@@ -2,7 +2,7 @@
   "name": "xcloce",
   "version": "0.1.0",
   "private": true,
-  "description": "XCLOCE — crypto-meme Telegram Mini App: trade meme tokens, dump on personal bosses, global damage.",
+  "description": "XCLOCE \u2014 Telegram Mini App meme fighter: dress your shiba, beat meme bosses, build a clan.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -10,9 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "check": "npm run typecheck && npm run test && npm run build",
-    "assets": "node --experimental-strip-types scripts/gen-assets.ts",
-    "economy": "node --experimental-strip-types scripts/economy-table.ts",
-    "market:check": "node --experimental-strip-types scripts/market-sim-check.ts"
+    "assets": "node --experimental-strip-types scripts/gen-assets.ts"
   },
   "engines": {
     "node": ">=20.11"

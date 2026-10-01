@@ -1,267 +1,140 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useGame } from "../store.tsx";
-import { api, type BossListItem } from "../api.ts";
-import { TokenLogo } from "../ui.tsx";
+import { BOSSES, bossImage } from "../../shared/content.ts";
+import { ATTACKS_PER_DAY, KEYS_TO_UNLOCK } from "../../shared/economy.ts";
+import { itemById } from "../../shared/items.ts";
+import { Bar, PriceTag, fmtNum, countdown } from "../ui.tsx";
+import { UIcon } from "../art/icons.tsx";
+import { ItemIcon } from "../art/items.tsx";
 import { haptic } from "../telegram.ts";
-import { AnimatedNumber, Bar, Icon } from "../ui.tsx";
-import { money } from "../format.ts";
-import { bossInfo } from "../../shared/bosses.ts";
-import { comboMultiplier, contributionFactor, DUMP_TOOLS, equipmentByTier, toolById, COMBO_WINDOW_MS } from "../../shared/economy.ts";
+import type { BattleResult } from "../api.ts";
 
 export function BossScreen() {
-  const { game, predictedBoss, busy } = useGame();
-  const [list, setList] = useState<BossListItem[] | null>(null);
-  const [view, setView] = useState<"list" | "fight" | number>("list");
-  const currentIndex = predictedBoss?.index ?? game?.boss.index ?? 1;
-  useEffect(() => {
-    let alive = true;
-    api.bosses().then((r) => alive && setList(r.bosses)).catch(() => alive && setList([]));
-    return () => { alive = false; };
-  }, [game?.boss.index, game?.stats?.bosses_defeated]);
-  const currentRef = useRef<HTMLButtonElement | null>(null);
-  useEffect(() => {
-    if (view === "list" && list) currentRef.current?.scrollIntoView({ block: "center" });
-  }, [view, list]);
-
-  if (view === "fight") return <BossFight onBack={() => setView("list")} />;
-  if (typeof view === "number") return <BossDetail index={view} item={list?.find((b) => b.index === view)} onBack={() => setView("list")} onFight={() => setView("fight")} />;
+  const { game, act, busy, setBattle, now } = useGame();
   if (!game) return null;
+  const nextReset = new Date(now);
+  const resetIn = Date.UTC(nextReset.getUTCFullYear(), nextReset.getUTCMonth(), nextReset.getUTCDate() + 1) - now;
 
   return (
-    <div className="screen boss-list-screen">
-      <div className="screen-head">
-        <h2>Боссы</h2>
-        <span className="muted small">побеждено: {game.stats?.bosses_defeated ?? 0}</span>
+    <div className="screen">
+      <div className="screen-title">
+        <h2 className="comic">BOSSES</h2>
+        <span className="muted small">Нападения обновятся через {countdown(resetIn)}</span>
       </div>
-      {!list && <div className="empty">Загрузка…</div>}
       <div className="boss-list">
-        {list?.map((b) => {
-          const isCurrent = b.index === currentIndex;
-          const status = b.index < currentIndex ? "defeated" : isCurrent ? "current" : "locked";
-          const remaining = isCurrent && predictedBoss ? predictedBoss.remaining : status === "defeated" ? 0 : b.marketCap;
+        {game.bosses.map((b) => {
+          const def = BOSSES.find((x) => x.index === b.index)!;
+          const locked = !b.unlocked;
+          const chance = Math.round(b.winChance * 100);
           return (
-            <button
-              key={b.index}
-              ref={isCurrent ? currentRef : undefined}
-              className={`boss-item ${status}`}
-              onClick={() => setView(isCurrent ? "fight" : b.index)}
-              disabled={busy === "x"}
-            >
-              <span className="boss-num">{b.index}</span>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={b.image} alt="" width={64} height={64} style={b.hueShift ? { filter: `hue-rotate(${b.hueShift}deg)` } : undefined} />
-              <span className="grow minw0">
-                <span className="strong ellipsis block">{b.name}</span>
-                <span className="muted small ellipsis block">{b.title}</span>
-                {isCurrent ? (
+            <div key={b.index} className={`boss-card ${locked ? "locked" : ""}`}>
+              <div className="boss-ava">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={bossImage(def)} alt="" draggable={false} />
+                {locked && <span className="q comic">?</span>}
+                <span className="boss-n comic">{b.index}</span>
+              </div>
+              <div className="boss-info">
+                <div className="boss-name comic ellipsis">{b.name}</div>
+                <div className="hp-row">
+                  <span className="hp-ic">❤</span>
+                  <Bar value={b.hp} max={b.hp} tone="red" label={`${fmtNum(b.hp)} HP`} />
+                </div>
+                <div className="boss-meta">
+                  <span title="Награда"><PriceTag price={b.reward} size={14} /></span>
+                  <span title="Побед">🏆 {b.wins}</span>
+                  {!locked && <span className={chance >= 70 ? "up" : chance >= 30 ? "warn-t" : "down"} title="Шанс победы">🎯 {chance}%</span>}
+                </div>
+              </div>
+              <div className="boss-act">
+                {!locked ? (
                   <>
-                    <Bar value={remaining} max={b.marketCap} tone="boss" />
-                    <span className="small block">{money(remaining, { compact: true })} / {money(b.marketCap, { compact: true })}</span>
+                    <button
+                      className="btn-attack comic"
+                      disabled={b.attemptsLeft <= 0 || busy === "attack"}
+                      onClick={async () => {
+                        haptic.tap();
+                        const r = await act<BattleResult>("attack", { boss: b.index });
+                        if (r) setBattle(r);
+                      }}
+                    >
+                      ATTACK
+                    </button>
+                    <small className="muted">{b.attemptsLeft}/{ATTACKS_PER_DAY}</small>
                   </>
+                ) : b.canUnlock ? (
+                  <button className="btn-unlock comic" disabled={busy === "unlock"} onClick={() => act("unlock", { boss: b.index }, `Босс #${b.index} открыт!`)}>
+                    OPEN<br /><span className="keys"><UIcon name="key" size={14} />{KEYS_TO_UNLOCK}</span>
+                  </button>
                 ) : (
-                  <span className="small block">MCAP {money(b.marketCap, { compact: true })} · награда до {money(b.rewardUsdFull, { compact: true })}{b.dropToolId ? " · 🎁" : ""}</span>
+                  <div className="key-need">
+                    <UIcon name={b.index === 1 ? "lock" : "key"} size={22} />
+                    <small>{b.index > 1 ? `${Math.min(b.keysHave, KEYS_TO_UNLOCK)}/${KEYS_TO_UNLOCK}` : ""}</small>
+                    <small className="muted">ключи #{b.index - 1}</small>
+                  </div>
                 )}
-              </span>
-              <span className={`status status-${status}`}>{status === "defeated" ? "✓" : isCurrent ? "⚔️ Бой" : "🔒"}</span>
-            </button>
+              </div>
+            </div>
           );
         })}
       </div>
+      <p className="muted small center">Победа даёт ключ этого босса. {KEYS_TO_UNLOCK} ключа открывают следующего. Сила растёт от заданий, побед и экипировки.</p>
     </div>
   );
 }
 
-function BossDetail({ index, item, onBack, onFight }: { index: number; item?: BossListItem; onBack: () => void; onFight: () => void }) {
-  const { predictedBoss } = useGame();
-  const info = bossInfo(index);
-  const current = predictedBoss?.index ?? 1;
-  const status = index < current ? "defeated" : index === current ? "current" : "locked";
-  const drop = info.dropToolId ? toolById(info.dropToolId) : null;
-  return (
-    <div className="screen boss-screen">
-      <div className="screen-head">
-        <button className="btn btn-ghost small" onClick={onBack}>← Все боссы</button>
-        <span className={`status status-${status}`}>{status === "defeated" ? "✓ Побеждён" : status === "current" ? "⚔️ Текущий" : "🔒 Впереди"}</span>
-      </div>
-      <div>
-        <h2>#{info.index} {info.name}</h2>
-        <div className="muted small">{info.title}</div>
-      </div>
-      <section className={`boss-stage ${status === "locked" ? "locked-stage" : ""}`}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={status === "defeated" ? info.imageHurt : info.image} alt={info.name} className="boss-img" style={info.hueShift ? { filter: `hue-rotate(${info.hueShift}deg)` } : undefined} draggable={false} />
-        {status === "defeated" && <div className="stamp">DUMPED</div>}
-      </section>
-      <section className="card">
-        <p>{info.description}</p>
-        <div className="stats-grid">
-          <div><span className="muted small">Market Cap</span><b>{money(info.marketCap)}</b></div>
-          <div><span className="muted small">Награда до</span><b className="up">{money(info.rewardUsdFull)}</b></div>
-          <div><span className="muted small">XP</span><b>+{info.rewardXp}</b></div>
-          <div><span className="muted small">Дроп</span><b>{drop ? drop.name : "—"}</b></div>
-          {item?.personalDamage != null && <div><span className="muted small">Твой урон</span><b>{money(item.personalDamage)}</b></div>}
-          {item?.rewardPaid != null && <div><span className="muted small">Получено</span><b className="up">{money(item.rewardPaid)}</b></div>}
-        </div>
-        {status === "current" && <button className="btn btn-sell wide" onClick={onFight}>⚔️ В бой</button>}
-        {status === "locked" && <div className="muted small">Откроется после победы над боссом #{index - 1}. Глобальный урон всех игроков приближает его.</div>}
-      </section>
-    </div>
-  );
-}
-
-function BossFight({ onBack }: { onBack: () => void }) {
-  const { game, predictedBoss, pops, feed, setTab, live, openMore, run, busy, energyNow, toast } = useGame();
-  const [hit, setHit] = useState(false);
-  const lastPop = useRef(0);
+export function BattleModal() {
+  const { battle, setBattle } = useGame();
+  const [step, setStep] = useState(0);
   useEffect(() => {
-    const last = pops[pops.length - 1];
-    if (last && last.id !== lastPop.current) {
-      lastPop.current = last.id;
-      setHit(true);
-      const t = setTimeout(() => setHit(false), 380);
-      return () => clearTimeout(t);
-    }
-  }, [pops]);
-  if (!game || !predictedBoss) return null;
-  const info = bossInfo(predictedBoss.index);
-  const sameBoss = predictedBoss.index === game.boss.index;
-  const personal = sameBoss ? game.boss.personalOnBoss : 0;
-  const tool = toolById(game.player.equippedTool) ?? DUMP_TOOLS[0];
-  const eq = equipmentByTier(game.player.equipmentTier);
-  const comboActive = game.player.lastSellAt && Date.now() - game.player.lastSellAt <= COMBO_WINDOW_MS ? game.player.combo : 0;
-  const damageFeed = feed.filter((f) => ["damage", "crit", "boss"].includes(f.kind)).slice(-6).reverse();
-  const share = contributionFactor(personal, info.marketCap);
-
+    if (!battle) return;
+    setStep(0);
+    let i = 0;
+    const t = setInterval(() => {
+      i += 1;
+      setStep(i);
+      if (i <= battle.hits.length) haptic.tap();
+      if (i > battle.hits.length) {
+        clearInterval(t);
+        if (battle.win) haptic.ok(); else haptic.err();
+      }
+    }, 260);
+    return () => clearInterval(t);
+  }, [battle]);
+  if (!battle) return null;
+  const def = BOSSES.find((b) => b.index === battle.bossIndex)!;
+  const dealt = battle.hits.slice(0, step).reduce((s, h) => s + h.dmg, 0);
+  const done = step > battle.hits.length;
+  const last = battle.hits[Math.min(step, battle.hits.length) - 1];
   return (
-    <div className="screen boss-screen">
-      <div className="screen-head">
-        <div className="minw0">
-          <h2 className="ellipsis">#{info.index} {info.name}</h2>
-          <div className="muted small">{info.title}</div>
-        </div>
-        <button className="btn btn-ghost small" onClick={onBack}>← Все боссы</button>
-      </div>
-      <section className={`boss-stage env-${info.env} ${hit ? "hit" : ""}`}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={predictedBoss.remaining / info.marketCap < 0.35 ? info.imageHurt : info.image} alt={info.name} className="boss-img" style={info.hueShift ? { filter: `hue-rotate(${info.hueShift}deg) saturate(1.2)` } : undefined} draggable={false} />
-        <div className="pops">
-          {pops.map((p) => (
-            <span key={p.id} className={`pop ${p.crit ? "crit" : ""} ${p.mine ? "mine" : "global"}`}>
-              -{money(p.amount)}{p.crit ? " CRIT" : ""}
-            </span>
-          ))}
-        </div>
-      </section>
-
-      <section className="card boss-mcap">
-        <div className="row between">
-          <span className="muted small">MARKET CAP</span>
-          <span className={`live ${live ? "on" : ""}`}>{live ? "LIVE" : "sync"}</span>
-        </div>
-        <div className="mcap-value">
-          <AnimatedNumber value={predictedBoss.remaining} format={(v) => money(v)} duration={500} />
-          <span className="muted"> / {money(info.marketCap)}</span>
-        </div>
-        <Bar value={predictedBoss.remaining} max={info.marketCap} tone="boss" />
-        <div className="row between small">
-          <span>Твой урон: <b>{money(personal)}</b></span>
-          <span>Награда: <b className="up">{money(info.rewardUsdFull * share)}</b>{share < 1 && <span className="muted"> из {money(info.rewardUsdFull)}</span>}</span>
-        </div>
-        {share < 1 && <div className="muted small">Нанеси лично 10% Market Cap ({money(info.marketCap * 0.1)}), чтобы получить полную награду.</div>}
-        {info.dropToolId && <div className="drop small">🎁 Дроп: {toolById(info.dropToolId)?.name}</div>}
-      </section>
-
-      <section className="card">
-        <div className="row between"><h3>Dump Tool</h3><button className="btn btn-ghost small" onClick={() => openMore("arsenal")}>Сменить →</button></div>
-        <div className="row gap tool-line">
+    <div className="modal-backdrop" onClick={() => done && setBattle(null)}>
+      <div className={`battle ${done ? (battle.win ? "won" : "lost") : ""}`} onClick={(e) => e.stopPropagation()}>
+        <div className="battle-name comic">{def.name}</div>
+        <div className={`battle-boss ${step > 0 && !done ? "shake" : ""}`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={`/assets/dump-tools/${tool.id}.svg`} width={52} height={52} alt="" />
-          <div className="grow">
-            <div className="strong">{tool.name}</div>
-            <div className="mods">
-              <span className="mod">×{tool.mult} урон</span>
-              <span className="mod">{Math.round(tool.critChance * 100)}% крит ×{tool.critMult}</span>
-              <span className="mod">комбо {comboActive} · ×{comboMultiplier(comboActive)}</span>
-              <span className="mod">сетап ×{(1 + eq.damageBonus).toFixed(2)}</span>
-            </div>
-          </div>
+          <img src={bossImage(def)} alt="" />
+          {last && !done && <span key={step} className={`hit-pop comic ${last.crit ? "crit" : ""}`}>-{fmtNum(last.dmg)}{last.crit ? "!" : ""}</span>}
+          {done && <span className={`result-stamp comic ${battle.win ? "win" : "lose"}`}>{battle.win ? "VICTORY" : "DEFEAT"}</span>}
         </div>
-      </section>
-
-      <section className="card attack-card">
-        <div className="row between"><h3>⚔️ Атака</h3><span className="muted small">{Math.floor(energyNow)} ⚡ · {tool.energyCost} ⚡ за удар</span></div>
-        {game.positions.length ? (
-          <div className="list">
-            {game.positions.map((x) => {
-              const dmg = x.valueUsd * tool.mult * comboMultiplier(comboActive + 1) * (1 + eq.damageBonus);
-              const attack = (fraction: number) => {
-                if (energyNow < tool.energyCost) return toast("err", "Нет энергии для удара");
-                run(`atk:${x.tokenId}`, () => api.sell(x.tokenId, fraction), (r) => {
-                  haptic.hit();
-                  toast("dmg", `${r.damage.crit ? "💥 CRITICAL DUMP! " : "🔥 "}${money(r.damage.amount)} урона`);
-                });
-              };
-              return (
-                <div key={x.tokenId} className="attack-row">
-                  <TokenLogo art={x.art as never} size={36} />
-                  <div className="grow minw0">
-                    <div className="strong">${x.ticker}</div>
-                    <div className="small muted">{money(x.valueUsd)} · удар ≈ <b className="dmg">{money(dmg)}</b></div>
-                  </div>
-                  <button className="btn btn-chip" disabled={busy === `atk:${x.tokenId}`} onClick={() => attack(0.5)}>50%</button>
-                  <button className="btn btn-chip btn-sell" disabled={busy === `atk:${x.tokenId}`} onClick={() => attack(1)}>DUMP</button>
-                </div>
-              );
-            })}
+        <Bar value={Math.max(0, battle.hp - dealt)} max={battle.hp} tone="red" label={`${fmtNum(Math.max(0, battle.hp - dealt))} / ${fmtNum(battle.hp)}`} />
+        <div className="small muted center">Твоя сила: {fmtNum(battle.power)} · удар {Math.min(step, battle.hits.length)}/{battle.hits.length}</div>
+        {done && (
+          <div className="battle-rewards">
+            {battle.win ? (
+              <>
+                {battle.reward && <span className="reward"><PriceTag price={battle.reward} /></span>}
+                {battle.key && <span className="reward"><ItemIcon id={battle.key} size={26} /> ключ</span>}
+                {battle.items.map((id) => <span key={id} className="reward"><ItemIcon id={id} size={26} /> {itemById(id)?.name}</span>)}
+                <span className="reward">+{battle.xp} XP</span>
+                <span className="reward">+{battle.powerGained} ⚔</span>
+              </>
+            ) : (
+              <span className="reward">+{battle.xp} XP · прокачай силу и возвращайся</span>
+            )}
           </div>
-        ) : (
-          <div className="empty small">Нечем бить. Купи мемкоин — его продажа нанесёт урон боссу.</div>
         )}
-        <button className="btn btn-sell wide" onClick={() => setTab("market")}>Купить снаряды на рынке</button>
-      </section>
-
-      <section className="card">
-        <div className="row between"><h3>Глобальная активность</h3><Icon name="damage" size={18} /></div>
-        <div className="feed">
-          {damageFeed.length ? damageFeed.map((f) => <div key={f.id} className={`feed-item feed-${f.kind}`}>{f.text}</div>) : <div className="muted small">Пока тихо. Будь первым, кто сольёт!</div>}
-        </div>
-        <div className="muted small">Урон любого игрока снижает Market Cap твоего босса — и всех остальных.</div>
-      </section>
-    </div>
-  );
-}
-
-export function Celebration() {
-  const { celebrations, dismissCelebration } = useGame();
-  const c = celebrations[0];
-  if (!c) return null;
-  const info = bossInfo(c.index);
-  const item = c.rewardItem ? toolById(c.rewardItem) : null;
-  return (
-    <div className="victory-backdrop" onClick={dismissCelebration}>
-      <div className="victory" onClick={(e) => e.stopPropagation()}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/assets/effects/explosion.svg" className="victory-boom" alt="" />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={info.image} className="victory-boss" alt="" style={info.hueShift ? { filter: `hue-rotate(${info.hueShift}deg) grayscale(.6)` } : { filter: "grayscale(.6)" }} />
-        <div className="victory-title">BOSS DUMPED!</div>
-        <div className="victory-name">#{c.index} {info.name}</div>
-        <div className="victory-stats">
-          <div><span className="muted small">Market Cap</span><b>{money(info.marketCap)}</b></div>
-          <div><span className="muted small">Твой вклад</span><b>{money(c.personalDamage)}</b></div>
-        </div>
-        <div className="victory-rewards">
-          <div className="reward"><Icon name="usd" size={22} /> +{money(c.rewardUsd)}</div>
-          <div className="reward"><Icon name="xp" size={22} /> +{c.rewardXp} XP</div>
-          {item && (
-            <div className="reward">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`/assets/dump-tools/${item.id}.svg`} width={22} height={22} alt="" /> {item.name}
-            </div>
-          )}
-        </div>
-        <button className="btn btn-primary wide" onClick={dismissCelebration}>Забрать награду</button>
+        {done && <button className="btn-green comic" onClick={() => setBattle(null)}>{battle.attemptsLeft > 0 ? `OK · осталось ${battle.attemptsLeft}` : "OK"}</button>}
       </div>
     </div>
   );

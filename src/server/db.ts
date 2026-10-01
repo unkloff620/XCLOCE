@@ -133,7 +133,7 @@ export function splitSql(sql: string): string[] {
 
 let dbPromise: Promise<Db> | null = null;
 
-/** Lazily created singleton DB with schema + seed applied. */
+/** Lazily created singleton DB with schema applied. */
 export function getDb(): Promise<Db> {
   if (!dbPromise) {
     dbPromise = (async () => {
@@ -147,8 +147,6 @@ export function getDb(): Promise<Db> {
         log.warn("db.pglite", { message: "DATABASE_URL not set, using in-process PGlite" });
       }
       await migrate(db);
-      const { seed } = await import("./seed.ts");
-      await seed(db);
       return db;
     })().catch((e) => {
       dbPromise = null;

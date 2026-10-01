@@ -226,4 +226,66 @@ CREATE TABLE IF NOT EXISTS quest_claims (
 );
 `,
   },
+  {
+    id: "003_v2_rpg",
+    sql: `
+ALTER TABLE players ADD COLUMN IF NOT EXISTS power_bonus INT NOT NULL DEFAULT 0;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS loadout JSONB NOT NULL DEFAULT '{}';
+ALTER TABLE players ADD COLUMN IF NOT EXISTS theme TEXT NOT NULL DEFAULT 't-default';
+ALTER TABLE players ADD COLUMN IF NOT EXISTS idle_claimed_at TIMESTAMPTZ NOT NULL DEFAULT now();
+ALTER TABLE players ADD COLUMN IF NOT EXISTS clan_id BIGINT;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS power_cached INT NOT NULL DEFAULT 100;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS v2_initialized BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- Per-player boss progress: unlock state, wins, and the daily attack counter.
+CREATE TABLE IF NOT EXISTS player_bosses (
+  player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  boss_index INT NOT NULL,
+  unlocked BOOLEAN NOT NULL DEFAULT FALSE,
+  wins INT NOT NULL DEFAULT 0,
+  losses INT NOT NULL DEFAULT 0,
+  attempts INT NOT NULL DEFAULT 0,
+  attempts_day TEXT NOT NULL DEFAULT '',
+  first_win_at TIMESTAMPTZ,
+  PRIMARY KEY (player_id, boss_index)
+);
+
+CREATE TABLE IF NOT EXISTS clans (
+  id BIGSERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  tag TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  owner_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS clans_name_lower_idx ON clans (lower(name));
+CREATE UNIQUE INDEX IF NOT EXISTS clans_tag_lower_idx ON clans (lower(tag));
+
+CREATE TABLE IF NOT EXISTS clan_members (
+  player_id BIGINT PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
+  clan_id BIGINT NOT NULL REFERENCES clans(id) ON DELETE CASCADE,
+  role TEXT NOT NULL DEFAULT 'member',
+  joined_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS clan_members_clan_idx ON clan_members (clan_id);
+
+CREATE TABLE IF NOT EXISTS clan_requests (
+  player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  clan_id BIGINT NOT NULL REFERENCES clans(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (player_id, clan_id)
+);
+
+CREATE TABLE IF NOT EXISTS battles (
+  id BIGSERIAL PRIMARY KEY,
+  player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  boss_index INT NOT NULL,
+  power INT NOT NULL,
+  win BOOLEAN NOT NULL,
+  damage INT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS battles_player_idx ON battles (player_id, created_at DESC);
+`,
+  },
 ];

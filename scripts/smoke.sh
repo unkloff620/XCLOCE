@@ -4,27 +4,21 @@ set -euo pipefail
 BASE=${BASE:-http://localhost:3000}
 j() { node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{const o=JSON.parse(d);console.log(eval('o'+process.argv[1]))})" "$1"; }
 uuid() { node -e "console.log(crypto.randomUUID())"; }
+act() { curl -s -X POST "${H[@]}" $BASE/api/action -d "$1"; sleep 0.45; }
 echo "health: $(curl -sf $BASE/api/health)"
 TOKEN=$(curl -sf -X POST $BASE/api/auth -H 'content-type: application/json' -d "{\"guestId\":\"$(uuid)\"}" | j .token)
 H=(-H "authorization: Bearer $TOKEN" -H 'content-type: application/json')
-echo "me: boss=$(curl -sf "${H[@]}" $BASE/api/me | j .state.boss.index) rub=$(curl -sf "${H[@]}" $BASE/api/me | j .state.balances.RUB)"
-echo "market tokens: $(curl -sf $BASE/api/market | j .tokens.length)"
-echo "work: $(curl -sf -X POST "${H[@]}" $BASE/api/work -d '{}' | j .result.earned)"
-sleep 0.3
-echo "rub->usd: $(curl -sf -X POST "${H[@]}" $BASE/api/exchange -d "{\"from\":\"RUB\",\"to\":\"USD\",\"amount\":9000,\"idem\":\"$(uuid)\"}" | j .result.received)"
-sleep 0.3
-echo "usd->sol: $(curl -sf -X POST "${H[@]}" $BASE/api/exchange -d "{\"from\":\"USD\",\"to\":\"SOL\",\"amount\":90,\"idem\":\"$(uuid)\"}" | j .result.received)"
-sleep 0.4
-echo "buy: $(curl -sf -X POST "${H[@]}" $BASE/api/trade -d "{\"side\":\"buy\",\"tokenId\":\"dking\",\"sol\":0.5,\"idem\":\"$(uuid)\"}" | j .result.amount)"
-sleep 0.4
-SELL=$(curl -sf -X POST "${H[@]}" $BASE/api/trade -d "{\"side\":\"sell\",\"tokenId\":\"dking\",\"fraction\":1,\"idem\":\"$(uuid)\"}")
-echo "sell damage: $(echo "$SELL" | j .result.damage.amount) boss remaining: $(echo "$SELL" | j .state.boss.remaining) global: $(echo "$SELL" | j .state.globalTotal)"
-echo "bad sell: $(curl -s -X POST "${H[@]}" $BASE/api/trade -d "{\"side\":\"sell\",\"tokenId\":\"dking\",\"fraction\":1,\"idem\":\"$(uuid)\"}")"
-echo "no auth: $(curl -s $BASE/api/me)"
-echo "leaderboard rows: $(curl -sf "$BASE/api/leaderboard?type=damage_all" | j .rows.length)"
-echo "feed: $(curl -sf $BASE/api/feed | j .items.length)"
-echo "stream: $(timeout 4 curl -sN $BASE/api/stream | head -c 300 || true)"
-echo "daily: $(curl -sf -X POST "${H[@]}" $BASE/api/retention -d '{"action":"daily"}' | j .result.day)"
-sleep 0.3
-echo "wear: $(curl -sf -X POST "${H[@]}" $BASE/api/retention -d '{"action":"wear","cosmeticId":"headphones-none"}' | j .state.player.outfit.headphones)"
-echo "quests: $(curl -sf "${H[@]}" $BASE/api/me | j '.state.quests.map(q=>q.id+":"+q.progress).join(",")')"
+ME=$(curl -sf "${H[@]}" $BASE/api/me)
+echo "me: power=$(echo "$ME" | j .state.player.power) energy=$(echo "$ME" | j .state.player.energy) bosses=$(echo "$ME" | j .state.bosses.length)"
+echo "task: $(act '{"type":"task","taskId":"t-chat"}' | j .result.reward.amount)"
+echo "attack: $(act '{"type":"attack","boss":1}' | j '.result.win+" left="+o.result.attemptsLeft')"
+echo "locked attack: $(act '{"type":"attack","boss":2}' | j .error.code)"
+echo "buy fan: $(act '{"type":"buy","itemId":"w-paper-fan"}' | j .result.itemId)"
+echo "equip: $(act '{"type":"equip","itemId":"w-paper-fan"}' | j .result.power)"
+echo "daily: $(act '{"type":"daily"}' | j .result.label)"
+echo "mission: $(act '{"type":"mission","missionId":"m-login"}' | j .result.missionId)"
+echo "idle: $(act '{"type":"idle"}' | j '.error ? o.error.code : o.result.amount')"
+echo "exchange: $(act '{"type":"exchange","from":"RUB","to":"USD","amount":1000}' | j .result.received)"
+echo "clan: $(act '{"type":"clan_create","name":"Smoke Squad","tag":"SMK"}' | j '.error ? o.error.code : o.result.clanId')"
+echo "clans: $(curl -sf "${H[@]}" "$BASE/api/clans" | j .clans.length)"
+echo "no auth: $(curl -s $BASE/api/me | j .error.code)"

@@ -12,9 +12,8 @@ export const POST = publicRoute("auth", async ({ db, body }) => {
   if (typeof body.initData === "string" && body.initData.length > 0) {
     const token = process.env.TELEGRAM_BOT_TOKEN;
     if (!token) throw new GameError("auth_unconfigured", "Бот не настроен на сервере", 503);
-    const { user, startParam } = validateInitData(body.initData, token);
-    const ref = startParam?.startsWith("ref_") ? startParam.slice(4) : undefined;
-    const playerId = await db.tx((tx) => upsertTelegramPlayer(tx, user, ref));
+    const { user } = validateInitData(body.initData, token);
+    const playerId = await db.tx((tx) => upsertTelegramPlayer(tx, user));
     log.info("auth.telegram", { playerId });
     return { token: issueSession(playerId), mode: "telegram" };
   }

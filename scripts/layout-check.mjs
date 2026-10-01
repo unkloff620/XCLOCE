@@ -8,7 +8,7 @@ for (const width of [320, 360, 390, 768]) {
   await page.goto(base, { waitUntil: "networkidle" });
   await page.waitForTimeout(2000);
   for (let tab = 0; tab < 5; tab++) {
-    await page.locator(".navbtn").nth(tab).click();
+    await page.locator(".nav-btn").nth(tab).click();
     await page.waitForTimeout(900);
     const r = await page.evaluate(() => {
       const vw = document.documentElement.clientWidth;
@@ -16,12 +16,12 @@ for (const width of [320, 360, 390, 768]) {
       for (const el of document.querySelectorAll(".app *")) {
         const b = el.getBoundingClientRect();
         if (b.width === 0 || getComputedStyle(el).position === "fixed") continue;
-        if (el.closest(".scroll-x, .balances, svg")) continue;
+        if (el.closest(".tabs, svg, .stage")) continue;
         if (b.right > vw + 1 || b.left < -1) bad.push(`${el.tagName.toLowerCase()}.${String(el.className).split(" ")[0]} [${Math.round(b.left)}..${Math.round(b.right)}]`);
       }
       return { scrollW: document.documentElement.scrollWidth, vw, bad: [...new Set(bad)].slice(0, 8) };
     });
-    console.log(width, ["home", "market", "boss", "quests", "more"][tab], r.scrollW > r.vw ? `OVERFLOW ${r.scrollW}>${r.vw}` : "ok", r.bad.join(" | "));
+    console.log(width, ["boss", "market", "home", "inventory", "social"][tab], r.scrollW > r.vw ? `OVERFLOW ${r.scrollW}>${r.vw}` : "ok", r.bad.join(" | "));
   }
   await page.close();
 }
