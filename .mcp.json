@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "game-images": {
+      "command": "node",
+      "args": ["tools/image-generator/launcher.mjs"]
+    }
+  }
+}
