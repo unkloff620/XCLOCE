@@ -4,6 +4,8 @@
 
 ## Status
 
+**Stage 2 — reference-style UI, retention, meme bosses: implemented.** Home redesigned after the owner's reference (illustrated live room with a dressable shiba character, currency cards with hourly rates, XP/energy bars with regen timer, side widgets, three big cards, nav Home/Market/Boss/Quests/More). Daily login reward with 7-day streak, daily & weekly quests driven by real actions, wardrobe (cosmetics), 12 original meme bosses with meme-macro captions and a "hurt" state, attack panel on the boss screen. Tapping the room = work.
+
 **Stage 1 — MVP vertical slice: implemented.** Telegram auth, profile, currencies + exchanger, meme market with charts, buy/sell, portfolio, personal bosses, Global Damage Bus, realtime (SSE), boss defeat + rewards (once), Dump Tools (buy/equip, drops), workplace tiers with room art, leaderboards, global feed, tutorial, responsive UI.
 
 - Production URL: https://xcloce.vercel.app (Vercel project `xcloce`, auto-deploys from `main`; `dev` → preview deployments)
@@ -20,14 +22,17 @@
 ## Structure
 
 ```
-src/shared/      economy.ts (ALL formulas), bosses.ts, tokens.ts (seeds, risk), art.ts (procedural SVG)
+src/shared/      economy.ts (ALL formulas), bosses.ts, tokens.ts (seeds, risk), art.ts (procedural SVG),
+                 retention.ts (daily rewards, quests, cosmetics)
 src/server/      db.ts (pg/PGlite, migrations), migrations.ts, seed.ts, auth.ts (initData + sessions),
                  damageBus.ts (GLOBAL DAMAGE BUS), bossChain.ts (pure chain/overkill), game.ts (actions),
                  market.ts + marketSim.ts (market), http.ts (route wrapper, errors, rate limit), routes.ts, log.ts
 src/app/api/*    route handlers
-src/client/      store.tsx (state, SSE, actions), api.ts, telegram.ts, ui.tsx, chrome.tsx, screens/*
-scripts/         gen-assets.ts, economy-table.ts, market-sim-check.ts, smoke.sh
-tests/           bossChain, damageBus (§99–101 + concurrency + reward-once), trading, auth
+src/client/      store.tsx (state, SSE, actions), api.ts, telegram.ts, ui.tsx, chrome.tsx, icons.tsx,
+                 room/Room.tsx (live illustrated room + dressable character), screens/* (Home, Market, Boss, Quests, More)
+scripts/         gen-assets.ts (+ meme-bosses.ts), economy-table.ts, market-sim-check.ts, smoke.sh,
+                 screenshots.mjs + layout-check.mjs (playwright visual QA)
+tests/           bossChain, damageBus (§99–101 + concurrency + reward-once), trading, auth, retention
 public/assets/   bosses, dump-tools, rooms, icons, ui, effects
 ```
 
@@ -45,6 +50,7 @@ public/assets/   bosses, dump-tools, rooms, icons, ui, effects
 | POST | /api/shop | ✓ | `{kind: equipment, tier}` / `{kind: tool, toolId}` + idem |
 | POST | /api/equip | ✓ | equip owned Dump Tool |
 | POST | /api/tutorial | ✓ | `boss_opened` (also marks defeats seen) / `skip` |
+| POST | /api/retention | ✓ | `{action: daily}` claim login reward · `{action: quest, questId}` · `{action: wear, cosmeticId}` (buys if needed) |
 | GET | /api/bosses | ✓ | boss progression list |
 | GET | /api/leaderboard?type= | – | damage_today, damage_all, bosses, biggest_dump, profit, level |
 | GET | /api/feed | – | latest feed + global total |
@@ -71,12 +77,13 @@ See `.env.example`. Production (Vercel): `DATABASE_URL` (Neon integration), `TEL
 
 ## Checks
 
-`npm run typecheck`, `npm test` (26 tests), `npm run build`, `bash scripts/smoke.sh` against a running server. The local agent environment has no npm registry access; checks run in a Vercel Sandbox (`xcloce-dev`) cloned from the `dev` branch.
+`npm run typecheck`, `npm test` (30 tests), `npm run build`, `bash scripts/smoke.sh` against a running server. The local agent environment has no npm registry access; checks run in a Vercel Sandbox (`xcloce-dev`) cloned from the `dev` branch.
 
 ## Open issues / next stage
 
-1. **Stage 2:** character + cosmetics (dress-up) — owner request; room decorations; daily reward & streak; daily/weekly quests; achievements.
-2. Assistants (passive bonuses), referrals via `start_param=ref_<tgId>` (stored as `referrer_id`, rewards not implemented yet).
+1. **Stage 3:** achievements; more cosmetics & room decorations; assistants; referral rewards; Dump Tool upgrade levels; loot boxes.
+   Owner may supply licensed meme images for bosses — drop them into `public/assets/bosses/NN-slug(-hurt).svg|png` and update `bossInfo`.
+2. Referrals via `start_param=ref_<tgId>` (stored as `referrer_id`, rewards not implemented yet).
 3. Dump Tool upgrade levels; loot boxes; news-driven market events beyond the simulation.
 4. Boss scaling vs. player count (see GAME_DESIGN.md open questions).
 5. SSE polls the DB every 1.5 s per open connection — move to Postgres LISTEN/NOTIFY or a pub/sub service when concurrency grows.

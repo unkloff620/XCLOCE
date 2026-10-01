@@ -17,7 +17,12 @@ Postgres (Neon in production, in-process PGlite locally/tests). The schema is cr
 | `market_clock` | last simulated tick | `id = 1` |
 | `positions` | player's token holdings + cost basis | (`player_id`, `token_id`) |
 | `actions` | idempotency log for exchange/buy/sell/shop with stored result; **UNIQUE (player_id, idem_key)** | `id` |
-| `inventory` | owned Dump Tools and workplace items | (`player_id`, `item_type`, `item_id`) |
+| `inventory` | owned Dump Tools, workplace items and cosmetics | (`player_id`, `item_type`, `item_id`) |
+| `daily_rewards` | login streak and last claim time | `player_id` |
+| `quest_metrics` | counters per period (`d:YYYY-MM-DD`, `w:<monday>`) and metric (work, buys, sells, sell_usd, damage, bosses, exchanges) | (`player_id`, `period`, `metric`) |
+| `quest_claims` | one claim per quest per period (idempotent rewards) | (`player_id`, `quest_id`, `period`) |
+
+`players.outfit` (JSONB) stores the worn cosmetic per slot (hoodie, hat, glasses, headphones).
 
 ## Concurrency rules
 

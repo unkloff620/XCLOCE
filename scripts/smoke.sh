@@ -26,5 +26,5 @@ echo "feed: $(curl -sf $BASE/api/feed | j .items.length)"
 echo "stream: $(timeout 4 curl -sN $BASE/api/stream | head -c 300 || true)"
 echo "daily: $(curl -sf -X POST "${H[@]}" $BASE/api/retention -d '{"action":"daily"}' | j .result.day)"
 sleep 0.3
-echo "wear cap: $(curl -sf -X POST "${H[@]}" $BASE/api/retention -d '{"action":"wear","cosmeticId":"hat-cap"}' | j .state.player.outfit.hat)"
+echo "wear: $(curl -sf -X POST "${H[@]}" $BASE/api/retention -d '{"action":"wear","cosmeticId":"headphones-none"}' | j .state.player.outfit.headphones)"
 echo "quests: $(curl -sf "${H[@]}" $BASE/api/me | j '.state.quests.map(q=>q.id+":"+q.progress).join(",")')"
