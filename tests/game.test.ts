@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { Db } from "../src/server/db.ts";
 import * as G from "../src/server/game.ts";
-import { ATTACKS_PER_DAY, KEYS_TO_UNLOCK, simulateBattle, winChance } from "../src/shared/economy.ts";
+import { ATTACKS_PER_DAY, DAMAGE_MULT, avgHit, rollHit } from "../src/shared/economy.ts";
+import { ITEMS } from "../src/shared/items.ts";
 import { BOSSES } from "../src/shared/content.ts";
 import { always, bal, freshDb, newPlayer, qty } from "./helpers.ts";
 
@@ -11,62 +12,104 @@ afterEach(async () => { await db.close(); });
 let clock = Date.UTC(2026, 9, 1, 10, 0, 0); // a Thursday
 const t = () => (clock += 1_000);
 
-describe("battle math", () => {
-  it("win chance grows with power and the simulation respects it", () => {
-    expect(winChance(100, 900)).toBeGreaterThan(0.9);
-    expect(winChance(100, 2_000)).toBeLessThan(0.01);
-    expect(simulateBattle(100, 900, always(0.5)).win).toBe(true);
-    expect(simulateBattle(100, 5_000, always(0.99)).win).toBe(false);
+describe("hit math", () => {
+  it("damage scales with power, crits double it", () => {
+    expect(rollHit(100, always(0.5))).toEqual({ dmg: 100 * DAMAGE_MULT, crit: false });
+    expect(rollHit(100, always(0.01)).crit).toBe(true);
+    expect(avgHit(200)).toBeGreaterThan(avgHit(100));
   });
 });
 
-describe("bosses", () => {
-  it("boss #1 is open, others locked; locked bosses cannot be attacked", async () => {
+const hit = (pid: number, boss = 1, at = t(), weapon = G.FISTS) => db.tx((tx) => G.doHit(tx, pid, boss, weapon, at, always(0.5)));
+const settle = (pid: number) => db.tx((tx) => G.lockPlayer(tx, pid, t()));
+const fightOf = (pid: number, boss = 1) => db.tx((tx) => G.bossFight(tx, pid, boss, clock));
+
+describe("shared bosses", () => {
+  it("boss #1 is open, others locked; locked bosses cannot be hit", async () => {
     const pid = await newPlayer(db);
     const st = await db.tx((tx) => G.getState(tx, pid, clock));
     expect(st.bosses.map((b) => b.unlocked)).toEqual([true, false, false, false, false, false, false, false, false, false]);
-    expect(st.bosses).toHaveLength(10);
-    await expect(db.tx((tx) => G.doAttack(tx, pid, 2, t()))).rejects.toMatchObject({ code: "boss_locked" });
+    expect(st.bosses[0]).toMatchObject({ hp: BOSSES[0].hp, hpMax: BOSSES[0].hp });
+    expect(st.weapons.map((w) => w.id)).toEqual([G.FISTS]);
+    await expect(hit(pid, 2)).rejects.toMatchObject({ code: "boss_locked" });
   });
 
-  it("a win pays reward, key, xp and power; attacks are limited to 7 per day per boss", async () => {
+  it("HP is shared; the kill splits the reward by damage and gives keys to the killer and big hitters", async () => {
+    const a = await newPlayer(db);
+    const b = await newPlayer(db);
+    const rubA = await bal(db, a, "RUB");
+    const rubB = await bal(db, b, "RUB");
+    const h1 = await hit(a);
+    expect(h1).toMatchObject({ dmg: 300, hp: 600, killed: false, attemptsLeft: ATTACKS_PER_DAY - 1 });
+    await hit(a);
+    const seenByB = await fightOf(b);
+    expect(seenByB.hp).toBe(300);
+    expect(seenByB.damage).toEqual([expect.objectContaining({ id: a, damage: 600, hits: 2 })]);
+    const kill = await hit(b);
+    expect(kill).toMatchObject({ killed: true, hp: 0 });
+    expect(kill.kill).toMatchObject({ killer: true, key: true, amount: 300 });
+    expect(await bal(db, b, "RUB")).toBe(rubB + 300);
+    expect(await qty(db, b, "key-1")).toBe(1);
+    // A's share is paid on A's next action
+    expect(await bal(db, a, "RUB")).toBe(rubA);
+    await settle(a);
+    expect(await bal(db, a, "RUB")).toBe(rubA + 600);
+    expect(await qty(db, a, "key-1")).toBe(1);
+    await settle(a); // paid only once
+    expect(await bal(db, a, "RUB")).toBe(rubA + 600);
+    const fresh = await fightOf(a);
+    expect(fresh).toMatchObject({ hp: BOSSES[0].hp, damage: [] });
+    expect(fresh.lastKill).toMatchObject({ killerId: b, myReward: { amount: 600, key: true, killer: false } });
+    const st = await db.tx((tx) => G.getState(tx, a, clock));
+    expect(st.bosses[0].wins).toBe(1);
+  });
+
+  it("small contributors get a share but no key", async () => {
+    const a = await newPlayer(db);
+    const b = await newPlayer(db);
+    for (const pid of [a, b]) await db.query("INSERT INTO player_bosses (player_id, boss_index, unlocked) VALUES ($1, 5, TRUE)", [pid]);
+    await db.query("UPDATE players SET power_bonus = 5000 WHERE id=$1", [b]);
+    await hit(a, 5);
+    const k = await hit(b, 5);
+    expect(k.killed).toBe(true);
+    await settle(a);
+    expect(await qty(db, a, "key-5")).toBe(0);
+    const f = await fightOf(a, 5);
+    expect(f.lastKill?.myReward).toMatchObject({ key: false, share: 300 / BOSSES[4].hp });
+  });
+
+  it("hits are limited to 7 per day per boss and come back the next day", async () => {
     const pid = await newPlayer(db);
-    const rub0 = await bal(db, pid, "RUB");
-    const r = await db.tx((tx) => G.doAttack(tx, pid, 1, t(), always(0.5)));
-    expect(r.win).toBe(true);
-    expect(await qty(db, pid, "key-1")).toBe(1);
-    expect(await bal(db, pid, "RUB")).toBe(rub0 + BOSSES[0].reward.amount);
-    for (let i = 1; i < ATTACKS_PER_DAY; i++) await db.tx((tx) => G.doAttack(tx, pid, 1, t(), always(0.5)));
-    await expect(db.tx((tx) => G.doAttack(tx, pid, 1, t(), always(0.5)))).rejects.toMatchObject({ code: "no_attempts" });
-    const st = await db.tx((tx) => G.getState(tx, pid, clock));
-    expect(st.bosses[0]).toMatchObject({ wins: ATTACKS_PER_DAY, attemptsLeft: 0 });
-    // next UTC day — attempts are back
-    const tomorrow = clock + 24 * 3_600_000;
-    const again = await db.tx((tx) => G.doAttack(tx, pid, 1, tomorrow, always(0.5)));
+    for (let i = 0; i < ATTACKS_PER_DAY; i++) await hit(pid);
+    await expect(hit(pid)).rejects.toMatchObject({ code: "no_attempts" });
+    expect(await qty(db, pid, "key-1")).toBe(2); // killed on hits 3 and 6
+    const again = await hit(pid, 1, clock + 24 * 3_600_000);
     expect(again.attemptsLeft).toBe(ATTACKS_PER_DAY - 1);
   });
 
   it("3 keys from boss #1 unlock boss #2 and are consumed", async () => {
     const pid = await newPlayer(db);
-    for (let i = 0; i < KEYS_TO_UNLOCK - 1; i++) await db.tx((tx) => G.doAttack(tx, pid, 1, t(), always(0.5)));
+    for (let i = 0; i < 6; i++) await hit(pid);
     await expect(db.tx((tx) => G.unlockBoss(tx, pid, 2, t()))).rejects.toMatchObject({ code: "no_keys" });
-    await db.tx((tx) => G.doAttack(tx, pid, 1, t(), always(0.5)));
-    const st0 = await db.tx((tx) => G.getState(tx, pid, clock));
+    for (let i = 0; i < 3; i++) await hit(pid, 1, clock + 24 * 3_600_000 + i * 1000);
+    const day2 = clock + 24 * 3_600_000 + 10_000;
+    const st0 = await db.tx((tx) => G.getState(tx, pid, day2));
     expect(st0.bosses[1].canUnlock).toBe(true);
-    await db.tx((tx) => G.unlockBoss(tx, pid, 2, t()));
+    await db.tx((tx) => G.unlockBoss(tx, pid, 2, day2 + 1_000));
     expect(await qty(db, pid, "key-1")).toBe(0);
-    const st = await db.tx((tx) => G.getState(tx, pid, clock));
+    const st = await db.tx((tx) => G.getState(tx, pid, day2 + 2_000));
     expect(st.bosses[1].unlocked).toBe(true);
-    await expect(db.tx((tx) => G.unlockBoss(tx, pid, 3, t()))).rejects.toMatchObject({ code: "no_keys" });
   });
 
-  it("a loss uses an attempt and gives only partial xp", async () => {
+  it("weapons: only owned ones can be used and they add damage", async () => {
     const pid = await newPlayer(db);
-    await db.query("INSERT INTO player_bosses (player_id, boss_index, unlocked) VALUES ($1, 5, TRUE)", [pid]);
-    const r = await db.tx((tx) => G.doAttack(tx, pid, 5, t(), always(0.5)));
-    expect(r.win).toBe(false);
-    expect(r.key).toBeNull();
-    expect(r.attemptsLeft).toBe(ATTACKS_PER_DAY - 1);
+    const w = ITEMS.find((i) => i.kind === "weapon")!;
+    await expect(hit(pid, 1, t(), w.id)).rejects.toMatchObject({ code: "no_item" });
+    await db.query("INSERT INTO inventory (player_id, item_type, item_id, quantity) VALUES ($1,'item',$2,1)", [pid, w.id]);
+    const r = await hit(pid, 1, t(), w.id);
+    expect(r.dmg).toBe((100 + (w.power ?? 0)) * DAMAGE_MULT);
+    const st = await db.tx((tx) => G.getState(tx, pid, clock));
+    expect(st.weapons.map((x) => x.id)).toEqual([G.FISTS, w.id]);
   });
 });
 

@@ -4,20 +4,18 @@ import { Hero } from "../art/hero.tsx";
 import { Scene } from "../art/scene.tsx";
 import { UIcon } from "../art/icons.tsx";
 import { countdown, fmtCur } from "../ui.tsx";
-import type { BattleResult } from "../api.ts";
 
 export function HomeScreen() {
-  const { game, openSheet, setTab, act, busy, setBattle, now } = useGame();
+  const { game, openSheet, setTab, act, busy, setFight, now } = useGame();
   if (!game) return null;
   const p = game.player;
   const target = [...game.bosses].reverse().find((b) => b.unlocked && b.attemptsLeft > 0);
   const missionsReady = game.missions.filter((m) => m.done && !m.claimed).length;
   const idleFullIn = Math.max(0, game.idle.capMs - game.idle.ms);
 
-  const fight = async () => {
+  const fight = () => {
     if (!target) return setTab("boss");
-    const r = await act<BattleResult>("attack", { boss: target.index });
-    if (r) setBattle(r);
+    setFight(target.index);
   };
 
   return (
@@ -47,7 +45,7 @@ export function HomeScreen() {
           </button>
         </div>
 
-        <button className="fight-btn" onClick={fight} disabled={busy === "attack"}>
+        <button className="fight-btn" onClick={fight}>
           <span className="fight-burst" />
           <span className="fight-text comic">FIGHT<br />NOW</span>
           <span className="fight-sub">{target ? `⚔ ${target.name} · ${target.attemptsLeft}/7` : "Выбрать босса"}</span>

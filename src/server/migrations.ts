@@ -288,4 +288,34 @@ CREATE TABLE IF NOT EXISTS battles (
 CREATE INDEX IF NOT EXISTS battles_player_idx ON battles (player_id, created_at DESC);
 `,
   },
+  {
+    id: "004_shared_bosses",
+    sql: `
+CREATE TABLE IF NOT EXISTS boss_instances (
+  id BIGSERIAL PRIMARY KEY,
+  boss_index INT NOT NULL,
+  hp_max BIGINT NOT NULL,
+  hp BIGINT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'alive',
+  killer_id BIGINT REFERENCES players(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  killed_at TIMESTAMPTZ
+);
+CREATE UNIQUE INDEX IF NOT EXISTS boss_instances_alive_idx ON boss_instances (boss_index) WHERE status = 'alive';
+CREATE INDEX IF NOT EXISTS boss_instances_dead_idx ON boss_instances (boss_index, killed_at DESC) WHERE status = 'dead';
+
+CREATE TABLE IF NOT EXISTS boss_damage (
+  instance_id BIGINT NOT NULL REFERENCES boss_instances(id) ON DELETE CASCADE,
+  player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  damage BIGINT NOT NULL DEFAULT 0,
+  hits INT NOT NULL DEFAULT 0,
+  last_hit_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  reward JSONB,
+  claimed_at TIMESTAMPTZ,
+  PRIMARY KEY (instance_id, player_id)
+);
+CREATE INDEX IF NOT EXISTS boss_damage_top_idx ON boss_damage (instance_id, damage DESC);
+CREATE INDEX IF NOT EXISTS boss_damage_pending_idx ON boss_damage (player_id) WHERE reward IS NOT NULL AND claimed_at IS NULL;
+`,
+  },
 ];

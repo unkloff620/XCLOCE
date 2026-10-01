@@ -1,7 +1,7 @@
-import type { GameState } from "../server/game.ts";
+import type { BossFight, GameState } from "../server/game.ts";
 import { tg } from "./telegram.ts";
 
-export type { GameState };
+export type { BossFight, GameState };
 
 export class ApiError extends Error {
   code: string;
@@ -77,6 +77,7 @@ export const api = {
     raw<ActionResponse<R>>("/api/action", { method: "POST", body: JSON.stringify({ type, idem: crypto.randomUUID(), ...payload }) }),
   clans: (search = "") => raw<{ clans: ClanRow[] }>(`/api/clans?search=${encodeURIComponent(search)}`),
   clan: (id: number) => raw<{ clan: ClanDetails | null }>(`/api/clans?id=${id}`),
+  boss: (index: number) => raw<{ fight: BossFight; state: GameState | null }>(`/api/boss?index=${index}`),
   feed: () => raw<{ items: FeedItem[]; top: TopRow[] }>("/api/feed", {}, false),
 };
 
@@ -86,7 +87,11 @@ export interface ClanDetails { id: number; name: string; tag: string; descriptio
 export interface FeedItem { id: number; kind: string; text: string; created_at: string }
 export interface TopRow { id: number; name: string; photo_url: string | null; level: number; power: number; tag: string | null }
 
-export interface BattleResult {
-  bossIndex: number; power: number; hp: number; win: boolean; total: number; hits: { dmg: number; crit: boolean }[];
-  attemptsLeft: number; reward: { currency: string; amount: number } | null; xp: number; powerGained: number; key: string | null; items: string[];
+export interface KillReward {
+  bossIndex: number; bossName: string; currency: string; amount: number; key: boolean; killer: boolean;
+  damage: number; share: number; xp: number; power: number; items: string[];
+}
+export interface HitResult {
+  bossIndex: number; weapon: string; power: number; dmg: number; crit: boolean; hp: number; hpMax: number;
+  killed: boolean; xp: number; attemptsLeft: number; kill: KillReward | null;
 }
