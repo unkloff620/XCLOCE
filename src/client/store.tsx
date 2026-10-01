@@ -4,7 +4,8 @@ import { api, ApiError, login, type ActionResponse, type FeedItem, type GameStat
 import { haptic, initTelegram } from "./telegram.ts";
 import { bossMarketCap } from "../shared/economy.ts";
 
-export type Tab = "home" | "market" | "boss" | "bag" | "top";
+export type Tab = "home" | "market" | "boss" | "quests" | "more";
+export type MoreSection = "upgrades" | "arsenal" | "wardrobe" | "top";
 export interface Toast { id: number; kind: "ok" | "err" | "info" | "dmg"; text: string }
 export interface Celebration { index: number; name: string; rewardUsd: number; rewardXp: number; rewardItem: string | null; personalDamage: number }
 export interface DamagePop { id: number; amount: number; crit: boolean; mine: boolean }
@@ -22,8 +23,10 @@ interface Ctx {
   setTab: (t: Tab) => void;
   tokenId: string | null;
   openToken: (id: string | null) => void;
-  sheet: "exchange" | "bosses" | null;
-  openSheet: (s: "exchange" | "bosses" | null) => void;
+  sheet: "exchange" | "bosses" | "events" | null;
+  openSheet: (s: "exchange" | "bosses" | "events" | null) => void;
+  moreSection: MoreSection;
+  openMore: (s: MoreSection) => void;
   toasts: Toast[];
   toast: (kind: Toast["kind"], text: string) => void;
   celebrations: Celebration[];
@@ -59,6 +62,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [tab, setTabState] = useState<Tab>("home");
   const [tokenId, setTokenId] = useState<string | null>(null);
   const [sheet, setSheet] = useState<Ctx["sheet"]>(null);
+  const [moreSection, setMoreSection] = useState<MoreSection>("upgrades");
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [celebrations, setCelebrations] = useState<Celebration[]>([]);
   const [pops, setPops] = useState<DamagePop[]>([]);
@@ -324,6 +328,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const value: Ctx = {
     status, error, mode, game, market, feed, globalLive, live, tab, setTab, tokenId, openToken, sheet, openSheet: setSheet,
+    moreSection, openMore: (s: MoreSection) => { setMoreSection(s); setTab("more"); },
     toasts, toast, celebrations, dismissCelebration, pops, busy, run, refresh,
     refreshMarket, predictedBoss, energyNow, retry: () => setRetryN((n) => n + 1),
   };

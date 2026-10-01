@@ -1,9 +1,10 @@
 // Generates all static game art into public/assets. Run: npm run assets
 // (node --experimental-strip-types scripts/gen-assets.ts). Output is committed to the repo.
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { accessorySvg, creatureSvg, type TokenArt } from "../src/shared/art.ts";
 import { BOSS_DESIGNS, type BossEnv } from "../src/shared/bosses.ts";
+import { caption, memeBoss } from "./meme-bosses.ts";
 import { DUMP_TOOLS, EQUIPMENT } from "../src/shared/economy.ts";
 
 const OUT = join(import.meta.dirname, "..", "public", "assets");
@@ -102,13 +103,15 @@ function env(e: BossEnv): string {
   }
 }
 
+rmSync(join(OUT, "bosses"), { recursive: true, force: true });
 for (const [i, d] of BOSS_DESIGNS.entries()) {
-  const art: TokenArt = { creature: d.creature, accessory: "none", hue: 0, skin: d.skin, mood: d.mood };
-  const acc = d.accessories.map((a) => accessorySvg({ ...art, accessory: a })).join("");
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">${env(d.env)}
-<ellipse cx="200" cy="370" rx="110" ry="14" fill="#000" opacity=".35"/>
-<g transform="translate(50 80) scale(3)">${creatureSvg(art)}${acc}</g></svg>`;
-  save("bosses", `${String(i + 1).padStart(2, "0")}-${d.slug}.svg`, svg);
+  for (const hurt of [false, true]) {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">${env(d.env)}
+<ellipse cx="200" cy="378" rx="130" ry="14" fill="#000" opacity=".35"/>
+<g>${memeBoss(d.slug, hurt)}</g>${hurt ? '<rect width="400" height="400" fill="#ff0030" opacity=".12"/>' : ""}
+${caption(d.top, 52)}${caption(d.bottom, 386)}</svg>`;
+    save("bosses", `${String(i + 1).padStart(2, "0")}-${d.slug}${hurt ? "-hurt" : ""}.svg`, svg);
+  }
 }
 
 // ---------------- Dump tools ----------------
@@ -134,64 +137,7 @@ for (const t of DUMP_TOOLS) {
   save("dump-tools", `${t.id}.svg`, svg);
 }
 
-// ---------------- Rooms (one per equipment tier) ----------------
-function monitor(x: number, y: number, w: number, h: number, seed: number, color: "green" | "red" | "mixed"): string {
-  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="#0b0f18" stroke="#2c3550" stroke-width="3"/>` +
-    `<g transform="translate(${x + 3} ${y + 3}) scale(${(w - 6) / 400} ${(h - 6) / 400})">${candles(seed, color, 220, 60, 0.95)}</g>` +
-    `<rect x="${x + w / 2 - 4}" y="${y + h}" width="8" height="10" fill="#333"/>`;
-}
-const ROOM = {
-  wall: ["#2a2530", "#262a38", "#1e2236", "#181c30", "#14162a", "#101226", "#0c0b1c"],
-  floor: ["#4a3a2e", "#4a3a2e", "#3a3240", "#2a2a3a", "#22223a", "#1a1a30", "#1a1424"],
-};
-for (const eq of EQUIPMENT) {
-  const t = eq.tier;
-  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
-<defs><linearGradient id="w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${ROOM.wall[t - 1]}"/><stop offset="1" stop-color="#0a0a12"/></linearGradient>
-<linearGradient id="rgb" x1="0" x2="1"><stop offset="0" stop-color="#ff3d81"/><stop offset=".5" stop-color="#3fa7ff"/><stop offset="1" stop-color="#22e58b"/></linearGradient></defs>
-<rect width="400" height="200" fill="url(#w)"/><rect y="200" width="400" height="60" fill="${ROOM.floor[t - 1]}"/>`;
-  // window
-  s += `<rect x="290" y="30" width="80" height="70" rx="4" fill="#0e1a33" stroke="#3a3f55" stroke-width="4"/>${t >= 5 ? `<g transform="translate(290 30) scale(.2 .175)">${stars(t, 40)}</g>` : ""}<path d="M330 30v70M290 65h80" stroke="#3a3f55" stroke-width="3"/>`;
-  // posters
-  if (t >= 2) s += `<rect x="30" y="34" width="44" height="58" rx="3" fill="#ffd23f"/><g transform="translate(32 40) scale(.4)">${creatureSvg({ creature: "frog", accessory: "none", hue: 0, skin: "#5fbf4a", mood: "smug" })}</g>`;
-  if (t >= 4) s += `<rect x="86" y="30" width="40" height="40" rx="3" fill="#3fa7ff"/><text x="106" y="57" text-anchor="middle" font-size="22" font-weight="800" fill="#fff" font-family="sans-serif">₿</text>`;
-  if (t >= 6) s += `<rect x="200" y="30" width="70" height="30" rx="4" fill="#22e58b" opacity=".85"/><text x="235" y="51" text-anchor="middle" font-size="14" font-weight="800" fill="#062" font-family="sans-serif">HODL</text>`;
-  // RGB strip
-  if (t >= 3) s += `<rect x="0" y="196" width="400" height="5" fill="url(#rgb)" opacity="${0.4 + t * 0.08}"/>`;
-  // server racks
-  if (t >= 6) for (let k = 0; k < (t >= 7 ? 3 : 2); k++) {
-    const x = 330 - k * 34;
-    s += `<rect x="${x}" y="110" width="30" height="92" rx="3" fill="#15182a" stroke="#2c3550" stroke-width="2"/>` +
-      Array.from({ length: 6 }, (_, j) => `<rect x="${x + 4}" y="${116 + j * 14}" width="22" height="8" rx="1" fill="#0b0f18"/><circle cx="${x + 22}" cy="${120 + j * 14}" r="1.6" fill="${j % 2 ? "#22e58b" : "#3fa7ff"}"/>`).join("");
-  }
-  // desk
-  const deskW = [120, 150, 180, 220, 250, 260, 280][t - 1];
-  const dx = 150 - deskW / 2 + 40;
-  s += `<rect x="${dx}" y="170" width="${deskW}" height="12" rx="3" fill="${t >= 5 ? "#2b2f40" : "#7a5a3c"}"/><rect x="${dx + 8}" y="182" width="8" height="40" fill="#3a2a1e"/><rect x="${dx + deskW - 16}" y="182" width="8" height="40" fill="#3a2a1e"/>`;
-  // computers
-  const cx = dx + deskW / 2;
-  if (t === 1) {
-    s += `<path d="M${cx - 30} 168l6-34h48l6 34z" fill="#6b6f7a"/><rect x="${cx - 21}" y="138" width="42" height="26" fill="#101828"/><path d="M${cx - 16} 158l10-8 8 4 12-12" stroke="#22e58b" stroke-width="2" fill="none"/><rect x="${cx - 36}" y="166" width="72" height="5" rx="2" fill="#4a4f5c"/>`;
-    s += `<rect x="${cx + 44}" y="152" width="12" height="16" rx="2" fill="#c9a86a"/>`; // instant noodles
-  } else {
-    const n = [0, 1, 1, 3, 3, 4, 6][t - 1];
-    const mw = t >= 6 ? 50 : 60;
-    for (let k = 0; k < n; k++) {
-      const row = t >= 7 && k >= 3 ? 1 : 0;
-      const col = row ? k - 3 : k;
-      const count = row ? n - 3 : Math.min(n, 3);
-      const x = cx - (count * (mw + 6)) / 2 + col * (mw + 6);
-      s += monitor(x, 118 - row * 46, mw, 38, t * 10 + k, k % 3 === 1 ? "red" : "green");
-    }
-    if (t >= 3) s += `<rect x="${dx + deskW - 30}" y="120" width="22" height="50" rx="3" fill="#15182a" stroke="url(#rgb)" stroke-width="2"/>`;
-    s += `<rect x="${cx - 26}" y="164" width="52" height="6" rx="2" fill="#2a2e3a"/>`;
-  }
-  // chair
-  s += `<path d="M${cx - 18} 236h36M${cx} 236v-24" stroke="#222" stroke-width="5"/><rect x="${cx - 20}" y="186" width="40" height="28" rx="8" fill="${t >= 4 ? "#e63946" : "#444"}"/>`;
-  if (t >= 7) s += `<g transform="translate(20 140) scale(.6)">${creatureSvg({ creature: "fish", accessory: "none", hue: 0, skin: "#46a8e0", mood: "smug" })}${accessorySvg({ creature: "fish", accessory: "crown", hue: 0, skin: "#46a8e0", mood: "smug" })}</g>`;
-  s += `</svg>`;
-  save("rooms", `room-${t}-${eq.id}.svg`, s);
-}
+rmSync(join(OUT, "rooms"), { recursive: true, force: true }); // rooms are rendered live by src/client/room/Room.tsx
 
 // ---------------- Currency icons ----------------
 const CUR: Record<string, string> = {

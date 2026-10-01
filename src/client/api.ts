@@ -1,6 +1,7 @@
 import type { GameState } from "../server/game.ts";
 import type { TokenPublic } from "../server/market.ts";
 import { tg } from "./telegram.ts";
+import type { Reward } from "../shared/retention.ts";
 
 export type { GameState, TokenPublic };
 
@@ -110,6 +111,9 @@ export const api = {
   buyTool: (toolId: string) => raw<ActionResponse<unknown>>("/api/shop", { method: "POST", body: JSON.stringify({ kind: "tool", toolId, idem: idem() }) }),
   equip: (toolId: string) => raw<ActionResponse<unknown>>("/api/equip", { method: "POST", body: JSON.stringify({ toolId }) }),
   tutorial: (action: "boss_opened" | "skip") => raw<ActionResponse<unknown>>("/api/tutorial", { method: "POST", body: JSON.stringify({ action }) }),
+  claimDaily: () => raw<ActionResponse<{ day: number; reward: Reward }>>("/api/retention", { method: "POST", body: JSON.stringify({ action: "daily" }) }),
+  claimQuest: (questId: string) => raw<ActionResponse<{ questId: string; reward: Reward }>>("/api/retention", { method: "POST", body: JSON.stringify({ action: "quest", questId }) }),
+  wear: (cosmeticId: string) => raw<ActionResponse<{ cosmeticId: string; bought: boolean }>>("/api/retention", { method: "POST", body: JSON.stringify({ action: "wear", cosmeticId }) }),
   bosses: () => raw<{ current: number; bosses: BossListItem[] }>("/api/bosses"),
   leaderboard: (type: string) => raw<{ title: string; money: boolean; rows: LeaderRow[] }>(`/api/leaderboard?type=${type}`, {}, false),
   feed: () => raw<{ items: FeedItem[]; globalTotal: number }>("/api/feed", {}, false),

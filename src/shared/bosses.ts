@@ -1,4 +1,3 @@
-import type { Accessory, Creature } from "./art.ts";
 import { bossMarketCap, bossRewardRate, bossRewardXp, BOSS_TOOL_DROPS } from "./economy.ts";
 
 export type BossEnv =
@@ -10,27 +9,29 @@ export interface BossDesign {
   name: string;
   title: string;
   description: string;
-  creature: Creature;
-  skin: string;
-  mood: "smug" | "happy" | "sad" | "angry";
-  accessories: Accessory[];
+  /** meme-macro captions drawn on the boss art */
+  top: string;
+  bottom: string;
   env: BossEnv;
 }
 
-/** 12 hand-designed bosses. After #12 the cycle repeats as harder "remixes" (II, III, …). */
+/**
+ * 12 original meme bosses (crypto-meme archetypes, not copies of existing meme characters).
+ * After #12 the cycle repeats as harder "remixes" (II, III, …) with a hue shift.
+ */
 export const BOSS_DESIGNS: BossDesign[] = [
-  { slug: "pond-prophet", name: "Pond Prophet", title: "Пророк из болота", description: "Сидит на листе кувшинки и знает, когда пампить. Почти всегда ошибается.", creature: "frog", skin: "#5fbf4a", mood: "smug", accessories: ["none"], env: "swamp" },
-  { slug: "bagholder-hammy", name: "Bagholder Hammy", title: "Держатель мешков", description: "Купил на хаях, держит до последнего. Щёки набиты токенами, которые уже ничего не стоят.", creature: "hamster", skin: "#e8b27f", mood: "sad", accessories: ["headband"], env: "redchart" },
-  { slug: "shiba-shogun", name: "Shiba Shogun", title: "Сёгун мемкоинов", description: "Командует армией сиба-холдеров. Меч из чистого хайпа.", creature: "dog", skin: "#e3a857", mood: "angry", accessories: ["headband"], env: "dojo" },
-  { slug: "banana-bandit", name: "Banana Bandit", title: "Банановый кот-налётчик", description: "Ворует ликвидность прямо из пулов. Пахнет бананами.", creature: "cat", skin: "#f4d27a", mood: "smug", accessories: ["shades"], env: "jungle" },
-  { slug: "moon-ape", name: "Moon Ape", title: "Обезьяна на Луне", description: "Обещал всем луну. Улетел туда один.", creature: "ape", skin: "#7a5236", mood: "happy", accessories: ["shades", "chain"], env: "moon" },
-  { slug: "bear-baron", name: "Bear Market Baron", title: "Барон медвежьего рынка", description: "Каждый его рёв минус десять процентов к портфелю.", creature: "bear", skin: "#8b5a3c", mood: "angry", accessories: ["crown"], env: "storm" },
-  { slug: "laser-pigeon", name: "Laser Pigeon", title: "Голубь с лазерами", description: "Гадит красными свечами на весь город.", creature: "pigeon", skin: "#8f9bb3", mood: "angry", accessories: ["laser"], env: "city" },
-  { slug: "troll-whale", name: "Troll Whale", title: "Кит-тролль", description: "Одна его сделка двигает весь рынок. Смеётся над твоим стопом.", creature: "fish", skin: "#46a8e0", mood: "smug", accessories: ["crown"], env: "ocean" },
-  { slug: "rug-wizard", name: "Rug Wizard", title: "Ковровый маг", description: "Вытягивает ковры из-под ног инвесторов силой мысли.", creature: "alien", skin: "#b48cf2", mood: "smug", accessories: ["halo"], env: "rug" },
-  { slug: "hamster-ceo", name: "Hamster CEO", title: "Хомяк-гендиректор", description: "Раздаёт обещания вместо дивидендов. Золотая цепь куплена на твои деньги.", creature: "hamster", skin: "#d79c66", mood: "smug", accessories: ["chain", "shades"], env: "office" },
-  { slug: "gas-goblin", name: "Gas Fee Goblin", title: "Гоблин комиссий", description: "Берёт свою долю с каждой транзакции. И с этой тоже.", creature: "alien", skin: "#8be36a", mood: "angry", accessories: ["cap"], env: "gas" },
-  { slug: "meme-king", name: "MEME KING", title: "Король мемов", description: "Правит всеми чартами. Собрал мемы со всего интернета в одну корону.", creature: "duck", skin: "#ffd23f", mood: "smug", accessories: ["crown", "chain", "laser"], env: "throne" },
+  { slug: "bagholder", name: "BAGHOLDER", title: "Купил на хаях", description: "Купил на самом пике и держит до последнего. Мешки тяжелеют с каждой свечой.", top: "BOUGHT THE TOP", bottom: "STILL HOLDING", env: "redchart" },
+  { slug: "copium-hamster", name: "COPIUM HAMSTER", title: "Дышит копиумом", description: "Сидит на копиуме с первого дампа. Уверен, что отскок вот-вот.", top: "IT WILL BOUNCE", bottom: "TRUST ME BRO", env: "storm" },
+  { slug: "wen-lambo", name: "WEN LAMBO", title: "Пёс в игрушечной ламбе", description: "Спрашивает «когда ламба» в каждом чате. Пока ездит на пластиковой.", top: "WEN LAMBO?", bottom: "SER PLS", env: "city" },
+  { slug: "paper-cat", name: "PAPER HANDS CAT", title: "Бумажные лапки", description: "Продал на −2%. Через час токен сделал ×5. Злится на весь рынок.", top: "SOLD AT -2%", bottom: "IT PUMPED +400%", env: "jungle" },
+  { slug: "laser-ape", name: "LASER APE", title: "Обезьяна с лазерами", description: "Поставил лазерные глаза и обещает сотку к Новому году.", top: "100K BY NEW YEAR", bottom: "(WHICH YEAR?)", env: "moon" },
+  { slug: "bear-baron", name: "BEAR BARON", title: "Барон медвежьего рынка", description: "Каждый его рёв — минус десять процентов к портфелю.", top: "JUST A CORRECTION", bottom: "-90%", env: "storm" },
+  { slug: "rug-wizard", name: "RUG WIZARD", title: "Ковровый маг", description: "Одним движением вытягивает ликвидность из-под ног инвесторов.", top: "TRUST THE DEV", bottom: "DEV LEFT THE CHAT", env: "rug" },
+  { slug: "gas-goblin", name: "GAS GOBLIN", title: "Гоблин комиссий", description: "Берёт свою долю с каждой транзакции. И с этой тоже.", top: "SWAP $5", bottom: "FEE: $80", env: "gas" },
+  { slug: "chart-astrologer", name: "CHART ASTROLOGER", title: "Астролог графиков", description: "Рисует линии на графике и сверяет их со звёздами.", top: "MERCURY RETROGRADE", bottom: "= BEARISH", env: "moon" },
+  { slug: "troll-whale", name: "TROLL WHALE", title: "Кит-тролль", description: "Двигает рынок одним плавником и смеётся над твоим стопом.", top: "MOVED 1 COIN", bottom: "MARKET: -20%", env: "ocean" },
+  { slug: "fomo-duck", name: "FOMO DUCK", title: "Утка на FOMO", description: "Заходит на самом верху, потому что «все уже купили».", top: "EVERYONE IS BUYING", bottom: "ME: ALL IN", env: "office" },
+  { slug: "meme-king", name: "MEME KING", title: "Король мемов", description: "Правит всеми чартами. Собрал корону из мемов всего интернета.", top: "BOW TO THE KING", bottom: "OF ALL MEMES", env: "throne" },
 ];
 
 const ROMAN = ["", "", " II", " III", " IV", " V", " VI", " VII", " VIII", " IX", " X"];
@@ -41,6 +42,7 @@ export interface BossInfo {
   title: string;
   description: string;
   image: string;
+  imageHurt: string;
   hueShift: number;
   marketCap: number;
   rewardUsdFull: number;
@@ -60,6 +62,7 @@ export function bossInfo(index: number): BossInfo {
     title: d.title,
     description: d.description,
     image: `/assets/bosses/${String(((index - 1) % BOSS_DESIGNS.length) + 1).padStart(2, "0")}-${d.slug}.svg`,
+    imageHurt: `/assets/bosses/${String(((index - 1) % BOSS_DESIGNS.length) + 1).padStart(2, "0")}-${d.slug}-hurt.svg`,
     hueShift: (cycle - 1) * 55,
     marketCap: mcap,
     rewardRate: bossRewardRate(index),
