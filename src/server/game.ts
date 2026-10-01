@@ -144,7 +144,7 @@ async function idempotent<T>(tx: Queryable, playerId: number, key: string | unde
     "INSERT INTO actions (player_id, idem_key, kind, token_id, amount, price, usd_value, result) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
     [playerId, key, kind, meta?.tokenId ?? null, meta?.amount ?? null, meta?.price ?? null, meta?.usd ?? null, JSON.stringify(result)],
   );
-  return result;
+  return result as T & { replay?: boolean };
 }
 
 // ---------------- Actions ----------------

@@ -76,8 +76,9 @@ describe("trading loop (tutorial path)", () => {
     const pid = await newPlayer(db);
     await fundSol(pid);
     await db.tx((tx) => doBuy(tx, pid, "bcat", 0.3, "b", tick()));
-    await db.query("UPDATE players SET energy = 0, energy_updated_at = $2 WHERE id = $1", [pid, new Date(clock + 1)]);
-    await expect(db.tx((tx) => doSell(tx, pid, "bcat", 1, "s", clock + 2))).rejects.toMatchObject({ code: "no_energy" });
+    const t = clock + 2_000;
+    await db.query("UPDATE players SET energy = 0, energy_updated_at = $2 WHERE id = $1", [pid, new Date(t - 1)]);
+    await expect(db.tx((tx) => doSell(tx, pid, "bcat", 1, "s", t))).rejects.toMatchObject({ code: "no_energy" });
   });
 
   it("only owned tools can be equipped; bought tools modify damage", async () => {
