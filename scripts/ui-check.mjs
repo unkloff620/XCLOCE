@@ -32,12 +32,31 @@ for (const width of [320, 390]) {
     const txt = document.querySelector(".energy-txt");
     return { textFits: txt.scrollWidth <= txt.clientWidth + 1, text: txt.textContent, navArt: document.querySelectorAll(".nav-art").length, panelArt: document.querySelectorAll(".panel-art").length, banner: !!document.querySelector(".boss-banner") };
   });
+  // money: one currency, dropdown switches it
+  const money0 = await page.locator(".money-main").textContent();
+  await page.locator(".money-main").click();
+  await page.waitForTimeout(300);
+  const rows = await page.locator(".money-row").count();
+  const listBox = await page.evaluate(() => { const b = document.querySelector(".money-list").getBoundingClientRect(); return { right: Math.round(innerWidth - b.right), left: Math.round(b.left) }; });
+  await page.locator(".money-row", { hasText: "SOL" }).click();
+  await page.waitForTimeout(400);
+  const money = { before: money0, rows, listBox, after: await page.locator(".money-main").textContent(), listClosed: (await page.locator(".money-list").count()) === 0 };
+  await page.reload({ waitUntil: "networkidle" });
+  await page.waitForTimeout(1200);
+  money.afterReload = await page.locator(".money-main").textContent();
+  // exchange only from the Exchange button on Home
+  await page.locator(".side-btn", { hasText: "Exchange" }).click();
+  await page.waitForTimeout(400);
+  const exchange = await page.evaluate(() => ({ title: document.querySelector(".sheet-head h3")?.textContent, form: !!document.querySelector(".sheet .cur-pick"), rates: document.querySelectorAll(".ex-rate").length }));
+  await shot("exchange");
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(200);
   // shop must be centered
   await page.locator(".side-btn", { hasText: "Магазин" }).click();
   await page.waitForTimeout(500);
   const shop = await page.evaluate(() => {
     const b = document.querySelector(".sheet").getBoundingClientRect();
-    return { centerDy: Math.round(b.top + b.height / 2 - innerHeight / 2), top: Math.round(b.top), bottom: Math.round(innerHeight - b.bottom) };
+    return { centerDy: Math.round(b.top + b.height / 2 - innerHeight / 2), noExchangeTab: ![...document.querySelectorAll(".tabs button")].some((x) => x.textContent === "Обмен") };
   });
   await shot("shop");
   await page.keyboard.press("Escape");
@@ -77,7 +96,7 @@ for (const width of [320, 390]) {
   await page.waitForTimeout(800);
   const home = await page.evaluate(() => ({ fightClosed: !document.querySelector(".fight-view"), banner: document.querySelector(".boss-banner")?.textContent ?? null }));
   await shot("home-banner");
-  console.log(width, JSON.stringify({ hud, shop, yard, yardItems, market, fight, flicker, home }));
+  console.log(width, JSON.stringify({ money, exchange, hud, shop, yard, yardItems, market, fight, flicker, home }));
   await page.close();
 }
 await browser.close();

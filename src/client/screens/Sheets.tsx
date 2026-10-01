@@ -9,16 +9,15 @@ import { ItemIcon } from "../art/items.tsx";
 import { UIcon, type UiIcon } from "../art/icons.tsx";
 import { Avatar, Bar, PriceTag, RARITY_LABEL, Sheet, Tabs, countdown, fmtCur, fmtNum } from "../ui.tsx";
 
-type ShopTab = "weapon" | "outfit" | "items" | "rooms" | "exchange";
+type ShopTab = "weapon" | "outfit" | "items" | "rooms";
 
 export function ShopSheet() {
   const { sheet, openSheet } = useGame();
   const [tab, setTab] = useState<ShopTab>("weapon");
   useEffect(() => {
-    if (sheet === "exchange") setTab("exchange");
     if (sheet === "rooms") setTab("rooms");
   }, [sheet]);
-  const open = sheet === "shop" || sheet === "exchange" || sheet === "rooms";
+  const open = sheet === "shop" || sheet === "rooms";
   return (
     <Sheet open={open} onClose={() => openSheet(null)} title="МАГАЗИН" wide>
       <Tabs<ShopTab>
@@ -29,15 +28,14 @@ export function ShopSheet() {
           { value: "outfit", label: "Одежда" },
           { value: "items", label: "Предметы" },
           { value: "rooms", label: "Комнаты" },
-          { value: "exchange", label: "Обмен" },
         ]}
       />
-      {tab === "exchange" ? <Exchange /> : <ShopGrid tab={tab} />}
+      <ShopGrid tab={tab} />
     </Sheet>
   );
 }
 
-function ShopGrid({ tab }: { tab: Exclude<ShopTab, "exchange"> }) {
+function ShopGrid({ tab }: { tab: ShopTab }) {
   const { game, act, busy } = useGame();
   if (!game) return null;
   const list = ITEMS.filter((i) => {
@@ -77,6 +75,29 @@ function ShopGrid({ tab }: { tab: Exclude<ShopTab, "exchange"> }) {
         );
       })}
     </div>
+  );
+}
+
+/** The only place to swap currencies: opened by the Exchange button on the main screen. */
+export function ExchangeSheet() {
+  const { sheet, openSheet, game, now } = useGame();
+  if (!game) return null;
+  const rub = (c: Currency) => exchangeQuote(c, "RUB", 1, now).rate;
+  return (
+    <Sheet open={sheet === "exchange"} onClose={() => openSheet(null)} title="EXCHANGE">
+      <div className="ex-rates">
+        {CURRENCIES.map((c) => (
+          <div key={c} className="ex-rate">
+            <UIcon name={c.toLowerCase() as UiIcon} size={22} />
+            <div className="minw0">
+              <b>{fmtCur(game.balances[c], c)}</b>
+              <small className="muted">{c === "RUB" ? "базовая" : `1 ${c} = ${fmtNum(rub(c))} ₽`}</small>
+            </div>
+          </div>
+        ))}
+      </div>
+      <Exchange />
+    </Sheet>
   );
 }
 

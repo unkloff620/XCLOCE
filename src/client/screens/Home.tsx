@@ -26,6 +26,7 @@ export function HomeScreen() {
           <SideBtn icon="scroll" skin="side-missions" label="Задания" dot={missionsReady > 0} onClick={() => openSheet("missions")} />
           <SideBtn icon="trophy" skin="side-events" label="Ивенты" dot={game.weekend} onClick={() => openSheet("events")} />
           <SideBtn icon="shop" skin="side-shop" label="Магазин" onClick={() => openSheet("shop")} />
+          <SideBtn icon="exchange" skin="side-exchange" label="Exchange" onClick={() => openSheet("exchange")} />
         </div>
         <div className="side right">
           <button className="poster" onClick={() => openSheet("rooms")}>

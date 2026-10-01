@@ -1,14 +1,15 @@
 "use client";
 import { useGame, type Tab } from "./store.tsx";
 import { AnimatedNumber, Avatar, fmtNum } from "./ui.tsx";
-import { UIcon, type UiIcon } from "./art/icons.tsx";
+import { useEffect, useRef, useState } from "react";
+import { CUR_ICON, UIcon, type UiIcon } from "./art/icons.tsx";
+import { CURRENCIES, type Currency } from "../shared/economy.ts";
 import { CellArt, NavArt, PanelArt } from "./art/hudart.tsx";
 
 export function TopHud() {
   const { game, energyNow, openSheet, nextEnergyIn } = useGame();
   if (!game) return null;
   const p = game.player;
-  const b = game.balances;
   return (
     <header className="hud">
       <button className="hud-panel hud-profile" onClick={() => openSheet("profile")} aria-label="Профиль">
@@ -34,17 +35,63 @@ export function TopHud() {
           <span className="energy-txt">⚡{Math.floor(energyNow)}/{p.maxEnergy}</span>
         </button>
       </div>
-      <div className="hud-panel hud-money">
-        <PanelArt variant="money" />
-        {(["RUB", "USD", "SOL", "BTC"] as const).map((c) => (
-          <button key={c} className="money" onClick={() => openSheet("exchange")} aria-label={`${c} — обменник`}>
-            <CellArt cur={c} />
-            <UIcon name={c.toLowerCase() as UiIcon} size={16} />
-            <b><AnimatedNumber value={b[c]} format={(v) => (c === "BTC" ? v.toFixed(4) : c === "SOL" && v < 100 ? v.toFixed(2) : fmtNum(v))} /></b>
-          </button>
-        ))}
-      </div>
+      <MoneyPanel />
     </header>
+  );
+}
+
+const CUR_KEY = "xcloce_hud_currency";
+const fmtBal = (c: Currency, v: number) => (c === "BTC" ? v.toFixed(5) : c === "SOL" ? v.toFixed(2) : fmtNum(v));
+
+/** HUD money: shows one chosen currency (RUB by default); tap opens the list of all balances to pick another. */
+function MoneyPanel() {
+  const { game } = useGame();
+  const [cur, setCur] = useState<Currency>("RUB");
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(CUR_KEY) as Currency | null;
+      if (saved && CURRENCIES.includes(saved)) setCur(saved);
+    } catch {
+      /* storage unavailable — keep RUB */
+    }
+  }, []);
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: PointerEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, [open]);
+  if (!game) return null;
+  const b = game.balances;
+  const pick = (c: Currency) => {
+    setCur(c);
+    setOpen(false);
+    try { localStorage.setItem(CUR_KEY, c); } catch { /* ignore */ }
+  };
+  return (
+    <div className="hud-panel hud-money" ref={ref}>
+      <PanelArt variant="money" />
+      <button className="money money-main" onClick={() => setOpen((o) => !o)} aria-haspopup="listbox" aria-expanded={open} aria-label={`Баланс ${cur}, выбрать валюту`}>
+        <CellArt cur={cur} />
+        <UIcon name={CUR_ICON[cur]} size={20} />
+        <b><AnimatedNumber key={cur} value={b[cur]} format={(v) => fmtBal(cur, v)} /></b>
+        <span className={`caret ${open ? "up" : ""}`}>▾</span>
+      </button>
+      {open && (
+        <div className="money-list" role="listbox" aria-label="Валюты">
+          {CURRENCIES.map((c) => (
+            <button key={c} role="option" aria-selected={c === cur} className={`money money-row ${c === cur ? "on" : ""}`} onClick={() => pick(c)}>
+              <CellArt cur={c} />
+              <UIcon name={CUR_ICON[c]} size={18} />
+              <span className="money-code">{c}</span>
+              <b>{fmtBal(c, b[c])}</b>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
