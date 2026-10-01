@@ -78,7 +78,7 @@ export interface CosmeticDef {
   variant?: string;
 }
 export const COSMETICS: CosmeticDef[] = [
-  { id: "hoodie-black", slot: "hoodie", name: "Чёрное худи", price: 0, currency: "RUB", unlockLevel: 1, color: "#22252e" },
+  { id: "hoodie-black", slot: "hoodie", name: "Чёрное худи", price: 0, currency: "RUB", unlockLevel: 1, color: "#2c3142" },
   { id: "hoodie-grey", slot: "hoodie", name: "Серое худи", price: 6_000, currency: "RUB", unlockLevel: 1, color: "#6b7080" },
   { id: "hoodie-green", slot: "hoodie", name: "Худи «Green Candle»", price: 15_000, currency: "RUB", unlockLevel: 2, color: "#159a5c" },
   { id: "hoodie-red", slot: "hoodie", name: "Худи «Liquidation»", price: 15_000, currency: "RUB", unlockLevel: 2, color: "#b3283c" },
