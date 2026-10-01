@@ -7,7 +7,7 @@ import { CURRENCIES } from "../../../shared/economy.ts";
 import { SLOTS } from "../../../shared/items.ts";
 
 const TYPES = [
-  "task", "location_claim", "fight_start", "fight_hit", "fight_claim", "fight_flee", "rename", "unlock", "idle", "workplace", "theme", "buy", "equip", "unequip", "use", "exchange",
+  "task", "location_claim", "fight_start", "fight_hit", "fight_claim", "fight_flee", "rename", "unlock", "yard_pick", "workplace", "theme", "buy", "equip", "unequip", "use", "exchange",
   "daily", "mission", "clan_create", "clan_disband", "clan_request", "clan_cancel", "clan_accept", "clan_reject", "clan_kick", "clan_leave",
 ] as const;
 
@@ -25,7 +25,7 @@ export const POST = authedRoute("action", async ({ db, body, playerId: pid }) =>
       case "fight_flee": return G.fleeFight(tx, pid);
       case "rename": return G.renamePlayer(tx, pid, str(body.name, "name", 64));
       case "unlock": return G.unlockBoss(tx, pid, num(body.boss, "boss"));
-      case "idle": return G.claimIdle(tx, pid);
+      case "yard_pick": return G.yardPick(tx, pid, num(body.slot, "slot"));
       case "workplace": return G.buyWorkplace(tx, pid, num(body.tier, "tier"));
       case "theme": return G.setTheme(tx, pid, str(body.itemId, "itemId", 40));
       case "buy": return G.shopBuy(tx, pid, str(body.itemId, "itemId", 40), idem);

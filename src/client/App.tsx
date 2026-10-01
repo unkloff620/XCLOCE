@@ -2,14 +2,15 @@
 import { GameProvider, useGame } from "./store.tsx";
 import { BottomNav, Toasts, TopHud } from "./hud.tsx";
 import { HomeScreen } from "./screens/Home.tsx";
-import { BossScreen, FightScreen, VictoryModal } from "./screens/Boss.tsx";
+import { BossScreen, FightScreen, ResultModal } from "./screens/Boss.tsx";
+import { YardScreen } from "./screens/Yard.tsx";
 import { MarketScreen } from "./screens/Market.tsx";
 import { InventoryScreen, ItemSheet } from "./screens/Inventory.tsx";
 import { SocialScreen } from "./screens/Social.tsx";
 import { DailySheet, EventsSheet, MissionsSheet, ProfileSheet, ShopSheet, UpgradeSheet } from "./screens/Sheets.tsx";
 
 function Shell() {
-  const { status, error, tab, retry, mode } = useGame();
+  const { status, error, tab, retry, mode, fight, yard } = useGame();
   if (status !== "ready") {
     return (
       <div className="splash">
@@ -29,7 +30,7 @@ function Shell() {
     <div className="app">
       <TopHud />
       <main className="content">
-        {tab === "home" ? <HomeScreen /> : tab === "boss" ? <BossScreen /> : tab === "market" ? <MarketScreen /> : tab === "inventory" ? <InventoryScreen /> : <SocialScreen />}
+        {fight !== null ? <FightScreen /> : yard ? <YardScreen /> : tab === "home" ? <HomeScreen /> : tab === "boss" ? <BossScreen /> : tab === "market" ? <MarketScreen /> : tab === "inventory" ? <InventoryScreen /> : <SocialScreen />}
         {mode === "guest" && <div className="guest-note">Гостевой режим. Откройте игру в Telegram, чтобы прогресс сохранился в аккаунте.</div>}
       </main>
       <BottomNav />
@@ -40,8 +41,7 @@ function Shell() {
       <UpgradeSheet />
       <ProfileSheet />
       <ItemSheet />
-      <FightScreen />
-      <VictoryModal />
+      <ResultModal />
       <Toasts />
     </div>
   );

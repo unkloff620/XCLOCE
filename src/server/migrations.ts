@@ -366,4 +366,19 @@ ALTER TABLE players ADD COLUMN IF NOT EXISTS name_changed_at TIMESTAMPTZ;
 CREATE UNIQUE INDEX IF NOT EXISTS players_display_name_idx ON players (lower(display_name)) WHERE display_name IS NOT NULL;
 `,
   },
+  {
+    id: "006_consumable_weapons_yard",
+    sql: `
+-- weapons are consumables now: nothing is equipped in the weapon slot
+UPDATE players SET loadout = loadout - 'weapon' WHERE loadout ? 'weapon';
+CREATE TABLE IF NOT EXISTS yard_pickups (
+  player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  slot BIGINT NOT NULL,
+  item TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (player_id, slot)
+);
+CREATE INDEX IF NOT EXISTS yard_pickups_day_idx ON yard_pickups (player_id, created_at);
+`,
+  },
 ];

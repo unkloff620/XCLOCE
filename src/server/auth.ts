@@ -60,7 +60,7 @@ export function signInitData(fields: Record<string, string>, botToken: string): 
 // ---------------- Session tokens ----------------
 const SESSION_TTL_S = 7 * 24 * 3600;
 
-function sessionSecret(): string {
+export function sessionSecret(): string {
   if (process.env.SESSION_SECRET) return process.env.SESSION_SECRET;
   const base = process.env.TELEGRAM_BOT_TOKEN || process.env.DATABASE_URL || process.env.POSTGRES_URL || "xcloce-local-dev";
   return createHash("sha256").update("xcloce-session:" + base).digest("hex");

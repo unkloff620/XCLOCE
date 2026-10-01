@@ -1,10 +1,11 @@
-import { randomInt } from "node:crypto";
+import { createHmac, randomInt } from "node:crypto";
 import { GameError, type Queryable } from "./db.ts";
 import { addXp } from "./xp.ts";
 import { log } from "./log.ts";
-import type { TelegramUser } from "./auth.ts";
+import { sessionSecret, type TelegramUser } from "./auth.ts";
 import {
-  ATTACKS_PER_DAY, CURRENCIES, ENERGY_BASE_MAX, ENERGY_REGEN_MS, IDLE_CAP_MS, KEYS_TO_UNLOCK, RENAME_COOLDOWN_MS, START_BALANCES, WORKPLACE,
+  ATTACKS_PER_DAY, CURRENCIES, ENERGY_BASE_MAX, ENERGY_REGEN_MS, FIGHT_DURATION_MS, KEYS_TO_UNLOCK, RENAME_COOLDOWN_MS, START_BALANCES, WORKPLACE,
+  YARD_DAILY_LIMIT, YARD_SLOT_MS, YARD_TTL_SLOTS,
   computePower, dayKey, exchangeQuote, nextDayStart, roundCur, usdRates, workplace, xpForNextLevel,
   type Currency, type Price,
 } from "../shared/economy.ts";
@@ -260,6 +261,7 @@ async function bossRows(tx: Queryable, pid: number) {
 }
 
 interface FightRow { id: number; boss_index: number; hp_max: number; start_hit_id: number; cooldowns: Record<string, number>; started_at: Date }
+const fightEnds = (f: FightRow) => new Date(f.started_at).getTime() + FIGHT_DURATION_MS;
 
 async function activeFight(tx: Queryable, pid: number, lock = false): Promise<FightRow | null> {
   const [f] = await tx.query<FightRow>(
@@ -269,14 +271,17 @@ async function activeFight(tx: Queryable, pid: number, lock = false): Promise<Fi
   f.cooldowns = (typeof f.cooldowns === "string" ? JSON.parse(f.cooldowns) : f.cooldowns) ?? {};
   return f;
 }
-/** Global damage dealt by all players since a fight started — it all hits that fight's boss. */
-async function damageSince(tx: Queryable, startHitId: number): Promise<number> {
-  const [r] = await tx.query<{ d: number }>("SELECT COALESCE(SUM(damage), 0)::float8 AS d FROM global_hits WHERE id > $1", [startHitId]);
+/** Global damage dealt by all players during a fight (from its start until its 8-hour end) — it all hits that fight's boss. */
+async function damageSince(tx: Queryable, f: FightRow): Promise<number> {
+  const [r] = await tx.query<{ d: number }>(
+    "SELECT COALESCE(SUM(damage), 0)::float8 AS d FROM global_hits WHERE id > $1 AND created_at <= $2", [f.start_hit_id, new Date(fightEnds(f))]);
   return r.d;
 }
-async function fightHp(tx: Queryable, f: FightRow) {
-  const total = await damageSince(tx, f.start_hit_id);
-  return { total, hp: Math.max(0, f.hp_max - total) };
+async function fightHp(tx: Queryable, f: FightRow, now = Date.now()) {
+  const total = await damageSince(tx, f);
+  const hp = Math.max(0, f.hp_max - total);
+  const endsAt = fightEnds(f);
+  return { total, hp, endsAt, won: hp <= 0, lost: hp > 0 && now > endsAt };
 }
 
 /** Starts a personal fight. One fight at a time; ATTACKS_PER_DAY fights per boss per day. */
@@ -286,6 +291,8 @@ export async function startFight(tx: Queryable, pid: number, bossIndex: number, 
   if (!boss) throw new GameError("no_boss", "Босс не найден", 404);
   const cur = await activeFight(tx, pid, true);
   if (cur) {
+    const st = await fightHp(tx, cur, now);
+    if (st.won || st.lost) throw new GameError("fight_result", "Сначала посмотри итог прошлого боя во вкладке Boss", 400);
     if (cur.boss_index === bossIndex) return { fightId: cur.id, bossIndex, already: true };
     throw new GameError("in_fight", `Сначала закончи бой с боссом #${cur.boss_index}`, 400);
   }
@@ -310,34 +317,48 @@ export async function hitFight(tx: Queryable, pid: number, weaponId: string, now
   rateLimit(p, 250, now);
   const f = await activeFight(tx, pid, true);
   if (!f) throw new GameError("no_fight", "Сначала нападай на босса", 400);
-  const before = await fightHp(tx, f);
-  if (before.hp <= 0) throw new GameError("boss_dead", "Босс уже повержен — забери награду", 400);
+  const before = await fightHp(tx, f, now);
+  if (before.won) throw new GameError("boss_dead", "Босс уже повержен — забери награду", 400);
+  if (before.lost) throw new GameError("fight_over", "Время боя вышло", 400);
   const w = weaponHit(weaponId);
   if (!w) throw new GameError("bad_weapon", "Это не оружие", 400);
-  if (weaponId !== FISTS.id && (await itemCount(tx, pid, weaponId)) < 1) throw new GameError("no_item", "Этого оружия нет в инвентаре", 400);
-  const readyAt = f.cooldowns[weaponId] ?? 0;
-  if (now < readyAt) throw new GameError("cooldown", "Оружие перезаряжается", 400);
+  let cooldowns = f.cooldowns;
+  if (weaponId === FISTS.id) {
+    if (now < (f.cooldowns[weaponId] ?? 0)) throw new GameError("cooldown", "Кулак перезаряжается", 400);
+    cooldowns = { ...f.cooldowns, [weaponId]: now + w.cooldownMin * 60_000 };
+    await tx.query("UPDATE player_fights SET cooldowns=$2 WHERE id=$1", [f.id, JSON.stringify(cooldowns)]);
+  } else {
+    // weapons are consumables: one item = one hit
+    await removeItem(tx, pid, weaponId).catch(() => { throw new GameError("no_item", "Это оружие закончилось — купи в магазине", 400); });
+  }
   const boss = bossByIndex(f.boss_index)!;
   await tx.query("INSERT INTO global_hits (player_id, boss_index, weapon, damage, created_at) VALUES ($1,$2,$3,$4,$5)", [pid, f.boss_index, weaponId, w.dmg, new Date(now)]);
-  const cooldowns = { ...f.cooldowns, [weaponId]: now + w.cooldownMin * 60_000 };
-  await tx.query("UPDATE player_fights SET cooldowns=$2 WHERE id=$1", [f.id, JSON.stringify(cooldowns)]);
   await tx.query("UPDATE player_stats SET lifetime_damage = lifetime_damage + $2 WHERE player_id=$1", [pid, w.dmg]);
   const xp = Math.max(1, Math.round(boss.xp * HIT_XP_SHARE));
   await gainXpPower(tx, pid, xp, 0);
   await bump(tx, pid, "fights", 1, now);
   await touch(tx, p, now);
-  const after = await fightHp(tx, f);
+  const after = await fightHp(tx, f, now);
   log.info("boss.hit", { player: pid, boss: f.boss_index, weapon: weaponId, dmg: w.dmg });
-  return { bossIndex: f.boss_index, weapon: weaponId, dmg: w.dmg, hp: after.hp, hpMax: f.hp_max, won: after.hp <= 0, readyAt: cooldowns[weaponId], xp };
+  return { bossIndex: f.boss_index, weapon: weaponId, dmg: w.dmg, hp: after.hp, hpMax: f.hp_max, won: after.won, readyAt: cooldowns[weaponId] ?? 0, xp };
 }
 
-/** Collects the victory reward once the boss HP reached 0 (from anyone's damage) and ends the fight. */
+/**
+ * Closes a finished fight. Victory (HP reached 0 from anyone's damage within 8 h) pays the reward;
+ * a fight whose 8 hours ran out with the boss alive is a defeat.
+ */
 export async function claimFight(tx: Queryable, pid: number, now = Date.now(), rng: () => number = rand) {
   const p = await lockPlayer(tx, pid, now);
   const f = await activeFight(tx, pid, true);
   if (!f) throw new GameError("no_fight", "Нет активного боя", 400);
-  const { hp, total } = await fightHp(tx, f);
-  if (hp > 0) throw new GameError("not_won", "Босс ещё жив", 400);
+  const { total, won, lost } = await fightHp(tx, f, now);
+  if (lost) {
+    await tx.query("UPDATE player_fights SET status='lost', ended_at=$2 WHERE id=$1", [f.id, new Date(now)]);
+    await tx.query("UPDATE player_bosses SET losses = losses + 1 WHERE player_id=$1 AND boss_index=$2", [pid, f.boss_index]);
+    const boss = bossByIndex(f.boss_index)!;
+    return { outcome: "lose" as const, bossIndex: f.boss_index, bossName: boss.name, reward: null, key: null, xp: 0, power: 0, items: [] as string[], myDamage: 0, totalDamage: Math.min(total, f.hp_max) };
+  }
+  if (!won) throw new GameError("not_won", "Босс ещё жив", 400);
   const boss = bossByIndex(f.boss_index)!;
   const [pb] = await tx.query<{ wins: number }>(
     `UPDATE player_bosses SET wins = wins + 1, first_win_at = COALESCE(first_win_at, now()) WHERE player_id=$1 AND boss_index=$2 RETURNING wins`, [pid, f.boss_index]);
@@ -352,7 +373,7 @@ export async function claimFight(tx: Queryable, pid: number, now = Date.now(), r
   await tx.query("UPDATE player_stats SET bosses_defeated = bosses_defeated + 1 WHERE player_id=$1", [pid]);
   await bump(tx, pid, "wins", 1, now);
   const [mine] = await tx.query<{ d: number }>("SELECT COALESCE(SUM(damage),0)::float8 AS d FROM global_hits WHERE id > $1 AND player_id=$2", [f.start_hit_id, pid]);
-  const result = { bossIndex: f.boss_index, bossName: boss.name, reward: boss.reward, key, xp: boss.xp, power: boss.power, items, myDamage: mine.d, totalDamage: Math.min(total, f.hp_max) };
+  const result = { outcome: "win" as const, bossIndex: f.boss_index, bossName: boss.name, reward: boss.reward as Price | null, key: key as string | null, xp: boss.xp, power: boss.power, items, myDamage: mine.d, totalDamage: Math.min(total, f.hp_max) };
   await tx.query("UPDATE player_fights SET status='won', ended_at=$2, reward=$3 WHERE id=$1", [f.id, new Date(now), JSON.stringify(result)]);
   if (pb?.wins === 1) await feed(tx, "boss", `👑 ${displayName(p)} впервые победил ${boss.name}`, pid);
   await touch(tx, p, now);
@@ -364,7 +385,8 @@ export async function fleeFight(tx: Queryable, pid: number, now = Date.now()) {
   await lockPlayer(tx, pid, now);
   const f = await activeFight(tx, pid, true);
   if (!f) throw new GameError("no_fight", "Нет активного боя", 400);
-  if ((await fightHp(tx, f)).hp <= 0) throw new GameError("already_won", "Босс уже повержен — забери награду", 400);
+  const st = await fightHp(tx, f, now);
+  if (st.won || st.lost) throw new GameError("fight_result", "Бой уже окончен — посмотри итог", 400);
   await tx.query("UPDATE player_fights SET status='fled', ended_at=$2 WHERE id=$1", [f.id, new Date(now)]);
   await tx.query("UPDATE player_bosses SET losses = losses + 1 WHERE player_id=$1 AND boss_index=$2", [pid, f.boss_index]);
   return { bossIndex: f.boss_index };
@@ -374,21 +396,73 @@ export async function fleeFight(tx: Queryable, pid: number, now = Date.now()) {
 export async function fightView(tx: Queryable, pid: number, now = Date.now()) {
   const f = await activeFight(tx, pid);
   if (!f) return null;
-  const { hp, total } = await fightHp(tx, f);
+  const { hp, total, endsAt, won, lost } = await fightHp(tx, f, now);
   const damage = await tx.query<{ id: number; name: string; photo_url: string | null; damage: number; hits: number; boss_index: number }>(
     `SELECT h.player_id AS id, ${NAME_SQL("p")} AS name, p.photo_url, SUM(h.damage)::float8 AS damage, COUNT(*)::int AS hits,
             (array_agg(h.boss_index ORDER BY h.id DESC))[1] AS boss_index
-     FROM global_hits h JOIN players p ON p.id = h.player_id WHERE h.id > $1
-     GROUP BY h.player_id, p.display_name, p.username, p.first_name, p.photo_url ORDER BY damage DESC LIMIT 30`, [f.start_hit_id]);
-  return { fightId: f.id, bossIndex: f.boss_index, hp, hpMax: f.hp_max, won: hp <= 0, total, startedAt: new Date(f.started_at).getTime(), cooldowns: f.cooldowns, damage, serverTime: now };
+     FROM global_hits h JOIN players p ON p.id = h.player_id WHERE h.id > $1 AND h.created_at <= $2
+     GROUP BY h.player_id, p.display_name, p.username, p.first_name, p.photo_url ORDER BY damage DESC, h.player_id LIMIT 30`, [f.start_hit_id, new Date(endsAt)]);
+  return { fightId: f.id, bossIndex: f.boss_index, hp, hpMax: f.hp_max, won, lost, endsAt, total, startedAt: new Date(f.started_at).getTime(), cooldowns: f.cooldowns, damage, serverTime: now };
 }
 export type FightView = NonNullable<Awaited<ReturnType<typeof fightView>>>;
 
-/** Weapons the player can hit with: fists + owned weapons, strongest first. */
-export function weaponOptions(owned: string[]) {
-  const list: { id: string; name: string; dmg: number; cooldownMin: number }[] = [{ id: FISTS.id, name: FISTS.name, ...FISTS.hit }];
-  for (const i of ITEMS) if (i.kind === "weapon" && i.hit && owned.includes(i.id)) list.push({ id: i.id, name: i.name, ...i.hit });
+/** Weapons the player can hit with: fists (always, qty = null) + weapon items in stock, strongest first. */
+export function weaponOptions(inv: { item_id: string; quantity: number }[]) {
+  const list: { id: string; name: string; dmg: number; cooldownMin: number; qty: number | null }[] = [{ id: FISTS.id, name: FISTS.name, ...FISTS.hit, qty: null }];
+  for (const i of ITEMS) {
+    const q = inv.find((x) => x.item_id === i.id)?.quantity ?? 0;
+    if (i.kind === "weapon" && i.hit && q > 0) list.push({ id: i.id, name: i.name, ...i.hit, qty: q });
+  }
   return list.sort((a, b) => b.dmg - a.dmg);
+}
+
+// ---------------- Yard: an item appears every 5 s ----------------
+export type YardKind = "beer" | "energy" | "coins" | "weapon";
+/** Deterministic item for (player, slot) — the server can verify any pickup without storing spawns. */
+export function yardItem(pid: number, slot: number) {
+  const h = createHmac("sha256", sessionSecret()).update(`yard:${pid}:${slot}`).digest();
+  const r = (i: number) => h.readUInt32BE(i) / 2 ** 32;
+  const roll = r(0);
+  const kind: YardKind = roll < 0.02 ? "weapon" : roll < 0.4 ? "beer" : roll < 0.65 ? "energy" : "coins";
+  const x = Math.round(8 + r(4) * 80);
+  const y = Math.round(52 + r(8) * 36);
+  let reward: { energy?: number; rub?: number; item?: string };
+  if (kind === "beer") reward = { energy: 5 };
+  else if (kind === "energy") reward = { energy: 15 };
+  else if (kind === "coins") reward = { rub: 10 + Math.floor(r(12) * 51) };
+  else reward = { item: r(12) < 0.7 ? "w-paper-fan" : "w-sell-club" };
+  return { slot, kind, x, y, reward };
+}
+async function yardPickedToday(tx: Queryable, pid: number, now: number) {
+  const dayStart = new Date(Date.UTC(new Date(now).getUTCFullYear(), new Date(now).getUTCMonth(), new Date(now).getUTCDate()));
+  const [r] = await tx.query<{ n: number }>("SELECT COUNT(*)::int AS n FROM yard_pickups WHERE player_id=$1 AND created_at >= $2", [pid, dayStart]);
+  return r.n;
+}
+/** Items currently lying in the yard (spawned in the last 30 s and not picked up). */
+export async function yardView(tx: Queryable, pid: number, now = Date.now()) {
+  const cur = Math.floor(now / YARD_SLOT_MS);
+  const from = cur - YARD_TTL_SLOTS + 1;
+  const picked = new Set((await tx.query<{ slot: number }>("SELECT slot::float8 AS slot FROM yard_pickups WHERE player_id=$1 AND slot >= $2", [pid, from])).map((r) => r.slot));
+  const items = [];
+  for (let s = from; s <= cur; s++) if (!picked.has(s)) items.push(yardItem(pid, s));
+  const pickedToday = await yardPickedToday(tx, pid, now);
+  return { items: pickedToday >= YARD_DAILY_LIMIT ? [] : items, pickedToday, limit: YARD_DAILY_LIMIT, slotMs: YARD_SLOT_MS, nextAt: (cur + 1) * YARD_SLOT_MS, serverTime: now };
+}
+export async function yardPick(tx: Queryable, pid: number, slot: number, now = Date.now()) {
+  const p = await lockPlayer(tx, pid, now);
+  const cur = Math.floor(now / YARD_SLOT_MS);
+  if (!Number.isInteger(slot) || slot > cur || slot <= cur - YARD_TTL_SLOTS) throw new GameError("yard_gone", "Предмет уже исчез", 400);
+  if ((await yardPickedToday(tx, pid, now)) >= YARD_DAILY_LIMIT) throw new GameError("yard_limit", "На сегодня во дворе всё собрано. Приходи завтра", 400);
+  const it = yardItem(pid, slot);
+  const ins = await tx.query("INSERT INTO yard_pickups (player_id, slot, item, created_at) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING RETURNING slot", [pid, slot, it.kind, new Date(now)]);
+  if (!ins.length) throw new GameError("yard_taken", "Уже подобрано", 400);
+  if (it.reward.energy) {
+    const max = maxEnergy(p.equipment_tier);
+    await tx.query("UPDATE players SET energy = GREATEST(energy, LEAST($2::int * 2, energy + $3)) WHERE id=$1", [pid, max, it.reward.energy]);
+  }
+  if (it.reward.rub) await credit(tx, pid, { currency: "RUB", amount: it.reward.rub });
+  if (it.reward.item) await addItem(tx, pid, it.reward.item);
+  return { slot, kind: it.kind, reward: it.reward };
 }
 
 // ---------------- Profile ----------------
@@ -420,30 +494,14 @@ export async function unlockBoss(tx: Queryable, pid: number, bossIndex: number, 
   return { bossIndex, already: false };
 }
 
-// ---------------- Home: idle, workplace, theme ----------------
-export function idleAccrued(p: Pick<PlayerRow, "equipment_tier" | "idle_claimed_at">, now: number) {
-  const ms = Math.min(IDLE_CAP_MS, Math.max(0, now - new Date(p.idle_claimed_at).getTime()));
-  const rate = workplace(p.equipment_tier).idlePerHour;
-  return { ms, amount: roundCur((rate.amount * ms) / 3_600_000, rate.currency), currency: rate.currency, full: ms >= IDLE_CAP_MS };
-}
-export async function claimIdle(tx: Queryable, pid: number, now = Date.now()) {
-  const p = await lockPlayer(tx, pid, now);
-  const a = idleAccrued(p, now);
-  if (a.amount < 1) throw new GameError("idle_empty", "Пока нечего забирать", 400);
-  await credit(tx, pid, { currency: a.currency, amount: a.amount });
-  await tx.query("UPDATE players SET idle_claimed_at=$2 WHERE id=$1", [pid, new Date(now)]);
-  return { amount: a.amount, currency: a.currency };
-}
+// ---------------- Home: workplace, theme ----------------
 export async function buyWorkplace(tx: Queryable, pid: number, tier: number, now = Date.now()) {
   const p = await lockPlayer(tx, pid, now);
   const w = WORKPLACE[tier - 1];
   if (!w || tier !== p.equipment_tier + 1 || !w.price) throw new GameError("bad_tier", "Сначала купите предыдущий уровень", 400);
   if (p.level < w.unlockLevel) throw new GameError("locked", `Откроется на уровне ${w.unlockLevel}`, 400);
-  // collect idle at the old rate first
-  const a = idleAccrued(p, now);
-  if (a.amount > 0) await credit(tx, pid, { currency: a.currency, amount: a.amount });
   await debit(tx, pid, w.price);
-  await tx.query("UPDATE players SET equipment_tier=$2, idle_claimed_at=$3 WHERE id=$1", [pid, tier, new Date(now)]);
+  await tx.query("UPDATE players SET equipment_tier=$2 WHERE id=$1", [pid, tier]);
   await recalcPower(tx, pid);
   await bump(tx, pid, "shop", 1, now);
   return { tier, name: w.name };
@@ -719,7 +777,7 @@ export async function getState(tx: Queryable, pid: number, now = Date.now()) {
   const keys = new Map(inv.filter((i) => i.item_id.startsWith("key-")).map((i) => [Number(i.item_id.slice(4)), i.quantity]));
   const power = p.power_cached;
   const fightRow = await activeFight(tx, pid);
-  const fight = fightRow ? { bossIndex: fightRow.boss_index, hpMax: fightRow.hp_max, cooldowns: fightRow.cooldowns, ...(await fightHp(tx, fightRow)) } : null;
+  const fight = fightRow ? { bossIndex: fightRow.boss_index, hpMax: fightRow.hp_max, cooldowns: fightRow.cooldowns, ...(await fightHp(tx, fightRow, now)) } : null;
   const bosses = BOSSES.map((b) => {
     const r = rows.find((x) => x.boss_index === b.index);
     const unlocked = !!r?.unlocked;
@@ -746,10 +804,9 @@ export async function getState(tx: Queryable, pid: number, now = Date.now()) {
     },
     balances,
     rates: usdRates(now),
-    idle: { ...idleAccrued(p, now), perHour: workplace(p.equipment_tier).idlePerHour, capMs: IDLE_CAP_MS },
     inventory: inv.map((i) => ({ id: i.item_id, qty: i.quantity })),
-    weapons: weaponOptions(inv.map((i) => i.item_id)),
-    fight: fight ? { ...fight, won: fight.hp <= 0 } : null,
+    weapons: weaponOptions(inv),
+    fight,
     locations: await locationProgress(tx, pid),
     bosses,
     daily: dailyStatus(daily, now),

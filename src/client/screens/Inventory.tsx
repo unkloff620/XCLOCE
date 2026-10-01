@@ -6,7 +6,7 @@ import { ItemIcon } from "../art/items.tsx";
 import { Hero } from "../art/hero.tsx";
 import { PriceTag, RARITY_LABEL, Sheet, Tabs, fmtNum } from "../ui.tsx";
 
-const SLOT_LABEL: Record<Slot, string> = { weapon: "Оружие", hat: "Голова", glasses: "Очки", jacket: "Куртка", chain: "Цепь" };
+const SLOT_LABEL: Record<Slot, string> = { hat: "Голова", glasses: "Очки", jacket: "Куртка", chain: "Цепь" };
 type Filter = "all" | "gear" | "items" | "keys";
 
 export function InventoryScreen() {
@@ -17,7 +17,7 @@ export function InventoryScreen() {
     const list = game.inventory.map((i) => ({ ...i, def: itemById(i.id) })).filter((i) => i.def);
     const f = list.filter((i) => {
       const k = i.def!.kind;
-      if (filter === "gear") return SLOTS.includes(k as Slot);
+      if (filter === "gear") return SLOTS.includes(k as Slot) || k === "weapon";
       if (filter === "keys") return k === "key";
       if (filter === "items") return k === "consumable" || k === "chest" || k === "theme";
       return true;
@@ -82,9 +82,12 @@ export function ItemSheet() {
         <span className={`rarity-chip r-${it.rarity}`}>{RARITY_LABEL[it.rarity]}</span>
         {it.power ? <span className="power-chip comic">+{it.power} ⚔</span> : null}
         {it.energy ? <span className="power-chip comic">+{it.energy} ⚡</span> : null}
+        {it.hit ? <span className="power-chip comic">💥 {fmtNum(it.hit.dmg)}</span> : null}
         {owned > 1 && <span className="muted">×{owned}</span>}
       </div>
       <p className="center">{it.description}</p>
+      {it.kind === "weapon" && <p className="small muted center">Расходник: 1 штука = 1 удар по боссу. Используется в бою с боссом.</p>}
+      {it.kind === "weapon" && it.price && <button className="btn-yellow comic" onClick={() => { close(); openSheet("shop"); }}>КУПИТЬ ЕЩЁ</button>}
       {isGear && owned > 0 && (
         equipped
           ? <button className="btn-dark comic" disabled={!!busy} onClick={() => act("unequip", { slot: it.kind }, "Снято")}>СНЯТЬ</button>
