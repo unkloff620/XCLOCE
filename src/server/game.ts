@@ -386,7 +386,7 @@ export type FightView = NonNullable<Awaited<ReturnType<typeof fightView>>>;
 
 /** Weapons the player can hit with: fists + owned weapons, strongest first. */
 export function weaponOptions(owned: string[]) {
-  const list = [{ id: FISTS.id, name: FISTS.name, ...FISTS.hit }];
+  const list: { id: string; name: string; dmg: number; cooldownMin: number }[] = [{ id: FISTS.id, name: FISTS.name, ...FISTS.hit }];
   for (const i of ITEMS) if (i.kind === "weapon" && i.hit && owned.includes(i.id)) list.push({ id: i.id, name: i.name, ...i.hit });
   return list.sort((a, b) => b.dmg - a.dmg);
 }
