@@ -33,23 +33,26 @@ Power is the character's rating (top players, clan power); hit damage is set by 
 ## Battles — personal fights, global damage
 
 - Every player fights **their own** boss (`fight_start`). One active fight at a time; **7 fights per boss per UTC day** (`ATTACKS_PER_DAY`).
+- **A fight lasts 8 hours.** If the boss still has HP after 8 h the fight is lost; hits after the end do not count.
 - **Global damage:** every hit by any player on any boss is recorded in `global_hits` and also damages every fight that was
-  active at that moment. My boss HP = boss HP − all hits since my fight started. The fight screen lists who dealt that damage.
-- **Weapons:** each tap on a weapon is one hit; every weapon has its own cooldown inside the fight. Cooldowns reset when the fight ends.
+  running at that moment. My boss HP = boss HP − all hits between my fight's start and its end. The fight screen lists who dealt that damage.
+- **Weapons are consumables** bought in the shop: one item = one hit, no cooldown. **Fists** are always available: 20 damage, 1 h recharge
+  (reset when the fight ends).
 
-| Weapon | Damage | Cooldown |
-|---|---:|---:|
-| Fists (always) | 20 | 1 h |
-| Paper fan | 40 | 1 h |
-| SELL club | 80 | 1 h |
-| Dump Hammer | 200 | 1.5 h |
-| BAN Hammer | 450 | 2 h |
-| Rug Cannon | 900 | 3 h |
-| Whale harpoon | 1,800 | 4 h |
-| Diamond Fist (drop) | 3,500 | 4 h |
+| Weapon | Damage | Price per hit |
+|---|---:|---|
+| Fists (always) | 20 | free, 1 h recharge |
+| Paper fan | 40 | 150 ₽ |
+| SELL club | 80 | 300 ₽ |
+| Dump Hammer | 200 | $8 |
+| BAN Hammer | 450 | $18 |
+| Rug Cannon | 900 | 0.25 SOL |
+| Whale harpoon | 1,800 | 0.0012 BTC |
+| Diamond Fist (drop) | 3,500 | — |
 
-- When HP reaches 0 (from anyone's damage) the **victory window** opens; "Забрать" pays the boss reward, its key, XP and power
-  (+ first-win item, chest chance) and returns to the boss list. "Сбежать" ends the fight without reward.
+- When the fight is over, opening the **Boss** tab shows the **victory** window (reward, key, XP, power, first-win item, chest chance)
+  or the **defeat** window; closing it returns to the boss list. "Сбежать" ends the fight without reward.
+- Home shows an **active boss banner** (boss art, name, HP left, time left) instead of FIGHT NOW; no banner without a fight.
 - **Boss #1 is always open. 3 keys of boss N unlock boss N+1** (keys are consumed).
 
 | # | Boss | HP | — | Reward | Power per win |
@@ -75,13 +78,19 @@ finishing a task gives power. When all 5 tasks are done the **location reward wi
 the next location unlocks, and the location's tasks reset so it can be replayed.
 Locations: Мамкин подвал → Крипто-чат → Офис биржи → Майнинг-ферма → Луна (rewards grow from ₽ to BTC).
 
+## Yard (Двор)
+
+Home → «Двор». Every 5 s an item appears in the courtyard and lies for 30 s: beer (+5⚡, 38%), energy drink (+15⚡, 25%),
+small change (10–60 ₽, 35%), rarely a weapon (2%: paper fan / SELL club). Items are deterministic per player and 5-second slot
+(HMAC), so the server verifies every pickup; limit 100 pickups per UTC day.
+
 ## Profile
 
 Tap the avatar (top-left) to change the nickname: 3–16 chars (letters, digits, space, `_ . -`), unique, once per 24 h.
 
 ## Home
 
-- Workplace tiers 1–6: idle income 400 → 26,000 ₽/h, +0…900 power, +0…60 max energy. Idle income accumulates up to 8 h, claimed with CLAIM.
+- Workplace tiers 1–6: +0…900 power, +0…60 max energy. (Passive hourly income was removed.)
 - Room themes (shop): default, neon city, moon base, whale penthouse.
 - Login reward: 7-day streak (₽, energy drink, $, chest, SOL, mega drink); claim every 20 h, streak resets after 48 h.
 - Daily missions (6): login, 5 task steps, spend 100⚡, 3 boss hits, 1 boss win, 1 purchase.

@@ -33,15 +33,17 @@ tests/        game.test.ts (fights, global damage, cooldowns, keys, locations, r
 
 ## API
 
-`POST /api/action {type, …}` — types: task, location_claim, fight_start, fight_hit, fight_claim, fight_flee, rename, unlock, idle, workplace, theme, buy, equip, unequip, use, exchange, daily, mission,
+`POST /api/action {type, …}` — types: task, location_claim, fight_start, fight_hit, fight_claim, fight_flee, rename, unlock, yard_pick, workplace, theme, buy, equip, unequip, use, exchange, daily, mission,
 clan_create, clan_disband, clan_request, clan_cancel, clan_accept, clan_reject, clan_kick, clan_leave. Returns `{result, state}`.
-`GET /api/me`, `GET /api/fight` (active fight: HP after global damage, cooldowns, damage list), `GET /api/clans?search=|?id=`, `GET /api/feed` (feed + top players), `POST /api/auth`, `GET /api/health`.
+`GET /api/me`, `GET /api/fight` (active fight: HP after global damage, cooldowns, damage list, end time), `GET /api/yard` (items lying in the yard), `GET /api/clans?search=|?id=`, `GET /api/feed` (feed + top players), `POST /api/auth`, `GET /api/health`.
 
 ## Decisions / assumptions
 
 - 7/day limit = fights started **per boss** (constant `ATTACKS_PER_DAY`).
 - Global damage: a hit damages every fight active at that moment, regardless of boss; a boss killed by others' damage is still a victory.
-- Weapon damage is flat (fists 20 / 1 h); power does not scale damage yet.
+- Weapon damage is flat; weapons are consumables (1 item = 1 hit), fists 20 / 1 h; power does not scale damage yet.
+- Fights last 8 h; result window opens on the Boss tab. No passive income. Yard: 1 item / 5 s, 100 pickups per day.
+- HUD and nav art is hand-drawn SVG (no image model available); nav buttons have no text labels.
 - Market locations are replayable after their reward is claimed.
 - Keys: 1 per victory, 3 consumed to unlock the next boss.
 

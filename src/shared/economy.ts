@@ -56,22 +56,20 @@ export interface WorkplaceTier {
   name: string;
   price: Price | null;
   unlockLevel: number;
-  idlePerHour: Price; // idle income
   power: number; // flat power bonus
   maxEnergyBonus: number;
 }
 export const WORKPLACE: WorkplaceTier[] = [
-  { tier: 1, name: "Старый ноутбук", price: null, unlockLevel: 1, idlePerHour: { currency: "RUB", amount: 400 }, power: 0, maxEnergyBonus: 0 },
-  { tier: 2, name: "Офисный ПК", price: { currency: "RUB", amount: 15_000 }, unlockLevel: 2, idlePerHour: { currency: "RUB", amount: 1_000 }, power: 40, maxEnergyBonus: 10 },
-  { tier: 3, name: "Игровой сетап", price: { currency: "USD", amount: 150 }, unlockLevel: 4, idlePerHour: { currency: "RUB", amount: 2_400 }, power: 100, maxEnergyBonus: 20 },
-  { tier: 4, name: "Трейдерская станция", price: { currency: "USD", amount: 600 }, unlockLevel: 7, idlePerHour: { currency: "RUB", amount: 5_500 }, power: 220, maxEnergyBonus: 30 },
-  { tier: 5, name: "Крипто-ферма", price: { currency: "SOL", amount: 8 }, unlockLevel: 11, idlePerHour: { currency: "RUB", amount: 12_000 }, power: 450, maxEnergyBonus: 40 },
-  { tier: 6, name: "Whale Command Center", price: { currency: "BTC", amount: 0.05 }, unlockLevel: 16, idlePerHour: { currency: "RUB", amount: 26_000 }, power: 900, maxEnergyBonus: 60 },
+  { tier: 1, name: "Старый ноутбук", price: null, unlockLevel: 1, power: 0, maxEnergyBonus: 0 },
+  { tier: 2, name: "Офисный ПК", price: { currency: "RUB", amount: 15_000 }, unlockLevel: 2, power: 40, maxEnergyBonus: 10 },
+  { tier: 3, name: "Игровой сетап", price: { currency: "USD", amount: 150 }, unlockLevel: 4, power: 100, maxEnergyBonus: 20 },
+  { tier: 4, name: "Трейдерская станция", price: { currency: "USD", amount: 600 }, unlockLevel: 7, power: 220, maxEnergyBonus: 30 },
+  { tier: 5, name: "Крипто-ферма", price: { currency: "SOL", amount: 8 }, unlockLevel: 11, power: 450, maxEnergyBonus: 40 },
+  { tier: 6, name: "Whale Command Center", price: { currency: "BTC", amount: 0.05 }, unlockLevel: 16, power: 900, maxEnergyBonus: 60 },
 ];
 export function workplace(tier: number): WorkplaceTier {
   return WORKPLACE[Math.max(0, Math.min(WORKPLACE.length - 1, tier - 1))];
 }
-export const IDLE_CAP_MS = 8 * HOUR;
 
 // ---------------- Power ----------------
 export const BASE_POWER = 100;
@@ -84,6 +82,13 @@ export function computePower(level: number, itemPower: number, workplaceTier: nu
 export const ATTACKS_PER_DAY = 7; // fights started per boss per day, resets at 00:00 UTC
 export const KEYS_TO_UNLOCK = 3;
 export const RENAME_COOLDOWN_MS = 24 * 3_600_000;
+/** A boss fight lasts 8 hours; if the boss is still alive then, the fight is lost. */
+export const FIGHT_DURATION_MS = 8 * 3_600_000;
+
+// ---------------- Yard ----------------
+export const YARD_SLOT_MS = 5_000; // a new item appears every 5 seconds
+export const YARD_TTL_SLOTS = 6; // and lies for 30 seconds
+export const YARD_DAILY_LIMIT = 100; // pickups per UTC day
 
 export function dayKey(t: number): string {
   return new Date(t).toISOString().slice(0, 10);

@@ -58,7 +58,8 @@ function ShopGrid({ tab }: { tab: Exclude<ShopTab, "exchange"> }) {
             <ItemIcon id={it.id} size={64} />
             <b className="small">{it.name}</b>
             <span className={`rarity-chip r-${it.rarity}`}>{RARITY_LABEL[it.rarity]}</span>
-            {it.power ? <span className="small">+{it.power} ⚔</span> : it.energy ? <span className="small">+{it.energy} ⚡</span> : <span className="small muted">{it.kind === "chest" ? "случайная награда" : " "}</span>}
+            {it.hit ? <span className="small">💥 {fmtNum(it.hit.dmg)} урона · 1 удар</span> : it.power ? <span className="small">+{it.power} ⚔</span> : it.energy ? <span className="small">+{it.energy} ⚡</span> : <span className="small muted">{it.kind === "chest" ? "случайная награда" : " "}</span>}
+            {it.stackable && (game.inventory.find((x) => x.id === it.id)?.qty ?? 0) > 0 && <span className="small muted">в наличии: {game.inventory.find((x) => x.id === it.id)?.qty}</span>}
             {it.kind === "theme" && have ? (
               <button className="btn-small green comic" disabled={applied || !!busy} onClick={() => act("theme", { itemId: it.id }, "Комната изменена")}>{applied ? "✓" : "Применить"}</button>
             ) : have && !it.stackable ? (
@@ -188,7 +189,7 @@ export function UpgradeSheet() {
             <span className="wp-n comic">{w.tier}</span>
             <div className="grow minw0">
               <b>{w.name}</b>
-              <div className="small muted">Idle {fmtCur(w.idlePerHour.amount, w.idlePerHour.currency)}/ч · +{w.power} ⚔ · +{w.maxEnergyBonus} ⚡</div>
+              <div className="small muted">+{w.power} ⚔ · +{w.maxEnergyBonus} ⚡ к максимуму энергии</div>
             </div>
             {state === "current" ? <span className="chip-owned">Сейчас</span> : state === "done" ? <span className="chip-owned">✓</span> : state === "next" && w.price ? (
               game.player.level < w.unlockLevel ? <span className="lock-chip"><UIcon name="lock" size={14} />Lv {w.unlockLevel}</span> : (

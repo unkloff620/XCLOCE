@@ -3,22 +3,14 @@ import { useGame } from "../store.tsx";
 import { Hero } from "../art/hero.tsx";
 import { Scene } from "../art/scene.tsx";
 import { UIcon } from "../art/icons.tsx";
-import { countdown, fmtCur } from "../ui.tsx";
+import { countdown, fmtNum } from "../ui.tsx";
+import { BOSSES, bossImage } from "../../shared/content.ts";
 
 export function HomeScreen() {
-  const { game, openSheet, setTab, act, busy, setFight, now } = useGame();
+  const { game, openSheet, setTab, setYard, now } = useGame();
   if (!game) return null;
   const p = game.player;
-  const target = [...game.bosses].reverse().find((b) => b.unlocked && b.attemptsLeft > 0);
   const missionsReady = game.missions.filter((m) => m.done && !m.claimed).length;
-  const idleFullIn = Math.max(0, game.idle.capMs - game.idle.ms);
-
-  const fight = async () => {
-    if (game.fight) return setFight(game.fight.bossIndex);
-    if (!target) return setTab("boss");
-    const r = await act<{ bossIndex: number }>("fight_start", { boss: target.index });
-    if (r) setFight(r.bossIndex);
-  };
 
   return (
     <div className="screen home">
@@ -29,7 +21,7 @@ export function HomeScreen() {
         </div>
 
         <div className="side left">
-          <SideBtn icon="gift" label="Награда" dot={game.daily.canClaim} onClick={() => openSheet("daily")} />
+          <SideBtn icon="yard" label="Двор" onClick={() => setYard(true)} />
           <SideBtn icon="scroll" label="Задания" dot={missionsReady > 0} onClick={() => openSheet("missions")} />
           <SideBtn icon="trophy" label="Ивенты" dot={game.weekend} onClick={() => openSheet("events")} />
           <SideBtn icon="shop" label="Магазин" onClick={() => openSheet("shop")} />
@@ -47,33 +39,18 @@ export function HomeScreen() {
           </button>
         </div>
 
-        <button className="fight-btn" onClick={fight}>
-          <span className="fight-burst" />
-          <span className="fight-text comic">FIGHT<br />NOW</span>
-          <span className="fight-sub">{game.fight ? (game.fight.won ? "Победа! Забери награду" : `В бою: #${game.fight.bossIndex}`) : target ? `⚔ ${target.name} · ${target.attemptsLeft}/7` : "Выбрать босса"}</span>
-        </button>
+        {game.fight && <BossBanner />}
       </section>
 
       <section className="home-cards">
-        <div className="hcard idle">
-          <div className="hcard-title comic"><UIcon name="coin" size={18} /> IDLE REWARDS</div>
-          <div className="row-c gap">
-            <UIcon name="chest" size={44} />
-            <div className="grow">
-              <div className="mono small">{game.idle.full ? "Склад полон" : countdown(idleFullIn)}</div>
-              <b className="idle-amount">{fmtCur(game.idle.amount, game.idle.currency)}</b>
-            </div>
-          </div>
-          <button className="btn-yellow comic" disabled={game.idle.amount < 1 || busy === "idle"} onClick={() => act("idle", {}, (r: { amount: number; currency: string }) => `+${fmtCur(r.amount, r.currency)}`)}>CLAIM</button>
-        </div>
         <button className="hcard" onClick={() => openSheet("upgrade")}>
           <div className="hcard-title comic">UPGRADE</div>
-          <div className="row-c gap"><UIcon name="muscle" size={44} /><small className="muted">Улучши рабочее место — больше дохода и силы</small></div>
+          <div className="row-c gap"><UIcon name="muscle" size={44} /><small className="muted">Улучши рабочее место — больше силы и энергии</small></div>
           <span className="chev">›</span>
         </button>
         <button className="hcard" onClick={() => setTab("inventory")}>
-          <div className="hcard-title comic">EQUIP</div>
-          <div className="row-c gap"><UIcon name="cards" size={44} /><small className="muted">Оружие и шмот для боёв с боссами</small></div>
+          <div className="hcard-title comic">INVENTORY</div>
+          <div className="row-c gap"><UIcon name="cards" size={44} /><small className="muted">Оружие, шмот и сундуки</small></div>
           <span className="chev">›</span>
         </button>
       </section>
@@ -87,6 +64,39 @@ function SideBtn({ icon, label, dot, onClick }: { icon: Parameters<typeof UIcon>
       <UIcon name={icon} size={34} />
       <span>{label}</span>
       {dot && <i className="dot" />}
+    </button>
+  );
+}
+
+const leftLabel = (ms: number) => {
+  const m = Math.max(0, Math.floor(ms / 60_000));
+  return m >= 60 ? `${Math.floor(m / 60)}Ч ${m % 60}М` : `${m}М ${Math.max(0, Math.floor(ms / 1000) % 60)}С`;
+};
+
+/** Active boss fight banner (replaces FIGHT NOW): boss art, name, HP left and time to the end of the 8-hour fight. */
+function BossBanner() {
+  const { game, setFight, setTab, now } = useGame();
+  const f = game?.fight;
+  if (!f) return null;
+  const def = BOSSES.find((b) => b.index === f.bossIndex)!;
+  const pct = Math.round((f.hp / f.hpMax) * 100);
+  const over = f.won || f.lost;
+  return (
+    <button className={`boss-banner ${f.won ? "won" : f.lost ? "lost" : ""}`} onClick={() => (over ? setTab("boss") : setFight(f.bossIndex))}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className="bb-art" src={bossImage(def)} alt="" draggable={false} />
+      <span className="bb-shade" />
+      <span className="bb-left">
+        <span className="bb-tag comic">BOSS FIGHT</span>
+        <span className="bb-name comic">{def.name}</span>
+        <span className="bb-time">⏱ {f.won ? "ПОБЕДА!" : f.lost ? "ВРЕМЯ ВЫШЛО" : `${leftLabel(f.endsAt - now)} LEFT`}</span>
+      </span>
+      <span className="bb-right">
+        <span className="bb-lv comic">#{def.index}</span>
+        <span className="bb-sub">YOUR BOSS</span>
+        <span className="bb-hp"><span style={{ width: `${pct}%` }} /><b>{fmtNum(f.hp)} HP · {pct}%</b></span>
+        <span className="bb-btn comic">{over ? "ИТОГ" : "VIEW BOSS"} ›</span>
+      </span>
     </button>
   );
 }

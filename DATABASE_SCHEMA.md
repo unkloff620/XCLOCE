@@ -1,7 +1,7 @@
 # Database schema (v2)
 
 Postgres (Neon) in production, PGlite locally/in tests. Idempotent migrations in [`src/server/migrations.ts`](src/server/migrations.ts)
-(001 v1 base, 002 retention, 003 v2 RPG, **005 personal fights + locations**; 004 shared bosses was replaced by 005). v1-only tables (tokens, positions, damage events, …) remain but are unused.
+(001 v1 base, 002 retention, 003 v2 RPG, 005 personal fights + locations, **006 consumable weapons + yard**; 004 shared bosses was replaced by 005). v1-only tables (tokens, positions, damage events, …) remain but are unused.
 
 | Table | Purpose | Key |
 |---|---|---|
@@ -10,8 +10,9 @@ Postgres (Neon) in production, PGlite locally/in tests. Idempotent migrations in
 | `inventory` | items (`item_type='item'`), stackable `quantity` | (`player_id`, `item_type`, `item_id`) |
 | `player_bosses` | per boss: `unlocked`, `wins`, `losses`, daily `attempts` + `attempts_day` | (`player_id`, `boss_index`) |
 | `battles` | legacy battle log | `id` |
-| `player_fights` | personal fight: boss, `hp_max`, `start_hit_id`, `status` active/won/fled, weapon `cooldowns` JSONB, `reward` | `id`, unique active per player |
+| `player_fights` | personal fight: boss, `hp_max`, `start_hit_id`, `status` active/won/lost/fled (8 h duration), weapon `cooldowns` JSONB, `reward` | `id`, unique active per player |
 | `global_hits` | every hit of every player (boss, weapon, damage) — the global damage ledger | `id` |
+| `yard_pickups` | yard pickups per 5-second slot (one per slot), daily limit counted by `created_at` | (`player_id`, `slot`) |
 | `location_progress` | Market task progress N/target | (`player_id`, `task_id`) |
 | `location_clears` | how many times a location was completed | (`player_id`, `location_id`) |
 | `daily_rewards` | login streak | `player_id` |

@@ -78,6 +78,7 @@ export const api = {
   clans: (search = "") => raw<{ clans: ClanRow[] }>(`/api/clans?search=${encodeURIComponent(search)}`),
   clan: (id: number) => raw<{ clan: ClanDetails | null }>(`/api/clans?id=${id}`),
   fight: () => raw<{ fight: FightView | null }>("/api/fight"),
+  yard: () => raw<YardView>("/api/yard"),
   feed: () => raw<{ items: FeedItem[]; top: TopRow[] }>("/api/feed", {}, false),
 };
 
@@ -89,7 +90,7 @@ export interface TopRow { id: number; name: string; photo_url: string | null; le
 
 export interface HitResult { bossIndex: number; weapon: string; dmg: number; hp: number; hpMax: number; won: boolean; readyAt: number; xp: number }
 export interface VictoryResult {
-  bossIndex: number; bossName: string; reward: { currency: string; amount: number }; key: string; xp: number; power: number;
+  outcome: "win" | "lose"; bossIndex: number; bossName: string; reward: { currency: string; amount: number } | null; key: string | null; xp: number; power: number;
   items: string[]; myDamage: number; totalDamage: number;
 }
 export interface TaskResult {
@@ -97,3 +98,6 @@ export interface TaskResult {
   reward: { currency: string; amount: number }; xp: number; power: number; weekend: boolean;
 }
 export interface LocationReward { locationId: string; name: string; reward: { currency: string; amount: number }; items: string[]; xp: number; power: number; clears: number }
+
+export interface YardItem { slot: number; kind: "beer" | "energy" | "coins" | "weapon"; x: number; y: number; reward: { energy?: number; rub?: number; item?: string } }
+export interface YardView { items: YardItem[]; pickedToday: number; limit: number; slotMs: number; nextAt: number; serverTime: number }

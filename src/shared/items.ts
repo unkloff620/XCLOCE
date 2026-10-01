@@ -1,8 +1,8 @@
 import type { Price } from "./economy.ts";
 
 export type Rarity = "common" | "rare" | "epic" | "legendary" | "mythic";
-export type Slot = "weapon" | "hat" | "glasses" | "jacket" | "chain";
-export type ItemKind = Slot | "consumable" | "chest" | "key" | "theme";
+export type Slot = "hat" | "glasses" | "jacket" | "chain";
+export type ItemKind = Slot | "weapon" | "consumable" | "chest" | "key" | "theme";
 
 export interface ItemDef {
   id: string;
@@ -11,7 +11,7 @@ export interface ItemDef {
   rarity: Rarity;
   /** power bonus while equipped (gear) */
   power?: number;
-  /** weapons: damage per hit and cooldown between hits */
+  /** weapons: damage per hit (weapons are consumables: one item = one hit) */
   hit?: { dmg: number; cooldownMin: number };
   /** shop price; absent = not sold (drop only) */
   price?: Price;
@@ -28,13 +28,13 @@ export interface ItemDef {
 
 export const ITEMS: ItemDef[] = [
   // ---------- weapons ----------
-  { id: "w-paper-fan", name: "Бумажный веер", kind: "weapon", hit: { dmg: 40, cooldownMin: 60 }, rarity: "common", power: 20, price: { currency: "RUB", amount: 2_000 }, art: "fan", color: "#f4f1e8", description: "Для бумажных рук. Лучше, чем ничего." },
-  { id: "w-sell-club", name: "Дубина «SELL»", kind: "weapon", hit: { dmg: 80, cooldownMin: 60 }, rarity: "common", power: 45, price: { currency: "RUB", amount: 9_000 }, unlockLevel: 2, art: "club", color: "#e63946", description: "Большая красная кнопка на палке." },
-  { id: "w-dump-hammer", name: "Dump Hammer", kind: "weapon", hit: { dmg: 200, cooldownMin: 90 }, rarity: "rare", power: 100, price: { currency: "USD", amount: 70 }, unlockLevel: 4, art: "hammer", color: "#3fa7ff", description: "Одним ударом — минус 30% к графику." },
-  { id: "w-ban-hammer", name: "BAN Hammer", kind: "weapon", hit: { dmg: 450, cooldownMin: 120 }, rarity: "epic", power: 220, price: { currency: "USD", amount: 300 }, unlockLevel: 7, art: "banhammer", color: "#22e58b", description: "Модераторский молот. Банит FUD навсегда." },
-  { id: "w-rug-cannon", name: "Rug Cannon", kind: "weapon", hit: { dmg: 900, cooldownMin: 180 }, rarity: "epic", power: 420, price: { currency: "SOL", amount: 4 }, unlockLevel: 10, art: "cannon", color: "#b45cff", description: "Стреляет коврами из-под ног врага." },
-  { id: "w-whale-harpoon", name: "Гарпун на китов", kind: "weapon", hit: { dmg: 1800, cooldownMin: 240 }, rarity: "legendary", power: 800, price: { currency: "BTC", amount: 0.02 }, unlockLevel: 14, art: "harpoon", color: "#ffb02e", description: "Единственное, чего боятся киты." },
-  { id: "w-diamond-fist", name: "Diamond Fist", kind: "weapon", hit: { dmg: 3500, cooldownMin: 240 }, rarity: "mythic", power: 1_500, art: "fist", color: "#7cf3ff", description: "Выпадает с MEME KING. Алмазные руки в прямом смысле." },
+  { id: "w-paper-fan", name: "Бумажный веер", kind: "weapon", hit: { dmg: 40, cooldownMin: 0 }, rarity: "common", price: { currency: "RUB", amount: 150 }, art: "fan", color: "#f4f1e8", stackable: true, description: "Для бумажных рук. Лучше, чем ничего." },
+  { id: "w-sell-club", name: "Дубина «SELL»", kind: "weapon", hit: { dmg: 80, cooldownMin: 0 }, rarity: "common", price: { currency: "RUB", amount: 300 }, unlockLevel: 2, art: "club", color: "#e63946", stackable: true, description: "Большая красная кнопка на палке." },
+  { id: "w-dump-hammer", name: "Dump Hammer", kind: "weapon", hit: { dmg: 200, cooldownMin: 0 }, rarity: "rare", price: { currency: "USD", amount: 8 }, unlockLevel: 4, art: "hammer", color: "#3fa7ff", stackable: true, description: "Одним ударом — минус 30% к графику." },
+  { id: "w-ban-hammer", name: "BAN Hammer", kind: "weapon", hit: { dmg: 450, cooldownMin: 0 }, rarity: "epic", price: { currency: "USD", amount: 18 }, unlockLevel: 7, art: "banhammer", color: "#22e58b", stackable: true, description: "Модераторский молот. Банит FUD навсегда." },
+  { id: "w-rug-cannon", name: "Rug Cannon", kind: "weapon", hit: { dmg: 900, cooldownMin: 0 }, rarity: "epic", price: { currency: "SOL", amount: 0.25 }, unlockLevel: 10, art: "cannon", color: "#b45cff", stackable: true, description: "Стреляет коврами из-под ног врага." },
+  { id: "w-whale-harpoon", name: "Гарпун на китов", kind: "weapon", hit: { dmg: 1800, cooldownMin: 0 }, rarity: "legendary", price: { currency: "BTC", amount: 0.0012 }, unlockLevel: 14, art: "harpoon", color: "#ffb02e", stackable: true, description: "Единственное, чего боятся киты." },
+  { id: "w-diamond-fist", name: "Diamond Fist", kind: "weapon", hit: { dmg: 3500, cooldownMin: 0 }, rarity: "mythic", art: "fist", color: "#7cf3ff", stackable: true, description: "Выпадает с MEME KING. Алмазные руки в прямом смысле." },
   // ---------- hats ----------
   { id: "h-cap", name: "Кепка дегена", kind: "hat", rarity: "common", power: 10, price: { currency: "RUB", amount: 3_000 }, art: "cap", color: "#e63946", description: "Козырьком назад, конечно." },
   { id: "h-beanie", name: "Шапка HODL", kind: "hat", rarity: "rare", power: 25, price: { currency: "USD", amount: 25 }, unlockLevel: 3, art: "beanie", color: "#1e7a4a", description: "Тёплая, как вера в отскок." },
@@ -76,15 +76,16 @@ export function itemById(id: string): ItemDef | undefined {
   return ITEMS.find((i) => i.id === id);
 }
 
-export const SLOTS: Slot[] = ["weapon", "hat", "glasses", "jacket", "chain"];
-export type Loadout = Partial<Record<Slot, string>>;
+export const SLOTS: Slot[] = ["hat", "glasses", "jacket", "chain"];
+/** Equipped gear. `weapon` is legacy (weapons are consumables now) and is ignored. */
+export type Loadout = Partial<Record<Slot | "weapon", string>>;
 export const DEFAULT_THEME = "t-default";
 
 export const RARITY_ORDER: Rarity[] = ["common", "rare", "epic", "legendary", "mythic"];
 
 /** Bare fists: always available, cannot be bought. */
 export const FISTS = { id: "fists", name: "Кулаки", hit: { dmg: 20, cooldownMin: 60 } } as const;
-/** Damage and cooldown of a weapon id ("fists" or a weapon item). */
+/** Damage and cooldown of a weapon id ("fists" recharge 1 h; weapon items are spent, no cooldown). */
 export function weaponHit(id: string): { dmg: number; cooldownMin: number } | null {
   if (id === FISTS.id) return FISTS.hit;
   return itemById(id)?.hit ?? null;

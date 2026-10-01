@@ -2,7 +2,7 @@
 /** Comic-style colourful UI icons (64×64). */
 export type UiIcon =
   | "gift" | "scroll" | "trophy" | "shop" | "chest" | "swords" | "energy" | "crown" | "palette" | "muscle" | "cards"
-  | "home" | "market" | "boss" | "bag" | "people" | "lock" | "key" | "coin" | "rub" | "usd" | "sol" | "btc" | "calendar" | "exchange";
+  | "home" | "market" | "boss" | "bag" | "people" | "lock" | "key" | "coin" | "rub" | "usd" | "sol" | "btc" | "calendar" | "exchange" | "yard";
 
 const P: Record<UiIcon, string> = {
   gift: `<rect x="10" y="26" width="44" height="30" rx="4" fill="#e8e8f0" stroke="#111" stroke-width="3"/><rect x="8" y="18" width="48" height="10" rx="3" fill="#fff" stroke="#111" stroke-width="3"/><rect x="28" y="18" width="8" height="38" fill="#9aa4b8"/><path d="M32 18q-14-14-16-2t16 2q14-14 16-2t-16 2" fill="none" stroke="#111" stroke-width="3"/>`,
@@ -29,6 +29,7 @@ const P: Record<UiIcon, string> = {
   sol: `<circle cx="32" cy="32" r="26" fill="#111827" stroke="#111" stroke-width="3"/><g fill="#14f195"><path d="M20 22h26l-5 5H15z"/><path d="M15 30h26l5 5H20z"/><path d="M20 38h26l-5 5H15z"/></g>`,
   btc: `<circle cx="32" cy="32" r="26" fill="#f7931a" stroke="#111" stroke-width="3"/><text x="33" y="44" text-anchor="middle" font-size="32" font-weight="900" fill="#fff" font-family="Arial Black,sans-serif" transform="rotate(12 32 32)">₿</text>`,
   calendar: `<rect x="8" y="12" width="48" height="44" rx="6" fill="#f4f1e8" stroke="#111" stroke-width="3"/><path d="M8 18a6 6 0 0 1 6-6h36a6 6 0 0 1 6 6v8H8z" fill="#ff3b5c" stroke="#111" stroke-width="3"/><path d="M20 40l8 8 16-16" stroke="#16a34a" stroke-width="6" fill="none" stroke-linecap="round"/>`,
+  yard: `<rect x="6" y="8" width="30" height="40" fill="#8a8f9c" stroke="#111" stroke-width="3"/><path d="M11 14h6v6h-6zM23 14h6v6h-6zM11 26h6v6h-6zM23 26h6v6h-6z" fill="#ffd23f" stroke="#111" stroke-width="1.5"/><circle cx="48" cy="22" r="12" fill="#4fd11e" stroke="#111" stroke-width="3"/><rect x="45" y="32" width="6" height="16" fill="#8a5a1a" stroke="#111" stroke-width="2.5"/><path d="M4 48h56v10H4z" fill="#555b66" stroke="#111" stroke-width="3"/><path d="M14 44h22v5H14zM16 49v6M34 49v6" fill="#c8722b" stroke="#111" stroke-width="2.5"/><rect x="40" y="46" width="7" height="12" rx="1" fill="#2f8f3a" stroke="#111" stroke-width="2"/>`,
   exchange: `<circle cx="32" cy="32" r="26" fill="#ffb02e" stroke="#111" stroke-width="3"/><path d="M18 26h26l-7-7M46 38H20l7 7" stroke="#111" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
 };
 

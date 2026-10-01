@@ -20,6 +20,8 @@ interface Ctx {
   openItem: (id: string | null) => void;
   fight: number | null;
   setFight: (bossIndex: number | null) => void;
+  yard: boolean;
+  setYard: (open: boolean) => void;
   toasts: Toast[];
   toast: (kind: Toast["kind"], text: string) => void;
   applyState: (s: GameState) => void;
@@ -49,6 +51,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [sheet, setSheet] = useState<SheetName>(null);
   const [itemSheet, setItemSheet] = useState<string | null>(null);
   const [fight, setFight] = useState<number | null>(null);
+  const [yard, setYard] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
@@ -94,7 +97,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(t);
   }, []);
 
-  // periodic refresh (idle income, energy, daily resets)
+  // periodic refresh (energy, fight timer, daily resets)
   useEffect(() => {
     if (status !== "ready") return;
     const t = setInterval(() => api.me().then((r) => apply(r.state)).catch(() => undefined), 60_000);
@@ -109,6 +112,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const setTab = useCallback((t: Tab) => {
     haptic.select();
     setTabState(t);
+    setFight(null);
+    setYard(false);
     if (typeof window !== "undefined") window.scrollTo({ top: 0 });
   }, []);
 
@@ -145,9 +150,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
     return { energyNow: e, nextEnergyIn: e >= p.maxEnergy ? 0 : p.energyRegenMs - (elapsed % p.energyRegenMs) };
   }, [game, now]);
 
+  const refresh = useCallback(() => api.me().then((r) => apply(r.state)).catch(() => undefined), [apply]);
+  const openFight = useCallback((i: number | null) => { setYard(false); setFight(i); if (typeof window !== "undefined") window.scrollTo({ top: 0 }); }, []);
+  const openYard = useCallback((o: boolean) => { setFight(null); setYard(o); if (typeof window !== "undefined") window.scrollTo({ top: 0 }); }, []);
+
   const value: Ctx = {
-    status, error, mode, game, tab, setTab, sheet, openSheet: setSheet, itemSheet, openItem: setItemSheet, fight, setFight,
-    toasts, toast, applyState: apply, refresh: () => api.me().then((r) => apply(r.state)).catch(() => undefined), busy, act, energyNow, nextEnergyIn, now: now + offset.current, retry: () => setRetryN((n) => n + 1),
+    status, error, mode, game, tab, setTab, sheet, openSheet: setSheet, itemSheet, openItem: setItemSheet, fight, setFight: openFight, yard, setYard: openYard,
+    toasts, toast, applyState: apply, refresh, busy, act, energyNow, nextEnergyIn, now: now + offset.current, retry: () => setRetryN((n) => n + 1),
   };
   return <GameCtx.Provider value={value}>{children}</GameCtx.Provider>;
 }
