@@ -1,33 +1,22 @@
-# Database schema
+# Database schema (v2)
 
-Postgres (Neon in production, in-process PGlite locally/tests). The schema is created by idempotent migrations in [`src/server/migrations.ts`](src/server/migrations.ts), applied automatically on cold start under an advisory lock. Amounts are `DOUBLE PRECISION`, rounded in application code.
+Postgres (Neon) in production, PGlite locally/in tests. Idempotent migrations in [`src/server/migrations.ts`](src/server/migrations.ts)
+(001 v1 base, 002 retention, **003 v2 RPG**). v1-only tables (tokens, positions, damage events, …) remain but are unused.
 
 | Table | Purpose | Key |
 |---|---|---|
-| `players` | Telegram (or guest) account, level/xp, energy + regen timestamp, passive timestamp, workplace tier, equipped Dump Tool, combo, tutorial step, rate-limit timestamp | `id`, unique `tg_id` |
-| `balances` | RUB / USD / SOL / BTC per player, `CHECK amount >= 0` | (`player_id`, `currency`) |
-| `boss_progress` | Personal boss chain: current `boss_index`, `damage_taken`, `personal_on_boss`, `pending_personal`, **`global_checkpoint`** | `player_id` |
-| `boss_defeats` | One row per defeated boss with reward paid; **UNIQUE (player_id, boss_index)** guarantees rewards once | `id` |
-| `player_stats` | lifetime damage, damage today, biggest dump, bosses defeated, trades, volume, realized profit | `player_id` |
-| `global_state` | single row: **`damage_total` = GLOBAL_DAMAGE_TOTAL** | `id = 1` |
-| `damage_events` | every event through the Global Damage Bus: source player, amount, source type/entity, crit, combo, total after | `id` |
-| `feed` | realtime feed: damage, crits, boss kills, market news | `id` |
-| `tokens` | meme tokens + simulated market state (price, fair price, liquidity, holders, risk inputs, regime) | `id` |
-| `token_prices` | price per tick, last ~1 hour | (`token_id`, `tick`) |
-| `market_clock` | last simulated tick | `id = 1` |
-| `positions` | player's token holdings + cost basis | (`player_id`, `token_id`) |
-| `actions` | idempotency log for exchange/buy/sell/shop with stored result; **UNIQUE (player_id, idem_key)** | `id` |
-| `inventory` | owned Dump Tools, workplace items and cosmetics | (`player_id`, `item_type`, `item_id`) |
-| `daily_rewards` | login streak and last claim time | `player_id` |
-| `quest_metrics` | counters per period (`d:YYYY-MM-DD`, `w:<monday>`) and metric (work, buys, sells, sell_usd, damage, bosses, exchanges) | (`player_id`, `period`, `metric`) |
-| `quest_claims` | one claim per quest per period (idempotent rewards) | (`player_id`, `quest_id`, `period`) |
+| `players` | account, level/xp, energy + regen timestamp, `equipment_tier` (workplace), `loadout` JSONB (equipped gear), `theme`, `idle_claimed_at`, `power_bonus` (permanent), `power_cached`, `clan_id` | `id`, unique `tg_id` |
+| `balances` | RUB / USD / SOL / BTC, `CHECK amount >= 0` | (`player_id`, `currency`) |
+| `inventory` | items (`item_type='item'`), stackable `quantity` | (`player_id`, `item_type`, `item_id`) |
+| `player_bosses` | per boss: `unlocked`, `wins`, `losses`, daily `attempts` + `attempts_day` | (`player_id`, `boss_index`) |
+| `battles` | battle log (power, win, damage) | `id` |
+| `daily_rewards` | login streak | `player_id` |
+| `quest_metrics` / `quest_claims` | daily mission counters (`d:YYYY-MM-DD`) and one claim per mission per day | composite |
+| `clans` | name/tag unique (case-insensitive), owner | `id` |
+| `clan_members` | one clan per player, role leader/member | `player_id` |
+| `clan_requests` | join requests (max 5 per player) | (`player_id`, `clan_id`) |
+| `actions` | idempotency log for purchases/exchange | (`player_id`, `idem_key`) |
+| `feed` | server events (first boss kills, new clans) | `id` |
 
-`players.outfit` (JSONB) stores the worn cosmetic per slot (hoodie, hat, glasses, headphones).
-
-## Concurrency rules
-
-- Every mutating action runs in one transaction and starts with `SELECT … FROM players WHERE id = $1 FOR UPDATE`.
-- Lock order is always **player → token → global_state** (no deadlocks).
-- `global_state.damage_total` is incremented with `UPDATE … SET damage_total = damage_total + $1 RETURNING` (atomic).
-- Boss sync locks `boss_progress` of that player only; other players are never written by someone else's action.
-- Debits use `UPDATE … WHERE amount >= $x RETURNING` so balances cannot go negative.
+Concurrency: every action locks the player row (`SELECT … FOR UPDATE`), then the boss row; debits are conditional
+(`WHERE amount >= $x`); unique constraints guard double claims.

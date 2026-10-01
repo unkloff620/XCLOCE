@@ -1,90 +1,53 @@
 # PROJECT_STATE
 
-> Project memory. Read this first in every new session. Update after each major stage.
+> Project memory. Read first in every new session.
 
-## Status
+## Status — v2 "Meme Fighter" (current, `main`)
 
-**Stage 2 — reference-style UI, retention, meme bosses: implemented.** Home redesigned after the owner's reference (illustrated live room with a dressable shiba character, currency cards with hourly rates, XP/energy bars with regen timer, side widgets, three big cards, nav Home/Market/Boss/Quests/More). Daily login reward with 7-day streak, daily & weekly quests driven by real actions, wardrobe (cosmetics), 12 original meme bosses with meme-macro captions and a "hurt" state, attack panel on the boss screen. Tapping the room = work.
+Owner redesigned the game (2026-10-01) after a comic-style reference: dressable shiba hero, boss list with keys, energy tasks on Market,
+5-column inventory, clans. Implemented and deployed: auth, HUD (avatar/nick/level/XP, POWER, RUB/USD/SOL/BTC, energy), bottom nav
+Boss · Market · Home · Inventory · Social, Home scene with FIGHT NOW + side buttons + Idle/Upgrade/Equip, 10 bosses with
+7 attacks/day/boss and 3-key unlocks, battle animation, Market tasks, shop (gear, items, themes, exchange), inventory & equipment,
+login streak, daily missions, events, workplace upgrades, clans (create/request/accept/reject/kick/leave/disband), top players.
 
-**Stage 1 — MVP vertical slice: implemented.** Telegram auth, profile, currencies + exchanger, meme market with charts, buy/sell, portfolio, personal bosses, Global Damage Bus, realtime (SSE), boss defeat + rewards (once), Dump Tools (buy/equip, drops), workplace tiers with room art, leaderboards, global feed, tutorial, responsive UI.
+v1 (meme-token trading, personal bosses + global damage) is archived in branch **`v1-trading`**.
 
-- Production URL: https://xcloce.vercel.app (Vercel project `xcloce`, auto-deploys from `main`; `dev` → preview deployments)
+- Production: https://xcloce.vercel.app (Vercel project `xcloce`, auto-deploy from `main`; `dev` → previews)
 - Repo: https://github.com/unkloff620/XCLOCE
 
 ## Stack
 
-- **Next.js 16 (App Router) + React 19 + TypeScript**, one Vercel project for UI and API (route handlers, Node runtime).
-- **Postgres** via `pg` (Neon, Vercel Storage). Local/tests: **PGlite** (in-process WASM Postgres) when `DATABASE_URL` is empty.
-- No ORM: hand-written SQL with explicit locks (see DATABASE_SCHEMA.md).
-- Realtime: **Server-Sent Events** (`/api/stream`), 50 s connections with auto-reconnect; polling fallback every 8 s.
-- Tests: **Vitest** with PGlite. All art is generated SVG (`scripts/gen-assets.ts` → `public/assets`, token logos rendered from `src/shared/art.ts`).
+Next.js 16 (App Router) + React 19 + TypeScript on Vercel; Postgres via `pg` (Neon); PGlite for local/tests; Vitest; SVG art in code.
+Fonts: Bangers (comic, latin) + Russo One (cyrillic fallback) + Inter.
 
 ## Structure
 
 ```
-src/shared/      economy.ts (ALL formulas), bosses.ts, tokens.ts (seeds, risk), art.ts (procedural SVG),
-                 retention.ts (daily rewards, quests, cosmetics)
-src/server/      db.ts (pg/PGlite, migrations), migrations.ts, seed.ts, auth.ts (initData + sessions),
-                 damageBus.ts (GLOBAL DAMAGE BUS), bossChain.ts (pure chain/overkill), game.ts (actions),
-                 market.ts + marketSim.ts (market), http.ts (route wrapper, errors, rate limit), routes.ts, log.ts
-src/app/api/*    route handlers
-src/client/      store.tsx (state, SSE, actions), api.ts, telegram.ts, ui.tsx, chrome.tsx, icons.tsx,
-                 room/Room.tsx (live illustrated room + dressable character), screens/* (Home, Market, Boss, Quests, More)
-scripts/         gen-assets.ts (+ meme-bosses.ts), economy-table.ts, market-sim-check.ts, smoke.sh,
-                 screenshots.mjs + layout-check.mjs (playwright visual QA)
-tests/           bossChain, damageBus (§99–101 + concurrency + reward-once), trading, auth, retention
-public/assets/   bosses, dump-tools, rooms, icons, ui, effects
+src/shared/   economy.ts (currencies, power, battle math, workplace), items.ts (catalog), content.ts (bosses, tasks, rewards, missions, events, clans)
+src/server/   db.ts, migrations.ts, auth.ts, http.ts, routes.ts, log.ts, xp.ts, game.ts (all game actions + state)
+src/app/api/  auth, me, action (single action dispatcher), clans, feed, health
+src/client/   store.tsx, api.ts, hud.tsx, ui.tsx, telegram.ts, art/{hero,items,scene,icons}.tsx, screens/{Home,Boss,Market,Inventory,Social,Sheets}.tsx
+scripts/      gen-assets.ts + meme-bosses.ts (boss art), smoke.sh, screenshots.mjs, layout-check.mjs
+tests/        game.test.ts (bosses, keys, limits, tasks, shop, items, daily, idle, clans), auth.test.ts
 ```
 
 ## API
 
-| Method | Path | Auth | Purpose |
-|---|---|---|---|
-| POST | /api/auth | – | `{initData}` (Telegram, HMAC-validated) or `{guestId}` → session token |
-| GET | /api/me | ✓ | sync global damage → full state |
-| GET | /api/market | – | tokens + sparklines (advances market) |
-| GET | /api/token?id= | – | token detail + 1 h history |
-| POST | /api/trade | ✓ | `{side: buy, tokenId, sol, idem}` / `{side: sell, tokenId, fraction, idem}` |
-| POST | /api/exchange | ✓ | `{from, to, amount, idem}` |
-| POST | /api/work | ✓ | +RUB for 1 energy |
-| POST | /api/shop | ✓ | `{kind: equipment, tier}` / `{kind: tool, toolId}` + idem |
-| POST | /api/equip | ✓ | equip owned Dump Tool |
-| POST | /api/tutorial | ✓ | `boss_opened` (also marks defeats seen) / `skip` |
-| POST | /api/retention | ✓ | `{action: daily}` claim login reward · `{action: quest, questId}` · `{action: wear, cosmeticId}` (buys if needed) |
-| GET | /api/bosses | ✓ | boss progression list |
-| GET | /api/leaderboard?type= | – | damage_today, damage_all, bosses, biggest_dump, profit, level |
-| GET | /api/feed | – | latest feed + global total |
-| GET | /api/stream | – | SSE: `global`, `feed`, `market` events |
-| GET | /api/health | – | DB / bot config check |
+`POST /api/action {type, …}` — types: task, attack, unlock, idle, workplace, theme, buy, equip, unequip, use, exchange, daily, mission,
+clan_create, clan_disband, clan_request, clan_cancel, clan_accept, clan_reject, clan_kick, clan_leave. Returns `{result, state}`.
+`GET /api/me`, `GET /api/clans?search=|?id=`, `GET /api/feed` (feed + top players), `POST /api/auth`, `GET /api/health`.
 
-Every action returns `{result, state}` computed in the same transaction.
+## Decisions / assumptions
 
-## Global Damage Bus (how it works)
+- 7 attacks/day are **per boss** (owner's wording ambiguous; constant `ATTACKS_PER_DAY`).
+- Keys: 1 per win, 3 consumed to unlock the next boss.
+- Battles resolved server-side (10 hits, crits); client only animates the returned hits.
+- Players from v1 are migrated on first request (boss #1 opened, energy reset, balances kept).
 
-`emitDamage` (inside the seller's transaction) atomically adds to `global_state.damage_total`, records a `damage_events` row (source, amount, type, entity), updates personal stats and `pending_personal`, and writes the feed. Each player keeps `global_checkpoint`; `syncBoss` applies `total − checkpoint` through `applyChain` (overkill → next bosses, safety cap 200 defeats per sync, unapplied rest kept). This gives O(1) work per event, offline damage for free, no fan-out writes. New players start at the current total. Rewards are inserted with `UNIQUE(player_id, boss_index)`.
+## Next steps / open
 
-## Key decisions
-
-- Damage = gross sale value (documented in GAME_DESIGN.md), modifiers applied server-side.
-- Reward contribution factor (25%..100%) to keep the economy finite with many players.
-- Market & exchange rates are deterministic functions of (seed, tick/time) → consistent across serverless instances.
-- Guest browser mode (`ALLOW_GUEST`, default on) for testing outside Telegram; guests are separate `guest:<uuid>` accounts.
-- Session token = HMAC-signed `{pid, exp}` (7 days); secret from `SESSION_SECRET` or derived from bot token.
-
-## Environment
-
-See `.env.example`. Production (Vercel): `DATABASE_URL` (Neon integration), `TELEGRAM_BOT_TOKEN` (production only). Optional: `SESSION_SECRET`, `ALLOW_GUEST`, `NEXT_PUBLIC_BOT_USERNAME`.
-
-## Checks
-
-`npm run typecheck`, `npm test` (30 tests), `npm run build`, `bash scripts/smoke.sh` against a running server. The local agent environment has no npm registry access; checks run in a Vercel Sandbox (`xcloce-dev`) cloned from the `dev` branch.
-
-## Open issues / next stage
-
-1. **Stage 3:** achievements; more cosmetics & room decorations; assistants; referral rewards; Dump Tool upgrade levels; loot boxes.
-   Owner may supply licensed meme images for bosses — drop them into `public/assets/bosses/NN-slug(-hurt).svg|png` and update `bossInfo`.
-2. Referrals via `start_param=ref_<tgId>` (stored as `referrer_id`, rewards not implemented yet).
-3. Dump Tool upgrade levels; loot boxes; news-driven market events beyond the simulation.
-4. Boss scaling vs. player count (see GAME_DESIGN.md open questions).
-5. SSE polls the DB every 1.5 s per open connection — move to Postgres LISTEN/NOTIFY or a pub/sub service when concurrency grows.
-6. Telegram bot: set Mini App URL in @BotFather to the production URL (owner action).
+1. Owner to adjust boss names/HP and rewards.
+2. Battle Pass, staking, meme crew (reference screen elements) — not yet.
+3. Clan chat / clan bosses / clan rewards.
+4. Better art (owner may supply illustrated assets).
+5. Referral links.
