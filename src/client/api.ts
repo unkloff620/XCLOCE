@@ -99,5 +99,5 @@ export interface TaskResult {
 }
 export interface LocationReward { locationId: string; name: string; reward: { currency: string; amount: number }; items: string[]; xp: number; power: number; clears: number }
 
-export interface YardItem { slot: number; kind: "beer" | "energy" | "coins" | "weapon"; x: number; y: number; reward: { energy?: number; rub?: number; item?: string } }
+export interface YardItem { slot: number; kind: "beer" | "energy" | "coins" | "weapon"; x: number; y: number; reward: { rub?: number; item?: string } }
 export interface YardView { items: YardItem[]; pickedToday: number; limit: number; slotMs: number; nextAt: number; serverTime: number }

@@ -196,12 +196,31 @@ describe("yard", () => {
     const r = await db.tx((tx) => G.yardPick(tx, pid, it.slot, now));
     expect(r.kind).toBe(it.kind);
     if (it.reward.rub) expect(await bal(db, pid, "RUB")).toBe(rub0 + it.reward.rub);
-    if (it.reward.energy) expect((await db.tx((tx) => G.getState(tx, pid, now))).player.energy).toBe(10 + it.reward.energy);
     if (it.reward.item) expect(await qty(db, pid, it.reward.item)).toBe(1);
     await expect(db.tx((tx) => G.yardPick(tx, pid, it.slot, now))).rejects.toMatchObject({ code: "yard_taken" });
     await expect(db.tx((tx) => G.yardPick(tx, pid, it.slot, now + 60_000))).rejects.toMatchObject({ code: "yard_gone" });
     await expect(db.tx((tx) => G.yardPick(tx, pid, it.slot + 5, now))).rejects.toMatchObject({ code: "yard_gone" });
     expect((await db.tx((tx) => G.yardView(tx, pid, now))).items).toHaveLength(5);
+  });
+
+  it("found drinks and weapons go to the inventory; weapons are usable in fights", async () => {
+    const pid = await newPlayer(db);
+    const base = Math.floor(clock / 5_000);
+    const want = new Map<string, number>();
+    for (let slot = base - 400; slot < base && want.size < 3; slot++) {
+      const k = G.yardItem(pid, slot).kind;
+      if (k !== "coins" && !want.has(k)) want.set(k, slot);
+    }
+    for (const [kind, slot] of want) {
+      const r = await db.tx((tx) => G.yardPick(tx, pid, slot, slot * 5_000 + 1_000));
+      expect(r.reward.item).toBe(kind === "beer" ? "x-beer" : kind === "energy" ? "x-can" : r.reward.item);
+      expect(await qty(db, pid, r.reward.item!)).toBe(1);
+      if (kind === "weapon") {
+        const st = await db.tx((tx) => G.getState(tx, pid, clock));
+        expect(st.weapons.map((w) => w.id)).toContain(r.reward.item);
+      }
+    }
+    expect(want.has("beer") && want.has("energy")).toBe(true);
   });
 
   it("has a daily pickup limit", async () => {

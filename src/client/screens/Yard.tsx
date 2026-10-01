@@ -39,7 +39,7 @@ export function YardScreen() {
     const r = await act<{ reward: YardItem["reward"] }>("yard_pick", { slot: it.slot });
     if (!r) return;
     const w = r.reward;
-    toast("ok", w.item ? `Нашёл: ${itemById(w.item)?.name}!` : w.rub ? `+${w.rub} ₽` : `+${w.energy} ⚡`);
+    toast("ok", w.item ? `В инвентарь: ${itemById(w.item)?.name}${itemById(w.item)?.kind === "weapon" ? " — уже доступно в бою" : ""}` : `+${w.rub} ₽`);
     setView((v) => (v ? { ...v, pickedToday: v.pickedToday + 1 } : v));
   };
 
@@ -70,10 +70,10 @@ export function YardScreen() {
         <div className="yard-hud comic">{limitReached ? "На сегодня всё собрано" : `Новый предмет через ${nextIn}с`}</div>
       </div>
       <div className="yard-legend">
-        <span><YardItemArt kind="beer" size={26} /> Пиво +5⚡</span>
-        <span><YardItemArt kind="energy" size={26} /> Энергетик +15⚡</span>
-        <span><YardItemArt kind="coins" size={26} /> Мелочь 10–60 ₽</span>
-        <span>🗡 Редко — оружие</span>
+        <span><YardItemArt kind="beer" size={26} /> Пиво (+5⚡) → инвентарь</span>
+        <span><YardItemArt kind="energy" size={26} /> Энергетик (+15⚡) → инвентарь</span>
+        <span><YardItemArt kind="coins" size={26} /> Мелочь 10–60 ₽ → баланс</span>
+        <span>🗡 Редко оружие → инвентарь и бой</span>
       </div>
       <p className="muted small center">Каждые 5 секунд во дворе что-то появляется и лежит 30 секунд. Лимит — {view?.limit ?? 100} находок в сутки.</p>
     </div>

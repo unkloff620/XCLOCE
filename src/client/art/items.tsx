@@ -30,6 +30,16 @@ function Body({ it }: { it: ItemDef }) {
         </svg>
       );
     case "consumable":
+      if (it.art === "beer") {
+        return (
+          <svg viewBox="0 0 64 64">
+            <path d="M27 4h10v12q0 4 4 9 3 4 3 10v22q0 4-4 4H24q-4 0-4-4V35q0-6 3-10 4-5 4-9z" fill="#7a3d0e" stroke="#111" strokeWidth="3" strokeLinejoin="round" />
+            <rect x="26" y="2" width="12" height="6" rx="1" fill="#ffd23f" stroke="#111" strokeWidth="2.5" />
+            <rect x="21" y="36" width="22" height="14" rx="2" fill="#f4e7c8" stroke="#111" strokeWidth="2" />
+            <path d="M25 41h14M25 45h9" stroke="#c0392b" strokeWidth="2.5" strokeLinecap="round" />
+          </svg>
+        );
+      }
       return (
         <svg viewBox="0 0 100 100">
           <rect x="30" y="14" width="40" height="74" rx="8" fill="#1b1d26" {...K} />
