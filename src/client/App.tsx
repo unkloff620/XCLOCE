@@ -4,6 +4,7 @@ import { BottomNav, Toasts, TopHud } from "./hud.tsx";
 import { HomeScreen } from "./screens/Home.tsx";
 import { BossScreen, FightScreen, ResultModal } from "./screens/Boss.tsx";
 import { YardScreen } from "./screens/Yard.tsx";
+import { SkinStyles } from "./skin.tsx";
 import { MarketScreen } from "./screens/Market.tsx";
 import { InventoryScreen, ItemSheet } from "./screens/Inventory.tsx";
 import { SocialScreen } from "./screens/Social.tsx";
@@ -42,6 +43,7 @@ function Shell() {
       <ProfileSheet />
       <ItemSheet />
       <ResultModal />
+      <SkinStyles />
       <Toasts />
     </div>
   );

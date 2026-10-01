@@ -5,6 +5,7 @@ import { api, type YardItem, type YardView } from "../api.ts";
 import { itemById } from "../../shared/items.ts";
 import { ItemIcon } from "../art/items.tsx";
 import { haptic } from "../telegram.ts";
+import { skinUrl } from "../../shared/skin.ts";
 
 /** Courtyard: a new item appears every 5 s (beer, energy drink, coins, rarely a weapon) and lies for 30 s. */
 export function YardScreen() {
@@ -54,7 +55,10 @@ export function YardScreen() {
         <span className="muted small">Собрано сегодня: {view?.pickedToday ?? 0}/{view?.limit ?? 100}</span>
       </div>
       <div className="yard-stage">
-        <YardScene />
+        {skinUrl("bg-yard") ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img className="yard-scene skin-cover" src={skinUrl("bg-yard")!} alt="" draggable={false} />
+        ) : <YardScene />}
         {!limitReached && items.map((it) => {
           const ageSlots = view ? Math.floor((serverNow - it.slot * view.slotMs) / view.slotMs) : 0;
           return (
@@ -77,6 +81,9 @@ export function YardScreen() {
 }
 
 export function YardItemArt({ kind, size = 44 }: { kind: YardItem["kind"]; size?: number }) {
+  const up = skinUrl(`yard-${kind}`);
+  // eslint-disable-next-line @next/next/no-img-element
+  if (up) return <img className="skin-img" src={up} alt="" width={size} height={size} draggable={false} />;
   if (kind === "beer") {
     return (
       <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true">

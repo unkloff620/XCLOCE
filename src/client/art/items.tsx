@@ -1,6 +1,7 @@
 "use client";
 import { memo } from "react";
 import { itemById, type ItemDef } from "../../shared/items.ts";
+import { skinUrl } from "../../shared/skin.ts";
 import { GlassesArt, HatArt, WeaponArt } from "./hero.tsx";
 
 const K = { stroke: "#0b0b0f", strokeWidth: 3.5, strokeLinejoin: "round" as const, strokeLinecap: "round" as const };
@@ -74,9 +75,11 @@ function Body({ it }: { it: ItemDef }) {
 function ItemIconImpl({ id, size = 56 }: { id: string; size?: number }) {
   const it = itemById(id);
   if (!it) return null;
+  const up = skinUrl(`items/${id}`);
   return (
     <span className="item-icon" style={{ width: size, height: size }}>
-      <Body it={it} />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {up ? <img className="skin-img" src={up} alt="" draggable={false} /> : <Body it={it} />}
     </span>
   );
 }
