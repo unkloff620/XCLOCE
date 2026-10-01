@@ -24,7 +24,19 @@ await page.waitForTimeout(500);
 const inv = await page.evaluate(() => ({ greenBtn: document.querySelector(".btn-green") ? getComputedStyle(document.querySelector(".btn-green")).borderImageSource.slice(0, 50) : "none on screen" }));
 await page.locator(".nav-btn").nth(0).click();
 await page.waitForTimeout(500);
-const boss = await page.evaluate(() => ({ bossImg: document.querySelector(".boss-ava img")?.getAttribute("src")?.split("?")[0], attackFrame: getComputedStyle(document.querySelector(".btn-attack")).borderImageSource.slice(0, 50) }));
+const boss = await page.evaluate(() => {
+  const card = document.querySelector(".boss-card");
+  const btn = document.querySelector(".btn-attack");
+  return {
+    bossImg: document.querySelector(".boss-ava .bp-art")?.getAttribute("src")?.split("?")[0],
+    cardFrame: getComputedStyle(card).borderImageSource.slice(0, 50),
+    attackImg: btn.querySelector("img")?.getAttribute("src")?.split("?")[0] ?? null,
+    attackText: btn.textContent.trim(),
+    counter: document.querySelector(".boss-act small")?.textContent,
+    power: document.querySelector(".meta-power")?.textContent,
+    cardOverflow: [...card.querySelectorAll("*")].filter((e) => e.getBoundingClientRect().right > card.getBoundingClientRect().right + 1).length,
+  };
+});
 await page.screenshot({ path: "/tmp/skin-check.jpg", type: "jpeg", quality: 60 });
 console.log(JSON.stringify({ ...r, ...inv, ...boss }, null, 1));
 await browser.close();

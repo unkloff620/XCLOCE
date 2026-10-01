@@ -535,3 +535,10 @@ button.hud-profile { color: inherit; text-align: left; width: 100%; font: inheri
 .hit-pop.crit { color: var(--yellow); font-size: 44px; }
 .room-info > .row-c { flex-wrap: wrap; row-gap: 2px; }
 .room-info .rarity-chip { flex: none; }
+
+/* ---------- boss card: image ATTACK button, power reward ---------- */
+.btn-attack.skinned { padding: 0; background: none !important; box-shadow: none; border: 0; clip-path: none; height: 42px; width: 74px; }
+.btn-attack.skinned .skin-img { object-fit: contain; }
+.btn-attack.skinned:disabled { opacity: 1; }
+.btn-attack.skinned:disabled .skin-img { filter: grayscale(1) brightness(0.6); }
+.meta-power { color: var(--yellow); font-weight: 800; }
