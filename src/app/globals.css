@@ -452,3 +452,19 @@ p { margin: 6px 0; }
 .attack-row { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 14px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--line); }
 .attack-row .btn-chip { flex: none; min-width: 56px; }
 .dmg { color: #ffb3c0; }
+
+/* boss list tab */
+.block { display: block; }
+.boss-list-screen .boss-list { gap: 8px; }
+.boss-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px; border-radius: 18px; background: var(--card); border: 1px solid var(--line); text-align: left; transition: transform 0.1s; }
+.boss-item:active { transform: scale(0.98); }
+.boss-item img { border-radius: 14px; flex: none; border: 1px solid var(--line2); }
+.boss-item .bar { margin: 5px 0 3px; }
+.boss-item.current { border-color: var(--down); box-shadow: 0 0 18px rgba(255, 59, 92, 0.25), inset 0 0 0 1px rgba(255, 59, 92, 0.25); background: linear-gradient(135deg, rgba(255, 59, 92, 0.14), var(--card)); }
+.boss-item.defeated { opacity: 0.72; }
+.boss-item.defeated img { filter: grayscale(0.7) !important; }
+.boss-item.locked img { filter: brightness(0.35) grayscale(1) !important; }
+.boss-num { width: 26px; text-align: center; font-family: var(--font-display), sans-serif; font-size: 15px; color: var(--muted); flex: none; }
+.boss-item.current .boss-num { color: var(--down); }
+.locked-stage .boss-img { filter: brightness(0.3) grayscale(1) !important; }
+.stamp { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-14deg); padding: 6px 16px; border: 5px solid #22e58b; color: #22e58b; border-radius: 10px; font-family: var(--font-display), sans-serif; font-size: 34px; background: rgba(0, 0, 0, 0.45); letter-spacing: 0.06em; }

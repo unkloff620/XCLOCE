@@ -3,7 +3,7 @@ import { GameProvider, useGame } from "./store.tsx";
 import { BottomNav, Toasts, TopBar } from "./chrome.tsx";
 import { EventsSheet, ExchangeSheet, HomeScreen } from "./screens/Home.tsx";
 import { MarketScreen, TokenScreen } from "./screens/Market.tsx";
-import { BossListSheet, BossScreen, Celebration } from "./screens/Boss.tsx";
+import { BossScreen, Celebration } from "./screens/Boss.tsx";
 import { MoreScreen } from "./screens/More.tsx";
 import { QuestsScreen } from "./screens/Quests.tsx";
 
@@ -51,7 +51,6 @@ function Shell() {
       </main>
       <BottomNav />
       <ExchangeSheet />
-      <BossListSheet />
       <EventsSheet />
       <Celebration />
       <Toasts />

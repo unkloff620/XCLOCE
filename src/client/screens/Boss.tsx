@@ -4,13 +4,114 @@ import { useGame } from "../store.tsx";
 import { api, type BossListItem } from "../api.ts";
 import { TokenLogo } from "../ui.tsx";
 import { haptic } from "../telegram.ts";
-import { AnimatedNumber, Bar, Icon, Sheet } from "../ui.tsx";
+import { AnimatedNumber, Bar, Icon } from "../ui.tsx";
 import { money } from "../format.ts";
 import { bossInfo } from "../../shared/bosses.ts";
 import { comboMultiplier, contributionFactor, DUMP_TOOLS, equipmentByTier, toolById, COMBO_WINDOW_MS } from "../../shared/economy.ts";
 
 export function BossScreen() {
-  const { game, predictedBoss, pops, feed, setTab, openSheet, live, openMore, run, busy, energyNow, toast } = useGame();
+  const { game, predictedBoss, busy } = useGame();
+  const [list, setList] = useState<BossListItem[] | null>(null);
+  const [view, setView] = useState<"list" | "fight" | number>("list");
+  const currentIndex = predictedBoss?.index ?? game?.boss.index ?? 1;
+  useEffect(() => {
+    let alive = true;
+    api.bosses().then((r) => alive && setList(r.bosses)).catch(() => alive && setList([]));
+    return () => { alive = false; };
+  }, [game?.boss.index, game?.stats?.bosses_defeated]);
+  const currentRef = useRef<HTMLButtonElement | null>(null);
+  useEffect(() => {
+    if (view === "list" && list) currentRef.current?.scrollIntoView({ block: "center" });
+  }, [view, list]);
+
+  if (view === "fight") return <BossFight onBack={() => setView("list")} />;
+  if (typeof view === "number") return <BossDetail index={view} item={list?.find((b) => b.index === view)} onBack={() => setView("list")} onFight={() => setView("fight")} />;
+  if (!game) return null;
+
+  return (
+    <div className="screen boss-list-screen">
+      <div className="screen-head">
+        <h2>Боссы</h2>
+        <span className="muted small">побеждено: {game.stats?.bosses_defeated ?? 0}</span>
+      </div>
+      {!list && <div className="empty">Загрузка…</div>}
+      <div className="boss-list">
+        {list?.map((b) => {
+          const isCurrent = b.index === currentIndex;
+          const status = b.index < currentIndex ? "defeated" : isCurrent ? "current" : "locked";
+          const remaining = isCurrent && predictedBoss ? predictedBoss.remaining : status === "defeated" ? 0 : b.marketCap;
+          return (
+            <button
+              key={b.index}
+              ref={isCurrent ? currentRef : undefined}
+              className={`boss-item ${status}`}
+              onClick={() => setView(isCurrent ? "fight" : b.index)}
+              disabled={busy === "x"}
+            >
+              <span className="boss-num">{b.index}</span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={b.image} alt="" width={64} height={64} style={b.hueShift ? { filter: `hue-rotate(${b.hueShift}deg)` } : undefined} />
+              <span className="grow minw0">
+                <span className="strong ellipsis block">{b.name}</span>
+                <span className="muted small ellipsis block">{b.title}</span>
+                {isCurrent ? (
+                  <>
+                    <Bar value={remaining} max={b.marketCap} tone="boss" />
+                    <span className="small block">{money(remaining, { compact: true })} / {money(b.marketCap, { compact: true })}</span>
+                  </>
+                ) : (
+                  <span className="small block">MCAP {money(b.marketCap, { compact: true })} · награда до {money(b.rewardUsdFull, { compact: true })}{b.dropToolId ? " · 🎁" : ""}</span>
+                )}
+              </span>
+              <span className={`status status-${status}`}>{status === "defeated" ? "✓" : isCurrent ? "⚔️ Бой" : "🔒"}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function BossDetail({ index, item, onBack, onFight }: { index: number; item?: BossListItem; onBack: () => void; onFight: () => void }) {
+  const { predictedBoss } = useGame();
+  const info = bossInfo(index);
+  const current = predictedBoss?.index ?? 1;
+  const status = index < current ? "defeated" : index === current ? "current" : "locked";
+  const drop = info.dropToolId ? toolById(info.dropToolId) : null;
+  return (
+    <div className="screen boss-screen">
+      <div className="screen-head">
+        <button className="btn btn-ghost small" onClick={onBack}>← Все боссы</button>
+        <span className={`status status-${status}`}>{status === "defeated" ? "✓ Побеждён" : status === "current" ? "⚔️ Текущий" : "🔒 Впереди"}</span>
+      </div>
+      <div>
+        <h2>#{info.index} {info.name}</h2>
+        <div className="muted small">{info.title}</div>
+      </div>
+      <section className={`boss-stage ${status === "locked" ? "locked-stage" : ""}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={status === "defeated" ? info.imageHurt : info.image} alt={info.name} className="boss-img" style={info.hueShift ? { filter: `hue-rotate(${info.hueShift}deg)` } : undefined} draggable={false} />
+        {status === "defeated" && <div className="stamp">DUMPED</div>}
+      </section>
+      <section className="card">
+        <p>{info.description}</p>
+        <div className="stats-grid">
+          <div><span className="muted small">Market Cap</span><b>{money(info.marketCap)}</b></div>
+          <div><span className="muted small">Награда до</span><b className="up">{money(info.rewardUsdFull)}</b></div>
+          <div><span className="muted small">XP</span><b>+{info.rewardXp}</b></div>
+          <div><span className="muted small">Дроп</span><b>{drop ? drop.name : "—"}</b></div>
+          {item?.personalDamage != null && <div><span className="muted small">Твой урон</span><b>{money(item.personalDamage)}</b></div>}
+          {item?.rewardPaid != null && <div><span className="muted small">Получено</span><b className="up">{money(item.rewardPaid)}</b></div>}
+        </div>
+        {status === "current" && <button className="btn btn-sell wide" onClick={onFight}>⚔️ В бой</button>}
+        {status === "locked" && <div className="muted small">Откроется после победы над боссом #{index - 1}. Глобальный урон всех игроков приближает его.</div>}
+      </section>
+    </div>
+  );
+}
+
+function BossFight({ onBack }: { onBack: () => void }) {
+  const { game, predictedBoss, pops, feed, setTab, live, openMore, run, busy, energyNow, toast } = useGame();
   const [hit, setHit] = useState(false);
   const lastPop = useRef(0);
   useEffect(() => {
@@ -39,7 +140,7 @@ export function BossScreen() {
           <h2 className="ellipsis">#{info.index} {info.name}</h2>
           <div className="muted small">{info.title}</div>
         </div>
-        <button className="btn btn-ghost small" onClick={() => openSheet("bosses")}>Все боссы →</button>
+        <button className="btn btn-ghost small" onClick={onBack}>← Все боссы</button>
       </div>
       <section className={`boss-stage env-${info.env} ${hit ? "hit" : ""}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -128,35 +229,6 @@ export function BossScreen() {
         <div className="muted small">Урон любого игрока снижает Market Cap твоего босса — и всех остальных.</div>
       </section>
     </div>
-  );
-}
-
-export function BossListSheet() {
-  const { sheet, openSheet } = useGame();
-  const [list, setList] = useState<BossListItem[] | null>(null);
-  const open = sheet === "bosses";
-  useEffect(() => {
-    if (open) api.bosses().then((r) => setList(r.bosses)).catch(() => setList([]));
-  }, [open]);
-  return (
-    <Sheet open={open} onClose={() => openSheet(null)} title="Прогрессия боссов">
-      <div className="boss-list">
-        {!list && <div className="empty">Загрузка…</div>}
-        {list?.map((b) => (
-          <div key={b.index} className={`boss-row ${b.status}`}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={b.image} alt="" width={56} height={56} style={b.hueShift ? { filter: `hue-rotate(${b.hueShift}deg)` } : undefined} />
-            <div className="grow minw0">
-              <div className="strong ellipsis">#{b.index} {b.name}</div>
-              <div className="muted small">MC {money(b.marketCap, { compact: true })} · награда до {money(b.rewardUsdFull, { compact: true })}{b.dropToolId ? " · 🎁" : ""}</div>
-            </div>
-            <span className={`status status-${b.status}`}>
-              {b.status === "defeated" ? "✓" : b.status === "current" ? "Бой" : "🔒"}
-            </span>
-          </div>
-        ))}
-      </div>
-    </Sheet>
   );
 }
 
