@@ -21,6 +21,7 @@ export function BossScreen() {
     if (r) setFight(r.bossIndex);
   };
   if (!game) return null;
+  const atkImg = skinUrl("btn-attack");
   const nextReset = new Date(now);
   const resetIn = Date.UTC(nextReset.getUTCFullYear(), nextReset.getUTCMonth(), nextReset.getUTCDate() + 1) - now;
 
@@ -49,6 +50,7 @@ export function BossScreen() {
                 </div>
                 <div className="boss-meta">
                   <span title="Награда"><PriceTag price={b.reward} size={14} /></span>
+                  <span className="meta-power" title="Сила за победу">+{b.power} ⚔</span>
                   <span title="Побед">🏆 {b.wins}</span>
                 </div>
               </div>
@@ -58,9 +60,12 @@ export function BossScreen() {
                     {fight?.bossIndex === b.index ? (
                       <button className={`btn-attack comic ${fight.won ? "won" : fight.lost ? "lost" : "live"}`} onClick={() => setFight(b.index)}>{fight.won ? "WIN!" : fight.lost ? "ИТОГ" : "В БОЮ"}</button>
                     ) : (
-                      <button className="btn-attack comic" disabled={!!fight || b.attemptsLeft <= 0 || busy === "fight_start"} onClick={() => start(b.index)}>ATTACK</button>
+                      <button className={`btn-attack comic ${atkImg ? "skinned" : ""}`} aria-label="Напасть" disabled={!!fight || b.attemptsLeft <= 0 || busy === "fight_start"} onClick={() => start(b.index)}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        {atkImg ? <img className="skin-img" src={atkImg} alt="" draggable={false} /> : "ATTACK"}
+                      </button>
                     )}
-                    <small className="muted">{fight && fight.bossIndex !== b.index ? `бой #${fight.bossIndex}` : `${b.attemptsLeft}/${ATTACKS_PER_DAY}`}</small>
+                    <small className="muted">{fight && fight.bossIndex !== b.index ? `бой #${fight.bossIndex}` : `${ATTACKS_PER_DAY - b.attemptsLeft}/${ATTACKS_PER_DAY}`}</small>
                   </>
                 ) : b.canUnlock ? (
                   <button className="btn-unlock comic" disabled={busy === "unlock"} onClick={() => act("unlock", { boss: b.index }, `Босс #${b.index} открыт!`)}>
