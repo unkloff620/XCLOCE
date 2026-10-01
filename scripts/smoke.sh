@@ -11,8 +11,9 @@ H=(-H "authorization: Bearer $TOKEN" -H 'content-type: application/json')
 ME=$(curl -sf "${H[@]}" $BASE/api/me)
 echo "me: power=$(echo "$ME" | j .state.player.power) energy=$(echo "$ME" | j .state.player.energy) bosses=$(echo "$ME" | j .state.bosses.length)"
 echo "task: $(act '{"type":"task","taskId":"t-chat"}' | j .result.reward.amount)"
-echo "attack: $(act '{"type":"attack","boss":1}' | j '.result.win+" left="+o.result.attemptsLeft')"
-echo "locked attack: $(act '{"type":"attack","boss":2}' | j .error.code)"
+echo "hit: $(act '{"type":"hit","boss":1,"weapon":"fists"}' | j '.result.dmg+" hp="+o.result.hp+" left="+o.result.attemptsLeft')"
+echo "locked hit: $(act '{"type":"hit","boss":2}' | j .error.code)"
+echo "fight view: $(curl -s "$BASE/api/boss?index=1" -H "authorization: Bearer $TOKEN" | j '.fight.hp+"/"+o.fight.hpMax+" players="+o.fight.damage.length')"
 echo "buy fan: $(act '{"type":"buy","itemId":"w-paper-fan"}' | j .result.itemId)"
 echo "equip: $(act '{"type":"equip","itemId":"w-paper-fan"}' | j .result.power)"
 echo "daily: $(act '{"type":"daily"}' | j .result.label)"
