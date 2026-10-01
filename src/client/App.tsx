@@ -1,58 +1,45 @@
 "use client";
 import { GameProvider, useGame } from "./store.tsx";
-import { BottomNav, Toasts, TopBar } from "./chrome.tsx";
-import { EventsSheet, ExchangeSheet, HomeScreen } from "./screens/Home.tsx";
-import { MarketScreen, TokenScreen } from "./screens/Market.tsx";
-import { BossScreen, Celebration } from "./screens/Boss.tsx";
-import { MoreScreen } from "./screens/More.tsx";
-import { QuestsScreen } from "./screens/Quests.tsx";
+import { BottomNav, Toasts, TopHud } from "./hud.tsx";
+import { HomeScreen } from "./screens/Home.tsx";
+import { BattleModal, BossScreen } from "./screens/Boss.tsx";
+import { MarketScreen } from "./screens/Market.tsx";
+import { InventoryScreen, ItemSheet } from "./screens/Inventory.tsx";
+import { SocialScreen } from "./screens/Social.tsx";
+import { DailySheet, EventsSheet, MissionsSheet, ShopSheet, UpgradeSheet } from "./screens/Sheets.tsx";
 
 function Shell() {
-  const { status, error, tab, tokenId, retry, mode } = useGame();
-  if (status === "loading") {
+  const { status, error, tab, retry, mode } = useGame();
+  if (status !== "ready") {
     return (
       <div className="splash">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/assets/ui/logo.svg" width={84} height={84} alt="" className="splash-logo" />
-        <div className="splash-title">XCLOCE</div>
-        <div className="muted small">Загружаем рынок…</div>
-      </div>
-    );
-  }
-  if (status === "error") {
-    return (
-      <div className="splash">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/assets/bosses/01-bagholder-hurt.svg" width={140} height={140} alt="" className="splash-err" />
-        <div className="splash-title">Что-то сломалось</div>
-        <div className="muted center">{error}</div>
-        <button className="btn btn-primary" onClick={retry}>Попробовать снова</button>
+        <img src={status === "error" ? "/assets/bosses/01-bagholder.svg" : "/assets/ui/logo.svg"} width={status === "error" ? 160 : 90} height={status === "error" ? 160 : 90} alt="" className={status === "loading" ? "spin" : "rounded"} />
+        <div className="comic splash-title">{status === "error" ? "ЧТО-ТО СЛОМАЛОСЬ" : "XCLOCE"}</div>
+        {status === "error" ? (
+          <>
+            <div className="muted center">{error}</div>
+            <button className="btn-green comic" onClick={retry}>ЕЩЁ РАЗ</button>
+          </>
+        ) : <div className="muted small">Загрузка…</div>}
       </div>
     );
   }
   return (
     <div className="app">
-      <TopBar />
+      <TopHud />
       <main className="content">
-        {tokenId ? (
-          <TokenScreen id={tokenId} />
-        ) : tab === "home" ? (
-          <HomeScreen />
-        ) : tab === "market" ? (
-          <MarketScreen />
-        ) : tab === "boss" ? (
-          <BossScreen />
-        ) : tab === "quests" ? (
-          <QuestsScreen />
-        ) : (
-          <MoreScreen />
-        )}
-        {mode === "guest" && <div className="guest-note">Гостевой режим в браузере. Откройте через Telegram, чтобы сохранить прогресс в аккаунте.</div>}
+        {tab === "home" ? <HomeScreen /> : tab === "boss" ? <BossScreen /> : tab === "market" ? <MarketScreen /> : tab === "inventory" ? <InventoryScreen /> : <SocialScreen />}
+        {mode === "guest" && <div className="guest-note">Гостевой режим. Откройте игру в Telegram, чтобы прогресс сохранился в аккаунте.</div>}
       </main>
       <BottomNav />
-      <ExchangeSheet />
+      <ShopSheet />
+      <DailySheet />
+      <MissionsSheet />
       <EventsSheet />
-      <Celebration />
+      <UpgradeSheet />
+      <ItemSheet />
+      <BattleModal />
       <Toasts />
     </div>
   );

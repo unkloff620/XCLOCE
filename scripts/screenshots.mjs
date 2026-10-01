@@ -21,16 +21,11 @@ await page.waitForTimeout(2500);
 await shot(page, "home", false);
 await shot(page, "home-full");
 const nav = async (i) => { await page.locator(".navbtn").nth(i).click(); await page.waitForTimeout(1500); };
-await nav(1); await shot(page, "market", false);
-await nav(2); await shot(page, "boss");
-await nav(3); await shot(page, "quests");
-await nav(4); await shot(page, "upgrades");
-await page.getByRole("button", { name: "Гардероб" }).click(); await page.waitForTimeout(800); await shot(page, "wardrobe");
+for (const [i, name] of ["boss", "market", "home", "inventory", "social"].entries()) { await nav(i); await shot(page, name); }
 
 const gallery = await browser.newPage({ viewport: { width: 1200, height: 900 }, deviceScaleFactor: scale });
-const ids = ["01-bagholder", "02-copium-hamster", "03-wen-lambo", "04-paper-cat", "05-laser-ape", "06-bear-baron", "07-rug-wizard", "08-gas-goblin", "09-chart-astrologer", "10-troll-whale", "11-fomo-duck", "12-meme-king"];
+const ids = ["01-bagholder", "02-copium-hamster", "03-wen-lambo", "04-paper-cat", "05-laser-ape", "06-bear-baron", "07-rug-wizard", "08-gas-goblin", "09-troll-whale", "10-meme-king"];
 const grid = (list) => `<body style="margin:0;background:#111;display:grid;grid-template-columns:repeat(4,300px)">${list.map((i) => `<img src="${base}/assets/bosses/${i}.svg" width="300" height="300">`).join("")}</body>`;
 await gallery.setContent(grid(ids)); await gallery.waitForTimeout(1500); await shot(gallery, "bosses");
-await gallery.setContent(grid(ids.map((i) => i + "-hurt"))); await gallery.waitForTimeout(1500); await shot(gallery, "bosses-hurt");
 console.log("errors:", JSON.stringify(errors.slice(0, 10)));
 await browser.close();

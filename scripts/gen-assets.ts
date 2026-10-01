@@ -2,10 +2,10 @@
 // (node --experimental-strip-types scripts/gen-assets.ts). Output is committed to the repo.
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { accessorySvg, creatureSvg, type TokenArt } from "../src/shared/art.ts";
-import { BOSS_DESIGNS, type BossEnv } from "../src/shared/bosses.ts";
+import { BOSSES } from "../src/shared/content.ts";
 import { caption, memeBoss } from "./meme-bosses.ts";
-import { DUMP_TOOLS, EQUIPMENT } from "../src/shared/economy.ts";
+
+type BossEnv = "swamp" | "redchart" | "dojo" | "jungle" | "moon" | "storm" | "city" | "ocean" | "rug" | "office" | "gas" | "throne";
 
 const OUT = join(import.meta.dirname, "..", "public", "assets");
 function save(dir: string, name: string, svg: string) {
@@ -104,40 +104,15 @@ function env(e: BossEnv): string {
 }
 
 rmSync(join(OUT, "bosses"), { recursive: true, force: true });
-for (const [i, d] of BOSS_DESIGNS.entries()) {
-  for (const hurt of [false, true]) {
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">${env(d.env)}
+for (const d of BOSSES) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">${env(d.env as BossEnv)}
 <ellipse cx="200" cy="378" rx="130" ry="14" fill="#000" opacity=".35"/>
-<g>${memeBoss(d.slug, hurt)}</g>${hurt ? '<rect width="400" height="400" fill="#ff0030" opacity=".12"/>' : ""}
+<g>${memeBoss(d.slug, false)}</g>
 ${caption(d.top, 52)}${caption(d.bottom, 386)}</svg>`;
-    save("bosses", `${String(i + 1).padStart(2, "0")}-${d.slug}${hurt ? "-hurt" : ""}.svg`, svg);
-  }
+  save("bosses", `${String(d.index).padStart(2, "0")}-${d.slug}.svg`, svg);
 }
-
-// ---------------- Dump tools ----------------
-const RARITY_COLORS: Record<string, [string, string]> = {
-  common: ["#8b93a7", "#3a3f4d"], rare: ["#3fa7ff", "#0f3a66"], epic: ["#b45cff", "#3d1366"],
-  legendary: ["#ffb02e", "#6b3a00"], mythic: ["#ff3d81", "#5c0a2a"],
-};
-const TOOL_ART: Record<string, string> = {
-  paper: `<path d="M30 70l10-40 16 6 6-12 10 6-6 40z" fill="#f4f1e8" stroke="#bbb" stroke-width="2"/><path d="M38 52l18 4M36 60l20 4" stroke="#bbb" stroke-width="2"/><path d="M60 30q10 4 12 14" stroke="#fff" stroke-width="3" fill="none"/>`,
-  button: `<ellipse cx="50" cy="66" rx="30" ry="10" fill="#555"/><rect x="20" y="50" width="60" height="16" fill="#555"/><ellipse cx="50" cy="50" rx="30" ry="10" fill="#777"/><ellipse cx="50" cy="44" rx="22" ry="8" fill="#e63946"/><rect x="28" y="36" width="44" height="8" fill="#e63946"/><ellipse cx="50" cy="36" rx="22" ry="8" fill="#ff5a66"/><text x="50" y="40" text-anchor="middle" font-size="9" font-weight="800" fill="#fff" font-family="sans-serif">SELL</text>`,
-  bot: `<rect x="28" y="34" width="44" height="36" rx="8" fill="#9aa4b8"/><rect x="34" y="42" width="32" height="14" rx="4" fill="#0b0f18"/><circle cx="42" cy="49" r="3" fill="#ff3b5c"/><circle cx="58" cy="49" r="3" fill="#ff3b5c"/><path d="M50 34v-10" stroke="#9aa4b8" stroke-width="3"/><circle cx="50" cy="22" r="4" fill="#ff3b5c"/><path d="M38 64h24" stroke="#0b0f18" stroke-width="3"/>`,
-  whale: `<path d="M18 56q4-22 34-22 26 0 30 18l10-10v24l-10-6q-6 18-32 18-28 0-32-22z" fill="#3fa7ff"/><circle cx="34" cy="50" r="3" fill="#111"/><path d="M48 34q-4-10 2-14M52 34q4-10-2-14" stroke="#9fe3ff" stroke-width="3" fill="none"/><rect x="40" y="56" width="22" height="12" rx="3" fill="#ffd23f"/>`,
-  terminal: `<rect x="16" y="26" width="68" height="44" rx="6" fill="#141a2a" stroke="#b45cff" stroke-width="3"/><polyline points="22,60 34,50 42,56 54,38 64,46 78,32" fill="none" stroke="#22e58b" stroke-width="3"/><rect x="40" y="70" width="20" height="8" fill="#555"/><rect x="30" y="78" width="40" height="5" rx="2" fill="#777"/>`,
-  nuke: `<circle cx="50" cy="52" r="26" fill="#ffd23f"/><circle cx="50" cy="52" r="6" fill="#111"/><path d="M50 52l-13-22a26 26 0 0 1 26 0zM50 52l26 0a26 26 0 0 1-13 22zM50 52l-13 22a26 26 0 0 1-13-22z" fill="#111"/>`,
-  cannon: `<rect x="22" y="40" width="50" height="20" rx="6" fill="#4a4f5c" transform="rotate(-20 47 50)"/><circle cx="36" cy="66" r="12" fill="#6b4a2a" stroke="#3a2a1a" stroke-width="3"/><path d="M70 30q8-6 14 2-4 8-14 6z" fill="#b3283c"/><path d="M72 32h10" stroke="#ffd23f" stroke-width="2" stroke-dasharray="2 2"/>`,
-  machine: `<rect x="20" y="30" width="60" height="44" rx="6" fill="#5c6270"/><rect x="28" y="38" width="20" height="14" fill="#111"/><text x="38" y="49" text-anchor="middle" font-size="9" fill="#ff3b5c" font-family="monospace">-99</text><circle cx="64" cy="45" r="8" fill="#ffb02e"/><path d="M28 62h44" stroke="#ff3b5c" stroke-width="4"/><path d="M34 30l6-10h20l6 10" fill="#3a3f4d"/>`,
-  swan: `<path d="M30 70q-6-20 16-24 18-2 22 12 4-24-8-30-10-4-12 6" fill="none" stroke="#0b0b0f" stroke-width="7" stroke-linecap="round"/><path d="M26 70q24 10 50-2-8 14-26 14-18 0-24-12z" fill="#0b0b0f"/><path d="M54 30l8 2-8 3z" fill="#ff3d81"/>`,
-};
-for (const t of DUMP_TOOLS) {
-  const [c1, c2] = RARITY_COLORS[t.rarity];
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><radialGradient id="r" cx="50%" cy="40%" r="70%"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></radialGradient></defs>
-<rect x="2" y="2" width="96" height="96" rx="20" fill="url(#r)"/><rect x="2" y="2" width="96" height="96" rx="20" fill="none" stroke="#fff" stroke-opacity=".25" stroke-width="2"/>${TOOL_ART[t.effect]}</svg>`;
-  save("dump-tools", `${t.id}.svg`, svg);
-}
-
-rmSync(join(OUT, "rooms"), { recursive: true, force: true }); // rooms are rendered live by src/client/room/Room.tsx
+rmSync(join(OUT, "rooms"), { recursive: true, force: true });
+rmSync(join(OUT, "dump-tools"), { recursive: true, force: true });
 
 // ---------------- Currency icons ----------------
 const CUR: Record<string, string> = {
