@@ -10,14 +10,14 @@ export function TopHud() {
   const b = game.balances;
   return (
     <header className="hud">
-      <div className="hud-panel hud-profile">
+      <button className="hud-panel hud-profile" onClick={() => openSheet("profile")} aria-label="Профиль">
         <Avatar url={p.photoUrl} name={p.name} size={44} />
         <div className="minw0 grow">
           <div className="hud-name ellipsis">{p.name}</div>
           <div className="hud-lvl"><span>Lv. {p.level}</span></div>
           <span className="xpbar"><span style={{ width: `${Math.min(100, (p.xp / p.xpNext) * 100)}%` }} /></span>
         </div>
-      </div>
+      </button>
       <div className="hud-panel hud-power">
         <div className="row-c">
           <UIcon name="swords" size={26} />
@@ -26,10 +26,9 @@ export function TopHud() {
             <b className="comic"><AnimatedNumber value={p.power} format={fmtNum} /></b>
           </div>
         </div>
-        <button className="energy-line" onClick={() => openSheet("shop")} aria-label="Энергия">
-          <UIcon name="energy" size={14} />
-          <b>{Math.floor(energyNow)}/{p.maxEnergy}</b>
-          {nextEnergyIn > 0 && <small>{Math.ceil(nextEnergyIn / 1000)}s</small>}
+        <button className="energy-mini" onClick={() => openSheet("shop")} aria-label="Энергия" title={nextEnergyIn > 0 ? `+1 через ${Math.ceil(nextEnergyIn / 1000)} с` : "Энергия полная"}>
+          <span className="energy-fill" style={{ width: `${Math.min(100, (energyNow / p.maxEnergy) * 100)}%` }} />
+          <span className="energy-txt">⚡{Math.floor(energyNow)}/{p.maxEnergy}</span>
         </button>
       </div>
       <div className="hud-panel hud-money">

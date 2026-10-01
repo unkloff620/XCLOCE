@@ -1,9 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { Db } from "../src/server/db.ts";
 import * as G from "../src/server/game.ts";
-import { ATTACKS_PER_DAY, DAMAGE_MULT, avgHit, rollHit } from "../src/shared/economy.ts";
-import { ITEMS } from "../src/shared/items.ts";
-import { BOSSES } from "../src/shared/content.ts";
+import { ATTACKS_PER_DAY } from "../src/shared/economy.ts";
+import { BOSSES, LOCATIONS } from "../src/shared/content.ts";
 import { always, bal, freshDb, newPlayer, qty } from "./helpers.ts";
 
 let db: Db;
@@ -12,121 +11,162 @@ afterEach(async () => { await db.close(); });
 let clock = Date.UTC(2026, 9, 1, 10, 0, 0); // a Thursday
 const t = () => (clock += 1_000);
 
-describe("hit math", () => {
-  it("damage scales with power, crits double it", () => {
-    expect(rollHit(100, always(0.5))).toEqual({ dmg: 100 * DAMAGE_MULT, crit: false });
-    expect(rollHit(100, always(0.01)).crit).toBe(true);
-    expect(avgHit(200)).toBeGreaterThan(avgHit(100));
-  });
-});
+const H = 3_600_000;
+const start = (pid: number, boss = 1, at = t()) => db.tx((tx) => G.startFight(tx, pid, boss, at));
+const hit = (pid: number, weapon = "fists", at = t()) => db.tx((tx) => G.hitFight(tx, pid, weapon, at));
+const view = (pid: number) => db.tx((tx) => G.fightView(tx, pid, clock));
+const claim = (pid: number, at = t()) => db.tx((tx) => G.claimFight(tx, pid, at, always(0.99)));
+const give = (pid: number, item: string) => db.query("INSERT INTO inventory (player_id, item_type, item_id, quantity) VALUES ($1,'item',$2,1) ON CONFLICT DO NOTHING", [pid, item]);
+const openBoss = (pid: number, n: number) => db.query("INSERT INTO player_bosses (player_id, boss_index, unlocked) VALUES ($1,$2,TRUE) ON CONFLICT (player_id, boss_index) DO UPDATE SET unlocked = TRUE", [pid, n]);
 
-const hit = (pid: number, boss = 1, at = t(), weapon = G.FISTS) => db.tx((tx) => G.doHit(tx, pid, boss, weapon, at, always(0.5)));
-const settle = (pid: number) => db.tx((tx) => G.lockPlayer(tx, pid, t()));
-const fightOf = (pid: number, boss = 1) => db.tx((tx) => G.bossFight(tx, pid, boss, clock));
-
-describe("shared bosses", () => {
-  it("boss #1 is open, others locked; locked bosses cannot be hit", async () => {
+describe("personal fights with global damage", () => {
+  it("boss #1 is open, others locked; fists are always available", async () => {
     const pid = await newPlayer(db);
     const st = await db.tx((tx) => G.getState(tx, pid, clock));
     expect(st.bosses.map((b) => b.unlocked)).toEqual([true, false, false, false, false, false, false, false, false, false]);
-    expect(st.bosses[0]).toMatchObject({ hp: BOSSES[0].hp, hpMax: BOSSES[0].hp });
-    expect(st.weapons.map((w) => w.id)).toEqual([G.FISTS]);
-    await expect(hit(pid, 2)).rejects.toMatchObject({ code: "boss_locked" });
+    expect(st.weapons).toEqual([{ id: "fists", name: "Кулаки", dmg: 20, cooldownMin: 60 }]);
+    expect(st.fight).toBeNull();
+    await expect(start(pid, 2)).rejects.toMatchObject({ code: "boss_locked" });
+    await expect(hit(pid)).rejects.toMatchObject({ code: "no_fight" });
   });
 
-  it("HP is shared; the kill splits the reward by damage and gives keys to the killer and big hitters", async () => {
-    const a = await newPlayer(db);
-    const b = await newPlayer(db);
-    const rubA = await bal(db, a, "RUB");
-    const rubB = await bal(db, b, "RUB");
-    const h1 = await hit(a);
-    expect(h1).toMatchObject({ dmg: 300, hp: 600, killed: false, attemptsLeft: ATTACKS_PER_DAY - 1 });
-    await hit(a);
-    const seenByB = await fightOf(b);
-    expect(seenByB.hp).toBe(300);
-    expect(seenByB.damage).toEqual([expect.objectContaining({ id: a, damage: 600, hits: 2 })]);
-    const kill = await hit(b);
-    expect(kill).toMatchObject({ killed: true, hp: 0 });
-    expect(kill.kill).toMatchObject({ killer: true, key: true, amount: 300 });
-    expect(await bal(db, b, "RUB")).toBe(rubB + 300);
-    expect(await qty(db, b, "key-1")).toBe(1);
-    // A's share is paid on A's next action
-    expect(await bal(db, a, "RUB")).toBe(rubA);
-    await settle(a);
-    expect(await bal(db, a, "RUB")).toBe(rubA + 600);
-    expect(await qty(db, a, "key-1")).toBe(1);
-    await settle(a); // paid only once
-    expect(await bal(db, a, "RUB")).toBe(rubA + 600);
-    const fresh = await fightOf(a);
-    expect(fresh).toMatchObject({ hp: BOSSES[0].hp, damage: [] });
-    expect(fresh.lastKill).toMatchObject({ killerId: b, myReward: { amount: 600, key: true, killer: false } });
-    const st = await db.tx((tx) => G.getState(tx, a, clock));
-    expect(st.bosses[0].wins).toBe(1);
-  });
-
-  it("small contributors get a share but no key", async () => {
-    const a = await newPlayer(db);
-    const b = await newPlayer(db);
-    for (const pid of [a, b]) await db.query("INSERT INTO player_bosses (player_id, boss_index, unlocked) VALUES ($1, 5, TRUE)", [pid]);
-    await db.query("UPDATE players SET power_bonus = 5000 WHERE id=$1", [b]);
-    await hit(a, 5);
-    const k = await hit(b, 5);
-    expect(k.killed).toBe(true);
-    await settle(a);
-    expect(await qty(db, a, "key-5")).toBe(0);
-    const f = await fightOf(a, 5);
-    expect(f.lastKill?.myReward).toMatchObject({ key: false, share: 300 / BOSSES[4].hp });
-  });
-
-  it("hits are limited to 7 per day per boss and come back the next day", async () => {
+  it("fist deals 20 damage and recharges for 1 hour", async () => {
     const pid = await newPlayer(db);
-    for (let i = 0; i < ATTACKS_PER_DAY; i++) await hit(pid);
-    await expect(hit(pid)).rejects.toMatchObject({ code: "no_attempts" });
-    expect(await qty(db, pid, "key-1")).toBe(2); // killed on hits 3 and 6
-    const again = await hit(pid, 1, clock + 24 * 3_600_000);
-    expect(again.attemptsLeft).toBe(ATTACKS_PER_DAY - 1);
+    await start(pid);
+    const h1 = await hit(pid);
+    expect(h1).toMatchObject({ dmg: 20, hp: BOSSES[0].hp - 20, won: false });
+    await expect(hit(pid)).rejects.toMatchObject({ code: "cooldown" });
+    const h2 = await hit(pid, "fists", h1.readyAt + 1_000);
+    expect(h2.hp).toBe(BOSSES[0].hp - 40);
+  });
+
+  it("every player's damage hits every active fight, whatever boss they fight", async () => {
+    const a = await newPlayer(db);
+    const b = await newPlayer(db);
+    await openBoss(b, 2);
+    await start(b, 2);
+    await hit(b); // before A's fight — does not count for A
+    await start(a, 1);
+    expect((await view(a))?.hp).toBe(BOSSES[0].hp);
+    await hit(b, "fists", clock + 2 * H);
+    const v = await view(a);
+    expect(v?.hp).toBe(BOSSES[0].hp - 20);
+    expect(v?.damage).toEqual([expect.objectContaining({ id: b, damage: 20, hits: 1, boss_index: 2 })]);
+    expect((await view(b))?.hp).toBe(BOSSES[1].hp - 40);
+  });
+
+  it("victory window → claim pays reward + key, ends the fight and resets cooldowns", async () => {
+    const pid = await newPlayer(db);
+    await give(pid, "w-diamond-fist");
+    const rub0 = await bal(db, pid, "RUB");
+    await start(pid);
+    await hit(pid); // fist goes on cooldown
+    const k = await hit(pid, "w-diamond-fist");
+    expect(k).toMatchObject({ won: true, hp: 0 });
+    await expect(hit(pid, "w-diamond-fist", clock + 5 * H)).rejects.toMatchObject({ code: "boss_dead" });
+    await expect(start(pid, 1)).resolves.toMatchObject({ already: true });
+    expect((await db.tx((tx) => G.getState(tx, pid, clock))).fight).toMatchObject({ won: true, bossIndex: 1 });
+    const r = await claim(pid);
+    expect(r).toMatchObject({ bossIndex: 1, key: "key-1", myDamage: 3520 });
+    expect(await bal(db, pid, "RUB")).toBe(rub0 + BOSSES[0].reward.amount);
+    expect(await qty(db, pid, "key-1")).toBe(1);
+    const st = await db.tx((tx) => G.getState(tx, pid, clock));
+    expect(st.fight).toBeNull();
+    expect(st.bosses[0].wins).toBe(1);
+    await expect(claim(pid)).rejects.toMatchObject({ code: "no_fight" });
+    await start(pid);
+    await expect(hit(pid)).resolves.toMatchObject({ dmg: 20 }); // fist cooldown was reset
+  });
+
+  it("a boss killed by other players' damage can be claimed without hitting", async () => {
+    const a = await newPlayer(db);
+    const b = await newPlayer(db);
+    await start(a, 1);
+    await openBoss(b, 3);
+    await give(b, "w-diamond-fist");
+    await start(b, 3);
+    await hit(b, "w-diamond-fist");
+    expect((await view(a))?.won).toBe(true);
+    await expect(claim(a)).resolves.toMatchObject({ myDamage: 0, key: "key-1" });
+    expect((await view(b))?.won).toBe(false); // boss #3 has more HP
+  });
+
+  it("one fight at a time, fleeing ends it, 7 fights per boss per day", async () => {
+    const pid = await newPlayer(db);
+    await openBoss(pid, 2);
+    await start(pid, 1);
+    await expect(start(pid, 2)).rejects.toMatchObject({ code: "in_fight" });
+    await db.tx((tx) => G.fleeFight(tx, pid, t()));
+    for (let i = 1; i < ATTACKS_PER_DAY; i++) {
+      await start(pid, 1);
+      await db.tx((tx) => G.fleeFight(tx, pid, t()));
+    }
+    await expect(start(pid, 1)).rejects.toMatchObject({ code: "no_attempts" });
+    await expect(start(pid, 1, clock + 24 * H)).resolves.toMatchObject({ already: false });
   });
 
   it("3 keys from boss #1 unlock boss #2 and are consumed", async () => {
     const pid = await newPlayer(db);
-    for (let i = 0; i < 6; i++) await hit(pid);
-    await expect(db.tx((tx) => G.unlockBoss(tx, pid, 2, t()))).rejects.toMatchObject({ code: "no_keys" });
-    for (let i = 0; i < 3; i++) await hit(pid, 1, clock + 24 * 3_600_000 + i * 1000);
-    const day2 = clock + 24 * 3_600_000 + 10_000;
-    const st0 = await db.tx((tx) => G.getState(tx, pid, day2));
-    expect(st0.bosses[1].canUnlock).toBe(true);
-    await db.tx((tx) => G.unlockBoss(tx, pid, 2, day2 + 1_000));
+    await give(pid, "w-diamond-fist");
+    for (let i = 0; i < 3; i++) {
+      await start(pid);
+      await hit(pid, "w-diamond-fist");
+      await claim(pid);
+    }
+    expect((await db.tx((tx) => G.getState(tx, pid, clock))).bosses[1].canUnlock).toBe(true);
+    await db.tx((tx) => G.unlockBoss(tx, pid, 2, t()));
     expect(await qty(db, pid, "key-1")).toBe(0);
-    const st = await db.tx((tx) => G.getState(tx, pid, day2 + 2_000));
-    expect(st.bosses[1].unlocked).toBe(true);
-  });
-
-  it("weapons: only owned ones can be used and they add damage", async () => {
-    const pid = await newPlayer(db);
-    const w = ITEMS.find((i) => i.kind === "weapon")!;
-    await expect(hit(pid, 1, t(), w.id)).rejects.toMatchObject({ code: "no_item" });
-    await db.query("INSERT INTO inventory (player_id, item_type, item_id, quantity) VALUES ($1,'item',$2,1)", [pid, w.id]);
-    const r = await hit(pid, 1, t(), w.id);
-    expect(r.dmg).toBe((100 + (w.power ?? 0)) * DAMAGE_MULT);
-    const st = await db.tx((tx) => G.getState(tx, pid, clock));
-    expect(st.weapons.map((x) => x.id)).toEqual([G.FISTS, w.id]);
+    expect((await db.tx((tx) => G.getState(tx, pid, clock))).bosses[1].unlocked).toBe(true);
   });
 });
 
-describe("market tasks, shop, inventory", () => {
-  it("tasks spend energy and grant currency, xp and power", async () => {
+describe("market locations", () => {
+  it("task steps spend energy and advance progress; finishing a location pays its reward and opens the next", async () => {
     const pid = await newPlayer(db);
-    const before = await db.tx((tx) => G.getState(tx, pid, clock));
-    const r = await db.tx((tx) => G.doTask(tx, pid, "t-chat", t()));
-    expect(r.reward.amount).toBe(350);
-    const after = await db.tx((tx) => G.getState(tx, pid, clock));
-    expect(after.player.energy).toBe(before.player.energy - 5);
-    expect(after.player.power).toBeGreaterThan(before.player.power);
-    await expect(db.tx((tx) => G.doTask(tx, pid, "t-mining", t()))).rejects.toMatchObject({ code: "locked" });
-    await db.query("UPDATE players SET energy = 3 WHERE id = $1", [pid]);
-    await expect(db.tx((tx) => G.doTask(tx, pid, "t-chat", t()))).rejects.toMatchObject({ code: "no_energy" });
+    const loc = LOCATIONS[0];
+    const rub0 = await bal(db, pid, "RUB");
+    const r = await db.tx((tx) => G.doTask(tx, pid, loc.tasks[0].id, t()));
+    expect(r).toMatchObject({ progress: 1, target: loc.tasks[0].target, done: false, locationComplete: false, reward: loc.tasks[0].reward });
+    expect((await db.tx((tx) => G.getState(tx, pid, clock))).player.energy).toBe(100 - loc.tasks[0].energy);
+    expect(await bal(db, pid, "RUB")).toBe(rub0 + loc.tasks[0].reward.amount);
+    await expect(db.tx((tx) => G.doTask(tx, pid, LOCATIONS[1].tasks[0].id, t()))).rejects.toMatchObject({ code: "locked" });
+    await expect(db.tx((tx) => G.claimLocation(tx, pid, loc.id, t()))).rejects.toMatchObject({ code: "not_complete" });
+    await db.query("UPDATE players SET energy = 5000 WHERE id=$1", [pid]);
+    let last = r;
+    for (const task of loc.tasks) {
+      const already = task === loc.tasks[0] ? 1 : 0;
+      for (let i = already; i < task.target; i++) last = await db.tx((tx) => G.doTask(tx, pid, task.id, t()));
+    }
+    expect(last).toMatchObject({ done: true, locationComplete: true });
+    await expect(db.tx((tx) => G.doTask(tx, pid, loc.tasks[0].id, t()))).rejects.toMatchObject({ code: "task_done" });
+    const before = await bal(db, pid, "RUB");
+    const c = await db.tx((tx) => G.claimLocation(tx, pid, loc.id, t()));
+    expect(c).toMatchObject({ clears: 1 });
+    expect(await bal(db, pid, "RUB")).toBe(before + loc.reward.price.amount);
+    expect(await qty(db, pid, "x-chest")).toBe(1);
+    const st = await db.tx((tx) => G.getState(tx, pid, clock));
+    expect(st.locations.clears[loc.id]).toBe(1);
+    expect(st.locations.progress[loc.tasks[0].id]).toBeUndefined(); // replayable
+    await expect(db.tx((tx) => G.doTask(tx, pid, LOCATIONS[1].tasks[0].id, t()))).resolves.toMatchObject({ progress: 1 });
+    await db.query("UPDATE players SET energy = 0 WHERE id=$1", [pid]);
+    await expect(db.tx((tx) => G.doTask(tx, pid, loc.tasks[0].id, t()))).rejects.toMatchObject({ code: "no_energy" });
   });
+});
 
+describe("profile", () => {
+  it("nickname can be changed once per 24h and must be unique", async () => {
+    const a = await newPlayer(db);
+    const b = await newPlayer(db);
+    await expect(db.tx((tx) => G.renamePlayer(tx, a, "ab", t()))).rejects.toMatchObject({ code: "bad_name" });
+    await db.tx((tx) => G.renamePlayer(tx, a, "  Doge   King ", t()));
+    expect((await db.tx((tx) => G.getState(tx, a, clock))).player.name).toBe("Doge King");
+    await expect(db.tx((tx) => G.renamePlayer(tx, a, "Doge Queen", t()))).rejects.toMatchObject({ code: "rename_cooldown" });
+    await expect(db.tx((tx) => G.renamePlayer(tx, b, "doge king", t()))).rejects.toMatchObject({ code: "name_taken" });
+    await expect(db.tx((tx) => G.renamePlayer(tx, a, "Doge Queen", clock + 25 * H))).resolves.toMatchObject({ name: "Doge Queen" });
+  });
+});
+
+describe("shop, inventory", () => {
   it("buying and equipping a weapon raises power; duplicate purchase is idempotent", async () => {
     const pid = await newPlayer(db);
     const p0 = (await db.tx((tx) => G.getState(tx, pid, clock))).player.power;

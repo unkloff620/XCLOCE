@@ -13,9 +13,11 @@ export function HomeScreen() {
   const missionsReady = game.missions.filter((m) => m.done && !m.claimed).length;
   const idleFullIn = Math.max(0, game.idle.capMs - game.idle.ms);
 
-  const fight = () => {
+  const fight = async () => {
+    if (game.fight) return setFight(game.fight.bossIndex);
     if (!target) return setTab("boss");
-    setFight(target.index);
+    const r = await act<{ bossIndex: number }>("fight_start", { boss: target.index });
+    if (r) setFight(r.bossIndex);
   };
 
   return (
@@ -48,7 +50,7 @@ export function HomeScreen() {
         <button className="fight-btn" onClick={fight}>
           <span className="fight-burst" />
           <span className="fight-text comic">FIGHT<br />NOW</span>
-          <span className="fight-sub">{target ? `⚔ ${target.name} · ${target.attemptsLeft}/7` : "Выбрать босса"}</span>
+          <span className="fight-sub">{game.fight ? (game.fight.won ? "Победа! Забери награду" : `В бою: #${game.fight.bossIndex}`) : target ? `⚔ ${target.name} · ${target.attemptsLeft}/7` : "Выбрать босса"}</span>
         </button>
       </section>
 

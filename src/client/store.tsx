@@ -4,7 +4,7 @@ import { api, ApiError, login, type ActionResponse, type GameState } from "./api
 import { haptic, initTelegram } from "./telegram.ts";
 
 export type Tab = "boss" | "market" | "home" | "inventory" | "social";
-export type SheetName = "shop" | "daily" | "missions" | "events" | "upgrade" | "exchange" | "rooms" | null;
+export type SheetName = "shop" | "daily" | "missions" | "events" | "upgrade" | "exchange" | "rooms" | "profile" | null;
 export interface Toast { id: number; kind: "ok" | "err" | "info"; text: string }
 
 interface Ctx {
@@ -23,6 +23,7 @@ interface Ctx {
   toasts: Toast[];
   toast: (kind: Toast["kind"], text: string) => void;
   applyState: (s: GameState) => void;
+  refresh: () => Promise<void>;
   busy: string | null;
   act: <R>(type: string, payload?: Record<string, unknown>, okText?: string | ((r: R) => string)) => Promise<R | null>;
   energyNow: number;
@@ -146,7 +147,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const value: Ctx = {
     status, error, mode, game, tab, setTab, sheet, openSheet: setSheet, itemSheet, openItem: setItemSheet, fight, setFight,
-    toasts, toast, applyState: apply, busy, act, energyNow, nextEnergyIn, now: now + offset.current, retry: () => setRetryN((n) => n + 1),
+    toasts, toast, applyState: apply, refresh: () => api.me().then((r) => apply(r.state)).catch(() => undefined), busy, act, energyNow, nextEnergyIn, now: now + offset.current, retry: () => setRetryN((n) => n + 1),
   };
   return <GameCtx.Provider value={value}>{children}</GameCtx.Provider>;
 }
