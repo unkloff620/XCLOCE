@@ -103,7 +103,7 @@ export const hms = (ms: number) => {
 
 /** Personal fight, shown between the HUD and the bottom menu. Damage of all players (on any boss) also hits this boss. */
 export function FightScreen() {
-  const { fight: openIndex, setFight, game, act, busy, refresh, now, openSheet } = useGame();
+  const { fight: openIndex, setFight, setTab, game, act, busy, refresh, now, openSheet } = useGame();
   const [view, setView] = useState<FightView | null>(null);
   const [pops, setPops] = useState<{ id: number; dmg: number }[]>([]);
   const [shake, setShake] = useState(0);
@@ -111,6 +111,8 @@ export function FightScreen() {
   const doneRef = useRef(false);
   const refreshRef = useRef(refresh);
   refreshRef.current = refresh;
+  const setTabRef = useRef(setTab);
+  setTabRef.current = setTab;
 
   // poll the fight once every 3 s; the effect depends only on the boss, so the list never resets between polls
   useEffect(() => {
@@ -124,8 +126,10 @@ export function FightScreen() {
         if (!r.fight) return setFight(null);
         setView(r.fight);
         if ((r.fight.won || r.fight.lost) && !doneRef.current) {
+          // the fight is over (someone's damage finished the boss, or 8 h ran out): close it, the result window opens on the boss list
           doneRef.current = true;
-          refreshRef.current(); // result window
+          await refreshRef.current();
+          if (alive) setTabRef.current("boss");
         }
       } catch {
         /* keep the last view; the next poll retries */
@@ -156,8 +160,10 @@ export function FightScreen() {
     setShake((n) => n + 1);
     setView((v) => (v ? { ...v, hp: r.hp, won: r.won, cooldowns: r.readyAt ? { ...v.cooldowns, [weapon]: r.readyAt } : v.cooldowns } : v));
     if (r.won) {
+      // boss defeated: leave the fight screen; the victory window opens over the boss list
       doneRef.current = true;
       haptic.ok();
+      setTimeout(() => setTab("boss"), 700);
     }
   };
 
@@ -247,7 +253,8 @@ export function FightScreen() {
 export function ResultModal() {
   const { game, act, busy, setFight, setTab, toast, tab, fight: openFight } = useGame();
   const f = game?.fight;
-  if (!f || !(f.won || f.lost) || (tab !== "boss" && openFight === null)) return null;
+  // shown only on the boss list (the fight screen closes first)
+  if (!f || !(f.won || f.lost) || tab !== "boss" || openFight !== null) return null;
   const def = BOSSES.find((b) => b.index === f.bossIndex)!;
   const close = async () => {
     const r = await act<VictoryResult>("fight_claim");

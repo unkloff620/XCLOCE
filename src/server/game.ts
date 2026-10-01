@@ -426,9 +426,10 @@ export function yardItem(pid: number, slot: number) {
   const kind: YardKind = roll < 0.02 ? "weapon" : roll < 0.4 ? "beer" : roll < 0.65 ? "energy" : "coins";
   const x = Math.round(8 + r(4) * 80);
   const y = Math.round(52 + r(8) * 36);
-  let reward: { energy?: number; rub?: number; item?: string };
-  if (kind === "beer") reward = { energy: 5 };
-  else if (kind === "energy") reward = { energy: 15 };
+  // drinks and weapons go to the inventory (weapons then show up in boss fights too); small change goes to the RUB balance
+  let reward: { rub?: number; item?: string };
+  if (kind === "beer") reward = { item: "x-beer" };
+  else if (kind === "energy") reward = { item: "x-can" };
   else if (kind === "coins") reward = { rub: 10 + Math.floor(r(12) * 51) };
   else reward = { item: r(12) < 0.7 ? "w-paper-fan" : "w-sell-club" };
   return { slot, kind, x, y, reward };
@@ -449,17 +450,13 @@ export async function yardView(tx: Queryable, pid: number, now = Date.now()) {
   return { items: pickedToday >= YARD_DAILY_LIMIT ? [] : items, pickedToday, limit: YARD_DAILY_LIMIT, slotMs: YARD_SLOT_MS, nextAt: (cur + 1) * YARD_SLOT_MS, serverTime: now };
 }
 export async function yardPick(tx: Queryable, pid: number, slot: number, now = Date.now()) {
-  const p = await lockPlayer(tx, pid, now);
+  await lockPlayer(tx, pid, now);
   const cur = Math.floor(now / YARD_SLOT_MS);
   if (!Number.isInteger(slot) || slot > cur || slot <= cur - YARD_TTL_SLOTS) throw new GameError("yard_gone", "Предмет уже исчез", 400);
   if ((await yardPickedToday(tx, pid, now)) >= YARD_DAILY_LIMIT) throw new GameError("yard_limit", "На сегодня во дворе всё собрано. Приходи завтра", 400);
   const it = yardItem(pid, slot);
   const ins = await tx.query("INSERT INTO yard_pickups (player_id, slot, item, created_at) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING RETURNING slot", [pid, slot, it.kind, new Date(now)]);
   if (!ins.length) throw new GameError("yard_taken", "Уже подобрано", 400);
-  if (it.reward.energy) {
-    const max = maxEnergy(p.equipment_tier);
-    await tx.query("UPDATE players SET energy = GREATEST(energy, LEAST($2::int * 2, energy + $3)) WHERE id=$1", [pid, max, it.reward.energy]);
-  }
   if (it.reward.rub) await credit(tx, pid, { currency: "RUB", amount: it.reward.rub });
   if (it.reward.item) await addItem(tx, pid, it.reward.item);
   return { slot, kind: it.kind, reward: it.reward };

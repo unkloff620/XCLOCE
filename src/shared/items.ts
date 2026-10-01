@@ -53,6 +53,8 @@ export const ITEMS: ItemDef[] = [
   { id: "c-gold", name: "Золотая цепь", kind: "chain", rarity: "rare", power: 40, price: { currency: "USD", amount: 60 }, unlockLevel: 5, art: "chain", color: "#ffd23f", description: "С кулоном-короной." },
   { id: "c-diamond", name: "Бриллиантовая цепь", kind: "chain", rarity: "epic", power: 110, price: { currency: "SOL", amount: 2 }, unlockLevel: 9, art: "chain", color: "#7cf3ff", description: "Diamond hands, diamond chain." },
   // ---------- consumables ----------
+  { id: "x-beer", name: "Бутылка пива", kind: "consumable", rarity: "common", energy: 5, art: "beer", color: "#7a3d0e", description: "+5 энергии. Нашёл во дворе — тёплое, но бодрит.", stackable: true },
+  { id: "x-can", name: "Банка энергетика", kind: "consumable", rarity: "common", energy: 15, art: "can", color: "#9dff3a", description: "+15 энергии. Нашёл во дворе, почти полная.", stackable: true },
   { id: "x-energy", name: "Энергетик", kind: "consumable", rarity: "common", energy: 30, price: { currency: "RUB", amount: 1_500 }, art: "can", color: "#22e58b", description: "+30 энергии. Вкус зелёной свечи.", stackable: true },
   { id: "x-mega-energy", name: "Мега-энергетик", kind: "consumable", rarity: "rare", energy: 100, price: { currency: "USD", amount: 12 }, art: "can", color: "#ff3d81", description: "+100 энергии. Сердце стучит как график.", stackable: true },
   { id: "x-chest", name: "Мем-сундук", kind: "chest", rarity: "rare", price: { currency: "USD", amount: 30 }, art: "chest", color: "#d98f3a", description: "Валюта, энергетики, шанс на экипировку.", stackable: true },
