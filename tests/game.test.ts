@@ -92,12 +92,12 @@ describe("shared bosses", () => {
     for (let i = 0; i < 6; i++) await hit(pid);
     await expect(db.tx((tx) => G.unlockBoss(tx, pid, 2, t()))).rejects.toMatchObject({ code: "no_keys" });
     for (let i = 0; i < 3; i++) await hit(pid, 1, clock + 24 * 3_600_000 + i * 1000);
-    clock += 24 * 3_600_000 + 10_000;
-    const st0 = await db.tx((tx) => G.getState(tx, pid, clock));
+    const day2 = clock + 24 * 3_600_000 + 10_000;
+    const st0 = await db.tx((tx) => G.getState(tx, pid, day2));
     expect(st0.bosses[1].canUnlock).toBe(true);
-    await db.tx((tx) => G.unlockBoss(tx, pid, 2, t()));
+    await db.tx((tx) => G.unlockBoss(tx, pid, 2, day2 + 1_000));
     expect(await qty(db, pid, "key-1")).toBe(0);
-    const st = await db.tx((tx) => G.getState(tx, pid, clock));
+    const st = await db.tx((tx) => G.getState(tx, pid, day2 + 2_000));
     expect(st.bosses[1].unlocked).toBe(true);
   });
 
@@ -107,7 +107,7 @@ describe("shared bosses", () => {
     await expect(hit(pid, 1, t(), w.id)).rejects.toMatchObject({ code: "no_item" });
     await db.query("INSERT INTO inventory (player_id, item_type, item_id, quantity) VALUES ($1,'item',$2,1)", [pid, w.id]);
     const r = await hit(pid, 1, t(), w.id);
-    expect(r.dmg).toBe((100 + w.power) * DAMAGE_MULT);
+    expect(r.dmg).toBe((100 + (w.power ?? 0)) * DAMAGE_MULT);
     const st = await db.tx((tx) => G.getState(tx, pid, clock));
     expect(st.weapons.map((x) => x.id)).toEqual([G.FISTS, w.id]);
   });
