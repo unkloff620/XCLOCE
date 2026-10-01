@@ -8,7 +8,7 @@ for (const width of [320, 360, 390, 768]) {
   await page.goto(base, { waitUntil: "networkidle" });
   await page.waitForTimeout(2000);
   for (let tab = 0; tab < 5; tab++) {
-    await page.locator(".navbtn").nth(tab).click();
+    await page.locator(".nav-btn").nth(tab).click();
     await page.waitForTimeout(900);
     const r = await page.evaluate(() => {
       const vw = document.documentElement.clientWidth;
