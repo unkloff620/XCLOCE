@@ -37,6 +37,15 @@ tests/        game.test.ts (fights, global damage, cooldowns, keys, locations, r
 clan_create, clan_disband, clan_request, clan_cancel, clan_accept, clan_reject, clan_kick, clan_leave. Returns `{result, state}`.
 `GET /api/me`, `GET /api/fight` (active fight: HP after global damage, cooldowns, damage list, end time), `GET /api/yard` (items lying in the yard), `GET /api/clans?search=|?id=`, `GET /api/feed` (feed + top players), `POST /api/auth`, `GET /api/health`.
 
+## Skins (owner's artwork)
+
+- All replaceable pictures are listed in `src/shared/skin.ts` (`SKIN_SLOTS`: key, size at 3×, kind nine/image/cover, 9-slice corner,
+  text padding, overlay zones). Owner's spec page: "Скины XCLOCE" artifact; templates zip generated from the same list.
+- Put `public/skin/<key>.png` (or .webp/.jpg; items in `public/skin/items/<id>.png`, bosses in `public/skin/bosses/<slug>.png`).
+  `scripts/skin-manifest.mjs` (runs before dev/build) writes `src/shared/skin-files.ts`; missing files fall back to the drawn art.
+- 9-slice frames are applied by CSS `border-image` on the slot's selector (`SkinStyles`); text keeps its own padding (`pad`).
+- `scripts/skin-check.mjs` verifies applied skins; `node --experimental-strip-types scripts/skin-export.ts` prints the slot list.
+
 ## Decisions / assumptions
 
 - 7/day limit = fights started **per boss** (constant `ATTACKS_PER_DAY`).
