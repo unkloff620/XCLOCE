@@ -14,11 +14,15 @@ if (!process.env.OPENAI_API_KEY) {
 }
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const model = process.env.OPENAI_IMAGE_MODEL || "gpt-image-1";
+
+// GPT Image 2 is the current default for normal artwork.
+// Transparent backgrounds are not supported by GPT Image 2, so item cutouts use GPT Image 1 by default.
+const defaultModel = process.env.OPENAI_IMAGE_MODEL || "gpt-image-2";
+const transparentModel = process.env.OPENAI_TRANSPARENT_IMAGE_MODEL || "gpt-image-1";
 
 const server = new McpServer({
   name: "xcloce-game-images",
-  version: "1.0.0",
+  version: "1.1.0",
 });
 
 const sizes = {
@@ -40,14 +44,15 @@ function outputPath(relativePath) {
   return absolute;
 }
 
-async function generate({ prompt, output, size, quality, transparent }) {
+async function generate({ prompt, output, size, quality, transparent = false }) {
+  const model = transparent ? transparentModel : defaultModel;
+
   const result = await openai.images.generate({
     model,
     prompt,
     size: sizes[size],
     quality,
     background: transparent ? "transparent" : "opaque",
-    output_format: "png",
     n: 1,
   });
 
@@ -69,10 +74,9 @@ server.tool(
     output: z.string().min(1),
     size: z.enum(["square", "portrait", "landscape"]).default("portrait"),
     quality: z.enum(["low", "medium", "high"]).default("high"),
-    transparent: z.boolean().default(false),
   },
   async (args) => ({
-    content: [{ type: "text", text: "Generated: " + await generate(args) }],
+    content: [{ type: "text", text: "Generated: " + await generate({ ...args, transparent: false }) }],
   })
 );
 
