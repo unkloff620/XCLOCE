@@ -487,3 +487,22 @@ button.hud-profile { color: inherit; text-align: left; width: 100%; font: inheri
 /* ---------- result / reward windows (victory, defeat, location) ---------- */
 .modal-backdrop { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: calc(var(--safe-top) + 12px) 12px calc(var(--safe-bottom) + 12px); background: rgba(0, 0, 0, 0.8); animation: in 0.15s; }
 .modal-backdrop .victory { animation: pop-in 0.22s cubic-bezier(0.2, 1.3, 0.4, 1); }
+
+/* ---------- HUD money: one currency + dropdown ---------- */
+.hud { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr); }
+.hud .hud-money { display: flex; align-items: center; padding: 5px; overflow: visible; }
+.hud .money-main { width: 100%; height: 100%; min-height: 40px; display: flex; align-items: center; gap: 5px; padding: 3px 6px; }
+.hud .money-main b { flex: 1; min-width: 0; font-size: 14px; text-align: left; }
+.caret { flex: none; font-size: 12px; color: var(--yellow); transition: transform 0.15s; }
+.caret.up { transform: rotate(180deg); }
+.hud .money-list { position: absolute; top: calc(100% + 4px); right: 0; z-index: 40; width: max(100%, 180px); display: flex; flex-direction: column; gap: 4px; padding: 6px;
+  background: linear-gradient(180deg, #1b202b, #0c0f14); border: 2px solid #000; box-shadow: 0 0 0 1px var(--yellow), 0 12px 28px rgba(0, 0, 0, 0.7); animation: pop-in 0.14s ease-out; }
+.hud .money-row { display: flex; align-items: center; gap: 6px; width: 100%; padding: 7px 8px; text-align: left; }
+.hud .money-row b { margin-left: auto; font-size: 13px; }
+.money-code { font-size: 12px; font-weight: 800; color: var(--muted); }
+.hud .money-row.on { box-shadow: inset 0 0 0 2px var(--yellow); }
+.hud .money-row.on .money-code { color: var(--yellow); }
+.ex-rates { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.ex-rate { display: flex; align-items: center; gap: 8px; padding: 8px; background: #0b0d12; border: 2px solid #000; }
+.ex-rate b { display: block; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ex-rate small { display: block; font-size: 11px; }

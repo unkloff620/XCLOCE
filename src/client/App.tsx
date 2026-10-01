@@ -8,7 +8,7 @@ import { SkinStyles } from "./skin.tsx";
 import { MarketScreen } from "./screens/Market.tsx";
 import { InventoryScreen, ItemSheet } from "./screens/Inventory.tsx";
 import { SocialScreen } from "./screens/Social.tsx";
-import { DailySheet, EventsSheet, MissionsSheet, ProfileSheet, ShopSheet, UpgradeSheet } from "./screens/Sheets.tsx";
+import { DailySheet, EventsSheet, ExchangeSheet, MissionsSheet, ProfileSheet, ShopSheet, UpgradeSheet } from "./screens/Sheets.tsx";
 
 function Shell() {
   const { status, error, tab, retry, mode, fight, yard } = useGame();
@@ -36,6 +36,7 @@ function Shell() {
       </main>
       <BottomNav />
       <ShopSheet />
+      <ExchangeSheet />
       <DailySheet />
       <MissionsSheet />
       <EventsSheet />
