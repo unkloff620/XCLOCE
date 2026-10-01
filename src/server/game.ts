@@ -9,7 +9,7 @@ import {
   computePower, dayKey, exchangeQuote, nextDayStart, roundCur, usdRates, workplace, xpForNextLevel,
   type Currency, type Price,
 } from "../shared/economy.ts";
-import { DEFAULT_THEME, FISTS, ITEMS, SLOTS, itemById, keyItem, weaponHit, type Loadout, type Slot } from "../shared/items.ts";
+import { DEFAULT_THEME, FISTS, ITEMS, SLOTS, itemById, keyItem, roomBonus, weaponHit, type Loadout, type Slot } from "../shared/items.ts";
 import {
   BOSSES, CHEST_LOOT, DAILY_COOLDOWN_MS, DAILY_REWARDS, DAILY_STREAK_RESET_MS, HIT_XP_SHARE, MISSIONS, CLAN_CREATE_PRICE, CLAN_MAX_MEMBERS,
   LOCATIONS, bossByIndex, isWeekend, locationById, locationTask, missionById, type Metric,
@@ -110,7 +110,27 @@ export async function lockPlayer(tx: Queryable, playerId: number, now = Date.now
     p.energy_updated_at = new Date(now);
   }
   p.loadout = (p.loadout ?? {}) as Loadout;
+  await autoUnlockBosses(tx, p.id);
   return p;
+}
+
+/** As soon as the player holds 3 keys of boss N, boss N+1 opens (keys are spent). */
+async function autoUnlockBosses(tx: Queryable, pid: number) {
+  const keys = await tx.query<{ item_id: string; quantity: number }>(
+    "SELECT item_id, quantity FROM inventory WHERE player_id=$1 AND item_type='item' AND item_id LIKE 'key-%' AND quantity >= $2", [pid, KEYS_TO_UNLOCK]);
+  if (!keys.length) return;
+  const rows = await tx.query<{ boss_index: number; unlocked: boolean }>("SELECT boss_index, unlocked FROM player_bosses WHERE player_id=$1", [pid]);
+  const open = new Set(rows.filter((r) => r.unlocked).map((r) => r.boss_index));
+  for (const k of keys.sort((a, b) => Number(a.item_id.slice(4)) - Number(b.item_id.slice(4)))) {
+    const n = Number(k.item_id.slice(4));
+    if (!open.has(n) || open.has(n + 1) || !bossByIndex(n + 1)) continue;
+    await removeItem(tx, pid, k.item_id, KEYS_TO_UNLOCK);
+    await tx.query(
+      `INSERT INTO player_bosses (player_id, boss_index, unlocked) VALUES ($1,$2,TRUE)
+       ON CONFLICT (player_id, boss_index) DO UPDATE SET unlocked = TRUE`, [pid, n + 1]);
+    open.add(n + 1);
+    log.info("boss.auto_unlock", { player: pid, boss: n + 1 });
+  }
 }
 
 function rateLimit(p: PlayerRow, minMs: number, now: number) {
@@ -312,7 +332,7 @@ export async function startFight(tx: Queryable, pid: number, bossIndex: number, 
 }
 
 /** One hit with a weapon. Each weapon has its own cooldown inside the fight; cooldowns reset when the fight ends. */
-export async function hitFight(tx: Queryable, pid: number, weaponId: string, now = Date.now()) {
+export async function hitFight(tx: Queryable, pid: number, weaponId: string, now = Date.now(), rng: () => number = rand) {
   const p = await lockPlayer(tx, pid, now);
   rateLimit(p, 250, now);
   const f = await activeFight(tx, pid, true);
@@ -332,15 +352,19 @@ export async function hitFight(tx: Queryable, pid: number, weaponId: string, now
     await removeItem(tx, pid, weaponId).catch(() => { throw new GameError("no_item", "Это оружие закончилось — купи в магазине", 400); });
   }
   const boss = bossByIndex(f.boss_index)!;
-  await tx.query("INSERT INTO global_hits (player_id, boss_index, weapon, damage, created_at) VALUES ($1,$2,$3,$4,$5)", [pid, f.boss_index, weaponId, w.dmg, new Date(now)]);
-  await tx.query("UPDATE player_stats SET lifetime_damage = lifetime_damage + $2 WHERE player_id=$1", [pid, w.dmg]);
+  // the applied room adds weapon damage and a crit chance
+  const room = roomBonus(p.theme);
+  const crit = room.critChance > 0 && rng() < room.critChance;
+  const dmg = Math.round(w.dmg * (1 + (room.weapons[weaponId] ?? 0)) * (crit ? room.critMult : 1));
+  await tx.query("INSERT INTO global_hits (player_id, boss_index, weapon, damage, created_at) VALUES ($1,$2,$3,$4,$5)", [pid, f.boss_index, weaponId, dmg, new Date(now)]);
+  await tx.query("UPDATE player_stats SET lifetime_damage = lifetime_damage + $2 WHERE player_id=$1", [pid, dmg]);
   const xp = Math.max(1, Math.round(boss.xp * HIT_XP_SHARE));
   await gainXpPower(tx, pid, xp, 0);
   await bump(tx, pid, "fights", 1, now);
   await touch(tx, p, now);
   const after = await fightHp(tx, f, now);
-  log.info("boss.hit", { player: pid, boss: f.boss_index, weapon: weaponId, dmg: w.dmg });
-  return { bossIndex: f.boss_index, weapon: weaponId, dmg: w.dmg, hp: after.hp, hpMax: f.hp_max, won: after.won, readyAt: cooldowns[weaponId] ?? 0, xp };
+  log.info("boss.hit", { player: pid, boss: f.boss_index, weapon: weaponId, dmg, crit });
+  return { bossIndex: f.boss_index, weapon: weaponId, dmg, crit, hp: after.hp, hpMax: f.hp_max, won: after.won, readyAt: cooldowns[weaponId] ?? 0, xp };
 }
 
 /**

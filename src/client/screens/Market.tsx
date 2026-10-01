@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useGame } from "../store.tsx";
 import { LOCATIONS, type LocationDef } from "../../shared/content.ts";
 import { itemById } from "../../shared/items.ts";
@@ -19,8 +19,10 @@ function unlocked(loc: LocationDef, p: Progress) {
 const doneCount = (loc: LocationDef, p: Progress) => loc.tasks.filter((t) => (p.progress[t.id] ?? 0) >= t.target).length;
 
 export function MarketScreen() {
-  const { game, energyNow, nextEnergyIn, openSheet } = useGame();
+  const { game, energyNow, nextEnergyIn, openSheet, navTick } = useGame();
   const [openId, setOpenId] = useState<string | null>(null);
+  // pressing Market in the bottom menu again returns to the list of locations
+  useEffect(() => setOpenId(null), [navTick]);
   const [rewardFor, setRewardFor] = useState<string | null>(null);
   if (!game) return null;
   const p = game.player;

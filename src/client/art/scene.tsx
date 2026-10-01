@@ -69,22 +69,22 @@ function SceneImpl({ theme, tier }: { theme: string; tier: number }) {
   return (
     <svg className="scene-svg" viewBox="0 0 400 560" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       <defs>
-        <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
+        <radialGradient id={`moonGlow-${t}`} cx="50%" cy="50%" r="50%">
           <stop offset="0" stopColor={t === "penthouse" ? "#ffd23f" : t === "moon" ? "#9fd8ff" : "#9dff3a"} stopOpacity=".55" />
           <stop offset="1" stopColor="#000" stopOpacity="0" />
         </radialGradient>
-        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={`sky-${t}`} x1="0" y1="0" x2="0" y2="1">
           {t === "neon" && (<><stop offset="0" stopColor="#0a2a22" /><stop offset="1" stopColor="#06120f" /></>)}
           {t === "moon" && (<><stop offset="0" stopColor="#05051a" /><stop offset="1" stopColor="#141a3a" /></>)}
           {t === "penthouse" && (<><stop offset="0" stopColor="#2a1d05" /><stop offset="1" stopColor="#120c02" /></>)}
           {t === "default" && (<><stop offset="0" stopColor="#1a1630" /><stop offset="1" stopColor="#0c0a16" /></>)}
         </linearGradient>
-        <linearGradient id="floorG" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={`floorG-${t}`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#000" stopOpacity="0" />
           <stop offset="1" stopColor="#000" stopOpacity=".85" />
         </linearGradient>
       </defs>
-      <rect width="400" height="560" fill="url(#sky)" />
+      <rect width="400" height="560" fill={`url(#sky-${t})`} />
       {t === "default" && (
         <g>
           <rect x="230" y="40" width="150" height="150" rx="6" fill="#141030" stroke="#2a2440" strokeWidth="8" />
@@ -100,7 +100,7 @@ function SceneImpl({ theme, tier }: { theme: string; tier: number }) {
       )}
       {t === "neon" && (
         <g>
-          <circle cx="250" cy="150" r="140" fill="url(#moonGlow)" />
+          <circle cx="250" cy="150" r="140" fill={`url(#moonGlow-${t})`} />
           <circle cx="250" cy="150" r="82" fill="#b6ff7a" opacity=".85" />
           <circle cx="226" cy="130" r="14" fill="#8bd85a" opacity=".6" /><circle cx="280" cy="176" r="10" fill="#8bd85a" opacity=".6" />
           <Skyline color="#071a14" windows="#9dff3a" seed={7} />
@@ -128,7 +128,7 @@ function SceneImpl({ theme, tier }: { theme: string; tier: number }) {
         </g>
       )}
       <Desk tier={tier} />
-      <rect y="380" width="400" height="180" fill="url(#floorG)" />
+      <rect y="380" width="400" height="180" fill={`url(#floorG-${t})`} />
     </svg>
   );
 }

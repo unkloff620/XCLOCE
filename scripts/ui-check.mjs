@@ -33,17 +33,24 @@ for (const width of [320, 390]) {
     return { textFits: txt.scrollWidth <= txt.clientWidth + 1, text: txt.textContent, navArt: document.querySelectorAll(".nav-art").length, panelArt: document.querySelectorAll(".panel-art").length, banner: !!document.querySelector(".boss-banner") };
   });
   // money: one currency, dropdown switches it
-  const money0 = await page.locator(".money-main").textContent();
-  await page.locator(".money-main").click();
+  const money0 = await page.locator(".money-main").allTextContents();
+  await page.locator(".money-main").nth(1).click();
   await page.waitForTimeout(300);
   const rows = await page.locator(".money-row").count();
   const listBox = await page.evaluate(() => { const b = document.querySelector(".money-list").getBoundingClientRect(); return { right: Math.round(innerWidth - b.right), left: Math.round(b.left) }; });
   await page.locator(".money-row", { hasText: "SOL" }).click();
   await page.waitForTimeout(400);
-  const money = { before: money0, rows, listBox, after: await page.locator(".money-main").textContent(), listClosed: (await page.locator(".money-list").count()) === 0 };
+  const money = { before: money0, rows, listBox, after: await page.locator(".money-main").allTextContents(), listClosed: (await page.locator(".money-list").count()) === 0 };
   await page.reload({ waitUntil: "networkidle" });
   await page.waitForTimeout(1200);
-  money.afterReload = await page.locator(".money-main").textContent();
+  money.afterReload = await page.locator(".money-main").allTextContents();
+  // rooms window from the poster
+  await page.locator(".poster").click();
+  await page.waitForTimeout(500);
+  const rooms = await page.evaluate(() => ({ title: document.querySelector(".sheet-head h3")?.textContent, rooms: document.querySelectorAll(".room").length, bonuses: document.querySelectorAll(".room-bonus li").length, bad: [...document.querySelectorAll(".sheet *")].filter((e) => e.getBoundingClientRect().right > innerWidth + 1).length }));
+  await shot("rooms");
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(200);
   // exchange only from the Exchange button on Home
   await page.locator(".side-btn", { hasText: "Exchange" }).click();
   await page.waitForTimeout(400);
@@ -72,6 +79,12 @@ for (const width of [320, 390]) {
   await page.locator(".nav-btn").nth(1).click();
   await page.waitForTimeout(500);
   const market = await page.evaluate((f) => ({ yardClosed: !document.querySelector(".yard-view"), locs: document.querySelectorAll(".loc-card").length, bad: eval(f)(".app *") }), overflow.toString());
+  await page.locator(".loc-card").first().click();
+  await page.waitForTimeout(300);
+  market.inLocation = (await page.locator(".loc-card").count()) === 0;
+  await page.locator(".nav-btn").nth(1).click(); // Market again → back to locations
+  await page.waitForTimeout(300);
+  market.backToList = (await page.locator(".loc-card").count()) === 5;
   // fight
   await page.locator(".nav-btn").nth(0).click();
   await page.waitForTimeout(500);
@@ -96,7 +109,7 @@ for (const width of [320, 390]) {
   await page.waitForTimeout(800);
   const home = await page.evaluate(() => ({ fightClosed: !document.querySelector(".fight-view"), banner: document.querySelector(".boss-banner")?.textContent ?? null }));
   await shot("home-banner");
-  console.log(width, JSON.stringify({ money, exchange, hud, shop, yard, yardItems, market, fight, flicker, home }));
+  console.log(width, JSON.stringify({ money, rooms, exchange, hud, shop, yard, yardItems, market, fight, flicker, home }));
   await page.close();
 }
 await browser.close();

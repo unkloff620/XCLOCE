@@ -40,49 +40,55 @@ export function TopHud() {
   );
 }
 
-const CUR_KEY = "xcloce_hud_currency";
+const CUR_KEY = "xcloce_hud_currencies";
 const fmtBal = (c: Currency, v: number) => (c === "BTC" ? v.toFixed(5) : c === "SOL" ? v.toFixed(2) : fmtNum(v));
 
-/** HUD money: shows one chosen currency (RUB by default); tap opens the list of all balances to pick another. */
+/** HUD money: two currencies (RUB + USD by default); tap one to pick any currency for that line. */
 function MoneyPanel() {
   const { game } = useGame();
-  const [cur, setCur] = useState<Currency>("RUB");
-  const [open, setOpen] = useState(false);
+  const [pair, setPair] = useState<[Currency, Currency]>(["RUB", "USD"]);
+  const [open, setOpen] = useState<0 | 1 | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(CUR_KEY) as Currency | null;
-      if (saved && CURRENCIES.includes(saved)) setCur(saved);
+      const saved = JSON.parse(localStorage.getItem(CUR_KEY) ?? "null") as unknown;
+      if (Array.isArray(saved) && saved.length === 2 && saved.every((c) => CURRENCIES.includes(c)) && saved[0] !== saved[1]) setPair(saved as [Currency, Currency]);
     } catch {
-      /* storage unavailable — keep RUB */
+      /* storage unavailable — keep RUB + USD */
     }
   }, []);
   useEffect(() => {
-    if (!open) return;
-    const close = (e: PointerEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
+    if (open === null) return;
+    const close = (e: PointerEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(null); };
     document.addEventListener("pointerdown", close);
     return () => document.removeEventListener("pointerdown", close);
   }, [open]);
   if (!game) return null;
   const b = game.balances;
-  const pick = (c: Currency) => {
-    setCur(c);
-    setOpen(false);
-    try { localStorage.setItem(CUR_KEY, c); } catch { /* ignore */ }
+  const pick = (slot: 0 | 1, c: Currency) => {
+    const next: [Currency, Currency] = [...pair];
+    const other = slot === 0 ? 1 : 0;
+    if (next[other] === c) next[other] = next[slot]; // picking the other line's currency swaps them
+    next[slot] = c;
+    setPair(next);
+    setOpen(null);
+    try { localStorage.setItem(CUR_KEY, JSON.stringify(next)); } catch { /* ignore */ }
   };
   return (
     <div className="hud-panel hud-money" ref={ref}>
       <PanelArt variant="money" />
-      <button className="money money-main" onClick={() => setOpen((o) => !o)} aria-haspopup="listbox" aria-expanded={open} aria-label={`Баланс ${cur}, выбрать валюту`}>
-        <CellArt cur={cur} />
-        <UIcon name={CUR_ICON[cur]} size={20} />
-        <b><AnimatedNumber key={cur} value={b[cur]} format={(v) => fmtBal(cur, v)} /></b>
-        <span className={`caret ${open ? "up" : ""}`}>▾</span>
-      </button>
-      {open && (
+      {pair.map((cur, i) => (
+        <button key={i} className={`money money-main ${open === i ? "open" : ""}`} onClick={() => setOpen((o) => (o === i ? null : (i as 0 | 1)))} aria-haspopup="listbox" aria-expanded={open === i} aria-label={`Баланс ${cur}, выбрать валюту`}>
+          <CellArt cur={cur} />
+          <UIcon name={CUR_ICON[cur]} size={16} />
+          <b><AnimatedNumber key={cur} value={b[cur]} format={(v) => fmtBal(cur, v)} /></b>
+          <span className={`caret ${open === i ? "up" : ""}`}>▾</span>
+        </button>
+      ))}
+      {open !== null && (
         <div className="money-list" role="listbox" aria-label="Валюты">
           {CURRENCIES.map((c) => (
-            <button key={c} role="option" aria-selected={c === cur} className={`money money-row ${c === cur ? "on" : ""}`} onClick={() => pick(c)}>
+            <button key={c} role="option" aria-selected={c === pair[open]} className={`money money-row ${c === pair[open] ? "on" : ""} ${c === pair[open === 0 ? 1 : 0] ? "other" : ""}`} onClick={() => pick(open, c)}>
               <CellArt cur={c} />
               <UIcon name={CUR_ICON[c]} size={18} />
               <span className="money-code">{c}</span>

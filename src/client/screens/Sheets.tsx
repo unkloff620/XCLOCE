@@ -2,22 +2,20 @@
 import { useEffect, useState } from "react";
 import { useGame } from "../store.tsx";
 import { api, type FeedItem } from "../api.ts";
-import { ITEMS, itemById, type ItemDef } from "../../shared/items.ts";
+import { DEFAULT_THEME, ITEMS, describeRoom, itemById, roomBonus, type ItemDef } from "../../shared/items.ts";
+import { Scene } from "../art/scene.tsx";
 import { DAILY_REWARDS, EVENTS } from "../../shared/content.ts";
 import { CURRENCIES, WORKPLACE, exchangeQuote, type Currency } from "../../shared/economy.ts";
 import { ItemIcon } from "../art/items.tsx";
 import { UIcon, type UiIcon } from "../art/icons.tsx";
 import { Avatar, Bar, PriceTag, RARITY_LABEL, Sheet, Tabs, countdown, fmtCur, fmtNum } from "../ui.tsx";
 
-type ShopTab = "weapon" | "outfit" | "items" | "rooms";
+type ShopTab = "weapon" | "outfit" | "items";
 
 export function ShopSheet() {
   const { sheet, openSheet } = useGame();
   const [tab, setTab] = useState<ShopTab>("weapon");
-  useEffect(() => {
-    if (sheet === "rooms") setTab("rooms");
-  }, [sheet]);
-  const open = sheet === "shop" || sheet === "rooms";
+  const open = sheet === "shop";
   return (
     <Sheet open={open} onClose={() => openSheet(null)} title="МАГАЗИН" wide>
       <Tabs<ShopTab>
@@ -27,7 +25,6 @@ export function ShopSheet() {
           { value: "weapon", label: "Оружие" },
           { value: "outfit", label: "Одежда" },
           { value: "items", label: "Предметы" },
-          { value: "rooms", label: "Комнаты" },
         ]}
       />
       <ShopGrid tab={tab} />
@@ -41,8 +38,7 @@ function ShopGrid({ tab }: { tab: ShopTab }) {
   const list = ITEMS.filter((i) => {
     if (tab === "weapon") return i.kind === "weapon";
     if (tab === "outfit") return ["hat", "glasses", "jacket", "chain"].includes(i.kind);
-    if (tab === "items") return i.kind === "consumable" || i.kind === "chest";
-    return i.kind === "theme";
+    return (i.kind === "consumable" || i.kind === "chest") && !!i.price;
   });
   const owned = (it: ItemDef) => game.inventory.some((x) => x.id === it.id) || (it.id === "t-default");
   return (
@@ -75,6 +71,51 @@ function ShopGrid({ tab }: { tab: ShopTab }) {
         );
       })}
     </div>
+  );
+}
+
+/** Rooms: buy and apply; every room except the default one gives damage bonuses while applied. */
+export function RoomsSheet() {
+  const { sheet, openSheet, game, act, busy } = useGame();
+  if (!game) return null;
+  const rooms = ITEMS.filter((i) => i.kind === "theme");
+  return (
+    <Sheet open={sheet === "rooms"} onClose={() => openSheet(null)} title="КОМНАТЫ">
+      <p className="small muted center">Бонусы работают, пока комната применена.</p>
+      <div className="rooms">
+        {rooms.map((r) => {
+          const owned = r.id === DEFAULT_THEME || game.inventory.some((x) => x.id === r.id);
+          const applied = game.player.theme === r.id;
+          const locked = game.player.level < (r.unlockLevel ?? 1);
+          const bonus = describeRoom(roomBonus(r.id));
+          return (
+            <div key={r.id} className={`room r-${r.rarity} ${applied ? "applied" : ""}`}>
+              <div className="room-preview"><Scene theme={r.id} tier={game.player.workplaceTier} /></div>
+              <div className="room-info">
+                <div className="row-c between gap"><b className="comic room-name">{r.name}</b><span className={`rarity-chip r-${r.rarity}`}>{RARITY_LABEL[r.rarity]}</span></div>
+                <div className="small muted">{r.description}</div>
+                {bonus.length ? (
+                  <ul className="room-bonus">{bonus.map((t) => <li key={t}>⚔ {t}</li>)}</ul>
+                ) : <div className="small muted">Без бонусов</div>}
+                <div className="room-act">
+                  {applied ? (
+                    <span className="chip-owned">✓ Применена</span>
+                  ) : owned ? (
+                    <button className="btn-small green comic" disabled={!!busy} onClick={() => act("theme", { itemId: r.id }, `${r.name} — применена`)}>Применить</button>
+                  ) : locked ? (
+                    <span className="lock-chip"><UIcon name="lock" size={14} />Lv {r.unlockLevel}</span>
+                  ) : r.price ? (
+                    <button className="btn-buy comic" disabled={!!busy} onClick={async () => { if (await act("buy", { itemId: r.id }, `${r.name} — куплена`)) act("theme", { itemId: r.id }); }}>
+                      <PriceTag price={r.price} size={14} />
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </Sheet>
   );
 }
 

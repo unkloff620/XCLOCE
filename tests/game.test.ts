@@ -135,6 +135,34 @@ describe("personal fights with global damage", () => {
     await expect(start(pid, 1, clock + 24 * H)).resolves.toMatchObject({ already: false });
   });
 
+  it("the applied room adds weapon damage and crits", async () => {
+    const pid = await newPlayer(db);
+    await give(pid, "w-whale-harpoon", 2);
+    await db.query("UPDATE players SET theme = 't-penthouse' WHERE id=$1", [pid]);
+    await openBoss(pid, 10);
+    await start(pid, 10);
+    const crit = await db.tx((tx) => G.hitFight(tx, pid, "w-whale-harpoon", t(), always(0)));
+    expect(crit).toMatchObject({ crit: true, dmg: Math.round(1800 * 1.3 * 2) });
+    const plain = await db.tx((tx) => G.hitFight(tx, pid, "w-whale-harpoon", t(), always(0.99)));
+    expect(plain).toMatchObject({ crit: false, dmg: Math.round(1800 * 1.3) });
+    await db.query("UPDATE players SET theme = 't-default' WHERE id=$1", [pid]);
+    await expect(db.tx((tx) => G.hitFight(tx, pid, "fists", t(), always(0)))).resolves.toMatchObject({ crit: false, dmg: 20 });
+  });
+
+  it("3 keys open the next boss automatically", async () => {
+    const pid = await newPlayer(db);
+    await give(pid, "w-diamond-fist", 3);
+    for (let i = 0; i < 3; i++) {
+      await start(pid);
+      await hit(pid, "w-diamond-fist");
+      await claim(pid);
+    }
+    await db.tx((tx) => G.lockPlayer(tx, pid, t())); // any next action
+    const st = await db.tx((tx) => G.getState(tx, pid, clock));
+    expect(st.bosses[1]).toMatchObject({ unlocked: true, canUnlock: false });
+    expect(await qty(db, pid, "key-1")).toBe(0);
+  });
+
   it("3 keys from boss #1 unlock boss #2 and are consumed", async () => {
     const pid = await newPlayer(db);
     await give(pid, "w-diamond-fist", 3);
