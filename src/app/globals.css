@@ -533,3 +533,5 @@ button.hud-profile { color: inherit; text-align: left; width: 100%; font: inheri
 .room-line { padding: 0 12px 6px; color: var(--yellow); font-weight: 800; }
 .w-dmg.boosted { color: var(--green); }
 .hit-pop.crit { color: var(--yellow); font-size: 44px; }
+.room-info > .row-c { flex-wrap: wrap; row-gap: 2px; }
+.room-info .rarity-chip { flex: none; }
