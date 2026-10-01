@@ -5,6 +5,7 @@
  */
 import type { ReactNode } from "react";
 import type { Tab } from "../store.tsx";
+import { skinUrl } from "../../shared/skin.ts";
 
 const NS = { vectorEffect: "non-scaling-stroke" as const };
 
@@ -88,8 +89,11 @@ const NAV_THEME: Record<Tab, { a: string; b: string; rim: string }> = {
   social: { a: "#b45cff", b: "#3c0d7a", rim: "#e6c8ff" },
 };
 
-/** Illustrated nav button (icon art inside a comic badge). */
-export function NavArt({ id }: { id: Tab }) {
+/** Illustrated nav button (icon art inside a comic badge). Uploaded `nav-<id>` / `nav-<id>-on` pictures replace it. */
+export function NavArt({ id, on = false }: { id: Tab; on?: boolean }) {
+  const up = (on && skinUrl(`nav-${id}-on`)) || skinUrl(`nav-${id}`);
+  // eslint-disable-next-line @next/next/no-img-element
+  if (up) return <img className="nav-art skin-img" src={up} alt="" draggable={false} />;
   const t = NAV_THEME[id];
   const g = `nav-${id}`;
   const home = id === "home";

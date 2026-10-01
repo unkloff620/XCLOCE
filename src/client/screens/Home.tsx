@@ -1,10 +1,11 @@
 "use client";
+import { bossArt, skinUrl } from "../../shared/skin.ts";
 import { useGame } from "../store.tsx";
 import { Hero } from "../art/hero.tsx";
 import { Scene } from "../art/scene.tsx";
 import { UIcon } from "../art/icons.tsx";
 import { countdown, fmtNum } from "../ui.tsx";
-import { BOSSES, bossImage } from "../../shared/content.ts";
+import { BOSSES } from "../../shared/content.ts";
 
 export function HomeScreen() {
   const { game, openSheet, setTab, setYard, now } = useGame();
@@ -21,10 +22,10 @@ export function HomeScreen() {
         </div>
 
         <div className="side left">
-          <SideBtn icon="yard" label="Двор" onClick={() => setYard(true)} />
-          <SideBtn icon="scroll" label="Задания" dot={missionsReady > 0} onClick={() => openSheet("missions")} />
-          <SideBtn icon="trophy" label="Ивенты" dot={game.weekend} onClick={() => openSheet("events")} />
-          <SideBtn icon="shop" label="Магазин" onClick={() => openSheet("shop")} />
+          <SideBtn icon="yard" skin="side-yard" label="Двор" onClick={() => setYard(true)} />
+          <SideBtn icon="scroll" skin="side-missions" label="Задания" dot={missionsReady > 0} onClick={() => openSheet("missions")} />
+          <SideBtn icon="trophy" skin="side-events" label="Ивенты" dot={game.weekend} onClick={() => openSheet("events")} />
+          <SideBtn icon="shop" skin="side-shop" label="Магазин" onClick={() => openSheet("shop")} />
         </div>
         <div className="side right">
           <button className="poster" onClick={() => openSheet("rooms")}>
@@ -58,10 +59,12 @@ export function HomeScreen() {
   );
 }
 
-function SideBtn({ icon, label, dot, onClick }: { icon: Parameters<typeof UIcon>[0]["name"]; label: string; dot?: boolean; onClick: () => void }) {
+function SideBtn({ icon, skin, label, dot, onClick }: { icon: Parameters<typeof UIcon>[0]["name"]; skin: string; label: string; dot?: boolean; onClick: () => void }) {
+  const up = skinUrl(skin);
   return (
-    <button className="side-btn" onClick={onClick}>
-      <UIcon name={icon} size={34} />
+    <button className={`side-btn ${up ? "skinned" : ""}`} onClick={onClick}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {up ? <img className="side-img" src={up} alt="" draggable={false} /> : <UIcon name={icon} size={34} />}
       <span>{label}</span>
       {dot && <i className="dot" />}
     </button>
@@ -84,7 +87,7 @@ function BossBanner() {
   return (
     <button className={`boss-banner ${f.won ? "won" : f.lost ? "lost" : ""}`} onClick={() => (over ? setTab("boss") : setFight(f.bossIndex))}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="bb-art" src={bossImage(def)} alt="" draggable={false} />
+      <img className="bb-art" src={bossArt(def)} alt="" draggable={false} />
       <span className="bb-shade" />
       <span className="bb-left">
         <span className="bb-tag comic">BOSS FIGHT</span>

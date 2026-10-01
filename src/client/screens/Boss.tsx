@@ -1,7 +1,8 @@
 "use client";
+import { bossArt, skinUrl } from "../../shared/skin.ts";
 import { useEffect, useRef, useState } from "react";
 import { useGame } from "../store.tsx";
-import { BOSSES, bossImage } from "../../shared/content.ts";
+import { BOSSES } from "../../shared/content.ts";
 import { ATTACKS_PER_DAY, KEYS_TO_UNLOCK } from "../../shared/economy.ts";
 import { itemById } from "../../shared/items.ts";
 import { Avatar, Bar, ConfirmButton, PriceTag, fmtNum, countdown } from "../ui.tsx";
@@ -37,7 +38,7 @@ export function BossScreen() {
             <div key={b.index} className={`boss-card ${locked ? "locked" : ""}`}>
               <div className="boss-ava">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={bossImage(def)} alt="" draggable={false} />
+                <img src={bossArt(def)} alt="" draggable={false} />
                 {locked && <span className="q comic">?</span>}
                 <span className="boss-n comic">{b.index}</span>
               </div>
@@ -84,7 +85,12 @@ export function BossScreen() {
 }
 
 export function WeaponIcon({ id, size }: { id: string; size: number }) {
-  if (id === "fists") return <span className="fist-ic" style={{ fontSize: size * 0.7, width: size, height: size }}>👊</span>;
+  if (id === "fists") {
+    const up = skinUrl("fists");
+    // eslint-disable-next-line @next/next/no-img-element
+    if (up) return <img className="skin-img" src={up} alt="" width={size} height={size} draggable={false} />;
+    return <span className="fist-ic" style={{ fontSize: size * 0.7, width: size, height: size }}>👊</span>;
+  }
   return <ItemIcon id={id} size={size} />;
 }
 export const hms = (ms: number) => {
@@ -168,7 +174,7 @@ export function FightScreen() {
       <div className="fight-stage">
         <div key={shake} className={`fight-boss ${shake ? "shake" : ""} ${hp <= 0 ? "dead" : ""}`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={bossImage(def)} alt="" draggable={false} />
+          <img src={bossArt(def)} alt="" draggable={false} />
         </div>
         {pops.map((p, i) => (
           <span key={p.id} className="hit-pop comic" style={{ left: `${38 + ((p.id * 17) % 28)}%`, top: `${30 + i * 6}%` }}>-{fmtNum(p.dmg)}</span>
@@ -257,7 +263,7 @@ export function ResultModal() {
         <div className="victory-title comic">{win ? "ПОБЕДА!" : "ПОРАЖЕНИЕ"}</div>
         <div className="victory-boss">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={bossImage(def)} alt="" />
+          <img src={bossArt(def)} alt="" />
           <span className={`result-stamp comic ${win ? "win" : "lose"}`}>{win ? "K.O." : "TIME"}</span>
         </div>
         <div className="comic big center">{win ? `${def.name} повержен` : `${def.name} выстоял 8 часов`}</div>

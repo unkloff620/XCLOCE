@@ -68,7 +68,7 @@ export function BottomNav() {
     <nav className="nav">
       {NAV.map((n) => (
         <button key={n.id} className={`nav-btn ${active === n.id ? "on" : ""} ${n.id === "home" ? "home" : ""}`} onClick={() => setTab(n.id)} aria-label={n.label}>
-          <NavArt id={n.id} />
+          <NavArt id={n.id} on={active === n.id} />
           {dots[n.id] && active !== n.id && <i className="dot" />}
         </button>
       ))}

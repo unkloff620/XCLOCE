@@ -475,3 +475,11 @@ button.hud-profile { color: inherit; text-align: left; width: 100%; font: inheri
 .yard-hud { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); padding: 3px 10px; font-size: 14px; background: rgba(0, 0, 0, 0.7); border: 2px solid #000; white-space: nowrap; }
 .yard-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 12px; font-size: 12px; font-weight: 800; }
 .yard-legend span { display: inline-flex; align-items: center; gap: 3px; }
+
+/* ---------- uploaded skins ---------- */
+.skin-img { display: block; width: 100%; height: 100%; object-fit: contain; pointer-events: none; user-select: none; -webkit-user-drag: none; }
+.skin-cover { object-fit: cover; }
+.item-icon .skin-img { width: 100%; height: 100%; }
+.side-btn.skinned { background: none; border: 0; box-shadow: none; clip-path: none; padding: 0; justify-content: flex-start; }
+.side-btn.skinned .side-img { width: 56px; height: 56px; object-fit: contain; }
+.side-btn.skinned span { text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; }
