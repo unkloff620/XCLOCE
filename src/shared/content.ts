@@ -39,7 +39,8 @@ export function bossImage(b: Pick<BossDef, "index" | "slug">) {
   return `/assets/bosses/${String(b.index).padStart(2, "0")}-${b.slug}.svg`;
 }
 /** Losing a battle still gives a little XP. */
-export const LOSS_XP_SHARE = 0.25;
+/** XP for a single hit, as a share of the boss kill XP. */
+export const HIT_XP_SHARE = 0.1;
 
 // ---------------- Market tasks (spend energy) ----------------
 export interface TaskDef {

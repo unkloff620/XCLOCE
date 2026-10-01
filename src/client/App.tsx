@@ -2,7 +2,7 @@
 import { GameProvider, useGame } from "./store.tsx";
 import { BottomNav, Toasts, TopHud } from "./hud.tsx";
 import { HomeScreen } from "./screens/Home.tsx";
-import { BattleModal, BossScreen } from "./screens/Boss.tsx";
+import { BossScreen, FightScreen } from "./screens/Boss.tsx";
 import { MarketScreen } from "./screens/Market.tsx";
 import { InventoryScreen, ItemSheet } from "./screens/Inventory.tsx";
 import { SocialScreen } from "./screens/Social.tsx";
@@ -39,7 +39,7 @@ function Shell() {
       <EventsSheet />
       <UpgradeSheet />
       <ItemSheet />
-      <BattleModal />
+      <FightScreen />
       <Toasts />
     </div>
   );

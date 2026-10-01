@@ -7,7 +7,7 @@ import { CURRENCIES } from "../../../shared/economy.ts";
 import { SLOTS } from "../../../shared/items.ts";
 
 const TYPES = [
-  "task", "attack", "unlock", "idle", "workplace", "theme", "buy", "equip", "unequip", "use", "exchange",
+  "task", "hit", "unlock", "idle", "workplace", "theme", "buy", "equip", "unequip", "use", "exchange",
   "daily", "mission", "clan_create", "clan_disband", "clan_request", "clan_cancel", "clan_accept", "clan_reject", "clan_kick", "clan_leave",
 ] as const;
 
@@ -18,7 +18,7 @@ export const POST = authedRoute("action", async ({ db, body, playerId: pid }) =>
   return withState(db, pid, async (tx) => {
     switch (type) {
       case "task": return G.doTask(tx, pid, str(body.taskId, "taskId", 40));
-      case "attack": return G.doAttack(tx, pid, num(body.boss, "boss"));
+      case "hit": return G.doHit(tx, pid, num(body.boss, "boss"), typeof body.weapon === "string" ? body.weapon.slice(0, 40) : G.FISTS);
       case "unlock": return G.unlockBoss(tx, pid, num(body.boss, "boss"));
       case "idle": return G.claimIdle(tx, pid);
       case "workplace": return G.buyWorkplace(tx, pid, num(body.tier, "tier"));

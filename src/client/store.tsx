@@ -1,6 +1,6 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { api, ApiError, login, type ActionResponse, type BattleResult, type GameState } from "./api.ts";
+import { api, ApiError, login, type ActionResponse, type GameState } from "./api.ts";
 import { haptic, initTelegram } from "./telegram.ts";
 
 export type Tab = "boss" | "market" | "home" | "inventory" | "social";
@@ -18,10 +18,11 @@ interface Ctx {
   openSheet: (s: SheetName) => void;
   itemSheet: string | null;
   openItem: (id: string | null) => void;
-  battle: BattleResult | null;
-  setBattle: (b: BattleResult | null) => void;
+  fight: number | null;
+  setFight: (bossIndex: number | null) => void;
   toasts: Toast[];
   toast: (kind: Toast["kind"], text: string) => void;
+  applyState: (s: GameState) => void;
   busy: string | null;
   act: <R>(type: string, payload?: Record<string, unknown>, okText?: string | ((r: R) => string)) => Promise<R | null>;
   energyNow: number;
@@ -46,7 +47,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [tab, setTabState] = useState<Tab>("home");
   const [sheet, setSheet] = useState<SheetName>(null);
   const [itemSheet, setItemSheet] = useState<string | null>(null);
-  const [battle, setBattle] = useState<BattleResult | null>(null);
+  const [fight, setFight] = useState<number | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
@@ -144,8 +145,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, [game, now]);
 
   const value: Ctx = {
-    status, error, mode, game, tab, setTab, sheet, openSheet: setSheet, itemSheet, openItem: setItemSheet, battle, setBattle,
-    toasts, toast, busy, act, energyNow, nextEnergyIn, now: now + offset.current, retry: () => setRetryN((n) => n + 1),
+    status, error, mode, game, tab, setTab, sheet, openSheet: setSheet, itemSheet, openItem: setItemSheet, fight, setFight,
+    toasts, toast, applyState: apply, busy, act, energyNow, nextEnergyIn, now: now + offset.current, retry: () => setRetryN((n) => n + 1),
   };
   return <GameCtx.Provider value={value}>{children}</GameCtx.Provider>;
 }

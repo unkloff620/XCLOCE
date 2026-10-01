@@ -81,46 +81,24 @@ export function computePower(level: number, itemPower: number, workplaceTier: nu
 }
 
 // ---------------- Battle ----------------
-export const BATTLE_HITS = 10;
-export const HIT_SPREAD = 0.2; // each hit = power × U(0.8, 1.2)
-export const CRIT_CHANCE = 0.1;
-export const CRIT_MULT = 1.6;
-export const ATTACKS_PER_DAY = 7; // per boss, resets at 00:00 UTC
+export const HIT_SPREAD = 0.15; // each hit = power × DAMAGE_MULT × U(0.85, 1.15)
+export const DAMAGE_MULT = 3;
+export const CRIT_CHANCE = 0.12;
+export const CRIT_MULT = 2;
+export const ATTACKS_PER_DAY = 7; // hits per boss per day, resets at 00:00 UTC
 export const KEYS_TO_UNLOCK = 3;
+/** Share of boss HP a player must deal to get a key when the boss dies (the killer always gets one). */
+export const KEY_SHARE = 0.1;
 
-/** Expected total damage of one battle. */
-export function expectedDamage(power: number): number {
-  return power * BATTLE_HITS * (1 + CRIT_CHANCE * (CRIT_MULT - 1));
+/** Average damage of one hit with the given power. */
+export function avgHit(power: number): number {
+  return Math.round(power * DAMAGE_MULT * (1 + CRIT_CHANCE * (CRIT_MULT - 1)));
 }
-/** Approximate win chance (normal approximation of the sum of hits). */
-export function winChance(power: number, hp: number): number {
-  const mean = expectedDamage(power);
-  // variance per hit: uniform spread + crit bernoulli
-  const u = (power * HIT_SPREAD * 2) ** 2 / 12;
-  const c = CRIT_CHANCE * (1 - CRIT_CHANCE) * (power * (CRIT_MULT - 1)) ** 2;
-  const sd = Math.sqrt(BATTLE_HITS * (u + c));
-  if (sd === 0) return mean >= hp ? 1 : 0;
-  const z = (mean - hp) / sd;
-  return Math.max(0, Math.min(1, 0.5 * (1 + erf(z / Math.SQRT2))));
-}
-function erf(x: number): number {
-  const s = Math.sign(x);
-  const a = Math.abs(x);
-  const t = 1 / (1 + 0.3275911 * a);
-  const y = 1 - ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-a * a);
-  return s * y;
-}
-/** Simulates one battle with a server RNG returning uniform [0,1). */
-export function simulateBattle(power: number, hp: number, rand: () => number) {
-  const hits: { dmg: number; crit: boolean }[] = [];
-  let total = 0;
-  for (let i = 0; i < BATTLE_HITS && total < hp; i++) {
-    const crit = rand() < CRIT_CHANCE;
-    const dmg = Math.round(power * (1 - HIT_SPREAD + 2 * HIT_SPREAD * rand()) * (crit ? CRIT_MULT : 1));
-    hits.push({ dmg, crit });
-    total += dmg;
-  }
-  return { win: total >= hp, total: Math.min(total, hp), hits };
+/** One hit with a server RNG returning uniform [0,1). */
+export function rollHit(power: number, rand: () => number): { dmg: number; crit: boolean } {
+  const crit = rand() < CRIT_CHANCE;
+  const dmg = Math.max(1, Math.round(power * DAMAGE_MULT * (1 - HIT_SPREAD + 2 * HIT_SPREAD * rand()) * (crit ? CRIT_MULT : 1)));
+  return { dmg, crit };
 }
 
 export function dayKey(t: number): string {
