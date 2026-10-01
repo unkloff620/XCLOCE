@@ -38,36 +38,101 @@ export function bossByIndex(i: number) {
 export function bossImage(b: Pick<BossDef, "index" | "slug">) {
   return `/assets/bosses/${String(b.index).padStart(2, "0")}-${b.slug}.svg`;
 }
-/** Losing a battle still gives a little XP. */
 /** XP for a single hit, as a share of the boss kill XP. */
-export const HIT_XP_SHARE = 0.1;
+export const HIT_XP_SHARE = 0.05;
 
-// ---------------- Market tasks (spend energy) ----------------
-export interface TaskDef {
+// ---------------- Market: locations with tasks (spend energy) ----------------
+export interface LocationTask {
   id: string;
   title: string;
-  description: string;
+  /** energy per step */
   energy: number;
-  unlockLevel: number;
+  /** steps to complete the task (progress N/target) */
+  target: number;
+  /** reward for every step */
   reward: Price;
   xp: number;
+  /** power for completing the whole task */
   power: number;
-  /** chance of a bonus drop and which item */
-  drop?: { item: string; chance: number };
-  icon: string;
 }
-export const TASKS: TaskDef[] = [
-  { id: "t-chat", title: "Пост в крипто-чате", description: "Напиши «gm» и пару ракет. Классика.", energy: 5, unlockLevel: 1, reward: { currency: "RUB", amount: 350 }, xp: 5, power: 1, drop: { item: "x-energy", chance: 0.06 }, icon: "chat" },
-  { id: "t-shill", title: "Шиллинг мемкоина", description: "Убеди трёх знакомых, что это следующий ×100.", energy: 10, unlockLevel: 1, reward: { currency: "RUB", amount: 800 }, xp: 10, power: 1, icon: "megaphone" },
-  { id: "t-scalp", title: "Скальпинг", description: "Зашёл, вышел, плюс доллар. Повторить.", energy: 15, unlockLevel: 2, reward: { currency: "USD", amount: 9 }, xp: 15, power: 2, icon: "chart" },
-  { id: "t-meme", title: "Нарисовать мем", description: "Вирусный мем поднимает хайп и тебя вместе с ним.", energy: 20, unlockLevel: 3, reward: { currency: "USD", amount: 14 }, xp: 22, power: 3, drop: { item: "x-chest", chance: 0.05 }, icon: "brush" },
-  { id: "t-arb", title: "Арбитраж между биржами", description: "Купил дешевле, продал дороже. Пока никто не заметил.", energy: 25, unlockLevel: 5, reward: { currency: "SOL", amount: 0.12 }, xp: 30, power: 3, icon: "swap" },
-  { id: "t-airdrop", title: "Фарм аирдропа", description: "Сотня кликов в тестнете. Вдруг повезёт.", energy: 30, unlockLevel: 7, reward: { currency: "SOL", amount: 0.18 }, xp: 38, power: 4, drop: { item: "x-chest", chance: 0.15 }, icon: "gift" },
-  { id: "t-mining", title: "Майнинг на ферме", description: "Видеокарты гудят, счёт за свет растёт.", energy: 40, unlockLevel: 10, reward: { currency: "BTC", amount: 0.0012 }, xp: 50, power: 5, icon: "chip" },
-  { id: "t-whale", title: "Охота на китов", description: "Следи за кошельками китов и заходи раньше них.", energy: 50, unlockLevel: 14, reward: { currency: "BTC", amount: 0.002 }, xp: 65, power: 6, drop: { item: "x-mega-energy", chance: 0.1 }, icon: "whale" },
+export interface LocationDef {
+  id: string;
+  index: number;
+  name: string;
+  subtitle: string;
+  emoji: string;
+  bg: string;
+  tasks: LocationTask[];
+  /** reward for completing all tasks of the location */
+  reward: { price: Price; items: string[]; xp: number; power: number };
+}
+const T = (id: string, title: string, energy: number, target: number, reward: Price, xp: number, power: number): LocationTask => ({ id, title, energy, target, reward, xp, power });
+export const LOCATIONS: LocationDef[] = [
+  {
+    id: "loc-basement", index: 1, name: "Мамкин подвал", subtitle: "Здесь начинается путь каждого дегена", emoji: "🏚️", bg: "linear-gradient(135deg,#3b2a1e,#1a120c)",
+    tasks: [
+      T("b-monitor", "Протереть монитор от чипсов", 5, 5, { currency: "RUB", amount: 120 }, 3, 1),
+      T("b-wallet", "Завести первый кошелёк", 5, 6, { currency: "RUB", amount: 150 }, 3, 1),
+      T("b-gm", "Написать «gm» в 10 чатов", 5, 10, { currency: "RUB", amount: 150 }, 3, 1),
+      T("b-videos", "Посмотреть видео «как стать миллионером»", 10, 6, { currency: "RUB", amount: 300 }, 5, 2),
+      T("b-first-coin", "Купить первый мемкоин", 10, 5, { currency: "RUB", amount: 400 }, 6, 2),
+    ],
+    reward: { price: { currency: "RUB", amount: 5_000 }, items: ["x-chest"], xp: 80, power: 5 },
+  },
+  {
+    id: "loc-chat", index: 2, name: "Крипто-чат", subtitle: "Шиллинг, FUD и бесконечные ракеты", emoji: "💬", bg: "linear-gradient(135deg,#1e3a5f,#0d1a2b)",
+    tasks: [
+      T("c-shill", "Шиллить мемкоин", 10, 8, { currency: "RUB", amount: 450 }, 6, 2),
+      T("c-fud", "Разоблачить FUD", 10, 8, { currency: "RUB", amount: 500 }, 6, 2),
+      T("c-memes", "Запостить 20 мемов", 10, 10, { currency: "RUB", amount: 400 }, 6, 2),
+      T("c-ama", "Провести AMA с котом", 15, 6, { currency: "USD", amount: 4 }, 10, 3),
+      T("c-mod", "Забанить скамеров", 15, 6, { currency: "USD", amount: 5 }, 10, 3),
+    ],
+    reward: { price: { currency: "USD", amount: 40 }, items: ["x-energy", "x-chest"], xp: 150, power: 8 },
+  },
+  {
+    id: "loc-exchange", index: 3, name: "Офис биржи", subtitle: "Графики, свечи и кофе литрами", emoji: "🏦", bg: "linear-gradient(135deg,#123d2c,#081a12)",
+    tasks: [
+      T("e-scalp", "Скальпинг на минутках", 15, 8, { currency: "USD", amount: 5 }, 10, 3),
+      T("e-short", "Зашортить хомяков", 15, 8, { currency: "USD", amount: 6 }, 10, 3),
+      T("e-arb", "Арбитраж между биржами", 20, 6, { currency: "USD", amount: 9 }, 14, 4),
+      T("e-listing", "Пролоббировать листинг", 20, 6, { currency: "SOL", amount: 0.05 }, 14, 4),
+      T("e-margin", "Пережить маржин-колл", 25, 5, { currency: "SOL", amount: 0.07 }, 18, 5),
+    ],
+    reward: { price: { currency: "SOL", amount: 1 }, items: ["x-mega-energy", "x-chest"], xp: 260, power: 12 },
+  },
+  {
+    id: "loc-farm", index: 4, name: "Майнинг-ферма", subtitle: "Гул видеокарт и счёт за свет", emoji: "⛏️", bg: "linear-gradient(135deg,#4a2a0a,#1c0f03)",
+    tasks: [
+      T("f-cards", "Собрать риг из видеокарт", 20, 6, { currency: "SOL", amount: 0.06 }, 16, 4),
+      T("f-cool", "Починить охлаждение", 20, 6, { currency: "SOL", amount: 0.06 }, 16, 4),
+      T("f-power", "Договориться с электриком", 25, 5, { currency: "SOL", amount: 0.08 }, 20, 5),
+      T("f-pool", "Подключиться к пулу", 25, 5, { currency: "BTC", amount: 0.0006 }, 20, 5),
+      T("f-halving", "Пережить халвинг", 30, 5, { currency: "BTC", amount: 0.0008 }, 25, 6),
+    ],
+    reward: { price: { currency: "BTC", amount: 0.008 }, items: ["x-mega-energy", "x-chest", "x-chest"], xp: 400, power: 18 },
+  },
+  {
+    id: "loc-moon", index: 5, name: "Луна", subtitle: "To the moon — буквально", emoji: "🌕", bg: "linear-gradient(135deg,#2c2152,#0e0a1f)",
+    tasks: [
+      T("m-rocket", "Заправить ракету хайпом", 30, 5, { currency: "BTC", amount: 0.0008 }, 25, 6),
+      T("m-lambo", "Припарковать ламбу в кратере", 30, 5, { currency: "BTC", amount: 0.0009 }, 25, 6),
+      T("m-flag", "Воткнуть флаг $DOGE", 35, 4, { currency: "BTC", amount: 0.0012 }, 30, 7),
+      T("m-aliens", "Продать NFT пришельцам", 35, 4, { currency: "BTC", amount: 0.0012 }, 30, 7),
+      T("m-whales", "Отбиться от лунных китов", 40, 4, { currency: "BTC", amount: 0.0015 }, 35, 8),
+    ],
+    reward: { price: { currency: "BTC", amount: 0.02 }, items: ["x-mega-energy", "x-chest", "x-chest", "x-chest"], xp: 700, power: 30 },
+  },
 ];
-export function taskById(id: string) {
-  return TASKS.find((t) => t.id === id);
+export function locationById(id: string) {
+  return LOCATIONS.find((l) => l.id === id);
+}
+export function locationTask(taskId: string) {
+  for (const loc of LOCATIONS) {
+    const t = loc.tasks.find((x) => x.id === taskId);
+    if (t) return { loc, task: t };
+  }
+  return null;
 }
 
 // ---------------- Chest loot ----------------
@@ -103,10 +168,10 @@ export type Metric = "tasks" | "energy" | "fights" | "wins" | "shop" | "login";
 export interface MissionDef { id: string; title: string; metric: Metric; target: number; reward: Price; xp: number; power: number }
 export const MISSIONS: MissionDef[] = [
   { id: "m-login", title: "Зайти в игру", metric: "login", target: 1, reward: { currency: "RUB", amount: 500 }, xp: 10, power: 1 },
-  { id: "m-tasks5", title: "Выполни 5 заданий на Market", metric: "tasks", target: 5, reward: { currency: "RUB", amount: 1_500 }, xp: 25, power: 2 },
+  { id: "m-tasks5", title: "Сделай 5 шагов заданий на Market", metric: "tasks", target: 5, reward: { currency: "RUB", amount: 1_500 }, xp: 25, power: 2 },
   { id: "m-energy100", title: "Потрать 100 энергии", metric: "energy", target: 100, reward: { currency: "USD", amount: 8 }, xp: 30, power: 2 },
-  { id: "m-fight3", title: "Нападай на боссов 3 раза", metric: "fights", target: 3, reward: { currency: "USD", amount: 6 }, xp: 25, power: 2 },
-  { id: "m-win5", title: "Победи боссов 5 раз", metric: "wins", target: 5, reward: { currency: "USD", amount: 15 }, xp: 40, power: 4 },
+  { id: "m-fight3", title: "Нанеси 3 удара боссам", metric: "fights", target: 3, reward: { currency: "USD", amount: 6 }, xp: 25, power: 2 },
+  { id: "m-win1", title: "Победи босса", metric: "wins", target: 1, reward: { currency: "USD", amount: 15 }, xp: 40, power: 4 },
   { id: "m-shop", title: "Купи что-нибудь в магазине", metric: "shop", target: 1, reward: { currency: "RUB", amount: 1_000 }, xp: 15, power: 1 },
 ];
 export function missionById(id: string) {
@@ -116,8 +181,8 @@ export function missionById(id: string) {
 // ---------------- Events (always-on live ops, shown in the Events panel) ----------------
 export interface EventDef { id: string; title: string; description: string; kind: "weekend" | "info" }
 export const EVENTS: EventDef[] = [
-  { id: "e-weekend", title: "Weekend Pump ×2", description: "По субботам и воскресеньям (UTC) награды за задания Market удваиваются.", kind: "weekend" },
-  { id: "e-keys", title: "Охота за ключами", description: "Каждая победа над боссом даёт его ключ. 3 ключа открывают следующего босса.", kind: "info" },
+  { id: "e-weekend", title: "Weekend Pump ×2", description: "По субботам и воскресеньям (UTC) награды за шаги заданий Market удваиваются.", kind: "weekend" },
+  { id: "e-keys", title: "Охота за ключами", description: "Урон всех игроков общий: каждый удар любого игрока бьёт и твоего босса. Победа даёт ключ, 3 ключа открывают следующего босса.", kind: "info" },
 ];
 export function isWeekend(t: number): boolean {
   const d = new Date(t).getUTCDay();

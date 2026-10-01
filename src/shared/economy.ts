@@ -81,25 +81,9 @@ export function computePower(level: number, itemPower: number, workplaceTier: nu
 }
 
 // ---------------- Battle ----------------
-export const HIT_SPREAD = 0.15; // each hit = power × DAMAGE_MULT × U(0.85, 1.15)
-export const DAMAGE_MULT = 3;
-export const CRIT_CHANCE = 0.12;
-export const CRIT_MULT = 2;
-export const ATTACKS_PER_DAY = 7; // hits per boss per day, resets at 00:00 UTC
+export const ATTACKS_PER_DAY = 7; // fights started per boss per day, resets at 00:00 UTC
 export const KEYS_TO_UNLOCK = 3;
-/** Share of boss HP a player must deal to get a key when the boss dies (the killer always gets one). */
-export const KEY_SHARE = 0.1;
-
-/** Average damage of one hit with the given power. */
-export function avgHit(power: number): number {
-  return Math.round(power * DAMAGE_MULT * (1 + CRIT_CHANCE * (CRIT_MULT - 1)));
-}
-/** One hit with a server RNG returning uniform [0,1). */
-export function rollHit(power: number, rand: () => number): { dmg: number; crit: boolean } {
-  const crit = rand() < CRIT_CHANCE;
-  const dmg = Math.max(1, Math.round(power * DAMAGE_MULT * (1 - HIT_SPREAD + 2 * HIT_SPREAD * rand()) * (crit ? CRIT_MULT : 1)));
-  return { dmg, crit };
-}
+export const RENAME_COOLDOWN_MS = 24 * 3_600_000;
 
 export function dayKey(t: number): string {
   return new Date(t).toISOString().slice(0, 10);

@@ -4,14 +4,14 @@ import { addXp } from "./xp.ts";
 import { log } from "./log.ts";
 import type { TelegramUser } from "./auth.ts";
 import {
-  ATTACKS_PER_DAY, CURRENCIES, ENERGY_BASE_MAX, ENERGY_REGEN_MS, IDLE_CAP_MS, KEYS_TO_UNLOCK, START_BALANCES, WORKPLACE,
-  KEY_SHARE, avgHit, computePower, dayKey, exchangeQuote, nextDayStart, rollHit, roundCur, usdRates, workplace, xpForNextLevel,
+  ATTACKS_PER_DAY, CURRENCIES, ENERGY_BASE_MAX, ENERGY_REGEN_MS, IDLE_CAP_MS, KEYS_TO_UNLOCK, RENAME_COOLDOWN_MS, START_BALANCES, WORKPLACE,
+  computePower, dayKey, exchangeQuote, nextDayStart, roundCur, usdRates, workplace, xpForNextLevel,
   type Currency, type Price,
 } from "../shared/economy.ts";
-import { DEFAULT_THEME, ITEMS, SLOTS, itemById, keyItem, type Loadout, type Slot } from "../shared/items.ts";
+import { DEFAULT_THEME, FISTS, ITEMS, SLOTS, itemById, keyItem, weaponHit, type Loadout, type Slot } from "../shared/items.ts";
 import {
   BOSSES, CHEST_LOOT, DAILY_COOLDOWN_MS, DAILY_REWARDS, DAILY_STREAK_RESET_MS, HIT_XP_SHARE, MISSIONS, CLAN_CREATE_PRICE, CLAN_MAX_MEMBERS,
-  bossByIndex, isWeekend, missionById, taskById, type Metric,
+  LOCATIONS, bossByIndex, isWeekend, locationById, locationTask, missionById, type Metric,
 } from "../shared/content.ts";
 
 export interface PlayerRow {
@@ -34,11 +34,15 @@ export interface PlayerRow {
   clan_id: number | null;
   power_cached: number;
   v2_initialized: boolean;
+  display_name: string | null;
+  name_changed_at: Date | null;
 }
 
-export function displayName(p: Pick<PlayerRow, "username" | "first_name">): string {
-  return p.username ? p.username : p.first_name || "Degen";
+export function displayName(p: Pick<PlayerRow, "username" | "first_name"> & { display_name?: string | null }): string {
+  return p.display_name || p.username || p.first_name || "Degen";
 }
+/** SQL expression for a player's shown name (alias p). */
+const NAME_SQL = (a: string) => `COALESCE(${a}.display_name, ${a}.username, ${a}.first_name)`;
 const rand = () => randomInt(0, 2 ** 31) / 2 ** 31;
 
 // ---------------- players ----------------
@@ -105,7 +109,6 @@ export async function lockPlayer(tx: Queryable, playerId: number, now = Date.now
     p.energy_updated_at = new Date(now);
   }
   p.loadout = (p.loadout ?? {}) as Loadout;
-  await settleBossRewards(tx, p.id, now);
   return p;
 }
 
@@ -184,27 +187,70 @@ async function idempotent<T>(tx: Queryable, pid: number, key: string | undefined
   return result;
 }
 
-// ---------------- Market tasks ----------------
+// ---------------- Market: locations ----------------
+async function locationProgress(tx: Queryable, pid: number) {
+  const progress: Record<string, number> = {};
+  for (const r of await tx.query<{ task_id: string; progress: number }>("SELECT task_id, progress FROM location_progress WHERE player_id=$1", [pid])) progress[r.task_id] = r.progress;
+  const clears: Record<string, number> = {};
+  for (const r of await tx.query<{ location_id: string; clears: number }>("SELECT location_id, clears FROM location_clears WHERE player_id=$1", [pid])) clears[r.location_id] = r.clears;
+  return { progress, clears };
+}
+/** A location is open when it is the first one or the previous one was completed at least once. */
+export function locationUnlocked(index: number, clears: Record<string, number>): boolean {
+  if (index <= 1) return true;
+  const prev = LOCATIONS.find((l) => l.index === index - 1);
+  return !!prev && (clears[prev.id] ?? 0) > 0;
+}
+
+/** One step of a location task: spends energy, pays the step reward, advances progress N/target. */
 export async function doTask(tx: Queryable, pid: number, taskId: string, now = Date.now()) {
   const p = await lockPlayer(tx, pid, now);
   rateLimit(p, 250, now);
-  const t = taskById(taskId);
-  if (!t) throw new GameError("no_task", "Задание не найдено", 404);
-  if (p.level < t.unlockLevel) throw new GameError("locked", `Откроется на уровне ${t.unlockLevel}`, 400);
-  if (p.energy < t.energy) throw new GameError("no_energy", "Не хватает энергии", 400);
-  await tx.query("UPDATE players SET energy = energy - $2 WHERE id=$1", [pid, t.energy]);
+  const lt = locationTask(taskId);
+  if (!lt) throw new GameError("no_task", "Задание не найдено", 404);
+  const { loc, task } = lt;
+  const { progress, clears } = await locationProgress(tx, pid);
+  if (!locationUnlocked(loc.index, clears)) throw new GameError("locked", "Сначала пройди предыдущую локацию", 400);
+  const cur = progress[task.id] ?? 0;
+  if (cur >= task.target) throw new GameError("task_done", "Задание уже выполнено", 400);
+  if (p.energy < task.energy) throw new GameError("no_energy", "Не хватает энергии", 400);
+  await tx.query("UPDATE players SET energy = energy - $2 WHERE id=$1", [pid, task.energy]);
   const mult = isWeekend(now) ? 2 : 1;
-  await credit(tx, pid, t.reward, mult);
-  let drop: string | null = null;
-  if (t.drop && rand() < t.drop.chance) {
-    drop = t.drop.item;
-    await addItem(tx, pid, drop);
-  }
-  await gainXpPower(tx, pid, t.xp, t.power);
+  await credit(tx, pid, task.reward, mult);
+  const next = cur + 1;
+  await tx.query(
+    `INSERT INTO location_progress (player_id, task_id, progress) VALUES ($1,$2,1)
+     ON CONFLICT (player_id, task_id) DO UPDATE SET progress = location_progress.progress + 1`, [pid, task.id]);
+  const done = next >= task.target;
+  await gainXpPower(tx, pid, task.xp, done ? task.power : 0);
   await bump(tx, pid, "tasks", 1, now);
-  await bump(tx, pid, "energy", t.energy, now);
+  await bump(tx, pid, "energy", task.energy, now);
   await touch(tx, p, now);
-  return { taskId: t.id, reward: { currency: t.reward.currency, amount: roundCur(t.reward.amount * mult, t.reward.currency) }, xp: t.xp, power: t.power, drop, weekend: mult > 1 };
+  progress[task.id] = next;
+  const locationComplete = loc.tasks.every((t) => (progress[t.id] ?? 0) >= t.target);
+  return {
+    taskId: task.id, locationId: loc.id, progress: next, target: task.target, done, locationComplete,
+    reward: { currency: task.reward.currency, amount: roundCur(task.reward.amount * mult, task.reward.currency) }, xp: task.xp, power: done ? task.power : 0, weekend: mult > 1,
+  };
+}
+
+/** Pays the location reward once all 5 tasks are done; progress resets so the location can be replayed. */
+export async function claimLocation(tx: Queryable, pid: number, locationId: string, now = Date.now()) {
+  const p = await lockPlayer(tx, pid, now);
+  const loc = locationById(locationId);
+  if (!loc) throw new GameError("no_location", "Локация не найдена", 404);
+  const { progress } = await locationProgress(tx, pid);
+  if (!loc.tasks.every((t) => (progress[t.id] ?? 0) >= t.target)) throw new GameError("not_complete", "Выполни все задания локации", 400);
+  await credit(tx, pid, loc.reward.price);
+  for (const it of loc.reward.items) await addItem(tx, pid, it);
+  await gainXpPower(tx, pid, loc.reward.xp, loc.reward.power);
+  await tx.query("DELETE FROM location_progress WHERE player_id=$1 AND task_id = ANY($2::text[])", [pid, loc.tasks.map((t) => t.id)]);
+  const [c] = await tx.query<{ clears: number }>(
+    `INSERT INTO location_clears (player_id, location_id, clears) VALUES ($1,$2,1)
+     ON CONFLICT (player_id, location_id) DO UPDATE SET clears = location_clears.clears + 1 RETURNING clears`, [pid, loc.id]);
+  if (c.clears === 1) await feed(tx, "system", `🗺 ${displayName(p)} прошёл локацию «${loc.name}»`, pid);
+  await touch(tx, p, now);
+  return { locationId: loc.id, name: loc.name, reward: loc.reward.price, items: loc.reward.items, xp: loc.reward.xp, power: loc.reward.power, clears: c.clears };
 }
 
 // ---------------- Bosses ----------------
@@ -213,153 +259,149 @@ async function bossRows(tx: Queryable, pid: number) {
     "SELECT boss_index, unlocked, wins, losses, attempts, attempts_day FROM player_bosses WHERE player_id=$1", [pid]);
 }
 
-export const FISTS = "fists";
+interface FightRow { id: number; boss_index: number; hp_max: number; start_hit_id: number; cooldowns: Record<string, number>; started_at: Date }
 
-interface KillReward {
-  bossIndex: number; bossName: string; currency: Currency; amount: number; key: boolean; killer: boolean;
-  damage: number; share: number; xp: number; power: number; items: string[];
+async function activeFight(tx: Queryable, pid: number, lock = false): Promise<FightRow | null> {
+  const [f] = await tx.query<FightRow>(
+    `SELECT id, boss_index, hp_max::float8 AS hp_max, start_hit_id::float8 AS start_hit_id, cooldowns, started_at
+     FROM player_fights WHERE player_id=$1 AND status='active'${lock ? " FOR UPDATE" : ""}`, [pid]);
+  if (!f) return null;
+  f.cooldowns = (typeof f.cooldowns === "string" ? JSON.parse(f.cooldowns) : f.cooldowns) ?? {};
+  return f;
+}
+/** Global damage dealt by all players since a fight started — it all hits that fight's boss. */
+async function damageSince(tx: Queryable, startHitId: number): Promise<number> {
+  const [r] = await tx.query<{ d: number }>("SELECT COALESCE(SUM(damage), 0)::float8 AS d FROM global_hits WHERE id > $1", [startHitId]);
+  return r.d;
+}
+async function fightHp(tx: Queryable, f: FightRow) {
+  const total = await damageSince(tx, f.start_hit_id);
+  return { total, hp: Math.max(0, f.hp_max - total) };
 }
 
-/** Returns the alive instance of a boss, creating one if needed. With lock=true the row is locked FOR UPDATE. */
-async function bossInstance(tx: Queryable, bossIndex: number, lock: boolean) {
-  const boss = bossByIndex(bossIndex)!;
-  await tx.query(
-    `INSERT INTO boss_instances (boss_index, hp_max, hp) VALUES ($1,$2,$2)
-     ON CONFLICT (boss_index) WHERE status = 'alive' DO NOTHING`, [bossIndex, boss.hp]);
-  const [inst] = await tx.query<{ id: number; hp: number; hp_max: number }>(
-    `SELECT id, hp::float8 AS hp, hp_max::float8 AS hp_max FROM boss_instances WHERE boss_index=$1 AND status='alive'${lock ? " FOR UPDATE" : ""}`, [bossIndex]);
-  return inst;
-}
-
-/** Power of the player if they hit with the given weapon instead of the equipped one. */
-function powerWith(power: number, loadout: Loadout, weaponId: string): number {
-  const equipped = itemById(loadout.weapon ?? "")?.power ?? 0;
-  const chosen = weaponId === FISTS ? 0 : itemById(weaponId)?.power ?? 0;
-  return Math.max(1, power - equipped + chosen);
-}
-
-/**
- * One hit on the shared boss. Lock order: boss instance → player (every hit uses the same order).
- * When HP reaches 0 the boss dies, every participant gets a reward share recorded on their damage row
- * (settled on their next action), and a fresh instance spawns on the next hit.
- */
-export async function doHit(tx: Queryable, pid: number, bossIndex: number, weaponId: string, now = Date.now(), rng: () => number = rand) {
+/** Starts a personal fight. One fight at a time; ATTACKS_PER_DAY fights per boss per day. */
+export async function startFight(tx: Queryable, pid: number, bossIndex: number, now = Date.now()) {
+  const p = await lockPlayer(tx, pid, now);
   const boss = bossByIndex(bossIndex);
   if (!boss) throw new GameError("no_boss", "Босс не найден", 404);
-  const inst = await bossInstance(tx, bossIndex, true);
-  const p = await lockPlayer(tx, pid, now);
-  rateLimit(p, 250, now);
+  const cur = await activeFight(tx, pid, true);
+  if (cur) {
+    if (cur.boss_index === bossIndex) return { fightId: cur.id, bossIndex, already: true };
+    throw new GameError("in_fight", `Сначала закончи бой с боссом #${cur.boss_index}`, 400);
+  }
   const [row] = await tx.query<{ unlocked: boolean; attempts: number; attempts_day: string }>(
     "SELECT unlocked, attempts, attempts_day FROM player_bosses WHERE player_id=$1 AND boss_index=$2 FOR UPDATE", [pid, bossIndex]);
   if (!row?.unlocked) throw new GameError("boss_locked", `Нужно ${KEYS_TO_UNLOCK} ключа с босса #${bossIndex - 1}`, 400);
   const today = dayKey(now);
   const used = row.attempts_day === today ? row.attempts : 0;
-  if (used >= ATTACKS_PER_DAY) throw new GameError("no_attempts", "Удары по этому боссу закончились. Новые — завтра", 400);
-  const weapon = weaponId || FISTS;
-  if (weapon !== FISTS) {
-    if (itemById(weapon)?.kind !== "weapon") throw new GameError("bad_weapon", "Это не оружие", 400);
-    if ((await itemCount(tx, pid, weapon)) < 1) throw new GameError("no_item", "Этого оружия нет в инвентаре", 400);
-  }
-  const power = powerWith(await recalcPower(tx, pid), p.loadout, weapon);
-  const hit = rollHit(power, rng);
-  const dmg = Math.min(hit.dmg, inst.hp);
-  const hpLeft = inst.hp - dmg;
-  await tx.query(
-    `INSERT INTO boss_damage (instance_id, player_id, damage, hits, last_hit_at) VALUES ($1,$2,$3,1,$4)
-     ON CONFLICT (instance_id, player_id) DO UPDATE SET damage = boss_damage.damage + $3, hits = boss_damage.hits + 1, last_hit_at = $4`,
-    [inst.id, pid, dmg, new Date(now)]);
-  await tx.query("UPDATE boss_instances SET hp=$2 WHERE id=$1", [inst.id, hpLeft]);
+  if (used >= ATTACKS_PER_DAY) throw new GameError("no_attempts", "Нападения на этого босса закончились. Новые — завтра", 400);
+  const [{ last }] = await tx.query<{ last: number }>("SELECT COALESCE(MAX(id), 0)::float8 AS last FROM global_hits");
+  const [f] = await tx.query<{ id: number }>(
+    "INSERT INTO player_fights (player_id, boss_index, hp_max, start_hit_id, started_at) VALUES ($1,$2,$3,$4,$5) RETURNING id",
+    [pid, bossIndex, boss.hp, last, new Date(now)]);
   await tx.query("UPDATE player_bosses SET attempts=$3, attempts_day=$4 WHERE player_id=$1 AND boss_index=$2", [pid, bossIndex, used + 1, today]);
-  await tx.query("INSERT INTO battles (player_id, boss_index, power, win, damage) VALUES ($1,$2,$3,$4,$5)", [pid, bossIndex, power, hpLeft <= 0, dmg]);
-  await tx.query("UPDATE player_stats SET lifetime_damage = lifetime_damage + $2 WHERE player_id=$1", [pid, dmg]);
-  const hitXp = Math.max(1, Math.round(boss.xp * HIT_XP_SHARE));
-  await gainXpPower(tx, pid, hitXp, 0);
-  await bump(tx, pid, "fights", 1, now);
-  let killReward: KillReward | null = null;
-  if (hpLeft <= 0) {
-    await tx.query("UPDATE boss_instances SET status='dead', killer_id=$2, killed_at=$3 WHERE id=$1", [inst.id, pid, new Date(now)]);
-    const parts = await tx.query<{ player_id: number; damage: number }>("SELECT player_id, damage::float8 AS damage FROM boss_damage WHERE instance_id=$1", [inst.id]);
-    for (const part of parts) {
-      const killer = part.player_id === pid;
-      const share = Math.min(1, part.damage / inst.hp_max);
-      const key = killer || share >= KEY_SHARE;
-      const items: string[] = [];
-      if (killer && rng() < boss.chestChance) items.push("x-chest");
-      const reward: KillReward = {
-        bossIndex, bossName: boss.name, currency: boss.reward.currency, amount: Math.max(roundCur(boss.reward.amount * share, boss.reward.currency), 0),
-        key, killer, damage: part.damage, share, xp: key ? boss.xp : Math.round(boss.xp * share), power: key ? boss.power : 0, items,
-      };
-      await tx.query("UPDATE boss_damage SET reward=$3 WHERE instance_id=$1 AND player_id=$2", [inst.id, part.player_id, JSON.stringify(reward)]);
-    }
-    await feed(tx, "boss", `💀 ${displayName(p)} добил ${boss.name}. Участников: ${parts.length}`, pid);
-    killReward = (await settleBossRewards(tx, pid, now)).find((r) => r.bossIndex === bossIndex && r.killer) ?? null;
-  }
   await touch(tx, p, now);
-  log.info("boss.hit", { player: pid, boss: bossIndex, dmg, killed: hpLeft <= 0 });
-  return { bossIndex, weapon, power, dmg, crit: hit.crit, hp: hpLeft, hpMax: inst.hp_max, killed: hpLeft <= 0, xp: hitXp, attemptsLeft: ATTACKS_PER_DAY - used - 1, kill: killReward };
+  return { fightId: f.id, bossIndex, already: false };
 }
 
-/** Applies boss-kill rewards recorded for this player. Caller must hold the player's row lock. */
-export async function settleBossRewards(tx: Queryable, pid: number, now = Date.now()): Promise<KillReward[]> {
-  const pending = await tx.query<{ instance_id: number; reward: KillReward }>(
-    "SELECT instance_id, reward FROM boss_damage WHERE player_id=$1 AND reward IS NOT NULL AND claimed_at IS NULL FOR UPDATE", [pid]);
-  const out: KillReward[] = [];
-  for (const { instance_id, reward } of pending) {
-    const r = typeof reward === "string" ? (JSON.parse(reward) as KillReward) : reward;
-    if (r.amount > 0) await credit(tx, pid, { currency: r.currency, amount: r.amount });
-    if (r.key) {
-      const [pb] = await tx.query<{ wins: number }>(
-        `INSERT INTO player_bosses (player_id, boss_index, unlocked, wins, first_win_at) VALUES ($1,$2,TRUE,1,now())
-         ON CONFLICT (player_id, boss_index) DO UPDATE SET wins = player_bosses.wins + 1, first_win_at = COALESCE(player_bosses.first_win_at, now())
-         RETURNING wins`, [pid, r.bossIndex]);
-      await addItem(tx, pid, keyItem(r.bossIndex).id);
-      const first = bossByIndex(r.bossIndex)?.firstWinItem;
-      if (first && pb.wins === 1) r.items.push(first);
-      await tx.query("UPDATE player_stats SET bosses_defeated = bosses_defeated + 1 WHERE player_id=$1", [pid]);
-      await bump(tx, pid, "wins", 1, now);
-    }
-    for (const it of r.items) await addItem(tx, pid, it);
-    await gainXpPower(tx, pid, r.xp, r.power);
-    await tx.query("UPDATE boss_damage SET claimed_at=$3, reward=$4 WHERE instance_id=$1 AND player_id=$2", [instance_id, pid, new Date(now), JSON.stringify(r)]);
-    out.push(r);
-  }
-  return out;
+/** One hit with a weapon. Each weapon has its own cooldown inside the fight; cooldowns reset when the fight ends. */
+export async function hitFight(tx: Queryable, pid: number, weaponId: string, now = Date.now()) {
+  const p = await lockPlayer(tx, pid, now);
+  rateLimit(p, 250, now);
+  const f = await activeFight(tx, pid, true);
+  if (!f) throw new GameError("no_fight", "Сначала нападай на босса", 400);
+  const before = await fightHp(tx, f);
+  if (before.hp <= 0) throw new GameError("boss_dead", "Босс уже повержен — забери награду", 400);
+  const w = weaponHit(weaponId);
+  if (!w) throw new GameError("bad_weapon", "Это не оружие", 400);
+  if (weaponId !== FISTS.id && (await itemCount(tx, pid, weaponId)) < 1) throw new GameError("no_item", "Этого оружия нет в инвентаре", 400);
+  const readyAt = f.cooldowns[weaponId] ?? 0;
+  if (now < readyAt) throw new GameError("cooldown", "Оружие перезаряжается", 400);
+  const boss = bossByIndex(f.boss_index)!;
+  await tx.query("INSERT INTO global_hits (player_id, boss_index, weapon, damage, created_at) VALUES ($1,$2,$3,$4,$5)", [pid, f.boss_index, weaponId, w.dmg, new Date(now)]);
+  const cooldowns = { ...f.cooldowns, [weaponId]: now + w.cooldownMin * 60_000 };
+  await tx.query("UPDATE player_fights SET cooldowns=$2 WHERE id=$1", [f.id, JSON.stringify(cooldowns)]);
+  await tx.query("UPDATE player_stats SET lifetime_damage = lifetime_damage + $2 WHERE player_id=$1", [pid, w.dmg]);
+  const xp = Math.max(1, Math.round(boss.xp * HIT_XP_SHARE));
+  await gainXpPower(tx, pid, xp, 0);
+  await bump(tx, pid, "fights", 1, now);
+  await touch(tx, p, now);
+  const after = await fightHp(tx, f);
+  log.info("boss.hit", { player: pid, boss: f.boss_index, weapon: weaponId, dmg: w.dmg });
+  return { bossIndex: f.boss_index, weapon: weaponId, dmg: w.dmg, hp: after.hp, hpMax: f.hp_max, won: after.hp <= 0, readyAt: cooldowns[weaponId], xp };
 }
 
-/** Live view of a boss fight: shared HP, damage leaderboard, the last kill and my reward from it. */
-export async function bossFight(tx: Queryable, pid: number, bossIndex: number, now = Date.now()) {
-  const boss = bossByIndex(bossIndex);
-  if (!boss) throw new GameError("no_boss", "Босс не найден", 404);
-  const inst = await bossInstance(tx, bossIndex, false);
-  const damage = await tx.query<{ id: number; name: string; photo_url: string | null; level: number; damage: number; hits: number }>(
-    `SELECT p.id, COALESCE(p.username, p.first_name) AS name, p.photo_url, p.level, d.damage::float8 AS damage, d.hits
-     FROM boss_damage d JOIN players p ON p.id = d.player_id WHERE d.instance_id=$1 ORDER BY d.damage DESC LIMIT 30`, [inst.id]);
-  const [mine] = await tx.query<{ damage: number; hits: number }>("SELECT damage::float8 AS damage, hits FROM boss_damage WHERE instance_id=$1 AND player_id=$2", [inst.id, pid]);
-  const [participants] = await tx.query<{ n: number }>("SELECT COUNT(*)::int AS n FROM boss_damage WHERE instance_id=$1", [inst.id]);
-  const [last] = await tx.query<{ id: number; killed_at: Date; killer: string | null; killer_id: number | null }>(
-    `SELECT i.id, i.killed_at, COALESCE(p.username, p.first_name) AS killer, i.killer_id FROM boss_instances i LEFT JOIN players p ON p.id = i.killer_id
-     WHERE i.boss_index=$1 AND i.status='dead' ORDER BY i.killed_at DESC LIMIT 1`, [bossIndex]);
-  let lastKill = null;
-  if (last) {
-    const [my] = await tx.query<{ reward: KillReward | string | null }>("SELECT reward FROM boss_damage WHERE instance_id=$1 AND player_id=$2", [last.id, pid]);
-    const reward = my?.reward ? (typeof my.reward === "string" ? (JSON.parse(my.reward) as KillReward) : my.reward) : null;
-    lastKill = { instanceId: last.id, killer: last.killer ?? "Игрок", killerId: last.killer_id, at: new Date(last.killed_at).getTime(), myReward: reward };
-  }
-  const [row] = await tx.query<{ attempts: number; attempts_day: string; unlocked: boolean }>(
-    "SELECT attempts, attempts_day, unlocked FROM player_bosses WHERE player_id=$1 AND boss_index=$2", [pid, bossIndex]);
-  return {
-    bossIndex, instanceId: inst.id, hp: inst.hp, hpMax: inst.hp_max, participants: participants.n,
-    damage, my: { damage: mine?.damage ?? 0, hits: mine?.hits ?? 0 },
-    attemptsLeft: row?.unlocked ? ATTACKS_PER_DAY - (row.attempts_day === dayKey(now) ? row.attempts : 0) : 0,
-    lastKill, serverTime: now,
-  };
+/** Collects the victory reward once the boss HP reached 0 (from anyone's damage) and ends the fight. */
+export async function claimFight(tx: Queryable, pid: number, now = Date.now(), rng: () => number = rand) {
+  const p = await lockPlayer(tx, pid, now);
+  const f = await activeFight(tx, pid, true);
+  if (!f) throw new GameError("no_fight", "Нет активного боя", 400);
+  const { hp, total } = await fightHp(tx, f);
+  if (hp > 0) throw new GameError("not_won", "Босс ещё жив", 400);
+  const boss = bossByIndex(f.boss_index)!;
+  const [pb] = await tx.query<{ wins: number }>(
+    `UPDATE player_bosses SET wins = wins + 1, first_win_at = COALESCE(first_win_at, now()) WHERE player_id=$1 AND boss_index=$2 RETURNING wins`, [pid, f.boss_index]);
+  await credit(tx, pid, boss.reward);
+  const key = keyItem(f.boss_index).id;
+  await addItem(tx, pid, key);
+  const items: string[] = [];
+  if (boss.firstWinItem && pb?.wins === 1) items.push(boss.firstWinItem);
+  if (rng() < boss.chestChance) items.push("x-chest");
+  for (const it of items) await addItem(tx, pid, it);
+  await gainXpPower(tx, pid, boss.xp, boss.power);
+  await tx.query("UPDATE player_stats SET bosses_defeated = bosses_defeated + 1 WHERE player_id=$1", [pid]);
+  await bump(tx, pid, "wins", 1, now);
+  const [mine] = await tx.query<{ d: number }>("SELECT COALESCE(SUM(damage),0)::float8 AS d FROM global_hits WHERE id > $1 AND player_id=$2", [f.start_hit_id, pid]);
+  const result = { bossIndex: f.boss_index, bossName: boss.name, reward: boss.reward, key, xp: boss.xp, power: boss.power, items, myDamage: mine.d, totalDamage: Math.min(total, f.hp_max) };
+  await tx.query("UPDATE player_fights SET status='won', ended_at=$2, reward=$3 WHERE id=$1", [f.id, new Date(now), JSON.stringify(result)]);
+  if (pb?.wins === 1) await feed(tx, "boss", `👑 ${displayName(p)} впервые победил ${boss.name}`, pid);
+  await touch(tx, p, now);
+  return result;
 }
-export type BossFight = Awaited<ReturnType<typeof bossFight>>;
 
-/** Damage estimate for each weapon the player can hit with (fists + owned weapons). */
-export function weaponOptions(power: number, loadout: Loadout, owned: string[]) {
-  const ids = [FISTS, ...ITEMS.filter((i) => i.kind === "weapon" && owned.includes(i.id)).map((i) => i.id)];
-  return ids.map((id) => ({ id, avg: avgHit(powerWith(power, loadout, id)) }));
+/** Leaves the fight without a reward (counts as a loss). */
+export async function fleeFight(tx: Queryable, pid: number, now = Date.now()) {
+  await lockPlayer(tx, pid, now);
+  const f = await activeFight(tx, pid, true);
+  if (!f) throw new GameError("no_fight", "Нет активного боя", 400);
+  if ((await fightHp(tx, f)).hp <= 0) throw new GameError("already_won", "Босс уже повержен — забери награду", 400);
+  await tx.query("UPDATE player_fights SET status='fled', ended_at=$2 WHERE id=$1", [f.id, new Date(now)]);
+  await tx.query("UPDATE player_bosses SET losses = losses + 1 WHERE player_id=$1 AND boss_index=$2", [pid, f.boss_index]);
+  return { bossIndex: f.boss_index };
+}
+
+/** Live fight view: my boss HP after global damage, cooldowns and who dealt damage since my fight began. */
+export async function fightView(tx: Queryable, pid: number, now = Date.now()) {
+  const f = await activeFight(tx, pid);
+  if (!f) return null;
+  const { hp, total } = await fightHp(tx, f);
+  const damage = await tx.query<{ id: number; name: string; photo_url: string | null; damage: number; hits: number; boss_index: number }>(
+    `SELECT h.player_id AS id, ${NAME_SQL("p")} AS name, p.photo_url, SUM(h.damage)::float8 AS damage, COUNT(*)::int AS hits,
+            (array_agg(h.boss_index ORDER BY h.id DESC))[1] AS boss_index
+     FROM global_hits h JOIN players p ON p.id = h.player_id WHERE h.id > $1
+     GROUP BY h.player_id, p.display_name, p.username, p.first_name, p.photo_url ORDER BY damage DESC LIMIT 30`, [f.start_hit_id]);
+  return { fightId: f.id, bossIndex: f.boss_index, hp, hpMax: f.hp_max, won: hp <= 0, total, startedAt: new Date(f.started_at).getTime(), cooldowns: f.cooldowns, damage, serverTime: now };
+}
+export type FightView = NonNullable<Awaited<ReturnType<typeof fightView>>>;
+
+/** Weapons the player can hit with: fists + owned weapons, strongest first. */
+export function weaponOptions(owned: string[]) {
+  const list: { id: string; name: string; dmg: number; cooldownMin: number }[] = [{ id: FISTS.id, name: FISTS.name, ...FISTS.hit }];
+  for (const i of ITEMS) if (i.kind === "weapon" && i.hit && owned.includes(i.id)) list.push({ id: i.id, name: i.name, ...i.hit });
+  return list.sort((a, b) => b.dmg - a.dmg);
+}
+
+// ---------------- Profile ----------------
+const NICK = /^[\p{L}\p{N}_. -]{3,16}$/u;
+export async function renamePlayer(tx: Queryable, pid: number, raw: string, now = Date.now()) {
+  const p = await lockPlayer(tx, pid, now);
+  const name = raw.replace(/\s+/g, " ").trim();
+  if (!NICK.test(name)) throw new GameError("bad_name", "Ник: 3–16 символов — буквы, цифры, пробел, _ . -", 400);
+  if (p.name_changed_at && now - new Date(p.name_changed_at).getTime() < RENAME_COOLDOWN_MS) throw new GameError("rename_cooldown", "Сменить ник можно раз в 24 часа", 400);
+  const taken = await tx.query("SELECT 1 FROM players WHERE lower(display_name) = lower($1) AND id <> $2", [name, pid]);
+  if (taken.length) throw new GameError("name_taken", "Этот ник уже занят", 400);
+  await tx.query("UPDATE players SET display_name=$2, name_changed_at=$3 WHERE id=$1", [pid, name, new Date(now)]);
+  return { name };
 }
 
 export async function unlockBoss(tx: Queryable, pid: number, bossIndex: number, now = Date.now()) {
@@ -644,7 +686,7 @@ export async function leaveClan(tx: Queryable, pid: number, now = Date.now()) {
 export async function listClans(tx: Queryable, search = "") {
   return tx.query<{ id: number; name: string; tag: string; description: string; members: number; power: number; owner: string }>(
     `SELECT c.id, c.name, c.tag, c.description, COUNT(m.player_id)::int AS members, COALESCE(SUM(p.power_cached),0)::int AS power,
-            (SELECT COALESCE(o.username, o.first_name) FROM players o WHERE o.id = c.owner_id) AS owner
+            (SELECT ${NAME_SQL("o")} FROM players o WHERE o.id = c.owner_id) AS owner
        FROM clans c LEFT JOIN clan_members m ON m.clan_id = c.id LEFT JOIN players p ON p.id = m.player_id
       WHERE $1 = '' OR lower(c.name) LIKE '%' || lower($1) || '%' OR lower(c.tag) LIKE '%' || lower($1) || '%'
       GROUP BY c.id ORDER BY power DESC, c.id ASC LIMIT 50`, [search.slice(0, 30)]);
@@ -654,12 +696,12 @@ export async function clanDetails(tx: Queryable, clanId: number, viewerId: numbe
   const [c] = await tx.query<{ id: number; name: string; tag: string; description: string; owner_id: number; created_at: string }>("SELECT * FROM clans WHERE id=$1", [clanId]);
   if (!c) return null;
   const members = await tx.query<{ id: number; name: string; photo_url: string | null; level: number; power: number; role: string }>(
-    `SELECT p.id, COALESCE(p.username, p.first_name) AS name, p.photo_url, p.level, p.power_cached AS power, m.role
+    `SELECT p.id, ${NAME_SQL("p")} AS name, p.photo_url, p.level, p.power_cached AS power, m.role
        FROM clan_members m JOIN players p ON p.id = m.player_id WHERE m.clan_id=$1 ORDER BY (m.role='leader') DESC, p.power_cached DESC`, [clanId]);
   const isLeader = c.owner_id === viewerId;
   const requests = isLeader
     ? await tx.query<{ id: number; name: string; photo_url: string | null; level: number; power: number }>(
-        `SELECT p.id, COALESCE(p.username, p.first_name) AS name, p.photo_url, p.level, p.power_cached AS power
+        `SELECT p.id, ${NAME_SQL("p")} AS name, p.photo_url, p.level, p.power_cached AS power
            FROM clan_requests r JOIN players p ON p.id = r.player_id WHERE r.clan_id=$1 ORDER BY r.created_at`, [clanId])
     : [];
   return { ...c, members, requests, power: members.reduce((s, m) => s + m.power, 0), isLeader };
@@ -676,15 +718,15 @@ export async function getState(tx: Queryable, pid: number, now = Date.now()) {
   const today = dayKey(now);
   const keys = new Map(inv.filter((i) => i.item_id.startsWith("key-")).map((i) => [Number(i.item_id.slice(4)), i.quantity]));
   const power = p.power_cached;
-  const alive = new Map((await tx.query<{ boss_index: number; hp: number; hp_max: number }>(
-    "SELECT boss_index, hp::float8 AS hp, hp_max::float8 AS hp_max FROM boss_instances WHERE status='alive'")).map((r) => [r.boss_index, r]));
+  const fightRow = await activeFight(tx, pid);
+  const fight = fightRow ? { bossIndex: fightRow.boss_index, hpMax: fightRow.hp_max, cooldowns: fightRow.cooldowns, ...(await fightHp(tx, fightRow)) } : null;
   const bosses = BOSSES.map((b) => {
     const r = rows.find((x) => x.boss_index === b.index);
     const unlocked = !!r?.unlocked;
     const prevKeys = keys.get(b.index - 1) ?? 0;
     const prevUnlocked = b.index === 1 || !!rows.find((x) => x.boss_index === b.index - 1)?.unlocked;
     return {
-      index: b.index, slug: b.slug, name: b.name, title: b.title, hp: alive.get(b.index)?.hp ?? b.hp, hpMax: alive.get(b.index)?.hp_max ?? b.hp, reward: b.reward, xp: b.xp, power: b.power,
+      index: b.index, slug: b.slug, name: b.name, title: b.title, hp: fight?.bossIndex === b.index ? fight.hp : b.hp, hpMax: b.hp, reward: b.reward, xp: b.xp, power: b.power,
       unlocked, wins: r?.wins ?? 0, losses: r?.losses ?? 0,
       attemptsLeft: unlocked ? ATTACKS_PER_DAY - (r?.attempts_day === today ? r.attempts : 0) : 0,
       canUnlock: !unlocked && prevUnlocked && prevKeys >= KEYS_TO_UNLOCK, keysHave: prevKeys,
@@ -698,7 +740,7 @@ export async function getState(tx: Queryable, pid: number, now = Date.now()) {
   return {
     serverTime: now,
     player: {
-      id: p.id, name: displayName(p), photoUrl: p.photo_url, isGuest: p.is_guest, level: p.level, xp: p.xp, xpNext: xpForNextLevel(p.level),
+      id: p.id, name: displayName(p), renameAt: p.name_changed_at ? new Date(p.name_changed_at).getTime() + RENAME_COOLDOWN_MS : 0, photoUrl: p.photo_url, isGuest: p.is_guest, level: p.level, xp: p.xp, xpNext: xpForNextLevel(p.level),
       energy: p.energy, maxEnergy: max, energyUpdatedAt: new Date(p.energy_updated_at).getTime(), energyRegenMs: ENERGY_REGEN_MS,
       power, powerBonus: p.power_bonus, workplaceTier: p.equipment_tier, loadout: (p.loadout ?? {}) as Loadout, theme: p.theme || DEFAULT_THEME,
     },
@@ -706,7 +748,9 @@ export async function getState(tx: Queryable, pid: number, now = Date.now()) {
     rates: usdRates(now),
     idle: { ...idleAccrued(p, now), perHour: workplace(p.equipment_tier).idlePerHour, capMs: IDLE_CAP_MS },
     inventory: inv.map((i) => ({ id: i.item_id, qty: i.quantity })),
-    weapons: weaponOptions(power, (p.loadout ?? {}) as Loadout, inv.map((i) => i.item_id)),
+    weapons: weaponOptions(inv.map((i) => i.item_id)),
+    fight: fight ? { ...fight, won: fight.hp <= 0 } : null,
+    locations: await locationProgress(tx, pid),
     bosses,
     daily: dailyStatus(daily, now),
     missions: await missionStatus(tx, pid, now),

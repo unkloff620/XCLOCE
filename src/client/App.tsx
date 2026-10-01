@@ -2,11 +2,11 @@
 import { GameProvider, useGame } from "./store.tsx";
 import { BottomNav, Toasts, TopHud } from "./hud.tsx";
 import { HomeScreen } from "./screens/Home.tsx";
-import { BossScreen, FightScreen } from "./screens/Boss.tsx";
+import { BossScreen, FightScreen, VictoryModal } from "./screens/Boss.tsx";
 import { MarketScreen } from "./screens/Market.tsx";
 import { InventoryScreen, ItemSheet } from "./screens/Inventory.tsx";
 import { SocialScreen } from "./screens/Social.tsx";
-import { DailySheet, EventsSheet, MissionsSheet, ShopSheet, UpgradeSheet } from "./screens/Sheets.tsx";
+import { DailySheet, EventsSheet, MissionsSheet, ProfileSheet, ShopSheet, UpgradeSheet } from "./screens/Sheets.tsx";
 
 function Shell() {
   const { status, error, tab, retry, mode } = useGame();
@@ -38,8 +38,10 @@ function Shell() {
       <MissionsSheet />
       <EventsSheet />
       <UpgradeSheet />
+      <ProfileSheet />
       <ItemSheet />
       <FightScreen />
+      <VictoryModal />
       <Toasts />
     </div>
   );

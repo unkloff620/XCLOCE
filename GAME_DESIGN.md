@@ -27,17 +27,32 @@ RUB (start 5,000), USD (start 20), SOL, BTC. Spent on gear, workplace and themes
 ## Power
 
 `power = 100 + 20·(level−1) + Σ equipped gear power + workplace bonus + permanent bonus`
-Permanent bonus grows from Market tasks (+1…+6), boss victories (+3·boss index) and daily missions.
+Permanent bonus grows from finished Market tasks and locations, boss victories (+3·boss index) and daily missions.
+Power is the character's rating (top players, clan power); hit damage is set by the weapon (open question: scale damage by power?).
 
-## Battles
+## Battles — personal fights, global damage
 
-- Each attack = 10 hits, each hit = power × U(0.8, 1.2), 10% crit ×1.6; win if total damage ≥ boss HP.
-  Expected damage ≈ 10.6 × power. The boss list shows the server-calculated win chance.
-- **7 attacks per boss per UTC day** (configurable `ATTACKS_PER_DAY`). A loss uses an attempt and gives 25% XP.
-- **Boss #1 is always open.** Every win drops the boss's key; **3 keys of boss N unlock boss N+1** (keys are consumed).
-- First-win drops: #2 cap, #4 neon glasses, #6 BAN Hammer, #10 Diamond Fist (mythic). Chest chance 5–16% per win.
+- Every player fights **their own** boss (`fight_start`). One active fight at a time; **7 fights per boss per UTC day** (`ATTACKS_PER_DAY`).
+- **Global damage:** every hit by any player on any boss is recorded in `global_hits` and also damages every fight that was
+  active at that moment. My boss HP = boss HP − all hits since my fight started. The fight screen lists who dealt that damage.
+- **Weapons:** each tap on a weapon is one hit; every weapon has its own cooldown inside the fight. Cooldowns reset when the fight ends.
 
-| # | Boss | HP | Power for ~50% | Reward | Power per win |
+| Weapon | Damage | Cooldown |
+|---|---:|---:|
+| Fists (always) | 20 | 1 h |
+| Paper fan | 40 | 1 h |
+| SELL club | 80 | 1 h |
+| Dump Hammer | 200 | 1.5 h |
+| BAN Hammer | 450 | 2 h |
+| Rug Cannon | 900 | 3 h |
+| Whale harpoon | 1,800 | 4 h |
+| Diamond Fist (drop) | 3,500 | 4 h |
+
+- When HP reaches 0 (from anyone's damage) the **victory window** opens; "Забрать" pays the boss reward, its key, XP and power
+  (+ first-win item, chest chance) and returns to the boss list. "Сбежать" ends the fight without reward.
+- **Boss #1 is always open. 3 keys of boss N unlock boss N+1** (keys are consumed).
+
+| # | Boss | HP | — | Reward | Power per win |
 |---|---|---:|---:|---|---:|
 | 1 | BAGHOLDER | 900 | 85 | 900 ₽ | +3 |
 | 2 | COPIUM HAMSTER | 2,000 | 190 | 2,000 ₽ | +6 |
@@ -55,15 +70,21 @@ Boss names and HP are placeholders (owner will adjust).
 ## Energy & Market
 
 Max 100 (+10…60 from workplace), regenerates +1 per minute; energy drinks add 30/100 (may overfill up to 2× max).
-Tasks: chat post (5⚡ → 350 ₽), shilling (10⚡ → 800 ₽), scalping (15⚡ → $9), meme drawing (20⚡ → $14), arbitrage (25⚡ → 0.12 SOL),
-airdrop farming (30⚡ → 0.18 SOL), mining (40⚡ → 0.0012 BTC), whale hunting (50⚡ → 0.002 BTC). Level gates 1–14.
+Market = **5 locations × 5 tasks**. Every task has progress N/target; each step costs energy and pays a step reward + XP,
+finishing a task gives power. When all 5 tasks are done the **location reward window** opens (currency + items + XP + power),
+the next location unlocks, and the location's tasks reset so it can be replayed.
+Locations: Мамкин подвал → Крипто-чат → Офис биржи → Майнинг-ферма → Луна (rewards grow from ₽ to BTC).
+
+## Profile
+
+Tap the avatar (top-left) to change the nickname: 3–16 chars (letters, digits, space, `_ . -`), unique, once per 24 h.
 
 ## Home
 
 - Workplace tiers 1–6: idle income 400 → 26,000 ₽/h, +0…900 power, +0…60 max energy. Idle income accumulates up to 8 h, claimed with CLAIM.
 - Room themes (shop): default, neon city, moon base, whale penthouse.
 - Login reward: 7-day streak (₽, energy drink, $, chest, SOL, mega drink); claim every 20 h, streak resets after 48 h.
-- Daily missions (6): login, 5 tasks, spend 100⚡, 3 boss attacks, 5 wins, 1 purchase.
+- Daily missions (6): login, 5 task steps, spend 100⚡, 3 boss hits, 1 boss win, 1 purchase.
 - Events: Weekend Pump ×2 (Sat/Sun UTC), key hunt info; server feed (first boss kills, new clans).
 
 ## Items

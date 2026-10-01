@@ -318,4 +318,52 @@ CREATE INDEX IF NOT EXISTS boss_damage_top_idx ON boss_damage (instance_id, dama
 CREATE INDEX IF NOT EXISTS boss_damage_pending_idx ON boss_damage (player_id) WHERE reward IS NOT NULL AND claimed_at IS NULL;
 `,
   },
+  {
+    id: "005_personal_fights_locations",
+    sql: `
+DROP TABLE IF EXISTS boss_damage;
+DROP TABLE IF EXISTS boss_instances;
+
+-- every hit of every player; it damages every active fight that started before it
+CREATE TABLE IF NOT EXISTS global_hits (
+  id BIGSERIAL PRIMARY KEY,
+  player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  boss_index INT NOT NULL,
+  weapon TEXT NOT NULL,
+  damage INT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS player_fights (
+  id BIGSERIAL PRIMARY KEY,
+  player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  boss_index INT NOT NULL,
+  hp_max BIGINT NOT NULL,
+  start_hit_id BIGINT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'active',
+  cooldowns JSONB NOT NULL DEFAULT '{}'::jsonb,
+  reward JSONB,
+  started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  ended_at TIMESTAMPTZ
+);
+CREATE UNIQUE INDEX IF NOT EXISTS player_fights_active_idx ON player_fights (player_id) WHERE status = 'active';
+
+CREATE TABLE IF NOT EXISTS location_progress (
+  player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  task_id TEXT NOT NULL,
+  progress INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (player_id, task_id)
+);
+CREATE TABLE IF NOT EXISTS location_clears (
+  player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  location_id TEXT NOT NULL,
+  clears INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (player_id, location_id)
+);
+
+ALTER TABLE players ADD COLUMN IF NOT EXISTS display_name TEXT;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS name_changed_at TIMESTAMPTZ;
+CREATE UNIQUE INDEX IF NOT EXISTS players_display_name_idx ON players (lower(display_name)) WHERE display_name IS NOT NULL;
+`,
+  },
 ];

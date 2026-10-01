@@ -7,7 +7,7 @@ import { DAILY_REWARDS, EVENTS } from "../../shared/content.ts";
 import { CURRENCIES, WORKPLACE, exchangeQuote, type Currency } from "../../shared/economy.ts";
 import { ItemIcon } from "../art/items.tsx";
 import { UIcon, type UiIcon } from "../art/icons.tsx";
-import { Bar, PriceTag, RARITY_LABEL, Sheet, Tabs, countdown, fmtCur, fmtNum } from "../ui.tsx";
+import { Avatar, Bar, PriceTag, RARITY_LABEL, Sheet, Tabs, countdown, fmtCur, fmtNum } from "../ui.tsx";
 
 type ShopTab = "weapon" | "outfit" | "items" | "rooms" | "exchange";
 
@@ -198,6 +198,40 @@ export function UpgradeSheet() {
           </div>
         );
       })}
+    </Sheet>
+  );
+}
+
+export function ProfileSheet() {
+  const { sheet, openSheet, game, act, busy, now } = useGame();
+  const [name, setName] = useState("");
+  const open = sheet === "profile";
+  useEffect(() => { if (open && game) setName(game.player.name); }, [open, game?.player.name]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!game) return null;
+  const p = game.player;
+  const wait = p.renameAt - now;
+  const clean = name.replace(/\s+/g, " ").trim();
+  const valid = /^[\p{L}\p{N}_. -]{3,16}$/u.test(clean) && clean !== p.name;
+  return (
+    <Sheet open={open} onClose={() => openSheet(null)} title="ПРОФИЛЬ">
+      <div className="profile-head">
+        <Avatar url={p.photoUrl} name={p.name} size={72} />
+        <div className="minw0">
+          <div className="comic big ellipsis">{p.name}</div>
+          <div className="small muted">Lv {p.level} · ⚔ {fmtNum(p.power)}</div>
+        </div>
+      </div>
+      <label className="field"><span>Никнейм (3–16 символов)</span>
+        <input maxLength={16} value={name} disabled={wait > 0} onChange={(e) => setName(e.target.value)} placeholder="Твой ник" />
+      </label>
+      {wait > 0 ? (
+        <p className="small muted center">Сменить ник снова можно через {countdown(wait)}</p>
+      ) : (
+        <p className="small muted center">Ник можно менять раз в 24 часа. Буквы, цифры, пробел, _ . -</p>
+      )}
+      <button className="btn-green comic" disabled={!valid || wait > 0 || busy === "rename"} onClick={async () => { if (await act("rename", { name: clean }, "Ник изменён")) openSheet(null); }}>
+        СОХРАНИТЬ
+      </button>
     </Sheet>
   );
 }

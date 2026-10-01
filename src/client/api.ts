@@ -1,7 +1,7 @@
-import type { BossFight, GameState } from "../server/game.ts";
+import type { FightView, GameState } from "../server/game.ts";
 import { tg } from "./telegram.ts";
 
-export type { BossFight, GameState };
+export type { FightView, GameState };
 
 export class ApiError extends Error {
   code: string;
@@ -77,7 +77,7 @@ export const api = {
     raw<ActionResponse<R>>("/api/action", { method: "POST", body: JSON.stringify({ type, idem: crypto.randomUUID(), ...payload }) }),
   clans: (search = "") => raw<{ clans: ClanRow[] }>(`/api/clans?search=${encodeURIComponent(search)}`),
   clan: (id: number) => raw<{ clan: ClanDetails | null }>(`/api/clans?id=${id}`),
-  boss: (index: number) => raw<{ fight: BossFight; state: GameState | null }>(`/api/boss?index=${index}`),
+  fight: () => raw<{ fight: FightView | null }>("/api/fight"),
   feed: () => raw<{ items: FeedItem[]; top: TopRow[] }>("/api/feed", {}, false),
 };
 
@@ -87,11 +87,13 @@ export interface ClanDetails { id: number; name: string; tag: string; descriptio
 export interface FeedItem { id: number; kind: string; text: string; created_at: string }
 export interface TopRow { id: number; name: string; photo_url: string | null; level: number; power: number; tag: string | null }
 
-export interface KillReward {
-  bossIndex: number; bossName: string; currency: string; amount: number; key: boolean; killer: boolean;
-  damage: number; share: number; xp: number; power: number; items: string[];
+export interface HitResult { bossIndex: number; weapon: string; dmg: number; hp: number; hpMax: number; won: boolean; readyAt: number; xp: number }
+export interface VictoryResult {
+  bossIndex: number; bossName: string; reward: { currency: string; amount: number }; key: string; xp: number; power: number;
+  items: string[]; myDamage: number; totalDamage: number;
 }
-export interface HitResult {
-  bossIndex: number; weapon: string; power: number; dmg: number; crit: boolean; hp: number; hpMax: number;
-  killed: boolean; xp: number; attemptsLeft: number; kill: KillReward | null;
+export interface TaskResult {
+  taskId: string; locationId: string; progress: number; target: number; done: boolean; locationComplete: boolean;
+  reward: { currency: string; amount: number }; xp: number; power: number; weekend: boolean;
 }
+export interface LocationReward { locationId: string; name: string; reward: { currency: string; amount: number }; items: string[]; xp: number; power: number; clears: number }
