@@ -4,6 +4,9 @@ export type Rarity = "common" | "rare" | "epic" | "legendary" | "mythic";
 export type Slot = "hat" | "glasses" | "jacket" | "chain";
 export type ItemKind = Slot | "weapon" | "consumable" | "chest" | "key" | "theme";
 
+/** Damage bonuses of an applied room: crit chance (0..1), crit multiplier, extra damage per weapon id (0.25 = +25%). */
+export interface RoomBonus { critChance: number; critMult: number; weapons: Record<string, number> }
+
 export interface ItemDef {
   id: string;
   name: string;
@@ -11,6 +14,8 @@ export interface ItemDef {
   rarity: Rarity;
   /** power bonus while equipped (gear) */
   power?: number;
+  /** rooms: damage bonuses while this room is applied */
+  room?: RoomBonus;
   /** weapons: damage per hit (weapons are consumables: one item = one hit) */
   hit?: { dmg: number; cooldownMin: number };
   /** shop price; absent = not sold (drop only) */
@@ -60,9 +65,9 @@ export const ITEMS: ItemDef[] = [
   { id: "x-chest", name: "Мем-сундук", kind: "chest", rarity: "rare", price: { currency: "USD", amount: 30 }, art: "chest", color: "#d98f3a", description: "Валюта, энергетики, шанс на экипировку.", stackable: true },
   // ---------- room themes ----------
   { id: "t-default", name: "Комната дегена", kind: "theme", rarity: "common", art: "default", description: "Тесно, зато своё." },
-  { id: "t-neon", name: "Неоновый город", kind: "theme", rarity: "rare", price: { currency: "RUB", amount: 20_000 }, unlockLevel: 3, art: "neon", description: "Вид на ночной город и зелёную луну." },
-  { id: "t-moon", name: "Лунная база", kind: "theme", rarity: "epic", price: { currency: "USD", amount: 250 }, unlockLevel: 6, art: "moon", description: "Мы всё-таки долетели." },
-  { id: "t-penthouse", name: "Пентхаус кита", kind: "theme", rarity: "legendary", price: { currency: "SOL", amount: 5 }, unlockLevel: 10, art: "penthouse", description: "Золото, мрамор и графики во всю стену." },
+  { id: "t-neon", name: "Неоновый город", kind: "theme", rarity: "rare", price: { currency: "RUB", amount: 20_000 }, unlockLevel: 3, art: "neon", description: "Вид на ночной город и зелёную луну.", room: { critChance: 0.1, critMult: 1.5, weapons: { "w-paper-fan": 0.2, "w-sell-club": 0.2 } } },
+  { id: "t-moon", name: "Лунная база", kind: "theme", rarity: "epic", price: { currency: "USD", amount: 250 }, unlockLevel: 6, art: "moon", description: "Мы всё-таки долетели.", room: { critChance: 0.12, critMult: 1.5, weapons: { "w-dump-hammer": 0.25, "w-ban-hammer": 0.25 } } },
+  { id: "t-penthouse", name: "Пентхаус кита", kind: "theme", rarity: "legendary", price: { currency: "SOL", amount: 5 }, unlockLevel: 10, art: "penthouse", description: "Золото, мрамор и графики во всю стену.", room: { critChance: 0.15, critMult: 2, weapons: { "w-rug-cannon": 0.3, "w-whale-harpoon": 0.3 } } },
 ];
 
 /** Boss keys (key-1 … key-10) are generated, stackable items. */
@@ -91,4 +96,22 @@ export const FISTS = { id: "fists", name: "Кулаки", hit: { dmg: 20, cooldo
 export function weaponHit(id: string): { dmg: number; cooldownMin: number } | null {
   if (id === FISTS.id) return FISTS.hit;
   return itemById(id)?.hit ?? null;
+}
+
+const NO_BONUS: RoomBonus = { critChance: 0, critMult: 1.5, weapons: {} };
+/** Bonuses of the applied room (the default room gives none). */
+export function roomBonus(themeId: string | null | undefined): RoomBonus {
+  return itemById(themeId ?? "")?.room ?? NO_BONUS;
+}
+/** Expected (non-crit) damage of a weapon with the room's bonus. */
+export function weaponDamage(weaponId: string, room: RoomBonus): number {
+  const base = weaponHit(weaponId)?.dmg ?? 0;
+  return Math.round(base * (1 + (room.weapons[weaponId] ?? 0)));
+}
+/** Short Russian description of a room bonus, e.g. "Крит 10% ×1.5 · +20% Бумажный веер". */
+export function describeRoom(room: RoomBonus): string[] {
+  const out: string[] = [];
+  if (room.critChance > 0) out.push(`Крит ${Math.round(room.critChance * 100)}% · урон ×${room.critMult}`);
+  for (const [id, k] of Object.entries(room.weapons)) out.push(`+${Math.round(k * 100)}% урона: ${itemById(id)?.name ?? id}`);
+  return out;
 }

@@ -78,6 +78,19 @@ finishing a task gives power. When all 5 tasks are done the **location reward wi
 the next location unlocks, and the location's tasks reset so it can be replayed.
 Locations: Мамкин подвал → Крипто-чат → Офис биржи → Майнинг-ферма → Луна (rewards grow from ₽ to BTC).
 
+## Rooms (Home → poster)
+
+Rooms are bought and applied in the rooms window (not in the shop). While applied, a room gives damage bonuses:
+
+| Room | Crit chance | Crit damage | Weapon bonus |
+|---|---:|---:|---|
+| Комната дегена (default) | — | — | — |
+| Неоновый город | 10% | ×1.5 | +20% paper fan, SELL club |
+| Лунная база | 12% | ×1.5 | +25% Dump Hammer, BAN Hammer |
+| Пентхаус кита | 15% | ×2 | +30% Rug Cannon, whale harpoon |
+
+Crits apply to every hit, fists included. Boss N+1 opens automatically as soon as the player holds 3 keys of boss N.
+
 ## Yard (Двор)
 
 Home → «Двор». Every 5 s an item appears in the courtyard and lies for 30 s: beer (+5⚡, 38%), energy drink (+15⚡, 25%),

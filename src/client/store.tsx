@@ -14,6 +14,8 @@ interface Ctx {
   game: GameState | null;
   tab: Tab;
   setTab: (t: Tab) => void;
+  /** increases on every bottom-menu press, so screens can return to their main view */
+  navTick: number;
   sheet: SheetName;
   openSheet: (s: SheetName) => void;
   itemSheet: string | null;
@@ -48,6 +50,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<Ctx["mode"]>(null);
   const [game, setGame] = useState<GameState | null>(null);
   const [tab, setTabState] = useState<Tab>("home");
+  const [navTick, setNavTick] = useState(0);
   const [sheet, setSheet] = useState<SheetName>(null);
   const [itemSheet, setItemSheet] = useState<string | null>(null);
   const [fight, setFight] = useState<number | null>(null);
@@ -112,6 +115,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const setTab = useCallback((t: Tab) => {
     haptic.select();
     setTabState(t);
+    setNavTick((n) => n + 1);
     setFight(null);
     setYard(false);
     if (typeof window !== "undefined") window.scrollTo({ top: 0 });
@@ -155,7 +159,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const openYard = useCallback((o: boolean) => { setFight(null); setYard(o); if (typeof window !== "undefined") window.scrollTo({ top: 0 }); }, []);
 
   const value: Ctx = {
-    status, error, mode, game, tab, setTab, sheet, openSheet: setSheet, itemSheet, openItem: setItemSheet, fight, setFight: openFight, yard, setYard: openYard,
+    status, error, mode, game, tab, setTab, navTick, sheet, openSheet: setSheet, itemSheet, openItem: setItemSheet, fight, setFight: openFight, yard, setYard: openYard,
     toasts, toast, applyState: apply, refresh, busy, act, energyNow, nextEnergyIn, now: now + offset.current, retry: () => setRetryN((n) => n + 1),
   };
   return <GameCtx.Provider value={value}>{children}</GameCtx.Provider>;

@@ -88,7 +88,7 @@ export interface ClanDetails { id: number; name: string; tag: string; descriptio
 export interface FeedItem { id: number; kind: string; text: string; created_at: string }
 export interface TopRow { id: number; name: string; photo_url: string | null; level: number; power: number; tag: string | null }
 
-export interface HitResult { bossIndex: number; weapon: string; dmg: number; hp: number; hpMax: number; won: boolean; readyAt: number; xp: number }
+export interface HitResult { bossIndex: number; weapon: string; dmg: number; crit: boolean; hp: number; hpMax: number; won: boolean; readyAt: number; xp: number }
 export interface VictoryResult {
   outcome: "win" | "lose"; bossIndex: number; bossName: string; reward: { currency: string; amount: number } | null; key: string | null; xp: number; power: number;
   items: string[]; myDamage: number; totalDamage: number;

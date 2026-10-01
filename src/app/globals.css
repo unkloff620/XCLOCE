@@ -189,7 +189,7 @@ button.hud-profile { color: inherit; text-align: left; width: 100%; font: inheri
 }
 .boss-ava { position: relative; width: 74px; height: 74px; flex: none; border: 2px solid #000; background: #000; }
 .boss-ava img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.boss-card.locked .boss-ava img { filter: grayscale(1) brightness(0.28) contrast(1.4); }
+.boss-card.locked .boss-ava .bp-art { filter: grayscale(1) brightness(0.28) contrast(1.4); }
 .boss-ava .q { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 46px; color: #cfd6e6; text-shadow: 3px 3px 0 #000; }
 .boss-n { position: absolute; left: -2px; top: -2px; background: var(--green); color: #000; font-size: 15px; padding: 0 6px; border: 2px solid #000; }
 .boss-card.locked .boss-n { background: #555; color: #ddd; }
@@ -490,9 +490,11 @@ button.hud-profile { color: inherit; text-align: left; width: 100%; font: inheri
 
 /* ---------- HUD money: one currency + dropdown ---------- */
 .hud { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr); }
-.hud .hud-money { display: flex; align-items: center; padding: 5px; overflow: visible; }
-.hud .money-main { width: 100%; height: 100%; min-height: 40px; display: flex; align-items: center; gap: 5px; padding: 3px 6px; }
-.hud .money-main b { flex: 1; min-width: 0; font-size: 14px; text-align: left; }
+.hud .hud-money { display: flex; flex-direction: column; justify-content: center; gap: 3px; padding: 5px; overflow: visible; }
+.hud .money-main { width: 100%; flex: 1; min-height: 22px; display: flex; align-items: center; gap: 4px; padding: 2px 5px; }
+.hud .money-main b { flex: 1; min-width: 0; font-size: 12.5px; text-align: left; }
+.hud .money-main.open { box-shadow: inset 0 0 0 1.5px var(--yellow); }
+.hud .money-row.other .money-code::after { content: " ⇄"; color: var(--muted); }
 .caret { flex: none; font-size: 12px; color: var(--yellow); transition: transform 0.15s; }
 .caret.up { transform: rotate(180deg); }
 .hud .money-list { position: absolute; top: calc(100% + 4px); right: 0; z-index: 40; width: max(100%, 180px); display: flex; flex-direction: column; gap: 4px; padding: 6px;
@@ -506,3 +508,30 @@ button.hud-profile { color: inherit; text-align: left; width: 100%; font: inheri
 .ex-rate { display: flex; align-items: center; gap: 8px; padding: 8px; background: #0b0d12; border: 2px solid #000; }
 .ex-rate b { display: block; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ex-rate small { display: block; font-size: 11px; }
+
+.home-cards { grid-template-columns: minmax(0, 1fr); }
+
+/* ---------- rooms window ---------- */
+.rooms { display: flex; flex-direction: column; gap: 10px; }
+.room { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 10px; padding: 8px; background: #0b0d12; border: 2px solid #000; }
+.room.applied { box-shadow: inset 0 0 0 2px var(--green); }
+.room-preview { position: relative; width: 120px; aspect-ratio: 4 / 5; overflow: hidden; border: 2px solid #000; background: #000; }
+.room-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.room-name { font-size: 17px; line-height: 1.05; }
+.room-bonus { margin: 2px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px; font-size: 12px; font-weight: 800; color: var(--yellow); }
+.room-act { margin-top: auto; display: flex; justify-content: flex-end; padding-top: 4px; }
+@media (max-width: 360px) { .room { grid-template-columns: 90px minmax(0, 1fr); } .room-preview { width: 90px; } }
+
+/* ---------- boss portrait + optional frame (frames/<slug>.png, window inset 12%) ---------- */
+.boss-portrait { position: relative; width: 100%; height: 100%; }
+.boss-portrait .bp-art { display: block; width: 100%; height: 100%; object-fit: cover; }
+.boss-portrait.framed .bp-art { position: absolute; left: 12%; top: 12%; width: 76%; height: 76%; }
+.boss-portrait .bp-frame { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; z-index: 1; }
+.boss-ava.framed, .fight-boss.framed, .victory-boss.framed { border: 0; background: none; box-shadow: none; overflow: visible; }
+.fight-boss.shake .bp-frame { animation: none; }
+.fight-boss.dead .bp-frame { filter: none; }
+.room-line { padding: 0 12px 6px; color: var(--yellow); font-weight: 800; }
+.w-dmg.boosted { color: var(--green); }
+.hit-pop.crit { color: var(--yellow); font-size: 44px; }
+.room-info > .row-c { flex-wrap: wrap; row-gap: 2px; }
+.room-info .rarity-chip { flex: none; }

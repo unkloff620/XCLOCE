@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useGame } from "../store.tsx";
 import { BOSSES } from "../../shared/content.ts";
 import { ATTACKS_PER_DAY, KEYS_TO_UNLOCK } from "../../shared/economy.ts";
-import { itemById } from "../../shared/items.ts";
+import { describeRoom, itemById, roomBonus, weaponDamage } from "../../shared/items.ts";
 import { Avatar, Bar, ConfirmButton, PriceTag, fmtNum, countdown } from "../ui.tsx";
 import { UIcon } from "../art/icons.tsx";
 import { ItemIcon } from "../art/items.tsx";
@@ -36,9 +36,8 @@ export function BossScreen() {
           const locked = !b.unlocked;
           return (
             <div key={b.index} className={`boss-card ${locked ? "locked" : ""}`}>
-              <div className="boss-ava">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={bossArt(def)} alt="" draggable={false} />
+              <div className={`boss-ava ${bossFrame(def) ? "framed" : ""}`}>
+                <BossPortrait def={def} />
                 {locked && <span className="q comic">?</span>}
                 <span className="boss-n comic">{b.index}</span>
               </div>
@@ -84,6 +83,23 @@ export function BossScreen() {
   );
 }
 
+/** Boss frame uploaded for this boss (`frames/<slug>`), or the shared `frames/default`, or none. */
+export function bossFrame(def: { slug: string }): string | null {
+  return skinUrl(`frames/${def.slug}`) ?? skinUrl("frames/default");
+}
+/** Boss picture; with a frame the picture sits in the frame's window (inset 12%) and the frame is drawn on top. */
+export function BossPortrait({ def }: { def: { index: number; slug: string } }) {
+  const frame = bossFrame(def);
+  return (
+    <div className={`boss-portrait ${frame ? "framed" : ""}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className="bp-art" src={bossArt(def)} alt="" draggable={false} />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {frame && <img className="bp-frame" src={frame} alt="" draggable={false} />}
+    </div>
+  );
+}
+
 export function WeaponIcon({ id, size }: { id: string; size: number }) {
   if (id === "fists") {
     const up = skinUrl("fists");
@@ -105,7 +121,7 @@ export const hms = (ms: number) => {
 export function FightScreen() {
   const { fight: openIndex, setFight, setTab, game, act, busy, refresh, now, openSheet } = useGame();
   const [view, setView] = useState<FightView | null>(null);
-  const [pops, setPops] = useState<{ id: number; dmg: number }[]>([]);
+  const [pops, setPops] = useState<{ id: number; dmg: number; crit: boolean }[]>([]);
   const [shake, setShake] = useState(0);
   const popSeq = useRef(0);
   const doneRef = useRef(false);
@@ -148,6 +164,8 @@ export function FightScreen() {
   const endsAt = view?.endsAt ?? st?.endsAt ?? now;
   const cooldowns = view?.cooldowns ?? st?.cooldowns ?? {};
   const over = hp <= 0 || now > endsAt;
+  const room = roomBonus(game.player.theme);
+  const roomText = describeRoom(room);
 
   const hit = async (weapon: string) => {
     if (busy || over) return;
@@ -155,7 +173,8 @@ export function FightScreen() {
     const r = await act<HitResult>("fight_hit", { weapon });
     if (!r) return;
     const id = ++popSeq.current;
-    setPops((p) => [...p.slice(-3), { id, dmg: r.dmg }]);
+    setPops((p) => [...p.slice(-3), { id, dmg: r.dmg, crit: r.crit }]);
+    if (r.crit) haptic.ok();
     setTimeout(() => setPops((p) => p.filter((x) => x.id !== id)), 900);
     setShake((n) => n + 1);
     setView((v) => (v ? { ...v, hp: r.hp, won: r.won, cooldowns: r.readyAt ? { ...v.cooldowns, [weapon]: r.readyAt } : v.cooldowns } : v));
@@ -178,12 +197,11 @@ export function FightScreen() {
       </div>
 
       <div className="fight-stage">
-        <div key={shake} className={`fight-boss ${shake ? "shake" : ""} ${hp <= 0 ? "dead" : ""}`}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={bossArt(def)} alt="" draggable={false} />
+        <div key={shake} className={`fight-boss ${shake ? "shake" : ""} ${hp <= 0 ? "dead" : ""} ${bossFrame(def) ? "framed" : ""}`}>
+          <BossPortrait def={def} />
         </div>
         {pops.map((p, i) => (
-          <span key={p.id} className="hit-pop comic" style={{ left: `${38 + ((p.id * 17) % 28)}%`, top: `${30 + i * 6}%` }}>-{fmtNum(p.dmg)}</span>
+          <span key={p.id} className={`hit-pop comic ${p.crit ? "crit" : ""}`} style={{ left: `${38 + ((p.id * 17) % 28)}%`, top: `${30 + i * 6}%` }}>-{fmtNum(p.dmg)}{p.crit ? " КРИТ!" : ""}</span>
         ))}
         {hp <= 0 && <span className="result-stamp comic win">K.O.</span>}
       </div>
@@ -200,6 +218,7 @@ export function FightScreen() {
           <span className="small muted">{over ? "Бой окончен" : "Нажми на оружие, чтобы ударить"}</span>
           <button className="btn-small comic" onClick={() => openSheet("shop")}>+ Оружие</button>
         </div>
+        {roomText.length > 0 && <div className="room-line small">🏠 {itemById(game.player.theme)?.name}: {roomText.join(" · ")}</div>}
         <div className="weapons">
           {game.weapons.map((w) => {
             const left = (cooldowns[w.id] ?? 0) - now;
@@ -209,7 +228,7 @@ export function FightScreen() {
                 <WeaponIcon id={w.id} size={40} />
                 {w.qty !== null && <span className="w-qty comic">×{w.qty}</span>}
                 <span className="w-name ellipsis">{w.name}</span>
-                <span className="w-dmg comic">{fmtNum(w.dmg)}</span>
+                <span className={`w-dmg comic ${room.weapons[w.id] ? "boosted" : ""}`}>{fmtNum(weaponDamage(w.id, room))}</span>
                 {w.qty === null && <span className="w-cd">{cd ? `⏳ ${hms(left)}` : "готов"}</span>}
               </button>
             );
@@ -268,9 +287,8 @@ export function ResultModal() {
     <div className="modal-backdrop">
       <div className={`victory ${win ? "" : "defeat"}`}>
         <div className="victory-title comic">{win ? "ПОБЕДА!" : "ПОРАЖЕНИЕ"}</div>
-        <div className="victory-boss">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={bossArt(def)} alt="" />
+        <div className={`victory-boss ${bossFrame(def) ? "framed" : ""}`}>
+          <BossPortrait def={def} />
           <span className={`result-stamp comic ${win ? "win" : "lose"}`}>{win ? "K.O." : "TIME"}</span>
         </div>
         <div className="comic big center">{win ? `${def.name} повержен` : `${def.name} выстоял 8 часов`}</div>

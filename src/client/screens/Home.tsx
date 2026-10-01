@@ -31,7 +31,7 @@ export function HomeScreen() {
         <div className="side right">
           <button className="poster" onClick={() => openSheet("rooms")}>
             <span className="poster-title comic">TO THE<br />MOON</span>
-            <span className="poster-sub">Сменить комнату</span>
+            <span className="poster-sub">Комнаты · бонусы к урону</span>
           </button>
           <button className="side-card" onClick={() => openSheet("daily")}>
             <span className="comic">DAILY<br />REWARDS</span>
@@ -48,11 +48,6 @@ export function HomeScreen() {
         <button className="hcard" onClick={() => openSheet("upgrade")}>
           <div className="hcard-title comic">UPGRADE</div>
           <div className="row-c gap"><UIcon name="muscle" size={44} /><small className="muted">Улучши рабочее место — больше силы и энергии</small></div>
-          <span className="chev">›</span>
-        </button>
-        <button className="hcard" onClick={() => setTab("inventory")}>
-          <div className="hcard-title comic">INVENTORY</div>
-          <div className="row-c gap"><UIcon name="cards" size={44} /><small className="muted">Оружие, шмот и сундуки</small></div>
           <span className="chev">›</span>
         </button>
       </section>
