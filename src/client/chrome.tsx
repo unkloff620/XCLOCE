@@ -1,14 +1,21 @@
 "use client";
 import { useGame, type Tab } from "./store.tsx";
 import { Icon, AnimatedNumber } from "./ui.tsx";
-import { money, num } from "./format.ts";
+import { money } from "./format.ts";
 import { CURRENCY_UNLOCK_LEVEL } from "../shared/economy.ts";
 
+function compact(v: number): string {
+  const a = Math.abs(v);
+  if (a >= 1e9) return (v / 1e9).toFixed(2) + "B";
+  if (a >= 1e6) return (v / 1e6).toFixed(2) + "M";
+  if (a >= 1e4) return (v / 1e3).toFixed(1) + "K";
+  return Math.floor(v).toLocaleString("en-US");
+}
 function fmtBal(v: number, c: string): string {
-  if (c === "RUB") return num(v, 0);
-  if (c === "USD") return v >= 1e4 ? num(v) : v.toFixed(2);
-  if (c === "SOL") return v >= 100 ? num(v) : v.toFixed(3);
-  return v.toFixed(5);
+  if (c === "RUB") return compact(v);
+  if (c === "USD") return v >= 1000 ? compact(v) : v.toFixed(2);
+  if (c === "SOL") return v >= 1000 ? compact(v) : v >= 10 ? v.toFixed(1) : v.toFixed(3);
+  return v.toFixed(4);
 }
 
 export function TopBar() {
@@ -18,17 +25,17 @@ export function TopBar() {
   const r = game.rates;
   const lvl = game.player.level;
   const cards = [
-    { c: "RUB", icon: "rub" as const, sub: `+${num(game.player.passiveRubPerHour, 0)}/ч`, up: true },
-    { c: "USD", icon: "usd" as const, sub: `1$ = ${(1 / r.RUB).toFixed(1)}₽`, up: false },
+    { c: "RUB", icon: "rub" as const, sub: `+${compact(game.player.passiveRubPerHour)}/ч`, up: true },
+    { c: "USD", icon: "usd" as const, sub: `${(1 / r.RUB).toFixed(0)}₽`, up: false },
     { c: "SOL", icon: "sol" as const, sub: money(r.SOL), up: false },
-    { c: "BTC", icon: "btc" as const, sub: lvl >= CURRENCY_UNLOCK_LEVEL.BTC ? money(r.BTC, { compact: true }) : `🔒 LVL ${CURRENCY_UNLOCK_LEVEL.BTC}`, up: false },
+    { c: "BTC", icon: "btc" as const, sub: lvl >= CURRENCY_UNLOCK_LEVEL.BTC ? money(r.BTC, { compact: true }) : `🔒 Lv${CURRENCY_UNLOCK_LEVEL.BTC}`, up: false },
   ];
   return (
     <header className="topbar">
       <div className="cur-cards">
         {cards.map((k) => (
           <button key={k.c} className="cur-card" onClick={() => openSheet("exchange")} aria-label={`${k.c}: открыть обменник`}>
-            <Icon name={k.icon} size={26} />
+            <Icon name={k.icon} size={22} />
             <span className="cur-text">
               <b><AnimatedNumber value={b[k.c as keyof typeof b]} format={(v) => fmtBal(v, k.c)} /></b>
               <small className={k.up ? "up" : "muted"}>{k.sub}</small>

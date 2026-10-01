@@ -35,7 +35,10 @@ export function BossScreen() {
   return (
     <div className="screen boss-screen">
       <div className="screen-head">
-        <h2>Босс #{info.index}</h2>
+        <div className="minw0">
+          <h2 className="ellipsis">#{info.index} {info.name}</h2>
+          <div className="muted small">{info.title}</div>
+        </div>
         <button className="btn btn-ghost small" onClick={() => openSheet("bosses")}>Все боссы →</button>
       </div>
       <section className={`boss-stage env-${info.env} ${hit ? "hit" : ""}`}>
@@ -47,10 +50,6 @@ export function BossScreen() {
               -{money(p.amount)}{p.crit ? " CRIT" : ""}
             </span>
           ))}
-        </div>
-        <div className="boss-name">
-          <div className="title">{info.name}</div>
-          <div className="muted small">{info.title}</div>
         </div>
       </section>
 

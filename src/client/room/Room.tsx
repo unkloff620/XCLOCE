@@ -68,8 +68,8 @@ function Character({ outfit, tier }: { outfit: Outfit; tier: number }) {
   const hat = cosmeticById(outfit.hat)?.variant ?? "none";
   const glasses = cosmeticById(outfit.glasses)?.variant ?? "none";
   const phones = cosmeticById(outfit.headphones)?.variant ?? "none";
-  const chairCol = tier >= 4 ? "#2a0f17" : "#2b2b33";
-  const chairTrim = tier >= 4 ? "#b3283c" : "#444652";
+  const chairCol = tier >= 4 ? "#1a0a10" : "#141419";
+  const chairTrim = tier >= 4 ? "#d22e48" : "#8a2433";
   return (
     <g className="character">
       {/* chair back */}
@@ -79,6 +79,7 @@ function Character({ outfit, tier }: { outfit: Outfit; tier: number }) {
       {/* body (hoodie) */}
       <path d="M168 372 q-6 -66 22 -92 q22 -14 44 0 q28 26 22 92z" fill={hoodie} stroke="#0a0a0e" strokeWidth="2" />
       <path d="M190 282 q22 16 44 0" fill="none" stroke="#000" strokeOpacity=".35" strokeWidth="3" />
+      <path d="M168 372 q-6 -66 22 -92 q22 -14 44 0 q28 26 22 92" fill="none" stroke="#9fb4ff" strokeOpacity=".28" strokeWidth="2" />
       {/* hood */}
       <path d="M182 290 q30 22 60 0 l-6 -14 q-24 14 -48 0z" fill={hoodie} stroke="#0a0a0e" strokeWidth="1.5" />
       <path d="M182 290 q30 22 60 0" fill="none" stroke="#fff" strokeOpacity=".12" strokeWidth="2" />
@@ -206,7 +207,7 @@ function RoomImpl({ tier, outfit, tickers }: { tier: number; outfit: Outfit; tic
       </g>
 
       {/* posters */}
-      {t >= 2 && (
+      {t >= 1 && (
         <g transform="rotate(-2 140 120)">
           <rect x="106" y="64" width="70" height="104" rx="3" fill="#15161a" stroke="#000" strokeWidth="2" />
           <text x="141" y="90" fontSize="15" textAnchor="middle" fill="#e8e3d0" style={{ fontFamily: "var(--font-display), sans-serif" }} fontWeight="800">BUY</text>
@@ -322,8 +323,13 @@ function RoomImpl({ tier, outfit, tickers }: { tier: number; outfit: Outfit; tic
       <ellipse cx="270" cy="250" rx="130" ry="70" fill="url(#monGlow)" opacity={0.4 + t * 0.07} />
       {t === 1 && (
         <g>
-          <path d="M240 298 l6 -46 h70 l6 46z" fill="#6b6f7a" stroke="#2a2a30" strokeWidth="1.5" />
-          <ChartScreen x={250} y={257} w={62} h={38} t={best[0]} />
+          <path d="M226 300 l8 -60 h96 l8 60z" fill="#6b6f7a" stroke="#2a2a30" strokeWidth="1.5" />
+          <ChartScreen x={240} y={246} w={84} h={50} t={best[0]} />
+          <rect x="234" y="298" width="100" height="5" rx="2" fill="#4a4f5c" />
+          <rect x="118" y="276" width="18" height="24" rx="3" fill="#7a4a2a" />
+          <path d="M127 276 q-14 -20 -4 -34 q6 14 4 34z M127 276 q12 -22 2 -36 q-8 16 -2 36z" fill="#2f8f4e" />
+          <rect x="338" y="246" width="22" height="20" fill="#ffd23f" transform="rotate(6 349 256)" />
+          <text x="349" y="259" fontSize="5" textAnchor="middle" fill="#5a4400" transform="rotate(6 349 256)">wen moon</text>
         </g>
       )}
       {t === 2 && <ChartScreen x={240} y={228} w={100} h={62} t={best[0]} />}

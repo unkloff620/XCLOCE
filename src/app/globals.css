@@ -119,16 +119,16 @@ p { margin: 6px 0; }
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--line);
 }
-.cur-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.cur-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
 .cur-card {
-  display: flex; align-items: center; gap: 6px; padding: 6px 6px; min-width: 0;
+  display: flex; align-items: center; gap: 4px; padding: 6px 5px; min-width: 0;
   border-radius: 14px; background: linear-gradient(180deg, rgba(30, 38, 60, 0.9), rgba(16, 20, 34, 0.9));
   border: 1px solid rgba(120, 150, 255, 0.16); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   text-align: left;
 }
 .cur-card:active { transform: scale(0.97); }
 .cur-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
-.cur-text b { font-size: 13.5px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cur-text b { font-size: 13px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cur-text small { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media (max-width: 370px) { .cur-card .icon { width: 20px; height: 20px; } .cur-text b { font-size: 12px; } }
 .icon { display: inline-block; flex: none; }
