@@ -20,7 +20,7 @@ await page.goto(base, { waitUntil: "networkidle" });
 await page.waitForTimeout(2500);
 await shot(page, "home", false);
 await shot(page, "home-full");
-const nav = async (i) => { await page.locator(".navbtn").nth(i).click(); await page.waitForTimeout(1500); };
+const nav = async (i) => { await page.locator(".nav-btn").nth(i).click(); await page.waitForTimeout(1500); };
 for (const [i, name] of ["boss", "market", "home", "inventory", "social"].entries()) { await nav(i); await shot(page, name); }
 
 const gallery = await browser.newPage({ viewport: { width: 1200, height: 900 }, deviceScaleFactor: scale });
