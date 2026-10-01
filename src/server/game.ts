@@ -10,6 +10,7 @@ import {
   type Currency,
 } from "../shared/economy.ts";
 import { bossInfo } from "../shared/bosses.ts";
+import { bumpMetric, claimDaily, claimQuest, dailyStatus, normalizeOutfit, ownedCosmetics, questStatus, wearCosmetic } from "./retention.ts";
 import { log } from "./log.ts";
 
 export interface PlayerRow {
@@ -156,6 +157,7 @@ export async function doWork(tx: Queryable, playerId: number, now = Date.now()) 
   await credit(tx, p.id, "RUB", eq.workRub);
   await tx.query("UPDATE players SET energy = energy - $2 WHERE id = $1", [p.id, WORK_ENERGY_COST]);
   await addXp(tx, p.id, XP.work);
+  await bumpMetric(tx, p.id, "work", 1, now);
   await touchAction(tx, p, now);
   await advanceTutorial(tx, p, TUTORIAL.WORK);
   return { earned: eq.workRub, currency: "RUB" as Currency };
@@ -176,6 +178,7 @@ export async function doExchange(tx: Queryable, playerId: number, from: Currency
     await debit(tx, p.id, from, amt);
     await credit(tx, p.id, to, q.received);
     await addXp(tx, p.id, XP.exchange);
+    await bumpMetric(tx, p.id, "exchanges", 1, now);
     await touchAction(tx, p, now);
     if (to === "USD") await advanceTutorial(tx, p, TUTORIAL.BUY_USD);
     if (to === "SOL") await advanceTutorial(tx, p, TUTORIAL.BUY_SOL);
@@ -210,6 +213,7 @@ export async function doBuy(tx: Queryable, playerId: number, tokenId: string, so
     );
     await tx.query("UPDATE player_stats SET trades = trades + 1, volume_usd = volume_usd + $2 WHERE player_id = $1", [p.id, usd]);
     await addXp(tx, p.id, XP.buy);
+    await bumpMetric(tx, p.id, "buys", 1, now);
     await touchAction(tx, p, now);
     await advanceTutorial(tx, p, TUTORIAL.BUY_TOKEN);
     return { tokenId: tok.id, ticker: tok.ticker, spentSol: sol, usd: roundTo(usd, 2), feeUsd: roundTo(fee, 2), amount, price: execPrice, impact };
@@ -270,6 +274,9 @@ export async function doSell(tx: Queryable, playerId: number, tokenId: string, f
       [p.id, saleUsd, pnl],
     );
     await addXp(tx, p.id, XP.sellBase + XP.sellBonus(saleUsd));
+    await bumpMetric(tx, p.id, "sells", 1, now);
+    await bumpMetric(tx, p.id, "sell_usd", saleUsd, now);
+    await bumpMetric(tx, p.id, "damage", dmg.amount, now);
     await touchAction(tx, p, now);
     await advanceTutorial(tx, p, TUTORIAL.SELL_TOKEN);
     const after = await syncBoss(tx, p.id, displayName(p));
@@ -332,6 +339,21 @@ export async function skipTutorial(tx: Queryable, playerId: number) {
   return { ok: true };
 }
 
+export async function doClaimDaily(tx: Queryable, playerId: number, now = Date.now()) {
+  await lockPlayer(tx, playerId, now);
+  return claimDaily(tx, playerId, now);
+}
+
+export async function doClaimQuest(tx: Queryable, playerId: number, questId: string, now = Date.now()) {
+  await lockPlayer(tx, playerId, now);
+  return claimQuest(tx, playerId, questId, now);
+}
+
+export async function doWear(tx: Queryable, playerId: number, cosmeticId: string, now = Date.now()) {
+  const p = await lockPlayer(tx, playerId, now);
+  return wearCosmetic(tx, playerId, p.level, cosmeticId);
+}
+
 // ---------------- Full state snapshot ----------------
 export async function getState(tx: Queryable, playerId: number, sync?: SyncResult, now = Date.now()) {
   const [p] = await tx.query<PlayerRow>("SELECT * FROM players WHERE id = $1", [playerId]);
@@ -350,6 +372,9 @@ export async function getState(tx: Queryable, playerId: number, sync?: SyncResul
   const info = bossInfo(bp.boss_index);
   const rates = usdRates(now);
   const tool = toolById(p.equipped_tool) ?? DUMP_TOOLS[0];
+  const [daily] = await tx.query<{ streak: number; last_claim_at: Date | null }>("SELECT streak, last_claim_at FROM daily_rewards WHERE player_id = $1", [playerId]);
+  const quests = await questStatus(tx, playerId, now);
+  const cosmetics = await ownedCosmetics(tx, playerId);
   return {
     serverTime: now,
     player: {
@@ -360,7 +385,12 @@ export async function getState(tx: Queryable, playerId: number, sync?: SyncResul
       combo: p.combo, lastSellAt: p.last_sell_at ? new Date(p.last_sell_at).getTime() : null,
       tutorialStep: p.tutorial_step,
       equipmentTier: p.equipment_tier, equippedTool: tool.id,
+      outfit: normalizeOutfit((p as unknown as { outfit: unknown }).outfit),
+      passiveRubPerHour: eq.passiveRubPerHour,
     },
+    daily: dailyStatus(daily, now),
+    quests,
+    cosmetics,
     balances,
     rates,
     boss: {

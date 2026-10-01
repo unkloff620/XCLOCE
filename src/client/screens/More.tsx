@@ -1,26 +1,40 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useGame } from "../store.tsx";
+import { useEffect, useMemo, useState } from "react";
+import { useGame, type MoreSection } from "../store.tsx";
 import { api, type LeaderRow } from "../api.ts";
 import { Avatar, RarityBadge, Segmented } from "../ui.tsx";
 import { cur, money, num } from "../format.ts";
 import { haptic } from "../telegram.ts";
+import { Room, CharacterPreview, type MonitorTicker } from "../room/Room.tsx";
 import { DUMP_TOOLS, EQUIPMENT, equipmentByTier } from "../../shared/economy.ts";
+import { COSMETICS, cosmeticById, type Slot } from "../../shared/retention.ts";
 
-export function BagScreen() {
-  const { game, run, busy, toast } = useGame();
-  const [section, setSection] = useState<"tools" | "setup">("tools");
-  if (!game) return null;
-  const owned = new Set(game.inventory.tools);
-  const tier = game.player.equipmentTier;
-  const next = EQUIPMENT[tier];
-  const cur0 = equipmentByTier(tier);
-
+export function MoreScreen() {
+  const { moreSection, openMore } = useGame();
   return (
     <div className="screen">
-      <div className="screen-head"><h2>Арсенал</h2></div>
-      <Segmented value={section} onChange={setSection} options={[{ value: "tools", label: "Dump Tools" }, { value: "setup", label: "Рабочее место" }]} />
-      {section === "tools" ? (
+      <div className="scroll-x">
+        <Segmented<MoreSection>
+          value={moreSection}
+          onChange={openMore}
+          options={[
+            { value: "upgrades", label: "Апгрейды" },
+            { value: "arsenal", label: "Dump Tools" },
+            { value: "wardrobe", label: "Гардероб" },
+            { value: "top", label: "Топ" },
+          ]}
+        />
+      </div>
+      {moreSection === "upgrades" ? <UpgradesSection /> : moreSection === "arsenal" ? <ArsenalSection /> : moreSection === "wardrobe" ? <WardrobeSection /> : <TopSection />}
+    </div>
+  );
+}
+
+function ArsenalSection() {
+  const { game, run, busy, toast } = useGame();
+  if (!game) return null;
+  const owned = new Set(game.inventory.tools);
+  return (
         <div className="tool-grid">
           {DUMP_TOOLS.map((t) => {
             const have = owned.has(t.id);
@@ -60,12 +74,21 @@ export function BagScreen() {
             );
           })}
         </div>
-      ) : (
+  );
+}
+
+function UpgradesSection() {
+  const { game, run, busy, toast, market } = useGame();
+  const tickers: MonitorTicker[] = useMemo(() => market.map((t) => ({ ticker: t.ticker, change: t.change1h, history: t.history })), [market]);
+  if (!game) return null;
+  const tier = game.player.equipmentTier;
+  const next = EQUIPMENT[tier];
+  const cur0 = equipmentByTier(tier);
+  return (
         <div className="setup">
           <section className="card">
             <h3>Сейчас: {cur0.name}</h3>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="room small-room" src={`/assets/rooms/room-${cur0.tier}-${cur0.id}.svg`} alt="" />
+            <div className="room-thumb"><Room tier={cur0.tier} outfit={game.player.outfit} tickers={tickers} /></div>
             <div className="stats-grid">
               <div><span className="muted small">За смену</span><b>{cur0.workRub} ₽</b></div>
               <div><span className="muted small">Пассивно</span><b>{num(cur0.passiveRubPerHour, 0)} ₽/ч</b></div>
@@ -76,8 +99,7 @@ export function BagScreen() {
           {next ? (
             <section className="card upgrade-card">
               <h3>Следующий уровень: {next.name}</h3>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="room small-room" src={`/assets/rooms/room-${next.tier}-${next.id}.svg`} alt="" />
+              <div className="room-thumb"><Room tier={next.tier} outfit={game.player.outfit} tickers={tickers} /></div>
               <div className="stats-grid">
                 <div><span className="muted small">За смену</span><b className="up">{next.workRub} ₽</b></div>
                 <div><span className="muted small">Пассивно</span><b className="up">{num(next.passiveRubPerHour, 0)} ₽/ч</b></div>
@@ -103,7 +125,65 @@ export function BagScreen() {
             <section className="card"><h3>Максимальный сетап 🐋</h3></section>
           )}
         </div>
-      )}
+  );
+}
+
+const SLOTS: { slot: Slot; label: string }[] = [
+  { slot: "hoodie", label: "Худи" },
+  { slot: "hat", label: "Голова" },
+  { slot: "glasses", label: "Очки" },
+  { slot: "headphones", label: "Наушники" },
+];
+
+function WardrobeSection() {
+  const { game, run, busy, toast } = useGame();
+  const [slot, setSlot] = useState<Slot>("hoodie");
+  const [preview, setPreview] = useState<string | null>(null);
+  if (!game) return null;
+  const owned = new Set(game.cosmetics);
+  const outfit = { ...game.player.outfit };
+  const pv = preview ? cosmeticById(preview) : null;
+  if (pv) outfit[pv.slot] = pv.id;
+  return (
+    <div className="section">
+      <section className="card wardrobe-stage">
+        <CharacterPreview outfit={outfit} size={170} />
+        {pv && !owned.has(pv.id) && <div className="chip chip-info">Примерка: {pv.name}</div>}
+      </section>
+      <Segmented<Slot> value={slot} onChange={(s) => { setSlot(s); setPreview(null); }} options={SLOTS.map((s) => ({ value: s.slot, label: s.label }))} />
+      <div className="wardrobe-grid">
+        {COSMETICS.filter((c) => c.slot === slot).map((c) => {
+          const have = owned.has(c.id);
+          const worn = game.player.outfit[c.slot] === c.id;
+          const locked = game.player.level < c.unlockLevel;
+          return (
+            <div key={c.id} className={`wear-card ${worn ? "worn" : ""} ${preview === c.id ? "previewing" : ""}`} onClick={() => setPreview(c.id)}>
+              <span className="swatch" style={{ background: c.color ?? "linear-gradient(135deg,#2a2f45,#141926)" }}>{c.variant && c.variant !== "none" ? c.variant.slice(0, 1).toUpperCase() : c.color ? "" : "—"}</span>
+              <div className="strong small">{c.name}</div>
+              {worn ? (
+                <span className="chip chip-up">Надето</span>
+              ) : have ? (
+                <button className="btn btn-chip" disabled={busy === "wear"} onClick={(e) => { e.stopPropagation(); run("wear", () => api.wear(c.id), () => { haptic.ok(); setPreview(null); }); }}>Надеть</button>
+              ) : locked ? (
+                <span className="chip chip-muted">🔒 LVL {c.unlockLevel}</span>
+              ) : (
+                <button
+                  className="btn btn-chip btn-buy"
+                  disabled={busy === "wear"}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (game.balances[c.currency] < c.price) return toast("err", `Нужно ${cur(c.price, c.currency)}`);
+                    run("wear", () => api.wear(c.id), () => { haptic.ok(); toast("ok", `${c.name} — твоё!`); setPreview(null); });
+                  }}
+                >
+                  {cur(c.price, c.currency)}
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <p className="muted small center">Косметика не влияет на урон — только на стиль.</p>
     </div>
   );
 }
@@ -117,7 +197,7 @@ const BOARDS = [
   { value: "level", label: "Уровень" },
 ] as const;
 
-export function TopScreen() {
+function TopSection() {
   const { game } = useGame();
   const [board, setBoard] = useState<(typeof BOARDS)[number]["value"]>("damage_today");
   const [data, setData] = useState<{ title: string; money: boolean; rows: LeaderRow[] } | null>(null);
@@ -129,7 +209,7 @@ export function TopScreen() {
   const s = game.stats as Record<string, number>;
   const p = game.player;
   return (
-    <div className="screen">
+    <div className="section">
       <section className="card profile-big">
         <Avatar url={p.photoUrl} name={p.name} size={64} />
         <div>

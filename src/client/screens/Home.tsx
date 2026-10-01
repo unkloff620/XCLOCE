@@ -1,24 +1,46 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useGame } from "../store.tsx";
 import { api } from "../api.ts";
-import { AnimatedNumber, Avatar, Bar, Icon, Sheet, TokenLogo } from "../ui.tsx";
+import { AnimatedNumber, Bar, Icon, Sheet, TokenLogo } from "../ui.tsx";
 import { cur, money, pct } from "../format.ts";
 import { haptic } from "../telegram.ts";
-import { CURRENCY_UNLOCK_LEVEL, EQUIPMENT, EXCHANGE_PAIRS, exchangeQuote, equipmentByTier, type Currency } from "../../shared/economy.ts";
+import { Room, type MonitorTicker } from "../room/Room.tsx";
+import { GameIcon } from "../icons.tsx";
+import { CURRENCY_UNLOCK_LEVEL, EXCHANGE_PAIRS, exchangeQuote, equipmentByTier, type Currency } from "../../shared/economy.ts";
 
 const TUTORIAL_TEXT: Record<number, { title: string; text: string; cta: string }> = {
-  0: { title: "Шаг 1 · Первые деньги", text: "Отработай смену за старым ноутбуком и получи первые рубли.", cta: "Работать" },
-  1: { title: "Шаг 2 · Купи доллары", text: "Обменяй рубли на USD в обменнике.", cta: "Открыть обменник" },
-  2: { title: "Шаг 3 · Купи SOL", text: "Мем-токены торгуются за SOL. Обменяй USD → SOL.", cta: "Открыть обменник" },
-  3: { title: "Шаг 4 · Первый мемкоин", text: "Зайди на рынок и купи любой мем-токен за SOL.", cta: "На рынок" },
-  4: { title: "Шаг 5 · Слей его", text: "Продай позицию. Сумма продажи станет уроном по боссу!", cta: "К позиции" },
-  5: { title: "Шаг 6 · Твой босс", text: "Твоя продажа ударила по боссу. И по боссам всех игроков сервера.", cta: "К боссу" },
+  0: { title: "Шаг 1 · Первые деньги", text: "Тапни по комнате или нажми кнопку — отработай смену и получи рубли.", cta: "Работать" },
+  1: { title: "Шаг 2 · Купи доллары", text: "Обменяй рубли на USD в обменнике.", cta: "Обменник" },
+  2: { title: "Шаг 3 · Купи SOL", text: "Мем-токены торгуются за SOL. Обменяй USD → SOL.", cta: "Обменник" },
+  3: { title: "Шаг 4 · Первый мемкоин", text: "Зайди на рынок и купи любой мем-токен.", cta: "На рынок" },
+  4: { title: "Шаг 5 · Слей его", text: "Продай позицию — сумма продажи станет уроном по боссу!", cta: "К позиции" },
+  5: { title: "Шаг 6 · Твой босс", text: "Твой слив ударил по боссу. И по боссам всех игроков.", cta: "К боссу" },
 };
 
+function useCountdown(target: number) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const ms = Math.max(0, target - now);
+  const h = Math.floor(ms / 3_600_000);
+  const m = Math.floor((ms % 3_600_000) / 60_000);
+  const s = Math.floor((ms % 60_000) / 1000);
+  return { ms, text: `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`, short: `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}` };
+}
+
 export function HomeScreen() {
-  const { game, run, busy, energyNow, setTab, openSheet, predictedBoss, globalLive, live, openToken, market } = useGame();
-  const [floaters, setFloaters] = useState<{ id: number; text: string }[]>([]);
+  const { game, run, energyNow, setTab, openSheet, openMore, predictedBoss, globalLive, live, openToken, market, toast } = useGame();
+  const [floaters, setFloaters] = useState<{ id: number; text: string; x: number; y: number }[]>([]);
+  const tickers: MonitorTicker[] = useMemo(
+    () => market.map((t) => ({ ticker: t.ticker, change: t.change1h, history: t.history })),
+    [market],
+  );
+  const daily = useCountdown(game?.daily.availableAt ?? 0);
+  const regenLeft = game ? game.player.energyRegenMs - ((Date.now() - game.serverTime) % game.player.energyRegenMs) : 0;
+  const energyTimer = useCountdown(Date.now() + regenLeft);
   if (!game) return null;
   const p = game.player;
   const eq = equipmentByTier(p.equipmentTier);
@@ -26,13 +48,18 @@ export function HomeScreen() {
   const tut = TUTORIAL_TEXT[step];
   const portfolio = game.positions.reduce((s, x) => s + x.valueUsd, 0);
   const pnl = game.positions.reduce((s, x) => s + x.pnlUsd, 0);
+  const questsReady = game.quests.filter((q) => q.done && !q.claimed).length;
 
-  const work = () => {
+  const work = (x = 50, y = 55) => {
+    if (energyNow < 1) {
+      toast("err", "Нет энергии — она восстанавливается со временем");
+      return;
+    }
     haptic.tap();
     run("work", api.work, (r) => {
       const id = Date.now() + Math.random();
-      setFloaters((f) => [...f.slice(-5), { id, text: `+${r.earned} ₽` }]);
-      setTimeout(() => setFloaters((f) => f.filter((x) => x.id !== id)), 900);
+      setFloaters((f) => [...f.slice(-6), { id, text: `+${r.earned} ₽`, x, y }]);
+      setTimeout(() => setFloaters((f) => f.filter((v) => v.id !== id)), 900);
     });
   };
 
@@ -47,69 +74,110 @@ export function HomeScreen() {
     } else if (step === 5) setTab("boss");
   };
 
+  const claimDaily = () => {
+    if (!game.daily.canClaim) return setTab("quests");
+    run("daily", api.claimDaily, (r) => {
+      haptic.ok();
+      toast("ok", `День ${r.day}: награда получена!`);
+    });
+  };
+
   return (
     <div className="screen home">
-      <section className="card profile-card">
-        <Avatar url={p.photoUrl} name={p.name} />
-        <div className="profile-main">
-          <div className="profile-name">{p.name}{p.isGuest && <span className="chip chip-muted">гость</span>}</div>
-          <div className="profile-level">
-            <span className="lvl">LVL {p.level}</span>
-            <Bar value={p.xp} max={p.xpNext} tone="xp" />
-            <span className="muted small">{p.xp}/{p.xpNext}</span>
-          </div>
+      <div className="stat-row">
+        <div className="stat-pill xp-pill">
+          <span className="xp-badge">XP</span>
+          <span className="lvl-text">Lv. {p.level}</span>
+          <div className="grow"><Bar value={p.xp} max={p.xpNext} tone="xp" /></div>
+          <span className="small muted mono">{p.xp.toLocaleString("en-US")} / {p.xpNext.toLocaleString("en-US")}</span>
         </div>
-      </section>
-
-      {tut && (
-        <section className="card tutorial">
-          <div className="tutorial-step">{tut.title}</div>
-          <p>{tut.text}</p>
-          <div className="row gap">
-            <button className="btn btn-primary" onClick={tutorialAction}>{tut.cta}</button>
-            <button className="btn btn-ghost small" onClick={() => run("skip", () => api.tutorial("skip"))}>Пропустить</button>
+        <div className="stat-pill energy-pill">
+          <Icon name="energy" size={22} />
+          <div className="grow">
+            <div className="row between"><b className="mono">{Math.floor(energyNow)} / {p.maxEnergy}</b></div>
+            <Bar value={energyNow} max={p.maxEnergy} tone="energy" />
+            <small className="muted">{energyNow >= p.maxEnergy ? "полная" : `+1 через ${energyTimer.short}`}</small>
           </div>
-        </section>
-      )}
-
-      <section className="room-wrap">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="room" src={`/assets/rooms/room-${eq.tier}-${eq.id}.svg`} alt={eq.name} />
-        <div className="room-label">
-          <span>{eq.name}</span>
-          <span className="muted small">+{eq.passiveRubPerHour.toLocaleString("ru-RU")} ₽/ч пассивно</span>
+          <button className="plus-btn" onClick={() => openMore("upgrades")} aria-label="Улучшить энергию">+</button>
         </div>
+      </div>
+
+      <section className="scene" onClick={(e) => {
+        const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        work(((e.clientX - r.left) / r.width) * 100, ((e.clientY - r.top) / r.height) * 100);
+      }}>
+        <Room tier={p.equipmentTier} outfit={p.outfit} tickers={tickers} />
         <div className="floaters">
-          {floaters.map((f) => <span key={f.id} className="floater">{f.text}</span>)}
+          {floaters.map((f) => <span key={f.id} className="floater" style={{ left: `${f.x}%`, top: `${f.y}%` }}>{f.text}</span>)}
+        </div>
+        <div className="widgets left" onClick={(e) => e.stopPropagation()}>
+          <button className="widget" onClick={claimDaily}>
+            <GameIcon name="chest" size={44} />
+            <span className="widget-label">{game.daily.canClaim ? "Забрать" : daily.text}</span>
+            {game.daily.canClaim && <span className="dot" />}
+          </button>
+          <button className="widget" onClick={() => setTab("quests")}>
+            <GameIcon name="calendar" size={40} />
+            <span className="widget-label">Daily</span>
+            {questsReady > 0 && <span className="dot" />}
+          </button>
+        </div>
+        <div className="widgets right" onClick={(e) => e.stopPropagation()}>
+          <button className="widget" onClick={() => openSheet("events")}>
+            <GameIcon name="megaphone" size={40} />
+            <span className="widget-label">Events</span>
+            <span className={`dot ${live ? "live-dot" : "off"}`} />
+          </button>
+          <button className="widget" onClick={() => openMore("wardrobe")}>
+            <GameIcon name="hoodie" size={40} />
+            <span className="widget-label">Стиль</span>
+          </button>
+          <button className="widget" onClick={() => openMore("top")}>
+            <GameIcon name="trophy" size={40} />
+            <span className="widget-label">Топ</span>
+          </button>
+        </div>
+        <div className="scene-hint" onClick={(e) => e.stopPropagation()}>
+          {tut ? (
+            <div className="tut-bubble">
+              <div className="tutorial-step">{tut.title}</div>
+              <div className="small">{tut.text}</div>
+              <div className="row gap">
+                <button className="btn btn-primary small" onClick={tutorialAction}>{tut.cta}</button>
+                <button className="btn btn-ghost small" onClick={() => run("skip", () => api.tutorial("skip"))}>Пропустить</button>
+              </div>
+            </div>
+          ) : (
+            <div className="work-chip">👆 Тапай по комнате: +{eq.workRub} ₽ за 1 ⚡</div>
+          )}
         </div>
       </section>
 
-      <section className="actions-grid">
-        <button className={`action action-work ${busy === "work" ? "busy" : ""}`} onClick={work} disabled={energyNow < 1}>
-          <span className="action-title">Работать</span>
-          <span className="action-sub">+{eq.workRub} ₽ · 1 <Icon name="energy" size={12} /></span>
+      <section className="big-cards">
+        <button className="big-card c-green" onClick={() => openMore("upgrades")}>
+          <span className="big-icon"><GameIcon name="hammer" size={46} /></span>
+          <b>Upgrades</b>
+          <small>Улучши сетап<br />Зарабатывай больше</small>
         </button>
-        <button className="action" onClick={() => openSheet("exchange")}>
-          <span className="action-title">Обменник</span>
-          <span className="action-sub">₽ · $ · SOL{p.level >= CURRENCY_UNLOCK_LEVEL.BTC ? " · BTC" : ""}</span>
+        <button className="big-card c-violet" onClick={() => setTab("quests")}>
+          <span className="big-icon"><GameIcon name="scroll" size={46} /></span>
+          <b>Quests</b>
+          <small>Выполняй задания<br />Получай награды</small>
+          {questsReady > 0 && <span className="dot" />}
         </button>
-        <button className="action" onClick={() => setTab("market")}>
-          <span className="action-title">Рынок</span>
-          <span className="action-sub">{market.length} мемкоинов</span>
-        </button>
-        <button className="action action-boss" onClick={() => setTab("boss")}>
-          <span className="action-title">Босс #{predictedBoss?.index}</span>
-          <span className="action-sub">{money(predictedBoss?.remaining ?? 0, { compact: true })} MCAP</span>
+        <button className="big-card c-gold" onClick={() => openSheet("exchange")}>
+          <span className="big-icon"><GameIcon name="swap" size={46} /></span>
+          <b>Exchange</b>
+          <small>Меняй валюты<br />Расти капитал</small>
         </button>
       </section>
 
-      <section className="card global-card">
+      <section className="card global-card" onClick={() => setTab("boss")}>
         <div className="row between">
-          <span className="muted small">GLOBAL DAMAGE</span>
+          <span className="muted small">GLOBAL DAMAGE · босс #{predictedBoss?.index} · {money(predictedBoss?.remaining ?? 0, { compact: true })} MCAP</span>
           <span className={`live ${live ? "on" : ""}`}>{live ? "LIVE" : "sync"}</span>
         </div>
         <div className="global-total"><AnimatedNumber value={globalLive} format={(v) => money(v)} /></div>
-        <div className="muted small">Каждый слив любого игрока бьёт по твоему боссу</div>
       </section>
 
       {game.positions.length > 0 && (
@@ -135,17 +203,22 @@ export function HomeScreen() {
           </div>
         </section>
       )}
-
-      <section className="card">
-        <div className="row between">
-          <h3>Рабочее место</h3>
-          <button className="btn btn-ghost small" onClick={() => setTab("bag")}>Улучшить →</button>
-        </div>
-        <div className="muted small">
-          Уровень {eq.tier}/{EQUIPMENT.length} · энергия {eq.maxEnergy} · урон +{Math.round(eq.damageBonus * 100)}%
-        </div>
-      </section>
     </div>
+  );
+}
+
+export function EventsSheet() {
+  const { sheet, openSheet, feed } = useGame();
+  const items = [...feed].reverse();
+  return (
+    <Sheet open={sheet === "events"} onClose={() => openSheet(null)} title="События сервера">
+      <div className="feed">
+        {items.length ? items.map((f) => (
+          <div key={f.id} className={`feed-item feed-${f.kind}`}>{f.text}</div>
+        )) : <div className="empty">Пока тихо</div>}
+      </div>
+      <p className="muted small center">Новости — это игровые события. Они влияют на внутриигровой рынок.</p>
+    </Sheet>
   );
 }
 

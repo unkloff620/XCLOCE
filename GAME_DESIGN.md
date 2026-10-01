@@ -49,7 +49,7 @@ Reward: `USD = marketCap × rate(n) × contributionFactor`, `rate(n) = max(1.5%,
 
 Tool drops on first defeat: #3 Sell Button, #7 Dump Bot, #20 Black Swan Generator (mythic, drop-only).
 
-12 hand-designed bosses; after #12 the designs repeat as harder remixes (II, III, …) with a hue shift.
+12 original meme bosses in meme-macro style (BAGHOLDER, COPIUM HAMSTER, WEN LAMBO, PAPER HANDS CAT, LASER APE, BEAR BARON, RUG WIZARD, GAS GOBLIN, CHART ASTROLOGER, TROLL WHALE, FOMO DUCK, MEME KING). They are original crypto-meme archetypes, not copies of existing meme characters or real people. Each has a normal and a "hurt" image (shown below 35% market cap). After #12 the designs repeat as harder remixes (II, III, …) with a hue shift.
 
 ### Progression table (first 30 bosses)
 
@@ -151,6 +151,12 @@ Monte Carlo (20 simulated days, `scripts/market-sim-check.ts`): low-risk tokens 
 
 Trades move the price: impact = `min(25%, usd / liquidity × 0.5)`.
 
+## Retention
+
+- **Daily login reward:** claim every 20 h; streak breaks after 48 h without a claim; 7-day cycle: 2,000 ₽ → 4,000 ₽ → \$25 → 8,000 ₽ + 20⚡ → \$60 → 0.25 SOL → \$150 + 50⚡ (+XP).
+- **Quests** (progress from real server actions, one claim per period): daily — 20 shifts, buy 3 tokens, 5 sales, sell \$500, deal \$1,000 damage, defeat 1 boss; weekly — \$25,000 damage, 5 bosses, 50 sales, 200 shifts. Rewards are small relative to boss rewards (≈ 1 day of early income).
+- **Wardrobe:** hoodies, hats, glasses, headphones for the shiba character; prices in ₽/\$; cosmetic only (no stats).
+
 ## Tutorial (through real actions)
 
 0 work → 1 buy USD → 2 buy SOL → 3 buy a meme token → 4 sell it → 5 open the boss screen → 6 done. Steps advance on the server when the real action succeeds.
@@ -159,4 +165,4 @@ Trades move the price: impact = `min(25%, usd / liquidity × 0.5)`.
 
 - Contribution factor (25% min / full at 10%) — protects the economy when many players are online; tune after first tests.
 - Boss scaling with player count: currently none. With thousands of players global damage will clear early bosses very fast; consider scaling the curve or per-boss global damage caps.
-- Character customization / cosmetics (owner request: dress up the character) — planned for the next stage.
+- Achievements, assistants, referral rewards — next stage.

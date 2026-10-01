@@ -1,58 +1,72 @@
 "use client";
-import { useGame } from "./store.tsx";
+import { useGame, type Tab } from "./store.tsx";
 import { Icon, AnimatedNumber } from "./ui.tsx";
-import { cur, money } from "./format.ts";
+import { money, num } from "./format.ts";
 import { CURRENCY_UNLOCK_LEVEL } from "../shared/economy.ts";
 
+function fmtBal(v: number, c: string): string {
+  if (c === "RUB") return num(v, 0);
+  if (c === "USD") return v >= 1e4 ? num(v) : v.toFixed(2);
+  if (c === "SOL") return v >= 100 ? num(v) : v.toFixed(3);
+  return v.toFixed(5);
+}
+
 export function TopBar() {
-  const { game, energyNow, openSheet } = useGame();
+  const { game, openSheet } = useGame();
   if (!game) return null;
   const b = game.balances;
+  const r = game.rates;
   const lvl = game.player.level;
+  const cards = [
+    { c: "RUB", icon: "rub" as const, sub: `+${num(game.player.passiveRubPerHour, 0)}/ч`, up: true },
+    { c: "USD", icon: "usd" as const, sub: `1$ = ${(1 / r.RUB).toFixed(1)}₽`, up: false },
+    { c: "SOL", icon: "sol" as const, sub: money(r.SOL), up: false },
+    { c: "BTC", icon: "btc" as const, sub: lvl >= CURRENCY_UNLOCK_LEVEL.BTC ? money(r.BTC, { compact: true }) : `🔒 LVL ${CURRENCY_UNLOCK_LEVEL.BTC}`, up: false },
+  ];
   return (
     <header className="topbar">
-      <button className="balances" onClick={() => openSheet("exchange")} aria-label="Открыть обменник">
-        <span className="bal"><Icon name="rub" size={16} /><AnimatedNumber value={b.RUB} format={(v) => cur(v, "RUB")} /></span>
-        <span className="bal"><Icon name="usd" size={16} /><AnimatedNumber value={b.USD} format={(v) => money(v)} /></span>
-        <span className="bal"><Icon name="sol" size={16} /><AnimatedNumber value={b.SOL} format={(v) => v.toFixed(v >= 100 ? 1 : 3)} /></span>
-        {lvl >= CURRENCY_UNLOCK_LEVEL.BTC && (
-          <span className="bal"><Icon name="btc" size={16} />{b.BTC.toFixed(5)}</span>
-        )}
-      </button>
-      <div className="energy" title="Энергия">
-        <Icon name="energy" size={16} />
-        <span>{Math.floor(energyNow)}<small>/{game.player.maxEnergy}</small></span>
+      <div className="cur-cards">
+        {cards.map((k) => (
+          <button key={k.c} className="cur-card" onClick={() => openSheet("exchange")} aria-label={`${k.c}: открыть обменник`}>
+            <Icon name={k.icon} size={26} />
+            <span className="cur-text">
+              <b><AnimatedNumber value={b[k.c as keyof typeof b]} format={(v) => fmtBal(v, k.c)} /></b>
+              <small className={k.up ? "up" : "muted"}>{k.sub}</small>
+            </span>
+          </button>
+        ))}
       </div>
     </header>
   );
 }
 
-const NAV_ICONS: Record<string, string> = {
+const NAV_ICONS: Record<Tab, string> = {
   home: "M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z",
-  market: "M3 20h18M5 16l4-5 4 3 6-8M15 6h4v4",
-  boss: "M6 10a6 6 0 1 1 12 0v4l2 4H4l2-4zM9 11h.01M15 11h.01M4 4l3 3M20 4l-3 3",
-  bag: "M4 8h16l-1 12H5zM9 8V6a3 3 0 0 1 6 0v2M10 13h4",
-  top: "M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3",
+  market: "M5 20v-6M10 20V10M15 20v-9M20 20V5",
+  boss: "M5 9l3 2 4-5 4 5 3-2-1 9H6zM9 14h.01M15 14h.01M10 17h4",
+  quests: "M8 4h8l1 2h2v15H5V6h2zM9 11l2 2 4-4M9 17h6",
+  more: "M5 12h.01M12 12h.01M19 12h.01",
 };
-function NavIcon({ id }: { id: string }) {
+function NavIcon({ id }: { id: Tab }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={id === "more" ? 3.2 : 1.9} strokeLinecap="round" strokeLinejoin="round">
       <path d={NAV_ICONS[id]} />
     </svg>
   );
 }
 
-const TABS = [
-  { id: "home", label: "База" },
-  { id: "market", label: "Рынок" },
-  { id: "boss", label: "Босс" },
-  { id: "bag", label: "Арсенал" },
-  { id: "top", label: "Топ" },
-] as const;
+const TABS: { id: Tab; label: string }[] = [
+  { id: "home", label: "Home" },
+  { id: "market", label: "Market" },
+  { id: "boss", label: "Boss" },
+  { id: "quests", label: "Quests" },
+  { id: "more", label: "More" },
+];
 
 export function BottomNav() {
   const { tab, setTab, game, predictedBoss } = useGame();
   const step = game?.player.tutorialStep ?? 6;
+  const questReady = (game?.quests.some((q) => q.done && !q.claimed) ?? false) || (game?.daily.canClaim ?? false);
   return (
     <nav className="bottomnav">
       {TABS.map((t) => {
@@ -62,6 +76,7 @@ export function BottomNav() {
             <span className="navicon"><NavIcon id={t.id} /></span>
             <span className="navlabel">{t.label}</span>
             {t.id === "boss" && predictedBoss && <span className="navbadge">#{predictedBoss.index}</span>}
+            {t.id === "quests" && questReady && <span className="navdot" />}
           </button>
         );
       })}

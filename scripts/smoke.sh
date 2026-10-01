@@ -24,3 +24,7 @@ echo "no auth: $(curl -s $BASE/api/me)"
 echo "leaderboard rows: $(curl -sf "$BASE/api/leaderboard?type=damage_all" | j .rows.length)"
 echo "feed: $(curl -sf $BASE/api/feed | j .items.length)"
 echo "stream: $(timeout 4 curl -sN $BASE/api/stream | head -c 300 || true)"
+echo "daily: $(curl -sf -X POST "${H[@]}" $BASE/api/retention -d '{"action":"daily"}' | j .result.day)"
+sleep 0.3
+echo "wear: $(curl -sf -X POST "${H[@]}" $BASE/api/retention -d '{"action":"wear","cosmeticId":"headphones-none"}' | j .state.player.outfit.headphones)"
+echo "quests: $(curl -sf "${H[@]}" $BASE/api/me | j '.state.quests.map(q=>q.id+":"+q.progress).join(",")')"

@@ -195,4 +195,35 @@ CREATE TABLE IF NOT EXISTS inventory (
 );
 `,
   },
+  {
+    id: "002_retention",
+    sql: `
+ALTER TABLE players ADD COLUMN IF NOT EXISTS outfit JSONB NOT NULL DEFAULT '{"hoodie":"hoodie-black","hat":"hat-none","glasses":"glasses-none","headphones":"headphones-none"}';
+
+-- Daily login reward streak.
+CREATE TABLE IF NOT EXISTS daily_rewards (
+  player_id BIGINT PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
+  streak INT NOT NULL DEFAULT 0,
+  last_claim_at TIMESTAMPTZ
+);
+
+-- Quest progress counters per period ("d:YYYY-MM-DD" / "w:YYYY-MM-DD").
+CREATE TABLE IF NOT EXISTS quest_metrics (
+  player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  period TEXT NOT NULL,
+  metric TEXT NOT NULL,
+  value DOUBLE PRECISION NOT NULL DEFAULT 0,
+  PRIMARY KEY (player_id, period, metric)
+);
+
+-- One claim per quest per period (idempotent rewards).
+CREATE TABLE IF NOT EXISTS quest_claims (
+  player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  quest_id TEXT NOT NULL,
+  period TEXT NOT NULL,
+  claimed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (player_id, quest_id, period)
+);
+`,
+  },
 ];

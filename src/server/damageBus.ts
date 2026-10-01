@@ -12,7 +12,11 @@
  */
 import type { Queryable } from "./db.ts";
 import { applyChain, type ChainDefeat } from "./bossChain.ts";
-import { bossRewardUsd, bossRewardXp, BOSS_TOOL_DROPS, MAX_BOSS_CHAIN_STEPS, roundTo, toolById, xpForNextLevel } from "../shared/economy.ts";
+import { bossRewardUsd, bossRewardXp, BOSS_TOOL_DROPS, MAX_BOSS_CHAIN_STEPS, roundTo, toolById } from "../shared/economy.ts";
+import { addXp } from "./xp.ts";
+import { bumpMetric } from "./retention.ts";
+
+export { addXp };
 import { bossInfo } from "../shared/bosses.ts";
 import { log } from "./log.ts";
 
@@ -136,6 +140,7 @@ export async function syncBoss(tx: Queryable, playerId: number, playerName?: str
     }
     await tx.query("UPDATE balances SET amount = amount + $2 WHERE player_id = $1 AND currency = 'USD'", [playerId, rewardUsd]);
     await tx.query("UPDATE player_stats SET bosses_defeated = bosses_defeated + 1 WHERE player_id = $1", [playerId]);
+    await bumpMetric(tx, playerId, "bosses", 1);
     await addXp(tx, playerId, rewardXp);
     let rewardItem: string | null = null;
     if (dropId && toolById(dropId)) {
@@ -157,20 +162,6 @@ export async function syncBoss(tx: Queryable, playerId: number, playerName?: str
     bossIndex: res.state.bossIndex, damageTaken: res.state.damageTaken, personalOnBoss: res.state.personalOnBoss,
     checkpoint, globalTotal: g.damage_total, applied: res.applied, defeats,
   };
-}
-
-/** Adds XP and processes level-ups. Returns new level. */
-export async function addXp(tx: Queryable, playerId: number, xp: number): Promise<number> {
-  const [p] = await tx.query<{ level: number; xp: number }>("UPDATE players SET xp = xp + $2 WHERE id = $1 RETURNING level, xp", [playerId, Math.round(xp)]);
-  let { level, xp: cur } = p;
-  let changed = false;
-  while (cur >= xpForNextLevel(level) && level < 200) {
-    cur -= xpForNextLevel(level);
-    level += 1;
-    changed = true;
-  }
-  if (changed) await tx.query("UPDATE players SET level = $2, xp = $3 WHERE id = $1", [playerId, level, cur]);
-  return level;
 }
 
 function fmt(n: number): string {

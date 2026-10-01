@@ -2,13 +2,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useGame } from "../store.tsx";
 import { api, type BossListItem } from "../api.ts";
+import { TokenLogo } from "../ui.tsx";
+import { haptic } from "../telegram.ts";
 import { AnimatedNumber, Bar, Icon, Sheet } from "../ui.tsx";
 import { money } from "../format.ts";
 import { bossInfo } from "../../shared/bosses.ts";
 import { comboMultiplier, contributionFactor, DUMP_TOOLS, equipmentByTier, toolById, COMBO_WINDOW_MS } from "../../shared/economy.ts";
 
 export function BossScreen() {
-  const { game, predictedBoss, pops, feed, setTab, openSheet, live } = useGame();
+  const { game, predictedBoss, pops, feed, setTab, openSheet, live, openMore, run, busy, energyNow, toast } = useGame();
   const [hit, setHit] = useState(false);
   const lastPop = useRef(0);
   useEffect(() => {
@@ -38,7 +40,7 @@ export function BossScreen() {
       </div>
       <section className={`boss-stage env-${info.env} ${hit ? "hit" : ""}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={info.image} alt={info.name} className="boss-img" style={info.hueShift ? { filter: `hue-rotate(${info.hueShift}deg) saturate(1.2)` } : undefined} draggable={false} />
+        <img src={predictedBoss.remaining / info.marketCap < 0.35 ? info.imageHurt : info.image} alt={info.name} className="boss-img" style={info.hueShift ? { filter: `hue-rotate(${info.hueShift}deg) saturate(1.2)` } : undefined} draggable={false} />
         <div className="pops">
           {pops.map((p) => (
             <span key={p.id} className={`pop ${p.crit ? "crit" : ""} ${p.mine ? "mine" : "global"}`}>
@@ -71,7 +73,7 @@ export function BossScreen() {
       </section>
 
       <section className="card">
-        <div className="row between"><h3>Dump Tool</h3><button className="btn btn-ghost small" onClick={() => setTab("bag")}>Сменить →</button></div>
+        <div className="row between"><h3>Dump Tool</h3><button className="btn btn-ghost small" onClick={() => openMore("arsenal")}>Сменить →</button></div>
         <div className="row gap tool-line">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={`/assets/dump-tools/${tool.id}.svg`} width={52} height={52} alt="" />
@@ -85,7 +87,38 @@ export function BossScreen() {
             </div>
           </div>
         </div>
-        <button className="btn btn-sell wide" onClick={() => setTab("market")}>Атаковать: продай мемкоин</button>
+      </section>
+
+      <section className="card attack-card">
+        <div className="row between"><h3>⚔️ Атака</h3><span className="muted small">{Math.floor(energyNow)} ⚡ · {tool.energyCost} ⚡ за удар</span></div>
+        {game.positions.length ? (
+          <div className="list">
+            {game.positions.map((x) => {
+              const dmg = x.valueUsd * tool.mult * comboMultiplier(comboActive + 1) * (1 + eq.damageBonus);
+              const attack = (fraction: number) => {
+                if (energyNow < tool.energyCost) return toast("err", "Нет энергии для удара");
+                run(`atk:${x.tokenId}`, () => api.sell(x.tokenId, fraction), (r) => {
+                  haptic.hit();
+                  toast("dmg", `${r.damage.crit ? "💥 CRITICAL DUMP! " : "🔥 "}${money(r.damage.amount)} урона`);
+                });
+              };
+              return (
+                <div key={x.tokenId} className="attack-row">
+                  <TokenLogo art={x.art as never} size={36} />
+                  <div className="grow minw0">
+                    <div className="strong">${x.ticker}</div>
+                    <div className="small muted">{money(x.valueUsd)} · удар ≈ <b className="dmg">{money(dmg)}</b></div>
+                  </div>
+                  <button className="btn btn-chip" disabled={busy === `atk:${x.tokenId}`} onClick={() => attack(0.5)}>50%</button>
+                  <button className="btn btn-chip btn-sell" disabled={busy === `atk:${x.tokenId}`} onClick={() => attack(1)}>DUMP</button>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="empty small">Нечем бить. Купи мемкоин — его продажа нанесёт урон боссу.</div>
+        )}
+        <button className="btn btn-sell wide" onClick={() => setTab("market")}>Купить снаряды на рынке</button>
       </section>
 
       <section className="card">

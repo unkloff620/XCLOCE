@@ -1,10 +1,11 @@
 "use client";
 import { GameProvider, useGame } from "./store.tsx";
 import { BottomNav, Toasts, TopBar } from "./chrome.tsx";
-import { ExchangeSheet, HomeScreen } from "./screens/Home.tsx";
+import { EventsSheet, ExchangeSheet, HomeScreen } from "./screens/Home.tsx";
 import { MarketScreen, TokenScreen } from "./screens/Market.tsx";
 import { BossListSheet, BossScreen, Celebration } from "./screens/Boss.tsx";
-import { BagScreen, TopScreen } from "./screens/Bag.tsx";
+import { MoreScreen } from "./screens/More.tsx";
+import { QuestsScreen } from "./screens/Quests.tsx";
 
 function Shell() {
   const { status, error, tab, tokenId, retry, mode } = useGame();
@@ -22,7 +23,7 @@ function Shell() {
     return (
       <div className="splash">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/assets/bosses/02-bagholder-hammy.svg" width={140} height={140} alt="" className="splash-err" />
+        <img src="/assets/bosses/01-bagholder-hurt.svg" width={140} height={140} alt="" className="splash-err" />
         <div className="splash-title">Что-то сломалось</div>
         <div className="muted center">{error}</div>
         <button className="btn btn-primary" onClick={retry}>Попробовать снова</button>
@@ -41,16 +42,17 @@ function Shell() {
           <MarketScreen />
         ) : tab === "boss" ? (
           <BossScreen />
-        ) : tab === "bag" ? (
-          <BagScreen />
+        ) : tab === "quests" ? (
+          <QuestsScreen />
         ) : (
-          <TopScreen />
+          <MoreScreen />
         )}
         {mode === "guest" && <div className="guest-note">Гостевой режим в браузере. Откройте через Telegram, чтобы сохранить прогресс в аккаунте.</div>}
       </main>
       <BottomNav />
       <ExchangeSheet />
       <BossListSheet />
+      <EventsSheet />
       <Celebration />
       <Toasts />
     </div>
