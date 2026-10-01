@@ -2,7 +2,7 @@ import type { Price } from "./economy.ts";
 
 export type Rarity = "common" | "rare" | "epic" | "legendary" | "mythic";
 export type Slot = "hat" | "glasses" | "jacket" | "chain";
-export type ItemKind = Slot | "consumable" | "chest" | "key" | "theme";
+export type ItemKind = Slot | "weapon" | "consumable" | "chest" | "key" | "theme";
 
 export interface ItemDef {
   id: string;
