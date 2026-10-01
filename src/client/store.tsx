@@ -242,6 +242,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     tokenRef.current = null;
     setTokenId(null);
     setTabState(t);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0 });
     if (t === "market") refreshMarket();
     if (t === "boss" && gameRef.current && gameRef.current.player.tutorialStep === 5) {
       api.tutorial("boss_opened").then((r) => applyState(r.state)).catch(() => undefined);
@@ -251,6 +252,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const openToken = useCallback((id: string | null) => {
     tokenRef.current = id;
     setTokenId(id);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0 });
     if (id) haptic.tap();
   }, []);
 

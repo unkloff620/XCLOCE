@@ -46,9 +46,10 @@ export function MarketScreen() {
             <TokenLogo art={t.art} size={42} />
             <div className="grow minw0">
               <div className="row gap-s"><span className="strong ellipsis">{t.name}</span><RegimeChip regime={t.regime} /></div>
-              <div className="muted small">${t.ticker} · MC {money(t.marketCap, { compact: true })} · <RiskChip score={t.risk} /></div>
+              <div className="muted small ellipsis">${t.ticker} · {money(t.marketCap, { compact: true })}</div>
+              <RiskChip score={t.risk} />
             </div>
-            <Sparkline data={t.history} />
+            <Sparkline data={t.history} width={56} height={26} />
             <div className="right price-col">
               <div className="strong mono">{price(t.price)}</div>
               <div className={`small ${t.change1h >= 0 ? "up" : "down"}`}>{pct(t.change1h)}</div>
@@ -148,20 +149,21 @@ export function TokenScreen({ id }: { id: string }) {
         <div className="row between"><h3>Риск</h3><span className={`risk risk-${r.level}`}>{r.label}</span></div>
         <div className="risk-rows">
           {([
-            ["Репутация разработчика", 1 - token.riskFactors.dev],
+            ["Ненадёжный разработчик", token.riskFactors.dev],
             ["Концентрация китов", token.riskFactors.whales],
-            ["Ликвидность", 1 - token.riskFactors.liquidity],
-            ["Холдеры", 1 - token.riskFactors.holders],
+            ["Мало ликвидности", token.riskFactors.liquidity],
+            ["Мало холдеров", token.riskFactors.holders],
+            ["Молодой токен", token.riskFactors.age],
             ["Волатильность", token.riskFactors.volatility],
           ] as [string, number][]).map(([label, v]) => (
             <div key={label} className="risk-row">
               <span className="small">{label}</span>
-              <Bar value={v} max={1} tone="energy" />
+              <Bar value={v} max={1} tone="risk" />
             </div>
           ))}
         </div>
         {token.ruggedCount > 0 && <div className="warn small">Этот токен уже рагали: {token.ruggedCount}×</div>}
-        <div className="muted small">Высокий риск = выше шанс rugpull. Следите за уходом ликвидности и холдеров.</div>
+        <div className="muted small">Длиннее полоса — опаснее. Высокий риск = выше шанс rugpull. Следите за уходом ликвидности и холдеров.</div>
       </section>
 
       {pos && (

@@ -115,7 +115,7 @@ export function AnimatedNumber({ value, format, duration = 600 }: { value: numbe
   return <>{format(shown)}</>;
 }
 
-export function Bar({ value, max, tone = "boss" }: { value: number; max: number; tone?: "boss" | "xp" | "energy" }) {
+export function Bar({ value, max, tone = "boss" }: { value: number; max: number; tone?: "boss" | "xp" | "energy" | "risk" }) {
   const k = max > 0 ? Math.max(0, Math.min(1, value / max)) : 0;
   return (
     <div className={`bar bar-${tone}`}>
