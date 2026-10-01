@@ -127,7 +127,7 @@ export function BattleModal() {
                 {battle.key && <span className="reward"><ItemIcon id={battle.key} size={26} /> ключ</span>}
                 {battle.items.map((id) => <span key={id} className="reward"><ItemIcon id={id} size={26} /> {itemById(id)?.name}</span>)}
                 <span className="reward">+{battle.xp} XP</span>
-                <span className="reward">+{def.power} ⚔</span>
+                <span className="reward">+{battle.powerGained} ⚔</span>
               </>
             ) : (
               <span className="reward">+{battle.xp} XP · прокачай силу и возвращайся</span>

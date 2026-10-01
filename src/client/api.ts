@@ -88,5 +88,5 @@ export interface TopRow { id: number; name: string; photo_url: string | null; le
 
 export interface BattleResult {
   bossIndex: number; power: number; hp: number; win: boolean; total: number; hits: { dmg: number; crit: boolean }[];
-  attemptsLeft: number; reward: { currency: string; amount: number } | null; xp: number; key: string | null; items: string[];
+  attemptsLeft: number; reward: { currency: string; amount: number } | null; xp: number; powerGained: number; key: string | null; items: string[];
 }

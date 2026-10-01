@@ -229,7 +229,7 @@ export async function doAttack(tx: Queryable, pid: number, bossIndex: number, no
     [pid, bossIndex, used + 1, today, battle.win ? 1 : 0, battle.win ? 0 : 1]);
   await tx.query("INSERT INTO battles (player_id, boss_index, power, win, damage) VALUES ($1,$2,$3,$4,$5)", [pid, bossIndex, power, battle.win, battle.total]);
   await bump(tx, pid, "fights", 1, now);
-  let rewards: { reward: Price | null; xp: number; power: number; key: string | null; items: string[] } = { reward: null, xp: Math.round(boss.xp * LOSS_XP_SHARE), power: 0, key: null, items: [] };
+  let rewards: { reward: Price | null; xp: number; powerGained: number; key: string | null; items: string[] } = { reward: null, xp: Math.round(boss.xp * LOSS_XP_SHARE), powerGained: 0, key: null, items: [] };
   if (battle.win) {
     await credit(tx, pid, boss.reward);
     const key = keyItem(bossIndex).id;
@@ -243,12 +243,12 @@ export async function doAttack(tx: Queryable, pid: number, bossIndex: number, no
       await addItem(tx, pid, "x-chest");
       items.push("x-chest");
     }
-    rewards = { reward: boss.reward, xp: boss.xp, power: boss.power, key, items };
+    rewards = { reward: boss.reward, xp: boss.xp, powerGained: boss.power, key, items };
     await tx.query("UPDATE player_stats SET bosses_defeated = bosses_defeated + 1, lifetime_damage = lifetime_damage + $2 WHERE player_id=$1", [pid, battle.total]);
     await bump(tx, pid, "wins", 1, now);
     if (row.wins === 0) await feed(tx, "boss", `👑 ${displayName(p)} впервые победил ${boss.name}`, pid);
   }
-  await gainXpPower(tx, pid, rewards.xp, rewards.power);
+  await gainXpPower(tx, pid, rewards.xp, rewards.powerGained);
   await touch(tx, p, now);
   log.info("boss.attack", { player: pid, boss: bossIndex, power, win: battle.win });
   return { bossIndex, power, hp: boss.hp, ...battle, attemptsLeft: ATTACKS_PER_DAY - used - 1, ...rewards };
