@@ -45,7 +45,7 @@ function sweat(x: number, y: number): string {
 
 export function memeBoss(slug: string, hurt: boolean): string {
   switch (slug) {
-    case "bagholder": {
+    case "chill-guy": {
       const m: Mood = "happy";
       return (
         `<path d="M120 360 q-6 -110 80 -116 q86 6 80 116z" fill="#3a6fd8" ${O}/>` +
