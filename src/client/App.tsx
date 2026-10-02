@@ -16,7 +16,7 @@ function Shell() {
     return (
       <div className="splash">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={status === "error" ? "/assets/bosses/01-bagholder.svg" : "/assets/ui/logo.svg"} width={status === "error" ? 160 : 90} height={status === "error" ? 160 : 90} alt="" className={status === "loading" ? "spin" : "rounded"} />
+        <img src={status === "error" ? "/assets/bosses/01-chill-guy.svg" : "/assets/ui/logo.svg"} width={status === "error" ? 160 : 90} height={status === "error" ? 160 : 90} alt="" className={status === "loading" ? "spin" : "rounded"} />
         <div className="comic splash-title">{status === "error" ? "ЧТО-ТО СЛОМАЛОСЬ" : "XCLOCE"}</div>
         {status === "error" ? (
           <>

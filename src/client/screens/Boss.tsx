@@ -35,6 +35,53 @@ export function BossScreen() {
         {game.bosses.map((b) => {
           const def = BOSSES.find((x) => x.index === b.index)!;
           const locked = !b.unlocked;
+          const action = !locked ? (
+            <>
+              {fight?.bossIndex === b.index ? (
+                <button className={`btn-attack comic ${fight.won ? "won" : fight.lost ? "lost" : "live"}`} onClick={() => setFight(b.index)}>{fight.won ? "WIN!" : fight.lost ? "ИТОГ" : "В БОЮ"}</button>
+              ) : (
+                <button className={`btn-attack comic ${atkImg ? "skinned" : ""}`} aria-label="Напасть" disabled={!!fight || b.attemptsLeft <= 0 || busy === "fight_start"} onClick={() => start(b.index)}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  {atkImg ? <img className="skin-img" src={atkImg} alt="" draggable={false} /> : "ATTACK"}
+                </button>
+              )}
+              <small className="muted">{fight && fight.bossIndex !== b.index ? `бой #${fight.bossIndex}` : `${ATTACKS_PER_DAY - b.attemptsLeft}/${ATTACKS_PER_DAY}`}</small>
+            </>
+          ) : b.canUnlock ? (
+            <button className="btn-unlock comic" disabled={busy === "unlock"} onClick={() => act("unlock", { boss: b.index }, `Босс #${b.index} открыт!`)}>
+              OPEN<br /><span className="keys"><UIcon name="key" size={14} />{KEYS_TO_UNLOCK}</span>
+            </button>
+          ) : (
+            <div className="key-need">
+              <UIcon name={b.index === 1 ? "lock" : "key"} size={22} />
+              <small>{b.index > 1 ? `${Math.min(b.keysHave, KEYS_TO_UNLOCK)}/${KEYS_TO_UNLOCK}` : ""}</small>
+              <small className="muted">ключи #{b.index - 1}</small>
+            </div>
+          );
+          const card = skinUrl(`cards/${def.slug}`);
+          if (card) {
+            // the owner's card picture (art + frame + background) with the boss data laid over its empty right side
+            const pct = Math.max(0, Math.min(100, (b.hp / b.hpMax) * 100));
+            return (
+              <div key={b.index} className={`boss-card-art ${locked ? "locked" : ""}`}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="bca-img" src={card} alt="" draggable={false} />
+                {locked && <span className="bca-q comic">?</span>}
+                <div className="bca-info">
+                  <div className="bca-name comic"><span className="bca-n">#{b.index}</span> {b.name}</div>
+                  <div className="bca-main">
+                    <div className="bca-hp"><span style={{ width: `${pct}%` }} /><b>❤ {fmtNum(b.hp)} / {fmtNum(b.hpMax)} HP</b></div>
+                    <div className="bca-meta">
+                      <span title="Награда"><PriceTag price={b.reward} size={14} /></span>
+                      <span className="meta-power" title="Сила за победу">+{b.power} ⚔</span>
+                      <span title="Побед">🏆 {b.wins}</span>
+                    </div>
+                  </div>
+                  <div className="bca-act boss-act">{action}</div>
+                </div>
+              </div>
+            );
+          }
           return (
             <div key={b.index} className={`boss-card ${locked ? "locked" : ""}`}>
               <div className={`boss-ava ${bossFrame(def) ? "framed" : ""}`}>
@@ -54,31 +101,7 @@ export function BossScreen() {
                   <span title="Побед">🏆 {b.wins}</span>
                 </div>
               </div>
-              <div className="boss-act">
-                {!locked ? (
-                  <>
-                    {fight?.bossIndex === b.index ? (
-                      <button className={`btn-attack comic ${fight.won ? "won" : fight.lost ? "lost" : "live"}`} onClick={() => setFight(b.index)}>{fight.won ? "WIN!" : fight.lost ? "ИТОГ" : "В БОЮ"}</button>
-                    ) : (
-                      <button className={`btn-attack comic ${atkImg ? "skinned" : ""}`} aria-label="Напасть" disabled={!!fight || b.attemptsLeft <= 0 || busy === "fight_start"} onClick={() => start(b.index)}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        {atkImg ? <img className="skin-img" src={atkImg} alt="" draggable={false} /> : "ATTACK"}
-                      </button>
-                    )}
-                    <small className="muted">{fight && fight.bossIndex !== b.index ? `бой #${fight.bossIndex}` : `${ATTACKS_PER_DAY - b.attemptsLeft}/${ATTACKS_PER_DAY}`}</small>
-                  </>
-                ) : b.canUnlock ? (
-                  <button className="btn-unlock comic" disabled={busy === "unlock"} onClick={() => act("unlock", { boss: b.index }, `Босс #${b.index} открыт!`)}>
-                    OPEN<br /><span className="keys"><UIcon name="key" size={14} />{KEYS_TO_UNLOCK}</span>
-                  </button>
-                ) : (
-                  <div className="key-need">
-                    <UIcon name={b.index === 1 ? "lock" : "key"} size={22} />
-                    <small>{b.index > 1 ? `${Math.min(b.keysHave, KEYS_TO_UNLOCK)}/${KEYS_TO_UNLOCK}` : ""}</small>
-                    <small className="muted">ключи #{b.index - 1}</small>
-                  </div>
-                )}
-              </div>
+              <div className="boss-act">{action}</div>
             </div>
           );
         })}

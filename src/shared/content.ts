@@ -21,7 +21,7 @@ export interface BossDef {
 }
 
 export const BOSSES: BossDef[] = [
-  { index: 1, slug: "bagholder", name: "BAGHOLDER", title: "Купил на хаях", hp: 900, reward: { currency: "RUB", amount: 900 }, xp: 30, power: 3, chestChance: 0.05, top: "BOUGHT THE TOP", bottom: "STILL HOLDING", env: "redchart" },
+  { index: 1, slug: "chill-guy", name: "Chill Guy", title: "Ему пофиг на графики", hp: 900, reward: { currency: "RUB", amount: 900 }, xp: 30, power: 3, chestChance: 0.05, top: "BOUGHT THE TOP", bottom: "STILL HOLDING", env: "redchart" },
   { index: 2, slug: "copium-hamster", name: "COPIUM HAMSTER", title: "Дышит копиумом", hp: 2_000, reward: { currency: "RUB", amount: 2_000 }, xp: 55, power: 6, chestChance: 0.06, firstWinItem: "h-cap", top: "IT WILL BOUNCE", bottom: "TRUST ME BRO", env: "storm" },
   { index: 3, slug: "wen-lambo", name: "WEN LAMBO", title: "Пёс в игрушечной ламбе", hp: 3_800, reward: { currency: "USD", amount: 12 }, xp: 85, power: 9, chestChance: 0.07, top: "WEN LAMBO?", bottom: "SER PLS", env: "city" },
   { index: 4, slug: "paper-cat", name: "PAPER HANDS CAT", title: "Бумажные лапки", hp: 6_500, reward: { currency: "USD", amount: 22 }, xp: 120, power: 12, chestChance: 0.08, firstWinItem: "g-neon", top: "SOLD AT -2%", bottom: "IT PUMPED +400%", env: "jungle" },
