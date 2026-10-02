@@ -61,7 +61,7 @@ export function memeBoss(slug: string, hurt: boolean): string {
         (hurt ? bandage(240, 120) : sweat(268, 150))
       );
     }
-    case "copium-hamster": {
+    case "chill-house": {
       const m: Mood = "smug";
       return (
         `<ellipse cx="200" cy="270" rx="120" ry="90" fill="#e8b27f" ${O}/>` +

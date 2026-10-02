@@ -58,7 +58,7 @@ Power is the character's rating (top players, clan power); hit damage is set by 
 | # | Boss | HP | — | Reward | Power per win |
 |---|---|---:|---:|---|---:|
 | 1 | Chill Guy | 900 | 85 | 900 ₽ | +3 |
-| 2 | COPIUM HAMSTER | 2,000 | 190 | 2,000 ₽ | +6 |
+| 2 | CHILL HOUSE | 2,000 | 190 | 2,000 ₽ | +6 |
 | 3 | WEN LAMBO | 3,800 | 360 | $12 | +9 |
 | 4 | PAPER HANDS CAT | 6,500 | 615 | $22 | +12 |
 | 5 | LASER APE | 10,000 | 945 | $40 | +15 |
