@@ -566,3 +566,23 @@ button.hud-profile { color: inherit; text-align: left; width: 100%; font: inheri
 .bca-act small { font-size: 2.8cqw; font-weight: 800; text-shadow: 1px 1px 0 #000; }
 .bca-act .btn-unlock { width: 100%; font-size: 3.6cqw; padding: 1cqw; }
 .bca-act .key-need small { font-size: 2.6cqw; }
+
+/* ---------- bottom menu: active button glows in its own colour ---------- */
+.nav-btn.t-boss { --glow: #ff3b5c; }
+.nav-btn.t-market { --glow: #9dff3a; }
+.nav-btn.t-home { --glow: #ffe03a; }
+.nav-btn.t-inventory { --glow: #3fd8ff; }
+.nav-btn.t-social { --glow: #ffa22e; }
+.nav { gap: 6px; padding-top: 8px; overflow: visible; }
+.nav-btn, .nav-btn.on, .nav-btn.home, .nav-btn.home.on { filter: none; height: 56px; margin-top: 0; overflow: visible; }
+.nav-btn.home, .nav-btn.home.on { height: 62px; margin-top: -6px; }
+.nav-btn .nav-art { width: 100%; height: 100%; object-fit: contain; transition: filter 0.18s, transform 0.18s; filter: saturate(0.55) brightness(0.68); transform: scale(0.94); }
+.nav-btn.on .nav-art { transform: scale(1.06) translateY(-3px); filter: brightness(1.15) saturate(1.2) drop-shadow(0 0 5px var(--glow)) drop-shadow(0 0 12px var(--glow)); }
+.nav-btn.on::after { content: ""; position: absolute; left: 18%; right: 18%; bottom: -5px; height: 3px; border-radius: 3px; background: var(--glow); box-shadow: 0 0 8px 2px var(--glow), 0 0 18px 4px color-mix(in srgb, var(--glow) 45%, transparent); }
+.nav-btn:not(.on):active .nav-art { transform: scale(0.9); }
+@media (prefers-reduced-motion: no-preference) {
+  .nav-btn.on .nav-art { animation: nav-glow 2.2s ease-in-out infinite; }
+  @keyframes nav-glow { 50% { filter: brightness(1.25) saturate(1.3) drop-shadow(0 0 8px var(--glow)) drop-shadow(0 0 20px var(--glow)); } }
+}
+.content { padding-bottom: calc(88px + var(--safe-bottom)); }
+.weapon-bar { bottom: calc(74px + var(--safe-bottom)); }
