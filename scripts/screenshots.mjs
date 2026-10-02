@@ -24,7 +24,7 @@ const nav = async (i) => { await page.locator(".nav-btn").nth(i).click(); await 
 for (const [i, name] of ["boss", "market", "home", "inventory", "social"].entries()) { await nav(i); await shot(page, name); }
 
 const gallery = await browser.newPage({ viewport: { width: 1200, height: 900 }, deviceScaleFactor: scale });
-const ids = ["01-chill-guy", "02-copium-hamster", "03-wen-lambo", "04-paper-cat", "05-laser-ape", "06-bear-baron", "07-rug-wizard", "08-gas-goblin", "09-troll-whale", "10-meme-king"];
+const ids = ["01-chill-guy", "02-chill-house", "03-wen-lambo", "04-paper-cat", "05-laser-ape", "06-bear-baron", "07-rug-wizard", "08-gas-goblin", "09-troll-whale", "10-meme-king"];
 const grid = (list) => `<body style="margin:0;background:#111;display:grid;grid-template-columns:repeat(4,300px)">${list.map((i) => `<img src="${base}/assets/bosses/${i}.svg" width="300" height="300">`).join("")}</body>`;
 await gallery.setContent(grid(ids)); await gallery.waitForTimeout(1500); await shot(gallery, "bosses");
 console.log("errors:", JSON.stringify(errors.slice(0, 10)));
