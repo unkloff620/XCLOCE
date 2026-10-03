@@ -8,7 +8,14 @@ type ObjId = keyof typeof SCENE_OBJECTS;
 function Obj({ id, onPick }: { id: ObjId; onPick?: (equipment: string) => void }) {
   const o = SCENE_OBJECTS[id];
   const eq = "equipment" in o ? o.equipment : null;
-  const img = <image href={`/assets/home/${id}-1.webp`} x={o.x} y={o.y} width={o.w} height={o.w * o.aspect} preserveAspectRatio="none" />;
+  const h = o.w * o.aspect;
+  const img = o.flip ? (
+    <g transform={`translate(${o.x + o.w} ${o.y}) scale(-1 1)`}>
+      <image href={`/assets/home/${id}-1.webp`} x="0" y="0" width={o.w} height={h} preserveAspectRatio="none" />
+    </g>
+  ) : (
+    <image href={`/assets/home/${id}-1.webp`} x={o.x} y={o.y} width={o.w} height={h} preserveAspectRatio="none" />
+  );
   if (!eq || !onPick) return img;
   return (
     <g role="button" tabIndex={0} aria-label={id === "pc" ? "Системник" : "Монитор"} style={{ cursor: "pointer" }}
@@ -24,8 +31,8 @@ export function HomeScene({ room = "basic", onPick }: { room?: string; onPick?: 
     <svg viewBox={`0 0 ${SCENE.w} ${SCENE.h}`} width="100%" style={{ display: "block" }}>
       <image href={`/assets/home/${bg}.webp`} x="0" y="0" width={SCENE.w} height={SCENE.h} preserveAspectRatio="none" />
       <Obj id="desk" />
-      <Obj id="monitor" onPick={onPick} />
       <Obj id="pc" onPick={onPick} />
+      <Obj id="monitor" onPick={onPick} />
       <RigViewport x={CHARACTER.x} y={CHARACTER.y} scale={CHARACTER.scale} seat />
     </svg>
   );
