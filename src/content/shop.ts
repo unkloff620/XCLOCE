@@ -19,6 +19,8 @@ export const SHOP_SECTIONS = [
 
 // Draft prices. Energy costs 18 RUB-equivalent per point, more than the best task pays (16), so it cannot be farmed.
 export const OFFERS: Offer[] = [
+  { id: "mouse-1", section: "weapons", give: { item: "mouse", qty: 1 }, price: { currency: "RUB", amount: 60 }, title: "Мышь" },
+  { id: "mouse-10", section: "weapons", give: { item: "mouse", qty: 10 }, price: { currency: "RUB", amount: 540 }, title: "Мышь ×10", note: "−10%" },
   { id: "candle-1", section: "weapons", give: { item: "red-candle", qty: 1 }, price: { currency: "RUB", amount: 100 }, title: "Красная свеча" },
   { id: "candle-10", section: "weapons", give: { item: "red-candle", qty: 10 }, price: { currency: "RUB", amount: 900 }, title: "Красная свеча ×10", note: "−10%" },
   { id: "keyboard-1", section: "weapons", give: { item: "keyboard", qty: 1 }, price: { currency: "RUB", amount: 190 }, title: "Клавиатура" },

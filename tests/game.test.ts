@@ -178,13 +178,16 @@ describe("boss fights: personal fights, shared damage", () => {
     expect(r.state.fight?.bossId).toBe("kedr");
   });
 
-  it("the mouse is permanent with a 1 hour cooldown", async () => {
+  it("the fist is permanent with a 1 hour cooldown; the mouse is a 30-damage consumable", async () => {
     const p = await newPlayer(db);
     await startDatsik(p);
-    const r = await hit(p, "mouse");
+    const r = await hit(p, "fist");
     expect(r.result).toMatchObject({ damage: 10, left: null });
-    await expect(hit(p, "mouse", T0 + 59 * M)).rejects.toMatchObject({ code: "cooldown" });
-    await hit(p, "mouse", T0 + 60 * M);
+    await expect(hit(p, "fist", T0 + 59 * M)).rejects.toMatchObject({ code: "cooldown" });
+    await hit(p, "fist", T0 + 60 * M);
+    expect(await qty(db, p, "fist")).toBe(1);
+    await give(db, p, "mouse", 2);
+    expect((await hit(p, "mouse", T0 + 61 * M)).result).toMatchObject({ damage: 30 });
     expect(await qty(db, p, "mouse")).toBe(1);
   });
 
@@ -225,9 +228,9 @@ describe("yard", () => {
     expect((await look(T0 + 3 * H + 4 * M)).count).toBe(4);
     expect((await look(T0 + 3 * H + 5 * M)).count).toBe(5);
   });
-  it("the mouse, GPU and Rug Pull Gun never drop in the yard", () => {
+  it("the fist, GPU and Rug Pull Gun never drop in the yard", () => {
     const ids = YARD_DROPS.flatMap((d) => d.reward.items?.map((i) => i.id) ?? []);
-    expect(ids).not.toContain("mouse");
+    expect(ids).not.toContain("fist");
     expect(ids).not.toContain("gpu");
     expect(ids).not.toContain("rug-pull-gun");
     expect(ids).toContain("red-candle");
@@ -358,7 +361,7 @@ describe("selling, nickname, slot machine 777", () => {
     expect(r.result).toMatchObject({ got: 120, left: 1 });
     expect(await wallet(db, p, "RUB")).toBe(620);
     await expect(act(db, p, "sell", { itemId: "spinner", qty: 5 }, T0)).rejects.toMatchObject({ code: "no_item" });
-    await expect(act(db, p, "sell", { itemId: "mouse" }, T0)).rejects.toMatchObject({ code: "not_sellable" });
+    await expect(act(db, p, "sell", { itemId: "fist" }, T0)).rejects.toMatchObject({ code: "not_sellable" });
   });
 
   it("nickname: paid, once per 24 h, unique, survives a Telegram re-login", async () => {

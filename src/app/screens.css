@@ -104,6 +104,10 @@
 .fx { position: absolute; inset: 0; }
 .fx-proj, .fx-gun { position: absolute; left: 50%; top: 50%; }
 .fx.other { opacity: 0.55; transform: translateX(calc(var(--lane) * 14%)) scale(0.7); }
+.fx-fist .fx-proj { animation: fx-fist 0.55s cubic-bezier(0.2, 0.8, 0.3, 1) forwards; }
+@keyframes fx-fist { 0% { transform: translate(-30%, 240%) rotate(-25deg) scale(0.8); } 55% { transform: translate(-50%, -50%) rotate(-10deg) scale(1.15); } 70% { transform: translate(-50%, -42%) rotate(-8deg) scale(1.05); } 100% { transform: translate(-40%, 60%) rotate(-20deg) scale(0.9); opacity: 0; } }
+.fx-pow { position: absolute; left: 50%; top: 45%; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%; background: radial-gradient(circle, rgba(255,240,180,0.95) 0 25%, rgba(255,120,60,0.6) 45%, transparent 70%); opacity: 0; animation: fx-pow 0.5s ease 0.28s forwards; }
+@keyframes fx-pow { 0% { opacity: 0; transform: scale(0.3); } 30% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.6); } }
 .fx-mouse .fx-proj { animation: fx-mouse 0.6s cubic-bezier(0.3, 0.6, 0.4, 1) forwards; }
 .fx-cable { position: absolute; left: 25%; width: 50%; top: 35%; height: 65%; opacity: 0; animation: fx-cable 0.6s ease forwards; }
 @keyframes fx-mouse { 0% { transform: translate(-50%, 260%) rotate(0); } 70% { transform: translate(-50%, -60%) rotate(540deg); } 85% { transform: translate(-60%, -40%) rotate(560deg) scale(1.1); } 100% { transform: translate(-90%, 120%) rotate(620deg); opacity: 0; } }

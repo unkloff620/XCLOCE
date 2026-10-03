@@ -311,7 +311,7 @@ export function BossScreen({ id }: { id: string }) {
           </div>
         </div>
       )}
-      {invQty(state, "mouse") === 0 && <p className="small muted">Мышь потерялась? Напиши организаторам.</p>}
+      {invQty(state, "fist") === 0 && <p className="small muted">Кулак потерялся? Напиши организаторам.</p>}
     </div>
   );
 }

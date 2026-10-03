@@ -13,7 +13,7 @@ export interface WeaponStats {
   /** permanent weapons only: minutes until it can be used again */
   cooldownMin?: number;
   /** client animation id (see client/fx) */
-  animation: "mouse" | "candle" | "keyboard" | "gpu" | "rugpull";
+  animation: "fist" | "mouse" | "candle" | "keyboard" | "gpu" | "rugpull";
   /** button text on the boss screen */
   action: string;
 }
@@ -40,10 +40,16 @@ export interface ItemDef {
 
 export const WEAPONS: ItemDef[] = [
   {
-    id: "mouse", name: "Мышь", category: "weapon", rarity: "common", maxStack: 1,
-    description: "Базовое оружие. Не ломается, но после броска надо сходить за ней — час.",
+    id: "fist", name: "Кулак", category: "weapon", rarity: "common", maxStack: 1,
+    description: "Базовое оружие. Всегда с тобой, но после удара руке нужен час отдыха.",
     sources: ["Есть у каждого с начала игры"],
-    weapon: { damage: 10, kind: "permanent", cooldownMin: 60, animation: "mouse", action: "Кинуть мышку" },
+    weapon: { damage: 10, kind: "permanent", cooldownMin: 60, animation: "fist", action: "Втащить кулаком" },
+  },
+  {
+    id: "mouse", name: "Мышь", category: "weapon", rarity: "common", maxStack: 999,
+    description: "Перемотана скотчем, провод держится на честном слове. Одноразовая.",
+    sources: ["Магазин"],
+    weapon: { damage: 30, kind: "consumable", animation: "mouse", action: "Кинуть мышку" },
   },
   {
     id: "red-candle", name: "Красная свеча", category: "weapon", rarity: "common", maxStack: 999,

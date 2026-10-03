@@ -1,7 +1,7 @@
 "use client";
 /*
  * Short attack animations on the boss arena (≤ 1 s each, they overlap, so the player can hit again right away).
- * Every weapon has its own: the mouse flies on its cable, the red candle crashes from above, the keyboard spins
+ * Every weapon has its own: the fist punches up from below, the mouse flies on its cable, the red candle crashes from above, the keyboard spins
  * and sheds keys, the GPU tumbles and smokes, the Rug Pull Gun fires and the floor disappears under the boss.
  */
 import { useCallback, useRef, useState } from "react";
@@ -43,10 +43,16 @@ export function useFx(onImpact: (fx: Fx) => void) {
 }
 
 function FxItem({ fx }: { fx: Fx }) {
-  const anim = weaponById(fx.weapon)?.weapon.animation ?? "mouse";
+  const anim = weaponById(fx.weapon)?.weapon.animation ?? "fist";
   const style = { ["--lane" as string]: fx.lane } as React.CSSProperties;
   return (
     <div className={`fx fx-${anim} ${fx.mine ? "mine" : "other"}`} style={style}>
+      {anim === "fist" && (
+        <>
+          <div className="fx-proj"><ItemArt id="fist" size={110} /></div>
+          <div className="fx-pow" />
+        </>
+      )}
       {anim === "mouse" && (
         <>
           <svg className="fx-cable" viewBox="0 0 200 300" preserveAspectRatio="none">

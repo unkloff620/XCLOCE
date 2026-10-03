@@ -4,10 +4,10 @@ import { CURRENCIES } from "../content/currencies.ts";
 import { STARTER_OUTFIT } from "../content/items.ts";
 import { ENERGY } from "../content/levels.ts";
 
-/** Starting kit: the mouse, the starter outfit, some RUB and a few candles to try the boss right away. */
+/** Starting kit: the fist, the starter outfit, some RUB and a few candles to try the boss right away. */
 const START_RUB = 500;
 const START_ITEMS: { id: string; qty: number }[] = [
-  { id: "mouse", qty: 1 },
+  { id: "fist", qty: 1 },
   { id: "red-candle", qty: 3 },
   ...Object.values(STARTER_OUTFIT).map((id) => ({ id: id as string, qty: 1 })),
 ];

@@ -244,4 +244,12 @@ CREATE TABLE player_equipment (
 );
 `,
   },
+  {
+    // the fist becomes the free permanent weapon; the mouse turns into a 30-damage consumable (players keep theirs)
+    id: "v2-007-fist",
+    sql: `
+INSERT INTO inventory (player_id, item_id, qty, source) SELECT id, 'fist', 1, 'migration' FROM players
+ON CONFLICT (player_id, item_id) DO NOTHING;
+`,
+  },
 ];
