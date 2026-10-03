@@ -34,6 +34,8 @@ export interface ItemDef {
   use?: { energy?: number };
   /** wearable that hides other slots (a hoodie hides the shirt underneath) */
   hides?: Slot[];
+  /** sale price in RUB from the inventory (things found in the yard) */
+  sell?: number;
 }
 
 export const WEAPONS: ItemDef[] = [
@@ -114,3 +116,19 @@ export const weaponById = (id: string) => {
 export const STARTER_OUTFIT: Partial<Record<Slot, string>> = { SHIRT: "tee-white", PANTS: "jeans", SHOES: "sneakers" };
 export const RARITY_NAME: Record<Rarity, string> = { common: "Обычный", rare: "Редкий", epic: "Эпический", legendary: "Легендарный", mythic: "Мифический" };
 export const CATEGORY_NAME: Record<Category, string> = { weapon: "Оружие", clothing: "Одежда", item: "Предметы", reward: "Награды", event: "Ивентовые" };
+
+/** Everything that drops in the yard can be sold back for RUB (about half of the shop price). Overridable via config "sell". */
+export const SELL_PRICES: Record<string, number> = {
+  "bottle-cap": 15,
+  "flyer-passive": 25,
+  "sticker-hodl": 40,
+  "spinner": 60,
+  "energy-drink": 90,
+  "lost-wallet": 150,
+  "red-candle": 50,
+  "keyboard": 95,
+};
+for (const [id, price] of Object.entries(SELL_PRICES)) {
+  const it = ITEMS.find((i) => i.id === id);
+  if (it) it.sell = price;
+}

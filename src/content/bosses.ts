@@ -19,6 +19,8 @@ export interface BossDef {
   /** HP phases in percent (only the final boss has several) */
   phases?: { from: number; name: string }[];
   final?: boolean;
+  /** keys of the previous boss needed to open this one (default KEYS_TO_UNLOCK) */
+  keysToUnlock?: number;
 }
 
 /** 1 000 → 10 000 → 50 000 → … → 10 000 000 (Солнце). */
@@ -84,6 +86,7 @@ export const BOSSES: BossDef[] = [
     hp: hp(7), reward: { xp: xp(7), currencies: { BTC: 0.0005, RUB: 1200 } },
     drop: [{ id: "rug-pull-gun", qty: 1, chance: 0.35 }],
     theme: { a: "#401624", b: "#16060c", accent: "#ff6b9a" }, photo: photo("fokus"),
+    keysToUnlock: 1,
   },
   {
     id: "solntse", order: 9, name: "Солнце", title: "Финальный босс компании",
@@ -93,6 +96,7 @@ export const BOSSES: BossDef[] = [
     theme: { a: "#4a2a06", b: "#1a0c02", accent: "#ffd23f" }, photo: photo("solntse"),
     phases: [{ from: 100, name: "Рассвет" }, { from: 66, name: "Зенит" }, { from: 33, name: "Солнечная буря" }],
     final: true,
+    keysToUnlock: 1,
   },
 ];
 
@@ -102,5 +106,10 @@ export const keyId = (bossId: string) => `key-${bossId}`;
 export const KEYS_TO_UNLOCK = 3;
 /** Personal fight length. */
 export const FIGHT_HOURS = 8;
-/** Fights per boss per player per Moscow day. */
+/** Fights per boss per player per Moscow day. Lost or abandoned fights do not count. */
 export const FIGHTS_PER_DAY = 7;
+
+/** How many keys of the previous boss open this one. */
+export function keysNeeded(b: BossDef, defaultKeys: number): number {
+  return b.keysToUnlock ?? defaultKeys;
+}

@@ -214,4 +214,19 @@ CREATE TABLE daily_login (
 );
 `,
   },
+  {
+    id: "v2-005-nick-slots",
+    sql: `
+ALTER TABLE players ADD COLUMN IF NOT EXISTS name_custom BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS name_changed_at TIMESTAMPTZ;
+CREATE TABLE slot_spins (
+  id SERIAL PRIMARY KEY,
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  outcome TEXT NOT NULL,
+  reels TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL
+);
+CREATE INDEX slot_spins_player ON slot_spins (player_id, created_at DESC);
+`,
+  },
 ];

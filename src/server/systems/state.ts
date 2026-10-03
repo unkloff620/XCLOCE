@@ -8,6 +8,7 @@ import { BOSSES } from "../../content/bosses.ts";
 import { LOCATIONS } from "../../content/locations.ts";
 import { touchActivity } from "../players.ts";
 import { dailyView } from "./daily.ts";
+import { renameView, slotsView } from "./extras.ts";
 
 /** Everything the HUD and the always-visible parts of the game need. Runs inside the player's transaction. */
 export async function gameState(ctx: Ctx) {
@@ -51,6 +52,9 @@ export async function gameState(ctx: Ctx) {
     pending: pending.map((f) => ({ fightId: f.id, bossId: f.boss_id, status: f.status })),
     clan: clan ?? null,
     daily: await dailyView(ctx.q, ctx.pid, ctx.now, ctx.cfg),
+    slots: await slotsView(ctx.q, ctx.pid, ctx.now, ctx.cfg),
+    rename: await renameView(ctx.q, ctx.pid, ctx.now, ctx.cfg),
+    sell: ctx.cfg.sell,
   };
 }
 

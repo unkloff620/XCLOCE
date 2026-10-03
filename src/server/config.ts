@@ -5,6 +5,9 @@ import { ENERGY, LEVELS } from "../content/levels.ts";
 import { YARD_DROPS, YARD_MAX_ITEMS, YARD_SPAWN_MIN } from "../content/yard.ts";
 import { OFFERS } from "../content/shop.ts";
 import { DAILY_REWARDS } from "../content/daily.ts";
+import { SELL_PRICES } from "../content/items.ts";
+import { RENAME } from "../content/profile.ts";
+import { SLOT_OUTCOMES, SLOT_SPINS_PER_HOUR } from "../content/slots.ts";
 import type { Reward } from "../content/rewards.ts";
 
 /**
@@ -15,12 +18,17 @@ export interface Config {
   bossHp: Record<string, number>;
   fight: { hours: number; perDay: number; keysToUnlock: number };
   energy: { max: number; regenMin: number };
-  levels: { base: number; power: number; max: number };
+  levels: { a: number; b: number; p: number; max: number };
   yard: { spawnMin: number; maxItems: number; weights: Record<string, number> };
   prices: Record<string, number>;
   exchange: { rub: Record<Currency, number>; fee: number };
   /** login reward cycle, one entry per day */
   daily: Reward[];
+  /** inventory sale prices in RUB */
+  sell: Record<string, number>;
+  rename: { price: number; cooldownH: number };
+  /** slot machine: outcome weights and spins per 60 minutes */
+  slots: { perHour: number; weights: Record<string, number> };
   /** Telegram ids allowed to run admin actions */
   admins: number[];
 }
@@ -35,6 +43,9 @@ export function defaultConfig(): Config {
     prices: Object.fromEntries(OFFERS.map((o) => [o.id, o.price.amount])),
     exchange: { rub: Object.fromEntries(Object.values(CURRENCY_DEFS).map((c) => [c.id, c.rub])) as Record<Currency, number>, fee: EXCHANGE_FEE },
     daily: DAILY_REWARDS.map((r) => structuredClone(r)),
+    sell: { ...SELL_PRICES },
+    rename: { price: RENAME.price, cooldownH: RENAME.cooldownH },
+    slots: { perHour: SLOT_SPINS_PER_HOUR, weights: Object.fromEntries(SLOT_OUTCOMES.map((o) => [o.id, o.weight])) },
     admins: (process.env.ADMIN_TELEGRAM_IDS ?? "").split(",").map((s) => Number(s.trim())).filter((n) => Number.isFinite(n) && n > 0),
   };
 }
@@ -57,6 +68,13 @@ const KEYS: Record<string, (c: Config, v: unknown) => void> = {
   },
   daily: (c, v) => {
     if (Array.isArray(v) && v.length >= 1 && v.length <= 31 && v.every((r) => r && typeof r === "object" && !Array.isArray(r))) c.daily = v as Reward[];
+  },
+  sell: (c, v) => Object.assign(c.sell, numMap(v)),
+  rename: (c, v) => Object.assign(c.rename, numMap(v)),
+  "slots.weights": (c, v) => Object.assign(c.slots.weights, numMap(v)),
+  slots: (c, v) => {
+    const m = numMap(v);
+    if (m.perHour) c.slots.perHour = m.perHour;
   },
   admins: (c, v) => {
     if (Array.isArray(v)) c.admins = [...new Set([...c.admins, ...v.filter((x): x is number => typeof x === "number")])];

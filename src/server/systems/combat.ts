@@ -1,6 +1,6 @@
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, idempotent, itemQty, ledger, moscowDay, nextMoscowMidnight, takeItem, type Ctx, type Granted } from "../core.ts";
-import { BOSSES, bossById, keyId, type BossDef } from "../../content/bosses.ts";
+import { BOSSES, bossById, keyId, keysNeeded, type BossDef } from "../../content/bosses.ts";
 import { WEAPONS, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
 import { mergeRewards } from "../../content/rewards.ts";
@@ -67,15 +67,16 @@ export function fightHp(f: Pick<FightRow, "hp_max" | "start_total" | "end_total"
 }
 
 /** Boss N+1 opens after KEYS keys of boss N. */
-export async function isUnlocked(q: Queryable, pid: number, boss: BossDef, keysNeeded: number): Promise<boolean> {
+export async function isUnlocked(q: Queryable, pid: number, boss: BossDef, defaultKeys: number): Promise<boolean> {
   if (boss.order === 1) return true;
   const prev = BOSSES.find((b) => b.order === boss.order - 1);
   if (!prev) return false;
-  return (await itemQty(q, pid, keyId(prev.id))) >= keysNeeded;
+  return (await itemQty(q, pid, keyId(prev.id))) >= keysNeeded(boss, defaultKeys);
 }
 
+/** Fights that count toward the daily limit: won ones and the running one. Lost / abandoned fights do not count. */
 async function fightsToday(q: Queryable, pid: number, bossId: string, day: string): Promise<number> {
-  const [r] = await q.query<{ n: number }>("SELECT COUNT(*)::int AS n FROM fights WHERE player_id=$1 AND boss_id=$2 AND day=$3", [pid, bossId, day]);
+  const [r] = await q.query<{ n: number }>("SELECT COUNT(*)::int AS n FROM fights WHERE player_id=$1 AND boss_id=$2 AND day=$3 AND status <> 'lost'", [pid, bossId, day]);
   return r.n;
 }
 
@@ -94,7 +95,8 @@ export async function startFight(ctx: Ctx, bossId: string) {
   const [active] = await ctx.q.query<{ id: number; boss_id: string }>("SELECT id, boss_id FROM fights WHERE player_id=$1 AND status='active'", [ctx.pid]);
   if (active) throw new GameError("fight_running", `Сначала закончи бой с боссом ${bossById(active.boss_id)?.name}`);
   if (!(await isUnlocked(ctx.q, ctx.pid, def, ctx.cfg.fight.keysToUnlock))) {
-    throw new GameError("boss_locked", `Нужно ${ctx.cfg.fight.keysToUnlock} ключа предыдущего босса`);
+    const n = keysNeeded(def, ctx.cfg.fight.keysToUnlock);
+    throw new GameError("boss_locked", n === 1 ? "Нужен ключ предыдущего босса" : `Нужно ${n} ключа предыдущего босса`);
   }
   const day = moscowDay(ctx.now);
   if ((await fightsToday(ctx.q, ctx.pid, def.id, day)) >= ctx.cfg.fight.perDay) {
@@ -273,7 +275,7 @@ export async function bossList(q: Queryable, pid: number, cfg: Ctx["cfg"], now =
   const day = moscowDay(now);
   const keys = await q.query<{ item_id: string; qty: number }>("SELECT item_id, qty FROM inventory WHERE player_id=$1 AND item_id LIKE 'key-%'", [pid]);
   const keyMap = new Map(keys.map((k) => [k.item_id, k.qty]));
-  const today = await q.query<{ boss_id: string; n: number }>("SELECT boss_id, COUNT(*)::int AS n FROM fights WHERE player_id=$1 AND day=$2 GROUP BY boss_id", [pid, day]);
+  const today = await q.query<{ boss_id: string; n: number }>("SELECT boss_id, COUNT(*)::int AS n FROM fights WHERE player_id=$1 AND day=$2 AND status <> 'lost' GROUP BY boss_id", [pid, day]);
   const todayMap = new Map(today.map((t) => [t.boss_id, t.n]));
   const mine = await q.query<{ boss_id: string; damage: number; wins: number }>("SELECT boss_id, damage, wins FROM boss_damage WHERE player_id=$1", [pid]);
   const mineMap = new Map(mine.map((m) => [m.boss_id, m]));
@@ -281,6 +283,11 @@ export async function bossList(q: Queryable, pid: number, cfg: Ctx["cfg"], now =
   const activeMap = new Map(active.map((a) => [a.boss_id, a.n]));
   const totals = await q.query<{ id: string; wins: number }>("SELECT id, wins FROM bosses");
   const winsMap = new Map(totals.map((t) => [t.id, t.wins]));
+  const killers = await q.query<{ boss_id: string; id: number; display_name: string; photo_url: string | null; ended_at: Date }>(
+    `SELECT DISTINCT ON (f.boss_id) f.boss_id, p.id, p.display_name, p.photo_url, f.ended_at FROM fights f JOIN players p ON p.id = f.killer_id
+     WHERE f.status='won' AND f.killer_id IS NOT NULL ORDER BY f.boss_id, f.ended_at DESC, f.id DESC`,
+  );
+  const killerMap = new Map(killers.map((k) => [k.boss_id, { id: k.id, name: k.display_name, photo: k.photo_url, at: new Date(k.ended_at).getTime() }]));
   return {
     resetAt: nextMoscowMidnight(now),
     bosses: BOSSES.map((b) => {
@@ -288,9 +295,9 @@ export async function bossList(q: Queryable, pid: number, cfg: Ctx["cfg"], now =
       const keysHave = prev ? keyMap.get(keyId(prev.id)) ?? 0 : 0;
       return {
         id: b.id,
-        unlocked: b.order === 1 || keysHave >= cfg.fight.keysToUnlock,
+        unlocked: b.order === 1 || keysHave >= keysNeeded(b, cfg.fight.keysToUnlock),
         keysHave,
-        keysNeed: cfg.fight.keysToUnlock,
+        keysNeed: keysNeeded(b, cfg.fight.keysToUnlock),
         myKeys: keyMap.get(keyId(b.id)) ?? 0,
         hpMax: cfg.bossHp[b.id] ?? b.hp,
         fightsToday: todayMap.get(b.id) ?? 0,
@@ -299,6 +306,7 @@ export async function bossList(q: Queryable, pid: number, cfg: Ctx["cfg"], now =
         myWins: mineMap.get(b.id)?.wins ?? 0,
         fightingNow: activeMap.get(b.id) ?? 0,
         totalWins: winsMap.get(b.id) ?? 0,
+        lastKiller: killerMap.get(b.id) ?? null,
       };
     }),
   };

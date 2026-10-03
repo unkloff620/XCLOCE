@@ -140,16 +140,32 @@ describe("boss fights: personal fights, shared damage", () => {
     expect((await fightView(db, a, fa.result.fightId, 0, T0 + 9 * H)).status).toBe("lost");
   });
 
-  it("only one running fight; daily limit of 7 fights per boss", async () => {
+  it("only one running fight; 7 won fights per boss per day, lost fights do not count", async () => {
+    await setBossHp({ datsik: 10 });
     const p = await newPlayer(db);
+    await give(db, p, "red-candle", 20);
     await startDatsik(p);
     await expect(startDatsik(p)).rejects.toMatchObject({ code: "fight_running" });
+    // ten abandoned fights do not use up the limit
     await act(db, p, "fight_flee", {}, T0);
-    for (let i = 1; i < 7; i++) {
+    for (let i = 1; i < 10; i++) {
       await startDatsik(p, T0 + i * M);
       await act(db, p, "fight_flee", {}, T0 + i * M);
     }
-    await expect(startDatsik(p, T0 + 10 * M)).rejects.toMatchObject({ code: "fight_limit" });
+    for (let i = 0; i < 7; i++) {
+      await startDatsik(p, T0 + (20 + i) * M);
+      const r = await hit(p, "red-candle", T0 + (20 + i) * M);
+      expect(r.result.status).toBe("won");
+    }
+    await expect(startDatsik(p, T0 + 40 * M)).rejects.toMatchObject({ code: "fight_limit" });
+  });
+
+  it("Фокус and Солнце open with a single key", async () => {
+    const p = await newPlayer(db);
+    await expect(act(db, p, "fight_start", { boss: "fokus" }, T0)).rejects.toMatchObject({ code: "boss_locked" });
+    await give(db, p, "key-utilizator", 1);
+    const r = await act(db, p, "fight_start", { boss: "fokus" }, T0);
+    expect(r.state.fight?.bossId).toBe("fokus");
   });
 
   it("3 keys of a boss open the next boss", async () => {
@@ -334,11 +350,58 @@ describe("daily login reward", () => {
   });
 });
 
+describe("selling, nickname, slot machine 777", () => {
+  it("yard finds sell for RUB, other things do not", async () => {
+    const p = await newPlayer(db);
+    await give(db, p, "spinner", 3);
+    const r = await act(db, p, "sell", { itemId: "spinner", qty: 2 }, T0);
+    expect(r.result).toMatchObject({ got: 120, left: 1 });
+    expect(await wallet(db, p, "RUB")).toBe(620);
+    await expect(act(db, p, "sell", { itemId: "spinner", qty: 5 }, T0)).rejects.toMatchObject({ code: "no_item" });
+    await expect(act(db, p, "sell", { itemId: "mouse" }, T0)).rejects.toMatchObject({ code: "not_sellable" });
+  });
+
+  it("nickname: paid, once per 24 h, unique, survives a Telegram re-login", async () => {
+    const a = await newPlayer(db), b = await newPlayer(db);
+    await setMoney(db, a, "RUB", 5000);
+    await expect(act(db, a, "rename", { name: "x" }, T0)).rejects.toMatchObject({ code: "bad_nick" });
+    const r = await act(db, a, "rename", { name: "  Хомяк   Кит " }, T0);
+    expect(r.state.player.name).toBe("Хомяк Кит");
+    expect(await wallet(db, a, "RUB")).toBe(4000);
+    await expect(act(db, a, "rename", { name: "Другой" }, T0 + 23 * H)).rejects.toMatchObject({ code: "rename_cooldown" });
+    await setMoney(db, b, "RUB", 5000);
+    await expect(act(db, b, "rename", { name: "хомяк кит" }, T0)).rejects.toMatchObject({ code: "nick_taken" });
+    await setMoney(db, b, "RUB", 10);
+    await expect(act(db, b, "rename", { name: "Бедняк" }, T0)).rejects.toMatchObject({ code: "no_money" });
+    const ok = await act(db, a, "rename", { name: "Другой" }, T0 + 25 * H);
+    expect(ok.state.player.name).toBe("Другой");
+  });
+
+  it("slots: 3 spins per 60 minutes, 777 pays the jackpot", async () => {
+    const p = await newPlayer(db);
+    const s1 = await act(db, p, "slots_spin", {}, T0, always(0)); // lowest roll → first outcome = jackpot
+    expect(s1.result).toMatchObject({ outcome: "jackpot", reels: ["seven", "seven", "seven"], left: 2 });
+    expect(await qty(db, p, "gpu")).toBe(1);
+    expect(await wallet(db, p, "SOL")).toBeCloseTo(0.07);
+    const s2 = await act(db, p, "slots_spin", {}, T0 + 10 * M, always(0.999));
+    expect(s2.result.kind).toBe("miss");
+    expect(new Set(s2.result.reels).size).toBe(3);
+    await act(db, p, "slots_spin", {}, T0 + 20 * M, always(0.5));
+    await expect(act(db, p, "slots_spin", {}, T0 + 30 * M)).rejects.toMatchObject({ code: "slots_limit" });
+    const st = await act(db, p, "slots_spin", {}, T0 + 61 * M, always(0.999));
+    expect(st.state.slots).toMatchObject({ left: 0, nextAt: T0 + 70 * M });
+  });
+});
+
 describe("levels and auth", () => {
-  it("level curve 100 × N^1.5", () => {
-    expect(levelFromXp(0)).toEqual({ level: 1, into: 0, need: 100 });
-    expect(levelFromXp(100)).toEqual({ level: 2, into: 0, need: 283 });
-    expect(levelFromXp(383 + 10).level).toBe(3);
+  it("authority curve: 0 / 225 / 485 / … / 1 100 110 for level 100", () => {
+    expect(levelFromXp(0)).toEqual({ level: 1, into: 0, need: 225 });
+    expect(levelFromXp(224).level).toBe(1);
+    expect(levelFromXp(225)).toEqual({ level: 2, into: 0, need: 260 });
+    expect(levelFromXp(485).level).toBe(3);
+    expect(levelFromXp(1_100_109).level).toBe(99);
+    expect(levelFromXp(1_100_110).level).toBe(100);
+    expect(levelFromXp(5_000_000).level).toBe(100);
   });
   it("Telegram initData and Login Widget signatures", () => {
     const token = "123:ABC";

@@ -9,6 +9,7 @@ import * as yard from "./systems/yard.ts";
 import * as shop from "./systems/shop.ts";
 import * as clans from "./systems/clans.ts";
 import * as daily from "./systems/daily.ts";
+import * as extras from "./systems/extras.ts";
 import { gameState } from "./systems/state.ts";
 import { CURRENCIES } from "../content/currencies.ts";
 import { WEARABLE_SLOTS } from "../content/items.ts";
@@ -37,7 +38,7 @@ export const ACTIONS = [
   "yard_pick",
   "buy", "exchange", "use", "equip", "unequip",
   "clan_create", "clan_join", "clan_leave", "clan_kick",
-  "daily_claim",
+  "daily_claim", "sell", "rename", "slots_spin",
 ] as const;
 export type ActionType = (typeof ACTIONS)[number];
 
@@ -60,6 +61,9 @@ export function dispatch(ctx: Ctx, type: ActionType, body: Record<string, unknow
     case "clan_join": return clans.joinClan(ctx, num(body.clanId, "clanId"));
     case "clan_leave": return clans.leaveClan(ctx);
     case "daily_claim": return daily.claimDaily(ctx);
+    case "sell": return extras.sellItem(ctx, str(body.itemId, "itemId", 40), body.qty === undefined ? 1 : num(body.qty, "qty"));
+    case "rename": return extras.rename(ctx, str(body.name, "name", 60));
+    case "slots_spin": return extras.spinSlots(ctx);
     case "clan_kick": return clans.kickMember(ctx, num(body.playerId, "playerId"));
     default: throw new GameError("bad_action", "Неизвестное действие");
   }
