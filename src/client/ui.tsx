@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { Icon } from "./art/icons.tsx";
 import { ItemArt } from "./art/items.tsx";
 import { itemById } from "../content/items.ts";
@@ -23,7 +24,8 @@ export function Modal({ title, onClose, children, wide }: { title?: ReactNode; o
     window.addEventListener("keydown", k);
     return () => window.removeEventListener("keydown", k);
   }, [onClose]);
-  return (
+  // rendered into <body> so it covers the HUD even when opened from a fixed full-screen scene
+  const box = (
     <div className="modal-back" onClick={onClose} role="dialog" aria-modal="true">
       <div className="modal" style={wide ? { maxWidth: 460 } : undefined} onClick={(e) => e.stopPropagation()}>
         <button className="x" onClick={onClose} aria-label="Закрыть">×</button>
@@ -32,6 +34,7 @@ export function Modal({ title, onClose, children, wide }: { title?: ReactNode; o
       </div>
     </div>
   );
+  return typeof document === "undefined" ? box : createPortal(box, document.body);
 }
 
 export function Avatar({ name, photo, size = 36 }: { name: string; photo?: string | null; size?: number }) {
