@@ -93,9 +93,45 @@ export function verifySession(token: string | null | undefined, nowS = Math.floo
   return data.pid;
 }
 
-/** Guest (browser) play is allowed unless ALLOW_GUEST=false. Guests can never act as Telegram users. */
+/**
+ * Guest (browser, no Telegram) play exists for local development, tests and preview deployments.
+ * In production the account is always a Telegram account unless ALLOW_GUEST=true is set explicitly.
+ */
 export function guestAllowed(): boolean {
-  return process.env.ALLOW_GUEST !== "false";
+  if (process.env.ALLOW_GUEST === "true") return true;
+  if (process.env.ALLOW_GUEST === "false") return false;
+  return process.env.VERCEL_ENV !== "production";
+}
+
+/**
+ * Validates data from the Telegram Login Widget (desktop browser login, https://core.telegram.org/widgets/login#checking-authorization).
+ * Requires the game's domain to be set for the bot in BotFather (/setdomain).
+ */
+export function validateLoginWidget(data: Record<string, unknown>, botToken: string, nowS = Math.floor(Date.now() / 1000)): TelegramUser {
+  const hash = typeof data.hash === "string" ? data.hash : "";
+  if (!/^[0-9a-f]{64}$/.test(hash)) throw new GameError("auth_invalid", "Нет подписи Telegram", 401);
+  const allowed = ["id", "first_name", "last_name", "username", "photo_url", "auth_date"];
+  const pairs = Object.entries(data)
+    .filter(([k, v]) => allowed.includes(k) && v !== undefined && v !== null && v !== "")
+    .map(([k, v]) => `${k}=${v}`)
+    .sort();
+  const secret = createHash("sha256").update(botToken).digest();
+  const expected = createHmac("sha256", secret).update(pairs.join("\n")).digest();
+  const given = Buffer.from(hash, "hex");
+  if (given.length !== expected.length || !timingSafeEqual(given, expected)) throw new GameError("auth_invalid", "Подпись Telegram не прошла проверку", 401);
+  const authDate = Number(data.auth_date);
+  if (!Number.isFinite(authDate) || nowS - authDate > INIT_DATA_MAX_AGE_S) throw new GameError("auth_expired", "Вход устарел, войдите ещё раз", 401);
+  const id = Number(data.id);
+  if (!Number.isSafeInteger(id) || id <= 0) throw new GameError("auth_invalid", "Некорректный пользователь", 401);
+  const s = (k: string) => (typeof data[k] === "string" ? (data[k] as string) : undefined);
+  return { id, first_name: s("first_name"), last_name: s("last_name"), username: s("username"), photo_url: s("photo_url") };
+}
+
+/** Test helper: signs Login Widget data. */
+export function signLoginWidget(fields: Record<string, string | number>, botToken: string): Record<string, string | number> {
+  const pairs = Object.entries(fields).map(([k, v]) => `${k}=${v}`).sort();
+  const secret = createHash("sha256").update(botToken).digest();
+  return { ...fields, hash: createHmac("sha256", secret).update(pairs.join("\n")).digest("hex") };
 }
 export function newGuestId(): string {
   return randomUUID();
