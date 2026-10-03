@@ -203,7 +203,7 @@ export function HomeScreen() {
               <b className="display">{viewRoom.name}</b>
               <span className="tiny" style={{ color: "var(--gold)" }}><BonusLine b={viewRoom.bonus} /></span>
               <button className="btn gold sm" disabled={!canPay || busy === "room_buy"} onClick={unlock}>
-                <Icon name="lock" size={16} /> Разблокировать · <Icon name={viewRoom.price!.currency} size={15} /> {money(viewRoom.price!.currency, viewRoom.price!.amount)}
+                <Icon name="lock" size={16} /> Разблокировать <span className="room-price"><Icon name={viewRoom.price!.currency} size={15} />{money(viewRoom.price!.currency, viewRoom.price!.amount)}</span>
               </button>
               {!canPay && <span className="tiny" style={{ color: "#ff8a9e" }}>Не хватает {viewRoom.price!.currency}</span>}
             </div>
