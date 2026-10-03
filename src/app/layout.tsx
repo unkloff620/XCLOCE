@@ -1,31 +1,22 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
-import { Bangers, Russo_One, Inter, Permanent_Marker } from "next/font/google";
+import { Rubik, Russo_One } from "next/font/google";
 import "./globals.css";
+import "./screens.css";
 
-const comic = Bangers({ subsets: ["latin"], weight: "400", variable: "--font-comic", display: "swap" });
+const body = Rubik({ subsets: ["latin", "cyrillic"], weight: ["400", "500", "700", "800"], variable: "--font-body", display: "swap" });
 const display = Russo_One({ subsets: ["latin", "cyrillic"], weight: "400", variable: "--font-display", display: "swap" });
-const marker = Permanent_Marker({ subsets: ["latin"], weight: "400", variable: "--font-marker", display: "swap" });
-const body = Inter({ subsets: ["latin", "cyrillic"], weight: ["400", "500", "600", "700"], variable: "--font-body", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "XCLOCE — Meme Fighters",
-  description: "Прокачивай мем-бойца, бей мем-боссов, собирай клан.",
-  icons: { icon: "/assets/ui/logo.svg" },
+  title: "XCLOCE",
+  description: "Корпоративная игра: бей боссов администрации оружием, проходи локации, собирай двор.",
+  icons: { icon: "/icon.svg" },
 };
-
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-  viewportFit: "cover",
-  themeColor: "#07090f",
-};
+export const viewport: Viewport = { width: "device-width", initialScale: 1, maximumScale: 1, userScalable: false, viewportFit: "cover", themeColor: "#0c0e1c" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru" className={`${comic.variable} ${display.variable} ${body.variable} ${marker.variable}`}>
+    <html lang="ru" className={`${body.variable} ${display.variable}`}>
       <body>
         <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
         {children}

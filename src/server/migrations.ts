@@ -1,384 +1,206 @@
-// Database migrations, applied in order on cold start (see db.ts ensureSchema).
-// Every statement is idempotent. Add new migrations to the end of MIGRATIONS; never edit applied ones.
+/**
+ * XCLOCE 2.0 schema. Migration ids are prefixed "v2-" so they never collide with the old game's ids,
+ * and v2-000 drops every table of the old game: the new game starts from a clean database.
+ */
+const OLD_TABLES = [
+  "actions", "balances", "battles", "boss_damage", "boss_defeats", "boss_instances", "boss_progress", "clan_members", "clan_requests",
+  "clans", "daily_rewards", "damage_events", "feed", "global_hits", "global_state", "inventory", "location_clears", "location_progress",
+  "market_clock", "player_bosses", "player_fights", "player_stats", "players", "positions", "quest_claims", "quest_metrics",
+  "token_prices", "tokens", "yard_pickups",
+];
+
 export const MIGRATIONS: { id: string; sql: string }[] = [
   {
-    id: "001_init",
+    id: "v2-000-drop-old",
+    sql: OLD_TABLES.map((t) => `DROP TABLE IF EXISTS ${t} CASCADE;`).join("\n"),
+  },
+  {
+    id: "v2-001-core",
     sql: `
--- XCLOCE schema v1. Idempotent: safe to run on every cold start.
--- Money and amounts are DOUBLE PRECISION, rounded in application code (src/shared/economy.ts).
-
-CREATE TABLE IF NOT EXISTS schema_meta (
-  key TEXT PRIMARY KEY,
-  value TEXT NOT NULL
-);
-
--- Players. tg_id is the Telegram user id (or "guest:<uuid>" for browser guests).
-CREATE TABLE IF NOT EXISTS players (
-  id BIGSERIAL PRIMARY KEY,
-  tg_id TEXT NOT NULL UNIQUE,
+CREATE TABLE players (
+  id SERIAL PRIMARY KEY,
+  telegram_id BIGINT UNIQUE,
+  guest_id UUID UNIQUE,
   username TEXT,
-  first_name TEXT NOT NULL DEFAULT 'Degen',
+  display_name TEXT NOT NULL,
   photo_url TEXT,
-  is_guest BOOLEAN NOT NULL DEFAULT FALSE,
-  level INT NOT NULL DEFAULT 1,
-  xp INT NOT NULL DEFAULT 0,
-  energy DOUBLE PRECISION NOT NULL DEFAULT 50,
-  energy_updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  passive_updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  equipment_tier INT NOT NULL DEFAULT 1,
-  equipped_tool TEXT NOT NULL DEFAULT 'paper-hands',
-  combo INT NOT NULL DEFAULT 0,
-  last_sell_at TIMESTAMPTZ,
-  last_action_at TIMESTAMPTZ,
-  tutorial_step INT NOT NULL DEFAULT 0,
-  referrer_id BIGINT,
+  xp BIGINT NOT NULL DEFAULT 0,
+  energy INT NOT NULL DEFAULT 50 CHECK (energy >= 0),
+  energy_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  clan_id INT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  last_seen_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  last_seen_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  last_day DATE,
+  active_days INT NOT NULL DEFAULT 0
 );
-
-CREATE TABLE IF NOT EXISTS balances (
-  player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+CREATE TABLE wallets (
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
   currency TEXT NOT NULL,
-  amount DOUBLE PRECISION NOT NULL DEFAULT 0 CHECK (amount >= 0),
+  amount NUMERIC(30, 8) NOT NULL DEFAULT 0 CHECK (amount >= 0),
   PRIMARY KEY (player_id, currency)
 );
-
--- Personal boss chain. One row per player: current boss + damage already taken by it.
-CREATE TABLE IF NOT EXISTS boss_progress (
-  player_id BIGINT PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
-  boss_index INT NOT NULL DEFAULT 1,
-  damage_taken DOUBLE PRECISION NOT NULL DEFAULT 0 CHECK (damage_taken >= 0),
-  personal_on_boss DOUBLE PRECISION NOT NULL DEFAULT 0,
-  -- personal damage emitted by this player that has not yet been applied through the chain
-  pending_personal DOUBLE PRECISION NOT NULL DEFAULT 0,
-  -- last processed value of global_state.damage_total
-  global_checkpoint DOUBLE PRECISION NOT NULL DEFAULT 0,
-  boss_started_at TIMESTAMPTZ NOT NULL DEFAULT now()
+CREATE TABLE inventory (
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  item_id TEXT NOT NULL,
+  qty INT NOT NULL CHECK (qty >= 0),
+  source TEXT,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (player_id, item_id)
 );
-
-CREATE TABLE IF NOT EXISTS boss_defeats (
-  id BIGSERIAL PRIMARY KEY,
-  player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
-  boss_index INT NOT NULL,
-  market_cap DOUBLE PRECISION NOT NULL,
-  personal_damage DOUBLE PRECISION NOT NULL,
-  reward_usd DOUBLE PRECISION NOT NULL,
-  reward_xp INT NOT NULL,
-  reward_item TEXT,
-  seen BOOLEAN NOT NULL DEFAULT FALSE,
-  defeated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE (player_id, boss_index)
+CREATE TABLE cooldowns (
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  item_id TEXT NOT NULL,
+  ready_at TIMESTAMPTZ NOT NULL,
+  PRIMARY KEY (player_id, item_id)
 );
-
--- Lifetime / daily stats
-CREATE TABLE IF NOT EXISTS player_stats (
-  player_id BIGINT PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
-  lifetime_damage DOUBLE PRECISION NOT NULL DEFAULT 0,
-  damage_today DOUBLE PRECISION NOT NULL DEFAULT 0,
-  damage_day DATE NOT NULL DEFAULT CURRENT_DATE,
-  biggest_dump DOUBLE PRECISION NOT NULL DEFAULT 0,
-  bosses_defeated INT NOT NULL DEFAULT 0,
-  trades INT NOT NULL DEFAULT 0,
-  realized_profit_usd DOUBLE PRECISION NOT NULL DEFAULT 0,
-  volume_usd DOUBLE PRECISION NOT NULL DEFAULT 0,
-  rugs_suffered INT NOT NULL DEFAULT 0
+CREATE TABLE appearance (
+  player_id INT PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
+  equipped JSONB NOT NULL DEFAULT '{}'::jsonb,
+  room TEXT NOT NULL DEFAULT 'basic'
 );
-
--- Single-row global state (id = 1).
-CREATE TABLE IF NOT EXISTS global_state (
-  id INT PRIMARY KEY,
-  damage_total DOUBLE PRECISION NOT NULL DEFAULT 0,
-  last_event_id BIGINT NOT NULL DEFAULT 0,
+CREATE TABLE player_stats (
+  player_id INT PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
+  total_damage BIGINT NOT NULL DEFAULT 0,
+  weapons JSONB NOT NULL DEFAULT '{}'::jsonb,
+  task_steps INT NOT NULL DEFAULT 0,
+  tasks_done INT NOT NULL DEFAULT 0,
+  locations_done INT NOT NULL DEFAULT 0,
+  yard_found INT NOT NULL DEFAULT 0,
+  rewards_got INT NOT NULL DEFAULT 0,
+  fights_won INT NOT NULL DEFAULT 0,
+  fights_lost INT NOT NULL DEFAULT 0
+);
+CREATE TABLE config (
+  key TEXT PRIMARY KEY,
+  value JSONB NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-INSERT INTO global_state (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
-
--- Market simulation clock (separate row so trading does not contend with damage).
-CREATE TABLE IF NOT EXISTS market_clock (
-  id INT PRIMARY KEY,
-  tick BIGINT NOT NULL DEFAULT 0
-);
-INSERT INTO market_clock (id, tick) VALUES (1, 0) ON CONFLICT (id) DO NOTHING;
-
--- Every damage event that passed through the Global Damage Bus.
-CREATE TABLE IF NOT EXISTS damage_events (
+CREATE TABLE ledger (
   id BIGSERIAL PRIMARY KEY,
-  source_player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
-  amount DOUBLE PRECISION NOT NULL CHECK (amount > 0),
-  source_type TEXT NOT NULL,
-  source_entity TEXT,
-  crit BOOLEAN NOT NULL DEFAULT FALSE,
-  combo INT NOT NULL DEFAULT 0,
-  global_total_after DOUBLE PRECISION NOT NULL,
+  player_id INT NOT NULL,
+  kind TEXT NOT NULL,
+  key TEXT NOT NULL,
+  delta NUMERIC(30, 8) NOT NULL,
+  reason TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE INDEX IF NOT EXISTS damage_events_created_idx ON damage_events (created_at DESC);
-CREATE INDEX IF NOT EXISTS damage_events_player_idx ON damage_events (source_player_id, created_at DESC);
-
--- Global feed (damage, crits, boss kills, market news).
-CREATE TABLE IF NOT EXISTS feed (
-  id BIGSERIAL PRIMARY KEY,
-  kind TEXT NOT NULL,
-  text TEXT NOT NULL,
-  amount DOUBLE PRECISION,
-  player_id BIGINT,
-  token_id TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-CREATE INDEX IF NOT EXISTS feed_id_desc_idx ON feed (id DESC);
-
--- Meme tokens and their simulated market state.
-CREATE TABLE IF NOT EXISTS tokens (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  ticker TEXT NOT NULL,
-  description TEXT NOT NULL,
-  art JSONB NOT NULL,
-  price DOUBLE PRECISION NOT NULL,
-  fair_price DOUBLE PRECISION NOT NULL,
-  launch_price DOUBLE PRECISION NOT NULL,
-  supply DOUBLE PRECISION NOT NULL,
-  liquidity DOUBLE PRECISION NOT NULL,
-  holders INT NOT NULL,
-  volume_24h DOUBLE PRECISION NOT NULL DEFAULT 0,
-  volatility DOUBLE PRECISION NOT NULL,
-  dev_reputation DOUBLE PRECISION NOT NULL,
-  whale_concentration DOUBLE PRECISION NOT NULL,
-  hype DOUBLE PRECISION NOT NULL DEFAULT 0,
-  regime TEXT NOT NULL DEFAULT 'normal',
-  regime_ticks INT NOT NULL DEFAULT 0,
-  launched_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  generation INT NOT NULL DEFAULT 1,
-  rugged_count INT NOT NULL DEFAULT 0,
-  sort_order INT NOT NULL DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS token_prices (
-  token_id TEXT NOT NULL REFERENCES tokens(id) ON DELETE CASCADE,
-  tick BIGINT NOT NULL,
-  price DOUBLE PRECISION NOT NULL,
-  PRIMARY KEY (token_id, tick)
-);
-
-CREATE TABLE IF NOT EXISTS positions (
-  player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
-  token_id TEXT NOT NULL REFERENCES tokens(id) ON DELETE CASCADE,
-  amount DOUBLE PRECISION NOT NULL DEFAULT 0 CHECK (amount >= 0),
-  cost_usd DOUBLE PRECISION NOT NULL DEFAULT 0,
-  generation INT NOT NULL DEFAULT 1,
-  PRIMARY KEY (player_id, token_id)
-);
-
--- Trades double as the idempotency log for buy/sell/exchange/shop actions.
-CREATE TABLE IF NOT EXISTS actions (
-  id BIGSERIAL PRIMARY KEY,
-  player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
-  idem_key TEXT NOT NULL,
-  kind TEXT NOT NULL,
-  token_id TEXT,
-  amount DOUBLE PRECISION,
-  price DOUBLE PRECISION,
-  usd_value DOUBLE PRECISION,
+CREATE INDEX ledger_player ON ledger (player_id, id);
+CREATE TABLE idempotency (
+  player_id INT NOT NULL,
+  key TEXT NOT NULL,
   result JSONB NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE (player_id, idem_key)
+  PRIMARY KEY (player_id, key)
 );
-CREATE INDEX IF NOT EXISTS actions_player_idx ON actions (player_id, created_at DESC);
-
-CREATE TABLE IF NOT EXISTS inventory (
-  player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
-  item_type TEXT NOT NULL,
-  item_id TEXT NOT NULL,
-  quantity INT NOT NULL DEFAULT 1,
-  acquired_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  PRIMARY KEY (player_id, item_type, item_id)
-);
-`,
-  },
-  {
-    id: "002_retention",
-    sql: `
-ALTER TABLE players ADD COLUMN IF NOT EXISTS outfit JSONB NOT NULL DEFAULT '{"hoodie":"hoodie-black","hat":"hat-none","glasses":"glasses-none","headphones":"headphones-none"}';
-
--- Daily login reward streak.
-CREATE TABLE IF NOT EXISTS daily_rewards (
-  player_id BIGINT PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
-  streak INT NOT NULL DEFAULT 0,
-  last_claim_at TIMESTAMPTZ
-);
-
--- Quest progress counters per period ("d:YYYY-MM-DD" / "w:YYYY-MM-DD").
-CREATE TABLE IF NOT EXISTS quest_metrics (
-  player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
-  period TEXT NOT NULL,
-  metric TEXT NOT NULL,
-  value DOUBLE PRECISION NOT NULL DEFAULT 0,
-  PRIMARY KEY (player_id, period, metric)
-);
-
--- One claim per quest per period (idempotent rewards).
-CREATE TABLE IF NOT EXISTS quest_claims (
-  player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
-  quest_id TEXT NOT NULL,
-  period TEXT NOT NULL,
-  claimed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  PRIMARY KEY (player_id, quest_id, period)
-);
-`,
-  },
-  {
-    id: "003_v2_rpg",
-    sql: `
-ALTER TABLE players ADD COLUMN IF NOT EXISTS power_bonus INT NOT NULL DEFAULT 0;
-ALTER TABLE players ADD COLUMN IF NOT EXISTS loadout JSONB NOT NULL DEFAULT '{}';
-ALTER TABLE players ADD COLUMN IF NOT EXISTS theme TEXT NOT NULL DEFAULT 't-default';
-ALTER TABLE players ADD COLUMN IF NOT EXISTS idle_claimed_at TIMESTAMPTZ NOT NULL DEFAULT now();
-ALTER TABLE players ADD COLUMN IF NOT EXISTS clan_id BIGINT;
-ALTER TABLE players ADD COLUMN IF NOT EXISTS power_cached INT NOT NULL DEFAULT 100;
-ALTER TABLE players ADD COLUMN IF NOT EXISTS v2_initialized BOOLEAN NOT NULL DEFAULT FALSE;
-
--- Per-player boss progress: unlock state, wins, and the daily attack counter.
-CREATE TABLE IF NOT EXISTS player_bosses (
-  player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
-  boss_index INT NOT NULL,
-  unlocked BOOLEAN NOT NULL DEFAULT FALSE,
-  wins INT NOT NULL DEFAULT 0,
-  losses INT NOT NULL DEFAULT 0,
-  attempts INT NOT NULL DEFAULT 0,
-  attempts_day TEXT NOT NULL DEFAULT '',
-  first_win_at TIMESTAMPTZ,
-  PRIMARY KEY (player_id, boss_index)
-);
-
-CREATE TABLE IF NOT EXISTS clans (
+CREATE TABLE events (
   id BIGSERIAL PRIMARY KEY,
-  name TEXT NOT NULL,
-  tag TEXT NOT NULL,
-  description TEXT NOT NULL DEFAULT '',
-  owner_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  kind TEXT NOT NULL,
+  payload JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE UNIQUE INDEX IF NOT EXISTS clans_name_lower_idx ON clans (lower(name));
-CREATE UNIQUE INDEX IF NOT EXISTS clans_tag_lower_idx ON clans (lower(tag));
-
-CREATE TABLE IF NOT EXISTS clan_members (
-  player_id BIGINT PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
-  clan_id BIGINT NOT NULL REFERENCES clans(id) ON DELETE CASCADE,
+`,
+  },
+  {
+    id: "v2-002-bosses",
+    sql: `
+CREATE TABLE bosses (
+  id TEXT PRIMARY KEY,
+  damage_total BIGINT NOT NULL DEFAULT 0,
+  last_seq BIGINT NOT NULL DEFAULT 0,
+  wins INT NOT NULL DEFAULT 0
+);
+CREATE TABLE boss_hits (
+  id BIGSERIAL PRIMARY KEY,
+  boss_id TEXT NOT NULL,
+  seq BIGINT NOT NULL,
+  player_id INT NOT NULL,
+  fight_id INT NOT NULL,
+  weapon TEXT NOT NULL,
+  damage INT NOT NULL,
+  phrase INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (boss_id, seq)
+);
+CREATE INDEX boss_hits_fight ON boss_hits (fight_id);
+CREATE TABLE fights (
+  id SERIAL PRIMARY KEY,
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  boss_id TEXT NOT NULL,
+  hp_max INT NOT NULL,
+  start_total BIGINT NOT NULL,
+  start_seq BIGINT NOT NULL,
+  started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  ends_at TIMESTAMPTZ NOT NULL,
+  day DATE NOT NULL,
+  status TEXT NOT NULL DEFAULT 'active',
+  end_total BIGINT,
+  end_seq BIGINT,
+  ended_at TIMESTAMPTZ,
+  killer_id INT,
+  my_damage BIGINT NOT NULL DEFAULT 0,
+  my_hits INT NOT NULL DEFAULT 0,
+  reward JSONB,
+  seen BOOLEAN NOT NULL DEFAULT false
+);
+CREATE UNIQUE INDEX fights_one_active ON fights (player_id) WHERE status = 'active';
+CREATE INDEX fights_boss_active ON fights (boss_id) WHERE status = 'active';
+CREATE INDEX fights_player_day ON fights (player_id, boss_id, day);
+CREATE TABLE boss_damage (
+  boss_id TEXT NOT NULL,
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  damage BIGINT NOT NULL DEFAULT 0,
+  hits INT NOT NULL DEFAULT 0,
+  wins INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (boss_id, player_id)
+);
+CREATE INDEX boss_damage_top ON boss_damage (boss_id, damage DESC);
+`,
+  },
+  {
+    id: "v2-003-world",
+    sql: `
+CREATE TABLE task_progress (
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  task_id TEXT NOT NULL,
+  steps INT NOT NULL DEFAULT 0,
+  done_at TIMESTAMPTZ,
+  PRIMARY KEY (player_id, task_id)
+);
+CREATE TABLE location_claims (
+  id SERIAL PRIMARY KEY,
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  location_id TEXT NOT NULL,
+  claimed_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX location_claims_player ON location_claims (player_id, location_id);
+CREATE TABLE yard (
+  player_id INT PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
+  anchor_at TIMESTAMPTZ
+);
+CREATE TABLE yard_items (
+  id SERIAL PRIMARY KEY,
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  slot INT NOT NULL,
+  drop_id TEXT NOT NULL,
+  spawned_at TIMESTAMPTZ NOT NULL,
+  UNIQUE (player_id, slot)
+);
+CREATE TABLE clans (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  tag TEXT NOT NULL UNIQUE,
+  emblem TEXT NOT NULL,
+  color TEXT NOT NULL,
+  leader_id INT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE TABLE clan_members (
+  player_id INT PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
+  clan_id INT NOT NULL REFERENCES clans(id) ON DELETE CASCADE,
   role TEXT NOT NULL DEFAULT 'member',
   joined_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE INDEX IF NOT EXISTS clan_members_clan_idx ON clan_members (clan_id);
-
-CREATE TABLE IF NOT EXISTS clan_requests (
-  player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
-  clan_id BIGINT NOT NULL REFERENCES clans(id) ON DELETE CASCADE,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  PRIMARY KEY (player_id, clan_id)
-);
-
-CREATE TABLE IF NOT EXISTS battles (
-  id BIGSERIAL PRIMARY KEY,
-  player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
-  boss_index INT NOT NULL,
-  power INT NOT NULL,
-  win BOOLEAN NOT NULL,
-  damage INT NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-CREATE INDEX IF NOT EXISTS battles_player_idx ON battles (player_id, created_at DESC);
-`,
-  },
-  {
-    id: "004_shared_bosses",
-    sql: `
-CREATE TABLE IF NOT EXISTS boss_instances (
-  id BIGSERIAL PRIMARY KEY,
-  boss_index INT NOT NULL,
-  hp_max BIGINT NOT NULL,
-  hp BIGINT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'alive',
-  killer_id BIGINT REFERENCES players(id) ON DELETE SET NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  killed_at TIMESTAMPTZ
-);
-CREATE UNIQUE INDEX IF NOT EXISTS boss_instances_alive_idx ON boss_instances (boss_index) WHERE status = 'alive';
-CREATE INDEX IF NOT EXISTS boss_instances_dead_idx ON boss_instances (boss_index, killed_at DESC) WHERE status = 'dead';
-
-CREATE TABLE IF NOT EXISTS boss_damage (
-  instance_id BIGINT NOT NULL REFERENCES boss_instances(id) ON DELETE CASCADE,
-  player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
-  damage BIGINT NOT NULL DEFAULT 0,
-  hits INT NOT NULL DEFAULT 0,
-  last_hit_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  reward JSONB,
-  claimed_at TIMESTAMPTZ,
-  PRIMARY KEY (instance_id, player_id)
-);
-CREATE INDEX IF NOT EXISTS boss_damage_top_idx ON boss_damage (instance_id, damage DESC);
-CREATE INDEX IF NOT EXISTS boss_damage_pending_idx ON boss_damage (player_id) WHERE reward IS NOT NULL AND claimed_at IS NULL;
-`,
-  },
-  {
-    id: "005_personal_fights_locations",
-    sql: `
-DROP TABLE IF EXISTS boss_damage;
-DROP TABLE IF EXISTS boss_instances;
-
--- every hit of every player; it damages every active fight that started before it
-CREATE TABLE IF NOT EXISTS global_hits (
-  id BIGSERIAL PRIMARY KEY,
-  player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
-  boss_index INT NOT NULL,
-  weapon TEXT NOT NULL,
-  damage INT NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS player_fights (
-  id BIGSERIAL PRIMARY KEY,
-  player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
-  boss_index INT NOT NULL,
-  hp_max BIGINT NOT NULL,
-  start_hit_id BIGINT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'active',
-  cooldowns JSONB NOT NULL DEFAULT '{}'::jsonb,
-  reward JSONB,
-  started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  ended_at TIMESTAMPTZ
-);
-CREATE UNIQUE INDEX IF NOT EXISTS player_fights_active_idx ON player_fights (player_id) WHERE status = 'active';
-
-CREATE TABLE IF NOT EXISTS location_progress (
-  player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
-  task_id TEXT NOT NULL,
-  progress INT NOT NULL DEFAULT 0,
-  PRIMARY KEY (player_id, task_id)
-);
-CREATE TABLE IF NOT EXISTS location_clears (
-  player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
-  location_id TEXT NOT NULL,
-  clears INT NOT NULL DEFAULT 0,
-  PRIMARY KEY (player_id, location_id)
-);
-
-ALTER TABLE players ADD COLUMN IF NOT EXISTS display_name TEXT;
-ALTER TABLE players ADD COLUMN IF NOT EXISTS name_changed_at TIMESTAMPTZ;
-CREATE UNIQUE INDEX IF NOT EXISTS players_display_name_idx ON players (lower(display_name)) WHERE display_name IS NOT NULL;
-`,
-  },
-  {
-    id: "006_consumable_weapons_yard",
-    sql: `
--- weapons are consumables now: nothing is equipped in the weapon slot
-UPDATE players SET loadout = loadout - 'weapon' WHERE loadout ? 'weapon';
-CREATE TABLE IF NOT EXISTS yard_pickups (
-  player_id BIGINT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
-  slot BIGINT NOT NULL,
-  item TEXT NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  PRIMARY KEY (player_id, slot)
-);
-CREATE INDEX IF NOT EXISTS yard_pickups_day_idx ON yard_pickups (player_id, created_at);
+CREATE INDEX clan_members_clan ON clan_members (clan_id);
 `,
   },
 ];

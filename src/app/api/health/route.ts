@@ -8,7 +8,7 @@ export async function GET() {
   try {
     const db = await getDb();
     const [p] = await db.query<{ n: number }>("SELECT COUNT(*)::int AS n FROM players");
-    return json({ ok: true, db: db.kind, players: p.n, telegram: !!process.env.TELEGRAM_BOT_TOKEN, ms: Date.now() - started });
+    return json({ ok: true, version: 2, db: db.kind, players: p.n, telegram: !!process.env.TELEGRAM_BOT_TOKEN, ms: Date.now() - started });
   } catch (e) {
     return json({ ok: false, error: (e as { code?: string }).code ?? "db_unavailable" }, 503);
   }

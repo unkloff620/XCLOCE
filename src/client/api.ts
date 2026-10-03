@@ -1,7 +1,39 @@
-import type { FightView, GameState } from "../server/game.ts";
+"use client";
 import { tg } from "./telegram.ts";
+import type { Currency } from "../content/currencies.ts";
 
-export type { FightView, GameState };
+/* ---------- types of what the server sends (kept loose on purpose: the server is the source of truth) ---------- */
+export interface Granted {
+  xp: number;
+  currencies: Partial<Record<Currency, number>>;
+  items: { id: string; qty: number; lost?: number }[];
+  energy: number;
+  levelUp?: { from: number; to: number };
+}
+export interface GameState {
+  now: number;
+  player: {
+    id: number; name: string; username: string | null; photo: string | null; telegram: boolean;
+    xp: number; level: number; levelXp: number; levelNeed: number;
+    energy: number; energyMax: number; energyNextIn: number; energyPeriodMs: number;
+  };
+  wallet: Record<Currency, number>;
+  inventory: { id: string; qty: number }[];
+  cooldowns: Record<string, number>;
+  look: { equipped: Record<string, string>; room: string };
+  yard: { count: number; max: number; nextAt: number | null };
+  fight: { id: number; bossId: string; hp: number; hpMax: number; endsAt: number } | null;
+  pending: { fightId: number; bossId: string; status: string }[];
+  clan: { id: number; name: string; tag: string; emblem: string; color: string } | null;
+}
+export interface Hit { seq: number; playerId: number; name: string; weapon: string; damage: number; phrase: number; at: number }
+export interface FightView {
+  fightId: number; bossId: string; hp: number; hpMax: number; status: "active" | "won" | "lost";
+  startedAt: number; endsAt: number; myDamage: number; myHits: number; killer: string | null; killerIsMe: boolean;
+  reward: Granted | null; claimed: boolean; lastSeq: number; hits: Hit[];
+  top: { playerId: number; name: string; damage: number; hits: number }[]; fightingNow: number;
+}
+export interface Tray { id: string; qty: number; readyAt: number | null }
 
 export class ApiError extends Error {
   code: string;
@@ -13,91 +45,75 @@ export class ApiError extends Error {
   }
 }
 
+const TOKEN_KEY = "xc2_token";
+const GUEST_KEY = "xc2_guest";
 let token: string | null = null;
-let mode: "telegram" | "guest" | null = null;
 
-function storage(): Storage | null {
+function store(k: string, v?: string | null): string | null {
   try {
-    return window.localStorage;
+    if (v === undefined) return localStorage.getItem(k);
+    if (v === null) localStorage.removeItem(k);
+    else localStorage.setItem(k, v);
   } catch {
-    return null;
+    /* storage can be blocked */
   }
-}
-function guestId(): string {
-  const ls = storage();
-  let id = ls?.getItem("xcloce_guest") ?? null;
-  if (!id) {
-    id = crypto.randomUUID();
-    ls?.setItem("xcloce_guest", id);
-  }
-  return id;
-}
-export const authMode = () => mode;
-
-export async function login(): Promise<"telegram" | "guest"> {
-  const app = tg();
-  const body = app ? { initData: app.initData } : { guestId: guestId() };
-  const r = await raw<{ token: string; mode: "telegram" | "guest" }>("/api/auth", { method: "POST", body: JSON.stringify(body) }, false);
-  token = r.token;
-  mode = r.mode;
-  return r.mode;
+  return null;
 }
 
-async function raw<T>(url: string, init: RequestInit = {}, auth = true, retry = true): Promise<T> {
-  const headers: Record<string, string> = { "content-type": "application/json" };
-  if (auth && token) headers.authorization = `Bearer ${token}`;
-  let res: Response;
-  try {
-    res = await fetch(url, { ...init, headers, cache: "no-store" });
-  } catch {
-    throw new ApiError("network", "Нет соединения. Проверьте интернет", 0);
+async function raw<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const r = await fetch(path, {
+    ...init,
+    headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}), ...(init.headers ?? {}) },
+    cache: "no-store",
+  });
+  const j = (await r.json().catch(() => ({}))) as { error?: { code: string; message: string } };
+  if (!r.ok) throw new ApiError(j.error?.code ?? "http", j.error?.message ?? `Ошибка ${r.status}`, r.status);
+  return j as T;
+}
+
+export type AuthResult = { ok: true; mode: string } | { ok: false; needLogin: true; bot: string | null };
+
+/** Telegram Mini App → initData; desktop browser in production → Telegram Login Widget; elsewhere → guest. */
+export async function authenticate(): Promise<AuthResult> {
+  const w = tg();
+  if (w) {
+    const r = await raw<{ token: string; mode: string }>("/api/auth", { method: "POST", body: JSON.stringify({ initData: w.initData }) });
+    token = r.token;
+    store(TOKEN_KEY, r.token);
+    return { ok: true, mode: r.mode };
   }
-  let data: unknown = null;
-  try {
-    data = await res.json();
-  } catch {
-    /* empty */
-  }
-  if (!res.ok) {
-    const err = (data as { error?: { code?: string; message?: string } } | null)?.error;
-    if (res.status === 401 && auth && retry && err?.code === "auth_required") {
-      await login();
-      return raw<T>(url, init, auth, false);
+  const saved = store(TOKEN_KEY);
+  if (saved) {
+    token = saved;
+    try {
+      await raw("/api/state");
+      return { ok: true, mode: "saved" };
+    } catch {
+      token = null;
+      store(TOKEN_KEY, null);
     }
-    throw new ApiError(err?.code ?? `http_${res.status}`, err?.message ?? "Сервер недоступен, попробуйте позже", res.status);
   }
-  return data as T;
+  const cfg = await raw<{ guest: boolean; bot: string | null }>("/api/config");
+  if (!cfg.guest) return { ok: false, needLogin: true, bot: cfg.bot };
+  let gid = store(GUEST_KEY);
+  if (!gid) {
+    gid = crypto.randomUUID();
+    store(GUEST_KEY, gid);
+  }
+  const r = await raw<{ token: string; mode: string }>("/api/auth", { method: "POST", body: JSON.stringify({ guestId: gid }) });
+  token = r.token;
+  store(TOKEN_KEY, r.token);
+  return { ok: true, mode: r.mode };
 }
 
-export interface ActionResponse<R = unknown> { result: R; state: GameState }
+export async function loginWidget(data: Record<string, unknown>) {
+  const r = await raw<{ token: string }>("/api/auth", { method: "POST", body: JSON.stringify({ widget: data }) });
+  token = r.token;
+  store(TOKEN_KEY, r.token);
+}
 
 export const api = {
-  me: () => raw<ActionResponse<null>>("/api/me"),
-  action: <R = unknown>(type: string, payload: Record<string, unknown> = {}) =>
-    raw<ActionResponse<R>>("/api/action", { method: "POST", body: JSON.stringify({ type, idem: crypto.randomUUID(), ...payload }) }),
-  clans: (search = "") => raw<{ clans: ClanRow[] }>(`/api/clans?search=${encodeURIComponent(search)}`),
-  clan: (id: number) => raw<{ clan: ClanDetails | null }>(`/api/clans?id=${id}`),
-  fight: () => raw<{ fight: FightView | null }>("/api/fight"),
-  yard: () => raw<YardView>("/api/yard"),
-  feed: () => raw<{ items: FeedItem[]; top: TopRow[] }>("/api/feed", {}, false),
+  get: <T>(path: string) => raw<T>(path),
+  action: <T>(type: string, body: Record<string, unknown> = {}) =>
+    raw<{ result: T; state: GameState }>("/api/action", { method: "POST", body: JSON.stringify({ type, ...body }) }),
 };
-
-export interface ClanRow { id: number; name: string; tag: string; description: string; members: number; power: number; owner: string }
-export interface ClanMember { id: number; name: string; photo_url: string | null; level: number; power: number; role?: string }
-export interface ClanDetails { id: number; name: string; tag: string; description: string; owner_id: number; members: ClanMember[]; requests: ClanMember[]; power: number; isLeader: boolean }
-export interface FeedItem { id: number; kind: string; text: string; created_at: string }
-export interface TopRow { id: number; name: string; photo_url: string | null; level: number; power: number; tag: string | null }
-
-export interface HitResult { bossIndex: number; weapon: string; dmg: number; crit: boolean; hp: number; hpMax: number; won: boolean; readyAt: number; xp: number }
-export interface VictoryResult {
-  outcome: "win" | "lose"; bossIndex: number; bossName: string; reward: { currency: string; amount: number } | null; key: string | null; xp: number; power: number;
-  items: string[]; myDamage: number; totalDamage: number;
-}
-export interface TaskResult {
-  taskId: string; locationId: string; progress: number; target: number; done: boolean; locationComplete: boolean;
-  reward: { currency: string; amount: number }; xp: number; power: number; weekend: boolean;
-}
-export interface LocationReward { locationId: string; name: string; reward: { currency: string; amount: number }; items: string[]; xp: number; power: number; clears: number }
-
-export interface YardItem { slot: number; kind: "beer" | "energy" | "coins" | "weapon"; x: number; y: number; reward: { rub?: number; item?: string } }
-export interface YardView { items: YardItem[]; pickedToday: number; limit: number; slotMs: number; nextAt: number; serverTime: number }

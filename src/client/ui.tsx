@@ -1,133 +1,78 @@
 "use client";
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { UIcon, CUR_ICON } from "./art/icons.tsx";
-import type { Currency, Price } from "../shared/economy.ts";
-import type { Rarity } from "../shared/items.ts";
+import { useEffect, type ReactNode } from "react";
+import { Icon } from "./art/icons.tsx";
+import { ItemArt } from "./art/items.tsx";
+import { itemById } from "../content/items.ts";
+import type { Currency } from "../content/currencies.ts";
+import type { Reward } from "../content/rewards.ts";
+import type { Granted } from "./api.ts";
+import { money, pct } from "./format.ts";
 
-export function fmtNum(v: number): string {
-  const a = Math.abs(v);
-  if (a >= 1e9) return (v / 1e9).toFixed(2).replace(/\.?0+$/, "") + "B";
-  if (a >= 1e6) return (v / 1e6).toFixed(2).replace(/\.?0+$/, "") + "M";
-  if (a >= 1e4) return (v / 1e3).toFixed(1).replace(/\.0$/, "") + "K";
-  if (a >= 100) return Math.round(v).toLocaleString("en-US");
-  if (a >= 1) return (Math.round(v * 100) / 100).toString();
-  if (a === 0) return "0";
-  return v.toPrecision(2);
-}
-export function fmtCur(v: number, c: Currency | string): string {
-  if (c === "RUB") return `${fmtNum(v)} ₽`;
-  if (c === "USD") return `$${fmtNum(v)}`;
-  return `${fmtNum(v)} ${c}`;
-}
-
-export function PriceTag({ price, size = 18 }: { price: Price | { currency: string; amount: number }; size?: number }) {
+export function Bar({ value, max, tone = "green", label, height }: { value: number; max: number; tone?: "green" | "red" | "gold" | "violet"; label?: ReactNode; height?: number }) {
   return (
-    <span className="price-tag">
-      <UIcon name={CUR_ICON[price.currency as Currency]} size={size} />
-      <b>{fmtNum(price.amount)}</b>
-    </span>
-  );
-}
-
-export function AnimatedNumber({ value, format = fmtNum, duration = 500 }: { value: number; format?: (v: number) => string; duration?: number }) {
-  const [shown, setShown] = useState(value);
-  const from = useRef(value);
-  useEffect(() => {
-    const a = from.current;
-    const b = value;
-    if (a === b) return;
-    const start = performance.now();
-    let raf = 0;
-    const step = (t: number) => {
-      const k = Math.min(1, (t - start) / duration);
-      const v = a + (b - a) * (1 - Math.pow(1 - k, 3));
-      setShown(v);
-      from.current = v;
-      if (k < 1) raf = requestAnimationFrame(step);
-    };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [value, duration]);
-  return <>{format(shown)}</>;
-}
-
-export function Bar({ value, max, tone = "green", label }: { value: number; max: number; tone?: "green" | "red" | "violet" | "gold" | "blue"; label?: ReactNode }) {
-  const k = max > 0 ? Math.max(0, Math.min(1, value / max)) : 0;
-  return (
-    <div className={`bar bar-${tone}`}>
-      <div className="bar-fill" style={{ width: `${k * 100}%` }} />
-      {label !== undefined && <span className="bar-label">{label}</span>}
+    <div className={`bar ${tone}`} style={height ? { height } : undefined}>
+      <i style={{ width: `${pct(value, max)}%` }} />
+      {label !== undefined && <span style={height ? { lineHeight: `${height - 5}px` } : undefined}>{label}</span>}
     </div>
   );
 }
 
-export function Avatar({ url, name, size = 52 }: { url?: string | null; name: string; size?: number }) {
-  const [broken, setBroken] = useState(false);
-  return (
-    <span className="avatar" style={{ width: size, height: size }}>
-      {url && !broken ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt="" onError={() => setBroken(true)} />
-      ) : (
-        <span className="avatar-letter" style={{ fontSize: size * 0.42 }}>{(name.replace("@", "")[0] || "D").toUpperCase()}</span>
-      )}
-    </span>
-  );
-}
-
-export function Sheet({ open, onClose, title, children, wide }: { open: boolean; onClose: () => void; title: string; children: ReactNode; wide?: boolean }) {
+export function Modal({ title, onClose, children, wide }: { title?: ReactNode; onClose: () => void; children: ReactNode; wide?: boolean }) {
   useEffect(() => {
-    if (!open) return;
     const k = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", k);
     return () => window.removeEventListener("keydown", k);
-  }, [open, onClose]);
-  if (!open) return null;
+  }, [onClose]);
   return (
-    <div className="sheet-backdrop" onClick={onClose}>
-      <div className={`sheet ${wide ? "wide" : ""}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={title}>
-        <div className="sheet-head">
-          <h3 className="comic">{title}</h3>
-          <button className="x-btn" onClick={onClose} aria-label="Закрыть">✕</button>
-        </div>
-        <div className="sheet-body">{children}</div>
+    <div className="modal-back" onClick={onClose} role="dialog" aria-modal="true">
+      <div className="modal" style={wide ? { maxWidth: 460 } : undefined} onClick={(e) => e.stopPropagation()}>
+        <button className="x" onClick={onClose} aria-label="Закрыть">×</button>
+        {title && <h3 className="display">{title}</h3>}
+        {children}
       </div>
     </div>
   );
 }
 
-export function Tabs<T extends string>({ value, options, onChange }: { value: T; options: { value: T; label: string }[]; onChange: (v: T) => void }) {
+export function Avatar({ name, photo, size = 36 }: { name: string; photo?: string | null; size?: number }) {
+  const letters = name.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
   return (
-    <div className="tabs">
-      {options.map((o) => (
-        <button key={o.value} className={o.value === value ? "on" : ""} onClick={() => onChange(o.value)}>{o.label}</button>
+    <span className="avatar" style={{ width: size, height: size, fontSize: size * 0.4, borderRadius: size * 0.32 }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {photo ? <img src={photo} alt="" referrerPolicy="no-referrer" /> : letters || "?"}
+    </span>
+  );
+}
+
+export function Coin({ c, v, size = 18, bold = true }: { c: Currency; v: number; size?: number; bold?: boolean }) {
+  return (
+    <span className="row" style={{ gap: 3, display: "inline-flex" }}>
+      <Icon name={c} size={size} />
+      {bold ? <b className="num">{money(c, v)}</b> : <span className="num">{money(c, v)}</span>}
+    </span>
+  );
+}
+
+/** Reward preview (from the catalog) or what was actually granted. */
+export function RewardChips({ r, size = 18 }: { r: Reward | Granted | null | undefined; size?: number }) {
+  if (!r) return null;
+  const items = r.items ?? [];
+  return (
+    <span className="row" style={{ flexWrap: "wrap", gap: 6 }}>
+      {Object.entries(r.currencies ?? {}).map(([c, v]) => (v ? <span key={c} className="chip"><Coin c={c as Currency} v={v} size={size} /></span> : null))}
+      {!!r.xp && <span className="chip violet"><Icon name="xp" size={size} />+{r.xp} XP</span>}
+      {!!r.energy && <span className="chip gold"><Icon name="energy" size={size} />+{r.energy}</span>}
+      {items.map((it) => (
+        <span key={it.id} className="chip" title={itemById(it.id)?.name}>
+          <ItemArt id={it.id} size={size + 2} />
+          {itemById(it.id)?.name ?? it.id}
+          {it.qty > 1 ? ` ×${it.qty}` : ""}
+        </span>
       ))}
-    </div>
+    </span>
   );
 }
 
-export const RARITY_LABEL: Record<Rarity, string> = { common: "Common", rare: "Rare", epic: "Epic", legendary: "Legendary", mythic: "Mythic" };
-
-export function countdown(ms: number): string {
-  const s = Math.max(0, Math.floor(ms / 1000));
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const sec = s % 60;
-  if (h >= 24) return `${Math.floor(h / 24)}д ${h % 24}ч`;
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
-}
-
-/** Two-tap confirmation button (window.confirm is unreliable inside Telegram webviews). */
-export function ConfirmButton({ className, disabled, onConfirm, children, confirmText = "Точно?" }: { className?: string; disabled?: boolean; onConfirm: () => void; children: ReactNode; confirmText?: string }) {
-  const [armed, setArmed] = useState(false);
-  useEffect(() => {
-    if (!armed) return;
-    const t = setTimeout(() => setArmed(false), 3000);
-    return () => clearTimeout(t);
-  }, [armed]);
-  return (
-    <button className={`${className ?? ""} ${armed ? "armed" : ""}`} disabled={disabled} onClick={() => (armed ? (setArmed(false), onConfirm()) : setArmed(true))}>
-      {armed ? confirmText : children}
-    </button>
-  );
+export function Empty({ children }: { children: ReactNode }) {
+  return <div className="panel center muted" style={{ padding: 22 }}>{children}</div>;
 }

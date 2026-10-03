@@ -1,19 +1,15 @@
 {
   "name": "xcloce",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "XCLOCE — Telegram Mini App meme fighter: dress your shiba, beat meme bosses, build a clan.",
+  "description": "XCLOCE 2.0 — корпоративная Telegram Mini App игра: боссы, локации, двор, магазин, кланы.",
   "scripts": {
-    "predev": "node scripts/skin-manifest.mjs",
     "dev": "next dev",
-    "prebuild": "node scripts/skin-manifest.mjs",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "check": "npm run typecheck && npm run test && npm run build",
-    "assets": "node --experimental-strip-types scripts/gen-assets.ts",
-    "skin": "node scripts/skin-manifest.mjs"
+    "check": "npm run typecheck && npm run test && npm run build"
   },
   "engines": {
     "node": ">=20.11"

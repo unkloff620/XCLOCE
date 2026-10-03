@@ -1,166 +1,159 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { api, ApiError, login, type ActionResponse, type GameState } from "./api.ts";
+import { api, ApiError, authenticate, type AuthResult, type GameState } from "./api.ts";
 import { haptic, initTelegram } from "./telegram.ts";
 
-export type Tab = "boss" | "market" | "home" | "inventory" | "social";
-export type SheetName = "shop" | "daily" | "missions" | "events" | "upgrade" | "exchange" | "rooms" | "profile" | null;
-export interface Toast { id: number; kind: "ok" | "err" | "info"; text: string }
-
-interface Ctx {
-  status: "loading" | "ready" | "error";
+type Toast = { id: number; text: string; kind: "ok" | "err" | "info" };
+interface Game {
+  state: GameState | null;
+  auth: "loading" | "ok" | "login" | "error";
+  authInfo: AuthResult | null;
   error: string | null;
-  mode: "telegram" | "guest" | null;
-  game: GameState | null;
-  tab: Tab;
-  setTab: (t: Tab) => void;
-  /** increases on every bottom-menu press, so screens can return to their main view */
-  navTick: number;
-  sheet: SheetName;
-  openSheet: (s: SheetName) => void;
-  itemSheet: string | null;
-  openItem: (id: string | null) => void;
-  fight: number | null;
-  setFight: (bossIndex: number | null) => void;
-  yard: boolean;
-  setYard: (open: boolean) => void;
-  toasts: Toast[];
-  toast: (kind: Toast["kind"], text: string) => void;
-  applyState: (s: GameState) => void;
+  /** server time offset: Date.now() + skew ≈ server now */
+  skew: number;
   refresh: () => Promise<void>;
+  act: <T = unknown>(type: string, body?: Record<string, unknown>, ok?: string | ((r: T) => string | null)) => Promise<T | null>;
   busy: string | null;
-  act: <R>(type: string, payload?: Record<string, unknown>, okText?: string | ((r: R) => string)) => Promise<R | null>;
-  energyNow: number;
-  nextEnergyIn: number;
-  now: number;
-  retry: () => void;
+  toast: (text: string, kind?: Toast["kind"]) => void;
+  setState: (s: GameState) => void;
+  retryAuth: () => void;
 }
 
-const GameCtx = createContext<Ctx | null>(null);
-export function useGame(): Ctx {
-  const c = useContext(GameCtx);
-  if (!c) throw new Error("useGame outside provider");
-  return c;
+const Ctx = createContext<Game | null>(null);
+const NowCtx = createContext<number>(0);
+
+export function useGame(): Game {
+  const g = useContext(Ctx);
+  if (!g) throw new Error("GameProvider missing");
+  return g;
 }
-let seq = 1;
+/** Current (server-aligned) time, ticking once a second. */
+export function useNow(): number {
+  return useContext(NowCtx);
+}
 
 export function GameProvider({ children }: { children: ReactNode }) {
-  const [status, setStatus] = useState<Ctx["status"]>("loading");
+  const [state, setStateRaw] = useState<GameState | null>(null);
+  const [auth, setAuth] = useState<Game["auth"]>("loading");
+  const [authInfo, setAuthInfo] = useState<AuthResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [mode, setMode] = useState<Ctx["mode"]>(null);
-  const [game, setGame] = useState<GameState | null>(null);
-  const [tab, setTabState] = useState<Tab>("home");
-  const [navTick, setNavTick] = useState(0);
-  const [sheet, setSheet] = useState<SheetName>(null);
-  const [itemSheet, setItemSheet] = useState<string | null>(null);
-  const [fight, setFight] = useState<number | null>(null);
-  const [yard, setYard] = useState(false);
-  const [toasts, setToasts] = useState<Toast[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [skew, setSkew] = useState(0);
   const [now, setNow] = useState(() => Date.now());
-  const [retryN, setRetryN] = useState(0);
-  const offset = useRef(0); // server - client clock
+  const tid = useRef(0);
+  const [authTry, setAuthTry] = useState(0);
 
-  const toast = useCallback((kind: Toast["kind"], text: string) => {
-    const id = seq++;
-    setToasts((t) => [...t.slice(-2), { id, kind, text }]);
-    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), kind === "err" ? 3800 : 2600);
+  const setState = useCallback((s: GameState) => {
+    setStateRaw(s);
+    setSkew(s.now - Date.now());
   }, []);
 
-  const apply = useCallback((s: GameState) => {
-    offset.current = s.serverTime - Date.now();
-    setGame(s);
+  const toast = useCallback((text: string, kind: Toast["kind"] = "info") => {
+    const id = ++tid.current;
+    setToasts((t) => [...t.slice(-2), { id, text, kind }]);
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), kind === "err" ? 3600 : 2400);
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        initTelegram();
-        setStatus("loading");
-        const m = await login();
-        const me = await api.me();
-        if (cancelled) return;
-        setMode(m);
-        apply(me.state);
-        setStatus("ready");
-      } catch (e) {
-        if (cancelled) return;
-        setError(e instanceof ApiError ? e.message : "Не удалось загрузить игру");
-        setStatus("error");
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [apply, retryN]);
-
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, []);
-
-  // periodic refresh (energy, fight timer, daily resets)
-  useEffect(() => {
-    if (status !== "ready") return;
-    const t = setInterval(() => api.me().then((r) => apply(r.state)).catch(() => undefined), 60_000);
-    const onVis = () => document.visibilityState === "visible" && api.me().then((r) => apply(r.state)).catch(() => undefined);
-    document.addEventListener("visibilitychange", onVis);
-    return () => {
-      clearInterval(t);
-      document.removeEventListener("visibilitychange", onVis);
-    };
-  }, [status, apply]);
-
-  const setTab = useCallback((t: Tab) => {
-    haptic.select();
-    setTabState(t);
-    setNavTick((n) => n + 1);
-    setFight(null);
-    setYard(false);
-    if (typeof window !== "undefined") window.scrollTo({ top: 0 });
-  }, []);
+  const refresh = useCallback(async () => {
+    try {
+      setState(await api.get<GameState>("/api/state"));
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 401) setAuth("login");
+    }
+  }, [setState]);
 
   const act = useCallback(
-    async <R,>(type: string, payload: Record<string, unknown> = {}, okText?: string | ((r: R) => string)): Promise<R | null> => {
+    async <T,>(type: string, body: Record<string, unknown> = {}, ok?: string | ((r: T) => string | null)): Promise<T | null> => {
       setBusy(type);
       try {
-        const r: ActionResponse<R> = await api.action<R>(type, payload);
-        apply(r.state);
-        if (okText) {
-          haptic.ok();
-          toast("ok", typeof okText === "function" ? okText(r.result) : okText);
-        }
+        const r = await api.action<T>(type, body);
+        setState(r.state);
+        const msg = typeof ok === "function" ? ok(r.result) : ok;
+        if (msg) toast(msg, "ok");
         return r.result;
       } catch (e) {
         haptic.err();
-        toast("err", e instanceof ApiError ? e.message : "Не получилось. Попробуйте ещё раз");
+        toast(e instanceof Error ? e.message : "Ошибка", "err");
         return null;
       } finally {
         setBusy(null);
       }
     },
-    [apply, toast],
+    [setState, toast],
   );
 
-  const { energyNow, nextEnergyIn } = useMemo(() => {
-    if (!game) return { energyNow: 0, nextEnergyIn: 0 };
-    const p = game.player;
-    const serverNow = now + offset.current;
-    if (p.energy >= p.maxEnergy) return { energyNow: p.energy, nextEnergyIn: 0 };
-    const elapsed = Math.max(0, serverNow - p.energyUpdatedAt);
-    const gained = Math.floor(elapsed / p.energyRegenMs);
-    const e = Math.min(p.maxEnergy, p.energy + gained);
-    return { energyNow: e, nextEnergyIn: e >= p.maxEnergy ? 0 : p.energyRegenMs - (elapsed % p.energyRegenMs) };
-  }, [game, now]);
+  // auth + first state
+  useEffect(() => {
+    initTelegram();
+    let alive = true;
+    (async () => {
+      try {
+        const a = await authenticate();
+        if (!alive) return;
+        setAuthInfo(a);
+        if (!a.ok) return setAuth("login");
+        setState(await api.get<GameState>("/api/state"));
+        setAuth("ok");
+      } catch (e) {
+        if (!alive) return;
+        setError(e instanceof Error ? e.message : "Не удалось подключиться");
+        setAuth("error");
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [authTry, setState]);
 
-  const refresh = useCallback(() => api.me().then((r) => apply(r.state)).catch(() => undefined), [apply]);
-  const openFight = useCallback((i: number | null) => { setYard(false); setFight(i); if (typeof window !== "undefined") window.scrollTo({ top: 0 }); }, []);
-  const openYard = useCallback((o: boolean) => { setFight(null); setYard(o); if (typeof window !== "undefined") window.scrollTo({ top: 0 }); }, []);
+  // clock + background refresh (15 s while the tab is visible)
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  useEffect(() => {
+    if (auth !== "ok") return;
+    const t = setInterval(() => {
+      if (document.visibilityState === "visible") void refresh();
+    }, 15_000);
+    const onVis = () => document.visibilityState === "visible" && void refresh();
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      clearInterval(t);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, [auth, refresh]);
 
-  const value: Ctx = {
-    status, error, mode, game, tab, setTab, navTick, sheet, openSheet: setSheet, itemSheet, openItem: setItemSheet, fight, setFight: openFight, yard, setYard: openYard,
-    toasts, toast, applyState: apply, refresh, busy, act, energyNow, nextEnergyIn, now: now + offset.current, retry: () => setRetryN((n) => n + 1),
-  };
-  return <GameCtx.Provider value={value}>{children}</GameCtx.Provider>;
+  const value = useMemo<Game>(
+    () => ({ state, auth, authInfo, error, skew, refresh, act, busy, toast, setState, retryAuth: () => setAuthTry((n) => n + 1) }),
+    [state, auth, authInfo, error, skew, refresh, act, busy, toast, setState],
+  );
+  return (
+    <Ctx.Provider value={value}>
+      <NowCtx.Provider value={now + skew}>
+        {children}
+        <div className="toasts" aria-live="polite">
+          {toasts.map((t) => (
+            <div key={t.id} className={`toast ${t.kind}`}>{t.text}</div>
+          ))}
+        </div>
+      </NowCtx.Provider>
+    </Ctx.Provider>
+  );
+}
+
+/** Energy shown between server polls: regen is replayed locally from the last state. */
+export function liveEnergy(s: GameState, now: number): { energy: number; nextIn: number } {
+  const p = s.player;
+  if (p.energy >= p.energyMax || p.energyNextIn <= 0) return { energy: p.energy, nextIn: 0 };
+  const passed = now - s.now;
+  if (passed < p.energyNextIn) return { energy: p.energy, nextIn: p.energyNextIn - passed };
+  const extra = 1 + Math.floor((passed - p.energyNextIn) / p.energyPeriodMs);
+  const e = Math.min(p.energyMax, p.energy + extra);
+  if (e >= p.energyMax) return { energy: e, nextIn: 0 };
+  return { energy: e, nextIn: p.energyPeriodMs - ((passed - p.energyNextIn) % p.energyPeriodMs) };
+}
+
+export function invQty(s: GameState | null, id: string): number {
+  return s?.inventory.find((i) => i.id === id)?.qty ?? 0;
 }
