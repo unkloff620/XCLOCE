@@ -61,7 +61,7 @@ function SlotPicker({ slot, onClose }: { slot: Slot; onClose: () => void }) {
 }
 
 /** Hair, hair colour, eyes and skin. Changes are previewed live and saved with one button. */
-function LookEditor({ draft, setDraft }: { draft: Look; setDraft: (l: Look) => void }) {
+function LookEditor({ draft, patch }: { draft: Look; patch: (p: Partial<Look>) => void }) {
   const row = (label: string, children: ReactNode) => (
     <div className="look-row">
       <div className="tiny muted">{label}</div>
@@ -71,16 +71,16 @@ function LookEditor({ draft, setDraft }: { draft: Look; setDraft: (l: Look) => v
   return (
     <div className="col" style={{ gap: 10 }}>
       {row("ПРИЧЁСКА", HAIR_STYLES.map((h) => (
-        <button key={h.id} className={`look-chip ${draft.hair === h.id ? "on" : ""}`} onClick={() => setDraft({ ...draft, hair: h.id })}>{h.name}</button>
+        <button key={h.id} className={`look-chip ${draft.hair === h.id ? "on" : ""}`} onClick={() => patch({ hair: h.id })}>{h.name}</button>
       )))}
       {row("ЦВЕТ ВОЛОС", HAIR_COLORS.map((c, i) => (
-        <button key={c} className={`swatch ${draft.hairColor === i ? "on" : ""}`} style={{ background: c }} onClick={() => setDraft({ ...draft, hairColor: i })} aria-label={`цвет волос ${i + 1}`} />
+        <button key={c} className={`swatch ${draft.hairColor === i ? "on" : ""}`} style={{ background: c }} onClick={() => patch({ hairColor: i })} aria-label={`цвет волос ${i + 1}`} />
       )))}
       {row("ЦВЕТ ГЛАЗ", EYE_COLORS.map((c, i) => (
-        <button key={c} className={`swatch ${draft.eyes === i ? "on" : ""}`} style={{ background: c }} onClick={() => setDraft({ ...draft, eyes: i })} aria-label={`цвет глаз ${i + 1}`} />
+        <button key={c} className={`swatch ${draft.eyes === i ? "on" : ""}`} style={{ background: c }} onClick={() => patch({ eyes: i })} aria-label={`цвет глаз ${i + 1}`} />
       )))}
       {row("ЦВЕТ КОЖИ", SKIN_TONES.map((t, i) => (
-        <button key={t.base} className={`swatch ${draft.skin === i ? "on" : ""}`} style={{ background: t.base }} onClick={() => setDraft({ ...draft, skin: i })} aria-label={`тон кожи ${i + 1}`} />
+        <button key={t.base} className={`swatch ${draft.skin === i ? "on" : ""}`} style={{ background: t.base }} onClick={() => patch({ skin: i })} aria-label={`тон кожи ${i + 1}`} />
       )))}
     </div>
   );
@@ -127,9 +127,9 @@ function Wardrobe({ onClose }: { onClose: () => void }) {
         </>
       ) : (
         <div className="look-edit">
-          <div className="wd-center look-preview"><Character equipped={{}} look={look} size={240} /></div>
+          <div className="wd-center look-preview"><Character equipped={eq} look={look} size={240} /></div>
           <div className="grow col" style={{ gap: 10, minWidth: 0 }}>
-            <LookEditor draft={look} setDraft={setDraft} />
+            <LookEditor draft={look} patch={(p) => setDraft((d) => ({ ...(d ?? state.look.body), ...p }))} />
             <button className="btn green block" disabled={!changed || busy === "look_set"} onClick={save}>Сохранить</button>
           </div>
         </div>

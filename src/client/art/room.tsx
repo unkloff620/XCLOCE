@@ -85,6 +85,7 @@ function Station({ levels, onPick, desk }: { levels: Record<string, number>; onP
 
       {/* PC tower under the desk */}
       <Hot id="pc" onPick={onPick} label="Мощный системник">
+        <g transform="translate(-66 0)">
         {pc > 0 ? (
           <g>
             <rect x="338" y="352" width="42" height="66" rx="5" fill="#151933" {...s()} />
@@ -104,6 +105,7 @@ function Station({ levels, onPick, desk }: { levels: Record<string, number>; onP
             <Plus x={359} y={385} />
           </g>
         )}
+        </g>
       </Hot>
 
       {/* main monitor (always there) */}
@@ -138,6 +140,7 @@ function Station({ levels, onPick, desk }: { levels: Record<string, number>; onP
 
       {/* gaming chair in front of the desk */}
       <Hot id="chair" onPick={onPick} label="Геймерское кресло">
+        <g transform="translate(40 40)">
         {chair > 0 ? (
           <g>
             <path d="M296 300 C296 284 340 284 340 300 L338 386 H298 Z" fill={chair >= 3 ? "#ffcc33" : chair === 2 ? "#8d6bff" : "#ff4d6d"} {...s()} />
@@ -154,6 +157,7 @@ function Station({ levels, onPick, desk }: { levels: Record<string, number>; onP
             <Plus x={318} y={340} />
           </g>
         )}
+        </g>
       </Hot>
     </g>
   );

@@ -139,7 +139,7 @@ export function SlotMachine() {
             {result.reward && <RewardChips r={result.reward} size={15} />}
           </>
         ) : (
-          <span className="tiny muted">Три одинаковых — приз. 777 — куш: деньги и оружие.</span>
+          <span className="tiny muted">Удачи!</span>
         )}
       </div>
       <button className={`btn big block ${cooling ? "dark" : "red"} slots-btn`} disabled={busy || cooling} onClick={spin}>

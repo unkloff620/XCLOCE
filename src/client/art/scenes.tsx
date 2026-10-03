@@ -194,8 +194,8 @@ export function YardScene() {
         <path d="M56 348 V366 M142 348 V366" stroke={OL} strokeWidth="6" />
       </g>
       {/* trash can */}
-      <path d="M262 368 H292 L288 410 H266 Z" fill="#3a8a5a" {...s(3)} />
-      <rect x="258" y="360" width="38" height="10" rx="3" fill="#2bb56b" {...s(3)} />
+      <path d="M232 368 H262 L258 410 H236 Z" fill="#3a8a5a" {...s(3)} />
+      <rect x="228" y="360" width="38" height="10" rx="3" fill="#2bb56b" {...s(3)} />
     </svg>
   );
 }
