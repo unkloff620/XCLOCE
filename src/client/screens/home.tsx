@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { useGame, useNow } from "../store.tsx";
-import { Character } from "../art/character.tsx";
+import { HeroRig } from "../art/rig.tsx";
 import { RoomScene } from "../art/room.tsx";
 import { Icon } from "../art/icons.tsx";
 import { ItemArt } from "../art/items.tsx";
@@ -15,6 +15,9 @@ import { DailyWindow } from "./daily.tsx";
 import { EquipmentWindow, RoomsWindow } from "./house.tsx";
 import { Help } from "../help.tsx";
 import { EYE_COLORS, HAIR_COLORS, HAIR_STYLES, SKIN_TONES, type Look } from "../../content/home.ts";
+
+/** Hair, eyes and skin editor: off while the hand-drawn character has a fixed look. */
+const LOOK_EDITOR = false;
 
 /** The login reward pops up by itself once per app start; later only from the button. */
 let dailyAutoShown = false;
@@ -114,20 +117,20 @@ function Wardrobe({ onClose }: { onClose: () => void }) {
     <Modal title="Гардероб" onClose={onClose} wide>
       <div className="tabs" style={{ marginBottom: 10 }}>
         <button className={tab === "clothes" ? "on" : ""} onClick={() => setTab("clothes")}>Одежда</button>
-        <button className={tab === "look" ? "on" : ""} onClick={() => setTab("look")}>Внешность</button>
+        {LOOK_EDITOR && <button className={tab === "look" ? "on" : ""} onClick={() => setTab("look")}>Внешность</button>}
       </div>
       {tab === "clothes" ? (
         <>
           <div className="wd">
             <div className="wd-side">{LEFT_SLOTS.map(box)}</div>
-            <div className="wd-center"><Character equipped={eq} look={look} size={260} /></div>
+            <div className="wd-center"><HeroRig size={220} still /></div>
             <div className="wd-side">{RIGHT_SLOTS.map(box)}</div>
           </div>
-          <p className="tiny muted center" style={{ margin: "10px 0 0" }}>Нажми на ячейку, чтобы выбрать вещь.</p>
+          <p className="tiny muted center" style={{ margin: "10px 0 0" }}>Нажми на ячейку, чтобы выбрать вещь. Одежда на новом персонаже появится, когда её дорисуем.</p>
         </>
       ) : (
         <div className="look-edit">
-          <div className="wd-center look-preview"><Character equipped={eq} look={look} size={240} /></div>
+          <div className="wd-center look-preview"><HeroRig size={220} still /></div>
           <div className="grow col" style={{ gap: 10, minWidth: 0 }}>
             <LookEditor draft={look} patch={(p) => setDraft((d) => ({ ...(d ?? state.look.body), ...p }))} />
             <button className="btn green block" disabled={!changed || busy === "look_set"} onClick={save}>Сохранить</button>
@@ -161,7 +164,7 @@ export function HomeScreen() {
     <div className="col" style={{ gap: 12 }}>
       <div className="room">
         <RoomScene room={state.look.room} levels={state.home.levels} onPick={(id) => setEquip(id)} />
-        <div className="room-char"><Character equipped={state.look.equipped} look={state.look.body} size={300} /></div>
+        <div className="room-rig"><HeroRig size={340} /></div>
         <div className="room-help">
           <Help topic="home" title="Твой дом">
             <p>Здесь живёт твой персонаж. В «Гардеробе» — одежда и внешность: причёска, цвет глаз и кожи.</p>

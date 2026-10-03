@@ -11,7 +11,7 @@ import { Avatar, Bar, Coin, Empty, Modal } from "../ui.tsx";
 import { Emblem } from "../art/emblems.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { Icon } from "../art/icons.tsx";
-import { Character } from "../art/character.tsx";
+import { HeroRig } from "../art/rig.tsx";
 import type { Look } from "../../content/home.ts";
 import { clock, dateRu, full, money, short } from "../format.ts";
 
@@ -83,7 +83,7 @@ export function ProfileScreen() {
         <Link href="/" className="back">← Дом</Link>
       </div>
       <div className="panel profile-head">
-        <div className="profile-char"><Character equipped={p.equipped} look={p.body} size={150} /></div>
+        <div className="profile-char"><HeroRig size={150} still /></div>
         <div className="col grow" style={{ gap: 6 }}>
           <div className="row">
             <Avatar name={p.name} photo={p.photo} size={44} />
