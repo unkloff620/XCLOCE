@@ -203,4 +203,15 @@ CREATE TABLE clan_members (
 CREATE INDEX clan_members_clan ON clan_members (clan_id);
 `,
   },
+  {
+    id: "v2-004-daily",
+    sql: `
+CREATE TABLE daily_login (
+  player_id INT PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
+  last_day TEXT NOT NULL,
+  streak INT NOT NULL DEFAULT 0,
+  total INT NOT NULL DEFAULT 0
+);
+`,
+  },
 ];

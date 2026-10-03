@@ -64,12 +64,12 @@ describe("boss fights: personal fights, shared damage", () => {
   it("a weapon is the only way to deal damage; consumables are spent", async () => {
     const p = await newPlayer(db);
     const f = await startDatsik(p);
-    expect(f.state.fight).toMatchObject({ bossId: "datsik", hp: 5000, hpMax: 5000 });
+    expect(f.state.fight).toMatchObject({ bossId: "datsik", hp: 1000, hpMax: 1000 });
     const r = await hit(p, "red-candle");
-    expect(r.result).toMatchObject({ damage: 50, hp: 4950, left: 2 });
+    expect(r.result).toMatchObject({ damage: 50, hp: 950, left: 2 });
     expect(await qty(db, p, "red-candle")).toBe(2);
     await expect(hit(p, "gpu")).rejects.toMatchObject({ code: "no_item" });
-    expect((await fightView(db, p, f.result.fightId, 0, T0)).hp).toBe(4950);
+    expect((await fightView(db, p, f.result.fightId, 0, T0)).hp).toBe(950);
   });
 
   it("damage from the client is ignored: the server takes it from the catalog", async () => {
@@ -84,12 +84,12 @@ describe("boss fights: personal fights, shared damage", () => {
     const fa = await startDatsik(a);
     await startDatsik(b);
     await hit(b, "red-candle");
-    expect((await fightView(db, a, fa.result.fightId, 0, T0)).hp).toBe(4950);
+    expect((await fightView(db, a, fa.result.fightId, 0, T0)).hp).toBe(950);
     const fc = await startDatsik(c, T0 + M);
-    expect((await fightView(db, c, fc.result.fightId, 0, T0 + M)).hp).toBe(5000);
+    expect((await fightView(db, c, fc.result.fightId, 0, T0 + M)).hp).toBe(1000);
     await hit(a, "red-candle", T0 + 2 * M);
-    expect((await fightView(db, a, fa.result.fightId, 0, T0 + 2 * M)).hp).toBe(4900);
-    expect((await fightView(db, c, fc.result.fightId, 0, T0 + 2 * M)).hp).toBe(4950);
+    expect((await fightView(db, a, fa.result.fightId, 0, T0 + 2 * M)).hp).toBe(900);
+    expect((await fightView(db, c, fc.result.fightId, 0, T0 + 2 * M)).hp).toBe(950);
     const v = await fightView(db, a, fa.result.fightId, 0, T0 + 2 * M);
     expect(v.top.map((t) => t.damage).sort()).toEqual([50, 50]);
     expect(v.hits).toHaveLength(2);
@@ -307,6 +307,29 @@ describe("inventory and clans", () => {
     await act(db, a, "clan_leave", {}, T0);
     const [m] = await db.query<{ role: string }>("SELECT role FROM clan_members WHERE player_id=$1", [b]);
     expect(m.role).toBe("leader");
+  });
+});
+
+describe("daily login reward", () => {
+  const D = 24 * H;
+  it("once per Moscow day, the streak grows, a missed day resets it, the cycle wraps after 7", async () => {
+    const p = await newPlayer(db);
+    const r1 = await act(db, p, "daily_claim", {}, T0);
+    expect(r1.result).toMatchObject({ day: 1, streak: 1 });
+    expect(r1.state.daily).toMatchObject({ available: false, day: 1, streak: 1 });
+    expect(await wallet(db, p, "RUB")).toBe(800);
+    await expect(act(db, p, "daily_claim", {}, T0 + 10 * H)).rejects.toMatchObject({ code: "daily_taken" });
+    // 12:00 → next day 01:00 MSK
+    const r2 = await act(db, p, "daily_claim", {}, T0 + 13 * H);
+    expect(r2.result).toMatchObject({ day: 2, streak: 2 });
+    expect(await qty(db, p, "red-candle")).toBe(5);
+    // skip a day → back to day 1
+    const r3 = await act(db, p, "daily_claim", {}, T0 + 3 * D);
+    expect(r3.result).toMatchObject({ day: 1, streak: 1 });
+    for (let i = 1; i < 7; i++) await act(db, p, "daily_claim", {}, T0 + (3 + i) * D);
+    expect(await qty(db, p, "gpu")).toBe(1);
+    const r8 = await act(db, p, "daily_claim", {}, T0 + 10 * D);
+    expect(r8.result).toMatchObject({ day: 1, streak: 8 });
   });
 });
 

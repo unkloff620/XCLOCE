@@ -4,6 +4,8 @@ import { CURRENCY_DEFS, EXCHANGE_FEE, type Currency } from "../content/currencie
 import { ENERGY, LEVELS } from "../content/levels.ts";
 import { YARD_DROPS, YARD_MAX_ITEMS, YARD_SPAWN_MIN } from "../content/yard.ts";
 import { OFFERS } from "../content/shop.ts";
+import { DAILY_REWARDS } from "../content/daily.ts";
+import type { Reward } from "../content/rewards.ts";
 
 /**
  * Game numbers. Defaults come from src/content; rows of the `config` table override them without a deploy:
@@ -17,6 +19,8 @@ export interface Config {
   yard: { spawnMin: number; maxItems: number; weights: Record<string, number> };
   prices: Record<string, number>;
   exchange: { rub: Record<Currency, number>; fee: number };
+  /** login reward cycle, one entry per day */
+  daily: Reward[];
   /** Telegram ids allowed to run admin actions */
   admins: number[];
 }
@@ -30,6 +34,7 @@ export function defaultConfig(): Config {
     yard: { spawnMin: YARD_SPAWN_MIN, maxItems: YARD_MAX_ITEMS, weights: Object.fromEntries(YARD_DROPS.map((d) => [d.id, d.weight])) },
     prices: Object.fromEntries(OFFERS.map((o) => [o.id, o.price.amount])),
     exchange: { rub: Object.fromEntries(Object.values(CURRENCY_DEFS).map((c) => [c.id, c.rub])) as Record<Currency, number>, fee: EXCHANGE_FEE },
+    daily: DAILY_REWARDS.map((r) => structuredClone(r)),
     admins: (process.env.ADMIN_TELEGRAM_IDS ?? "").split(",").map((s) => Number(s.trim())).filter((n) => Number.isFinite(n) && n > 0),
   };
 }
@@ -49,6 +54,9 @@ const KEYS: Record<string, (c: Config, v: unknown) => void> = {
   "exchange.rub": (c, v) => Object.assign(c.exchange.rub, numMap(v)),
   "exchange.fee": (c, v) => {
     if (typeof v === "number" && v >= 0 && v < 0.5) c.exchange.fee = v;
+  },
+  daily: (c, v) => {
+    if (Array.isArray(v) && v.length >= 1 && v.length <= 31 && v.every((r) => r && typeof r === "object" && !Array.isArray(r))) c.daily = v as Reward[];
   },
   admins: (c, v) => {
     if (Array.isArray(v)) c.admins = [...new Set([...c.admins, ...v.filter((x): x is number => typeof x === "number")])];

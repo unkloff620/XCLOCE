@@ -109,6 +109,16 @@ const ICONS: Record<string, () => ReactNode> = {
       <rect x="26" y="31" width="12" height="14" rx="3" fill="#ffcc33" {...S} />
     </>
   ),
+  gift: () => (
+    <>
+      <rect x="8" y="26" width="48" height="12" rx="3" fill="#ff4d6d" {...S} />
+      <rect x="12" y="38" width="40" height="20" rx="3" fill="#e2365a" {...S} />
+      <path d="M27 26 V58 M37 26 V58" stroke={OL} strokeWidth="3" />
+      <rect x="27" y="26" width="10" height="32" fill="#ffcc33" />
+      <path d="M27 26 V58 M37 26 V58" stroke={OL} strokeWidth="3" />
+      <path d="M32 25 C24 10 10 14 16 22 C19 26 27 26 32 25 Z M32 25 C40 10 54 14 48 22 C45 26 37 26 32 25 Z" fill="#ffcc33" {...S} />
+    </>
+  ),
   shop: () => (
     <>
       <path d="M8 24 L14 10 H50 L56 24 Z" fill="#ff4d6d" {...S} />

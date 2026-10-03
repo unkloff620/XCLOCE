@@ -1,6 +1,7 @@
 "use client";
 import { tg } from "./telegram.ts";
 import type { Currency } from "../content/currencies.ts";
+import type { Reward } from "../content/rewards.ts";
 
 /* ---------- types of what the server sends (kept loose on purpose: the server is the source of truth) ---------- */
 export interface Granted {
@@ -25,6 +26,7 @@ export interface GameState {
   fight: { id: number; bossId: string; hp: number; hpMax: number; endsAt: number } | null;
   pending: { fightId: number; bossId: string; status: string }[];
   clan: { id: number; name: string; tag: string; emblem: string; color: string } | null;
+  daily: { available: boolean; day: number; streak: number; cycle: number; nextAt: number | null; rewards: Reward[] };
 }
 export interface Hit { seq: number; playerId: number; name: string; weapon: string; damage: number; phrase: number; at: number }
 export interface FightView {

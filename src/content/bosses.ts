@@ -21,7 +21,9 @@ export interface BossDef {
   final?: boolean;
 }
 
-const hp = (i: number) => Math.round((5000 * 1.6 ** i) / 100) * 100;
+/** 1 000 → 10 000 → 50 000 → … → 10 000 000 (Солнце). */
+const HP = [1_000, 10_000, 50_000, 150_000, 400_000, 1_000_000, 2_500_000, 5_000_000, 10_000_000];
+const hp = (i: number) => HP[i];
 const xp = (i: number) => Math.round(60 * 1.35 ** i);
 const photo = (id: string, has = false) => (has ? { portrait: `/bosses/${id}/portrait.webp`, full: `/bosses/${id}/full.webp` } : { portrait: null, full: null });
 

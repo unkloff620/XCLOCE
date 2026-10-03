@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { Character } from "../art/character.tsx";
 import { RoomScene } from "../art/scenes.tsx";
@@ -11,6 +11,16 @@ import { bossById, BOSSES } from "../../content/bosses.ts";
 import { ITEMS, WEARABLE_SLOTS, type Slot } from "../../content/items.ts";
 import { clock, full } from "../format.ts";
 import { BossPhoto } from "./boss-parts.tsx";
+import { DailyWindow } from "./daily.tsx";
+
+/** The login reward pops up by itself once per app start; later only from the button. */
+let dailyAutoShown = false;
+
+const SIDE = [
+  { href: "/shop", icon: "shop", label: "Магазин", c: "#ff4d6d" },
+  { href: "/shop?tab=exchange", icon: "exchange", label: "Обменник", c: "#3fd2ff" },
+  { href: "/locations", icon: "map", label: "Локации", c: "#3ddc84" },
+] as const;
 
 const SLOT_NAME: Record<Slot, string> = { BODY: "Тело", PANTS: "Штаны", SHIRT: "Верх", SHOES: "Обувь", HEAD: "Голова", ACCESSORY: "Аксессуар", SPECIAL: "Особое" };
 
@@ -55,6 +65,15 @@ export function HomeScreen() {
   const { state } = useGame();
   const now = useNow();
   const [wardrobe, setWardrobe] = useState(false);
+  const [daily, setDaily] = useState(false);
+  const dailyReady = !!state?.daily.available;
+  const busyWindow = (state?.pending.length ?? 0) > 0;
+  useEffect(() => {
+    if (dailyReady && !busyWindow && !dailyAutoShown) {
+      dailyAutoShown = true;
+      setDaily(true);
+    }
+  }, [dailyReady, busyWindow]);
   if (!state) return null;
   const f = state.fight;
   const fb = f ? bossById(f.bossId)! : null;
@@ -85,32 +104,29 @@ export function HomeScreen() {
       <div className="room">
         <RoomScene room={state.look.room} />
         <div className="room-char"><Character equipped={state.look.equipped} size={300} className="idle" /></div>
-        <button className="room-wardrobe btn sm violet" onClick={() => setWardrobe(true)}><Icon name="shirt" size={18} /> Гардероб</button>
+        <nav className="room-side" aria-label="Быстрые переходы">
+          {SIDE.map((b) => (
+            <Link key={b.href} href={b.href} className="side-btn" style={{ ["--c" as string]: b.c }}>
+              <Icon name={b.icon} size={34} />
+              <span>{b.label}</span>
+            </Link>
+          ))}
+        </nav>
+        <div className="room-right">
+          <button className="side-btn" style={{ ["--c" as string]: "#b06bff" }} onClick={() => setWardrobe(true)}>
+            <Icon name="shirt" size={34} />
+            <span>Гардероб</span>
+          </button>
+          <button className={`side-btn ${state.daily.available ? "glow" : ""}`} style={{ ["--c" as string]: "#ffcc33" }} onClick={() => setDaily(true)}>
+            <Icon name="gift" size={34} />
+            <span>Бонус</span>
+            {state.daily.available && <i className="side-dot" />}
+          </button>
+        </div>
       </div>
 
-      <div className="home-grid">
-        <Link href="/locations" className="home-btn" style={{ ["--c" as string]: "#3ddc84" }}>
-          <Icon name="map" size={40} />
-          <b className="display">Локации</b>
-          <span className="tiny muted">энергия → награды</span>
-        </Link>
-        <Link href="/shop" className="home-btn" style={{ ["--c" as string]: "#ff4d6d" }}>
-          <Icon name="shop" size={40} />
-          <b className="display">Магазин</b>
-          <span className="tiny muted">оружие и энергия</span>
-        </Link>
-        <Link href="/shop?tab=exchange" className="home-btn" style={{ ["--c" as string]: "#3fd2ff" }}>
-          <Icon name="exchange" size={40} />
-          <b className="display">Обменник</b>
-          <span className="tiny muted">RUB ⇄ USD ⇄ SOL ⇄ BTC</span>
-        </Link>
-        <Link href="/yard" className="home-btn" style={{ ["--c" as string]: "#ffcc33" }}>
-          <Icon name="coins" size={40} />
-          <b className="display">Двор</b>
-          <span className="tiny muted">{state.yard.count}/{state.yard.max} предметов</span>
-        </Link>
-      </div>
       {wardrobe && <Wardrobe onClose={() => setWardrobe(false)} />}
+      {daily && <DailyWindow onClose={() => setDaily(false)} />}
     </div>
   );
 }
