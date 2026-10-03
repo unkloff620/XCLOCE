@@ -172,16 +172,9 @@ export function HomeScreen() {
             <p>«Бонус» — награда за ежедневный вход.</p>
           </Help>
         </div>
-        <div className="room-bottom">
-          <button className="side-btn" style={{ ["--c" as string]: "#3fd2ff" }} onClick={() => setEquip(null)}>
-            <Icon name="bolt" size={30} />
-            <span>Техника</span>
-          </button>
-          <button className="side-btn" style={{ ["--c" as string]: "#2ee88a" }} onClick={() => setRooms(true)}>
-            <Icon name="door" size={30} />
-            <span>Комнаты</span>
-          </button>
-        </div>
+        <button className="room-corner" style={{ ["--c" as string]: "#2ee88a" }} onClick={() => setRooms(true)} aria-label="Комнаты" title="Комнаты">
+          <Icon name="door" size={28} />
+        </button>
         <div className="room-left">
           <button className="side-btn" style={{ ["--c" as string]: "#b06bff" }} onClick={() => setWardrobe(true)}>
             <Icon name="shirt" size={34} />
@@ -191,6 +184,10 @@ export function HomeScreen() {
             <Icon name="gift" size={34} />
             <span>Бонус</span>
             {state.daily.available && <i className="side-dot" />}
+          </button>
+          <button className="side-btn" style={{ ["--c" as string]: "#3fd2ff" }} onClick={() => setEquip(null)}>
+            <Icon name="bolt" size={30} />
+            <span>Техника</span>
           </button>
         </div>
       </div>
