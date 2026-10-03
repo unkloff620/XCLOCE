@@ -229,4 +229,19 @@ CREATE TABLE slot_spins (
 CREATE INDEX slot_spins_player ON slot_spins (player_id, created_at DESC);
 `,
   },
+  {
+    id: "v2-006-home",
+    sql: `
+ALTER TABLE appearance ADD COLUMN IF NOT EXISTS rooms JSONB NOT NULL DEFAULT '["basic"]';
+ALTER TABLE appearance ADD COLUMN IF NOT EXISTS body JSONB NOT NULL DEFAULT '{}';
+ALTER TABLE players ADD COLUMN IF NOT EXISTS help_seen JSONB NOT NULL DEFAULT '[]';
+ALTER TABLE boss_hits ADD COLUMN IF NOT EXISTS crit BOOLEAN NOT NULL DEFAULT false;
+CREATE TABLE player_equipment (
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  equipment_id TEXT NOT NULL,
+  level INT NOT NULL,
+  PRIMARY KEY (player_id, equipment_id)
+);
+`,
+  },
 ];

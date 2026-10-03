@@ -10,6 +10,7 @@ import * as shop from "./systems/shop.ts";
 import * as clans from "./systems/clans.ts";
 import * as daily from "./systems/daily.ts";
 import * as extras from "./systems/extras.ts";
+import * as home from "./systems/home.ts";
 import { gameState } from "./systems/state.ts";
 import { CURRENCIES } from "../content/currencies.ts";
 import { WEARABLE_SLOTS } from "../content/items.ts";
@@ -39,6 +40,7 @@ export const ACTIONS = [
   "buy", "exchange", "use", "equip", "unequip",
   "clan_create", "clan_join", "clan_leave", "clan_kick",
   "daily_claim", "sell", "rename", "slots_spin",
+  "equipment_upgrade", "room_buy", "room_set", "look_set", "help_seen",
 ] as const;
 export type ActionType = (typeof ACTIONS)[number];
 
@@ -64,6 +66,11 @@ export function dispatch(ctx: Ctx, type: ActionType, body: Record<string, unknow
     case "sell": return extras.sellItem(ctx, str(body.itemId, "itemId", 40), body.qty === undefined ? 1 : num(body.qty, "qty"));
     case "rename": return extras.rename(ctx, str(body.name, "name", 60));
     case "slots_spin": return extras.spinSlots(ctx);
+    case "equipment_upgrade": return home.upgradeEquipment(ctx, str(body.id, "id", 40));
+    case "room_buy": return home.buyRoom(ctx, str(body.id, "id", 40));
+    case "room_set": return home.setRoom(ctx, str(body.id, "id", 40));
+    case "look_set": return home.setLook(ctx, body);
+    case "help_seen": return home.helpSeen(ctx, str(body.topic, "topic", 40));
     case "clan_kick": return clans.kickMember(ctx, num(body.playerId, "playerId"));
     default: throw new GameError("bad_action", "Неизвестное действие");
   }

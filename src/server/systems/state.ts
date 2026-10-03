@@ -6,9 +6,11 @@ import { yardSync } from "./yard.ts";
 import { levelFromXp } from "../../content/levels.ts";
 import { BOSSES } from "../../content/bosses.ts";
 import { LOCATIONS } from "../../content/locations.ts";
+import { normalizeLook } from "../../content/home.ts";
 import { touchActivity } from "../players.ts";
 import { dailyView } from "./daily.ts";
 import { renameView, slotsView } from "./extras.ts";
+import { homeView } from "./home.ts";
 
 /** Everything the HUD and the always-visible parts of the game need. Runs inside the player's transaction. */
 export async function gameState(ctx: Ctx) {
@@ -18,7 +20,8 @@ export async function gameState(ctx: Ctx) {
   await touchActivity(ctx.q, ctx.pid, moscowDay(ctx.now), ctx.now);
   const e = energyNow(p.energy, new Date(p.energy_at).getTime(), ctx.now, ctx.cfg.energy);
   const lv = levelFromXp(p.xp, ctx.cfg.levels);
-  const [app] = await ctx.q.query<{ equipped: Record<string, string>; room: string }>("SELECT equipped, room FROM appearance WHERE player_id=$1", [ctx.pid]);
+  const [app] = await ctx.q.query<{ equipped: Record<string, string> }>("SELECT equipped FROM appearance WHERE player_id=$1", [ctx.pid]);
+  const home = await homeView(ctx.q, ctx.pid);
   const yard = await yardSync(ctx);
   const [fightRow] = await ctx.q.query<{ id: number; boss_id: string; hp_max: number; start_total: number; end_total: number | null; ends_at: Date; damage_total: number }>(
     "SELECT f.id, f.boss_id, f.hp_max, f.start_total, f.end_total, f.ends_at, b.damage_total FROM fights f JOIN bosses b ON b.id=f.boss_id WHERE f.player_id=$1 AND f.status='active'",
@@ -44,7 +47,9 @@ export async function gameState(ctx: Ctx) {
         .map((c) => [c.item_id, new Date(c.ready_at).getTime()])
         .filter(([, t]) => (t as number) > ctx.now),
     ) as Record<string, number>,
-    look: { equipped: app?.equipped ?? {}, room: app?.room ?? "basic" },
+    look: { equipped: app?.equipped ?? {}, room: home.room, body: home.body },
+    home: { levels: home.levels, rooms: home.rooms, bonus: home.bonus },
+    helpSeen: (p as PlayerRow & { help_seen?: string[] }).help_seen ?? [],
     yard: { count: yard.items.length, max: yard.max, nextAt: yard.nextAt },
     fight: fightRow
       ? { id: fightRow.id, bossId: fightRow.boss_id, hp: fightHp(fightRow, fightRow.damage_total), hpMax: fightRow.hp_max, endsAt: new Date(fightRow.ends_at).getTime() }
@@ -72,7 +77,7 @@ export async function profileView(q: Queryable, viewer: number, pid: number, cfg
   );
   const [clears] = await q.query<{ n: number }>("SELECT COUNT(DISTINCT location_id)::int AS n FROM location_claims WHERE player_id=$1", [pid]);
   const [clan] = p.clan_id ? await q.query<{ id: number; name: string; tag: string; emblem: string; color: string }>("SELECT id, name, tag, emblem, color FROM clans WHERE id=$1", [p.clan_id]) : [];
-  const [app] = await q.query<{ equipped: Record<string, string> }>("SELECT equipped FROM appearance WHERE player_id=$1", [pid]);
+  const [app] = await q.query<{ equipped: Record<string, string>; body: unknown }>("SELECT equipped, body FROM appearance WHERE player_id=$1", [pid]);
   const lv = levelFromXp(p.xp, cfg.levels);
   const self = viewer === pid;
   const e = energyNow(p.energy, new Date(p.energy_at).getTime(), Date.now(), cfg.energy);
@@ -93,5 +98,6 @@ export async function profileView(q: Queryable, viewer: number, pid: number, cfg
     }),
     clan: clan ?? null,
     equipped: app?.equipped ?? {},
+    body: normalizeLook(app?.body),
   };
 }

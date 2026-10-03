@@ -4,6 +4,8 @@ import { BOSSES, bossById, keyId, keysNeeded, type BossDef } from "../../content
 import { WEAPONS, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
 import { mergeRewards } from "../../content/rewards.ts";
+import { BASE_CRIT_MULT } from "../../content/home.ts";
+import { playerBonus } from "./home.ts";
 
 /*
  * Personal fights, shared damage.
@@ -116,6 +118,7 @@ export interface HitResult {
   fightId: number;
   weapon: string;
   damage: number;
+  crit: boolean;
   phrase: string;
   hp: number;
   hpMax: number;
@@ -155,15 +158,19 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string): Promise
       await ledger(ctx, "use", w.id, 1, `hit:${mine.boss_id}`);
     }
 
-    const damage = w.weapon.damage;
-    const seq = boss.last_seq + 1;
-    const total = boss.damage_total + damage;
     const phrases = HIT_PHRASES[w.id] ?? [""];
     const phraseIdx = Math.floor(ctx.rng() * phrases.length) % phrases.length;
+    // home bonuses: +damage %, crit chance and crit power (equipment + rooms)
+    const bonus = await playerBonus(ctx.q, ctx.pid);
+    let damage = Math.round(w.weapon.damage * (1 + bonus.damage));
+    const crit = bonus.critChance > 0 && ctx.rng() < bonus.critChance;
+    if (crit) damage = Math.round(damage * (BASE_CRIT_MULT + bonus.critDamage));
+    const seq = boss.last_seq + 1;
+    const total = boss.damage_total + damage;
     await ctx.q.query("UPDATE bosses SET damage_total=$2, last_seq=$3 WHERE id=$1", [boss.id, total, seq]);
     await ctx.q.query(
-      "INSERT INTO boss_hits (boss_id, seq, player_id, fight_id, weapon, damage, phrase, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
-      [boss.id, seq, ctx.pid, mine.id, w.id, damage, phraseIdx, new Date(ctx.now)],
+      "INSERT INTO boss_hits (boss_id, seq, player_id, fight_id, weapon, damage, phrase, created_at, crit) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)",
+      [boss.id, seq, ctx.pid, mine.id, w.id, damage, phraseIdx, new Date(ctx.now), crit],
     );
     await ctx.q.query("UPDATE fights SET my_damage = my_damage + $2, my_hits = my_hits + 1 WHERE id=$1", [mine.id, damage]);
     await ctx.q.query(
@@ -184,7 +191,7 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string): Promise
     const mineWon = won.some((x) => x.id === mine.id);
     const hp = mineWon ? 0 : fightHp({ ...mine, end_total: null }, total);
     return {
-      fightId: mine.id, weapon: w.id, damage, phrase: phrases[phraseIdx], hp, hpMax: mine.hp_max,
+      fightId: mine.id, weapon: w.id, damage, crit, phrase: phrases[phraseIdx], hp, hpMax: mine.hp_max,
       status: mineWon ? "won" : "active", left, readyAt, finished: won.length,
     };
   });
@@ -233,15 +240,16 @@ interface HitView {
   damage: number;
   phrase: number;
   at: number;
+  crit: boolean;
 }
 
 async function hitsInWindow(q: Queryable, bossId: string, afterSeq: number, upToSeq: number | null, limit: number): Promise<HitView[]> {
-  const rows = await q.query<{ seq: number; player_id: number; display_name: string; weapon: string; damage: number; phrase: number; created_at: Date }>(
-    `SELECT h.seq, h.player_id, p.display_name, h.weapon, h.damage, h.phrase, h.created_at FROM boss_hits h JOIN players p ON p.id = h.player_id
+  const rows = await q.query<{ seq: number; player_id: number; display_name: string; weapon: string; damage: number; phrase: number; created_at: Date; crit: boolean }>(
+    `SELECT h.seq, h.player_id, p.display_name, h.weapon, h.damage, h.phrase, h.created_at, h.crit FROM boss_hits h JOIN players p ON p.id = h.player_id
      WHERE h.boss_id=$1 AND h.seq > $2 AND ($3::bigint IS NULL OR h.seq <= $3) ORDER BY h.seq DESC LIMIT $4`,
     [bossId, afterSeq, upToSeq, limit],
   );
-  return rows.map((r) => ({ seq: r.seq, playerId: r.player_id, name: r.display_name, weapon: r.weapon, damage: r.damage, phrase: r.phrase, at: new Date(r.created_at).getTime() }));
+  return rows.map((r) => ({ seq: r.seq, playerId: r.player_id, name: r.display_name, weapon: r.weapon, damage: r.damage, phrase: r.phrase, at: new Date(r.created_at).getTime(), crit: !!r.crit }));
 }
 
 export async function fightView(q: Queryable, pid: number, fightId: number, sinceSeq = 0, now = Date.now()) {
@@ -319,13 +327,13 @@ export async function bossDetails(q: Queryable, pid: number, bossId: string) {
     "SELECT d.player_id, p.display_name, d.damage, d.wins FROM boss_damage d JOIN players p ON p.id=d.player_id WHERE d.boss_id=$1 AND d.damage > 0 ORDER BY d.damage DESC LIMIT 20",
     [bossId],
   );
-  const mine = await q.query<{ weapon: string; damage: number; phrase: number; created_at: Date }>(
-    "SELECT weapon, damage, phrase, created_at FROM boss_hits WHERE boss_id=$1 AND player_id=$2 ORDER BY id DESC LIMIT 30",
+  const mine = await q.query<{ weapon: string; damage: number; phrase: number; created_at: Date; crit: boolean }>(
+    "SELECT weapon, damage, phrase, created_at, crit FROM boss_hits WHERE boss_id=$1 AND player_id=$2 ORDER BY id DESC LIMIT 30",
     [bossId, pid],
   );
   return {
     top: top.map((t) => ({ playerId: t.player_id, name: t.display_name, damage: t.damage, wins: t.wins })),
-    myHits: mine.map((h) => ({ weapon: h.weapon, damage: h.damage, phrase: h.phrase, at: new Date(h.created_at).getTime() })),
+    myHits: mine.map((h) => ({ weapon: h.weapon, damage: h.damage, phrase: h.phrase, at: new Date(h.created_at).getTime(), crit: !!h.crit })),
   };
 }
 

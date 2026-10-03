@@ -393,6 +393,50 @@ describe("selling, nickname, slot machine 777", () => {
   });
 });
 
+describe("home: equipment, rooms, look, help", () => {
+  it("equipment levels cost money and add crits and damage to hits", async () => {
+    await setBossHp({ datsik: 100000 });
+    const p = await newPlayer(db);
+    await setMoney(db, p, "RUB", 20000);
+    await startDatsik(p);
+    const plain = await hit(p, "red-candle");
+    expect(plain.result).toMatchObject({ damage: 50, crit: false });
+    await act(db, p, "equipment_upgrade", { id: "chair" }, T0);
+    await act(db, p, "equipment_upgrade", { id: "monitor2" }, T0);
+    await act(db, p, "equipment_upgrade", { id: "pc" }, T0);
+    expect(await wallet(db, p, "RUB")).toBe(20000 - 2500 - 3000 - 5000);
+    const r = await hit(p, "red-candle"); // rng 0 → always a crit once the chance is above zero
+    expect(r.result).toMatchObject({ crit: true, damage: Math.round(Math.round(50 * 1.03) * 1.6) });
+    // level 2 of the monitor costs USD
+    await expect(act(db, p, "equipment_upgrade", { id: "monitor2" }, T0)).rejects.toMatchObject({ code: "no_money" });
+    const st = await act(db, p, "equipment_upgrade", { id: "rgb" }, T0);
+    expect(st.state.home.levels).toMatchObject({ chair: 1, monitor2: 1, pc: 1, rgb: 1 });
+  });
+
+  it("rooms: buy, switch, the bonus of every owned room counts", async () => {
+    const p = await newPlayer(db);
+    await expect(act(db, p, "room_set", { id: "office" }, T0)).rejects.toMatchObject({ code: "room_locked" });
+    await setMoney(db, p, "USD", 50);
+    const b = await act(db, p, "room_buy", { id: "office" }, T0);
+    expect(b.state.look.room).toBe("office");
+    expect(b.state.home.bonus.critChance).toBeCloseTo(0.03);
+    const back = await act(db, p, "room_set", { id: "basic" }, T0);
+    expect(back.state.look.room).toBe("basic");
+    expect(back.state.home.bonus.critChance).toBeCloseTo(0.03);
+    await expect(act(db, p, "room_buy", { id: "office" }, T0)).rejects.toMatchObject({ code: "room_owned" });
+  });
+
+  it("look: only known options are kept; help topics are remembered once", async () => {
+    const p = await newPlayer(db);
+    const r = await act(db, p, "look_set", { hair: "mohawk", hairColor: 5, eyes: 99, skin: 3 }, T0);
+    expect(r.state.look.body).toEqual({ hair: "mohawk", hairColor: 5, eyes: 0, skin: 3 });
+    await act(db, p, "help_seen", { topic: "boss" }, T0);
+    const h = await act(db, p, "help_seen", { topic: "boss" }, T0);
+    expect(h.state.helpSeen).toEqual(["boss"]);
+    await expect(act(db, p, "help_seen", { topic: "nope" }, T0)).rejects.toMatchObject({ code: "bad_topic" });
+  });
+});
+
 describe("levels and auth", () => {
   it("authority curve: 0 / 225 / 485 / … / 1 100 110 for level 100", () => {
     expect(levelFromXp(0)).toEqual({ level: 1, into: 0, need: 225 });
