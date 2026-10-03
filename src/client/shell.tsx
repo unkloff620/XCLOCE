@@ -89,7 +89,9 @@ function Nav() {
 }
 
 function Loading({ text }: { text?: string }) {
-  const [line] = useState(() => LOADING_LINES[Math.floor(Math.random() * LOADING_LINES.length)]);
+  // picked after mount: a random line during server rendering would not match the client (hydration error)
+  const [line, setLine] = useState(LOADING_LINES[0]);
+  useEffect(() => setLine(LOADING_LINES[Math.floor(Math.random() * LOADING_LINES.length)]), []);
   return (
     <div className="loading">
       <div>
