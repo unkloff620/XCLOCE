@@ -103,7 +103,7 @@ export function BossScreen() {
   );
 }
 
-const Chevron = () => <svg className="chev" viewBox="0 0 10 16" aria-hidden="true"><path d="M2 2l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+const Chevron = () => <svg className="fight-chev" viewBox="0 0 10 16" aria-hidden="true"><path d="M2 2l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 
 /** Boss frame uploaded for this boss (`frames/<slug>`), or the shared `frames/default`, or none. */
 export function bossFrame(def: { slug: string }): string | null {

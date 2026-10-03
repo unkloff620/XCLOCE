@@ -600,7 +600,9 @@ button.hud-profile { color: inherit; text-align: left; width: 100%; font: inheri
 .bcard .btn-attack:not(.live):not(.won):not(.lost):not(.skinned) { background: linear-gradient(180deg, #ffec5c, #ffc400 55%, #f0a500); }
 .bcard .btn-attack.skinned { border: 0; box-shadow: none; }
 .bcard .btn-attack:disabled:not(.skinned) { filter: grayscale(1) brightness(0.7); opacity: 1; }
-.bcard .btn-attack .chev { width: 2.2cqw; height: 3.6cqw; flex: none; }
+.bcard .btn-attack .fight-chev { display: block; width: 2.2cqw; height: 3.6cqw; flex: none; }
+.bcard .btn-attack { white-space: nowrap; padding: 0 1cqw; }
+.bcard .btn-attack.live, .bcard .btn-attack.won, .bcard .btn-attack.lost { font-size: 4.4cqw; letter-spacing: 0.02em; }
 .bcard-act small { font-size: 2.5cqw; font-weight: 800; white-space: nowrap; }
 .bcard-act .btn-unlock { width: 100%; height: 9.6cqw; flex-direction: row; gap: 1cqw; font-size: 4.4cqw; clip-path: none; border-radius: 1.5cqw; border-width: 0.4cqw; }
 .bcard-act .btn-unlock .keys { font-size: 3.4cqw; }
