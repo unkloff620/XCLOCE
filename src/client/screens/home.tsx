@@ -22,43 +22,65 @@ const SLOT_NAME: Record<Slot, string> = { BODY: "Тело", PANTS: "Штаны",
 const LEFT_SLOTS: Slot[] = ["HEAD", "SHIRT", "ACCESSORY"];
 const RIGHT_SLOTS: Slot[] = ["PANTS", "SHOES"];
 
-function Wardrobe({ onClose }: { onClose: () => void }) {
+const PICK_TITLE: Record<Slot, string> = { BODY: "Тело", PANTS: "Штаны", SHIRT: "Верх", SHOES: "Обувь", HEAD: "Головные уборы", ACCESSORY: "Аксессуары", SPECIAL: "Особое" };
+
+/** Window with the owned things for one slot. */
+function SlotPicker({ slot, onClose }: { slot: Slot; onClose: () => void }) {
   const { state, act, busy } = useGame();
   if (!state) return null;
   const owned = new Set(state.inventory.map((i) => i.id));
-  const eq = state.look.equipped;
-  const side = (slots: Slot[]) => (
-    <div className="wd-side">
-      {slots.map((slot) => {
-        const items = ITEMS.filter((i) => i.slot === slot && owned.has(i.id));
-        return (
-          <div key={slot} className="wd-slot">
-            <div className="tiny muted wd-slot-name">{SLOT_NAME[slot].toUpperCase()}</div>
-            <div className="wd-items">
-              {items.length === 0 && <span className="tiny dim">пусто</span>}
-              {items.map((i) => {
-                const on = eq[slot] === i.id;
-                return (
-                  <button key={i.id} className={`wear-pick rar-${i.rarity} ${on ? "on" : ""}`} disabled={!!busy} title={i.name} aria-label={i.name}
-                    onClick={() => act(on ? "unequip" : "equip", on ? { slot } : { itemId: i.id })}>
-                    <ItemArt id={i.id} size={32} />
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })}
-    </div>
+  const items = ITEMS.filter((i) => i.slot === slot && owned.has(i.id));
+  const on = state.look.equipped[slot];
+  const pick = async (id: string) => {
+    const r = await act(id === on ? "unequip" : "equip", id === on ? { slot } : { itemId: id });
+    if (r !== null) onClose();
+  };
+  return (
+    <Modal title={PICK_TITLE[slot]} onClose={onClose}>
+      {items.length === 0 ? (
+        <div className="col center" style={{ gap: 10, alignItems: "center" }}>
+          <div className="muted small">Пока нечего надеть. Вещи дают за локации, боссов и продают в магазине.</div>
+          <Link href="/shop?tab=clothing" className="btn gold" onClick={onClose}>В магазин</Link>
+        </div>
+      ) : (
+        <div className="pick-grid">
+          {items.map((i) => (
+            <button key={i.id} className={`pick-cell rar-${i.rarity} ${on === i.id ? "on" : ""}`} disabled={!!busy} onClick={() => pick(i.id)}>
+              <ItemArt id={i.id} size={56} />
+              <span className="pick-name">{i.name}</span>
+              <span className={`tiny ${on === i.id ? "pick-off" : "muted"}`}>{on === i.id ? "Снять" : "Надеть"}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </Modal>
   );
+}
+
+function Wardrobe({ onClose }: { onClose: () => void }) {
+  const { state } = useGame();
+  const [slot, setSlot] = useState<Slot | null>(null);
+  if (!state) return null;
+  const eq = state.look.equipped;
+  const box = (s: Slot) => {
+    const id = eq[s];
+    const def = id ? ITEMS.find((i) => i.id === id) : null;
+    return (
+      <button key={s} className={`wd-box ${def ? `filled rar-${def.rarity}` : ""}`} onClick={() => setSlot(s)} aria-label={`${SLOT_NAME[s]}: ${def?.name ?? "пусто"}`}>
+        <span className="wd-box-name tiny">{SLOT_NAME[s]}</span>
+        {def ? <ItemArt id={def.id} size={44} /> : <span className="wd-plus" aria-hidden="true">+</span>}
+      </button>
+    );
+  };
   return (
     <Modal title="Гардероб" onClose={onClose} wide>
       <div className="wd">
-        {side(LEFT_SLOTS)}
+        <div className="wd-side">{LEFT_SLOTS.map(box)}</div>
         <div className="wd-center"><Character equipped={eq} size={260} /></div>
-        {side(RIGHT_SLOTS)}
+        <div className="wd-side">{RIGHT_SLOTS.map(box)}</div>
       </div>
-      <p className="tiny muted center" style={{ margin: "10px 0 0" }}>Нажми на вещь, чтобы надеть или снять. Новая одежда — в наградах локаций и в магазине.</p>
+      <p className="tiny muted center" style={{ margin: "10px 0 0" }}>Нажми на ячейку, чтобы выбрать вещь.</p>
+      {slot && <SlotPicker slot={slot} onClose={() => setSlot(null)} />}
     </Modal>
   );
 }

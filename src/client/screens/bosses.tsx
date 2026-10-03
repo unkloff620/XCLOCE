@@ -32,6 +32,12 @@ export function useBossList() {
   return { data, load };
 }
 
+/** HP under the boss photo: full numbers while they fit, short ones for the big bosses. */
+function hpLabel(hp: number, max: number): string {
+  const f = max >= 100_000 ? short : full;
+  return `${f(hp)}/${f(max)}`;
+}
+
 export function BossesScreen() {
   const { state } = useGame();
   const now = useNow();
@@ -56,29 +62,29 @@ export function BossesScreen() {
           const locked = row ? !row.unlocked : b.order > 1;
           return (
             <Link key={b.id} href={`/bosses/${b.id}`} className={`boss-row ${locked ? "locked" : ""} ${b.final ? "final" : ""} ${mine ? "live" : ""}`} style={{ ["--acc" as string]: b.theme.accent }}>
-              <div className="boss-row-photo">
-                <BossPhoto boss={b} round locked={locked} />
-                <span className="boss-n display">{b.order}</span>
+              <div className="boss-left">
+                <div className="boss-row-photo">
+                  <BossPhoto boss={b} round locked={locked} />
+                  <span className="boss-n display">{b.order}</span>
+                </div>
+                <Bar value={mine ? mine.hp : 1} max={mine ? mine.hpMax : 1} tone="red" height={18}
+                  label={hpLabel(mine ? mine.hp : row?.hpMax ?? b.hp, mine ? mine.hpMax : row?.hpMax ?? b.hp)} />
               </div>
-              <div className="grow col" style={{ gap: 4 }}>
-                <div className="row" style={{ justifyContent: "space-between" }}>
+              <div className="grow col" style={{ gap: 5, minWidth: 0 }}>
+                <div className="row" style={{ justifyContent: "space-between", gap: 6 }}>
                   <b className="display boss-name ellipsis">{b.name}</b>
                   {b.final && <span className="chip gold">ФИНАЛ</span>}
                 </div>
                 <div className="small muted ellipsis">{b.title}</div>
                 {mine ? (
-                  <>
-                    <Bar value={mine.hp} max={mine.hpMax} tone="red" label={`${full(mine.hp)} / ${full(mine.hpMax)} HP`} />
-                    <div className="row small"><span className="chip gold"><Icon name="clock" size={14} />{clock(mine.endsAt - now)}</span><span className="muted">идёт бой</span></div>
-                  </>
+                  <div className="row small" style={{ flexWrap: "wrap", gap: 6 }}><span className="chip gold"><Icon name="clock" size={14} />{clock(mine.endsAt - now)}</span><span className="muted">идёт бой</span></div>
                 ) : locked ? (
-                  <div className="row small" style={{ flexWrap: "wrap" }}>
+                  <div className="row small" style={{ flexWrap: "wrap", gap: 6 }}>
                     <span className="chip"><Icon name="key" size={14} />{row?.keysHave ?? 0}/{row?.keysNeed ?? 3}</span>
                     <span className="muted">{(row?.keysNeed ?? 3) === 1 ? "ключ" : "ключа"} «{prev?.name}»</span>
                   </div>
                 ) : (
                   <div className="row small" style={{ flexWrap: "wrap", gap: 6 }}>
-                    <span className="chip">HP {short(row?.hpMax ?? b.hp)}</span>
                     <span className="chip">Победы {row?.fightsToday ?? 0}/{row?.fightsPerDay ?? 7}</span>
                     {!!row?.myWins && <span className="chip green"><Icon name="trophy" size={14} />{row.myWins}</span>}
                     {!!row?.fightingNow && <span className="chip red">бьют: {row.fightingNow}</span>}
