@@ -89,11 +89,16 @@ const NAV_THEME: Record<Tab, { a: string; b: string; rim: string }> = {
   social: { a: "#b45cff", b: "#3c0d7a", rim: "#e6c8ff" },
 };
 
+const VECTOR_NAV = true;
+
 /** Illustrated nav button (icon art inside a comic badge). Uploaded `nav-<id>` / `nav-<id>-on` pictures replace it. */
 export function NavArt({ id, on = false }: { id: Tab; on?: boolean }) {
   const up = (on && skinUrl(`nav-${id}-on`)) || skinUrl(`nav-${id}`);
   // eslint-disable-next-line @next/next/no-img-element
   if (up) return <img className="nav-art skin-img" src={up} alt="" draggable={false} />;
+  // vector buttons (scripts/gen-nav-svg.py → public/assets/nav/<id>.svg)
+  // eslint-disable-next-line @next/next/no-img-element
+  if (VECTOR_NAV) return <img className="nav-art skin-img" src={`/assets/nav/${id}.svg`} alt="" draggable={false} />;
   const t = NAV_THEME[id];
   const g = `nav-${id}`;
   const home = id === "home";

@@ -4,10 +4,5 @@ export const SKIN_FILES: Record<string, string> = {
   "bosses/chill-guy": "bosses/chill-guy.webp?v=4c5b25c5",
   "bosses/chill-house": "bosses/chill-house.webp?v=10436404",
   "cards/chill-guy": "cards/chill-guy.webp?v=ae72d534",
-  "cards/chill-house": "cards/chill-house.webp?v=7ca1a09e",
-  "nav-boss": "nav-boss.webp?v=ad657a68",
-  "nav-home": "nav-home.webp?v=5855eace",
-  "nav-inventory": "nav-inventory.webp?v=03460ef4",
-  "nav-market": "nav-market.webp?v=71a21ced",
-  "nav-social": "nav-social.webp?v=8fc269c1"
+  "cards/chill-house": "cards/chill-house.webp?v=7ca1a09e"
 };
