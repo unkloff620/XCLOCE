@@ -173,6 +173,7 @@ describe("boss fights: personal fights, shared damage", () => {
   });
 
   it("20 players attacking at the same moment: no damage is lost", async () => {
+    await setBossHp({ datsik: 5000 });
     const ps = await Promise.all(Array.from({ length: 20 }, () => newPlayer(db)));
     for (const p of ps) {
       await give(db, p, "red-candle", 5);
