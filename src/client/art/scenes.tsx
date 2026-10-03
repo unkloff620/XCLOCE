@@ -100,7 +100,7 @@ export const YARD_SPOTS = [
 ];
 
 /** Night yard: houses with balconies and AC units, a 24/7 kiosk, graffiti, a lamp post, a tree, a bench, puddles. */
-export function YardScene() {
+export function YardScene({ fill }: { fill?: boolean } = {}) {
   const win = (x: number, y: number, on: boolean, k: string) => (
     <g key={k}>
       <rect x={x} y={y} width="22" height="28" rx="2" fill={on ? "#ffcc33" : "#232a63"} {...s(2.5)} />
@@ -109,7 +109,7 @@ export function YardScene() {
     </g>
   );
   return (
-    <svg viewBox="0 0 400 560" width="100%" style={{ display: "block" }} aria-hidden="true">
+    <svg viewBox="0 0 400 560" width="100%" height={fill ? "100%" : undefined} preserveAspectRatio={fill ? "xMidYMax slice" : undefined} style={{ display: "block" }} aria-hidden="true">
       <defs>
         <linearGradient id="yard-sky" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#141838" />

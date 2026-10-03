@@ -399,17 +399,29 @@
 .room-unlock .btn { white-space: nowrap; gap: 6px; }
 .room-price { display: inline-flex; align-items: center; gap: 3px; margin-left: 4px; padding-left: 8px; border-left: 2px solid rgba(0, 0, 0, 0.25); }
 
-/* ---------- screens that fit the viewport without scrolling (home, yard) ---------- */
-.fit-page {
-  height: calc(100dvh - var(--hud-h) - var(--safe-t) - 10px - var(--nav-h) - var(--safe-b) - 16px);
-  min-height: 300px; display: flex; flex-direction: column; gap: 10px;
-}
-.fit-page > * { flex: none; }
-.fit-page > .title { margin-bottom: 0; }
-/* the scene box keeps its natural proportions but shrinks to the space left; the art inside is anchored to the bottom */
-.fit-page > .room, .fit-page > .yard { flex: 0 1 auto; min-height: 0; width: 100%; }
-.fit-page > .room { aspect-ratio: 1060 / 1484; }
-.fit-page > .yard { aspect-ratio: 400 / 560; }
-.fit-page .room-view, .yard-stage { position: absolute; left: 0; right: 0; bottom: 0; }
+/* ---------- full-screen scenes (home, yard): the scene fills the screen, everything else floats over it ---------- */
+/* no transform / z-index here: modals opened from these screens must still cover the HUD */
+.fit-page { position: fixed; top: 0; bottom: 0; left: 0; right: 0; margin: 0 auto; width: 100%; max-width: var(--col); overflow: hidden;
+  --top: calc(var(--hud-h) + var(--safe-t) + 10px); --bottom: calc(var(--nav-h) + var(--safe-b) + 10px); }
+.fit-page > .room, .fit-page > .yard { position: absolute; inset: 0; border: 0; border-radius: 0; box-shadow: none; background: #0c0e1c; }
+/* blurred copy of the scene behind it, so the space above (and the strip under the nav) is not empty */
+.scene-backdrop { position: absolute; inset: 0; background-size: cover; background-position: center bottom; filter: blur(7px) brightness(0.6) saturate(0.9); transform: scale(1.06); }
+.scene-backdrop svg { width: 100%; height: 100%; }
+.scene-backdrop.locked { filter: blur(7px) brightness(0.35) grayscale(0.55); }
+/* the sharp scene at full width, standing on the nav; its top edge fades into the backdrop */
+.fit-page .room-view, .yard-stage { position: absolute; left: 0; right: 0; bottom: calc(var(--nav-h) + var(--safe-b) - 6px);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 9%); mask-image: linear-gradient(180deg, transparent 0, #000 9%); }
 .fit-page .room-view { aspect-ratio: 1060 / 1484; }
 .yard-stage { aspect-ratio: 400 / 560; }
+.fit-page .room-help { top: var(--top); left: 12px; }
+.fit-page .room-left { top: calc(var(--top) + 40px); left: 12px; }
+.fit-page .room-arrow { top: 58%; }
+.fit-page .room-label { bottom: var(--bottom); }
+.fit-page.has-fight .room-label { bottom: calc(var(--bottom) + 96px); }
+.fit-page > .fight-now { position: absolute; left: 12px; right: 12px; bottom: var(--bottom); z-index: 4; }
+.fit-page > .title { position: absolute; left: 12px; right: 12px; top: var(--top); z-index: 3; margin: 0; }
+.fit-page .yard-timer { top: calc(var(--top) + 42px); z-index: 3; }
+.fit-page .yard-side { top: calc(var(--top) + 84px); left: 12px; }
+/* the HUD and the nav become see-through on these screens */
+body:has(.fit-page) .hud { background: linear-gradient(180deg, rgba(10, 12, 24, 0.85), rgba(10, 12, 24, 0)); border-bottom: 0; box-shadow: none; backdrop-filter: none; }
+body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(10, 12, 24, 0.92), rgba(10, 12, 24, 0.55)); backdrop-filter: blur(4px); }

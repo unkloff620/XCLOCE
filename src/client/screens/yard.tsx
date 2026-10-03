@@ -68,7 +68,8 @@ export function YardScreen() {
         <span className="chip">{data?.items.length ?? state?.yard.count ?? 0}/{data?.max ?? 5}</span>
       </div>
       <div className="yard">
-        {/* the scene keeps its proportions and sits on the bottom edge; on short screens the sky is cut off */}
+        {/* full-screen scene: a blurred copy fills the screen, the sharp scene stands on the nav at full width */}
+        <div className="scene-backdrop"><YardScene fill /></div>
         <div className="yard-stage">
           <YardScene />
           <button className={`yard-slots ${state && state.slots.left > 0 ? "ready" : ""}`} onClick={() => setSlots(true)} aria-label="Игровой автомат 777">
