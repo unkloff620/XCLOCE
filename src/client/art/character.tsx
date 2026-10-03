@@ -159,10 +159,10 @@ const WEAR: Record<string, () => ReactNode> = {
   ),
 };
 
-export function Character({ equipped, size = 220, className }: { equipped: Partial<Record<Slot, string>>; size?: number; className?: string }) {
+export function Character({ equipped, size = 220, className }: { equipped: Partial<Record<Slot | string, string>>; size?: number; className?: string }) {
   // a worn item may hide other slots (a hoodie over a shirt)
   const hidden = new Set<Slot>();
-  for (const id of Object.values(equipped)) for (const h of (id && itemById(id)?.hides) ?? []) hidden.add(h);
+  for (const id of Object.values(equipped)) for (const h of (id ? itemById(id)?.hides : undefined) ?? []) hidden.add(h);
   return (
     <svg className={className} viewBox="0 0 360 720" width={size / 2} height={size} aria-hidden="true" style={{ overflow: "visible" }}>
       {SLOTS.map((slot) => {
