@@ -371,3 +371,7 @@
 @media (prefers-reduced-motion: reduce) { .rig-breath, .rig-head, .rig-tap { animation: none; } }
 .room-rig { position: absolute; left: 50%; bottom: 2%; transform: translateX(-50%); width: 74%; pointer-events: none; display: grid; place-items: end center; }
 .room-rig svg { width: 100% !important; height: auto !important; }
+
+/* buttons on the bare wall on the left: the desk with the computer stands on the right */
+.room-left { position: absolute; left: 10px; top: 48px; display: flex; flex-direction: column; gap: 10px; z-index: 2; }
+.room-left .side-btn { width: 70px; }

@@ -7,6 +7,7 @@
  */
 import type { ReactNode } from "react";
 import { RIG } from "./rig-data.ts";
+import { SEAT } from "../../content/home-scene.ts";
 
 type PartId = keyof typeof RIG;
 const SRC = (p: PartId) => `/assets/hero/${p}.webp`;
@@ -27,26 +28,17 @@ function Bone({ p, className, children }: { p: PartId; className?: string; child
   );
 }
 
-/** Placeholder stool until the artist's furniture arrives (level 1 seat). */
-function Stool() {
-  const ink = "#140d0a";
-  return (
-    <g>
-      <path d="M352 984 L318 1276 M648 984 L682 1276 M430 996 L420 1250 M570 996 L580 1250" stroke={ink} strokeWidth="26" strokeLinecap="round" />
-      <path d="M352 984 L318 1276 M648 984 L682 1276 M430 996 L420 1250 M570 996 L580 1250" stroke="#8a5a2b" strokeWidth="14" strokeLinecap="round" />
-      <path d="M338 1150 H662" stroke={ink} strokeWidth="18" strokeLinecap="round" />
-      <path d="M338 1150 H662" stroke="#6b4320" strokeWidth="8" strokeLinecap="round" />
-      <ellipse cx="500" cy="984" rx="196" ry="36" fill="#6b4320" stroke={ink} strokeWidth="9" />
-      <ellipse cx="500" cy="968" rx="196" ry="36" fill="#a8743f" stroke={ink} strokeWidth="9" />
-    </g>
-  );
+/** The seat (stool → chairs as the player upgrades), drawn behind the body. */
+function Seat({ level = 1 }: { level?: number }) {
+  return <image href={`/assets/home/seat-${level}.webp`} x={SEAT.x} y={SEAT.y} width={SEAT.w} height={SEAT.w * SEAT.aspect} preserveAspectRatio="none" />;
 }
 
-export function HeroRig({ size = 300, className, still }: { size?: number; className?: string; still?: boolean }) {
+/** Rig contents in its own 1000×1400 coordinates (place inside an <svg viewBox="0 0 1000 1400">). */
+function RigBody({ seat }: { seat?: boolean }) {
   return (
-    <svg className={`rig ${still ? "still" : ""} ${className ?? ""}`} viewBox="0 0 1000 1400" width={size * (1000 / 1400)} height={size} aria-hidden="true" style={{ overflow: "visible" }}>
+    <>
       <ellipse cx="500" cy="1282" rx="400" ry="30" fill="rgba(0,0,0,0.3)" />
-      <Stool />
+      {seat && <Seat />}
       {/* torso breathes; arms and head ride along in a second group with the same animation */}
       <g className="rig-breath">
         <Img p="torso" />
@@ -64,6 +56,23 @@ export function HeroRig({ size = 300, className, still }: { size?: number; class
         </Bone>
         <Bone p="head" className="rig-head" />
       </g>
+    </>
+  );
+}
+
+/** Nested viewport so bone pivots (view-box units) stay in rig coordinates inside any scene. */
+export function RigViewport({ x, y, scale, seat, still }: { x: number; y: number; scale: number; seat?: boolean; still?: boolean }) {
+  return (
+    <svg className={`rig ${still ? "still" : ""}`} x={x} y={y} width={1000 * scale} height={1400 * scale} viewBox="0 0 1000 1400" overflow="visible">
+      <RigBody seat={seat} />
+    </svg>
+  );
+}
+
+export function HeroRig({ size = 300, className, still }: { size?: number; className?: string; still?: boolean }) {
+  return (
+    <svg className={`rig ${still ? "still" : ""} ${className ?? ""}`} viewBox="0 0 1000 1400" width={size * (1000 / 1400)} height={size} aria-hidden="true" style={{ overflow: "visible" }}>
+      <RigBody />
     </svg>
   );
 }

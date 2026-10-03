@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { HeroRig } from "../art/rig.tsx";
-import { RoomScene } from "../art/room.tsx";
+import { HomeScene } from "../art/home-scene.tsx";
 import { Icon } from "../art/icons.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { Bar, Modal } from "../ui.tsx";
@@ -163,8 +163,7 @@ export function HomeScreen() {
   return (
     <div className="col" style={{ gap: 12 }}>
       <div className="room">
-        <RoomScene room={state.look.room} levels={state.home.levels} onPick={(id) => setEquip(id)} />
-        <div className="room-rig"><HeroRig size={340} /></div>
+        <HomeScene room={state.look.room} onPick={(id) => setEquip(id)} />
         <div className="room-help">
           <Help topic="home" title="Твой дом">
             <p>Здесь живёт твой персонаж. В «Гардеробе» — одежда и внешность: причёска, цвет глаз и кожи.</p>
@@ -183,7 +182,7 @@ export function HomeScreen() {
             <span>Комнаты</span>
           </button>
         </div>
-        <div className="room-right">
+        <div className="room-left">
           <button className="side-btn" style={{ ["--c" as string]: "#b06bff" }} onClick={() => setWardrobe(true)}>
             <Icon name="shirt" size={34} />
             <span>Гардероб</span>
