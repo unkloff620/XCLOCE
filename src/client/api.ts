@@ -27,6 +27,10 @@ export interface GameState {
   pending: { fightId: number; bossId: string; status: string }[];
   clan: { id: number; name: string; tag: string; emblem: string; color: string } | null;
   daily: { available: boolean; day: number; streak: number; cycle: number; nextAt: number | null; rewards: Reward[] };
+  slots: { left: number; max: number; nextAt: number | null };
+  rename: { price: { currency: Currency; amount: number }; nextAt: number | null; min: number; max: number };
+  /** inventory sale prices in RUB */
+  sell: Record<string, number>;
 }
 export interface Hit { seq: number; playerId: number; name: string; weapon: string; damage: number; phrase: number; at: number }
 export interface FightView {

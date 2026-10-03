@@ -81,7 +81,7 @@ img { max-width: 100%; }
 .lvl { flex: none; padding: 1px 6px; border-radius: 7px; background: var(--violet); border: 2px solid var(--line); font-size: 10.5px; font-weight: 800; letter-spacing: 0.04em; }
 .xpbar { height: 8px; border-radius: 6px; background: #0a0c1a; border: 2px solid var(--line); overflow: hidden; }
 .xpbar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--violet), #c3a8ff); }
-.energy-chip { flex: none; display: flex; align-items: center; gap: 4px; padding: 5px 9px 5px 6px; border-radius: 14px; background: var(--panel); border: 2.5px solid var(--line); font-weight: 800; }
+.energy-chip { flex: none; color: inherit; font: inherit; cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 5px 9px 5px 6px; border-radius: 14px; background: var(--panel); border: 2.5px solid var(--line); font-weight: 800; }
 .energy-chip.over b { color: var(--gold); }
 .energy-chip small { display: block; font-size: 10px; font-weight: 600; color: var(--muted); line-height: 1; }
 .hud-money { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }

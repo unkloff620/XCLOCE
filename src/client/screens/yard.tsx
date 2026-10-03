@@ -7,6 +7,15 @@ import { ItemArt } from "../art/items.tsx";
 import { YARD_DROPS } from "../../content/yard.ts";
 import { clock } from "../format.ts";
 import { haptic } from "../telegram.ts";
+import Link from "next/link";
+import { Icon } from "../art/icons.tsx";
+import { SlotMachine } from "./slots.tsx";
+
+const LINKS = [
+  { href: "/shop", icon: "shop", label: "Магазин", c: "#ff4d6d" },
+  { href: "/exchange", icon: "exchange", label: "Обменник", c: "#3fd2ff" },
+  { href: "/locations", icon: "map", label: "Локации", c: "#3ddc84" },
+] as const;
 
 interface YardData { items: { id: number; slot: number; drop: string; at: number }[]; max: number; nextAt: number | null; periodMs: number }
 
@@ -48,6 +57,14 @@ export function YardScreen() {
         <h1 className="display">Двор</h1>
         <span className="chip">{data?.items.length ?? state?.yard.count ?? 0}/{data?.max ?? 5}</span>
       </div>
+      <nav className="yard-links" aria-label="Места во дворе">
+        {LINKS.map((b) => (
+          <Link key={b.href} href={b.href} className="side-btn wide" style={{ ["--c" as string]: b.c }}>
+            <Icon name={b.icon} size={36} />
+            <span>{b.label}</span>
+          </Link>
+        ))}
+      </nav>
       <div className="yard">
         <YardScene />
         <div className="yard-timer">
@@ -69,9 +86,10 @@ export function YardScreen() {
           );
         })}
       </div>
-      <p className="small muted" style={{ margin: "10px 2px" }}>
-        Каждые 5 минут во дворе появляется случайная находка, максимум 5 сразу. Время идёт, даже когда игра закрыта. Изредка попадаются Красная свеча и Клавиатура.
+      <p className="small muted" style={{ margin: "10px 2px 14px" }}>
+        Каждые 5 минут во дворе появляется случайная находка, максимум 5 сразу. Время идёт, даже когда игра закрыта. Изредка попадаются Красная свеча и Клавиатура. Находки можно продать в инвентаре.
       </p>
+      <SlotMachine />
     </div>
   );
 }

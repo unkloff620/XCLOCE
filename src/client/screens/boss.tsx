@@ -13,6 +13,7 @@ import { Icon } from "../art/icons.tsx";
 import { Bar, Empty } from "../ui.tsx";
 import { useFx, type Fx } from "../fx/attack.tsx";
 import { BossRewardsPanel, useBossList } from "./bosses.tsx";
+import { BossPhoto } from "./boss-parts.tsx";
 import { clock, full, pct, short } from "../format.ts";
 import { haptic } from "../telegram.ts";
 
@@ -94,7 +95,7 @@ export function BossScreen({ id }: { id: string }) {
   const [rug, setRug] = useState(false);
   const [pendingDmg, setPendingDmg] = useState(0);
   const [phrase, setPhrase] = useState<{ text: string; id: number } | null>(null);
-  const [tab, setTab] = useState<"top" | "mine" | "rewards" | "story">("top");
+  const [tab, setTab] = useState<"top" | "mine">("top");
   const [details, setDetails] = useState<{ top: { playerId: number; name: string; damage: number; wins: number }[]; myHits: { weapon: string; damage: number; phrase: number; at: number }[] } | null>(null);
   const lastSeq = useRef(0);
   const seen = useRef<Set<number>>(new Set());
@@ -146,10 +147,11 @@ export function BossScreen({ id }: { id: string }) {
     return () => clearInterval(t);
   }, [fightId, poll]);
 
+  // my hits are shown only during a fight (only hits of this fight)
   useEffect(() => {
-    if (tab === "top" && fightId) return;
+    if (!fightId || tab !== "mine") return;
     api.get<typeof details>(`/api/bosses/${id}`).then(setDetails).catch(() => undefined);
-  }, [tab, id, fightId, view?.status]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [tab, id, fightId, view?.myHits]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const row = list?.bosses.find((b) => b.id === id);
   const hpShown = view ? Math.max(0, view.hp - pendingDmg) : state?.fight?.bossId === id ? state.fight.hp : null;
@@ -192,12 +194,14 @@ export function BossScreen({ id }: { id: string }) {
   };
 
   const myShare = view ? pct(view.myDamage, view.hpMax) : 0;
-  const topRows = useMemo(() => (fightId && tab === "top" ? view?.top ?? [] : details?.top ?? []), [fightId, tab, view, details]);
+  const topRows = useMemo(() => view?.top ?? [], [view]);
+  const myHits = useMemo(() => (details?.myHits ?? []).filter((h) => view && h.at >= view.startedAt), [details, view]);
 
   if (!boss) return <Empty>Такого босса нет</Empty>;
   const otherFight = state?.fight && state.fight.bossId !== id ? state.fight : null;
   const limitLeft = row ? row.fightsPerDay - row.fightsToday : 1;
 
+  const hpMax = view?.hpMax ?? row?.hpMax ?? boss.hp;
   return (
     <div>
       <div className="title">
@@ -209,90 +213,101 @@ export function BossScreen({ id }: { id: string }) {
         {fightId && view && <span className="chip red">бьют: {view.fightingNow}</span>}
       </div>
 
-      <Arena boss={boss} hp={hpShown} hpMax={view?.hpMax ?? row?.hpMax ?? boss.hp} endsAt={fightId ? state!.fight!.endsAt : null} fx={layer} hit={hitAnim} rug={rug} feed={hits} />
-      {phrase && <div key={phrase.id} className="phrase-bubble">{phrase.text}</div>}
-
       {fightId ? (
         <>
+          <Arena boss={boss} hp={hpShown} hpMax={hpMax} endsAt={state!.fight!.endsAt} fx={layer} hit={hitAnim} rug={rug} feed={hits} />
+          {phrase && <div key={phrase.id} className="phrase-bubble">{phrase.text}</div>}
           <div className="row small" style={{ justifyContent: "space-between", margin: "10px 2px" }}>
             <span>Мой вклад: <b className="num">{full(view?.myDamage ?? 0)}</b> <span className="muted">({myShare.toFixed(1)}%)</span></span>
             <button className={`btn sm ${fleeAsk ? "red" : "dark"}`} onClick={flee} disabled={busy === "fight_flee"}>{fleeAsk ? "Точно сдаться?" : "Сдаться"}</button>
           </div>
           <WeaponTray tray={tray} onHit={attack} disabled={view?.status !== undefined && view.status !== "active"} />
           <p className="tiny muted center" style={{ margin: "6px 0 0" }}>Энергия в бою не тратится — только оружие.</p>
+
+          <div className="tabs" style={{ marginTop: 14 }}>
+            {([["top", "Топ боя"], ["mine", "Мои удары"]] as const).map(([k, l]) => (
+              <button key={k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>{l}</button>
+            ))}
+          </div>
+          <div className="panel">
+            {tab === "top" && (
+              topRows.length ? (
+                <div className="col" style={{ gap: 4 }}>
+                  {topRows.map((t, i) => (
+                    <div key={t.playerId} className={`top-row ${t.playerId === me ? "me" : ""}`}>
+                      <span className="top-n display">{i + 1}</span>
+                      <span className="grow ellipsis">{t.name}</span>
+                      <b className="num">{short(t.damage)}</b>
+                    </div>
+                  ))}
+                </div>
+              ) : <div className="muted small center">В этом бою ещё никто не бил. Будь первым.</div>
+            )}
+            {tab === "mine" && (
+              myHits.length ? (
+                <div className="col" style={{ gap: 4 }}>
+                  {myHits.map((h, i) => (
+                    <div key={i} className="row small">
+                      <ItemArt id={h.weapon} size={22} />
+                      <span className="grow ellipsis muted">{HIT_PHRASES[h.weapon]?.[h.phrase] ?? ""}</span>
+                      <b className="num" style={{ color: "var(--red)" }}>−{h.damage}</b>
+                    </div>
+                  ))}
+                </div>
+              ) : <div className="muted small center">В этом бою ты ещё не бил.</div>
+            )}
+          </div>
         </>
       ) : (
-        <div className="panel" style={{ marginTop: 12 }}>
-          {row && !row.unlocked ? (
-            <div className="row">
-              <Icon name="lock" size={40} />
-              <div className="grow">
-                <b>Босс закрыт</b>
-                <div className="small muted">Нужно {row.keysNeed} ключа за победы над предыдущим боссом. У тебя {row.keysHave}.</div>
-              </div>
+        <div className="boss-card-full" style={{ ["--acc" as string]: boss.theme.accent }}>
+          <div className="boss-card-photo">
+            {boss.photo.full && !(row && !row.unlocked) ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img className="boss-card-img" src={boss.photo.full} alt={boss.name} draggable={false} />
+            ) : (
+              <BossPhoto boss={boss} locked={!!row && !row.unlocked} />
+            )}
+            {boss.final && <span className="chip gold boss-card-final">ФИНАЛЬНЫЙ БОСС</span>}
+          </div>
+          <div className="boss-card-body col">
+            <p className="boss-story">{boss.story}</p>
+            <div className="boss-facts">
+              <div><span className="tiny muted">Здоровье</span><b className="num">{full(hpMax)} HP</b></div>
+              <div><span className="tiny muted">Время боя</span><b>8 часов</b></div>
+              <div><span className="tiny muted">Победы сегодня</span><b className="num">{row?.fightsToday ?? 0} / {row?.fightsPerDay ?? 7}</b></div>
+              <div><span className="tiny muted">Мои ключи</span><b className="num">{boss.final ? "—" : row?.myKeys ?? 0}</b></div>
             </div>
-          ) : otherFight ? (
-            <div className="col">
-              <span>Сейчас идёт бой с боссом <b>{bossById(otherFight.bossId)?.name}</b>. Одновременно можно вести только один бой.</span>
-              <Link className="btn violet block" href={`/bosses/${otherFight.bossId}`}>К текущему бою</Link>
+            {boss.phases && (
+              <div className="small muted">Фазы: {boss.phases.map((p) => p.name).join(" → ")}</div>
+            )}
+            <div className="boss-card-rewards">
+              <b className="small">Награда за победу</b>
+              <BossRewardsPanel bossId={id} />
             </div>
-          ) : (
-            <div className="col">
-              <div className="row small" style={{ justifyContent: "space-between" }}>
-                <span>Боёв сегодня: <b>{row?.fightsToday ?? 0}/{row?.fightsPerDay ?? 7}</b></span>
-                <span>Побед: <b>{row?.myWins ?? 0}</b> · ключей: <b>{row?.myKeys ?? 0}</b></span>
+            <div className="tiny muted">Бой личный, а урон общий: удары всех, кто сейчас бьёт этого босса, снимают HP и в твоём бою. Проигранный бой в лимит не идёт.</div>
+          </div>
+          <div className="boss-card-cta">
+            {row && !row.unlocked ? (
+              <div className="row">
+                <Icon name="lock" size={36} />
+                <div className="grow small">
+                  <b>Босс закрыт</b>
+                  <div className="muted">Нужно ключей предыдущего босса: {row.keysNeed}. У тебя {row.keysHave}.</div>
+                </div>
               </div>
+            ) : otherFight ? (
+              <div className="col">
+                <span className="small">Сейчас идёт бой с боссом <b>{bossById(otherFight.bossId)?.name}</b>. Одновременно можно вести только один бой.</span>
+                <Link className="btn violet block" href={`/bosses/${otherFight.bossId}`}>К текущему бою</Link>
+              </div>
+            ) : (
               <button className="btn red big block" disabled={busy === "fight_start" || limitLeft <= 0} onClick={start}>
-                {limitLeft <= 0 ? "Лимит на сегодня" : "В бой · 8 часов"}
+                {limitLeft <= 0 ? "Лимит побед на сегодня" : "В бой"}
               </button>
-              <div className="tiny muted center">Удары всех, кто сейчас бьёт этого босса, засчитываются и в твоём бою.</div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
-
-      <div className="tabs" style={{ marginTop: 14 }}>
-        {(
-          [
-            ["top", fightId ? "Топ боя" : "Топ урона"],
-            ["mine", "Мои удары"],
-            ["rewards", "Награды"],
-            ["story", "История"],
-          ] as const
-        ).map(([k, l]) => (
-          <button key={k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>{l}</button>
-        ))}
-      </div>
-      <div className="panel">
-        {tab === "top" && (
-          topRows.length ? (
-            <div className="col" style={{ gap: 4 }}>
-              {topRows.map((t, i) => (
-                <div key={t.playerId} className={`top-row ${t.playerId === me ? "me" : ""}`}>
-                  <span className="top-n display">{i + 1}</span>
-                  <span className="grow ellipsis">{t.name}</span>
-                  <b className="num">{short(t.damage)}</b>
-                </div>
-              ))}
-            </div>
-          ) : <div className="muted small center">Пока никто не бил. Будь первым.</div>
-        )}
-        {tab === "mine" && (
-          details?.myHits.length ? (
-            <div className="col" style={{ gap: 4 }}>
-              {details.myHits.map((h, i) => (
-                <div key={i} className="row small">
-                  <ItemArt id={h.weapon} size={22} />
-                  <span className="grow ellipsis muted">{HIT_PHRASES[h.weapon]?.[h.phrase] ?? ""}</span>
-                  <b className="num" style={{ color: "var(--red)" }}>−{h.damage}</b>
-                </div>
-              ))}
-            </div>
-          ) : <div className="muted small center">Ты ещё не бил этого босса.</div>
-        )}
-        {tab === "rewards" && <BossRewardsPanel bossId={id} />}
-        {tab === "story" && <p style={{ margin: 0 }}>{boss.story}</p>}
-      </div>
       {invQty(state, "mouse") === 0 && <p className="small muted">Мышь потерялась? Напиши организаторам.</p>}
     </div>
   );

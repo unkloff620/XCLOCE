@@ -133,6 +133,8 @@
 .loc-card { position: relative; display: block; border-radius: 18px; overflow: hidden; border: 2.5px solid var(--line); box-shadow: 0 4px 0 var(--line); background: var(--panel); }
 .loc-card.head { margin-bottom: 2px; }
 .loc-card.locked svg { filter: grayscale(1) brightness(0.45); }
+.loc-card.ready { border-color: #ffcc33; box-shadow: 0 4px 0 var(--line), 0 0 0 2px #ffcc33, 0 0 18px rgba(255, 204, 51, 0.35); }
+.loc-claim { display: flex; flex-direction: column; gap: 8px; padding: 0 12px 12px; }
 .loc-body { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px 12px; }
 .loc-lock { position: absolute; right: 12px; top: 12px; }
 .blocks { display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; }
@@ -198,3 +200,86 @@
 .result-title { font-size: 30px; letter-spacing: 0.04em; text-shadow: 0 4px 0 var(--line); animation: pulse 1.2s ease-in-out infinite; }
 .result-title.win { color: var(--gold); text-shadow: 0 4px 0 var(--line), 0 0 24px rgba(255, 204, 51, 0.6); }
 .result-title.lose { color: var(--muted); animation: none; }
+
+/* ---------- selling ---------- */
+.sell-box { display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 14px; border: 2px dashed color-mix(in srgb, var(--gold, #ffcc33) 55%, var(--line)); background: color-mix(in srgb, #ffcc33 6%, var(--panel2)); }
+/* ---------- energy window ---------- */
+.energy-head { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 16px; background: linear-gradient(120deg, rgba(255, 204, 51, 0.18), transparent); border: 2px solid var(--line); }
+.energy-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: var(--panel2); border: 2px solid var(--line); }
+
+/* ---------- home: running fight ---------- */
+.fight-now { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 18px; border: 2.5px solid var(--line);
+  box-shadow: 0 4px 0 var(--line), inset 0 0 0 2px color-mix(in srgb, var(--acc) 55%, transparent);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--acc) 26%, var(--panel)), var(--panel)); }
+.fight-now-photo { width: 62px; height: 62px; flex: none; }
+.fight-now-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--acc); letter-spacing: 0.06em; }
+.live-dot { width: 9px; height: 9px; border-radius: 50%; background: #ff4d6d; box-shadow: 0 0 0 3px rgba(255, 77, 109, 0.25); animation: live 1.2s ease-in-out infinite; }
+@keyframes live { 50% { opacity: 0.35; } }
+
+/* ---------- wardrobe: character in the middle, things on both sides ---------- */
+.wd { display: grid; grid-template-columns: minmax(0, 1fr) minmax(110px, 1.1fr) minmax(0, 1fr); gap: 8px; align-items: stretch; }
+.wd-center { display: grid; place-items: center; border-radius: 16px; background: radial-gradient(circle at 50% 45%, rgba(141, 107, 255, 0.35), transparent 70%); }
+.wd-center svg { width: 100% !important; max-width: 180px; height: auto !important; }
+.wd-side { display: flex; flex-direction: column; gap: 8px; }
+.wd-slot { padding: 6px; border-radius: 12px; background: var(--panel2); border: 2px solid var(--line); }
+.wd-slot-name { margin-bottom: 4px; font-size: 10px; }
+.wd-items { display: flex; flex-wrap: wrap; gap: 5px; }
+.wd .wear-pick { width: 44px; height: 44px; }
+@media (min-width: 560px) { .wd .wear-pick { width: 52px; height: 52px; } }
+
+/* ---------- yard: links ---------- */
+.yard-links { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+.side-btn.wide { width: auto; padding: 10px 4px 8px; }
+.side-btn.wide span { font-size: 12.5px; }
+
+/* ---------- slot machine 777 ---------- */
+.slots { display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 22px; border: 3px solid var(--line);
+  box-shadow: 0 5px 0 var(--line), inset 0 2px 0 rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, #7a1730 0%, #4a0c1f 55%, #2a0614 100%); }
+.slots.jackpot { animation: jackpot 0.5s ease-in-out 6; }
+@keyframes jackpot { 50% { box-shadow: 0 5px 0 var(--line), 0 0 30px 6px rgba(255, 210, 63, 0.75); } }
+.slots-top { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.slots-title { font-size: 34px; line-height: 1; color: #ffd23f; text-shadow: 0 3px 0 #140d24, 0 0 14px rgba(255, 210, 63, 0.6); letter-spacing: 0.08em; }
+.slots-sub { letter-spacing: 0.2em; color: #ffd1da; opacity: 0.85; }
+.slots-lights { display: flex; gap: 8px; margin-bottom: 4px; }
+.slots-lights i { width: 8px; height: 8px; border-radius: 50%; background: #ffd23f; border: 1.5px solid #140d24; animation: bulb 1s steps(2) infinite; }
+@keyframes bulb { 50% { background: #ff6b9a; } }
+.slots-window { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 8px; border-radius: 16px; background: #140d24; border: 3px solid #ffd23f; }
+.slots-line { position: absolute; left: 6px; right: 6px; top: 50%; height: 2px; background: rgba(255, 59, 92, 0.6); pointer-events: none; }
+.reel { position: relative; height: 78px; overflow: hidden; border-radius: 10px; background: linear-gradient(180deg, #cfd3ef, #fff 35%, #fff 65%, #cfd3ef); border: 2.5px solid #140d24; display: grid; place-items: center; }
+.reel-strip { position: absolute; top: 0; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; animation: reel 0.42s linear infinite; filter: blur(1.2px); }
+.reel-strip span { height: 66px; display: grid; place-items: center; }
+@keyframes reel { from { transform: translateY(-50%); } to { transform: translateY(0); } }
+.reel-face { animation: reel-stop 0.28s ease-out; }
+@keyframes reel-stop { 0% { transform: translateY(-14px); } 70% { transform: translateY(4px); } 100% { transform: none; } }
+.reel.hit { box-shadow: 0 0 0 3px #ffd23f, 0 0 16px rgba(255, 210, 63, 0.7); }
+.slots-result { min-height: 46px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; }
+.slots-result .win { color: #ffd23f; font-size: 20px; text-shadow: 0 2px 0 #140d24; }
+.slots-result .miss { color: #ffd1da; font-size: 15px; }
+.slots-pay summary { cursor: pointer; text-decoration: underline; }
+.slots-pay[open] { flex-basis: 100%; }
+@media (prefers-reduced-motion: reduce) { .reel-strip, .slots-lights i, .slots.jackpot { animation: none; } }
+
+/* ---------- boss card extras ---------- */
+.boss-reward .chip { padding: 2px 6px; font-size: 11px; min-height: 0; }
+.boss-reward > span { gap: 4px !important; }
+.last-killer { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; color: var(--muted); opacity: 0.8; }
+.last-killer .avatar { border-width: 1.5px; flex: none; }
+
+/* ---------- boss card (outside a fight) ---------- */
+.boss-card-full { border-radius: 22px; overflow: hidden; border: 3px solid var(--line); box-shadow: 0 5px 0 var(--line), inset 0 0 0 2px color-mix(in srgb, var(--acc) 45%, transparent); background: var(--panel); }
+.boss-card-photo { position: relative; aspect-ratio: 1 / 1; max-height: 380px; width: 100%; background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--acc) 45%, transparent), transparent 70%), var(--bg2); display: grid; place-items: center; }
+.boss-card-photo > * { width: 100%; height: 100%; }
+.boss-card-img { object-fit: contain; object-position: center bottom; }
+.boss-card-final { position: absolute; top: 10px; left: 10px; width: auto !important; height: auto !important; }
+.boss-card-body { gap: 10px; padding: 12px; }
+.boss-story { margin: 0; line-height: 1.45; }
+.boss-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.boss-facts > div { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border-radius: 12px; background: var(--bg2); border: 2px solid var(--line); }
+.boss-card-rewards { display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 14px; background: color-mix(in srgb, #ffcc33 7%, var(--bg2)); border: 2px solid var(--line); }
+.boss-card-cta { padding: 0 12px 12px; }
+
+/* ---------- profile ---------- */
+.icon-btn { flex: none; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 9px; background: var(--panel2); border: 2px solid var(--line); cursor: pointer; }
+.tg-link { display: inline-block; color: #6fc3ff; text-decoration: none; margin: 1px 0 3px; }
+.tg-link:hover { text-decoration: underline; }

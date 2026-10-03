@@ -4,10 +4,41 @@ import { useState } from "react";
 import { useGame } from "../store.tsx";
 import { CATEGORY_NAME, itemById, RARITY_NAME, type Category, type ItemDef } from "../../content/items.ts";
 import { ItemArt } from "../art/items.tsx";
-import { Empty, Modal } from "../ui.tsx";
+import { Coin, Empty, Modal } from "../ui.tsx";
+import { haptic } from "../telegram.ts";
 
 const CATS: (Category | "all")[] = ["all", "weapon", "clothing", "item", "reward", "event"];
 const CAT_LABEL = { all: "Всё", ...CATEGORY_NAME };
+
+/** Selling yard finds back for RUB. */
+function SellBox({ id, have, price }: { id: string; have: number; price: number }) {
+  const { act, busy } = useGame();
+  const [n, setN] = useState(1);
+  const qty = Math.max(1, Math.min(n, have));
+  if (have < 1) return null;
+  const sell = async () => {
+    const r = await act<{ got: number }>("sell", { itemId: id, qty }, (x) => `Продано за ${x.got} ₽`);
+    if (r) {
+      haptic.ok();
+      setN(1);
+    }
+  };
+  return (
+    <div className="sell-box">
+      <div className="row" style={{ justifyContent: "space-between" }}>
+        <span className="small muted">Продать · {price} ₽ за шт.</span>
+        <b><Coin c="RUB" v={price * qty} /></b>
+      </div>
+      <div className="row">
+        <button className="btn sm dark" onClick={() => setN(Math.max(1, qty - 1))} disabled={qty <= 1}>−</button>
+        <span className="num grow center"><b>{qty}</b> / {have}</span>
+        <button className="btn sm dark" onClick={() => setN(Math.min(have, qty + 1))} disabled={qty >= have}>+</button>
+        <button className="btn sm dark" onClick={() => setN(have)}>Все</button>
+      </div>
+      <button className="btn gold block" disabled={busy === "sell"} onClick={sell}>Продать ×{qty}</button>
+    </div>
+  );
+}
 
 export function InventoryScreen() {
   const { state, act, busy } = useGame();
@@ -62,7 +93,7 @@ export function InventoryScreen() {
             )}
             <p className="center" style={{ margin: "10px 0" }}>{open.description}</p>
             <div className="tiny muted center">Откуда: {open.sources.join(", ")}</div>
-            <div style={{ marginTop: 12 }}>
+            <div className="col" style={{ marginTop: 12, gap: 8 }}>
               {open.weapon && (
                 <button className="btn red block" onClick={() => router.push(state.fight ? `/bosses/${state.fight.bossId}` : "/bosses")}>
                   {open.weapon.action} — к боссу
@@ -78,6 +109,7 @@ export function InventoryScreen() {
                   {worn ? "Снять" : "Надеть"}
                 </button>
               )}
+              {!!state.sell[open.id] && <SellBox key={open.id} id={open.id} have={qtyOf(open.id)} price={state.sell[open.id]} />}
             </div>
           </div>
         </Modal>

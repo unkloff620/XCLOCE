@@ -5,13 +5,15 @@ import { useGame, useNow } from "../store.tsx";
 import { api, type Tray } from "../api.ts";
 import { BOSSES, bossById } from "../../content/bosses.ts";
 import { BossPhoto } from "./boss-parts.tsx";
-import { Bar, RewardChips } from "../ui.tsx";
+import { Avatar, Bar, RewardChips } from "../ui.tsx";
+import type { BossDef } from "../../content/bosses.ts";
 import { Icon } from "../art/icons.tsx";
 import { clock, full, short } from "../format.ts";
 
 export interface BossRow {
   id: string; unlocked: boolean; keysHave: number; keysNeed: number; myKeys: number; hpMax: number;
   fightsToday: number; fightsPerDay: number; myDamage: number; myWins: number; fightingNow: number; totalWins: number;
+  lastKiller: { id: number; name: string; photo: string | null; at: number } | null;
 }
 export interface BossListData { resetAt: number; bosses: BossRow[]; weapons: Tray[]; now: number }
 
@@ -44,7 +46,7 @@ export function BossesScreen() {
         {data && <span className="small muted">Лимиты обновятся через {clock(data.resetAt - now)}</span>}
       </div>
       <p className="small muted" style={{ margin: "0 2px 12px" }}>
-        Бой у каждого свой, на 8 часов, а урон общий: удары всех, кто сейчас бьёт этого босса, снимают HP и в твоём бою. Победа даёт ключ, 3 ключа открывают следующего.
+        Бой у каждого свой, на 8 часов, а урон общий: удары всех, кто сейчас бьёт этого босса, снимают HP и в твоём бою. Победа даёт ключ, ключи открывают следующего. В лимит 7 боёв в сутки идут только победы.
       </p>
       <div className="col" style={{ gap: 10 }}>
         {BOSSES.map((b) => {
@@ -72,7 +74,7 @@ export function BossesScreen() {
                 ) : locked ? (
                   <div className="row small" style={{ flexWrap: "wrap" }}>
                     <span className="chip"><Icon name="key" size={14} />{row?.keysHave ?? 0}/{row?.keysNeed ?? 3}</span>
-                    <span className="muted">ключа «{prev?.name}»</span>
+                    <span className="muted">{(row?.keysNeed ?? 3) === 1 ? "ключ" : "ключа"} «{prev?.name}»</span>
                   </div>
                 ) : (
                   <div className="row small" style={{ flexWrap: "wrap", gap: 6 }}>
@@ -82,12 +84,28 @@ export function BossesScreen() {
                     {!!row?.fightingNow && <span className="chip red">бьют: {row.fightingNow}</span>}
                   </div>
                 )}
+                <BossRewardLine boss={b} />
+                {row?.lastKiller && (
+                  <span className="last-killer tiny" title="Последним добил">
+                    <Avatar name={row.lastKiller.name} photo={row.lastKiller.photo} size={16} />
+                    <span className="ellipsis">добил {row.lastKiller.name}</span>
+                  </span>
+                )}
               </div>
               <span className="boss-go display">›</span>
             </Link>
           );
         })}
       </div>
+    </div>
+  );
+}
+
+/** Compact reward line on the boss card. */
+function BossRewardLine({ boss }: { boss: BossDef }) {
+  return (
+    <div className="boss-reward">
+      <RewardChips r={{ ...boss.reward, items: [...(boss.final ? [] : [{ id: `key-${boss.id}`, qty: 1 }]), ...(boss.reward.items ?? [])] }} size={13} />
     </div>
   );
 }

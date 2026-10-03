@@ -36,13 +36,44 @@ function Blocks({ done, total }: { done: number; total: number }) {
   );
 }
 
+type ClaimResult = { reward: Granted; first: boolean; opened: string | null };
+
+function ClaimedModal({ got, onClose }: { got: ClaimResult; onClose: () => void }) {
+  return (
+    <Modal title="Локация пройдена!" onClose={onClose}>
+      <div className="col" style={{ alignItems: "center", textAlign: "center" }}>
+        <RewardChips r={got.reward} />
+        {got.opened && <div className="chip green">Открыта локация «{locationById(got.opened)?.name}»</div>}
+        {got.reward.levelUp && <div className="chip violet">Новый уровень: {got.reward.levelUp.to}!</div>}
+        <div className="small muted">Задания этой локации можно пройти заново.</div>
+        <div className="row" style={{ width: "100%" }}>
+          {got.opened && <Link className="btn green grow" href={`/locations/${got.opened}`} onClick={onClose}>Дальше</Link>}
+          <button className="btn dark grow" onClick={onClose}>Ок</button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
 export function LocationsScreen() {
-  const { rows } = useLocations();
+  const { rows, load } = useLocations();
+  const { act, busy } = useGame();
+  const [got, setGot] = useState<ClaimResult | null>(null);
+  const claim = async (locationId: string) => {
+    const res = await act<ClaimResult>("location_claim", { locationId });
+    if (res) {
+      haptic.ok();
+      setGot(res);
+      void load();
+    }
+  };
   return (
     <div>
       <div className="title">
-        <h1 className="display">Локации</h1>
-        <Link href="/" className="back">← Дом</Link>
+        <div>
+          <Link href="/yard" className="back">← Двор</Link>
+          <h1 className="display">Локации</h1>
+        </div>
       </div>
       <p className="small muted" style={{ margin: "0 2px 12px" }}>Энергия тратится только здесь. Закрой все 5 заданий локации — получишь большую награду и откроешь следующую.</p>
       <div className="col" style={{ gap: 12 }}>
@@ -64,13 +95,28 @@ export function LocationsScreen() {
               {locked && <div className="loc-lock"><Icon name="lock" size={44} /></div>}
             </>
           );
-          return locked ? (
-            <div key={l.id} className="loc-card locked">{inner}</div>
-          ) : (
-            <Link key={l.id} href={`/locations/${l.id}`} className="loc-card">{inner}</Link>
-          );
+          const ready = !locked && !!r && r.done === r.total;
+          if (locked) return <div key={l.id} className="loc-card locked">{inner}</div>;
+          if (ready) {
+            return (
+              <div key={l.id} className="loc-card ready">
+                {inner}
+                <div className="loc-claim">
+                  <RewardChips r={r!.nextReward} size={14} />
+                  <div className="row">
+                    <button className="btn gold grow" disabled={busy === "location_claim"} onClick={() => claim(l.id)}>
+                      <Icon name="chest" size={20} /> Забрать награду
+                    </button>
+                    <Link href={`/locations/${l.id}`} className="btn dark sm">Открыть</Link>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+          return <Link key={l.id} href={`/locations/${l.id}`} className="loc-card">{inner}</Link>;
         })}
       </div>
+      {got && <ClaimedModal got={got} onClose={() => setGot(null)} />}
     </div>
   );
 }
@@ -80,7 +126,7 @@ export function LocationScreen({ id }: { id: string }) {
   const { state, act, busy } = useGame();
   const now = useNow();
   const { rows, load } = useLocations();
-  const [got, setGot] = useState<{ reward: Granted; first: boolean; opened: string | null } | null>(null);
+  const [got, setGot] = useState<ClaimResult | null>(null);
   if (!loc) return <Empty>Такой локации нет</Empty>;
   const r = rows?.find((x) => x.id === id);
   const energy = state ? liveEnergy(state, now).energy : 0;
@@ -89,7 +135,7 @@ export function LocationScreen({ id }: { id: string }) {
   const step = async (taskId: string) => {
     haptic.tap();
     const res = await act<{ steps: number; need: number; step: Granted; done: Granted | null; locationComplete: boolean }>("task", { taskId }, (x) =>
-      x.done ? "Задание выполнено!" : `+${x.step.currencies.RUB ?? 0} ₽ · +${x.step.xp} XP`,
+      x.done ? "Задание выполнено!" : `+${x.step.currencies.RUB ?? 0} ₽ · +${x.step.xp} авторитета`,
     );
     if (res) void load();
   };
@@ -149,7 +195,7 @@ export function LocationScreen({ id }: { id: string }) {
           <div className={`panel loc-reward ${allDone ? "ready" : ""}`} style={{ marginTop: 12 }}>
             <div className="row" style={{ justifyContent: "space-between" }}>
               <b className="display">Награда за локацию</b>
-              {!!r?.clears && <span className="tiny muted">повтор: половина валюты и XP</span>}
+              {!!r?.clears && <span className="tiny muted">повтор: половина валюты и авторитета</span>}
             </div>
             <div style={{ margin: "8px 0" }}><RewardChips r={r?.nextReward ?? loc.reward} /></div>
             <button className="btn gold block" disabled={!allDone || busy === "location_claim"} onClick={claim}>
@@ -157,24 +203,11 @@ export function LocationScreen({ id }: { id: string }) {
             </button>
           </div>
           {energy < Math.min(...loc.tasks.map((t) => t.energy)) && (
-            <p className="small muted center">Энергия кончилась: +1 каждые 5 минут, или <Link href="/shop?tab=energy" style={{ color: "var(--gold)" }}>купи в магазине</Link>.</p>
+            <p className="small muted center">Энергия кончилась: +1 каждые 5 минут, или <Link href="/shop?tab=energy" style={{ color: "var(--gold)" }}>купи энергию</Link>.</p>
           )}
         </>
       )}
-      {got && (
-        <Modal title="Локация пройдена!" onClose={() => setGot(null)}>
-          <div className="col" style={{ alignItems: "center", textAlign: "center" }}>
-            <RewardChips r={got.reward} />
-            {got.opened && <div className="chip green">Открыта локация «{locationById(got.opened)?.name}»</div>}
-            {got.reward.levelUp && <div className="chip violet">Новый уровень: {got.reward.levelUp.to}!</div>}
-            <div className="small muted">Задания этой локации можно пройти заново.</div>
-            <div className="row" style={{ width: "100%" }}>
-              {got.opened && <Link className="btn green grow" href={`/locations/${got.opened}`} onClick={() => setGot(null)}>Дальше</Link>}
-              <button className="btn dark grow" onClick={() => setGot(null)}>Ок</button>
-            </div>
-          </div>
-        </Modal>
-      )}
+      {got && <ClaimedModal got={got} onClose={() => setGot(null)} />}
     </div>
   );
 }

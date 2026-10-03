@@ -7,8 +7,8 @@ import { RoomScene } from "../art/scenes.tsx";
 import { Icon } from "../art/icons.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { Bar, Modal } from "../ui.tsx";
-import { bossById, BOSSES } from "../../content/bosses.ts";
-import { ITEMS, WEARABLE_SLOTS, type Slot } from "../../content/items.ts";
+import { bossById } from "../../content/bosses.ts";
+import { ITEMS, type Slot } from "../../content/items.ts";
 import { clock, full } from "../format.ts";
 import { BossPhoto } from "./boss-parts.tsx";
 import { DailyWindow } from "./daily.tsx";
@@ -16,47 +16,49 @@ import { DailyWindow } from "./daily.tsx";
 /** The login reward pops up by itself once per app start; later only from the button. */
 let dailyAutoShown = false;
 
-const SIDE = [
-  { href: "/shop", icon: "shop", label: "Магазин", c: "#ff4d6d" },
-  { href: "/shop?tab=exchange", icon: "exchange", label: "Обменник", c: "#3fd2ff" },
-  { href: "/locations", icon: "map", label: "Локации", c: "#3ddc84" },
-] as const;
 
 const SLOT_NAME: Record<Slot, string> = { BODY: "Тело", PANTS: "Штаны", SHIRT: "Верх", SHOES: "Обувь", HEAD: "Голова", ACCESSORY: "Аксессуар", SPECIAL: "Особое" };
+
+const LEFT_SLOTS: Slot[] = ["HEAD", "SHIRT", "ACCESSORY"];
+const RIGHT_SLOTS: Slot[] = ["PANTS", "SHOES"];
 
 function Wardrobe({ onClose }: { onClose: () => void }) {
   const { state, act, busy } = useGame();
   if (!state) return null;
   const owned = new Set(state.inventory.map((i) => i.id));
   const eq = state.look.equipped;
+  const side = (slots: Slot[]) => (
+    <div className="wd-side">
+      {slots.map((slot) => {
+        const items = ITEMS.filter((i) => i.slot === slot && owned.has(i.id));
+        return (
+          <div key={slot} className="wd-slot">
+            <div className="tiny muted wd-slot-name">{SLOT_NAME[slot].toUpperCase()}</div>
+            <div className="wd-items">
+              {items.length === 0 && <span className="tiny dim">пусто</span>}
+              {items.map((i) => {
+                const on = eq[slot] === i.id;
+                return (
+                  <button key={i.id} className={`wear-pick rar-${i.rarity} ${on ? "on" : ""}`} disabled={!!busy} title={i.name} aria-label={i.name}
+                    onClick={() => act(on ? "unequip" : "equip", on ? { slot } : { itemId: i.id })}>
+                    <ItemArt id={i.id} size={32} />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
   return (
     <Modal title="Гардероб" onClose={onClose} wide>
-      <div className="wardrobe">
-        <div className="wardrobe-preview"><Character equipped={eq} size={260} /></div>
-        <div className="col grow" style={{ gap: 10 }}>
-          {WEARABLE_SLOTS.filter((s) => s !== "SPECIAL").map((slot) => {
-            const items = ITEMS.filter((i) => i.slot === slot && owned.has(i.id));
-            return (
-              <div key={slot}>
-                <div className="tiny muted" style={{ marginBottom: 4 }}>{SLOT_NAME[slot].toUpperCase()}</div>
-                <div className="row" style={{ flexWrap: "wrap", gap: 6 }}>
-                  {items.length === 0 && <span className="tiny dim">пока пусто</span>}
-                  {items.map((i) => {
-                    const on = eq[slot] === i.id;
-                    return (
-                      <button key={i.id} className={`wear-pick rar-${i.rarity} ${on ? "on" : ""}`} disabled={!!busy} title={i.name}
-                        onClick={() => act(on ? "unequip" : "equip", on ? { slot } : { itemId: i.id })}>
-                        <ItemArt id={i.id} size={34} />
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-          <p className="tiny muted" style={{ margin: 0 }}>Новая одежда — в наградах локаций и в магазине. Скоро: смена комнаты и декор.</p>
-        </div>
+      <div className="wd">
+        {side(LEFT_SLOTS)}
+        <div className="wd-center"><Character equipped={eq} size={260} /></div>
+        {side(RIGHT_SLOTS)}
       </div>
+      <p className="tiny muted center" style={{ margin: "10px 0 0" }}>Нажми на вещь, чтобы надеть или снять. Новая одежда — в наградах локаций и в магазине.</p>
     </Modal>
   );
 }
@@ -79,39 +81,9 @@ export function HomeScreen() {
   const fb = f ? bossById(f.bossId)! : null;
   return (
     <div className="col" style={{ gap: 12 }}>
-      {f && fb ? (
-        <Link href={`/bosses/${fb.id}`} className="fight-banner" style={{ ["--acc" as string]: fb.theme.accent }}>
-          <div style={{ width: 64, height: 64, flex: "none" }}><BossPhoto boss={fb} round /></div>
-          <div className="grow col" style={{ gap: 4 }}>
-            <div className="row" style={{ justifyContent: "space-between" }}>
-              <b className="display">БОЙ: {fb.name}</b>
-              <span className="chip gold"><Icon name="clock" size={14} />{clock(f.endsAt - now)}</span>
-            </div>
-            <Bar value={f.hp} max={f.hpMax} tone="red" label={`${full(f.hp)} / ${full(f.hpMax)} HP`} />
-          </div>
-        </Link>
-      ) : (
-        <Link href="/bosses" className="fight-banner idle">
-          <div style={{ width: 64, height: 64, flex: "none" }}><BossPhoto boss={BOSSES[0]} round /></div>
-          <div className="grow">
-            <b className="display">Боссы ждут</b>
-            <div className="small muted">Начни бой — 8 часов, урон общий со всеми</div>
-          </div>
-          <span className="btn red sm">В бой</span>
-        </Link>
-      )}
-
       <div className="room">
         <RoomScene room={state.look.room} />
         <div className="room-char"><Character equipped={state.look.equipped} size={300} className="idle" /></div>
-        <nav className="room-side" aria-label="Быстрые переходы">
-          {SIDE.map((b) => (
-            <Link key={b.href} href={b.href} className="side-btn" style={{ ["--c" as string]: b.c }}>
-              <Icon name={b.icon} size={34} />
-              <span>{b.label}</span>
-            </Link>
-          ))}
-        </nav>
         <div className="room-right">
           <button className="side-btn" style={{ ["--c" as string]: "#b06bff" }} onClick={() => setWardrobe(true)}>
             <Icon name="shirt" size={34} />
@@ -125,6 +97,20 @@ export function HomeScreen() {
         </div>
       </div>
 
+      {f && fb && (
+        <Link href={`/bosses/${fb.id}`} className="fight-now" style={{ ["--acc" as string]: fb.theme.accent }}>
+          <div className="fight-now-photo"><BossPhoto boss={fb} round /></div>
+          <div className="grow col" style={{ gap: 5, minWidth: 0 }}>
+            <div className="row" style={{ justifyContent: "space-between", gap: 6 }}>
+              <span className="fight-now-tag display"><i className="live-dot" />ИДЁТ БОЙ</span>
+              <span className="chip gold"><Icon name="clock" size={14} />{clock(f.endsAt - now)}</span>
+            </div>
+            <b className="display ellipsis" style={{ fontSize: 17 }}>{fb.name}</b>
+            <Bar value={f.hp} max={f.hpMax} tone="red" label={`${full(f.hp)} / ${full(f.hpMax)} HP`} />
+          </div>
+          <span className="boss-go display">›</span>
+        </Link>
+      )}
       {wardrobe && <Wardrobe onClose={() => setWardrobe(false)} />}
       {daily && <DailyWindow onClose={() => setDaily(false)} />}
     </div>

@@ -11,6 +11,7 @@ import { LOADING_LINES } from "../content/phrases.ts";
 import { loginWidget } from "./api.ts";
 import { telegramBack } from "./telegram.ts";
 import { ResultWindow } from "./screens/result.tsx";
+import { EnergyWindow } from "./screens/energy.tsx";
 
 const TABS = [
   { id: "home", href: "/", label: "Дом" },
@@ -31,6 +32,7 @@ function activeTab(path: string): string {
 function Hud() {
   const { state } = useGame();
   const now = useNow();
+  const [energyOpen, setEnergyOpen] = useState(false);
   if (!state) return null;
   const p = state.player;
   const e = liveEnergy(state, now);
@@ -46,26 +48,27 @@ function Hud() {
             </div>
             <div className="row" style={{ gap: 6 }}>
               <div className="xpbar grow"><i style={{ width: `${p.levelNeed ? (p.levelXp / p.levelNeed) * 100 : 100}%` }} /></div>
-              <span className="tiny muted num">{p.levelXp} / {p.levelNeed} XP</span>
+              <span className="tiny muted num" title="Авторитет">{p.levelNeed ? `${p.levelXp} / ${p.levelNeed}` : "макс."} АВТ</span>
             </div>
           </div>
         </Link>
-        <Link href="/locations" className={`energy-chip ${e.energy > p.energyMax ? "over" : ""}`} aria-label="Энергия">
+        <button className={`energy-chip ${e.energy > p.energyMax ? "over" : ""}`} aria-label="Энергия" onClick={() => setEnergyOpen(true)}>
           <Icon name="energy" size={24} />
           <span>
             <b className="num">{e.energy}</b><span className="muted"> / {p.energyMax}</span>
             <small className="num">{e.nextIn > 0 ? `+1 через ${clock(e.nextIn)}` : e.energy > p.energyMax ? "сверх лимита" : "полная"}</small>
           </span>
-        </Link>
+        </button>
       </div>
       <div className="hud-money">
         {CURRENCIES.map((c) => (
-          <Link key={c} href="/shop?tab=exchange" className="coin-chip" title={c}>
+          <Link key={c} href="/exchange" className="coin-chip" title={`${c} — обменник`}>
             <Icon name={c} size={20} />
             <b className="num">{moneyShort(c, state.wallet[c] ?? 0)}</b>
           </Link>
         ))}
       </div>
+      {energyOpen && <EnergyWindow onClose={() => setEnergyOpen(false)} />}
     </header>
   );
 }
