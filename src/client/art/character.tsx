@@ -96,7 +96,7 @@ const EYES = [
   { cx: 550, cy: 142, ex: 552, ey: 144 },
 ];
 
-function Body({ look }: { look: Look }) {
+function Body({ look, pants }: { look: Look; pants: boolean }) {
   const skin = SKIN_TONES[look.skin] ?? SKIN_TONES[1];
   const iris = EYE_COLORS[look.eyes] ?? EYE_COLORS[0];
   return (
@@ -118,10 +118,14 @@ function Body({ look }: { look: Look }) {
           </g>
         ))}
       </g>
-      {/* base shorts: an empty pants slot never looks naked */}
-      <path d={P.SHORTS} fill="#343135" />
-      <path d={P.SHORTS_DARK} fill="#1d1b1f" />
-      <path d={P.LINES_SHORTS} fill={INK} fillRule="evenodd" />
+      {/* base shorts: an empty pants slot never looks naked (hidden under real pants) */}
+      {!pants && (
+        <g>
+          <path d={P.SHORTS} fill="#343135" />
+          <path d={P.SHORTS_DARK} fill="#1d1b1f" />
+          <path d={P.LINES_SHORTS} fill={INK} fillRule="evenodd" />
+        </g>
+      )}
     </g>
   );
 }
@@ -199,9 +203,10 @@ const WEAR: Record<string, () => ReactNode> = {
   jeans: () => (
     <g>
       <path d={P.JEANS} fill="#3d6fd6" {...outlined} />
-      <path d="M512 760 V950 M512 950 C506 1100 500 1250 498 1380 M512 950 C518 1100 524 1250 526 1380" fill="none" stroke="#2a52a8" strokeWidth="6" />
-      <path d="M350 762 H676" stroke={INK} strokeWidth="5" />
-      <path d="M392 1370 H442 M582 1370 H632" stroke="#2a52a8" strokeWidth="8" strokeLinecap="round" />
+      <path d="M356 772 H668" stroke={INK} strokeWidth="5" />
+      <path d="M512 772 V930" stroke="#2a52a8" strokeWidth="6" />
+      <path d="M380 790 C400 830 430 840 456 836 M644 790 C624 830 594 840 568 836" fill="none" stroke="#2a52a8" strokeWidth="6" strokeLinecap="round" />
+      <path d="M410 1010 C420 1120 414 1240 404 1350 M614 1010 C604 1120 610 1240 620 1350" fill="none" stroke="#5a8ae8" strokeWidth="8" strokeLinecap="round" opacity="0.7" />
     </g>
   ),
   "shorts-remote": () => <Shorts color="#ff8a3d" dark="#d0661f" />,
@@ -256,7 +261,7 @@ export function Character({ equipped, look = DEFAULT_LOOK, size = 220, className
       <ellipse cx="512" cy="1494" rx="250" ry="28" fill="rgba(0,0,0,0.3)" />
       <g className={breathe ? "breath" : undefined}>
         <g transform={HEAD_SHIFT}><HairBack style={look.hair} color={hair} /></g>
-        <Body look={look} />
+        <Body look={look} pants={!!equipped.PANTS && !hidden.has("PANTS")} />
         {SLOTS.filter((s) => s === "PANTS" || s === "SHIRT" || s === "SHOES").map(layer)}
         <g transform={HEAD_SHIFT}><HairFront style={look.hair} color={hair} /></g>
         {SLOTS.filter((s) => s === "HEAD" || s === "ACCESSORY" || s === "SPECIAL").map(layer)}
