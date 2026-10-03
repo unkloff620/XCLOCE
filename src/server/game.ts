@@ -39,7 +39,7 @@ export const ACTIONS = [
 ] as const;
 export type ActionType = (typeof ACTIONS)[number];
 
-export function dispatch(ctx: Ctx, type: ActionType, body: Record<string, unknown>) {
+export function dispatch(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Promise<unknown> {
   const idem = typeof body.idem === "string" ? body.idem.slice(0, 80) : undefined;
   switch (type) {
     case "fight_start": return combat.startFight(ctx, str(body.boss, "boss", 40));

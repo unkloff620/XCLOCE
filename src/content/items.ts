@@ -69,7 +69,7 @@ export const WEAPONS: ItemDef[] = [
   },
 ];
 
-const WEARABLES: ItemDef[] = [
+const WEARABLES: ItemDef[] = ([
   { id: "tee-white", name: "Белая футболка", slot: "SHIRT", rarity: "common", description: "Классика опенспейса.", sources: ["Стартовая"] },
   { id: "tee-pump", name: "Футболка PUMP", slot: "SHIRT", rarity: "rare", description: "Зелёная, как график в мечтах.", sources: ["Награда за локацию 1"] },
   { id: "hoodie-hodl", name: "Худи HODL", slot: "SHIRT", rarity: "epic", description: "Держит тепло и позицию.", sources: ["Награда за локацию 4"] },
@@ -81,7 +81,7 @@ const WEARABLES: ItemDef[] = [
   { id: "santa-hat", name: "Новогодний колпак", slot: "HEAD", rarity: "epic", description: "Сезонный предмет.", sources: ["Новогодний ивент"] },
   { id: "laser-eyes", name: "Лазерные глаза", slot: "ACCESSORY", rarity: "legendary", description: "Обязательный аксессуар биткоин-максималиста.", sources: ["Награда за локацию 5"] },
   { id: "gold-chain", name: "Цепь из блокчейна", slot: "ACCESSORY", rarity: "epic", description: "Каждое звено — подтверждённый блок.", sources: ["Награда за локацию 3"] },
-].map((w) => ({ ...w, category: "clothing" as const, maxStack: 1 }));
+] as Omit<ItemDef, "category" | "maxStack">[]).map((w) => ({ ...w, category: "clothing" as const, maxStack: 1 }));
 
 const MISC: ItemDef[] = [
   { id: "energy-drink", name: "Энергетик", category: "item", rarity: "common", maxStack: 999, description: "+10 энергии. Сверх лимита тоже работает.", sources: ["Двор", "Боссы"], use: { energy: 10 } },
