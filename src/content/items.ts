@@ -72,8 +72,8 @@ export const WEAPONS: ItemDef[] = [
 ];
 
 const WEARABLES: ItemDef[] = ([
-  { id: "tee-white", name: "Белая футболка", slot: "SHIRT", rarity: "common", description: "Классика опенспейса.", sources: ["Стартовая"] },
-  { id: "tee-pump", name: "Футболка PUMP", slot: "SHIRT", rarity: "rare", description: "Зелёная, как график в мечтах.", sources: ["Награда за локацию 1"] },
+  { id: "tee-white", name: "Белая майка", slot: "SHIRT", rarity: "common", description: "Классика: майка-алкоголичка, в которой начинают все.", sources: ["Стартовая"] },
+  { id: "tee-pump", name: "Майка PUMP", slot: "SHIRT", rarity: "rare", description: "Зелёная, как график в мечтах.", sources: ["Награда за локацию 1"] },
   { id: "hoodie-hodl", name: "Худи HODL", slot: "SHIRT", rarity: "epic", description: "Держит тепло и позицию.", sources: ["Награда за локацию 4"] },
   { id: "jeans", name: "Джинсы", slot: "PANTS", rarity: "common", description: "Синие. Просто синие.", sources: ["Стартовые"] },
   { id: "shorts-remote", name: "Шорты «на удалёнке»", slot: "PANTS", rarity: "rare", description: "Ниже камеры можно всё.", sources: ["Награда за локацию 2"] },

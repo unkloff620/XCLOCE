@@ -96,6 +96,7 @@ export function totalBonus(levels: Record<string, number>, rooms: string[]): Req
 
 /* ---------------- внешность ---------------- */
 export const HAIR_STYLES = [
+  { id: "bald", name: "Лысый" },
   { id: "short", name: "Короткая" },
   { id: "messy", name: "Растрёпанная" },
   { id: "buzz", name: "Под ноль" },
@@ -108,7 +109,7 @@ export const HAIR_COLORS = ["#4a2c1a", "#1d1a24", "#c9822f", "#f0d27a", "#b8401f
 export const EYE_COLORS = ["#3a2618", "#2f6fd6", "#2e9e5b", "#7a8899", "#9b5de5", "#e0a32f"] as const;
 export const SKIN_TONES = [
   { base: "#f8d5b4", shade: "#e2ad85" },
-  { base: "#f4c49c", shade: "#d99a6c" },
+  { base: "#fcb477", shade: "#d28b5b" },
   { base: "#dda57a", shade: "#b97c52" },
   { base: "#b97a4e", shade: "#94592f" },
   { base: "#8a5534", shade: "#683c20" },
@@ -116,7 +117,7 @@ export const SKIN_TONES = [
 ] as const;
 
 export interface Look { hair: string; hairColor: number; eyes: number; skin: number }
-export const DEFAULT_LOOK: Look = { hair: "short", hairColor: 0, eyes: 0, skin: 1 };
+export const DEFAULT_LOOK: Look = { hair: "bald", hairColor: 0, eyes: 0, skin: 1 };
 
 export function normalizeLook(v: unknown): Look {
   const o = (v && typeof v === "object" ? v : {}) as Record<string, unknown>;
