@@ -96,13 +96,14 @@ const EYES = [
   { cx: 550, cy: 142, ex: 552, ey: 144 },
 ];
 
-function Body({ look, pants }: { look: Look; pants: boolean }) {
+function Body({ look, pants, shirt }: { look: Look; pants: boolean; shirt: boolean }) {
   const skin = SKIN_TONES[look.skin] ?? SKIN_TONES[1];
   const iris = EYE_COLORS[look.eyes] ?? EYE_COLORS[0];
   return (
     <g>
-      <path d={P.SIL} fill={skin.base} />
+      <path d={P.SIL} fill={skin.base} stroke={INK} strokeWidth="8" strokeLinejoin="round" />
       <path d={P.SHADE} fill={skin.shade} />
+      {!shirt && <Torso shade={skin.shade} />}
       <path d={P.EYES_WHITE} fill="#fbfbfb" />
       <path d={P.LINES_SKIN} fill={INK} fillRule="evenodd" />
       {/* coloured irises on top of the traced ones, kept inside the eye opening */}
@@ -126,6 +127,40 @@ function Body({ look, pants }: { look: Look; pants: boolean }) {
           <path d={P.LINES_SHORTS} fill={INK} fillRule="evenodd" />
         </g>
       )}
+    </g>
+  );
+}
+
+/** Bare torso drawn when no shirt is worn: sides, collarbones, chest, abs, shading (mirrored around x=512). */
+const M = (d: string) => d; // marker for paths that are mirrored below
+const TORSO_SIDE = M("M374 352 C366 410 366 456 374 500 C384 556 392 598 388 640 C384 682 372 712 364 740");
+const TORSO_SHADE = M("M374 352 C366 410 366 456 374 500 C384 556 392 598 388 640 C384 682 372 712 364 740 L392 740 C404 690 414 640 410 590 C404 540 392 470 396 400 Z");
+const PEC_SHADE = M("M396 420 C410 456 460 474 506 458 L506 476 C456 496 404 476 390 440 Z");
+const PEC = M("M392 372 C392 428 446 466 506 454");
+const COLLAR = M("M430 318 C456 332 486 336 506 330");
+const ABS = M("M466 500 C482 508 496 508 506 504 M462 556 C480 562 496 562 506 558 M464 610 C480 616 496 616 506 612");
+const OBLIQUE = M("M418 520 C436 580 448 640 466 716");
+
+function mirror(d: string) {
+  return d.replace(/(-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?)/g, (_, x, y) => `${1024 - Number(x)} ${y}`);
+}
+
+function Torso({ shade }: { shade: string }) {
+  const both = (d: string) => `${d} ${mirror(d)}`;
+  return (
+    <g>
+      <path d={both(TORSO_SHADE)} fill={shade} opacity="0.9" />
+      <path d={both(PEC_SHADE)} fill={shade} />
+      <path d="M496 600 C504 640 520 640 528 600 L528 700 C520 716 504 716 496 700 Z" fill={shade} opacity="0.55" />
+      <g fill="none" stroke={INK} strokeLinecap="round" strokeLinejoin="round">
+        <path d={both(TORSO_SIDE)} strokeWidth="8" />
+        <path d={both(PEC)} strokeWidth="7" />
+        <path d={both(COLLAR)} strokeWidth="5" />
+        <path d={both(ABS)} strokeWidth="5" />
+        <path d={both(OBLIQUE)} strokeWidth="4.5" opacity="0.8" />
+        <path d="M512 352 V440 M512 470 V690" strokeWidth="4.5" />
+      </g>
+      <ellipse cx="512" cy="706" rx="6" ry="8" fill={INK} opacity="0.8" />
     </g>
   );
 }
@@ -154,31 +189,85 @@ function Shorts({ color, dark }: { color: string; dark: string }) {
   );
 }
 
-function Shoes({ upper, sole, strapOnly }: { upper: string; sole: string; strapOnly?: boolean }) {
+/* ---------------- jeans: slim straight cut, waistband, fly, pockets, seams, cuffs ---------------- */
+const JEANS_SHAPE =
+  "M356 736 H668 C676 790 680 860 674 960 L684 1390 H598 L542 994 Q512 968 482 994 L426 1390 H340 L350 960 C344 860 348 790 356 736 Z";
+function Jeans() {
+  const blue = "#3a6fd8";
+  const dark = "#2a52a8";
+  const light = "#6d9bf0";
+  const stitch = "#e8b04b";
   return (
     <g>
-      <clipPath id="feet-clip"><path d={P.FEET} /></clipPath>
-      {strapOnly ? (
-        <g>
-          <g clipPath="url(#feet-clip)">
-            <rect x="200" y="1474" width="640" height="40" fill={sole} />
-            <rect x="200" y="1418" width="640" height="30" fill={upper} />
-          </g>
-          <path d="M290 1418 H420 M600 1418 H740 M290 1448 H420 M600 1448 H740" stroke={INK} strokeWidth="5" clipPath="url(#feet-clip)" />
-        </g>
-      ) : (
-        <g>
-          <path d={P.FEET} fill={upper} {...outlined} />
-          <g clipPath="url(#feet-clip)">
-            <rect x="200" y="1468" width="640" height="40" fill={sole} />
-            <path d="M200 1468 H840" stroke={INK} strokeWidth="5" />
-            <path d="M330 1420 L360 1440 M340 1404 L370 1424 M690 1420 L660 1440 M680 1404 L650 1424" stroke={INK} strokeWidth="5" strokeLinecap="round" />
-          </g>
-        </g>
-      )}
+      <path d={JEANS_SHAPE} fill={blue} stroke={INK} strokeWidth="9" strokeLinejoin="round" />
+      {/* shading on the inner and outer side of each leg */}
+      <path d="M350 960 L340 1390 H372 L378 980 C370 900 366 840 362 790 Z" fill={dark} opacity="0.75" />
+      <path d="M542 994 L598 1390 H628 L572 1000 C560 990 550 990 542 994 Z" fill={dark} opacity="0.75" />
+      <path d="M482 994 L460 1160 L470 1170 L496 990 Z" fill={dark} opacity="0.5" />
+      <path d="M392 1000 C396 1120 392 1260 386 1360 M636 1000 C634 1120 640 1260 646 1360" fill="none" stroke={light} strokeWidth="9" strokeLinecap="round" opacity="0.55" />
+      {/* knee creases */}
+      <path d="M380 1170 C396 1178 414 1178 430 1170 M594 1170 C610 1178 628 1178 644 1170" fill="none" stroke={dark} strokeWidth="5" strokeLinecap="round" />
+      {/* waistband, loops, button, fly */}
+      <path d="M356 736 H668 L670 770 H354 Z" fill={dark} stroke={INK} strokeWidth="6" strokeLinejoin="round" />
+      {[384, 448, 576, 640].map((x) => <rect key={x} x={x - 5} y="732" width="10" height="44" rx="3" fill={blue} stroke={INK} strokeWidth="4" />)}
+      <circle cx="512" cy="753" r="9" fill="#e8b04b" stroke={INK} strokeWidth="4" />
+      <path d="M512 770 V900 C530 900 540 880 540 850 V772" fill="none" stroke={INK} strokeWidth="5" strokeLinejoin="round" />
+      <path d="M530 776 V850 C530 874 524 888 514 892" fill="none" stroke={stitch} strokeWidth="3" strokeDasharray="7 6" />
+      {/* front pockets with stitching */}
+      <path d="M372 772 C386 822 420 846 462 842" fill="none" stroke={INK} strokeWidth="5" strokeLinecap="round" />
+      <path d="M652 772 C638 822 604 846 562 842" fill="none" stroke={INK} strokeWidth="5" strokeLinecap="round" />
+      <path d="M384 778 C398 816 424 832 456 830 M640 778 C626 816 600 832 568 830" fill="none" stroke={stitch} strokeWidth="3" strokeDasharray="7 6" />
+      {/* side seams */}
+      <path d="M352 800 C350 880 352 940 352 990 L344 1380 M672 800 C674 880 672 940 672 990 L680 1380" fill="none" stroke={stitch} strokeWidth="3" strokeDasharray="7 6" opacity="0.8" />
+      {/* rolled cuffs */}
+      <path d="M342 1354 H426 L424 1390 H340 Z M598 1354 H682 L684 1390 H600 Z" fill={light} stroke={INK} strokeWidth="6" strokeLinejoin="round" />
+      <path d="M346 1372 H422 M602 1372 H678" stroke={blue} strokeWidth="4" />
     </g>
   );
 }
+
+/* ---------------- sneakers: drawn for the left foot, mirrored for the right ---------------- */
+function Sneaker({ upper, accent, sole }: { upper: string; accent: string; sole: string }) {
+  return (
+    <g>
+      {/* sole */}
+      <path d="M274 1486 C272 1508 286 1520 306 1520 H410 C426 1520 434 1508 432 1490 L428 1478 C380 1490 318 1494 274 1486 Z" fill={sole} stroke={INK} strokeWidth="7" strokeLinejoin="round" />
+      <path d="M282 1506 H424" stroke="rgba(0,0,0,0.25)" strokeWidth="4" />
+      {/* upper */}
+      <path d="M334 1388 C334 1410 318 1430 294 1446 C272 1460 268 1480 278 1490 C318 1496 380 1492 430 1482 L428 1400 C414 1382 352 1380 334 1388 Z" fill={upper} stroke={INK} strokeWidth="7" strokeLinejoin="round" />
+      {/* toe cap and side panel shade */}
+      <path d="M280 1486 C276 1468 288 1452 306 1446 C318 1460 320 1476 316 1490 C302 1491 290 1490 280 1486 Z" fill="rgba(0,0,0,0.08)" stroke={INK} strokeWidth="4" strokeLinejoin="round" />
+      <path d="M402 1400 L428 1402 L430 1482 L404 1486 C410 1456 408 1426 402 1400 Z" fill="rgba(0,0,0,0.12)" />
+      {/* accent stripe (generic, no brand) */}
+      <path d="M332 1468 C350 1444 372 1470 392 1446 C404 1432 414 1440 424 1430" fill="none" stroke={INK} strokeWidth="14" strokeLinecap="round" />
+      <path d="M332 1468 C350 1444 372 1470 392 1446 C404 1432 414 1440 424 1430" fill="none" stroke={accent} strokeWidth="8" strokeLinecap="round" />
+      {/* collar, tongue, laces */}
+      <ellipse cx="380" cy="1392" rx="44" ry="9" fill="#2c2f48" stroke={INK} strokeWidth="5" />
+      <path d="M352 1396 C350 1414 342 1428 330 1438" fill="none" stroke={INK} strokeWidth="5" strokeLinecap="round" />
+      <path d="M346 1404 L366 1408 M340 1416 L360 1421 M332 1428 L352 1434" stroke={INK} strokeWidth="5" strokeLinecap="round" />
+      <path d="M346 1404 L366 1408 M340 1416 L360 1421 M332 1428 L352 1434" stroke="#f2f3fb" strokeWidth="2.5" strokeLinecap="round" />
+      {/* heel tab */}
+      <path d="M420 1396 L432 1398 L432 1430 L422 1428 Z" fill={accent} stroke={INK} strokeWidth="4" strokeLinejoin="round" />
+    </g>
+  );
+}
+
+function Slipper({ strap, sole }: { strap: string; sole: string }) {
+  return (
+    <g>
+      <path d="M272 1490 C270 1508 284 1518 302 1518 H412 C428 1518 436 1506 434 1490 Z" fill={sole} stroke={INK} strokeWidth="7" strokeLinejoin="round" />
+      <path d="M300 1458 C330 1430 392 1424 424 1436 L428 1470 C390 1460 330 1468 296 1484 Z" fill={strap} stroke={INK} strokeWidth="7" strokeLinejoin="round" />
+      <path d="M318 1462 C350 1446 390 1442 418 1448" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="5" strokeLinecap="round" />
+    </g>
+  );
+}
+
+const pair = (one: ReactNode) => (
+  <g>
+    {one}
+    <g transform="translate(1024 0) scale(-1 1)">{one}</g>
+  </g>
+);
 
 const WEAR: Record<string, () => ReactNode> = {
   "tee-white": () => <Tank color="#fcfcfc" shadeColor="#cfd0d6" />,
@@ -200,18 +289,10 @@ const WEAR: Record<string, () => ReactNode> = {
       </Tank>
     </g>
   ),
-  jeans: () => (
-    <g>
-      <path d={P.JEANS} fill="#3d6fd6" {...outlined} />
-      <path d="M356 772 H668" stroke={INK} strokeWidth="5" />
-      <path d="M512 772 V930" stroke="#2a52a8" strokeWidth="6" />
-      <path d="M380 790 C400 830 430 840 456 836 M644 790 C624 830 594 840 568 836" fill="none" stroke="#2a52a8" strokeWidth="6" strokeLinecap="round" />
-      <path d="M410 1010 C420 1120 414 1240 404 1350 M614 1010 C604 1120 610 1240 620 1350" fill="none" stroke="#5a8ae8" strokeWidth="8" strokeLinecap="round" opacity="0.7" />
-    </g>
-  ),
+  jeans: () => <Jeans />,
   "shorts-remote": () => <Shorts color="#ff8a3d" dark="#d0661f" />,
-  sneakers: () => <Shoes upper="#f2f3fb" sole="#ff4d6d" />,
-  slippers: () => <Shoes upper="#3fd2ff" sole="#2c3566" strapOnly />,
+  sneakers: () => pair(<Sneaker upper="#f4f5fb" accent="#ff4d6d" sole="#e9e3d6" />),
+  slippers: () => pair(<Slipper strap="#3fd2ff" sole="#2c3566" />),
   "cap-moon": () => (
     <g transform={HEAD_SHIFT}>
       <path d="M96 116 C96 52 140 36 180 36 C222 36 266 52 264 116 Z" fill="#151933" stroke={OL} strokeWidth={W} />
@@ -261,7 +342,7 @@ export function Character({ equipped, look = DEFAULT_LOOK, size = 220, className
       <ellipse cx="512" cy="1494" rx="250" ry="28" fill="rgba(0,0,0,0.3)" />
       <g className={breathe ? "breath" : undefined}>
         <g transform={HEAD_SHIFT}><HairBack style={look.hair} color={hair} /></g>
-        <Body look={look} pants={!!equipped.PANTS && !hidden.has("PANTS")} />
+        <Body look={look} pants={!!equipped.PANTS && !hidden.has("PANTS")} shirt={!!equipped.SHIRT && !hidden.has("SHIRT")} />
         {SLOTS.filter((s) => s === "PANTS" || s === "SHIRT" || s === "SHOES").map(layer)}
         <g transform={HEAD_SHIFT}><HairFront style={look.hair} color={hair} /></g>
         {SLOTS.filter((s) => s === "HEAD" || s === "ACCESSORY" || s === "SPECIAL").map(layer)}
