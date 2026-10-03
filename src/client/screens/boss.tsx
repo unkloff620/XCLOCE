@@ -12,7 +12,7 @@ import { ItemArt } from "../art/items.tsx";
 import { Icon } from "../art/icons.tsx";
 import { Bar, Empty } from "../ui.tsx";
 import { useFx, type Fx } from "../fx/attack.tsx";
-import { BossRewardsPanel, useBossList } from "./bosses.tsx";
+import { BossRewardsPanel, BossRulesHelp, useBossList } from "./bosses.tsx";
 import { BossPhoto } from "./boss-parts.tsx";
 import { clock, full, pct, short } from "../format.ts";
 import { haptic } from "../telegram.ts";
@@ -44,7 +44,7 @@ function Arena({ boss, hp, hpMax, endsAt, fx, hit, rug, feed }: { boss: BossDef;
         <div className="arena-feed">
           {feed.slice(0, 3).map((h) => (
             <div key={h.seq} className="feed-line">
-              <b>{h.name}</b> {FEED_VERB[h.weapon] ?? "ударил"} — <b className="dmg">{h.damage}</b>
+              <b>{h.name}</b> {FEED_VERB[h.weapon] ?? "ударил"} — <b className="dmg">{h.damage}</b>{h.crit && <b className="crit-tag"> КРИТ</b>}
             </div>
           ))}
         </div>
@@ -94,7 +94,7 @@ export function BossScreen({ id }: { id: string }) {
   const [hitAnim, setHitAnim] = useState(false);
   const [rug, setRug] = useState(false);
   const [pendingDmg, setPendingDmg] = useState(0);
-  const [phrase, setPhrase] = useState<{ text: string; id: number } | null>(null);
+  const [phrase, setPhrase] = useState<{ text: string; id: number; crit?: boolean } | null>(null);
   const [tab, setTab] = useState<"top" | "mine">("top");
   const [details, setDetails] = useState<{ top: { playerId: number; name: string; damage: number; wins: number }[]; myHits: { weapon: string; damage: number; phrase: number; at: number }[] } | null>(null);
   const lastSeq = useRef(0);
@@ -163,8 +163,9 @@ export function BossScreen({ id }: { id: string }) {
     setPendingDmg((d) => d + w.weapon.damage);
     setTray((t) => t.map((x) => (x.id === weapon && w.weapon.kind === "consumable" ? { ...x, qty: Math.max(0, x.qty - 1) } : x)));
     try {
-      const r = await api.action<{ damage: number; phrase: string; hp: number; status: string; left: number | null; readyAt: number | null }>("attack", { weapon, idem: crypto.randomUUID() });
-      setPhrase({ text: r.result.phrase || w.weapon.action, id: Date.now() });
+      const r = await api.action<{ damage: number; crit: boolean; phrase: string; hp: number; status: string; left: number | null; readyAt: number | null }>("attack", { weapon, idem: crypto.randomUUID() });
+      setPhrase({ text: r.result.crit ? `КРИТ! −${r.result.damage} · ${r.result.phrase || w.weapon.action}` : r.result.phrase || w.weapon.action, id: Date.now(), crit: r.result.crit });
+      if (r.result.crit) haptic.ok();
       setView((v) => (v ? { ...v, hp: Math.min(v.hp, r.result.hp), myDamage: v.myDamage + r.result.damage, myHits: v.myHits + 1 } : v));
       setTray((t) => t.map((x) => (x.id === weapon ? { ...x, qty: r.result.left ?? x.qty, readyAt: r.result.readyAt ?? x.readyAt } : x)));
       if (r.result.status !== "active") void refresh();
@@ -216,7 +217,7 @@ export function BossScreen({ id }: { id: string }) {
       {fightId ? (
         <>
           <Arena boss={boss} hp={hpShown} hpMax={hpMax} endsAt={state!.fight!.endsAt} fx={layer} hit={hitAnim} rug={rug} feed={hits} />
-          {phrase && <div key={phrase.id} className="phrase-bubble">{phrase.text}</div>}
+          {phrase && <div key={phrase.id} className={`phrase-bubble ${phrase.crit ? "crit" : ""}`}>{phrase.text}</div>}
           <div className="row small" style={{ justifyContent: "space-between", margin: "10px 2px" }}>
             <span>Мой вклад: <b className="num">{full(view?.myDamage ?? 0)}</b> <span className="muted">({myShare.toFixed(1)}%)</span></span>
             <button className={`btn sm ${fleeAsk ? "red" : "dark"}`} onClick={flee} disabled={busy === "fight_flee"}>{fleeAsk ? "Точно сдаться?" : "Сдаться"}</button>
@@ -269,22 +270,12 @@ export function BossScreen({ id }: { id: string }) {
             )}
             {boss.final && <span className="chip gold boss-card-final">ФИНАЛЬНЫЙ БОСС</span>}
           </div>
-          <div className="boss-card-body col">
-            <p className="boss-story">{boss.story}</p>
-            <div className="boss-facts">
-              <div><span className="tiny muted">Здоровье</span><b className="num">{full(hpMax)} HP</b></div>
-              <div><span className="tiny muted">Время боя</span><b>8 часов</b></div>
-              <div><span className="tiny muted">Победы сегодня</span><b className="num">{row?.fightsToday ?? 0} / {row?.fightsPerDay ?? 7}</b></div>
-              <div><span className="tiny muted">Мои ключи</span><b className="num">{boss.final ? "—" : row?.myKeys ?? 0}</b></div>
+          <div className="boss-card-vitals">
+            <Bar value={hpMax} max={hpMax} tone="red" height={26} label={`${full(hpMax)} / ${full(hpMax)} HP`} />
+            <div className="row small" style={{ justifyContent: "space-between" }}>
+              <span className="chip gold"><Icon name="clock" size={14} />Бой: 8 часов</span>
+              <span className="muted">Победы сегодня: <b className="num" style={{ color: "var(--ink)" }}>{row?.fightsToday ?? 0}/{row?.fightsPerDay ?? 7}</b></span>
             </div>
-            {boss.phases && (
-              <div className="small muted">Фазы: {boss.phases.map((p) => p.name).join(" → ")}</div>
-            )}
-            <div className="boss-card-rewards">
-              <b className="small">Награда за победу</b>
-              <BossRewardsPanel bossId={id} />
-            </div>
-            <div className="tiny muted">Бой личный, а урон общий: удары всех, кто сейчас бьёт этого босса, снимают HP и в твоём бою. Проигранный бой в лимит не идёт.</div>
           </div>
           <div className="boss-card-cta">
             {row && !row.unlocked ? (
@@ -301,10 +292,22 @@ export function BossScreen({ id }: { id: string }) {
                 <Link className="btn violet block" href={`/bosses/${otherFight.bossId}`}>К текущему бою</Link>
               </div>
             ) : (
-              <button className="btn red big block" disabled={busy === "fight_start" || limitLeft <= 0} onClick={start}>
-                {limitLeft <= 0 ? "Лимит побед на сегодня" : "В бой"}
-              </button>
+              <div className="row" style={{ gap: 8 }}>
+                <button className="btn red big grow" disabled={busy === "fight_start" || limitLeft <= 0} onClick={start}>
+                  {limitLeft <= 0 ? "Лимит побед на сегодня" : "В бой"}
+                </button>
+                <BossRulesHelp topic="boss" />
+              </div>
             )}
+          </div>
+          <div className="boss-card-body col">
+            <p className="boss-story">{boss.story}</p>
+            {boss.phases && <div className="small muted">Фазы: {boss.phases.map((p) => p.name).join(" → ")}</div>}
+            <div className="boss-card-rewards">
+              <b className="small">Награда за победу</b>
+              <BossRewardsPanel bossId={id} />
+              {!boss.final && <div className="tiny muted">Твоих ключей: {row?.myKeys ?? 0}</div>}
+            </div>
           </div>
         </div>
       )}

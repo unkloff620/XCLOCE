@@ -33,6 +33,28 @@ export function SlotSymbolArt({ s, size = 44 }: { s: SlotSymbol; size?: number }
   }
 }
 
+/** The machine as it stands in the yard (button picture). */
+export function SlotCabinet() {
+  return (
+    <svg viewBox="0 0 120 190" width="100%" height="100%" aria-hidden="true">
+      <rect x="10" y="30" width="100" height="150" rx="14" fill="#7a1730" stroke={OL} strokeWidth="5" />
+      <rect x="22" y="8" width="76" height="30" rx="10" fill="#ffd23f" stroke={OL} strokeWidth="5" />
+      <text x="60" y="31" textAnchor="middle" fontSize="22" fontWeight="900" fill="#c2143c" fontFamily="var(--font-display), sans-serif">777</text>
+      <rect x="20" y="50" width="80" height="44" rx="8" fill="#140d24" stroke="#ffd23f" strokeWidth="4" />
+      {[0, 1, 2].map((i) => <rect key={i} x={26 + i * 24} y="56" width="20" height="32" rx="4" fill="#f2f3fb" stroke={OL} strokeWidth="2.5" />)}
+      {[0, 1, 2].map((i) => <text key={i} x={36 + i * 24} y="80" textAnchor="middle" fontSize="20" fontWeight="900" fill="#ff3b5c" fontFamily="var(--font-display), sans-serif">7</text>)}
+      <rect x="26" y="106" width="68" height="14" rx="5" fill="#4a0c1f" stroke={OL} strokeWidth="3" />
+      <circle cx="44" cy="140" r="9" fill="#2ee88a" stroke={OL} strokeWidth="3" />
+      <circle cx="76" cy="140" r="9" fill="#ff4d6d" stroke={OL} strokeWidth="3" />
+      <rect x="30" y="158" width="60" height="12" rx="4" fill="#2a0614" stroke={OL} strokeWidth="3" />
+      <path d="M110 70 H116 V36" stroke={OL} strokeWidth="9" strokeLinecap="round" fill="none" />
+      <path d="M110 70 H116 V36" stroke="#c9ceea" strokeWidth="4" strokeLinecap="round" fill="none" />
+      <circle cx="116" cy="30" r="9" fill="#ff4d6d" stroke={OL} strokeWidth="3.5" />
+      {[0, 1, 2, 3, 4].map((i) => <circle key={i} className="bulb" cx={20 + i * 20} cy="44" r="3.5" fill="#ffd23f" style={{ animationDelay: `${i * 0.15}s` }} />)}
+    </svg>
+  );
+}
+
 const STRIP: SlotSymbol[] = [...SLOT_SYMBOLS, ...SLOT_SYMBOLS];
 
 interface Spin { outcome: string; kind: "jackpot" | "triple" | "pair" | "miss"; title: string; reels: SlotSymbol[]; reward: Granted | null; left: number }

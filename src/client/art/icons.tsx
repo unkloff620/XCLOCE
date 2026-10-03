@@ -154,6 +154,15 @@ const ICONS: Record<string, () => ReactNode> = {
       <path d="M8 58 a24 20 0 0 1 48 0 Z" fill="#8d6bff" {...S} />
     </>
   ),
+  door: () => (
+    <>
+      <rect x="14" y="6" width="36" height="54" rx="4" fill="#8a5a2b" {...S} />
+      <rect x="20" y="12" width="24" height="18" rx="2" fill="#6b4320" stroke={OL} strokeWidth="2.5" />
+      <rect x="20" y="34" width="24" height="18" rx="2" fill="#6b4320" stroke={OL} strokeWidth="2.5" />
+      <circle cx="42" cy="34" r="3.5" fill="#ffcc33" stroke={OL} strokeWidth="2" />
+      <path d="M50 60 H6" stroke={OL} strokeWidth="4" strokeLinecap="round" />
+    </>
+  ),
   bolt: () => <path d="M37 4 L12 37 H29 L24 60 L52 24 H34 Z" fill="#ffcc33" {...S} />,
   fire: () => (
     <>

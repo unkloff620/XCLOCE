@@ -2,6 +2,7 @@
 import { tg } from "./telegram.ts";
 import type { Currency } from "../content/currencies.ts";
 import type { Reward } from "../content/rewards.ts";
+import type { Look } from "../content/home.ts";
 
 /* ---------- types of what the server sends (kept loose on purpose: the server is the source of truth) ---------- */
 export interface Granted {
@@ -21,7 +22,9 @@ export interface GameState {
   wallet: Record<Currency, number>;
   inventory: { id: string; qty: number }[];
   cooldowns: Record<string, number>;
-  look: { equipped: Record<string, string>; room: string };
+  look: { equipped: Record<string, string>; room: string; body: Look };
+  home: { levels: Record<string, number>; rooms: string[]; bonus: { critChance: number; critDamage: number; damage: number } };
+  helpSeen: string[];
   yard: { count: number; max: number; nextAt: number | null };
   fight: { id: number; bossId: string; hp: number; hpMax: number; endsAt: number } | null;
   pending: { fightId: number; bossId: string; status: string }[];
@@ -32,7 +35,7 @@ export interface GameState {
   /** inventory sale prices in RUB */
   sell: Record<string, number>;
 }
-export interface Hit { seq: number; playerId: number; name: string; weapon: string; damage: number; phrase: number; at: number }
+export interface Hit { seq: number; playerId: number; name: string; weapon: string; damage: number; phrase: number; at: number; crit?: boolean }
 export interface FightView {
   fightId: number; bossId: string; hp: number; hpMax: number; status: "active" | "won" | "lost";
   startedAt: number; endsAt: number; myDamage: number; myHits: number; killer: string | null; killerIsMe: boolean;

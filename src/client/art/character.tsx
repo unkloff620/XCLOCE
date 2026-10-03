@@ -8,9 +8,8 @@ import type { ReactNode } from "react";
 import type { Slot } from "../../content/items.ts";
 import { SLOTS, itemById } from "../../content/items.ts";
 import { OL } from "./icons.tsx";
+import { DEFAULT_LOOK, EYE_COLORS, HAIR_COLORS, SKIN_TONES, type Look } from "../../content/home.ts";
 
-const SKIN = "#f4c49c";
-const SKIN_D = "#d99a6c";
 const W = 4; // outline width on this grid
 
 /** a limb: thick rounded line with a dark outline */
@@ -29,7 +28,82 @@ const LEG_L = "M146 470 L140 650";
 const LEG_R = "M214 470 L220 650";
 const TORSO = "M112 276 C140 256 220 256 248 276 L258 470 C220 482 140 482 102 470 Z";
 
-function Body() {
+/** darker / lighter shade of a #rrggbb colour */
+function shade(hex: string, k: number): string {
+  const n = parseInt(hex.slice(1), 16);
+  const f = (v: number) => Math.max(0, Math.min(255, Math.round(k < 0 ? v * (1 + k) : v + (255 - v) * k)));
+  return `#${[(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => f(v).toString(16).padStart(2, "0")).join("")}`;
+}
+
+/** hair drawn BEHIND the head (long hair, bun) */
+function HairBack({ style, color }: { style: string; color: string }) {
+  if (style === "long") {
+    return <path d="M90 150 C80 70 130 44 180 44 C232 44 282 70 270 150 L282 300 C250 318 214 312 200 300 L160 300 C146 312 110 318 78 300 Z" fill={color} stroke={OL} strokeWidth={W} strokeLinejoin="round" />;
+  }
+  if (style === "bun") {
+    return <circle cx="180" cy="50" r="34" fill={color} stroke={OL} strokeWidth={W} />;
+  }
+  return null;
+}
+
+/** hair drawn OVER the head */
+function HairFront({ style, color }: { style: string; color: string }) {
+  const hl = shade(color, 0.35);
+  switch (style) {
+    case "messy":
+      return (
+        <g>
+          <path d="M92 146 C82 96 104 58 136 50 L146 30 L162 48 L178 22 L194 46 L214 28 L222 52 C258 58 280 96 268 146 C256 118 238 104 220 100 L210 120 L196 102 L178 124 L164 104 L146 122 L136 104 C118 110 102 124 92 146 Z" fill={color} stroke={OL} strokeWidth={W} strokeLinejoin="round" />
+          <path d="M150 70 C164 62 186 62 200 68" stroke={hl} strokeWidth="6" strokeLinecap="round" fill="none" />
+        </g>
+      );
+    case "buzz":
+      return <path d="M94 138 C94 84 130 60 180 60 C230 60 266 84 266 138 C250 114 220 104 180 104 C140 104 110 114 94 138 Z" fill={color} opacity="0.88" stroke={OL} strokeWidth={W} strokeLinejoin="round" />;
+    case "long":
+      return (
+        <g>
+          <path d="M94 150 C86 76 136 48 180 50 C226 48 276 76 266 150 C258 120 240 100 214 92 C196 112 160 118 128 108 C112 118 100 132 94 150 Z" fill={color} stroke={OL} strokeWidth={W} strokeLinejoin="round" />
+          <path d="M146 70 C162 60 190 60 206 66" stroke={hl} strokeWidth="6" strokeLinecap="round" fill="none" />
+        </g>
+      );
+    case "mohawk":
+      return (
+        <g>
+          <path d="M96 136 C98 92 130 66 180 66 C230 66 262 92 264 136 C246 116 220 106 180 106 C140 106 114 116 96 136 Z" fill={shade(color, -0.35)} opacity="0.7" />
+          <path d="M156 106 L150 60 L164 70 L162 22 L180 44 L192 8 L200 44 L214 26 L210 70 L222 62 L206 106 Z" fill={color} stroke={OL} strokeWidth={W} strokeLinejoin="round" />
+        </g>
+      );
+    case "curly":
+      return (
+        <g fill={color} stroke={OL} strokeWidth={W}>
+          {[[104, 120, 22], [116, 88, 24], [142, 66, 26], [178, 56, 28], [214, 66, 26], [242, 88, 24], [256, 120, 22], [160, 96, 20], [200, 96, 20]].map(([x, y, r]) => <circle key={`${x}${y}`} cx={x} cy={y} r={r} />)}
+          <path d="M126 80 C150 70 210 70 234 80" stroke={hl} strokeWidth="5" strokeLinecap="round" fill="none" />
+        </g>
+      );
+    case "bun":
+      return (
+        <g>
+          <path d="M94 140 C90 84 134 60 180 60 C226 60 270 84 266 140 C254 116 230 102 180 102 C130 102 106 116 94 140 Z" fill={color} stroke={OL} strokeWidth={W} strokeLinejoin="round" />
+          <path d="M150 74 C164 66 196 66 210 74" stroke={hl} strokeWidth="6" strokeLinecap="round" fill="none" />
+        </g>
+      );
+    default: // short
+      return (
+        <g>
+          <path d="M96 140 C92 70 140 50 180 52 C226 50 270 72 264 140 C252 112 236 98 214 96 C206 110 186 116 160 110 C140 112 116 116 96 140 Z" fill={color} stroke={OL} strokeWidth={W} strokeLinejoin="round" />
+          <path d="M150 74 C164 66 186 64 200 70" stroke={hl} strokeWidth="6" strokeLinecap="round" fill="none" />
+        </g>
+      );
+  }
+}
+
+function Body({ look }: { look: Look }) {
+  const skin = SKIN_TONES[look.skin] ?? SKIN_TONES[1];
+  const SKIN = skin.base;
+  const SKIN_D = skin.shade;
+  const hair = HAIR_COLORS[look.hairColor] ?? HAIR_COLORS[0];
+  const brow = shade(hair, -0.35);
+  const iris = EYE_COLORS[look.eyes] ?? EYE_COLORS[0];
   return (
     <g>
       <Limb d={LEG_L} color={SKIN} width={42} />
@@ -40,28 +114,46 @@ function Body() {
       <path d="M104 450 H256 L258 520 H188 L180 500 L172 520 H102 Z" fill="#6e75a6" stroke={OL} strokeWidth={W} strokeLinejoin="round" />
       <Limb d={ARM_L} color={SKIN} width={32} />
       <Limb d={ARM_R} color={SKIN} width={32} />
+      {/* hands with a thumb */}
       <circle cx="84" cy="452" r="21" fill={SKIN} stroke={OL} strokeWidth={W} />
       <circle cx="276" cy="452" r="21" fill={SKIN} stroke={OL} strokeWidth={W} />
+      <path d="M96 440 C104 446 104 456 98 462" fill="none" stroke={SKIN_D} strokeWidth="4" strokeLinecap="round" />
+      <path d="M264 440 C256 446 256 456 262 462" fill="none" stroke={SKIN_D} strokeWidth="4" strokeLinecap="round" />
       <path d={TORSO} fill="#9aa0c8" stroke={OL} strokeWidth={W} strokeLinejoin="round" />
-      <rect x="160" y="226" width="40" height="44" rx="10" fill={SKIN_D} stroke={OL} strokeWidth={W} />
-      {/* head */}
+      {/* neck with a shadow under the chin */}
+      <rect x="158" y="222" width="44" height="50" rx="12" fill={SKIN} stroke={OL} strokeWidth={W} />
+      <path d="M162 236 C172 246 188 246 198 236" fill={SKIN_D} />
+      <HairBack style={look.hair} color={hair} />
+      {/* ears */}
       <circle cx="94" cy="160" r="20" fill={SKIN} stroke={OL} strokeWidth={W} />
       <circle cx="266" cy="160" r="20" fill={SKIN} stroke={OL} strokeWidth={W} />
+      <path d="M92 152 C86 158 88 168 96 170" fill="none" stroke={SKIN_D} strokeWidth="4" strokeLinecap="round" />
+      <path d="M268 152 C274 158 272 168 264 170" fill="none" stroke={SKIN_D} strokeWidth="4" strokeLinecap="round" />
+      {/* head + jaw shading */}
       <circle cx="180" cy="150" r="88" fill={SKIN} stroke={OL} strokeWidth={W} />
-      <path d="M96 140 C92 70 140 50 180 52 C226 50 270 72 264 140 C252 112 236 98 214 96 C206 110 186 116 160 110 C140 112 116 116 96 140 Z" fill="#4a2c1a" stroke={OL} strokeWidth={W} strokeLinejoin="round" />
-      <path d="M150 74 C164 66 186 64 200 70" stroke="#7a4a2c" strokeWidth="6" strokeLinecap="round" fill="none" />
+      <path d="M104 190 C126 236 234 236 256 190 C236 222 124 222 104 190 Z" fill={SKIN_D} opacity="0.45" />
+      <HairFront style={look.hair} color={hair} />
+      {/* eyes: white, coloured iris, pupil, two highlights */}
       <g className="blink">
-        <ellipse cx="150" cy="162" rx="15" ry="18" fill="#fff" stroke={OL} strokeWidth={W} />
-        <ellipse cx="210" cy="162" rx="15" ry="18" fill="#fff" stroke={OL} strokeWidth={W} />
-        <circle cx="153" cy="166" r="8" fill={OL} />
-        <circle cx="213" cy="166" r="8" fill={OL} />
-        <circle cx="156" cy="162" r="2.6" fill="#fff" />
-        <circle cx="216" cy="162" r="2.6" fill="#fff" />
+        <ellipse cx="150" cy="164" rx="16" ry="19" fill="#fff" stroke={OL} strokeWidth={W} />
+        <ellipse cx="210" cy="164" rx="16" ry="19" fill="#fff" stroke={OL} strokeWidth={W} />
+        <circle cx="153" cy="168" r="10" fill={iris} stroke={OL} strokeWidth="2" />
+        <circle cx="213" cy="168" r="10" fill={iris} stroke={OL} strokeWidth="2" />
+        <circle cx="153" cy="168" r="4.6" fill={OL} />
+        <circle cx="213" cy="168" r="4.6" fill={OL} />
+        <circle cx="157" cy="163" r="3" fill="#fff" />
+        <circle cx="217" cy="163" r="3" fill="#fff" />
+        <circle cx="149" cy="172" r="1.4" fill="#fff" opacity="0.8" />
+        <circle cx="209" cy="172" r="1.4" fill="#fff" opacity="0.8" />
       </g>
-      <path d="M132 136 L166 140 M228 136 L194 140" stroke={OL} strokeWidth="7" strokeLinecap="round" />
-      <path d="M156 202 C168 214 192 214 204 202" fill="none" stroke={OL} strokeWidth="6" strokeLinecap="round" />
-      <ellipse cx="124" cy="196" rx="12" ry="7" fill="#ff8a9e" opacity="0.55" />
-      <ellipse cx="236" cy="196" rx="12" ry="7" fill="#ff8a9e" opacity="0.55" />
+      {/* brows, nose, mouth, cheeks */}
+      <path d="M130 136 C142 128 158 130 168 138" stroke={brow} strokeWidth="8" strokeLinecap="round" fill="none" />
+      <path d="M230 136 C218 128 202 130 192 138" stroke={brow} strokeWidth="8" strokeLinecap="round" fill="none" />
+      <path d="M178 176 C172 190 174 196 184 196" fill="none" stroke={SKIN_D} strokeWidth="5" strokeLinecap="round" />
+      <path d="M154 206 C166 220 194 220 206 206 C196 212 164 212 154 206 Z" fill="#7a2a36" stroke={OL} strokeWidth="4" strokeLinejoin="round" />
+      <path d="M162 209 C172 213 188 213 198 209" stroke="#fff" strokeWidth="4" strokeLinecap="round" />
+      <ellipse cx="122" cy="196" rx="13" ry="7" fill="#ff8a9e" opacity="0.5" />
+      <ellipse cx="238" cy="196" rx="13" ry="7" fill="#ff8a9e" opacity="0.5" />
     </g>
   );
 }
@@ -159,19 +251,23 @@ const WEAR: Record<string, () => ReactNode> = {
   ),
 };
 
-export function Character({ equipped, size = 220, className }: { equipped: Partial<Record<Slot | string, string>>; size?: number; className?: string }) {
+export function Character({ equipped, look = DEFAULT_LOOK, size = 220, className, breathe = true }: { equipped: Partial<Record<Slot | string, string>>; look?: Look; size?: number; className?: string; breathe?: boolean }) {
   // a worn item may hide other slots (a hoodie over a shirt)
   const hidden = new Set<Slot>();
   for (const id of Object.values(equipped)) for (const h of (id ? itemById(id)?.hides : undefined) ?? []) hidden.add(h);
   return (
     <svg className={className} viewBox="0 0 360 720" width={size / 2} height={size} aria-hidden="true" style={{ overflow: "visible" }}>
+      {/* soft shadow on the floor: the character stands, not floats */}
+      <ellipse cx="180" cy="684" rx="120" ry="16" fill="rgba(0,0,0,0.28)" />
+      <g className={breathe ? "breath" : undefined}>
       {SLOTS.map((slot) => {
-        if (slot === "BODY") return <Body key="BODY" />;
+        if (slot === "BODY") return <Body key="BODY" look={look} />;
         const id = equipped[slot];
         if (!id || hidden.has(slot)) return null;
         const draw = WEAR[id];
         return draw ? <g key={slot}>{draw()}</g> : null;
       })}
+      </g>
     </svg>
   );
 }

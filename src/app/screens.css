@@ -295,3 +295,67 @@
 .pick-cell.on { box-shadow: 0 3px 0 var(--line), 0 0 0 3px var(--green, #3ddc84); }
 .pick-name { font-size: 12px; font-weight: 700; text-align: center; line-height: 1.15; }
 .pick-off { color: #ff8a9e; }
+
+/* ---------- [?] help ---------- */
+.help-btn { flex: none; display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 9px; cursor: pointer; padding: 0;
+  font: 900 15px/1 var(--font-display), sans-serif; color: var(--ink); background: var(--panel2); border: 2px solid var(--line); box-shadow: 0 2px 0 var(--line); }
+.help-btn.fresh { color: #140d24; background: #ffcc33; animation: help-blink 1.1s ease-in-out infinite; }
+@keyframes help-blink { 50% { box-shadow: 0 2px 0 var(--line), 0 0 0 5px rgba(255, 204, 51, 0.35), 0 0 16px rgba(255, 204, 51, 0.8); transform: scale(1.08); } }
+.help-body { display: flex; flex-direction: column; gap: 8px; line-height: 1.45; }
+.help-body p { margin: 0; }
+.help-body ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.title-row { display: flex; align-items: center; gap: 8px; }
+@media (prefers-reduced-motion: reduce) { .help-btn.fresh { animation: none; } }
+
+/* ---------- character breathing ---------- */
+.breath { transform-box: fill-box; transform-origin: 50% 100%; animation: breath 3.6s ease-in-out infinite; }
+@keyframes breath { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.006, 1.016); } }
+.fan { animation: fan 0.6s linear infinite; }
+@keyframes fan { to { transform: rotate(360deg); } }
+.rgb-glow { animation: rgb 3s ease-in-out infinite; }
+@keyframes rgb { 50% { filter: hue-rotate(90deg) brightness(1.2); } }
+.twinkle { animation: twinkle 2.4s ease-in-out infinite; }
+@keyframes twinkle { 50% { opacity: 0.3; } }
+@media (prefers-reduced-motion: reduce) { .breath, .fan, .rgb-glow, .twinkle { animation: none; } }
+
+/* ---------- yard: buttons on the left, the slot machine on the right ---------- */
+.yard-side { position: absolute; left: 10px; top: 52px; display: flex; flex-direction: column; gap: 8px; z-index: 2; }
+.yard-side .side-btn { width: 76px; }
+.yard-slots { position: absolute; right: 4%; top: 49%; width: 25%; aspect-ratio: 120 / 190; padding: 0; border: 0; background: none; cursor: pointer; z-index: 2;
+  filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.35)); transition: transform 0.15s; }
+.yard-slots:active { transform: scale(0.96); }
+.yard-slots.ready { animation: slot-call 2.4s ease-in-out infinite; }
+@keyframes slot-call { 0%, 80%, 100% { transform: none; } 85% { transform: rotate(-3deg); } 90% { transform: rotate(3deg); } 95% { transform: rotate(-2deg); } }
+.yard-slots-left { position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%); padding: 1px 8px; border-radius: 9px; font-size: 11px; font-weight: 800; background: #ffd23f; color: #140d24; border: 2px solid var(--line); }
+.bulb { animation: bulb 1s steps(2) infinite; }
+@media (min-width: 720px) { .yard-side .side-btn { width: 96px; } }
+.boss-card-vitals { display: flex; flex-direction: column; gap: 8px; padding: 12px 12px 4px; }
+.boss-card-cta { padding: 8px 12px 4px; }
+.boss-card-cta .help-btn { width: 40px; height: 40px; font-size: 20px; border-radius: 12px; }
+.phrase-bubble.crit { background: #ffcc33; color: #140d24; font-weight: 900; }
+.crit-tag { color: #ffcc33; }
+
+/* ---------- home: help, bottom buttons, equipment & rooms windows, look editor ---------- */
+.room-help { position: absolute; left: 10px; top: 10px; z-index: 2; }
+.room-bottom { position: absolute; left: 10px; right: 10px; bottom: 10px; display: flex; justify-content: space-between; pointer-events: none; z-index: 2; }
+.room-bottom .side-btn { pointer-events: auto; width: 74px; }
+.room-char { pointer-events: none; }
+.bonus-sum { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.equip-row { display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 14px; background: var(--panel2); border: 2px solid var(--line); }
+.equip-row.focus { box-shadow: 0 0 0 2px #ffcc33; }
+.equip-lv { display: inline-flex; gap: 3px; }
+.equip-lv i { width: 14px; height: 8px; border-radius: 3px; background: var(--bg2); border: 1.5px solid var(--line); }
+.equip-lv i.on { background: #ffcc33; }
+.rooms-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.room-card { display: flex; flex-direction: column; gap: 6px; padding: 8px; border-radius: 16px; background: var(--panel2); border: 2.5px solid var(--line); }
+.room-card.here { box-shadow: 0 0 0 2px var(--green, #3ddc84); }
+.room-thumb { border-radius: 12px; overflow: hidden; border: 2px solid var(--line); aspect-ratio: 400 / 300; }
+.room-thumb svg { margin-top: -6%; }
+.look-edit { display: flex; gap: 12px; align-items: flex-start; }
+.look-preview { flex: none; width: 120px; padding: 8px 0; }
+.look-row { display: flex; flex-direction: column; gap: 5px; }
+.look-opts { display: flex; flex-wrap: wrap; gap: 6px; }
+.look-opts .swatch { width: 28px; height: 28px; cursor: pointer; }
+.look-chip { padding: 5px 9px; border-radius: 10px; font: 700 12px/1 inherit; color: var(--ink); background: var(--bg2); border: 2px solid var(--line); cursor: pointer; }
+.look-chip.on { background: #8d6bff; }
+@media (max-width: 420px) { .look-edit { flex-direction: column; align-items: center; } .look-preview { width: 110px; } }

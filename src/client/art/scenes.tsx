@@ -1,134 +1,8 @@
 "use client";
 /* Vector backgrounds: the player's room (layered), location banners, the yard, boss arenas. */
-import type { ReactNode } from "react";
 import { OL } from "./icons.tsx";
 
 const s = (w = 4) => ({ stroke: OL, strokeWidth: w, strokeLinejoin: "round" as const, strokeLinecap: "round" as const });
-
-/* ---------------- room: separate layers so rooms and decor can be swapped later ---------------- */
-export interface RoomTheme {
-  wall: [string, string];
-  floor: [string, string];
-  window: "city" | "moon";
-  decor: { poster?: string; desk?: boolean; plant?: boolean; lamp?: boolean; rug?: string };
-}
-export const ROOMS: Record<string, RoomTheme> = {
-  basic: { wall: ["#2f3577", "#1d2150"], floor: ["#8a5a2b", "#6b4320"], window: "city", decor: { poster: "HODL", desk: true, plant: true, lamp: true, rug: "#8d6bff" } },
-};
-
-function Wall({ t }: { t: RoomTheme }) {
-  return (
-    <g>
-      <defs>
-        <linearGradient id="room-wall" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor={t.wall[0]} />
-          <stop offset="1" stopColor={t.wall[1]} />
-        </linearGradient>
-      </defs>
-      <rect width="400" height="440" fill="url(#room-wall)" />
-      {Array.from({ length: 9 }, (_, i) => <rect key={i} x={i * 48 - 8} y="0" width="22" height="440" fill="rgba(255,255,255,0.03)" />)}
-      <rect x="0" y="400" width="400" height="14" fill="rgba(0,0,0,0.25)" />
-    </g>
-  );
-}
-function Window({ t }: { t: RoomTheme }) {
-  return (
-    <g>
-      <rect x="28" y="70" width="130" height="150" rx="10" fill="#0b1030" {...s()} />
-      <g clipPath="url(#win-clip)">
-        <defs>
-          <clipPath id="win-clip"><rect x="32" y="74" width="122" height="142" rx="7" /></clipPath>
-        </defs>
-        <circle cx="128" cy="104" r="14" fill="#fff6c2" />
-        {[[34, 150, 22, 66], [58, 128, 20, 88], [80, 160, 26, 56], [108, 140, 22, 76], [132, 120, 24, 96]].map(([x, y, w, h]) => (
-          <g key={x}>
-            <rect x={x} y={y} width={w} height={h} fill="#1e2557" stroke={OL} strokeWidth="2" />
-            {Array.from({ length: Math.floor(h / 16) }, (_, k) => <rect key={k} x={x + 5} y={y + 6 + k * 16} width="5" height="6" fill={k % 3 ? "#ffcc33" : "#3d4380"} />)}
-          </g>
-        ))}
-        <path d="M34 200 L60 186 L80 194 L104 166 L124 174 L152 140" fill="none" stroke="#2ee88a" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
-      </g>
-      <path d="M93 72 V218 M30 145 H156" stroke={OL} strokeWidth="5" />
-      <rect x="20" y="214" width="146" height="14" rx="5" fill="#c9ceea" {...s()} />
-    </g>
-  );
-}
-function Poster({ text }: { text: string }) {
-  return (
-    <g transform="rotate(4 300 130)">
-      <rect x="250" y="66" width="104" height="132" rx="6" fill="#ffcc33" {...s()} />
-      <path d="M302 92 L318 126 H286 Z" fill="#ff4d6d" {...s(3)} />
-      <rect x="292" y="126" width="20" height="26" fill="#e8ebff" {...s(3)} />
-      <path d="M296 152 L302 168 L308 152" fill="#ff8a3d" {...s(3)} />
-      <text x="302" y="190" textAnchor="middle" fontSize="20" fontWeight="900" fill={OL} fontFamily="var(--font-display), sans-serif">{text}</text>
-    </g>
-  );
-}
-function Floor({ t }: { t: RoomTheme }) {
-  return (
-    <g>
-      <path d="M0 414 H400 V560 H0 Z" fill={t.floor[0]} {...s()} />
-      {Array.from({ length: 6 }, (_, i) => <path key={i} d={`M0 ${436 + i * 24} H400`} stroke={t.floor[1]} strokeWidth="3" />)}
-      {Array.from({ length: 8 }, (_, i) => <path key={`v${i}`} d={`M${(i * 61 + (i % 2) * 30) % 400} ${436 + (i % 5) * 24} v24`} stroke={t.floor[1]} strokeWidth="3" />)}
-    </g>
-  );
-}
-function Desk() {
-  return (
-    <g>
-      <rect x="276" y="300" width="112" height="72" rx="6" fill="#151933" {...s()} />
-      <path d="M296 374 V392 M368 374 V392" stroke={OL} strokeWidth="5" />
-      <rect x="290" y="244" width="84" height="56" rx="6" fill="#0b1030" {...s()} />
-      {[0, 1, 2, 3, 4].map((i) => {
-        const up = i % 2 === 0;
-        const h = [16, 24, 12, 28, 20][i];
-        return <rect key={i} x={300 + i * 14} y={290 - h - i * 3} width="8" height={h} fill={up ? "#2ee88a" : "#ff4d6d"} />;
-      })}
-      <rect x="326" y="300" width="12" height="10" fill="#2c3566" {...s(3)} />
-      <rect x="248" y="346" width="58" height="24" rx="6" fill="#ff4d6d" {...s()} />
-      <rect x="252" y="370" width="50" height="40" rx="8" fill="#c21d42" {...s()} />
-      <path d="M262 410 V424 M292 410 V424" stroke={OL} strokeWidth="5" />
-    </g>
-  );
-}
-function Plant() {
-  return (
-    <g>
-      <path d="M36 300 C30 260 50 248 58 232 M58 300 C60 262 80 254 86 236 M48 300 C40 270 20 266 14 248" fill="none" stroke={OL} strokeWidth="10" strokeLinecap="round" />
-      <path d="M36 300 C30 260 50 248 58 232 M58 300 C60 262 80 254 86 236 M48 300 C40 270 20 266 14 248" fill="none" stroke="#2ee88a" strokeWidth="5" strokeLinecap="round" />
-      <ellipse cx="58" cy="232" rx="12" ry="7" fill="#2ee88a" {...s(3)} transform="rotate(-30 58 232)" />
-      <ellipse cx="86" cy="236" rx="12" ry="7" fill="#2ee88a" {...s(3)} transform="rotate(-40 86 236)" />
-      <ellipse cx="14" cy="248" rx="12" ry="7" fill="#2ee88a" {...s(3)} transform="rotate(30 14 248)" />
-      <path d="M24 300 H74 L68 344 H30 Z" fill="#ff8a3d" {...s()} />
-    </g>
-  );
-}
-function Lamp() {
-  return (
-    <g>
-      <path d="M200 0 V40" stroke={OL} strokeWidth="4" />
-      <path d="M176 40 H224 L232 62 H168 Z" fill="#ffcc33" {...s()} />
-      <path d="M150 62 L250 62 L320 420 L80 420 Z" fill="rgba(255,220,120,0.06)" />
-    </g>
-  );
-}
-
-export function RoomScene({ room = "basic", children }: { room?: string; children?: ReactNode }) {
-  const t = ROOMS[room] ?? ROOMS.basic;
-  return (
-    <svg viewBox="0 0 400 560" width="100%" style={{ display: "block" }} aria-hidden="true">
-      <Wall t={t} />
-      <Window t={t} />
-      {t.decor.poster && <Poster text={t.decor.poster} />}
-      <Floor t={t} />
-      {t.decor.rug && <ellipse cx="200" cy="500" rx="130" ry="30" fill={t.decor.rug} {...s()} opacity="0.95" />}
-      {t.decor.desk && <Desk />}
-      {t.decor.plant && <Plant />}
-      {t.decor.lamp && <Lamp />}
-      {children}
-    </svg>
-  );
-}
 
 /* ---------------- location banners (360×140) ---------------- */
 export function LocationScene({ scene }: { scene: string }) {
@@ -218,49 +92,110 @@ export function LocationScene({ scene }: { scene: string }) {
 
 /* ---------------- yard (400×560). Item spots are in YARD_SPOTS (percent of the scene) ---------------- */
 export const YARD_SPOTS = [
-  { x: 22, y: 76 },
-  { x: 50, y: 84 },
-  { x: 78, y: 75 },
-  { x: 36, y: 64 },
-  { x: 66, y: 63 },
+  { x: 36, y: 78 },
+  { x: 54, y: 88 },
+  { x: 62, y: 72 },
+  { x: 44, y: 66 },
+  { x: 26, y: 90 },
 ];
+
+/** Night yard: houses with balconies and AC units, a 24/7 kiosk, graffiti, a lamp post, a tree, a bench, puddles. */
 export function YardScene() {
+  const win = (x: number, y: number, on: boolean, k: string) => (
+    <g key={k}>
+      <rect x={x} y={y} width="22" height="28" rx="2" fill={on ? "#ffcc33" : "#232a63"} {...s(2.5)} />
+      {on && <rect x={x + 3} y={y + 3} width="7" height="22" fill="rgba(255,255,255,0.35)" />}
+      <path d={`M${x + 11} ${y} V${y + 28}`} stroke={OL} strokeWidth="2" />
+    </g>
+  );
   return (
     <svg viewBox="0 0 400 560" width="100%" style={{ display: "block" }} aria-hidden="true">
       <defs>
         <linearGradient id="yard-sky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#1b1f47" />
-          <stop offset="1" stopColor="#3a2a5a" />
+          <stop offset="0" stopColor="#141838" />
+          <stop offset="0.7" stopColor="#3a2a5a" />
+          <stop offset="1" stopColor="#5a3a62" />
+        </linearGradient>
+        <radialGradient id="yard-lamp" cx="0.5" cy="0" r="1">
+          <stop offset="0" stopColor="#ffe9a6" stopOpacity="0.45" />
+          <stop offset="1" stopColor="#ffe9a6" stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id="yard-ground" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#4a4e72" />
+          <stop offset="1" stopColor="#30334f" />
         </linearGradient>
       </defs>
       <rect width="400" height="560" fill="url(#yard-sky)" />
-      {[[30, 30], [120, 60], [210, 24], [330, 50], [270, 90]].map(([x, y]) => <circle key={x} cx={x} cy={y} r="2.5" fill="#fff6c2" />)}
-      <rect x="0" y="70" width="250" height="250" fill="#5a3a5e" {...s()} />
-      {Array.from({ length: 4 }, (_, r) => Array.from({ length: 5 }, (_, c) => (
-        <rect key={`${r}${c}`} x={18 + c * 46} y={90 + r * 52} width="28" height="34" rx="3" fill={(r + c) % 3 ? "#ffcc33" : "#2a2f63"} {...s(3)} />
-      )))}
-      <rect x="250" y="150" width="150" height="170" fill="#45305a" {...s()} />
-      <text x="325" y="250" textAnchor="middle" fontSize="34" fontWeight="900" fill="#2ee88a" stroke={OL} strokeWidth="2.5" fontFamily="var(--font-display), sans-serif" transform="rotate(-8 325 250)">HODL</text>
-      <path d="M0 320 H400 V560 H0 Z" fill="#3d4060" {...s()} />
-      <path d="M0 330 H400" stroke="#7a7fa8" strokeWidth="6" />
-      {[[60, 400, 70], [250, 470, 90], [150, 520, 50], [330, 380, 40]].map(([x, y, w]) => <path key={x} d={`M${x} ${y} h${w}`} stroke="#2c2f48" strokeWidth="4" strokeLinecap="round" />)}
+      {/* moon and stars */}
+      <circle cx="330" cy="54" r="22" fill="#fff6c2" />
+      <circle cx="322" cy="48" r="20" fill="#1b2046" />
+      {[[30, 30], [120, 18], [210, 40], [270, 22], [380, 96], [160, 70], [250, 84]].map(([x, y]) => <circle key={`${x}${y}`} cx={x} cy={y} r="2" fill="#fff6c2" className="twinkle" />)}
+      {/* far skyline */}
+      <path d="M0 210 V150 H30 V120 H58 V160 H90 V100 H120 V140 H150 V90 H186 V130 H220 V110 H250 V150 H290 V120 H320 V160 H360 V130 H400 V210 Z" fill="#241b42" />
+      {/* main house on the left */}
+      <rect x="0" y="96" width="196" height="250" fill="#6a3f5e" {...s()} />
+      <rect x="0" y="86" width="204" height="14" fill="#4a2a44" {...s(3)} />
+      {[0, 1, 2, 3].map((r) => [0, 1, 2, 3, 4].map((c) => win(14 + c * 36, 112 + r * 52, (r * 5 + c) % 3 !== 0, `${r}${c}`)))}
+      {/* balconies and AC units */}
+      <rect x="44" y="190" width="56" height="8" fill="#3a2440" {...s(2.5)} />
+      <path d="M48 198 V214 M58 198 V214 M68 198 V214 M78 198 V214 M88 198 V214 M96 198 V214" stroke={OL} strokeWidth="2.5" />
+      <path d="M46 214 H98" stroke={OL} strokeWidth="3" />
+      <path d="M52 186 L60 170 L68 186 M70 186 L78 172 L86 186" stroke="#f2f3fb" strokeWidth="3" fill="none" />
+      <rect x="152" y="246" width="30" height="20" rx="3" fill="#c9ceea" {...s(2.5)} />
+      <circle cx="162" cy="256" r="6" fill="#6e75a6" stroke={OL} strokeWidth="2" />
+      <rect x="116" y="144" width="30" height="20" rx="3" fill="#c9ceea" {...s(2.5)} />
+      <circle cx="126" cy="154" r="6" fill="#6e75a6" stroke={OL} strokeWidth="2" />
+      {/* entrance with a lamp */}
+      <rect x="138" y="288" width="40" height="58" rx="4" fill="#2a1a2e" {...s(3)} />
+      <rect x="132" y="282" width="52" height="8" fill="#4a2a44" {...s(2.5)} />
+      <circle cx="158" cy="276" r="5" fill="#ffe9a6" />
+      <circle cx="170" cy="318" r="3" fill="#ffcc33" />
+      {/* 24/7 crypto kiosk */}
+      <rect x="200" y="252" width="96" height="94" rx="4" fill="#2b6a7a" {...s()} />
+      <rect x="196" y="236" width="104" height="22" rx="4" fill="#ff4d6d" {...s(3)} />
+      <text x="248" y="252" textAnchor="middle" fontSize="13" fontWeight="900" fill="#fff" fontFamily="var(--font-display), sans-serif">КРИПТО 24/7</text>
+      <rect x="210" y="268" width="50" height="40" rx="3" fill="#ffe9a6" {...s(2.5)} />
+      <path d="M216 300 L226 288 L236 294 L252 276" stroke="#2ee88a" strokeWidth="4" fill="none" strokeLinecap="round" />
+      <rect x="266" y="270" width="22" height="76" rx="3" fill="#1a3a44" {...s(2.5)} />
+      {/* graffiti wall */}
+      <rect x="296" y="196" width="104" height="150" fill="#4a3060" {...s()} />
+      {Array.from({ length: 6 }, (_, r) => <path key={r} d={`M296 ${214 + r * 22} H400`} stroke="rgba(0,0,0,0.2)" strokeWidth="2" />)}
+      <text x="348" y="262" textAnchor="middle" fontSize="30" fontWeight="900" fill="#2ee88a" stroke={OL} strokeWidth="2.5" fontFamily="var(--font-display), sans-serif" transform="rotate(-8 348 262)">HODL</text>
+      <path d="M318 312 L330 290 L342 312 Z" fill="#ff4d6d" {...s(2.5)} />
+      <path d="M352 320 C362 300 384 304 386 318" stroke="#ffcc33" strokeWidth="5" fill="none" strokeLinecap="round" />
+      {/* ground: curb, asphalt, puddles, manhole */}
+      <path d="M0 346 H400 V560 H0 Z" fill="url(#yard-ground)" {...s()} />
+      <path d="M0 352 H400" stroke="#8a8fb8" strokeWidth="7" />
+      <path d="M0 352 H400" stroke={OL} strokeWidth="2" strokeDasharray="30 10" />
+      <ellipse cx="300" cy="500" rx="58" ry="12" fill="#5a6aa8" opacity="0.55" />
+      <ellipse cx="300" cy="500" rx="30" ry="4" fill="#ffe9a6" opacity="0.4" />
+      <ellipse cx="90" cy="430" rx="34" ry="8" fill="#5a6aa8" opacity="0.45" />
+      <ellipse cx="200" cy="540" rx="30" ry="9" fill="#2c2f48" {...s(3)} />
+      <path d="M180 540 H220 M186 534 H214 M186 546 H214" stroke="#4a4e72" strokeWidth="2" />
+      {[[40, 470, 60], [240, 450, 80], [120, 520, 40], [330, 420, 40]].map(([x, y, w]) => <path key={x} d={`M${x} ${y} h${w}`} stroke="#2c2f48" strokeWidth="4" strokeLinecap="round" />)}
+      {/* tree */}
       <g>
-        <rect x="300" y="270" width="12" height="70" fill="#151933" {...s(3)} />
-        <circle cx="330" cy="236" r="44" fill="#2ee88a" {...s()} />
-        <circle cx="300" cy="260" r="26" fill="#2bb56b" {...s()} />
-        <circle cx="362" cy="262" r="24" fill="#2bb56b" {...s()} />
+        <path d="M330 352 V280" stroke={OL} strokeWidth="14" strokeLinecap="round" />
+        <path d="M330 352 V280" stroke="#6b4320" strokeWidth="8" strokeLinecap="round" />
+        <circle cx="330" cy="226" r="40" fill="#2ee88a" {...s()} />
+        <circle cx="298" cy="252" r="26" fill="#2bb56b" {...s()} />
+        <circle cx="364" cy="250" r="26" fill="#2bb56b" {...s()} />
+        <circle cx="318" cy="214" r="9" fill="#7ff0b0" opacity="0.7" />
       </g>
+      {/* lamp post with a light cone */}
+      <path d="M150 196 L250 196 L300 352 L100 352 Z" fill="url(#yard-lamp)" />
+      <path d="M200 352 V186" stroke={OL} strokeWidth="9" />
+      <path d="M200 352 V186" stroke="#6e75a6" strokeWidth="4" />
+      <path d="M186 180 H214 L210 196 H190 Z" fill="#ffcc33" {...s(3)} />
+      {/* bench */}
       <g>
-        <rect x="40" y="300" width="120" height="14" rx="4" fill="#ff8a3d" {...s(3)} />
-        <rect x="40" y="318" width="120" height="12" rx="4" fill="#ff8a3d" {...s(3)} />
-        <path d="M52 330 V348 M148 330 V348" stroke={OL} strokeWidth="6" />
+        <rect x="44" y="322" width="110" height="12" rx="4" fill="#ff8a3d" {...s(3)} />
+        <rect x="44" y="338" width="110" height="10" rx="4" fill="#ff8a3d" {...s(3)} />
+        <path d="M56 348 V366 M142 348 V366" stroke={OL} strokeWidth="6" />
       </g>
-      <g>
-        <path d="M200 340 V180" stroke={OL} strokeWidth="9" />
-        <path d="M200 340 V180" stroke="#6e75a6" strokeWidth="4" />
-        <path d="M186 180 H214 L210 196 H190 Z" fill="#ffcc33" {...s(3)} />
-        <path d="M150 196 L250 196 L280 340 L120 340 Z" fill="rgba(255,220,120,0.07)" />
-      </g>
+      {/* trash can */}
+      <path d="M262 368 H292 L288 410 H266 Z" fill="#3a8a5a" {...s(3)} />
+      <rect x="258" y="360" width="38" height="10" rx="3" fill="#2bb56b" {...s(3)} />
     </svg>
   );
 }

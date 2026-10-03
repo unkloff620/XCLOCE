@@ -1,6 +1,8 @@
 "use client";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Help } from "../help.tsx";
 import { useGame } from "../store.tsx";
 import { api } from "../api.ts";
 import { Emblem } from "../art/emblems.tsx";
@@ -48,6 +50,12 @@ function CreateClan({ emblems, colors, onClose }: { emblems: string[]; colors: s
 
 export function ClansScreen() {
   const { state } = useGame();
+  const router = useRouter();
+  const myClan = state?.clan?.id;
+  // a member goes straight to the own clan; the full list stays at /clans?all=1
+  useEffect(() => {
+    if (myClan && !new URLSearchParams(window.location.search).has("all")) router.replace(`/clans/${myClan}`);
+  }, [myClan, router]);
   const [data, setData] = useState<{ clans: ClanRow[]; emblems: string[]; colors: string[] } | null>(null);
   const [create, setCreate] = useState(false);
   const load = useCallback(() => api.get<typeof data>("/api/clans").then(setData).catch(() => undefined), []);
@@ -57,7 +65,14 @@ export function ClansScreen() {
   return (
     <div>
       <div className="title">
-        <h1 className="display">Кланы</h1>
+        <div className="title-row">
+          <h1 className="display">Кланы</h1>
+          <Help topic="clans" title="Кланы">
+            <p>Клан — до 30 человек. Рейтинг считается по общему урону участников по боссам.</p>
+            <p>Создать клан можно бесплатно, вступить — в любой открытый. Лидер может исключать участников; если лидер уходит, роль переходит дальше.</p>
+            <p>Клановые задания, боссы и войны появятся позже.</p>
+          </Help>
+        </div>
         {!state?.clan && data && <button className="btn sm green" onClick={() => setCreate(true)}>+ Создать</button>}
       </div>
       {state?.clan && (
@@ -70,7 +85,6 @@ export function ClansScreen() {
           <span className="display" style={{ fontSize: 22 }}>›</span>
         </Link>
       )}
-      <p className="small muted" style={{ margin: "0 2px 10px" }}>Рейтинг — по общему урону участников по боссам. Клановые задания, боссы и войны появятся позже.</p>
       {!data ? null : data.clans.length === 0 ? (
         <Empty>Кланов ещё нет. Создай первый!</Empty>
       ) : (
@@ -108,7 +122,7 @@ export function ClanScreen({ id }: { id: number }) {
   return (
     <div>
       <div className="title">
-        <Link href="/clans" className="back">← Кланы</Link>
+        <Link href="/clans?all=1" className="back">← Все кланы</Link>
         <span className="chip">#{c.rank} в рейтинге</span>
       </div>
       <div className="panel center col" style={{ alignItems: "center" }}>

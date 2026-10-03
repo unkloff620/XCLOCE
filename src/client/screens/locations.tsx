@@ -9,6 +9,7 @@ import { LocationScene } from "../art/scenes.tsx";
 import { Icon } from "../art/icons.tsx";
 import { Bar, Empty, Modal, RewardChips } from "../ui.tsx";
 import { haptic } from "../telegram.ts";
+import { Help } from "../help.tsx";
 
 interface LocRow { id: string; unlocked: boolean; done: number; total: number; clears: number; tasks: { id: string; steps: number; need: number }[]; nextReward: Reward }
 
@@ -72,10 +73,17 @@ export function LocationsScreen() {
       <div className="title">
         <div>
           <Link href="/yard" className="back">← Двор</Link>
-          <h1 className="display">Локации</h1>
+          <div className="title-row">
+            <h1 className="display">Локации</h1>
+            <Help topic="locations" title="Локации">
+              <p>Энергия тратится только здесь: каждый шаг задания стоит энергии и даёт рубли и авторитет.</p>
+              <p>Закрой все 5 заданий — на карточке появится кнопка «Забрать награду» (доллары и вещи), откроется следующая локация.</p>
+              <p>Пройденную локацию можно повторить: награда за повтор — половина валюты и авторитета.</p>
+              <p>Энергия: +1 каждые 5 минут до 50. Купить больше — нажми на энергию вверху.</p>
+            </Help>
+          </div>
         </div>
       </div>
-      <p className="small muted" style={{ margin: "0 2px 12px" }}>Энергия тратится только здесь. Закрой все 5 заданий локации — получишь большую награду и откроешь следующую.</p>
       <div className="col" style={{ gap: 12 }}>
         {LOCATIONS.map((l) => {
           const r = rows?.find((x) => x.id === l.id);

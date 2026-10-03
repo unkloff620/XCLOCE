@@ -7,6 +7,7 @@ import { BOSSES, bossById } from "../../content/bosses.ts";
 import { BossPhoto } from "./boss-parts.tsx";
 import { Avatar, Bar, RewardChips } from "../ui.tsx";
 import type { BossDef } from "../../content/bosses.ts";
+import { Help } from "../help.tsx";
 import { Icon } from "../art/icons.tsx";
 import { clock, full, short } from "../format.ts";
 
@@ -48,12 +49,12 @@ export function BossesScreen() {
   return (
     <div>
       <div className="title">
-        <h1 className="display">Боссы</h1>
+        <div className="title-row">
+          <h1 className="display">Боссы</h1>
+          <BossRulesHelp topic="bosses" />
+        </div>
         {data && <span className="small muted">Лимиты обновятся через {clock(data.resetAt - now)}</span>}
       </div>
-      <p className="small muted" style={{ margin: "0 2px 12px" }}>
-        Бой у каждого свой, на 8 часов, а урон общий: удары всех, кто сейчас бьёт этого босса, снимают HP и в твоём бою. Победа даёт ключ, ключи открывают следующего. В лимит 7 боёв в сутки идут только победы.
-      </p>
       <div className="col" style={{ gap: 10 }}>
         {BOSSES.map((b) => {
           const row = data?.bosses.find((x) => x.id === b.id);
@@ -104,6 +105,22 @@ export function BossesScreen() {
         })}
       </div>
     </div>
+  );
+}
+
+/** The rules of boss fights behind a [?]. */
+export function BossRulesHelp({ topic }: { topic: "bosses" | "boss" }) {
+  return (
+    <Help topic={topic} title="Как бить боссов">
+      <ul>
+        <li>Бой у каждого свой и длится 8 часов. Не успел — босс уходит, бой проигран.</li>
+        <li>Урон общий: удары всех, кто сейчас бьёт этого босса, снимают HP и в твоём бою.</li>
+        <li>Бьют только оружием. Мышь — бесплатно раз в час, остальное оружие тратится.</li>
+        <li>Победа даёт награду и ключ. Ключи открывают следующего босса (для Фокуса и Солнца хватает одного).</li>
+        <li>В день можно победить каждого босса 7 раз. Проигранные бои в лимит не идут.</li>
+        <li>Оборудование и комнаты дома дают шанс крита и прибавку к урону.</li>
+      </ul>
+    </Help>
   );
 }
 
