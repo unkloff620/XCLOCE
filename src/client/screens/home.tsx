@@ -181,7 +181,7 @@ export function HomeScreen() {
   const f = state.fight;
   const fb = f ? bossById(f.bossId)! : null;
   return (
-    <div className="col" style={{ gap: 12 }}>
+    <div className="fit-page">
       <div className="room">
         <div className={`room-view ${owned ? "" : "locked"}`}>
           <HomeScene room={viewRoom.id} look={state.look.body} worn={state.look.equipped} onPick={owned ? (id) => setEquip(id) : undefined} />

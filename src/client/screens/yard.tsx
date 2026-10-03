@@ -55,7 +55,7 @@ export function YardScreen() {
   };
 
   return (
-    <div>
+    <div className="fit-page">
       <div className="title">
         <div className="title-row">
           <h1 className="display">Двор</h1>
@@ -68,7 +68,29 @@ export function YardScreen() {
         <span className="chip">{data?.items.length ?? state?.yard.count ?? 0}/{data?.max ?? 5}</span>
       </div>
       <div className="yard">
-        <YardScene />
+        {/* the scene keeps its proportions and sits on the bottom edge; on short screens the sky is cut off */}
+        <div className="yard-stage">
+          <YardScene />
+          <button className={`yard-slots ${state && state.slots.left > 0 ? "ready" : ""}`} onClick={() => setSlots(true)} aria-label="Игровой автомат 777">
+            <SlotCabinet />
+            {state && <span className="yard-slots-left num">{state.slots.left}/{state.slots.max}</span>}
+          </button>
+          {data?.items.map((it) => {
+            const spot = YARD_SPOTS[it.slot % YARD_SPOTS.length];
+            const drop = YARD_DROPS.find((d) => d.id === it.drop);
+            return (
+              <button
+                key={it.id}
+                className={`yard-item ${flying === it.id ? "fly" : ""} ${drop && drop.weight <= 3 ? "rare" : ""}`}
+                style={{ left: `${spot.x}%`, top: `${spot.y}%` }}
+                onClick={() => pick(it.id)}
+                aria-label={drop?.name ?? "предмет"}
+              >
+                <ItemArt id={drop?.icon ?? "coins"} size={52} />
+              </button>
+            );
+          })}
+        </div>
         <nav className="yard-side" aria-label="Места во дворе">
           {LINKS.map((b) => (
             <Link key={b.href} href={b.href} className="side-btn" style={{ ["--c" as string]: b.c }}>
@@ -77,28 +99,9 @@ export function YardScreen() {
             </Link>
           ))}
         </nav>
-        <button className={`yard-slots ${state && state.slots.left > 0 ? "ready" : ""}`} onClick={() => setSlots(true)} aria-label="Игровой автомат 777">
-          <SlotCabinet />
-          {state && <span className="yard-slots-left num">{state.slots.left}/{state.slots.max}</span>}
-        </button>
         <div className="yard-timer">
           {!data ? "…" : data.nextAt ? <>Следующая находка через <b className="num">{clock(data.nextAt - now)}</b></> : <>Двор полон — собери, чтобы появилось новое</>}
         </div>
-        {data?.items.map((it) => {
-          const spot = YARD_SPOTS[it.slot % YARD_SPOTS.length];
-          const drop = YARD_DROPS.find((d) => d.id === it.drop);
-          return (
-            <button
-              key={it.id}
-              className={`yard-item ${flying === it.id ? "fly" : ""} ${drop && drop.weight <= 3 ? "rare" : ""}`}
-              style={{ left: `${spot.x}%`, top: `${spot.y}%` }}
-              onClick={() => pick(it.id)}
-              aria-label={drop?.name ?? "предмет"}
-            >
-              <ItemArt id={drop?.icon ?? "coins"} size={52} />
-            </button>
-          );
-        })}
       </div>
       {slots && (
         <Modal title={<span className="title-row">Игровой автомат <SlotsHelp /></span>} onClose={() => setSlots(false)}>

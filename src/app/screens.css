@@ -398,3 +398,18 @@
   background: rgba(14, 16, 36, 0.9); border: 2.5px solid var(--line); box-shadow: 0 4px 0 var(--line); }
 .room-unlock .btn { white-space: nowrap; gap: 6px; }
 .room-price { display: inline-flex; align-items: center; gap: 3px; margin-left: 4px; padding-left: 8px; border-left: 2px solid rgba(0, 0, 0, 0.25); }
+
+/* ---------- screens that fit the viewport without scrolling (home, yard) ---------- */
+.fit-page {
+  height: calc(100dvh - var(--hud-h) - var(--safe-t) - 10px - var(--nav-h) - var(--safe-b) - 16px);
+  min-height: 300px; display: flex; flex-direction: column; gap: 10px;
+}
+.fit-page > * { flex: none; }
+.fit-page > .title { margin-bottom: 0; }
+/* the scene box keeps its natural proportions but shrinks to the space left; the art inside is anchored to the bottom */
+.fit-page > .room, .fit-page > .yard { flex: 0 1 auto; min-height: 0; width: 100%; }
+.fit-page > .room { aspect-ratio: 1060 / 1484; }
+.fit-page > .yard { aspect-ratio: 400 / 560; }
+.fit-page .room-view, .yard-stage { position: absolute; left: 0; right: 0; bottom: 0; }
+.fit-page .room-view { aspect-ratio: 1060 / 1484; }
+.yard-stage { aspect-ratio: 400 / 560; }
