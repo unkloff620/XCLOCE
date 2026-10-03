@@ -182,23 +182,6 @@ button.hud-profile { color: inherit; text-align: left; width: 100%; font: inheri
 
 /* ---------- Boss list ---------- */
 .boss-list { display: flex; flex-direction: column; gap: 8px; }
-.boss-card {
-  display: flex; align-items: center; gap: 10px; padding: 8px;
-  background: linear-gradient(180deg, var(--panel2), var(--panel)); border: 2px solid #000;
-  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
-}
-.boss-ava { position: relative; width: 74px; height: 74px; flex: none; border: 2px solid #000; background: #000; }
-.boss-ava img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.boss-card.locked .boss-ava .bp-art { filter: grayscale(1) brightness(0.28) contrast(1.4); }
-.boss-ava .q { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 46px; color: #cfd6e6; text-shadow: 3px 3px 0 #000; }
-.boss-n { position: absolute; left: -2px; top: -2px; background: var(--green); color: #000; font-size: 15px; padding: 0 6px; border: 2px solid #000; }
-.boss-card.locked .boss-n { background: #555; color: #ddd; }
-.boss-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.boss-name { font-size: 20px; line-height: 1; text-shadow: 2px 2px 0 #000; }
-.hp-row { display: flex; align-items: center; gap: 4px; }
-.hp-ic { color: var(--red); font-size: 13px; }
-.hp-row .bar { flex: 1; }
-.boss-meta { display: flex; gap: 8px; flex-wrap: wrap; font-size: 11.5px; font-weight: 700; }
 .boss-act { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 74px; flex: none; }
 .btn-attack { width: 74px; height: 42px; font-size: 18px; color: #fff; background: linear-gradient(180deg, #ff7088, #e0213f); box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.3); }
 .btn-unlock { width: 74px; height: 46px; font-size: 16px; line-height: 1; color: #2a1d00; background: linear-gradient(180deg, #ffe680, #ffb800); flex-direction: column; gap: 0; }
@@ -544,28 +527,6 @@ button.hud-profile { color: inherit; text-align: left; width: 100%; font: inheri
 .meta-power { color: var(--yellow); font-weight: 800; }
 
 /* ---------- owner's boss card picture (cards/<slug>, fixed 3:1) with data on its right side ---------- */
-.boss-card-art { position: relative; container-type: inline-size; user-select: none; -webkit-user-select: none; }
-.bca-img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 1; object-fit: fill; pointer-events: none; }
-.boss-card-art.locked .bca-img { filter: grayscale(1) brightness(0.35) contrast(1.2); }
-.bca-q { position: absolute; left: 9%; width: 30%; top: 18%; bottom: 15%; display: flex; align-items: center; justify-content: center; font-size: 20cqw; color: #cfd6e6; text-shadow: 4px 4px 0 #000; }
-.boss-list:has(.boss-card-art) { gap: 0; }
-.boss-card-art + .boss-card-art, .boss-card-art + .boss-card, .boss-card + .boss-card-art { margin-top: -3.5cqw; }
-.boss-card + .boss-card { margin-top: 8px; }
-.bca-info { position: absolute; left: 41%; right: 3.5%; top: 20.5%; bottom: 16.5%; display: grid; grid-template-columns: minmax(0, 1fr) 20cqw; grid-template-rows: auto 1fr; column-gap: 2.4cqw; row-gap: 1cqw; align-items: center; }
-.bca-main { min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 1.6cqw; }
-.bca-name { grid-column: 1 / -1; font-size: 4.9cqw; line-height: 1; text-transform: uppercase; letter-spacing: 0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 2px 2px 0 #000, 0 0 10px rgba(157, 255, 58, 0.35); }
-.bca-n { color: var(--green); font-size: 0.75em; }
-.bca-hp { position: relative; height: 4cqw; background: #12060a; border: 2px solid #000; border-radius: 3px; overflow: hidden; box-shadow: 0 0 0 1px rgba(255, 59, 92, 0.35); }
-.bca-hp > span { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #ff3b5c, #ff7088); transition: width 0.3s; }
-.bca-hp b { position: relative; display: block; font-size: 2.5cqw; line-height: calc(4cqw - 4px); text-align: center; white-space: nowrap; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; }
-.bca-meta { display: flex; align-items: center; gap: 2.4cqw; font-size: 3cqw; font-weight: 800; white-space: nowrap; text-shadow: 1px 1px 0 #000; }
-.bca-meta svg { width: 3.8cqw !important; height: 3.8cqw !important; }
-.bca-meta .price-tag { gap: 0.8cqw; }
-.bca-act { flex: none; width: 20cqw; display: flex; flex-direction: column; align-items: center; gap: 0.8cqw; }
-.bca-act .btn-attack { width: 100%; height: 9.6cqw; font-size: 4.2cqw; }
-.bca-act small { font-size: 2.8cqw; font-weight: 800; text-shadow: 1px 1px 0 #000; }
-.bca-act .btn-unlock { width: 100%; font-size: 3.6cqw; padding: 1cqw; }
-.bca-act .key-need small { font-size: 2.6cqw; }
 
 /* ---------- bottom menu: active button glows in its own colour ---------- */
 .nav-btn.t-boss { --glow: #ff3b5c; }
@@ -586,3 +547,68 @@ button.hud-profile { color: inherit; text-align: left; width: 100%; font: inheri
 }
 .content { padding-bottom: calc(88px + var(--safe-bottom)); }
 .weapon-bar { bottom: calc(74px + var(--safe-bottom)); }
+
+/* ---- boss card (vector frame, fixed 5:2; everything inside scales with the card width via cqw) ---- */
+.boss-list { gap: 10px; }
+.bcard {
+  position: relative; container-type: inline-size; aspect-ratio: 5 / 2; border-radius: 12px; overflow: hidden; user-select: none; -webkit-user-select: none;
+  background:
+    radial-gradient(55% 85% at 66% 28%, rgba(210, 18, 42, 0.3), transparent 70%),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.035) 0 2px, transparent 2px 10px),
+    linear-gradient(180deg, #1c0d11, #0a0507);
+  border: 1.5px solid #5a3a40;
+  box-shadow: 0 0 0 1px #000, inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 0 26px rgba(0, 0, 0, 0.85), 0 6px 16px rgba(0, 0, 0, 0.5);
+}
+.bcard-box {
+  position: absolute; left: 2cqw; top: 2cqw; bottom: 2cqw; width: 33cqw; border-radius: 1.8cqw; overflow: hidden;
+  background: radial-gradient(75% 70% at 50% 42%, #c8162d, #6c0a17 58%, #24040a);
+  border: 0.5cqw solid #000;
+  box-shadow: inset 0 0 0 0.35cqw rgba(255, 96, 110, 0.35), inset 0 0 5cqw rgba(0, 0, 0, 0.55);
+}
+.bcard-box::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(120deg, rgba(255, 255, 255, 0.06) 0 0.4cqw, transparent 0.4cqw 4cqw); mix-blend-mode: screen; }
+.bcard-box::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, rgba(0, 0, 0, 0.55)); pointer-events: none; }
+.bcard-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; z-index: 1; pointer-events: none; }
+.bcard-tag { position: absolute; left: 0; top: 0; z-index: 3; padding: 0.7cqw 2cqw 0.5cqw 1.6cqw; font-size: 3.1cqw; line-height: 1; color: #fff; background: linear-gradient(90deg, #000, #1c0508); border-bottom-right-radius: 1.8cqw; text-shadow: 0 0 1.4cqw rgba(255, 60, 80, 0.6); }
+.bcard-q { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center; font-size: 18cqw; color: rgba(235, 238, 245, 0.8); text-shadow: 0.6cqw 0.6cqw 0 #000; }
+.bcard-chart { position: absolute; right: 3cqw; top: 2.5cqw; width: 24cqw; height: 12cqw; color: rgba(255, 36, 60, 0.32); filter: drop-shadow(0 0 1.2cqw rgba(255, 30, 60, 0.6)); pointer-events: none; }
+.bcard-main { position: absolute; left: 37.5cqw; right: 2.6cqw; top: 2.2cqw; bottom: 2.2cqw; display: flex; flex-direction: column; min-width: 0; }
+.bcard-name {
+  font-family: var(--font-marker), var(--font-comic), Impact, sans-serif; line-height: 1.12; text-transform: uppercase; white-space: nowrap; overflow: hidden;
+  color: #ff2b40; text-shadow: 0 0.35cqw 0 #3a0008, 0 0 2.4cqw rgba(255, 0, 40, 0.6); padding-right: 1cqw;
+}
+.bcard-hp { display: flex; align-items: center; gap: 1.6cqw; margin-top: 0.6cqw; }
+.bcard-bar { position: relative; flex: 1; height: 4.4cqw; background: #2a0b10; border: 0.35cqw solid #000; border-radius: 0.9cqw; overflow: hidden; box-shadow: 0 0 0 0.25cqw rgba(255, 60, 80, 0.25); }
+.bcard-bar > span { position: absolute; inset: 0 auto 0 0; background: linear-gradient(180deg, #ff6a7a, #e8162f 45%, #a80c20); box-shadow: inset 0 0.5cqw 0 rgba(255, 255, 255, 0.25); transition: width 0.3s; }
+.bcard-hp b { font-size: 3.4cqw; font-weight: 900; color: #fff; min-width: 7cqw; text-align: right; }
+.bcard-hptext { margin-top: 0.6cqw; font-size: 3cqw; font-weight: 800; color: #eadfe2; white-space: nowrap; }
+.bcard-bottom { margin-top: auto; display: flex; align-items: flex-end; justify-content: space-between; gap: 2cqw; }
+.bcard-rewards { display: flex; flex-direction: column; gap: 0.7cqw; min-width: 0; }
+.bcard-rewards small { font-size: 2.3cqw; font-weight: 900; letter-spacing: 0.08em; color: #c6b4b8; }
+.bcard-tiles { display: flex; gap: 1.2cqw; }
+.bcard-tile {
+  width: 10cqw; height: 10.6cqw; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.2cqw;
+  background: linear-gradient(180deg, #2c1519, #140a0c); border: 0.35cqw solid #4c252c; border-radius: 1.3cqw; box-shadow: inset 0 0.3cqw 0 rgba(255, 255, 255, 0.06);
+}
+.bcard-tile svg { width: 5.4cqw !important; height: 5.4cqw !important; }
+.bcard-tile b { font-size: 2.7cqw; line-height: 1; font-weight: 900; color: #fff; white-space: nowrap; }
+.bcard-tile.key { border-color: #8a6a1c; box-shadow: inset 0 0 2cqw rgba(255, 200, 40, 0.18); }
+.boss-act.bcard-act { width: 24cqw; gap: 0.8cqw; }
+.bcard .btn-attack {
+  width: 100%; height: 9.6cqw; gap: 1.2cqw; font-size: 5.6cqw; letter-spacing: 0.05em; color: #141000; clip-path: none; border: 0.4cqw solid #1a1200; border-radius: 1.5cqw;
+  box-shadow: inset 0 -0.8cqw 0 rgba(0, 0, 0, 0.18), inset 0 0.5cqw 0 rgba(255, 255, 255, 0.45), 0 0 2.6cqw rgba(255, 196, 0, 0.35);
+}
+.bcard .btn-attack:not(.live):not(.won):not(.lost):not(.skinned) { background: linear-gradient(180deg, #ffec5c, #ffc400 55%, #f0a500); }
+.bcard .btn-attack.skinned { border: 0; box-shadow: none; }
+.bcard .btn-attack:disabled:not(.skinned) { filter: grayscale(1) brightness(0.7); opacity: 1; }
+.bcard .btn-attack .chev { width: 2.2cqw; height: 3.6cqw; flex: none; }
+.bcard-act small { font-size: 2.5cqw; font-weight: 800; white-space: nowrap; }
+.bcard-act .btn-unlock { width: 100%; height: 9.6cqw; flex-direction: row; gap: 1cqw; font-size: 4.4cqw; clip-path: none; border-radius: 1.5cqw; border-width: 0.4cqw; }
+.bcard-act .btn-unlock .keys { font-size: 3.4cqw; }
+.bcard-act .btn-unlock svg { width: 3.6cqw; height: 3.6cqw; }
+.bcard-act .key-need { font-size: 2.6cqw; }
+.bcard-act .key-need small { font-size: 2.5cqw; }
+.bcard-act .key-need svg { width: 5.4cqw; height: 5.4cqw; }
+.bcard.locked .bcard-box { filter: grayscale(1) brightness(0.55); }
+.bcard.locked .bcard-name { color: #8d8a92; text-shadow: 0 0.35cqw 0 #000; }
+.bcard.locked .bcard-chart { color: rgba(160, 160, 170, 0.18); filter: none; }
+.bcard.locked .bcard-bar > span { filter: grayscale(1); }
