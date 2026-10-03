@@ -194,7 +194,7 @@ function Shoe({ fill, sole }: { fill: string; sole: string }) {
 }
 
 /** Items drawn by the artist (public/assets/items/<id>.webp, built by tools/items/build-items.py). */
-const RASTER_ITEMS = new Set(["mouse", "keyboard", "gpu", "rug-pull-gun"]);
+const RASTER_ITEMS = new Set(["mouse", "red-candle", "keyboard", "gpu", "rug-pull-gun"]);
 
 /** Picture of any item; keys use the key icon, unknown ids fall back to a coin. */
 export function ItemArt({ id, size = 40 }: { id: string; size?: number }) {
