@@ -1,5 +1,6 @@
 import cv2, numpy as np, json
-im=cv2.imread('ref.png'); h,w=im.shape[:2]
+import os; os.chdir(os.path.dirname(os.path.abspath(__file__)))
+im=cv2.imread('reference.png'); h,w=im.shape[:2]
 hsv=cv2.cvtColor(im,cv2.COLOR_BGR2HSV); H,S,V=[hsv[:,:,i].astype(int) for i in range(3)]
 b,g,r=[im[:,:,i].astype(int) for i in range(3)]
 K=lambda n: np.ones((n,n),np.uint8)
@@ -20,7 +21,7 @@ for i in range(1,n):
 shorts=fillholes(cv2.morphologyEx(shorts,cv2.MORPH_CLOSE,K(21)))
 tank=fillholes(cv2.morphologyEx(biggest(cv2.morphologyEx(white,cv2.MORPH_OPEN,K(3))),cv2.MORPH_CLOSE,K(11)))
 hips=np.zeros_like(skin)
-cv2.fillPoly(hips,[np.array([(356,736),(668,736),(674,860),(664,1004),(553,1004),(512,972),(469,1004),(360,1004),(350,860)],np.int32)],255)
+cv2.fillPoly(hips,[np.array([(358,736),(666,736),(676,800),(678,860),(668,930),(662,990),(553,1000),(512,960),(469,1000),(362,990),(354,930),(346,860),(348,800)],np.int32)],255)
 union=cv2.bitwise_or(cv2.bitwise_or(cv2.morphologyEx(skin,cv2.MORPH_OPEN,K(3)),tank),hips)
 sil=fillholes(biggest(cv2.morphologyEx(union,cv2.MORPH_CLOSE,K(17))))
 # regions grow a little under their own outline so fills meet the line art without gaps
@@ -48,7 +49,12 @@ eyesw=cv2.bitwise_and(white,cv2.bitwise_not(tank)); eyesw[300:]=0
 yy,xx=np.mgrid[0:h,0:w]
 arms=cv2.bitwise_and(silg,((((xx<392)|(xx>632))&(yy>300)&(yy<880))*255).astype(np.uint8))
 legs=cv2.bitwise_and(silg,(((yy>900)&(yy<1392)&(xx>330)&(xx<700))*255).astype(np.uint8))
-jeans=cv2.morphologyEx(cv2.bitwise_or(legs,cv2.dilate(hips,K(5))),cv2.MORPH_CLOSE,K(7))
+def hull(m):
+    pts=cv2.findNonZero(m); o=np.zeros_like(m)
+    if pts is not None: cv2.fillPoly(o,[cv2.convexHull(pts)],255)
+    return o
+legL=legs.copy(); legL[:, 512:]=0; legR=legs.copy(); legR[:, :512]=0
+jeans=cv2.bitwise_or(cv2.bitwise_or(hull(legL),hull(legR)),cv2.dilate(hips,K(5)))
 feet=cv2.bitwise_and(silg,((yy>1384)*255).astype(np.uint8))
 head=cv2.bitwise_and(silg,(((yy<300)&(xx>380)&(xx<640))*255).astype(np.uint8))
 def path(m,eps=1.2,minarea=6):
