@@ -16,7 +16,7 @@ const TABS = [
   { id: "home", href: "/", label: "Дом" },
   { id: "bosses", href: "/bosses", label: "Боссы" },
   { id: "yard", href: "/yard", label: "Двор" },
-  { id: "inventory", href: "/inventory", label: "Вещи" },
+  { id: "inventory", href: "/inventory", label: "Инвентарь" },
   { id: "clans", href: "/clans", label: "Кланы" },
 ] as const;
 

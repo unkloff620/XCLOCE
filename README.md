@@ -1,16 +1,15 @@
-# XCLOCE — Meme Fighter
+# XCLOCE 2.0
 
-Telegram Mini App: dress and arm your shiba, complete Market tasks for currency, beat meme bosses (7 attacks per boss per day,
-3 keys unlock the next boss), and build a clan.
+Корпоративная Telegram Mini App игра: боссы-администрация бьются только оружием, энергия тратится в локациях, двор, магазин с обменником, инвентарь, кланы, профиль.
 
-```bash
-npm install
-npm run dev     # http://localhost:3000 — guest mode + in-process PGlite, no setup needed
-npm test        # game rules (bosses, keys, tasks, shop, clans)
-npm run check   # typecheck + tests + build
-```
+- Проект и правила игры: документ «XCLOCE 2.0 — проект игры».
+- Данные игры (оружие, предметы, боссы, локации, двор, магазин, уровни, фразы): `src/content/`.
+- Сервер (всё считается здесь): `src/server/` — `systems/` по механикам, `migrations.ts` — схема.
+- Клиент: `src/client/` (экраны, векторная графика `art/`, анимации атак `fx/`), маршруты — `src/app/(game)/`.
+- Фото боссов: `public/bosses/<id>/portrait.webp` и `full.webp` (прозрачный фон).
 
-Deploy: Vercel project with Neon Postgres (`DATABASE_URL`) and `TELEGRAM_BOT_TOKEN`; push to `main`.
-In @BotFather set the Mini App URL to the production domain.
+Цифры баланса меняются без выкладки через таблицу `config` (ключи `boss.hp`, `fight`, `energy`, `levels`, `yard.weights`, `prices`, `exchange.rub`, `exchange.fee`, `admins`).
 
-Docs: [PROJECT_STATE.md](PROJECT_STATE.md) · [GAME_DESIGN.md](GAME_DESIGN.md) · [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)
+Проверки: `npm run check` (типы, тесты, сборка), `node scripts/walk.mjs` — обход экранов в браузере.
+
+Предыдущая версия игры — в ветке `archive-v1`.

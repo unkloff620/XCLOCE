@@ -42,7 +42,7 @@
 .boss-go { font-size: 26px; color: var(--muted); }
 
 /* ---------- boss arena ---------- */
-.arena { position: relative; aspect-ratio: 400 / 440; border-radius: 22px; overflow: hidden; border: 3px solid var(--line); box-shadow: 0 5px 0 var(--line), inset 0 0 0 3px color-mix(in srgb, var(--acc) 70%, transparent); isolation: isolate; }
+.arena { position: relative; aspect-ratio: 400 / 400; border-radius: 22px; overflow: hidden; border: 3px solid var(--line); box-shadow: 0 5px 0 var(--line), inset 0 0 0 3px color-mix(in srgb, var(--acc) 70%, transparent); isolation: isolate; }
 .arena.final { box-shadow: 0 5px 0 var(--line), inset 0 0 0 4px #ffd23f, 0 0 30px rgba(255, 210, 63, 0.35); }
 .sunrays { animation: spin 40s linear infinite; }
 .arena-photo { position: absolute; left: 10%; right: 10%; bottom: 0; top: 16%; display: flex; align-items: flex-end; justify-content: center; transition: transform 0.2s; }
