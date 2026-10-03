@@ -145,22 +145,23 @@ function mirror(d: string) {
   return d.replace(/(-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?)/g, (_, x, y) => `${1024 - Number(x)} ${y}`);
 }
 
-function Torso({ shade }: { shade: string }) {
+function Torso({ shade: sh }: { shade: string }) {
   const both = (d: string) => `${d} ${mirror(d)}`;
+  const line = shade(sh, -0.45);
   return (
     <g>
-      <path d={both(TORSO_SHADE)} fill={shade} opacity="0.9" />
-      <path d={both(PEC_SHADE)} fill={shade} />
-      <path d="M496 600 C504 640 520 640 528 600 L528 700 C520 716 504 716 496 700 Z" fill={shade} opacity="0.55" />
-      <g fill="none" stroke={INK} strokeLinecap="round" strokeLinejoin="round">
-        <path d={both(TORSO_SIDE)} strokeWidth="8" />
-        <path d={both(PEC)} strokeWidth="7" />
-        <path d={both(COLLAR)} strokeWidth="5" />
-        <path d={both(ABS)} strokeWidth="5" />
-        <path d={both(OBLIQUE)} strokeWidth="4.5" opacity="0.8" />
-        <path d="M512 352 V440 M512 470 V690" strokeWidth="4.5" />
+      <path d={both(TORSO_SHADE)} fill={sh} opacity="0.9" />
+      <path d={both(PEC_SHADE)} fill={sh} />
+      <path d="M496 600 C504 640 520 640 528 600 L528 700 C520 716 504 716 496 700 Z" fill={sh} opacity="0.45" />
+      <g fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <path d={both(TORSO_SIDE)} stroke={INK} strokeWidth="7" />
+        <path d={both(PEC)} stroke={INK} strokeWidth="5" />
+        <path d={both(COLLAR)} stroke={line} strokeWidth="4" />
+        <path d={both(ABS)} stroke={line} strokeWidth="4" />
+        <path d={both(OBLIQUE)} stroke={line} strokeWidth="3.5" />
+        <path d="M512 352 V440 M512 470 V690" stroke={line} strokeWidth="3.5" />
       </g>
-      <ellipse cx="512" cy="706" rx="6" ry="8" fill={INK} opacity="0.8" />
+      <ellipse cx="512" cy="706" rx="5" ry="7" fill={line} />
     </g>
   );
 }

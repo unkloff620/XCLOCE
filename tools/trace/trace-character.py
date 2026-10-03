@@ -27,6 +27,8 @@ sil=fillholes(biggest(cv2.morphologyEx(union,cv2.MORPH_CLOSE,K(17))))
 # regions grow a little under their own outline so fills meet the line art without gaps
 grow=lambda m,n=7: cv2.bitwise_and(cv2.dilate(m,K(n)),cv2.dilate(sil,K(9)))
 silg=cv2.dilate(sil,K(7))
+# smooth the outer silhouette (anti-aliased straps left jaggies on the shoulders)
+silg=(cv2.GaussianBlur(silg,(0,0),4)>127).astype(np.uint8)*255
 tankg=grow(tank); shortsg=grow(shorts)
 inS=cv2.erode(shorts,K(9))>0
 lines=((((V<62)&~inS)|((V<26)&inS))&(cv2.dilate(sil,K(19))>0))
