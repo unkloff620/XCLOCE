@@ -97,14 +97,12 @@ export function totalBonus(levels: Record<string, number>, rooms: string[]): Req
 /* ---------------- внешность ---------------- */
 export const HAIR_STYLES = [
   { id: "bald", name: "Лысый" },
-  { id: "short", name: "Короткая" },
-  { id: "messy", name: "Растрёпанная" },
-  { id: "buzz", name: "Под ноль" },
-  { id: "long", name: "Длинная" },
-  { id: "mohawk", name: "Ирокез" },
-  { id: "curly", name: "Кудри" },
-  { id: "bun", name: "Пучок" },
+  { id: "sidepart", name: "Зачёс" },
+  { id: "slick", name: "Кок" },
+  { id: "shaggy", name: "Лохматый" },
+  { id: "spiky", name: "Ёжик" },
 ] as const;
+/** hair and skin colours are baked into the art by tools/rig/build-look.py — keep the lists in sync */
 export const HAIR_COLORS = ["#4a2c1a", "#1d1a24", "#c9822f", "#f0d27a", "#b8401f", "#8d6bff", "#3fd2ff", "#e8e8f0"] as const;
 export const EYE_COLORS = ["#3a2618", "#2f6fd6", "#2e9e5b", "#7a8899", "#9b5de5", "#e0a32f"] as const;
 export const SKIN_TONES = [

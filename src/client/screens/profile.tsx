@@ -83,7 +83,7 @@ export function ProfileScreen() {
         <Link href="/" className="back">← Дом</Link>
       </div>
       <div className="panel profile-head">
-        <div className="profile-char"><HeroRig size={150} still /></div>
+        <div className="profile-char"><HeroRig size={150} still look={p.body} /></div>
         <div className="col grow" style={{ gap: 6 }}>
           <div className="row">
             <Avatar name={p.name} photo={p.photo} size={44} />

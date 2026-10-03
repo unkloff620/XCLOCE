@@ -16,10 +16,10 @@ import { BonusLine, EquipmentWindow } from "./house.tsx";
 import { ROOM_DEFS } from "../../content/home.ts";
 import { money } from "../format.ts";
 import { Help } from "../help.tsx";
-import { EYE_COLORS, HAIR_COLORS, HAIR_STYLES, SKIN_TONES, type Look } from "../../content/home.ts";
+import { HAIR_COLORS, HAIR_STYLES, SKIN_TONES, type Look } from "../../content/home.ts";
 
-/** Hair, eyes and skin editor: off while the hand-drawn character has a fixed look. */
-const LOOK_EDITOR = false;
+/** Hairstyle, hair colour and skin tone editor. */
+const LOOK_EDITOR = true;
 
 /** The login reward pops up by itself once per app start; later only from the button. */
 let dailyAutoShown = false;
@@ -65,7 +65,7 @@ function SlotPicker({ slot, onClose }: { slot: Slot; onClose: () => void }) {
   );
 }
 
-/** Hair, hair colour, eyes and skin. Changes are previewed live and saved with one button. */
+/** Hairstyle, hair colour and skin tone. Changes are previewed live and saved with one button. */
 function LookEditor({ draft, patch }: { draft: Look; patch: (p: Partial<Look>) => void }) {
   const row = (label: string, children: ReactNode) => (
     <div className="look-row">
@@ -78,11 +78,8 @@ function LookEditor({ draft, patch }: { draft: Look; patch: (p: Partial<Look>) =
       {row("ПРИЧЁСКА", HAIR_STYLES.map((h) => (
         <button key={h.id} className={`look-chip ${draft.hair === h.id ? "on" : ""}`} onClick={() => patch({ hair: h.id })}>{h.name}</button>
       )))}
-      {row("ЦВЕТ ВОЛОС", HAIR_COLORS.map((c, i) => (
+      {draft.hair !== "bald" && row("ЦВЕТ ВОЛОС", HAIR_COLORS.map((c, i) => (
         <button key={c} className={`swatch ${draft.hairColor === i ? "on" : ""}`} style={{ background: c }} onClick={() => patch({ hairColor: i })} aria-label={`цвет волос ${i + 1}`} />
-      )))}
-      {row("ЦВЕТ ГЛАЗ", EYE_COLORS.map((c, i) => (
-        <button key={c} className={`swatch ${draft.eyes === i ? "on" : ""}`} style={{ background: c }} onClick={() => patch({ eyes: i })} aria-label={`цвет глаз ${i + 1}`} />
       )))}
       {row("ЦВЕТ КОЖИ", SKIN_TONES.map((t, i) => (
         <button key={t.base} className={`swatch ${draft.skin === i ? "on" : ""}`} style={{ background: t.base }} onClick={() => patch({ skin: i })} aria-label={`тон кожи ${i + 1}`} />
@@ -125,14 +122,14 @@ function Wardrobe({ onClose }: { onClose: () => void }) {
         <>
           <div className="wd">
             <div className="wd-side">{LEFT_SLOTS.map(box)}</div>
-            <div className="wd-center"><HeroRig size={220} still /></div>
+            <div className="wd-center"><HeroRig size={220} still look={state.look.body} /></div>
             <div className="wd-side">{RIGHT_SLOTS.map(box)}</div>
           </div>
           <p className="tiny muted center" style={{ margin: "10px 0 0" }}>Нажми на ячейку, чтобы выбрать вещь. Одежда на новом персонаже появится, когда её дорисуем.</p>
         </>
       ) : (
         <div className="look-edit">
-          <div className="wd-center look-preview"><HeroRig size={220} still /></div>
+          <div className="wd-center look-preview"><HeroRig size={220} still look={look} /></div>
           <div className="grow col" style={{ gap: 10, minWidth: 0 }}>
             <LookEditor draft={look} patch={(p) => setDraft((d) => ({ ...(d ?? state.look.body), ...p }))} />
             <button className="btn green block" disabled={!changed || busy === "look_set"} onClick={save}>Сохранить</button>
@@ -187,7 +184,7 @@ export function HomeScreen() {
     <div className="col" style={{ gap: 12 }}>
       <div className="room">
         <div className={`room-view ${owned ? "" : "locked"}`}>
-          <HomeScene room={viewRoom.id} onPick={owned ? (id) => setEquip(id) : undefined} />
+          <HomeScene room={viewRoom.id} look={state.look.body} onPick={owned ? (id) => setEquip(id) : undefined} />
         </div>
         {idx > 0 && (
           <button className="room-arrow left" onClick={() => flip(-1)} aria-label="Предыдущая комната" disabled={busy === "room_set"}>‹</button>

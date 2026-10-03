@@ -428,8 +428,8 @@ describe("home: equipment, rooms, look, help", () => {
 
   it("look: only known options are kept; help topics are remembered once", async () => {
     const p = await newPlayer(db);
-    const r = await act(db, p, "look_set", { hair: "mohawk", hairColor: 5, eyes: 99, skin: 3 }, T0);
-    expect(r.state.look.body).toEqual({ hair: "mohawk", hairColor: 5, eyes: 0, skin: 3 });
+    const r = await act(db, p, "look_set", { hair: "spiky", hairColor: 5, eyes: 99, skin: 3 }, T0);
+    expect(r.state.look.body).toEqual({ hair: "spiky", hairColor: 5, eyes: 0, skin: 3 });
     await act(db, p, "help_seen", { topic: "boss" }, T0);
     const h = await act(db, p, "help_seen", { topic: "boss" }, T0);
     expect(h.state.helpSeen).toEqual(["boss"]);
