@@ -37,6 +37,7 @@ function Hud() {
   const p = state.player;
   const e = liveEnergy(state, now);
   return (
+    <>
     <header className="hud">
       <div className="hud-top">
         <Link href="/profile" className="hud-me" aria-label="Профиль">
@@ -68,8 +69,9 @@ function Hud() {
           </Link>
         ))}
       </div>
-      {energyOpen && <EnergyWindow onClose={() => setEnergyOpen(false)} />}
     </header>
+    {energyOpen && <EnergyWindow onClose={() => setEnergyOpen(false)} />}
+    </>
   );
 }
 
