@@ -6,7 +6,7 @@ import { BOSSES } from "../../shared/content.ts";
 import { ATTACKS_PER_DAY, KEYS_TO_UNLOCK } from "../../shared/economy.ts";
 import { describeRoom, itemById, roomBonus, weaponDamage } from "../../shared/items.ts";
 import { Avatar, Bar, ConfirmButton, PriceTag, fmtNum, countdown } from "../ui.tsx";
-import { UIcon } from "../art/icons.tsx";
+import { CUR_ICON, UIcon } from "../art/icons.tsx";
 import { ItemIcon } from "../art/items.tsx";
 import { haptic } from "../telegram.ts";
 import { api, type FightView, type HitResult, type VictoryResult } from "../api.ts";
@@ -38,18 +38,18 @@ export function BossScreen() {
           const action = !locked ? (
             <>
               {fight?.bossIndex === b.index ? (
-                <button className={`btn-attack comic ${fight.won ? "won" : fight.lost ? "lost" : "live"}`} onClick={() => setFight(b.index)}>{fight.won ? "WIN!" : fight.lost ? "ИТОГ" : "В БОЮ"}</button>
+                <button className={`btn-attack comic ${fight.won ? "won" : fight.lost ? "lost" : "live"}`} onClick={() => setFight(b.index)}>{fight.won ? "WIN!" : fight.lost ? "ИТОГ" : "В БОЮ"}<Chevron /></button>
               ) : (
                 <button className={`btn-attack comic ${atkImg ? "skinned" : ""}`} aria-label="Напасть" disabled={!!fight || b.attemptsLeft <= 0 || busy === "fight_start"} onClick={() => start(b.index)}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  {atkImg ? <img className="skin-img" src={atkImg} alt="" draggable={false} /> : "ATTACK"}
+                  {atkImg ? <img className="skin-img" src={atkImg} alt="" draggable={false} /> : <>FIGHT<Chevron /></>}
                 </button>
               )}
-              <small className="muted">{fight && fight.bossIndex !== b.index ? `бой #${fight.bossIndex}` : `${ATTACKS_PER_DAY - b.attemptsLeft}/${ATTACKS_PER_DAY}`}</small>
+              <small className="muted">{fight && fight.bossIndex !== b.index ? `бой #${fight.bossIndex}` : `${ATTACKS_PER_DAY - b.attemptsLeft}/${ATTACKS_PER_DAY} · 🏆 ${b.wins}`}</small>
             </>
           ) : b.canUnlock ? (
             <button className="btn-unlock comic" disabled={busy === "unlock"} onClick={() => act("unlock", { boss: b.index }, `Босс #${b.index} открыт!`)}>
-              OPEN<br /><span className="keys"><UIcon name="key" size={14} />{KEYS_TO_UNLOCK}</span>
+              OPEN <span className="keys"><UIcon name="key" size={14} />{KEYS_TO_UNLOCK}</span>
             </button>
           ) : (
             <div className="key-need">
@@ -58,50 +58,42 @@ export function BossScreen() {
               <small className="muted">ключи #{b.index - 1}</small>
             </div>
           );
-          const card = skinUrl(`cards/${def.slug}`);
-          if (card) {
-            // the owner's card picture (art + frame + background) with the boss data laid over its empty right side
-            const pct = Math.max(0, Math.min(100, (b.hp / b.hpMax) * 100));
-            return (
-              <div key={b.index} className={`boss-card-art ${locked ? "locked" : ""}`}>
+          const art = skinUrl(`cards/${def.slug}`);
+          const pct = Math.max(0, Math.min(100, (b.hp / b.hpMax) * 100));
+          const hasNext = BOSSES.some((x) => x.index === b.index + 1);
+          // marker font: ~0.62em per letter, the name gets 58% of the card width
+          const nameSize = Math.min(7.6, 58 / (Math.max(6, b.name.length) * 0.62));
+          return (
+            <div key={b.index} className={`bcard ${locked ? "locked" : ""}`}>
+              <div className="bcard-box">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="bca-img" src={card} alt="" draggable={false} />
-                {locked && <span className="bca-q comic">?</span>}
-                <div className="bca-info">
-                  <div className="bca-name comic"><span className="bca-n">#{b.index}</span> {b.name}</div>
-                  <div className="bca-main">
-                    <div className="bca-hp"><span style={{ width: `${pct}%` }} /><b>❤ {fmtNum(b.hp)} / {fmtNum(b.hpMax)} HP</b></div>
-                    <div className="bca-meta">
-                      <span title="Награда"><PriceTag price={b.reward} size={14} /></span>
-                      <span className="meta-power" title="Сила за победу">+{b.power} ⚔</span>
-                      <span title="Побед">🏆 {b.wins}</span>
+                {art && <img className="bcard-art" src={art} alt="" draggable={false} />}
+                {locked && <span className="bcard-q comic">?</span>}
+                <span className="bcard-tag comic">BOSS #{b.index}</span>
+              </div>
+              <svg className="bcard-chart" viewBox="0 0 120 60" aria-hidden="true">
+                <path d="M2 8 L22 16 L32 10 L52 30 L62 24 L88 46 L96 40" fill="none" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
+                <path d="M86 36 L104 52 L82 54 Z" fill="currentColor" />
+              </svg>
+              <div className="bcard-main">
+                <div className="bcard-name" style={{ fontSize: `${nameSize}cqw` }}>{b.name}</div>
+                <div className="bcard-hp">
+                  <div className="bcard-bar"><span style={{ width: `${pct}%` }} /></div>
+                  <b>{Math.ceil(pct)}%</b>
+                </div>
+                <div className="bcard-hptext">{fmtNum(b.hp)} / {fmtNum(b.hpMax)} HP</div>
+                <div className="bcard-bottom">
+                  <div className="bcard-rewards">
+                    <small>НАГРАДЫ</small>
+                    <div className="bcard-tiles">
+                      <span className="bcard-tile" title="Награда"><UIcon name={CUR_ICON[b.reward.currency as keyof typeof CUR_ICON]} size={24} /><b>+{fmtNum(b.reward.amount)}</b></span>
+                      <span className="bcard-tile" title="Сила за победу"><UIcon name="swords" size={24} /><b>+{b.power}</b></span>
+                      {hasNext && <span className="bcard-tile key" title={`Ключ к боссу #${b.index + 1}`}><UIcon name="key" size={24} /><b>+1</b></span>}
                     </div>
                   </div>
-                  <div className="bca-act boss-act">{action}</div>
+                  <div className="bcard-act boss-act">{action}</div>
                 </div>
               </div>
-            );
-          }
-          return (
-            <div key={b.index} className={`boss-card ${locked ? "locked" : ""}`}>
-              <div className={`boss-ava ${bossFrame(def) ? "framed" : ""}`}>
-                <BossPortrait def={def} />
-                {locked && <span className="q comic">?</span>}
-                <span className="boss-n comic">{b.index}</span>
-              </div>
-              <div className="boss-info">
-                <div className="boss-name comic ellipsis">{b.name}</div>
-                <div className="hp-row">
-                  <span className="hp-ic">❤</span>
-                  <Bar value={b.hp} max={b.hpMax} tone="red" label={`${fmtNum(b.hp)} / ${fmtNum(b.hpMax)} HP`} />
-                </div>
-                <div className="boss-meta">
-                  <span title="Награда"><PriceTag price={b.reward} size={14} /></span>
-                  <span className="meta-power" title="Сила за победу">+{b.power} ⚔</span>
-                  <span title="Побед">🏆 {b.wins}</span>
-                </div>
-              </div>
-              <div className="boss-act">{action}</div>
             </div>
           );
         })}
@@ -110,6 +102,8 @@ export function BossScreen() {
     </div>
   );
 }
+
+const Chevron = () => <svg className="fight-chev" viewBox="0 0 10 16" aria-hidden="true"><path d="M2 2l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 
 /** Boss frame uploaded for this boss (`frames/<slug>`), or the shared `frames/default`, or none. */
 export function bossFrame(def: { slug: string }): string | null {

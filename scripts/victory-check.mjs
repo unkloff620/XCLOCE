@@ -44,6 +44,6 @@ const after = await page.evaluate(() => {
 await page.screenshot({ path: "/tmp/victory.jpg", type: "jpeg", quality: 60 });
 await page.locator(".victory button").click();
 await page.waitForTimeout(1200);
-const closed = await page.evaluate(() => ({ modalGone: !document.querySelector(".modal-backdrop"), bossList: !!document.querySelector(".boss-list"), wins: document.querySelector(".boss-meta span[title='Побед']")?.textContent }));
+const closed = await page.evaluate(() => ({ modalGone: !document.querySelector(".modal-backdrop"), bossList: !!document.querySelector(".boss-list"), wins: document.querySelector(".bcard-act small")?.textContent }));
 console.log(JSON.stringify({ fightOpen, after, closed }));
 await browser.close();

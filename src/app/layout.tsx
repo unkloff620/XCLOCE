@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
-import { Bangers, Russo_One, Inter } from "next/font/google";
+import { Bangers, Russo_One, Inter, Permanent_Marker } from "next/font/google";
 import "./globals.css";
 
 const comic = Bangers({ subsets: ["latin"], weight: "400", variable: "--font-comic", display: "swap" });
 const display = Russo_One({ subsets: ["latin", "cyrillic"], weight: "400", variable: "--font-display", display: "swap" });
+const marker = Permanent_Marker({ subsets: ["latin"], weight: "400", variable: "--font-marker", display: "swap" });
 const body = Inter({ subsets: ["latin", "cyrillic"], weight: ["400", "500", "600", "700"], variable: "--font-body", display: "swap" });
 
 export const metadata: Metadata = {
@@ -24,7 +25,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru" className={`${comic.variable} ${display.variable} ${body.variable}`}>
+    <html lang="ru" className={`${comic.variable} ${display.variable} ${body.variable} ${marker.variable}`}>
       <body>
         <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
         {children}

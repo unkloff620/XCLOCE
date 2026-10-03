@@ -20,7 +20,6 @@ export function SkinStyles() {
       rules.push(`${all}{border-style:solid!important;border-width:0!important;border-color:transparent!important;border-image:url("${url}") ${s.slice} fill / ${w}px stretch!important;background:none!important;box-shadow:none!important;clip-path:none!important;${keepPad}}`);
       rules.push(sels.map((x) => `${x} > .panel-art`).join(", ") + "{display:none!important}");
       // card frames keep transparent margins above/below the frame line — pull neighbouring cards closer
-      if (s.key === "boss-card") rules.push(".boss-card + .boss-card{margin-top:-6px!important}");
     } else if (s.kind === "cover") {
       rules.push(`${all}{background-image:url("${url}")!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}`);
     }
