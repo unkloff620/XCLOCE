@@ -1,6 +1,7 @@
 """
 Item pictures from the artist's PNGs: tools/items/source/<id>.png → public/assets/items/<id>.webp
 (alpha cleaned of haze and specks, trimmed, centred on a square canvas, 256 px).
+Clothes drawn on the rig canvas (tools/rig/source/wear/<id>.png) get their icons here too.
 The ids listed in RASTER_ITEMS (src/client/art/items.tsx) use these files instead of the vector art.
 """
 import os, glob
@@ -12,8 +13,13 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.abspath(os.path.join(HERE, "..", "..", "public", "assets", "items"))
 SIZE = 256
 os.makedirs(OUT, exist_ok=True)
-for f in sorted(glob.glob(os.path.join(HERE, "source", "*.png"))):
-    im = np.array(Image.open(f).convert("RGBA"))
+WEAR = os.path.join(HERE, "..", "rig", "source", "wear")
+ICON_CROP = {"sneakers": (0, 0, 1000, 2800)}  # a pair far apart: the icon shows one shoe
+for f in sorted(glob.glob(os.path.join(HERE, "source", "*.png")) + glob.glob(os.path.join(WEAR, "*.png"))):
+    name = os.path.splitext(os.path.basename(f))[0]
+    img = Image.open(f).convert("RGBA")
+    if name in ICON_CROP: img = img.crop(ICON_CROP[name])
+    im = np.array(img)
     a = im[:, :, 3]
     a[a < 40] = 0
     n, lab, st, _ = cv2.connectedComponentsWithStats((a > 0).astype(np.uint8))
@@ -25,6 +31,5 @@ for f in sorted(glob.glob(os.path.join(HERE, "source", "*.png"))):
     side = round(max(crop.size) * 1.04)
     sq = Image.new("RGBA", (side, side))
     sq.alpha_composite(crop, ((side - crop.width) // 2, (side - crop.height) // 2))
-    name = os.path.splitext(os.path.basename(f))[0]
     sq.resize((SIZE, SIZE), Image.LANCZOS).save(os.path.join(OUT, name + ".webp"), "WEBP", quality=88, method=4)
     print(name, crop.size, os.path.getsize(os.path.join(OUT, name + ".webp")) // 1024, "KB")

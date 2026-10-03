@@ -1,7 +1,7 @@
 "use client";
 /* The player's room: artist's background, desk, monitor, PC and the seated character on the stool. */
 import { CHARACTER, ROOM_BG, SCENE, SCENE_OBJECTS } from "../../content/home-scene.ts";
-import { RigViewport } from "./rig.tsx";
+import { RigViewport, type Worn } from "./rig.tsx";
 import type { Look } from "../../content/home.ts";
 
 type ObjId = keyof typeof SCENE_OBJECTS;
@@ -26,7 +26,7 @@ function Obj({ id, onPick }: { id: ObjId; onPick?: (equipment: string) => void }
   );
 }
 
-export function HomeScene({ room = "basic", onPick, still, look }: { room?: string; onPick?: (equipment: string) => void; still?: boolean; look?: Look }) {
+export function HomeScene({ room = "basic", onPick, still, look, worn }: { room?: string; onPick?: (equipment: string) => void; still?: boolean; look?: Look; worn?: Worn }) {
   const bg = ROOM_BG[room] ?? ROOM_BG.basic;
   return (
     <svg viewBox={`0 0 ${SCENE.w} ${SCENE.h}`} width="100%" style={{ display: "block" }}>
@@ -34,7 +34,7 @@ export function HomeScene({ room = "basic", onPick, still, look }: { room?: stri
       <Obj id="desk" />
       <Obj id="pc" onPick={onPick} />
       <Obj id="monitor" onPick={onPick} />
-      <RigViewport x={CHARACTER.x} y={CHARACTER.y} scale={CHARACTER.scale} seat still={still} look={look} />
+      <RigViewport x={CHARACTER.x} y={CHARACTER.y} scale={CHARACTER.scale} seat still={still} look={look} worn={worn} />
     </svg>
   );
 }

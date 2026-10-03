@@ -78,14 +78,14 @@ export const WEAPONS: ItemDef[] = [
 ];
 
 const WEARABLES: ItemDef[] = ([
-  { id: "tee-white", name: "Белая майка", slot: "SHIRT", rarity: "common", description: "Классика: майка-алкоголичка, в которой начинают все.", sources: ["Стартовая"] },
-  { id: "tee-pump", name: "Майка PUMP", slot: "SHIRT", rarity: "rare", description: "Зелёная, как график в мечтах.", sources: ["Награда за локацию 1"] },
+  { id: "tee-white", name: "Белая футболка", slot: "SHIRT", rarity: "common", description: "Классика, в которой начинают все.", sources: ["Стартовая"] },
+  { id: "tee-pump", name: "Футболка pump.fun", slot: "SHIRT", rarity: "rare", description: "Зелёная, как график в мечтах.", sources: ["Награда за локацию 1"] },
   { id: "hoodie-hodl", name: "Худи HODL", slot: "SHIRT", rarity: "epic", description: "Держит тепло и позицию.", sources: ["Награда за локацию 4"] },
   { id: "jeans", name: "Джинсы", slot: "PANTS", rarity: "common", description: "Синие. Просто синие.", sources: ["Стартовые"] },
   { id: "shorts-remote", name: "Шорты «на удалёнке»", slot: "PANTS", rarity: "rare", description: "Ниже камеры можно всё.", sources: ["Награда за локацию 2"] },
   { id: "sneakers", name: "Кеды", slot: "SHOES", rarity: "common", description: "Белые, пока не вышел во двор.", sources: ["Стартовые"] },
   { id: "slippers", name: "Тапки", slot: "SHOES", rarity: "rare", description: "Офисный дресс-код, версия 2.0.", sources: ["Награда за локацию 3"] },
-  { id: "cap-moon", name: "Кепка TO THE MOON", slot: "HEAD", rarity: "rare", description: "Указывает направление.", sources: ["Награда за локацию 2"] },
+  { id: "cap-moon", name: "Чёрная кепка", slot: "HEAD", rarity: "rare", description: "Козырёк вперёд — курс на луну.", sources: ["Награда за локацию 2"] },
   { id: "santa-hat", name: "Новогодний колпак", slot: "HEAD", rarity: "epic", description: "Сезонный предмет.", sources: ["Новогодний ивент"] },
   { id: "laser-eyes", name: "Лазерные глаза", slot: "ACCESSORY", rarity: "legendary", description: "Обязательный аксессуар биткоин-максималиста.", sources: ["Награда за локацию 5"] },
   { id: "gold-chain", name: "Цепь из блокчейна", slot: "ACCESSORY", rarity: "epic", description: "Каждое звено — подтверждённый блок.", sources: ["Награда за локацию 3"] },

@@ -122,14 +122,14 @@ function Wardrobe({ onClose }: { onClose: () => void }) {
         <>
           <div className="wd">
             <div className="wd-side">{LEFT_SLOTS.map(box)}</div>
-            <div className="wd-center"><HeroRig size={220} still look={state.look.body} /></div>
+            <div className="wd-center"><HeroRig size={220} still look={state.look.body} worn={eq} /></div>
             <div className="wd-side">{RIGHT_SLOTS.map(box)}</div>
           </div>
-          <p className="tiny muted center" style={{ margin: "10px 0 0" }}>Нажми на ячейку, чтобы выбрать вещь. Одежда на новом персонаже появится, когда её дорисуем.</p>
+          <p className="tiny muted center" style={{ margin: "10px 0 0" }}>Нажми на ячейку, чтобы выбрать вещь. Вещи без рисунка пока не видны на персонаже.</p>
         </>
       ) : (
         <div className="look-edit">
-          <div className="wd-center look-preview"><HeroRig size={220} still look={look} /></div>
+          <div className="wd-center look-preview"><HeroRig size={220} still look={look} worn={eq} /></div>
           <div className="grow col" style={{ gap: 10, minWidth: 0 }}>
             <LookEditor draft={look} patch={(p) => setDraft((d) => ({ ...(d ?? state.look.body), ...p }))} />
             <button className="btn green block" disabled={!changed || busy === "look_set"} onClick={save}>Сохранить</button>
@@ -184,7 +184,7 @@ export function HomeScreen() {
     <div className="col" style={{ gap: 12 }}>
       <div className="room">
         <div className={`room-view ${owned ? "" : "locked"}`}>
-          <HomeScene room={viewRoom.id} look={state.look.body} onPick={owned ? (id) => setEquip(id) : undefined} />
+          <HomeScene room={viewRoom.id} look={state.look.body} worn={state.look.equipped} onPick={owned ? (id) => setEquip(id) : undefined} />
         </div>
         {idx > 0 && (
           <button className="room-arrow left" onClick={() => flip(-1)} aria-label="Предыдущая комната" disabled={busy === "room_set"}>‹</button>
