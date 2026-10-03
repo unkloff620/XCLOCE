@@ -71,7 +71,7 @@ export interface RoomDef {
 }
 
 export const ROOM_DEFS: RoomDef[] = [
-  { id: "basic", name: "Каморка", description: "С чего все начинали. Окно, постер HODL и мечты.", price: null, bonus: {} },
+  { id: "basic", name: "Каморка", description: "С чего все начинали: облезлые обои, старый стол, ламповый монитор и табуретка.", price: null, bonus: {} },
   { id: "office", name: "Офис трейдера", description: "Стеклянные стены, три графика и кофемашина. Даёт шанс крита.", price: { currency: "USD", amount: 40 }, bonus: { critChance: 0.03 } },
   { id: "penthouse", name: "Пентхаус To The Moon", description: "Вид на Луну, золото и бассейн из стейблкоинов. Урон и сила крита.", price: { currency: "SOL", amount: 0.5 }, bonus: { damage: 0.05, critDamage: 0.15 } },
 ];

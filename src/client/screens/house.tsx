@@ -2,7 +2,7 @@
 import { useGame } from "../store.tsx";
 import { Modal } from "../ui.tsx";
 import { Icon } from "../art/icons.tsx";
-import { RoomThumb } from "../art/room.tsx";
+import { HomeScene } from "../art/home-scene.tsx";
 import { money } from "../format.ts";
 import { haptic } from "../telegram.ts";
 import { EQUIPMENT, ROOM_DEFS, type Bonus } from "../../content/home.ts";
@@ -79,7 +79,7 @@ export function RoomsWindow({ onClose }: { onClose: () => void }) {
           const can = r.price ? (state.wallet[r.price.currency] ?? 0) >= r.price.amount : true;
           return (
             <div key={r.id} className={`room-card ${here ? "here" : ""}`}>
-              <div className="room-thumb"><RoomThumb room={r.id} /></div>
+              <div className="room-thumb"><HomeScene room={r.id} still /></div>
               <b className="display">{r.name}</b>
               <div className="tiny muted">{r.description}</div>
               <div className="tiny" style={{ color: "var(--gold)" }}><BonusLine b={r.bonus} /></div>

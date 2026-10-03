@@ -350,7 +350,7 @@
 .room-card { display: flex; flex-direction: column; gap: 6px; padding: 8px; border-radius: 16px; background: var(--panel2); border: 2.5px solid var(--line); }
 .room-card.here { box-shadow: 0 0 0 2px var(--green, #3ddc84); }
 .room-thumb { border-radius: 12px; overflow: hidden; border: 2px solid var(--line); aspect-ratio: 400 / 300; }
-.room-thumb svg { margin-top: -6%; }
+.room-thumb svg { margin-top: -18%; }
 .look-edit { display: flex; gap: 12px; align-items: flex-start; }
 .look-preview { flex: none; width: 120px; padding: 8px 0; }
 .look-row { display: flex; flex-direction: column; gap: 5px; }

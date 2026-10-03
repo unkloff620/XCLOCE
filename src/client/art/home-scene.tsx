@@ -25,7 +25,7 @@ function Obj({ id, onPick }: { id: ObjId; onPick?: (equipment: string) => void }
   );
 }
 
-export function HomeScene({ room = "basic", onPick }: { room?: string; onPick?: (equipment: string) => void }) {
+export function HomeScene({ room = "basic", onPick, still }: { room?: string; onPick?: (equipment: string) => void; still?: boolean }) {
   const bg = ROOM_BG[room] ?? ROOM_BG.basic;
   return (
     <svg viewBox={`0 0 ${SCENE.w} ${SCENE.h}`} width="100%" style={{ display: "block" }}>
@@ -33,7 +33,7 @@ export function HomeScene({ room = "basic", onPick }: { room?: string; onPick?: 
       <Obj id="desk" />
       <Obj id="pc" onPick={onPick} />
       <Obj id="monitor" onPick={onPick} />
-      <RigViewport x={CHARACTER.x} y={CHARACTER.y} scale={CHARACTER.scale} seat />
+      <RigViewport x={CHARACTER.x} y={CHARACTER.y} scale={CHARACTER.scale} seat still={still} />
     </svg>
   );
 }
