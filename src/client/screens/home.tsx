@@ -12,7 +12,9 @@ import { ITEMS, type Slot } from "../../content/items.ts";
 import { clock, full } from "../format.ts";
 import { BossPhoto } from "./boss-parts.tsx";
 import { DailyWindow } from "./daily.tsx";
-import { EquipmentWindow, RoomsWindow } from "./house.tsx";
+import { BonusLine, EquipmentWindow } from "./house.tsx";
+import { ROOM_DEFS } from "../../content/home.ts";
+import { money } from "../format.ts";
 import { Help } from "../help.tsx";
 import { EYE_COLORS, HAIR_COLORS, HAIR_STYLES, SKIN_TONES, type Look } from "../../content/home.ts";
 
@@ -143,12 +145,13 @@ function Wardrobe({ onClose }: { onClose: () => void }) {
 }
 
 export function HomeScreen() {
-  const { state } = useGame();
+  const { state, act, busy } = useGame();
   const now = useNow();
   const [wardrobe, setWardrobe] = useState(false);
   const [daily, setDaily] = useState(false);
   const [equip, setEquip] = useState<string | null | false>(false);
-  const [rooms, setRooms] = useState(false);
+  // room browser: arrows flip through rooms; an owned room is switched to at once, a locked one is shown with "unlock"
+  const [viewIdx, setViewIdx] = useState<number | null>(null);
   const dailyReady = !!state?.daily.available;
   const busyWindow = (state?.pending.length ?? 0) > 0;
   useEffect(() => {
@@ -158,23 +161,62 @@ export function HomeScreen() {
     }
   }, [dailyReady, busyWindow]);
   if (!state) return null;
+  const curIdx = Math.max(0, ROOM_DEFS.findIndex((r) => r.id === state.look.room));
+  const idx = viewIdx ?? curIdx;
+  const viewRoom = ROOM_DEFS[idx];
+  const owned = state.home.rooms.includes(viewRoom.id);
+  const canPay = !viewRoom.price || (state.wallet[viewRoom.price.currency] ?? 0) >= viewRoom.price.amount;
+  const flip = (dir: number) => {
+    const ni = idx + dir;
+    if (ni < 0 || ni >= ROOM_DEFS.length) return;
+    const r = ROOM_DEFS[ni];
+    if (state.home.rooms.includes(r.id)) {
+      setViewIdx(null);
+      if (r.id !== state.look.room) void act("room_set", { id: r.id });
+    } else {
+      setViewIdx(ni);
+    }
+  };
+  const unlock = async () => {
+    const r = await act("room_buy", { id: viewRoom.id }, `Открыта комната «${viewRoom.name}»`);
+    if (r) setViewIdx(null);
+  };
   const f = state.fight;
   const fb = f ? bossById(f.bossId)! : null;
   return (
     <div className="col" style={{ gap: 12 }}>
       <div className="room">
-        <HomeScene room={state.look.room} onPick={(id) => setEquip(id)} />
+        <div className={`room-view ${owned ? "" : "locked"}`}>
+          <HomeScene room={viewRoom.id} onPick={owned ? (id) => setEquip(id) : undefined} />
+        </div>
+        {idx > 0 && (
+          <button className="room-arrow left" onClick={() => flip(-1)} aria-label="Предыдущая комната" disabled={busy === "room_set"}>‹</button>
+        )}
+        {idx < ROOM_DEFS.length - 1 && (
+          <button className="room-arrow right" onClick={() => flip(1)} aria-label="Следующая комната" disabled={busy === "room_set"}>›</button>
+        )}
+        <div className="room-label">
+          {owned ? (
+            <span className="chip">{viewRoom.name}</span>
+          ) : (
+            <div className="room-unlock">
+              <b className="display">{viewRoom.name}</b>
+              <span className="tiny" style={{ color: "var(--gold)" }}><BonusLine b={viewRoom.bonus} /></span>
+              <button className="btn gold sm" disabled={!canPay || busy === "room_buy"} onClick={unlock}>
+                <Icon name="lock" size={16} /> Разблокировать · <Icon name={viewRoom.price!.currency} size={15} /> {money(viewRoom.price!.currency, viewRoom.price!.amount)}
+              </button>
+              {!canPay && <span className="tiny" style={{ color: "#ff8a9e" }}>Не хватает {viewRoom.price!.currency}</span>}
+            </div>
+          )}
+        </div>
         <div className="room-help">
           <Help topic="home" title="Твой дом">
             <p>Здесь живёт твой персонаж. В «Гардеробе» — одежда и внешность: причёска, цвет глаз и кожи.</p>
             <p>На заднем плане стоит оборудование: второй монитор, кресло, системник, RGB-подсветка. Нажми на любой предмет (или «Техника»), чтобы купить или улучшить его — оно даёт шанс и силу крита и прибавку к урону по боссам.</p>
-            <p>Кнопка «Комнаты» — переезд в офис трейдера или пентхаус. Каждая купленная комната тоже даёт бонус.</p>
+            <p>Стрелки по бокам листают комнаты: купленная включается сразу, закрытую можно разблокировать кнопкой снизу. Каждая купленная комната даёт бонус.</p>
             <p>«Бонус» — награда за ежедневный вход.</p>
           </Help>
         </div>
-        <button className="room-corner" style={{ ["--c" as string]: "#2ee88a" }} onClick={() => setRooms(true)} aria-label="Комнаты" title="Комнаты">
-          <Icon name="door" size={28} />
-        </button>
         <div className="room-left">
           <button className="side-btn" style={{ ["--c" as string]: "#b06bff" }} onClick={() => setWardrobe(true)}>
             <Icon name="shirt" size={34} />
@@ -209,7 +251,6 @@ export function HomeScreen() {
       {wardrobe && <Wardrobe onClose={() => setWardrobe(false)} />}
       {daily && <DailyWindow onClose={() => setDaily(false)} />}
       {equip !== false && <EquipmentWindow focus={equip} onClose={() => setEquip(false)} />}
-      {rooms && <RoomsWindow onClose={() => setRooms(false)} />}
     </div>
   );
 }

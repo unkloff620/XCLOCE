@@ -379,3 +379,16 @@
   border-radius: 14px; border: 2.5px solid var(--line); box-shadow: 0 3px 0 var(--line); background: linear-gradient(160deg, color-mix(in srgb, var(--c) 45%, var(--panel2)), color-mix(in srgb, var(--c) 12%, var(--panel))); }
 .room-corner:active { transform: translateY(2px); }
 .room-soon { position: absolute; top: 6px; right: 6px; }
+
+/* ---------- room browser on the home screen ---------- */
+.room-view.locked { filter: grayscale(0.55) brightness(0.55); }
+.room-arrow { position: absolute; top: 66%; transform: translateY(-50%); z-index: 3; width: 38px; height: 54px; padding: 0; cursor: pointer;
+  border-radius: 14px; border: 2.5px solid var(--line); box-shadow: 0 3px 0 var(--line); background: rgba(20, 24, 52, 0.82);
+  color: #fff; font: 900 34px/1 var(--font-display), sans-serif; display: grid; place-items: center; }
+.room-arrow.left { left: 6px; }
+.room-arrow.right { right: 6px; }
+.room-arrow:active { transform: translateY(calc(-50% + 2px)); }
+.room-label { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 3; display: flex; justify-content: center; max-width: 92%; }
+.room-label .chip { background: rgba(20, 24, 52, 0.82); }
+.room-unlock { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 10px 12px; border-radius: 16px; text-align: center;
+  background: rgba(14, 16, 36, 0.9); border: 2.5px solid var(--line); box-shadow: 0 4px 0 var(--line); }
