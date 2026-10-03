@@ -79,7 +79,7 @@ export function BossesScreen() {
                 ) : (
                   <div className="row small" style={{ flexWrap: "wrap", gap: 6 }}>
                     <span className="chip">HP {short(row?.hpMax ?? b.hp)}</span>
-                    <span className="chip">Бои {row?.fightsToday ?? 0}/{row?.fightsPerDay ?? 7}</span>
+                    <span className="chip">Победы {row?.fightsToday ?? 0}/{row?.fightsPerDay ?? 7}</span>
                     {!!row?.myWins && <span className="chip green"><Icon name="trophy" size={14} />{row.myWins}</span>}
                     {!!row?.fightingNow && <span className="chip red">бьют: {row.fightingNow}</span>}
                   </div>

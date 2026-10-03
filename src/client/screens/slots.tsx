@@ -7,7 +7,7 @@ import { RewardChips } from "../ui.tsx";
 import { clock } from "../format.ts";
 import { haptic } from "../telegram.ts";
 import { SLOT_OUTCOMES, SLOT_SYMBOLS, type SlotSymbol } from "../../content/slots.ts";
-import type { Granted } from "../api.ts";
+import { api, type GameState, type Granted } from "../api.ts";
 
 const OL = "#140d24";
 
@@ -38,7 +38,7 @@ const STRIP: SlotSymbol[] = [...SLOT_SYMBOLS, ...SLOT_SYMBOLS];
 interface Spin { outcome: string; kind: "jackpot" | "triple" | "pair" | "miss"; title: string; reels: SlotSymbol[]; reward: Granted | null; left: number }
 
 export function SlotMachine() {
-  const { state, act } = useGame();
+  const { state, setState, toast } = useGame();
   const now = useNow();
   const [reels, setReels] = useState<SlotSymbol[]>(["seven", "seven", "seven"]);
   const [spinning, setSpinning] = useState<boolean[]>([false, false, false]);
@@ -56,22 +56,32 @@ export function SlotMachine() {
     setResult(null);
     setSpinning([true, true, true]);
     const started = Date.now();
-    const r = await act<Spin>("slots_spin");
-    if (!r) {
+    let r: Spin;
+    let fresh: GameState;
+    try {
+      const res = await api.action<Spin>("slots_spin");
+      r = res.result;
+      fresh = res.state;
+    } catch (e) {
+      haptic.err();
+      toast(e instanceof Error ? e.message : "Автомат заело", "err");
       setSpinning([false, false, false]);
       return;
     }
+    const spinRes = r;
+    const st = fresh;
     // reels stop one by one, the result shows after the last one
     const wait = Math.max(0, 700 - (Date.now() - started));
     [0, 1, 2].forEach((i) => {
       timers.current.push(
         setTimeout(() => {
-          setReels((old) => old.map((x, k) => (k === i ? r.reels[i] : x)));
+          setReels((old) => old.map((x, k) => (k === i ? spinRes.reels[i] : x)));
           setSpinning((old) => old.map((x, k) => (k === i ? false : x)));
           haptic.tap();
           if (i === 2) {
-            setResult(r);
-            if (r.kind !== "miss") haptic.ok();
+            setResult(spinRes);
+            setState(st); // the balance changes only when the last reel stops
+            if (spinRes.kind !== "miss") haptic.ok();
           }
         }, wait + i * 380),
       );
