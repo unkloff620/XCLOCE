@@ -79,7 +79,7 @@ export function RoomsWindow({ onClose }: { onClose: () => void }) {
           const can = r.price ? (state.wallet[r.price.currency] ?? 0) >= r.price.amount : true;
           return (
             <div key={r.id} className={`room-card ${here ? "here" : ""}`}>
-              <div className="room-thumb"><HomeScene room={r.id} still /></div>
+              <div className="room-thumb"><HomeScene room={r.id} still />{r.id !== "basic" && <span className="chip gold room-soon">вид скоро</span>}</div>
               <b className="display">{r.name}</b>
               <div className="tiny muted">{r.description}</div>
               <div className="tiny" style={{ color: "var(--gold)" }}><BonusLine b={r.bonus} /></div>
