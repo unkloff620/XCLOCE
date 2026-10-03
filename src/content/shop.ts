@@ -33,7 +33,7 @@ export const OFFERS: Offer[] = [
   { id: "energy-100", section: "energy", give: { energy: 100, qty: 1 }, price: { currency: "USD", amount: 20 }, title: "+100 энергии" },
   { id: "energy-500", section: "energy", give: { energy: 500, qty: 1 }, price: { currency: "SOL", amount: 0.6 }, title: "+500 энергии", note: "сверх лимита" },
   { id: "tee-pump", section: "clothing", give: { item: "tee-pump", qty: 1 }, price: { currency: "RUB", amount: 1500 }, title: "Футболка PUMP" },
-  { id: "cap-moon", section: "clothing", give: { item: "cap-moon", qty: 1 }, price: { currency: "USD", amount: 15 }, title: "Кепка TO THE MOON" },
+  { id: "cap-moon", section: "clothing", give: { item: "cap-moon", qty: 1 }, price: { currency: "USD", amount: 15 }, title: "Чёрная кепка" },
   { id: "energy-drink", section: "misc", give: { item: "energy-drink", qty: 1 }, price: { currency: "RUB", amount: 180 }, title: "Энергетик" },
 ];
 export const offerById = (id: string) => OFFERS.find((o) => o.id === id);
