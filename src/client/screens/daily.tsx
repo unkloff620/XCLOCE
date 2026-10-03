@@ -69,7 +69,7 @@ export function DailyWindow({ onClose }: { onClose: () => void }) {
           </div>
         ) : d.available ? (
           <button className="btn gold big block" disabled={busy === "daily_claim"} onClick={claim}>
-            <Icon name="gift" size={22} /> Забрать награду дня {d.day}
+            <Icon name="gift" size={22} /> Забрать награду
           </button>
         ) : (
           <div className="btn dark block" aria-disabled>
