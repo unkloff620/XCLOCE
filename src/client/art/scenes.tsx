@@ -5,7 +5,14 @@ import { OL } from "./icons.tsx";
 const s = (w = 4) => ({ stroke: OL, strokeWidth: w, strokeLinejoin: "round" as const, strokeLinecap: "round" as const });
 
 /* ---------------- location banners (360×140) ---------------- */
+/** locations with a drawn background (public/assets/locations, built by tools/scene/build-locations.py) */
+export const LOCATION_ART = new Set(["openspace"]);
+
 export function LocationScene({ scene }: { scene: string }) {
+  if (LOCATION_ART.has(scene)) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img className="loc-banner" src={`/assets/locations/${scene}-card.webp`} alt="" draggable={false} />;
+  }
   const sky: Record<string, [string, string]> = {
     openspace: ["#2f3577", "#1b1f47"], market: ["#3a1a52", "#1a0c2a"], serverroom: ["#0f2f3a", "#06161c"], basement: ["#3a2610", "#160d04"], board: ["#3a1424", "#170710"],
   };

@@ -5,7 +5,7 @@ import { liveEnergy, useGame, useNow } from "../store.tsx";
 import { api, type Granted } from "../api.ts";
 import { LOCATIONS, locationById } from "../../content/locations.ts";
 import type { Reward } from "../../content/rewards.ts";
-import { LocationScene } from "../art/scenes.tsx";
+import { LOCATION_ART, LocationScene } from "../art/scenes.tsx";
 import { Icon } from "../art/icons.tsx";
 import { Bar, Empty, Modal, RewardChips } from "../ui.tsx";
 import { haptic } from "../telegram.ts";
@@ -157,7 +157,8 @@ export function LocationScreen({ id }: { id: string }) {
   };
 
   return (
-    <div>
+    <div className={LOCATION_ART.has(loc.scene) ? "loc-page has-bg" : "loc-page"}>
+      {LOCATION_ART.has(loc.scene) && <div className="loc-page-bg" style={{ backgroundImage: `url(/assets/locations/${loc.scene}.webp)` }} aria-hidden="true" />}
       <div className="title">
         <Link href="/locations" className="back">← Локации</Link>
         <span className="chip gold"><Icon name="energy" size={16} />{energy}</span>

@@ -630,18 +630,12 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .fight-bottom .weapon { padding: 8px 1px 7px; }
 
 /* ---------------- side picture buttons: alive, so they are noticed ---------------- */
-/* each button gently bobs, and now and then gives a little wiggle; neighbours are out of step */
-.icon-btn-art > svg { animation: side-in 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) both, side-idle 3.6s ease-in-out 0.5s infinite; transform-origin: 50% 85%; }
-.icon-btn-art:nth-child(2) > svg { animation-delay: 0.08s, 1.1s; }
-.icon-btn-art:nth-child(3) > svg { animation-delay: 0.16s, 1.7s; }
-@keyframes side-in { from { transform: scale(0.4) rotate(-12deg); opacity: 0; } }
-@keyframes side-idle {
-  0%, 60%, 100% { transform: translateY(0) rotate(0); }
-  30% { transform: translateY(-4px) rotate(0); }
-  76% { transform: translateY(-2px) rotate(-7deg) scale(1.06); }
-  84% { transform: translateY(-2px) rotate(6deg) scale(1.06); }
-  92% { transform: translateY(0) rotate(-2deg); }
-}
+/* idle: a slow, small float (neighbours out of step); the lively wiggle is kept for buttons that call (.glow) */
+.icon-btn-art > svg { animation: side-in 0.6s ease-out both, side-idle 6s ease-in-out 0.6s infinite; transform-origin: 50% 85%; }
+.icon-btn-art:nth-child(2) > svg { animation-delay: 0.1s, 2.6s; }
+.icon-btn-art:nth-child(3) > svg { animation-delay: 0.2s, 4.2s; }
+@keyframes side-in { from { transform: translateY(6px); opacity: 0; } }
+@keyframes side-idle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
 .icon-btn-art.glow > svg { animation: side-in 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) both, side-call 1.4s ease-in-out 0.5s infinite; }
 @keyframes side-call { 0%, 100% { transform: scale(1) rotate(0); } 20% { transform: scale(1.1) rotate(-6deg); } 40% { transform: scale(1.1) rotate(6deg); } 60% { transform: scale(1) rotate(0); } }
 /* "!" like on the Bosses tab */
@@ -649,3 +643,14 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
   background: var(--gold); color: #2e1c00; border: 2.5px solid var(--line); font: 900 13px/1 var(--font-display, inherit); animation: alert-pulse 1.2s ease-in-out infinite; }
 @keyframes alert-pulse { 50% { transform: scale(1.18); } }
 @media (prefers-reduced-motion: reduce) { .icon-btn-art > svg, .icon-btn-art.glow > svg, .side-alert { animation: none; } }
+
+/* location page over its drawn background: the picture stays sharp at the top and darkens under the tasks */
+.loc-page { position: relative; }
+.loc-page-bg { position: fixed; top: 0; bottom: 0; left: 50%; width: min(100%, var(--col)); transform: translateX(-50%); z-index: 0; background-size: cover; background-position: center top; pointer-events: none; }
+.loc-page-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20, 14, 10, 0.15) 0%, rgba(20, 14, 10, 0.55) 35%, rgba(20, 14, 10, 0.82) 70%); }
+.loc-page > :not(.loc-page-bg) { position: relative; z-index: 1; }
+.loc-page.has-bg .loc-card.head { background: rgba(32, 21, 13, 0.72); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+.loc-page.has-bg .loc-card.head .loc-banner { display: none; }  /* the page itself shows the picture */
+.loc-page.has-bg .task { background: linear-gradient(180deg, rgba(54, 38, 26, 0.86), rgba(42, 29, 20, 0.86)); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+.loc-banner { display: block; width: 100%; aspect-ratio: 360 / 140; object-fit: cover; }
+.loc-card.locked .loc-banner { filter: grayscale(1) brightness(0.45); }
