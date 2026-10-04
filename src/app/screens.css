@@ -774,7 +774,7 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .bcard-reward .gain { font-size: 13px; }
 .bcard-label { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
 .bcard-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.bcard-meta { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--muted); }
+.bcard-meta { white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--muted); }
 .bcard-meta b { color: var(--ink); }
 .bcard-cta { flex: none; display: inline-flex; align-items: center; gap: 4px; padding: 6px 14px; border-radius: 999px; font-size: 14px; color: #1e1006;
   background: linear-gradient(180deg, #ffd25a, #ff9f2e); box-shadow: 0 3px 0 rgba(0, 0, 0, 0.45); }
