@@ -33,6 +33,14 @@ export interface GameState {
   pending: { fightId: number; bossId: string; status: string }[];
   clan: { id: number; name: string; tag: string; emblem: string; color: string } | null;
   daily: { available: boolean; day: number; streak: number; cycle: number; nextAt: number | null; rewards: Reward[] };
+  quests: {
+    list: { id: string; progress: number; target: number; done: boolean; claimed: boolean }[];
+    chest: { ready: boolean; opened: boolean; reward: Granted | null };
+    claimable: boolean;
+    resetAt: number;
+  };
+  /** Telegram reminders: on — the player's switch; blocked — the bot may not write to them yet */
+  notify: { on: boolean; blocked: boolean; available: boolean };
   slots: { left: number; max: number; nextAt: number | null };
   rename: { price: { currency: Currency; amount: number }; nextAt: number | null; min: number; max: number };
   /** inventory sale prices in RUB */

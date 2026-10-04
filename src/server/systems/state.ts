@@ -12,6 +12,8 @@ import { dailyView } from "./daily.ts";
 import { renameView, slotsView } from "./extras.ts";
 import { homeView } from "./home.ts";
 import { tasksHint } from "./locations.ts";
+import { questsView } from "./quests.ts";
+import { notifyView, scheduleEnergy } from "./notify.ts";
 
 /** Everything the HUD and the always-visible parts of the game need. Runs inside the player's transaction. */
 export async function gameState(ctx: Ctx) {
@@ -20,6 +22,7 @@ export async function gameState(ctx: Ctx) {
   if (!p) throw new GameError("no_player", "Игрок не найден", 404);
   await touchActivity(ctx.q, ctx.pid, moscowDay(ctx.now), ctx.now);
   const e = energyNow(p.energy, new Date(p.energy_at).getTime(), ctx.now, ctx.cfg.energy);
+  await scheduleEnergy(ctx, e.energy, e.at);
   const lv = levelFromXp(p.xp, ctx.cfg.levels);
   const [app] = await ctx.q.query<{ equipped: Record<string, string> }>("SELECT equipped FROM appearance WHERE player_id=$1", [ctx.pid]);
   const home = await homeView(ctx.q, ctx.pid);
@@ -60,6 +63,8 @@ export async function gameState(ctx: Ctx) {
     pending: pending.map((f) => ({ fightId: f.id, bossId: f.boss_id, status: f.status })),
     clan: clan ?? null,
     daily: await dailyView(ctx.q, ctx.pid, ctx.now, ctx.cfg),
+    quests: await questsView(ctx.q, ctx.pid, ctx.now),
+    notify: await notifyView(ctx.q, ctx.pid),
     slots: await slotsView(ctx.q, ctx.pid, ctx.now, ctx.cfg),
     rename: await renameView(ctx.q, ctx.pid, ctx.now, ctx.cfg),
     sell: ctx.cfg.sell,

@@ -788,3 +788,31 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .bcard.locked .bcard-art { filter: grayscale(1) brightness(0.45); }
 .bcard.final:not(.locked) { animation: bcard-boss 3.2s ease-in-out infinite; }
 @keyframes bcard-boss { 50% { box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45), 0 0 30px color-mix(in srgb, var(--acc) 45%, transparent); } }
+
+/* ---------------- daily quests ---------------- */
+.icon-btn-art:nth-child(4) > svg { animation-delay: 0.3s, 5.4s; }
+.side-streak, .side-count { position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%); z-index: 2; display: inline-flex; align-items: center; gap: 1px;
+  padding: 1px 6px 1px 4px; border-radius: 999px; border: 2px solid var(--line); background: #2a1608; color: #ffb35c; font-size: 11px; font-weight: 900; line-height: 14px; white-space: nowrap; }
+.side-count { padding: 1px 6px; color: #9ff0bf; background: #10261a; }
+.quest { display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 12px; border-radius: 14px; border: 2.5px solid var(--line); background: var(--panel2); box-shadow: 0 3px 0 var(--line); }
+.quest-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.quest-title { font-size: 14px; line-height: 1.2; }
+.quest-bar { position: relative; height: 16px; border-radius: 8px; background: rgba(0, 0, 0, 0.35); border: 2px solid var(--line); overflow: hidden; }
+.quest-bar i { position: absolute; inset: 0 auto 0 0; width: var(--p); background: linear-gradient(180deg, #ffd25a, #ff9f2e); transition: width 0.3s; }
+.quest-bar span { position: relative; display: block; text-align: center; font-size: 10.5px; font-weight: 800; line-height: 12px; color: #fff; text-shadow: 0 1px 2px #000; }
+.quest.done { border-color: #ffcc33; box-shadow: 0 3px 0 var(--line), 0 0 14px rgba(255, 204, 51, 0.35); }
+.quest.done .quest-bar i, .quest.claimed .quest-bar i { background: linear-gradient(180deg, #6ff0a0, #2fbf6a); }
+.quest.claimed { opacity: 0.6; }
+.quest-ok { flex: none; width: 34px; text-align: center; font-size: 24px; color: #3ddc84; }
+.quest-chest { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 16px; border: 2.5px dashed rgba(255, 204, 51, 0.45);
+  background: linear-gradient(150deg, color-mix(in srgb, #ffcc33 14%, var(--panel2)), var(--panel2)); }
+.quest-chest-art { flex: none; filter: grayscale(0.6) brightness(0.8); }
+.quest-chest.ready { border-style: solid; border-color: #ffcc33; box-shadow: 0 0 18px rgba(255, 204, 51, 0.45); }
+.quest-chest.ready .quest-chest-art { filter: none; animation: chest-shake 1.4s ease-in-out infinite; }
+.quest-chest.opened .quest-chest-art { filter: none; }
+@keyframes chest-shake { 0%, 60%, 100% { transform: rotate(0); } 70% { transform: rotate(-8deg); } 80% { transform: rotate(8deg); } 90% { transform: rotate(-4deg); } }
+.notify-row { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 14px; background: rgba(0, 0, 0, 0.25); border: 1.5px solid rgba(255, 190, 120, 0.15); }
+.notify-row.on { border-color: rgba(61, 220, 132, 0.4); }
+.notify-ico { font-size: 22px; flex: none; }
+.notify-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; font-size: 13px; }
+@media (prefers-reduced-motion: reduce) { .quest-chest.ready .quest-chest-art { animation: none; } }

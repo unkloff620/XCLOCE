@@ -40,7 +40,10 @@ export async function upsertTelegramPlayer(q: Queryable, u: TelegramUser): Promi
   const photo = typeof u.photo_url === "string" && /^https:\/\//.test(u.photo_url) ? u.photo_url.slice(0, 500) : null;
   const [ex] = await q.query<{ id: number }>("SELECT id FROM players WHERE telegram_id=$1", [u.id]);
   if (ex) {
-    await q.query("UPDATE players SET display_name=CASE WHEN name_custom THEN display_name ELSE $2 END, username=$3, photo_url=COALESCE($4, photo_url) WHERE id=$1", [ex.id, name, username, photo]);
+    await q.query(
+      "UPDATE players SET display_name=CASE WHEN name_custom THEN display_name ELSE $2 END, username=$3, photo_url=COALESCE($4, photo_url), pm_blocked = CASE WHEN $5 THEN false ELSE pm_blocked END WHERE id=$1",
+      [ex.id, name, username, photo, u.allows_write_to_pm === true],
+    );
     return ex.id;
   }
   return createPlayer(q, { telegramId: u.id, username, name, photo });

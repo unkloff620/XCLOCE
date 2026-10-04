@@ -1,6 +1,17 @@
 import { GameError, getDb, type Db } from "./db.ts";
 import { verifySession } from "./auth.ts";
 import { log } from "./log.ts";
+import { after } from "next/server";
+import { dispatchNotifications } from "./notify-send.ts";
+
+/** After the response: send due Telegram reminders (throttled in the DB, so most calls do nothing). */
+function kickNotifications(db: Db) {
+  try {
+    after(() => dispatchNotifications(db).catch((e) => log.warn("notify.fail", { message: String(e?.message ?? e).slice(0, 200) })));
+  } catch {
+    /* outside a request (tests) */
+  }
+}
 
 type Ctx = { db: Db; req: Request; body: Record<string, unknown>; playerId: number };
 type PublicCtx = Omit<Ctx, "playerId">;
@@ -85,7 +96,9 @@ export function authedRoute(name: string, fn: (ctx: Ctx) => Promise<unknown>) {
       }
       const body = await readBody(req);
       const db = await getDb();
-      return json(await fn({ db, req, body, playerId }));
+      const out = json(await fn({ db, req, body, playerId }));
+      kickNotifications(db);
+      return out;
     } catch (e) {
       return errorResponse(e, name);
     }

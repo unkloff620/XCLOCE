@@ -9,6 +9,7 @@ interface TgWebApp {
   setHeaderColor?(c: string): void;
   setBackgroundColor?(c: string): void;
   HapticFeedback?: { impactOccurred(s: "light" | "medium" | "heavy" | "rigid" | "soft"): void; notificationOccurred(t: "error" | "success" | "warning"): void };
+  requestWriteAccess?(cb?: (granted: boolean) => void): void;
   BackButton?: { show(): void; hide(): void; onClick(f: () => void): void; offClick(f: () => void): void };
 }
 
@@ -50,4 +51,17 @@ export function telegramBack(on: boolean, go: () => void) {
   return () => {
     b.offClick(go);
   };
+}
+
+/** Asks Telegram to let the bot write to the player (for reminders). Resolves false outside Telegram or on refusal. */
+export function requestWriteAccess(): Promise<boolean> {
+  const w = tg();
+  if (!w?.requestWriteAccess) return Promise.resolve(false);
+  return new Promise((resolve) => {
+    try {
+      w.requestWriteAccess!((granted) => resolve(!!granted));
+    } catch {
+      resolve(false);
+    }
+  });
 }

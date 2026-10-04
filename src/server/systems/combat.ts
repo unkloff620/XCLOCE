@@ -6,6 +6,7 @@ import { HIT_PHRASES } from "../../content/phrases.ts";
 import { mergeRewards } from "../../content/rewards.ts";
 import { BASE_CRIT_MULT, talentsForDamage } from "../../content/home.ts";
 import { playerBonus } from "./home.ts";
+import { notifyBossLow } from "./notify.ts";
 
 /*
  * Personal fights, shared damage.
@@ -201,6 +202,8 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string): Promise
       [boss.id, total, seq, new Date(ctx.now), ctx.pid],
     );
     if (won.length) await ctx.q.query("UPDATE bosses SET wins = wins + $2 WHERE id=$1", [boss.id, won.length]);
+    // others whose fight with this boss is nearly over get a "finish it!" reminder
+    await notifyBossLow(ctx, boss.id, total);
     const mineWon = won.some((x) => x.id === mine.id);
     const hp = mineWon ? 0 : fightHp({ ...mine, end_total: null }, total);
     return {

@@ -8,6 +8,8 @@ export interface TelegramUser {
   username?: string;
   photo_url?: string;
   language_code?: string;
+  /** the user let the bot write to them (Mini App write access) */
+  allows_write_to_pm?: boolean;
 }
 
 export const INIT_DATA_MAX_AGE_S = 24 * 3600;

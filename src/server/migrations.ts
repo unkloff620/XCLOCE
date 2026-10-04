@@ -287,4 +287,31 @@ UPDATE appearance SET equipped = equipped - 'DESK';
 ALTER TABLE appearance ADD COLUMN IF NOT EXISTS decor JSONB NOT NULL DEFAULT '{}'::jsonb;
 `,
   },
+  {
+    // daily quests (three a day + a chest) and Telegram bot reminders
+    id: "v2-012-quests-notify",
+    sql: `
+CREATE TABLE IF NOT EXISTS daily_quests (
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  day TEXT NOT NULL,
+  progress JSONB NOT NULL DEFAULT '{}'::jsonb,
+  claimed JSONB NOT NULL DEFAULT '[]'::jsonb,
+  chest JSONB,
+  PRIMARY KEY (player_id, day)
+);
+CREATE TABLE IF NOT EXISTS notifications (
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  kind TEXT NOT NULL,
+  due_at TIMESTAMPTZ NOT NULL,
+  sent_at TIMESTAMPTZ,
+  meta JSONB NOT NULL DEFAULT '{}'::jsonb,
+  PRIMARY KEY (player_id, kind)
+);
+CREATE INDEX IF NOT EXISTS notifications_due ON notifications (due_at) WHERE sent_at IS NULL;
+CREATE TABLE IF NOT EXISTS notify_runs (id INT PRIMARY KEY, at TIMESTAMPTZ NOT NULL);
+INSERT INTO notify_runs (id, at) VALUES (1, '2000-01-01') ON CONFLICT DO NOTHING;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS notify_on BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS pm_blocked BOOLEAN NOT NULL DEFAULT false;
+`,
+  },
 ];

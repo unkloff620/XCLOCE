@@ -11,6 +11,10 @@ import * as clans from "./systems/clans.ts";
 import * as daily from "./systems/daily.ts";
 import * as extras from "./systems/extras.ts";
 import * as home from "./systems/home.ts";
+import * as quests from "./systems/quests.ts";
+import * as notify from "./systems/notify.ts";
+import { taskById } from "../content/locations.ts";
+import { weaponById } from "../content/items.ts";
 import { gameState } from "./systems/state.ts";
 import { CURRENCIES } from "../content/currencies.ts";
 import { WEARABLE_SLOTS } from "../content/items.ts";
@@ -41,10 +45,46 @@ export const ACTIONS = [
   "clan_create", "clan_join", "clan_leave", "clan_kick",
   "daily_claim", "sell", "rename", "slots_spin",
   "equipment_upgrade", "pc_upgrade", "room_buy", "room_set", "look_set", "decor_set", "help_seen",
+  "quest_claim", "quest_chest", "notify_set",
 ] as const;
 export type ActionType = (typeof ACTIONS)[number];
 
-export function dispatch(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Promise<unknown> {
+/** Runs the action, then feeds daily quests and reminders from what it did. */
+export async function dispatch(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Promise<unknown> {
+  const result = await perform(ctx, type, body);
+  await afterAction(ctx, type, result);
+  return result;
+}
+
+async function afterAction(ctx: Ctx, type: ActionType, result: unknown) {
+  const r = (result ?? {}) as Record<string, unknown>;
+  switch (type) {
+    case "attack": {
+      await quests.questTick(ctx, "damage", Number(r.damage) || 0);
+      await quests.questTick(ctx, "hits", 1);
+      // the fist rests an hour: remind when it is ready again
+      if (typeof r.readyAt === "number" && weaponById(String(r.weapon))?.weapon.kind === "permanent") {
+        await notify.schedule(ctx.q, ctx.pid, "fist_ready", r.readyAt, { fightId: r.fightId });
+      }
+      return;
+    }
+    case "task": {
+      await quests.questTick(ctx, "steps", 1);
+      await quests.questTick(ctx, "energy", taskById(String(r.taskId))?.task.energy ?? 0);
+      return;
+    }
+    case "yard_pick": return quests.questTick(ctx, "yard", 1);
+    case "buy": return quests.questTick(ctx, "buy", 1);
+    case "exchange": return quests.questTick(ctx, "exchange", 1);
+    case "slots_spin": return quests.questTick(ctx, "slots", 1);
+    case "equipment_upgrade":
+    case "pc_upgrade": return quests.questTick(ctx, "upgrade", 1);
+    case "daily_claim": return notify.scheduleStreak(ctx, Number(r.streak) || 1);
+    default: return;
+  }
+}
+
+function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Promise<unknown> {
   const idem = typeof body.idem === "string" ? body.idem.slice(0, 80) : undefined;
   switch (type) {
     case "fight_start": return combat.startFight(ctx, str(body.boss, "boss", 40));
@@ -74,6 +114,9 @@ export function dispatch(ctx: Ctx, type: ActionType, body: Record<string, unknow
     case "decor_set": return home.setDecor(ctx, str(body.id, "id", 40), num(body.stage, "stage"));
     case "help_seen": return home.helpSeen(ctx, str(body.topic, "topic", 40));
     case "clan_kick": return clans.kickMember(ctx, num(body.playerId, "playerId"));
+    case "quest_claim": return quests.claimQuest(ctx, str(body.id, "id", 40));
+    case "quest_chest": return quests.openQuestChest(ctx);
+    case "notify_set": return notify.setNotify(ctx, body.on === true, body.granted === true);
     default: throw new GameError("bad_action", "Неизвестное действие");
   }
 }

@@ -14,6 +14,7 @@ import { ITEMS, type Slot } from "../../content/items.ts";
 import { clock, full } from "../format.ts";
 import { BossPhoto } from "./boss-parts.tsx";
 import { DailyWindow } from "./daily.tsx";
+import { QuestsWindow } from "./quests.tsx";
 import { BonusLine, EquipmentWindow } from "./house.tsx";
 import { ComputerWindow } from "./computer.tsx";
 import { ROOM_DEFS } from "../../content/home.ts";
@@ -161,6 +162,7 @@ export function HomeScreen() {
   const now = useNow();
   const [wardrobe, setWardrobe] = useState(false);
   const [daily, setDaily] = useState(false);
+  const [quests, setQuests] = useState(false);
   const [equip, setEquip] = useState<string | null | false>(false);
   const [pc, setPc] = useState(false);
   // the running fight sits folded in the left column; a tap unfolds the full card
@@ -228,8 +230,9 @@ export function HomeScreen() {
             <p>Здесь живёт твой персонаж. На заднем плане стоит оборудование — нажми на мониторы, чтобы обставить рабочее место, или на системник в углу — там детали компьютера, которые улучшаются за таланты. Стрелки по бокам листают комнаты: купленная включается сразу, закрытую можно разблокировать кнопкой снизу. Каждая купленная комната даёт бонус к урону.</p>
             <HelpList title="Кнопки слева" rows={[
               { key: "w", icon: <Icon name="shirt" size={44} />, name: "Гардероб", hint: "Одежда и внешность: причёска, цвет волос и кожи." },
-              { key: "b", icon: <Icon name="gift" size={44} />, name: "Бонус", hint: "Награда за ежедневный вход. Заходи каждый день — награда растёт." },
-              { key: "t", icon: <Icon name="bolt" size={44} />, name: "Техника", hint: "Всё для рабочего места: монитор, кресло, подсветка. Шанс и сила крита." },
+              { key: "b", icon: <Icon name="gift" size={44} />, name: "Бонус", hint: "Награда за ежедневный вход. Заходи каждый день подряд — награда растёт, на 7-й день редкое оружие. Пропустишь день — серия сгорит." },
+              { key: "q", icon: <Icon name="map" size={44} />, name: "Задания дня", hint: "Три задания на сутки: бой, энергия, покупки. Выполнишь все — открой сундук. Там же включаются напоминания в Telegram." },
+              { key: "t", icon: <Icon name="bolt" size={44} />, name: "Обстановка", hint: "Всё для рабочего места: стол, мониторы, кресло, подсветка. Шанс и сила крита." },
             ]} />
             <HelpList title="Меню внизу" rows={NAV_TABS.map((t) => ({ key: t.id, icon: <NavIcon id={t.id} size={44} />, name: t.label, hint: t.hint }))} />
             <HelpList title="Валюта (вверху)" rows={[
@@ -250,6 +253,12 @@ export function HomeScreen() {
           <button className={`icon-btn-art ${state.daily.available ? "glow" : ""}`} style={{ ["--c" as string]: "#ffcc33" }} onClick={() => setDaily(true)} aria-label="Бонус" title="Бонус">
             <Icon name="gift" size={58} />
             {state.daily.available && <i className="side-dot" />}
+            {state.daily.streak > 1 && <span className="side-streak num" title={`Серия входов: ${state.daily.streak} дн.`}><Icon name="fire" size={13} />{state.daily.streak}</span>}
+          </button>
+          <button className={`icon-btn-art ${state.quests.claimable ? "glow" : ""}`} style={{ ["--c" as string]: "#3ddc84" }} onClick={() => setQuests(true)} aria-label="Задания дня" title="Задания дня">
+            <Icon name="map" size={58} />
+            {state.quests.claimable && <i className="side-dot" />}
+            <span className="side-count num">{state.quests.list.filter((x) => x.claimed).length}/3</span>
           </button>
           <button className="icon-btn-art" style={{ ["--c" as string]: "#3fd2ff" }} onClick={() => setEquip(null)} aria-label="Обстановка" title="Обстановка">
             <Icon name="bolt" size={58} />
@@ -284,6 +293,7 @@ export function HomeScreen() {
       )}
       {wardrobe && <Wardrobe onClose={() => setWardrobe(false)} />}
       {daily && <DailyWindow onClose={() => setDaily(false)} />}
+      {quests && <QuestsWindow onClose={() => setQuests(false)} />}
       {equip !== false && <EquipmentWindow focus={equip} onClose={() => setEquip(false)} />}
       {pc && <ComputerWindow onClose={() => setPc(false)} />}
     </div>

@@ -10,6 +10,7 @@ import { itemById } from "../../content/items.ts";
 import type { Currency } from "../../content/currencies.ts";
 import type { Reward } from "../../content/rewards.ts";
 import type { Granted } from "../api.ts";
+import { NotifySwitch } from "./quests.tsx";
 
 /** Compact content of one day tile: currencies, energy, items, XP — one per line. */
 function TileReward({ r }: { r: Reward }) {
@@ -44,7 +45,7 @@ export function DailyWindow({ onClose }: { onClose: () => void }) {
     <Modal title="Награда за вход" onClose={onClose} wide>
       <div className="col" style={{ gap: 12 }}>
         <div className="small muted">
-          Заходи каждый день — награда растёт. Пропустишь день — серия начнётся заново.
+          Заходи каждый день подряд — награда растёт, на 7-й день редкое оружие. Пропустишь день — серия сгорит.
           {d.streak > 0 && <> Серия: <b style={{ color: "var(--ink)" }}>{d.streak} дн.</b></>}
         </div>
         <div className="daily-grid">
@@ -76,6 +77,7 @@ export function DailyWindow({ onClose }: { onClose: () => void }) {
             <Icon name="clock" size={18} /> Следующая через {clock((d.nextAt ?? now) - now)}
           </div>
         )}
+        <NotifySwitch />
       </div>
     </Modal>
   );
