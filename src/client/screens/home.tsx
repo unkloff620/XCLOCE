@@ -218,7 +218,7 @@ export function HomeScreen() {
             <HelpList title="Кнопки слева" rows={[
               { key: "w", icon: <Icon name="shirt" size={44} />, name: "Гардероб", hint: "Одежда и внешность: причёска, цвет волос и кожи." },
               { key: "b", icon: <Icon name="gift" size={44} />, name: "Бонус", hint: "Награда за ежедневный вход. Заходи каждый день — награда растёт." },
-              { key: "t", icon: <Icon name="bolt" size={44} />, name: "Техника", hint: "Монитор, кресло, системник, подсветка: шанс и сила крита, прибавка к урону." },
+              { key: "t", icon: <Icon name="bolt" size={44} />, name: "Техника", hint: "Всё для рабочего места: монитор, кресло, подсветка. Шанс и сила крита." },
             ]} />
             <HelpList title="Меню внизу" rows={NAV_TABS.map((t) => ({ key: t.id, icon: <NavIcon id={t.id} size={44} />, name: t.label, hint: t.hint }))} />
             <HelpList title="Валюта (вверху)" rows={[

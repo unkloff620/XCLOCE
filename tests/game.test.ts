@@ -417,14 +417,19 @@ describe("home: equipment, rooms, look, help", () => {
     expect(plain.result).toMatchObject({ damage: 50, crit: false });
     await act(db, p, "equipment_upgrade", { id: "chair" }, T0);
     await act(db, p, "equipment_upgrade", { id: "monitor2" }, T0);
-    await act(db, p, "equipment_upgrade", { id: "pc" }, T0);
-    expect(await wallet(db, p, "RUB")).toBe(20000 - 2500 - 3000 - 5000);
+    // the old money-bought system unit is gone from the shop (the computer is upgraded for talents now)
+    await expect(act(db, p, "equipment_upgrade", { id: "pc" }, T0)).rejects.toMatchObject({ code: "bad_equipment" });
+    expect(await wallet(db, p, "RUB")).toBe(20000 - 2500 - 3000);
     const r = await hit(p, "red-candle"); // rng 0 → always a crit once the chance is above zero
-    expect(r.result).toMatchObject({ crit: true, damage: Math.round(Math.round(50 * 1.03) * 1.6) });
+    expect(r.result).toMatchObject({ crit: true, damage: Math.round(50 * 1.6) });
     // level 2 of the monitor costs USD
     await expect(act(db, p, "equipment_upgrade", { id: "monitor2" }, T0)).rejects.toMatchObject({ code: "no_money" });
     const st = await act(db, p, "equipment_upgrade", { id: "rgb" }, T0);
-    expect(st.state.home.levels).toMatchObject({ chair: 1, monitor2: 1, pc: 1, rgb: 1 });
+    expect(st.state.home.levels).toMatchObject({ chair: 1, monitor2: 1, rgb: 1 });
+    // players who bought it earlier keep its bonus
+    await db.query("INSERT INTO player_equipment (player_id, equipment_id, level) VALUES ($1, 'pc', 1)", [p]);
+    const legacy = await hit(p, "red-candle");
+    expect(legacy.result.damage).toBe(Math.round(Math.round(50 * 1.03) * 1.6));
   });
 
   it("talents: thresholds grow 200, 500, 900…", () => {

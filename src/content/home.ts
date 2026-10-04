@@ -45,19 +45,26 @@ export const EQUIPMENT: EquipmentDef[] = [
     ],
   },
   {
-    id: "pc", name: "Мощный системник", description: "Рендерит удары быстрее, чем босс успевает моргнуть. Добавляет урон любому оружию.",
-    levels: [
-      { price: { currency: "RUB", amount: 5000 }, bonus: { damage: 0.03 } },
-      { price: { currency: "USD", amount: 50 }, bonus: { damage: 0.06 } },
-      { price: { currency: "SOL", amount: 0.25 }, bonus: { damage: 0.1 } },
-    ],
-  },
-  {
     id: "rgb", name: "RGB-подсветка", description: "Всем известно: RGB даёт +15% к скиллу. У нас чуть скромнее.",
     levels: [
       { price: { currency: "RUB", amount: 1200 }, bonus: { critChance: 0.01 } },
       { price: { currency: "RUB", amount: 2400 }, bonus: { critChance: 0.02 } },
       { price: { currency: "USD", amount: 15 }, bonus: { critChance: 0.03, critDamage: 0.05 } },
+    ],
+  },
+];
+
+/**
+ * Снято с продажи: системник за валюту заменён компьютером за таланты (PC_PARTS).
+ * Уже купленные уровни продолжают давать бонус, но в «Технике» не показываются и не улучшаются.
+ */
+export const LEGACY_EQUIPMENT: EquipmentDef[] = [
+  {
+    id: "pc", name: "Мощный системник", description: "Рендерит удары быстрее, чем босс успевает моргнуть. Добавляет урон любому оружию.",
+    levels: [
+      { price: { currency: "RUB", amount: 5000 }, bonus: { damage: 0.03 } },
+      { price: { currency: "USD", amount: 50 }, bonus: { damage: 0.06 } },
+      { price: { currency: "SOL", amount: 0.25 }, bonus: { damage: 0.1 } },
     ],
   },
 ];
@@ -110,7 +117,7 @@ export function talentsForDamage(damage: number): number {
 /** Total bonus from equipment levels (incl. computer parts) and owned rooms. */
 export function totalBonus(levels: Record<string, number>, rooms: string[]): Required<Bonus> {
   let b: Bonus = {};
-  for (const e of EQUIPMENT) {
+  for (const e of [...EQUIPMENT, ...LEGACY_EQUIPMENT]) {
     const lv = levels[e.id] ?? 0;
     if (lv > 0) b = addBonus(b, e.levels[Math.min(lv, e.levels.length) - 1].bonus);
   }
