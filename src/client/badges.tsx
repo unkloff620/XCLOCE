@@ -58,7 +58,7 @@ export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: b
           const maxed = s.reached >= 5;
           const pct = maxed ? 100 : Math.min(100, Math.round((s.progress / s.next) * 100));
           return (
-            <button key={c.id} className={`ach-row ${s.ready ? "ready" : ""}`} onClick={() => setOpen(c.id)}>
+            <div key={c.id} role="button" tabIndex={0} className={`ach-row ${s.ready ? "ready" : ""}`} onClick={() => setOpen(c.id)} onKeyDown={(e) => e.key === "Enter" && setOpen(c.id)}>
               <BadgeMedal icon={c.icon} tier={s.earned} earned={s.earned > 0} size={44} />
               <span className="ach-main">
                 <span className="row" style={{ justifyContent: "space-between", gap: 6 }}>
@@ -75,8 +75,15 @@ export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: b
                   <i /><span className="num">{maxed ? "всё собрано" : `${short(s.progress)} / ${short(s.next)}`}</span>
                 </span>
               </span>
-              {s.ready && <span className="btn gold sm ach-take">Забрать</span>}
-            </button>
+              {/* collected right here, one after another; the row itself opens the details */}
+              {s.ready && (
+                <button className="btn gold sm ach-take" disabled={busy === "achievement_claim"}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void claim(s.ready!.id);
+                  }}>Забрать</button>
+              )}
+            </div>
           );
         })}
       </div>

@@ -212,13 +212,9 @@ export function HomeScreen() {
         <div className={`room-view ${owned ? "" : "locked"}`}>
           <HomeScene room={viewRoom.id} look={state.look.body} worn={state.look.equipped} levels={state.home.levels} decor={state.home.decor} onPick={owned ? (id) => (id === "pc" ? setPc(true) : setEquip(id)) : undefined} />
         </div>
-        {/* room switcher: one pill «‹ name ›» at the bottom, the lock offer under it */}
+        {/* room switcher: one pill «‹ name ›» at the bottom, the lock offer above it */}
         <div className="room-label">
-          <div className="room-switch">
-            <button className="room-step" onClick={() => flip(-1)} disabled={idx === 0 || busy === "room_set"} aria-label="Предыдущая комната">‹</button>
-            <span className="room-name display">{viewRoom.name}</span>
-            <button className="room-step" onClick={() => flip(1)} disabled={idx >= ROOM_DEFS.length - 1 || busy === "room_set"} aria-label="Следующая комната">›</button>
-          </div>
+          {/* the switcher pill always stays at the bottom; a locked room's offer sits above it */}
           {!owned && (
             <div className="room-unlock">
               <span className="tiny" style={{ color: "var(--gold)" }}><BonusLine b={viewRoom.bonus} /></span>
@@ -228,6 +224,11 @@ export function HomeScreen() {
               {!canPay && <span className="tiny" style={{ color: "#ff8a9e" }}>Не хватает {viewRoom.price!.currency}</span>}
             </div>
           )}
+          <div className="room-switch">
+            <button className="room-step" onClick={() => flip(-1)} disabled={idx === 0 || busy === "room_set"} aria-label="Предыдущая комната">‹</button>
+            <span className="room-name display">{viewRoom.name}</span>
+            <button className="room-step" onClick={() => flip(1)} disabled={idx >= ROOM_DEFS.length - 1 || busy === "room_set"} aria-label="Следующая комната">›</button>
+          </div>
         </div>
         <div className="room-help">
           <Help topic="home-menu" title="Твой дом">

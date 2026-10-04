@@ -110,16 +110,44 @@ function Hud() {
   );
 }
 
+/**
+ * One step up inside a section (null = already at its start): the bottom tab of the open section works as "back",
+ * e.g. Двор → Локации → Опенспейс, then the Двор tab: → Локации → Двор.
+ */
+export function parentOf(path: string, search: string, myClan: number | null): string | null {
+  const parts = path.split("/").filter(Boolean);
+  if (parts[0] === "locations") return parts.length > 1 ? "/locations" : "/yard";
+  if (parts[0] === "shop" || parts[0] === "exchange") return "/yard";
+  if (parts[0] === "bosses" && parts.length > 1) return "/bosses";
+  if (parts[0] === "profile" || parts[0] === "rating") return "/";
+  if (parts[0] === "clans") {
+    if (parts.length > 1) return Number(parts[1]) === myClan ? null : myClan ? "/clans?all=1" : "/clans";
+    return myClan && search.includes("all") ? `/clans/${myClan}` : null;
+  }
+  return null;
+}
+
 function Nav() {
   const path = usePathname();
+  const router = useRouter();
   const { state } = useGame();
   const on = activeTab(path);
   const now = useNow();
   const taskHint = tasksReady(state, now);
+  const myClan = state?.clan?.id ?? null;
   return (
     <nav className="nav">
       {TABS.map((t) => (
-        <Link key={t.id} href={t.href} className={on === t.id ? "on" : ""} style={{ ["--glow" as string]: NAV_GLOW[t.id] }} aria-label={t.label} title={t.label} onClick={() => window.scrollTo({ top: 0 })}>
+        // a member's Clans tab leads straight to the own clan (no flash of the clan list)
+        <Link key={t.id} href={t.id === "clans" && myClan ? `/clans/${myClan}` : t.href} className={on === t.id ? "on" : ""} style={{ ["--glow" as string]: NAV_GLOW[t.id] }} aria-label={t.label} title={t.label}
+          onClick={(e) => {
+            window.scrollTo({ top: 0 });
+            if (on !== t.id) return;
+            // the tab of the open section: one step back inside it
+            const up = parentOf(path, window.location.search, myClan);
+            e.preventDefault();
+            if (up) router.push(up);
+          }}>
           <NavIcon id={t.id} />
           {t.id === "yard" && !!state?.yard.count && <span className="badge">{state.yard.count}</span>}
           {t.id === "yard" && !state?.yard.count && taskHint && <span className="badge" style={{ background: "var(--gold)", color: "#2e1c00" }}>!</span>}

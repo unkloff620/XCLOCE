@@ -71,7 +71,7 @@ export function BossesScreen() {
           const hp = mine ? mine.hp : hpMax;
           return (
             <Link key={b.id} href={`/bosses/${b.id}`} className={`bcard ${locked ? "locked" : ""} ${b.final ? "final" : ""} ${mine ? "live" : ""}`}
-              style={{ ["--acc" as string]: tierColor(b.order), ["--hp" as string]: `${Math.round((hp / Math.max(1, hpMax)) * 100)}%` }}>
+              style={{ ["--i" as string]: b.order, ["--acc" as string]: tierColor(b.order), ["--hp" as string]: `${Math.round((hp / Math.max(1, hpMax)) * 100)}%` }}>
               {/* the boss stands on the left and fades into the card */}
               <div className="bcard-art" aria-hidden="true">
                 {/* eslint-disable-next-line @next/next/no-img-element */}

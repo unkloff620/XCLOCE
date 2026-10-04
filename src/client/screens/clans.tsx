@@ -96,10 +96,13 @@ export function ClansScreen() {
   const { state } = useGame();
   const router = useRouter();
   const myClan = state?.clan?.id;
-  // a member goes straight to the own clan; the full list stays at /clans?all=1
+  // a member goes straight to the own clan (nothing of the list is shown meanwhile); the full list stays at /clans?all=1
+  const [all, setAll] = useState<boolean | null>(null);
+  useEffect(() => setAll(new URLSearchParams(window.location.search).has("all")), []);
+  const redirect = !!myClan && all === false;
   useEffect(() => {
-    if (myClan && !new URLSearchParams(window.location.search).has("all")) router.replace(`/clans/${myClan}`);
-  }, [myClan, router]);
+    if (redirect) router.replace(`/clans/${myClan}`);
+  }, [redirect, myClan, router]);
   const [data, setData] = useState<{ clans: ClanRow[]; emblems: string[]; colors: string[] } | null>(null);
   const [create, setCreate] = useState(false);
   const [query, setQuery] = useState("");
@@ -109,6 +112,7 @@ export function ClansScreen() {
   useEffect(() => {
     void load();
   }, [load, state?.clan?.id]);
+  if (all === null || redirect) return null;
   return (
     <div>
       <div className="title">
