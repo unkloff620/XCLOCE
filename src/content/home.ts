@@ -54,9 +54,9 @@ export const EQUIPMENT: EquipmentDef[] = [
     ],
     stages: [
       { name: "Старый ламповый", art: "monitor-1" },
-      { name: "Один монитор", art: "monitor-center" },
+      { name: "Один монитор", art: "monitor-right" },
       { name: "Два монитора", art: "monitor-left" },
-      { name: "Три монитора", art: "monitor-right" },
+      { name: "Три монитора", art: "monitor-center" },
     ],
   },
   {

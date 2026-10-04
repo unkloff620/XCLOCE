@@ -9,8 +9,9 @@ export const SCENE = { w: 1060, h: 1484 };
 export const SCENE_OBJECTS = {
   /** the desk behind the character; picture = the desk stage (desk-001…004) */
   desk: { x: 140, y: 690, w: 780, aspect: 0.4, flip: false },
-  /** monitors on the desk top: level 0 — the old CRT in the middle; 1 — a flat one in its place; 2 — + left; 3 — + right */
-  monitorOld: { x: 440, y: 555, w: 190, aspect: 1.0, flip: true },
+  /** monitors on the desk top (the middle hides behind the head, so it comes last):
+   *  level 0 — the old CRT on the right; 1 — a flat one in its place; 2 — + left; 3 — + middle */
+  monitorOld: { x: 690, y: 555, w: 190, aspect: 1.0, flip: true },
   monitorCenter: { x: 425, y: 579, w: 210, aspect: 0.79, flip: false },
   monitorLeft: { x: 175, y: 545, w: 200, aspect: 1.0, flip: false },
   monitorRight: { x: 685, y: 545, w: 200, aspect: 1.0, flip: false },
