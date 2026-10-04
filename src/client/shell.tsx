@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { liveEnergy, useGame, useNow } from "./store.tsx";
 import { Icon, NAV_GLOW, NavIcon } from "./art/icons.tsx";
 import { Avatar } from "./ui.tsx";
-import { clock, moneyShort } from "./format.ts";
+import { clock, full, moneyShort } from "./format.ts";
 import { CURRENCIES } from "../content/currencies.ts";
 import { LOADING_LINES } from "../content/phrases.ts";
 import { loginWidget } from "./api.ts";
@@ -42,10 +42,11 @@ function Hud() {
               <span className="lvl">LVL {p.level}</span>
               <span className="name ellipsis">{p.name}</span>
             </div>
-            <div className="row" style={{ gap: 6 }}>
-              <Icon name="xp" size={18} />
-              <div className="xpbar grow" title="Авторитет"><i style={{ width: `${p.levelNeed ? (p.levelXp / p.levelNeed) * 100 : 100}%` }} /></div>
-              <span className="tiny muted num" title="Авторитет">{p.levelNeed ? `${p.levelXp} / ${p.levelNeed}` : "макс."}</span>
+            {/* progress to the next level; exact numbers are in the profile */}
+            <div className="xpbar" title="Прогресс уровня"><i style={{ width: `${p.levelNeed ? (p.levelXp / p.levelNeed) * 100 : 100}%` }} /></div>
+            <div className="row hud-xp" title="Авторитет">
+              <Icon name="xp" size={16} />
+              <b className="num">{full(p.xp)}</b>
             </div>
           </div>
         </Link>
