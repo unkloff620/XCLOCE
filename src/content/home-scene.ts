@@ -8,20 +8,20 @@ export const SCENE = { w: 1060, h: 1484 };
 /** Bottom-anchored places (x, y = top-left for the nominal aspect; the real picture keeps the same bottom line). */
 export const SCENE_OBJECTS = {
   /** the desk behind the character; picture = the desk stage (desk-001…004) */
-  desk: { x: 140, y: 690, w: 780, aspect: 0.4, flip: false },
+  desk: { x: 70, y: 650, w: 920, aspect: 0.4, flip: false },
   /** monitors on the desk top (the middle hides behind the head, so it comes last):
    *  level 0 — the old CRT on the right; 1 — a flat one in its place; 2 — + left; 3 — + middle */
-  monitorOld: { x: 690, y: 555, w: 190, aspect: 1.0, flip: true },
-  monitorCenter: { x: 425, y: 579, w: 210, aspect: 0.79, flip: false },
-  monitorLeft: { x: 175, y: 545, w: 200, aspect: 1.0, flip: false },
-  monitorRight: { x: 685, y: 545, w: 200, aspect: 1.0, flip: false },
+  monitorOld: { x: 650, y: 505, w: 215, aspect: 1.0, flip: true },
+  monitorCenter: { x: 405, y: 530, w: 250, aspect: 0.79, flip: false },
+  monitorLeft: { x: 170, y: 478, w: 245, aspect: 1.0, flip: false },
+  monitorRight: { x: 645, y: 478, w: 245, aspect: 1.0, flip: false },
   /** the system unit on the floor, right in the corner of the room (its back in the corner of the walls at x≈945, y≈885, the base on the floor in front of it) */
   pc: { x: 850, y: 756, w: 140, aspect: 1.4401, flip: false },
 } as const;
 
 /** tap zones (scene units) that open the windows: bigger than the pictures so a finger hits them */
 export const SCENE_HOT = {
-  monitors: { x: 150, y: 520, w: 760, h: 250, equipment: "monitor2" },
+  monitors: { x: 150, y: 460, w: 760, h: 280, equipment: "monitor2" },
   pc: { x: 830, y: 730, w: 200, h: 245, equipment: "pc" },
 } as const;
 
