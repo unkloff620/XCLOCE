@@ -27,6 +27,8 @@ export interface GameState {
   home: { levels: Record<string, number>; rooms: string[]; bonus: { critChance: number; critDamage: number; damage: number } };
   helpSeen: string[];
   yard: { count: number; max: number; nextAt: number | null };
+  /** cheapest task step left in an open location; claimable = a location reward is waiting */
+  tasks: { minEnergy: number | null; claimable: boolean };
   fight: { id: number; bossId: string; hp: number; hpMax: number; endsAt: number; myDamage: number } | null;
   pending: { fightId: number; bossId: string; status: string }[];
   clan: { id: number; name: string; tag: string; emblem: string; color: string } | null;

@@ -37,6 +37,20 @@ export async function locationsView(q: Queryable, pid: number) {
   });
 }
 
+/** For the "you can spend energy" hint: the cheapest step left in an open location, and whether a location reward waits. */
+export async function tasksHint(q: Queryable, pid: number) {
+  const { steps, clears } = await progress(q, pid);
+  let minEnergy: number | null = null;
+  let claimable = false;
+  for (const l of LOCATIONS) {
+    if (!unlocked(l, clears)) continue;
+    const left = l.tasks.filter((t) => (steps.get(t.id) ?? 0) < t.steps);
+    if (!left.length) claimable = true;
+    for (const t of left) minEnergy = minEnergy === null ? t.energy : Math.min(minEnergy, t.energy);
+  }
+  return { minEnergy, claimable };
+}
+
 export async function doTask(ctx: Ctx, taskId: string) {
   const found = taskById(taskId);
   if (!found) throw new GameError("bad_task", "Такого задания нет");

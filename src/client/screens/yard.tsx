@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { useGame, useNow } from "../store.tsx";
+import { tasksReady, useGame, useNow } from "../store.tsx";
 import { api } from "../api.ts";
 import { YARD_SPOTS } from "../art/scenes.tsx";
 import { ItemArt } from "../art/items.tsx";
@@ -17,8 +17,8 @@ import type { Granted } from "../api.ts";
 
 const LINKS = [
   { href: "/shop", icon: "shop", label: "Магазин", c: "#ff4d6d", hint: "Оружие, энергия, одежда и разное за игровую валюту." },
-  { href: "/exchange", icon: "exchange", label: "Обменник", c: "#3fd2ff", hint: "Меняй одну валюту на другую (комиссия 5%)." },
-  { href: "/locations", icon: "map", label: "Локации", c: "#3ddc84", hint: "Задания за энергию: проходи шаги и забирай награды." },
+  { href: "/exchange", icon: "exchange", label: "Обменник", c: "#ffb347", hint: "Меняй одну валюту на другую (комиссия 5%)." },
+  { href: "/locations", icon: "map", label: "Локации", c: "#3ddc84", hint: "Задания за энергию: проходи шаги и забирай награды. Значок «!» — энергии хватает на задание, пора её потратить." },
 ] as const;
 
 interface YardData { items: { id: number; slot: number; drop: string; at: number }[]; max: number; nextAt: number | null; periodMs: number }
@@ -28,6 +28,8 @@ export function YardScreen() {
   const now = useNow();
   const [data, setData] = useState<YardData | null>(null);
   const [flying, setFlying] = useState<number | null>(null);
+  // enough energy for a task step (or a location reward waits) → the Locations button calls for attention
+  const taskHint = tasksReady(state, now);
   const [slots, setSlots] = useState(false);
   const load = useCallback(async () => {
     try {
@@ -102,8 +104,9 @@ export function YardScreen() {
         </div>
         <nav className="yard-side" aria-label="Места во дворе">
           {LINKS.map((b) => (
-            <Link key={b.href} href={b.href} className="icon-btn-art" style={{ ["--c" as string]: b.c }} aria-label={b.label} title={b.label}>
+            <Link key={b.href} href={b.href} className={`icon-btn-art ${b.href === "/locations" && taskHint ? "glow" : ""}`} style={{ ["--c" as string]: b.c }} aria-label={b.label} title={b.label}>
               <Icon name={b.icon} size={58} />
+              {b.href === "/locations" && taskHint && <span className="side-alert">!</span>}
             </Link>
           ))}
         </nav>

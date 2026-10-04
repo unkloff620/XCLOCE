@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { liveEnergy, useGame, useNow } from "./store.tsx";
+import { liveEnergy, tasksReady, useGame, useNow } from "./store.tsx";
 import { Icon, NAV_GLOW, NavIcon } from "./art/icons.tsx";
 import { Avatar } from "./ui.tsx";
 import { clock, full, moneyShort } from "./format.ts";
@@ -76,12 +76,15 @@ function Nav() {
   const path = usePathname();
   const { state } = useGame();
   const on = activeTab(path);
+  const now = useNow();
+  const taskHint = tasksReady(state, now);
   return (
     <nav className="nav">
       {TABS.map((t) => (
         <Link key={t.id} href={t.href} className={on === t.id ? "on" : ""} style={{ ["--glow" as string]: NAV_GLOW[t.id] }} aria-label={t.label} title={t.label} onClick={() => window.scrollTo({ top: 0 })}>
           <NavIcon id={t.id} />
           {t.id === "yard" && !!state?.yard.count && <span className="badge">{state.yard.count}</span>}
+          {t.id === "yard" && !state?.yard.count && taskHint && <span className="badge" style={{ background: "var(--gold)", color: "#2e1c00" }}>!</span>}
           {t.id === "bosses" && state?.fight && <span className="badge" style={{ background: "var(--gold)", color: "#2e1c00" }}>!</span>}
         </Link>
       ))}

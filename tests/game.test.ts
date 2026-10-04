@@ -467,6 +467,12 @@ describe("home: equipment, rooms, look, help", () => {
     expect(r.result.damage).toBe(Math.round(50 * 1.03));
   });
 
+  it("tasks hint: the cheapest step left in an open location", async () => {
+    const p = await newPlayer(db);
+    const st = await act(db, p, "help_seen", { topic: "home" }, T0);
+    expect(st.state.tasks).toEqual({ minEnergy: 3, claimable: false });
+  });
+
   it("rooms: buy, switch, the bonus of every owned room counts", async () => {
     const p = await newPlayer(db);
     await expect(act(db, p, "room_set", { id: "office" }, T0)).rejects.toMatchObject({ code: "room_locked" });

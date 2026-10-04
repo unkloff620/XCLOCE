@@ -11,6 +11,7 @@ import { touchActivity } from "../players.ts";
 import { dailyView } from "./daily.ts";
 import { renameView, slotsView } from "./extras.ts";
 import { homeView } from "./home.ts";
+import { tasksHint } from "./locations.ts";
 
 /** Everything the HUD and the always-visible parts of the game need. Runs inside the player's transaction. */
 export async function gameState(ctx: Ctx) {
@@ -52,6 +53,7 @@ export async function gameState(ctx: Ctx) {
     home: { levels: home.levels, rooms: home.rooms, bonus: home.bonus },
     helpSeen: (p as PlayerRow & { help_seen?: string[] }).help_seen ?? [],
     yard: { count: yard.items.length, max: yard.max, nextAt: yard.nextAt },
+    tasks: await tasksHint(ctx.q, ctx.pid),
     fight: fightRow
       ? { id: fightRow.id, bossId: fightRow.boss_id, hp: fightHp(fightRow, fightRow.damage_total), hpMax: fightRow.hp_max, endsAt: new Date(fightRow.ends_at).getTime(), myDamage: Number(fightRow.my_damage) }
       : null,

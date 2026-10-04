@@ -154,6 +154,13 @@ export function liveEnergy(s: GameState, now: number): { energy: number; nextIn:
   return { energy: e, nextIn: p.energyPeriodMs - ((passed - p.energyNextIn) % p.energyPeriodMs) };
 }
 
+/** There is something to spend energy on right now (a task step is affordable) or a location reward waits. */
+export function tasksReady(s: GameState | null, now: number): boolean {
+  if (!s?.tasks) return false;
+  if (s.tasks.claimable) return true;
+  return s.tasks.minEnergy !== null && liveEnergy(s, now).energy >= s.tasks.minEnergy;
+}
+
 export function invQty(s: GameState | null, id: string): number {
   return s?.inventory.find((i) => i.id === id)?.qty ?? 0;
 }
