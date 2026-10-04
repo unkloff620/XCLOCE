@@ -488,7 +488,7 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(10, 12, 24, 0.
 .arena.full { position: absolute; left: 0; right: 0; top: calc(var(--top) + 44px); bottom: calc(var(--bottom) + 132px); aspect-ratio: auto; border: 0; border-radius: 0; box-shadow: none; background: none; }
 .arena.full .arena-top { left: 12px; right: 12px; top: 0; }
 .arena.full .arena-photo { left: 4%; right: 4%; top: 58px; bottom: 0; }
-.arena.full .arena-feed { left: 12px; right: 12px; bottom: 4px; }
+.arena.full .arena-feed { left: 12px; right: 12px; bottom: 50px; }  /* room for the phrase bubble under it */
 .fight-bottom { position: absolute; left: 12px; right: 12px; bottom: var(--bottom); z-index: 5; display: flex; flex-direction: column; gap: 8px; }
 .fight-bottom .phrase-bubble { position: absolute; left: 0; right: 0; bottom: calc(100% + 10px); margin: 0 auto; }
 .fight-bar { gap: 6px; }
