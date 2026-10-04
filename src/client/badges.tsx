@@ -24,7 +24,7 @@ export function BadgeMedal({ id, earned, size = 54 }: { id: string; earned: bool
 export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: boolean; onClaimed?: () => void }) {
   const { act, busy } = useGame();
   const [open, setOpen] = useState<string | null>(null);
-  const earned = rows.filter((r) => r.claimed || (!self && r.done)).length;
+  const earned = rows.filter((r) => r.claimed || r.done).length;
   const sel = open ? rows.find((r) => r.id === open) : null;
   const def = open ? achievementById(open) : null;
   const claim = async (id: string) => {
@@ -49,7 +49,7 @@ export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: b
           const ready = self && r.done && !r.claimed;
           return (
             <button key={r.id} className={`badge-cell ${ready ? "ready" : ""}`} onClick={() => setOpen(r.id)} title={achievementById(r.id)?.name}>
-              <BadgeMedal id={r.id} earned={r.claimed || (!self && r.done)} />
+              <BadgeMedal id={r.id} earned={r.claimed || r.done} />
               {ready && <i className="side-dot" />}
               <span className="badge-name">{achievementById(r.id)?.name}</span>
             </button>
@@ -59,7 +59,7 @@ export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: b
       {sel && def && (
         <Modal title={def.name} onClose={() => setOpen(null)}>
           <div className="col" style={{ alignItems: "center", gap: 10, textAlign: "center" }}>
-            <BadgeMedal id={def.id} earned={sel.claimed || (!self && sel.done)} size={84} />
+            <BadgeMedal id={def.id} earned={sel.claimed || sel.done} size={84} />
             <div>{def.hint}</div>
             <div className="ach-bar" style={{ ["--p" as string]: `${Math.round((sel.progress / sel.target) * 100)}%` }}><i /><span className="num">{full(sel.progress)} / {full(sel.target)}</span></div>
             <div className="col" style={{ alignItems: "center", gap: 4 }}>

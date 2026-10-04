@@ -29,6 +29,13 @@ const TABS: { id: Tab; label: string }[] = [
 ];
 const MEDAL = ["🥇", "🥈", "🥉"];
 
+/** "5 д 3 ч" for long waits, the clock for the last day */
+function untilText(ms: number): string {
+  const d = Math.floor(ms / 86_400_000);
+  if (d < 1) return clock(ms);
+  return `${d} д ${Math.floor((ms % 86_400_000) / 3_600_000)} ч`;
+}
+
 function Place({ n }: { n: number }) {
   return <span className={`rt-place display ${n <= 3 ? `p${n}` : ""}`}>{n <= 3 ? MEDAL[n - 1] : n}</span>;
 }
@@ -64,7 +71,7 @@ export function RatingScreen() {
 
       {tab !== "authority" && data && (
         <div className="rt-week">
-          <span className="row" style={{ gap: 6 }}><Icon name="clock" size={16} />Итоги недели через <b className="num">{clock(data.week.end - now)}</b></span>
+          <span className="row" style={{ gap: 6 }}><Icon name="clock" size={16} />Итоги недели через <b className="num">{untilText(data.week.end - now)}</b></span>
           <button className="btn dark sm" onClick={() => setPrizesOpen((v) => !v)}>{prizesOpen ? "Скрыть" : "Призы"}</button>
         </div>
       )}
