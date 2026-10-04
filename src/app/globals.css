@@ -21,7 +21,7 @@
   --orange: #ff8a3d;
   --r: 16px;
   --hud-h: 98px;
-  --nav-h: 78px;
+  --nav-h: 70px;
   --safe-t: env(safe-area-inset-top, 0px);
   --safe-b: env(safe-area-inset-bottom, 0px);
   --col: 480px;
