@@ -734,3 +734,13 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .fight-mini .boss-ring { animation: ring-glow 1.8s ease-in-out infinite; }
 @keyframes ring-glow { 50% { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45), 0 0 14px 2px color-mix(in srgb, var(--acc, #ff4d6d) 70%, transparent); } }
 .fight-mini .live-dot { top: 2px; right: 2px; }
+
+/* locations: cleared ones glow green, the current one glows gold and breathes */
+.loc-card.cleared { border-color: #3ddc84; box-shadow: 0 4px 0 var(--line), 0 0 0 2px rgba(61, 220, 132, 0.55), 0 0 16px rgba(61, 220, 132, 0.3); }
+.loc-card.current { border-color: #ffcc33; box-shadow: 0 4px 0 var(--line), 0 0 0 2px #ffcc33, 0 0 20px rgba(255, 204, 51, 0.45); animation: loc-now 2.4s ease-in-out infinite; }
+@keyframes loc-now { 50% { box-shadow: 0 4px 0 var(--line), 0 0 0 2px #ffcc33, 0 0 30px 4px rgba(255, 204, 51, 0.6); } }
+.loc-now { animation: alert-pulse 1.6s ease-in-out infinite; }
+/* weapon on cooldown: looks pressed-out (grey clock), but a tap explains why */
+.weapon.cd { cursor: default; }
+.weapon.cd:active { transform: none; }
+@media (prefers-reduced-motion: reduce) { .loc-card.current, .loc-now { animation: none; } }

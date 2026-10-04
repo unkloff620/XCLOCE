@@ -61,7 +61,7 @@ function Arena({ boss, hp, hpMax, endsAt, fx, hit, rug, feed, full: fullScreen }
   );
 }
 
-function WeaponTray({ tray, onHit, disabled, bonus }: { tray: Tray[]; onHit: (id: string) => void; disabled: boolean; bonus: number }) {
+function WeaponTray({ tray, onHit, onCooldown, disabled, bonus }: { tray: Tray[]; onHit: (id: string) => void; onCooldown: (name: string, leftMs: number) => void; disabled: boolean; bonus: number }) {
   const now = useNow();
   const router = useRouter();
   return (
@@ -79,15 +79,15 @@ function WeaponTray({ tray, onHit, disabled, bonus }: { tray: Tray[]; onHit: (id
           <button
             key={w.id}
             className={`weapon rar-${w.rarity} ${empty ? "empty" : ""} ${cd ? "cd" : ""}`}
-            disabled={disabled || !!cd}
-            onClick={() => (empty ? router.push("/shop?tab=weapons") : onHit(w.id))}
+            disabled={disabled}
+            aria-disabled={!!cd}
+            onClick={() => (cd ? onCooldown(w.name, cd) : empty ? router.push("/shop?tab=weapons") : onHit(w.id))}
             title={`${w.name}: ${w.weapon!.action}`}
           >
             <ItemArt id={w.id} size={40} />
             <span className="w-dmg display">−{weaponDamage(w.weapon!.damage, bonus)}</span>
             {!perm && <span className="w-qty num">{qty}</span>}
             {cd > 0 && <span className="w-cd" style={{ ["--p" as string]: `${done * 360}deg` }} />}
-            {cd > 0 && <span className="w-cd-time num">{clock(cd)}</span>}
           </button>
         );
       })}
@@ -259,7 +259,7 @@ export function BossScreen({ id }: { id: string }) {
             <button className="btn sm dark" onClick={() => setTab("mine")}>Мои</button>
             <button className={`btn sm ${fleeAsk ? "red" : "dark"}`} onClick={flee} disabled={busy === "fight_flee"}>{fleeAsk ? "Точно?" : "Сдаться"}</button>
           </div>
-          <WeaponTray tray={tray} onHit={attack} bonus={dmgBonus} disabled={view?.status !== undefined && view.status !== "active"} />
+          <WeaponTray tray={tray} onHit={attack} onCooldown={(name, left) => { haptic.err(); toast(`${name} перезаряжается: ещё ${clock(left)}`, "err"); }} bonus={dmgBonus} disabled={view?.status !== undefined && view.status !== "active"} />
         </div>
         {tab !== null && (
           <Modal title={tab === "top" ? "Топ боя" : "Мои удары"} onClose={() => setTab(null)}>

@@ -87,6 +87,9 @@ export function LocationsScreen() {
       <div className="col" style={{ gap: 12 }}>
         {LOCATIONS.map((l) => {
           const r = rows?.find((x) => x.id === l.id);
+          // the one to play now: the first open location not cleared yet
+          const current = !!rows && rows.find((x) => x.unlocked && !x.clears)?.id === l.id;
+          const cleared = !!r?.clears;
           const locked = r ? !r.unlocked : l.order > 1;
           const inner = (
             <>
@@ -94,7 +97,8 @@ export function LocationsScreen() {
               <div className="loc-body">
                 <div className="row" style={{ justifyContent: "space-between" }}>
                   <span className="tiny muted display">ЛОКАЦИЯ {l.order}</span>
-                  {!!r?.clears && <span className="chip green">пройдена ×{r.clears}</span>}
+                  {cleared && <span className="chip green">✓ пройдена{r!.clears > 1 ? ` ×${r!.clears}` : ""}</span>}
+                  {current && <span className="chip gold loc-now">сейчас здесь</span>}
                 </div>
                 <b className="display" style={{ fontSize: 18 }}>{locked ? "???" : l.name}</b>
                 <div className="small muted">{locked ? `Закрой «${LOCATIONS[l.order - 2]?.name}»` : l.subtitle}</div>
@@ -107,7 +111,7 @@ export function LocationsScreen() {
           if (locked) return <div key={l.id} className="loc-card locked">{inner}</div>;
           if (ready) {
             return (
-              <div key={l.id} className="loc-card ready">
+              <div key={l.id} className={`loc-card ready ${cleared ? "cleared" : ""}`}>
                 {inner}
                 <div className="loc-claim">
                   <RewardChips r={r!.nextReward} size={14} />
@@ -121,7 +125,7 @@ export function LocationsScreen() {
               </div>
             );
           }
-          return <Link key={l.id} href={`/locations/${l.id}`} className="loc-card">{inner}</Link>;
+          return <Link key={l.id} href={`/locations/${l.id}`} className={`loc-card ${cleared ? "cleared" : ""} ${current ? "current" : ""}`}>{inner}</Link>;
         })}
       </div>
       {got && <ClaimedModal got={got} onClose={() => setGot(null)} />}
