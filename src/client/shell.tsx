@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { isMusicOn, isMuted, onSoundChange, setMuted, setMusic, sfx } from "./sound.ts";
 import { liveEnergy, tasksReady, useGame, useNow } from "./store.tsx";
 import { Icon, NAV_GLOW, NavIcon } from "./art/icons.tsx";
 import { Avatar } from "./ui.tsx";
@@ -25,6 +26,35 @@ function activeTab(path: string): string {
   if (path.startsWith("/inventory")) return "inventory";
   if (path.startsWith("/clans")) return "clans";
   return "home";
+}
+
+/** Two small switches under the energy: game sounds and the music. Remembered on this device. */
+function SoundToggles() {
+  const muted = useSyncExternalStore(onSoundChange, isMuted, () => false);
+  const music = useSyncExternalStore(onSoundChange, isMusicOn, () => true);
+  return (
+    <div className="hud-toggles">
+      <button type="button" data-nosfx className={`hud-tog ${muted ? "off" : ""}`} aria-pressed={!muted} aria-label={muted ? "Включить звуки" : "Выключить звуки"} title={muted ? "Звуки выключены" : "Звуки"}
+        onClick={() => {
+          setMuted(!muted);
+          if (muted) sfx("coin");
+        }}>
+        <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+          <path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" />
+          {muted ? <path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /> : <path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" />}
+        </svg>
+      </button>
+      <button type="button" data-nosfx className={`hud-tog ${music ? "" : "off"}`} aria-pressed={music} aria-label={music ? "Выключить музыку" : "Включить музыку"} title={music ? "Музыка" : "Музыка выключена"}
+        onClick={() => setMusic(!music)}>
+        <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+          <path d="M9 17.5V6l11-2.5v11.5" stroke="currentColor" strokeWidth="2" fill="none" strokeLinejoin="round" />
+          <ellipse cx="6.5" cy="17.5" rx="3" ry="2.4" fill="currentColor" />
+          <ellipse cx="17.5" cy="15" rx="3" ry="2.4" fill="currentColor" />
+          {!music && <path d="M3 3l18 18" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />}
+        </svg>
+      </button>
+    </div>
+  );
 }
 
 function Hud() {
@@ -53,13 +83,16 @@ function Hud() {
             </div>
           </div>
         </Link>
-        <button className={`energy-chip ${e.energy > p.energyMax ? "over" : ""}`} aria-label="Энергия" onClick={() => setEnergyOpen(true)}>
-          <Icon name="energy" size={24} />
-          <span>
-            <b className="num">{e.energy}</b><span className="muted"> / {p.energyMax}</span>
-            <small className="num">{e.nextIn > 0 ? `+1 через ${clock(e.nextIn)}` : e.energy > p.energyMax ? "сверх лимита" : "полная"}</small>
-          </span>
-        </button>
+        <div className="hud-right">
+          <button className={`energy-chip ${e.energy > p.energyMax ? "over" : ""}`} aria-label="Энергия" onClick={() => setEnergyOpen(true)}>
+            <Icon name="energy" size={24} />
+            <span>
+              <b className="num">{e.energy}</b><span className="muted"> / {p.energyMax}</span>
+              <small className="num">{e.nextIn > 0 ? `+1 через ${clock(e.nextIn)}` : e.energy > p.energyMax ? "сверх лимита" : "полная"}</small>
+            </span>
+          </button>
+          <SoundToggles />
+        </div>
       </div>
       <div className="hud-money">
         {CURRENCIES.map((c) => (
