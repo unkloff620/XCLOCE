@@ -36,6 +36,9 @@ interface Profile {
   room: { id: string; levels: Record<string, number>; decor: Record<string, number> };
 }
 
+/** "3 окт. 2026" — fits a narrow side column */
+const shortDate = (ms: number) => new Date(ms).toLocaleDateString("ru-RU", { day: "numeric", month: "short", year: "numeric" }).replace(" г.", "");
+
 const FRAME_TITLE: Record<string, string> = { gold: "1 место прошлой недели", silver: "2 место прошлой недели", bronze: "3 место прошлой недели", top: "Топ-10 прошлой недели" };
 
 function RenameWindow({ current, onClose, onDone }: { current: string; onClose: () => void; onDone: () => void }) {
@@ -95,38 +98,56 @@ export function ProfileScreen() {
       <div className="title" style={{ margin: 0 }}>
         <Link href="/" className="back">← Дом</Link>
       </div>
-      <div className="panel profile-head">
-        <div className="profile-char"><HeroRig size={150} still look={p.body} worn={p.equipped} seat={stageOf("chair", p.room.levels, p.room.decor).level} /></div>
-        <div className="col grow" style={{ gap: 6 }}>
-          <div className="row">
-            <Avatar name={p.name} photo={p.photo} size={44} frame={p.frame} />
-            <div className="grow" style={{ minWidth: 0 }}>
-              <div className="row" style={{ gap: 6 }}>
-                <b className="display ellipsis" style={{ fontSize: 18 }}>{p.name}</b>
-                {p.self && (
-                  <button className="icon-btn" onClick={() => setRenaming(true)} aria-label="Сменить ник" title="Сменить ник">
-                    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z" fill="#ffcc33" stroke="#140d24" strokeWidth="2" strokeLinejoin="round" /><path d="M13 7l4 4" stroke="#140d24" strokeWidth="2" /></svg>
-                  </button>
-                )}
-              </div>
-              {p.username && (
-                <a className="tg-link tiny" href={`https://t.me/${encodeURIComponent(p.username)}`} target="_blank" rel="noopener noreferrer">@{p.username}</a>
+      {/* the hero sits in the middle; name on top, dates and clan on the sides, level and authority under him */}
+      <div className="panel ph">
+        <div className="ph-top">
+          <Avatar name={p.name} photo={p.photo} size={48} frame={p.frame} />
+          <div className="ph-name">
+            <div className="row" style={{ gap: 6, justifyContent: "center" }}>
+              <b className="display ellipsis" style={{ fontSize: 20 }}>{p.name}</b>
+              {p.self && (
+                <button className="icon-btn" onClick={() => setRenaming(true)} aria-label="Сменить ник" title="Сменить ник">
+                  <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z" fill="#ffcc33" stroke="#140d24" strokeWidth="2" strokeLinejoin="round" /><path d="M13 7l4 4" stroke="#140d24" strokeWidth="2" /></svg>
+                </button>
               )}
-              <div className="row" style={{ gap: 6, flexWrap: "wrap" }}>
-                <span className="lvl">LVL {p.level}</span>
-                {p.frame && <span className={`chip frame-chip frame-${p.frame}`}><Icon name="trophy" size={14} />{FRAME_TITLE[p.frame]}</span>}
-              </div>
             </div>
+            {p.username && (
+              <a className="tg-link tiny" href={`https://t.me/${encodeURIComponent(p.username)}`} target="_blank" rel="noopener noreferrer">@{p.username}</a>
+            )}
           </div>
-          <div className="row" style={{ gap: 6 }} title="Авторитет"><Icon name="xp" size={22} /><div className="grow"><Bar value={p.levelXp} max={p.levelNeed || 1} tone="violet" label={p.levelNeed ? `${full(p.levelXp)} / ${full(p.levelNeed)}` : "максимальный уровень"} /></div></div>
-          <div className="tiny muted">Авторитет: <b className="num" style={{ color: "var(--ink)" }}>{full(p.xp)}</b>{p.levelNeed ? <> · до уровня {p.level + 1}: <b className="num" style={{ color: "var(--ink)" }}>{full(p.levelNeed - p.levelXp)}</b></> : null}</div>
-          <div className="tiny muted">В игре с {dateRu(p.firstSeen)} · дней в игре: {p.activeDays}</div>
-          <div className="tiny muted">Последний вход: {dateRu(p.lastSeen)}</div>
-          {p.clan && (
-            <Link href={`/clans/${p.clan.id}`} className="row small">
-              <Emblem emblem={p.clan.emblem} color={p.clan.color} size={26} /> {p.clan.name} [{p.clan.tag}]
-            </Link>
-          )}
+        </div>
+        {p.frame && <div className="center"><span className={`chip frame-chip frame-${p.frame}`}><Icon name="trophy" size={14} />{FRAME_TITLE[p.frame]}</span></div>}
+
+        <div className="ph-mid">
+          <div className="ph-side">
+            <div className="ph-fact"><span>В игре с</span><b>{shortDate(p.firstSeen)}</b></div>
+            <div className="ph-fact"><span>Дней в игре</span><b className="num">{full(p.activeDays)}</b></div>
+          </div>
+          <div className="ph-hero"><HeroRig size={190} still look={p.body} worn={p.equipped} seat={stageOf("chair", p.room.levels, p.room.decor).level} /></div>
+          <div className="ph-side">
+            <div className="ph-fact"><span>Был в игре</span><b>{shortDate(p.lastSeen)}</b></div>
+            {p.clan ? (
+              <Link href={`/clans/${p.clan.id}`} className="ph-fact ph-clan">
+                <Emblem emblem={p.clan.emblem} color={p.clan.color} size={30} />
+                <b className="ellipsis">{p.clan.name}</b>
+                <span>[{p.clan.tag}]</span>
+              </Link>
+            ) : (
+              <div className="ph-fact"><span>Клан</span><b className="muted">нет</b></div>
+            )}
+          </div>
+        </div>
+
+        <div className="ph-bottom">
+          <div className="row" style={{ gap: 8 }}>
+            <span className="lvl ph-lvl">LVL {p.level}</span>
+            <div className="grow" title="Прогресс уровня"><Bar value={p.levelXp} max={p.levelNeed || 1} tone="violet" label={p.levelNeed ? `${full(p.levelXp)} / ${full(p.levelNeed)}` : "максимальный уровень"} /></div>
+          </div>
+          <div className="ph-auth">
+            <span className="row" style={{ gap: 4 }}><Icon name="xp" size={20} /><span className="muted">Авторитет</span></span>
+            <b className="num">{full(p.xp)}</b>
+          </div>
+          {!!p.levelNeed && <div className="tiny muted center">до {p.level + 1} уровня: <b className="num" style={{ color: "var(--ink)" }}>{full(p.levelNeed - p.levelXp)}</b></div>}
         </div>
       </div>
 

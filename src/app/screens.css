@@ -1018,3 +1018,22 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .balance-row { display: flex; align-items: center; gap: 10px; padding: 7px 12px 7px 8px; border-radius: 12px; background: var(--bg2); border: 2px solid var(--line); min-width: 0; }
 .balance-name { flex: 1; min-width: 0; font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .balance-val { flex: none; max-width: 65%; font-size: 16px; text-align: right; overflow-wrap: anywhere; }
+
+/* profile head: name on top, the hero in the middle with facts on both sides, level and authority below */
+.ph { display: flex; flex-direction: column; gap: 10px; }
+.ph-top { display: flex; align-items: center; justify-content: center; gap: 10px; min-width: 0; }
+.ph-name { display: flex; flex-direction: column; align-items: center; min-width: 0; max-width: 75%; }
+.ph-mid { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 6px; }
+.ph-side { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.ph-fact { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 4px; border-radius: 12px; text-align: center; min-width: 0;
+  background: var(--bg2); border: 2px solid var(--line); color: inherit; }
+.ph-fact span { font-size: 10px; color: var(--muted); line-height: 1.1; }
+.ph-fact b { font-size: 13px; line-height: 1.15; max-width: 100%; }
+.ph-clan { text-decoration: none; }
+.ph-hero { display: grid; place-items: center; width: 136px; }
+.ph-hero svg { width: 136px !important; height: auto !important; }
+.ph-bottom { display: flex; flex-direction: column; gap: 6px; }
+.ph-lvl { font-size: 14px; padding: 4px 10px; flex: none; }
+.ph-auth { display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; border-radius: 12px; background: var(--bg2); border: 2px solid var(--line); }
+.ph-auth b { font-size: 18px; color: var(--gold); }
+@media (max-width: 360px) { .ph-hero, .ph-hero svg { width: 112px !important; } }
