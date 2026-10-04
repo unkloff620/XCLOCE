@@ -65,7 +65,7 @@ export function Exchanger({ ex }: { ex: ShopData["exchange"] }) {
         <span className="exp-label">Получу</span>
         <Icon name={to} size={24} />
         <b className="num grow exp-quote">{money(to, quote)}</b>
-        <span className="exp-rate">1 {from} = {money(to, floorTo(to, rate) || rate)} {to}</span>
+        <span className="exp-rate">1 {from} = {rate >= 1 ? money(to, floorTo(to, rate)) : Number(rate.toPrecision(3)).toLocaleString("ru-RU")} {to}</span>
       </div>
       <button className="exp-btn exp-go display" style={box(4.6, 77.7, 90.8, 10.7)} disabled={!can} onClick={go}>
         {a > have ? "Не хватает" : "Обменять"}
