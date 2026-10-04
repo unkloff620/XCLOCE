@@ -49,7 +49,7 @@ function Hair() {
   const hat = wornIn(useContext(WornCtx), "HEAD"); // hair is cut to fit under a hat
   if (!(look.hair in HAIR_FIT)) return null; // bald
   const f = HAIR_FIT[look.hair as HairId];
-  return <image href={`/assets/hero/hair/${look.hair}-${look.hairColor}${hat ? `-${hat}` : ""}.webp`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
+  return <image href={`/assets/hero/hair/${look.hair}-${look.hairColor}${hat ? `-${hat}` : ""}.webp?v=2`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
 }
 
 /** a bone: rotates around its joint (pivot) */

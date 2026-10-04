@@ -90,7 +90,7 @@ export function YardScreen() {
             </div>
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="yard-bg" src="/assets/yard/bg.webp" alt="" draggable={false} />
+          <img className="yard-bg" src="/assets/yard/bg.webp?v=2" alt="" draggable={false} />
           <button className={`yard-slots ${state && state.slots.left > 0 ? "ready" : ""}`} onClick={() => setSlots(true)} aria-label="Игровой автомат 777">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/assets/yard/slot.webp" alt="" draggable={false} />
