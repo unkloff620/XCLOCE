@@ -13,7 +13,6 @@ import { Icon } from "../art/icons.tsx";
 import { Bar, Empty } from "../ui.tsx";
 import { useFx, type Fx } from "../fx/attack.tsx";
 import { BossRewardsPanel, BossRulesHelp, useBossList } from "./bosses.tsx";
-import { BossPhoto } from "./boss-parts.tsx";
 import { clock, full, pct, short } from "../format.ts";
 import { haptic } from "../telegram.ts";
 import { DriftingSky } from "../art/sky.tsx";
@@ -186,6 +185,7 @@ export function BossScreen({ id }: { id: string }) {
     if (r) void loadList();
   };
   const [fleeAsk, setFleeAsk] = useState(false);
+  const [info, setInfo] = useState(false);
   const flee = async () => {
     if (!fleeAsk) {
       setFleeAsk(true);
@@ -266,69 +266,70 @@ export function BossScreen({ id }: { id: string }) {
     );
   }
 
+  // before the fight: the same garage scene, the boss idles in the middle, rules and rewards in windows
+  const locked = !!row && !row.unlocked;
   return (
-    <div>
-      <div className="title">
-        <div>
-          <Link href="/bosses" className="back">← Боссы</Link>
-          <h1 className="display">{boss.name}</h1>
-          <div className="small muted">{boss.title}</div>
+    <div className="fit-page fight-page" style={{ ["--acc" as string]: boss.theme.accent }}>
+      <div className="fight-bg" aria-hidden="true">
+        <DriftingSky className="fight-sky" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/assets/arena/garage.webp" alt="" draggable={false} />
+      </div>
+      <div className="fight-head">
+        <Link href="/bosses" className="back-btn" aria-label="К боссам">‹</Link>
+        <div className="grow" style={{ minWidth: 0 }}>
+          <b className="display boss-name ellipsis">{boss.name}</b>
+          <div className="tiny muted ellipsis">{boss.title}</div>
+        </div>
+        {boss.final && <span className="chip gold">ФИНАЛ</span>}
+        <BossRulesHelp topic="boss" />
+      </div>
+      <div className={`arena full prefight ${locked ? "locked" : ""}`}>
+        <div className="arena-photo">
+          {locked ? (
+            <div className="arena-sil"><BossSilhouette accent={boss.theme.accent} /></div>
+          ) : hasBossRig(boss.id) ? (
+            <BossRig id={boss.id} />
+          ) : boss.photo.full ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={boss.photo.full} alt={boss.name} draggable={false} />
+          ) : (
+            <div className="arena-sil"><BossSilhouette accent={boss.theme.accent} /><span className="small muted">фото скоро</span></div>
+          )}
         </div>
       </div>
-
-      {(
-        <div className="boss-card-full" style={{ ["--acc" as string]: boss.theme.accent }}>
-          <div className="boss-card-photo">
-            {boss.photo.full && !(row && !row.unlocked) ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img className="boss-card-img" src={boss.photo.full} alt={boss.name} draggable={false} />
-            ) : (
-              <BossPhoto boss={boss} locked={!!row && !row.unlocked} />
-            )}
-            {boss.final && <span className="chip gold boss-card-final">ФИНАЛЬНЫЙ БОСС</span>}
-          </div>
-          <div className="boss-card-vitals">
-            <Bar value={hpMax} max={hpMax} tone="red" height={26} label={`${full(hpMax)} / ${full(hpMax)} HP`} />
-            <div className="row small" style={{ justifyContent: "space-between" }}>
-              <span className="chip gold"><Icon name="clock" size={14} />Бой: 8 часов</span>
-              <span className="muted">Победы сегодня: <b className="num" style={{ color: "var(--ink)" }}>{row?.fightsToday ?? 0}/{row?.fightsPerDay ?? 7}</b></span>
-            </div>
-          </div>
-          <div className="boss-card-cta">
-            {row && !row.unlocked ? (
-              <div className="row">
-                <Icon name="lock" size={36} />
-                <div className="grow small">
-                  <b>Босс закрыт</b>
-                  <div className="muted">Нужно ключей предыдущего босса: {row.keysNeed}. У тебя {row.keysHave}.</div>
-                </div>
-              </div>
-            ) : otherFight ? (
-              <div className="col">
-                <span className="small">Сейчас идёт бой с боссом <b>{bossById(otherFight.bossId)?.name}</b>. Одновременно можно вести только один бой.</span>
-                <Link className="btn violet block" href={`/bosses/${otherFight.bossId}`}>К текущему бою</Link>
-              </div>
-            ) : (
-              <div className="row" style={{ gap: 8 }}>
-                <button className="btn red big grow" disabled={busy === "fight_start" || limitLeft <= 0} onClick={start}>
-                  {limitLeft <= 0 ? "Лимит побед на сегодня" : "В бой"}
-                </button>
-                <BossRulesHelp topic="boss" />
-              </div>
-            )}
-          </div>
-          <div className="boss-card-body col">
-            <p className="boss-story">{boss.story}</p>
-            {boss.phases && <div className="small muted">Фазы: {boss.phases.map((p) => p.name).join(" → ")}</div>}
-            <div className="boss-card-rewards">
-              <b className="small">Награда за победу</b>
-              <BossRewardsPanel bossId={id} />
-              {!boss.final && <div className="tiny muted">Твоих ключей: {row?.myKeys ?? 0}</div>}
-            </div>
-          </div>
+      <div className="fight-bottom prefight-panel">
+        <Bar value={hpMax} max={hpMax} tone="red" height={22} label={`${full(hpMax)} HP`} />
+        <div className="row small" style={{ justifyContent: "space-between", gap: 6 }}>
+          <span className="chip gold"><Icon name="clock" size={14} />8 часов</span>
+          <span className="chip" title="Победы сегодня">Победы {row?.fightsToday ?? 0}/{row?.fightsPerDay ?? 7}</span>
+          <button className="btn sm dark" onClick={() => setInfo(true)}>Награды</button>
         </div>
+        {locked ? (
+          <div className="panel row small" style={{ gap: 8 }}>
+            <Icon name="lock" size={30} />
+            <span className="grow">Нужно ключей предыдущего босса: <b>{row!.keysNeed}</b>. У тебя {row!.keysHave}.</span>
+          </div>
+        ) : otherFight ? (
+          <Link className="btn violet block" href={`/bosses/${otherFight.bossId}`}>Идёт бой с {bossById(otherFight.bossId)?.name} — к нему</Link>
+        ) : (
+          <button className="btn red big block" disabled={busy === "fight_start" || limitLeft <= 0} onClick={start}>
+            {limitLeft <= 0 ? "Лимит побед на сегодня" : "В бой"}
+          </button>
+        )}
+      </div>
+      {info && (
+        <Modal title={boss.name} onClose={() => setInfo(false)}>
+          <div className="col" style={{ gap: 10 }}>
+            <p className="boss-story" style={{ margin: 0 }}>{boss.story}</p>
+            {boss.phases && <div className="small muted">Фазы: {boss.phases.map((p) => p.name).join(" → ")}</div>}
+            <b className="small">Награда за победу</b>
+            <BossRewardsPanel bossId={id} />
+            {!boss.final && <div className="tiny muted">Твоих ключей: {row?.myKeys ?? 0}</div>}
+            {invQty(state, "fist") === 0 && <p className="small muted">Кулак потерялся? Напиши организаторам.</p>}
+          </div>
+        </Modal>
       )}
-      {invQty(state, "fist") === 0 && <p className="small muted">Кулак потерялся? Напиши организаторам.</p>}
     </div>
   );
 }
