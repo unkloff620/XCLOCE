@@ -1,6 +1,7 @@
 /* Item and weapon pictures, same style as the icon set (64×64, dark outline, flat fills). */
 import type { ReactNode } from "react";
 import { Icon, OL, Svg } from "./icons.tsx";
+import { ART_VER } from "../preload.ts";
 
 const S = { stroke: OL, strokeWidth: 3.5, strokeLinejoin: "round" as const, strokeLinecap: "round" as const };
 
@@ -205,7 +206,7 @@ export function ItemArt({ id, size = 40 }: { id: string; size?: number }) {
   if (RASTER_ITEMS.has(id)) {
     return (
       <svg viewBox="0 0 64 64" width={size} height={size} aria-hidden="true" style={{ flex: "none", display: "block" }}>
-        <image href={`/assets/items/${id}.webp`} x="0" y="0" width="64" height="64" />
+        <image href={`/assets/items/${id}.webp?v=${ART_VER.items}`} x="0" y="0" width="64" height="64" />
       </svg>
     );
   }
