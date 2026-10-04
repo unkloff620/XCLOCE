@@ -525,4 +525,4 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(10, 12, 24, 0.
 .shop-scene .yard-stage { -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 6%); mask-image: linear-gradient(180deg, transparent 0, #000 6%); }
 .fit-page .title-row .back-btn { margin-right: 2px; }
 /* the shop fills the height (sides are cropped a little on tall phones instead of an empty strip on top) */
-.shop-scene .yard-stage { left: 50%; right: auto; top: 0; height: calc(100% - var(--nav-h) - var(--safe-b) + 6px); width: auto; transform: translateX(-50%); }
+.shop-scene .yard-stage { aspect-ratio: 941 / 1672; left: 50%; right: auto; top: 0; height: calc(100% - var(--nav-h) - var(--safe-b) + 6px); width: auto; transform: translateX(-50%); }
