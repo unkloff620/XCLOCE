@@ -9,7 +9,7 @@ import { Icon, NavIcon } from "../art/icons.tsx";
 import { NAV_TABS } from "../../content/nav.ts";
 import { ItemArt } from "../art/items.tsx";
 import { Modal } from "../ui.tsx";
-import { bossById } from "../../content/bosses.ts";
+import { bossById, type BossDef } from "../../content/bosses.ts";
 import { ITEMS, type Slot } from "../../content/items.ts";
 import { clock, full } from "../format.ts";
 import { BossPhoto } from "./boss-parts.tsx";
@@ -145,6 +145,17 @@ function Wardrobe({ onClose }: { onClose: () => void }) {
   );
 }
 
+/** The boss's face in a plain circle; the ring around it is the boss's HP left (uses --hp and --acc from the parent). */
+function BossRing({ boss, size }: { boss: BossDef; size: number }) {
+  const src = boss.photo.portrait;
+  return (
+    <span className="boss-ring" style={{ width: size, height: size }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {src ? <img src={src} alt="" draggable={false} /> : <span className="boss-ring-empty" />}
+    </span>
+  );
+}
+
 export function HomeScreen() {
   const { state, act, busy } = useGame();
   const now = useNow();
@@ -187,6 +198,7 @@ export function HomeScreen() {
   };
   const f = state.fight;
   const fb = f ? bossById(f.bossId)! : null;
+  const hpPct = f ? `${Math.max(0, Math.min(100, (f.hp / Math.max(1, f.hpMax)) * 100))}%` : "0%";
   return (
     <div className={`fit-page ${f && fb && fightOpen ? "has-fight" : ""}`}>
       <div className="room">
@@ -243,8 +255,8 @@ export function HomeScreen() {
             <Icon name="bolt" size={58} />
           </button>
           {f && fb && !fightOpen && (
-            <button className="fight-mini" style={{ ["--acc" as string]: fb.theme.accent }} onClick={() => setFightOpen(true)} aria-label={`Идёт бой: ${fb.name}`} title="Идёт бой">
-              <span className="fight-mini-photo"><BossPhoto boss={fb} round /></span>
+            <button className="fight-mini" style={{ ["--acc" as string]: fb.theme.accent, ["--hp" as string]: hpPct }} onClick={() => setFightOpen(true)} aria-label={`Идёт бой: ${fb.name}`} title="Идёт бой">
+              <BossRing boss={fb} size={58} />
               <i className="live-dot" />
               <span className="fight-mini-time num">{clock(f.endsAt - now)}</span>
             </button>
@@ -253,10 +265,10 @@ export function HomeScreen() {
       </div>
 
       {f && fb && fightOpen && (
-        <div className="fight-card" style={{ ["--acc" as string]: fb.theme.accent, ["--hp" as string]: `${Math.max(0, Math.min(100, (f.hp / Math.max(1, f.hpMax)) * 100))}%` }}>
+        <div className="fight-card" style={{ ["--acc" as string]: fb.theme.accent, ["--hp" as string]: hpPct }}>
           <button className="fight-card-fold" onClick={() => setFightOpen(false)} aria-label="Свернуть" title="Свернуть" />
           <Link href={`/bosses/${fb.id}`} className="fight-card-body">
-            <span className="fight-card-photo"><BossPhoto boss={fb} round /></span>
+            <BossRing boss={fb} size={56} />
             <span className="fight-card-info">
               <span className="fight-card-top">
                 <span className="fight-card-live"><i className="live-dot" />идёт бой</span>

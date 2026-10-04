@@ -681,7 +681,6 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .fit-page.has-fight .room-arrow { bottom: calc(var(--bottom) + 112px); }
 /* the running fight, folded: the boss's round photo with a live dot and the time left */
 .fight-mini { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; width: 62px; padding: 0; border: 0; background: none; cursor: pointer; }
-.fight-mini-photo { display: block; width: 54px; height: 54px; border-radius: 50%; box-shadow: 0 0 0 3px var(--acc, var(--red)), 0 3px 0 4px var(--line); animation: fight-mini 1.6s ease-in-out infinite; overflow: hidden; }
 .fight-mini .live-dot { position: absolute; top: 0; right: 4px; }
 .fight-mini-time { font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 8px; background: rgba(24, 15, 9, 0.85); border: 1.5px solid var(--line); color: var(--gold); }
 @keyframes fight-mini { 50% { box-shadow: 0 0 0 3px var(--acc, var(--red)), 0 3px 0 4px var(--line), 0 0 14px 3px var(--acc, var(--red)); } }
@@ -726,3 +725,12 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
   border-radius: 9px; border: 1.5px solid rgba(255, 190, 120, 0.25); background: rgba(24, 15, 9, 0.92); }
 .fight-card-fold::after { content: ""; position: absolute; left: 50%; top: 50%; width: 9px; height: 9px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
   transform: translate(-50%, -75%) rotate(45deg); }
+/* boss face in a clean circle; the ring is the boss's HP (conic, boss colour on a faint track) */
+.boss-ring { position: relative; display: block; flex: none; border-radius: 50%; padding: 4px;
+  background: conic-gradient(var(--acc, #ff4d6d) var(--hp, 100%), rgba(255, 255, 255, 0.14) 0); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45); }
+.boss-ring::before { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: #1a110b; }  /* thin gap between ring and face */
+.boss-ring img, .boss-ring-empty { position: relative; display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; object-position: 50% 20%;
+  background: #2a1c12; border: 2px solid #1a110b; }
+.fight-mini .boss-ring { animation: ring-glow 1.8s ease-in-out infinite; }
+@keyframes ring-glow { 50% { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45), 0 0 14px 2px color-mix(in srgb, var(--acc, #ff4d6d) 70%, transparent); } }
+.fight-mini .live-dot { top: 2px; right: 2px; }
