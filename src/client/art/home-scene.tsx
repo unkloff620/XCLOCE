@@ -1,40 +1,42 @@
 "use client";
-/* The player's room: artist's background, desk, monitor, PC and the seated character on the stool. */
-import { CHARACTER, ROOM_BG, ROOM_LIGHTS, ROOM_SKY, SCENE, SCENE_OBJECTS } from "../../content/home-scene.ts";
+/* The player's room: artist's background, the PC in the corner, the desk with 1–3 monitors and the seated character on the stool. */
+import { CHARACTER, ROOM_BG, ROOM_LIGHTS, ROOM_SKY, SCENE, SCENE_HOT, SCENE_OBJECTS } from "../../content/home-scene.ts";
 import { RigViewport, type Worn } from "./rig.tsx";
-import { DESK_ASPECT } from "./desk-data.ts";
-import { STARTER_DESK } from "../../content/items.ts";
-import type { Look } from "../../content/home.ts";
+import { ART_ASPECT } from "./desk-data.ts";
+import { stageOf, type Look } from "../../content/home.ts";
 
 type ObjId = keyof typeof SCENE_OBJECTS;
 
-function Obj({ id, onPick, art }: { id: ObjId; onPick?: (equipment: string) => void; art?: { src: string; aspect: number } }) {
+/** a picture standing at its place; a picture of another height keeps the place's bottom line (legs, stand on the desk) */
+function Obj({ id, art }: { id: ObjId; art: string }) {
   const o = SCENE_OBJECTS[id];
-  const eq = "equipment" in o ? o.equipment : null;
-  const h = o.w * (art?.aspect ?? o.aspect);
-  const src = art?.src ?? `/assets/home/${id}-1.webp`;
-  // standing objects keep their bottom (feet, legs) where the layout puts it, whatever the picture's height
+  const h = o.w * (ART_ASPECT[art] ?? o.aspect);
+  const src = `/assets/home/${art}.webp`;
   const y = o.y + o.w * o.aspect - h;
-  const img = o.flip ? (
+  return o.flip ? (
     <g transform={`translate(${o.x + o.w} ${y}) scale(-1 1)`}>
       <image href={src} x="0" y="0" width={o.w} height={h} preserveAspectRatio="none" />
     </g>
   ) : (
     <image href={src} x={o.x} y={y} width={o.w} height={h} preserveAspectRatio="none" />
   );
-  if (!eq || !onPick) return img;
+}
+
+/** invisible tap zone above everything (the character's pictures would catch the taps otherwise) */
+function Hot({ id, onPick }: { id: keyof typeof SCENE_HOT; onPick: (equipment: string) => void }) {
+  const z = SCENE_HOT[id];
   return (
-    <g role="button" tabIndex={0} aria-label={id === "pc" ? "Системник" : "Монитор"} style={{ cursor: "pointer" }}
-      onClick={() => onPick(eq)} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onPick(eq)}>
-      {img}
-    </g>
+    <rect role="button" tabIndex={0} aria-label={id === "pc" ? "Системник" : "Мониторы"} x={z.x} y={z.y} width={z.w} height={z.h}
+      fill="transparent" pointerEvents="all" style={{ cursor: "pointer", outline: "none" }}
+      onClick={() => onPick(z.equipment)} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onPick(z.equipment)} />
   );
 }
 
-export function HomeScene({ room = "basic", onPick, still, look, worn }: { room?: string; onPick?: (equipment: string) => void; still?: boolean; look?: Look; worn?: Worn }) {
+export function HomeScene({ room = "basic", onPick, still, look, worn, levels = {} }: { room?: string; onPick?: (equipment: string) => void; still?: boolean; look?: Look; worn?: Worn; levels?: Record<string, number> }) {
   const bg = ROOM_BG[room] ?? ROOM_BG.basic;
   const sky = ROOM_SKY[room];
-  const desk = worn?.DESK && DESK_ASPECT[worn.DESK] ? worn.DESK : STARTER_DESK;
+  const desk = stageOf("desk", levels).stage?.art ?? "desk-001";
+  const monitors = stageOf("monitor2", levels).level; // 0: centre only, 1: + left, 2: + right
   const lights = ROOM_LIGHTS[room] ?? [];
   return (
     <svg viewBox={`0 0 ${SCENE.w} ${SCENE.h}`} width="100%" style={{ display: "block" }}>
@@ -64,10 +66,14 @@ export function HomeScene({ room = "basic", onPick, still, look, worn }: { room?
           ))}
         </g>
       )}
-      <Obj id="desk" art={{ src: `/assets/home/${desk}.webp`, aspect: DESK_ASPECT[desk] ?? SCENE_OBJECTS.desk.aspect }} />
-      <Obj id="pc" onPick={onPick} />
-      <Obj id="monitor" onPick={onPick} />
+      <Obj id="pc" art="pc-1" />
+      <Obj id="desk" art={desk} />
+      {monitors >= 1 && <Obj id="monitorLeft" art="monitor-left" />}
+      {monitors >= 2 && <Obj id="monitorRight" art="monitor-right" />}
+      <Obj id="monitorCenter" art="monitor-center" />
       <RigViewport x={CHARACTER.x} y={CHARACTER.y} scale={CHARACTER.scale} seat still={still} look={look} worn={worn} />
+      {onPick && <Hot id="monitors" onPick={onPick} />}
+      {onPick && <Hot id="pc" onPick={onPick} />}
     </svg>
   );
 }

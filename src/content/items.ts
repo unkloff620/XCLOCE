@@ -1,8 +1,8 @@
 import { BOSSES, keyId } from "./bosses.ts";
 
-export type Category = "weapon" | "clothing" | "furniture" | "item" | "reward" | "event";
+export type Category = "weapon" | "clothing" | "item" | "reward" | "event";
 export type Rarity = "common" | "rare" | "epic" | "legendary" | "mythic";
-export type Slot = "BODY" | "PANTS" | "SHIRT" | "SHOES" | "HEAD" | "ACCESSORY" | "SPECIAL" | "DESK";
+export type Slot = "BODY" | "PANTS" | "SHIRT" | "SHOES" | "HEAD" | "ACCESSORY" | "SPECIAL";
 /** Drawing order of the character, bottom to top. */
 export const SLOTS: Slot[] = ["BODY", "PANTS", "SHIRT", "SHOES", "HEAD", "ACCESSORY", "SPECIAL"];
 export const WEARABLE_SLOTS: Slot[] = ["PANTS", "SHIRT", "SHOES", "HEAD", "ACCESSORY", "SPECIAL"];
@@ -36,8 +36,6 @@ export interface ItemDef {
   hides?: Slot[];
   /** sale price in RUB from the inventory (things found in the yard) */
   sell?: number;
-  /** furniture in the room: combat bonus while it stands there (same fields as content/home.ts Bonus) */
-  bonus?: { critChance?: number; critDamage?: number; damage?: number };
 }
 
 export const WEAPONS: ItemDef[] = [
@@ -93,15 +91,6 @@ const WEARABLES: ItemDef[] = ([
   { id: "gold-chain", name: "Серебряная цепь", slot: "ACCESSORY", rarity: "epic", description: "Каждое звено — подтверждённый блок.", sources: ["Награда за локацию 3"] },
 ] as Omit<ItemDef, "category" | "maxStack">[]).map((w) => ({ ...w, category: "clothing" as const, maxStack: 1 }));
 
-/** Desks: one stands in the room (slot DESK), the monitor and the system unit stay on it. Bought in the shop. */
-const FURNITURE: ItemDef[] = ([
-  { id: "desk-001", name: "Стол 001", rarity: "common", description: "Видал виды: потёртая столешница, ржавые ножки. Зато свой.", sources: ["Есть у каждого с начала игры"] },
-  { id: "desk-002", name: "Стол 002", rarity: "rare", description: "Ореховая столешница и подъёмные ножки. Солидно, без понтов.", sources: ["Магазин"], bonus: { critChance: 0.02 } },
-  { id: "desk-003", name: "Стол 003", rarity: "epic", description: "Мрамор с золотыми прожилками и подсветка по контуру.", sources: ["Магазин"], bonus: { critChance: 0.03, damage: 0.03 } },
-  { id: "desk-004", name: "Стол 004", rarity: "legendary", description: "Лакированный корень и золото. Под таким столом даже провода выглядят дорого.", sources: ["Магазин"], bonus: { critChance: 0.05, critDamage: 0.1, damage: 0.06 } },
-] as Omit<ItemDef, "category" | "maxStack" | "slot">[]).map((d) => ({ ...d, category: "furniture" as const, maxStack: 1, slot: "DESK" as const }));
-export const STARTER_DESK = "desk-001";
-
 const MISC: ItemDef[] = [
   { id: "energy-drink", name: "Энергетик", category: "item", rarity: "common", maxStack: 999, description: "+10 энергии. Сверх лимита тоже работает.", sources: ["Двор", "Боссы"], use: { energy: 10 } },
   { id: "energy-pack", name: "Пачка энергетиков", category: "item", rarity: "rare", maxStack: 999, description: "+50 энергии разом.", sources: ["Награды локаций"], use: { energy: 50 } },
@@ -121,7 +110,7 @@ const TROPHY: ItemDef = {
   description: "Доказательство, что ты дошёл до конца.", sources: ["Победа: Солнце"],
 };
 
-export const ITEMS: ItemDef[] = [...WEAPONS, ...WEARABLES, ...FURNITURE, ...MISC, ...KEYS, TROPHY];
+export const ITEMS: ItemDef[] = [...WEAPONS, ...WEARABLES, ...MISC, ...KEYS, TROPHY];
 const BY_ID = new Map(ITEMS.map((i) => [i.id, i]));
 export const itemById = (id: string) => BY_ID.get(id);
 export const weaponById = (id: string) => {
@@ -130,9 +119,9 @@ export const weaponById = (id: string) => {
 };
 
 /** Starting outfit: given and equipped on first login. */
-export const STARTER_OUTFIT: Partial<Record<Slot, string>> = { SHIRT: "tee-white", PANTS: "jeans", SHOES: "sneakers", DESK: "desk-001" };
+export const STARTER_OUTFIT: Partial<Record<Slot, string>> = { SHIRT: "tee-white", PANTS: "jeans", SHOES: "sneakers" };
 export const RARITY_NAME: Record<Rarity, string> = { common: "Обычный", rare: "Редкий", epic: "Эпический", legendary: "Легендарный", mythic: "Мифический" };
-export const CATEGORY_NAME: Record<Category, string> = { weapon: "Оружие", clothing: "Одежда", furniture: "Мебель", item: "Предметы", reward: "Награды", event: "Ивентовые" };
+export const CATEGORY_NAME: Record<Category, string> = { weapon: "Оружие", clothing: "Одежда", item: "Предметы", reward: "Награды", event: "Ивентовые" };
 
 /** Everything that drops in the yard can be sold back for RUB (about half of the shop price). Overridable via config "sell". */
 export const SELL_PRICES: Record<string, number> = {

@@ -25,15 +25,36 @@ export interface EquipmentDef {
   description: string;
   /** уровни 1..N: цена покупки этого уровня и суммарный бонус на этом уровне */
   levels: { price: Price; bonus: Bonus }[];
+  /** то, что стоит в комнате на уровне 0..N (название + картинка в public/assets/home) — для стола и мониторов */
+  stages?: { name: string; art: string }[];
 }
 
 export const EQUIPMENT: EquipmentDef[] = [
   {
-    id: "monitor2", name: "Второй монитор", description: "Один экран для графика, второй — чтобы видеть, куда бить. Усиливает критические удары.",
+    id: "desk", name: "Стол", description: "Всё начинается со стола. Чем солиднее стол — тем увереннее удар.",
+    levels: [
+      { price: { currency: "RUB", amount: 4000 }, bonus: { critChance: 0.02 } },
+      { price: { currency: "USD", amount: 30 }, bonus: { critChance: 0.03, damage: 0.03 } },
+      { price: { currency: "SOL", amount: 0.2 }, bonus: { critChance: 0.05, critDamage: 0.1, damage: 0.06 } },
+    ],
+    stages: [
+      { name: "Стол с Авито", art: "desk-001" },
+      { name: "Ореховый стандарт", art: "desk-002" },
+      { name: "Мраморный холд", art: "desk-003" },
+      { name: "Золотой памп", art: "desk-004" },
+    ],
+  },
+  {
+    // id stays "monitor2": players who bought «Второй монитор» keep their levels and bonus
+    id: "monitor2", name: "Мониторы", description: "Один экран — для графика, второй — для чата, третий — чтобы видеть, куда бить. Усиливают криты.",
     levels: [
       { price: { currency: "RUB", amount: 3000 }, bonus: { critDamage: 0.1 } },
       { price: { currency: "USD", amount: 30 }, bonus: { critDamage: 0.2 } },
-      { price: { currency: "SOL", amount: 0.15 }, bonus: { critDamage: 0.35 } },
+    ],
+    stages: [
+      { name: "Один монитор", art: "monitor-center" },
+      { name: "Два монитора", art: "monitor-left" },
+      { name: "Три монитора", art: "monitor-right" },
     ],
   },
   {
@@ -84,6 +105,12 @@ export const ROOM_DEFS: RoomDef[] = [
 ];
 
 export const equipmentById = (id: string) => EQUIPMENT.find((e) => e.id === id);
+/** what stands in the room at the player's level of this equipment */
+export const stageOf = (id: string, levels: Record<string, number>) => {
+  const e = equipmentById(id);
+  const lv = Math.min(levels[id] ?? 0, e?.levels.length ?? 0);
+  return { level: lv, stage: e?.stages?.[lv] };
+};
 export const roomById = (id: string) => ROOM_DEFS.find((r) => r.id === id);
 
 export function addBonus(a: Bonus, b: Bonus): Bonus {
@@ -114,10 +141,9 @@ export function talentsForDamage(damage: number): number {
   return k;
 }
 
-/** Total bonus from equipment levels (incl. computer parts), owned rooms and furniture standing in the room. */
-export function totalBonus(levels: Record<string, number>, rooms: string[], furniture: Bonus[] = []): Required<Bonus> {
+/** Total bonus from equipment levels (incl. computer parts) and owned rooms. */
+export function totalBonus(levels: Record<string, number>, rooms: string[]): Required<Bonus> {
   let b: Bonus = {};
-  for (const f of furniture) b = addBonus(b, f);
   for (const e of [...EQUIPMENT, ...LEGACY_EQUIPMENT]) {
     const lv = levels[e.id] ?? 0;
     if (lv > 0) b = addBonus(b, e.levels[Math.min(lv, e.levels.length) - 1].bonus);

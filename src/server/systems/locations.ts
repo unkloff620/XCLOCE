@@ -37,13 +37,14 @@ export async function locationsView(q: Queryable, pid: number) {
   });
 }
 
-/** For the "you can spend energy" hint: the cheapest step left in an open location, and whether a location reward waits. */
+/** For the "you can spend energy" hint: the cheapest step left in an open location not cleared yet, and whether its first reward waits. */
 export async function tasksHint(q: Queryable, pid: number) {
   const { steps, clears } = await progress(q, pid);
   let minEnergy: number | null = null;
   let claimable = false;
   for (const l of LOCATIONS) {
-    if (!unlocked(l, clears)) continue;
+    // a cleared location can be replayed, but it does not call for attention: only open, not yet cleared ones do
+    if (!unlocked(l, clears) || (clears.get(l.id) ?? 0) > 0) continue;
     const left = l.tasks.filter((t) => (steps.get(t.id) ?? 0) < t.steps);
     if (!left.length) claimable = true;
     for (const t of left) minEnergy = minEnergy === null ? t.energy : Math.min(minEnergy, t.energy);

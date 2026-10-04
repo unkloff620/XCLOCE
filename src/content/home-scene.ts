@@ -1,17 +1,26 @@
 /*
  * Home scene layout (scene canvas 1060×1484 = the background picture).
  * Objects: x, y = top-left corner, w = width in scene units; height follows the picture's aspect (h/w); flip = mirror.
- * Upgradable things have a level → picture "<kind>-<level>". Only level 1 is drawn so far.
+ * Upgradable things change with their level (content/home.ts EQUIPMENT stages): the desk picture, how many monitors stand on it.
  */
 export const SCENE = { w: 1060, h: 1484 };
 
+/** Bottom-anchored places (x, y = top-left for the nominal aspect; the real picture keeps the same bottom line). */
 export const SCENE_OBJECTS = {
-  /** the desk stands behind the character; which desk = the item in the DESK slot (picture desk-<id>, aspect in client/art/desk-data.ts) */
+  /** the desk behind the character; picture = the desk stage (desk-001…004) */
   desk: { x: 140, y: 690, w: 780, aspect: 0.4, flip: false },
-  /** on the desk top, right of the character; mirrored so the screen faces the room */
-  monitor: { x: 690, y: 560, w: 190, aspect: 1.0, flip: true, equipment: "monitor2" },
-  /** on the desk top, left of the character */
-  pc: { x: 190, y: 585, w: 120, aspect: 1.4401, flip: true, equipment: "pc" },
+  /** monitors on the desk top: the centre one always, the left one from level 1, the right one from level 2 */
+  monitorCenter: { x: 425, y: 579, w: 210, aspect: 0.79, flip: false },
+  monitorLeft: { x: 175, y: 545, w: 200, aspect: 1.0, flip: false },
+  monitorRight: { x: 685, y: 545, w: 200, aspect: 1.0, flip: false },
+  /** the system unit on the floor in the right corner, behind the desk */
+  pc: { x: 905, y: 760, w: 120, aspect: 1.4401, flip: true },
+} as const;
+
+/** tap zones (scene units) that open the windows: bigger than the pictures so a finger hits them */
+export const SCENE_HOT = {
+  monitors: { x: 150, y: 520, w: 760, h: 250, equipment: "monitor2" },
+  pc: { x: 880, y: 730, w: 175, h: 240, equipment: "pc" },
 } as const;
 
 /** Character placement: the 1000×1400 rig canvas scaled into the scene. */

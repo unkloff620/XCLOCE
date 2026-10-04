@@ -471,20 +471,20 @@ describe("home: equipment, rooms, look, help", () => {
     const p = await newPlayer(db);
     const st = await act(db, p, "help_seen", { topic: "home" }, T0);
     expect(st.state.tasks).toEqual({ minEnergy: 3, claimable: false });
+    // a cleared location stops calling: only the next, not yet cleared one counts
+    await db.query("INSERT INTO location_claims (player_id, location_id, claimed_at) VALUES ($1, 'openspace', $2)", [p, new Date(T0)]);
+    const st2 = await act(db, p, "help_seen", { topic: "yard" }, T0);
+    const market = LOCATIONS.find((l) => l.id === "market")!;
+    expect(st2.state.tasks.minEnergy).toBe(Math.min(...market.tasks.map((t) => t.energy)));
   });
 
-  it("desks: everyone starts with «Стол 001»; a bought desk stands in the room and gives its bonus", async () => {
+  it("desk: four stages, upgraded in «Обстановка» for money, each with its bonus", async () => {
     const p = await newPlayer(db);
-    const st = await act(db, p, "help_seen", { topic: "home" }, T0);
-    expect(st.state.look.equipped.DESK).toBe("desk-001");
-    expect(st.state.home.bonus.critChance).toBe(0);
     await setMoney(db, p, "RUB", 5000);
-    const b = await act(db, p, "buy", { offerId: "desk-002" }, T0);
-    expect(b.state.look.equipped.DESK).toBe("desk-002");
-    expect(b.state.home.bonus.critChance).toBeCloseTo(0.02);
-    await expect(act(db, p, "buy", { offerId: "desk-002" }, T0)).rejects.toMatchObject({ code: "stack_full" });
-    const back = await act(db, p, "equip", { itemId: "desk-001" }, T0);
-    expect(back.state.home.bonus.critChance).toBe(0);
+    const r = await act(db, p, "equipment_upgrade", { id: "desk" }, T0);
+    expect(r.result).toMatchObject({ level: 1, max: 3 });
+    expect(r.state.home.bonus.critChance).toBeCloseTo(0.02);
+    await expect(act(db, p, "equipment_upgrade", { id: "desk" }, T0)).rejects.toMatchObject({ code: "no_money" });
   });
 
   it("rooms: buy, switch, the bonus of every owned room counts", async () => {

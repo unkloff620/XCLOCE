@@ -23,10 +23,6 @@ export async function buy(ctx: Ctx, offerId: string, idem?: string) {
     }
     await takeMoney(ctx, o.price.currency, price, `buy:${o.id}`);
     if (o.give.item) await addItem(ctx, o.give.item, o.give.qty, "shop");
-    // a bought desk goes straight into the room
-    if (o.give.item && itemById(o.give.item)?.slot === "DESK") {
-      await ctx.q.query("UPDATE appearance SET equipped = jsonb_set(equipped, '{DESK}', to_jsonb($2::text)) WHERE player_id=$1", [ctx.pid, o.give.item]);
-    }
     if (o.give.energy) await addEnergy(ctx, o.give.energy, `buy:${o.id}`);
     return { offerId: o.id, paid: { currency: o.price.currency, amount: price } };
   });

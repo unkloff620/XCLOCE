@@ -29,12 +29,12 @@ const LOOK_EDITOR = true;
 let dailyAutoShown = false;
 
 
-const SLOT_NAME: Record<Slot, string> = { BODY: "Тело", PANTS: "Штаны", SHIRT: "Верх", SHOES: "Обувь", HEAD: "Голова", ACCESSORY: "Аксессуар", SPECIAL: "Особое", DESK: "Стол" };
+const SLOT_NAME: Record<Slot, string> = { BODY: "Тело", PANTS: "Штаны", SHIRT: "Верх", SHOES: "Обувь", HEAD: "Голова", ACCESSORY: "Аксессуар", SPECIAL: "Особое" };
 
 const LEFT_SLOTS: Slot[] = ["HEAD", "SHIRT", "ACCESSORY"];
 const RIGHT_SLOTS: Slot[] = ["PANTS", "SHOES"];
 
-const PICK_TITLE: Record<Slot, string> = { BODY: "Тело", PANTS: "Штаны", SHIRT: "Верх", SHOES: "Обувь", HEAD: "Головные уборы", ACCESSORY: "Аксессуары", SPECIAL: "Особое", DESK: "Столы" };
+const PICK_TITLE: Record<Slot, string> = { BODY: "Тело", PANTS: "Штаны", SHIRT: "Верх", SHOES: "Обувь", HEAD: "Головные уборы", ACCESSORY: "Аксессуары", SPECIAL: "Особое" };
 
 /** Window with the owned things for one slot. */
 function SlotPicker({ slot, onClose }: { slot: Slot; onClose: () => void }) {
@@ -190,7 +190,7 @@ export function HomeScreen() {
       <div className="room">
         <div className={`scene-backdrop ${owned ? "" : "locked"}`} style={{ backgroundImage: `url(/assets/home/${ROOM_BACKDROP[viewRoom.id] ?? ROOM_BACKDROP.basic}.webp)` }} />
         <div className={`room-view ${owned ? "" : "locked"}`}>
-          <HomeScene room={viewRoom.id} look={state.look.body} worn={state.look.equipped} onPick={owned ? (id) => (id === "pc" ? setPc(true) : setEquip(id)) : undefined} />
+          <HomeScene room={viewRoom.id} look={state.look.body} worn={state.look.equipped} levels={state.home.levels} onPick={owned ? (id) => (id === "pc" ? setPc(true) : setEquip(id)) : undefined} />
         </div>
         {idx > 0 && (
           <button className="room-arrow left" onClick={() => flip(-1)} aria-label="Предыдущая комната" disabled={busy === "room_set"}>‹</button>
@@ -214,7 +214,7 @@ export function HomeScreen() {
         </div>
         <div className="room-help">
           <Help topic="home-menu" title="Твой дом">
-            <p>Здесь живёт твой персонаж. На заднем плане стоит оборудование — нажми на монитор, чтобы улучшить его, или на системник — там детали компьютера, которые улучшаются за таланты. Стрелки по бокам листают комнаты: купленная включается сразу, закрытую можно разблокировать кнопкой снизу. Каждая купленная комната даёт бонус к урону.</p>
+            <p>Здесь живёт твой персонаж. На заднем плане стоит оборудование — нажми на мониторы, чтобы обставить рабочее место, или на системник в углу — там детали компьютера, которые улучшаются за таланты. Стрелки по бокам листают комнаты: купленная включается сразу, закрытую можно разблокировать кнопкой снизу. Каждая купленная комната даёт бонус к урону.</p>
             <HelpList title="Кнопки слева" rows={[
               { key: "w", icon: <Icon name="shirt" size={44} />, name: "Гардероб", hint: "Одежда и внешность: причёска, цвет волос и кожи." },
               { key: "b", icon: <Icon name="gift" size={44} />, name: "Бонус", hint: "Награда за ежедневный вход. Заходи каждый день — награда растёт." },
@@ -240,7 +240,7 @@ export function HomeScreen() {
             <Icon name="gift" size={58} />
             {state.daily.available && <i className="side-dot" />}
           </button>
-          <button className="icon-btn-art" style={{ ["--c" as string]: "#3fd2ff" }} onClick={() => setEquip(null)} aria-label="Техника" title="Техника">
+          <button className="icon-btn-art" style={{ ["--c" as string]: "#3fd2ff" }} onClick={() => setEquip(null)} aria-label="Обстановка" title="Обстановка">
             <Icon name="bolt" size={58} />
           </button>
         </div>

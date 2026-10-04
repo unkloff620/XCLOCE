@@ -268,4 +268,16 @@ ON CONFLICT (player_id, item_id) DO NOTHING;
 UPDATE appearance SET equipped = jsonb_set(equipped, '{DESK}', '"desk-001"') WHERE NOT (equipped ? 'DESK');
 `,
   },
+  {
+    // desks are room upgrades now (equipment "desk", levels 0..3), not items: a bought desk becomes the level
+    id: "v2-010-desk-level",
+    sql: `
+INSERT INTO player_equipment (player_id, equipment_id, level)
+SELECT player_id, 'desk', MAX(CASE item_id WHEN 'desk-002' THEN 1 WHEN 'desk-003' THEN 2 WHEN 'desk-004' THEN 3 ELSE 0 END)
+FROM inventory WHERE item_id IN ('desk-002', 'desk-003', 'desk-004') AND qty > 0 GROUP BY player_id
+ON CONFLICT (player_id, equipment_id) DO UPDATE SET level = GREATEST(player_equipment.level, EXCLUDED.level);
+DELETE FROM inventory WHERE item_id LIKE 'desk-%';
+UPDATE appearance SET equipped = equipped - 'DESK';
+`,
+  },
 ];

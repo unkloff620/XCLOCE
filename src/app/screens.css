@@ -665,3 +665,7 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 @keyframes lamp-live { 0%, 100% { opacity: 0.9; } 18% { opacity: 0.62; } 22% { opacity: 0.85; } 46% { opacity: 0.7; } 63% { opacity: 1; transform: scale(1.04); } 80% { opacity: 0.66; } }
 @keyframes strip-live { 0%, 100% { opacity: 0.85; } 50% { opacity: 0.55; } }
 @media (prefers-reduced-motion: reduce) { .room-sky, .room-light { animation: none; } }
+/* the character in the room lets taps through to the desk, monitors and the system unit */
+.room-view .rig { pointer-events: none; }
+.equip-stage { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 12px; background: rgba(0, 0, 0, 0.25); }
+.equip-stage img { width: 84px; height: 50px; object-fit: contain; flex: none; }

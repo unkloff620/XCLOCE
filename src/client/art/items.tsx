@@ -198,7 +198,6 @@ const RASTER_ITEMS = new Set([
   "fist", "mouse", "red-candle", "keyboard", "gpu", "rug-pull-gun",
   "tee-white", "tee-pump", "jeans", "shorts-remote", "sneakers", "cap-moon", "slippers", "gold-chain",
   "energy-drink", "lost-wallet", "bottle-cap", "flyer-passive", "spinner", "sticker-hodl",
-  "desk-001", "desk-002", "desk-003", "desk-004",
 ]);
 
 /** Picture of any item; keys use the key icon, unknown ids fall back to a coin. */

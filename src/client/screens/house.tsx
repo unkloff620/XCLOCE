@@ -17,7 +17,7 @@ export function BonusLine({ b }: { b: Bonus }) {
   return <span>{parts.length ? parts.join(" · ") : "без бонуса"}</span>;
 }
 
-/** Upgrades of the things in the room. `focus` scrolls the list to one piece. */
+/** «Обстановка»: upgrades of the things in the room (desk, monitors, chair, light). `focus` puts one piece first. */
 export function EquipmentWindow({ focus, onClose }: { focus?: string | null; onClose: () => void }) {
   const { state, act, busy } = useGame();
   if (!state) return null;
@@ -28,7 +28,7 @@ export function EquipmentWindow({ focus, onClose }: { focus?: string | null; onC
     if (r) haptic.ok();
   };
   return (
-    <Modal title="Оборудование" onClose={onClose}>
+    <Modal title="Обстановка" onClose={onClose}>
       <div className="col" style={{ gap: 10 }}>
         <div className="bonus-sum small">
           <span className="muted">Сейчас:</span>
@@ -46,6 +46,16 @@ export function EquipmentWindow({ focus, onClose }: { focus?: string | null; onC
                 <b>{e.name}</b>
                 <span className="equip-lv">{Array.from({ length: e.levels.length }, (_, i) => <i key={i} className={i < lv ? "on" : ""} />)}</span>
               </div>
+              {e.stages && (
+                <div className="equip-stage">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={`/assets/home/${e.stages[Math.min(lv, e.stages.length - 1)].art}.webp`} alt="" />
+                  <div className="col" style={{ gap: 2, minWidth: 0 }}>
+                    <b className="small">{e.stages[Math.min(lv, e.stages.length - 1)].name}</b>
+                    {next && <span className="tiny muted">дальше: {e.stages[lv + 1]?.name}</span>}
+                  </div>
+                </div>
+              )}
               <div className="tiny muted">{e.description}</div>
               <div className="tiny">
                 {lv > 0 && <>Сейчас: <BonusLine b={e.levels[lv - 1].bonus} /><br /></>}
@@ -61,7 +71,7 @@ export function EquipmentWindow({ focus, onClose }: { focus?: string | null; onC
             </div>
           );
         })}
-        <div className="tiny muted">Бонусы работают в бою с любым боссом: крит наносит ×1.5 урона и больше. Бонусы оборудования и всех купленных комнат складываются.</div>
+        <div className="tiny muted">Бонусы работают в бою с любым боссом: крит наносит ×1.5 урона и больше. Бонусы обстановки и всех купленных комнат складываются. Улучшенный стол и новые мониторы сразу появляются в комнате.</div>
       </div>
     </Modal>
   );
@@ -79,7 +89,7 @@ export function RoomsWindow({ onClose }: { onClose: () => void }) {
           const can = r.price ? (state.wallet[r.price.currency] ?? 0) >= r.price.amount : true;
           return (
             <div key={r.id} className={`room-card ${here ? "here" : ""}`}>
-              <div className="room-thumb"><HomeScene room={r.id} still /></div>
+              <div className="room-thumb"><HomeScene room={r.id} still levels={state.home.levels} /></div>
               <b className="display">{r.name}</b>
               <div className="tiny muted">{r.description}</div>
               <div className="tiny" style={{ color: "var(--gold)" }}><BonusLine b={r.bonus} /></div>

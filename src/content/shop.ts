@@ -2,7 +2,7 @@ import type { Currency } from "./currencies.ts";
 
 export interface Offer {
   id: string;
-  section: "weapons" | "energy" | "clothing" | "furniture" | "misc";
+  section: "weapons" | "energy" | "clothing" | "misc";
   /** what the player gets: an item or raw energy */
   give: { item?: string; energy?: number; qty: number };
   price: { currency: Currency; amount: number };
@@ -14,7 +14,6 @@ export const SHOP_SECTIONS = [
   { id: "weapons", name: "Оружие" },
   { id: "energy", name: "Энергия" },
   { id: "clothing", name: "Одежда" },
-  { id: "furniture", name: "Мебель" },
   { id: "misc", name: "Разное" },
 ] as const;
 
@@ -35,9 +34,6 @@ export const OFFERS: Offer[] = [
   { id: "energy-500", section: "energy", give: { energy: 500, qty: 1 }, price: { currency: "SOL", amount: 0.6 }, title: "+500 энергии", note: "сверх лимита" },
   { id: "tee-pump", section: "clothing", give: { item: "tee-pump", qty: 1 }, price: { currency: "RUB", amount: 1500 }, title: "Футболка PUMP" },
   { id: "cap-moon", section: "clothing", give: { item: "cap-moon", qty: 1 }, price: { currency: "USD", amount: 15 }, title: "Чёрная кепка" },
-  { id: "desk-002", section: "furniture", give: { item: "desk-002", qty: 1 }, price: { currency: "RUB", amount: 4000 }, title: "Стол 002" },
-  { id: "desk-003", section: "furniture", give: { item: "desk-003", qty: 1 }, price: { currency: "USD", amount: 30 }, title: "Стол 003" },
-  { id: "desk-004", section: "furniture", give: { item: "desk-004", qty: 1 }, price: { currency: "SOL", amount: 0.2 }, title: "Стол 004" },
   { id: "energy-drink", section: "misc", give: { item: "energy-drink", qty: 1 }, price: { currency: "RUB", amount: 180 }, title: "Энергетик" },
 ];
 export const offerById = (id: string) => OFFERS.find((o) => o.id === id);
