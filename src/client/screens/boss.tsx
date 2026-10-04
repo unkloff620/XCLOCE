@@ -6,7 +6,7 @@ import { invQty, useGame, useNow } from "../store.tsx";
 import { api, type FightView, type Hit, type Tray } from "../api.ts";
 import { bossById, type BossDef } from "../../content/bosses.ts";
 import { WEAPONS, weaponById } from "../../content/items.ts";
-import { FEED_VERB, HIT_PHRASES } from "../../content/phrases.ts";
+import { HIT_PHRASES } from "../../content/phrases.ts";
 import { ArenaBackdrop, BossSilhouette } from "../art/scenes.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { Icon } from "../art/icons.tsx";
@@ -21,6 +21,10 @@ import { Modal } from "../ui.tsx";
 import { talentThreshold, talentsForDamage } from "../../content/home.ts";
 
 const POLL_MS = 1500;
+/** a hit stays in the arena feed this long */
+const FEED_MS = 5000;
+/** the hit phrase bubble stays this long */
+const PHRASE_MS = 2200;
 
 function Arena({ boss, hp, hpMax, endsAt, fx, hit, rug, feed, full: fullScreen }: { boss: BossDef; hp: number | null; hpMax: number; endsAt: number | null; fx: React.ReactNode; hit: boolean; rug: boolean; feed: Hit[]; full?: boolean }) {
   const now = useNow();
@@ -36,27 +40,28 @@ function Arena({ boss, hp, hpMax, endsAt, fx, hit, rug, feed, full: fullScreen }
         {hurt && !hasBossRig(boss.id) && <div className="arena-plasters" />}
       </div>
       <div className="arena-top">
-        <div className="row" style={{ justifyContent: "space-between", marginBottom: 4 }}>
-          <span className="chip" style={{ background: "rgba(0,0,0,0.55)" }}>{phase ? phase.name : "HP"}</span>
-          {endsAt && <span className="chip gold"><Icon name="clock" size={14} />{clock(endsAt - now)}</span>}
-        </div>
         {hp !== null ? <Bar value={hp} max={hpMax} tone="red" height={24} label={`${full(hp)} / ${full(hpMax)}`} /> : <Bar value={hpMax} max={hpMax} tone="red" height={24} label={`${full(hpMax)} HP`} />}
+        <div className="arena-sub">
+          <div className="col" style={{ gap: 4, alignItems: "flex-start" }}>
+            {endsAt && <span className="chip gold"><Icon name="clock" size={14} />{clock(endsAt - now)}</span>}
+            {phase && <span className="chip" style={{ background: "rgba(0,0,0,0.55)" }}>{phase.name}</span>}
+          </div>
+          {/* who hit and how hard: the last few hits, each line fades away after a few seconds */}
+          <div className="arena-feed">
+            {feed.filter((h) => now - h.at < FEED_MS).slice(0, 3).map((h) => (
+              <div key={h.seq} className="feed-line">
+                <b className="ellipsis">{h.name}</b> <ItemArt id={h.weapon} size={18} /> <b className="dmg">−{h.damage}</b>{h.crit && <b className="crit-tag"> КРИТ</b>}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
       {fx}
-      {feed.length > 0 && (
-        <div className="arena-feed">
-          {feed.slice(0, 3).map((h) => (
-            <div key={h.seq} className="feed-line">
-              <b>{h.name}</b> {FEED_VERB[h.weapon] ?? "ударил"} — <b className="dmg">{h.damage}</b>{h.crit && <b className="crit-tag"> КРИТ</b>}
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
 
-function WeaponTray({ tray, onHit, disabled }: { tray: Tray[]; onHit: (id: string) => void; disabled: boolean }) {
+function WeaponTray({ tray, onHit, disabled, bonus }: { tray: Tray[]; onHit: (id: string) => void; disabled: boolean; bonus: number }) {
   const now = useNow();
   const router = useRouter();
   return (
@@ -65,26 +70,33 @@ function WeaponTray({ tray, onHit, disabled }: { tray: Tray[]; onHit: (id: strin
         const t = tray.find((x) => x.id === w.id);
         const qty = t?.qty ?? 0;
         const cd = t?.readyAt && t.readyAt > now ? t.readyAt - now : 0;
+        const total = (w.weapon!.cooldownMin ?? 0) * 60_000;
         const perm = w.weapon!.kind === "permanent";
         const empty = !perm && qty <= 0;
+        // the cooldown "clock": the grey part shrinks clockwise until the weapon is in colour again
+        const done = cd && total ? Math.max(0, Math.min(1, 1 - cd / total)) : 1;
         return (
           <button
             key={w.id}
             className={`weapon rar-${w.rarity} ${empty ? "empty" : ""} ${cd ? "cd" : ""}`}
             disabled={disabled || !!cd}
             onClick={() => (empty ? router.push("/shop?tab=weapons") : onHit(w.id))}
-            title={w.weapon!.action}
+            title={`${w.name}: ${w.weapon!.action}`}
           >
             <ItemArt id={w.id} size={40} />
-            <span className="w-dmg display">−{w.weapon!.damage}</span>
-            <span className="w-name">{w.name}</span>
-            <span className="w-qty num">{perm ? (cd ? clock(cd) : "ГОТОВО") : empty ? "купить" : `×${qty}`}</span>
+            <span className="w-dmg display">−{weaponDamage(w.weapon!.damage, bonus)}</span>
+            {!perm && <span className="w-qty num">{qty}</span>}
+            {cd > 0 && <span className="w-cd" style={{ ["--p" as string]: `${done * 360}deg` }} />}
+            {cd > 0 && <span className="w-cd-time num">{clock(cd)}</span>}
           </button>
         );
       })}
     </div>
   );
 }
+
+/** weapon damage with the home bonus (equipment, rooms, computer), as the server counts it (without crits) */
+const weaponDamage = (base: number, bonus: number) => Math.round(base * (1 + bonus));
 
 export function BossScreen({ id }: { id: string }) {
   const boss = bossById(id);
@@ -99,6 +111,13 @@ export function BossScreen({ id }: { id: string }) {
   const [pendingDmg, setPendingDmg] = useState(0);
   const [phrase, setPhrase] = useState<{ text: string; id: number; crit?: boolean } | null>(null);
   const [talentPop, setTalentPop] = useState(0);
+  const dmgBonus = state?.home.bonus.damage ?? 0;
+  // the phrase bubble goes away by itself
+  useEffect(() => {
+    if (!phrase) return;
+    const t = setTimeout(() => setPhrase(null), PHRASE_MS);
+    return () => clearTimeout(t);
+  }, [phrase]);
   const [tab, setTab] = useState<"top" | "mine" | null>(null);
   const [details, setDetails] = useState<{ top: { playerId: number; name: string; damage: number; wins: number }[]; myHits: { weapon: string; damage: number; phrase: number; at: number }[] } | null>(null);
   const lastSeq = useRef(0);
@@ -162,9 +181,10 @@ export function BossScreen({ id }: { id: string }) {
 
   const attack = async (weapon: string) => {
     const w = weaponById(weapon)!;
+    const est = weaponDamage(w.weapon.damage, dmgBonus);
     haptic.hit();
-    play(weapon, w.weapon.damage, w.weapon.action, true);
-    setPendingDmg((d) => d + w.weapon.damage);
+    play(weapon, est, w.weapon.action, true);
+    setPendingDmg((d) => d + est);
     setTray((t) => t.map((x) => (x.id === weapon && w.weapon.kind === "consumable" ? { ...x, qty: Math.max(0, x.qty - 1) } : x)));
     try {
       const r = await api.action<{ damage: number; crit: boolean; phrase: string; hp: number; status: string; left: number | null; readyAt: number | null; fightDamage: number; talentsGained: number }>("attack", { weapon, idem: crypto.randomUUID() });
@@ -183,7 +203,7 @@ export function BossScreen({ id }: { id: string }) {
       toast(e instanceof Error ? e.message : "Не получилось", "err");
       void poll(true);
     } finally {
-      setPendingDmg((d) => Math.max(0, d - w.weapon.damage));
+      setPendingDmg((d) => Math.max(0, d - est));
     }
   };
 
@@ -223,7 +243,6 @@ export function BossScreen({ id }: { id: string }) {
           <img src="/assets/arena/garage.webp" alt="" draggable={false} />
         </div>
         <div className="fight-head">
-          <Link href="/bosses" className="back-btn" aria-label="К боссам">‹</Link>
           <div className="grow" style={{ minWidth: 0 }}>
             <b className="display boss-name ellipsis">{boss.name}</b>
           </div>
@@ -240,7 +259,7 @@ export function BossScreen({ id }: { id: string }) {
             <button className="btn sm dark" onClick={() => setTab("mine")}>Мои</button>
             <button className={`btn sm ${fleeAsk ? "red" : "dark"}`} onClick={flee} disabled={busy === "fight_flee"}>{fleeAsk ? "Точно?" : "Сдаться"}</button>
           </div>
-          <WeaponTray tray={tray} onHit={attack} disabled={view?.status !== undefined && view.status !== "active"} />
+          <WeaponTray tray={tray} onHit={attack} bonus={dmgBonus} disabled={view?.status !== undefined && view.status !== "active"} />
         </div>
         {tab !== null && (
           <Modal title={tab === "top" ? "Топ боя" : "Мои удары"} onClose={() => setTab(null)}>
@@ -283,7 +302,6 @@ export function BossScreen({ id }: { id: string }) {
         <img src="/assets/arena/garage.webp" alt="" draggable={false} />
       </div>
       <div className="fight-head">
-        <Link href="/bosses" className="back-btn" aria-label="К боссам">‹</Link>
         <div className="grow" style={{ minWidth: 0 }}>
           <b className="display boss-name ellipsis">{boss.name}</b>
           <div className="tiny muted ellipsis">{boss.title}</div>
