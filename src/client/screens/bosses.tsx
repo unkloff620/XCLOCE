@@ -9,6 +9,7 @@ import { Avatar, Bar, RewardChips } from "../ui.tsx";
 import type { BossDef } from "../../content/bosses.ts";
 import { Help } from "../help.tsx";
 import { Icon } from "../art/icons.tsx";
+import { BossSilhouette } from "../art/scenes.tsx";
 import { clock, full, short } from "../format.ts";
 
 export interface BossRow {
@@ -55,51 +56,51 @@ export function BossesScreen() {
         </div>
         {data && <span className="small muted">Лимиты обновятся через {clock(data.resetAt - now)}</span>}
       </div>
-      <div className="col" style={{ gap: 10 }}>
+      <div className="col" style={{ gap: 12 }}>
         {BOSSES.map((b) => {
           const row = data?.bosses.find((x) => x.id === b.id);
           const prev = BOSSES.find((x) => x.order === b.order - 1);
           const mine = state?.fight?.bossId === b.id ? state.fight : null;
           const locked = row ? !row.unlocked : b.order > 1;
+          const hpMax = mine ? mine.hpMax : row?.hpMax ?? b.hp;
+          const hp = mine ? mine.hp : hpMax;
           return (
-            <Link key={b.id} href={`/bosses/${b.id}`} className={`boss-row ${locked ? "locked" : ""} ${b.final ? "final" : ""} ${mine ? "live" : ""}`} style={{ ["--acc" as string]: b.theme.accent }}>
-              <div className="boss-left">
-                <div className="boss-row-photo">
-                  <BossPhoto boss={b} round locked={locked} />
-                  <span className="boss-n display">{b.order}</span>
+            <Link key={b.id} href={`/bosses/${b.id}`} className={`boss-card2 ${locked ? "locked" : ""} ${b.final ? "final" : ""} ${mine ? "live" : ""}`} style={{ ["--acc" as string]: b.theme.accent, ["--bga" as string]: b.theme.a }}>
+              {/* left box: the boss art fills it, name and HP sit over the right side */}
+              <div className="bc-hero">
+                <div className="bc-art">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  {b.photo.full && !locked ? <img src={b.photo.full} alt="" draggable={false} /> : <div className="bc-sil"><BossSilhouette accent={b.theme.accent} /></div>}
                 </div>
-                <Bar value={mine ? mine.hp : 1} max={mine ? mine.hpMax : 1} tone="red" height={18}
-                  label={hpLabel(mine ? mine.hp : row?.hpMax ?? b.hp, mine ? mine.hpMax : row?.hpMax ?? b.hp)} />
+                <span className="boss-n display">{b.order}</span>
+                <div className="bc-info">
+                  <b className="display boss-name">{b.name}</b>
+                  <Bar value={hp} max={hpMax} tone="red" height={18} label={`${Math.round((hp / Math.max(1, hpMax)) * 100)}%`} />
+                  <span className="bc-hp num">{hpLabel(hp, hpMax)}</span>
+                </div>
+                <div className="bc-status">
+                  {mine ? (
+                    <span className="chip gold"><Icon name="clock" size={13} />{clock(mine.endsAt - now)}</span>
+                  ) : locked ? (
+                    <span className="chip" title={`${(row?.keysNeed ?? 3) === 1 ? "ключ" : "ключа"} «${prev?.name}»`}><Icon name="key" size={14} />{row?.keysHave ?? 0}/{row?.keysNeed ?? 3}</span>
+                  ) : (
+                    <span className="chip" title="Победы сегодня">{row?.fightsToday ?? 0}/{row?.fightsPerDay ?? 7}</span>
+                  )}
+                  {!!row?.fightingNow && !locked && <span className="chip red">бьют: {row.fightingNow}</span>}
+                </div>
               </div>
-              <div className="grow col" style={{ gap: 5, minWidth: 0 }}>
-                <div className="row" style={{ justifyContent: "space-between", gap: 6 }}>
-                  <b className="display boss-name ellipsis">{b.name}</b>
-                  {b.final && <span className="chip gold">ФИНАЛ</span>}
-                </div>
-                <div className="small muted ellipsis">{b.title}</div>
-                {mine ? (
-                  <div className="row small" style={{ flexWrap: "wrap", gap: 6 }}><span className="chip gold"><Icon name="clock" size={14} />{clock(mine.endsAt - now)}</span><span className="muted">идёт бой</span></div>
-                ) : locked ? (
-                  <div className="row small" style={{ flexWrap: "wrap", gap: 6 }}>
-                    <span className="chip"><Icon name="key" size={14} />{row?.keysHave ?? 0}/{row?.keysNeed ?? 3}</span>
-                    <span className="muted">{(row?.keysNeed ?? 3) === 1 ? "ключ" : "ключа"} «{prev?.name}»</span>
-                  </div>
-                ) : (
-                  <div className="row small" style={{ flexWrap: "wrap", gap: 6 }}>
-                    <span className="chip">Победы {row?.fightsToday ?? 0}/{row?.fightsPerDay ?? 7}</span>
-                    {!!row?.myWins && <span className="chip green"><Icon name="trophy" size={14} />{row.myWins}</span>}
-                    {!!row?.fightingNow && <span className="chip red">бьют: {row.fightingNow}</span>}
-                  </div>
-                )}
+              {/* right box: rewards for a win */}
+              <div className="bc-rewards">
+                {b.final && <span className="chip gold">ФИНАЛ</span>}
                 <BossRewardLine boss={b} />
                 {row?.lastKiller && (
                   <span className="last-killer tiny" title="Последним добил">
                     <Avatar name={row.lastKiller.name} photo={row.lastKiller.photo} size={16} />
-                    <span className="ellipsis">добил {row.lastKiller.name}</span>
+                    <span className="ellipsis">{row.lastKiller.name}</span>
                   </span>
                 )}
               </div>
-              <span className="boss-go display">›</span>
+              <span className="bc-go" aria-hidden="true">›</span>
             </Link>
           );
         })}
@@ -115,7 +116,7 @@ export function BossRulesHelp({ topic }: { topic: "bosses" | "boss" }) {
       <ul>
         <li>Бой у каждого свой и длится 8 часов. Не успел — босс уходит, бой проигран.</li>
         <li>Урон общий: удары всех, кто сейчас бьёт этого босса, снимают HP и в твоём бою.</li>
-        <li>Бьют только оружием. Мышь — бесплатно раз в час, остальное оружие тратится.</li>
+        <li>Бьют только оружием. Кулак — бесплатно раз в час, остальное оружие тратится.</li>
         <li>Победа даёт награду и ключ. Ключи открывают следующего босса (для Фокуса и Солнца хватает одного).</li>
         <li>В день можно победить каждого босса 7 раз. Проигранные бои в лимит не идут.</li>
         <li>Оборудование и комнаты дома дают шанс крита и прибавку к урону.</li>

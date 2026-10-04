@@ -430,3 +430,28 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(10, 12, 24, 0.
 .help-nav { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
 .help-nav-row { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 12px; background: var(--bg2); border: 2px solid var(--line); }
 .help-nav-row svg { flex: none; }
+
+/* ---------- boss list card: [art box with name + HP] [rewards box] [›] ---------- */
+.boss-card2 { display: flex; align-items: stretch; gap: 8px; color: inherit; }
+.bc-hero { position: relative; flex: 1.45 1 0; min-width: 0; height: 128px; border-radius: 16px; overflow: hidden; border: 2.5px solid var(--line);
+  box-shadow: 0 4px 0 var(--line), inset 0 0 0 2px color-mix(in srgb, var(--acc) 80%, transparent); outline: 2px solid color-mix(in srgb, var(--acc) 45%, transparent); outline-offset: -7px;
+  background: radial-gradient(circle at 28% 45%, color-mix(in srgb, var(--acc) 50%, transparent), var(--bga) 75%); }
+.bc-art { position: absolute; inset: 0; }
+.bc-art img { position: absolute; left: -6%; top: 0; width: 66%; height: 100%; object-fit: cover; object-position: 50% 12%; }
+.bc-sil { position: absolute; left: 4%; bottom: 0; width: 50%; height: 92%; }
+.bc-sil svg { width: 100%; height: 100%; }
+.bc-art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 30%, rgba(8, 9, 20, 0.82) 58%); }
+.boss-card2.locked .bc-art { filter: grayscale(1) brightness(0.5); }
+.bc-hero .boss-n { left: 6px; top: 6px; z-index: 2; }
+.bc-info { position: absolute; right: 8px; top: 0; bottom: 0; width: 52%; display: flex; flex-direction: column; justify-content: center; gap: 5px; z-index: 1; }
+.bc-info .boss-name { font-size: 18px; line-height: 1.05; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bc-info .bar { font-size: 11px; }
+.bc-hp { font-size: 11px; font-weight: 800; color: var(--muted); }
+.bc-status { position: absolute; left: 6px; bottom: 6px; display: flex; gap: 4px; z-index: 2; }
+.bc-status .chip { padding: 1px 6px; font-size: 11px; min-height: 0; background: rgba(10, 12, 24, 0.85); }
+.bc-rewards { flex: 1 1 0; min-width: 0; padding: 8px; border-radius: 16px; border: 2.5px solid var(--line); box-shadow: 0 4px 0 var(--line);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--acc) 16%, var(--panel2)), var(--panel)); display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+.bc-rewards .chip.gold { align-self: flex-start; }
+.bc-go { flex: none; align-self: center; width: 28px; height: 40px; display: grid; place-items: center; border-radius: 10px; border: 2.5px solid var(--line); background: var(--panel); font-size: 22px; font-weight: 800; color: var(--muted); }
+.boss-card2.live .bc-hero { box-shadow: 0 4px 0 var(--line), 0 0 0 2px var(--gold), 0 0 16px rgba(255, 204, 51, 0.35); }
+.boss-card2.final .bc-rewards { background: linear-gradient(160deg, rgba(255, 210, 63, 0.3), var(--panel)); }
