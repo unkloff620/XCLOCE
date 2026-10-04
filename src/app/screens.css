@@ -595,9 +595,10 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(10, 12, 24, 0.
 .pc-row img { width: 64px; height: 40px; object-fit: contain; flex: none; }
 .pc-dot { position: static; flex: none; }
 .pc-help-img { width: 44px; height: 34px; object-fit: contain; flex: none; }
-.pc-part-art { display: grid; place-items: center; height: 150px; border-radius: 16px; border: 2px solid var(--line);
+.pc-part-art { position: relative; height: 150px; flex: none; overflow: hidden; border-radius: 16px; border: 2px solid var(--line);
   background: radial-gradient(ellipse at 50% 60%, rgba(63, 210, 255, 0.28), transparent 65%), #10131f; }
-.pc-part-art img { max-width: 88%; max-height: 82%; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.6)); animation: bob 3s ease-in-out infinite; }
+/* sized to the box (a % max-height in an auto grid row is ignored — the tall cooler spilled out) */
+.pc-part-art img { position: absolute; left: 6%; top: 14px; width: 88%; height: calc(100% - 28px); object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.6)); animation: bob 3s ease-in-out infinite; }
 .pc-bonus { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 8px; border-radius: 12px; background: var(--panel2); border: 2px solid var(--line); }
 .pc-bonus > div { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .pc-arrow { font-size: 22px; color: var(--gold); font-weight: 800; }
