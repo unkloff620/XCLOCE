@@ -17,6 +17,7 @@ import { BossPhoto } from "./boss-parts.tsx";
 import { clock, full, pct, short } from "../format.ts";
 import { haptic } from "../telegram.ts";
 import { DriftingSky } from "../art/sky.tsx";
+import { BossRig, hasBossRig } from "../art/boss-rig.tsx";
 import { Modal } from "../ui.tsx";
 
 const POLL_MS = 1500;
@@ -30,7 +31,7 @@ function Arena({ boss, hp, hpMax, endsAt, fx, hit, rug, feed, full: fullScreen }
       {!fullScreen && <ArenaBackdrop theme={boss.theme} final={boss.final} />}
       <div className={`arena-photo ${hit ? "hit" : ""} ${rug ? "rug" : ""} ${hurt ? "hurt" : ""}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        {boss.photo.full ? <img src={boss.photo.full} alt={boss.name} draggable={false} /> : <div className="arena-sil"><BossSilhouette accent={boss.theme.accent} /><span className="small muted">фото скоро</span></div>}
+        {hasBossRig(boss.id) ? <BossRig id={boss.id} /> : boss.photo.full ? <img src={boss.photo.full} alt={boss.name} draggable={false} /> : <div className="arena-sil"><BossSilhouette accent={boss.theme.accent} /><span className="small muted">фото скоро</span></div>}
         <div className="arena-flash" />
         {hurt && <div className="arena-plasters" />}
       </div>

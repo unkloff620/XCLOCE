@@ -497,3 +497,21 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(10, 12, 24, 0.
 .fight-bottom .tray { gap: 5px; }
 .fight-bottom .weapon .w-name { display: none; }  /* names are in the [?] and the long-press title */
 .fight-bottom .weapon { padding: 6px 1px 5px; }
+
+/* ---------- animated boss rig ---------- */
+.boss-rig { display: block; filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.55)); overflow: visible; }
+.br-breath { animation: br-breath 3.2s ease-in-out infinite; }
+@keyframes br-breath { 50% { transform: scale(1.012, 1.022); } }
+.br-head { animation: br-head 5.5s ease-in-out infinite; }
+@keyframes br-head { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-2.2deg); } 60% { transform: rotate(1.8deg); } }
+.br-fist-l { animation: br-fist-l 1.7s ease-in-out infinite; }
+@keyframes br-fist-l { 50% { transform: rotate(-5deg); } }
+.br-fist-r { animation: br-fist-r 1.7s ease-in-out infinite 0.85s; }
+@keyframes br-fist-r { 50% { transform: rotate(4deg); } }
+.br-eyes-closed { opacity: 0; animation: br-blink 4.3s steps(1) infinite; }
+.br-eyes-open { animation: br-blink-open 4.3s steps(1) infinite; }
+@keyframes br-blink { 0%, 93% { opacity: 0; } 94%, 97% { opacity: 1; } 98%, 100% { opacity: 0; } }
+@keyframes br-blink-open { 0%, 93% { opacity: 1; } 94%, 97% { opacity: 0; } 98%, 100% { opacity: 1; } }
+/* the fists punch forward when the boss is hit */
+.arena-photo.hit .br-fist-l, .arena-photo.hit .br-fist-r { animation-duration: 0.28s; }
+@media (prefers-reduced-motion: reduce) { .br-breath, .br-head, .br-fist-l, .br-fist-r { animation: none; } }
