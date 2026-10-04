@@ -100,7 +100,7 @@ export function BossesScreen() {
                   ) : (
                     <span className="bcard-meta" title="Победы сегодня"><Icon name="swords" size={14} /> Побед <b className="num">{row?.fightsToday ?? 0}/{row?.fightsPerDay ?? 7}</b></span>
                   )}
-                  <span className={`bcard-cta display ${locked ? "off" : ""}`}>{locked ? <><Icon name="lock" size={14} /> Закрыт</> : mine ? <>Продолжить ›</> : <>В бой ›</>}</span>
+                  <span className={`bcard-cta display ${locked ? "off" : ""}`}>{locked ? <><Icon name="lock" size={14} /> Закрыт</> : mine ? <>Бить ›</> : <>В бой ›</>}</span>
                 </div>
                 {row?.lastKiller && !locked && (
                   <span className="bcard-killer tiny" title="Последним добил">
