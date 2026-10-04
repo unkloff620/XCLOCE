@@ -46,7 +46,7 @@ function Img({ p }: { p: PartId }) {
   const skin = useContext(LookCtx).skin;
   // parts without skin (pupils, brows, closed eyes) have no tone variants; ?v=2 — the slimmer character
   const tinted = skin !== SKIN_ORIGINAL && !NO_SKIN.has(p);
-  const src = `${tinted ? `/assets/hero/skin-${skin}/${p}` : `/assets/hero/${p}`}.webp?v=2`;
+  const src = `${tinted ? `/assets/hero/skin-${skin}/${p}` : `/assets/hero/${p}`}.webp?v=3`;
   return <image href={src} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" />;
 }
 
