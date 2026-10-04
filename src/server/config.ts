@@ -1,5 +1,5 @@
 import type { Queryable } from "./db.ts";
-import { BOSSES, FIGHT_HOURS, FIGHTS_PER_DAY, KEYS_TO_UNLOCK } from "../content/bosses.ts";
+import { BOSSES, FIGHT_HOURS, FIGHTS_PER_DAY, FULL_SHARE, KEY_SHARE, KEYS_TO_UNLOCK } from "../content/bosses.ts";
 import { CURRENCY_DEFS, EXCHANGE_FEE, type Currency } from "../content/currencies.ts";
 import { ENERGY, LEVELS } from "../content/levels.ts";
 import { YARD_DROPS, YARD_MAX_ITEMS, YARD_SPAWN_MIN } from "../content/yard.ts";
@@ -16,7 +16,7 @@ import type { Reward } from "../content/rewards.ts";
  */
 export interface Config {
   bossHp: Record<string, number>;
-  fight: { hours: number; perDay: number; keysToUnlock: number };
+  fight: { hours: number; perDay: number; keysToUnlock: number; fullShare: number; keyShare: number };
   energy: { max: number; regenMin: number };
   levels: { a: number; b: number; p: number; max: number };
   yard: { spawnMin: number; maxItems: number; weights: Record<string, number> };
@@ -36,7 +36,7 @@ export interface Config {
 export function defaultConfig(): Config {
   return {
     bossHp: Object.fromEntries(BOSSES.map((b) => [b.id, b.hp])),
-    fight: { hours: FIGHT_HOURS, perDay: FIGHTS_PER_DAY, keysToUnlock: KEYS_TO_UNLOCK },
+    fight: { hours: FIGHT_HOURS, perDay: FIGHTS_PER_DAY, keysToUnlock: KEYS_TO_UNLOCK, fullShare: FULL_SHARE, keyShare: KEY_SHARE },
     energy: { max: ENERGY.max, regenMin: ENERGY.regenMin },
     levels: { ...LEVELS },
     yard: { spawnMin: YARD_SPAWN_MIN, maxItems: YARD_MAX_ITEMS, weights: Object.fromEntries(YARD_DROPS.map((d) => [d.id, d.weight])) },

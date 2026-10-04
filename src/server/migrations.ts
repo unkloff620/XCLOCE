@@ -369,4 +369,11 @@ ON CONFLICT DO NOTHING;
 ALTER TABLE clans ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT '';
 `,
   },
+  {
+    // the level curve got longer (levels above 100): players who were here before do not get the newcomer tour again
+    id: "v2-015-levels-tour",
+    sql: `
+UPDATE players SET help_seen = help_seen || '["tutorial"]'::jsonb WHERE NOT (help_seen ? 'tutorial');
+`,
+  },
 ];

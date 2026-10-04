@@ -972,3 +972,11 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .clan-desc { margin: 4px 0 6px; font-size: 13px; line-height: 1.4; color: var(--ink); white-space: pre-wrap; text-align: center; max-width: 100%; overflow-wrap: anywhere; }
 .clan-desc-input { resize: vertical; min-height: 80px; font: inherit; }
 .clan-desc-input { padding: 10px 12px; }
+
+/* fight: the part of the win reward already earned (full from 2% of the boss HP) */
+.share-chip { position: relative; overflow: hidden; gap: 4px; }
+.share-chip > .fill { position: absolute; inset: 0 auto 0 0; background: rgba(61, 220, 132, 0.25); pointer-events: none; transition: width 0.3s; }
+.share-chip > :not(.fill) { position: relative; }
+.share-chip.full { border-color: rgba(61, 220, 132, 0.6); color: #9ff0bf; }
+.share-note { width: 100%; padding: 8px 10px; border-radius: 12px; font-size: 13px; text-align: center; background: rgba(255, 159, 67, 0.12); border: 1.5px solid rgba(255, 159, 67, 0.35); color: #ffd8a8; }
+.share-note.full { background: rgba(61, 220, 132, 0.12); border-color: rgba(61, 220, 132, 0.4); color: #b8f5cf; }

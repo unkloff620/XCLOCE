@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { invQty, useGame, useNow } from "../store.tsx";
 import { api, type FightView, type Hit, type Tray } from "../api.ts";
-import { bossById, type BossDef } from "../../content/bosses.ts";
+import { bossById, type BossDef, FULL_SHARE, KEY_SHARE, rewardShare } from "../../content/bosses.ts";
 import { WEAPONS, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
 import { ArenaBackdrop, BossSilhouette } from "../art/scenes.tsx";
@@ -271,6 +271,7 @@ export function BossScreen({ id }: { id: string }) {
           {phrase && <div key={phrase.id} className={`phrase-bubble ${phrase.crit ? "crit" : ""}`}>{phrase.text}</div>}
           <div className="row fight-bar">
             <TalentProgress dmg={view?.myDamage ?? state?.fight?.myDamage ?? 0} pop={talentPop} share={myShare} />
+            {view && <ShareChip dmg={view.myDamage} hpMax={view.hpMax} />}
             <span className="grow" />
             <button className="btn sm dark" onClick={() => setTab("top")}>Топ</button>
             <button className="btn sm dark" onClick={() => setTab("mine")}>Мои</button>
@@ -378,6 +379,19 @@ export function BossScreen({ id }: { id: string }) {
 }
 
 /** Damage of this fight towards the next talent (the counter burns when the fight ends). */
+/** How much of the win reward this fight already earns: full from FULL_SHARE of the boss HP. */
+function ShareChip({ dmg, hpMax }: { dmg: number; hpMax: number }) {
+  const k = rewardShare(dmg, hpMax);
+  const need = Math.ceil(hpMax * FULL_SHARE);
+  return (
+    <span className={`chip share-chip ${k >= 1 ? "full" : ""}`} title={`Награда за победу зависит от твоего урона: полная — от ${full(need)} (2% здоровья босса), ключ — от ${full(Math.ceil(hpMax * KEY_SHARE))}`}>
+      <i className="fill" style={{ width: `${k * 100}%` }} />
+      <Icon name="chest" size={16} />
+      <b className="num">{Math.round(k * 100)}%</b>
+    </span>
+  );
+}
+
 function TalentProgress({ dmg, pop, share }: { dmg: number; pop: number; share: number }) {
   const k = talentsForDamage(dmg);
   const from = k > 0 ? talentThreshold(k) : 0;

@@ -9,7 +9,7 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
     `SELECT
        (SELECT COALESCE(SUM(hits), 0) FROM boss_damage WHERE player_id=$1)::bigint AS hits,
        (SELECT COALESCE(total_damage, 0) FROM player_stats WHERE player_id=$1)::bigint AS damage,
-       (SELECT COUNT(*) FROM fights WHERE player_id=$1 AND status='won')::int AS wins,
+       (SELECT COUNT(*) FROM fights WHERE player_id=$1 AND status='won' AND my_damage > 0)::int AS wins,
        (SELECT COUNT(*) FROM fights WHERE killer_id=$1 AND player_id=$1)::int AS kills,
        (SELECT COUNT(*) FROM location_claims WHERE player_id=$1)::int AS locations,
        (SELECT COALESCE(tasks_done, 0) FROM player_stats WHERE player_id=$1)::int AS tasks,

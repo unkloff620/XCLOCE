@@ -1,9 +1,9 @@
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, idempotent, itemQty, ledger, moscowDay, nextMoscowMidnight, takeItem, type Ctx, type Granted } from "../core.ts";
-import { BOSSES, bossById, keyId, keysNeeded, type BossDef } from "../../content/bosses.ts";
+import { BOSSES, bossById, keyId, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
 import { WEAPONS, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
-import { mergeRewards } from "../../content/rewards.ts";
+import { mergeRewards, scaleReward } from "../../content/rewards.ts";
 import { BASE_CRIT_MULT, talentsForDamage } from "../../content/home.ts";
 import { playerBonus } from "./home.ts";
 import { notifyBossLow } from "./notify.ts";
@@ -227,15 +227,21 @@ export async function claimFight(ctx: Ctx, fightId: number) {
     return { status: "won" as const, reward: f.reward };
   }
   const def = bossById(f.boss_id)!;
-  const drops = (def.drop ?? []).filter((d) => ctx.rng() < d.chance).map((d) => ({ id: d.id, qty: d.qty }));
-  const key = def.final ? [] : [{ id: keyId(def.id), qty: 1 }];
-  const granted = await grantReward(ctx, mergeRewards(def.reward, { items: [...key, ...drops] }), `win:${def.id}`);
+  // the reward follows my own part of this fight (see FULL_SHARE / KEY_SHARE in content/bosses.ts)
+  const myDamage = Number(f.my_damage);
+  const share = rewardShare(myDamage, f.hp_max, ctx.cfg.fight.fullShare);
+  const earnedKey = myDamage >= f.hp_max * ctx.cfg.fight.keyShare;
+  const drops = earnedKey ? (def.drop ?? []).filter((d) => ctx.rng() < d.chance).map((d) => ({ id: d.id, qty: d.qty })) : [];
+  const key = def.final || !earnedKey ? [] : [{ id: keyId(def.id), qty: 1 }];
+  const granted = await grantReward(ctx, mergeRewards(scaleReward(def.reward, share), { items: [...key, ...drops] }), `win:${def.id}`);
   await ctx.q.query("UPDATE fights SET reward=$2, seen=true WHERE id=$1", [f.id, JSON.stringify(granted)]);
-  await ctx.q.query(
-    "INSERT INTO boss_damage (boss_id, player_id, wins) VALUES ($1,$2,1) ON CONFLICT (boss_id, player_id) DO UPDATE SET wins = boss_damage.wins + 1",
-    [def.id, ctx.pid],
-  );
-  return { status: "won" as const, reward: granted };
+  if (myDamage > 0) {
+    await ctx.q.query(
+      "INSERT INTO boss_damage (boss_id, player_id, wins) VALUES ($1,$2,1) ON CONFLICT (boss_id, player_id) DO UPDATE SET wins = boss_damage.wins + 1",
+      [def.id, ctx.pid],
+    );
+  }
+  return { status: "won" as const, reward: granted, share, key: earnedKey };
 }
 
 /** Gives up the running fight (counts as a loss). */

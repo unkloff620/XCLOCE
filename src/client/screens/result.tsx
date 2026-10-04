@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useGame } from "../store.tsx";
 import { api, type FightView, type Granted } from "../api.ts";
-import { bossById } from "../../content/bosses.ts";
+import { KEY_SHARE, bossById, rewardShare } from "../../content/bosses.ts";
+import { scaleReward } from "../../content/rewards.ts";
 import { ESCAPE_LINES } from "../../content/phrases.ts";
 import { Modal, RewardChips } from "../ui.tsx";
 import { BossPhoto } from "./boss-parts.tsx";
@@ -37,6 +38,9 @@ export function ResultWindow() {
   if (!active || !view) return null;
   const boss = bossById(view.bossId)!;
   const won = view.status === "won";
+  // the reward follows my part of the fight: full from 2% of the boss HP, the key from 1%
+  const share = rewardShare(view.myDamage, view.hpMax);
+  const keyOk = view.myDamage >= view.hpMax * KEY_SHARE;
   const done = () => setActive(null);
   const claim = async () => {
     const r = await act<{ status: string; reward: Granted | null }>("fight_claim", { fightId: view.fightId });
@@ -89,7 +93,11 @@ export function ResultWindow() {
         )}
         {won && !got && (
           <>
-            <RewardChips r={{ ...boss.reward, items: [...(boss.final ? [] : [{ id: `key-${boss.id}`, qty: 1 }]), ...(boss.reward.items ?? [])] }} />
+            <div className={`share-note ${share >= 1 ? "full" : ""}`}>
+              {share >= 1 ? "Полная награда — твой вклад засчитан" : share > 0 ? `Награда ${Math.round(share * 100)}%: для полной нужно ${full(Math.ceil(view.hpMax * 0.02))} урона в бою` : "Ты не нанёс урона в этом бою — награды нет"}
+              {share > 0 && !keyOk && !boss.final && <div className="tiny">Ключ — от {full(Math.ceil(view.hpMax * KEY_SHARE))} урона</div>}
+            </div>
+            <RewardChips r={{ ...scaleReward(boss.reward, share), items: [...(boss.final || !keyOk ? [] : [{ id: `key-${boss.id}`, qty: 1 }]), ...(share >= 1 ? boss.reward.items ?? [] : [])] }} />
             <button className="btn gold big block" disabled={busy === "fight_claim"} onClick={claim}>Забрать награду</button>
           </>
         )}

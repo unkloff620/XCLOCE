@@ -110,6 +110,18 @@ export const KEYS_TO_UNLOCK = 3;
 export const FIGHT_HOURS = 8;
 /** Fights per boss per player per Moscow day. Lost or abandoned fights do not count. */
 export const FIGHTS_PER_DAY = 7;
+/**
+ * Bosses are shared: everybody's hits lower HP in every running fight, so with ~100 players a boss falls fast.
+ * The win reward therefore follows your own part: full reward from FULL_SHARE of the boss HP dealt in that fight,
+ * proportionally less below it, and the key (and the drop) only from KEY_SHARE. No damage — no reward.
+ */
+export const FULL_SHARE = 0.02;
+export const KEY_SHARE = 0.01;
+/** reward multiplier for damage dealt in a fight */
+export function rewardShare(myDamage: number, hpMax: number, full = FULL_SHARE): number {
+  if (!(myDamage > 0) || !(hpMax > 0)) return 0;
+  return Math.min(1, myDamage / (hpMax * full));
+}
 
 /** How many keys of the previous boss open this one. */
 export function keysNeeded(b: BossDef, defaultKeys: number): number {
