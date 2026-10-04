@@ -111,6 +111,9 @@ export async function startFight(ctx: Ctx, bossId: string) {
     "INSERT INTO fights (player_id, boss_id, hp_max, start_total, start_seq, started_at, ends_at, day) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id",
     [ctx.pid, def.id, hpMax, boss.damage_total, boss.last_seq, new Date(ctx.now), new Date(ctx.now + ctx.cfg.fight.hours * 3600_000), day],
   );
+  // every new fight starts with rested hands: permanent weapons (the fist) are ready again
+  const permanent = WEAPONS.filter((x) => x.weapon?.kind === "permanent").map((x) => x.id);
+  await ctx.q.query("DELETE FROM cooldowns WHERE player_id=$1 AND item_id = ANY($2)", [ctx.pid, permanent]);
   return { fightId: f.id, bossId: def.id };
 }
 

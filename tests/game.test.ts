@@ -191,6 +191,16 @@ describe("boss fights: personal fights, shared damage", () => {
     expect(await qty(db, p, "mouse")).toBe(1);
   });
 
+  it("a new fight resets the fist cooldown", async () => {
+    const p = await newPlayer(db);
+    await startDatsik(p);
+    await hit(p, "fist");
+    await expect(hit(p, "fist", T0 + M)).rejects.toMatchObject({ code: "cooldown" });
+    await act(db, p, "fight_flee", {}, T0 + 2 * M);
+    await act(db, p, "fight_start", { boss: "datsik" }, T0 + 3 * M);
+    expect((await hit(p, "fist", T0 + 4 * M)).result).toMatchObject({ damage: 10 });
+  });
+
   it("20 players attacking at the same moment: no damage is lost", async () => {
     await setBossHp({ datsik: 5000 });
     const ps = await Promise.all(Array.from({ length: 20 }, () => newPlayer(db)));
