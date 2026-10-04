@@ -14,6 +14,10 @@ import { Emblem } from "../art/emblems.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { Icon } from "../art/icons.tsx";
 import { HeroRig } from "../art/rig.tsx";
+import { HomeScene } from "../art/home-scene.tsx";
+import { ROOM_BACKDROP } from "../../content/home-scene.ts";
+import { ROOM_DEFS } from "../../content/home.ts";
+import { BadgesPanel, type AchRow } from "../badges.tsx";
 import type { Look } from "../../content/home.ts";
 import { clock, dateRu, full, money, short } from "../format.ts";
 
@@ -27,7 +31,12 @@ interface Profile {
   clan: { id: number; name: string; tag: string; emblem: string; color: string } | null;
   equipped: Record<string, string>;
   body: Look;
+  frame: string | null;
+  achievements: AchRow[];
+  room: { id: string; levels: Record<string, number>; decor: Record<string, number> };
 }
+
+const FRAME_TITLE: Record<string, string> = { gold: "1 место прошлой недели", silver: "2 место прошлой недели", bronze: "3 место прошлой недели", top: "Топ-10 прошлой недели" };
 
 function RenameWindow({ current, onClose, onDone }: { current: string; onClose: () => void; onDone: () => void }) {
   const { state, act, busy } = useGame();
@@ -73,9 +82,11 @@ export function ProfileScreen() {
   const [err, setErr] = useState<string | null>(null);
   const [renaming, setRenaming] = useState(false);
   const id = q.get("id");
+  const [tick, setTick] = useState(0);
+  const reload = () => setTick((t) => t + 1);
   useEffect(() => {
     api.get<Profile>(`/api/profile${id ? `?id=${encodeURIComponent(id)}` : ""}`).then(setP).catch((e) => setErr(e.message));
-  }, [id, state?.player.xp, state?.player.name]);
+  }, [id, state?.player.xp, state?.player.name, tick]);
   if (err) return <Empty>{err}</Empty>;
   if (!p) return null;
   const s = p.stats;
@@ -88,7 +99,7 @@ export function ProfileScreen() {
         <div className="profile-char"><HeroRig size={150} still look={p.body} worn={p.equipped} /></div>
         <div className="col grow" style={{ gap: 6 }}>
           <div className="row">
-            <Avatar name={p.name} photo={p.photo} size={44} />
+            <Avatar name={p.name} photo={p.photo} size={44} frame={p.frame} />
             <div className="grow" style={{ minWidth: 0 }}>
               <div className="row" style={{ gap: 6 }}>
                 <b className="display ellipsis" style={{ fontSize: 18 }}>{p.name}</b>
@@ -101,7 +112,10 @@ export function ProfileScreen() {
               {p.username && (
                 <a className="tg-link tiny" href={`https://t.me/${encodeURIComponent(p.username)}`} target="_blank" rel="noopener noreferrer">@{p.username}</a>
               )}
-              <div><span className="lvl">LVL {p.level}</span></div>
+              <div className="row" style={{ gap: 6, flexWrap: "wrap" }}>
+                <span className="lvl">LVL {p.level}</span>
+                {p.frame && <span className={`chip frame-chip frame-${p.frame}`}><Icon name="trophy" size={14} />{FRAME_TITLE[p.frame]}</span>}
+              </div>
             </div>
           </div>
           <div className="row" style={{ gap: 6 }} title="Авторитет"><Icon name="xp" size={22} /><div className="grow"><Bar value={p.levelXp} max={p.levelNeed || 1} tone="violet" label={p.levelNeed ? `${full(p.levelXp)} / ${full(p.levelNeed)}` : "максимальный уровень"} /></div></div>
@@ -125,6 +139,18 @@ export function ProfileScreen() {
           {p.energy !== null && <div className="row small" style={{ marginTop: 8 }}><Icon name="energy" size={18} /> Энергия: <b>{p.energy}</b></div>}
         </div>
       )}
+
+      <BadgesPanel rows={p.achievements} self={p.self} onClaimed={reload} />
+
+      <div className="panel">
+        <div className="row" style={{ justifyContent: "space-between", marginBottom: 8 }}>
+          <span className="small muted">КОМНАТА</span>
+          <span className="tiny muted">{ROOM_DEFS.find((r) => r.id === p.room.id)?.name ?? ""}</span>
+        </div>
+        <div className="profile-room" style={{ backgroundImage: `url(/assets/home/${ROOM_BACKDROP[p.room.id] ?? ROOM_BACKDROP.basic}.webp)` }}>
+          <HomeScene room={p.room.id} look={p.body} worn={p.equipped} levels={p.room.levels} decor={p.room.decor} still />
+        </div>
+      </div>
 
       {p.self && <SettingsPanel />}
 
@@ -167,13 +193,6 @@ export function ProfileScreen() {
         </div>
       </div>
 
-      <div className="panel">
-        <div className="small muted" style={{ marginBottom: 8 }}>ДОСТИЖЕНИЯ</div>
-        <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
-          {Array.from({ length: 6 }, (_, i) => <span key={i} className="ach-slot"><Icon name="lock" size={24} /></span>)}
-        </div>
-        <div className="tiny muted" style={{ marginTop: 6 }}>Появятся в следующих обновлениях.</div>
-      </div>
       {renaming && <RenameWindow current={p.name} onClose={() => setRenaming(false)} onDone={() => undefined} />}
     </div>
   );

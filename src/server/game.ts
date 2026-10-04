@@ -13,6 +13,8 @@ import * as extras from "./systems/extras.ts";
 import * as home from "./systems/home.ts";
 import * as quests from "./systems/quests.ts";
 import * as notify from "./systems/notify.ts";
+import * as rating from "./systems/rating.ts";
+import * as achievements from "./systems/achievements.ts";
 import { taskById } from "../content/locations.ts";
 import { weaponById } from "../content/items.ts";
 import { gameState } from "./systems/state.ts";
@@ -45,7 +47,7 @@ export const ACTIONS = [
   "clan_create", "clan_join", "clan_leave", "clan_kick",
   "daily_claim", "sell", "rename", "slots_spin",
   "equipment_upgrade", "pc_upgrade", "room_buy", "room_set", "look_set", "decor_set", "help_seen",
-  "quest_claim", "quest_chest", "notify_set",
+  "quest_claim", "quest_chest", "notify_set", "achievement_claim", "prize_claim",
 ] as const;
 export type ActionType = (typeof ACTIONS)[number];
 
@@ -61,6 +63,7 @@ async function afterAction(ctx: Ctx, type: ActionType, result: unknown) {
   switch (type) {
     case "attack": {
       await quests.questTick(ctx, "damage", Number(r.damage) || 0);
+      await rating.addWeeklyDamage(ctx, Number(r.damage) || 0);
       await quests.questTick(ctx, "hits", 1);
       // the fist rests an hour: remind when it is ready again
       if (typeof r.readyAt === "number" && weaponById(String(r.weapon))?.weapon.kind === "permanent") {
@@ -117,6 +120,8 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "quest_claim": return quests.claimQuest(ctx, str(body.id, "id", 40));
     case "quest_chest": return quests.openQuestChest(ctx);
     case "notify_set": return notify.setNotify(ctx, body.on === true, body.granted === true);
+    case "achievement_claim": return achievements.claimAchievement(ctx, str(body.id, "id", 40));
+    case "prize_claim": return rating.claimPrize(ctx, num(body.id, "id"));
     default: throw new GameError("bad_action", "Неизвестное действие");
   }
 }

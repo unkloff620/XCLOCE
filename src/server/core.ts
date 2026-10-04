@@ -38,6 +38,15 @@ export function nextMoscowMidnight(now: number): number {
   return Date.parse(d + "T00:00:00Z") + 24 * 3600_000 - 3 * 3600_000;
 }
 
+/** Monday 00:00 MSK of the week `now` is in (ms), and its key "YYYY-MM-DD" (the Monday's date). */
+export function weekStart(now: number): number {
+  const msk = new Date(now + 3 * 3600_000);
+  const dow = (msk.getUTCDay() + 6) % 7; // Monday = 0
+  return Date.UTC(msk.getUTCFullYear(), msk.getUTCMonth(), msk.getUTCDate() - dow) - 3 * 3600_000;
+}
+export const weekKey = (now: number) => moscowDay(weekStart(now));
+export const nextWeekAt = (now: number) => weekStart(now) + 7 * 24 * 3600_000;
+
 // ---------------- energy ----------------
 /** Current energy from the stored value. Above the regular maximum nothing regenerates and nothing is cut. */
 export function energyNow(stored: number, at: number, now: number, cfg: Config["energy"]): { energy: number; at: number; nextIn: number } {

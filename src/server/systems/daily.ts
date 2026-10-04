@@ -34,8 +34,9 @@ export async function claimDaily(ctx: Ctx) {
   if (!s.available) throw new GameError("daily_taken", "Сегодняшняя награда уже получена — приходи завтра");
   const reward = ctx.cfg.daily[s.day - 1];
   await ctx.q.query(
-    `INSERT INTO daily_login (player_id, last_day, streak, total) VALUES ($1,$2,$3,1)
-     ON CONFLICT (player_id) DO UPDATE SET last_day=EXCLUDED.last_day, streak=EXCLUDED.streak, total=daily_login.total+1`,
+    `INSERT INTO daily_login (player_id, last_day, streak, total, best_streak) VALUES ($1,$2,$3,1,$3)
+     ON CONFLICT (player_id) DO UPDATE SET last_day=EXCLUDED.last_day, streak=EXCLUDED.streak, total=daily_login.total+1,
+       best_streak=GREATEST(daily_login.best_streak, EXCLUDED.streak)`,
     [ctx.pid, moscowDay(ctx.now), s.nextStreak],
   );
   const got = await grantReward(ctx, reward, `daily:${s.day}`);

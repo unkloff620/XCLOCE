@@ -314,4 +314,52 @@ ALTER TABLE players ADD COLUMN IF NOT EXISTS notify_on BOOLEAN NOT NULL DEFAULT 
 ALTER TABLE players ADD COLUMN IF NOT EXISTS pm_blocked BOOLEAN NOT NULL DEFAULT false;
 `,
   },
+  {
+    // weekly rating (damage per Moscow week), its results and prizes; achievements; the best login streak
+    id: "v2-013-rating-achievements",
+    sql: `
+CREATE TABLE IF NOT EXISTS weekly_stats (
+  week TEXT NOT NULL,
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  damage BIGINT NOT NULL DEFAULT 0,
+  hits INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (week, player_id)
+);
+CREATE INDEX IF NOT EXISTS weekly_stats_rank ON weekly_stats (week, damage DESC);
+CREATE TABLE IF NOT EXISTS week_results (
+  week TEXT NOT NULL,
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  place INT NOT NULL,
+  damage BIGINT NOT NULL,
+  PRIMARY KEY (week, player_id)
+);
+CREATE TABLE IF NOT EXISTS weeks_settled (week TEXT PRIMARY KEY, at TIMESTAMPTZ NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS prizes (
+  id SERIAL PRIMARY KEY,
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  reward JSONB NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  claimed_at TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS prizes_open ON prizes (player_id) WHERE claimed_at IS NULL;
+CREATE TABLE IF NOT EXISTS achievements (
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  id TEXT NOT NULL,
+  claimed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (player_id, id)
+);
+ALTER TABLE daily_login ADD COLUMN IF NOT EXISTS best_streak INT NOT NULL DEFAULT 0;
+UPDATE daily_login SET best_streak = GREATEST(best_streak, streak);
+-- this week's damage so far counts; the week before is closed without prizes (the rating did not exist yet)
+INSERT INTO weekly_stats (week, player_id, damage, hits)
+SELECT to_char(date_trunc('week', (created_at AT TIME ZONE 'UTC') + interval '3 hours'), 'YYYY-MM-DD'), player_id, SUM(damage), COUNT(*)
+FROM boss_hits
+WHERE date_trunc('week', (created_at AT TIME ZONE 'UTC') + interval '3 hours') = date_trunc('week', (now() AT TIME ZONE 'UTC') + interval '3 hours')
+GROUP BY 1, 2
+ON CONFLICT (week, player_id) DO NOTHING;
+INSERT INTO weeks_settled (week) VALUES (to_char(date_trunc('week', (now() AT TIME ZONE 'UTC') + interval '3 hours') - interval '7 days', 'YYYY-MM-DD'))
+ON CONFLICT DO NOTHING;
+`,
+  },
 ];

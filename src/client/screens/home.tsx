@@ -233,6 +233,7 @@ export function HomeScreen() {
             <HelpList title="Кнопки слева" rows={[
               { key: "w", icon: <Icon name="shirt" size={44} />, name: "Гардероб", hint: "Одежда и внешность: причёска, цвет волос и кожи." },
               { key: "b", icon: <Icon name="gift" size={44} />, name: "Бонус", hint: "Награда за ежедневный вход. Заходи каждый день подряд — награда растёт, на 7-й день редкое оружие. Пропустишь день — серия сгорит." },
+              { key: "r", icon: <Icon name="trophy" size={44} />, name: "Рейтинг", hint: "Топ по урону за неделю, по авторитету и кланам. Топ-10 недели получает призы, лидеры — рамку на карточке." },
               { key: "q", icon: <Icon name="map" size={44} />, name: "Задания дня", hint: "Три задания на сутки: бой, энергия, покупки. Выполнишь все — открой сундук. Там же включаются напоминания в Telegram." },
               { key: "t", icon: <Icon name="bolt" size={44} />, name: "Обстановка", hint: "Всё для рабочего места: стол, мониторы, кресло, подсветка. Шанс и сила крита." },
             ]} />
@@ -265,6 +266,10 @@ export function HomeScreen() {
           <button className="icon-btn-art" style={{ ["--c" as string]: "#3fd2ff" }} onClick={() => setEquip(null)} aria-label="Обстановка" title="Обстановка">
             <Icon name="bolt" size={58} />
           </button>
+          <Link href="/rating" className={`icon-btn-art ${state.prizes.length ? "glow" : ""}`} style={{ ["--c" as string]: "#ffcc33" }} aria-label="Рейтинг" title="Рейтинг">
+            <Icon name="trophy" size={54} />
+            {state.prizes.length > 0 && <i className="side-dot" />}
+          </Link>
           {f && fb && !fightOpen && (
             <button className="fight-mini" style={{ ["--acc" as string]: fb.theme.accent, ["--hp" as string]: hpPct }} onClick={() => setFightOpen(true)} aria-label={`Идёт бой: ${fb.name}`} title="Идёт бой">
               <BossRing boss={fb} size={58} />

@@ -14,6 +14,7 @@ import { telegramBack } from "./telegram.ts";
 import { ResultWindow } from "./screens/result.tsx";
 import { LevelUpOverlay } from "./levelup.tsx";
 import { Tutorial } from "./tutorial.tsx";
+import { PrizeWindow } from "./prizes.tsx";
 import { EnergyWindow } from "./screens/energy.tsx";
 import { NAV_TABS } from "../content/nav.ts";
 import { isLoaded, preload, sectionOfRoute, urlsFor, type LookLite } from "./preload.ts";
@@ -70,6 +71,7 @@ function Hud() {
       <div className="hud-top">
         <Link href="/profile" className="hud-me" aria-label="Профиль">
           <Avatar name={p.name} photo={p.photo} size={38} />
+          {state.achievementsReady > 0 && <i className="side-dot hud-dot" title="Есть награда за достижение" />}
           <div className="grow" style={{ display: "flex", flexDirection: "column", gap: 3 }}>
             <div className="row" style={{ gap: 6 }}>
               <span className="lvl">LVL {p.level}</span>
@@ -217,7 +219,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const { auth, authInfo, error, state, retryAuth } = useGame();
   const path = usePathname();
   const router = useRouter();
-  const deep = path.split("/").filter(Boolean).length > 1 || ["/locations", "/shop", "/profile"].includes(path);
+  const deep = path.split("/").filter(Boolean).length > 1 || ["/locations", "/shop", "/profile", "/rating"].includes(path);
   useEffect(() => telegramBack(deep, () => router.back()), [deep, router]);
   const body = state?.look.body;
   const look = useMemo<LookLite | null>(() => (body ? { hair: body.hair, hairColor: body.hairColor, skin: body.skin } : null), [body?.hair, body?.hairColor, body?.skin]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -245,6 +247,7 @@ export function Shell({ children }: { children: ReactNode }) {
             <Nav />
             <ResultWindow />
             <Tutorial />
+            <PrizeWindow />
             <LevelUpOverlay />
           </>
         )}

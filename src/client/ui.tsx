@@ -37,10 +37,11 @@ export function Modal({ title, onClose, children, wide }: { title?: ReactNode; o
   return typeof document === "undefined" ? box : createPortal(box, document.body);
 }
 
-export function Avatar({ name, photo, size = 36 }: { name: string; photo?: string | null; size?: number }) {
+/** Player picture; `frame` — last week's place in the damage rating (gold/silver/bronze/top-10). */
+export function Avatar({ name, photo, size = 36, frame }: { name: string; photo?: string | null; size?: number; frame?: string | null }) {
   const letters = name.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
   return (
-    <span className="avatar" style={{ width: size, height: size, fontSize: size * 0.4, borderRadius: size * 0.32 }}>
+    <span className={`avatar ${frame ? `frame-${frame}` : ""}`} style={{ width: size, height: size, fontSize: size * 0.4, borderRadius: size * 0.32 }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       {photo ? <img src={photo} alt="" referrerPolicy="no-referrer" /> : letters || "?"}
     </span>

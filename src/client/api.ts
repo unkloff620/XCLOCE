@@ -41,6 +41,10 @@ export interface GameState {
   };
   /** Telegram reminders: on — the player's switch; blocked — the bot may not write to them yet */
   notify: { on: boolean; blocked: boolean; available: boolean };
+  /** weekly rating prizes waiting to be collected */
+  prizes: { id: number; title: string; reward: Reward }[];
+  /** badges reached but not collected */
+  achievementsReady: number;
   slots: { left: number; max: number; nextAt: number | null };
   rename: { price: { currency: Currency; amount: number }; nextAt: number | null; min: number; max: number };
   /** inventory sale prices in RUB */

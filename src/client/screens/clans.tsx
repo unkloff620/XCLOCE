@@ -142,11 +142,13 @@ export function ClanScreen({ id }: { id: number }) {
       <div className="col" style={{ gap: 6 }}>
         {c.members.map((m) => (
           <div key={m.id} className="clan-row">
-            <Avatar name={m.name} photo={m.photo} size={36} />
-            <div className="grow" style={{ minWidth: 0 }}>
-              <b className="ellipsis" style={{ display: "block" }}>{m.name}</b>
-              <span className="tiny muted">LVL {m.level}{m.role === "leader" ? " · лидер" : ""}</span>
-            </div>
+            <Link href={`/profile?id=${m.id}`} className="row grow" style={{ minWidth: 0, gap: 10, color: "inherit" }}>
+              <Avatar name={m.name} photo={m.photo} size={36} />
+              <div className="grow" style={{ minWidth: 0 }}>
+                <b className="ellipsis" style={{ display: "block" }}>{m.name}</b>
+                <span className="tiny muted">LVL {m.level}{m.role === "leader" ? " · лидер" : ""}</span>
+              </div>
+            </Link>
             <b className="num">{short(m.damage)}</b>
             {leader && m.role !== "leader" && <button className="btn sm red" onClick={() => act("clan_kick", { playerId: m.id }, "Исключён")}>×</button>}
           </div>

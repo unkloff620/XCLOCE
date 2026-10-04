@@ -279,11 +279,11 @@ export function BossScreen({ id }: { id: string }) {
               topRows.length ? (
                 <div className="col" style={{ gap: 4 }}>
                   {topRows.map((t, i) => (
-                    <div key={t.playerId} className={`top-row ${t.playerId === me ? "me" : ""}`}>
+                    <Link key={t.playerId} href={`/profile?id=${t.playerId}`} className={`top-row ${t.playerId === me ? "me" : ""}`}>
                       <span className="top-n display">{i + 1}</span>
                       <span className="grow ellipsis">{t.name}</span>
                       <b className="num">{short(t.damage)}</b>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               ) : <div className="muted small center">В этом бою ещё никто не бил. Будь первым.</div>

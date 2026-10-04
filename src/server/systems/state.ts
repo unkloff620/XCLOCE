@@ -14,6 +14,8 @@ import { homeView } from "./home.ts";
 import { tasksHint } from "./locations.ts";
 import { questsView } from "./quests.ts";
 import { notifyView, scheduleEnergy } from "./notify.ts";
+import { framesFor, prizesView, settleWeeks } from "./rating.ts";
+import { achievementsReady, achievementsView } from "./achievements.ts";
 
 /** Everything the HUD and the always-visible parts of the game need. Runs inside the player's transaction. */
 export async function gameState(ctx: Ctx) {
@@ -65,13 +67,18 @@ export async function gameState(ctx: Ctx) {
     daily: await dailyView(ctx.q, ctx.pid, ctx.now, ctx.cfg),
     quests: await questsView(ctx.q, ctx.pid, ctx.now),
     notify: await notifyView(ctx.q, ctx.pid),
+    prizes: await (async () => {
+      await settleWeeks(ctx.q, ctx.now);
+      return prizesView(ctx.q, ctx.pid);
+    })(),
+    achievementsReady: await achievementsReady(ctx.q, ctx.pid, ctx.cfg),
     slots: await slotsView(ctx.q, ctx.pid, ctx.now, ctx.cfg),
     rename: await renameView(ctx.q, ctx.pid, ctx.now, ctx.cfg),
     sell: ctx.cfg.sell,
   };
 }
 
-export async function profileView(q: Queryable, viewer: number, pid: number, cfg: Ctx["cfg"]) {
+export async function profileView(q: Queryable, viewer: number, pid: number, cfg: Ctx["cfg"], now = Date.now()) {
   const [p] = await q.query<PlayerRow & { last_day: string | null }>("SELECT * FROM players WHERE id=$1", [pid]);
   if (!p) throw new GameError("no_player", "Игрок не найден", 404);
   const [s] = await q.query<{ total_damage: number; weapons: Record<string, number>; task_steps: number; tasks_done: number; locations_done: number; yard_found: number; rewards_got: number }>(
@@ -107,5 +114,11 @@ export async function profileView(q: Queryable, viewer: number, pid: number, cfg
     clan: clan ?? null,
     equipped: app?.equipped ?? {},
     body: normalizeLook(app?.body),
+    frame: (await framesFor(q, [pid], now)).get(pid) ?? null,
+    achievements: await achievementsView(q, pid, cfg),
+    room: await (async () => {
+      const h = await homeView(q, pid);
+      return { id: h.room, levels: h.levels, decor: h.decor };
+    })(),
   };
 }
