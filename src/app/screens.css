@@ -674,3 +674,16 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .stage-opt { width: 54px; height: 54px; padding: 4px; border-radius: 12px; border: 2px solid var(--line); background: rgba(0, 0, 0, 0.3); cursor: pointer; }
 .stage-opt img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .stage-opt.on { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(255, 204, 51, 0.35); background: rgba(255, 204, 51, 0.12); }
+
+/* room arrows sit low, beside the room name, out of the way of the desk and the system unit */
+.fit-page .room-arrow { top: auto; bottom: calc(var(--bottom) - 10px); transform: none; }
+.fit-page .room-arrow:active { transform: translateY(2px); }
+.fit-page.has-fight .room-arrow { bottom: calc(var(--bottom) + 86px); }
+/* the running fight, folded: the boss's round photo with a live dot and the time left */
+.fight-mini { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; width: 62px; padding: 0; border: 0; background: none; cursor: pointer; }
+.fight-mini-photo { display: block; width: 54px; height: 54px; border-radius: 50%; box-shadow: 0 0 0 3px var(--acc, var(--red)), 0 3px 0 4px var(--line); animation: fight-mini 1.6s ease-in-out infinite; overflow: hidden; }
+.fight-mini .live-dot { position: absolute; top: 0; right: 4px; }
+.fight-mini-time { font-size: 10px; font-weight: 800; padding: 1px 6px; border-radius: 8px; background: rgba(24, 15, 9, 0.85); border: 1.5px solid var(--line); color: var(--gold); }
+@keyframes fight-mini { 50% { box-shadow: 0 0 0 3px var(--acc, var(--red)), 0 3px 0 4px var(--line), 0 0 14px 3px var(--acc, var(--red)); } }
+.fight-now { position: relative; }
+.fight-now-fold { position: absolute; top: -10px; right: -6px; width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--line); background: var(--panel3); color: var(--ink); font-size: 16px; font-weight: 800; line-height: 1; cursor: pointer; display: grid; place-items: center; padding: 0; }

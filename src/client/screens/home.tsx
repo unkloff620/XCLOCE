@@ -152,6 +152,8 @@ export function HomeScreen() {
   const [daily, setDaily] = useState(false);
   const [equip, setEquip] = useState<string | null | false>(false);
   const [pc, setPc] = useState(false);
+  // the running fight sits folded in the left column; a tap unfolds the full card
+  const [fightOpen, setFightOpen] = useState(false);
   // room browser: arrows flip through rooms; an owned room is switched to at once, a locked one is shown with "unlock"
   const [viewIdx, setViewIdx] = useState<number | null>(null);
   const dailyReady = !!state?.daily.available;
@@ -186,7 +188,7 @@ export function HomeScreen() {
   const f = state.fight;
   const fb = f ? bossById(f.bossId)! : null;
   return (
-    <div className={`fit-page ${f && fb ? "has-fight" : ""}`}>
+    <div className={`fit-page ${f && fb && fightOpen ? "has-fight" : ""}`}>
       <div className="room">
         <div className={`scene-backdrop ${owned ? "" : "locked"}`} style={{ backgroundImage: `url(/assets/home/${ROOM_BACKDROP[viewRoom.id] ?? ROOM_BACKDROP.basic}.webp)` }} />
         <div className={`room-view ${owned ? "" : "locked"}`}>
@@ -243,10 +245,17 @@ export function HomeScreen() {
           <button className="icon-btn-art" style={{ ["--c" as string]: "#3fd2ff" }} onClick={() => setEquip(null)} aria-label="Обстановка" title="Обстановка">
             <Icon name="bolt" size={58} />
           </button>
+          {f && fb && !fightOpen && (
+            <button className="fight-mini" style={{ ["--acc" as string]: fb.theme.accent }} onClick={() => setFightOpen(true)} aria-label={`Идёт бой: ${fb.name}`} title="Идёт бой">
+              <span className="fight-mini-photo"><BossPhoto boss={fb} round /></span>
+              <i className="live-dot" />
+              <span className="fight-mini-time num">{clock(f.endsAt - now)}</span>
+            </button>
+          )}
         </div>
       </div>
 
-      {f && fb && (
+      {f && fb && fightOpen && (
         <Link href={`/bosses/${fb.id}`} className="fight-now" style={{ ["--acc" as string]: fb.theme.accent }}>
           <div className="fight-now-photo"><BossPhoto boss={fb} round /></div>
           <div className="grow col" style={{ gap: 5, minWidth: 0 }}>
@@ -258,6 +267,8 @@ export function HomeScreen() {
             <Bar value={f.hp} max={f.hpMax} tone="red" label={`${full(f.hp)} / ${full(f.hpMax)} HP`} />
           </div>
           <span className="boss-go display">›</span>
+          <button className="fight-now-fold" aria-label="Свернуть" title="Свернуть"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setFightOpen(false); }}>×</button>
         </Link>
       )}
       {wardrobe && <Wardrobe onClose={() => setWardrobe(false)} />}
