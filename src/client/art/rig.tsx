@@ -7,6 +7,7 @@
  * Hair rides on the head bone; skin tone and hair colour come from `look` (pre-baked image variants).
  * Animations (CSS, see screens.css): breathing, looking around, tapping fingers on the knee.
  */
+import { ART_VER } from "../preload.ts";
 import type { ReactNode } from "react";
 import { createContext, useContext } from "react";
 import { RIG } from "./rig-data.ts";
@@ -36,7 +37,7 @@ function Wear({ slot }: { slot: string }) {
   const id = wornIn(useContext(WornCtx), slot);
   if (!id) return null;
   const f = WEARS[id];
-  return <image href={`/assets/hero/wear/${id}.webp?v=2`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
+  return <image href={`/assets/hero/wear/${id}.webp?v=${ART_VER.wear}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
 }
 
 const NO_SKIN = new Set<string>(["pupils", "brows", "eyes-closed"]);
@@ -46,7 +47,7 @@ function Img({ p }: { p: PartId }) {
   const skin = useContext(LookCtx).skin;
   // parts without skin (pupils, brows, closed eyes) have no tone variants; ?v=2 — the slimmer character
   const tinted = skin !== SKIN_ORIGINAL && !NO_SKIN.has(p);
-  const src = `${tinted ? `/assets/hero/skin-${skin}/${p}` : `/assets/hero/${p}`}.webp?v=3`;
+  const src = `${tinted ? `/assets/hero/skin-${skin}/${p}` : `/assets/hero/${p}`}.webp?v=${ART_VER.heroPart}`;
   return <image href={src} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" />;
 }
 
@@ -55,7 +56,7 @@ function Hair() {
   const hat = wornIn(useContext(WornCtx), "HEAD"); // hair is cut to fit under a hat
   if (!(look.hair in HAIR_FIT)) return null; // bald
   const f = HAIR_FIT[look.hair as HairId];
-  return <image href={`/assets/hero/hair/${look.hair}-${look.hairColor}${hat ? `-${hat}` : ""}.webp?v=4`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
+  return <image href={`/assets/hero/hair/${look.hair}-${look.hairColor}${hat ? `-${hat}` : ""}.webp?v=${ART_VER.hair}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
 }
 
 /** Eyes, pupils and brows over the head: blinking, glancing around, brows moving. */

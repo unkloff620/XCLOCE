@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { liveEnergy, tasksReady, useGame, useNow } from "./store.tsx";
 import { Icon, NAV_GLOW, NavIcon } from "./art/icons.tsx";
 import { Avatar } from "./ui.tsx";
@@ -13,6 +13,7 @@ import { telegramBack } from "./telegram.ts";
 import { ResultWindow } from "./screens/result.tsx";
 import { EnergyWindow } from "./screens/energy.tsx";
 import { NAV_TABS } from "../content/nav.ts";
+import { isLoaded, preload, sectionOfRoute, urlsFor, type LookLite } from "./preload.ts";
 
 const TABS = NAV_TABS;
 
@@ -92,19 +93,57 @@ function Nav() {
   );
 }
 
-function Loading({ text }: { text?: string }) {
+function Loading({ text, progress, overlay }: { text?: string; progress?: number; overlay?: boolean }) {
   // picked after mount: a random line during server rendering would not match the client (hydration error)
   const [line, setLine] = useState(LOADING_LINES[0]);
   useEffect(() => setLine(LOADING_LINES[Math.floor(Math.random() * LOADING_LINES.length)]), []);
   return (
-    <div className="loading">
+    <div className={`loading ${overlay ? "overlay" : ""}`}>
       <div>
         <div className="logo display">XCLOCE</div>
-        <div className="spinner" />
+        {progress === undefined ? (
+          <div className="spinner" />
+        ) : (
+          <div className="load-bar" aria-label="Загрузка"><i style={{ width: `${Math.round(progress * 100)}%` }} /><b className="num">{Math.round(progress * 100)}%</b></div>
+        )}
         <div className="muted">{text ?? line}</div>
       </div>
     </div>
   );
+}
+
+/** First entry: every picture of the game is downloaded before it shows (only the player's own hero variants). */
+function useArtReady(look: LookLite | null, active: boolean) {
+  const [progress, setProgress] = useState(0);
+  const [ready, setReady] = useState(false);
+  const started = useRef(false);
+  useEffect(() => {
+    if (!active || started.current) return;
+    started.current = true;
+    void preload(urlsFor("all", look), (n, total) => setProgress(total ? n / total : 1)).then(() => setReady(true));
+  }, [active, look]);
+  return { ready, progress };
+}
+
+/** A section (yard, shop, bosses…) opens only when its pictures are downloaded; until then a loading screen covers it. */
+function SectionGate({ route, look, children }: { route: string; look: LookLite | null; children: ReactNode }) {
+  const section = sectionOfRoute(route);
+  const urls = section ? urlsFor([section], look) : []; // hero and icons (core) were loaded on entry
+  const ok = isLoaded(urls);
+  const [progress, setProgress] = useState(0);
+  const [, setTick] = useState(0);
+  const key = urls.join("|");
+  useEffect(() => {
+    if (ok) return;
+    let alive = true;
+    setProgress(0);
+    void preload(urls, (n, total) => alive && setProgress(total ? n / total : 1)).then(() => alive && setTick((t) => t + 1));
+    return () => {
+      alive = false;
+    };
+  }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (ok) return <>{children}</>;
+  return <Loading overlay progress={progress} text="Загружаем локацию…" />;
 }
 
 /** Desktop browser in production: Telegram Login Widget. */
@@ -145,6 +184,9 @@ export function Shell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const deep = path.split("/").filter(Boolean).length > 1 || ["/locations", "/shop", "/profile"].includes(path);
   useEffect(() => telegramBack(deep, () => router.back()), [deep, router]);
+  const body = state?.look.body;
+  const look = useMemo<LookLite | null>(() => (body ? { hair: body.hair, hairColor: body.hairColor, skin: body.skin } : null), [body?.hair, body?.hairColor, body?.skin]); // eslint-disable-line react-hooks/exhaustive-deps
+  const art = useArtReady(look, auth === "ok" && !!state);
 
   return (
     <>
@@ -160,10 +202,11 @@ export function Shell({ children }: { children: ReactNode }) {
             </div>
           </div>
         )}
-        {auth === "ok" && state && (
+        {auth === "ok" && state && !art.ready && <Loading progress={art.progress} text="Загружаем картинки…" />}
+        {auth === "ok" && state && art.ready && (
           <>
             <Hud />
-            <main className="main">{children}</main>
+            <main className="main"><SectionGate route={path} look={look}>{children}</SectionGate></main>
             <Nav />
             <ResultWindow />
           </>

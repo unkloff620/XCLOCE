@@ -180,6 +180,10 @@ h2.h { margin: 4px 2px 8px; font-size: 16px; text-shadow: 0 2px 0 var(--line); }
 /* ---------- loading ---------- */
 .loading { min-height: 100dvh; display: grid; place-items: center; text-align: center; padding: 24px; }
 .loading .logo { font-size: 40px; text-shadow: 0 4px 0 var(--line), 0 0 30px rgba(141, 107, 255, 0.6); }
+.loading.overlay { position: fixed; inset: 0; z-index: 85; min-height: 0; background: var(--bg); }
+.load-bar { position: relative; width: 220px; height: 18px; margin: 18px auto 12px; border-radius: 10px; border: 2.5px solid var(--line); background: var(--panel); overflow: hidden; box-shadow: 0 3px 0 var(--line); }
+.load-bar i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(180deg, #ffd25a, #ff9f2e); transition: width 0.2s ease; }
+.load-bar b { position: relative; display: block; text-align: center; font-size: 11px; line-height: 13px; color: #1e1006; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4); }
 .spinner { width: 34px; height: 34px; border-radius: 50%; border: 4px solid var(--panel3); border-top-color: var(--green); animation: spin 0.8s linear infinite; margin: 16px auto; }
 
 .hud-xp { gap: 4px; font-size: 12px; line-height: 1; }

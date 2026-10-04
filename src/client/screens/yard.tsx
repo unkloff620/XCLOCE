@@ -13,6 +13,7 @@ import { SlotMachine } from "./slots.tsx";
 import { DriftingSky } from "../art/sky.tsx";
 import { Help, HelpList } from "../help.tsx";
 import { GainLine, Modal } from "../ui.tsx";
+import { ART_VER } from "../preload.ts";
 import type { Granted } from "../api.ts";
 
 const LINKS = [
@@ -80,7 +81,7 @@ export function YardScreen() {
           {/* the sky upside down under the ground: it shows through the transparent puddles */}
           <DriftingSky className="yard-reflect" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="yard-bg" src="/assets/yard/bg.webp?v=2" alt="" draggable={false} />
+          <img className="yard-bg" src={`/assets/yard/bg.webp?v=${ART_VER.yardBg}`} alt="" draggable={false} />
           <button className={`yard-slots ${state && state.slots.left > 0 ? "ready" : ""}`} onClick={() => setSlots(true)} aria-label="Игровой автомат 777">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/assets/yard/slot.webp" alt="" draggable={false} />

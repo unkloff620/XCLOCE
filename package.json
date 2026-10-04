@@ -4,6 +4,7 @@
   "private": true,
   "description": "XCLOCE 2.0 — корпоративная Telegram Mini App игра: боссы, локации, двор, магазин, кланы.",
   "scripts": {
+    "prebuild": "node tools/asset-manifest.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
