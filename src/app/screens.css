@@ -909,7 +909,9 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .badge-medal.tier-3 { background: radial-gradient(circle at 35% 25%, #fff3b0, #ffcc33 50%, #b06d00); }
 .badge-medal.tier-4 { background: radial-gradient(circle at 35% 25%, #e6fffb, #5ff0dc 50%, #13786c); }
 .badge-medal.tier-5 { background: radial-gradient(circle at 35% 25%, #fbeaff, #c07bff 50%, #5a1d9a); box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.5); }
-.badge-medal.locked { background: radial-gradient(circle at 35% 25%, #5a4c40, #2e2620 70%); }
+/* not earned yet: its tier colour, dimmed (no tier at all: plain grey) */
+.badge-medal.locked { filter: saturate(0.45) brightness(0.5) drop-shadow(0 3px 0 rgba(0, 0, 0, 0.6)); }
+.badge-medal.tier-0 { background: radial-gradient(circle at 35% 25%, #5a4c40, #2e2620 70%); filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.6)); }
 .badge-medal.locked > svg { filter: grayscale(1) brightness(0.55); opacity: 0.7; }
 .ach-bar { position: relative; width: 100%; height: 18px; border-radius: 9px; background: rgba(0, 0, 0, 0.35); border: 2px solid var(--line); overflow: hidden; }
 .ach-bar i { position: absolute; inset: 0 auto 0 0; width: var(--p); background: linear-gradient(180deg, #ffd25a, #ff9f2e); }
