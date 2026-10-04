@@ -18,6 +18,6 @@ export const SCENE_OBJECTS = {
 export const CHARACTER = { x: 130, y: 405, scale: 0.78 };
 
 /** Seat inside the rig canvas (under the hips). */
-export const SEAT = { x: 250, y: 640, w: 500, aspect: 1.2068 };
+export const SEAT = { x: 280, y: 670, w: 440, aspect: 1.5 }; // stretched taller: the seat hides under the shorts, the legs stand on the floor
 
 export const ROOM_BG: Record<string, string> = { basic: "room-basic", office: "room-basic", penthouse: "room-basic" };
