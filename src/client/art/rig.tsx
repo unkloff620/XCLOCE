@@ -1,7 +1,7 @@
 "use client";
 /*
  * Seated player character assembled from the artist's parts (public/assets/hero, built by tools/rig/build-rig.py).
- * Bones: torso → head, upper arms → forearms; legs are static. Each bone rotates around the joint where it overlaps
+ * Bones: torso (with the legs) → head, upper arms → forearms. The face (eyes, pupils, brows, closed eyes) rides on the head. Each bone rotates around the joint where it overlaps
  * its parent. Draw order matches the artwork: torso, legs over the shorts, arms over the torso, head on top.
  * Clothes (WEAR_FIT): shoes and pants over the legs, the shirt over the arms, the hat on the head bone.
  * Hair rides on the head bone; skin tone and hair colour come from `look` (pre-baked image variants).
@@ -37,10 +37,14 @@ function Wear({ slot }: { slot: string }) {
   return <image href={`/assets/hero/wear/${id}.webp`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
 }
 
+const NO_SKIN = new Set<string>(["pupils", "brows", "eyes-closed"]);
+
 function Img({ p }: { p: PartId }) {
   const r = RIG[p];
   const skin = useContext(LookCtx).skin;
-  const src = skin === SKIN_ORIGINAL ? `/assets/hero/${p}.webp` : `/assets/hero/skin-${skin}/${p}.webp`;
+  // parts without skin (pupils, brows, closed eyes) have no tone variants; ?v=2 — the slimmer character
+  const tinted = skin !== SKIN_ORIGINAL && !NO_SKIN.has(p);
+  const src = `${tinted ? `/assets/hero/skin-${skin}/${p}` : `/assets/hero/${p}`}.webp?v=2`;
   return <image href={src} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" />;
 }
 
@@ -49,7 +53,21 @@ function Hair() {
   const hat = wornIn(useContext(WornCtx), "HEAD"); // hair is cut to fit under a hat
   if (!(look.hair in HAIR_FIT)) return null; // bald
   const f = HAIR_FIT[look.hair as HairId];
-  return <image href={`/assets/hero/hair/${look.hair}-${look.hairColor}${hat ? `-${hat}` : ""}.webp?v=2`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
+  return <image href={`/assets/hero/hair/${look.hair}-${look.hairColor}${hat ? `-${hat}` : ""}.webp?v=3`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
+}
+
+/** Eyes, pupils and brows over the head: blinking, glancing around, brows moving. */
+function Face() {
+  return (
+    <>
+      <g className="rig-eyes-open">
+        <Img p="eyes" />
+        <g className="rig-pupils"><Img p="pupils" /></g>
+      </g>
+      <g className="rig-eyes-closed"><Img p="eyes-closed" /></g>
+      <g className="rig-brows"><Img p="brows" /></g>
+    </>
+  );
 }
 
 /** a bone: rotates around its joint (pivot) */
@@ -76,13 +94,10 @@ function RigBody({ seat, look, worn }: { seat?: boolean; look?: Look; worn?: Wor
       <ellipse cx="500" cy="1282" rx="400" ry="30" fill="rgba(0,0,0,0.3)" />
       {seat && <Seat />}
       {/* torso breathes; arms and head ride along in a second group with the same animation */}
+      {/* the torso layer carries the legs too; only the chest breathes visibly (origin at the hips) */}
       <g className="rig-breath">
         <Img p="torso" />
       </g>
-      <Img p="thighL" />
-      <Img p="thighR" />
-      <Img p="shinL" />
-      <Img p="shinR" />
       <Wear slot="SHOES" />
       <Wear slot="PANTS" />
       <g className="rig-breath">
@@ -94,6 +109,7 @@ function RigBody({ seat, look, worn }: { seat?: boolean; look?: Look; worn?: Wor
         </Bone>
         <Wear slot="SHIRT" />
         <Bone p="head" className="rig-head">
+          <Face />
           <Hair />
           <Wear slot="HEAD" />
         </Bone>

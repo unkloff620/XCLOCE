@@ -15,9 +15,9 @@ export const SCENE_OBJECTS = {
 } as const;
 
 /** Character placement: the 1000×1400 rig canvas scaled into the scene. */
-export const CHARACTER = { x: 130, y: 430, scale: 0.8 };
+export const CHARACTER = { x: 130, y: 405, scale: 0.78 };
 
 /** Seat inside the rig canvas (under the hips). */
-export const SEAT = { x: 320, y: 845, w: 360, aspect: 1.2068 };
+export const SEAT = { x: 250, y: 640, w: 500, aspect: 1.2068 };
 
 export const ROOM_BG: Record<string, string> = { basic: "room-basic", office: "room-basic", penthouse: "room-basic" };

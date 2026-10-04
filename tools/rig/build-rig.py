@@ -1,6 +1,8 @@
 """
 Builds the seated player rig from the artist's parts.
-Input: tools/rig/source/<part>.png — every part on the same 2000×2800 transparent canvas, in place.
+Input: tools/rig/source/v2/<part>.png — every part on the same 2000×2800 transparent canvas, in place
+(the torso layer includes the legs; face parts — eyes, pupils, brows, eyes-closed — ride on the head).
+The first, broader character is kept in tools/rig/source/v1/.
 Output: public/assets/hero/<part>.webp (trimmed, half size) + src/client/art/rig-data.ts (positions, pivots).
 Pivots are found automatically where a child part overlaps its parent.
 """
@@ -11,13 +13,12 @@ import cv2
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
-SRC = os.path.join(HERE, "source")
+SRC = os.path.join(HERE, "source", "v2")
 OUT = os.path.join(ROOT, "public", "assets", "hero")
 SCALE = 0.5
-PARTS = ["torso", "head", "armUL", "armUR", "foreL", "foreR", "thighL", "thighR", "shinL", "shinR"]
+PARTS = ["torso", "head", "armUL", "armUR", "foreL", "foreR", "eyes", "pupils", "brows", "eyes-closed"]
 JOINTS = {  # child: parent
     "head": "torso", "armUL": "torso", "armUR": "torso", "foreL": "armUL", "foreR": "armUR",
-    "thighL": "torso", "thighR": "torso", "shinL": "thighL", "shinR": "thighR",
 }
 os.makedirs(OUT, exist_ok=True)
 data, masks = {}, {}
@@ -28,7 +29,7 @@ for p in PARTS:
     # remove stray specks: keep components larger than 400 px
     n, lab, st, _ = cv2.connectedComponentsWithStats((a > 0).astype(np.uint8))
     for i in range(1, n):
-        if st[i][4] < 400: a[lab == i] = 0
+        if st[i][4] < (20 if p in ("pupils", "eyes-closed", "brows", "eyes") else 400): a[lab == i] = 0
     im[:, :, 3] = a
     im[a == 0, :3] = 0
     masks[p] = a > 128

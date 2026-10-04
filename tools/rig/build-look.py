@@ -21,11 +21,13 @@ SRC = os.path.join(HERE, "source")
 OUT = os.path.join(ROOT, "public", "assets", "hero")
 RIG_SCALE = 0.5
 HAIR_STYLES = ["sidepart", "slick", "shaggy", "spiky"]
-HAIR_FIT = (0.46, 751.6, 40)  # template → 2000×2800 source canvas: scale, x, y (fitted by eye on the head)
+HAIR_FIT = (0.46, 751.6, 40)  # template → 2000×2800 source canvas of the v1 head: scale, x, y (fitted by eye)
+# v1 head → v2 head on the same canvas (OpenCV ECC on the head silhouettes); hair is moved with the head
+HEAD_WARP = np.array([[1.03917, 0.00046, -78.873], [0.00242, 1.02046, -74.156]], np.float32)
 HAIR_COLORS = ["#4a2c1a", "#1d1a24", "#c9822f", "#f0d27a", "#b8401f", "#8d6bff", "#3fd2ff", "#e8e8f0"]
 SKIN_TONES = ["#f8d5b4", "#fcb477", "#dda57a", "#b97a4e", "#8a5534", "#5e3a24"]
 SKIN_ORIGINAL = 1
-PARTS = ["torso", "head", "armUL", "armUR", "foreL", "foreR", "thighL", "thighR", "shinL", "shinR"]
+PARTS = ["torso", "head", "armUL", "armUR", "foreL", "foreR", "eyes"]  # parts with skin (the eyelids too)
 
 
 def lab(rgb):  # uint8 rgb (..., 3) → float LAB (L 0..100)
@@ -63,7 +65,8 @@ def hair_recolor(im, target, ref):
 
 
 # ---------------- clothes ----------------
-WEAR_SLOT = {"tee-white": "SHIRT", "tee-pump": "SHIRT", "jeans": "PANTS", "shorts-remote": "PANTS", "sneakers": "SHOES", "cap-moon": "HEAD"}
+# clothes were drawn for the v1 body (tools/rig/source/wear); they come back once redrawn for the v2 body
+WEAR_SLOT = {}
 wear, hat_alpha = {}, {}
 for item, slot in WEAR_SLOT.items():
     a = np.array(Image.open(os.path.join(SRC, "wear", item + ".png")).convert("RGBA"))
@@ -107,11 +110,18 @@ for style in HAIR_STYLES:
     a[a[:, :, 3] < 30] = 0
     ys, xs = np.nonzero(a[:, :, 3])
     x0, y0, x1, y1 = xs.min() - 6, ys.min() - 6, xs.max() + 7, ys.max() + 7
-    crop = a[y0:y1, x0:x1]
-    f = s * RIG_SCALE  # template px → rig px
-    w, h = round(crop.shape[1] * f), round(crop.shape[0] * f)
-    small = np.array(Image.fromarray(crop).resize((w, h), Image.LANCZOS))
-    fit[style] = {"x": round((tx * RIG_SCALE) + x0 * f, 1), "y": round((ty * RIG_SCALE) + y0 * f, 1), "w": w, "h": h}
+    # template → v1 canvas → v2 head (HEAD_WARP) → half-size rig canvas, then trimmed
+    T = np.array([[s, 0, tx], [0, s, ty], [0, 0, 1]], np.float32)
+    M = (RIG_SCALE * (np.vstack([HEAD_WARP, [0, 0, 1]]) @ T))[:2].astype(np.float32)
+    PAD = 120  # hair may rise above the top of the rig canvas
+    M[1, 2] += PAD
+    full = cv2.warpAffine(a, M, (1000, 1400 + PAD), flags=cv2.INTER_AREA, borderValue=(0, 0, 0, 0))
+    ys2, xs2 = np.nonzero(full[:, :, 3] > 8)
+    X0, Y0, X1, Y1 = max(0, xs2.min() - 2), max(0, ys2.min() - 2), xs2.max() + 3, ys2.max() + 3
+    small = np.ascontiguousarray(full[Y0:Y1, X0:X1])
+    f = s * RIG_SCALE
+    w, h = small.shape[1], small.shape[0]
+    fit[style] = {"x": float(X0), "y": float(Y0 - PAD), "w": int(w), "h": int(h)}
     body = small[:, :, 3] > 200
     Lb = lab(small[:, :, :3])[body]
     ref = np.median(Lb[Lb[:, 0] > 30], axis=0)

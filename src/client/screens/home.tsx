@@ -128,7 +128,7 @@ function Wardrobe({ onClose }: { onClose: () => void }) {
             <div className="wd-center"><HeroRig size={220} still look={state.look.body} worn={eq} /></div>
             <div className="wd-side">{RIGHT_SLOTS.map(box)}</div>
           </div>
-          <p className="tiny muted center" style={{ margin: "10px 0 0" }}>Нажми на ячейку, чтобы выбрать вещь. Вещи без рисунка пока не видны на персонаже.</p>
+          <p className="tiny muted center" style={{ margin: "10px 0 0" }}>Нажми на ячейку, чтобы выбрать вещь. Одежду перерисовываем под нового персонажа — пока она не видна на нём.</p>
         </>
       ) : (
         <div className="look-edit">
