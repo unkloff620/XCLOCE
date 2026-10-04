@@ -120,6 +120,7 @@ export const ASSET_FILES: string[] = [
  "/assets/hero/wear/tee-white.webp",
  "/assets/home/chair-1.webp",
  "/assets/home/chair-2.webp",
+ "/assets/home/chair-3.webp",
  "/assets/home/desk-001.webp",
  "/assets/home/desk-002.webp",
  "/assets/home/desk-003.webp",

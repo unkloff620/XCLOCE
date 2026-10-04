@@ -32,11 +32,11 @@ function Hot({ id, onPick }: { id: keyof typeof SCENE_HOT; onPick: (equipment: s
   );
 }
 
-export function HomeScene({ room = "basic", onPick, still, look, worn, levels = {} }: { room?: string; onPick?: (equipment: string) => void; still?: boolean; look?: Look; worn?: Worn; levels?: Record<string, number> }) {
+export function HomeScene({ room = "basic", onPick, still, look, worn, levels = {}, decor = {} }: { room?: string; onPick?: (equipment: string) => void; still?: boolean; look?: Look; worn?: Worn; levels?: Record<string, number>; decor?: Record<string, number> }) {
   const bg = ROOM_BG[room] ?? ROOM_BG.basic;
   const sky = ROOM_SKY[room];
-  const desk = stageOf("desk", levels).stage?.art ?? "desk-001";
-  const monitors = stageOf("monitor2", levels).level; // 0: old CRT on the right, 1: flat on the right, 2: + left, 3: + middle
+  const desk = stageOf("desk", levels, decor).stage?.art ?? "desk-001";
+  const monitors = stageOf("monitor2", levels, decor).level; // 0: old CRT on the right, 1: flat on the right, 2: + left, 3: + middle
   const lights = ROOM_LIGHTS[room] ?? [];
   return (
     <svg viewBox={`0 0 ${SCENE.w} ${SCENE.h}`} width="100%" style={{ display: "block" }}>
@@ -71,7 +71,7 @@ export function HomeScene({ room = "basic", onPick, still, look, worn, levels = 
       {monitors >= 3 && <Obj id="monitorCenter" art="monitor-center" />}
       {monitors >= 2 && <Obj id="monitorLeft" art="monitor-left" />}
       {monitors >= 1 ? <Obj id="monitorRight" art="monitor-right" /> : <Obj id="monitorOld" art="monitor-1" />}
-      <RigViewport x={CHARACTER.x} y={CHARACTER.y} scale={CHARACTER.scale} seat={stageOf("chair", levels).level} still={still} look={look} worn={worn} />
+      <RigViewport x={CHARACTER.x} y={CHARACTER.y} scale={CHARACTER.scale} seat={stageOf("chair", levels, decor).level} still={still} look={look} worn={worn} />
       {onPick && <Hot id="monitors" onPick={onPick} />}
       {onPick && <Hot id="pc" onPick={onPick} />}
     </svg>

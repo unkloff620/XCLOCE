@@ -280,4 +280,11 @@ DELETE FROM inventory WHERE item_id LIKE 'desk-%';
 UPDATE appearance SET equipped = equipped - 'DESK';
 `,
   },
+  {
+    // the stage of a room thing that stands in the room, chosen among the owned ones (chair: stool / office / gaming / throne)
+    id: "v2-011-decor",
+    sql: `
+ALTER TABLE appearance ADD COLUMN IF NOT EXISTS decor JSONB NOT NULL DEFAULT '{}'::jsonb;
+`,
+  },
 ];

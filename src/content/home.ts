@@ -66,12 +66,11 @@ export const EQUIPMENT: EquipmentDef[] = [
       { price: { currency: "USD", amount: 25 }, bonus: { critChance: 0.04 } },
       { price: { currency: "SOL", amount: 0.12 }, bonus: { critChance: 0.07 } },
     ],
-    // level 3 shows the level-2 chair until its own art is drawn
     stages: [
       { name: "Табуретка", art: "seat-1" },
       { name: "Офисное кресло", art: "chair-1" },
       { name: "Геймерское кресло", art: "chair-2" },
-      { name: "Трон трейдера", art: "chair-2" },
+      { name: "Трон трейдера", art: "chair-3" },
     ],
   },
   {
@@ -114,10 +113,12 @@ export const ROOM_DEFS: RoomDef[] = [
 ];
 
 export const equipmentById = (id: string) => EQUIPMENT.find((e) => e.id === id);
-/** what stands in the room at the player's level of this equipment */
-export const stageOf = (id: string, levels: Record<string, number>) => {
+/** what stands in the room: the chosen owned stage (decor), else the latest bought one */
+export const stageOf = (id: string, levels: Record<string, number>, decor: Record<string, number> = {}) => {
   const e = equipmentById(id);
-  const lv = Math.min(levels[id] ?? 0, e?.levels.length ?? 0);
+  const owned = Math.min(levels[id] ?? 0, e?.levels.length ?? 0);
+  const pick = decor[id];
+  const lv = typeof pick === "number" && pick >= 0 && pick <= owned ? pick : owned;
   return { level: lv, stage: e?.stages?.[lv] };
 };
 export const roomById = (id: string) => ROOM_DEFS.find((r) => r.id === id);

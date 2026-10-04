@@ -24,7 +24,7 @@ export interface GameState {
   inventory: { id: string; qty: number }[];
   cooldowns: Record<string, number>;
   look: { equipped: Record<string, string>; room: string; body: Look };
-  home: { levels: Record<string, number>; rooms: string[]; bonus: { critChance: number; critDamage: number; damage: number } };
+  home: { levels: Record<string, number>; rooms: string[]; bonus: { critChance: number; critDamage: number; damage: number }; decor: Record<string, number> };
   helpSeen: string[];
   yard: { count: number; max: number; nextAt: number | null };
   /** cheapest task step left in an open location; claimable = a location reward is waiting */

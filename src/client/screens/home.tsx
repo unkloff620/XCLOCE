@@ -190,7 +190,7 @@ export function HomeScreen() {
       <div className="room">
         <div className={`scene-backdrop ${owned ? "" : "locked"}`} style={{ backgroundImage: `url(/assets/home/${ROOM_BACKDROP[viewRoom.id] ?? ROOM_BACKDROP.basic}.webp)` }} />
         <div className={`room-view ${owned ? "" : "locked"}`}>
-          <HomeScene room={viewRoom.id} look={state.look.body} worn={state.look.equipped} levels={state.home.levels} onPick={owned ? (id) => (id === "pc" ? setPc(true) : setEquip(id)) : undefined} />
+          <HomeScene room={viewRoom.id} look={state.look.body} worn={state.look.equipped} levels={state.home.levels} decor={state.home.decor} onPick={owned ? (id) => (id === "pc" ? setPc(true) : setEquip(id)) : undefined} />
         </div>
         {idx > 0 && (
           <button className="room-arrow left" onClick={() => flip(-1)} aria-label="Предыдущая комната" disabled={busy === "room_set"}>‹</button>

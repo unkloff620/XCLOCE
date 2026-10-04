@@ -5,7 +5,7 @@ import { Icon } from "../art/icons.tsx";
 import { HomeScene } from "../art/home-scene.tsx";
 import { money } from "../format.ts";
 import { haptic } from "../telegram.ts";
-import { EQUIPMENT, ROOM_DEFS, type Bonus } from "../../content/home.ts";
+import { EQUIPMENT, ROOM_DEFS, stageOf, type Bonus } from "../../content/home.ts";
 
 const pct = (v: number) => `${Math.round(v * 1000) / 10}%`;
 
@@ -46,16 +46,33 @@ export function EquipmentWindow({ focus, onClose }: { focus?: string | null; onC
                 <b>{e.name}</b>
                 <span className="equip-lv">{Array.from({ length: e.levels.length }, (_, i) => <i key={i} className={i < lv ? "on" : ""} />)}</span>
               </div>
-              {e.stages && (
-                <div className="equip-stage">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={`/assets/home/${e.stages[Math.min(lv, e.stages.length - 1)].art}.webp`} alt="" />
-                  <div className="col" style={{ gap: 2, minWidth: 0 }}>
-                    <b className="small">{e.stages[Math.min(lv, e.stages.length - 1)].name}</b>
-                    {next && <span className="tiny muted">дальше: {e.stages[lv + 1]?.name}</span>}
-                  </div>
-                </div>
-              )}
+              {e.stages && (() => {
+                const shown = stageOf(e.id, state.home.levels, state.home.decor).level;
+                return (
+                  <>
+                    <div className="equip-stage">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={`/assets/home/${e.stages[shown].art}.webp`} alt="" />
+                      <div className="col" style={{ gap: 2, minWidth: 0 }}>
+                        <b className="small">{e.stages[shown].name}</b>
+                        {next && <span className="tiny muted">дальше: {e.stages[lv + 1]?.name}</span>}
+                      </div>
+                    </div>
+                    {lv > 0 && (
+                      // any owned stage can stand in the room; the bonus stays the bought level's
+                      <div className="stage-pick" role="radiogroup" aria-label={`${e.name}: что поставить в комнату`}>
+                        {e.stages.slice(0, lv + 1).map((st, i) => (
+                          <button key={i} role="radio" aria-checked={i === shown} className={`stage-opt ${i === shown ? "on" : ""}`} title={st.name}
+                            disabled={busy === "decor_set"} onClick={() => i !== shown && act("decor_set", { id: e.id, stage: i }, `В комнате: ${st.name}`)}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={`/assets/home/${st.art}.webp`} alt="" />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
               <div className="tiny muted">{e.description}</div>
               <div className="tiny">
                 {lv > 0 && <>Сейчас: <BonusLine b={e.levels[lv - 1].bonus} /><br /></>}
@@ -89,7 +106,7 @@ export function RoomsWindow({ onClose }: { onClose: () => void }) {
           const can = r.price ? (state.wallet[r.price.currency] ?? 0) >= r.price.amount : true;
           return (
             <div key={r.id} className={`room-card ${here ? "here" : ""}`}>
-              <div className="room-thumb"><HomeScene room={r.id} still levels={state.home.levels} /></div>
+              <div className="room-thumb"><HomeScene room={r.id} still levels={state.home.levels} decor={state.home.decor} /></div>
               <b className="display">{r.name}</b>
               <div className="tiny muted">{r.description}</div>
               <div className="tiny" style={{ color: "var(--gold)" }}><BonusLine b={r.bonus} /></div>

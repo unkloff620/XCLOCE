@@ -40,7 +40,7 @@ export const ACTIONS = [
   "buy", "exchange", "use", "equip", "unequip",
   "clan_create", "clan_join", "clan_leave", "clan_kick",
   "daily_claim", "sell", "rename", "slots_spin",
-  "equipment_upgrade", "pc_upgrade", "room_buy", "room_set", "look_set", "help_seen",
+  "equipment_upgrade", "pc_upgrade", "room_buy", "room_set", "look_set", "decor_set", "help_seen",
 ] as const;
 export type ActionType = (typeof ACTIONS)[number];
 
@@ -71,6 +71,7 @@ export function dispatch(ctx: Ctx, type: ActionType, body: Record<string, unknow
     case "room_buy": return home.buyRoom(ctx, str(body.id, "id", 40));
     case "room_set": return home.setRoom(ctx, str(body.id, "id", 40));
     case "look_set": return home.setLook(ctx, body);
+    case "decor_set": return home.setDecor(ctx, str(body.id, "id", 40), num(body.stage, "stage"));
     case "help_seen": return home.helpSeen(ctx, str(body.topic, "topic", 40));
     case "clan_kick": return clans.kickMember(ctx, num(body.playerId, "playerId"));
     default: throw new GameError("bad_action", "Неизвестное действие");

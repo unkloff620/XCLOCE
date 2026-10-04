@@ -487,6 +487,17 @@ describe("home: equipment, rooms, look, help", () => {
     await expect(act(db, p, "equipment_upgrade", { id: "desk" }, T0)).rejects.toMatchObject({ code: "no_money" });
   });
 
+  it("decor: any owned stage of a room thing can stand in the room; an upgrade shows the new one", async () => {
+    const p = await newPlayer(db);
+    await setMoney(db, p, "RUB", 3000);
+    await act(db, p, "equipment_upgrade", { id: "chair" }, T0);
+    await expect(act(db, p, "decor_set", { id: "chair", stage: 2 }, T0)).rejects.toMatchObject({ code: "locked" });
+    const back = await act(db, p, "decor_set", { id: "chair", stage: 0 }, T0); // the old stool
+    expect(back.state.home.decor).toEqual({ chair: 0 });
+    expect(back.state.home.bonus.critChance).toBeCloseTo(0.02); // the bonus stays
+    await expect(act(db, p, "decor_set", { id: "rgb", stage: 0 }, T0)).rejects.toMatchObject({ code: "bad_equipment" });
+  });
+
   it("rooms: buy, switch, the bonus of every owned room counts", async () => {
     const p = await newPlayer(db);
     await expect(act(db, p, "room_set", { id: "office" }, T0)).rejects.toMatchObject({ code: "room_locked" });
