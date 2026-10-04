@@ -66,12 +66,12 @@ export const EQUIPMENT: EquipmentDef[] = [
       { price: { currency: "USD", amount: 25 }, bonus: { critChance: 0.04 } },
       { price: { currency: "SOL", amount: 0.12 }, bonus: { critChance: 0.07 } },
     ],
-    // levels 2 and 3 show the level-1 chair until their own art is drawn
+    // level 3 shows the level-2 chair until its own art is drawn
     stages: [
       { name: "Табуретка", art: "seat-1" },
       { name: "Офисное кресло", art: "chair-1" },
-      { name: "Кресло руководителя", art: "chair-1" },
-      { name: "Геймерский трон", art: "chair-1" },
+      { name: "Геймерское кресло", art: "chair-2" },
+      { name: "Трон трейдера", art: "chair-2" },
     ],
   },
   {
