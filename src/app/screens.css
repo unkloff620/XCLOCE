@@ -515,3 +515,12 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(10, 12, 24, 0.
 /* the fists punch forward when the boss is hit */
 .arena-photo.hit .br-fist-l, .arena-photo.hit .br-fist-r { animation-duration: 0.28s; }
 @media (prefers-reduced-motion: reduce) { .br-breath, .br-head, .br-fist-l, .br-fist-r { animation: none; } }
+
+/* ---------- shop scene ---------- */
+.shop-spot { position: absolute; padding: 0; border: 0; background: none; cursor: pointer; z-index: 2; transition: transform 0.12s, filter 0.12s;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5)); animation: spot-glow 3s ease-in-out infinite; }
+.shop-spot img { display: block; width: 100%; height: auto; pointer-events: none; }
+.shop-spot:active { transform: scale(0.97); }
+@keyframes spot-glow { 50% { filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 10px rgba(255, 190, 90, 0.55)); } }
+.shop-scene .yard-stage { -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 6%); mask-image: linear-gradient(180deg, transparent 0, #000 6%); }
+.fit-page .title-row .back-btn { margin-right: 2px; }
