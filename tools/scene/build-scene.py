@@ -14,7 +14,7 @@ os.makedirs(OUT, exist_ok=True)
 # widths in scene units (the seat in rig units, it lives in the character's space); ×1.5 for sharp phones
 # sky behind the penthouse window: top and height in scene units (keep in sync with src/content/home-scene.ts ROOM_SKY)
 SKY_Y, SKY_H = 40, 880
-WIDTH = {"desk": 780, "monitor": 220, "pc": 130, "seat": 360}
+WIDTH = {"desk": 780, "monitor": 220, "pc": 150, "seat": 360}
 DESKS = {}
 for f in sorted(os.listdir(os.path.join(HERE, "source"))):
     name, ext = os.path.splitext(f)
