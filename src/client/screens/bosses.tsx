@@ -34,6 +34,10 @@ export function useBossList() {
 }
 
 /** HP under the boss photo: full numbers while they fit, short ones for the big bosses. */
+/** card colour by boss order: grey for the first, climbing like loot rarity, red for the last */
+const CARD_TIER = ["#a3aab4", "#5fd068", "#3fd6c4", "#4a9dff", "#8f6bff", "#d65cff", "#ff9a2e", "#ffcc33", "#ff3b3b"];
+const tierColor = (order: number) => CARD_TIER[Math.min(CARD_TIER.length, Math.max(1, order)) - 1];
+
 function hpLabel(hp: number, max: number): string {
   const f = max >= 100_000 ? short : full;
   return `${f(hp)}/${f(max)}`;
@@ -65,11 +69,11 @@ export function BossesScreen() {
           const hp = mine ? mine.hp : hpMax;
           return (
             <Link key={b.id} href={`/bosses/${b.id}`} className={`bcard ${locked ? "locked" : ""} ${b.final ? "final" : ""} ${mine ? "live" : ""}`}
-              style={{ ["--acc" as string]: b.theme.accent, ["--bga" as string]: b.theme.a, ["--hp" as string]: `${Math.round((hp / Math.max(1, hpMax)) * 100)}%` }}>
+              style={{ ["--acc" as string]: tierColor(b.order), ["--hp" as string]: `${Math.round((hp / Math.max(1, hpMax)) * 100)}%` }}>
               {/* the boss stands on the left and fades into the card */}
               <div className="bcard-art" aria-hidden="true">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                {b.photo.full && !locked ? <img src={b.photo.full} alt="" draggable={false} /> : <div className="bcard-sil"><BossSilhouette accent={b.theme.accent} /></div>}
+                {b.photo.full && !locked ? <img src={b.photo.full} alt="" draggable={false} /> : <div className="bcard-sil"><BossSilhouette accent={tierColor(b.order)} /></div>}
               </div>
               <span className="bcard-n display">{b.order}</span>
               <div className="bcard-main">
