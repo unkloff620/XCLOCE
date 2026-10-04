@@ -96,18 +96,37 @@ describe("boss fights: personal fights, shared damage", () => {
     expect(v.hits).toHaveLength(2);
   });
 
-  it("one hit can finish several fights; each winner collects SOL, XP and a key", async () => {
-    await setBossHp({ datsik: 100 });
-    const a = await newPlayer(db), b = await newPlayer(db);
+  it("one hit can finish several fights; the reward follows each one's own damage", async () => {
+    await setBossHp({ datsik: 1000 });
+    const a = await newPlayer(db), b = await newPlayer(db), c = await newPlayer(db), d = await newPlayer(db);
     const fa = await startDatsik(a);
     const fb = await startDatsik(b);
-    await give(db, a, "keyboard", 1);
-    const r = await hit(a, "keyboard");
-    expect(r.result).toMatchObject({ status: "won", hp: 0, finished: 2 });
+    const fc = await startDatsik(c);
+    const fd = await startDatsik(d);
+    // b: a full share (2% = 20 → one fist hit is 10, a mouse 30); c: half a share (one fist hit = 1% → key); d: nothing
+    await give(db, b, "mouse", 1);
+    await hit(b, "mouse");
+    await hit(c, "fist");
+    await give(db, a, "rug-pull-gun", 2);
+    await hit(a, "rug-pull-gun");
+    const r = await hit(a, "rug-pull-gun");
+    expect(r.result).toMatchObject({ status: "won", hp: 0, finished: 4 });
+
     const sb = await act(db, b, "fight_claim", { fightId: fb.result.fightId }, T0, always(0.99));
-    expect(sb.result.status).toBe("won");
+    expect(sb.result).toMatchObject({ status: "won", share: 1, key: true });
     expect(await qty(db, b, "key-datsik")).toBe(1);
     expect(await wallet(db, b, "SOL")).toBeCloseTo(0.02);
+
+    const sc = await act(db, c, "fight_claim", { fightId: fc.result.fightId }, T0, always(0.99));
+    expect(sc.result).toMatchObject({ share: 0.5, key: true });
+    expect(await wallet(db, c, "SOL")).toBeCloseTo(0.01);
+    expect(await qty(db, c, "key-datsik")).toBe(1);
+
+    const sd = await act(db, d, "fight_claim", { fightId: fd.result.fightId }, T0, always(0.99));
+    expect(sd.result).toMatchObject({ share: 0, key: false });
+    expect(await wallet(db, d, "SOL")).toBe(0);
+    expect(await qty(db, d, "key-datsik")).toBe(0);
+
     const va = await fightView(db, a, fa.result.fightId, 0, T0);
     expect(va).toMatchObject({ status: "won", killerIsMe: true });
     // claiming twice does not pay twice
@@ -523,14 +542,14 @@ describe("home: equipment, rooms, look, help", () => {
 });
 
 describe("levels and auth", () => {
-  it("authority curve: 0 / 225 / 485 / … / 1 100 110 for level 100", () => {
-    expect(levelFromXp(0)).toEqual({ level: 1, into: 0, need: 225 });
-    expect(levelFromXp(224).level).toBe(1);
-    expect(levelFromXp(225)).toEqual({ level: 2, into: 0, need: 260 });
-    expect(levelFromXp(485).level).toBe(3);
-    expect(levelFromXp(1_100_109).level).toBe(99);
-    expect(levelFromXp(1_100_110).level).toBe(100);
-    expect(levelFromXp(5_000_000).level).toBe(100);
+  it("authority curve: 1 003 for level 2, ~10 M for level 100, levels go past 100", () => {
+    expect(levelFromXp(0)).toEqual({ level: 1, into: 0, need: 1003 });
+    expect(levelFromXp(1002).level).toBe(1);
+    expect(levelFromXp(1003).level).toBe(2);
+    expect(levelFromXp(13_000).level).toBe(10);
+    expect(levelFromXp(1_100_000).level).toBe(50);
+    expect(levelFromXp(10_200_000).level).toBe(100);
+    expect(levelFromXp(100_000_000).level).toBe(200);
   });
   it("Telegram initData and Login Widget signatures", () => {
     const token = "123:ABC";
