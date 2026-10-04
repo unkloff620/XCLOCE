@@ -647,10 +647,10 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 /* location page over its drawn background: the picture stays sharp at the top and darkens under the tasks */
 .loc-page { position: relative; }
 .loc-page-bg { position: fixed; top: 0; bottom: 0; left: 50%; width: min(100%, var(--col)); transform: translateX(-50%); z-index: 0; background-size: cover; background-position: center top; pointer-events: none; }
-.loc-page-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20, 14, 10, 0.15) 0%, rgba(20, 14, 10, 0.55) 35%, rgba(20, 14, 10, 0.82) 70%); }
+.loc-page-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20, 14, 10, 0.1) 0%, rgba(20, 14, 10, 0.45) 40%, rgba(20, 14, 10, 0.7) 80%); }
 .loc-page > :not(.loc-page-bg) { position: relative; z-index: 1; }
 .loc-page.has-bg .loc-card.head { background: rgba(32, 21, 13, 0.72); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
-.loc-page.has-bg .loc-card.head .loc-banner { display: none; }  /* the page itself shows the picture */
-.loc-page.has-bg .task { background: linear-gradient(180deg, rgba(54, 38, 26, 0.86), rgba(42, 29, 20, 0.86)); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+.loc-page.has-bg .loc-card.head .loc-banner { aspect-ratio: 360 / 160; }
+.loc-page.has-bg .task { background: linear-gradient(180deg, rgba(54, 38, 26, 0.78), rgba(42, 29, 20, 0.78)); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
 .loc-banner { display: block; width: 100%; aspect-ratio: 360 / 140; object-fit: cover; }
 .loc-card.locked .loc-banner { filter: grayscale(1) brightness(0.45); }
