@@ -475,3 +475,4 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(10, 12, 24, 0.
 .yard-bg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; user-select: none; pointer-events: none; }
 .yard-slots img { width: 100%; height: 100%; display: block; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.6)); }
 @media (prefers-reduced-motion: reduce) { .yard-sky-strip { animation: none; } }
+.yard-reflect { position: absolute; left: 0; right: 0; top: 55%; bottom: 0; overflow: hidden; transform: scaleY(-1); filter: brightness(0.75) saturate(1.1) blur(0.6px); }

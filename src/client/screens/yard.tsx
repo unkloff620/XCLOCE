@@ -80,6 +80,15 @@ export function YardScreen() {
           </div>
         </div>
         <div className="yard-stage">
+          {/* the sky upside down under the ground: it shows through the transparent puddles */}
+          <div className="yard-reflect" aria-hidden="true">
+            <div className="yard-sky-strip">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/assets/yard/sky.webp" alt="" draggable={false} />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/assets/yard/sky.webp" alt="" draggable={false} />
+            </div>
+          </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="yard-bg" src="/assets/yard/bg.webp" alt="" draggable={false} />
           <button className={`yard-slots ${state && state.slots.left > 0 ? "ready" : ""}`} onClick={() => setSlots(true)} aria-label="Игровой автомат 777">
