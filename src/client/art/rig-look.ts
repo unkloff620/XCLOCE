@@ -82,6 +82,13 @@ export const WEAR_FIT = {
     "y": 13.5,
     "w": 219,
     "h": 170
+  },
+  "hoodie-hodl": {
+    "slot": "SHIRT",
+    "x": 105.5,
+    "y": 227.5,
+    "w": 792,
+    "h": 542
   }
 } as const;
 export const SKIN_ORIGINAL = 1;
