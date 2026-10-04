@@ -298,8 +298,8 @@ export function BossScreen({ id }: { id: string }) {
           )}
         </div>
       </div>
+      <div className="prefight-hp"><Bar value={hpMax} max={hpMax} tone="red" height={22} label={`${full(hpMax)} HP`} /></div>
       <div className="fight-bottom prefight-panel">
-        <Bar value={hpMax} max={hpMax} tone="red" height={22} label={`${full(hpMax)} HP`} />
         <div className="row small" style={{ justifyContent: "space-between", gap: 6 }}>
           <span className="chip gold"><Icon name="clock" size={14} />8 часов</span>
           <span className="chip" title="Победы сегодня">Победы {row?.fightsToday ?? 0}/{row?.fightsPerDay ?? 7}</span>

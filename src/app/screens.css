@@ -570,3 +570,12 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(10, 12, 24, 0.
 @keyframes face-brows { 0%, 30%, 100% { transform: translateY(0); } 36%, 44% { transform: translateY(-5px); } 50% { transform: translateY(0); } 70%, 76% { transform: translateY(2px); } }
 .rig.still .rig-pupils, .rig.still .rig-brows { animation: none; }
 @media (prefers-reduced-motion: reduce) { .rig-pupils, .rig-brows, .rig-eyes-open, .rig-eyes-closed { animation: none; } .rig-eyes-closed { opacity: 0; } }
+
+/* the boss stands behind the bottom panel: his cut-off lower edge hides under the weapons / the «В бой» button */
+.arena.full { bottom: calc(var(--bottom) + 26px); }
+.arena.full .arena-photo { -webkit-mask-image: linear-gradient(180deg, #000 88%, transparent); mask-image: linear-gradient(180deg, #000 88%, transparent); }
+.fight-bottom::before { content: ""; position: absolute; left: -12px; right: -12px; top: 30px; bottom: calc(-1 * var(--bottom)); z-index: -1;
+  background: linear-gradient(180deg, transparent, rgba(12, 10, 18, 0.85) 40%, rgba(12, 10, 18, 0.95)); pointer-events: none; }
+.arena.full.prefight { top: calc(var(--top) + 78px); bottom: calc(var(--bottom) + 22px); }
+.prefight-hp { position: absolute; left: 12px; right: 12px; top: calc(var(--top) + 46px); z-index: 5; }
+.prefight-panel::before { top: 34px; }
