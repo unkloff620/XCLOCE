@@ -744,3 +744,43 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .weapon.cd { cursor: default; }
 .weapon.cd:active { transform: none; }
 @media (prefers-reduced-motion: reduce) { .loc-card.current, .loc-now { animation: none; } }
+
+/* ---------------- boss list card v3: one card, the boss on the left, everything readable on the right ---------------- */
+.bcard { position: relative; display: block; min-height: 172px; border-radius: 20px; overflow: hidden; color: inherit; text-decoration: none;
+  border: 1.5px solid color-mix(in srgb, var(--acc) 45%, rgba(255, 190, 120, 0.15));
+  background: radial-gradient(120% 120% at 0% 40%, color-mix(in srgb, var(--acc) 30%, transparent), transparent 60%), linear-gradient(160deg, #2c1d13, #160e08);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45); transition: transform 0.12s; }
+.bcard:active { transform: scale(0.985); }
+.bcard-art { position: absolute; left: 0; top: 0; bottom: 0; width: 46%; }
+.bcard-art img { position: absolute; left: -8%; bottom: -4%; width: 118%; height: 112%; object-fit: cover; object-position: 50% 8%; }
+.bcard-art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 45%, #1d130c 98%); }
+.bcard-sil { position: absolute; left: 6%; bottom: 0; width: 80%; height: 92%; opacity: 0.6; }
+.bcard-sil svg { width: 100%; height: 100%; }
+.bcard-n { position: absolute; left: 10px; top: 10px; z-index: 2; min-width: 28px; height: 28px; padding: 0 7px; display: grid; place-items: center; border-radius: 10px;
+  font-size: 15px; color: #1e1006; background: var(--acc); box-shadow: 0 3px 0 rgba(0, 0, 0, 0.45); }
+.bcard-main { position: relative; z-index: 1; margin-left: 40%; padding: 12px 12px 10px 4px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.bcard-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
+.bcard-name { font-size: 22px; line-height: 1.05; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.5); }
+.bcard-title { font-size: 11.5px; color: var(--muted); }
+.bcard-pill { flex: none; display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 800;
+  background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 190, 120, 0.2); }
+.bcard-pill.live { color: var(--gold); border-color: rgba(255, 204, 51, 0.5); }
+.bcard-hpbar { position: relative; height: 10px; border-radius: 6px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+.bcard-hpbar i { position: absolute; inset: 0 auto 0 0; width: var(--hp); border-radius: 6px; background: linear-gradient(90deg, #e2334f, #ff7a5c); box-shadow: 0 0 10px rgba(255, 77, 109, 0.5); }
+.bcard-hpnums { display: flex; justify-content: space-between; margin-top: 3px; font-size: 11px; color: var(--muted); }
+.bcard-hpnums b { color: var(--ink); }
+.bcard-reward { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 6px 8px; border-radius: 12px; background: rgba(0, 0, 0, 0.28); }
+.bcard-reward .gain-line { gap: 8px; flex-wrap: wrap; }
+.bcard-reward .gain { font-size: 13px; }
+.bcard-label { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.bcard-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.bcard-meta { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--muted); }
+.bcard-meta b { color: var(--ink); }
+.bcard-cta { flex: none; display: inline-flex; align-items: center; gap: 4px; padding: 6px 14px; border-radius: 999px; font-size: 14px; color: #1e1006;
+  background: linear-gradient(180deg, #ffd25a, #ff9f2e); box-shadow: 0 3px 0 rgba(0, 0, 0, 0.45); }
+.bcard-cta.off { color: var(--muted); background: rgba(255, 255, 255, 0.08); box-shadow: none; }
+.bcard-killer { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); min-width: 0; }
+.bcard.live { border-color: var(--gold); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45), 0 0 0 2px rgba(255, 204, 51, 0.5), 0 0 22px rgba(255, 204, 51, 0.3); }
+.bcard.locked { filter: saturate(0.4); }
+.bcard.locked .bcard-art { filter: grayscale(1) brightness(0.45); }
+.bcard.final { border-color: #ffd23f; background: radial-gradient(120% 120% at 0% 40%, rgba(255, 210, 63, 0.3), transparent 60%), linear-gradient(160deg, #3a2a10, #160e08); }

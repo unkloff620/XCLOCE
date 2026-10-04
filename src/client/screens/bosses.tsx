@@ -4,8 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { api, type Tray } from "../api.ts";
 import { BOSSES, bossById } from "../../content/bosses.ts";
-import { BossPhoto } from "./boss-parts.tsx";
-import { Avatar, Bar, RewardChips } from "../ui.tsx";
+import { Avatar, GainLine, RewardChips } from "../ui.tsx";
 import type { BossDef } from "../../content/bosses.ts";
 import { Help } from "../help.tsx";
 import { Icon } from "../art/icons.tsx";
@@ -65,42 +64,51 @@ export function BossesScreen() {
           const hpMax = mine ? mine.hpMax : row?.hpMax ?? b.hp;
           const hp = mine ? mine.hp : hpMax;
           return (
-            <Link key={b.id} href={`/bosses/${b.id}`} className={`boss-card2 ${locked ? "locked" : ""} ${b.final ? "final" : ""} ${mine ? "live" : ""}`} style={{ ["--acc" as string]: b.theme.accent, ["--bga" as string]: b.theme.a }}>
-              {/* left box: the boss art fills it, name and HP sit over the right side */}
-              <div className="bc-hero">
-                <div className="bc-art">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  {b.photo.full && !locked ? <img src={b.photo.full} alt="" draggable={false} /> : <div className="bc-sil"><BossSilhouette accent={b.theme.accent} /></div>}
-                </div>
-                <span className="boss-n display">{b.order}</span>
-                <div className="bc-info">
-                  <b className="display boss-name">{b.name}</b>
-                  <Bar value={hp} max={hpMax} tone="red" height={18} label={`${Math.round((hp / Math.max(1, hpMax)) * 100)}%`} />
-                  <span className="bc-hp num">{hpLabel(hp, hpMax)}</span>
-                </div>
-                <div className="bc-status">
-                  {mine ? (
-                    <span className="chip gold"><Icon name="clock" size={13} />{clock(mine.endsAt - now)}</span>
-                  ) : locked ? (
-                    <span className="chip" title={`${(row?.keysNeed ?? 3) === 1 ? "ключ" : "ключа"} «${prev?.name}»`}><Icon name="key" size={14} />{row?.keysHave ?? 0}/{row?.keysNeed ?? 3}</span>
-                  ) : (
-                    <span className="chip" title="Победы сегодня">{row?.fightsToday ?? 0}/{row?.fightsPerDay ?? 7}</span>
-                  )}
-                  {!!row?.fightingNow && !locked && <span className="chip red">бьют: {row.fightingNow}</span>}
-                </div>
+            <Link key={b.id} href={`/bosses/${b.id}`} className={`bcard ${locked ? "locked" : ""} ${b.final ? "final" : ""} ${mine ? "live" : ""}`}
+              style={{ ["--acc" as string]: b.theme.accent, ["--bga" as string]: b.theme.a, ["--hp" as string]: `${Math.round((hp / Math.max(1, hpMax)) * 100)}%` }}>
+              {/* the boss stands on the left and fades into the card */}
+              <div className="bcard-art" aria-hidden="true">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {b.photo.full && !locked ? <img src={b.photo.full} alt="" draggable={false} /> : <div className="bcard-sil"><BossSilhouette accent={b.theme.accent} /></div>}
               </div>
-              {/* right box: rewards for a win */}
-              <div className="bc-rewards">
-                {b.final && <span className="chip gold">ФИНАЛ</span>}
-                <BossRewardLine boss={b} />
-                {row?.lastKiller && (
-                  <span className="last-killer tiny" title="Последним добил">
+              <span className="bcard-n display">{b.order}</span>
+              <div className="bcard-main">
+                <div className="bcard-head">
+                  <div className="col" style={{ gap: 1, minWidth: 0 }}>
+                    <b className="bcard-name display ellipsis">{locked ? "???" : b.name}</b>
+                    <span className="bcard-title ellipsis">{locked ? `Откроется ключами «${prev?.name}»` : b.title}</span>
+                  </div>
+                  {mine ? (
+                    <span className="bcard-pill live"><i className="live-dot" />{clock(mine.endsAt - now)}</span>
+                  ) : !!row?.fightingNow && !locked ? (
+                    <span className="bcard-pill" title="Сейчас бьют">⚔ {row.fightingNow}</span>
+                  ) : null}
+                </div>
+                {!locked && (
+                  <div className="bcard-hp">
+                    <div className="bcard-hpbar"><i /></div>
+                    <div className="bcard-hpnums num"><span>{hpLabel(hp, hpMax)} HP</span><b>{Math.round((hp / Math.max(1, hpMax)) * 100)}%</b></div>
+                  </div>
+                )}
+                <div className="bcard-reward">
+                  <span className="bcard-label">{b.final ? "Финал:" : "Награда:"}</span>
+                  <GainLine r={{ ...b.reward, items: [...(b.final ? [] : [{ id: `key-${b.id}`, qty: 1 }]), ...(b.reward.items ?? [])] }} size={18} />
+                </div>
+                <div className="bcard-foot">
+                  {locked ? (
+                    <span className="bcard-meta"><Icon name="key" size={15} /> {row?.keysHave ?? 0}/{row?.keysNeed ?? 3} ключа</span>
+                  ) : (
+                    <span className="bcard-meta" title="Победы сегодня">Победы сегодня <b className="num">{row?.fightsToday ?? 0}/{row?.fightsPerDay ?? 7}</b></span>
+                  )}
+                  <span className={`bcard-cta display ${locked ? "off" : ""}`}>{locked ? <><Icon name="lock" size={14} /> Закрыт</> : mine ? <>Продолжить ›</> : <>В бой ›</>}</span>
+                </div>
+                {row?.lastKiller && !locked && (
+                  <span className="bcard-killer tiny" title="Последним добил">
                     <Avatar name={row.lastKiller.name} photo={row.lastKiller.photo} size={16} />
-                    <span className="ellipsis">{row.lastKiller.name}</span>
+                    <span className="ellipsis">добил {row.lastKiller.name}</span>
                   </span>
                 )}
               </div>
-              <span className="bc-go" aria-hidden="true">›</span>
             </Link>
           );
         })}
@@ -122,15 +130,6 @@ export function BossRulesHelp({ topic }: { topic: "bosses" | "boss" }) {
         <li>Оборудование и комнаты дома дают шанс крита и прибавку к урону.</li>
       </ul>
     </Help>
-  );
-}
-
-/** Compact reward line on the boss card. */
-function BossRewardLine({ boss }: { boss: BossDef }) {
-  return (
-    <div className="boss-reward">
-      <RewardChips r={{ ...boss.reward, items: [...(boss.final ? [] : [{ id: `key-${boss.id}`, qty: 1 }]), ...(boss.reward.items ?? [])] }} size={13} />
-    </div>
   );
 }
 
