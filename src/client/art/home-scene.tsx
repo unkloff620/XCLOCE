@@ -71,7 +71,7 @@ export function HomeScene({ room = "basic", onPick, still, look, worn, levels = 
       {monitors >= 3 && <Obj id="monitorCenter" art="monitor-center" />}
       {monitors >= 2 && <Obj id="monitorLeft" art="monitor-left" />}
       {monitors >= 1 ? <Obj id="monitorRight" art="monitor-right" /> : <Obj id="monitorOld" art="monitor-1" />}
-      <RigViewport x={CHARACTER.x} y={CHARACTER.y} scale={CHARACTER.scale} seat still={still} look={look} worn={worn} />
+      <RigViewport x={CHARACTER.x} y={CHARACTER.y} scale={CHARACTER.scale} seat={stageOf("chair", levels).level} still={still} look={look} worn={worn} />
       {onPick && <Hot id="monitors" onPick={onPick} />}
       {onPick && <Hot id="pc" onPick={onPick} />}
     </svg>

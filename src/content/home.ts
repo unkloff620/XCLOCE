@@ -60,11 +60,18 @@ export const EQUIPMENT: EquipmentDef[] = [
     ],
   },
   {
-    id: "chair", name: "Геймерское кресло", description: "Спина прямая — рука твёрдая. Повышает шанс крита.",
+    id: "chair", name: "Кресло", description: "Спина прямая — рука твёрдая. Повышает шанс крита.",
     levels: [
       { price: { currency: "RUB", amount: 2500 }, bonus: { critChance: 0.02 } },
       { price: { currency: "USD", amount: 25 }, bonus: { critChance: 0.04 } },
       { price: { currency: "SOL", amount: 0.12 }, bonus: { critChance: 0.07 } },
+    ],
+    // levels 2 and 3 show the level-1 chair until their own art is drawn
+    stages: [
+      { name: "Табуретка", art: "seat-1" },
+      { name: "Офисное кресло", art: "chair-1" },
+      { name: "Кресло руководителя", art: "chair-1" },
+      { name: "Геймерский трон", art: "chair-1" },
     ],
   },
   {

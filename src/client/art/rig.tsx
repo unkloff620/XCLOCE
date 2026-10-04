@@ -13,6 +13,7 @@ import { createContext, useContext } from "react";
 import { RIG } from "./rig-data.ts";
 import { HAIR_FIT, SKIN_ORIGINAL, WEAR_FIT } from "./rig-look.ts";
 import { SEAT } from "../../content/home-scene.ts";
+import { CHAIR_FIT } from "./desk-data.ts";
 import { DEFAULT_LOOK, type Look } from "../../content/home.ts";
 
 type PartId = keyof typeof RIG;
@@ -84,18 +85,22 @@ function Bone({ p, className, children }: { p: PartId; className?: string; child
   );
 }
 
-/** The seat (stool → chairs as the player upgrades), drawn behind the body. */
-function Seat({ level = 1 }: { level?: number }) {
-  return <image href={`/assets/home/seat-${level}.webp`} x={SEAT.x} y={SEAT.y} width={SEAT.w} height={SEAT.w * SEAT.aspect} preserveAspectRatio="none" />;
+/** The seat, drawn behind the body: the stool at chair level 0, then the best drawn chair up to the level. */
+function Seat({ level = 0 }: { level?: number }) {
+  for (let l = level; l >= 1; l--) {
+    const f = CHAIR_FIT[`chair-${l}`];
+    if (f) return <image href={`/assets/home/chair-${l}.webp`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
+  }
+  return <image href="/assets/home/seat-1.webp" x={SEAT.x} y={SEAT.y} width={SEAT.w} height={SEAT.w * SEAT.aspect} preserveAspectRatio="none" />;
 }
 
 /** Rig contents in its own 1000×1400 coordinates (place inside an <svg viewBox="0 0 1000 1400">). */
-function RigBody({ seat, look, worn }: { seat?: boolean; look?: Look; worn?: Worn }) {
+function RigBody({ seat, look, worn }: { seat?: boolean | number; look?: Look; worn?: Worn }) {
   return (
     <LookCtx.Provider value={look ?? DEFAULT_LOOK}>
     <WornCtx.Provider value={worn ?? {}}>
       <ellipse cx="500" cy="1282" rx="400" ry="30" fill="rgba(0,0,0,0.3)" />
-      {seat && <Seat />}
+      {seat !== undefined && seat !== false && <Seat level={typeof seat === "number" ? seat : 0} />}
       {/* torso breathes; arms and head ride along in a second group with the same animation */}
       {/* the torso layer carries the legs too; only the chest breathes visibly (origin at the hips) */}
       <g className="rig-breath">
@@ -124,7 +129,7 @@ function RigBody({ seat, look, worn }: { seat?: boolean; look?: Look; worn?: Wor
 }
 
 /** Nested viewport so bone pivots (view-box units) stay in rig coordinates inside any scene. */
-export function RigViewport({ x, y, scale, seat, still, look, worn }: { x: number; y: number; scale: number; seat?: boolean; still?: boolean; look?: Look; worn?: Worn }) {
+export function RigViewport({ x, y, scale, seat, still, look, worn }: { x: number; y: number; scale: number; seat?: boolean | number; still?: boolean; look?: Look; worn?: Worn }) {
   return (
     <svg className={`rig ${still ? "still" : ""}`} x={x} y={y} width={1000 * scale} height={1400 * scale} viewBox="0 0 1000 1400" overflow="visible">
       <RigBody seat={seat} look={look} worn={worn} />
