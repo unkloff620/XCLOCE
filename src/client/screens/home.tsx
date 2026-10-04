@@ -8,7 +8,7 @@ import { ROOM_BACKDROP } from "../../content/home-scene.ts";
 import { Icon, NavIcon } from "../art/icons.tsx";
 import { NAV_TABS } from "../../content/nav.ts";
 import { ItemArt } from "../art/items.tsx";
-import { Bar, Modal } from "../ui.tsx";
+import { Modal } from "../ui.tsx";
 import { bossById } from "../../content/bosses.ts";
 import { ITEMS, type Slot } from "../../content/items.ts";
 import { clock, full } from "../format.ts";
@@ -194,18 +194,15 @@ export function HomeScreen() {
         <div className={`room-view ${owned ? "" : "locked"}`}>
           <HomeScene room={viewRoom.id} look={state.look.body} worn={state.look.equipped} levels={state.home.levels} decor={state.home.decor} onPick={owned ? (id) => (id === "pc" ? setPc(true) : setEquip(id)) : undefined} />
         </div>
-        {idx > 0 && (
-          <button className="room-arrow left" onClick={() => flip(-1)} aria-label="Предыдущая комната" disabled={busy === "room_set"}>‹</button>
-        )}
-        {idx < ROOM_DEFS.length - 1 && (
-          <button className="room-arrow right" onClick={() => flip(1)} aria-label="Следующая комната" disabled={busy === "room_set"}>›</button>
-        )}
+        {/* room switcher: one pill «‹ name ›» at the bottom, the lock offer under it */}
         <div className="room-label">
-          {owned ? (
-            <span className="chip">{viewRoom.name}</span>
-          ) : (
+          <div className="room-switch">
+            <button className="room-step" onClick={() => flip(-1)} disabled={idx === 0 || busy === "room_set"} aria-label="Предыдущая комната">‹</button>
+            <span className="room-name display">{viewRoom.name}</span>
+            <button className="room-step" onClick={() => flip(1)} disabled={idx >= ROOM_DEFS.length - 1 || busy === "room_set"} aria-label="Следующая комната">›</button>
+          </div>
+          {!owned && (
             <div className="room-unlock">
-              <b className="display">{viewRoom.name}</b>
               <span className="tiny" style={{ color: "var(--gold)" }}><BonusLine b={viewRoom.bonus} /></span>
               <button className="btn gold sm" disabled={!canPay || busy === "room_buy"} onClick={unlock}>
                 <Icon name="lock" size={16} /> Разблокировать <span className="room-price"><Icon name={viewRoom.price!.currency} size={15} />{money(viewRoom.price!.currency, viewRoom.price!.amount)}</span>
@@ -256,20 +253,22 @@ export function HomeScreen() {
       </div>
 
       {f && fb && fightOpen && (
-        <Link href={`/bosses/${fb.id}`} className="fight-now" style={{ ["--acc" as string]: fb.theme.accent }}>
-          <div className="fight-now-photo"><BossPhoto boss={fb} round /></div>
-          <div className="grow col" style={{ gap: 5, minWidth: 0 }}>
-            <div className="row" style={{ justifyContent: "space-between", gap: 6 }}>
-              <span className="fight-now-tag display"><i className="live-dot" />ИДЁТ БОЙ</span>
-              <span className="chip gold"><Icon name="clock" size={14} />{clock(f.endsAt - now)}</span>
-            </div>
-            <b className="display ellipsis" style={{ fontSize: 17 }}>{fb.name}</b>
-            <Bar value={f.hp} max={f.hpMax} tone="red" label={`${full(f.hp)} / ${full(f.hpMax)} HP`} />
-          </div>
-          <span className="boss-go display">›</span>
-          <button className="fight-now-fold" aria-label="Свернуть" title="Свернуть"
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setFightOpen(false); }}>×</button>
-        </Link>
+        <div className="fight-card" style={{ ["--acc" as string]: fb.theme.accent, ["--hp" as string]: `${Math.max(0, Math.min(100, (f.hp / Math.max(1, f.hpMax)) * 100))}%` }}>
+          <button className="fight-card-fold" onClick={() => setFightOpen(false)} aria-label="Свернуть" title="Свернуть" />
+          <Link href={`/bosses/${fb.id}`} className="fight-card-body">
+            <span className="fight-card-photo"><BossPhoto boss={fb} round /></span>
+            <span className="fight-card-info">
+              <span className="fight-card-top">
+                <span className="fight-card-live"><i className="live-dot" />идёт бой</span>
+                <span className="fight-card-time num"><Icon name="clock" size={12} />{clock(f.endsAt - now)}</span>
+              </span>
+              <b className="fight-card-name display ellipsis">{fb.name}</b>
+              <span className="fight-card-hp"><i /></span>
+              <span className="fight-card-hpnum num">{full(f.hp)} / {full(f.hpMax)} HP</span>
+            </span>
+            <span className="fight-card-go display" aria-hidden="true">›</span>
+          </Link>
+        </div>
       )}
       {wardrobe && <Wardrobe onClose={() => setWardrobe(false)} />}
       {daily && <DailyWindow onClose={() => setDaily(false)} />}

@@ -687,3 +687,42 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 @keyframes fight-mini { 50% { box-shadow: 0 0 0 3px var(--acc, var(--red)), 0 3px 0 4px var(--line), 0 0 14px 3px var(--acc, var(--red)); } }
 .fight-now { position: relative; }
 .fight-now-fold { position: absolute; top: -10px; right: -6px; width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--line); background: var(--panel3); color: var(--ink); font-size: 16px; font-weight: 800; line-height: 1; cursor: pointer; display: grid; place-items: center; padding: 0; }
+
+/* ---------------- home v4: room switcher pill and the running-fight card ---------------- */
+.fit-page .room-label { flex-direction: column; align-items: center; gap: 6px; bottom: calc(var(--bottom) - 2px); }
+.fit-page.has-fight .room-label { bottom: calc(var(--bottom) + 104px); }
+.room-switch { display: inline-flex; align-items: center; gap: 2px; padding: 3px; border-radius: 999px;
+  background: rgba(24, 15, 9, 0.72); border: 1.5px solid rgba(255, 190, 120, 0.2); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35); }
+.room-step { width: 30px; height: 30px; border-radius: 50%; border: 0; padding: 0; display: grid; place-items: center; cursor: pointer;
+  background: rgba(255, 204, 120, 0.12); color: var(--ink); font-size: 20px; font-weight: 800; line-height: 1; }
+.room-step:disabled { opacity: 0.25; cursor: default; }
+.room-step:not(:disabled):active { transform: scale(0.92); }
+.room-name { padding: 0 10px; font-size: 14px; white-space: nowrap; }
+.fit-page .room-unlock { padding: 8px 12px; }
+
+/* the fight card: dark glass, the boss's colour as a soft glow on the left, HP as a thin line */
+.fit-page > .fight-card { position: absolute; left: 12px; right: 12px; bottom: var(--bottom); z-index: 4; }
+.fight-card { border-radius: 20px; padding: 1.5px; background: linear-gradient(120deg, color-mix(in srgb, var(--acc) 70%, transparent), rgba(255, 190, 120, 0.12) 45%, rgba(255, 190, 120, 0.06));
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5); animation: drop 0.25s ease; }
+.fight-card-body { position: relative; display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 19px; color: inherit; text-decoration: none; overflow: hidden;
+  background: radial-gradient(120% 140% at 0% 50%, color-mix(in srgb, var(--acc) 26%, transparent), transparent 55%), linear-gradient(180deg, rgba(38, 25, 16, 0.94), rgba(20, 13, 8, 0.96));
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.fight-card-photo { flex: none; width: 54px; height: 54px; border-radius: 50%; padding: 3px;
+  background: conic-gradient(var(--acc) var(--hp), rgba(255, 255, 255, 0.12) 0); }  /* the ring is the boss's HP */
+.fight-card-photo .bphoto { width: 100%; height: 100%; }
+.fight-card-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.fight-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.fight-card-live { display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: color-mix(in srgb, var(--acc) 70%, #fff); }
+.fight-card-time { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 800; color: var(--gold); }
+.fight-card-name { font-size: 18px; line-height: 1.1; }
+.fight-card-hp { position: relative; height: 6px; border-radius: 4px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+.fight-card-hp i { position: absolute; inset: 0 auto 0 0; width: var(--hp); border-radius: 4px; background: linear-gradient(90deg, #ff4d6d, #ff8a5c); box-shadow: 0 0 8px rgba(255, 77, 109, 0.6); }
+.fight-card-hpnum { font-size: 10.5px; color: var(--muted); }
+.fight-card-go { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 22px;
+  background: color-mix(in srgb, var(--acc) 30%, rgba(255, 255, 255, 0.06)); color: #fff; }
+/* fold handle: a small grip on the top edge */
+.fight-card-fold { position: absolute; left: 50%; top: -9px; transform: translateX(-50%); z-index: 2; width: 44px; height: 18px; padding: 0; cursor: pointer;
+  border-radius: 9px; border: 1.5px solid rgba(255, 190, 120, 0.25); background: rgba(24, 15, 9, 0.92); }
+.fight-card-fold::after { content: ""; position: absolute; left: 50%; top: 50%; width: 9px; height: 9px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: translate(-50%, -75%) rotate(45deg); }
