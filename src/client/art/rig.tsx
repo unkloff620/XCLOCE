@@ -137,10 +137,11 @@ export function RigViewport({ x, y, scale, seat, still, look, worn }: { x: numbe
   );
 }
 
-export function HeroRig({ size = 300, className, still, look, worn }: { size?: number; className?: string; still?: boolean; look?: Look; worn?: Worn }) {
+/** The hero alone; `seat` (chair level) puts the seat under them so a sitting hero does not hang in the air. */
+export function HeroRig({ size = 300, className, still, look, worn, seat }: { size?: number; className?: string; still?: boolean; look?: Look; worn?: Worn; seat?: boolean | number }) {
   return (
     <svg className={`rig ${still ? "still" : ""} ${className ?? ""}`} viewBox="0 0 1000 1400" width={size * (1000 / 1400)} height={size} aria-hidden="true" style={{ overflow: "visible" }}>
-      <RigBody look={look} worn={worn} />
+      <RigBody look={look} worn={worn} seat={seat} />
     </svg>
   );
 }

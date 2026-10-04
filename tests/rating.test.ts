@@ -96,24 +96,39 @@ async function setMoneyAll(pid: number) {
 }
 
 describe("achievements and someone's profile", () => {
-  it("a badge is collected once, only when reached; the profile shows badges and the room", async () => {
+  it("a badge tier is collected once, only when reached; the profile shows badges and the room", async () => {
     const p = await newPlayer(db);
-    await expect(act(db, p, "achievement_claim", { id: "first-blood" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
+    await expect(act(db, p, "achievement_claim", { id: "hits-1" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
+    await give(db, p, "red-candle", 10);
     await act(db, p, "fight_start", { boss: "datsik" }, T0);
-    const hit = await act(db, p, "attack", { weapon: "fist" }, T0, always(0.99));
-    expect(hit.state.achievementsReady).toBe(1);
+    let hit;
+    for (let i = 0; i < 10; i++) hit = await act(db, p, "attack", { weapon: "red-candle" }, T0, always(0.99));
+    expect(hit!.state.achievementsReady).toBeGreaterThanOrEqual(1);
+    await expect(act(db, p, "achievement_claim", { id: "hits-2" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
     const rub = await wallet(db, p, "RUB");
-    const r = await act(db, p, "achievement_claim", { id: "first-blood" }, T0);
-    expect(await wallet(db, p, "RUB")).toBe(rub + 200);
-    expect(r.state.achievementsReady).toBe(0);
-    await expect(act(db, p, "achievement_claim", { id: "first-blood" }, T0)).rejects.toMatchObject({ code: "achievement_taken" });
+    await act(db, p, "achievement_claim", { id: "hits-1" }, T0);
+    expect(await wallet(db, p, "RUB")).toBe(rub + 500);
+    await expect(act(db, p, "achievement_claim", { id: "hits-1" }, T0)).rejects.toMatchObject({ code: "achievement_taken" });
 
     const viewer = await newPlayer(db);
-    const prof = await profileView(db, viewer, p, await loadConfig(db));
+    const prof = await profileView(db, viewer, p, await loadConfig(db), T0);
     expect(prof.self).toBe(false);
     expect(prof.wallet).toBeNull();
-    expect(prof.achievements.find((a) => a.id === "first-blood")).toMatchObject({ done: true, claimed: true });
+    expect(prof.achievements.find((a) => a.id === "hits-1")).toMatchObject({ done: true, claimed: true });
+    expect(prof.achievements.find((a) => a.id === "damage-1")).toMatchObject({ progress: 500, done: false });
     expect(prof.room).toMatchObject({ id: "basic" });
+  });
+
+  it("clan settings: only the leader edits name, emblem, colour and description", async () => {
+    const a = await newPlayer(db);
+    const b = await newPlayer(db);
+    await act(db, a, "clan_create", { name: "Альфа", tag: "ALF", emblem: "skull", color: "#ff4d6d" }, T0);
+    const [{ clan_id }] = await db.query<{ clan_id: number }>("SELECT clan_id FROM players WHERE id=$1", [a]);
+    await act(db, b, "clan_join", { clanId: clan_id }, T0);
+    await expect(act(db, b, "clan_edit", { name: "Бета", emblem: "moon", color: "#3ddc84", description: "x" }, T0)).rejects.toMatchObject({ code: "not_leader" });
+    await act(db, a, "clan_edit", { name: "Бета", emblem: "moon", color: "#3ddc84", description: "Бьём боссов по вечерам" }, T0);
+    const [c] = await db.query<{ name: string; emblem: string; description: string }>("SELECT name, emblem, description FROM clans WHERE id=$1", [clan_id]);
+    expect(c).toEqual({ name: "Бета", emblem: "moon", description: "Бьём боссов по вечерам" });
   });
 
   it("the best login streak is remembered after the streak breaks", async () => {

@@ -417,7 +417,6 @@
 .fit-page .room-left { top: calc(var(--top) + 40px); left: 12px; }
 .fit-page .room-arrow { top: 58%; }
 .fit-page .room-label { bottom: var(--bottom); }
-.fit-page.has-fight .room-label { bottom: calc(var(--bottom) + 96px); }
 .fit-page > .fight-now { position: absolute; left: 12px; right: 12px; bottom: var(--bottom); z-index: 4; }
 .fit-page > .title { position: absolute; left: 12px; right: 12px; top: var(--top); z-index: 3; margin: 0; }
 .fit-page .yard-timer { top: calc(var(--top) + 42px); z-index: 3; }
@@ -689,7 +688,6 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 
 /* ---------------- home v4: room switcher pill and the running-fight card ---------------- */
 .fit-page .room-label { flex-direction: column; align-items: center; gap: 6px; bottom: calc(var(--bottom) - 2px); }
-.fit-page.has-fight .room-label { bottom: calc(var(--bottom) + 104px); }
 .room-switch { display: inline-flex; align-items: center; gap: 2px; padding: 3px; border-radius: 999px;
   background: rgba(24, 15, 9, 0.72); border: 1.5px solid rgba(255, 190, 120, 0.2); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35); }
@@ -782,7 +780,11 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .bcard-cta { flex: none; display: inline-flex; align-items: center; gap: 4px; padding: 6px 14px; border-radius: 999px; font-size: 14px; color: #1e1006;
   background: linear-gradient(180deg, #ffd25a, #ff9f2e); box-shadow: 0 3px 0 rgba(0, 0, 0, 0.45); }
 .bcard-cta.off { color: var(--muted); background: rgba(255, 255, 255, 0.08); box-shadow: none; }
-.bcard-killer { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); min-width: 0; }
+/* the last killer: a small framed avatar at the bottom of the boss picture */
+.bcard-killer { position: absolute; z-index: 3; left: 8px; bottom: 8px; display: inline-flex; align-items: center; gap: 4px; padding: 3px 3px 3px 7px; border-radius: 12px; cursor: pointer;
+  background: rgba(14, 9, 5, 0.78); border: 1.5px solid color-mix(in srgb, var(--acc) 70%, transparent); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5); }
+.bcard-killer-label { font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.bcard-killer .avatar { border-width: 1.5px; }
 .bcard.live { border-color: var(--gold); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45), 0 0 0 2px rgba(255, 204, 51, 0.5), 0 0 22px rgba(255, 204, 51, 0.3); }
 .bcard.locked { opacity: 0.82; }
 .bcard.locked .bcard-art { filter: grayscale(1) brightness(0.45); }
@@ -902,9 +904,11 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 @keyframes badge-call { 50% { transform: scale(1.08) rotate(-4deg); filter: drop-shadow(0 0 10px rgba(255, 204, 51, 0.9)); } }
 .badge-name { font-size: 10px; line-height: 1.15; text-align: center; color: var(--muted); max-width: 76px; }
 .badge-medal { display: grid; place-items: center; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.6)); }
-.badge-medal.tier-bronze { background: radial-gradient(circle at 35% 25%, #ffd2a6, #d0803f 55%, #7a3e14); }
-.badge-medal.tier-silver { background: radial-gradient(circle at 35% 25%, #ffffff, #b9c4d6 55%, #5b6680); }
-.badge-medal.tier-gold { background: radial-gradient(circle at 35% 25%, #fff3b0, #ffcc33 50%, #b06d00); }
+.badge-medal.tier-1 { background: radial-gradient(circle at 35% 25%, #ffd2a6, #d0803f 55%, #7a3e14); }
+.badge-medal.tier-2 { background: radial-gradient(circle at 35% 25%, #ffffff, #b9c4d6 55%, #5b6680); }
+.badge-medal.tier-3 { background: radial-gradient(circle at 35% 25%, #fff3b0, #ffcc33 50%, #b06d00); }
+.badge-medal.tier-4 { background: radial-gradient(circle at 35% 25%, #e6fffb, #5ff0dc 50%, #13786c); }
+.badge-medal.tier-5 { background: radial-gradient(circle at 35% 25%, #fbeaff, #c07bff 50%, #5a1d9a); box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.5); }
 .badge-medal.locked { background: radial-gradient(circle at 35% 25%, #5a4c40, #2e2620 70%); }
 .badge-medal.locked > svg { filter: grayscale(1) brightness(0.55); opacity: 0.7; }
 .ach-bar { position: relative; width: 100%; height: 18px; border-radius: 9px; background: rgba(0, 0, 0, 0.35); border: 2px solid var(--line); overflow: hidden; }
@@ -918,3 +922,51 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 
 .prize-cup { filter: drop-shadow(0 0 18px rgba(255, 204, 51, 0.7)); animation: lvl-bob 2.4s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .badge-cell.ready .badge-medal, .prize-cup { animation: none; } }
+
+/* achievements as rows: category medal (its best colour), five steps bronze → diamond, progress to the next */
+.ach-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px 8px 8px; border-radius: 14px; border: 2px solid var(--line);
+  background: var(--panel2); color: inherit; text-align: left; cursor: pointer; font: inherit; }
+.ach-row.ready { border-color: #ffcc33; box-shadow: 0 0 12px rgba(255, 204, 51, 0.35); }
+.ach-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.ach-name { font-size: 14px; }
+.ach-steps { display: inline-flex; gap: 3px; flex: none; }
+.ach-steps i { width: 13px; height: 14px; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); background: rgba(255, 255, 255, 0.12); }
+.ach-steps i.on { background: var(--c); }
+.ach-steps i.due { background: var(--c); opacity: 0.45; animation: alert-pulse 1.2s ease-in-out infinite; }
+.ach-bar.sm { height: 14px; border-width: 1.5px; }
+.ach-bar.sm span { font-size: 10px; line-height: 11px; }
+.ach-bar.sm i { background: var(--c, #ffcc33); }
+.ach-take { flex: none; pointer-events: none; }
+.ach-tier { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 12px; border: 2px solid rgba(255, 255, 255, 0.06); background: rgba(0, 0, 0, 0.2); }
+.ach-tier.got { border-color: color-mix(in srgb, var(--c) 55%, transparent); }
+.ach-tier.due { border-color: var(--c); box-shadow: 0 0 10px color-mix(in srgb, var(--c) 45%, transparent); }
+/* balance: four currencies and the energy in one row */
+.stat-grid.balance-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+.balance-grid b { font-size: 13px; }
+@media (max-width: 360px) { .stat-grid.balance-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* home menu: one [≡] button, the picture buttons drop down under it */
+.menu-toggle { position: relative; display: grid; place-items: center; width: 52px; height: 52px; padding: 0; cursor: pointer; border-radius: 16px;
+  border: 2.5px solid var(--line); background: linear-gradient(180deg, #4a3220, #2a1a10); box-shadow: 0 4px 0 var(--line), inset 0 2px 0 rgba(255, 255, 255, 0.08); transition: transform 0.12s; }
+.menu-toggle:active { transform: translateY(2px); }
+.menu-toggle .side-dot { top: -5px; right: -5px; }
+.menu-toggle.glow { animation: art-glow 1.6s ease-in-out infinite; --c: #ffcc33; }
+.menu-bars { position: relative; width: 24px; height: 18px; }
+.menu-bars i { position: absolute; left: 0; right: 0; height: 3.5px; border-radius: 2px; background: var(--gold); transition: transform 0.2s, opacity 0.2s, top 0.2s; }
+.menu-bars i:nth-child(1) { top: 0; }
+.menu-bars i:nth-child(2) { top: 7px; }
+.menu-bars i:nth-child(3) { top: 14px; }
+.menu-toggle.open .menu-bars i:nth-child(1) { top: 7px; transform: rotate(45deg); }
+.menu-toggle.open .menu-bars i:nth-child(2) { opacity: 0; }
+.menu-toggle.open .menu-bars i:nth-child(3) { top: 7px; transform: rotate(-45deg); }
+.menu-drop { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 8px 0; margin-left: -5px; border-radius: 18px;
+  background: rgba(24, 15, 9, 0.55); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); animation: menu-in 0.22s ease-out both; }
+@keyframes menu-in { from { opacity: 0; transform: translateY(-10px) scaleY(0.9); transform-origin: top; } }
+.menu-drop .icon-btn-art:not(.glow) > svg { animation: side-in 0.3s ease-out both, side-idle 6s ease-in-out 0.3s infinite; }
+
+/* clans: search, description */
+.clan-search { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.clan-search .input { flex: 1; min-width: 0; }
+.clan-desc { margin: 4px 0 6px; font-size: 13px; line-height: 1.4; color: var(--ink); white-space: pre-wrap; text-align: center; max-width: 100%; overflow-wrap: anywhere; }
+.clan-desc-input { resize: vertical; min-height: 80px; font: inherit; }
+.clan-desc-input { padding: 10px 12px; }

@@ -28,8 +28,8 @@ export interface LocationDef {
 // Draft numbers: ~12–16 RUB and ~1 XP per energy point; higher locations pay a bit better per energy.
 const t = (id: string, title: string, flavor: string, energy: number, steps: number, rubPerEnergy: number, done: Reward = {}): TaskDef => ({
   id, title, flavor, energy, steps,
-  stepReward: { currencies: { RUB: Math.round(energy * rubPerEnergy) }, xp: energy },
-  doneReward: { xp: energy * steps, ...done },
+  stepReward: { currencies: { RUB: Math.round(energy * rubPerEnergy) }, xp: energy * 10 },
+  doneReward: { xp: energy * steps * 10, ...done },
 });
 
 export const LOCATIONS: LocationDef[] = [
@@ -42,7 +42,7 @@ export const LOCATIONS: LocationDef[] = [
       t("os-printer", "Починить принтер", "Он не сломан. Он просто тебя не любит.", 4, 3, 12, { items: [{ id: "red-candle", qty: 2 }] }),
       t("os-deadline", "Сдать задачу «на вчера»", "Вчера было вчера.", 5, 3, 12, { items: [{ id: "energy-drink", qty: 1 }] }),
     ],
-    reward: { currencies: { USD: 5, RUB: 300 }, xp: 120, items: [{ id: "red-candle", qty: 10 }, { id: "tee-pump", qty: 1 }] },
+    reward: { currencies: { USD: 5, RUB: 300 }, xp: 1_000, items: [{ id: "red-candle", qty: 10 }, { id: "tee-pump", qty: 1 }] },
   },
   {
     id: "market", order: 2, name: "Крипто-рынок", subtitle: "Купи на хаях, продай на лоях", scene: "market",
@@ -53,7 +53,7 @@ export const LOCATIONS: LocationDef[] = [
       t("mk-airdrop", "Поймать аирдроп", "Подключи кошелёк… нет, не этот.", 7, 2, 13, { items: [{ id: "keyboard", qty: 1 }] }),
       t("mk-dip", "Откупить дно", "Дно было ниже.", 8, 3, 13, { items: [{ id: "energy-drink", qty: 2 }] }),
     ],
-    reward: { currencies: { USD: 8, RUB: 500 }, xp: 220, items: [{ id: "keyboard", qty: 5 }, { id: "shorts-remote", qty: 1 }, { id: "cap-moon", qty: 1 }] },
+    reward: { currencies: { USD: 8, RUB: 500 }, xp: 3_000, items: [{ id: "keyboard", qty: 5 }, { id: "shorts-remote", qty: 1 }, { id: "cap-moon", qty: 1 }] },
   },
   {
     id: "serverroom", order: 3, name: "Серверная", subtitle: "Тепло, шумно и всё мигает", scene: "serverroom",
@@ -64,7 +64,7 @@ export const LOCATIONS: LocationDef[] = [
       t("sr-cool", "Охладить стойку вентилятором", "Вентилятор от бабушки, надёжный.", 11, 3, 14, { items: [{ id: "keyboard", qty: 2 }] }),
       t("sr-backup", "Проверить бэкап", "Бэкап есть. Восстановления нет.", 12, 3, 14, { items: [{ id: "energy-pack", qty: 1 }] }),
     ],
-    reward: { currencies: { USD: 12, RUB: 800 }, xp: 380, items: [{ id: "gpu", qty: 2 }, { id: "slippers", qty: 1 }, { id: "gold-chain", qty: 1 }] },
+    reward: { currencies: { USD: 12, RUB: 800 }, xp: 8_000, items: [{ id: "gpu", qty: 2 }, { id: "slippers", qty: 1 }, { id: "gold-chain", qty: 1 }] },
   },
   {
     id: "basement", order: 4, name: "Майнинг-подвал", subtitle: "Здесь греются видеокарты и надежды", scene: "basement",
@@ -75,7 +75,7 @@ export const LOCATIONS: LocationDef[] = [
       t("bs-rig", "Собрать риг из коробки", "Инструкция на китайском, отвёртка твоя.", 15, 3, 15, { items: [{ id: "gpu", qty: 1 }] }),
       t("bs-halving", "Пережить халвинг", "Награда меньше, а гордость та же.", 16, 3, 15, { items: [{ id: "energy-pack", qty: 1 }] }),
     ],
-    reward: { currencies: { USD: 18, RUB: 1200 }, xp: 600, items: [{ id: "gpu", qty: 3 }, { id: "hoodie-hodl", qty: 1 }] },
+    reward: { currencies: { USD: 18, RUB: 1200 }, xp: 20_000, items: [{ id: "gpu", qty: 3 }, { id: "hoodie-hodl", qty: 1 }] },
   },
   {
     id: "board", order: 5, name: "Совет директоров", subtitle: "Последний кабинет перед Солнцем", scene: "board",
@@ -86,7 +86,7 @@ export const LOCATIONS: LocationDef[] = [
       t("bd-kpi", "Согласовать KPI", "KPI: согласовать KPI.", 19, 3, 16, { items: [{ id: "rug-pull-gun", qty: 1 }] }),
       t("bd-vote", "Пережить голосование", "Воздержался — тоже голос.", 20, 3, 16, { items: [{ id: "energy-pack", qty: 2 }] }),
     ],
-    reward: { currencies: { USD: 25, RUB: 2000 }, xp: 900, items: [{ id: "rug-pull-gun", qty: 3 }, { id: "laser-eyes", qty: 1 }] },
+    reward: { currencies: { USD: 25, RUB: 2000 }, xp: 50_000, items: [{ id: "rug-pull-gun", qty: 3 }, { id: "laser-eyes", qty: 1 }] },
   },
 ];
 

@@ -70,9 +70,25 @@ export async function kickMember(ctx: Ctx, playerId: number) {
   return { kicked: playerId };
 }
 
+/** Leader only: name, emblem, colour and description. */
+export async function editClan(ctx: Ctx, nameRaw: string, emblem: string, color: string, descRaw: string) {
+  const [m] = await ctx.q.query<{ clan_id: number; role: string }>("SELECT clan_id, role FROM clan_members WHERE player_id=$1", [ctx.pid]);
+  if (!m || m.role !== "leader") throw new GameError("not_leader", "Настраивать клан может только лидер");
+  const name = clean(nameRaw);
+  const description = descRaw.replace(/[\u0000-\u0009\u000b-\u001f\u007f<>]/g, "").replace(/\n{3,}/g, "\n\n").trim();
+  if (name.length < 3 || name.length > 24) throw new GameError("bad_name", "Название: от 3 до 24 символов");
+  if (description.length > 300) throw new GameError("bad_description", "Описание: до 300 символов");
+  if (!(CLAN_EMBLEMS as readonly string[]).includes(emblem)) throw new GameError("bad_emblem", "Выбери герб");
+  if (!(CLAN_COLORS as readonly string[]).includes(color)) throw new GameError("bad_color", "Выбери цвет");
+  const dup = await ctx.q.query("SELECT 1 FROM clans WHERE lower(name)=lower($1) AND id <> $2", [name, m.clan_id]);
+  if (dup.length) throw new GameError("clan_exists", "Такое название уже занято");
+  await ctx.q.query("UPDATE clans SET name=$2, emblem=$3, color=$4, description=$5 WHERE id=$1", [m.clan_id, name, emblem, color, description]);
+  return { clanId: m.clan_id };
+}
+
 export async function clanList(q: Queryable) {
-  const rows = await q.query<{ id: number; name: string; tag: string; emblem: string; color: string; members: number; damage: number; leader: string }>(
-    `SELECT c.id, c.name, c.tag, c.emblem, c.color, COUNT(m.player_id)::int AS members, COALESCE(SUM(s.total_damage), 0)::bigint AS damage, lp.display_name AS leader
+  const rows = await q.query<{ id: number; name: string; tag: string; emblem: string; color: string; description: string; members: number; damage: number; leader: string }>(
+    `SELECT c.id, c.name, c.tag, c.emblem, c.color, c.description, COUNT(m.player_id)::int AS members, COALESCE(SUM(s.total_damage), 0)::bigint AS damage, lp.display_name AS leader
      FROM clans c LEFT JOIN clan_members m ON m.clan_id=c.id LEFT JOIN player_stats s ON s.player_id=m.player_id JOIN players lp ON lp.id=c.leader_id
      GROUP BY c.id, lp.display_name ORDER BY damage DESC, c.id`,
   );
@@ -85,12 +101,12 @@ export async function clanView(q: Queryable, clanId: number, levelsCfg?: Paramet
   if (!c) throw new GameError("no_clan", "Клан не найден", 404);
   const members = await q.query<{ id: number; display_name: string; photo_url: string | null; xp: number; role: string; damage: number; joined_at: Date }>(
     `SELECT p.id, p.display_name, p.photo_url, p.xp, m.role, COALESCE(s.total_damage,0)::bigint AS damage, m.joined_at FROM clan_members m JOIN players p ON p.id=m.player_id
-     LEFT JOIN player_stats s ON s.player_id=p.id WHERE m.clan_id=$1 ORDER BY m.role='leader' DESC, damage DESC`,
+     LEFT JOIN player_stats s ON s.player_id=p.id WHERE m.clan_id=$1 ORDER BY m.role='leader' DESC, p.xp DESC`,
     [clanId],
   );
   const [wins] = await q.query<{ n: number }>("SELECT COUNT(*)::int AS n FROM fights f JOIN clan_members m ON m.player_id=f.player_id WHERE m.clan_id=$1 AND f.status='won'", [clanId]);
   return {
     ...c, wins: wins.n, max: CLAN_MAX,
-    members: members.map((m) => ({ id: m.id, name: m.display_name, photo: m.photo_url, level: levelFromXp(m.xp, levelsCfg).level, role: m.role, damage: Number(m.damage) })),
+    members: members.map((m) => ({ id: m.id, name: m.display_name, photo: m.photo_url, level: levelFromXp(Number(m.xp), levelsCfg).level, xp: Number(m.xp), role: m.role, damage: Number(m.damage) })),
   };
 }

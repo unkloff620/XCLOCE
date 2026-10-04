@@ -47,7 +47,7 @@ export const ACTIONS = [
   "clan_create", "clan_join", "clan_leave", "clan_kick",
   "daily_claim", "sell", "rename", "slots_spin",
   "equipment_upgrade", "pc_upgrade", "room_buy", "room_set", "look_set", "decor_set", "help_seen",
-  "quest_claim", "quest_chest", "notify_set", "achievement_claim", "prize_claim",
+  "quest_claim", "quest_chest", "notify_set", "achievement_claim", "prize_claim", "clan_edit",
 ] as const;
 export type ActionType = (typeof ACTIONS)[number];
 
@@ -122,6 +122,7 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "notify_set": return notify.setNotify(ctx, body.on === true, body.granted === true);
     case "achievement_claim": return achievements.claimAchievement(ctx, str(body.id, "id", 40));
     case "prize_claim": return rating.claimPrize(ctx, num(body.id, "id"));
+    case "clan_edit": return clans.editClan(ctx, str(body.name, "name", 40), str(body.emblem, "emblem", 20), str(body.color, "color", 10), typeof body.description === "string" ? body.description.slice(0, 400) : "");
     default: throw new GameError("bad_action", "Неизвестное действие");
   }
 }

@@ -25,18 +25,18 @@ const R = (rub: number, xp: number, extra: Reward = {}): Reward => ({ currencies
 /** three groups → three quests a day */
 export const QUEST_GROUPS: QuestDef[][] = [
   [
-    { id: "q-damage", kind: "damage", target: 500, title: "Нанеси 500 урона боссам", href: "/bosses", reward: R(250, 25) },
-    { id: "q-hits", kind: "hits", target: 10, title: "Ударь босса 10 раз", href: "/bosses", reward: R(250, 25) },
+    { id: "q-damage", kind: "damage", target: 500, title: "Нанеси 500 урона боссам", href: "/bosses", reward: R(250, 500) },
+    { id: "q-hits", kind: "hits", target: 10, title: "Ударь босса 10 раз", href: "/bosses", reward: R(250, 500) },
   ],
   [
-    { id: "q-steps", kind: "steps", target: 3, title: "Выполни 3 шага заданий в локациях", href: "/locations", reward: R(200, 20, { energy: 10 }) },
-    { id: "q-energy", kind: "energy", target: 30, title: "Потрать 30 энергии", href: "/locations", reward: R(200, 20, { energy: 10 }) },
-    { id: "q-yard", kind: "yard", target: 5, title: "Подбери 5 вещей во дворе", href: "/yard", reward: R(200, 20) },
+    { id: "q-steps", kind: "steps", target: 3, title: "Выполни 3 шага заданий в локациях", href: "/locations", reward: R(200, 400, { energy: 10 }) },
+    { id: "q-energy", kind: "energy", target: 30, title: "Потрать 30 энергии", href: "/locations", reward: R(200, 400, { energy: 10 }) },
+    { id: "q-yard", kind: "yard", target: 5, title: "Подбери 5 вещей во дворе", href: "/yard", reward: R(200, 400) },
   ],
   [
-    { id: "q-buy", kind: "buy", target: 1, title: "Купи что-нибудь в магазине", href: "/shop", reward: R(150, 15) },
-    { id: "q-exchange", kind: "exchange", target: 1, title: "Обменяй валюту в обменнике", hint: "Нажми на любую валюту вверху экрана", reward: R(150, 15) },
-    { id: "q-slots", kind: "slots", target: 1, title: "Крутани однорукого бандита", href: "/yard", reward: R(150, 15) },
+    { id: "q-buy", kind: "buy", target: 1, title: "Купи что-нибудь в магазине", href: "/shop", reward: R(150, 300) },
+    { id: "q-exchange", kind: "exchange", target: 1, title: "Обменяй валюту в обменнике", hint: "Нажми на любую валюту вверху экрана", reward: R(150, 300) },
+    { id: "q-slots", kind: "slots", target: 1, title: "Крутани однорукого бандита", href: "/yard", reward: R(150, 300) },
   ],
 ];
 
@@ -44,7 +44,7 @@ export const QUESTS: QuestDef[] = QUEST_GROUPS.flat();
 export const questById = (id: string) => QUESTS.find((q) => q.id === id);
 
 /** The chest for all three: a fixed part plus one weapon by chance. */
-export const QUEST_CHEST_BASE: Reward = { currencies: { RUB: 500, USD: 3 }, energy: 20, xp: 50 };
+export const QUEST_CHEST_BASE: Reward = { currencies: { RUB: 500, USD: 3 }, energy: 20, xp: 2_000 };
 export const QUEST_CHEST_LOOT: { v: { id: string; qty: number }; w: number }[] = [
   { v: { id: "red-candle", qty: 3 }, w: 45 },
   { v: { id: "keyboard", qty: 1 }, w: 35 },

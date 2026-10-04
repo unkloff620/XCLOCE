@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { invQty, useGame, useNow } from "../store.tsx";
 import { api, type FightView, type Hit, type Tray } from "../api.ts";
@@ -13,6 +12,7 @@ import { Icon } from "../art/icons.tsx";
 import { Bar, Empty } from "../ui.tsx";
 import { useFx, type Fx } from "../fx/attack.tsx";
 import { BossRewardsPanel, BossRulesHelp, useBossList } from "./bosses.tsx";
+import { WeaponShopWindow } from "./shop.tsx";
 import { clock, full, pct, short } from "../format.ts";
 import { sfx } from "../sound.ts";
 import { haptic } from "../telegram.ts";
@@ -62,9 +62,8 @@ function Arena({ boss, hp, hpMax, endsAt, fx, hit, rug, feed, full: fullScreen }
   );
 }
 
-function WeaponTray({ tray, onHit, onCooldown, disabled, bonus }: { tray: Tray[]; onHit: (id: string) => void; onCooldown: (name: string, leftMs: number) => void; disabled: boolean; bonus: number }) {
+function WeaponTray({ tray, onHit, onCooldown, onBuy, disabled, bonus }: { tray: Tray[]; onHit: (id: string) => void; onCooldown: (name: string, leftMs: number) => void; onBuy: () => void; disabled: boolean; bonus: number }) {
   const now = useNow();
-  const router = useRouter();
   return (
     <div className="tray" style={{ gridTemplateColumns: `repeat(${WEAPONS.length}, minmax(0, 1fr))` }}>
       {WEAPONS.map((w) => {
@@ -82,7 +81,7 @@ function WeaponTray({ tray, onHit, onCooldown, disabled, bonus }: { tray: Tray[]
             className={`weapon rar-${w.rarity} ${empty ? "empty" : ""} ${cd ? "cd" : ""}`}
             disabled={disabled}
             aria-disabled={!!cd}
-            onClick={() => (cd ? onCooldown(w.name, cd) : empty ? router.push("/shop?tab=weapons") : onHit(w.id))}
+            onClick={() => (cd ? onCooldown(w.name, cd) : empty ? onBuy() : onHit(w.id))}
             title={`${w.name}: ${w.weapon!.action}`}
           >
             <ItemArt id={w.id} size={40} />
@@ -224,6 +223,12 @@ export function BossScreen({ id }: { id: string }) {
     if (r) void loadList();
   };
   const [fleeAsk, setFleeAsk] = useState(false);
+  // a missing weapon opens the weapons shelf right here; closing it leaves you in the fight
+  const [shopOpen, setShopOpen] = useState(false);
+  const closeShop = () => {
+    setShopOpen(false);
+    api.get<{ weapons: Tray[] }>("/api/bosses").then((r) => setTray(r.weapons)).catch(() => undefined);
+  };
   const [info, setInfo] = useState(false);
   const flee = async () => {
     if (!fleeAsk) {
@@ -271,8 +276,9 @@ export function BossScreen({ id }: { id: string }) {
             <button className="btn sm dark" onClick={() => setTab("mine")}>Мои</button>
             <button className={`btn sm ${fleeAsk ? "red" : "dark"}`} onClick={flee} disabled={busy === "fight_flee"}>{fleeAsk ? "Точно?" : "Сдаться"}</button>
           </div>
-          <WeaponTray tray={tray} onHit={attack} onCooldown={(name, left) => { haptic.err(); toast(`${name} перезаряжается: ещё ${clock(left)}`, "err"); }} bonus={dmgBonus} disabled={view?.status !== undefined && view.status !== "active"} />
+          <WeaponTray tray={tray} onHit={attack} onBuy={() => setShopOpen(true)} onCooldown={(name, left) => { haptic.err(); toast(`${name} перезаряжается: ещё ${clock(left)}`, "err"); }} bonus={dmgBonus} disabled={view?.status !== undefined && view.status !== "active"} />
         </div>
+        {shopOpen && <WeaponShopWindow onClose={closeShop} />}
         {tab !== null && (
           <Modal title={tab === "top" ? "Топ боя" : "Мои удары"} onClose={() => setTab(null)}>
             {tab === "top" ? (

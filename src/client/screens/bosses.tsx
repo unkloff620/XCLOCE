@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { api, type Tray } from "../api.ts";
@@ -45,6 +46,7 @@ function hpLabel(hp: number, max: number): string {
 
 export function BossesScreen() {
   const { state } = useGame();
+  const router = useRouter();
   const now = useNow();
   const { data, load } = useBossList();
   useEffect(() => {
@@ -75,6 +77,18 @@ export function BossesScreen() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 {b.photo.full && !locked ? <img src={b.photo.full} alt="" draggable={false} /> : <div className="bcard-sil"><BossSilhouette accent={tierColor(b.order)} /></div>}
               </div>
+              {/* who finished this boss last: a framed avatar at the bottom of the picture → their profile */}
+              {row?.lastKiller && !locked && (
+                <span className="bcard-killer" role="link" tabIndex={0} title={`Последним добил: ${row.lastKiller.name}`} aria-label={`Последним добил: ${row.lastKiller.name}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    router.push(`/profile?id=${row.lastKiller!.id}`);
+                  }}>
+                  <span className="bcard-killer-label">добил</span>
+                  <Avatar name={row.lastKiller.name} photo={row.lastKiller.photo} size={30} />
+                </span>
+              )}
               <span className="bcard-n display">{b.order}</span>
               <div className="bcard-main">
                 <div className="bcard-head">
@@ -106,12 +120,6 @@ export function BossesScreen() {
                   )}
                   <span className={`bcard-cta display ${locked ? "off" : ""}`}>{locked ? <><Icon name="lock" size={14} /> Закрыт</> : mine ? <>Бить ›</> : <>В бой ›</>}</span>
                 </div>
-                {row?.lastKiller && !locked && (
-                  <span className="bcard-killer tiny" title="Последним добил">
-                    <Avatar name={row.lastKiller.name} photo={row.lastKiller.photo} size={16} />
-                    <span className="ellipsis">добил {row.lastKiller.name}</span>
-                  </span>
-                )}
               </div>
             </Link>
           );

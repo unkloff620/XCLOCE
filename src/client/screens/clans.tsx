@@ -7,13 +7,57 @@ import { useGame } from "../store.tsx";
 import { api } from "../api.ts";
 import { Emblem } from "../art/emblems.tsx";
 import { Avatar, Empty, Modal } from "../ui.tsx";
-import { short } from "../format.ts";
+import { full, short } from "../format.ts";
+import { Icon } from "../art/icons.tsx";
 
-interface ClanRow { id: number; name: string; tag: string; emblem: string; color: string; members: number; damage: number; leader: string; level: number; rank: number }
+interface ClanRow { id: number; name: string; tag: string; emblem: string; color: string; description: string; members: number; damage: number; leader: string; level: number; rank: number }
 interface ClanPage extends Omit<ClanRow, "members"> {
   wins: number;
   max: number;
-  members: { id: number; name: string; photo: string | null; level: number; role: string; damage: number }[];
+  members: { id: number; name: string; photo: string | null; level: number; xp: number; role: string; damage: number }[];
+}
+
+/** Leader's clan settings: name, emblem and colour, description. */
+function ClanSettings({ c, onClose, onSaved }: { c: ClanPage; onClose: () => void; onSaved: () => void }) {
+  const { act, busy } = useGame();
+  const [opts, setOpts] = useState<{ emblems: string[]; colors: string[] } | null>(null);
+  const [name, setName] = useState(c.name);
+  const [emblem, setEmblem] = useState(c.emblem);
+  const [color, setColor] = useState(c.color);
+  const [desc, setDesc] = useState(c.description ?? "");
+  useEffect(() => {
+    api.get<{ emblems: string[]; colors: string[] }>("/api/clans").then(setOpts).catch(() => undefined);
+  }, []);
+  const save = async () => {
+    const r = await act("clan_edit", { name, emblem, color, description: desc }, "Клан обновлён");
+    if (r) {
+      onSaved();
+      onClose();
+    }
+  };
+  return (
+    <Modal title="Настройки клана" onClose={onClose}>
+      <div className="col" style={{ gap: 10 }}>
+        <div className="row" style={{ justifyContent: "center" }}><Emblem emblem={emblem} color={color} size={84} /></div>
+        <label className="tiny muted">Название</label>
+        <input className="input" maxLength={24} value={name} onChange={(e) => setName(e.target.value)} />
+        <label className="tiny muted">Герб и цвет</label>
+        <div className="row" style={{ flexWrap: "wrap", gap: 6 }}>
+          {(opts?.emblems ?? [c.emblem]).map((e) => (
+            <button key={e} className={`pick ${e === emblem ? "on" : ""}`} onClick={() => setEmblem(e)}><Emblem emblem={e} color={color} size={34} /></button>
+          ))}
+        </div>
+        <div className="row" style={{ gap: 8 }}>
+          {(opts?.colors ?? [c.color]).map((x) => (
+            <button key={x} className={`swatch ${x === color ? "on" : ""}`} style={{ background: x }} onClick={() => setColor(x)} aria-label={x} />
+          ))}
+        </div>
+        <label className="tiny muted">Описание <span className="num">({desc.length}/300)</span></label>
+        <textarea className="input clan-desc-input" maxLength={300} rows={4} placeholder="Кто вы, кого зовёте, когда бьёте боссов…" value={desc} onChange={(e) => setDesc(e.target.value)} />
+        <button className="btn green block" disabled={busy === "clan_edit" || name.trim().length < 3} onClick={save}>Сохранить</button>
+      </div>
+    </Modal>
+  );
 }
 
 function CreateClan({ emblems, colors, onClose }: { emblems: string[]; colors: string[]; onClose: () => void }) {
@@ -58,7 +102,10 @@ export function ClansScreen() {
   }, [myClan, router]);
   const [data, setData] = useState<{ clans: ClanRow[]; emblems: string[]; colors: string[] } | null>(null);
   const [create, setCreate] = useState(false);
+  const [query, setQuery] = useState("");
   const load = useCallback(() => api.get<typeof data>("/api/clans").then(setData).catch(() => undefined), []);
+  const ql = query.trim().toLowerCase();
+  const shown = data ? (ql ? data.clans.filter((c) => c.name.toLowerCase().includes(ql) || c.tag.toLowerCase().includes(ql)) : data.clans) : [];
   useEffect(() => {
     void load();
   }, [load, state?.clan?.id]);
@@ -85,11 +132,20 @@ export function ClansScreen() {
           <span className="display" style={{ fontSize: 22 }}>›</span>
         </Link>
       )}
+      {data && data.clans.length > 0 && (
+        <div className="clan-search">
+          <span aria-hidden="true">🔍</span>
+          <input className="input" placeholder={`Поиск по ${data.clans.length} кланам: название или тег`} value={query} onChange={(e) => setQuery(e.target.value)} />
+          {query && <button className="btn dark sm" onClick={() => setQuery("")} aria-label="Очистить">×</button>}
+        </div>
+      )}
       {!data ? null : data.clans.length === 0 ? (
         <Empty>Кланов ещё нет. Создай первый!</Empty>
+      ) : shown.length === 0 ? (
+        <Empty>Ничего не нашлось по «{query}»</Empty>
       ) : (
         <div className="col" style={{ gap: 8 }}>
-          {data.clans.map((c) => (
+          {shown.map((c) => (
             <Link key={c.id} href={`/clans/${c.id}`} className={`clan-row ${state?.clan?.id === c.id ? "me" : ""}`}>
               <span className="top-n display">{c.rank}</span>
               <Emblem emblem={c.emblem} color={c.color} size={40} />
@@ -109,6 +165,9 @@ export function ClansScreen() {
 
 export function ClanScreen({ id }: { id: number }) {
   const { state, act, busy } = useGame();
+  const [editing, setEditing] = useState(false);
+  const [settings, setSettings] = useState(false);
+  const [kickAsk, setKickAsk] = useState<number | null>(null);
   const [c, setC] = useState<ClanPage | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const load = useCallback(() => api.get<ClanPage>(`/api/clans/${id}`).then(setC).catch((e) => setErr(e.message)), [id]);
@@ -119,16 +178,24 @@ export function ClanScreen({ id }: { id: number }) {
   if (!c) return null;
   const mine = state?.clan?.id === c.id;
   const leader = c.members.find((m) => m.role === "leader")?.id === state?.player.id;
+  // two taps: «Исключить» → «Точно?» (a slip of the finger does not kick anyone)
+  const kick = async (id: number, name: string) => {
+    if (kickAsk !== id) return setKickAsk(id);
+    setKickAsk(null);
+    const r = await act("clan_kick", { playerId: id }, `${name} исключён`);
+    if (r) void load();
+  };
   return (
     <div>
       <div className="title">
-        <Link href="/clans?all=1" className="back">← Все кланы</Link>
         <span className="chip">#{c.rank} в рейтинге</span>
+        <Link href="/clans?all=1" className="btn dark sm">🔍 Все кланы</Link>
       </div>
       <div className="panel center col" style={{ alignItems: "center" }}>
         <Emblem emblem={c.emblem} color={c.color} size={92} />
         <b className="display" style={{ fontSize: 22 }}>{c.name}</b>
         <span className="chip">[{c.tag}]</span>
+        {c.description && <p className="clan-desc">{c.description}</p>}
         <div className="stat-grid" style={{ width: "100%" }}>
           <div><b className="num">{c.level}</b><span>уровень</span></div>
           <div><b className="num">{c.members.length}/{c.max}</b><span>участников</span></div>
@@ -138,7 +205,16 @@ export function ClanScreen({ id }: { id: number }) {
         {!state?.clan && <button className="btn green block" disabled={busy === "clan_join" || c.members.length >= c.max} onClick={() => act("clan_join", { clanId: c.id }, "Ты в клане!")}>Вступить</button>}
         {mine && <button className="btn dark block" disabled={busy === "clan_leave"} onClick={() => act("clan_leave", {}, "Ты вышел из клана")}>Выйти из клана</button>}
       </div>
-      <h2 className="h display">Участники</h2>
+      <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
+        <h2 className="h display">Участники</h2>
+        {leader && (
+          <div className="row" style={{ gap: 6 }}>
+            <button className={`btn sm ${editing ? "gold" : "dark"}`} onClick={() => { setEditing((v) => !v); setKickAsk(null); }}>{editing ? "Готово" : "✎ Редактировать"}</button>
+            <button className="btn sm dark" onClick={() => setSettings(true)} aria-label="Настройки клана" title="Настройки клана">⚙</button>
+          </div>
+        )}
+      </div>
+      {editing && <div className="tiny muted" style={{ marginBottom: 6 }}>Режим редактирования: нажми «Исключить» у игрока.</div>}
       <div className="col" style={{ gap: 6 }}>
         {c.members.map((m) => (
           <div key={m.id} className="clan-row">
@@ -146,14 +222,18 @@ export function ClanScreen({ id }: { id: number }) {
               <Avatar name={m.name} photo={m.photo} size={36} />
               <div className="grow" style={{ minWidth: 0 }}>
                 <b className="ellipsis" style={{ display: "block" }}>{m.name}</b>
-                <span className="tiny muted">LVL {m.level}{m.role === "leader" ? " · лидер" : ""}</span>
+                <span className="tiny muted row" style={{ gap: 3 }}><Icon name="xp" size={13} /><b className="num" style={{ color: "var(--ink)" }}>{full(m.xp)}</b>{m.role === "leader" ? " · лидер" : ""}</span>
               </div>
             </Link>
-            <b className="num">{short(m.damage)}</b>
-            {leader && m.role !== "leader" && <button className="btn sm red" onClick={() => act("clan_kick", { playerId: m.id }, "Исключён")}>×</button>}
+            {editing && leader && m.role !== "leader" ? (
+              <button className="btn sm red" disabled={busy === "clan_kick"} onClick={() => kick(m.id, m.name)}>{kickAsk === m.id ? "Точно?" : "Исключить"}</button>
+            ) : (
+              <span className="col" style={{ alignItems: "flex-end", gap: 0 }}><b className="num">{short(m.damage)}</b><span className="tiny muted">урон</span></span>
+            )}
           </div>
         ))}
       </div>
+      {settings && <ClanSettings c={c} onClose={() => setSettings(false)} onSaved={() => void load()} />}
     </div>
   );
 }

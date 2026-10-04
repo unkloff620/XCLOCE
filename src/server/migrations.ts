@@ -362,4 +362,11 @@ INSERT INTO weeks_settled (week) VALUES (to_char(date_trunc('week', (now() AT TI
 ON CONFLICT DO NOTHING;
 `,
   },
+  {
+    // clan settings: a description the leader writes
+    id: "v2-014-clan-description",
+    sql: `
+ALTER TABLE clans ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT '';
+`,
+  },
 ];

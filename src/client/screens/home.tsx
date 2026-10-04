@@ -164,6 +164,7 @@ export function HomeScreen() {
   const [wardrobe, setWardrobe] = useState(false);
   const [daily, setDaily] = useState(false);
   const [quests, setQuests] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [equip, setEquip] = useState<string | null | false>(false);
   const [pc, setPc] = useState(false);
   // the running fight sits folded in the left column; a tap unfolds the full card
@@ -202,6 +203,7 @@ export function HomeScreen() {
   };
   const f = state.fight;
   const fb = f ? bossById(f.bossId)! : null;
+  const menuAlert = state.daily.available || state.quests.claimable || state.prizes.length > 0;
   const hpPct = f ? `${Math.max(0, Math.min(100, (f.hp / Math.max(1, f.hpMax)) * 100))}%` : "0%";
   return (
     <div className={`fit-page ${f && fb && fightOpen ? "has-fight" : ""}`}>
@@ -230,7 +232,7 @@ export function HomeScreen() {
         <div className="room-help">
           <Help topic="home-menu" title="Твой дом">
             <p>Здесь живёт твой персонаж. На заднем плане стоит оборудование — нажми на мониторы, чтобы обставить рабочее место, или на системник в углу — там детали компьютера, которые улучшаются за таланты. Стрелки по бокам листают комнаты: купленная включается сразу, закрытую можно разблокировать кнопкой снизу. Каждая купленная комната даёт бонус к урону.</p>
-            <HelpList title="Кнопки слева" rows={[
+            <HelpList title="Меню [≡] слева" rows={[
               { key: "w", icon: <Icon name="shirt" size={44} />, name: "Гардероб", hint: "Одежда и внешность: причёска, цвет волос и кожи." },
               { key: "b", icon: <Icon name="gift" size={44} />, name: "Бонус", hint: "Награда за ежедневный вход. Заходи каждый день подряд — награда растёт, на 7-й день редкое оружие. Пропустишь день — серия сгорит." },
               { key: "r", icon: <Icon name="trophy" size={44} />, name: "Рейтинг", hint: "Топ по урону за неделю, по авторитету и кланам. Топ-10 недели получает призы, лидеры — рамку на карточке." },
@@ -250,26 +252,35 @@ export function HomeScreen() {
           </Help>
         </div>
         <div className="room-left">
-          <button className="icon-btn-art" style={{ ["--c" as string]: "#b06bff" }} onClick={() => setWardrobe(true)} aria-label="Гардероб" title="Гардероб">
-            <Icon name="shirt" size={58} />
+          {/* everything for the home sits folded in one [≡] button; its dot shows when anything inside waits */}
+          <button className={`menu-toggle ${menuOpen ? "open" : ""} ${menuAlert && !menuOpen ? "glow" : ""}`} onClick={() => setMenuOpen((v) => !v)} aria-label="Меню" aria-expanded={menuOpen} title="Меню">
+            <span className="menu-bars" aria-hidden="true"><i /><i /><i /></span>
+            {menuAlert && !menuOpen && <i className="side-dot" />}
           </button>
-          <button className={`icon-btn-art ${state.daily.available ? "glow" : ""}`} style={{ ["--c" as string]: "#ffcc33" }} onClick={() => setDaily(true)} aria-label="Бонус" title="Бонус">
-            <Icon name="gift" size={58} />
-            {state.daily.available && <i className="side-dot" />}
-            {state.daily.streak > 1 && <span className="side-streak num" title={`Серия входов: ${state.daily.streak} дн.`}><Icon name="fire" size={13} />{state.daily.streak}</span>}
-          </button>
-          <button className={`icon-btn-art ${state.quests.claimable ? "glow" : ""}`} style={{ ["--c" as string]: "#3ddc84" }} onClick={() => setQuests(true)} aria-label="Задания дня" title="Задания дня">
-            <Icon name="map" size={58} />
-            {state.quests.claimable && <i className="side-dot" />}
-            <span className="side-count num">{state.quests.list.filter((x) => x.claimed).length}/3</span>
-          </button>
-          <button className="icon-btn-art" style={{ ["--c" as string]: "#3fd2ff" }} onClick={() => setEquip(null)} aria-label="Обстановка" title="Обстановка">
-            <Icon name="bolt" size={58} />
-          </button>
-          <Link href="/rating" className={`icon-btn-art ${state.prizes.length ? "glow" : ""}`} style={{ ["--c" as string]: "#ffcc33" }} aria-label="Рейтинг" title="Рейтинг">
-            <Icon name="trophy" size={54} />
-            {state.prizes.length > 0 && <i className="side-dot" />}
-          </Link>
+          {menuOpen && (
+            <div className="menu-drop" onClick={() => setMenuOpen(false)}>
+              <button className="icon-btn-art" style={{ ["--c" as string]: "#b06bff" }} onClick={() => setWardrobe(true)} aria-label="Гардероб" title="Гардероб">
+                <Icon name="shirt" size={58} />
+              </button>
+              <button className={`icon-btn-art ${state.daily.available ? "glow" : ""}`} style={{ ["--c" as string]: "#ffcc33" }} onClick={() => setDaily(true)} aria-label="Бонус" title="Бонус">
+                <Icon name="gift" size={58} />
+                {state.daily.available && <i className="side-dot" />}
+                {state.daily.streak > 1 && <span className="side-streak num" title={`Серия входов: ${state.daily.streak} дн.`}><Icon name="fire" size={13} />{state.daily.streak}</span>}
+              </button>
+              <button className={`icon-btn-art ${state.quests.claimable ? "glow" : ""}`} style={{ ["--c" as string]: "#3ddc84" }} onClick={() => setQuests(true)} aria-label="Задания дня" title="Задания дня">
+                <Icon name="map" size={58} />
+                {state.quests.claimable && <i className="side-dot" />}
+                <span className="side-count num">{state.quests.list.filter((x) => x.claimed).length}/3</span>
+              </button>
+              <button className="icon-btn-art" style={{ ["--c" as string]: "#3fd2ff" }} onClick={() => setEquip(null)} aria-label="Обстановка" title="Обстановка">
+                <Icon name="bolt" size={58} />
+              </button>
+              <Link href="/rating" className={`icon-btn-art ${state.prizes.length ? "glow" : ""}`} style={{ ["--c" as string]: "#ffcc33" }} aria-label="Рейтинг" title="Рейтинг">
+                <Icon name="trophy" size={54} />
+                {state.prizes.length > 0 && <i className="side-dot" />}
+              </Link>
+            </div>
+          )}
           {f && fb && !fightOpen && (
             <button className="fight-mini" style={{ ["--acc" as string]: fb.theme.accent, ["--hp" as string]: hpPct }} onClick={() => setFightOpen(true)} aria-label={`Идёт бой: ${fb.name}`} title="Идёт бой">
               <BossRing boss={fb} size={58} />

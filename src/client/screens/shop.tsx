@@ -102,3 +102,18 @@ export function ShopScreen() {
     </div>
   );
 }
+
+/** The weapons shelf as a window over the current screen (from the fight: buy and go on hitting where you were). */
+export function WeaponShopWindow({ onClose }: { onClose: () => void }) {
+  const [data, setData] = useState<ShopData | null>(null);
+  useEffect(() => {
+    api.get<ShopData>("/api/shop").then(setData).catch(() => undefined);
+  }, []);
+  const offers = data?.offers.filter((o) => o.section === "weapons") ?? [];
+  return (
+    <Modal title="Оружие" onClose={onClose} wide>
+      {data ? <OfferGrid offers={offers} /> : <div className="muted small center">Загрузка…</div>}
+      <p className="tiny muted center" style={{ marginTop: 12 }}>Не хватает валюты? Нажми на любую валюту вверху — откроется обменник.</p>
+    </Modal>
+  );
+}

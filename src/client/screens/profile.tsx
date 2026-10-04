@@ -16,7 +16,7 @@ import { Icon } from "../art/icons.tsx";
 import { HeroRig } from "../art/rig.tsx";
 import { HomeScene } from "../art/home-scene.tsx";
 import { ROOM_BACKDROP } from "../../content/home-scene.ts";
-import { ROOM_DEFS } from "../../content/home.ts";
+import { ROOM_DEFS, stageOf } from "../../content/home.ts";
 import { BadgesPanel, type AchRow } from "../badges.tsx";
 import type { Look } from "../../content/home.ts";
 import { clock, dateRu, full, money, short } from "../format.ts";
@@ -96,7 +96,7 @@ export function ProfileScreen() {
         <Link href="/" className="back">← Дом</Link>
       </div>
       <div className="panel profile-head">
-        <div className="profile-char"><HeroRig size={150} still look={p.body} worn={p.equipped} /></div>
+        <div className="profile-char"><HeroRig size={150} still look={p.body} worn={p.equipped} seat={stageOf("chair", p.room.levels, p.room.decor).level} /></div>
         <div className="col grow" style={{ gap: 6 }}>
           <div className="row">
             <Avatar name={p.name} photo={p.photo} size={44} frame={p.frame} />
@@ -133,10 +133,10 @@ export function ProfileScreen() {
       {p.wallet && (
         <div className="panel">
           <div className="small muted" style={{ marginBottom: 8 }}>БАЛАНС</div>
-          <div className="stat-grid">
+          <div className="stat-grid balance-grid">
             {CURRENCIES.map((c) => <div key={c}><b><Coin c={c} v={p.wallet![c]} size={18} /></b><span>{c}</span></div>)}
+            {p.energy !== null && <div><b className="row" style={{ gap: 3, display: "inline-flex" }}><Icon name="energy" size={18} /><span className="num">{p.energy}</span></b><span>энергия</span></div>}
           </div>
-          {p.energy !== null && <div className="row small" style={{ marginTop: 8 }}><Icon name="energy" size={18} /> Энергия: <b>{p.energy}</b></div>}
         </div>
       )}
 

@@ -6,43 +6,67 @@ import type { Reward } from "./rewards.ts";
  */
 
 /** what a badge measures (server: systems/achievements.ts → statsFor) */
-export type AchStat = "hits" | "damage" | "wins" | "kills" | "locations" | "tasks" | "yard" | "bestStreak" | "level" | "clan" | "chests" | "weeklyTop";
+export type AchStat = "authority" | "damage" | "hits" | "wins" | "kills" | "locations" | "tasks" | "yard" | "bestStreak" | "chests" | "weeklyTop";
 
-export type AchTier = "bronze" | "silver" | "gold";
+/** 1 bronze · 2 silver · 3 gold · 4 platinum · 5 diamond */
+export type AchTier = 1 | 2 | 3 | 4 | 5;
+export const TIER_NAMES: Record<AchTier, string> = { 1: "Бронза", 2: "Серебро", 3: "Золото", 4: "Платина", 5: "Бриллиант" };
+export const TIER_COLORS: Record<AchTier, string> = { 1: "#d0803f", 2: "#c3cdde", 3: "#ffcc33", 4: "#5ff0dc", 5: "#c07bff" };
+
+export interface AchCategory {
+  id: string;
+  name: string;
+  /** "Набери {n} авторитета" — {n} becomes the tier's target */
+  hint: string;
+  stat: AchStat;
+  icon: string;
+  /** five thresholds, bronze → diamond */
+  targets: [number, number, number, number, number];
+}
+
+export const ACH_CATEGORIES: AchCategory[] = [
+  { id: "authority", name: "Авторитет", hint: "Набери {n} авторитета", stat: "authority", icon: "xp", targets: [10_000, 500_000, 2_500_000, 5_000_000, 10_000_000] },
+  { id: "damage", name: "Урон боссам", hint: "Нанеси боссам {n} урона", stat: "damage", icon: "fire", targets: [1_000, 25_000, 250_000, 1_000_000, 5_000_000] },
+  { id: "hits", name: "Удары", hint: "Нанеси {n} ударов", stat: "hits", icon: "swords", targets: [10, 100, 1_000, 5_000, 20_000] },
+  { id: "wins", name: "Победы", hint: "Выиграй {n} боёв с боссами", stat: "wins", icon: "trophy", targets: [1, 10, 50, 200, 500] },
+  { id: "kills", name: "Добивающий", hint: "Нанеси последний удар боссу {n} раз", stat: "kills", icon: "key", targets: [1, 5, 25, 100, 250] },
+  { id: "locations", name: "Локации", hint: "Пройди локации {n} раз (повторы считаются)", stat: "locations", icon: "map", targets: [1, 5, 20, 50, 100] },
+  { id: "tasks", name: "Задания", hint: "Выполни {n} заданий в локациях", stat: "tasks", icon: "energy", targets: [5, 25, 100, 300, 1_000] },
+  { id: "yard", name: "Барахольщик", hint: "Подбери во дворе {n} находок", stat: "yard", icon: "chest", targets: [10, 100, 500, 2_000, 5_000] },
+  { id: "streak", name: "Серия входов", hint: "Заходи {n} дней подряд", stat: "bestStreak", icon: "gift", targets: [3, 7, 14, 30, 60] },
+  { id: "chests", name: "Сундуки дня", hint: "Открой {n} сундуков за задания дня", stat: "chests", icon: "chest", targets: [1, 7, 30, 100, 365] },
+  { id: "weekly", name: "Топ недели", hint: "Попади в топ-10 недели по урону {n} раз", stat: "weeklyTop", icon: "trophy", targets: [1, 3, 10, 25, 50] },
+];
+
+/** the same reward for a tier in every category: the higher, the richer */
+export const TIER_REWARDS: Record<AchTier, Reward> = {
+  1: { currencies: { RUB: 500 }, xp: 1_000 },
+  2: { currencies: { USD: 10 }, xp: 10_000, items: [{ id: "keyboard", qty: 2 }] },
+  3: { currencies: { USD: 30 }, xp: 50_000, items: [{ id: "gpu", qty: 2 }] },
+  4: { currencies: { SOL: 0.1 }, xp: 150_000, items: [{ id: "rug-pull-gun", qty: 1 }] },
+  5: { currencies: { SOL: 0.3 }, xp: 500_000, items: [{ id: "rug-pull-gun", qty: 3 }] },
+};
 
 export interface AchievementDef {
   id: string;
+  category: string;
   name: string;
   hint: string;
   stat: AchStat;
   target: number;
   tier: AchTier;
-  /** icon name from art/icons.tsx */
   icon: string;
   reward: Reward;
 }
 
-export const ACHIEVEMENTS: AchievementDef[] = [
-  { id: "first-blood", name: "Первая кровь", hint: "Ударь любого босса", stat: "hits", target: 1, tier: "bronze", icon: "swords", reward: { currencies: { RUB: 200 } } },
-  { id: "hits-100", name: "Разогрелся", hint: "Нанеси 100 ударов", stat: "hits", target: 100, tier: "silver", icon: "swords", reward: { currencies: { RUB: 800 }, items: [{ id: "keyboard", qty: 1 }] } },
-  { id: "hits-1000", name: "Тысяча ударов", hint: "Нанеси 1 000 ударов", stat: "hits", target: 1000, tier: "gold", icon: "swords", reward: { currencies: { USD: 25 }, items: [{ id: "gpu", qty: 2 }] } },
-  { id: "dmg-10k", name: "Ощутимо", hint: "Нанеси боссам 10 000 урона", stat: "damage", target: 10_000, tier: "silver", icon: "fire", reward: { currencies: { RUB: 1500 } } },
-  { id: "dmg-100k", name: "Разрушитель", hint: "Нанеси боссам 100 000 урона", stat: "damage", target: 100_000, tier: "gold", icon: "fire", reward: { currencies: { SOL: 0.05 }, items: [{ id: "rug-pull-gun", qty: 1 }] } },
-  { id: "win-1", name: "Первая победа", hint: "Выиграй бой с боссом", stat: "wins", target: 1, tier: "bronze", icon: "trophy", reward: { currencies: { RUB: 300 } } },
-  { id: "win-25", name: "Гроза офиса", hint: "Выиграй 25 боёв", stat: "wins", target: 25, tier: "gold", icon: "trophy", reward: { currencies: { USD: 20 }, items: [{ id: "gpu", qty: 1 }] } },
-  { id: "kill-1", name: "Добивающий", hint: "Нанеси последний удар боссу", stat: "kills", target: 1, tier: "silver", icon: "key", reward: { currencies: { USD: 5 } } },
-  { id: "loc-1", name: "Стажёр", hint: "Пройди первую локацию", stat: "locations", target: 1, tier: "bronze", icon: "map", reward: { energy: 20 } },
-  { id: "loc-all", name: "Весь офис наш", hint: "Пройди все локации", stat: "locations", target: 5, tier: "gold", icon: "map", reward: { currencies: { USD: 30 }, energy: 100 } },
-  { id: "tasks-25", name: "Исполнительный", hint: "Выполни 25 заданий в локациях", stat: "tasks", target: 25, tier: "silver", icon: "energy", reward: { currencies: { RUB: 1000 }, energy: 30 } },
-  { id: "yard-100", name: "Барахольщик", hint: "Подбери 100 находок во дворе", stat: "yard", target: 100, tier: "silver", icon: "chest", reward: { currencies: { RUB: 1000 } } },
-  { id: "streak-7", name: "Неделя подряд", hint: "Заходи 7 дней подряд", stat: "bestStreak", target: 7, tier: "silver", icon: "gift", reward: { currencies: { USD: 5 } } },
-  { id: "streak-30", name: "Без выходных", hint: "Заходи 30 дней подряд", stat: "bestStreak", target: 30, tier: "gold", icon: "gift", reward: { currencies: { SOL: 0.05 }, items: [{ id: "rug-pull-gun", qty: 1 }] } },
-  { id: "level-10", name: "Авторитет", hint: "Достигни 10 уровня", stat: "level", target: 10, tier: "silver", icon: "xp", reward: { currencies: { USD: 10 } } },
-  { id: "level-25", name: "Легенда офиса", hint: "Достигни 25 уровня", stat: "level", target: 25, tier: "gold", icon: "xp", reward: { currencies: { SOL: 0.05 } } },
-  { id: "clan", name: "Командный игрок", hint: "Вступи в клан или создай свой", stat: "clan", target: 1, tier: "bronze", icon: "user", reward: { currencies: { RUB: 300 } } },
-  { id: "chests-7", name: "Охотник за сундуками", hint: "Открой 7 сундуков дня", stat: "chests", target: 7, tier: "silver", icon: "chest", reward: { currencies: { USD: 5 }, items: [{ id: "keyboard", qty: 2 }] } },
-  { id: "weekly-top", name: "В десятке", hint: "Попади в топ-10 недели по урону", stat: "weeklyTop", target: 1, tier: "gold", icon: "trophy", reward: { currencies: { USD: 10 } } },
-];
+const fmt = (n: number) => n.toLocaleString("ru-RU").replace(/\u00a0/g, " ");
+
+export const ACHIEVEMENTS: AchievementDef[] = ACH_CATEGORIES.flatMap((c) =>
+  c.targets.map((target, i) => {
+    const tier = (i + 1) as AchTier;
+    return { id: `${c.id}-${tier}`, category: c.id, name: `${c.name}: ${TIER_NAMES[tier]}`, hint: c.hint.replace("{n}", fmt(target)), stat: c.stat, target, tier, icon: c.icon, reward: TIER_REWARDS[tier] };
+  }),
+);
 
 export const achievementById = (id: string) => ACHIEVEMENTS.find((a) => a.id === id);
 
@@ -50,16 +74,16 @@ export const achievementById = (id: string) => ACHIEVEMENTS.find((a) => a.id ===
 
 /** Prizes for the weekly damage top-10, by place (index 0 = 1st place). */
 export const WEEKLY_PRIZES: Reward[] = [
-  { currencies: { SOL: 0.1, USD: 30 }, items: [{ id: "rug-pull-gun", qty: 2 }] },
-  { currencies: { SOL: 0.06, USD: 20 }, items: [{ id: "rug-pull-gun", qty: 1 }] },
-  { currencies: { SOL: 0.04, USD: 15 }, items: [{ id: "gpu", qty: 2 }] },
-  ...Array.from({ length: 7 }, () => ({ currencies: { USD: 10 }, items: [{ id: "gpu", qty: 1 }] }) as Reward),
+  { currencies: { SOL: 0.1, USD: 30 }, xp: 300_000, items: [{ id: "rug-pull-gun", qty: 2 }] },
+  { currencies: { SOL: 0.06, USD: 20 }, xp: 200_000, items: [{ id: "rug-pull-gun", qty: 1 }] },
+  { currencies: { SOL: 0.04, USD: 15 }, xp: 150_000, items: [{ id: "gpu", qty: 2 }] },
+  ...Array.from({ length: 7 }, () => ({ currencies: { USD: 10 }, xp: 50_000, items: [{ id: "gpu", qty: 1 }] }) as Reward),
 ];
 /** Every member of the top-3 clans of the week. */
 export const CLAN_PRIZES: Reward[] = [
-  { currencies: { USD: 10 }, items: [{ id: "keyboard", qty: 2 }] },
-  { currencies: { USD: 6 }, items: [{ id: "keyboard", qty: 1 }] },
-  { currencies: { USD: 4 } },
+  { currencies: { USD: 10 }, xp: 50_000, items: [{ id: "keyboard", qty: 2 }] },
+  { currencies: { USD: 6 }, xp: 30_000, items: [{ id: "keyboard", qty: 1 }] },
+  { currencies: { USD: 4 }, xp: 20_000 },
 ];
 
 /** frame on the player card for last week's place */

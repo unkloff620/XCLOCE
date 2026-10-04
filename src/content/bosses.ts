@@ -26,7 +26,9 @@ export interface BossDef {
 /** 1 000 → 10 000 → 50 000 → … → 10 000 000 (Солнце). */
 const HP = [1_000, 10_000, 50_000, 150_000, 400_000, 1_000_000, 2_500_000, 5_000_000, 10_000_000];
 const hp = (i: number) => HP[i];
-const xp = (i: number) => Math.round(60 * 1.35 ** i);
+/** Authority for a win: 100 for Дацик … 1 500 000 for Солнце (×≈3.3 per boss). */
+const XP = [100, 350, 1_100, 3_700, 12_000, 40_000, 135_000, 450_000, 1_500_000];
+const xp = (i: number) => XP[i];
 const photo = (id: string, has = false) => (has ? { portrait: `/bosses/${id}/portrait.webp`, full: `/bosses/${id}/full.webp` } : { portrait: null, full: null });
 
 /** Strict order from the design: Дацик → … → Солнце (final). */
