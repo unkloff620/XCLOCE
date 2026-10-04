@@ -655,8 +655,8 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .loc-banner { display: block; width: 100%; aspect-ratio: 360 / 140; object-fit: cover; }
 .loc-card.locked .loc-banner { filter: grayscale(1) brightness(0.45); }
 
-/* penthouse: clouds float slowly behind the window (one loop = the panorama and its mirror, ~6 min) */
-.room-sky { animation: room-sky 360s linear infinite; }
+/* penthouse: clouds float slowly behind the window (one loop = the panorama and its mirror, 10 min) */
+.room-sky { animation: room-sky 600s linear infinite; }
 @keyframes room-sky { to { transform: translateX(var(--sky-w)); } }
 /* living lamps: a soft, uneven breathing of the glow, like a real bulb */
 .room-light { transform-box: fill-box; transform-origin: center; }
