@@ -16,16 +16,18 @@ import { BossRewardsPanel, BossRulesHelp, useBossList } from "./bosses.tsx";
 import { BossPhoto } from "./boss-parts.tsx";
 import { clock, full, pct, short } from "../format.ts";
 import { haptic } from "../telegram.ts";
+import { DriftingSky } from "../art/sky.tsx";
+import { Modal } from "../ui.tsx";
 
 const POLL_MS = 1500;
 
-function Arena({ boss, hp, hpMax, endsAt, fx, hit, rug, feed }: { boss: BossDef; hp: number | null; hpMax: number; endsAt: number | null; fx: React.ReactNode; hit: boolean; rug: boolean; feed: Hit[] }) {
+function Arena({ boss, hp, hpMax, endsAt, fx, hit, rug, feed, full: fullScreen }: { boss: BossDef; hp: number | null; hpMax: number; endsAt: number | null; fx: React.ReactNode; hit: boolean; rug: boolean; feed: Hit[]; full?: boolean }) {
   const now = useNow();
   const phase = boss.phases && hp !== null ? [...boss.phases].reverse().find((p) => pct(hp, hpMax) <= p.from) ?? boss.phases[0] : null;
   const hurt = hp !== null && pct(hp, hpMax) < 25;
   return (
-    <div className={`arena ${boss.final ? "final" : ""}`} style={{ ["--acc" as string]: boss.theme.accent }}>
-      <ArenaBackdrop theme={boss.theme} final={boss.final} />
+    <div className={`arena ${boss.final ? "final" : ""} ${fullScreen ? "full" : ""}`} style={{ ["--acc" as string]: boss.theme.accent }}>
+      {!fullScreen && <ArenaBackdrop theme={boss.theme} final={boss.final} />}
       <div className={`arena-photo ${hit ? "hit" : ""} ${rug ? "rug" : ""} ${hurt ? "hurt" : ""}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         {boss.photo.full ? <img src={boss.photo.full} alt={boss.name} draggable={false} /> : <div className="arena-sil"><BossSilhouette accent={boss.theme.accent} /><span className="small muted">фото скоро</span></div>}
@@ -95,7 +97,7 @@ export function BossScreen({ id }: { id: string }) {
   const [rug, setRug] = useState(false);
   const [pendingDmg, setPendingDmg] = useState(0);
   const [phrase, setPhrase] = useState<{ text: string; id: number; crit?: boolean } | null>(null);
-  const [tab, setTab] = useState<"top" | "mine">("top");
+  const [tab, setTab] = useState<"top" | "mine" | null>(null);
   const [details, setDetails] = useState<{ top: { playerId: number; name: string; damage: number; wins: number }[]; myHits: { weapon: string; damage: number; phrase: number; at: number }[] } | null>(null);
   const lastSeq = useRef(0);
   const seen = useRef<Set<number>>(new Set());
@@ -203,35 +205,38 @@ export function BossScreen({ id }: { id: string }) {
   const limitLeft = row ? row.fightsPerDay - row.fightsToday : 1;
 
   const hpMax = view?.hpMax ?? row?.hpMax ?? boss.hp;
-  return (
-    <div>
-      <div className="title">
-        <div>
-          <Link href="/bosses" className="back">← Боссы</Link>
-          <h1 className="display">{boss.name}</h1>
-          <div className="small muted">{boss.title}</div>
+  // the fight takes the whole screen: garage + drifting sky behind, the boss in the middle, weapons at the bottom
+  if (fightId) {
+    return (
+      <div className="fit-page fight-page" style={{ ["--acc" as string]: boss.theme.accent }}>
+        <div className="fight-bg" aria-hidden="true">
+          <DriftingSky className="fight-sky" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/assets/arena/garage.webp" alt="" draggable={false} />
         </div>
-        {fightId && view && <span className="chip red">бьют: {view.fightingNow}</span>}
-      </div>
-
-      {fightId ? (
-        <>
-          <Arena boss={boss} hp={hpShown} hpMax={hpMax} endsAt={state!.fight!.endsAt} fx={layer} hit={hitAnim} rug={rug} feed={hits} />
+        <div className="fight-head">
+          <Link href="/bosses" className="back-btn" aria-label="К боссам">‹</Link>
+          <div className="grow" style={{ minWidth: 0 }}>
+            <b className="display boss-name ellipsis">{boss.name}</b>
+          </div>
+          {view && <span className="chip red">бьют: {view.fightingNow}</span>}
+          <BossRulesHelp topic="boss" />
+        </div>
+        <Arena full boss={boss} hp={hpShown} hpMax={hpMax} endsAt={state!.fight!.endsAt} fx={layer} hit={hitAnim} rug={rug} feed={hits} />
+        <div className="fight-bottom">
           {phrase && <div key={phrase.id} className={`phrase-bubble ${phrase.crit ? "crit" : ""}`}>{phrase.text}</div>}
-          <div className="row small" style={{ justifyContent: "space-between", margin: "10px 2px" }}>
-            <span>Мой вклад: <b className="num">{full(view?.myDamage ?? 0)}</b> <span className="muted">({myShare.toFixed(1)}%)</span></span>
-            <button className={`btn sm ${fleeAsk ? "red" : "dark"}`} onClick={flee} disabled={busy === "fight_flee"}>{fleeAsk ? "Точно сдаться?" : "Сдаться"}</button>
+          <div className="row fight-bar">
+            <span className="chip" title="Мой вклад">Вклад: <b className="num">{full(view?.myDamage ?? 0)}</b> <span className="muted">{myShare.toFixed(1)}%</span></span>
+            <span className="grow" />
+            <button className="btn sm dark" onClick={() => setTab("top")}>Топ</button>
+            <button className="btn sm dark" onClick={() => setTab("mine")}>Мои</button>
+            <button className={`btn sm ${fleeAsk ? "red" : "dark"}`} onClick={flee} disabled={busy === "fight_flee"}>{fleeAsk ? "Точно?" : "Сдаться"}</button>
           </div>
           <WeaponTray tray={tray} onHit={attack} disabled={view?.status !== undefined && view.status !== "active"} />
-          <p className="tiny muted center" style={{ margin: "6px 0 0" }}>Энергия в бою не тратится — только оружие.</p>
-
-          <div className="tabs" style={{ marginTop: 14 }}>
-            {([["top", "Топ боя"], ["mine", "Мои удары"]] as const).map(([k, l]) => (
-              <button key={k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>{l}</button>
-            ))}
-          </div>
-          <div className="panel">
-            {tab === "top" && (
+        </div>
+        {tab !== null && (
+          <Modal title={tab === "top" ? "Топ боя" : "Мои удары"} onClose={() => setTab(null)}>
+            {tab === "top" ? (
               topRows.length ? (
                 <div className="col" style={{ gap: 4 }}>
                   {topRows.map((t, i) => (
@@ -243,23 +248,34 @@ export function BossScreen({ id }: { id: string }) {
                   ))}
                 </div>
               ) : <div className="muted small center">В этом бою ещё никто не бил. Будь первым.</div>
-            )}
-            {tab === "mine" && (
-              myHits.length ? (
-                <div className="col" style={{ gap: 4 }}>
-                  {myHits.map((h, i) => (
-                    <div key={i} className="row small">
-                      <ItemArt id={h.weapon} size={22} />
-                      <span className="grow ellipsis muted">{HIT_PHRASES[h.weapon]?.[h.phrase] ?? ""}</span>
-                      <b className="num" style={{ color: "var(--red)" }}>−{h.damage}</b>
-                    </div>
-                  ))}
-                </div>
-              ) : <div className="muted small center">В этом бою ты ещё не бил.</div>
-            )}
-          </div>
-        </>
-      ) : (
+            ) : myHits.length ? (
+              <div className="col" style={{ gap: 4 }}>
+                {myHits.map((h, i) => (
+                  <div key={i} className="row small">
+                    <ItemArt id={h.weapon} size={22} />
+                    <span className="grow ellipsis muted">{HIT_PHRASES[h.weapon]?.[h.phrase] ?? ""}</span>
+                    <b className="num" style={{ color: "var(--red)" }}>−{h.damage}</b>
+                  </div>
+                ))}
+              </div>
+            ) : <div className="muted small center">В этом бою ты ещё не бил.</div>}
+          </Modal>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="title">
+        <div>
+          <Link href="/bosses" className="back">← Боссы</Link>
+          <h1 className="display">{boss.name}</h1>
+          <div className="small muted">{boss.title}</div>
+        </div>
+      </div>
+
+      {(
         <div className="boss-card-full" style={{ ["--acc" as string]: boss.theme.accent }}>
           <div className="boss-card-photo">
             {boss.photo.full && !(row && !row.unlocked) ? (

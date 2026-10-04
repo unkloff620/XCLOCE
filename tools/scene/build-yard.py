@@ -1,5 +1,5 @@
 """
-Yard art: tools/scene/source/yard-{bg,sky}.png, slot-machine.png → public/assets/yard/*.webp
+Yard and boss-fight art: tools/scene/source/yard-{bg,sky}.png, slot-machine.png, arena-garage.png → public/assets/{yard,arena}/*.webp
   * bg.webp   — the yard with a transparent sky (1060×1484)
   * sky.webp  — the sky with its ends cross-faded so it tiles seamlessly; it scrolls behind the yard
   * slot.webp — the slot machine (transparent), used as the button in the yard
@@ -37,3 +37,10 @@ slot.save(os.path.join(OUT, "slot.webp"), "WEBP", quality=82, method=4)
 for f in ("bg", "sky", "slot"):
     p = os.path.join(OUT, f + ".webp")
     print(f, Image.open(p).size, os.path.getsize(p) // 1024, "KB")
+
+# boss fight background (garage; transparent windows show the drifting sky)
+ARENA = os.path.abspath(os.path.join(HERE, "..", "..", "public", "assets", "arena"))
+os.makedirs(ARENA, exist_ok=True)
+g = Image.open(os.path.join(SRC, "arena-garage.png")).convert("RGBA")
+g.save(os.path.join(ARENA, "garage.webp"), "WEBP", quality=72, method=4)
+print("garage", g.size, os.path.getsize(os.path.join(ARENA, "garage.webp")) // 1024, "KB")

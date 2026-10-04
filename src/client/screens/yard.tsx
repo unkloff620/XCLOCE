@@ -10,6 +10,7 @@ import { haptic } from "../telegram.ts";
 import Link from "next/link";
 import { Icon } from "../art/icons.tsx";
 import { SlotMachine } from "./slots.tsx";
+import { DriftingSky } from "../art/sky.tsx";
 import { Help, HelpList } from "../help.tsx";
 import { Modal } from "../ui.tsx";
 
@@ -70,25 +71,11 @@ export function YardScreen() {
       </div>
       <div className="yard">
         {/* full-screen scene: a blurred copy fills the screen, the sharp scene stands on the nav at full width */}
-        {/* the sky drifts behind the yard: two copies of a seamless tile slide left forever */}
-        <div className="yard-sky" aria-hidden="true">
-          <div className="yard-sky-strip">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/assets/yard/sky.webp" alt="" draggable={false} />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/assets/yard/sky.webp" alt="" draggable={false} />
-          </div>
-        </div>
+        {/* the sky drifts behind the yard */}
+        <DriftingSky className="yard-sky" />
         <div className="yard-stage">
           {/* the sky upside down under the ground: it shows through the transparent puddles */}
-          <div className="yard-reflect" aria-hidden="true">
-            <div className="yard-sky-strip">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/assets/yard/sky.webp" alt="" draggable={false} />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/assets/yard/sky.webp" alt="" draggable={false} />
-            </div>
-          </div>
+          <DriftingSky className="yard-reflect" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="yard-bg" src="/assets/yard/bg.webp?v=2" alt="" draggable={false} />
           <button className={`yard-slots ${state && state.slots.left > 0 ? "ready" : ""}`} onClick={() => setSlots(true)} aria-label="Игровой автомат 777">

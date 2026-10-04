@@ -476,3 +476,21 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(10, 12, 24, 0.
 .yard-slots img { width: 100%; height: 100%; display: block; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.6)); }
 @media (prefers-reduced-motion: reduce) { .yard-sky-strip { animation: none; } }
 .yard-reflect { position: absolute; left: 0; right: 0; top: 55%; bottom: 0; overflow: hidden; transform: scaleY(-1); filter: brightness(0.75) saturate(1.1) blur(0.6px); }
+
+/* ---------- boss fight on the whole screen ---------- */
+.fight-bg { position: absolute; inset: 0; background: #120c0a; overflow: hidden; }
+.fight-sky { position: absolute; left: 0; right: 0; top: 0; height: 45%; overflow: hidden; }
+.fight-bg > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 100%; user-select: none; }
+.fight-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8, 9, 20, 0.35), transparent 30%, transparent 60%, rgba(8, 9, 20, 0.6)); }
+.fight-head { position: absolute; left: 12px; right: 12px; top: var(--top); z-index: 5; display: flex; align-items: center; gap: 8px; }
+.fight-head .boss-name { display: block; font-size: 22px; }
+.back-btn { flex: none; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 11px; border: 2.5px solid var(--line); background: rgba(20, 24, 52, 0.85); color: var(--ink); font-size: 24px; font-weight: 800; line-height: 1; }
+.arena.full { position: absolute; left: 0; right: 0; top: calc(var(--top) + 44px); bottom: calc(var(--bottom) + 132px); aspect-ratio: auto; border: 0; border-radius: 0; box-shadow: none; background: none; }
+.arena.full .arena-top { left: 12px; right: 12px; top: 0; }
+.arena.full .arena-photo { left: 4%; right: 4%; top: 58px; bottom: 0; }
+.arena.full .arena-feed { left: 12px; right: 12px; bottom: 4px; }
+.fight-bottom { position: absolute; left: 12px; right: 12px; bottom: var(--bottom); z-index: 5; display: flex; flex-direction: column; gap: 8px; }
+.fight-bottom .phrase-bubble { position: absolute; left: 0; right: 0; bottom: calc(100% + 10px); margin: 0 auto; }
+.fight-bar { gap: 6px; }
+.fight-bar .chip { background: rgba(10, 12, 24, 0.85); white-space: nowrap; }
+.fight-bar .btn { padding-left: 10px; padding-right: 10px; }
