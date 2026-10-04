@@ -16,7 +16,9 @@ import { DEFAULT_LOOK, type Look } from "../../content/home.ts";
 
 type PartId = keyof typeof RIG;
 type HairId = keyof typeof HAIR_FIT;
-type WearId = keyof typeof WEAR_FIT;
+type WearId = string;
+/** clothes drawn for the current body (may be empty while being redrawn) */
+const WEARS: Record<string, { slot: string; x: number; y: number; w: number; h: number }> = WEAR_FIT;
 /** what the player wears: slot → item id (items without drawn art are skipped) */
 export type Worn = Record<string, string | undefined>;
 
@@ -26,14 +28,14 @@ const WornCtx = createContext<Worn>({});
 
 function wornIn(worn: Worn, slot: string): WearId | null {
   const id = worn[slot];
-  return id && id in WEAR_FIT ? (id as WearId) : null;
+  return id && id in WEARS ? id : null;
 }
 
 /** a worn piece of clothing, if the item in that slot has art */
 function Wear({ slot }: { slot: string }) {
   const id = wornIn(useContext(WornCtx), slot);
   if (!id) return null;
-  const f = WEAR_FIT[id];
+  const f = WEARS[id];
   return <image href={`/assets/hero/wear/${id}.webp`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
 }
 
