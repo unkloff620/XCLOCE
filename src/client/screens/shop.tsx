@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { BonusLine } from "./house.tsx";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { invQty, useGame } from "../store.tsx";
@@ -21,6 +22,7 @@ const SHOP_SPOTS = [
   { id: "weapons", img: "shelf", name: "Оружие", sections: ["weapons"], left: -18, top: 12, width: 68, hint: "Стеллаж с оружием: мыши, свечи, клавиатуры, видеокарты и Rug Pull Gun." },
   { id: "clothing", img: "rack", name: "Одежда", sections: ["clothing"], left: 40.4, top: 33.5, width: 28.7, hint: "Вешалка с вещами: футболки, кепки и прочее для персонажа." },
   { id: "energy", img: "drinks", name: "Энергия", sections: ["energy", "misc"], left: 81.8, top: 31.5, width: 23.5, hint: "Энергетики на прилавке: энергия для заданий и полезные мелочи." },
+  { id: "furniture", img: "desk", name: "Мебель", sections: ["furniture"], left: 20, top: 64, width: 58, hint: "Стол на ковре: столы для твоей комнаты. Хороший стол даёт бонус к удару." },
 ] as const;
 
 function OfferGrid({ offers }: { offers: Offer[] }) {
@@ -42,6 +44,7 @@ function OfferGrid({ offers }: { offers: Offer[] }) {
             <div className="offer-art">{def ? <ItemArt id={def.id} size={56} /> : <Icon name="energy" size={56} />}</div>
             <b className="small">{o.title}</b>
             {def?.weapon && <span className="tiny muted">урон {def.weapon.damage}</span>}
+            {def?.bonus && <span className="tiny" style={{ color: "var(--gold)" }}><BonusLine b={def.bonus} /></span>}
             {def && def.maxStack > 1 && <span className="tiny dim">есть: {owned}</span>}
             {def && def.maxStack === 1 && owned > 0 && <span className="tiny" style={{ color: "var(--green)" }}>уже есть</span>}
             <button className="btn sm gold block" disabled={!can || full || busy === "buy"} onClick={() => buy(o)}>

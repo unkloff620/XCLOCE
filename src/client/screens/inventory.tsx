@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useGame } from "../store.tsx";
+import { BonusLine } from "./house.tsx";
 import { CATEGORY_NAME, itemById, RARITY_NAME, type Category, type ItemDef } from "../../content/items.ts";
 import { ItemArt } from "../art/items.tsx";
 import { Coin, Empty, Modal } from "../ui.tsx";
@@ -47,7 +48,7 @@ export function InventoryScreen() {
   const [open, setOpen] = useState<ItemDef | null>(null);
   if (!state) return null;
   const items = state.inventory.map((i) => ({ def: itemById(i.id)!, qty: i.qty })).filter((x) => x.def && (cat === "all" || x.def.category === cat));
-  const order: Category[] = ["weapon", "clothing", "item", "reward", "event"];
+  const order: Category[] = ["weapon", "clothing", "furniture", "item", "reward", "event"];
   items.sort((a, b) => order.indexOf(a.def.category) - order.indexOf(b.def.category) || (b.def.weapon?.damage ?? 0) - (a.def.weapon?.damage ?? 0));
   const qtyOf = (id: string) => state.inventory.find((i) => i.id === id)?.qty ?? 0;
   const worn = open?.slot ? state.look.equipped[open.slot] === open.id : false;
@@ -104,11 +105,16 @@ export function InventoryScreen() {
                   Использовать
                 </button>
               )}
-              {open.slot && (
+              {open.slot === "DESK" ? (
+                worn ? <div className="chip green" style={{ alignSelf: "center" }}>Стоит в комнате</div> : (
+                  <button className="btn violet block" disabled={!!busy} onClick={() => act("equip", { itemId: open.id }, "Стол в комнате")}>Поставить в комнату</button>
+                )
+              ) : open.slot && (
                 <button className="btn violet block" disabled={!!busy} onClick={() => act(worn ? "unequip" : "equip", worn ? { slot: open.slot } : { itemId: open.id }, worn ? "Снято" : "Надето")}>
                   {worn ? "Снять" : "Надеть"}
                 </button>
               )}
+              {open.bonus && <div className="small center" style={{ color: "var(--gold)" }}>Пока стоит в комнате: <BonusLine b={open.bonus} /></div>}
               {!!state.sell[open.id] && <SellBox key={open.id} id={open.id} have={qtyOf(open.id)} price={state.sell[open.id]} />}
             </div>
           </div>

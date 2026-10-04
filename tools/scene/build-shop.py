@@ -11,3 +11,7 @@ for name, width, q in [("bg", 941, 76), ("shelf", 700, 82), ("rack", 420, 82), (
     im = im.resize((width, round(im.height * width / im.width)), Image.LANCZOS)
     im.save(os.path.join(OUT, name + ".webp"), "WEBP", quality=q, method=4)
     print(name, im.size, os.path.getsize(os.path.join(OUT, name + ".webp")) // 1024, "KB")
+# furniture spot: the best desk on the carpet (the cut-out desk from tools/scene/source, see cut-desks.py)
+d = Image.open(os.path.join(HERE, "source", "desk-004.png")).convert("RGBA")
+d = d.crop(d.getbbox())
+d.resize((600, round(d.height * 600 / d.width)), Image.LANCZOS).save(os.path.join(OUT, "desk.webp"), "WEBP", quality=86, method=6)

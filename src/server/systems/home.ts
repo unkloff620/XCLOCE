@@ -1,4 +1,5 @@
 import { GameError, type Queryable } from "../db.ts";
+import { itemById, STARTER_DESK } from "../../content/items.ts";
 import { takeMoney, type Ctx } from "../core.ts";
 import { EQUIPMENT, HELP_TOPICS, equipmentById, pcPartById, pcPartCost, normalizeLook, roomById, totalBonus, type HelpTopic, type Look } from "../../content/home.ts";
 
@@ -6,29 +7,32 @@ import { EQUIPMENT, HELP_TOPICS, equipmentById, pcPartById, pcPartCost, normaliz
  * Дом: оборудование (уровни), комнаты (купить / выбрать), внешность персонажа, просмотренные подсказки.
  */
 
-export interface HomeRow { levels: Record<string, number>; rooms: string[]; room: string; body: Look }
+const deskBonus = (id: string) => [itemById(id)?.bonus ?? {}];
+
+export interface HomeRow { levels: Record<string, number>; rooms: string[]; room: string; body: Look; desk: string }
 
 export async function homeData(q: Queryable, pid: number): Promise<HomeRow> {
   const eq = await q.query<{ equipment_id: string; level: number }>("SELECT equipment_id, level FROM player_equipment WHERE player_id=$1", [pid]);
-  const [a] = await q.query<{ room: string; rooms: string[] | null; body: unknown }>("SELECT room, rooms, body FROM appearance WHERE player_id=$1", [pid]);
+  const [a] = await q.query<{ room: string; rooms: string[] | null; body: unknown; equipped: Record<string, string> | null }>("SELECT room, rooms, body, equipped FROM appearance WHERE player_id=$1", [pid]);
   const rooms = Array.isArray(a?.rooms) && a.rooms.length ? a.rooms : ["basic"];
   return {
     levels: Object.fromEntries(eq.map((e) => [e.equipment_id, e.level])),
     rooms,
     room: a && rooms.includes(a.room) ? a.room : "basic",
     body: normalizeLook(a?.body),
+    desk: a?.equipped?.DESK ?? STARTER_DESK,
   };
 }
 
 /** Combat bonus of a player (equipment + every owned room). */
 export async function playerBonus(q: Queryable, pid: number) {
   const h = await homeData(q, pid);
-  return totalBonus(h.levels, h.rooms);
+  return totalBonus(h.levels, h.rooms, deskBonus(h.desk));
 }
 
 export async function homeView(q: Queryable, pid: number) {
   const h = await homeData(q, pid);
-  return { ...h, bonus: totalBonus(h.levels, h.rooms) };
+  return { ...h, bonus: totalBonus(h.levels, h.rooms, deskBonus(h.desk)) };
 }
 
 export async function upgradeEquipment(ctx: Ctx, id: string) {

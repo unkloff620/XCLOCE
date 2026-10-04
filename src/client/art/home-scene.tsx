@@ -2,20 +2,25 @@
 /* The player's room: artist's background, desk, monitor, PC and the seated character on the stool. */
 import { CHARACTER, ROOM_BG, ROOM_LIGHTS, ROOM_SKY, SCENE, SCENE_OBJECTS } from "../../content/home-scene.ts";
 import { RigViewport, type Worn } from "./rig.tsx";
+import { DESK_ASPECT } from "./desk-data.ts";
+import { STARTER_DESK } from "../../content/items.ts";
 import type { Look } from "../../content/home.ts";
 
 type ObjId = keyof typeof SCENE_OBJECTS;
 
-function Obj({ id, onPick }: { id: ObjId; onPick?: (equipment: string) => void }) {
+function Obj({ id, onPick, art }: { id: ObjId; onPick?: (equipment: string) => void; art?: { src: string; aspect: number } }) {
   const o = SCENE_OBJECTS[id];
   const eq = "equipment" in o ? o.equipment : null;
-  const h = o.w * o.aspect;
+  const h = o.w * (art?.aspect ?? o.aspect);
+  const src = art?.src ?? `/assets/home/${id}-1.webp`;
+  // standing objects keep their bottom (feet, legs) where the layout puts it, whatever the picture's height
+  const y = o.y + o.w * o.aspect - h;
   const img = o.flip ? (
-    <g transform={`translate(${o.x + o.w} ${o.y}) scale(-1 1)`}>
-      <image href={`/assets/home/${id}-1.webp`} x="0" y="0" width={o.w} height={h} preserveAspectRatio="none" />
+    <g transform={`translate(${o.x + o.w} ${y}) scale(-1 1)`}>
+      <image href={src} x="0" y="0" width={o.w} height={h} preserveAspectRatio="none" />
     </g>
   ) : (
-    <image href={`/assets/home/${id}-1.webp`} x={o.x} y={o.y} width={o.w} height={h} preserveAspectRatio="none" />
+    <image href={src} x={o.x} y={y} width={o.w} height={h} preserveAspectRatio="none" />
   );
   if (!eq || !onPick) return img;
   return (
@@ -29,6 +34,7 @@ function Obj({ id, onPick }: { id: ObjId; onPick?: (equipment: string) => void }
 export function HomeScene({ room = "basic", onPick, still, look, worn }: { room?: string; onPick?: (equipment: string) => void; still?: boolean; look?: Look; worn?: Worn }) {
   const bg = ROOM_BG[room] ?? ROOM_BG.basic;
   const sky = ROOM_SKY[room];
+  const desk = worn?.DESK && DESK_ASPECT[worn.DESK] ? worn.DESK : STARTER_DESK;
   const lights = ROOM_LIGHTS[room] ?? [];
   return (
     <svg viewBox={`0 0 ${SCENE.w} ${SCENE.h}`} width="100%" style={{ display: "block" }}>
@@ -58,7 +64,7 @@ export function HomeScene({ room = "basic", onPick, still, look, worn }: { room?
           ))}
         </g>
       )}
-      <Obj id="desk" />
+      <Obj id="desk" art={{ src: `/assets/home/${desk}.webp`, aspect: DESK_ASPECT[desk] ?? SCENE_OBJECTS.desk.aspect }} />
       <Obj id="pc" onPick={onPick} />
       <Obj id="monitor" onPick={onPick} />
       <RigViewport x={CHARACTER.x} y={CHARACTER.y} scale={CHARACTER.scale} seat still={still} look={look} worn={worn} />

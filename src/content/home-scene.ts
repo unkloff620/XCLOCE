@@ -6,12 +6,12 @@
 export const SCENE = { w: 1060, h: 1484 };
 
 export const SCENE_OBJECTS = {
-  /** stands on the floor in front of the back wall */
-  desk: { x: 548, y: 598, w: 420, aspect: 0.9403, flip: false },
-  /** on the desk top, in front of the shelf; mirrored so the screen faces the room */
-  monitor: { x: 680, y: 522, w: 190, aspect: 1.0, flip: true, equipment: "monitor2" },
-  /** on the floor to the right of the desk, mirrored */
-  pc: { x: 925, y: 833, w: 120, aspect: 1.4401, flip: true, equipment: "pc" },
+  /** the desk stands behind the character; which desk = the item in the DESK slot (picture desk-<id>, aspect in client/art/desk-data.ts) */
+  desk: { x: 140, y: 690, w: 780, aspect: 0.4, flip: false },
+  /** on the desk top, right of the character; mirrored so the screen faces the room */
+  monitor: { x: 690, y: 560, w: 190, aspect: 1.0, flip: true, equipment: "monitor2" },
+  /** on the desk top, left of the character */
+  pc: { x: 190, y: 585, w: 120, aspect: 1.4401, flip: true, equipment: "pc" },
 } as const;
 
 /** Character placement: the 1000×1400 rig canvas scaled into the scene. */

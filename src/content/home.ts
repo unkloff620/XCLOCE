@@ -114,9 +114,10 @@ export function talentsForDamage(damage: number): number {
   return k;
 }
 
-/** Total bonus from equipment levels (incl. computer parts) and owned rooms. */
-export function totalBonus(levels: Record<string, number>, rooms: string[]): Required<Bonus> {
+/** Total bonus from equipment levels (incl. computer parts), owned rooms and furniture standing in the room. */
+export function totalBonus(levels: Record<string, number>, rooms: string[], furniture: Bonus[] = []): Required<Bonus> {
   let b: Bonus = {};
+  for (const f of furniture) b = addBonus(b, f);
   for (const e of [...EQUIPMENT, ...LEGACY_EQUIPMENT]) {
     const lv = levels[e.id] ?? 0;
     if (lv > 0) b = addBonus(b, e.levels[Math.min(lv, e.levels.length) - 1].bonus);

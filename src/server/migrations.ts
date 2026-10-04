@@ -259,4 +259,13 @@ ON CONFLICT (player_id, item_id) DO NOTHING;
 ALTER TABLE players ADD COLUMN IF NOT EXISTS talents INT NOT NULL DEFAULT 0;
 `,
   },
+  {
+    // desks: everyone gets «Стол 001» and it stands in the room
+    id: "v2-009-desk",
+    sql: `
+INSERT INTO inventory (player_id, item_id, qty, source) SELECT id, 'desk-001', 1, 'migration' FROM players
+ON CONFLICT (player_id, item_id) DO NOTHING;
+UPDATE appearance SET equipped = jsonb_set(equipped, '{DESK}', '"desk-001"') WHERE NOT (equipped ? 'DESK');
+`,
+  },
 ];
