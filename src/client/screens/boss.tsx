@@ -174,7 +174,7 @@ export function BossScreen({ id }: { id: string }) {
       setTray((t) => t.map((x) => (x.id === weapon ? { ...x, qty: r.result.left ?? x.qty, readyAt: r.result.readyAt ?? x.readyAt } : x)));
       if (r.result.talentsGained > 0) {
         haptic.ok();
-        toast(`+${r.result.talentsGained} ${r.result.talentsGained === 1 ? "талант" : "таланта"}! Трать на детали компьютера дома`, "ok");
+        toast(<span className="gain-line"><span className="gain"><Icon name="talent" size={26} />+{r.result.talentsGained}</span></span>, "ok");
         setTalentPop(Date.now());
       }
       if (r.result.status !== "active" || r.result.talentsGained > 0) void refresh();
