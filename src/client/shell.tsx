@@ -18,7 +18,7 @@ const TABS = NAV_TABS;
 
 function activeTab(path: string): string {
   if (path.startsWith("/bosses")) return "bosses";
-  if (path.startsWith("/yard")) return "yard";
+  if (["/yard", "/shop", "/exchange", "/locations"].some((p) => path.startsWith(p))) return "yard"; // places opened from the yard
   if (path.startsWith("/inventory")) return "inventory";
   if (path.startsWith("/clans")) return "clans";
   return "home";
