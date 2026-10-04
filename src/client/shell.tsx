@@ -43,8 +43,9 @@ function Hud() {
               <span className="name ellipsis">{p.name}</span>
             </div>
             <div className="row" style={{ gap: 6 }}>
-              <div className="xpbar grow"><i style={{ width: `${p.levelNeed ? (p.levelXp / p.levelNeed) * 100 : 100}%` }} /></div>
-              <span className="tiny muted num" title="Авторитет">{p.levelNeed ? `${p.levelXp} / ${p.levelNeed}` : "макс."} АВТ</span>
+              <Icon name="xp" size={18} />
+              <div className="xpbar grow" title="Авторитет"><i style={{ width: `${p.levelNeed ? (p.levelXp / p.levelNeed) * 100 : 100}%` }} /></div>
+              <span className="tiny muted num" title="Авторитет">{p.levelNeed ? `${p.levelXp} / ${p.levelNeed}` : "макс."}</span>
             </div>
           </div>
         </Link>

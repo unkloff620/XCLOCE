@@ -102,7 +102,7 @@ export function ProfileScreen() {
               <div><span className="lvl">LVL {p.level}</span></div>
             </div>
           </div>
-          <Bar value={p.levelXp} max={p.levelNeed || 1} tone="violet" label={p.levelNeed ? `${full(p.levelXp)} / ${full(p.levelNeed)} авторитета` : "максимальный уровень"} />
+          <div className="row" style={{ gap: 6 }} title="Авторитет"><Icon name="xp" size={22} /><div className="grow"><Bar value={p.levelXp} max={p.levelNeed || 1} tone="violet" label={p.levelNeed ? `${full(p.levelXp)} / ${full(p.levelNeed)}` : "максимальный уровень"} /></div></div>
           <div className="tiny muted">В игре с {dateRu(p.firstSeen)} · дней в игре: {p.activeDays}</div>
           <div className="tiny muted">Последний вход: {dateRu(p.lastSeen)}</div>
           {p.clan && (

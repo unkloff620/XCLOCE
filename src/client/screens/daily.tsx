@@ -20,7 +20,7 @@ function TileReward({ r }: { r: Reward }) {
       {(r.items ?? []).map((it) => (
         <span key={it.id} title={itemById(it.id)?.name}><ItemArt id={it.id} size={18} /><b className="num">×{it.qty}</b></span>
       ))}
-      {!!r.xp && <span className="dim tiny">+{r.xp} авторитета</span>}
+      {!!r.xp && <span title="Авторитет"><Icon name="xp" size={15} /><b className="num">+{r.xp}</b></span>}
     </div>
   );
 }

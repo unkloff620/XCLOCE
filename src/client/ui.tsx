@@ -63,7 +63,7 @@ export function RewardChips({ r, size = 18 }: { r: Reward | Granted | null | und
   return (
     <span className="row" style={{ flexWrap: "wrap", gap: 6 }}>
       {Object.entries(r.currencies ?? {}).map(([c, v]) => (v ? <span key={c} className="chip"><Coin c={c as Currency} v={v} size={size} /></span> : null))}
-      {!!r.xp && <span className="chip violet"><Icon name="xp" size={size} />+{r.xp} авторитета</span>}
+      {!!r.xp && <span className="chip violet" title="Авторитет"><Icon name="xp" size={size} />+{r.xp}</span>}
       {!!r.energy && <span className="chip gold"><Icon name="energy" size={size} />+{r.energy}</span>}
       {items.map((it) => (
         <span key={it.id} className="chip" title={itemById(it.id)?.name}>

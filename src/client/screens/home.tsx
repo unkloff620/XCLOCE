@@ -224,6 +224,7 @@ export function HomeScreen() {
               { key: "USD", icon: <Icon name="USD" size={40} />, name: CURRENCY_DEFS.USD.name, hint: "Награды за боссов и локации. Видеокарты, одежда, энергия." },
               { key: "SOL", icon: <Icon name="SOL" size={40} />, name: CURRENCY_DEFS.SOL.name, hint: "Редкая валюта за сильных боссов. Rug Pull Gun и большие пакеты энергии." },
               { key: "BTC", icon: <Icon name="BTC" size={40} />, name: CURRENCY_DEFS.BTC.name, hint: "Самая ценная валюта — за последних боссов." },
+              { key: "xp", icon: <Icon name="xp" size={40} />, name: "Авторитет", hint: "Опыт за задания, боссов и бонусы. Полоса вверху — прогресс до следующего уровня." },
               { key: "en", icon: <Icon name="energy" size={40} />, name: "Энергия", hint: "Тратится на задания в локациях и сама восстанавливается. Нажми на неё, чтобы докупить." },
             ]} />
             <p className="small muted">Нажми на любую валюту вверху — откроется обменник. Валюта игровая и ничего не стоит в реальном мире.</p>
