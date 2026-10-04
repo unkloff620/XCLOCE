@@ -40,7 +40,7 @@ export const ACTIONS = [
   "buy", "exchange", "use", "equip", "unequip",
   "clan_create", "clan_join", "clan_leave", "clan_kick",
   "daily_claim", "sell", "rename", "slots_spin",
-  "equipment_upgrade", "room_buy", "room_set", "look_set", "help_seen",
+  "equipment_upgrade", "pc_upgrade", "room_buy", "room_set", "look_set", "help_seen",
 ] as const;
 export type ActionType = (typeof ACTIONS)[number];
 
@@ -67,6 +67,7 @@ export function dispatch(ctx: Ctx, type: ActionType, body: Record<string, unknow
     case "rename": return extras.rename(ctx, str(body.name, "name", 60));
     case "slots_spin": return extras.spinSlots(ctx);
     case "equipment_upgrade": return home.upgradeEquipment(ctx, str(body.id, "id", 40));
+    case "pc_upgrade": return home.upgradePcPart(ctx, str(body.id, "id", 40));
     case "room_buy": return home.buyRoom(ctx, str(body.id, "id", 40));
     case "room_set": return home.setRoom(ctx, str(body.id, "id", 40));
     case "look_set": return home.setLook(ctx, body);

@@ -18,6 +18,7 @@ export interface GameState {
     id: number; name: string; username: string | null; photo: string | null; telegram: boolean;
     xp: number; level: number; levelXp: number; levelNeed: number;
     energy: number; energyMax: number; energyNextIn: number; energyPeriodMs: number;
+    talents: number;
   };
   wallet: Record<Currency, number>;
   inventory: { id: string; qty: number }[];
@@ -26,7 +27,7 @@ export interface GameState {
   home: { levels: Record<string, number>; rooms: string[]; bonus: { critChance: number; critDamage: number; damage: number } };
   helpSeen: string[];
   yard: { count: number; max: number; nextAt: number | null };
-  fight: { id: number; bossId: string; hp: number; hpMax: number; endsAt: number } | null;
+  fight: { id: number; bossId: string; hp: number; hpMax: number; endsAt: number; myDamage: number } | null;
   pending: { fightId: number; bossId: string; status: string }[];
   clan: { id: number; name: string; tag: string; emblem: string; color: string } | null;
   daily: { available: boolean; day: number; streak: number; cycle: number; nextAt: number | null; rewards: Reward[] };

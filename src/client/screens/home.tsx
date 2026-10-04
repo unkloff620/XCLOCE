@@ -15,6 +15,7 @@ import { clock, full } from "../format.ts";
 import { BossPhoto } from "./boss-parts.tsx";
 import { DailyWindow } from "./daily.tsx";
 import { BonusLine, EquipmentWindow } from "./house.tsx";
+import { ComputerWindow } from "./computer.tsx";
 import { ROOM_DEFS } from "../../content/home.ts";
 import { money } from "../format.ts";
 import { Help, HelpList } from "../help.tsx";
@@ -150,6 +151,7 @@ export function HomeScreen() {
   const [wardrobe, setWardrobe] = useState(false);
   const [daily, setDaily] = useState(false);
   const [equip, setEquip] = useState<string | null | false>(false);
+  const [pc, setPc] = useState(false);
   // room browser: arrows flip through rooms; an owned room is switched to at once, a locked one is shown with "unlock"
   const [viewIdx, setViewIdx] = useState<number | null>(null);
   const dailyReady = !!state?.daily.available;
@@ -188,7 +190,7 @@ export function HomeScreen() {
       <div className="room">
         <div className={`scene-backdrop ${owned ? "" : "locked"}`} style={{ backgroundImage: `url(/assets/home/${ROOM_BG[viewRoom.id] ?? ROOM_BG.basic}.webp)` }} />
         <div className={`room-view ${owned ? "" : "locked"}`}>
-          <HomeScene room={viewRoom.id} look={state.look.body} worn={state.look.equipped} onPick={owned ? (id) => setEquip(id) : undefined} />
+          <HomeScene room={viewRoom.id} look={state.look.body} worn={state.look.equipped} onPick={owned ? (id) => (id === "pc" ? setPc(true) : setEquip(id)) : undefined} />
         </div>
         {idx > 0 && (
           <button className="room-arrow left" onClick={() => flip(-1)} aria-label="Предыдущая комната" disabled={busy === "room_set"}>‹</button>
@@ -212,7 +214,7 @@ export function HomeScreen() {
         </div>
         <div className="room-help">
           <Help topic="home-menu" title="Твой дом">
-            <p>Здесь живёт твой персонаж. На заднем плане стоит оборудование — нажми на монитор или системник, чтобы улучшить его. Стрелки по бокам листают комнаты: купленная включается сразу, закрытую можно разблокировать кнопкой снизу. Каждая купленная комната даёт бонус к урону.</p>
+            <p>Здесь живёт твой персонаж. На заднем плане стоит оборудование — нажми на монитор, чтобы улучшить его, или на системник — там детали компьютера, которые улучшаются за таланты. Стрелки по бокам листают комнаты: купленная включается сразу, закрытую можно разблокировать кнопкой снизу. Каждая купленная комната даёт бонус к урону.</p>
             <HelpList title="Кнопки слева" rows={[
               { key: "w", icon: <Icon name="shirt" size={44} />, name: "Гардероб", hint: "Одежда и внешность: причёска, цвет волос и кожи." },
               { key: "b", icon: <Icon name="gift" size={44} />, name: "Бонус", hint: "Награда за ежедневный вход. Заходи каждый день — награда растёт." },
@@ -261,6 +263,7 @@ export function HomeScreen() {
       {wardrobe && <Wardrobe onClose={() => setWardrobe(false)} />}
       {daily && <DailyWindow onClose={() => setDaily(false)} />}
       {equip !== false && <EquipmentWindow focus={equip} onClose={() => setEquip(false)} />}
+      {pc && <ComputerWindow onClose={() => setPc(false)} />}
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { BOSSES, bossById, keyId, keysNeeded, type BossDef } from "../../content
 import { WEAPONS, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
 import { mergeRewards } from "../../content/rewards.ts";
-import { BASE_CRIT_MULT } from "../../content/home.ts";
+import { BASE_CRIT_MULT, talentsForDamage } from "../../content/home.ts";
 import { playerBonus } from "./home.ts";
 
 /*
@@ -130,6 +130,9 @@ export interface HitResult {
   readyAt: number | null;
   /** fights (of anyone) this hit finished */
   finished: number;
+  /** damage dealt in this fight so far and talents this hit earned (thresholds in content/home.ts) */
+  fightDamage: number;
+  talentsGained: number;
 }
 
 export async function attack(ctx: Ctx, weaponId: string, idem?: string): Promise<HitResult> {
@@ -176,6 +179,13 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string): Promise
       [boss.id, seq, ctx.pid, mine.id, w.id, damage, phraseIdx, new Date(ctx.now), crit],
     );
     await ctx.q.query("UPDATE fights SET my_damage = my_damage + $2, my_hits = my_hits + 1 WHERE id=$1", [mine.id, damage]);
+    // talents for damage within this fight (the counter lives on the fight, so it is gone once the fight ends)
+    const fightDamage = mine.my_damage + damage;
+    const talentsGained = talentsForDamage(fightDamage) - talentsForDamage(mine.my_damage);
+    if (talentsGained > 0) {
+      await ctx.q.query("UPDATE players SET talents = talents + $2 WHERE id=$1", [ctx.pid, talentsGained]);
+      await ledger(ctx, "talent", "talent", talentsGained, `fight:${mine.id}`);
+    }
     await ctx.q.query(
       "INSERT INTO boss_damage (boss_id, player_id, damage, hits) VALUES ($1,$2,$3,1) ON CONFLICT (boss_id, player_id) DO UPDATE SET damage = boss_damage.damage + EXCLUDED.damage, hits = boss_damage.hits + 1",
       [boss.id, ctx.pid, damage],
@@ -195,7 +205,7 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string): Promise
     const hp = mineWon ? 0 : fightHp({ ...mine, end_total: null }, total);
     return {
       fightId: mine.id, weapon: w.id, damage, crit, phrase: phrases[phraseIdx], hp, hpMax: mine.hp_max,
-      status: mineWon ? "won" : "active", left, readyAt, finished: won.length,
+      status: mineWon ? "won" : "active", left, readyAt, finished: won.length, fightDamage, talentsGained,
     };
   });
 }

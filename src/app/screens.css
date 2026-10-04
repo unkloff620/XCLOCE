@@ -579,3 +579,30 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(10, 12, 24, 0.
 .arena.full.prefight { top: calc(var(--top) + 78px); bottom: calc(var(--bottom) + 22px); }
 .prefight-hp { position: absolute; left: 12px; right: 12px; top: calc(var(--top) + 46px); z-index: 5; }
 .prefight-panel::before { top: 34px; }
+
+/* ---------------- computer (talents) ---------------- */
+.talent-chip { gap: 4px; color: #bff3ff; }
+.pc-top { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.pc-case { position: relative; width: 100%; margin-bottom: 10px; }
+.pc-case-img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; user-select: none; }
+.pc-hot { position: absolute; padding: 0; border: 2px dashed rgba(63, 210, 255, 0.75); border-radius: 10px; background: rgba(63, 210, 255, 0.08); cursor: pointer; animation: pc-hot 2.2s ease-in-out infinite; }
+.pc-hot.can { border-color: #ffcc33; background: rgba(255, 204, 51, 0.12); }
+.pc-hot:active { transform: scale(0.98); }
+.pc-lv { position: absolute; right: 4px; top: 4px; padding: 1px 7px; border-radius: 8px; font: 800 12px/1.4 var(--font-display, inherit); color: #07080f; background: #3fd2ff; border: 2px solid #07080f; }
+.pc-hot.can .pc-lv { background: #ffcc33; }
+@keyframes pc-hot { 50% { box-shadow: 0 0 14px 2px rgba(63, 210, 255, 0.55); } }
+.pc-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 10px; border-radius: 14px; background: var(--panel2); border: 2px solid var(--line); color: inherit; text-align: left; cursor: pointer; position: relative; }
+.pc-row img { width: 64px; height: 40px; object-fit: contain; flex: none; }
+.pc-dot { position: static; flex: none; }
+.pc-help-img { width: 44px; height: 34px; object-fit: contain; flex: none; }
+.pc-part-art { display: grid; place-items: center; height: 150px; border-radius: 16px; border: 2px solid var(--line);
+  background: radial-gradient(ellipse at 50% 60%, rgba(63, 210, 255, 0.28), transparent 65%), #10131f; }
+.pc-part-art img { max-width: 88%; max-height: 82%; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.6)); animation: bob 3s ease-in-out infinite; }
+.pc-bonus { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 8px; border-radius: 12px; background: var(--panel2); border: 2px solid var(--line); }
+.pc-bonus > div { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.pc-arrow { font-size: 22px; color: var(--gold); font-weight: 800; }
+/* talent progress in the fight */
+.talent-prog { position: relative; overflow: hidden; gap: 4px; }
+.talent-prog > .fill { position: absolute; inset: 0 auto 0 0; background: rgba(63, 210, 255, 0.28); pointer-events: none; transition: width 0.3s; }
+.talent-prog > :not(.fill) { position: relative; }
+.talent-pop { animation: pop 0.35s ease-out, pc-hot 1.2s ease-in-out 2; }

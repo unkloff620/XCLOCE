@@ -179,6 +179,16 @@ const ICONS: Record<string, () => ReactNode> = {
       <ellipse cx="34" cy="24" rx="16" ry="7" fill="#ffcc33" {...S} />
     </>
   ),
+  /* talent: a glowing chip with a star (earned by damage, spent on the computer) */
+  talent: () => (
+    <>
+      <path d="M22 6 V14 M32 6 V14 M42 6 V14 M22 50 V58 M32 50 V58 M42 50 V58 M6 22 H14 M6 32 H14 M6 42 H14 M50 22 H58 M50 32 H58 M50 42 H58" stroke={OL} strokeWidth="8" strokeLinecap="round" />
+      <path d="M22 6 V14 M32 6 V14 M42 6 V14 M22 50 V58 M32 50 V58 M42 50 V58 M6 22 H14 M6 32 H14 M6 42 H14 M50 22 H58 M50 32 H58 M50 42 H58" stroke="#ffcc33" strokeWidth="3.5" strokeLinecap="round" />
+      <rect x="12" y="12" width="40" height="40" rx="7" fill="#2fc7e8" {...S} />
+      <path d="M32 18 L36 27 L46 28 L38.5 34.5 L41 44 L32 39 L23 44 L25.5 34.5 L18 28 L28 27 Z" fill="#fff6c2" stroke={OL} strokeWidth="3" strokeLinejoin="round" />
+      <path d="M17 19 a4 4 0 0 1 4 -3" stroke="rgba(255,255,255,0.7)" strokeWidth="3" strokeLinecap="round" fill="none" />
+    </>
+  ),
 };
 
 export type IconName = keyof typeof ICONS | string;

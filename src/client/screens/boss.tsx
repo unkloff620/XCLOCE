@@ -18,6 +18,7 @@ import { haptic } from "../telegram.ts";
 import { DriftingSky } from "../art/sky.tsx";
 import { BossRig, hasBossRig } from "../art/boss-rig.tsx";
 import { Modal } from "../ui.tsx";
+import { talentThreshold, talentsForDamage } from "../../content/home.ts";
 
 const POLL_MS = 1500;
 
@@ -97,6 +98,7 @@ export function BossScreen({ id }: { id: string }) {
   const [rug, setRug] = useState(false);
   const [pendingDmg, setPendingDmg] = useState(0);
   const [phrase, setPhrase] = useState<{ text: string; id: number; crit?: boolean } | null>(null);
+  const [talentPop, setTalentPop] = useState(0);
   const [tab, setTab] = useState<"top" | "mine" | null>(null);
   const [details, setDetails] = useState<{ top: { playerId: number; name: string; damage: number; wins: number }[]; myHits: { weapon: string; damage: number; phrase: number; at: number }[] } | null>(null);
   const lastSeq = useRef(0);
@@ -165,12 +167,17 @@ export function BossScreen({ id }: { id: string }) {
     setPendingDmg((d) => d + w.weapon.damage);
     setTray((t) => t.map((x) => (x.id === weapon && w.weapon.kind === "consumable" ? { ...x, qty: Math.max(0, x.qty - 1) } : x)));
     try {
-      const r = await api.action<{ damage: number; crit: boolean; phrase: string; hp: number; status: string; left: number | null; readyAt: number | null }>("attack", { weapon, idem: crypto.randomUUID() });
+      const r = await api.action<{ damage: number; crit: boolean; phrase: string; hp: number; status: string; left: number | null; readyAt: number | null; fightDamage: number; talentsGained: number }>("attack", { weapon, idem: crypto.randomUUID() });
       setPhrase({ text: r.result.crit ? `КРИТ! −${r.result.damage} · ${r.result.phrase || w.weapon.action}` : r.result.phrase || w.weapon.action, id: Date.now(), crit: r.result.crit });
       if (r.result.crit) haptic.ok();
       setView((v) => (v ? { ...v, hp: Math.min(v.hp, r.result.hp), myDamage: v.myDamage + r.result.damage, myHits: v.myHits + 1 } : v));
       setTray((t) => t.map((x) => (x.id === weapon ? { ...x, qty: r.result.left ?? x.qty, readyAt: r.result.readyAt ?? x.readyAt } : x)));
-      if (r.result.status !== "active") void refresh();
+      if (r.result.talentsGained > 0) {
+        haptic.ok();
+        toast(`+${r.result.talentsGained} ${r.result.talentsGained === 1 ? "талант" : "таланта"}! Трать на детали компьютера дома`, "ok");
+        setTalentPop(Date.now());
+      }
+      if (r.result.status !== "active" || r.result.talentsGained > 0) void refresh();
     } catch (e) {
       haptic.err();
       toast(e instanceof Error ? e.message : "Не получилось", "err");
@@ -227,7 +234,7 @@ export function BossScreen({ id }: { id: string }) {
         <div className="fight-bottom">
           {phrase && <div key={phrase.id} className={`phrase-bubble ${phrase.crit ? "crit" : ""}`}>{phrase.text}</div>}
           <div className="row fight-bar">
-            <span className="chip" title="Мой вклад">Вклад: <b className="num">{full(view?.myDamage ?? 0)}</b> <span className="muted">{myShare.toFixed(1)}%</span></span>
+            <TalentProgress dmg={view?.myDamage ?? state?.fight?.myDamage ?? 0} pop={talentPop} share={myShare} />
             <span className="grow" />
             <button className="btn sm dark" onClick={() => setTab("top")}>Топ</button>
             <button className="btn sm dark" onClick={() => setTab("mine")}>Мои</button>
@@ -331,5 +338,20 @@ export function BossScreen({ id }: { id: string }) {
         </Modal>
       )}
     </div>
+  );
+}
+
+/** Damage of this fight towards the next talent (the counter burns when the fight ends). */
+function TalentProgress({ dmg, pop, share }: { dmg: number; pop: number; share: number }) {
+  const k = talentsForDamage(dmg);
+  const from = k > 0 ? talentThreshold(k) : 0;
+  const to = talentThreshold(k + 1);
+  const p = Math.max(0, Math.min(1, (dmg - from) / (to - from)));
+  return (
+    <span key={pop} className={`chip talent-prog ${pop ? "talent-pop" : ""}`} title={`Урон в этом бою: ${full(dmg)} (${share.toFixed(1)}% HP). Следующий талант — на ${full(to)}`}>
+      <i className="fill" style={{ width: `${p * 100}%` }} />
+      <Icon name="talent" size={16} />
+      <b className="num">{full(dmg)}</b><span className="muted">/{full(to)}</span>
+    </span>
   );
 }

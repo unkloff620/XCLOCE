@@ -1,6 +1,6 @@
 import { GameError, type Queryable } from "../db.ts";
 import { takeMoney, type Ctx } from "../core.ts";
-import { EQUIPMENT, HELP_TOPICS, equipmentById, normalizeLook, roomById, totalBonus, type HelpTopic, type Look } from "../../content/home.ts";
+import { EQUIPMENT, HELP_TOPICS, equipmentById, pcPartById, pcPartCost, normalizeLook, roomById, totalBonus, type HelpTopic, type Look } from "../../content/home.ts";
 
 /*
  * Дом: оборудование (уровни), комнаты (купить / выбрать), внешность персонажа, просмотренные подсказки.
@@ -44,6 +44,29 @@ export async function upgradeEquipment(ctx: Ctx, id: string) {
     [ctx.pid, def.id, lv + 1],
   );
   return { id: def.id, level: lv + 1, max: def.levels.length };
+}
+
+/** Upgrade a computer part for talents (level n costs n talents). */
+export async function upgradePcPart(ctx: Ctx, id: string) {
+  const def = pcPartById(id);
+  if (!def) throw new GameError("bad_part", "Такой детали нет");
+  const h = await homeData(ctx.q, ctx.pid);
+  const lv = h.levels[def.id] ?? 0;
+  if (lv >= def.maxLevel) throw new GameError("max_level", `${def.name}: уже максимальный уровень`);
+  const cost = pcPartCost(lv + 1);
+  const [p] = await ctx.q.query<{ talents: number }>(
+    "UPDATE players SET talents = talents - $2 WHERE id=$1 AND talents >= $2 RETURNING talents",
+    [ctx.pid, cost],
+  );
+  if (!p) throw new GameError("no_talents", `Не хватает талантов: нужно ${cost}`);
+  const [row] = await ctx.q.query<{ level: number }>(
+    `INSERT INTO player_equipment (player_id, equipment_id, level) VALUES ($1,$2,$3)
+     ON CONFLICT (player_id, equipment_id) DO UPDATE SET level = EXCLUDED.level WHERE player_equipment.level = $4
+     RETURNING level`,
+    [ctx.pid, def.id, lv + 1, lv],
+  );
+  if (!row) throw new GameError("conflict", "Деталь уже улучшена, обнови экран");
+  return { id: def.id, level: lv + 1, max: def.maxLevel, talents: p.talents };
 }
 
 export async function buyRoom(ctx: Ctx, id: string) {

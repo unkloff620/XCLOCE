@@ -7,6 +7,7 @@ import { fightView } from "../src/server/systems/combat.ts";
 import { YARD_DROPS } from "../src/content/yard.ts";
 import { levelFromXp } from "../src/content/levels.ts";
 import { LOCATIONS } from "../src/content/locations.ts";
+import { talentThreshold, talentsForDamage } from "../src/content/home.ts";
 import { signInitData, signLoginWidget, validateInitData, validateLoginWidget } from "../src/server/auth.ts";
 
 let db: Db;
@@ -424,6 +425,41 @@ describe("home: equipment, rooms, look, help", () => {
     await expect(act(db, p, "equipment_upgrade", { id: "monitor2" }, T0)).rejects.toMatchObject({ code: "no_money" });
     const st = await act(db, p, "equipment_upgrade", { id: "rgb" }, T0);
     expect(st.state.home.levels).toMatchObject({ chair: 1, monitor2: 1, pc: 1, rgb: 1 });
+  });
+
+  it("talents: thresholds grow 200, 500, 900…", () => {
+    expect([1, 2, 3, 4, 5].map(talentThreshold)).toEqual([200, 500, 900, 1400, 2000]);
+    expect([0, 199, 200, 499, 500, 899, 900, 2000].map(talentsForDamage)).toEqual([0, 0, 1, 1, 2, 2, 3, 5]);
+  });
+
+  it("talents come from damage within one fight, burn with the fight and buy computer parts", async () => {
+    await setBossHp({ datsik: 100000 });
+    const p = await newPlayer(db);
+    await give(db, p, "red-candle", 30);
+    await startDatsik(p);
+    for (let i = 0; i < 3; i++) expect((await hit(p, "red-candle")).result.talentsGained).toBe(0);
+    const t1 = await hit(p, "red-candle"); // 200
+    expect(t1.result).toMatchObject({ fightDamage: 200, talentsGained: 1 });
+    expect(t1.state.player.talents).toBe(1);
+    let last = t1;
+    for (let i = 0; i < 6; i++) last = await hit(p, "red-candle"); // 500
+    expect(last.state.player.talents).toBe(2);
+    // the counter burns with the fight: a new fight starts from zero
+    await act(db, p, "fight_flee", {}, T0);
+    await startDatsik(p, T0 + M);
+    for (let i = 0; i < 3; i++) last = await hit(p, "red-candle", T0 + M);
+    expect(last.result.talentsGained).toBe(0);
+    expect(last.state.fight?.myDamage).toBe(150);
+    expect(last.state.player.talents).toBe(2);
+    // level 1 costs 1 talent, level 2 costs 2
+    const up = await act(db, p, "pc_upgrade", { id: "pc-gpu" }, T0 + M);
+    expect(up.result).toMatchObject({ level: 1, talents: 1 });
+    expect(up.state.home.levels["pc-gpu"]).toBe(1);
+    expect(up.state.home.bonus.damage).toBeCloseTo(0.03);
+    await expect(act(db, p, "pc_upgrade", { id: "pc-gpu" }, T0 + M)).rejects.toMatchObject({ code: "no_talents" });
+    await expect(act(db, p, "pc_upgrade", { id: "pc-nope" }, T0 + M)).rejects.toMatchObject({ code: "bad_part" });
+    const r = await hit(p, "red-candle", T0 + M);
+    expect(r.result.damage).toBe(Math.round(50 * 1.03));
   });
 
   it("rooms: buy, switch, the bonus of every owned room counts", async () => {

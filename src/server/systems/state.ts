@@ -23,8 +23,8 @@ export async function gameState(ctx: Ctx) {
   const [app] = await ctx.q.query<{ equipped: Record<string, string> }>("SELECT equipped FROM appearance WHERE player_id=$1", [ctx.pid]);
   const home = await homeView(ctx.q, ctx.pid);
   const yard = await yardSync(ctx);
-  const [fightRow] = await ctx.q.query<{ id: number; boss_id: string; hp_max: number; start_total: number; end_total: number | null; ends_at: Date; damage_total: number }>(
-    "SELECT f.id, f.boss_id, f.hp_max, f.start_total, f.end_total, f.ends_at, b.damage_total FROM fights f JOIN bosses b ON b.id=f.boss_id WHERE f.player_id=$1 AND f.status='active'",
+  const [fightRow] = await ctx.q.query<{ id: number; boss_id: string; hp_max: number; start_total: number; end_total: number | null; ends_at: Date; damage_total: number; my_damage: number }>(
+    "SELECT f.id, f.boss_id, f.hp_max, f.start_total, f.end_total, f.ends_at, f.my_damage, b.damage_total FROM fights f JOIN bosses b ON b.id=f.boss_id WHERE f.player_id=$1 AND f.status='active'",
     [ctx.pid],
   );
   // finished fights the player has not looked at yet → victory / defeat window on any screen
@@ -39,6 +39,7 @@ export async function gameState(ctx: Ctx) {
       id: p.id, name: p.display_name, username: p.username, photo: p.photo_url, telegram: p.telegram_id !== null,
       xp: Number(p.xp), level: lv.level, levelXp: lv.into, levelNeed: lv.need,
       energy: e.energy, energyMax: ctx.cfg.energy.max, energyNextIn: e.nextIn, energyPeriodMs: ctx.cfg.energy.regenMin * 60_000,
+      talents: Number((p as PlayerRow & { talents?: number }).talents ?? 0),
     },
     wallet: await balances(ctx.q, ctx.pid),
     inventory: await inventoryView(ctx.q, ctx.pid),
@@ -52,7 +53,7 @@ export async function gameState(ctx: Ctx) {
     helpSeen: (p as PlayerRow & { help_seen?: string[] }).help_seen ?? [],
     yard: { count: yard.items.length, max: yard.max, nextAt: yard.nextAt },
     fight: fightRow
-      ? { id: fightRow.id, bossId: fightRow.boss_id, hp: fightHp(fightRow, fightRow.damage_total), hpMax: fightRow.hp_max, endsAt: new Date(fightRow.ends_at).getTime() }
+      ? { id: fightRow.id, bossId: fightRow.boss_id, hp: fightHp(fightRow, fightRow.damage_total), hpMax: fightRow.hp_max, endsAt: new Date(fightRow.ends_at).getTime(), myDamage: Number(fightRow.my_damage) }
       : null,
     pending: pending.map((f) => ({ fightId: f.id, bossId: f.boss_id, status: f.status })),
     clan: clan ?? null,

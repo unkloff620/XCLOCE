@@ -83,12 +83,40 @@ export function addBonus(a: Bonus, b: Bonus): Bonus {
   return { critChance: (a.critChance ?? 0) + (b.critChance ?? 0), critDamage: (a.critDamage ?? 0) + (b.critDamage ?? 0), damage: (a.damage ?? 0) + (b.damage ?? 0) };
 }
 
-/** Total bonus from equipment levels and owned rooms. */
+/* ---------------- компьютер: детали за таланты ---------------- */
+/*
+ * Таланты дают за урон по боссу в ОДНОМ бою: 1-й — за 200 урона, 2-й — за 500, дальше пороги растут
+ * (50·k·(k+3): 200, 500, 900, 1400, 2000…). Бой закончился (победа, поражение, побег) — счётчик урона обнуляется.
+ * Детали системника хранятся в player_equipment под своими id; уровень n стоит n талантов.
+ */
+export interface PcPartDef { id: string; name: string; description: string; maxLevel: number; damagePerLevel: number }
+export const PC_PARTS: PcPartDef[] = [
+  { id: "pc-gpu", name: "Видеокарта", description: "Больше ядер — больше урона. Главная деталь системника.", maxLevel: 10, damagePerLevel: 0.03 },
+  { id: "pc-cooler", name: "Кулер процессора", description: "Холодный процессор — горячие удары. Проц не троттлит, урон растёт.", maxLevel: 10, damagePerLevel: 0.02 },
+  { id: "pc-psu", name: "Блок питания", description: "Стабильные вольты под нагрузкой: железо выдаёт всё, на что способно.", maxLevel: 10, damagePerLevel: 0.02 },
+];
+export const pcPartById = (id: string) => PC_PARTS.find((p) => p.id === id);
+/** talents to buy level `level` (1-based) */
+export const pcPartCost = (level: number) => level;
+/** damage dealt within one fight needed for the k-th talent */
+export const talentThreshold = (k: number) => 50 * k * (k + 3);
+/** talents earned by `damage` dealt in one fight */
+export function talentsForDamage(damage: number): number {
+  let k = 0;
+  while (talentThreshold(k + 1) <= damage) k++;
+  return k;
+}
+
+/** Total bonus from equipment levels (incl. computer parts) and owned rooms. */
 export function totalBonus(levels: Record<string, number>, rooms: string[]): Required<Bonus> {
   let b: Bonus = {};
   for (const e of EQUIPMENT) {
     const lv = levels[e.id] ?? 0;
     if (lv > 0) b = addBonus(b, e.levels[Math.min(lv, e.levels.length) - 1].bonus);
+  }
+  for (const p of PC_PARTS) {
+    const lv = Math.min(levels[p.id] ?? 0, p.maxLevel);
+    if (lv > 0) b = addBonus(b, { damage: lv * p.damagePerLevel });
   }
   for (const id of rooms) b = addBonus(b, roomById(id)?.bonus ?? {});
   return { critChance: Math.min(0.75, b.critChance ?? 0), critDamage: b.critDamage ?? 0, damage: b.damage ?? 0 };
@@ -129,5 +157,5 @@ export function normalizeLook(v: unknown): Look {
 }
 
 /* ---------------- подсказки [?] ---------------- */
-export const HELP_TOPICS = ["bosses", "boss", "yard", "slots", "home", "home-menu", "yard-menu", "exchange", "locations", "clans", "shop"] as const;
+export const HELP_TOPICS = ["bosses", "boss", "yard", "slots", "home", "home-menu", "yard-menu", "exchange", "locations", "clans", "shop", "computer"] as const;
 export type HelpTopic = (typeof HELP_TOPICS)[number];

@@ -252,4 +252,11 @@ INSERT INTO inventory (player_id, item_id, qty, source) SELECT id, 'fist', 1, 'm
 ON CONFLICT (player_id, item_id) DO NOTHING;
 `,
   },
+  {
+    // talents: earned by damage dealt within one boss fight, spent on the computer parts (player_equipment pc-*)
+    id: "v2-008-talents",
+    sql: `
+ALTER TABLE players ADD COLUMN IF NOT EXISTS talents INT NOT NULL DEFAULT 0;
+`,
+  },
 ];
