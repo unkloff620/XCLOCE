@@ -1,6 +1,9 @@
 "use client";
+import { isMuted, setMuted, sfx } from "../sound.ts";
+import { replayTutorial } from "../tutorial.tsx";
+import { NotifySwitch } from "./quests.tsx";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { api } from "../api.ts";
@@ -124,6 +127,8 @@ export function ProfileScreen() {
         </div>
       )}
 
+      {p.self && <SettingsPanel />}
+
       <div className="panel">
         <div className="small muted" style={{ marginBottom: 8 }}>СТАТИСТИКА</div>
         <div className="stat-grid">
@@ -171,6 +176,31 @@ export function ProfileScreen() {
         <div className="tiny muted" style={{ marginTop: 6 }}>Появятся в следующих обновлениях.</div>
       </div>
       {renaming && <RenameWindow current={p.name} onClose={() => setRenaming(false)} onDone={() => undefined} />}
+    </div>
+  );
+}
+
+/** Own profile only: sound, Telegram reminders, the tour again. */
+function SettingsPanel() {
+  const router = useRouter();
+  const [mute, setMute] = useState(false);
+  useEffect(() => setMute(isMuted()), []);
+  const toggle = () => {
+    const v = !mute;
+    setMuted(v);
+    setMute(v);
+    if (!v) sfx("coin");
+  };
+  return (
+    <div className="panel col" style={{ gap: 8 }}>
+      <div className="small muted">НАСТРОЙКИ</div>
+      <div className={`notify-row ${mute ? "" : "on"}`}>
+        <span className="notify-ico" aria-hidden="true">{mute ? "🔇" : "🔊"}</span>
+        <span className="notify-text"><b>Звуки</b><span className="tiny muted">Удары, покупки, награды, новый уровень</span></span>
+        <button className={`btn sm ${mute ? "green" : "dark"}`} onClick={toggle}>{mute ? "Включить" : "Выкл"}</button>
+      </div>
+      <NotifySwitch />
+      <button className="btn dark block" onClick={() => { router.push("/"); setTimeout(replayTutorial, 400); }}>Пройти обучение заново</button>
     </div>
   );
 }

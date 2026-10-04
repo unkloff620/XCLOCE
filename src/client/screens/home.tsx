@@ -15,6 +15,7 @@ import { clock, full } from "../format.ts";
 import { BossPhoto } from "./boss-parts.tsx";
 import { DailyWindow } from "./daily.tsx";
 import { QuestsWindow } from "./quests.tsx";
+import { tutorialPending } from "../tutorial.tsx";
 import { BonusLine, EquipmentWindow } from "./house.tsx";
 import { ComputerWindow } from "./computer.tsx";
 import { ROOM_DEFS } from "../../content/home.ts";
@@ -170,7 +171,8 @@ export function HomeScreen() {
   // room browser: arrows flip through rooms; an owned room is switched to at once, a locked one is shown with "unlock"
   const [viewIdx, setViewIdx] = useState<number | null>(null);
   const dailyReady = !!state?.daily.available;
-  const busyWindow = (state?.pending.length ?? 0) > 0;
+  // the first-visit tour goes first; the daily reward window waits for it
+  const busyWindow = (state?.pending.length ?? 0) > 0 || tutorialPending(state);
   useEffect(() => {
     if (dailyReady && !busyWindow && !dailyAutoShown) {
       dailyAutoShown = true;

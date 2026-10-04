@@ -5,6 +5,7 @@ import { Icon } from "../art/icons.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { RewardChips } from "../ui.tsx";
 import { clock } from "../format.ts";
+import { sfx } from "../sound.ts";
 import { haptic } from "../telegram.ts";
 import { SLOT_OUTCOMES, SLOT_SYMBOLS, type SlotSymbol } from "../../content/slots.ts";
 import { api, type GameState, type Granted } from "../api.ts";
@@ -86,6 +87,7 @@ export function SlotMachine() {
       fresh = res.state;
     } catch (e) {
       haptic.err();
+      sfx("error");
       toast(e instanceof Error ? e.message : "Автомат заело", "err");
       setSpinning([false, false, false]);
       return;
@@ -100,10 +102,17 @@ export function SlotMachine() {
           setReels((old) => old.map((x, k) => (k === i ? spinRes.reels[i] : x)));
           setSpinning((old) => old.map((x, k) => (k === i ? false : x)));
           haptic.tap();
+          sfx("tap");
           if (i === 2) {
             setResult(spinRes);
             setState(st); // the balance changes only when the last reel stops
-            if (spinRes.kind !== "miss") haptic.ok();
+            if (spinRes.kind === "jackpot") {
+              haptic.big();
+              sfx("levelup");
+            } else if (spinRes.kind !== "miss") {
+              haptic.ok();
+              sfx("reward");
+            }
           }
         }, wait + i * 380),
       );

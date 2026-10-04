@@ -53,7 +53,7 @@ export function QuestsWindow({ onClose }: { onClose: () => void }) {
   const openChest = async () => {
     const r = await act<{ reward: Granted }>("quest_chest");
     if (r) {
-      haptic.ok();
+      haptic.big();
       setChestGot(r.reward);
     }
   };

@@ -2,6 +2,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api, ApiError, authenticate, type AuthResult, type GameState } from "./api.ts";
 import { haptic, initTelegram } from "./telegram.ts";
+import { ACTION_SFX, sfx, unlockAudioOnGesture } from "./sound.ts";
 
 type Toast = { id: number; text: ReactNode; kind: "ok" | "err" | "info" };
 interface Game {
@@ -17,6 +18,9 @@ interface Game {
   toast: (text: ReactNode, kind?: Toast["kind"]) => void;
   setState: (s: GameState) => void;
   retryAuth: () => void;
+  /** a level just gained (full-screen celebration); null when there is none to show */
+  levelUp: { from: number; to: number } | null;
+  clearLevelUp: () => void;
 }
 
 const Ctx = createContext<Game | null>(null);
@@ -43,11 +47,18 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [now, setNow] = useState(() => Date.now());
   const tid = useRef(0);
   const [authTry, setAuthTry] = useState(0);
+  const [levelUp, setLevelUp] = useState<{ from: number; to: number } | null>(null);
+  const lastLevel = useRef<number | null>(null);
 
   const setState = useCallback((s: GameState) => {
     setStateRaw(s);
     setSkew(s.now - Date.now());
+    // a level gained since the last state (not on the first load) → the celebration
+    const prev = lastLevel.current;
+    lastLevel.current = s.player.level;
+    if (prev !== null && s.player.level > prev) setLevelUp((cur) => ({ from: cur?.from ?? prev, to: s.player.level }));
   }, []);
+  const clearLevelUp = useCallback(() => setLevelUp(null), []);
 
   const toast = useCallback((text: ReactNode, kind: Toast["kind"] = "info") => {
     const id = ++tid.current;
@@ -68,12 +79,15 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setBusy(type);
       try {
         const r = await api.action<T>(type, body);
+        const snd = ACTION_SFX[type];
+        if (snd) sfx(snd);
         setState(r.state);
         const msg = typeof ok === "function" ? ok(r.result) : ok;
         if (msg) toast(msg, "ok");
         return r.result;
       } catch (e) {
         haptic.err();
+        sfx("error");
         toast(e instanceof Error ? e.message : "Ошибка", "err");
         return null;
       } finally {
@@ -86,6 +100,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   // auth + first state
   useEffect(() => {
     initTelegram();
+    unlockAudioOnGesture();
     let alive = true;
     (async () => {
       try {
@@ -106,6 +121,17 @@ export function GameProvider({ children }: { children: ReactNode }) {
     };
   }, [authTry, setState]);
 
+  // a soft click on every button and link (weapons and the slot lever have their own sounds)
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      const el = (e.target as Element | null)?.closest?.("button, a, [role=button]");
+      if (!el || el.closest(".weapon, .slots-btn, [data-nosfx]") || (el as HTMLButtonElement).disabled) return;
+      sfx("tap");
+    };
+    document.addEventListener("click", onClick, true);
+    return () => document.removeEventListener("click", onClick, true);
+  }, []);
+
   // clock + background refresh (15 s while the tab is visible)
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -125,8 +151,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, [auth, refresh]);
 
   const value = useMemo<Game>(
-    () => ({ state, auth, authInfo, error, skew, refresh, act, busy, toast, setState, retryAuth: () => setAuthTry((n) => n + 1) }),
-    [state, auth, authInfo, error, skew, refresh, act, busy, toast, setState],
+    () => ({ state, auth, authInfo, error, skew, refresh, act, busy, toast, setState, retryAuth: () => setAuthTry((n) => n + 1), levelUp, clearLevelUp }),
+    [state, auth, authInfo, error, skew, refresh, act, busy, toast, setState, levelUp, clearLevelUp],
   );
   return (
     <Ctx.Provider value={value}>

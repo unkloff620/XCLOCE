@@ -816,3 +816,46 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .notify-ico { font-size: 22px; flex: none; }
 .notify-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; font-size: 13px; }
 @media (prefers-reduced-motion: reduce) { .quest-chest.ready .quest-chest-art { animation: none; } }
+
+/* ---------------- first-visit tour ---------------- */
+.tour { position: fixed; inset: 0; z-index: 90; }
+.tour-dim { position: absolute; inset: 0; background: rgba(8, 5, 3, 0.78); }
+.tour-spot { position: fixed; border-radius: 18px; box-shadow: 0 0 0 9999px rgba(8, 5, 3, 0.78), 0 0 0 3px var(--gold), 0 0 26px rgba(255, 204, 51, 0.6);
+  transition: left 0.35s ease, top 0.35s ease, width 0.35s ease, height 0.35s ease; pointer-events: none; animation: tour-pulse 1.6s ease-in-out infinite; }
+@keyframes tour-pulse { 50% { box-shadow: 0 0 0 9999px rgba(8, 5, 3, 0.78), 0 0 0 5px var(--gold), 0 0 38px rgba(255, 204, 51, 0.8); } }
+.tour-card { position: fixed; left: 50%; width: min(340px, calc(100vw - 32px)); margin-left: calc(min(340px, calc(100vw - 32px)) / -2);
+  display: flex; flex-direction: column; gap: 8px; padding: 14px 14px 12px; border-radius: 18px; border: 2.5px solid var(--line);
+  background: linear-gradient(170deg, #3a2716, #1e140c); box-shadow: 0 5px 0 var(--line), 0 18px 40px rgba(0, 0, 0, 0.55); animation: tour-in 0.3s cubic-bezier(0.2, 1.4, 0.4, 1) both; }
+@keyframes tour-in { from { opacity: 0; translate: 0 10px; scale: 0.96; } }
+.tour-title { font-size: 19px; color: var(--gold); }
+.tour-text { margin: 0; font-size: 14px; line-height: 1.4; }
+.tour-steps { display: flex; gap: 5px; }
+.tour-steps i { width: 18px; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, 0.15); }
+.tour-steps i.done { background: rgba(255, 204, 51, 0.55); }
+.tour-steps i.on { background: var(--gold); width: 28px; }
+
+/* ---------------- level up ---------------- */
+.lvlup { position: fixed; inset: 0; z-index: 95; display: grid; place-items: center; overflow: hidden; cursor: pointer;
+  background: radial-gradient(circle at 50% 45%, rgba(120, 70, 10, 0.75), rgba(10, 6, 3, 0.94) 65%); animation: lvl-fade 0.35s ease-out both; }
+@keyframes lvl-fade { from { opacity: 0; } }
+.lvlup-rays { position: absolute; left: 50%; top: 45%; width: 180vmax; height: 180vmax; margin: -90vmax 0 0 -90vmax; opacity: 0.35;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 204, 51, 0.9) 0deg 7deg, transparent 7deg 22deg);
+  mask: radial-gradient(circle, #000 0, transparent 55%); -webkit-mask: radial-gradient(circle, #000 0, transparent 55%); animation: lvl-spin 18s linear infinite; }
+@keyframes lvl-spin { to { transform: rotate(360deg); } }
+.lvlup-body { position: relative; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 0 24px; text-align: center; }
+.lvlup-kicker { font-size: 30px; color: #fff3d0; text-shadow: 0 3px 0 #5a2d00, 0 0 24px rgba(255, 204, 51, 0.8); animation: lvl-drop 0.6s cubic-bezier(0.2, 1.6, 0.4, 1) 0.15s both; }
+@keyframes lvl-drop { from { opacity: 0; transform: translateY(-30px) scale(0.7); } }
+.lvlup-badge { position: relative; display: grid; place-items: center; width: 168px; height: 168px; border-radius: 50%; color: #2e1c00;
+  background: radial-gradient(circle at 35% 30%, #fff1a8, #ffcc33 45%, #e08a12 80%); border: 5px solid #5a2d00;
+  box-shadow: 0 8px 0 #3a1d00, 0 0 0 10px rgba(255, 204, 51, 0.25), 0 0 60px rgba(255, 204, 51, 0.7); animation: lvl-pop 0.8s cubic-bezier(0.2, 1.8, 0.4, 1) 0.3s both, lvl-bob 2.4s ease-in-out 1.2s infinite; }
+.lvlup-badge small { position: absolute; top: 26px; font-size: 18px; letter-spacing: 0.1em; }
+.lvlup-badge b { font-size: 78px; line-height: 1; margin-top: 18px; text-shadow: 0 3px 0 rgba(255, 255, 255, 0.45); }
+@keyframes lvl-pop { from { opacity: 0; transform: scale(0.2) rotate(-25deg); } }
+@keyframes lvl-bob { 50% { transform: translateY(-6px) scale(1.03); } }
+.lvlup-sub { font-size: 14px; color: #f2dcc0; animation: lvl-fade 0.4s ease-out 0.8s both; }
+.lvlup-sub b { color: var(--gold); }
+.lvlup .btn { min-width: 180px; animation: lvl-fade 0.4s ease-out 1s both; }
+.lvlup-confetti { position: absolute; inset: 0; pointer-events: none; }
+.lvlup-confetti i { position: absolute; top: -20px; width: 9px; height: 15px; border-radius: 2px; transform: rotate(var(--r)); animation: lvl-fall linear 0.3s both; animation-iteration-count: 2; }
+@keyframes lvl-fall { from { transform: translateY(-20px) rotate(var(--r)); } to { transform: translateY(110vh) rotate(calc(var(--r) + 540deg)); } }
+@media (prefers-reduced-motion: reduce) { .lvlup-rays, .lvlup-badge, .lvlup-confetti i, .tour-spot { animation: none; } }

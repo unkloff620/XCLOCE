@@ -14,6 +14,7 @@ import { Bar, Empty } from "../ui.tsx";
 import { useFx, type Fx } from "../fx/attack.tsx";
 import { BossRewardsPanel, BossRulesHelp, useBossList } from "./bosses.tsx";
 import { clock, full, pct, short } from "../format.ts";
+import { sfx } from "../sound.ts";
 import { haptic } from "../telegram.ts";
 import { DriftingSky } from "../art/sky.tsx";
 import { BossRig, hasBossRig } from "../art/boss-rig.tsx";
@@ -183,23 +184,34 @@ export function BossScreen({ id }: { id: string }) {
     const w = weaponById(weapon)!;
     const est = weaponDamage(w.weapon.damage, dmgBonus);
     haptic.hit();
+    // heavier weapons sound heavier: 10 dmg → 0, 500+ → 1
+    sfx("hit", Math.min(1, Math.log10(Math.max(10, w.weapon.damage) / 10) / Math.log10(50)));
     play(weapon, est, w.weapon.action, true);
     setPendingDmg((d) => d + est);
     setTray((t) => t.map((x) => (x.id === weapon && w.weapon.kind === "consumable" ? { ...x, qty: Math.max(0, x.qty - 1) } : x)));
     try {
       const r = await api.action<{ damage: number; crit: boolean; phrase: string; hp: number; status: string; left: number | null; readyAt: number | null; fightDamage: number; talentsGained: number }>("attack", { weapon, idem: crypto.randomUUID() });
       setPhrase({ text: r.result.crit ? `КРИТ! −${r.result.damage} · ${r.result.phrase || w.weapon.action}` : r.result.phrase || w.weapon.action, id: Date.now(), crit: r.result.crit });
-      if (r.result.crit) haptic.ok();
+      if (r.result.crit) {
+        haptic.heavy();
+        sfx("crit");
+      }
       setView((v) => (v ? { ...v, hp: Math.min(v.hp, r.result.hp), myDamage: v.myDamage + r.result.damage, myHits: v.myHits + 1 } : v));
       setTray((t) => t.map((x) => (x.id === weapon ? { ...x, qty: r.result.left ?? x.qty, readyAt: r.result.readyAt ?? x.readyAt } : x)));
+      if (r.result.status === "won") {
+        haptic.big();
+        sfx("win");
+      }
       if (r.result.talentsGained > 0) {
         haptic.ok();
+        sfx("coin");
         toast(<span className="gain-line"><span className="gain"><Icon name="talent" size={26} />+{r.result.talentsGained}</span></span>, "ok");
         setTalentPop(Date.now());
       }
       if (r.result.status !== "active" || r.result.talentsGained > 0) void refresh();
     } catch (e) {
       haptic.err();
+      sfx("error");
       toast(e instanceof Error ? e.message : "Не получилось", "err");
       void poll(true);
     } finally {

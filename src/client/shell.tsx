@@ -11,6 +11,8 @@ import { LOADING_LINES } from "../content/phrases.ts";
 import { loginWidget } from "./api.ts";
 import { telegramBack } from "./telegram.ts";
 import { ResultWindow } from "./screens/result.tsx";
+import { LevelUpOverlay } from "./levelup.tsx";
+import { Tutorial } from "./tutorial.tsx";
 import { EnergyWindow } from "./screens/energy.tsx";
 import { NAV_TABS } from "../content/nav.ts";
 import { isLoaded, preload, sectionOfRoute, urlsFor, type LookLite } from "./preload.ts";
@@ -209,6 +211,8 @@ export function Shell({ children }: { children: ReactNode }) {
             <main className="main"><SectionGate route={path} look={look}>{children}</SectionGate></main>
             <Nav />
             <ResultWindow />
+            <Tutorial />
+            <LevelUpOverlay />
           </>
         )}
       </div>

@@ -38,6 +38,15 @@ export const haptic = {
   hit: () => tg()?.HapticFeedback?.impactOccurred("medium"),
   ok: () => tg()?.HapticFeedback?.notificationOccurred("success"),
   err: () => tg()?.HapticFeedback?.notificationOccurred("error"),
+  heavy: () => tg()?.HapticFeedback?.impactOccurred("heavy"),
+  /** a rolling triple thump for big moments (level up, chest) */
+  big: () => {
+    const h = tg()?.HapticFeedback;
+    if (!h) return;
+    h.notificationOccurred("success");
+    setTimeout(() => h.impactOccurred("heavy"), 180);
+    setTimeout(() => h.impactOccurred("medium"), 360);
+  },
 };
 
 /** Shows Telegram's back button while `on`; returns a cleanup. */
