@@ -11,9 +11,14 @@ export interface AchRow { id: string; progress: number; target: number; done: bo
 
 /** A hexagonal medal in its tier colour (bronze → diamond); grey until earned. */
 export function BadgeMedal({ icon, tier, earned, size = 54 }: { icon: string; tier: AchTier | 0; earned: boolean; size?: number }) {
+  // drawn achievement pictures are big and detailed: they stand over the medal instead of sitting small inside it
+  const art = icon.startsWith("ach-");
   return (
-    <span className={`badge-medal tier-${tier} ${earned ? "" : "locked"}`} style={{ width: size, height: size * 1.1 }}>
-      <Icon name={icon as IconName} size={size * 0.52} />
+    <span className={`badge-wrap ${art ? "art" : ""} ${earned ? "" : "locked"}`} style={{ width: size, height: size * 1.1 }}>
+      <span className={`badge-medal tier-${tier} ${earned ? "" : "locked"}`} style={{ width: size, height: size * 1.1 }}>
+        {!art && <Icon name={icon as IconName} size={size * 0.52} />}
+      </span>
+      {art && <span className="badge-art"><Icon name={icon as IconName} size={size * 0.92} /></span>}
     </span>
   );
 }

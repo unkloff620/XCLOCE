@@ -195,6 +195,8 @@ export type IconName = keyof typeof ICONS | string;
 /** Icons drawn by the artist: icon name → public/assets/ui/<file>.webp (built by tools/items/build-items.py). */
 const RASTER_ICONS: Partial<Record<string, string>> = { shirt: "wardrobe", gift: "bonus", bolt: "tech", shop: "shop", exchange: "exchange", map: "tasks",
   energy: "energy", key: "key", RUB: "rub", USD: "usd", SOL: "sol", BTC: "btc", coins: "coins", xp: "authority",
+  // achievement pictures (tools/ui/cut-achievements.py)
+  "ach-damage": "ach-damage", "ach-hits": "ach-hits", "ach-wins": "ach-wins", "ach-yard": "ach-yard", "ach-chests": "ach-chests", "ach-weekly": "ach-weekly",
 };
 
 export function Icon({ name, size = 28, className }: { name: IconName; size?: number; className?: string }) {

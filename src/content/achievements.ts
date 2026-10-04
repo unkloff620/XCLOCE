@@ -26,16 +26,16 @@ export interface AchCategory {
 
 export const ACH_CATEGORIES: AchCategory[] = [
   { id: "authority", name: "Авторитет", hint: "Набери {n} авторитета", stat: "authority", icon: "xp", targets: [10_000, 500_000, 2_500_000, 5_000_000, 10_000_000] },
-  { id: "damage", name: "Урон боссам", hint: "Нанеси боссам {n} урона", stat: "damage", icon: "fire", targets: [1_000, 25_000, 250_000, 1_000_000, 5_000_000] },
-  { id: "hits", name: "Удары", hint: "Нанеси {n} ударов", stat: "hits", icon: "swords", targets: [10, 100, 1_000, 5_000, 20_000] },
-  { id: "wins", name: "Победы", hint: "Выиграй {n} боёв с боссами", stat: "wins", icon: "trophy", targets: [1, 10, 50, 200, 500] },
+  { id: "damage", name: "Урон боссам", hint: "Нанеси боссам {n} урона", stat: "damage", icon: "ach-damage", targets: [1_000, 25_000, 250_000, 1_000_000, 5_000_000] },
+  { id: "hits", name: "Удары", hint: "Нанеси {n} ударов", stat: "hits", icon: "ach-hits", targets: [10, 100, 1_000, 5_000, 20_000] },
+  { id: "wins", name: "Победы", hint: "Выиграй {n} боёв с боссами", stat: "wins", icon: "ach-wins", targets: [1, 10, 50, 200, 500] },
   { id: "kills", name: "Добивающий", hint: "Нанеси последний удар боссу {n} раз", stat: "kills", icon: "key", targets: [1, 5, 25, 100, 250] },
   { id: "locations", name: "Локации", hint: "Пройди локации {n} раз (повторы считаются)", stat: "locations", icon: "map", targets: [1, 5, 20, 50, 100] },
   { id: "tasks", name: "Задания", hint: "Выполни {n} заданий в локациях", stat: "tasks", icon: "energy", targets: [5, 25, 100, 300, 1_000] },
-  { id: "yard", name: "Барахольщик", hint: "Подбери во дворе {n} находок", stat: "yard", icon: "chest", targets: [10, 100, 500, 2_000, 5_000] },
+  { id: "yard", name: "Барахольщик", hint: "Подбери во дворе {n} находок", stat: "yard", icon: "ach-yard", targets: [10, 100, 500, 2_000, 5_000] },
   { id: "streak", name: "Серия входов", hint: "Заходи {n} дней подряд", stat: "bestStreak", icon: "gift", targets: [3, 7, 14, 30, 60] },
-  { id: "chests", name: "Сундуки дня", hint: "Открой {n} сундуков за задания дня", stat: "chests", icon: "chest", targets: [1, 7, 30, 100, 365] },
-  { id: "weekly", name: "Топ недели", hint: "Попади в топ-10 недели по урону {n} раз", stat: "weeklyTop", icon: "trophy", targets: [1, 3, 10, 25, 50] },
+  { id: "chests", name: "Сундуки дня", hint: "Открой {n} сундуков за задания дня", stat: "chests", icon: "ach-chests", targets: [1, 7, 30, 100, 365] },
+  { id: "weekly", name: "Топ недели", hint: "Попади в топ-10 недели по урону {n} раз", stat: "weeklyTop", icon: "ach-weekly", targets: [1, 3, 10, 25, 50] },
 ];
 
 /** the same reward for a tier in every category: the higher, the richer */
