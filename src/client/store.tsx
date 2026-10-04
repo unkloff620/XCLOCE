@@ -3,7 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { api, ApiError, authenticate, type AuthResult, type GameState } from "./api.ts";
 import { haptic, initTelegram } from "./telegram.ts";
 
-type Toast = { id: number; text: string; kind: "ok" | "err" | "info" };
+type Toast = { id: number; text: ReactNode; kind: "ok" | "err" | "info" };
 interface Game {
   state: GameState | null;
   auth: "loading" | "ok" | "login" | "error";
@@ -14,7 +14,7 @@ interface Game {
   refresh: () => Promise<void>;
   act: <T = unknown>(type: string, body?: Record<string, unknown>, ok?: string | ((r: T) => string | null)) => Promise<T | null>;
   busy: string | null;
-  toast: (text: string, kind?: Toast["kind"]) => void;
+  toast: (text: ReactNode, kind?: Toast["kind"]) => void;
   setState: (s: GameState) => void;
   retryAuth: () => void;
 }
@@ -49,7 +49,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setSkew(s.now - Date.now());
   }, []);
 
-  const toast = useCallback((text: string, kind: Toast["kind"] = "info") => {
+  const toast = useCallback((text: ReactNode, kind: Toast["kind"] = "info") => {
     const id = ++tid.current;
     setToasts((t) => [...t.slice(-2), { id, text, kind }]);
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), kind === "err" ? 3600 : 2400);

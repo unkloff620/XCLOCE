@@ -161,10 +161,13 @@ h2.h { margin: 4px 2px 8px; font-size: 16px; text-shadow: 0 2px 0 var(--line); }
 .modal { position: relative; width: 100%; max-width: 420px; max-height: calc(100dvh - 32px); overflow-y: auto; background: linear-gradient(180deg, var(--panel3), var(--panel)); border: 3px solid var(--line); border-radius: 22px; box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.08), 0 6px 0 var(--line), 0 20px 60px rgba(0, 0, 0, 0.6); padding: 18px 16px 16px; animation: pop 0.22s cubic-bezier(0.2, 1.4, 0.4, 1); }
 .modal .x { position: absolute; top: 10px; right: 10px; width: 34px; height: 34px; border-radius: 11px; border: 2.5px solid var(--line); background: var(--panel); font-size: 18px; font-weight: 800; line-height: 1; }
 .modal h3 { margin: 0 40px 12px 0; font-size: 20px; text-shadow: 0 3px 0 var(--line); }
-.toasts { position: fixed; z-index: 90; left: 50%; transform: translateX(-50%); top: calc(var(--hud-h) + var(--safe-t) + 8px); width: calc(100% - 24px); max-width: 456px; display: flex; flex-direction: column; gap: 6px; pointer-events: none; }
-.toast { padding: 10px 12px; border-radius: 14px; border: 2.5px solid var(--line); background: var(--panel3); box-shadow: 0 4px 0 var(--line); font-weight: 700; animation: drop 0.25s ease; }
-.toast.err { background: #4a1424; }
-.toast.ok { background: #124430; }
+/* compact see-through pills in the top centre (under the HUD) */
+.toasts { position: fixed; z-index: 90; left: 50%; transform: translateX(-50%); top: calc(var(--hud-h) + var(--safe-t) + 8px); width: max-content; max-width: calc(100% - 32px); display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
+.toast { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 6px 14px; border-radius: 999px; border: 1.5px solid rgba(255, 255, 255, 0.14); background: rgba(10, 12, 26, 0.5); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); font-size: 14px; font-weight: 700; text-align: center; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); animation: drop 0.25s ease; }
+.toast.err { background: rgba(110, 20, 44, 0.55); border-color: rgba(255, 120, 150, 0.35); }
+.toast.ok { background: rgba(10, 12, 26, 0.5); border-color: rgba(61, 220, 132, 0.35); }
+.gain-line { display: inline-flex; align-items: center; gap: 10px; }
+.gain { display: inline-flex; align-items: center; gap: 3px; font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; }
 
 @keyframes fade { from { opacity: 0; } }
 @keyframes pop { from { transform: scale(0.85); opacity: 0; } }

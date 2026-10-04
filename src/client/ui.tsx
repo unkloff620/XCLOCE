@@ -76,6 +76,23 @@ export function RewardChips({ r, size = 18 }: { r: Reward | Granted | null | und
   );
 }
 
+/** What was just gained, pictures only: [picture]+N … (toasts for pickups). */
+export function GainLine({ r, size = 26 }: { r: Reward | Granted | null | undefined; size?: number }) {
+  if (!r) return null;
+  return (
+    <span className="gain-line">
+      {(r.items ?? []).map((it) => (
+        <span key={it.id} className="gain" title={itemById(it.id)?.name}><ItemArt id={it.id} size={size} />+{it.qty}</span>
+      ))}
+      {Object.entries(r.currencies ?? {}).map(([c, v]) => (v ? (
+        <span key={c} className="gain" title={c}><Icon name={c} size={size} />+{money(c as Currency, v)}</span>
+      ) : null))}
+      {!!r.energy && <span className="gain"><Icon name="energy" size={size} />+{r.energy}</span>}
+      {!!r.xp && <span className="gain"><Icon name="xp" size={size} />+{r.xp}</span>}
+    </span>
+  );
+}
+
 export function Empty({ children }: { children: ReactNode }) {
   return <div className="panel center muted" style={{ padding: 22 }}>{children}</div>;
 }

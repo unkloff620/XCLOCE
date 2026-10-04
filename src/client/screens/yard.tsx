@@ -12,7 +12,8 @@ import { Icon } from "../art/icons.tsx";
 import { SlotMachine } from "./slots.tsx";
 import { DriftingSky } from "../art/sky.tsx";
 import { Help, HelpList } from "../help.tsx";
-import { Modal } from "../ui.tsx";
+import { GainLine, Modal } from "../ui.tsx";
+import type { Granted } from "../api.ts";
 
 const LINKS = [
   { href: "/shop", icon: "shop", label: "Магазин", c: "#ff4d6d", hint: "Оружие, энергия, одежда и разное за игровую валюту." },
@@ -47,10 +48,10 @@ export function YardScreen() {
     if (flying) return;
     haptic.tap();
     setFlying(id);
-    const r = await act<{ name: string; yard: YardData }>("yard_pick", { itemId: id });
+    const r = await act<{ name: string; reward: Granted; yard: YardData }>("yard_pick", { itemId: id });
     setTimeout(() => setFlying(null), 450);
     if (r) {
-      toast(`${r.name} — в инвентарь`, "ok");
+      toast(<GainLine r={r.reward} />, "ok");
       setData(r.yard);
     }
   };
