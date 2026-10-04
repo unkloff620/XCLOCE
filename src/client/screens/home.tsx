@@ -29,12 +29,12 @@ const LOOK_EDITOR = true;
 let dailyAutoShown = false;
 
 
-const SLOT_NAME: Record<Slot, string> = { BODY: "Тело", PANTS: "Штаны", SHIRT: "Верх", SHOES: "Обувь", HEAD: "Голова", ACCESSORY: "Аксессуар", SPECIAL: "Особое" };
+const SLOT_NAME: Record<Slot, string> = { BODY: "Тело", PANTS: "Штаны", SHIRT: "Верх", SHOES: "Обувь", HEAD: "Голова", ACCESSORY: "Аксессуар", SPECIAL: "Особое", DESK: "Стол" };
 
 const LEFT_SLOTS: Slot[] = ["HEAD", "SHIRT", "ACCESSORY"];
 const RIGHT_SLOTS: Slot[] = ["PANTS", "SHOES"];
 
-const PICK_TITLE: Record<Slot, string> = { BODY: "Тело", PANTS: "Штаны", SHIRT: "Верх", SHOES: "Обувь", HEAD: "Головные уборы", ACCESSORY: "Аксессуары", SPECIAL: "Особое" };
+const PICK_TITLE: Record<Slot, string> = { BODY: "Тело", PANTS: "Штаны", SHIRT: "Верх", SHOES: "Обувь", HEAD: "Головные уборы", ACCESSORY: "Аксессуары", SPECIAL: "Особое", DESK: "Столы" };
 
 /** Window with the owned things for one slot. */
 function SlotPicker({ slot, onClose }: { slot: Slot; onClose: () => void }) {
