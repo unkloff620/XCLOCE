@@ -33,7 +33,7 @@ const photo = (id: string, has = false) => (has ? { portrait: `/bosses/${id}/por
 export const BOSSES: BossDef[] = [
   {
     id: "datsik", order: 1, name: "Дацик", title: "Хранитель входа",
-    story: "Первый, кого встречает каждый новичок. Проверяет, умеешь ли ты кидать мышку, и не впечатляется.",
+    story: "Первый, кого встречает каждый новичок. Проверяет, умеешь ли ты махать кулаками, и не впечатляется.",
     hp: hp(0), reward: { xp: xp(0), currencies: { SOL: 0.02, RUB: 150 } },
     drop: [{ id: "red-candle", qty: 3, chance: 0.35 }],
     theme: { a: "#3a1430", b: "#12081a", accent: "#ff4d6d" }, photo: photo("datsik", true),
