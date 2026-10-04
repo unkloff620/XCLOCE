@@ -1,6 +1,6 @@
 "use client";
 /* The player's room: artist's background, desk, monitor, PC and the seated character on the stool. */
-import { CHARACTER, ROOM_BG, SCENE, SCENE_OBJECTS } from "../../content/home-scene.ts";
+import { CHARACTER, ROOM_BG, ROOM_LIGHTS, ROOM_SKY, SCENE, SCENE_OBJECTS } from "../../content/home-scene.ts";
 import { RigViewport, type Worn } from "./rig.tsx";
 import type { Look } from "../../content/home.ts";
 
@@ -28,9 +28,36 @@ function Obj({ id, onPick }: { id: ObjId; onPick?: (equipment: string) => void }
 
 export function HomeScene({ room = "basic", onPick, still, look, worn }: { room?: string; onPick?: (equipment: string) => void; still?: boolean; look?: Look; worn?: Worn }) {
   const bg = ROOM_BG[room] ?? ROOM_BG.basic;
+  const sky = ROOM_SKY[room];
+  const lights = ROOM_LIGHTS[room] ?? [];
   return (
     <svg viewBox={`0 0 ${SCENE.w} ${SCENE.h}`} width="100%" style={{ display: "block" }}>
+      {sky && (
+        // the panorama and its mirror copy side by side: one period = 2 × width, so the loop has no seam
+        <g className={still ? undefined : "room-sky"} style={{ ["--sky-w" as string]: `${-2 * sky.w}px` }}>
+          <image href={sky.src} x="0" y={sky.y} width={sky.w} height={sky.h} preserveAspectRatio="none" />
+          <image href={sky.src} x={-2 * sky.w} y={sky.y} width={sky.w} height={sky.h} preserveAspectRatio="none" transform="scale(-1 1)" />
+          <image href={sky.src} x={2 * sky.w} y={sky.y} width={sky.w} height={sky.h} preserveAspectRatio="none" />
+        </g>
+      )}
       <image href={`/assets/home/${bg}.webp`} x="0" y="0" width={SCENE.w} height={SCENE.h} preserveAspectRatio="none" />
+      {lights.length > 0 && (
+        <g className={still ? undefined : "room-lights"} style={{ mixBlendMode: "screen" }} aria-hidden="true">
+          <defs>
+            {lights.map((l, i) => (
+              <radialGradient key={i} id={`glow-${room}-${i}`}>
+                <stop offset="0" stopColor={l.color} stopOpacity={l.kind === "lamp" ? 0.75 : 0.35} />
+                <stop offset="0.35" stopColor={l.color} stopOpacity={l.kind === "lamp" ? 0.28 : 0.15} />
+                <stop offset="1" stopColor={l.color} stopOpacity="0" />
+              </radialGradient>
+            ))}
+          </defs>
+          {lights.map((l, i) => (
+            <ellipse key={i} className={`room-light ${l.kind}`} style={{ animationDelay: `${-i * 1.7}s` }}
+              cx={l.x} cy={l.y} rx={l.r} ry={l.kind === "lamp" ? l.r * 1.25 : l.r * 0.22} fill={`url(#glow-${room}-${i})`} />
+          ))}
+        </g>
+      )}
       <Obj id="desk" />
       <Obj id="pc" onPick={onPick} />
       <Obj id="monitor" onPick={onPick} />

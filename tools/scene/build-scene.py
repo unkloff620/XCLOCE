@@ -12,12 +12,30 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 OUT = os.path.join(ROOT, "public", "assets", "home")
 os.makedirs(OUT, exist_ok=True)
 # widths in scene units (the seat in rig units, it lives in the character's space); ×1.5 for sharp phones
+# sky behind the penthouse window: top and height in scene units (keep in sync with src/content/home-scene.ts ROOM_SKY)
+SKY_Y, SKY_H = 40, 880
 WIDTH = {"desk": 500, "monitor": 230, "pc": 130, "seat": 360}
 for f in sorted(os.listdir(os.path.join(HERE, "source"))):
-    name, _ = os.path.splitext(f)
+    name, ext = os.path.splitext(f)
+    # only the home scene's own files (the arena, yard, shop… have their own build scripts)
+    if ext != ".png" or not re.match(r"(room-|(desk|monitor|pc|seat)-\d+$)", name):
+        continue
     im = Image.open(os.path.join(HERE, "source", f))
     if name.startswith("room-"):
-        im.convert("RGB").save(os.path.join(OUT, name + ".webp"), "WEBP", quality=82, method=6)
+        # a room with a see-through window (alpha) keeps it: the sky is drawn behind (penthouse)
+        has_alpha = im.mode in ("RGBA", "LA") and im.getchannel("A").getextrema()[0] < 250
+        (im.convert("RGBA") if has_alpha else im.convert("RGB")).save(os.path.join(OUT, name + ".webp"), "WEBP", quality=82, method=6)
+        if has_alpha and os.path.exists(os.path.join(HERE, "source", "sky", name[5:] + "-sky.png")):
+            # the panorama behind the window: SKY_H scene units tall, plus a flat copy (room over sky) for the blurred backdrop
+            sky = Image.open(os.path.join(HERE, "source", "sky", name[5:] + "-sky.png")).convert("RGB")
+            sw = round(sky.width * SKY_H / sky.height)
+            sky = sky.resize((sw, SKY_H), Image.LANCZOS)
+            sky.save(os.path.join(OUT, name[5:] + "-sky.webp"), "WEBP", quality=78, method=6)
+            flat = Image.new("RGB", im.size, (40, 30, 30))
+            flat.paste(sky.crop((0, 0, im.width, SKY_H)), (0, SKY_Y))
+            flat.paste(im.convert("RGBA"), (0, 0), im.convert("RGBA"))
+            flat.save(os.path.join(OUT, name + "-flat.webp"), "WEBP", quality=70, method=6)
+            print(name[5:] + "-sky", sky.size)
     else:
         kind = re.sub(r"-\d+$", "", name)
         im = im.convert("RGBA"); a = im.getchannel("A").point(lambda v: 0 if v < 30 else v); im.putalpha(a)

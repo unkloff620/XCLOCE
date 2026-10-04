@@ -654,3 +654,14 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .loc-page.has-bg .task { background: linear-gradient(180deg, rgba(54, 38, 26, 0.78), rgba(42, 29, 20, 0.78)); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
 .loc-banner { display: block; width: 100%; aspect-ratio: 360 / 140; object-fit: cover; }
 .loc-card.locked .loc-banner { filter: grayscale(1) brightness(0.45); }
+
+/* penthouse: clouds float slowly behind the window (one loop = the panorama and its mirror, ~6 min) */
+.room-sky { animation: room-sky 360s linear infinite; }
+@keyframes room-sky { to { transform: translateX(var(--sky-w)); } }
+/* living lamps: a soft, uneven breathing of the glow, like a real bulb */
+.room-light { transform-box: fill-box; transform-origin: center; }
+.room-light.lamp { animation: lamp-live 5.5s ease-in-out infinite; }
+.room-light.strip { animation: strip-live 9s ease-in-out infinite; }
+@keyframes lamp-live { 0%, 100% { opacity: 0.9; } 18% { opacity: 0.62; } 22% { opacity: 0.85; } 46% { opacity: 0.7; } 63% { opacity: 1; transform: scale(1.04); } 80% { opacity: 0.66; } }
+@keyframes strip-live { 0%, 100% { opacity: 0.85; } 50% { opacity: 0.55; } }
+@media (prefers-reduced-motion: reduce) { .room-sky, .room-light { animation: none; } }

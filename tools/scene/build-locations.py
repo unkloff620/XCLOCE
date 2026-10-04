@@ -8,11 +8,13 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.abspath(os.path.join(HERE, "..", "..", "public", "assets", "locations"))
 os.makedirs(OUT, exist_ok=True)
 BANNER = (720, 280)  # 360×140 card at 2×
-BANNER_Y = {"openspace": 0.3}  # centre of the banner crop, share of the height
+BANNER_Y = {"openspace": 0.3, "market": 0.42, "board": 0.45, "basement": 0.45, "serverroom": 0.45}  # centre of the banner crop, share of the height
 for f in sorted(glob.glob(os.path.join(HERE, "source", "locations", "*.png"))):
     name = os.path.splitext(os.path.basename(f))[0]
     im = Image.open(f).convert("RGB")
-    full = im.resize((800, round(im.height * 800 / im.width)), Image.LANCZOS)
+    # tall pictures: 800 wide; wide ones: 1500 tall at most (the page shows a phone-shaped middle part)
+    k = 800 / im.width if im.height > im.width else min(1.0, 1500 / im.height)
+    full = im.resize((round(im.width * k), round(im.height * k)), Image.LANCZOS)
     full.save(os.path.join(OUT, name + ".webp"), "WEBP", quality=78, method=4)
     w = im.width
     h = round(w * BANNER[1] / BANNER[0])

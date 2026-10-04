@@ -6,7 +6,7 @@ const s = (w = 4) => ({ stroke: OL, strokeWidth: w, strokeLinejoin: "round" as c
 
 /* ---------------- location banners (360×140) ---------------- */
 /** locations with a drawn background (public/assets/locations, built by tools/scene/build-locations.py) */
-export const LOCATION_ART = new Set(["openspace"]);
+export const LOCATION_ART = new Set(["openspace", "market", "serverroom", "basement", "board"]);
 
 export function LocationScene({ scene }: { scene: string }) {
   if (LOCATION_ART.has(scene)) {

@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { HeroRig } from "../art/rig.tsx";
 import { HomeScene } from "../art/home-scene.tsx";
-import { ROOM_BG } from "../../content/home-scene.ts";
+import { ROOM_BACKDROP } from "../../content/home-scene.ts";
 import { Icon, NavIcon } from "../art/icons.tsx";
 import { NAV_TABS } from "../../content/nav.ts";
 import { ItemArt } from "../art/items.tsx";
@@ -188,7 +188,7 @@ export function HomeScreen() {
   return (
     <div className={`fit-page ${f && fb ? "has-fight" : ""}`}>
       <div className="room">
-        <div className={`scene-backdrop ${owned ? "" : "locked"}`} style={{ backgroundImage: `url(/assets/home/${ROOM_BG[viewRoom.id] ?? ROOM_BG.basic}.webp)` }} />
+        <div className={`scene-backdrop ${owned ? "" : "locked"}`} style={{ backgroundImage: `url(/assets/home/${ROOM_BACKDROP[viewRoom.id] ?? ROOM_BACKDROP.basic}.webp)` }} />
         <div className={`room-view ${owned ? "" : "locked"}`}>
           <HomeScene room={viewRoom.id} look={state.look.body} worn={state.look.equipped} onPick={owned ? (id) => (id === "pc" ? setPc(true) : setEquip(id)) : undefined} />
         </div>
