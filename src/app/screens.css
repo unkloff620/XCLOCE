@@ -425,3 +425,8 @@
 /* the HUD and the nav become see-through on these screens */
 body:has(.fit-page) .hud { background: linear-gradient(180deg, rgba(10, 12, 24, 0.85), rgba(10, 12, 24, 0)); border-bottom: 0; box-shadow: none; backdrop-filter: none; }
 body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(10, 12, 24, 0.92), rgba(10, 12, 24, 0.55)); backdrop-filter: blur(4px); }
+
+/* bottom-menu legend in the home help */
+.help-nav { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+.help-nav-row { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 12px; background: var(--bg2); border: 2px solid var(--line); }
+.help-nav-row svg { flex: none; }

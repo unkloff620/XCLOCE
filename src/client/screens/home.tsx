@@ -5,7 +5,8 @@ import { useGame, useNow } from "../store.tsx";
 import { HeroRig } from "../art/rig.tsx";
 import { HomeScene } from "../art/home-scene.tsx";
 import { ROOM_BG } from "../../content/home-scene.ts";
-import { Icon } from "../art/icons.tsx";
+import { Icon, NavIcon } from "../art/icons.tsx";
+import { NAV_TABS } from "../../content/nav.ts";
 import { ItemArt } from "../art/items.tsx";
 import { Bar, Modal } from "../ui.tsx";
 import { bossById } from "../../content/bosses.ts";
@@ -209,11 +210,20 @@ export function HomeScreen() {
           )}
         </div>
         <div className="room-help">
-          <Help topic="home" title="Твой дом">
-            <p>Здесь живёт твой персонаж. В «Гардеробе» — одежда и внешность: причёска, цвет глаз и кожи.</p>
+          <Help topic="home-menu" title="Твой дом">
+            <p>Здесь живёт твой персонаж. В «Гардеробе» — одежда и внешность: причёска, цвет волос и кожи.</p>
             <p>На заднем плане стоит оборудование: второй монитор, кресло, системник, RGB-подсветка. Нажми на любой предмет (или «Техника»), чтобы купить или улучшить его — оно даёт шанс и силу крита и прибавку к урону по боссам.</p>
             <p>Стрелки по бокам листают комнаты: купленная включается сразу, закрытую можно разблокировать кнопкой снизу. Каждая купленная комната даёт бонус.</p>
             <p>«Бонус» — награда за ежедневный вход.</p>
+            <b>Меню внизу</b>
+            <div className="help-nav">
+              {NAV_TABS.map((t) => (
+                <div key={t.id} className="help-nav-row">
+                  <NavIcon id={t.id} size={44} />
+                  <div><b>{t.label}</b><div className="small muted">{t.hint}</div></div>
+                </div>
+              ))}
+            </div>
           </Help>
         </div>
         <div className="room-left">

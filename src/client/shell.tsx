@@ -12,14 +12,9 @@ import { loginWidget } from "./api.ts";
 import { telegramBack } from "./telegram.ts";
 import { ResultWindow } from "./screens/result.tsx";
 import { EnergyWindow } from "./screens/energy.tsx";
+import { NAV_TABS } from "../content/nav.ts";
 
-const TABS = [
-  { id: "home", href: "/", label: "Дом" },
-  { id: "bosses", href: "/bosses", label: "Боссы" },
-  { id: "yard", href: "/yard", label: "Двор" },
-  { id: "inventory", href: "/inventory", label: "Инвентарь" },
-  { id: "clans", href: "/clans", label: "Кланы" },
-] as const;
+const TABS = NAV_TABS;
 
 function activeTab(path: string): string {
   if (path.startsWith("/bosses")) return "bosses";
@@ -82,9 +77,8 @@ function Nav() {
   return (
     <nav className="nav">
       {TABS.map((t) => (
-        <Link key={t.id} href={t.href} className={on === t.id ? "on" : ""} style={{ ["--glow" as string]: NAV_GLOW[t.id] }} onClick={() => window.scrollTo({ top: 0 })}>
+        <Link key={t.id} href={t.href} className={on === t.id ? "on" : ""} style={{ ["--glow" as string]: NAV_GLOW[t.id] }} aria-label={t.label} title={t.label} onClick={() => window.scrollTo({ top: 0 })}>
           <NavIcon id={t.id} />
-          {t.label}
           {t.id === "yard" && !!state?.yard.count && <span className="badge">{state.yard.count}</span>}
           {t.id === "bosses" && state?.fight && <span className="badge" style={{ background: "var(--gold)", color: "#2e1c00" }}>!</span>}
         </Link>
