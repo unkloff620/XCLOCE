@@ -158,8 +158,14 @@
 /* ---------- yard ---------- */
 .yard { position: relative; border-radius: 22px; overflow: hidden; border: 3px solid var(--line); box-shadow: 0 5px 0 var(--line); }
 .yard-timer { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); padding: 5px 12px; border-radius: 12px; background: rgba(14, 9, 5, 0.75); border: 2px solid var(--line); font-size: 12px; white-space: nowrap; }
-.yard-item { position: absolute; transform: translate(-50%, -50%); width: 72px; height: 72px; display: grid; place-items: center; border: 0; border-radius: 50%; background: radial-gradient(circle, rgba(255, 246, 194, 0.35), transparent 65%); animation: bob 2.4s ease-in-out infinite; }
-.yard-item.rare { background: radial-gradient(circle, rgba(255, 77, 109, 0.55), transparent 65%); }
+/* finds lie on the ground where they fell (each turned its own way) with a soft glow that breathes; nothing moves sideways */
+.yard-item { position: absolute; transform: translate(-50%, -50%); width: 72px; height: 72px; display: grid; place-items: center; border: 0; padding: 0; background: none; cursor: pointer; --g: 255, 230, 150; }
+.yard-item::before { content: ""; position: absolute; left: 50%; top: 62%; width: 96px; height: 40px; translate: -50% -50%; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(var(--g), 0.6), rgba(var(--g), 0.18) 55%, transparent); animation: yard-glow 2.2s ease-in-out infinite; animation-delay: var(--d, 0s); pointer-events: none; }
+.yard-item > svg { position: relative; rotate: var(--r, 0deg); filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 6px rgba(var(--g), 0.55)); animation: yard-pulse 2.2s ease-in-out infinite; animation-delay: var(--d, 0s); }
+.yard-item.rare { --g: 255, 90, 120; }
+@keyframes yard-glow { 0%, 100% { opacity: 0.55; scale: 0.9; } 50% { opacity: 1; scale: 1.08; } }
+@keyframes yard-pulse { 0%, 100% { scale: 1; } 50% { scale: 1.06; } }
 .yard-item.fly { animation: fly 0.45s ease-in forwards; }
 @keyframes fly { to { transform: translate(-50%, 260%) scale(0.3); opacity: 0; } }
 

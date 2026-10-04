@@ -94,7 +94,7 @@ export function YardScreen() {
               <button
                 key={it.id}
                 className={`yard-item ${flying === it.id ? "fly" : ""} ${drop && drop.weight <= 3 ? "rare" : ""}`}
-                style={{ left: `${spot.x}%`, top: `${spot.y}%` }}
+                style={{ left: `${spot.x}%`, top: `${spot.y}%`, ["--r" as string]: `${spot.r}deg`, ["--d" as string]: `${(it.slot % 5) * -0.45}s` }}
                 onClick={() => pick(it.id)}
                 aria-label={drop?.name ?? "предмет"}
               >
