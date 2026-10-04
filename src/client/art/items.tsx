@@ -197,7 +197,7 @@ function Shoe({ fill, sole }: { fill: string; sole: string }) {
 const RASTER_ITEMS = new Set([
   "fist", "mouse", "red-candle", "keyboard", "gpu", "rug-pull-gun",
   "tee-white", "tee-pump", "jeans", "shorts-remote", "sneakers", "cap-moon",
-  "energy-drink", "lost-wallet", "bottle-cap", "flyer-passive",
+  "energy-drink", "lost-wallet", "bottle-cap", "flyer-passive", "spinner", "sticker-hodl",
 ]);
 
 /** Picture of any item; keys use the key icon, unknown ids fall back to a coin. */
