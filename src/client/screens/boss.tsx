@@ -59,7 +59,7 @@ function WeaponTray({ tray, onHit, disabled }: { tray: Tray[]; onHit: (id: strin
   const now = useNow();
   const router = useRouter();
   return (
-    <div className="tray">
+    <div className="tray" style={{ gridTemplateColumns: `repeat(${WEAPONS.length}, minmax(0, 1fr))` }}>
       {WEAPONS.map((w) => {
         const t = tray.find((x) => x.id === w.id);
         const qty = t?.qty ?? 0;

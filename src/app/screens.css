@@ -494,3 +494,6 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(10, 12, 24, 0.
 .fight-bar { gap: 6px; }
 .fight-bar .chip { background: rgba(10, 12, 24, 0.85); white-space: nowrap; }
 .fight-bar .btn { padding-left: 10px; padding-right: 10px; }
+.fight-bottom .tray { gap: 5px; }
+.fight-bottom .weapon .w-name { display: none; }  /* names are in the [?] and the long-press title */
+.fight-bottom .weapon { padding: 6px 1px 5px; }
