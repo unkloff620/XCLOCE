@@ -455,3 +455,5 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(10, 12, 24, 0.
 .bc-go { flex: none; align-self: center; width: 28px; height: 40px; display: grid; place-items: center; border-radius: 10px; border: 2.5px solid var(--line); background: var(--panel); font-size: 22px; font-weight: 800; color: var(--muted); }
 .boss-card2.live .bc-hero { box-shadow: 0 4px 0 var(--line), 0 0 0 2px var(--gold), 0 0 16px rgba(255, 204, 51, 0.35); }
 .boss-card2.final .bc-rewards { background: linear-gradient(160deg, rgba(255, 210, 63, 0.3), var(--panel)); }
+.bc-rewards .boss-reward > span { display: flex; flex-wrap: wrap; gap: 4px !important; }
+.bc-rewards .boss-reward .chip { padding: 1px 5px; font-size: 10.5px; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
