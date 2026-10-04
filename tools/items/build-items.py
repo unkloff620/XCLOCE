@@ -14,17 +14,20 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.abspath(os.path.join(HERE, "..", "..", "public", "assets", "items"))
 SIZE = 256
 os.makedirs(OUT, exist_ok=True)
-WEAR = os.path.join(HERE, "..", "rig", "source", "wear")
+WEAR = os.path.abspath(os.path.join(HERE, "..", "rig", "source", "wear"))
 ICON_CROP = {"sneakers": (0, 0, 1000, 2800), "slippers": (0, 0, 1000, 2800)}  # a pair far apart: the icon shows one shoe
 UI_OUT = os.path.abspath(os.path.join(HERE, "..", "..", "public", "assets", "ui"))
 os.makedirs(UI_OUT, exist_ok=True)
-files = sorted(glob.glob(os.path.join(HERE, "source", "*.png")) + glob.glob(os.path.join(WEAR, "*.png")))
+# a dedicated icon drawn by the artist (source/<id>.png) wins over the one cut from the clothes on the rig canvas
+own = sorted(glob.glob(os.path.join(HERE, "source", "*.png")))
+have = {os.path.splitext(os.path.basename(f))[0] for f in own}
+files = own + [f for f in sorted(glob.glob(os.path.join(WEAR, "*.png"))) if os.path.splitext(os.path.basename(f))[0] not in have]
 files += sorted(glob.glob(os.path.join(HERE, "ui", "*.png")))
 for f in files:
     name = os.path.splitext(os.path.basename(f))[0]
     dest = UI_OUT if os.path.basename(os.path.dirname(f)) == "ui" else OUT
     img = Image.open(f).convert("RGBA")
-    if name in ICON_CROP: img = img.crop(ICON_CROP[name])
+    if name in ICON_CROP and os.path.dirname(f) == os.path.abspath(WEAR): img = img.crop(ICON_CROP[name])
     im = np.array(img)
     a = im[:, :, 3]
     a[a < 40] = 0
