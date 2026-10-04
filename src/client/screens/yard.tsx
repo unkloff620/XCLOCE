@@ -2,14 +2,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { api } from "../api.ts";
-import { YardScene, YARD_SPOTS } from "../art/scenes.tsx";
+import { YARD_SPOTS } from "../art/scenes.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { YARD_DROPS } from "../../content/yard.ts";
 import { clock } from "../format.ts";
 import { haptic } from "../telegram.ts";
 import Link from "next/link";
 import { Icon } from "../art/icons.tsx";
-import { SlotMachine, SlotCabinet } from "./slots.tsx";
+import { SlotMachine } from "./slots.tsx";
 import { Help, HelpList } from "../help.tsx";
 import { Modal } from "../ui.tsx";
 
@@ -70,11 +70,21 @@ export function YardScreen() {
       </div>
       <div className="yard">
         {/* full-screen scene: a blurred copy fills the screen, the sharp scene stands on the nav at full width */}
-        <div className="scene-backdrop"><YardScene fill /></div>
+        {/* the sky drifts behind the yard: two copies of a seamless tile slide left forever */}
+        <div className="yard-sky" aria-hidden="true">
+          <div className="yard-sky-strip">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/assets/yard/sky.webp" alt="" draggable={false} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/assets/yard/sky.webp" alt="" draggable={false} />
+          </div>
+        </div>
         <div className="yard-stage">
-          <YardScene />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="yard-bg" src="/assets/yard/bg.webp" alt="" draggable={false} />
           <button className={`yard-slots ${state && state.slots.left > 0 ? "ready" : ""}`} onClick={() => setSlots(true)} aria-label="Игровой автомат 777">
-            <SlotCabinet />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/assets/yard/slot.webp" alt="" draggable={false} />
             {state && <span className="yard-slots-left num">{state.slots.left}/{state.slots.max}</span>}
           </button>
           {data?.items.map((it) => {
