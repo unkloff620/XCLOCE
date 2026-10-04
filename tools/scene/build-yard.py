@@ -1,11 +1,11 @@
 """
 Yard art: tools/scene/source/yard-{bg,sky}.png, slot-machine.png → public/assets/yard/*.webp
   * bg.webp   — the yard with a transparent sky (1060×1484)
-  * sky.webp  — the sky mirrored side by side so it tiles seamlessly; it scrolls behind the yard
+  * sky.webp  — the sky with its ends cross-faded so it tiles seamlessly; it scrolls behind the yard
   * slot.webp — the slot machine (transparent), used as the button in the yard
 """
 import os
-from PIL import Image, ImageOps
+from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(HERE, "source")
@@ -16,11 +16,17 @@ bg = Image.open(os.path.join(SRC, "yard-bg.png")).convert("RGBA")
 bg.save(os.path.join(OUT, "bg.webp"), "WEBP", quality=76, method=4)
 
 sky = Image.open(os.path.join(SRC, "yard-sky.png")).convert("RGB")
-h = 1000
-sky = sky.resize((round(sky.width * h / sky.height), h), Image.LANCZOS)
-tile = Image.new("RGB", (sky.width * 2, h))
-tile.paste(sky, (0, 0))
-tile.paste(ImageOps.mirror(sky), (sky.width, 0))  # mirrored copy: the right edge meets the left edge seamlessly
+sky = sky.crop((0, round(sky.height * 0.25), sky.width, sky.height))  # only the lower sky shows above the houses
+h = 800
+sky = sky.resize((round(sky.width * h / sky.height * 1.8), h), Image.LANCZOS)  # stretched wide: clouds are horizontal streaks
+# seamless wrap: the last quarter of the picture is cross-faded into its start, then cut off
+import numpy as np
+arr = np.asarray(sky, dtype=np.float32)
+w = arr.shape[1]
+b = w // 4
+t = np.linspace(0, 1, b, dtype=np.float32)[None, :, None]
+head = arr[:, w - b:] * (1 - t) + arr[:, :b] * t
+tile = Image.fromarray(np.concatenate([head, arr[:, b:w - b]], axis=1).clip(0, 255).astype(np.uint8))
 tile.save(os.path.join(OUT, "sky.webp"), "WEBP", quality=80, method=4)
 
 slot = Image.open(os.path.join(SRC, "slot-machine.png")).convert("RGBA")
