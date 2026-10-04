@@ -28,3 +28,20 @@ export function Help({ topic, title, children }: { topic: HelpTopic; title: stri
     </>
   );
 }
+
+/** A legend inside a help window: picture + name + one line on what it is. */
+export function HelpList({ title, rows }: { title: string; rows: { key: string; icon: ReactNode; name: string; hint: string }[] }) {
+  return (
+    <>
+      <b>{title}</b>
+      <div className="help-nav">
+        {rows.map((r) => (
+          <div key={r.key} className="help-nav-row">
+            {r.icon}
+            <div><b>{r.name}</b><div className="small muted">{r.hint}</div></div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}

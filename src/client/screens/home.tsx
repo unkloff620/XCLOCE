@@ -17,7 +17,8 @@ import { DailyWindow } from "./daily.tsx";
 import { BonusLine, EquipmentWindow } from "./house.tsx";
 import { ROOM_DEFS } from "../../content/home.ts";
 import { money } from "../format.ts";
-import { Help } from "../help.tsx";
+import { Help, HelpList } from "../help.tsx";
+import { CURRENCY_DEFS } from "../../content/currencies.ts";
 import { HAIR_COLORS, HAIR_STYLES, SKIN_TONES, type Look } from "../../content/home.ts";
 
 /** Hairstyle, hair colour and skin tone editor. */
@@ -211,34 +212,33 @@ export function HomeScreen() {
         </div>
         <div className="room-help">
           <Help topic="home-menu" title="Твой дом">
-            <p>Здесь живёт твой персонаж. В «Гардеробе» — одежда и внешность: причёска, цвет волос и кожи.</p>
-            <p>На заднем плане стоит оборудование: второй монитор, кресло, системник, RGB-подсветка. Нажми на любой предмет (или «Техника»), чтобы купить или улучшить его — оно даёт шанс и силу крита и прибавку к урону по боссам.</p>
-            <p>Стрелки по бокам листают комнаты: купленная включается сразу, закрытую можно разблокировать кнопкой снизу. Каждая купленная комната даёт бонус.</p>
-            <p>«Бонус» — награда за ежедневный вход.</p>
-            <b>Меню внизу</b>
-            <div className="help-nav">
-              {NAV_TABS.map((t) => (
-                <div key={t.id} className="help-nav-row">
-                  <NavIcon id={t.id} size={44} />
-                  <div><b>{t.label}</b><div className="small muted">{t.hint}</div></div>
-                </div>
-              ))}
-            </div>
+            <p>Здесь живёт твой персонаж. На заднем плане стоит оборудование — нажми на монитор или системник, чтобы улучшить его. Стрелки по бокам листают комнаты: купленная включается сразу, закрытую можно разблокировать кнопкой снизу. Каждая купленная комната даёт бонус к урону.</p>
+            <HelpList title="Кнопки слева" rows={[
+              { key: "w", icon: <Icon name="shirt" size={44} />, name: "Гардероб", hint: "Одежда и внешность: причёска, цвет волос и кожи." },
+              { key: "b", icon: <Icon name="gift" size={44} />, name: "Бонус", hint: "Награда за ежедневный вход. Заходи каждый день — награда растёт." },
+              { key: "t", icon: <Icon name="bolt" size={44} />, name: "Техника", hint: "Монитор, кресло, системник, подсветка: шанс и сила крита, прибавка к урону." },
+            ]} />
+            <HelpList title="Меню внизу" rows={NAV_TABS.map((t) => ({ key: t.id, icon: <NavIcon id={t.id} size={44} />, name: t.label, hint: t.hint }))} />
+            <HelpList title="Валюта (вверху)" rows={[
+              { key: "RUB", icon: <Icon name="RUB" size={40} />, name: CURRENCY_DEFS.RUB.name, hint: "Основная валюта: задания, двор, боссы. Оружие и мелочи в магазине." },
+              { key: "USD", icon: <Icon name="USD" size={40} />, name: CURRENCY_DEFS.USD.name, hint: "Награды за боссов и локации. Видеокарты, одежда, энергия." },
+              { key: "SOL", icon: <Icon name="SOL" size={40} />, name: CURRENCY_DEFS.SOL.name, hint: "Редкая валюта за сильных боссов. Rug Pull Gun и большие пакеты энергии." },
+              { key: "BTC", icon: <Icon name="BTC" size={40} />, name: CURRENCY_DEFS.BTC.name, hint: "Самая ценная валюта — за последних боссов." },
+              { key: "en", icon: <Icon name="energy" size={40} />, name: "Энергия", hint: "Тратится на задания в локациях и сама восстанавливается. Нажми на неё, чтобы докупить." },
+            ]} />
+            <p className="small muted">Нажми на любую валюту вверху — откроется обменник. Валюта игровая и ничего не стоит в реальном мире.</p>
           </Help>
         </div>
         <div className="room-left">
-          <button className="side-btn" style={{ ["--c" as string]: "#b06bff" }} onClick={() => setWardrobe(true)}>
-            <Icon name="shirt" size={40} />
-            <span>Гардероб</span>
+          <button className="icon-btn-art" style={{ ["--c" as string]: "#b06bff" }} onClick={() => setWardrobe(true)} aria-label="Гардероб" title="Гардероб">
+            <Icon name="shirt" size={58} />
           </button>
-          <button className={`side-btn ${state.daily.available ? "glow" : ""}`} style={{ ["--c" as string]: "#ffcc33" }} onClick={() => setDaily(true)}>
-            <Icon name="gift" size={40} />
-            <span>Бонус</span>
+          <button className={`icon-btn-art ${state.daily.available ? "glow" : ""}`} style={{ ["--c" as string]: "#ffcc33" }} onClick={() => setDaily(true)} aria-label="Бонус" title="Бонус">
+            <Icon name="gift" size={58} />
             {state.daily.available && <i className="side-dot" />}
           </button>
-          <button className="side-btn" style={{ ["--c" as string]: "#3fd2ff" }} onClick={() => setEquip(null)}>
-            <Icon name="bolt" size={40} />
-            <span>Техника</span>
+          <button className="icon-btn-art" style={{ ["--c" as string]: "#3fd2ff" }} onClick={() => setEquip(null)} aria-label="Техника" title="Техника">
+            <Icon name="bolt" size={58} />
           </button>
         </div>
       </div>

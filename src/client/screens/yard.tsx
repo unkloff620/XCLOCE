@@ -10,13 +10,13 @@ import { haptic } from "../telegram.ts";
 import Link from "next/link";
 import { Icon } from "../art/icons.tsx";
 import { SlotMachine, SlotCabinet } from "./slots.tsx";
-import { Help } from "../help.tsx";
+import { Help, HelpList } from "../help.tsx";
 import { Modal } from "../ui.tsx";
 
 const LINKS = [
-  { href: "/shop", icon: "shop", label: "Магазин", c: "#ff4d6d" },
-  { href: "/exchange", icon: "exchange", label: "Обменник", c: "#3fd2ff" },
-  { href: "/locations", icon: "map", label: "Локации", c: "#3ddc84" },
+  { href: "/shop", icon: "shop", label: "Магазин", c: "#ff4d6d", hint: "Оружие, энергия, одежда и разное за игровую валюту." },
+  { href: "/exchange", icon: "exchange", label: "Обменник", c: "#3fd2ff", hint: "Меняй одну валюту на другую (комиссия 5%)." },
+  { href: "/locations", icon: "map", label: "Локации", c: "#3ddc84", hint: "Задания за энергию: проходи шаги и забирай награды." },
 ] as const;
 
 interface YardData { items: { id: number; slot: number; drop: string; at: number }[]; max: number; nextAt: number | null; periodMs: number }
@@ -59,10 +59,11 @@ export function YardScreen() {
       <div className="title">
         <div className="title-row">
           <h1 className="display">Двор</h1>
-          <Help topic="yard" title="Как устроен двор">
+          <Help topic="yard-menu" title="Как устроен двор">
             <p>Каждые 5 минут во дворе появляется случайная находка, максимум 5 сразу. Время идёт, даже когда игра закрыта — заходи и собирай.</p>
             <p>Изредка попадаются Красная свеча и Клавиатура. Всё найденное можно продать в инвентаре.</p>
-            <p>Слева — Магазин, Обменник и Локации. Справа стоит игровой автомат 777.</p>
+            <HelpList title="Кнопки слева" rows={LINKS.map((b) => ({ key: b.href, icon: <Icon name={b.icon} size={44} />, name: b.label, hint: b.hint }))} />
+            <p>Справа стоит игровой автомат 777 — 3 бесплатные прокрутки в час.</p>
           </Help>
         </div>
         <span className="chip">{data?.items.length ?? state?.yard.count ?? 0}/{data?.max ?? 5}</span>
@@ -94,9 +95,8 @@ export function YardScreen() {
         </div>
         <nav className="yard-side" aria-label="Места во дворе">
           {LINKS.map((b) => (
-            <Link key={b.href} href={b.href} className="side-btn" style={{ ["--c" as string]: b.c }}>
-              <Icon name={b.icon} size={40} />
-              <span>{b.label}</span>
+            <Link key={b.href} href={b.href} className="icon-btn-art" style={{ ["--c" as string]: b.c }} aria-label={b.label} title={b.label}>
+              <Icon name={b.icon} size={58} />
             </Link>
           ))}
         </nav>
