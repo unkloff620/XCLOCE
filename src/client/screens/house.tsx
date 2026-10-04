@@ -63,7 +63,7 @@ export function EquipmentWindow({ focus, onClose }: { focus?: string | null; onC
               </div>
               {next ? (
                 <button className="btn sm gold block" disabled={!can || busy === "equipment_upgrade"} onClick={() => up(e.id, e.name)}>
-                  {lv === 0 ? "Купить" : "Улучшить"} · <Icon name={next.price.currency} size={15} /> {money(next.price.currency, next.price.amount)}
+                  {lv === 0 && !e.stages ? "Купить" : "Улучшить"} · <Icon name={next.price.currency} size={15} /> {money(next.price.currency, next.price.amount)}
                 </button>
               ) : (
                 <div className="chip green" style={{ alignSelf: "flex-start" }}>Максимальный уровень</div>
