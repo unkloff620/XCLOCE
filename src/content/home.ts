@@ -50,8 +50,10 @@ export const EQUIPMENT: EquipmentDef[] = [
     levels: [
       { price: { currency: "RUB", amount: 3000 }, bonus: { critDamage: 0.1 } },
       { price: { currency: "USD", amount: 30 }, bonus: { critDamage: 0.2 } },
+      { price: { currency: "SOL", amount: 0.15 }, bonus: { critDamage: 0.35 } },
     ],
     stages: [
+      { name: "Старый ламповый", art: "monitor-1" },
       { name: "Один монитор", art: "monitor-center" },
       { name: "Два монитора", art: "monitor-left" },
       { name: "Три монитора", art: "monitor-right" },

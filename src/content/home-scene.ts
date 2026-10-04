@@ -9,18 +9,19 @@ export const SCENE = { w: 1060, h: 1484 };
 export const SCENE_OBJECTS = {
   /** the desk behind the character; picture = the desk stage (desk-001…004) */
   desk: { x: 140, y: 690, w: 780, aspect: 0.4, flip: false },
-  /** monitors on the desk top: the centre one always, the left one from level 1, the right one from level 2 */
+  /** monitors on the desk top: level 0 — the old CRT in the middle; 1 — a flat one in its place; 2 — + left; 3 — + right */
+  monitorOld: { x: 440, y: 555, w: 190, aspect: 1.0, flip: true },
   monitorCenter: { x: 425, y: 579, w: 210, aspect: 0.79, flip: false },
   monitorLeft: { x: 175, y: 545, w: 200, aspect: 1.0, flip: false },
   monitorRight: { x: 685, y: 545, w: 200, aspect: 1.0, flip: false },
-  /** the system unit on the floor in the right corner, behind the desk */
-  pc: { x: 905, y: 760, w: 120, aspect: 1.4401, flip: true },
+  /** the system unit on the floor, right in the corner of the room (the corner of the walls is at x≈945, y≈885) */
+  pc: { x: 878, y: 727, w: 120, aspect: 1.4401, flip: false },
 } as const;
 
 /** tap zones (scene units) that open the windows: bigger than the pictures so a finger hits them */
 export const SCENE_HOT = {
   monitors: { x: 150, y: 520, w: 760, h: 250, equipment: "monitor2" },
-  pc: { x: 880, y: 730, w: 175, h: 240, equipment: "pc" },
+  pc: { x: 855, y: 700, w: 190, h: 235, equipment: "pc" },
 } as const;
 
 /** Character placement: the 1000×1400 rig canvas scaled into the scene. */
