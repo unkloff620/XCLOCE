@@ -26,5 +26,62 @@ export const HAIR_FIT = {
   }
 } as const;
 /** worn clothes drawn on the rig; hats in this list also have hair variants cut under them */
-export const WEAR_FIT = {} as const;
+export const WEAR_FIT = {
+  "tee-white": {
+    "slot": "SHIRT",
+    "x": 187.0,
+    "y": 285.5,
+    "w": 624,
+    "h": 481
+  },
+  "tee-pump": {
+    "slot": "SHIRT",
+    "x": 179.5,
+    "y": 291.0,
+    "w": 646,
+    "h": 476
+  },
+  "jeans": {
+    "slot": "PANTS",
+    "x": 74.5,
+    "y": 678.0,
+    "w": 862,
+    "h": 530
+  },
+  "shorts-remote": {
+    "slot": "PANTS",
+    "x": 179.5,
+    "y": 696.5,
+    "w": 652,
+    "h": 291
+  },
+  "sneakers": {
+    "slot": "SHOES",
+    "x": 60.0,
+    "y": 1086.0,
+    "w": 882,
+    "h": 270
+  },
+  "slippers": {
+    "slot": "SHOES",
+    "x": 51.5,
+    "y": 1193.5,
+    "w": 898,
+    "h": 170
+  },
+  "gold-chain": {
+    "slot": "ACCESSORY",
+    "x": 413.5,
+    "y": 291.5,
+    "w": 173,
+    "h": 108
+  },
+  "cap-moon": {
+    "slot": "HEAD",
+    "x": 393.0,
+    "y": 13.5,
+    "w": 219,
+    "h": 170
+  }
+} as const;
 export const SKIN_ORIGINAL = 1;

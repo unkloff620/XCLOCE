@@ -88,7 +88,7 @@ const WEARABLES: ItemDef[] = ([
   { id: "cap-moon", name: "Чёрная кепка", slot: "HEAD", rarity: "rare", description: "Козырёк вперёд — курс на луну.", sources: ["Награда за локацию 2"] },
   { id: "santa-hat", name: "Новогодний колпак", slot: "HEAD", rarity: "epic", description: "Сезонный предмет.", sources: ["Новогодний ивент"] },
   { id: "laser-eyes", name: "Лазерные глаза", slot: "ACCESSORY", rarity: "legendary", description: "Обязательный аксессуар биткоин-максималиста.", sources: ["Награда за локацию 5"] },
-  { id: "gold-chain", name: "Цепь из блокчейна", slot: "ACCESSORY", rarity: "epic", description: "Каждое звено — подтверждённый блок.", sources: ["Награда за локацию 3"] },
+  { id: "gold-chain", name: "Серебряная цепь", slot: "ACCESSORY", rarity: "epic", description: "Каждое звено — подтверждённый блок.", sources: ["Награда за локацию 3"] },
 ] as Omit<ItemDef, "category" | "maxStack">[]).map((w) => ({ ...w, category: "clothing" as const, maxStack: 1 }));
 
 const MISC: ItemDef[] = [
