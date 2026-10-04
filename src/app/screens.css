@@ -1008,8 +1008,13 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 
 /* achievement medal with a drawn picture standing over it */
 .badge-wrap { position: relative; display: inline-grid; place-items: center; flex: none; }
-.badge-wrap.art .badge-medal { opacity: 0.85; transform: scale(0.82); }
 .badge-art { position: absolute; inset: 0; display: grid; place-items: center; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6)); }
 .badge-wrap.locked .badge-art { filter: grayscale(0.85) brightness(0.6) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6)); }
 /* the boss picture is its own layer under the text: its glow, fade and breathing never cover the name or the numbers */
 .bcard-art { z-index: 0; overflow: hidden; }
+
+/* profile balance: a row per currency */
+.balance-list { display: flex; flex-direction: column; gap: 6px; }
+.balance-row { display: flex; align-items: center; gap: 10px; padding: 7px 12px 7px 8px; border-radius: 12px; background: var(--bg2); border: 2px solid var(--line); min-width: 0; }
+.balance-name { flex: 1; min-width: 0; font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.balance-val { flex: none; max-width: 65%; font-size: 16px; text-align: right; overflow-wrap: anywhere; }

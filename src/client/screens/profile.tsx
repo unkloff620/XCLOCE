@@ -8,7 +8,7 @@ import { useGame, useNow } from "../store.tsx";
 import { api } from "../api.ts";
 import { BOSSES } from "../../content/bosses.ts";
 import { WEAPONS } from "../../content/items.ts";
-import { CURRENCIES, type Currency } from "../../content/currencies.ts";
+import { CURRENCIES, CURRENCY_DEFS, type Currency } from "../../content/currencies.ts";
 import { Avatar, Bar, Coin, Empty, Modal } from "../ui.tsx";
 import { Emblem } from "../art/emblems.tsx";
 import { ItemArt } from "../art/items.tsx";
@@ -133,9 +133,22 @@ export function ProfileScreen() {
       {p.wallet && (
         <div className="panel">
           <div className="small muted" style={{ marginBottom: 8 }}>БАЛАНС</div>
-          <div className="stat-grid balance-grid">
-            {CURRENCIES.map((c) => <div key={c}><b><Coin c={c} v={p.wallet![c]} size={18} /></b><span>{c}</span></div>)}
-            {p.energy !== null && <div><b className="row" style={{ gap: 3, display: "inline-flex" }}><Icon name="energy" size={18} /><span className="num">{p.energy}</span></b><span>энергия</span></div>}
+          {/* one row per currency: the full amount has the whole width, however big it grows */}
+          <div className="balance-list">
+            {CURRENCIES.map((c) => (
+              <div key={c} className="balance-row">
+                <Icon name={c} size={26} />
+                <span className="balance-name">{CURRENCY_DEFS[c].name}</span>
+                <b className="balance-val num">{money(c, p.wallet![c])}</b>
+              </div>
+            ))}
+            {p.energy !== null && (
+              <div className="balance-row">
+                <Icon name="energy" size={26} />
+                <span className="balance-name">Энергия</span>
+                <b className="balance-val num">{full(p.energy)}</b>
+              </div>
+            )}
           </div>
         </div>
       )}
