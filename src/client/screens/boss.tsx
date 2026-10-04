@@ -31,9 +31,9 @@ function Arena({ boss, hp, hpMax, endsAt, fx, hit, rug, feed, full: fullScreen }
       {!fullScreen && <ArenaBackdrop theme={boss.theme} final={boss.final} />}
       <div className={`arena-photo ${hit ? "hit" : ""} ${rug ? "rug" : ""} ${hurt ? "hurt" : ""}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        {hasBossRig(boss.id) ? <BossRig id={boss.id} /> : boss.photo.full ? <img src={boss.photo.full} alt={boss.name} draggable={false} /> : <div className="arena-sil"><BossSilhouette accent={boss.theme.accent} /><span className="small muted">фото скоро</span></div>}
+        {hasBossRig(boss.id) ? <BossRig id={boss.id} hpShare={hp === null ? 1 : hp / Math.max(1, hpMax)} /> : boss.photo.full ? <img src={boss.photo.full} alt={boss.name} draggable={false} /> : <div className="arena-sil"><BossSilhouette accent={boss.theme.accent} /><span className="small muted">фото скоро</span></div>}
         <div className="arena-flash" />
-        {hurt && <div className="arena-plasters" />}
+        {hurt && !hasBossRig(boss.id) && <div className="arena-plasters" />}
       </div>
       <div className="arena-top">
         <div className="row" style={{ justifyContent: "space-between", marginBottom: 4 }}>

@@ -2,6 +2,7 @@
 /*
  * Animated boss built from the artist's layers (tools/boss/build-boss.py): body breathes, head sways around the neck,
  * fists bob in a guard around the elbows, eyes blink. Bosses without a rig use their flat picture.
+ * Below half HP a boss with a "<id>-beaten" rig (tools/boss/align-variant.py) switches to its beaten look.
  */
 import { BOSS_RIGS } from "./boss-rig-data.ts";
 
@@ -11,7 +12,11 @@ export function hasBossRig(id: string): boolean {
   return id in BOSS_RIGS;
 }
 
-export function BossRig({ id }: { id: string }) {
+/** HP share (0..1) below which the beaten look is shown. */
+export const BEATEN_BELOW = 0.5;
+
+export function BossRig({ id: baseId, hpShare = 1 }: { id: string; hpShare?: number }) {
+  const id = hpShare < BEATEN_BELOW && `${baseId}-beaten` in BOSS_RIGS ? `${baseId}-beaten` : baseId;
   const rig = BOSS_RIGS[id];
   if (!rig) return null;
   const P = rig.parts;
@@ -24,7 +29,7 @@ export function BossRig({ id }: { id: string }) {
     return { transformOrigin: `${pv[0]}px ${pv[1]}px`, transformBox: "view-box" as const };
   };
   return (
-    <svg className="boss-rig" viewBox={`0 0 ${rig.w} ${rig.h}`} width="100%" height="100%" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+    <svg key={id} className={`boss-rig ${id.endsWith("-beaten") ? "beaten" : ""}`} viewBox={`0 0 ${rig.w} ${rig.h}`} width="100%" height="100%" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
       <g className="br-breath" style={{ transformOrigin: `${rig.w / 2}px ${rig.h}px`, transformBox: "view-box" }}>
         {img("body")}
         <g className="br-head" style={origin("head")}>

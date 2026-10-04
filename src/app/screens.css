@@ -526,3 +526,5 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(10, 12, 24, 0.
 .fit-page .title-row .back-btn { margin-right: 2px; }
 /* the shop fills the height (sides are cropped a little on tall phones instead of an empty strip on top) */
 .shop-scene .yard-stage { aspect-ratio: 941 / 1672; left: 50%; right: auto; top: 0; height: calc(100% - var(--nav-h) - var(--safe-b) + 6px); width: auto; transform: translateX(-50%); }
+.boss-rig.beaten { animation: beaten-in 0.6s ease-out; }
+@keyframes beaten-in { 0% { filter: brightness(2.2) drop-shadow(0 8px 18px rgba(0, 0, 0, 0.55)); transform: translateX(-6px); } 30% { transform: translateX(6px); } 60% { transform: translateX(-3px); } 100% { filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.55)); transform: none; } }
