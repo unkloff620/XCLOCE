@@ -95,7 +95,7 @@ export function YardScreen() {
         <nav className="yard-side" aria-label="Места во дворе">
           {LINKS.map((b) => (
             <Link key={b.href} href={b.href} className="side-btn" style={{ ["--c" as string]: b.c }}>
-              <Icon name={b.icon} size={32} />
+              <Icon name={b.icon} size={40} />
               <span>{b.label}</span>
             </Link>
           ))}

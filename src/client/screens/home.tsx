@@ -228,16 +228,16 @@ export function HomeScreen() {
         </div>
         <div className="room-left">
           <button className="side-btn" style={{ ["--c" as string]: "#b06bff" }} onClick={() => setWardrobe(true)}>
-            <Icon name="shirt" size={34} />
+            <Icon name="shirt" size={40} />
             <span>Гардероб</span>
           </button>
           <button className={`side-btn ${state.daily.available ? "glow" : ""}`} style={{ ["--c" as string]: "#ffcc33" }} onClick={() => setDaily(true)}>
-            <Icon name="gift" size={34} />
+            <Icon name="gift" size={40} />
             <span>Бонус</span>
             {state.daily.available && <i className="side-dot" />}
           </button>
           <button className="side-btn" style={{ ["--c" as string]: "#3fd2ff" }} onClick={() => setEquip(null)}>
-            <Icon name="bolt" size={30} />
+            <Icon name="bolt" size={40} />
             <span>Техника</span>
           </button>
         </div>

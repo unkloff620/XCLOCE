@@ -182,7 +182,18 @@ const ICONS: Record<string, () => ReactNode> = {
 };
 
 export type IconName = keyof typeof ICONS | string;
+/** Icons drawn by the artist: icon name → public/assets/ui/<file>.webp (built by tools/items/build-items.py). */
+const RASTER_ICONS: Partial<Record<string, string>> = { shirt: "wardrobe", gift: "bonus", bolt: "tech", shop: "shop", exchange: "exchange", map: "tasks" };
+
 export function Icon({ name, size = 28, className }: { name: IconName; size?: number; className?: string }) {
+  const art = RASTER_ICONS[name];
+  if (art) {
+    return (
+      <svg className={className} width={size} height={size} viewBox="0 0 64 64" aria-hidden="true" style={{ flex: "none", display: "block" }}>
+        <image href={`/assets/ui/${art}.webp`} x="0" y="0" width="64" height="64" />
+      </svg>
+    );
+  }
   const f = ICONS[name];
   if (!f) return <Svg size={size} className={className}><circle cx="32" cy="32" r="24" fill="#6e75a6" {...S} /></Svg>;
   return <Svg size={size} className={className}>{f()}</Svg>;
