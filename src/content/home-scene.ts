@@ -15,14 +15,14 @@ export const SCENE_OBJECTS = {
   monitorCenter: { x: 425, y: 579, w: 210, aspect: 0.79, flip: false },
   monitorLeft: { x: 175, y: 545, w: 200, aspect: 1.0, flip: false },
   monitorRight: { x: 685, y: 545, w: 200, aspect: 1.0, flip: false },
-  /** the system unit on the floor, right in the corner of the room (the corner of the walls is at x≈945, y≈885) */
-  pc: { x: 878, y: 727, w: 120, aspect: 1.4401, flip: false },
+  /** the system unit on the floor, right in the corner of the room (its back in the corner of the walls at x≈945, y≈885, the base on the floor in front of it) */
+  pc: { x: 868, y: 785, w: 120, aspect: 1.4401, flip: false },
 } as const;
 
 /** tap zones (scene units) that open the windows: bigger than the pictures so a finger hits them */
 export const SCENE_HOT = {
   monitors: { x: 150, y: 520, w: 760, h: 250, equipment: "monitor2" },
-  pc: { x: 855, y: 700, w: 190, h: 235, equipment: "pc" },
+  pc: { x: 845, y: 755, w: 190, h: 235, equipment: "pc" },
 } as const;
 
 /** Character placement: the 1000×1400 rig canvas scaled into the scene. */
