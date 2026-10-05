@@ -3,13 +3,13 @@ import { useEffect, useState } from "react";
 
 /*
  * A short loading screen between sections: the screen goes grey and a spinner turns in the middle, no text.
- * Shown for at least MIN_MS so the next place has time to draw its pictures; it stays a little longer
+ * Shown for at least MIN_MS (half a second) so the next place has time to draw its pictures; it stays a little longer
  * (up to MAX_MS) while the pictures of the new screen are still decoding.
  * Starts on its own for the bottom menu and for the places of the yard (locations, shop, exchange);
  * code that navigates with router.push calls startRouteLoad() itself.
  */
 
-const MIN_MS = 1000;
+const MIN_MS = 500;
 const MAX_MS = 4000;
 
 let listener: ((from: string) => void) | null = null;
