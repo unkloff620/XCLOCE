@@ -102,7 +102,7 @@ export async function startFight(ctx: Ctx, bossId: string, solo = false) {
   if (active) throw new GameError("fight_running", `Сначала закончи бой с боссом ${bossById(active.boss_id)?.name}`);
   if (!(await isUnlocked(ctx.q, ctx.pid, def, ctx.cfg.fight.keysToUnlock))) {
     const n = keysNeeded(def, ctx.cfg.fight.keysToUnlock);
-    throw new GameError("boss_locked", n === 1 ? "Нужна карточка предыдущего босса" : `Нужно ${n} карточки предыдущего босса`);
+    throw new GameError("boss_locked", n === 1 ? "Нужен пропуск предыдущего босса" : `Нужно ${n} пропуска предыдущего босса`);
   }
   const day = moscowDay(ctx.now);
   if ((await fightsToday(ctx.q, ctx.pid, def.id, day)) >= ctx.cfg.fight.perDay) {

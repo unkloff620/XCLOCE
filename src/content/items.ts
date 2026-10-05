@@ -108,7 +108,7 @@ const KEYS: ItemDef[] = BOSSES.filter((b) => !b.final).map((b, i, list) => {
   const need = next?.keysToUnlock ?? 3;
   return {
     id: keyId(b.id), name: `${t.name}: ${b.name}`, category: "reward" as const, rarity: t.rarity, maxStack: 999,
-    description: `Выдаётся за победу над боссом ${b.name}. ${need === 1 ? "Одна карточка открывает" : `${need} карточки открывают`} босса ${next?.name ?? ""}.`.trim(),
+    description: `Выдаётся за победу над боссом ${b.name}. ${need === 1 ? "Один пропуск открывает" : `${need} пропуска открывают`} босса ${next?.name ?? ""}.`.trim(),
     sources: [`Победа: ${b.name}`],
   };
 });

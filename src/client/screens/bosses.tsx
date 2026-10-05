@@ -95,7 +95,7 @@ export function BossesScreen() {
                 <div className="bcard-head">
                   <div className="col" style={{ gap: 1, minWidth: 0 }}>
                     <b className="bcard-name display ellipsis">{locked ? "???" : b.name}</b>
-                    <span className="bcard-title ellipsis">{locked ? `Откроется карточками «${prev?.name}»` : b.title}</span>
+                    <span className="bcard-title ellipsis">{locked ? `Откроется пропусками «${prev?.name}»` : b.title}</span>
                   </div>
                   {mine ? (
                     <span className="bcard-pill live"><i className="live-dot" />{clock(mine.endsAt - now)}</span>
@@ -115,7 +115,7 @@ export function BossesScreen() {
                 </div>
                 <div className="bcard-foot">
                   {locked ? (
-                    <span className="bcard-meta">{prev && <ItemArt id={`key-${prev.id}`} size={22} />} {row?.keysHave ?? 0}/{row?.keysNeed ?? 3} {(row?.keysNeed ?? 3) === 1 ? "карточка" : "карточки"}</span>
+                    <span className="bcard-meta">{prev && <ItemArt id={`key-${prev.id}`} size={22} />} {row?.keysHave ?? 0}/{row?.keysNeed ?? 3} {(row?.keysNeed ?? 3) === 1 ? "пропуск" : "пропуска"}</span>
                   ) : (
                     <span className="bcard-meta" title="Победы сегодня"><Icon name="swords" size={14} /> Побед <b className="num">{row?.fightsToday ?? 0}/{row?.fightsPerDay ?? 7}</b></span>
                   )}
@@ -140,7 +140,7 @@ export function BossRulesHelp({ topic }: { topic: "bosses" | "boss" }) {
         <li>Кнопка «Соло» — бой в одиночку: HP босса снимают только твои удары. Соло-победы дают отдельное достижение «Соло».</li>
         <li>Бьют только оружием. Кулак — бесплатно раз в час, остальное оружие тратится.</li>
         <li>Награда за победу зависит от твоего урона в этом бою: полная — если нанёс хотя бы 2% здоровья босса, меньше — пропорционально. Без урона награды нет.</li>
-        <li>Карточка босса даётся от 1% его здоровья. Карточки открывают следующего босса: бронзовые, серебряные, золотые и платиновые — по 3 штуки, бриллиантовые (для Фокуса и Солнца) — по одной.</li>
+        <li>Пропуск босса даётся от 1% его здоровья. Пропуски открывают следующего босса: бронзовые, серебряные, золотые и платиновые — по 3 штуки, бриллиантовые (для Фокуса и Солнца) — по одному.</li>
         <li>С Дацкоу с шансом 10% выпадает одежда: белая футболка и тапки. Не повезло 10 побед подряд — вещь выпадет точно.</li>
         <li>За Утилизатора дают статуэтку CLOSE: она сама встаёт на стол в комнате и даёт +25% к силе крита.</li>
         <li>В день можно победить каждого босса 7 раз. Проигранные бои в лимит не идут.</li>

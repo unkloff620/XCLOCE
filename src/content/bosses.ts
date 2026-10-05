@@ -30,14 +30,14 @@ export interface BossDef {
   wear?: { items: string[]; chance: number; pity: number };
 }
 
-/** Boss cards (they used to be keys): the tier only sets the look and the name, every boss has its own card. */
+/** Boss passes «Пропуск» (they used to be keys): the tier only sets the look and the name, every boss has its own card. */
 export type CardTier = "bronze" | "silver" | "gold" | "platinum" | "diamond";
 export const CARD_TIERS: Record<CardTier, { name: string; rarity: "common" | "rare" | "epic" | "legendary" | "mythic" }> = {
-  bronze: { name: "Бронзовая карточка", rarity: "common" },
-  silver: { name: "Серебряная карточка", rarity: "rare" },
-  gold: { name: "Золотая карточка", rarity: "epic" },
-  platinum: { name: "Платиновая карточка", rarity: "legendary" },
-  diamond: { name: "Бриллиантовая карточка", rarity: "mythic" },
+  bronze: { name: "Бронзовый пропуск", rarity: "common" },
+  silver: { name: "Серебряный пропуск", rarity: "rare" },
+  gold: { name: "Золотой пропуск", rarity: "epic" },
+  platinum: { name: "Платиновый пропуск", rarity: "legendary" },
+  diamond: { name: "Бриллиантовый пропуск", rarity: "mythic" },
 };
 
 /** 1 000 → 10 000 → 50 000 → … → 10 000 000 (Солнце). Подчинённые (Гаркуша, Mugo, Вадим, Боцман) fill the gaps. */

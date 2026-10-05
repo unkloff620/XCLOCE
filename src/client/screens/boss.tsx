@@ -359,7 +359,7 @@ export function BossScreen({ id }: { id: string }) {
         {locked ? (
           <div className="panel row small" style={{ gap: 8 }}>
             <Icon name="lock" size={30} />
-            <span className="grow">Нужно карточек предыдущего босса: <b>{row!.keysNeed}</b>. У тебя {row!.keysHave}.</span>
+            <span className="grow">Нужно пропусков предыдущего босса: <b>{row!.keysNeed}</b>. У тебя {row!.keysHave}.</span>
           </div>
         ) : otherFight ? (
           <Link className="btn violet block" href={`/bosses/${otherFight.bossId}`}>Идёт бой с {bossById(otherFight.bossId)?.name} — к нему</Link>
@@ -383,7 +383,7 @@ export function BossScreen({ id }: { id: string }) {
             {boss.phases && <div className="small muted">Фазы: {boss.phases.map((p) => p.name).join(" → ")}</div>}
             <b className="small">Награда за победу</b>
             <BossRewardsPanel bossId={id} />
-            {!boss.final && <div className="tiny muted row" style={{ gap: 6 }}><ItemArt id={`key-${boss.id}`} size={22} /> Твоих карточек: {row?.myKeys ?? 0}</div>}
+            {!boss.final && <div className="tiny muted row" style={{ gap: 6 }}><ItemArt id={`key-${boss.id}`} size={22} /> Твоих пропусков: {row?.myKeys ?? 0}</div>}
             {invQty(state, "fist") === 0 && <p className="small muted">Кулак потерялся? Напиши организаторам.</p>}
           </div>
         </Modal>
