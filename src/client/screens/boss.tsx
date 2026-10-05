@@ -400,7 +400,7 @@ export function BossScreen({ id }: { id: string }) {
           <span className="door-hit" />
           <span className="door-plate">
             <b className="door-plate-title">{boss.final ? "ФИНАЛ" : "НАГРАДА"}</b>
-            <GainLine r={doorReward} size={16} />
+            <GainLine r={doorReward} size={14} />
           </span>
           {blocked && locked && <span className="door-lock"><Icon name="lock" size={30} /></span>}
         </button>

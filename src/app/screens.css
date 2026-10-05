@@ -1137,11 +1137,12 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .door-scene.rattle .door-leaf { animation: door-rattle 0.42s ease-in-out; }
 @keyframes door-rattle { 20% { transform: translateX(-1.2%) rotateY(-2deg); } 40% { transform: translateX(1%); } 60% { transform: translateX(-0.8%) rotateY(-1deg); } 80% { transform: translateX(0.5%); } }
 /* rewards written on the lower half of the door */
-.door-plate { position: absolute; left: 36%; width: 30%; top: 46.5%; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 5px 4px 6px;
+.door-plate { position: absolute; left: 35%; width: 32%; top: 47%; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 5px 4px 6px;
   border-radius: 6px; background: rgba(18, 11, 7, 0.82); border: 2px solid rgba(160, 98, 52, 0.85); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.5);
   pointer-events: none; color: var(--ink); font-size: 11px; }
 .door-plate-title { font-family: inherit; font-size: 10px; letter-spacing: 0.12em; color: var(--gold); }
-.door-plate .gain-line, .door-plate > span:last-child { justify-content: center; flex-wrap: wrap; }
+.door-plate .gain-line { display: flex; justify-content: center; flex-wrap: wrap; gap: 2px 6px; }
+.door-plate .gain { font-size: 10.5px; gap: 2px; }
 .door-lock { position: absolute; left: 58.5%; top: 35.5%; width: 9%; aspect-ratio: 1; display: grid; place-items: center; border-radius: 50%; background: rgba(0, 0, 0, 0.6); pointer-events: none; }
 .door-lock svg { width: 70%; height: 70%; }
 /* the pass on the left wall */
