@@ -188,7 +188,7 @@ function ClanWeek({ c }: { c: ClanPage }) {
       <div className="col" style={{ gap: 5 }}>
         {rows.map((x) => (
           <div key={x.place} className={`clan-prize${x.on ? " on" : ""}`}>
-            <span className="clan-prize-place display">{x.place}</span>
+            <span className={`clan-prize-place display${x.place.length > 2 ? " rest" : ""}`}>{x.place}</span>
             <RewardChips r={x.r} size={15} />
           </div>
         ))}
