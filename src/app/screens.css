@@ -1045,7 +1045,7 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 @media (max-width: 360px) { .ph-hero, .ph-hero svg { width: 112px !important; } }
 
 /* ---------- character editor right in the room: everything goes grey, only the hero keeps his colours ---------- */
-.fit-page { --sty-h: calc(238px + var(--safe-b)); }
+:root { --sty-h: calc(268px + var(--safe-b)); }
 body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); pointer-events: none; transition: filter 0.25s; }
 .fit-page.styling .scene-backdrop { filter: blur(7px) brightness(0.3) grayscale(1); }
 .fit-page.styling .room-left, .fit-page.styling .room-label, .fit-page.styling .room-help, .fit-page.styling .room-arrow,
