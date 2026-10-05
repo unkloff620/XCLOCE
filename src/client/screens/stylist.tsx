@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useGame } from "../store.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { ITEMS, type Slot } from "../../content/items.ts";
@@ -89,7 +90,8 @@ export function Stylist({ draft, setDraft, onClose }: { draft: StyleDraft; setDr
       <div className="sty-side left">{LEFT.map(slotBtn)}</div>
       <div className="sty-side right">{RIGHT.map(slotBtn)}</div>
 
-      <div className="sty-panel">
+      {/* the panel goes to <body>: the fixed .fit-page is its own stacking layer and would stay under the nav */}
+      {createPortal(<div className="sty-panel">
         <div className="sty-tabs">
           <button className={tab === "clothes" ? "on" : ""} onClick={() => setTab("clothes")}>Одежда</button>
           <button className={tab === "look" ? "on" : ""} onClick={() => setTab("look")}>Внешность</button>
@@ -152,7 +154,7 @@ export function Stylist({ draft, setDraft, onClose }: { draft: StyleDraft; setDr
           <button className="btn dark" onClick={onClose}>Отмена</button>
           <button className="btn green grow" disabled={!changed || saving || !!busy} onClick={save}>{changed ? "Сохранить" : "Без изменений"}</button>
         </div>
-      </div>
+      </div>, document.body)}
     </>
   );
 }
