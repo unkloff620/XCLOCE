@@ -1204,5 +1204,8 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .batch-btn b { font-size: 14px; }
 .batch-btn.on { background: var(--gold, #f5c542); color: var(--line); transform: translateY(1px); box-shadow: 0 2px 0 var(--line); }
 .batch-off { padding: 0 5px; border-radius: 6px; background: var(--green); color: var(--line); font-size: 9.5px; font-weight: 800; }
-/* the clothes rack: a header per slot */
-.shop-group { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.8; }
+/* the clothes rack: filter by slot (all, head, top, bottom, shoes, accessories) */
+.slot-row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 5px; margin-bottom: 8px; }
+.slot-btn { display: grid; place-items: center; aspect-ratio: 1; max-height: 48px; padding: 4px; border-radius: 12px; border: 2px solid var(--line); box-shadow: 0 3px 0 var(--line); background: var(--tex), var(--panel); color: inherit; cursor: pointer; }
+.slot-btn img { width: 78%; height: 78%; object-fit: contain; pointer-events: none; }
+.slot-btn.on { background: var(--gold); color: var(--line); transform: translateY(1px); box-shadow: 0 2px 0 var(--line); }

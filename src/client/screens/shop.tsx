@@ -44,14 +44,32 @@ function LockedInfo({ itemId, onClose }: { itemId: string; onClose: () => void }
   );
 }
 
-/** clothes on the rack go from the head down */
-const WEAR_GROUPS: { slot: Slot; name: string }[] = [
-  { slot: "HEAD", name: "Голова" },
-  { slot: "SHIRT", name: "Верх" },
-  { slot: "PANTS", name: "Низ" },
-  { slot: "SHOES", name: "Обувь" },
-  { slot: "ACCESSORY", name: "Аксессуары" },
+/** clothes on the rack go from the head down; the filter row shows these as icons */
+const WEAR_GROUPS: { slot: Slot; name: string; icon: string }[] = [
+  { slot: "HEAD", name: "Голова", icon: "slot-head" },
+  { slot: "SHIRT", name: "Верх", icon: "slot-shirt" },
+  { slot: "PANTS", name: "Низ", icon: "slot-pants" },
+  { slot: "SHOES", name: "Обувь", icon: "slot-shoes" },
+  { slot: "ACCESSORY", name: "Аксессуары", icon: "slot-accessory" },
 ];
+
+/** the filter row above the clothes: everything, or one slot */
+function SlotRow({ slot, onPick }: { slot: Slot | null; onPick: (s: Slot | null) => void }) {
+  const pick = (s: Slot | null) => { haptic.tap(); onPick(s); };
+  return (
+    <div className="slot-row" role="radiogroup" aria-label="Что показать">
+      <button role="radio" aria-checked={slot === null} aria-label="Всё" title="Всё" className={`slot-btn${slot === null ? " on" : ""}`} onClick={() => pick(null)}>
+        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="3" strokeLinecap="round" /></svg>
+      </button>
+      {WEAR_GROUPS.map((g) => (
+        <button key={g.slot} role="radio" aria-checked={slot === g.slot} aria-label={g.name} title={g.name} className={`slot-btn${slot === g.slot ? " on" : ""}`} onClick={() => pick(g.slot)}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={`/assets/ui/${g.icon}.webp`} alt="" width={30} height={30} draggable={false} />
+        </button>
+      ))}
+    </div>
+  );
+}
 
 /** the batch row above the weapons: 1, 10, 100, 1000 — the price on every card follows it */
 function BatchRow({ qty, onPick }: { qty: number; onPick: (n: number) => void }) {
@@ -71,19 +89,19 @@ function OfferGrid({ offers, rub }: { offers: Offer[]; rub?: Record<Currency, nu
   const [batch, setBatch] = useState(1);
   const bulk = offers.some((o) => o.bulk);
   const wear = offers.length > 0 && offers.every((o) => o.section === "clothing");
+  const [slot, setSlot] = useState<Slot | null>(null);
   if (wear) {
     // by slot (head, top, bottom, shoes, accessories), cheaper first inside a slot
     const val = (o: Offer) => o.price.amount * (rub?.[o.price.currency] ?? 1);
-    const groups = WEAR_GROUPS.map((g) => ({ ...g, offers: offers.filter((o) => itemById(o.give.item ?? "")?.slot === g.slot).sort((a, b) => val(a) - val(b)) })).filter((g) => g.offers.length > 0);
+    const order = (o: Offer) => WEAR_GROUPS.findIndex((g) => g.slot === itemById(o.give.item ?? "")?.slot);
+    const shown = offers
+      .filter((o) => slot === null || itemById(o.give.item ?? "")?.slot === slot)
+      .sort((a, b) => order(a) - order(b) || val(a) - val(b));
     return (
-      <div className="col" style={{ gap: 10 }}>
-        {groups.map((g) => (
-          <section key={g.slot} className="col" style={{ gap: 5 }}>
-            <h3 className="shop-group">{g.name}</h3>
-            <Cards offers={g.offers} batch={1} />
-          </section>
-        ))}
-      </div>
+      <>
+        <SlotRow slot={slot} onPick={setSlot} />
+        {shown.length > 0 ? <Cards offers={shown} batch={1} /> : <p className="small muted center">Здесь пока пусто</p>}
+      </>
     );
   }
   return (
