@@ -352,14 +352,7 @@ export function BossScreen({ id }: { id: string }) {
     <div className="fit-page door-page" style={{ ["--acc" as string]: boss.theme.accent }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="door-backdrop" src="/assets/door/room.webp" alt="" aria-hidden="true" draggable={false} />
-      <div className="fight-head">
-        <div className="grow" style={{ minWidth: 0 }}>
-          <b className="display boss-name ellipsis">{boss.name}</b>
-          <div className="tiny muted ellipsis">{boss.title}</div>
-        </div>
-        {boss.final && <span className="chip gold">ФИНАЛ</span>}
-        <BossRulesHelp topic="boss" />
-      </div>
+      <div className="door-help"><BossRulesHelp topic="boss" /></div>
       <div className={`door-scene ${door}`}>
         {/* behind the door: the boss's own background and the boss himself */}
         <div className="door-behind">
@@ -397,6 +390,9 @@ export function BossScreen({ id }: { id: string }) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/assets/door/door.webp" alt="" draggable={false} />
           <span className="door-hit" />
+          {/* the name above the window, the title under it, the rewards down the lower half — all on the door */}
+          <b className="door-name display">{boss.name}</b>
+          <span className="door-title">{boss.final ? `ФИНАЛ · ${boss.title}` : boss.title}</span>
           <span className="door-plate">
             <b className="door-plate-title">{boss.final ? "ФИНАЛ" : "НАГРАДА"}</b>
             <GainLine r={doorReward} size={14} />

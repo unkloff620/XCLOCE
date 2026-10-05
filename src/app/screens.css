@@ -1114,8 +1114,10 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .door-page { background: #120c08; }
 .door-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; filter: blur(8px) brightness(0.45); transform: scale(1.08); }
 .door-page .fight-head { position: absolute; left: 12px; right: 12px; top: var(--top); z-index: 4; }
-.door-scene { position: absolute; left: 0; right: 0; bottom: calc(var(--nav-h) + var(--safe-b) - 6px); aspect-ratio: 2000 / 2800; perspective: 1100px; perspective-origin: 50% 42%;
-  transform-origin: 50.6% 42%; transition: transform 0.4s ease-in; }
+/* the room fills the screen height (cover): on a tall screen it grows and the side walls go off screen, the ceiling stays */
+.door-scene { position: absolute; --dw: max(100%, calc((100dvh - var(--nav-h) - var(--safe-b) + 6px) * 2000 / 2800)); width: var(--dw); left: calc((100% - var(--dw)) / 2);
+  bottom: calc(var(--nav-h) + var(--safe-b) - 6px); aspect-ratio: 2000 / 2800; perspective: 1100px; perspective-origin: 50% 42%;
+  transform-origin: 50.6% 42%; transition: transform 0.4s ease-in; container-type: inline-size; }
 .door-scene > * { position: absolute; }
 .door-room { inset: 0; width: 100%; height: 100%; pointer-events: none; }
 /* the doorway hole (x 666–1380, y 482–1860 of the room picture) */
@@ -1136,20 +1138,26 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .door-scene.open .door-leaf, .door-scene.enter .door-leaf { transform: rotateY(-102deg); filter: brightness(0.7); }
 .door-scene.rattle .door-leaf { animation: door-rattle 0.42s ease-in-out; }
 @keyframes door-rattle { 20% { transform: translateX(-1.2%) rotateY(-2deg); } 40% { transform: translateX(1%); } 60% { transform: translateX(-0.8%) rotateY(-1deg); } 80% { transform: translateX(0.5%); } }
-/* rewards written right on the lower half of the door: no frame, painted-on look */
-.door-plate { position: absolute; left: 35%; width: 32%; top: 47.5%; display: flex; flex-direction: column; align-items: center; gap: 2px;
-  pointer-events: none; color: #fff3e3; font-size: 11px; text-shadow: 0 1px 0 #000, 0 0 4px rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.7); }
-.door-plate-title { font-size: 10px; letter-spacing: 0.14em; color: var(--gold); }
-.door-plate .gain-line { display: flex; justify-content: center; flex-wrap: wrap; gap: 2px 6px; }
-.door-plate .gain { font-size: 10.5px; gap: 2px; }
-.door-plate .gain svg { filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.8)); }
+/* written on the door: name above the window (window y 23.6–33.4%), title under it, rewards in a column on the lower half */
+.door-name, .door-title, .door-plate { position: absolute; left: 34%; width: 34%; text-align: center; pointer-events: none; color: #fff3e3;
+  text-shadow: 0 1px 0 #000, 0 0 4px rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.7); }
+.door-name { top: 18.6%; font-size: 5.2cqw; line-height: 1.05; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 0.02em; }
+.door-title { top: 34.3%; font-size: 2.5cqw; line-height: 1.2; font-weight: 700; color: #f1d9b8; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.door-plate { top: 43.5%; display: flex; flex-direction: column; align-items: center; gap: 0.6cqw; }
+.door-plate-title { font-size: 2.6cqw; letter-spacing: 0.14em; color: var(--gold); }
+.door-plate .gain-line { display: flex; flex-direction: column; align-items: center; gap: 0.5cqw; }
+.door-plate .gain { font-size: 3.1cqw; gap: 1cqw; }
+.door-plate .gain svg { width: 4.2cqw; height: 4.2cqw; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.8)); }
+.door-plate .mystery-box { width: 4.2cqw !important; height: 4.2cqw !important; font-size: 3cqw !important; }
+.door-help { position: absolute; right: 12px; top: var(--top); z-index: 6; }
 .door-lock { position: absolute; left: 58.5%; top: 35.5%; width: 9%; aspect-ratio: 1; display: grid; place-items: center; border-radius: 50%; background: rgba(0, 0, 0, 0.6); pointer-events: none; }
 .door-lock svg { width: 70%; height: 70%; }
 /* the pass on the left wall */
-.door-pass { left: 14%; top: 38%; width: 13%; display: flex; flex-direction: column; align-items: center; gap: 0; padding: 4px 2px 3px; border-radius: 8px;
+.door-pass { left: 73.8%; top: 38%; width: 10.6%; display: flex; flex-direction: column; align-items: center; gap: 0; padding: 4px 2px 3px; border-radius: 8px;
   background: rgba(20, 12, 8, 0.6); border: 1.5px solid rgba(160, 98, 52, 0.7); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45); text-align: center; color: var(--ink); line-height: 1.1; }
-.door-pass b { font-size: 11px; }
-.door-pass .tiny { font-size: 8.5px; }
+.door-pass b { font-size: 3cqw; }
+.door-pass .tiny { font-size: 2.2cqw; }
+.door-pass svg { width: 8cqw; height: 8cqw; }
 .door-pass.short b { color: #ff8a9e; }
 .door-hint { left: 50.6%; top: 68%; transform: translateX(-50%); padding: 4px 12px; border-radius: 999px; background: rgba(0, 0, 0, 0.55); font-size: 12px; font-weight: 700; color: var(--ink);
   pointer-events: none; animation: door-hint 1.6s ease-in-out infinite; white-space: nowrap; }
