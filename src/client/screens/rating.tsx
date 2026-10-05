@@ -85,8 +85,9 @@ export function RatingScreen() {
             </>
           ) : (
             <>
-              <div className="tiny muted">Каждый участник трёх лучших кланов недели получает приз.</div>
-              {data.prizes.clans.map((r, i) => <div key={i} className="row small" style={{ gap: 8 }}><Place n={i + 1} /><RewardChips r={r} size={14} /></div>)}
+              <div className="tiny muted">Каждый участник {data.prizes.clans.length} лучших кланов недели получает приз.</div>
+              {data.prizes.clans.slice(0, 3).map((r, i) => <div key={i} className="row small" style={{ gap: 8 }}><Place n={i + 1} /><RewardChips r={r} size={14} /></div>)}
+              {data.prizes.clans[3] && <div className="row small" style={{ gap: 8 }}><span className="rt-place display">4–{data.prizes.clans.length}</span><RewardChips r={data.prizes.clans[3]} size={14} /></div>}
             </>
           )}
         </div>

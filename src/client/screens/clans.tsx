@@ -6,14 +6,16 @@ import { Help } from "../help.tsx";
 import { useGame } from "../store.tsx";
 import { api } from "../api.ts";
 import { Emblem } from "../art/emblems.tsx";
-import { Avatar, Empty, Modal } from "../ui.tsx";
+import { Avatar, Bar, Empty, Modal, RewardChips } from "../ui.tsx";
+import type { Reward } from "../../content/rewards.ts";
 import { full, short } from "../format.ts";
 import { Icon } from "../art/icons.tsx";
 
-interface ClanRow { id: number; name: string; tag: string; emblem: string; color: string; description: string; members: number; damage: number; leader: string; level: number; rank: number }
+interface ClanRow { id: number; name: string; tag: string; emblem: string; color: string; description: string; members: number; damage: number; leader: string; level: number; levelFrom: number; levelTo: number; rank: number }
 interface ClanPage extends Omit<ClanRow, "members"> {
   wins: number;
   max: number;
+  week: { damage: number; place: number | null; prizes: Reward[] };
   members: { id: number; name: string; photo: string | null; level: number; xp: number; role: string; damage: number }[];
 }
 
@@ -120,6 +122,8 @@ export function ClansScreen() {
           <h1 className="display">Кланы</h1>
           <Help topic="clans" title="Кланы">
             <p>Клан — до 30 человек. Рейтинг считается по общему урону участников по боссам.</p>
+            <p>Уровень клана растёт от общего урона участников: 1 уровень — 5 000 урона, 2 — 11 000, 3 — 18 000, и каждый следующий шаг на 1 000 длиннее.</p>
+            <p>Каждую неделю топ-10 кланов по урону за неделю получают награды — их получает каждый участник: авторитет, рубли и оружие.</p>
             <p>Создать клан можно бесплатно, вступить — в любой открытый. Лидер может исключать участников; если лидер уходит, роль переходит дальше.</p>
             <p>Клановые задания, боссы и войны появятся позже.</p>
           </Help>
@@ -167,6 +171,32 @@ export function ClansScreen() {
   );
 }
 
+/** This week: the clan's damage and place; the top 10 clans by damage get prizes for every member on Monday. */
+function ClanWeek({ c }: { c: ClanPage }) {
+  const p = c.week.prizes;
+  const rows: { place: string; r: Reward; on: boolean }[] = [
+    ...p.slice(0, 3).map((r, i) => ({ place: ["🥇", "🥈", "🥉"][i], r, on: c.week.place === i + 1 })),
+    ...(p[3] ? [{ place: `4–${p.length}`, r: p[3], on: !!c.week.place && c.week.place >= 4 && c.week.place <= p.length }] : []),
+  ];
+  return (
+    <div className="panel col" style={{ gap: 8 }}>
+      <div className="row" style={{ justifyContent: "space-between", alignItems: "baseline" }}>
+        <b className="display">Награды недели</b>
+        <span className="tiny muted">урон клана: <b className="num" style={{ color: "var(--ink)" }}>{short(c.week.damage)}</b></span>
+      </div>
+      <span className="tiny muted">Топ-{p.length} кланов по урону за неделю. Награду получает каждый участник — в понедельник она придёт в «Призы».</span>
+      <div className="col" style={{ gap: 5 }}>
+        {rows.map((x) => (
+          <div key={x.place} className={`clan-prize${x.on ? " on" : ""}`}>
+            <span className="clan-prize-place display">{x.place}</span>
+            <RewardChips r={x.r} size={15} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function ClanScreen({ id }: { id: number }) {
   const { state, act, busy } = useGame();
   const [editing, setEditing] = useState(false);
@@ -197,11 +227,19 @@ export function ClanScreen({ id }: { id: number }) {
       </div>
       <div className="panel center col" style={{ alignItems: "center" }}>
         <Emblem emblem={c.emblem} color={c.color} size={92} />
+        {/* the clan level: grows with the members' total boss damage */}
+        <div className="clan-level">
+          <span className="clan-lv display">{c.level}</span>
+          <div className="grow col" style={{ gap: 2, minWidth: 0 }}>
+            <Bar value={c.damage - c.levelFrom} max={c.levelTo - c.levelFrom} tone="gold" height={16} label={`${short(c.damage)} / ${short(c.levelTo)}`} />
+            <span className="tiny muted">до {c.level + 1} уровня: {short(c.levelTo - c.damage)} урона</span>
+          </div>
+        </div>
         <b className="display" style={{ fontSize: 22 }}>{c.name}</b>
         <span className="chip">[{c.tag}]</span>
         {c.description && <p className="clan-desc">{c.description}</p>}
         <div className="stat-grid" style={{ width: "100%" }}>
-          <div><b className="num">{c.level}</b><span>уровень</span></div>
+          <div><b className="num">{c.week.place ? `#${c.week.place}` : "—"}</b><span>место недели</span></div>
           <div><b className="num">{c.members.length}/{c.max}</b><span>участников</span></div>
           <div><b className="num">{short(c.damage)}</b><span>общий урон</span></div>
           <div><b className="num">{c.wins}</b><span>побед</span></div>
@@ -209,6 +247,7 @@ export function ClanScreen({ id }: { id: number }) {
         {!state?.clan && <button className="btn green block" disabled={busy === "clan_join" || c.members.length >= c.max} onClick={() => act("clan_join", { clanId: c.id }, "Ты в клане!")}>Вступить</button>}
         {mine && <button className="btn dark block" disabled={busy === "clan_leave"} onClick={() => act("clan_leave", {}, "Ты вышел из клана")}>Выйти из клана</button>}
       </div>
+      <ClanWeek c={c} />
       <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
         <h2 className="h display">Участники</h2>
         {leader && (

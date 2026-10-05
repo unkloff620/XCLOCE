@@ -7,7 +7,7 @@ import type { Config } from "../config.ts";
 /*
  * Ratings: damage this week (Moscow week from Monday 00:00), authority (all time) and clans (members' damage this week).
  * When a week is over, the first request after it settles it once: places 1–10 are written down (→ frames on the
- * player card for the next week) and prizes are put aside for the winners and for the members of the top-3 clans.
+ * player card for the next week) and prizes are put aside for the winners and for the members of the top-10 clans.
  * Prizes are collected by the players themselves (prizes table), so nobody else's rows are touched here.
  */
 
@@ -42,7 +42,7 @@ export async function settleWeeks(q: Queryable, now: number) {
   }
   const clans = await q.query<{ clan_id: number; name: string }>(
     `SELECT p.clan_id, c.name FROM weekly_stats w JOIN players p ON p.id = w.player_id JOIN clans c ON c.id = p.clan_id
-     WHERE w.week=$1 GROUP BY p.clan_id, c.name HAVING SUM(w.damage) > 0 ORDER BY SUM(w.damage) DESC, p.clan_id LIMIT 3`,
+     WHERE w.week=$1 GROUP BY p.clan_id, c.name HAVING SUM(w.damage) > 0 ORDER BY SUM(w.damage) DESC, p.clan_id LIMIT ${CLAN_PRIZES.length}`,
     [prev],
   );
   for (const [i, c] of clans.entries()) {

@@ -77,7 +77,7 @@ describe("rating", () => {
     expect((await profileView(db, ids[0], ids[11], await loadConfig(db), T0)).frame).toBeNull();
   });
 
-  it("the top-3 clans of the week: every member gets a prize", async () => {
+  it("the top-10 clans of the week: every member gets a prize", async () => {
     const prev = weekKey(T0 - 7 * D);
     const a = await newPlayer(db);
     const b = await newPlayer(db);
@@ -137,5 +137,13 @@ describe("achievements and someone's profile", () => {
     await act(db, p, "daily_claim", {}, T0 + 6 * D);
     const [d] = await db.query<{ streak: number; best_streak: number }>("SELECT streak, best_streak FROM daily_login WHERE player_id=$1", [p]);
     expect(d).toMatchObject({ streak: 1, best_streak: 3 });
+  });
+});
+
+describe("clan level", () => {
+  it("5 000 damage is level 1, 11 000 level 2, each step 1 000 longer", async () => {
+    const { clanLevelInfo } = await import("../src/content/clans.ts");
+    expect([0, 4999, 5000, 10999, 11000, 18000, 26000].map((d) => clanLevelInfo(d).level)).toEqual([0, 0, 1, 1, 2, 3, 4]);
+    expect(clanLevelInfo(12000)).toEqual({ level: 2, from: 11000, to: 18000 });
   });
 });

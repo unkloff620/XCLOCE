@@ -1,15 +1,16 @@
 import { GameError, type Queryable } from "../db.ts";
 import type { Ctx } from "../core.ts";
 import { levelFromXp } from "../../content/levels.ts";
+import { clanLevelInfo } from "../../content/clans.ts";
+import { CLAN_PRIZES } from "../../content/achievements.ts";
+import { weekKey } from "../core.ts";
 
 export const CLAN_EMBLEMS = ["rocket", "diamond", "bull", "bear", "moon", "skull", "crown", "flame"] as const;
 export const CLAN_COLORS = ["#ff4d6d", "#3ddc84", "#4da3ff", "#ffb020", "#b06bff", "#38d6ff"] as const;
 export const CLAN_MAX = 30;
 
-/** Clan level grows with the total boss damage of its members. */
-export function clanLevel(damage: number): number {
-  return 1 + Math.floor(Math.sqrt(Math.max(0, damage) / 2000));
-}
+/** Clan level grows with the total boss damage of its members (content/clans.ts). */
+export const clanLevel = (damage: number) => clanLevelInfo(damage).level;
 
 const clean = (s: string) => s.replace(/[\u0000-\u001f\u007f<>]/g, "").replace(/\s+/g, " ").trim();
 
@@ -92,10 +93,13 @@ export async function clanList(q: Queryable) {
      FROM clans c LEFT JOIN clan_members m ON m.clan_id=c.id LEFT JOIN player_stats s ON s.player_id=m.player_id JOIN players lp ON lp.id=c.leader_id
      GROUP BY c.id, lp.display_name ORDER BY damage DESC, c.id`,
   );
-  return rows.map((r, i) => ({ ...r, damage: Number(r.damage), level: clanLevel(Number(r.damage)), rank: i + 1 }));
+  return rows.map((r, i) => {
+    const lv = clanLevelInfo(Number(r.damage));
+    return { ...r, damage: Number(r.damage), level: lv.level, levelFrom: lv.from, levelTo: lv.to, rank: i + 1 };
+  });
 }
 
-export async function clanView(q: Queryable, clanId: number, levelsCfg?: Parameters<typeof levelFromXp>[1]) {
+export async function clanView(q: Queryable, clanId: number, levelsCfg?: Parameters<typeof levelFromXp>[1], now = Date.now()) {
   const list = await clanList(q);
   const c = list.find((x) => x.id === clanId);
   if (!c) throw new GameError("no_clan", "Клан не найден", 404);
@@ -105,8 +109,17 @@ export async function clanView(q: Queryable, clanId: number, levelsCfg?: Paramet
     [clanId],
   );
   const [wins] = await q.query<{ n: number }>("SELECT COUNT(*)::int AS n FROM fights f JOIN clan_members m ON m.player_id=f.player_id WHERE m.clan_id=$1 AND f.status='won'", [clanId]);
+  // this week: the clan's damage and its place among the clans (the top 10 get prizes on Monday)
+  const week = weekKey(now);
+  const weekly = await q.query<{ clan_id: number; value: number }>(
+    `SELECT p.clan_id, SUM(w.damage)::bigint AS value FROM weekly_stats w JOIN players p ON p.id = w.player_id
+     WHERE w.week=$1 AND p.clan_id IS NOT NULL GROUP BY p.clan_id HAVING SUM(w.damage) > 0 ORDER BY value DESC, p.clan_id`,
+    [week],
+  );
+  const wi = weekly.findIndex((w) => w.clan_id === clanId);
   return {
     ...c, wins: wins.n, max: CLAN_MAX,
+    week: { damage: wi >= 0 ? Number(weekly[wi].value) : 0, place: wi >= 0 ? wi + 1 : null, prizes: CLAN_PRIZES },
     members: members.map((m) => ({ id: m.id, name: m.display_name, photo: m.photo_url, level: levelFromXp(Number(m.xp), levelsCfg).level, xp: Number(m.xp), role: m.role, damage: Number(m.damage) })),
   };
 }

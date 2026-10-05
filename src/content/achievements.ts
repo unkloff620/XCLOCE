@@ -80,11 +80,12 @@ export const WEEKLY_PRIZES: Reward[] = [
   { currencies: { SOL: 0.04, USD: 15 }, xp: 150_000, items: [{ id: "gpu", qty: 2 }] },
   ...Array.from({ length: 7 }, () => ({ currencies: { USD: 10 }, xp: 50_000, items: [{ id: "gpu", qty: 1 }] }) as Reward),
 ];
-/** Every member of the top-3 clans of the week. */
+/** Every member of the top-10 clans of the week (by the members' damage that week); places 4–10 get the same. */
 export const CLAN_PRIZES: Reward[] = [
-  { currencies: { USD: 10 }, xp: 50_000, items: [{ id: "keyboard", qty: 2 }] },
-  { currencies: { USD: 6 }, xp: 30_000, items: [{ id: "keyboard", qty: 1 }] },
-  { currencies: { USD: 4 }, xp: 20_000 },
+  { currencies: { RUB: 5000 }, xp: 10_000, items: [{ id: "rug-pull-gun", qty: 3 }] },
+  { currencies: { RUB: 2500 }, xp: 5_000, items: [{ id: "rug-pull-gun", qty: 1 }] },
+  { currencies: { RUB: 1250 }, xp: 2_500, items: [{ id: "gpu", qty: 1 }] },
+  ...Array.from({ length: 7 }, () => ({ currencies: { RUB: 250 }, xp: 500, items: [{ id: "red-candle", qty: 2 }] }) as Reward),
 ];
 
 /** frame on the player card for last week's place */
