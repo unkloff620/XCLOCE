@@ -67,7 +67,7 @@ function OfferGrid({ offers }: { offers: Offer[] }) {
               <div className="offer-art"><ItemArt id={def!.id} size={56} /><span className="locked-badge"><Icon name="lock" size={18} /></span></div>
               <b className="small">{o.title}</b>
               <span className="tiny muted">с босса {boss!.name}</span>
-              <span className="btn sm dark block">Как получить</span>
+              <span className="btn sm dark block">Где взять</span>
             </button>
           );
         }

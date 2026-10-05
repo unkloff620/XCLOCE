@@ -176,8 +176,7 @@
 .cur-pick button { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 2px; border-radius: 11px; border: 2.5px solid var(--line); background: var(--tex), var(--bg2); font-weight: 800; font-size: 12px; }
 .cur-pick button.on { background: var(--violet); }
 .cur-pick button:disabled { opacity: 0.35; }
-.shop-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-@media (min-width: 420px) { .shop-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.shop-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
 .offer { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 8px 10px; border-radius: 16px; border: 2.5px solid var(--line); box-shadow: 0 4px 0 var(--line); background: var(--tex), radial-gradient(circle at 50% 22%, color-mix(in srgb, var(--rar) 40%, transparent), var(--panel) 65%); text-align: center; }
 .offer-art { height: 60px; display: grid; place-items: center; }
 .offer-note { position: absolute; top: 6px; right: 6px; padding: 1px 6px; border-radius: 7px; background: var(--green); color: var(--line); font-size: 10px; font-weight: 800; border: 2px solid var(--line); }
@@ -1186,3 +1185,15 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .locked-art > svg { filter: grayscale(1) brightness(0.6); }
 .unlock-note { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 10px; border-radius: 12px; border: 2px dashed rgba(255, 204, 51, 0.6); background: rgba(255, 204, 51, 0.08); width: 100%; }
 .mystery-count { margin-left: 3px; font-weight: 800; }
+
+/* the shop: four things in a row — compact cards */
+.shop-grid .offer { padding: 8px 3px 5px; gap: 2px; border-radius: 12px; border-width: 2px; box-shadow: 0 3px 0 var(--line); }
+.shop-grid .offer-art { height: 44px; }
+.shop-grid .offer-art > svg { width: 42px; height: 42px; }
+.shop-grid .offer b.small { font-size: 10.5px; line-height: 1.15; min-height: 2.3em; display: flex; align-items: center; justify-content: center; }
+.shop-grid .offer .tiny { font-size: 9px; line-height: 1.15; }
+.shop-grid .offer .btn { padding: 4px 2px; font-size: 10.5px; gap: 2px; min-height: 0; border-width: 2px; letter-spacing: 0; }
+.shop-grid .offer .btn svg { width: 13px; height: 13px; }
+.shop-grid .offer-note { top: 3px; right: 3px; padding: 0 4px; font-size: 8.5px; border-width: 1.5px; }
+.shop-grid .locked-badge { padding: 2px; right: -4px; }
+.shop-grid .locked-badge svg { width: 12px; height: 12px; }
