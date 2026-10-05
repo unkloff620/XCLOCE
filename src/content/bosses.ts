@@ -23,11 +23,11 @@ export interface BossDef {
   keysToUnlock?: number;
 }
 
-/** 1 000 → 10 000 → 50 000 → … → 10 000 000 (Солнце). */
-const HP = [1_000, 10_000, 50_000, 150_000, 400_000, 1_000_000, 2_500_000, 5_000_000, 10_000_000];
+/** 1 000 → 10 000 → 50 000 → … → 10 000 000 (Солнце). Вадим and Боцман bridge Князь → Утилизатор. */
+const HP = [1_000, 10_000, 50_000, 150_000, 400_000, 1_000_000, 1_500_000, 2_000_000, 2_500_000, 5_000_000, 10_000_000];
 const hp = (i: number) => HP[i];
-/** Authority for a win: 100 for Дацик … 1 500 000 for Солнце (×≈3.3 per boss). */
-const XP = [100, 350, 1_100, 3_700, 12_000, 40_000, 135_000, 450_000, 1_500_000];
+/** Authority for a win: 100 for Дацик … 1 500 000 for Солнце (×≈3.3 per boss, ×1.5 across Вадим and Боцман). */
+const XP = [100, 350, 1_100, 3_700, 12_000, 40_000, 60_000, 90_000, 135_000, 450_000, 1_500_000];
 const xp = (i: number) => XP[i];
 const photo = (id: string, has = false) => (has ? { portrait: `/bosses/${id}/portrait.webp`, full: `/bosses/${id}/full.webp` } : { portrait: null, full: null });
 
@@ -76,24 +76,38 @@ export const BOSSES: BossDef[] = [
     theme: { a: "#2e1846", b: "#0e0718", accent: "#b06bff" }, photo: photo("knyaz"),
   },
   {
-    id: "utilizator", order: 7, name: "Утилизатор", title: "Переработчик идей",
+    id: "vadim", order: 7, name: "Вадим", title: "Главный по таблицам",
+    story: "Сводит всю компанию в один Excel. Нет тебя в таблице — нет тебя в компании.",
+    hp: hp(6), reward: { xp: xp(6), currencies: { SOL: 0.17, RUB: 820 } },
+    drop: [{ id: "gpu", qty: 1, chance: 0.4 }],
+    theme: { a: "#3a2416", b: "#140b05", accent: "#ff8a3d" }, photo: photo("vadim"),
+  },
+  {
+    id: "botsman", order: 8, name: "Боцман", title: "Держит курс на дедлайн",
+    story: "Свистит в дудку, если кто-то ушёл на обед раньше. Корабль тонет, но отчёт сдан вовремя.",
+    hp: hp(7), reward: { xp: xp(7), currencies: { SOL: 0.22, RUB: 880 } },
+    drop: [{ id: "rug-pull-gun", qty: 1, chance: 0.15 }],
+    theme: { a: "#0f2a44", b: "#050e18", accent: "#5fb8ff" }, photo: photo("botsman"),
+  },
+  {
+    id: "utilizator", order: 9, name: "Утилизатор", title: "Переработчик идей",
     story: "Любая гениальная идея на входе — служебная записка на выходе.",
-    hp: hp(6), reward: { xp: xp(6), currencies: { BTC: 0.0003, RUB: 950 } },
+    hp: hp(8), reward: { xp: xp(8), currencies: { BTC: 0.0003, RUB: 950 } },
     drop: [{ id: "rug-pull-gun", qty: 1, chance: 0.25 }],
     theme: { a: "#2f3416", b: "#0f1106", accent: "#c8f03c" }, photo: photo("utilizator"),
   },
   {
-    id: "fokus", order: 8, name: "Фокус", title: "Видит всё, что ты не доделал",
+    id: "fokus", order: 10, name: "Фокус", title: "Видит всё, что ты не доделал",
     story: "Последний рубеж перед Солнцем. Смотрит прямо в бэклог.",
-    hp: hp(7), reward: { xp: xp(7), currencies: { BTC: 0.0005, RUB: 1200 } },
+    hp: hp(9), reward: { xp: xp(9), currencies: { BTC: 0.0005, RUB: 1200 } },
     drop: [{ id: "rug-pull-gun", qty: 1, chance: 0.35 }],
     theme: { a: "#401624", b: "#16060c", accent: "#ff6b9a" }, photo: photo("fokus"),
     keysToUnlock: 1,
   },
   {
-    id: "solntse", order: 9, name: "Солнце", title: "Финальный босс компании",
+    id: "solntse", order: 11, name: "Солнце", title: "Финальный босс компании",
     story: "Светит всем, всегда и без выходных. Чтобы дойти сюда, нужно пройти всю администрацию.",
-    hp: hp(8), reward: { xp: xp(8), currencies: { BTC: 0.001, RUB: 2000 }, items: [{ id: "trophy-sun", qty: 1 }] },
+    hp: hp(10), reward: { xp: xp(10), currencies: { BTC: 0.001, RUB: 2000 }, items: [{ id: "trophy-sun", qty: 1 }] },
     drop: [{ id: "rug-pull-gun", qty: 2, chance: 0.5 }],
     theme: { a: "#4a2a06", b: "#1a0c02", accent: "#ffd23f" }, photo: photo("solntse"),
     phases: [{ from: 100, name: "Рассвет" }, { from: 66, name: "Зенит" }, { from: 33, name: "Солнечная буря" }],

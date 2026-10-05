@@ -188,6 +188,21 @@ describe("boss fights: personal fights, shared damage", () => {
     expect(r.state.fight?.bossId).toBe("fokus");
   });
 
+  it("Вадим and Боцман stand between Князь and Утилизатор; who had Утилизатор open keeps it", async () => {
+    const p = await newPlayer(db);
+    await give(db, p, "key-knyaz", 3);
+    await act(db, p, "fight_start", { boss: "vadim" }, T0);
+    const q = await newPlayer(db);
+    await give(db, q, "key-knyaz", 3);
+    await expect(act(db, q, "fight_start", { boss: "utilizator" }, T0)).rejects.toMatchObject({ code: "boss_locked" });
+    const { MIGRATIONS } = await import("../src/server/migrations.ts");
+    await db.query(MIGRATIONS.find((m) => m.id === "v2-016-vadim-botsman")!.sql);
+    expect(await qty(db, q, "key-vadim")).toBe(3);
+    expect(await qty(db, q, "key-botsman")).toBe(3);
+    const r = await act(db, q, "fight_start", { boss: "utilizator" }, T0);
+    expect(r.state.fight?.bossId).toBe("utilizator");
+  });
+
   it("3 keys of a boss open the next boss", async () => {
     const p = await newPlayer(db);
     await expect(act(db, p, "fight_start", { boss: "kedr" }, T0)).rejects.toMatchObject({ code: "boss_locked" });

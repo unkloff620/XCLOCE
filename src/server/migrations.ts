@@ -376,4 +376,16 @@ ALTER TABLE clans ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT '';
 UPDATE players SET help_seen = help_seen || '["tutorial"]'::jsonb WHERE NOT (help_seen ? 'tutorial');
 `,
   },
+  {
+    // Вадим and Боцман now stand between Князь and Утилизатор. Whoever already had Утилизатор open
+    // (3 keys of Князь) keeps it: they get the keys of the two new bosses.
+    id: "v2-016-vadim-botsman",
+    sql: `
+INSERT INTO inventory (player_id, item_id, qty, source)
+SELECT k.player_id, n.item_id, 3, 'migration:new-bosses'
+FROM inventory k CROSS JOIN (VALUES ('key-vadim'), ('key-botsman')) AS n(item_id)
+WHERE k.item_id = 'key-knyaz' AND k.qty >= 3
+ON CONFLICT (player_id, item_id) DO UPDATE SET qty = GREATEST(inventory.qty, 3);
+`,
+  },
 ];

@@ -36,7 +36,7 @@ export function useBossList() {
 
 /** HP under the boss photo: full numbers while they fit, short ones for the big bosses. */
 /** card colour by boss order: grey for the first, climbing like loot rarity, red for the last */
-const CARD_TIER = ["#a3aab4", "#5fd068", "#3fd6c4", "#4a9dff", "#8f6bff", "#d65cff", "#ff9a2e", "#ffcc33", "#ff3b3b"];
+const CARD_TIER = ["#a3aab4", "#5fd068", "#3fd6c4", "#4a9dff", "#6f7dff", "#8f6bff", "#b45cff", "#e05cd6", "#ff9a2e", "#ffcc33", "#ff3b3b"];
 const tierColor = (order: number) => CARD_TIER[Math.min(CARD_TIER.length, Math.max(1, order)) - 1];
 
 function hpLabel(hp: number, max: number): string {
