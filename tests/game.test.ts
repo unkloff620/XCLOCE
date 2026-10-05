@@ -203,6 +203,18 @@ describe("boss fights: personal fights, shared damage", () => {
     expect(r.state.fight?.bossId).toBe("utilizator");
   });
 
+  it("Гаркуша and Mugo stand between Командате and Бабафей; who had Бабафей open keeps it", async () => {
+    const p = await newPlayer(db);
+    await give(db, p, "key-bebyakyan", 3);
+    await expect(act(db, p, "fight_start", { boss: "babafey" }, T0)).rejects.toMatchObject({ code: "boss_locked" });
+    const { MIGRATIONS } = await import("../src/server/migrations.ts");
+    await db.query(MIGRATIONS.find((m) => m.id === "v2-017-garkusha-mugo")!.sql);
+    expect(await qty(db, p, "key-garkusha")).toBe(3);
+    expect(await qty(db, p, "key-mugo")).toBe(3);
+    const r = await act(db, p, "fight_start", { boss: "babafey" }, T0);
+    expect(r.state.fight?.bossId).toBe("babafey");
+  });
+
   it("3 keys of a boss open the next boss", async () => {
     const p = await newPlayer(db);
     await expect(act(db, p, "fight_start", { boss: "kedr" }, T0)).rejects.toMatchObject({ code: "boss_locked" });

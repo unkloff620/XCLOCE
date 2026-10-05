@@ -388,4 +388,16 @@ WHERE k.item_id = 'key-knyaz' AND k.qty >= 3
 ON CONFLICT (player_id, item_id) DO UPDATE SET qty = GREATEST(inventory.qty, 3);
 `,
   },
+  {
+    // Гаркуша and Mugo now stand between Командате (bebyakyan) and Бабафей. Whoever already had Бабафей open
+    // (3 keys of Командате) keeps everything after it: they get the keys of the two new bosses.
+    id: "v2-017-garkusha-mugo",
+    sql: `
+INSERT INTO inventory (player_id, item_id, qty, source)
+SELECT k.player_id, n.item_id, 3, 'migration:new-bosses'
+FROM inventory k CROSS JOIN (VALUES ('key-garkusha'), ('key-mugo')) AS n(item_id)
+WHERE k.item_id = 'key-bebyakyan' AND k.qty >= 3
+ON CONFLICT (player_id, item_id) DO UPDATE SET qty = GREATEST(inventory.qty, 3);
+`,
+  },
 ];
