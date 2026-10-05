@@ -1197,3 +1197,12 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .shop-grid .offer-note { top: 3px; right: 3px; padding: 0 4px; font-size: 8.5px; border-width: 1.5px; }
 .shop-grid .locked-badge { padding: 2px; right: -4px; }
 .shop-grid .locked-badge svg { width: 12px; height: 12px; }
+
+/* the weapons: how many at once (×1 ×10 ×100 ×1000) with the discount under the bigger batches */
+.batch-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-bottom: 8px; }
+.batch-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-height: 40px; padding: 4px 2px; border-radius: 12px; border: 2px solid var(--line); box-shadow: 0 3px 0 var(--line); background: var(--tex), var(--panel); color: inherit; font: inherit; cursor: pointer; }
+.batch-btn b { font-size: 14px; }
+.batch-btn.on { background: var(--gold, #f5c542); color: var(--line); transform: translateY(1px); box-shadow: 0 2px 0 var(--line); }
+.batch-off { padding: 0 5px; border-radius: 6px; background: var(--green); color: var(--line); font-size: 9.5px; font-weight: 800; }
+/* the clothes rack: a header per slot */
+.shop-group { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.8; }

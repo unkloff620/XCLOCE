@@ -97,7 +97,7 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "task": return locations.doTask(ctx, str(body.taskId, "taskId", 40));
     case "location_claim": return locations.claimLocation(ctx, str(body.locationId, "locationId", 40));
     case "yard_pick": return yard.yardPick(ctx, num(body.itemId, "itemId"));
-    case "buy": return shop.buy(ctx, str(body.offerId, "offerId", 40), idem);
+    case "buy": return shop.buy(ctx, str(body.offerId, "offerId", 40), idem, body.qty === undefined ? 1 : num(body.qty, "qty"));
     case "exchange": return shop.exchange(ctx, oneOf(body.from, CURRENCIES, "from"), oneOf(body.to, CURRENCIES, "to"), num(body.amount, "amount"), idem);
     case "use": return shop.useItem(ctx, str(body.itemId, "itemId", 40));
     case "equip": return shop.equip(ctx, str(body.itemId, "itemId", 40));

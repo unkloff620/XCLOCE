@@ -4,11 +4,11 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { invQty, useGame } from "../store.tsx";
 import { api } from "../api.ts";
-import { type Offer } from "../../content/shop.ts";
+import { BULK, bulkPrice, type Offer } from "../../content/shop.ts";
 import { Modal } from "../ui.tsx";
 import { Help, HelpList } from "../help.tsx";
 import type { Currency } from "../../content/currencies.ts";
-import { itemById } from "../../content/items.ts";
+import { itemById, type Slot } from "../../content/items.ts";
 import { unlockBossOf } from "../../content/bosses.ts";
 import { ItemArt } from "../art/items.tsx";
 import { Icon } from "../art/icons.tsx";
@@ -44,20 +44,72 @@ function LockedInfo({ itemId, onClose }: { itemId: string; onClose: () => void }
   );
 }
 
-function OfferGrid({ offers }: { offers: Offer[] }) {
+/** clothes on the rack go from the head down */
+const WEAR_GROUPS: { slot: Slot; name: string }[] = [
+  { slot: "HEAD", name: "Голова" },
+  { slot: "SHIRT", name: "Верх" },
+  { slot: "PANTS", name: "Низ" },
+  { slot: "SHOES", name: "Обувь" },
+  { slot: "ACCESSORY", name: "Аксессуары" },
+];
+
+/** the batch row above the weapons: 1, 10, 100, 1000 — the price on every card follows it */
+function BatchRow({ qty, onPick }: { qty: number; onPick: (n: number) => void }) {
+  return (
+    <div className="batch-row" role="radiogroup" aria-label="Сколько штук">
+      {BULK.map((b) => (
+        <button key={b.qty} role="radio" aria-checked={qty === b.qty} className={`batch-btn${qty === b.qty ? " on" : ""}`} onClick={() => { haptic.tap(); onPick(b.qty); }}>
+          <b className="num">×{b.qty}</b>
+          {b.off > 0 && <span className="batch-off">−{Math.round(b.off * 100)}%</span>}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function OfferGrid({ offers, rub }: { offers: Offer[]; rub?: Record<Currency, number> }) {
+  const [batch, setBatch] = useState(1);
+  const bulk = offers.some((o) => o.bulk);
+  const wear = offers.length > 0 && offers.every((o) => o.section === "clothing");
+  if (wear) {
+    // by slot (head, top, bottom, shoes, accessories), cheaper first inside a slot
+    const val = (o: Offer) => o.price.amount * (rub?.[o.price.currency] ?? 1);
+    const groups = WEAR_GROUPS.map((g) => ({ ...g, offers: offers.filter((o) => itemById(o.give.item ?? "")?.slot === g.slot).sort((a, b) => val(a) - val(b)) })).filter((g) => g.offers.length > 0);
+    return (
+      <div className="col" style={{ gap: 10 }}>
+        {groups.map((g) => (
+          <section key={g.slot} className="col" style={{ gap: 5 }}>
+            <h3 className="shop-group">{g.name}</h3>
+            <Cards offers={g.offers} batch={1} />
+          </section>
+        ))}
+      </div>
+    );
+  }
+  return (
+    <>
+      {bulk && <BatchRow qty={batch} onPick={setBatch} />}
+      <Cards offers={offers} batch={batch} />
+    </>
+  );
+}
+
+function Cards({ offers, batch }: { offers: Offer[]; batch: number }) {
   const { state, act, busy } = useGame();
   const [info, setInfo] = useState<string | null>(null);
-  const buy = async (o: Offer) => {
+  const buy = async (o: Offer, n: number) => {
     haptic.tap();
-    await act("buy", { offerId: o.id, idem: crypto.randomUUID() }, `Куплено: ${o.title}`);
+    await act("buy", n > 1 ? { offerId: o.id, qty: n, idem: crypto.randomUUID() } : { offerId: o.id, idem: crypto.randomUUID() }, `Куплено: ${o.title}${n > 1 ? ` ×${n}` : ""}`);
   };
   return (
     <div className="shop-grid">
       {offers.map((o) => {
+        const n = o.bulk ? batch : 1;
+        const amount = n > 1 ? bulkPrice(o.price.currency, o.price.amount, n) : o.price.amount;
         const def = o.give.item ? itemById(o.give.item) : null;
         const owned = def ? invQty(state, def.id) : 0;
-        const full = def ? owned + o.give.qty > def.maxStack : false;
-        const can = (state?.wallet[o.price.currency] ?? 0) >= o.price.amount;
+        const full = def ? owned + o.give.qty * n > def.maxStack : false;
+        const can = (state?.wallet[o.price.currency] ?? 0) >= amount;
         // things from bosses are sold only after they dropped (or if already owned)
         const boss = def ? unlockBossOf(def.id) : null;
         const locked = !!boss && owned === 0 && !state?.unlocks?.includes(def!.id);
@@ -74,14 +126,15 @@ function OfferGrid({ offers }: { offers: Offer[] }) {
         return (
           <div key={o.id} className={`offer rar-${def?.rarity ?? "common"}`}>
             {o.note && <span className="offer-note">{o.note}</span>}
+            {n > 1 && <span className="offer-note">×{n}</span>}
             <div className="offer-art">{def ? <ItemArt id={def.id} size={56} /> : <Icon name="energy" size={56} />}</div>
             <b className="small">{o.title}</b>
             {def?.weapon && <span className="tiny muted">урон {def.weapon.damage}</span>}
             {def && def.maxStack > 1 && <span className="tiny dim">есть: {owned}</span>}
             {def && def.maxStack === 1 && owned > 0 && <span className="tiny" style={{ color: "var(--green)" }}>уже есть</span>}
-            <button className="btn sm gold block" disabled={!can || full || busy === "buy"} onClick={() => buy(o)}>
+            <button className="btn sm gold block" disabled={!can || full || busy === "buy"} onClick={() => buy(o, n)}>
               <Icon name={o.price.currency} size={16} />
-              {money(o.price.currency, o.price.amount)}
+              {money(o.price.currency, amount)}
             </button>
           </div>
         );
@@ -131,7 +184,7 @@ export function ShopScreen() {
       </div>
       {open && (
         <Modal title={open.name} onClose={() => setOpen(null)} wide>
-          {data ? <OfferGrid offers={offers} /> : <div className="muted small center">Загрузка…</div>}
+          {data ? <OfferGrid offers={offers} rub={data.exchange.rub} /> : <div className="muted small center">Загрузка…</div>}
           <p className="tiny muted center" style={{ marginTop: 12 }}>Не хватает валюты? Загляни в <Link href="/exchange" style={{ textDecoration: "underline" }}>обменник</Link>.</p>
         </Modal>
       )}
@@ -148,7 +201,7 @@ export function WeaponShopWindow({ onClose }: { onClose: () => void }) {
   const offers = data?.offers.filter((o) => o.section === "weapons") ?? [];
   return (
     <Modal title="Оружие" onClose={onClose} wide>
-      {data ? <OfferGrid offers={offers} /> : <div className="muted small center">Загрузка…</div>}
+      {data ? <OfferGrid offers={offers} rub={data.exchange.rub} /> : <div className="muted small center">Загрузка…</div>}
       <p className="tiny muted center" style={{ marginTop: 12 }}>Не хватает валюты? Нажми на любую валюту вверху — откроется обменник.</p>
     </Modal>
   );

@@ -1,6 +1,6 @@
 import { GameError, type Queryable } from "../db.ts";
 import { addEnergy, addItem, addMoney, idempotent, itemQty, takeItem, takeMoney, type Ctx } from "../core.ts";
-import { OFFERS, offerById } from "../../content/shop.ts";
+import { OFFERS, bulkOf, bulkPrice, offerById } from "../../content/shop.ts";
 import { CURRENCY_DEFS, floorTo, type Currency } from "../../content/currencies.ts";
 import { itemById, WEARABLE_SLOTS, type Slot } from "../../content/items.ts";
 import { unlockBossOf } from "../../content/bosses.ts";
@@ -10,15 +10,19 @@ export function shopView(cfg: Config) {
   return OFFERS.map((o) => ({ ...o, price: { currency: o.price.currency, amount: cfg.prices[o.id] ?? o.price.amount } }));
 }
 
-export async function buy(ctx: Ctx, offerId: string, idem?: string) {
+/** `batch`: how many at once (1, 10, 100, 1000) for offers sold in batches — bigger batches get a discount */
+export async function buy(ctx: Ctx, offerId: string, idem?: string, batch = 1) {
   return idempotent(ctx, idem ? `buy:${idem}` : undefined, async () => {
     const o = offerById(offerId);
     if (!o) throw new GameError("bad_offer", "Такого товара нет");
-    const price = ctx.cfg.prices[o.id] ?? o.price.amount;
+    if (batch !== 1 && !(o.bulk && bulkOf(batch))) throw new GameError("bad_qty", "Некорректное количество");
+    const unit = ctx.cfg.prices[o.id] ?? o.price.amount;
+    const price = batch === 1 ? unit : bulkPrice(o.price.currency, unit, batch);
+    const qty = o.give.qty * batch;
     if (o.give.item) {
       const def = itemById(o.give.item)!;
       const have = await itemQty(ctx.q, ctx.pid, def.id);
-      if (have + o.give.qty > def.maxStack) {
+      if (have + qty > def.maxStack) {
         throw new GameError("stack_full", def.maxStack === 1 ? `${def.name} уже есть` : `${def.name}: максимум ${def.maxStack} шт.`);
       }
       // a thing from a boss: sold only after it dropped (opened) for this player
@@ -29,9 +33,9 @@ export async function buy(ctx: Ctx, offerId: string, idem?: string) {
       }
     }
     await takeMoney(ctx, o.price.currency, price, `buy:${o.id}`);
-    if (o.give.item) await addItem(ctx, o.give.item, o.give.qty, "shop");
+    if (o.give.item) await addItem(ctx, o.give.item, qty, "shop");
     if (o.give.energy) await addEnergy(ctx, o.give.energy, `buy:${o.id}`);
-    return { offerId: o.id, paid: { currency: o.price.currency, amount: price } };
+    return { offerId: o.id, qty, paid: { currency: o.price.currency, amount: price } };
   });
 }
 

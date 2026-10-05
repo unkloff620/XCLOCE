@@ -379,11 +379,22 @@ describe("shop and exchange", () => {
     await expect(act(db, p, "buy", { offerId: "gpu-1" }, T0)).rejects.toMatchObject({ code: "no_money" });
     expect(await qty(db, p, "gpu")).toBe(0);
   });
-  it("respects the 999 stack", async () => {
+  it("respects the 9999 stack", async () => {
     const p = await newPlayer(db);
-    await give(db, p, "red-candle", 995);
+    await give(db, p, "red-candle", 9995);
     await setMoney(db, p, "RUB", 100000);
-    await expect(act(db, p, "buy", { offerId: "candle-10" }, T0)).rejects.toMatchObject({ code: "stack_full" });
+    await expect(act(db, p, "buy", { offerId: "candle-1", qty: 10 }, T0)).rejects.toMatchObject({ code: "stack_full" });
+  });
+  it("sells weapons in batches with a discount", async () => {
+    const p = await newPlayer(db);
+    await setMoney(db, p, "RUB", 100000);
+    await act(db, p, "buy", { offerId: "candle-1", qty: 10 }, T0); // 1000 − 2%
+    expect(await wallet(db, p, "RUB")).toBe(100000 - 980);
+    await act(db, p, "buy", { offerId: "mouse-1", qty: 1000 }, T0); // 60 000 − 10%
+    expect(await wallet(db, p, "RUB")).toBe(100000 - 980 - 54000);
+    expect(await qty(db, p, "mouse")).toBe(1000);
+    await expect(act(db, p, "buy", { offerId: "mouse-1", qty: 7 }, T0)).rejects.toMatchObject({ code: "bad_qty" });
+    await expect(act(db, p, "buy", { offerId: "tee-white", qty: 10 }, T0)).rejects.toMatchObject({ code: "bad_qty" });
   });
   it("idempotent purchase is charged once", async () => {
     const p = await newPlayer(db);

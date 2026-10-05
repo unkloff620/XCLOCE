@@ -83,7 +83,7 @@ export function InventoryScreen() {
             <div className="row" style={{ justifyContent: "center", gap: 6, flexWrap: "wrap" }}>
               <span className="chip" style={{ color: "var(--rar)" }}>{RARITY_NAME[open.rarity]}</span>
               <span className="chip">{CATEGORY_NAME[open.category]}</span>
-              {open.maxStack > 1 && <span className="chip">×{qtyOf(open.id)}{open.maxStack < 999 ? "" : " / 999"}</span>}
+              {open.maxStack > 1 && <span className="chip">×{qtyOf(open.id)}{open.maxStack < 999 ? "" : ` / ${open.maxStack}`}</span>}
             </div>
             {open.weapon && (
               <div className="row" style={{ justifyContent: "center", gap: 6 }}>
