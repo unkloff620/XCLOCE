@@ -1050,14 +1050,11 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .fit-page.styling .scene-backdrop { filter: blur(7px) brightness(0.3) grayscale(1); }
 .fit-page.styling .room-left, .fit-page.styling .room-label, .fit-page.styling .room-help, .fit-page.styling .room-arrow,
 .fit-page.styling > .fight-card { display: none; }
-/* the scene rises so the hero sits above the panel instead of under it */
-.fit-page .room-view { transition: transform 0.3s ease; }
-.fit-page.styling .room-view { transform: translateY(calc(var(--nav-h) + var(--safe-b) - 6px - var(--sty-h) + 18px)); }
-
-.sty-top { position: absolute; left: 12px; right: 12px; top: var(--top); z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  padding: 6px 6px 6px 14px; border-radius: 14px; background: rgba(24, 15, 9, 0.78); border: 2.5px solid var(--line); animation: fade 0.2s ease; }
-.sty-top b { font-size: 16px; }
-.sty-side { position: absolute; z-index: 5; top: calc(var(--top) + 64px); bottom: calc(var(--sty-h) + 10px); display: flex; flex-direction: column; justify-content: center; gap: 10px; animation: fade 0.25s ease; }
+/* the scene stands on the panel; on short screens (Telegram on a PC) it shrinks so the whole hero fits under the HUD
+   (the hero takes the lower ~73% of the 1060×1484 scene: width = free height / (0.73 × 1.4)) */
+.fit-page.styling .room-view { bottom: calc(var(--sty-h) - 14px); left: 50%; right: auto; transform: translateX(-50%);
+  width: min(100%, calc((100dvh - var(--sty-h) - var(--hud-h) - var(--safe-t) + 10px) / 1.02)); }
+.sty-side { position: absolute; z-index: 5; top: var(--top); bottom: calc(var(--sty-h) + 10px); display: flex; flex-direction: column; justify-content: center; gap: 10px; animation: fade 0.25s ease; }
 .sty-side.left { left: 10px; }
 .sty-side.right { right: 10px; }
 .sty-slot { position: relative; width: 62px; height: 62px; display: grid; place-items: center; padding: 0 0 12px; border-radius: 14px; cursor: pointer; color: var(--ink); font: inherit;
@@ -1072,10 +1069,12 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
   background: linear-gradient(180deg, rgba(36, 24, 15, 0.98), rgba(24, 15, 9, 0.99)); border-top: 2.5px solid var(--line); border-radius: 18px 18px 0 0;
   box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.55); animation: sty-up 0.25s ease; }
 @keyframes sty-up { from { transform: translate(-50%, 40px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
-.sty-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 3px; border-radius: 12px; background: var(--bg2); border: 2px solid var(--line); flex: none; }
+.sty-head { display: flex; gap: 8px; align-items: stretch; flex: none; }
+.sty-x { flex: none; width: 40px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg2); color: var(--ink); font: inherit; font-weight: 800; font-size: 16px; cursor: pointer; }
+.sty-tabs { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 3px; border-radius: 12px; background: var(--bg2); border: 2px solid var(--line); flex: none; }
 .sty-tabs button { padding: 7px 0; border: 0; border-radius: 9px; background: none; color: var(--muted); font: inherit; font-weight: 800; font-size: 13px; cursor: pointer; }
 .sty-tabs button.on { background: #8d6bff; color: #fff; }
-.sty-body { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; }
+.sty-body { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; overflow-x: hidden; padding: 3px 4px; margin: 0 -4px; }
 .sty-strip { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 4px; scrollbar-width: none; }
 .sty-strip::-webkit-scrollbar { display: none; }
 .sty-item { flex: none; width: 76px; height: 86px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 4px; border-radius: 12px; cursor: pointer;
@@ -1088,3 +1087,5 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .sty-opts .swatch { width: 28px; height: 28px; cursor: pointer; }
 .sty-opts .swatch.on { box-shadow: 0 0 0 2.5px #fff; }
 .sty-actions { display: flex; gap: 8px; flex: none; }
+.sty-opts .swatch.eye { background: radial-gradient(circle, #0b0b10 0 28%, var(--iris) 32% 62%, #14141a 66%); border-radius: 50%; }
+.sty-soon { align-self: center; }

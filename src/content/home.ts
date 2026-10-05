@@ -176,7 +176,8 @@ export const HAIR_STYLES = [
 ] as const;
 /** hair and skin colours are baked into the art by tools/rig/build-look.py — keep the lists in sync */
 export const HAIR_COLORS = ["#4a2c1a", "#1d1a24", "#c9822f", "#f0d27a", "#b8401f", "#8d6bff", "#3fd2ff", "#e8e8f0"] as const;
-export const EYE_COLORS = ["#3a2618", "#2f6fd6", "#2e9e5b", "#7a8899", "#9b5de5", "#e0a32f"] as const;
+/** iris colours, baked into pupils-<i>.webp by tools/rig/build-eyes.py (0 is the original dark iris) — keep in sync */
+export const EYE_COLORS = ["#2a2a33", "#7a4a26", "#2f6fd6", "#2e9e5b", "#8a98a8", "#9b5de5", "#e0a32f", "#d63a3a"] as const;
 export const SKIN_TONES = [
   { base: "#f8d5b4", shade: "#e2ad85" },
   { base: "#fcb477", shade: "#d28b5b" },

@@ -5,12 +5,12 @@ import { createPortal } from "react-dom";
 import { useGame } from "../store.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { ITEMS, type Slot } from "../../content/items.ts";
-import { HAIR_COLORS, HAIR_STYLES, SKIN_TONES, type Look } from "../../content/home.ts";
+import { EYE_COLORS, HAIR_COLORS, HAIR_STYLES, SKIN_TONES, type Look } from "../../content/home.ts";
 import { haptic } from "../telegram.ts";
 
 /*
  * The hero editor right on the home screen: the room and every button go grey, only the hero keeps his colours.
- * Slots stand around him (tap one — his things for it show in the panel below), the second tab changes hair and skin.
+ * Slots stand around him (tap one — his things for it show in the panel below), «Внешность» changes hair and skin, «Глаза» the eye colour.
  * Everything is a preview until «Сохранить»: then the changed slots are put on / taken off and the look is saved.
  */
 
@@ -25,7 +25,7 @@ const RIGHT: Slot[] = ["PANTS", "SHOES"];
 
 export function Stylist({ draft, setDraft, onClose }: { draft: StyleDraft; setDraft: (d: StyleDraft) => void; onClose: () => void }) {
   const { state, act, busy } = useGame();
-  const [tab, setTab] = useState<"clothes" | "look">("clothes");
+  const [tab, setTab] = useState<"clothes" | "look" | "eyes">("clothes");
   const [slot, setSlot] = useState<Slot>("SHIRT");
   const [saving, setSaving] = useState(false);
   if (!state) return null;
@@ -83,18 +83,18 @@ export function Stylist({ draft, setDraft, onClose }: { draft: StyleDraft; setDr
 
   return (
     <>
-      <div className="sty-top">
-        <b className="display">Редактор персонажа</b>
-        <button className="btn dark sm" onClick={onClose} aria-label="Закрыть без сохранения">✕</button>
-      </div>
       <div className="sty-side left">{LEFT.map(slotBtn)}</div>
       <div className="sty-side right">{RIGHT.map(slotBtn)}</div>
 
       {/* the panel goes to <body>: the fixed .fit-page is its own stacking layer and would stay under the nav */}
       {createPortal(<div className="sty-panel">
-        <div className="sty-tabs">
-          <button className={tab === "clothes" ? "on" : ""} onClick={() => setTab("clothes")}>Одежда</button>
-          <button className={tab === "look" ? "on" : ""} onClick={() => setTab("look")}>Внешность</button>
+        <div className="sty-head">
+          <div className="sty-tabs">
+            <button className={tab === "clothes" ? "on" : ""} onClick={() => setTab("clothes")}>Одежда</button>
+            <button className={tab === "look" ? "on" : ""} onClick={() => setTab("look")}>Внешность</button>
+            <button className={tab === "eyes" ? "on" : ""} onClick={() => setTab("eyes")}>Глаза</button>
+          </div>
+          <button className="sty-x" onClick={onClose} aria-label="Закрыть без сохранения">✕</button>
         </div>
 
         {tab === "clothes" ? (
@@ -117,6 +117,24 @@ export function Stylist({ draft, setDraft, onClose }: { draft: StyleDraft; setDr
                   <span className="sty-item-name">В магазин</span>
                 </Link>
               )}
+            </div>
+          </div>
+        ) : tab === "eyes" ? (
+          <div className="sty-body">
+            <div className="sty-row">
+              <span className="tiny muted">Цвет глаз</span>
+              <div className="sty-opts">
+                {EYE_COLORS.map((c, i) => (
+                  <button key={c} className={`swatch eye ${draft.look.eyes === i ? "on" : ""}`} style={{ ["--iris" as string]: c }} onClick={() => patch({ eyes: i })} aria-label={`цвет глаз ${i + 1}`} />
+                ))}
+              </div>
+            </div>
+            <div className="sty-row">
+              <span className="tiny muted">Форма глаз</span>
+              <div className="sty-opts">
+                <button className="look-chip on">Обычные</button>
+                <span className="tiny muted sty-soon">новые формы — в следующем обновлении</span>
+              </div>
             </div>
           </div>
         ) : (

@@ -45,10 +45,12 @@ const NO_SKIN = new Set<string>(["pupils", "brows", "eyes-closed"]);
 
 function Img({ p }: { p: PartId }) {
   const r = RIG[p];
-  const skin = useContext(LookCtx).skin;
+  const { skin, eyes } = useContext(LookCtx);
   // parts without skin (pupils, brows, closed eyes) have no tone variants; ?v=2 — the slimmer character
   const tinted = skin !== SKIN_ORIGINAL && !NO_SKIN.has(p);
-  const src = `${tinted ? `/assets/hero/skin-${skin}/${p}` : `/assets/hero/${p}`}.webp?v=${ART_VER.heroPart}`;
+  // the pupils come in eye colours (tools/rig/build-eyes.py); 0 is the original art
+  const file = p === "pupils" && eyes > 0 ? `pupils-${eyes}` : p;
+  const src = `${tinted ? `/assets/hero/skin-${skin}/${p}` : `/assets/hero/${file}`}.webp?v=${ART_VER.heroPart}`;
   return <image href={src} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" />;
 }
 

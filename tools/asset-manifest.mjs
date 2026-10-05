@@ -6,10 +6,12 @@ import { join, relative } from "node:path";
 const ROOT = new URL("..", import.meta.url).pathname;
 const PUB = join(ROOT, "public");
 const files = [];
+// art kept for later updates, not used by any screen yet: not preloaded
+const SKIP = new Set(["assets/textures"]);
 const walk = (d) => {
   for (const f of readdirSync(d).sort()) {
     const p = join(d, f);
-    if (statSync(p).isDirectory()) walk(p);
+    if (statSync(p).isDirectory()) { if (!SKIP.has(relative(PUB, p).split("\\").join("/"))) walk(p); }
     else if (/\.(webp|png|jpe?g|svg)$/i.test(f)) files.push("/" + relative(PUB, p).split("\\").join("/"));
   }
 };
