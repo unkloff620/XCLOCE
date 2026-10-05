@@ -32,7 +32,10 @@ function Hot({ id, onPick }: { id: keyof typeof SCENE_HOT; onPick: (equipment: s
   );
 }
 
-export function HomeScene({ room = "basic", onPick, still, look, worn, levels = {}, decor = {} }: { room?: string; onPick?: (equipment: string) => void; still?: boolean; look?: Look; worn?: Worn; levels?: Record<string, number>; decor?: Record<string, number> }) {
+/**
+ * focusHero: the character editor is open — the whole room goes grey and dark, only the hero keeps his colours.
+ */
+export function HomeScene({ room = "basic", onPick, still, look, worn, levels = {}, decor = {}, focusHero }: { room?: string; onPick?: (equipment: string) => void; still?: boolean; look?: Look; worn?: Worn; levels?: Record<string, number>; decor?: Record<string, number>; focusHero?: boolean }) {
   const bg = ROOM_BG[room] ?? ROOM_BG.basic;
   const sky = ROOM_SKY[room];
   const desk = stageOf("desk", levels, decor).stage?.art ?? "desk-001";
@@ -40,6 +43,15 @@ export function HomeScene({ room = "basic", onPick, still, look, worn, levels = 
   const lights = ROOM_LIGHTS[room] ?? [];
   return (
     <svg viewBox={`0 0 ${SCENE.w} ${SCENE.h}`} width="100%" style={{ display: "block" }}>
+      {focusHero && (
+        <defs>
+          {/* greyscale, then ~40% brightness */}
+          <filter id="scene-dim" colorInterpolationFilters="sRGB">
+            <feColorMatrix type="matrix" values="0.085 0.286 0.029 0 0  0.085 0.286 0.029 0 0  0.085 0.286 0.029 0 0  0 0 0 1 0" />
+          </filter>
+        </defs>
+      )}
+      <g filter={focusHero ? "url(#scene-dim)" : undefined}>
       {sky && (
         // the panorama and its mirror copy side by side: one period = 2 × width, so the loop has no seam
         <g className={still ? undefined : "room-sky"} style={{ ["--sky-w" as string]: `${-2 * sky.w}px` }}>
@@ -71,6 +83,7 @@ export function HomeScene({ room = "basic", onPick, still, look, worn, levels = 
       {monitors >= 3 && <Obj id="monitorCenter" art="monitor-center" />}
       {monitors >= 2 && <Obj id="monitorLeft" art="monitor-left" />}
       {monitors >= 1 ? <Obj id="monitorRight" art="monitor-right" /> : <Obj id="monitorOld" art="monitor-1" />}
+      </g>
       <RigViewport x={CHARACTER.x} y={CHARACTER.y} scale={CHARACTER.scale} seat={stageOf("chair", levels, decor).level} still={still} look={look} worn={worn} />
       {onPick && <Hot id="monitors" onPick={onPick} />}
       {onPick && <Hot id="pc" onPick={onPick} />}

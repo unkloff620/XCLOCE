@@ -1,16 +1,12 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
-import { HeroRig } from "../art/rig.tsx";
 import { HomeScene } from "../art/home-scene.tsx";
 import { ROOM_BACKDROP } from "../../content/home-scene.ts";
 import { Icon, NavIcon } from "../art/icons.tsx";
 import { NAV_TABS } from "../../content/nav.ts";
-import { ItemArt } from "../art/items.tsx";
-import { Modal } from "../ui.tsx";
 import { bossById, type BossDef } from "../../content/bosses.ts";
-import { ITEMS, type Slot } from "../../content/items.ts";
 import { clock, full } from "../format.ts";
 import { BossPhoto } from "./boss-parts.tsx";
 import { DailyWindow } from "./daily.tsx";
@@ -22,130 +18,11 @@ import { ROOM_DEFS } from "../../content/home.ts";
 import { money } from "../format.ts";
 import { Help, HelpList } from "../help.tsx";
 import { CURRENCY_DEFS } from "../../content/currencies.ts";
-import { HAIR_COLORS, HAIR_STYLES, SKIN_TONES, type Look } from "../../content/home.ts";
-
-/** Hairstyle, hair colour and skin tone editor. */
-const LOOK_EDITOR = true;
+import { Stylist, type StyleDraft } from "./stylist.tsx";
 
 /** The login reward pops up by itself once per app start; later only from the button. */
 let dailyAutoShown = false;
 
-
-const SLOT_NAME: Record<Slot, string> = { BODY: "Тело", PANTS: "Штаны", SHIRT: "Верх", SHOES: "Обувь", HEAD: "Голова", ACCESSORY: "Аксессуар", SPECIAL: "Особое" };
-
-const LEFT_SLOTS: Slot[] = ["HEAD", "SHIRT", "ACCESSORY"];
-const RIGHT_SLOTS: Slot[] = ["PANTS", "SHOES"];
-
-const PICK_TITLE: Record<Slot, string> = { BODY: "Тело", PANTS: "Штаны", SHIRT: "Верх", SHOES: "Обувь", HEAD: "Головные уборы", ACCESSORY: "Аксессуары", SPECIAL: "Особое" };
-
-/** Window with the owned things for one slot. */
-function SlotPicker({ slot, onClose }: { slot: Slot; onClose: () => void }) {
-  const { state, act, busy } = useGame();
-  if (!state) return null;
-  const owned = new Set(state.inventory.map((i) => i.id));
-  const items = ITEMS.filter((i) => i.slot === slot && owned.has(i.id));
-  const on = state.look.equipped[slot];
-  const pick = async (id: string) => {
-    const r = await act(id === on ? "unequip" : "equip", id === on ? { slot } : { itemId: id });
-    if (r !== null) onClose();
-  };
-  return (
-    <Modal title={PICK_TITLE[slot]} onClose={onClose}>
-      {items.length === 0 ? (
-        <div className="col center" style={{ gap: 10, alignItems: "center" }}>
-          <div className="muted small">Пока нечего надеть. Вещи дают за локации, боссов и продают в магазине.</div>
-          <Link href="/shop?tab=clothing" className="btn gold" onClick={onClose}>В магазин</Link>
-        </div>
-      ) : (
-        <div className="pick-grid">
-          {items.map((i) => (
-            <button key={i.id} className={`pick-cell rar-${i.rarity} ${on === i.id ? "on" : ""}`} disabled={!!busy} onClick={() => pick(i.id)}>
-              <ItemArt id={i.id} size={56} />
-              <span className="pick-name">{i.name}</span>
-              <span className={`tiny ${on === i.id ? "pick-off" : "muted"}`}>{on === i.id ? "Снять" : "Надеть"}</span>
-            </button>
-          ))}
-        </div>
-      )}
-    </Modal>
-  );
-}
-
-/** Hairstyle, hair colour and skin tone. Changes are previewed live and saved with one button. */
-function LookEditor({ draft, patch }: { draft: Look; patch: (p: Partial<Look>) => void }) {
-  const row = (label: string, children: ReactNode) => (
-    <div className="look-row">
-      <div className="tiny muted">{label}</div>
-      <div className="look-opts">{children}</div>
-    </div>
-  );
-  return (
-    <div className="col" style={{ gap: 10 }}>
-      {row("ПРИЧЁСКА", HAIR_STYLES.map((h) => (
-        <button key={h.id} className={`look-chip ${draft.hair === h.id ? "on" : ""}`} onClick={() => patch({ hair: h.id })}>{h.name}</button>
-      )))}
-      {draft.hair !== "bald" && row("ЦВЕТ ВОЛОС", HAIR_COLORS.map((c, i) => (
-        <button key={c} className={`swatch ${draft.hairColor === i ? "on" : ""}`} style={{ background: c }} onClick={() => patch({ hairColor: i })} aria-label={`цвет волос ${i + 1}`} />
-      )))}
-      {row("ЦВЕТ КОЖИ", SKIN_TONES.map((t, i) => (
-        <button key={t.base} className={`swatch ${draft.skin === i ? "on" : ""}`} style={{ background: t.base }} onClick={() => patch({ skin: i })} aria-label={`тон кожи ${i + 1}`} />
-      )))}
-    </div>
-  );
-}
-
-function Wardrobe({ onClose }: { onClose: () => void }) {
-  const { state, act, busy } = useGame();
-  const [slot, setSlot] = useState<Slot | null>(null);
-  const [tab, setTab] = useState<"clothes" | "look">("clothes");
-  const [draft, setDraft] = useState<Look | null>(null);
-  if (!state) return null;
-  const eq = state.look.equipped;
-  const look = draft ?? state.look.body;
-  const changed = !!draft && JSON.stringify(draft) !== JSON.stringify(state.look.body);
-  const box = (s: Slot) => {
-    const id = eq[s];
-    const def = id ? ITEMS.find((i) => i.id === id) : null;
-    return (
-      <button key={s} className={`wd-box ${def ? `filled rar-${def.rarity}` : ""}`} onClick={() => setSlot(s)} aria-label={`${SLOT_NAME[s]}: ${def?.name ?? "пусто"}`}>
-        <span className="wd-box-name tiny">{SLOT_NAME[s]}</span>
-        {def ? <ItemArt id={def.id} size={44} /> : <span className="wd-plus" aria-hidden="true">+</span>}
-      </button>
-    );
-  };
-  const save = async () => {
-    if (!draft) return;
-    const r = await act("look_set", { ...draft }, "Внешность сохранена");
-    if (r) setDraft(null);
-  };
-  return (
-    <Modal title="Гардероб" onClose={onClose} wide>
-      <div className="tabs" style={{ marginBottom: 10 }}>
-        <button className={tab === "clothes" ? "on" : ""} onClick={() => setTab("clothes")}>Одежда</button>
-        {LOOK_EDITOR && <button className={tab === "look" ? "on" : ""} onClick={() => setTab("look")}>Внешность</button>}
-      </div>
-      {tab === "clothes" ? (
-        <>
-          <div className="wd">
-            <div className="wd-side">{LEFT_SLOTS.map(box)}</div>
-            <div className="wd-center"><HeroRig size={220} still look={state.look.body} worn={eq} /></div>
-            <div className="wd-side">{RIGHT_SLOTS.map(box)}</div>
-          </div>
-          <p className="tiny muted center" style={{ margin: "10px 0 0" }}>Нажми на ячейку, чтобы выбрать вещь.</p>
-        </>
-      ) : (
-        <div className="look-edit">
-          <div className="wd-center look-preview"><HeroRig size={220} still look={look} worn={eq} /></div>
-          <div className="grow col" style={{ gap: 10, minWidth: 0 }}>
-            <LookEditor draft={look} patch={(p) => setDraft((d) => ({ ...(d ?? state.look.body), ...p }))} />
-            <button className="btn green block" disabled={!changed || busy === "look_set"} onClick={save}>Сохранить</button>
-          </div>
-        </div>
-      )}
-      {slot && <SlotPicker slot={slot} onClose={() => setSlot(null)} />}
-    </Modal>
-  );
-}
 
 /** The boss's face in a plain circle; the ring around it is the boss's HP left (uses --hp and --acc from the parent). */
 function BossRing({ boss, size }: { boss: BossDef; size: number }) {
@@ -161,7 +38,7 @@ function BossRing({ boss, size }: { boss: BossDef; size: number }) {
 export function HomeScreen() {
   const { state, act, busy } = useGame();
   const now = useNow();
-  const [wardrobe, setWardrobe] = useState(false);
+  const [styling, setStyling] = useState<StyleDraft | null>(null);
   const [daily, setDaily] = useState(false);
   const [quests, setQuests] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -173,13 +50,19 @@ export function HomeScreen() {
   const [viewIdx, setViewIdx] = useState<number | null>(null);
   const dailyReady = !!state?.daily.available;
   // the first-visit tour goes first; the daily reward window waits for it
-  const busyWindow = (state?.pending.length ?? 0) > 0 || tutorialPending(state);
+  const busyWindow = (state?.pending.length ?? 0) > 0 || tutorialPending(state) || !!styling;
   useEffect(() => {
     if (dailyReady && !busyWindow && !dailyAutoShown) {
       dailyAutoShown = true;
       setDaily(true);
     }
   }, [dailyReady, busyWindow]);
+  const isStyling = !!styling;
+  // the editor greys out the HUD and the bottom menu too — they live outside this screen
+  useEffect(() => {
+    document.body.classList.toggle("styling", isStyling);
+    return () => document.body.classList.remove("styling");
+  }, [isStyling]);
   if (!state) return null;
   const curIdx = Math.max(0, ROOM_DEFS.findIndex((r) => r.id === state.look.room));
   const idx = viewIdx ?? curIdx;
@@ -206,11 +89,11 @@ export function HomeScreen() {
   const menuAlert = state.daily.available || state.quests.claimable || state.prizes.length > 0;
   const hpPct = f ? `${Math.max(0, Math.min(100, (f.hp / Math.max(1, f.hpMax)) * 100))}%` : "0%";
   return (
-    <div className={`fit-page ${f && fb && fightOpen ? "has-fight" : ""}`}>
+    <div className={`fit-page ${f && fb && fightOpen ? "has-fight" : ""} ${styling ? "styling" : ""}`}>
       <div className="room">
         <div className={`scene-backdrop ${owned ? "" : "locked"}`} style={{ backgroundImage: `url(/assets/home/${ROOM_BACKDROP[viewRoom.id] ?? ROOM_BACKDROP.basic}.webp)` }} />
         <div className={`room-view ${owned ? "" : "locked"}`}>
-          <HomeScene room={viewRoom.id} look={state.look.body} worn={state.look.equipped} levels={state.home.levels} decor={state.home.decor} onPick={owned ? (id) => (id === "pc" ? setPc(true) : setEquip(id)) : undefined} />
+          <HomeScene room={viewRoom.id} look={styling?.look ?? state.look.body} worn={styling?.worn ?? state.look.equipped} levels={state.home.levels} decor={state.home.decor} focusHero={!!styling} onPick={owned && !styling ? (id) => (id === "pc" ? setPc(true) : setEquip(id)) : undefined} />
         </div>
         {/* room switcher: one pill «‹ name ›» at the bottom, the lock offer above it */}
         <div className="room-label">
@@ -234,7 +117,7 @@ export function HomeScreen() {
           <Help topic="home-menu" title="Твой дом">
             <p>Здесь живёт твой персонаж. На заднем плане стоит оборудование — нажми на мониторы, чтобы обставить рабочее место, или на системник в углу — там детали компьютера, которые улучшаются за таланты. Стрелки по бокам листают комнаты: купленная включается сразу, закрытую можно разблокировать кнопкой снизу. Каждая купленная комната даёт бонус к урону.</p>
             <HelpList title="Меню [≡] слева" rows={[
-              { key: "w", icon: <Icon name="shirt" size={44} />, name: "Гардероб", hint: "Одежда и внешность: причёска, цвет волос и кожи." },
+              { key: "w", icon: <Icon name="shirt" size={44} />, name: "Гардероб", hint: "Редактор персонажа прямо в комнате: комната сереет, а ты примеряешь одежду, причёску, цвет волос и кожи. Всё сохраняется одной кнопкой." },
               { key: "b", icon: <Icon name="gift" size={44} />, name: "Бонус", hint: "Награда за ежедневный вход. Заходи каждый день подряд — награда растёт, на 7-й день редкое оружие. Пропустишь день — серия сгорит." },
               { key: "r", icon: <Icon name="trophy" size={44} />, name: "Рейтинг", hint: "Топ по урону за неделю, по авторитету и кланам. Топ-10 недели получает призы, лидеры — рамку на карточке." },
               { key: "q", icon: <Icon name="map" size={44} />, name: "Задания дня", hint: "Три задания на сутки: бой, энергия, покупки. Выполнишь все — открой сундук. Там же включаются напоминания в Telegram." },
@@ -260,7 +143,7 @@ export function HomeScreen() {
           </button>
           {menuOpen && (
             <div className="menu-drop" onClick={() => setMenuOpen(false)}>
-              <button className="icon-btn-art" style={{ ["--c" as string]: "#b06bff" }} onClick={() => setWardrobe(true)} aria-label="Гардероб" title="Гардероб">
+              <button className="icon-btn-art" style={{ ["--c" as string]: "#b06bff" }} onClick={() => setStyling({ look: { ...state.look.body }, worn: { ...state.look.equipped } })} aria-label="Гардероб" title="Гардероб">
                 <Icon name="shirt" size={58} />
               </button>
               <button className={`icon-btn-art ${state.daily.available ? "glow" : ""}`} style={{ ["--c" as string]: "#ffcc33" }} onClick={() => setDaily(true)} aria-label="Бонус" title="Бонус">
@@ -310,7 +193,7 @@ export function HomeScreen() {
           </Link>
         </div>
       )}
-      {wardrobe && <Wardrobe onClose={() => setWardrobe(false)} />}
+      {styling && <Stylist draft={styling} setDraft={setStyling} onClose={() => setStyling(null)} />}
       {daily && <DailyWindow onClose={() => setDaily(false)} />}
       {quests && <QuestsWindow onClose={() => setQuests(false)} />}
       {equip !== false && <EquipmentWindow focus={equip} onClose={() => setEquip(false)} />}
