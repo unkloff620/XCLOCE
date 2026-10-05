@@ -1,5 +1,4 @@
 "use client";
-import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 /*
@@ -43,7 +42,6 @@ async function picturesReady(limitMs: number) {
 }
 
 export function RouteLoader() {
-  const path = usePathname();
   const [load, setLoad] = useState<{ from: string; at: number } | null>(null);
 
   useEffect(() => {
@@ -68,23 +66,20 @@ export function RouteLoader() {
   useEffect(() => {
     if (!load) return;
     let alive = true;
-    // a navigation that never happens (cancelled, same page) must not leave the screen grey
-    const safety = setTimeout(() => alive && setLoad(null), MAX_MS + MIN_MS);
-    if (path !== load.from) {
-      void (async () => {
-        const left = MIN_MS - (Date.now() - load.at);
-        if (left > 0) await new Promise((r) => setTimeout(r, left));
-        // give the new screen a frame to put its pictures in, then wait for them
-        await new Promise((r) => requestAnimationFrame(() => r(null)));
-        await picturesReady(Math.max(0, MAX_MS - (Date.now() - load.at)));
-        if (alive) setLoad(null);
-      })();
-    }
+    const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    const left = () => MAX_MS - (Date.now() - load.at);
+    void (async () => {
+      await wait(MIN_MS);
+      // the new page is in place (the address changed), or the navigation never happened
+      while (alive && window.location.pathname === load.from && left() > 0) await wait(50);
+      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      if (left() > 0) await picturesReady(left());
+      if (alive) setLoad(null);
+    })();
     return () => {
       alive = false;
-      clearTimeout(safety);
     };
-  }, [load, path]);
+  }, [load]);
 
   if (!load) return null;
   return (
