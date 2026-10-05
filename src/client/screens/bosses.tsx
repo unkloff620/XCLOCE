@@ -9,6 +9,7 @@ import { Avatar, GainLine, RewardChips } from "../ui.tsx";
 import type { BossDef } from "../../content/bosses.ts";
 import { Help } from "../help.tsx";
 import { Icon } from "../art/icons.tsx";
+import { ItemArt } from "../art/items.tsx";
 import { BossSilhouette } from "../art/scenes.tsx";
 import { clock, full, short } from "../format.ts";
 
@@ -94,7 +95,7 @@ export function BossesScreen() {
                 <div className="bcard-head">
                   <div className="col" style={{ gap: 1, minWidth: 0 }}>
                     <b className="bcard-name display ellipsis">{locked ? "???" : b.name}</b>
-                    <span className="bcard-title ellipsis">{locked ? `Откроется ключами «${prev?.name}»` : b.title}</span>
+                    <span className="bcard-title ellipsis">{locked ? `Откроется карточками «${prev?.name}»` : b.title}</span>
                   </div>
                   {mine ? (
                     <span className="bcard-pill live"><i className="live-dot" />{clock(mine.endsAt - now)}</span>
@@ -114,7 +115,7 @@ export function BossesScreen() {
                 </div>
                 <div className="bcard-foot">
                   {locked ? (
-                    <span className="bcard-meta"><Icon name="key" size={15} /> {row?.keysHave ?? 0}/{row?.keysNeed ?? 3} ключа</span>
+                    <span className="bcard-meta">{prev && <ItemArt id={`key-${prev.id}`} size={22} />} {row?.keysHave ?? 0}/{row?.keysNeed ?? 3} {(row?.keysNeed ?? 3) === 1 ? "карточка" : "карточки"}</span>
                   ) : (
                     <span className="bcard-meta" title="Победы сегодня"><Icon name="swords" size={14} /> Побед <b className="num">{row?.fightsToday ?? 0}/{row?.fightsPerDay ?? 7}</b></span>
                   )}
@@ -138,7 +139,9 @@ export function BossRulesHelp({ topic }: { topic: "bosses" | "boss" }) {
         <li>Урон общий: удары всех, кто сейчас бьёт этого босса, снимают HP и в твоём бою.</li>
         <li>Бьют только оружием. Кулак — бесплатно раз в час, остальное оружие тратится.</li>
         <li>Награда за победу зависит от твоего урона в этом бою: полная — если нанёс хотя бы 2% здоровья босса, меньше — пропорционально. Без урона награды нет.</li>
-        <li>Ключ даётся от 1% здоровья босса. Ключи открывают следующего босса (для Фокуса и Солнца хватает одного).</li>
+        <li>Карточка босса даётся от 1% его здоровья. Карточки открывают следующего босса: бронзовые, серебряные, золотые и платиновые — по 3 штуки, бриллиантовые (для Фокуса и Солнца) — по одной.</li>
+        <li>С Дацкоу с шансом 10% выпадает одежда: белая футболка и тапки. Не повезло 10 побед подряд — вещь выпадет точно.</li>
+        <li>За Утилизатора дают статуэтку CLOSE: она сама встаёт на стол в комнате и даёт +25% к силе крита.</li>
         <li>В день можно победить каждого босса 7 раз. Проигранные бои в лимит не идут.</li>
         <li>Оборудование и комнаты дома дают шанс крита и прибавку к урону.</li>
       </ul>
@@ -160,6 +163,16 @@ export function BossRewardsPanel({ bossId }: { bossId: string }) {
               <span key={d.id} className="chip">
                 <RewardChips r={{ items: [{ id: d.id, qty: d.qty }] }} size={16} /> {Math.round(d.chance * 100)}%
               </span>
+            ))}
+          </div>
+        </>
+      )}
+      {b.wear && (
+        <>
+          <div className="small muted">Одежда (каждая вещь {Math.round(b.wear.chance * 100)}%, без неё {b.wear.pity} побед подряд — выпадет точно):</div>
+          <div className="row" style={{ flexWrap: "wrap", gap: 6 }}>
+            {b.wear.items.map((id) => (
+              <span key={id} className="chip"><RewardChips r={{ items: [{ id, qty: 1 }] }} size={16} /></span>
             ))}
           </div>
         </>

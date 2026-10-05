@@ -151,8 +151,13 @@ export function talentsForDamage(damage: number): number {
   return k;
 }
 
-/** Total bonus from equipment levels (incl. computer parts) and owned rooms. */
-export function totalBonus(levels: Record<string, number>, rooms: string[]): Required<Bonus> {
+/** Trophies: reward items that stand in the room by themselves and add a bonus while owned. */
+export const TROPHIES: { id: string; bonus: Bonus }[] = [
+  { id: "statue-close", bonus: { critDamage: 0.25 } },
+];
+
+/** Total bonus from equipment levels (incl. computer parts), owned rooms and trophies. */
+export function totalBonus(levels: Record<string, number>, rooms: string[], trophies: string[] = []): Required<Bonus> {
   let b: Bonus = {};
   for (const e of [...EQUIPMENT, ...LEGACY_EQUIPMENT]) {
     const lv = levels[e.id] ?? 0;
@@ -163,6 +168,7 @@ export function totalBonus(levels: Record<string, number>, rooms: string[]): Req
     if (lv > 0) b = addBonus(b, { damage: lv * p.damagePerLevel });
   }
   for (const id of rooms) b = addBonus(b, roomById(id)?.bonus ?? {});
+  for (const t of TROPHIES) if (trophies.includes(t.id)) b = addBonus(b, t.bonus);
   return { critChance: Math.min(0.75, b.critChance ?? 0), critDamage: b.critDamage ?? 0, damage: b.damage ?? 0 };
 }
 

@@ -180,6 +180,36 @@ describe("boss fights: personal fights, shared damage", () => {
     await expect(startDatsik(p, T0 + 40 * M)).rejects.toMatchObject({ code: "fight_limit" });
   });
 
+  it("Дацкоу: clothes 10% per win, the 10th win without clothes gives one for sure; owned pieces do not fall", async () => {
+    await setBossHp({ datsik: 50 });
+    const p = await newPlayer(db);
+    expect(await qty(db, p, "tee-white")).toBe(0); // no longer a starter
+    await give(db, p, "red-candle", 30);
+    const D = 24 * H;
+    const win = async (i: number, rng: number) => {
+      const t = T0 + Math.floor(i / 7) * D + (i % 7) * M;
+      const f = await startDatsik(p, t);
+      await hit(p, "red-candle", t);
+      return act(db, p, "fight_claim", { fightId: f.result.fightId }, t, always(rng));
+    };
+    for (let i = 0; i < 9; i++) await win(i, 0.99);
+    expect((await qty(db, p, "tee-white")) + (await qty(db, p, "slippers"))).toBe(0);
+    await win(9, 0.99);
+    expect((await qty(db, p, "tee-white")) + (await qty(db, p, "slippers"))).toBe(1);
+    // a lucky roll gives the missing piece; then nothing is left to drop
+    await win(10, 0.01);
+    expect(await qty(db, p, "tee-white")).toBe(1);
+    expect(await qty(db, p, "slippers")).toBe(1);
+    await win(11, 0.01);
+    expect(await qty(db, p, "tee-white")).toBe(1);
+  });
+
+  it("the CLOSE statue adds crit damage while owned", async () => {
+    const { totalBonus } = await import("../src/content/home.ts");
+    expect(totalBonus({}, ["basic"], ["statue-close"]).critDamage).toBeCloseTo(0.25);
+    expect(totalBonus({}, ["basic"], []).critDamage).toBe(0);
+  });
+
   it("Фокус and Солнце open with a single key", async () => {
     const p = await newPlayer(db);
     await expect(act(db, p, "fight_start", { boss: "fokus" }, T0)).rejects.toMatchObject({ code: "boss_locked" });

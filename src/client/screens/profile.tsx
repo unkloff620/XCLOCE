@@ -33,7 +33,7 @@ interface Profile {
   body: Look;
   frame: string | null;
   achievements: AchRow[];
-  room: { id: string; levels: Record<string, number>; decor: Record<string, number> };
+  room: { id: string; levels: Record<string, number>; decor: Record<string, number>; trophies?: string[] };
 }
 
 /** "3 окт. 2026" — fits a narrow side column */
@@ -182,7 +182,7 @@ export function ProfileScreen() {
           <span className="tiny muted">{ROOM_DEFS.find((r) => r.id === p.room.id)?.name ?? ""}</span>
         </div>
         <div className="profile-room" style={{ backgroundImage: `url(/assets/home/${ROOM_BACKDROP[p.room.id] ?? ROOM_BACKDROP.basic}.webp)` }}>
-          <HomeScene room={p.room.id} look={p.body} worn={p.equipped} levels={p.room.levels} decor={p.room.decor} still />
+          <HomeScene room={p.room.id} look={p.body} worn={p.equipped} levels={p.room.levels} decor={p.room.decor} trophies={p.room.trophies} still />
         </div>
       </div>
 

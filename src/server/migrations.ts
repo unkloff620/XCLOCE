@@ -400,4 +400,16 @@ WHERE k.item_id = 'key-bebyakyan' AND k.qty >= 3
 ON CONFLICT (player_id, item_id) DO UPDATE SET qty = GREATEST(inventory.qty, 3);
 `,
   },
+  {
+    // clothes falling from a boss: wins in a row without clothes (the 10th one gives a piece for sure)
+    id: "v2-018-boss-pity",
+    sql: `
+CREATE TABLE IF NOT EXISTS boss_pity (
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  boss_id TEXT NOT NULL,
+  misses INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (player_id, boss_id)
+);
+`,
+  },
 ];

@@ -1,4 +1,4 @@
-import { BOSSES, keyId } from "./bosses.ts";
+import { BOSSES, CARD_TIERS, keyId } from "./bosses.ts";
 
 export type Category = "weapon" | "clothing" | "item" | "reward" | "event";
 export type Rarity = "common" | "rare" | "epic" | "legendary" | "mythic";
@@ -78,13 +78,13 @@ export const WEAPONS: ItemDef[] = [
 ];
 
 const WEARABLES: ItemDef[] = ([
-  { id: "tee-white", name: "Белая футболка", slot: "SHIRT", rarity: "common", description: "Классика, в которой начинают все.", sources: ["Стартовая"] },
+  { id: "tee-white", name: "Белая футболка", slot: "SHIRT", rarity: "common", description: "Классика офиса. Выбивается из Дацкоу.", sources: ["Победа: Дацкоу (10%)"] },
   { id: "tee-pump", name: "Футболка pump.fun", slot: "SHIRT", rarity: "rare", description: "Зелёная, как график в мечтах.", sources: ["Награда за локацию 1"] },
   { id: "hoodie-hodl", name: "Худи HODL", slot: "SHIRT", rarity: "epic", description: "Держит тепло и позицию.", sources: ["Награда за локацию 4"] },
   { id: "jeans", name: "Джинсы", slot: "PANTS", rarity: "common", description: "Синие. Просто синие.", sources: ["Стартовые"] },
   { id: "shorts-remote", name: "Шорты «на удалёнке»", slot: "PANTS", rarity: "rare", description: "Ниже камеры можно всё.", sources: ["Награда за локацию 2"] },
   { id: "sneakers", name: "Кеды", slot: "SHOES", rarity: "common", description: "Белые, пока не вышел во двор.", sources: ["Стартовые"] },
-  { id: "slippers", name: "Тапки", slot: "SHOES", rarity: "rare", description: "Офисный дресс-код, версия 2.0.", sources: ["Награда за локацию 3"] },
+  { id: "slippers", name: "Тапки", slot: "SHOES", rarity: "rare", description: "Офисный дресс-код, версия 2.0.", sources: ["Награда за локацию 3", "Победа: Дацкоу (10%)"] },
   { id: "cap-moon", name: "Чёрная кепка", slot: "HEAD", rarity: "rare", description: "Козырёк вперёд — курс на луну.", sources: ["Награда за локацию 2"] },
   { id: "santa-hat", name: "Новогодний колпак", slot: "HEAD", rarity: "epic", description: "Сезонный предмет.", sources: ["Новогодний ивент"] },
   { id: "laser-eyes", name: "Лазерные глаза", slot: "ACCESSORY", rarity: "legendary", description: "Обязательный аксессуар биткоин-максималиста.", sources: ["Награда за локацию 5"] },
@@ -101,16 +101,28 @@ const MISC: ItemDef[] = [
   { id: "lost-wallet", name: "Забытый кошелёк", category: "item", rarity: "rare", maxStack: 999, description: "Внутри немного долларов и чек из шаурмы.", sources: ["Двор"] },
 ];
 
-const KEYS: ItemDef[] = BOSSES.filter((b) => !b.final).map((b) => ({
-  id: keyId(b.id), name: `Ключ: ${b.name}`, category: "reward" as const, rarity: "rare" as const, maxStack: 999,
-  description: `Выдаётся за победу над боссом ${b.name}. 3 ключа открывают следующего босса.`, sources: [`Победа: ${b.name}`],
-}));
+/** Boss cards: ids stay key-<boss> (they used to be keys), the tier gives the look and the name. */
+const KEYS: ItemDef[] = BOSSES.filter((b) => !b.final).map((b, i, list) => {
+  const t = CARD_TIERS[b.card ?? "bronze"];
+  const next = BOSSES.find((x) => x.order === b.order + 1);
+  const need = next?.keysToUnlock ?? 3;
+  return {
+    id: keyId(b.id), name: `${t.name}: ${b.name}`, category: "reward" as const, rarity: t.rarity, maxStack: 999,
+    description: `Выдаётся за победу над боссом ${b.name}. ${need === 1 ? "Одна карточка открывает" : `${need} карточки открывают`} босса ${next?.name ?? ""}.`.trim(),
+    sources: [`Победа: ${b.name}`],
+  };
+});
+/** Trophies stand in the room by themselves and give a bonus (TROPHIES in content/home.ts). */
+const STATUE: ItemDef = {
+  id: "statue-close", name: "Статуэтка CLOSE", category: "reward", rarity: "legendary", maxStack: 1,
+  description: "Награда за Утилизатора. Сама встаёт на стол в комнате: +25% к силе крита.", sources: ["Победа: Утилизатор"],
+};
 const TROPHY: ItemDef = {
   id: "trophy-sun", name: "Осколок Солнца", category: "reward", rarity: "mythic", maxStack: 999,
   description: "Доказательство, что ты дошёл до конца.", sources: ["Победа: Солнце"],
 };
 
-export const ITEMS: ItemDef[] = [...WEAPONS, ...WEARABLES, ...MISC, ...KEYS, TROPHY];
+export const ITEMS: ItemDef[] = [...WEAPONS, ...WEARABLES, ...MISC, ...KEYS, TROPHY, STATUE];
 const BY_ID = new Map(ITEMS.map((i) => [i.id, i]));
 export const itemById = (id: string) => BY_ID.get(id);
 export const weaponById = (id: string) => {
@@ -118,8 +130,8 @@ export const weaponById = (id: string) => {
   return i?.weapon ? (i as ItemDef & { weapon: WeaponStats }) : undefined;
 };
 
-/** Starting outfit: given and equipped on first login. */
-export const STARTER_OUTFIT: Partial<Record<Slot, string>> = { SHIRT: "tee-white", PANTS: "jeans", SHOES: "sneakers" };
+/** Starting outfit: given and equipped on first login. The white tee now falls from Дацкоу. */
+export const STARTER_OUTFIT: Partial<Record<Slot, string>> = { PANTS: "jeans", SHOES: "sneakers" };
 export const RARITY_NAME: Record<Rarity, string> = { common: "Обычный", rare: "Редкий", epic: "Эпический", legendary: "Легендарный", mythic: "Мифический" };
 export const CATEGORY_NAME: Record<Category, string> = { weapon: "Оружие", clothing: "Одежда", item: "Предметы", reward: "Награды", event: "Ивентовые" };
 

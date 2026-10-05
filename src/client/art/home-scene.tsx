@@ -35,7 +35,7 @@ function Hot({ id, onPick }: { id: keyof typeof SCENE_HOT; onPick: (equipment: s
 /**
  * focusHero: the character editor is open — the whole room goes grey and dark, only the hero keeps his colours.
  */
-export function HomeScene({ room = "basic", onPick, still, look, worn, levels = {}, decor = {}, focusHero }: { room?: string; onPick?: (equipment: string) => void; still?: boolean; look?: Look; worn?: Worn; levels?: Record<string, number>; decor?: Record<string, number>; focusHero?: boolean }) {
+export function HomeScene({ room = "basic", onPick, still, look, worn, levels = {}, decor = {}, trophies = [], focusHero }: { room?: string; onPick?: (equipment: string) => void; still?: boolean; look?: Look; worn?: Worn; levels?: Record<string, number>; decor?: Record<string, number>; trophies?: string[]; focusHero?: boolean }) {
   const bg = ROOM_BG[room] ?? ROOM_BG.basic;
   const sky = ROOM_SKY[room];
   const desk = stageOf("desk", levels, decor).stage?.art ?? "desk-001";
@@ -83,6 +83,7 @@ export function HomeScene({ room = "basic", onPick, still, look, worn, levels = 
       {monitors >= 3 && <Obj id="monitorCenter" art="monitor-center" />}
       {monitors >= 2 && <Obj id="monitorLeft" art="monitor-left" />}
       {monitors >= 1 ? <Obj id="monitorRight" art="monitor-right" /> : <Obj id="monitorOld" art="monitor-1" />}
+      {trophies.includes("statue-close") && <Obj id="statueClose" art="statue-close" />}
       </g>
       <RigViewport x={CHARACTER.x} y={CHARACTER.y} scale={CHARACTER.scale} seat={stageOf("chair", levels, decor).level} still={still} look={look} worn={worn} />
       {onPick && <Hot id="monitors" onPick={onPick} />}

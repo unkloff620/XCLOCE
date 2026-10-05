@@ -93,7 +93,7 @@ export function HomeScreen() {
       <div className="room">
         <div className={`scene-backdrop ${owned ? "" : "locked"}`} style={{ backgroundImage: `url(/assets/home/${ROOM_BACKDROP[viewRoom.id] ?? ROOM_BACKDROP.basic}.webp)` }} />
         <div className={`room-view ${owned ? "" : "locked"}`}>
-          <HomeScene room={viewRoom.id} look={styling?.look ?? state.look.body} worn={styling?.worn ?? state.look.equipped} levels={state.home.levels} decor={state.home.decor} focusHero={!!styling} onPick={owned && !styling ? (id) => (id === "pc" ? setPc(true) : setEquip(id)) : undefined} />
+          <HomeScene room={viewRoom.id} look={styling?.look ?? state.look.body} worn={styling?.worn ?? state.look.equipped} levels={state.home.levels} decor={state.home.decor} trophies={state.home.trophies} focusHero={!!styling} onPick={owned && !styling ? (id) => (id === "pc" ? setPc(true) : setEquip(id)) : undefined} />
         </div>
         {/* room switcher: one pill «‹ name ›» at the bottom, the lock offer above it */}
         <div className="room-label">

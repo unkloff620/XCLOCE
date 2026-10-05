@@ -38,7 +38,7 @@ export function ResultWindow() {
   if (!active || !view) return null;
   const boss = bossById(view.bossId)!;
   const won = view.status === "won";
-  // the reward follows my part of the fight: full from 2% of the boss HP, the key from 1%
+  // the reward follows my part of the fight: full from 2% of the boss HP, the card from 1%
   const share = rewardShare(view.myDamage, view.hpMax);
   const keyOk = view.myDamage >= view.hpMax * KEY_SHARE;
   const done = () => setActive(null);
@@ -64,7 +64,7 @@ export function ResultWindow() {
             Последний удар: <b style={{ color: "var(--ink)" }}>{view.killerIsMe ? "ты" : view.killer}</b>
           </div>
         ) : (
-          <div className="muted">{ESCAPE_LINES[view.fightId % ESCAPE_LINES.length]} 8 часов прошли, ключа нет.</div>
+          <div className="muted">{ESCAPE_LINES[view.fightId % ESCAPE_LINES.length]} 8 часов прошли, карточки нет.</div>
         )}
         <div className="panel" style={{ width: "100%", padding: 10 }}>
           <div className="row" style={{ justifyContent: "space-between" }}>
@@ -95,7 +95,7 @@ export function ResultWindow() {
           <>
             <div className={`share-note ${share >= 1 ? "full" : ""}`}>
               {share >= 1 ? "Полная награда — твой вклад засчитан" : share > 0 ? `Награда ${Math.round(share * 100)}%: для полной нужно ${full(Math.ceil(view.hpMax * 0.02))} урона в бою` : "Ты не нанёс урона в этом бою — награды нет"}
-              {share > 0 && !keyOk && !boss.final && <div className="tiny">Ключ — от {full(Math.ceil(view.hpMax * KEY_SHARE))} урона</div>}
+              {share > 0 && !keyOk && !boss.final && <div className="tiny">Карточка — от {full(Math.ceil(view.hpMax * KEY_SHARE))} урона</div>}
             </div>
             <RewardChips r={{ ...scaleReward(boss.reward, share), items: [...(boss.final || !keyOk ? [] : [{ id: `key-${boss.id}`, qty: 1 }]), ...(share >= 1 ? boss.reward.items ?? [] : [])] }} />
             <button className="btn gold big block" disabled={busy === "fight_claim"} onClick={claim}>Забрать награду</button>

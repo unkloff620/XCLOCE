@@ -1,35 +1,37 @@
 import { GameError, type Queryable } from "../db.ts";
 import { takeMoney, type Ctx } from "../core.ts";
-import { EQUIPMENT, HELP_TOPICS, equipmentById, pcPartById, pcPartCost, normalizeLook, roomById, totalBonus, type HelpTopic, type Look } from "../../content/home.ts";
+import { EQUIPMENT, HELP_TOPICS, TROPHIES, equipmentById, pcPartById, pcPartCost, normalizeLook, roomById, totalBonus, type HelpTopic, type Look } from "../../content/home.ts";
 
 /*
  * Дом: оборудование (уровни), комнаты (купить / выбрать), внешность персонажа, просмотренные подсказки.
  */
 
-export interface HomeRow { levels: Record<string, number>; rooms: string[]; room: string; body: Look; decor: Record<string, number> }
+export interface HomeRow { levels: Record<string, number>; rooms: string[]; room: string; body: Look; decor: Record<string, number>; trophies: string[] }
 
 export async function homeData(q: Queryable, pid: number): Promise<HomeRow> {
   const eq = await q.query<{ equipment_id: string; level: number }>("SELECT equipment_id, level FROM player_equipment WHERE player_id=$1", [pid]);
   const [a] = await q.query<{ room: string; rooms: string[] | null; body: unknown; decor: Record<string, number> | null }>("SELECT room, rooms, body, decor FROM appearance WHERE player_id=$1", [pid]);
   const rooms = Array.isArray(a?.rooms) && a.rooms.length ? a.rooms : ["basic"];
+  const tr = await q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id = ANY($2)", [pid, TROPHIES.map((t) => t.id)]);
   return {
     levels: Object.fromEntries(eq.map((e) => [e.equipment_id, e.level])),
     rooms,
     room: a && rooms.includes(a.room) ? a.room : "basic",
     body: normalizeLook(a?.body),
     decor: a?.decor && typeof a.decor === "object" ? a.decor : {},
+    trophies: tr.map((t) => t.item_id),
   };
 }
 
 /** Combat bonus of a player (equipment + every owned room). */
 export async function playerBonus(q: Queryable, pid: number) {
   const h = await homeData(q, pid);
-  return totalBonus(h.levels, h.rooms);
+  return totalBonus(h.levels, h.rooms, h.trophies);
 }
 
 export async function homeView(q: Queryable, pid: number) {
   const h = await homeData(q, pid);
-  return { ...h, bonus: totalBonus(h.levels, h.rooms) };
+  return { ...h, bonus: totalBonus(h.levels, h.rooms, h.trophies) };
 }
 
 export async function upgradeEquipment(ctx: Ctx, id: string) {

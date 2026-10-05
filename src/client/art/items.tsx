@@ -1,3 +1,4 @@
+import { bossById } from "../../content/bosses.ts";
 /* Item and weapon pictures, same style as the icon set (64×64, dark outline, flat fills). */
 import type { ReactNode } from "react";
 import { Icon, OL, Svg } from "./icons.tsx";
@@ -198,19 +199,24 @@ function Shoe({ fill, sole }: { fill: string; sole: string }) {
 const RASTER_ITEMS = new Set([
   "fist", "mouse", "red-candle", "keyboard", "gpu", "rug-pull-gun",
   "tee-white", "tee-pump", "hoodie-hodl", "jeans", "shorts-remote", "sneakers", "cap-moon", "slippers", "gold-chain",
-  "energy-drink", "lost-wallet", "bottle-cap", "flyer-passive", "spinner", "sticker-hodl",
+  "energy-drink", "lost-wallet", "bottle-cap", "flyer-passive", "spinner", "sticker-hodl", "statue-close",
 ]);
 
-/** Picture of any item; keys use the key icon, unknown ids fall back to a coin. */
+/** a boss card (item key-<boss>) shows the picture of its tier: bronze … diamond */
+export function cardArt(id: string): string {
+  return `card-${bossById(id.replace(/^key-/, ""))?.card ?? "bronze"}`;
+}
+
+/** Picture of any item; boss cards show their tier, unknown ids fall back to a chest. */
 export function ItemArt({ id, size = 40 }: { id: string; size?: number }) {
-  if (RASTER_ITEMS.has(id)) {
+  const raster = RASTER_ITEMS.has(id) ? id : id.startsWith("key-") ? cardArt(id) : null;
+  if (raster) {
     return (
       <svg viewBox="0 0 64 64" width={size} height={size} aria-hidden="true" style={{ flex: "none", display: "block" }}>
-        <image href={`/assets/items/${id}.webp?v=${ART_VER.items}`} x="0" y="0" width="64" height="64" />
+        <image href={`/assets/items/${raster}.webp?v=${ART_VER.items}`} x="0" y="0" width="64" height="64" />
       </svg>
     );
   }
-  if (id.startsWith("key-")) return <Icon name="key" size={size} />;
   if (id === "coins") return <Icon name="coins" size={size} />;
   const f = ART[id];
   if (!f) return <Icon name="chest" size={size} />;

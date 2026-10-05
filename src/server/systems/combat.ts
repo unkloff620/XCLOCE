@@ -1,7 +1,7 @@
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, idempotent, itemQty, ledger, moscowDay, nextMoscowMidnight, takeItem, type Ctx, type Granted } from "../core.ts";
 import { BOSSES, bossById, keyId, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
-import { WEAPONS, weaponById } from "../../content/items.ts";
+import { WEAPONS, itemById, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
 import { mergeRewards, scaleReward } from "../../content/rewards.ts";
 import { BASE_CRIT_MULT, talentsForDamage } from "../../content/home.ts";
@@ -99,7 +99,7 @@ export async function startFight(ctx: Ctx, bossId: string) {
   if (active) throw new GameError("fight_running", `Сначала закончи бой с боссом ${bossById(active.boss_id)?.name}`);
   if (!(await isUnlocked(ctx.q, ctx.pid, def, ctx.cfg.fight.keysToUnlock))) {
     const n = keysNeeded(def, ctx.cfg.fight.keysToUnlock);
-    throw new GameError("boss_locked", n === 1 ? "Нужен ключ предыдущего босса" : `Нужно ${n} ключа предыдущего босса`);
+    throw new GameError("boss_locked", n === 1 ? "Нужна карточка предыдущего босса" : `Нужно ${n} карточки предыдущего босса`);
   }
   const day = moscowDay(ctx.now);
   if ((await fightsToday(ctx.q, ctx.pid, def.id, day)) >= ctx.cfg.fight.perDay) {
@@ -233,7 +233,11 @@ export async function claimFight(ctx: Ctx, fightId: number) {
   const earnedKey = myDamage >= f.hp_max * ctx.cfg.fight.keyShare;
   const drops = earnedKey ? (def.drop ?? []).filter((d) => ctx.rng() < d.chance).map((d) => ({ id: d.id, qty: d.qty })) : [];
   const key = def.final || !earnedKey ? [] : [{ id: keyId(def.id), qty: 1 }];
-  const granted = await grantReward(ctx, mergeRewards(scaleReward(def.reward, share), { items: [...key, ...drops] }), `win:${def.id}`);
+  const wear = earnedKey ? await rollWear(ctx, def) : [];
+  // one-of-a-kind rewards (the statue) are not handed out again
+  const base = scaleReward(def.reward, share);
+  if (base.items?.length) base.items = await notOwnedUnique(ctx, base.items);
+  const granted = await grantReward(ctx, mergeRewards(base, { items: [...key, ...drops, ...wear] }), `win:${def.id}`);
   await ctx.q.query("UPDATE fights SET reward=$2, seen=true WHERE id=$1", [f.id, JSON.stringify(granted)]);
   if (myDamage > 0) {
     await ctx.q.query(
@@ -242,6 +246,36 @@ export async function claimFight(ctx: Ctx, fightId: number) {
     );
   }
   return { status: "won" as const, reward: granted, share, key: earnedKey };
+}
+
+/** Drops items with maxStack 1 the player already has. */
+async function notOwnedUnique(ctx: Ctx, items: { id: string; qty: number }[]) {
+  const out = [];
+  for (const it of items) {
+    if (itemById(it.id)?.maxStack === 1 && (await itemQty(ctx.q, ctx.pid, it.id)) > 0) continue;
+    out.push(it);
+  }
+  return out;
+}
+
+/**
+ * Clothes from a boss (BossDef.wear): every piece not owned yet rolls its chance; after `pity` wins in a row
+ * without clothes one of the missing pieces falls for sure. The miss counter lives in boss_pity.
+ */
+async function rollWear(ctx: Ctx, def: BossDef): Promise<{ id: string; qty: number }[]> {
+  if (!def.wear) return [];
+  const missing: string[] = [];
+  for (const id of def.wear.items) if ((await itemQty(ctx.q, ctx.pid, id)) === 0) missing.push(id);
+  if (!missing.length) return [];
+  const [row] = await ctx.q.query<{ misses: number }>("SELECT misses FROM boss_pity WHERE player_id=$1 AND boss_id=$2 FOR UPDATE", [ctx.pid, def.id]);
+  const misses = row?.misses ?? 0;
+  let got = missing.filter(() => ctx.rng() < def.wear!.chance);
+  if (!got.length && misses + 1 >= def.wear.pity) got = [missing[Math.floor(ctx.rng() * missing.length) % missing.length]];
+  await ctx.q.query(
+    "INSERT INTO boss_pity (player_id, boss_id, misses) VALUES ($1,$2,$3) ON CONFLICT (player_id, boss_id) DO UPDATE SET misses = EXCLUDED.misses",
+    [ctx.pid, def.id, got.length ? 0 : misses + 1],
+  );
+  return got.map((id) => ({ id, qty: 1 }));
 }
 
 /** Gives up the running fight (counts as a loss). */

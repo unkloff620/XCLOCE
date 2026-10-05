@@ -19,9 +19,26 @@ export interface BossDef {
   /** HP phases in percent (only the final boss has several) */
   phases?: { from: number; name: string }[];
   final?: boolean;
-  /** keys of the previous boss needed to open this one (default KEYS_TO_UNLOCK) */
+  /** cards of the previous boss needed to open this one (default KEYS_TO_UNLOCK) */
   keysToUnlock?: number;
+  /** the card this boss gives for a win (item key-<id>); the final boss gives none */
+  card?: CardTier;
+  /**
+   * clothes that can fall from this boss: each item not owned yet rolls `chance` per win (from KEY_SHARE damage);
+   * after `pity` wins in a row without clothes one of them falls for sure
+   */
+  wear?: { items: string[]; chance: number; pity: number };
 }
+
+/** Boss cards (they used to be keys): the tier only sets the look and the name, every boss has its own card. */
+export type CardTier = "bronze" | "silver" | "gold" | "platinum" | "diamond";
+export const CARD_TIERS: Record<CardTier, { name: string; rarity: "common" | "rare" | "epic" | "legendary" | "mythic" }> = {
+  bronze: { name: "Бронзовая карточка", rarity: "common" },
+  silver: { name: "Серебряная карточка", rarity: "rare" },
+  gold: { name: "Золотая карточка", rarity: "epic" },
+  platinum: { name: "Платиновая карточка", rarity: "legendary" },
+  diamond: { name: "Бриллиантовая карточка", rarity: "mythic" },
+};
 
 /** 1 000 → 10 000 → 50 000 → … → 10 000 000 (Солнце). Подчинённые (Гаркуша, Mugo, Вадим, Боцман) fill the gaps. */
 const HP = [1_000, 10_000, 50_000, 80_000, 115_000, 150_000, 400_000, 1_000_000, 1_500_000, 2_000_000, 2_500_000, 5_000_000, 10_000_000];
@@ -37,84 +54,85 @@ const photo = (id: string, has = false) => (has ? { portrait: `/bosses/${id}/por
  */
 export const BOSSES: BossDef[] = [
   {
-    id: "datsik", order: 1, name: "Дацкоу", title: "Замороженный подчинённый Бабафея",
+    id: "datsik", order: 1, card: "bronze", name: "Дацкоу", title: "Замороженный подчинённый Бабафея",
     story: "Числится в штате, но давно заморожен. Оттаивает, только когда кто-то пытается пройти мимо.",
     hp: hp(0), reward: { xp: xp(0), currencies: { SOL: 0.02, RUB: 150 } },
     drop: [{ id: "red-candle", qty: 3, chance: 0.35 }],
+    wear: { items: ["tee-white", "slippers"], chance: 0.1, pity: 10 },
     theme: { a: "#3a1430", b: "#12081a", accent: "#ff4d6d" }, photo: photo("datsik", true),
   },
   {
-    id: "kedr", order: 2, name: "Кедр", title: "Ответственный за сайт ActClose",
+    id: "kedr", order: 2, card: "bronze", name: "Кедр", title: "Ответственный за сайт ActClose",
     story: "Сайт лежит — Кедр стоит. Сайт стоит — Кедр всё равно стоит, корни глубоко.",
     hp: hp(1), reward: { xp: xp(1), currencies: { SOL: 0.03, RUB: 220 } },
     drop: [{ id: "keyboard", qty: 2, chance: 0.3 }],
     theme: { a: "#173a26", b: "#07140c", accent: "#3ddc84" }, photo: photo("kedr"),
   },
   {
-    id: "bebyakyan", order: 3, name: "Командате", title: "Подчинённый Востока",
+    id: "bebyakyan", order: 3, card: "bronze", name: "Командате", title: "Подчинённый Востока",
     story: "Командует всеми, кто ниже. Таких пока немного, но он не сдаётся.",
     hp: hp(2), reward: { xp: xp(2), currencies: { SOL: 0.045, RUB: 300 } },
     drop: [{ id: "keyboard", qty: 3, chance: 0.3 }],
     theme: { a: "#1c2a4a", b: "#080d1c", accent: "#4da3ff" }, photo: photo("bebyakyan"),
   },
   {
-    id: "garkusha", order: 4, name: "Гаркуша", title: "Подчинённый Князя",
+    id: "garkusha", order: 4, card: "silver", name: "Гаркуша", title: "Подчинённый Князя",
     story: "Правая рука Князя. Левой подписывает всё, что Князь не успел прочитать.",
     hp: hp(3), reward: { xp: xp(3), currencies: { SOL: 0.052, RUB: 340 } },
     drop: [{ id: "keyboard", qty: 3, chance: 0.35 }],
     theme: { a: "#3a1a1a", b: "#140707", accent: "#ff6b4a" }, photo: photo("garkusha"),
   },
   {
-    id: "mugo", order: 5, name: "Mugo", title: "Подчинённый Вадима",
+    id: "mugo", order: 5, card: "silver", name: "Mugo", title: "Подчинённый Вадима",
     story: "Делает всё, что сказал Вадим. Иногда даже то, что Вадим только подумал.",
     hp: hp(4), reward: { xp: xp(4), currencies: { SOL: 0.058, RUB: 380 } },
     drop: [{ id: "energy-drink", qty: 2, chance: 0.35 }],
     theme: { a: "#163a3a", b: "#061414", accent: "#2ee6c8" }, photo: photo("mugo"),
   },
   {
-    id: "babafey", order: 6, name: "Бабафей", title: "Главный администратор Close Neo",
+    id: "babafey", order: 6, card: "silver", name: "Бабафей", title: "Главный администратор Close Neo",
     story: "Держит Close Neo в ежовых рукавицах. Каждое «ок» стоит три письма и одно совещание.",
     hp: hp(5), reward: { xp: xp(5), currencies: { SOL: 0.065, RUB: 420 } },
     drop: [{ id: "gpu", qty: 1, chance: 0.25 }],
     theme: { a: "#3a2a10", b: "#140d04", accent: "#ffb020" }, photo: photo("babafey"),
   },
   {
-    id: "vodovoz", order: 7, name: "Восток", title: "Главный администратор Close Vostok",
+    id: "vodovoz", order: 7, card: "gold", name: "Восток", title: "Главный администратор Close Vostok",
     story: "Солнце встаёт на востоке, а Восток встаёт раньше Солнца. Проверяет всех ещё до начала смены.",
     hp: hp(6), reward: { xp: xp(6), currencies: { SOL: 0.09, RUB: 560 } },
     drop: [{ id: "energy-drink", qty: 3, chance: 0.4 }],
     theme: { a: "#0f3440", b: "#041217", accent: "#38d6ff" }, photo: photo("vodovoz"),
   },
   {
-    id: "knyaz", order: 8, name: "Князь", title: "Главный администратор Close Knuaz",
+    id: "knyaz", order: 8, card: "gold", name: "Князь", title: "Главный администратор Close Knuaz",
     story: "Правит своим Close как княжеством. Отчёты принимает только в правильном шрифте — шрифт каждый раз новый.",
     hp: hp(7), reward: { xp: xp(7), currencies: { SOL: 0.13, RUB: 750 } },
     drop: [{ id: "gpu", qty: 1, chance: 0.35 }],
     theme: { a: "#2e1846", b: "#0e0718", accent: "#b06bff" }, photo: photo("knyaz"),
   },
   {
-    id: "vadim", order: 9, name: "Вадим", title: "Главный администратор Close Vadim",
+    id: "vadim", order: 9, card: "platinum", name: "Вадим", title: "Главный администратор Close Vadim",
     story: "Сводит весь Close Vadim в один Excel. Нет тебя в таблице — нет тебя в компании.",
     hp: hp(8), reward: { xp: xp(8), currencies: { SOL: 0.17, RUB: 820 } },
     drop: [{ id: "gpu", qty: 1, chance: 0.4 }],
     theme: { a: "#3a2416", b: "#140b05", accent: "#ff8a3d" }, photo: photo("vadim"),
   },
   {
-    id: "botsman", order: 10, name: "Боцман", title: "Появляется раз в год — на Новый год",
+    id: "botsman", order: 10, card: "platinum", name: "Боцман", title: "Появляется раз в год — на Новый год",
     story: "Весь год его никто не видел, а в декабре он уже стоит у ёлки. Что-то из себя да представляет.",
     hp: hp(9), reward: { xp: xp(9), currencies: { SOL: 0.22, RUB: 880 } },
     drop: [{ id: "rug-pull-gun", qty: 1, chance: 0.15 }],
     theme: { a: "#0f2a44", b: "#050e18", accent: "#5fb8ff" }, photo: photo("botsman"),
   },
   {
-    id: "utilizator", order: 11, name: "Утилизатор", title: "Прокси и вся движуха",
+    id: "utilizator", order: 11, card: "diamond", name: "Утилизатор", title: "Прокси и вся движуха",
     story: "Отвечает за прокси и за всё, что связано с алкоголем. Тусовка не начнётся без его разрешения.",
-    hp: hp(10), reward: { xp: xp(10), currencies: { BTC: 0.0003, RUB: 950 } },
+    hp: hp(10), reward: { xp: xp(10), currencies: { BTC: 0.0003, RUB: 950 }, items: [{ id: "statue-close", qty: 1 }] },
     drop: [{ id: "rug-pull-gun", qty: 1, chance: 0.25 }],
     theme: { a: "#2f3416", b: "#0f1106", accent: "#c8f03c" }, photo: photo("utilizator"),
   },
   {
-    id: "fokus", order: 12, name: "Фокус", title: "Главный и единственный программист",
+    id: "fokus", order: 12, card: "diamond", name: "Фокус", title: "Главный и единственный программист",
     story: "Весь код Close написал он один. И только он знает, почему это работает.",
     hp: hp(11), reward: { xp: xp(11), currencies: { BTC: 0.0005, RUB: 1200 } },
     drop: [{ id: "rug-pull-gun", qty: 1, chance: 0.35 }],
