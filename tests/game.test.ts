@@ -207,6 +207,29 @@ describe("boss fights: personal fights, shared damage", () => {
     expect(await qty(db, p, "tee-white")).toBe(1);
   });
 
+  it("«Соло»: others' damage does not touch my solo fight; my own win counts for the solo badge", async () => {
+    await setBossHp({ datsik: 100 });
+    const a = await newPlayer(db), b = await newPlayer(db);
+    await act(db, a, "fight_start", { boss: "datsik" }, T0);
+    const fb = await act(db, b, "fight_start", { boss: "datsik", solo: true }, T0);
+    expect(fb.result.solo).toBe(true);
+    await give(db, a, "rug-pull-gun", 1);
+    const ra = await hit(a, "rug-pull-gun");
+    expect(ra.result.status).toBe("won");
+    let sb = await act(db, b, "equip", { itemId: "jeans" }, T0);
+    expect(sb.state.fight).toMatchObject({ solo: true, hp: 100 });
+    await expect(act(db, b, "achievement_claim", { id: "solo-1" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
+    const h1 = await hit(b, "red-candle");
+    expect(h1.result).toMatchObject({ status: "active", hp: 50 });
+    const h2 = await hit(b, "red-candle");
+    expect(h2.result).toMatchObject({ status: "won", hp: 0 });
+    const c = await act(db, b, "fight_claim", { fightId: fb.result.fightId }, T0, always(0.99));
+    expect(c.result).toMatchObject({ status: "won", share: 1, key: true });
+    await act(db, b, "achievement_claim", { id: "solo-1" }, T0);
+    sb = await act(db, b, "equip", { itemId: "jeans" }, T0);
+    expect(sb.state.fight).toBeNull();
+  });
+
   it("the CLOSE statue adds crit damage while owned", async () => {
     const { totalBonus } = await import("../src/content/home.ts");
     expect(totalBonus({}, ["basic"], ["statue-close"]).critDamage).toBeCloseTo(0.25);

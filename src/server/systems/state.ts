@@ -29,8 +29,8 @@ export async function gameState(ctx: Ctx) {
   const [app] = await ctx.q.query<{ equipped: Record<string, string> }>("SELECT equipped FROM appearance WHERE player_id=$1", [ctx.pid]);
   const home = await homeView(ctx.q, ctx.pid);
   const yard = await yardSync(ctx);
-  const [fightRow] = await ctx.q.query<{ id: number; boss_id: string; hp_max: number; start_total: number; end_total: number | null; ends_at: Date; damage_total: number; my_damage: number }>(
-    "SELECT f.id, f.boss_id, f.hp_max, f.start_total, f.end_total, f.ends_at, f.my_damage, b.damage_total FROM fights f JOIN bosses b ON b.id=f.boss_id WHERE f.player_id=$1 AND f.status='active'",
+  const [fightRow] = await ctx.q.query<{ id: number; boss_id: string; hp_max: number; start_total: number; end_total: number | null; ends_at: Date; damage_total: number; my_damage: number; solo: boolean }>(
+    "SELECT f.id, f.boss_id, f.hp_max, f.start_total, f.end_total, f.ends_at, f.my_damage, f.solo, b.damage_total FROM fights f JOIN bosses b ON b.id=f.boss_id WHERE f.player_id=$1 AND f.status='active'",
     [ctx.pid],
   );
   // finished fights the player has not looked at yet → victory / defeat window on any screen
@@ -60,7 +60,7 @@ export async function gameState(ctx: Ctx) {
     yard: { count: yard.items.length, max: yard.max, nextAt: yard.nextAt },
     tasks: await tasksHint(ctx.q, ctx.pid),
     fight: fightRow
-      ? { id: fightRow.id, bossId: fightRow.boss_id, hp: fightHp(fightRow, fightRow.damage_total), hpMax: fightRow.hp_max, endsAt: new Date(fightRow.ends_at).getTime(), myDamage: Number(fightRow.my_damage) }
+      ? { id: fightRow.id, bossId: fightRow.boss_id, hp: fightHp(fightRow, fightRow.damage_total), hpMax: fightRow.hp_max, endsAt: new Date(fightRow.ends_at).getTime(), myDamage: Number(fightRow.my_damage), solo: !!fightRow.solo }
       : null,
     pending: pending.map((f) => ({ fightId: f.id, bossId: f.boss_id, status: f.status })),
     clan: clan ?? null,

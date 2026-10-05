@@ -29,7 +29,7 @@ export interface GameState {
   yard: { count: number; max: number; nextAt: number | null };
   /** cheapest task step left in an open location; claimable = a location reward is waiting */
   tasks: { minEnergy: number | null; claimable: boolean };
-  fight: { id: number; bossId: string; hp: number; hpMax: number; endsAt: number; myDamage: number } | null;
+  fight: { id: number; bossId: string; hp: number; hpMax: number; endsAt: number; myDamage: number; solo?: boolean } | null;
   pending: { fightId: number; bossId: string; status: string }[];
   clan: { id: number; name: string; tag: string; emblem: string; color: string } | null;
   daily: { available: boolean; day: number; streak: number; cycle: number; nextAt: number | null; rewards: Reward[] };
@@ -56,6 +56,8 @@ export interface FightView {
   startedAt: number; endsAt: number; myDamage: number; myHits: number; killer: string | null; killerIsMe: boolean;
   reward: Granted | null; claimed: boolean; lastSeq: number; hits: Hit[];
   top: { playerId: number; name: string; damage: number; hits: number }[]; fightingNow: number;
+  /** «Соло»: only my own hits take this fight's HP */
+  solo?: boolean;
 }
 export interface Tray { id: string; qty: number; readyAt: number | null }
 

@@ -34,6 +34,8 @@ interface FightRow {
   killer_id: number | null;
   my_damage: number;
   my_hits: number;
+  /** «Соло»: only my own hits count, other players' damage does not take this fight's HP */
+  solo: boolean;
   reward: Granted | null;
   seen: boolean;
 }
@@ -65,7 +67,8 @@ async function expireFights(ctx: Ctx, boss: BossRow) {
   );
 }
 
-export function fightHp(f: Pick<FightRow, "hp_max" | "start_total" | "end_total">, bossTotal: number): number {
+export function fightHp(f: Pick<FightRow, "hp_max" | "start_total" | "end_total"> & { solo?: boolean; my_damage?: number | string }, bossTotal: number): number {
+  if (f.solo) return Math.max(0, f.hp_max - Number(f.my_damage ?? 0));
   return Math.max(0, f.hp_max - ((f.end_total ?? bossTotal) - f.start_total));
 }
 
@@ -91,7 +94,7 @@ export async function settleMyFight(ctx: Ctx): Promise<void> {
   await expireFights(ctx, boss);
 }
 
-export async function startFight(ctx: Ctx, bossId: string) {
+export async function startFight(ctx: Ctx, bossId: string, solo = false) {
   const def = bossById(bossId);
   if (!def) throw new GameError("bad_boss", "Такого босса нет");
   await settleMyFight(ctx);
@@ -109,13 +112,13 @@ export async function startFight(ctx: Ctx, bossId: string) {
   await expireFights(ctx, boss);
   const hpMax = ctx.cfg.bossHp[def.id] ?? def.hp;
   const [f] = await ctx.q.query<{ id: number }>(
-    "INSERT INTO fights (player_id, boss_id, hp_max, start_total, start_seq, started_at, ends_at, day) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id",
-    [ctx.pid, def.id, hpMax, boss.damage_total, boss.last_seq, new Date(ctx.now), new Date(ctx.now + ctx.cfg.fight.hours * 3600_000), day],
+    "INSERT INTO fights (player_id, boss_id, hp_max, start_total, start_seq, started_at, ends_at, day, solo) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id",
+    [ctx.pid, def.id, hpMax, boss.damage_total, boss.last_seq, new Date(ctx.now), new Date(ctx.now + ctx.cfg.fight.hours * 3600_000), day, solo],
   );
   // every new fight starts with rested hands: permanent weapons (the fist) are ready again
   const permanent = WEAPONS.filter((x) => x.weapon?.kind === "permanent").map((x) => x.id);
   await ctx.q.query("DELETE FROM cooldowns WHERE player_id=$1 AND item_id = ANY($2)", [ctx.pid, permanent]);
-  return { fightId: f.id, bossId: def.id };
+  return { fightId: f.id, bossId: def.id, solo };
 }
 
 export interface HitResult {
@@ -198,14 +201,19 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string): Promise
 
     // every running fight with this boss whose HP reached zero is won by this hit
     const won = await ctx.q.query<{ id: number }>(
-      "UPDATE fights SET status='won', end_total=$2, end_seq=$3, ended_at=$4, killer_id=$5 WHERE boss_id=$1 AND status='active' AND hp_max - ($2 - start_total) <= 0 RETURNING id",
+      "UPDATE fights SET status='won', end_total=$2, end_seq=$3, ended_at=$4, killer_id=$5 WHERE boss_id=$1 AND status='active' AND NOT solo AND hp_max - ($2 - start_total) <= 0 RETURNING id",
       [boss.id, total, seq, new Date(ctx.now), ctx.pid],
     );
+    // a solo fight is won only by my own damage
+    if (mine.solo && Number(mine.my_damage) + damage >= mine.hp_max) {
+      await ctx.q.query("UPDATE fights SET status='won', end_total=$2, end_seq=$3, ended_at=$4, killer_id=$5 WHERE id=$1", [mine.id, total, seq, new Date(ctx.now), ctx.pid]);
+      won.push({ id: mine.id });
+    }
     if (won.length) await ctx.q.query("UPDATE bosses SET wins = wins + $2 WHERE id=$1", [boss.id, won.length]);
     // others whose fight with this boss is nearly over get a "finish it!" reminder
     await notifyBossLow(ctx, boss.id, total);
     const mineWon = won.some((x) => x.id === mine.id);
-    const hp = mineWon ? 0 : fightHp({ ...mine, end_total: null }, total);
+    const hp = mineWon ? 0 : fightHp({ ...mine, end_total: null, my_damage: Number(mine.my_damage) + damage }, total);
     return {
       fightId: mine.id, weapon: w.id, damage, crit, phrase: phrases[phraseIdx], hp, hpMax: mine.hp_max,
       status: mineWon ? "won" : "active", left, readyAt, finished: won.length, fightDamage, talentsGained,
@@ -299,11 +307,11 @@ interface HitView {
   crit: boolean;
 }
 
-async function hitsInWindow(q: Queryable, bossId: string, afterSeq: number, upToSeq: number | null, limit: number): Promise<HitView[]> {
+async function hitsInWindow(q: Queryable, bossId: string, afterSeq: number, upToSeq: number | null, limit: number, onlyPlayer: number | null = null): Promise<HitView[]> {
   const rows = await q.query<{ seq: number; player_id: number; display_name: string; weapon: string; damage: number; phrase: number; created_at: Date; crit: boolean }>(
     `SELECT h.seq, h.player_id, p.display_name, h.weapon, h.damage, h.phrase, h.created_at, h.crit FROM boss_hits h JOIN players p ON p.id = h.player_id
-     WHERE h.boss_id=$1 AND h.seq > $2 AND ($3::bigint IS NULL OR h.seq <= $3) ORDER BY h.seq DESC LIMIT $4`,
-    [bossId, afterSeq, upToSeq, limit],
+     WHERE h.boss_id=$1 AND h.seq > $2 AND ($3::bigint IS NULL OR h.seq <= $3) AND ($5::int IS NULL OR h.player_id = $5) ORDER BY h.seq DESC LIMIT $4`,
+    [bossId, afterSeq, upToSeq, limit, onlyPlayer],
   );
   return rows.map((r) => ({ seq: r.seq, playerId: r.player_id, name: r.display_name, weapon: r.weapon, damage: r.damage, phrase: r.phrase, at: new Date(r.created_at).getTime(), crit: !!r.crit }));
 }
@@ -315,16 +323,17 @@ export async function fightView(q: Queryable, pid: number, fightId: number, sinc
   const timeUp = f.status === "active" && new Date(f.ends_at).getTime() <= now;
   const hp = fightHp(f, b.damage_total);
   const upTo = f.end_seq ?? (timeUp ? b.last_seq : null);
-  const hits = await hitsInWindow(q, f.boss_id, Math.max(f.start_seq, sinceSeq), upTo, 20);
+  // a solo fight shows only my own hits: the others' damage does not touch it
+  const hits = await hitsInWindow(q, f.boss_id, Math.max(f.start_seq, sinceSeq), upTo, 20, f.solo ? pid : null);
   const top = await q.query<{ player_id: number; display_name: string; dmg: number; hits: number }>(
     `SELECT h.player_id, p.display_name, SUM(h.damage)::int AS dmg, COUNT(*)::int AS hits FROM boss_hits h JOIN players p ON p.id=h.player_id
-     WHERE h.boss_id=$1 AND h.seq > $2 AND ($3::bigint IS NULL OR h.seq <= $3) GROUP BY h.player_id, p.display_name ORDER BY dmg DESC LIMIT 10`,
-    [f.boss_id, f.start_seq, upTo],
+     WHERE h.boss_id=$1 AND h.seq > $2 AND ($3::bigint IS NULL OR h.seq <= $3) AND ($4::int IS NULL OR h.player_id = $4) GROUP BY h.player_id, p.display_name ORDER BY dmg DESC LIMIT 10`,
+    [f.boss_id, f.start_seq, upTo, f.solo ? pid : null],
   );
   const [killer] = f.killer_id ? await q.query<{ display_name: string }>("SELECT display_name FROM players WHERE id=$1", [f.killer_id]) : [];
   const fighting = await q.query<{ n: number }>("SELECT COUNT(*)::int AS n FROM fights WHERE boss_id=$1 AND status='active' AND ends_at > $2", [f.boss_id, new Date(now)]);
   return {
-    fightId: f.id, bossId: f.boss_id, hp, hpMax: f.hp_max,
+    fightId: f.id, bossId: f.boss_id, hp, hpMax: f.hp_max, solo: !!f.solo,
     status: timeUp ? ("lost" as const) : f.status,
     startedAt: new Date(f.started_at).getTime(), endsAt: new Date(f.ends_at).getTime(),
     myDamage: f.my_damage, myHits: f.my_hits, killer: killer?.display_name ?? null, killerIsMe: f.killer_id === pid,

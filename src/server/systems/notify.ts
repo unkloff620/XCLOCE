@@ -40,7 +40,7 @@ export async function scheduleStreak(ctx: Ctx, streak: number) {
 export async function notifyBossLow(ctx: Ctx, bossId: string, bossTotal: number) {
   const rows = await ctx.q.query<{ id: number; player_id: number; hp: number; hp_max: number }>(
     `SELECT id, player_id, hp_max - ($2 - start_total) AS hp, hp_max FROM fights
-     WHERE boss_id=$1 AND status='active' AND ends_at > $3 AND player_id <> $4
+     WHERE boss_id=$1 AND status='active' AND NOT solo AND ends_at > $3 AND player_id <> $4
        AND hp_max - ($2 - start_total) > 0 AND (hp_max - ($2 - start_total)) * 5 <= hp_max`,
     [bossId, bossTotal, new Date(ctx.now), ctx.pid],
   );

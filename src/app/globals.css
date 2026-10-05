@@ -1,7 +1,8 @@
 /* XCLOCE 2.0 — one visual language: dark night-office base, thick dark outlines, flat saturated fills, crypto accents. */
 :root {
-  /* rusty-metal grain over every brown surface (tools/ui/build-texture.py); `none` turns it off */
-  --tex: url(/assets/ui/tex-grain.webp) 0 0 / 320px 320px repeat;
+  /* rusty-metal grain over every brown surface (tools/ui/build-texture.py): a see-through layer — dark specks and
+     rusty light ones — so it looks the same everywhere (iPhone ignored the old blend mode); `none` turns it off */
+  --tex: url(/assets/ui/tex-grain-a.webp) 0 0 / 320px 320px repeat;
   --bg: #140e0a;
   --bg2: #1f1610;
   --panel: #2a1d14;
@@ -32,7 +33,7 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; padding: 0; }
 body {
-  background: var(--tex), var(--bg); background-blend-mode: overlay, normal, normal, normal;
+  background: var(--tex), var(--bg);
   color: var(--ink);
   font-family: var(--font-body), system-ui, sans-serif;
   font-size: 14px;
@@ -63,9 +64,9 @@ img { max-width: 100%; }
     radial-gradient(50% 40% at 85% 80%, rgba(46, 232, 138, 0.10), transparent 70%),
     repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px 48px),
     repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px 48px),
-    var(--bg); background-blend-mode: overlay, normal, normal, normal;
+    var(--bg);
 }
-.shell { position: relative; z-index: 1; max-width: var(--col); margin: 0 auto; min-height: 100dvh; background: var(--tex), linear-gradient(180deg, #1c120b, #140e0a 40%); background-blend-mode: overlay, normal; }
+.shell { position: relative; z-index: 1; max-width: var(--col); margin: 0 auto; min-height: 100dvh; background: var(--tex), linear-gradient(180deg, #1c120b, #140e0a 40%); }
 @media (min-width: 520px) { .shell { box-shadow: 0 0 0 2px var(--line), 0 30px 80px rgba(0, 0, 0, 0.6); } }
 .main { padding: calc(var(--hud-h) + var(--safe-t) + 10px) 12px calc(var(--nav-h) + var(--safe-b) + 16px); min-height: 100dvh; }
 
@@ -77,16 +78,16 @@ img { max-width: 100%; }
   border-bottom: 2.5px solid var(--line); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45); backdrop-filter: blur(6px);
 }
 .hud-top { display: flex; align-items: stretch; gap: 8px; }
-.hud-me { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; padding: 4px 8px 4px 4px; border-radius: 14px; background: var(--tex), var(--panel); background-blend-mode: overlay, normal, normal, normal; border: 2.5px solid var(--line); box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.06); }
+.hud-me { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; padding: 4px 8px 4px 4px; border-radius: 14px; background: var(--tex), var(--panel); border: 2.5px solid var(--line); box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.06); }
 .hud-me .name { font-weight: 700; font-size: 13px; }
 .lvl { flex: none; padding: 1px 6px; border-radius: 7px; background: var(--violet); border: 2px solid var(--line); font-size: 10.5px; font-weight: 800; letter-spacing: 0.04em; }
 .xpbar { height: 8px; border-radius: 6px; background: #120b07; border: 2px solid var(--line); overflow: hidden; }
 .xpbar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--violet), #c3a8ff); }
-.energy-chip { flex: none; color: inherit; font: inherit; cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 5px 9px 5px 6px; border-radius: 14px; background: var(--tex), var(--panel); background-blend-mode: overlay, normal, normal, normal; border: 2.5px solid var(--line); font-weight: 800; }
+.energy-chip { flex: none; color: inherit; font: inherit; cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 5px 9px 5px 6px; border-radius: 14px; background: var(--tex), var(--panel); border: 2.5px solid var(--line); font-weight: 800; }
 .energy-chip.over b { color: var(--gold); }
 .energy-chip small { display: block; font-size: 10px; font-weight: 600; color: var(--muted); line-height: 1; }
 .hud-money { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
-.coin-chip { display: flex; align-items: center; gap: 4px; min-width: 0; padding: 3px 6px 3px 3px; border-radius: 11px; background: var(--tex), var(--bg2); background-blend-mode: overlay, normal, normal, normal; border: 2px solid var(--line); font-weight: 800; font-size: 12px; }
+.coin-chip { display: flex; align-items: center; gap: 4px; min-width: 0; padding: 3px 6px 3px 3px; border-radius: 11px; background: var(--tex), var(--bg2); border: 2px solid var(--line); font-weight: 800; font-size: 12px; }
 .coin-chip b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ---------- bottom nav ---------- */
@@ -97,13 +98,13 @@ img { max-width: 100%; }
 }
 .nav a { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px 0; border-radius: 14px; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: 0; text-transform: uppercase; transition: transform 0.15s, background 0.15s, color 0.15s; }
 .nav a svg { width: 46px; height: 46px; filter: saturate(0.5) brightness(0.8); transition: filter 0.15s, transform 0.15s; }
-.nav a.on { color: var(--ink); background: var(--tex), linear-gradient(180deg, var(--panel3), var(--panel)); background-blend-mode: overlay, normal, normal, normal; box-shadow: 0 0 0 2.5px var(--line), 0 0 18px var(--glow, rgba(141, 107, 255, 0.5)); transform: translateY(-4px); }
+.nav a.on { color: var(--ink); background: var(--tex), linear-gradient(180deg, var(--panel3), var(--panel)); box-shadow: 0 0 0 2.5px var(--line), 0 0 18px var(--glow, rgba(141, 107, 255, 0.5)); transform: translateY(-4px); }
 .nav a.on svg { filter: none; transform: scale(1.08); }
 .nav a.on::after { content: ""; position: absolute; bottom: -7px; width: 22px; height: 4px; border-radius: 3px; background: var(--glow, var(--violet)); box-shadow: 0 0 10px var(--glow, var(--violet)); }
 .nav .badge { position: absolute; top: 0; right: 14%; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--red); border: 2px solid var(--line); color: #fff; font-size: 10px; line-height: 13px; text-align: center; }
 
 /* ---------- building blocks ---------- */
-.panel { position: relative; background: var(--tex), linear-gradient(180deg, var(--panel2), var(--panel)); background-blend-mode: overlay, normal, normal, normal; border: 2.5px solid var(--line); border-radius: var(--r); box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.06), 0 4px 0 var(--line); padding: 12px; }
+.panel { position: relative; background: var(--tex), linear-gradient(180deg, var(--panel2), var(--panel)); border: 2.5px solid var(--line); border-radius: var(--r); box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.06), 0 4px 0 var(--line); padding: 12px; }
 .panel + .panel { margin-top: 12px; }
 .section { display: flex; flex-direction: column; gap: 12px; }
 .title { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 2px 2px 10px; }
@@ -113,7 +114,7 @@ h2.h { margin: 4px 2px 8px; font-size: 16px; text-shadow: 0 2px 0 var(--line); }
 
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 16px;
-  border-radius: 14px; border: 2.5px solid var(--line); background: var(--tex), var(--panel3); background-blend-mode: overlay, normal, normal, normal; color: var(--ink);
+  border-radius: 14px; border: 2.5px solid var(--line); background: var(--tex), var(--panel3); color: var(--ink);
   font-family: var(--font-display), sans-serif; font-size: 15px; letter-spacing: 0.03em; text-transform: uppercase;
   box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.25), inset 0 -4px 0 rgba(0, 0, 0, 0.25), 0 4px 0 var(--line);
   transition: transform 0.08s, box-shadow 0.08s, filter 0.15s; user-select: none;
@@ -137,7 +138,7 @@ h2.h { margin: 4px 2px 8px; font-size: 16px; text-shadow: 0 2px 0 var(--line); }
 .bar.violet > i { background: linear-gradient(180deg, #b49dff, var(--violet-d)); }
 .bar > span { position: relative; display: block; text-align: center; font-size: 11px; font-weight: 800; line-height: 13px; text-shadow: 0 1px 0 #000, 0 0 3px #000; }
 
-.chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9px; background: var(--tex), var(--bg2); background-blend-mode: overlay, normal, normal, normal; border: 2px solid var(--line); font-size: 12px; font-weight: 700; white-space: nowrap; }
+.chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9px; background: var(--tex), var(--bg2); border: 2px solid var(--line); font-size: 12px; font-weight: 700; white-space: nowrap; }
 .chip.green { background: #0f3a25; color: var(--green); }
 .chip.red { background: #3a0f1a; color: #ff8a9e; }
 .chip.gold { background: #3a2c08; color: var(--gold); }
@@ -145,7 +146,7 @@ h2.h { margin: 4px 2px 8px; font-size: 16px; text-shadow: 0 2px 0 var(--line); }
 
 .tabs { display: flex; gap: 6px; overflow-x: auto; padding: 2px 2px 8px; scrollbar-width: none; }
 .tabs::-webkit-scrollbar { display: none; }
-.tabs button { flex: none; padding: 7px 12px; border-radius: 12px; border: 2.5px solid var(--line); background: var(--tex), var(--panel); background-blend-mode: overlay, normal, normal, normal; color: var(--muted); font-weight: 800; font-size: 12px; letter-spacing: 0.03em; text-transform: uppercase; box-shadow: 0 3px 0 var(--line); }
+.tabs button { flex: none; padding: 7px 12px; border-radius: 12px; border: 2.5px solid var(--line); background: var(--tex), var(--panel); color: var(--muted); font-weight: 800; font-size: 12px; letter-spacing: 0.03em; text-transform: uppercase; box-shadow: 0 3px 0 var(--line); }
 .tabs button.on { background: var(--violet); color: #fff; }
 
 .avatar { position: relative; flex: none; border-radius: 12px; border: 2.5px solid var(--line); overflow: hidden; background: linear-gradient(135deg, var(--violet), var(--cyan)); display: grid; place-items: center; font-weight: 800; color: #fff; }
@@ -159,8 +160,8 @@ h2.h { margin: 4px 2px 8px; font-size: 16px; text-shadow: 0 2px 0 var(--line); }
 
 /* ---------- modal & toast ---------- */
 .modal-back { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 16px; background: rgba(14, 9, 5, 0.72); backdrop-filter: blur(3px); animation: fade 0.15s ease; }
-.modal { position: relative; width: 100%; max-width: 420px; max-height: calc(100dvh - 32px); overflow-y: auto; background: var(--tex), linear-gradient(180deg, var(--panel3), var(--panel)); background-blend-mode: overlay, normal, normal, normal; border: 3px solid var(--line); border-radius: 22px; box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.08), 0 6px 0 var(--line), 0 20px 60px rgba(0, 0, 0, 0.6); padding: 18px 16px 16px; animation: pop 0.22s cubic-bezier(0.2, 1.4, 0.4, 1); }
-.modal .x { position: absolute; top: 10px; right: 10px; width: 34px; height: 34px; border-radius: 11px; border: 2.5px solid var(--line); background: var(--tex), var(--panel); background-blend-mode: overlay, normal, normal, normal; font-size: 18px; font-weight: 800; line-height: 1; }
+.modal { position: relative; width: 100%; max-width: 420px; max-height: calc(100dvh - 32px); overflow-y: auto; background: var(--tex), linear-gradient(180deg, var(--panel3), var(--panel)); border: 3px solid var(--line); border-radius: 22px; box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.08), 0 6px 0 var(--line), 0 20px 60px rgba(0, 0, 0, 0.6); padding: 18px 16px 16px; animation: pop 0.22s cubic-bezier(0.2, 1.4, 0.4, 1); }
+.modal .x { position: absolute; top: 10px; right: 10px; width: 34px; height: 34px; border-radius: 11px; border: 2.5px solid var(--line); background: var(--tex), var(--panel); font-size: 18px; font-weight: 800; line-height: 1; }
 .modal h3 { margin: 0 40px 12px 0; font-size: 20px; text-shadow: 0 3px 0 var(--line); }
 /* compact see-through pills in the top centre (under the HUD) */
 .toasts { position: fixed; z-index: 90; left: 50%; transform: translateX(-50%); top: calc(var(--hud-h) + var(--safe-t) + 8px); width: max-content; max-width: calc(100% - 32px); display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
@@ -181,8 +182,8 @@ h2.h { margin: 4px 2px 8px; font-size: 16px; text-shadow: 0 2px 0 var(--line); }
 /* ---------- loading ---------- */
 .loading { min-height: 100dvh; display: grid; place-items: center; text-align: center; padding: 24px; }
 .loading .logo { font-size: 40px; text-shadow: 0 4px 0 var(--line), 0 0 30px rgba(141, 107, 255, 0.6); }
-.loading.overlay { position: fixed; inset: 0; z-index: 85; min-height: 0; background: var(--tex), var(--bg); background-blend-mode: overlay, normal, normal, normal; }
-.load-bar { position: relative; width: 220px; height: 18px; margin: 18px auto 12px; border-radius: 10px; border: 2.5px solid var(--line); background: var(--tex), var(--panel); background-blend-mode: overlay, normal, normal, normal; overflow: hidden; box-shadow: 0 3px 0 var(--line); }
+.loading.overlay { position: fixed; inset: 0; z-index: 85; min-height: 0; background: var(--tex), var(--bg); }
+.load-bar { position: relative; width: 220px; height: 18px; margin: 18px auto 12px; border-radius: 10px; border: 2.5px solid var(--line); background: var(--tex), var(--panel); overflow: hidden; box-shadow: 0 3px 0 var(--line); }
 .load-bar i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(180deg, #ffd25a, #ff9f2e); transition: width 0.2s ease; }
 .load-bar b { position: relative; display: block; text-align: center; font-size: 11px; line-height: 13px; color: #1e1006; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4); }
 .spinner { width: 34px; height: 34px; border-radius: 50%; border: 4px solid var(--panel3); border-top-color: var(--green); animation: spin 0.8s linear infinite; margin: 16px auto; }
@@ -194,7 +195,7 @@ h2.h { margin: 4px 2px 8px; font-size: 16px; text-shadow: 0 2px 0 var(--line); }
 .hud-right .energy-chip { flex: 1; justify-content: center; }
 .hud-toggles { display: flex; gap: 4px; }
 .hud-tog { flex: 1; display: grid; place-items: center; height: 22px; padding: 0; border-radius: 8px; cursor: pointer; color: var(--gold);
-  background: var(--tex), var(--panel); background-blend-mode: overlay, normal, normal, normal; border: 2px solid var(--line); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06); transition: transform 0.1s; }
+  background: var(--tex), var(--panel); border: 2px solid var(--line); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06); transition: transform 0.1s; }
 .hud-tog:active { transform: scale(0.92); }
 .hud-tog.off { color: var(--muted); opacity: 0.75; }
 

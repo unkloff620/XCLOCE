@@ -412,4 +412,11 @@ CREATE TABLE IF NOT EXISTS boss_pity (
 );
 `,
   },
+  {
+    // «Соло»: a personal fight where only my own hits take the boss's HP (others' damage does not count)
+    id: "v2-019-solo-fights",
+    sql: `
+ALTER TABLE fights ADD COLUMN IF NOT EXISTS solo BOOLEAN NOT NULL DEFAULT false;
+`,
+  },
 ];

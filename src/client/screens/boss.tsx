@@ -224,8 +224,9 @@ export function BossScreen({ id }: { id: string }) {
     }
   };
 
-  const start = async () => {
-    const r = await act<{ fightId: number }>("fight_start", { boss: id }, `Бой с боссом ${boss?.name} начался! 8 часов`);
+  // «Соло»: the same fight, but only my own hits take the boss's HP — wins count for the «Соло» badge
+  const start = async (solo = false) => {
+    const r = await act<{ fightId: number }>("fight_start", { boss: id, solo }, solo ? `Соло-бой с боссом ${boss?.name}: бьёшь только ты. 8 часов` : `Бой с боссом ${boss?.name} начался! 8 часов`);
     if (r) void loadList();
   };
   const [fleeAsk, setFleeAsk] = useState(false);
@@ -269,7 +270,7 @@ export function BossScreen({ id }: { id: string }) {
           <div className="grow" style={{ minWidth: 0 }}>
             <b className="display boss-name ellipsis">{boss.name}</b>
           </div>
-          {view && <span className="chip red">бьют: {view.fightingNow}</span>}
+          {(view?.solo ?? state?.fight?.solo) ? <span className="chip violet">соло</span> : view && <span className="chip red">бьют: {view.fightingNow}</span>}
           <BossRulesHelp topic="boss" />
         </div>
         <Arena full boss={boss} hp={hpShown} hpMax={hpMax} endsAt={state!.fight!.endsAt} fx={layer} hit={hitAnim} ouch={ouch} rug={rug} feed={hits} />
@@ -363,9 +364,16 @@ export function BossScreen({ id }: { id: string }) {
         ) : otherFight ? (
           <Link className="btn violet block" href={`/bosses/${otherFight.bossId}`}>Идёт бой с {bossById(otherFight.bossId)?.name} — к нему</Link>
         ) : (
-          <button className="btn red big block" disabled={busy === "fight_start" || limitLeft <= 0} onClick={start}>
-            {limitLeft <= 0 ? "Лимит побед на сегодня" : "В бой"}
-          </button>
+          <div className="row fight-start">
+            <button className="btn red big grow" disabled={busy === "fight_start" || limitLeft <= 0} onClick={() => start(false)}>
+              {limitLeft <= 0 ? "Лимит побед на сегодня" : "В бой"}
+            </button>
+            {limitLeft > 0 && (
+              <button className="btn violet big solo-btn" disabled={busy === "fight_start"} onClick={() => start(true)} title="Соло: урон других игроков не засчитывается, только твой">
+                <Icon name="swords" size={20} /> Соло
+              </button>
+            )}
+          </div>
         )}
       </div>
       {info && (

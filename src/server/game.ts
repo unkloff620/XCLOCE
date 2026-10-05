@@ -90,7 +90,7 @@ async function afterAction(ctx: Ctx, type: ActionType, result: unknown) {
 function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Promise<unknown> {
   const idem = typeof body.idem === "string" ? body.idem.slice(0, 80) : undefined;
   switch (type) {
-    case "fight_start": return combat.startFight(ctx, str(body.boss, "boss", 40));
+    case "fight_start": return combat.startFight(ctx, str(body.boss, "boss", 40), body.solo === true);
     case "attack": return combat.attack(ctx, str(body.weapon, "weapon", 40), idem);
     case "fight_claim": return combat.claimFight(ctx, num(body.fightId, "fightId"));
     case "fight_flee": return combat.fleeFight(ctx);
