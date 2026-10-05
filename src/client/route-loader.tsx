@@ -72,7 +72,7 @@ export function RouteLoader() {
       await wait(MIN_MS);
       // the new page is in place (the address changed), or the navigation never happened
       while (alive && window.location.pathname === load.from && left() > 0) await wait(50);
-      await new Promise((r) => requestAnimationFrame(() => r(null)));
+      await wait(30); // let the new screen put its pictures in
       if (left() > 0) await picturesReady(left());
       if (alive) setLoad(null);
     })();
