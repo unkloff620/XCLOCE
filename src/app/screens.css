@@ -1136,19 +1136,20 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .door-scene.open .door-leaf, .door-scene.enter .door-leaf { transform: rotateY(-102deg); filter: brightness(0.7); }
 .door-scene.rattle .door-leaf { animation: door-rattle 0.42s ease-in-out; }
 @keyframes door-rattle { 20% { transform: translateX(-1.2%) rotateY(-2deg); } 40% { transform: translateX(1%); } 60% { transform: translateX(-0.8%) rotateY(-1deg); } 80% { transform: translateX(0.5%); } }
-/* rewards written on the lower half of the door */
-.door-plate { position: absolute; left: 35%; width: 32%; top: 47%; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 5px 4px 6px;
-  border-radius: 6px; background: rgba(18, 11, 7, 0.82); border: 2px solid rgba(160, 98, 52, 0.85); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.5);
-  pointer-events: none; color: var(--ink); font-size: 11px; }
-.door-plate-title { font-family: inherit; font-size: 10px; letter-spacing: 0.12em; color: var(--gold); }
+/* rewards written right on the lower half of the door: no frame, painted-on look */
+.door-plate { position: absolute; left: 35%; width: 32%; top: 47.5%; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  pointer-events: none; color: #fff3e3; font-size: 11px; text-shadow: 0 1px 0 #000, 0 0 4px rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.7); }
+.door-plate-title { font-size: 10px; letter-spacing: 0.14em; color: var(--gold); }
 .door-plate .gain-line { display: flex; justify-content: center; flex-wrap: wrap; gap: 2px 6px; }
 .door-plate .gain { font-size: 10.5px; gap: 2px; }
+.door-plate .gain svg { filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.8)); }
 .door-lock { position: absolute; left: 58.5%; top: 35.5%; width: 9%; aspect-ratio: 1; display: grid; place-items: center; border-radius: 50%; background: rgba(0, 0, 0, 0.6); pointer-events: none; }
 .door-lock svg { width: 70%; height: 70%; }
 /* the pass on the left wall */
-.door-pass { left: 5%; top: 28%; width: 22%; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px; border-radius: 10px;
-  background: rgba(20, 12, 8, 0.72); border: 2px solid rgba(160, 98, 52, 0.8); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); text-align: center; color: var(--ink); }
-.door-pass b { font-size: 13px; }
+.door-pass { left: 14%; top: 38%; width: 13%; display: flex; flex-direction: column; align-items: center; gap: 0; padding: 4px 2px 3px; border-radius: 8px;
+  background: rgba(20, 12, 8, 0.6); border: 1.5px solid rgba(160, 98, 52, 0.7); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45); text-align: center; color: var(--ink); line-height: 1.1; }
+.door-pass b { font-size: 11px; }
+.door-pass .tiny { font-size: 8.5px; }
 .door-pass.short b { color: #ff8a9e; }
 .door-hint { left: 50.6%; top: 68%; transform: translateX(-50%); padding: 4px 12px; border-radius: 999px; background: rgba(0, 0, 0, 0.55); font-size: 12px; font-weight: 700; color: var(--ink);
   pointer-events: none; animation: door-hint 1.6s ease-in-out infinite; white-space: nowrap; }
@@ -1159,3 +1160,11 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .door-scene.enter .door-flash { opacity: 1; }
 .door-page .prefight-panel { z-index: 5; }
 @media (prefers-reduced-motion: reduce) { .door-leaf, .door-scene { transition-duration: 0.01s; } .door-hint { animation: none; } }
+
+/* boss name and title on the door screen: a see-through frame */
+.door-page .fight-head { padding: 6px 8px 6px 12px; border-radius: 14px; background: rgba(18, 11, 7, 0.55); border: 1.5px solid rgba(255, 243, 227, 0.14);
+  -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+/* hidden boss drops: a «?» box */
+.gain.mystery { align-items: center; }
+.mystery-box { display: inline-grid; place-items: center; border-radius: 5px; font-weight: 900; line-height: 1; color: #2e1c00;
+  background: linear-gradient(180deg, #ffe07a, #f0a92c); border: 1.5px solid #3a2208; box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4) inset; text-shadow: none; }

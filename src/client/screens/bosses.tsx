@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { api, type Tray } from "../api.ts";
 import { BOSSES, bossById } from "../../content/bosses.ts";
-import { Avatar, GainLine, RewardChips } from "../ui.tsx";
+import { Avatar, GainLine, MysteryDrop, RewardChips } from "../ui.tsx";
 import type { BossDef } from "../../content/bosses.ts";
 import { Help } from "../help.tsx";
 import { Icon } from "../art/icons.tsx";
@@ -112,6 +112,7 @@ export function BossesScreen() {
                 <div className="bcard-reward">
                   <span className="bcard-label">{b.final ? "Финал:" : "Награда:"}</span>
                   <GainLine r={{ ...b.reward, items: [...(b.final ? [] : [{ id: `key-${b.id}`, qty: 1 }]), ...(b.reward.items ?? [])] }} size={18} />
+                  {(!!b.drop?.length || !!b.wear) && <MysteryDrop size={18} />}
                 </div>
                 <div className="bcard-foot">
                   {locked ? (
@@ -141,7 +142,6 @@ export function BossRulesHelp({ topic }: { topic: "bosses" | "boss" }) {
         <li>Бьют только оружием. Кулак — бесплатно раз в час, остальное оружие тратится.</li>
         <li>Награда за победу зависит от твоего урона в этом бою: полная — если нанёс хотя бы 2% здоровья босса, меньше — пропорционально. Без урона награды нет.</li>
         <li>Пропуск босса даётся от 1% его здоровья. Пропуски открывают следующего босса: бронзовые, серебряные, золотые и платиновые — по 3 штуки, бриллиантовые (для Фокуса и Солнца) — по одному.</li>
-        <li>С Дацкоу с шансом 10% выпадает одежда: белая футболка и тапки. Не повезло 10 побед подряд — вещь выпадет точно.</li>
         <li>За Утилизатора дают статуэтку CLOSE: она сама встаёт на стол в комнате и даёт +25% к силе крита.</li>
         <li>В день можно победить каждого босса 7 раз. Проигранные бои в лимит не идут.</li>
         <li>Оборудование и комнаты дома дают шанс крита и прибавку к урону.</li>
@@ -156,27 +156,9 @@ export function BossRewardsPanel({ bossId }: { bossId: string }) {
     <div className="col">
       <div className="small muted">За каждую победу:</div>
       <RewardChips r={{ ...b.reward, items: [...(b.final ? [] : [{ id: `key-${b.id}`, qty: 1 }]), ...(b.reward.items ?? [])] }} />
-      {!!b.drop?.length && (
-        <>
-          <div className="small muted">Возможный дроп:</div>
-          <div className="row" style={{ flexWrap: "wrap", gap: 6 }}>
-            {b.drop.map((d) => (
-              <span key={d.id} className="chip">
-                <RewardChips r={{ items: [{ id: d.id, qty: d.qty }] }} size={16} /> {Math.round(d.chance * 100)}%
-              </span>
-            ))}
-          </div>
-        </>
-      )}
-      {b.wear && (
-        <>
-          <div className="small muted">Одежда (каждая вещь {Math.round(b.wear.chance * 100)}%, без неё {b.wear.pity} побед подряд — выпадет точно):</div>
-          <div className="row" style={{ flexWrap: "wrap", gap: 6 }}>
-            {b.wear.items.map((id) => (
-              <span key={id} className="chip"><RewardChips r={{ items: [{ id, qty: 1 }] }} size={16} /></span>
-            ))}
-          </div>
-        </>
+      {/* what can drop is a secret: just a «?» */}
+      {(!!b.drop?.length || !!b.wear) && (
+        <div className="row small muted" style={{ gap: 6 }}><MysteryDrop size={20} /> и шанс выбить что-то ещё</div>
       )}
     </div>
   );

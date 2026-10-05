@@ -78,6 +78,15 @@ export function RewardChips({ r, size = 18 }: { r: Reward | Granted | null | und
 }
 
 /** What was just gained, pictures only: [picture]+N … (toasts for pickups). */
+/** Boss drops are a secret: one «?» says something else may fall (a weapon, clothes…). */
+export function MysteryDrop({ size = 18 }: { size?: number }) {
+  return (
+    <span className="gain mystery" title="Шанс выбить что-то ещё — что именно, секрет">
+      <span className="mystery-box" style={{ width: size, height: size, fontSize: size * 0.72 }}>?</span>
+    </span>
+  );
+}
+
 export function GainLine({ r, size = 26 }: { r: Reward | Granted | null | undefined; size?: number }) {
   if (!r) return null;
   return (

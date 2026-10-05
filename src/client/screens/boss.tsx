@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { invQty, useGame, useNow } from "../store.tsx";
+import { useGame, useNow } from "../store.tsx";
 import { api, type FightView, type Hit, type Tray } from "../api.ts";
 import { BOSSES, bossById, type BossDef, FULL_SHARE, KEY_SHARE, rewardShare } from "../../content/bosses.ts";
 import { WEAPONS, weaponById } from "../../content/items.ts";
@@ -9,9 +9,9 @@ import { HIT_PHRASES } from "../../content/phrases.ts";
 import { ArenaBackdrop, BossSilhouette } from "../art/scenes.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { Icon } from "../art/icons.tsx";
-import { Bar, Empty, GainLine } from "../ui.tsx";
+import { Bar, Empty, GainLine, MysteryDrop } from "../ui.tsx";
 import { useFx, type Fx } from "../fx/attack.tsx";
-import { BossRewardsPanel, BossRulesHelp, useBossList } from "./bosses.tsx";
+import { BossRulesHelp, useBossList } from "./bosses.tsx";
 import { WeaponShopWindow } from "./shop.tsx";
 import { clock, full, pct, short } from "../format.ts";
 import { sfx } from "../sound.ts";
@@ -242,7 +242,6 @@ export function BossScreen({ id }: { id: string }) {
     setShopOpen(false);
     api.get<{ weapons: Tray[] }>("/api/bosses").then((r) => setTray(r.weapons)).catch(() => undefined);
   };
-  const [info, setInfo] = useState(false);
   const flee = async () => {
     if (!fleeAsk) {
       setFleeAsk(true);
@@ -387,7 +386,7 @@ export function BossScreen({ id }: { id: string }) {
         <div className={`door-pass ${locked ? "short" : ""}`}>
           {prev ? (
             <>
-              <ItemArt id={`key-${prev.id}`} size={58} />
+              <ItemArt id={`key-${prev.id}`} size={34} />
               <b className="num">{row?.keysHave ?? 0}/{row?.keysNeed ?? 3}</b>
             </>
           ) : (
@@ -401,6 +400,7 @@ export function BossScreen({ id }: { id: string }) {
           <span className="door-plate">
             <b className="door-plate-title">{boss.final ? "ФИНАЛ" : "НАГРАДА"}</b>
             <GainLine r={doorReward} size={14} />
+            {(!!boss.drop?.length || !!boss.wear) && <MysteryDrop size={14} />}
           </span>
           {blocked && locked && <span className="door-lock"><Icon name="lock" size={30} /></span>}
         </button>
@@ -411,7 +411,6 @@ export function BossScreen({ id }: { id: string }) {
         <div className="row small" style={{ justifyContent: "space-between", gap: 6 }}>
           <span className="chip gold"><Icon name="clock" size={14} />8 часов</span>
           <span className="chip" title="Победы сегодня">Победы {row?.fightsToday ?? 0}/{row?.fightsPerDay ?? 7}</span>
-          <button className="btn sm dark" onClick={() => setInfo(true)}>Награды</button>
         </div>
         {otherFight ? (
           <Link className="btn violet block" href={`/bosses/${otherFight.bossId}`}>Идёт бой с {bossById(otherFight.bossId)?.name} — к нему</Link>
@@ -423,18 +422,6 @@ export function BossScreen({ id }: { id: string }) {
           )
         )}
       </div>
-      {info && (
-        <Modal title={boss.name} onClose={() => setInfo(false)}>
-          <div className="col" style={{ gap: 10 }}>
-            <p className="boss-story" style={{ margin: 0 }}>{boss.story}</p>
-            {boss.phases && <div className="small muted">Фазы: {boss.phases.map((p) => p.name).join(" → ")}</div>}
-            <b className="small">Награда за победу</b>
-            <BossRewardsPanel bossId={id} />
-            {!boss.final && <div className="tiny muted row" style={{ gap: 6 }}><ItemArt id={`key-${boss.id}`} size={22} /> Твоих пропусков: {row?.myKeys ?? 0}</div>}
-            {invQty(state, "fist") === 0 && <p className="small muted">Кулак потерялся? Напиши организаторам.</p>}
-          </div>
-        </Modal>
-      )}
     </div>
   );
 }
