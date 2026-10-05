@@ -66,7 +66,7 @@ export const BOSSES: BossDef[] = [
     story: "Сайт лежит — Кедр стоит. Сайт стоит — Кедр всё равно стоит, корни глубоко.",
     hp: hp(1), reward: { xp: xp(1), currencies: { SOL: 0.03, RUB: 220 } },
     drop: [{ id: "keyboard", qty: 2, chance: 0.3 }],
-    theme: { a: "#173a26", b: "#07140c", accent: "#3ddc84" }, photo: photo("kedr"),
+    theme: { a: "#173a26", b: "#07140c", accent: "#3ddc84" }, photo: photo("kedr", true),
   },
   {
     id: "bebyakyan", order: 3, card: "bronze", name: "Командате", title: "Подчинённый Востока",

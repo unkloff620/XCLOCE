@@ -1,7 +1,9 @@
 """
 Animated boss rigs from the artist's layers: tools/boss/source/<boss>/{body,head,eyes,eyes-closed,foreL,foreR}.png
-(all on one canvas, in place) → public/bosses/<boss>/rig/<part>.webp (trimmed, half size) + src/client/art/boss-rig-data.ts.
+plus optional face parts {pupils,brows,brows-sad,mouth,mouth-closed} and {collar} (all on one canvas, in place)
+→ public/bosses/<boss>/rig/<part>.webp (trimmed, half size) + src/client/art/boss-rig-data.ts.
 Pivots: head — bottom of the neck; forearms — the elbow (the end that joins the body).
+Loose parts drawn on separate sheets are put in place first by fit-parts.py / place-parts.py (see assemble-kedr.py).
 """
 import os, glob, json
 import numpy as np
@@ -10,12 +12,14 @@ from PIL import Image
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 SCALE = 0.5
-PARTS = ["body", "foreL", "foreR", "head", "eyes", "eyes-closed"]
+PARTS = ["body", "foreL", "foreR", "head", "eyes", "eyes-closed", "pupils", "brows", "brows-sad", "mouth", "mouth-closed", "collar"]
 # which edge of the part joins the parent: (axis, side) — y/bottom for head and left forearm, x/right for the right one
 JOINT = {"head": ("y", "max"), "foreL": ("y", "max"), "foreR": ("x", "max")}
+# bosses whose arms come up from below (both elbows at the bottom end)
+JOINT_BY_BOSS = {"kedr": {"foreR": ("y", "max")}}
 
 out = {}
-for d in sorted(glob.glob(os.path.join(HERE, "source", "*"))):
+for d in sorted(x for x in glob.glob(os.path.join(HERE, "source", "*")) if os.path.isdir(x)):
     boss = os.path.basename(d)
     dest = os.path.join(ROOT, "public", "bosses", boss, "rig")
     os.makedirs(dest, exist_ok=True)
@@ -36,8 +40,9 @@ for d in sorted(glob.glob(os.path.join(HERE, "source", "*"))):
         w, h = round(crop.width * SCALE), round(crop.height * SCALE)
         crop.resize((w, h), Image.LANCZOS).save(os.path.join(dest, p + ".webp"), "WEBP", quality=86, method=4)
         r = {"x": round(max(0, x0) * SCALE, 1), "y": round(max(0, y0) * SCALE, 1), "w": w, "h": h}
-        if p in JOINT:
-            axis, _ = JOINT[p]
+        joint = {**JOINT, **JOINT_BY_BOSS.get(boss, {})}
+        if p in joint:
+            axis, _ = joint[p]
             m = a > 128
             if axis == "y":
                 band = ys.max() - (ys.max() - ys.min()) * 0.12

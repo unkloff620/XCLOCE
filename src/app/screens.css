@@ -519,7 +519,23 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 @keyframes br-blink-open { 0%, 93% { opacity: 1; } 94%, 97% { opacity: 0; } 98%, 100% { opacity: 1; } }
 /* the fists punch forward when the boss is hit */
 .arena-photo.hit .br-fist-l, .arena-photo.hit .br-fist-r { animation-duration: 0.28s; }
-@media (prefers-reduced-motion: reduce) { .br-breath, .br-head, .br-fist-l, .br-fist-r { animation: none; } }
+/* Кедр: reaches for the player (arms grow from the elbows in turns), looks around, the face reacts to hits */
+.rig-kedr .br-breath { animation-duration: 3.6s; }
+.rig-kedr .br-head { animation-duration: 6.5s; }
+.rig-kedr .br-fist-l { animation: br-reach 2.6s ease-in-out infinite; }
+.rig-kedr .br-fist-r { animation: br-reach 2.6s ease-in-out infinite 1.3s; }
+@keyframes br-reach { 0%, 100% { transform: scale(1) rotate(0); } 45% { transform: scale(1.14) rotate(-1.5deg); } 60% { transform: scale(1.12) rotate(0.5deg); } }
+.br-pupils { animation: br-look 7s ease-in-out infinite; }
+@keyframes br-look { 0%, 14%, 46%, 100% { transform: translate(0, 0); } 20%, 32% { transform: translate(-4px, 0.5px); } 52%, 64% { transform: translate(4px, 0.5px); } 74%, 84% { transform: translate(0, 1.5px); } }
+.br-brows { animation: br-brow 5.5s ease-in-out infinite; }
+@keyframes br-brow { 0%, 70%, 100% { transform: translateY(0); } 76%, 82% { transform: translateY(-2.5px); } }
+.br-brows-sad, .br-mouth-closed { opacity: 0; }
+.arena-photo.ouch .br-brows-angry, .arena-photo.ouch .br-mouth { opacity: 0; }
+.arena-photo.ouch .br-brows-sad, .arena-photo.ouch .br-mouth-closed { opacity: 1; }
+.arena-photo.ouch .br-brows { animation: br-brow-ouch 0.5s ease-out; }
+@keyframes br-brow-ouch { 0% { transform: translateY(3px); } 100% { transform: translateY(0); } }
+.arena-photo.ouch .rig-kedr .br-fist-l, .arena-photo.ouch .rig-kedr .br-fist-r { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) { .br-breath, .br-head, .br-fist-l, .br-fist-r, .br-pupils, .br-brows { animation: none; } }
 
 /* ---------- shop scene ---------- */
 .shop-spot { position: absolute; padding: 0; border: 0; background: none; cursor: pointer; z-index: 2; transition: transform 0.12s, filter 0.12s;

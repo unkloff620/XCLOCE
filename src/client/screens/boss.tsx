@@ -27,14 +27,14 @@ const FEED_MS = 5000;
 /** the hit phrase bubble stays this long */
 const PHRASE_MS = 2200;
 
-function Arena({ boss, hp, hpMax, endsAt, fx, hit, rug, feed, full: fullScreen }: { boss: BossDef; hp: number | null; hpMax: number; endsAt: number | null; fx: React.ReactNode; hit: boolean; rug: boolean; feed: Hit[]; full?: boolean }) {
+function Arena({ boss, hp, hpMax, endsAt, fx, hit, ouch, rug, feed, full: fullScreen }: { boss: BossDef; hp: number | null; hpMax: number; endsAt: number | null; fx: React.ReactNode; hit: boolean; ouch?: boolean; rug: boolean; feed: Hit[]; full?: boolean }) {
   const now = useNow();
   const phase = boss.phases && hp !== null ? [...boss.phases].reverse().find((p) => pct(hp, hpMax) <= p.from) ?? boss.phases[0] : null;
   const hurt = hp !== null && pct(hp, hpMax) < 25;
   return (
     <div className={`arena ${boss.final ? "final" : ""} ${fullScreen ? "full" : ""}`} style={{ ["--acc" as string]: boss.theme.accent }}>
       {!fullScreen && <ArenaBackdrop theme={boss.theme} final={boss.final} />}
-      <div className={`arena-photo ${hit ? "hit" : ""} ${rug ? "rug" : ""} ${hurt ? "hurt" : ""}`}>
+      <div className={`arena-photo ${hit ? "hit" : ""} ${ouch ? "ouch" : ""} ${rug ? "rug" : ""} ${hurt ? "hurt" : ""}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         {hasBossRig(boss.id) ? <BossRig id={boss.id} hpShare={hp === null ? 1 : hp / Math.max(1, hpMax)} /> : boss.photo.full ? <img src={boss.photo.full} alt={boss.name} draggable={false} /> : <div className="arena-sil"><BossSilhouette accent={boss.theme.accent} /><span className="small muted">фото скоро</span></div>}
         <div className="arena-flash" />
@@ -107,6 +107,9 @@ export function BossScreen({ id }: { id: string }) {
   const [tray, setTray] = useState<Tray[]>([]);
   const [hits, setHits] = useState<Hit[]>([]);
   const [hitAnim, setHitAnim] = useState(false);
+  // the boss's face stays hurt a little longer than the shake (sad brows, closed mouth)
+  const [ouch, setOuch] = useState(false);
+  const ouchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [rug, setRug] = useState(false);
   const [pendingDmg, setPendingDmg] = useState(0);
   const [phrase, setPhrase] = useState<{ text: string; id: number; crit?: boolean } | null>(null);
@@ -128,6 +131,9 @@ export function BossScreen({ id }: { id: string }) {
   const onImpact = useCallback((f: Fx) => {
     setHitAnim(true);
     setTimeout(() => setHitAnim(false), 280);
+    setOuch(true);
+    if (ouchTimer.current) clearTimeout(ouchTimer.current);
+    ouchTimer.current = setTimeout(() => setOuch(false), 1300);
     if (f.weapon === "rug-pull-gun") {
       setRug(true);
       setTimeout(() => setRug(false), 700);
@@ -266,7 +272,7 @@ export function BossScreen({ id }: { id: string }) {
           {view && <span className="chip red">бьют: {view.fightingNow}</span>}
           <BossRulesHelp topic="boss" />
         </div>
-        <Arena full boss={boss} hp={hpShown} hpMax={hpMax} endsAt={state!.fight!.endsAt} fx={layer} hit={hitAnim} rug={rug} feed={hits} />
+        <Arena full boss={boss} hp={hpShown} hpMax={hpMax} endsAt={state!.fight!.endsAt} fx={layer} hit={hitAnim} ouch={ouch} rug={rug} feed={hits} />
         <div className="fight-bottom">
           {phrase && <div key={phrase.id} className={`phrase-bubble ${phrase.crit ? "crit" : ""}`}>{phrase.text}</div>}
           <div className="row fight-bar">

@@ -2,6 +2,8 @@
 /*
  * Animated boss built from the artist's layers (tools/boss/build-boss.py): body breathes, head sways around the neck,
  * fists bob in a guard around the elbows, eyes blink. Bosses without a rig use their flat picture.
+ * Bosses with a full face (pupils, brows, mouth layers) also look around and react to hits: the arena gets the
+ * class "ouch" for a moment — angry brows turn into sad ones and the grin into a closed mouth.
  * Below half HP a boss with a "<id>-beaten" rig (tools/boss/align-variant.py) switches to its beaten look.
  */
 import { BOSS_RIGS } from "./boss-rig-data.ts";
@@ -28,15 +30,23 @@ export function BossRig({ id: baseId, hpShare = 1 }: { id: string; hpShare?: num
     const pv = P[p]?.pivot ?? [rig.w / 2, rig.h];
     return { transformOrigin: `${pv[0]}px ${pv[1]}px`, transformBox: "view-box" as const };
   };
+  // bosses with a full face (Кедр): pupils glance around, brows and mouth change when he is hit (class "ouch" on the arena)
   return (
-    <svg key={id} className={`boss-rig ${id.endsWith("-beaten") ? "beaten" : ""}`} viewBox={`0 0 ${rig.w} ${rig.h}`} width="100%" height="100%" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+    <svg key={id} className={`boss-rig rig-${baseId} ${id.endsWith("-beaten") ? "beaten" : ""}`} viewBox={`0 0 ${rig.w} ${rig.h}`} width="100%" height="100%" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
       <g className="br-breath" style={{ transformOrigin: `${rig.w / 2}px ${rig.h}px`, transformBox: "view-box" }}>
         {img("body")}
         <g className="br-head" style={origin("head")}>
           {img("head")}
-          {img("eyes", "br-eyes-open")}
+          <g className="br-eyes-open">
+            {img("eyes")}
+            {P.pupils && <g className="br-pupils">{img("pupils")}</g>}
+          </g>
           {img("eyes-closed", "br-eyes-closed")}
+          {P.brows && <g className="br-brows">{img("brows", "br-brows-angry")}{img("brows-sad", "br-brows-sad")}</g>}
+          {img("mouth", "br-mouth")}
+          {img("mouth-closed", "br-mouth-closed")}
         </g>
+        {img("collar")}
         <g className="br-fist-l" style={origin("foreL")}>{img("foreL")}</g>
         <g className="br-fist-r" style={origin("foreR")}>{img("foreR")}</g>
       </g>
