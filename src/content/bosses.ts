@@ -14,8 +14,8 @@ export interface BossDef {
   drop?: { id: string; qty: number; chance: number }[];
   /** arena colours: background top/bottom and accent */
   theme: { a: string; b: string; accent: string };
-  /** raster photos in public/bosses/<id>/ — portrait (lists) and full (boss screen); null = placeholder */
-  photo: { portrait: string | null; full: string | null };
+  /** raster photos in public/bosses/<id>/ — portrait (lists), full (boss screen), card (waist-up, the boss list); null = placeholder */
+  photo: { portrait: string | null; full: string | null; card?: string | null };
   /** HP phases in percent (only the final boss has several) */
   phases?: { from: number; name: string }[];
   final?: boolean;
@@ -46,7 +46,7 @@ const hp = (i: number) => HP[i];
 /** Authority for a win: 100 for Дацкоу … 1 500 000 for Солнце (×≈3.3 per boss, smaller steps across the inserted bosses). */
 const XP = [100, 350, 1_100, 1_700, 2_600, 3_700, 12_000, 40_000, 60_000, 90_000, 135_000, 450_000, 1_500_000];
 const xp = (i: number) => XP[i];
-const photo = (id: string, has = false) => (has ? { portrait: `/bosses/${id}/portrait.webp`, full: `/bosses/${id}/full.webp` } : { portrait: null, full: null });
+const photo = (id: string, has = false) => (has ? { portrait: `/bosses/${id}/portrait.webp`, full: `/bosses/${id}/full.webp`, card: `/bosses/${id}/card.webp` } : { portrait: null, full: null });
 
 /**
  * Strict order, weakest first: Дацкоу → … → Солнце (final) — the Close hierarchy from the bottom up.

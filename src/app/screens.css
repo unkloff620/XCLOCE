@@ -775,7 +775,7 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .bcard::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; z-index: 3; background: linear-gradient(90deg, transparent, var(--acc), transparent); opacity: 0.9; }
 .bcard:active { transform: scale(0.985); }
 .bcard-art { position: absolute; left: 0; top: 0; bottom: 0; width: 46%; }
-.bcard-art img { position: absolute; left: -8%; bottom: -4%; width: 118%; height: 112%; object-fit: cover; object-position: 50% 8%; }
+.bcard-art img { position: absolute; left: -8%; bottom: -4%; width: 118%; height: 112%; object-fit: cover; object-position: 50% 0%; }
 .bcard-art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 45%, color-mix(in srgb, var(--acc) 12%, #1a110b) 98%); }
 .bcard-sil { position: absolute; left: 6%; bottom: 0; width: 80%; height: 92%; opacity: 0.6; }
 .bcard-sil svg { width: 100%; height: 100%; }

@@ -76,7 +76,7 @@ export function BossesScreen() {
               {/* the boss stands on the left and fades into the card */}
               <div className="bcard-art" aria-hidden="true">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                {b.photo.full && !locked ? <img src={b.photo.full} alt="" draggable={false} /> : <div className="bcard-sil"><BossSilhouette accent={tierColor(b.order)} /></div>}
+                {(b.photo.card ?? b.photo.full) && !locked ? <img src={(b.photo.card ?? b.photo.full)!} alt="" draggable={false} /> : <div className="bcard-sil"><BossSilhouette accent={tierColor(b.order)} /></div>}
               </div>
               {/* who finished this boss last: a framed avatar at the bottom of the picture → their profile */}
               {row?.lastKiller && !locked && (
