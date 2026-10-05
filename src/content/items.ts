@@ -1,4 +1,4 @@
-import { BOSSES, CARD_TIERS, keyId } from "./bosses.ts";
+import { BOSSES, CARD_TIERS, keyId, unlockBossOf } from "./bosses.ts";
 
 export type Category = "weapon" | "clothing" | "item" | "reward" | "event";
 export type Rarity = "common" | "rare" | "epic" | "legendary" | "mythic";
@@ -89,7 +89,11 @@ const WEARABLES: ItemDef[] = ([
   { id: "santa-hat", name: "Новогодний колпак", slot: "HEAD", rarity: "epic", description: "Сезонный предмет.", sources: ["Новогодний ивент"] },
   { id: "laser-eyes", name: "Лазерные глаза", slot: "ACCESSORY", rarity: "legendary", description: "Обязательный аксессуар биткоин-максималиста.", sources: ["Награда за локацию 5"] },
   { id: "gold-chain", name: "Серебряная цепь", slot: "ACCESSORY", rarity: "epic", description: "Каждое звено — подтверждённый блок.", sources: ["Магазин", "Награда за локацию 3"] },
-] as Omit<ItemDef, "category" | "maxStack">[]).map((w) => ({ ...w, category: "clothing" as const, maxStack: 1 }));
+] as Omit<ItemDef, "category" | "maxStack">[]).map((w) => {
+  // clothes a boss unlocks: the drop opens them in the shop, then they are bought there
+  const boss = unlockBossOf(w.id);
+  return { ...w, category: "clothing" as const, maxStack: 1, sources: boss ? [`Выпадает с босса ${boss.name}, потом — магазин`, ...w.sources.filter((x) => !x.startsWith("Магазин") && !x.startsWith("Победа"))] : w.sources };
+});
 
 const MISC: ItemDef[] = [
   { id: "energy-drink", name: "Энергетик", category: "item", rarity: "common", maxStack: 999, description: "+10 энергии. Сверх лимита тоже работает.", sources: ["Двор", "Боссы"], use: { energy: 10 } },

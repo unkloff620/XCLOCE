@@ -9,6 +9,7 @@ import { Modal } from "../ui.tsx";
 import { Help, HelpList } from "../help.tsx";
 import type { Currency } from "../../content/currencies.ts";
 import { itemById } from "../../content/items.ts";
+import { unlockBossOf } from "../../content/bosses.ts";
 import { ItemArt } from "../art/items.tsx";
 import { Icon } from "../art/icons.tsx";
 import { money } from "../format.ts";
@@ -23,8 +24,29 @@ const SHOP_SPOTS = [
   { id: "energy", img: "drinks", name: "Энергия", sections: ["energy", "misc"], left: 81.8, top: 31.5, width: 23.5, hint: "Энергетики на прилавке: энергия для заданий и полезные мелочи." },
 ] as const;
 
+/** A locked thing: which boss drops it, and that it is bought here after it drops. */
+function LockedInfo({ itemId, onClose }: { itemId: string; onClose: () => void }) {
+  const def = itemById(itemId)!;
+  const boss = unlockBossOf(itemId)!;
+  return (
+    <Modal title={def.name} onClose={onClose}>
+      <div className="col" style={{ gap: 10, alignItems: "center", textAlign: "center" }}>
+        <div className="locked-art"><ItemArt id={itemId} size={84} /><span className="locked-badge"><Icon name="lock" size={22} /></span></div>
+        <p className="small" style={{ margin: 0 }}>{def.description}</p>
+        <div className="panel col" style={{ gap: 6, width: "100%" }}>
+          <b>Где получить</b>
+          <span className="small">Выпадает с босса <b>{boss.name}</b> (№{boss.order}). Победи его — вещь откроется здесь, в магазине, и её можно будет выкупить.</span>
+          <span className="tiny muted">Шанс — секрет. Не везёт {boss.wear?.pity ?? 10} побед подряд — вещь откроется точно. Нужно нанести в бою хотя бы 1% здоровья босса.</span>
+        </div>
+        <Link href={`/bosses/${boss.id}`} className="btn red block" onClick={onClose}>К боссу {boss.name}</Link>
+      </div>
+    </Modal>
+  );
+}
+
 function OfferGrid({ offers }: { offers: Offer[] }) {
   const { state, act, busy } = useGame();
+  const [info, setInfo] = useState<string | null>(null);
   const buy = async (o: Offer) => {
     haptic.tap();
     await act("buy", { offerId: o.id, idem: crypto.randomUUID() }, `Куплено: ${o.title}`);
@@ -36,6 +58,19 @@ function OfferGrid({ offers }: { offers: Offer[] }) {
         const owned = def ? invQty(state, def.id) : 0;
         const full = def ? owned + o.give.qty > def.maxStack : false;
         const can = (state?.wallet[o.price.currency] ?? 0) >= o.price.amount;
+        // things from bosses are sold only after they dropped (or if already owned)
+        const boss = def ? unlockBossOf(def.id) : null;
+        const locked = !!boss && owned === 0 && !state?.unlocks?.includes(def!.id);
+        if (locked) {
+          return (
+            <button key={o.id} className={`offer locked rar-${def!.rarity}`} onClick={() => setInfo(def!.id)} aria-label={`${o.title}: закрыто, выпадает с босса ${boss!.name}`}>
+              <div className="offer-art"><ItemArt id={def!.id} size={56} /><span className="locked-badge"><Icon name="lock" size={18} /></span></div>
+              <b className="small">{o.title}</b>
+              <span className="tiny muted">с босса {boss!.name}</span>
+              <span className="btn sm dark block">Как получить</span>
+            </button>
+          );
+        }
         return (
           <div key={o.id} className={`offer rar-${def?.rarity ?? "common"}`}>
             {o.note && <span className="offer-note">{o.note}</span>}
@@ -51,6 +86,7 @@ function OfferGrid({ offers }: { offers: Offer[] }) {
           </div>
         );
       })}
+      {info && <LockedInfo itemId={info} onClose={() => setInfo(null)} />}
     </div>
   );
 }

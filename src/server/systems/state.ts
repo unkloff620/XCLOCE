@@ -1,6 +1,6 @@
 import { GameError, type Queryable } from "../db.ts";
 import { balances, energyNow, moscowDay, type Ctx, type PlayerRow } from "../core.ts";
-import { fightHp, settleMyFight } from "./combat.ts";
+import { fightHp, settleMyFight, unlockedItems } from "./combat.ts";
 import { inventoryView } from "./shop.ts";
 import { yardSync } from "./yard.ts";
 import { levelFromXp } from "../../content/levels.ts";
@@ -57,6 +57,7 @@ export async function gameState(ctx: Ctx) {
     look: { equipped: app?.equipped ?? {}, room: home.room, body: home.body },
     home: { levels: home.levels, rooms: home.rooms, bonus: home.bonus, decor: home.decor, trophies: home.trophies },
     helpSeen: (p as PlayerRow & { help_seen?: string[] }).help_seen ?? [],
+    unlocks: await unlockedItems(ctx.q, ctx.pid),
     yard: { count: yard.items.length, max: yard.max, nextAt: yard.nextAt },
     tasks: await tasksHint(ctx.q, ctx.pid),
     fight: fightRow

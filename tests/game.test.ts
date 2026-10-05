@@ -180,15 +180,19 @@ describe("boss fights: personal fights, shared damage", () => {
     await expect(startDatsik(p, T0 + 40 * M)).rejects.toMatchObject({ code: "fight_limit" });
   });
 
-  it("Дацкоу: clothes 10% per win, the 10th win without clothes gives one for sure; owned pieces do not fall", async () => {
+  it("Дацкоу opens his things in the shop (10% each, the 10th unlucky win for sure); they are bought there, not given", async () => {
     await setBossHp({ datsik: 50 });
     const p = await newPlayer(db);
     expect(await qty(db, p, "tee-white")).toBe(0); // players start with no clothes
     expect(await qty(db, p, "sneakers")).toBe(0);
     const [{ equipped }] = await db.query<{ equipped: Record<string, string> }>("SELECT equipped FROM appearance WHERE player_id=$1", [p]);
     expect(equipped).toEqual({});
+    // locked in the shop before it drops
+    await setMoney(db, p, "RUB", 10_000);
+    await expect(act(db, p, "buy", { offerId: "tee-white" }, T0)).rejects.toMatchObject({ code: "item_locked" });
     await give(db, p, "red-candle", 30);
     const D = 24 * H;
+    const unlocks = async () => (await db.query<{ item_id: string }>("SELECT item_id FROM player_unlocks WHERE player_id=$1 ORDER BY item_id", [p])).map((r) => r.item_id);
     const win = async (i: number, rng: number) => {
       const t = T0 + Math.floor(i / 7) * D + (i % 7) * M;
       const f = await startDatsik(p, t);
@@ -196,15 +200,20 @@ describe("boss fights: personal fights, shared damage", () => {
       return act(db, p, "fight_claim", { fightId: f.result.fightId }, t, always(rng));
     };
     for (let i = 0; i < 9; i++) await win(i, 0.99);
-    expect((await qty(db, p, "tee-white")) + (await qty(db, p, "slippers"))).toBe(0);
-    await win(9, 0.99);
-    expect((await qty(db, p, "tee-white")) + (await qty(db, p, "slippers"))).toBe(1);
-    // a lucky roll gives the missing piece; then nothing is left to drop
+    expect(await unlocks()).toEqual([]);
+    const c = await win(9, 0.99);
+    expect(await unlocks()).toHaveLength(1);
+    expect(c.result.reward.unlocks).toHaveLength(1);
+    // a lucky roll opens all the rest; the things themselves are not given
     await win(10, 0.01);
+    expect(await unlocks()).toEqual(["jeans", "sneakers", "tee-white"]);
+    expect(await qty(db, p, "tee-white")).toBe(0);
+    const s = await act(db, p, "buy", { offerId: "tee-white" }, T0 + 2 * D);
+    expect(s.state.unlocks).toContain("tee-white");
     expect(await qty(db, p, "tee-white")).toBe(1);
-    expect(await qty(db, p, "slippers")).toBe(1);
-    await win(11, 0.01);
-    expect(await qty(db, p, "tee-white")).toBe(1);
+    // nothing left to open: no more rolls
+    const after = await win(11, 0.01);
+    expect(after.result.reward.unlocks).toBeUndefined();
   });
 
   it("«Соло»: others' damage does not touch my solo fight; my own win counts for the solo badge", async () => {

@@ -5,7 +5,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { api, type Tray } from "../api.ts";
 import { BOSSES, bossById } from "../../content/bosses.ts";
-import { Avatar, GainLine, MysteryDrop, RewardChips } from "../ui.tsx";
+import { Avatar, GainLine, MysteryDrop, RewardChips, bossItemsCount } from "../ui.tsx";
+import { WEAPONS } from "../../content/items.ts";
 import type { BossDef } from "../../content/bosses.ts";
 import { Help, HelpList } from "../help.tsx";
 import { itemById } from "../../content/items.ts";
@@ -113,7 +114,7 @@ export function BossesScreen() {
                 <div className="bcard-reward">
                   <span className="bcard-label">{b.final ? "Финал:" : "Награда:"}</span>
                   <GainLine r={{ ...b.reward, items: [...(b.final ? [] : [{ id: `key-${b.id}`, qty: 1 }]), ...(b.reward.items ?? [])] }} size={18} />
-                  {(!!b.drop?.length || !!b.wear) && <MysteryDrop size={18} />}
+                  {(!!b.drop?.length || !!b.wear) && <MysteryDrop size={18} count={bossItemsCount(b, state) ?? undefined} />}
                 </div>
                 <div className="bcard-foot">
                   {locked ? (
@@ -132,44 +133,71 @@ export function BossesScreen() {
   );
 }
 
-/** Everything that can fall from a boss besides the win reward (weapons, clothes) — no chances, those are a secret. */
-function dropsOf(b: BossDef): string[] {
-  return [...new Set([...(b.drop ?? []).map((d) => d.id), ...(b.wear?.items ?? [])])];
-}
-function dropHint(id: string): string {
-  const it = itemById(id);
-  if (!it) return "";
-  if (it.weapon) return `Оружие · урон ${it.weapon.damage}${it.weapon.kind === "consumable" ? " · тратится за удар" : ""}`;
-  if (it.category === "clothing") return `Одежда · ${it.description}`;
-  return it.description;
-}
+/** a picture for the help rows */
+const helpImg = (src: string) => (
+  // eslint-disable-next-line @next/next/no-img-element
+  <img src={src} alt="" width={44} height={44} style={{ objectFit: "contain", flex: "none" }} draggable={false} />
+);
 
-/** The rules of boss fights behind a [?]; on a boss's screen also what can fall from him, in the list — from every boss. */
+/**
+ * The rules of boss fights behind a [?]. In the boss list — the whole guide with pictures: how to get in, what to hit
+ * with, what a win gives and what for, what may drop. At a boss — what can be won from him: secret «?» things
+ * (the ones already opened are shown by name).
+ */
 export function BossRulesHelp({ topic, bossId }: { topic: "bosses" | "boss"; bossId?: string }) {
+  const { state } = useGame();
   const boss = bossId ? bossById(bossId) : null;
-  const drops = boss ? dropsOf(boss) : [];
   return (
-    <Help topic={topic} title="Как бить боссов">
-      {boss && (
-        drops.length ? (
-          <HelpList title={`Что может выпасть с босса ${boss.name}`} rows={drops.map((id) => ({ key: id, icon: <ItemArt id={id} size={40} />, name: itemById(id)?.name ?? id, hint: dropHint(id) }))} />
-        ) : (
-          <p className="small muted">С босса {boss.name} вещи не падают — только награда за победу.</p>
-        )
+    <Help topic={topic} title={boss ? `Босс ${boss.name}` : "Как бить боссов"}>
+      {boss ? (
+        <>
+          {boss.wear?.items.length ? (
+            <HelpList title={`Вещи с босса: открыто ${bossItemsCount(boss, state)}`} rows={boss.wear.items.map((id, i) => {
+              const open = !!state?.unlocks?.includes(id) || (state?.inventory.find((x) => x.id === id)?.qty ?? 0) > 0;
+              return open
+                ? { key: id, icon: <ItemArt id={id} size={40} />, name: itemById(id)?.name ?? id, hint: "Уже выпала — открыта в магазине одежды, там её можно выкупить." }
+                : { key: `s${i}`, icon: <MysteryDrop size={36} />, name: "Секретная вещь", hint: "Какая — пока секрет. Выпадет — откроется в магазине, и её нужно будет выкупить." };
+            })} />
+          ) : (
+            <p className="small muted">С босса {boss.name} вещи не выпадают.</p>
+          )}
+          {!!boss.drop?.length && (
+            <HelpList title="Ещё может выпасть" rows={[{ key: "w", icon: <MysteryDrop size={36} />, name: "Оружие", hint: "Иногда после победы падает оружие — сразу в инвентарь. Какое — секрет." }]} />
+          )}
+          <p className="tiny muted" style={{ marginTop: 0 }}>Шанс — секрет. Вещь выпадает, если нанёс в бою хотя бы 1% здоровья босса. Не везёт {boss.wear?.pity ?? 10} побед подряд — вещь откроется точно.</p>
+        </>
+      ) : (
+        <>
+          <HelpList title="Как напасть на босса" rows={[
+            { key: "door", icon: helpImg("/assets/ui/help-door.webp"), name: "Дверь", hint: "Нажми на босса в списке — откроется комната с дверью. Через окно видно босса, на двери — награда. Нажми на дверь, чтобы войти в бой." },
+            { key: "pass", icon: <ItemArt id="key-datsik" size={44} />, name: "Пропуски", hint: "Каждый босс, кроме первого, закрыт. Его открывают пропуски предыдущего: 3 бронзовых, серебряных, золотых или платиновых, а бриллиантовый — один." },
+            { key: "solo", icon: <Icon name="swords" size={40} />, name: "Соло", hint: "Бой в одиночку: HP босса снимают только твои удары. За соло-победы — отдельное достижение." },
+            { key: "time", icon: <Icon name="clock" size={40} />, name: "8 часов и 7 побед", hint: "Бой длится 8 часов. Каждого босса можно победить 7 раз в день, проигранные бои не считаются." },
+          ]} />
+          <HelpList title="Чем бить" rows={WEAPONS.map((w) => ({
+            key: w.id, icon: <ItemArt id={w.id} size={44} />, name: `${w.name} — урон ${w.weapon!.damage}`,
+            hint: w.weapon!.kind === "permanent" ? "Бесплатно, раз в час. Есть у всех." : "Тратится за удар. Магазин, двор, задания и дроп с боссов.",
+          }))} />
+          <HelpList title="Что даёт победа" rows={[
+            { key: "pass", icon: <ItemArt id="key-kedr" size={44} />, name: "Пропуск босса", hint: "От 1% урона. Нужен, чтобы открыть следующего босса." },
+            { key: "cur", icon: <Icon name="RUB" size={40} />, name: "Рубли, доллары, SOL, BTC", hint: "Покупки в магазине, обменник, оборудование и комнаты дома. Чем сильнее босс, тем ценнее валюта." },
+            { key: "xp", icon: <Icon name="xp" size={40} />, name: "Авторитет", hint: "Опыт: растёт уровень, место в рейтинге и достижения." },
+            { key: "statue", icon: <ItemArt id="statue-close" size={44} />, name: "Трофеи", hint: "За некоторых боссов — особые награды. Статуэтка CLOSE за Утилизатора встаёт на стол и даёт +25% к силе крита." },
+          ]} />
+          <p className="tiny muted" style={{ marginTop: 0 }}>Полная награда — если нанёс хотя бы 2% здоровья босса, меньше — пропорционально. Без урона награды нет.</p>
+          <HelpList title="Что может выпасть" rows={[
+            { key: "things", icon: <MysteryDrop size={36} />, name: "Вещи — «?» x/N", hint: "У каждого босса свои вещи, у некоторых их нет. Какие — секрет. Выпавшая вещь не приходит сразу: она открывается в магазине, и её нужно выкупить." },
+            { key: "weapon", icon: <ItemArt id="keyboard" size={44} />, name: "Оружие", hint: "Иногда падает оружие — сразу в инвентарь." },
+            { key: "shop", icon: <span className="locked-art"><ItemArt id="hoodie-hodl" size={44} /><span className="locked-badge"><Icon name="lock" size={14} /></span></span>, name: "Закрытые вещи в магазине", hint: "Вещи с замком ещё не выпали. Нажми на такую — увидишь, с какого босса она падает." },
+          ]} />
+          <HelpList title="Что дают вещи" rows={[
+            { key: "wear", icon: <ItemArt id="tee-white" size={44} />, name: "Одежда", hint: "Внешний вид персонажа: видно в комнате, в профиле и другим игрокам. Надевается в гардеробе." },
+            { key: "trophy", icon: <ItemArt id="statue-close" size={44} />, name: "Трофеи", hint: "Сами встают в комнату и дают бонус к бою." },
+            { key: "weap", icon: <ItemArt id="gpu" size={44} />, name: "Оружие", hint: "Чем сильнее оружие, тем быстрее падает босс и тем больше твоя доля награды." },
+          ]} />
+        </>
       )}
-      {boss && <p className="tiny muted" style={{ marginTop: 0 }}>У каждого босса свой дроп. Шанс — секрет, на двери он спрятан за «?». Вещь может выпасть, если нанёс в бою хотя бы 1% здоровья босса.</p>}
-      {!boss && (
-        <HelpList title="Что падает с боссов" rows={BOSSES.map((b) => {
-          const d = dropsOf(b);
-          return {
-            key: b.id,
-            icon: <span className="help-drops">{d.length ? d.map((id) => <ItemArt key={id} id={id} size={26} />) : <span className="tiny muted">—</span>}</span>,
-            name: `${b.order}. ${b.name}`,
-            hint: d.length ? d.map((id) => itemById(id)?.name ?? id).join(", ") : "ничего не падает, только награда",
-          };
-        })} />
-      )}
-      <ul>
+      {!boss && <ul>
         <li>Бой у каждого свой и длится 8 часов. Не успел — босс уходит, бой проигран.</li>
         <li>Урон общий: удары всех, кто сейчас бьёт этого босса, снимают HP и в твоём бою.</li>
         <li>Кнопка «Соло» — бой в одиночку: HP босса снимают только твои удары. Соло-победы дают отдельное достижение «Соло».</li>
@@ -179,7 +207,7 @@ export function BossRulesHelp({ topic, bossId }: { topic: "bosses" | "boss"; bos
         <li>За Утилизатора дают статуэтку CLOSE: она сама встаёт на стол в комнате и даёт +25% к силе крита.</li>
         <li>В день можно победить каждого босса 7 раз. Проигранные бои в лимит не идут.</li>
         <li>Оборудование и комнаты дома дают шанс крита и прибавку к урону.</li>
-      </ul>
+      </ul>}
     </Help>
   );
 }

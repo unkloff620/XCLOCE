@@ -241,11 +241,12 @@ export async function claimFight(ctx: Ctx, fightId: number) {
   const earnedKey = myDamage >= f.hp_max * ctx.cfg.fight.keyShare;
   const drops = earnedKey ? (def.drop ?? []).filter((d) => ctx.rng() < d.chance).map((d) => ({ id: d.id, qty: d.qty })) : [];
   const key = def.final || !earnedKey ? [] : [{ id: keyId(def.id), qty: 1 }];
-  const wear = earnedKey ? await rollWear(ctx, def) : [];
+  const unlocked = earnedKey ? await rollUnlocks(ctx, def) : [];
   // one-of-a-kind rewards (the statue) are not handed out again
   const base = scaleReward(def.reward, share);
   if (base.items?.length) base.items = await notOwnedUnique(ctx, base.items);
-  const granted = await grantReward(ctx, mergeRewards(base, { items: [...key, ...drops, ...wear] }), `win:${def.id}`);
+  const granted = await grantReward(ctx, mergeRewards(base, { items: [...key, ...drops] }), `win:${def.id}`);
+  if (unlocked.length) granted.unlocks = unlocked;
   await ctx.q.query("UPDATE fights SET reward=$2, seen=true WHERE id=$1", [f.id, JSON.stringify(granted)]);
   if (myDamage > 0) {
     await ctx.q.query(
@@ -266,14 +267,21 @@ async function notOwnedUnique(ctx: Ctx, items: { id: string; qty: number }[]) {
   return out;
 }
 
+/** Things the player may buy: owned already, or opened by a boss drop. */
+export async function unlockedItems(q: Queryable, pid: number): Promise<string[]> {
+  return (await q.query<{ item_id: string }>("SELECT item_id FROM player_unlocks WHERE player_id=$1", [pid])).map((r) => r.item_id);
+}
+
 /**
- * Clothes from a boss (BossDef.wear): every piece not owned yet rolls its chance; after `pity` wins in a row
- * without clothes one of the missing pieces falls for sure. The miss counter lives in boss_pity.
+ * Things a boss opens in the shop (BossDef.wear): every one not opened (or owned) yet rolls its chance; after `pity`
+ * wins in a row without luck one of them opens for sure. The thing itself is bought in the shop afterwards.
+ * The miss counter lives in boss_pity.
  */
-async function rollWear(ctx: Ctx, def: BossDef): Promise<{ id: string; qty: number }[]> {
+async function rollUnlocks(ctx: Ctx, def: BossDef): Promise<string[]> {
   if (!def.wear) return [];
+  const open = new Set(await unlockedItems(ctx.q, ctx.pid));
   const missing: string[] = [];
-  for (const id of def.wear.items) if ((await itemQty(ctx.q, ctx.pid, id)) === 0) missing.push(id);
+  for (const id of def.wear.items) if (!open.has(id) && (await itemQty(ctx.q, ctx.pid, id)) === 0) missing.push(id);
   if (!missing.length) return [];
   const [row] = await ctx.q.query<{ misses: number }>("SELECT misses FROM boss_pity WHERE player_id=$1 AND boss_id=$2 FOR UPDATE", [ctx.pid, def.id]);
   const misses = row?.misses ?? 0;
@@ -283,7 +291,10 @@ async function rollWear(ctx: Ctx, def: BossDef): Promise<{ id: string; qty: numb
     "INSERT INTO boss_pity (player_id, boss_id, misses) VALUES ($1,$2,$3) ON CONFLICT (player_id, boss_id) DO UPDATE SET misses = EXCLUDED.misses",
     [ctx.pid, def.id, got.length ? 0 : misses + 1],
   );
-  return got.map((id) => ({ id, qty: 1 }));
+  for (const id of got) {
+    await ctx.q.query("INSERT INTO player_unlocks (player_id, item_id, boss_id, at) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING", [ctx.pid, id, def.id, new Date(ctx.now)]);
+  }
+  return got;
 }
 
 /** Gives up the running fight (counts as a loss). */

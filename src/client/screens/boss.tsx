@@ -9,7 +9,7 @@ import { HIT_PHRASES } from "../../content/phrases.ts";
 import { ArenaBackdrop, BossSilhouette } from "../art/scenes.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { Icon } from "../art/icons.tsx";
-import { Bar, Empty, GainLine, MysteryDrop } from "../ui.tsx";
+import { Bar, Empty, GainLine, MysteryDrop, bossItemsCount } from "../ui.tsx";
 import { useFx, type Fx } from "../fx/attack.tsx";
 import { BossRulesHelp, useBossList } from "./bosses.tsx";
 import { WeaponShopWindow } from "./shop.tsx";
@@ -396,7 +396,7 @@ export function BossScreen({ id }: { id: string }) {
           <span className="door-plate">
             <b className="door-plate-title">{boss.final ? "ФИНАЛ" : "НАГРАДА"}</b>
             <GainLine r={doorReward} size={14} />
-            {(!!boss.drop?.length || !!boss.wear) && <MysteryDrop size={14} />}
+            {(!!boss.drop?.length || !!boss.wear) && <MysteryDrop size={14} count={bossItemsCount(boss, state) ?? undefined} />}
           </span>
           {blocked && locked && <span className="door-lock"><Icon name="lock" size={30} /></span>}
         </button>

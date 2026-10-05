@@ -163,6 +163,8 @@ export interface Granted {
   items: { id: string; qty: number; lost?: number }[];
   energy: number;
   levelUp?: { from: number; to: number };
+  /** things a boss drop opened in the shop (to be bought there) */
+  unlocks?: string[];
 }
 
 export async function grantReward(ctx: Ctx, r: Reward, reason: string): Promise<Granted> {

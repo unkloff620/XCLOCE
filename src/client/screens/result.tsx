@@ -7,6 +7,8 @@ import { KEY_SHARE, bossById, rewardShare } from "../../content/bosses.ts";
 import { scaleReward } from "../../content/rewards.ts";
 import { ESCAPE_LINES } from "../../content/phrases.ts";
 import { Modal, RewardChips } from "../ui.tsx";
+import { ItemArt } from "../art/items.tsx";
+import { itemById } from "../../content/items.ts";
 import { BossPhoto } from "./boss-parts.tsx";
 import { full, pct } from "../format.ts";
 import { haptic } from "../telegram.ts";
@@ -105,6 +107,15 @@ export function ResultWindow() {
           <>
             <div className="small muted">Получено:</div>
             <RewardChips r={got} />
+            {!!got.unlocks?.length && (
+              <div className="unlock-note">
+                <b className="small">Выпало! Открыто в магазине:</b>
+                <div className="row" style={{ gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+                  {got.unlocks.map((id) => <span key={id} className="chip"><ItemArt id={id} size={24} /> {itemById(id)?.name ?? id}</span>)}
+                </div>
+                <Link href="/shop?tab=clothing" className="btn gold sm" onClick={done}>Выкупить в магазине</Link>
+              </div>
+            )}
             {got.levelUp && <div className="chip violet">Новый уровень: {got.levelUp.to}!</div>}
             <div className="row" style={{ width: "100%" }}>
               <Link href={`/bosses/${boss.id}`} className="btn dark grow" onClick={done}>К боссу</Link>

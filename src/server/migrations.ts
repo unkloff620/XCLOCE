@@ -419,4 +419,17 @@ CREATE TABLE IF NOT EXISTS boss_pity (
 ALTER TABLE fights ADD COLUMN IF NOT EXISTS solo BOOLEAN NOT NULL DEFAULT false;
 `,
   },
+  {
+    // things a boss drop opens in the shop (they are bought there afterwards)
+    id: "v2-020-unlocks",
+    sql: `
+CREATE TABLE IF NOT EXISTS player_unlocks (
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  item_id TEXT NOT NULL,
+  boss_id TEXT,
+  at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (player_id, item_id)
+);
+`,
+  },
 ];

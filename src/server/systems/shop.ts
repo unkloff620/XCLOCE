@@ -3,6 +3,7 @@ import { addEnergy, addItem, addMoney, idempotent, itemQty, takeItem, takeMoney,
 import { OFFERS, offerById } from "../../content/shop.ts";
 import { CURRENCY_DEFS, floorTo, type Currency } from "../../content/currencies.ts";
 import { itemById, WEARABLE_SLOTS, type Slot } from "../../content/items.ts";
+import { unlockBossOf } from "../../content/bosses.ts";
 import type { Config } from "../config.ts";
 
 export function shopView(cfg: Config) {
@@ -19,6 +20,12 @@ export async function buy(ctx: Ctx, offerId: string, idem?: string) {
       const have = await itemQty(ctx.q, ctx.pid, def.id);
       if (have + o.give.qty > def.maxStack) {
         throw new GameError("stack_full", def.maxStack === 1 ? `${def.name} уже есть` : `${def.name}: максимум ${def.maxStack} шт.`);
+      }
+      // a thing from a boss: sold only after it dropped (opened) for this player
+      const boss = unlockBossOf(def.id);
+      if (boss) {
+        const [u] = await ctx.q.query("SELECT 1 FROM player_unlocks WHERE player_id=$1 AND item_id=$2", [ctx.pid, def.id]);
+        if (!u) throw new GameError("item_locked", `«${def.name}» сначала нужно выбить с босса ${boss.name}`);
       }
     }
     await takeMoney(ctx, o.price.currency, price, `buy:${o.id}`);

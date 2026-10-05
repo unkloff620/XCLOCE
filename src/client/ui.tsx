@@ -78,13 +78,21 @@ export function RewardChips({ r, size = 18 }: { r: Reward | Granted | null | und
 }
 
 /** What was just gained, pictures only: [picture]+N … (toasts for pickups). */
-/** Boss drops are a secret: one «?» says something else may fall (a weapon, clothes…). */
-export function MysteryDrop({ size = 18 }: { size?: number }) {
+/** Boss drops are a secret: a «?» says something may fall; `count` = things of this boss already opened, e.g. "0/3". */
+export function MysteryDrop({ size = 18, count }: { size?: number; count?: string }) {
   return (
-    <span className="gain mystery" title="Шанс выбить что-то ещё — что именно, секрет">
+    <span className="gain mystery" title={count ? `Вещи с этого босса: открыто ${count}. Какие — секрет` : "Шанс выбить что-то ещё — что именно, секрет"}>
       <span className="mystery-box" style={{ width: size, height: size, fontSize: size * 0.72 }}>?</span>
+      {count && <span className="mystery-count">{count}</span>}
     </span>
   );
+}
+
+/** "x/N": how many of a boss's things the player has opened (or owns); null when the boss has none */
+export function bossItemsCount(boss: { wear?: { items: string[] } }, state: { unlocks?: string[]; inventory: { id: string; qty: number }[] } | null): string | null {
+  if (!boss.wear?.items.length) return null;
+  const have = boss.wear.items.filter((id) => state?.unlocks?.includes(id) || (state?.inventory.find((i) => i.id === id)?.qty ?? 0) > 0).length;
+  return `${have}/${boss.wear.items.length}`;
 }
 
 export function GainLine({ r, size = 26 }: { r: Reward | Granted | null | undefined; size?: number }) {

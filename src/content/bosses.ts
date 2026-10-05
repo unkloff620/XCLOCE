@@ -24,8 +24,9 @@ export interface BossDef {
   /** the card this boss gives for a win (item key-<id>); the final boss gives none */
   card?: CardTier;
   /**
-   * clothes that can fall from this boss: each item not owned yet rolls `chance` per win (from KEY_SHARE damage);
-   * after `pity` wins in a row without clothes one of them falls for sure
+   * things this boss unlocks in the shop: each one not unlocked yet rolls `chance` per win (from KEY_SHARE damage);
+   * after `pity` wins in a row without luck one of them unlocks for sure. A dropped thing is not given — it opens
+   * in the shop and has to be bought there. Which ones, is a secret for the player (shown as «?» x/N)
    */
   wear?: { items: string[]; chance: number; pity: number };
 }
@@ -58,7 +59,7 @@ export const BOSSES: BossDef[] = [
     story: "Числится в штате, но давно заморожен. Оттаивает, только когда кто-то пытается пройти мимо.",
     hp: hp(0), reward: { xp: xp(0), currencies: { SOL: 0.02, RUB: 150 } },
     drop: [{ id: "red-candle", qty: 3, chance: 0.35 }],
-    wear: { items: ["tee-white", "slippers"], chance: 0.1, pity: 10 },
+    wear: { items: ["tee-white", "jeans", "sneakers"], chance: 0.1, pity: 10 },
     theme: { a: "#3a1430", b: "#12081a", accent: "#ff4d6d" }, photo: photo("datsik", true),
   },
   {
@@ -66,6 +67,7 @@ export const BOSSES: BossDef[] = [
     story: "Сайт лежит — Кедр стоит. Сайт стоит — Кедр всё равно стоит, корни глубоко.",
     hp: hp(1), reward: { xp: xp(1), currencies: { SOL: 0.03, RUB: 220 } },
     drop: [{ id: "keyboard", qty: 2, chance: 0.3 }],
+    wear: { items: ["slippers", "shorts-remote"], chance: 0.1, pity: 10 },
     theme: { a: "#173a26", b: "#07140c", accent: "#3ddc84" }, photo: photo("kedr", true),
   },
   {
@@ -73,6 +75,7 @@ export const BOSSES: BossDef[] = [
     story: "Командует всеми, кто ниже. Таких пока немного, но он не сдаётся.",
     hp: hp(2), reward: { xp: xp(2), currencies: { SOL: 0.045, RUB: 300 } },
     drop: [{ id: "keyboard", qty: 3, chance: 0.3 }],
+    wear: { items: ["tee-pump"], chance: 0.1, pity: 10 },
     theme: { a: "#1c2a4a", b: "#080d1c", accent: "#4da3ff" }, photo: photo("bebyakyan"),
   },
   {
@@ -80,6 +83,7 @@ export const BOSSES: BossDef[] = [
     story: "Правая рука Князя. Левой подписывает всё, что Князь не успел прочитать.",
     hp: hp(3), reward: { xp: xp(3), currencies: { SOL: 0.052, RUB: 340 } },
     drop: [{ id: "keyboard", qty: 3, chance: 0.35 }],
+    wear: { items: ["cap-moon"], chance: 0.1, pity: 10 },
     theme: { a: "#3a1a1a", b: "#140707", accent: "#ff6b4a" }, photo: photo("garkusha"),
   },
   {
@@ -87,6 +91,7 @@ export const BOSSES: BossDef[] = [
     story: "Делает всё, что сказал Вадим. Иногда даже то, что Вадим только подумал.",
     hp: hp(4), reward: { xp: xp(4), currencies: { SOL: 0.058, RUB: 380 } },
     drop: [{ id: "energy-drink", qty: 2, chance: 0.35 }],
+    wear: { items: ["gold-chain"], chance: 0.1, pity: 10 },
     theme: { a: "#163a3a", b: "#061414", accent: "#2ee6c8" }, photo: photo("mugo"),
   },
   {
@@ -94,6 +99,7 @@ export const BOSSES: BossDef[] = [
     story: "Держит Close Neo в ежовых рукавицах. Каждое «ок» стоит три письма и одно совещание.",
     hp: hp(5), reward: { xp: xp(5), currencies: { SOL: 0.065, RUB: 420 } },
     drop: [{ id: "gpu", qty: 1, chance: 0.25 }],
+    wear: { items: ["hoodie-hodl"], chance: 0.1, pity: 10 },
     theme: { a: "#3a2a10", b: "#140d04", accent: "#ffb020" }, photo: photo("babafey"),
   },
   {
@@ -152,6 +158,8 @@ export const BOSSES: BossDef[] = [
 ];
 
 export const bossById = (id: string) => BOSSES.find((b) => b.id === id);
+/** the boss that unlocks this shop item (BossDef.wear), if any */
+export const unlockBossOf = (itemId: string) => BOSSES.find((b) => b.wear?.items.includes(itemId));
 export const keyId = (bossId: string) => `key-${bossId}`;
 /** Keys of boss N needed to open boss N+1. */
 export const KEYS_TO_UNLOCK = 3;

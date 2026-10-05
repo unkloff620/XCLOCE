@@ -11,6 +11,8 @@ export interface Granted {
   items: { id: string; qty: number; lost?: number }[];
   energy: number;
   levelUp?: { from: number; to: number };
+  /** things a boss drop opened in the shop (to be bought there) */
+  unlocks?: string[];
 }
 export interface GameState {
   now: number;
@@ -26,6 +28,8 @@ export interface GameState {
   look: { equipped: Record<string, string>; room: string; body: Look };
   home: { levels: Record<string, number>; rooms: string[]; bonus: { critChance: number; critDamage: number; damage: number }; decor: Record<string, number>; trophies: string[] };
   helpSeen: string[];
+  /** things a boss drop opened in the shop */
+  unlocks?: string[];
   yard: { count: number; max: number; nextAt: number | null };
   /** cheapest task step left in an open location; claimable = a location reward is waiting */
   tasks: { minEnergy: number | null; claimable: boolean };
