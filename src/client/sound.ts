@@ -5,7 +5,7 @@
  * The mute switch is remembered on this device.
  */
 
-export type Sfx = "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" | "upgrade" | "levelup" | "error" | "win" | "step";
+export type Sfx = "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" | "upgrade" | "levelup" | "error" | "win" | "step" | "door" | "locked";
 
 const MUTE_KEY = "xc2_mute";
 const MUSIC_KEY = "xc2_music";
@@ -191,6 +191,18 @@ export function sfx(name: Sfx, power = 0.5) {
       [2093, 2637, 3136].forEach((f, i) => tone(a, f, t + 0.55 + i * 0.08, 0.3, { type: "sine", vol: 0.06 }));
       break;
     }
+    case "door":
+      // a rusty creak sliding up, then the heavy door hits the stop
+      tone(a, 140, t, 0.75, { type: "sawtooth", vol: 0.05, slide: 1.9, attack: 0.08 });
+      tone(a, 210, t + 0.1, 0.6, { type: "sawtooth", vol: 0.03, slide: 1.6, attack: 0.1 });
+      noise(a, t, 0.7, { freq: 900, type: "bandpass", q: 6, vol: 0.12 });
+      noise(a, t + 0.78, 0.2, { freq: 500, vol: 0.5 });
+      tone(a, 75, t + 0.78, 0.3, { type: "sine", vol: 0.45, slide: 0.6 });
+      break;
+    case "locked":
+      [0, 0.09, 0.18].forEach((d) => noise(a, t + d, 0.06, { freq: 2600, type: "bandpass", q: 3, vol: 0.4 }));
+      tone(a, 180, t + 0.02, 0.18, { type: "square", vol: 0.05 });
+      break;
     case "error":
       tone(a, 220, t, 0.12, { type: "square", vol: 0.07 });
       tone(a, 165, t + 0.11, 0.18, { type: "square", vol: 0.07 });

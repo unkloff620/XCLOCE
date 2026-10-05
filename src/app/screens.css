@@ -1109,3 +1109,52 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 /* «В бой» and «Соло» side by side before the fight */
 .fight-start { gap: 8px; width: 100%; }
 .fight-start .solo-btn { flex: none; gap: 6px; padding-left: 16px; padding-right: 16px; }
+
+/* ---------- the door before a boss fight: room 2000×2800 with a doorway hole, the door on its hinges, the boss behind ---------- */
+.door-page { background: #120c08; }
+.door-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; filter: blur(8px) brightness(0.45); transform: scale(1.08); }
+.door-page .fight-head { position: absolute; left: 12px; right: 12px; top: var(--top); z-index: 4; }
+.door-scene { position: absolute; left: 0; right: 0; bottom: calc(var(--nav-h) + var(--safe-b) - 6px); aspect-ratio: 2000 / 2800; perspective: 1100px; perspective-origin: 50% 42%;
+  transform-origin: 50.6% 42%; transition: transform 0.4s ease-in; }
+.door-scene > * { position: absolute; }
+.door-room { inset: 0; width: 100%; height: 100%; pointer-events: none; }
+/* the doorway hole (x 666–1380, y 482–1860 of the room picture) */
+.door-behind { left: 33.3%; top: 17.2%; width: 35.7%; height: 49.3%; overflow: hidden; background: #050302; }
+.door-behind .fight-sky { position: absolute; inset: 0; }
+.door-behind-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 60%; }
+.door-boss { position: absolute; left: 50%; bottom: 0; width: 165%; height: 100%; transform: translateX(-50%); filter: brightness(0.82); transition: filter 0.6s; }
+.door-boss > svg, .door-boss > img { width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; display: block; }
+.door-boss .arena-sil { position: absolute; inset: 8% 15% 0; }
+.door-light { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 35%, rgba(255, 220, 160, 0.25), transparent 65%); opacity: 0; transition: opacity 0.6s; }
+.door-scene.open .door-boss, .door-scene.enter .door-boss { filter: brightness(1.05); }
+.door-scene.open .door-light, .door-scene.enter .door-light { opacity: 1; }
+/* the door: the whole picture turns on its hinges (left edge of the door, x≈650) and swings towards us */
+.door-leaf { inset: 0; width: 100%; height: 100%; padding: 0; border: 0; background: none; pointer-events: none; transform-origin: 32.5% 50%; transform-style: preserve-3d;
+  transition: transform 0.85s cubic-bezier(0.55, 0, 0.3, 1), filter 0.85s; }
+.door-leaf img { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.door-hit { position: absolute; left: 32%; top: 17%; width: 37.7%; height: 49.6%; pointer-events: auto; cursor: pointer; }
+.door-scene.open .door-leaf, .door-scene.enter .door-leaf { transform: rotateY(-102deg); filter: brightness(0.7); }
+.door-scene.rattle .door-leaf { animation: door-rattle 0.42s ease-in-out; }
+@keyframes door-rattle { 20% { transform: translateX(-1.2%) rotateY(-2deg); } 40% { transform: translateX(1%); } 60% { transform: translateX(-0.8%) rotateY(-1deg); } 80% { transform: translateX(0.5%); } }
+/* rewards written on the lower half of the door */
+.door-plate { position: absolute; left: 36%; width: 30%; top: 46.5%; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 5px 4px 6px;
+  border-radius: 6px; background: rgba(18, 11, 7, 0.82); border: 2px solid rgba(160, 98, 52, 0.85); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.5);
+  pointer-events: none; color: var(--ink); font-size: 11px; }
+.door-plate-title { font-family: inherit; font-size: 10px; letter-spacing: 0.12em; color: var(--gold); }
+.door-plate .gain-line, .door-plate > span:last-child { justify-content: center; flex-wrap: wrap; }
+.door-lock { position: absolute; left: 58.5%; top: 35.5%; width: 9%; aspect-ratio: 1; display: grid; place-items: center; border-radius: 50%; background: rgba(0, 0, 0, 0.6); pointer-events: none; }
+.door-lock svg { width: 70%; height: 70%; }
+/* the pass on the left wall */
+.door-pass { left: 5%; top: 28%; width: 22%; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px; border-radius: 10px;
+  background: rgba(20, 12, 8, 0.72); border: 2px solid rgba(160, 98, 52, 0.8); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); text-align: center; color: var(--ink); }
+.door-pass b { font-size: 13px; }
+.door-pass.short b { color: #ff8a9e; }
+.door-hint { left: 50.6%; top: 68%; transform: translateX(-50%); padding: 4px 12px; border-radius: 999px; background: rgba(0, 0, 0, 0.55); font-size: 12px; font-weight: 700; color: var(--ink);
+  pointer-events: none; animation: door-hint 1.6s ease-in-out infinite; white-space: nowrap; }
+@keyframes door-hint { 50% { opacity: 0.45; } }
+/* stepping in: the scene rushes towards the doorway, a flash, then the fight */
+.door-flash { inset: 0; background: radial-gradient(circle at 50.6% 42%, rgba(255, 240, 210, 0.95), rgba(255, 240, 210, 0.6) 45%, rgba(0, 0, 0, 0.9)); opacity: 0; pointer-events: none; transition: opacity 0.35s ease-in; }
+.door-scene.enter { transform: scale(2.3); }
+.door-scene.enter .door-flash { opacity: 1; }
+.door-page .prefight-panel { z-index: 5; }
+@media (prefers-reduced-motion: reduce) { .door-leaf, .door-scene { transition-duration: 0.01s; } .door-hint { animation: none; } }

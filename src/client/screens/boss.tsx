@@ -3,13 +3,13 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { invQty, useGame, useNow } from "../store.tsx";
 import { api, type FightView, type Hit, type Tray } from "../api.ts";
-import { bossById, type BossDef, FULL_SHARE, KEY_SHARE, rewardShare } from "../../content/bosses.ts";
+import { BOSSES, bossById, type BossDef, FULL_SHARE, KEY_SHARE, rewardShare } from "../../content/bosses.ts";
 import { WEAPONS, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
 import { ArenaBackdrop, BossSilhouette } from "../art/scenes.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { Icon } from "../art/icons.tsx";
-import { Bar, Empty } from "../ui.tsx";
+import { Bar, Empty, GainLine } from "../ui.tsx";
 import { useFx, type Fx } from "../fx/attack.tsx";
 import { BossRewardsPanel, BossRulesHelp, useBossList } from "./bosses.tsx";
 import { WeaponShopWindow } from "./shop.tsx";
@@ -228,7 +228,13 @@ export function BossScreen({ id }: { id: string }) {
   const start = async (solo = false) => {
     const r = await act<{ fightId: number }>("fight_start", { boss: id, solo }, solo ? `Соло-бой с боссом ${boss?.name}: бьёшь только ты. 8 часов` : `Бой с боссом ${boss?.name} начался! 8 часов`);
     if (r) void loadList();
+    return !!r;
   };
+  // the door in front of the boss: closed → open (swings on its hinges) → enter (we step in, the fight starts)
+  const [door, setDoor] = useState<"closed" | "rattle" | "open" | "enter">("closed");
+  useEffect(() => {
+    if (!fightId) setDoor("closed"); // back from a fight: the door is shut again
+  }, [fightId]);
   const [fleeAsk, setFleeAsk] = useState(false);
   // a missing weapon opens the weapons shelf right here; closing it leaves you in the fight
   const [shopOpen, setShopOpen] = useState(false);
@@ -318,15 +324,35 @@ export function BossScreen({ id }: { id: string }) {
     );
   }
 
-  // before the fight: the same garage scene, the boss idles in the middle, rules and rewards in windows
+  // before the fight: a room with a door, the boss waits behind it (seen through the window); the rewards are on the door,
+  // the pass that opens him hangs on the left wall. A tap on the door opens it and starts the fight (Соло — the same, alone)
   const locked = !!row && !row.unlocked;
+  const prev = boss.order > 1 ? BOSSES.find((x) => x.order === boss.order - 1) : null;
+  const blocked = locked ? `Нужно пропусков «${prev?.name}»: ${row!.keysNeed}. У тебя ${row!.keysHave}` : otherFight ? `Сначала закончи бой с боссом ${bossById(otherFight.bossId)?.name}` : limitLeft <= 0 ? "Лимит побед на сегодня — новые после полуночи по Москве" : null;
+  const openDoor = async (solo: boolean) => {
+    if (door !== "closed" || busy === "fight_start") return;
+    if (blocked) {
+      setDoor("rattle");
+      sfx("locked");
+      haptic.err();
+      toast(blocked, "err");
+      setTimeout(() => setDoor("closed"), 450);
+      return;
+    }
+    setDoor("open");
+    sfx("door");
+    haptic.heavy();
+    await new Promise((r) => setTimeout(r, 850));
+    setDoor("enter");
+    await new Promise((r) => setTimeout(r, 380));
+    const ok = await start(solo);
+    if (!ok) setDoor("closed");
+  };
+  const doorReward = { ...boss.reward, items: [...(boss.final ? [] : [{ id: `key-${boss.id}`, qty: 1 }]), ...(boss.reward.items ?? [])] };
   return (
-    <div className="fit-page fight-page" style={{ ["--acc" as string]: boss.theme.accent }}>
-      <div className="fight-bg" aria-hidden="true">
-        <DriftingSky className="fight-sky" />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/assets/arena/garage.webp" alt="" draggable={false} />
-      </div>
+    <div className="fit-page door-page" style={{ ["--acc" as string]: boss.theme.accent }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className="door-backdrop" src="/assets/door/room.webp" alt="" aria-hidden="true" draggable={false} />
       <div className="fight-head">
         <div className="grow" style={{ minWidth: 0 }}>
           <b className="display boss-name ellipsis">{boss.name}</b>
@@ -335,45 +361,66 @@ export function BossScreen({ id }: { id: string }) {
         {boss.final && <span className="chip gold">ФИНАЛ</span>}
         <BossRulesHelp topic="boss" />
       </div>
-      <div className={`arena full prefight ${locked ? "locked" : ""}`}>
-        <div className="arena-photo">
-          {locked ? (
-            <div className="arena-sil"><BossSilhouette accent={boss.theme.accent} /></div>
-          ) : hasBossRig(boss.id) ? (
-            <BossRig id={boss.id} />
-          ) : boss.photo.full ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={boss.photo.full} alt={boss.name} draggable={false} />
+      <div className={`door-scene ${door}`}>
+        {/* behind the door: the boss's own background and the boss himself */}
+        <div className="door-behind">
+          <DriftingSky className="fight-sky" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="door-behind-bg" src="/assets/arena/garage.webp" alt="" draggable={false} />
+          <div className="door-boss">
+            {locked ? (
+              <div className="arena-sil"><BossSilhouette accent={boss.theme.accent} /></div>
+            ) : hasBossRig(boss.id) ? (
+              <BossRig id={boss.id} />
+            ) : boss.photo.full ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={boss.photo.full} alt={boss.name} draggable={false} />
+            ) : (
+              <div className="arena-sil"><BossSilhouette accent={boss.theme.accent} /></div>
+            )}
+          </div>
+          <div className="door-light" />
+        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="door-room" src="/assets/door/room.webp" alt="" draggable={false} />
+        {/* the pass that opens this boss, on the left wall */}
+        <div className={`door-pass ${locked ? "short" : ""}`}>
+          {prev ? (
+            <>
+              <ItemArt id={`key-${prev.id}`} size={58} />
+              <b className="num">{row?.keysHave ?? 0}/{row?.keysNeed ?? 3}</b>
+            </>
           ) : (
-            <div className="arena-sil"><BossSilhouette accent={boss.theme.accent} /><span className="small muted">фото скоро</span></div>
+            <span className="tiny">вход<br />свободный</span>
           )}
         </div>
+        <button className="door-leaf" onClick={() => openDoor(false)} aria-label={blocked ? `Закрыто: ${blocked}` : `Открыть дверь и начать бой с боссом ${boss.name}`} disabled={door === "open" || door === "enter"}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/assets/door/door.webp" alt="" draggable={false} />
+          <span className="door-hit" />
+          <span className="door-plate">
+            <b className="door-plate-title">{boss.final ? "ФИНАЛ" : "НАГРАДА"}</b>
+            <GainLine r={doorReward} size={16} />
+          </span>
+          {blocked && locked && <span className="door-lock"><Icon name="lock" size={30} /></span>}
+        </button>
+        {!blocked && door === "closed" && <span className="door-hint">Нажми на дверь</span>}
+        <div className="door-flash" />
       </div>
-      <div className="prefight-hp"><Bar value={hpMax} max={hpMax} tone="red" height={22} label={`${full(hpMax)} HP`} /></div>
       <div className="fight-bottom prefight-panel">
         <div className="row small" style={{ justifyContent: "space-between", gap: 6 }}>
           <span className="chip gold"><Icon name="clock" size={14} />8 часов</span>
           <span className="chip" title="Победы сегодня">Победы {row?.fightsToday ?? 0}/{row?.fightsPerDay ?? 7}</span>
           <button className="btn sm dark" onClick={() => setInfo(true)}>Награды</button>
         </div>
-        {locked ? (
-          <div className="panel row small" style={{ gap: 8 }}>
-            <Icon name="lock" size={30} />
-            <span className="grow">Нужно пропусков предыдущего босса: <b>{row!.keysNeed}</b>. У тебя {row!.keysHave}.</span>
-          </div>
-        ) : otherFight ? (
+        {otherFight ? (
           <Link className="btn violet block" href={`/bosses/${otherFight.bossId}`}>Идёт бой с {bossById(otherFight.bossId)?.name} — к нему</Link>
         ) : (
-          <div className="row fight-start">
-            <button className="btn red big grow" disabled={busy === "fight_start" || limitLeft <= 0} onClick={() => start(false)}>
-              {limitLeft <= 0 ? "Лимит побед на сегодня" : "В бой"}
+          !locked && limitLeft > 0 && (
+            <button className="btn violet block solo-btn" disabled={busy === "fight_start" || door !== "closed"} onClick={() => openDoor(true)} title="Соло: урон других игроков не засчитывается, только твой">
+              <Icon name="swords" size={20} /> Соло — бой в одиночку
             </button>
-            {limitLeft > 0 && (
-              <button className="btn violet big solo-btn" disabled={busy === "fight_start"} onClick={() => start(true)} title="Соло: урон других игроков не засчитывается, только твой">
-                <Icon name="swords" size={20} /> Соло
-              </button>
-            )}
-          </div>
+          )
         )}
       </div>
       {info && (
