@@ -1194,7 +1194,7 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .shop-grid .offer .tiny { font-size: 9px; line-height: 1.15; }
 .shop-grid .offer .btn { padding: 4px 2px; font-size: 10.5px; gap: 2px; min-height: 0; border-width: 2px; letter-spacing: 0; }
 .shop-grid .offer .btn svg { width: 13px; height: 13px; }
-.shop-grid .offer-note { top: 3px; right: 3px; padding: 0 4px; font-size: 8.5px; border-width: 1.5px; white-space: nowrap; max-width: calc(100% - 6px); overflow: hidden; text-overflow: ellipsis; }
+.shop-grid .offer-note { top: 3px; right: 3px; left: 3px; padding: 0 2px; font-size: 8px; border-width: 1.5px; white-space: nowrap; text-align: center; overflow: hidden; }
 .shop-grid .locked-badge { padding: 2px; right: -4px; }
 .shop-grid .locked-badge svg { width: 12px; height: 12px; }
 
