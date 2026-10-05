@@ -183,7 +183,10 @@ describe("boss fights: personal fights, shared damage", () => {
   it("Дацкоу: clothes 10% per win, the 10th win without clothes gives one for sure; owned pieces do not fall", async () => {
     await setBossHp({ datsik: 50 });
     const p = await newPlayer(db);
-    expect(await qty(db, p, "tee-white")).toBe(0); // no longer a starter
+    expect(await qty(db, p, "tee-white")).toBe(0); // players start with no clothes
+    expect(await qty(db, p, "sneakers")).toBe(0);
+    const [{ equipped }] = await db.query<{ equipped: Record<string, string> }>("SELECT equipped FROM appearance WHERE player_id=$1", [p]);
+    expect(equipped).toEqual({});
     await give(db, p, "red-candle", 30);
     const D = 24 * H;
     const win = async (i: number, rng: number) => {

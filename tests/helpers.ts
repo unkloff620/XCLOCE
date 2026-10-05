@@ -10,8 +10,11 @@ export async function freshDb(): Promise<Db> {
   await migrate(db);
   return db;
 }
+/** A fresh player. Players start with no clothes; tests get jeans so `equip jeans` works as a harmless "touch" action. */
 export async function newPlayer(db: Db): Promise<number> {
-  return db.tx((q) => upsertGuestPlayer(q, randomUUID()));
+  const id = await db.tx((q) => upsertGuestPlayer(q, randomUUID()));
+  await db.query("INSERT INTO inventory (player_id, item_id, qty) VALUES ($1,'jeans',1)", [id]);
+  return id;
 }
 export async function wallet(db: Db, pid: number, c: string): Promise<number> {
   return Number((await db.query<{ amount: number }>("SELECT amount FROM wallets WHERE player_id=$1 AND currency=$2", [pid, c]))[0]?.amount ?? 0);

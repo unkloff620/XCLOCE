@@ -32,8 +32,13 @@ export const OFFERS: Offer[] = [
   { id: "energy-50", section: "energy", give: { energy: 50, qty: 1 }, price: { currency: "RUB", amount: 900 }, title: "+50 энергии" },
   { id: "energy-100", section: "energy", give: { energy: 100, qty: 1 }, price: { currency: "USD", amount: 20 }, title: "+100 энергии" },
   { id: "energy-500", section: "energy", give: { energy: 500, qty: 1 }, price: { currency: "SOL", amount: 0.6 }, title: "+500 энергии", note: "сверх лимита" },
+  { id: "sneakers", section: "clothing", give: { item: "sneakers", qty: 1 }, price: { currency: "RUB", amount: 500 }, title: "Кеды" },
+  { id: "jeans", section: "clothing", give: { item: "jeans", qty: 1 }, price: { currency: "RUB", amount: 600 }, title: "Джинсы" },
   { id: "tee-pump", section: "clothing", give: { item: "tee-pump", qty: 1 }, price: { currency: "RUB", amount: 1500 }, title: "Футболка PUMP" },
+  { id: "shorts-remote", section: "clothing", give: { item: "shorts-remote", qty: 1 }, price: { currency: "RUB", amount: 1800 }, title: "Шорты «на удалёнке»" },
   { id: "cap-moon", section: "clothing", give: { item: "cap-moon", qty: 1 }, price: { currency: "USD", amount: 15 }, title: "Чёрная кепка" },
+  { id: "hoodie-hodl", section: "clothing", give: { item: "hoodie-hodl", qty: 1 }, price: { currency: "USD", amount: 35 }, title: "Худи HODL" },
+  { id: "gold-chain", section: "clothing", give: { item: "gold-chain", qty: 1 }, price: { currency: "SOL", amount: 0.12 }, title: "Серебряная цепь" },
   { id: "energy-drink", section: "misc", give: { item: "energy-drink", qty: 1 }, price: { currency: "RUB", amount: 180 }, title: "Энергетик" },
 ];
 export const offerById = (id: string) => OFFERS.find((o) => o.id === id);

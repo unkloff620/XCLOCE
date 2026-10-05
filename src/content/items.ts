@@ -79,16 +79,16 @@ export const WEAPONS: ItemDef[] = [
 
 const WEARABLES: ItemDef[] = ([
   { id: "tee-white", name: "Белая футболка", slot: "SHIRT", rarity: "common", description: "Классика офиса. Выбивается из Дацкоу.", sources: ["Победа: Дацкоу (10%)"] },
-  { id: "tee-pump", name: "Футболка pump.fun", slot: "SHIRT", rarity: "rare", description: "Зелёная, как график в мечтах.", sources: ["Награда за локацию 1"] },
-  { id: "hoodie-hodl", name: "Худи HODL", slot: "SHIRT", rarity: "epic", description: "Держит тепло и позицию.", sources: ["Награда за локацию 4"] },
-  { id: "jeans", name: "Джинсы", slot: "PANTS", rarity: "common", description: "Синие. Просто синие.", sources: ["Стартовые"] },
-  { id: "shorts-remote", name: "Шорты «на удалёнке»", slot: "PANTS", rarity: "rare", description: "Ниже камеры можно всё.", sources: ["Награда за локацию 2"] },
-  { id: "sneakers", name: "Кеды", slot: "SHOES", rarity: "common", description: "Белые, пока не вышел во двор.", sources: ["Стартовые"] },
+  { id: "tee-pump", name: "Футболка pump.fun", slot: "SHIRT", rarity: "rare", description: "Зелёная, как график в мечтах.", sources: ["Магазин", "Награда за локацию 1"] },
+  { id: "hoodie-hodl", name: "Худи HODL", slot: "SHIRT", rarity: "epic", description: "Держит тепло и позицию.", sources: ["Магазин", "Награда за локацию 4"] },
+  { id: "jeans", name: "Джинсы", slot: "PANTS", rarity: "common", description: "Синие. Просто синие.", sources: ["Магазин"] },
+  { id: "shorts-remote", name: "Шорты «на удалёнке»", slot: "PANTS", rarity: "rare", description: "Ниже камеры можно всё.", sources: ["Магазин", "Награда за локацию 2"] },
+  { id: "sneakers", name: "Кеды", slot: "SHOES", rarity: "common", description: "Белые, пока не вышел во двор.", sources: ["Магазин"] },
   { id: "slippers", name: "Тапки", slot: "SHOES", rarity: "rare", description: "Офисный дресс-код, версия 2.0.", sources: ["Награда за локацию 3", "Победа: Дацкоу (10%)"] },
-  { id: "cap-moon", name: "Чёрная кепка", slot: "HEAD", rarity: "rare", description: "Козырёк вперёд — курс на луну.", sources: ["Награда за локацию 2"] },
+  { id: "cap-moon", name: "Чёрная кепка", slot: "HEAD", rarity: "rare", description: "Козырёк вперёд — курс на луну.", sources: ["Магазин", "Награда за локацию 2"] },
   { id: "santa-hat", name: "Новогодний колпак", slot: "HEAD", rarity: "epic", description: "Сезонный предмет.", sources: ["Новогодний ивент"] },
   { id: "laser-eyes", name: "Лазерные глаза", slot: "ACCESSORY", rarity: "legendary", description: "Обязательный аксессуар биткоин-максималиста.", sources: ["Награда за локацию 5"] },
-  { id: "gold-chain", name: "Серебряная цепь", slot: "ACCESSORY", rarity: "epic", description: "Каждое звено — подтверждённый блок.", sources: ["Награда за локацию 3"] },
+  { id: "gold-chain", name: "Серебряная цепь", slot: "ACCESSORY", rarity: "epic", description: "Каждое звено — подтверждённый блок.", sources: ["Магазин", "Награда за локацию 3"] },
 ] as Omit<ItemDef, "category" | "maxStack">[]).map((w) => ({ ...w, category: "clothing" as const, maxStack: 1 }));
 
 const MISC: ItemDef[] = [
@@ -130,8 +130,8 @@ export const weaponById = (id: string) => {
   return i?.weapon ? (i as ItemDef & { weapon: WeaponStats }) : undefined;
 };
 
-/** Starting outfit: given and equipped on first login. The white tee now falls from Дацкоу. */
-export const STARTER_OUTFIT: Partial<Record<Slot, string>> = { PANTS: "jeans", SHOES: "sneakers" };
+/** Starting outfit: a new player starts with nothing on (clothes come from the shop and from bosses). */
+export const STARTER_OUTFIT: Partial<Record<Slot, string>> = {};
 export const RARITY_NAME: Record<Rarity, string> = { common: "Обычный", rare: "Редкий", epic: "Эпический", legendary: "Легендарный", mythic: "Мифический" };
 export const CATEGORY_NAME: Record<Category, string> = { weapon: "Оружие", clothing: "Одежда", item: "Предметы", reward: "Награды", event: "Ивентовые" };
 
