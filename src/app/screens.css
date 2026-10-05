@@ -1114,8 +1114,8 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .door-page { background: #120c08; }
 .door-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; filter: blur(8px) brightness(0.45); transform: scale(1.08); }
 .door-page .fight-head { position: absolute; left: 12px; right: 12px; top: var(--top); z-index: 4; }
-/* the room fills the screen height (cover): on a tall screen it grows and the side walls go off screen, the ceiling stays */
-.door-scene { position: absolute; --dw: max(100%, calc((100dvh - var(--nav-h) - var(--safe-b) + 6px) * 2000 / 2800)); width: var(--dw); left: calc((100% - var(--dw)) / 2);
+/* the room fills the height between the HUD and the menu (cover): on a tall screen it grows and the side walls go off screen, the ceiling stays */
+.door-scene { position: absolute; --dw: max(100%, calc((100dvh - var(--hud-h) - var(--safe-t) - var(--nav-h) - var(--safe-b) + 6px) * 2000 / 2800)); width: var(--dw); left: calc((100% - var(--dw)) / 2);
   bottom: calc(var(--nav-h) + var(--safe-b) - 6px); aspect-ratio: 2000 / 2800; perspective: 1100px; perspective-origin: 50% 42%;
   transform-origin: 50.6% 42%; transition: transform 0.4s ease-in; container-type: inline-size; }
 .door-scene > * { position: absolute; }
@@ -1149,8 +1149,8 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .door-plate .gain { font-size: 3.1cqw; gap: 1cqw; }
 .door-plate .gain svg { width: 4.2cqw; height: 4.2cqw; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.8)); }
 .door-plate .mystery-box { width: 4.2cqw !important; height: 4.2cqw !important; font-size: 3cqw !important; }
-.door-help { position: absolute; right: 12px; top: var(--top); z-index: 6; }
-.door-lock { position: absolute; left: 58.5%; top: 35.5%; width: 9%; aspect-ratio: 1; display: grid; place-items: center; border-radius: 50%; background: rgba(0, 0, 0, 0.6); pointer-events: none; }
+.door-help { position: absolute; right: 12px; top: calc(var(--top) + 4px); z-index: 6; }
+.door-lock { position: absolute; left: 59.5%; top: 38.6%; width: 6.5%; aspect-ratio: 1; display: grid; place-items: center; border-radius: 50%; background: rgba(0, 0, 0, 0.6); pointer-events: none; }
 .door-lock svg { width: 70%; height: 70%; }
 /* the pass on the left wall */
 .door-pass { left: 73.8%; top: 38%; width: 10.6%; display: flex; flex-direction: column; align-items: center; gap: 0; padding: 4px 2px 3px; border-radius: 8px;
