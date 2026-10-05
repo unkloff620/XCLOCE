@@ -352,7 +352,7 @@ export function BossScreen({ id }: { id: string }) {
     <div className="fit-page door-page" style={{ ["--acc" as string]: boss.theme.accent }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="door-backdrop" src="/assets/door/room.webp" alt="" aria-hidden="true" draggable={false} />
-      <div className="door-help"><BossRulesHelp topic="boss" /></div>
+      <div className="door-help"><BossRulesHelp topic="boss" bossId={boss.id} /></div>
       <div className={`door-scene ${door}`}>
         {/* behind the door: the boss's own background and the boss himself */}
         <div className="door-behind">

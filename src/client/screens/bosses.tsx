@@ -7,7 +7,8 @@ import { api, type Tray } from "../api.ts";
 import { BOSSES, bossById } from "../../content/bosses.ts";
 import { Avatar, GainLine, MysteryDrop, RewardChips } from "../ui.tsx";
 import type { BossDef } from "../../content/bosses.ts";
-import { Help } from "../help.tsx";
+import { Help, HelpList } from "../help.tsx";
+import { itemById } from "../../content/items.ts";
 import { Icon } from "../art/icons.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { BossSilhouette } from "../art/scenes.tsx";
@@ -131,10 +132,43 @@ export function BossesScreen() {
   );
 }
 
-/** The rules of boss fights behind a [?]. */
-export function BossRulesHelp({ topic }: { topic: "bosses" | "boss" }) {
+/** Everything that can fall from a boss besides the win reward (weapons, clothes) — no chances, those are a secret. */
+function dropsOf(b: BossDef): string[] {
+  return [...new Set([...(b.drop ?? []).map((d) => d.id), ...(b.wear?.items ?? [])])];
+}
+function dropHint(id: string): string {
+  const it = itemById(id);
+  if (!it) return "";
+  if (it.weapon) return `Оружие · урон ${it.weapon.damage}${it.weapon.kind === "consumable" ? " · тратится за удар" : ""}`;
+  if (it.category === "clothing") return `Одежда · ${it.description}`;
+  return it.description;
+}
+
+/** The rules of boss fights behind a [?]; on a boss's screen also what can fall from him, in the list — from every boss. */
+export function BossRulesHelp({ topic, bossId }: { topic: "bosses" | "boss"; bossId?: string }) {
+  const boss = bossId ? bossById(bossId) : null;
+  const drops = boss ? dropsOf(boss) : [];
   return (
     <Help topic={topic} title="Как бить боссов">
+      {boss && (
+        drops.length ? (
+          <HelpList title={`Что может выпасть с босса ${boss.name}`} rows={drops.map((id) => ({ key: id, icon: <ItemArt id={id} size={40} />, name: itemById(id)?.name ?? id, hint: dropHint(id) }))} />
+        ) : (
+          <p className="small muted">С босса {boss.name} вещи не падают — только награда за победу.</p>
+        )
+      )}
+      {boss && <p className="tiny muted" style={{ marginTop: 0 }}>У каждого босса свой дроп. Шанс — секрет, на двери он спрятан за «?». Вещь может выпасть, если нанёс в бою хотя бы 1% здоровья босса.</p>}
+      {!boss && (
+        <HelpList title="Что падает с боссов" rows={BOSSES.map((b) => {
+          const d = dropsOf(b);
+          return {
+            key: b.id,
+            icon: <span className="help-drops">{d.length ? d.map((id) => <ItemArt key={id} id={id} size={26} />) : <span className="tiny muted">—</span>}</span>,
+            name: `${b.order}. ${b.name}`,
+            hint: d.length ? d.map((id) => itemById(id)?.name ?? id).join(", ") : "ничего не падает, только награда",
+          };
+        })} />
+      )}
       <ul>
         <li>Бой у каждого свой и длится 8 часов. Не успел — босс уходит, бой проигран.</li>
         <li>Урон общий: удары всех, кто сейчас бьёт этого босса, снимают HP и в твоём бою.</li>
