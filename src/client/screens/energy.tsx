@@ -4,7 +4,7 @@ import { invQty, liveEnergy, useGame, useNow } from "../store.tsx";
 import { api } from "../api.ts";
 import { Modal } from "../ui.tsx";
 import { Icon } from "../art/icons.tsx";
-import { ItemArt } from "../art/items.tsx";
+import { EnergyArt, ItemArt } from "../art/items.tsx";
 import { clock, money } from "../format.ts";
 import { haptic } from "../telegram.ts";
 import { ITEMS } from "../../content/items.ts";
@@ -65,7 +65,7 @@ export function EnergyWindow({ onClose }: { onClose: () => void }) {
             const can = (state.wallet[o.price.currency] ?? 0) >= o.price.amount;
             return (
               <div key={o.id} className="energy-row">
-                <Icon name="energy" size={38} />
+                <EnergyArt amount={o.give.energy ?? 0} size={38} />
                 <div className="grow">
                   <b className="small">{o.title}</b>
                   {o.note && <div className="tiny muted">{o.note}</div>}

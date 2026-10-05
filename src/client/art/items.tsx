@@ -199,8 +199,13 @@ function Shoe({ fill, sole }: { fill: string; sole: string }) {
 const RASTER_ITEMS = new Set([
   "fist", "mouse", "red-candle", "keyboard", "gpu", "rug-pull-gun",
   "tee-white", "tee-pump", "hoodie-hodl", "jeans", "shorts-remote", "sneakers", "cap-moon", "slippers", "gold-chain",
-  "energy-drink", "lost-wallet", "bottle-cap", "flyer-passive", "spinner", "sticker-hodl", "statue-close",
+  "energy-drink", "energy-pack", "energy-50", "energy-100", "energy-500", "lost-wallet", "bottle-cap", "flyer-passive", "spinner", "sticker-hodl", "statue-close",
 ]);
+
+/** picture of an energy offer: +50 a crate, +100 a box, +500 a pile of cans (the energy icon for other amounts) */
+export function EnergyArt({ amount, size = 40 }: { amount: number; size?: number }) {
+  return RASTER_ITEMS.has(`energy-${amount}`) ? <ItemArt id={`energy-${amount}`} size={size} /> : <Icon name="energy" size={size} />;
+}
 
 /** a boss card (item key-<boss>) shows the picture of its tier: bronze … diamond */
 export function cardArt(id: string): string {

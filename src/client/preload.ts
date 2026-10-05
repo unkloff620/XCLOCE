@@ -8,7 +8,7 @@
 import { ASSET_FILES } from "./asset-manifest.ts";
 
 /** cache-busting versions of redrawn art (bump when the picture changes) */
-export const ART_VER = { heroPart: 3, hair: 4, wear: 2, yardBg: 2, items: 2 } as const;
+export const ART_VER = { heroPart: 3, hair: 4, wear: 2, yardBg: 2, items: 3 } as const;
 
 /** the URL a screen really requests for a file from the manifest */
 export function usedUrl(path: string): string {
