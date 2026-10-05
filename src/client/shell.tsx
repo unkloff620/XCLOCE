@@ -14,6 +14,7 @@ import { telegramBack } from "./telegram.ts";
 import { ResultWindow } from "./screens/result.tsx";
 import { LevelUpOverlay } from "./levelup.tsx";
 import { Tutorial } from "./tutorial.tsx";
+import { RouteLoader, startRouteLoad } from "./route-loader.tsx";
 import { PrizeWindow } from "./prizes.tsx";
 import { EnergyWindow } from "./screens/energy.tsx";
 import { NAV_TABS } from "../content/nav.ts";
@@ -146,7 +147,10 @@ function Nav() {
             // the tab of the open section: one step back inside it
             const up = parentOf(path, window.location.search, myClan);
             e.preventDefault();
-            if (up) router.push(up);
+            if (up) {
+              startRouteLoad();
+              router.push(up);
+            }
           }}>
           <NavIcon id={t.id} />
           {t.id === "yard" && !!state?.yard.count && <span className="badge">{state.yard.count}</span>}
@@ -277,6 +281,7 @@ export function Shell({ children }: { children: ReactNode }) {
             <Tutorial />
             <PrizeWindow />
             <LevelUpOverlay />
+            <RouteLoader />
           </>
         )}
       </div>
