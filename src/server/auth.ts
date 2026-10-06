@@ -138,3 +138,36 @@ export function signLoginWidget(fields: Record<string, string | number>, botToke
 export function newGuestId(): string {
   return randomUUID();
 }
+
+// ---------------- Admin sessions ----------------
+// A separate token (own HMAC key, 12 h) for the admin panel: a game session can never be used as an admin one.
+const ADMIN_TTL_S = 12 * 3600;
+const adminKey = () => sessionSecret() + ":admin";
+
+export function issueAdminSession(tgId: number, nowS = Math.floor(Date.now() / 1000)): string {
+  const payload = b64url(JSON.stringify({ tg: tgId, exp: nowS + ADMIN_TTL_S }));
+  return `${payload}.${createHmac("sha256", adminKey()).update(payload).digest("base64url")}`;
+}
+
+export function verifyAdminSession(token: string | null | undefined, nowS = Math.floor(Date.now() / 1000)): number {
+  const fail = () => new GameError("admin_required", "Войдите в админку заново", 401);
+  if (!token) throw fail();
+  const [payload, sig] = token.split(".");
+  if (!payload || !sig) throw fail();
+  const expected = createHmac("sha256", adminKey()).update(payload).digest();
+  const given = Buffer.from(sig, "base64url");
+  if (given.length !== expected.length || !timingSafeEqual(given, expected)) throw fail();
+  let data: { tg: number; exp: number };
+  try {
+    data = JSON.parse(Buffer.from(payload, "base64url").toString());
+  } catch {
+    throw fail();
+  }
+  if (!data.tg || data.exp < nowS) throw fail();
+  return data.tg;
+}
+
+/** Sandbox / local only: sign in to the admin panel by Telegram id without the widget. Never in production. */
+export function adminDevLogin(): boolean {
+  return process.env.ADMIN_DEV_LOGIN === "true" && process.env.VERCEL_ENV !== "production";
+}

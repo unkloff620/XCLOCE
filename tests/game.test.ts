@@ -694,3 +694,48 @@ describe("levels and auth", () => {
     expect(() => validateLoginWidget({ ...w, id: 43 }, token)).toThrow();
   });
 });
+
+describe("admin", () => {
+  it("logs actions (ok and refused), not hits", async () => {
+    const { actions } = await import("../src/server/admin.ts");
+    const p = await newPlayer(db);
+    await act(db, p, "equip", { itemId: "jeans" }, T0);
+    await expect(act(db, p, "buy", { offerId: "nope" }, T0)).rejects.toThrow();
+    const rows = await actions(db, { playerId: p });
+    expect(rows.map((r) => [r.type, r.ok])).toEqual([["buy", false], ["equip", true]]);
+    expect(String(rows[1].info)).toContain("jeans");
+  });
+  it("edits are applied, written to the ledger and admin_log", async () => {
+    const { edit, player } = await import("../src/server/admin.ts");
+    const p = await newPlayer(db);
+    await edit(db, 777, p, { op: "set_money", currency: "RUB", amount: 12345 });
+    await edit(db, 777, p, { op: "set_item", item: "mouse", qty: 50 });
+    await edit(db, 777, p, { op: "set_xp", value: 999 });
+    await edit(db, 777, p, { op: "set_talent", weapon: "fist", branch: "dmg", level: 3 });
+    await edit(db, 777, p, { op: "set_name", value: "Тест" });
+    expect(await wallet(db, p, "RUB")).toBe(12345);
+    expect(await qty(db, p, "mouse")).toBe(50);
+    await edit(db, 777, p, { op: "set_item", item: "mouse", qty: 0 });
+    expect(await qty(db, p, "mouse")).toBe(0);
+    await expect(edit(db, 777, p, { op: "set_item", item: "fist", qty: 5 })).rejects.toThrow();
+    const v = await player(db, p);
+    expect(v.player.display_name).toBe("Тест");
+    expect(Number(v.player.xp)).toBe(999);
+    expect(v.talents).toEqual([{ weapon_id: "fist", branch: "dmg", level: 3 }]);
+    expect(v.admin.length).toBe(6);
+    expect(v.ledger.some((l) => l.reason === "admin:777" && l.key === "mouse" && Number(l.delta) === -50)).toBe(true);
+  });
+  it("a banned player cannot act until unbanned", async () => {
+    const { edit } = await import("../src/server/admin.ts");
+    const p = await newPlayer(db);
+    await edit(db, 1, p, { op: "ban", reason: "читы" });
+    await expect(act(db, p, "equip", { itemId: "jeans" }, T0)).rejects.toThrow(/заблокирован: читы/);
+    await edit(db, 1, p, { op: "unban" });
+    await act(db, p, "equip", { itemId: "jeans" }, T0);
+  });
+  it("admin sessions are separate from game sessions", async () => {
+    const { issueAdminSession, verifyAdminSession, issueSession } = await import("../src/server/auth.ts");
+    expect(verifyAdminSession(issueAdminSession(42))).toBe(42);
+    expect(() => verifyAdminSession(issueSession(42))).toThrow();
+  });
+});

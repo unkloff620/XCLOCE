@@ -1,5 +1,6 @@
 import { GameError, getDb, type Db } from "./db.ts";
-import { verifySession } from "./auth.ts";
+import { verifyAdminSession, verifySession } from "./auth.ts";
+import { loadConfig } from "./config.ts";
 import { log } from "./log.ts";
 import { after } from "next/server";
 import { dispatchNotifications } from "./notify-send.ts";
@@ -99,6 +100,24 @@ export function authedRoute(name: string, fn: (ctx: Ctx) => Promise<unknown>) {
       const out = json(await fn({ db, req, body, playerId }));
       kickNotifications(db);
       return out;
+    } catch (e) {
+      return errorResponse(e, name);
+    }
+  };
+}
+
+/** Admin panel: an admin session whose Telegram id is still in the admin list (env ADMIN_TELEGRAM_IDS / config "admins"). */
+export function adminRoute(name: string, fn: (ctx: PublicCtx & { adminTg: number }) => Promise<unknown>) {
+  return async (req: Request): Promise<Response> => {
+    try {
+      if (!allow("adm:" + clientKey(req), 60, 10)) throw new GameError("rate_limited", "Слишком много запросов", 429);
+      const auth = req.headers.get("authorization");
+      const adminTg = verifyAdminSession(auth?.startsWith("Bearer ") ? auth.slice(7) : null);
+      const body = await readBody(req);
+      const db = await getDb();
+      const cfg = await loadConfig(db);
+      if (!cfg.admins.includes(adminTg)) throw new GameError("not_admin", "Нет доступа к админке", 403);
+      return json(await fn({ db, req, body, adminTg }));
     } catch (e) {
       return errorResponse(e, name);
     }

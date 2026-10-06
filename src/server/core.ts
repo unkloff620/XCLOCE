@@ -27,6 +27,8 @@ export interface PlayerRow {
   created_at: Date;
   last_seen_at: Date;
   active_days: number;
+  banned_at?: Date | null;
+  ban_reason?: string | null;
 }
 
 /** Moscow calendar day (daily limits reset at 00:00 MSK). */

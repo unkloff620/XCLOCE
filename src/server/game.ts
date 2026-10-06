@@ -33,7 +33,8 @@ export async function makeCtx(q: Queryable, pid: number, opts: { now?: number; r
 export async function inPlayerTx<T>(db: Db, pid: number, fn: (ctx: Ctx) => Promise<T>, opts: { now?: number; rng?: () => number } = {}) {
   return db.tx(async (q) => {
     const ctx = await makeCtx(q, pid, opts);
-    await lockPlayer(ctx);
+    const p = await lockPlayer(ctx);
+    if (p.banned_at) throw new GameError("banned", `Аккаунт заблокирован${p.ban_reason ? `: ${p.ban_reason}` : ""}`, 403);
     const result = await fn(ctx);
     return { result, state: await gameState(ctx) };
   });
@@ -127,6 +128,33 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
   }
 }
 
+/** Actions not written to the action log: hits are already in boss_hits, help_seen is noise. */
+const NOT_LOGGED = new Set<ActionType>(["attack", "help_seen"]);
+
+/** What the player sent, short (for the admin's action log). */
+function actionInfo(body: Record<string, unknown>): string | null {
+  const { type: _t, idem: _i, ...rest } = body;
+  void _t; void _i;
+  const s = JSON.stringify(rest);
+  return s === "{}" ? null : s.slice(0, 300);
+}
+
+export async function logAction(q: Queryable, pid: number, type: string, ok: boolean, info: string | null, now: number) {
+  await q.query("INSERT INTO action_log (player_id, type, ok, info, at) VALUES ($1,$2,$3,$4,$5)", [pid, type, ok, info, new Date(now)]);
+}
+
 export async function runAction(db: Db, pid: number, type: ActionType, body: Record<string, unknown>, opts: { now?: number; rng?: () => number } = {}) {
-  return inPlayerTx(db, pid, (ctx) => dispatch(ctx, type, body), opts);
+  try {
+    return await inPlayerTx(db, pid, async (ctx) => {
+      const r = await dispatch(ctx, type, body);
+      if (!NOT_LOGGED.has(type)) await logAction(ctx.q, pid, type, true, actionInfo(body), ctx.now);
+      return r;
+    }, opts);
+  } catch (e) {
+    // refused actions are logged too (outside the rolled-back transaction): spam and cheating attempts show up here
+    if (e instanceof GameError && e.status < 500 && e.code !== "banned" && !NOT_LOGGED.has(type)) {
+      await logAction(db, pid, type, false, `${e.code} ${actionInfo(body) ?? ""}`.trim().slice(0, 300), opts.now ?? Date.now()).catch(() => {});
+    }
+    throw e;
+  }
 }

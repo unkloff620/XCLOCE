@@ -466,4 +466,32 @@ due AS (
 UPDATE players p SET talents = p.talents + d.n FROM due d WHERE d.player_id = p.id AND d.n > 0;
 `,
   },
+  {
+    // Админка: журнал действий игроков (каждое действие, кроме ударов — они уже в boss_hits), журнал правок админов,
+    // бан игрока.
+    id: "v2-022-admin",
+    sql: `
+CREATE TABLE IF NOT EXISTS action_log (
+  id BIGSERIAL PRIMARY KEY,
+  player_id INT NOT NULL,
+  type TEXT NOT NULL,
+  ok BOOLEAN NOT NULL DEFAULT true,
+  info TEXT,
+  at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS action_log_player ON action_log (player_id, id DESC);
+CREATE INDEX IF NOT EXISTS action_log_at ON action_log (at);
+CREATE TABLE IF NOT EXISTS admin_log (
+  id BIGSERIAL PRIMARY KEY,
+  admin_tg BIGINT NOT NULL,
+  player_id INT,
+  op TEXT NOT NULL,
+  info JSONB NOT NULL DEFAULT '{}'::jsonb,
+  at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS admin_log_player ON admin_log (player_id, id DESC);
+ALTER TABLE players ADD COLUMN IF NOT EXISTS banned_at TIMESTAMPTZ;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS ban_reason TEXT;
+`,
+  },
 ];

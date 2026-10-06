@@ -1,0 +1,558 @@
+"use client";
+/*
+ * XCLOCE admin panel (outside the game): /admin. Sign-in with the Telegram Login Widget; the Telegram id must be in
+ * ADMIN_TELEGRAM_IDS. Overview, players, a player's card (edit money, items, authority, energy, talents, name, ban),
+ * the action log and the admins' own log. Views are in the URL hash, so a player's card can be linked: #player/42.
+ */
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import "./admin.css";
+import { ITEMS, itemById } from "../../content/items.ts";
+import { CURRENCIES } from "../../content/currencies.ts";
+import { TALENT_BRANCHES, TALENT_WEAPONS } from "../../content/talents.ts";
+import { bossById } from "../../content/bosses.ts";
+
+const TOKEN_KEY = "xcloce.admin";
+const ACTION_TYPES = [
+  "fight_start", "fight_claim", "fight_flee", "task", "location_claim", "yard_pick", "buy", "exchange", "use", "equip", "unequip",
+  "clan_create", "clan_join", "clan_leave", "clan_kick", "clan_edit", "daily_claim", "sell", "rename", "slots_spin",
+  "equipment_upgrade", "talent_up", "room_buy", "room_set", "look_set", "decor_set", "quest_claim", "quest_chest",
+  "notify_set", "achievement_claim", "prize_claim",
+];
+const ACTION_NAMES: Record<string, string> = {
+  fight_start: "начал бой", fight_claim: "забрал награду боя", fight_flee: "сбежал из боя", task: "задание", location_claim: "награда локации",
+  yard_pick: "находка во дворе", buy: "покупка", exchange: "обмен", use: "использовал", equip: "надел", unequip: "снял",
+  clan_create: "создал клан", clan_join: "вступил в клан", clan_leave: "вышел из клана", clan_kick: "исключил из клана", clan_edit: "изменил клан",
+  daily_claim: "ежедневная награда", sell: "продажа", rename: "смена имени", slots_spin: "автомат 777", equipment_upgrade: "улучшение комнаты",
+  talent_up: "талант", room_buy: "купил комнату", room_set: "сменил комнату", look_set: "внешность", decor_set: "декор",
+  quest_claim: "задание дня", quest_chest: "сундук дня", notify_set: "уведомления", achievement_claim: "достижение", prize_claim: "приз недели",
+};
+const OP_NAMES: Record<string, string> = {
+  set_money: "валюта", set_item: "предмет", set_xp: "авторитет", set_energy: "энергия", set_talents: "свободные таланты",
+  set_talent: "ветка таланта", set_name: "имя", ban: "бан", unban: "разбан",
+};
+
+// ---------------- api ----------------
+let token: string | null = null;
+function loadToken() {
+  try { token = localStorage.getItem(TOKEN_KEY); } catch { token = null; }
+}
+function saveToken(t: string | null) {
+  token = t;
+  try { if (t) localStorage.setItem(TOKEN_KEY, t); else localStorage.removeItem(TOKEN_KEY); } catch { /* private mode */ }
+}
+class ApiError extends Error {
+  constructor(message: string, public status: number, public code: string) { super(message); }
+}
+async function call<T>(path: string, body?: unknown): Promise<T> {
+  const r = await fetch(path, {
+    method: body === undefined ? "GET" : "POST",
+    headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}) },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new ApiError(j?.error?.message ?? `Ошибка ${r.status}`, r.status, j?.error?.code ?? "error");
+  return j as T;
+}
+const admin = <T,>(op: string, args: Record<string, unknown> = {}) => call<T>("/api/admin", { op, ...args });
+
+// ---------------- formatting ----------------
+type Row = Record<string, unknown>;
+const num = (v: unknown) => Number(v ?? 0);
+const fmt = (v: unknown) => num(v).toLocaleString("ru-RU", { maximumFractionDigits: 8 });
+function when(v: unknown) {
+  if (!v) return "—";
+  const d = new Date(String(v));
+  return d.toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
+}
+function ago(v: unknown) {
+  if (!v) return "—";
+  const s = Math.max(0, (Date.now() - new Date(String(v)).getTime()) / 1000);
+  if (s < 60) return "только что";
+  if (s < 3600) return `${Math.floor(s / 60)} мин назад`;
+  if (s < 86400) return `${Math.floor(s / 3600)} ч назад`;
+  return `${Math.floor(s / 86400)} дн назад`;
+}
+const who = (r: Row) => `${r.display_name ?? "?"}${r.username ? ` @${r.username}` : ""}`;
+function infoText(v: unknown): string {
+  if (!v) return "";
+  if (typeof v === "object") return Object.entries(v as Row).map(([k, x]) => `${k}: ${typeof x === "object" ? JSON.stringify(x) : x}`).join(", ");
+  return String(v);
+}
+
+// ---------------- routing ----------------
+type View = { tab: "dash" | "players" | "actions" | "log" } | { tab: "player"; id: number };
+function parseHash(): View {
+  const h = typeof location === "undefined" ? "" : location.hash.slice(1);
+  const m = /^player\/(\d+)$/.exec(h);
+  if (m) return { tab: "player", id: Number(m[1]) };
+  if (h === "players" || h === "actions" || h === "log") return { tab: h };
+  return { tab: "dash" };
+}
+const go = (h: string) => { location.hash = h; };
+
+// ---------------- page ----------------
+export default function AdminPage() {
+  const [me, setMe] = useState<number | null | undefined>(undefined);
+  const [view, setView] = useState<View>({ tab: "dash" });
+  useEffect(() => {
+    document.body.classList.add("adm-body");
+    loadToken();
+    setView(parseHash());
+    const on = () => setView(parseHash());
+    addEventListener("hashchange", on);
+    if (!token) setMe(null);
+    else admin<{ tg: number }>("me").then((r) => setMe(r.tg), () => { saveToken(null); setMe(null); });
+    return () => removeEventListener("hashchange", on);
+  }, []);
+  if (me === undefined) return <div className="adm-center muted">Загрузка…</div>;
+  if (me === null) return <Login onIn={setMe} />;
+  const out = () => { saveToken(null); setMe(null); };
+  return (
+    <div className="adm">
+      <header className="adm-top">
+        <b className="adm-logo"><span>X</span>CLOCE <small>админка</small></b>
+        <nav>
+          {([["dash", "Обзор"], ["players", "Игроки"], ["actions", "Действия"], ["log", "Правки админов"]] as const).map(([k, t]) => (
+            <a key={k} href={`#${k}`} className={view.tab === k || (k === "players" && view.tab === "player") ? "on" : ""}>{t}</a>
+          ))}
+        </nav>
+        <span className="grow" />
+        <span className="muted small">TG {me}</span>
+        <button className="adm-btn ghost" onClick={out}>Выйти</button>
+      </header>
+      <main className="adm-main">
+        {view.tab === "dash" && <Dashboard />}
+        {view.tab === "players" && <Players />}
+        {view.tab === "actions" && <Actions />}
+        {view.tab === "log" && <AdminLog />}
+        {view.tab === "player" && <Player key={view.id} id={view.id} />}
+      </main>
+    </div>
+  );
+}
+
+function Login({ onIn }: { onIn: (tg: number) => void }) {
+  const box = useRef<HTMLDivElement>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [bot, setBot] = useState<string | null | undefined>(undefined);
+  const [dev, setDev] = useState(false);
+  const [devId, setDevId] = useState("");
+  const done = useCallback(async (body: Row) => {
+    setErr(null);
+    try {
+      const r = await call<{ token: string; tg: number }>("/api/admin/login", body);
+      saveToken(r.token);
+      onIn(r.tg);
+    } catch (e) {
+      setErr((e as Error).message);
+    }
+  }, [onIn]);
+  useEffect(() => {
+    call<{ bot: string | null }>("/api/config").then((c) => setBot(c.bot), () => setBot(null));
+    call<{ dev: boolean }>("/api/admin/login").then((c) => setDev(c.dev), () => {});
+  }, []);
+  useEffect(() => {
+    if (!bot || !box.current) return;
+    (window as unknown as { onAdminAuth: (u: Row) => void }).onAdminAuth = (u) => done({ widget: u });
+    const s = document.createElement("script");
+    s.src = "https://telegram.org/js/telegram-widget.js?22";
+    s.async = true;
+    s.setAttribute("data-telegram-login", bot);
+    s.setAttribute("data-size", "large");
+    s.setAttribute("data-radius", "10");
+    s.setAttribute("data-onauth", "onAdminAuth(user)");
+    box.current.replaceChildren(s);
+  }, [bot, done]);
+  return (
+    <div className="adm-center">
+      <div className="adm-card adm-login">
+        <b className="adm-logo big"><span>X</span>CLOCE</b>
+        <p className="muted">Админ-панель. Вход через Telegram — доступ только у ID из списка админов.</p>
+        <div ref={box} className="adm-widget" />
+        {bot === null && <p className="muted small">Вход через Telegram не настроен (нет бота или домена).</p>}
+        {dev && (
+          <form className="row" onSubmit={(e) => { e.preventDefault(); done({ dev: Number(devId) }); }}>
+            <input className="adm-in" placeholder="Telegram ID (тестовый вход)" value={devId} onChange={(e) => setDevId(e.target.value)} />
+            <button className="adm-btn">Войти</button>
+          </form>
+        )}
+        {err && <p className="adm-err">{err}</p>}
+      </div>
+    </div>
+  );
+}
+
+// ---------------- shared bits ----------------
+function useLoad<T>(fn: () => Promise<T>, deps: unknown[]) {
+  const [data, setData] = useState<T | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    setErr(null);
+    fn().then((d) => alive && setData(d), (e) => alive && setErr((e as Error).message));
+    return () => { alive = false; };
+  }, [...deps, n]); // eslint-disable-line react-hooks/exhaustive-deps
+  return { data, err, reload: () => setN((x) => x + 1), setData };
+}
+function Box({ title, children, right }: { title: ReactNode; children: ReactNode; right?: ReactNode }) {
+  return (
+    <section className="adm-card">
+      <div className="adm-card-h"><h3>{title}</h3><span className="grow" />{right}</div>
+      {children}
+    </section>
+  );
+}
+function Table({ cols, rows, empty = "Пусто" }: { cols: [string, (r: Row) => ReactNode, string?][]; rows: Row[]; empty?: string }) {
+  if (!rows.length) return <p className="muted small">{empty}</p>;
+  return (
+    <div className="adm-scroll">
+      <table className="adm-table">
+        <thead><tr>{cols.map(([h, , c]) => <th key={h} className={c}>{h}</th>)}</tr></thead>
+        <tbody>{rows.map((r, i) => <tr key={String(r.id ?? i)}>{cols.map(([h, f, c]) => <td key={h} className={c}>{f(r)}</td>)}</tr>)}</tbody>
+      </table>
+    </div>
+  );
+}
+const PlayerLink = ({ r, id = r.player_id ?? r.id }: { r: Row; id?: unknown }) => <a href={`#player/${id}`}>{who(r)}</a>;
+const ActionName = ({ t }: { t: unknown }) => <span title={String(t)}>{ACTION_NAMES[String(t)] ?? String(t)}</span>;
+const Err = ({ e }: { e: string | null }) => (e ? <p className="adm-err">{e}</p> : null);
+
+// ---------------- overview ----------------
+function Dashboard() {
+  const { data, err, reload } = useLoad(() => admin<{ counts: Row; byType: Row[]; top: Row[]; suspicious: Row[] }>("dashboard"), []);
+  const feed = useLoad(() => admin<Row[]>("actions", { limit: 40 }), []);
+  useEffect(() => {
+    const t = setInterval(() => { reload(); feed.reload(); }, 30_000);
+    return () => clearInterval(t);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const c = data?.counts ?? {};
+  const stats: [string, unknown, string?][] = [
+    ["Игроков", c.players, `из них Telegram: ${fmt(c.telegram)}`], ["Онлайн (15 мин)", c.online], ["Активны за 24 ч", c.active24], ["Активны за 7 дн", c.active7],
+    ["Новых за 24 ч", c.new24], ["Идёт боёв", c.fights], ["Ударов за 24 ч", c.hits24, `урон ${fmt(c.damage24)}`], ["Действий за 24 ч", c.actions24, `отказов ${fmt(c.failed24)}`], ["В бане", c.banned],
+  ];
+  return (
+    <>
+      <Err e={err} />
+      <div className="adm-stats">
+        {stats.map(([t, v, s]) => (
+          <div key={t} className="adm-stat"><span className="muted small">{t}</span><b>{data ? fmt(v) : "…"}</b>{s && <span className="muted tiny">{s}</span>}</div>
+        ))}
+      </div>
+      <div className="adm-grid2">
+        <Box title="Действия за 24 ч">
+          <Table rows={data?.byType ?? []} cols={[["Действие", (r) => <ActionName t={r.type} />], ["Всего", (r) => fmt(r.total), "r"], ["Отказов", (r) => (num(r.failed) ? <span className="bad">{fmt(r.failed)}</span> : "0"), "r"]]} />
+        </Box>
+        <Box title="Топ по урону за всё время">
+          <Table rows={data?.top ?? []} cols={[["#", (r) => (data!.top.indexOf(r) + 1)], ["Игрок", (r) => <PlayerLink r={r} />], ["Урон", (r) => fmt(r.total_damage), "r"]]} />
+        </Box>
+      </div>
+      {!!data?.suspicious.length && (
+        <Box title="Подозрительно много отказов за 24 ч">
+          <p className="muted small">Сервер отклонил 20+ действий: так выглядит спам кнопок, скрипт или попытка обмануть сервер.</p>
+          <Table rows={data.suspicious} cols={[["Игрок", (r) => <PlayerLink r={r} />], ["Действий", (r) => fmt(r.total), "r"], ["Отказов", (r) => <span className="bad">{fmt(r.failed)}</span>, "r"]]} />
+        </Box>
+      )}
+      <Box title="Последние действия" right={<a href="#actions" className="small">все →</a>}>
+        <ActionRows rows={feed.data ?? []} withPlayer />
+      </Box>
+    </>
+  );
+}
+
+function ActionRows({ rows, withPlayer }: { rows: Row[]; withPlayer?: boolean }) {
+  return (
+    <Table rows={rows} empty="Действий нет" cols={[
+      ["Когда", (r) => <span title={when(r.at)}>{ago(r.at)}</span>, "nowrap"],
+      ...(withPlayer ? [["Игрок", (r: Row) => <PlayerLink r={r} />] as [string, (r: Row) => ReactNode]] : []),
+      ["Действие", (r) => <><span className={r.ok ? "dot ok" : "dot bad"} /> <ActionName t={r.type} /></>, "nowrap"],
+      ["Детали", (r) => <code className="adm-code">{String(r.info ?? "")}</code>],
+    ]} />
+  );
+}
+
+// ---------------- players ----------------
+function Players() {
+  const [q, setQ] = useState("");
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState("seen");
+  const [banned, setBanned] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const { data, err } = useLoad(() => admin<{ total: number; rows: Row[] }>("players", { q: query, sort, banned, offset }), [query, sort, banned, offset]);
+  return (
+    <Box title={`Игроки${data ? ` · ${fmt(data.total)}` : ""}`}>
+      <form className="adm-filters" onSubmit={(e) => { e.preventDefault(); setOffset(0); setQuery(q); }}>
+        <input className="adm-in grow" placeholder="ID, Telegram ID, имя или @username" value={q} onChange={(e) => setQ(e.target.value)} />
+        <select className="adm-in" value={sort} onChange={(e) => { setOffset(0); setSort(e.target.value); }}>
+          <option value="seen">последний вход</option><option value="new">новые</option><option value="xp">авторитет</option>
+          <option value="damage">урон</option><option value="rub">рубли</option>
+        </select>
+        <label className="adm-check"><input type="checkbox" checked={banned} onChange={(e) => { setOffset(0); setBanned(e.target.checked); }} /> в бане</label>
+        <button className="adm-btn">Найти</button>
+      </form>
+      <Err e={err} />
+      <Table rows={data?.rows ?? []} empty={data ? "Никого не нашли" : "Загрузка…"} cols={[
+        ["ID", (r) => r.id],
+        ["Игрок", (r) => <><PlayerLink r={r} />{r.banned_at ? <span className="tag bad">бан</span> : null}{!r.telegram_id && <span className="tag">гость</span>}</>],
+        ["Ур.", (r) => r.level, "r"],
+        ["Урон", (r) => fmt(r.damage), "r"],
+        ["RUB", (r) => fmt(r.rub), "r"],
+        ["Дней", (r) => r.active_days, "r"],
+        ["Был", (r) => <span title={when(r.last_seen_at)}>{ago(r.last_seen_at)}</span>, "nowrap"],
+        ["Создан", (r) => when(r.created_at), "nowrap"],
+      ]} />
+      {data && data.total > 50 && (
+        <div className="row adm-pager">
+          <button className="adm-btn ghost" disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - 50))}>←</button>
+          <span className="muted small">{offset + 1}–{Math.min(data.total, offset + 50)} из {fmt(data.total)}</span>
+          <button className="adm-btn ghost" disabled={offset + 50 >= data.total} onClick={() => setOffset(offset + 50)}>→</button>
+        </div>
+      )}
+    </Box>
+  );
+}
+
+// ---------------- action log ----------------
+function Actions() {
+  const [type, setType] = useState("");
+  const [playerId, setPlayerId] = useState("");
+  const [pid, setPid] = useState("");
+  const [failed, setFailed] = useState(false);
+  const [rows, setRows] = useState<Row[]>([]);
+  const [more, setMore] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const load = useCallback(async (before?: number) => {
+    setErr(null);
+    try {
+      const r = await admin<Row[]>("actions", { type: type || undefined, playerId: pid || undefined, failed, before, limit: 100 });
+      setRows((x) => (before ? [...x, ...r] : r));
+      setMore(r.length === 100);
+    } catch (e) {
+      setErr((e as Error).message);
+    }
+  }, [type, pid, failed]);
+  useEffect(() => { load(); }, [load]);
+  return (
+    <Box title="Действия игроков" right={<button className="adm-btn ghost" onClick={() => load()}>Обновить</button>}>
+      <p className="muted small">Каждое действие в игре, кроме ударов по боссу (их видно в боях игрока). Красная точка — сервер отказал. Хранится 60 дней.</p>
+      <form className="adm-filters" onSubmit={(e) => { e.preventDefault(); setPid(playerId.trim()); }}>
+        <select className="adm-in" value={type} onChange={(e) => setType(e.target.value)}>
+          <option value="">все действия</option>
+          {ACTION_TYPES.map((t) => <option key={t} value={t}>{ACTION_NAMES[t] ?? t}</option>)}
+        </select>
+        <input className="adm-in" placeholder="ID игрока" value={playerId} onChange={(e) => setPlayerId(e.target.value.replace(/\D/g, ""))} />
+        <label className="adm-check"><input type="checkbox" checked={failed} onChange={(e) => setFailed(e.target.checked)} /> только отказы</label>
+        <button className="adm-btn">Применить</button>
+      </form>
+      <Err e={err} />
+      <ActionRows rows={rows} withPlayer />
+      {more && <button className="adm-btn ghost wide" onClick={() => load(num(rows[rows.length - 1]?.id))}>Ещё</button>}
+    </Box>
+  );
+}
+
+function AdminLog() {
+  const { data, err } = useLoad(() => admin<Row[]>("admin_log"), []);
+  return (
+    <Box title="Правки админов">
+      <Err e={err} />
+      <Table rows={data ?? []} empty="Правок ещё не было" cols={[
+        ["Когда", (r) => when(r.at), "nowrap"], ["Админ (TG)", (r) => r.admin_tg], ["Игрок", (r) => <PlayerLink r={r} />],
+        ["Что", (r) => OP_NAMES[String(r.op)] ?? String(r.op)], ["Детали", (r) => <code className="adm-code">{infoText(r.info)}</code>],
+      ]} />
+    </Box>
+  );
+}
+
+// ---------------- player card ----------------
+type PlayerData = {
+  player: Row; money: Record<string, number>; inventory: Row[]; stats: Row | null; talents: Row[]; clan: Row | null;
+  fights: Row[]; actions: Row[]; ledger: Row[]; admin: Row[];
+};
+
+function Player({ id }: { id: number }) {
+  const { data, err, reload } = useLoad(() => admin<PlayerData>("player", { id }), [id]);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [tab, setTab] = useState<"actions" | "fights" | "ledger" | "admin">("actions");
+  const edit = useCallback(async (e: Row, label: string) => {
+    setMsg(null);
+    try {
+      const r = await admin<Row>("edit", { id, edit: e });
+      setMsg({ ok: true, text: `${label}: ${"from" in r ? `${r.from} → ${r.to}` : "готово"}` });
+      reload();
+      return true;
+    } catch (x) {
+      setMsg({ ok: false, text: (x as Error).message });
+      return false;
+    }
+  }, [id, reload]);
+  if (err) return <><a href="#players">← игроки</a><Err e={err} /></>;
+  if (!data) return <div className="muted">Загрузка…</div>;
+  const p = data.player;
+  return (
+    <>
+      <div className="adm-ph">
+        <a href="#players" className="small">← игроки</a>
+        <h2>{String(p.display_name)} {p.banned_at ? <span className="tag bad">бан{p.ban_reason ? `: ${p.ban_reason}` : ""}</span> : null}</h2>
+        <div className="muted small adm-meta">
+          <span>ID {String(p.id)}</span>
+          {p.telegram_id ? <span>TG {String(p.telegram_id)}</span> : <span className="tag">гость</span>}
+          {p.username ? <a href={`https://t.me/${p.username}`} target="_blank" rel="noreferrer">@{String(p.username)}</a> : null}
+          <span>ур. {String(p.level)}</span>
+          <span>создан {when(p.created_at)}</span>
+          <span>был {ago(p.last_seen_at)}</span>
+          <span>дней в игре {String(p.active_days)}</span>
+          {data.clan && <span>клан [{String(data.clan.tag)}] {String(data.clan.name)}{data.clan.role === "leader" ? " (лидер)" : ""}</span>}
+        </div>
+      </div>
+      {msg && <p className={msg.ok ? "adm-ok" : "adm-err"}>{msg.text}</p>}
+      <div className="adm-grid2">
+        <Box title="Валюта и параметры">
+          <div className="adm-form">
+            {CURRENCIES.map((c) => <EditNum key={c} label={c} value={data.money[c]} step="any" onSave={(v) => edit({ op: "set_money", currency: c, amount: v }, c)} />)}
+            <EditNum label="Авторитет (XP)" value={num(p.xp)} onSave={(v) => edit({ op: "set_xp", value: v }, "Авторитет")} />
+            <EditNum label="Энергия" value={num(p.energyNow)} onSave={(v) => edit({ op: "set_energy", value: v }, "Энергия")} />
+            <EditNum label="Свободные таланты" value={num(p.talents)} onSave={(v) => edit({ op: "set_talents", value: v }, "Таланты")} />
+            <EditText label="Имя" value={String(p.display_name)} onSave={(v) => edit({ op: "set_name", value: v }, "Имя")} />
+          </div>
+          <BanBox banned={!!p.banned_at} onBan={(reason) => edit({ op: "ban", reason }, "Бан")} onUnban={() => edit({ op: "unban" }, "Разбан")} />
+        </Box>
+        <Box title="Статистика">
+          {data.stats ? (
+            <dl className="adm-dl">
+              {([["Урон всего", "total_damage"], ["Побед", "fights_won"], ["Поражений", "fights_lost"], ["Заданий", "tasks_done"], ["Шагов заданий", "task_steps"], ["Локаций", "locations_done"], ["Находок во дворе", "yard_found"], ["Наград", "rewards_got"]] as const).map(([t, k]) => (
+                <div key={k}><dt>{t}</dt><dd>{fmt(data.stats![k])}</dd></div>
+              ))}
+            </dl>
+          ) : <p className="muted small">Нет статистики</p>}
+          {data.stats?.weapons && Object.keys(data.stats.weapons as Row).length > 0 && (
+            <p className="small muted">Удары по оружию: {Object.entries(data.stats.weapons as Row).map(([w, v]) => `${itemById(w)?.name ?? w} ${fmt(typeof v === "object" ? (v as Row).hits ?? JSON.stringify(v) : v)}`).join(" · ")}</p>
+          )}
+        </Box>
+      </div>
+      <Inventory rows={data.inventory} edit={edit} />
+      <Talents rows={data.talents} edit={edit} />
+      <section className="adm-card">
+        <div className="adm-tabs">
+          {([["actions", `Действия (${data.actions.length})`], ["fights", `Бои (${data.fights.length})`], ["ledger", `Движения (${data.ledger.length})`], ["admin", `Правки (${data.admin.length})`]] as const).map(([k, t]) => (
+            <button key={k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>{t}</button>
+          ))}
+        </div>
+        {tab === "actions" && <ActionRows rows={data.actions} />}
+        {tab === "fights" && (
+          <Table rows={data.fights} empty="Боёв нет" cols={[
+            ["#", (r) => r.id], ["Босс", (r) => bossById(String(r.boss_id))?.name ?? String(r.boss_id)], ["Статус", (r) => `${r.status}${r.solo ? " · соло" : ""}`],
+            ["Урон", (r) => fmt(r.my_damage), "r"], ["Ударов", (r) => fmt(r.my_hits), "r"], ["Начат", (r) => when(r.started_at), "nowrap"],
+            ["Награда", (r) => <code className="adm-code">{infoText(r.reward)}</code>],
+          ]} />
+        )}
+        {tab === "ledger" && (
+          <>
+            <p className="muted small">Все изменения валют, предметов, энергии и талантов (последние 300).</p>
+            <Table rows={data.ledger} cols={[
+              ["Когда", (r) => when(r.created_at), "nowrap"], ["Что", (r) => (r.kind === "item" || r.kind === "use" ? itemById(String(r.key))?.name ?? String(r.key) : String(r.key))],
+              ["Изм.", (r) => <span className={num(r.delta) < 0 ? "bad" : "good"}>{num(r.delta) > 0 ? "+" : ""}{fmt(r.delta)}</span>, "r"], ["Причина", (r) => <code className="adm-code">{String(r.reason)}</code>],
+            ]} />
+          </>
+        )}
+        {tab === "admin" && (
+          <Table rows={data.admin} empty="Админ не правил этого игрока" cols={[
+            ["Когда", (r) => when(r.at), "nowrap"], ["Админ (TG)", (r) => r.admin_tg], ["Что", (r) => OP_NAMES[String(r.op)] ?? String(r.op)], ["Детали", (r) => <code className="adm-code">{infoText(r.info)}</code>],
+          ]} />
+        )}
+      </section>
+    </>
+  );
+}
+
+type EditFn = (e: Row, label: string) => Promise<boolean>;
+
+function EditNum({ label, value, onSave, step = "1" }: { label: string; value: number; onSave: (v: number) => Promise<boolean>; step?: string }) {
+  const [v, setV] = useState(String(value));
+  useEffect(() => setV(String(value)), [value]);
+  const changed = v !== String(value) && v.trim() !== "" && Number.isFinite(Number(v));
+  return (
+    <form className="adm-field" onSubmit={(e) => { e.preventDefault(); if (changed) onSave(Number(v)); }}>
+      <label>{label}</label>
+      <input className="adm-in" type="number" step={step} min={0} value={v} onChange={(e) => setV(e.target.value)} />
+      <button className="adm-btn" disabled={!changed}>Сохранить</button>
+    </form>
+  );
+}
+function EditText({ label, value, onSave }: { label: string; value: string; onSave: (v: string) => Promise<boolean> }) {
+  const [v, setV] = useState(value);
+  useEffect(() => setV(value), [value]);
+  const changed = v.trim() !== value && v.trim() !== "";
+  return (
+    <form className="adm-field" onSubmit={(e) => { e.preventDefault(); if (changed) onSave(v.trim()); }}>
+      <label>{label}</label>
+      <input className="adm-in" maxLength={32} value={v} onChange={(e) => setV(e.target.value)} />
+      <button className="adm-btn" disabled={!changed}>Сохранить</button>
+    </form>
+  );
+}
+function BanBox({ banned, onBan, onUnban }: { banned: boolean; onBan: (reason: string) => Promise<boolean>; onUnban: () => Promise<boolean> }) {
+  const [reason, setReason] = useState("");
+  const [sure, setSure] = useState(false);
+  if (banned) return <div className="adm-ban"><button className="adm-btn" onClick={onUnban}>Разбанить</button></div>;
+  return (
+    <form className="adm-ban" onSubmit={(e) => { e.preventDefault(); if (sure) onBan(reason).then(() => setSure(false)); else setSure(true); }}>
+      <input className="adm-in grow" placeholder="Причина бана (её увидит игрок)" maxLength={200} value={reason} onChange={(e) => setReason(e.target.value)} />
+      <button className="adm-btn danger">{sure ? "Точно забанить?" : "Забанить"}</button>
+    </form>
+  );
+}
+
+function Inventory({ rows, edit }: { rows: Row[]; edit: EditFn }) {
+  const [add, setAdd] = useState("");
+  const [qty, setQty] = useState("1");
+  const [filter, setFilter] = useState("");
+  const options = useMemo(() => ITEMS.filter((i) => i.maxStack > 0).sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name)), []);
+  const shown = rows.filter((r) => !filter || String(r.name).toLowerCase().includes(filter.toLowerCase()) || String(r.item_id).includes(filter));
+  const def = itemById(add);
+  return (
+    <Box title={`Инвентарь · ${rows.length}`} right={<input className="adm-in sm" placeholder="фильтр" value={filter} onChange={(e) => setFilter(e.target.value)} />}>
+      <form className="adm-filters" onSubmit={(e) => { e.preventDefault(); if (def) edit({ op: "set_item", item: add, qty: Number(qty) }, def.name); }}>
+        <select className="adm-in grow" value={add} onChange={(e) => setAdd(e.target.value)}>
+          <option value="">выдать / задать предмет…</option>
+          {options.map((i) => <option key={i.id} value={i.id}>{i.name} · {i.category} · макс {i.maxStack}</option>)}
+        </select>
+        <input className="adm-in sm" type="number" min={0} max={def?.maxStack} value={qty} onChange={(e) => setQty(e.target.value)} />
+        <button className="adm-btn" disabled={!def}>Задать количество</button>
+      </form>
+      <Table rows={shown} empty="Инвентарь пуст" cols={[
+        ["Предмет", (r) => <><b>{String(r.name)}</b> <span className="muted tiny">{String(r.item_id)}</span></>],
+        ["Тип", (r) => String(r.category)],
+        ["Кол-во", (r) => <QtyCell r={r} edit={edit} />, "r"],
+        ["Откуда", (r) => <span className="muted small">{String(r.source ?? "")}</span>],
+      ]} />
+    </Box>
+  );
+}
+function QtyCell({ r, edit }: { r: Row; edit: EditFn }) {
+  const [v, setV] = useState(String(r.qty));
+  useEffect(() => setV(String(r.qty)), [r.qty]);
+  const changed = v !== String(r.qty) && v !== "";
+  return (
+    <form className="adm-qty" onSubmit={(e) => { e.preventDefault(); if (changed) edit({ op: "set_item", item: r.item_id, qty: Number(v) }, String(r.name)); }}>
+      <input className="adm-in sm" type="number" min={0} value={v} onChange={(e) => setV(e.target.value)} />
+      {changed && <button className="adm-btn sm">✓</button>}
+    </form>
+  );
+}
+
+function Talents({ rows, edit }: { rows: Row[]; edit: EditFn }) {
+  const level = (w: string, b: string) => num(rows.find((r) => r.weapon_id === w && r.branch === b)?.level);
+  return (
+    <Box title="Ветки талантов">
+      <Table rows={TALENT_WEAPONS.map((w) => ({ id: w }))} cols={[
+        ["Оружие", (r) => itemById(String(r.id))?.name ?? String(r.id)],
+        ...TALENT_BRANCHES.map((b) => [b.name, (r: Row) => (
+          <select className="adm-in sm" value={level(String(r.id), b.id)} onChange={(e) => edit({ op: "set_talent", weapon: r.id, branch: b.id, level: Number(e.target.value) }, `${itemById(String(r.id))?.name}: ${b.name}`)}>
+            {Array.from({ length: b.maxLevel + 1 }, (_, i) => <option key={i} value={i}>{i}</option>)}
+          </select>
+        ), "r"] as [string, (r: Row) => ReactNode, string]),
+      ]} />
+    </Box>
+  );
+}
