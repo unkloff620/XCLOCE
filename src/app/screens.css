@@ -534,6 +534,10 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .arena-photo.ouch .br-brows { animation: br-brow-ouch 0.5s ease-out; }
 @keyframes br-brow-ouch { 0% { transform: translateY(3px); } 100% { transform: translateY(0); } }
 .arena-photo.ouch .rig-kedr .br-fist-l, .arena-photo.ouch .rig-kedr .br-fist-r { animation-play-state: paused; }
+/* Командате: the irises are cut to the lids, so they glance only a little */
+.rig-bebyakyan .br-pupils { animation-name: br-look-small; }
+@keyframes br-look-small { 0%, 14%, 46%, 100% { transform: translate(0, 0); } 20%, 32% { transform: translate(-1.6px, 0); } 52%, 64% { transform: translate(1.6px, 0); } }
+.rig-bebyakyan .br-eyes-closed, .rig-bebyakyan .br-eyes-open { animation-duration: 3.7s; }
 @media (prefers-reduced-motion: reduce) { .br-breath, .br-head, .br-fist-l, .br-fist-r, .br-pupils, .br-brows { animation: none; } }
 
 /* ---------- shop scene ---------- */

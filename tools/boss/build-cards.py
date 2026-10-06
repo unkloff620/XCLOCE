@@ -9,6 +9,7 @@ CARDS = {
     # boss: (source, (x0, y0, x1, y1))
     "datsik": ("public/bosses/datsik/full.webp", (0, -90, 1024, 1174)),
     "kedr": ("tools/boss/source/kedr/raw/reference.png", (420, -70, 1460, 1214)),
+    "bebyakyan": ("tools/boss/source/bebyakyan/raw/reference.png", (240, -80, 1700, 1722)),
 }
 W = 640
 for boss, (src, (x0, y0, x1, y1)) in CARDS.items():
