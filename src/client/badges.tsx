@@ -40,6 +40,7 @@ function catState(c: AchCategory, rows: Map<string, AchRow>, self: boolean) {
 export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: boolean; onClaimed?: () => void }) {
   const { act, busy } = useGame();
   const [open, setOpen] = useState<string | null>(null);
+  const [soloOpen, setSoloOpen] = useState(false);
   const byId = new Map(rows.map((r) => [r.id, r]));
   const total = rows.filter((r) => r.claimed || (!self && r.done)).length;
   const claim = async (id: string) => {
@@ -91,32 +92,60 @@ export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: b
             </div>
           );
         })}
-      </div>
-      {/* one badge per boss: beat him in a solo fight once */}
-      <div className="row" style={{ justifyContent: "space-between", margin: "14px 0 8px" }}>
-        <span className="small muted">СОЛО-ПОБЕДЫ НАД БОССАМИ</span>
-        <span className="tiny muted num">{SOLO_BOSS_ACHIEVEMENTS.filter((a) => { const r = byId.get(a.id); return r && (r.claimed || (!self && r.done)); }).length}/{SOLO_BOSS_ACHIEVEMENTS.length}</span>
-      </div>
-      <div className="col" style={{ gap: 6 }}>
-        {SOLO_BOSS_ACHIEVEMENTS.map((a) => {
-          const r = byId.get(a.id);
-          const got = !!r && (r.claimed || (!self && r.done));
-          const due = self && !!r?.done && !r.claimed;
+        {/* one cell for the per-boss solo badges; the window lists every boss and its reward */}
+        {(() => {
+          const sr = SOLO_BOSS_ACHIEVEMENTS.map((a) => byId.get(a.id));
+          const got = sr.filter((r) => r && (r.claimed || (!self && r.done))).length;
+          const ready = self ? SOLO_BOSS_ACHIEVEMENTS.find((a) => { const r = byId.get(a.id); return r?.done && !r.claimed; }) ?? null : null;
+          const n = SOLO_BOSS_ACHIEVEMENTS.length;
+          const top = Math.max(0, ...SOLO_BOSS_ACHIEVEMENTS.filter((a) => { const r = byId.get(a.id); return r && (r.claimed || (!self && r.done)); }).map((a) => a.tier)) as AchTier | 0;
           return (
-            <div key={a.id} className={`ach-tier solo-ach ${got ? "got" : due ? "due" : ""}`} style={{ ["--c" as string]: TIER_COLORS[a.tier] }}>
-              <BadgeMedal icon={a.icon} tier={a.tier} earned={got || due} size={38} />
-              <span className="grow col" style={{ gap: 3, minWidth: 0 }}>
-                <b className="ellipsis" style={{ color: got || due ? TIER_COLORS[a.tier] : undefined }}>{a.name}</b>
-                <span className="tiny muted">{a.hint}</span>
-                <RewardChips r={a.reward} size={13} />
+            <div role="button" tabIndex={0} className={`ach-row ${ready ? "ready" : ""}`} onClick={() => setSoloOpen(true)} onKeyDown={(e) => e.key === "Enter" && setSoloOpen(true)}>
+              <BadgeMedal icon="swords" tier={top} earned={got > 0} size={44} />
+              <span className="ach-main">
+                <span className="row" style={{ justifyContent: "space-between", gap: 6 }}>
+                  <b className="ach-name">Соло-убийства</b>
+                  <span className="tiny muted num">{got}/{n}</span>
+                </span>
+                <span className="ach-bar sm" style={{ ["--p" as string]: `${Math.round((got / n) * 100)}%`, ["--c" as string]: "#ffcc33" }}>
+                  <i /><span className="num">{got >= n ? "всё собрано" : `${got} / ${n} боссов`}</span>
+                </span>
               </span>
-              {got ? <span className="quest-ok display">✓</span> : due ? (
-                <button className="btn gold sm" disabled={busy === "achievement_claim"} onClick={() => claim(a.id)}>Забрать</button>
-              ) : null}
+              {ready && (
+                <button className="btn gold sm ach-take" disabled={busy === "achievement_claim"}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void claim(ready.id);
+                  }}>Забрать</button>
+              )}
             </div>
           );
-        })}
+        })()}
       </div>
+      {soloOpen && (
+        <Modal title="Соло-убийства" onClose={() => setSoloOpen(false)}>
+          <div className="col" style={{ gap: 8 }}>
+            <div className="small muted center">Победи босса в бою «Соло» — HP снимают только твои удары. За каждого босса своя награда.</div>
+            {SOLO_BOSS_ACHIEVEMENTS.map((a) => {
+              const r = byId.get(a.id);
+              const got = !!r && (r.claimed || (!self && r.done));
+              const due = self && !!r?.done && !r.claimed;
+              return (
+                <div key={a.id} className={`ach-tier ${got ? "got" : due ? "due" : ""}`} style={{ ["--c" as string]: TIER_COLORS[a.tier] }}>
+                  <BadgeMedal icon={a.icon} tier={a.tier} earned={got || due} size={38} />
+                  <span className="grow col" style={{ gap: 3, minWidth: 0 }}>
+                    <b className="ellipsis" style={{ color: TIER_COLORS[a.tier] }}>{a.name.replace("Соло: ", "")}</b>
+                    <RewardChips r={a.reward} size={13} />
+                  </span>
+                  {got ? <span className="quest-ok display">✓</span> : due ? (
+                    <button className="btn gold sm" disabled={busy === "achievement_claim"} onClick={() => claim(a.id)}>Забрать</button>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        </Modal>
+      )}
       {cat && cs && (
         <Modal title={cat.name} onClose={() => setOpen(null)}>
           <div className="col" style={{ gap: 8 }}>
