@@ -359,10 +359,9 @@ export function BossScreen({ id }: { id: string }) {
           <DriftingSky className="fight-sky" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="door-behind-bg" src="/assets/arena/garage.webp" alt="" draggable={false} />
-          <div className="door-boss">
-            {locked ? (
-              <div className="arena-sil"><BossSilhouette accent={boss.theme.accent} /></div>
-            ) : hasBossRig(boss.id) ? (
+          {/* a boss that is not open yet stands there too, but grey */}
+          <div className={`door-boss${locked ? " locked" : ""}`}>
+            {hasBossRig(boss.id) ? (
               <BossRig id={boss.id} />
             ) : boss.photo.full ? (
               // eslint-disable-next-line @next/next/no-img-element
