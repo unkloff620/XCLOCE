@@ -18,6 +18,7 @@ import * as achievements from "./systems/achievements.ts";
 import { taskById } from "../content/locations.ts";
 import { weaponById } from "../content/items.ts";
 import { gameState } from "./systems/state.ts";
+import { actionText, refusedText } from "./action-text.ts";
 import { CURRENCIES } from "../content/currencies.ts";
 import { WEARABLE_SLOTS } from "../content/items.ts";
 
@@ -131,14 +132,6 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
 /** Actions not written to the action log: hits are already in boss_hits, help_seen is noise. */
 const NOT_LOGGED = new Set<ActionType>(["attack", "help_seen"]);
 
-/** What the player sent, short (for the admin's action log). */
-function actionInfo(body: Record<string, unknown>): string | null {
-  const { type: _t, idem: _i, ...rest } = body;
-  void _t; void _i;
-  const s = JSON.stringify(rest);
-  return s === "{}" ? null : s.slice(0, 300);
-}
-
 export async function logAction(q: Queryable, pid: number, type: string, ok: boolean, info: string | null, now: number) {
   await q.query("INSERT INTO action_log (player_id, type, ok, info, at) VALUES ($1,$2,$3,$4,$5)", [pid, type, ok, info, new Date(now)]);
 }
@@ -147,13 +140,13 @@ export async function runAction(db: Db, pid: number, type: ActionType, body: Rec
   try {
     return await inPlayerTx(db, pid, async (ctx) => {
       const r = await dispatch(ctx, type, body);
-      if (!NOT_LOGGED.has(type)) await logAction(ctx.q, pid, type, true, actionInfo(body), ctx.now);
+      if (!NOT_LOGGED.has(type)) await logAction(ctx.q, pid, type, true, actionText(type, body, r)?.slice(0, 500) ?? null, ctx.now);
       return r;
     }, opts);
   } catch (e) {
     // refused actions are logged too (outside the rolled-back transaction): spam and cheating attempts show up here
     if (e instanceof GameError && e.status < 500 && e.code !== "banned" && !NOT_LOGGED.has(type)) {
-      await logAction(db, pid, type, false, `${e.code} ${actionInfo(body) ?? ""}`.trim().slice(0, 300), opts.now ?? Date.now()).catch(() => {});
+      await logAction(db, pid, type, false, refusedText(type, body, e.message).slice(0, 500), opts.now ?? Date.now()).catch(() => {});
     }
     throw e;
   }

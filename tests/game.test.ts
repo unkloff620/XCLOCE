@@ -703,7 +703,9 @@ describe("admin", () => {
     await expect(act(db, p, "buy", { offerId: "nope" }, T0)).rejects.toThrow();
     const rows = await actions(db, { playerId: p });
     expect(rows.map((r) => [r.type, r.ok])).toEqual([["buy", false], ["equip", true]]);
-    expect(String(rows[1].info)).toContain("jeans");
+    const { itemById } = await import("../src/content/items.ts");
+    expect(String(rows[1].info)).toBe(itemById("jeans")!.name);
+    expect(String(rows[0].info)).toContain("отказ: Такого товара нет");
   });
   it("edits are applied, written to the ledger and admin_log", async () => {
     const { edit, player } = await import("../src/server/admin.ts");
@@ -737,6 +739,22 @@ describe("admin", () => {
     const { issueAdminSession, verifyAdminSession, issueSession } = await import("../src/server/auth.ts");
     expect(verifyAdminSession(issueAdminSession(42))).toBe(42);
     expect(() => verifyAdminSession(issueSession(42))).toThrow();
+  });
+});
+
+describe("action log texts", () => {
+  it("says what was found in the yard and what the 777 paid", async () => {
+    const { actionText } = await import("../src/server/action-text.ts");
+    expect(actionText("yard_pick", { itemId: 311 }, { name: "Ржавый ключ", reward: { xp: 5, currencies: { RUB: 120 }, items: [], energy: 0 } })).toBe("нашёл «Ржавый ключ» · +120 RUB, +5 авторитета");
+    expect(actionText("slots_spin", {}, { title: "Три биткоина", reels: ["btc", "btc", "btc"], reward: { xp: 0, currencies: { BTC: 0.001 }, items: [], energy: 0 } })).toBe("Три биткоина [BTC BTC BTC] · +0,001 BTC");
+    expect(actionText("slots_spin", {}, { title: "Мимо", reels: ["btc", "sol", "rub"], reward: null })).toBe("Мимо [BTC SOL RUB] · без выигрыша");
+  });
+  it("is written for real actions", async () => {
+    const { actions } = await import("../src/server/admin.ts");
+    const p = await newPlayer(db);
+    await act(db, p, "slots_spin", {}, T0);
+    const [row] = await actions(db, { playerId: p });
+    expect(String(row.info)).toMatch(/\[.+ .+ .+\] · /);
   });
 });
 

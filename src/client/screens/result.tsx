@@ -49,8 +49,11 @@ export function ResultWindow() {
     if (r?.reward && won) setGot(r.reward);
     else done();
   };
+  // the cross works like the main button: a lost fight is marked as seen (or the window comes back at once),
+  // a won one takes the reward first so it is not lost
   const close = () => {
-    if (got || !won) done();
+    if (got) done();
+    else if (busy !== "fight_claim") claim();
   };
 
   return (

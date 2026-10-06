@@ -10,6 +10,8 @@ import { ITEMS, itemById } from "../../content/items.ts";
 import { CURRENCIES } from "../../content/currencies.ts";
 import { TALENT_BRANCHES, TALENT_WEAPONS } from "../../content/talents.ts";
 import { bossById } from "../../content/bosses.ts";
+import { offerById } from "../../content/shop.ts";
+import { taskById } from "../../content/locations.ts";
 
 const TOKEN_KEY = "xcloce.admin";
 const ACTION_TYPES = [
@@ -77,6 +79,28 @@ function infoText(v: unknown): string {
   if (!v) return "";
   if (typeof v === "object") return Object.entries(v as Row).map(([k, x]) => `${k}: ${typeof x === "object" ? JSON.stringify(x) : x}`).join(", ");
   return String(v);
+}
+
+/** Entries logged before readable texts were stored as JSON of the request: show them in words too. */
+function legacyInfo(v: unknown): string {
+  const s = String(v ?? "");
+  if (!s.startsWith("{")) return s;
+  try {
+    const j = JSON.parse(s) as Row;
+    const out: string[] = [];
+    for (const [k, x] of Object.entries(j)) {
+      if (k === "offerId") out.push(`«${offerById(String(x))?.title ?? x}»`);
+      else if (k === "taskId") out.push(`«${taskById(String(x))?.task.title ?? x}»`);
+      else if (k === "boss") out.push(bossById(String(x))?.name ?? String(x));
+      else if (k === "itemId") out.push(typeof x === "number" ? `находка #${x} (что именно — не записано)` : itemById(String(x))?.name ?? String(x));
+      else if (k === "qty") out.push(`×${x}`);
+      else if (k === "solo") out.push(x ? "соло" : "");
+      else out.push(`${k}: ${typeof x === "object" ? JSON.stringify(x) : x}`);
+    }
+    return out.filter(Boolean).join(" · ");
+  } catch {
+    return s;
+  }
 }
 
 // ---------------- routing ----------------
@@ -419,7 +443,7 @@ function ActionRows({ rows, withPlayer }: { rows: Row[]; withPlayer?: boolean })
       ["Когда", (r) => <span title={when(r.at)}>{ago(r.at)}</span>, "nowrap"],
       ...(withPlayer ? [["Игрок", (r: Row) => <PlayerLink r={r} />] as [string, (r: Row) => ReactNode]] : []),
       ["Действие", (r) => <><span className={r.ok ? "dot ok" : "dot bad"} /> <ActionName t={r.type} /></>, "nowrap"],
-      ["Детали", (r) => <code className="adm-code">{String(r.info ?? "")}</code>],
+      ["Детали", (r) => <span className="adm-info">{legacyInfo(r.info)}</span>],
     ]} />
   );
 }

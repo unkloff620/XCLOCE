@@ -66,6 +66,7 @@ a.adm-btn { display: inline-block; text-decoration: none; }
 .adm-table th { text-align: left; font-weight: 600; color: var(--a-muted); font-size: 12px; padding: 6px 8px; border-bottom: 1px solid var(--a-line); white-space: nowrap; }
 .adm-table td { padding: 6px 8px; border-bottom: 1px solid #20242d; vertical-align: top; }
 .adm-table tbody tr:hover { background: var(--a-panel2); }
+.adm-info { display: inline-block; min-width: 200px; font-size: 13px; color: #c9d1e2; }
 .adm-code { display: inline-block; min-width: 180px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; color: #b9c2d6; word-break: break-word; }
 
 .adm-in { background: var(--a-bg); color: var(--a-ink); border: 1px solid var(--a-line); border-radius: 8px; padding: 7px 10px; font: inherit; min-width: 0; }
