@@ -292,12 +292,12 @@ function Players() {
       </form>
       <Err e={err} />
       <Table rows={data?.rows ?? []} empty={data ? "Никого не нашли" : "Загрузка…"} cols={[
-        ["ID", (r) => r.id],
+        ["ID", (r) => String(r.id)],
         ["Игрок", (r) => <><PlayerLink r={r} />{r.banned_at ? <span className="tag bad">бан</span> : null}{!r.telegram_id && <span className="tag">гость</span>}</>],
-        ["Ур.", (r) => r.level, "r"],
+        ["Ур.", (r) => String(r.level), "r"],
         ["Урон", (r) => fmt(r.damage), "r"],
         ["RUB", (r) => fmt(r.rub), "r"],
-        ["Дней", (r) => r.active_days, "r"],
+        ["Дней", (r) => String(r.active_days), "r"],
         ["Был", (r) => <span title={when(r.last_seen_at)}>{ago(r.last_seen_at)}</span>, "nowrap"],
         ["Создан", (r) => when(r.created_at), "nowrap"],
       ]} />
@@ -357,7 +357,7 @@ function AdminLog() {
     <Box title="Правки админов">
       <Err e={err} />
       <Table rows={data ?? []} empty="Правок ещё не было" cols={[
-        ["Когда", (r) => when(r.at), "nowrap"], ["Админ (TG)", (r) => r.admin_tg], ["Игрок", (r) => <PlayerLink r={r} />],
+        ["Когда", (r) => when(r.at), "nowrap"], ["Админ (TG)", (r) => String(r.admin_tg)], ["Игрок", (r) => <PlayerLink r={r} />],
         ["Что", (r) => OP_NAMES[String(r.op)] ?? String(r.op)], ["Детали", (r) => <code className="adm-code">{infoText(r.info)}</code>],
       ]} />
     </Box>
@@ -425,7 +425,7 @@ function Player({ id }: { id: number }) {
               ))}
             </dl>
           ) : <p className="muted small">Нет статистики</p>}
-          {data.stats?.weapons && Object.keys(data.stats.weapons as Row).length > 0 && (
+          {!!data.stats?.weapons && Object.keys(data.stats.weapons as Row).length > 0 && (
             <p className="small muted">Удары по оружию: {Object.entries(data.stats.weapons as Row).map(([w, v]) => `${itemById(w)?.name ?? w} ${fmt(typeof v === "object" ? (v as Row).hits ?? JSON.stringify(v) : v)}`).join(" · ")}</p>
           )}
         </Box>
@@ -441,7 +441,7 @@ function Player({ id }: { id: number }) {
         {tab === "actions" && <ActionRows rows={data.actions} />}
         {tab === "fights" && (
           <Table rows={data.fights} empty="Боёв нет" cols={[
-            ["#", (r) => r.id], ["Босс", (r) => bossById(String(r.boss_id))?.name ?? String(r.boss_id)], ["Статус", (r) => `${r.status}${r.solo ? " · соло" : ""}`],
+            ["#", (r) => String(r.id)], ["Босс", (r) => bossById(String(r.boss_id))?.name ?? String(r.boss_id)], ["Статус", (r) => `${r.status}${r.solo ? " · соло" : ""}`],
             ["Урон", (r) => fmt(r.my_damage), "r"], ["Ударов", (r) => fmt(r.my_hits), "r"], ["Начат", (r) => when(r.started_at), "nowrap"],
             ["Награда", (r) => <code className="adm-code">{infoText(r.reward)}</code>],
           ]} />
@@ -457,7 +457,7 @@ function Player({ id }: { id: number }) {
         )}
         {tab === "admin" && (
           <Table rows={data.admin} empty="Админ не правил этого игрока" cols={[
-            ["Когда", (r) => when(r.at), "nowrap"], ["Админ (TG)", (r) => r.admin_tg], ["Что", (r) => OP_NAMES[String(r.op)] ?? String(r.op)], ["Детали", (r) => <code className="adm-code">{infoText(r.info)}</code>],
+            ["Когда", (r) => when(r.at), "nowrap"], ["Админ (TG)", (r) => String(r.admin_tg)], ["Что", (r) => OP_NAMES[String(r.op)] ?? String(r.op)], ["Детали", (r) => <code className="adm-code">{infoText(r.info)}</code>],
           ]} />
         )}
       </section>
