@@ -41,7 +41,7 @@ export const CARD_TIERS: Record<CardTier, { name: string; rarity: "common" | "ra
   diamond: { name: "Бриллиантовый пропуск", rarity: "mythic" },
 };
 
-/** 1 000 → 10 000 → 50 000 → … → 10 000 000 (Солнце). Подчинённые (Гаркуша, Mugo, Вадим, Боцман) fill the gaps. */
+/** 1 000 → 10 000 → 50 000 → … → 10 000 000 (Солнце). Подчинённые (Гаркуша, Мугонатор, Вадим, Боцман) fill the gaps. */
 const HP = [1_000, 10_000, 50_000, 80_000, 115_000, 150_000, 400_000, 1_000_000, 1_500_000, 2_000_000, 2_500_000, 5_000_000, 10_000_000];
 const hp = (i: number) => HP[i];
 /** Authority for a win: 100 for Дацкоу … 1 500 000 for Солнце (×≈3.3 per boss, smaller steps across the inserted bosses). */
@@ -87,7 +87,7 @@ export const BOSSES: BossDef[] = [
     theme: { a: "#3a1a1a", b: "#140707", accent: "#ff6b4a" }, photo: photo("garkusha"),
   },
   {
-    id: "mugo", order: 5, card: "silver", name: "Mugo", title: "Подчинённый Вадима",
+    id: "mugo", order: 5, card: "silver", name: "Мугонатор", title: "Подчинённый Вадима",
     story: "Делает всё, что сказал Вадим. Иногда даже то, что Вадим только подумал.",
     hp: hp(4), reward: { xp: xp(4), currencies: { SOL: 0.058, RUB: 380 } },
     drop: [{ id: "energy-drink", qty: 2, chance: 0.35 }],
