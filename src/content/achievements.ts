@@ -1,4 +1,5 @@
 import type { Reward } from "./rewards.ts";
+import { BOSSES, type CardTier } from "./bosses.ts";
 
 /*
  * Достижения: значок в профиле + разовая награда. Прогресс считается сервером из того, что уже записано
@@ -6,7 +7,7 @@ import type { Reward } from "./rewards.ts";
  */
 
 /** what a badge measures (server: systems/achievements.ts → statsFor) */
-export type AchStat = "authority" | "damage" | "hits" | "wins" | "soloWins" | "kills" | "locations" | "tasks" | "yard" | "bestStreak" | "chests" | "weeklyTop";
+export type AchStat = "authority" | "damage" | "hits" | "wins" | "soloWins" | "kills" | "locations" | "tasks" | "yard" | "bestStreak" | "chests" | "weeklyTop" | `solo:${string}`;
 
 /** 1 bronze · 2 silver · 3 gold · 4 platinum · 5 diamond */
 export type AchTier = 1 | 2 | 3 | 4 | 5;
@@ -62,12 +63,27 @@ export interface AchievementDef {
 
 const fmt = (n: number) => n.toLocaleString("ru-RU").replace(/\u00a0/g, " ");
 
-export const ACHIEVEMENTS: AchievementDef[] = ACH_CATEGORIES.flatMap((c) =>
-  c.targets.map((target, i) => {
-    const tier = (i + 1) as AchTier;
-    return { id: `${c.id}-${tier}`, category: c.id, name: `${c.name}: ${TIER_NAMES[tier]}`, hint: c.hint.replace("{n}", fmt(target)), stat: c.stat, target, tier, icon: c.icon, reward: TIER_REWARDS[tier] };
-  }),
-);
+/** the pass tier of a boss → the medal and reward tier of beating him solo (the final boss counts as diamond) */
+const CARD_TO_TIER: Record<CardTier, AchTier> = { bronze: 1, silver: 2, gold: 3, platinum: 4, diamond: 5 };
+
+/** One badge per boss: win a solo fight against him once. Stat "solo:<boss id>" = solo wins over that boss. */
+export const SOLO_BOSS_ACHIEVEMENTS: AchievementDef[] = BOSSES.map((b) => {
+  const tier = b.card ? CARD_TO_TIER[b.card] : 5;
+  return {
+    id: `soloboss-${b.id}`, category: "solo-boss", name: `Соло: ${b.name}`, hint: `Убей босса ${b.name} в одиночку (бой «Соло»)`,
+    stat: `solo:${b.id}` as const, target: 1, tier, icon: "swords", reward: TIER_REWARDS[tier],
+  };
+});
+
+export const ACHIEVEMENTS: AchievementDef[] = [
+  ...ACH_CATEGORIES.flatMap((c) =>
+    c.targets.map((target, i) => {
+      const tier = (i + 1) as AchTier;
+      return { id: `${c.id}-${tier}`, category: c.id, name: `${c.name}: ${TIER_NAMES[tier]}`, hint: c.hint.replace("{n}", fmt(target)), stat: c.stat, target, tier, icon: c.icon, reward: TIER_REWARDS[tier] };
+    }),
+  ),
+  ...SOLO_BOSS_ACHIEVEMENTS,
+];
 
 export const achievementById = (id: string) => ACHIEVEMENTS.find((a) => a.id === id);
 

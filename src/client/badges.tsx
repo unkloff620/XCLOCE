@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { ACH_CATEGORIES, ACHIEVEMENTS, TIER_COLORS, TIER_NAMES, achievementById, type AchCategory, type AchTier } from "../content/achievements.ts";
+import { ACH_CATEGORIES, ACHIEVEMENTS, SOLO_BOSS_ACHIEVEMENTS, TIER_COLORS, TIER_NAMES, achievementById, type AchCategory, type AchTier } from "../content/achievements.ts";
 import { Icon, type IconName } from "./art/icons.tsx";
 import { Modal, RewardChips } from "./ui.tsx";
 import { useGame } from "./store.tsx";
@@ -88,6 +88,31 @@ export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: b
                     void claim(s.ready!.id);
                   }}>Забрать</button>
               )}
+            </div>
+          );
+        })}
+      </div>
+      {/* one badge per boss: beat him in a solo fight once */}
+      <div className="row" style={{ justifyContent: "space-between", margin: "14px 0 8px" }}>
+        <span className="small muted">СОЛО-ПОБЕДЫ НАД БОССАМИ</span>
+        <span className="tiny muted num">{SOLO_BOSS_ACHIEVEMENTS.filter((a) => { const r = byId.get(a.id); return r && (r.claimed || (!self && r.done)); }).length}/{SOLO_BOSS_ACHIEVEMENTS.length}</span>
+      </div>
+      <div className="col" style={{ gap: 6 }}>
+        {SOLO_BOSS_ACHIEVEMENTS.map((a) => {
+          const r = byId.get(a.id);
+          const got = !!r && (r.claimed || (!self && r.done));
+          const due = self && !!r?.done && !r.claimed;
+          return (
+            <div key={a.id} className={`ach-tier solo-ach ${got ? "got" : due ? "due" : ""}`} style={{ ["--c" as string]: TIER_COLORS[a.tier] }}>
+              <BadgeMedal icon={a.icon} tier={a.tier} earned={got || due} size={38} />
+              <span className="grow col" style={{ gap: 3, minWidth: 0 }}>
+                <b className="ellipsis" style={{ color: got || due ? TIER_COLORS[a.tier] : undefined }}>{a.name}</b>
+                <span className="tiny muted">{a.hint}</span>
+                <RewardChips r={a.reward} size={13} />
+              </span>
+              {got ? <span className="quest-ok display">✓</span> : due ? (
+                <button className="btn gold sm" disabled={busy === "achievement_claim"} onClick={() => claim(a.id)}>Забрать</button>
+              ) : null}
             </div>
           );
         })}
