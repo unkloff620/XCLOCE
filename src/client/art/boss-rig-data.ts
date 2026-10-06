@@ -16,8 +16,8 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "w": 262,
         "h": 426,
         "pivot": [
-          112.9,
-          535.4
+          228.0,
+          405.0
         ]
       },
       "foreR": {
@@ -26,8 +26,8 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "w": 224,
         "h": 262,
         "pivot": [
-          705.4,
-          468.8
+          617.0,
+          437.0
         ]
       },
       "head": {

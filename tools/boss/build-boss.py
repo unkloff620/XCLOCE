@@ -17,6 +17,8 @@ PARTS = ["body", "foreL", "foreR", "head", "eyes", "eyes-closed", "pupils", "bro
 JOINT = {"head": ("y", "max"), "foreL": ("y", "max"), "foreR": ("x", "max")}
 # bosses whose arms come up from below (both elbows at the bottom end)
 JOINT_BY_BOSS = {"kedr": {"foreR": ("y", "max")}}
+# hand-placed joints (output px): where the arm piece lies over the end of the torso's sleeve, so it turns without a gap
+PIVOT_BY_BOSS = {"bebyakyan": {"foreL": [228.0, 405.0], "foreR": [617.0, 437.0]}}
 
 out = {}
 for d in sorted(x for x in glob.glob(os.path.join(HERE, "source", "*")) if os.path.isdir(x)):
@@ -51,6 +53,8 @@ for d in sorted(x for x in glob.glob(os.path.join(HERE, "source", "*")) if os.pa
                 band = xs.max() - (xs.max() - xs.min()) * 0.15
                 sel = np.nonzero(m & (np.arange(W)[None, :] >= band))
             r["pivot"] = [round(sel[1].mean() * SCALE, 1), round(sel[0].mean() * SCALE, 1)]
+        if p in PIVOT_BY_BOSS.get(boss, {}):
+            r["pivot"] = PIVOT_BY_BOSS[boss][p]
         rig[p] = r
     out[boss] = {"w": round(W * SCALE), "h": round(H * SCALE), "parts": rig}
     print(boss, json.dumps(rig))
