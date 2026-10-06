@@ -86,12 +86,16 @@ select.adm-in.sm { width: auto; }
 
 .adm-err { color: var(--a-bad); background: rgba(255, 93, 115, 0.1); border: 1px solid rgba(255, 93, 115, 0.3); border-radius: 8px; padding: 8px 10px; margin: 0; }
 .adm-ok { color: var(--a-good); background: rgba(46, 232, 138, 0.08); border: 1px solid rgba(46, 232, 138, 0.3); border-radius: 8px; padding: 8px 10px; margin: 0; }
+.adm-who { display: inline-flex; align-items: center; gap: 8px; max-width: 280px; }
+.adm-ava { flex: none; border-radius: 50%; object-fit: cover; background: var(--a-panel2); border: 1px solid var(--a-line); }
+.adm-ava.letter { display: inline-grid; place-items: center; font-weight: 700; color: #fff; background: linear-gradient(135deg, #5a6cff, #2aabee); border: 0; }
 .tag { display: inline-block; font-size: 11px; padding: 1px 6px; margin-left: 6px; border-radius: 6px; background: var(--a-panel2); color: var(--a-muted); border: 1px solid var(--a-line); vertical-align: middle; }
 .tag.bad { color: var(--a-bad); border-color: rgba(255, 93, 115, 0.4); }
 .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; vertical-align: middle; }
 .dot.ok { background: var(--a-good); }
 .dot.bad { background: var(--a-bad); }
 
+.adm-who-h { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .adm-ph h2 { margin: 6px 0 4px; font-size: 22px; }
 .adm-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; }
 .adm-form { display: grid; gap: 8px; }

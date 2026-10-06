@@ -391,6 +391,22 @@ function Table({ cols, rows, empty = "Пусто" }: { cols: [string, (r: Row) =
     </div>
   );
 }
+/** Telegram avatar; the first letter of the name when there is no photo or it does not load */
+function Avatar({ r, size = 28 }: { r: Row; size?: number }) {
+  const [bad, setBad] = useState(false);
+  const url = typeof r.photo_url === "string" && r.photo_url ? r.photo_url : null;
+  const letter = String(r.display_name ?? "?").trim().charAt(0).toUpperCase() || "?";
+  return url && !bad
+    // eslint-disable-next-line @next/next/no-img-element
+    ? <img className="adm-ava" src={url} alt="" width={size} height={size} style={{ width: size, height: size }} referrerPolicy="no-referrer" onError={() => setBad(true)} />
+    : <span className="adm-ava letter" style={{ width: size, height: size, fontSize: size * 0.45 }}>{letter}</span>;
+}
+/** the Telegram id, opening the player's Telegram profile; guests have none */
+function TgId({ r }: { r: Row }) {
+  if (!r.telegram_id) return <span className="tag" style={{ marginLeft: 0 }} title={`игровой ID ${r.id}`}>гость</span>;
+  const href = r.username ? `https://t.me/${r.username}` : `tg://user?id=${r.telegram_id}`;
+  return <a href={href} target="_blank" rel="noreferrer" title={r.username ? `@${r.username} в Telegram` : "профиль в Telegram"}>{String(r.telegram_id)}</a>;
+}
 const PlayerLink = ({ r, id = r.player_id ?? r.id }: { r: Row; id?: unknown }) => <a href={`#player/${id}`}>{who(r)}</a>;
 const ActionName = ({ t }: { t: unknown }) => <span title={String(t)}>{ACTION_NAMES[String(t)] ?? String(t)}</span>;
 const Err = ({ e }: { e: string | null }) => (e ? <p className="adm-err">{e}</p> : null);
@@ -462,18 +478,18 @@ function Players() {
         <input className="adm-in grow" placeholder="ID, Telegram ID, имя или @username" value={q} onChange={(e) => setQ(e.target.value)} />
         <select className="adm-in" value={sort} onChange={(e) => { setOffset(0); setSort(e.target.value); }}>
           <option value="seen">последний вход</option><option value="new">новые</option><option value="xp">авторитет</option>
-          <option value="damage">урон</option><option value="rub">рубли</option>
+          <option value="damage">урон</option>
         </select>
         <label className="adm-check"><input type="checkbox" checked={banned} onChange={(e) => { setOffset(0); setBanned(e.target.checked); }} /> в бане</label>
         <button className="adm-btn">Найти</button>
       </form>
       <Err e={err} />
       <Table rows={data?.rows ?? []} empty={data ? "Никого не нашли" : "Загрузка…"} cols={[
-        ["ID", (r) => String(r.id)],
-        ["Игрок", (r) => <><PlayerLink r={r} />{r.banned_at ? <span className="tag bad">бан</span> : null}{!r.telegram_id && <span className="tag">гость</span>}</>],
+        ["ID", (r) => <TgId r={r} />, "nowrap"],
+        ["Игрок", (r) => <a href={`#player/${r.id}`} className="adm-who"><Avatar r={r} /><span className="ellipsis">{String(r.display_name)}</span>{r.banned_at ? <span className="tag bad">бан</span> : null}</a>],
         ["Ур.", (r) => String(r.level), "r"],
-        ["Урон", (r) => fmt(r.damage), "r"],
-        ["RUB", (r) => fmt(r.rub), "r"],
+        ["Авторитет", (r) => fmt(r.xp), "r"],
+        ["Урон за всё время", (r) => fmt(r.damage), "r"],
         ["Дней", (r) => String(r.active_days), "r"],
         ["Был", (r) => <span title={when(r.last_seen_at)}>{ago(r.last_seen_at)}</span>, "nowrap"],
         ["Создан", (r) => when(r.created_at), "nowrap"],
@@ -570,10 +586,10 @@ function Player({ id }: { id: number }) {
     <>
       <div className="adm-ph">
         <a href="#players" className="small">← игроки</a>
-        <h2>{String(p.display_name)} {p.banned_at ? <span className="tag bad">бан{p.ban_reason ? `: ${p.ban_reason}` : ""}</span> : null}</h2>
+        <h2 className="adm-who-h"><Avatar r={p} size={40} />{String(p.display_name)} {p.banned_at ? <span className="tag bad">бан{p.ban_reason ? `: ${p.ban_reason}` : ""}</span> : null}</h2>
         <div className="muted small adm-meta">
           <span>ID {String(p.id)}</span>
-          {p.telegram_id ? <span>TG {String(p.telegram_id)}</span> : <span className="tag">гость</span>}
+          {p.telegram_id ? <span>TG <TgId r={p} /></span> : <span className="tag">гость</span>}
           {p.username ? <a href={`https://t.me/${p.username}`} target="_blank" rel="noreferrer">@{String(p.username)}</a> : null}
           <span>ур. {String(p.level)}</span>
           <span>создан {when(p.created_at)}</span>

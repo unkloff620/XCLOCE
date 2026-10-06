@@ -68,7 +68,6 @@ const SORTS = {
   new: "p.created_at DESC",
   xp: "p.xp DESC",
   damage: "COALESCE(s.total_damage, 0) DESC",
-  rub: "COALESCE(w.amount, 0) DESC",
 } as const;
 export type PlayerSort = keyof typeof SORTS;
 export const PLAYER_SORTS = Object.keys(SORTS) as PlayerSort[];
@@ -88,12 +87,11 @@ export async function players(db: Db, f: { q?: string; sort?: PlayerSort; offset
   const sql = (cols: string, tail: string) => `
     SELECT ${cols} FROM players p
     LEFT JOIN player_stats s ON s.player_id = p.id
-    LEFT JOIN wallets w ON w.player_id = p.id AND w.currency = 'RUB'
     ${where.length ? "WHERE " + where.join(" AND ") : ""} ${tail}`;
   const offset = Math.max(0, Math.floor(f.offset ?? 0));
   const rows = await db.query(
     sql(
-      "p.id, p.telegram_id, p.username, p.display_name, p.xp, p.created_at, p.last_seen_at, p.active_days, p.banned_at, COALESCE(s.total_damage, 0) AS damage, COALESCE(w.amount, 0) AS rub",
+      "p.id, p.telegram_id, p.username, p.display_name, p.photo_url, p.xp, p.created_at, p.last_seen_at, p.active_days, p.banned_at, COALESCE(s.total_damage, 0) AS damage",
       `ORDER BY ${SORTS[f.sort ?? "seen"] ?? SORTS.seen}, p.id DESC LIMIT 50 OFFSET ${offset}`,
     ),
     args,
