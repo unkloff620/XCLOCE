@@ -1,6 +1,8 @@
 "use client";
 /*
- * Game sounds, synthesized with Web Audio — no files to download, nothing to preload.
+ * Game sounds. The «prison» set (chanson background music, the cell door, keys, punches, coins, a match, the bars)
+ * is in public/assets/sound (made by tools/sound/build-prison-sounds.py) and loads after the first touch; until a
+ * file is in — or if it fails — the synthesized Web Audio version plays instead. The battle music stays synthesized.
  * The audio context starts on the first touch (browsers and Telegram allow sound only after a gesture).
  * The mute switch is remembered on this device.
  */
@@ -12,6 +14,7 @@ const MUSIC_KEY = "xc2_music";
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
 let musicBus: GainNode | null = null;
+let musicLp: BiquadFilterNode | null = null;
 let muted = readFlag(MUTE_KEY, false);
 // music is on by default; it starts with the first touch
 let musicOn = !readFlag(MUSIC_KEY + "_off", false);
@@ -69,9 +72,11 @@ function audio(): AudioContext | null {
     const lp = ctx.createBiquadFilter();
     lp.type = "lowpass";
     lp.frequency.value = 2600;
+    musicLp = lp;
     musicBus = ctx.createGain();
     musicBus.gain.value = 0;
     musicBus.connect(lp).connect(ctx.destination);
+    loadSamples(ctx);
   }
   if (ctx.state === "suspended") void ctx.resume().catch(() => undefined);
   return ctx;
@@ -94,6 +99,57 @@ export function unlockAudioOnGesture() {
     if (document.visibilityState === "hidden") void ctx.suspend().catch(() => undefined);
     else void ctx.resume().catch(() => undefined);
   });
+}
+
+/* ---------------- recorded sounds ---------------- */
+const SAMPLE_URLS = {
+  music: "/assets/sound/chanson.mp3",
+  door: "/assets/sound/door.mp3",
+  keys: "/assets/sound/keys.mp3",
+  punch: "/assets/sound/punch.mp3",
+  crit: "/assets/sound/crit.mp3",
+  coin: "/assets/sound/coin.mp3",
+  match: "/assets/sound/match.mp3",
+  bars: "/assets/sound/bars.mp3",
+} as const;
+type SampleId = keyof typeof SAMPLE_URLS;
+/** the chanson file is one period with a bit of the end before it and of the start after it: loop exactly that period */
+const MUSIC_LOOP = { start: 0.5, end: 37.42308390022676 };
+/** the chanson is mastered loud: this brings it to the level of the rest of the music */
+const MUSIC_FILE_GAIN = 0.17;
+const buffers: Partial<Record<SampleId, AudioBuffer>> = {};
+let samplesLoading = false;
+
+function decode(a: AudioContext, data: ArrayBuffer): Promise<AudioBuffer> {
+  // old Safari only has the callback form
+  return new Promise((ok, fail) => {
+    const p = a.decodeAudioData(data, ok, fail);
+    if (p && typeof p.then === "function") p.then(ok, fail);
+  });
+}
+function loadSamples(a: AudioContext) {
+  if (samplesLoading) return;
+  samplesLoading = true;
+  for (const [id, url] of Object.entries(SAMPLE_URLS) as [SampleId, string][]) {
+    fetch(url)
+      .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(String(r.status)))))
+      .then((d) => decode(a, d))
+      .then((b) => { buffers[id] = b; })
+      .catch(() => undefined); // the synthesized sound stays
+  }
+}
+/** plays a recorded sound; false when it is not loaded (the caller falls back to the synthesized one) */
+function sample(a: AudioContext, id: SampleId, at: number, vol = 0.5, rate = 1): boolean {
+  const b = buffers[id];
+  if (!b || !master) return false;
+  const src = a.createBufferSource();
+  src.buffer = b;
+  src.playbackRate.value = rate;
+  const g = a.createGain();
+  g.gain.value = vol;
+  src.connect(g).connect(master);
+  src.start(at);
+  return true;
 }
 
 /** one oscillator note with a quick attack and an exponential tail */
@@ -146,17 +202,21 @@ export function sfx(name: Sfx, power = 0.5) {
       break;
     case "hit": {
       const p = Math.max(0, Math.min(1, power));
+      // a dull punch: heavier weapons are lower and louder
+      if (sample(a, "punch", t, 0.45 + p * 0.35, 1.12 - p * 0.3)) break;
       noise(a, t, 0.12 + p * 0.12, { freq: 900 + p * 900, vol: 0.45 + p * 0.3 });
       tone(a, 150 - p * 60, t, 0.16 + p * 0.14, { type: "sine", vol: 0.5, slide: 0.45 });
       break;
     }
     case "crit":
+      if (sample(a, "crit", t, 0.75)) break;
       noise(a, t, 0.25, { freq: 1800, vol: 0.7 });
       tone(a, 110, t, 0.3, { type: "sine", vol: 0.6, slide: 0.4 });
       tone(a, 1320, t + 0.03, 0.25, { type: "square", vol: 0.08 });
       tone(a, 1760, t + 0.09, 0.3, { type: "square", vol: 0.07 });
       break;
     case "coin":
+      if (sample(a, "coin", t, 0.4)) break;
       tone(a, 1319, t, 0.07, { type: "square", vol: 0.09 });
       tone(a, 1976, t + 0.06, 0.18, { type: "square", vol: 0.09 });
       break;
@@ -167,6 +227,8 @@ export function sfx(name: Sfx, power = 0.5) {
       tone(a, 2093, t + 0.17, 0.25, { type: "triangle", vol: 0.12 });
       break;
     case "reward":
+      // a match struck — «закурил» — over a short chime
+      sample(a, "match", t, 0.45);
       [784, 988, 1175, 1568].forEach((f, i) => tone(a, f, t + i * 0.07, 0.22, { type: "triangle", vol: 0.16 }));
       break;
     case "upgrade":
@@ -174,10 +236,16 @@ export function sfx(name: Sfx, power = 0.5) {
       [659, 880, 1319].forEach((f, i) => tone(a, f, t + 0.12 + i * 0.06, 0.25, { type: "triangle", vol: 0.14 }));
       break;
     case "chest":
+      if (sample(a, "keys", t, 0.5)) {
+        [1047, 1568, 2093].forEach((f, i) => tone(a, f, t + 0.25 + i * 0.07, 0.25, { type: "triangle", vol: 0.08 }));
+        break;
+      }
       noise(a, t, 0.35, { freq: 2400, type: "bandpass", q: 1.4, vol: 0.35 });
       [1047, 1319, 1568, 2093, 2637].forEach((f, i) => tone(a, f, t + 0.18 + i * 0.06, 0.3, { type: "triangle", vol: 0.12 }));
       break;
     case "win":
+      // the pass: a bunch of keys, then the fanfare
+      sample(a, "keys", t, 0.45);
       [523, 659, 784].forEach((f, i) => tone(a, f, t + i * 0.12, 0.2, { type: "square", vol: 0.08 }));
       tone(a, 1047, t + 0.36, 0.6, { type: "square", vol: 0.1 });
       tone(a, 784, t + 0.36, 0.6, { type: "triangle", vol: 0.12 });
@@ -192,6 +260,8 @@ export function sfx(name: Sfx, power = 0.5) {
       break;
     }
     case "door":
+      // the cell door: a creaking hinge and a heavy clank
+      if (sample(a, "door", t, 0.6)) break;
       // a rusty creak sliding up, then the heavy door hits the stop
       tone(a, 140, t, 0.75, { type: "sawtooth", vol: 0.05, slide: 1.9, attack: 0.08 });
       tone(a, 210, t + 0.1, 0.6, { type: "sawtooth", vol: 0.03, slide: 1.6, attack: 0.1 });
@@ -200,10 +270,13 @@ export function sfx(name: Sfx, power = 0.5) {
       tone(a, 75, t + 0.78, 0.3, { type: "sine", vol: 0.45, slide: 0.6 });
       break;
     case "locked":
+      // a mug along the bars
+      if (sample(a, "bars", t, 0.45)) break;
       [0, 0.09, 0.18].forEach((d) => noise(a, t + d, 0.06, { freq: 2600, type: "bandpass", q: 3, vol: 0.4 }));
       tone(a, 180, t + 0.02, 0.18, { type: "square", vol: 0.05 });
       break;
     case "error":
+      if (sample(a, "bars", t, 0.25, 1.15)) break;
       tone(a, 220, t, 0.12, { type: "square", vol: 0.07 });
       tone(a, 165, t + 0.11, 0.18, { type: "square", vol: 0.07 });
       break;
@@ -334,6 +407,32 @@ function calmStep(a: AudioContext, s: number, at: number) {
   if (bar >= 4) for (const [b, st, n, len] of MELODY) if (b === bar - 4 && st === inBar) tone(a, N(n + 12), at, STEP * len, { type: "square", vol: 0.025, attack: 0.02, out });
 }
 
+let fileSrc: AudioBufferSourceNode | null = null;
+/** the chanson loop (the calm track); the low-pass of the music bus is opened for it */
+function startFile(a: AudioContext): boolean {
+  if (fileSrc) return true;
+  const b = buffers.music;
+  if (!b || !musicBus) return false;
+  const src = a.createBufferSource();
+  src.buffer = b;
+  src.loop = true;
+  src.loopStart = MUSIC_LOOP.start;
+  src.loopEnd = Math.min(MUSIC_LOOP.end, b.duration);
+  const g = a.createGain();
+  g.gain.value = MUSIC_FILE_GAIN;
+  src.connect(g).connect(musicBus);
+  musicLp?.frequency.setValueAtTime(14000, a.currentTime);
+  src.start(a.currentTime + 0.05, MUSIC_LOOP.start);
+  fileSrc = src;
+  return true;
+}
+function stopFile(at = 0) {
+  if (!fileSrc) return;
+  try { fileSrc.stop(at); } catch { /* already stopped */ }
+  fileSrc = null;
+  if (ctx) musicLp?.frequency.setValueAtTime(2600, Math.max(at, ctx.currentTime));
+}
+
 export function startMusic() {
   const a = audio();
   if (!a || !musicBus || seqTimer) return;
@@ -343,6 +442,12 @@ export function startMusic() {
   nextAt = a.currentTime + 0.1;
   seqTimer = setInterval(() => {
     if (a.state !== "running" || switchTimer) return;
+    // the calm track is the chanson file once it has loaded; the synthesized loop plays until then
+    if (track === "calm" && startFile(a)) {
+      nextAt = a.currentTime + 0.05;
+      return;
+    }
+    if (track !== "calm") stopFile();
     // schedule everything due in the next 0.3 s
     while (nextAt < a.currentTime + 0.3) {
       const t = TRACKS[track];
@@ -376,6 +481,7 @@ export function setMusicTrack(t: MusicTrack) {
   musicBus.gain.linearRampToValueAtTime(0, a.currentTime + 0.35);
   switchTimer = setTimeout(() => {
     switchTimer = null;
+    stopFile();
     track = t;
     step = 0;
     if (!musicBus || !ctx) return;
@@ -389,6 +495,7 @@ export function setMusicTrack(t: MusicTrack) {
 export function stopMusic() {
   if (seqTimer) clearInterval(seqTimer);
   seqTimer = null;
+  if (ctx) stopFile(ctx.currentTime + 0.45);
   if (ctx && musicBus) {
     musicBus.gain.cancelScheduledValues(ctx.currentTime);
     musicBus.gain.setValueAtTime(musicBus.gain.value, ctx.currentTime);
