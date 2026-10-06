@@ -14,7 +14,7 @@ export const POST = adminRoute("admin", async ({ db, body, adminTg }) => {
     case "dashboard": return admin.dashboard(db);
     case "players": return admin.players(db, { q: optStr(body.q), sort: body.sort ? oneOf(body.sort, admin.PLAYER_SORTS, "sort") : undefined, offset: optNum(body.offset), banned: body.banned === true });
     case "player": return admin.player(db, num(body.id, "id"));
-    case "actions": return admin.actions(db, { playerId: optNum(body.playerId), type: optStr(body.type), failed: body.failed === true, before: optNum(body.before) });
+    case "actions": return admin.actions(db, { playerId: optNum(body.playerId), type: optStr(body.type), failed: body.failed === true, before: optNum(body.before), sinceHours: optNum(body.sinceHours) });
     case "admin_log": return admin.adminLog(db, optNum(body.before));
     case "edit": {
       const e = body.edit as Record<string, unknown> | undefined;

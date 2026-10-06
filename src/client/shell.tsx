@@ -277,7 +277,7 @@ function Login({ bot }: { bot: string | null }) {
   return (
     <div className="loading">
       <div className="panel" style={{ maxWidth: 360, padding: 22 }}>
-        <div className="logo display" style={{ fontSize: 34 }}>XCLOCE</div>
+        <div className="logo display" style={{ fontSize: 34 }}>XCLOSE</div>
         <p>Игра для сотрудников. Войди через Telegram — аккаунт тот же, что и в мини-приложении.</p>
         <div ref={box} style={{ display: "grid", placeItems: "center", minHeight: 50 }} />
         {!bot && <p className="muted small">Вход через браузер не настроен. Открой игру в Telegram.</p>}

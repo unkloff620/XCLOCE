@@ -36,27 +36,28 @@ export async function dashboard(db: Db) {
     SELECT type, COUNT(*)::int AS total, COUNT(*) FILTER (WHERE NOT ok)::int AS failed
     FROM action_log WHERE at > now() - interval '1 day' GROUP BY type ORDER BY total DESC`);
   const top = await db.query(`
-    SELECT p.id, p.display_name, p.username, s.total_damage FROM player_stats s JOIN players p ON p.id = s.player_id
+    SELECT p.id, p.display_name, p.username, p.photo_url, s.total_damage FROM player_stats s JOIN players p ON p.id = s.player_id
     ORDER BY s.total_damage DESC LIMIT 10`);
   // the busiest players of the day: many refused actions are what a script or a cheat looks like
   const suspicious = await db.query(`
-    SELECT a.player_id AS id, p.display_name, p.username, COUNT(*)::int AS total, COUNT(*) FILTER (WHERE NOT a.ok)::int AS failed
+    SELECT a.player_id AS id, p.display_name, p.username, p.photo_url, COUNT(*)::int AS total, COUNT(*) FILTER (WHERE NOT a.ok)::int AS failed
     FROM action_log a JOIN players p ON p.id = a.player_id WHERE a.at > now() - interval '1 day'
-    GROUP BY a.player_id, p.display_name, p.username HAVING COUNT(*) FILTER (WHERE NOT a.ok) >= 20
+    GROUP BY a.player_id, p.display_name, p.username, p.photo_url HAVING COUNT(*) FILTER (WHERE NOT a.ok) >= 20
     ORDER BY failed DESC LIMIT 10`);
   return { counts: c, byType, top, suspicious };
 }
 
-export async function actions(db: Db, f: { playerId?: number; type?: string; failed?: boolean; before?: number; limit?: number }) {
+export async function actions(db: Db, f: { playerId?: number; type?: string; failed?: boolean; before?: number; limit?: number; sinceHours?: number }) {
   const where: string[] = [];
   const args: unknown[] = [];
   if (f.playerId) where.push(`a.player_id = $${args.push(f.playerId)}`);
   if (f.type) where.push(`a.type = $${args.push(f.type)}`);
   if (f.failed) where.push("NOT a.ok");
   if (f.before) where.push(`a.id < $${args.push(f.before)}`);
+  if (f.sinceHours) where.push(`a.at > now() - make_interval(hours => $${args.push(Math.min(24 * 60, Math.max(1, Math.floor(f.sinceHours)))) }::int)`);
   const limit = Math.min(500, Math.max(1, f.limit ?? 100));
   return db.query(
-    `SELECT a.id, a.player_id, p.display_name, p.username, a.type, a.ok, a.info, a.at
+    `SELECT a.id, a.player_id, p.display_name, p.username, p.photo_url, p.telegram_id, a.type, a.ok, a.info, a.at
      FROM action_log a LEFT JOIN players p ON p.id = a.player_id
      ${where.length ? "WHERE " + where.join(" AND ") : ""} ORDER BY a.id DESC LIMIT ${limit}`,
     args,
@@ -115,7 +116,7 @@ export async function player(db: Db, id: number) {
     db.query("SELECT id, boss_id, status, solo, started_at, ended_at, my_damage, my_hits, reward FROM fights WHERE player_id=$1 ORDER BY id DESC LIMIT 30", [id]),
     actions(db, { playerId: id, limit: 200 }),
     db.query("SELECT id, kind, key, delta, reason, created_at FROM ledger WHERE player_id=$1 ORDER BY id DESC LIMIT 300", [id]),
-    db.query("SELECT id, admin_tg, op, info, at FROM admin_log WHERE player_id=$1 ORDER BY id DESC LIMIT 100", [id]),
+    db.query(`SELECT a.id, a.admin_tg, ${ADMIN_COLS}, a.op, a.info, a.at FROM admin_log a LEFT JOIN players ap ON ap.telegram_id = a.admin_tg WHERE a.player_id=$1 ORDER BY a.id DESC LIMIT 100`, [id]),
   ]);
   const money = Object.fromEntries(CURRENCIES.map((c) => [c, n(wallet.find((w) => w.currency === c)?.amount)]));
   return {
@@ -132,9 +133,13 @@ export async function player(db: Db, id: number) {
   };
 }
 
+/** the admin as a player of the game (same Telegram id): name, avatar and username for the log */
+const ADMIN_COLS = `ap.display_name AS admin_name, ap.username AS admin_username, ap.photo_url AS admin_photo`;
+
 export async function adminLog(db: Db, before?: number) {
   return db.query(
-    `SELECT a.id, a.admin_tg, a.player_id, p.display_name, a.op, a.info, a.at FROM admin_log a LEFT JOIN players p ON p.id = a.player_id
+    `SELECT a.id, a.admin_tg, ${ADMIN_COLS}, a.player_id, p.display_name, p.username, p.photo_url, p.telegram_id, a.op, a.info, a.at
+     FROM admin_log a LEFT JOIN players p ON p.id = a.player_id LEFT JOIN players ap ON ap.telegram_id = a.admin_tg
      ${before ? "WHERE a.id < $1" : ""} ORDER BY a.id DESC LIMIT 200`,
     before ? [before] : [],
   );

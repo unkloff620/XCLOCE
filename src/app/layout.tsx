@@ -8,7 +8,7 @@ const body = Rubik({ subsets: ["latin", "cyrillic"], weight: ["400", "500", "700
 const display = Russo_One({ subsets: ["latin", "cyrillic"], weight: "400", variable: "--font-display", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "XCLOCE",
+  title: "XCLOSE",
   description: "Корпоративная игра: бей боссов администрации оружием, проходи локации, собирай двор.",
   icons: { icon: "/icon.svg" },
 };

@@ -1,6 +1,6 @@
 "use client";
 /*
- * XCLOCE admin panel (outside the game): /admin. Sign-in from the Telegram app (Mini App) or the Login Widget; the Telegram id must be in
+ * XCLOSE admin panel (outside the game): /admin. Sign-in from the Telegram app (Mini App) or the Login Widget; the Telegram id must be in
  * ADMIN_TELEGRAM_IDS. Overview, players, a player's card (edit money, items, authority, energy, talents, name, ban),
  * the action log and the admins' own log. Views are in the URL hash, so a player's card can be linked: #player/42.
  */
@@ -104,14 +104,30 @@ function legacyInfo(v: unknown): string {
 }
 
 // ---------------- routing ----------------
-type View = { tab: "dash" | "players" | "actions" | "log" } | { tab: "player"; id: number };
+type ActionsQuery = { type?: string; failed?: boolean; sinceHours?: number; playerId?: string };
+type View = { tab: "dash" | "log" } | { tab: "players" } | { tab: "actions"; q: ActionsQuery; key: string } | { tab: "player"; id: number };
 function parseHash(): View {
   const h = typeof location === "undefined" ? "" : location.hash.slice(1);
-  const m = /^player\/(\d+)$/.exec(h);
+  const [path, query = ""] = h.split("?");
+  const m = /^player\/(\d+)$/.exec(path);
   if (m) return { tab: "player", id: Number(m[1]) };
-  if (h === "players" || h === "actions" || h === "log") return { tab: h };
+  if (path === "actions") {
+    const p = new URLSearchParams(query);
+    return { tab: "actions", key: query, q: { type: p.get("type") ?? undefined, failed: p.get("failed") === "1", sinceHours: p.get("since") ? Number(p.get("since")) : undefined, playerId: p.get("player") ?? undefined } };
+  }
+  if (path === "players" || path === "log") return { tab: path };
   return { tab: "dash" };
 }
+/** link to the action log with filters */
+const actionsHref = (q: { type?: string; failed?: boolean; since?: number; player?: number | string }) => {
+  const p = new URLSearchParams();
+  if (q.type) p.set("type", q.type);
+  if (q.failed) p.set("failed", "1");
+  if (q.since) p.set("since", String(q.since));
+  if (q.player) p.set("player", String(q.player));
+  const s = p.toString();
+  return `#actions${s ? "?" + s : ""}`;
+};
 const go = (h: string) => { location.hash = h; };
 
 // ---------------- page ----------------
@@ -136,7 +152,7 @@ export default function AdminPage() {
   return (
     <div className="adm">
       <header className="adm-top">
-        <b className="adm-logo"><span>X</span>CLOCE <small>админка</small></b>
+        <b className="adm-logo"><span>X</span>CLOSE <small>админка</small></b>
         <nav>
           {([["dash", "Обзор"], ["players", "Игроки"], ["actions", "Действия"], ["log", "Правки админов"]] as const).map(([k, t]) => (
             <a key={k} href={`#${k}`} className={view.tab === k || (k === "players" && view.tab === "player") ? "on" : ""}>{t}</a>
@@ -149,7 +165,7 @@ export default function AdminPage() {
       <main className="adm-main">
         {view.tab === "dash" && <Dashboard />}
         {view.tab === "players" && <Players />}
-        {view.tab === "actions" && <Actions />}
+        {view.tab === "actions" && <Actions key={view.key} initial={view.q} />}
         {view.tab === "log" && <AdminLog />}
         {view.tab === "player" && <Player key={view.id} id={view.id} />}
       </main>
@@ -178,7 +194,7 @@ function openTelegram(bot: string, startapp: string): Promise<boolean> {
 }
 
 function Center({ children }: { children: ReactNode }) {
-  return <div className="adm-center"><div className="adm-card adm-login"><b className="adm-logo big"><span>X</span>CLOCE</b>{children}</div></div>;
+  return <div className="adm-center"><div className="adm-card adm-login"><b className="adm-logo big"><span>X</span>CLOSE</b>{children}</div></div>;
 }
 
 /**
@@ -407,7 +423,9 @@ function TgId({ r }: { r: Row }) {
   const href = r.username ? `https://t.me/${r.username}` : `tg://user?id=${r.telegram_id}`;
   return <a href={href} target="_blank" rel="noreferrer" title={r.username ? `@${r.username} в Telegram` : "профиль в Telegram"}>{String(r.telegram_id)}</a>;
 }
-const PlayerLink = ({ r, id = r.player_id ?? r.id }: { r: Row; id?: unknown }) => <a href={`#player/${id}`}>{who(r)}</a>;
+const PlayerLink = ({ r, id = r.player_id ?? r.id }: { r: Row; id?: unknown }) => (
+  <a href={`#player/${id}`} className="adm-who" title={r.username ? `@${r.username}` : undefined}><Avatar r={r} size={22} /><span className="ellipsis">{String(r.display_name ?? "?")}</span></a>
+);
 const ActionName = ({ t }: { t: unknown }) => <span title={String(t)}>{ACTION_NAMES[String(t)] ?? String(t)}</span>;
 const Err = ({ e }: { e: string | null }) => (e ? <p className="adm-err">{e}</p> : null);
 
@@ -422,19 +440,28 @@ function Dashboard() {
   const c = data?.counts ?? {};
   const stats: [string, unknown, string?][] = [
     ["Игроков", c.players, `из них Telegram: ${fmt(c.telegram)}`], ["Онлайн (15 мин)", c.online], ["Активны за 24 ч", c.active24], ["Активны за 7 дн", c.active7],
-    ["Новых за 24 ч", c.new24], ["Идёт боёв", c.fights], ["Ударов за 24 ч", c.hits24, `урон ${fmt(c.damage24)}`], ["Действий за 24 ч", c.actions24, `отказов ${fmt(c.failed24)}`], ["В бане", c.banned],
+    ["Новых за 24 ч", c.new24], ["Идёт боёв", c.fights], ["Ударов за 24 ч", c.hits24, `урон ${fmt(c.damage24)}`], ["Действий за 24 ч", c.actions24, `отказов ${fmt(c.failed24)} — открыть`], ["В бане", c.banned],
   ];
   return (
     <>
       <Err e={err} />
       <div className="adm-stats">
-        {stats.map(([t, v, s]) => (
-          <div key={t} className="adm-stat"><span className="muted small">{t}</span><b>{data ? fmt(v) : "…"}</b>{s && <span className="muted tiny">{s}</span>}</div>
-        ))}
+        {stats.map(([t, v, s]) => {
+          const inner = <><span className="muted small">{t}</span><b>{data ? fmt(v) : "…"}</b>{s && <span className="muted tiny">{s}</span>}</>;
+          // the actions tile opens the day's refusals
+          return t === "Действий за 24 ч"
+            ? <a key={t} className="adm-stat link" href={actionsHref({ failed: true, since: 24 })} title="Все отказы за 24 часа">{inner}</a>
+            : <div key={t} className="adm-stat">{inner}</div>;
+        })}
       </div>
       <div className="adm-grid2">
         <Box title="Действия за 24 ч">
-          <Table rows={data?.byType ?? []} cols={[["Действие", (r) => <ActionName t={r.type} />], ["Всего", (r) => fmt(r.total), "r"], ["Отказов", (r) => (num(r.failed) ? <span className="bad">{fmt(r.failed)}</span> : "0"), "r"]]} />
+          <p className="muted tiny">Нажмите на действие или на число отказов — откроется список за 24 часа.</p>
+          <Table rows={data?.byType ?? []} cols={[
+            ["Действие", (r) => <a href={actionsHref({ type: String(r.type), since: 24 })}><ActionName t={r.type} /></a>],
+            ["Всего", (r) => <a href={actionsHref({ type: String(r.type), since: 24 })}>{fmt(r.total)}</a>, "r"],
+            ["Отказов", (r) => (num(r.failed) ? <a className="bad" href={actionsHref({ type: String(r.type), failed: true, since: 24 })}>{fmt(r.failed)}</a> : "0"), "r"],
+          ]} />
         </Box>
         <Box title="Топ по урону за всё время">
           <Table rows={data?.top ?? []} cols={[["#", (r) => (data!.top.indexOf(r) + 1)], ["Игрок", (r) => <PlayerLink r={r} />], ["Урон", (r) => fmt(r.total_damage), "r"]]} />
@@ -443,7 +470,7 @@ function Dashboard() {
       {!!data?.suspicious.length && (
         <Box title="Подозрительно много отказов за 24 ч">
           <p className="muted small">Сервер отклонил 20+ действий: так выглядит спам кнопок, скрипт или попытка обмануть сервер.</p>
-          <Table rows={data.suspicious} cols={[["Игрок", (r) => <PlayerLink r={r} />], ["Действий", (r) => fmt(r.total), "r"], ["Отказов", (r) => <span className="bad">{fmt(r.failed)}</span>, "r"]]} />
+          <Table rows={data.suspicious} cols={[["Игрок", (r) => <PlayerLink r={r} />], ["Действий", (r) => <a href={actionsHref({ player: String(r.id), since: 24 })}>{fmt(r.total)}</a>, "r"], ["Отказов", (r) => <a className="bad" href={actionsHref({ player: String(r.id), failed: true, since: 24 })}>{fmt(r.failed)}</a>, "r"]]} />
         </Box>
       )}
       <Box title="Последние действия" right={<a href="#actions" className="small">все →</a>}>
@@ -506,41 +533,94 @@ function Players() {
 }
 
 // ---------------- action log ----------------
-function Actions() {
-  const [type, setType] = useState("");
-  const [playerId, setPlayerId] = useState("");
-  const [pid, setPid] = useState("");
-  const [failed, setFailed] = useState(false);
+function Actions({ initial }: { initial: ActionsQuery }) {
+  const [type, setType] = useState(initial.type ?? "");
+  const [playerId, setPlayerId] = useState(initial.playerId ?? "");
+  const [pid, setPid] = useState(initial.playerId ?? "");
+  const [failed, setFailed] = useState(!!initial.failed);
+  const [since, setSince] = useState(initial.sinceHours ?? 0);
   const [rows, setRows] = useState<Row[]>([]);
   const [more, setMore] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const load = useCallback(async (before?: number) => {
     setErr(null);
     try {
-      const r = await admin<Row[]>("actions", { type: type || undefined, playerId: pid || undefined, failed, before, limit: 100 });
+      const r = await admin<Row[]>("actions", { type: type || undefined, playerId: pid || undefined, failed, before, limit: 100, sinceHours: since || undefined });
       setRows((x) => (before ? [...x, ...r] : r));
       setMore(r.length === 100);
     } catch (e) {
       setErr((e as Error).message);
     }
-  }, [type, pid, failed]);
+  }, [type, pid, failed, since]);
   useEffect(() => { load(); }, [load]);
   return (
-    <Box title="Действия игроков" right={<button className="adm-btn ghost" onClick={() => load()}>Обновить</button>}>
+    <Box title={failed ? "Отказы" : "Действия игроков"} right={<button className="adm-btn ghost" onClick={() => load()}>Обновить</button>}>
       <p className="muted small">Каждое действие в игре, кроме ударов по боссу (их видно в боях игрока). Красная точка — сервер отказал. Хранится 60 дней.</p>
       <form className="adm-filters" onSubmit={(e) => { e.preventDefault(); setPid(playerId.trim()); }}>
         <select className="adm-in" value={type} onChange={(e) => setType(e.target.value)}>
           <option value="">все действия</option>
           {ACTION_TYPES.map((t) => <option key={t} value={t}>{ACTION_NAMES[t] ?? t}</option>)}
         </select>
-        <input className="adm-in" placeholder="ID игрока" value={playerId} onChange={(e) => setPlayerId(e.target.value.replace(/\D/g, ""))} />
+        <div className="adm-pid">
+          <input className="adm-in" placeholder="ID игрока" value={playerId} onChange={(e) => setPlayerId(e.target.value.replace(/\D/g, ""))} />
+          <PlayerPicker onPick={(id) => { setPlayerId(String(id)); setPid(String(id)); }} />
+        </div>
+        <select className="adm-in" value={since} onChange={(e) => setSince(Number(e.target.value))}>
+          <option value={0}>за всё время</option><option value={1}>за 1 час</option><option value={24}>за 24 часа</option><option value={168}>за 7 дней</option>
+        </select>
         <label className="adm-check"><input type="checkbox" checked={failed} onChange={(e) => setFailed(e.target.checked)} /> только отказы</label>
         <button className="adm-btn">Применить</button>
+        {pid && <button type="button" className="adm-btn ghost" onClick={() => { setPid(""); setPlayerId(""); }}>× игрок {pid}</button>}
       </form>
       <Err e={err} />
       <ActionRows rows={rows} withPlayer />
       {more && <button className="adm-btn ghost wide" onClick={() => load(num(rows[rows.length - 1]?.id))}>Ещё</button>}
     </Box>
+  );
+}
+
+/** «▾» next to the player id: the list of all players with a search, to pick one quickly */
+function PlayerPicker({ onPick }: { onPick: (id: number) => void }) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const [rows, setRows] = useState<Row[] | null>(null);
+  const [total, setTotal] = useState(0);
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    let alive = true;
+    const t = setTimeout(() => {
+      admin<{ total: number; rows: Row[] }>("players", { q: q || undefined, sort: "seen" }).then((r) => { if (alive) { setRows(r.rows); setTotal(r.total); } }, () => alive && setRows([]));
+    }, q ? 250 : 0);
+    return () => { alive = false; clearTimeout(t); };
+  }, [open, q]);
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: MouseEvent) => { if (box.current && !box.current.contains(e.target as Node)) setOpen(false); };
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", away);
+    document.addEventListener("keydown", esc);
+    return () => { document.removeEventListener("mousedown", away); document.removeEventListener("keydown", esc); };
+  }, [open]);
+  return (
+    <div className="adm-picker" ref={box}>
+      <button type="button" className="adm-btn ghost" aria-expanded={open} title="Список игроков" onClick={() => setOpen((v) => !v)}>Все игроки ▾</button>
+      {open && (
+        <div className="adm-pop">
+          <input className="adm-in" autoFocus placeholder="Имя, @username, ID или Telegram ID" value={q} onChange={(e) => setQ(e.target.value)} />
+          <div className="adm-pop-list">
+            {rows === null ? <p className="muted small">Загрузка…</p> : rows.length === 0 ? <p className="muted small">Никого не нашли</p> : rows.map((r) => (
+              <button type="button" key={String(r.id)} className="adm-pop-row" onClick={() => { onPick(num(r.id)); setOpen(false); }}>
+                <Avatar r={r} size={26} />
+                <span className="grow ellipsis">{String(r.display_name)}{r.username ? <span className="muted small"> @{String(r.username)}</span> : null}</span>
+                <span className="muted tiny">#{String(r.id)}</span>
+              </button>
+            ))}
+          </div>
+          {total > 50 && <p className="muted tiny">Показаны 50 из {fmt(total)} — уточните поиск</p>}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -550,10 +630,50 @@ function AdminLog() {
     <Box title="Правки админов">
       <Err e={err} />
       <Table rows={data ?? []} empty="Правок ещё не было" cols={[
-        ["Когда", (r) => when(r.at), "nowrap"], ["Админ (TG)", (r) => String(r.admin_tg)], ["Игрок", (r) => <PlayerLink r={r} />],
-        ["Что", (r) => OP_NAMES[String(r.op)] ?? String(r.op)], ["Детали", (r) => <code className="adm-code">{infoText(r.info)}</code>],
+        ["Когда", (r) => when(r.at), "nowrap"],
+        ["Админ", (r) => <AdminWho r={r} />],
+        ["Игрок", (r) => <a href={`#player/${r.player_id}`} className="adm-who"><Avatar r={r} size={24} /><span className="ellipsis">{String(r.display_name ?? "?")}</span></a>],
+        ["Что", (r) => OP_NAMES[String(r.op)] ?? String(r.op), "nowrap"],
+        ["Изменение", (r) => <EditInfo op={String(r.op)} info={r.info} />],
       ]} />
     </Box>
+  );
+}
+
+/** the admin: avatar and name (when they play the game too) and the Telegram id linking to the profile */
+function AdminWho({ r }: { r: Row }) {
+  const a = { display_name: r.admin_name ?? "Админ", photo_url: r.admin_photo, username: r.admin_username, telegram_id: r.admin_tg, id: null };
+  return (
+    <span className="adm-who">
+      <Avatar r={a} size={24} />
+      <span className="col" style={{ minWidth: 0 }}>
+        {r.admin_name ? <span className="ellipsis">{String(r.admin_name)}</span> : null}
+        <span className="small"><TgId r={a} /></span>
+      </span>
+    </span>
+  );
+}
+
+/** «RUB: 78 → 79»: green when it went up, red when it went down */
+function EditInfo({ op, info }: { op: string; info: unknown }) {
+  const i = (info && typeof info === "object" ? info : {}) as Row;
+  const label =
+    op === "set_money" ? String(i.currency ?? "") :
+    op === "set_item" ? itemById(String(i.item))?.name ?? String(i.item ?? "") :
+    op === "set_talent" ? `${itemById(String(i.weapon))?.name ?? i.weapon}: ${TALENT_BRANCHES.find((b) => b.id === i.branch)?.name ?? i.branch}` :
+    op === "set_xp" ? "Авторитет" : op === "set_energy" ? "Энергия" : op === "set_talents" ? "Свободные таланты" : op === "set_name" ? "Имя" : "";
+  if (op === "ban") return <span className="bad">заблокирован{i.reason ? `: ${i.reason}` : ""}</span>;
+  if (op === "unban") return <span className="good">разблокирован</span>;
+  if (!("from" in i) || !("to" in i)) return <span className="adm-info">{infoText(info)}</span>;
+  const numeric = typeof i.from === "number" && typeof i.to === "number";
+  const cls = numeric ? (num(i.to) > num(i.from) ? "good" : num(i.to) < num(i.from) ? "bad" : "") : "";
+  const diff = numeric ? num(i.to) - num(i.from) : 0;
+  return (
+    <span className={`adm-edit ${cls}`}>
+      {label && <b>{label}: </b>}
+      {numeric ? fmt(i.from) : `«${i.from}»`} → {numeric ? fmt(i.to) : `«${i.to}»`}
+      {numeric && diff !== 0 && <span className="adm-diff"> ({diff > 0 ? "+" : ""}{fmt(diff)})</span>}
+    </span>
   );
 }
 
@@ -650,7 +770,7 @@ function Player({ id }: { id: number }) {
         )}
         {tab === "admin" && (
           <Table rows={data.admin} empty="Админ не правил этого игрока" cols={[
-            ["Когда", (r) => when(r.at), "nowrap"], ["Админ (TG)", (r) => String(r.admin_tg)], ["Что", (r) => OP_NAMES[String(r.op)] ?? String(r.op)], ["Детали", (r) => <code className="adm-code">{infoText(r.info)}</code>],
+            ["Когда", (r) => when(r.at), "nowrap"], ["Админ", (r) => <AdminWho r={r} />], ["Что", (r) => OP_NAMES[String(r.op)] ?? String(r.op), "nowrap"], ["Изменение", (r) => <EditInfo op={String(r.op)} info={r.info} />],
           ]} />
         )}
       </section>
