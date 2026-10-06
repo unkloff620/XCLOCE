@@ -14,7 +14,7 @@ import { useFx, type Fx } from "../fx/attack.tsx";
 import { BossRulesHelp, useBossList } from "./bosses.tsx";
 import { WeaponShopWindow } from "./shop.tsx";
 import { clock, full, pct, short } from "../format.ts";
-import { sfx } from "../sound.ts";
+import { setMusicTrack, sfx } from "../sound.ts";
 import { haptic } from "../telegram.ts";
 import { DriftingSky } from "../art/sky.tsx";
 import { BossRig, hasBossRig } from "../art/boss-rig.tsx";
@@ -130,6 +130,13 @@ export function BossScreen({ id }: { id: string }) {
   const seen = useRef<Set<number>>(new Set());
   const fightId = state?.fight?.bossId === id ? state.fight.id : null;
   const me = state?.player.id;
+  // battle music while a fight with this boss is on; the calm loop comes back on leaving or when it ends
+  const fighting = !!fightId && (view ? view.status === "active" : true);
+  useEffect(() => {
+    if (!fighting) return;
+    setMusicTrack("battle");
+    return () => setMusicTrack("calm");
+  }, [fighting]);
 
   const onImpact = useCallback((f: Fx) => {
     setHitAnim(true);

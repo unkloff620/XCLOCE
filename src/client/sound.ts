@@ -240,11 +240,82 @@ const MELODY: [number, number, number, number][] = [
   [2, 0, 7, 3], [2, 4, 10, 2], [2, 6, 12, 2], [2, 8, 15, 6],
   [3, 0, 14, 4], [3, 6, 12, 2], [3, 8, 10, 4], [3, 12, 7, 4],
 ];
+/* ---------------- battle music ----------------
+ * In the boss room while a fight is on: 140 BPM, D minor, 8 bars of Dm – B♭ – C – A. A driving 8th-note saw bass
+ * through a low-pass, four-on-the-floor kick, snare on 2 and 4, 16th hats, power-chord stabs on the off-beats and a
+ * menacing lead in bars 5–8; bar 8 ends with a drum fill back into the loop.
+ */
+const B_BPM = 140;
+const B_STEP = 60 / B_BPM / 4;
+const D = (semi: number) => 146.83 * 2 ** (semi / 12); // semitones from D3
+const B_ROOTS = [0, -4, -2, -5]; // Dm, B♭, C, A
+const B_THIRD = [3, 4, 4, 4]; // minor third on Dm, major on the rest (A major pulls back to Dm)
+const B_LEAD: [number, number, number, number][] = [
+  [0, 0, 12, 2], [0, 2, 15, 2], [0, 4, 17, 4], [0, 10, 15, 2], [0, 12, 12, 4],
+  [1, 0, 10, 2], [1, 2, 12, 2], [1, 4, 14, 4], [1, 10, 12, 2], [1, 12, 10, 4],
+  [2, 0, 12, 2], [2, 2, 14, 2], [2, 4, 16, 4], [2, 10, 19, 2], [2, 12, 17, 4],
+  [3, 0, 16, 4], [3, 4, 13, 4], [3, 8, 16, 2], [3, 10, 19, 2], [3, 12, 21, 4],
+];
+
+/** a saw note through its own low-pass (the battle bass), the filter opening on the attack */
+function sawBass(a: AudioContext, freq: number, at: number, dur: number, out: AudioNode) {
+  const o = a.createOscillator();
+  const f = a.createBiquadFilter();
+  const g = a.createGain();
+  o.type = "sawtooth";
+  o.frequency.setValueAtTime(freq, at);
+  f.type = "lowpass";
+  f.Q.value = 6;
+  f.frequency.setValueAtTime(1400, at);
+  f.frequency.exponentialRampToValueAtTime(220, at + dur);
+  g.gain.setValueAtTime(0.0001, at);
+  g.gain.exponentialRampToValueAtTime(0.16, at + 0.005);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+  o.connect(f).connect(g).connect(out);
+  o.start(at);
+  o.stop(at + dur + 0.02);
+}
+
+function battleStep(a: AudioContext, s: number, at: number) {
+  const out = musicBus!;
+  const bar = Math.floor(s / 16) % 8;
+  const inBar = s % 16;
+  const root = B_ROOTS[bar % 4];
+  const fill = bar === 7 && inBar >= 12;
+  // bass: 8th notes, the octave jumping up on the off-beats
+  if (inBar % 2 === 0) sawBass(a, D(root - 12 + (inBar % 4 === 2 ? 12 : 0)), at, B_STEP * 1.8, out);
+  // kick on every beat
+  if (inBar % 4 === 0 && !fill) tone(a, 120, at, 0.2, { type: "sine", vol: 0.42, slide: 0.35, out });
+  // snare on 2 and 4 (and a roll in the fill)
+  if ((inBar === 4 || inBar === 12) && !fill) {
+    noise(a, at, 0.14, { freq: 2200, type: "bandpass", q: 0.9, vol: 0.32, out });
+    tone(a, 190, at, 0.08, { type: "triangle", vol: 0.12, out });
+  }
+  if (fill) noise(a, at, 0.07, { freq: 1600 + (inBar - 12) * 500, type: "bandpass", q: 1, vol: 0.18 + (inBar - 12) * 0.06, out });
+  // hats: 16ths, the off-beat ones louder
+  noise(a, at, 0.03, { freq: 8000, type: "highpass", vol: inBar % 4 === 2 ? 0.08 : 0.035, out });
+  // power-chord stabs (root + fifth + octave) on the "and" of 1 and 3
+  if (inBar === 2 || inBar === 10) for (const n of [root, root + 7, root + 12]) tone(a, D(n), at, B_STEP * 1.5, { type: "square", vol: 0.028, out });
+  // a held chord under it all, once per bar
+  if (inBar === 0) for (const n of [root, root + B_THIRD[bar % 4], root + 7]) tone(a, D(n + 12), at, B_STEP * 16, { type: "sawtooth", vol: 0.012, attack: 0.2, out });
+  // lead in bars 5–8
+  if (bar >= 4) for (const [b, st, n, len] of B_LEAD) if (b === bar - 4 && st === inBar) tone(a, D(n), at, B_STEP * len, { type: "square", vol: 0.034, attack: 0.01, out });
+  // crash at the top of the loop
+  if (s === 0) noise(a, at, 1.2, { freq: 5000, type: "highpass", vol: 0.12, out });
+}
+
+export type MusicTrack = "calm" | "battle";
+const TRACKS: Record<MusicTrack, { step: number; bars: number; play: (a: AudioContext, s: number, at: number) => void }> = {
+  calm: { step: STEP, bars: 8, play: calmStep },
+  battle: { step: B_STEP, bars: 8, play: battleStep },
+};
+let track: MusicTrack = "calm";
+
 let seqTimer: ReturnType<typeof setInterval> | null = null;
 let nextAt = 0;
 let step = 0;
 
-function playStep(a: AudioContext, s: number, at: number) {
+function calmStep(a: AudioContext, s: number, at: number) {
   const out = musicBus!;
   const bar = Math.floor(s / 16) % 8;
   const inBar = s % 16;
@@ -268,19 +339,51 @@ export function startMusic() {
   if (!a || !musicBus || seqTimer) return;
   musicBus.gain.cancelScheduledValues(a.currentTime);
   musicBus.gain.setValueAtTime(musicBus.gain.value, a.currentTime);
-  musicBus.gain.linearRampToValueAtTime(0.5, a.currentTime + 2.5); // fade in
+  musicBus.gain.linearRampToValueAtTime(track === "battle" ? 0.45 : 0.5, a.currentTime + 2.5); // fade in
   nextAt = a.currentTime + 0.1;
   seqTimer = setInterval(() => {
-    if (a.state !== "running") return;
+    if (a.state !== "running" || switchTimer) return;
     // schedule everything due in the next 0.3 s
     while (nextAt < a.currentTime + 0.3) {
-      playStep(a, step, nextAt);
-      step = (step + 1) % (16 * 8);
-      nextAt += STEP;
+      const t = TRACKS[track];
+      t.play(a, step, nextAt);
+      step = (step + 1) % (16 * t.bars);
+      nextAt += t.step;
     }
     // after a pause (suspended context) do not try to catch up
     if (nextAt < a.currentTime) nextAt = a.currentTime + 0.05;
   }, 100);
+}
+
+/**
+ * Switches the background music (the boss room asks for "battle" while a fight is on, and back to "calm" when it
+ * leaves). A quick fade out, the new track from its first bar, a fade in.
+ */
+let switchTimer: ReturnType<typeof setTimeout> | null = null;
+export function setMusicTrack(t: MusicTrack) {
+  if (t === track && !switchTimer) return;
+  if (switchTimer) clearTimeout(switchTimer);
+  switchTimer = null;
+  const a = ctx;
+  if (!a || !musicBus || !seqTimer) {
+    // not playing yet: the next start uses it
+    track = t;
+    step = 0;
+    return;
+  }
+  musicBus.gain.cancelScheduledValues(a.currentTime);
+  musicBus.gain.setValueAtTime(musicBus.gain.value, a.currentTime);
+  musicBus.gain.linearRampToValueAtTime(0, a.currentTime + 0.35);
+  switchTimer = setTimeout(() => {
+    switchTimer = null;
+    track = t;
+    step = 0;
+    if (!musicBus || !ctx) return;
+    nextAt = ctx.currentTime + 0.05;
+    musicBus.gain.cancelScheduledValues(ctx.currentTime);
+    musicBus.gain.setValueAtTime(0, ctx.currentTime);
+    musicBus.gain.linearRampToValueAtTime(t === "battle" ? 0.45 : 0.5, ctx.currentTime + (t === "battle" ? 0.6 : 2));
+  }, 380);
 }
 
 export function stopMusic() {
