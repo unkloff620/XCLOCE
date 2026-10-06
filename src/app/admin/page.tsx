@@ -1,6 +1,6 @@
 "use client";
 /*
- * XCLOCE admin panel (outside the game): /admin. Sign-in with the Telegram Login Widget; the Telegram id must be in
+ * XCLOCE admin panel (outside the game): /admin. Sign-in from the Telegram app (Mini App) or the Login Widget; the Telegram id must be in
  * ADMIN_TELEGRAM_IDS. Overview, players, a player's card (edit money, items, authority, energy, talents, name, ban),
  * the action log and the admins' own log. Views are in the URL hash, so a player's card can be linked: #player/42.
  */
@@ -131,12 +131,22 @@ export default function AdminPage() {
   );
 }
 
+type TgApp = { initData?: string; ready?(): void; expand?(): void; openTelegramLink?(url: string): void };
+const tgApp = (): TgApp | null => (typeof window === "undefined" ? null : (window as unknown as { Telegram?: { WebApp?: TgApp } }).Telegram?.WebApp ?? null);
+
+/**
+ * Sign-in. Inside Telegram (the bot's Mini App, opened by «Открыть в Telegram») the initData signs the admin in by
+ * itself. In a browser: «Открыть в Telegram» tries the Telegram Desktop app (tg:// link); if no app answers, the
+ * page offers the Login Widget in the browser instead.
+ */
 function Login({ onIn }: { onIn: (tg: number) => void }) {
   const box = useRef<HTMLDivElement>(null);
   const [err, setErr] = useState<string | null>(null);
-  const [bot, setBot] = useState<string | null | undefined>(undefined);
+  const [cfg, setCfg] = useState<{ bot: string | null; mainApp?: boolean } | null>(null);
   const [dev, setDev] = useState(false);
   const [devId, setDevId] = useState("");
+  const [inApp, setInApp] = useState(false);
+  const [tried, setTried] = useState<"no" | "opening" | "opened" | "failed">("no");
   const done = useCallback(async (body: Row) => {
     setErr(null);
     try {
@@ -148,9 +158,18 @@ function Login({ onIn }: { onIn: (tg: number) => void }) {
     }
   }, [onIn]);
   useEffect(() => {
-    call<{ bot: string | null }>("/api/config").then((c) => setBot(c.bot), () => setBot(null));
+    const app = tgApp();
+    if (app?.initData) {
+      // opened inside Telegram: no button needed
+      setInApp(true);
+      try { app.ready?.(); app.expand?.(); } catch { /* old client */ }
+      done({ initData: app.initData });
+      return;
+    }
+    call<{ bot: string | null; mainApp?: boolean }>("/api/config").then(setCfg, () => setCfg({ bot: null }));
     call<{ dev: boolean }>("/api/admin/login").then((c) => setDev(c.dev), () => {});
-  }, []);
+  }, [done]);
+  const bot = cfg?.bot ?? null;
   useEffect(() => {
     if (!bot || !box.current) return;
     (window as unknown as { onAdminAuth: (u: Row) => void }).onAdminAuth = (u) => done({ widget: u });
@@ -163,16 +182,52 @@ function Login({ onIn }: { onIn: (tg: number) => void }) {
     s.setAttribute("data-onauth", "onAdminAuth(user)");
     box.current.replaceChildren(s);
   }, [bot, done]);
+  /** tg:// opens the installed Telegram app; when the browser stays in front, there is no app to open it */
+  const openApp = () => {
+    if (!bot) return;
+    setTried("opening");
+    let left = false;
+    const away = () => { left = true; };
+    addEventListener("blur", away, { once: true });
+    document.addEventListener("visibilitychange", away, { once: true });
+    location.href = `tg://resolve?domain=${encodeURIComponent(bot)}&startapp=admin`;
+    setTimeout(() => {
+      removeEventListener("blur", away);
+      document.removeEventListener("visibilitychange", away);
+      setTried(left ? "opened" : "failed");
+    }, 1800);
+  };
+  if (inApp) {
+    return (
+      <div className="adm-center">
+        <div className="adm-card adm-login">
+          <b className="adm-logo big"><span>X</span>CLOCE</b>
+          {err ? <p className="adm-err">{err}</p> : <p className="muted">Входим через Telegram…</p>}
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="adm-center">
       <div className="adm-card adm-login">
         <b className="adm-logo big"><span>X</span>CLOCE</b>
-        <p className="muted">Админ-панель. Вход через Telegram — доступ только у ID из списка админов.</p>
+        <p className="muted">Админ-панель. Доступ только у Telegram ID из списка админов.</p>
+        {bot && (
+          <>
+            <button className="adm-btn tg" onClick={openApp} disabled={tried === "opening"}>
+              {tried === "opening" ? "Открываем Telegram…" : "Открыть в Telegram"}
+            </button>
+            {tried === "opened" && <p className="muted small">Админка открылась в Telegram. Если окно не появилось — войдите через браузер ниже.</p>}
+            {tried === "failed" && <p className="adm-warn small">Приложение Telegram не открылось — похоже, его нет на этом компьютере. Войдите через браузер:</p>}
+            {cfg?.mainApp === false && <p className="muted tiny">У бота не включено мини-приложение (BotFather → Bot Settings → Configure Mini App), поэтому Telegram откроет только чат бота.</p>}
+            <div className="adm-or"><span>или в браузере</span></div>
+          </>
+        )}
         <div ref={box} className="adm-widget" />
-        {bot === null && <p className="muted small">Вход через Telegram не настроен (нет бота или домена).</p>}
+        {cfg && !bot && <p className="muted small">Вход через Telegram не настроен (нет бота или домена).</p>}
         {dev && (
           <form className="row" onSubmit={(e) => { e.preventDefault(); done({ dev: Number(devId) }); }}>
-            <input className="adm-in" placeholder="Telegram ID (тестовый вход)" value={devId} onChange={(e) => setDevId(e.target.value)} />
+            <input className="adm-in grow" placeholder="Telegram ID (тестовый вход)" value={devId} onChange={(e) => setDevId(e.target.value)} />
             <button className="adm-btn">Войти</button>
           </form>
         )}

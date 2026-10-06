@@ -1,15 +1,19 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 import { publicRoute, num } from "../../../../server/http.ts";
-import { adminDevLogin, issueAdminSession, validateLoginWidget } from "../../../../server/auth.ts";
+import { adminDevLogin, issueAdminSession, validateInitData, validateLoginWidget } from "../../../../server/auth.ts";
 import { loadConfig } from "../../../../server/config.ts";
 import { GameError } from "../../../../server/db.ts";
 import { log } from "../../../../server/log.ts";
 
-/** Admin sign-in: Telegram Login Widget; the Telegram id must be in the admin list. */
+/** Admin sign-in: the Mini App's initData (Telegram Desktop / phone) or the Login Widget (browser); the id must be in the admin list. */
 export const POST = publicRoute("admin.login", async ({ db, body }) => {
   let tg: number;
-  if (body.widget && typeof body.widget === "object") {
+  if (typeof body.initData === "string" && body.initData.length > 0) {
+    const token = process.env.TELEGRAM_BOT_TOKEN;
+    if (!token) throw new GameError("auth_unconfigured", "Бот не настроен на сервере", 503);
+    tg = validateInitData(body.initData, token).user.id;
+  } else if (body.widget && typeof body.widget === "object") {
     const token = process.env.TELEGRAM_BOT_TOKEN;
     if (!token) throw new GameError("auth_unconfigured", "Бот не настроен на сервере", 503);
     tg = validateLoginWidget(body.widget as Record<string, unknown>, token).id;

@@ -3,6 +3,7 @@
 
 interface TgWebApp {
   initData: string;
+  initDataUnsafe?: { start_param?: string };
   ready(): void;
   expand(): void;
   disableVerticalSwipes?(): void;
@@ -17,6 +18,11 @@ export function tg(): TgWebApp | null {
   if (typeof window === "undefined") return null;
   const w = (window as unknown as { Telegram?: { WebApp?: TgWebApp } }).Telegram?.WebApp;
   return w && w.initData ? w : null;
+}
+
+/** The Mini App was opened with t.me/<bot>?startapp=admin: the admin panel, not the game. */
+export function openedForAdmin(): boolean {
+  return tg()?.initDataUnsafe?.start_param === "admin";
 }
 
 export function initTelegram() {
