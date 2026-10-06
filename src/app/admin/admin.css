@@ -133,5 +133,9 @@ a.adm-stat.link:hover { border-color: #4b6bff; background: var(--a-panel2); }
   .adm-top { gap: 8px 12px; padding: 8px 12px; }
   .adm-top nav { order: 3; width: 100%; }
   .adm-filters > .grow { flex-basis: 100%; }
+  /* the player list opens across the whole filter row instead of running off the screen */
+  .adm-filters { position: relative; }
+  .adm-picker { position: static; }
+  .adm-pop { left: 0; right: 0; width: auto; }
   .adm-stat b { font-size: 19px; }
 }
