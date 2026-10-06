@@ -611,7 +611,7 @@ describe("home: equipment, rooms, look, help", () => {
     await db.query("INSERT INTO ledger (player_id, kind, key, delta, reason) VALUES ($1,'talent','talent',5,'fight:1')", [p]);
     await db.query("INSERT INTO player_equipment (player_id, equipment_id, level) VALUES ($1,'pc-gpu',2)", [p]);
     await db.query("UPDATE player_stats SET total_damage = 20000 WHERE player_id=$1", [p]);
-    await db.query(MIGRATIONS.find((m) => m.id === "v2-021-weapon-talents")!.sql);
+    await db.exec(MIGRATIONS.find((m) => m.id === "v2-021-weapon-talents")!.sql);
     const [row] = await db.query<{ talents: number }>("SELECT talents FROM players WHERE id=$1", [p]);
     // 2 left + 3 refunded + (talents for 20 000 on the new curve − 5 already earned)
     expect(row.talents).toBe(2 + 3 + talentsForDamage(20000) - 5);
