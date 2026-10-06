@@ -8,7 +8,7 @@ import { Icon, NAV_GLOW, NavIcon } from "./art/icons.tsx";
 import { Avatar } from "./ui.tsx";
 import { clock, full, moneyShort } from "./format.ts";
 import { CURRENCIES } from "../content/currencies.ts";
-import { LOADING_LINES } from "../content/phrases.ts";
+import { TIPS, resourceLine } from "../content/loading.ts";
 import { loginWidget } from "./api.ts";
 import { telegramBack } from "./telegram.ts";
 import { ResultWindow } from "./screens/result.tsx";
@@ -162,20 +162,59 @@ function Nav() {
   );
 }
 
-function Loading({ text, progress, overlay }: { text?: string; progress?: number; overlay?: boolean }) {
-  // picked after mount: a random line during server rendering would not match the client (hydration error)
-  const [line, setLine] = useState(LOADING_LINES[0]);
-  useEffect(() => setLine(LOADING_LINES[Math.floor(Math.random() * LOADING_LINES.length)]), []);
+let entryTip: string | undefined;
+
+export interface LoadProgress { n: number; total: number; url: string | null }
+
+/**
+ * Loading screen: the XClose logo, a ring with [loaded/total] in the middle, a joke about what is downloading now
+ * and one game tip (picked at random each time the game opens).
+ * Without `prog` (connecting to the server) the ring just spins.
+ */
+function Loading({ prog, overlay }: { prog?: LoadProgress; overlay?: boolean }) {
+  // random picks happen after mount: a random value during server rendering would not match the client (hydration error)
+  const [tip, setTip] = useState<string | null>(null);
+  const [seed, setSeed] = useState(0);
+  useEffect(() => {
+    // one tip per game entry: the connecting screen, the art download and section loads all show the same one
+    entryTip ??= TIPS[Math.floor(Math.random() * TIPS.length)];
+    setTip(entryTip);
+    setSeed(Math.floor(Math.random() * 1000));
+  }, []);
+  // the joke changes at most every 0.9 s, otherwise it flickers faster than anyone can read
+  const [shownUrl, setShownUrl] = useState<string | null>(null);
+  const lastSwap = useRef(0);
+  const url = prog?.url ?? null;
+  useEffect(() => {
+    if (!url || url === shownUrl) return;
+    const wait = Math.max(0, 900 - (Date.now() - lastSwap.current));
+    const t = setTimeout(() => {
+      lastSwap.current = Date.now();
+      setShownUrl(url);
+    }, wait);
+    return () => clearTimeout(t);
+  }, [url, shownUrl]);
+  const frac = prog ? (prog.total ? prog.n / prog.total : 1) : null;
+  const R = 52;
+  const C = 2 * Math.PI * R;
   return (
-    <div className={`loading ${overlay ? "overlay" : ""}`}>
-      <div>
-        <div className="logo display">XCLOCE</div>
-        {progress === undefined ? (
-          <div className="spinner" />
-        ) : (
-          <div className="load-bar" aria-label="Загрузка"><i style={{ width: `${Math.round(progress * 100)}%` }} /><b className="num">{Math.round(progress * 100)}%</b></div>
+    <div className={`loading boot ${overlay ? "overlay" : ""}`}>
+      <div className="boot-box">
+        <div className="boot-logo display" aria-label="XClose"><span className="x">X</span>Close</div>
+        <div className={`boot-ring${frac === null ? " spin" : ""}`} role="progressbar" aria-label="Загрузка" aria-valuemin={0} aria-valuemax={prog?.total ?? 100} aria-valuenow={prog?.n}>
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle className="track" cx="60" cy="60" r={R} />
+            <circle className="arc" cx="60" cy="60" r={R} strokeDasharray={C} strokeDashoffset={frac === null ? C * 0.72 : C * (1 - frac)} />
+          </svg>
+          <b className="num">{prog ? `[${prog.n}/${prog.total}]` : "[…]"}</b>
+        </div>
+        <div className="boot-what">{prog ? resourceLine(shownUrl, seed + (shownUrl?.length ?? 0)) : "Стучимся на сервер…"}</div>
+        {tip && (
+          <div className="boot-tip">
+            <b>Подсказка</b>
+            <span>{tip}</span>
+          </div>
         )}
-        <div className="muted">{text ?? line}</div>
       </div>
     </div>
   );
@@ -183,15 +222,15 @@ function Loading({ text, progress, overlay }: { text?: string; progress?: number
 
 /** First entry: every picture of the game is downloaded before it shows (only the player's own hero variants). */
 function useArtReady(look: LookLite | null, active: boolean) {
-  const [progress, setProgress] = useState(0);
+  const [prog, setProg] = useState<LoadProgress>({ n: 0, total: 0, url: null });
   const [ready, setReady] = useState(false);
   const started = useRef(false);
   useEffect(() => {
     if (!active || started.current) return;
     started.current = true;
-    void preload(urlsFor("all", look), (n, total) => setProgress(total ? n / total : 1)).then(() => setReady(true));
+    void preload(urlsFor("all", look), (n, total, url) => setProg((p) => ({ n, total, url: url ?? p.url }))).then(() => setReady(true));
   }, [active, look]);
-  return { ready, progress };
+  return { ready, prog };
 }
 
 /** A section (yard, shop, bosses…) opens only when its pictures are downloaded; until then a loading screen covers it. */
@@ -199,20 +238,20 @@ function SectionGate({ route, look, children }: { route: string; look: LookLite 
   const section = sectionOfRoute(route);
   const urls = section ? urlsFor([section], look) : []; // hero and icons (core) were loaded on entry
   const ok = isLoaded(urls);
-  const [progress, setProgress] = useState(0);
+  const [prog, setProg] = useState<LoadProgress>({ n: 0, total: 0, url: null });
   const [, setTick] = useState(0);
   const key = urls.join("|");
   useEffect(() => {
     if (ok) return;
     let alive = true;
-    setProgress(0);
-    void preload(urls, (n, total) => alive && setProgress(total ? n / total : 1)).then(() => alive && setTick((t) => t + 1));
+    setProg({ n: 0, total: urls.length, url: null });
+    void preload(urls, (n, total, url) => alive && setProg((p) => ({ n, total, url: url ?? p.url }))).then(() => alive && setTick((t) => t + 1));
     return () => {
       alive = false;
     };
   }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
   if (ok) return <>{children}</>;
-  return <Loading overlay progress={progress} text="Загружаем локацию…" />;
+  return <Loading overlay prog={prog} />;
 }
 
 /** Desktop browser in production: Telegram Login Widget. */
@@ -271,7 +310,7 @@ export function Shell({ children }: { children: ReactNode }) {
             </div>
           </div>
         )}
-        {auth === "ok" && state && !art.ready && <Loading progress={art.progress} text="Загружаем картинки…" />}
+        {auth === "ok" && state && !art.ready && <Loading prog={art.prog} />}
         {auth === "ok" && state && art.ready && (
           <>
             <Hud />

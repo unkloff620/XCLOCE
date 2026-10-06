@@ -83,16 +83,16 @@ function loadOne(url: string): Promise<void> {
 
 export const isLoaded = (urls: string[]) => urls.every((u) => done.has(u));
 
-/** Downloads the pictures, 6 at a time; onProgress(done, total) after each one. */
-export async function preload(urls: string[], onProgress?: (n: number, total: number) => void): Promise<void> {
+/** Downloads the pictures, 6 at a time; onProgress(done, total, url just finished) after each one. */
+export async function preload(urls: string[], onProgress?: (n: number, total: number, url: string | null) => void): Promise<void> {
   const list = [...new Set(urls)];
   let n = list.filter((u) => done.has(u)).length;
-  onProgress?.(n, list.length);
+  onProgress?.(n, list.length, null);
   const queue = list.filter((u) => !done.has(u));
   const worker = async () => {
     for (let u = queue.shift(); u; u = queue.shift()) {
       await loadOne(u);
-      onProgress?.(++n, list.length);
+      onProgress?.(++n, list.length, u);
     }
   };
   await Promise.all(Array.from({ length: 6 }, worker));
