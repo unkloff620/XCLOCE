@@ -739,3 +739,24 @@ describe("admin", () => {
     expect(() => verifyAdminSession(issueSession(42))).toThrow();
   });
 });
+
+describe("admin sign-in confirmed in the Telegram app", () => {
+  it("the browser gets the session only after the admin confirms, only once, only with its secret", async () => {
+    const { startLogin, approveLogin, pollLogin } = await import("../src/server/admin-login.ts");
+    const { verifyAdminSession } = await import("../src/server/auth.ts");
+    await db.query("INSERT INTO config (key, value) VALUES ('admins', '[555]')");
+    resetConfigCache();
+    const s = await startLogin(db, "1.2.3.4", "Firefox");
+    expect(await pollLogin(db, s.code, s.secret)).toEqual({ status: "pending" });
+    await expect(approveLogin(db, s.code, 999, true)).rejects.toThrow(/Нет доступа/);
+    const info = await approveLogin(db, s.code, 555, false);
+    expect(info).toMatchObject({ ip: "1.2.3.4", ua: "Firefox", approved: false });
+    expect(await pollLogin(db, s.code, s.secret)).toEqual({ status: "pending" });
+    await approveLogin(db, s.code, 555, true);
+    await expect(pollLogin(db, s.code, "wrong")).rejects.toThrow();
+    const r = await pollLogin(db, s.code, s.secret);
+    expect(r.status).toBe("ok");
+    expect(verifyAdminSession(r.token!)).toBe(555);
+    await expect(pollLogin(db, s.code, s.secret)).rejects.toThrow(/устарел/);
+  });
+});

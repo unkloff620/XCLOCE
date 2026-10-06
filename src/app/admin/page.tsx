@@ -100,7 +100,9 @@ export default function AdminPage() {
     setView(parseHash());
     const on = () => setView(parseHash());
     addEventListener("hashchange", on);
-    if (!token) setMe(null);
+    // opened in Telegram to confirm a browser sign-in: the confirmation screen, even with a session in this app
+    const confirming = (window as unknown as { Telegram?: { WebApp?: { initDataUnsafe?: { start_param?: string } } } }).Telegram?.WebApp?.initDataUnsafe?.start_param?.startsWith("al_");
+    if (!token || confirming) setMe(null);
     else admin<{ tg: number }>("me").then((r) => setMe(r.tg), () => { saveToken(null); setMe(null); });
     return () => removeEventListener("hashchange", on);
   }, []);
@@ -131,44 +133,117 @@ export default function AdminPage() {
   );
 }
 
-type TgApp = { initData?: string; ready?(): void; expand?(): void; openTelegramLink?(url: string): void };
+type TgApp = { initData?: string; initDataUnsafe?: { start_param?: string }; ready?(): void; expand?(): void; close?(): void };
 const tgApp = (): TgApp | null => (typeof window === "undefined" ? null : (window as unknown as { Telegram?: { WebApp?: TgApp } }).Telegram?.WebApp ?? null);
+const LOGIN_KEY = "xcloce.admin.login";
+
+/** tg:// opens the installed Telegram app; resolves false when the browser stayed in front (no app answered) */
+function openTelegram(bot: string, startapp: string): Promise<boolean> {
+  return new Promise((done) => {
+    let left = false;
+    const away = () => { left = true; };
+    addEventListener("blur", away);
+    document.addEventListener("visibilitychange", away);
+    location.href = `tg://resolve?domain=${encodeURIComponent(bot)}&startapp=${encodeURIComponent(startapp)}`;
+    setTimeout(() => {
+      removeEventListener("blur", away);
+      document.removeEventListener("visibilitychange", away);
+      done(left);
+    }, 1800);
+  });
+}
+
+function Center({ children }: { children: ReactNode }) {
+  return <div className="adm-center"><div className="adm-card adm-login"><b className="adm-logo big"><span>X</span>CLOCE</b>{children}</div></div>;
+}
 
 /**
- * Sign-in. Inside Telegram (the bot's Mini App, opened by «Открыть в Telegram») the initData signs the admin in by
- * itself. In a browser: «Открыть в Telegram» tries the Telegram Desktop app (tg:// link); if no app answers, the
- * page offers the Login Widget in the browser instead.
+ * Sign-in. In a browser:
+ *   «Войти через приложение Telegram» — Telegram Desktop opens only to confirm, the panel stays in the browser;
+ *   «Открыть админку в Telegram» — the panel itself opens inside the Telegram app;
+ *   the Login Widget — sign-in in the browser alone (when there is no Telegram app).
+ * Inside Telegram: startapp=al_<code> is the confirmation screen, otherwise initData signs in right away.
  */
 function Login({ onIn }: { onIn: (tg: number) => void }) {
+  const [app, setApp] = useState<TgApp | null | undefined>(undefined);
+  useEffect(() => setApp(tgApp()?.initData ? tgApp() : null), []);
+  if (app === undefined) return null;
+  if (app) {
+    try { app.ready?.(); app.expand?.(); } catch { /* old client */ }
+    const sp = app.initDataUnsafe?.start_param ?? "";
+    if (sp.startsWith("al_")) return <ApproveInApp app={app} code={sp.slice(3)} />;
+    return <InAppLogin app={app} onIn={onIn} />;
+  }
+  return <BrowserLogin onIn={onIn} />;
+}
+
+function InAppLogin({ app, onIn }: { app: TgApp; onIn: (tg: number) => void }) {
+  const [err, setErr] = useState<string | null>(null);
+  useEffect(() => {
+    call<{ token: string; tg: number }>("/api/admin/login", { initData: app.initData }).then((r) => { saveToken(r.token); onIn(r.tg); }, (e) => setErr((e as Error).message));
+  }, [app, onIn]);
+  return <Center>{err ? <p className="adm-err">{err}</p> : <p className="muted">Входим через Telegram…</p>}</Center>;
+}
+
+/** In the Telegram app: confirm that the browser asking to sign in is yours */
+function ApproveInApp({ app, code }: { app: TgApp; code: string }) {
+  const [info, setInfo] = useState<{ ip: string | null; ua: string | null; createdAt: string; approved: boolean; short: string } | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const ask = useCallback((confirm: boolean) => {
+    setErr(null);
+    call<typeof info>("/api/admin/login", { op: "approve", code, initData: app.initData, confirm }).then((r) => {
+      setInfo(r);
+      if (confirm) setTimeout(() => { try { app.close?.(); } catch { /* ignore */ } }, 2500);
+    }, (e) => setErr((e as Error).message));
+  }, [app, code]);
+  useEffect(() => ask(false), [ask]);
+  if (err) return <Center><p className="adm-err">{err}</p></Center>;
+  if (!info) return <Center><p className="muted">Загрузка…</p></Center>;
+  if (info.approved) return <Center><p className="adm-ok">Вход подтверждён. Вернитесь в браузер — админка уже открывается там.</p></Center>;
+  return (
+    <Center>
+      <p>Подтвердить вход в админку в браузере?</p>
+      <div className="adm-code-big">{info.short}</div>
+      <p className="muted small">Код должен совпадать с кодом на сайте. Запрос: {ago(info.createdAt)}{info.ip ? `, IP ${info.ip}` : ""}</p>
+      {info.ua && <p className="muted tiny">{info.ua}</p>}
+      <button className="adm-btn tg" onClick={() => ask(true)}>Подтвердить вход</button>
+      <button className="adm-btn ghost" onClick={() => { try { app.close?.(); } catch { /* ignore */ } }}>Это не я — отмена</button>
+    </Center>
+  );
+}
+
+function BrowserLogin({ onIn }: { onIn: (tg: number) => void }) {
   const box = useRef<HTMLDivElement>(null);
   const [err, setErr] = useState<string | null>(null);
   const [cfg, setCfg] = useState<{ bot: string | null; mainApp?: boolean } | null>(null);
   const [dev, setDev] = useState(false);
   const [devId, setDevId] = useState("");
-  const [inApp, setInApp] = useState(false);
-  const [tried, setTried] = useState<"no" | "opening" | "opened" | "failed">("no");
+  /** the pending browser sign-in confirmed in the app */
+  const [wait, setWait] = useState<{ code: string; secret: string; until: number } | null>(null);
+  const [noApp, setNoApp] = useState(false);
+  const [opening, setOpening] = useState(false);
+  const signedIn = useCallback((r: { token: string; tg: number }) => {
+    saveToken(r.token);
+    try { sessionStorage.removeItem(LOGIN_KEY); } catch { /* ignore */ }
+    onIn(r.tg);
+  }, [onIn]);
   const done = useCallback(async (body: Row) => {
     setErr(null);
     try {
-      const r = await call<{ token: string; tg: number }>("/api/admin/login", body);
-      saveToken(r.token);
-      onIn(r.tg);
+      signedIn(await call<{ token: string; tg: number }>("/api/admin/login", body));
     } catch (e) {
       setErr((e as Error).message);
     }
-  }, [onIn]);
+  }, [signedIn]);
   useEffect(() => {
-    const app = tgApp();
-    if (app?.initData) {
-      // opened inside Telegram: no button needed
-      setInApp(true);
-      try { app.ready?.(); app.expand?.(); } catch { /* old client */ }
-      done({ initData: app.initData });
-      return;
-    }
     call<{ bot: string | null; mainApp?: boolean }>("/api/config").then(setCfg, () => setCfg({ bot: null }));
     call<{ dev: boolean }>("/api/admin/login").then((c) => setDev(c.dev), () => {});
-  }, [done]);
+    // a sign-in started before a reload keeps waiting
+    try {
+      const w = JSON.parse(sessionStorage.getItem(LOGIN_KEY) ?? "null");
+      if (w && w.until > Date.now()) setWait(w);
+    } catch { /* ignore */ }
+  }, []);
   const bot = cfg?.bot ?? null;
   useEffect(() => {
     if (!bot || !box.current) return;
@@ -182,58 +257,81 @@ function Login({ onIn }: { onIn: (tg: number) => void }) {
     s.setAttribute("data-onauth", "onAdminAuth(user)");
     box.current.replaceChildren(s);
   }, [bot, done]);
-  /** tg:// opens the installed Telegram app; when the browser stays in front, there is no app to open it */
-  const openApp = () => {
+  // waiting for the confirmation in Telegram
+  useEffect(() => {
+    if (!wait) return;
+    let alive = true;
+    const tick = async () => {
+      if (!alive) return;
+      if (Date.now() > wait.until) { setWait(null); setErr("Время на подтверждение вышло. Начните вход заново"); return; }
+      try {
+        const r = await call<{ status: string; token?: string; tg?: number }>("/api/admin/login", { op: "poll", code: wait.code, secret: wait.secret });
+        if (r.status === "ok" && r.token && r.tg) { signedIn({ token: r.token, tg: r.tg }); return; }
+      } catch (e) {
+        if ((e as ApiError).status !== 429 && (e as ApiError).status !== 503) { setWait(null); setErr((e as Error).message); return; }
+      }
+      if (alive) setTimeout(tick, 2000);
+    };
+    const t = setTimeout(tick, 1500);
+    return () => { alive = false; clearTimeout(t); };
+  }, [wait, signedIn]);
+  const viaApp = async () => {
     if (!bot) return;
-    setTried("opening");
-    let left = false;
-    const away = () => { left = true; };
-    addEventListener("blur", away, { once: true });
-    document.addEventListener("visibilitychange", away, { once: true });
-    location.href = `tg://resolve?domain=${encodeURIComponent(bot)}&startapp=admin`;
-    setTimeout(() => {
-      removeEventListener("blur", away);
-      document.removeEventListener("visibilitychange", away);
-      setTried(left ? "opened" : "failed");
-    }, 1800);
+    setErr(null);
+    setOpening(true);
+    try {
+      const r = await call<{ code: string; secret: string; ttlMin: number }>("/api/admin/login", { op: "start" });
+      const w = { code: r.code, secret: r.secret, until: Date.now() + r.ttlMin * 60_000 };
+      setWait(w);
+      try { sessionStorage.setItem(LOGIN_KEY, JSON.stringify(w)); } catch { /* ignore */ }
+      setNoApp(!(await openTelegram(bot, `al_${r.code}`)));
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setOpening(false);
+    }
   };
-  if (inApp) {
-    return (
-      <div className="adm-center">
-        <div className="adm-card adm-login">
-          <b className="adm-logo big"><span>X</span>CLOCE</b>
-          {err ? <p className="adm-err">{err}</p> : <p className="muted">Входим через Telegram…</p>}
-        </div>
-      </div>
-    );
-  }
+  const inApp = async () => {
+    if (!bot) return;
+    setOpening(true);
+    setNoApp(!(await openTelegram(bot, "admin")));
+    setOpening(false);
+  };
+  const cancel = () => { setWait(null); setNoApp(false); try { sessionStorage.removeItem(LOGIN_KEY); } catch { /* ignore */ } };
   return (
-    <div className="adm-center">
-      <div className="adm-card adm-login">
-        <b className="adm-logo big"><span>X</span>CLOCE</b>
-        <p className="muted">Админ-панель. Доступ только у Telegram ID из списка админов.</p>
-        {bot && (
-          <>
-            <button className="adm-btn tg" onClick={openApp} disabled={tried === "opening"}>
-              {tried === "opening" ? "Открываем Telegram…" : "Открыть в Telegram"}
-            </button>
-            {tried === "opened" && <p className="muted small">Админка открылась в Telegram. Если окно не появилось — войдите через браузер ниже.</p>}
-            {tried === "failed" && <p className="adm-warn small">Приложение Telegram не открылось — похоже, его нет на этом компьютере. Войдите через браузер:</p>}
-            {cfg?.mainApp === false && <p className="muted tiny">У бота не включено мини-приложение (BotFather → Bot Settings → Configure Mini App), поэтому Telegram откроет только чат бота.</p>}
-            <div className="adm-or"><span>или в браузере</span></div>
-          </>
-        )}
-        <div ref={box} className="adm-widget" />
-        {cfg && !bot && <p className="muted small">Вход через Telegram не настроен (нет бота или домена).</p>}
-        {dev && (
-          <form className="row" onSubmit={(e) => { e.preventDefault(); done({ dev: Number(devId) }); }}>
-            <input className="adm-in grow" placeholder="Telegram ID (тестовый вход)" value={devId} onChange={(e) => setDevId(e.target.value)} />
-            <button className="adm-btn">Войти</button>
-          </form>
-        )}
-        {err && <p className="adm-err">{err}</p>}
-      </div>
-    </div>
+    <Center>
+      <p className="muted">Админ-панель. Доступ только у Telegram ID из списка админов.</p>
+      {bot && wait ? (
+        <div className="adm-wait">
+          <p>Подтвердите вход в приложении Telegram</p>
+          <div className="adm-code-big">{wait.code.slice(0, 4).toUpperCase()}</div>
+          <p className="muted small">Проверьте, что в Telegram тот же код, и нажмите «Подтвердить вход». Эта страница войдёт сама.</p>
+          <div className="adm-spin" aria-hidden />
+          <div className="row" style={{ justifyContent: "center", flexWrap: "wrap" }}>
+            <a className="adm-btn ghost" href={`https://t.me/${bot}?startapp=al_${wait.code}`} target="_blank" rel="noreferrer">Открыть Telegram ещё раз</a>
+            <button className="adm-btn ghost" onClick={cancel}>Отмена</button>
+          </div>
+        </div>
+      ) : bot ? (
+        <div className="adm-choice">
+          <button className="adm-btn tg" onClick={viaApp} disabled={opening}>Войти через приложение Telegram</button>
+          <span className="muted tiny">Telegram откроется только для подтверждения — админка останется здесь, в браузере.</span>
+          <button className="adm-btn ghost" onClick={inApp} disabled={opening}>Открыть админку в приложении Telegram</button>
+        </div>
+      ) : null}
+      {noApp && <p className="adm-warn small">Приложение Telegram не открылось — похоже, его нет на этом компьютере. Войдите через браузер ниже.</p>}
+      {cfg?.mainApp === false && bot && <p className="muted tiny">У бота не включено мини-приложение (BotFather → Bot Settings → Configure Mini App), поэтому Telegram откроет только чат бота.</p>}
+      {bot && <div className="adm-or"><span>без приложения — в браузере</span></div>}
+      <div ref={box} className="adm-widget" />
+      {cfg && !bot && <p className="muted small">Вход через Telegram не настроен (нет бота или домена).</p>}
+      {dev && (
+        <form className="row" onSubmit={(e) => { e.preventDefault(); done({ dev: Number(devId) }); }}>
+          <input className="adm-in grow" placeholder="Telegram ID (тестовый вход)" value={devId} onChange={(e) => setDevId(e.target.value)} />
+          <button className="adm-btn">Войти</button>
+        </form>
+      )}
+      {err && <p className="adm-err">{err}</p>}
+    </Center>
   );
 }
 

@@ -35,7 +35,7 @@ function allow(key: string, capacity = 40, refillPerSec = 8): boolean {
   return true;
 }
 
-function clientKey(req: Request): string {
+export function clientKey(req: Request): string {
   return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "local";
 }
 

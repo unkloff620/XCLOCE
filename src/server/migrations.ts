@@ -494,4 +494,21 @@ ALTER TABLE players ADD COLUMN IF NOT EXISTS banned_at TIMESTAMPTZ;
 ALTER TABLE players ADD COLUMN IF NOT EXISTS ban_reason TEXT;
 `,
   },
+  {
+    // Вход в админку в браузере с подтверждением в приложении Telegram: браузер создаёт код, мини-приложение его
+    // подтверждает (initData), браузер забирает сессию по секрету, который знает только он.
+    id: "v2-023-admin-login-codes",
+    sql: `
+CREATE TABLE IF NOT EXISTS admin_login_codes (
+  code TEXT PRIMARY KEY,
+  secret_hash TEXT NOT NULL,
+  ip TEXT,
+  ua TEXT,
+  tg BIGINT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  approved_at TIMESTAMPTZ,
+  used_at TIMESTAMPTZ
+);
+`,
+  },
 ];

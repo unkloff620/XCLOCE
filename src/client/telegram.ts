@@ -20,9 +20,10 @@ export function tg(): TgWebApp | null {
   return w && w.initData ? w : null;
 }
 
-/** The Mini App was opened with t.me/<bot>?startapp=admin: the admin panel, not the game. */
+/** The Mini App was opened for the admin panel (startapp=admin) or to confirm a browser sign-in (startapp=al_<code>). */
 export function openedForAdmin(): boolean {
-  return tg()?.initDataUnsafe?.start_param === "admin";
+  const p = tg()?.initDataUnsafe?.start_param ?? "";
+  return p === "admin" || p.startsWith("al_");
 }
 
 export function initTelegram() {
