@@ -9,6 +9,7 @@ import { Avatar, GainLine, MysteryDrop, RewardChips, bossItemsCount } from "../u
 import { WEAPONS } from "../../content/items.ts";
 import type { BossDef } from "../../content/bosses.ts";
 import { Help, HelpList } from "../help.tsx";
+import { weaponStats } from "../weapon-stats.ts";
 import { itemById } from "../../content/items.ts";
 import { Icon } from "../art/icons.tsx";
 import { ItemArt } from "../art/items.tsx";
@@ -175,7 +176,7 @@ export function BossRulesHelp({ topic, bossId }: { topic: "bosses" | "boss"; bos
             { key: "time", icon: <Icon name="clock" size={40} />, name: "8 часов и 7 побед", hint: "Бой длится 8 часов. Каждого босса можно победить 7 раз в день, проигранные бои не считаются." },
           ]} />
           <HelpList title="Чем бить" rows={WEAPONS.map((w) => ({
-            key: w.id, icon: <ItemArt id={w.id} size={44} />, name: `${w.name} — урон ${w.weapon!.damage}`,
+            key: w.id, icon: <ItemArt id={w.id} size={44} />, name: (() => { const st = weaponStats(state, w.id); return st.damage !== st.base ? `${w.name} — урон ${st.damage} (база ${st.base})` : `${w.name} — урон ${st.base}`; })(),
             hint: w.weapon!.kind === "permanent" ? "Бесплатно, раз в час. Есть у всех." : "Тратится за удар. Магазин, двор, задания и дроп с боссов.",
           }))} />
           <HelpList title="Что даёт победа" rows={[

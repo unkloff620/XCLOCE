@@ -7,8 +7,7 @@ import { ItemArt } from "../art/items.tsx";
 import { Coin, Empty, Modal } from "../ui.tsx";
 import { haptic } from "../telegram.ts";
 import { Icon } from "../art/icons.tsx";
-import { BASE_CRIT_MULT } from "../../content/home.ts";
-import { weaponTalentBonus } from "../../content/talents.ts";
+import { weaponStats } from "../weapon-stats.ts";
 import { TalentNext, TalentWindow } from "./talents.tsx";
 
 const CATS: (Category | "all")[] = ["all", "weapon", "clothing", "item", "reward", "event"];
@@ -117,13 +116,12 @@ export function InventoryScreen() {
             {open.weapon && (
               <div className="row" style={{ justifyContent: "center", gap: 6 }}>
                 {(() => {
-                  // what a hit really does: the home bonus and this weapon's talents
-                  const t = weaponTalentBonus(state.weaponTalents ?? {}, open.id);
-                  const dmg = Math.round(open.weapon.damage * (1 + state.home.bonus.damage + t.damage));
+                  // what a hit really does: base damage plus every bonus (room, equipment, trophies, this weapon's talents)
+                  const st = weaponStats(state, open.id);
                   return (
                     <>
-                      <span className="chip red" title={`база ${open.weapon.damage}`}>Урон: {dmg}</span>
-                      <span className="chip">крит ×{(BASE_CRIT_MULT + state.home.bonus.critDamage + t.critDamage).toFixed(2)}</span>
+                      <span className="chip red">Урон: {st.damage}{st.damage !== st.base && <span className="muted"> (база {st.base})</span>}</span>
+                      <span className="chip">крит ×{st.crit.toFixed(2)}</span>
                     </>
                   );
                 })()}

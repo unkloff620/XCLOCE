@@ -14,6 +14,7 @@ import { EnergyArt, ItemArt } from "../art/items.tsx";
 import { Icon } from "../art/icons.tsx";
 import { money } from "../format.ts";
 import { haptic } from "../telegram.ts";
+import { weaponStats } from "../weapon-stats.ts";
 
 export interface ShopData { offers: Offer[]; exchange: { rub: Record<Currency, number>; fee: number } }
 
@@ -147,7 +148,7 @@ function Cards({ offers, batch }: { offers: Offer[]; batch: number }) {
             {n > 1 && <span className="offer-note">×{n}</span>}
             <div className="offer-art">{def ? <ItemArt id={def.id} size={56} /> : <EnergyArt amount={o.give.energy ?? 0} size={56} />}</div>
             <b className="small">{o.title}</b>
-            {def?.weapon && <span className="tiny muted">урон {def.weapon.damage}</span>}
+            {def?.weapon && <span className="tiny muted" title={`база ${def.weapon.damage}`}>урон {weaponStats(state, def.id).damage}</span>}
             {def && def.maxStack > 1 && <span className="tiny dim">есть: {owned}</span>}
             {def && def.maxStack === 1 && owned > 0 && <span className="tiny" style={{ color: "var(--green)" }}>уже есть</span>}
             <button className="btn sm gold block" disabled={!can || full || busy === "buy"} onClick={() => buy(o, n)}>

@@ -11,8 +11,8 @@ import { Help } from "../help.tsx";
 import { haptic } from "../telegram.ts";
 import { full } from "../format.ts";
 import { itemById } from "../../content/items.ts";
-import { BASE_CRIT_MULT } from "../../content/home.ts";
-import { TALENT_BRANCHES, TALENT_WEAPONS, talentCost, talentThreshold, talentsForDamage, weaponTalentBonus, type TalentBranch } from "../../content/talents.ts";
+import { weaponStats } from "../weapon-stats.ts";
+import { TALENT_BRANCHES, TALENT_WEAPONS, talentCost, talentThreshold, talentsForDamage, type TalentBranch } from "../../content/talents.ts";
 
 const pct = (v: number) => `${Math.round(v * 1000) / 10}%`;
 
@@ -83,15 +83,14 @@ export function TalentWindow({ onClose }: { onClose: () => void }) {
         {TALENT_WEAPONS.map((id) => {
           const def = itemById(id);
           if (!def?.weapon) return null;
-          const b = weaponTalentBonus(wt, id);
-          const dmg = Math.round(def.weapon.damage * (1 + state.home.bonus.damage + b.damage));
+          const st = weaponStats(state, id);
           return (
             <div key={id} className={`tal-weapon rar-${def.rarity}`}>
               <div className="tal-head">
                 <span className="tal-art"><ItemArt id={id} size={44} /></span>
                 <span className="grow col" style={{ gap: 1, minWidth: 0 }}>
                   <b className="ellipsis">{def.name}</b>
-                  <span className="tiny muted">урон <b className="num" style={{ color: "var(--ink)" }}>{full(dmg)}</b> · крит ×{(BASE_CRIT_MULT + state.home.bonus.critDamage + b.critDamage).toFixed(2)}</span>
+                  <span className="tiny muted">урон <b className="num" style={{ color: "var(--ink)" }}>{full(st.damage)}</b>{st.damage !== st.base && <> (база {st.base})</>} · крит ×{st.crit.toFixed(2)}</span>
                 </span>
               </div>
               <div className="tal-branches">

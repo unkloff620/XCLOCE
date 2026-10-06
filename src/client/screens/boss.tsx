@@ -19,8 +19,9 @@ import { haptic } from "../telegram.ts";
 import { DriftingSky } from "../art/sky.tsx";
 import { BossRig, hasBossRig } from "../art/boss-rig.tsx";
 import { Modal } from "../ui.tsx";
-import { talentThreshold, talentsForDamage, weaponTalentBonus, type WeaponTalents } from "../../content/talents.ts";
+import { talentThreshold, talentsForDamage } from "../../content/talents.ts";
 import { TalentWindow } from "./talents.tsx";
+import { weaponStats } from "../weapon-stats.ts";
 
 const POLL_MS = 1500;
 /** a hit stays in the arena feed this long */
@@ -63,7 +64,8 @@ function Arena({ boss, hp, hpMax, endsAt, fx, hit, ouch, rug, feed, full: fullSc
   );
 }
 
-function WeaponTray({ tray, onHit, onCooldown, onBuy, disabled, bonus, talents }: { tray: Tray[]; onHit: (id: string) => void; onCooldown: (name: string, leftMs: number) => void; onBuy: () => void; disabled: boolean; bonus: number; talents: WeaponTalents }) {
+function WeaponTray({ tray, onHit, onCooldown, onBuy, disabled }: { tray: Tray[]; onHit: (id: string) => void; onCooldown: (name: string, leftMs: number) => void; onBuy: () => void; disabled: boolean }) {
+  const { state } = useGame();
   const now = useNow();
   return (
     <div className="tray" style={{ gridTemplateColumns: `repeat(${WEAPONS.length}, minmax(0, 1fr))` }}>
@@ -86,7 +88,7 @@ function WeaponTray({ tray, onHit, onCooldown, onBuy, disabled, bonus, talents }
             title={`${w.name}: ${w.weapon!.action}`}
           >
             <ItemArt id={w.id} size={40} />
-            <span className="w-dmg display">−{weaponDamage(w.weapon!.damage, bonus + weaponTalentBonus(talents, w.id).damage)}</span>
+            <span className="w-dmg display">−{weaponStats(state, w.id).damage}</span>
             {!perm && <span className="w-qty num">{qty}</span>}
             {cd > 0 && <span className="w-cd" style={{ ["--p" as string]: `${done * 360}deg` }} />}
           </button>
@@ -96,8 +98,6 @@ function WeaponTray({ tray, onHit, onCooldown, onBuy, disabled, bonus, talents }
   );
 }
 
-/** weapon damage with the home bonus (equipment, rooms) and the weapon's talents, as the server counts it (without crits) */
-const weaponDamage = (base: number, bonus: number) => Math.round(base * (1 + bonus));
 
 export function BossScreen({ id }: { id: string }) {
   const boss = bossById(id);
@@ -118,7 +118,6 @@ export function BossScreen({ id }: { id: string }) {
   // the talent counter after my last hit (the state catches up on the next refresh)
   const [talentDmg, setTalentDmg] = useState<number | null>(null);
   const [talentsOpen, setTalentsOpen] = useState(false);
-  const dmgBonus = state?.home.bonus.damage ?? 0;
   // the phrase bubble goes away by itself
   useEffect(() => {
     if (!phrase) return;
@@ -191,7 +190,7 @@ export function BossScreen({ id }: { id: string }) {
 
   const attack = async (weapon: string) => {
     const w = weaponById(weapon)!;
-    const est = weaponDamage(w.weapon.damage, dmgBonus + weaponTalentBonus(state?.weaponTalents ?? {}, w.id).damage);
+    const est = weaponStats(state, w.id).damage;
     haptic.hit();
     // heavier weapons sound heavier: 10 dmg → 0, 500+ → 1
     sfx("hit", Math.min(1, Math.log10(Math.max(10, w.weapon.damage) / 10) / Math.log10(50)));
@@ -294,7 +293,7 @@ export function BossScreen({ id }: { id: string }) {
             <button className="btn sm dark" onClick={() => setTab("mine")}>Мои</button>
             <button className={`btn sm ${fleeAsk ? "red" : "dark"}`} onClick={flee} disabled={busy === "fight_flee"}>{fleeAsk ? "Точно?" : "Сдаться"}</button>
           </div>
-          <WeaponTray tray={tray} onHit={attack} onBuy={() => setShopOpen(true)} onCooldown={(name, left) => { haptic.err(); toast(`${name} перезаряжается: ещё ${clock(left)}`, "err"); }} bonus={dmgBonus} talents={state?.weaponTalents ?? {}} disabled={view?.status !== undefined && view.status !== "active"} />
+          <WeaponTray tray={tray} onHit={attack} onBuy={() => setShopOpen(true)} onCooldown={(name, left) => { haptic.err(); toast(`${name} перезаряжается: ещё ${clock(left)}`, "err"); }} disabled={view?.status !== undefined && view.status !== "active"} />
         </div>
         {shopOpen && <WeaponShopWindow onClose={closeShop} />}
       {talentsOpen && <TalentWindow onClose={() => setTalentsOpen(false)} />}
