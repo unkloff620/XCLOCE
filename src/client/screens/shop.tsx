@@ -145,7 +145,7 @@ function Cards({ offers, batch }: { offers: Offer[]; batch: number }) {
         return (
           <div key={o.id} className={`offer rar-${def?.rarity ?? "common"}`}>
             {o.note && <span className="offer-note">{o.note}</span>}
-            {n > 1 && <span className="offer-note">×{n}</span>}
+            {o.bulk && <span className="offer-batch num">×{n}</span>}
             <div className="offer-art">{def ? <ItemArt id={def.id} size={56} /> : <EnergyArt amount={o.give.energy ?? 0} size={56} />}</div>
             <b className="small">{o.title}</b>
             {def?.weapon && <span className="tiny muted" title={`база ${def.weapon.damage}`}>урон {weaponStats(state, def.id).damage}</span>}

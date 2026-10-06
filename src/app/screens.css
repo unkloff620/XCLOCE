@@ -1242,3 +1242,5 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .tal-up { padding: 3px 7px; gap: 2px; font-size: 11px; min-height: 0; }
 .tal-max { font-size: 10px; font-weight: 800; color: var(--green); padding: 0 6px; }
 .talent-prog { font: inherit; color: inherit; cursor: pointer; }
+/* the weapon batch (×1 ×10 ×100 ×1000): a small badge in the top-right corner of every weapon card */
+.offer-batch { position: absolute; top: 3px; right: 3px; z-index: 2; padding: 0 5px; border-radius: 7px; border: 1.5px solid var(--line); background: var(--green); color: var(--line); font-size: 9px; font-weight: 800; line-height: 14px; }
