@@ -19,7 +19,7 @@ import { haptic } from "../telegram.ts";
 import { DriftingSky } from "../art/sky.tsx";
 import { BossRig, hasBossRig } from "../art/boss-rig.tsx";
 import { Modal } from "../ui.tsx";
-import { talentThreshold, talentsForDamage } from "../../content/home.ts";
+import { talentThreshold, talentsForDamage } from "../../content/talents.ts";
 
 const POLL_MS = 1500;
 /** a hit stays in the arena feed this long */
@@ -114,6 +114,8 @@ export function BossScreen({ id }: { id: string }) {
   const [pendingDmg, setPendingDmg] = useState(0);
   const [phrase, setPhrase] = useState<{ text: string; id: number; crit?: boolean } | null>(null);
   const [talentPop, setTalentPop] = useState(0);
+  // the talent counter after my last hit (the state catches up on the next refresh)
+  const [talentDmg, setTalentDmg] = useState<number | null>(null);
   const dmgBonus = state?.home.bonus.damage ?? 0;
   // the phrase bubble goes away by itself
   useEffect(() => {
@@ -195,7 +197,7 @@ export function BossScreen({ id }: { id: string }) {
     setPendingDmg((d) => d + est);
     setTray((t) => t.map((x) => (x.id === weapon && w.weapon.kind === "consumable" ? { ...x, qty: Math.max(0, x.qty - 1) } : x)));
     try {
-      const r = await api.action<{ damage: number; crit: boolean; phrase: string; hp: number; status: string; left: number | null; readyAt: number | null; fightDamage: number; talentsGained: number }>("attack", { weapon, idem: crypto.randomUUID() });
+      const r = await api.action<{ damage: number; crit: boolean; phrase: string; hp: number; status: string; left: number | null; readyAt: number | null; fightDamage: number; talentDamage: number; talentsGained: number }>("attack", { weapon, idem: crypto.randomUUID() });
       setPhrase({ text: r.result.crit ? `КРИТ! −${r.result.damage} · ${r.result.phrase || w.weapon.action}` : r.result.phrase || w.weapon.action, id: Date.now(), crit: r.result.crit });
       if (r.result.crit) {
         haptic.heavy();
@@ -203,6 +205,7 @@ export function BossScreen({ id }: { id: string }) {
       }
       setView((v) => (v ? { ...v, hp: Math.min(v.hp, r.result.hp), myDamage: v.myDamage + r.result.damage, myHits: v.myHits + 1 } : v));
       setTray((t) => t.map((x) => (x.id === weapon ? { ...x, qty: r.result.left ?? x.qty, readyAt: r.result.readyAt ?? x.readyAt } : x)));
+      setTalentDmg(r.result.talentDamage);
       if (r.result.status === "won") {
         haptic.big();
         sfx("win");
@@ -282,7 +285,7 @@ export function BossScreen({ id }: { id: string }) {
         <div className="fight-bottom">
           {phrase && <div key={phrase.id} className={`phrase-bubble ${phrase.crit ? "crit" : ""}`}>{phrase.text}</div>}
           <div className="row fight-bar">
-            <TalentProgress dmg={view?.myDamage ?? state?.fight?.myDamage ?? 0} pop={talentPop} share={myShare} />
+            <TalentProgress dmg={talentDmg ?? state?.player.talentDamage ?? 0} pop={talentPop} share={myShare} />
             {view && <ShareChip dmg={view.myDamage} hpMax={view.hpMax} />}
             <span className="grow" />
             <button className="btn sm dark" onClick={() => setTab("top")}>Топ</button>
@@ -421,7 +424,6 @@ export function BossScreen({ id }: { id: string }) {
   );
 }
 
-/** Damage of this fight towards the next talent (the counter burns when the fight ends). */
 /** How much of the win reward this fight already earns: full from FULL_SHARE of the boss HP. */
 function ShareChip({ dmg, hpMax }: { dmg: number; hpMax: number }) {
   const k = rewardShare(dmg, hpMax);
@@ -435,13 +437,14 @@ function ShareChip({ dmg, hpMax }: { dmg: number; hpMax: number }) {
   );
 }
 
+/** Boss damage of all time towards the next talent (the counter carries over from fight to fight). */
 function TalentProgress({ dmg, pop, share }: { dmg: number; pop: number; share: number }) {
   const k = talentsForDamage(dmg);
-  const from = k > 0 ? talentThreshold(k) : 0;
+  const from = talentThreshold(k);
   const to = talentThreshold(k + 1);
   const p = Math.max(0, Math.min(1, (dmg - from) / (to - from)));
   return (
-    <span key={pop} className={`chip talent-prog ${pop ? "talent-pop" : ""}`} title={`Урон в этом бою: ${full(dmg)} (${share.toFixed(1)}% HP). Следующий талант — на ${full(to)}`}>
+    <span key={pop} className={`chip talent-prog ${pop ? "talent-pop" : ""}`} title={`Урон по боссам за всё время: ${full(dmg)} (в этом бою — ${share.toFixed(1)}% HP). Следующий талант — на ${full(to)}`}>
       <i className="fill" style={{ width: `${p * 100}%` }} />
       <Icon name="talent" size={16} />
       <b className="num">{full(dmg)}</b><span className="muted">/{full(to)}</span>

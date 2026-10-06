@@ -10,7 +10,7 @@ import { normalizeLook } from "../../content/home.ts";
 import { touchActivity } from "../players.ts";
 import { dailyView } from "./daily.ts";
 import { renameView, slotsView } from "./extras.ts";
-import { homeView } from "./home.ts";
+import { homeView, weaponTalents } from "./home.ts";
 import { tasksHint } from "./locations.ts";
 import { questsView } from "./quests.ts";
 import { notifyView, scheduleEnergy } from "./notify.ts";
@@ -46,7 +46,11 @@ export async function gameState(ctx: Ctx) {
       xp: Number(p.xp), level: lv.level, levelXp: lv.into, levelNeed: lv.need,
       energy: e.energy, energyMax: ctx.cfg.energy.max, energyNextIn: e.nextIn, energyPeriodMs: ctx.cfg.energy.regenMin * 60_000,
       talents: Number((p as PlayerRow & { talents?: number }).talents ?? 0),
+      // the talent counter: boss damage of all time
+      talentDamage: Number((await ctx.q.query<{ total_damage: number }>("SELECT total_damage FROM player_stats WHERE player_id=$1", [ctx.pid]))[0]?.total_damage ?? 0),
     },
+    /** weapon talents: weapon → branch → level */
+    weaponTalents: await weaponTalents(ctx.q, ctx.pid),
     wallet: await balances(ctx.q, ctx.pid),
     inventory: await inventoryView(ctx.q, ctx.pid),
     cooldowns: Object.fromEntries(

@@ -4,8 +4,9 @@ import { BOSSES, bossById, keyId, keysNeeded, rewardShare, type BossDef } from "
 import { WEAPONS, itemById, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
 import { mergeRewards, scaleReward } from "../../content/rewards.ts";
-import { BASE_CRIT_MULT, talentsForDamage } from "../../content/home.ts";
-import { playerBonus } from "./home.ts";
+import { BASE_CRIT_MULT } from "../../content/home.ts";
+import { talentsForDamage, weaponTalentBonus } from "../../content/talents.ts";
+import { playerBonus, weaponTalents } from "./home.ts";
 import { notifyBossLow } from "./notify.ts";
 
 /*
@@ -134,8 +135,10 @@ export interface HitResult {
   readyAt: number | null;
   /** fights (of anyone) this hit finished */
   finished: number;
-  /** damage dealt in this fight so far and talents this hit earned (thresholds in content/home.ts) */
+  /** damage dealt in this fight so far */
   fightDamage: number;
+  /** damage dealt to bosses of all time (the talent counter) and talents this hit earned (content/talents.ts) */
+  talentDamage: number;
   talentsGained: number;
 }
 
@@ -170,11 +173,12 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string): Promise
 
     const phrases = HIT_PHRASES[w.id] ?? [""];
     const phraseIdx = Math.floor(ctx.rng() * phrases.length) % phrases.length;
-    // home bonuses: +damage %, crit chance and crit power (equipment + rooms)
+    // home bonuses: +damage %, crit chance and crit power (equipment + rooms); this weapon's talents: +damage %, crit power
     const bonus = await playerBonus(ctx.q, ctx.pid);
-    let damage = Math.round(w.weapon.damage * (1 + bonus.damage));
+    const wt = weaponTalentBonus(await weaponTalents(ctx.q, ctx.pid), w.id);
+    let damage = Math.round(w.weapon.damage * (1 + bonus.damage + wt.damage));
     const crit = bonus.critChance > 0 && ctx.rng() < bonus.critChance;
-    if (crit) damage = Math.round(damage * (BASE_CRIT_MULT + bonus.critDamage));
+    if (crit) damage = Math.round(damage * (BASE_CRIT_MULT + bonus.critDamage + wt.critDamage));
     const seq = boss.last_seq + 1;
     const total = boss.damage_total + damage;
     await ctx.q.query("UPDATE bosses SET damage_total=$2, last_seq=$3 WHERE id=$1", [boss.id, total, seq]);
@@ -183,9 +187,12 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string): Promise
       [boss.id, seq, ctx.pid, mine.id, w.id, damage, phraseIdx, new Date(ctx.now), crit],
     );
     await ctx.q.query("UPDATE fights SET my_damage = my_damage + $2, my_hits = my_hits + 1 WHERE id=$1", [mine.id, damage]);
-    // talents for damage within this fight (the counter lives on the fight, so it is gone once the fight ends)
     const fightDamage = mine.my_damage + damage;
-    const talentsGained = talentsForDamage(fightDamage) - talentsForDamage(mine.my_damage);
+    // talents for the damage of all time: the counter carries over from fight to fight
+    const [st] = await ctx.q.query<{ total_damage: number }>("SELECT total_damage FROM player_stats WHERE player_id=$1", [ctx.pid]);
+    const before = Number(st?.total_damage ?? 0);
+    const talentDamage = before + damage;
+    const talentsGained = talentsForDamage(talentDamage) - talentsForDamage(before);
     if (talentsGained > 0) {
       await ctx.q.query("UPDATE players SET talents = talents + $2 WHERE id=$1", [ctx.pid, talentsGained]);
       await ledger(ctx, "talent", "talent", talentsGained, `fight:${mine.id}`);
@@ -216,7 +223,7 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string): Promise
     const hp = mineWon ? 0 : fightHp({ ...mine, end_total: null, my_damage: Number(mine.my_damage) + damage }, total);
     return {
       fightId: mine.id, weapon: w.id, damage, crit, phrase: phrases[phraseIdx], hp, hpMax: mine.hp_max,
-      status: mineWon ? "won" : "active", left, readyAt, finished: won.length, fightDamage, talentsGained,
+      status: mineWon ? "won" : "active", left, readyAt, finished: won.length, fightDamage, talentDamage, talentsGained,
     };
   });
 }

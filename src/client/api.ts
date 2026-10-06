@@ -21,7 +21,9 @@ export interface GameState {
     xp: number; level: number; levelXp: number; levelNeed: number;
     energy: number; energyMax: number; energyNextIn: number; energyPeriodMs: number;
     talents: number;
+    talentDamage: number;
   };
+  weaponTalents: Record<string, { dmg?: number; crit?: number }>;
   wallet: Record<Currency, number>;
   inventory: { id: string; qty: number }[];
   cooldowns: Record<string, number>;

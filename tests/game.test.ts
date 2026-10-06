@@ -7,7 +7,8 @@ import { fightView } from "../src/server/systems/combat.ts";
 import { YARD_DROPS } from "../src/content/yard.ts";
 import { levelFromXp } from "../src/content/levels.ts";
 import { LOCATIONS } from "../src/content/locations.ts";
-import { talentThreshold, talentsForDamage } from "../src/content/home.ts";
+import { TALENT_THRESHOLDS, talentThreshold, talentsForDamage } from "../src/content/talents.ts";
+import { MIGRATIONS } from "../src/server/migrations.ts";
 import { signInitData, signLoginWidget, validateInitData, validateLoginWidget } from "../src/server/auth.ts";
 
 let db: Db;
@@ -563,39 +564,58 @@ describe("home: equipment, rooms, look, help", () => {
     expect(legacy.result.damage).toBe(Math.round(Math.round(50 * 1.03) * 1.6));
   });
 
-  it("talents: thresholds grow 200, 500, 900…", () => {
-    expect([1, 2, 3, 4, 5].map(talentThreshold)).toEqual([200, 500, 900, 1400, 2000]);
-    expect([0, 199, 200, 499, 500, 899, 900, 2000].map(talentsForDamage)).toEqual([0, 0, 1, 1, 2, 2, 3, 5]);
+  it("talents: the 1st for 100 damage, the 100th for 1 000 000, uneven steps in between", () => {
+    expect(TALENT_THRESHOLDS.length).toBe(100);
+    expect([talentThreshold(1), talentThreshold(100)]).toEqual([100, 1_000_000]);
+    for (let k = 2; k <= 100; k++) expect(talentThreshold(k)).toBeGreaterThan(talentThreshold(k - 1));
+    expect([0, 99, 100, talentThreshold(2) - 1, talentThreshold(2), 999_999, 1_000_000, 1_210_000].map(talentsForDamage)).toEqual([0, 0, 1, 1, 2, 99, 100, 110]);
+    // not a plain 100·k² curve
+    expect(TALENT_THRESHOLDS.filter((v, i) => v !== 100 * (i + 1) ** 2).length).toBeGreaterThan(80);
   });
 
-  it("talents come from damage within one fight, burn with the fight and buy computer parts", async () => {
+  it("talents: the counter carries over between fights; weapon branches cost talents and boost only that weapon", async () => {
     await setBossHp({ datsik: 100000 });
     const p = await newPlayer(db);
-    await give(db, p, "red-candle", 30);
+    await give(db, p, "red-candle", 40);
     await startDatsik(p);
-    for (let i = 0; i < 3; i++) expect((await hit(p, "red-candle")).result.talentsGained).toBe(0);
-    const t1 = await hit(p, "red-candle"); // 200
-    expect(t1.result).toMatchObject({ fightDamage: 200, talentsGained: 1 });
-    expect(t1.state.player.talents).toBe(1);
-    let last = t1;
-    for (let i = 0; i < 6; i++) last = await hit(p, "red-candle"); // 500
-    expect(last.state.player.talents).toBe(2);
-    // the counter burns with the fight: a new fight starts from zero
+    expect((await hit(p, "red-candle")).result.talentsGained).toBe(0); // 50
+    const t1 = await hit(p, "red-candle"); // 100
+    expect(t1.result).toMatchObject({ fightDamage: 100, talentDamage: 100, talentsGained: 1 });
+    expect(t1.state.player).toMatchObject({ talents: 1, talentDamage: 100 });
+    // a new fight goes on from the same counter
     await act(db, p, "fight_flee", {}, T0);
     await startDatsik(p, T0 + M);
-    for (let i = 0; i < 3; i++) last = await hit(p, "red-candle", T0 + M);
-    expect(last.result.talentsGained).toBe(0);
-    expect(last.state.fight?.myDamage).toBe(150);
+    let last = t1;
+    const need = talentThreshold(2) - 100;
+    for (let i = 0; i < Math.ceil(need / 50); i++) last = await hit(p, "red-candle", T0 + M);
+    expect(last.state.fight?.myDamage).toBe(Math.ceil(need / 50) * 50);
     expect(last.state.player.talents).toBe(2);
-    // level 1 costs 1 talent, level 2 costs 2
-    const up = await act(db, p, "pc_upgrade", { id: "pc-gpu" }, T0 + M);
+    // branches: levels 1–3 cost 1 talent; the damage branch adds 6% to that weapon only
+    const up = await act(db, p, "talent_up", { weapon: "red-candle", branch: "dmg" }, T0 + M);
     expect(up.result).toMatchObject({ level: 1, talents: 1 });
-    expect(up.state.home.levels["pc-gpu"]).toBe(1);
-    expect(up.state.home.bonus.damage).toBeCloseTo(0.03);
-    await expect(act(db, p, "pc_upgrade", { id: "pc-gpu" }, T0 + M)).rejects.toMatchObject({ code: "no_talents" });
-    await expect(act(db, p, "pc_upgrade", { id: "pc-nope" }, T0 + M)).rejects.toMatchObject({ code: "bad_part" });
+    expect(up.state.weaponTalents).toEqual({ "red-candle": { dmg: 1 } });
     const r = await hit(p, "red-candle", T0 + M);
-    expect(r.result.damage).toBe(Math.round(50 * 1.03));
+    expect(r.result.damage).toBe(Math.round(50 * 1.06));
+    await give(db, p, "mouse", 1);
+    expect((await hit(p, "mouse", T0 + M)).result.damage).toBe(30);
+    await act(db, p, "talent_up", { weapon: "fist", branch: "crit" }, T0 + M);
+    await expect(act(db, p, "talent_up", { weapon: "fist", branch: "crit" }, T0 + M)).rejects.toMatchObject({ code: "no_talents" });
+    await expect(act(db, p, "talent_up", { weapon: "nope", branch: "dmg" }, T0 + M)).rejects.toMatchObject({ code: "bad_talent" });
+    await expect(act(db, p, "talent_up", { weapon: "fist", branch: "speed" }, T0 + M)).rejects.toMatchObject({ code: "bad_talent" });
+  });
+
+  it("talents migration: computer parts are refunded, damage so far is counted on the new curve", async () => {
+    const p = await newPlayer(db);
+    // before: 5 talents earned in fights, 3 of them spent on the GPU (levels 1 and 2), 20 000 damage dealt
+    await db.query("UPDATE players SET talents = 2 WHERE id=$1", [p]);
+    await db.query("INSERT INTO ledger (player_id, kind, key, delta, reason) VALUES ($1,'talent','talent',5,'fight:1')", [p]);
+    await db.query("INSERT INTO player_equipment (player_id, equipment_id, level) VALUES ($1,'pc-gpu',2)", [p]);
+    await db.query("UPDATE player_stats SET total_damage = 20000 WHERE player_id=$1", [p]);
+    await db.query(MIGRATIONS.find((m) => m.id === "v2-021-weapon-talents")!.sql);
+    const [row] = await db.query<{ talents: number }>("SELECT talents FROM players WHERE id=$1", [p]);
+    // 2 left + 3 refunded + (talents for 20 000 on the new curve − 5 already earned)
+    expect(row.talents).toBe(2 + 3 + talentsForDamage(20000) - 5);
+    expect(await db.query("SELECT 1 FROM player_equipment WHERE player_id=$1 AND equipment_id LIKE 'pc-%'", [p])).toHaveLength(0);
   });
 
   it("tasks hint: the cheapest step left in an open location", async () => {

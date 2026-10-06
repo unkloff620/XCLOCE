@@ -212,7 +212,7 @@ export function sfx(name: Sfx, power = 0.5) {
 
 /** What a successful action sounds like (attacks and slots play their own). */
 export const ACTION_SFX: Partial<Record<string, Sfx>> = {
-  buy: "buy", exchange: "buy", room_buy: "upgrade", equipment_upgrade: "upgrade", pc_upgrade: "upgrade",
+  buy: "buy", exchange: "buy", room_buy: "upgrade", equipment_upgrade: "upgrade", talent_up: "upgrade",
   daily_claim: "reward", quest_claim: "reward", location_claim: "reward", fight_claim: "win", quest_chest: "chest",
   yard_pick: "coin", task: "step", sell: "coin", use: "coin",
   fight_start: "tap", equip: "tap", unequip: "tap", room_set: "tap", decor_set: "tap", look_set: "tap", notify_set: "tap",

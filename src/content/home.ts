@@ -84,7 +84,7 @@ export const EQUIPMENT: EquipmentDef[] = [
 ];
 
 /**
- * Снято с продажи: системник за валюту заменён компьютером за таланты (PC_PARTS).
+ * Снято с продажи: системник за валюту заменён талантами оружия (content/talents.ts).
  * Уже купленные уровни продолжают давать бонус, но в «Технике» не показываются и не улучшаются.
  */
 export const LEGACY_EQUIPMENT: EquipmentDef[] = [
@@ -127,45 +127,17 @@ export function addBonus(a: Bonus, b: Bonus): Bonus {
   return { critChance: (a.critChance ?? 0) + (b.critChance ?? 0), critDamage: (a.critDamage ?? 0) + (b.critDamage ?? 0), damage: (a.damage ?? 0) + (b.damage ?? 0) };
 }
 
-/* ---------------- компьютер: детали за таланты ---------------- */
-/*
- * Таланты дают за урон по боссу в ОДНОМ бою: 1-й — за 200 урона, 2-й — за 500, дальше пороги растут
- * (50·k·(k+3): 200, 500, 900, 1400, 2000…). Бой закончился (победа, поражение, побег) — счётчик урона обнуляется.
- * Детали системника хранятся в player_equipment под своими id; уровень n стоит n талантов.
- */
-export interface PcPartDef { id: string; name: string; description: string; maxLevel: number; damagePerLevel: number }
-export const PC_PARTS: PcPartDef[] = [
-  { id: "pc-gpu", name: "Видеокарта", description: "Больше ядер — больше урона. Главная деталь системника.", maxLevel: 10, damagePerLevel: 0.03 },
-  { id: "pc-cooler", name: "Кулер процессора", description: "Холодный процессор — горячие удары. Проц не троттлит, урон растёт.", maxLevel: 10, damagePerLevel: 0.02 },
-  { id: "pc-psu", name: "Блок питания", description: "Стабильные вольты под нагрузкой: железо выдаёт всё, на что способно.", maxLevel: 10, damagePerLevel: 0.02 },
-];
-export const pcPartById = (id: string) => PC_PARTS.find((p) => p.id === id);
-/** talents to buy level `level` (1-based) */
-export const pcPartCost = (level: number) => level;
-/** damage dealt within one fight needed for the k-th talent */
-export const talentThreshold = (k: number) => 50 * k * (k + 3);
-/** talents earned by `damage` dealt in one fight */
-export function talentsForDamage(damage: number): number {
-  let k = 0;
-  while (talentThreshold(k + 1) <= damage) k++;
-  return k;
-}
-
 /** Trophies: reward items that stand in the room by themselves and add a bonus while owned. */
 export const TROPHIES: { id: string; bonus: Bonus }[] = [
   { id: "statue-close", bonus: { critDamage: 0.25 } },
 ];
 
-/** Total bonus from equipment levels (incl. computer parts), owned rooms and trophies. */
+/** Total bonus from equipment levels, owned rooms and trophies (weapon talents are added per weapon in combat). */
 export function totalBonus(levels: Record<string, number>, rooms: string[], trophies: string[] = []): Required<Bonus> {
   let b: Bonus = {};
   for (const e of [...EQUIPMENT, ...LEGACY_EQUIPMENT]) {
     const lv = levels[e.id] ?? 0;
     if (lv > 0) b = addBonus(b, e.levels[Math.min(lv, e.levels.length) - 1].bonus);
-  }
-  for (const p of PC_PARTS) {
-    const lv = Math.min(levels[p.id] ?? 0, p.maxLevel);
-    if (lv > 0) b = addBonus(b, { damage: lv * p.damagePerLevel });
   }
   for (const id of rooms) b = addBonus(b, roomById(id)?.bonus ?? {});
   for (const t of TROPHIES) if (trophies.includes(t.id)) b = addBonus(b, t.bonus);
@@ -208,5 +180,5 @@ export function normalizeLook(v: unknown): Look {
 }
 
 /* ---------------- подсказки [?] ---------------- */
-export const HELP_TOPICS = ["bosses", "boss", "yard", "slots", "home", "home-menu", "yard-menu", "exchange", "locations", "clans", "shop", "computer", "tutorial"] as const;
+export const HELP_TOPICS = ["bosses", "boss", "yard", "slots", "home", "home-menu", "yard-menu", "exchange", "locations", "clans", "shop", "computer", "talents", "tutorial"] as const;
 export type HelpTopic = (typeof HELP_TOPICS)[number];

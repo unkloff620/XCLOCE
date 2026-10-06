@@ -432,4 +432,38 @@ CREATE TABLE IF NOT EXISTS player_unlocks (
 );
 `,
   },
+  {
+    // Таланты: the counter is the damage of all time (it no longer burns with the fight) and talents are spent on
+    // weapon branches instead of computer parts. Computer parts are refunded (level n cost n talents), and everyone
+    // gets the talents the new curve gives for their damage so far minus what they already earned.
+    id: "v2-021-weapon-talents",
+    sql: `
+CREATE TABLE IF NOT EXISTS player_talents (
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  weapon_id TEXT NOT NULL,
+  branch TEXT NOT NULL,
+  level INT NOT NULL DEFAULT 0 CHECK (level >= 0),
+  PRIMARY KEY (player_id, weapon_id, branch)
+);
+WITH refund AS (
+  SELECT player_id, SUM(level * (level + 1) / 2)::int AS n FROM player_equipment
+  WHERE equipment_id IN ('pc-gpu', 'pc-cooler', 'pc-psu') AND level > 0 GROUP BY player_id
+), ins AS (
+  INSERT INTO ledger (player_id, kind, key, delta, reason) SELECT player_id, 'talent', 'talent', n, 'refund:pc' FROM refund
+)
+UPDATE players p SET talents = p.talents + r.n FROM refund r WHERE r.player_id = p.id;
+DELETE FROM player_equipment WHERE equipment_id IN ('pc-gpu', 'pc-cooler', 'pc-psu');
+WITH thr(v) AS (VALUES (100),(401),(905),(1613),(2519),(3626),(4909),(6403),(8074),(9878),(11893),(14047),(16267),(18923),(21512),(24338),(27833),(31194),(35158),(38929),(43668),(48163),(53591),(58901),(65158),(70027),(76085),(82394),(88859),(96784),(101946),(108629),(113829),(120336),(125743),(131291),(137774),(143456),(150605),(155661),(163137),(169501),(177399),(183326),(188521),(201611),(211856),(221677),(230105),(242527),(250538),(267851),(278602),(289322),(300806),(321807),(337203),(342633),(363893),(379168),(384124),(402344),(415882),(425893),(444256),(458485),(465897),(479603),(489867),(504457),(509142),(524451),(525346),(531825),(547737),(551129),(564198),(578874),(594733),(604543),(630407),(641516),(661536),(680438),(710031),(728365),(756467),(775739),(802998),(824003),(845103),(867526),(883933),(902517),(920587),(934589),(949849),(965897),(982441),(1000000)),
+due AS (
+  SELECT s.player_id,
+    (SELECT COUNT(*) FROM thr WHERE v <= s.total_damage)::int
+      + GREATEST(0, FLOOR(SQRT(s.total_damage / 100.0))::int - 100)
+      - COALESCE((SELECT SUM(delta) FROM ledger l WHERE l.player_id = s.player_id AND l.kind = 'talent' AND l.reason NOT LIKE 'refund:%'), 0)::int AS n
+  FROM player_stats s
+), ins AS (
+  INSERT INTO ledger (player_id, kind, key, delta, reason) SELECT player_id, 'talent', 'talent', n, 'catch-up:damage' FROM due WHERE n > 0
+)
+UPDATE players p SET talents = p.talents + d.n FROM due d WHERE d.player_id = p.id AND d.n > 0;
+`,
+  },
 ];

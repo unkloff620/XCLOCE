@@ -1,6 +1,7 @@
 import { GameError, type Queryable } from "../db.ts";
 import { takeMoney, type Ctx } from "../core.ts";
-import { EQUIPMENT, HELP_TOPICS, TROPHIES, equipmentById, pcPartById, pcPartCost, normalizeLook, roomById, totalBonus, type HelpTopic, type Look } from "../../content/home.ts";
+import { EQUIPMENT, HELP_TOPICS, TROPHIES, equipmentById, normalizeLook, roomById, totalBonus, type HelpTopic, type Look } from "../../content/home.ts";
+import { TALENT_WEAPONS, branchById, talentCost, type WeaponTalents } from "../../content/talents.ts";
 
 /*
  * Дом: оборудование (уровни), комнаты (купить / выбрать), внешность персонажа, просмотренные подсказки.
@@ -50,27 +51,35 @@ export async function upgradeEquipment(ctx: Ctx, id: string) {
   return { id: def.id, level: lv + 1, max: def.levels.length };
 }
 
-/** Upgrade a computer part for talents (level n costs n talents). */
-export async function upgradePcPart(ctx: Ctx, id: string) {
-  const def = pcPartById(id);
-  if (!def) throw new GameError("bad_part", "Такой детали нет");
-  const h = await homeData(ctx.q, ctx.pid);
-  const lv = h.levels[def.id] ?? 0;
-  if (lv >= def.maxLevel) throw new GameError("max_level", `${def.name}: уже максимальный уровень`);
-  const cost = pcPartCost(lv + 1);
+/** The player's weapon talents: weapon → branch → level. */
+export async function weaponTalents(q: Queryable, pid: number): Promise<WeaponTalents> {
+  const rows = await q.query<{ weapon_id: string; branch: string; level: number }>("SELECT weapon_id, branch, level FROM player_talents WHERE player_id=$1 AND level > 0", [pid]);
+  const out: WeaponTalents = {};
+  for (const r of rows) (out[r.weapon_id] ??= {})[r.branch as "dmg" | "crit"] = r.level;
+  return out;
+}
+
+/** One more level of a weapon's branch (damage or crit power), paid with talents. */
+export async function upgradeTalent(ctx: Ctx, weaponId: string, branchId: string) {
+  const br = branchById(branchId);
+  if (!br || !TALENT_WEAPONS.includes(weaponId)) throw new GameError("bad_talent", "Такой ветки нет");
+  const [cur] = await ctx.q.query<{ level: number }>("SELECT level FROM player_talents WHERE player_id=$1 AND weapon_id=$2 AND branch=$3", [ctx.pid, weaponId, br.id]);
+  const lv = cur?.level ?? 0;
+  if (lv >= br.maxLevel) throw new GameError("max_level", `${br.name}: уже максимальный уровень`);
+  const cost = talentCost(lv + 1);
   const [p] = await ctx.q.query<{ talents: number }>(
     "UPDATE players SET talents = talents - $2 WHERE id=$1 AND talents >= $2 RETURNING talents",
     [ctx.pid, cost],
   );
   if (!p) throw new GameError("no_talents", `Не хватает талантов: нужно ${cost}`);
   const [row] = await ctx.q.query<{ level: number }>(
-    `INSERT INTO player_equipment (player_id, equipment_id, level) VALUES ($1,$2,$3)
-     ON CONFLICT (player_id, equipment_id) DO UPDATE SET level = EXCLUDED.level WHERE player_equipment.level = $4
+    `INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,$2,$3,$4)
+     ON CONFLICT (player_id, weapon_id, branch) DO UPDATE SET level = EXCLUDED.level WHERE player_talents.level = $5
      RETURNING level`,
-    [ctx.pid, def.id, lv + 1, lv],
+    [ctx.pid, weaponId, br.id, lv + 1, lv],
   );
-  if (!row) throw new GameError("conflict", "Деталь уже улучшена, обнови экран");
-  return { id: def.id, level: lv + 1, max: def.maxLevel, talents: p.talents };
+  if (!row) throw new GameError("conflict", "Талант уже улучшен, обнови экран");
+  return { weapon: weaponId, branch: br.id, level: lv + 1, max: br.maxLevel, talents: p.talents };
 }
 
 export async function buyRoom(ctx: Ctx, id: string) {
