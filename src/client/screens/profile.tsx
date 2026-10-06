@@ -18,6 +18,7 @@ import { HomeScene } from "../art/home-scene.tsx";
 import { ROOM_BACKDROP } from "../../content/home-scene.ts";
 import { ROOM_DEFS, stageOf } from "../../content/home.ts";
 import { BadgesPanel, type AchRow } from "../badges.tsx";
+import { TalentChip, TalentNext, TalentWindow } from "./talents.tsx";
 import type { Look } from "../../content/home.ts";
 import { clock, dateRu, full, money, short } from "../format.ts";
 
@@ -84,6 +85,7 @@ export function ProfileScreen() {
   const [p, setP] = useState<Profile | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [renaming, setRenaming] = useState(false);
+  const [talentsOpen, setTalentsOpen] = useState(false);
   const id = q.get("id");
   const [tick, setTick] = useState(0);
   const reload = () => setTick((t) => t + 1);
@@ -173,6 +175,19 @@ export function ProfileScreen() {
           </div>
         </div>
       )}
+
+      {/* my talents: the counter and the way into the talent window */}
+      {p.self && state && (
+        <div className="panel col" style={{ gap: 8 }}>
+          <div className="row" style={{ justifyContent: "space-between" }}>
+            <span className="small muted">ТАЛАНТЫ</span>
+            <TalentChip n={state.player.talents} />
+          </div>
+          <TalentNext dmg={state.player.talentDamage} />
+          <button className="btn gold block" onClick={() => setTalentsOpen(true)}>Прокачать оружие ›</button>
+        </div>
+      )}
+      {talentsOpen && <TalentWindow onClose={() => setTalentsOpen(false)} />}
 
       <BadgesPanel rows={p.achievements} self={p.self} onClaimed={reload} />
 

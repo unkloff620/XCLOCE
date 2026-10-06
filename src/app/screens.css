@@ -1241,3 +1241,4 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .tal-val { font-size: 11px; min-width: 38px; text-align: right; }
 .tal-up { padding: 3px 7px; gap: 2px; font-size: 11px; min-height: 0; }
 .tal-max { font-size: 10px; font-weight: 800; color: var(--green); padding: 0 6px; }
+.talent-prog { font: inherit; color: inherit; cursor: pointer; }

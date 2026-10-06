@@ -590,12 +590,12 @@ describe("home: equipment, rooms, look, help", () => {
     for (let i = 0; i < Math.ceil(need / 50); i++) last = await hit(p, "red-candle", T0 + M);
     expect(last.state.fight?.myDamage).toBe(Math.ceil(need / 50) * 50);
     expect(last.state.player.talents).toBe(2);
-    // branches: levels 1–3 cost 1 talent; the damage branch adds 6% to that weapon only
+    // branches: levels 1–3 cost 1 talent; the damage branch adds 10% to that weapon only
     const up = await act(db, p, "talent_up", { weapon: "red-candle", branch: "dmg" }, T0 + M);
     expect(up.result).toMatchObject({ level: 1, talents: 1 });
     expect(up.state.weaponTalents).toEqual({ "red-candle": { dmg: 1 } });
     const r = await hit(p, "red-candle", T0 + M);
-    expect(r.result.damage).toBe(Math.round(50 * 1.06));
+    expect(r.result.damage).toBe(Math.round(50 * 1.1));
     await give(db, p, "mouse", 1);
     expect((await hit(p, "mouse", T0 + M)).result.damage).toBe(30);
     await act(db, p, "talent_up", { weapon: "fist", branch: "crit" }, T0 + M);

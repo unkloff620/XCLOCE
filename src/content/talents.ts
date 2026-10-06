@@ -3,7 +3,7 @@
  * Даются за урон по боссам за всё время игры: счётчик не сгорает после боя — следующий бой продолжает набивать
  * его с того места, где остановился прошлый. 1-й талант — за 100 урона, 100-й — за 1 000 000; пороги между ними
  * идут примерно как 100·k², но не ровно (где-то чуть раньше, где-то позже). После 100-го — ровно 100·k².
- * Тратятся в окне талантов (системник в комнате): у каждого оружия, даже у кулака, две ветки — урон и сила крита.
+ * Тратятся в окне талантов (счётчик в бою, профиль, инвентарь): у каждого оружия, даже у кулака, две ветки — урон и сила крита.
  */
 import { WEAPONS } from "./items.ts";
 
@@ -46,9 +46,9 @@ export function talentsForDamage(damage: number): number {
 
 export type TalentBranch = "dmg" | "crit";
 export interface BranchDef { id: TalentBranch; name: string; short: string; perLevel: number; maxLevel: number }
-/** +6% damage of that weapon per level; +12% crit power of that weapon per level (crit chance comes from the room) */
+/** +10% damage of that weapon per level (+100% at the top); +12% crit power of that weapon per level (crit chance comes from the room) */
 export const TALENT_BRANCHES: BranchDef[] = [
-  { id: "dmg", name: "Урон", short: "урон", perLevel: 0.06, maxLevel: 10 },
+  { id: "dmg", name: "Урон", short: "урон", perLevel: 0.1, maxLevel: 10 },
   { id: "crit", name: "Сила крита", short: "крит", perLevel: 0.12, maxLevel: 10 },
 ];
 export const branchById = (id: string) => TALENT_BRANCHES.find((b) => b.id === id);

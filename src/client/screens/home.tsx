@@ -13,7 +13,7 @@ import { DailyWindow } from "./daily.tsx";
 import { QuestsWindow } from "./quests.tsx";
 import { tutorialPending } from "../tutorial.tsx";
 import { BonusLine, EquipmentWindow } from "./house.tsx";
-import { TalentWindow } from "./talents.tsx";
+import { ComputerWindow } from "./computer.tsx";
 import { ROOM_DEFS } from "../../content/home.ts";
 import { money } from "../format.ts";
 import { Help, HelpList } from "../help.tsx";
@@ -115,7 +115,7 @@ export function HomeScreen() {
         </div>
         <div className="room-help">
           <Help topic="home-menu" title="Твой дом">
-            <p>Здесь живёт твой персонаж. На заднем плане стоит оборудование — нажми на мониторы, чтобы обставить рабочее место, или на системник в углу — там таланты: ими улучшается каждое оружие, даже кулак. Стрелки по бокам листают комнаты: купленная включается сразу, закрытую можно разблокировать кнопкой снизу. Каждая купленная комната даёт бонус к урону.</p>
+            <p>Здесь живёт твой персонаж. На заднем плане стоит оборудование — нажми на мониторы, чтобы обставить рабочее место, или на системник в углу (его улучшения появятся позже). Стрелки по бокам листают комнаты: купленная включается сразу, закрытую можно разблокировать кнопкой снизу. Каждая купленная комната даёт бонус к урону.</p>
             <HelpList title="Меню [≡] слева" rows={[
               { key: "w", icon: <Icon name="shirt" size={44} />, name: "Гардероб", hint: "Редактор персонажа прямо в комнате: комната сереет, а ты примеряешь одежду, причёску, цвет волос и кожи. Всё сохраняется одной кнопкой." },
               { key: "b", icon: <Icon name="gift" size={44} />, name: "Бонус", hint: "Награда за ежедневный вход. Заходи каждый день подряд — награда растёт, на 7-й день редкое оружие. Пропустишь день — серия сгорит." },
@@ -197,7 +197,7 @@ export function HomeScreen() {
       {daily && <DailyWindow onClose={() => setDaily(false)} />}
       {quests && <QuestsWindow onClose={() => setQuests(false)} />}
       {equip !== false && <EquipmentWindow focus={equip} onClose={() => setEquip(false)} />}
-      {pc && <TalentWindow onClose={() => setPc(false)} />}
+      {pc && <ComputerWindow onClose={() => setPc(false)} />}
     </div>
   );
 }

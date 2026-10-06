@@ -6,6 +6,10 @@ import { CATEGORY_NAME, itemById, RARITY_NAME, type Category, type ItemDef } fro
 import { ItemArt } from "../art/items.tsx";
 import { Coin, Empty, Modal } from "../ui.tsx";
 import { haptic } from "../telegram.ts";
+import { Icon } from "../art/icons.tsx";
+import { BASE_CRIT_MULT } from "../../content/home.ts";
+import { weaponTalentBonus } from "../../content/talents.ts";
+import { TalentNext, TalentWindow } from "./talents.tsx";
 
 const CATS: (Category | "all")[] = ["all", "weapon", "clothing", "item", "reward", "event"];
 const CAT_LABEL = { all: "Всё", ...CATEGORY_NAME };
@@ -45,7 +49,11 @@ export function InventoryScreen() {
   const router = useRouter();
   const [cat, setCat] = useState<Category | "all">("all");
   const [open, setOpen] = useState<ItemDef | null>(null);
+  // talents: a cell of their own (with "all" and "rewards"), its window leads to the talent tree
+  const [talInfo, setTalInfo] = useState(false);
+  const [talents, setTalents] = useState(false);
   if (!state) return null;
+  const showTalents = cat === "all" || cat === "reward";
   const items = state.inventory.map((i) => ({ def: itemById(i.id)!, qty: i.qty })).filter((x) => x.def && (cat === "all" || x.def.category === cat));
   const order: Category[] = ["weapon", "clothing", "item", "reward", "event"];
   items.sort((a, b) => order.indexOf(a.def.category) - order.indexOf(b.def.category) || (b.def.weapon?.damage ?? 0) - (a.def.weapon?.damage ?? 0));
@@ -63,10 +71,17 @@ export function InventoryScreen() {
           <button key={c} className={cat === c ? "on" : ""} onClick={() => setCat(c)}>{CAT_LABEL[c]}</button>
         ))}
       </div>
-      {items.length === 0 ? (
+      {items.length === 0 && !showTalents ? (
         <Empty>{cat === "event" ? "Ивентовые вещи появятся с первыми событиями." : "Здесь пока пусто."}</Empty>
       ) : (
         <div className="inv-grid">
+          {showTalents && (
+            <button className="inv-cell rar-epic" onClick={() => setTalInfo(true)}>
+              <Icon name="talent" size={44} />
+              <span className="inv-name">Таланты</span>
+              <span className="inv-qty num">×{state.player.talents}</span>
+            </button>
+          )}
           {items.map(({ def, qty }) => (
             <button key={def.id} className={`inv-cell rar-${def.rarity} ${def.slot && state.look.equipped[def.slot] === def.id ? "worn" : ""}`} onClick={() => setOpen(def)}>
               <ItemArt id={def.id} size={44} />
@@ -76,6 +91,20 @@ export function InventoryScreen() {
           ))}
         </div>
       )}
+      {talInfo && (
+        <Modal title="Таланты" onClose={() => setTalInfo(false)}>
+          <div className="item-card rar-epic">
+            <div className="item-art"><Icon name="talent" size={96} /></div>
+            <div className="row" style={{ justifyContent: "center", gap: 6 }}>
+              <span className="chip">свободно: <b className="num">{state.player.talents}</b></span>
+            </div>
+            <p className="center" style={{ margin: "10px 0" }}>Таланты дают за урон по боссам — счётчик не сгорает между боями. Ими прокачивается каждое оружие, даже кулак: урон и сила крита.</p>
+            <TalentNext dmg={state.player.talentDamage} />
+            <button className="btn gold block" style={{ marginTop: 12 }} onClick={() => { setTalInfo(false); setTalents(true); }}>Перейти</button>
+          </div>
+        </Modal>
+      )}
+      {talents && <TalentWindow onClose={() => setTalents(false)} />}
       {open && (
         <Modal title={open.name} onClose={() => setOpen(null)}>
           <div className={`item-card rar-${open.rarity}`}>
@@ -87,7 +116,17 @@ export function InventoryScreen() {
             </div>
             {open.weapon && (
               <div className="row" style={{ justifyContent: "center", gap: 6 }}>
-                <span className="chip red">Урон: {open.weapon.damage}</span>
+                {(() => {
+                  // what a hit really does: the home bonus and this weapon's talents
+                  const t = weaponTalentBonus(state.weaponTalents ?? {}, open.id);
+                  const dmg = Math.round(open.weapon.damage * (1 + state.home.bonus.damage + t.damage));
+                  return (
+                    <>
+                      <span className="chip red" title={`база ${open.weapon.damage}`}>Урон: {dmg}</span>
+                      <span className="chip">крит ×{(BASE_CRIT_MULT + state.home.bonus.critDamage + t.critDamage).toFixed(2)}</span>
+                    </>
+                  );
+                })()}
                 <span className="chip">{open.weapon.kind === "permanent" ? `перезарядка ${open.weapon.cooldownMin} мин` : "расходник"}</span>
               </div>
             )}
