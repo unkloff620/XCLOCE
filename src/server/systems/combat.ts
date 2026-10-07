@@ -62,10 +62,34 @@ async function lockBoss(q: Queryable, id: string): Promise<BossRow> {
 
 /** Marks fights of this boss whose 8 hours are over as lost. Caller holds the boss lock. */
 async function expireFights(ctx: Ctx, boss: BossRow) {
-  await ctx.q.query(
-    "UPDATE fights SET status='lost', ended_at=ends_at, end_total=$2, end_seq=$3 WHERE boss_id=$1 AND status='active' AND ends_at <= $4",
+  const lost = await ctx.q.query<LostFight>(
+    "UPDATE fights SET status='lost', ended_at=ends_at, end_total=$2, end_seq=$3 WHERE boss_id=$1 AND status='active' AND ends_at <= $4 RETURNING id, player_id, boss_id, keys_spent",
     [boss.id, boss.damage_total, boss.last_seq, new Date(ctx.now)],
   );
+  await refundKeys(ctx, lost);
+}
+
+/** The boss before this one: its passes are the entry to this one. */
+const prevBoss = (b: BossDef) => BOSSES.find((x) => x.order === b.order - 1);
+
+interface LostFight { id: number; player_id: number; boss_id: string; keys_spent: number }
+/**
+ * Passes are spent when a fight starts and stay spent when the boss is beaten. A lost fight (8 hours over, or fled)
+ * gives them back.
+ */
+async function refundKeys(ctx: Ctx, fights: LostFight[]) {
+  for (const f of fights) {
+    const def = bossById(f.boss_id);
+    const prev = def && prevBoss(def);
+    const n = Number(f.keys_spent);
+    if (!prev || !(n > 0)) continue;
+    await ctx.q.query(
+      "INSERT INTO inventory (player_id, item_id, qty, source, updated_at) VALUES ($1,$2,$3,'refund',$4) ON CONFLICT (player_id, item_id) DO UPDATE SET qty = inventory.qty + EXCLUDED.qty, updated_at = EXCLUDED.updated_at",
+      [f.player_id, keyId(prev.id), n, new Date(ctx.now)],
+    );
+    await ctx.q.query("INSERT INTO ledger (player_id, kind, key, delta, reason, created_at) VALUES ($1,'item',$2,$3,$4,$5)", [f.player_id, keyId(prev.id), n, `refund:fight:${f.id}`, new Date(ctx.now)]);
+    await ctx.q.query("UPDATE fights SET keys_spent=0 WHERE id=$1", [f.id]);
+  }
 }
 
 export function fightHp(f: Pick<FightRow, "hp_max" | "start_total" | "end_total"> & { solo?: boolean; my_damage?: number | string }, bossTotal: number): number {
@@ -76,7 +100,7 @@ export function fightHp(f: Pick<FightRow, "hp_max" | "start_total" | "end_total"
 /** Boss N+1 opens after KEYS keys of boss N. */
 export async function isUnlocked(q: Queryable, pid: number, boss: BossDef, defaultKeys: number): Promise<boolean> {
   if (boss.order === 1) return true;
-  const prev = BOSSES.find((b) => b.order === boss.order - 1);
+  const prev = prevBoss(boss);
   if (!prev) return false;
   return (await itemQty(q, pid, keyId(prev.id))) >= keysNeeded(boss, defaultKeys);
 }
@@ -111,10 +135,14 @@ export async function startFight(ctx: Ctx, bossId: string, solo = false) {
   }
   const boss = await lockBoss(ctx.q, def.id);
   await expireFights(ctx, boss);
+  // the entry: the passes of the previous boss are spent (a lost or fled fight gives them back)
+  const prev = prevBoss(def);
+  const keys = prev ? keysNeeded(def, ctx.cfg.fight.keysToUnlock) : 0;
+  if (prev && keys > 0) await takeItem(ctx, keyId(prev.id), keys, `fight:${def.id}`);
   const hpMax = ctx.cfg.bossHp[def.id] ?? def.hp;
   const [f] = await ctx.q.query<{ id: number }>(
-    "INSERT INTO fights (player_id, boss_id, hp_max, start_total, start_seq, started_at, ends_at, day, solo) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id",
-    [ctx.pid, def.id, hpMax, boss.damage_total, boss.last_seq, new Date(ctx.now), new Date(ctx.now + ctx.cfg.fight.hours * 3600_000), day, solo],
+    "INSERT INTO fights (player_id, boss_id, hp_max, start_total, start_seq, started_at, ends_at, day, solo, keys_spent) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id",
+    [ctx.pid, def.id, hpMax, boss.damage_total, boss.last_seq, new Date(ctx.now), new Date(ctx.now + ctx.cfg.fight.hours * 3600_000), day, solo, keys],
   );
   // the free weapons (fist, mouse, candle) keep their 5-hour rest across fights: a new fight does not reset it
   return { fightId: f.id, bossId: def.id, solo };
@@ -308,8 +336,12 @@ export async function fleeFight(ctx: Ctx) {
   const [f] = await ctx.q.query<FightRow>("SELECT * FROM fights WHERE player_id=$1 AND status='active'", [ctx.pid]);
   if (!f) throw new GameError("no_fight", "Нет боя");
   const boss = await lockBoss(ctx.q, f.boss_id);
-  await ctx.q.query("UPDATE fights SET status='lost', ended_at=$2, end_total=$3, end_seq=$4 WHERE id=$1", [f.id, new Date(ctx.now), boss.damage_total, boss.last_seq]);
-  return { fightId: f.id };
+  const lost = await ctx.q.query<LostFight>(
+    "UPDATE fights SET status='lost', ended_at=$2, end_total=$3, end_seq=$4 WHERE id=$1 RETURNING id, player_id, boss_id, keys_spent",
+    [f.id, new Date(ctx.now), boss.damage_total, boss.last_seq],
+  );
+  await refundKeys(ctx, lost);
+  return { fightId: f.id, keysBack: Number(lost[0]?.keys_spent ?? 0) };
 }
 
 // ---------------- views ----------------
@@ -370,6 +402,8 @@ export async function bossList(q: Queryable, pid: number, cfg: Ctx["cfg"], now =
   const mine = await q.query<{ boss_id: string; damage: number; wins: number }>("SELECT boss_id, damage, wins FROM boss_damage WHERE player_id=$1", [pid]);
   const mineMap = new Map(mine.map((m) => [m.boss_id, m]));
   const active = await q.query<{ boss_id: string; n: number }>("SELECT boss_id, COUNT(*)::int AS n FROM fights WHERE status='active' AND ends_at > $1 GROUP BY boss_id", [new Date(now)]);
+  // my running fight keeps its boss open even though its passes are already spent
+  const [myFight] = await q.query<{ boss_id: string }>("SELECT boss_id FROM fights WHERE player_id=$1 AND status='active'", [pid]);
   const activeMap = new Map(active.map((a) => [a.boss_id, a.n]));
   const totals = await q.query<{ id: string; wins: number }>("SELECT id, wins FROM bosses");
   const winsMap = new Map(totals.map((t) => [t.id, t.wins]));
@@ -385,7 +419,7 @@ export async function bossList(q: Queryable, pid: number, cfg: Ctx["cfg"], now =
       const keysHave = prev ? keyMap.get(keyId(prev.id)) ?? 0 : 0;
       return {
         id: b.id,
-        unlocked: b.order === 1 || keysHave >= keysNeeded(b, cfg.fight.keysToUnlock),
+        unlocked: b.order === 1 || keysHave >= keysNeeded(b, cfg.fight.keysToUnlock) || myFight?.boss_id === b.id,
         keysHave,
         keysNeed: keysNeeded(b, cfg.fight.keysToUnlock),
         myKeys: keyMap.get(keyId(b.id)) ?? 0,

@@ -302,6 +302,35 @@ describe("boss fights: personal fights, shared damage", () => {
     expect(r.state.fight?.bossId).toBe("kedr");
   });
 
+  it("passes are spent on entering the fight; a win keeps them spent, a lost or fled fight gives them back", async () => {
+    await setBossHp({ kedr: 50 });
+    const p = await newPlayer(db);
+    await give(db, p, "key-datsik", 4);
+    await act(db, p, "fight_start", { boss: "kedr" }, T0);
+    expect(await qty(db, p, "key-datsik")).toBe(1);
+    // my running fight keeps the boss open in the list
+    const { bossList } = await import("../src/server/systems/combat.ts");
+    const { loadConfig } = await import("../src/server/config.ts");
+    expect((await bossList(db, p, await loadConfig(db), T0)).bosses.find((b) => b.id === "kedr")?.unlocked).toBe(true);
+    // fled: the passes come back
+    const fled = await act(db, p, "fight_flee", {}, T0 + M);
+    expect(fled.result.keysBack).toBe(3);
+    expect(await qty(db, p, "key-datsik")).toBe(4);
+    // won: they stay spent, and the next fight needs three more
+    const f = await act(db, p, "fight_start", { boss: "kedr" }, T0 + 2 * M);
+    await give(db, p, "gpu", 1);
+    expect((await hit(p, "gpu", T0 + 2 * M)).result.status).toBe("won");
+    await act(db, p, "fight_claim", { fightId: f.result.fightId }, T0 + 2 * M, always(0.99));
+    expect(await qty(db, p, "key-datsik")).toBe(1);
+    await expect(act(db, p, "fight_start", { boss: "kedr" }, T0 + 3 * M)).rejects.toMatchObject({ code: "boss_locked" });
+    // 8 hours over: the passes come back
+    await give(db, p, "key-datsik", 3);
+    await act(db, p, "fight_start", { boss: "kedr" }, T0 + 4 * M);
+    expect(await qty(db, p, "key-datsik")).toBe(0);
+    await act(db, p, "equip", { itemId: "jeans" }, T0 + 4 * M + 8 * H + 1000);
+    expect(await qty(db, p, "key-datsik")).toBe(3);
+  });
+
   it("the fist, the mouse and the candle are free for everyone, with a 5 hour cooldown each", async () => {
     await setBossHp({ datsik: 100000 });
     const p = await newPlayer(db);

@@ -540,4 +540,11 @@ ON CONFLICT (player_id, item_id) DO UPDATE SET qty = 1;
 DELETE FROM yard_items WHERE drop_id = 'red-candle';
 `,
   },
+  {
+    // Пропуски тратятся на вход в бой со следующим боссом (проигранный или брошенный бой их возвращает): сколько взято
+    id: "v2-025-fight-keys-spent",
+    sql: `
+ALTER TABLE fights ADD COLUMN IF NOT EXISTS keys_spent INT NOT NULL DEFAULT 0;
+`,
+  },
 ];
