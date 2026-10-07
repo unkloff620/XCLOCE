@@ -59,13 +59,19 @@ function Blocks({ done, total }: { done: number; total: number }) {
   );
 }
 
-type ClaimResult = { reward: Granted; first: boolean; opened: string | null };
+type ClaimResult = { reward: Granted; first: boolean; opened: string | null; stash?: string | null };
 
 function ClaimedModal({ got, onClose }: { got: ClaimResult; onClose: () => void }) {
   return (
     <Modal title="Локация пройдена!" onClose={onClose}>
       <div className="col" style={{ alignItems: "center", textAlign: "center" }}>
         <RewardChips r={got.reward} />
+        {got.stash && (
+          <div className="col" style={{ alignItems: "center", gap: 4 }}>
+            <span className="stash-cell big stash-pop" style={{ width: 120 }}>{/* eslint-disable-next-line @next/next/no-img-element */}<img src={`/assets/items/${got.stash}.webp`} alt="" /></span>
+            <b>Нычка: {itemById(got.stash)?.name}</b>
+          </div>
+        )}
         {got.opened && <div className="chip green">Открыта локация «{locationById(got.opened)?.name}»</div>}
         {got.reward.levelUp && <div className="chip violet">Новый уровень: {got.reward.levelUp.to}!</div>}
         <div className="small muted">Задания этой локации можно пройти заново.</div>
@@ -101,7 +107,7 @@ export function LocationsScreen() {
               <p>Энергия тратится только здесь: каждый шаг задания стоит энергии и даёт рубли и авторитет.</p>
               <p>Закрой все 5 заданий — на карточке появится кнопка «Забрать награду» (доллары и вещи), откроется следующая локация.</p>
               <p>Пройденную локацию можно повторить: награда за повтор — половина валюты и авторитета.</p>
-              <p>Иногда за шаг задания находится <b>нычка</b> — в каждой из первых четырёх локаций свой набор из 4 нычек. Собери набор целиком и забери награду в достижениях «Нычки». Найденные лежат в инвентаре во вкладке «Нычки».</p>
+              <p>Иногда за шаг задания находится <b>нычка</b>, а при закрытии локации одна нычка выпадает наверняка. У каждой локации свои наборы по 4 нычки. Собери набор целиком и забери награду в достижениях «Нычки». Найденные лежат в инвентаре во вкладке «Нычки».</p>
               <p>Энергия: +1 каждые 5 минут до 50. Купить больше — нажми на энергию вверху.</p>
             </Help>
           </div>

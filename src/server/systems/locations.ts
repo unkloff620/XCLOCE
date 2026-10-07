@@ -1,6 +1,6 @@
 import { GameError, type Queryable } from "../db.ts";
-import { addItem, grantReward, spendEnergy, type Ctx } from "../core.ts";
-import { STASH_CHANCE, stashSetByLocation } from "../../content/stashes.ts";
+import { addItem, grantReward, spendEnergy, type Ctx, type Granted } from "../core.ts";
+import { STASH_CHANCE, stashSetsByLocation } from "../../content/stashes.ts";
 import { LOCATIONS, locationById, taskById, type LocationDef } from "../../content/locations.ts";
 import type { Reward } from "../../content/rewards.ts";
 
@@ -68,20 +68,8 @@ export async function doTask(ctx: Ctx, taskId: string) {
   );
   const stepNow = have + 1;
   const stepGot = await grantReward(ctx, task.stepReward, `task:${task.id}`);
-  // нычки: a small chance that this step finds one of the set of this location the player does not have yet
-  const set = stashSetByLocation(loc.id);
-  let stash: string | null = null;
-  if (set && ctx.rng() < STASH_CHANCE) {
-    const owned = new Set((await ctx.q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id = ANY($2::text[])", [ctx.pid, set.items.map((i) => i.id)])).map((r) => r.item_id));
-    const missing = set.items.filter((i) => !owned.has(i.id));
-    if (missing.length) {
-      const pick = missing[Math.floor(ctx.rng() * missing.length) % missing.length];
-      if ((await addItem(ctx, pick.id, 1, `stash:${loc.id}`)) > 0) {
-        stash = pick.id;
-        stepGot.items.push({ id: pick.id, qty: 1 });
-      }
-    }
-  }
+  // нычки: a chance that this step finds one of the location's stashes the player does not have yet
+  const stash = ctx.rng() < STASH_CHANCE ? await findStash(ctx, loc.id, stepGot) : null;
   let doneGot = null;
   if (stepNow >= task.steps) {
     // a task finished before its step count went up (done_at is set) keeps its old reward: no second one
@@ -97,6 +85,20 @@ export async function doTask(ctx: Ctx, taskId: string) {
   return { taskId: task.id, steps: stepNow, need: task.steps, energyLeft, step: stepGot, done: doneGot, locationComplete: doneCount === loc.tasks.length, stash };
 }
 
+/** One of the location's stashes the player is missing (none when all its sets are complete); goes to the inventory. */
+async function findStash(ctx: Ctx, locationId: string, into: Granted): Promise<string | null> {
+  const sets = stashSetsByLocation(locationId);
+  if (!sets.length) return null;
+  const all = sets.flatMap((s) => s.items.map((i) => i.id));
+  const owned = new Set((await ctx.q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id = ANY($2::text[])", [ctx.pid, all])).map((r) => r.item_id));
+  const missing = all.filter((id) => !owned.has(id));
+  if (!missing.length) return null;
+  const pick = missing[Math.floor(ctx.rng() * missing.length) % missing.length];
+  if ((await addItem(ctx, pick, 1, `stash:${locationId}`)) < 1) return null;
+  into.items.push({ id: pick, qty: 1 });
+  return pick;
+}
+
 export async function claimLocation(ctx: Ctx, locationId: string) {
   const loc = locationById(locationId);
   if (!loc) throw new GameError("bad_location", "Такой локации нет");
@@ -105,10 +107,12 @@ export async function claimLocation(ctx: Ctx, locationId: string) {
   if (!loc.tasks.every((t) => (steps.get(t.id) ?? 0) >= t.steps)) throw new GameError("not_done", "Выполни все 5 заданий");
   const first = (clears.get(loc.id) ?? 0) === 0;
   const got = await grantReward(ctx, first ? loc.reward : repeatReward(loc.reward), `location:${loc.id}`);
+  // closing a location always finds one of its stashes (while some are missing)
+  const stash = await findStash(ctx, loc.id, got);
   await ctx.q.query("INSERT INTO location_claims (player_id, location_id, claimed_at) VALUES ($1,$2,$3)", [ctx.pid, loc.id, new Date(ctx.now)]);
   if (first) await ctx.q.query("UPDATE player_stats SET locations_done = locations_done + 1 WHERE player_id=$1", [ctx.pid]);
   // reset the tasks for the next round
   await ctx.q.query("UPDATE task_progress SET steps=0, done_at=NULL WHERE player_id=$1 AND task_id = ANY($2::text[])", [ctx.pid, loc.tasks.map((t) => t.id)]);
   const next = LOCATIONS.find((l) => l.order === loc.order + 1);
-  return { locationId: loc.id, first, reward: got, opened: first && next ? next.id : null };
+  return { locationId: loc.id, first, reward: got, opened: first && next ? next.id : null, stash };
 }

@@ -456,7 +456,7 @@ function GameIcon({ kind }: { kind: "blackjack" | "zonk" | "upgrader" }) {
 
 export function YardGames() {
   const { state } = useGame();
-  const [open, setOpen] = useState<"blackjack" | "zonk" | "upgrader" | null>(null);
+  const [open, setOpen] = useState<"blackjack" | "zonk" | null>(null);
   const bj = state?.games?.blackjack;
   const zk = state?.games?.zonk;
   return (
@@ -470,13 +470,23 @@ export function YardGames() {
           <GameIcon kind="zonk" /><span>Зонк</span>
           {zk && (zk.active ? <i className="yg-badge live">идёт</i> : zk.freeLeft > 0 && <i className="yg-badge">{zk.freeLeft}</i>)}
         </button>
-        <button className="yard-game" onClick={() => setOpen("upgrader")}>
-          <GameIcon kind="upgrader" /><span>Апгрейд</span>
-        </button>
       </div>
       {open === "blackjack" && <BlackjackWindow onClose={() => setOpen(null)} />}
       {open === "zonk" && <ZonkWindow onClose={() => setOpen(null)} />}
-      {open === "upgrader" && <UpgraderWindow onClose={() => setOpen(null)} />}
+    </>
+  );
+}
+
+/** The upgrader: an arcade cabinet standing in the yard scene, a little apart from the 777 machine. */
+export function YardUpgrader() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button className="yard-upgrader" onClick={() => setOpen(true)} aria-label="Апгрейдер" title="Апгрейдер">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/assets/yard/upgrader.webp" alt="" draggable={false} />
+      </button>
+      {open && <UpgraderWindow onClose={() => setOpen(false)} />}
     </>
   );
 }

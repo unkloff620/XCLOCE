@@ -7,7 +7,7 @@ import { useGame } from "./store.tsx";
 import { haptic } from "./telegram.ts";
 import { full, short } from "./format.ts";
 import { BOSSES } from "../content/bosses.ts";
-import { STASH_SETS } from "../content/stashes.ts";
+import { STASH_LOCATION_NAMES, STASH_SETS_ORDERED } from "../content/stashes.ts";
 import { itemById } from "../content/items.ts";
 import { BossPhoto } from "./screens/boss-parts.tsx";
 
@@ -161,7 +161,7 @@ export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: b
         })()}
         {/* «Нычки»: four sets of four; a whole set gives its reward */}
         {(() => {
-          const sets = STASH_SETS.map((st) => ({ st, r: byId.get(st.id) }));
+          const sets = STASH_SETS_ORDERED.map((st) => ({ st, r: byId.get(st.id) }));
           const done = sets.filter((x) => x.r && (x.r.claimed || (!self && x.r.done))).length;
           const found = sets.reduce((n, x) => n + (x.r?.progress ?? 0), 0);
           const ready = self ? sets.find((x) => x.r?.done && !x.r.claimed) ?? null : null;
@@ -173,8 +173,8 @@ export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: b
                   <b className="ach-name">Нычки</b>
                   <span className="tiny muted num">{done}/{sets.length} наборов</span>
                 </span>
-                <span className="ach-bar sm" style={{ ["--p" as string]: `${Math.round((found / 16) * 100)}%`, ["--c" as string]: "#ffcc33" }}>
-                  <i /><span className="num">{found} / 16 нычек</span>
+                <span className="ach-bar sm" style={{ ["--p" as string]: `${Math.round((found / (sets.length * 4)) * 100)}%`, ["--c" as string]: "#ffcc33" }}>
+                  <i /><span className="num">{found} / {sets.length * 4} нычек</span>
                 </span>
               </span>
               {ready && (
@@ -191,17 +191,19 @@ export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: b
       {stashOpen && (
         <Modal title="Нычки" onClose={() => setStashOpen(false)}>
           <div className="col" style={{ gap: 8 }}>
-            <div className="small muted center">Нычки находятся за задания в локациях: 1-й набор — в 1-й локации, 2-й — во 2-й и так далее. Собери все 4 — забери награду за набор.</div>
-            {STASH_SETS.map((st) => {
+            <div className="small muted center">Нычки находятся за задания в локациях, а при закрытии локации одна нычка выпадает наверняка. У каждой локации свои наборы. Собери все 4 нычки набора — забери награду.</div>
+            {STASH_SETS_ORDERED.map((st, k, arr) => {
               const r = byId.get(st.id);
               const n = r?.progress ?? 0;
               const complete = !!r?.done;
               const got = !!r?.claimed || (!self && complete);
               const due = self && complete && !r?.claimed;
               return (
-                <div key={st.id} className={`stash-set ${complete ? "done" : ""}`}>
+                <div key={st.id} className="col" style={{ gap: 6 }}>
+                {(k === 0 || arr[k - 1].location !== st.location) && <b className="tiny muted stash-loc">{STASH_LOCATION_NAMES[st.location]?.toUpperCase()}</b>}
+                <div className={`stash-set ${complete ? "done" : ""}`}>
                   <div className="row" style={{ justifyContent: "space-between", gap: 6 }}>
-                    <b>{st.n}. {st.name}</b>
+                    <b>{st.name}</b>
                     <span className="tiny muted num">{n}/4</span>
                   </div>
                   <div className="stash-row">
@@ -223,6 +225,7 @@ export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: b
                       <button className="btn gold sm" disabled={busy === "achievement_claim"} onClick={() => claim(st.id)}>Забрать</button>
                     ) : null}
                   </div>
+                </div>
                 </div>
               );
             })}

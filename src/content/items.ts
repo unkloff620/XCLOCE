@@ -1,4 +1,4 @@
-import { STASH_SETS } from "./stashes.ts";
+import { STASH_LOCATION_NAMES, STASH_SETS, stashLevel } from "./stashes.ts";
 import { BOSSES, CARD_TIERS, keyId, unlockBossOf } from "./bosses.ts";
 
 export type Category = "weapon" | "clothing" | "item" | "reward" | "stash" | "event";
@@ -128,11 +128,11 @@ const TROPHY: ItemDef = {
 };
 
 /** Нычки (content/stashes.ts): one of each, a set of four per location */
-const STASH_RARITY: Rarity[] = ["rare", "epic", "legendary", "mythic"];
+const STASH_RARITY: Rarity[] = ["rare", "epic", "legendary", "mythic", "mythic"];
 const STASHES: ItemDef[] = STASH_SETS.flatMap((s) =>
   s.items.map((it) => ({
-    id: it.id, name: it.name, category: "stash" as const, rarity: STASH_RARITY[s.n - 1] ?? "rare", maxStack: 1,
-    description: `${it.description} Набор «${s.name}» (${s.n}/4).`, sources: [`Задания в локации ${s.n}, шанс мал`],
+    id: it.id, name: it.name, category: "stash" as const, rarity: STASH_RARITY[stashLevel(s) - 1] ?? "rare", maxStack: 1,
+    description: `${it.description} Набор «${s.name}».`, sources: [`Локация «${STASH_LOCATION_NAMES[s.location]}»: задания и закрытие локации`],
   })),
 );
 export const ITEMS: ItemDef[] = [...WEAPONS, ...WEARABLES, ...MISC, ...KEYS, TROPHY, STATUE, ...STASHES];

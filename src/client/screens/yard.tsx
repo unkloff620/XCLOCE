@@ -10,7 +10,7 @@ import { haptic } from "../telegram.ts";
 import Link from "next/link";
 import { Icon } from "../art/icons.tsx";
 import { SlotMachine } from "./slots.tsx";
-import { YardGames } from "./minigames.tsx";
+import { YardGames, YardUpgrader } from "./minigames.tsx";
 import { DriftingSky } from "../art/sky.tsx";
 import { Help, HelpList } from "../help.tsx";
 import { GainLine, Modal } from "../ui.tsx";
@@ -70,7 +70,7 @@ export function YardScreen() {
             <p>Изредка попадается Клавиатура. Всё найденное можно продать в инвентаре.</p>
             <HelpList title="Кнопки слева" rows={LINKS.map((b) => ({ key: b.href, icon: <Icon name={b.icon} size={44} />, name: b.label, hint: b.hint }))} />
             <p>Справа стоит игровой автомат 777 — 3 бесплатные прокрутки в час.</p>
-            <p>Внизу — мини-игры: блэкджек (3 бесплатные партии в день), зонк (1 бесплатная игра в день) и апгрейдер находок. Дальше партия стоит 2 USD.</p>
+            <p>Рядом с 777 стоит автомат «Апгрейдер» — улучшай находки и оружие. Справа сверху — блэкджек (3 бесплатные партии в день) и зонк (1 бесплатная игра в день), дальше партия стоит 2 USD.</p>
           </Help>
         </div>
         <span className="chip">{data?.items.length ?? state?.yard.count ?? 0}/{data?.max ?? 5}</span>
@@ -89,6 +89,7 @@ export function YardScreen() {
             <img src="/assets/yard/slot.webp" alt="" draggable={false} />
             {state && <span className="yard-slots-left num">{state.slots.left}/{state.slots.max}</span>}
           </button>
+          <YardUpgrader />
           {data?.items.map((it) => {
             const spot = YARD_SPOTS[it.slot % YARD_SPOTS.length];
             const drop = YARD_DROPS.find((d) => d.id === it.drop);

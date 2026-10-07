@@ -1123,3 +1123,18 @@ describe("нычки", () => {
     expect(itemById("stash-radio")?.category).toBe("stash");
   });
 });
+
+describe("нычки v2", () => {
+  it("two sets in the first location; closing a location always finds a missing stash", async () => {
+    const { stashSetsByLocation, STASH_SETS } = await import("../src/content/stashes.ts");
+    expect(STASH_SETS).toHaveLength(12);
+    expect(stashSetsByLocation("openspace")).toHaveLength(2);
+    const p = await newPlayer(db);
+    const loc = LOCATIONS.find((l) => l.id === "openspace")!;
+    for (const t of loc.tasks) await db.query("INSERT INTO task_progress (player_id, task_id, steps) VALUES ($1,$2,$3)", [p, t.id, t.steps]);
+    const r = await act(db, p, "location_claim", { locationId: "openspace" }, T0, always(0.99));
+    expect(r.result.stash).toMatch(/^stash-/);
+    expect(stashSetsByLocation("openspace").some((s) => s.items.some((i) => i.id === r.result.stash))).toBe(true);
+    expect(await qty(db, p, r.result.stash)).toBe(1);
+  });
+});
