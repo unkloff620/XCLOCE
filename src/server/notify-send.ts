@@ -29,9 +29,10 @@ async function textFor(q: Queryable, n: Due, now: number): Promise<string | null
   const cfg = await loadConfig(q, now);
   switch (n.kind) {
     case "energy_full": {
-      const [p] = await q.query<{ energy: number; energy_at: Date }>("SELECT energy, energy_at FROM players WHERE id=$1", [n.player_id]);
-      if (!p || energyNow(p.energy, new Date(p.energy_at).getTime(), now, cfg.energy).energy < cfg.energy.max) return null;
-      return `⚡ Энергия полная — ${cfg.energy.max}/${cfg.energy.max}.\nЗагляни в локации, пока она не простаивает!`;
+      const [p] = await q.query<{ energy: number; energy_at: Date; energy_bonus: number }>("SELECT energy, energy_at, energy_bonus FROM players WHERE id=$1", [n.player_id]);
+      const max = cfg.energy.max + Number(p?.energy_bonus ?? 0);
+      if (!p || energyNow(p.energy, new Date(p.energy_at).getTime(), now, { ...cfg.energy, max }).energy < max) return null;
+      return `⚡ Энергия полная — ${max}/${max}.\nЗагляни в локации, пока она не простаивает!`;
     }
     case "fist_ready": {
       const [f] = await q.query<{ boss_id: string }>(

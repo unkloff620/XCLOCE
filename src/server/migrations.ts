@@ -606,4 +606,11 @@ CREATE TABLE IF NOT EXISTS stash_sets (
 );
 `,
   },
+  {
+    // Неоновая хата: падает с Кедра, даёт +5 к лимиту энергии — бонус лимита хранится у игрока
+    id: "v2-030-energy-bonus",
+    sql: `
+ALTER TABLE players ADD COLUMN IF NOT EXISTS energy_bonus INT NOT NULL DEFAULT 0;
+`,
+  },
 ];

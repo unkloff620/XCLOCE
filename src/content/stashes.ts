@@ -14,11 +14,11 @@ export interface StashSet { id: string; n: number; name: string; location: strin
 export const STASH_CHANCE = 0.08;
 
 const LOC_REWARD: Record<string, Reward> = {
-  openspace: { currencies: { RUB: 500 }, xp: 1_000, items: [{ id: "keyboard", qty: 1 }] },
-  market: { currencies: { USD: 4 }, xp: 3_000, items: [{ id: "keyboard", qty: 2 }] },
-  serverroom: { currencies: { SOL: 0.008 }, xp: 8_000, items: [{ id: "gpu", qty: 1 }] },
-  basement: { currencies: { SOL: 0.02 }, xp: 20_000, items: [{ id: "gpu", qty: 2 }] },
-  board: { currencies: { SOL: 0.05 }, xp: 50_000, items: [{ id: "gpu", qty: 3 }] },
+  openspace: { currencies: { RUB: 100 }, xp: 1_000 },
+  market: { currencies: { RUB: 300 }, xp: 2_000 },
+  serverroom: { currencies: { RUB: 500 }, xp: 3_000 },
+  basement: { currencies: { RUB: 750 }, xp: 4_000 },
+  board: { currencies: { RUB: 1000 }, xp: 5_000 },
 };
 /** the order of the locations (rarity and medal of their sets grow with it) */
 export const STASH_LOCATIONS = ["openspace", "market", "serverroom", "basement", "board"] as const;

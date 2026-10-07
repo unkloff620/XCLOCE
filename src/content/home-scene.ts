@@ -34,9 +34,19 @@ export const CHARACTER = { x: 130, y: 405, scale: 0.78 };
 /** Seat inside the rig canvas (under the hips). */
 export const SEAT = { x: 280, y: 670, w: 440, aspect: 1.5 }; // stretched taller: the seat hides under the shorts, the legs stand on the floor
 
-export const ROOM_BG: Record<string, string> = { basic: "room-basic", office: "room-office", penthouse: "room-penthouse" };
+export const ROOM_BG: Record<string, string> = { basic: "room-basic", neon: "room-neon", office: "room-office", penthouse: "room-penthouse" };
 /** opaque picture for the blurred backdrop around the scene (a room with a see-through window has a flat copy) */
-export const ROOM_BACKDROP: Record<string, string> = { basic: "room-basic", office: "room-office", penthouse: "room-penthouse-flat" };
+export const ROOM_BACKDROP: Record<string, string> = { basic: "room-basic", neon: "room-neon", office: "room-office", penthouse: "room-penthouse-flat" };
+/** RGB LED strip (violet → blue) along the ceiling and the sides: polylines in scene units */
+export const ROOM_RGB: Record<string, number[][][]> = {
+  neon: [
+    [[28, 22], [118, 110], [942, 110], [1032, 22]],
+    [[0, 918], [118, 850]],
+    [[942, 850], [1060, 918]],
+    [[118, 110], [118, 850]],
+    [[942, 110], [942, 850]],
+  ],
+};
 /** sky panorama drifting behind a see-through window (scene units; built by tools/scene/build-scene.py, SKY_Y/SKY_H) */
 export const ROOM_SKY: Record<string, { src: string; y: number; w: number; h: number }> = {
   penthouse: { src: "/assets/home/penthouse-sky.webp", y: 40, w: 2640, h: 880 },

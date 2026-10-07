@@ -13,6 +13,8 @@ export interface Bonus {
   critDamage?: number;
   /** добавка к урону оружия, доля */
   damage?: number;
+  /** +к лимиту энергии (только комнаты) */
+  energyMax?: number;
 }
 
 export const BASE_CRIT_MULT = 1.5;
@@ -104,10 +106,13 @@ export interface RoomDef {
   description: string;
   price: Price | null;
   bonus: Bonus;
+  /** a room that drops from a boss: it can be bought only after it dropped (chance per win that earned the pass) */
+  drop?: { boss: string; chance: number };
 }
 
 export const ROOM_DEFS: RoomDef[] = [
   { id: "basic", name: "Каморка", description: "С чего все начинали: облезлые обои, старый стол, ламповый монитор и табуретка.", price: null, bonus: {} },
+  { id: "neon", name: "Неоновая хата", description: "Обои с узором, кот на крыше и RGB-лента под потолком. Выпадает с Кедра. +5 к лимиту энергии.", price: { currency: "RUB", amount: 2000 }, bonus: { energyMax: 5 }, drop: { boss: "kedr", chance: 0.15 } },
   { id: "office", name: "Офис трейдера", description: "Стеклянные стены, три графика и кофемашина. Даёт шанс крита.", price: { currency: "USD", amount: 40 }, bonus: { critChance: 0.03 } },
   { id: "penthouse", name: "Пентхаус To The Moon", description: "Вид на Луну, золото и бассейн из стейблкоинов. Урон и сила крита.", price: { currency: "SOL", amount: 0.5 }, bonus: { damage: 0.05, critDamage: 0.15 } },
 ];
@@ -122,9 +127,13 @@ export const stageOf = (id: string, levels: Record<string, number>, decor: Recor
   return { level: lv, stage: e?.stages?.[lv] };
 };
 export const roomById = (id: string) => ROOM_DEFS.find((r) => r.id === id);
+/** the unlock key of a room that drops from a boss (stored with the shop unlocks) */
+export const roomUnlockId = (id: string) => `room:${id}`;
+/** extra energy limit the owned rooms give */
+export const roomsEnergyBonus = (rooms: string[]) => rooms.reduce((n, id) => n + (roomById(id)?.bonus.energyMax ?? 0), 0);
 
 export function addBonus(a: Bonus, b: Bonus): Bonus {
-  return { critChance: (a.critChance ?? 0) + (b.critChance ?? 0), critDamage: (a.critDamage ?? 0) + (b.critDamage ?? 0), damage: (a.damage ?? 0) + (b.damage ?? 0) };
+  return { critChance: (a.critChance ?? 0) + (b.critChance ?? 0), critDamage: (a.critDamage ?? 0) + (b.critDamage ?? 0), damage: (a.damage ?? 0) + (b.damage ?? 0), energyMax: (a.energyMax ?? 0) + (b.energyMax ?? 0) };
 }
 
 /** Trophies: reward items that stand in the room by themselves and add a bonus while owned. */
@@ -141,7 +150,7 @@ export function totalBonus(levels: Record<string, number>, rooms: string[], trop
   }
   for (const id of rooms) b = addBonus(b, roomById(id)?.bonus ?? {});
   for (const t of TROPHIES) if (trophies.includes(t.id)) b = addBonus(b, t.bonus);
-  return { critChance: Math.min(0.75, b.critChance ?? 0), critDamage: b.critDamage ?? 0, damage: b.damage ?? 0 };
+  return { critChance: Math.min(0.75, b.critChance ?? 0), critDamage: b.critDamage ?? 0, damage: b.damage ?? 0, energyMax: b.energyMax ?? 0 };
 }
 
 /* ---------------- внешность ---------------- */

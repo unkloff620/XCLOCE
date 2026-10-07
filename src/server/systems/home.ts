@@ -1,6 +1,6 @@
 import { GameError, type Queryable } from "../db.ts";
 import { ledger, takeMoney, type Ctx } from "../core.ts";
-import { EQUIPMENT, HELP_TOPICS, TROPHIES, equipmentById, normalizeLook, roomById, totalBonus, type HelpTopic, type Look } from "../../content/home.ts";
+import { EQUIPMENT, HELP_TOPICS, TROPHIES, equipmentById, normalizeLook, roomById, roomUnlockId, roomsEnergyBonus, totalBonus, type HelpTopic, type Look } from "../../content/home.ts";
 import { TALENT_RESET_PRICE, TALENT_WEAPONS, nodeOpen, talentTree, talentsSpent, type TalentBranch, type WeaponTalents } from "../../content/talents.ts";
 
 /*
@@ -101,8 +101,15 @@ export async function buyRoom(ctx: Ctx, id: string) {
   if (!def) throw new GameError("bad_room", "Такой комнаты нет");
   const h = await homeData(ctx.q, ctx.pid);
   if (h.rooms.includes(def.id)) throw new GameError("room_owned", "Эта комната уже твоя");
+  if (def.drop) {
+    const [u] = await ctx.q.query("SELECT 1 FROM player_unlocks WHERE player_id=$1 AND item_id=$2", [ctx.pid, roomUnlockId(def.id)]);
+    if (!u) throw new GameError("room_locked", `Комната ещё не выпала — она падает с босса`);
+  }
   if (def.price) await takeMoney(ctx, def.price.currency, def.price.amount, `room:${def.id}`);
-  await ctx.q.query("UPDATE appearance SET rooms=$2, room=$3 WHERE player_id=$1", [ctx.pid, JSON.stringify([...h.rooms, def.id]), def.id]);
+  const rooms = [...h.rooms, def.id];
+  await ctx.q.query("UPDATE appearance SET rooms=$2, room=$3 WHERE player_id=$1", [ctx.pid, JSON.stringify(rooms), def.id]);
+  // a room may raise the energy limit
+  await ctx.q.query("UPDATE players SET energy_bonus=$2 WHERE id=$1", [ctx.pid, roomsEnergyBonus(rooms)]);
   return { room: def.id };
 }
 

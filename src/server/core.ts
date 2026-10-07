@@ -16,6 +16,8 @@ export interface Ctx {
 
 export interface PlayerRow {
   id: number;
+  /** extra energy limit from the rooms */
+  energy_bonus?: number;
   telegram_id: number | null;
   username: string | null;
   display_name: string;
@@ -61,13 +63,19 @@ export function energyNow(stored: number, at: number, now: number, cfg: Config["
   return { energy, at: at2, nextIn: period - (now - at2) };
 }
 
+/** The energy limit of this player: the game's plus what the rooms give (players.energy_bonus). */
+export function energyCfgOf(cfg: Ctx["cfg"], p: { energy_bonus?: number | null }) {
+  return { ...cfg.energy, max: cfg.energy.max + Number(p.energy_bonus ?? 0) };
+}
+
 /** Locks the player row for this transaction and applies pending energy regeneration. */
 export async function lockPlayer(ctx: Ctx): Promise<PlayerRow & { energyNow: number; nextEnergyIn: number }> {
   const [p] = await ctx.q.query<PlayerRow>("SELECT * FROM players WHERE id=$1 FOR NO KEY UPDATE", [ctx.pid]);
   if (!p) throw new GameError("no_player", "Игрок не найден", 404);
-  const e = energyNow(p.energy, new Date(p.energy_at).getTime(), ctx.now, ctx.cfg.energy);
+  const ec = energyCfgOf(ctx.cfg, p);
+  const e = energyNow(p.energy, new Date(p.energy_at).getTime(), ctx.now, ec);
   // Only regeneration below the maximum changes the stored row.
-  if (p.energy < ctx.cfg.energy.max && (e.energy !== p.energy || e.at !== new Date(p.energy_at).getTime())) {
+  if (p.energy < ec.max && (e.energy !== p.energy || e.at !== new Date(p.energy_at).getTime())) {
     await ctx.q.query("UPDATE players SET energy=$2, energy_at=$3 WHERE id=$1", [ctx.pid, e.energy, new Date(e.at)]);
     p.energy = e.energy;
     p.energy_at = new Date(e.at);
@@ -80,7 +88,7 @@ export async function spendEnergy(ctx: Ctx, amount: number): Promise<number> {
   if (p.energyNow < amount) throw new GameError("no_energy", `Не хватает энергии: нужно ${amount}, есть ${p.energyNow}`);
   const left = p.energyNow - amount;
   // Dropping from the maximum (or above it) below it starts the regen clock now.
-  const at = p.energyNow >= ctx.cfg.energy.max ? new Date(ctx.now) : p.energy_at;
+  const at = p.energyNow >= energyCfgOf(ctx.cfg, p).max ? new Date(ctx.now) : p.energy_at;
   await ctx.q.query("UPDATE players SET energy=$2, energy_at=$3 WHERE id=$1", [ctx.pid, left, at]);
   await ledger(ctx, "energy", "energy", -amount, "spend");
   return left;
@@ -90,7 +98,7 @@ export async function addEnergy(ctx: Ctx, amount: number, reason: string): Promi
   const p = await lockPlayer(ctx);
   const total = p.energyNow + amount;
   // Below the maximum the regen clock keeps running; at or above it, regen simply pauses.
-  await ctx.q.query("UPDATE players SET energy=$2, energy_at=$3 WHERE id=$1", [ctx.pid, total, p.energyNow >= ctx.cfg.energy.max ? new Date(ctx.now) : p.energy_at]);
+  await ctx.q.query("UPDATE players SET energy=$2, energy_at=$3 WHERE id=$1", [ctx.pid, total, p.energyNow >= energyCfgOf(ctx.cfg, p).max ? new Date(ctx.now) : p.energy_at]);
   await ledger(ctx, "energy", "energy", amount, reason);
   return total;
 }

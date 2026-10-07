@@ -233,14 +233,13 @@ export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: b
                       <img src={`/assets/stash/set-${st.n}.webp`} alt="Полный набор" />
                       {ready && <i className="stash-take">Забрать</i>}
                     </button>
-                    {st.items.map((it, k) => {
+                    {st.items.map((it) => {
                       const q = stashQty.get(it.id) ?? 0;
                       return (
                         <button key={it.id} className={`stash-cell ${q > 0 || (!self && count > 0) ? "" : "off"}`} onClick={() => setStashItem(it.id)} aria-label={it.name}>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={`/assets/items/${it.id}.webp`} alt="" />
-                          <i className="stash-n">{k + 1}</i>
-                          {q > 1 && <i className="stash-q num">×{q}</i>}
+                          {self && <i className={`stash-n num ${q > 0 ? "has" : ""}`}>{q}</i>}
                         </button>
                       );
                     })}

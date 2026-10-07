@@ -24,8 +24,7 @@ export async function cancel(q: Queryable, pid: number, kind: NotifyKind) {
 }
 
 /** Energy: due when regeneration reaches the maximum. Called with the current energy from the state. */
-export async function scheduleEnergy(ctx: Ctx, energy: number, energyAt: number) {
-  const max = ctx.cfg.energy.max;
+export async function scheduleEnergy(ctx: Ctx, energy: number, energyAt: number, max = ctx.cfg.energy.max) {
   if (energy >= max) return cancel(ctx.q, ctx.pid, "energy_full");
   const period = ctx.cfg.energy.regenMin * 60_000;
   return schedule(ctx.q, ctx.pid, "energy_full", energyAt + (max - energy) * period);

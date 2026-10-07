@@ -4,7 +4,7 @@ import { BOSSES, EXTRA_KEY_CHANCE, bossById, keyId, keysNeeded, rewardShare, typ
 import { WEAPONS, itemById, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
 import { mergeRewards, scaleReward } from "../../content/rewards.ts";
-import { BASE_CRIT_MULT } from "../../content/home.ts";
+import { BASE_CRIT_MULT, ROOM_DEFS, roomUnlockId } from "../../content/home.ts";
 import { talentsForDamage, weaponTalentBonus } from "../../content/talents.ts";
 import { playerBonus, weaponTalents } from "./home.ts";
 import { notifyBossLow } from "./notify.ts";
@@ -299,6 +299,19 @@ export async function claimFight(ctx: Ctx, fightId: number) {
   const bonusKey = !def.final && earnedKey && ctx.rng() < EXTRA_KEY_CHANCE;
   const key = def.final || !earnedKey ? [] : [{ id: keyId(def.id), qty: bonusKey ? 2 : 1 }];
   const unlocked = earnedKey ? await rollUnlocks(ctx, def) : [];
+  // a room that drops from this boss (it is bought afterwards, like the clothes)
+  if (earnedKey) {
+    for (const room of ROOM_DEFS.filter((r) => r.drop?.boss === def.id)) {
+      const key = roomUnlockId(room.id);
+      const [have] = await ctx.q.query("SELECT 1 FROM player_unlocks WHERE player_id=$1 AND item_id=$2", [ctx.pid, key]);
+      const [app] = await ctx.q.query<{ rooms: string[] }>("SELECT rooms FROM appearance WHERE player_id=$1", [ctx.pid]);
+      if (have || (app?.rooms ?? []).includes(room.id)) continue;
+      if (ctx.rng() < room.drop!.chance) {
+        await ctx.q.query("INSERT INTO player_unlocks (player_id, item_id, boss_id, at) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING", [ctx.pid, key, def.id, new Date(ctx.now)]);
+        unlocked.push(key);
+      }
+    }
+  }
   // one-of-a-kind rewards (the statue) are not handed out again
   const base = scaleReward(def.reward, share);
   if (base.items?.length) base.items = await notOwnedUnique(ctx, base.items);

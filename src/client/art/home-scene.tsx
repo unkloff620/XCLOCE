@@ -1,6 +1,6 @@
 "use client";
 /* The player's room: artist's background, the PC in the corner, the desk with 1–3 monitors and the seated character on the stool. */
-import { CHARACTER, ROOM_BG, ROOM_LIGHTS, ROOM_SKY, SCENE, SCENE_HOT, SCENE_OBJECTS } from "../../content/home-scene.ts";
+import { CHARACTER, ROOM_BG, ROOM_LIGHTS, ROOM_RGB, ROOM_SKY, SCENE, SCENE_HOT, SCENE_OBJECTS } from "../../content/home-scene.ts";
 import { RigViewport, type Worn } from "./rig.tsx";
 import { ART_ASPECT } from "./desk-data.ts";
 import { stageOf, type Look } from "../../content/home.ts";
@@ -41,6 +41,7 @@ export function HomeScene({ room = "basic", onPick, still, look, worn, levels = 
   const desk = stageOf("desk", levels, decor).stage?.art ?? "desk-001";
   const monitors = stageOf("monitor2", levels, decor).level; // 0: old CRT on the right, 1: flat on the right, 2: + left, 3: + middle
   const lights = ROOM_LIGHTS[room] ?? [];
+  const rgb = ROOM_RGB[room];
   return (
     <svg viewBox={`0 0 ${SCENE.w} ${SCENE.h}`} width="100%" style={{ display: "block" }}>
       {focusHero && (
@@ -75,6 +76,25 @@ export function HomeScene({ room = "basic", onPick, still, look, worn, levels = 
           {lights.map((l, i) => (
             <ellipse key={i} className={`room-light ${l.kind}`} style={{ animationDelay: `${-i * 1.7}s` }}
               cx={l.x} cy={l.y} rx={l.r} ry={l.kind === "lamp" ? l.r * 1.25 : l.r * 0.22} fill={`url(#glow-${room}-${i})`} />
+          ))}
+        </g>
+      )}
+      {rgb && (
+        // RGB LED strip: a soft glow along the ceiling and the sides, flowing from violet to blue
+        <g className={still ? undefined : "room-rgb"} style={{ mixBlendMode: "screen" }} aria-hidden="true">
+          <defs>
+            <linearGradient id={`rgb-${room}`} x1="0" y1="0" x2={SCENE.w} y2="0" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stopColor="#b44cff">{!still && <animate attributeName="stop-color" values="#b44cff;#3d8bff;#b44cff" dur="6s" repeatCount="indefinite" />}</stop>
+              <stop offset="0.5" stopColor="#7a5cff">{!still && <animate attributeName="stop-color" values="#7a5cff;#b44cff;#3d8bff;#7a5cff" dur="6s" repeatCount="indefinite" />}</stop>
+              <stop offset="1" stopColor="#3d8bff">{!still && <animate attributeName="stop-color" values="#3d8bff;#b44cff;#3d8bff" dur="6s" repeatCount="indefinite" />}</stop>
+            </linearGradient>
+            <filter id={`rgb-blur-${room}`} x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="14" /></filter>
+          </defs>
+          {rgb.map((pts, i) => (
+            <g key={i}>
+              <polyline points={pts.map((p) => p.join(",")).join(" ")} fill="none" stroke={`url(#rgb-${room})`} strokeWidth={i > 2 ? 26 : 44} strokeLinecap="round" strokeLinejoin="round" filter={`url(#rgb-blur-${room})`} opacity={i > 2 ? 0.45 : 0.8} />
+              <polyline points={pts.map((p) => p.join(",")).join(" ")} fill="none" stroke={`url(#rgb-${room})`} strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" opacity={i > 2 ? 0.35 : 0.9} />
+            </g>
           ))}
         </g>
       )}

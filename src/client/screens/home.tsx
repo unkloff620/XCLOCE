@@ -69,6 +69,8 @@ export function HomeScreen() {
   const viewRoom = ROOM_DEFS[idx];
   const owned = state.home.rooms.includes(viewRoom.id);
   const canPay = !viewRoom.price || (state.wallet[viewRoom.price.currency] ?? 0) >= viewRoom.price.amount;
+  // a room that drops from a boss is bought only after it dropped
+  const dropped = !viewRoom.drop || (state.unlocks ?? []).includes(`room:${viewRoom.id}`);
   const flip = (dir: number) => {
     const ni = idx + dir;
     if (ni < 0 || ni >= ROOM_DEFS.length) return;
@@ -111,10 +113,16 @@ export function HomeScreen() {
           {!owned && (
             <div className="room-unlock">
               <span className="tiny" style={{ color: "var(--gold)" }}><BonusLine b={viewRoom.bonus} /></span>
-              <button className="btn gold sm" disabled={!canPay || busy === "room_buy"} onClick={unlock}>
-                <Icon name="lock" size={16} /> Разблокировать <span className="room-price"><Icon name={viewRoom.price!.currency} size={15} />{money(viewRoom.price!.currency, viewRoom.price!.amount)}</span>
-              </button>
-              {!canPay && <span className="tiny" style={{ color: "#ff8a9e" }}>Не хватает {viewRoom.price!.currency}</span>}
+              {dropped ? (
+                <>
+                  <button className="btn gold sm" disabled={!canPay || busy === "room_buy"} onClick={unlock}>
+                    <Icon name="lock" size={16} /> Разблокировать <span className="room-price"><Icon name={viewRoom.price!.currency} size={15} />{money(viewRoom.price!.currency, viewRoom.price!.amount)}</span>
+                  </button>
+                  {!canPay && <span className="tiny" style={{ color: "#ff8a9e" }}>Не хватает {viewRoom.price!.currency}</span>}
+                </>
+              ) : (
+                <span className="chip"><Icon name="lock" size={16} /> Выпадает с босса {bossById(viewRoom.drop!.boss)?.name} · {Math.round(viewRoom.drop!.chance * 100)}%</span>
+              )}
             </div>
           )}
           <div className={`room-switch ${previewing ? "" : "idle"}`}>

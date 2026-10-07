@@ -1,4 +1,5 @@
 "use client";
+import { Icon } from "../art/icons.tsx";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useGame } from "../store.tsx";
@@ -8,6 +9,7 @@ import { scaleReward } from "../../content/rewards.ts";
 import { ESCAPE_LINES } from "../../content/phrases.ts";
 import { Modal, RewardChips } from "../ui.tsx";
 import { ItemArt } from "../art/items.tsx";
+import { roomById } from "../../content/home.ts";
 import { itemById } from "../../content/items.ts";
 import { BossPhoto } from "./boss-parts.tsx";
 import { full, pct } from "../format.ts";
@@ -112,11 +114,13 @@ export function ResultWindow() {
             <RewardChips r={got} />
             {!!got.unlocks?.length && (
               <div className="unlock-note">
-                <b className="small">Выпало! Открыто в магазине:</b>
+                <b className="small">Выпало!</b>
                 <div className="row" style={{ gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
-                  {got.unlocks.map((id) => <span key={id} className="chip"><ItemArt id={id} size={24} /> {itemById(id)?.name ?? id}</span>)}
+                  {got.unlocks.map((id) => id.startsWith("room:")
+                    ? <span key={id} className="chip gold"><Icon name="home" size={22} /> Комната «{roomById(id.slice(5))?.name}» — купи её дома стрелками</span>
+                    : <span key={id} className="chip"><ItemArt id={id} size={24} /> {itemById(id)?.name ?? id}</span>)}
                 </div>
-                <Link href="/shop?tab=clothing" className="btn gold sm" onClick={done}>Выкупить в магазине</Link>
+                {got.unlocks.some((id) => !id.startsWith("room:")) && <Link href="/shop?tab=clothing" className="btn gold sm" onClick={done}>Выкупить в магазине</Link>}
               </div>
             )}
             {got.levelUp && <div className="chip violet">Новый уровень: {got.levelUp.to}!</div>}

@@ -1112,11 +1112,11 @@ describe("нычки", () => {
     await expect(act(db, p, "stash_collect", { set: "stash-set-1" }, T0)).rejects.toMatchObject({ code: "set_incomplete" });
     expect(await qty(db, p, "stash-sneaker")).toBe(2); // nothing taken on a refusal
     for (const id of ["stash-cigs", "stash-noodles", "stash-can"]) await give(db, p, id, 1);
-    const kb = await qty(db, p, "keyboard");
+    const rub = await wallet(db, p, "RUB");
     const c = await act(db, p, "stash_collect", { set: "stash-set-1" }, T0);
     expect(c.result.count).toBe(1);
     expect(c.state.stashSets).toEqual({ 1: 1 });
-    expect(await qty(db, p, "keyboard")).toBe(kb + 1);
+    expect(await wallet(db, p, "RUB")).toBe(rub + 100);
     expect([await qty(db, p, "stash-sneaker"), await qty(db, p, "stash-cigs")]).toEqual([1, 0]);
     // medals: bronze at 10 sets
     await expect(act(db, p, "achievement_claim", { id: "stashset-1-1" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
@@ -1139,5 +1139,23 @@ describe("нычки v2", () => {
     expect(r.result.stash).toMatch(/^stash-/);
     expect(stashSetsByLocation("openspace").some((s) => s.items.some((i) => i.id === r.result.stash))).toBe(true);
     expect(await qty(db, p, r.result.stash)).toBe(1);
+  });
+});
+
+describe("Неоновая хата", () => {
+  it("drops from Кедр (15% per win with the pass), then is bought for 2000 RUB and adds +5 to the energy limit", async () => {
+    await setBossHp({ kedr: 10 });
+    const p = await newPlayer(db);
+    await setMoney(db, p, "RUB", 5000);
+    await expect(act(db, p, "room_buy", { id: "neon" }, T0)).rejects.toMatchObject({ code: "room_locked" });
+    await give(db, p, "key-datsik", 3);
+    await give(db, p, "keyboard", 1);
+    const f = await act(db, p, "fight_start", { boss: "kedr" }, T0);
+    await hit(p, "keyboard");
+    const c = await act(db, p, "fight_claim", { fightId: f.result.fightId }, T0, always(0.05));
+    expect(c.result.reward.unlocks).toContain("room:neon");
+    const b = await act(db, p, "room_buy", { id: "neon" }, T0);
+    expect(b.state.player.energyMax).toBe(55);
+    expect(await wallet(db, p, "RUB")).toBeLessThan(5000);
   });
 });

@@ -1,5 +1,5 @@
 import { GameError, type Queryable } from "../db.ts";
-import { balances, energyNow, moscowDay, type Ctx, type PlayerRow } from "../core.ts";
+import { balances, energyCfgOf, energyNow, moscowDay, type Ctx, type PlayerRow } from "../core.ts";
 import { fightHp, settleMyFight, unlockedItems } from "./combat.ts";
 import { inventoryView } from "./shop.ts";
 import { yardSync } from "./yard.ts";
@@ -25,8 +25,9 @@ export async function gameState(ctx: Ctx) {
   const [p] = await ctx.q.query<PlayerRow>("SELECT * FROM players WHERE id=$1", [ctx.pid]);
   if (!p) throw new GameError("no_player", "Игрок не найден", 404);
   await touchActivity(ctx.q, ctx.pid, moscowDay(ctx.now), ctx.now);
-  const e = energyNow(p.energy, new Date(p.energy_at).getTime(), ctx.now, ctx.cfg.energy);
-  await scheduleEnergy(ctx, e.energy, e.at);
+  const ec = energyCfgOf(ctx.cfg, p);
+  const e = energyNow(p.energy, new Date(p.energy_at).getTime(), ctx.now, ec);
+  await scheduleEnergy(ctx, e.energy, e.at, ec.max);
   const lv = levelFromXp(p.xp, ctx.cfg.levels);
   const [app] = await ctx.q.query<{ equipped: Record<string, string> }>("SELECT equipped FROM appearance WHERE player_id=$1", [ctx.pid]);
   const home = await homeView(ctx.q, ctx.pid);
@@ -46,7 +47,7 @@ export async function gameState(ctx: Ctx) {
     player: {
       id: p.id, name: p.display_name, username: p.username, photo: p.photo_url, telegram: p.telegram_id !== null,
       xp: Number(p.xp), level: lv.level, levelXp: lv.into, levelNeed: lv.need,
-      energy: e.energy, energyMax: ctx.cfg.energy.max, energyNextIn: e.nextIn, energyPeriodMs: ctx.cfg.energy.regenMin * 60_000,
+      energy: e.energy, energyMax: ec.max, energyNextIn: e.nextIn, energyPeriodMs: ctx.cfg.energy.regenMin * 60_000,
       talents: Number((p as PlayerRow & { talents?: number }).talents ?? 0),
       // the talent counter: boss damage of all time
       talentDamage: Number((await ctx.q.query<{ total_damage: number }>("SELECT total_damage FROM player_stats WHERE player_id=$1", [ctx.pid]))[0]?.total_damage ?? 0),
@@ -106,7 +107,7 @@ export async function profileView(q: Queryable, viewer: number, pid: number, cfg
   const [app] = await q.query<{ equipped: Record<string, string>; body: unknown }>("SELECT equipped, body FROM appearance WHERE player_id=$1", [pid]);
   const lv = levelFromXp(p.xp, cfg.levels);
   const self = viewer === pid;
-  const e = energyNow(p.energy, new Date(p.energy_at).getTime(), Date.now(), cfg.energy);
+  const e = energyNow(p.energy, new Date(p.energy_at).getTime(), Date.now(), energyCfgOf(cfg, p));
   return {
     id: p.id, self, name: p.display_name, username: p.username, photo: p.photo_url,
     level: lv.level, xp: Number(p.xp), levelXp: lv.into, levelNeed: lv.need,

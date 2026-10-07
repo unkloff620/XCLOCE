@@ -19,7 +19,7 @@ const SLOT_NAMES: Record<string, string> = { PANTS: "штаны", SHIRT: "вер
 
 const n = (v: unknown) => Number(v ?? 0);
 const fmt = (v: unknown) => n(v).toLocaleString("ru-RU", { maximumFractionDigits: 8 });
-const item = (id: unknown) => itemById(String(id))?.name ?? String(id);
+const item = (id: unknown) => String(id).startsWith("room:") ? `комната «${roomById(String(id).slice(5))?.name ?? id}»` : itemById(String(id))?.name ?? String(id);
 const join = (...parts: (string | null | undefined | false)[]) => parts.filter(Boolean).join(" · ");
 
 /** «+300 RUB, +200 авторитета, Клавиатура ×3» */

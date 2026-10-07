@@ -109,7 +109,7 @@ export async function player(db: Db, id: number) {
   const cfg = await loadConfig(db);
   const [p] = await db.query<PlayerRow & { guest_id: string | null; banned_at: Date | null; ban_reason: string | null; talents: number }>("SELECT * FROM players WHERE id=$1", [id]);
   if (!p) throw new GameError("no_player", "Игрок не найден", 404);
-  const e = energyNow(p.energy, new Date(p.energy_at).getTime(), Date.now(), cfg.energy);
+  const e = energyNow(p.energy, new Date(p.energy_at).getTime(), Date.now(), { ...cfg.energy, max: cfg.energy.max + Number(p.energy_bonus ?? 0) });
   const [wallet, inventory, [stats], talents, [clan], fights, acts, ledger, admin] = await Promise.all([
     db.query<{ currency: string; amount: number }>("SELECT currency, amount FROM wallets WHERE player_id=$1", [id]),
     db.query<{ item_id: string; qty: number; source: string | null; updated_at: Date }>("SELECT item_id, qty, source, updated_at FROM inventory WHERE player_id=$1 AND qty > 0 ORDER BY item_id", [id]),
@@ -238,7 +238,7 @@ export async function edit(db: Db, adminTg: number, pid: number, e: Edit) {
       case "set_energy": {
         const to = wholeIn(e.value, 0, 1_000_000, "Энергия");
         const cfg = await loadConfig(q);
-        const from = energyNow(p.energy, new Date(p.energy_at).getTime(), Date.now(), cfg.energy).energy;
+        const from = energyNow(p.energy, new Date(p.energy_at).getTime(), Date.now(), { ...cfg.energy, max: cfg.energy.max + Number((p as { energy_bonus?: number }).energy_bonus ?? 0) }).energy;
         await q.query("UPDATE players SET energy=$2, energy_at=now() WHERE id=$1", [pid, to]);
         await ledgerRow(q, pid, "energy", "energy", to - from, adminTg);
         info = { from, to };
@@ -284,7 +284,7 @@ export async function edit(db: Db, adminTg: number, pid: number, e: Edit) {
         // out of the clan first (a leader hands the clan to the oldest member; an empty clan is closed)
         if ((await q.query("SELECT 1 FROM clan_members WHERE player_id=$1", [pid])).length) await leaveClan({ q, pid } as Ctx);
         for (const t of PROGRESS_TABLES) await q.query(`DELETE FROM ${t} WHERE player_id=$1`, [pid]);
-        await q.query("UPDATE players SET xp=0, talents=0, energy=$2, energy_at=now(), clan_id=NULL WHERE id=$1", [pid, ENERGY.start]);
+        await q.query("UPDATE players SET xp=0, talents=0, energy_bonus=0, energy=$2, energy_at=now(), clan_id=NULL WHERE id=$1", [pid, ENERGY.start]);
         await giveStartKit(q, pid);
         info = { before };
         break;
