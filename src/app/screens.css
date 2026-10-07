@@ -1324,14 +1324,15 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .clan-reqs .clan-row { gap: 6px; }
 
 /* ---------- yard mini games (buttons for now; they become objects in the yard later) ---------- */
-.yard-games { position: absolute; left: 10px; top: 300px; display: flex; flex-direction: column; gap: 6px; z-index: 2; }
-.fit-page .yard-games { top: calc(var(--top) + 300px); left: 12px; }
+.yard-games { position: absolute; right: 10px; top: 52px; display: flex; flex-direction: column; gap: 6px; z-index: 2; }
+.fit-page .yard-games { top: calc(var(--top) + 84px); right: 12px; }
 .yard-game { position: relative; width: 66px; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 4px 2px 3px; border-radius: 14px; border: 2.5px solid var(--line); box-shadow: 0 3px 0 var(--line);
   background: var(--tex), linear-gradient(180deg, #3a2414, #24160c); color: var(--ink); font: inherit; font-size: 10px; font-weight: 800; cursor: pointer; }
 .yard-game:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
 .yg-badge { position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; padding: 0 4px; display: grid; place-items: center; border-radius: 9px; background: var(--green); color: #0b2a17; font-style: normal; font-size: 10px; border: 2px solid var(--line); }
 .yg-badge.live { background: var(--gold); color: #1e1006; }
-@media (max-height: 700px) { .fit-page .yard-games { top: calc(var(--top) + 270px); } .yard-game { width: 58px; } }
+/* short screens: a row along the top, clear of the slot machine */
+@media (max-height: 760px) { .yard-games { flex-direction: row; } .yard-game { width: 58px; } }
 
 .mg-table { display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 18px; border: 3px solid var(--line);
   background: radial-gradient(ellipse at 50% 40%, #1f7a45, #0f4a28 70%, #0a3019); box-shadow: inset 0 0 0 3px rgba(255, 210, 63, 0.25); }
