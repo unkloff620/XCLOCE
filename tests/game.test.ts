@@ -805,7 +805,7 @@ describe("admin: reset a player", () => {
     await edit(db, 1, p, { op: "set_xp", value: 123_456 });
     await edit(db, 1, p, { op: "set_talent", weapon: "fist", branch: "dmg", level: 4 });
     await act(db, p, "task", { taskId: "os-standup" }, T0);
-    const c = await act(db, p, "clan_create", { name: "Сбросники", tag: "SBR", emblem: "skull", color: "#ff0000" }, T0);
+    const c = await act(db, p, "clan_create", { name: "Сбросники", tag: "SBR", emblem: "skull", color: "#ff4d6d" }, T0);
     const clanId = c.result.clanId;
     await act(db, other, "clan_join", { clanId }, T0);
     const r = await edit(db, 1, p, { op: "reset" });
