@@ -1,0 +1,100 @@
+{
+ "torso": {
+  "s": 0.678,
+  "tx": 228.9,
+  "ty": 263.8,
+  "err": 1874.4,
+  "sheet": "torso"
+ },
+ "head": {
+  "s": 0.4787,
+  "tx": 728.9,
+  "ty": 468.8,
+  "err": 636.8
+ },
+ "armL": {
+  "s": 0.678,
+  "tx": 228.9,
+  "ty": 263.8,
+  "err": 1874.4,
+  "sheet": "armL"
+ },
+ "armR": {
+  "s": 0.678,
+  "tx": 228.9,
+  "ty": 263.8,
+  "err": 1874.4,
+  "sheet": "armR"
+ },
+ "fist": {
+  "s": 0.678,
+  "tx": 228.9,
+  "ty": 263.8,
+  "err": 1874.4,
+  "sheet": "fist"
+ },
+ "sclera": {
+  "s": 0.4787,
+  "tx": 728.9,
+  "ty": 468.8,
+  "err": 636.8,
+  "sheet": "sclera"
+ },
+ "iris": {
+  "s": 0.4787,
+  "tx": 728.9,
+  "ty": 468.8,
+  "err": 636.8,
+  "sheet": "iris"
+ },
+ "lids": {
+  "s": 0.4787,
+  "tx": 728.9,
+  "ty": 468.8,
+  "err": 636.8,
+  "sheet": "lids"
+ },
+ "cigarette": {
+  "s": 0.4787,
+  "tx": 728.9,
+  "ty": 468.8,
+  "err": 636.8,
+  "sheet": "cigarette"
+ },
+ "room": {
+  "s": 1,
+  "tx": 0,
+  "ty": 0,
+  "sheet": "room"
+ },
+ "lamp": {
+  "s": 1,
+  "tx": 0,
+  "ty": 0,
+  "sheet": "lamp"
+ },
+ "drinks": {
+  "s": 1,
+  "tx": 0,
+  "ty": 0,
+  "sheet": "drinks"
+ },
+ "rack": {
+  "s": 1,
+  "tx": 0,
+  "ty": 0,
+  "sheet": "rack"
+ },
+ "counter": {
+  "s": 1,
+  "tx": 0,
+  "ty": 0,
+  "sheet": "counter"
+ },
+ "weapons": {
+  "s": 1,
+  "tx": 0,
+  "ty": 0,
+  "sheet": "weapons"
+ }
+}

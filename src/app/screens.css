@@ -549,7 +549,6 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .shop-scene .yard-stage { -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 6%); mask-image: linear-gradient(180deg, transparent 0, #000 6%); }
 .fit-page .title-row .back-btn { margin-right: 2px; }
 /* the shop fills the height (sides are cropped a little on tall phones instead of an empty strip on top) */
-.shop-scene .yard-stage { aspect-ratio: 941 / 1672; left: 50%; right: auto; top: 0; height: calc(100% - var(--nav-h) - var(--safe-b) + 6px); width: auto; transform: translateX(-50%); }
 .boss-rig.beaten { animation: beaten-in 0.6s ease-out; }
 @keyframes beaten-in { 0% { filter: brightness(2.2) drop-shadow(0 8px 18px rgba(0, 0, 0, 0.55)); transform: translateX(-6px); } 30% { transform: translateX(6px); } 60% { transform: translateX(-3px); } 100% { filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.55)); transform: none; } }
 
@@ -1245,3 +1244,53 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .talent-prog { font: inherit; color: inherit; cursor: pointer; }
 /* the weapon batch (×1 ×10 ×100 ×1000): a small badge in the top-right corner of every weapon card */
 .offer-batch { position: absolute; top: 3px; right: 3px; z-index: 2; padding: 0 5px; border-radius: 7px; border: 1.5px solid var(--line); background: var(--green); color: var(--line); font-size: 9px; font-weight: 800; line-height: 14px; }
+
+/* ---------- the shop: the shopkeeper behind the counter (screens/shop-scene.tsx) ---------- */
+.shop-scene .yard-stage { aspect-ratio: 2000 / 2800; }
+.sk-scene { position: absolute; inset: 0; overflow: hidden; user-select: none; -webkit-user-select: none; }
+.sk-layer { position: absolute; display: block; max-width: none; pointer-events: none; }
+.sk-room { inset: 0; width: 100%; height: 100%; }
+.sk-body, .sk-head { position: absolute; inset: 0; pointer-events: none; }
+/* he breathes, sways his head, blinks and glances */
+.sk-body { animation: sk-breathe 4.2s ease-in-out infinite; }
+@keyframes sk-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.004, 1.012); } }
+.sk-head { animation: sk-sway 7s ease-in-out infinite; }
+@keyframes sk-sway { 0%, 100% { transform: rotate(0deg); } 30% { transform: rotate(-1.4deg); } 65% { transform: rotate(1deg); } }
+.sk-lids { opacity: 0; animation: sk-blink 4.6s steps(1, end) infinite; }
+@keyframes sk-blink { 0%, 93% { opacity: 0; } 94%, 97% { opacity: 1; } 98%, 100% { opacity: 0; } }
+.sk-iris { animation: sk-glance 9s ease-in-out infinite; }
+@keyframes sk-glance { 0%, 18%, 100% { transform: translateX(0); } 24%, 40% { transform: translateX(-9%); } 50%, 62% { transform: translateX(0); } 68%, 80% { transform: translateX(8%); } }
+/* the cigarette: bobs with the lips, the tip glows, smoke goes up */
+.sk-cig { animation: sk-cig 3.4s ease-in-out infinite; }
+@keyframes sk-cig { 0%, 100% { transform: rotate(0deg); } 40% { transform: rotate(-5deg); } 70% { transform: rotate(3deg); } }
+.sk-ember { position: absolute; width: 1.1%; aspect-ratio: 1; margin: -0.55% 0 0 -0.55%; border-radius: 50%; background: radial-gradient(circle, #ffe08a 0, #ff7a1a 45%, rgba(255, 80, 0, 0) 72%); animation: sk-ember 1.8s ease-in-out infinite; pointer-events: none; }
+@keyframes sk-ember { 0%, 100% { opacity: 0.55; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.35); } }
+.sk-smoke { position: absolute; width: 2.4%; aspect-ratio: 1; margin: -1.2% 0 0 -1.2%; border-radius: 50%; background: radial-gradient(circle, rgba(230, 225, 215, 0.55) 0, rgba(230, 225, 215, 0) 70%); filter: blur(1px); opacity: 0; animation: sk-smoke 4.4s ease-out infinite; pointer-events: none; }
+@keyframes sk-smoke { 0% { opacity: 0; transform: translate(0, 0) scale(0.4); } 15% { opacity: 0.9; } 100% { opacity: 0; transform: translate(-260%, -900%) scale(2.6); } }
+/* the open hand offers, the fist taps the counter: tap-tap-tap, a pause */
+.sk-armL { animation: sk-offer 5s ease-in-out infinite; }
+@keyframes sk-offer { 0%, 100% { transform: rotate(0deg); } 45% { transform: rotate(-2.2deg); } 70% { transform: rotate(0.8deg); } }
+.sk-armR { animation: sk-armR 2.4s ease-in-out infinite; }
+@keyframes sk-armR { 0%, 46%, 100% { transform: rotate(0deg); } 8%, 22%, 36% { transform: rotate(0.6deg); } }
+.sk-fist { z-index: 3; animation: sk-tap 2.4s ease-in-out infinite; }
+@keyframes sk-tap { 0%, 46%, 100% { transform: rotate(0deg) translateY(0); } 6% { transform: rotate(9deg) translateY(-3%); } 12% { transform: rotate(0deg) translateY(0); } 20% { transform: rotate(9deg) translateY(-3%); } 26% { transform: rotate(0deg) translateY(0); } 34% { transform: rotate(9deg) translateY(-3%); } 40% { transform: rotate(0deg) translateY(0); } }
+.sk-lamp { animation: sk-lamp 6s ease-in-out infinite; }
+@keyframes sk-lamp { 0%, 100% { transform: rotate(-1.2deg); } 50% { transform: rotate(1.2deg); } }
+/* the goods: a glowing outline that pulses, a label; tap → the window */
+.sk-spot { position: absolute; z-index: 2; padding: 0; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.sk-spot img { display: block; width: 100%; height: 100%; pointer-events: none; animation: sk-glow 2.2s ease-in-out infinite; }
+.sk-spot:active img { transform: scale(0.97); }
+@keyframes sk-glow {
+  0%, 100% { filter: drop-shadow(0 0 1px #fff6c8) drop-shadow(0 0 3px rgba(255, 204, 51, 0.55)); transform: scale(1); }
+  50% { filter: drop-shadow(0 0 2px #fff6c8) drop-shadow(0 0 9px rgba(255, 204, 51, 0.95)); transform: scale(1.018); }
+}
+.sk-spot-energy img { animation-delay: 0.7s; }
+.sk-spot-clothing img { animation-delay: 1.4s; }
+.sk-tag { position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap; padding: 2px 9px; border-radius: 999px; font: 800 11px/1.3 var(--font-display), system-ui; letter-spacing: 0.3px; color: #1e1006; background: linear-gradient(180deg, #ffe27a, #f2b52c); border: 2px solid var(--line); box-shadow: 0 2px 0 var(--line); pointer-events: none; }
+.sk-tag.bottom { bottom: -6px; }
+.sk-tag.top { top: -4px; }
+.sk-spot-weapons .sk-tag { bottom: 8%; }
+@media (prefers-reduced-motion: reduce) {
+  .sk-body, .sk-head, .sk-lids, .sk-iris, .sk-cig, .sk-ember, .sk-smoke, .sk-armL, .sk-armR, .sk-fist, .sk-lamp, .sk-spot img { animation: none; }
+  .sk-spot img { filter: drop-shadow(0 0 2px #fff6c8) drop-shadow(0 0 6px rgba(255, 204, 51, 0.8)); }
+}

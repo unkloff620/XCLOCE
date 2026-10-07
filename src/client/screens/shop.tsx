@@ -15,14 +15,15 @@ import { Icon } from "../art/icons.tsx";
 import { money } from "../format.ts";
 import { haptic } from "../telegram.ts";
 import { weaponStats } from "../weapon-stats.ts";
+import { ShopScene } from "./shop-scene.tsx";
 
 export interface ShopData { offers: Offer[]; exchange: { rub: Record<Currency, number>; fee: number } }
 
-/** Clickable things in the shop scene (percent of the 941×1672 background), as in the artist's layout reference. */
+/** The goods in the shop scene (screens/shop-scene.tsx): the weapons on the counter, the clothes rack, the energy drinks. */
 const SHOP_SPOTS = [
-  { id: "weapons", img: "shelf", name: "Оружие", sections: ["weapons"], left: -18, top: 12, width: 68, hint: "Стеллаж с оружием: мыши, свечи, клавиатуры, видеокарты и Rug Pull Gun." },
-  { id: "clothing", img: "rack", name: "Одежда", sections: ["clothing"], left: 40.4, top: 33.5, width: 28.7, hint: "Вешалка с вещами: футболки, кепки и прочее для персонажа." },
-  { id: "energy", img: "drinks", name: "Энергия", sections: ["energy", "misc"], left: 81.8, top: 31.5, width: 23.5, hint: "Энергетики на прилавке: энергия для заданий и полезные мелочи." },
+  { id: "weapons", img: "weapons", name: "Оружие", sections: ["weapons"], hint: "Оружие на прилавке: мыши, свечи, клавиатуры, видеокарты и Rug Pull Gun." },
+  { id: "clothing", img: "rack", name: "Одежда", sections: ["clothing"], hint: "Вешалка с вещами: футболки, кепки и прочее для персонажа." },
+  { id: "energy", img: "drinks", name: "Энергия", sections: ["energy", "misc"], hint: "Энергетики на полке: энергия для заданий и полезные мелочи." },
 ] as const;
 
 /** A locked thing: which boss drops it, and that it is bought here after it drops. */
@@ -183,22 +184,15 @@ export function ShopScreen() {
           <Link href="/yard" className="back-btn" aria-label="Во двор">‹</Link>
           <h1 className="display">Магазин</h1>
           <Help topic="shop" title="Магазин">
-            <HelpList title="Что где лежит" rows={SHOP_SPOTS.map((x) => ({ key: x.id, icon: /* eslint-disable-next-line @next/next/no-img-element */ <img src={`/assets/shop/${x.img}.webp`} alt="" width={44} height={44} style={{ objectFit: "contain" }} />, name: x.name, hint: x.hint }))} />
-            <p className="small muted">Нажми на стеллаж, вешалку или энергетики — откроется витрина. Все цены во внутриигровой валюте; не хватает — загляни в обменник.</p>
+            <HelpList title="Что где лежит" rows={SHOP_SPOTS.map((x) => ({ key: x.id, icon: /* eslint-disable-next-line @next/next/no-img-element */ <img src={`/assets/shop/v2/${x.img}.webp`} alt="" width={44} height={44} style={{ objectFit: "contain" }} />, name: x.name, hint: x.hint }))} />
+            <p className="small muted">Нажми на оружие на прилавке, вешалку или энергетики на полке — они подсвечены — откроется витрина. Все цены во внутриигровой валюте; не хватает — загляни в обменник.</p>
           </Help>
         </div>
       </div>
       <div className="yard shop-scene">
-        <div className="scene-backdrop" style={{ backgroundImage: "url(/assets/shop/bg.webp)" }} />
+        <div className="scene-backdrop" style={{ backgroundImage: "url(/assets/shop/v2/room.webp)" }} />
         <div className="yard-stage">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="yard-bg" src="/assets/shop/bg.webp" alt="" draggable={false} />
-          {SHOP_SPOTS.map((x) => (
-            <button key={x.id} className="shop-spot" style={{ left: `${x.left}%`, top: `${x.top}%`, width: `${x.width}%` }} onClick={() => setOpen(x.id)} aria-label={x.name} title={x.name}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`/assets/shop/${x.img}.webp`} alt="" draggable={false} />
-            </button>
-          ))}
+          <ShopScene onOpen={(id) => setOpen(id)} />
         </div>
       </div>
       {open && (
