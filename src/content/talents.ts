@@ -46,10 +46,10 @@ export function talentsForDamage(damage: number): number {
 
 export type TalentBranch = "dmg" | "crit";
 export interface BranchDef { id: TalentBranch; name: string; short: string; perLevel: number; maxLevel: number }
-/** +10% damage of that weapon per level (+100% at the top); +12% crit power of that weapon per level (crit chance comes from the room) */
+/** +10% damage of that weapon per level (+100% at the top); +20% crit power of that weapon per level (+200% at the top; crit chance comes from the room) */
 export const TALENT_BRANCHES: BranchDef[] = [
   { id: "dmg", name: "Урон", short: "урон", perLevel: 0.1, maxLevel: 10 },
-  { id: "crit", name: "Сила крита", short: "крит", perLevel: 0.12, maxLevel: 10 },
+  { id: "crit", name: "Сила крита", short: "крит", perLevel: 0.2, maxLevel: 10 },
 ];
 export const branchById = (id: string) => TALENT_BRANCHES.find((b) => b.id === id);
 /** talents for level `level` (1-based) of a branch: 1,1,1,2,2,2,3,3,3,4 — 22 for a whole branch */

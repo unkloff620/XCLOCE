@@ -51,7 +51,7 @@ function TalentHelp() {
       <p>У каждого оружия, даже у кулака, свои две ветки:</p>
       <ul className="small">
         <li><b>Урон</b> — +{pct(TALENT_BRANCHES[0].perLevel)} к урону этого оружия за уровень, до {TALENT_BRANCHES[0].maxLevel} уровня.</li>
-        <li><b>Сила крита</b> — +{pct(TALENT_BRANCHES[1].perLevel)} к силе крита этого оружия за уровень. Шанс крита дают комната и оборудование.</li>
+        <li><b>Сила крита</b> — +{pct(TALENT_BRANCHES[1].perLevel)} к силе крита этого оружия за уровень, до +{pct(TALENT_BRANCHES[1].perLevel * TALENT_BRANCHES[1].maxLevel)} на {TALENT_BRANCHES[1].maxLevel}-м. Шанс крита дают комната и оборудование.</li>
       </ul>
       <p className="small muted">Уровни 1–3 стоят 1 талант, 4–6 — 2, 7–9 — 3, 10-й — 4.</p>
     </Help>
