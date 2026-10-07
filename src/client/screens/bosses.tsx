@@ -121,7 +121,10 @@ export function BossesScreen() {
                   {locked ? (
                     <span className="bcard-meta">{prev && <ItemArt id={`key-${prev.id}`} size={22} />} {row?.keysHave ?? 0}/{row?.keysNeed ?? 3} {(row?.keysNeed ?? 3) === 1 ? "пропуск" : "пропуска"}</span>
                   ) : (
-                    <span className="bcard-meta" title="Победы сегодня"><Icon name="swords" size={14} /> Побед <b className="num">{row?.fightsToday ?? 0}/{row?.fightsPerDay ?? 7}</b></span>
+                    <span className="bcard-meta stack" title="Боёв сегодня из дневного лимита · побед над этим боссом за всё время">
+                      <span>Сегодня <b className="num">{row?.fightsToday ?? 0}/{row?.fightsPerDay ?? 7}</b></span>
+                      <span>Всего побед <b className="num">{row?.myWins ?? 0}</b></span>
+                    </span>
                   )}
                   <span className={`bcard-cta display ${locked ? "off" : ""}`}>{locked ? <><Icon name="lock" size={14} /> Закрыт</> : mine ? <>Бить ›</> : <>В бой ›</>}</span>
                 </div>

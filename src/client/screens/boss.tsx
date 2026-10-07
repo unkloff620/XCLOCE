@@ -417,7 +417,7 @@ export function BossScreen({ id }: { id: string }) {
       <div className="fight-bottom prefight-panel">
         <div className="row small" style={{ justifyContent: "space-between", gap: 6 }}>
           <span className="chip gold"><Icon name="clock" size={14} />8 часов</span>
-          <span className="chip" title="Победы сегодня">Победы {row?.fightsToday ?? 0}/{row?.fightsPerDay ?? 7}</span>
+          <span className="chip" title="Боёв сегодня из дневного лимита · побед над этим боссом за всё время">Сегодня {row?.fightsToday ?? 0}/{row?.fightsPerDay ?? 7} · всего {row?.myWins ?? 0}</span>
         </div>
         {otherFight ? (
           <Link className="btn violet block" href={`/bosses/${otherFight.bossId}`}>Идёт бой с {bossById(otherFight.bossId)?.name} — к нему</Link>
