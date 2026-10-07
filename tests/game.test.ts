@@ -793,3 +793,36 @@ describe("admin sign-in confirmed in the Telegram app", () => {
     await expect(pollLogin(db, s.code, s.secret)).rejects.toThrow(/устарел/);
   });
 });
+
+describe("admin: reset a player", () => {
+  it("wipes the progress back to the starting kit, keeps the account, hands the clan over", async () => {
+    const { edit, player } = await import("../src/server/admin.ts");
+    const p = await newPlayer(db);
+    const other = await newPlayer(db);
+    await db.query("UPDATE players SET display_name='Тест-игрок' WHERE id=$1", [p]);
+    await setMoney(db, p, "RUB", 50_000);
+    await give(db, p, "rug-pull-gun", 40);
+    await edit(db, 1, p, { op: "set_xp", value: 123_456 });
+    await edit(db, 1, p, { op: "set_talent", weapon: "fist", branch: "dmg", level: 4 });
+    await act(db, p, "task", { taskId: "os-standup" }, T0);
+    const c = await act(db, p, "clan_create", { name: "Сбросники", tag: "SBR", emblem: "skull", color: "#ff0000" }, T0);
+    const clanId = c.result.clanId;
+    await act(db, other, "clan_join", { clanId }, T0);
+    const r = await edit(db, 1, p, { op: "reset" });
+    expect(r.op).toBe("reset");
+    const v = await player(db, p);
+    expect(v.player.display_name).toBe("Тест-игрок");
+    expect(Number(v.player.xp)).toBe(0);
+    expect(v.money.RUB).toBe(500);
+    expect(await qty(db, p, "rug-pull-gun")).toBe(0);
+    expect(await qty(db, p, "fist")).toBe(1);
+    expect(v.talents).toEqual([]);
+    expect(v.clan).toBeNull();
+    const [cl] = await db.query<{ leader_id: number }>("SELECT leader_id FROM clans WHERE id=$1", [clanId]);
+    expect(cl.leader_id).toBe(other);
+    expect(v.admin[0].op).toBe("reset");
+    // the player plays on as a newcomer
+    const s = await act(db, p, "task", { taskId: "os-standup" }, T0 + H);
+    expect(s.result.steps).toBe(1);
+  });
+});

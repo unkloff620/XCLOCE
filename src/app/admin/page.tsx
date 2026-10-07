@@ -30,7 +30,7 @@ const ACTION_NAMES: Record<string, string> = {
 };
 const OP_NAMES: Record<string, string> = {
   set_money: "валюта", set_item: "предмет", set_xp: "авторитет", set_energy: "энергия", set_talents: "свободные таланты",
-  set_talent: "ветка таланта", set_name: "имя", ban: "бан", unban: "разбан",
+  set_talent: "ветка таланта", set_name: "имя", ban: "бан", unban: "разбан", reset: "сброс прогресса",
 };
 
 // ---------------- api ----------------
@@ -664,6 +664,11 @@ function EditInfo({ op, info }: { op: string; info: unknown }) {
     op === "set_xp" ? "Авторитет" : op === "set_energy" ? "Энергия" : op === "set_talents" ? "Свободные таланты" : op === "set_name" ? "Имя" : "";
   if (op === "ban") return <span className="bad">заблокирован{i.reason ? `: ${i.reason}` : ""}</span>;
   if (op === "unban") return <span className="good">разблокирован</span>;
+  if (op === "reset") {
+    const b = (i.before ?? {}) as Row;
+    const m = (b.money ?? {}) as Row;
+    return <span className="bad">прогресс сброшен <span className="muted">(было: авторитет {fmt(b.xp)}, урон {fmt(b.damage)}, {fmt(m.RUB)} RUB)</span></span>;
+  }
   if (!("from" in i) || !("to" in i)) return <span className="adm-info">{infoText(info)}</span>;
   const numeric = typeof i.from === "number" && typeof i.to === "number";
   const cls = numeric ? (num(i.to) > num(i.from) ? "good" : num(i.to) < num(i.from) ? "bad" : "") : "";
@@ -691,7 +696,7 @@ function Player({ id }: { id: number }) {
     setMsg(null);
     try {
       const r = await admin<Row>("edit", { id, edit: e });
-      setMsg({ ok: true, text: `${label}: ${"from" in r ? `${r.from} → ${r.to}` : "готово"}` });
+      setMsg({ ok: true, text: `${label}: ${"from" in r && "to" in r ? `${r.from} → ${r.to}` : "готово"}` });
       reload();
       return true;
     } catch (x) {
@@ -729,6 +734,7 @@ function Player({ id }: { id: number }) {
             <EditText label="Имя" value={String(p.display_name)} onSave={(v) => edit({ op: "set_name", value: v }, "Имя")} />
           </div>
           <BanBox banned={!!p.banned_at} onBan={(reason) => edit({ op: "ban", reason }, "Бан")} onUnban={() => edit({ op: "unban" }, "Разбан")} />
+          <ResetBox name={String(p.display_name)} onReset={() => edit({ op: "reset" }, "Сброс прогресса")} />
         </Box>
         <Box title="Статистика">
           {data.stats ? (
@@ -804,6 +810,26 @@ function EditText({ label, value, onSave }: { label: string; value: string; onSa
     </form>
   );
 }
+/** Wipes the player's progress back to the starting kit: two steps and a typed word, it cannot be undone */
+function ResetBox({ name, onReset }: { name: string; onReset: () => Promise<boolean> }) {
+  const [open, setOpen] = useState(false);
+  const [word, setWord] = useState("");
+  const [busy, setBusy] = useState(false);
+  if (!open) return <div className="adm-ban"><button className="adm-btn ghost danger-text" onClick={() => setOpen(true)}>Сбросить прогресс…</button></div>;
+  const ok = word.trim().toUpperCase() === "СБРОС";
+  return (
+    <form className="adm-reset" onSubmit={async (e) => { e.preventDefault(); if (!ok || busy) return; setBusy(true); if (await onReset()) { setOpen(false); setWord(""); } setBusy(false); }}>
+      <b className="bad">Сбросить весь прогресс игрока «{name}»?</b>
+      <p className="small muted">Обнулятся валюты, предметы, одежда, авторитет и уровень, таланты, комната и техника, задания и локации, бои и победы над боссами, пропуски, двор, достижения, ежедневные награды и задания, рейтинг и призы. Игрок выйдет из клана (лидерство перейдёт старейшему участнику). Останутся аккаунт, имя, аватарка, бан и журналы. Игрок получит стартовый набор, как новичок. <b>Отменить нельзя.</b></p>
+      <div className="row">
+        <input className="adm-in grow" placeholder="Напишите СБРОС" value={word} onChange={(e) => setWord(e.target.value)} />
+        <button className="adm-btn danger" disabled={!ok || busy}>{busy ? "Сбрасываем…" : "Сбросить"}</button>
+        <button type="button" className="adm-btn ghost" onClick={() => { setOpen(false); setWord(""); }}>Отмена</button>
+      </div>
+    </form>
+  );
+}
+
 function BanBox({ banned, onBan, onUnban }: { banned: boolean; onBan: (reason: string) => Promise<boolean>; onUnban: () => Promise<boolean> }) {
   const [reason, setReason] = useState("");
   const [sure, setSure] = useState(false);

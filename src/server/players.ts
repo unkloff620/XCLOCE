@@ -25,13 +25,17 @@ async function createPlayer(q: Queryable, fields: { telegramId?: number; guestId
     "INSERT INTO players (telegram_id, guest_id, username, display_name, photo_url, energy) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id",
     [fields.telegramId ?? null, fields.guestId ?? null, fields.username ?? null, fields.name, fields.photo ?? null, ENERGY.start],
   );
-  const id = p.id;
+  await giveStartKit(q, p.id);
+  return p.id;
+}
+
+/** What a new player starts with: wallets, the starting items and outfit, empty stats and yard. Also used by the admin's reset. */
+export async function giveStartKit(q: Queryable, id: number) {
   for (const c of CURRENCIES) await q.query("INSERT INTO wallets (player_id, currency, amount) VALUES ($1,$2,$3)", [id, c, c === "RUB" ? START_RUB : 0]);
   for (const it of START_ITEMS) await q.query("INSERT INTO inventory (player_id, item_id, qty, source) VALUES ($1,$2,$3,'start')", [id, it.id, it.qty]);
   await q.query("INSERT INTO appearance (player_id, equipped) VALUES ($1,$2)", [id, JSON.stringify(STARTER_OUTFIT)]);
   await q.query("INSERT INTO player_stats (player_id) VALUES ($1)", [id]);
   await q.query("INSERT INTO yard (player_id, anchor_at) VALUES ($1, now())", [id]);
-  return id;
 }
 
 export async function upsertTelegramPlayer(q: Queryable, u: TelegramUser): Promise<number> {

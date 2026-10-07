@@ -116,6 +116,9 @@ a.adm-stat.link:hover { border-color: #4b6bff; background: var(--a-panel2); }
 .adm-field { display: grid; grid-template-columns: 150px 1fr auto; gap: 8px; align-items: center; }
 .adm-field label { color: var(--a-muted); font-size: 13px; }
 .adm-ban { display: flex; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--a-line); }
+.adm-reset { display: grid; gap: 8px; margin-top: 12px; padding: 12px; border: 1px solid rgba(255, 93, 115, 0.4); border-radius: 10px; background: rgba(255, 93, 115, 0.06); }
+.adm-reset p { margin: 0; }
+.adm-btn.danger-text { color: var(--a-bad); }
 .adm-qty { display: inline-flex; gap: 4px; justify-content: flex-end; }
 .adm-dl { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin: 0 0 8px; }
 .adm-dl div { background: var(--a-panel2); border-radius: 8px; padding: 6px 10px; }

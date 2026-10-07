@@ -5,7 +5,10 @@
  */
 import { GameError, type Db, type Queryable } from "./db.ts";
 import { loadConfig } from "./config.ts";
-import { energyNow, type PlayerRow } from "./core.ts";
+import { energyNow, type Ctx, type PlayerRow } from "./core.ts";
+import { giveStartKit } from "./players.ts";
+import { leaveClan } from "./systems/clans.ts";
+import { ENERGY } from "../content/levels.ts";
 import { CURRENCIES, floorTo, isCurrency } from "../content/currencies.ts";
 import { itemById } from "../content/items.ts";
 import { levelFromXp } from "../content/levels.ts";
@@ -155,8 +158,21 @@ export type Edit =
   | { op: "set_talent"; weapon: string; branch: string; level: number }
   | { op: "set_name"; value: string }
   | { op: "ban"; reason: string }
-  | { op: "unban" };
-export const EDIT_OPS = ["set_money", "set_item", "set_xp", "set_energy", "set_talents", "set_talent", "set_name", "ban", "unban"] as const;
+  | { op: "unban" }
+  | { op: "reset" };
+export const EDIT_OPS = ["set_money", "set_item", "set_xp", "set_energy", "set_talents", "set_talent", "set_name", "ban", "unban", "reset"] as const;
+
+/**
+ * Everything a player has earned, keyed by player_id. The reset wipes these and gives the starting kit again.
+ * Kept: the account itself (Telegram id, name, avatar, ban), the logs (ledger, action_log, admin_log) and the shared
+ * boss history (boss_hits).
+ */
+const PROGRESS_TABLES = [
+  "wallets", "inventory", "cooldowns", "appearance", "player_stats", "fights", "boss_damage", "task_progress",
+  "location_claims", "yard", "yard_items", "daily_login", "slot_spins", "player_equipment", "daily_quests",
+  "notifications", "weekly_stats", "week_results", "prizes", "achievements", "boss_pity", "player_unlocks",
+  "player_talents", "idempotency",
+] as const;
 
 const bad = (m: string) => new GameError("bad_request", m, 400);
 function wholeIn(v: number, min: number, max: number, what: string): number {
@@ -258,6 +274,19 @@ export async function edit(db: Db, adminTg: number, pid: number, e: Edit) {
         const reason = String(e.reason ?? "").trim().slice(0, 200);
         await q.query("UPDATE players SET banned_at=now(), ban_reason=$2 WHERE id=$1", [pid, reason || null]);
         info = { reason };
+        break;
+      }
+      case "reset": {
+        // what was there, for the log
+        const [st] = await q.query<{ total_damage: number }>("SELECT total_damage FROM player_stats WHERE player_id=$1", [pid]);
+        const money = await q.query<{ currency: string; amount: number }>("SELECT currency, amount FROM wallets WHERE player_id=$1", [pid]);
+        const before = { xp: n(p.xp), talents: n(p.talents), damage: n(st?.total_damage), money: Object.fromEntries(money.map((m) => [m.currency, n(m.amount)])) };
+        // out of the clan first (a leader hands the clan to the oldest member; an empty clan is closed)
+        if ((await q.query("SELECT 1 FROM clan_members WHERE player_id=$1", [pid])).length) await leaveClan({ q, pid } as Ctx);
+        for (const t of PROGRESS_TABLES) await q.query(`DELETE FROM ${t} WHERE player_id=$1`, [pid]);
+        await q.query("UPDATE players SET xp=0, talents=0, energy=$2, energy_at=now(), clan_id=NULL WHERE id=$1", [pid, ENERGY.start]);
+        await giveStartKit(q, pid);
+        info = { before };
         break;
       }
       case "unban": {
