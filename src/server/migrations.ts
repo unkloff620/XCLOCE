@@ -511,4 +511,33 @@ CREATE TABLE IF NOT EXISTS admin_login_codes (
 );
 `,
   },
+  {
+    // Дерево талантов оружия (4 улучшения на оружие вместо двух веток «урон %/крит»): всё, что было потрачено на старые
+    // ветки, возвращается (уровень i стоил ceil(i/3) таланта). Мышь и красная свеча стали бесплатными постоянными
+    // оружиями с перезарядкой 5 ч: у всех ровно по одной, лишние выкупаются по старой цене магазина (60 и 100 RUB),
+    // свеча больше не лежит во дворе.
+    id: "v2-024-talent-tree-free-weapons",
+    sql: `
+WITH refund AS (
+  SELECT player_id, SUM((SELECT SUM(CEIL(i / 3.0))::int FROM generate_series(1, LEAST(level, 10)) AS i))::int AS n
+  FROM player_talents WHERE level > 0 GROUP BY player_id
+), ins AS (
+  INSERT INTO ledger (player_id, kind, key, delta, reason) SELECT player_id, 'talent', 'talent', n, 'refund:talents-v2' FROM refund WHERE n > 0
+)
+UPDATE players p SET talents = p.talents + r.n FROM refund r WHERE r.player_id = p.id AND r.n > 0;
+DELETE FROM player_talents;
+WITH extra AS (
+  SELECT player_id, SUM(CASE item_id WHEN 'mouse' THEN 60 ELSE 100 END * (qty - 1))::int AS rub
+  FROM inventory WHERE item_id IN ('mouse', 'red-candle') AND qty > 1 GROUP BY player_id
+), led AS (
+  INSERT INTO ledger (player_id, kind, key, delta, reason) SELECT player_id, 'currency', 'RUB', rub, 'refund:free-weapons' FROM extra
+)
+INSERT INTO wallets (player_id, currency, amount) SELECT player_id, 'RUB', rub FROM extra
+ON CONFLICT (player_id, currency) DO UPDATE SET amount = wallets.amount + EXCLUDED.amount;
+INSERT INTO inventory (player_id, item_id, qty, source)
+SELECT p.id, w.item_id, 1, 'migration:free-weapons' FROM players p CROSS JOIN (VALUES ('mouse'), ('red-candle')) AS w(item_id)
+ON CONFLICT (player_id, item_id) DO UPDATE SET qty = 1;
+DELETE FROM yard_items WHERE drop_id = 'red-candle';
+`,
+  },
 ];

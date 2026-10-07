@@ -21,7 +21,7 @@ export interface ShopData { offers: Offer[]; exchange: { rub: Record<Currency, n
 
 /** The goods in the shop scene (screens/shop-scene.tsx): the weapons on the counter, the clothes rack, the energy drinks. */
 const SHOP_SPOTS = [
-  { id: "weapons", img: "weapons", name: "Оружие", sections: ["weapons"], hint: "Оружие на прилавке: мыши, свечи, клавиатуры, видеокарты и Rug Pull Gun." },
+  { id: "weapons", img: "weapons", name: "Оружие", sections: ["weapons"], hint: "Оружие на прилавке: клавиатуры, видеокарты и Rug Pull Gun. Кулак, мышь и свеча есть у всех бесплатно." },
   { id: "clothing", img: "rack", name: "Одежда", sections: ["clothing"], hint: "Вешалка с вещами: футболки, кепки и прочее для персонажа." },
   { id: "energy", img: "drinks", name: "Энергия", sections: ["energy", "misc"], hint: "Энергетики на полке: энергия для заданий и полезные мелочи." },
 ] as const;

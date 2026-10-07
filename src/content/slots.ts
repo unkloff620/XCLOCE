@@ -24,7 +24,7 @@ export const SLOT_OUTCOMES: SlotOutcome[] = [
   { id: "sol", title: "Три соланы", triple: "sol", kind: "triple", weight: 2, reward: { currencies: { SOL: 0.02 } } },
   { id: "keyboard", title: "Три клавы", triple: "keyboard", kind: "triple", weight: 3, reward: { items: [{ id: "keyboard", qty: 2 }] } },
   { id: "usd", title: "Три доллара", triple: "usd", kind: "triple", weight: 5, reward: { currencies: { USD: 7 } } },
-  { id: "candle", title: "Три свечи", triple: "candle", kind: "triple", weight: 6, reward: { items: [{ id: "red-candle", qty: 5 }] } },
+  { id: "candle", title: "Три свечи", triple: "candle", kind: "triple", weight: 6, reward: { items: [{ id: "keyboard", qty: 3 }] } },
   { id: "rub", title: "Три рубля", triple: "rub", kind: "triple", weight: 9, reward: { currencies: { RUB: 777 } } },
   { id: "pair", title: "Пара!", triple: null, kind: "pair", weight: 28, reward: { currencies: { RUB: 150 } } },
   { id: "miss", title: "Мимо. Рынок сегодня против тебя", triple: null, kind: "miss", weight: 45, reward: {} },

@@ -41,39 +41,39 @@ export interface ItemDef {
 export const WEAPONS: ItemDef[] = [
   {
     id: "fist", name: "Кулак", category: "weapon", rarity: "common", maxStack: 1,
-    description: "Базовое оружие. Всегда с тобой, но после удара руке нужен час отдыха.",
+    description: "Базовое оружие. Всегда с тобой, но после удара руке нужно 5 часов отдыха.",
     sources: ["Есть у каждого с начала игры"],
-    weapon: { damage: 10, kind: "permanent", cooldownMin: 60, animation: "fist", action: "Втащить кулаком" },
+    weapon: { damage: 12, kind: "permanent", cooldownMin: 300, animation: "fist", action: "Втащить кулаком" },
   },
   {
-    id: "mouse", name: "Мышь", category: "weapon", rarity: "common", maxStack: 9999,
-    description: "Перемотана скотчем, провод держится на честном слове. Одноразовая.",
-    sources: ["Магазин"],
-    weapon: { damage: 30, kind: "consumable", animation: "mouse", action: "Кинуть мышку" },
+    id: "mouse", name: "Мышь", category: "weapon", rarity: "common", maxStack: 1,
+    description: "Перемотана скотчем, провод держится на честном слове. Бесплатная: после броска её надо 5 часов искать под столом.",
+    sources: ["Есть у каждого с начала игры"],
+    weapon: { damage: 20, kind: "permanent", cooldownMin: 300, animation: "mouse", action: "Кинуть мышку" },
   },
   {
-    id: "red-candle", name: "Красная свеча", category: "weapon", rarity: "common", maxStack: 9999,
-    description: "Свеча графика, которая падает быстрее, чем ты успеваешь продать.",
-    sources: ["Магазин", "Двор (редко)"],
-    weapon: { damage: 50, kind: "consumable", animation: "candle", action: "Уронить капу" },
+    id: "red-candle", name: "Красная свеча", category: "weapon", rarity: "common", maxStack: 1,
+    description: "Свеча графика, которая падает быстрее, чем ты успеваешь продать. Бесплатная: после удара 5 часов ждёт нового дна.",
+    sources: ["Есть у каждого с начала игры"],
+    weapon: { damage: 30, kind: "permanent", cooldownMin: 300, animation: "candle", action: "Уронить капу" },
   },
   {
     id: "keyboard", name: "Клавиатура", category: "weapon", rarity: "rare", maxStack: 9999,
     description: "Механическая, с синими свичами. Громкая в полёте.",
     sources: ["Магазин", "Двор (редко)"],
-    weapon: { damage: 100, kind: "consumable", animation: "keyboard", action: "Пиздануть клавой" },
+    weapon: { damage: 30, kind: "consumable", animation: "keyboard", action: "Пиздануть клавой" },
   },
   {
     id: "gpu", name: "Видеокарта", category: "weapon", rarity: "epic", maxStack: 9999,
     description: "Три кулера, RGB и полное отсутствие сожалений.",
     sources: ["Магазин"],
-    weapon: { damage: 250, kind: "consumable", animation: "gpu", action: "Снять видюху и кинуть в босса" },
+    weapon: { damage: 60, kind: "consumable", animation: "gpu", action: "Снять видюху и кинуть в босса" },
   },
   {
     id: "rug-pull-gun", name: "Rug Pull Gun", category: "weapon", rarity: "legendary", maxStack: 9999,
     description: "Один выстрел — и под ногами босса исчезает ликвидность.",
     sources: ["Магазин"],
-    weapon: { damage: 500, kind: "consumable", animation: "rugpull", action: "Выдернуть ковёр" },
+    weapon: { damage: 250, kind: "consumable", animation: "rugpull", action: "Выдернуть ковёр" },
   },
 ];
 
@@ -147,7 +147,6 @@ export const SELL_PRICES: Record<string, number> = {
   "spinner": 60,
   "energy-drink": 90,
   "lost-wallet": 150,
-  "red-candle": 50,
   "keyboard": 95,
 };
 for (const [id, price] of Object.entries(SELL_PRICES)) {

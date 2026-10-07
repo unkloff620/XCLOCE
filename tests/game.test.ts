@@ -67,18 +67,19 @@ describe("boss fights: personal fights, shared damage", () => {
     const p = await newPlayer(db);
     const f = await startDatsik(p);
     expect(f.state.fight).toMatchObject({ bossId: "datsik", hp: 1000, hpMax: 1000 });
-    const r = await hit(p, "red-candle");
-    expect(r.result).toMatchObject({ damage: 50, hp: 950, left: 2 });
-    expect(await qty(db, p, "red-candle")).toBe(2);
+    await give(db, p, "keyboard", 3);
+    const r = await hit(p, "keyboard");
+    expect(r.result).toMatchObject({ damage: 30, hp: 970, left: 2 });
+    expect(await qty(db, p, "keyboard")).toBe(2);
     await expect(hit(p, "gpu")).rejects.toMatchObject({ code: "no_item" });
-    expect((await fightView(db, p, f.result.fightId, 0, T0)).hp).toBe(950);
+    expect((await fightView(db, p, f.result.fightId, 0, T0)).hp).toBe(970);
   });
 
   it("damage from the client is ignored: the server takes it from the catalog", async () => {
     const p = await newPlayer(db);
     await startDatsik(p);
     const r = await hit(p, "red-candle", T0, { damage: 999999 });
-    expect(r.result.damage).toBe(50);
+    expect(r.result.damage).toBe(30);
   });
 
   it("another player's hit lowers HP in my fight; fights started later do not get earlier hits", async () => {
@@ -86,14 +87,14 @@ describe("boss fights: personal fights, shared damage", () => {
     const fa = await startDatsik(a);
     await startDatsik(b);
     await hit(b, "red-candle");
-    expect((await fightView(db, a, fa.result.fightId, 0, T0)).hp).toBe(950);
+    expect((await fightView(db, a, fa.result.fightId, 0, T0)).hp).toBe(970);
     const fc = await startDatsik(c, T0 + M);
     expect((await fightView(db, c, fc.result.fightId, 0, T0 + M)).hp).toBe(1000);
     await hit(a, "red-candle", T0 + 2 * M);
-    expect((await fightView(db, a, fa.result.fightId, 0, T0 + 2 * M)).hp).toBe(900);
-    expect((await fightView(db, c, fc.result.fightId, 0, T0 + 2 * M)).hp).toBe(950);
+    expect((await fightView(db, a, fa.result.fightId, 0, T0 + 2 * M)).hp).toBe(940);
+    expect((await fightView(db, c, fc.result.fightId, 0, T0 + 2 * M)).hp).toBe(970);
     const v = await fightView(db, a, fa.result.fightId, 0, T0 + 2 * M);
-    expect(v.top.map((t) => t.damage).sort()).toEqual([50, 50]);
+    expect(v.top.map((t) => t.damage).sort()).toEqual([30, 30]);
     expect(v.hits).toHaveLength(2);
   });
 
@@ -104,12 +105,11 @@ describe("boss fights: personal fights, shared damage", () => {
     const fb = await startDatsik(b);
     const fc = await startDatsik(c);
     const fd = await startDatsik(d);
-    // b: a full share (2% = 20 → one fist hit is 10, a mouse 30); c: half a share (one fist hit = 1% → key); d: nothing
-    await give(db, b, "mouse", 1);
+    // b: a full share (2% = 20 → the free mouse hits for 20); c: 0.6 of a share (one fist hit = 12 = 1.2% → key); d: nothing
     await hit(b, "mouse");
     await hit(c, "fist");
-    await give(db, a, "rug-pull-gun", 2);
-    await hit(a, "rug-pull-gun");
+    await give(db, a, "rug-pull-gun", 4);
+    for (let i = 0; i < 3; i++) await hit(a, "rug-pull-gun");
     const r = await hit(a, "rug-pull-gun");
     expect(r.result).toMatchObject({ status: "won", hp: 0, finished: 4 });
 
@@ -119,8 +119,8 @@ describe("boss fights: personal fights, shared damage", () => {
     expect(await wallet(db, b, "SOL")).toBeCloseTo(0.02);
 
     const sc = await act(db, c, "fight_claim", { fightId: fc.result.fightId }, T0, always(0.99));
-    expect(sc.result).toMatchObject({ share: 0.5, key: true });
-    expect(await wallet(db, c, "SOL")).toBeCloseTo(0.01);
+    expect(sc.result).toMatchObject({ share: 0.6, key: true });
+    expect(await wallet(db, c, "SOL")).toBeCloseTo(0.012, 3);
     expect(await qty(db, c, "key-datsik")).toBe(1);
 
     const sd = await act(db, d, "fight_claim", { fightId: fd.result.fightId }, T0, always(0.99));
@@ -138,13 +138,14 @@ describe("boss fights: personal fights, shared damage", () => {
   it("after 8 hours the fight is lost: no key, weapons not returned", async () => {
     const p = await newPlayer(db);
     const f = await startDatsik(p);
-    await hit(p, "red-candle");
+    await give(db, p, "keyboard", 3);
+    await hit(p, "keyboard");
     const later = T0 + 8 * H + 1000;
-    await expect(hit(p, "red-candle", later)).rejects.toMatchObject({ code: "fight_over" });
+    await expect(hit(p, "keyboard", later)).rejects.toMatchObject({ code: "fight_over" });
     const s = await act(db, p, "equip", { itemId: "jeans" }, later);
     expect(s.state.fight).toBeNull();
     expect(s.state.pending).toEqual([{ fightId: f.result.fightId, bossId: "datsik", status: "lost" }]);
-    expect(await qty(db, p, "red-candle")).toBe(2);
+    expect(await qty(db, p, "keyboard")).toBe(2);
     const c = await act(db, p, "fight_claim", { fightId: f.result.fightId }, later);
     expect(c.result.status).toBe("lost");
     expect(await qty(db, p, "key-datsik")).toBe(0);
@@ -164,7 +165,7 @@ describe("boss fights: personal fights, shared damage", () => {
   it("only one running fight; 7 won fights per boss per day, lost fights do not count", async () => {
     await setBossHp({ datsik: 10 });
     const p = await newPlayer(db);
-    await give(db, p, "red-candle", 20);
+    await give(db, p, "keyboard", 20);
     await startDatsik(p);
     await expect(startDatsik(p)).rejects.toMatchObject({ code: "fight_running" });
     // ten abandoned fights do not use up the limit
@@ -175,7 +176,7 @@ describe("boss fights: personal fights, shared damage", () => {
     }
     for (let i = 0; i < 7; i++) {
       await startDatsik(p, T0 + (20 + i) * M);
-      const r = await hit(p, "red-candle", T0 + (20 + i) * M);
+      const r = await hit(p, "keyboard", T0 + (20 + i) * M);
       expect(r.result.status).toBe("won");
     }
     await expect(startDatsik(p, T0 + 40 * M)).rejects.toMatchObject({ code: "fight_limit" });
@@ -191,13 +192,13 @@ describe("boss fights: personal fights, shared damage", () => {
     // locked in the shop before it drops
     await setMoney(db, p, "RUB", 10_000);
     await expect(act(db, p, "buy", { offerId: "tee-white" }, T0)).rejects.toMatchObject({ code: "item_locked" });
-    await give(db, p, "red-candle", 30);
+    await give(db, p, "gpu", 30);
     const D = 24 * H;
     const unlocks = async () => (await db.query<{ item_id: string }>("SELECT item_id FROM player_unlocks WHERE player_id=$1 ORDER BY item_id", [p])).map((r) => r.item_id);
     const win = async (i: number, rng: number) => {
       const t = T0 + Math.floor(i / 7) * D + (i % 7) * M;
       const f = await startDatsik(p, t);
-      await hit(p, "red-candle", t);
+      await hit(p, "gpu", t);
       return act(db, p, "fight_claim", { fightId: f.result.fightId }, t, always(rng));
     };
     for (let i = 0; i < 9; i++) await win(i, 0.99);
@@ -232,9 +233,10 @@ describe("boss fights: personal fights, shared damage", () => {
     await expect(act(db, b, "achievement_claim", { id: "soloboss-datsik" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
     // the common (not solo) win over Датцкоу does not count for player a either
     await expect(act(db, a, "achievement_claim", { id: "soloboss-datsik" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
-    const h1 = await hit(b, "red-candle");
-    expect(h1.result).toMatchObject({ status: "active", hp: 50 });
-    const h2 = await hit(b, "red-candle");
+    await give(db, b, "gpu", 2);
+    const h1 = await hit(b, "gpu");
+    expect(h1.result).toMatchObject({ status: "active", hp: 40 });
+    const h2 = await hit(b, "gpu");
     expect(h2.result).toMatchObject({ status: "won", hp: 0 });
     const c = await act(db, b, "fight_claim", { fightId: fb.result.fightId }, T0, always(0.99));
     expect(c.result).toMatchObject({ status: "won", share: 1, key: true });
@@ -300,49 +302,55 @@ describe("boss fights: personal fights, shared damage", () => {
     expect(r.state.fight?.bossId).toBe("kedr");
   });
 
-  it("the fist is permanent with a 1 hour cooldown; the mouse is a 30-damage consumable", async () => {
+  it("the fist, the mouse and the candle are free for everyone, with a 5 hour cooldown each", async () => {
+    await setBossHp({ datsik: 100000 });
     const p = await newPlayer(db);
+    expect([await qty(db, p, "fist"), await qty(db, p, "mouse"), await qty(db, p, "red-candle")]).toEqual([1, 1, 1]);
     await startDatsik(p);
     const r = await hit(p, "fist");
-    expect(r.result).toMatchObject({ damage: 10, left: null });
-    await expect(hit(p, "fist", T0 + 59 * M)).rejects.toMatchObject({ code: "cooldown" });
-    await hit(p, "fist", T0 + 60 * M);
-    expect(await qty(db, p, "fist")).toBe(1);
-    await give(db, p, "mouse", 2);
-    expect((await hit(p, "mouse", T0 + 61 * M)).result).toMatchObject({ damage: 30 });
-    expect(await qty(db, p, "mouse")).toBe(1);
+    expect(r.result).toMatchObject({ damage: 12, left: null });
+    expect((await hit(p, "mouse")).result).toMatchObject({ damage: 20, left: null });
+    expect((await hit(p, "red-candle")).result).toMatchObject({ damage: 30, left: null });
+    await expect(hit(p, "fist", T0 + 299 * M)).rejects.toMatchObject({ code: "cooldown" });
+    await expect(hit(p, "mouse", T0 + 299 * M)).rejects.toMatchObject({ code: "cooldown" });
+    await hit(p, "fist", T0 + 300 * M);
+    await hit(p, "mouse", T0 + 300 * M);
+    expect([await qty(db, p, "fist"), await qty(db, p, "mouse"), await qty(db, p, "red-candle")]).toEqual([1, 1, 1]);
+    // the mouse and the candle are no longer sold
+    const { OFFERS } = await import("../src/content/shop.ts");
+    expect(OFFERS.some((o) => ["mouse", "red-candle"].includes(o.give.item ?? ""))).toBe(false);
   });
 
-  it("a new fight resets the fist cooldown", async () => {
+  it("a new fight does not reset the cooldown of the free weapons", async () => {
     const p = await newPlayer(db);
     await startDatsik(p);
     await hit(p, "fist");
-    await expect(hit(p, "fist", T0 + M)).rejects.toMatchObject({ code: "cooldown" });
     await act(db, p, "fight_flee", {}, T0 + 2 * M);
     await act(db, p, "fight_start", { boss: "datsik" }, T0 + 3 * M);
-    expect((await hit(p, "fist", T0 + 4 * M)).result).toMatchObject({ damage: 10 });
+    await expect(hit(p, "fist", T0 + 4 * M)).rejects.toMatchObject({ code: "cooldown" });
   });
 
   it("20 players attacking at the same moment: no damage is lost", async () => {
     await setBossHp({ datsik: 5000 });
     const ps = await Promise.all(Array.from({ length: 20 }, () => newPlayer(db)));
     for (const p of ps) {
-      await give(db, p, "red-candle", 5);
+      await give(db, p, "keyboard", 5);
       await startDatsik(p);
     }
-    await Promise.all(ps.flatMap((p) => [hit(p, "red-candle"), hit(p, "red-candle"), hit(p, "keyboard").catch(() => null)]));
+    await Promise.all(ps.flatMap((p) => [hit(p, "keyboard"), hit(p, "keyboard"), hit(p, "gpu").catch(() => null)]));
     const [b] = await db.query<{ damage_total: number; last_seq: number }>("SELECT damage_total, last_seq FROM bosses WHERE id='datsik'");
-    expect(b.damage_total).toBe(20 * 2 * 50);
+    expect(b.damage_total).toBe(20 * 2 * 30);
     expect(b.last_seq).toBe(40);
-    for (const p of ps) expect(await qty(db, p, "red-candle")).toBe(3);
+    for (const p of ps) expect(await qty(db, p, "keyboard")).toBe(3);
   });
 
   it("the same idempotency key does not hit twice", async () => {
     const p = await newPlayer(db);
     await startDatsik(p);
-    await hit(p, "red-candle", T0, { idem: "x1" });
-    await hit(p, "red-candle", T0, { idem: "x1" });
-    expect(await qty(db, p, "red-candle")).toBe(2);
+    await give(db, p, "keyboard", 3);
+    await hit(p, "keyboard", T0, { idem: "x1" });
+    await hit(p, "keyboard", T0, { idem: "x1" });
+    expect(await qty(db, p, "keyboard")).toBe(2);
   });
 });
 
@@ -360,12 +368,10 @@ describe("yard", () => {
     expect((await look(T0 + 3 * H + 4 * M)).count).toBe(4);
     expect((await look(T0 + 3 * H + 5 * M)).count).toBe(5);
   });
-  it("the fist, GPU and Rug Pull Gun never drop in the yard", () => {
+  it("only a rare keyboard drops in the yard of all the weapons", () => {
     const ids = YARD_DROPS.flatMap((d) => d.reward.items?.map((i) => i.id) ?? []);
-    expect(ids).not.toContain("fist");
-    expect(ids).not.toContain("gpu");
-    expect(ids).not.toContain("rug-pull-gun");
-    expect(ids).toContain("red-candle");
+    for (const w of ["fist", "mouse", "red-candle", "gpu", "rug-pull-gun"]) expect(ids).not.toContain(w);
+    expect(ids).toContain("keyboard");
   });
   it("a picked item goes to the inventory", async () => {
     const p = await newPlayer(db);
@@ -383,34 +389,34 @@ describe("yard", () => {
 describe("shop and exchange", () => {
   it("buys with server prices; not enough money changes nothing", async () => {
     const p = await newPlayer(db);
-    await act(db, p, "buy", { offerId: "candle-1", price: 1 }, T0);
-    expect(await wallet(db, p, "RUB")).toBe(400);
-    expect(await qty(db, p, "red-candle")).toBe(4);
+    await act(db, p, "buy", { offerId: "keyboard-1", price: 1 }, T0);
+    expect(await wallet(db, p, "RUB")).toBe(310);
+    expect(await qty(db, p, "keyboard")).toBe(1);
     await expect(act(db, p, "buy", { offerId: "gpu-1" }, T0)).rejects.toMatchObject({ code: "no_money" });
     expect(await qty(db, p, "gpu")).toBe(0);
   });
   it("respects the 9999 stack", async () => {
     const p = await newPlayer(db);
-    await give(db, p, "red-candle", 9995);
+    await give(db, p, "keyboard", 9995);
     await setMoney(db, p, "RUB", 100000);
-    await expect(act(db, p, "buy", { offerId: "candle-1", qty: 10 }, T0)).rejects.toMatchObject({ code: "stack_full" });
+    await expect(act(db, p, "buy", { offerId: "keyboard-1", qty: 10 }, T0)).rejects.toMatchObject({ code: "stack_full" });
   });
   it("sells weapons in batches with a discount", async () => {
     const p = await newPlayer(db);
-    await setMoney(db, p, "RUB", 100000);
-    await act(db, p, "buy", { offerId: "candle-1", qty: 10 }, T0); // 1000 − 2%
-    expect(await wallet(db, p, "RUB")).toBe(100000 - 980);
-    await act(db, p, "buy", { offerId: "mouse-1", qty: 1000 }, T0); // 60 000 − 10%
-    expect(await wallet(db, p, "RUB")).toBe(100000 - 980 - 54000);
-    expect(await qty(db, p, "mouse")).toBe(1000);
-    await expect(act(db, p, "buy", { offerId: "mouse-1", qty: 7 }, T0)).rejects.toMatchObject({ code: "bad_qty" });
+    await setMoney(db, p, "RUB", 300000);
+    await act(db, p, "buy", { offerId: "keyboard-1", qty: 10 }, T0); // 1900 − 2%
+    expect(await wallet(db, p, "RUB")).toBe(300000 - 1862);
+    await act(db, p, "buy", { offerId: "keyboard-1", qty: 1000 }, T0); // 190 000 − 10%
+    expect(await wallet(db, p, "RUB")).toBe(300000 - 1862 - 171000);
+    expect(await qty(db, p, "keyboard")).toBe(1010);
+    await expect(act(db, p, "buy", { offerId: "keyboard-1", qty: 7 }, T0)).rejects.toMatchObject({ code: "bad_qty" });
     await expect(act(db, p, "buy", { offerId: "tee-white", qty: 10 }, T0)).rejects.toMatchObject({ code: "bad_qty" });
   });
   it("idempotent purchase is charged once", async () => {
     const p = await newPlayer(db);
-    await act(db, p, "buy", { offerId: "candle-1", idem: "b1" }, T0);
-    await act(db, p, "buy", { offerId: "candle-1", idem: "b1" }, T0);
-    expect(await wallet(db, p, "RUB")).toBe(400);
+    await act(db, p, "buy", { offerId: "keyboard-1", idem: "b1" }, T0);
+    await act(db, p, "buy", { offerId: "keyboard-1", idem: "b1" }, T0);
+    expect(await wallet(db, p, "RUB")).toBe(310);
   });
   it("exchanges at the server rate minus the fee", async () => {
     const p = await newPlayer(db);
@@ -500,7 +506,7 @@ describe("daily login reward", () => {
     // 12:00 → next day 01:00 MSK
     const r2 = await act(db, p, "daily_claim", {}, T0 + 13 * H);
     expect(r2.result).toMatchObject({ day: 2, streak: 2 });
-    expect(await qty(db, p, "red-candle")).toBe(5);
+    expect(await qty(db, p, "keyboard")).toBe(1);
     // skip a day → back to day 1
     const r3 = await act(db, p, "daily_claim", {}, T0 + 3 * D);
     expect(r3.result).toMatchObject({ day: 1, streak: 1 });
@@ -560,23 +566,24 @@ describe("home: equipment, rooms, look, help", () => {
     const p = await newPlayer(db);
     await setMoney(db, p, "RUB", 20000);
     await startDatsik(p);
-    const plain = await hit(p, "red-candle");
-    expect(plain.result).toMatchObject({ damage: 50, crit: false });
+    await give(db, p, "keyboard", 3);
+    const plain = await hit(p, "keyboard");
+    expect(plain.result).toMatchObject({ damage: 30, crit: false });
     await act(db, p, "equipment_upgrade", { id: "chair" }, T0);
     await act(db, p, "equipment_upgrade", { id: "monitor2" }, T0);
     // the old money-bought system unit is gone from the shop (the computer is upgraded for talents now)
     await expect(act(db, p, "equipment_upgrade", { id: "pc" }, T0)).rejects.toMatchObject({ code: "bad_equipment" });
     expect(await wallet(db, p, "RUB")).toBe(20000 - 2500 - 3000);
-    const r = await hit(p, "red-candle"); // rng 0 → always a crit once the chance is above zero
-    expect(r.result).toMatchObject({ crit: true, damage: Math.round(50 * 1.6) });
+    const r = await hit(p, "keyboard"); // rng 0 → always a crit once the chance is above zero
+    expect(r.result).toMatchObject({ crit: true, damage: Math.round(30 * 1.6) });
     // level 2 of the monitor costs USD
     await expect(act(db, p, "equipment_upgrade", { id: "monitor2" }, T0)).rejects.toMatchObject({ code: "no_money" });
     const st = await act(db, p, "equipment_upgrade", { id: "rgb" }, T0);
     expect(st.state.home.levels).toMatchObject({ chair: 1, monitor2: 1, rgb: 1 });
     // players who bought it earlier keep its bonus
     await db.query("INSERT INTO player_equipment (player_id, equipment_id, level) VALUES ($1, 'pc', 1)", [p]);
-    const legacy = await hit(p, "red-candle");
-    expect(legacy.result.damage).toBe(Math.round(Math.round(50 * 1.03) * 1.6));
+    const legacy = await hit(p, "keyboard");
+    expect(legacy.result.damage).toBe(Math.round(Math.round(30 * 1.03) * 1.6));
   });
 
   it("talents: the 1st for 100 damage, the 100th for 1 000 000, uneven steps in between", () => {
@@ -588,35 +595,86 @@ describe("home: equipment, rooms, look, help", () => {
     expect(TALENT_THRESHOLDS.filter((v, i) => v !== 100 * (i + 1) ** 2).length).toBeGreaterThan(80);
   });
 
-  it("talents: the counter carries over between fights; weapon branches cost talents and boost only that weapon", async () => {
+  it("talents: the counter carries over between fights; the weapon tree costs talents and boosts only that weapon", async () => {
     await setBossHp({ datsik: 100000 });
     const p = await newPlayer(db);
-    await give(db, p, "red-candle", 40);
+    await give(db, p, "keyboard", 200);
     await startDatsik(p);
-    expect((await hit(p, "red-candle")).result.talentsGained).toBe(0); // 50
-    const t1 = await hit(p, "red-candle"); // 100
-    expect(t1.result).toMatchObject({ fightDamage: 100, talentDamage: 100, talentsGained: 1 });
-    expect(t1.state.player).toMatchObject({ talents: 1, talentDamage: 100 });
+    for (let i = 0; i < 3; i++) expect((await hit(p, "keyboard")).result.talentsGained).toBe(0); // 30, 60, 90
+    const t1 = await hit(p, "keyboard"); // 120
+    expect(t1.result).toMatchObject({ fightDamage: 120, talentDamage: 120, talentsGained: 1 });
+    expect(t1.state.player).toMatchObject({ talents: 1, talentDamage: 120 });
     // a new fight goes on from the same counter
     await act(db, p, "fight_flee", {}, T0);
     await startDatsik(p, T0 + M);
     let last = t1;
-    const need = talentThreshold(2) - 100;
-    for (let i = 0; i < Math.ceil(need / 50); i++) last = await hit(p, "red-candle", T0 + M);
-    expect(last.state.fight?.myDamage).toBe(Math.ceil(need / 50) * 50);
-    expect(last.state.player.talents).toBe(2);
-    // branches: levels 1–3 cost 1 talent; the damage branch adds 10% to that weapon only
-    const up = await act(db, p, "talent_up", { weapon: "red-candle", branch: "dmg" }, T0 + M);
-    expect(up.result).toMatchObject({ level: 1, talents: 1 });
-    expect(up.state.weaponTalents).toEqual({ "red-candle": { dmg: 1 } });
-    const r = await hit(p, "red-candle", T0 + M);
-    expect(r.result.damage).toBe(Math.round(50 * 1.1));
-    await give(db, p, "mouse", 1);
-    expect((await hit(p, "mouse", T0 + M)).result.damage).toBe(30);
-    await act(db, p, "talent_up", { weapon: "fist", branch: "crit" }, T0 + M);
-    await expect(act(db, p, "talent_up", { weapon: "fist", branch: "crit" }, T0 + M)).rejects.toMatchObject({ code: "no_talents" });
-    await expect(act(db, p, "talent_up", { weapon: "nope", branch: "dmg" }, T0 + M)).rejects.toMatchObject({ code: "bad_talent" });
-    await expect(act(db, p, "talent_up", { weapon: "fist", branch: "speed" }, T0 + M)).rejects.toMatchObject({ code: "bad_talent" });
+    const need = talentThreshold(3) - 120;
+    for (let i = 0; i < Math.ceil(need / 30); i++) last = await hit(p, "keyboard", T0 + M);
+    expect(last.state.fight?.myDamage).toBe(Math.ceil(need / 30) * 30);
+    expect(last.state.player.talents).toBe(3);
+    // the first upgrade costs 1 talent and adds +3 damage to the keyboard only
+    const up = await act(db, p, "talent_up", { weapon: "keyboard", branch: "n1" }, T0 + M);
+    expect(up.result).toMatchObject({ level: 1, max: 10, talents: 2 });
+    expect(up.state.weaponTalents).toEqual({ keyboard: { n1: 1 } });
+    expect((await hit(p, "keyboard", T0 + M)).result.damage).toBe(33);
+    expect((await hit(p, "mouse", T0 + M)).result.damage).toBe(20);
+    // the next upgrade opens only when the one above is full
+    await expect(act(db, p, "talent_up", { weapon: "keyboard", branch: "n2" }, T0 + M)).rejects.toMatchObject({ code: "talent_locked" });
+    await expect(act(db, p, "talent_up", { weapon: "nope", branch: "n1" }, T0 + M)).rejects.toMatchObject({ code: "bad_talent" });
+    await expect(act(db, p, "talent_up", { weapon: "fist", branch: "dmg" }, T0 + M)).rejects.toMatchObject({ code: "bad_talent" });
+    // a full first upgrade opens «Сила крита»; «Урон II» costs 2 talents a level
+    await db.query("INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,'fist','n1',10),($1,'fist','n2',10)", [p]);
+    await db.query("UPDATE players SET talents = 1 WHERE id=$1", [p]);
+    await expect(act(db, p, "talent_up", { weapon: "fist", branch: "n3" }, T0 + M)).rejects.toMatchObject({ code: "no_talents" });
+    await db.query("UPDATE players SET talents = 2 WHERE id=$1", [p]);
+    const n3 = await act(db, p, "talent_up", { weapon: "fist", branch: "n3" }, T0 + M);
+    expect(n3.result).toMatchObject({ level: 1, max: 20, talents: 0 });
+    await expect(act(db, p, "talent_up", { weapon: "fist", branch: "n2" }, T0 + M)).rejects.toMatchObject({ code: "max_level" });
+  });
+
+  it("the tree: +30 steps of damage and +200% crit power per weapon for 100 talents", async () => {
+    const { talentTree, weaponTalentBonus, talentsSpent } = await import("../src/content/talents.ts");
+    for (const w of ["fist", "mouse", "red-candle", "keyboard", "gpu", "rug-pull-gun"]) {
+      const tree = talentTree(w);
+      const full = { [w]: Object.fromEntries(tree.map((n) => [n.id, n.max])) };
+      expect(talentsSpent(full)).toBe(100);
+      expect(weaponTalentBonus(full, w).critDamage).toBeCloseTo(2);
+      expect(weaponTalentBonus(full, w).flat).toBe(30 * tree[0].per);
+    }
+    expect(weaponTalentBonus({ fist: { n1: 10, n2: 0, n3: 20 } }, "fist").flat).toBe(30);
+  });
+
+  it("the talent reset costs 5 USD and gives every spent talent back", async () => {
+    const p = await newPlayer(db);
+    await expect(act(db, p, "talent_reset", {}, T0)).rejects.toMatchObject({ code: "nothing_to_reset" });
+    await db.query("INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,'fist','n1',10),($1,'fist','n2',10),($1,'gpu','n1',3),($1,'fist','n3',4)", [p]);
+    await db.query("UPDATE players SET talents = 7 WHERE id=$1", [p]);
+    await setMoney(db, p, "USD", 4);
+    await expect(act(db, p, "talent_reset", {}, T0)).rejects.toMatchObject({ code: "no_money" });
+    await setMoney(db, p, "USD", 12);
+    const r = await act(db, p, "talent_reset", {}, T0);
+    expect(r.result).toMatchObject({ returned: 10 + 10 + 3 + 8, talents: 7 + 31 });
+    expect(r.state.weaponTalents).toEqual({});
+    expect(await wallet(db, p, "USD")).toBe(7);
+  });
+
+  it("tree migration: old branches are refunded, mice and candles become one free each", async () => {
+    const p = await newPlayer(db), q = await newPlayer(db);
+    await db.query("UPDATE players SET talents = 1 WHERE id=$1", [p]);
+    // old costs: levels 1–3 → 1 each, 4–6 → 2, 7–9 → 3, 10 → 4: level 4 = 5, level 10 = 22
+    await db.query("INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,'fist','dmg',4),($1,'gpu','crit',10)", [p]);
+    await give(db, p, "mouse", 5);
+    await give(db, p, "red-candle", 3);
+    await db.query("DELETE FROM inventory WHERE player_id=$1 AND item_id IN ('mouse','red-candle')", [q]);
+    await db.query("INSERT INTO yard_items (player_id, slot, drop_id, spawned_at) VALUES ($1, 0, 'red-candle', now())", [q]);
+    const rub = await wallet(db, p, "RUB");
+    await db.exec(MIGRATIONS.find((m) => m.id === "v2-024-talent-tree-free-weapons")!.sql);
+    const [row] = await db.query<{ talents: number }>("SELECT talents FROM players WHERE id=$1", [p]);
+    expect(row.talents).toBe(1 + 5 + 22);
+    expect(await db.query("SELECT 1 FROM player_talents")).toHaveLength(0);
+    expect(await wallet(db, p, "RUB")).toBe(rub + 4 * 60 + 2 * 100);
+    for (const x of [p, q]) expect([await qty(db, x, "mouse"), await qty(db, x, "red-candle")]).toEqual([1, 1]);
+    expect(await db.query("SELECT 1 FROM yard_items WHERE drop_id='red-candle'")).toHaveLength(0);
   });
 
   it("talents migration: computer parts are refunded, damage so far is counted on the new curve", async () => {
@@ -726,21 +784,21 @@ describe("admin", () => {
     const { edit, player } = await import("../src/server/admin.ts");
     const p = await newPlayer(db);
     await edit(db, 777, p, { op: "set_money", currency: "RUB", amount: 12345 });
-    await edit(db, 777, p, { op: "set_item", item: "mouse", qty: 50 });
+    await edit(db, 777, p, { op: "set_item", item: "keyboard", qty: 50 });
     await edit(db, 777, p, { op: "set_xp", value: 999 });
-    await edit(db, 777, p, { op: "set_talent", weapon: "fist", branch: "dmg", level: 3 });
+    await edit(db, 777, p, { op: "set_talent", weapon: "fist", branch: "n1", level: 3 });
     await edit(db, 777, p, { op: "set_name", value: "Тест" });
     expect(await wallet(db, p, "RUB")).toBe(12345);
-    expect(await qty(db, p, "mouse")).toBe(50);
-    await edit(db, 777, p, { op: "set_item", item: "mouse", qty: 0 });
-    expect(await qty(db, p, "mouse")).toBe(0);
+    expect(await qty(db, p, "keyboard")).toBe(50);
+    await edit(db, 777, p, { op: "set_item", item: "keyboard", qty: 0 });
+    expect(await qty(db, p, "keyboard")).toBe(0);
     await expect(edit(db, 777, p, { op: "set_item", item: "fist", qty: 5 })).rejects.toThrow();
     const v = await player(db, p);
     expect(v.player.display_name).toBe("Тест");
     expect(Number(v.player.xp)).toBe(999);
-    expect(v.talents).toEqual([{ weapon_id: "fist", branch: "dmg", level: 3 }]);
+    expect(v.talents).toEqual([{ weapon_id: "fist", branch: "n1", level: 3 }]);
     expect(v.admin.length).toBe(6);
-    expect(v.ledger.some((l) => l.reason === "admin:777" && l.key === "mouse" && Number(l.delta) === -50)).toBe(true);
+    expect(v.ledger.some((l) => l.reason === "admin:777" && l.key === "keyboard" && Number(l.delta) === -50)).toBe(true);
   });
   it("a banned player cannot act until unbanned", async () => {
     const { edit } = await import("../src/server/admin.ts");
@@ -803,7 +861,7 @@ describe("admin: reset a player", () => {
     await setMoney(db, p, "RUB", 50_000);
     await give(db, p, "rug-pull-gun", 40);
     await edit(db, 1, p, { op: "set_xp", value: 123_456 });
-    await edit(db, 1, p, { op: "set_talent", weapon: "fist", branch: "dmg", level: 4 });
+    await edit(db, 1, p, { op: "set_talent", weapon: "fist", branch: "n1", level: 4 });
     await act(db, p, "task", { taskId: "os-standup" }, T0);
     const c = await act(db, p, "clan_create", { name: "Сбросники", tag: "SBR", emblem: "skull", color: "#ff4d6d" }, T0);
     const clanId = c.result.clanId;

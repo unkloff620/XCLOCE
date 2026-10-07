@@ -12,7 +12,7 @@ import { ENERGY } from "../content/levels.ts";
 import { CURRENCIES, floorTo, isCurrency } from "../content/currencies.ts";
 import { itemById } from "../content/items.ts";
 import { levelFromXp } from "../content/levels.ts";
-import { TALENT_BRANCHES, TALENT_WEAPONS } from "../content/talents.ts";
+import { TALENT_WEAPONS, talentTree } from "../content/talents.ts";
 
 const n = (v: unknown) => Number(v ?? 0);
 
@@ -252,9 +252,9 @@ export async function edit(db: Db, adminTg: number, pid: number, e: Edit) {
         break;
       }
       case "set_talent": {
-        const br = TALENT_BRANCHES.find((b) => b.id === e.branch);
-        if (!br || !TALENT_WEAPONS.includes(e.weapon)) throw bad("Неизвестное оружие или ветка");
-        const to = wholeIn(e.level, 0, br.maxLevel, `Уровень ветки «${br.name}»`);
+        const br = TALENT_WEAPONS.includes(e.weapon) ? talentTree(e.weapon).find((b) => b.id === e.branch) : undefined;
+        if (!br) throw bad("Неизвестное оружие или улучшение");
+        const to = wholeIn(e.level, 0, br.max, `Уровень «${br.name}»`);
         const [r] = await q.query<{ level: number }>("SELECT level FROM player_talents WHERE player_id=$1 AND weapon_id=$2 AND branch=$3", [pid, e.weapon, e.branch]);
         await q.query(
           "INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,$2,$3,$4) ON CONFLICT (player_id, weapon_id, branch) DO UPDATE SET level = EXCLUDED.level",

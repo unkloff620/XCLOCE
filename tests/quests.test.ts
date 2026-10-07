@@ -35,7 +35,7 @@ describe("daily quests", () => {
     await act(db, p, "fight_start", { boss: "datsik" }, T0);
     const r = await act(db, p, "attack", { weapon: "red-candle" }, T0, always(0.99));
     const q0 = r.state.quests.list[0];
-    expect(q0.progress).toBe(q0.id === "q-damage" ? 50 : 1);
+    expect(q0.progress).toBe(q0.id === "q-damage" ? 30 : 1);
   });
 
   it("a location step counts toward steps / energy quests", async () => {
@@ -102,10 +102,12 @@ describe("Telegram reminders", () => {
     await act(db, a, "fight_start", { boss: "datsik" }, T0);
     await act(db, b, "fight_start", { boss: "datsik" }, T0);
     await act(db, a, "attack", { weapon: "fist" }, T0, always(0.99));
-    expect((await notes(a)).find((x) => x.kind === "fist_ready")?.due_at).toEqual(new Date(T0 + 60 * M));
-    await give(db, a, "red-candle", 10);
-    for (let i = 0; i < 3; i++) await act(db, a, "attack", { weapon: "red-candle" }, T0 + M, always(0.99));
-    // 10 + 150 = 160 of 200 → 20% left
+    expect((await notes(a)).find((x) => x.kind === "fist_ready")?.due_at).toEqual(new Date(T0 + 300 * M));
+    await give(db, a, "gpu", 10);
+    for (let i = 0; i < 2; i++) await act(db, a, "attack", { weapon: "gpu" }, T0 + M, always(0.99));
+    // 12 + 120 = 132 of 200 → 34% left; one more GPU → 192, 4% left
+    expect((await notes(b)).some((x) => x.kind === "boss_low")).toBe(false);
+    await act(db, a, "attack", { weapon: "gpu" }, T0 + M, always(0.99));
     const low = (await notes(b)).filter((x) => x.kind === "boss_low");
     expect(low).toHaveLength(1);
     expect(low[0].meta).toMatchObject({ bossId: "datsik" });

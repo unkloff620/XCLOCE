@@ -10,7 +10,7 @@ import { locationById, taskById } from "../content/locations.ts";
 import { questById } from "../content/quests.ts";
 import { achievementById } from "../content/achievements.ts";
 import { equipmentById, roomById } from "../content/home.ts";
-import { TALENT_BRANCHES } from "../content/talents.ts";
+import { talentTree } from "../content/talents.ts";
 
 type Row = Record<string, unknown>;
 const SYMBOLS: Record<string, string> = { seven: "7", btc: "BTC", sol: "SOL", usd: "USD", keyboard: "клавиатура", candle: "свеча", rub: "RUB" };
@@ -21,7 +21,7 @@ const fmt = (v: unknown) => n(v).toLocaleString("ru-RU", { maximumFractionDigits
 const item = (id: unknown) => itemById(String(id))?.name ?? String(id);
 const join = (...parts: (string | null | undefined | false)[]) => parts.filter(Boolean).join(" · ");
 
-/** «+300 RUB, +200 авторитета, Мышь ×3» */
+/** «+300 RUB, +200 авторитета, Клавиатура ×3» */
 export function grantedText(g: unknown): string {
   if (!g || typeof g !== "object") return "";
   const r = g as Partial<Granted>;
@@ -64,7 +64,8 @@ export function actionText(type: string, body: Row, result: unknown): string | n
     case "fight_flee": return r.fightId ? `бой #${r.fightId}` : null;
     case "daily_claim": return join(`день ${r.day}`, `серия ${r.streak}`, grantedText(r.reward));
     case "rename": return `новое имя «${r.name ?? body.name}»`;
-    case "talent_up": return `${item(r.weapon ?? body.weapon)}: ${TALENT_BRANCHES.find((b) => b.id === (r.branch ?? body.branch))?.name ?? body.branch} → уровень ${r.level}`;
+    case "talent_up": return `${item(r.weapon ?? body.weapon)}: ${talentTree(String(r.weapon ?? body.weapon)).find((n) => n.id === (r.branch ?? body.branch))?.name ?? body.branch} → ${r.level}/${r.max}`;
+    case "talent_reset": return `сброс талантов за ${r.price ? `${(r.price as { amount: number }).amount} USD` : "5 USD"} · вернулось ${fmt(r.returned)}`;
     case "equipment_upgrade": return `${equipmentById(String(r.id ?? body.id))?.name ?? body.id} → уровень ${r.level}`;
     case "room_buy":
     case "room_set": return roomById(String(r.room ?? body.id))?.name ?? String(body.id);

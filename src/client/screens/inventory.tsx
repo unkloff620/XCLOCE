@@ -125,7 +125,7 @@ export function InventoryScreen() {
                     </>
                   );
                 })()}
-                <span className="chip">{open.weapon.kind === "permanent" ? `перезарядка ${open.weapon.cooldownMin} мин` : "расходник"}</span>
+                <span className="chip">{open.weapon.kind === "permanent" ? `бесплатно · перезарядка ${(open.weapon.cooldownMin ?? 0) >= 60 ? `${Math.round((open.weapon.cooldownMin ?? 0) / 60)} ч` : `${open.weapon.cooldownMin} мин`}` : "расходник"}</span>
               </div>
             )}
             <p className="center" style={{ margin: "10px 0" }}>{open.description}</p>

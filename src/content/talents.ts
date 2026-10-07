@@ -42,26 +42,59 @@ export function talentsForDamage(damage: number): number {
   return k;
 }
 
-/* ---------------- ветки оружия ---------------- */
-
-export type TalentBranch = "dmg" | "crit";
-export interface BranchDef { id: TalentBranch; name: string; short: string; perLevel: number; maxLevel: number }
-/** +10% damage of that weapon per level (+100% at the top); +20% crit power of that weapon per level (+200% at the top; crit chance comes from the room) */
-export const TALENT_BRANCHES: BranchDef[] = [
-  { id: "dmg", name: "Урон", short: "урон", perLevel: 0.1, maxLevel: 10 },
-  { id: "crit", name: "Сила крита", short: "крит", perLevel: 0.2, maxLevel: 10 },
-];
-export const branchById = (id: string) => TALENT_BRANCHES.find((b) => b.id === id);
-/** talents for level `level` (1-based) of a branch: 1,1,1,2,2,2,3,3,3,4 — 22 for a whole branch */
-export const talentCost = (level: number) => Math.min(4, Math.ceil(level / 3));
+/* ---------------- дерево талантов оружия ---------------- */
+/*
+ * У каждого оружия, даже у кулака, своя ветка из четырёх улучшений, одно под другим. Следующее открывается,
+ * когда предыдущее прокачано до конца:
+ *   1. Урон +N за уровень, 10 уровней, по 1 таланту
+ *   2. Сила крита +5% за уровень, 10 уровней, по 1 таланту
+ *   3. Урон +N за уровень, 20 уровней, по 2 таланта
+ *   4. Сила крита +7,5% за уровень, 20 уровней, по 2 таланта
+ * Итого на оружие: +30·N урона и +200% к силе крита за 100 талантов. N — шаг урона этого оружия (≈ 1/12 базового урона).
+ * Сброс всех талантов — за 5 USD: потраченные таланты возвращаются.
+ */
+export type TalentBranch = "n1" | "n2" | "n3" | "n4";
+export interface TalentNode { id: TalentBranch; kind: "dmg" | "crit"; name: string; per: number; max: number; cost: number }
+/** damage added by one level of the damage upgrades of each weapon */
+export const TALENT_DMG_STEP: Record<string, number> = { fist: 1, mouse: 2, "red-candle": 3, keyboard: 3, gpu: 5, "rug-pull-gun": 20 };
+export function talentTree(weapon: string): TalentNode[] {
+  const step = TALENT_DMG_STEP[weapon] ?? 1;
+  return [
+    { id: "n1", kind: "dmg", name: "Урон", per: step, max: 10, cost: 1 },
+    { id: "n2", kind: "crit", name: "Сила крита", per: 0.05, max: 10, cost: 1 },
+    { id: "n3", kind: "dmg", name: "Урон II", per: step, max: 20, cost: 2 },
+    { id: "n4", kind: "crit", name: "Сила крита II", per: 0.075, max: 20, cost: 2 },
+  ];
+}
+export const TALENT_NODE_IDS: TalentBranch[] = ["n1", "n2", "n3", "n4"];
 /** every weapon has its own tree, the fist too */
 export const TALENT_WEAPONS = WEAPONS.map((w) => w.id);
+/** resetting all talents (they all come back) */
+export const TALENT_RESET_PRICE = { currency: "USD" as const, amount: 5 };
 
-/** levels of the player's weapon talents: weapon → branch → level */
+/** levels of the player's weapon talents: weapon → upgrade → level */
 export type WeaponTalents = Record<string, Partial<Record<TalentBranch, number>>>;
-/** the bonus the talents give one weapon */
-export function weaponTalentBonus(t: WeaponTalents, weapon: string): { damage: number; critDamage: number } {
-  const w = t[weapon] ?? {};
-  const lv = (b: TalentBranch) => Math.min(w[b] ?? 0, branchById(b)!.maxLevel);
-  return { damage: lv("dmg") * branchById("dmg")!.perLevel, critDamage: lv("crit") * branchById("crit")!.perLevel };
+/** an upgrade can be bought once the one above it is full */
+export function nodeOpen(levels: Partial<Record<TalentBranch, number>>, weapon: string, node: TalentBranch): boolean {
+  const tree = talentTree(weapon);
+  const i = tree.findIndex((n) => n.id === node);
+  if (i <= 0) return i === 0;
+  return (levels[tree[i - 1].id] ?? 0) >= tree[i - 1].max;
+}
+/** talents spent on all the upgrades (what a reset gives back) */
+export function talentsSpent(t: WeaponTalents): number {
+  let sum = 0;
+  for (const [w, lv] of Object.entries(t)) for (const n of talentTree(w)) sum += Math.min(lv[n.id] ?? 0, n.max) * n.cost;
+  return sum;
+}
+/** the bonus the talents give one weapon: flat damage added to the base, and crit power */
+export function weaponTalentBonus(t: WeaponTalents, weapon: string): { flat: number; critDamage: number } {
+  const lv = t[weapon] ?? {};
+  let flat = 0, critDamage = 0;
+  for (const n of talentTree(weapon)) {
+    const l = Math.min(lv[n.id] ?? 0, n.max);
+    if (n.kind === "dmg") flat += l * n.per;
+    else critDamage += l * n.per;
+  }
+  return { flat, critDamage: Math.round(critDamage * 1000) / 1000 };
 }

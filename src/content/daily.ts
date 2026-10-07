@@ -7,7 +7,7 @@ import type { Reward } from "./rewards.ts";
  */
 export const DAILY_REWARDS: Reward[] = [
   { currencies: { RUB: 300 }, xp: 200 },
-  { currencies: { RUB: 500 }, items: [{ id: "red-candle", qty: 2 }], xp: 400 },
+  { currencies: { RUB: 500 }, items: [{ id: "keyboard", qty: 1 }], xp: 400 },
   { currencies: { RUB: 700 }, energy: 25, xp: 700 },
   { currencies: { RUB: 900 }, items: [{ id: "keyboard", qty: 1 }], xp: 1_000 },
   { currencies: { USD: 10 }, energy: 40, xp: 1_500 },

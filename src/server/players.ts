@@ -8,7 +8,8 @@ import { ENERGY } from "../content/levels.ts";
 const START_RUB = 500;
 const START_ITEMS: { id: string; qty: number }[] = [
   { id: "fist", qty: 1 },
-  { id: "red-candle", qty: 3 },
+  { id: "mouse", qty: 1 },
+  { id: "red-candle", qty: 1 },
   ...Object.values(STARTER_OUTFIT).map((id) => ({ id: id as string, qty: 1 })),
 ];
 

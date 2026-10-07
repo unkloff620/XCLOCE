@@ -1,7 +1,7 @@
 import { GameError, type Queryable } from "../db.ts";
-import { takeMoney, type Ctx } from "../core.ts";
+import { ledger, takeMoney, type Ctx } from "../core.ts";
 import { EQUIPMENT, HELP_TOPICS, TROPHIES, equipmentById, normalizeLook, roomById, totalBonus, type HelpTopic, type Look } from "../../content/home.ts";
-import { TALENT_WEAPONS, branchById, talentCost, type WeaponTalents } from "../../content/talents.ts";
+import { TALENT_RESET_PRICE, TALENT_WEAPONS, nodeOpen, talentTree, talentsSpent, type TalentBranch, type WeaponTalents } from "../../content/talents.ts";
 
 /*
  * Дом: оборудование (уровни), комнаты (купить / выбрать), внешность персонажа, просмотренные подсказки.
@@ -55,31 +55,45 @@ export async function upgradeEquipment(ctx: Ctx, id: string) {
 export async function weaponTalents(q: Queryable, pid: number): Promise<WeaponTalents> {
   const rows = await q.query<{ weapon_id: string; branch: string; level: number }>("SELECT weapon_id, branch, level FROM player_talents WHERE player_id=$1 AND level > 0", [pid]);
   const out: WeaponTalents = {};
-  for (const r of rows) (out[r.weapon_id] ??= {})[r.branch as "dmg" | "crit"] = r.level;
+  for (const r of rows) (out[r.weapon_id] ??= {})[r.branch as TalentBranch] = r.level;
   return out;
 }
 
-/** One more level of a weapon's branch (damage or crit power), paid with talents. */
-export async function upgradeTalent(ctx: Ctx, weaponId: string, branchId: string) {
-  const br = branchById(branchId);
-  if (!br || !TALENT_WEAPONS.includes(weaponId)) throw new GameError("bad_talent", "Такой ветки нет");
-  const [cur] = await ctx.q.query<{ level: number }>("SELECT level FROM player_talents WHERE player_id=$1 AND weapon_id=$2 AND branch=$3", [ctx.pid, weaponId, br.id]);
-  const lv = cur?.level ?? 0;
-  if (lv >= br.maxLevel) throw new GameError("max_level", `${br.name}: уже максимальный уровень`);
-  const cost = talentCost(lv + 1);
+/** One more level of an upgrade in a weapon's tree, paid with talents; an upgrade opens when the one above is full. */
+export async function upgradeTalent(ctx: Ctx, weaponId: string, nodeId: string) {
+  const node = TALENT_WEAPONS.includes(weaponId) ? talentTree(weaponId).find((n) => n.id === nodeId) : undefined;
+  if (!node) throw new GameError("bad_talent", "Такого улучшения нет");
+  const all = await weaponTalents(ctx.q, ctx.pid);
+  const mine = all[weaponId] ?? {};
+  if (!nodeOpen(mine, weaponId, node.id)) throw new GameError("talent_locked", "Сначала прокачай до конца улучшение выше");
+  const lv = mine[node.id] ?? 0;
+  if (lv >= node.max) throw new GameError("max_level", `${node.name}: уже максимальный уровень`);
   const [p] = await ctx.q.query<{ talents: number }>(
     "UPDATE players SET talents = talents - $2 WHERE id=$1 AND talents >= $2 RETURNING talents",
-    [ctx.pid, cost],
+    [ctx.pid, node.cost],
   );
-  if (!p) throw new GameError("no_talents", `Не хватает талантов: нужно ${cost}`);
+  if (!p) throw new GameError("no_talents", `Не хватает талантов: нужно ${node.cost}`);
   const [row] = await ctx.q.query<{ level: number }>(
     `INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,$2,$3,$4)
      ON CONFLICT (player_id, weapon_id, branch) DO UPDATE SET level = EXCLUDED.level WHERE player_talents.level = $5
      RETURNING level`,
-    [ctx.pid, weaponId, br.id, lv + 1, lv],
+    [ctx.pid, weaponId, node.id, lv + 1, lv],
   );
   if (!row) throw new GameError("conflict", "Талант уже улучшен, обнови экран");
-  return { weapon: weaponId, branch: br.id, level: lv + 1, max: br.maxLevel, talents: p.talents };
+  await ledger(ctx, "talent", "talent", -node.cost, `talent:${weaponId}:${node.id}`);
+  return { weapon: weaponId, branch: node.id, level: lv + 1, max: node.max, talents: p.talents };
+}
+
+/** All talents back for 5 USD: every upgrade goes to 0, the spent talents return to the counter. */
+export async function resetTalents(ctx: Ctx) {
+  const all = await weaponTalents(ctx.q, ctx.pid);
+  const back = talentsSpent(all);
+  if (back <= 0) throw new GameError("nothing_to_reset", "Таланты ещё не вложены — сбрасывать нечего");
+  await takeMoney(ctx, TALENT_RESET_PRICE.currency, TALENT_RESET_PRICE.amount, "talent-reset");
+  await ctx.q.query("DELETE FROM player_talents WHERE player_id=$1", [ctx.pid]);
+  const [p] = await ctx.q.query<{ talents: number }>("UPDATE players SET talents = talents + $2 WHERE id=$1 RETURNING talents", [ctx.pid, back]);
+  await ledger(ctx, "talent", "talent", back, "talent-reset");
+  return { returned: back, talents: p.talents, price: TALENT_RESET_PRICE };
 }
 
 export async function buyRoom(ctx: Ctx, id: string) {

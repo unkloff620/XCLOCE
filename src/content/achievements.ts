@@ -101,7 +101,7 @@ export const CLAN_PRIZES: Reward[] = [
   { currencies: { RUB: 5000 }, xp: 10_000, items: [{ id: "rug-pull-gun", qty: 3 }] },
   { currencies: { RUB: 2500 }, xp: 5_000, items: [{ id: "rug-pull-gun", qty: 1 }] },
   { currencies: { RUB: 1250 }, xp: 2_500, items: [{ id: "gpu", qty: 1 }] },
-  ...Array.from({ length: 7 }, () => ({ currencies: { RUB: 250 }, xp: 500, items: [{ id: "red-candle", qty: 2 }] }) as Reward),
+  ...Array.from({ length: 7 }, () => ({ currencies: { RUB: 250 }, xp: 500, items: [{ id: "keyboard", qty: 1 }] }) as Reward),
 ];
 
 /** frame on the player card for last week's place */

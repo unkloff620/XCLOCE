@@ -8,7 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import "./admin.css";
 import { ITEMS, itemById } from "../../content/items.ts";
 import { CURRENCIES } from "../../content/currencies.ts";
-import { TALENT_BRANCHES, TALENT_WEAPONS } from "../../content/talents.ts";
+import { TALENT_NODE_IDS, TALENT_WEAPONS, talentTree } from "../../content/talents.ts";
 import { bossById } from "../../content/bosses.ts";
 import { offerById } from "../../content/shop.ts";
 import { taskById } from "../../content/locations.ts";
@@ -17,7 +17,7 @@ const TOKEN_KEY = "xcloce.admin";
 const ACTION_TYPES = [
   "fight_start", "fight_claim", "fight_flee", "task", "location_claim", "yard_pick", "buy", "exchange", "use", "equip", "unequip",
   "clan_create", "clan_join", "clan_leave", "clan_kick", "clan_edit", "daily_claim", "sell", "rename", "slots_spin",
-  "equipment_upgrade", "talent_up", "room_buy", "room_set", "look_set", "decor_set", "quest_claim", "quest_chest",
+  "equipment_upgrade", "talent_up", "talent_reset", "room_buy", "room_set", "look_set", "decor_set", "quest_claim", "quest_chest",
   "notify_set", "achievement_claim", "prize_claim",
 ];
 const ACTION_NAMES: Record<string, string> = {
@@ -25,7 +25,7 @@ const ACTION_NAMES: Record<string, string> = {
   yard_pick: "находка во дворе", buy: "покупка", exchange: "обмен", use: "использовал", equip: "надел", unequip: "снял",
   clan_create: "создал клан", clan_join: "вступил в клан", clan_leave: "вышел из клана", clan_kick: "исключил из клана", clan_edit: "изменил клан",
   daily_claim: "ежедневная награда", sell: "продажа", rename: "смена имени", slots_spin: "автомат 777", equipment_upgrade: "улучшение комнаты",
-  talent_up: "талант", room_buy: "купил комнату", room_set: "сменил комнату", look_set: "внешность", decor_set: "декор",
+  talent_up: "талант", talent_reset: "сброс талантов", room_buy: "купил комнату", room_set: "сменил комнату", look_set: "внешность", decor_set: "декор",
   quest_claim: "задание дня", quest_chest: "сундук дня", notify_set: "уведомления", achievement_claim: "достижение", prize_claim: "приз недели",
 };
 const OP_NAMES: Record<string, string> = {
@@ -660,7 +660,7 @@ function EditInfo({ op, info }: { op: string; info: unknown }) {
   const label =
     op === "set_money" ? String(i.currency ?? "") :
     op === "set_item" ? itemById(String(i.item))?.name ?? String(i.item ?? "") :
-    op === "set_talent" ? `${itemById(String(i.weapon))?.name ?? i.weapon}: ${TALENT_BRANCHES.find((b) => b.id === i.branch)?.name ?? i.branch}` :
+    op === "set_talent" ? `${itemById(String(i.weapon))?.name ?? i.weapon}: ${talentTree(String(i.weapon)).find((b) => b.id === i.branch)?.name ?? i.branch}` :
     op === "set_xp" ? "Авторитет" : op === "set_energy" ? "Энергия" : op === "set_talents" ? "Свободные таланты" : op === "set_name" ? "Имя" : "";
   if (op === "ban") return <span className="bad">заблокирован{i.reason ? `: ${i.reason}` : ""}</span>;
   if (op === "unban") return <span className="good">разблокирован</span>;
@@ -886,11 +886,14 @@ function Talents({ rows, edit }: { rows: Row[]; edit: EditFn }) {
     <Box title="Ветки талантов">
       <Table rows={TALENT_WEAPONS.map((w) => ({ id: w }))} cols={[
         ["Оружие", (r) => itemById(String(r.id))?.name ?? String(r.id)],
-        ...TALENT_BRANCHES.map((b) => [b.name, (r: Row) => (
-          <select className="adm-in sm" value={level(String(r.id), b.id)} onChange={(e) => edit({ op: "set_talent", weapon: r.id, branch: b.id, level: Number(e.target.value) }, `${itemById(String(r.id))?.name}: ${b.name}`)}>
-            {Array.from({ length: b.maxLevel + 1 }, (_, i) => <option key={i} value={i}>{i}</option>)}
-          </select>
-        ), "r"] as [string, (r: Row) => ReactNode, string]),
+        ...TALENT_NODE_IDS.map((id, k) => [talentTree("fist")[k].name, (r: Row) => {
+          const b = talentTree(String(r.id))[k];
+          return (
+            <select className="adm-in sm" value={level(String(r.id), id)} onChange={(e) => edit({ op: "set_talent", weapon: r.id, branch: id, level: Number(e.target.value) }, `${itemById(String(r.id))?.name}: ${b.name}`)}>
+              {Array.from({ length: b.max + 1 }, (_, i) => <option key={i} value={i}>{i}</option>)}
+            </select>
+          );
+        }, "r"] as [string, (r: Row) => ReactNode, string]),
       ]} />
     </Box>
   );

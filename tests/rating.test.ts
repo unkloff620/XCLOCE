@@ -31,15 +31,15 @@ describe("rating", () => {
     const a = await newPlayer(db);
     const b = await newPlayer(db);
     for (const p of [a, b]) {
-      await give(db, p, "red-candle", 5);
+      await give(db, p, "keyboard", 5);
       await act(db, p, "fight_start", { boss: "datsik" }, T0);
     }
-    await act(db, a, "attack", { weapon: "red-candle" }, T0, always(0.99));
-    await act(db, b, "attack", { weapon: "red-candle" }, T0, always(0.99));
-    await act(db, b, "attack", { weapon: "red-candle" }, T0, always(0.99));
+    await act(db, a, "attack", { weapon: "keyboard" }, T0, always(0.99));
+    await act(db, b, "attack", { weapon: "keyboard" }, T0, always(0.99));
+    await act(db, b, "attack", { weapon: "keyboard" }, T0, always(0.99));
     const v = await ratingView(db, a, await loadConfig(db), T0);
-    expect(v.damage.map((r) => [r.id, r.value])).toEqual([[b, 100], [a, 50]]);
-    expect(v.me.damage).toEqual({ value: 50, place: 2 });
+    expect(v.damage.map((r) => [r.id, r.value])).toEqual([[b, 60], [a, 30]]);
+    expect(v.me.damage).toEqual({ value: 30, place: 2 });
   });
 
   it("a finished week is settled once: top-10 prizes, frames for the leaders, prizes collected by the winners", async () => {
@@ -99,10 +99,10 @@ describe("achievements and someone's profile", () => {
   it("a badge tier is collected once, only when reached; the profile shows badges and the room", async () => {
     const p = await newPlayer(db);
     await expect(act(db, p, "achievement_claim", { id: "hits-1" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
-    await give(db, p, "red-candle", 10);
+    await give(db, p, "keyboard", 10);
     await act(db, p, "fight_start", { boss: "datsik" }, T0);
     let hit;
-    for (let i = 0; i < 10; i++) hit = await act(db, p, "attack", { weapon: "red-candle" }, T0, always(0.99));
+    for (let i = 0; i < 10; i++) hit = await act(db, p, "attack", { weapon: "keyboard" }, T0, always(0.99));
     expect(hit!.state.achievementsReady).toBeGreaterThanOrEqual(1);
     await expect(act(db, p, "achievement_claim", { id: "hits-2" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
     const rub = await wallet(db, p, "RUB");

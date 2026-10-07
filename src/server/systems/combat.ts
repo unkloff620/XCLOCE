@@ -116,9 +116,7 @@ export async function startFight(ctx: Ctx, bossId: string, solo = false) {
     "INSERT INTO fights (player_id, boss_id, hp_max, start_total, start_seq, started_at, ends_at, day, solo) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id",
     [ctx.pid, def.id, hpMax, boss.damage_total, boss.last_seq, new Date(ctx.now), new Date(ctx.now + ctx.cfg.fight.hours * 3600_000), day, solo],
   );
-  // every new fight starts with rested hands: permanent weapons (the fist) are ready again
-  const permanent = WEAPONS.filter((x) => x.weapon?.kind === "permanent").map((x) => x.id);
-  await ctx.q.query("DELETE FROM cooldowns WHERE player_id=$1 AND item_id = ANY($2)", [ctx.pid, permanent]);
+  // the free weapons (fist, mouse, candle) keep their 5-hour rest across fights: a new fight does not reset it
   return { fightId: f.id, bossId: def.id, solo };
 }
 
@@ -176,7 +174,8 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string): Promise
     // home bonuses: +damage %, crit chance and crit power (equipment + rooms); this weapon's talents: +damage %, crit power
     const bonus = await playerBonus(ctx.q, ctx.pid);
     const wt = weaponTalentBonus(await weaponTalents(ctx.q, ctx.pid), w.id);
-    let damage = Math.round(w.weapon.damage * (1 + bonus.damage + wt.damage));
+    // talents add flat damage to the weapon's base; the room and trophies multiply the sum
+    let damage = Math.round((w.weapon.damage + wt.flat) * (1 + bonus.damage));
     const crit = bonus.critChance > 0 && ctx.rng() < bonus.critChance;
     if (crit) damage = Math.round(damage * (BASE_CRIT_MULT + bonus.critDamage + wt.critDamage));
     const seq = boss.last_seq + 1;

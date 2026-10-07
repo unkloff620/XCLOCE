@@ -2,6 +2,7 @@ import type { Db, Queryable } from "./db.ts";
 import { loadConfig } from "./config.ts";
 import { energyNow, moscowDay } from "./core.ts";
 import { bossById } from "../content/bosses.ts";
+import { itemById } from "../content/items.ts";
 import { log } from "./log.ts";
 
 /*
@@ -37,9 +38,11 @@ async function textFor(q: Queryable, n: Due, now: number): Promise<string | null
         "SELECT boss_id FROM fights WHERE player_id=$1 AND status='active' AND ends_at > $2",
         [n.player_id, new Date(now)],
       );
-      const [cd] = await q.query<{ ready_at: Date }>("SELECT ready_at FROM cooldowns WHERE player_id=$1 AND item_id='fist'", [n.player_id]);
+      const weapon = typeof n.meta.weapon === "string" ? n.meta.weapon : "fist";
+      const [cd] = await q.query<{ ready_at: Date }>("SELECT ready_at FROM cooldowns WHERE player_id=$1 AND item_id=$2", [n.player_id, weapon]);
       if (!f || (cd && new Date(cd.ready_at).getTime() > now)) return null;
-      return `👊 Кулак перезарядился!\n${bossById(f.boss_id)?.name ?? "Босс"} ждёт следующего удара.`;
+      const icon = weapon === "mouse" ? "🖱" : weapon === "red-candle" ? "🕯" : "👊";
+      return `${icon} ${itemById(weapon)?.name ?? "Оружие"} снова готово к бою!\n${bossById(f.boss_id)?.name ?? "Босс"} ждёт следующего удара.`;
     }
     case "boss_low": {
       const fightId = Number(n.meta.fightId);

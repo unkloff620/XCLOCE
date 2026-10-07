@@ -40,10 +40,10 @@ export const LOCATIONS: LocationDef[] = [
       t("os-standup", "Пережить планёрку", "Кивать в нужных местах — тоже навык.", 3, 5, 12),
       t("os-coffee", "Добыть кофе из автомата", "Автомат принимает только монеты 2009 года.", 3, 5, 12),
       t("os-chat", "Прочитать рабочий чат", "312 непрочитанных. 300 из них — стикеры.", 4, 6, 12),
-      t("os-printer", "Починить принтер", "Он не сломан. Он просто тебя не любит.", 4, 6, 12, { items: [{ id: "red-candle", qty: 2 }] }),
+      t("os-printer", "Починить принтер", "Он не сломан. Он просто тебя не любит.", 4, 6, 12, { items: [{ id: "keyboard", qty: 1 }] }),
       t("os-deadline", "Сдать задачу «на вчера»", "Вчера было вчера.", 5, 7, 12, { items: [{ id: "energy-drink", qty: 1 }] }),
     ],
-    reward: { currencies: { USD: 5, RUB: 300 }, xp: 1_000, items: [{ id: "red-candle", qty: 10 }, { id: "tee-pump", qty: 1 }] },
+    reward: { currencies: { USD: 5, RUB: 300 }, xp: 1_000, items: [{ id: "keyboard", qty: 5 }, { id: "tee-pump", qty: 1 }] },
   },
   {
     id: "market", order: 2, name: "Крипто-рынок", subtitle: "Купи на хаях, продай на лоях", scene: "market",

@@ -46,7 +46,7 @@ export const questById = (id: string) => QUESTS.find((q) => q.id === id);
 /** The chest for all three: a fixed part plus one weapon by chance. */
 export const QUEST_CHEST_BASE: Reward = { currencies: { RUB: 500, USD: 3 }, energy: 20, xp: 2_000 };
 export const QUEST_CHEST_LOOT: { v: { id: string; qty: number }; w: number }[] = [
-  { v: { id: "red-candle", qty: 3 }, w: 45 },
+  { v: { id: "keyboard", qty: 2 }, w: 45 },
   { v: { id: "keyboard", qty: 1 }, w: 35 },
   { v: { id: "gpu", qty: 1 }, w: 17 },
   { v: { id: "rug-pull-gun", qty: 1 }, w: 3 },

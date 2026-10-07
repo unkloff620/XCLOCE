@@ -48,7 +48,7 @@ export const ACTIONS = [
   "buy", "exchange", "use", "equip", "unequip",
   "clan_create", "clan_join", "clan_leave", "clan_kick",
   "daily_claim", "sell", "rename", "slots_spin",
-  "equipment_upgrade", "talent_up", "room_buy", "room_set", "look_set", "decor_set", "help_seen",
+  "equipment_upgrade", "talent_up", "talent_reset", "room_buy", "room_set", "look_set", "decor_set", "help_seen",
   "quest_claim", "quest_chest", "notify_set", "achievement_claim", "prize_claim", "clan_edit",
 ] as const;
 export type ActionType = (typeof ACTIONS)[number];
@@ -67,9 +67,9 @@ async function afterAction(ctx: Ctx, type: ActionType, result: unknown) {
       await quests.questTick(ctx, "damage", Number(r.damage) || 0);
       await rating.addWeeklyDamage(ctx, Number(r.damage) || 0);
       await quests.questTick(ctx, "hits", 1);
-      // the fist rests an hour: remind when it is ready again
+      // a free weapon (fist, mouse, candle) rests 5 hours: remind when it is ready again
       if (typeof r.readyAt === "number" && weaponById(String(r.weapon))?.weapon.kind === "permanent") {
-        await notify.schedule(ctx.q, ctx.pid, "fist_ready", r.readyAt, { fightId: r.fightId });
+        await notify.schedule(ctx.q, ctx.pid, "fist_ready", r.readyAt, { fightId: r.fightId, weapon: r.weapon });
       }
       return;
     }
@@ -113,6 +113,7 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "slots_spin": return extras.spinSlots(ctx);
     case "equipment_upgrade": return home.upgradeEquipment(ctx, str(body.id, "id", 40));
     case "talent_up": return home.upgradeTalent(ctx, str(body.weapon, "weapon", 40), str(body.branch, "branch", 10));
+    case "talent_reset": return home.resetTalents(ctx);
     case "room_buy": return home.buyRoom(ctx, str(body.id, "id", 40));
     case "room_set": return home.setRoom(ctx, str(body.id, "id", 40));
     case "look_set": return home.setLook(ctx, body);
