@@ -89,6 +89,7 @@ export function actionText(type: string, body: Row, result: unknown): string | n
       return join(name, g.paid ? "платная" : "бесплатная", g.result?.title, grantedText(g.result?.reward) || "без выигрыша");
     }
     case "upgrade": return join(`${item(r.from ?? body.stake)}${body.uid !== undefined ? " ★" : body.qty && n(body.qty) > 1 ? ` ×${fmt(body.qty)}` : ""} (${fmt(r.stakeValue)} ₽) → ${item(r.target)} ★ ${fmt(r.value)} ₽`, `шанс ${fmt(Math.round(n(r.chance) * 10000) / 100)}%`, r.won ? "получилось!" : "сгорело");
+    case "stash_collect": return join(`собрал набор нычек #${r.count ?? ""} (${String(body.set)})`, grantedText(r.reward));
     case "up_sell": return `продал ${item(r.itemId)} ★ · +${fmt(r.got)} RUB`;
     case "up_take": return `${item(r.itemId)} ★ → ${r.used ? "использовал" : "в обычный инвентарь"}`;
     case "clan_kick": return `исключил игрока #${body.playerId}`;

@@ -83,6 +83,7 @@ export async function gameState(ctx: Ctx) {
     slots: await slotsView(ctx.q, ctx.pid, ctx.now, ctx.cfg),
     games: await gamesView(ctx.q, ctx.pid, ctx.now),
     upgraded: await upgradedView(ctx.q, ctx.pid),
+    stashSets: Object.fromEntries((await ctx.q.query<{ set_n: number; count: number }>("SELECT set_n, count FROM stash_sets WHERE player_id=$1", [ctx.pid])).map((r) => [r.set_n, Number(r.count)])) as Record<number, number>,
     rename: await renameView(ctx.q, ctx.pid, ctx.now, ctx.cfg),
     sell: ctx.cfg.sell,
   };

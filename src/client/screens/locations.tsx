@@ -26,7 +26,7 @@ function StashFound({ id, onClose }: { id: string; onClose: () => void }) {
         <span className="stash-cell big stash-pop">{/* eslint-disable-next-line @next/next/no-img-element */}<img src={`/assets/items/${id}.webp`} alt="" /></span>
         <b className="display" style={{ fontSize: 20 }}>{d?.name}</b>
         <span className="small">{d?.description}</span>
-        {set && <span className="chip gold">{set.name}: {have}/4{have >= 4 ? " — набор собран! Награда в достижениях" : ""}</span>}
+        {set && <span className="chip gold">{set.name}: {have}/4{have >= 4 ? " — собери набор в достижениях «Нычки»" : ""}</span>}
         <button className="btn gold block" onClick={onClose}>Забрать</button>
       </div>
     </Modal>

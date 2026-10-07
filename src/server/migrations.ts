@@ -594,4 +594,16 @@ CREATE TABLE IF NOT EXISTS upgraded_items (
 CREATE INDEX IF NOT EXISTS upgraded_items_player ON upgraded_items (player_id);
 `,
   },
+  {
+    // Нычки собираются повторно: сколько раз игрок собрал каждый набор
+    id: "v2-029-stash-sets",
+    sql: `
+CREATE TABLE IF NOT EXISTS stash_sets (
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  set_n INT NOT NULL,
+  count INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (player_id, set_n)
+);
+`,
+  },
 ];

@@ -49,7 +49,15 @@ export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: b
   const [stashOpen, setStashOpen] = useState(false);
   const [stashItem, setStashItem] = useState<string | null>(null);
   const { state } = useGame();
-  const ownedStash = new Set(self ? (state?.inventory ?? []).filter((i) => i.qty > 0 && i.id.startsWith("stash-")).map((i) => i.id) : []);
+  const stashQty = new Map(self ? (state?.inventory ?? []).filter((i) => i.qty > 0 && i.id.startsWith("stash-")).map((i) => [i.id, i.qty] as const) : []);
+  const ownedStash = new Set(stashQty.keys());
+  const collect = async (setId: string, name: string) => {
+    const r = await act<{ count: number }>("stash_collect", { set: setId }, (x) => `Набор «${name}» собран (${x.count})`);
+    if (r) {
+      haptic.big();
+      onClaimed?.();
+    }
+  };
   const [medal, setMedal] = useState<string | null>(null);
   const byId = new Map(rows.map((r) => [r.id, r]));
   const total = rows.filter((r) => r.claimed || (!self && r.done)).length;
@@ -159,29 +167,30 @@ export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: b
             </div>
           );
         })()}
-        {/* «Нычки»: four sets of four; a whole set gives its reward */}
+        {/* «Нычки»: sets of four, collected again and again; medals for 10 / 50 / 100 sets of each */}
         {(() => {
-          const sets = STASH_SETS_ORDERED.map((st) => ({ st, r: byId.get(st.id) }));
-          const done = sets.filter((x) => x.r && (x.r.claimed || (!self && x.r.done))).length;
-          const found = sets.reduce((n, x) => n + (x.r?.progress ?? 0), 0);
-          const ready = self ? sets.find((x) => x.r?.done && !x.r.claimed) ?? null : null;
+          const medals = STASH_SETS_ORDERED.flatMap((st) => ([1, 2, 3] as AchTier[]).map((t) => ({ st, t, r: byId.get(`stashset-${st.n}-${t}`) })));
+          const got = medals.filter((x) => x.r && (x.r.claimed || (!self && x.r.done))).length;
+          const ready = self ? medals.find((x) => x.r?.done && !x.r.claimed) ?? null : null;
+          const collectable = self && STASH_SETS_ORDERED.some((st) => st.items.every((it) => (stashQty.get(it.id) ?? 0) > 0));
+          const total = STASH_SETS_ORDERED.reduce((n, st) => n + (self ? state?.stashSets?.[st.n] ?? 0 : byId.get(`stashset-${st.n}-3`)?.progress ?? 0), 0);
           return (
-            <div role="button" tabIndex={0} className={`ach-row ${ready ? "ready" : ""}`} onClick={() => setStashOpen(true)} onKeyDown={(e) => e.key === "Enter" && setStashOpen(true)}>
-              <span className={`stash-medal ${found ? "" : "off"}`}>{/* eslint-disable-next-line @next/next/no-img-element */}<img src="/assets/stash/set-1.webp" alt="" /></span>
+            <div role="button" tabIndex={0} className={`ach-row ${ready || collectable ? "ready" : ""}`} onClick={() => setStashOpen(true)} onKeyDown={(e) => e.key === "Enter" && setStashOpen(true)}>
+              <span className={`stash-medal ${total || stashQty.size ? "" : "off"}`}>{/* eslint-disable-next-line @next/next/no-img-element */}<img src="/assets/stash/set-1.webp" alt="" /></span>
               <span className="ach-main">
                 <span className="row" style={{ justifyContent: "space-between", gap: 6 }}>
                   <b className="ach-name">Нычки</b>
-                  <span className="tiny muted num">{done}/{sets.length} наборов</span>
+                  <span className="tiny muted num">собрано наборов: {total}</span>
                 </span>
-                <span className="ach-bar sm" style={{ ["--p" as string]: `${Math.round((found / (sets.length * 4)) * 100)}%`, ["--c" as string]: "#ffcc33" }}>
-                  <i /><span className="num">{found} / {sets.length * 4} нычек</span>
+                <span className="ach-bar sm" style={{ ["--p" as string]: `${Math.round((got / medals.length) * 100)}%`, ["--c" as string]: "#ffcc33" }}>
+                  <i /><span className="num">{got} / {medals.length} медалей</span>
                 </span>
               </span>
               {ready && (
                 <button className="btn gold sm ach-take" disabled={busy === "achievement_claim"}
                   onClick={(e) => {
                     e.stopPropagation();
-                    void claim(ready.st.id);
+                    void claim(ready.r!.id);
                   }}>Забрать</button>
               )}
             </div>
@@ -191,40 +200,52 @@ export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: b
       {stashOpen && (
         <Modal title="Нычки" onClose={() => setStashOpen(false)}>
           <div className="col" style={{ gap: 8 }}>
-            <div className="small muted center">Нычки находятся за задания в локациях, а при закрытии локации одна нычка выпадает наверняка. У каждой локации свои наборы. Собери все 4 нычки набора — забери награду.</div>
+            <div className="small muted center">Нычки находятся за задания в локациях, а при закрытии локации одна нычка выпадает наверняка; они выпадают повторно и копятся. Есть все 4 нычки набора — нажми на картинку набора и забери награду. За 10, 50 и 100 собранных наборов — медали.</div>
             {STASH_SETS_ORDERED.map((st, k, arr) => {
-              const r = byId.get(st.id);
-              const n = r?.progress ?? 0;
-              const complete = !!r?.done;
-              const got = !!r?.claimed || (!self && complete);
-              const due = self && complete && !r?.claimed;
+              const count = self ? state?.stashSets?.[st.n] ?? 0 : byId.get(`stashset-${st.n}-3`)?.progress ?? 0;
+              const ready = self && st.items.every((it) => (stashQty.get(it.id) ?? 0) > 0);
               return (
                 <div key={st.id} className="col" style={{ gap: 6 }}>
                 {(k === 0 || arr[k - 1].location !== st.location) && <b className="tiny muted stash-loc">{STASH_LOCATION_NAMES[st.location]?.toUpperCase()}</b>}
-                <div className={`stash-set ${complete ? "done" : ""}`}>
+                <div className={`stash-set ${ready ? "done" : ""}`}>
                   <div className="row" style={{ justifyContent: "space-between", gap: 6 }}>
-                    <b>{st.name}</b>
-                    <span className="tiny muted num">{n}/4</span>
+                    <span className="col" style={{ gap: 0, minWidth: 0 }}>
+                      <b className="ellipsis">{st.name}</b>
+                      <span className="tiny muted">собрано: <b className="num" style={{ color: "var(--ink)" }}>{count}</b></span>
+                    </span>
+                    <span className="bk-medals">
+                      {([1, 2, 3] as AchTier[]).map((t) => {
+                        const id = `stashset-${st.n}-${t}`;
+                        const r = byId.get(id);
+                        const gotM = !!r && (r.claimed || (!self && r.done));
+                        const due = self && !!r?.done && !r.claimed;
+                        return (
+                          <button key={t} className={`bk-medal ${due ? "due" : ""}`} onClick={() => setMedal(id)} aria-label={achievementById(id)?.name}>
+                            <BadgeMedal icon="chest" tier={t} earned={gotM || due} size={28} />
+                          </button>
+                        );
+                      })}
+                    </span>
                   </div>
                   <div className="stash-row">
-                    <span className={`stash-cell full ${complete ? "" : "off"}`} title="Полный набор">{/* eslint-disable-next-line @next/next/no-img-element */}<img src={`/assets/stash/set-${st.n}.webp`} alt="Полный набор" /></span>
+                    <button className={`stash-cell full ${ready ? "ready" : count ? "" : "off"}`} disabled={!ready || busy === "stash_collect"} onClick={() => collect(st.id, st.name)} title={ready ? "Собрать набор и забрать награду" : "Полный набор"}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={`/assets/stash/set-${st.n}.webp`} alt="Полный набор" />
+                      {ready && <i className="stash-take">Забрать</i>}
+                    </button>
                     {st.items.map((it, k) => {
-                      const has = self ? ownedStash.has(it.id) : complete;
+                      const q = stashQty.get(it.id) ?? 0;
                       return (
-                        <button key={it.id} className={`stash-cell ${has ? "" : "off"}`} onClick={() => setStashItem(it.id)} aria-label={it.name}>
+                        <button key={it.id} className={`stash-cell ${q > 0 || (!self && count > 0) ? "" : "off"}`} onClick={() => setStashItem(it.id)} aria-label={it.name}>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={`/assets/items/${it.id}.webp`} alt="" />
                           <i className="stash-n">{k + 1}</i>
+                          {q > 1 && <i className="stash-q num">×{q}</i>}
                         </button>
                       );
                     })}
                   </div>
-                  <div className="row" style={{ justifyContent: "space-between", gap: 6, flexWrap: "wrap" }}>
-                    <RewardChips r={st.reward} size={13} />
-                    {got ? <span className="quest-ok display">✓</span> : due ? (
-                      <button className="btn gold sm" disabled={busy === "achievement_claim"} onClick={() => claim(st.id)}>Забрать</button>
-                    ) : null}
-                  </div>
+                  <RewardChips r={st.reward} size={13} />
                 </div>
                 </div>
               );
@@ -285,7 +306,7 @@ export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: b
         return (
           <Modal title={a.name} onClose={() => setMedal(null)}>
             <div className="col" style={{ gap: 10, alignItems: "center", textAlign: "center" }}>
-              <BadgeMedal icon="ach-wins" tier={a.tier} earned={got || due} size={72} />
+              <BadgeMedal icon={a.icon} tier={a.tier} earned={got || due} size={72} />
               <b style={{ color: TIER_COLORS[a.tier] }}>{TIER_NAMES[a.tier]}</b>
               <span className="small">{a.hint}</span>
               <span className="ach-bar" style={{ width: "100%", ["--p" as string]: `${Math.round(((r?.progress ?? 0) / a.target) * 100)}%`, ["--c" as string]: TIER_COLORS[a.tier] }}>

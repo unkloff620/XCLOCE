@@ -1,6 +1,6 @@
 import { GameError, type Queryable } from "../db.ts";
-import { addItem, grantReward, spendEnergy, type Ctx, type Granted } from "../core.ts";
-import { STASH_CHANCE, stashSetsByLocation } from "../../content/stashes.ts";
+import { addItem, grantReward, ledger, spendEnergy, type Ctx, type Granted } from "../core.ts";
+import { STASH_CHANCE, STASH_SETS, stashSetsByLocation } from "../../content/stashes.ts";
 import { LOCATIONS, locationById, taskById, type LocationDef } from "../../content/locations.ts";
 import type { Reward } from "../../content/rewards.ts";
 
@@ -85,18 +85,31 @@ export async function doTask(ctx: Ctx, taskId: string) {
   return { taskId: task.id, steps: stepNow, need: task.steps, energyLeft, step: stepGot, done: doneGot, locationComplete: doneCount === loc.tasks.length, stash };
 }
 
-/** One of the location's stashes the player is missing (none when all its sets are complete); goes to the inventory. */
+/** One of the location's stashes (they drop again and pile up); goes to the inventory. */
 async function findStash(ctx: Ctx, locationId: string, into: Granted): Promise<string | null> {
-  const sets = stashSetsByLocation(locationId);
-  if (!sets.length) return null;
-  const all = sets.flatMap((s) => s.items.map((i) => i.id));
-  const owned = new Set((await ctx.q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id = ANY($2::text[])", [ctx.pid, all])).map((r) => r.item_id));
-  const missing = all.filter((id) => !owned.has(id));
-  if (!missing.length) return null;
-  const pick = missing[Math.floor(ctx.rng() * missing.length) % missing.length];
+  const all = stashSetsByLocation(locationId).flatMap((s) => s.items.map((i) => i.id));
+  if (!all.length) return null;
+  const pick = all[Math.floor(ctx.rng() * all.length) % all.length];
   if ((await addItem(ctx, pick, 1, `stash:${locationId}`)) < 1) return null;
   into.items.push({ id: pick, qty: 1 });
   return pick;
+}
+
+/** Four different stashes of a set → the set's reward, one of each stash is used up, the set counter grows. */
+export async function collectStashSet(ctx: Ctx, setId: string) {
+  const set = STASH_SETS.find((s) => s.id === setId);
+  if (!set) throw new GameError("bad_set", "Такого набора нет");
+  for (const it of set.items) {
+    const r = await ctx.q.query("UPDATE inventory SET qty = qty - 1, updated_at=$3 WHERE player_id=$1 AND item_id=$2 AND qty >= 1 RETURNING qty", [ctx.pid, it.id, new Date(ctx.now)]);
+    if (!r.length) throw new GameError("set_incomplete", "Нужны все 4 нычки набора");
+    await ledger(ctx, "item", it.id, -1, `stash-set:${set.id}`);
+  }
+  const [row] = await ctx.q.query<{ count: number }>(
+    "INSERT INTO stash_sets (player_id, set_n, count) VALUES ($1,$2,1) ON CONFLICT (player_id, set_n) DO UPDATE SET count = stash_sets.count + 1 RETURNING count",
+    [ctx.pid, set.n],
+  );
+  const reward = await grantReward(ctx, set.reward, `stash-set:${set.id}`);
+  return { setId: set.id, count: Number(row.count), reward };
 }
 
 export async function claimLocation(ctx: Ctx, locationId: string) {
@@ -107,7 +120,7 @@ export async function claimLocation(ctx: Ctx, locationId: string) {
   if (!loc.tasks.every((t) => (steps.get(t.id) ?? 0) >= t.steps)) throw new GameError("not_done", "Выполни все 5 заданий");
   const first = (clears.get(loc.id) ?? 0) === 0;
   const got = await grantReward(ctx, first ? loc.reward : repeatReward(loc.reward), `location:${loc.id}`);
-  // closing a location always finds one of its stashes (while some are missing)
+  // closing a location always finds one of its stashes
   const stash = await findStash(ctx, loc.id, got);
   await ctx.q.query("INSERT INTO location_claims (player_id, location_id, claimed_at) VALUES ($1,$2,$3)", [ctx.pid, loc.id, new Date(ctx.now)]);
   if (first) await ctx.q.query("UPDATE player_stats SET locations_done = locations_done + 1 WHERE player_id=$1", [ctx.pid]);

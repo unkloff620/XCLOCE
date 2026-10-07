@@ -1102,23 +1102,26 @@ describe("boss slayer badges", () => {
 });
 
 describe("нычки", () => {
-  it("a task step in a set's location may find a missing stash; a whole set gives its reward", async () => {
+  it("stashes drop again and pile up; four of a set are collected for the set reward, again and again; medals at 10 / 50 / 100", async () => {
     const p = await newPlayer(db);
-    // rng 0 → the chance hits and the first missing stash of the openspace set is found
+    // rng 0 → the chance hits and the first stash of the location drops — again and again
     const r = await act(db, p, "task", { taskId: "os-standup" }, T0, always(0));
     expect(r.result.stash).toBe("stash-sneaker");
-    expect(await qty(db, p, "stash-sneaker")).toBe(1);
-    const r2 = await act(db, p, "task", { taskId: "os-standup" }, T0, always(0));
-    expect(r2.result.stash).toBe("stash-cigs"); // only missing ones drop
-    await expect(act(db, p, "achievement_claim", { id: "stash-set-1" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
-    await give(db, p, "stash-noodles", 1);
-    await give(db, p, "stash-can", 1);
+    await act(db, p, "task", { taskId: "os-standup" }, T0, always(0));
+    expect(await qty(db, p, "stash-sneaker")).toBe(2);
+    await expect(act(db, p, "stash_collect", { set: "stash-set-1" }, T0)).rejects.toMatchObject({ code: "set_incomplete" });
+    expect(await qty(db, p, "stash-sneaker")).toBe(2); // nothing taken on a refusal
+    for (const id of ["stash-cigs", "stash-noodles", "stash-can"]) await give(db, p, id, 1);
     const kb = await qty(db, p, "keyboard");
-    await act(db, p, "achievement_claim", { id: "stash-set-1" }, T0);
-    expect(await qty(db, p, "keyboard")).toBe(kb + 5);
-    // the set is complete: the next stash comes from the location's other set
-    const r3 = await act(db, p, "task", { taskId: "os-standup" }, T0, always(0));
-    expect(r3.result.stash).toBe("stash-pepe-head");
+    const c = await act(db, p, "stash_collect", { set: "stash-set-1" }, T0);
+    expect(c.result.count).toBe(1);
+    expect(c.state.stashSets).toEqual({ 1: 1 });
+    expect(await qty(db, p, "keyboard")).toBe(kb + 1);
+    expect([await qty(db, p, "stash-sneaker"), await qty(db, p, "stash-cigs")]).toEqual([1, 0]);
+    // medals: bronze at 10 sets
+    await expect(act(db, p, "achievement_claim", { id: "stashset-1-1" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
+    await db.query("UPDATE stash_sets SET count = 10 WHERE player_id=$1 AND set_n=1", [p]);
+    await act(db, p, "achievement_claim", { id: "stashset-1-1" }, T0);
     const { itemById } = await import("../src/content/items.ts");
     expect(itemById("stash-radio")?.category).toBe("stash");
   });

@@ -131,7 +131,7 @@ const TROPHY: ItemDef = {
 const STASH_RARITY: Rarity[] = ["rare", "epic", "legendary", "mythic", "mythic"];
 const STASHES: ItemDef[] = STASH_SETS.flatMap((s) =>
   s.items.map((it) => ({
-    id: it.id, name: it.name, category: "stash" as const, rarity: STASH_RARITY[stashLevel(s) - 1] ?? "rare", maxStack: 1,
+    id: it.id, name: it.name, category: "stash" as const, rarity: STASH_RARITY[stashLevel(s) - 1] ?? "rare", maxStack: 999,
     description: `${it.description} Набор «${s.name}».`, sources: [`Локация «${STASH_LOCATION_NAMES[s.location]}»: задания и закрытие локации`],
   })),
 );

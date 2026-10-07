@@ -1,23 +1,24 @@
 /*
  * Нычки: наборы по 4 нычки, у каждой локации свои наборы (в первых трёх — по 2, в двух последних — по 3).
  * Нычка может найтись за шаг задания в локации (шанс STASH_CHANCE), а при закрытии локации одна нычка выпадает
- * наверняка. Выпадают только те, которых у игрока ещё нет. Собрал все 4 — набор закрыт, в достижениях «Нычки»
- * забирается награда за него.
+ * наверняка. Нычки выпадают повторно и копятся. Есть все 4 нычки набора — нажимаешь на картинку набора в «Нычках»:
+ * по одной нычке каждого вида уходит, приходит награда набора, счётчик собранных наборов растёт. За 10, 50 и 100
+ * собранных наборов — бронзовая, серебряная и золотая медаль (как у боссов).
  */
 import type { Reward } from "./rewards.ts";
 
 export interface StashDef { id: string; name: string; description: string }
 export interface StashSet { id: string; n: number; name: string; location: string; items: StashDef[]; reward: Reward }
 
-/** chance that a task step in the set's location finds one of the missing stashes */
+/** chance that a task step in the set's location finds one of its stashes */
 export const STASH_CHANCE = 0.08;
 
 const LOC_REWARD: Record<string, Reward> = {
-  openspace: { currencies: { RUB: 3000 }, xp: 5_000, items: [{ id: "keyboard", qty: 5 }] },
-  market: { currencies: { USD: 25 }, xp: 15_000, items: [{ id: "gpu", qty: 2 }] },
-  serverroom: { currencies: { SOL: 0.05 }, xp: 40_000, items: [{ id: "gpu", qty: 5 }] },
-  basement: { currencies: { SOL: 0.15 }, xp: 100_000, items: [{ id: "rug-pull-gun", qty: 1 }] },
-  board: { currencies: { SOL: 0.3 }, xp: 250_000, items: [{ id: "rug-pull-gun", qty: 2 }] },
+  openspace: { currencies: { RUB: 500 }, xp: 1_000, items: [{ id: "keyboard", qty: 1 }] },
+  market: { currencies: { USD: 4 }, xp: 3_000, items: [{ id: "keyboard", qty: 2 }] },
+  serverroom: { currencies: { SOL: 0.008 }, xp: 8_000, items: [{ id: "gpu", qty: 1 }] },
+  basement: { currencies: { SOL: 0.02 }, xp: 20_000, items: [{ id: "gpu", qty: 2 }] },
+  board: { currencies: { SOL: 0.05 }, xp: 50_000, items: [{ id: "gpu", qty: 3 }] },
 };
 /** the order of the locations (rarity and medal of their sets grow with it) */
 export const STASH_LOCATIONS = ["openspace", "market", "serverroom", "basement", "board"] as const;
@@ -137,6 +138,8 @@ export const STASH_SETS: StashSet[] = [
     ],
   },
 ];
+/** sets collected for the bronze, silver and gold medal of a set */
+export const STASH_MEDAL_TARGETS = [10, 50, 100] as const;
 export const STASH_IDS = STASH_SETS.flatMap((s) => s.items.map((i) => i.id));
 export const stashSetOf = (itemId: string) => STASH_SETS.find((s) => s.items.some((i) => i.id === itemId));
 export const stashSetsByLocation = (locationId: string) => STASH_SETS.filter((s) => s.location === locationId);

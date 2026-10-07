@@ -52,7 +52,7 @@ export const ACTIONS = [
   "equipment_upgrade", "talent_up", "talent_reset", "room_buy", "room_set", "look_set", "decor_set", "help_seen",
   "quest_claim", "quest_chest", "notify_set", "achievement_claim", "prize_claim", "clan_edit",
   "game_start", "bj_move", "zonk_move", "upgrade", "up_sell", "up_take",
-  "clan_cancel", "clan_accept", "clan_reject",
+  "clan_cancel", "clan_accept", "clan_reject", "stash_collect",
 ] as const;
 export type ActionType = (typeof ACTIONS)[number];
 
@@ -139,6 +139,7 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     );
     case "up_sell": return games.sellUpgraded(ctx, num(body.uid, "uid"));
     case "up_take": return games.takeUpgradedOut(ctx, num(body.uid, "uid"), body.use === true);
+    case "stash_collect": return locations.collectStashSet(ctx, str(body.set, "set", 30));
     case "clan_cancel": return clans.cancelRequest(ctx);
     case "clan_accept": return clans.answerRequest(ctx, num(body.playerId, "playerId"), true);
     case "clan_reject": return clans.answerRequest(ctx, num(body.playerId, "playerId"), false);

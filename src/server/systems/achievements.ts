@@ -2,7 +2,6 @@ import { GameError, type Queryable } from "../db.ts";
 import { grantReward, type Ctx } from "../core.ts";
 import { ACHIEVEMENTS, achievementById, type AchStat } from "../../content/achievements.ts";
 import type { Config } from "../config.ts";
-import { STASH_SETS } from "../../content/stashes.ts";
 
 /** Everything the badges measure, read from what the game already stores. */
 export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promise<Partial<Record<AchStat, number>>> {
@@ -33,9 +32,9 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
     "SELECT boss_id, COUNT(*)::int AS n FROM fights WHERE player_id=$1 AND status='won' AND my_damage > 0 GROUP BY boss_id",
     [pid],
   );
-  // stashes owned of each set ("stash:<n>")
-  const owned = new Set((await q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id LIKE 'stash-%'", [pid])).map((r) => r.item_id));
-  const stash = Object.fromEntries(STASH_SETS.map((s) => [`stash:${s.n}`, s.items.filter((i) => owned.has(i.id)).length]));
+  // sets of stashes collected ("stashsets:<n>")
+  const sets = await q.query<{ set_n: number; count: number }>("SELECT set_n, count FROM stash_sets WHERE player_id=$1", [pid]);
+  const stash = Object.fromEntries(sets.map((r) => [`stashsets:${r.set_n}`, Number(r.count)]));
   return {
     ...stash,
     ...Object.fromEntries(solo.map((x) => [`solo:${x.boss_id}`, Number(x.n)])),
