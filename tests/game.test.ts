@@ -1159,3 +1159,22 @@ describe("Неоновая хата", () => {
     expect(await wallet(db, p, "RUB")).toBeLessThan(5000);
   });
 });
+
+describe("Боксёрская", () => {
+  it("drops from Командате, costs 4000 RUB and adds +30 to the fist", async () => {
+    await setBossHp({ bebyakyan: 10 });
+    const p = await newPlayer(db);
+    await setMoney(db, p, "RUB", 5000);
+    await give(db, p, "key-kedr", 3);
+    await give(db, p, "keyboard", 1);
+    const f = await act(db, p, "fight_start", { boss: "bebyakyan" }, T0);
+    await hit(p, "keyboard");
+    const c = await act(db, p, "fight_claim", { fightId: f.result.fightId }, T0, always(0.05));
+    expect(c.result.reward.unlocks).toContain("room:boxing");
+    await act(db, p, "room_buy", { id: "boxing" }, T0);
+    expect(await wallet(db, p, "RUB")).toBeLessThanOrEqual(1000 + 5000);
+    await setBossHp({ datsik: 1000 });
+    await startDatsik(p, T0 + M);
+    expect((await hit(p, "fist", T0 + M)).result.damage).toBe(42);
+  });
+});

@@ -213,7 +213,9 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1
     const bonus = await playerBonus(ctx.q, ctx.pid);
     const wt = weaponTalentBonus(await weaponTalents(ctx.q, ctx.pid), w.id);
     // talents add flat damage to the weapon's base; the room and trophies multiply the sum; every hit of a batch rolls its crit
-    const one = Math.round((w.weapon.damage + wt.flat) * (1 + bonus.damage));
+    // a room may add flat damage to the fist (Боксёрская)
+    const roomFlat = w.id === "fist" ? bonus.fistDamage ?? 0 : 0;
+    const one = Math.round((w.weapon.damage + wt.flat + roomFlat) * (1 + bonus.damage));
     const critOne = Math.round(one * (BASE_CRIT_MULT + bonus.critDamage + wt.critDamage));
     const hpBefore = fightHp({ ...mine, end_total: null, my_damage: Number(mine.my_damage) }, boss.damage_total);
     let damage = 0, crits = 0, used = 0;

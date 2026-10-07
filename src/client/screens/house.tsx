@@ -15,6 +15,7 @@ export function BonusLine({ b }: { b: Bonus }) {
   if (b.critDamage) parts.push(`сила крита +${pct(b.critDamage)}`);
   if (b.damage) parts.push(`урон +${pct(b.damage)}`);
   if (b.energyMax) parts.push(`лимит энергии +${b.energyMax}`);
+  if (b.fistDamage) parts.push(`урон кулака +${b.fistDamage}`);
   return <span>{parts.length ? parts.join(" · ") : "без бонуса"}</span>;
 }
 

@@ -15,5 +15,6 @@ export function weaponStats(state: GameState | null | undefined, weaponId: strin
   const home = state?.home.bonus ?? { damage: 0, critDamage: 0, critChance: 0 };
   const t = weaponTalentBonus(state?.weaponTalents ?? {}, weaponId);
   const bonus = home.damage;
-  return { base, damage: Math.round((base + t.flat) * (1 + bonus)), bonus, flat: t.flat, crit: BASE_CRIT_MULT + home.critDamage + t.critDamage, critChance: home.critChance };
+  const flat = t.flat + (weaponId === "fist" ? (home as { fistDamage?: number }).fistDamage ?? 0 : 0);
+  return { base, damage: Math.round((base + flat) * (1 + bonus)), bonus, flat, crit: BASE_CRIT_MULT + home.critDamage + t.critDamage, critChance: home.critChance };
 }
