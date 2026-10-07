@@ -1246,7 +1246,9 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .offer-batch { position: absolute; top: 3px; right: 3px; z-index: 2; padding: 0 5px; border-radius: 7px; border: 1.5px solid var(--line); background: var(--green); color: var(--line); font-size: 9px; font-weight: 800; line-height: 14px; }
 
 /* ---------- the shop: the shopkeeper behind the counter (screens/shop-scene.tsx) ---------- */
-.shop-scene .yard-stage { aspect-ratio: 2000 / 2800; }
+/* the whole scene always fits between the title and the nav: as wide as the screen, or as tall as the space allows */
+.shop-scene .yard-stage { aspect-ratio: auto; top: calc(var(--top) + 8px); container-type: size; }
+.shop-scene .sk-scene { inset: auto; left: 50%; bottom: 0; width: 100%; width: min(100cqw, calc(100cqh * 2000 / 2800)); transform: translateX(-50%); }
 .sk-scene { position: absolute; inset: 0; overflow: hidden; user-select: none; -webkit-user-select: none; }
 .sk-layer { position: absolute; display: block; max-width: none; pointer-events: none; }
 .sk-room { inset: 0; width: 100%; height: 100%; }
@@ -1290,6 +1292,7 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .sk-tag.bottom { bottom: -6px; }
 .sk-tag.top { top: -4px; }
 .sk-spot-weapons .sk-tag { bottom: 8%; }
+.sk-spot-energy .sk-tag { bottom: auto; top: 100%; margin-top: 3px; }
 @media (prefers-reduced-motion: reduce) {
   .sk-body, .sk-head, .sk-lids, .sk-iris, .sk-cig, .sk-ember, .sk-smoke, .sk-armL, .sk-armR, .sk-fist, .sk-lamp, .sk-spot img { animation: none; }
   .sk-spot img { filter: drop-shadow(0 0 2px #fff6c8) drop-shadow(0 0 6px rgba(255, 204, 51, 0.8)); }
