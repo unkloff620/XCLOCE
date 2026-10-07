@@ -51,7 +51,7 @@ export const ACTIONS = [
   "daily_claim", "sell", "rename", "slots_spin",
   "equipment_upgrade", "talent_up", "talent_reset", "room_buy", "room_set", "look_set", "decor_set", "help_seen",
   "quest_claim", "quest_chest", "notify_set", "achievement_claim", "prize_claim", "clan_edit",
-  "game_start", "bj_move", "zonk_move", "upgrade",
+  "game_start", "bj_move", "zonk_move", "upgrade", "up_sell", "up_take",
   "clan_cancel", "clan_accept", "clan_reject",
 ] as const;
 export type ActionType = (typeof ACTIONS)[number];
@@ -132,7 +132,13 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "game_start": return games.startGame(ctx, oneOf(body.game, ["blackjack", "zonk"] as const, "game"));
     case "bj_move": return games.bjMove(ctx, oneOf(body.move, ["hit", "stand"] as const, "move"));
     case "zonk_move": return games.zonkMove(ctx, Array.isArray(body.pick) ? body.pick.slice(0, 6).map((x) => Number(x)) : [], oneOf(body.then, ["roll", "bank"] as const, "then"));
-    case "upgrade": return games.upgrade(ctx, str(body.stake, "stake", 40), num(body.qty, "qty"), str(body.target, "target", 40));
+    case "upgrade": return games.upgrade(
+      ctx,
+      body.uid !== undefined ? { uid: num(body.uid, "uid") } : { item: str(body.stake, "stake", 40), qty: body.qty === undefined ? 1 : num(body.qty, "qty") },
+      str(body.mode, "mode", 8),
+    );
+    case "up_sell": return games.sellUpgraded(ctx, num(body.uid, "uid"));
+    case "up_take": return games.takeUpgradedOut(ctx, num(body.uid, "uid"), body.use === true);
     case "clan_cancel": return clans.cancelRequest(ctx);
     case "clan_accept": return clans.answerRequest(ctx, num(body.playerId, "playerId"), true);
     case "clan_reject": return clans.answerRequest(ctx, num(body.playerId, "playerId"), false);

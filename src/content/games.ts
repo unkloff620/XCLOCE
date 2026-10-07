@@ -98,29 +98,36 @@ export function zonkPrize(points: number, paid: boolean): Reward {
 }
 
 /* ---------------- upgrader ---------------- */
-/** what a find is worth as a stake (rubles) — the sell price of the things the yard gives */
-export const UPGRADE_STAKES: Record<string, number> = {
-  "bottle-cap": 15, "flyer-passive": 25, "sticker-hodl": 40, spinner: 60, "energy-drink": 90, "lost-wallet": 150, keyboard: 95,
+/*
+ * Ставка — вещь (обычная из инвентаря, несколько одинаковых, или уже улучшенная). Выбираешь множитель: ×2, ×4, ×8,
+ * или шанс: 15%, 30%, 70%. Шанс = 90% / множитель. Получилось — в инвентарь падает УЛУЧШЕННАЯ вещь (с обводкой)
+ * стоимостью «ставка × множитель»: это самая дорогая вещь, чья обычная цена не выше этой суммы. Улучшенная вещь
+ * продаётся за свою стоимость; в остальном это та же вещь: энергетик даёт ту же энергию, оружие бьёт так же
+ * (чтобы ударить им, её берут в бой — она становится обычной). Её можно поставить в апгрейдер снова.
+ */
+/** what things are worth in the upgrader (rubles): the sell price of yard finds, a fair price for the rest */
+export const ITEM_VALUES: Record<string, number> = {
+  "bottle-cap": 15, "flyer-passive": 25, "sticker-hodl": 40, spinner: 60, "energy-drink": 90, keyboard: 95,
+  "lost-wallet": 150, "energy-pack": 250, gpu: 300, "rug-pull-gun": 2000,
 };
-/** what can come out and what it is worth (rubles) */
-export const UPGRADE_TARGETS: { id: string; value: number }[] = [
-  { id: "spinner", value: 120 },
-  { id: "energy-drink", value: 180 },
-  { id: "lost-wallet", value: 300 },
-  { id: "keyboard", value: 380 },
-  { id: "energy-pack", value: 600 },
-  { id: "gpu", value: 1500 },
-  { id: "rug-pull-gun", value: 9000 },
-];
 export const UPGRADE_EDGE = 0.9;
-export const UPGRADE_MAX = 0.75;
-export const UPGRADE_MIN = 0.001;
-/** the chance to get the target for qty of the stake (0 if it is not allowed) */
-export function upgradeChance(stake: string, qty: number, target: string): number {
-  const v = UPGRADE_STAKES[stake];
-  const t = UPGRADE_TARGETS.find((x) => x.id === target);
-  if (!v || !t || qty < 1) return 0;
-  const c = ((v * qty) / t.value) * UPGRADE_EDGE;
-  if (c > UPGRADE_MAX || c < UPGRADE_MIN) return 0;
-  return Math.round(c * 10000) / 10000;
+/** the six buttons: three multipliers and three chances */
+export const UPGRADE_MODES = [
+  { id: "x2", label: "×2", mult: 2 },
+  { id: "x4", label: "×4", mult: 4 },
+  { id: "x8", label: "×8", mult: 8 },
+  { id: "c15", label: "15%", mult: UPGRADE_EDGE / 0.15 },
+  { id: "c30", label: "30%", mult: UPGRADE_EDGE / 0.3 },
+  { id: "c70", label: "70%", mult: UPGRADE_EDGE / 0.7 },
+] as const;
+export type UpgradeMode = (typeof UPGRADE_MODES)[number]["id"];
+export const upgradeMode = (id: string) => UPGRADE_MODES.find((m) => m.id === id);
+export const upgradeChanceOf = (mult: number) => Math.round((UPGRADE_EDGE / mult) * 10000) / 10000;
+
+/** the thing a win gives for this value: the most expensive item whose plain price fits (at least the cheapest) */
+export function upgradeTarget(value: number): string {
+  const fits = Object.entries(ITEM_VALUES).filter(([, v]) => v <= value).sort((a, b) => b[1] - a[1]);
+  return fits[0]?.[0] ?? "bottle-cap";
 }
+/** stake value × multiplier, rounded */
+export const upgradeValue = (stake: number, mult: number) => Math.max(1, Math.round(stake * mult));

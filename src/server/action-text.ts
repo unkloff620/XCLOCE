@@ -88,7 +88,9 @@ export function actionText(type: string, body: Row, result: unknown): string | n
       if (g.status !== "done") return join(name, g.paid ? "платная" : "бесплатная", g.kind === "blackjack" ? `${g.playerValue} очков` : `${g.turn ?? 0} очков`);
       return join(name, g.paid ? "платная" : "бесплатная", g.result?.title, grantedText(g.result?.reward) || "без выигрыша");
     }
-    case "upgrade": return join(`${item(r.stake ?? body.stake)} ×${fmt(r.qty ?? body.qty)} → ${item(r.target ?? body.target)}`, `шанс ${fmt(Math.round(n(r.chance) * 10000) / 100)}%`, r.won ? "получилось!" : "сгорело");
+    case "upgrade": return join(`${item(r.from ?? body.stake)}${body.uid !== undefined ? " ★" : body.qty && n(body.qty) > 1 ? ` ×${fmt(body.qty)}` : ""} (${fmt(r.stakeValue)} ₽) → ${item(r.target)} ★ ${fmt(r.value)} ₽`, `шанс ${fmt(Math.round(n(r.chance) * 10000) / 100)}%`, r.won ? "получилось!" : "сгорело");
+    case "up_sell": return `продал ${item(r.itemId)} ★ · +${fmt(r.got)} RUB`;
+    case "up_take": return `${item(r.itemId)} ★ → ${r.used ? "использовал" : "в обычный инвентарь"}`;
     case "clan_kick": return `исключил игрока #${body.playerId}`;
     case "clan_edit": return `«${body.name}»`;
     case "notify_set": return body.on === true ? "включил" : "выключил";

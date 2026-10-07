@@ -48,6 +48,7 @@ export function InventoryScreen() {
   const router = useRouter();
   const [cat, setCat] = useState<Category | "all">("all");
   const [open, setOpen] = useState<ItemDef | null>(null);
+  const [openUp, setOpenUp] = useState<number | null>(null);
   // talents: a cell of their own (with "all" and "rewards"), its window leads to the talent tree
   const [talInfo, setTalInfo] = useState(false);
   const [talents, setTalents] = useState(false);
@@ -57,6 +58,10 @@ export function InventoryScreen() {
   const order: Category[] = ["weapon", "clothing", "item", "reward", "event"];
   items.sort((a, b) => order.indexOf(a.def.category) - order.indexOf(b.def.category) || (b.def.weapon?.damage ?? 0) - (a.def.weapon?.damage ?? 0));
   const qtyOf = (id: string) => state.inventory.find((i) => i.id === id)?.qty ?? 0;
+  // upgraded things (from the upgrader): each one a cell of its own with a gold outline and its price
+  const ups = (state.upgraded ?? []).map((u) => ({ ...u, def: itemById(u.itemId)! })).filter((u) => u.def && (cat === "all" || u.def.category === cat));
+  const upOpen = openUp !== null ? (state.upgraded ?? []).find((u) => u.uid === openUp) ?? null : null;
+  const upDef = upOpen ? itemById(upOpen.itemId) : null;
   const worn = open?.slot ? state.look.equipped[open.slot] === open.id : false;
 
   return (
@@ -70,7 +75,7 @@ export function InventoryScreen() {
           <button key={c} className={cat === c ? "on" : ""} onClick={() => setCat(c)}>{CAT_LABEL[c]}</button>
         ))}
       </div>
-      {items.length === 0 && !showTalents ? (
+      {items.length === 0 && ups.length === 0 && !showTalents ? (
         <Empty>{cat === "event" ? "Ивентовые вещи появятся с первыми событиями." : "Здесь пока пусто."}</Empty>
       ) : (
         <div className="inv-grid">
@@ -81,6 +86,14 @@ export function InventoryScreen() {
               <span className="inv-qty num">×{state.player.talents}</span>
             </button>
           )}
+          {ups.map((u) => (
+            <button key={`up${u.uid}`} className={`inv-cell rar-${u.def.rarity} upgraded`} onClick={() => setOpenUp(u.uid)}>
+              <i className="inv-up">★</i>
+              <ItemArt id={u.itemId} size={44} />
+              <span className="inv-name">{u.def.name}</span>
+              <span className="inv-qty num">{u.value} ₽</span>
+            </button>
+          ))}
           {items.map(({ def, qty }) => (
             <button key={def.id} className={`inv-cell rar-${def.rarity} ${def.slot && state.look.equipped[def.slot] === def.id ? "worn" : ""}`} onClick={() => setOpen(def)}>
               <ItemArt id={def.id} size={44} />
@@ -89,6 +102,36 @@ export function InventoryScreen() {
             </button>
           ))}
         </div>
+      )}
+      {upOpen && upDef && (
+        <Modal title={`${upDef.name} ★`} onClose={() => setOpenUp(null)}>
+          <div className={`item-card rar-${upDef.rarity}`}>
+            <div className="item-art upg-box upgraded" style={{ minHeight: 0 }}><ItemArt id={upDef.id} size={96} /></div>
+            <div className="row" style={{ justifyContent: "center", gap: 6, flexWrap: "wrap" }}>
+              <span className="chip gold">★ улучшено</span>
+              <span className="chip">цена <b className="num">{upOpen.value} ₽</b></span>
+              {upDef.weapon && <span className="chip red">урон {weaponStats(state, upDef.id).damage}</span>}
+            </div>
+            <p className="center small" style={{ margin: "10px 0" }}>
+              Вещь из апгрейдера: продаётся дороже обычной — за {upOpen.value} ₽. {upDef.weapon ? "В бою бьёт как обычная: возьми её в бой — она встанет в общую стопку." : upDef.use ? "Даёт ту же энергию, что и обычная." : "Её можно продать или снова поставить в апгрейдер."}
+            </p>
+            <div className="col" style={{ gap: 8 }}>
+              <button className="btn gold block" disabled={!!busy} onClick={async () => { const r = await act<{ got: number }>("up_sell", { uid: upOpen.uid }, (x) => `Продано за ${x.got} ₽`); if (r) { haptic.ok(); setOpenUp(null); } }}>
+                Продать за {upOpen.value} ₽
+              </button>
+              {upDef.weapon && (
+                <button className="btn red block" disabled={!!busy} onClick={async () => { const r = await act("up_take", { uid: upOpen.uid }, `${upDef.name} — в бою`); if (r) setOpenUp(null); }}>
+                  Взять в бой
+                </button>
+              )}
+              {upDef.use && (
+                <button className="btn green block" disabled={!!busy} onClick={async () => { const r = await act("up_take", { uid: upOpen.uid, use: true }, `+${upDef.use?.energy} энергии`); if (r) setOpenUp(null); }}>
+                  Использовать
+                </button>
+              )}
+            </div>
+          </div>
+        </Modal>
       )}
       {talInfo && (
         <Modal title="Таланты" onClose={() => setTalInfo(false)}>

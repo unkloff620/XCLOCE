@@ -10,7 +10,7 @@ import { normalizeLook } from "../../content/home.ts";
 import { touchActivity } from "../players.ts";
 import { dailyView } from "./daily.ts";
 import { renameView, slotsView } from "./extras.ts";
-import { gamesView } from "./games.ts";
+import { gamesView, upgradedView } from "./games.ts";
 import { requestsView } from "./clans.ts";
 import { homeView, weaponTalents } from "./home.ts";
 import { tasksHint } from "./locations.ts";
@@ -82,6 +82,7 @@ export async function gameState(ctx: Ctx) {
     achievementsReady: await achievementsReady(ctx.q, ctx.pid, ctx.cfg),
     slots: await slotsView(ctx.q, ctx.pid, ctx.now, ctx.cfg),
     games: await gamesView(ctx.q, ctx.pid, ctx.now),
+    upgraded: await upgradedView(ctx.q, ctx.pid),
     rename: await renameView(ctx.q, ctx.pid, ctx.now, ctx.cfg),
     sell: ctx.cfg.sell,
   };

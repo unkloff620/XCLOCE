@@ -580,4 +580,18 @@ CREATE TABLE IF NOT EXISTS clan_requests (
 CREATE INDEX IF NOT EXISTS clan_requests_clan ON clan_requests (clan_id);
 `,
   },
+  {
+    // Апгрейдер: улучшенные вещи — каждая отдельной единицей со своей ценой продажи
+    id: "v2-028-upgraded-items",
+    sql: `
+CREATE TABLE IF NOT EXISTS upgraded_items (
+  id SERIAL PRIMARY KEY,
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  item_id TEXT NOT NULL,
+  value INT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS upgraded_items_player ON upgraded_items (player_id);
+`,
+  },
 ];

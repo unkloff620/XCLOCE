@@ -56,6 +56,8 @@ export interface GameState {
   achievementsReady: number;
   slots: { left: number; max: number; nextAt: number | null };
   /** yard mini games: free games left today, the price after that, the hand / game in progress */
+  /** upgraded things from the upgrader: each one its own unit with its own price */
+  upgraded: { uid: number; itemId: string; value: number }[];
   games: Record<"blackjack" | "zonk", { freeLeft: number; freePerDay: number; price: { currency: Currency; amount: number }; active: GameView | null }>;
   rename: { price: { currency: Currency; amount: number }; nextAt: number | null; min: number; max: number };
   /** inventory sale prices in RUB */

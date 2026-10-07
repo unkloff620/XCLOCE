@@ -3,9 +3,10 @@
  * games; апгрейдер — одно действие. Колоду тасует и кости кидает только сервер.
  */
 import { GameError, type Queryable } from "../db.ts";
-import { addItem, grantReward, itemQty, moscowDay, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
+import { addItem, addMoney, grantReward, itemQty, ledger, moscowDay, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
+import { useItem } from "./shop.ts";
 import {
-  BJ_PAY, BJ_TITLES, GAME_RULES, UPGRADE_STAKES, ZONK_DICE, bjOutcome, handValue, isBlackjack, upgradeChance, zonkHasScore, zonkPrize, zonkScore,
+  BJ_PAY, BJ_TITLES, GAME_RULES, ITEM_VALUES, ZONK_DICE, bjOutcome, handValue, isBlackjack, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue, zonkHasScore, zonkPrize, zonkScore,
   type BjOutcome, type Card, type GameKind,
 } from "../../content/games.ts";
 import { itemById } from "../../content/items.ts";
@@ -157,17 +158,72 @@ export async function zonkMove(ctx: Ctx, pick: number[], then: "roll" | "bank") 
   return viewOf(g);
 }
 
-/** Upgrader: qty of a yard find for a chance to get something better. The stake burns either way. */
-export async function upgrade(ctx: Ctx, stake: string, qty: number, target: string) {
-  if (!UPGRADE_STAKES[stake] || !itemById(target)) throw new GameError("bad_upgrade", "Так улучшить нельзя");
-  if (!Number.isInteger(qty) || qty < 1 || qty > 9999) throw new GameError("bad_qty", "Некорректное количество");
-  const chance = upgradeChance(stake, qty, target);
-  if (chance <= 0) throw new GameError("bad_upgrade", "Шанс должен быть от 0,1% до 75% — поменяй ставку или цель");
-  if ((await itemQty(ctx.q, ctx.pid, stake)) < qty) throw new GameError("no_item", `Не хватает: ${itemById(stake)?.name ?? stake}`);
-  await takeItem(ctx, stake, qty, `upgrade:${target}`);
+/* ---------------- upgrader ---------------- */
+interface UpRow { id: number; item_id: string; value: number }
+
+/** The player's upgraded things (each one is its own unit with its own price). */
+export async function upgradedView(q: Queryable, pid: number) {
+  const rows = await q.query<UpRow>("SELECT id, item_id, value FROM upgraded_items WHERE player_id=$1 ORDER BY value DESC, id", [pid]);
+  return rows.map((r) => ({ uid: r.id, itemId: r.item_id, value: Number(r.value) }));
+}
+
+async function takeUpgraded(ctx: Ctx, uid: number): Promise<UpRow> {
+  const [r] = await ctx.q.query<UpRow>("DELETE FROM upgraded_items WHERE id=$1 AND player_id=$2 RETURNING id, item_id, value", [uid, ctx.pid]);
+  if (!r) throw new GameError("no_item", "Этой улучшенной вещи уже нет");
+  await ledger(ctx, "upgraded", r.item_id, -1, `up:${uid}:${r.value}`);
+  return r;
+}
+
+/**
+ * Upgrader: the stake is qty of a plain thing or one upgraded thing; the mode is ×2/×4/×8 or a chance 15/30/70%.
+ * A win gives an upgraded thing worth stake × multiplier; the stake is gone either way.
+ */
+export async function upgrade(ctx: Ctx, stake: { item?: string; qty?: number; uid?: number }, modeId: string) {
+  const mode = upgradeMode(modeId);
+  if (!mode) throw new GameError("bad_upgrade", "Выбери множитель или шанс");
+  let value: number;
+  let from: string;
+  if (stake.uid !== undefined) {
+    const r = await takeUpgraded(ctx, stake.uid);
+    value = Number(r.value);
+    from = r.item_id;
+  } else {
+    const id = stake.item ?? "";
+    const qty = stake.qty ?? 1;
+    if (!ITEM_VALUES[id]) throw new GameError("bad_upgrade", "Это нельзя поставить");
+    if (!Number.isInteger(qty) || qty < 1 || qty > 9999) throw new GameError("bad_qty", "Некорректное количество");
+    if ((await itemQty(ctx.q, ctx.pid, id)) < qty) throw new GameError("no_item", `Не хватает: ${itemById(id)?.name ?? id}`);
+    await takeItem(ctx, id, qty, `upgrade:${mode.id}`);
+    value = ITEM_VALUES[id] * qty;
+    from = id;
+  }
+  const chance = upgradeChanceOf(mode.mult);
+  const newValue = upgradeValue(value, mode.mult);
+  const target = upgradeTarget(newValue);
   const roll = ctx.rng();
   const won = roll < chance;
-  let got = 0;
-  if (won) got = await addItem(ctx, target, 1, `upgrade:${stake}`);
-  return { won, chance, roll: Math.round(roll * 10000) / 10000, stake, qty, target, got };
+  let uid: number | null = null;
+  if (won) {
+    const [row] = await ctx.q.query<{ id: number }>("INSERT INTO upgraded_items (player_id, item_id, value, created_at) VALUES ($1,$2,$3,$4) RETURNING id", [ctx.pid, target, newValue, new Date(ctx.now)]);
+    uid = row.id;
+    await ledger(ctx, "upgraded", target, 1, `up:${uid}:${newValue}`);
+  }
+  return { won, chance, roll: Math.round(roll * 10000) / 10000, mode: mode.id, from, stakeValue: value, value: newValue, target, uid };
+}
+
+/** An upgraded thing sold for its own price. */
+export async function sellUpgraded(ctx: Ctx, uid: number) {
+  const r = await takeUpgraded(ctx, uid);
+  const got = await addMoney(ctx, "RUB", Number(r.value), `sell-up:${r.item_id}`);
+  return { uid, itemId: r.item_id, got };
+}
+
+/** Back to a plain thing: a weapon goes into the fight stack, an energy drink is drunk right away. */
+export async function takeUpgradedOut(ctx: Ctx, uid: number, use: boolean) {
+  const r = await takeUpgraded(ctx, uid);
+  const added = await addItem(ctx, r.item_id, 1, `up-take:${uid}`);
+  if (added < 1) throw new GameError("stack_full", "Нет места в инвентаре");
+  const def = itemById(r.item_id);
+  if (use && def?.use) return { uid, itemId: r.item_id, used: await useItem(ctx, r.item_id) };
+  return { uid, itemId: r.item_id };
 }

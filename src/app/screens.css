@@ -1352,15 +1352,38 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .mg-result.win { background: rgba(46, 232, 138, 0.12); border-color: rgba(46, 232, 138, 0.6); }
 .mg-result.win b { color: var(--green); }
 .mg-result.lose { background: rgba(255, 77, 109, 0.1); border-color: rgba(255, 77, 109, 0.5); }
-.zonk-turn { font-size: 26px; color: #ffd23f; text-shadow: 0 2px 0 #1e1006; }
-.zonk-dice { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; min-height: 52px; align-items: center; }
-.die { aspect-ratio: 1; padding: 3px; border-radius: 10px; border: 2.5px solid #1e1006; background: #fffdf6; box-shadow: 0 3px 0 rgba(0, 0, 0, 0.4); cursor: pointer; animation: roll 0.4s ease-out both; }
+.die { position: relative; aspect-ratio: 1; padding: 3px; border-radius: 10px; border: 2.5px solid #1e1006; background: #fffdf6; box-shadow: 0 3px 0 rgba(0, 0, 0, 0.4); cursor: pointer; }
 .die:disabled { cursor: default; }
-.die.on { background: #ffd23f; transform: translateY(-5px); box-shadow: 0 0 0 3px #ffd23f, 0 6px 0 rgba(0, 0, 0, 0.4); }
-.die.small { width: 22px; height: 22px; padding: 1px; border-width: 1.5px; border-radius: 5px; box-shadow: none; animation: none; }
-@keyframes roll { from { transform: rotate(-200deg) scale(0.6); } }
-.zonk-hist { display: flex; flex-wrap: wrap; gap: 6px; }
-.zonk-kept { display: inline-flex; align-items: center; gap: 2px; padding: 2px 6px; border-radius: 8px; background: rgba(0, 0, 0, 0.3); font-size: 12px; }
+.die.small { width: 100%; height: 100%; padding: 1px; border-width: 1.5px; border-radius: 5px; box-shadow: none; }
+
+/* zonk: a wooden board, dice thrown across it, a cup, the kept dice along the left, the scoring table on the right */
+.zk { display: grid; grid-template-columns: 1fr 132px; gap: 8px; }
+.zk-board { position: relative; aspect-ratio: 4 / 3.2; border-radius: 16px; border: 4px solid #3a1d0b; overflow: hidden;
+  background: repeating-linear-gradient(92deg, rgba(0, 0, 0, 0.05) 0 3px, transparent 3px 14px), radial-gradient(ellipse at 55% 40%, #c2834a, #9a5b2a 70%, #6d3b17);
+  box-shadow: inset 0 0 0 3px rgba(255, 220, 170, 0.18), inset 0 0 30px rgba(0, 0, 0, 0.45); }
+.zk-board .die { position: absolute; z-index: 1; width: 17%; transform: rotate(var(--rot)); animation: zk-throw 0.45s ease-out both; margin-left: 9%; }
+.zk-board .die.on { transform: rotate(0deg) translateY(-4px) scale(1.06); background: #ffd23f; box-shadow: 0 0 0 3px #ffd23f, 0 6px 10px rgba(0, 0, 0, 0.45); }
+.zk-board .die.hint { box-shadow: 0 0 0 2.5px rgba(46, 232, 138, 0.9), 0 3px 0 rgba(0, 0, 0, 0.4); }
+@keyframes zk-throw { from { transform: translate(60%, 90%) rotate(240deg) scale(0.6); opacity: 0; } }
+.zk-score { position: absolute; top: 6px; right: 8px; display: flex; flex-direction: column; align-items: flex-end; color: #fff3dc; text-shadow: 0 2px 0 #3a1d0b; z-index: 2; }
+.zk-score b { font-size: 24px; line-height: 1; color: #ffd23f; }
+.zk-cup { position: absolute; right: 3%; bottom: 3%; width: 15%; transform: rotate(-14deg); filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.5)); pointer-events: none; }
+.zk-kept { position: absolute; left: 4px; top: 4px; bottom: 4px; width: 8%; display: grid; grid-template-rows: repeat(12, 1fr); gap: 2px; }
+.zk-slot { border-radius: 4px; background: rgba(58, 29, 11, 0.35); border: 1px solid rgba(58, 29, 11, 0.6); display: grid; place-items: center; aspect-ratio: 1; max-width: 100%; }
+.zk-over { position: absolute; inset: 0; display: grid; place-items: center; font-size: 40px; color: #2ee88a; text-shadow: 0 3px 0 #1e1006, 0 0 20px rgba(0, 0, 0, 0.6); animation: zk-pop 0.4s ease-out; }
+.zk-over.zonk { color: #ff4d6d; }
+@keyframes zk-pop { from { transform: scale(0.4); opacity: 0; } }
+.zk-table { display: flex; flex-direction: column; gap: 2px; padding: 6px; border-radius: 14px; background: #4a0d12; border: 3px solid #2a0608; }
+.zk-table-h { color: #ffd1a0; text-align: center; letter-spacing: 0.04em; margin-bottom: 2px; }
+.zk-row { display: flex; align-items: center; justify-content: space-between; gap: 4px; padding: 2px 5px; border-radius: 6px; background: rgba(0, 0, 0, 0.25); opacity: 0.55; transition: background 0.15s, opacity 0.15s; }
+.zk-row b { font-size: 11px; color: #ffd1a0; }
+.zk-row.can { opacity: 1; background: rgba(46, 232, 138, 0.18); box-shadow: inset 0 0 0 1.5px rgba(46, 232, 138, 0.6); }
+.zk-row.on { opacity: 1; background: rgba(255, 210, 63, 0.35); box-shadow: inset 0 0 0 2px #ffd23f; }
+.zk-row.on b { color: #fff; }
+.zk-mini { display: flex; gap: 1px; }
+.zk-mini i { width: 11px; height: 11px; border-radius: 2px; background: #fffdf6; display: grid; }
+.zk-note { display: block; text-align: center; margin-top: 6px; }
+@media (max-width: 420px) { .zk { grid-template-columns: 1fr; } .zk-table { display: grid; grid-template-columns: 1fr 1fr; } .zk-table-h { grid-column: 1 / -1; } }
 
 .upg { display: grid; grid-template-columns: 1fr minmax(140px, 1.1fr) 1fr; gap: 8px; align-items: center; }
 .upg-box { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 6px; border-radius: 16px; border: 2.5px solid var(--line); background: var(--tex), var(--panel); min-height: 170px; justify-content: center; }
@@ -1388,3 +1411,23 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .bk-medal { padding: 0; border: 0; background: none; cursor: pointer; border-radius: 10px; }
 .bk-medal.due { animation: bk-due 1.2s ease-in-out infinite; }
 @keyframes bk-due { 50% { transform: scale(1.12); filter: drop-shadow(0 0 6px #ffcc33); } }
+
+/* upgrader v2: modes and upgraded things */
+.upg-art { position: relative; display: inline-grid; }
+.up-star { position: absolute; top: -6px; right: -8px; font-style: normal; font-size: 16px; color: #ffd23f; text-shadow: 0 2px 0 #1e1006; }
+.upg-price { font-size: 15px; font-weight: 800; }
+.upg-price.gold { color: #ffd23f; }
+.upg-box.upgraded { border-color: #ffd23f; box-shadow: 0 0 0 2px rgba(255, 210, 63, 0.35), 0 0 16px rgba(255, 210, 63, 0.25); }
+.upg-gauge.won .upg-center b { color: #2ee88a; }
+.upg-gauge.lost .upg-center b { color: #ff4d6d; }
+.upg-modes { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 5px; margin-top: 10px; }
+.upg-mode { padding: 8px 0; border-radius: 10px; border: 2px solid var(--line); background: var(--tex), var(--panel2); color: var(--ink); font: inherit; font-weight: 800; font-size: 13px; cursor: pointer; }
+.upg-mode.ch-c15 { color: #ff7a8a; border-color: rgba(255, 77, 109, 0.6); }
+.upg-mode.ch-c30 { color: #ffcc33; border-color: rgba(255, 204, 51, 0.6); }
+.upg-mode.ch-c70 { color: #2ee88a; border-color: rgba(46, 232, 138, 0.6); }
+.upg-mode.on { background: #ffd23f; color: #1e1006; border-color: #ffd23f; box-shadow: 0 0 10px rgba(255, 210, 63, 0.5); }
+.upg-go { margin-top: 8px; }
+.upg-chip.upgraded { border-color: #ffd23f; box-shadow: inset 0 0 0 1px rgba(255, 210, 63, 0.6); }
+/* upgraded things in the inventory: a gold outline and the price */
+.inv-cell.upgraded { border-color: #ffd23f !important; box-shadow: 0 0 0 2px rgba(255, 210, 63, 0.45), 0 0 12px rgba(255, 210, 63, 0.35); }
+.inv-cell .inv-up { position: absolute; top: 3px; left: 5px; font-size: 13px; color: #ffd23f; text-shadow: 0 1px 0 #1e1006; }

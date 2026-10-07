@@ -3,7 +3,7 @@
  * Мини-игры двора (пока кнопками, потом станут объектами во дворе): блэкджек, зонк (кости) и апгрейдер находок.
  * Правила и выплаты — content/games.ts, карты и кости — на сервере (server/systems/games.ts).
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useGame } from "../store.tsx";
 import { Modal, RewardChips } from "../ui.tsx";
 import { Icon } from "../art/icons.tsx";
@@ -15,8 +15,8 @@ import { full } from "../format.ts";
 import type { GameView } from "../api.ts";
 import { itemById } from "../../content/items.ts";
 import {
-  BJ_PAY, GAME_RULES, RANKS, SUITS, UPGRADE_MAX, UPGRADE_STAKES, UPGRADE_TARGETS, upgradeChance, zonkScore, zonkPrize,
-  type GameKind,
+  BJ_PAY, GAME_RULES, ITEM_VALUES, RANKS, SUITS, UPGRADE_MODES, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue, zonkScore, zonkPrize,
+  type GameKind, type UpgradeMode,
 } from "../../content/games.ts";
 
 /* ---------------- shared: free games / price line and the start button ---------------- */
@@ -128,28 +128,72 @@ const PIPS: Record<number, [number, number][]> = {
   1: [[50, 50]], 2: [[28, 28], [72, 72]], 3: [[26, 26], [50, 50], [74, 74]], 4: [[28, 28], [72, 28], [28, 72], [72, 72]],
   5: [[26, 26], [74, 26], [50, 50], [26, 74], [74, 74]], 6: [[28, 24], [72, 24], [28, 50], [72, 50], [28, 76], [72, 76]],
 };
-function Die({ v, on, onClick, small }: { v: number; on?: boolean; onClick?: () => void; small?: boolean }) {
-  const scoring = v === 1 || v === 5;
+function DieFace({ v }: { v: number }) {
   return (
-    <button className={`die ${on ? "on" : ""} ${small ? "small" : ""} ${scoring ? "scoring" : ""}`} onClick={onClick} disabled={!onClick} aria-label={`кость ${v}`}>
-      <svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true">
-        {PIPS[v].map(([x, y], i) => <circle key={i} cx={x} cy={y} r="9.5" fill={v === 1 ? "#e8173c" : "#1e1006"} />)}
-      </svg>
+    <svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true">
+      {PIPS[v].map(([x, y], i) => <circle key={i} cx={x} cy={y} r="9.5" fill={v === 1 ? "#e8173c" : "#1e1006"} />)}
+    </svg>
+  );
+}
+function Die({ v, on, onClick, small, style, hint }: { v: number; on?: boolean; onClick?: () => void; small?: boolean; style?: CSSProperties; hint?: boolean }) {
+  return (
+    <button className={`die ${on ? "on" : ""} ${small ? "small" : ""} ${hint ? "hint" : ""}`} onClick={onClick} disabled={!onClick} aria-label={`кость ${v}`} style={style}>
+      <DieFace v={v} />
     </button>
   );
+}
+
+const counts = (dice: number[]) => {
+  const n = [0, 0, 0, 0, 0, 0, 0];
+  for (const d of dice) n[d]++;
+  return n;
+};
+/** the scoring table on the right of the board; a row lights up when the roll has it, brighter when it is picked */
+const COMBOS: { key: string; dice: number[]; label: string; test: (n: number[], len: number) => boolean }[] = [
+  { key: "1", dice: [1], label: "100", test: (n) => n[1] >= 1 },
+  { key: "5", dice: [5], label: "50", test: (n) => n[5] >= 1 },
+  { key: "111", dice: [1, 1, 1], label: "1 000", test: (n) => n[1] >= 3 },
+  ...[2, 3, 4, 5, 6].map((f) => ({ key: `${f}${f}${f}`, dice: [f, f, f], label: String(f * 100), test: (n: number[]) => n[f] >= 3 })),
+  { key: "4k", dice: [3, 3, 3, 3], label: "×2", test: (n) => n.some((x) => x >= 4) },
+  { key: "5k", dice: [3, 3, 3, 3, 3], label: "×4", test: (n) => n.some((x) => x >= 5) },
+  { key: "6k", dice: [3, 3, 3, 3, 3, 3], label: "×8", test: (n) => n.some((x) => x >= 6) },
+  { key: "str", dice: [1, 2, 3, 4, 5, 6], label: "1 500", test: (n, len) => len === 6 && n.slice(1).every((x) => x === 1) },
+  { key: "pairs", dice: [2, 2, 4, 4, 6, 6], label: "750", test: (n, len) => len === 6 && n.filter((x) => x === 2).length === 3 },
+];
+/** the dice worth keeping: everything that scores (all six for a straight or three pairs) */
+function bestPick(roll: number[]): number[] {
+  const n = counts(roll);
+  if (roll.length === 6 && (n.slice(1).every((x) => x === 1) || n.filter((x) => x === 2).length === 3)) return roll.map((_, i) => i);
+  return roll.map((v, i) => (v === 1 || v === 5 || n[v] >= 3 ? i : -1)).filter((i) => i >= 0);
+}
+/** where the dice land on the board: one per cell of a 3×2 grid, nudged and turned (stable for one roll) */
+function scatter(seed: number, i: number) {
+  const r = (k: number) => {
+    const x = Math.sin(seed * 9301 + i * 49297 + k * 233) * 10000;
+    return x - Math.floor(x);
+  };
+  const col = i % 3, row = Math.floor(i / 3);
+  return { left: `${6 + col * 25 + r(1) * 8}%`, top: `${12 + row * 38 + r(2) * 12}%`, ["--rot" as string]: `${Math.round(r(3) * 70 - 35)}deg` };
 }
 
 function ZonkHelp() {
   return (
     <Help topic="zonk" title="Зонк">
       <p>Бросаешь 6 костей и откладываешь очковые. Потом решаешь: бросить оставшиеся — рискнуть ради большего — или забрать очки. Бросок без единой очковой кости — «Зонк»: всё набранное сгорает. Отложил все шесть — бросаешь все шесть заново.</p>
-      <ul className="small">
-        <li>1 — 100, 5 — 50.</li>
-        <li>Три одинаковых — номинал × 100 (три единицы — 1000). Четыре — вдвое больше, пять — вчетверо, шесть — в 8 раз.</li>
-        <li>Стрит 1–6 — 1500, три пары — 750.</li>
-      </ul>
+      <p>Таблица справа подсказывает: строка светится, если такая комбинация есть в броске, и горит ярко, когда ты её выбрал. «Подсказка» сама выберет все очковые кости.</p>
       <p>Бесплатно — {GAME_RULES.zonk.freePerDay} игра в день: очки / 5 = рубли (1000 очков = 200 RUB). Дальше {GAME_RULES.zonk.price.amount} USD за игру: 1000 очков = 2,5 USD.</p>
     </Help>
+  );
+}
+
+function Cup() {
+  return (
+    <svg viewBox="0 0 80 90" width="100%" height="100%" aria-hidden="true">
+      <path d="M10 14 L70 14 L62 84 Q40 90 18 84 Z" fill="#c98a52" stroke="#3a1d0b" strokeWidth="4" strokeLinejoin="round" />
+      <ellipse cx="40" cy="14" rx="30" ry="9" fill="#7a4720" stroke="#3a1d0b" strokeWidth="4" />
+      <path d="M16 30 L64 30 M17 66 L63 66" stroke="#3a1d0b" strokeWidth="3" opacity="0.45" />
+      <path d="M22 22 L26 78" stroke="#f0c08a" strokeWidth="4" strokeLinecap="round" opacity="0.6" />
+    </svg>
   );
 }
 
@@ -164,6 +208,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
   const picked = pick.map((i) => roll[i]);
   const pts = picked.length ? zonkScore(picked) : null;
   const playing = g?.status === "active";
+  const seed = (g?.id ?? 1) * 13 + (g?.history?.length ?? 0) * 7;
   const run = async (type: string, body: Record<string, unknown>) => {
     haptic.tap();
     sfx("tap");
@@ -177,32 +222,51 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
   };
   const toggle = (i: number) => setPick((p) => (p.includes(i) ? p.filter((x) => x !== i) : [...p, i]));
   const turn = (g?.turn ?? 0) + (pts ?? 0);
+  const nRoll = counts(playing ? roll : []);
+  const nPick = counts(picked);
+  const hints = playing ? new Set(bestPick(roll)) : new Set<number>();
+  const kept = (g?.history ?? []).flatMap((h) => h.kept);
   return (
-    <Modal title={<span className="title-row">Зонк <ZonkHelp /></span>} onClose={onClose}>
-      <div className="mg-table zonk">
-        <div className="row" style={{ justifyContent: "space-between" }}>
-          <span className="tiny muted">Очки хода</span>
-          <b className="display zonk-turn num">{full(playing ? turn : g?.result?.points ?? g?.turn ?? 0)}</b>
-        </div>
-        <div className="zonk-dice">
-          {playing ? roll.map((v, i) => <Die key={`${g!.id}-${(g!.history ?? []).length}-${i}`} v={v} on={pick.includes(i)} onClick={() => toggle(i)} />) : g ? <span className="tiny muted">Игра окончена</span> : [1, 2, 3, 4, 5, 6].map((v) => <Die key={v} v={v} />)}
-        </div>
-        {playing && (
-          <span className="tiny muted center">
-            {pick.length === 0 ? "Нажми на очковые кости, чтобы отложить их" : pts === null ? "Среди выбранных есть кости без очков" : <>Отложено: +{pts}. Выигрыш сейчас: <RewardChips r={zonkPrize(turn, !!g?.paid)} size={13} /></>}
-          </span>
-        )}
-        {(g?.history?.length ?? 0) > 0 && (
-          <div className="zonk-hist">
-            {g!.history!.map((h, i) => (
-              <span key={i} className="zonk-kept">{h.kept.map((v, k) => <Die key={k} v={v} small />)}<b className="num">+{h.points}</b></span>
-            ))}
+    <Modal title={<span className="title-row">Зонк <ZonkHelp /></span>} onClose={onClose} wide>
+      <div className="zk">
+        <div className="zk-board">
+          <div className="zk-score">
+            <span className="tiny">ОЧКИ ХОДА</span>
+            <b className="display num">{full(playing ? turn : g?.result?.points ?? g?.turn ?? 0)}</b>
           </div>
-        )}
+          {playing
+            ? roll.map((v, i) => <Die key={`${seed}-${i}`} v={v} on={pick.includes(i)} hint={hints.has(i) && !pick.includes(i)} onClick={() => toggle(i)} style={scatter(seed, i)} />)
+            : !g && [1, 2, 3, 4, 5, 6].map((v, i) => <Die key={v} v={v} style={scatter(3, i)} />)}
+          {g?.status === "done" && <div className={`zk-over display ${g.result?.outcome === "zonk" ? "zonk" : ""}`}>{g.result?.outcome === "zonk" ? "ЗОНК!" : `+${full(g.result?.points ?? 0)}`}</div>}
+          <span className="zk-cup"><Cup /></span>
+          {/* the kept dice line up along the left edge, like on the real board */}
+          <div className="zk-kept" aria-label="Отложено">
+            {Array.from({ length: 12 }, (_, i) => <span key={i} className="zk-slot">{kept[i] !== undefined && <Die v={kept[i]} small />}</span>)}
+          </div>
+        </div>
+        <div className="zk-table">
+          <b className="tiny zk-table-h">УДАЧНЫЕ КОМБИНАЦИИ</b>
+          {COMBOS.map((c) => {
+            const can = c.test(nRoll, roll.length);
+            const on = picked.length > 0 && c.test(nPick, picked.length);
+            return (
+              <div key={c.key} className={`zk-row ${can ? "can" : ""} ${on ? "on" : ""}`}>
+                <span className="zk-mini">{c.dice.map((d, k) => <i key={k}><DieFace v={d} /></i>)}</span>
+                <b className="num">{c.label}</b>
+              </div>
+            );
+          })}
+        </div>
       </div>
+      {playing && (
+        <span className="tiny muted zk-note">
+          {pick.length === 0 ? "Нажми на очковые кости (они подсвечены), чтобы отложить" : pts === null ? "Среди выбранных есть кости без очков" : <>Отложено: +{pts}. Если забрать сейчас: <RewardChips r={zonkPrize(turn, !!g?.paid)} size={13} /></>}
+        </span>
+      )}
       {g && <ResultLine g={g} />}
       {playing ? (
-        <div className="row" style={{ gap: 8, marginTop: 10 }}>
+        <div className="row" style={{ gap: 6, marginTop: 8 }}>
+          <button className="btn dark" disabled={busy === "zonk_move"} onClick={() => setPick(bestPick(roll))}>Подсказка</button>
           <button className="btn big grow gold" disabled={busy === "zonk_move" || pts === null} onClick={() => run("zonk_move", { pick, then: "roll" })}>
             Бросить {(() => { const left = (g?.left ?? 6) - pick.length; return left <= 0 ? 6 : left; })()}
           </button>
@@ -218,22 +282,22 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
 /* ---------------- upgrader ---------------- */
 const pctText = (c: number) => `${(Math.round(c * 10000) / 100).toLocaleString("ru-RU")}%`;
 
-function Gauge({ chance, roll, spinning }: { chance: number; roll: number | null; spinning: boolean }) {
+function Gauge({ chance, roll, spinning, won }: { chance: number; roll: number | null; spinning: boolean; won: boolean | null }) {
   // the arc: the green part is the chance (from the top, clockwise), the needle lands on the roll
   const r = 70, c = 2 * Math.PI * r;
   const angle = roll === null ? 0 : roll * 360;
   return (
-    <div className="upg-gauge">
+    <div className={`upg-gauge ${won === true ? "won" : won === false ? "lost" : ""}`}>
       <svg viewBox="0 0 180 180" aria-hidden="true">
         <circle cx="90" cy="90" r={r} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="16" />
-        <circle cx="90" cy="90" r={r} fill="none" stroke="#2ee88a" strokeWidth="16" strokeDasharray={`${Math.max(0.5, chance * c)} ${c}`} transform="rotate(-90 90 90)" strokeLinecap="butt" />
+        <circle cx="90" cy="90" r={r} fill="none" stroke={chance >= 0.35 ? "#2ee88a" : chance >= 0.2 ? "#ffcc33" : "#ff7a45"} strokeWidth="16" strokeDasharray={`${Math.max(0.5, chance * c)} ${c}`} transform="rotate(-90 90 90)" />
         <g className={`upg-needle ${spinning ? "spin" : ""}`} style={{ ["--a" as string]: `${angle + (spinning ? 1440 : 0)}deg` }}>
           <path d="M90 14 L84 34 H96 Z" fill="#ffd23f" stroke="#1e1006" strokeWidth="2" />
         </g>
       </svg>
       <div className="upg-center">
         <b className="display num">{pctText(chance)}</b>
-        <span className="tiny muted">{chance >= 0.35 ? "хороший шанс" : chance >= 0.1 ? "средний шанс" : chance > 0 ? "низкий шанс" : "выбери ставку и цель"}</span>
+        <span className="tiny muted">{won === true ? "прокачано!" : won === false ? "сгорело" : chance >= 0.35 ? "хороший шанс" : chance >= 0.2 ? "средний шанс" : "низкий шанс"}</span>
       </div>
     </div>
   );
@@ -242,33 +306,56 @@ function Gauge({ chance, roll, spinning }: { chance: number; roll: number | null
 function UpgraderHelp() {
   return (
     <Help topic="upgrader" title="Апгрейдер">
-      <p>Ставишь находки из двора — одну или несколько одинаковых — и пробуешь превратить их в вещь дороже. Чем дороже цель, тем ниже шанс; больше штук в ставке — шанс выше (до {Math.round(UPGRADE_MAX * 100)}%).</p>
-      <p>Получилось — цель в инвентаре. Не повезло — ставка сгорает. С крышки от энергетика можно дойти даже до Rug Pull Gun, но шанс крошечный.</p>
+      <p>Ставишь вещь — находку, оружие, энергетик (можно несколько одинаковых) или уже улучшенную вещь — и выбираешь множитель: ×2, ×4, ×8, или шанс: 15%, 30%, 70%. Шанс = 90% ÷ множитель.</p>
+      <p>Получилось — в инвентарь падает <b>улучшенная</b> вещь с золотой обводкой: она стоит «ставка × множитель» и столько же даёт при продаже. В остальном это та же вещь: энергетик даёт ту же энергию, оружие бьёт так же (возьми его в бой). Не повезло — ставка сгорает.</p>
+      <p>Улучшенную вещь можно поставить снова — и так дойти хоть до Rug Pull Gun.</p>
     </Help>
   );
 }
 
+type Stake = { kind: "plain"; id: string } | { kind: "up"; uid: number };
+
 export function UpgraderWindow({ onClose }: { onClose: () => void }) {
   const { state, act, busy } = useGame();
   const inv = useMemo(() => new Map((state?.inventory ?? []).map((x) => [x.id, x.qty])), [state?.inventory]);
-  const stakes = Object.keys(UPGRADE_STAKES).filter((id) => (inv.get(id) ?? 0) > 0);
-  const [stake, setStake] = useState<string | null>(null);
+  const ups = state?.upgraded ?? [];
+  const plain = Object.keys(ITEM_VALUES).filter((id) => (inv.get(id) ?? 0) > 0).sort((a, b) => ITEM_VALUES[a] - ITEM_VALUES[b]);
+  const [stake, setStake] = useState<Stake | null>(null);
   const [qty, setQty] = useState(1);
-  const [target, setTarget] = useState(UPGRADE_TARGETS[3].id);
+  const [mode, setMode] = useState<UpgradeMode>("x2");
   const [roll, setRoll] = useState<number | null>(null);
   const [spinning, setSpinning] = useState(false);
-  const [res, setRes] = useState<{ won: boolean; target: string } | null>(null);
-  const cur = stake && (inv.get(stake) ?? 0) > 0 ? stake : stakes[0] ?? null;
-  const have = cur ? inv.get(cur) ?? 0 : 0;
-  const q = Math.max(1, Math.min(qty, have));
-  const chance = cur ? upgradeChance(cur, q, target) : 0;
+  const [won, setWon] = useState<boolean | null>(null);
+  // the stake that is still there (after a spin the old one may be gone)
+  const cur: Stake | null = (() => {
+    if (stake?.kind === "up" && ups.some((u) => u.uid === stake.uid)) return stake;
+    if (stake?.kind === "plain" && (inv.get(stake.id) ?? 0) > 0) return stake;
+    if (ups[0]) return { kind: "up", uid: ups[0].uid };
+    return plain[0] ? { kind: "plain", id: plain[0] } : null;
+  })();
+  const up = cur?.kind === "up" ? ups.find((u) => u.uid === cur.uid) ?? null : null;
+  const curId = cur ? (cur.kind === "up" ? up?.itemId ?? "" : cur.id) : "";
+  const have = cur?.kind === "plain" ? inv.get(cur.id) ?? 0 : 1;
+  const q = cur?.kind === "plain" ? Math.max(1, Math.min(qty, have)) : 1;
+  const stakeValue = cur ? (cur.kind === "up" ? up?.value ?? 0 : (ITEM_VALUES[cur.id] ?? 0) * q) : 0;
+  const m = upgradeMode(mode)!;
+  const chance = upgradeChanceOf(m.mult);
+  const value = upgradeValue(stakeValue, m.mult);
+  const target = upgradeTarget(value);
+  const pickStake = (s: Stake) => {
+    setStake(s);
+    setQty(1);
+    setWon(null);
+    setRoll(null);
+  };
   const go = async () => {
-    if (!cur || !chance) return;
-    setRes(null);
+    if (!cur || spinning) return;
+    setWon(null);
     setSpinning(true);
     haptic.tap();
     sfx("tap");
-    const r = await act<{ won: boolean; roll: number; target: string }>("upgrade", { stake: cur, qty: q, target });
+    const body = cur.kind === "up" ? { uid: cur.uid, mode } : { stake: cur.id, qty: q, mode };
+    const r = await act<{ won: boolean; roll: number; uid: number | null }>("upgrade", body);
     if (!r) {
       setSpinning(false);
       return;
@@ -276,61 +363,65 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
     setRoll(r.roll);
     setTimeout(() => {
       setSpinning(false);
-      setRes({ won: r.won, target: r.target });
-      if (r.won) { haptic.big(); sfx("levelup"); } else { haptic.err(); sfx("error"); }
+      setWon(r.won);
+      if (r.won) {
+        haptic.big();
+        sfx("levelup");
+        // the prize becomes the next stake: one more tap to go higher
+        if (r.uid) setStake({ kind: "up", uid: r.uid });
+      } else {
+        haptic.err();
+        sfx("error");
+      }
     }, 1600);
   };
   return (
     <Modal title={<span className="title-row">Апгрейдер <UpgraderHelp /></span>} onClose={onClose} wide>
       <div className="upg">
-        <div className="upg-box stake">
+        <div className={`upg-box stake ${up ? "upgraded" : ""}`}>
           <span className="tiny upg-cap">ТВОЯ СТАВКА</span>
           {cur ? (
             <>
-              <ItemArt id={cur} size={72} />
-              <b className="small center">{itemById(cur)?.name}</b>
-              <span className="tiny muted num">{full((UPGRADE_STAKES[cur] ?? 0) * q)} ₽ · ×{q} из {have}</span>
-              <input type="range" min={1} max={Math.max(1, have)} value={q} onChange={(e) => setQty(Number(e.target.value))} aria-label="Сколько ставить" />
+              <span className="upg-art"><ItemArt id={curId} size={72} />{up && <i className="up-star">★</i>}</span>
+              <b className="small center">{itemById(curId)?.name}{up ? " ★" : q > 1 ? ` ×${q}` : ""}</b>
+              <span className="upg-price num">{full(stakeValue)} ₽</span>
+              {cur.kind === "plain" && have > 1 && <input type="range" min={1} max={have} value={q} onChange={(e) => { setQty(Number(e.target.value)); setWon(null); }} aria-label="Сколько ставить" />}
             </>
           ) : (
-            <span className="small muted center">Нет находок для ставки. Собери что-нибудь во дворе.</span>
+            <span className="small muted center">Нечего ставить. Собери находки во дворе.</span>
           )}
         </div>
-        <Gauge chance={chance} roll={roll} spinning={spinning} />
-        <div className="upg-box target">
+        <Gauge chance={chance} roll={roll} spinning={spinning} won={won} />
+        <div className="upg-box target upgraded">
           <span className="tiny upg-cap">ЦЕЛЬ</span>
-          <ItemArt id={target} size={72} />
-          <b className="small center">{itemById(target)?.name}</b>
-          <span className="tiny muted num">{full(UPGRADE_TARGETS.find((t) => t.id === target)?.value ?? 0)} ₽</span>
+          <span className="upg-art"><ItemArt id={target} size={72} /><i className="up-star">★</i></span>
+          <b className="small center">{itemById(target)?.name} ★</b>
+          <span className="upg-price num gold">{full(value)} ₽</span>
         </div>
       </div>
-      {res && (
-        <div className={`mg-result ${res.won ? "win" : "lose"}`}>
-          <b className="display">{res.won ? "Прокачано!" : "Сгорело"}</b>
-          <span className="tiny muted">{res.won ? `${itemById(res.target)?.name} — в инвентаре` : "Ставка ушла в никуда. Ещё разок?"}</span>
-        </div>
-      )}
-      <button className="btn big block gold" style={{ marginTop: 10 }} disabled={!chance || spinning || busy === "upgrade"} onClick={go}>
-        {spinning ? "Крутим…" : "Прокачать"}
-      </button>
-      <span className="tiny muted">Ставка</span>
-      <div className="upg-pick">
-        {stakes.length ? stakes.map((id) => (
-          <button key={id} className={`upg-chip ${id === cur ? "on" : ""}`} onClick={() => { setStake(id); setRes(null); }} title={itemById(id)?.name}>
-            <ItemArt id={id} size={34} /><span className="num">{inv.get(id)}</span>
+      <div className="upg-modes">
+        {UPGRADE_MODES.map((x) => (
+          <button key={x.id} className={`upg-mode ${x.id.startsWith("c") ? `ch ch-${x.id}` : ""} ${x.id === mode ? "on" : ""}`} onClick={() => { setMode(x.id); setWon(null); setRoll(null); }} disabled={spinning}>
+            {x.label}
           </button>
-        )) : <span className="tiny muted">пусто</span>}
+        ))}
       </div>
-      <span className="tiny muted">Цель</span>
+      <button className="btn big block gold upg-go" disabled={!cur || spinning || busy === "upgrade"} onClick={go}>
+        {spinning ? "Крутим…" : "⇪ Прокачать"}
+      </button>
+      <span className="tiny muted">Что поставить</span>
       <div className="upg-pick">
-        {UPGRADE_TARGETS.map((t) => {
-          const c = cur ? upgradeChance(cur, q, t.id) : 0;
-          return (
-            <button key={t.id} className={`upg-chip ${t.id === target ? "on" : ""} ${c ? "" : "off"}`} onClick={() => { setTarget(t.id); setRes(null); }} title={itemById(t.id)?.name}>
-              <ItemArt id={t.id} size={34} /><span className="num">{c ? pctText(c) : "—"}</span>
-            </button>
-          );
-        })}
+        {ups.map((u) => (
+          <button key={`u${u.uid}`} className={`upg-chip upgraded ${cur?.kind === "up" && cur.uid === u.uid ? "on" : ""}`} onClick={() => pickStake({ kind: "up", uid: u.uid })} title={`${itemById(u.itemId)?.name} ★`}>
+            <ItemArt id={u.itemId} size={34} /><span className="num">{full(u.value)} ₽</span>
+          </button>
+        ))}
+        {plain.map((id) => (
+          <button key={id} className={`upg-chip ${cur?.kind === "plain" && cur.id === id ? "on" : ""}`} onClick={() => pickStake({ kind: "plain", id })} title={itemById(id)?.name}>
+            <ItemArt id={id} size={34} /><span className="num">×{inv.get(id)}</span>
+          </button>
+        ))}
+        {!ups.length && !plain.length && <span className="tiny muted">пусто</span>}
       </div>
     </Modal>
   );

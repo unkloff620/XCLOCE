@@ -1015,21 +1015,40 @@ describe("yard mini games", () => {
     await expect(act(db, p, "game_start", { game: "zonk" }, T0 + M)).rejects.toMatchObject({ code: "no_money" });
   });
 
-  it("upgrader: the chance follows the stake's value; the stake burns, a win gives the target", async () => {
-    const { upgradeChance } = await import("../src/content/games.ts");
-    expect(upgradeChance("spinner", 2, "keyboard")).toBeCloseTo((120 / 380) * 0.9, 3);
-    expect(upgradeChance("bottle-cap", 1, "rug-pull-gun")).toBeGreaterThan(0);
-    expect(upgradeChance("lost-wallet", 5, "keyboard")).toBe(0); // over 75%
+  it("upgrader: ×2/×4/×8 or 15/30/70%; a win gives an upgraded thing worth stake × multiplier, sold for that price", async () => {
+    const { upgradeChanceOf, upgradeMode, upgradeTarget } = await import("../src/content/games.ts");
+    expect(upgradeChanceOf(upgradeMode("x2")!.mult)).toBeCloseTo(0.45, 4);
+    expect(upgradeChanceOf(upgradeMode("x8")!.mult)).toBeCloseTo(0.1125, 4);
+    expect(upgradeChanceOf(upgradeMode("c70")!.mult)).toBeCloseTo(0.7, 4);
+    expect(upgradeTarget(240)).toBe("lost-wallet");
+    expect(upgradeTarget(2500)).toBe("rug-pull-gun");
     const p = await newPlayer(db);
     await give(db, p, "spinner", 4);
-    const lose = await act(db, p, "upgrade", { stake: "spinner", qty: 2, target: "keyboard" }, T0, always(0.99));
-    expect(lose.result.won).toBe(false);
-    expect(await qty(db, p, "spinner")).toBe(2);
-    const win = await act(db, p, "upgrade", { stake: "spinner", qty: 2, target: "keyboard" }, T0, always(0.01));
-    expect(win.result.won).toBe(true);
-    expect(await qty(db, p, "spinner")).toBe(0);
+    // lose: the stake burns, nothing comes
+    const lose = await act(db, p, "upgrade", { stake: "spinner", qty: 1, mode: "x2" }, T0, always(0.99));
+    expect(lose.result).toMatchObject({ won: false, uid: null });
+    expect(await qty(db, p, "spinner")).toBe(3);
+    // win: 2 spinners (120 ₽) ×2 → an upgraded thing worth 240 ₽ (the dearest item not above that)
+    const win = await act(db, p, "upgrade", { stake: "spinner", qty: 2, mode: "x2" }, T0, always(0.01));
+    expect(win.result).toMatchObject({ won: true, stakeValue: 120, value: 240, target: upgradeTarget(240) });
+    expect(win.state.upgraded).toEqual([{ uid: win.result.uid, itemId: upgradeTarget(240), value: 240 }]);
+    expect(await qty(db, p, "spinner")).toBe(1);
+    // the upgraded thing can go again: 240 ×4 = 960
+    const again = await act(db, p, "upgrade", { uid: win.result.uid, mode: "x4" }, T0, always(0.01));
+    expect(again.result).toMatchObject({ won: true, stakeValue: 240, value: 960, target: "gpu" });
+    expect(again.state.upgraded).toHaveLength(1);
+    // sold for its own price
+    const rub = await wallet(db, p, "RUB");
+    await act(db, p, "up_sell", { uid: again.result.uid }, T0);
+    expect(await wallet(db, p, "RUB")).toBe(rub + 960);
+    await expect(act(db, p, "up_sell", { uid: again.result.uid }, T0)).rejects.toMatchObject({ code: "no_item" });
+    // an upgraded weapon taken into the fight becomes a plain one
+    await give(db, p, "keyboard", 1);
+    const kb = await act(db, p, "upgrade", { stake: "keyboard", qty: 1, mode: "c70" }, T0, always(0.01));
+    await act(db, p, "up_take", { uid: kb.result.uid }, T0);
     expect(await qty(db, p, "keyboard")).toBe(1);
-    await expect(act(db, p, "upgrade", { stake: "spinner", qty: 1, target: "keyboard" }, T0)).rejects.toMatchObject({ code: "no_item" });
+    await expect(act(db, p, "upgrade", { stake: "spinner", qty: 1, mode: "x3" }, T0)).rejects.toMatchObject({ code: "bad_upgrade" });
+    await expect(act(db, p, "upgrade", { stake: "jeans", qty: 1, mode: "x2" }, T0)).rejects.toMatchObject({ code: "bad_upgrade" });
   });
 });
 
