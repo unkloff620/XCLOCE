@@ -18,15 +18,16 @@ const ACTION_TYPES = [
   "fight_start", "fight_claim", "fight_flee", "task", "location_claim", "yard_pick", "buy", "exchange", "use", "equip", "unequip",
   "clan_create", "clan_join", "clan_leave", "clan_kick", "clan_edit", "daily_claim", "sell", "rename", "slots_spin",
   "equipment_upgrade", "talent_up", "talent_reset", "room_buy", "room_set", "look_set", "decor_set", "quest_claim", "quest_chest",
-  "notify_set", "achievement_claim", "prize_claim",
+  "notify_set", "achievement_claim", "prize_claim", "game_start", "bj_move", "zonk_move", "upgrade", "clan_cancel", "clan_accept", "clan_reject",
 ];
 const ACTION_NAMES: Record<string, string> = {
   fight_start: "начал бой", fight_claim: "забрал награду боя", fight_flee: "сбежал из боя", task: "задание", location_claim: "награда локации",
   yard_pick: "находка во дворе", buy: "покупка", exchange: "обмен", use: "использовал", equip: "надел", unequip: "снял",
-  clan_create: "создал клан", clan_join: "вступил в клан", clan_leave: "вышел из клана", clan_kick: "исключил из клана", clan_edit: "изменил клан",
+  clan_create: "создал клан", clan_join: "заявка в клан", clan_leave: "вышел из клана", clan_kick: "исключил из клана", clan_edit: "изменил клан",
   daily_claim: "ежедневная награда", sell: "продажа", rename: "смена имени", slots_spin: "автомат 777", equipment_upgrade: "улучшение комнаты",
   talent_up: "талант", talent_reset: "сброс талантов", room_buy: "купил комнату", room_set: "сменил комнату", look_set: "внешность", decor_set: "декор",
   quest_claim: "задание дня", quest_chest: "сундук дня", notify_set: "уведомления", achievement_claim: "достижение", prize_claim: "приз недели",
+  game_start: "мини-игра", bj_move: "блэкджек", zonk_move: "зонк", upgrade: "апгрейдер", clan_cancel: "отменил заявку", clan_accept: "принял в клан", clan_reject: "отклонил заявку",
 };
 const OP_NAMES: Record<string, string> = {
   set_money: "валюта", set_item: "предмет", set_xp: "авторитет", set_energy: "энергия", set_talents: "свободные таланты",

@@ -10,6 +10,7 @@ import * as shop from "./systems/shop.ts";
 import * as clans from "./systems/clans.ts";
 import * as daily from "./systems/daily.ts";
 import * as extras from "./systems/extras.ts";
+import * as games from "./systems/games.ts";
 import * as home from "./systems/home.ts";
 import * as quests from "./systems/quests.ts";
 import * as notify from "./systems/notify.ts";
@@ -50,6 +51,8 @@ export const ACTIONS = [
   "daily_claim", "sell", "rename", "slots_spin",
   "equipment_upgrade", "talent_up", "talent_reset", "room_buy", "room_set", "look_set", "decor_set", "help_seen",
   "quest_claim", "quest_chest", "notify_set", "achievement_claim", "prize_claim", "clan_edit",
+  "game_start", "bj_move", "zonk_move", "upgrade",
+  "clan_cancel", "clan_accept", "clan_reject",
 ] as const;
 export type ActionType = (typeof ACTIONS)[number];
 
@@ -66,7 +69,7 @@ async function afterAction(ctx: Ctx, type: ActionType, result: unknown) {
     case "attack": {
       await quests.questTick(ctx, "damage", Number(r.damage) || 0);
       await rating.addWeeklyDamage(ctx, Number(r.damage) || 0);
-      await quests.questTick(ctx, "hits", 1);
+      await quests.questTick(ctx, "hits", Number(r.count) || 1);
       // a free weapon (fist, mouse, candle) rests 5 hours: remind when it is ready again
       if (typeof r.readyAt === "number" && weaponById(String(r.weapon))?.weapon.kind === "permanent") {
         await notify.schedule(ctx.q, ctx.pid, "fist_ready", r.readyAt, { fightId: r.fightId, weapon: r.weapon });
@@ -93,7 +96,7 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
   const idem = typeof body.idem === "string" ? body.idem.slice(0, 80) : undefined;
   switch (type) {
     case "fight_start": return combat.startFight(ctx, str(body.boss, "boss", 40), body.solo === true);
-    case "attack": return combat.attack(ctx, str(body.weapon, "weapon", 40), idem);
+    case "attack": return combat.attack(ctx, str(body.weapon, "weapon", 40), idem, body.count === undefined ? 1 : num(body.count, "count"));
     case "fight_claim": return combat.claimFight(ctx, num(body.fightId, "fightId"));
     case "fight_flee": return combat.fleeFight(ctx);
     case "task": return locations.doTask(ctx, str(body.taskId, "taskId", 40));
@@ -126,6 +129,13 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "achievement_claim": return achievements.claimAchievement(ctx, str(body.id, "id", 40));
     case "prize_claim": return rating.claimPrize(ctx, num(body.id, "id"));
     case "clan_edit": return clans.editClan(ctx, str(body.name, "name", 40), str(body.emblem, "emblem", 20), str(body.color, "color", 10), typeof body.description === "string" ? body.description.slice(0, 400) : "");
+    case "game_start": return games.startGame(ctx, oneOf(body.game, ["blackjack", "zonk"] as const, "game"));
+    case "bj_move": return games.bjMove(ctx, oneOf(body.move, ["hit", "stand"] as const, "move"));
+    case "zonk_move": return games.zonkMove(ctx, Array.isArray(body.pick) ? body.pick.slice(0, 6).map((x) => Number(x)) : [], oneOf(body.then, ["roll", "bank"] as const, "then"));
+    case "upgrade": return games.upgrade(ctx, str(body.stake, "stake", 40), num(body.qty, "qty"), str(body.target, "target", 40));
+    case "clan_cancel": return clans.cancelRequest(ctx);
+    case "clan_accept": return clans.answerRequest(ctx, num(body.playerId, "playerId"), true);
+    case "clan_reject": return clans.answerRequest(ctx, num(body.playerId, "playerId"), false);
     default: throw new GameError("bad_action", "Неизвестное действие");
   }
 }

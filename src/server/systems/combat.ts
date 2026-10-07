@@ -1,6 +1,6 @@
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, idempotent, itemQty, ledger, moscowDay, nextMoscowMidnight, takeItem, type Ctx, type Granted } from "../core.ts";
-import { BOSSES, bossById, keyId, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
+import { BOSSES, EXTRA_KEY_CHANCE, bossById, keyId, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
 import { WEAPONS, itemById, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
 import { mergeRewards, scaleReward } from "../../content/rewards.ts";
@@ -166,12 +166,20 @@ export interface HitResult {
   /** damage dealt to bosses of all time (the talent counter) and talents this hit earned (content/talents.ts) */
   talentDamage: number;
   talentsGained: number;
+  /** how many weapons this action used (×10, ×100, ×1000 for consumables) and how many of those hits were crits */
+  count: number;
+  crits: number;
 }
 
-export async function attack(ctx: Ctx, weaponId: string, idem?: string): Promise<HitResult> {
+/** How many consumables one tap may use at once. The free weapons always hit once. */
+export const BATCH_SIZES = [1, 10, 100, 1000] as const;
+
+export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1): Promise<HitResult> {
   return idempotent(ctx, idem ? `hit:${idem}` : undefined, async () => {
     const w = weaponById(weaponId);
     if (!w) throw new GameError("bad_weapon", "Этим нельзя бить босса");
+    if (!(BATCH_SIZES as readonly number[]).includes(want)) throw new GameError("bad_count", "Можно бить по 1, 10, 100 или 1000");
+    if (want > 1 && w.weapon.kind !== "consumable") throw new GameError("bad_count", `${w.name} бьёт только по одному разу`);
     const [mine] = await ctx.q.query<FightRow>("SELECT * FROM fights WHERE player_id=$1 AND status='active'", [ctx.pid]);
     if (!mine) throw new GameError("no_fight", "Сначала начни бой с боссом");
     const boss = await lockBoss(ctx.q, mine.boss_id);
@@ -180,11 +188,13 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string): Promise
       throw new GameError("fight_over", "Время боя вышло — босс ушёл");
     }
 
-    // pay with the weapon
+    // pay with the weapon (a batch uses what is left of it, and only as many as the boss needs)
     let left: number | null = null;
     let readyAt: number | null = null;
+    let count = 1;
     if (w.weapon.kind === "consumable") {
-      left = await takeItem(ctx, w.id, 1, `hit:${mine.boss_id}`);
+      count = Math.min(want, await itemQty(ctx.q, ctx.pid, w.id));
+      if (count < 1) throw new GameError("no_item", `Нет предмета: ${w.name}`);
     } else {
       if ((await itemQty(ctx.q, ctx.pid, w.id)) < 1) throw new GameError("no_item", `Нет оружия: ${w.name}`);
       const [cd] = await ctx.q.query<{ ready_at: Date }>("SELECT ready_at FROM cooldowns WHERE player_id=$1 AND item_id=$2", [ctx.pid, w.id]);
@@ -202,18 +212,29 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string): Promise
     // home bonuses: +damage %, crit chance and crit power (equipment + rooms); this weapon's talents: +damage %, crit power
     const bonus = await playerBonus(ctx.q, ctx.pid);
     const wt = weaponTalentBonus(await weaponTalents(ctx.q, ctx.pid), w.id);
-    // talents add flat damage to the weapon's base; the room and trophies multiply the sum
-    let damage = Math.round((w.weapon.damage + wt.flat) * (1 + bonus.damage));
-    const crit = bonus.critChance > 0 && ctx.rng() < bonus.critChance;
-    if (crit) damage = Math.round(damage * (BASE_CRIT_MULT + bonus.critDamage + wt.critDamage));
+    // talents add flat damage to the weapon's base; the room and trophies multiply the sum; every hit of a batch rolls its crit
+    const one = Math.round((w.weapon.damage + wt.flat) * (1 + bonus.damage));
+    const critOne = Math.round(one * (BASE_CRIT_MULT + bonus.critDamage + wt.critDamage));
+    const hpBefore = fightHp({ ...mine, end_total: null, my_damage: Number(mine.my_damage) }, boss.damage_total);
+    let damage = 0, crits = 0, used = 0;
+    while (used < count) {
+      const c = bonus.critChance > 0 && ctx.rng() < bonus.critChance;
+      damage += c ? critOne : one;
+      if (c) crits++;
+      used++;
+      if (damage >= hpBefore) break;
+    }
+    count = used;
+    const crit = crits > 0;
+    if (w.weapon.kind === "consumable") left = await takeItem(ctx, w.id, count, `hit:${mine.boss_id}`);
     const seq = boss.last_seq + 1;
     const total = boss.damage_total + damage;
     await ctx.q.query("UPDATE bosses SET damage_total=$2, last_seq=$3 WHERE id=$1", [boss.id, total, seq]);
     await ctx.q.query(
-      "INSERT INTO boss_hits (boss_id, seq, player_id, fight_id, weapon, damage, phrase, created_at, crit) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)",
-      [boss.id, seq, ctx.pid, mine.id, w.id, damage, phraseIdx, new Date(ctx.now), crit],
+      "INSERT INTO boss_hits (boss_id, seq, player_id, fight_id, weapon, damage, phrase, created_at, crit, count) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)",
+      [boss.id, seq, ctx.pid, mine.id, w.id, damage, phraseIdx, new Date(ctx.now), crit, count],
     );
-    await ctx.q.query("UPDATE fights SET my_damage = my_damage + $2, my_hits = my_hits + 1 WHERE id=$1", [mine.id, damage]);
+    await ctx.q.query("UPDATE fights SET my_damage = my_damage + $2, my_hits = my_hits + $3 WHERE id=$1", [mine.id, damage, count]);
     const fightDamage = mine.my_damage + damage;
     // talents for the damage of all time: the counter carries over from fight to fight
     const [st] = await ctx.q.query<{ total_damage: number }>("SELECT total_damage FROM player_stats WHERE player_id=$1", [ctx.pid]);
@@ -225,12 +246,12 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string): Promise
       await ledger(ctx, "talent", "talent", talentsGained, `fight:${mine.id}`);
     }
     await ctx.q.query(
-      "INSERT INTO boss_damage (boss_id, player_id, damage, hits) VALUES ($1,$2,$3,1) ON CONFLICT (boss_id, player_id) DO UPDATE SET damage = boss_damage.damage + EXCLUDED.damage, hits = boss_damage.hits + 1",
-      [boss.id, ctx.pid, damage],
+      "INSERT INTO boss_damage (boss_id, player_id, damage, hits) VALUES ($1,$2,$3,$4) ON CONFLICT (boss_id, player_id) DO UPDATE SET damage = boss_damage.damage + EXCLUDED.damage, hits = boss_damage.hits + EXCLUDED.hits",
+      [boss.id, ctx.pid, damage, count],
     );
     await ctx.q.query(
-      "UPDATE player_stats SET total_damage = total_damage + $2, weapons = jsonb_set(weapons, ARRAY[$3::text], to_jsonb(COALESCE((weapons->>$3)::int, 0) + 1)) WHERE player_id=$1",
-      [ctx.pid, damage, w.id],
+      "UPDATE player_stats SET total_damage = total_damage + $2, weapons = jsonb_set(weapons, ARRAY[$3::text], to_jsonb(COALESCE((weapons->>$3)::int, 0) + $4)) WHERE player_id=$1",
+      [ctx.pid, damage, w.id, count],
     );
 
     // every running fight with this boss whose HP reached zero is won by this hit
@@ -250,7 +271,7 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string): Promise
     const hp = mineWon ? 0 : fightHp({ ...mine, end_total: null, my_damage: Number(mine.my_damage) + damage }, total);
     return {
       fightId: mine.id, weapon: w.id, damage, crit, phrase: phrases[phraseIdx], hp, hpMax: mine.hp_max,
-      status: mineWon ? "won" : "active", left, readyAt, finished: won.length, fightDamage, talentDamage, talentsGained,
+      status: mineWon ? "won" : "active", left, readyAt, finished: won.length, fightDamage, talentDamage, talentsGained, count, crits,
     };
   });
 }
@@ -274,7 +295,9 @@ export async function claimFight(ctx: Ctx, fightId: number) {
   const share = rewardShare(myDamage, f.hp_max, ctx.cfg.fight.fullShare);
   const earnedKey = myDamage >= f.hp_max * ctx.cfg.fight.keyShare;
   const drops = earnedKey ? (def.drop ?? []).filter((d) => ctx.rng() < d.chance).map((d) => ({ id: d.id, qty: d.qty })) : [];
-  const key = def.final || !earnedKey ? [] : [{ id: keyId(def.id), qty: 1 }];
+  // the pass of this boss, and with EXTRA_KEY_CHANCE a second one
+  const bonusKey = !def.final && earnedKey && ctx.rng() < EXTRA_KEY_CHANCE;
+  const key = def.final || !earnedKey ? [] : [{ id: keyId(def.id), qty: bonusKey ? 2 : 1 }];
   const unlocked = earnedKey ? await rollUnlocks(ctx, def) : [];
   // one-of-a-kind rewards (the statue) are not handed out again
   const base = scaleReward(def.reward, share);
@@ -288,7 +311,7 @@ export async function claimFight(ctx: Ctx, fightId: number) {
       [def.id, ctx.pid],
     );
   }
-  return { status: "won" as const, reward: granted, share, key: earnedKey };
+  return { status: "won" as const, reward: granted, share, key: earnedKey, bonusKey };
 }
 
 /** Drops items with maxStack 1 the player already has. */
@@ -354,15 +377,17 @@ interface HitView {
   phrase: number;
   at: number;
   crit: boolean;
+  /** weapons used by this tap (×10, ×100, ×1000) */
+  count: number;
 }
 
 async function hitsInWindow(q: Queryable, bossId: string, afterSeq: number, upToSeq: number | null, limit: number, onlyPlayer: number | null = null): Promise<HitView[]> {
-  const rows = await q.query<{ seq: number; player_id: number; display_name: string; weapon: string; damage: number; phrase: number; created_at: Date; crit: boolean }>(
-    `SELECT h.seq, h.player_id, p.display_name, h.weapon, h.damage, h.phrase, h.created_at, h.crit FROM boss_hits h JOIN players p ON p.id = h.player_id
+  const rows = await q.query<{ seq: number; player_id: number; display_name: string; weapon: string; damage: number; phrase: number; created_at: Date; crit: boolean; count: number }>(
+    `SELECT h.seq, h.player_id, p.display_name, h.weapon, h.damage, h.phrase, h.created_at, h.crit, h.count FROM boss_hits h JOIN players p ON p.id = h.player_id
      WHERE h.boss_id=$1 AND h.seq > $2 AND ($3::bigint IS NULL OR h.seq <= $3) AND ($5::int IS NULL OR h.player_id = $5) ORDER BY h.seq DESC LIMIT $4`,
     [bossId, afterSeq, upToSeq, limit, onlyPlayer],
   );
-  return rows.map((r) => ({ seq: r.seq, playerId: r.player_id, name: r.display_name, weapon: r.weapon, damage: r.damage, phrase: r.phrase, at: new Date(r.created_at).getTime(), crit: !!r.crit }));
+  return rows.map((r) => ({ seq: r.seq, playerId: r.player_id, name: r.display_name, weapon: r.weapon, damage: r.damage, phrase: r.phrase, at: new Date(r.created_at).getTime(), crit: !!r.crit, count: Number(r.count ?? 1) }));
 }
 
 export async function fightView(q: Queryable, pid: number, fightId: number, sinceSeq = 0, now = Date.now()) {
@@ -443,13 +468,13 @@ export async function bossDetails(q: Queryable, pid: number, bossId: string) {
     "SELECT d.player_id, p.display_name, d.damage, d.wins FROM boss_damage d JOIN players p ON p.id=d.player_id WHERE d.boss_id=$1 AND d.damage > 0 ORDER BY d.damage DESC LIMIT 20",
     [bossId],
   );
-  const mine = await q.query<{ weapon: string; damage: number; phrase: number; created_at: Date; crit: boolean }>(
-    "SELECT weapon, damage, phrase, created_at, crit FROM boss_hits WHERE boss_id=$1 AND player_id=$2 ORDER BY id DESC LIMIT 30",
+  const mine = await q.query<{ weapon: string; damage: number; phrase: number; created_at: Date; crit: boolean; count: number }>(
+    "SELECT weapon, damage, phrase, created_at, crit, count FROM boss_hits WHERE boss_id=$1 AND player_id=$2 ORDER BY id DESC LIMIT 30",
     [bossId, pid],
   );
   return {
     top: top.map((t) => ({ playerId: t.player_id, name: t.display_name, damage: t.damage, wins: t.wins })),
-    myHits: mine.map((h) => ({ weapon: h.weapon, damage: h.damage, phrase: h.phrase, at: new Date(h.created_at).getTime(), crit: !!h.crit })),
+    myHits: mine.map((h) => ({ weapon: h.weapon, damage: h.damage, phrase: h.phrase, at: new Date(h.created_at).getTime(), crit: !!h.crit, count: Number(h.count ?? 1) })),
   };
 }
 

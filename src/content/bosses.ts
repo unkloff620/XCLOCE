@@ -174,6 +174,8 @@ export const FIGHTS_PER_DAY = 7;
  */
 export const FULL_SHARE = 0.02;
 export const KEY_SHARE = 0.01;
+/** a win that earned the pass gives a second pass of the same boss with this chance */
+export const EXTRA_KEY_CHANCE = 0.1;
 /** reward multiplier for damage dealt in a fight */
 export function rewardShare(myDamage: number, hpMax: number, full = FULL_SHARE): number {
   if (!(myDamage > 0) || !(hpMax > 0)) return 0;

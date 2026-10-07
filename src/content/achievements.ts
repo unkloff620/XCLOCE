@@ -7,7 +7,7 @@ import { BOSSES, type CardTier } from "./bosses.ts";
  */
 
 /** what a badge measures (server: systems/achievements.ts → statsFor) */
-export type AchStat = "authority" | "damage" | "hits" | "wins" | "soloWins" | "kills" | "locations" | "tasks" | "yard" | "bestStreak" | "chests" | "weeklyTop" | `solo:${string}`;
+export type AchStat = "authority" | "damage" | "hits" | "wins" | "soloWins" | "kills" | "locations" | "tasks" | "yard" | "bestStreak" | "chests" | "weeklyTop" | `solo:${string}` | `win:${string}`;
 
 /** 1 bronze · 2 silver · 3 gold · 4 platinum · 5 diamond */
 export type AchTier = 1 | 2 | 3 | 4 | 5;
@@ -75,6 +75,18 @@ export const SOLO_BOSS_ACHIEVEMENTS: AchievementDef[] = BOSSES.map((b) => {
   };
 });
 
+/** «Убийца боссов»: three medals per boss — bronze, silver and gold for 10, 50 and 100 wins. Stat "win:<boss id>". */
+export const BOSS_KILL_TARGETS = [10, 50, 100] as const;
+export const BOSS_KILL_ACHIEVEMENTS: AchievementDef[] = BOSSES.flatMap((b) =>
+  BOSS_KILL_TARGETS.map((target, i) => {
+    const tier = (i + 1) as AchTier;
+    return {
+      id: `bosskill-${b.id}-${tier}`, category: "boss-kill", name: `${b.name}: ${TIER_NAMES[tier]}`, hint: `Победи босса ${b.name} ${target} раз`,
+      stat: `win:${b.id}` as const, target, tier, icon: "ach-wins", reward: TIER_REWARDS[tier],
+    };
+  }),
+);
+
 export const ACHIEVEMENTS: AchievementDef[] = [
   ...ACH_CATEGORIES.flatMap((c) =>
     c.targets.map((target, i) => {
@@ -83,6 +95,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     }),
   ),
   ...SOLO_BOSS_ACHIEVEMENTS,
+  ...BOSS_KILL_ACHIEVEMENTS,
 ];
 
 export const achievementById = (id: string) => ACHIEVEMENTS.find((a) => a.id === id);

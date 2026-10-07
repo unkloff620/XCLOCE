@@ -183,7 +183,7 @@ export function BossRulesHelp({ topic, bossId }: { topic: "bosses" | "boss"; bos
             hint: w.weapon!.kind === "permanent" ? `Бесплатно, раз в ${Math.round((w.weapon!.cooldownMin ?? 0) / 60)} ч. Есть у всех.` : "Тратится за удар. Магазин, двор, задания и дроп с боссов.",
           }))} />
           <HelpList title="Что даёт победа" rows={[
-            { key: "pass", icon: <ItemArt id="key-kedr" size={44} />, name: "Пропуск босса", hint: "От 1% урона. Нужен, чтобы открыть следующего босса." },
+            { key: "pass", icon: <ItemArt id="key-kedr" size={44} />, name: "Пропуск босса", hint: "От 1% урона. Вход в бой со следующим боссом. С шансом 10% выпадает сразу два." },
             { key: "cur", icon: <Icon name="RUB" size={40} />, name: "Рубли, доллары, SOL, BTC", hint: "Покупки в магазине, обменник, оборудование и комнаты дома. Чем сильнее босс, тем ценнее валюта." },
             { key: "xp", icon: <Icon name="xp" size={40} />, name: "Авторитет", hint: "Опыт: растёт уровень, место в рейтинге и достижения." },
             { key: "statue", icon: <ItemArt id="statue-close" size={44} />, name: "Трофеи", hint: "За некоторых боссов — особые награды. Статуэтка CLOSE за Утилизатора встаёт на стол и даёт +25% к силе крита." },

@@ -547,4 +547,37 @@ DELETE FROM yard_items WHERE drop_id = 'red-candle';
 ALTER TABLE fights ADD COLUMN IF NOT EXISTS keys_spent INT NOT NULL DEFAULT 0;
 `,
   },
+  {
+    // Удар пачкой (×10, ×100, ×1000 расходного оружия) — одна строка в ленте боя с числом использованного оружия
+    id: "v2-026-batch-hits",
+    sql: `
+ALTER TABLE boss_hits ADD COLUMN IF NOT EXISTS count INT NOT NULL DEFAULT 1;
+`,
+  },
+  {
+    // Мини-игры во дворе (блэкджек, зонк): партия и её состояние; бесплатные партии считаются по дню (МСК).
+    // Заявки в клан: игрок подаёт одну заявку, лидер принимает или отклоняет.
+    id: "v2-027-games-clan-requests",
+    sql: `
+CREATE TABLE IF NOT EXISTS games (
+  id SERIAL PRIMARY KEY,
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  kind TEXT NOT NULL,
+  day TEXT NOT NULL,
+  paid BOOLEAN NOT NULL DEFAULT false,
+  status TEXT NOT NULL DEFAULT 'active',
+  state JSONB NOT NULL,
+  result JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS games_player ON games (player_id, kind, day);
+CREATE TABLE IF NOT EXISTS clan_requests (
+  player_id INT PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
+  clan_id INT NOT NULL REFERENCES clans(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS clan_requests_clan ON clan_requests (clan_id);
+`,
+  },
 ];

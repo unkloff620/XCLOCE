@@ -10,6 +10,8 @@ import { normalizeLook } from "../../content/home.ts";
 import { touchActivity } from "../players.ts";
 import { dailyView } from "./daily.ts";
 import { renameView, slotsView } from "./extras.ts";
+import { gamesView } from "./games.ts";
+import { requestsView } from "./clans.ts";
 import { homeView, weaponTalents } from "./home.ts";
 import { tasksHint } from "./locations.ts";
 import { questsView } from "./quests.ts";
@@ -69,6 +71,7 @@ export async function gameState(ctx: Ctx) {
       : null,
     pending: pending.map((f) => ({ fightId: f.id, bossId: f.boss_id, status: f.status })),
     clan: clan ?? null,
+    clanRequests: await requestsView(ctx.q, ctx.pid, p.clan_id ?? null),
     daily: await dailyView(ctx.q, ctx.pid, ctx.now, ctx.cfg),
     quests: await questsView(ctx.q, ctx.pid, ctx.now),
     notify: await notifyView(ctx.q, ctx.pid),
@@ -78,6 +81,7 @@ export async function gameState(ctx: Ctx) {
     })(),
     achievementsReady: await achievementsReady(ctx.q, ctx.pid, ctx.cfg),
     slots: await slotsView(ctx.q, ctx.pid, ctx.now, ctx.cfg),
+    games: await gamesView(ctx.q, ctx.pid, ctx.now),
     rename: await renameView(ctx.q, ctx.pid, ctx.now, ctx.cfg),
     sell: ctx.cfg.sell,
   };

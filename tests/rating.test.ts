@@ -85,6 +85,7 @@ describe("rating", () => {
     await act(db, a, "clan_create", { name: "Альфа", tag: "ALF", emblem: "skull", color: "#ff4d6d" }, T0 - 8 * D);
     const [{ clan_id }] = await db.query<{ clan_id: number }>("SELECT clan_id FROM players WHERE id=$1", [a]);
     await act(db, b, "clan_join", { clanId: clan_id }, T0 - 8 * D);
+    await act(db, a, "clan_accept", { playerId: b }, T0 - 8 * D);
     await db.query("INSERT INTO weekly_stats (week, player_id, damage) VALUES ($1,$2,500)", [prev, a]);
     const r = await act(db, b, "equip", { itemId: "jeans" }, T0);
     expect(r.state.prizes.map((p: { title: string }) => p.title)).toEqual(["Клан «Альфа» — 1 место недели"]);
@@ -125,6 +126,7 @@ describe("achievements and someone's profile", () => {
     await act(db, a, "clan_create", { name: "Альфа", tag: "ALF", emblem: "skull", color: "#ff4d6d" }, T0);
     const [{ clan_id }] = await db.query<{ clan_id: number }>("SELECT clan_id FROM players WHERE id=$1", [a]);
     await act(db, b, "clan_join", { clanId: clan_id }, T0);
+    await act(db, a, "clan_accept", { playerId: b }, T0);
     await expect(act(db, b, "clan_edit", { name: "Бета", emblem: "moon", color: "#3ddc84", description: "x" }, T0)).rejects.toMatchObject({ code: "not_leader" });
     await act(db, a, "clan_edit", { name: "Бета", emblem: "moon", color: "#3ddc84", description: "Бьём боссов по вечерам" }, T0);
     const [c] = await db.query<{ name: string; emblem: string; description: string }>("SELECT name, emblem, description FROM clans WHERE id=$1", [clan_id]);

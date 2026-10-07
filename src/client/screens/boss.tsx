@@ -53,7 +53,7 @@ function Arena({ boss, hp, hpMax, endsAt, fx, hit, ouch, rug, feed, full: fullSc
           <div className="arena-feed">
             {feed.filter((h) => now - h.at < FEED_MS).slice(0, 3).map((h) => (
               <div key={h.seq} className="feed-line">
-                <b className="ellipsis">{h.name}</b> <ItemArt id={h.weapon} size={18} /> <b className="dmg">−{h.damage}</b>{h.crit && <b className="crit-tag"> КРИТ</b>}
+                <b className="ellipsis">{h.name}</b> <ItemArt id={h.weapon} size={18} /> {(h.count ?? 1) > 1 && <b className="feed-x">×{h.count}</b>} <b className="dmg">−{full(h.damage)}</b>{h.crit && <b className="crit-tag"> КРИТ</b>}
               </div>
             ))}
           </div>
@@ -64,7 +64,28 @@ function Arena({ boss, hp, hpMax, endsAt, fx, hit, ouch, rug, feed, full: fullSc
   );
 }
 
-function WeaponTray({ tray, onHit, onCooldown, onBuy, disabled }: { tray: Tray[]; onHit: (id: string) => void; onCooldown: (name: string, leftMs: number) => void; onBuy: () => void; disabled: boolean }) {
+/** consumables used per tap: ×1, ×10, ×100, ×1000 (the free weapons always hit once) */
+const MULTS = [1, 10, 100, 1000] as const;
+type Mult = (typeof MULTS)[number];
+/** how many of this weapon one tap uses now */
+const batchOf = (kind: string, qty: number, mult: Mult) => (kind === "consumable" ? Math.max(1, Math.min(mult, qty)) : 1);
+
+function MultPicker({ mult, setMult }: { mult: Mult; setMult: (m: Mult) => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className={`mult-pick ${open ? "open" : ""}`}>
+      <button className={`btn sm ${mult > 1 ? "gold" : "dark"} mult-btn`} onClick={() => setOpen((o) => !o)} aria-expanded={open} title="Сколько оружия тратить за одно нажатие">
+        ×{mult}
+      </button>
+      {open && MULTS.map((m) => (
+        <button key={m} className={`btn sm ${m === mult ? "gold" : "dark"}`} onClick={() => { setMult(m); setOpen(false); }}>×{m}</button>
+      ))}
+      {open && <span className="tiny muted mult-note">кулак, мышь и свеча — всегда ×1</span>}
+    </div>
+  );
+}
+
+function WeaponTray({ tray, onHit, onCooldown, onBuy, disabled, mult }: { tray: Tray[]; onHit: (id: string) => void; onCooldown: (name: string, leftMs: number) => void; onBuy: () => void; disabled: boolean; mult: Mult }) {
   const { state } = useGame();
   const now = useNow();
   return (
@@ -88,7 +109,8 @@ function WeaponTray({ tray, onHit, onCooldown, onBuy, disabled }: { tray: Tray[]
             title={`${w.name}: ${w.weapon!.action}`}
           >
             <ItemArt id={w.id} size={40} />
-            <span className="w-dmg display">−{weaponStats(state, w.id).damage}</span>
+            <span className="w-dmg display">−{short(weaponStats(state, w.id).damage * batchOf(w.weapon!.kind, qty, mult))}</span>
+            {!perm && mult > 1 && qty > 1 && <span className="w-mult">×{Math.min(mult, qty)}</span>}
             {!perm && <span className="w-qty num">{qty}</span>}
             {cd > 0 && <span className="w-cd" style={{ ["--p" as string]: `${done * 360}deg` }} />}
           </button>
@@ -125,7 +147,7 @@ export function BossScreen({ id }: { id: string }) {
     return () => clearTimeout(t);
   }, [phrase]);
   const [tab, setTab] = useState<"top" | "mine" | null>(null);
-  const [details, setDetails] = useState<{ top: { playerId: number; name: string; damage: number; wins: number }[]; myHits: { weapon: string; damage: number; phrase: number; at: number }[] } | null>(null);
+  const [details, setDetails] = useState<{ top: { playerId: number; name: string; damage: number; wins: number }[]; myHits: { weapon: string; damage: number; phrase: number; at: number; count?: number }[] } | null>(null);
   const lastSeq = useRef(0);
   const seen = useRef<Set<number>>(new Set());
   const fightId = state?.fight?.bossId === id ? state.fight.id : null;
@@ -195,23 +217,30 @@ export function BossScreen({ id }: { id: string }) {
   const row = list?.bosses.find((b) => b.id === id);
   const hpShown = view ? Math.max(0, view.hp - pendingDmg) : state?.fight?.bossId === id ? state.fight.hp : null;
 
+  const [mult, setMult] = useState<Mult>(1);
   const attack = async (weapon: string) => {
     const w = weaponById(weapon)!;
-    const est = weaponStats(state, w.id).damage;
+    const have = tray.find((x) => x.id === weapon)?.qty ?? 0;
+    const n = batchOf(w.weapon.kind, have, mult);
+    const est = weaponStats(state, w.id).damage * n;
     haptic.hit();
     // heavier weapons sound heavier: 10 dmg → 0, 500+ → 1
     weaponSfx(w.id, Math.min(1, Math.log10(Math.max(10, w.weapon.damage) / 10) / Math.log10(50)));
     play(weapon, est, w.weapon.action, true);
     setPendingDmg((d) => d + est);
-    setTray((t) => t.map((x) => (x.id === weapon && w.weapon.kind === "consumable" ? { ...x, qty: Math.max(0, x.qty - 1) } : x)));
+    setTray((t) => t.map((x) => (x.id === weapon && w.weapon.kind === "consumable" ? { ...x, qty: Math.max(0, x.qty - n) } : x)));
     try {
-      const r = await api.action<{ damage: number; crit: boolean; phrase: string; hp: number; status: string; left: number | null; readyAt: number | null; fightDamage: number; talentDamage: number; talentsGained: number }>("attack", { weapon, idem: crypto.randomUUID() });
-      setPhrase({ text: r.result.crit ? `КРИТ! −${r.result.damage} · ${r.result.phrase || w.weapon.action}` : r.result.phrase || w.weapon.action, id: Date.now(), crit: r.result.crit });
+      const r = await api.action<{ damage: number; crit: boolean; crits: number; count: number; phrase: string; hp: number; status: string; left: number | null; readyAt: number | null; fightDamage: number; talentDamage: number; talentsGained: number }>("attack", { weapon, count: n, idem: crypto.randomUUID() });
+      const batch = (r.result.count ?? 1) > 1;
+      const text = batch
+        ? `×${r.result.count} · −${full(r.result.damage)}${r.result.crits ? ` · критов: ${r.result.crits}` : ""}`
+        : r.result.crit ? `КРИТ! −${r.result.damage} · ${r.result.phrase || w.weapon.action}` : r.result.phrase || w.weapon.action;
+      setPhrase({ text, id: Date.now(), crit: r.result.crit });
       if (r.result.crit) {
         haptic.heavy();
         sfx("crit");
       }
-      setView((v) => (v ? { ...v, hp: Math.min(v.hp, r.result.hp), myDamage: v.myDamage + r.result.damage, myHits: v.myHits + 1 } : v));
+      setView((v) => (v ? { ...v, hp: Math.min(v.hp, r.result.hp), myDamage: v.myDamage + r.result.damage, myHits: v.myHits + (r.result.count ?? 1) } : v));
       setTray((t) => t.map((x) => (x.id === weapon ? { ...x, qty: r.result.left ?? x.qty, readyAt: r.result.readyAt ?? x.readyAt } : x)));
       setTalentDmg(r.result.talentDamage);
       if (r.result.status === "won") {
@@ -292,6 +321,7 @@ export function BossScreen({ id }: { id: string }) {
         <Arena full boss={boss} hp={hpShown} hpMax={hpMax} endsAt={state!.fight!.endsAt} fx={layer} hit={hitAnim} ouch={ouch} rug={rug} feed={hits} />
         <div className="fight-bottom">
           {phrase && <div key={phrase.id} className={`phrase-bubble ${phrase.crit ? "crit" : ""}`}>{phrase.text}</div>}
+          <MultPicker mult={mult} setMult={setMult} />
           <div className="row fight-bar">
             <TalentProgress dmg={talentDmg ?? state?.player.talentDamage ?? 0} pop={talentPop} share={myShare} onOpen={() => setTalentsOpen(true)} />
             {view && <ShareChip dmg={view.myDamage} hpMax={view.hpMax} />}
@@ -300,7 +330,7 @@ export function BossScreen({ id }: { id: string }) {
             <button className="btn sm dark" onClick={() => setTab("mine")}>Мои</button>
             <button className={`btn sm ${fleeAsk ? "red" : "dark"}`} onClick={flee} disabled={busy === "fight_flee"}>{fleeAsk ? "Точно?" : "Сдаться"}</button>
           </div>
-          <WeaponTray tray={tray} onHit={attack} onBuy={() => setShopOpen(true)} onCooldown={(name, left) => { haptic.err(); toast(`${name} перезаряжается: ещё ${clock(left)}`, "err"); }} disabled={view?.status !== undefined && view.status !== "active"} />
+          <WeaponTray tray={tray} onHit={attack} onBuy={() => setShopOpen(true)} onCooldown={(name, left) => { haptic.err(); toast(`${name} перезаряжается: ещё ${clock(left)}`, "err"); }} disabled={view?.status !== undefined && view.status !== "active"} mult={mult} />
         </div>
         {shopOpen && <WeaponShopWindow onClose={closeShop} />}
       {talentsOpen && <TalentWindow onClose={() => setTalentsOpen(false)} />}
@@ -324,7 +354,8 @@ export function BossScreen({ id }: { id: string }) {
                   <div key={i} className="row small">
                     <ItemArt id={h.weapon} size={22} />
                     <span className="grow ellipsis muted">{HIT_PHRASES[h.weapon]?.[h.phrase] ?? ""}</span>
-                    <b className="num" style={{ color: "var(--red)" }}>−{h.damage}</b>
+                    {(h.count ?? 1) > 1 && <span className="tiny muted">×{h.count}</span>}
+                    <b className="num" style={{ color: "var(--red)" }}>−{full(h.damage)}</b>
                   </div>
                 ))}
               </div>

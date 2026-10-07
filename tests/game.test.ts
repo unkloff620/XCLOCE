@@ -516,6 +516,7 @@ describe("inventory and clans", () => {
     const a = await newPlayer(db), b = await newPlayer(db);
     const c = await act(db, a, "clan_create", { name: "Хомяки", tag: "HMS", emblem: "bull", color: "#3ddc84" }, T0);
     await act(db, b, "clan_join", { clanId: c.result.clanId }, T0);
+    await act(db, a, "clan_accept", { playerId: b }, T0);
     await expect(act(db, b, "clan_create", { name: "Другие", tag: "OTH", emblem: "bull", color: "#3ddc84" }, T0)).rejects.toMatchObject({ code: "in_clan" });
     await act(db, a, "clan_leave", {}, T0);
     const [m] = await db.query<{ role: string }>("SELECT role FROM clan_members WHERE player_id=$1", [b]);
@@ -895,6 +896,7 @@ describe("admin: reset a player", () => {
     const c = await act(db, p, "clan_create", { name: "Сбросники", tag: "SBR", emblem: "skull", color: "#ff4d6d" }, T0);
     const clanId = c.result.clanId;
     await act(db, other, "clan_join", { clanId }, T0);
+    await act(db, p, "clan_accept", { playerId: other }, T0);
     const r = await edit(db, 1, p, { op: "reset" });
     expect(r.op).toBe("reset");
     const v = await player(db, p);
@@ -911,5 +913,171 @@ describe("admin: reset a player", () => {
     // the player plays on as a newcomer
     const s = await act(db, p, "task", { taskId: "os-standup" }, T0 + H);
     expect(s.result.steps).toBe(1);
+  });
+});
+
+describe("batch hits, extra pass", () => {
+  it("×10/×100/×1000 uses that many consumables in one tap, stops when the boss is down; free weapons hit once", async () => {
+    await setBossHp({ datsik: 1000 });
+    const p = await newPlayer(db);
+    await give(db, p, "keyboard", 50);
+    await startDatsik(p);
+    const r = await act(db, p, "attack", { weapon: "keyboard", count: 10 }, T0, always(0.99));
+    expect(r.result).toMatchObject({ count: 10, damage: 300, left: 40, hp: 700 });
+    // ×100 with 40 left: only as many as needed to finish the boss (700 / 30 → 24)
+    const w = await act(db, p, "attack", { weapon: "keyboard", count: 100 }, T0, always(0.99));
+    expect(w.result).toMatchObject({ count: 24, status: "won", left: 16 });
+    expect(w.state.fight).toBeNull();
+    await startDatsik(p, T0 + M);
+    await expect(act(db, p, "attack", { weapon: "fist", count: 10 }, T0 + M)).rejects.toMatchObject({ code: "bad_count" });
+    await expect(act(db, p, "attack", { weapon: "keyboard", count: 7 }, T0 + M)).rejects.toMatchObject({ code: "bad_count" });
+    const { fightView } = await import("../src/server/systems/combat.ts");
+    const v = await fightView(db, p, r.result.fightId, 0, T0);
+    expect(v.hits[v.hits.length - 1]).toMatchObject({ count: 10, damage: 300 });
+  });
+
+  it("a win gives a second pass with a 10% chance", async () => {
+    await setBossHp({ datsik: 10 });
+    const p = await newPlayer(db);
+    await give(db, p, "keyboard", 5);
+    const f1 = await startDatsik(p);
+    await hit(p, "keyboard");
+    await act(db, p, "fight_claim", { fightId: f1.result.fightId }, T0, always(0.99));
+    expect(await qty(db, p, "key-datsik")).toBe(1);
+    const f2 = await startDatsik(p, T0 + M);
+    await hit(p, "keyboard", T0 + M);
+    const c = await act(db, p, "fight_claim", { fightId: f2.result.fightId }, T0 + M, always(0.05));
+    expect(c.result.bonusKey).toBe(true);
+    expect(await qty(db, p, "key-datsik")).toBe(3);
+  });
+});
+
+describe("yard mini games", () => {
+  it("blackjack: hand values, outcomes", async () => {
+    const { handValue, bjOutcome } = await import("../src/content/games.ts");
+    const c = (r: number) => ({ r, s: 0 });
+    expect(handValue([c(1), c(13)])).toBe(21);
+    expect(handValue([c(1), c(1), c(9)])).toBe(21);
+    expect(handValue([c(10), c(9), c(5)])).toBe(24);
+    expect(bjOutcome([c(1), c(12)], [c(10), c(9)])).toBe("blackjack");
+    expect(bjOutcome([c(10), c(8)], [c(10), c(6), c(9)])).toBe("win");
+    expect(bjOutcome([c(10), c(8)], [c(10), c(8)])).toBe("push");
+    expect(bjOutcome([c(10), c(8), c(5)], [c(10), c(8)])).toBe("lose");
+  });
+
+  it("blackjack: 3 free hands a day, then 2 USD; one hand at a time; standing ends it", async () => {
+    const p = await newPlayer(db);
+    await setMoney(db, p, "USD", 3);
+    for (let i = 0; i < 3; i++) {
+      let g = await act(db, p, "game_start", { game: "blackjack" }, T0 + i * M, always(0.5));
+      expect(g.result.paid).toBe(false);
+      if (g.result.status === "active") {
+        await expect(act(db, p, "game_start", { game: "blackjack" }, T0 + i * M)).rejects.toMatchObject({ code: "game_running" });
+        expect(g.result.dealer).toHaveLength(1); // the hole card stays hidden
+        g = await act(db, p, "bj_move", { move: "stand" }, T0 + i * M, always(0.5));
+      }
+      expect(g.result.status).toBe("done");
+      expect(g.result.dealer.length).toBeGreaterThanOrEqual(2);
+    }
+    expect((await act(db, p, "equip", { itemId: "jeans" }, T0 + 5 * M)).state.games.blackjack.freeLeft).toBe(0);
+    const paid = await act(db, p, "game_start", { game: "blackjack" }, T0 + 6 * M, always(0.5));
+    expect(paid.result.paid).toBe(true);
+    const [charge] = await db.query<{ delta: number }>("SELECT delta FROM ledger WHERE player_id=$1 AND reason='game:blackjack'", [p]);
+    expect(Number(charge.delta)).toBe(-2);
+  });
+
+  it("zonk: scoring rules", async () => {
+    const { zonkScore, zonkHasScore } = await import("../src/content/games.ts");
+    expect(zonkScore([1])).toBe(100);
+    expect(zonkScore([5, 5])).toBe(100);
+    expect(zonkScore([1, 1, 1])).toBe(1000);
+    expect(zonkScore([4, 4, 4, 4])).toBe(800);
+    expect(zonkScore([1, 2, 3, 4, 5, 6])).toBe(1500);
+    expect(zonkScore([2, 2, 3, 3, 6, 6])).toBe(750);
+    expect(zonkScore([2, 3])).toBeNull();
+    expect(zonkScore([1, 2])).toBeNull();
+    expect(zonkHasScore([2, 3, 4, 6, 6, 2])).toBe(false);
+    expect(zonkHasScore([2, 2, 2, 3])).toBe(true);
+  });
+
+  it("zonk: keep scoring dice, roll or bank; banked points pay rubles in the free game", async () => {
+    const p = await newPlayer(db);
+    // rng 0 → every die shows 1: six ones
+    const g = await act(db, p, "game_start", { game: "zonk" }, T0, always(0));
+    expect(g.result.roll).toEqual([1, 1, 1, 1, 1, 1]);
+    await expect(act(db, p, "zonk_move", { pick: [0, 0], then: "roll" }, T0, always(0))).rejects.toMatchObject({ code: "bad_pick" });
+    const rub = await wallet(db, p, "RUB");
+    const b = await act(db, p, "zonk_move", { pick: [0, 1, 2], then: "bank" }, T0, always(0));
+    expect(b.result).toMatchObject({ status: "done", result: { outcome: "bank", points: 1000 } });
+    expect(await wallet(db, p, "RUB")).toBe(rub + 200);
+    // the second game today costs 2 USD
+    await setMoney(db, p, "USD", 1);
+    await expect(act(db, p, "game_start", { game: "zonk" }, T0 + M)).rejects.toMatchObject({ code: "no_money" });
+  });
+
+  it("upgrader: the chance follows the stake's value; the stake burns, a win gives the target", async () => {
+    const { upgradeChance } = await import("../src/content/games.ts");
+    expect(upgradeChance("spinner", 2, "keyboard")).toBeCloseTo((120 / 380) * 0.9, 3);
+    expect(upgradeChance("bottle-cap", 1, "rug-pull-gun")).toBeGreaterThan(0);
+    expect(upgradeChance("lost-wallet", 5, "keyboard")).toBe(0); // over 75%
+    const p = await newPlayer(db);
+    await give(db, p, "spinner", 4);
+    const lose = await act(db, p, "upgrade", { stake: "spinner", qty: 2, target: "keyboard" }, T0, always(0.99));
+    expect(lose.result.won).toBe(false);
+    expect(await qty(db, p, "spinner")).toBe(2);
+    const win = await act(db, p, "upgrade", { stake: "spinner", qty: 2, target: "keyboard" }, T0, always(0.01));
+    expect(win.result.won).toBe(true);
+    expect(await qty(db, p, "spinner")).toBe(0);
+    expect(await qty(db, p, "keyboard")).toBe(1);
+    await expect(act(db, p, "upgrade", { stake: "spinner", qty: 1, target: "keyboard" }, T0)).rejects.toMatchObject({ code: "no_item" });
+  });
+});
+
+describe("clan requests", () => {
+  it("a request waits for the leader; it can be cancelled; one at a time; own clan drops it", async () => {
+    const a = await newPlayer(db), b = await newPlayer(db), c = await newPlayer(db);
+    const ca = await act(db, a, "clan_create", { name: "Альфы", tag: "ALF", emblem: "bull", color: "#3ddc84" }, T0);
+    const cc = await act(db, c, "clan_create", { name: "Сигмы", tag: "SIG", emblem: "moon", color: "#3ddc84" }, T0);
+    const r = await act(db, b, "clan_join", { clanId: ca.result.clanId }, T0);
+    expect(r.result.requested).toBe(true);
+    expect(r.state.clan).toBeNull();
+    expect(r.state.clanRequests.mine).toMatchObject({ clanId: ca.result.clanId });
+    await expect(act(db, b, "clan_join", { clanId: cc.result.clanId }, T0)).rejects.toMatchObject({ code: "request_elsewhere" });
+    const la = await act(db, a, "equip", { itemId: "jeans" }, T0);
+    expect(la.state.clanRequests.waiting).toBe(1);
+    const { clanRequests } = await import("../src/server/systems/clans.ts");
+    expect(await clanRequests(db, ca.result.clanId, a)).toHaveLength(1);
+    expect(await clanRequests(db, ca.result.clanId, b)).toBeNull();
+    // only the leader answers
+    await expect(act(db, c, "clan_accept", { playerId: b }, T0)).rejects.toMatchObject({ code: "no_request" });
+    await act(db, b, "clan_cancel", {}, T0);
+    await expect(act(db, a, "clan_accept", { playerId: b }, T0)).rejects.toMatchObject({ code: "no_request" });
+    // apply elsewhere, get rejected, apply again, get accepted
+    await act(db, b, "clan_join", { clanId: cc.result.clanId }, T0);
+    await act(db, c, "clan_reject", { playerId: b }, T0);
+    await act(db, b, "clan_join", { clanId: cc.result.clanId }, T0);
+    const ok = await act(db, c, "clan_accept", { playerId: b }, T0);
+    expect(ok.result.accepted).toBe(true);
+    const [m] = await db.query<{ clan_id: number }>("SELECT clan_id FROM players WHERE id=$1", [b]);
+    expect(m.clan_id).toBe(cc.result.clanId);
+    // creating a clan drops a pending request
+    const d = await newPlayer(db);
+    await act(db, d, "clan_join", { clanId: ca.result.clanId }, T0);
+    await act(db, d, "clan_create", { name: "Дельты", tag: "DLT", emblem: "moon", color: "#3ddc84" }, T0);
+    expect(await clanRequests(db, ca.result.clanId, a)).toHaveLength(0);
+  });
+});
+
+describe("boss slayer badges", () => {
+  it("10 / 50 / 100 wins over a boss: bronze, silver, gold", async () => {
+    const p = await newPlayer(db);
+    await expect(act(db, p, "achievement_claim", { id: "bosskill-datsik-1" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
+    for (let i = 0; i < 10; i++) {
+      await db.query("INSERT INTO fights (player_id, boss_id, hp_max, start_total, start_seq, started_at, ends_at, day, status, my_damage) VALUES ($1,'datsik',10,0,0,now(),now(),'2020-01-01','won',10)", [p]);
+    }
+    const r = await act(db, p, "achievement_claim", { id: "bosskill-datsik-1" }, T0);
+    expect(r.result.reward).toBeTruthy();
+    await expect(act(db, p, "achievement_claim", { id: "bosskill-datsik-2" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
+    await expect(act(db, p, "achievement_claim", { id: "bosskill-kedr-1" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
   });
 });

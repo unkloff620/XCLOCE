@@ -10,6 +10,7 @@ import { haptic } from "../telegram.ts";
 import Link from "next/link";
 import { Icon } from "../art/icons.tsx";
 import { SlotMachine } from "./slots.tsx";
+import { YardGames } from "./minigames.tsx";
 import { DriftingSky } from "../art/sky.tsx";
 import { Help, HelpList } from "../help.tsx";
 import { GainLine, Modal } from "../ui.tsx";
@@ -69,6 +70,7 @@ export function YardScreen() {
             <p>Изредка попадается Клавиатура. Всё найденное можно продать в инвентаре.</p>
             <HelpList title="Кнопки слева" rows={LINKS.map((b) => ({ key: b.href, icon: <Icon name={b.icon} size={44} />, name: b.label, hint: b.hint }))} />
             <p>Справа стоит игровой автомат 777 — 3 бесплатные прокрутки в час.</p>
+            <p>Внизу — мини-игры: блэкджек (3 бесплатные партии в день), зонк (1 бесплатная игра в день) и апгрейдер находок. Дальше партия стоит 2 USD.</p>
           </Help>
         </div>
         <span className="chip">{data?.items.length ?? state?.yard.count ?? 0}/{data?.max ?? 5}</span>
@@ -111,6 +113,7 @@ export function YardScreen() {
             </Link>
           ))}
         </nav>
+        <YardGames />
         <div className="yard-timer">
           {!data ? "…" : data.nextAt ? <>Следующая находка через <b className="num">{clock(data.nextAt - now)}</b></> : <>Двор полон — собери, чтобы появилось новое</>}
         </div>

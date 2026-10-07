@@ -27,8 +27,14 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
     "SELECT boss_id, COUNT(*)::int AS n FROM fights WHERE player_id=$1 AND status='won' AND solo GROUP BY boss_id",
     [pid],
   );
+  // wins over each boss where I dealt damage ("win:<boss id>")
+  const wins = await q.query<{ boss_id: string; n: number }>(
+    "SELECT boss_id, COUNT(*)::int AS n FROM fights WHERE player_id=$1 AND status='won' AND my_damage > 0 GROUP BY boss_id",
+    [pid],
+  );
   return {
     ...Object.fromEntries(solo.map((x) => [`solo:${x.boss_id}`, Number(x.n)])),
+    ...Object.fromEntries(wins.map((x) => [`win:${x.boss_id}`, Number(x.n)])),
     authority: n("xp"), hits: n("hits"), damage: n("damage"), wins: n("wins"), soloWins: n("solo_wins"), kills: n("kills"), locations: n("locations"), tasks: n("tasks"),
     yard: n("yard"), bestStreak: n("best_streak"), chests: n("chests"), weeklyTop: n("weekly_top"),
   };

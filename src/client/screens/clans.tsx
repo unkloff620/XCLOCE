@@ -17,6 +17,25 @@ interface ClanPage extends Omit<ClanRow, "members"> {
   max: number;
   week: { damage: number; place: number | null; prizes: Reward[] };
   members: { id: number; name: string; photo: string | null; level: number; xp: number; role: string; damage: number }[];
+  /** requests to join — only the leader gets them */
+  requests: { id: number; name: string; photo: string | null; xp: number; damage: number; at: number }[] | null;
+}
+
+/** My request to a clan: where it went, and a button to take it back. */
+function MyRequest() {
+  const { state, act, busy } = useGame();
+  const r = state?.clanRequests?.mine;
+  if (!r || state?.clan) return null;
+  return (
+    <div className="panel row clan-req-mine">
+      <div className="grow" style={{ minWidth: 0 }}>
+        <div className="tiny muted">ЗАЯВКА ПОДАНА</div>
+        <Link href={`/clans/${r.clanId}`} className="ellipsis" style={{ display: "block", color: "inherit" }}><b>{r.name}</b> <span className="muted">[{r.tag}]</span></Link>
+        <span className="tiny muted">Ждём ответа лидера</span>
+      </div>
+      <button className="btn sm dark" disabled={busy === "clan_cancel"} onClick={() => act("clan_cancel", {}, "Заявка отменена")}>Отменить</button>
+    </div>
+  );
 }
 
 /** Leader's clan settings: name, emblem and colour, description. */
@@ -124,12 +143,14 @@ export function ClansScreen() {
             <p>Клан — до 30 человек. Рейтинг считается по общему урону участников по боссам.</p>
             <p>Уровень клана растёт от общего урона участников: 1 уровень — 5 000 урона, 2 — 11 000, 3 — 18 000, и каждый следующий шаг на 1 000 длиннее.</p>
             <p>Каждую неделю топ-10 кланов по урону за неделю получают награды — их получает каждый участник: авторитет, рубли и оружие.</p>
-            <p>Создать клан можно бесплатно, вступить — в любой открытый. Лидер может исключать участников; если лидер уходит, роль переходит дальше.</p>
+            <p>Создать клан можно бесплатно. Чтобы вступить, подай заявку — лидер примет её или отклонит. Заявка одна: отмени её, чтобы подать в другой клан. Создал свой — заявка снимается сама.</p>
+            <p>Лидер разбирает заявки и может исключать участников; если лидер уходит, роль переходит дальше.</p>
             <p>Клановые задания, боссы и войны появятся позже.</p>
           </Help>
         </div>
         {!state?.clan && data && <button className="btn sm green" onClick={() => setCreate(true)}>+ Создать</button>}
       </div>
+      <MyRequest />
       {state?.clan && (
         <Link href={`/clans/${state.clan.id}`} className="panel row" style={{ marginBottom: 12, display: "flex" }}>
           <Emblem emblem={state.clan.emblem} color={state.clan.color} size={48} />
@@ -137,6 +158,7 @@ export function ClansScreen() {
             <div className="tiny muted">МОЙ КЛАН</div>
             <b className="display">{state.clan.name} <span className="muted">[{state.clan.tag}]</span></b>
           </div>
+          {(state.clanRequests?.waiting ?? 0) > 0 && <span className="chip red">заявки: {state.clanRequests.waiting}</span>}
           <span className="display" style={{ fontSize: 22 }}>›</span>
         </Link>
       )}
@@ -213,6 +235,11 @@ export function ClanScreen({ id }: { id: number }) {
   const mine = state?.clan?.id === c.id;
   const leader = c.members.find((m) => m.role === "leader")?.id === state?.player.id;
   // two taps: «Исключить» → «Точно?» (a slip of the finger does not kick anyone)
+  const answer = async (pid: number, name: string, accept: boolean) => {
+    const r = await act(accept ? "clan_accept" : "clan_reject", { playerId: pid }, accept ? `${name} теперь в клане` : `Заявка ${name} отклонена`);
+    if (r) void load();
+  };
+  const req = state?.clanRequests?.mine;
   const kick = async (id: number, name: string) => {
     if (kickAsk !== id) return setKickAsk(id);
     setKickAsk(null);
@@ -244,9 +271,36 @@ export function ClanScreen({ id }: { id: number }) {
           <div><b className="num">{short(c.damage)}</b><span>общий урон</span></div>
           <div><b className="num">{c.wins}</b><span>побед</span></div>
         </div>
-        {!state?.clan && <button className="btn green block" disabled={busy === "clan_join" || c.members.length >= c.max} onClick={() => act("clan_join", { clanId: c.id }, "Ты в клане!")}>Вступить</button>}
+        {!state?.clan && (req?.clanId === c.id ? (
+          <div className="col" style={{ gap: 6, width: "100%" }}>
+            <span className="small muted center">Заявка подана — ждём ответа лидера</span>
+            <button className="btn dark block" disabled={busy === "clan_cancel"} onClick={() => act("clan_cancel", {}, "Заявка отменена")}>Отменить заявку</button>
+          </div>
+        ) : req ? (
+          <span className="small muted center">У тебя заявка в «{req.name}». Отмени её, чтобы подать сюда.</span>
+        ) : (
+          <button className="btn green block" disabled={busy === "clan_join" || c.members.length >= c.max} onClick={() => act("clan_join", { clanId: c.id }, "Заявка отправлена лидеру")}>Подать заявку</button>
+        ))}
         {mine && <button className="btn dark block" disabled={busy === "clan_leave"} onClick={() => act("clan_leave", {}, "Ты вышел из клана")}>Выйти из клана</button>}
       </div>
+      {leader && c.requests && c.requests.length > 0 && (
+        <div className="panel col clan-reqs" style={{ gap: 6 }}>
+          <b className="display">Заявки · {c.requests.length}</b>
+          {c.requests.map((r) => (
+            <div key={r.id} className="clan-row">
+              <Link href={`/profile?id=${r.id}`} className="row grow" style={{ minWidth: 0, gap: 10, color: "inherit" }}>
+                <Avatar name={r.name} photo={r.photo} size={36} />
+                <div className="grow" style={{ minWidth: 0 }}>
+                  <b className="ellipsis" style={{ display: "block" }}>{r.name}</b>
+                  <span className="tiny muted row" style={{ gap: 3 }}><Icon name="xp" size={13} /><b className="num" style={{ color: "var(--ink)" }}>{full(r.xp)}</b> · урон {short(r.damage)}</span>
+                </div>
+              </Link>
+              <button className="btn sm green" disabled={busy === "clan_accept"} onClick={() => answer(r.id, r.name, true)}>Принять</button>
+              <button className="btn sm red" disabled={busy === "clan_reject"} onClick={() => answer(r.id, r.name, false)} aria-label="Отклонить">✕</button>
+            </div>
+          ))}
+        </div>
+      )}
       <ClanWeek c={c} />
       <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
         <h2 className="h display">Участники</h2>

@@ -1,11 +1,13 @@
 "use client";
 import { useState } from "react";
-import { ACH_CATEGORIES, ACHIEVEMENTS, SOLO_BOSS_ACHIEVEMENTS, TIER_COLORS, TIER_NAMES, achievementById, type AchCategory, type AchTier } from "../content/achievements.ts";
+import { ACH_CATEGORIES, ACHIEVEMENTS, BOSS_KILL_ACHIEVEMENTS, BOSS_KILL_TARGETS, SOLO_BOSS_ACHIEVEMENTS, TIER_COLORS, TIER_NAMES, achievementById, type AchCategory, type AchTier } from "../content/achievements.ts";
 import { Icon, type IconName } from "./art/icons.tsx";
 import { Modal, RewardChips } from "./ui.tsx";
 import { useGame } from "./store.tsx";
 import { haptic } from "./telegram.ts";
 import { full, short } from "./format.ts";
+import { BOSSES } from "../content/bosses.ts";
+import { BossPhoto } from "./screens/boss-parts.tsx";
 
 export interface AchRow { id: string; progress: number; target: number; done: boolean; claimed: boolean; at: number | null }
 
@@ -41,6 +43,8 @@ export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: b
   const { act, busy } = useGame();
   const [open, setOpen] = useState<string | null>(null);
   const [soloOpen, setSoloOpen] = useState(false);
+  const [killOpen, setKillOpen] = useState(false);
+  const [medal, setMedal] = useState<string | null>(null);
   const byId = new Map(rows.map((r) => [r.id, r]));
   const total = rows.filter((r) => r.claimed || (!self && r.done)).length;
   const claim = async (id: string) => {
@@ -121,7 +125,89 @@ export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: b
             </div>
           );
         })()}
+        {/* «Убийца боссов»: every boss with three medals — 10, 50 and 100 wins */}
+        {(() => {
+          const got = BOSS_KILL_ACHIEVEMENTS.filter((a) => { const r = byId.get(a.id); return r && (r.claimed || (!self && r.done)); });
+          const ready = self ? BOSS_KILL_ACHIEVEMENTS.find((a) => { const r = byId.get(a.id); return r?.done && !r.claimed; }) ?? null : null;
+          const n = BOSS_KILL_ACHIEVEMENTS.length;
+          const top = Math.max(0, ...got.map((a) => a.tier)) as AchTier | 0;
+          return (
+            <div role="button" tabIndex={0} className={`ach-row ${ready ? "ready" : ""}`} onClick={() => setKillOpen(true)} onKeyDown={(e) => e.key === "Enter" && setKillOpen(true)}>
+              <BadgeMedal icon="ach-wins" tier={top} earned={got.length > 0} size={44} />
+              <span className="ach-main">
+                <span className="row" style={{ justifyContent: "space-between", gap: 6 }}>
+                  <b className="ach-name">Убийца боссов</b>
+                  <span className="tiny muted num">{got.length}/{n}</span>
+                </span>
+                <span className="ach-bar sm" style={{ ["--p" as string]: `${Math.round((got.length / n) * 100)}%`, ["--c" as string]: "#ffcc33" }}>
+                  <i /><span className="num">{got.length >= n ? "всё собрано" : `${got.length} / ${n} медалей`}</span>
+                </span>
+              </span>
+              {ready && (
+                <button className="btn gold sm ach-take" disabled={busy === "achievement_claim"}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void claim(ready.id);
+                  }}>Забрать</button>
+              )}
+            </div>
+          );
+        })()}
       </div>
+      {killOpen && (
+        <Modal title="Убийца боссов" onClose={() => setKillOpen(false)}>
+          <div className="col" style={{ gap: 6 }}>
+            <div className="small muted center">Медали за победы над каждым боссом: бронза — {BOSS_KILL_TARGETS[0]}, серебро — {BOSS_KILL_TARGETS[1]}, золото — {BOSS_KILL_TARGETS[2]}. Нажми на медаль — увидишь награду.</div>
+            {BOSSES.map((b) => {
+              const tiers = ([1, 2, 3] as AchTier[]).map((t) => ({ t, a: achievementById(`bosskill-${b.id}-${t}`)!, r: byId.get(`bosskill-${b.id}-${t}`) }));
+              const wins = tiers[2].r?.progress ?? 0;
+              return (
+                <div key={b.id} className="bk-row">
+                  <span className="bk-photo"><BossPhoto boss={b} round /></span>
+                  <span className="grow col" style={{ gap: 1, minWidth: 0 }}>
+                    <b className="ellipsis">{b.name}</b>
+                    <span className="tiny muted">побед: <b className="num" style={{ color: "var(--ink)" }}>{full(wins)}{wins >= 100 ? "+" : ""}</b></span>
+                  </span>
+                  <span className="bk-medals">
+                    {tiers.map(({ t, a, r }) => {
+                      const got = !!r && (r.claimed || (!self && r.done));
+                      const due = self && !!r?.done && !r.claimed;
+                      return (
+                        <button key={t} className={`bk-medal ${due ? "due" : ""}`} onClick={() => setMedal(a.id)} aria-label={a.name}>
+                          <BadgeMedal icon="ach-wins" tier={t} earned={got || due} size={30} />
+                        </button>
+                      );
+                    })}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </Modal>
+      )}
+      {medal && (() => {
+        const a = achievementById(medal);
+        const r = byId.get(medal);
+        if (!a) return null;
+        const got = !!r && (r.claimed || (!self && r.done));
+        const due = self && !!r?.done && !r?.claimed;
+        return (
+          <Modal title={a.name} onClose={() => setMedal(null)}>
+            <div className="col" style={{ gap: 10, alignItems: "center", textAlign: "center" }}>
+              <BadgeMedal icon="ach-wins" tier={a.tier} earned={got || due} size={72} />
+              <b style={{ color: TIER_COLORS[a.tier] }}>{TIER_NAMES[a.tier]}</b>
+              <span className="small">{a.hint}</span>
+              <span className="ach-bar" style={{ width: "100%", ["--p" as string]: `${Math.round(((r?.progress ?? 0) / a.target) * 100)}%`, ["--c" as string]: TIER_COLORS[a.tier] }}>
+                <i /><span className="num">{full(r?.progress ?? 0)} / {full(a.target)}</span>
+              </span>
+              <RewardChips r={a.reward} size={15} />
+              {got ? <span className="quest-ok display">✓ получено</span> : due ? (
+                <button className="btn gold block" disabled={busy === "achievement_claim"} onClick={async () => { await claim(a.id); setMedal(null); }}>Забрать</button>
+              ) : null}
+            </div>
+          </Modal>
+        );
+      })()}
       {soloOpen && (
         <Modal title="Соло-убийства" onClose={() => setSoloOpen(false)}>
           <div className="col" style={{ gap: 8 }}>

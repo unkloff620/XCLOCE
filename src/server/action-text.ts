@@ -11,9 +11,10 @@ import { questById } from "../content/quests.ts";
 import { achievementById } from "../content/achievements.ts";
 import { equipmentById, roomById } from "../content/home.ts";
 import { talentTree } from "../content/talents.ts";
+import { SLOT_SYMBOL_NAMES } from "../content/slots.ts";
 
 type Row = Record<string, unknown>;
-const SYMBOLS: Record<string, string> = { seven: "7", btc: "BTC", sol: "SOL", usd: "USD", keyboard: "клавиатура", candle: "свеча", rub: "RUB" };
+const SYMBOLS: Record<string, string> = { ...SLOT_SYMBOL_NAMES, btc: "BTC", sol: "SOL", usd: "USD", keyboard: "клавиатура", candle: "свеча", rub: "RUB" };
 const SLOT_NAMES: Record<string, string> = { PANTS: "штаны", SHIRT: "верх", SHOES: "обувь", HEAD: "голова", ACCESSORY: "аксессуар", SPECIAL: "особое" };
 
 const n = (v: unknown) => Number(v ?? 0);
@@ -75,7 +76,19 @@ export function actionText(type: string, body: Row, result: unknown): string | n
     case "achievement_claim": return join(achievementById(String(body.id))?.name ?? String(body.id), grantedText(r.reward));
     case "prize_claim": return join(r.title ? String(r.title) : `приз #${body.id}`, grantedText(r.reward));
     case "clan_create": return `[${body.tag}] ${body.name}`;
-    case "clan_join": return `клан #${body.clanId}`;
+    case "clan_join": return `заявка в «${r.name ?? `клан #${body.clanId}`}»`;
+    case "clan_cancel": return `отменил заявку в клан #${r.clanId}`;
+    case "clan_accept": return `принял игрока #${body.playerId}`;
+    case "clan_reject": return `отклонил заявку игрока #${body.playerId}`;
+    case "game_start":
+    case "bj_move":
+    case "zonk_move": {
+      const g = r as { kind?: string; paid?: boolean; status?: string; result?: { title?: string; reward?: unknown } | null; playerValue?: number; dealerValue?: number; turn?: number };
+      const name = g.kind === "zonk" ? "Зонк" : "Блэкджек";
+      if (g.status !== "done") return join(name, g.paid ? "платная" : "бесплатная", g.kind === "blackjack" ? `${g.playerValue} очков` : `${g.turn ?? 0} очков`);
+      return join(name, g.paid ? "платная" : "бесплатная", g.result?.title, grantedText(g.result?.reward) || "без выигрыша");
+    }
+    case "upgrade": return join(`${item(r.stake ?? body.stake)} ×${fmt(r.qty ?? body.qty)} → ${item(r.target ?? body.target)}`, `шанс ${fmt(Math.round(n(r.chance) * 10000) / 100)}%`, r.won ? "получилось!" : "сгорело");
     case "clan_kick": return `исключил игрока #${body.playerId}`;
     case "clan_edit": return `«${body.name}»`;
     case "notify_set": return body.on === true ? "включил" : "выключил";

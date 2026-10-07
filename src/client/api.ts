@@ -39,6 +39,8 @@ export interface GameState {
   fight: { id: number; bossId: string; hp: number; hpMax: number; endsAt: number; myDamage: number; solo?: boolean } | null;
   pending: { fightId: number; bossId: string; status: string }[];
   clan: { id: number; name: string; tag: string; emblem: string; color: string } | null;
+  /** my request to join a clan; waiting — requests to my clan (I am its leader) */
+  clanRequests: { mine: { clanId: number; name: string; tag: string } | null; waiting: number };
   daily: { available: boolean; day: number; streak: number; cycle: number; nextAt: number | null; rewards: Reward[] };
   quests: {
     list: { id: string; progress: number; target: number; done: boolean; claimed: boolean }[];
@@ -53,11 +55,21 @@ export interface GameState {
   /** badges reached but not collected */
   achievementsReady: number;
   slots: { left: number; max: number; nextAt: number | null };
+  /** yard mini games: free games left today, the price after that, the hand / game in progress */
+  games: Record<"blackjack" | "zonk", { freeLeft: number; freePerDay: number; price: { currency: Currency; amount: number }; active: GameView | null }>;
   rename: { price: { currency: Currency; amount: number }; nextAt: number | null; min: number; max: number };
   /** inventory sale prices in RUB */
   sell: Record<string, number>;
 }
-export interface Hit { seq: number; playerId: number; name: string; weapon: string; damage: number; phrase: number; at: number; crit?: boolean }
+export interface GameResult { outcome: string; title: string; reward: Granted | null; points?: number }
+export interface GameView {
+  id: number; kind: "blackjack" | "zonk"; paid: boolean; status: "active" | "done"; result: GameResult | null;
+  /** blackjack */
+  player?: { r: number; s: number }[]; dealer?: { r: number; s: number }[]; dealerHidden?: number; playerValue?: number; dealerValue?: number;
+  /** zonk */
+  roll?: number[]; turn?: number; left?: number; history?: { kept: number[]; points: number }[];
+}
+export interface Hit { seq: number; playerId: number; name: string; weapon: string; damage: number; phrase: number; at: number; crit?: boolean; count?: number }
 export interface FightView {
   fightId: number; bossId: string; hp: number; hpMax: number; status: "active" | "won" | "lost";
   startedAt: number; endsAt: number; myDamage: number; myHits: number; killer: string | null; killerIsMe: boolean;
