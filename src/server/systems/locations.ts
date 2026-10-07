@@ -1,5 +1,6 @@
 import { GameError, type Queryable } from "../db.ts";
-import { grantReward, spendEnergy, type Ctx } from "../core.ts";
+import { addItem, grantReward, spendEnergy, type Ctx } from "../core.ts";
+import { STASH_CHANCE, stashSetByLocation } from "../../content/stashes.ts";
 import { LOCATIONS, locationById, taskById, type LocationDef } from "../../content/locations.ts";
 import type { Reward } from "../../content/rewards.ts";
 
@@ -67,6 +68,20 @@ export async function doTask(ctx: Ctx, taskId: string) {
   );
   const stepNow = have + 1;
   const stepGot = await grantReward(ctx, task.stepReward, `task:${task.id}`);
+  // нычки: a small chance that this step finds one of the set of this location the player does not have yet
+  const set = stashSetByLocation(loc.id);
+  let stash: string | null = null;
+  if (set && ctx.rng() < STASH_CHANCE) {
+    const owned = new Set((await ctx.q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id = ANY($2::text[])", [ctx.pid, set.items.map((i) => i.id)])).map((r) => r.item_id));
+    const missing = set.items.filter((i) => !owned.has(i.id));
+    if (missing.length) {
+      const pick = missing[Math.floor(ctx.rng() * missing.length) % missing.length];
+      if ((await addItem(ctx, pick.id, 1, `stash:${loc.id}`)) > 0) {
+        stash = pick.id;
+        stepGot.items.push({ id: pick.id, qty: 1 });
+      }
+    }
+  }
   let doneGot = null;
   if (stepNow >= task.steps) {
     // a task finished before its step count went up (done_at is set) keeps its old reward: no second one
@@ -79,7 +94,7 @@ export async function doTask(ctx: Ctx, taskId: string) {
   }
   await ctx.q.query("UPDATE player_stats SET task_steps = task_steps + 1 WHERE player_id=$1", [ctx.pid]);
   const doneCount = loc.tasks.filter((t) => (t.id === task.id ? stepNow : steps.get(t.id) ?? 0) >= t.steps).length;
-  return { taskId: task.id, steps: stepNow, need: task.steps, energyLeft, step: stepGot, done: doneGot, locationComplete: doneCount === loc.tasks.length };
+  return { taskId: task.id, steps: stepNow, need: task.steps, energyLeft, step: stepGot, done: doneGot, locationComplete: doneCount === loc.tasks.length, stash };
 }
 
 export async function claimLocation(ctx: Ctx, locationId: string) {

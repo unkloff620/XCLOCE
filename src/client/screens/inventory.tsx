@@ -10,7 +10,7 @@ import { Icon } from "../art/icons.tsx";
 import { weaponStats } from "../weapon-stats.ts";
 import { TalentNext, TalentWindow } from "./talents.tsx";
 
-const CATS: (Category | "all")[] = ["all", "weapon", "clothing", "item", "reward", "event"];
+const CATS: (Category | "all")[] = ["all", "weapon", "clothing", "item", "reward", "stash", "event"];
 const CAT_LABEL = { all: "Всё", ...CATEGORY_NAME };
 
 /** Selling yard finds back for RUB. */
@@ -55,7 +55,7 @@ export function InventoryScreen() {
   if (!state) return null;
   const showTalents = cat === "all" || cat === "reward";
   const items = state.inventory.map((i) => ({ def: itemById(i.id)!, qty: i.qty })).filter((x) => x.def && (cat === "all" || x.def.category === cat));
-  const order: Category[] = ["weapon", "clothing", "item", "reward", "event"];
+  const order: Category[] = ["weapon", "clothing", "item", "stash", "reward", "event"];
   items.sort((a, b) => order.indexOf(a.def.category) - order.indexOf(b.def.category) || (b.def.weapon?.damage ?? 0) - (a.def.weapon?.damage ?? 0));
   const qtyOf = (id: string) => state.inventory.find((i) => i.id === id)?.qty ?? 0;
   // upgraded things (from the upgrader): each one a cell of its own with a gold outline and its price

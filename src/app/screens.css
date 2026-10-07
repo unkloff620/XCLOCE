@@ -1431,3 +1431,18 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 /* upgraded things in the inventory: a gold outline and the price */
 .inv-cell.upgraded { border-color: #ffd23f !important; box-shadow: 0 0 0 2px rgba(255, 210, 63, 0.45), 0 0 12px rgba(255, 210, 63, 0.35); }
 .inv-cell .inv-up { position: absolute; top: 3px; left: 5px; font-size: 13px; color: #ffd23f; text-shadow: 0 1px 0 #1e1006; }
+
+/* «Нычки»: sets of four in the achievements; grey until found */
+.stash-medal { flex: none; width: 44px; height: 48px; display: grid; place-items: center; }
+.stash-medal img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5)); }
+.stash-medal.off img, .stash-cell.off img { filter: grayscale(1) brightness(0.55); opacity: 0.6; }
+.stash-set { display: flex; flex-direction: column; gap: 6px; padding: 8px; border-radius: 14px; border: 2px solid var(--line); background: var(--tex), var(--panel2); }
+.stash-set.done { border-color: #ffcc33; box-shadow: 0 0 0 1px rgba(255, 204, 51, 0.4); }
+.stash-row { display: grid; grid-template-columns: 1.3fr repeat(4, 1fr); gap: 5px; align-items: center; }
+.stash-cell { position: relative; aspect-ratio: 1; padding: 2px; border-radius: 10px; border: 2px solid var(--line); background: rgba(0, 0, 0, 0.3); display: grid; place-items: center; cursor: pointer; }
+.stash-cell img { width: 100%; height: 100%; object-fit: contain; }
+.stash-cell.full { cursor: default; border-color: rgba(255, 204, 51, 0.6); }
+.stash-cell.big { width: 160px; cursor: default; }
+.stash-n { position: absolute; bottom: 1px; right: 4px; font-style: normal; font-size: 10px; font-weight: 800; color: var(--muted); }
+.stash-pop { animation: stash-pop 0.6s cubic-bezier(0.2, 1.4, 0.4, 1) both; box-shadow: 0 0 24px rgba(255, 204, 51, 0.45); }
+@keyframes stash-pop { from { transform: scale(0.3) rotate(-12deg); opacity: 0; } }

@@ -1,5 +1,6 @@
 import type { Reward } from "./rewards.ts";
 import { BOSSES, type CardTier } from "./bosses.ts";
+import { STASH_SETS } from "./stashes.ts";
 
 /*
  * Достижения: значок в профиле + разовая награда. Прогресс считается сервером из того, что уже записано
@@ -7,7 +8,7 @@ import { BOSSES, type CardTier } from "./bosses.ts";
  */
 
 /** what a badge measures (server: systems/achievements.ts → statsFor) */
-export type AchStat = "authority" | "damage" | "hits" | "wins" | "soloWins" | "kills" | "locations" | "tasks" | "yard" | "bestStreak" | "chests" | "weeklyTop" | `solo:${string}` | `win:${string}`;
+export type AchStat = "authority" | "damage" | "hits" | "wins" | "soloWins" | "kills" | "locations" | "tasks" | "yard" | "bestStreak" | "chests" | "weeklyTop" | `solo:${string}` | `win:${string}` | `stash:${number}`;
 
 /** 1 bronze · 2 silver · 3 gold · 4 platinum · 5 diamond */
 export type AchTier = 1 | 2 | 3 | 4 | 5;
@@ -87,6 +88,12 @@ export const BOSS_KILL_ACHIEVEMENTS: AchievementDef[] = BOSSES.flatMap((b) =>
   }),
 );
 
+/** «Нычки»: a whole set of four collected; the reward is the set's (content/stashes.ts). Stat "stash:<n>" = stashes of set n owned. */
+export const STASH_ACHIEVEMENTS: AchievementDef[] = STASH_SETS.map((s) => ({
+  id: s.id, category: "stash", name: s.name, hint: `Собери все 4 нычки набора «${s.name}»`,
+  stat: `stash:${s.n}` as const, target: 4, tier: Math.min(5, s.n + 1) as AchTier, icon: "chest", reward: s.reward,
+}));
+
 export const ACHIEVEMENTS: AchievementDef[] = [
   ...ACH_CATEGORIES.flatMap((c) =>
     c.targets.map((target, i) => {
@@ -96,6 +103,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   ),
   ...SOLO_BOSS_ACHIEVEMENTS,
   ...BOSS_KILL_ACHIEVEMENTS,
+  ...STASH_ACHIEVEMENTS,
 ];
 
 export const achievementById = (id: string) => ACHIEVEMENTS.find((a) => a.id === id);

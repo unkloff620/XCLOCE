@@ -3,6 +3,7 @@ import { bossById } from "../../content/bosses.ts";
 import type { ReactNode } from "react";
 import { Icon, OL, Svg } from "./icons.tsx";
 import { ART_VER } from "../preload.ts";
+import { STASH_IDS } from "../../content/stashes.ts";
 
 const S = { stroke: OL, strokeWidth: 3.5, strokeLinejoin: "round" as const, strokeLinecap: "round" as const };
 
@@ -200,6 +201,7 @@ const RASTER_ITEMS = new Set([
   "fist", "mouse", "red-candle", "keyboard", "gpu", "rug-pull-gun",
   "tee-white", "tee-pump", "hoodie-hodl", "jeans", "shorts-remote", "sneakers", "cap-moon", "slippers", "gold-chain",
   "energy-drink", "energy-pack", "energy-50", "energy-100", "energy-500", "lost-wallet", "bottle-cap", "flyer-passive", "spinner", "sticker-hodl", "statue-close",
+  ...STASH_IDS,
 ]);
 
 /** picture of an energy offer: +50 a crate, +100 a box, +500 a pile of cans (the energy icon for other amounts) */

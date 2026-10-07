@@ -10,6 +10,28 @@ import { Icon } from "../art/icons.tsx";
 import { Bar, Empty, Modal, RewardChips } from "../ui.tsx";
 import { haptic } from "../telegram.ts";
 import { Help } from "../help.tsx";
+import { sfx } from "../sound.ts";
+import { itemById } from "../../content/items.ts";
+import { stashSetOf } from "../../content/stashes.ts";
+
+/** A stash found during a task: the picture, its set and how many of the set are found. */
+function StashFound({ id, onClose }: { id: string; onClose: () => void }) {
+  const { state } = useGame();
+  const d = itemById(id);
+  const set = stashSetOf(id);
+  const have = set ? set.items.filter((i) => (state?.inventory ?? []).some((x) => x.id === i.id && x.qty > 0)).length : 0;
+  return (
+    <Modal title="Нычка!" onClose={onClose}>
+      <div className="col" style={{ gap: 8, alignItems: "center", textAlign: "center" }}>
+        <span className="stash-cell big stash-pop">{/* eslint-disable-next-line @next/next/no-img-element */}<img src={`/assets/items/${id}.webp`} alt="" /></span>
+        <b className="display" style={{ fontSize: 20 }}>{d?.name}</b>
+        <span className="small">{d?.description}</span>
+        {set && <span className="chip gold">{set.name}: {have}/4{have >= 4 ? " — набор собран! Награда в достижениях" : ""}</span>}
+        <button className="btn gold block" onClick={onClose}>Забрать</button>
+      </div>
+    </Modal>
+  );
+}
 
 interface LocRow { id: string; unlocked: boolean; done: number; total: number; clears: number; tasks: { id: string; steps: number; need: number }[]; nextReward: Reward }
 
@@ -79,6 +101,7 @@ export function LocationsScreen() {
               <p>Энергия тратится только здесь: каждый шаг задания стоит энергии и даёт рубли и авторитет.</p>
               <p>Закрой все 5 заданий — на карточке появится кнопка «Забрать награду» (доллары и вещи), откроется следующая локация.</p>
               <p>Пройденную локацию можно повторить: награда за повтор — половина валюты и авторитета.</p>
+              <p>Иногда за шаг задания находится <b>нычка</b> — в каждой из первых четырёх локаций свой набор из 4 нычек. Собери набор целиком и забери награду в достижениях «Нычки». Найденные лежат в инвентаре во вкладке «Нычки».</p>
               <p>Энергия: +1 каждые 5 минут до 50. Купить больше — нажми на энергию вверху.</p>
             </Help>
           </div>
@@ -139,6 +162,7 @@ export function LocationScreen({ id }: { id: string }) {
   const now = useNow();
   const { rows, load } = useLocations();
   const [got, setGot] = useState<ClaimResult | null>(null);
+  const [stash, setStash] = useState<string | null>(null);
   if (!loc) return <Empty>Такой локации нет</Empty>;
   const r = rows?.find((x) => x.id === id);
   const energy = state ? liveEnergy(state, now).energy : 0;
@@ -146,9 +170,15 @@ export function LocationScreen({ id }: { id: string }) {
 
   const step = async (taskId: string) => {
     haptic.tap();
-    const res = await act<{ steps: number; need: number; step: Granted; done: Granted | null; locationComplete: boolean }>("task", { taskId }, (x) =>
-      x.done ? "Задание выполнено!" : `+${x.step.currencies.RUB ?? 0} ₽ · +${x.step.xp} авторитета`,
+    const res = await act<{ steps: number; need: number; step: Granted; done: Granted | null; locationComplete: boolean; stash: string | null }>("task", { taskId }, (x) =>
+      x.stash ? null : x.done ? "Задание выполнено!" : `+${x.step.currencies.RUB ?? 0} ₽ · +${x.step.xp} авторитета`,
     );
+    if (res?.stash) {
+      // a stash found: a moment of its own
+      haptic.big();
+      sfx("levelup");
+      setStash(res.stash);
+    }
     if (res) void load();
   };
   const claim = async () => {
@@ -221,6 +251,7 @@ export function LocationScreen({ id }: { id: string }) {
         </>
       )}
       {got && <ClaimedModal got={got} onClose={() => setGot(null)} />}
+      {stash && <StashFound id={stash} onClose={() => setStash(null)} />}
     </div>
   );
 }

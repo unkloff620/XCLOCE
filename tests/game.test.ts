@@ -1100,3 +1100,26 @@ describe("boss slayer badges", () => {
     await expect(act(db, p, "achievement_claim", { id: "bosskill-kedr-1" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
   });
 });
+
+describe("нычки", () => {
+  it("a task step in a set's location may find a missing stash; a whole set gives its reward", async () => {
+    const p = await newPlayer(db);
+    // rng 0 → the chance hits and the first missing stash of the openspace set is found
+    const r = await act(db, p, "task", { taskId: "os-standup" }, T0, always(0));
+    expect(r.result.stash).toBe("stash-sneaker");
+    expect(await qty(db, p, "stash-sneaker")).toBe(1);
+    const r2 = await act(db, p, "task", { taskId: "os-standup" }, T0, always(0));
+    expect(r2.result.stash).toBe("stash-cigs"); // only missing ones drop
+    await expect(act(db, p, "achievement_claim", { id: "stash-set-1" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
+    await give(db, p, "stash-noodles", 1);
+    await give(db, p, "stash-can", 1);
+    const kb = await qty(db, p, "keyboard");
+    await act(db, p, "achievement_claim", { id: "stash-set-1" }, T0);
+    expect(await qty(db, p, "keyboard")).toBe(kb + 5);
+    // the set is complete: no more stashes from this location
+    const r3 = await act(db, p, "task", { taskId: "os-standup" }, T0, always(0));
+    expect(r3.result.stash).toBeNull();
+    const { itemById } = await import("../src/content/items.ts");
+    expect(itemById("stash-radio")?.category).toBe("stash");
+  });
+});

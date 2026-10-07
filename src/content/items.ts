@@ -1,6 +1,7 @@
+import { STASH_SETS } from "./stashes.ts";
 import { BOSSES, CARD_TIERS, keyId, unlockBossOf } from "./bosses.ts";
 
-export type Category = "weapon" | "clothing" | "item" | "reward" | "event";
+export type Category = "weapon" | "clothing" | "item" | "reward" | "stash" | "event";
 export type Rarity = "common" | "rare" | "epic" | "legendary" | "mythic";
 export type Slot = "BODY" | "PANTS" | "SHIRT" | "SHOES" | "HEAD" | "ACCESSORY" | "SPECIAL";
 /** Drawing order of the character, bottom to top. */
@@ -126,7 +127,15 @@ const TROPHY: ItemDef = {
   description: "Доказательство, что ты дошёл до конца.", sources: ["Победа: Солнце"],
 };
 
-export const ITEMS: ItemDef[] = [...WEAPONS, ...WEARABLES, ...MISC, ...KEYS, TROPHY, STATUE];
+/** Нычки (content/stashes.ts): one of each, a set of four per location */
+const STASH_RARITY: Rarity[] = ["rare", "epic", "legendary", "mythic"];
+const STASHES: ItemDef[] = STASH_SETS.flatMap((s) =>
+  s.items.map((it) => ({
+    id: it.id, name: it.name, category: "stash" as const, rarity: STASH_RARITY[s.n - 1] ?? "rare", maxStack: 1,
+    description: `${it.description} Набор «${s.name}» (${s.n}/4).`, sources: [`Задания в локации ${s.n}, шанс мал`],
+  })),
+);
+export const ITEMS: ItemDef[] = [...WEAPONS, ...WEARABLES, ...MISC, ...KEYS, TROPHY, STATUE, ...STASHES];
 const BY_ID = new Map(ITEMS.map((i) => [i.id, i]));
 export const itemById = (id: string) => BY_ID.get(id);
 export const weaponById = (id: string) => {
@@ -137,7 +146,7 @@ export const weaponById = (id: string) => {
 /** Starting outfit: a new player starts with nothing on (clothes come from the shop and from bosses). */
 export const STARTER_OUTFIT: Partial<Record<Slot, string>> = {};
 export const RARITY_NAME: Record<Rarity, string> = { common: "Обычный", rare: "Редкий", epic: "Эпический", legendary: "Легендарный", mythic: "Мифический" };
-export const CATEGORY_NAME: Record<Category, string> = { weapon: "Оружие", clothing: "Одежда", item: "Предметы", reward: "Награды", event: "Ивентовые" };
+export const CATEGORY_NAME: Record<Category, string> = { weapon: "Оружие", clothing: "Одежда", item: "Предметы", reward: "Награды", stash: "Нычки", event: "Ивентовые" };
 
 /** Everything that drops in the yard can be sold back for RUB (about half of the shop price). Overridable via config "sell". */
 export const SELL_PRICES: Record<string, number> = {

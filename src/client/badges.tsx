@@ -7,6 +7,8 @@ import { useGame } from "./store.tsx";
 import { haptic } from "./telegram.ts";
 import { full, short } from "./format.ts";
 import { BOSSES } from "../content/bosses.ts";
+import { STASH_SETS } from "../content/stashes.ts";
+import { itemById } from "../content/items.ts";
 import { BossPhoto } from "./screens/boss-parts.tsx";
 
 export interface AchRow { id: string; progress: number; target: number; done: boolean; claimed: boolean; at: number | null }
@@ -44,6 +46,10 @@ export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: b
   const [open, setOpen] = useState<string | null>(null);
   const [soloOpen, setSoloOpen] = useState(false);
   const [killOpen, setKillOpen] = useState(false);
+  const [stashOpen, setStashOpen] = useState(false);
+  const [stashItem, setStashItem] = useState<string | null>(null);
+  const { state } = useGame();
+  const ownedStash = new Set(self ? (state?.inventory ?? []).filter((i) => i.qty > 0 && i.id.startsWith("stash-")).map((i) => i.id) : []);
   const [medal, setMedal] = useState<string | null>(null);
   const byId = new Map(rows.map((r) => [r.id, r]));
   const total = rows.filter((r) => r.claimed || (!self && r.done)).length;
@@ -153,7 +159,89 @@ export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: b
             </div>
           );
         })()}
+        {/* «Нычки»: four sets of four; a whole set gives its reward */}
+        {(() => {
+          const sets = STASH_SETS.map((st) => ({ st, r: byId.get(st.id) }));
+          const done = sets.filter((x) => x.r && (x.r.claimed || (!self && x.r.done))).length;
+          const found = sets.reduce((n, x) => n + (x.r?.progress ?? 0), 0);
+          const ready = self ? sets.find((x) => x.r?.done && !x.r.claimed) ?? null : null;
+          return (
+            <div role="button" tabIndex={0} className={`ach-row ${ready ? "ready" : ""}`} onClick={() => setStashOpen(true)} onKeyDown={(e) => e.key === "Enter" && setStashOpen(true)}>
+              <span className={`stash-medal ${found ? "" : "off"}`}>{/* eslint-disable-next-line @next/next/no-img-element */}<img src="/assets/stash/set-1.webp" alt="" /></span>
+              <span className="ach-main">
+                <span className="row" style={{ justifyContent: "space-between", gap: 6 }}>
+                  <b className="ach-name">Нычки</b>
+                  <span className="tiny muted num">{done}/{sets.length} наборов</span>
+                </span>
+                <span className="ach-bar sm" style={{ ["--p" as string]: `${Math.round((found / 16) * 100)}%`, ["--c" as string]: "#ffcc33" }}>
+                  <i /><span className="num">{found} / 16 нычек</span>
+                </span>
+              </span>
+              {ready && (
+                <button className="btn gold sm ach-take" disabled={busy === "achievement_claim"}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void claim(ready.st.id);
+                  }}>Забрать</button>
+              )}
+            </div>
+          );
+        })()}
       </div>
+      {stashOpen && (
+        <Modal title="Нычки" onClose={() => setStashOpen(false)}>
+          <div className="col" style={{ gap: 8 }}>
+            <div className="small muted center">Нычки находятся за задания в локациях: 1-й набор — в 1-й локации, 2-й — во 2-й и так далее. Собери все 4 — забери награду за набор.</div>
+            {STASH_SETS.map((st) => {
+              const r = byId.get(st.id);
+              const n = r?.progress ?? 0;
+              const complete = !!r?.done;
+              const got = !!r?.claimed || (!self && complete);
+              const due = self && complete && !r?.claimed;
+              return (
+                <div key={st.id} className={`stash-set ${complete ? "done" : ""}`}>
+                  <div className="row" style={{ justifyContent: "space-between", gap: 6 }}>
+                    <b>{st.n}. {st.name}</b>
+                    <span className="tiny muted num">{n}/4</span>
+                  </div>
+                  <div className="stash-row">
+                    <span className={`stash-cell full ${complete ? "" : "off"}`} title="Полный набор">{/* eslint-disable-next-line @next/next/no-img-element */}<img src={`/assets/stash/set-${st.n}.webp`} alt="Полный набор" /></span>
+                    {st.items.map((it, k) => {
+                      const has = self ? ownedStash.has(it.id) : complete;
+                      return (
+                        <button key={it.id} className={`stash-cell ${has ? "" : "off"}`} onClick={() => setStashItem(it.id)} aria-label={it.name}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={`/assets/items/${it.id}.webp`} alt="" />
+                          <i className="stash-n">{k + 1}</i>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="row" style={{ justifyContent: "space-between", gap: 6, flexWrap: "wrap" }}>
+                    <RewardChips r={st.reward} size={13} />
+                    {got ? <span className="quest-ok display">✓</span> : due ? (
+                      <button className="btn gold sm" disabled={busy === "achievement_claim"} onClick={() => claim(st.id)}>Забрать</button>
+                    ) : null}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Modal>
+      )}
+      {stashItem && (() => {
+        const d = itemById(stashItem);
+        const has = ownedStash.has(stashItem);
+        return (
+          <Modal title={d?.name ?? "Нычка"} onClose={() => setStashItem(null)}>
+            <div className="col" style={{ gap: 8, alignItems: "center", textAlign: "center" }}>
+              <span className={`stash-cell big ${has || !self ? "" : "off"}`}>{/* eslint-disable-next-line @next/next/no-img-element */}<img src={`/assets/items/${stashItem}.webp`} alt="" /></span>
+              <span className="small">{d?.description}</span>
+              <span className="tiny muted">{self ? (has ? "Найдена" : "Ещё не найдена — ищи в заданиях локации") : ""}</span>
+            </div>
+          </Modal>
+        );
+      })()}
       {killOpen && (
         <Modal title="Убийца боссов" onClose={() => setKillOpen(false)}>
           <div className="col" style={{ gap: 6 }}>
