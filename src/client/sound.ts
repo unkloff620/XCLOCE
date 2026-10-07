@@ -113,8 +113,13 @@ const SAMPLE_URLS = {
   coin: "/assets/sound/coin.mp3",
   match: "/assets/sound/match.mp3",
   bars: "/assets/sound/bars.mp3",
-} as const;
-type SampleId = keyof typeof SAMPLE_URLS;
+} as Record<string, string>;
+/** a hit sound per weapon (w-<weapon id>) and a pick-up sound per yard find (y-<drop id>): tools/sound/build-item-sounds.py */
+const WEAPON_SOUNDS = ["fist", "mouse", "keyboard", "red-candle", "gpu", "rug-pull-gun"];
+const YARD_SOUNDS = ["coins", "sticker-hodl", "bottle-cap", "spinner", "flyer-passive", "energy-drink", "lost-wallet", "red-candle", "keyboard"];
+for (const id of WEAPON_SOUNDS) SAMPLE_URLS[`w-${id}`] = `/assets/sound/w-${id}.mp3`;
+for (const id of YARD_SOUNDS) SAMPLE_URLS[`y-${id}`] = `/assets/sound/y-${id}.mp3`;
+type SampleId = string;
 /**
  * The music files: each is one period with a bit of its end before it and of its start after it, so the loop is
  * exactly that period whatever padding the decoder adds. `gain` brings each to the level of the rest of the sound.
@@ -288,6 +293,22 @@ export function sfx(name: Sfx, power = 0.5) {
       tone(a, 165, t + 0.11, 0.18, { type: "square", vol: 0.07 });
       break;
   }
+}
+
+/** The hit of this weapon (its own sound: a movie punch, plastic, fire, metal, a gunshot); `power` 0..1 for the fallback. */
+export function weaponSfx(weaponId: string, power = 0.5) {
+  if (muted) return;
+  const a = audio();
+  if (!a || a.state !== "running") return;
+  if (!sample(a, `w-${weaponId}`, a.currentTime + 0.005, weaponId === "rug-pull-gun" ? 0.6 : 0.55)) sfx("hit", power);
+}
+
+/** Picking a thing up in the yard: coins jingle, a sticker peels, a spinner whirs, a can hisses… */
+export function yardSfx(dropId: string) {
+  if (muted) return;
+  const a = audio();
+  if (!a || a.state !== "running") return;
+  if (!sample(a, `y-${dropId}`, a.currentTime + 0.005, 0.5)) sfx("coin");
 }
 
 /** What a successful action sounds like (attacks and slots play their own). */

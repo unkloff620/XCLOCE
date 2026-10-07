@@ -2,7 +2,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api, ApiError, authenticate, type AuthResult, type GameState } from "./api.ts";
 import { haptic, initTelegram } from "./telegram.ts";
-import { ACTION_SFX, sfx, unlockAudioOnGesture } from "./sound.ts";
+import { ACTION_SFX, sfx, unlockAudioOnGesture, yardSfx } from "./sound.ts";
 
 type Toast = { id: number; text: ReactNode; kind: "ok" | "err" | "info" };
 interface Game {
@@ -79,8 +79,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setBusy(type);
       try {
         const r = await api.action<T>(type, body);
-        const snd = ACTION_SFX[type];
-        if (snd) sfx(snd);
+        // a yard find has its own sound; other actions their usual one
+        const picked = type === "yard_pick" ? (r.result as { picked?: string } | null)?.picked : undefined;
+        if (picked) yardSfx(picked);
+        else {
+          const snd = ACTION_SFX[type];
+          if (snd) sfx(snd);
+        }
         setState(r.state);
         const msg = typeof ok === "function" ? ok(r.result) : ok;
         if (msg) toast(msg, "ok");

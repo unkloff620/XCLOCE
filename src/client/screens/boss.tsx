@@ -14,7 +14,7 @@ import { useFx, type Fx } from "../fx/attack.tsx";
 import { BossRulesHelp, useBossList } from "./bosses.tsx";
 import { WeaponShopWindow } from "./shop.tsx";
 import { clock, full, pct, short } from "../format.ts";
-import { setMusicTrack, sfx } from "../sound.ts";
+import { setMusicTrack, sfx, weaponSfx } from "../sound.ts";
 import { haptic } from "../telegram.ts";
 import { DriftingSky } from "../art/sky.tsx";
 import { BossRig, hasBossRig } from "../art/boss-rig.tsx";
@@ -200,7 +200,7 @@ export function BossScreen({ id }: { id: string }) {
     const est = weaponStats(state, w.id).damage;
     haptic.hit();
     // heavier weapons sound heavier: 10 dmg → 0, 500+ → 1
-    sfx("hit", Math.min(1, Math.log10(Math.max(10, w.weapon.damage) / 10) / Math.log10(50)));
+    weaponSfx(w.id, Math.min(1, Math.log10(Math.max(10, w.weapon.damage) / 10) / Math.log10(50)));
     play(weapon, est, w.weapon.action, true);
     setPendingDmg((d) => d + est);
     setTray((t) => t.map((x) => (x.id === weapon && w.weapon.kind === "consumable" ? { ...x, qty: Math.max(0, x.qty - 1) } : x)));
