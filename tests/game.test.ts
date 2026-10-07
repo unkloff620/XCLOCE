@@ -156,8 +156,8 @@ describe("boss fights: personal fights, shared damage", () => {
     const a = await newPlayer(db), b = await newPlayer(db);
     const fa = await startDatsik(a);
     await startDatsik(b, T0 + 7 * H);
-    await give(db, b, "keyboard", 1);
-    const r = await hit(b, "keyboard", T0 + 9 * H);
+    await give(db, b, "rug-pull-gun", 1);
+    const r = await hit(b, "rug-pull-gun", T0 + 9 * H);
     expect(r.result.status).toBe("won");
     expect((await fightView(db, a, fa.result.fightId, 0, T0 + 9 * H)).status).toBe("lost");
   });

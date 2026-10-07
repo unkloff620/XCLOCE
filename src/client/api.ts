@@ -3,6 +3,7 @@ import { tg } from "./telegram.ts";
 import type { Currency } from "../content/currencies.ts";
 import type { Reward } from "../content/rewards.ts";
 import type { Look } from "../content/home.ts";
+import type { WeaponTalents } from "../content/talents.ts";
 
 /* ---------- types of what the server sends (kept loose on purpose: the server is the source of truth) ---------- */
 export interface Granted {
@@ -23,7 +24,7 @@ export interface GameState {
     talents: number;
     talentDamage: number;
   };
-  weaponTalents: Record<string, { dmg?: number; crit?: number }>;
+  weaponTalents: WeaponTalents;
   wallet: Record<Currency, number>;
   inventory: { id: string; qty: number }[];
   cooldowns: Record<string, number>;
