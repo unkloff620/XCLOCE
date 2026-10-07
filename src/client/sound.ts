@@ -2,7 +2,8 @@
 /*
  * Game sounds. The «prison» set (chanson background music, the cell door, keys, punches, coins, a match, the bars)
  * is in public/assets/sound (made by tools/sound/build-prison-sounds.py) and loads after the first touch; until a
- * file is in — or if it fails — the synthesized Web Audio version plays instead. The battle music stays synthesized.
+ * file is in — or if it fails — the synthesized Web Audio version plays instead. Boss fights have their own track:
+ * a fast blatnoy gallop (public/assets/sound/battle.mp3, tools/sound/build-battle-music.py).
  * The audio context starts on the first touch (browsers and Telegram allow sound only after a gesture).
  * The mute switch is remembered on this device.
  */
@@ -104,6 +105,7 @@ export function unlockAudioOnGesture() {
 /* ---------------- recorded sounds ---------------- */
 const SAMPLE_URLS = {
   music: "/assets/sound/chanson.mp3",
+  battle: "/assets/sound/battle.mp3",
   door: "/assets/sound/door.mp3",
   keys: "/assets/sound/keys.mp3",
   punch: "/assets/sound/punch.mp3",
@@ -113,10 +115,15 @@ const SAMPLE_URLS = {
   bars: "/assets/sound/bars.mp3",
 } as const;
 type SampleId = keyof typeof SAMPLE_URLS;
-/** the chanson file is one period with a bit of the end before it and of the start after it: loop exactly that period */
-const MUSIC_LOOP = { start: 0.5, end: 37.42308390022676 };
-/** the chanson is mastered loud: this brings it to the level of the rest of the music */
-const MUSIC_FILE_GAIN = 0.17;
+/**
+ * The music files: each is one period with a bit of its end before it and of its start after it, so the loop is
+ * exactly that period whatever padding the decoder adds. `gain` brings each to the level of the rest of the sound.
+ * calm — chanson (tools/sound/build-prison-sounds.py); battle — the blatnoy gallop of boss fights (build-battle-music.py).
+ */
+const MUSIC_FILES = {
+  calm: { id: "music", start: 0.5, end: 37.42308390022676, gain: 0.17 },
+  battle: { id: "battle", start: 0.5, end: 25.76315192743764, gain: 0.14 },
+} as const;
 const buffers: Partial<Record<SampleId, AudioBuffer>> = {};
 let samplesLoading = false;
 
@@ -408,28 +415,33 @@ function calmStep(a: AudioContext, s: number, at: number) {
 }
 
 let fileSrc: AudioBufferSourceNode | null = null;
-/** the chanson loop (the calm track); the low-pass of the music bus is opened for it */
-function startFile(a: AudioContext): boolean {
-  if (fileSrc) return true;
-  const b = buffers.music;
+let fileTrack: MusicTrack | null = null;
+/** the music file of this track, looped; the low-pass of the music bus is opened for it. false: not loaded (yet) */
+function startFile(a: AudioContext, t: MusicTrack): boolean {
+  if (fileSrc && fileTrack === t) return true;
+  const f = MUSIC_FILES[t];
+  const b = buffers[f.id];
   if (!b || !musicBus) return false;
+  stopFile();
   const src = a.createBufferSource();
   src.buffer = b;
   src.loop = true;
-  src.loopStart = MUSIC_LOOP.start;
-  src.loopEnd = Math.min(MUSIC_LOOP.end, b.duration);
+  src.loopStart = f.start;
+  src.loopEnd = Math.min(f.end, b.duration);
   const g = a.createGain();
-  g.gain.value = MUSIC_FILE_GAIN;
+  g.gain.value = f.gain;
   src.connect(g).connect(musicBus);
   musicLp?.frequency.setValueAtTime(14000, a.currentTime);
-  src.start(a.currentTime + 0.05, MUSIC_LOOP.start);
+  src.start(a.currentTime + 0.05, f.start);
   fileSrc = src;
+  fileTrack = t;
   return true;
 }
 function stopFile(at = 0) {
   if (!fileSrc) return;
   try { fileSrc.stop(at); } catch { /* already stopped */ }
   fileSrc = null;
+  fileTrack = null;
   if (ctx) musicLp?.frequency.setValueAtTime(2600, Math.max(at, ctx.currentTime));
 }
 
@@ -442,12 +454,12 @@ export function startMusic() {
   nextAt = a.currentTime + 0.1;
   seqTimer = setInterval(() => {
     if (a.state !== "running" || switchTimer) return;
-    // the calm track is the chanson file once it has loaded; the synthesized loop plays until then
-    if (track === "calm" && startFile(a)) {
+    // each track plays its music file once it has loaded; the synthesized loop plays until then
+    if (startFile(a, track)) {
       nextAt = a.currentTime + 0.05;
       return;
     }
-    if (track !== "calm") stopFile();
+    if (fileTrack !== track) stopFile();
     // schedule everything due in the next 0.3 s
     while (nextAt < a.currentTime + 0.3) {
       const t = TRACKS[track];
