@@ -3,7 +3,7 @@
  * The shop: the shopkeeper behind the counter (tools/shop/build-shop.py cuts the artist's parts into layers).
  * He breathes, sways his head, blinks, glances around, smokes (the cigarette bobs, the tip glows, smoke rises),
  * moves the open hand and taps the counter with the fist. The goods glow and pulse: the weapons on the counter,
- * the clothes rack, the energy drinks on the shelf — a tap opens that window.
+ * the clothes rack, the energy drinks on the shelf — a tap opens that window. The arms lie in front of the goods.
  */
 import type { CSSProperties, ReactNode } from "react";
 import { SHOP_ART } from "../art/shop-data.ts";
@@ -54,8 +54,6 @@ export function ShopScene({ onOpen, children }: { onOpen: (id: ShopSpotId) => vo
       {spot("clothing")}
       <div className="sk-body" style={{ transformOrigin: `${neck.x}% 70%` }}>
         <Layer n="torso" />
-        <Layer n="armR" className="sk-armR" style={{ transformOrigin: "72% 4%" }} />
-        <Layer n="armL" className="sk-armL" style={{ transformOrigin: "88% 6%" }} />
         <div className="sk-head" style={{ transformOrigin: `${neck.x}% ${neck.y}%` }}>
           <Layer n="head" />
           <Layer n="sclera" />
@@ -68,7 +66,12 @@ export function ShopScene({ onOpen, children }: { onOpen: (id: ShopSpotId) => vo
       </div>
       <Layer n="counter" />
       {spot("weapons")}
-      <Layer n="fist" className="sk-fist" style={{ transformOrigin: "96% 55%" }} />
+      {/* the arms lie on the counter in front of the goods; they breathe with the body (same animation, same pivot) */}
+      <div className="sk-body sk-arms" style={{ transformOrigin: `${neck.x}% 70%` }}>
+        <Layer n="armR" className="sk-armR" style={{ transformOrigin: "72% 4%" }} />
+        <Layer n="armL" className="sk-armL" style={{ transformOrigin: "88% 6%" }} />
+        <Layer n="fist" className="sk-fist" style={{ transformOrigin: "96% 55%" }} />
+      </div>
       {children}
     </div>
   );

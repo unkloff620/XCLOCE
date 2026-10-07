@@ -1253,6 +1253,7 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .sk-layer { position: absolute; display: block; max-width: none; pointer-events: none; }
 .sk-room { inset: 0; width: 100%; height: 100%; }
 .sk-body, .sk-head { position: absolute; inset: 0; pointer-events: none; }
+.sk-arms { z-index: 3; }
 /* he breathes, sways his head, blinks and glances */
 .sk-body { animation: sk-breathe 4.2s ease-in-out infinite; }
 @keyframes sk-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.004, 1.012); } }
