@@ -69,9 +69,13 @@ export async function doTask(ctx: Ctx, taskId: string) {
   const stepGot = await grantReward(ctx, task.stepReward, `task:${task.id}`);
   let doneGot = null;
   if (stepNow >= task.steps) {
-    await ctx.q.query("UPDATE task_progress SET done_at=$3 WHERE player_id=$1 AND task_id=$2", [ctx.pid, task.id, new Date(ctx.now)]);
-    doneGot = await grantReward(ctx, task.doneReward, `task-done:${task.id}`);
-    await ctx.q.query("UPDATE player_stats SET tasks_done = tasks_done + 1 WHERE player_id=$1", [ctx.pid]);
+    // a task finished before its step count went up (done_at is set) keeps its old reward: no second one
+    const [prev] = await ctx.q.query<{ done_at: Date | null }>("SELECT done_at FROM task_progress WHERE player_id=$1 AND task_id=$2", [ctx.pid, task.id]);
+    if (!prev?.done_at) {
+      await ctx.q.query("UPDATE task_progress SET done_at=$3 WHERE player_id=$1 AND task_id=$2", [ctx.pid, task.id, new Date(ctx.now)]);
+      doneGot = await grantReward(ctx, task.doneReward, `task-done:${task.id}`);
+      await ctx.q.query("UPDATE player_stats SET tasks_done = tasks_done + 1 WHERE player_id=$1", [ctx.pid]);
+    }
   }
   await ctx.q.query("UPDATE player_stats SET task_steps = task_steps + 1 WHERE player_id=$1", [ctx.pid]);
   const doneCount = loc.tasks.filter((t) => (t.id === task.id ? stepNow : steps.get(t.id) ?? 0) >= t.steps).length;

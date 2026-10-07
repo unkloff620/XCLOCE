@@ -424,6 +424,21 @@ describe("shop and exchange", () => {
 });
 
 describe("locations", () => {
+  it("first location tasks take at least 5 steps, later ones more; a task finished before the change is not paid twice", async () => {
+    expect(Math.min(...LOCATIONS[0].tasks.map((t) => t.steps))).toBeGreaterThanOrEqual(5);
+    for (let i = 1; i < LOCATIONS.length; i++) {
+      expect(Math.min(...LOCATIONS[i].tasks.map((t) => t.steps))).toBeGreaterThan(Math.min(...LOCATIONS[i - 1].tasks.map((t) => t.steps)));
+    }
+    const p = await newPlayer(db);
+    await setEnergy(p, 5000, T0);
+    const t = LOCATIONS[0].tasks[0];
+    // done under the old count (2 steps): the done reward was paid then
+    await db.query("INSERT INTO task_progress (player_id, task_id, steps, done_at) VALUES ($1,$2,2,now())", [p, t.id]);
+    let last;
+    for (let i = 2; i < t.steps; i++) last = await act(db, p, "task", { taskId: t.id }, T0);
+    expect(last!.result.steps).toBe(t.steps);
+    expect(last!.result.done).toBeNull();
+  });
   it("5 tasks, then the location reward opens the next location; replays pay half", async () => {
     const p = await newPlayer(db);
     await setEnergy(p, 5000, T0);
