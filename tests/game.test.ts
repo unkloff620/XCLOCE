@@ -1116,9 +1116,9 @@ describe("нычки", () => {
     const kb = await qty(db, p, "keyboard");
     await act(db, p, "achievement_claim", { id: "stash-set-1" }, T0);
     expect(await qty(db, p, "keyboard")).toBe(kb + 5);
-    // the set is complete: no more stashes from this location
+    // the set is complete: the next stash comes from the location's other set
     const r3 = await act(db, p, "task", { taskId: "os-standup" }, T0, always(0));
-    expect(r3.result.stash).toBeNull();
+    expect(r3.result.stash).toBe("stash-pepe-head");
     const { itemById } = await import("../src/content/items.ts");
     expect(itemById("stash-radio")?.category).toBe("stash");
   });
