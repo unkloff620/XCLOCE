@@ -3,7 +3,8 @@
  * The shop: the shopkeeper behind the counter (tools/shop/build-shop.py cuts the artist's parts into layers).
  * He breathes, sways his head, blinks, glances around, smokes (the cigarette bobs, the tip glows, smoke rises),
  * moves the open hand and taps the counter with the fist. The goods glow and pulse: the weapons on the counter,
- * the clothes rack, the energy drinks on the shelf — a tap opens that window. The arms lie in front of the goods.
+ * the clothes rack, the energy drinks on the shelf — a tap opens that window. The arms lie in front of the goods;
+ * the rack and the shelf stand right after the background, behind the shopkeeper and the counter.
  */
 import type { CSSProperties, ReactNode } from "react";
 import { SHOP_ART } from "../art/shop-data.ts";
@@ -49,7 +50,8 @@ export function ShopScene({ onOpen, children }: { onOpen: (id: ShopSpotId) => vo
   return (
     <div className="sk-scene" style={{ aspectRatio: SHOP_ART.aspect }}>
       <Layer n="room" className="sk-room" />
-      <Layer n="lamp" className="sk-lamp" style={{ transformOrigin: "50% 0%" }} />
+      {/* the lamp hangs a little higher, so the cut end of its cord stays above the picture */}
+      <Layer n="lamp" className="sk-lamp" style={{ transformOrigin: "50% 0%", top: `${L.lamp.top - 3.2}%` }} />
       {spot("energy")}
       {spot("clothing")}
       <div className="sk-body" style={{ transformOrigin: `${neck.x}% 70%` }}>

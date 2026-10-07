@@ -1308,6 +1308,8 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 }
 .sk-spot-energy img { animation-delay: 0.7s; }
 .sk-spot-clothing img { animation-delay: 1.4s; }
+/* the rack and the shelf stand behind the shopkeeper and the counter (right after the background) */
+.sk-spot-clothing, .sk-spot-energy { z-index: 0; }
 .sk-tag { position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap; padding: 2px 9px; border-radius: 999px; font: 800 11px/1.3 var(--font-display), system-ui; letter-spacing: 0.3px; color: #1e1006; background: linear-gradient(180deg, #ffe27a, #f2b52c); border: 2px solid var(--line); box-shadow: 0 2px 0 var(--line); pointer-events: none; }
 .sk-tag.bottom { bottom: -6px; }
 .sk-tag.top { top: -4px; }
