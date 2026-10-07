@@ -1461,7 +1461,7 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 /* confirming another room: a bar on top — ✕ back to your room, ✓ choose this one */
 .room-confirm { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); z-index: 4; display: flex; align-items: center; gap: 10px; padding: 6px; border-radius: 999px;
   background: rgba(24, 15, 9, 0.88); border: 2px solid rgba(255, 190, 120, 0.35); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
-  animation: room-confirm-in 0.2s ease-out; max-width: calc(100% - 24px); }
+  animation: room-confirm-in 0.2s ease-out; max-width: calc(100% - 150px); }
 .fit-page .room-confirm { top: var(--top); }
 @keyframes room-confirm-in { from { opacity: 0; transform: translate(-50%, -8px); } }
 .room-confirm-name { display: flex; flex-direction: column; align-items: center; min-width: 0; font-size: 11px; color: var(--muted); line-height: 1.15; text-align: center; }
