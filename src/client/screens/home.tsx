@@ -46,7 +46,7 @@ export function HomeScreen() {
   const [pc, setPc] = useState(false);
   // the running fight sits folded in the left column; a tap unfolds the full card
   const [fightOpen, setFightOpen] = useState(false);
-  // room browser: arrows flip through rooms; an owned room is switched to at once, a locked one is shown with "unlock"
+  // room browser: arrows flip through rooms as a preview; a bar on top confirms the choice (✓) or goes back (✕)
   const [viewIdx, setViewIdx] = useState<number | null>(null);
   const dailyReady = !!state?.daily.available;
   // the first-visit tour goes first; the daily reward window waits for it
@@ -72,14 +72,14 @@ export function HomeScreen() {
   const flip = (dir: number) => {
     const ni = idx + dir;
     if (ni < 0 || ni >= ROOM_DEFS.length) return;
-    const r = ROOM_DEFS[ni];
-    if (state.home.rooms.includes(r.id)) {
-      setViewIdx(null);
-      if (r.id !== state.look.room) void act("room_set", { id: r.id });
-    } else {
-      setViewIdx(ni);
-    }
+    // back on the current room: nothing to confirm
+    setViewIdx(ni === curIdx ? null : ni);
   };
+  const choose = async () => {
+    const r = await act("room_set", { id: viewRoom.id }, `Комната «${viewRoom.name}»`);
+    if (r) setViewIdx(null);
+  };
+  const previewing = viewIdx !== null && viewIdx !== curIdx;
   const unlock = async () => {
     const r = await act("room_buy", { id: viewRoom.id }, `Открыта комната «${viewRoom.name}»`);
     if (r) setViewIdx(null);
@@ -95,6 +95,16 @@ export function HomeScreen() {
         <div className={`room-view ${owned ? "" : "locked"}`}>
           <HomeScene room={viewRoom.id} look={styling?.look ?? state.look.body} worn={styling?.worn ?? state.look.equipped} levels={state.home.levels} decor={state.home.decor} trophies={state.home.trophies} focusHero={!!styling} onPick={owned && !styling ? (id) => (id === "pc" ? setPc(true) : setEquip(id)) : undefined} />
         </div>
+        {/* looking at another room: confirm it (✓) or go back to the current one (✕) */}
+        {previewing && !styling && (
+          <div className="room-confirm">
+            <button className="room-confirm-x" onClick={() => setViewIdx(null)} aria-label="Закрыть и вернуться в свою комнату">✕</button>
+            <span className="room-confirm-name">{owned ? "Выбрать комнату?" : "Комната закрыта"}<b className="display">{viewRoom.name}</b></span>
+            {owned ? (
+              <button className="room-confirm-ok" disabled={busy === "room_set"} onClick={choose} aria-label="Выбрать комнату">✓</button>
+            ) : <span className="room-confirm-lock"><Icon name="lock" size={18} /></span>}
+          </div>
+        )}
         {/* room switcher: one pill «‹ name ›» at the bottom, the lock offer above it */}
         <div className="room-label">
           {/* the switcher pill always stays at the bottom; a locked room's offer sits above it */}
@@ -107,7 +117,7 @@ export function HomeScreen() {
               {!canPay && <span className="tiny" style={{ color: "#ff8a9e" }}>Не хватает {viewRoom.price!.currency}</span>}
             </div>
           )}
-          <div className="room-switch">
+          <div className={`room-switch ${previewing ? "" : "idle"}`}>
             <button className="room-step" onClick={() => flip(-1)} disabled={idx === 0 || busy === "room_set"} aria-label="Предыдущая комната">‹</button>
             <span className="room-name display">{viewRoom.name}</span>
             <button className="room-step" onClick={() => flip(1)} disabled={idx >= ROOM_DEFS.length - 1 || busy === "room_set"} aria-label="Следующая комната">›</button>
@@ -115,7 +125,7 @@ export function HomeScreen() {
         </div>
         <div className="room-help">
           <Help topic="home-menu" title="Твой дом">
-            <p>Здесь живёт твой персонаж. На заднем плане стоит оборудование — нажми на мониторы, чтобы обставить рабочее место, или на системник в углу (его улучшения появятся позже). Стрелки по бокам листают комнаты: купленная включается сразу, закрытую можно разблокировать кнопкой снизу. Каждая купленная комната даёт бонус к урону.</p>
+            <p>Здесь живёт твой персонаж. На заднем плане стоит оборудование — нажми на мониторы, чтобы обставить рабочее место, или на системник в углу (его улучшения появятся позже). Стрелки внизу листают комнаты: сверху появится выбор — ✓ включить комнату, ✕ вернуться в свою; закрытую можно разблокировать кнопкой снизу. Каждая купленная комната даёт бонус к урону.</p>
             <HelpList title="Меню [≡] слева" rows={[
               { key: "w", icon: <Icon name="shirt" size={44} />, name: "Гардероб", hint: "Редактор персонажа прямо в комнате: комната сереет, а ты примеряешь одежду, причёску, цвет волос и кожи. Всё сохраняется одной кнопкой." },
               { key: "b", icon: <Icon name="gift" size={44} />, name: "Бонус", hint: "Награда за ежедневный вход. Заходи каждый день подряд — награда растёт, на 7-й день редкое оружие. Пропустишь день — серия сгорит." },
