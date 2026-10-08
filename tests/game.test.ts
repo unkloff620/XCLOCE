@@ -350,13 +350,34 @@ describe("boss fights: personal fights, shared damage", () => {
     expect(OFFERS.some((o) => ["mouse", "red-candle"].includes(o.give.item ?? ""))).toBe(false);
   });
 
-  it("a new fight does not reset the cooldown of the free weapons", async () => {
+  it("a new fight resets the free weapons' rest; the boss leaving resets it too; fleeing does not", async () => {
+    await setBossHp({ datsik: 100000 });
     const p = await newPlayer(db);
     await startDatsik(p);
     await hit(p, "fist");
+    // fled: no fresh fist in the next fight (no endless flee + restart)
     await act(db, p, "fight_flee", {}, T0 + 2 * M);
     await act(db, p, "fight_start", { boss: "datsik" }, T0 + 3 * M);
     await expect(hit(p, "fist", T0 + 4 * M)).rejects.toMatchObject({ code: "cooldown" });
+
+    // the boss is beaten (by someone else): the fist is rested at once, and the next fight starts with it ready
+    await setBossHp({ datsik: 40 });
+    const q = await newPlayer(db);
+    const k = await newPlayer(db);
+    await startDatsik(q, T0 + 10 * M);
+    await startDatsik(k, T0 + 10 * M);
+    await hit(q, "fist", T0 + 11 * M);
+    expect(await db.query("SELECT 1 FROM cooldowns WHERE player_id=$1 AND item_id='fist'", [q])).toHaveLength(1);
+    await hit(k, "red-candle", T0 + 12 * M); // 12 + 30 ≥ 40: the boss falls
+    expect(await db.query("SELECT 1 FROM cooldowns WHERE player_id=$1 AND item_id='fist'", [q])).toHaveLength(0);
+
+    // the time ran out (the boss left): the rest is gone as well
+    await setBossHp({ datsik: 100000 });
+    const r = await newPlayer(db);
+    await startDatsik(r, T0 + 20 * M);
+    await hit(r, "fist", T0 + 21 * M);
+    await act(db, r, "fight_start", { boss: "datsik" }, T0 + 20 * M + 8 * 60 * M + M);
+    expect((await hit(r, "fist", T0 + 20 * M + 8 * 60 * M + 2 * M)).result.damage).toBeGreaterThan(0);
   });
 
   it("20 players attacking at the same moment: no damage is lost", async () => {

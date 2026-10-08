@@ -67,6 +67,14 @@ async function expireFights(ctx: Ctx, boss: BossRow) {
     [boss.id, boss.damage_total, boss.last_seq, new Date(ctx.now)],
   );
   await refundKeys(ctx, lost);
+  // the boss left: the free weapons of those players are rested again
+  for (const f of lost) await resetFreeWeapons(ctx.q, f.player_id);
+}
+
+/** the free weapons (fist, mouse, candle): permanent, with a rest after each hit */
+const FREE_WEAPONS = WEAPONS.filter((w) => w.weapon?.kind === "permanent").map((w) => w.id);
+async function resetFreeWeapons(q: Queryable, pid: number) {
+  await q.query("DELETE FROM cooldowns WHERE player_id=$1 AND item_id = ANY($2::text[])", [pid, FREE_WEAPONS]);
 }
 
 /** The boss before this one: its passes are the entry to this one. */
@@ -144,7 +152,13 @@ export async function startFight(ctx: Ctx, bossId: string, solo = false) {
     "INSERT INTO fights (player_id, boss_id, hp_max, start_total, start_seq, started_at, ends_at, day, solo, keys_spent) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id",
     [ctx.pid, def.id, hpMax, boss.damage_total, boss.last_seq, new Date(ctx.now), new Date(ctx.now + ctx.cfg.fight.hours * 3600_000), day, solo, keys],
   );
-  // the free weapons (fist, mouse, candle) keep their 5-hour rest across fights: a new fight does not reset it
+  // every new fight starts with the free weapons (fist, mouse, candle) ready — unless the last fight was fled:
+  // otherwise flee + start again would give endless free hits (fled fights do not count toward the daily limit)
+  const [last] = await ctx.q.query<{ fled: boolean }>(
+    "SELECT (status='lost' AND ended_at < ends_at) AS fled FROM fights WHERE player_id=$1 AND id <> $2 ORDER BY id DESC LIMIT 1",
+    [ctx.pid, f.id],
+  );
+  if (!last?.fled) await resetFreeWeapons(ctx.q, ctx.pid);
   return { fightId: f.id, bossId: def.id, solo };
 }
 
@@ -257,15 +271,17 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1
     );
 
     // every running fight with this boss whose HP reached zero is won by this hit
-    const won = await ctx.q.query<{ id: number }>(
-      "UPDATE fights SET status='won', end_total=$2, end_seq=$3, ended_at=$4, killer_id=$5 WHERE boss_id=$1 AND status='active' AND NOT solo AND hp_max - ($2 - start_total) <= 0 RETURNING id",
+    const won = await ctx.q.query<{ id: number; player_id: number }>(
+      "UPDATE fights SET status='won', end_total=$2, end_seq=$3, ended_at=$4, killer_id=$5 WHERE boss_id=$1 AND status='active' AND NOT solo AND hp_max - ($2 - start_total) <= 0 RETURNING id, player_id",
       [boss.id, total, seq, new Date(ctx.now), ctx.pid],
     );
     // a solo fight is won only by my own damage
     if (mine.solo && Number(mine.my_damage) + damage >= mine.hp_max) {
       await ctx.q.query("UPDATE fights SET status='won', end_total=$2, end_seq=$3, ended_at=$4, killer_id=$5 WHERE id=$1", [mine.id, total, seq, new Date(ctx.now), ctx.pid]);
-      won.push({ id: mine.id });
+      won.push({ id: mine.id, player_id: ctx.pid });
     }
+    // the boss is gone: everyone whose fight ended rests the free weapons no more
+    for (const f of won) await resetFreeWeapons(ctx.q, f.player_id);
     if (won.length) await ctx.q.query("UPDATE bosses SET wins = wins + $2 WHERE id=$1", [boss.id, won.length]);
     // others whose fight with this boss is nearly over get a "finish it!" reminder
     await notifyBossLow(ctx, boss.id, total);

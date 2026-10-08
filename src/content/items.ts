@@ -42,19 +42,19 @@ export interface ItemDef {
 export const WEAPONS: ItemDef[] = [
   {
     id: "fist", name: "Кулак", category: "weapon", rarity: "common", maxStack: 1,
-    description: "Базовое оружие. Всегда с тобой, но после удара руке нужно 5 часов отдыха.",
+    description: "Базовое оружие. Всегда с тобой: после удара руке нужно 5 часов отдыха, но в каждом новом бою кулак снова готов.",
     sources: ["Есть у каждого с начала игры"],
     weapon: { damage: 12, kind: "permanent", cooldownMin: 300, animation: "fist", action: "Втащить кулаком" },
   },
   {
     id: "mouse", name: "Мышь", category: "weapon", rarity: "common", maxStack: 1,
-    description: "Перемотана скотчем, провод держится на честном слове. Бесплатная: после броска её надо 5 часов искать под столом.",
+    description: "Перемотана скотчем, провод держится на честном слове. Бесплатная: после броска её надо 5 часов искать под столом, а в новом бою она снова под рукой.",
     sources: ["Есть у каждого с начала игры"],
     weapon: { damage: 20, kind: "permanent", cooldownMin: 300, animation: "mouse", action: "Кинуть мышку" },
   },
   {
     id: "red-candle", name: "Красная свеча", category: "weapon", rarity: "common", maxStack: 1,
-    description: "Свеча графика, которая падает быстрее, чем ты успеваешь продать. Бесплатная: после удара 5 часов ждёт нового дна.",
+    description: "Свеча графика, которая падает быстрее, чем ты успеваешь продать. Бесплатная: после удара 5 часов ждёт нового дна, но новый бой начинается с ней наготове.",
     sources: ["Есть у каждого с начала игры"],
     weapon: { damage: 30, kind: "permanent", cooldownMin: 300, animation: "candle", action: "Уронить капу" },
   },
