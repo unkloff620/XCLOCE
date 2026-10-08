@@ -16,7 +16,7 @@ import { Icon } from "../art/icons.tsx";
 import { HeroRig } from "../art/rig.tsx";
 import { HomeScene } from "../art/home-scene.tsx";
 import { ROOM_BACKDROP } from "../../content/home-scene.ts";
-import { ROOM_DEFS, stageOf } from "../../content/home.ts";
+import { ROOM_DEFS, placedOf } from "../../content/home.ts";
 import { BadgesPanel, type AchRow } from "../badges.tsx";
 import { TalentChip, TalentNext, TalentWindow } from "./talents.tsx";
 import type { Look } from "../../content/home.ts";
@@ -34,7 +34,7 @@ interface Profile {
   body: Look;
   frame: string | null;
   achievements: AchRow[];
-  room: { id: string; levels: Record<string, number>; decor: Record<string, number>; trophies?: string[] };
+  room: { id: string; levels: Record<string, number>; pieces?: Record<string, number>; decor: Record<string, number>; trophies?: string[] };
 }
 
 /** "3 окт. 2026" — fits a narrow side column */
@@ -125,7 +125,7 @@ export function ProfileScreen() {
             <div className="ph-fact"><span>В игре с</span><b>{shortDate(p.firstSeen)}</b></div>
             <div className="ph-fact"><span>Дней в игре</span><b className="num">{full(p.activeDays)}</b></div>
           </div>
-          <div className="ph-hero"><HeroRig size={190} still look={p.body} worn={p.equipped} seat={stageOf("chair", p.room.levels, p.room.decor).level} /></div>
+          <div className="ph-hero"><HeroRig size={190} still look={p.body} worn={p.equipped} seat={placedOf("chair", p.room.pieces ?? {}, p.room.decor)} /></div>
           <div className="ph-side">
             <div className="ph-fact"><span>Был в игре</span><b>{shortDate(p.lastSeen)}</b></div>
             {p.clan ? (
@@ -197,7 +197,7 @@ export function ProfileScreen() {
           <span className="tiny muted">{ROOM_DEFS.find((r) => r.id === p.room.id)?.name ?? ""}</span>
         </div>
         <div className="profile-room" style={{ backgroundImage: `url(/assets/home/${ROOM_BACKDROP[p.room.id] ?? ROOM_BACKDROP.basic}.webp)` }}>
-          <HomeScene room={p.room.id} look={p.body} worn={p.equipped} levels={p.room.levels} decor={p.room.decor} trophies={p.room.trophies} still />
+          <HomeScene room={p.room.id} look={p.body} worn={p.equipped} pieces={p.room.pieces} decor={p.room.decor} trophies={p.room.trophies} still />
         </div>
       </div>
 

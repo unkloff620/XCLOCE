@@ -1,21 +1,22 @@
 import { GameError, type Queryable } from "../db.ts";
 import { ledger, takeMoney, type Ctx } from "../core.ts";
-import { EQUIPMENT, HELP_TOPICS, TROPHIES, equipmentById, normalizeLook, roomById, roomUnlockId, roomsEnergyBonus, totalBonus, type HelpTopic, type Look } from "../../content/home.ts";
+import { EQUIPMENT, HELP_TOPICS, TROPHIES, equipmentById, hasPiece, piecesCount, normalizeLook, roomById, roomUnlockId, roomsEnergyBonus, totalBonus, type HelpTopic, type Look } from "../../content/home.ts";
 import { TALENT_RESET_PRICE, TALENT_WEAPONS, nodeOpen, talentTree, talentsSpent, type TalentBranch, type WeaponTalents } from "../../content/talents.ts";
 
 /*
  * Дом: оборудование (уровни), комнаты (купить / выбрать), внешность персонажа, просмотренные подсказки.
  */
 
-export interface HomeRow { levels: Record<string, number>; rooms: string[]; room: string; body: Look; decor: Record<string, number>; trophies: string[] }
+export interface HomeRow { levels: Record<string, number>; pieces: Record<string, number>; rooms: string[]; room: string; body: Look; decor: Record<string, number>; trophies: string[] }
 
 export async function homeData(q: Queryable, pid: number): Promise<HomeRow> {
-  const eq = await q.query<{ equipment_id: string; level: number }>("SELECT equipment_id, level FROM player_equipment WHERE player_id=$1", [pid]);
+  const eq = await q.query<{ equipment_id: string; level: number; pieces: number }>("SELECT equipment_id, level, pieces FROM player_equipment WHERE player_id=$1", [pid]);
   const [a] = await q.query<{ room: string; rooms: string[] | null; body: unknown; decor: Record<string, number> | null }>("SELECT room, rooms, body, decor FROM appearance WHERE player_id=$1", [pid]);
   const rooms = Array.isArray(a?.rooms) && a.rooms.length ? a.rooms : ["basic"];
   const tr = await q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id = ANY($2)", [pid, TROPHIES.map((t) => t.id)]);
   return {
     levels: Object.fromEntries(eq.map((e) => [e.equipment_id, e.level])),
+    pieces: Object.fromEntries(eq.filter((e) => e.pieces > 0).map((e) => [e.equipment_id, Number(e.pieces)])),
     rooms,
     room: a && rooms.includes(a.room) ? a.room : "basic",
     body: normalizeLook(a?.body),
@@ -27,28 +28,58 @@ export async function homeData(q: Queryable, pid: number): Promise<HomeRow> {
 /** Combat bonus of a player (equipment + every owned room). */
 export async function playerBonus(q: Queryable, pid: number) {
   const h = await homeData(q, pid);
-  return totalBonus(h.levels, h.rooms, h.trophies);
+  return totalBonus(h.levels, h.rooms, h.trophies, h.pieces);
 }
 
 export async function homeView(q: Queryable, pid: number) {
   const h = await homeData(q, pid);
-  return { ...h, bonus: totalBonus(h.levels, h.rooms, h.trophies) };
+  return { ...h, bonus: totalBonus(h.levels, h.rooms, h.trophies, h.pieces) };
 }
 
 export async function upgradeEquipment(ctx: Ctx, id: string) {
   const def = equipmentById(id);
   if (!def) throw new GameError("bad_equipment", "Такого оборудования нет");
+  if (def.pieces?.length) {
+    // room things are bought piece by piece; the old «upgrade» buys the first one not owned yet
+    const h = await homeData(ctx.q, ctx.pid);
+    const k = def.pieces.findIndex((_, i) => !hasPiece(h.pieces[def.id] ?? 0, i + 1)) + 1;
+    if (k < 1) throw new GameError("max_level", `${def.name}: уже всё куплено`);
+    const r = await buyPiece(ctx, def.id, k);
+    return { id: def.id, level: r.count, max: def.pieces.length };
+  }
   const h = await homeData(ctx.q, ctx.pid);
   const lv = h.levels[def.id] ?? 0;
   if (lv >= def.levels.length) throw new GameError("max_level", `${def.name}: уже максимальный уровень`);
   const next = def.levels[lv];
   await takeMoney(ctx, next.price.currency, next.price.amount, `equip:${def.id}:${lv + 1}`);
-  await ctx.q.query("UPDATE appearance SET decor = decor - $2::text WHERE player_id=$1", [ctx.pid, def.id]); // the new thing goes into the room
   await ctx.q.query(
     "INSERT INTO player_equipment (player_id, equipment_id, level) VALUES ($1,$2,$3) ON CONFLICT (player_id, equipment_id) DO UPDATE SET level = EXCLUDED.level",
     [ctx.pid, def.id, lv + 1],
   );
   return { id: def.id, level: lv + 1, max: def.levels.length };
+}
+
+/** One room thing (desk / monitor / chair) bought on its own, in any order; it goes straight into the room. */
+export async function buyPiece(ctx: Ctx, id: string, k: number) {
+  const def = equipmentById(id);
+  const piece = def?.pieces?.[k - 1];
+  if (!def || !piece || !Number.isInteger(k)) throw new GameError("bad_equipment", "Такой вещи нет");
+  const h = await homeData(ctx.q, ctx.pid);
+  const owned = h.pieces[def.id] ?? 0;
+  if (hasPiece(owned, k)) throw new GameError("owned", `${piece.name}: уже куплено`);
+  await takeMoney(ctx, piece.price.currency, piece.price.amount, `piece:${def.id}:${k}`);
+  const mask = owned | (1 << (k - 1));
+  const [row] = await ctx.q.query<{ pieces: number }>(
+    `INSERT INTO player_equipment (player_id, equipment_id, level, pieces) VALUES ($1,$2,$3,$4)
+     ON CONFLICT (player_id, equipment_id) DO UPDATE SET pieces = player_equipment.pieces | EXCLUDED.pieces, level = $3
+     RETURNING pieces`,
+    [ctx.pid, def.id, piecesCount(mask), mask],
+  );
+  // the new thing goes into the room: a monitor joins the shown ones, a desk / chair takes the place
+  const shown = def.multi ? (typeof h.decor[def.id] === "number" ? h.decor[def.id] | (1 << (k - 1)) : null) : k;
+  if (shown === null) await ctx.q.query("UPDATE appearance SET decor = decor - $2::text WHERE player_id=$1", [ctx.pid, def.id]);
+  else await ctx.q.query("UPDATE appearance SET decor = jsonb_set(decor, ARRAY[$2::text], to_jsonb($3::int)) WHERE player_id=$1", [ctx.pid, def.id, shown]);
+  return { id: def.id, piece: k, name: piece.name, pieces: Number(row.pieces), count: piecesCount(Number(row.pieces)) };
 }
 
 /** The player's weapon talents: weapon → branch → level. */
@@ -120,15 +151,30 @@ export async function setRoom(ctx: Ctx, id: string) {
   return { room: id };
 }
 
-/** Which of the owned stages of a room thing stands in the room (e.g. the old chair you like more); the bonus stays the bought level's. */
-export async function setDecor(ctx: Ctx, id: string, stage: number) {
+/** Check one decor value: desk / chair — 0 (the free one) or an owned piece; monitors — a mask of owned ones. */
+function decorValue(id: string, v: unknown, pieces: Record<string, number>): number {
   const def = equipmentById(id);
-  if (!def?.stages) throw new GameError("bad_equipment", "Это нельзя поставить");
+  if (!def?.pieces?.length) throw new GameError("bad_equipment", "Это нельзя поставить");
+  const owned = pieces[def.id] ?? 0;
+  if (typeof v !== "number" || !Number.isInteger(v) || v < 0) throw new GameError("bad_value", "Неверное значение");
+  if (def.multi ? (v & ~owned) !== 0 : v !== 0 && !hasPiece(owned, v)) throw new GameError("locked", "Сначала купи эту вещь");
+  return v;
+}
+
+/** What stands in the room (e.g. the old chair you like more); the bonus of every owned piece stays. */
+export async function setDecor(ctx: Ctx, id: string, stage: number) {
+  return saveDecor(ctx, { [id]: stage });
+}
+
+/** The room editor saves everything at once: { desk, chair, monitor2 }. */
+export async function saveDecor(ctx: Ctx, raw: Record<string, unknown>) {
   const h = await homeData(ctx.q, ctx.pid);
-  const lv = Math.min(h.levels[def.id] ?? 0, def.levels.length);
-  if (!Number.isInteger(stage) || stage < 0 || stage > lv) throw new GameError("locked", "Сначала улучши до этого уровня");
-  await ctx.q.query("UPDATE appearance SET decor = jsonb_set(decor, ARRAY[$2::text], to_jsonb($3::int)) WHERE player_id=$1", [ctx.pid, def.id, stage]);
-  return { id: def.id, stage };
+  const entries = Object.entries(raw ?? {});
+  if (!entries.length || entries.length > EQUIPMENT.length) throw new GameError("bad_value", "Нечего сохранять");
+  const decor = { ...h.decor };
+  for (const [id, v] of entries) decor[id] = decorValue(id, v, h.pieces);
+  await ctx.q.query("UPDATE appearance SET decor=$2 WHERE player_id=$1", [ctx.pid, JSON.stringify(decor)]);
+  return { decor };
 }
 
 export async function setLook(ctx: Ctx, raw: Record<string, unknown>) {

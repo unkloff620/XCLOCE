@@ -1485,3 +1485,20 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .room-rgb { animation: rgb-breathe 4s ease-in-out infinite; }
 @keyframes rgb-breathe { 50% { opacity: 0.75; } }
 @media (prefers-reduced-motion: reduce) { .room-rgb { animation: none; } }
+
+/* ---------- room editor: the hero steps away, the room keeps its colours ---------- */
+.fit-page.decorating .scene-backdrop { filter: blur(7px) brightness(0.55); }
+.room-ed-side .sty-slot { padding-bottom: 14px; }
+.room-ed-art { display: grid; place-items: center; width: 44px; height: 36px; }
+.room-ed-art img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.room-ed-title { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 1px; padding: 2px 4px; }
+.room-ed-title b { font-size: 18px; line-height: 1.1; }
+.room-ed-thumb { width: 56px; height: 44px; object-fit: contain; }
+.sty-item.room-ed-new { border-style: dashed; }
+.sty-item.room-ed-new .room-ed-thumb { opacity: 0.75; }
+.sty-item.room-ed-item { position: relative; width: 86px; height: 104px; gap: 2px; }
+.room-ed-price { display: inline-flex; align-items: center; gap: 2px; font-size: 10px; font-weight: 800; color: var(--gold); }
+.room-ed-check { position: absolute; top: 4px; right: 4px; width: 16px; height: 16px; border-radius: 50%; display: grid; place-items: center; font-size: 10px; font-weight: 900;
+  border: 1.5px solid var(--line); background: rgba(0, 0, 0, 0.35); color: #fff; }
+.room-ed-check.on { background: #3ddc84; color: #10200f; }
+.room-ed-info { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; min-height: 30px; }

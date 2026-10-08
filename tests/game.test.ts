@@ -752,6 +752,30 @@ describe("home: equipment, rooms, look, help", () => {
     await expect(act(db, p, "decor_set", { id: "rgb", stage: 0 }, T0)).rejects.toMatchObject({ code: "bad_equipment" });
   });
 
+  it("room pieces: desk, monitors and chair are bought one by one, in any order", async () => {
+    const p = await newPlayer(db);
+    await setMoney(db, p, "SOL", 1);
+    await setMoney(db, p, "RUB", 3000);
+    // the middle monitor first, without the right and the left ones
+    const m3 = await act(db, p, "piece_buy", { id: "monitor2", piece: 3 }, T0);
+    expect(m3.state.home.pieces).toMatchObject({ monitor2: 4 });
+    expect(m3.state.home.bonus.critDamage).toBeCloseTo(0.15);
+    await expect(act(db, p, "piece_buy", { id: "monitor2", piece: 3 }, T0)).rejects.toMatchObject({ code: "owned" });
+    const m1 = await act(db, p, "piece_buy", { id: "monitor2", piece: 1 }, T0);
+    expect(m1.state.home.pieces).toMatchObject({ monitor2: 5 });
+    expect(m1.state.home.bonus.critDamage).toBeCloseTo(0.25);
+    // the throne straight away
+    const ch = await act(db, p, "piece_buy", { id: "chair", piece: 3 }, T0);
+    expect(ch.state.home.decor).toMatchObject({ chair: 3 });
+    expect(ch.state.home.bonus.critChance).toBeCloseTo(0.03);
+    // the editor saves what stands: only owned things
+    await expect(act(db, p, "decor_save", { decor: { monitor2: 2 } }, T0)).rejects.toMatchObject({ code: "locked" });
+    await expect(act(db, p, "decor_save", { decor: { chair: 1 } }, T0)).rejects.toMatchObject({ code: "locked" });
+    const saved = await act(db, p, "decor_save", { decor: { desk: 0, chair: 0, monitor2: 4 } }, T0);
+    expect(saved.state.home.decor).toMatchObject({ desk: 0, chair: 0, monitor2: 4 });
+    expect(saved.state.home.bonus.critDamage).toBeCloseTo(0.25); // hidden things keep their bonus
+  });
+
   it("rooms: buy, switch, the bonus of every owned room counts", async () => {
     const p = await newPlayer(db);
     await expect(act(db, p, "room_set", { id: "office" }, T0)).rejects.toMatchObject({ code: "room_locked" });

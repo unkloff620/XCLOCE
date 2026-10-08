@@ -2,7 +2,7 @@ import type { Currency } from "./currencies.ts";
 
 /*
  * Дом: оборудование на заднем плане и комнаты. Оба дают боевые бонусы.
- * Бонусы складываются: оборудование (по уровню) + все купленные комнаты.
+ * Бонусы складываются: подсветка (по уровню), каждый купленный стол / монитор / кресло + все купленные комнаты.
  * Черновые цены и бонусы — правятся здесь.
  */
 
@@ -23,58 +23,61 @@ export const BASE_CRIT_MULT = 1.5;
 
 export interface Price { currency: Currency; amount: number }
 
+/** One thing for the room that is bought on its own (a desk, a monitor, a chair), in any order. */
+export interface PieceDef {
+  name: string;
+  /** picture in public/assets/home */
+  art: string;
+  price: Price;
+  /** bonus this piece gives while owned (pieces of one kind add up) */
+  bonus: Bonus;
+}
+
 export interface EquipmentDef {
   id: string;
   name: string;
   description: string;
-  /** уровни 1..N: цена покупки этого уровня и суммарный бонус на этом уровне */
+  /** sequential upgrades (RGB): price of each level and the total bonus on it */
   levels: { price: Price; bonus: Bonus }[];
-  /** то, что стоит в комнате на уровне 0..N (название + картинка в public/assets/home) — для стола и мониторов */
-  stages?: { name: string; art: string }[];
+  /** room things: what stands there for free … */
+  base?: { name: string; art: string };
+  /** … and the pieces bought one by one (piece k is bit k-1 of the owned mask) */
+  pieces?: PieceDef[];
+  /** monitors: every owned piece can stand at once (each has its own place); desk and chair: one at a time */
+  multi?: boolean;
 }
 
 export const EQUIPMENT: EquipmentDef[] = [
   {
-    id: "desk", name: "Стол", description: "Всё начинается со стола. Чем солиднее стол — тем увереннее удар.",
-    levels: [
-      { price: { currency: "RUB", amount: 4000 }, bonus: { critChance: 0.02 } },
-      { price: { currency: "USD", amount: 30 }, bonus: { critChance: 0.03, damage: 0.03 } },
-      { price: { currency: "SOL", amount: 0.2 }, bonus: { critChance: 0.05, critDamage: 0.1, damage: 0.06 } },
-    ],
-    stages: [
-      { name: "Стол с Авито", art: "desk-001" },
-      { name: "Ореховый стандарт", art: "desk-002" },
-      { name: "Мраморный холд", art: "desk-003" },
-      { name: "Золотой памп", art: "desk-004" },
+    id: "desk", name: "Стол", description: "Всё начинается со стола. Каждый купленный стол даёт свой бонус навсегда, а в комнату ставишь любой.",
+    levels: [],
+    base: { name: "Стол с Авито", art: "desk-001" },
+    pieces: [
+      { name: "Ореховый стандарт", art: "desk-002", price: { currency: "RUB", amount: 4000 }, bonus: { critChance: 0.02 } },
+      { name: "Мраморный холд", art: "desk-003", price: { currency: "USD", amount: 30 }, bonus: { critChance: 0.01, damage: 0.03 } },
+      { name: "Золотой памп", art: "desk-004", price: { currency: "SOL", amount: 0.2 }, bonus: { critChance: 0.02, critDamage: 0.1, damage: 0.03 } },
     ],
   },
   {
-    // id stays "monitor2": players who bought «Второй монитор» keep their levels and bonus
-    id: "monitor2", name: "Мониторы", description: "Один экран — для графика, второй — для чата, третий — чтобы видеть, куда бить. Усиливают криты.",
-    levels: [
-      { price: { currency: "RUB", amount: 3000 }, bonus: { critDamage: 0.1 } },
-      { price: { currency: "USD", amount: 30 }, bonus: { critDamage: 0.2 } },
-      { price: { currency: "SOL", amount: 0.15 }, bonus: { critDamage: 0.35 } },
-    ],
-    stages: [
-      { name: "Старый ламповый", art: "monitor-1" },
-      { name: "Один монитор", art: "monitor-right" },
-      { name: "Два монитора", art: "monitor-left" },
-      { name: "Три монитора", art: "monitor-center" },
+    // id stays "monitor2": players who bought monitors keep them (levels became pieces in migration v2-031)
+    id: "monitor2", name: "Мониторы", description: "Один экран — для графика, второй — для чата, третий — чтобы видеть, куда бить. Каждый покупается отдельно и усиливает криты.",
+    levels: [],
+    base: { name: "Старый ламповый", art: "monitor-1" },
+    multi: true,
+    pieces: [
+      { name: "Монитор справа", art: "monitor-right", price: { currency: "RUB", amount: 3000 }, bonus: { critDamage: 0.1 } },
+      { name: "Монитор слева", art: "monitor-left", price: { currency: "USD", amount: 30 }, bonus: { critDamage: 0.1 } },
+      { name: "Монитор по центру", art: "monitor-center", price: { currency: "SOL", amount: 0.15 }, bonus: { critDamage: 0.15 } },
     ],
   },
   {
-    id: "chair", name: "Кресло", description: "Спина прямая — рука твёрдая. Повышает шанс крита.",
-    levels: [
-      { price: { currency: "RUB", amount: 2500 }, bonus: { critChance: 0.02 } },
-      { price: { currency: "USD", amount: 25 }, bonus: { critChance: 0.04 } },
-      { price: { currency: "SOL", amount: 0.12 }, bonus: { critChance: 0.07 } },
-    ],
-    stages: [
-      { name: "Табуретка", art: "seat-1" },
-      { name: "Офисное кресло", art: "chair-1" },
-      { name: "Геймерское кресло", art: "chair-2" },
-      { name: "Трон трейдера", art: "chair-3" },
+    id: "chair", name: "Кресло", description: "Спина прямая — рука твёрдая. Каждое купленное кресло повышает шанс крита навсегда, а сидишь на любом.",
+    levels: [],
+    base: { name: "Табуретка", art: "seat-1" },
+    pieces: [
+      { name: "Офисное кресло", art: "chair-1", price: { currency: "RUB", amount: 2500 }, bonus: { critChance: 0.02 } },
+      { name: "Геймерское кресло", art: "chair-2", price: { currency: "USD", amount: 25 }, bonus: { critChance: 0.02 } },
+      { name: "Трон трейдера", art: "chair-3", price: { currency: "SOL", amount: 0.12 }, bonus: { critChance: 0.03 } },
     ],
   },
   {
@@ -121,13 +124,28 @@ export const ROOM_DEFS: RoomDef[] = [
 ];
 
 export const equipmentById = (id: string) => EQUIPMENT.find((e) => e.id === id);
-/** what stands in the room: the chosen owned stage (decor), else the latest bought one */
-export const stageOf = (id: string, levels: Record<string, number>, decor: Record<string, number> = {}) => {
+/** the room things bought piece by piece */
+export const PIECE_EQUIPMENT = EQUIPMENT.filter((e) => e.pieces?.length);
+export const hasPiece = (mask: number, k: number) => k >= 1 && ((mask >> (k - 1)) & 1) === 1;
+export const piecesCount = (mask: number) => { let n = 0; for (let m = mask; m; m >>= 1) n += m & 1; return n; };
+/**
+ * What stands in the room. Desk / chair: the chosen piece (0 = the free one) if owned, else the newest owned.
+ * Monitors: a mask of the shown monitors (decor), only owned ones; by default every owned monitor stands.
+ */
+export function placedOf(id: string, pieces: Record<string, number>, decor: Record<string, number> = {}): number {
   const e = equipmentById(id);
-  const owned = Math.min(levels[id] ?? 0, e?.levels.length ?? 0);
+  const owned = pieces[id] ?? 0;
   const pick = decor[id];
-  const lv = typeof pick === "number" && pick >= 0 && pick <= owned ? pick : owned;
-  return { level: lv, stage: e?.stages?.[lv] };
+  if (e?.multi) return typeof pick === "number" && pick >= 0 ? pick & owned : owned;
+  if (typeof pick === "number" && (pick === 0 || hasPiece(owned, pick))) return pick;
+  for (let k = e?.pieces?.length ?? 0; k >= 1; k--) if (hasPiece(owned, k)) return k;
+  return 0;
+}
+/** the picture of what stands in the room (desk / chair) */
+export const placedArt = (id: string, pieces: Record<string, number>, decor: Record<string, number> = {}) => {
+  const e = equipmentById(id);
+  const k = placedOf(id, pieces, decor);
+  return k > 0 ? e?.pieces?.[k - 1]?.art : e?.base?.art;
 };
 export const roomById = (id: string) => ROOM_DEFS.find((r) => r.id === id);
 /** the unlock key of a room that drops from a boss (stored with the shop unlocks) */
@@ -145,9 +163,13 @@ export const TROPHIES: { id: string; bonus: Bonus }[] = [
 ];
 
 /** Total bonus from equipment levels, owned rooms and trophies (weapon talents are added per weapon in combat). */
-export function totalBonus(levels: Record<string, number>, rooms: string[], trophies: string[] = []): Required<Bonus> {
+export function totalBonus(levels: Record<string, number>, rooms: string[], trophies: string[] = [], pieces: Record<string, number> = {}): Required<Bonus> {
   let b: Bonus = {};
   for (const e of [...EQUIPMENT, ...LEGACY_EQUIPMENT]) {
+    if (e.pieces?.length) {
+      e.pieces.forEach((pc, i) => { if (hasPiece(pieces[e.id] ?? 0, i + 1)) b = addBonus(b, pc.bonus); });
+      continue;
+    }
     const lv = levels[e.id] ?? 0;
     if (lv > 0) b = addBonus(b, e.levels[Math.min(lv, e.levels.length) - 1].bonus);
   }

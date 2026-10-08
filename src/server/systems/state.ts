@@ -62,7 +62,7 @@ export async function gameState(ctx: Ctx) {
         .filter(([, t]) => (t as number) > ctx.now),
     ) as Record<string, number>,
     look: { equipped: app?.equipped ?? {}, room: home.room, body: home.body },
-    home: { levels: home.levels, rooms: home.rooms, bonus: home.bonus, decor: home.decor, trophies: home.trophies },
+    home: { levels: home.levels, pieces: home.pieces, rooms: home.rooms, bonus: home.bonus, decor: home.decor, trophies: home.trophies },
     helpSeen: (p as PlayerRow & { help_seen?: string[] }).help_seen ?? [],
     unlocks: await unlockedItems(ctx.q, ctx.pid),
     yard: { count: yard.items.length, max: yard.max, nextAt: yard.nextAt },
@@ -130,7 +130,7 @@ export async function profileView(q: Queryable, viewer: number, pid: number, cfg
     achievements: await achievementsView(q, pid, cfg),
     room: await (async () => {
       const h = await homeView(q, pid);
-      return { id: h.room, levels: h.levels, decor: h.decor, trophies: h.trophies };
+      return { id: h.room, levels: h.levels, pieces: h.pieces, decor: h.decor, trophies: h.trophies };
     })(),
   };
 }

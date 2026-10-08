@@ -70,6 +70,8 @@ export function actionText(type: string, body: Row, result: unknown): string | n
     case "equipment_upgrade": return `${equipmentById(String(r.id ?? body.id))?.name ?? body.id} → уровень ${r.level}`;
     case "room_buy":
     case "room_set": return roomById(String(r.room ?? body.id))?.name ?? String(body.id);
+    case "piece_buy": return `${equipmentById(String(body.id))?.pieces?.[Number(body.piece) - 1]?.name ?? body.id}`;
+    case "decor_save": return "обстановка";
     case "decor_set": return `${equipmentById(String(body.id))?.name ?? body.id}, стадия ${body.stage}`;
     case "quest_claim": return join(questById(String(body.id))?.title ?? String(body.id), grantedText(r.reward));
     case "quest_chest": return join("сундук дня", grantedText(r.reward));

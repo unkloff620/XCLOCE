@@ -29,7 +29,7 @@ export interface GameState {
   inventory: { id: string; qty: number }[];
   cooldowns: Record<string, number>;
   look: { equipped: Record<string, string>; room: string; body: Look };
-  home: { levels: Record<string, number>; rooms: string[]; bonus: { critChance: number; critDamage: number; damage: number; energyMax?: number; fistDamage?: number }; decor: Record<string, number>; trophies: string[] };
+  home: { levels: Record<string, number>; pieces?: Record<string, number>; rooms: string[]; bonus: { critChance: number; critDamage: number; damage: number; energyMax?: number; fistDamage?: number }; decor: Record<string, number>; trophies: string[] };
   helpSeen: string[];
   /** things a boss drop opened in the shop */
   unlocks?: string[];

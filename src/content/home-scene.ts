@@ -1,7 +1,7 @@
 /*
  * Home scene layout (scene canvas 1060×1484 = the background picture).
  * Objects: x, y = top-left corner, w = width in scene units; height follows the picture's aspect (h/w); flip = mirror.
- * Upgradable things change with their level (content/home.ts EQUIPMENT stages): the desk picture, how many monitors stand on it.
+ * Room things are bought piece by piece (content/home.ts EQUIPMENT pieces): which desk stands, which monitors, which chair.
  */
 export const SCENE = { w: 1060, h: 1484 };
 
@@ -24,9 +24,16 @@ export const SCENE_OBJECTS = {
 
 /** tap zones (scene units) that open the windows: bigger than the pictures so a finger hits them */
 export const SCENE_HOT = {
+  // the whole back of the room (monitors, desk): opens the room editor
   monitors: { x: 50, y: 390, w: 950, h: 330, equipment: "monitor2" },
   pc: { x: 830, y: 730, w: 200, h: 245, equipment: "pc" },
 } as const;
+
+/** the hero's body (head + torso, scene units), laid over the monitors' zone: a tap opens the wardrobe */
+export const HERO_HOT = [
+  { x: 405, y: 425, w: 235, h: 235 },
+  { x: 265, y: 660, w: 520, h: 640 },
+] as const;
 
 /** Character placement: the 1000×1400 rig canvas scaled into the scene. */
 export const CHARACTER = { x: 130, y: 405, scale: 0.78 };

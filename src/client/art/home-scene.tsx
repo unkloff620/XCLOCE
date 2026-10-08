@@ -1,9 +1,9 @@
 "use client";
 /* The player's room: artist's background, the PC in the corner, the desk with 1–3 monitors and the seated character on the stool. */
-import { CHARACTER, ROOM_BG, ROOM_LIGHTS, ROOM_RGB, ROOM_SKY, SCENE, SCENE_HOT, SCENE_OBJECTS } from "../../content/home-scene.ts";
+import { CHARACTER, HERO_HOT, ROOM_BG, ROOM_LIGHTS, ROOM_RGB, ROOM_SKY, SCENE, SCENE_HOT, SCENE_OBJECTS } from "../../content/home-scene.ts";
 import { RigViewport, type Worn } from "./rig.tsx";
 import { ART_ASPECT } from "./desk-data.ts";
-import { stageOf, type Look } from "../../content/home.ts";
+import { placedArt, placedOf, type Look } from "../../content/home.ts";
 
 type ObjId = keyof typeof SCENE_OBJECTS;
 
@@ -34,12 +34,15 @@ function Hot({ id, onPick }: { id: keyof typeof SCENE_HOT; onPick: (equipment: s
 
 /**
  * focusHero: the character editor is open — the whole room goes grey and dark, only the hero keeps his colours.
+ * hideHero: the room editor is open — the hero steps away (his chair stays) so the room behind is seen.
+ * pieces / decor: the owned room things and which of them stand (content/home.ts placedOf).
  */
-export function HomeScene({ room = "basic", onPick, still, look, worn, levels = {}, decor = {}, trophies = [], focusHero }: { room?: string; onPick?: (equipment: string) => void; still?: boolean; look?: Look; worn?: Worn; levels?: Record<string, number>; decor?: Record<string, number>; trophies?: string[]; focusHero?: boolean }) {
+export function HomeScene({ room = "basic", onPick, onHero, still, look, worn, pieces = {}, decor = {}, trophies = [], focusHero, hideHero }: { room?: string; onPick?: (equipment: string) => void; onHero?: () => void; still?: boolean; look?: Look; worn?: Worn; pieces?: Record<string, number>; decor?: Record<string, number>; trophies?: string[]; focusHero?: boolean; hideHero?: boolean }) {
   const bg = ROOM_BG[room] ?? ROOM_BG.basic;
   const sky = ROOM_SKY[room];
-  const desk = stageOf("desk", levels, decor).stage?.art ?? "desk-001";
-  const monitors = stageOf("monitor2", levels, decor).level; // 0: old CRT on the right, 1: flat on the right, 2: + left, 3: + middle
+  const desk = placedArt("desk", pieces, decor) ?? "desk-001";
+  // shown monitors: bit 1 — right, 2 — left, 4 — middle; without the right one the old CRT stands in its place
+  const monitors = placedOf("monitor2", pieces, decor);
   const lights = ROOM_LIGHTS[room] ?? [];
   const rgb = ROOM_RGB[room];
   return (
@@ -100,14 +103,20 @@ export function HomeScene({ room = "basic", onPick, still, look, worn, levels = 
       )}
       <Obj id="pc" art="pc-1" />
       <Obj id="desk" art={desk} />
-      {monitors >= 3 && <Obj id="monitorCenter" art="monitor-center" />}
-      {monitors >= 2 && <Obj id="monitorLeft" art="monitor-left" />}
-      {monitors >= 1 ? <Obj id="monitorRight" art="monitor-right" /> : <Obj id="monitorOld" art="monitor-1" />}
+      {(monitors & 4) !== 0 && <Obj id="monitorCenter" art="monitor-center" />}
+      {(monitors & 2) !== 0 && <Obj id="monitorLeft" art="monitor-left" />}
+      {(monitors & 1) !== 0 ? <Obj id="monitorRight" art="monitor-right" /> : <Obj id="monitorOld" art="monitor-1" />}
       {trophies.includes("statue-close") && <Obj id="statueClose" art="statue-close" />}
       </g>
-      <RigViewport x={CHARACTER.x} y={CHARACTER.y} scale={CHARACTER.scale} seat={stageOf("chair", levels, decor).level} still={still} look={look} worn={worn} />
+      <RigViewport x={CHARACTER.x} y={CHARACTER.y} scale={CHARACTER.scale} seat={placedOf("chair", pieces, decor)} still={still} look={look} worn={worn} seatOnly={hideHero} />
       {onPick && <Hot id="monitors" onPick={onPick} />}
       {onPick && <Hot id="pc" onPick={onPick} />}
+      {onHero && !hideHero && HERO_HOT.map((z, i) => (
+        // the hero's body over the monitors' zone: a tap opens the wardrobe
+        <rect key={i} role="button" tabIndex={i === 0 ? 0 : -1} aria-label="Персонаж: гардероб" x={z.x} y={z.y} width={z.w} height={z.h} rx="40"
+          fill="transparent" pointerEvents="all" style={{ cursor: "pointer", outline: "none" }}
+          onClick={onHero} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onHero()} />
+      ))}
     </svg>
   );
 }

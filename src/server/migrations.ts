@@ -613,4 +613,16 @@ CREATE TABLE IF NOT EXISTS stash_sets (
 ALTER TABLE players ADD COLUMN IF NOT EXISTS energy_bonus INT NOT NULL DEFAULT 0;
 `,
   },
+  {
+    // Стол, мониторы и кресло покупаются по отдельности, в любом порядке: маска купленных вещей (вещь k — бит k-1).
+    // Купленный раньше уровень N превращается в вещи 1..N; показ мониторов в decor — тоже маска.
+    id: "v2-031-room-pieces",
+    sql: `
+ALTER TABLE player_equipment ADD COLUMN IF NOT EXISTS pieces INT NOT NULL DEFAULT 0;
+UPDATE player_equipment SET pieces = (1 << LEAST(level, 3)) - 1
+  WHERE equipment_id IN ('desk', 'monitor2', 'chair') AND pieces = 0 AND level > 0;
+UPDATE appearance SET decor = jsonb_set(decor, '{monitor2}', to_jsonb((1 << LEAST(GREATEST((decor->>'monitor2')::int, 0), 3)) - 1))
+  WHERE decor ? 'monitor2';
+`,
+  },
 ];

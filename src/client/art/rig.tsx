@@ -97,7 +97,9 @@ function Seat({ level = 0 }: { level?: number }) {
 }
 
 /** Rig contents in its own 1000×1400 coordinates (place inside an <svg viewBox="0 0 1000 1400">). */
-function RigBody({ seat, look, worn }: { seat?: boolean | number; look?: Look; worn?: Worn }) {
+function RigBody({ seat, look, worn, seatOnly }: { seat?: boolean | number; look?: Look; worn?: Worn; seatOnly?: boolean }) {
+  // the room editor hides the hero: only the seat stays, so the room behind is seen
+  if (seatOnly) return <>{seat !== undefined && seat !== false && <Seat level={typeof seat === "number" ? seat : 0} />}</>;
   return (
     <LookCtx.Provider value={look ?? DEFAULT_LOOK}>
     <WornCtx.Provider value={worn ?? {}}>
@@ -131,10 +133,10 @@ function RigBody({ seat, look, worn }: { seat?: boolean | number; look?: Look; w
 }
 
 /** Nested viewport so bone pivots (view-box units) stay in rig coordinates inside any scene. */
-export function RigViewport({ x, y, scale, seat, still, look, worn }: { x: number; y: number; scale: number; seat?: boolean | number; still?: boolean; look?: Look; worn?: Worn }) {
+export function RigViewport({ x, y, scale, seat, still, look, worn, seatOnly }: { x: number; y: number; scale: number; seat?: boolean | number; still?: boolean; look?: Look; worn?: Worn; seatOnly?: boolean }) {
   return (
     <svg className={`rig ${still ? "still" : ""}`} x={x} y={y} width={1000 * scale} height={1400 * scale} viewBox="0 0 1000 1400" overflow="visible">
-      <RigBody seat={seat} look={look} worn={worn} />
+      <RigBody seat={seat} look={look} worn={worn} seatOnly={seatOnly} />
     </svg>
   );
 }

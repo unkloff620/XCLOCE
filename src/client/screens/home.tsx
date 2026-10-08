@@ -12,7 +12,8 @@ import { BossPhoto } from "./boss-parts.tsx";
 import { DailyWindow } from "./daily.tsx";
 import { QuestsWindow } from "./quests.tsx";
 import { tutorialPending } from "../tutorial.tsx";
-import { BonusLine, EquipmentWindow } from "./house.tsx";
+import { BonusLine } from "./house.tsx";
+import { RoomEditor, previewPieces, roomDraftOf, type RoomDraft, type RoomTab } from "./decorator.tsx";
 import { ComputerWindow } from "./computer.tsx";
 import { ROOM_DEFS } from "../../content/home.ts";
 import { money } from "../format.ts";
@@ -62,7 +63,9 @@ export function HomeScreen() {
       }
       return open;
     });
-  const [equip, setEquip] = useState<string | null | false>(false);
+  // the room editor: what would stand in the room (preview until saved) and the picked thing
+  const [decorating, setDecorating] = useState<RoomDraft | null>(null);
+  const [roomTab, setRoomTab] = useState<RoomTab>("monitor2");
   const [pc, setPc] = useState(false);
   // the running fight sits folded in the left column; a tap unfolds the full card
   const [fightOpen, setFightOpen] = useState(false);
@@ -70,14 +73,14 @@ export function HomeScreen() {
   const [viewIdx, setViewIdx] = useState<number | null>(null);
   const dailyReady = !!state?.daily.available;
   // the first-visit tour goes first; the daily reward window waits for it
-  const busyWindow = (state?.pending.length ?? 0) > 0 || tutorialPending(state) || !!styling;
+  const busyWindow = (state?.pending.length ?? 0) > 0 || tutorialPending(state) || !!styling || !!decorating;
   useEffect(() => {
     if (dailyReady && !busyWindow && !dailyAutoShown) {
       dailyAutoShown = true;
       setDaily(true);
     }
   }, [dailyReady, busyWindow]);
-  const isStyling = !!styling;
+  const isStyling = !!styling || !!decorating;
   // the editor greys out the HUD and the bottom menu too — they live outside this screen
   useEffect(() => {
     document.body.classList.toggle("styling", isStyling);
@@ -109,16 +112,30 @@ export function HomeScreen() {
   const f = state.fight;
   const fb = f ? bossById(f.bossId)! : null;
   const menuAlert = state.daily.available || state.quests.claimable || state.prizes.length > 0;
+  const openWardrobe = () => {
+    setDecorating(null);
+    setStyling({ look: { ...state.look.body }, worn: { ...state.look.equipped } });
+  };
+  const openRoomEditor = (tab: RoomTab) => {
+    setStyling(null);
+    setRoomTab(tab);
+    setDecorating(roomDraftOf(state.home.pieces ?? {}, state.home.decor));
+  };
+  const editing = !!styling || !!decorating;
   const hpPct = f ? `${Math.max(0, Math.min(100, (f.hp / Math.max(1, f.hpMax)) * 100))}%` : "0%";
   return (
-    <div className={`fit-page ${f && fb && fightOpen ? "has-fight" : ""} ${styling ? "styling" : ""}`}>
+    <div className={`fit-page ${f && fb && fightOpen ? "has-fight" : ""} ${editing ? "styling" : ""} ${decorating ? "decorating" : ""}`}>
       <div className="room">
         <div className={`scene-backdrop ${owned ? "" : "locked"}`} style={{ backgroundImage: `url(/assets/home/${ROOM_BACKDROP[viewRoom.id] ?? ROOM_BACKDROP.basic}.webp)` }} />
         <div className={`room-view ${owned ? "" : "locked"}`}>
-          <HomeScene room={viewRoom.id} look={styling?.look ?? state.look.body} worn={styling?.worn ?? state.look.equipped} levels={state.home.levels} decor={state.home.decor} trophies={state.home.trophies} focusHero={!!styling} onPick={owned && !styling ? (id) => (id === "pc" ? setPc(true) : setEquip(id)) : undefined} />
+          <HomeScene room={viewRoom.id} look={styling?.look ?? state.look.body} worn={styling?.worn ?? state.look.equipped}
+            pieces={decorating ? previewPieces(state.home.pieces ?? {}, decorating) : state.home.pieces} decor={decorating ?? state.home.decor} trophies={state.home.trophies}
+            focusHero={!!styling} hideHero={!!decorating}
+            onPick={owned && !editing ? (id) => (id === "pc" ? setPc(true) : openRoomEditor("monitor2")) : undefined}
+            onHero={owned && !editing ? openWardrobe : undefined} />
         </div>
         {/* looking at another room: confirm it (✓) or go back to the current one (✕) */}
-        {previewing && !styling && (
+        {previewing && !editing && (
           <div className="room-confirm">
             <button className="room-confirm-x" onClick={() => setViewIdx(null)} aria-label="Закрыть и вернуться в свою комнату">✕</button>
             <span className="room-confirm-name">{owned ? "Выбрать комнату?" : "Комната закрыта"}<b className="display">{viewRoom.name}</b></span>
@@ -153,13 +170,13 @@ export function HomeScreen() {
         </div>
         <div className="room-help">
           <Help topic="home-menu" title="Твой дом">
-            <p>Здесь живёт твой персонаж. На заднем плане стоит оборудование — нажми на мониторы, чтобы обставить рабочее место, или на системник в углу (его улучшения появятся позже). Стрелки внизу листают комнаты: сверху появится выбор — ✓ включить комнату, ✕ вернуться в свою; закрытую можно разблокировать кнопкой снизу. Каждая купленная комната даёт бонус к урону.</p>
+            <p>Здесь живёт твой персонаж. На заднем плане стоит оборудование — нажми на персонажа — откроется гардероб, на мониторы — редактор обстановки (персонаж отойдёт, чтобы было видно комнату; стол, каждый монитор и кресло покупаются отдельно), или на системник в углу (его улучшения появятся позже). Стрелки внизу листают комнаты: сверху появится выбор — ✓ включить комнату, ✕ вернуться в свою; закрытую можно разблокировать кнопкой снизу. Каждая купленная комната даёт бонус к урону.</p>
             <HelpList title="Меню [≡] слева (остаётся открытым или закрытым, как ты его оставил)" rows={[
               { key: "w", icon: <Icon name="shirt" size={44} />, name: "Гардероб", hint: "Редактор персонажа прямо в комнате: комната сереет, а ты примеряешь одежду, причёску, цвет волос и кожи. Всё сохраняется одной кнопкой." },
               { key: "b", icon: <Icon name="gift" size={44} />, name: "Бонус", hint: "Награда за ежедневный вход. Заходи каждый день подряд — награда растёт, на 7-й день редкое оружие. Пропустишь день — серия сгорит." },
               { key: "r", icon: <Icon name="trophy" size={44} />, name: "Рейтинг", hint: "Топ по урону за неделю, по авторитету и кланам. Топ-10 недели получает призы, лидеры — рамку на карточке." },
               { key: "q", icon: <Icon name="map" size={44} />, name: "Задания дня", hint: "Три задания на сутки: бой, энергия, покупки. Выполнишь все — открой сундук. Там же включаются напоминания в Telegram." },
-              { key: "t", icon: <Icon name="bolt" size={44} />, name: "Обстановка", hint: "Всё для рабочего места: стол, мониторы, кресло, подсветка. Шанс и сила крита." },
+              { key: "t", icon: <Icon name="bolt" size={44} />, name: "Обстановка", hint: "Редактор комнаты: стол, мониторы, кресло, подсветка. Каждую вещь покупаешь отдельно и в любом порядке, бонус купленной действует всегда." },
             ]} />
             <HelpList title="Меню внизу" rows={NAV_TABS.map((t) => ({ key: t.id, icon: <NavIcon id={t.id} size={44} />, name: t.label, hint: t.hint }))} />
             <HelpList title="Валюта (вверху)" rows={[
@@ -181,7 +198,7 @@ export function HomeScreen() {
           </button>
           {menuOpen && (
             <div className="menu-drop">
-              <button className="icon-btn-art" style={{ ["--c" as string]: "#b06bff" }} onClick={() => setStyling({ look: { ...state.look.body }, worn: { ...state.look.equipped } })} aria-label="Гардероб" title="Гардероб">
+              <button className="icon-btn-art" style={{ ["--c" as string]: "#b06bff" }} onClick={openWardrobe} aria-label="Гардероб" title="Гардероб">
                 <Icon name="shirt" size={58} />
               </button>
               <button className={`icon-btn-art ${state.daily.available ? "glow" : ""}`} style={{ ["--c" as string]: "#ffcc33" }} onClick={() => setDaily(true)} aria-label="Бонус" title="Бонус">
@@ -194,7 +211,7 @@ export function HomeScreen() {
                 {state.quests.claimable && <i className="side-dot" />}
                 <span className="side-count num">{state.quests.list.filter((x) => x.claimed).length}/3</span>
               </button>
-              <button className="icon-btn-art" style={{ ["--c" as string]: "#3fd2ff" }} onClick={() => setEquip(null)} aria-label="Обстановка" title="Обстановка">
+              <button className="icon-btn-art" style={{ ["--c" as string]: "#3fd2ff" }} onClick={() => openRoomEditor("desk")} aria-label="Обстановка" title="Обстановка">
                 <Icon name="bolt" size={58} />
               </button>
               <Link href="/rating" className={`icon-btn-art ${state.prizes.length ? "glow" : ""}`} style={{ ["--c" as string]: "#ffcc33" }} aria-label="Рейтинг" title="Рейтинг">
@@ -234,7 +251,7 @@ export function HomeScreen() {
       {styling && <Stylist draft={styling} setDraft={setStyling} onClose={() => setStyling(null)} />}
       {daily && <DailyWindow onClose={() => setDaily(false)} />}
       {quests && <QuestsWindow onClose={() => setQuests(false)} />}
-      {equip !== false && <EquipmentWindow focus={equip} onClose={() => setEquip(false)} />}
+      {decorating && <RoomEditor draft={decorating} setDraft={setDecorating} tab={roomTab} setTab={setRoomTab} onClose={() => setDecorating(null)} />}
       {pc && <ComputerWindow onClose={() => setPc(false)} />}
     </div>
   );

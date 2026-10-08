@@ -49,7 +49,7 @@ export const ACTIONS = [
   "buy", "exchange", "use", "equip", "unequip",
   "clan_create", "clan_join", "clan_leave", "clan_kick",
   "daily_claim", "sell", "rename", "slots_spin",
-  "equipment_upgrade", "talent_up", "talent_reset", "room_buy", "room_set", "look_set", "decor_set", "help_seen",
+  "equipment_upgrade", "talent_up", "talent_reset", "room_buy", "room_set", "look_set", "decor_set", "decor_save", "piece_buy", "help_seen",
   "quest_claim", "quest_chest", "notify_set", "achievement_claim", "prize_claim", "clan_edit",
   "game_start", "bj_move", "zonk_move", "upgrade", "up_sell", "up_take",
   "clan_cancel", "clan_accept", "clan_reject", "stash_collect",
@@ -86,6 +86,7 @@ async function afterAction(ctx: Ctx, type: ActionType, result: unknown) {
     case "exchange": return quests.questTick(ctx, "exchange", 1);
     case "slots_spin": return quests.questTick(ctx, "slots", 1);
     case "equipment_upgrade":
+    case "piece_buy":
     case "talent_up": return quests.questTick(ctx, "upgrade", 1);
     case "daily_claim": return notify.scheduleStreak(ctx, Number(r.streak) || 1);
     default: return;
@@ -121,6 +122,8 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "room_set": return home.setRoom(ctx, str(body.id, "id", 40));
     case "look_set": return home.setLook(ctx, body);
     case "decor_set": return home.setDecor(ctx, str(body.id, "id", 40), num(body.stage, "stage"));
+    case "decor_save": return home.saveDecor(ctx, (body.decor && typeof body.decor === "object" ? body.decor : {}) as Record<string, unknown>);
+    case "piece_buy": return home.buyPiece(ctx, str(body.id, "id", 40), num(body.piece, "piece"));
     case "help_seen": return home.helpSeen(ctx, str(body.topic, "topic", 40));
     case "clan_kick": return clans.kickMember(ctx, num(body.playerId, "playerId"));
     case "quest_claim": return quests.claimQuest(ctx, str(body.id, "id", 40));
