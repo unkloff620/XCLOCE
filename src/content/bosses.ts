@@ -93,6 +93,7 @@ export const BOSSES: BossDef[] = [
     drop: [{ id: "energy-drink", qty: 2, chance: 0.35 }],
     wear: { items: ["gold-chain"], chance: 0.1, pity: 10 },
     theme: { a: "#163a3a", b: "#061414", accent: "#2ee6c8" }, photo: photo("mugo"),
+    keysToUnlock: 1,
   },
   {
     id: "babafey", order: 6, card: "silver", name: "Бабафей", title: "Главный администратор Close Neo",
@@ -101,6 +102,7 @@ export const BOSSES: BossDef[] = [
     drop: [{ id: "gpu", qty: 1, chance: 0.25 }],
     wear: { items: ["hoodie-hodl"], chance: 0.1, pity: 10 },
     theme: { a: "#3a2a10", b: "#140d04", accent: "#ffb020" }, photo: photo("babafey"),
+    keysToUnlock: 1,
   },
   {
     id: "vodovoz", order: 7, card: "gold", name: "Восток", title: "Главный администратор Close Vostok",
@@ -108,6 +110,7 @@ export const BOSSES: BossDef[] = [
     hp: hp(6), reward: { xp: xp(6), currencies: { SOL: 0.09, RUB: 560 } },
     drop: [{ id: "energy-drink", qty: 3, chance: 0.4 }],
     theme: { a: "#0f3440", b: "#041217", accent: "#38d6ff" }, photo: photo("vodovoz"),
+    keysToUnlock: 1,
   },
   {
     id: "knyaz", order: 8, card: "gold", name: "Князь", title: "Главный администратор Close Knuaz",
@@ -115,6 +118,7 @@ export const BOSSES: BossDef[] = [
     hp: hp(7), reward: { xp: xp(7), currencies: { SOL: 0.13, RUB: 750 } },
     drop: [{ id: "gpu", qty: 1, chance: 0.35 }],
     theme: { a: "#2e1846", b: "#0e0718", accent: "#b06bff" }, photo: photo("knyaz"),
+    keysToUnlock: 1,
   },
   {
     id: "vadim", order: 9, card: "platinum", name: "Вадим", title: "Главный администратор Close Vadim",
@@ -122,6 +126,7 @@ export const BOSSES: BossDef[] = [
     hp: hp(8), reward: { xp: xp(8), currencies: { SOL: 0.17, RUB: 820 } },
     drop: [{ id: "gpu", qty: 1, chance: 0.4 }],
     theme: { a: "#3a2416", b: "#140b05", accent: "#ff8a3d" }, photo: photo("vadim"),
+    keysToUnlock: 1,
   },
   {
     id: "botsman", order: 10, card: "platinum", name: "Боцман", title: "Появляется раз в год — на Новый год",
@@ -129,6 +134,7 @@ export const BOSSES: BossDef[] = [
     hp: hp(9), reward: { xp: xp(9), currencies: { SOL: 0.22, RUB: 880 } },
     drop: [{ id: "rug-pull-gun", qty: 1, chance: 0.15 }],
     theme: { a: "#0f2a44", b: "#050e18", accent: "#5fb8ff" }, photo: photo("botsman"),
+    keysToUnlock: 1,
   },
   {
     id: "utilizator", order: 11, card: "diamond", name: "Утилизатор", title: "Прокси и вся движуха",
@@ -136,6 +142,7 @@ export const BOSSES: BossDef[] = [
     hp: hp(10), reward: { xp: xp(10), currencies: { BTC: 0.0003, RUB: 950 }, items: [{ id: "statue-close", qty: 1 }] },
     drop: [{ id: "rug-pull-gun", qty: 1, chance: 0.25 }],
     theme: { a: "#2f3416", b: "#0f1106", accent: "#c8f03c" }, photo: photo("utilizator"),
+    keysToUnlock: 1,
   },
   {
     id: "fokus", order: 12, card: "diamond", name: "Фокус", title: "Главный и единственный программист",
@@ -164,7 +171,7 @@ export const arenaOf = (bossId: string) => `/assets/arena/${BOSS_ARENAS.has(boss
 /** the boss that unlocks this shop item (BossDef.wear), if any */
 export const unlockBossOf = (itemId: string) => BOSSES.find((b) => b.wear?.items.includes(itemId));
 export const keyId = (bossId: string) => `key-${bossId}`;
-/** Keys of boss N needed to open boss N+1. */
+/** Keys of boss N needed to open boss N+1 (bosses after Гаркуша — from Мугонатор on — take one: keysToUnlock: 1). */
 export const KEYS_TO_UNLOCK = 3;
 /** Personal fight length. */
 export const FIGHT_HOURS = 8;
