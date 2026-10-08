@@ -1,188 +1,162 @@
 """
-Музыка финального боя с Солнцем (черновик для прослушивания): тяжёлая, устрашающая.
-96 BPM, 4/4, D фригийский (D – Eb – Bb – C – A): низкий гул, военные барабаны (тайко), медные «удары»,
-мрачный хор, похоронный колокол, тиканье часов и пульсирующее струнное остинато.
-16 тактов ≈ 40 с: 4 такта вступления (гул, колокол, часы) → 8 тактов полного боя → 4 такта кульминации с хором.
+Музыка финального боя с Солнцем — в стиле остальной музыки игры (блатной галоп: гитара «ум-ца-ца», щипковый бас,
+бочка на каждую долю, малый на слабые, бубен, аккордеон; см. build-battle-music.py), но мрачнее и «финальнее».
+160 BPM, 2/4, ре гармонический минор с фригийским ми-бемоль (Eb мажор как «неаполитанский» аккорд — тревога).
+Сверху: тяжёлые удары (большой барабан) на сильные доли, колокол на начало фраз, низкий мужской хор под аккордеоном,
+дроби малого перед новой фразой.
+Форма: вступление 8 тактов (медленно: тремоло аккордеона, колокол, удары) → раунд A (галоп + рифф) →
+раунд B (тема аккордеона, удвоена октавой ниже) → раунд C (кульминация: тема + хор + колокола).
 Пишет WAV в путь из аргумента (по умолчанию sun.wav).
 """
 import sys
 import numpy as np
 from scipy.io import wavfile
-from scipy.signal import butter, lfilter, fftconvolve
+from scipy.signal import butter, lfilter
 
 SR = 44100
-rng = np.random.default_rng(7)
-
-
-def lp(x, f, o=2): b, a = butter(o, f / (SR / 2)); return lfilter(b, a, x)
-def hp(x, f, o=2): b, a = butter(o, f / (SR / 2), "high"); return lfilter(b, a, x)
-def bp(x, lo, hi, o=2): b, a = butter(o, [lo / (SR / 2), hi / (SR / 2)], "band"); return lfilter(b, a, x)
+rng = np.random.default_rng(13)
+def lp(x, f, o=2): b, a = butter(o, f/(SR/2)); return lfilter(b, a, x)
+def hp(x, f, o=2): b, a = butter(o, f/(SR/2), "high"); return lfilter(b, a, x)
+def bp(x, lo, hi, o=2): b, a = butter(o, [lo/(SR/2), hi/(SR/2)], "band"); return lfilter(b, a, x)
 def hz(n): return 440 * 2 ** ((n - 69) / 12)
-
-
-BPM = 96
-beat = 60 / BPM
-bar = beat * 4
-BARS = 16
-N = int(SR * (bar * BARS + 3))
-L = np.zeros(N)   # left / right buses
-R = np.zeros(N)
-
-
-def put(x, at, pan=0.0, rev=0.0):
-    i = int(at * SR); j = min(N, i + len(x))
-    x = x[: j - i]
-    l, r = np.sqrt(0.5 * (1 - pan)), np.sqrt(0.5 * (1 + pan))
-    L[i:j] += x * l; R[i:j] += x * r
-    if rev:
-        WL[i:j] += x * rev * l; WR[i:j] += x * rev * r
-
-
-WL = np.zeros(N); WR = np.zeros(N)   # reverb send
-
-
-def env(n, a, d):
-    t = np.arange(n) / SR
-    return np.minimum(1, t / max(a, 1e-4)) * np.exp(-t / d)
-
-
-def saw(f, dur, det=(1.0,)):
-    t = np.arange(int(SR * dur)) / SR
+def put(mix, x, at):
+    i = int(at*SR); j = min(len(mix), i + len(x)); mix[i:j] += x[:j-i]
+def pluck(f, dur, bright=0.5, vol=1.0, damp=0.994):
+    n = int(SR*dur); p = max(2, int(SR/f))
+    buf = lp(rng.random(p)*2-1, 1500 + 5000*bright, 1)
+    out = np.zeros(n)
+    for i in range(n):
+        out[i] = buf[i % p]; buf[i % p] = damp*0.5*(buf[i % p] + buf[(i+1) % p])
+    return out*vol
+def reed(f, dur, vol=0.18, trem=0.0):
+    t = np.arange(int(SR*dur))/SR
+    vib = 1 + 0.004*np.sin(2*np.pi*6.2*t)
     s = np.zeros_like(t)
-    for k in det:
-        ph = (f * k * t + rng.random()) % 1
-        s += 2 * ph - 1
-    return s / len(det)
-
-
-# ---------- drone: D1 + A1, slowly breathing, a little growl ----------
-def drone(dur):
-    t = np.arange(int(SR * dur)) / SR
-    s = np.sin(2 * np.pi * hz(26) * t) + 0.6 * np.sin(2 * np.pi * hz(33) * t) + 0.35 * saw(hz(38), dur, (1, 1.004, 0.996))
-    s = np.tanh(1.8 * s) * (0.7 + 0.3 * np.sin(2 * np.pi * t / (bar * 2)))
-    fade = np.minimum(1, t / 3.0) * np.minimum(1, (dur - t) / 0.5).clip(0)
-    return lp(s, 260, 2) * fade * 0.32
-
-
-# ---------- war drum (taiko-ish): pitch drop + skin noise ----------
-def taiko(vol=1.0, f0=95):
-    n = int(SR * 1.1); t = np.arange(n) / SR
-    ph = np.cumsum(2 * np.pi * (f0 * (0.55 + 0.45 * np.exp(-t / 0.05))) / SR)
-    body = np.sin(ph) * np.exp(-t / 0.32)
-    skin = lp((rng.random(n) * 2 - 1), 900, 2) * np.exp(-t / 0.03) * 0.6
-    return np.tanh(2.2 * (body + skin)) * vol * 0.55
-
-
-def tick(vol=0.08):
-    n = int(SR * 0.03); t = np.arange(n) / SR
-    return hp(rng.random(n) * 2 - 1, 5000, 2) * np.exp(-t / 0.006) * vol
-
-
-# ---------- brass hit: stacked saws through a closing filter ----------
-def brass(notes, dur, vol=0.22):
-    n = int(SR * dur); t = np.arange(n) / SR
-    s = sum(saw(hz(m), dur, (1, 1.006, 0.994)) for m in notes) / len(notes)
-    cut = 300 + 2600 * np.exp(-t / 0.25)
-    out = np.zeros(n); y = 0.0
-    a = np.exp(-2 * np.pi * cut / SR)
-    for i in range(n):  # one-pole sweep
-        y = (1 - a[i]) * s[i] + a[i] * y
-        out[i] = y
-    out = lp(out, 2500, 2)
-    return np.tanh(2 * out) * env(n, 0.02, dur * 0.55) * vol
-
-
-# ---------- choir «aah»: detuned saws through vowel formants ----------
-def choir(notes, dur, vol=0.12):
-    n = int(SR * dur); t = np.arange(n) / SR
-    vib = 1 + 0.003 * np.sin(2 * np.pi * 5 * t)
+    for det in (1.0, 2**(10/1200), 2**(-8/1200)):
+        ph = np.cumsum(2*np.pi*f*det*vib/SR)
+        s += np.sign(np.sin(ph))*0.6 + 0.4*(2*((ph/(2*np.pi)) % 1) - 1)
+    env = np.minimum(1, t/0.015) * np.minimum(1, (dur - t)/0.03).clip(0)
+    if trem: env = env * (1 - trem*0.5*(1 + np.sin(2*np.pi*9*t)))   # bellows shake
+    return lp(s, 3200, 2)*env*vol
+def tone(f, dur, decay, vol=1.0, slide=1.0):
+    t = np.arange(int(SR*dur))/SR
+    ph = np.cumsum(2*np.pi*f*(slide**(t/dur))/SR)
+    return np.sin(ph)*np.exp(-t/decay)*vol
+def noise(dur, decay, vol=1.0):
+    t = np.arange(int(SR*dur))/SR
+    return (rng.random(len(t))*2-1)*np.exp(-t/decay)*vol
+def mixa(*xs):
+    n = max(len(x) for x in xs); out = np.zeros(n)
+    for x in xs: out[:len(x)] += x
+    return out
+def boom(vol=1.0):            # the big drum: a low pitch drop with a skin slap
+    n = int(SR*1.2); t = np.arange(n)/SR
+    ph = np.cumsum(2*np.pi*(62*(0.6 + 0.4*np.exp(-t/0.06)))/SR)
+    body = np.sin(ph)*np.exp(-t/0.45)
+    skin = lp(rng.random(n)*2-1, 700, 2)*np.exp(-t/0.025)*0.5
+    return np.tanh(2.0*(body + skin))*vol
+def bell(m, vol=0.2):         # a church bell: inharmonic partials
+    n = int(SR*4); t = np.arange(n)/SR; f = hz(m)
+    parts = [(0.5, 1.0, 3.0), (1.0, 0.8, 2.2), (1.19, 0.5, 1.7), (1.56, 0.35, 1.3), (2.0, 0.3, 1.0), (2.74, 0.2, 0.7)]
+    return sum(a*np.sin(2*np.pi*f*r*t)*np.exp(-t/d) for r, a, d in parts)*np.minimum(1, t/0.003)*vol
+def choir(notes, dur, vol=0.1):   # low men's choir «ooh/aah»: saws through vowel formants
+    n = int(SR*dur); t = np.arange(n)/SR
+    vib = 1 + 0.0035*np.sin(2*np.pi*5*t)
     s = np.zeros(n)
     for m in notes:
-        for k in (1, 1.004, 0.997, 1.008):
-            ph = np.cumsum(hz(m) * k * vib / SR)
-            s += 2 * (ph % 1) - 1
-    s = bp(s, 600, 820, 2) * 1.0 + bp(s, 1000, 1250, 2) * 0.6 + bp(s, 2400, 2800, 2) * 0.25
-    e = np.minimum(1, t / 1.2) * np.minimum(1, (dur - t) / 0.8).clip(0)
-    return s * e * vol / len(notes)
+        for k in (1, 1.004, 0.996, 1.007):
+            ph = np.cumsum(hz(m)*k*vib/SR); s += 2*(ph % 1) - 1
+    s = bp(s, 450, 700, 2) + 0.6*bp(s, 900, 1150, 2) + 0.2*bp(s, 2300, 2700, 2)
+    e = np.minimum(1, t/0.6)*np.minimum(1, (dur - t)/0.5).clip(0)
+    return s*e*vol/len(notes)
 
+BPM = 160; beat = 60/BPM; q = beat/4                      # q = a 16th; a bar = 2 beats
+CH = {  # bass root, bass fifth, strum notes (guitar voicing)
+    "Dm": (38, 45, [50, 53, 57, 62]), "Gm": (43, 38, [55, 58, 62, 67]), "A7": (45, 40, [49, 52, 55, 57]),
+    "Bb": (46, 41, [50, 53, 58, 62]), "Eb": (39, 46, [51, 55, 58, 63]),
+}
+PROG = ["Dm", "Dm", "Eb", "Dm", "Gm", "Gm", "Dm", "Dm", "Bb", "Eb", "Dm", "A7", "Gm", "A7", "Dm", "A7"]
+RIFF = {   # accordion, low and creeping: 16ths over each chord
+    "Dm": [62, None, 61, 62, 65, None, 62, 57],
+    "Eb": [63, None, 62, 63, 67, None, 63, 58],
+    "Gm": [67, None, 66, 67, 70, None, 67, 62],
+    "Bb": [65, None, 62, 65, 70, None, 65, 62],
+    "A7": [61, None, 57, 61, 64, None, 67, 61],
+}
+# the boss theme: (bar, 16th, note, length in 16ths) — original, D harmonic minor with Eb
+LEAD = [(0,0,74,4),(0,4,73,2),(0,6,74,2),(1,0,69,8),
+        (2,0,75,2),(2,2,74,2),(2,4,75,2),(2,6,79,2),(3,0,74,8),
+        (4,0,79,2),(4,2,77,2),(4,4,75,2),(4,6,74,2),(5,0,70,6),(5,6,69,2),
+        (6,0,74,2),(6,2,73,2),(6,4,74,2),(6,6,77,2),(7,0,74,8),
+        (8,0,77,2),(8,2,74,2),(8,4,70,2),(8,6,74,2),(9,0,75,4),(9,4,79,4),
+        (10,0,77,2),(10,2,74,2),(10,4,73,2),(10,6,74,2),(11,0,73,6),(11,6,69,2),
+        (12,0,70,2),(12,2,74,2),(12,4,79,2),(12,6,74,2),(13,0,73,2),(13,2,76,2),(13,4,79,2),(13,6,81,2),
+        (14,0,86,4),(14,4,81,2),(14,6,77,2),(15,0,76,2),(15,2,73,2),(15,4,69,4)]
+CHOIR = {"Dm": [50, 57, 62], "Eb": [51, 58, 63], "Gm": [50, 55, 62], "Bb": [50, 53, 58], "A7": [49, 52, 57]}
 
-# ---------- funeral bell: inharmonic partials ----------
-def bell(m, vol=0.25):
-    n = int(SR * 5); t = np.arange(n) / SR
-    f = hz(m)
-    parts = [(0.5, 1.0, 3.5), (1.0, 0.8, 2.6), (1.19, 0.5, 2.0), (1.56, 0.35, 1.5), (2.0, 0.3, 1.2), (2.74, 0.2, 0.8), (3.76, 0.12, 0.5)]
-    s = sum(a * np.sin(2 * np.pi * f * r * t) * np.exp(-t / d) for r, a, d in parts)
-    return s * np.minimum(1, t / 0.003) * vol
+bars = len(PROG); BAR = 2*beat; rnd = bars*BAR
+INTRO = 8; intro = INTRO*BAR
+total = intro + 3*rnd
+mix = np.zeros(int(SR*(total + 4)))
+kick = mixa(tone(110, 0.25, 0.07, 1.0, 0.35), lp(noise(0.03, 0.006, 0.4), 2000))
+snare = mixa(bp(noise(0.18, 0.045, 0.9), 900, 5000), tone(200, 0.1, 0.03, 0.4))
+tamb = hp(mixa(*[tone(f, 0.12, 0.03, 0.15) for f in (5200, 6900, 8300, 9800)], noise(0.08, 0.02, 0.25)), 4000)
 
+# ---------- intro: slow and heavy — shaking accordion chords, bell, big drum on every bar, a snare roll in ----------
+for i, ch in enumerate(["Dm", "Dm", "Eb", "Eb", "Dm", "Dm", "A7", "A7"]):
+    t0 = i*BAR
+    if i % 2 == 0:
+        for n in CH[ch][2][:3]: put(mix, reed(hz(n - 12), BAR*2*0.97, .06, trem=0.8), t0)
+        put(mix, pluck(hz(CH[ch][0]), 1.2, .3, .8), t0)
+    put(mix, boom(0.35 + 0.05*i if i % 2 else 0.5 + 0.05*i), t0)
+    if i in (0, 4): put(mix, bell(62, 0.22), t0)
+for k in range(8):                                             # the roll into the gallop
+    put(mix, snare*(0.25 + k*0.1), intro - BAR + k*q)
 
-# ---------- string ostinato: short low bowed notes ----------
-def stab(m, dur, vol=0.1):
-    n = int(SR * dur)
-    s = saw(hz(m), dur, (1, 1.005, 0.995))
-    return lp(s, 1400, 2) * env(n, 0.008, dur * 0.4) * vol
+# ---------- three rounds of the gallop ----------
+for r in range(3):
+    off = intro + r*rnd
+    for b, ch in enumerate(PROG):
+        root, fifth, strum = CH[ch]; t0 = off + b*BAR
+        # guitar gallop: bass on 1, its fifth on 2, short strums on the 16ths around the off-beats
+        put(mix, pluck(hz(root), 0.5, .4, .65), t0)
+        put(mix, pluck(hz(fifth), 0.5, .4, .5), t0 + beat)
+        for at, v in ((2*q, .2), (3*q, .13), (6*q, .2), (7*q, .13)):
+            for k, n in enumerate(strum): put(mix, pluck(hz(n), .22, .85, v, .985), t0 + at + k*0.007)
+        put(mix, kick, t0); put(mix, kick, t0 + beat)
+        put(mix, snare*0.8, t0 + 2*q); put(mix, snare, t0 + 6*q)
+        for e in range(4): put(mix, tamb*(1.0 if e % 2 else 0.6), t0 + e*2*q)
+        # the big drum on every other bar, every bar in the climax
+        if b % 2 == 0 or r == 2: put(mix, boom(0.6 if r < 2 else 0.75), t0)
+        if b % 4 == 3:                                         # a roll into each phrase
+            for k in range(4): put(mix, snare*(0.45 + k*0.15), t0 + beat + k*q)
+        if r == 0:
+            for k, n in enumerate(RIFF[ch]):
+                if n is not None: put(mix, reed(hz(n), q*0.9, .12), t0 + k*q)
+        else:
+            for (lb, st, n, ln) in LEAD:
+                if lb != b: continue
+                long = ln >= 6
+                put(mix, reed(hz(n), ln*q*0.95, .19, trem=0.5 if long else 0), t0 + st*q)
+                put(mix, reed(hz(n - 12), ln*q*0.95, .1), t0 + st*q)          # an octave below: heavier
+                if r == 2: put(mix, reed(hz(n + 12), ln*q*0.95, .05), t0 + st*q)
+            for at in (2*q, 6*q):
+                for n in strum[:3]: put(mix, reed(hz(n), q*1.2, .035), t0 + at)
+        # choir: under round B quietly, full in the climax; a bell on every phrase of the climax
+        if r >= 1 and b % 2 == 0:
+            put(mix, choir(CHOIR[ch], BAR*2, 0.06 if r == 1 else 0.13), t0)
+        if r == 2 and b % 4 == 0:
+            put(mix, bell(62 if b < 12 else 57, 0.18), t0)
 
-
-# ================= arrangement =================
-put(drone(bar * BARS + 1.5), 0, 0, rev=0.2)
-
-# the bell tolls on bar 1, 3, 5 … (lower each time in the climax)
-for b in range(0, BARS, 2):
-    put(bell(62 if b < 12 else 57, 0.22 if b < 12 else 0.3), b * bar, -0.2, rev=0.6)
-
-# clock ticks: 8ths through the whole piece, a little louder in the intro
-for b in range(BARS):
-    for k in range(8):
-        put(tick(0.07 if b < 4 else 0.045), b * bar + k * beat / 2, 0.5 if k % 2 else -0.5, rev=0.1)
-
-# war drums from bar 5: «BOOM . boom-boom . BOOM . . boom» + a roll into every 4th bar
-PAT = [(0, 1.0, 92), (1.5, 0.6, 110), (2, 0.75, 92), (3, 1.0, 80), (3.5, 0.5, 120)]
-for b in range(4, BARS):
-    for pos, v, f0 in PAT:
-        put(taiko(v, f0), b * bar + pos * beat, 0.15 * (1 if pos % 2 else -1), rev=0.35)
-    if b % 4 == 3:
-        for k in range(8):
-            put(taiko(0.25 + 0.08 * k, 140), b * bar + 2 * beat + k * beat / 4, 0.3, rev=0.3)
-
-# brass hits on the downbeats: D – Eb (phrygian dread) – Bb – A
-CH = [[38, 45, 50], [39, 46, 51], [34, 41, 46], [33, 40, 45]]
-for b in range(4, BARS):
-    c = CH[(b - 4) % 4]
-    put(brass(c, beat * 1.6, 0.26), b * bar, 0, rev=0.45)
-    if b >= 8:
-        put(brass([m + 12 for m in c], beat * 0.9, 0.12), b * bar + 2.5 * beat, 0.2, rev=0.4)
-
-# pulsing string ostinato (16ths) from bar 9
-OST = [50, 50, 51, 50, 50, 50, 46, 50, 50, 50, 51, 50, 53, 51, 50, 45]
-for b in range(8, BARS):
-    shift = [0, 1, -4, -5][(b - 4) % 4]
-    for k, m in enumerate(OST):
-        put(stab(m + shift - 12, beat / 4 * 0.9, 0.09 if k % 4 else 0.13), b * bar + k * beat / 4, -0.35 if k % 2 else 0.35, rev=0.2)
-
-# choir: low and quiet under the fight, full in the last 4 bars
-CHOIR = [[62, 69, 74], [63, 70, 75], [58, 65, 70], [57, 64, 69]]
-for b in range(4, BARS, 2):
-    c = CHOIR[((b - 4) // 2) % 4]
-    loud = b >= 12
-    put(choir(c if not loud else c + [c[0] + 12], bar * 2, 0.16 if loud else 0.07), b * bar, 0, rev=0.7)
-
-# the end: a rising noise sweep into the loop point
-n = int(SR * bar); t = np.arange(n) / SR
-sweep = bp(rng.random(n) * 2 - 1, 400, 6000, 1) * (t / bar) ** 2 * 0.12
-put(sweep, (BARS - 1) * bar, 0, rev=0.5)
-
-# ---------- reverb (a dark hall) and master ----------
-ir_n = int(SR * 3.2); ti = np.arange(ir_n) / SR
-ir = lp((rng.random(ir_n) * 2 - 1), 3500, 1) * np.exp(-ti / 0.9)
-ir /= np.sqrt(np.sum(ir ** 2))
-L += fftconvolve(WL, ir)[:N] * 0.6
-R += fftconvolve(WR, ir[::-1][::-1] * (1 + 0.02 * rng.standard_normal(ir_n)))[:N] * 0.6
-mix = np.stack([L, R], 1)
-mix = hp(mix.T, 28, 2).T
-peak = np.max(np.abs(mix))
-mix = np.tanh(1.4 * mix / peak) / np.tanh(1.4) * 0.92
-# fade out the tail
-cut = int(SR * (bar * BARS + 2.5))
-mix = mix[:cut]
-mix[-int(SR * 2.5):] *= np.linspace(1, 0, int(SR * 2.5))[:, None]
-wavfile.write(sys.argv[1] if len(sys.argv) > 1 else "sun.wav", SR, (mix * 32767).astype(np.int16))
-print("ok", round(cut / SR, 1), "s")
+# ---------- room + glue, as in the battle music ----------
+rev = np.zeros_like(mix)
+for d, g in ((0.023, .18), (0.041, .14), (0.067, .1), (0.11, .07)):
+    s = int(d*SR); rev[s:] += mix[:-s]*g
+mix = lp(mix + rev, 9000)
+mix = np.tanh(mix/np.max(np.abs(mix))*1.7)/np.tanh(1.7)
+end = int(SR*(total + 1.5))
+mix = mix[:end]
+mix[-int(SR*1.5):] *= np.linspace(1, 0, int(SR*1.5))
+mix = mix/np.max(np.abs(mix))*0.88
+wavfile.write(sys.argv[1] if len(sys.argv) > 1 else "sun.wav", SR, (mix*32767).astype(np.int16))
+print("ok", round(end/SR, 1), "s")
