@@ -625,4 +625,12 @@ UPDATE appearance SET decor = jsonb_set(decor, '{monitor2}', to_jsonb((1 << LEAS
   WHERE decor ? 'monitor2';
 `,
   },
+  {
+    // старый ламповый монитор — бесплатная вещь в списке мониторов (бит 8): там, где правого монитора нет, он стоял и раньше
+    id: "v2-032-crt-bit",
+    sql: `
+UPDATE appearance SET decor = jsonb_set(decor, '{monitor2}', to_jsonb(((decor->>'monitor2')::int) | 8))
+  WHERE decor ? 'monitor2' AND (((decor->>'monitor2')::int) & 1) = 0;
+`,
+  },
 ];

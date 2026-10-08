@@ -41,7 +41,7 @@ export function HomeScene({ room = "basic", onPick, onHero, still, look, worn, p
   const bg = ROOM_BG[room] ?? ROOM_BG.basic;
   const sky = ROOM_SKY[room];
   const desk = placedArt("desk", pieces, decor) ?? "desk-001";
-  // shown monitors: bit 1 — right, 2 — left, 4 — middle; without the right one the old CRT stands in its place
+  // shown monitors: bit 1 — right, 2 — left, 4 — middle, 8 — the old CRT (in the right one's place)
   const monitors = placedOf("monitor2", pieces, decor);
   const lights = ROOM_LIGHTS[room] ?? [];
   const rgb = ROOM_RGB[room];
@@ -105,7 +105,8 @@ export function HomeScene({ room = "basic", onPick, onHero, still, look, worn, p
       <Obj id="desk" art={desk} />
       {(monitors & 4) !== 0 && <Obj id="monitorCenter" art="monitor-center" />}
       {(monitors & 2) !== 0 && <Obj id="monitorLeft" art="monitor-left" />}
-      {(monitors & 1) !== 0 ? <Obj id="monitorRight" art="monitor-right" /> : <Obj id="monitorOld" art="monitor-1" />}
+      {(monitors & 1) !== 0 && <Obj id="monitorRight" art="monitor-right" />}
+      {(monitors & 8) !== 0 && <Obj id="monitorOld" art="monitor-1" />}
       {trophies.includes("statue-close") && <Obj id="statueClose" art="statue-close" />}
       </g>
       <RigViewport x={CHARACTER.x} y={CHARACTER.y} scale={CHARACTER.scale} seat={placedOf("chair", pieces, decor)} still={still} look={look} worn={worn} seatOnly={hideHero} />

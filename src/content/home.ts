@@ -45,6 +45,8 @@ export interface EquipmentDef {
   pieces?: PieceDef[];
   /** monitors: every owned piece can stand at once (each has its own place); desk and chair: one at a time */
   multi?: boolean;
+  /** multi: the free base thing stands in the place of this piece (the old CRT on the right) — one or the other */
+  baseSpot?: number;
 }
 
 export const EQUIPMENT: EquipmentDef[] = [
@@ -64,6 +66,7 @@ export const EQUIPMENT: EquipmentDef[] = [
     levels: [],
     base: { name: "Старый ламповый", art: "monitor-1" },
     multi: true,
+    baseSpot: 1,
     pieces: [
       { name: "Монитор справа", art: "monitor-right", price: { currency: "RUB", amount: 3000 }, bonus: { critDamage: 0.1 } },
       { name: "Монитор слева", art: "monitor-left", price: { currency: "USD", amount: 30 }, bonus: { critDamage: 0.1 } },
@@ -127,16 +130,26 @@ export const equipmentById = (id: string) => EQUIPMENT.find((e) => e.id === id);
 /** the room things bought piece by piece */
 export const PIECE_EQUIPMENT = EQUIPMENT.filter((e) => e.pieces?.length);
 export const hasPiece = (mask: number, k: number) => k >= 1 && ((mask >> (k - 1)) & 1) === 1;
+/** multi things: the bit that shows the free base (after the pieces' bits) */
+export const baseBit = (e: EquipmentDef) => 1 << (e.pieces?.length ?? 0);
 export const piecesCount = (mask: number) => { let n = 0; for (let m = mask; m; m >>= 1) n += m & 1; return n; };
 /**
  * What stands in the room. Desk / chair: the chosen piece (0 = the free one) if owned, else the newest owned.
- * Monitors: a mask of the shown monitors (decor), only owned ones; by default every owned monitor stands.
+ * Monitors: a mask of the shown monitors (decor), only owned ones + the free CRT (baseBit); by default every owned monitor
+ * stands, and the CRT stands while the right monitor is not bought.
  */
 export function placedOf(id: string, pieces: Record<string, number>, decor: Record<string, number> = {}): number {
   const e = equipmentById(id);
   const owned = pieces[id] ?? 0;
   const pick = decor[id];
-  if (e?.multi) return typeof pick === "number" && pick >= 0 ? pick & owned : owned;
+  if (e?.multi) {
+    // the free base (old CRT) is one more bit after the pieces; it shares its place with piece `baseSpot`
+    const base = baseBit(e);
+    const spot = e.baseSpot ? 1 << (e.baseSpot - 1) : 0;
+    let m = typeof pick === "number" && pick >= 0 ? pick & (owned | base) : owned | (owned & spot ? 0 : base);
+    if (m & spot) m &= ~base;
+    return m;
+  }
   if (typeof pick === "number" && (pick === 0 || hasPiece(owned, pick))) return pick;
   for (let k = e?.pieces?.length ?? 0; k >= 1; k--) if (hasPiece(owned, k)) return k;
   return 0;

@@ -5,7 +5,7 @@ import { useGame } from "../store.tsx";
 import { Icon } from "../art/icons.tsx";
 import { money } from "../format.ts";
 import { haptic } from "../telegram.ts";
-import { EQUIPMENT, equipmentById, hasPiece, placedOf, type Price } from "../../content/home.ts";
+import { EQUIPMENT, baseBit, equipmentById, hasPiece, placedOf, type Price } from "../../content/home.ts";
 import { BonusLine } from "./house.tsx";
 
 /*
@@ -38,7 +38,7 @@ export function previewPieces(pieces: Record<string, number>, draft: RoomDraft):
   for (const id of PLACED) {
     const e = equipmentById(id)!;
     const v = draft[id] ?? 0;
-    out[id] = (out[id] ?? 0) | (e.multi ? v : v > 0 ? 1 << (v - 1) : 0);
+    out[id] = (out[id] ?? 0) | (e.multi ? v & (baseBit(e) - 1) : v > 0 ? 1 << (v - 1) : 0);
   }
   return out;
 }
@@ -57,7 +57,7 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose }: { draft: R
   const notOwned = PLACED.filter((id) => {
     const e = equipmentById(id)!;
     const v = draft[id] ?? 0;
-    return e.multi ? (v & ~(owned[id] ?? 0)) !== 0 : v > 0 && !hasPiece(owned[id] ?? 0, v);
+    return e.multi ? (v & ~((owned[id] ?? 0) | baseBit(e))) !== 0 : v > 0 && !hasPiece(owned[id] ?? 0, v);
   });
   const changed = PLACED.some((id) => (draft[id] ?? 0) !== (now[id] ?? 0));
   const canPay = (p: Price) => (state.wallet[p.currency] ?? 0) >= p.amount;
@@ -67,8 +67,11 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose }: { draft: R
     const e = equipmentById(id)!;
     setFocus({ ...focus, [id]: k });
     if (e.multi) {
-      if (k === 0) setDraft({ ...draft, [id]: 0 });
-      else setDraft({ ...draft, [id]: (draft[id] ?? 0) ^ (1 << (k - 1)) });
+      // k = 0 is the free base (old CRT); it and the piece in its place stand one instead of the other
+      const bit = k === 0 ? baseBit(e) : 1 << (k - 1);
+      const rival = !e.baseSpot ? 0 : k === 0 ? 1 << (e.baseSpot - 1) : k === e.baseSpot ? baseBit(e) : 0;
+      const cur = draft[id] ?? 0;
+      setDraft({ ...draft, [id]: cur & bit ? cur & ~bit : (cur | bit) & ~rival });
     } else setDraft({ ...draft, [id]: k });
   };
   const buy = async (id: string, k: number) => {
@@ -78,7 +81,7 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose }: { draft: R
     if (r) {
       haptic.ok();
       // a bought monitor stands right away
-      if (e.multi) setDraft({ ...draft, [id]: (draft[id] ?? 0) | (1 << (k - 1)) });
+      if (e.multi) setDraft({ ...draft, [id]: ((draft[id] ?? 0) | (1 << (k - 1))) & ~(e.baseSpot === k ? baseBit(e) : 0) });
     }
   };
   const rgbUp = async () => {
@@ -99,7 +102,7 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose }: { draft: R
     if (id === "rgb") return <Icon name="bolt" size={36} />;
     const e = equipmentById(id)!;
     const v = draft[id] ?? 0;
-    // monitors: the highest shown one, else the old CRT
+    // monitors: the newest shown one, else the old CRT
     const k = e.multi ? [3, 2, 1].find((n) => (v & (1 << (n - 1))) !== 0) ?? 0 : v;
     const art = k > 0 ? e.pieces![k - 1].art : e.base!.art;
     // eslint-disable-next-line @next/next/no-img-element
@@ -107,7 +110,7 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose }: { draft: R
   };
 
   const e = tab === "rgb" ? null : equipmentById(tab)!;
-  const f = e ? focus[tab] ?? (e.multi ? 0 : draft[tab] ?? 0) : 0;
+  const f = e ? focus[tab] ?? (e.multi ? -1 : draft[tab] ?? 0) : 0;
   const fPiece = e && f > 0 ? e.pieces![f - 1] : null;
   const fOwned = e && f > 0 ? hasPiece(owned[tab] ?? 0, f) : true;
   const rgb = EQUIPMENT.find((x) => x.id === "rgb")!;
@@ -137,14 +140,18 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose }: { draft: R
         {e ? (
           <div className="sty-body">
             <div className="tiny muted">{e.multi ? "Каждый монитор покупается отдельно. Нажми, чтобы поставить или убрать." : "Купленные остаются навсегда и дают бонус, а поставить можно любой."}</div>
-            <div className="sty-strip">
-              {!e.multi && (
-                <button className={`sty-item room-ed-item ${(draft[tab] ?? 0) === 0 ? "on" : ""}`} onClick={() => pick(tab, 0)}>
+            <div className="sty-strip room-ed-strip">
+              {(() => {
+                const on = e.multi ? ((draft[tab] ?? 0) & baseBit(e)) !== 0 : (draft[tab] ?? 0) === 0;
+                return (
+                <button className={`sty-item room-ed-item ${on ? "on" : ""}`} onClick={() => pick(tab, 0)} aria-pressed={on}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img className="room-ed-thumb" src={`/assets/home/${e.base!.art}.webp`} alt="" draggable={false} />
                   <span className="sty-item-name">{e.base!.name}</span>
+                  {e.multi && <span className={`room-ed-check ${on ? "on" : ""}`} aria-hidden="true">{on ? "✓" : ""}</span>}
                 </button>
-              )}
+                );
+              })()}
               {e.pieces!.map((pc, i) => {
                 const k = i + 1;
                 const have = hasPiece(owned[tab] ?? 0, k);
@@ -170,7 +177,7 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose }: { draft: R
                 )}
               </div>
             ) : (
-              <div className="room-ed-info tiny muted">{e.multi ? "Без нового монитора справа стоит старый ламповый." : `${e.base!.name} — бесплатно, без бонуса.`}</div>
+              <div className="room-ed-info tiny muted">{e.multi ? (f === 0 ? `${e.base!.name} — бесплатно, без бонуса. Стоит на месте правого монитора.` : "Можно поставить любые купленные мониторы — или ни одного.") : `${e.base!.name} — бесплатно, без бонуса.`}</div>
             )}
           </div>
         ) : (

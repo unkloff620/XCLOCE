@@ -1,6 +1,6 @@
 import { GameError, type Queryable } from "../db.ts";
 import { ledger, takeMoney, type Ctx } from "../core.ts";
-import { EQUIPMENT, HELP_TOPICS, TROPHIES, equipmentById, hasPiece, piecesCount, normalizeLook, roomById, roomUnlockId, roomsEnergyBonus, totalBonus, type HelpTopic, type Look } from "../../content/home.ts";
+import { EQUIPMENT, HELP_TOPICS, TROPHIES, baseBit, equipmentById, hasPiece, piecesCount, normalizeLook, roomById, roomUnlockId, roomsEnergyBonus, totalBonus, type HelpTopic, type Look } from "../../content/home.ts";
 import { TALENT_RESET_PRICE, TALENT_WEAPONS, nodeOpen, talentTree, talentsSpent, type TalentBranch, type WeaponTalents } from "../../content/talents.ts";
 
 /*
@@ -76,7 +76,10 @@ export async function buyPiece(ctx: Ctx, id: string, k: number) {
     [ctx.pid, def.id, piecesCount(mask), mask],
   );
   // the new thing goes into the room: a monitor joins the shown ones, a desk / chair takes the place
-  const shown = def.multi ? (typeof h.decor[def.id] === "number" ? h.decor[def.id] | (1 << (k - 1)) : null) : k;
+  // (the right monitor takes the old CRT's place)
+  const shown = def.multi
+    ? (typeof h.decor[def.id] === "number" ? (h.decor[def.id] | (1 << (k - 1))) & ~(def.baseSpot === k ? baseBit(def) : 0) : null)
+    : k;
   if (shown === null) await ctx.q.query("UPDATE appearance SET decor = decor - $2::text WHERE player_id=$1", [ctx.pid, def.id]);
   else await ctx.q.query("UPDATE appearance SET decor = jsonb_set(decor, ARRAY[$2::text], to_jsonb($3::int)) WHERE player_id=$1", [ctx.pid, def.id, shown]);
   return { id: def.id, piece: k, name: piece.name, pieces: Number(row.pieces), count: piecesCount(Number(row.pieces)) };
@@ -157,7 +160,9 @@ function decorValue(id: string, v: unknown, pieces: Record<string, number>): num
   if (!def?.pieces?.length) throw new GameError("bad_equipment", "Это нельзя поставить");
   const owned = pieces[def.id] ?? 0;
   if (typeof v !== "number" || !Number.isInteger(v) || v < 0) throw new GameError("bad_value", "Неверное значение");
-  if (def.multi ? (v & ~owned) !== 0 : v !== 0 && !hasPiece(owned, v)) throw new GameError("locked", "Сначала купи эту вещь");
+  if (def.multi ? (v & ~(owned | baseBit(def))) !== 0 : v !== 0 && !hasPiece(owned, v)) throw new GameError("locked", "Сначала купи эту вещь");
+  // the base and the piece in its place cannot stand together
+  if (def.multi && def.baseSpot && v & (1 << (def.baseSpot - 1))) return v & ~baseBit(def);
   return v;
 }
 
