@@ -87,7 +87,7 @@ const WEARABLES: ItemDef[] = ([
   { id: "sneakers", name: "Кеды", slot: "SHOES", rarity: "common", description: "Белые, пока не вышел во двор.", sources: ["Магазин"] },
   { id: "slippers", name: "Тапки", slot: "SHOES", rarity: "rare", description: "Офисный дресс-код, версия 2.0.", sources: ["Награда за локацию 3", "Победа: Дацкоу (10%)"] },
   { id: "cap-moon", name: "Чёрная кепка", slot: "HEAD", rarity: "rare", description: "Козырёк вперёд — курс на луну.", sources: ["Магазин", "Награда за локацию 2"] },
-  { id: "santa-hat", name: "Новогодний колпак", slot: "HEAD", rarity: "epic", description: "Сезонный предмет.", sources: ["Новогодний ивент"] },
+  { id: "santa-hat", name: "Новогодний колпак", slot: "HEAD", rarity: "epic", description: "Сезонный предмет.", sources: ["Новогодний ивент", "Награда за локацию 8"] },
   { id: "laser-eyes", name: "Лазерные глаза", slot: "ACCESSORY", rarity: "legendary", description: "Обязательный аксессуар биткоин-максималиста.", sources: ["Награда за локацию 5"] },
   { id: "gold-chain", name: "Серебряная цепь", slot: "ACCESSORY", rarity: "epic", description: "Каждое звено — подтверждённый блок.", sources: ["Магазин", "Награда за локацию 3"] },
 ] as Omit<ItemDef, "category" | "maxStack">[]).map((w) => {

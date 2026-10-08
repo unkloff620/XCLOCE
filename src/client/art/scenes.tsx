@@ -15,6 +15,7 @@ export function LocationScene({ scene }: { scene: string }) {
   }
   const sky: Record<string, [string, string]> = {
     openspace: ["#2f3577", "#1b1f47"], market: ["#3a1a52", "#1a0c2a"], serverroom: ["#0f2f3a", "#06161c"], basement: ["#3a2610", "#160d04"], board: ["#3a1424", "#170710"],
+    accounting: ["#14342a", "#081a14"], hr: ["#3a2a4a", "#18101f"], party: ["#0e1f4a", "#050b22"],
   };
   const [a, b] = sky[scene] ?? sky.openspace;
   const id = `loc-${scene}`;
@@ -90,6 +91,86 @@ export function LocationScene({ scene }: { scene: string }) {
           <path d="M120 30 L150 70 L180 46 L240 80" stroke="#ff4d6d" strokeWidth="5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
           <path d="M20 112 H340 L330 128 H30 Z" fill="#6b4320" {...s(3)} />
           {[50, 110, 170, 230, 290].map((x) => <circle key={x} cx={x} cy="100" r="11" fill="#151933" {...s(3)} />)}
+        </g>
+      )}
+      {scene === "accounting" && (
+        <g>
+          {/* filing cabinets */}
+          {[14, 70].map((x) => (
+            <g key={x}>
+              <rect x={x} y="34" width="48" height="92" rx="3" fill="#7a8696" {...s(3)} />
+              {[0, 1, 2].map((k) => (
+                <g key={k}>
+                  <rect x={x + 5} y={40 + k * 28} width="38" height="22" rx="2" fill="#9aa6b8" {...s(2)} />
+                  <rect x={x + 18} y={48 + k * 28} width="12" height="4" rx="2" fill="#2a2f45" />
+                </g>
+              ))}
+            </g>
+          ))}
+          {/* desk with calculator and paper stacks */}
+          <rect x="140" y="88" width="200" height="14" rx="3" fill="#6b4320" {...s(3)} />
+          <path d="M152 102 V128 M328 102 V128" stroke={OL} strokeWidth="4" />
+          <rect x="160" y="54" width="44" height="34" rx="4" fill="#e8ebff" {...s(2.5)} />
+          <rect x="166" y="59" width="32" height="9" fill="#2ee88a" />
+          {[0, 1, 2].flatMap((r) => [0, 1, 2].map((c) => <rect key={`${r}${c}`} x={167 + c * 11} y={71 + r * 5.5} width="8" height="3.5" fill="#2a2f45" />))}
+          {[0, 1, 2, 3, 4].map((k) => <rect key={k} x={222 + (k % 2) * 2} y={80 - k * 7} width="46" height="7" fill={k % 2 ? "#f2f2f2" : "#dfe3f2"} {...s(1.5)} />)}
+          {[0, 1, 2, 3].map((k) => <rect key={k} x={282} y={80 - k * 7} width="40" height="7" fill={k % 2 ? "#ffe9a8" : "#f2f2f2"} {...s(1.5)} />)}
+          <text x="300" y="34" fontSize="22" fontWeight="900" fill="#ffcc33" stroke={OL} strokeWidth="1.5">₽</text>
+          <text x="240" y="26" fontSize="16" fontWeight="900" fill="#2ee88a" stroke={OL} strokeWidth="1">$</text>
+        </g>
+      )}
+      {scene === "hr" && (
+        <g>
+          {/* motivational poster */}
+          <rect x="24" y="18" width="78" height="56" rx="3" fill="#e8ebff" {...s(3)} />
+          <path d="M34 64 L54 36 L68 52 L78 42 L92 64 Z" fill="#7c5cff" {...s(2)} />
+          <circle cx="82" cy="30" r="6" fill="#ffcc33" />
+          {/* round table with chairs */}
+          <ellipse cx="200" cy="100" rx="90" ry="16" fill="#8a5a2b" {...s(3)} />
+          <path d="M200 116 V132" stroke={OL} strokeWidth="5" />
+          {[130, 170, 230, 270].map((x, i) => (
+            <g key={x}>
+              <rect x={x - 12} y="58" width="24" height="28" rx="6" fill={["#ff4d6d", "#2ee88a", "#ffcc33", "#5cc8ff"][i]} {...s(2.5)} />
+            </g>
+          ))}
+          {/* forms on the table */}
+          <rect x="176" y="88" width="22" height="12" fill="#f2f2f2" {...s(1.5)} transform="rotate(-8 187 94)" />
+          <rect x="204" y="88" width="22" height="12" fill="#f2f2f2" {...s(1.5)} transform="rotate(6 215 94)" />
+          {/* plant */}
+          <rect x="316" y="96" width="26" height="30" rx="3" fill="#b5651d" {...s(2.5)} />
+          <path d="M329 96 C318 76 312 64 318 52 M329 96 C334 74 344 64 348 52 M329 96 V58" stroke="#2ee88a" strokeWidth="5" fill="none" strokeLinecap="round" />
+        </g>
+      )}
+      {scene === "party" && (
+        <g>
+          {/* garland */}
+          <path d="M0 16 Q90 44 180 16 Q270 44 360 16" stroke="#2a2f45" strokeWidth="2" fill="none" />
+          {[20, 50, 80, 110, 140, 200, 230, 260, 290, 320, 345].map((x, i) => {
+            const y = 16 + 28 * Math.sin(((x % 180) / 180) * Math.PI) * 0.9;
+            return <circle key={x} cx={x} cy={y + 4} r="4.5" fill={["#ff4d6d", "#ffcc33", "#2ee88a", "#5cc8ff"][i % 4]} />;
+          })}
+          {/* tree */}
+          <path d="M290 34 L320 76 H304 L330 108 H250 L276 76 H260 Z" fill="#1fa05a" {...s(3)} />
+          <rect x="282" y="108" width="16" height="16" fill="#6b4320" {...s(2)} />
+          <path d="M290 22 L294 32 L304 32 L296 38 L299 48 L290 42 L281 48 L284 38 L276 32 L286 32 Z" fill="#ffcc33" {...s(1.5)} />
+          {[[280, 70], [300, 92], [272, 98], [312, 84]].map(([x, y]) => <circle key={`${x}${y}`} cx={x} cy={y} r="4" fill="#ff4d6d" stroke={OL} strokeWidth="1.5" />)}
+          {/* table with salad bowl and champagne */}
+          <rect x="20" y="96" width="200" height="12" rx="3" fill="#e8ebff" {...s(3)} />
+          <path d="M34 108 V128 M206 108 V128" stroke={OL} strokeWidth="4" />
+          <path d="M60 96 Q60 74 90 74 Q120 74 120 96 Z" fill="#d9d9e8" {...s(2.5)} />
+          <ellipse cx="90" cy="76" rx="26" ry="6" fill="#ffe08a" {...s(2)} />
+          {[150, 176].map((x) => (
+            <g key={x}>
+              <rect x={x} y="58" width="12" height="38" rx="4" fill="#1e5a33" {...s(2)} />
+              <rect x={x + 3} y="46" width="6" height="14" fill="#ffcc33" {...s(1.5)} />
+            </g>
+          ))}
+          {/* gifts */}
+          <rect x="240" y="110" width="24" height="18" fill="#ff4d6d" {...s(2)} />
+          <path d="M252 110 V128 M240 119 H264" stroke="#ffcc33" strokeWidth="3" />
+          <rect x="324" y="112" width="20" height="16" fill="#5cc8ff" {...s(2)} />
+          <path d="M334 112 V128" stroke="#ffcc33" strokeWidth="3" />
+          <rect x="0" y="128" width="360" height="12" fill="#2a1a3a" />
         </g>
       )}
       <rect width="360" height="140" fill="none" stroke={OL} strokeWidth="5" />

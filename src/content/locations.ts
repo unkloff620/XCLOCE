@@ -19,14 +19,14 @@ export interface LocationDef {
   name: string;
   subtitle: string;
   /** vector scene id (client/art/scenes) */
-  scene: "openspace" | "market" | "serverroom" | "basement" | "board";
+  scene: "openspace" | "market" | "serverroom" | "basement" | "board" | "accounting" | "hr" | "party";
   tasks: TaskDef[];
   /** special reward for closing all five tasks, much bigger than a task reward */
   reward: Reward;
 }
 
 // Draft numbers: ~12–16 RUB and ~1 XP per energy point; higher locations pay a bit better per energy.
-// Steps: 5–7 per task in the first location, then more in every next one (up to 12 in the last).
+// Steps: 5–7 per task in the first location, then more in every next one (up to 14 in the last).
 const t = (id: string, title: string, flavor: string, energy: number, steps: number, rubPerEnergy: number, done: Reward = {}): TaskDef => ({
   id, title, flavor, energy, steps,
   stepReward: { currencies: { RUB: Math.round(energy * rubPerEnergy) }, xp: energy * 10 },
@@ -79,7 +79,7 @@ export const LOCATIONS: LocationDef[] = [
     reward: { currencies: { USD: 18, RUB: 1200 }, xp: 20_000, items: [{ id: "gpu", qty: 3 }, { id: "hoodie-hodl", qty: 1 }] },
   },
   {
-    id: "board", order: 5, name: "Совет директоров", subtitle: "Последний кабинет перед Солнцем", scene: "board",
+    id: "board", order: 5, name: "Совет директоров", subtitle: "Здесь решают, кому сегодня повезёт", scene: "board",
     tasks: [
       t("bd-slides", "Защитить презентацию", "47 слайдов, ни одного вывода.", 16, 9, 16),
       t("bd-chart", "Показать график вверх ногами", "Если перевернуть — это рост.", 17, 9, 16),
@@ -88,6 +88,39 @@ export const LOCATIONS: LocationDef[] = [
       t("bd-vote", "Пережить голосование", "Воздержался — тоже голос.", 20, 12, 16, { items: [{ id: "energy-pack", qty: 2 }] }),
     ],
     reward: { currencies: { USD: 25, RUB: 2000 }, xp: 50_000, items: [{ id: "rug-pull-gun", qty: 3 }, { id: "laser-eyes", qty: 1 }] },
+  },
+  {
+    id: "accounting", order: 6, name: "Бухгалтерия", subtitle: "Деньги любят счёт. Бухгалтерия — тишину", scene: "accounting",
+    tasks: [
+      t("ac-receipt", "Сдать чеки за такси", "Чек из шаурмы — тоже командировочные.", 20, 10, 17),
+      t("ac-advance", "Выпросить аванс", "Аванс будет. Когда-нибудь. Наверное.", 21, 10, 17),
+      t("ac-report", "Закрыть квартальный отчёт", "Дебет с кредитом сошлись. Случайно.", 22, 11, 17),
+      t("ac-crypto", "Объяснить, что такое крипта", "«А где у биткоина печать?»", 23, 11, 17, { items: [{ id: "gpu", qty: 1 }] }),
+      t("ac-salary", "Найти ошибку в зарплате", "Ошибка в твою пользу. Уже исправили.", 24, 12, 17, { items: [{ id: "energy-pack", qty: 2 }] }),
+    ],
+    reward: { currencies: { USD: 35, RUB: 3000 }, xp: 100_000, items: [{ id: "gpu", qty: 4 }, { id: "lost-wallet", qty: 3 }] },
+  },
+  {
+    id: "hr", order: 7, name: "Отдел кадров", subtitle: "Мы не команда, мы семья. Но уволить можем", scene: "hr",
+    tasks: [
+      t("hr-form", "Заполнить анкету на 12 страниц", "Хобби: работа. Мечта: выходной.", 24, 11, 18),
+      t("hr-vacation", "Согласовать отпуск", "Есть свободная неделя. В феврале 2031-го.", 25, 11, 18),
+      t("hr-teambuild", "Выжить на тимбилдинге", "Верёвочный парк. Верёвки уже на исходе.", 26, 12, 18),
+      t("hr-review", "Пройти performance review", "Сильные стороны: приходишь. Зоны роста: всё остальное.", 27, 12, 18, { items: [{ id: "rug-pull-gun", qty: 1 }] }),
+      t("hr-raise", "Попросить повышение", "«Давай вернёмся к этому через полгода».", 28, 13, 18, { items: [{ id: "energy-pack", qty: 2 }] }),
+    ],
+    reward: { currencies: { USD: 50, RUB: 4500 }, xp: 200_000, items: [{ id: "rug-pull-gun", qty: 4 }, { id: "energy-pack", qty: 3 }] },
+  },
+  {
+    id: "party", order: 8, name: "Новогодний корпоратив", subtitle: "Последний рубеж перед Солнцем", scene: "party",
+    tasks: [
+      t("pt-oliv", "Добраться до оливье", "Тазик один, а желающих — весь отдел.", 28, 12, 19),
+      t("pt-toast", "Сказать тост за руководство", "Главное — не перепутать имена.", 29, 12, 19),
+      t("pt-karaoke", "Спеть в караоке", "Микрофон держится, голос — нет.", 30, 13, 19),
+      t("pt-santa", "Отыграть Деда Мороза", "Борода чешется, мешок тяжёлый, подарки — стикеры.", 31, 13, 19, { items: [{ id: "rug-pull-gun", qty: 1 }] }),
+      t("pt-photos", "Удалить фото из общего чата", "Поздно. Уже сохранили 46 человек.", 32, 14, 19, { items: [{ id: "energy-pack", qty: 3 }] }),
+    ],
+    reward: { currencies: { USD: 70, RUB: 6500 }, xp: 400_000, items: [{ id: "rug-pull-gun", qty: 5 }, { id: "santa-hat", qty: 1 }] },
   },
 ];
 
