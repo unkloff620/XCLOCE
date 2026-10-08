@@ -9,7 +9,7 @@ import "./admin.css";
 import { ITEMS, itemById } from "../../content/items.ts";
 import { CURRENCIES } from "../../content/currencies.ts";
 import { TALENT_NODE_IDS, TALENT_WEAPONS, talentTree } from "../../content/talents.ts";
-import { bossById } from "../../content/bosses.ts";
+import { BOSSES, bossById, keyId } from "../../content/bosses.ts";
 import { offerById } from "../../content/shop.ts";
 import { taskById } from "../../content/locations.ts";
 
@@ -30,7 +30,7 @@ const ACTION_NAMES: Record<string, string> = {
   game_start: "мини-игра", bj_move: "блэкджек", zonk_move: "зонк", upgrade: "апгрейдер", up_sell: "продал улучшенное", up_take: "забрал улучшенное", clan_cancel: "отменил заявку", clan_accept: "принял в клан", clan_reject: "отклонил заявку", stash_collect: "собрал набор нычек",
 };
 const OP_NAMES: Record<string, string> = {
-  set_money: "валюта", set_item: "предмет", set_xp: "авторитет", set_energy: "энергия", set_talents: "свободные таланты",
+  set_money: "валюта", set_item: "предмет", add_item: "выдал", set_xp: "авторитет", set_energy: "энергия", set_talents: "свободные таланты",
   set_talent: "ветка таланта", set_name: "имя", ban: "бан", unban: "разбан", reset: "сброс прогресса",
 };
 
@@ -660,7 +660,7 @@ function EditInfo({ op, info }: { op: string; info: unknown }) {
   const i = (info && typeof info === "object" ? info : {}) as Row;
   const label =
     op === "set_money" ? String(i.currency ?? "") :
-    op === "set_item" ? itemById(String(i.item))?.name ?? String(i.item ?? "") :
+    op === "set_item" || op === "add_item" ? itemById(String(i.item))?.name ?? String(i.item ?? "") :
     op === "set_talent" ? `${itemById(String(i.weapon))?.name ?? i.weapon}: ${talentTree(String(i.weapon)).find((b) => b.id === i.branch)?.name ?? i.branch}` :
     op === "set_xp" ? "Авторитет" : op === "set_energy" ? "Энергия" : op === "set_talents" ? "Свободные таланты" : op === "set_name" ? "Имя" : "";
   if (op === "ban") return <span className="bad">заблокирован{i.reason ? `: ${i.reason}` : ""}</span>;
@@ -750,6 +750,7 @@ function Player({ id }: { id: number }) {
           )}
         </Box>
       </div>
+      <Passes rows={data.inventory} edit={edit} />
       <Inventory rows={data.inventory} edit={edit} />
       <Talents rows={data.talents} edit={edit} />
       <section className="adm-card">
@@ -840,6 +841,48 @@ function BanBox({ banned, onBan, onUnban }: { banned: boolean; onBan: (reason: s
       <input className="adm-in grow" placeholder="Причина бана (её увидит игрок)" maxLength={200} value={reason} onChange={(e) => setReason(e.target.value)} />
       <button className="adm-btn danger">{sure ? "Точно забанить?" : "Забанить"}</button>
     </form>
+  );
+}
+
+/** Boss passes: one row per boss card — how many the player has, how many open the next boss, quick buttons to add. */
+function Passes({ rows, edit }: { rows: Row[]; edit: EditFn }) {
+  const [n, setN] = useState<Record<string, string>>({});
+  const have = (id: string) => num(rows.find((r) => r.item_id === id)?.qty);
+  const add = (id: string, delta: number) => {
+    if (!delta) return;
+    const name = itemById(id)?.name ?? id;
+    void edit({ op: "add_item", item: id, delta }, `${name} ${delta > 0 ? "+" : ""}${delta}`).then((ok) => ok && setN((x) => ({ ...x, [id]: "" })));
+  };
+  return (
+    <Box title="Пропуски на боссов">
+      <Table rows={BOSSES.filter((b) => !b.final).map((b) => ({ id: keyId(b.id), boss: b.id, order: b.order }))} empty="Нет боссов" cols={[
+        ["Пропуск", (r) => {
+          const b = bossById(String(r.boss))!;
+          return <><b>{itemById(String(r.id))?.name ?? String(r.id)}</b> <span className="muted tiny">#{b.order}</span></>;
+        }],
+        ["Есть", (r) => <b>{fmt(have(String(r.id)))}</b>, "r"],
+        ["Открывает", (r) => {
+          const next = BOSSES.find((x) => x.order === Number(r.order) + 1);
+          if (!next) return <span className="muted small">—</span>;
+          const need = next.keysToUnlock ?? 3;
+          const ok = have(String(r.id)) >= need;
+          return <span className={`small ${ok ? "" : "muted"}`}>{next.name}: нужно {need}{ok ? " ✓" : ""}</span>;
+        }],
+        ["Выдать", (r) => {
+          const id = String(r.id);
+          const v = n[id] ?? "";
+          return (
+            <form className="adm-qty" onSubmit={(e) => { e.preventDefault(); add(id, Math.trunc(Number(v))); }}>
+              <button type="button" className="adm-btn sm" onClick={() => add(id, 1)}>+1</button>
+              <button type="button" className="adm-btn sm" onClick={() => add(id, 3)}>+3</button>
+              <input className="adm-in sm" type="number" placeholder="±N" value={v} onChange={(e) => setN((x) => ({ ...x, [id]: e.target.value }))} />
+              <button className="adm-btn sm" disabled={!v || !Number(v)}>✓</button>
+            </form>
+          );
+        }],
+      ]} />
+      <p className="muted small">Пропуски тратятся при входе в бой со следующим боссом. Отрицательное число забирает пропуски.</p>
+    </Box>
   );
 }
 

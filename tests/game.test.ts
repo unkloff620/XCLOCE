@@ -854,6 +854,17 @@ describe("admin", () => {
     expect(v.admin.length).toBe(6);
     expect(v.ledger.some((l) => l.reason === "admin:777" && l.key === "keyboard" && Number(l.delta) === -50)).toBe(true);
   });
+  it("admin adds boss passes on top of what the player has (and can take them away)", async () => {
+    const { edit } = await import("../src/server/admin.ts");
+    const p = await newPlayer(db);
+    await edit(db, 777, p, { op: "add_item", item: "key-datsik", delta: 2 });
+    const r = await edit(db, 777, p, { op: "add_item", item: "key-datsik", delta: 3 });
+    expect(r).toMatchObject({ from: 2, to: 5 });
+    expect(await qty(db, p, "key-datsik")).toBe(5);
+    await edit(db, 777, p, { op: "add_item", item: "key-datsik", delta: -9 });
+    expect(await qty(db, p, "key-datsik")).toBe(0);
+    await expect(edit(db, 777, p, { op: "add_item", item: "key-nope", delta: 1 })).rejects.toThrow();
+  });
   it("a banned player cannot act until unbanned", async () => {
     const { edit } = await import("../src/server/admin.ts");
     const p = await newPlayer(db);

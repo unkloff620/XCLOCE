@@ -152,6 +152,7 @@ export async function adminLog(db: Db, before?: number) {
 export type Edit =
   | { op: "set_money"; currency: string; amount: number }
   | { op: "set_item"; item: string; qty: number }
+  | { op: "add_item"; item: string; delta: number }
   | { op: "set_xp"; value: number }
   | { op: "set_energy"; value: number }
   | { op: "set_talents"; value: number }
@@ -160,7 +161,7 @@ export type Edit =
   | { op: "ban"; reason: string }
   | { op: "unban" }
   | { op: "reset" };
-export const EDIT_OPS = ["set_money", "set_item", "set_xp", "set_energy", "set_talents", "set_talent", "set_name", "ban", "unban", "reset"] as const;
+export const EDIT_OPS = ["set_money", "set_item", "add_item", "set_xp", "set_energy", "set_talents", "set_talent", "set_name", "ban", "unban", "reset"] as const;
 
 /**
  * Everything a player has earned, keyed by player_id. The reset wipes these and gives the starting kit again.
@@ -219,6 +220,25 @@ export async function edit(db: Db, adminTg: number, pid: number, e: Edit) {
           // a removed piece of clothing comes off the character too
           if (def.slot) await q.query("UPDATE appearance SET equipped = equipped - $2::text WHERE player_id=$1 AND equipped->>$2::text = $3", [pid, def.slot, def.id]);
         } else {
+          await q.query(
+            "INSERT INTO inventory (player_id, item_id, qty, source, updated_at) VALUES ($1,$2,$3,'admin',now()) ON CONFLICT (player_id, item_id) DO UPDATE SET qty = EXCLUDED.qty, updated_at = now()",
+            [pid, e.item, to],
+          );
+        }
+        await ledgerRow(q, pid, "item", e.item, to - from, adminTg);
+        info = { item: e.item, from, to };
+        break;
+      }
+      case "add_item": {
+        // boss passes and anything else: add (or take away) a number on top of what the player has
+        const def = itemById(e.item);
+        if (!def) throw bad("Неизвестный предмет");
+        const delta = wholeIn(e.delta, -def.maxStack, def.maxStack, `Сколько добавить «${def.name}»`);
+        const [r] = await q.query<{ qty: number }>("SELECT qty FROM inventory WHERE player_id=$1 AND item_id=$2 FOR UPDATE", [pid, e.item]);
+        const from = r?.qty ?? 0;
+        const to = Math.max(0, Math.min(def.maxStack, from + delta));
+        if (to === 0) await q.query("DELETE FROM inventory WHERE player_id=$1 AND item_id=$2", [pid, e.item]);
+        else {
           await q.query(
             "INSERT INTO inventory (player_id, item_id, qty, source, updated_at) VALUES ($1,$2,$3,'admin',now()) ON CONFLICT (player_id, item_id) DO UPDATE SET qty = EXCLUDED.qty, updated_at = now()",
             [pid, e.item, to],
