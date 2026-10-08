@@ -84,7 +84,7 @@ export const BOSSES: BossDef[] = [
     hp: hp(3), reward: { xp: xp(3), currencies: { SOL: 0.052, RUB: 340 } },
     drop: [{ id: "keyboard", qty: 3, chance: 0.35 }],
     wear: { items: ["cap-moon"], chance: 0.1, pity: 10 },
-    theme: { a: "#3a1a1a", b: "#140707", accent: "#ff6b4a" }, photo: photo("garkusha"),
+    theme: { a: "#3a1a1a", b: "#140707", accent: "#ff6b4a" }, photo: photo("garkusha", true),
   },
   {
     id: "mugo", order: 5, card: "silver", name: "Мугонатор", title: "Подчинённый Вадима",

@@ -545,7 +545,24 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .rig-bebyakyan .br-pupils { animation-name: br-look-small; }
 @keyframes br-look-small { 0%, 14%, 46%, 100% { transform: translate(0, 0); } 20%, 32% { transform: translate(-1.6px, 0); } 52%, 64% { transform: translate(1.6px, 0); } }
 .rig-bebyakyan .br-eyes-closed, .rig-bebyakyan .br-eyes-open { animation-duration: 3.7s; }
-@media (prefers-reduced-motion: reduce) { .br-breath, .br-head, .br-fist-l, .br-fist-r, .br-pupils, .br-brows { animation: none; } }
+/* Гаркуша: arms with money swing at the shoulders, the hands turn at the wrists (fanning the cash), a calm breath;
+   the irises are clipped to the eye whites; when hit he opens his mouth (teeth) and lifts the sad brows */
+.rig-garkusha .br-breath { animation-duration: 3.4s; }
+.rig-garkusha .br-head { animation-duration: 6s; }
+.br-arm-l { animation: gk-arm-l 2.6s ease-in-out infinite; }
+.br-arm-r { animation: gk-arm-r 2.6s ease-in-out infinite 1.3s; }
+.br-hand-l { animation: gk-hand-l 1.3s ease-in-out infinite 0.2s; }
+.br-hand-r { animation: gk-hand-r 1.3s ease-in-out infinite 0.85s; }
+@keyframes gk-arm-l { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(2.6deg); } }
+@keyframes gk-arm-r { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-2.4deg); } }
+@keyframes gk-hand-l { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(5deg); } }
+@keyframes gk-hand-r { 0%, 100% { transform: rotate(3deg); } 50% { transform: rotate(-6deg); } }
+.rig-garkusha .br-pupils { animation-name: gk-look; animation-duration: 6.5s; }
+@keyframes gk-look { 0%, 14%, 46%, 100% { transform: translate(0, 0); } 20%, 32% { transform: translate(-2.2px, 0); } 52%, 64% { transform: translate(2.2px, 0.3px); } 74%, 84% { transform: translate(0, 0.8px); } }
+.rig-garkusha .br-eyes-closed, .rig-garkusha .br-eyes-open { animation-duration: 4.1s; }
+.arena-photo.hit .br-arm-l, .arena-photo.hit .br-arm-r { animation-duration: 0.4s; }
+.arena-photo.hit .br-hand-l, .arena-photo.hit .br-hand-r { animation-duration: 0.3s; }
+@media (prefers-reduced-motion: reduce) { .br-breath, .br-head, .br-fist-l, .br-fist-r, .br-pupils, .br-brows, .br-arm, .br-hand { animation: none; } }
 
 /* ---------- shop scene ---------- */
 .shop-spot { position: absolute; padding: 0; border: 0; background: none; cursor: pointer; z-index: 2; transition: transform 0.12s, filter 0.12s;

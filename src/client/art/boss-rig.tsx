@@ -5,6 +5,8 @@
  * Bosses with a full face (pupils, brows, mouth layers) also look around and react to hits: the arena gets the
  * class "ouch" for a moment — angry brows turn into sad ones and the grin into a closed mouth.
  * Below half HP a boss with a "<id>-beaten" rig (tools/boss/align-variant.py) switches to its beaten look.
+ * Bosses with whole arms (armL/armR + handL/handR, Гаркуша): the arm swings at the shoulder and the hand turns at the wrist
+ * inside it; the irises are clipped to the eye whites so they can look around.
  */
 import { BOSS_RIGS } from "./boss-rig-data.ts";
 
@@ -30,6 +32,16 @@ export function BossRig({ id: baseId, hpShare = 1 }: { id: string; hpShare?: num
     const pv = P[p]?.pivot ?? [rig.w / 2, rig.h];
     return { transformOrigin: `${pv[0]}px ${pv[1]}px`, transformBox: "view-box" as const };
   };
+  // whole arm: the sleeve swings at the shoulder, the hand inside it at the wrist
+  const arm = (side: "L" | "R") =>
+    P[`arm${side}`] ? (
+      <g className={`br-arm br-arm-${side.toLowerCase()}`} style={origin(`arm${side}`)}>
+        {img(`arm${side}`)}
+        <g className={`br-hand br-hand-${side.toLowerCase()}`} style={origin(`hand${side}`)}>{img(`hand${side}`)}</g>
+      </g>
+    ) : null;
+  const clipEyes = !!P.armL && !!P.pupils && !!P.eyes;
+  const maskId = `br-eyes-${id}`;
   // bosses with a full face (Кедр): pupils glance around, brows and mouth change when he is hit (class "ouch" on the arena)
   return (
     <svg key={id} className={`boss-rig rig-${baseId} ${id.endsWith("-beaten") ? "beaten" : ""}`} viewBox={`0 0 ${rig.w} ${rig.h}`} width="100%" height="100%" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
@@ -37,9 +49,12 @@ export function BossRig({ id: baseId, hpShare = 1 }: { id: string; hpShare?: num
         {img("body")}
         <g className="br-head" style={origin("head")}>
           {img("head")}
+          {clipEyes && (
+            <mask id={maskId} style={{ maskType: "alpha" }} maskUnits="userSpaceOnUse" x="0" y="0" width={rig.w} height={rig.h}>{img("eyes")}</mask>
+          )}
           <g className="br-eyes-open">
             {img("eyes")}
-            {P.pupils && <g className="br-pupils">{img("pupils")}</g>}
+            {P.pupils && <g mask={clipEyes ? `url(#${maskId})` : undefined}><g className="br-pupils">{img("pupils")}</g></g>}
           </g>
           {img("eyes-closed", "br-eyes-closed")}
           {P.brows && <g className="br-brows">{img("brows", "br-brows-angry")}{img("brows-sad", "br-brows-sad")}</g>}
@@ -47,8 +62,10 @@ export function BossRig({ id: baseId, hpShare = 1 }: { id: string; hpShare?: num
           {img("mouth-closed", "br-mouth-closed")}
         </g>
         {img("collar")}
-        <g className="br-fist-l" style={origin("foreL")}>{img("foreL")}</g>
-        <g className="br-fist-r" style={origin("foreR")}>{img("foreR")}</g>
+        {P.foreL && <g className="br-fist-l" style={origin("foreL")}>{img("foreL")}</g>}
+        {P.foreR && <g className="br-fist-r" style={origin("foreR")}>{img("foreR")}</g>}
+        {arm("R")}
+        {arm("L")}
       </g>
     </svg>
   );
