@@ -418,8 +418,9 @@
   -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 9%); mask-image: linear-gradient(180deg, transparent 0, #000 9%); }
 .fit-page .room-view { aspect-ratio: 1060 / 1484; }
 .yard-stage { aspect-ratio: 400 / 560; }
-.fit-page .room-help { top: var(--top); left: 12px; }
-.fit-page .room-left { top: calc(var(--top) + 40px); left: 12px; }
+/* «?» sits in the top-right corner, the [≡] menu takes the top-left */
+.fit-page .room-help { top: var(--top); left: auto; right: 12px; }
+.fit-page .room-left { top: var(--top); left: 12px; }
 .fit-page .room-arrow { top: 58%; }
 .fit-page .room-label { bottom: var(--bottom); }
 .fit-page > .fight-now { position: absolute; left: 12px; right: 12px; bottom: var(--bottom); z-index: 4; }
@@ -981,12 +982,14 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 
 /* home menu: one [≡] button, the picture buttons drop down under it */
 .menu-toggle { position: relative; display: grid; place-items: center; width: 52px; height: 52px; padding: 0; cursor: pointer; border-radius: 16px;
-  border: 2.5px solid var(--line); background: linear-gradient(180deg, #4a3220, #2a1a10); box-shadow: 0 4px 0 var(--line), inset 0 2px 0 rgba(255, 255, 255, 0.08); transition: transform 0.12s; }
+  border: 2px solid rgba(255, 220, 160, 0.28); background: rgba(30, 18, 10, 0.32); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.12); transition: transform 0.12s, background 0.2s; }
+.menu-toggle.open { background: rgba(30, 18, 10, 0.45); }
 .menu-toggle:active { transform: translateY(2px); }
 .menu-toggle .side-dot { top: -5px; right: -5px; }
 .menu-toggle.glow { animation: art-glow 1.6s ease-in-out infinite; --c: #ffcc33; }
 .menu-bars { position: relative; width: 24px; height: 18px; }
-.menu-bars i { position: absolute; left: 0; right: 0; height: 3.5px; border-radius: 2px; background: var(--gold); transition: transform 0.2s, opacity 0.2s, top 0.2s; }
+.menu-bars i { position: absolute; left: 0; right: 0; height: 3.5px; border-radius: 2px; background: var(--gold); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); transition: transform 0.2s, opacity 0.2s, top 0.2s; }
 .menu-bars i:nth-child(1) { top: 0; }
 .menu-bars i:nth-child(2) { top: 7px; }
 .menu-bars i:nth-child(3) { top: 14px; }

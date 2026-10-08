@@ -20,6 +20,8 @@ import { Help, HelpList } from "../help.tsx";
 import { CURRENCY_DEFS } from "../../content/currencies.ts";
 import { Stylist, type StyleDraft } from "./stylist.tsx";
 
+const MENU_KEY = "xc2_home_menu";
+
 /** The login reward pops up by itself once per app start; later only from the button. */
 let dailyAutoShown = false;
 
@@ -41,7 +43,25 @@ export function HomeScreen() {
   const [styling, setStyling] = useState<StyleDraft | null>(null);
   const [daily, setDaily] = useState(false);
   const [quests, setQuests] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  // the [≡] menu remembers whether it was left open or closed (per device)
+  const [menuOpen, setMenuOpenRaw] = useState(false);
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(MENU_KEY) === "1") setMenuOpenRaw(true);
+    } catch {
+      /* storage can be blocked */
+    }
+  }, []);
+  const setMenuOpen = (next: boolean | ((v: boolean) => boolean)) =>
+    setMenuOpenRaw((v) => {
+      const open = typeof next === "function" ? next(v) : next;
+      try {
+        localStorage.setItem(MENU_KEY, open ? "1" : "0");
+      } catch {
+        /* storage can be blocked */
+      }
+      return open;
+    });
   const [equip, setEquip] = useState<string | null | false>(false);
   const [pc, setPc] = useState(false);
   // the running fight sits folded in the left column; a tap unfolds the full card
@@ -134,7 +154,7 @@ export function HomeScreen() {
         <div className="room-help">
           <Help topic="home-menu" title="Твой дом">
             <p>Здесь живёт твой персонаж. На заднем плане стоит оборудование — нажми на мониторы, чтобы обставить рабочее место, или на системник в углу (его улучшения появятся позже). Стрелки внизу листают комнаты: сверху появится выбор — ✓ включить комнату, ✕ вернуться в свою; закрытую можно разблокировать кнопкой снизу. Каждая купленная комната даёт бонус к урону.</p>
-            <HelpList title="Меню [≡] слева" rows={[
+            <HelpList title="Меню [≡] слева (остаётся открытым или закрытым, как ты его оставил)" rows={[
               { key: "w", icon: <Icon name="shirt" size={44} />, name: "Гардероб", hint: "Редактор персонажа прямо в комнате: комната сереет, а ты примеряешь одежду, причёску, цвет волос и кожи. Всё сохраняется одной кнопкой." },
               { key: "b", icon: <Icon name="gift" size={44} />, name: "Бонус", hint: "Награда за ежедневный вход. Заходи каждый день подряд — награда растёт, на 7-й день редкое оружие. Пропустишь день — серия сгорит." },
               { key: "r", icon: <Icon name="trophy" size={44} />, name: "Рейтинг", hint: "Топ по урону за неделю, по авторитету и кланам. Топ-10 недели получает призы, лидеры — рамку на карточке." },
@@ -160,7 +180,7 @@ export function HomeScreen() {
             {menuAlert && !menuOpen && <i className="side-dot" />}
           </button>
           {menuOpen && (
-            <div className="menu-drop" onClick={() => setMenuOpen(false)}>
+            <div className="menu-drop">
               <button className="icon-btn-art" style={{ ["--c" as string]: "#b06bff" }} onClick={() => setStyling({ look: { ...state.look.body }, worn: { ...state.look.equipped } })} aria-label="Гардероб" title="Гардероб">
                 <Icon name="shirt" size={58} />
               </button>
