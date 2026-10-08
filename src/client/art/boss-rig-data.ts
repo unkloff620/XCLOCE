@@ -313,9 +313,9 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         ]
       },
       "armR": {
-        "x": 476.5,
+        "x": 481.0,
         "y": 317.5,
-        "w": 301,
+        "w": 296,
         "h": 260,
         "pivot": [
           540.0,
