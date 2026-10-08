@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import { Icon } from "./art/icons.tsx";
 import { ItemArt } from "./art/items.tsx";
 import { itemById } from "../content/items.ts";
-import type { Currency } from "../content/currencies.ts";
+import { CURRENCY_DEFS, type Currency } from "../content/currencies.ts";
 import type { Reward } from "../content/rewards.ts";
 import type { Granted } from "./api.ts";
 import { money, pct } from "./format.ts";
@@ -50,7 +50,7 @@ export function Avatar({ name, photo, size = 36, frame }: { name: string; photo?
 
 export function Coin({ c, v, size = 18, bold = true }: { c: Currency; v: number; size?: number; bold?: boolean }) {
   return (
-    <span className="row" style={{ gap: 3, display: "inline-flex" }}>
+    <span className="row" style={{ gap: 3, display: "inline-flex" }} title={CURRENCY_DEFS[c]?.name}>
       <Icon name={c} size={size} />
       {bold ? <b className="num">{money(c, v)}</b> : <span className="num">{money(c, v)}</span>}
     </span>
@@ -65,7 +65,7 @@ export function RewardChips({ r, size = 18 }: { r: Reward | Granted | null | und
     <span className="row" style={{ flexWrap: "wrap", gap: 6 }}>
       {Object.entries(r.currencies ?? {}).map(([c, v]) => (v ? <span key={c} className="chip"><Coin c={c as Currency} v={v} size={size} /></span> : null))}
       {!!r.xp && <span className="chip violet" title="Авторитет"><Icon name="xp" size={size} />+{r.xp}</span>}
-      {!!r.energy && <span className="chip gold"><Icon name="energy" size={size} />+{r.energy}</span>}
+      {!!r.energy && <span className="chip gold" title="Энергия"><Icon name="energy" size={size} />+{r.energy}</span>}
       {items.map((it) => (
         <span key={it.id} className="chip" title={itemById(it.id)?.name}>
           <ItemArt id={it.id} size={size + 2} />
@@ -103,10 +103,10 @@ export function GainLine({ r, size = 26 }: { r: Reward | Granted | null | undefi
         <span key={it.id} className="gain" title={itemById(it.id)?.name}><ItemArt id={it.id} size={size} />+{it.qty}</span>
       ))}
       {Object.entries(r.currencies ?? {}).map(([c, v]) => (v ? (
-        <span key={c} className="gain" title={c}><Icon name={c} size={size} />+{money(c as Currency, v)}</span>
+        <span key={c} className="gain" title={CURRENCY_DEFS[c as Currency]?.name ?? c}><Icon name={c} size={size} />+{money(c as Currency, v)}</span>
       ) : null))}
-      {!!r.energy && <span className="gain"><Icon name="energy" size={size} />+{r.energy}</span>}
-      {!!r.xp && <span className="gain"><Icon name="xp" size={size} />+{r.xp}</span>}
+      {!!r.energy && <span className="gain" title="Энергия"><Icon name="energy" size={size} />+{r.energy}</span>}
+      {!!r.xp && <span className="gain" title="Авторитет"><Icon name="xp" size={size} />+{r.xp}</span>}
     </span>
   );
 }

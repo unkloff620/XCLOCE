@@ -16,6 +16,7 @@ import { LevelUpOverlay } from "./levelup.tsx";
 import { Tutorial } from "./tutorial.tsx";
 import { RouteLoader, startRouteLoad } from "./route-loader.tsx";
 import { PrizeWindow } from "./prizes.tsx";
+import { TapTips } from "./tap-tips.tsx";
 import { EnergyWindow } from "./screens/energy.tsx";
 import { NAV_TABS } from "../content/nav.ts";
 import { isLoaded, preload, sectionOfRoute, urlsFor, type LookLite } from "./preload.ts";
@@ -321,6 +322,7 @@ export function Shell({ children }: { children: ReactNode }) {
             <PrizeWindow />
             <LevelUpOverlay />
             <RouteLoader />
+            <TapTips />
           </>
         )}
       </div>
