@@ -158,6 +158,9 @@ export const BOSSES: BossDef[] = [
 ];
 
 export const bossById = (id: string) => BOSSES.find((b) => b.id === id);
+/** each boss fights in his own room (public/assets/arena/<id>.webp); the rest still in the garage */
+export const BOSS_ARENAS = new Set(["kedr", "bebyakyan"]);
+export const arenaOf = (bossId: string) => `/assets/arena/${BOSS_ARENAS.has(bossId) ? bossId : "garage"}.webp`;
 /** the boss that unlocks this shop item (BossDef.wear), if any */
 export const unlockBossOf = (itemId: string) => BOSSES.find((b) => b.wear?.items.includes(itemId));
 export const keyId = (bossId: string) => `key-${bossId}`;

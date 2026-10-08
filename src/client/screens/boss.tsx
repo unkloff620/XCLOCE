@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { api, type FightView, type Hit, type Tray } from "../api.ts";
-import { BOSSES, bossById, type BossDef, FULL_SHARE, KEY_SHARE, rewardShare } from "../../content/bosses.ts";
+import { BOSSES, arenaOf, bossById, type BossDef, FULL_SHARE, KEY_SHARE, rewardShare } from "../../content/bosses.ts";
 import { WEAPONS, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
 import { ArenaBackdrop, BossSilhouette } from "../art/scenes.tsx";
@@ -302,14 +302,14 @@ export function BossScreen({ id }: { id: string }) {
   const limitLeft = row ? row.fightsPerDay - row.fightsToday : 1;
 
   const hpMax = view?.hpMax ?? row?.hpMax ?? boss.hp;
-  // the fight takes the whole screen: garage + drifting sky behind, the boss in the middle, weapons at the bottom
+  // the fight takes the whole screen: the boss's own room (the garage for the others) + drifting sky behind, the boss in the middle, weapons at the bottom
   if (fightId) {
     return (
       <div className="fit-page fight-page" style={{ ["--acc" as string]: boss.theme.accent }}>
         <div className="fight-bg" aria-hidden="true">
           <DriftingSky className="fight-sky" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assets/arena/garage.webp" alt="" draggable={false} />
+          <img src={arenaOf(boss.id)} alt="" draggable={false} />
         </div>
         <div className="fight-head">
           <div className="grow" style={{ minWidth: 0 }}>
@@ -401,7 +401,7 @@ export function BossScreen({ id }: { id: string }) {
         <div className="door-behind">
           <DriftingSky className="fight-sky" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="door-behind-bg" src="/assets/arena/garage.webp" alt="" draggable={false} />
+          <img className="door-behind-bg" src={arenaOf(boss.id)} alt="" draggable={false} />
           {/* a boss that is not open yet stands there too, but grey */}
           <div className={`door-boss${locked ? " locked" : ""}`}>
             {hasBossRig(boss.id) ? (
