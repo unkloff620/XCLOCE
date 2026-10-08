@@ -1,25 +1,33 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useGame } from "../store.tsx";
 import { api, type FightView, type Granted } from "../api.ts";
 import { KEY_SHARE, bossById, rewardShare } from "../../content/bosses.ts";
 import { scaleReward } from "../../content/rewards.ts";
 import { ESCAPE_LINES } from "../../content/phrases.ts";
-import { Modal, RewardChips } from "../ui.tsx";
+import { GainLine, Modal } from "../ui.tsx";
+import { ItemArt } from "../art/items.tsx";
 import { roomById } from "../../content/home.ts";
+import { ROOM_BACKDROP } from "../../content/home-scene.ts";
 import { itemById } from "../../content/items.ts";
 import { BossPhoto } from "./boss-parts.tsx";
 import { full, pct } from "../format.ts";
 import { haptic } from "../telegram.ts";
 
-/** Victory / defeat window for finished fights the player has not seen yet. Shows on any screen. */
+/**
+ * Victory / defeat window for finished fights the player has not seen yet. Shows on any screen.
+ * Victory: a big picture of the beaten boss, the rewards under it (taken at once, so a dropped room can be shown),
+ * a room that dropped glows, the top by damage, one «Забрать» button → back to the boss list.
+ */
 export function ResultWindow() {
-  const { state, act, busy, toast } = useGame();
+  const { state, act, busy } = useGame();
   const router = useRouter();
   const next = state?.pending[0] ?? null;
   const [active, setActive] = useState<{ fightId: number; status: string } | null>(null);
   const [view, setView] = useState<FightView | null>(null);
+  const [got, setGot] = useState<Granted | null>(null);
+  const claimed = useRef<number | null>(null);
 
   useEffect(() => {
     if (!active && next) setActive(next);
@@ -27,6 +35,7 @@ export function ResultWindow() {
 
   useEffect(() => {
     setView(null);
+    setGot(null);
     if (!active) return;
     let alive = true;
     api.get<{ fight: FightView }>(`/api/live?fight=${active.fightId}&since=0`).then((r) => alive && setView(r.fight)).catch(() => alive && setActive(null));
@@ -36,60 +45,100 @@ export function ResultWindow() {
     };
   }, [active]);
 
+  // a won fight: the reward is taken as soon as the window shows — what really dropped (a room!) is shown at once
+  useEffect(() => {
+    if (!view || view.status !== "won" || claimed.current === view.fightId) return;
+    claimed.current = view.fightId;
+    void act<{ status: string; reward: Granted | null }>("fight_claim", { fightId: view.fightId }).then((r) => {
+      if (r?.reward) setGot(r.reward);
+      else claimed.current = null;
+    });
+  }, [view, act]);
+
   if (!active || !view) return null;
   const boss = bossById(view.bossId)!;
   const won = view.status === "won";
-  // the reward follows my part of the fight: full from 2% of the boss HP, the card from 1%
+  const done = () => setActive(null);
+
+  if (!won) {
+    const seen = async () => {
+      await act("fight_claim", { fightId: view.fightId });
+      done();
+    };
+    return (
+      <Modal onClose={() => busy !== "fight_claim" && seen()}>
+        <div className="center col" style={{ alignItems: "center", gap: 10 }}>
+          <div className="display result-title lose">БОСС УШЁЛ</div>
+          <div style={{ width: 150, height: 150 }}>
+            <BossPhoto boss={boss} round />
+          </div>
+          <div className="display" style={{ fontSize: 20 }}>{boss.name}</div>
+          <div className="muted">{ESCAPE_LINES[view.fightId % ESCAPE_LINES.length]} 8 часов прошли, пропуска нет.</div>
+          <div className="panel" style={{ width: "100%", padding: 10 }}>
+            <div className="row" style={{ justifyContent: "space-between" }}>
+              <span className="muted">Мой урон</span>
+              <b className="num">{full(view.myDamage)} ({pct(view.myDamage, view.hpMax).toFixed(1)}%)</b>
+            </div>
+            <div className="row" style={{ justifyContent: "space-between" }}>
+              <span className="muted">Моих ударов</span>
+              <b className="num">{view.myHits}</b>
+            </div>
+          </div>
+          <button className="btn dark block" disabled={busy === "fight_claim"} onClick={seen}>Понятно</button>
+        </div>
+      </Modal>
+    );
+  }
+
+  // until the claim answers: the reward this fight earns (my part of it), the same numbers
   const share = rewardShare(view.myDamage, view.hpMax);
   const keyOk = view.myDamage >= view.hpMax * KEY_SHARE;
-  const done = () => setActive(null);
-  const claim = async () => {
-    const r = await act<{ status: string; reward: Granted | null }>("fight_claim", { fightId: view.fightId }, won ? "Награда получена" : undefined);
-    if (r?.reward && won) {
-      // no second window: straight back to the boss list; a rare drop is told in a toast
-      const drops = (r.reward.unlocks ?? []).map((id) => (id.startsWith("room:") ? `комната «${roomById(id.slice(5))?.name}»` : itemById(id)?.name ?? id));
-      if (drops.length) toast(`Выпало: ${drops.join(", ")}`, "ok");
-      done();
-      router.push("/bosses");
-    } else done();
-  };
-  // the cross works like the main button: a lost fight is marked as seen (or the window comes back at once),
-  // a won one takes the reward first so it is not lost (and goes back to the boss list)
-  const close = () => {
-    if (busy !== "fight_claim") claim();
+  const preview = { ...scaleReward(boss.reward, share), items: [...(boss.final || !keyOk ? [] : [{ id: `key-${boss.id}`, qty: 1 }]), ...(share >= 1 ? boss.reward.items ?? [] : [])] };
+  const unlocks = got?.unlocks ?? [];
+  const rooms = unlocks.filter((id) => id.startsWith("room:")).map((id) => id.slice(5));
+  const things = unlocks.filter((id) => !id.startsWith("room:"));
+  const take = async () => {
+    if (!got) {
+      const r = await act<{ status: string; reward: Granted | null }>("fight_claim", { fightId: view.fightId });
+      if (!r) return;
+    }
+    done();
+    router.push("/bosses");
   };
 
   return (
-    <Modal onClose={close}>
-      <div className="center col" style={{ alignItems: "center", gap: 10 }}>
-        <div className={`display result-title ${won ? "win" : "lose"}`}>{won ? "BOSS DEFEATED" : "БОСС УШЁЛ"}</div>
-        <div style={{ width: 150, height: 150 }}>
-          <BossPhoto boss={boss} round defeated={won} />
+    <Modal onClose={() => busy !== "fight_claim" && take()}>
+      <div className="result-win">
+        <div className="display result-title win">BOSS DEFEATED</div>
+        <div className="result-photo">
+          <BossPhoto boss={boss} round defeated />
         </div>
-        <div className="display" style={{ fontSize: 20 }}>{boss.name}</div>
-        {won ? (
-          <div className="muted">
-            Последний удар: <b style={{ color: "var(--ink)" }}>{view.killerIsMe ? "ты" : view.killer}</b>
+        <div className="display result-name">{boss.name}</div>
+        <div className="muted small">Последний удар: <b style={{ color: "var(--ink)" }}>{view.killerIsMe ? "ты" : view.killer}</b></div>
+
+        <div className="result-gains">
+          <GainLine r={got ?? preview} size={30} />
+        </div>
+
+        {rooms.map((id) => (
+          <div key={id} className="result-room">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`/assets/home/${ROOM_BACKDROP[id] ?? `room-${id}`}.webp`} alt="" draggable={false} />
+            <div className="col" style={{ gap: 2, minWidth: 0 }}>
+              <b className="display">Выпала комната!</b>
+              <span className="small">«{roomById(id)?.name}» — купи её дома стрелками</span>
+            </div>
           </div>
-        ) : (
-          <div className="muted">{ESCAPE_LINES[view.fightId % ESCAPE_LINES.length]} 8 часов прошли, пропуска нет.</div>
+        ))}
+        {things.length > 0 && (
+          <div className="result-drops">
+            <b className="small">Выпало!</b>
+            {things.map((id) => <span key={id} className="chip gold"><ItemArt id={id} size={24} /> {itemById(id)?.name ?? id}</span>)}
+          </div>
         )}
-        <div className="panel" style={{ width: "100%", padding: 10 }}>
-          <div className="row" style={{ justifyContent: "space-between" }}>
-            <span className="muted">Мой урон</span>
-            <b className="num">{full(view.myDamage)} ({pct(view.myDamage, view.hpMax).toFixed(1)}%)</b>
-          </div>
-          <div className="row" style={{ justifyContent: "space-between" }}>
-            <span className="muted">Моих ударов</span>
-            <b className="num">{view.myHits}</b>
-          </div>
-          <div className="row" style={{ justifyContent: "space-between" }}>
-            <span className="muted">Участников</span>
-            <b className="num">{view.top.length}</b>
-          </div>
-        </div>
+
         {view.top.length > 0 && (
-          <div className="panel" style={{ width: "100%", padding: 10, textAlign: "left" }}>
+          <div className="panel result-top">
             <div className="small muted" style={{ marginBottom: 6 }}>ТОП ПО УРОНУ</div>
             {view.top.slice(0, 5).map((t, i) => (
               <div key={t.playerId} className="row" style={{ justifyContent: "space-between", padding: "2px 0" }}>
@@ -99,17 +148,8 @@ export function ResultWindow() {
             ))}
           </div>
         )}
-        {won && (
-          <>
-            <div className={`share-note ${share >= 1 ? "full" : ""}`}>
-              {share >= 1 ? "Полная награда — твой вклад засчитан" : share > 0 ? `Награда ${Math.round(share * 100)}%: для полной нужно ${full(Math.ceil(view.hpMax * 0.02))} урона в бою` : "Ты не нанёс урона в этом бою — награды нет"}
-              {share > 0 && !keyOk && !boss.final && <div className="tiny">Пропуск — от {full(Math.ceil(view.hpMax * KEY_SHARE))} урона</div>}
-            </div>
-            <RewardChips r={{ ...scaleReward(boss.reward, share), items: [...(boss.final || !keyOk ? [] : [{ id: `key-${boss.id}`, qty: 1 }]), ...(share >= 1 ? boss.reward.items ?? [] : [])] }} />
-            <button className="btn gold big block" disabled={busy === "fight_claim"} onClick={claim}>Забрать награду</button>
-          </>
-        )}
-        {!won && <button className="btn dark block" disabled={busy === "fight_claim"} onClick={claim}>Понятно</button>}
+
+        <button className="btn gold big result-take" disabled={busy === "fight_claim"} onClick={take}>Забрать</button>
       </div>
     </Modal>
   );
