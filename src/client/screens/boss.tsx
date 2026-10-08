@@ -369,6 +369,8 @@ export function BossScreen({ id }: { id: string }) {
   // before the fight: a room with a door, the boss waits behind it (seen through the window); the rewards are on the door,
   // the pass that opens him hangs on the left wall. A tap on the door opens it and starts the fight (Соло — the same, alone)
   const locked = !!row && !row.unlocked;
+  // already fought → keeps its colour behind the door, grey only for a never opened boss
+  const grey = locked && !(row.myDamage > 0 || row.myWins > 0);
   const prev = boss.order > 1 ? BOSSES.find((x) => x.order === boss.order - 1) : null;
   const blocked = locked ? `Нужно пропусков «${prev?.name}»: ${row!.keysNeed}. У тебя ${row!.keysHave}` : otherFight ? `Сначала закончи бой с боссом ${bossById(otherFight.bossId)?.name}` : limitLeft <= 0 ? "Лимит побед на сегодня — новые после полуночи по Москве" : null;
   const openDoor = async (solo: boolean) => {
@@ -403,7 +405,7 @@ export function BossScreen({ id }: { id: string }) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="door-behind-bg" src={arenaOf(boss.id)} alt="" draggable={false} />
           {/* a boss that is not open yet stands there too, but grey */}
-          <div className={`door-boss${locked ? " locked" : ""}`}>
+          <div className={`door-boss${grey ? " locked" : ""}`}>
             {hasBossRig(boss.id) ? (
               <BossRig id={boss.id} />
             ) : boss.photo.full ? (
@@ -428,7 +430,7 @@ export function BossScreen({ id }: { id: string }) {
             <span className="tiny">вход<br />свободный</span>
           )}
         </div>
-        <button className="door-leaf" onClick={() => openDoor(false)} aria-label={blocked ? `Закрыто: ${blocked}` : `Открыть дверь и начать бой с боссом ${boss.name}`} disabled={door === "open" || door === "enter"}>
+        <button className="door-leaf" onClick={() => openDoor(false)} aria-label={blocked ? `${locked ? "Нет карт" : "Закрыто"}: ${blocked}` : `Открыть дверь и начать бой с боссом ${boss.name}`} disabled={door === "open" || door === "enter"}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/assets/door/door.webp" alt="" draggable={false} />
           <span className="door-hit" />

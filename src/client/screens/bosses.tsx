@@ -71,10 +71,12 @@ export function BossesScreen() {
           const prev = BOSSES.find((x) => x.order === b.order - 1);
           const mine = state?.fight?.bossId === b.id ? state.fight : null;
           const locked = row ? !row.unlocked : b.order > 1;
+          // a boss the player has already fought stays in colour even without passes now; grey only for never opened ones
+          const grey = locked && !((row?.myDamage ?? 0) > 0 || (row?.myWins ?? 0) > 0);
           const hpMax = mine ? mine.hpMax : row?.hpMax ?? b.hp;
           const hp = mine ? mine.hp : hpMax;
           return (
-            <Link key={b.id} href={`/bosses/${b.id}`} className={`bcard ${locked ? "locked" : ""} ${b.final ? "final" : ""} ${mine ? "live" : ""}`}
+            <Link key={b.id} href={`/bosses/${b.id}`} className={`bcard ${grey ? "locked" : ""} ${b.final ? "final" : ""} ${mine ? "live" : ""}`}
               style={{ ["--i" as string]: b.order, ["--acc" as string]: tierColor(b.order), ["--hp" as string]: `${Math.round((hp / Math.max(1, hpMax)) * 100)}%` }}>
               {/* the boss stands on the left and fades into the card */}
               <div className="bcard-art" aria-hidden="true">
@@ -82,7 +84,7 @@ export function BossesScreen() {
                 {(b.photo.card ?? b.photo.full) ? <img src={(b.photo.card ?? b.photo.full)!} alt="" draggable={false} /> : <div className="bcard-sil"><BossSilhouette accent={tierColor(b.order)} /></div>}
               </div>
               {/* who finished this boss last: a framed avatar at the bottom of the picture → their profile */}
-              {row?.lastKiller && !locked && (
+              {row?.lastKiller && !grey && (
                 <span className="bcard-killer" role="link" tabIndex={0} title={`Последним добил: ${row.lastKiller.name}`} aria-label={`Последним добил: ${row.lastKiller.name}`}
                   onClick={(e) => {
                     e.preventDefault();
@@ -98,7 +100,7 @@ export function BossesScreen() {
                 <div className="bcard-head">
                   <div className="col" style={{ gap: 1, minWidth: 0 }}>
                     <b className="bcard-name display ellipsis">{b.name}</b>
-                    <span className="bcard-title ellipsis">{locked ? `Откроется пропусками «${prev?.name}»` : b.title}</span>
+                    <span className="bcard-title ellipsis">{grey ? `Откроется пропусками «${prev?.name}»` : locked ? `Нужны пропуски «${prev?.name}»` : b.title}</span>
                   </div>
                   {mine ? (
                     <span className="bcard-pill live"><i className="live-dot" />{clock(mine.endsAt - now)}</span>
@@ -106,7 +108,7 @@ export function BossesScreen() {
                     <span className="bcard-pill" title="Сейчас бьют">⚔ {row.fightingNow}</span>
                   ) : null}
                 </div>
-                {!locked && (
+                {!grey && (
                   <div className="bcard-hp">
                     <div className="bcard-hpbar"><i /></div>
                     <div className="bcard-hpnums num"><span>{hpLabel(hp, hpMax)} HP</span><b>{Math.round((hp / Math.max(1, hpMax)) * 100)}%</b></div>
@@ -126,7 +128,7 @@ export function BossesScreen() {
                       <span>Всего побед <b className="num">{row?.myWins ?? 0}</b></span>
                     </span>
                   )}
-                  <span className={`bcard-cta display ${locked ? "off" : ""}`}>{locked ? <><Icon name="lock" size={14} /> Закрыт</> : mine ? <>Бить ›</> : <>В бой ›</>}</span>
+                  <span className={`bcard-cta display ${locked ? "off" : ""}`}>{locked ? <><Icon name="lock" size={14} /> Нет карт</> : mine ? <>Бить ›</> : <>В бой ›</>}</span>
                 </div>
               </div>
             </Link>
