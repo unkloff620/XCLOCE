@@ -117,19 +117,16 @@ export function ResultWindow() {
         <div className="muted small">Последний удар: <b style={{ color: "var(--ink)" }}>{view.killerIsMe ? "ты" : view.killer}</b></div>
 
         <div className="result-gains">
-          <GainLine r={got ?? preview} size={30} />
+          <GainLine r={got ?? preview} size={16} />
+          {/* a dropped room: one more reward plaque, glowing — [room picture] +комната */}
+          {rooms.map((id) => (
+            <span key={id} className="gain result-room" title={`Комната «${roomById(id)?.name}» — купи её дома стрелками`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={`/assets/home/${ROOM_BACKDROP[id] ?? `room-${id}`}.webp`} alt="" draggable={false} />+комната
+            </span>
+          ))}
         </div>
 
-        {rooms.map((id) => (
-          <div key={id} className="result-room">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`/assets/home/${ROOM_BACKDROP[id] ?? `room-${id}`}.webp`} alt="" draggable={false} />
-            <div className="col" style={{ gap: 2, minWidth: 0 }}>
-              <b className="display">Выпала комната!</b>
-              <span className="small">«{roomById(id)?.name}» — купи её дома стрелками</span>
-            </div>
-          </div>
-        ))}
         {things.length > 0 && (
           <div className="result-drops">
             <b className="small">Выпало!</b>
