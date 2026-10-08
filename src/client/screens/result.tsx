@@ -1,14 +1,12 @@
 "use client";
-import { Icon } from "../art/icons.tsx";
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useGame } from "../store.tsx";
 import { api, type FightView, type Granted } from "../api.ts";
 import { KEY_SHARE, bossById, rewardShare } from "../../content/bosses.ts";
 import { scaleReward } from "../../content/rewards.ts";
 import { ESCAPE_LINES } from "../../content/phrases.ts";
 import { Modal, RewardChips } from "../ui.tsx";
-import { ItemArt } from "../art/items.tsx";
 import { roomById } from "../../content/home.ts";
 import { itemById } from "../../content/items.ts";
 import { BossPhoto } from "./boss-parts.tsx";
@@ -17,11 +15,11 @@ import { haptic } from "../telegram.ts";
 
 /** Victory / defeat window for finished fights the player has not seen yet. Shows on any screen. */
 export function ResultWindow() {
-  const { state, act, busy } = useGame();
+  const { state, act, busy, toast } = useGame();
+  const router = useRouter();
   const next = state?.pending[0] ?? null;
   const [active, setActive] = useState<{ fightId: number; status: string } | null>(null);
   const [view, setView] = useState<FightView | null>(null);
-  const [got, setGot] = useState<Granted | null>(null);
 
   useEffect(() => {
     if (!active && next) setActive(next);
@@ -29,7 +27,6 @@ export function ResultWindow() {
 
   useEffect(() => {
     setView(null);
-    setGot(null);
     if (!active) return;
     let alive = true;
     api.get<{ fight: FightView }>(`/api/live?fight=${active.fightId}&since=0`).then((r) => alive && setView(r.fight)).catch(() => alive && setActive(null));
@@ -47,15 +44,19 @@ export function ResultWindow() {
   const keyOk = view.myDamage >= view.hpMax * KEY_SHARE;
   const done = () => setActive(null);
   const claim = async () => {
-    const r = await act<{ status: string; reward: Granted | null }>("fight_claim", { fightId: view.fightId });
-    if (r?.reward && won) setGot(r.reward);
-    else done();
+    const r = await act<{ status: string; reward: Granted | null }>("fight_claim", { fightId: view.fightId }, won ? "Награда получена" : undefined);
+    if (r?.reward && won) {
+      // no second window: straight back to the boss list; a rare drop is told in a toast
+      const drops = (r.reward.unlocks ?? []).map((id) => (id.startsWith("room:") ? `комната «${roomById(id.slice(5))?.name}»` : itemById(id)?.name ?? id));
+      if (drops.length) toast(`Выпало: ${drops.join(", ")}`, "ok");
+      done();
+      router.push("/bosses");
+    } else done();
   };
   // the cross works like the main button: a lost fight is marked as seen (or the window comes back at once),
-  // a won one takes the reward first so it is not lost
+  // a won one takes the reward first so it is not lost (and goes back to the boss list)
   const close = () => {
-    if (got) done();
-    else if (busy !== "fight_claim") claim();
+    if (busy !== "fight_claim") claim();
   };
 
   return (
@@ -98,7 +99,7 @@ export function ResultWindow() {
             ))}
           </div>
         )}
-        {won && !got && (
+        {won && (
           <>
             <div className={`share-note ${share >= 1 ? "full" : ""}`}>
               {share >= 1 ? "Полная награда — твой вклад засчитан" : share > 0 ? `Награда ${Math.round(share * 100)}%: для полной нужно ${full(Math.ceil(view.hpMax * 0.02))} урона в бою` : "Ты не нанёс урона в этом бою — награды нет"}
@@ -106,28 +107,6 @@ export function ResultWindow() {
             </div>
             <RewardChips r={{ ...scaleReward(boss.reward, share), items: [...(boss.final || !keyOk ? [] : [{ id: `key-${boss.id}`, qty: 1 }]), ...(share >= 1 ? boss.reward.items ?? [] : [])] }} />
             <button className="btn gold big block" disabled={busy === "fight_claim"} onClick={claim}>Забрать награду</button>
-          </>
-        )}
-        {got && (
-          <>
-            <div className="small muted">Получено:</div>
-            <RewardChips r={got} />
-            {!!got.unlocks?.length && (
-              <div className="unlock-note">
-                <b className="small">Выпало!</b>
-                <div className="row" style={{ gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
-                  {got.unlocks.map((id) => id.startsWith("room:")
-                    ? <span key={id} className="chip gold"><Icon name="home" size={22} /> Комната «{roomById(id.slice(5))?.name}» — купи её дома стрелками</span>
-                    : <span key={id} className="chip"><ItemArt id={id} size={24} /> {itemById(id)?.name ?? id}</span>)}
-                </div>
-                {got.unlocks.some((id) => !id.startsWith("room:")) && <Link href="/shop?tab=clothing" className="btn gold sm" onClick={done}>Выкупить в магазине</Link>}
-              </div>
-            )}
-            {got.levelUp && <div className="chip violet">Новый уровень: {got.levelUp.to}!</div>}
-            <div className="row" style={{ width: "100%" }}>
-              <Link href={`/bosses/${boss.id}`} className="btn dark grow" onClick={done}>К боссу</Link>
-              <button className="btn green grow" onClick={done}>Отлично</button>
-            </div>
           </>
         )}
         {!won && <button className="btn dark block" disabled={busy === "fight_claim"} onClick={claim}>Понятно</button>}
