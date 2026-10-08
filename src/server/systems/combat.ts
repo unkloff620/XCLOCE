@@ -457,6 +457,9 @@ export async function bossList(q: Queryable, pid: number, cfg: Ctx["cfg"], now =
   const todayMap = new Map(today.map((t) => [t.boss_id, t.n]));
   const mine = await q.query<{ boss_id: string; damage: number; wins: number }>("SELECT boss_id, damage, wins FROM boss_damage WHERE player_id=$1", [pid]);
   const mineMap = new Map(mine.map((m) => [m.boss_id, m]));
+  // solo wins over each boss (the star on the «Соло» button)
+  const solo = await q.query<{ boss_id: string; n: number }>("SELECT boss_id, COUNT(*)::int AS n FROM fights WHERE player_id=$1 AND status='won' AND solo GROUP BY boss_id", [pid]);
+  const soloMap = new Map(solo.map((x) => [x.boss_id, Number(x.n)]));
   const active = await q.query<{ boss_id: string; n: number }>("SELECT boss_id, COUNT(*)::int AS n FROM fights WHERE status='active' AND ends_at > $1 GROUP BY boss_id", [new Date(now)]);
   // my running fight keeps its boss open even though its passes are already spent
   const [myFight] = await q.query<{ boss_id: string }>("SELECT boss_id FROM fights WHERE player_id=$1 AND status='active'", [pid]);
@@ -484,6 +487,7 @@ export async function bossList(q: Queryable, pid: number, cfg: Ctx["cfg"], now =
         fightsPerDay: cfg.fight.perDay,
         myDamage: mineMap.get(b.id)?.damage ?? 0,
         myWins: mineMap.get(b.id)?.wins ?? 0,
+        mySoloWins: soloMap.get(b.id) ?? 0,
         fightingNow: activeMap.get(b.id) ?? 0,
         totalWins: winsMap.get(b.id) ?? 0,
         lastKiller: killerMap.get(b.id) ?? null,

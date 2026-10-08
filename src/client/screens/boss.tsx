@@ -430,6 +430,16 @@ export function BossScreen({ id }: { id: string }) {
             <span className="tiny">вход<br />свободный</span>
           )}
         </div>
+        {/* «Соло» under the passes: a fight alone; the star turns gold once the player beat this boss solo */}
+        {!otherFight && !locked && limitLeft > 0 && (
+          <button className="door-solo" disabled={busy === "fight_start" || door !== "closed"} onClick={() => openDoor(true)}
+            title="Соло: урон других игроков не засчитывается, только твой" aria-label={`Соло — бой в одиночку${(row?.mySoloWins ?? 0) > 0 ? ", уже побеждён соло" : ""}`}>
+            <svg className={`door-solo-star ${(row?.mySoloWins ?? 0) > 0 ? "on" : ""}`} viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 2.6l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z" />
+            </svg>
+            <span className="display">Соло</span>
+          </button>
+        )}
         <button className="door-leaf" onClick={() => openDoor(false)} aria-label={blocked ? `${locked ? "Нет карт" : "Закрыто"}: ${blocked}` : `Открыть дверь и начать бой с боссом ${boss.name}`} disabled={door === "open" || door === "enter"}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/assets/door/door.webp" alt="" draggable={false} />
@@ -452,14 +462,8 @@ export function BossScreen({ id }: { id: string }) {
           <span className="chip gold"><Icon name="clock" size={14} />8 часов</span>
           <span className="chip" title="Боёв сегодня из дневного лимита · побед над этим боссом за всё время">Сегодня {row?.fightsToday ?? 0}/{row?.fightsPerDay ?? 7} · всего {row?.myWins ?? 0}</span>
         </div>
-        {otherFight ? (
+        {otherFight && (
           <Link className="btn violet block" href={`/bosses/${otherFight.bossId}`}>Идёт бой с {bossById(otherFight.bossId)?.name} — к нему</Link>
-        ) : (
-          !locked && limitLeft > 0 && (
-            <button className="btn violet block solo-btn" disabled={busy === "fight_start" || door !== "closed"} onClick={() => openDoor(true)} title="Соло: урон других игроков не засчитывается, только твой">
-              <Icon name="swords" size={20} /> Соло — бой в одиночку
-            </button>
-          )
         )}
       </div>
     </div>

@@ -18,7 +18,7 @@ import { clock, full, short } from "../format.ts";
 
 export interface BossRow {
   id: string; unlocked: boolean; keysHave: number; keysNeed: number; myKeys: number; hpMax: number;
-  fightsToday: number; fightsPerDay: number; myDamage: number; myWins: number; fightingNow: number; totalWins: number;
+  fightsToday: number; fightsPerDay: number; myDamage: number; myWins: number; mySoloWins?: number; fightingNow: number; totalWins: number;
   lastKiller: { id: number; name: string; photo: string | null; at: number } | null;
 }
 export interface BossListData { resetAt: number; bosses: BossRow[]; weapons: Tray[]; now: number }

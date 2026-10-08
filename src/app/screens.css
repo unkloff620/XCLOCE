@@ -1190,6 +1190,16 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .door-pass .tiny { font-size: 2.2cqw; }
 .door-pass svg { width: 8cqw; height: 8cqw; }
 .door-pass.short b { color: #ff8a9e; }
+/* «Соло» under the passes: a see-through button, a star in its corner (gold after a solo win over this boss) */
+.door-solo { position: absolute; z-index: 3; left: 75.4%; top: 52%; width: 12.8%; padding: 1.6cqw 0.6cqw; border-radius: 8px; cursor: pointer; pointer-events: auto;
+  background: rgba(124, 92, 255, 0.28); border: 1.5px solid rgba(190, 170, 255, 0.65); color: #fff; font: inherit;
+  -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4); transition: transform 0.12s, background 0.15s; }
+.door-solo .display { font-size: 3.3cqw; letter-spacing: 0.04em; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); }
+.door-solo:active:not(:disabled) { transform: translateY(1px) scale(0.97); }
+.door-solo:disabled { opacity: 0.45; cursor: default; }
+.door-solo-star { position: absolute; top: -1.6cqw; right: -1.6cqw; width: 4.6cqw; height: 4.6cqw; overflow: visible; }
+.door-solo-star path { fill: rgba(255, 255, 255, 0.12); stroke: rgba(255, 255, 255, 0.75); stroke-width: 1.6; stroke-linejoin: round; }
+.door-solo-star.on path { fill: #ffcc33; stroke: #8a5a00; filter: drop-shadow(0 0 3px rgba(255, 204, 51, 0.8)); }
 .door-hint { left: 50.6%; top: 68%; transform: translateX(-50%); padding: 4px 12px; border-radius: 999px; background: rgba(0, 0, 0, 0.55); font-size: 12px; font-weight: 700; color: var(--ink);
   pointer-events: none; animation: door-hint 1.6s ease-in-out infinite; white-space: nowrap; }
 @keyframes door-hint { 50% { opacity: 0.45; } }
