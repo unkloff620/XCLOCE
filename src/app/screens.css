@@ -1569,36 +1569,34 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .yard-reflect { position: absolute; left: 0; right: 0; top: 60%; bottom: 0; overflow: hidden; transform: scaleY(-1); filter: brightness(0.85) saturate(1.15) blur(0.5px); }
 
 /* =====================================================================================================
-   Texture test (Oct 2026): brushed dark metal — the top and bottom HUD (light text);
-   kraft paper — pop-up windows, light concrete — plain panels (dark text: the theme tokens flip inside them,
-   so everything nested in them follows). Remove this block to go back to the brown look.
+   Textures (Oct 2026): the artist's stained tiles — dark (the game's backdrop, the top HUD, the bottom menu,
+   dark game surfaces; light text) and light (pop-up windows incl. the reward windows, plain text panels; dark text:
+   the theme tokens flip inside them, so everything nested follows). Remove this block to go back to the brown look.
    ===================================================================================================== */
 :root {
-  --tx-metal: url(/assets/textures/metal-brushed.webp) 0 0 / 256px 256px repeat;
-  --tx-paper: url(/assets/textures/kraft-paper.webp) 0 0 / 300px 300px repeat;
-  --tx-stone: url(/assets/textures/concrete-light.webp) 0 0 / 300px 300px repeat;
+  --tx-dark: url(/assets/textures/stain-dark.webp) 0 0 / 300px 300px repeat;
+  --tx-light: url(/assets/textures/stain-light.webp) 0 0 / 300px 300px repeat;
 }
-/* metal: the HUD plates and the bottom menu */
-.hud { background: linear-gradient(180deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.25)), var(--tx-metal), #2b2f36; }
-body:has(.fit-page) .hud { background: linear-gradient(180deg, rgba(12, 14, 18, 0.75), rgba(12, 14, 18, 0)); }
-.hud-me, .energy-chip, .coin-chip, .hud-tog { background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0.18)), var(--tx-metal), #30353d; }
-.nav, body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.05)), var(--tx-metal), #2b2f36; backdrop-filter: none; }
-.nav a.on { background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(0, 0, 0, 0.15)), var(--tx-metal), #3b414a; }
-.hud, .nav { --ink: #f4f6fa; --muted: #c3c9d3; }
+body { background: var(--tx-dark), var(--bg); }
+/* dark: the HUD plates and the bottom menu */
+.hud { background: linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.3)), var(--tx-dark), #4a3423; }
+body:has(.fit-page) .hud { background: linear-gradient(180deg, rgba(20, 12, 6, 0.75), rgba(20, 12, 6, 0)); }
+.hud-me, .energy-chip, .coin-chip, .hud-tog { background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.2)), var(--tx-dark), #4a3423; }
+.nav, body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.08)), var(--tx-dark), #4a3423; backdrop-filter: none; }
+.nav a.on { background: linear-gradient(180deg, rgba(255, 220, 170, 0.16), rgba(0, 0, 0, 0.12)), var(--tx-dark), #5a3f2a; }
 .hud :is(.name, b, small), .nav a { text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75); }
-/* paper: pop-up windows — dark text */
+/* light: pop-up windows — dark text */
 .modal { --ink: #24160a; --muted: #5a3f24; --dim: #7a5b3c; --panel: #b8834e; --panel2: #c4915c; --panel3: #d09f6b; --bg2: #bd8a56; --tex: none;
-  color: var(--ink); background: linear-gradient(180deg, rgba(255, 240, 210, 0.12), rgba(90, 50, 15, 0.12)), var(--tx-paper), #c9965c; }
+  color: var(--ink); background: linear-gradient(180deg, rgba(255, 240, 210, 0.1), rgba(90, 50, 15, 0.1)), var(--tx-light), #cc9e6c; }
 .modal h3 { text-shadow: 0 2px 0 rgba(255, 238, 205, 0.5); }
-/* concrete: plain panels on the screens — dark text */
-.panel { --ink: #1c1d20; --muted: #45474d; --dim: #63666d; --panel: #8f9196; --panel2: #a3a5aa; --panel3: #b4b6bb; --bg2: #9b9da2; --tex: none;
-  color: var(--ink); background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.08)), var(--tx-stone), #9fa1a5; }
-/* a brown panel inside a paper window stays paper-coloured */
-.modal .panel { --ink: #24160a; --muted: #5a3f24; --dim: #7a5b3c; background: rgba(120, 70, 25, 0.16); }
+/* light: plain text panels on the screens — dark text */
+.panel { --ink: #24160a; --muted: #5a3f24; --dim: #7a5b3c; --panel: #b8834e; --panel2: #c4915c; --panel3: #d09f6b; --bg2: #bd8a56; --tex: none;
+  color: var(--ink); background: linear-gradient(180deg, rgba(255, 240, 210, 0.08), rgba(90, 50, 15, 0.1)), var(--tx-light), #cc9e6c; }
+.modal .panel { background: rgba(120, 70, 25, 0.16); }
 /* dark islands inside the light surfaces (game tables, machines, bars, dark buttons): back to light text */
 .modal :is(.slots, .mg-table, .bar, .btn.dark, .upg-box, .upg-mode, .upg-chip), .panel :is(.bar, .btn.dark, .ph-auth, .talent-chip) {
   --ink: #fff3e3; --muted: #cdb497; --dim: #8f735a; --panel: #2a1d14; --panel2: #36261a; --panel3: #443021; --bg2: #1f1610;
-  --tex: url(/assets/ui/tex-grain-a.webp) 0 0 / 320px 320px repeat; color: var(--ink); }
+  --tex: var(--tx-dark); color: var(--ink); }
 :is(.modal, .panel) .ach-bar { background: rgba(20, 14, 10, 0.72); }
 .modal .upg-center b { color: #06582e; text-shadow: 0 1px 0 rgba(255, 240, 210, 0.6); }
 .modal .upg-gauge.won .upg-center b { color: #06582e; }
