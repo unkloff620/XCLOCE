@@ -3,7 +3,7 @@ import { grantReward, idempotent, itemQty, ledger, moscowDay, nextMoscowMidnight
 import { BOSSES, EXTRA_KEY_CHANCE, OPEN_BOSSES, bossById, bossOpen, keyId, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
 import { WEAPONS, itemById, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
-import { mergeRewards, scaleReward } from "../../content/rewards.ts";
+import { boostReward, mergeRewards, scaleReward } from "../../content/rewards.ts";
 import { BASE_CRIT_MULT, ROOM_DEFS, ROOM_PITY, roomUnlockId } from "../../content/home.ts";
 import { talentsForDamage, weaponTalentBonus } from "../../content/talents.ts";
 import { playerBonus, weaponTalents } from "./home.ts";
@@ -130,7 +130,7 @@ export async function settleMyFight(ctx: Ctx): Promise<void> {
 export async function startFight(ctx: Ctx, bossId: string, solo = false) {
   const def = bossById(bossId);
   if (!def) throw new GameError("bad_boss", "Такого босса нет");
-  if (!bossOpen(def)) throw new GameError("boss_hidden", "Этот босс пока не пришёл");
+  if (!bossOpen(def, ctx.cfg.bossOpen)) throw new GameError("boss_hidden", "Этот босс пока не пришёл");
   await settleMyFight(ctx);
   const [active] = await ctx.q.query<{ id: number; boss_id: string }>("SELECT id, boss_id FROM fights WHERE player_id=$1 AND status='active'", [ctx.pid]);
   if (active) throw new GameError("fight_running", `Сначала закончи бой с боссом ${bossById(active.boss_id)?.name}`);
@@ -340,7 +340,8 @@ export async function claimFight(ctx: Ctx, fightId: number) {
     }
   }
   // one-of-a-kind rewards (the statue) are not handed out again
-  const base = scaleReward(def.reward, share);
+  // the admin's «Увеличить награды» for this boss (rewards in % of the usual)
+  const base = boostReward(scaleReward(def.reward, share), ctx.cfg.bossReward[def.id] ?? 1);
   if (base.items?.length) base.items = await notOwnedUnique(ctx, base.items);
   const granted = await grantReward(ctx, mergeRewards(base, { items: [...key, ...drops] }), `win:${def.id}`);
   if (unlocked.length) granted.unlocks = unlocked;
@@ -482,7 +483,7 @@ export async function bossList(q: Queryable, pid: number, cfg: Ctx["cfg"], now =
   const killerMap = new Map(killers.map((k) => [k.boss_id, { id: k.id, name: k.display_name, photo: k.photo_url, at: new Date(k.ended_at).getTime() }]));
   return {
     resetAt: nextMoscowMidnight(now),
-    bosses: OPEN_BOSSES().map((b) => {
+    bosses: OPEN_BOSSES(cfg.bossOpen).map((b) => {
       const prev = BOSSES.find((x) => x.order === b.order - 1);
       const keysHave = prev ? keyMap.get(keyId(prev.id)) ?? 0 : 0;
       return {

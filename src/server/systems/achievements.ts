@@ -2,6 +2,10 @@ import { GameError, type Queryable } from "../db.ts";
 import { grantReward, type Ctx } from "../core.ts";
 import { ACHIEVEMENTS, achievementById, type AchStat } from "../../content/achievements.ts";
 import type { Config } from "../config.ts";
+import { bossById, bossOpen } from "../../content/bosses.ts";
+
+/** per-boss badges count only while the boss is in the game */
+const live = (cfg: Config) => ACHIEVEMENTS.filter((a) => !a.boss || (bossById(a.boss) && bossOpen(bossById(a.boss)!, cfg.bossOpen)));
 
 /** Everything the badges measure, read from what the game already stores. */
 export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promise<Partial<Record<AchStat, number>>> {
@@ -49,7 +53,7 @@ export async function achievementsView(q: Queryable, pid: number, cfg: Config) {
   const got = new Map(
     (await q.query<{ id: string; claimed_at: Date }>("SELECT id, claimed_at FROM achievements WHERE player_id=$1", [pid])).map((x) => [x.id, new Date(x.claimed_at).getTime()]),
   );
-  return ACHIEVEMENTS.map((a) => {
+  return live(cfg).map((a) => {
     const progress = Math.min(a.target, stats[a.stat] ?? 0);
     return { id: a.id, progress, target: a.target, done: progress >= a.target, claimed: got.has(a.id), at: got.get(a.id) ?? null };
   });

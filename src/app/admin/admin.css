@@ -150,3 +150,11 @@ a.adm-stat.link:hover { border-color: #4b6bff; background: var(--a-panel2); }
 .adm-ev-fx { display: flex; flex-direction: column; gap: 6px; padding: 10px; border: 1px solid var(--a-line); border-radius: 10px; }
 .adm-ev .adm-ev-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; }
 @media (max-width: 560px) { .adm-ev-dates { grid-template-columns: 1fr; } }
+/* boss controls in «События» */
+.adm-bosses { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 8px; }
+.adm-boss { position: relative; display: flex; align-items: center; gap: 10px; padding: 8px; border: 1px solid var(--a-line); border-radius: 10px; background: var(--a-panel2); }
+.adm-boss-img { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; flex: none; background: var(--a-bg); }
+.adm-boss-img.empty { display: grid; place-items: center; font-weight: 800; color: #8a93a8; }
+.adm-boss-menu { position: absolute; z-index: 5; top: calc(100% + 4px); right: 0; width: min(380px, 92vw); display: flex; flex-direction: column; gap: 6px; padding: 10px; border: 1px solid var(--a-line); border-radius: 10px; background: var(--a-panel); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); }
+.adm-boss-act { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.adm-boss-act .adm-in.sm { width: 64px; }

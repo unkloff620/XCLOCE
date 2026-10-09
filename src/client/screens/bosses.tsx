@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { api, type Tray } from "../api.ts";
-import { BOSSES, OPEN_BOSSES, bossById } from "../../content/bosses.ts";
+import { BOSSES, bossesIn, bossById } from "../../content/bosses.ts";
 import { Avatar, GainLine, MysteryDrop, RewardChips, bossItemsCount } from "../ui.tsx";
 import { WEAPONS } from "../../content/items.ts";
 import type { BossDef } from "../../content/bosses.ts";
@@ -66,7 +66,7 @@ export function BossesScreen() {
         {data && <span className="small muted">Лимиты обновятся через {clock(data.resetAt - now)}</span>}
       </div>
       <div className="col" style={{ gap: 12 }}>
-        {OPEN_BOSSES().map((b) => {
+        {bossesIn(data?.bosses.map((x) => x.id) ?? state?.openBosses).map((b) => {
           const row = data?.bosses.find((x) => x.id === b.id);
           const prev = BOSSES.find((x) => x.order === b.order - 1);
           const mine = state?.fight?.bossId === b.id ? state.fight : null;

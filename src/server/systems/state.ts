@@ -83,8 +83,10 @@ export async function gameState(ctx: Ctx) {
     })(),
     achievementsReady: await achievementsReady(ctx.q, ctx.pid, ctx.cfg),
     slots: await slotsView(ctx.q, ctx.pid, ctx.now, ctx.cfg),
-    // game events going on now (banner + their effects)
-    events: ctx.cfg.events,
+    // game events going on now (banner + their effects); the admin's working boss tweaks are not announced
+    events: ctx.cfg.events.filter((e) => !e.effects.silent),
+    // bosses in the game now (art + the admin's boss controls)
+    openBosses: OPEN_BOSSES(ctx.cfg.bossOpen).map((b) => b.id),
     games: await gamesView(ctx.q, ctx.pid, ctx.now),
     upgraded: await upgradedView(ctx.q, ctx.pid),
     stashSets: Object.fromEntries((await ctx.q.query<{ set_n: number; count: number }>("SELECT set_n, count FROM stash_sets WHERE player_id=$1", [ctx.pid])).map((r) => [r.set_n, Number(r.count)])) as Record<number, number>,
@@ -127,7 +129,7 @@ export async function profileView(q: Queryable, viewer: number, pid: number, cfg
       locationsDone: clears.n, locationsTotal: LOCATIONS.length, yardFound: s?.yard_found ?? 0, rewardsGot: s?.rewards_got ?? 0,
       fightsWon: fw.won, fightsLost: fw.lost,
     },
-    bosses: OPEN_BOSSES().map((b) => {
+    bosses: OPEN_BOSSES(cfg.bossOpen).map((b) => {
       const r = perBoss.find((x) => x.boss_id === b.id);
       return { id: b.id, damage: Number(r?.damage ?? 0), hits: r?.hits ?? 0, wins: r?.wins ?? 0 };
     }),

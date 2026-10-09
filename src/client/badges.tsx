@@ -1,12 +1,12 @@
 "use client";
 import { useState } from "react";
-import { ACH_CATEGORIES, ACHIEVEMENTS, BOSS_KILL_ACHIEVEMENTS, BOSS_KILL_TARGETS, SOLO_BOSS_ACHIEVEMENTS, TIER_COLORS, TIER_NAMES, achievementById, type AchCategory, type AchTier } from "../content/achievements.ts";
+import { ACH_CATEGORIES, BOSS_KILL_ACHIEVEMENTS, BOSS_KILL_TARGETS, SOLO_BOSS_ACHIEVEMENTS, TIER_COLORS, TIER_NAMES, achievementById, type AchCategory, type AchTier } from "../content/achievements.ts";
 import { Icon, type IconName } from "./art/icons.tsx";
 import { Modal, RewardChips } from "./ui.tsx";
 import { useGame } from "./store.tsx";
 import { haptic } from "./telegram.ts";
 import { full, short } from "./format.ts";
-import { OPEN_BOSSES } from "../content/bosses.ts";
+import { BOSSES as OPEN_ALL } from "../content/bosses.ts";
 import { STASH_LOCATION_NAMES, STASH_SETS_ORDERED } from "../content/stashes.ts";
 import { itemById } from "../content/items.ts";
 import { BossPhoto } from "./screens/boss-parts.tsx";
@@ -80,7 +80,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0 }: { rows: AchRo
         {waiting > 0 && <span className="chip gold ach-wait">забрать: {waiting}</span>}
         <span className="grow" />
         <span className="chip ach-pts" title="Очки достижений"><Icon name="sun" size={16} /><b className="num">{full(points)}</b></span>
-        <span className="tiny muted num">{total}/{ACHIEVEMENTS.length}</span>
+        <span className="tiny muted num">{total}/{rows.length}</span>
         <span className={`ach-caret ${shown ? "open" : ""}`} aria-hidden="true">▾</span>
       </button>
       {shown && <div className="col" style={{ gap: 8, marginTop: 8 }}>
@@ -119,11 +119,12 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0 }: { rows: AchRo
         })}
         {/* one cell for the per-boss solo badges; the window lists every boss and its reward */}
         {(() => {
-          const sr = SOLO_BOSS_ACHIEVEMENTS.map((a) => byId.get(a.id));
+          const soloList = SOLO_BOSS_ACHIEVEMENTS.filter((a) => byId.has(a.id));
+          const sr = soloList.map((a) => byId.get(a.id));
           const got = sr.filter((r) => r && (r.claimed || (!self && r.done))).length;
-          const ready = self ? SOLO_BOSS_ACHIEVEMENTS.find((a) => { const r = byId.get(a.id); return r?.done && !r.claimed; }) ?? null : null;
-          const n = SOLO_BOSS_ACHIEVEMENTS.length;
-          const top = Math.max(0, ...SOLO_BOSS_ACHIEVEMENTS.filter((a) => { const r = byId.get(a.id); return r && (r.claimed || (!self && r.done)); }).map((a) => a.tier)) as AchTier | 0;
+          const ready = self ? soloList.find((a) => { const r = byId.get(a.id); return r?.done && !r.claimed; }) ?? null : null;
+          const n = soloList.length;
+          const top = Math.max(0, ...soloList.filter((a) => { const r = byId.get(a.id); return r && (r.claimed || (!self && r.done)); }).map((a) => a.tier)) as AchTier | 0;
           return (
             <div role="button" tabIndex={0} className={`ach-row ${ready ? "ready" : ""}`} onClick={() => setSoloOpen(true)} onKeyDown={(e) => e.key === "Enter" && setSoloOpen(true)}>
               <BadgeMedal icon="swords" tier={top} earned={got > 0} size={44} />
@@ -148,9 +149,10 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0 }: { rows: AchRo
         })()}
         {/* «Убийца боссов»: every boss with three medals — 10, 50 and 100 wins */}
         {(() => {
-          const got = BOSS_KILL_ACHIEVEMENTS.filter((a) => { const r = byId.get(a.id); return r && (r.claimed || (!self && r.done)); });
-          const ready = self ? BOSS_KILL_ACHIEVEMENTS.find((a) => { const r = byId.get(a.id); return r?.done && !r.claimed; }) ?? null : null;
-          const n = BOSS_KILL_ACHIEVEMENTS.length;
+          const killList = BOSS_KILL_ACHIEVEMENTS.filter((a) => byId.has(a.id));
+          const got = killList.filter((a) => { const r = byId.get(a.id); return r && (r.claimed || (!self && r.done)); });
+          const ready = self ? killList.find((a) => { const r = byId.get(a.id); return r?.done && !r.claimed; }) ?? null : null;
+          const n = killList.length;
           const top = Math.max(0, ...got.map((a) => a.tier)) as AchTier | 0;
           return (
             <div role="button" tabIndex={0} className={`ach-row ${ready ? "ready" : ""}`} onClick={() => setKillOpen(true)} onKeyDown={(e) => e.key === "Enter" && setKillOpen(true)}>
@@ -276,7 +278,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0 }: { rows: AchRo
         <Modal title="Убийца боссов" onClose={() => setKillOpen(false)}>
           <div className="col" style={{ gap: 6 }}>
             <div className="small muted center">Медали за победы над каждым боссом: бронза — {BOSS_KILL_TARGETS[0]}, серебро — {BOSS_KILL_TARGETS[1]}, золото — {BOSS_KILL_TARGETS[2]}. Нажми на медаль — увидишь награду.</div>
-            {OPEN_BOSSES().map((b) => {
+            {OPEN_ALL.filter((b) => byId.has(`bosskill-${b.id}-1`)).map((b) => {
               const tiers = ([1, 2, 3] as AchTier[]).map((t) => ({ t, a: achievementById(`bosskill-${b.id}-${t}`)!, r: byId.get(`bosskill-${b.id}-${t}`) }));
               const wins = tiers[2].r?.progress ?? 0;
               return (
@@ -330,7 +332,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0 }: { rows: AchRo
         <Modal title="Соло-убийства" onClose={() => setSoloOpen(false)}>
           <div className="col" style={{ gap: 8 }}>
             <div className="small muted center">Победи босса в бою «Соло» — HP снимают только твои удары. За каждого босса своя награда.</div>
-            {SOLO_BOSS_ACHIEVEMENTS.map((a) => {
+            {SOLO_BOSS_ACHIEVEMENTS.filter((a) => byId.has(a.id)).map((a) => {
               const r = byId.get(a.id);
               const got = !!r && (r.claimed || (!self && r.done));
               const due = self && !!r?.done && !r.claimed;

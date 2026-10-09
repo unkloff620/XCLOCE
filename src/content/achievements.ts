@@ -1,5 +1,5 @@
 import type { Reward } from "./rewards.ts";
-import { OPEN_BOSSES, type CardTier } from "./bosses.ts";
+import { BOSSES, type CardTier } from "./bosses.ts";
 import { STASH_MEDAL_TARGETS, STASH_SETS_ORDERED } from "./stashes.ts";
 
 /*
@@ -60,6 +60,8 @@ export interface AchievementDef {
   tier: AchTier;
   icon: string;
   reward: Reward;
+  /** a per-boss badge: shown only while the boss is in the game */
+  boss?: string;
 }
 
 const fmt = (n: number) => n.toLocaleString("ru-RU").replace(/\u00a0/g, " ");
@@ -68,22 +70,22 @@ const fmt = (n: number) => n.toLocaleString("ru-RU").replace(/\u00a0/g, " ");
 const CARD_TO_TIER: Record<CardTier, AchTier> = { bronze: 1, silver: 2, gold: 3, platinum: 4, diamond: 5 };
 
 /** One badge per boss: win a solo fight against him once. Stat "solo:<boss id>" = solo wins over that boss. */
-export const SOLO_BOSS_ACHIEVEMENTS: AchievementDef[] = OPEN_BOSSES().map((b) => {
+export const SOLO_BOSS_ACHIEVEMENTS: AchievementDef[] = BOSSES.map((b) => {
   const tier = b.card ? CARD_TO_TIER[b.card] : 5;
   return {
     id: `soloboss-${b.id}`, category: "solo-boss", name: `Соло: ${b.name}`, hint: `Убей босса ${b.name} в одиночку (бой «Соло»)`,
-    stat: `solo:${b.id}` as const, target: 1, tier, icon: "swords", reward: TIER_REWARDS[tier],
+    stat: `solo:${b.id}` as const, target: 1, tier, icon: "swords", reward: TIER_REWARDS[tier], boss: b.id,
   };
 });
 
 /** «Убийца боссов»: three medals per boss — bronze, silver and gold for 10, 50 and 100 wins. Stat "win:<boss id>". */
 export const BOSS_KILL_TARGETS = [10, 50, 100] as const;
-export const BOSS_KILL_ACHIEVEMENTS: AchievementDef[] = OPEN_BOSSES().flatMap((b) =>
+export const BOSS_KILL_ACHIEVEMENTS: AchievementDef[] = BOSSES.flatMap((b) =>
   BOSS_KILL_TARGETS.map((target, i) => {
     const tier = (i + 1) as AchTier;
     return {
       id: `bosskill-${b.id}-${tier}`, category: "boss-kill", name: `${b.name}: ${TIER_NAMES[tier]}`, hint: `Победи босса ${b.name} ${target} раз`,
-      stat: `win:${b.id}` as const, target, tier, icon: "ach-wins", reward: TIER_REWARDS[tier],
+      stat: `win:${b.id}` as const, target, tier, icon: "ach-wins", reward: TIER_REWARDS[tier], boss: b.id,
     };
   }),
 );

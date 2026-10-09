@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { api } from "../api.ts";
-import { OPEN_BOSSES } from "../../content/bosses.ts";
+import { bossesIn } from "../../content/bosses.ts";
 import { itemById } from "../../content/items.ts";
 import { CURRENCIES, CURRENCY_DEFS, type Currency } from "../../content/currencies.ts";
 import { Avatar, Bar, Coin, Empty, Modal } from "../ui.tsx";
@@ -234,7 +234,7 @@ export function ProfileScreen() {
       <div className="panel">
         <div className="small muted" style={{ marginBottom: 8 }}>УРОН ПО БОССАМ</div>
         <div className="col" style={{ gap: 4 }}>
-          {OPEN_BOSSES().map((b) => {
+          {bossesIn(p.bosses.map((x) => x.id)).map((b) => {
             const r = p.bosses.find((x) => x.id === b.id);
             return (
               <div key={b.id} className="pb-row small">

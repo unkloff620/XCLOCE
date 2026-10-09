@@ -9,10 +9,10 @@ import "./admin.css";
 import { ITEMS, itemById } from "../../content/items.ts";
 import { CURRENCIES } from "../../content/currencies.ts";
 import { TALENT_NODE_IDS, TALENT_WEAPONS, talentTree } from "../../content/talents.ts";
-import { BOSSES, bossById, keyId } from "../../content/bosses.ts";
+import { BOSSES, bossById, bossHasArt, keyId } from "../../content/bosses.ts";
 import { offerById } from "../../content/shop.ts";
 import { taskById } from "../../content/locations.ts";
-import { EVENT_EFFECTS, effectLines, cleanEffects } from "../../content/events.ts";
+import { EVENT_EFFECTS, FOREVER, effectLines, cleanEffects, type BossTweak } from "../../content/events.ts";
 
 const TOKEN_KEY = "xcloce.admin";
 const ACTION_TYPES = [
@@ -952,7 +952,7 @@ const localInput = (v: unknown) => {
   const p = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 };
-type EvForm = { id?: number; title: string; description: string; startsAt: string; endsAt: string; effects: Record<string, string>; enabled: boolean };
+type EvForm = { id?: number; title: string; description: string; startsAt: string; endsAt: string; effects: Record<string, string>; enabled: boolean; extra?: Record<string, unknown> };
 const emptyEvent = (): EvForm => {
   const start = new Date(); start.setMinutes(0, 0, 0); start.setHours(start.getHours() + 1);
   const end = new Date(start.getTime() + 2 * 86_400_000);
@@ -974,13 +974,15 @@ function Events() {
   const now = Date.now();
   const edit = (r: Row) => setForm({
     id: Number(r.id), title: String(r.title), description: String(r.description ?? ""), startsAt: localInput(r.starts_at), endsAt: localInput(r.ends_at),
-    effects: Object.fromEntries(Object.entries((r.effects ?? {}) as Record<string, number>).map(([k, v]) => [k, String(v)])), enabled: r.enabled !== false,
+    effects: Object.fromEntries(Object.entries((r.effects ?? {}) as Record<string, unknown>).filter(([, v]) => typeof v === "number").map(([k, v]) => [k, String(v)])), enabled: r.enabled !== false,
+    // boss tweaks and «silent» are kept as they are (the form edits only the common effects)
+    extra: Object.fromEntries(Object.entries((r.effects ?? {}) as Record<string, unknown>).filter(([k]) => k === "bosses" || k === "silent")),
   });
   const save = async () => {
     if (!form) return;
     setBusy(true); setSaveErr(null);
     try {
-      const effects = Object.fromEntries(Object.entries(form.effects).filter(([, v]) => v !== "").map(([k, v]) => [k, Number(v.replace(",", "."))]));
+      const effects = { ...(form.extra ?? {}), ...Object.fromEntries(Object.entries(form.effects).filter(([, v]) => v !== "").map(([k, v]) => [k, Number(v.replace(",", "."))])) };
       const rows = await admin<Row[]>("event_save", { event: { id: form.id, title: form.title, description: form.description, startsAt: new Date(form.startsAt).toISOString(), endsAt: new Date(form.endsAt).toISOString(), effects, enabled: form.enabled } });
       setData(rows); setForm(null);
     } catch (e) { setSaveErr((e as Error).message); }
@@ -1000,11 +1002,16 @@ function Events() {
           ["Статус", (r) => evStatus(r, now), "nowrap"],
           ["Название", (r) => <b>{String(r.title)}</b>],
           ["Начало", (r) => when(r.starts_at), "nowrap"],
-          ["Конец", (r) => when(r.ends_at), "nowrap"],
-          ["Эффекты", (r) => effectLines(cleanEffects(r.effects)).join(" · ") || <span className="muted">только объявление</span>],
+          ["Конец", (r) => (new Date(String(r.ends_at)).getTime() >= FOREVER - 86_400_000 ? "навсегда" : when(r.ends_at)), "nowrap"],
+          ["Эффекты", (r) => {
+            const e = cleanEffects(r.effects);
+            const t = effectLines(e, (id) => bossById(id)?.name ?? id).join(" · ");
+            return <>{t || <span className="muted">только объявление</span>}{e.silent && <span className="muted small"> · игрокам не показывается</span>}</>;
+          }],
           ["", (r) => <span className="row" style={{ gap: 6 }}><button className="adm-btn ghost sm" onClick={() => { setSaveErr(null); edit(r); }}>Изменить</button><button className="adm-btn danger sm" onClick={() => del(Number(r.id))}>Удалить</button></span>, "nowrap"],
         ]} />
       </Box>
+      <BossControls rows={data ?? []} onSaved={setData} />
       {form && (
         <Box title={form.id ? `Событие #${form.id}` : "Новое событие"} right={<button className="adm-btn ghost sm" onClick={() => setForm(null)}>Закрыть</button>}>
           <form className="adm-ev" onSubmit={(e) => { e.preventDefault(); void save(); }}>
@@ -1030,5 +1037,111 @@ function Events() {
         </Box>
       )}
     </>
+  );
+}
+
+/** Boss state now from the events: in the game or not (art by default), HP and reward multipliers, the nearest end. */
+function bossNow(id: string, rows: Row[], now: number) {
+  const b = bossById(id)!;
+  let open = bossHasArt(b), hp = 1, reward = 1, until: number | null = null;
+  const live = rows
+    .filter((r) => r.enabled !== false && new Date(String(r.starts_at)).getTime() <= now && new Date(String(r.ends_at)).getTime() > now)
+    .sort((a, c) => new Date(String(a.starts_at)).getTime() - new Date(String(c.starts_at)).getTime() || Number(a.id) - Number(c.id));
+  for (const r of live) {
+    const t = cleanEffects(r.effects).bosses?.[id];
+    if (!t) continue;
+    const end = new Date(String(r.ends_at)).getTime();
+    if (t.visible !== undefined) open = t.visible;
+    if (t.hpPct) hp *= t.hpPct / 100;
+    if (t.rewardPct) reward *= t.rewardPct / 100;
+    if (end < FOREVER - 86_400_000) until = until === null ? end : Math.min(until, end);
+  }
+  return { open, hp, reward, until };
+}
+
+type BossAct = "out" | "in" | "in_days" | "hp_up" | "hp_down" | "reward";
+const BOSS_ACTS: { id: BossAct; name: string; pct?: number; days?: number | "" }[] = [
+  { id: "out", name: "Убрать из игры", days: "" },
+  { id: "in", name: "Добавить в игру" },
+  { id: "in_days", name: "Добавить в игру на время", days: 2 },
+  { id: "hp_up", name: "Увеличить здоровье", pct: 150, days: "" },
+  { id: "hp_down", name: "Уменьшить здоровье", pct: 50, days: "" },
+  { id: "reward", name: "Увеличить награды", pct: 200, days: "" },
+];
+
+function BossControls({ rows, onSaved }: { rows: Row[]; onSaved: (r: Row[]) => void }) {
+  const [menu, setMenu] = useState<string | null>(null);
+  const now = Date.now();
+  return (
+    <Box title="Боссы">
+      <p className="muted small" style={{ marginTop: 0 }}>Нажми «+» у босса: убрать или добавить его в игру (навсегда или на N дней), изменить здоровье или награды. Каждое действие — служебное событие в списке выше (игрокам окно не показывается); удали событие, чтобы отменить. Здоровье меняется у новых боёв, награды — при получении.</p>
+      <div className="adm-bosses">
+        {BOSSES.map((b) => {
+          const s = bossNow(b.id, rows, now);
+          return (
+            <div key={b.id} className="adm-boss">
+              {b.photo.portrait
+                ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={b.photo.portrait} alt="" className="adm-boss-img" />
+                : <span className="adm-boss-img empty">{b.name.slice(0, 1)}</span>}
+              <span className="grow col" style={{ minWidth: 0, gap: 2 }}>
+                <b className="ellipsis">{b.order}. {b.name}</b>
+                <span className="small">
+                  {s.open ? <span style={{ color: "#3ddc84" }}>в игре</span> : <span className="muted">не в игре</span>}
+                  {!bossHasArt(b) && <span className="muted"> · нет арта</span>}
+                  {s.hp !== 1 && <> · HP {Math.round(s.hp * 100)}%</>}
+                  {s.reward !== 1 && <> · награды {Math.round(s.reward * 100)}%</>}
+                  {s.until && <span className="muted"> · до {when(new Date(s.until).toISOString())}</span>}
+                </span>
+              </span>
+              <button className="adm-btn sm" onClick={() => setMenu(menu === b.id ? null : b.id)} aria-label={`Действия: ${b.name}`}>+</button>
+              {menu === b.id && <BossMenu id={b.id} onClose={() => setMenu(null)} onSaved={(r) => { onSaved(r); setMenu(null); }} />}
+            </div>
+          );
+        })}
+      </div>
+    </Box>
+  );
+}
+
+function BossMenu({ id, onClose, onSaved }: { id: string; onClose: () => void; onSaved: (r: Row[]) => void }) {
+  const b = bossById(id)!;
+  const [vals, setVals] = useState<Record<string, { pct?: string; days?: string }>>(
+    Object.fromEntries(BOSS_ACTS.map((a) => [a.id, { pct: a.pct !== undefined ? String(a.pct) : undefined, days: a.days !== undefined ? String(a.days) : undefined }])),
+  );
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const run = async (a: (typeof BOSS_ACTS)[number]) => {
+    const v = vals[a.id];
+    const days = v.days ? Number(v.days.replace(",", ".")) : 0;
+    const pct = v.pct ? Number(v.pct.replace(",", ".")) : 100;
+    if (a.id === "in_days" && !(days > 0)) return setErr("Укажи, на сколько дней");
+    if ((a.id === "hp_up" && !(pct > 100)) || (a.id === "reward" && !(pct > 100))) return setErr("Процент должен быть больше 100");
+    if (a.id === "hp_down" && !(pct > 0 && pct < 100)) return setErr("Процент должен быть меньше 100");
+    const tweak: BossTweak = a.id === "out" ? { visible: false } : a.id === "in" || a.id === "in_days" ? { visible: true } : a.id === "reward" ? { rewardPct: pct } : { hpPct: pct };
+    const start = Date.now();
+    const end = days > 0 ? start + days * 86_400_000 : FOREVER;
+    const what = a.id === "out" ? "убран из игры" : a.id === "in" || a.id === "in_days" ? "в игре" : a.id === "reward" ? `награды ${pct}%` : `HP ${pct}%`;
+    const title = `${b.name}: ${what}${days > 0 ? ` на ${days} дн.` : ""}`;
+    setBusy(true); setErr(null);
+    try {
+      onSaved(await admin<Row[]>("event_save", { event: { title, description: "", startsAt: new Date(start).toISOString(), endsAt: new Date(end).toISOString(), effects: { bosses: { [id]: tweak }, silent: true }, enabled: true } }));
+    } catch (e) { setErr((e as Error).message); }
+    setBusy(false);
+  };
+  const set = (k: string, f: "pct" | "days", v: string) => setVals((s) => ({ ...s, [k]: { ...s[k], [f]: v } }));
+  return (
+    <div className="adm-boss-menu" onClick={(e) => e.stopPropagation()}>
+      <div className="row" style={{ justifyContent: "space-between" }}><b>{b.name}</b><button className="adm-btn ghost sm" onClick={onClose}>×</button></div>
+      {BOSS_ACTS.map((a) => (
+        <div key={a.id} className="adm-boss-act">
+          <span className="grow">{a.name}</span>
+          {a.pct !== undefined && <label className="row" style={{ gap: 4 }}><input className="adm-in sm" type="number" min={5} max={1000} step={5} value={vals[a.id].pct ?? ""} onChange={(e) => set(a.id, "pct", e.target.value)} />%</label>}
+          {a.days !== undefined && <label className="row" style={{ gap: 4 }}><input className="adm-in sm" type="number" min={0} step={0.5} placeholder="∞" value={vals[a.id].days ?? ""} onChange={(e) => set(a.id, "days", e.target.value)} />дн.</label>}
+          <button className="adm-btn sm" disabled={busy} onClick={() => run(a)}>OK</button>
+        </div>
+      ))}
+      <span className="muted small">Дни пустые — навсегда.</span>
+      <Err e={err} />
+    </div>
   );
 }

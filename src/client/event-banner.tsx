@@ -7,6 +7,9 @@ import { useEffect, useState } from "react";
 import { useGame, useNow } from "./store.tsx";
 import { Modal } from "./ui.tsx";
 import { effectLines, type GameEventView } from "../content/events.ts";
+import { bossById } from "../content/bosses.ts";
+
+const bossName = (id: string) => bossById(id)?.name ?? id;
 
 const SEEN_KEY = "xc2_events_seen";
 
@@ -63,8 +66,8 @@ export function EventButton() {
               <div key={e.id} className="ev-card">
                 <b className="display ev-title">{e.title}</b>
                 {e.description && <p className="ev-desc">{e.description}</p>}
-                {effectLines(e.effects).length > 0 && (
-                  <ul className="ev-effects">{effectLines(e.effects).map((l) => <li key={l}>{l}</li>)}</ul>
+                {effectLines(e.effects, bossName).length > 0 && (
+                  <ul className="ev-effects">{effectLines(e.effects, bossName).map((l) => <li key={l}>{l}</li>)}</ul>
                 )}
                 <span className="small muted">До конца: <b>{leftText(e.endsAt - now)}</b></span>
               </div>

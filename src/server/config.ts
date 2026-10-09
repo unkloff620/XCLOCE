@@ -34,6 +34,10 @@ export interface Config {
   admins: number[];
   /** game events going on right now (their effects are already applied to the numbers above) */
   events: GameEventView[];
+  /** the admin's boss controls: a boss put in (true) or taken out (false) of the game */
+  bossOpen: Record<string, boolean>;
+  /** boss reward multipliers (1 = usual) */
+  bossReward: Record<string, number>;
 }
 
 export function defaultConfig(): Config {
@@ -51,6 +55,8 @@ export function defaultConfig(): Config {
     slots: { perHour: SLOT_SPINS_PER_HOUR, weights: Object.fromEntries(SLOT_OUTCOMES.map((o) => [o.id, o.weight])) },
     admins: (process.env.ADMIN_TELEGRAM_IDS ?? "").split(",").map((s) => Number(s.trim())).filter((n) => Number.isFinite(n) && n > 0),
     events: [],
+    bossOpen: {},
+    bossReward: {},
   };
 }
 
@@ -127,6 +133,12 @@ async function applyEvents(q: Queryable, cfg: Config, now: number) {
     if (e.slotsSpins) spins *= e.slotsSpins;
     if (e.exchangeFee !== undefined) fee = Math.min(fee ?? Infinity, e.exchangeFee);
     if (e.bossHp !== undefined) hp = Math.min(hp ?? Infinity, e.bossHp);
+    // per boss: the latest started event decides visibility; HP and rewards multiply
+    for (const [id, t] of Object.entries(e.bosses ?? {})) {
+      if (t.visible !== undefined) cfg.bossOpen[id] = t.visible;
+      if (t.hpPct && cfg.bossHp[id]) cfg.bossHp[id] = Math.max(1, Math.round((cfg.bossHp[id] * t.hpPct) / 100));
+      if (t.rewardPct) cfg.bossReward[id] = (cfg.bossReward[id] ?? 1) * (t.rewardPct / 100);
+    }
   }
   if (energy > 1) cfg.energy.regenMin = cfg.energy.regenMin / energy;
   if (yard > 1) cfg.yard.spawnMin = cfg.yard.spawnMin / yard;

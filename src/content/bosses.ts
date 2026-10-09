@@ -168,8 +168,12 @@ export const BOSSES: BossDef[] = [
  * cannot be started (old data — keys, fights, items — stays). A boss comes back by itself once his art is added
  * (photo has=true). ALL_BOSSES=1 (the tests) shows them all.
  */
-export const bossOpen = (b: BossDef) => !!b.photo.full || (typeof process !== "undefined" && process.env?.ALL_BOSSES === "1");
-export const OPEN_BOSSES = (): BossDef[] => BOSSES.filter(bossOpen);
+export const bossHasArt = (b: BossDef) => !!b.photo.full || (typeof process !== "undefined" && process.env?.ALL_BOSSES === "1");
+/** `over` — the admin's boss controls in «События» (server: cfg.bossOpen; client: state.openBosses) put a boss in or out */
+export const bossOpen = (b: BossDef, over?: Record<string, boolean>) => over?.[b.id] ?? bossHasArt(b);
+export const OPEN_BOSSES = (over?: Record<string, boolean>): BossDef[] => BOSSES.filter((b) => bossOpen(b, over));
+/** client side: the bosses the server says are in the game (state.openBosses), by art until it answers */
+export const bossesIn = (ids?: string[] | null): BossDef[] => (ids ? BOSSES.filter((b) => ids.includes(b.id)) : OPEN_BOSSES());
 
 
 export const bossById = (id: string) => BOSSES.find((b) => b.id === id);

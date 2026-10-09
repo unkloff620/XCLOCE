@@ -44,3 +44,13 @@ export function scaleReward(r: Reward, k: number): Reward {
   }
   return out;
 }
+
+/** Currencies, authority and energy times k (an event's «Увеличить награды»); things stay as they are. */
+export function boostReward(r: Reward, k: number): Reward {
+  if (!(k > 0) || k === 1) return r;
+  const out: Reward = { ...r };
+  if (r.xp) out.xp = Math.floor(r.xp * k);
+  if (r.energy) out.energy = Math.floor(r.energy * k);
+  if (r.currencies) out.currencies = Object.fromEntries(Object.entries(r.currencies).map(([c, v]) => [c, (v ?? 0) * k]));
+  return out;
+}
