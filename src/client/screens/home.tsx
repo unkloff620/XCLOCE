@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { haptic } from "../telegram.ts";
 import { useGame, useNow } from "../store.tsx";
 import type { RigEdit } from "../art/rig.tsx";
 import { HomeScene } from "../art/home-scene.tsx";
@@ -45,6 +46,11 @@ export function HomeScreen() {
   const [styling, setStyling] = useState<StyleDraft | null>(null);
   // which part of the hero the editor outlines brightest
   const [editFocus, setEditFocus] = useState<RigEdit>({ mode: "items", part: "SHIRT" });
+  // a tap on the hero in the editor picks that part (rig.tsx hit-tests the pictures)
+  const pickPart = useCallback((part: string) => {
+    haptic.tap();
+    setEditFocus((f) => ({ ...f, part }));
+  }, []);
   const [daily, setDaily] = useState(false);
   const [quests, setQuests] = useState(false);
   // the [≡] menu remembers whether it was left open or closed (per device)
@@ -133,7 +139,7 @@ export function HomeScreen() {
         <div className={`room-view ${owned ? "" : "locked"}`}>
           <HomeScene room={viewRoom.id} look={styling?.look ?? state.look.body} worn={styling?.worn ?? state.look.equipped}
             pieces={decorating ? previewPieces(state.home.pieces ?? {}, decorating) : state.home.pieces} decor={decorating ?? state.home.decor} trophies={state.home.trophies}
-            focusHero={!!styling} hideHero={!!decorating} edit={styling ? editFocus : undefined}
+            focusHero={!!styling} hideHero={!!decorating} edit={styling ? { ...editFocus, onPick: pickPart } : undefined}
             onPick={owned && !editing ? (id) => (id === "pc" ? setPc(true) : openRoomEditor("monitor2")) : undefined}
             onHero={owned && !editing ? openWardrobe : undefined} />
         </div>
@@ -251,7 +257,7 @@ export function HomeScreen() {
           </Link>
         </div>
       )}
-      {styling && <Stylist draft={styling} setDraft={setStyling} onClose={() => setStyling(null)} onFocus={setEditFocus} />}
+      {styling && <Stylist draft={styling} setDraft={setStyling} onClose={() => setStyling(null)} focus={editFocus} setFocus={setEditFocus} />}
       {daily && <DailyWindow onClose={() => setDaily(false)} />}
       {quests && <QuestsWindow onClose={() => setQuests(false)} />}
       {decorating && <RoomEditor draft={decorating} setDraft={setDecorating} tab={roomTab} setTab={setRoomTab} onClose={() => setDecorating(null)} />}

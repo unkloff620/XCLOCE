@@ -35,7 +35,7 @@ FINGERS = [  # (knuckle, tip): index … pinky, as drawn from left to right
     ((1402, 1660), (1415, 1785)),
     ((1445, 1675), (1462, 1760)),
 ]
-LIFT = 0.24  # how far a lifted fingertip goes towards its knuckle
+LIFT = 0.36  # how far a lifted fingertip goes towards its knuckle
 
 
 def to_local(p):  # source canvas → pixels of the upsampled part image
@@ -54,7 +54,7 @@ def pins_for(finger, amount):
             mid = (b + t) / 2
             k = LIFT * amount
             src += [tuple(mid), tuple(t)]
-            dst += [tuple(mid + (b - mid) * k * 0.45), tuple(t + (b - t) * k)]
+            dst += [tuple(mid + (b - mid) * k), tuple(t + (b - t) * k)]  # the whole finger shortens evenly (the nail keeps its shape)
     return src, dst
 
 

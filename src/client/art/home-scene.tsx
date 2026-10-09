@@ -109,7 +109,7 @@ export function HomeScene({ room = "basic", onPick, onHero, still, look, worn, p
       {(monitors & 8) !== 0 && <Obj id="monitorOld" art="monitor-1" />}
       {trophies.includes("statue-close") && <Obj id="statueClose" art="statue-close" />}
       </g>
-      <RigViewport x={CHARACTER.x} y={CHARACTER.y} scale={CHARACTER.scale} seat={placedOf("chair", pieces, decor)} still={still || !!edit} look={look} worn={worn} seatOnly={hideHero} edit={edit} />
+      <RigViewport x={CHARACTER.x} y={CHARACTER.y} scale={CHARACTER.scale} seat={placedOf("chair", pieces, decor)} still={still} look={look} worn={worn} seatOnly={hideHero} edit={edit} />
       {onPick && <Hot id="monitors" onPick={onPick} />}
       {onPick && <Hot id="pc" onPick={onPick} />}
       {onHero && !hideHero && HERO_HOT.map((z, i) => (

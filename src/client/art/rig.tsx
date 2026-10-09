@@ -9,8 +9,8 @@
  * Animations (CSS, see screens.css): breathing, looking around, drumming fingers.
  */
 import { ART_VER } from "../preload.ts";
-import type { ReactNode } from "react";
-import { createContext, useContext } from "react";
+import type { PointerEvent as ReactPointerEvent, ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef } from "react";
 import { RIG } from "./rig-data.ts";
 import { HAIR_FIT, SKIN_ORIGINAL, WEAR_FIT } from "./rig-look.ts";
 import { HELD_FIT } from "./held-data.ts";
@@ -29,15 +29,91 @@ export type Worn = Record<string, string | undefined>;
  * The character editor: every editable part gets a thin gold outline, the chosen one a bright thick one.
  * mode "items": HEAD, EYES, MOUTH, SHIRT, PANTS, SHOES, HAND; mode "body": the whole body (skin, later tattoos).
  */
-export type RigEdit = { mode: "items" | "body"; part: string | null };
+export type RigEdit = { mode: "items" | "body"; part: string | null; onPick?: (part: string) => void };
 const EditCtx = createContext<RigEdit | null>(null);
 
-/** wraps a part in the editor outline (nothing outside the editor) */
-function Ol({ k, children }: { k: string; children: ReactNode }) {
+/** wraps a part in the editor outline (nothing outside the editor); `items` / `body` — which editor parts it stands for */
+function Ol({ items, body, children }: { items?: string; body?: string[]; children: ReactNode }) {
   const e = useContext(EditCtx);
   if (!e) return <>{children}</>;
-  const on = e.mode === "body" ? k === "BODY" : e.part === k;
+  const on = !!e.part && (e.mode === "items" ? items === e.part : !!body?.includes(e.part));
   return <g filter={`url(#${on ? "rig-ol-on" : "rig-ol"})`} className={on ? "rig-ol-on" : undefined}>{children}</g>;
+}
+
+// ---------- tapping a part of the hero in the editor: hit-tested on the pictures' own pixels, top layer first ----------
+type HitLayer = { href: string; x: number; y: number; w: number; h: number; items: string; body: string; rect?: boolean };
+const alphaCache = new Map<string, Promise<ImageData | null>>();
+function alphaOf(href: string): Promise<ImageData | null> {
+  let p = alphaCache.get(href);
+  if (!p) {
+    p = new Promise((done) => {
+      const im = new Image();
+      im.onload = () => {
+        try {
+          const c = document.createElement("canvas");
+          c.width = im.naturalWidth; c.height = im.naturalHeight;
+          const g = c.getContext("2d");
+          if (!g) return done(null);
+          g.drawImage(im, 0, 0);
+          done(g.getImageData(0, 0, c.width, c.height));
+        } catch {
+          done(null);
+        }
+      };
+      im.onerror = () => done(null);
+      im.src = href;
+    });
+    alphaCache.set(href, p);
+  }
+  return p;
+}
+/** where the torso picture ends and the legs begin, and the legs and the feet (rig y) */
+const HIPS_Y = 660, FEET_Y = 1120;
+function hitLayers(look: Look, worn: Worn): HitLayer[] {
+  const skinDir = look.skin !== SKIN_ORIGINAL ? `/assets/hero/skin-${look.skin}` : "/assets/hero";
+  const part = (p: PartId) => ({ href: `${look.skin !== SKIN_ORIGINAL && !NO_SKIN.has(p) ? skinDir : "/assets/hero"}/${p}.webp?v=${ART_VER.heroPart}`, ...RIG[p] });
+  const wear = (slot: string) => {
+    const id = wornIn(worn, slot);
+    return id ? { href: `/assets/hero/wear/${id}.webp?v=${ART_VER.wear}`, ...WEARS[id] } : null;
+  };
+  const out: HitLayer[] = [];
+  const add = (l: { href: string; x: number; y: number; w: number; h: number } | null, items: string, body: string, rect?: boolean) => { if (l) out.push({ ...l, items, body, rect }); };
+  add(wear("HEAD"), "HEAD", "HEAD");
+  if (look.hair in HAIR_FIT) {
+    const hat = wornIn(worn, "HEAD");
+    add({ href: `/assets/hero/hair/${look.hair}-${look.hairColor}${hat ? `-${hat}` : ""}.webp?v=${ART_VER.hair}`, ...HAIR_FIT[look.hair as HairId] }, "HEAD", "HEAD");
+  }
+  add({ href: "", ...RIG.eyes, x: RIG.eyes.x - 6, y: RIG.eyes.y - 22, w: RIG.eyes.w + 12, h: RIG.eyes.h + 30 }, "HEAD", "EYES", true);
+  // no mouth layer yet: the place under the nose
+  add({ href: "", x: RIG.head.x + RIG.head.w * 0.36, y: RIG.head.y + RIG.head.h * 0.72, w: RIG.head.w * 0.28, h: RIG.head.h * 0.13 }, "HEAD", "MOUTH", true);
+  add(part("head"), "HEAD", "HEAD");
+  add(wear("SHIRT"), "SHIRT", "TORSO");
+  const held = worn.HAND && worn.HAND in HELD_FIT ? worn.HAND : null;
+  add(held ? { href: `${look.skin !== SKIN_ORIGINAL ? `${skinDir}/held-${held}` : `/assets/hero/held/${held}`}.webp?v=${ART_VER.heroPart}`, ...HELD_FIT[held] } : part("handR"), "HAND", "HAND");
+  for (const p of ["foreR", "armUR", "foreL", "armUL"] as PartId[]) add(part(p), "SHIRT", "ARMS");
+  add(wear("PANTS"), "PANTS", "LEGS");
+  add(wear("SHOES"), "SHOES", "LEGS");
+  add(part("torso"), "TORSO", "TORSO");
+  return out;
+}
+async function pickAt(x: number, y: number, layers: HitLayer[], mode: "items" | "body"): Promise<string | null> {
+  for (const l of layers) {
+    if (x < l.x || y < l.y || x >= l.x + l.w || y >= l.y + l.h) continue;
+    if (!l.rect) {
+      const a = await alphaOf(l.href);
+      if (a) {
+        const px = Math.floor(((x - l.x) / l.w) * a.width), py = Math.floor(((y - l.y) / l.h) * a.height);
+        if (a.data[(py * a.width + px) * 4 + 3] < 60) continue;
+      }
+    }
+    if (l.items === "TORSO") {
+      // the torso picture carries the legs too
+      if (mode === "body") return y < HIPS_Y ? "TORSO" : "LEGS";
+      return y < HIPS_Y ? "SHIRT" : y < FEET_Y ? "PANTS" : "SHOES";
+    }
+    return mode === "items" ? l.items : l.body;
+  }
+  return null;
 }
 
 function OutlineDefs() {
@@ -171,28 +247,28 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
       {/* torso breathes; arms and head ride along in a second group with the same animation */}
       {/* the torso layer carries the legs too; only the chest breathes visibly (origin at the hips) */}
       <g className="rig-breath">
-        <Ol k="BODY"><Img p="torso" /></Ol>
+        <Ol body={["TORSO", "LEGS"]}><Img p="torso" /></Ol>
       </g>
-      <Ol k="SHOES"><Wear slot="SHOES" /></Ol>
-      <Ol k="PANTS"><Wear slot="PANTS" /></Ol>
+      <Ol items="SHOES" body={["LEGS"]}><Wear slot="SHOES" /></Ol>
+      <Ol items="PANTS" body={["LEGS"]}><Wear slot="PANTS" /></Ol>
       <g className="rig-breath">
-        <Ol k="BODY">
+        <Ol body={["ARMS"]}>
           <Bone p="armUL">
             <Bone p="foreL" />
           </Bone>
         </Ol>
-        <Ol k="BODY">
+        <Ol body={["ARMS"]}>
           <Bone p="armUR">
             <Bone p="foreR">
-              <Ol k="HAND"><HandFrames /></Ol>
+              <Ol items="HAND" body={["HAND"]}><HandFrames /></Ol>
             </Bone>
           </Bone>
         </Ol>
-        <Ol k="SHIRT"><Wear slot="SHIRT" /></Ol>
+        <Ol items="SHIRT" body={["TORSO"]}><Wear slot="SHIRT" /></Ol>
         <Wear slot="ACCESSORY" />
-        <Ol k="HEAD">
+        <Ol items="HEAD" body={["HEAD", "MOUTH"]}>
           <Bone p="head" className="rig-head">
-            <Ol k="EYES"><Face /></Ol>
+            <Ol body={["EYES"]}><Face /></Ol>
             <Hair />
             <Wear slot="HEAD" />
           </Bone>
@@ -206,8 +282,22 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
 
 /** Nested viewport so bone pivots (view-box units) stay in rig coordinates inside any scene. */
 export function RigViewport({ x, y, scale, seat, still, look, worn, seatOnly, edit }: { x: number; y: number; scale: number; seat?: boolean | number; still?: boolean; look?: Look; worn?: Worn; seatOnly?: boolean; edit?: RigEdit }) {
+  const ref = useRef<SVGSVGElement>(null);
+  const layers = useMemo(() => (edit?.onPick ? hitLayers(look ?? DEFAULT_LOOK, worn ?? {}) : []), [edit?.onPick, look, worn]);
+  // the pictures' pixels are read once the editor opens, so the first tap is answered at once
+  useEffect(() => { layers.forEach((l) => !l.rect && void alphaOf(l.href)); }, [layers]);
+  const tap = async (e: ReactPointerEvent<SVGSVGElement>) => {
+    const svg = ref.current;
+    if (!svg || !edit?.onPick) return;
+    const m = svg.getScreenCTM();
+    if (!m) return;
+    const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
+    const part = await pickAt(pt.x, pt.y, layers, edit.mode);
+    if (part) edit.onPick(part);
+  };
   return (
-    <svg className={`rig ${still ? "still" : ""}`} x={x} y={y} width={1000 * scale} height={1400 * scale} viewBox="0 0 1000 1400" overflow="visible">
+    <svg ref={ref} className={`rig ${still ? "still" : ""} ${edit?.onPick ? "pickable" : ""}`} x={x} y={y} width={1000 * scale} height={1400 * scale} viewBox="0 0 1000 1400" overflow="visible"
+      onPointerDown={edit?.onPick ? tap : undefined}>
       <RigBody seat={seat} look={look} worn={worn} seatOnly={seatOnly} edit={edit} />
     </svg>
   );
