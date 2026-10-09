@@ -80,8 +80,10 @@ export function YardScreen() {
         <div className="yard-stage">
           {/* the sunset sky (the same as in the fights) drifts behind the see-through sky of the yard */}
           <DriftingSky className="court-sky" />
+          {/* the same sky upside down under the ground: it shows in the see-through puddles */}
+          <DriftingSky className="yard-reflect" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="yard-bg" src="/assets/yard/court-yard.webp" alt="" draggable={false} />
+          <img className="yard-bg" src="/assets/yard/court-night.webp" alt="" draggable={false} />
           {/* the entrance leads to the locations with tasks */}
           <Link href="/locations" className={`yard-obj yard-entrance ${taskHint ? "call" : ""}`} aria-label="Локации" title="Локации">
             {/* eslint-disable-next-line @next/next/no-img-element */}

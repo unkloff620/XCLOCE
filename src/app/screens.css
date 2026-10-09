@@ -1565,4 +1565,5 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .yard .yard-item { z-index: 4; }
 /* the yard's sky: the drifting sunset behind the see-through sky of the background */
 .court-sky { position: absolute; left: 0; right: 0; top: 0; height: 40.5%; overflow: hidden; background: #3a3150; }
-.court-sky .yard-sky-strip { animation-duration: 110s; }
+.court-sky .yard-sky-strip, .yard-reflect .yard-sky-strip { animation-duration: 110s; }
+.yard-reflect { position: absolute; left: 0; right: 0; top: 60%; bottom: 0; overflow: hidden; transform: scaleY(-1); filter: brightness(0.75) saturate(1.1) blur(0.6px); }
