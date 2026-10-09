@@ -1544,7 +1544,7 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .yard-upgrader { left: 74.5%; top: 58.71%; width: 25.5%; height: 23.35%; z-index: 3; }
 /* everything you can tap in the yard has a thin gold outline (a ring cut from the art's own edges, not the cut lines)
    that flares now and then — each object at its own moment */
-.yard-obj > img.yard-ring { position: absolute; left: calc(var(--rx) * -1); top: calc(var(--ry) * -1); width: calc(100% + 2 * var(--rx)); height: calc(100% + 2 * var(--ry));
+.yard-obj > img.yard-ring { position: absolute; max-width: none; left: calc(var(--rx) * -1); top: calc(var(--ry) * -1); width: calc(100% + 2 * var(--rx)); height: calc(100% + 2 * var(--ry));
   opacity: 0.5; animation: yard-ring 7s ease-in-out infinite; animation-delay: var(--od, 0s); }
 .yard-entrance { --rx: 6.03%; --ry: 3.81%; --od: 0s; }
 .yard-table { --rx: 3.12%; --ry: 4.25%; --od: -5.2s; }
@@ -1566,4 +1566,4 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 /* the yard's sky: the drifting sunset behind the see-through sky of the background */
 .court-sky { position: absolute; left: 0; right: 0; top: 0; height: 40.5%; overflow: hidden; background: #3a3150; }
 .court-sky .yard-sky-strip, .yard-reflect .yard-sky-strip { animation-duration: 110s; }
-.yard-reflect { position: absolute; left: 0; right: 0; top: 60%; bottom: 0; overflow: hidden; transform: scaleY(-1); filter: brightness(0.75) saturate(1.1) blur(0.6px); }
+.yard-reflect { position: absolute; left: 0; right: 0; top: 60%; bottom: 0; overflow: hidden; transform: scaleY(-1); filter: brightness(0.85) saturate(1.15) blur(0.5px); }
