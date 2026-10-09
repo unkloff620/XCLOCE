@@ -288,7 +288,7 @@ export const ASSET_FILES: string[] = [
  "/assets/ui/btc.webp",
  "/assets/ui/coins.webp",
  "/assets/ui/energy-can.webp",
- "/assets/ui/exchange-panel.webp",
+ "/assets/ui/exchange-frame.webp",
  "/assets/ui/exchange.webp",
  "/assets/ui/help-door.webp",
  "/assets/ui/key.webp",

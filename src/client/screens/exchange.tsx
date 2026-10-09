@@ -31,12 +31,12 @@ export function Exchanger({ ex }: { ex: ShopData["exchange"] }) {
       setAmount("");
     }
   };
-  // regions of the drawn panel (public/assets/ui/exchange-panel.webp), percent of 1127×1396
-  const COLS = [4.9, 28.2, 51.5, 74.5];
+  // regions of the drawn frame (public/assets/ui/exchange-frame.webp), percent of 1117×1301
+  const COLS = [8.6, 31.3, 53.6, 75.7];
   const box = (l: number, t: number, w: number, h: number) => ({ left: `${l}%`, top: `${t}%`, width: `${w}%`, height: `${h}%` });
   const row = (top: number, v: Currency, set: (c: Currency) => void, other: Currency) =>
     CURRENCIES.map((c, i) => (
-      <button key={c} className={`exp-btn exp-cur ${v === c ? "on" : ""}`} style={box(COLS[i], top, 20.9, 8.6)} disabled={c === other} onClick={() => set(c)} aria-label={CURRENCY_DEFS[c].name}>
+      <button key={c} className={`exp-btn exp-cur ${v === c ? "on" : ""}`} style={box(COLS[i], top, 20.1, 8)} disabled={c === other} onClick={() => set(c)} aria-label={CURRENCY_DEFS[c].name}>
         <Icon name={c} size={26} />
         <b>{c}</b>
       </button>
@@ -45,32 +45,32 @@ export function Exchanger({ ex }: { ex: ShopData["exchange"] }) {
   return (
     <div className="exp-panel">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="exp-bg" src="/assets/ui/exchange-panel.webp" alt="" draggable={false} />
-      <div className="exp-cell exp-title display" style={box(14.2, 1.1, 71.4, 6.4)}>Обменник</div>
-      <div className="exp-cell exp-info" style={box(4.6, 10.5, 90.8, 8.8)}>
+      <img className="exp-bg" src="/assets/ui/exchange-frame.webp" alt="" draggable={false} />
+      <div className="exp-cell exp-title display" style={box(17.9, 2.2, 68.5, 6)}>Обменник</div>
+      <div className="exp-cell exp-info" style={box(9, 11.3, 86.1, 8.8)}>
         <span className="exp-label">Отдаю</span>
         <Icon name={from} size={24} />
         <span className="grow">{CURRENCY_DEFS[from].name}</span>
         <span className="exp-have">есть <b className="num">{money(from, have)}</b></span>
       </div>
-      {row(21.8, from, setFrom, to)}
-      <div className="exp-cell exp-input" style={box(4.9, 33.3, 71.3, 9.3)}>
+      {row(23, from, setFrom, to)}
+      <div className="exp-cell exp-input" style={box(9, 34.4, 67.6, 8.8)}>
         <Icon name={from} size={24} />
         <input inputMode="decimal" placeholder="0" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^0-9.,]/g, ""))} aria-label="Сколько отдать" />
       </div>
-      <button className="exp-btn exp-max display" style={box(79.2, 33.3, 15.7, 9.3)} onClick={() => setAmount(String(floorTo(from, have)))}>ВСЁ</button>
-      <button className="exp-btn exp-swap" style={box(42.6, 44.4, 14.6, 10)} onClick={swap} aria-label="Поменять местами">⇅</button>
-      {row(56.6, to, setTo, from)}
-      <div className="exp-cell exp-info" style={box(4.6, 67.7, 90.8, 7.5)}>
+      <button className="exp-btn exp-max display" style={box(80.9, 34.3, 13.1, 8.3)} onClick={() => setAmount(String(floorTo(from, have)))}>ВСЁ</button>
+      <button className="exp-btn exp-swap" style={box(45.7, 46, 12.1, 8.8)} onClick={swap} aria-label="Поменять местами">⇅</button>
+      {row(57.9, to, setTo, from)}
+      <div className="exp-cell exp-info" style={box(9, 68.6, 86.1, 7.5)}>
         <span className="exp-label">Получу</span>
         <Icon name={to} size={24} />
         <b className="num grow exp-quote">{money(to, quote)}</b>
         <span className="exp-rate">1 {from} = {rate >= 1 ? money(to, floorTo(to, rate)) : Number(rate.toPrecision(3)).toLocaleString("ru-RU")} {to}</span>
       </div>
-      <button className="exp-btn exp-go display" style={box(4.6, 77.7, 90.8, 10.7)} disabled={!can} onClick={go}>
+      <button className="exp-btn exp-go display" style={box(9, 78.2, 86.1, 10.5)} disabled={!can} onClick={go}>
         {a > have ? "Не хватает" : "Обменять"}
       </button>
-      <div className="exp-cell exp-foot" style={box(17.7, 91.1, 64.8, 4.2)}>Комиссия {Math.round(ex.fee * 100)}% · валюта игровая</div>
+      <div className="exp-cell exp-foot" style={box(22.4, 95, 62.7, 2.6)}>Комиссия {Math.round(ex.fee * 100)}% · валюта игровая</div>
     </div>
   );
 }
