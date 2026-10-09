@@ -490,10 +490,10 @@ function TalentProgress({ dmg, pop, share, onOpen }: { dmg: number; pop: number;
   const to = talentThreshold(k + 1);
   const p = Math.max(0, Math.min(1, (dmg - from) / (to - from)));
   return (
-    <button type="button" key={pop} onClick={onOpen} aria-label="Открыть таланты" className={`chip talent-prog ${pop ? "talent-pop" : ""}`} title={`Урон по боссам за всё время: ${full(dmg)} (в этом бою — ${share.toFixed(1)}% HP). Следующий талант — на ${full(to)}`}>
+    <button type="button" key={pop} onClick={onOpen} aria-label="Открыть таланты" className={`chip talent-prog ${pop ? "talent-pop" : ""}`} title={`Урон по боссам за всё время: ${full(dmg)} (в этом бою — ${share.toFixed(1)}% HP). До следующего таланта — ${full(Math.max(0, to - dmg))}`}>
       <i className="fill" style={{ width: `${p * 100}%` }} />
       <Icon name="talent" size={16} />
-      <b className="num">{full(dmg)}</b><span className="muted">/{full(to)}</span>
+      <b className="num">{full(Math.max(0, dmg - from))}</b><span className="muted">/{full(to - from)}</span>
     </button>
   );
 }

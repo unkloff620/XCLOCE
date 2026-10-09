@@ -44,7 +44,7 @@ export function TalentNext({ dmg }: { dmg: number }) {
         <span className="tiny muted">получено всего: <b className="num" style={{ color: "var(--ink)" }}>{k}</b></span>
       </div>
       <div className="ach-bar" style={{ ["--p" as string]: `${p * 100}%` }}>
-        <i /><span className="num">{full(dmg)} / {full(to)} урона</span>
+        <i /><span className="num">{full(Math.max(0, dmg - from))} / {full(to - from)} урона</span>
       </div>
     </div>
   );
