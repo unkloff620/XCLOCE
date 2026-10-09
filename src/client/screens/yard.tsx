@@ -11,10 +11,8 @@ import Link from "next/link";
 import { Icon } from "../art/icons.tsx";
 import { SlotMachine } from "./slots.tsx";
 import { YardGames, YardUpgrader } from "./minigames.tsx";
-import { DriftingSky } from "../art/sky.tsx";
 import { Help, HelpList } from "../help.tsx";
 import { GainLine, Modal } from "../ui.tsx";
-import { ART_VER } from "../preload.ts";
 import type { Granted } from "../api.ts";
 
 const LINKS = [
@@ -69,24 +67,25 @@ export function YardScreen() {
             <p>Каждые 5 минут во дворе появляется случайная находка, максимум 5 сразу. Время идёт, даже когда игра закрыта — заходи и собирай.</p>
             <p>Изредка попадается Клавиатура. Всё найденное можно продать в инвентаре.</p>
             <HelpList title="Кнопки слева" rows={LINKS.map((b) => ({ key: b.href, icon: <Icon name={b.icon} size={44} />, name: b.label, hint: b.hint }))} />
-            <p>Справа стоит игровой автомат 777 — 3 бесплатные прокрутки в час.</p>
-            <p>Рядом с 777 стоит автомат «Апгрейдер» — улучшай находки и оружие. Справа сверху — блэкджек (3 бесплатные партии в день) и зонк (1 бесплатная игра в день), дальше партия стоит 2 USD.</p>
+            <p>Игровой автомат 777 — 3 бесплатные прокрутки в час. Справа от него — автомат «Апгрейдер»: улучшай находки и оружие.</p>
+            <p>Стол слева — блэкджек (3 бесплатные партии в день), табло над ним — зонк (1 бесплатная игра в день). Дальше партия стоит 2 USD.</p>
           </Help>
         </div>
         <span className="chip">{data?.items.length ?? state?.yard.count ?? 0}/{data?.max ?? 5}</span>
       </div>
       <div className="yard">
-        {/* full-screen scene: a blurred copy fills the screen, the sharp scene stands on the nav at full width */}
-        {/* the sky drifts behind the yard */}
-        <DriftingSky className="yard-sky" />
+        {/* blurred copy of the yard fills the space above the scene on tall screens */}
+        <div className="scene-backdrop" style={{ backgroundImage: "url(/assets/yard/court-bg.webp)" }} />
+        {/* the sharp scene stands on the nav at full width; the objects sit where they are drawn on the 2000×3405 sheet */}
         <div className="yard-stage">
-          {/* the sky upside down under the ground: it shows through the transparent puddles */}
-          <DriftingSky className="yard-reflect" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="yard-bg" src={`/assets/yard/bg.webp?v=${ART_VER.yardBg}`} alt="" draggable={false} />
-          <button className={`yard-slots ${state && state.slots.left > 0 ? "ready" : ""}`} onClick={() => setSlots(true)} aria-label="Игровой автомат 777">
+          <img className="yard-bg" src="/assets/yard/court-bg.webp" alt="" draggable={false} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="yard-obj yard-entrance" src="/assets/yard/court-entrance.webp" alt="" draggable={false} />
+          <YardGames />
+          <button className={`yard-obj yard-slots ${state && state.slots.left > 0 ? "ready" : ""}`} onClick={() => setSlots(true)} aria-label="Игровой автомат 777">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/assets/yard/slot.webp" alt="" draggable={false} />
+            <img src="/assets/yard/court-slot.webp" alt="" draggable={false} />
             {state && <span className="yard-slots-left num">{state.slots.left}/{state.slots.max}</span>}
           </button>
           <YardUpgrader />
@@ -114,7 +113,6 @@ export function YardScreen() {
             </Link>
           ))}
         </nav>
-        <YardGames />
         <div className="yard-timer">
           {!data ? "…" : data.nextAt ? <>Следующая находка через <b className="num">{clock(data.nextAt - now)}</b></> : <>Двор полон — собери, чтобы появилось новое</>}
         </div>

@@ -427,64 +427,34 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
   );
 }
 
-/* ---------------- the buttons in the yard ---------------- */
-function GameIcon({ kind }: { kind: "blackjack" | "zonk" | "upgrader" }) {
-  const OL = "#1e1006";
-  if (kind === "blackjack") return (
-    <svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true">
-      <rect x="6" y="9" width="22" height="30" rx="4" fill="#f4ecdc" stroke={OL} strokeWidth="3" transform="rotate(-12 17 24)" />
-      <rect x="18" y="7" width="22" height="30" rx="4" fill="#fff" stroke={OL} strokeWidth="3" transform="rotate(10 29 22)" />
-      <text x="30" y="27" textAnchor="middle" fontSize="13" fontWeight="900" fill="#e8173c" transform="rotate(10 29 22)">A</text>
-    </svg>
-  );
-  if (kind === "zonk") return (
-    <svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true">
-      <rect x="5" y="14" width="22" height="22" rx="5" fill="#fff" stroke={OL} strokeWidth="3" transform="rotate(-10 16 25)" />
-      <rect x="21" y="8" width="22" height="22" rx="5" fill="#ffd23f" stroke={OL} strokeWidth="3" transform="rotate(12 32 19)" />
-      {[[12, 21], [20, 29], [16, 25]].map(([x, y], i) => <circle key={i} cx={x} cy={y} r="2.2" fill="#e8173c" />)}
-      {[[27, 14], [37, 14], [27, 24], [37, 24]].map(([x, y], i) => <circle key={i} cx={x} cy={y} r="2.2" fill={OL} transform="rotate(12 32 19)" />)}
-    </svg>
-  );
-  return (
-    <svg viewBox="0 0 48 48" width="34" height="34" aria-hidden="true">
-      <circle cx="24" cy="24" r="18" fill="#2a0614" stroke={OL} strokeWidth="3" />
-      <path d="M24 6 A18 18 0 0 1 41 18" stroke="#2ee88a" strokeWidth="6" fill="none" />
-      <path d="M24 33 V16 M16 23 L24 15 L32 23" stroke="#ffd23f" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-    </svg>
-  );
-}
-
+/* ---------------- the game objects standing in the yard ---------------- */
+/** The blackjack table with the «Зонк» board behind it: tap the board for zonk, the table for blackjack. */
 export function YardGames() {
   const { state } = useGame();
   const [open, setOpen] = useState<"blackjack" | "zonk" | null>(null);
   const bj = state?.games?.blackjack;
   const zk = state?.games?.zonk;
+  const badge = (g: typeof bj) => g && (g.active ? <i className="yg-badge live">идёт</i> : g.freeLeft > 0 && <i className="yg-badge">{g.freeLeft}</i>);
   return (
     <>
-      <div className="yard-games" aria-label="Мини-игры">
-        <button className="yard-game" onClick={() => setOpen("blackjack")}>
-          <GameIcon kind="blackjack" /><span>Блэкджек</span>
-          {bj && (bj.active ? <i className="yg-badge live">идёт</i> : bj.freeLeft > 0 && <i className="yg-badge">{bj.freeLeft}</i>)}
-        </button>
-        <button className="yard-game" onClick={() => setOpen("zonk")}>
-          <GameIcon kind="zonk" /><span>Зонк</span>
-          {zk && (zk.active ? <i className="yg-badge live">идёт</i> : zk.freeLeft > 0 && <i className="yg-badge">{zk.freeLeft}</i>)}
-        </button>
-      </div>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className="yard-obj yard-table" src="/assets/yard/court-table.webp" alt="" draggable={false} />
+      <button className="yard-hit yard-hit-zonk" onClick={() => setOpen("zonk")} aria-label="Зонк" title="Зонк">{badge(zk)}</button>
+      <button className="yard-hit yard-hit-bj" onClick={() => setOpen("blackjack")} aria-label="Блэкджек" title="Блэкджек">{badge(bj)}</button>
       {open === "blackjack" && <BlackjackWindow onClose={() => setOpen(null)} />}
       {open === "zonk" && <ZonkWindow onClose={() => setOpen(null)} />}
     </>
   );
 }
 
-/** The upgrader: an arcade cabinet standing in the yard scene, a little apart from the 777 machine. */
+/** The upgrader: an arcade cabinet standing in the yard right of the 777 machine. */
 export function YardUpgrader() {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button className="yard-upgrader" onClick={() => setOpen(true)} aria-label="Апгрейдер" title="Апгрейдер">
+      <button className="yard-obj yard-upgrader" onClick={() => setOpen(true)} aria-label="Апгрейдер" title="Апгрейдер">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/assets/yard/upgrader.webp" alt="" draggable={false} />
+        <img src="/assets/yard/court-upgrader.webp" alt="" draggable={false} />
       </button>
       {open && <UpgraderWindow onClose={() => setOpen(false)} />}
     </>

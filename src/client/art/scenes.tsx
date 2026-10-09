@@ -180,13 +180,13 @@ export function LocationScene({ scene }: { scene: string }) {
 
 /* ---------------- yard (400×560). Item spots are in YARD_SPOTS (percent of the scene) ---------------- */
 export const YARD_SPOTS = [
-  // on the asphalt of the drawn yard (public/assets/yard/bg.webp), clear of the slot machine on the right
-  // scattered over the whole asphalt (the slot machine stands at the right, x ≥ 65%, y 41–74%); r = how the thing lies
-  { x: 22, y: 59, r: -14 },
-  { x: 48, y: 57, r: 9 },
-  { x: 36, y: 71, r: 18 },
-  { x: 58, y: 80, r: -8 },
-  { x: 76, y: 84, r: 12 },
+  // on the asphalt of the drawn yard (public/assets/yard/court-bg.webp): in front of the table and the machines
+  // (table x 2–61%, y 58–83%; 777 and the upgrader x 60–100%, y 59–82%); r = how the thing lies
+  { x: 14, y: 89, r: -14 },
+  { x: 36, y: 92, r: 9 },
+  { x: 57, y: 87, r: 18 },
+  { x: 78, y: 90, r: -8 },
+  { x: 56, y: 74, r: 12 },
 ];
 
 /** Night yard: houses with balconies and AC units, a 24/7 kiosk, graffiti, a lamp post, a tree, a bench, puddles. */

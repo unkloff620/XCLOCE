@@ -327,13 +327,9 @@
 @keyframes twinkle { 50% { opacity: 0.3; } }
 @media (prefers-reduced-motion: reduce) { .breath, .fan, .rgb-glow, .twinkle { animation: none; } }
 
-/* ---------- yard: buttons on the left, the slot machine on the right ---------- */
+/* ---------- yard: buttons on the left ---------- */
 .yard-side { position: absolute; left: 10px; top: 52px; display: flex; flex-direction: column; gap: 8px; z-index: 2; }
 .yard-side .side-btn { width: 76px; }
-.yard-slots { position: absolute; right: 3%; top: 48%; width: 25%; aspect-ratio: 360 / 504; padding: 0; border: 0; background: none; cursor: pointer; z-index: 2;
-  filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.35)); transition: transform 0.15s; }
-.yard-slots:active { transform: scale(0.96); }
-.yard-slots.ready { animation: slot-call 2.4s ease-in-out infinite; }
 @keyframes slot-call { 0%, 80%, 100% { transform: none; } 85% { transform: rotate(-3deg); } 90% { transform: rotate(3deg); } 95% { transform: rotate(-2deg); } }
 .yard-slots-left { position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%); padding: 1px 8px; border-radius: 9px; font-size: 11px; font-weight: 800; background: #ffd23f; color: #1e1006; border: 2px solid var(--line); }
 .bulb { animation: bulb 1s steps(2) infinite; }
@@ -417,7 +413,7 @@
 .fit-page .room-view, .yard-stage { position: absolute; left: 0; right: 0; bottom: calc(var(--nav-h) + var(--safe-b) - 6px);
   -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 9%); mask-image: linear-gradient(180deg, transparent 0, #000 9%); }
 .fit-page .room-view { aspect-ratio: 1060 / 1484; }
-.yard-stage { aspect-ratio: 400 / 560; }
+.yard-stage { aspect-ratio: 2000 / 3405; }
 /* «?» sits in the top-right corner, the [≡] menu takes the top-left */
 .fit-page .room-help { top: var(--top); left: auto; right: 12px; }
 .fit-page .room-left { top: var(--top); left: 12px; }
@@ -471,16 +467,9 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 @keyframes art-glow { 50% { filter: drop-shadow(0 3px 0 rgba(14, 9, 5, 0.9)) drop-shadow(0 0 12px var(--c)); } }
 .icon-btn-art .side-dot { top: 2px; right: 2px; }
 
-/* yard: drawn background with a drifting sky behind it */
-.yard-sky { position: absolute; left: 0; right: 0; top: 0; bottom: 42%; overflow: hidden; background: #2a2f55; }  /* the horizon hides behind the houses */
-.yard-sky-strip { position: absolute; top: 0; bottom: 0; left: 0; width: max-content; display: flex; height: 100%; animation: sky-drift 140s linear infinite; will-change: transform; }
-.yard-sky-strip img { height: 100%; width: auto; flex: none; display: block; }
 @keyframes sky-drift { to { transform: translateX(-50%); } }
 .yard-stage { -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 7%); mask-image: linear-gradient(180deg, transparent 0, #000 7%); }
 .yard-bg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; user-select: none; pointer-events: none; }
-.yard-slots img { width: 100%; height: 100%; display: block; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.6)); }
-@media (prefers-reduced-motion: reduce) { .yard-sky-strip { animation: none; } }
-.yard-reflect { position: absolute; left: 0; right: 0; top: 55%; bottom: 0; overflow: hidden; transform: scaleY(-1); filter: brightness(0.75) saturate(1.1) blur(0.6px); }
 
 /* ---------- boss fight on the whole screen ---------- */
 .fight-bg { position: absolute; inset: 0; background: #120c0a; overflow: hidden; }
@@ -1355,16 +1344,8 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .clan-reqs { margin-bottom: 12px; }
 .clan-reqs .clan-row { gap: 6px; }
 
-/* ---------- yard mini games (buttons for now; they become objects in the yard later) ---------- */
-.yard-games { position: absolute; right: 10px; top: 52px; display: flex; flex-direction: column; gap: 6px; z-index: 2; }
-.fit-page .yard-games { top: calc(var(--top) + 84px); right: 12px; }
-.yard-game { position: relative; width: 66px; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 4px 2px 3px; border-radius: 14px; border: 2.5px solid var(--line); box-shadow: 0 3px 0 var(--line);
-  background: var(--tex), linear-gradient(180deg, #3a2414, #24160c); color: var(--ink); font: inherit; font-size: 10px; font-weight: 800; cursor: pointer; }
-.yard-game:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
 .yg-badge { position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; padding: 0 4px; display: grid; place-items: center; border-radius: 9px; background: var(--green); color: #0b2a17; font-style: normal; font-size: 10px; border: 2px solid var(--line); }
 .yg-badge.live { background: var(--gold); color: #1e1006; }
-/* short screens: a row along the top, clear of the slot machine */
-@media (max-height: 760px) { .yard-games { flex-direction: row; } .yard-game { width: 58px; } }
 
 .mg-table { display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 18px; border: 3px solid var(--line);
   background: radial-gradient(ellipse at 50% 40%, #1f7a45, #0f4a28 70%, #0a3019); box-shadow: inset 0 0 0 3px rgba(255, 210, 63, 0.25); }
@@ -1479,12 +1460,6 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .stash-pop { animation: stash-pop 0.6s cubic-bezier(0.2, 1.4, 0.4, 1) both; box-shadow: 0 0 24px rgba(255, 204, 51, 0.45); }
 @keyframes stash-pop { from { transform: scale(0.3) rotate(-12deg); opacity: 0; } }
 .stash-loc { margin-top: 4px; letter-spacing: 0.06em; }
-/* the upgrader cabinet in the yard: left of the 777 machine, not touching it */
-.yard-upgrader { position: absolute; right: 31%; top: 45%; width: 21%; aspect-ratio: 395 / 600; padding: 0; border: 0; background: none; cursor: pointer; z-index: 2;
-  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.6)); animation: upg-glow 3s ease-in-out infinite; }
-.yard-upgrader img { width: 100%; height: 100%; display: block; }
-.yard-upgrader:active { transform: scale(0.96); }
-@keyframes upg-glow { 50% { filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 10px rgba(255, 200, 40, 0.55)); } }
 
 /* the room switcher stays see-through until you use it */
 .room-switch { transition: opacity 0.2s; }
@@ -1550,3 +1525,23 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .result-top { width: 100%; padding: 10px; text-align: left; }
 .result-take { align-self: center; min-width: 180px; padding-left: 36px; padding-right: 36px; }
 @media (prefers-reduced-motion: reduce) { .result-room { animation: none; } }
+
+/* ---------- yard: layered scene. Objects are cut from one 2000×3405 sheet, placed in % of it ---------- */
+.yard-obj { position: absolute; padding: 0; border: 0; background: none; user-select: none; }
+img.yard-obj, .yard-obj img { display: block; width: 100%; height: 100%; pointer-events: none; }
+button.yard-obj { cursor: pointer; transition: transform 0.15s; transform-origin: 50% 100%; }
+button.yard-obj:active { transform: scale(0.96); }
+.yard-entrance { left: 0; top: 39.71%; width: 30.45%; height: 28.25%; }
+.yard-table { left: 2.1%; top: 58%; width: 58.8%; height: 25.37%; z-index: 1; }
+.yard-slots { left: 60.4%; top: 60.32%; width: 24.3%; height: 18.71%; z-index: 2; }
+.yard-slots.ready { animation: slot-call 2.4s ease-in-out infinite; }
+.yard-upgrader { left: 74.5%; top: 58.71%; width: 25.5%; height: 23.35%; z-index: 3; animation: upg-glow 3s ease-in-out infinite; }
+@keyframes upg-glow { 50% { filter: drop-shadow(0 0 10px rgba(255, 200, 40, 0.55)); } }
+/* invisible tap zones over the table: the «Зонк» board and the blackjack table */
+.yard-hit { position: absolute; z-index: 2; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 12px; -webkit-tap-highlight-color: transparent; }
+.yard-hit:active { background: rgba(255, 210, 63, 0.14); }
+.yard-hit-zonk { left: 32.7%; top: 59%; width: 18.6%; height: 10%; }
+.yard-hit-bj { left: 2.3%; top: 68.8%; width: 58%; height: 14.6%; }
+.yard-hit .yg-badge { top: -4px; right: 4px; }
+.yard-hit-bj .yg-badge { top: 4px; right: 22%; }
+.yard .yard-item { z-index: 4; }
