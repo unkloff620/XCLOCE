@@ -1567,3 +1567,31 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .court-sky { position: absolute; left: 0; right: 0; top: 0; height: 40.5%; overflow: hidden; background: #3a3150; }
 .court-sky .yard-sky-strip, .yard-reflect .yard-sky-strip { animation-duration: 110s; }
 .yard-reflect { position: absolute; left: 0; right: 0; top: 60%; bottom: 0; overflow: hidden; transform: scaleY(-1); filter: brightness(0.85) saturate(1.15) blur(0.5px); }
+
+/* =====================================================================================================
+   Texture test (Oct 2026): brushed dark metal — the top and bottom HUD (light text);
+   kraft paper — pop-up windows, light concrete — plain panels (dark text: the theme tokens flip inside them,
+   so everything nested in them follows). Remove this block to go back to the brown look.
+   ===================================================================================================== */
+:root {
+  --tx-metal: url(/assets/textures/metal-brushed.webp) 0 0 / 256px 256px repeat;
+  --tx-paper: url(/assets/textures/kraft-paper.webp) 0 0 / 300px 300px repeat;
+  --tx-stone: url(/assets/textures/concrete-light.webp) 0 0 / 300px 300px repeat;
+}
+/* metal: the HUD plates and the bottom menu */
+.hud { background: linear-gradient(180deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.25)), var(--tx-metal), #2b2f36; }
+body:has(.fit-page) .hud { background: linear-gradient(180deg, rgba(12, 14, 18, 0.75), rgba(12, 14, 18, 0)); }
+.hud-me, .energy-chip, .coin-chip, .hud-tog { background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0.18)), var(--tx-metal), #30353d; }
+.nav, body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.05)), var(--tx-metal), #2b2f36; backdrop-filter: none; }
+.nav a.on { background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(0, 0, 0, 0.15)), var(--tx-metal), #3b414a; }
+.hud, .nav { --ink: #f4f6fa; --muted: #c3c9d3; }
+.hud :is(.name, b, small), .nav a { text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75); }
+/* paper: pop-up windows — dark text */
+.modal { --ink: #24160a; --muted: #5a3f24; --dim: #7a5b3c; --panel: #b8834e; --panel2: #c4915c; --panel3: #d09f6b; --bg2: #bd8a56; --tex: none;
+  color: var(--ink); background: linear-gradient(180deg, rgba(255, 240, 210, 0.12), rgba(90, 50, 15, 0.12)), var(--tx-paper), #c9965c; }
+.modal h3 { text-shadow: 0 2px 0 rgba(255, 238, 205, 0.5); }
+/* concrete: plain panels on the screens — dark text */
+.panel { --ink: #1c1d20; --muted: #45474d; --dim: #63666d; --panel: #8f9196; --panel2: #a3a5aa; --panel3: #b4b6bb; --bg2: #9b9da2; --tex: none;
+  color: var(--ink); background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.08)), var(--tx-stone), #9fa1a5; }
+/* a brown panel inside a paper window stays paper-coloured */
+.modal .panel { --ink: #24160a; --muted: #5a3f24; --dim: #7a5b3c; background: rgba(120, 70, 25, 0.16); }
