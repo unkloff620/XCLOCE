@@ -17,6 +17,7 @@ import { Tutorial } from "./tutorial.tsx";
 import { RouteLoader, startRouteLoad } from "./route-loader.tsx";
 import { PrizeWindow } from "./prizes.tsx";
 import { TapTips } from "./tap-tips.tsx";
+import { EventButton } from "./event-banner.tsx";
 import { EnergyWindow } from "./screens/energy.tsx";
 import { NAV_TABS } from "../content/nav.ts";
 import { isLoaded, preload, sectionOfRoute, urlsFor, type LookLite } from "./preload.ts";
@@ -57,6 +58,7 @@ function SoundToggles() {
           {!music && <path d="M3 3l18 18" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />}
         </svg>
       </button>
+      <EventButton />
     </div>
   );
 }

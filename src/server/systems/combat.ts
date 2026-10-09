@@ -1,6 +1,6 @@
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, idempotent, itemQty, ledger, moscowDay, nextMoscowMidnight, takeItem, type Ctx, type Granted } from "../core.ts";
-import { BOSSES, EXTRA_KEY_CHANCE, bossById, keyId, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
+import { BOSSES, EXTRA_KEY_CHANCE, OPEN_BOSSES, bossById, bossOpen, keyId, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
 import { WEAPONS, itemById, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
 import { mergeRewards, scaleReward } from "../../content/rewards.ts";
@@ -130,6 +130,7 @@ export async function settleMyFight(ctx: Ctx): Promise<void> {
 export async function startFight(ctx: Ctx, bossId: string, solo = false) {
   const def = bossById(bossId);
   if (!def) throw new GameError("bad_boss", "Такого босса нет");
+  if (!bossOpen(def)) throw new GameError("boss_hidden", "Этот босс пока не пришёл");
   await settleMyFight(ctx);
   const [active] = await ctx.q.query<{ id: number; boss_id: string }>("SELECT id, boss_id FROM fights WHERE player_id=$1 AND status='active'", [ctx.pid]);
   if (active) throw new GameError("fight_running", `Сначала закончи бой с боссом ${bossById(active.boss_id)?.name}`);
@@ -473,7 +474,7 @@ export async function bossList(q: Queryable, pid: number, cfg: Ctx["cfg"], now =
   const killerMap = new Map(killers.map((k) => [k.boss_id, { id: k.id, name: k.display_name, photo: k.photo_url, at: new Date(k.ended_at).getTime() }]));
   return {
     resetAt: nextMoscowMidnight(now),
-    bosses: BOSSES.map((b) => {
+    bosses: OPEN_BOSSES().map((b) => {
       const prev = BOSSES.find((x) => x.order === b.order - 1);
       const keysHave = prev ? keyMap.get(keyId(prev.id)) ?? 0 : 0;
       return {

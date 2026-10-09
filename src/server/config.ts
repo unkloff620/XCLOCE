@@ -9,6 +9,7 @@ import { SELL_PRICES } from "../content/items.ts";
 import { RENAME } from "../content/profile.ts";
 import { SLOT_OUTCOMES, SLOT_SPINS_PER_HOUR } from "../content/slots.ts";
 import type { Reward } from "../content/rewards.ts";
+import { cleanEffects, type GameEventView } from "../content/events.ts";
 
 /**
  * Game numbers. Defaults come from src/content; rows of the `config` table override them without a deploy:
@@ -31,6 +32,8 @@ export interface Config {
   slots: { perHour: number; weights: Record<string, number> };
   /** Telegram ids allowed to run admin actions */
   admins: number[];
+  /** game events going on right now (their effects are already applied to the numbers above) */
+  events: GameEventView[];
 }
 
 export function defaultConfig(): Config {
@@ -47,6 +50,7 @@ export function defaultConfig(): Config {
     rename: { price: RENAME.price, cooldownH: RENAME.cooldownH },
     slots: { perHour: SLOT_SPINS_PER_HOUR, weights: Object.fromEntries(SLOT_OUTCOMES.map((o) => [o.id, o.weight])) },
     admins: (process.env.ADMIN_TELEGRAM_IDS ?? "").split(",").map((s) => Number(s.trim())).filter((n) => Number.isFinite(n) && n > 0),
+    events: [],
   };
 }
 
@@ -95,9 +99,38 @@ export async function loadConfig(q: Queryable, now = Date.now()): Promise<Config
   const cfg = defaultConfig();
   const rows = await q.query<{ key: string; value: unknown }>("SELECT key, value FROM config");
   for (const r of rows) KEYS[r.key]?.(cfg, r.value);
+  await applyEvents(q, cfg, now);
   cache = { at: now, cfg };
   return cfg;
 }
 export function resetConfigCache() {
   cache = null;
+}
+
+/** Events going on at `now` change the numbers: multipliers multiply, the lowest fee and boss HP share win. */
+async function applyEvents(q: Queryable, cfg: Config, now: number) {
+  let rows: { id: number; title: string; description: string; starts_at: Date; ends_at: Date; effects: unknown }[] = [];
+  try {
+    rows = await q.query(
+      "SELECT id, title, description, starts_at, ends_at, effects FROM game_events WHERE enabled AND starts_at <= $1 AND ends_at > $1 ORDER BY starts_at, id",
+      [new Date(now)],
+    );
+  } catch {
+    return; // the table is not there yet (before the migration)
+  }
+  let energy = 1, yard = 1, spins = 1, fee: number | null = null, hp: number | null = null;
+  for (const r of rows) {
+    const e = cleanEffects(r.effects);
+    cfg.events.push({ id: Number(r.id), title: r.title, description: r.description, startsAt: new Date(r.starts_at).getTime(), endsAt: new Date(r.ends_at).getTime(), effects: e });
+    if (e.energyRegen) energy *= e.energyRegen;
+    if (e.yardSpeed) yard *= e.yardSpeed;
+    if (e.slotsSpins) spins *= e.slotsSpins;
+    if (e.exchangeFee !== undefined) fee = Math.min(fee ?? Infinity, e.exchangeFee);
+    if (e.bossHp !== undefined) hp = Math.min(hp ?? Infinity, e.bossHp);
+  }
+  if (energy > 1) cfg.energy.regenMin = cfg.energy.regenMin / energy;
+  if (yard > 1) cfg.yard.spawnMin = cfg.yard.spawnMin / yard;
+  if (spins > 1) cfg.slots.perHour = Math.round(cfg.slots.perHour * spins);
+  if (fee !== null) cfg.exchange.fee = Math.min(cfg.exchange.fee, fee / 100);
+  if (hp !== null) for (const id of Object.keys(cfg.bossHp)) cfg.bossHp[id] = Math.max(1, Math.round((cfg.bossHp[id] * hp) / 100));
 }

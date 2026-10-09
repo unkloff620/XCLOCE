@@ -633,4 +633,23 @@ UPDATE appearance SET decor = jsonb_set(decor, '{monitor2}', to_jsonb(((decor->>
   WHERE decor ? 'monitor2' AND (((decor->>'monitor2')::int) & 1) = 0;
 `,
   },
+  {
+    // Game events: a time window set in the admin panel; while it is on, its effects change the game's numbers
+    // (src/content/events.ts, applied in src/server/config.ts) and players see its banner.
+    id: "v2-033-game-events",
+    sql: `
+CREATE TABLE IF NOT EXISTS game_events (
+  id BIGSERIAL PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  starts_at TIMESTAMPTZ NOT NULL,
+  ends_at TIMESTAMPTZ NOT NULL,
+  effects JSONB NOT NULL DEFAULT '{}'::jsonb,
+  enabled BOOLEAN NOT NULL DEFAULT true,
+  created_by BIGINT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS game_events_window ON game_events (starts_at, ends_at);
+`,
+  },
 ];

@@ -142,3 +142,11 @@ a.adm-stat.link:hover { border-color: #4b6bff; background: var(--a-panel2); }
   .adm-pop { left: 0; right: 0; width: auto; }
   .adm-stat b { font-size: 19px; }
 }
+/* game events */
+.adm-ev { display: flex; flex-direction: column; gap: 10px; max-width: 640px; }
+.adm-ev label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.adm-ev textarea { resize: vertical; }
+.adm-ev-dates { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.adm-ev-fx { display: flex; flex-direction: column; gap: 6px; padding: 10px; border: 1px solid var(--a-line); border-radius: 10px; }
+.adm-ev .adm-ev-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; }
+@media (max-width: 560px) { .adm-ev-dates { grid-template-columns: 1fr; } }

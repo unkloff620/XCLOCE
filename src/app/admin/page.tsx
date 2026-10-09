@@ -12,6 +12,7 @@ import { TALENT_NODE_IDS, TALENT_WEAPONS, talentTree } from "../../content/talen
 import { BOSSES, bossById, keyId } from "../../content/bosses.ts";
 import { offerById } from "../../content/shop.ts";
 import { taskById } from "../../content/locations.ts";
+import { EVENT_EFFECTS, effectLines, cleanEffects } from "../../content/events.ts";
 
 const TOKEN_KEY = "xcloce.admin";
 const ACTION_TYPES = [
@@ -106,7 +107,7 @@ function legacyInfo(v: unknown): string {
 
 // ---------------- routing ----------------
 type ActionsQuery = { type?: string; failed?: boolean; sinceHours?: number; playerId?: string };
-type View = { tab: "dash" | "log" } | { tab: "players" } | { tab: "actions"; q: ActionsQuery; key: string } | { tab: "player"; id: number };
+type View = { tab: "dash" | "log" | "events" } | { tab: "players" } | { tab: "actions"; q: ActionsQuery; key: string } | { tab: "player"; id: number };
 function parseHash(): View {
   const h = typeof location === "undefined" ? "" : location.hash.slice(1);
   const [path, query = ""] = h.split("?");
@@ -116,7 +117,7 @@ function parseHash(): View {
     const p = new URLSearchParams(query);
     return { tab: "actions", key: query, q: { type: p.get("type") ?? undefined, failed: p.get("failed") === "1", sinceHours: p.get("since") ? Number(p.get("since")) : undefined, playerId: p.get("player") ?? undefined } };
   }
-  if (path === "players" || path === "log") return { tab: path };
+  if (path === "players" || path === "log" || path === "events") return { tab: path };
   return { tab: "dash" };
 }
 /** link to the action log with filters */
@@ -155,7 +156,7 @@ export default function AdminPage() {
       <header className="adm-top">
         <b className="adm-logo"><span>X</span>CLOSE <small>админка</small></b>
         <nav>
-          {([["dash", "Обзор"], ["players", "Игроки"], ["actions", "Действия"], ["log", "Правки админов"]] as const).map(([k, t]) => (
+          {([["dash", "Обзор"], ["players", "Игроки"], ["actions", "Действия"], ["events", "События"], ["log", "Правки админов"]] as const).map(([k, t]) => (
             <a key={k} href={`#${k}`} className={view.tab === k || (k === "players" && view.tab === "player") ? "on" : ""}>{t}</a>
           ))}
         </nav>
@@ -168,6 +169,7 @@ export default function AdminPage() {
         {view.tab === "players" && <Players />}
         {view.tab === "actions" && <Actions key={view.key} initial={view.q} />}
         {view.tab === "log" && <AdminLog />}
+        {view.tab === "events" && <Events />}
         {view.tab === "player" && <Player key={view.id} id={view.id} />}
       </main>
     </div>
@@ -940,5 +942,93 @@ function Talents({ rows, edit }: { rows: Row[]; edit: EditFn }) {
         }, "r"] as [string, (r: Row) => ReactNode, string]),
       ]} />
     </Box>
+  );
+}
+
+// ---------------- game events ----------------
+/** date for <input type="datetime-local"> in the admin's own time zone */
+const localInput = (v: unknown) => {
+  const d = new Date(v ? String(v) : Date.now());
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+};
+type EvForm = { id?: number; title: string; description: string; startsAt: string; endsAt: string; effects: Record<string, string>; enabled: boolean };
+const emptyEvent = (): EvForm => {
+  const start = new Date(); start.setMinutes(0, 0, 0); start.setHours(start.getHours() + 1);
+  const end = new Date(start.getTime() + 2 * 86_400_000);
+  return { title: "", description: "", startsAt: localInput(start), endsAt: localInput(end), effects: {}, enabled: true };
+};
+function evStatus(r: Row, now: number) {
+  if (!r.enabled) return <span className="muted">выключено</span>;
+  const s = new Date(String(r.starts_at)).getTime(), e = new Date(String(r.ends_at)).getTime();
+  if (now >= e) return <span className="muted">прошло</span>;
+  if (now >= s) return <b style={{ color: "#3ddc84" }}>идёт</b>;
+  return <span style={{ color: "#ffcc33" }}>скоро</span>;
+}
+
+function Events() {
+  const { data, err, reload, setData } = useLoad(() => admin<Row[]>("events"), []);
+  const [form, setForm] = useState<EvForm | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [saveErr, setSaveErr] = useState<string | null>(null);
+  const now = Date.now();
+  const edit = (r: Row) => setForm({
+    id: Number(r.id), title: String(r.title), description: String(r.description ?? ""), startsAt: localInput(r.starts_at), endsAt: localInput(r.ends_at),
+    effects: Object.fromEntries(Object.entries((r.effects ?? {}) as Record<string, number>).map(([k, v]) => [k, String(v)])), enabled: r.enabled !== false,
+  });
+  const save = async () => {
+    if (!form) return;
+    setBusy(true); setSaveErr(null);
+    try {
+      const effects = Object.fromEntries(Object.entries(form.effects).filter(([, v]) => v !== "").map(([k, v]) => [k, Number(v.replace(",", "."))]));
+      const rows = await admin<Row[]>("event_save", { event: { id: form.id, title: form.title, description: form.description, startsAt: new Date(form.startsAt).toISOString(), endsAt: new Date(form.endsAt).toISOString(), effects, enabled: form.enabled } });
+      setData(rows); setForm(null);
+    } catch (e) { setSaveErr((e as Error).message); }
+    setBusy(false);
+  };
+  const del = async (id: number) => {
+    if (!confirm("Удалить событие?")) return;
+    setData(await admin<Row[]>("event_delete", { id }));
+  };
+  const set = (k: keyof EvForm, v: unknown) => setForm((f) => (f ? { ...f, [k]: v } : f));
+  return (
+    <>
+      <Box title="События" right={<span className="row" style={{ gap: 8 }}><button className="adm-btn ghost sm" onClick={reload}>Обновить</button><button className="adm-btn" onClick={() => { setSaveErr(null); setForm(emptyEvent()); }}>+ Новое событие</button></span>}>
+        <p className="muted small" style={{ marginTop: 0 }}>Событие идёт с даты начала до даты конца (время — твоего часового пояса). Пока оно идёт, его эффекты меняют числа в игре, а игроки видят окно события и звезду в HUD. Изменения доходят до игры в течение ~30 секунд.</p>
+        <Err e={err} />
+        <Table rows={data ?? []} empty="Событий пока нет" cols={[
+          ["Статус", (r) => evStatus(r, now), "nowrap"],
+          ["Название", (r) => <b>{String(r.title)}</b>],
+          ["Начало", (r) => when(r.starts_at), "nowrap"],
+          ["Конец", (r) => when(r.ends_at), "nowrap"],
+          ["Эффекты", (r) => effectLines(cleanEffects(r.effects)).join(" · ") || <span className="muted">только объявление</span>],
+          ["", (r) => <span className="row" style={{ gap: 6 }}><button className="adm-btn ghost sm" onClick={() => { setSaveErr(null); edit(r); }}>Изменить</button><button className="adm-btn danger sm" onClick={() => del(Number(r.id))}>Удалить</button></span>, "nowrap"],
+        ]} />
+      </Box>
+      {form && (
+        <Box title={form.id ? `Событие #${form.id}` : "Новое событие"} right={<button className="adm-btn ghost sm" onClick={() => setForm(null)}>Закрыть</button>}>
+          <form className="adm-ev" onSubmit={(e) => { e.preventDefault(); void save(); }}>
+            <label>Название<input className="adm-in" value={form.title} maxLength={80} onChange={(e) => set("title", e.target.value)} placeholder="Например: Выходные удвоения" required /></label>
+            <label>Описание для игроков<textarea className="adm-in" rows={3} value={form.description} maxLength={1000} onChange={(e) => set("description", e.target.value)} placeholder="Что происходит и зачем заходить" /></label>
+            <div className="adm-ev-dates">
+              <label>Начало<input className="adm-in" type="datetime-local" value={form.startsAt} onChange={(e) => set("startsAt", e.target.value)} required /></label>
+              <label>Конец<input className="adm-in" type="datetime-local" value={form.endsAt} onChange={(e) => set("endsAt", e.target.value)} required /></label>
+            </div>
+            <div className="adm-ev-fx">
+              <b>Эффекты</b> <span className="muted small">(пусто — без изменений)</span>
+              {EVENT_EFFECTS.map((d) => (
+                <label key={d.id} className="adm-ev-row">
+                  <span>{d.name}<br /><span className="muted small">{d.hint}</span></span>
+                  <input className="adm-in sm" type="number" min={d.min} max={d.max} step={d.step} placeholder={String(d.neutral)} value={form.effects[d.id] ?? ""} onChange={(e) => set("effects", { ...form.effects, [d.id]: e.target.value })} />
+                </label>
+              ))}
+            </div>
+            <label className="row" style={{ gap: 8 }}><input type="checkbox" checked={form.enabled} onChange={(e) => set("enabled", e.target.checked)} /> Включено</label>
+            <Err e={saveErr} />
+            <button className="adm-btn wide" disabled={busy}>{busy ? "Сохраняем…" : form.id ? "Сохранить" : "Создать событие"}</button>
+          </form>
+        </Box>
+      )}
+    </>
   );
 }

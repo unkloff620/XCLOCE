@@ -6,7 +6,7 @@ import { Modal, RewardChips } from "./ui.tsx";
 import { useGame } from "./store.tsx";
 import { haptic } from "./telegram.ts";
 import { full, short } from "./format.ts";
-import { BOSSES } from "../content/bosses.ts";
+import { OPEN_BOSSES } from "../content/bosses.ts";
 import { STASH_LOCATION_NAMES, STASH_SETS_ORDERED } from "../content/stashes.ts";
 import { itemById } from "../content/items.ts";
 import { BossPhoto } from "./screens/boss-parts.tsx";
@@ -269,7 +269,7 @@ export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: b
         <Modal title="Убийца боссов" onClose={() => setKillOpen(false)}>
           <div className="col" style={{ gap: 6 }}>
             <div className="small muted center">Медали за победы над каждым боссом: бронза — {BOSS_KILL_TARGETS[0]}, серебро — {BOSS_KILL_TARGETS[1]}, золото — {BOSS_KILL_TARGETS[2]}. Нажми на медаль — увидишь награду.</div>
-            {BOSSES.map((b) => {
+            {OPEN_BOSSES().map((b) => {
               const tiers = ([1, 2, 3] as AchTier[]).map((t) => ({ t, a: achievementById(`bosskill-${b.id}-${t}`)!, r: byId.get(`bosskill-${b.id}-${t}`) }));
               const wins = tiers[2].r?.progress ?? 0;
               return (

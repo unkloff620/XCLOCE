@@ -1652,3 +1652,11 @@ body:has(.fit-page) .hud { background: linear-gradient(180deg, rgba(20, 12, 6, 0
 @media (prefers-reduced-motion: reduce) {
   .arena-photo.strike .br-breath, .arena-photo.strike > img, .fight-page.struck .arena, .fight-page.struck .fight-bg { animation: none; }
 }
+
+/* game events: the glowing star in the HUD and the event window (src/client/event-banner.tsx) */
+.hud-event { color: #ffd23f; animation: ev-glow 2.4s ease-in-out infinite; }
+@keyframes ev-glow { 50% { box-shadow: 0 0 10px rgba(255, 210, 63, 0.75), inset 0 0 6px rgba(255, 210, 63, 0.35); } }
+.ev-card { display: flex; flex-direction: column; gap: 6px; }
+.ev-title { font-size: 20px; }
+.ev-desc { margin: 0; white-space: pre-line; }
+.ev-effects { margin: 0; padding-left: 18px; font-weight: 700; }

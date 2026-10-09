@@ -4,7 +4,8 @@
  * reason `admin:<telegram id>` and to admin_log (who, whom, what, before → after).
  */
 import { GameError, type Db, type Queryable } from "./db.ts";
-import { loadConfig } from "./config.ts";
+import { loadConfig, resetConfigCache } from "./config.ts";
+import { cleanEffects } from "../content/events.ts";
 import { energyNow, type Ctx, type PlayerRow } from "./core.ts";
 import { giveStartKit } from "./players.ts";
 import { leaveClan } from "./systems/clans.ts";
@@ -320,4 +321,42 @@ export async function edit(db: Db, adminTg: number, pid: number, e: Edit) {
     await note(q, adminTg, pid, e.op, info);
     return { op: e.op, ...info };
   });
+}
+
+// ---------------- game events (src/content/events.ts) ----------------
+export async function events(db: Db) {
+  return db.query(`SELECT id, title, description, starts_at, ends_at, effects, enabled, created_by, created_at FROM game_events ORDER BY starts_at DESC, id DESC LIMIT 200`);
+}
+
+export interface EventInput { id?: number; title: string; description?: string; startsAt: string; endsAt: string; effects?: unknown; enabled?: boolean }
+
+export async function eventSave(db: Db, adminTg: number, e: EventInput) {
+  const title = String(e.title ?? "").trim().slice(0, 80);
+  if (!title) throw new GameError("bad_event", "Нужно название события");
+  const description = String(e.description ?? "").trim().slice(0, 1000);
+  const starts = new Date(e.startsAt), ends = new Date(e.endsAt);
+  if (!Number.isFinite(starts.getTime()) || !Number.isFinite(ends.getTime())) throw new GameError("bad_event", "Укажи даты начала и конца");
+  if (ends <= starts) throw new GameError("bad_event", "Конец должен быть позже начала");
+  const effects = cleanEffects(e.effects);
+  const enabled = e.enabled !== false;
+  if (e.id) {
+    const [r] = await db.query(
+      "UPDATE game_events SET title=$2, description=$3, starts_at=$4, ends_at=$5, effects=$6, enabled=$7 WHERE id=$1 RETURNING id",
+      [e.id, title, description, starts, ends, JSON.stringify(effects), enabled],
+    );
+    if (!r) throw new GameError("no_event", "Событие не найдено", 404);
+  } else {
+    await db.query(
+      "INSERT INTO game_events (title, description, starts_at, ends_at, effects, enabled, created_by) VALUES ($1,$2,$3,$4,$5,$6,$7)",
+      [title, description, starts, ends, JSON.stringify(effects), enabled, adminTg],
+    );
+  }
+  resetConfigCache();
+  return events(db);
+}
+
+export async function eventDelete(db: Db, id: number) {
+  await db.query("DELETE FROM game_events WHERE id=$1", [id]);
+  resetConfigCache();
+  return events(db);
 }

@@ -163,6 +163,14 @@ export const BOSSES: BossDef[] = [
     keysToUnlock: 1,
   },
 ];
+/**
+ * Bosses without drawn art are hidden for now: not in the lists, profile, medals and achievements, and a fight with them
+ * cannot be started (old data — keys, fights, items — stays). A boss comes back by itself once his art is added
+ * (photo has=true). ALL_BOSSES=1 (the tests) shows them all.
+ */
+export const bossOpen = (b: BossDef) => !!b.photo.full || (typeof process !== "undefined" && process.env?.ALL_BOSSES === "1");
+export const OPEN_BOSSES = (): BossDef[] => BOSSES.filter(bossOpen);
+
 
 export const bossById = (id: string) => BOSSES.find((b) => b.id === id);
 /** each boss fights in his own room (public/assets/arena/<id>.webp); the rest still in the garage */
