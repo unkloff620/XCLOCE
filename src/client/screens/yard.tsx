@@ -9,6 +9,7 @@ import { clock } from "../format.ts";
 import { haptic } from "../telegram.ts";
 import Link from "next/link";
 import { Icon } from "../art/icons.tsx";
+import { DriftingSky } from "../art/sky.tsx";
 import { SlotMachine } from "./slots.tsx";
 import { YardGames, YardUpgrader } from "./minigames.tsx";
 import { Help, HelpList } from "../help.tsx";
@@ -75,11 +76,15 @@ export function YardScreen() {
       </div>
       <div className="yard">
         {/* blurred copy of the yard fills the space above the scene on tall screens */}
-        <div className="scene-backdrop" style={{ backgroundImage: "url(/assets/yard/court-bg.webp)" }} />
+        <div className="scene-backdrop" style={{ backgroundImage: "url(/assets/yard/court-backdrop.webp)" }} />
         {/* the sharp scene stands on the nav at full width; the objects sit where they are drawn on the 2000×3405 sheet */}
         <div className="yard-stage">
+          {/* clouds drift behind the moon and the yard; the yard's sky is see-through */}
+          <DriftingSky className="court-sky" src="/assets/yard/court-sky.webp" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="yard-bg" src="/assets/yard/court-bg.webp" alt="" draggable={false} />
+          <img className="court-moon" src="/assets/yard/court-moon.webp" alt="" draggable={false} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="yard-bg" src="/assets/yard/court-yard.webp" alt="" draggable={false} />
           {/* the entrance leads to the locations with tasks */}
           <Link href="/locations" className={`yard-obj yard-entrance ${taskHint ? "call" : ""}`} aria-label="Локации" title="Локации">
             {/* eslint-disable-next-line @next/next/no-img-element */}

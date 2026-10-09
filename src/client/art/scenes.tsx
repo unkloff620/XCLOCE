@@ -180,7 +180,7 @@ export function LocationScene({ scene }: { scene: string }) {
 
 /* ---------------- yard (400×560). Item spots are in YARD_SPOTS (percent of the scene) ---------------- */
 export const YARD_SPOTS = [
-  // on the asphalt of the drawn yard (public/assets/yard/court-bg.webp): in front of the table and the machines
+  // on the asphalt of the drawn yard (public/assets/yard/court-yard.webp): in front of the table and the machines
   // (table x 2–61%, y 58–83%; 777 and the upgrader x 60–100%, y 59–82%); r = how the thing lies
   { x: 14, y: 89, r: -14 },
   { x: 36, y: 92, r: 9 },
