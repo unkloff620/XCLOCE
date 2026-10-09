@@ -172,6 +172,8 @@ export interface Granted {
   currencies: Partial<Record<Currency, number>>;
   items: { id: string; qty: number; lost?: number }[];
   energy: number;
+  /** achievement points (the sun) */
+  achPoints?: number;
   levelUp?: { from: number; to: number };
   /** things a boss drop opened in the shop (to be bought there) */
   unlocks?: string[];
@@ -189,6 +191,10 @@ export async function grantReward(ctx: Ctx, r: Reward, reason: string): Promise<
   if (r.energy) {
     out.energy = r.energy;
     await addEnergy(ctx, r.energy, reason);
+  }
+  if (r.achPoints && r.achPoints > 0) {
+    await ctx.q.query("UPDATE players SET ach_points = ach_points + $2 WHERE id=$1", [ctx.pid, Math.floor(r.achPoints)]);
+    out.achPoints = Math.floor(r.achPoints);
   }
   if (r.xp) {
     const [p] = await ctx.q.query<{ xp: number }>("UPDATE players SET xp = xp + $2 WHERE id=$1 RETURNING xp", [ctx.pid, r.xp]);

@@ -1216,6 +1216,24 @@ describe("Неоновая хата", () => {
   });
 });
 
+describe("room pity", () => {
+  it("a boss room drops for sure on the 10th win in a row without luck", async () => {
+    await setBossHp({ kedr: 10 });
+    const p = await newPlayer(db);
+    await give(db, p, "key-datsik", 100);
+    await give(db, p, "keyboard", 30);
+    const D = 24 * H;
+    const win = async (i: number) => {
+      const t = T0 + Math.floor(i / 5) * D + (i % 5) * M;
+      const f = await act(db, p, "fight_start", { boss: "kedr" }, t);
+      await hit(p, "keyboard", t);
+      return act(db, p, "fight_claim", { fightId: f.result.fightId }, t, always(0.99));
+    };
+    for (let i = 0; i < 9; i++) expect((await win(i)).result.reward.unlocks ?? []).not.toContain("room:neon");
+    expect((await win(9)).result.reward.unlocks).toContain("room:neon");
+  });
+});
+
 describe("Боксёрская", () => {
   it("drops from Командате, costs 4000 RUB and adds +30 to the fist", async () => {
     await setBossHp({ bebyakyan: 10 });

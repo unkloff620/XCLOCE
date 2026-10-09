@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { api } from "../api.ts";
 import { OPEN_BOSSES } from "../../content/bosses.ts";
-import { WEAPONS } from "../../content/items.ts";
+import { itemById } from "../../content/items.ts";
 import { CURRENCIES, CURRENCY_DEFS, type Currency } from "../../content/currencies.ts";
 import { Avatar, Bar, Coin, Empty, Modal } from "../ui.tsx";
 import { Emblem } from "../art/emblems.tsx";
@@ -27,6 +27,8 @@ interface Profile {
   level: number; xp: number; levelXp: number; levelNeed: number;
   firstSeen: number; lastSeen: number; activeDays: number;
   wallet: Record<Currency, number> | null; energy: number | null;
+  arsenal?: { id: string; qty: number }[];
+  achPoints?: number;
   stats: { totalDamage: number; weapons: Record<string, number>; taskSteps: number; tasksDone: number; locationsDone: number; locationsTotal: number; yardFound: number; rewardsGot: number; fightsWon: number; fightsLost: number };
   bosses: { id: string; damage: number; hits: number; wins: number }[];
   clan: { id: number; name: string; tag: string; emblem: string; color: string } | null;
@@ -105,7 +107,7 @@ export function ProfileScreen() {
         <div className="ph-top">
           <Avatar name={p.name} photo={p.photo} size={48} frame={p.frame} />
           <div className="ph-name">
-            <div className="row" style={{ gap: 6, justifyContent: "center" }}>
+            <div className="row" style={{ gap: 6 }}>
               <b className="display ellipsis" style={{ fontSize: 20 }}>{p.name}</b>
               {p.self && (
                 <button className="icon-btn" onClick={() => setRenaming(true)} aria-label="Сменить ник" title="Сменить ник">
@@ -183,13 +185,15 @@ export function ProfileScreen() {
             <span className="small muted">ТАЛАНТЫ</span>
             <TalentChip n={state.player.talents} />
           </div>
-          <TalentNext dmg={state.player.talentDamage} />
-          <button className="btn gold block" onClick={() => setTalentsOpen(true)}>Прокачать оружие ›</button>
+          <div className="tal-row">
+            <div className="grow"><TalentNext dmg={state.player.talentDamage} /></div>
+            <button className="btn gold sm tal-go" onClick={() => setTalentsOpen(true)}>Прокачать ›</button>
+          </div>
         </div>
       )}
       {talentsOpen && <TalentWindow onClose={() => setTalentsOpen(false)} />}
 
-      <BadgesPanel rows={p.achievements} self={p.self} onClaimed={reload} />
+      <BadgesPanel rows={p.achievements} self={p.self} onClaimed={reload} points={p.achPoints ?? 0} />
 
       <div className="panel">
         <div className="row" style={{ justifyContent: "space-between", marginBottom: 8 }}>
@@ -220,9 +224,10 @@ export function ProfileScreen() {
       <div className="panel">
         <div className="small muted" style={{ marginBottom: 8 }}>ОРУЖИЕ</div>
         <div className="row" style={{ flexWrap: "wrap", gap: 8 }}>
-          {WEAPONS.map((w) => (
-            <span key={w.id} className="chip"><ItemArt id={w.id} size={22} /> ×{s.weapons[w.id] ?? 0}</span>
+          {(p.arsenal ?? []).map((w) => (
+            <span key={w.id} className="chip" title={itemById(w.id)?.name}><ItemArt id={w.id} size={22} /> ×{full(w.qty)}</span>
           ))}
+          {!p.arsenal?.length && <span className="small muted">Оружия нет — загляни в магазин.</span>}
         </div>
       </div>
 
@@ -232,10 +237,10 @@ export function ProfileScreen() {
           {OPEN_BOSSES().map((b) => {
             const r = p.bosses.find((x) => x.id === b.id);
             return (
-              <div key={b.id} className="row small">
-                <span className="grow">{b.order}. {b.name}</span>
-                {!!r?.wins && <span className="chip green"><Icon name="trophy" size={14} />{r.wins}</span>}
-                <b className="num">{full(r?.damage ?? 0)}</b>
+              <div key={b.id} className="pb-row small">
+                <span className="ellipsis">{b.order}. {b.name}</span>
+                <span className="pb-wins">{!!r?.wins && <span className="chip green"><Icon name="trophy" size={14} /><b className="num">{r.wins}</b></span>}</span>
+                <b className="num pb-dmg">{full(r?.damage ?? 0)}</b>
               </div>
             );
           })}

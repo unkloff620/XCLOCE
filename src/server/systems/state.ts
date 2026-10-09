@@ -5,6 +5,7 @@ import { inventoryView } from "./shop.ts";
 import { yardSync } from "./yard.ts";
 import { levelFromXp } from "../../content/levels.ts";
 import { OPEN_BOSSES } from "../../content/bosses.ts";
+import { WEAPONS } from "../../content/items.ts";
 import { LOCATIONS } from "../../content/locations.ts";
 import { normalizeLook } from "../../content/home.ts";
 import { touchActivity } from "../players.ts";
@@ -107,11 +108,16 @@ export async function profileView(q: Queryable, viewer: number, pid: number, cfg
   const [clears] = await q.query<{ n: number }>("SELECT COUNT(DISTINCT location_id)::int AS n FROM location_claims WHERE player_id=$1", [pid]);
   const [clan] = p.clan_id ? await q.query<{ id: number; name: string; tag: string; emblem: string; color: string }>("SELECT id, name, tag, emblem, color FROM clans WHERE id=$1", [p.clan_id]) : [];
   const [app] = await q.query<{ equipped: Record<string, string>; body: unknown }>("SELECT equipped, body FROM appearance WHERE player_id=$1", [pid]);
+  // weapons in stock (the free fist, mouse and candle are not counted)
+  const stockIds = WEAPONS.filter((w) => w.weapon?.kind !== "permanent").map((w) => w.id);
+  const stock = await q.query<{ item_id: string; qty: number }>("SELECT item_id, qty FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id = ANY($2)", [pid, stockIds]);
   const lv = levelFromXp(p.xp, cfg.levels);
   const self = viewer === pid;
   const e = energyNow(p.energy, new Date(p.energy_at).getTime(), Date.now(), energyCfgOf(cfg, p));
   return {
     id: p.id, self, name: p.display_name, username: p.username, photo: p.photo_url,
+    achPoints: Number((p as PlayerRow & { ach_points?: number }).ach_points ?? 0),
+    arsenal: stockIds.map((id) => ({ id, qty: Number(stock.find((r) => r.item_id === id)?.qty ?? 0) })).filter((w) => w.qty > 0),
     level: lv.level, xp: Number(p.xp), levelXp: lv.into, levelNeed: lv.need,
     firstSeen: new Date(p.created_at).getTime(), lastSeen: new Date(p.last_seen_at).getTime(), activeDays: p.active_days,
     wallet: self ? await balances(q, pid) : null,

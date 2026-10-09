@@ -41,7 +41,9 @@ function catState(c: AchCategory, rows: Map<string, AchRow>, self: boolean) {
 }
 
 /** Profile block: one row per category with five coloured steps; on your own profile reached steps are collected. */
-export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: boolean; onClaimed?: () => void }) {
+export function BadgesPanel({ rows, self, onClaimed, points = 0 }: { rows: AchRow[]; self: boolean; onClaimed?: () => void; points?: number }) {
+  // the list is folded; the header shows the count, the points and whether something waits to be collected
+  const [shown, setShown] = useState(false);
   const { act, busy } = useGame();
   const [open, setOpen] = useState<string | null>(null);
   const [soloOpen, setSoloOpen] = useState(false);
@@ -61,6 +63,7 @@ export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: b
   const [medal, setMedal] = useState<string | null>(null);
   const byId = new Map(rows.map((r) => [r.id, r]));
   const total = rows.filter((r) => r.claimed || (!self && r.done)).length;
+  const waiting = self ? rows.filter((r) => r.done && !r.claimed).length : 0;
   const claim = async (id: string) => {
     const r = await act("achievement_claim", { id }, "Награда за достижение получена");
     if (r) {
@@ -72,11 +75,15 @@ export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: b
   const cs = cat ? catState(cat, byId, self) : null;
   return (
     <div className="panel">
-      <div className="row" style={{ justifyContent: "space-between", marginBottom: 8 }}>
+      <button type="button" className={`ach-head ${waiting ? "ready" : ""}`} onClick={() => setShown((v) => !v)} aria-expanded={shown}>
         <span className="small muted">ДОСТИЖЕНИЯ</span>
+        {waiting > 0 && <span className="chip gold ach-wait">забрать: {waiting}</span>}
+        <span className="grow" />
+        <span className="chip ach-pts" title="Очки достижений"><Icon name="sun" size={16} /><b className="num">{full(points)}</b></span>
         <span className="tiny muted num">{total}/{ACHIEVEMENTS.length}</span>
-      </div>
-      <div className="col" style={{ gap: 8 }}>
+        <span className={`ach-caret ${shown ? "open" : ""}`} aria-hidden="true">▾</span>
+      </button>
+      {shown && <div className="col" style={{ gap: 8, marginTop: 8 }}>
         {ACH_CATEGORIES.map((c) => {
           const s = catState(c, byId, self);
           const maxed = s.reached >= 5;
@@ -196,7 +203,7 @@ export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: b
             </div>
           );
         })()}
-      </div>
+      </div>}
       {stashOpen && (
         <Modal title="Нычки" onClose={() => setStashOpen(false)}>
           <div className="col" style={{ gap: 8 }}>
@@ -306,7 +313,7 @@ export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: b
           <Modal title={a.name} onClose={() => setMedal(null)}>
             <div className="col" style={{ gap: 10, alignItems: "center", textAlign: "center" }}>
               <BadgeMedal icon={a.icon} tier={a.tier} earned={got || due} size={72} />
-              <b style={{ color: TIER_COLORS[a.tier] }}>{TIER_NAMES[a.tier]}</b>
+              <b className="tier-name" style={{ color: TIER_COLORS[a.tier] }}>{TIER_NAMES[a.tier]}</b>
               <span className="small">{a.hint}</span>
               <span className="ach-bar" style={{ width: "100%", ["--p" as string]: `${Math.round(((r?.progress ?? 0) / a.target) * 100)}%`, ["--c" as string]: TIER_COLORS[a.tier] }}>
                 <i /><span className="num">{full(r?.progress ?? 0)} / {full(a.target)}</span>
@@ -331,8 +338,8 @@ export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: b
                 <div key={a.id} className={`ach-tier ${got ? "got" : due ? "due" : ""}`} style={{ ["--c" as string]: TIER_COLORS[a.tier] }}>
                   <BadgeMedal icon={a.icon} tier={a.tier} earned={got || due} size={38} />
                   <span className="grow col" style={{ gap: 3, minWidth: 0 }}>
-                    <b className="ellipsis" style={{ color: TIER_COLORS[a.tier] }}>{a.name.replace("Соло: ", "")}</b>
-                    <RewardChips r={a.reward} size={13} />
+                    <b className="ellipsis tier-name" style={{ color: TIER_COLORS[a.tier] }}>{a.name.replace("Соло: ", "")}</b>
+                    <RewardChips r={achievementById(a.id)?.reward ?? a.reward} size={13} />
                   </span>
                   {got ? <span className="quest-ok display">✓</span> : due ? (
                     <button className="btn gold sm" disabled={busy === "achievement_claim"} onClick={() => claim(a.id)}>Забрать</button>
@@ -357,8 +364,8 @@ export function BadgesPanel({ rows, self, onClaimed }: { rows: AchRow[]; self: b
                 <div key={t} className={`ach-tier ${got ? "got" : due ? "due" : ""}`} style={{ ["--c" as string]: TIER_COLORS[t] }}>
                   <BadgeMedal icon={cat.icon} tier={t} earned={got || (!self && !!r?.done) || due} size={38} />
                   <span className="grow col" style={{ gap: 3, minWidth: 0 }}>
-                    <b style={{ color: TIER_COLORS[t] }}>{TIER_NAMES[t]} · <span className="num">{full(def.target)}</span></b>
-                    <span className="tiny muted">{def.hint}</span>
+                    <b className="tier-name" style={{ color: TIER_COLORS[t] }}>{TIER_NAMES[t]} · <span className="num">{full(def.target)}</span></b>
+                    <span className="ach-hint">{def.hint}</span>
                     <RewardChips r={def.reward} size={13} />
                   </span>
                   {got ? <span className="quest-ok display">✓</span> : due ? (

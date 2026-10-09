@@ -7,6 +7,8 @@ export interface Reward {
   items?: { id: string; qty: number }[];
   /** energy is added on top of the regular maximum, never capped */
   energy?: number;
+  /** achievement points (the sun): +1 bronze … +5 diamond; what they buy comes later */
+  achPoints?: number;
 }
 
 export function mergeRewards(...rs: (Reward | undefined)[]): Reward {
@@ -15,6 +17,7 @@ export function mergeRewards(...rs: (Reward | undefined)[]): Reward {
     if (!r) continue;
     if (r.xp) out.xp = (out.xp ?? 0) + r.xp;
     if (r.energy) out.energy = (out.energy ?? 0) + r.energy;
+    if (r.achPoints) out.achPoints = (out.achPoints ?? 0) + r.achPoints;
     for (const [c, v] of Object.entries(r.currencies ?? {})) {
       out.currencies = out.currencies ?? {};
       out.currencies[c as Currency] = (out.currencies[c as Currency] ?? 0) + (v ?? 0);

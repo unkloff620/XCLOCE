@@ -96,7 +96,7 @@ export const STASH_ACHIEVEMENTS: AchievementDef[] = STASH_SETS_ORDERED.flatMap((
   }),
 );
 
-export const ACHIEVEMENTS: AchievementDef[] = [
+export const ACHIEVEMENTS: AchievementDef[] = ([
   ...ACH_CATEGORIES.flatMap((c) =>
     c.targets.map((target, i) => {
       const tier = (i + 1) as AchTier;
@@ -106,7 +106,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   ...SOLO_BOSS_ACHIEVEMENTS,
   ...BOSS_KILL_ACHIEVEMENTS,
   ...STASH_ACHIEVEMENTS,
-];
+] as AchievementDef[]).map((a) => ({ ...a, reward: { ...a.reward, achPoints: a.tier } }));
 
 export const achievementById = (id: string) => ACHIEVEMENTS.find((a) => a.id === id);
 

@@ -66,6 +66,7 @@ export function RewardChips({ r, size = 18 }: { r: Reward | Granted | null | und
       {Object.entries(r.currencies ?? {}).map(([c, v]) => (v ? <span key={c} className="chip"><Coin c={c as Currency} v={v} size={size} /></span> : null))}
       {!!r.xp && <span className="chip violet" title="Авторитет"><Icon name="xp" size={size} />+{r.xp}</span>}
       {!!r.energy && <span className="chip gold" title="Энергия"><Icon name="energy" size={size} />+{r.energy}</span>}
+      {!!r.achPoints && <span className="chip ach-pts" title="Очки достижений"><Icon name="sun" size={size} />+{r.achPoints}</span>}
       {items.map((it) => (
         <span key={it.id} className="chip" title={itemById(it.id)?.name}>
           <ItemArt id={it.id} size={size + 2} />
@@ -107,6 +108,7 @@ export function GainLine({ r, size = 26 }: { r: Reward | Granted | null | undefi
       ) : null))}
       {!!r.energy && <span className="gain" title="Энергия"><Icon name="energy" size={size} />+{r.energy}</span>}
       {!!r.xp && <span className="gain" title="Авторитет"><Icon name="xp" size={size} />+{r.xp}</span>}
+      {!!r.achPoints && <span className="gain" title="Очки достижений"><Icon name="sun" size={size} />+{r.achPoints}</span>}
     </span>
   );
 }

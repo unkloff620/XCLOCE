@@ -198,7 +198,7 @@ export function HomeScreen() {
           </button>
           {menuOpen && (
             <div className="menu-drop">
-              <button className="icon-btn-art" style={{ ["--c" as string]: "#b06bff" }} onClick={openWardrobe} aria-label="Гардероб" title="Гардероб">
+              <button className="icon-btn-art" style={{ ["--c" as string]: "#ff9a3d" }} onClick={openWardrobe} aria-label="Гардероб" title="Гардероб">
                 <Icon name="shirt" size={58} />
               </button>
               <button className={`icon-btn-art ${state.daily.available ? "glow" : ""}`} style={{ ["--c" as string]: "#ffcc33" }} onClick={() => setDaily(true)} aria-label="Бонус" title="Бонус">

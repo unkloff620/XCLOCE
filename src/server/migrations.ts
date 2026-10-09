@@ -2,6 +2,8 @@
  * XCLOCE 2.0 schema. Migration ids are prefixed "v2-" so they never collide with the old game's ids,
  * and v2-000 drops every table of the old game: the new game starts from a clean database.
  */
+import { ACHIEVEMENTS } from "../content/achievements.ts";
+
 const OLD_TABLES = [
   "actions", "balances", "battles", "boss_damage", "boss_defeats", "boss_instances", "boss_progress", "clan_members", "clan_requests",
   "clans", "daily_rewards", "damage_events", "feed", "global_hits", "global_state", "inventory", "location_clears", "location_progress",
@@ -650,6 +652,32 @@ CREATE TABLE IF NOT EXISTS game_events (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS game_events_window ON game_events (starts_at, ends_at);
+`,
+  },
+  {
+    // Комнаты с босса получили гарантию, как вещи: 10 побед без комнаты — она выпадает. Кто уже набрал 10+ побед
+    // над боссом и комнату не получил (и не купил), получает её сейчас.
+    id: "v2-034-room-pity",
+    sql: `
+INSERT INTO player_unlocks (player_id, item_id, boss_id, at)
+SELECT d.player_id, r.unlock, d.boss_id, now()
+FROM boss_damage d
+JOIN (VALUES ('kedr', 'room:neon', 'neon'), ('bebyakyan', 'room:boxing', 'boxing')) AS r(boss, unlock, room) ON r.boss = d.boss_id
+WHERE d.wins >= 10
+  AND NOT EXISTS (SELECT 1 FROM appearance a WHERE a.player_id = d.player_id AND a.rooms ? r.room)
+ON CONFLICT DO NOTHING;
+`,
+  },
+  {
+    // Очки достижений (солнце): +1 за бронзу … +5 за бриллиант. За уже собранные достижения — сразу.
+    id: "v2-035-ach-points",
+    sql: `
+ALTER TABLE players ADD COLUMN IF NOT EXISTS ach_points INT NOT NULL DEFAULT 0;
+UPDATE players p SET ach_points = s.pts FROM (
+  SELECT a.player_id, SUM(t.tier)::int AS pts FROM achievements a
+  JOIN (VALUES ${ACHIEVEMENTS.map((a) => `('${a.id}', ${a.tier})`).join(", ")}) AS t(id, tier) ON t.id = a.id
+  GROUP BY a.player_id
+) s WHERE s.player_id = p.id;
 `,
   },
 ];

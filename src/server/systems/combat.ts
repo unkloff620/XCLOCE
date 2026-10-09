@@ -4,7 +4,7 @@ import { BOSSES, EXTRA_KEY_CHANCE, OPEN_BOSSES, bossById, bossOpen, keyId, keysN
 import { WEAPONS, itemById, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
 import { mergeRewards, scaleReward } from "../../content/rewards.ts";
-import { BASE_CRIT_MULT, ROOM_DEFS, roomUnlockId } from "../../content/home.ts";
+import { BASE_CRIT_MULT, ROOM_DEFS, ROOM_PITY, roomUnlockId } from "../../content/home.ts";
 import { talentsForDamage, weaponTalentBonus } from "../../content/talents.ts";
 import { playerBonus, weaponTalents } from "./home.ts";
 import { notifyBossLow } from "./notify.ts";
@@ -325,7 +325,15 @@ export async function claimFight(ctx: Ctx, fightId: number) {
       const [have] = await ctx.q.query("SELECT 1 FROM player_unlocks WHERE player_id=$1 AND item_id=$2", [ctx.pid, key]);
       const [app] = await ctx.q.query<{ rooms: string[] }>("SELECT rooms FROM appearance WHERE player_id=$1", [ctx.pid]);
       if (have || (app?.rooms ?? []).includes(room.id)) continue;
-      if (ctx.rng() < room.drop!.chance) {
+      // the miss counter (boss_pity, keyed "room:<id>"): after ROOM_PITY wins without luck the room drops for sure
+      const [pity] = await ctx.q.query<{ misses: number }>("SELECT misses FROM boss_pity WHERE player_id=$1 AND boss_id=$2 FOR UPDATE", [ctx.pid, key]);
+      const misses = pity?.misses ?? 0;
+      const got = ctx.rng() < room.drop!.chance || misses + 1 >= ROOM_PITY;
+      await ctx.q.query(
+        "INSERT INTO boss_pity (player_id, boss_id, misses) VALUES ($1,$2,$3) ON CONFLICT (player_id, boss_id) DO UPDATE SET misses = EXCLUDED.misses",
+        [ctx.pid, key, got ? 0 : misses + 1],
+      );
+      if (got) {
         await ctx.q.query("INSERT INTO player_unlocks (player_id, item_id, boss_id, at) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING", [ctx.pid, key, def.id, new Date(ctx.now)]);
         unlocked.push(key);
       }

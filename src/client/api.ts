@@ -11,6 +11,8 @@ export interface Granted {
   currencies: Partial<Record<Currency, number>>;
   items: { id: string; qty: number; lost?: number }[];
   energy: number;
+  /** achievement points (the sun) */
+  achPoints?: number;
   levelUp?: { from: number; to: number };
   /** things a boss drop opened in the shop (to be bought there) */
   unlocks?: string[];

@@ -163,6 +163,8 @@ export const placedArt = (id: string, pieces: Record<string, number>, decor: Rec
 export const roomById = (id: string) => ROOM_DEFS.find((r) => r.id === id);
 /** the unlock key of a room that drops from a boss (stored with the shop unlocks) */
 export const roomUnlockId = (id: string) => `room:${id}`;
+/** like the boss's clothes: this many wins in a row without the room and it drops for sure */
+export const ROOM_PITY = 10;
 /** extra energy limit the owned rooms give */
 export const roomsEnergyBonus = (rooms: string[]) => rooms.reduce((n, id) => n + (roomById(id)?.bonus.energyMax ?? 0), 0);
 

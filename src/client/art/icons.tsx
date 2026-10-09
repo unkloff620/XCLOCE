@@ -82,6 +82,16 @@ const ICONS: Record<string, () => ReactNode> = {
       <path d="M32 18 V34 L42 40" fill="none" stroke={OL} strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
     </>
   ),
+  // achievement points
+  sun: () => (
+    <>
+      {Array.from({ length: 8 }, (_, i) => (
+        <path key={i} d="M32 3 L37 14 L27 14 Z" transform={`rotate(${i * 45} 32 32)`} fill="#ffb627" stroke={OL} strokeWidth="3" strokeLinejoin="round" />
+      ))}
+      <circle cx="32" cy="32" r="15" fill="#ffd23f" stroke={OL} strokeWidth="4" />
+      <circle cx="27" cy="27" r="5" fill="#fff3b0" />
+    </>
+  ),
   trophy: () => (
     <>
       <path d="M14 12 H4 v6 a12 12 0 0 0 14 11 M50 12 H60 v6 a12 12 0 0 1 -14 11" fill="none" stroke={OL} strokeWidth="9" />
@@ -214,7 +224,7 @@ export function Icon({ name, size = 28, className }: { name: IconName; size?: nu
 }
 
 /* ---------- bottom menu icons (larger, two-tone, the active tab glows in its colour) ---------- */
-export const NAV_GLOW: Record<string, string> = { home: "#ffcc33", bosses: "#ff4d6d", yard: "#3ddc84", shop: "#ff4d6d", inventory: "#3fd2ff", clans: "#b06bff" };
+export const NAV_GLOW: Record<string, string> = { home: "#ffcc33", bosses: "#ff4d6d", yard: "#3ddc84", shop: "#ff4d6d", inventory: "#3fd2ff", clans: "#ffb347" };
 /** Bottom-menu icons drawn by the artist (public/assets/nav, cut from the sheet by tools/items/build-nav.py). */
 const NAV_ART = new Set(["home", "bosses", "yard", "shop", "inventory", "clans"]);
 

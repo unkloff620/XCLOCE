@@ -18,8 +18,8 @@
   --red-d: #c21d42;
   --gold: #ffcc33;
   --gold-d: #d18f00;
-  --violet: #8d6bff;
-  --violet-d: #5a3ad6;
+  --violet: #e3862f;
+  --violet-d: #a24e12;
   --cyan: #ffb347;
   --orange: #ff8a3d;
   --r: 16px;
@@ -60,7 +60,7 @@ img { max-width: 100%; }
 /* ---------- desktop: the game stays a phone-width column on a decorated backdrop ---------- */
 .backdrop {
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background: var(--tex), radial-gradient(60% 40% at 15% 20%, rgba(141, 107, 255, 0.16), transparent 70%),
+  background: var(--tex), radial-gradient(60% 40% at 15% 20%, rgba(227, 134, 47, 0.16), transparent 70%),
     radial-gradient(50% 40% at 85% 80%, rgba(46, 232, 138, 0.10), transparent 70%),
     repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px 48px),
     repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px 48px),
@@ -82,7 +82,7 @@ img { max-width: 100%; }
 .hud-me .name { font-weight: 700; font-size: 13px; }
 .lvl { flex: none; padding: 1px 6px; border-radius: 7px; background: var(--violet); border: 2px solid var(--line); font-size: 10.5px; font-weight: 800; letter-spacing: 0.04em; }
 .xpbar { height: 8px; border-radius: 6px; background: #120b07; border: 2px solid var(--line); overflow: hidden; }
-.xpbar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--violet), #c3a8ff); }
+.xpbar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--violet), #ffc98a); }
 .energy-chip { flex: none; color: inherit; font: inherit; cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 5px 9px 5px 6px; border-radius: 14px; background: var(--tex), var(--panel); border: 2.5px solid var(--line); font-weight: 800; }
 .energy-chip.over b { color: var(--gold); }
 .energy-chip small { display: block; font-size: 10px; font-weight: 600; color: var(--muted); line-height: 1; }
@@ -98,7 +98,7 @@ img { max-width: 100%; }
 }
 .nav a { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px 0; border-radius: 14px; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: 0; text-transform: uppercase; transition: transform 0.15s, background 0.15s, color 0.15s; }
 .nav a svg { width: 46px; height: 46px; filter: saturate(0.5) brightness(0.8); transition: filter 0.15s, transform 0.15s; }
-.nav a.on { color: var(--ink); background: var(--tex), linear-gradient(180deg, var(--panel3), var(--panel)); box-shadow: 0 0 0 2.5px var(--line), 0 0 18px var(--glow, rgba(141, 107, 255, 0.5)); transform: translateY(-4px); }
+.nav a.on { color: var(--ink); background: var(--tex), linear-gradient(180deg, var(--panel3), var(--panel)); box-shadow: 0 0 0 2.5px var(--line), 0 0 18px var(--glow, rgba(227, 134, 47, 0.5)); transform: translateY(-4px); }
 .nav a.on svg { filter: none; transform: scale(1.08); }
 .nav a.on::after { content: ""; position: absolute; bottom: -7px; width: 22px; height: 4px; border-radius: 3px; background: var(--glow, var(--violet)); box-shadow: 0 0 10px var(--glow, var(--violet)); }
 .nav .badge { position: absolute; top: 0; right: 14%; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--red); border: 2px solid var(--line); color: #fff; font-size: 10px; line-height: 13px; text-align: center; }
@@ -124,7 +124,7 @@ h2.h { margin: 4px 2px 8px; font-size: 16px; text-shadow: 0 2px 0 var(--line); }
 .btn.green { background: linear-gradient(180deg, #4dfaa0, var(--green) 50%, var(--green-d)); color: #052b16; }
 .btn.gold { background: linear-gradient(180deg, #ffe27a, var(--gold) 50%, var(--gold-d)); color: #2e1c00; }
 .btn.red { background: linear-gradient(180deg, #ff8299, var(--red) 50%, var(--red-d)); color: #fff; }
-.btn.violet { background: linear-gradient(180deg, #b29bff, var(--violet) 50%, var(--violet-d)); color: #fff; }
+.btn.violet { background: linear-gradient(180deg, #ffb36b, var(--violet) 50%, var(--violet-d)); color: #fff; }
 .btn.dark { background: linear-gradient(180deg, #4a3524, #36261a); }
 .btn.big { min-height: 54px; font-size: 18px; border-radius: 16px; }
 .btn.block { width: 100%; }
@@ -135,14 +135,14 @@ h2.h { margin: 4px 2px 8px; font-size: 16px; text-shadow: 0 2px 0 var(--line); }
 .bar.green > i { background: linear-gradient(180deg, #5dffab, var(--green-d)); }
 .bar.red > i { background: linear-gradient(180deg, #ff7f95, var(--red-d)); }
 .bar.gold > i { background: linear-gradient(180deg, #ffe27a, var(--gold-d)); }
-.bar.violet > i { background: linear-gradient(180deg, #b49dff, var(--violet-d)); }
+.bar.violet > i { background: linear-gradient(180deg, #ffb36b, var(--violet-d)); }
 .bar > span { position: relative; display: block; text-align: center; font-size: 11px; font-weight: 800; line-height: 13px; text-shadow: 0 1px 0 #000, 0 0 3px #000; }
 
 .chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9px; background: var(--tex), var(--bg2); border: 2px solid var(--line); font-size: 12px; font-weight: 700; white-space: nowrap; }
 .chip.green { background: #0f3a25; color: var(--green); }
 .chip.red { background: #3a0f1a; color: #ff8a9e; }
 .chip.gold { background: #3a2c08; color: var(--gold); }
-.chip.violet { background: #241a4d; color: #c6b5ff; }
+.chip.violet { background: #4a2410; color: #ffd2a0; }
 
 .tabs { display: flex; gap: 6px; overflow-x: auto; padding: 2px 2px 8px; scrollbar-width: none; }
 .tabs::-webkit-scrollbar { display: none; }
@@ -181,7 +181,7 @@ h2.h { margin: 4px 2px 8px; font-size: 16px; text-shadow: 0 2px 0 var(--line); }
 
 /* ---------- loading ---------- */
 .loading { min-height: 100dvh; display: grid; place-items: center; text-align: center; padding: 24px; }
-.loading .logo { font-size: 40px; text-shadow: 0 4px 0 var(--line), 0 0 30px rgba(141, 107, 255, 0.6); }
+.loading .logo { font-size: 40px; text-shadow: 0 4px 0 var(--line), 0 0 30px rgba(227, 134, 47, 0.6); }
 .loading.overlay { position: fixed; inset: 0; z-index: 85; min-height: 0; background: var(--tex), var(--bg); }
 /* loading screen: XClose, ring with [n/total], a joke about the current download, a game tip */
 .boot-box { width: min(320px, 100%); display: flex; flex-direction: column; align-items: center; gap: 14px; }
