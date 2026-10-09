@@ -88,12 +88,16 @@ export function YardScreen() {
           {/* the entrance leads to the locations with tasks */}
           <Link href="/locations" className={`yard-obj yard-entrance ${taskHint ? "call" : ""}`} aria-label="Локации" title="Локации">
             {/* eslint-disable-next-line @next/next/no-img-element */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="yard-ring" src="/assets/yard/court-entrance-ring.webp" alt="" draggable={false} />
             <img src="/assets/yard/court-entrance.webp" alt="" draggable={false} />
             {taskHint && <span className="side-alert">!</span>}
           </Link>
           <YardGames />
           <button className={`yard-obj yard-slots ${state && state.slots.left > 0 ? "ready" : ""}`} onClick={() => setSlots(true)} aria-label="Игровой автомат 777">
             {/* eslint-disable-next-line @next/next/no-img-element */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="yard-ring" src="/assets/yard/court-slot-ring.webp" alt="" draggable={false} />
             <img src="/assets/yard/court-slot.webp" alt="" draggable={false} />
             {state && <span className="yard-slots-left num">{state.slots.left}/{state.slots.max}</span>}
           </button>

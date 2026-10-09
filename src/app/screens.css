@@ -1538,11 +1538,20 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .yard-entrance { left: 0; top: 39.71%; width: 30.45%; height: 28.25%; }
 .yard-table { left: 2.1%; top: 58%; width: 58.8%; height: 25.37%; z-index: 1;
   /* taps only on the board and the table, not on the empty corner over the entrance steps */
-  clip-path: polygon(52% 0, 88% 0, 88% 41%, 100% 41%, 100% 100%, 0 100%, 0 45%, 52% 41%); }
+  clip-path: polygon(49% -5%, 89% -5%, 89% 38%, 105% 38%, 105% 105%, -5% 105%, -5% 42%, 49% 38%); }
 .yard-slots { left: 60.4%; top: 60.32%; width: 24.3%; height: 18.71%; z-index: 2; }
 .yard-slots.ready { animation: slot-call 2.4s ease-in-out infinite; }
-.yard-upgrader { left: 74.5%; top: 58.71%; width: 25.5%; height: 23.35%; z-index: 3; animation: upg-glow 3s ease-in-out infinite; }
-@keyframes upg-glow { 50% { filter: drop-shadow(0 0 10px rgba(255, 200, 40, 0.55)); } }
+.yard-upgrader { left: 74.5%; top: 58.71%; width: 25.5%; height: 23.35%; z-index: 3; }
+/* everything you can tap in the yard has a thin gold outline (a ring cut from the art's own edges, not the cut lines)
+   that flares now and then — each object at its own moment */
+.yard-obj > img.yard-ring { position: absolute; left: calc(var(--rx) * -1); top: calc(var(--ry) * -1); width: calc(100% + 2 * var(--rx)); height: calc(100% + 2 * var(--ry));
+  opacity: 0.5; animation: yard-ring 7s ease-in-out infinite; animation-delay: var(--od, 0s); }
+.yard-entrance { --rx: 6.03%; --ry: 3.81%; --od: 0s; }
+.yard-table { --rx: 3.12%; --ry: 4.25%; --od: -5.2s; }
+.yard-slots { --rx: 7.53%; --ry: 5.76%; --od: -3.5s; }
+.yard-upgrader { --rx: 7.19%; --ry: 4.61%; --od: -1.7s; }
+@keyframes yard-ring { 0%, 80%, 100% { opacity: 0.5; } 88% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .yard-obj > img.yard-ring { animation: none; } }
 .yard-table .yg-badge { top: 4%; right: 40%; }
 /* the entrance: «!» over the door when there is energy for a task */
 .yard-entrance .side-alert { top: 48%; right: auto; left: 22%; }

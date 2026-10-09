@@ -440,6 +440,8 @@ export function YardGames() {
     <>
       <button className="yard-obj yard-table" onClick={() => setOpen("pick")} aria-label="Блэкджек и зонк" title="Блэкджек и зонк">
         {/* eslint-disable-next-line @next/next/no-img-element */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="yard-ring" src="/assets/yard/court-table-ring.webp" alt="" draggable={false} />
         <img src="/assets/yard/court-table.webp" alt="" draggable={false} />
         {free !== 0 && <i className={`yg-badge ${free === "идёт" ? "live" : ""}`}>{free}</i>}
       </button>
@@ -468,6 +470,8 @@ export function YardUpgrader() {
     <>
       <button className="yard-obj yard-upgrader" onClick={() => setOpen(true)} aria-label="Апгрейдер" title="Апгрейдер">
         {/* eslint-disable-next-line @next/next/no-img-element */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="yard-ring" src="/assets/yard/court-upgrader-ring.webp" alt="" draggable={false} />
         <img src="/assets/yard/court-upgrader.webp" alt="" draggable={false} />
       </button>
       {open && <UpgraderWindow onClose={() => setOpen(false)} />}
