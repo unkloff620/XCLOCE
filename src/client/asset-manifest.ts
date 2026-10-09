@@ -244,6 +244,7 @@ export const ASSET_FILES: string[] = [
  "/assets/nav/clans.webp",
  "/assets/nav/home.webp",
  "/assets/nav/inventory.webp",
+ "/assets/nav/shop.webp",
  "/assets/nav/yard.webp",
  "/assets/pc/case.webp",
  "/assets/pc/cooler.webp",

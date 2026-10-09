@@ -181,7 +181,6 @@ export function ShopScreen() {
     <div className="fit-page">
       <div className="title">
         <div className="title-row">
-          <Link href="/yard" className="back-btn" aria-label="Во двор">‹</Link>
           <h1 className="display">Магазин</h1>
           <Help topic="shop" title="Магазин">
             <HelpList title="Что где лежит" rows={SHOP_SPOTS.map((x) => ({ key: x.id, icon: /* eslint-disable-next-line @next/next/no-img-element */ <img src={`/assets/shop/v2/${x.img}.webp`} alt="" width={44} height={44} style={{ objectFit: "contain" }} />, name: x.name, hint: x.hint }))} />

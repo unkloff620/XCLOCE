@@ -93,7 +93,7 @@ img { max-width: 100%; }
 /* ---------- bottom nav ---------- */
 .nav {
   position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); z-index: 40; width: 100%; max-width: var(--col);
-  display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; padding: 6px 8px calc(var(--safe-b) + 8px);
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px; padding: 6px 6px calc(var(--safe-b) + 8px);
   background: linear-gradient(0deg, rgba(24, 15, 9, 0.99), rgba(28, 18, 11, 0.96)); border-top: 2.5px solid var(--line); box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.45);
 }
 .nav a { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px 0; border-radius: 14px; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: 0; text-transform: uppercase; transition: transform 0.15s, background 0.15s, color 0.15s; }

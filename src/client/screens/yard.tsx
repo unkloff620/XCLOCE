@@ -17,7 +17,6 @@ import { GainLine, Modal } from "../ui.tsx";
 import type { Granted } from "../api.ts";
 
 const LINKS = [
-  { href: "/shop", icon: "shop", label: "Магазин", c: "#ff4d6d", hint: "Оружие, энергия, одежда и разное за игровую валюту." },
   { href: "/exchange", icon: "exchange", label: "Обменник", c: "#ffb347", hint: "Меняй одну валюту на другую (комиссия 5%)." },
 ] as const;
 
