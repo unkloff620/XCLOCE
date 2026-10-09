@@ -1234,6 +1234,32 @@ describe("room pity", () => {
   });
 });
 
+describe("Бутылка Командате", () => {
+  it("is held in the hand slot and opens from Командате for sure after 10 unlucky wins", async () => {
+    await setBossHp({ bebyakyan: 10 });
+    const p = await newPlayer(db);
+    await give(db, p, "tee-pump", 1); // the other thing of his is owned: only the bottle is left to drop
+    await give(db, p, "key-kedr", 100);
+    await give(db, p, "keyboard", 30);
+    const D = 24 * H;
+    let opened: string[] = [];
+    for (let i = 0; i < 10 && !opened.includes("bottle-komandate"); i++) {
+      const t = T0 + Math.floor(i / 5) * D + (i % 5) * M;
+      const f = await act(db, p, "fight_start", { boss: "bebyakyan" }, t);
+      await hit(p, "keyboard", t);
+      const c = await act(db, p, "fight_claim", { fightId: f.result.fightId }, t, always(0.99));
+      opened = c.result.reward.unlocks ?? [];
+      if (i < 9) expect(opened).not.toContain("bottle-komandate");
+    }
+    expect(opened).toContain("bottle-komandate");
+    await give(db, p, "bottle-komandate", 1);
+    const e = await act(db, p, "equip", { itemId: "bottle-komandate" }, T0 + 3 * D);
+    expect(e.state.look.equipped.HAND).toBe("bottle-komandate");
+    const u = await act(db, p, "unequip", { slot: "HAND" }, T0 + 3 * D);
+    expect(u.state.look.equipped.HAND).toBeUndefined();
+  });
+});
+
 describe("Боксёрская", () => {
   it("drops from Командате, costs 4000 RUB and adds +30 to the fist", async () => {
     await setBossHp({ bebyakyan: 10 });

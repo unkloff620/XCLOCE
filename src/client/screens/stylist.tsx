@@ -24,11 +24,11 @@ export interface StyleDraft {
 }
 
 /** editor slots: clothing slots plus the parts edited here (eyes) or coming later (mouth, hand) */
-type EditSlot = Slot | "EYES" | "MOUTH" | "HAND";
+type EditSlot = Slot | "EYES" | "MOUTH";
 const SLOT_NAME: Record<string, string> = { HEAD: "Голова", EYES: "Глаза", MOUTH: "Рот", SHIRT: "Верх", HAND: "Кисть", PANTS: "Низ", SHOES: "Обувь" };
 const LEFT: EditSlot[] = ["HEAD", "EYES", "MOUTH", "SHIRT"];
 const RIGHT: EditSlot[] = ["HAND", "PANTS", "SHOES"];
-const CLOTHES: Slot[] = ["HEAD", "SHIRT", "PANTS", "SHOES"];
+const CLOTHES: Slot[] = ["HEAD", "SHIRT", "PANTS", "SHOES", "HAND"];
 const isClothes = (s: EditSlot): s is Slot => (CLOTHES as string[]).includes(s);
 
 export function Stylist({ draft, setDraft, onClose, onFocus }: { draft: StyleDraft; setDraft: (d: StyleDraft) => void; onClose: () => void; onFocus?: (f: RigEdit) => void }) {
@@ -82,7 +82,7 @@ export function Stylist({ draft, setDraft, onClose, onFocus }: { draft: StyleDra
   const slotBtn = (s: EditSlot) => {
     const id = isClothes(s) ? draft.worn[s] : undefined;
     const def = id ? ITEMS.find((i) => i.id === id) : null;
-    const soon = s === "MOUTH" || s === "HAND";
+    const soon = s === "MOUTH";
     return (
       <button key={s} className={`sty-slot ${slot === s ? "on" : ""} ${def ? `filled rar-${def.rarity}` : ""} ${soon ? "soon" : ""}`}
         onClick={() => { haptic.tap(); setSlot(s); }} aria-label={`${SLOT_NAME[s]}: ${def?.name ?? "пусто"}`}>
@@ -109,12 +109,12 @@ export function Stylist({ draft, setDraft, onClose, onFocus }: { draft: StyleDra
           <button className="sty-x" onClick={onClose} aria-label="Закрыть без сохранения">✕</button>
         </div>
 
-        {mode === "items" && (slot === "MOUTH" || slot === "HAND") ? (
+        {mode === "items" && slot === "MOUTH" ? (
           <div className="sty-body">
             <div className="tiny muted">{SLOT_NAME[slot]}</div>
             <div className="sty-soon-box">
               <b>Скоро</b>
-              <span className="small">{slot === "HAND" ? "Предметы в руку будут выпадать с боссов — герой будет держать их в кисти." : "Формы рта появятся в одном из следующих обновлений."}</span>
+              <span className="small">Формы рта появятся в одном из следующих обновлений.</span>
             </div>
           </div>
         ) : mode === "items" && isClothes(slot) ? (

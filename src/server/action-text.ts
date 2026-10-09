@@ -15,7 +15,7 @@ import { SLOT_SYMBOL_NAMES } from "../content/slots.ts";
 
 type Row = Record<string, unknown>;
 const SYMBOLS: Record<string, string> = { ...SLOT_SYMBOL_NAMES, btc: "BTC", sol: "SOL", usd: "USD", keyboard: "клавиатура", candle: "свеча", rub: "RUB" };
-const SLOT_NAMES: Record<string, string> = { PANTS: "штаны", SHIRT: "верх", SHOES: "обувь", HEAD: "голова", ACCESSORY: "аксессуар", SPECIAL: "особое" };
+const SLOT_NAMES: Record<string, string> = { PANTS: "штаны", SHIRT: "верх", SHOES: "обувь", HEAD: "голова", ACCESSORY: "аксессуар", SPECIAL: "особое", HAND: "кисть" };
 
 const n = (v: unknown) => Number(v ?? 0);
 const fmt = (v: unknown) => n(v).toLocaleString("ru-RU", { maximumFractionDigits: 8 });

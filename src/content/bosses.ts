@@ -75,7 +75,7 @@ export const BOSSES: BossDef[] = [
     story: "Командует всеми, кто ниже. Таких пока немного, но он не сдаётся.",
     hp: hp(2), reward: { xp: xp(2), currencies: { SOL: 0.045, RUB: 300 } },
     drop: [{ id: "keyboard", qty: 3, chance: 0.3 }],
-    wear: { items: ["tee-pump"], chance: 0.1, pity: 10 },
+    wear: { items: ["tee-pump", "bottle-komandate"], chance: 0.1, pity: 10 },
     theme: { a: "#1c2a4a", b: "#080d1c", accent: "#4da3ff" }, photo: photo("bebyakyan", true),
   },
   {

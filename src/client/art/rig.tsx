@@ -13,6 +13,7 @@ import type { ReactNode } from "react";
 import { createContext, useContext } from "react";
 import { RIG } from "./rig-data.ts";
 import { HAIR_FIT, SKIN_ORIGINAL, WEAR_FIT } from "./rig-look.ts";
+import { HELD_FIT } from "./held-data.ts";
 import { SEAT } from "../../content/home-scene.ts";
 import { CHAIR_FIT } from "./desk-data.ts";
 import { DEFAULT_LOOK, type Look } from "../../content/home.ts";
@@ -106,16 +107,30 @@ function Face() {
 /**
  * The empty left hand drums its fingers on the knee: frames from a puppet warp (tools/rig/build-hand.py), pinky → index,
  * each finger half up, up, half up; the frames are stacked and shown one at a time (screens.css «rig-hf»).
- * A thing held in the hand (later: drops from bosses) keeps the hand still.
+ * A thing held in the hand (slot «Кисть», drops from bosses) replaces the empty hand with its own swaying frames.
  */
-function HandFrames({ held }: { held?: boolean }) {
+function HandFrames() {
   const r = RIG.handR;
   const { skin } = useContext(LookCtx);
+  const heldId = useContext(WornCtx).HAND;
+  // a thing in the hand (slot «Кисть»): the hand holding it, swaying (tools/rig/build-held.py)
+  if (heldId && heldId in HELD_FIT) {
+    const f = HELD_FIT[heldId];
+    const base = skin !== SKIN_ORIGINAL ? `/assets/hero/skin-${skin}/held-${heldId}` : `/assets/hero/held/${heldId}`;
+    return (
+      <g className="rig-hand held">
+        <image className="rig-hl rig-hl-0" href={`${base}.webp?v=${ART_VER.heroPart}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />
+        {Array.from({ length: f.frames }, (_, i) => (
+          <image key={i} className={`rig-hl rig-hl-${i + 1}`} href={`${base}-f${i + 1}.webp?v=${ART_VER.heroPart}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />
+        ))}
+      </g>
+    );
+  }
   const dir = skin !== SKIN_ORIGINAL ? `/assets/hero/skin-${skin}` : "/assets/hero";
   return (
-    <g className={`rig-hand ${held ? "held" : ""}`}>
+    <g className="rig-hand">
       <image className="rig-hf rig-hf-0" href={`${dir}/handR.webp?v=${ART_VER.heroPart}`} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" />
-      {!held && [1, 2, 3, 4, 5, 6, 7, 8].map((k) => (
+      {[1, 2, 3, 4, 5, 6, 7, 8].map((k) => (
         <image key={k} className={`rig-hf rig-hf-${k}`} href={`${dir}/handR-f${k}.webp?v=${ART_VER.heroPart}`} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" />
       ))}
     </g>

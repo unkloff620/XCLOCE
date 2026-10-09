@@ -3,10 +3,10 @@ import { BOSSES, CARD_TIERS, keyId, unlockBossOf } from "./bosses.ts";
 
 export type Category = "weapon" | "clothing" | "item" | "reward" | "stash" | "event";
 export type Rarity = "common" | "rare" | "epic" | "legendary" | "mythic";
-export type Slot = "BODY" | "PANTS" | "SHIRT" | "SHOES" | "HEAD" | "ACCESSORY" | "SPECIAL";
+export type Slot = "BODY" | "PANTS" | "SHIRT" | "SHOES" | "HEAD" | "ACCESSORY" | "SPECIAL" | "HAND";
 /** Drawing order of the character, bottom to top. */
-export const SLOTS: Slot[] = ["BODY", "PANTS", "SHIRT", "SHOES", "HEAD", "ACCESSORY", "SPECIAL"];
-export const WEARABLE_SLOTS: Slot[] = ["PANTS", "SHIRT", "SHOES", "HEAD", "ACCESSORY", "SPECIAL"];
+export const SLOTS: Slot[] = ["BODY", "PANTS", "SHIRT", "SHOES", "HEAD", "ACCESSORY", "SPECIAL", "HAND"];
+export const WEARABLE_SLOTS: Slot[] = ["PANTS", "SHIRT", "SHOES", "HEAD", "ACCESSORY", "SPECIAL", "HAND"];
 
 export interface WeaponStats {
   damage: number;
@@ -89,6 +89,8 @@ const WEARABLES: ItemDef[] = ([
   { id: "cap-moon", name: "Чёрная кепка", slot: "HEAD", rarity: "rare", description: "Козырёк вперёд — курс на луну.", sources: ["Магазин", "Награда за локацию 2"] },
   { id: "santa-hat", name: "Новогодний колпак", slot: "HEAD", rarity: "epic", description: "Сезонный предмет.", sources: ["Новогодний ивент", "Награда за локацию 8"] },
   { id: "laser-eyes", name: "Лазерные глаза", slot: "ACCESSORY", rarity: "legendary", description: "Обязательный аксессуар биткоин-максималиста.", sources: ["Награда за локацию 5"] },
+  // held in the left hand (slot «Кисть»): the boss's own weapon, worn for the look
+  { id: "bottle-komandate", name: "Бутылка Командате", slot: "HAND", rarity: "epic", description: "Оружие Командате: горит, но не гаснет. Герой держит её в руке.", sources: ["Победа: Командате"] },
   { id: "gold-chain", name: "Серебряная цепь", slot: "ACCESSORY", rarity: "epic", description: "Каждое звено — подтверждённый блок.", sources: ["Магазин", "Награда за локацию 3"] },
 ] as Omit<ItemDef, "category" | "maxStack">[]).map((w) => {
   // clothes a boss unlocks: the drop opens them in the shop, then they are bought there

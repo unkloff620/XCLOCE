@@ -199,7 +199,7 @@ function Shoe({ fill, sole }: { fill: string; sole: string }) {
 /** Items drawn by the artist (public/assets/items/<id>.webp, built by tools/items/build-items.py). */
 const RASTER_ITEMS = new Set([
   "fist", "mouse", "red-candle", "keyboard", "gpu", "rug-pull-gun",
-  "tee-white", "tee-pump", "hoodie-hodl", "jeans", "shorts-remote", "sneakers", "cap-moon", "slippers", "gold-chain",
+  "tee-white", "tee-pump", "hoodie-hodl", "jeans", "shorts-remote", "sneakers", "cap-moon", "slippers", "gold-chain", "bottle-komandate",
   "energy-drink", "energy-pack", "energy-50", "energy-100", "energy-500", "lost-wallet", "bottle-cap", "flyer-passive", "spinner", "sticker-hodl", "statue-close",
   ...STASH_IDS,
 ]);
