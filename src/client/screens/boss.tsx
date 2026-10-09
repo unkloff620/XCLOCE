@@ -22,6 +22,7 @@ import { Modal } from "../ui.tsx";
 import { talentThreshold, talentsForDamage } from "../../content/talents.ts";
 import { TalentWindow } from "./talents.tsx";
 import { weaponStats } from "../weapon-stats.ts";
+import { StrikeFx, useBossStrike } from "../fx/boss-strike.tsx";
 
 const POLL_MS = 1500;
 /** a hit stays in the arena feed this long */
@@ -29,14 +30,14 @@ const FEED_MS = 5000;
 /** the hit phrase bubble stays this long */
 const PHRASE_MS = 2200;
 
-function Arena({ boss, hp, hpMax, endsAt, fx, hit, ouch, rug, feed, full: fullScreen }: { boss: BossDef; hp: number | null; hpMax: number; endsAt: number | null; fx: React.ReactNode; hit: boolean; ouch?: boolean; rug: boolean; feed: Hit[]; full?: boolean }) {
+function Arena({ boss, hp, hpMax, endsAt, fx, hit, ouch, rug, feed, full: fullScreen, strike }: { boss: BossDef; hp: number | null; hpMax: number; endsAt: number | null; fx: React.ReactNode; hit: boolean; ouch?: boolean; rug: boolean; feed: Hit[]; full?: boolean; strike?: "l" | "r" | null }) {
   const now = useNow();
   const phase = boss.phases && hp !== null ? [...boss.phases].reverse().find((p) => pct(hp, hpMax) <= p.from) ?? boss.phases[0] : null;
   const hurt = hp !== null && pct(hp, hpMax) < 25;
   return (
     <div className={`arena ${boss.final ? "final" : ""} ${fullScreen ? "full" : ""}`} style={{ ["--acc" as string]: boss.theme.accent }}>
       {!fullScreen && <ArenaBackdrop theme={boss.theme} final={boss.final} />}
-      <div className={`arena-photo ${hit ? "hit" : ""} ${ouch ? "ouch" : ""} ${rug ? "rug" : ""} ${hurt ? "hurt" : ""}`}>
+      <div className={`arena-photo ${hit ? "hit" : ""} ${ouch ? "ouch" : ""} ${rug ? "rug" : ""} ${hurt ? "hurt" : ""} ${strike ? `strike strike-${strike}` : ""}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         {hasBossRig(boss.id) ? <BossRig id={boss.id} hpShare={hp === null ? 1 : hp / Math.max(1, hpMax)} /> : boss.photo.full ? <img src={boss.photo.full} alt={boss.name} draggable={false} /> : <div className="arena-sil"><BossSilhouette accent={boss.theme.accent} /><span className="small muted">фото скоро</span></div>}
         <div className="arena-flash" />
@@ -216,6 +217,8 @@ export function BossScreen({ id }: { id: string }) {
 
   const row = list?.bosses.find((b) => b.id === id);
   const hpShown = view ? Math.max(0, view.hp - pendingDmg) : state?.fight?.bossId === id ? state.fight.hp : null;
+  // the boss punches at the screen now and then while the fight is on (show only, no damage)
+  const strikeFx = useBossStrike(fighting && (hpShown ?? 1) > 0);
 
   const [mult, setMult] = useState<Mult>(1);
   const attack = async (weapon: string) => {
@@ -305,7 +308,7 @@ export function BossScreen({ id }: { id: string }) {
   // the fight takes the whole screen: the boss's own room (the garage for the others) + drifting sky behind, the boss in the middle, weapons at the bottom
   if (fightId) {
     return (
-      <div className="fit-page fight-page" style={{ ["--acc" as string]: boss.theme.accent }}>
+      <div className={`fit-page fight-page ${strikeFx.impact ? "struck" : ""}`} style={{ ["--acc" as string]: boss.theme.accent }}>
         <div className="fight-bg" aria-hidden="true">
           <DriftingSky className="fight-sky" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -318,7 +321,8 @@ export function BossScreen({ id }: { id: string }) {
           {(view?.solo ?? state?.fight?.solo) ? <span className="chip violet">соло</span> : view && <span className="chip red">бьют: {view.fightingNow}</span>}
           <BossRulesHelp topic="boss" />
         </div>
-        <Arena full boss={boss} hp={hpShown} hpMax={hpMax} endsAt={state!.fight!.endsAt} fx={layer} hit={hitAnim} ouch={ouch} rug={rug} feed={hits} />
+        <Arena full boss={boss} hp={hpShown} hpMax={hpMax} endsAt={state!.fight!.endsAt} fx={layer} hit={hitAnim} ouch={ouch} rug={rug} feed={hits} strike={strikeFx.side} />
+        <StrikeFx impact={strikeFx.impact} />
         <div className="fight-bottom">
           {phrase && <div key={phrase.id} className={`phrase-bubble ${phrase.crit ? "crit" : ""}`}>{phrase.text}</div>}
           <MultPicker mult={mult} setMult={setMult} />

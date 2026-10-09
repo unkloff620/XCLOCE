@@ -8,6 +8,7 @@
  * Bosses with whole arms (armL/armR + handL/handR, Гаркуша): the arm swings at the shoulder and the hand turns at the wrist
  * inside it; the irises are clipped to the eye whites so they can look around.
  */
+import type { CSSProperties } from "react";
 import { BOSS_RIGS } from "./boss-rig-data.ts";
 
 type Part = { x: number; y: number; w: number; h: number; pivot?: readonly number[] };
@@ -32,10 +33,22 @@ export function BossRig({ id: baseId, hpShare = 1 }: { id: string; hpShare?: num
     const pv = P[p]?.pivot ?? [rig.w / 2, rig.h];
     return { transformOrigin: `${pv[0]}px ${pv[1]}px`, transformBox: "view-box" as const };
   };
+  // the punch at the screen (class "strike-l/r" on the arena): which way the limb turns around its joint so the fist
+  // goes towards the middle (a fist above/below the joint swings sideways; a fist beside it goes up)
+  const tilt = (limb: string, fist: string, deg: number): CSSProperties => {
+    const pv = P[limb]?.pivot;
+    const f = P[fist] ?? P[limb];
+    if (!pv || !f) return {};
+    const dx = f.x + f.w / 2 - pv[0];
+    const dy = f.y + f.h / 2 - pv[1];
+    const toMid = Math.sign(rig.w / 2 - (f.x + f.w / 2)) || 1;
+    const t = Math.abs(dy) > Math.abs(dx) * 0.6 ? toMid * Math.sign(-dy) : -Math.sign(dx);
+    return { ["--tilt" as string]: `${t * deg}deg` } as CSSProperties;
+  };
   // whole arm: the sleeve swings at the shoulder, the hand inside it at the wrist
   const arm = (side: "L" | "R") =>
     P[`arm${side}`] ? (
-      <g className={`br-arm br-arm-${side.toLowerCase()}`} style={origin(`arm${side}`)}>
+      <g className={`br-arm br-arm-${side.toLowerCase()}`} style={{ ...origin(`arm${side}`), ...tilt(`arm${side}`, `hand${side}`, 24) }}>
         {img(`arm${side}`)}
         <g className={`br-hand br-hand-${side.toLowerCase()}`} style={origin(`hand${side}`)}>{img(`hand${side}`)}</g>
       </g>
@@ -62,8 +75,8 @@ export function BossRig({ id: baseId, hpShare = 1 }: { id: string; hpShare?: num
           {img("mouth-closed", "br-mouth-closed")}
         </g>
         {img("collar")}
-        {P.foreL && <g className="br-fist-l" style={origin("foreL")}>{img("foreL")}</g>}
-        {P.foreR && <g className="br-fist-r" style={origin("foreR")}>{img("foreR")}</g>}
+        {P.foreL && <g className="br-fist-l" style={{ ...origin("foreL"), ...tilt("foreL", "foreL", 9) }}>{img("foreL")}</g>}
+        {P.foreR && <g className="br-fist-r" style={{ ...origin("foreR"), ...tilt("foreR", "foreR", 9) }}>{img("foreR")}</g>}
         {arm("R")}
         {arm("L")}
       </g>
