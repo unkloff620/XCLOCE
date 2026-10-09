@@ -680,4 +680,15 @@ UPDATE players p SET ach_points = s.pts FROM (
 ) s WHERE s.player_id = p.id;
 `,
   },
+  {
+    // «Нервные пальцы» (кисть, что барабанит) — награда за первую победу над Кедром, её выкупают в магазине.
+    // Тем, кто Кедра уже побеждал, она открывается сейчас.
+    id: "v2-036-hand-drum",
+    sql: `
+INSERT INTO player_unlocks (player_id, item_id, boss_id, at)
+SELECT d.player_id, 'hand-drum', d.boss_id, now() FROM boss_damage d
+WHERE d.boss_id = 'kedr' AND d.wins >= 1
+ON CONFLICT DO NOTHING;
+`,
+  },
 ];

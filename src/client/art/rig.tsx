@@ -5,8 +5,8 @@
  * its parent. Draw order matches the artwork: torso, legs over the shorts, arms over the torso, head on top.
  * Clothes (WEAR_FIT): shoes and pants over the legs, the shirt over the arms, the hat on the head bone.
  * Hair rides on the head bone; skin tone and hair colour come from `look` (pre-baked image variants).
- * The left hand (handR, on the screen's right) is its own part on the forearm; its fingers drum on the knee (HandFrames).
- * Animations (CSS, see screens.css): breathing, looking around, drumming fingers.
+ * The left hand (handR, on the screen's right) is its own part on the forearm (HandFrames): resting, drumming (an item) or holding a thing.
+ * Animations (CSS, see screens.css): breathing, looking around, drumming fingers, a held thing turning at the wrist.
  */
 import { ART_VER } from "../preload.ts";
 import type { PointerEvent as ReactPointerEvent, ReactNode } from "react";
@@ -180,32 +180,41 @@ function Face() {
   );
 }
 
+/** the item (slot «Кисть») that makes the left hand drum its fingers — a reward for the first win over Кедр */
+export const DRUM_HAND = "hand-drum";
+
 /**
- * The empty left hand drums its fingers on the knee: frames from a puppet warp (tools/rig/build-hand.py), pinky → index,
- * each finger half up, up, half up; the frames are stacked and shown one at a time (screens.css «rig-hf»).
- * A thing held in the hand (slot «Кисть», drops from bosses) replaces the empty hand with its own swaying frames.
+ * The left hand. By default it just rests on the knee (handR). With «Нервные пальцы» (DRUM_HAND) the fingers drum:
+ * frames from a puppet warp (tools/rig/build-hand.py), pinky → index, each finger half up, up, half up; the frames are
+ * stacked and shown one at a time (screens.css «rig-hf»), the wrist rocks along.
+ * A thing held in the hand (e.g. the bottle) replaces the hand with the hand holding it: glass does not bend, so the
+ * whole picture turns at the wrist (screens.css «rig-held»).
  */
 function HandFrames() {
   const r = RIG.handR;
   const { skin } = useContext(LookCtx);
   const heldId = useContext(WornCtx).HAND;
-  // a thing in the hand (slot «Кисть»): the hand holding it, swaying (tools/rig/build-held.py)
   if (heldId && heldId in HELD_FIT) {
     const f = HELD_FIT[heldId];
     const base = skin !== SKIN_ORIGINAL ? `/assets/hero/skin-${skin}/held-${heldId}` : `/assets/hero/held/${heldId}`;
     return (
       <g className="rig-hand held">
-        <image className="rig-hl rig-hl-0" href={`${base}.webp?v=${ART_VER.heroPart}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />
-        {Array.from({ length: f.frames }, (_, i) => (
-          <image key={i} className={`rig-hl rig-hl-${i + 1}`} href={`${base}-f${i + 1}.webp?v=${ART_VER.heroPart}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />
-        ))}
+        <image href={`${base}.webp?v=${ART_VER.heroPart}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />
       </g>
     );
   }
   const dir = skin !== SKIN_ORIGINAL ? `/assets/hero/skin-${skin}` : "/assets/hero";
+  const hand = `${dir}/handR.webp?v=${ART_VER.heroPart}`;
+  if (heldId !== DRUM_HAND) {
+    return (
+      <g className="rig-hand">
+        <image href={hand} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" />
+      </g>
+    );
+  }
   return (
-    <g className="rig-hand">
-      <image className="rig-hf rig-hf-0" href={`${dir}/handR.webp?v=${ART_VER.heroPart}`} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" />
+    <g className="rig-hand drum">
+      <image className="rig-hf rig-hf-0" href={hand} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" />
       {[1, 2, 3, 4, 5, 6, 7, 8].map((k) => (
         <image key={k} className={`rig-hf rig-hf-${k}`} href={`${dir}/handR-f${k}.webp?v=${ART_VER.heroPart}`} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" />
       ))}

@@ -1,5 +1,5 @@
 import { STASH_LOCATION_NAMES, STASH_SETS, stashLevel } from "./stashes.ts";
-import { BOSSES, CARD_TIERS, keyId, unlockBossOf } from "./bosses.ts";
+import { BOSSES, CARD_TIERS, isFirstWinItem, keyId, unlockBossOf } from "./bosses.ts";
 
 export type Category = "weapon" | "clothing" | "item" | "reward" | "stash" | "event";
 export type Rarity = "common" | "rare" | "epic" | "legendary" | "mythic";
@@ -91,11 +91,12 @@ const WEARABLES: ItemDef[] = ([
   { id: "laser-eyes", name: "Лазерные глаза", slot: "ACCESSORY", rarity: "legendary", description: "Обязательный аксессуар биткоин-максималиста.", sources: ["Награда за локацию 5"] },
   // held in the left hand (slot «Кисть»): the boss's own weapon, worn for the look
   { id: "bottle-komandate", name: "Бутылка Командате", slot: "HAND", rarity: "epic", description: "Оружие Командате: горит, но не гаснет. Герой держит её в руке.", sources: ["Победа: Командате"] },
+  { id: "hand-drum", name: "Нервные пальцы", slot: "HAND", rarity: "rare", description: "Пальцы сами отбивают ритм по колену, пока график грузится.", sources: ["Победа: Кедр"] },
   { id: "gold-chain", name: "Серебряная цепь", slot: "ACCESSORY", rarity: "epic", description: "Каждое звено — подтверждённый блок.", sources: ["Магазин", "Награда за локацию 3"] },
 ] as Omit<ItemDef, "category" | "maxStack">[]).map((w) => {
   // clothes a boss unlocks: the drop opens them in the shop, then they are bought there
   const boss = unlockBossOf(w.id);
-  return { ...w, category: "clothing" as const, maxStack: 1, sources: boss ? [`Выпадает с босса ${boss.name}, потом — магазин`, ...w.sources.filter((x) => !x.startsWith("Магазин") && !x.startsWith("Победа"))] : w.sources };
+  return { ...w, category: "clothing" as const, maxStack: 1, sources: boss ? [isFirstWinItem(w.id) ? `Первая победа над боссом ${boss.name}, потом — магазин` : `Выпадает с босса ${boss.name}, потом — магазин`, ...w.sources.filter((x) => !x.startsWith("Магазин") && !x.startsWith("Победа"))] : w.sources };
 });
 
 const MISC: ItemDef[] = [

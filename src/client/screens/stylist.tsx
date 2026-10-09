@@ -105,7 +105,7 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
       <div className="sty-strip">
         <button className={`sty-item none ${!draft.worn[slot] ? "on" : ""}`} onClick={() => wear(null)}>
           <span className="sty-plus" aria-hidden="true">∅</span>
-          <span className="sty-item-name">Ничего</span>
+          <span className="sty-item-name">{slot === "HAND" ? "Обычная" : "Ничего"}</span>
         </button>
         {items.map((i) => (
           <button key={i.id} className={`sty-item rar-${i.rarity} ${draft.worn[slot] === i.id ? "on" : ""}`} onClick={() => wear(i.id)}>

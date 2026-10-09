@@ -318,6 +318,15 @@ export async function claimFight(ctx: Ctx, fightId: number) {
   const bonusKey = !def.final && earnedKey && ctx.rng() < EXTRA_KEY_CHANCE;
   const key = def.final || !earnedKey ? [] : [{ id: keyId(def.id), qty: bonusKey ? 2 : 1 }];
   const unlocked = earnedKey ? await rollUnlocks(ctx, def) : [];
+  // things the first win opens for sure (BossDef.firstWin) — bought in the shop afterwards
+  if (earnedKey && def.firstWin?.length) {
+    const open = new Set(await unlockedItems(ctx.q, ctx.pid));
+    for (const id of def.firstWin) {
+      if (open.has(id) || (await itemQty(ctx.q, ctx.pid, id)) > 0) continue;
+      await ctx.q.query("INSERT INTO player_unlocks (player_id, item_id, boss_id, at) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING", [ctx.pid, id, def.id, new Date(ctx.now)]);
+      unlocked.push(id);
+    }
+  }
   // a room that drops from this boss (it is bought afterwards, like the clothes)
   if (earnedKey) {
     for (const room of ROOM_DEFS.filter((r) => r.drop?.boss === def.id)) {

@@ -1260,6 +1260,26 @@ describe("Бутылка Командате", () => {
   });
 });
 
+describe("Нервные пальцы", () => {
+  it("the first win over Кедр opens the drumming hand in the shop; it is bought there and worn in the hand slot", async () => {
+    await setBossHp({ kedr: 10 });
+    const p = await newPlayer(db);
+    await give(db, p, "key-datsik", 100);
+    await give(db, p, "keyboard", 30);
+    await expect(act(db, p, "buy", { offerId: "hand-drum" }, T0)).rejects.toMatchObject({ code: "item_locked" });
+    const f = await act(db, p, "fight_start", { boss: "kedr" }, T0);
+    await hit(p, "keyboard");
+    const c = await act(db, p, "fight_claim", { fightId: f.result.fightId }, T0, always(0.99));
+    expect(c.result.reward.unlocks).toContain("hand-drum");
+    expect(await qty(db, p, "hand-drum")).toBe(0); // opened, not given
+    await setMoney(db, p, "RUB", 5000);
+    await act(db, p, "buy", { offerId: "hand-drum" }, T0 + M);
+    expect(await qty(db, p, "hand-drum")).toBe(1);
+    const e = await act(db, p, "equip", { itemId: "hand-drum" }, T0 + M);
+    expect(e.state.look.equipped.HAND).toBe("hand-drum");
+  });
+});
+
 describe("Боксёрская", () => {
   it("drops from Командате, costs 4000 RUB and adds +30 to the fist", async () => {
     await setBossHp({ bebyakyan: 10 });

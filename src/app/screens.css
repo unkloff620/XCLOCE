@@ -1696,34 +1696,14 @@ body:has(.fit-page) .hud { background: linear-gradient(180deg, rgba(20, 12, 6, 0
 .sty-soon-box { display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 12px; border: 2px dashed var(--panel3); background: rgba(0, 0, 0, 0.18); }
 @media (max-height: 700px) { .sty-slot { width: 50px; height: 50px; } .sty-slot-name { font-size: 8px; } .sty-side { gap: 6px; } }
 
-/* a thing held in the hand sways (rig.tsx HandFrames → held, frames from tools/rig/build-held.py) */
-.rig-hl { animation-duration: 3.2s; animation-timing-function: steps(1, end); animation-iteration-count: infinite; opacity: 0; }
-.rig-hl-0 { animation-name: rig-hl-0; opacity: 1; }  /* seen even where the animation does not run */
-@keyframes rig-hl-0 { 0% { opacity: 0; } 0.0% { opacity: 1; } 5.0% { opacity: 0; } 50.0% { opacity: 1; } 55.0% { opacity: 0; } 100% { opacity: 0; } }
-.rig-hl-1 { animation-name: rig-hl-1; }
-@keyframes rig-hl-1 { 0% { opacity: 0; } 5.0% { opacity: 1; } 10.0% { opacity: 0; } 45.0% { opacity: 1; } 50.0% { opacity: 0; } 100% { opacity: 0; } }
-.rig-hl-2 { animation-name: rig-hl-2; }
-@keyframes rig-hl-2 { 0% { opacity: 0; } 10.0% { opacity: 1; } 15.0% { opacity: 0; } 40.0% { opacity: 1; } 45.0% { opacity: 0; } 100% { opacity: 0; } }
-.rig-hl-3 { animation-name: rig-hl-3; }
-@keyframes rig-hl-3 { 0% { opacity: 0; } 15.0% { opacity: 1; } 20.0% { opacity: 0; } 35.0% { opacity: 1; } 40.0% { opacity: 0; } 100% { opacity: 0; } }
-.rig-hl-4 { animation-name: rig-hl-4; }
-@keyframes rig-hl-4 { 0% { opacity: 0; } 20.0% { opacity: 1; } 25.0% { opacity: 0; } 30.0% { opacity: 1; } 35.0% { opacity: 0; } 100% { opacity: 0; } }
-.rig-hl-5 { animation-name: rig-hl-5; }
-@keyframes rig-hl-5 { 0% { opacity: 0; } 25.0% { opacity: 1; } 30.0% { opacity: 0; } 100% { opacity: 0; } }
-.rig-hl-6 { animation-name: rig-hl-6; }
-@keyframes rig-hl-6 { 0% { opacity: 0; } 55.0% { opacity: 1; } 60.0% { opacity: 0; } 95.0% { opacity: 1; } 100.0% { opacity: 0; } 100% { opacity: 0; } }
-.rig-hl-7 { animation-name: rig-hl-7; }
-@keyframes rig-hl-7 { 0% { opacity: 0; } 60.0% { opacity: 1; } 65.0% { opacity: 0; } 90.0% { opacity: 1; } 95.0% { opacity: 0; } 100% { opacity: 0; } }
-.rig-hl-8 { animation-name: rig-hl-8; }
-@keyframes rig-hl-8 { 0% { opacity: 0; } 65.0% { opacity: 1; } 70.0% { opacity: 0; } 85.0% { opacity: 1; } 90.0% { opacity: 0; } 100% { opacity: 0; } }
-.rig-hl-9 { animation-name: rig-hl-9; }
-@keyframes rig-hl-9 { 0% { opacity: 0; } 70.0% { opacity: 1; } 75.0% { opacity: 0; } 80.0% { opacity: 1; } 85.0% { opacity: 0; } 100% { opacity: 0; } }
-.rig-hl-10 { animation-name: rig-hl-10; }
-@keyframes rig-hl-10 { 0% { opacity: 0; } 75.0% { opacity: 1; } 80.0% { opacity: 0; } 100% { opacity: 0; } }
-.rig.still .rig-hl { animation: none; } .rig.still .rig-hl-0 { opacity: 1; }
-@media (prefers-reduced-motion: reduce) { .rig-hl { animation: none; } .rig-hl-0 { opacity: 1; } }
+/* a thing held in the hand (rig.tsx HandFrames → held): glass does not bend — the whole hand turns at the wrist */
+.rig-hand.held { transform-origin: 731.7px 760px; transform-box: view-box; animation-name: rig-held; animation-duration: 4.2s; animation-timing-function: ease-in-out; animation-iteration-count: infinite; }
+@keyframes rig-held { 0%, 100% { transform: rotate(0deg); } 18% { transform: rotate(-6deg); } 36% { transform: rotate(2.5deg); } 52% { transform: rotate(-4deg); } 68% { transform: rotate(1deg); } 80% { transform: rotate(0deg); } }
+.rig.still .rig-hand.held { animation: none; }
+@media (prefers-reduced-motion: reduce) { .rig-hand.held { animation: none; } }
 
-/* the empty hand drums its fingers twice (rig.tsx HandFrames, frames from tools/rig/build-hand.py): one frame at a time, the wrist rocks along */
+/* the drumming hand («Нервные пальцы», a reward for the first win over Кедр) */
+/* it drums its fingers twice (rig.tsx HandFrames, frames from tools/rig/build-hand.py): one frame at a time, the wrist rocks along */
 .rig-hf { animation-duration: 3.6s; animation-timing-function: steps(1, end); animation-iteration-count: infinite; }
 .rig-hf-0 { animation-name: rig-hf-0; }
 @keyframes rig-hf-0 { 0% { opacity: 0; } 60.0%, 100% { opacity: 1; } }
@@ -1743,10 +1723,10 @@ body:has(.fit-page) .hud { background: linear-gradient(180deg, rgba(20, 12, 6, 0
 @keyframes rig-hf-7 { 0% { opacity: 0; } 22.5% { opacity: 1; } 25.0% { opacity: 0; } 27.5% { opacity: 1; } 30.0% { opacity: 0; } 52.5% { opacity: 1; } 55.0% { opacity: 0; } 57.5% { opacity: 1; } 60.0% { opacity: 0; } 100% { opacity: 0; } }
 .rig-hf-8 { animation-name: rig-hf-8; opacity: 0; }
 @keyframes rig-hf-8 { 0% { opacity: 0; } 25.0% { opacity: 1; } 27.5% { opacity: 0; } 55.0% { opacity: 1; } 57.5% { opacity: 0; } 100% { opacity: 0; } }
-.rig-hand:not(.held) { transform-origin: 731.7px 760.0px; transform-box: view-box; animation: rig-wrist 3.6s ease-in-out infinite; }
+.rig-hand.drum { transform-origin: 731.7px 760.0px; transform-box: view-box; animation-name: rig-wrist; animation-duration: 3.6s; animation-timing-function: ease-in-out; animation-iteration-count: infinite; }
 @keyframes rig-wrist { 0%, 64.0%, 100% { transform: rotate(0deg); } 15.0% { transform: rotate(-3deg); } 30.0% { transform: rotate(1.5deg); } 45.0% { transform: rotate(-2.5deg); } }
-.rig.still .rig-hf, .rig.still .rig-hand { animation: none; } .rig.still .rig-hf:not(.rig-hf-0) { opacity: 0; } .rig.still .rig-hf-0 { opacity: 1; }
-@media (prefers-reduced-motion: reduce) { .rig-hf, .rig-hand { animation: none; } .rig-hf:not(.rig-hf-0) { opacity: 0; } .rig-hf-0 { opacity: 1; } }
+.rig.still .rig-hf, .rig.still .rig-hand.drum { animation: none; } .rig.still .rig-hf:not(.rig-hf-0) { opacity: 0; } .rig.still .rig-hf-0 { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .rig-hf, .rig-hand.drum { animation: none; } .rig-hf:not(.rig-hf-0) { opacity: 0; } .rig-hf-0 { opacity: 1; } }
 /* the character editor: tap a part of the hero to pick it */
 .room-view .rig.pickable, .rig.pickable { pointer-events: auto; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .sty-part { display: flex; align-items: baseline; gap: 8px; }

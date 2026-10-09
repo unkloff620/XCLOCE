@@ -9,7 +9,7 @@ import { Modal } from "../ui.tsx";
 import { Help, HelpList } from "../help.tsx";
 import type { Currency } from "../../content/currencies.ts";
 import { itemById, type Slot } from "../../content/items.ts";
-import { unlockBossOf } from "../../content/bosses.ts";
+import { isFirstWinItem, unlockBossOf } from "../../content/bosses.ts";
 import { EnergyArt, ItemArt } from "../art/items.tsx";
 import { Icon } from "../art/icons.tsx";
 import { money } from "../format.ts";
@@ -30,6 +30,7 @@ const SHOP_SPOTS = [
 function LockedInfo({ itemId, onClose }: { itemId: string; onClose: () => void }) {
   const def = itemById(itemId)!;
   const boss = unlockBossOf(itemId)!;
+  const first = isFirstWinItem(itemId);
   return (
     <Modal title={def.name} onClose={onClose}>
       <div className="col" style={{ gap: 10, alignItems: "center", textAlign: "center" }}>
@@ -37,8 +38,17 @@ function LockedInfo({ itemId, onClose }: { itemId: string; onClose: () => void }
         <p className="small" style={{ margin: 0 }}>{def.description}</p>
         <div className="panel col" style={{ gap: 6, width: "100%" }}>
           <b>Где получить</b>
-          <span className="small">Выпадает с босса <b>{boss.name}</b> (№{boss.order}). Победи его — вещь откроется здесь, в магазине, и её можно будет выкупить.</span>
-          <span className="tiny muted">Шанс — секрет. Не везёт {boss.wear?.pity ?? 10} побед подряд — вещь откроется точно. Нужно нанести в бою хотя бы 1% здоровья босса.</span>
+          {first ? (
+            <>
+              <span className="small">Награда за первую победу над боссом <b>{boss.name}</b> (№{boss.order}). Победи его — вещь откроется здесь, в магазине, и её можно будет выкупить.</span>
+              <span className="tiny muted">Нужно нанести в бою хотя бы 1% здоровья босса.</span>
+            </>
+          ) : (
+            <>
+              <span className="small">Выпадает с босса <b>{boss.name}</b> (№{boss.order}). Победи его — вещь откроется здесь, в магазине, и её можно будет выкупить.</span>
+              <span className="tiny muted">Шанс — секрет. Не везёт {boss.wear?.pity ?? 10} побед подряд — вещь откроется точно. Нужно нанести в бою хотя бы 1% здоровья босса.</span>
+            </>
+          )}
         </div>
         <Link href={`/bosses/${boss.id}`} className="btn red block" onClick={onClose}>К боссу {boss.name}</Link>
       </div>
@@ -138,7 +148,7 @@ function Cards({ offers, batch }: { offers: Offer[]; batch: number }) {
             <button key={o.id} className={`offer locked rar-${def!.rarity}`} onClick={() => setInfo(def!.id)} aria-label={`${o.title}: закрыто, выпадает с босса ${boss!.name}`}>
               <div className="offer-art"><ItemArt id={def!.id} size={56} /><span className="locked-badge"><Icon name="lock" size={18} /></span></div>
               <b className="small">{o.title}</b>
-              <span className="tiny muted">с босса {boss!.name}</span>
+              <span className="tiny muted">{isFirstWinItem(def!.id) ? `победа над ${boss!.name}` : `с босса ${boss!.name}`}</span>
               <span className="btn sm dark block">Где взять</span>
             </button>
           );

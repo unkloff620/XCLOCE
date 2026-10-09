@@ -29,6 +29,8 @@ export interface BossDef {
    * in the shop and has to be bought there. Which ones, is a secret for the player (shown as «?» x/N)
    */
   wear?: { items: string[]; chance: number; pity: number };
+  /** things the first win (from KEY_SHARE damage) opens in the shop for sure; they are bought there too */
+  firstWin?: string[];
 }
 
 /** Boss passes «Пропуск» (they used to be keys): the tier only sets the look and the name, every boss has its own card. */
@@ -68,6 +70,7 @@ export const BOSSES: BossDef[] = [
     hp: hp(1), reward: { xp: xp(1), currencies: { SOL: 0.03, RUB: 220 } },
     drop: [{ id: "keyboard", qty: 2, chance: 0.3 }],
     wear: { items: ["slippers", "shorts-remote"], chance: 0.1, pity: 10 },
+    firstWin: ["hand-drum"],
     theme: { a: "#173a26", b: "#07140c", accent: "#3ddc84" }, photo: photo("kedr", true),
   },
   {
@@ -181,7 +184,9 @@ export const bossById = (id: string) => BOSSES.find((b) => b.id === id);
 export const BOSS_ARENAS = new Set(["kedr", "bebyakyan"]);
 export const arenaOf = (bossId: string) => `/assets/arena/${BOSS_ARENAS.has(bossId) ? bossId : "garage"}.webp`;
 /** the boss that unlocks this shop item (BossDef.wear), if any */
-export const unlockBossOf = (itemId: string) => BOSSES.find((b) => b.wear?.items.includes(itemId));
+export const unlockBossOf = (itemId: string) => BOSSES.find((b) => b.wear?.items.includes(itemId) || b.firstWin?.includes(itemId));
+/** the thing opens for sure with the first win over its boss (BossDef.firstWin), not by a chance */
+export const isFirstWinItem = (itemId: string) => BOSSES.some((b) => b.firstWin?.includes(itemId));
 export const keyId = (bossId: string) => `key-${bossId}`;
 /** Keys of boss N needed to open boss N+1 (bosses after Гаркуша — from Мугонатор on — take one: keysToUnlock: 1). */
 export const KEYS_TO_UNLOCK = 3;
