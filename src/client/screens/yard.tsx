@@ -18,7 +18,6 @@ import type { Granted } from "../api.ts";
 const LINKS = [
   { href: "/shop", icon: "shop", label: "Магазин", c: "#ff4d6d", hint: "Оружие, энергия, одежда и разное за игровую валюту." },
   { href: "/exchange", icon: "exchange", label: "Обменник", c: "#ffb347", hint: "Меняй одну валюту на другую (комиссия 5%)." },
-  { href: "/locations", icon: "map", label: "Локации", c: "#3ddc84", hint: "Задания за энергию: проходи шаги и забирай награды. Значок «!» — энергии хватает на задание, пора её потратить." },
 ] as const;
 
 interface YardData { items: { id: number; slot: number; drop: string; at: number }[]; max: number; nextAt: number | null; periodMs: number }
@@ -68,7 +67,8 @@ export function YardScreen() {
             <p>Изредка попадается Клавиатура. Всё найденное можно продать в инвентаре.</p>
             <HelpList title="Кнопки слева" rows={LINKS.map((b) => ({ key: b.href, icon: <Icon name={b.icon} size={44} />, name: b.label, hint: b.hint }))} />
             <p>Игровой автомат 777 — 3 бесплатные прокрутки в час. Справа от него — автомат «Апгрейдер»: улучшай находки и оружие.</p>
-            <p>Стол слева — блэкджек (3 бесплатные партии в день), табло над ним — зонк (1 бесплатная игра в день). Дальше партия стоит 2 USD.</p>
+            <p>Подъезд — вход в локации: задания за энергию, шаги и награды. Значок «!» — энергии хватает на задание.</p>
+            <p>Стол с табло — блэкджек (3 бесплатные партии в день) и зонк (1 бесплатная игра в день), дальше партия стоит 2 USD. Нажми на стол и выбери игру.</p>
           </Help>
         </div>
         <span className="chip">{data?.items.length ?? state?.yard.count ?? 0}/{data?.max ?? 5}</span>
@@ -80,8 +80,12 @@ export function YardScreen() {
         <div className="yard-stage">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="yard-bg" src="/assets/yard/court-bg.webp" alt="" draggable={false} />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="yard-obj yard-entrance" src="/assets/yard/court-entrance.webp" alt="" draggable={false} />
+          {/* the entrance leads to the locations with tasks */}
+          <Link href="/locations" className={`yard-obj yard-entrance ${taskHint ? "call" : ""}`} aria-label="Локации" title="Локации">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/assets/yard/court-entrance.webp" alt="" draggable={false} />
+            {taskHint && <span className="side-alert">!</span>}
+          </Link>
           <YardGames />
           <button className={`yard-obj yard-slots ${state && state.slots.left > 0 ? "ready" : ""}`} onClick={() => setSlots(true)} aria-label="Игровой автомат 777">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -107,9 +111,8 @@ export function YardScreen() {
         </div>
         <nav className="yard-side" aria-label="Места во дворе">
           {LINKS.map((b) => (
-            <Link key={b.href} href={b.href} className={`icon-btn-art ${b.href === "/locations" && taskHint ? "glow" : ""}`} style={{ ["--c" as string]: b.c }} aria-label={b.label} title={b.label}>
+            <Link key={b.href} href={b.href} className="icon-btn-art" style={{ ["--c" as string]: b.c }} aria-label={b.label} title={b.label}>
               <Icon name={b.icon} size={58} />
-              {b.href === "/locations" && taskHint && <span className="side-alert">!</span>}
             </Link>
           ))}
         </nav>

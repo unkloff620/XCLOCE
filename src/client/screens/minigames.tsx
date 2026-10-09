@@ -428,19 +428,33 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
 }
 
 /* ---------------- the game objects standing in the yard ---------------- */
-/** The blackjack table with the «Зонк» board behind it: tap the board for zonk, the table for blackjack. */
+/** The blackjack table with the «Зонк» board behind it: one object; a tap asks which game to play. */
 export function YardGames() {
   const { state } = useGame();
-  const [open, setOpen] = useState<"blackjack" | "zonk" | null>(null);
+  const [open, setOpen] = useState<"pick" | "blackjack" | "zonk" | null>(null);
   const bj = state?.games?.blackjack;
   const zk = state?.games?.zonk;
-  const badge = (g: typeof bj) => g && (g.active ? <i className="yg-badge live">идёт</i> : g.freeLeft > 0 && <i className="yg-badge">{g.freeLeft}</i>);
+  const free = (bj?.active || zk?.active) ? "идёт" : (bj?.freeLeft ?? 0) + (zk?.freeLeft ?? 0);
+  const note = (g: typeof bj, paid: string) => (g?.active ? "партия идёт — продолжить" : g && g.freeLeft > 0 ? `бесплатно: ${g.freeLeft}` : paid);
   return (
     <>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="yard-obj yard-table" src="/assets/yard/court-table.webp" alt="" draggable={false} />
-      <button className="yard-hit yard-hit-zonk" onClick={() => setOpen("zonk")} aria-label="Зонк" title="Зонк">{badge(zk)}</button>
-      <button className="yard-hit yard-hit-bj" onClick={() => setOpen("blackjack")} aria-label="Блэкджек" title="Блэкджек">{badge(bj)}</button>
+      <button className="yard-obj yard-table" onClick={() => setOpen("pick")} aria-label="Блэкджек и зонк" title="Блэкджек и зонк">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/assets/yard/court-table.webp" alt="" draggable={false} />
+        {free !== 0 && <i className={`yg-badge ${free === "идёт" ? "live" : ""}`}>{free}</i>}
+      </button>
+      {open === "pick" && (
+        <Modal title="Во что сыграем?" onClose={() => setOpen(null)}>
+          <div className="game-pick">
+            <button className="btn big block green" onClick={() => setOpen("blackjack")}>
+              Блэкджек<small>{note(bj, "партия — 2 USD")}</small>
+            </button>
+            <button className="btn big block gold" onClick={() => setOpen("zonk")}>
+              Зонк<small>{note(zk, "игра — 2 USD")}</small>
+            </button>
+          </div>
+        </Modal>
+      )}
       {open === "blackjack" && <BlackjackWindow onClose={() => setOpen(null)} />}
       {open === "zonk" && <ZonkWindow onClose={() => setOpen(null)} />}
     </>

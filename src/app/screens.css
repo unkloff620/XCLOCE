@@ -1528,20 +1528,25 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 
 /* ---------- yard: layered scene. Objects are cut from one 2000×3405 sheet, placed in % of it ---------- */
 .yard-obj { position: absolute; padding: 0; border: 0; background: none; user-select: none; }
-img.yard-obj, .yard-obj img { display: block; width: 100%; height: 100%; pointer-events: none; }
-button.yard-obj { cursor: pointer; transition: transform 0.15s; transform-origin: 50% 100%; }
-button.yard-obj:active { transform: scale(0.96); }
+.yard-obj > img { display: block; width: 100%; height: 100%; pointer-events: none; }
+.yard-obj:is(button, a) { cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform 0.15s; transform-origin: 50% 100%; }
+.yard-obj:is(button, a):active { transform: scale(0.96); }
 .yard-entrance { left: 0; top: 39.71%; width: 30.45%; height: 28.25%; }
-.yard-table { left: 2.1%; top: 58%; width: 58.8%; height: 25.37%; z-index: 1; }
+.yard-table { left: 2.1%; top: 58%; width: 58.8%; height: 25.37%; z-index: 1;
+  /* taps only on the board and the table, not on the empty corner over the entrance steps */
+  clip-path: polygon(52% 0, 88% 0, 88% 41%, 100% 41%, 100% 100%, 0 100%, 0 45%, 52% 41%); }
 .yard-slots { left: 60.4%; top: 60.32%; width: 24.3%; height: 18.71%; z-index: 2; }
 .yard-slots.ready { animation: slot-call 2.4s ease-in-out infinite; }
 .yard-upgrader { left: 74.5%; top: 58.71%; width: 25.5%; height: 23.35%; z-index: 3; animation: upg-glow 3s ease-in-out infinite; }
 @keyframes upg-glow { 50% { filter: drop-shadow(0 0 10px rgba(255, 200, 40, 0.55)); } }
-/* invisible tap zones over the table: the «Зонк» board and the blackjack table */
-.yard-hit { position: absolute; z-index: 2; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 12px; -webkit-tap-highlight-color: transparent; }
-.yard-hit:active { background: rgba(255, 210, 63, 0.14); }
-.yard-hit-zonk { left: 32.7%; top: 59%; width: 18.6%; height: 10%; }
-.yard-hit-bj { left: 2.3%; top: 68.8%; width: 58%; height: 14.6%; }
-.yard-hit .yg-badge { top: -4px; right: 4px; }
-.yard-hit-bj .yg-badge { top: 4px; right: 22%; }
+.yard-table .yg-badge { top: 4%; right: 40%; }
+/* the entrance: «!» over the door when there is energy for a task */
+.yard-entrance .side-alert { top: 48%; right: auto; left: 22%; }
+.yard-entrance.call { animation: entrance-call 2.6s ease-in-out infinite; }
+@keyframes entrance-call { 50% { filter: drop-shadow(0 0 12px rgba(255, 200, 60, 0.6)); } }
+/* the game choice at the blackjack table */
+.game-pick { display: flex; flex-direction: column; gap: 10px; }
+.game-pick .btn { flex-direction: column; gap: 0; line-height: 1.1; }
+.game-pick .btn { min-height: 64px; }
+.game-pick small { font-family: var(--font-body), sans-serif; text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 700; opacity: 0.85; }
 .yard .yard-item { z-index: 4; }
