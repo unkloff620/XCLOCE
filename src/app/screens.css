@@ -1595,3 +1595,11 @@ body:has(.fit-page) .hud { background: linear-gradient(180deg, rgba(12, 14, 18, 
   color: var(--ink); background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.08)), var(--tx-stone), #9fa1a5; }
 /* a brown panel inside a paper window stays paper-coloured */
 .modal .panel { --ink: #24160a; --muted: #5a3f24; --dim: #7a5b3c; background: rgba(120, 70, 25, 0.16); }
+/* dark islands inside the light surfaces (game tables, machines, bars, dark buttons): back to light text */
+.modal :is(.slots, .mg-table, .bar, .btn.dark, .upg-box, .upg-mode, .upg-chip), .panel :is(.bar, .btn.dark, .ph-auth) {
+  --ink: #fff3e3; --muted: #cdb497; --dim: #8f735a; --panel: #2a1d14; --panel2: #36261a; --panel3: #443021; --bg2: #1f1610;
+  --tex: url(/assets/ui/tex-grain-a.webp) 0 0 / 320px 320px repeat; color: var(--ink); }
+:is(.modal, .panel) .ach-bar { background: rgba(20, 14, 10, 0.72); }
+.modal .upg-center b { color: #0b8a4a; text-shadow: 0 1px 0 rgba(255, 240, 210, 0.6); }
+.modal .upg-gauge.won .upg-center b { color: #0b8a4a; }
+.modal .upg-gauge.lost .upg-center b { color: #c21d42; }
