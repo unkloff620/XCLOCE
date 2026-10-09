@@ -79,10 +79,8 @@ export function YardScreen() {
         <div className="scene-backdrop" style={{ backgroundImage: "url(/assets/yard/court-backdrop.webp)" }} />
         {/* the sharp scene stands on the nav at full width; the objects sit where they are drawn on the 2000×3405 sheet */}
         <div className="yard-stage">
-          {/* clouds drift behind the moon and the yard; the yard's sky is see-through */}
-          <DriftingSky className="court-sky" src="/assets/yard/court-sky.webp" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="court-moon" src="/assets/yard/court-moon.webp" alt="" draggable={false} />
+          {/* the sunset sky (the same as in the fights) drifts behind the see-through sky of the yard */}
+          <DriftingSky className="court-sky" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="yard-bg" src="/assets/yard/court-yard.webp" alt="" draggable={false} />
           {/* the entrance leads to the locations with tasks */}

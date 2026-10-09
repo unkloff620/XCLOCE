@@ -1563,7 +1563,6 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .game-pick .btn { min-height: 64px; }
 .game-pick small { font-family: var(--font-body), sans-serif; text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 700; opacity: 0.85; }
 .yard .yard-item { z-index: 4; }
-/* the yard's sky: clouds cut from the drawn sky drift behind the moon and the see-through sky of the background */
-.court-sky { position: absolute; left: 0; right: 0; top: 0; height: 40.5%; overflow: hidden; background: #1b1d3d; }
+/* the yard's sky: the drifting sunset behind the see-through sky of the background */
+.court-sky { position: absolute; left: 0; right: 0; top: 0; height: 40.5%; overflow: hidden; background: #3a3150; }
 .court-sky .yard-sky-strip { animation-duration: 110s; }
-.court-moon { position: absolute; left: 74%; top: 5.46%; width: 11.2%; height: 6.58%; pointer-events: none; }
