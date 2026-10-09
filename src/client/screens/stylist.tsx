@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import type { RigEdit } from "../art/rig.tsx";
 import { createPortal } from "react-dom";
 import { useGame } from "../store.tsx";
 import { ItemArt } from "../art/items.tsx";
@@ -9,8 +10,11 @@ import { EYE_COLORS, HAIR_COLORS, HAIR_STYLES, SKIN_TONES, type Look } from "../
 import { haptic } from "../telegram.ts";
 
 /*
- * The hero editor right on the home screen: the room and every button go grey, only the hero keeps his colours.
- * Slots stand around him (tap one — his things for it show in the panel below), «Внешность» changes hair and skin, «Глаза» the eye colour.
+ * The hero editor right on the home screen: the room and every button go grey, only the hero keeps his colours,
+ * and his parts get gold outlines (the chosen one brighter). Two modes:
+ *   «Вещи» — slots around him: head, eyes, mouth, top on the left; hand, bottom, shoes on the right
+ *            (mouth shapes and things held in the hand come later, from bosses);
+ *   «Тело» — skin, hair and, later, tattoos (they will drop from bosses).
  * Everything is a preview until «Сохранить»: then the changed slots are put on / taken off and the look is saved.
  */
 
@@ -19,24 +23,33 @@ export interface StyleDraft {
   worn: Record<string, string>;
 }
 
-const SLOT_NAME: Record<string, string> = { HEAD: "Голова", SHIRT: "Верх", ACCESSORY: "Аксессуар", PANTS: "Штаны", SHOES: "Обувь" };
-const LEFT: Slot[] = ["HEAD", "SHIRT", "ACCESSORY"];
-const RIGHT: Slot[] = ["PANTS", "SHOES"];
+/** editor slots: clothing slots plus the parts edited here (eyes) or coming later (mouth, hand) */
+type EditSlot = Slot | "EYES" | "MOUTH" | "HAND";
+const SLOT_NAME: Record<string, string> = { HEAD: "Голова", EYES: "Глаза", MOUTH: "Рот", SHIRT: "Верх", HAND: "Кисть", PANTS: "Низ", SHOES: "Обувь" };
+const LEFT: EditSlot[] = ["HEAD", "EYES", "MOUTH", "SHIRT"];
+const RIGHT: EditSlot[] = ["HAND", "PANTS", "SHOES"];
+const CLOTHES: Slot[] = ["HEAD", "SHIRT", "PANTS", "SHOES"];
+const isClothes = (s: EditSlot): s is Slot => (CLOTHES as string[]).includes(s);
 
-export function Stylist({ draft, setDraft, onClose }: { draft: StyleDraft; setDraft: (d: StyleDraft) => void; onClose: () => void }) {
+export function Stylist({ draft, setDraft, onClose, onFocus }: { draft: StyleDraft; setDraft: (d: StyleDraft) => void; onClose: () => void; onFocus?: (f: RigEdit) => void }) {
   const { state, act, busy } = useGame();
-  const [tab, setTab] = useState<"clothes" | "look" | "eyes">("clothes");
-  const [slot, setSlot] = useState<Slot>("SHIRT");
+  const [mode, setModeRaw] = useState<"items" | "body">("items");
+  const [slot, setSlotRaw] = useState<EditSlot>("SHIRT");
   const [saving, setSaving] = useState(false);
+  // the outlines on the hero follow the mode and the chosen slot
+  useEffect(() => onFocus?.({ mode, part: slot }), [mode, slot]); // eslint-disable-line react-hooks/exhaustive-deps
+  const setMode = (m: "items" | "body") => { haptic.tap(); setModeRaw(m); };
+  const setSlot = (s: EditSlot) => setSlotRaw(s);
   if (!state) return null;
   const owned = new Set(state.inventory.map((i) => i.id));
   const items = ITEMS.filter((i) => i.slot === slot && owned.has(i.id));
   const now = state.look.equipped;
   const lookChanged = JSON.stringify(draft.look) !== JSON.stringify(state.look.body);
-  const slotsChanged = [...LEFT, ...RIGHT].filter((s) => (draft.worn[s] ?? null) !== (now[s] ?? null));
+  const slotsChanged = CLOTHES.filter((s) => (draft.worn[s] ?? null) !== (now[s] ?? null));
   const changed = lookChanged || slotsChanged.length > 0;
 
   const wear = (id: string | null) => {
+    if (!isClothes(slot)) return;
     haptic.tap();
     const worn = { ...draft.worn };
     if (id) worn[slot] = id;
@@ -66,16 +79,16 @@ export function Stylist({ draft, setDraft, onClose }: { draft: StyleDraft; setDr
     }
   };
 
-  const slotBtn = (s: Slot) => {
-    const id = draft.worn[s];
+  const slotBtn = (s: EditSlot) => {
+    const id = isClothes(s) ? draft.worn[s] : undefined;
     const def = id ? ITEMS.find((i) => i.id === id) : null;
+    const soon = s === "MOUTH" || s === "HAND";
     return (
-      <button key={s} className={`sty-slot ${tab === "clothes" && slot === s ? "on" : ""} ${def ? `filled rar-${def.rarity}` : ""}`}
-        onClick={() => {
-          setTab("clothes");
-          setSlot(s);
-        }} aria-label={`${SLOT_NAME[s]}: ${def?.name ?? "пусто"}`}>
-        {def ? <ItemArt id={def.id} size={38} /> : <span className="sty-plus" aria-hidden="true">+</span>}
+      <button key={s} className={`sty-slot ${slot === s ? "on" : ""} ${def ? `filled rar-${def.rarity}` : ""} ${soon ? "soon" : ""}`}
+        onClick={() => { haptic.tap(); setSlot(s); }} aria-label={`${SLOT_NAME[s]}: ${def?.name ?? "пусто"}`}>
+        {def ? <ItemArt id={def.id} size={38} />
+          : s === "EYES" ? <span className="sty-eye" style={{ ["--iris" as string]: EYE_COLORS[draft.look.eyes] ?? EYE_COLORS[0] }} aria-hidden="true" />
+          : <span className="sty-plus" aria-hidden="true">{soon ? "…" : "+"}</span>}
         <span className="sty-slot-name">{SLOT_NAME[s]}</span>
       </button>
     );
@@ -83,21 +96,28 @@ export function Stylist({ draft, setDraft, onClose }: { draft: StyleDraft; setDr
 
   return (
     <>
-      <div className="sty-side left">{LEFT.map(slotBtn)}</div>
-      <div className="sty-side right">{RIGHT.map(slotBtn)}</div>
+      {mode === "items" && <div className="sty-side left">{LEFT.map(slotBtn)}</div>}
+      {mode === "items" && <div className="sty-side right">{RIGHT.map(slotBtn)}</div>}
 
       {/* the panel goes to <body>: the fixed .fit-page is its own stacking layer and would stay under the nav */}
       {createPortal(<div className="sty-panel">
         <div className="sty-head">
-          <div className="sty-tabs">
-            <button className={tab === "clothes" ? "on" : ""} onClick={() => setTab("clothes")}>Одежда</button>
-            <button className={tab === "look" ? "on" : ""} onClick={() => setTab("look")}>Внешность</button>
-            <button className={tab === "eyes" ? "on" : ""} onClick={() => setTab("eyes")}>Глаза</button>
+          <div className="sty-tabs two">
+            <button className={mode === "items" ? "on" : ""} onClick={() => setMode("items")}>Вещи</button>
+            <button className={mode === "body" ? "on" : ""} onClick={() => setMode("body")}>Тело</button>
           </div>
           <button className="sty-x" onClick={onClose} aria-label="Закрыть без сохранения">✕</button>
         </div>
 
-        {tab === "clothes" ? (
+        {mode === "items" && (slot === "MOUTH" || slot === "HAND") ? (
+          <div className="sty-body">
+            <div className="tiny muted">{SLOT_NAME[slot]}</div>
+            <div className="sty-soon-box">
+              <b>Скоро</b>
+              <span className="small">{slot === "HAND" ? "Предметы в руку будут выпадать с боссов — герой будет держать их в кисти." : "Формы рта появятся в одном из следующих обновлений."}</span>
+            </div>
+          </div>
+        ) : mode === "items" && isClothes(slot) ? (
           <div className="sty-body">
             <div className="tiny muted">{SLOT_NAME[slot]}</div>
             <div className="sty-strip">
@@ -119,7 +139,7 @@ export function Stylist({ draft, setDraft, onClose }: { draft: StyleDraft; setDr
               )}
             </div>
           </div>
-        ) : tab === "eyes" ? (
+        ) : mode === "items" ? (
           <div className="sty-body">
             <div className="sty-row">
               <span className="tiny muted">Цвет глаз</span>
@@ -164,6 +184,10 @@ export function Stylist({ draft, setDraft, onClose }: { draft: StyleDraft; setDr
                   <button key={t.base} className={`swatch ${draft.look.skin === i ? "on" : ""}`} style={{ background: t.base }} onClick={() => patch({ skin: i })} aria-label={`тон кожи ${i + 1}`} />
                 ))}
               </div>
+            </div>
+            <div className="sty-row">
+              <span className="tiny muted">Татуировки</span>
+              <div className="sty-opts"><span className="tiny muted sty-soon">будут выпадать с боссов — в следующих обновлениях</span></div>
             </div>
           </div>
         )}

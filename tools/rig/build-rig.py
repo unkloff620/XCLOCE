@@ -1,7 +1,8 @@
 """
 Builds the seated player rig from the artist's parts.
 Input: tools/rig/source/v2/<part>.png — every part on the same 2000×2800 transparent canvas, in place
-(the torso layer includes the legs; face parts — eyes, pupils, brows, eyes-closed — ride on the head).
+(the torso layer includes the legs; face parts — eyes, pupils, brows, eyes-closed — ride on the head;
+the character's left hand — handR, on the screen's right — is its own part on the forearm: its fingers are animated by build-hand.py).
 The first, broader character is kept in tools/rig/source/v1/.
 Output: public/assets/hero/<part>.webp (trimmed, half size) + src/client/art/rig-data.ts (positions, pivots).
 Pivots are found automatically where a child part overlaps its parent.
@@ -16,9 +17,9 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 SRC = os.path.join(HERE, "source", "v2")
 OUT = os.path.join(ROOT, "public", "assets", "hero")
 SCALE = 0.5
-PARTS = ["torso", "head", "armUL", "armUR", "foreL", "foreR", "eyes", "pupils", "brows", "eyes-closed"]
+PARTS = ["torso", "head", "armUL", "armUR", "foreL", "foreR", "handR", "eyes", "pupils", "brows", "eyes-closed"]
 JOINTS = {  # child: parent
-    "head": "torso", "armUL": "torso", "armUR": "torso", "foreL": "armUL", "foreR": "armUR",
+    "head": "torso", "armUL": "torso", "armUR": "torso", "foreL": "armUL", "foreR": "armUR", "handR": "foreR",
 }
 os.makedirs(OUT, exist_ok=True)
 data, masks = {}, {}

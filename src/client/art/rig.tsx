@@ -5,7 +5,8 @@
  * its parent. Draw order matches the artwork: torso, legs over the shorts, arms over the torso, head on top.
  * Clothes (WEAR_FIT): shoes and pants over the legs, the shirt over the arms, the hat on the head bone.
  * Hair rides on the head bone; skin tone and hair colour come from `look` (pre-baked image variants).
- * Animations (CSS, see screens.css): breathing, looking around, tapping fingers on the knee.
+ * The left hand (handR, on the screen's right) is its own part on the forearm; its fingers drum on the knee (HandFrames).
+ * Animations (CSS, see screens.css): breathing, looking around, drumming fingers.
  */
 import { ART_VER } from "../preload.ts";
 import type { ReactNode } from "react";
@@ -23,6 +24,32 @@ type WearId = string;
 const WEARS: Record<string, { slot: string; x: number; y: number; w: number; h: number }> = WEAR_FIT;
 /** what the player wears: slot → item id (items without drawn art are skipped) */
 export type Worn = Record<string, string | undefined>;
+/**
+ * The character editor: every editable part gets a thin gold outline, the chosen one a bright thick one.
+ * mode "items": HEAD, EYES, MOUTH, SHIRT, PANTS, SHOES, HAND; mode "body": the whole body (skin, later tattoos).
+ */
+export type RigEdit = { mode: "items" | "body"; part: string | null };
+const EditCtx = createContext<RigEdit | null>(null);
+
+/** wraps a part in the editor outline (nothing outside the editor) */
+function Ol({ k, children }: { k: string; children: ReactNode }) {
+  const e = useContext(EditCtx);
+  if (!e) return <>{children}</>;
+  const on = e.mode === "body" ? k === "BODY" : e.part === k;
+  return <g filter={`url(#${on ? "rig-ol-on" : "rig-ol"})`} className={on ? "rig-ol-on" : undefined}>{children}</g>;
+}
+
+function OutlineDefs() {
+  const ring = (id: string, r: number, color: string, op: number) => (
+    <filter id={id} x="-15%" y="-15%" width="130%" height="130%">
+      <feMorphology in="SourceAlpha" operator="dilate" radius={r} result="d" />
+      <feFlood floodColor={color} floodOpacity={op} />
+      <feComposite in2="d" operator="in" result="o" />
+      <feMerge><feMergeNode in="o" /><feMergeNode in="SourceGraphic" /></feMerge>
+    </filter>
+  );
+  return <defs>{ring("rig-ol", 4, "#ffb627", 0.8)}{ring("rig-ol-on", 8, "#ffe27a", 1)}</defs>;
+}
 
 /** Look of the rig being drawn; skin and hair colours are pre-baked variants (tools/rig/build-look.py). */
 const LookCtx = createContext<Look>(DEFAULT_LOOK);
@@ -76,6 +103,25 @@ function Face() {
   );
 }
 
+/**
+ * The empty left hand drums its fingers on the knee: frames from a puppet warp (tools/rig/build-hand.py), pinky → index,
+ * each finger half up, up, half up; the frames are stacked and shown one at a time (screens.css «rig-hf»).
+ * A thing held in the hand (later: drops from bosses) keeps the hand still.
+ */
+function HandFrames({ held }: { held?: boolean }) {
+  const r = RIG.handR;
+  const { skin } = useContext(LookCtx);
+  const dir = skin !== SKIN_ORIGINAL ? `/assets/hero/skin-${skin}` : "/assets/hero";
+  return (
+    <g className={`rig-hand ${held ? "held" : ""}`}>
+      <image className="rig-hf rig-hf-0" href={`${dir}/handR.webp?v=${ART_VER.heroPart}`} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" />
+      {!held && [1, 2, 3, 4, 5, 6, 7, 8].map((k) => (
+        <image key={k} className={`rig-hf rig-hf-${k}`} href={`${dir}/handR-f${k}.webp?v=${ART_VER.heroPart}`} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" />
+      ))}
+    </g>
+  );
+}
+
 /** a bone: rotates around its joint (pivot) */
 function Bone({ p, className, children }: { p: PartId; className?: string; children?: ReactNode }) {
   const pv = "pivot" in RIG[p] ? (RIG[p] as { pivot: readonly [number, number] }).pivot : [500, 900];
@@ -97,46 +143,57 @@ function Seat({ level = 0 }: { level?: number }) {
 }
 
 /** Rig contents in its own 1000×1400 coordinates (place inside an <svg viewBox="0 0 1000 1400">). */
-function RigBody({ seat, look, worn, seatOnly }: { seat?: boolean | number; look?: Look; worn?: Worn; seatOnly?: boolean }) {
+function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number; look?: Look; worn?: Worn; seatOnly?: boolean; edit?: RigEdit }) {
   // the room editor hides the hero: only the seat stays, so the room behind is seen
   if (seatOnly) return <>{seat !== undefined && seat !== false && <Seat level={typeof seat === "number" ? seat : 0} />}</>;
   return (
     <LookCtx.Provider value={look ?? DEFAULT_LOOK}>
     <WornCtx.Provider value={worn ?? {}}>
+    <EditCtx.Provider value={edit ?? null}>
+      {edit && <OutlineDefs />}
       <ellipse cx="500" cy="1282" rx="400" ry="30" fill="rgba(0,0,0,0.3)" />
       {seat !== undefined && seat !== false && <Seat level={typeof seat === "number" ? seat : 0} />}
       {/* torso breathes; arms and head ride along in a second group with the same animation */}
       {/* the torso layer carries the legs too; only the chest breathes visibly (origin at the hips) */}
       <g className="rig-breath">
-        <Img p="torso" />
+        <Ol k="BODY"><Img p="torso" /></Ol>
       </g>
-      <Wear slot="SHOES" />
-      <Wear slot="PANTS" />
+      <Ol k="SHOES"><Wear slot="SHOES" /></Ol>
+      <Ol k="PANTS"><Wear slot="PANTS" /></Ol>
       <g className="rig-breath">
-        <Bone p="armUL">
-          <Bone p="foreL" />
-        </Bone>
-        <Bone p="armUR">
-          <Bone p="foreR" className="rig-tap" />
-        </Bone>
-        <Wear slot="SHIRT" />
+        <Ol k="BODY">
+          <Bone p="armUL">
+            <Bone p="foreL" />
+          </Bone>
+        </Ol>
+        <Ol k="BODY">
+          <Bone p="armUR">
+            <Bone p="foreR">
+              <Ol k="HAND"><HandFrames /></Ol>
+            </Bone>
+          </Bone>
+        </Ol>
+        <Ol k="SHIRT"><Wear slot="SHIRT" /></Ol>
         <Wear slot="ACCESSORY" />
-        <Bone p="head" className="rig-head">
-          <Face />
-          <Hair />
-          <Wear slot="HEAD" />
-        </Bone>
+        <Ol k="HEAD">
+          <Bone p="head" className="rig-head">
+            <Ol k="EYES"><Face /></Ol>
+            <Hair />
+            <Wear slot="HEAD" />
+          </Bone>
+        </Ol>
       </g>
+    </EditCtx.Provider>
     </WornCtx.Provider>
     </LookCtx.Provider>
   );
 }
 
 /** Nested viewport so bone pivots (view-box units) stay in rig coordinates inside any scene. */
-export function RigViewport({ x, y, scale, seat, still, look, worn, seatOnly }: { x: number; y: number; scale: number; seat?: boolean | number; still?: boolean; look?: Look; worn?: Worn; seatOnly?: boolean }) {
+export function RigViewport({ x, y, scale, seat, still, look, worn, seatOnly, edit }: { x: number; y: number; scale: number; seat?: boolean | number; still?: boolean; look?: Look; worn?: Worn; seatOnly?: boolean; edit?: RigEdit }) {
   return (
     <svg className={`rig ${still ? "still" : ""}`} x={x} y={y} width={1000 * scale} height={1400 * scale} viewBox="0 0 1000 1400" overflow="visible">
-      <RigBody seat={seat} look={look} worn={worn} seatOnly={seatOnly} />
+      <RigBody seat={seat} look={look} worn={worn} seatOnly={seatOnly} edit={edit} />
     </svg>
   );
 }

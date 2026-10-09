@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
+import type { RigEdit } from "../art/rig.tsx";
 import { HomeScene } from "../art/home-scene.tsx";
 import { ROOM_BACKDROP } from "../../content/home-scene.ts";
 import { Icon, NavIcon } from "../art/icons.tsx";
@@ -42,6 +43,8 @@ export function HomeScreen() {
   const { state, act, busy } = useGame();
   const now = useNow();
   const [styling, setStyling] = useState<StyleDraft | null>(null);
+  // which part of the hero the editor outlines brightest
+  const [editFocus, setEditFocus] = useState<RigEdit>({ mode: "items", part: "SHIRT" });
   const [daily, setDaily] = useState(false);
   const [quests, setQuests] = useState(false);
   // the [≡] menu remembers whether it was left open or closed (per device)
@@ -130,7 +133,7 @@ export function HomeScreen() {
         <div className={`room-view ${owned ? "" : "locked"}`}>
           <HomeScene room={viewRoom.id} look={styling?.look ?? state.look.body} worn={styling?.worn ?? state.look.equipped}
             pieces={decorating ? previewPieces(state.home.pieces ?? {}, decorating) : state.home.pieces} decor={decorating ?? state.home.decor} trophies={state.home.trophies}
-            focusHero={!!styling} hideHero={!!decorating}
+            focusHero={!!styling} hideHero={!!decorating} edit={styling ? editFocus : undefined}
             onPick={owned && !editing ? (id) => (id === "pc" ? setPc(true) : openRoomEditor("monitor2")) : undefined}
             onHero={owned && !editing ? openWardrobe : undefined} />
         </div>
@@ -248,7 +251,7 @@ export function HomeScreen() {
           </Link>
         </div>
       )}
-      {styling && <Stylist draft={styling} setDraft={setStyling} onClose={() => setStyling(null)} />}
+      {styling && <Stylist draft={styling} setDraft={setStyling} onClose={() => setStyling(null)} onFocus={setEditFocus} />}
       {daily && <DailyWindow onClose={() => setDaily(false)} />}
       {quests && <QuestsWindow onClose={() => setQuests(false)} />}
       {decorating && <RoomEditor draft={decorating} setDraft={setDecorating} tab={roomTab} setTab={setRoomTab} onClose={() => setDecorating(null)} />}

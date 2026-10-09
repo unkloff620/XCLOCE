@@ -1,7 +1,7 @@
 "use client";
 /* The player's room: artist's background, the PC in the corner, the desk with 1–3 monitors and the seated character on the stool. */
 import { CHARACTER, HERO_HOT, ROOM_BG, ROOM_LIGHTS, ROOM_RGB, ROOM_SKY, SCENE, SCENE_HOT, SCENE_OBJECTS } from "../../content/home-scene.ts";
-import { RigViewport, type Worn } from "./rig.tsx";
+import { RigViewport, type RigEdit, type Worn } from "./rig.tsx";
 import { ART_ASPECT } from "./desk-data.ts";
 import { placedArt, placedOf, type Look } from "../../content/home.ts";
 
@@ -37,7 +37,7 @@ function Hot({ id, onPick }: { id: keyof typeof SCENE_HOT; onPick: (equipment: s
  * hideHero: the room editor is open — the hero steps away (his chair stays) so the room behind is seen.
  * pieces / decor: the owned room things and which of them stand (content/home.ts placedOf).
  */
-export function HomeScene({ room = "basic", onPick, onHero, still, look, worn, pieces = {}, decor = {}, trophies = [], focusHero, hideHero }: { room?: string; onPick?: (equipment: string) => void; onHero?: () => void; still?: boolean; look?: Look; worn?: Worn; pieces?: Record<string, number>; decor?: Record<string, number>; trophies?: string[]; focusHero?: boolean; hideHero?: boolean }) {
+export function HomeScene({ room = "basic", onPick, onHero, still, look, worn, pieces = {}, decor = {}, trophies = [], focusHero, hideHero, edit }: { edit?: RigEdit; room?: string; onPick?: (equipment: string) => void; onHero?: () => void; still?: boolean; look?: Look; worn?: Worn; pieces?: Record<string, number>; decor?: Record<string, number>; trophies?: string[]; focusHero?: boolean; hideHero?: boolean }) {
   const bg = ROOM_BG[room] ?? ROOM_BG.basic;
   const sky = ROOM_SKY[room];
   const desk = placedArt("desk", pieces, decor) ?? "desk-001";
@@ -109,7 +109,7 @@ export function HomeScene({ room = "basic", onPick, onHero, still, look, worn, p
       {(monitors & 8) !== 0 && <Obj id="monitorOld" art="monitor-1" />}
       {trophies.includes("statue-close") && <Obj id="statueClose" art="statue-close" />}
       </g>
-      <RigViewport x={CHARACTER.x} y={CHARACTER.y} scale={CHARACTER.scale} seat={placedOf("chair", pieces, decor)} still={still} look={look} worn={worn} seatOnly={hideHero} />
+      <RigViewport x={CHARACTER.x} y={CHARACTER.y} scale={CHARACTER.scale} seat={placedOf("chair", pieces, decor)} still={still || !!edit} look={look} worn={worn} seatOnly={hideHero} edit={edit} />
       {onPick && <Hot id="monitors" onPick={onPick} />}
       {onPick && <Hot id="pc" onPick={onPick} />}
       {onHero && !hideHero && HERO_HOT.map((z, i) => (

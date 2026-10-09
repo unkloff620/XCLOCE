@@ -27,7 +27,7 @@ HEAD_WARP = np.array([[1.03917, 0.00046, -78.873], [0.00242, 1.02046, -74.156]],
 HAIR_COLORS = ["#4a2c1a", "#1d1a24", "#c9822f", "#f0d27a", "#b8401f", "#8d6bff", "#3fd2ff", "#e8e8f0"]
 SKIN_TONES = ["#f8d5b4", "#fcb477", "#dda57a", "#b97a4e", "#8a5534", "#5e3a24"]
 SKIN_ORIGINAL = 1
-PARTS = ["torso", "head", "armUL", "armUR", "foreL", "foreR", "eyes"]  # parts with skin (the eyelids too)
+PARTS = ["torso", "head", "armUL", "armUR", "foreL", "foreR", "handR", "eyes"]  # parts with skin (the eyelids too)
 
 
 def lab(rgb):  # uint8 rgb (..., 3) → float LAB (L 0..100)
