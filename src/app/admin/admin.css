@@ -158,3 +158,9 @@ a.adm-stat.link:hover { border-color: #4b6bff; background: var(--a-panel2); }
 .adm-boss-menu { position: absolute; z-index: 5; top: calc(100% + 4px); right: 0; width: min(380px, 92vw); display: flex; flex-direction: column; gap: 6px; padding: 10px; border: 1px solid var(--a-line); border-radius: 10px; background: var(--a-panel); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); }
 .adm-boss-act { display: flex; align-items: center; gap: 6px; font-size: 13px; }
 .adm-boss-act .adm-in.sm { width: 64px; }
+
+/* the «Выдать вещи» catalog: slot / owned filter chips */
+.adm-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.adm-chips button { background: var(--a-panel2); border: 1px solid transparent; color: var(--a-muted); padding: 4px 10px; border-radius: 999px; font: inherit; font-size: 13px; cursor: pointer; }
+.adm-chips button.on { color: var(--a-ink); border-color: var(--a-accent); }
+.adm-rar-rare { color: #5aa9ff; } .adm-rar-epic { color: #e0a23a; } .adm-rar-legendary { color: #ff8a3d; } .adm-rar-mythic { color: #ff5d7a; }

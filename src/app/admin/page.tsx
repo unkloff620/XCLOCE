@@ -6,10 +6,11 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import "./admin.css";
-import { ITEMS, itemById } from "../../content/items.ts";
+import { ITEMS, itemById, type ItemDef, type Slot } from "../../content/items.ts";
+import { ItemArt } from "../../client/art/items.tsx";
 import { CURRENCIES } from "../../content/currencies.ts";
 import { TALENT_NODE_IDS, TALENT_WEAPONS, talentTree } from "../../content/talents.ts";
-import { BOSSES, bossById, bossHasArt, keyId } from "../../content/bosses.ts";
+import { BOSSES, bossById, bossHasArt, keyId, unlockBossOf } from "../../content/bosses.ts";
 import { offerById } from "../../content/shop.ts";
 import { taskById } from "../../content/locations.ts";
 import { EVENT_EFFECTS, FOREVER, effectLines, cleanEffects, type BossTweak } from "../../content/events.ts";
@@ -753,6 +754,7 @@ function Player({ id }: { id: number }) {
         </Box>
       </div>
       <Passes rows={data.inventory} edit={edit} />
+      <GiveItems rows={data.inventory} edit={edit} />
       <Inventory rows={data.inventory} edit={edit} />
       <Talents rows={data.talents} edit={edit} />
       <section className="adm-card">
@@ -888,23 +890,123 @@ function Passes({ rows, edit }: { rows: Row[]; edit: EditFn }) {
   );
 }
 
+/**
+ * Everything that exists in the game, to hand out: tabs by kind (clothes — with the slot: head, top, bottom, shoes,
+ * hand…; tattoos; weapons; things; passes and rewards; stash finds), a search, and per item how many the player has
+ * with quick buttons. One-of-a-kind things (clothes) are given / taken away; stackable ones get +1 / +10 / ±N.
+ */
+const GIVE_TABS = [
+  { id: "clothing", name: "Одежда" },
+  { id: "tattoo", name: "Татуировки" },
+  { id: "weapon", name: "Оружие" },
+  { id: "item", name: "Предметы" },
+  { id: "reward", name: "Пропуски и награды" },
+  { id: "stash", name: "Нычки" },
+  { id: "event", name: "Ивенты" },
+] as const;
+type GiveTab = (typeof GIVE_TABS)[number]["id"];
+const SLOT_ORDER: { slot: Slot; name: string }[] = [
+  { slot: "HEAD", name: "Голова" }, { slot: "SHIRT", name: "Верх" }, { slot: "PANTS", name: "Низ" }, { slot: "SHOES", name: "Обувь" },
+  { slot: "HAND", name: "Кисть" }, { slot: "ACCESSORY", name: "Аксессуар" }, { slot: "SPECIAL", name: "Особое" }, { slot: "BODY", name: "Тело" },
+];
+const RARITY_NAME: Record<string, string> = { common: "обычная", rare: "редкая", epic: "эпическая", legendary: "легендарная", mythic: "мифическая" };
+const RARITY_RANK: Record<string, number> = { common: 0, rare: 1, epic: 2, legendary: 3, mythic: 4 };
+/** a tattoo is any item of the category "tattoo" (none in the game yet) */
+const kindOf = (i: ItemDef): string => i.category;
+
+function GiveItems({ rows, edit }: { rows: Row[]; edit: EditFn }) {
+  const [tab, setTab] = useState<GiveTab>("clothing");
+  const [slot, setSlot] = useState<Slot | "all">("all");
+  const [q, setQ] = useState("");
+  const [owned, setOwned] = useState<"all" | "no" | "yes">("all");
+  const [n, setN] = useState<Record<string, string>>({});
+  const have = (id: string) => num(rows.find((r) => r.item_id === id)?.qty);
+  const all = useMemo(() => ITEMS.filter((i) => i.maxStack > 0), []);
+  const count = (t: string) => all.filter((i) => kindOf(i) === t).length;
+  const slots = SLOT_ORDER.filter((s) => all.some((i) => i.category === "clothing" && i.slot === s.slot));
+  const needle = q.trim().toLowerCase();
+  const list = all
+    .filter((i) => (needle ? true : kindOf(i) === tab))
+    .filter((i) => needle || tab !== "clothing" || slot === "all" || i.slot === slot)
+    .filter((i) => !needle || i.name.toLowerCase().includes(needle) || i.id.includes(needle))
+    .filter((i) => owned === "all" || (owned === "yes") === have(i.id) > 0)
+    .sort((a, b) =>
+      (a.slot ? SLOT_ORDER.findIndex((s) => s.slot === a.slot) : 99) - (b.slot ? SLOT_ORDER.findIndex((s) => s.slot === b.slot) : 99) ||
+      RARITY_RANK[a.rarity] - RARITY_RANK[b.rarity] || a.name.localeCompare(b.name, "ru"));
+  const give = (i: ItemDef, delta: number) => {
+    if (!delta) return;
+    void edit({ op: "add_item", item: i.id, delta }, `${i.name} ${delta > 0 ? "+" : ""}${delta}`).then((ok) => ok && setN((x) => ({ ...x, [i.id]: "" })));
+  };
+  const setTo = (i: ItemDef, qty: number) => edit({ op: "set_item", item: i.id, qty }, i.name);
+  const where = (i: ItemDef) => {
+    const b = unlockBossOf(i.id);
+    return b ? `босс ${b.name}` : i.sources.slice(0, 2).join(", ");
+  };
+  return (
+    <Box title="Выдать вещи" right={<input className="adm-in" placeholder="поиск по всем вещам" value={q} onChange={(e) => setQ(e.target.value)} />}>
+      {!needle && (
+        <div className="adm-tabs">
+          {GIVE_TABS.filter((t) => t.id === "tattoo" || count(t.id) > 0).map((t) => (
+            <button key={t.id} className={tab === t.id ? "on" : ""} onClick={() => setTab(t.id)}>{t.name} · {count(t.id)}</button>
+          ))}
+        </div>
+      )}
+      {!needle && tab === "clothing" && (
+        <div className="adm-chips">
+          <button className={slot === "all" ? "on" : ""} onClick={() => setSlot("all")}>Все</button>
+          {slots.map((s) => (
+            <button key={s.slot} className={slot === s.slot ? "on" : ""} onClick={() => setSlot(s.slot)}>
+              {s.name} · {all.filter((i) => i.category === "clothing" && i.slot === s.slot).length}
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="adm-chips">
+        {([["all", "Все"], ["no", "Нет у игрока"], ["yes", "Есть у игрока"]] as const).map(([k, t]) => (
+          <button key={k} className={owned === k ? "on" : ""} onClick={() => setOwned(k)}>{t}</button>
+        ))}
+      </div>
+      {!needle && tab === "tattoo" && count("tattoo") === 0 ? (
+        <p className="muted small">Татуировок в игре пока нет. Как только они появятся (они будут выпадать с боссов), их можно будет выдать здесь.</p>
+      ) : (
+        <Table rows={list.map((i) => ({ id: i.id }))} empty="Ничего не найдено" cols={[
+          ["", (r) => <ItemArt id={String(r.id)} size={32} />],
+          ["Вещь", (r) => {
+            const i = itemById(String(r.id))!;
+            return <><b>{i.name}</b> <span className="muted tiny">{i.id}</span><br /><span className={`muted tiny adm-rar-${i.rarity}`}>{RARITY_NAME[i.rarity]}{i.slot ? ` · ${SLOT_ORDER.find((s) => s.slot === i.slot)?.name ?? i.slot}` : ""}</span></>;
+          }],
+          ["Откуда", (r) => <span className="muted small">{where(itemById(String(r.id))!)}</span>],
+          ["Есть", (r) => <b>{fmt(have(String(r.id)))}</b>, "r"],
+          ["Выдать", (r) => {
+            const i = itemById(String(r.id))!;
+            const h = have(i.id);
+            if (i.maxStack === 1) {
+              return h > 0
+                ? <button className="adm-btn sm danger-text" onClick={() => setTo(i, 0)}>Забрать</button>
+                : <button className="adm-btn sm" onClick={() => setTo(i, 1)}>Выдать</button>;
+            }
+            const v = n[i.id] ?? "";
+            return (
+              <form className="adm-qty" onSubmit={(e) => { e.preventDefault(); give(i, Math.trunc(Number(v))); }}>
+                <button type="button" className="adm-btn sm" onClick={() => give(i, 1)}>+1</button>
+                <button type="button" className="adm-btn sm" onClick={() => give(i, 10)}>+10</button>
+                <input className="adm-in sm" type="number" placeholder="±N" value={v} onChange={(e) => setN((x) => ({ ...x, [i.id]: e.target.value }))} />
+                <button className="adm-btn sm" disabled={!v || !Number(v)}>✓</button>
+              </form>
+            );
+          }, "r"],
+        ]} />
+      )}
+      <p className="muted small">Выданная одежда сразу появляется в редакторе персонажа, надеть её игрок может сам. Отрицательное число забирает.</p>
+    </Box>
+  );
+}
+
 function Inventory({ rows, edit }: { rows: Row[]; edit: EditFn }) {
-  const [add, setAdd] = useState("");
-  const [qty, setQty] = useState("1");
   const [filter, setFilter] = useState("");
-  const options = useMemo(() => ITEMS.filter((i) => i.maxStack > 0).sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name)), []);
   const shown = rows.filter((r) => !filter || String(r.name).toLowerCase().includes(filter.toLowerCase()) || String(r.item_id).includes(filter));
-  const def = itemById(add);
   return (
     <Box title={`Инвентарь · ${rows.length}`} right={<input className="adm-in sm" placeholder="фильтр" value={filter} onChange={(e) => setFilter(e.target.value)} />}>
-      <form className="adm-filters" onSubmit={(e) => { e.preventDefault(); if (def) edit({ op: "set_item", item: add, qty: Number(qty) }, def.name); }}>
-        <select className="adm-in grow" value={add} onChange={(e) => setAdd(e.target.value)}>
-          <option value="">выдать / задать предмет…</option>
-          {options.map((i) => <option key={i.id} value={i.id}>{i.name} · {i.category} · макс {i.maxStack}</option>)}
-        </select>
-        <input className="adm-in sm" type="number" min={0} max={def?.maxStack} value={qty} onChange={(e) => setQty(e.target.value)} />
-        <button className="adm-btn" disabled={!def}>Задать количество</button>
-      </form>
       <Table rows={shown} empty="Инвентарь пуст" cols={[
         ["Предмет", (r) => <><b>{String(r.name)}</b> <span className="muted tiny">{String(r.item_id)}</span></>],
         ["Тип", (r) => String(r.category)],

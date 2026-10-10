@@ -1,7 +1,8 @@
 import { STASH_LOCATION_NAMES, STASH_SETS, stashLevel } from "./stashes.ts";
 import { BOSSES, CARD_TIERS, isFirstWinItem, keyId, unlockBossOf } from "./bosses.ts";
 
-export type Category = "weapon" | "clothing" | "item" | "reward" | "stash" | "event";
+/** "tattoo": inked on a part of the body in the hero editor (none in the game yet) */
+export type Category = "weapon" | "clothing" | "item" | "reward" | "stash" | "event" | "tattoo";
 export type Rarity = "common" | "rare" | "epic" | "legendary" | "mythic";
 export type Slot = "BODY" | "PANTS" | "SHIRT" | "SHOES" | "HEAD" | "ACCESSORY" | "SPECIAL" | "HAND";
 /** Drawing order of the character, bottom to top. */
@@ -149,7 +150,7 @@ export const weaponById = (id: string) => {
 /** Starting outfit: a new player starts with nothing on (clothes come from the shop and from bosses). */
 export const STARTER_OUTFIT: Partial<Record<Slot, string>> = {};
 export const RARITY_NAME: Record<Rarity, string> = { common: "Обычный", rare: "Редкий", epic: "Эпический", legendary: "Легендарный", mythic: "Мифический" };
-export const CATEGORY_NAME: Record<Category, string> = { weapon: "Оружие", clothing: "Одежда", item: "Предметы", reward: "Награды", stash: "Нычки", event: "Ивентовые" };
+export const CATEGORY_NAME: Record<Category, string> = { weapon: "Оружие", clothing: "Одежда", item: "Предметы", reward: "Награды", stash: "Нычки", event: "Ивентовые", tattoo: "Татуировки" };
 
 /** Everything that drops in the yard can be sold back for RUB (about half of the shop price). Overridable via config "sell". */
 export const SELL_PRICES: Record<string, number> = {
