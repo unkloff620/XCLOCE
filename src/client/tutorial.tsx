@@ -31,31 +31,31 @@ const STEPS: Step[] = [
   {
     target: '.nav a[aria-label="Боссы"]', title: "Боссы",
     pics: [{ src: "/bosses/datsik/portrait.webp", cap: "Дацкоу" }, { src: "/bosses/kedr/portrait.webp", cap: "Кедр" }, { src: "/bosses/bebyakyan/portrait.webp", cap: "Командате" }],
-    text: "Главное в игре. Боссы идут строго по порядку — от Дацкоу до Солнца. Начни бой и бей оружием: у боя 8 часов, урон всех игроков общий.",
+    text: "Главное в игре. Начни бой и бей босса оружием — урон всех игроков общий.",
   },
   {
     title: "Оружие",
-    pics: [item("fist", "кулак"), item("mouse", "мышь"), item("red-candle", "свеча"), item("keyboard", "клава"), item("gpu", "видеокарта"), item("rug-pull-gun", "Rug Pull")],
-    text: "Кулак, мышь и свеча — бесплатные: бьют раз в 5 часов, а в каждом новом бою снова готовы. Клавиатура, видеокарта и Rug Pull Gun тратятся за удар, зато бьют сильнее — они из магазина и находок.",
+    pics: [item("fist", "кулак"), item("mouse", "мышь"), item("red-candle", "свеча"), item("keyboard", "клава"), item("gpu", "GPU"), item("rug-pull-gun", "пушка")],
+    text: "Кулак, мышь и свеча — бесплатные, бьют раз в 5 часов. Остальное оружие тратится за удар, зато бьёт сильнее.",
   },
   {
     title: "Пропуски", pics: [item("card-bronze", "бронза"), item("card-silver", "серебро"), item("card-gold", "золото")],
-    text: "Победи босса, нанеся ему хотя бы 1% здоровья, — получишь его пропуск. 3 пропуска открывают следующего босса (с Мугонатора хватает одного). Над каждым боссом — до 7 побед в день.",
+    text: "Побеждай босса — получай его пропуски. Пропуски открывают бой со следующим боссом.",
   },
   {
     title: "Вещи с боссов", pics: [item("tee-pump"), item("slippers"), item("bottle-komandate"), item("hand-drum")],
-    text: "С боссов выпадает одежда и вещи для руки. Выпавшая вещь открывается в магазине — там её и выкупаешь. Не везёт 10 побед подряд — вещь откроется точно. Что именно падает — секрет: «?» в списке боссов.",
+    text: "С боссов выпадают вещи. Выпавшую вещь можно купить в магазине.",
   },
   {
     title: "Таланты", pics: [ui("tech")],
-    text: "Урон по боссам копится за всё время: 1-й талант — за 100 урона, дальше всё больше. Талант вкладываешь в ветку оружия — урон или сила крита. Окно талантов открывается из боя, профиля и инвентаря.",
+    text: "Наноси урон боссам, получай таланты, улучшай оружие.",
   },
   {
     target: ".energy-chip", title: "Энергия", pics: [ui("energy-can"), item("energy-drink", "энергетик"), item("energy-pack", "пачка")],
     text: "Тратится на задания и сама восстанавливается: +1 каждые 5 минут. Энергетики из двора и магазина дают энергию сразу — даже сверх лимита.",
   },
   {
-    title: "Локации и задания", wide: true, pics: [{ src: "/assets/locations/openspace-card.webp" }],
+    title: "Локации и задания", pics: [{ src: "/assets/yard/court-entrance.webp", cap: "подъезд" }],
     text: "Подъезд во дворе ведёт в локации: опенспейс, крипто-рынок, серверная, майнинг-подвал, совет директоров. Задания дают рубли, авторитет и вещи. Прошёл все задания локации — забери её награду.",
   },
   {
@@ -76,8 +76,8 @@ const STEPS: Step[] = [
     text: "Авторитет — опыт за задания и победы, с ним растёт уровень. Достижения дают награды и очки-солнца, а лучшие в рейтинге недели получают призы.",
   },
   {
-    target: '[aria-label="Системник"]', title: "Твоя комната", pics: [ui("tech")],
-    text: "Нажми на героя — откроется редактор: выбираешь часть тела прямо на персонаже и меняешь одежду, причёску, кожу. Мониторы — обстановка комнаты (стол, мониторы и кресло дают бонусы к урону и криту). Системник прокачается позже.",
+    target: '[aria-label="Персонаж: гардероб"]', title: "Твой герой", pics: [ui("slot-head"), ui("slot-shirt"), ui("slot-pants"), ui("slot-shoes")],
+    text: "Нажми на героя — откроется редактор: одежда, причёска, цвет кожи. Нажми на мониторы — обстановка комнаты, она даёт бонусы к урону.",
   },
   {
     target: '.nav a[aria-label="Кланы"]', title: "Кланы", pics: [nav("clans", "кланы")],
@@ -157,6 +157,11 @@ export function Tutorial() {
     setForced(false);
     if (!state?.helpSeen.includes(TUTORIAL)) void act("help_seen", { topic: TUTORIAL });
   }, [act, state]);
+  const back = () => {
+    haptic.tap();
+    sfx("step");
+    setI((k) => Math.max(0, k - 1));
+  };
   const next = () => {
     haptic.tap();
     if (i >= STEPS.length - 1) {
@@ -183,7 +188,10 @@ export function Tutorial() {
     <div className="tour" role="dialog" aria-modal="true" aria-label="Обучение">
       {spot ? <div className="tour-spot" style={spot} /> : <div className="tour-dim" />}
       <div className="tour-card" style={cardStyle} key={i} ref={card}>
-        <div className="tour-steps" aria-hidden="true">{STEPS.map((_, k) => <i key={k} className={k === i ? "on" : k < i ? "done" : ""} />)}</div>
+        <div className="tour-top">
+          <div className="tour-steps" aria-hidden="true">{STEPS.map((_, k) => <i key={k} className={k === i ? "on" : k < i ? "done" : ""} />)}</div>
+          {i < STEPS.length - 1 && <button className="tour-skip" onClick={finish}>Пропустить</button>}
+        </div>
         <b className="display tour-title">{step.title}</b>
         {step.pics && (
           <div className={`tour-pics${step.wide ? " wide" : ""}${step.pics.length > 4 ? " many" : ""}`}>
@@ -198,8 +206,8 @@ export function Tutorial() {
         )}
         <p className="tour-text">{step.text}</p>
         <div className="row" style={{ justifyContent: "space-between" }}>
-          {i < STEPS.length - 1 ? <button className="btn dark sm" onClick={finish}>Пропустить</button> : <span />}
-          <button className="btn gold" onClick={next}>{i === 0 ? "Поехали" : i === STEPS.length - 1 ? "Начать играть" : "Дальше"} ›</button>
+          {i > 0 ? <button className="btn dark" onClick={back}>‹ Назад</button> : <span />}
+          <button className="btn gold" onClick={next}>{i === 0 ? "Поехали" : i === STEPS.length - 1 ? "Играть" : "Дальше"} ›</button>
         </div>
       </div>
     </div>,
