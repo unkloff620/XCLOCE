@@ -883,8 +883,9 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .tour-pics figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; width: 64px; }
 .tour-pics img { width: 64px; height: 64px; object-fit: contain; border-radius: 10px; filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.45)); }
 .tour-pics figcaption { font-size: 11px; line-height: 1.1; color: #e9d6b8; text-align: center; font-weight: 700; }
-.tour-pics.many figure { width: 46px; }
-.tour-pics.many img { width: 46px; height: 46px; }
+.tour-pics.many { gap: 6px; }
+.tour-pics.many figure { width: 42px; }
+.tour-pics.many img { width: 42px; height: 42px; }
 .tour-pics figure:only-child { width: auto; }
 .tour-pics figure:only-child img { width: 96px; height: 96px; }
 .tour-pics.wide { padding: 0; overflow: hidden; background: none; }
