@@ -170,8 +170,9 @@
 @keyframes fly { to { transform: translate(-50%, 260%) scale(0.3); opacity: 0; } }
 
 /* ---------- shop, exchange ---------- */
-.input { width: 100%; min-height: 44px; padding: 0 12px; border-radius: 12px; border: 2.5px solid var(--line); background: #0f0905; color: var(--ink); font: inherit; font-size: 16px; font-weight: 700; outline: none; }
+.input { width: 100%; min-height: 44px; padding: 0 12px; border-radius: 12px; border: 2.5px solid var(--line); background: #0f0905; color: #fff3e0; caret-color: #ffb547; font: inherit; font-size: 16px; font-weight: 700; outline: none; }
 .input:focus { box-shadow: 0 0 0 2px var(--violet); }
+.input::placeholder { color: #8a7258; }
 .cur-pick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 .cur-pick button { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 2px; border-radius: 11px; border: 2.5px solid var(--line); background: var(--tex), var(--bg2); font-weight: 800; font-size: 12px; }
 .cur-pick button.on { background: var(--violet); }
