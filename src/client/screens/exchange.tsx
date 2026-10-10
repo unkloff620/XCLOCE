@@ -70,7 +70,7 @@ export function Exchanger({ ex }: { ex: ShopData["exchange"] }) {
       <button className="exp-btn exp-go display" style={box(9, 78.2, 86.1, 10.5)} disabled={!can} onClick={go}>
         {a > have ? "Не хватает" : "Обменять"}
       </button>
-      <div className="exp-cell exp-foot" style={box(22.4, 95, 62.7, 2.6)}>Комиссия {Math.round(ex.fee * 100)}% · валюта игровая</div>
+      <div className="exp-cell exp-foot" style={box(9, 89.6, 86.1, 3.6)}>Комиссия {Math.round(ex.fee * 100)}% · валюта игровая</div>
     </div>
   );
 }

@@ -596,7 +596,7 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .exp-swap { font-size: 8cqw; font-weight: 900; color: #ffe2b0; text-shadow: 0 2px 0 #1e1006; }
 .exp-go { font-size: 6.6cqw; letter-spacing: 0.06em; text-transform: uppercase; color: #2a1808; text-shadow: 0 1px 0 rgba(255, 240, 210, 0.6); }
 .exp-go:disabled { filter: grayscale(0.7) brightness(0.65); cursor: default; }
-.exp-foot { justify-content: center; font-size: 2.9cqw; color: #cdb497; }
+.exp-foot { justify-content: center; font-size: 3.2cqw; font-weight: 700; color: #f1dcbc; text-shadow: 0 1px 2px #000, 0 0 4px rgba(0, 0, 0, 0.8); }
 
 /* face of the player character: blink (sometimes twice), glance left and right, brows move */
 .rig-eyes-closed { opacity: 0; animation: face-blink-c 5.2s steps(1) infinite; }
