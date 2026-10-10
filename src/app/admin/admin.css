@@ -53,9 +53,12 @@ a.adm-btn { display: inline-block; text-decoration: none; }
 .adm-main { max-width: 1280px; margin: 0 auto; padding: 16px; display: grid; gap: 14px; }
 
 .adm-card { background: var(--a-panel); border: 1px solid var(--a-line); border-radius: 12px; padding: 14px; min-width: 0; }
-.adm-card-h { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.adm-card-h { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; cursor: pointer; user-select: none; }
+.adm-card.folded { padding-top: 10px; padding-bottom: 10px; }
+.adm-card.folded .adm-card-h { margin-bottom: 0; }
+.adm-fold { color: var(--a-muted); width: 12px; font-size: 12px; }
 .adm-card h3 { margin: 0; font-size: 15px; }
-.adm-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 14px; }
+.adm-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 14px; align-items: start; }
 
 .adm-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
 .adm-stat { background: var(--a-panel); border: 1px solid var(--a-line); border-radius: 12px; padding: 10px 12px; display: grid; gap: 2px; }

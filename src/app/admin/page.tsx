@@ -392,11 +392,34 @@ function useLoad<T>(fn: () => Promise<T>, deps: unknown[]) {
   }, [...deps, n]); // eslint-disable-line react-hooks/exhaustive-deps
   return { data, err, reload: () => setN((x) => x + 1), setData };
 }
-function Box({ title, children, right }: { title: ReactNode; children: ReactNode; right?: ReactNode }) {
+/**
+ * A card. Every card folds: tap its header. Whether it is open is remembered per card title (in this browser);
+ * `closed` — folded until opened the first time (the player's card, so it does not take the whole screen).
+ */
+function Box({ title, children, right, closed }: { title: ReactNode; children: ReactNode; right?: ReactNode; closed?: boolean }) {
+  const key = typeof title === "string" ? `xcloce.admin.fold.${title.split(" · ")[0].replace(/\s+#?\d+$/, "")}` : null;
+  const [open, setOpen] = useState(!closed);
+  useEffect(() => {
+    if (!key) return;
+    try {
+      const v = localStorage.getItem(key);
+      if (v !== null) setOpen(v === "1");
+    } catch { /* no storage */ }
+  }, [key]);
+  const toggle = () => {
+    setOpen((o) => {
+      if (key) try { localStorage.setItem(key, o ? "0" : "1"); } catch { /* no storage */ }
+      return !o;
+    });
+  };
   return (
-    <section className="adm-card">
-      <div className="adm-card-h"><h3>{title}</h3><span className="grow" />{right}</div>
-      {children}
+    <section className={`adm-card${open ? "" : " folded"}`}>
+      <div className="adm-card-h" role="button" tabIndex={0} aria-expanded={open} onClick={toggle} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } }}>
+        <span className="adm-fold" aria-hidden="true">{open ? "▾" : "▸"}</span>
+        <h3>{title}</h3><span className="grow" />
+        {open && right && <span onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>{right}</span>}
+      </div>
+      {open && children}
     </section>
   );
 }
@@ -729,7 +752,7 @@ function Player({ id }: { id: number }) {
       </div>
       {msg && <p className={msg.ok ? "adm-ok" : "adm-err"}>{msg.text}</p>}
       <div className="adm-grid2">
-        <Box title="Валюта и параметры">
+        <Box title="Валюта и параметры" closed>
           <div className="adm-form">
             {CURRENCIES.map((c) => <EditNum key={c} label={c} value={data.money[c]} step="any" onSave={(v) => edit({ op: "set_money", currency: c, amount: v }, c)} />)}
             <EditNum label="Авторитет (XP)" value={num(p.xp)} onSave={(v) => edit({ op: "set_xp", value: v }, "Авторитет")} />
@@ -740,7 +763,7 @@ function Player({ id }: { id: number }) {
           <BanBox banned={!!p.banned_at} onBan={(reason) => edit({ op: "ban", reason }, "Бан")} onUnban={() => edit({ op: "unban" }, "Разбан")} />
           <ResetBox name={String(p.display_name)} onReset={() => edit({ op: "reset" }, "Сброс прогресса")} />
         </Box>
-        <Box title="Статистика">
+        <Box title="Статистика" closed>
           {data.stats ? (
             <dl className="adm-dl">
               {([["Урон всего", "total_damage"], ["Побед", "fights_won"], ["Поражений", "fights_lost"], ["Заданий", "tasks_done"], ["Шагов заданий", "task_steps"], ["Локаций", "locations_done"], ["Находок во дворе", "yard_found"], ["Наград", "rewards_got"]] as const).map(([t, k]) => (
@@ -757,7 +780,7 @@ function Player({ id }: { id: number }) {
       <GiveItems rows={data.inventory} edit={edit} />
       <Inventory rows={data.inventory} edit={edit} />
       <Talents rows={data.talents} edit={edit} />
-      <section className="adm-card">
+      <Box title="История" closed>
         <div className="adm-tabs">
           {([["actions", `Действия (${data.actions.length})`], ["fights", `Бои (${data.fights.length})`], ["ledger", `Движения (${data.ledger.length})`], ["admin", `Правки (${data.admin.length})`]] as const).map(([k, t]) => (
             <button key={k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>{t}</button>
@@ -785,7 +808,7 @@ function Player({ id }: { id: number }) {
             ["Когда", (r) => when(r.at), "nowrap"], ["Админ", (r) => <AdminWho r={r} />], ["Что", (r) => OP_NAMES[String(r.op)] ?? String(r.op), "nowrap"], ["Изменение", (r) => <EditInfo op={String(r.op)} info={r.info} />],
           ]} />
         )}
-      </section>
+      </Box>
     </>
   );
 }
@@ -858,7 +881,7 @@ function Passes({ rows, edit }: { rows: Row[]; edit: EditFn }) {
     void edit({ op: "add_item", item: id, delta }, `${name} ${delta > 0 ? "+" : ""}${delta}`).then((ok) => ok && setN((x) => ({ ...x, [id]: "" })));
   };
   return (
-    <Box title="Пропуски на боссов">
+    <Box title="Пропуски на боссов" closed>
       <Table rows={BOSSES.filter((b) => !b.final).map((b) => ({ id: keyId(b.id), boss: b.id, order: b.order }))} empty="Нет боссов" cols={[
         ["Пропуск", (r) => {
           const b = bossById(String(r.boss))!;
@@ -943,7 +966,7 @@ function GiveItems({ rows, edit }: { rows: Row[]; edit: EditFn }) {
     return b ? `босс ${b.name}` : i.sources.slice(0, 2).join(", ");
   };
   return (
-    <Box title="Выдать вещи" right={<input className="adm-in" placeholder="поиск по всем вещам" value={q} onChange={(e) => setQ(e.target.value)} />}>
+    <Box title="Выдать вещи" closed right={<input className="adm-in" placeholder="поиск по всем вещам" value={q} onChange={(e) => setQ(e.target.value)} />}>
       {!needle && (
         <div className="adm-tabs">
           {GIVE_TABS.filter((t) => t.id === "tattoo" || count(t.id) > 0).map((t) => (
@@ -1006,7 +1029,7 @@ function Inventory({ rows, edit }: { rows: Row[]; edit: EditFn }) {
   const [filter, setFilter] = useState("");
   const shown = rows.filter((r) => !filter || String(r.name).toLowerCase().includes(filter.toLowerCase()) || String(r.item_id).includes(filter));
   return (
-    <Box title={`Инвентарь · ${rows.length}`} right={<input className="adm-in sm" placeholder="фильтр" value={filter} onChange={(e) => setFilter(e.target.value)} />}>
+    <Box title={`Инвентарь · ${rows.length}`} closed right={<input className="adm-in sm" placeholder="фильтр" value={filter} onChange={(e) => setFilter(e.target.value)} />}>
       <Table rows={shown} empty="Инвентарь пуст" cols={[
         ["Предмет", (r) => <><b>{String(r.name)}</b> <span className="muted tiny">{String(r.item_id)}</span></>],
         ["Тип", (r) => String(r.category)],
@@ -1031,7 +1054,7 @@ function QtyCell({ r, edit }: { r: Row; edit: EditFn }) {
 function Talents({ rows, edit }: { rows: Row[]; edit: EditFn }) {
   const level = (w: string, b: string) => num(rows.find((r) => r.weapon_id === w && r.branch === b)?.level);
   return (
-    <Box title="Ветки талантов">
+    <Box title="Ветки талантов" closed>
       <Table rows={TALENT_WEAPONS.map((w) => ({ id: w }))} cols={[
         ["Оружие", (r) => itemById(String(r.id))?.name ?? String(r.id)],
         ...TALENT_NODE_IDS.map((id, k) => [talentTree("fist")[k].name, (r: Row) => {
