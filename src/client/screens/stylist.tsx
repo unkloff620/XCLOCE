@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { useGame } from "../store.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { ITEMS, type Slot } from "../../content/items.ts";
-import { EYE_COLORS, HAIR_COLORS, HAIR_STYLES, SKIN_TONES, type Look } from "../../content/home.ts";
+import { HAIR_COLORS, HAIR_STYLES, type Look } from "../../content/home.ts";
 import { haptic } from "../telegram.ts";
 import type { RigEdit } from "../art/rig.tsx";
 
@@ -13,9 +13,11 @@ import type { RigEdit } from "../art/rig.tsx";
  * The hero editor right on the home screen: the room and every button go grey, only the hero keeps his colours,
  * and his parts get gold outlines. You tap a part of the hero himself and its menu opens below (the chosen part
  * glows brighter). Two modes:
- *   «Вещи» — the torso → tops, the legs → bottoms, the feet → shoes, the head → hats, the hand → things held in it;
- *   «Тело» — the head → hair and skin, the eyes → their colour, the mouth (later), the torso / arms / hand / legs →
- *            the skin tone and the tattoos of that part (tattoos will drop from bosses).
+ *   «Вещи» — the head → hats, the neck → chains, the torso → tops, the legs → bottoms, the feet → shoes, the hand →
+ *            things held in it;
+ *   «Тело» — every place on its own: the head (hair), the eyes (effects from bosses, later), the mouth (later), the
+ *            torso, each shoulder, each forearm, the hand, each leg — the tattoos of that place (they will drop from
+ *            bosses). The skin tone and the eye colour are set in the profile («Внешность»).
  * Everything is a preview until «Сохранить»: then the changed slots are put on / taken off and the look is saved.
  */
 
@@ -24,10 +26,17 @@ export interface StyleDraft {
   worn: Record<string, string>;
 }
 
-const CLOTHES: Slot[] = ["HEAD", "SHIRT", "PANTS", "SHOES", "HAND"];
-const ITEM_PART: Record<string, string> = { HEAD: "Голова", SHIRT: "Верх", PANTS: "Низ", SHOES: "Обувь", HAND: "Кисть" };
-const BODY_PART: Record<string, string> = { HEAD: "Голова", EYES: "Глаза", MOUTH: "Рот", TORSO: "Торс", ARMS: "Руки", HAND: "Кисть", LEGS: "Ноги" };
-const TATTOO_WHERE: Record<string, string> = { HEAD: "на лице и шее", TORSO: "на груди и спине", ARMS: "на руках", HAND: "на кисти", LEGS: "на ногах" };
+const CLOTHES: Slot[] = ["HEAD", "ACCESSORY", "SHIRT", "PANTS", "SHOES", "HAND"];
+const ITEM_PART: Record<string, string> = { HEAD: "Голова", ACCESSORY: "Аксессуар", SHIRT: "Верх", PANTS: "Низ", SHOES: "Обувь", HAND: "Кисть" };
+// «левое / правое» — as seen on the screen
+const BODY_PART: Record<string, string> = {
+  HEAD: "Голова", EYES: "Глаза", MOUTH: "Рот", TORSO: "Торс", SHOULDER_L: "Левое плечо", SHOULDER_R: "Правое плечо",
+  ARM_L: "Левая рука", ARM_R: "Правая рука", HAND: "Кисть", LEG_L: "Левая нога", LEG_R: "Правая нога",
+};
+const TATTOO_WHERE: Record<string, string> = {
+  HEAD: "на лице и шее", TORSO: "на груди и животе", SHOULDER_L: "на левом плече", SHOULDER_R: "на правом плече",
+  ARM_L: "на левой руке", ARM_R: "на правой руке", HAND: "на кисти", LEG_L: "на левой ноге", LEG_R: "на правой ноге",
+};
 
 export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
   draft: StyleDraft; setDraft: (d: StyleDraft) => void; onClose: () => void; focus: RigEdit; setFocus: (f: RigEdit) => void;
@@ -80,16 +89,6 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
     }
   };
 
-  const skinRow = (
-    <div className="sty-row">
-      <span className="tiny muted">Кожа</span>
-      <div className="sty-opts">
-        {SKIN_TONES.map((t, i) => (
-          <button key={t.base} className={`swatch ${draft.look.skin === i ? "on" : ""}`} style={{ background: t.base }} onClick={() => patch({ skin: i })} aria-label={`тон кожи ${i + 1}`} />
-        ))}
-      </div>
-    </div>
-  );
   const tattooRow = (where: string) => (
     <div className="sty-row">
       <span className="tiny muted">Татуировки {where}</span>
@@ -122,22 +121,7 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
       </div>
     );
   } else if (part === "EYES") {
-    body = (
-      <>
-        <div className="sty-row">
-          <span className="tiny muted">Цвет глаз</span>
-          <div className="sty-opts">
-            {EYE_COLORS.map((c, i) => (
-              <button key={c} className={`swatch eye ${draft.look.eyes === i ? "on" : ""}`} style={{ ["--iris" as string]: c }} onClick={() => patch({ eyes: i })} aria-label={`цвет глаз ${i + 1}`} />
-            ))}
-          </div>
-        </div>
-        <div className="sty-row">
-          <span className="tiny muted">Форма глаз</span>
-          <div className="sty-opts"><button className="look-chip on">Обычные</button><span className="tiny muted sty-soon">новые формы — скоро</span></div>
-        </div>
-      </>
-    );
+    body = <div className="sty-soon-box"><b>Эффекты глаз — скоро</b><span className="small">Светящиеся и другие глаза будут выпадать с боссов. Цвет глаз меняется в профиле → «Внешность».</span></div>;
   } else if (part === "MOUTH") {
     body = <div className="sty-soon-box"><b>Скоро</b><span className="small">Формы рта появятся в одном из следующих обновлений.</span></div>;
   } else if (part === "HEAD") {
@@ -161,17 +145,11 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
             </div>
           </div>
         )}
-        {skinRow}
         {tattooRow(TATTOO_WHERE.HEAD)}
       </>
     );
   } else {
-    body = (
-      <>
-        {skinRow}
-        {tattooRow(TATTOO_WHERE[part] ?? "")}
-      </>
-    );
+    body = tattooRow(TATTOO_WHERE[part] ?? "");
   }
   const title = part ? (mode === "items" ? ITEM_PART[part] : BODY_PART[part]) : null;
 

@@ -19,7 +19,7 @@ import { ROOM_BACKDROP } from "../../content/home-scene.ts";
 import { ROOM_DEFS, placedOf } from "../../content/home.ts";
 import { BadgesPanel, type AchRow } from "../badges.tsx";
 import { TalentChip, TalentNext, TalentWindow } from "./talents.tsx";
-import type { Look } from "../../content/home.ts";
+import { EYE_COLORS, SKIN_TONES, type Look } from "../../content/home.ts";
 import { clock, dateRu, full, money, short } from "../format.ts";
 
 interface Profile {
@@ -252,14 +252,50 @@ export function ProfileScreen() {
   );
 }
 
-/** Own profile only: Telegram reminders, the tour again (sound switches live in the HUD). */
+/** Own profile only: the hero's looks, Telegram reminders, the tour again (sound switches live in the HUD). */
 function SettingsPanel() {
   const router = useRouter();
+  const [looks, setLooks] = useState(false);
   return (
     <div className="panel col" style={{ gap: 8 }}>
       <div className="small muted">НАСТРОЙКИ</div>
+      <button className="btn dark block" onClick={() => setLooks(true)}>Внешность: кожа и глаза</button>
+      {looks && <LooksWindow onClose={() => setLooks(false)} />}
       <NotifySwitch />
       <button className="btn dark block" onClick={() => { router.push("/"); setTimeout(replayTutorial, 400); }}>Пройти обучение заново</button>
     </div>
+  );
+}
+
+/** The hero's base looks — the skin tone and the eye colour (the character editor at home keeps clothes, hair, tattoos). */
+function LooksWindow({ onClose }: { onClose: () => void }) {
+  const { state, act, busy } = useGame();
+  const [look, setLook] = useState<Look | null>(state?.look.body ?? null);
+  if (!state || !look) return null;
+  const changed = JSON.stringify(look) !== JSON.stringify(state.look.body);
+  const save = async () => {
+    if ((await act("look_set", { ...look })) !== null) onClose();
+  };
+  return (
+    <Modal title="Внешность" onClose={onClose}>
+      <div className="col" style={{ gap: 12, alignItems: "center" }}>
+        <HeroRig size={220} still look={look} worn={state.look.equipped} />
+        <div className="col" style={{ gap: 6, width: "100%" }}>
+          <span className="tiny muted">Кожа</span>
+          <div className="sty-opts">
+            {SKIN_TONES.map((t, i) => (
+              <button key={t.base} className={`swatch ${look.skin === i ? "on" : ""}`} style={{ background: t.base }} onClick={() => setLook({ ...look, skin: i })} aria-label={`тон кожи ${i + 1}`} />
+            ))}
+          </div>
+          <span className="tiny muted">Цвет глаз</span>
+          <div className="sty-opts">
+            {EYE_COLORS.map((c, i) => (
+              <button key={c} className={`swatch eye ${look.eyes === i ? "on" : ""}`} style={{ ["--iris" as string]: c }} onClick={() => setLook({ ...look, eyes: i })} aria-label={`цвет глаз ${i + 1}`} />
+            ))}
+          </div>
+        </div>
+        <button className="btn green block" disabled={!changed || !!busy} onClick={save}>{changed ? "Сохранить" : "Без изменений"}</button>
+      </div>
+    </Modal>
   );
 }

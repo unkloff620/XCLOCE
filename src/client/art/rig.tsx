@@ -26,21 +26,23 @@ const WEARS: Record<string, { slot: string; x: number; y: number; w: number; h: 
 /** what the player wears: slot → item id (items without drawn art are skipped) */
 export type Worn = Record<string, string | undefined>;
 /**
- * The character editor: every editable part gets a thin gold outline, the chosen one a bright thick one.
- * mode "items": HEAD, EYES, MOUTH, SHIRT, PANTS, SHOES, HAND; mode "body": the whole body (skin, later tattoos).
+ * The character editor: every part of the hero gets a thin gold outline; the chosen part glows (a bright ring drawn
+ * over the hero, Highlight). While editing the hero holds still (no breathing), so the ring stays on the part.
+ * mode "items": HEAD, ACCESSORY, SHIRT, PANTS, SHOES, HAND — where clothes go (shown even with nothing worn);
+ * mode "body": HEAD, EYES, MOUTH, TORSO, SHOULDER_L/R, ARM_L/R (forearms), HAND, LEG_L/R — «L» is the screen's left.
  */
 export type RigEdit = { mode: "items" | "body"; part: string | null; onPick?: (part: string) => void };
 const EditCtx = createContext<RigEdit | null>(null);
 
-/** wraps a part in the editor outline (nothing outside the editor); `items` / `body` — which editor parts it stands for */
-function Ol({ items, body, children }: { items?: string; body?: string[]; children: ReactNode }) {
+/** the thin outline of every part in the editor (nothing outside the editor) */
+function Ol({ children }: { children: ReactNode }) {
   const e = useContext(EditCtx);
   if (!e) return <>{children}</>;
-  const on = !!e.part && (e.mode === "items" ? items === e.part : !!body?.includes(e.part));
-  return <g filter={`url(#${on ? "rig-ol-on" : "rig-ol"})`} className={on ? "rig-ol-on" : undefined}>{children}</g>;
+  return <g filter="url(#rig-ol)">{children}</g>;
 }
 
 // ---------- tapping a part of the hero in the editor: hit-tested on the pictures' own pixels, top layer first ----------
+/** `items` / `body` — the part this layer stands for in each mode ("" — not tappable in that mode) */
 type HitLayer = { href: string; x: number; y: number; w: number; h: number; items: string; body: string; rect?: boolean };
 const alphaCache = new Map<string, Promise<ImageData | null>>();
 function alphaOf(href: string): Promise<ImageData | null> {
@@ -67,38 +69,58 @@ function alphaOf(href: string): Promise<ImageData | null> {
   }
   return p;
 }
-/** where the torso picture ends and the legs begin, and the legs and the feet (rig y) */
-const HIPS_Y = 660, FEET_Y = 1120;
-function hitLayers(look: Look, worn: Worn): HitLayer[] {
+/** where the torso picture ends and the legs begin, and the legs and the feet (rig y); the legs part at MID_X */
+const HIPS_Y = 660, FEET_Y = 1120, MID_X = 500;
+/** where a chain goes when none is worn */
+const NECK = { x: 420, y: 285, w: 160, h: 85 };
+type Box = { href: string; x: number; y: number; w: number; h: number; rect?: boolean };
+function partLayer(look: Look, p: PartId): Box {
   const skinDir = look.skin !== SKIN_ORIGINAL ? `/assets/hero/skin-${look.skin}` : "/assets/hero";
-  const part = (p: PartId) => ({ href: `${look.skin !== SKIN_ORIGINAL && !NO_SKIN.has(p) ? skinDir : "/assets/hero"}/${p}.webp?v=${ART_VER.heroPart}`, ...RIG[p] });
-  const wear = (slot: string) => {
-    const id = wornIn(worn, slot);
-    return id ? { href: `/assets/hero/wear/${id}.webp?v=${ART_VER.wear}`, ...WEARS[id] } : null;
-  };
-  const out: HitLayer[] = [];
-  const add = (l: { href: string; x: number; y: number; w: number; h: number } | null, items: string, body: string, rect?: boolean) => { if (l) out.push({ ...l, items, body, rect }); };
-  add(wear("HEAD"), "HEAD", "HEAD");
-  if (look.hair in HAIR_FIT) {
-    const hat = wornIn(worn, "HEAD");
-    add({ href: `/assets/hero/hair/${look.hair}-${look.hairColor}${hat ? `-${hat}` : ""}.webp?v=${ART_VER.hair}`, ...HAIR_FIT[look.hair as HairId] }, "HEAD", "HEAD");
-  }
-  add({ href: "", ...RIG.eyes, x: RIG.eyes.x - 6, y: RIG.eyes.y - 22, w: RIG.eyes.w + 12, h: RIG.eyes.h + 30 }, "HEAD", "EYES", true);
-  // no mouth layer yet: the place under the nose
-  add({ href: "", x: RIG.head.x + RIG.head.w * 0.36, y: RIG.head.y + RIG.head.h * 0.72, w: RIG.head.w * 0.28, h: RIG.head.h * 0.13 }, "HEAD", "MOUTH", true);
-  add(part("head"), "HEAD", "HEAD");
-  add(wear("SHIRT"), "SHIRT", "TORSO");
+  return { href: `${look.skin !== SKIN_ORIGINAL && !NO_SKIN.has(p) ? skinDir : "/assets/hero"}/${p}.webp?v=${ART_VER.heroPart}`, ...RIG[p] };
+}
+function wearLayer(worn: Worn, slot: string): Box | null {
+  const id = wornIn(worn, slot);
+  return id ? { href: `/assets/hero/wear/${id}.webp?v=${ART_VER.wear}`, ...WEARS[id] } : null;
+}
+function handLayer(look: Look, worn: Worn): Box {
   const held = worn.HAND && worn.HAND in HELD_FIT ? worn.HAND : null;
-  add(held ? { href: `${look.skin !== SKIN_ORIGINAL ? `${skinDir}/held-${held}` : `/assets/hero/held/${held}`}.webp?v=${ART_VER.heroPart}`, ...HELD_FIT[held] } : part("handR"), "HAND", "HAND");
-  for (const p of ["foreR", "armUR", "foreL", "armUL"] as PartId[]) add(part(p), "SHIRT", "ARMS");
-  add(wear("PANTS"), "PANTS", "LEGS");
-  add(wear("SHOES"), "SHOES", "LEGS");
+  if (!held) return partLayer(look, "handR");
+  const base = look.skin !== SKIN_ORIGINAL ? `/assets/hero/skin-${look.skin}/held-${held}` : `/assets/hero/held/${held}`;
+  return { href: `${base}.webp?v=${ART_VER.heroPart}`, ...HELD_FIT[held] };
+}
+function hairLayer(look: Look, worn: Worn): Box | null {
+  if (!(look.hair in HAIR_FIT)) return null;
+  const hat = wornIn(worn, "HEAD");
+  return { href: `/assets/hero/hair/${look.hair}-${look.hairColor}${hat ? `-${hat}` : ""}.webp?v=${ART_VER.hair}`, ...HAIR_FIT[look.hair as HairId] };
+}
+const EYES_BOX = { href: "", x: RIG.eyes.x - 6, y: RIG.eyes.y - 22, w: RIG.eyes.w + 12, h: RIG.eyes.h + 30, rect: true };
+const MOUTH_BOX = { href: "", x: RIG.head.x + RIG.head.w * 0.36, y: RIG.head.y + RIG.head.h * 0.72, w: RIG.head.w * 0.28, h: RIG.head.h * 0.13, rect: true };
+function hitLayers(look: Look, worn: Worn): HitLayer[] {
+  const part = (p: PartId) => partLayer(look, p);
+  const out: HitLayer[] = [];
+  const add = (l: Box | null, items: string, body: string) => { if (l) out.push({ ...l, items, body }); };
+  add(wearLayer(worn, "HEAD"), "HEAD", "HEAD");
+  add(hairLayer(look, worn), "HEAD", "HEAD");
+  add(EYES_BOX, "HEAD", "EYES");
+  // no mouth layer yet: the place under the nose
+  add(MOUTH_BOX, "HEAD", "MOUTH");
+  add(part("head"), "HEAD", "HEAD");
+  add(wearLayer(worn, "ACCESSORY") ?? { href: "", ...NECK, rect: true }, "ACCESSORY", "");
+  add(wearLayer(worn, "SHIRT"), "SHIRT", "TORSO");
+  add(handLayer(look, worn), "HAND", "HAND");
+  add(part("foreR"), "SHIRT", "ARM_R");
+  add(part("armUR"), "SHIRT", "SHOULDER_R");
+  add(part("foreL"), "SHIRT", "ARM_L");
+  add(part("armUL"), "SHIRT", "SHOULDER_L");
+  add(wearLayer(worn, "PANTS"), "PANTS", "LEGS");
+  add(wearLayer(worn, "SHOES"), "SHOES", "LEGS");
   add(part("torso"), "TORSO", "TORSO");
   return out;
 }
 async function pickAt(x: number, y: number, layers: HitLayer[], mode: "items" | "body"): Promise<string | null> {
   for (const l of layers) {
     if (x < l.x || y < l.y || x >= l.x + l.w || y >= l.y + l.h) continue;
+    if (!(mode === "items" ? l.items : l.body)) continue;
     if (!l.rect) {
       const a = await alphaOf(l.href);
       if (a) {
@@ -106,26 +128,96 @@ async function pickAt(x: number, y: number, layers: HitLayer[], mode: "items" | 
         if (a.data[(py * a.width + px) * 4 + 3] < 60) continue;
       }
     }
-    if (l.items === "TORSO") {
-      // the torso picture carries the legs too
-      if (mode === "body") return y < HIPS_Y ? "TORSO" : "LEGS";
+    const v = mode === "items" ? l.items : l.body;
+    if (!v) continue;
+    // the torso picture carries the legs too; trousers and shoes count as the legs in the body editor
+    if (l.items === "TORSO" || v === "LEGS") {
+      if (mode === "body") return y < HIPS_Y && v !== "LEGS" ? "TORSO" : x < MID_X ? "LEG_L" : "LEG_R";
       return y < HIPS_Y ? "SHIRT" : y < FEET_Y ? "PANTS" : "SHOES";
     }
-    return mode === "items" ? l.items : l.body;
+    return v;
   }
   return null;
 }
 
 function OutlineDefs() {
-  const ring = (id: string, r: number, color: string, op: number) => (
-    <filter id={id} x="-15%" y="-15%" width="130%" height="130%">
-      <feMorphology in="SourceAlpha" operator="dilate" radius={r} result="d" />
-      <feFlood floodColor={color} floodOpacity={op} />
-      <feComposite in2="d" operator="in" result="o" />
-      <feMerge><feMergeNode in="o" /><feMergeNode in="SourceGraphic" /></feMerge>
-    </filter>
+  return (
+    <defs>
+      <filter id="rig-ol" x="-15%" y="-15%" width="130%" height="130%">
+        <feMorphology in="SourceAlpha" operator="dilate" radius={3} result="d" />
+        <feFlood floodColor="#ffb627" floodOpacity={0.55} />
+        <feComposite in2="d" operator="in" result="o" />
+        <feMerge><feMergeNode in="o" /><feMergeNode in="SourceGraphic" /></feMerge>
+      </filter>
+      {/* the chosen part: only a bright ring around it (drawn over the hero), with a soft glow */}
+      <filter id="rig-ring" x="-20%" y="-20%" width="140%" height="140%">
+        <feMorphology in="SourceAlpha" operator="dilate" radius={7} result="d" />
+        <feComposite in="d" in2="SourceAlpha" operator="out" result="r" />
+        <feFlood floodColor="#ffe27a" />
+        <feComposite in2="r" operator="in" result="ring" />
+        <feGaussianBlur in="ring" stdDeviation={5} result="glow" />
+        <feMerge><feMergeNode in="glow" /><feMergeNode in="ring" /></feMerge>
+      </filter>
+    </defs>
   );
-  return <defs>{ring("rig-ol", 4, "#ffb627", 0.8)}{ring("rig-ol-on", 8, "#ffe27a", 1)}</defs>;
+}
+
+type Clip = { x0?: number; x1?: number; y0?: number; y1?: number };
+/** the pictures (and clip) that make up the chosen part: drawn again over the hero through the ring filter */
+function partShapes(edit: RigEdit, look: Look, worn: Worn): { boxes: Box[]; clip?: Clip }[] {
+  const p = (id: PartId) => partLayer(look, id);
+  const torso = (clip: Clip) => ({ boxes: [p("torso")], clip });
+  const legs = { y0: HIPS_Y, y1: FEET_Y }, feet = { y0: FEET_Y };
+  const head = [p("head"), hairLayer(look, worn)].filter(Boolean) as Box[];
+  if (edit.mode === "items") {
+    switch (edit.part) {
+      case "HEAD": return [{ boxes: [wearLayer(worn, "HEAD") ?? head[0], ...head] }];
+      case "ACCESSORY": return [{ boxes: [wearLayer(worn, "ACCESSORY") ?? { href: "", ...NECK, rect: true }] }];
+      case "SHIRT": {
+        const shirt = wearLayer(worn, "SHIRT");
+        return [shirt ? { boxes: [shirt] } : torso({ y1: HIPS_Y }), { boxes: [p("armUL"), p("foreL"), p("armUR"), p("foreR")] }];
+      }
+      case "PANTS": { const w = wearLayer(worn, "PANTS"); return [w ? { boxes: [w] } : torso(legs)]; }
+      case "SHOES": { const w = wearLayer(worn, "SHOES"); return [w ? { boxes: [w] } : torso(feet)]; }
+      case "HAND": return [{ boxes: [handLayer(look, worn)] }];
+    }
+    return [];
+  }
+  switch (edit.part) {
+    case "HEAD": return [{ boxes: head }];
+    case "EYES": return [{ boxes: [EYES_BOX] }];
+    case "MOUTH": return [{ boxes: [MOUTH_BOX] }];
+    case "TORSO": return [torso({ y1: HIPS_Y })];
+    case "SHOULDER_L": return [{ boxes: [p("armUL")] }];
+    case "SHOULDER_R": return [{ boxes: [p("armUR")] }];
+    case "ARM_L": return [{ boxes: [p("foreL")] }];
+    case "ARM_R": return [{ boxes: [p("foreR")] }];
+    case "HAND": return [{ boxes: [handLayer(look, worn)] }];
+    case "LEG_L": return [torso({ y0: HIPS_Y, x1: MID_X })];
+    case "LEG_R": return [torso({ y0: HIPS_Y, x0: MID_X })];
+  }
+  return [];
+}
+function Highlight({ edit }: { edit: RigEdit }) {
+  const look = useContext(LookCtx), worn = useContext(WornCtx);
+  const shapes = partShapes(edit, look, worn);
+  return (
+    <g pointerEvents="none" className="rig-hl-part">
+      {shapes.map((sh, k) => {
+        const c = sh.clip, id = `rig-clip-${k}`;
+        return (
+          <g key={`${edit.part}-${k}`} clipPath={c ? `url(#${id})` : undefined}>
+            {c && <clipPath id={id}><rect x={c.x0 ?? -200} y={c.y0 ?? -200} width={(c.x1 ?? 1200) - (c.x0 ?? -200)} height={(c.y1 ?? 1600) - (c.y0 ?? -200)} /></clipPath>}
+            <g filter="url(#rig-ring)">
+              {sh.boxes.map((b, i) => b.rect
+                ? <rect key={i} x={b.x} y={b.y} width={b.w} height={b.h} rx={Math.min(b.w, b.h) / 2} fill="#fff" />
+                : <image key={i} href={b.href} x={b.x} y={b.y} width={b.w} height={b.h} preserveAspectRatio="none" />)}
+            </g>
+          </g>
+        );
+      })}
+    </g>
+  );
 }
 
 /** Look of the rig being drawn; skin and hair colours are pre-baked variants (tools/rig/build-look.py). */
@@ -256,33 +348,34 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
       {/* torso breathes; arms and head ride along in a second group with the same animation */}
       {/* the torso layer carries the legs too; only the chest breathes visibly (origin at the hips) */}
       <g className="rig-breath">
-        <Ol body={["TORSO", "LEGS"]}><Img p="torso" /></Ol>
+        <Ol><Img p="torso" /></Ol>
       </g>
-      <Ol items="SHOES" body={["LEGS"]}><Wear slot="SHOES" /></Ol>
-      <Ol items="PANTS" body={["LEGS"]}><Wear slot="PANTS" /></Ol>
+      <Ol><Wear slot="SHOES" /></Ol>
+      <Ol><Wear slot="PANTS" /></Ol>
       <g className="rig-breath">
-        <Ol body={["ARMS"]}>
+        <Ol>
           <Bone p="armUL">
             <Bone p="foreL" />
           </Bone>
         </Ol>
-        <Ol body={["ARMS"]}>
+        <Ol>
           <Bone p="armUR">
             <Bone p="foreR">
-              <Ol items="HAND" body={["HAND"]}><HandFrames /></Ol>
+              <Ol><HandFrames /></Ol>
             </Bone>
           </Bone>
         </Ol>
-        <Ol items="SHIRT" body={["TORSO"]}><Wear slot="SHIRT" /></Ol>
-        <Wear slot="ACCESSORY" />
-        <Ol items="HEAD" body={["HEAD", "MOUTH"]}>
+        <Ol><Wear slot="SHIRT" /></Ol>
+        <Ol><Wear slot="ACCESSORY" /></Ol>
+        <Ol>
           <Bone p="head" className="rig-head">
-            <Ol body={["EYES"]}><Face /></Ol>
+            <Face />
             <Hair />
             <Wear slot="HEAD" />
           </Bone>
         </Ol>
       </g>
+      {edit?.part && <Highlight edit={edit} />}
     </EditCtx.Provider>
     </WornCtx.Provider>
     </LookCtx.Provider>
@@ -305,7 +398,7 @@ export function RigViewport({ x, y, scale, seat, still, look, worn, seatOnly, ed
     if (part) edit.onPick(part);
   };
   return (
-    <svg ref={ref} className={`rig ${still ? "still" : ""} ${edit?.onPick ? "pickable" : ""}`} x={x} y={y} width={1000 * scale} height={1400 * scale} viewBox="0 0 1000 1400" overflow="visible"
+    <svg ref={ref} className={`rig ${still || edit ? "still" : ""} ${edit?.onPick ? "pickable" : ""}`} x={x} y={y} width={1000 * scale} height={1400 * scale} viewBox="0 0 1000 1400" overflow="visible"
       onPointerDown={edit?.onPick ? tap : undefined}>
       <RigBody seat={seat} look={look} worn={worn} seatOnly={seatOnly} edit={edit} />
     </svg>
