@@ -873,10 +873,23 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 @keyframes tour-in { from { opacity: 0; translate: 0 10px; scale: 0.96; } }
 .tour-title { font-size: 19px; color: var(--gold); }
 .tour-text { margin: 0; font-size: 14px; line-height: 1.4; }
-.tour-steps { display: flex; gap: 5px; }
-.tour-steps i { width: 18px; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, 0.15); }
+.tour-steps { display: flex; gap: 4px; }
+.tour-steps i { flex: 1 1 0; max-width: 18px; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, 0.15); }
 .tour-steps i.done { background: rgba(255, 204, 51, 0.55); }
-.tour-steps i.on { background: var(--gold); width: 28px; }
+.tour-steps i.on { background: var(--gold); flex-grow: 2; max-width: 28px; }
+.tour-card { max-height: calc(100dvh - 24px); overflow-y: auto; }
+/* the step's pictures: a row of squares with captions, or one wide card */
+.tour-pics { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; padding: 8px 6px; border-radius: 14px; background: radial-gradient(ellipse at 50% 40%, rgba(255, 204, 51, 0.14), rgba(0, 0, 0, 0.25) 70%); border: 1.5px solid rgba(255, 204, 51, 0.18); }
+.tour-pics figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; width: 64px; }
+.tour-pics img { width: 64px; height: 64px; object-fit: contain; border-radius: 10px; filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.45)); }
+.tour-pics figcaption { font-size: 11px; line-height: 1.1; color: #e9d6b8; text-align: center; font-weight: 700; }
+.tour-pics.many figure { width: 46px; }
+.tour-pics.many img { width: 46px; height: 46px; }
+.tour-pics figure:only-child { width: auto; }
+.tour-pics figure:only-child img { width: 96px; height: 96px; }
+.tour-pics.wide { padding: 0; overflow: hidden; background: none; }
+.tour-pics.wide figure, .tour-pics.wide img { width: 100%; height: auto; }
+.tour-pics.wide img { aspect-ratio: 18 / 7; object-fit: cover; border-radius: 12px; filter: none; }
 
 /* ---------------- level up ---------------- */
 .lvlup { position: fixed; inset: 0; z-index: 95; display: grid; place-items: center; overflow: hidden; cursor: pointer;
