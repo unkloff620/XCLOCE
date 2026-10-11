@@ -295,7 +295,7 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1
     for (const f of won) await resetFreeWeapons(ctx.q, f.player_id);
     const winsBy = new Map<string, number>();
     for (const f of won) winsBy.set(f.boss_id, (winsBy.get(f.boss_id) ?? 0) + 1);
-    for (const [id, n] of winsBy) await ctx.q.query("UPDATE bosses SET wins = wins + $2 WHERE id=$1", [id, n]);
+    for (const [id, n] of winsBy) await ctx.q.query("INSERT INTO bosses (id, wins) VALUES ($1,$2) ON CONFLICT (id) DO UPDATE SET wins = bosses.wins + EXCLUDED.wins", [id, n]);
     // others whose fight is nearly over get a "finish it!" reminder
     await notifyBossLow(ctx, total);
     const mineWon = won.some((x) => x.id === mine.id);
