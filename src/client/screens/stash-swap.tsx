@@ -107,3 +107,37 @@ export function StashGivePanel({ to, name, wish, give, onSent }: {
     </div>
   );
 }
+
+/** «Сообщения»: the stashes other players sent — accept one or all, they go to the inventory. */
+export function MessagesWindow({ onClose }: { onClose: () => void }) {
+  const { state, act, busy } = useGame();
+  if (!state) return null;
+  const inbox = state.stashInbox ?? [];
+  const accept = (id: number | null) => act("stash_accept", id === null ? {} : { id }, id === null ? "Все подарки в инвентаре" : "Нычка в инвентаре");
+  const when = (t: number) => new Date(t).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  return (
+    <Modal title="Сообщения" onClose={onClose}>
+      <div className="col" style={{ gap: 10 }}>
+        {inbox.length === 0 ? (
+          <p className="small muted" style={{ margin: 0, textAlign: "center" }}>Новых сообщений нет. Попроси нычки в меню дома — когда тебе их пришлют, подарки появятся здесь.</p>
+        ) : (
+          <>
+            <div className="col" style={{ gap: 6 }}>
+              {inbox.map((g) => (
+                <div key={g.id} className="msg-row">
+                  <ItemArt id={g.itemId} size={40} />
+                  <div className="grow" style={{ minWidth: 0 }}>
+                    <b className="small ellipsis" style={{ display: "block" }}>{itemById(g.itemId)?.name ?? g.itemId}</b>
+                    <span className="tiny muted">от <Link href={`/profile?id=${g.fromId}`} onClick={onClose}>{g.from}</Link> · {when(g.at)}</span>
+                  </div>
+                  <button className="btn green sm" disabled={!!busy} onClick={() => accept(g.id)}>Принять</button>
+                </div>
+              ))}
+            </div>
+            {inbox.length > 1 && <button className="btn gold block" disabled={!!busy} onClick={() => accept(null)}>Принять всё ({inbox.length})</button>}
+          </>
+        )}
+      </div>
+    </Modal>
+  );
+}

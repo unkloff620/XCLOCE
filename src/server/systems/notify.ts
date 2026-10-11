@@ -7,7 +7,7 @@ import { nextMoscowMidnight, type Ctx } from "../core.ts";
  * that the reason still holds (energy still full, fight still running, …), so a stale row just goes quiet.
  */
 
-export type NotifyKind = "energy_full" | "fist_ready" | "boss_low" | "streak";
+export type NotifyKind = "energy_full" | "fist_ready" | "boss_low" | "streak" | "stash_gift";
 
 /** Arms a reminder; an unchanged one (same moment and meta) is left as it is, so a sent reminder is not sent again. */
 export async function schedule(q: Queryable, pid: number, kind: NotifyKind, dueAt: number, meta: Record<string, unknown> = {}) {

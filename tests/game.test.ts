@@ -1345,12 +1345,20 @@ describe("нычки между игроками", () => {
     await expect(act(db, b, "stash_gift", { to: b, itemId: "stash-cigs" }, T0)).rejects.toMatchObject({ code: "bad_request" });
     for (let i = 0; i < 6; i++) await act(db, b, "stash_gift", { to: a, itemId: "stash-cigs" }, T0);
     await expect(act(db, b, "stash_gift", { to: a, itemId: "stash-cigs" }, T0)).rejects.toMatchObject({ code: "gift_limit" });
-    expect(await qty(db, a, "stash-cigs")).toBe(6);
+    // the gifts wait in «Сообщения» until accepted
+    expect(await qty(db, a, "stash-cigs")).toBe(0);
     expect(await qty(db, b, "stash-cigs")).toBe(4);
+    const box = await act(db, a, "stash_accept", { id: (await db.query<{ id: number }>("SELECT id FROM stash_gifts WHERE to_id=$1 ORDER BY id LIMIT 1", [a]))[0].id }, T0);
+    expect(box.state.stashInbox).toHaveLength(5);
+    expect(await qty(db, a, "stash-cigs")).toBe(1);
+    await act(db, a, "stash_accept", {}, T0);
+    expect(await qty(db, a, "stash-cigs")).toBe(6);
+    await expect(act(db, a, "stash_accept", {}, T0)).rejects.toMatchObject({ code: "no_gift" });
     // a new Moscow day: the limit is back
     await act(db, b, "stash_gift", { to: a, itemId: "stash-cigs" }, T0 + 24 * H);
     const s = await act(db, a, "stash_wish", { items: ["stash-cigs"] }, T0 + 24 * H);
     expect(s.state.stashWish).toEqual(["stash-cigs"]);
+    expect(s.state.stashInbox[0]).toMatchObject({ fromId: b, itemId: "stash-cigs" });
     expect(s.state.stashGifts[0]).toMatchObject({ fromId: b, itemId: "stash-cigs" });
   });
 });

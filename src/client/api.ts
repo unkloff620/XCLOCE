@@ -67,7 +67,9 @@ export interface GameState {
   stashSets: Record<number, number>;
   /** нычки I ask other players for, and who sent me what lately */
   stashWish?: string[];
-  stashGifts?: { fromId: number; from: string; itemId: string; at: number }[];
+  stashGifts?: { id: number; fromId: number; from: string; itemId: string; at: number }[];
+  /** gifts waiting in «Сообщения» to be accepted */
+  stashInbox?: { id: number; fromId: number; from: string; itemId: string; at: number }[];
   games: Record<"blackjack" | "zonk", { freeLeft: number; freePerDay: number; price: { currency: Currency; amount: number }; active: GameView | null }>;
   rename: { price: { currency: Currency; amount: number }; nextAt: number | null; min: number; max: number };
   /** inventory sale prices in RUB */

@@ -726,4 +726,13 @@ CREATE INDEX IF NOT EXISTS stash_gifts_from_day ON stash_gifts (from_id, day);
 CREATE INDEX IF NOT EXISTS stash_gifts_to ON stash_gifts (to_id, id);
 `,
   },
+  {
+    // Присланные нычки ждут в «Сообщениях», пока игрок их не примет. Уже присланные считаются принятыми.
+    id: "v2-039-stash-inbox",
+    sql: `
+ALTER TABLE stash_gifts ADD COLUMN IF NOT EXISTS accepted_at TIMESTAMPTZ;
+UPDATE stash_gifts SET accepted_at = at WHERE accepted_at IS NULL;
+CREATE INDEX IF NOT EXISTS stash_gifts_inbox ON stash_gifts (to_id) WHERE accepted_at IS NULL;
+`,
+  },
 ];

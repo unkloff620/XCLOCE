@@ -1770,3 +1770,5 @@ body:has(.fit-page) .hud { background: linear-gradient(180deg, rgba(20, 12, 6, 0
 .swap-check { position: absolute; left: 3px; top: 1px; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; background: var(--gold); color: #2a1808; font-size: 12px; font-weight: 900; }
 .swap-give { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .swap-give-item { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; text-align: center; }
+.msg-count { position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; display: grid; place-items: center; background: #ff3b3b; color: #fff; font-size: 12px; font-weight: 900; border: 2px solid #1e1006; }
+.msg-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: rgba(0, 0, 0, 0.16); border: 1.5px solid rgba(0, 0, 0, 0.25); }

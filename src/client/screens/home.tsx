@@ -22,7 +22,7 @@ import { money } from "../format.ts";
 import { Help, HelpList } from "../help.tsx";
 import { CURRENCY_DEFS } from "../../content/currencies.ts";
 import { Stylist, type StyleDraft } from "./stylist.tsx";
-import { StashWishWindow } from "./stash-swap.tsx";
+import { MessagesWindow, StashWishWindow } from "./stash-swap.tsx";
 import { ItemArt } from "../art/items.tsx";
 
 const MENU_KEY = "xc2_home_menu";
@@ -55,6 +55,7 @@ export function HomeScreen() {
   }, []);
   const [daily, setDaily] = useState(false);
   const [wish, setWish] = useState(false);
+  const [messages, setMessages] = useState(false);
   const [quests, setQuests] = useState(false);
   // the [≡] menu remembers whether it was left open or closed (per device)
   const [menuOpen, setMenuOpenRaw] = useState(false);
@@ -208,6 +209,11 @@ export function HomeScreen() {
             <span className="menu-bars" aria-hidden="true"><i /><i /><i /></span>
             {menuAlert && !menuOpen && <i className="side-dot" />}
           </button>
+          {/* «Сообщения»: stashes sent by other players wait here to be accepted */}
+          <button className={`menu-toggle msg-toggle ${(state.stashInbox?.length ?? 0) > 0 ? "glow" : ""}`} onClick={() => setMessages(true)} aria-label="Сообщения" title="Сообщения">
+            <Icon name="mail" size={36} />
+            {(state.stashInbox?.length ?? 0) > 0 && <span className="msg-count num">{state.stashInbox!.length}</span>}
+          </button>
           {menuOpen && (
             <div className="menu-drop">
               <button className="icon-btn-art" style={{ ["--c" as string]: "#ff9a3d" }} onClick={openWardrobe} aria-label="Гардероб" title="Гардероб">
@@ -267,6 +273,7 @@ export function HomeScreen() {
       {styling && <Stylist draft={styling} setDraft={setStyling} onClose={() => setStyling(null)} focus={editFocus} setFocus={setEditFocus} />}
       {daily && <DailyWindow onClose={() => setDaily(false)} />}
       {wish && <StashWishWindow onClose={() => setWish(false)} />}
+      {messages && <MessagesWindow onClose={() => setMessages(false)} />}
       {quests && <QuestsWindow onClose={() => setQuests(false)} />}
       {decorating && <RoomEditor draft={decorating} setDraft={setDecorating} tab={roomTab} setTab={setRoomTab} onClose={() => setDecorating(null)} />}
       {pc && <ComputerWindow onClose={() => setPc(false)} />}

@@ -65,6 +65,12 @@ async function textFor(q: Queryable, n: Due, now: number): Promise<string | null
       if (!d || d.last_day === today || d.last_day !== yesterday) return null;
       return `🎁 Награда за вход ждёт!\nСерия ${d.streak} дн. сгорит в полночь — зайди и забери день ${(d.streak % cfg.daily.length) + 1}.`;
     }
+    case "stash_gift": {
+      const [g] = await q.query<{ n: number }>("SELECT COUNT(*)::int AS n FROM stash_gifts WHERE to_id=$1 AND accepted_at IS NULL", [n.player_id]);
+      const k = Number(g?.n ?? 0);
+      if (!k) return null;
+      return `📦 Тебе прислали нычки: ${k} шт.\nЗагляни в «Сообщения» дома и забери подарки!`;
+    }
     default:
       return null;
   }
