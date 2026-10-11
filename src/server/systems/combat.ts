@@ -208,7 +208,7 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1
       throw new GameError("fight_over", "Время боя вышло — босс ушёл");
     }
 
-    // pay with the weapon (a batch uses what is left of it, and only as many as the boss needs)
+    // pay with the weapon (a batch uses what is left of it — all of it: damage is global, the overkill reaches others' fights)
     let left: number | null = null;
     let readyAt: number | null = null;
     let count = 1;
@@ -237,14 +237,12 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1
     const roomFlat = w.id === "fist" ? bonus.fistDamage ?? 0 : 0;
     const one = Math.round((w.weapon.damage + wt.flat + roomFlat) * (1 + bonus.damage));
     const critOne = Math.round(one * (BASE_CRIT_MULT + bonus.critDamage + wt.critDamage));
-    const hpBefore = fightHp({ ...mine, end_total: null, my_damage: Number(mine.my_damage) }, g.damage_total);
     let damage = 0, crits = 0, used = 0;
     while (used < count) {
       const c = bonus.critChance > 0 && ctx.rng() < bonus.critChance;
       damage += c ? critOne : one;
       if (c) crits++;
       used++;
-      if (damage >= hpBefore) break;
     }
     count = used;
     const crit = crits > 0;

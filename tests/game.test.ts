@@ -1006,16 +1006,16 @@ describe("admin: reset a player", () => {
 });
 
 describe("batch hits, extra pass", () => {
-  it("×10/×100/×1000 uses that many consumables in one tap, stops when the boss is down; free weapons hit once", async () => {
+  it("×10/×100/×1000 uses that many consumables in one tap, all of them even past the boss's HP (damage is global); free weapons hit once", async () => {
     await setBossHp({ datsik: 1000 });
     const p = await newPlayer(db);
     await give(db, p, "keyboard", 50);
     await startDatsik(p);
     const r = await act(db, p, "attack", { weapon: "keyboard", count: 10 }, T0, always(0.99));
     expect(r.result).toMatchObject({ count: 10, damage: 300, left: 40, hp: 700 });
-    // ×100 with 40 left: only as many as needed to finish the boss (700 / 30 → 24)
+    // ×100 with 40 left: all 40 hit, the damage over the boss's HP goes on to the other fights
     const w = await act(db, p, "attack", { weapon: "keyboard", count: 100 }, T0, always(0.99));
-    expect(w.result).toMatchObject({ count: 24, status: "won", left: 16 });
+    expect(w.result).toMatchObject({ count: 40, damage: 1200, status: "won", left: 0 });
     expect(w.state.fight).toBeNull();
     await startDatsik(p, T0 + M);
     await expect(act(db, p, "attack", { weapon: "fist", count: 10 }, T0 + M)).rejects.toMatchObject({ code: "bad_count" });
