@@ -34,7 +34,7 @@ export async function gameState(ctx: Ctx) {
   const home = await homeView(ctx.q, ctx.pid);
   const yard = await yardSync(ctx);
   const [fightRow] = await ctx.q.query<{ id: number; boss_id: string; hp_max: number; start_total: number; end_total: number | null; ends_at: Date; damage_total: number; my_damage: number; solo: boolean }>(
-    "SELECT f.id, f.boss_id, f.hp_max, f.start_total, f.end_total, f.ends_at, f.my_damage, f.solo, b.damage_total FROM fights f JOIN bosses b ON b.id=f.boss_id WHERE f.player_id=$1 AND f.status='active'",
+    "SELECT f.id, f.boss_id, f.hp_max, f.start_total, f.end_total, f.ends_at, f.my_damage, f.solo, b.damage_total FROM fights f JOIN bosses b ON b.id='_all' WHERE f.player_id=$1 AND f.status='active'",
     [ctx.pid],
   );
   // finished fights the player has not looked at yet → victory / defeat window on any screen

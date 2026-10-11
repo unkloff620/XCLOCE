@@ -10,13 +10,17 @@ import { playerBonus, weaponTalents } from "./home.ts";
 import { notifyBossLow } from "./notify.ts";
 
 /*
- * Personal fights, shared damage.
- * Every boss has a running damage counter. A fight remembers the counter at its start:
+ * Personal fights, global damage.
+ * One damage counter for the whole game (the bosses row GLOBAL): a hit on any boss adds to it. A fight remembers the
+ * counter at its start:
  *   fight HP = hp_max − (counter now − counter at start)
- * so a hit by anyone on that boss lowers HP in every fight with that boss that is running.
- * Lock order everywhere: player row (FOR NO KEY UPDATE) → boss row (FOR UPDATE). Other players'
+ * so a hit by anyone on any boss lowers HP in every running fight of every player (except «Соло» fights).
+ * Each boss row still counts its own damage and wins (statistics). Hits carry the global sequence number.
+ * Lock order everywhere: player row (FOR NO KEY UPDATE) → the GLOBAL row (FOR UPDATE). Other players'
  * rows are never touched inside an attack: winners collect their reward themselves (claimFight).
+ * Fights started before the switch (fights.global = false) keep their boss's own counter in the history views.
  */
+export const GLOBAL = "_all";
 
 interface FightRow {
   id: number;
@@ -49,6 +53,7 @@ interface BossRow {
 
 export async function ensureBosses(q: Queryable) {
   for (const b of BOSSES) await q.query("INSERT INTO bosses (id) VALUES ($1) ON CONFLICT DO NOTHING", [b.id]);
+  await q.query("INSERT INTO bosses (id) VALUES ($1) ON CONFLICT DO NOTHING", [GLOBAL]);
 }
 
 async function lockBoss(q: Queryable, id: string): Promise<BossRow> {
@@ -60,11 +65,11 @@ async function lockBoss(q: Queryable, id: string): Promise<BossRow> {
   return b;
 }
 
-/** Marks fights of this boss whose 8 hours are over as lost. Caller holds the boss lock. */
-async function expireFights(ctx: Ctx, boss: BossRow) {
+/** Marks fights whose 8 hours are over as lost. Caller holds the GLOBAL lock (`g`). */
+async function expireFights(ctx: Ctx, g: BossRow) {
   const lost = await ctx.q.query<LostFight>(
-    "UPDATE fights SET status='lost', ended_at=ends_at, end_total=$2, end_seq=$3 WHERE boss_id=$1 AND status='active' AND ends_at <= $4 RETURNING id, player_id, boss_id, keys_spent",
-    [boss.id, boss.damage_total, boss.last_seq, new Date(ctx.now)],
+    "UPDATE fights SET status='lost', ended_at=ends_at, end_total=$1, end_seq=$2 WHERE status='active' AND ends_at <= $3 RETURNING id, player_id, boss_id, keys_spent",
+    [g.damage_total, g.last_seq, new Date(ctx.now)],
   );
   await refundKeys(ctx, lost);
   // the boss left: the free weapons of those players are rested again
@@ -123,8 +128,7 @@ async function fightsToday(q: Queryable, pid: number, bossId: string, day: strin
 export async function settleMyFight(ctx: Ctx): Promise<void> {
   const [f] = await ctx.q.query<FightRow>("SELECT * FROM fights WHERE player_id=$1 AND status='active'", [ctx.pid]);
   if (!f || new Date(f.ends_at).getTime() > ctx.now) return;
-  const boss = await lockBoss(ctx.q, f.boss_id);
-  await expireFights(ctx, boss);
+  await expireFights(ctx, await lockBoss(ctx.q, GLOBAL));
 }
 
 export async function startFight(ctx: Ctx, bossId: string, solo = false) {
@@ -142,16 +146,16 @@ export async function startFight(ctx: Ctx, bossId: string, solo = false) {
   if ((await fightsToday(ctx.q, ctx.pid, def.id, day)) >= ctx.cfg.fight.perDay) {
     throw new GameError("fight_limit", `Лимит боёв с боссом ${def.name} на сегодня исчерпан (${ctx.cfg.fight.perDay}). Новые — после полуночи по Москве`);
   }
-  const boss = await lockBoss(ctx.q, def.id);
-  await expireFights(ctx, boss);
+  const g = await lockBoss(ctx.q, GLOBAL);
+  await expireFights(ctx, g);
   // the entry: the passes of the previous boss are spent (a lost or fled fight gives them back)
   const prev = prevBoss(def);
   const keys = prev ? keysNeeded(def, ctx.cfg.fight.keysToUnlock) : 0;
   if (prev && keys > 0) await takeItem(ctx, keyId(prev.id), keys, `fight:${def.id}`);
   const hpMax = ctx.cfg.bossHp[def.id] ?? def.hp;
   const [f] = await ctx.q.query<{ id: number }>(
-    "INSERT INTO fights (player_id, boss_id, hp_max, start_total, start_seq, started_at, ends_at, day, solo, keys_spent) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id",
-    [ctx.pid, def.id, hpMax, boss.damage_total, boss.last_seq, new Date(ctx.now), new Date(ctx.now + ctx.cfg.fight.hours * 3600_000), day, solo, keys],
+    "INSERT INTO fights (player_id, boss_id, hp_max, start_total, start_seq, started_at, ends_at, day, solo, keys_spent, global) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,true) RETURNING id",
+    [ctx.pid, def.id, hpMax, g.damage_total, g.last_seq, new Date(ctx.now), new Date(ctx.now + ctx.cfg.fight.hours * 3600_000), day, solo, keys],
   );
   // every new fight starts with the free weapons (fist, mouse, candle) ready — unless the last fight was fled:
   // otherwise flee + start again would give endless free hits (fled fights do not count toward the daily limit)
@@ -197,8 +201,9 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1
     if (want > 1 && w.weapon.kind !== "consumable") throw new GameError("bad_count", `${w.name} бьёт только по одному разу`);
     const [mine] = await ctx.q.query<FightRow>("SELECT * FROM fights WHERE player_id=$1 AND status='active'", [ctx.pid]);
     if (!mine) throw new GameError("no_fight", "Сначала начни бой с боссом");
-    const boss = await lockBoss(ctx.q, mine.boss_id);
-    await expireFights(ctx, boss);
+    const g = await lockBoss(ctx.q, GLOBAL);
+    await expireFights(ctx, g);
+    const bossId = mine.boss_id;
     if (new Date(mine.ends_at).getTime() <= ctx.now) {
       throw new GameError("fight_over", "Время боя вышло — босс ушёл");
     }
@@ -219,7 +224,7 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1
         "INSERT INTO cooldowns (player_id, item_id, ready_at) VALUES ($1,$2,$3) ON CONFLICT (player_id, item_id) DO UPDATE SET ready_at = EXCLUDED.ready_at",
         [ctx.pid, w.id, new Date(readyAt)],
       );
-      await ledger(ctx, "use", w.id, 1, `hit:${mine.boss_id}`);
+      await ledger(ctx, "use", w.id, 1, `hit:${bossId}`);
     }
 
     const phrases = HIT_PHRASES[w.id] ?? [""];
@@ -232,7 +237,7 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1
     const roomFlat = w.id === "fist" ? bonus.fistDamage ?? 0 : 0;
     const one = Math.round((w.weapon.damage + wt.flat + roomFlat) * (1 + bonus.damage));
     const critOne = Math.round(one * (BASE_CRIT_MULT + bonus.critDamage + wt.critDamage));
-    const hpBefore = fightHp({ ...mine, end_total: null, my_damage: Number(mine.my_damage) }, boss.damage_total);
+    const hpBefore = fightHp({ ...mine, end_total: null, my_damage: Number(mine.my_damage) }, g.damage_total);
     let damage = 0, crits = 0, used = 0;
     while (used < count) {
       const c = bonus.critChance > 0 && ctx.rng() < bonus.critChance;
@@ -243,13 +248,15 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1
     }
     count = used;
     const crit = crits > 0;
-    if (w.weapon.kind === "consumable") left = await takeItem(ctx, w.id, count, `hit:${mine.boss_id}`);
-    const seq = boss.last_seq + 1;
-    const total = boss.damage_total + damage;
-    await ctx.q.query("UPDATE bosses SET damage_total=$2, last_seq=$3 WHERE id=$1", [boss.id, total, seq]);
+    if (w.weapon.kind === "consumable") left = await takeItem(ctx, w.id, count, `hit:${bossId}`);
+    const seq = Number(g.last_seq) + 1;
+    const total = Number(g.damage_total) + damage;
+    await ctx.q.query("UPDATE bosses SET damage_total=$2, last_seq=$3 WHERE id=$1", [GLOBAL, total, seq]);
+    // the boss's own statistics
+    await ctx.q.query("UPDATE bosses SET damage_total = damage_total + $2, last_seq = last_seq + 1 WHERE id=$1", [bossId, damage]);
     await ctx.q.query(
       "INSERT INTO boss_hits (boss_id, seq, player_id, fight_id, weapon, damage, phrase, created_at, crit, count) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)",
-      [boss.id, seq, ctx.pid, mine.id, w.id, damage, phraseIdx, new Date(ctx.now), crit, count],
+      [bossId, seq, ctx.pid, mine.id, w.id, damage, phraseIdx, new Date(ctx.now), crit, count],
     );
     await ctx.q.query("UPDATE fights SET my_damage = my_damage + $2, my_hits = my_hits + $3 WHERE id=$1", [mine.id, damage, count]);
     const fightDamage = mine.my_damage + damage;
@@ -264,28 +271,30 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1
     }
     await ctx.q.query(
       "INSERT INTO boss_damage (boss_id, player_id, damage, hits) VALUES ($1,$2,$3,$4) ON CONFLICT (boss_id, player_id) DO UPDATE SET damage = boss_damage.damage + EXCLUDED.damage, hits = boss_damage.hits + EXCLUDED.hits",
-      [boss.id, ctx.pid, damage, count],
+      [bossId, ctx.pid, damage, count],
     );
     await ctx.q.query(
       "UPDATE player_stats SET total_damage = total_damage + $2, weapons = jsonb_set(weapons, ARRAY[$3::text], to_jsonb(COALESCE((weapons->>$3)::int, 0) + $4)) WHERE player_id=$1",
       [ctx.pid, damage, w.id, count],
     );
 
-    // every running fight with this boss whose HP reached zero is won by this hit
-    const won = await ctx.q.query<{ id: number; player_id: number }>(
-      "UPDATE fights SET status='won', end_total=$2, end_seq=$3, ended_at=$4, killer_id=$5 WHERE boss_id=$1 AND status='active' AND NOT solo AND hp_max - ($2 - start_total) <= 0 RETURNING id, player_id",
-      [boss.id, total, seq, new Date(ctx.now), ctx.pid],
+    // every running fight (with any boss) whose HP reached zero is won by this hit
+    const won = await ctx.q.query<{ id: number; player_id: number; boss_id: string }>(
+      "UPDATE fights SET status='won', end_total=$1, end_seq=$2, ended_at=$3, killer_id=$4 WHERE status='active' AND NOT solo AND hp_max - ($1 - start_total) <= 0 RETURNING id, player_id, boss_id",
+      [total, seq, new Date(ctx.now), ctx.pid],
     );
     // a solo fight is won only by my own damage
     if (mine.solo && Number(mine.my_damage) + damage >= mine.hp_max) {
       await ctx.q.query("UPDATE fights SET status='won', end_total=$2, end_seq=$3, ended_at=$4, killer_id=$5 WHERE id=$1", [mine.id, total, seq, new Date(ctx.now), ctx.pid]);
-      won.push({ id: mine.id, player_id: ctx.pid });
+      won.push({ id: mine.id, player_id: ctx.pid, boss_id: bossId });
     }
     // the boss is gone: everyone whose fight ended rests the free weapons no more
     for (const f of won) await resetFreeWeapons(ctx.q, f.player_id);
-    if (won.length) await ctx.q.query("UPDATE bosses SET wins = wins + $2 WHERE id=$1", [boss.id, won.length]);
-    // others whose fight with this boss is nearly over get a "finish it!" reminder
-    await notifyBossLow(ctx, boss.id, total);
+    const winsBy = new Map<string, number>();
+    for (const f of won) winsBy.set(f.boss_id, (winsBy.get(f.boss_id) ?? 0) + 1);
+    for (const [id, n] of winsBy) await ctx.q.query("UPDATE bosses SET wins = wins + $2 WHERE id=$1", [id, n]);
+    // others whose fight is nearly over get a "finish it!" reminder
+    await notifyBossLow(ctx, total);
     const mineWon = won.some((x) => x.id === mine.id);
     const hp = mineWon ? 0 : fightHp({ ...mine, end_total: null, my_damage: Number(mine.my_damage) + damage }, total);
     return {
@@ -408,10 +417,10 @@ async function rollUnlocks(ctx: Ctx, def: BossDef): Promise<string[]> {
 export async function fleeFight(ctx: Ctx) {
   const [f] = await ctx.q.query<FightRow>("SELECT * FROM fights WHERE player_id=$1 AND status='active'", [ctx.pid]);
   if (!f) throw new GameError("no_fight", "Нет боя");
-  const boss = await lockBoss(ctx.q, f.boss_id);
+  const g = await lockBoss(ctx.q, GLOBAL);
   const lost = await ctx.q.query<LostFight>(
     "UPDATE fights SET status='lost', ended_at=$2, end_total=$3, end_seq=$4 WHERE id=$1 RETURNING id, player_id, boss_id, keys_spent",
-    [f.id, new Date(ctx.now), boss.damage_total, boss.last_seq],
+    [f.id, new Date(ctx.now), g.damage_total, g.last_seq],
   );
   await refundKeys(ctx, lost);
   return { fightId: f.id, keysBack: Number(lost[0]?.keys_spent ?? 0) };
@@ -431,10 +440,10 @@ interface HitView {
   count: number;
 }
 
-async function hitsInWindow(q: Queryable, bossId: string, afterSeq: number, upToSeq: number | null, limit: number, onlyPlayer: number | null = null): Promise<HitView[]> {
+async function hitsInWindow(q: Queryable, bossId: string | null, afterSeq: number, upToSeq: number | null, limit: number, onlyPlayer: number | null = null): Promise<HitView[]> {
   const rows = await q.query<{ seq: number; player_id: number; display_name: string; weapon: string; damage: number; phrase: number; created_at: Date; crit: boolean; count: number }>(
     `SELECT h.seq, h.player_id, p.display_name, h.weapon, h.damage, h.phrase, h.created_at, h.crit, h.count FROM boss_hits h JOIN players p ON p.id = h.player_id
-     WHERE h.boss_id=$1 AND h.seq > $2 AND ($3::bigint IS NULL OR h.seq <= $3) AND ($5::int IS NULL OR h.player_id = $5) ORDER BY h.seq DESC LIMIT $4`,
+     WHERE ($1::text IS NULL OR h.boss_id=$1) AND h.seq > $2 AND ($3::bigint IS NULL OR h.seq <= $3) AND ($5::int IS NULL OR h.player_id = $5) ORDER BY h.seq DESC LIMIT $4`,
     [bossId, afterSeq, upToSeq, limit, onlyPlayer],
   );
   return rows.map((r) => ({ seq: r.seq, playerId: r.player_id, name: r.display_name, weapon: r.weapon, damage: r.damage, phrase: r.phrase, at: new Date(r.created_at).getTime(), crit: !!r.crit, count: Number(r.count ?? 1) }));
@@ -443,16 +452,18 @@ async function hitsInWindow(q: Queryable, bossId: string, afterSeq: number, upTo
 export async function fightView(q: Queryable, pid: number, fightId: number, sinceSeq = 0, now = Date.now()) {
   const [f] = await q.query<FightRow>("SELECT * FROM fights WHERE id=$1 AND player_id=$2", [fightId, pid]);
   if (!f) throw new GameError("no_fight", "Бой не найден", 404);
-  const [b] = await q.query<BossRow>("SELECT * FROM bosses WHERE id=$1", [f.boss_id]);
+  // a global fight counts every boss's hits; an old one (before the switch) — its own boss's
+  const scope = (f as FightRow & { global?: boolean }).global ? null : f.boss_id;
+  const [b] = await q.query<BossRow>("SELECT * FROM bosses WHERE id=$1", [scope ?? GLOBAL]);
   const timeUp = f.status === "active" && new Date(f.ends_at).getTime() <= now;
   const hp = fightHp(f, b.damage_total);
   const upTo = f.end_seq ?? (timeUp ? b.last_seq : null);
   // a solo fight shows only my own hits: the others' damage does not touch it
-  const hits = await hitsInWindow(q, f.boss_id, Math.max(f.start_seq, sinceSeq), upTo, 20, f.solo ? pid : null);
+  const hits = await hitsInWindow(q, scope, Math.max(f.start_seq, sinceSeq), upTo, 20, f.solo ? pid : null);
   const top = await q.query<{ player_id: number; display_name: string; dmg: number; hits: number }>(
     `SELECT h.player_id, p.display_name, SUM(h.damage)::int AS dmg, COUNT(*)::int AS hits FROM boss_hits h JOIN players p ON p.id=h.player_id
-     WHERE h.boss_id=$1 AND h.seq > $2 AND ($3::bigint IS NULL OR h.seq <= $3) AND ($4::int IS NULL OR h.player_id = $4) GROUP BY h.player_id, p.display_name ORDER BY dmg DESC LIMIT 10`,
-    [f.boss_id, f.start_seq, upTo, f.solo ? pid : null],
+     WHERE ($1::text IS NULL OR h.boss_id=$1) AND h.seq > $2 AND ($3::bigint IS NULL OR h.seq <= $3) AND ($4::int IS NULL OR h.player_id = $4) GROUP BY h.player_id, p.display_name ORDER BY dmg DESC LIMIT 10`,
+    [scope, f.start_seq, upTo, f.solo ? pid : null],
   );
   const [killer] = f.killer_id ? await q.query<{ display_name: string }>("SELECT display_name FROM players WHERE id=$1", [f.killer_id]) : [];
   const fighting = await q.query<{ n: number }>("SELECT COUNT(*)::int AS n FROM fights WHERE boss_id=$1 AND status='active' AND ends_at > $2", [f.boss_id, new Date(now)]);

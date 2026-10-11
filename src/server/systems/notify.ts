@@ -35,20 +35,20 @@ export async function scheduleStreak(ctx: Ctx, streak: number) {
   return schedule(ctx.q, ctx.pid, "streak", nextMoscowMidnight(ctx.now) + 20 * 3600_000, { streak });
 }
 
-/** After a hit: everyone else whose fight with this boss dropped to 20% HP or less gets "finish it!" — once per fight. */
-export async function notifyBossLow(ctx: Ctx, bossId: string, bossTotal: number) {
-  const rows = await ctx.q.query<{ id: number; player_id: number; hp: number; hp_max: number }>(
-    `SELECT id, player_id, hp_max - ($2 - start_total) AS hp, hp_max FROM fights
-     WHERE boss_id=$1 AND status='active' AND NOT solo AND ends_at > $3 AND player_id <> $4
-       AND hp_max - ($2 - start_total) > 0 AND (hp_max - ($2 - start_total)) * 5 <= hp_max`,
-    [bossId, bossTotal, new Date(ctx.now), ctx.pid],
+/** After a hit: everyone else whose fight dropped to 20% HP or less gets "finish it!" — once per fight (damage is global). */
+export async function notifyBossLow(ctx: Ctx, total: number) {
+  const rows = await ctx.q.query<{ id: number; player_id: number; boss_id: string; hp: number; hp_max: number }>(
+    `SELECT id, player_id, boss_id, hp_max - ($1 - start_total) AS hp, hp_max FROM fights
+     WHERE status='active' AND NOT solo AND ends_at > $2 AND player_id <> $3
+       AND hp_max - ($1 - start_total) > 0 AND (hp_max - ($1 - start_total)) * 5 <= hp_max`,
+    [total, new Date(ctx.now), ctx.pid],
   );
   for (const f of rows) {
     await ctx.q.query(
       `INSERT INTO notifications (player_id, kind, due_at, meta) VALUES ($1,'boss_low',$2,$3)
        ON CONFLICT (player_id, kind) DO UPDATE SET due_at=EXCLUDED.due_at, sent_at=NULL, meta=EXCLUDED.meta
        WHERE notifications.meta->>'fightId' IS DISTINCT FROM EXCLUDED.meta->>'fightId'`,
-      [f.player_id, new Date(ctx.now), JSON.stringify({ fightId: f.id, bossId })],
+      [f.player_id, new Date(ctx.now), JSON.stringify({ fightId: f.id, bossId: f.boss_id })],
     );
   }
 }

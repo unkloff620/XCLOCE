@@ -691,4 +691,18 @@ WHERE d.boss_id = 'kedr' AND d.wins >= 1
 ON CONFLICT DO NOTHING;
 `,
   },
+  {
+    // Урон стал глобальным: удар по любому боссу снимает HP во всех боях всех игроков. Один общий счётчик (строка
+    // bosses '_all'); идущие бои переводятся на него, сохраняя уже снятое HP.
+    id: "v2-037-global-damage",
+    sql: `
+ALTER TABLE fights ADD COLUMN IF NOT EXISTS global BOOLEAN NOT NULL DEFAULT false;
+INSERT INTO bosses (id, damage_total, last_seq)
+SELECT '_all', COALESCE(SUM(damage_total), 0), COALESCE(MAX(last_seq), 0) FROM bosses WHERE id <> '_all'
+ON CONFLICT (id) DO NOTHING;
+UPDATE fights f SET start_total = g.damage_total - (b.damage_total - f.start_total), start_seq = g.last_seq, global = true
+FROM bosses b, bosses g
+WHERE f.status = 'active' AND b.id = f.boss_id AND g.id = '_all';
+`,
+  },
 ];

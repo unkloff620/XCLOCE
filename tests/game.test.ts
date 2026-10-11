@@ -98,6 +98,25 @@ describe("boss fights: personal fights, shared damage", () => {
     expect(v.hits).toHaveLength(2);
   });
 
+  it("damage is global: a hit on one boss lowers HP in fights with other bosses too (not in solo fights)", async () => {
+    const a = await newPlayer(db), b = await newPlayer(db), c = await newPlayer(db);
+    await give(db, b, "key-datsik", 3);
+    await give(db, c, "key-datsik", 3);
+    const fa = await startDatsik(a);
+    const fb = await act(db, b, "fight_start", { boss: "kedr" }, T0);
+    const fc = await act(db, c, "fight_start", { boss: "kedr", solo: true }, T0);
+    await hit(a, "red-candle");
+    expect((await fightView(db, b, fb.result.fightId, 0, T0)).hp).toBe(10_000 - 30);
+    expect((await fightView(db, c, fc.result.fightId, 0, T0)).hp).toBe(10_000);
+    await hit(b, "red-candle");
+    const va = await fightView(db, a, fa.result.fightId, 0, T0);
+    expect(va.hp).toBe(1000 - 60);
+    expect(va.hits.map((h) => h.playerId).sort()).toEqual([a, b].sort());
+    // the bosses still count their own damage
+    const rows = await db.query<{ id: string; damage_total: number }>("SELECT id, damage_total FROM bosses WHERE id IN ('datsik','kedr','_all') ORDER BY id");
+    expect(Object.fromEntries(rows.map((r) => [r.id, Number(r.damage_total)]))).toEqual({ _all: 60, datsik: 30, kedr: 30 });
+  });
+
   it("one hit can finish several fights; the reward follows each one's own damage", async () => {
     await setBossHp({ datsik: 1000 });
     const a = await newPlayer(db), b = await newPlayer(db), c = await newPlayer(db), d = await newPlayer(db);

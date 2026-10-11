@@ -48,7 +48,7 @@ async function textFor(q: Queryable, n: Due, now: number): Promise<string | null
     case "boss_low": {
       const fightId = Number(n.meta.fightId);
       const [f] = await q.query<{ boss_id: string; hp_max: number; start_total: number; damage_total: number }>(
-        `SELECT f.boss_id, f.hp_max, f.start_total, b.damage_total FROM fights f JOIN bosses b ON b.id=f.boss_id
+        `SELECT f.boss_id, f.hp_max, f.start_total, b.damage_total FROM fights f JOIN bosses b ON b.id='_all'
          WHERE f.id=$1 AND f.player_id=$2 AND f.status='active' AND NOT f.solo AND f.ends_at > $3`,
         [fightId, n.player_id, new Date(now)],
       );
