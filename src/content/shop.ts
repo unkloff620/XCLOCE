@@ -35,14 +35,14 @@ export const SHOP_SECTIONS = [
   { id: "misc", name: "Разное" },
 ] as const;
 
-// Draft prices. Energy costs 18 RUB-equivalent per point, more than the best task pays (16), so it cannot be farmed.
+// Draft prices. Energy costs 36 RUB-equivalent per point (doubled), far more than the best task pays (16), so it cannot be farmed.
 export const OFFERS: Offer[] = [
   { id: "keyboard-1", section: "weapons", give: { item: "keyboard", qty: 1 }, price: { currency: "RUB", amount: 190 }, title: "Клавиатура", bulk: true },
   { id: "gpu-1", section: "weapons", give: { item: "gpu", qty: 1 }, price: { currency: "USD", amount: 4 }, title: "Видеокарта", bulk: true },
   { id: "rpg-1", section: "weapons", give: { item: "rug-pull-gun", qty: 1 }, price: { currency: "SOL", amount: 0.03 }, title: "Rug Pull Gun", bulk: true },
-  { id: "energy-50", section: "energy", give: { energy: 50, qty: 1 }, price: { currency: "RUB", amount: 900 }, title: "+50 энергии" },
-  { id: "energy-100", section: "energy", give: { energy: 100, qty: 1 }, price: { currency: "USD", amount: 20 }, title: "+100 энергии" },
-  { id: "energy-500", section: "energy", give: { energy: 500, qty: 1 }, price: { currency: "SOL", amount: 0.6 }, title: "+500 энергии", note: "сверх лимита" },
+  { id: "energy-50", section: "energy", give: { energy: 50, qty: 1 }, price: { currency: "RUB", amount: 1800 }, title: "+50 энергии" },
+  { id: "energy-100", section: "energy", give: { energy: 100, qty: 1 }, price: { currency: "USD", amount: 40 }, title: "+100 энергии" },
+  { id: "energy-500", section: "energy", give: { energy: 500, qty: 1 }, price: { currency: "SOL", amount: 1.2 }, title: "+500 энергии", note: "сверх лимита" },
   { id: "tee-white", section: "clothing", give: { item: "tee-white", qty: 1 }, price: { currency: "RUB", amount: 400 }, title: "Белая футболка" },
   { id: "slippers", section: "clothing", give: { item: "slippers", qty: 1 }, price: { currency: "RUB", amount: 900 }, title: "Тапки" },
   { id: "sneakers", section: "clothing", give: { item: "sneakers", qty: 1 }, price: { currency: "RUB", amount: 500 }, title: "Кеды" },
