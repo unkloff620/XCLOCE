@@ -131,7 +131,7 @@ async function raw<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (outdated) throw new ApiError("update", "Вышло обновление — обнови страницу", 409);
   const r = await fetch(path, {
     ...init,
-    headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}), ...(init.headers ?? {}) },
+    headers: { "content-type": "application/json", "x-app-version": APP_VERSION, ...(token ? { authorization: `Bearer ${token}` } : {}), ...(init.headers ?? {}) },
     cache: "no-store",
   });
   checkVersion(r.headers.get("x-app-version"));

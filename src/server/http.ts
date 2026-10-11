@@ -88,9 +88,21 @@ export function publicRoute(name: string, fn: (ctx: PublicCtx) => Promise<unknow
   };
 }
 
+/**
+ * The game page sends the release it was built from (x-app-version). A page from another release — or from before
+ * the version check existed (no header at all) — is refused: it shows the message and stops working until reloaded.
+ */
+export const UPDATE_MESSAGE = "Вышло обновление! Обнови страницу (или закрой и открой игру заново), чтобы продолжить.";
+function staleClient(req: Request): boolean {
+  if (APP_VERSION === "dev") return false;
+  const v = req.headers.get("x-app-version");
+  return v !== "dev" && v !== APP_VERSION;
+}
+
 export function authedRoute(name: string, fn: (ctx: Ctx) => Promise<unknown>) {
   return async (req: Request): Promise<Response> => {
     try {
+      if (staleClient(req)) throw new GameError("update", UPDATE_MESSAGE, 409);
       const auth = req.headers.get("authorization");
       const playerId = verifySession(auth?.startsWith("Bearer ") ? auth.slice(7) : null);
       if (!allow("p:" + playerId, 30, 6) || !allow("ip:" + clientKey(req), 80, 15)) {
