@@ -1362,3 +1362,24 @@ describe("нычки между игроками", () => {
     expect(s.state.stashGifts[0]).toMatchObject({ fromId: b, itemId: "stash-cigs" });
   });
 });
+
+describe("upgrader spins", () => {
+  it("3 free spins a Moscow day, then 500 ₽ a spin; no money — no spin, the stake stays", async () => {
+    const p = await newPlayer(db);
+    await give(db, p, "spinner", 10);
+    await setMoney(db, p, "RUB", 600);
+    for (let i = 0; i < 3; i++) {
+      const r = await act(db, p, "upgrade", { stake: "spinner", qty: 1, mode: "x2" }, T0, always(0.99));
+      expect(r.result.paid).toBe(false);
+    }
+    expect(await wallet(db, p, "RUB")).toBe(600);
+    const paid = await act(db, p, "upgrade", { stake: "spinner", qty: 1, mode: "x2" }, T0, always(0.99));
+    expect(paid.result.paid).toBe(true);
+    expect(paid.state.upgradeSpins).toMatchObject({ freeLeft: 0, price: { currency: "RUB", amount: 500 } });
+    expect(await wallet(db, p, "RUB")).toBe(100);
+    await expect(act(db, p, "upgrade", { stake: "spinner", qty: 1, mode: "x2" }, T0)).rejects.toMatchObject({ code: "no_money" });
+    expect(await qty(db, p, "spinner")).toBe(6);
+    const next = await act(db, p, "upgrade", { stake: "spinner", qty: 1, mode: "x2" }, T0 + 24 * H, always(0.99));
+    expect(next.result.paid).toBe(false);
+  });
+});

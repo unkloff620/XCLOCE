@@ -111,6 +111,8 @@ export const ITEM_VALUES: Record<string, number> = {
   "lost-wallet": 150, "energy-pack": 250, gpu: 300, "rug-pull-gun": 2000,
 };
 export const UPGRADE_EDGE = 0.9;
+/** a spin of the upgrader: the first ones of a Moscow day are free, then each costs `price` */
+export const UPGRADE_RULES = { freePerDay: 3, price: { currency: "RUB" as const, amount: 500 } };
 /** the six buttons: three multipliers and three chances */
 export const UPGRADE_MODES = [
   { id: "x2", label: "×2", mult: 2 },

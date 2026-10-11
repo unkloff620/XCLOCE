@@ -11,7 +11,7 @@ import { normalizeLook } from "../../content/home.ts";
 import { touchActivity } from "../players.ts";
 import { dailyView } from "./daily.ts";
 import { renameView, slotsView } from "./extras.ts";
-import { gamesView, upgradedView } from "./games.ts";
+import { gamesView, upgradedView, upgradeSpinsView } from "./games.ts";
 import { requestsView } from "./clans.ts";
 import { homeView, weaponTalents } from "./home.ts";
 import { tasksHint } from "./locations.ts";
@@ -90,6 +90,7 @@ export async function gameState(ctx: Ctx) {
     openBosses: OPEN_BOSSES(ctx.cfg.bossOpen).map((b) => b.id),
     games: await gamesView(ctx.q, ctx.pid, ctx.now),
     upgraded: await upgradedView(ctx.q, ctx.pid),
+    upgradeSpins: await upgradeSpinsView(ctx.q, ctx.pid, ctx.now),
     stashWish: await stashWish(ctx.q, ctx.pid),
     stashGifts: await giftsReceived(ctx.q, ctx.pid),
     stashInbox: await giftsReceived(ctx.q, ctx.pid, true),

@@ -5,7 +5,7 @@
 import { GameError, type Queryable } from "../db.ts";
 import { addItem, addMoney, grantReward, itemQty, ledger, moscowDay, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { useItem } from "./shop.ts";
-import {
+import { UPGRADE_RULES,
   BJ_PAY, BJ_TITLES, GAME_RULES, ITEM_VALUES, ZONK_DICE, bjOutcome, handValue, isBlackjack, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue, zonkHasScore, zonkPrize, zonkScore,
   type BjOutcome, type Card, type GameKind,
 } from "../../content/games.ts";
@@ -162,6 +162,12 @@ export async function zonkMove(ctx: Ctx, pick: number[], then: "roll" | "bank") 
 interface UpRow { id: number; item_id: string; value: number }
 
 /** The player's upgraded things (each one is its own unit with its own price). */
+/** free upgrader spins left today, and the price of a paid one */
+export async function upgradeSpinsView(q: Queryable, pid: number, now: number) {
+  const [r] = await q.query<{ n: number }>("SELECT n FROM upgrade_spins WHERE player_id=$1 AND day=$2", [pid, moscowDay(now)]);
+  return { freeLeft: Math.max(0, UPGRADE_RULES.freePerDay - Number(r?.n ?? 0)), freePerDay: UPGRADE_RULES.freePerDay, price: UPGRADE_RULES.price };
+}
+
 export async function upgradedView(q: Queryable, pid: number) {
   const rows = await q.query<UpRow>("SELECT id, item_id, value FROM upgraded_items WHERE player_id=$1 ORDER BY value DESC, id", [pid]);
   return rows.map((r) => ({ uid: r.id, itemId: r.item_id, value: Number(r.value) }));
@@ -181,6 +187,15 @@ async function takeUpgraded(ctx: Ctx, uid: number): Promise<UpRow> {
 export async function upgrade(ctx: Ctx, stake: { item?: string; qty?: number; uid?: number }, modeId: string) {
   const mode = upgradeMode(modeId);
   if (!mode) throw new GameError("bad_upgrade", "Выбери множитель или шанс");
+  // the spin itself: free while the day's free spins last, then UPGRADE_RULES.price
+  const day = moscowDay(ctx.now);
+  const [sp] = await ctx.q.query<{ n: number }>("SELECT n FROM upgrade_spins WHERE player_id=$1 AND day=$2 FOR UPDATE", [ctx.pid, day]);
+  const paid = Number(sp?.n ?? 0) >= UPGRADE_RULES.freePerDay;
+  if (paid) await takeMoney(ctx, UPGRADE_RULES.price.currency, UPGRADE_RULES.price.amount, "upgrade:spin");
+  await ctx.q.query(
+    "INSERT INTO upgrade_spins (player_id, day, n) VALUES ($1,$2,1) ON CONFLICT (player_id, day) DO UPDATE SET n = upgrade_spins.n + 1",
+    [ctx.pid, day],
+  );
   let value: number;
   let from: string;
   if (stake.uid !== undefined) {
@@ -208,7 +223,7 @@ export async function upgrade(ctx: Ctx, stake: { item?: string; qty?: number; ui
     uid = row.id;
     await ledger(ctx, "upgraded", target, 1, `up:${uid}:${newValue}`);
   }
-  return { won, chance, roll: Math.round(roll * 10000) / 10000, mode: mode.id, from, stakeValue: value, value: newValue, target, uid };
+  return { won, chance, roll: Math.round(roll * 10000) / 10000, mode: mode.id, from, stakeValue: value, value: newValue, target, uid, paid };
 }
 
 /** An upgraded thing sold for its own price. */

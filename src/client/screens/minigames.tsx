@@ -5,7 +5,7 @@
  */
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useGame } from "../store.tsx";
-import { Modal, RewardChips } from "../ui.tsx";
+import { Coin, Modal, RewardChips } from "../ui.tsx";
 import { Icon } from "../art/icons.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { Help } from "../help.tsx";
@@ -348,6 +348,10 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
     setWon(null);
     setRoll(null);
   };
+  const spins = state?.upgradeSpins;
+  const spinFree = (spins?.freeLeft ?? 1) > 0;
+  const spinPrice = spins?.price ?? { currency: "RUB" as const, amount: 500 };
+  const canSpin = spinFree || (state?.wallet[spinPrice.currency] ?? 0) >= spinPrice.amount;
   const go = async () => {
     if (!cur || spinning) return;
     setWon(null);
@@ -406,9 +410,10 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
           </button>
         ))}
       </div>
-      <button className="btn big block gold upg-go" disabled={!cur || spinning || busy === "upgrade"} onClick={go}>
-        {spinning ? "Крутим…" : "⇪ Прокачать"}
+      <button className="btn big block gold upg-go" disabled={!cur || spinning || busy === "upgrade" || !canSpin} onClick={go}>
+        {spinning ? "Крутим…" : spinFree ? `⇪ Прокачать · бесплатно ${spins!.freeLeft}/${spins!.freePerDay}` : <>⇪ Прокачать · <Coin c={spinPrice.currency} v={spinPrice.amount} size={16} /></>}
       </button>
+      {!spinFree && <span className="tiny muted center">Бесплатные прокруты на сегодня кончились ({spins?.freePerDay ?? 3} в день) — дальше {full(spinPrice.amount)} ₽ за прокрут. Новые — после полуночи по Москве.</span>}
       <span className="tiny muted">Что поставить</span>
       <div className="upg-pick">
         {ups.map((u) => (

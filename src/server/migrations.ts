@@ -735,4 +735,16 @@ UPDATE stash_gifts SET accepted_at = at WHERE accepted_at IS NULL;
 CREATE INDEX IF NOT EXISTS stash_gifts_inbox ON stash_gifts (to_id) WHERE accepted_at IS NULL;
 `,
   },
+  {
+    // Апгрейдер: 3 бесплатных прокрута в день, дальше 500 ₽ за прокрут. Счётчик прокрутов за день.
+    id: "v2-040-upgrade-spins",
+    sql: `
+CREATE TABLE IF NOT EXISTS upgrade_spins (
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  day DATE NOT NULL,
+  n INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (player_id, day)
+);
+`,
+  },
 ];

@@ -63,6 +63,8 @@ export interface GameState {
   /** yard mini games: free games left today, the price after that, the hand / game in progress */
   /** upgraded things from the upgrader: each one its own unit with its own price */
   upgraded: { uid: number; itemId: string; value: number }[];
+  /** upgrader spins: free ones left today, then each costs `price` */
+  upgradeSpins?: { freeLeft: number; freePerDay: number; price: { currency: Currency; amount: number } };
   /** how many times each set of stashes was collected (by set number) */
   stashSets: Record<number, number>;
   /** нычки I ask other players for, and who sent me what lately */
