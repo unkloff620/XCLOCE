@@ -54,10 +54,12 @@ export function bjOutcome(player: Card[], dealer: Card[]): BjOutcome {
 /*
  * 6 костей. Очки: 1 = 100, 5 = 50; три одинаковых = номинал × 100 (три единицы = 1000); четыре — вдвое больше трёх,
  * пять — вчетверо, шесть — в 8 раз; стрит 1-2-3-4-5-6 = 1500; три пары = 750.
- * Бросаешь, откладываешь очковые кости и решаешь: бросить оставшиеся или забрать очки. Бросок без очков — «Зонк»:
- * всё набранное сгорает. Отложены все 6 — бросаешь все шесть заново.
+ * Партия — ZONK_ROUNDS попыток. В попытке бросаешь, откладываешь очковые кости и решаешь: бросить оставшиеся или
+ * записать очки попытки в общий счёт. Бросок без очков — «Зонк»: очки этой попытки сгорают, попытка потрачена.
+ * Отложены все 6 — бросаешь все шесть заново. После последней попытки общий счёт даёт награду (zonkPrize).
  */
 export const ZONK_DICE = 6;
+export const ZONK_ROUNDS = 10;
 
 /** points of a set of dice where every die must count; null if some die does not score */
 export function zonkScore(dice: number[]): number | null {
@@ -90,11 +92,11 @@ export function zonkHasScore(dice: number[]): boolean {
   return false;
 }
 
-/** the prize for banked points: a free game pays rubles, a paid one dollars (a little less than the stake on average) */
+/** the prize for the game's total over ZONK_ROUNDS attempts: a free game pays rubles, a paid one dollars (a little less than the stake on average) */
 export function zonkPrize(points: number, paid: boolean): Reward {
   if (points <= 0) return {};
-  if (paid) return { currencies: { USD: Math.round((points / 400) * 10) / 10 } };
-  return { currencies: { RUB: Math.round(points / 5) } };
+  if (paid) return { currencies: { USD: Math.round((points / 4000) * 10) / 10 } };
+  return { currencies: { RUB: Math.round(points / 40) } };
 }
 
 /* ---------------- upgrader ---------------- */

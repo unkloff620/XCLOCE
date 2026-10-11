@@ -15,7 +15,7 @@ import { full } from "../format.ts";
 import type { GameView } from "../api.ts";
 import { itemById } from "../../content/items.ts";
 import {
-  BJ_PAY, GAME_RULES, ITEM_VALUES, RANKS, SUITS, UPGRADE_MODES, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue, zonkScore, zonkPrize,
+  BJ_PAY, GAME_RULES, ITEM_VALUES, RANKS, SUITS, UPGRADE_MODES, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue, zonkScore, zonkPrize, ZONK_ROUNDS,
   type GameKind, type UpgradeMode,
 } from "../../content/games.ts";
 
@@ -179,9 +179,10 @@ function scatter(seed: number, i: number) {
 function ZonkHelp() {
   return (
     <Help topic="zonk" title="Зонк">
-      <p>Бросаешь 6 костей и откладываешь очковые. Потом решаешь: бросить оставшиеся — рискнуть ради большего — или забрать очки. Бросок без единой очковой кости — «Зонк»: всё набранное сгорает. Отложил все шесть — бросаешь все шесть заново.</p>
+      <p>В партии {ZONK_ROUNDS} попыток. В каждой бросаешь 6 костей и откладываешь очковые, потом решаешь: бросить оставшиеся — рискнуть ради большего — или записать очки попытки в общий счёт. Бросок без единой очковой кости — «Зонк»: очки этой попытки сгорают, попытка потрачена. Отложил все шесть — бросаешь все шесть заново.</p>
+      <p>После {ZONK_ROUNDS}-й попытки общий счёт превращается в награду.</p>
       <p>Таблица справа подсказывает: строка светится, если такая комбинация есть в броске, и горит ярко, когда ты её выбрал. «Подсказка» сама выберет все очковые кости.</p>
-      <p>Бесплатно — {GAME_RULES.zonk.freePerDay} игра в день: очки / 5 = рубли (1000 очков = 200 RUB). Дальше {GAME_RULES.zonk.price.amount} USD за игру: 1000 очков = 2,5 USD.</p>
+      <p>Бесплатно — {GAME_RULES.zonk.freePerDay} игра в день: общий счёт / 40 = рубли (4000 очков = 100 RUB). Дальше {GAME_RULES.zonk.price.amount} USD за игру: 4000 очков = 1 USD.</p>
     </Help>
   );
 }
@@ -232,8 +233,17 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
         <div className="zk-board">
           <div className="zk-score">
             <span className="tiny">ОЧКИ ХОДА</span>
-            <b className="display num">{full(playing ? turn : g?.result?.points ?? g?.turn ?? 0)}</b>
+            <b className="display num">{full(playing ? turn : 0)}</b>
           </div>
+          {g && (
+            <div className="zk-total">
+              <span className="tiny">ПОПЫТКА <b className="num">{Math.min(g.round ?? 1, g.rounds ?? 10)}/{g.rounds ?? 10}</b></span>
+              <span className="tiny">ВСЕГО <b className="num">{full(playing ? g.total ?? 0 : g.result?.points ?? g.total ?? 0)}</b></span>
+            </div>
+          )}
+          {playing && g?.last && (
+            <div key={`${g.round}-${g.last.points}`} className={`zk-last ${g.last.zonk ? "zonk" : ""}`}>{g.last.zonk ? (g.last.points ? `Зонк! −${full(g.last.points)}` : "Зонк!") : `+${full(g.last.points)} в счёт`}</div>
+          )}
           {playing
             ? roll.map((v, i) => <Die key={`${seed}-${i}`} v={v} on={pick.includes(i)} hint={hints.has(i) && !pick.includes(i)} onClick={() => toggle(i)} style={scatter(seed, i)} />)
             : !g && [1, 2, 3, 4, 5, 6].map((v, i) => <Die key={v} v={v} style={scatter(3, i)} />)}
@@ -260,7 +270,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
       </div>
       {playing && (
         <span className="tiny muted zk-note">
-          {pick.length === 0 ? "Нажми на очковые кости (они подсвечены), чтобы отложить" : pts === null ? "Среди выбранных есть кости без очков" : <>Отложено: +{pts}. Если забрать сейчас: <RewardChips r={zonkPrize(turn, !!g?.paid)} size={13} /></>}
+          {pick.length === 0 ? "Нажми на очковые кости (они подсвечены), чтобы отложить" : pts === null ? "Среди выбранных есть кости без очков" : <>Отложено: +{pts}. Записать — и в счёте будет {full((g?.total ?? 0) + turn)}, это сейчас <RewardChips r={zonkPrize((g?.total ?? 0) + turn, !!g?.paid)} size={13} /></>}
         </span>
       )}
       {g && <ResultLine g={g} />}
@@ -270,7 +280,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
           <button className="btn big grow gold" disabled={busy === "zonk_move" || pts === null} onClick={() => run("zonk_move", { pick, then: "roll" })}>
             Бросить {(() => { const left = (g?.left ?? 6) - pick.length; return left <= 0 ? 6 : left; })()}
           </button>
-          <button className="btn big grow green" disabled={busy === "zonk_move" || pts === null} onClick={() => run("zonk_move", { pick, then: "bank" })}>Забрать</button>
+          <button className="btn big grow green" disabled={busy === "zonk_move" || pts === null} onClick={() => run("zonk_move", { pick, then: "bank" })}>{(g?.round ?? 1) >= (g?.rounds ?? 10) ? "Забрать" : "Записать"}</button>
         </div>
       ) : (
         <div style={{ marginTop: 10 }}><StartLine kind="zonk" again={!!g} onStart={() => run("game_start", { game: "zonk" })} /></div>

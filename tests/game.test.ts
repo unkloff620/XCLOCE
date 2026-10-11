@@ -1089,16 +1089,19 @@ describe("yard mini games", () => {
     expect(zonkHasScore([2, 2, 2, 3])).toBe(true);
   });
 
-  it("zonk: keep scoring dice, roll or bank; banked points pay rubles in the free game", async () => {
+  it("zonk: 10 attempts, each keeps scoring dice and rolls or writes its points down; the total pays rubles in the free game", async () => {
     const p = await newPlayer(db);
     // rng 0 → every die shows 1: six ones
     const g = await act(db, p, "game_start", { game: "zonk" }, T0, always(0));
     expect(g.result.roll).toEqual([1, 1, 1, 1, 1, 1]);
     await expect(act(db, p, "zonk_move", { pick: [0, 0], then: "roll" }, T0, always(0))).rejects.toMatchObject({ code: "bad_pick" });
     const rub = await wallet(db, p, "RUB");
-    const b = await act(db, p, "zonk_move", { pick: [0, 1, 2], then: "bank" }, T0, always(0));
-    expect(b.result).toMatchObject({ status: "done", result: { outcome: "bank", points: 1000 } });
-    expect(await wallet(db, p, "RUB")).toBe(rub + 200);
+    // 10 attempts: each writes 1000 down; the game ends after the 10th, the total pays
+    let b = await act(db, p, "zonk_move", { pick: [0, 1, 2], then: "bank" }, T0, always(0));
+    expect(b.result).toMatchObject({ status: "active", round: 2, rounds: 10, total: 1000, last: { points: 1000, zonk: false } });
+    for (let i = 2; i <= 10; i++) b = await act(db, p, "zonk_move", { pick: [0, 1, 2], then: "bank" }, T0, always(0));
+    expect(b.result).toMatchObject({ status: "done", total: 10_000, result: { outcome: "bank", points: 10_000 } });
+    expect(await wallet(db, p, "RUB")).toBe(rub + 250);
     // the second game today costs 2 USD
     await setMoney(db, p, "USD", 1);
     await expect(act(db, p, "game_start", { game: "zonk" }, T0 + M)).rejects.toMatchObject({ code: "no_money" });

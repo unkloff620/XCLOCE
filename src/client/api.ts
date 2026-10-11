@@ -84,6 +84,7 @@ export interface GameView {
   player?: { r: number; s: number }[]; dealer?: { r: number; s: number }[]; dealerHidden?: number; playerValue?: number; dealerValue?: number;
   /** zonk */
   roll?: number[]; turn?: number; left?: number; history?: { kept: number[]; points: number }[];
+  round?: number; rounds?: number; total?: number; last?: { points: number; zonk: boolean } | null;
 }
 export interface Hit { seq: number; playerId: number; name: string; weapon: string; damage: number; phrase: number; at: number; crit?: boolean; count?: number }
 export interface FightView {

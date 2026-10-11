@@ -6,14 +6,15 @@ import { GameError, type Queryable } from "../db.ts";
 import { addItem, addMoney, grantReward, itemQty, ledger, moscowDay, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { useItem } from "./shop.ts";
 import { UPGRADE_RULES,
-  BJ_PAY, BJ_TITLES, GAME_RULES, ITEM_VALUES, ZONK_DICE, bjOutcome, handValue, isBlackjack, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue, zonkHasScore, zonkPrize, zonkScore,
+  BJ_PAY, BJ_TITLES, GAME_RULES, ITEM_VALUES, ZONK_DICE, ZONK_ROUNDS, bjOutcome, handValue, isBlackjack, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue, zonkHasScore, zonkPrize, zonkScore,
   type BjOutcome, type Card, type GameKind,
 } from "../../content/games.ts";
 import { itemById } from "../../content/items.ts";
 import type { Reward } from "../../content/rewards.ts";
 
 interface BjState { deck: Card[]; player: Card[]; dealer: Card[] }
-interface ZonkState { roll: number[]; turn: number; left: number; history: { kept: number[]; points: number }[] }
+/** round: the attempt now (1…ZONK_ROUNDS); total: points written down; last: how the previous attempt ended */
+interface ZonkState { roll: number[]; turn: number; left: number; history: { kept: number[]; points: number }[]; round?: number; total?: number; last?: { points: number; zonk: boolean } | null }
 interface GameRow { id: number; kind: GameKind; paid: boolean; status: "active" | "done"; state: BjState | ZonkState; result: GameResult | null }
 interface GameResult { outcome: string; title: string; reward: Granted | null; points?: number }
 
@@ -40,7 +41,7 @@ function viewOf(g: GameRow) {
     };
   }
   const s = g.state as ZonkState;
-  return { id: g.id, kind: g.kind, paid: g.paid, status: g.status, result: g.result, roll: s.roll, turn: s.turn, left: s.left, history: s.history };
+  return { id: g.id, kind: g.kind, paid: g.paid, status: g.status, result: g.result, roll: s.roll, turn: s.turn, left: s.left, history: s.history, round: s.round ?? 1, rounds: ZONK_ROUNDS, total: s.total ?? 0, last: s.last ?? null };
 }
 
 export async function gamesView(q: Queryable, pid: number, now: number) {
@@ -79,7 +80,7 @@ export async function startGame(ctx: Ctx, kind: GameKind) {
     const deck = shuffled(ctx.rng);
     state = { deck, player: [deck.pop()!, deck.pop()!], dealer: [deck.pop()!, deck.pop()!] };
   } else {
-    state = { roll: Array.from({ length: ZONK_DICE }, () => die(ctx.rng)), turn: 0, left: ZONK_DICE, history: [] };
+    state = { roll: Array.from({ length: ZONK_DICE }, () => die(ctx.rng)), turn: 0, left: ZONK_DICE, history: [], round: 1, total: 0, last: null };
   }
   const [row] = await ctx.q.query<{ id: number }>(
     "INSERT INTO games (player_id, kind, day, paid, status, state, created_at, updated_at) VALUES ($1,$2,$3,$4,'active',$5,$6,$6) RETURNING id",
@@ -91,7 +92,8 @@ export async function startGame(ctx: Ctx, kind: GameKind) {
     // a natural on either side ends the hand at once
     if (isBlackjack(s.player) || isBlackjack(s.dealer)) await finishBj(ctx, g);
   } else if (!zonkHasScore((state as ZonkState).roll)) {
-    await finishZonk(ctx, g, true);
+    (state as ZonkState).last = { points: 0, zonk: true };
+    await nextZonkRound(ctx, g);
   }
   return viewOf(g);
 }
@@ -123,17 +125,39 @@ export async function bjMove(ctx: Ctx, move: "hit" | "stand") {
   return viewOf(g);
 }
 
-async function finishZonk(ctx: Ctx, g: GameRow, zonk: boolean) {
+/** The game is over after the last attempt: the total pays. */
+async function finishZonk(ctx: Ctx, g: GameRow) {
   const s = g.state as ZonkState;
-  const points = zonk ? 0 : s.turn;
+  const points = s.total ?? 0;
   const pay = zonkPrize(points, g.paid);
   const reward = isEmpty(pay) ? null : await grantReward(ctx, pay, `game:zonk:${points}`);
+  s.roll = [];
   g.status = "done";
-  g.result = zonk ? { outcome: "zonk", title: "Зонк! Очки сгорели", reward: null, points: 0 } : { outcome: "bank", title: `Забрал ${points} очков`, reward, points };
+  g.result = points > 0
+    ? { outcome: "bank", title: `Итог: ${points} очков за ${ZONK_ROUNDS} попыток`, reward, points }
+    : { outcome: "zonk", title: "Ни одного очка за все попытки", reward: null, points: 0 };
   await save(ctx, g);
 }
 
-/** Keep the chosen dice (they must all score), then roll the rest or take the points. */
+/** The next attempt (a fresh roll of six); a roll without points burns that attempt at once. After the last one — the end. */
+async function nextZonkRound(ctx: Ctx, g: GameRow) {
+  const s = g.state as ZonkState;
+  for (;;) {
+    s.round = (s.round ?? 1) + 1;
+    s.turn = 0;
+    s.left = ZONK_DICE;
+    s.history = [];
+    if (s.round > ZONK_ROUNDS) {
+      s.round = ZONK_ROUNDS;
+      return finishZonk(ctx, g);
+    }
+    s.roll = Array.from({ length: ZONK_DICE }, () => die(ctx.rng));
+    if (zonkHasScore(s.roll)) return save(ctx, g);
+    s.last = { points: 0, zonk: true };
+  }
+}
+
+/** Keep the chosen dice (they must all score), then roll the rest or write the attempt's points down. */
 export async function zonkMove(ctx: Ctx, pick: number[], then: "roll" | "bank") {
   const g = await activeGame(ctx.q, ctx.pid, "zonk");
   if (!g) throw new GameError("no_game", "Партия не начата");
@@ -148,12 +172,15 @@ export async function zonkMove(ctx: Ctx, pick: number[], then: "roll" | "bank") 
   s.left -= kept.length;
   if (s.left <= 0) s.left = ZONK_DICE; // all six scored: roll all six again
   if (then === "bank") {
-    s.roll = [];
-    await finishZonk(ctx, g, false);
+    s.total = (s.total ?? 0) + s.turn;
+    s.last = { points: s.turn, zonk: false };
+    await nextZonkRound(ctx, g);
   } else {
     s.roll = Array.from({ length: s.left }, () => die(ctx.rng));
-    if (!zonkHasScore(s.roll)) await finishZonk(ctx, g, true);
-    else await save(ctx, g);
+    if (!zonkHasScore(s.roll)) {
+      s.last = { points: s.turn, zonk: true };
+      await nextZonkRound(ctx, g);
+    } else await save(ctx, g);
   }
   return viewOf(g);
 }
