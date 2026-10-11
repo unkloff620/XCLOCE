@@ -1420,7 +1420,7 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 @media (max-width: 420px) { .zk { grid-template-columns: 1fr; } .zk-table { display: grid; grid-template-columns: 1fr 1fr; } .zk-table-h { grid-column: 1 / -1; } }
 
 .upg { display: grid; grid-template-columns: 1fr minmax(140px, 1.1fr) 1fr; gap: 8px; align-items: center; }
-.upg-box { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 6px; border-radius: 16px; border: 2.5px solid var(--line); background: var(--tex), var(--panel); min-height: 170px; justify-content: center; }
+.upg-box { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 6px; border-radius: 16px; border: 2.5px solid var(--line); background: var(--tex), var(--panel); height: 140px; justify-content: center; }
 .upg-box.stake { border-color: #8fd3ff; }
 .upg-box.target { border-color: #ff4d6d; }
 .upg-box input[type="range"] { width: 100%; accent-color: #ffd23f; }
@@ -1435,7 +1435,7 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .upg-chip { flex: none; display: flex; flex-direction: column; align-items: center; gap: 1px; width: 58px; padding: 4px 2px; border-radius: 12px; border: 2px solid var(--line); background: var(--tex), var(--panel2); color: var(--ink); font: inherit; font-size: 10.5px; font-weight: 800; cursor: pointer; }
 .upg-chip.on { border-color: #ffd23f; box-shadow: 0 0 0 2px #ffd23f; }
 .upg-chip.off { opacity: 0.45; }
-@media (max-width: 420px) { .upg { grid-template-columns: 1fr 1fr; } .upg-gauge { grid-column: 1 / -1; grid-row: 1; max-width: 160px; } .upg-box { min-height: 150px; } }
+@media (max-width: 420px) { .upg { grid-template-columns: 1fr 1fr; } .upg-gauge { grid-column: 1 / -1; grid-row: 1; max-width: 160px; } }
 
 /* «Убийца боссов»: a boss per row with three medals */
 .bk-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 14px; border: 2px solid var(--line); background: var(--tex), var(--panel2); }
@@ -1782,3 +1782,11 @@ body:has(.fit-page) .hud { background: linear-gradient(180deg, rgba(20, 12, 6, 0
 .zk-last.zonk { background: rgba(90, 15, 15, 0.9); color: #ffb3b3; }
 @keyframes zk-last { 0% { opacity: 0; transform: translate(-50%, -30%) scale(0.8); } 12% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); } 70% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -70%); } }
 @media (prefers-reduced-motion: reduce) { .zk-last { animation: none; opacity: 0; } }
+
+/* upgrader: the box keeps its size; the name (two lines at most) and the price stand under it in fixed lines */
+.upg-side { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; }
+.upg-side .upg-box { align-self: stretch; }
+.upg-range { display: block; width: 100%; height: 18px; }
+.upg-name { width: 100%; height: 2.4em; font-size: 12.5px; line-height: 1.2; text-align: center; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
+.upg-side .upg-price { height: 1.3em; line-height: 1.3; }
+.upg-note { display: block; margin: 2px 0 6px; }

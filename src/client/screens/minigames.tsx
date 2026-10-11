@@ -392,24 +392,30 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
   return (
     <Modal title={<span className="title-row">Апгрейдер <UpgraderHelp /></span>} onClose={onClose} wide>
       <div className="upg">
-        <div className={`upg-box stake ${up ? "upgraded" : ""}`}>
-          <span className="tiny upg-cap">ТВОЯ СТАВКА</span>
-          {cur ? (
-            <>
-              <span className="upg-art"><ItemArt id={curId} size={72} />{up && <i className="up-star">★</i>}</span>
-              <b className="small center">{itemById(curId)?.name}{up ? " ★" : q > 1 ? ` ×${q}` : ""}</b>
-              <span className="upg-price num">{full(stakeValue)} ₽</span>
-              {cur.kind === "plain" && have > 1 && <input type="range" min={1} max={have} value={q} onChange={(e) => { setQty(Number(e.target.value)); setWon(null); }} aria-label="Сколько ставить" />}
-            </>
-          ) : (
-            <span className="small muted center">Нечего ставить. Собери находки во дворе.</span>
-          )}
+        {/* the name and the price sit under the box, in fixed-height lines: nothing jumps when the stake changes */}
+        <div className="upg-side">
+          <div className={`upg-box stake ${up ? "upgraded" : ""}`}>
+            <span className="tiny upg-cap">ТВОЯ СТАВКА</span>
+            {cur ? (
+              <>
+                <span className="upg-art"><ItemArt id={curId} size={72} />{up && <i className="up-star">★</i>}</span>
+                <span className="upg-range">{cur.kind === "plain" && have > 1 && <input type="range" min={1} max={have} value={q} onChange={(e) => { setQty(Number(e.target.value)); setWon(null); }} aria-label="Сколько ставить" />}</span>
+              </>
+            ) : (
+              <span className="small muted center">Нечего ставить. Собери находки во дворе.</span>
+            )}
+          </div>
+          <b className="upg-name">{cur ? `${itemById(curId)?.name ?? ""}${up ? " ★" : q > 1 ? ` ×${q}` : ""}` : ""}</b>
+          <span className="upg-price num">{cur ? `${full(stakeValue)} ₽` : ""}</span>
         </div>
         <Gauge chance={chance} roll={roll} spinning={spinning} won={won} />
-        <div className="upg-box target upgraded">
-          <span className="tiny upg-cap">ЦЕЛЬ</span>
-          <span className="upg-art"><ItemArt id={target} size={72} /><i className="up-star">★</i></span>
-          <b className="small center">{itemById(target)?.name} ★</b>
+        <div className="upg-side">
+          <div className="upg-box target upgraded">
+            <span className="tiny upg-cap">ЦЕЛЬ</span>
+            <span className="upg-art"><ItemArt id={target} size={72} /><i className="up-star">★</i></span>
+            <span className="upg-range" />
+          </div>
+          <b className="upg-name">{itemById(target)?.name} ★</b>
           <span className="upg-price num gold">{full(value)} ₽</span>
         </div>
       </div>
@@ -423,8 +429,8 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
       <button className="btn big block gold upg-go" disabled={!cur || spinning || busy === "upgrade" || !canSpin} onClick={go}>
         {spinning ? "Крутим…" : spinFree ? `⇪ Прокачать · бесплатно ${spins!.freeLeft}/${spins!.freePerDay}` : <>⇪ Прокачать · <Coin c={spinPrice.currency} v={spinPrice.amount} size={16} /></>}
       </button>
-      {!spinFree && <span className="tiny muted center">Бесплатные прокруты на сегодня кончились ({spins?.freePerDay ?? 3} в день) — дальше {full(spinPrice.amount)} ₽ за прокрут. Новые — после полуночи по Москве.</span>}
-      <span className="tiny muted">Что поставить</span>
+      {!spinFree && <span className="tiny muted center upg-note">Бесплатные прокруты на сегодня кончились ({spins?.freePerDay ?? 3} в день) — дальше {full(spinPrice.amount)} ₽ за прокрут. Новые — после полуночи по Москве.</span>}
+      <span className="tiny muted" style={{ display: "block" }}>Что поставить</span>
       <div className="upg-pick">
         {ups.map((u) => (
           <button key={`u${u.uid}`} className={`upg-chip upgraded ${cur?.kind === "up" && cur.uid === u.uid ? "on" : ""}`} onClick={() => pickStake({ kind: "up", uid: u.uid })} title={`${itemById(u.itemId)?.name} ★`}>
