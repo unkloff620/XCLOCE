@@ -1,4 +1,5 @@
 "use client";
+import { APP_VERSION } from "../version.ts";
 import { tg } from "./telegram.ts";
 import type { Currency } from "../content/currencies.ts";
 import type { Reward } from "../content/rewards.ts";
@@ -113,12 +114,24 @@ function store(k: string, v?: string | null): string | null {
   return null;
 }
 
+/** a newer release is out: the page stops sending anything and asks for a reload (src/client/update.tsx) */
+export const UPDATE_EVENT = "xc-update";
+let outdated = false;
+export const isOutdated = () => outdated;
+export function checkVersion(v: string | null) {
+  if (outdated || !v || v === "dev" || APP_VERSION === "dev" || v === APP_VERSION) return;
+  outdated = true;
+  window.dispatchEvent(new Event(UPDATE_EVENT));
+}
+
 async function raw<T>(path: string, init: RequestInit = {}): Promise<T> {
+  if (outdated) throw new ApiError("update", "Вышло обновление — обнови страницу", 409);
   const r = await fetch(path, {
     ...init,
     headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}), ...(init.headers ?? {}) },
     cache: "no-store",
   });
+  checkVersion(r.headers.get("x-app-version"));
   const j = (await r.json().catch(() => ({}))) as { error?: { code: string; message: string } };
   if (!r.ok) throw new ApiError(j.error?.code ?? "http", j.error?.message ?? `Ошибка ${r.status}`, r.status);
   return j as T;

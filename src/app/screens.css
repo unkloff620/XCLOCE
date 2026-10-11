@@ -1749,3 +1749,12 @@ body:has(.fit-page) .hud { background: linear-gradient(180deg, rgba(20, 12, 6, 0
 .sty-part { display: flex; align-items: baseline; gap: 8px; }
 .sty-part b { font-size: 15px; }
 .sty-hint { padding: 16px 8px; text-align: center; color: var(--muted); font-weight: 700; }
+
+/* a new release: blocks the game until the page is reloaded (src/client/update.tsx) */
+.update-gate { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 16px; background: rgba(8, 5, 3, 0.86); backdrop-filter: blur(3px); }
+.update-card { width: min(340px, 100%); display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 20px 16px 16px; border-radius: 18px; border: 2.5px solid var(--line); background: linear-gradient(170deg, #3a2716, #1e140c); box-shadow: 0 5px 0 var(--line), 0 18px 40px rgba(0, 0, 0, 0.55); color: #f6ead8; }
+.update-icon { font-size: 44px; line-height: 1; color: var(--gold); animation: update-spin 2.4s linear infinite; }
+@keyframes update-spin { to { transform: rotate(360deg); } }
+.update-title { font-size: 22px; color: var(--gold); }
+.update-text { margin: 0; font-size: 14px; line-height: 1.4; color: #e9d6b8; }
+@media (prefers-reduced-motion: reduce) { .update-icon { animation: none; } }

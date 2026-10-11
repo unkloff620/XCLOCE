@@ -14,6 +14,7 @@ import { telegramBack } from "./telegram.ts";
 import { ResultWindow } from "./screens/result.tsx";
 import { LevelUpOverlay } from "./levelup.tsx";
 import { Tutorial } from "./tutorial.tsx";
+import { UpdateGate } from "./update.tsx";
 import { RouteLoader, startRouteLoad } from "./route-loader.tsx";
 import { PrizeWindow } from "./prizes.tsx";
 import { TapTips } from "./tap-tips.tsx";
@@ -323,6 +324,7 @@ export function Shell({ children }: { children: ReactNode }) {
             <Nav />
             <ResultWindow />
             <Tutorial />
+            <UpdateGate />
             <PrizeWindow />
             <LevelUpOverlay />
             <RouteLoader />

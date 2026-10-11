@@ -1,3 +1,4 @@
+import { APP_VERSION } from "../version.ts";
 import { GameError, getDb, type Db } from "./db.ts";
 import { verifyAdminSession, verifySession } from "./auth.ts";
 import { loadConfig } from "./config.ts";
@@ -42,7 +43,7 @@ export function clientKey(req: Request): string {
 export function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-app-version": APP_VERSION },
   });
 }
 
