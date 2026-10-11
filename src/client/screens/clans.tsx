@@ -224,6 +224,7 @@ export function ClanScreen({ id }: { id: number }) {
   const [editing, setEditing] = useState(false);
   const [settings, setSettings] = useState(false);
   const [kickAsk, setKickAsk] = useState<number | null>(null);
+  const [leadAsk, setLeadAsk] = useState<number | null>(null);
   const [c, setC] = useState<ClanPage | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const load = useCallback(() => api.get<ClanPage>(`/api/clans/${id}`).then(setC).catch((e) => setErr(e.message)), [id]);
@@ -240,7 +241,14 @@ export function ClanScreen({ id }: { id: number }) {
     if (r) void load();
   };
   const req = state?.clanRequests?.mine;
+  const makeLeader = async (id: number, name: string) => {
+    if (leadAsk !== id) { setKickAsk(null); return setLeadAsk(id); }
+    setLeadAsk(null);
+    const r = await act("clan_transfer", { playerId: id }, `${name} теперь лидер клана`);
+    if (r) { setEditing(false); void load(); }
+  };
   const kick = async (id: number, name: string) => {
+    setLeadAsk(null);
     if (kickAsk !== id) return setKickAsk(id);
     setKickAsk(null);
     const r = await act("clan_kick", { playerId: id }, `${name} исключён`);
@@ -306,12 +314,12 @@ export function ClanScreen({ id }: { id: number }) {
         <h2 className="h display">Участники</h2>
         {leader && (
           <div className="row" style={{ gap: 6 }}>
-            <button className={`btn sm ${editing ? "gold" : "dark"}`} onClick={() => { setEditing((v) => !v); setKickAsk(null); }}>{editing ? "Готово" : "✎ Редактировать"}</button>
+            <button className={`btn sm ${editing ? "gold" : "dark"}`} onClick={() => { setEditing((v) => !v); setKickAsk(null); setLeadAsk(null); }}>{editing ? "Готово" : "✎ Редактировать"}</button>
             <button className="btn sm dark" onClick={() => setSettings(true)} aria-label="Настройки клана" title="Настройки клана">⚙</button>
           </div>
         )}
       </div>
-      {editing && <div className="tiny muted" style={{ marginBottom: 6 }}>Режим редактирования: нажми «Исключить» у игрока.</div>}
+      {editing && <div className="tiny muted" style={{ marginBottom: 6 }}>Режим редактирования: «👑» — передать лидерство, «Исключить» — убрать из клана. Лидер после передачи остаётся в клане.</div>}
       <div className="col" style={{ gap: 6 }}>
         {c.members.map((m) => (
           <div key={m.id} className="clan-row">
@@ -323,7 +331,10 @@ export function ClanScreen({ id }: { id: number }) {
               </div>
             </Link>
             {editing && leader && m.role !== "leader" ? (
-              <button className="btn sm red" disabled={busy === "clan_kick"} onClick={() => kick(m.id, m.name)}>{kickAsk === m.id ? "Точно?" : "Исключить"}</button>
+              <span className="row" style={{ gap: 6, flex: "none" }}>
+                <button className={`btn sm ${leadAsk === m.id ? "gold" : "dark"}`} disabled={busy === "clan_transfer"} onClick={() => makeLeader(m.id, m.name)} aria-label={`Сделать ${m.name} лидером`} title="Передать лидерство">{leadAsk === m.id ? "Сделать лидером?" : "👑"}</button>
+                {leadAsk !== m.id && <button className="btn sm red" disabled={busy === "clan_kick"} onClick={() => kick(m.id, m.name)}>{kickAsk === m.id ? "Точно?" : "Исключить"}</button>}
+              </span>
             ) : (
               <span className="col" style={{ alignItems: "flex-end", gap: 0 }}><b className="num">{short(m.damage)}</b><span className="tiny muted">урон</span></span>
             )}

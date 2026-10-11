@@ -543,6 +543,20 @@ describe("inventory and clans", () => {
     const [m] = await db.query<{ role: string }>("SELECT role FROM clan_members WHERE player_id=$1", [b]);
     expect(m.role).toBe("leader");
   });
+  it("the leader hands the clan over and stays as a member", async () => {
+    const a = await newPlayer(db), b = await newPlayer(db), x = await newPlayer(db);
+    const c = await act(db, a, "clan_create", { name: "Совы", tag: "OWL", emblem: "bull", color: "#3ddc84" }, T0);
+    await act(db, b, "clan_join", { clanId: c.result.clanId }, T0);
+    await act(db, a, "clan_accept", { playerId: b }, T0);
+    await expect(act(db, b, "clan_transfer", { playerId: a }, T0)).rejects.toMatchObject({ code: "not_leader" });
+    await expect(act(db, a, "clan_transfer", { playerId: x }, T0)).rejects.toMatchObject({ code: "not_member" });
+    await act(db, a, "clan_transfer", { playerId: b }, T0);
+    const roles = await db.query<{ player_id: number; role: string }>("SELECT player_id, role FROM clan_members WHERE clan_id=$1", [c.result.clanId]);
+    expect(Object.fromEntries(roles.map((r) => [r.player_id, r.role]))).toEqual({ [a]: "member", [b]: "leader" });
+    const [cl] = await db.query<{ leader_id: number }>("SELECT leader_id FROM clans WHERE id=$1", [c.result.clanId]);
+    expect(cl.leader_id).toBe(b);
+    await act(db, b, "clan_kick", { playerId: a }, T0);
+  });
 });
 
 describe("daily login reward", () => {

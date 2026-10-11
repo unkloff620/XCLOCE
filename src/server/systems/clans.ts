@@ -124,6 +124,19 @@ export async function kickMember(ctx: Ctx, playerId: number) {
   return { kicked: playerId };
 }
 
+/** Leader only: hands the clan to another member; the old leader stays in the clan as a member. */
+export async function transferLeader(ctx: Ctx, playerId: number) {
+  const [m] = await ctx.q.query<{ clan_id: number; role: string }>("SELECT clan_id, role FROM clan_members WHERE player_id=$1 FOR UPDATE", [ctx.pid]);
+  if (!m || m.role !== "leader") throw new GameError("not_leader", "Передать лидерство может только лидер");
+  if (playerId === ctx.pid) throw new GameError("bad_request", "Ты уже лидер");
+  const [t] = await ctx.q.query("SELECT 1 FROM clan_members WHERE player_id=$1 AND clan_id=$2", [playerId, m.clan_id]);
+  if (!t) throw new GameError("not_member", "Этого игрока нет в клане");
+  await ctx.q.query("UPDATE clan_members SET role='member' WHERE player_id=$1", [ctx.pid]);
+  await ctx.q.query("UPDATE clan_members SET role='leader' WHERE player_id=$1", [playerId]);
+  await ctx.q.query("UPDATE clans SET leader_id=$2 WHERE id=$1", [m.clan_id, playerId]);
+  return { leader: playerId };
+}
+
 /** Leader only: name, emblem, colour and description. */
 export async function editClan(ctx: Ctx, nameRaw: string, emblem: string, color: string, descRaw: string) {
   const [m] = await ctx.q.query<{ clan_id: number; role: string }>("SELECT clan_id, role FROM clan_members WHERE player_id=$1", [ctx.pid]);

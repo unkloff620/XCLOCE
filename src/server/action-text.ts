@@ -95,6 +95,7 @@ export function actionText(type: string, body: Row, result: unknown): string | n
     case "up_sell": return `продал ${item(r.itemId)} ★ · +${fmt(r.got)} RUB`;
     case "up_take": return `${item(r.itemId)} ★ → ${r.used ? "использовал" : "в обычный инвентарь"}`;
     case "clan_kick": return `исключил игрока #${body.playerId}`;
+    case "clan_transfer": return `передал лидерство игроку #${body.playerId}`;
     case "clan_edit": return `«${body.name}»`;
     case "notify_set": return body.on === true ? "включил" : "выключил";
     case "look_set": return "сменил внешность";
