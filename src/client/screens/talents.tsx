@@ -109,6 +109,7 @@ export function TalentWindow({ onClose }: { onClose: () => void }) {
         </div>
       )}
       <TalentNext dmg={state.player.talentDamage ?? 0} />
+      <div className="tal-wrap">
       <div className="tal-tree">
         {TALENT_WEAPONS.map((id) => {
           const def = itemById(id);
@@ -146,6 +147,7 @@ export function TalentWindow({ onClose }: { onClose: () => void }) {
             </div>
           );
         })}
+      </div>
       </div>
     </Modal>
   );
