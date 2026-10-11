@@ -253,7 +253,10 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1
     const total = Number(g.damage_total) + damage;
     await ctx.q.query("UPDATE bosses SET damage_total=$2, last_seq=$3 WHERE id=$1", [GLOBAL, total, seq]);
     // the boss's own statistics
-    await ctx.q.query("UPDATE bosses SET damage_total = damage_total + $2, last_seq = last_seq + 1 WHERE id=$1", [bossId, damage]);
+    await ctx.q.query(
+      "INSERT INTO bosses (id, damage_total, last_seq) VALUES ($1,$2,1) ON CONFLICT (id) DO UPDATE SET damage_total = bosses.damage_total + EXCLUDED.damage_total, last_seq = bosses.last_seq + 1",
+      [bossId, damage],
+    );
     await ctx.q.query(
       "INSERT INTO boss_hits (boss_id, seq, player_id, fight_id, weapon, damage, phrase, created_at, crit, count) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)",
       [bossId, seq, ctx.pid, mine.id, w.id, damage, phraseIdx, new Date(ctx.now), crit, count],
