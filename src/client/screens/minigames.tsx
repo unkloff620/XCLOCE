@@ -336,6 +336,8 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
   const [roll, setRoll] = useState<number | null>(null);
   const [spinning, setSpinning] = useState(false);
   const [won, setWon] = useState<boolean | null>(null);
+  // the stake as it was when the spin started: shown while the needle runs, then it burns away on a loss
+  const [snap, setSnap] = useState<{ id: string; up: boolean; burn: boolean } | null>(null);
   // the stake that is still there (after a spin the old one may be gone)
   const cur: Stake | null = (() => {
     if (stake?.kind === "up" && ups.some((u) => u.uid === stake.uid)) return stake;
@@ -366,12 +368,14 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
     if (!cur || spinning) return;
     setWon(null);
     setSpinning(true);
+    setSnap({ id: curId, up: !!up, burn: false });
     haptic.tap();
     sfx("tap");
     const body = cur.kind === "up" ? { uid: cur.uid, mode } : { stake: cur.id, qty: q, mode };
     const r = await act<{ won: boolean; roll: number; uid: number | null }>("upgrade", body);
     if (!r) {
       setSpinning(false);
+      setSnap(null);
       return;
     }
     setRoll(r.roll);
@@ -383,9 +387,11 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
         sfx("levelup");
         // the prize becomes the next stake: one more tap to go higher
         if (r.uid) setStake({ kind: "up", uid: r.uid });
+        setSnap(null);
       } else {
         haptic.err();
         sfx("error");
+        setSnap((s) => (s ? { ...s, burn: true } : null));
       }
     }, 1600);
   };
@@ -396,10 +402,17 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
         <div className="upg-side">
           <div className={`upg-box stake ${up ? "upgraded" : ""}`}>
             <span className="tiny upg-cap">ТВОЯ СТАВКА</span>
-            {cur ? (
+            {cur || snap ? (
               <>
-                <span className="upg-art"><ItemArt id={curId} size={72} />{up && <i className="up-star">★</i>}</span>
-                <span className="upg-range">{cur.kind === "plain" && have > 1 && <input type="range" min={1} max={have} value={q} onChange={(e) => { setQty(Number(e.target.value)); setWon(null); }} aria-label="Сколько ставить" />}</span>
+                {snap ? (
+                  <span className={`upg-art ${snap.burn ? "upg-burn" : ""}`} onAnimationEnd={(e) => { if (e.animationName === "upg-burn") setSnap(null); }}>
+                    <ItemArt id={snap.id} size={72} />{snap.up && <i className="up-star">★</i>}
+                    {snap.burn && <i className="upg-embers" aria-hidden="true" />}
+                  </span>
+                ) : (
+                  <span className="upg-art"><ItemArt id={curId} size={72} />{up && <i className="up-star">★</i>}</span>
+                )}
+                <span className="upg-range">{!snap && cur?.kind === "plain" && have > 1 && <input type="range" min={1} max={have} value={q} onChange={(e) => { setQty(Number(e.target.value)); setWon(null); }} aria-label="Сколько ставить" />}</span>
               </>
             ) : (
               <span className="small muted center">Нечего ставить. Собери находки во дворе.</span>

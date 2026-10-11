@@ -15,6 +15,7 @@ import { ResultWindow } from "./screens/result.tsx";
 import { LevelUpOverlay } from "./levelup.tsx";
 import { Tutorial } from "./tutorial.tsx";
 import { UpdateGate } from "./update.tsx";
+import { HorizontalScroll } from "./hscroll.tsx";
 import { RouteLoader, startRouteLoad } from "./route-loader.tsx";
 import { PrizeWindow } from "./prizes.tsx";
 import { TapTips } from "./tap-tips.tsx";
@@ -304,6 +305,7 @@ export function Shell({ children }: { children: ReactNode }) {
 
   return (
     <>
+      <HorizontalScroll />
       <div className="backdrop" />
       <div className="shell">
         {auth === "loading" && <Loading />}
