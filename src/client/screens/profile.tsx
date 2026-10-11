@@ -1,5 +1,6 @@
 "use client";
 import { replayTutorial } from "../tutorial.tsx";
+import { StashGivePanel } from "./stash-swap.tsx";
 import { NotifySwitch } from "./quests.tsx";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -37,6 +38,8 @@ interface Profile {
   frame: string | null;
   achievements: AchRow[];
   room: { id: string; levels: Record<string, number>; pieces?: Record<string, number>; decor: Record<string, number>; trophies?: string[] };
+  stashWish?: string[];
+  stashGive?: { left: number; have: Record<string, number> } | null;
 }
 
 /** "3 окт. 2026" — fits a narrow side column */
@@ -204,6 +207,8 @@ export function ProfileScreen() {
           <HomeScene room={p.room.id} look={p.body} worn={p.equipped} pieces={p.room.pieces} decor={p.room.decor} trophies={p.room.trophies} still />
         </div>
       </div>
+
+      {!p.self && p.stashGive && <StashGivePanel to={p.id} name={p.name} wish={p.stashWish ?? []} give={p.stashGive} onSent={reload} />}
 
       {p.self && <SettingsPanel />}
 

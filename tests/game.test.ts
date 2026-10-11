@@ -1331,3 +1331,26 @@ describe("Боксёрская", () => {
     expect((await hit(p, "fist", T0 + M)).result.damage).toBe(42);
   });
 });
+
+describe("нычки между игроками", () => {
+  it("a player asks for up to 6 stashes; others send them from their own, at most 6 a day each", async () => {
+    const a = await newPlayer(db), b = await newPlayer(db);
+    await expect(act(db, a, "stash_wish", { items: ["stash-cigs", "stash-can", "stash-bread", "stash-soap", "stash-radio", "stash-coffee", "stash-book"] }, T0)).rejects.toMatchObject({ code: "too_many" });
+    await expect(act(db, a, "stash_wish", { items: ["keyboard"] }, T0)).rejects.toMatchObject({ code: "bad_item" });
+    await act(db, a, "stash_wish", { items: ["stash-cigs", "stash-can"] }, T0);
+    await expect(act(db, b, "stash_gift", { to: a, itemId: "stash-cigs" }, T0)).rejects.toMatchObject({ code: "no_item" });
+    await give(db, b, "stash-cigs", 10);
+    await give(db, b, "stash-bread", 1);
+    await expect(act(db, b, "stash_gift", { to: a, itemId: "stash-bread" }, T0)).rejects.toMatchObject({ code: "not_wished" });
+    await expect(act(db, b, "stash_gift", { to: b, itemId: "stash-cigs" }, T0)).rejects.toMatchObject({ code: "bad_request" });
+    for (let i = 0; i < 6; i++) await act(db, b, "stash_gift", { to: a, itemId: "stash-cigs" }, T0);
+    await expect(act(db, b, "stash_gift", { to: a, itemId: "stash-cigs" }, T0)).rejects.toMatchObject({ code: "gift_limit" });
+    expect(await qty(db, a, "stash-cigs")).toBe(6);
+    expect(await qty(db, b, "stash-cigs")).toBe(4);
+    // a new Moscow day: the limit is back
+    await act(db, b, "stash_gift", { to: a, itemId: "stash-cigs" }, T0 + 24 * H);
+    const s = await act(db, a, "stash_wish", { items: ["stash-cigs"] }, T0 + 24 * H);
+    expect(s.state.stashWish).toEqual(["stash-cigs"]);
+    expect(s.state.stashGifts[0]).toMatchObject({ fromId: b, itemId: "stash-cigs" });
+  });
+});

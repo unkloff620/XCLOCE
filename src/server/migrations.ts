@@ -705,4 +705,25 @@ FROM bosses b, bosses g
 WHERE f.status = 'active' AND b.id = f.boss_id AND g.id = '_all';
 `,
   },
+  {
+    // Обмен нычками: игрок просит до 6 нычек, другие отправляют их из профиля (до 6 в сутки от одного игрока).
+    id: "v2-038-stash-swap",
+    sql: `
+CREATE TABLE IF NOT EXISTS stash_wishes (
+  player_id INT PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
+  items JSONB NOT NULL DEFAULT '[]',
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS stash_gifts (
+  id BIGSERIAL PRIMARY KEY,
+  from_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  to_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  item_id TEXT NOT NULL,
+  day DATE NOT NULL,
+  at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS stash_gifts_from_day ON stash_gifts (from_id, day);
+CREATE INDEX IF NOT EXISTS stash_gifts_to ON stash_gifts (to_id, id);
+`,
+  },
 ];

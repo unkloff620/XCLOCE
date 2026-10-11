@@ -1758,3 +1758,15 @@ body:has(.fit-page) .hud { background: linear-gradient(180deg, rgba(20, 12, 6, 0
 .update-title { font-size: 22px; color: var(--gold); }
 .update-text { margin: 0; font-size: 14px; line-height: 1.4; color: #e9d6b8; }
 @media (prefers-reduced-motion: reduce) { .update-icon { animation: none; } }
+
+/* нычки between players (src/client/screens/stash-swap.tsx) */
+.swap-sets { gap: 8px; max-height: 46vh; overflow-y: auto; padding-right: 2px; }
+.swap-set { display: flex; flex-direction: column; gap: 4px; }
+.swap-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.swap-tile { position: relative; display: grid; place-items: center; aspect-ratio: 1; padding: 4px; border-radius: 12px; border: 2px solid rgba(0, 0, 0, 0.35); background: rgba(0, 0, 0, 0.18); cursor: pointer; }
+.swap-tile.on { border-color: var(--gold); background: rgba(255, 204, 51, 0.22); box-shadow: 0 0 10px rgba(255, 204, 51, 0.45); }
+.swap-tile:disabled { opacity: 0.45; cursor: default; }
+.swap-have { position: absolute; right: 4px; bottom: 2px; font-size: 11px; font-weight: 800; color: var(--ink); text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4); }
+.swap-check { position: absolute; left: 3px; top: 1px; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; background: var(--gold); color: #2a1808; font-size: 12px; font-weight: 900; }
+.swap-give { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.swap-give-item { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; text-align: center; }

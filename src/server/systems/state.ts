@@ -19,6 +19,7 @@ import { questsView } from "./quests.ts";
 import { notifyView, scheduleEnergy } from "./notify.ts";
 import { framesFor, prizesView, settleWeeks } from "./rating.ts";
 import { achievementsReady, achievementsView } from "./achievements.ts";
+import { giftsLeft, giftsReceived, stashWish } from "./swap.ts";
 
 /** Everything the HUD and the always-visible parts of the game need. Runs inside the player's transaction. */
 export async function gameState(ctx: Ctx) {
@@ -89,6 +90,8 @@ export async function gameState(ctx: Ctx) {
     openBosses: OPEN_BOSSES(ctx.cfg.bossOpen).map((b) => b.id),
     games: await gamesView(ctx.q, ctx.pid, ctx.now),
     upgraded: await upgradedView(ctx.q, ctx.pid),
+    stashWish: await stashWish(ctx.q, ctx.pid),
+    stashGifts: await giftsReceived(ctx.q, ctx.pid),
     stashSets: Object.fromEntries((await ctx.q.query<{ set_n: number; count: number }>("SELECT set_n, count FROM stash_sets WHERE player_id=$1", [ctx.pid])).map((r) => [r.set_n, Number(r.count)])) as Record<number, number>,
     rename: await renameView(ctx.q, ctx.pid, ctx.now, ctx.cfg),
     sell: ctx.cfg.sell,
@@ -134,6 +137,13 @@ export async function profileView(q: Queryable, viewer: number, pid: number, cfg
       return { id: b.id, damage: Number(r?.damage ?? 0), hits: r?.hits ?? 0, wins: r?.wins ?? 0 };
     }),
     clan: clan ?? null,
+    // нычки the player asks for; a visitor also sees how many of them he has himself and his gifts left today
+    stashWish: await stashWish(q, pid),
+    stashGive: self ? null : await (async () => {
+      const wish = await stashWish(q, pid);
+      const mine = wish.length ? await q.query<{ item_id: string; qty: number }>("SELECT item_id, qty FROM inventory WHERE player_id=$1 AND item_id = ANY($2)", [viewer, wish]) : [];
+      return { left: await giftsLeft(q, viewer, now), have: Object.fromEntries(mine.map((r) => [r.item_id, Number(r.qty)])) as Record<string, number> };
+    })(),
     equipped: app?.equipped ?? {},
     body: normalizeLook(app?.body),
     frame: (await framesFor(q, [pid], now)).get(pid) ?? null,

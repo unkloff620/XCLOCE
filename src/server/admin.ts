@@ -173,7 +173,7 @@ const PROGRESS_TABLES = [
   "wallets", "inventory", "cooldowns", "appearance", "player_stats", "fights", "boss_damage", "task_progress",
   "location_claims", "yard", "yard_items", "daily_login", "slot_spins", "player_equipment", "daily_quests",
   "notifications", "weekly_stats", "week_results", "prizes", "achievements", "boss_pity", "player_unlocks",
-  "player_talents", "idempotency", "games", "upgraded_items", "clan_requests", "stash_sets",
+  "player_talents", "idempotency", "games", "upgraded_items", "clan_requests", "stash_sets", "stash_wishes",
 ] as const;
 
 const bad = (m: string) => new GameError("bad_request", m, 400);

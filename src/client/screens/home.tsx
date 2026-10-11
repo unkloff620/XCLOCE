@@ -22,6 +22,8 @@ import { money } from "../format.ts";
 import { Help, HelpList } from "../help.tsx";
 import { CURRENCY_DEFS } from "../../content/currencies.ts";
 import { Stylist, type StyleDraft } from "./stylist.tsx";
+import { StashWishWindow } from "./stash-swap.tsx";
+import { ItemArt } from "../art/items.tsx";
 
 const MENU_KEY = "xc2_home_menu";
 
@@ -52,6 +54,7 @@ export function HomeScreen() {
     setEditFocus((f) => ({ ...f, part }));
   }, []);
   const [daily, setDaily] = useState(false);
+  const [wish, setWish] = useState(false);
   const [quests, setQuests] = useState(false);
   // the [≡] menu remembers whether it was left open or closed (per device)
   const [menuOpen, setMenuOpenRaw] = useState(false);
@@ -223,6 +226,10 @@ export function HomeScreen() {
               <button className="icon-btn-art" style={{ ["--c" as string]: "#3fd2ff" }} onClick={() => openRoomEditor("desk")} aria-label="Обстановка" title="Обстановка">
                 <Icon name="bolt" size={58} />
               </button>
+              <button className="icon-btn-art" style={{ ["--c" as string]: "#b98bff" }} onClick={() => setWish(true)} aria-label="Попросить нычки" title="Попросить нычки">
+                <ItemArt id="stash-cigs" size={54} />
+                {(state.stashWish?.length ?? 0) > 0 && <span className="side-count num">{state.stashWish!.length}/6</span>}
+              </button>
               <Link href="/rating" className={`icon-btn-art ${state.prizes.length ? "glow" : ""}`} style={{ ["--c" as string]: "#ffcc33" }} aria-label="Рейтинг" title="Рейтинг">
                 <Icon name="trophy" size={54} />
                 {state.prizes.length > 0 && <i className="side-dot" />}
@@ -259,6 +266,7 @@ export function HomeScreen() {
       )}
       {styling && <Stylist draft={styling} setDraft={setStyling} onClose={() => setStyling(null)} focus={editFocus} setFocus={setEditFocus} />}
       {daily && <DailyWindow onClose={() => setDaily(false)} />}
+      {wish && <StashWishWindow onClose={() => setWish(false)} />}
       {quests && <QuestsWindow onClose={() => setQuests(false)} />}
       {decorating && <RoomEditor draft={decorating} setDraft={setDecorating} tab={roomTab} setTab={setRoomTab} onClose={() => setDecorating(null)} />}
       {pc && <ComputerWindow onClose={() => setPc(false)} />}
