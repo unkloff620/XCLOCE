@@ -1,5 +1,5 @@
 """
-The yard's background: a few birds now and then, quiet and unhurried (the leaves and the wind were taken out).
+The yard's background: a few birds now and then, quiet and unhurried and a soft low wind (no leaf rustle).
 Everything is synthesized and periodic over PERIOD seconds (noise is shaped in the frequency domain of one whole
 period, so it wraps without a seam; bird calls near the end wrap around to the start).
 Output: public/assets/sound/yard.mp3 — the period with PAD seconds of its end before it and of its start after it
@@ -44,11 +44,12 @@ flutter = 0.75 + 0.25 * slow([PERIOD / 40, PERIOD / 57, PERIOD / 73])  # the lea
 leavesL = shaped_noise(400, 2800, -0.9) * (0.15 + 0.85 * gust) * flutter
 leavesR = shaped_noise(400, 2800, -0.9) * (0.15 + 0.85 * np.roll(gust, int(0.35 * SR))) * flutter
 # --- the wind itself: low and soft
-wind = shaped_noise(120, 600, -0.8) * (0.3 + 0.7 * gust)
+wind = shaped_noise(70, 420, -0.6) * (0.25 + 0.75 * gust)
 
-# no rustle and no wind any more (too much in the ears): only the birds, the quiet tail of the reverb around them
-L = np.zeros(N)
-R = np.zeros(N)
+# no leaf rustle (too much in the ears); only a soft, low wind that swells with the gusts, under the birds
+wind2 = shaped_noise(70, 420, -0.6) * (0.25 + 0.75 * np.roll(gust, int(0.8 * SR)))
+L = 0.05 * wind
+R = 0.05 * wind2
 
 
 # --- birds: a few short phrases spread over the period, each from its own spot

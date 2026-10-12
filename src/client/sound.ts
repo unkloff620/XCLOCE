@@ -106,7 +106,7 @@ export function unlockAudioOnGesture() {
 const SAMPLE_URLS = {
   music: "/assets/sound/chanson.mp3",
   battle: "/assets/sound/battle.mp3",
-  yard: "/assets/sound/yard.mp3?v=3",
+  yard: "/assets/sound/yard.mp3?v=4",
   door: "/assets/sound/door.mp3",
   keys: "/assets/sound/keys.mp3",
   punch: "/assets/sound/punch.mp3",
