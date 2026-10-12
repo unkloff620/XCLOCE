@@ -130,7 +130,7 @@ type SampleId = string;
 const MUSIC_FILES = {
   calm: { id: "music", start: 0.5, end: 37.42308390022676, gain: 0.17 },
   battle: { id: "battle", start: 0.5, end: 25.76315192743764, gain: 0.14 },
-  yard: { id: "yard", start: 0.5, end: 48.5, gain: 0.55 },
+  yard: { id: "yard", start: 0.5, end: 48.5, gain: 0.3 },
 } as const;
 const buffers: Partial<Record<SampleId, AudioBuffer>> = {};
 let samplesLoading = false;

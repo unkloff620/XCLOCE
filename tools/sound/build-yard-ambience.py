@@ -41,13 +41,14 @@ def slow(periods, phases=None):
 gust = 0.5 + 0.5 * slow([PERIOD, PERIOD / 2, PERIOD / 3, PERIOD / 5])
 gust = np.clip(gust, 0, 1) ** 1.6
 flutter = 0.75 + 0.25 * slow([PERIOD / 40, PERIOD / 57, PERIOD / 73])  # the leaves' own quick shimmer
-leavesL = shaped_noise(1200, 7000, -0.5) * (0.15 + 0.85 * gust) * flutter
-leavesR = shaped_noise(1200, 7000, -0.5) * (0.15 + 0.85 * np.roll(gust, int(0.35 * SR))) * flutter
+leavesL = shaped_noise(400, 2800, -0.9) * (0.15 + 0.85 * gust) * flutter
+leavesR = shaped_noise(400, 2800, -0.9) * (0.15 + 0.85 * np.roll(gust, int(0.35 * SR))) * flutter
 # --- the wind itself: low and soft
 wind = shaped_noise(120, 600, -0.8) * (0.3 + 0.7 * gust)
 
-L = 0.22 * leavesL + 0.10 * wind
-R = 0.22 * leavesR + 0.10 * wind
+# soft: the rustle stays well under the birds, no hiss on top
+L = 0.07 * leavesL + 0.06 * wind
+R = 0.07 * leavesR + 0.06 * wind
 
 
 # --- birds: a few short phrases spread over the period, each from its own spot
@@ -118,7 +119,7 @@ L = np.fft.irfft(np.fft.rfft(L) * irf, N) * 0.5 + L * 0.5
 R = np.fft.irfft(np.fft.rfft(R) * irf, N) * 0.5 + R * 0.5
 
 st = np.stack([L, R], 1)
-st /= np.abs(st).max() / 0.85
+st /= np.abs(st).max() / 0.7
 p = int(PAD * SR)
 full = np.concatenate([st[-p:], st, st[:p]])
 with tempfile.TemporaryDirectory() as d:
