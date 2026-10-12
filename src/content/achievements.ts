@@ -31,7 +31,7 @@ export const ACH_CATEGORIES: AchCategory[] = [
   { id: "damage", name: "Урон боссам", hint: "Нанеси боссам {n} урона", stat: "damage", icon: "ach-damage", targets: [1_000, 25_000, 250_000, 1_000_000, 5_000_000] },
   { id: "hits", name: "Удары", hint: "Нанеси {n} ударов", stat: "hits", icon: "ach-hits", targets: [10, 100, 1_000, 5_000, 20_000] },
   { id: "wins", name: "Победы", hint: "Выиграй {n} боёв с боссами", stat: "wins", icon: "ach-wins", targets: [1, 10, 50, 200, 500] },
-  { id: "solo", name: "Соло", hint: "Победи босса в одиночку (бой «Соло») {n} раз", stat: "soloWins", icon: "swords", targets: [1, 5, 25, 100, 300] },
+  { id: "solo", name: "Соло", hint: "Победи босса в одиночку (бой «Соло») {n} раз", stat: "soloWins", icon: "ach-solo", targets: [1, 5, 25, 100, 300] },
   { id: "kills", name: "Добивающий", hint: "Нанеси последний удар боссу {n} раз", stat: "kills", icon: "key", targets: [1, 5, 25, 100, 250] },
   { id: "locations", name: "Локации", hint: "Пройди локации {n} раз (повторы считаются)", stat: "locations", icon: "map", targets: [1, 5, 20, 50, 100] },
   { id: "tasks", name: "Задания", hint: "Выполни {n} заданий в локациях", stat: "tasks", icon: "energy", targets: [5, 25, 100, 300, 1_000] },
@@ -74,7 +74,7 @@ export const SOLO_BOSS_ACHIEVEMENTS: AchievementDef[] = BOSSES.map((b) => {
   const tier = b.card ? CARD_TO_TIER[b.card] : 5;
   return {
     id: `soloboss-${b.id}`, category: "solo-boss", name: `Соло: ${b.name}`, hint: `Убей босса ${b.name} в одиночку (бой «Соло»)`,
-    stat: `solo:${b.id}` as const, target: 1, tier, icon: "swords", reward: TIER_REWARDS[tier], boss: b.id,
+    stat: `solo:${b.id}` as const, target: 1, tier, icon: "ach-solo", reward: TIER_REWARDS[tier], boss: b.id,
   };
 });
 

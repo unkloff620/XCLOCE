@@ -127,7 +127,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0 }: { rows: AchRo
           const top = Math.max(0, ...soloList.filter((a) => { const r = byId.get(a.id); return r && (r.claimed || (!self && r.done)); }).map((a) => a.tier)) as AchTier | 0;
           return (
             <div role="button" tabIndex={0} className={`ach-row ${ready ? "ready" : ""}`} onClick={() => setSoloOpen(true)} onKeyDown={(e) => e.key === "Enter" && setSoloOpen(true)}>
-              <BadgeMedal icon="swords" tier={top} earned={got > 0} size={44} />
+              <BadgeMedal icon="ach-solo" tier={top} earned={got > 0} size={44} />
               <span className="ach-main">
                 <span className="row" style={{ justifyContent: "space-between", gap: 6 }}>
                   <b className="ach-name">Соло-убийства</b>
