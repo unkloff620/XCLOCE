@@ -1806,3 +1806,8 @@ body:has(.fit-page) .hud { background: linear-gradient(180deg, rgba(20, 12, 6, 0
   animation: upg-embers 1.15s ease-out forwards; }
 @keyframes upg-embers { 0% { opacity: 0; transform: translateY(6px); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(-34px); } }
 @media (prefers-reduced-motion: reduce) { .upg-burn { animation-duration: 0.01s; } .upg-embers { display: none; } }
+
+/* the fight's time under the HP bar (boss.tsx Arena) */
+.arena-time { margin-top: 4px; }
+.arena-time .bar > span { display: inline-flex; align-items: center; justify-content: center; gap: 3px; width: 100%; font-size: 11px; }
+.arena-time .bar > i { transition: width 1s linear; }

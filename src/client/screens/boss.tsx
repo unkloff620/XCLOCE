@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { api, type FightView, type Hit, type Tray } from "../api.ts";
-import { BOSSES, arenaOf, bossById, type BossDef, FULL_SHARE, KEY_SHARE, rewardShare } from "../../content/bosses.ts";
+import { BOSSES, arenaOf, bossById, type BossDef, FIGHT_HOURS, FULL_SHARE, KEY_SHARE, rewardShare } from "../../content/bosses.ts";
 import { WEAPONS, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
 import { ArenaBackdrop, BossSilhouette } from "../art/scenes.tsx";
@@ -45,9 +45,14 @@ function Arena({ boss, hp, hpMax, endsAt, fx, hit, ouch, rug, feed, full: fullSc
       </div>
       <div className="arena-top">
         {hp !== null ? <Bar value={hp} max={hpMax} tone="red" height={24} label={`${full(hp)} / ${full(hpMax)}`} /> : <Bar value={hpMax} max={hpMax} tone="red" height={24} label={`${full(hpMax)} HP`} />}
+        {/* the fight's time runs down like the HP: the bar shortens as the 8 hours pass */}
+        {endsAt && (
+          <div className="arena-time">
+            <Bar value={Math.max(0, endsAt - now)} max={FIGHT_HOURS * 3600_000} tone="gold" height={18} label={<><Icon name="clock" size={12} /> {clock(Math.max(0, endsAt - now))}</>} />
+          </div>
+        )}
         <div className="arena-sub">
           <div className="col" style={{ gap: 4, alignItems: "flex-start" }}>
-            {endsAt && <span className="chip gold"><Icon name="clock" size={14} />{clock(endsAt - now)}</span>}
             {phase && <span className="chip" style={{ background: "rgba(0,0,0,0.55)" }}>{phase.name}</span>}
           </div>
           {/* who hit and how hard: the last few hits, each line fades away after a few seconds */}
