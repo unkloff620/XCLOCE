@@ -51,6 +51,40 @@ export function setMuted(v: boolean) {
   writeFlag(MUTE_KEY, v);
   changed();
 }
+/* volumes 0…1 of the music and of the effects (profile → settings), remembered on this device */
+const VOL_KEY = "xc2_vol";
+function readVol(key: string): number {
+  try {
+    const v = typeof localStorage === "undefined" ? null : localStorage.getItem(key);
+    const n = v === null ? 1 : Number(v);
+    return Number.isFinite(n) ? Math.min(1, Math.max(0, n)) : 1;
+  } catch {
+    return 1;
+  }
+}
+let musicVol = readVol(VOL_KEY + "_music");
+let sfxVol = readVol(VOL_KEY + "_sfx");
+const MASTER = 0.55;
+/** the music bus level of a track at full volume */
+const trackLevel = (t: MusicTrack) => (t === "battle" ? 0.45 : 0.5) * musicVol;
+export const getMusicVolume = () => musicVol;
+export const getSfxVolume = () => sfxVol;
+export function setMusicVolume(v: number) {
+  musicVol = Math.min(1, Math.max(0, v));
+  try { localStorage.setItem(VOL_KEY + "_music", String(musicVol)); } catch { /* blocked */ }
+  if (ctx && musicBus && seqTimer && !switchTimer) {
+    musicBus.gain.cancelScheduledValues(ctx.currentTime);
+    musicBus.gain.setTargetAtTime(trackLevel(track), ctx.currentTime, 0.05);
+  }
+  changed();
+}
+export function setSfxVolume(v: number) {
+  sfxVol = Math.min(1, Math.max(0, v));
+  try { localStorage.setItem(VOL_KEY + "_sfx", String(sfxVol)); } catch { /* blocked */ }
+  if (ctx && master) master.gain.setTargetAtTime(MASTER * sfxVol, ctx.currentTime, 0.05);
+  changed();
+}
+
 export const isMusicOn = () => musicOn;
 export function setMusic(v: boolean) {
   musicOn = v;
@@ -67,7 +101,7 @@ function audio(): AudioContext | null {
     if (!AC) return null;
     ctx = new AC();
     master = ctx.createGain();
-    master.gain.value = 0.55;
+    master.gain.value = MASTER * sfxVol;
     master.connect(ctx.destination);
     // music: its own quiet bus through a soft low-pass, so it stays in the background
     const lp = ctx.createBiquadFilter();
@@ -476,7 +510,7 @@ export function startMusic() {
   if (!a || !musicBus || seqTimer) return;
   musicBus.gain.cancelScheduledValues(a.currentTime);
   musicBus.gain.setValueAtTime(musicBus.gain.value, a.currentTime);
-  musicBus.gain.linearRampToValueAtTime(track === "battle" ? 0.45 : 0.5, a.currentTime + 2.5); // fade in
+  musicBus.gain.linearRampToValueAtTime(trackLevel(track), a.currentTime + 2.5); // fade in
   nextAt = a.currentTime + 0.1;
   seqTimer = setInterval(() => {
     if (a.state !== "running" || switchTimer) return;
@@ -526,7 +560,7 @@ export function setMusicTrack(t: MusicTrack) {
     nextAt = ctx.currentTime + 0.05;
     musicBus.gain.cancelScheduledValues(ctx.currentTime);
     musicBus.gain.setValueAtTime(0, ctx.currentTime);
-    musicBus.gain.linearRampToValueAtTime(t === "battle" ? 0.45 : 0.5, ctx.currentTime + (t === "battle" ? 0.6 : 2));
+    musicBus.gain.linearRampToValueAtTime(trackLevel(t), ctx.currentTime + (t === "battle" ? 0.6 : 2));
   }, 380);
 }
 

@@ -1,10 +1,11 @@
 "use client";
 import { replayTutorial } from "../tutorial.tsx";
+import { getMusicVolume, getSfxVolume, onSoundChange, setMusicVolume, setSfxVolume } from "../sound.ts";
 import { StashGivePanel } from "./stash-swap.tsx";
 import { NotifySwitch } from "./quests.tsx";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { api } from "../api.ts";
 import { bossesIn } from "../../content/bosses.ts";
@@ -264,6 +265,7 @@ function SettingsPanel() {
   return (
     <div className="panel col" style={{ gap: 8 }}>
       <div className="small muted">НАСТРОЙКИ</div>
+      <VolumeSliders />
       <button className="btn dark block" onClick={() => setLooks(true)}>Внешность: кожа и глаза</button>
       {looks && <LooksWindow onClose={() => setLooks(false)} />}
       <NotifySwitch />
@@ -302,5 +304,24 @@ function LooksWindow({ onClose }: { onClose: () => void }) {
         <button className="btn green block" disabled={!changed || !!busy} onClick={save}>{changed ? "Сохранить" : "Без изменений"}</button>
       </div>
     </Modal>
+  );
+}
+
+/** Volume of the music (and the yard's nature) and of the effects; remembered on this device. */
+function VolumeSliders() {
+  const music = useSyncExternalStore(onSoundChange, getMusicVolume, () => 1);
+  const fx = useSyncExternalStore(onSoundChange, getSfxVolume, () => 1);
+  const row = (label: string, v: number, set: (x: number) => void) => (
+    <label className="vol-row">
+      <span className="small">{label}</span>
+      <input type="range" min={0} max={100} step={5} value={Math.round(v * 100)} onChange={(e) => set(Number(e.target.value) / 100)} aria-label={label} />
+      <b className="num tiny vol-val">{Math.round(v * 100)}%</b>
+    </label>
+  );
+  return (
+    <div className="col" style={{ gap: 6 }}>
+      {row("Музыка", music, setMusicVolume)}
+      {row("Эффекты", fx, setSfxVolume)}
+    </div>
   );
 }
