@@ -18,8 +18,8 @@ export function BadgeMedal({ icon, tier, earned, size = 54 }: { icon: string; ti
   // drawn achievement pictures sit inside the same medal as the simple icons, at the same size
   const art = icon.startsWith("ach-");
   return (
-    <span className={`badge-wrap ${art ? "art" : ""} ${earned ? "" : "locked"}`} style={{ width: size, height: size * 1.1 }}>
-      <span className={`badge-medal tier-${tier} ${earned ? "" : "locked"}`} style={{ width: size, height: size * 1.1 }}>
+    <span className={`badge-wrap ${art ? "art" : ""} ${earned ? "" : "locked"}`} style={{ width: size, height: size }}>
+      <span className={`badge-medal tier-${tier} ${earned ? "" : "locked"}`} style={{ width: size, height: size }}>
         {!art && <Icon name={icon as IconName} size={size * 0.6} />}
       </span>
       {art && <span className="badge-art"><Icon name={icon as IconName} size={size * 0.74} /></span>}

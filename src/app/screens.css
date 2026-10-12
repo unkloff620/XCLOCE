@@ -961,7 +961,7 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .badge-cell.ready .badge-medal { animation: badge-call 1.4s ease-in-out infinite; }
 @keyframes badge-call { 50% { transform: scale(1.08) rotate(-4deg); filter: drop-shadow(0 0 10px rgba(255, 204, 51, 0.9)); } }
 .badge-name { font-size: 10px; line-height: 1.15; text-align: center; color: var(--muted); max-width: 76px; }
-.badge-medal { display: grid; place-items: center; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.6)); }
+.badge-medal { display: grid; place-items: center; border-radius: 50%; box-sizing: border-box; border: 1.5px solid #2a1808; filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.6)); }
 .badge-medal.tier-1 { background: radial-gradient(circle at 35% 25%, #ffd2a6, #d0803f 55%, #7a3e14); }
 .badge-medal.tier-2 { background: radial-gradient(circle at 35% 25%, #ffffff, #b9c4d6 55%, #5b6680); }
 .badge-medal.tier-3 { background: radial-gradient(circle at 35% 25%, #fff3b0, #ffcc33 50%, #b06d00); }
