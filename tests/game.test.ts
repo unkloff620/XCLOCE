@@ -1239,7 +1239,10 @@ describe("yard mini games", () => {
     expect(b.result).toMatchObject({ status: "active", round: 2, rounds: 10, total: 1000, last: { points: 1000, zonk: false } });
     for (let i = 2; i <= 10; i++) b = await act(db, p, "zonk_move", { pick: [0, 1, 2], then: "bank" }, T0, always(0));
     expect(b.result).toMatchObject({ status: "done", total: 10_000, result: { outcome: "bank", points: 10_000 } });
-    expect(await wallet(db, p, "RUB")).toBe(rub + 250);
+    expect(b.result.scores).toHaveLength(10);
+    expect(b.result.scores[0]).toEqual({ points: 1000, zonk: false });
+    // 1000 points = 50 RUB in the free game
+    expect(await wallet(db, p, "RUB")).toBe(rub + 500);
     // the second game today costs 2 USD
     await setMoney(db, p, "USD", 1);
     await expect(act(db, p, "game_start", { game: "zonk" }, T0 + M)).rejects.toMatchObject({ code: "no_money" });

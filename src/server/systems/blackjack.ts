@@ -355,7 +355,7 @@ export async function bjLeave(ctx: Ctx) {
     for (const h of seat.hands) h.done = true;
     seat.left = true;
     if (s.turn?.seat === i) await advance(ctx, t, ctx.now);
-    if (s.phase === "betting") s.seats[i] = null; // the round ended right now
+    if ((s.phase as BjState["phase"]) === "betting") s.seats[i] = null; // the round ended right now
   } else if (seat.hands.length && s.phase === "playing") {
     seat.left = true;
   } else s.seats[i] = null;
