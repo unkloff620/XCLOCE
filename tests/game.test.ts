@@ -1075,6 +1075,53 @@ describe("yard mini games", () => {
     expect(Number(charge.delta)).toBe(-2);
   });
 
+  it("poker: combinations", async () => {
+    const { pokerHand, pokerLevel, pokerPay, POKER_HANDS } = await import("../src/content/games.ts");
+    for (const h of POKER_HANDS) expect(pokerHand(h.sample).hand).toBe(h.id);
+    const c = (r: number, s = 0) => ({ r, s });
+    expect(pokerHand([c(1, 0), c(2, 1), c(3, 2), c(4, 3), c(5, 0)]).hand).toBe("straight"); // wheel
+    expect(pokerHand([c(1, 0), c(2, 0), c(3, 0), c(4, 0), c(5, 0)]).hand).toBe("sflush");
+    expect(pokerHand([c(11, 0), c(12, 1), c(13, 2), c(1, 3), c(2, 0)]).hand).toBe("high"); // no wrap-around
+    expect(pokerHand([c(7, 0), c(7, 1), c(9, 2), c(2, 3), c(4, 0)]).used).toEqual([0, 1]);
+    expect(pokerLevel(0).level).toBe(0);
+    expect(pokerLevel(20).level).toBe(1);
+    expect(pokerLevel(59).level).toBe(1);
+    expect(pokerLevel(60).level).toBe(2);
+    expect(pokerLevel(1e9)).toMatchObject({ level: 20, to: null });
+    expect(pokerPay("pair", 0).currencies?.USD).toBe(2);
+    expect(pokerPay("pair", 10).currencies?.USD).toBe(2.3);
+    expect(pokerPay("high", 5)).toEqual({});
+  });
+
+  it("poker: 3 USD a hand, 20 hands a day, poker xp grows", async () => {
+    const p = await newPlayer(db);
+    await setMoney(db, p, "USD", 100);
+    let xp = 0;
+    for (let i = 0; i < 20; i++) {
+      const r = await act(db, p, "poker_play", {}, T0 + i * 1000, always(0.37));
+      expect(r.result.cards).toHaveLength(5);
+      xp += r.result.gainedXp;
+      expect(r.result.poker.xp).toBe(xp);
+      expect(r.result.poker.left).toBe(19 - i);
+    }
+    await expect(act(db, p, "poker_play", {}, T0 + 30 * 1000)).rejects.toMatchObject({ code: "poker_limit" });
+    const charges = await db.query<{ delta: number }>("SELECT delta FROM ledger WHERE player_id=$1 AND reason='game:poker'", [p]);
+    expect(charges).toHaveLength(20);
+    expect(Number(charges[0].delta)).toBe(-3);
+    // the next Moscow day: 20 more
+    const next = await act(db, p, "poker_play", {}, T0 + 24 * 3600 * 1000, always(0.37));
+    expect(next.result.poker.left).toBe(19);
+    expect(next.state.poker.left).toBe(19);
+  });
+
+  it("poker: not enough USD", async () => {
+    const p = await newPlayer(db);
+    await setMoney(db, p, "USD", 2);
+    await expect(act(db, p, "poker_play", {}, T0)).rejects.toBeTruthy();
+    const n = await db.query("SELECT 1 FROM games WHERE player_id=$1 AND kind='poker'", [p]);
+    expect(n).toHaveLength(0);
+  });
+
   it("zonk: scoring rules", async () => {
     const { zonkScore, zonkHasScore } = await import("../src/content/games.ts");
     expect(zonkScore([1])).toBe(100);

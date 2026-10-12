@@ -12,11 +12,12 @@ import { Help } from "../help.tsx";
 import { haptic } from "../telegram.ts";
 import { sfx } from "../sound.ts";
 import { full } from "../format.ts";
-import type { GameView } from "../api.ts";
+import type { GameView, PokerPlay } from "../api.ts";
 import { itemById } from "../../content/items.ts";
 import {
   BJ_PAY, GAME_RULES, ITEM_VALUES, RANKS, SUITS, UPGRADE_MODES, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue, zonkScore, zonkPrize, ZONK_ROUNDS,
-  type GameKind, type UpgradeMode,
+  POKER_HANDS, POKER_LEVEL_BONUS, POKER_MAX_LEVEL, POKER_RULES, pokerPay,
+  type GameKind, type PokerHand, type UpgradeMode,
 } from "../../content/games.ts";
 
 /* ---------------- shared: free games / price line and the start button ---------------- */
@@ -289,6 +290,93 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
   );
 }
 
+
+/* ---------------- poker ---------------- */
+function PokerHelp() {
+  return (
+    <Help topic="poker" title="Покер">
+      <p>Сразу сдаётся 5 карт. Собралась комбинация из таблицы — получаешь награду, чем старше комбинация, тем больше.</p>
+      <p>Раздача — {POKER_RULES.price.amount} USD, до {POKER_RULES.perDay} раздач в день.</p>
+      <p>Каждая раздача даёт опыт покера (за старшие комбинации — больше). Каждый уровень покера добавляет +{Math.round(POKER_LEVEL_BONUS * 1000) / 10}% к денежной награде, максимум {POKER_MAX_LEVEL} уровень.</p>
+    </Help>
+  );
+}
+
+function MiniCard({ r, s }: { r: number; s: number }) {
+  return <span className={`pk-mini ${s === 1 || s === 2 ? "red" : ""}`}><b>{RANKS[r]}</b><i>{SUITS[s]}</i></span>;
+}
+
+export function PokerWindow({ onClose }: { onClose: () => void }) {
+  const { state, act, busy } = useGame();
+  const info = state?.poker;
+  const [play, setPlay] = useState<PokerPlay | null>(null);
+  const [deal, setDeal] = useState(0);
+  const p = play?.poker ?? info;
+  const level = p?.level ?? 0;
+  const pct = !p ? 0 : p.to === null ? 100 : Math.max(0, Math.min(100, ((p.xp - p.from) / (p.to - p.from)) * 100));
+  const usd = state?.wallet[POKER_RULES.price.currency] ?? 0;
+  const left = p?.left ?? 0;
+  const run = async () => {
+    haptic.tap();
+    sfx("tap");
+    const r = await act<PokerPlay>("poker_play", {});
+    if (r) {
+      setPlay(r);
+      setDeal((d) => d + 1);
+      if (r.reward) { haptic.ok(); sfx("reward"); } else haptic.err();
+    }
+  };
+  const hand: PokerHand | null = play?.hand ?? null;
+  return (
+    <Modal title={<span className="title-row">Покер <PokerHelp /></span>} onClose={onClose} wide>
+      <div className="pk">
+        <div className="pk-lvl" title={p ? `${p.xp}${p.to !== null ? ` / ${p.to}` : ""} опыта покера` : undefined}>
+          <b className="display num">{level}</b>
+          <span className="tiny">ур.</span>
+          <div className="pk-bar"><i style={{ height: `${pct}%` }} /></div>
+        </div>
+        <div className="mg-table pk-felt">
+          <div className="pk-cards" key={deal}>
+            {play
+              ? play.cards.map((c, i) => (
+                <span key={i} className={`pk-slot ${play.used.includes(i) && hand !== "high" ? "used" : ""} ${hand !== "high" && !play.used.includes(i) ? "dim" : ""}`}>
+                  <PlayingCard i={i} r={c.r} s={c.s} />
+                </span>
+              ))
+              : Array.from({ length: 5 }, (_, i) => <span key={i} className="pk-slot"><PlayingCard i={i} back /></span>)}
+          </div>
+          {play ? (
+            <div className={`pk-res ${play.reward ? "win" : ""}`}>
+              <b className="display">{play.title}</b>
+              {play.reward ? <RewardChips r={play.reward} size={15} /> : <span className="tiny muted">без выигрыша</span>}
+              <span className="tiny">+{play.gainedXp} опыта покера{play.levelUp ? <b className="pk-up"> · новый уровень {level}!</b> : null}</span>
+            </div>
+          ) : (
+            <div className="pk-res"><span className="tiny muted">Сдаём 5 карт — собери комбинацию из таблицы</span></div>
+          )}
+          <button className="btn big gold pk-go" disabled={busy === "poker_play" || left <= 0 || usd < POKER_RULES.price.amount} onClick={run}>
+            {play ? "Ещё раздачу" : "Раздать"} · {POKER_RULES.price.amount} <Icon name={POKER_RULES.price.currency} size={18} />
+          </button>
+          <span className="tiny pk-left">
+            Раздач сегодня: <b className="num">{(p?.perDay ?? POKER_RULES.perDay) - left}/{p?.perDay ?? POKER_RULES.perDay}</b>
+            {left > 0 && usd < POKER_RULES.price.amount && <span style={{ color: "var(--red)" }}> · не хватает USD</span>}
+            {left <= 0 && <span> · приходи завтра</span>}
+          </span>
+        </div>
+        <div className="pk-table">
+          {POKER_HANDS.filter((h) => h.id !== "high").map((h) => (
+            <div key={h.id} className={`pk-row ${hand === h.id ? "on" : ""}`}>
+              <span className="pk-row-cards">{h.sample.map((c, k) => <MiniCard key={k} r={c.r} s={c.s} />)}</span>
+              <span className="pk-row-name tiny">{h.name}</span>
+              <span className="pk-row-pay"><RewardChips r={pokerPay(h.id, level)} size={12} /></span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
 /* ---------------- upgrader ---------------- */
 const pctText = (c: number) => `${(Math.round(c * 10000) / 100).toLocaleString("ru-RU")}%`;
 
@@ -465,14 +553,14 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
 /** The blackjack table with the «Зонк» board behind it: one object; a tap asks which game to play. */
 export function YardGames() {
   const { state } = useGame();
-  const [open, setOpen] = useState<"pick" | "blackjack" | "zonk" | null>(null);
+  const [open, setOpen] = useState<"pick" | "blackjack" | "zonk" | "poker" | null>(null);
   const bj = state?.games?.blackjack;
   const zk = state?.games?.zonk;
   const free = (bj?.active || zk?.active) ? "идёт" : (bj?.freeLeft ?? 0) + (zk?.freeLeft ?? 0);
   const note = (g: typeof bj, paid: string) => (g?.active ? "партия идёт — продолжить" : g && g.freeLeft > 0 ? `бесплатно: ${g.freeLeft}` : paid);
   return (
     <>
-      <button className="yard-obj yard-table" onClick={() => setOpen("pick")} aria-label="Блэкджек и зонк" title="Блэкджек и зонк">
+      <button className="yard-obj yard-table" onClick={() => setOpen("pick")} aria-label="Блэкджек, зонк и покер" title="Блэкджек, зонк и покер">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="yard-ring" src="/assets/yard/court-table-ring.webp" alt="" draggable={false} />
@@ -488,11 +576,15 @@ export function YardGames() {
             <button className="btn big block gold" onClick={() => setOpen("zonk")}>
               Зонк<small>{note(zk, "игра — 2 USD")}</small>
             </button>
+            <button className="btn big block red" onClick={() => setOpen("poker")}>
+              Покер<small>{state?.poker ? `раздача — ${state.poker.price.amount} USD · осталось ${state.poker.left}/${state.poker.perDay}` : "раздача — 3 USD"}</small>
+            </button>
           </div>
         </Modal>
       )}
       {open === "blackjack" && <BlackjackWindow onClose={() => setOpen(null)} />}
       {open === "zonk" && <ZonkWindow onClose={() => setOpen(null)} />}
+      {open === "poker" && <PokerWindow onClose={() => setOpen(null)} />}
     </>
   );
 }

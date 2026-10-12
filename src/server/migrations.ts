@@ -747,4 +747,11 @@ CREATE TABLE IF NOT EXISTS upgrade_spins (
 );
 `,
   },
+  {
+    // Покер во дворе: опыт покера у игрока (раздачи лежат в games с kind='poker').
+    id: "v2-041-poker",
+    sql: `
+ALTER TABLE players ADD COLUMN IF NOT EXISTS poker_xp INT NOT NULL DEFAULT 0;
+`,
+  },
 ];

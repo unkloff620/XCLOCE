@@ -90,6 +90,7 @@ export function actionText(type: string, body: Row, result: unknown): string | n
       if (g.status !== "done") return join(name, g.paid ? "платная" : "бесплатная", g.kind === "blackjack" ? `${g.playerValue} очков` : `${g.turn ?? 0} очков`);
       return join(name, g.paid ? "платная" : "бесплатная", g.result?.title, grantedText(g.result?.reward) || "без выигрыша");
     }
+    case "poker_play": return join("Покер", r.title, grantedText(r.reward) || "без выигрыша", r.gainedXp ? `+${fmt(r.gainedXp)} опыта покера` : "", r.levelUp ? "новый уровень" : "");
     case "upgrade": return join(`${item(r.from ?? body.stake)}${body.uid !== undefined ? " ★" : body.qty && n(body.qty) > 1 ? ` ×${fmt(body.qty)}` : ""} (${fmt(r.stakeValue)} ₽) → ${item(r.target)} ★ ${fmt(r.value)} ₽`, `шанс ${fmt(Math.round(n(r.chance) * 10000) / 100)}%`, r.won ? "получилось!" : "сгорело");
     case "stash_collect": return join(`собрал набор нычек #${r.count ?? ""} (${String(body.set)})`, grantedText(r.reward));
     case "up_sell": return `продал ${item(r.itemId)} ★ · +${fmt(r.got)} RUB`;

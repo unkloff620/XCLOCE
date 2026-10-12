@@ -5,7 +5,7 @@
 import { GameError, type Queryable } from "../db.ts";
 import { addItem, addMoney, grantReward, itemQty, ledger, moscowDay, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { useItem } from "./shop.ts";
-import { UPGRADE_RULES,
+import { UPGRADE_RULES, POKER_RULES, pokerHand, pokerHandDef, pokerLevel, pokerPay,
   BJ_PAY, BJ_TITLES, GAME_RULES, ITEM_VALUES, ZONK_DICE, ZONK_ROUNDS, bjOutcome, handValue, isBlackjack, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue, zonkHasScore, zonkPrize, zonkScore,
   type BjOutcome, type Card, type GameKind,
 } from "../../content/games.ts";
@@ -268,4 +268,42 @@ export async function takeUpgradedOut(ctx: Ctx, uid: number, use: boolean) {
   const def = itemById(r.item_id);
   if (use && def?.use) return { uid, itemId: r.item_id, used: await useItem(ctx, r.item_id) };
   return { uid, itemId: r.item_id };
+}
+
+/* ---------------- poker ---------------- */
+async function pokerPlaysToday(q: Queryable, pid: number, now: number) {
+  const [r] = await q.query<{ n: number }>("SELECT COUNT(*)::int AS n FROM games WHERE player_id=$1 AND kind='poker' AND day=$2", [pid, moscowDay(now)]);
+  return Number(r?.n ?? 0);
+}
+
+/** hands left today, the price, the poker experience and level */
+export async function pokerView(q: Queryable, pid: number, now: number) {
+  const [p] = await q.query<{ poker_xp: number }>("SELECT poker_xp FROM players WHERE id=$1", [pid]);
+  const xp = Number(p?.poker_xp ?? 0);
+  const played = await pokerPlaysToday(q, pid, now);
+  return { left: Math.max(0, POKER_RULES.perDay - played), perDay: POKER_RULES.perDay, price: POKER_RULES.price, xp, ...pokerLevel(xp) };
+}
+
+/** One paid hand: five cards at once, the combination pays (more with the poker level) and gives poker xp. */
+export async function playPoker(ctx: Ctx) {
+  // one hand at a time per player, so the daily limit holds
+  const [p] = await ctx.q.query<{ poker_xp: number }>("SELECT poker_xp FROM players WHERE id=$1 FOR UPDATE", [ctx.pid]);
+  if ((await pokerPlaysToday(ctx.q, ctx.pid, ctx.now)) >= POKER_RULES.perDay) throw new GameError("poker_limit", `На сегодня все ${POKER_RULES.perDay} раздач сыграны`);
+  await takeMoney(ctx, POKER_RULES.price.currency, POKER_RULES.price.amount, "game:poker");
+  const deck = shuffled(ctx.rng);
+  const cards = deck.slice(0, 5);
+  const { hand, used } = pokerHand(cards);
+  const def = pokerHandDef(hand);
+  const before = pokerLevel(Number(p?.poker_xp ?? 0));
+  const pay = pokerPay(hand, before.level);
+  const reward = isEmpty(pay) ? null : await grantReward(ctx, pay, `game:poker:${hand}`);
+  const [u] = await ctx.q.query<{ poker_xp: number }>("UPDATE players SET poker_xp = poker_xp + $2 WHERE id=$1 RETURNING poker_xp", [ctx.pid, def.xp]);
+  const xp = Number(u.poker_xp);
+  const after = pokerLevel(xp);
+  const result: GameResult = { outcome: hand, title: def.name, reward };
+  await ctx.q.query(
+    "INSERT INTO games (player_id, kind, day, paid, status, state, result, created_at, updated_at) VALUES ($1,'poker',$2,true,'done',$3,$4,$5,$5)",
+    [ctx.pid, moscowDay(ctx.now), JSON.stringify({ cards }), JSON.stringify(result), new Date(ctx.now)],
+  );
+  return { kind: "poker", cards, hand, used, title: def.name, reward, gainedXp: def.xp, levelUp: after.level > before.level, poker: await pokerView(ctx.q, ctx.pid, ctx.now) };
 }

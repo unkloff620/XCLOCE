@@ -65,6 +65,8 @@ export interface GameState {
   upgraded: { uid: number; itemId: string; value: number }[];
   /** upgrader spins: free ones left today, then each costs `price` */
   upgradeSpins?: { freeLeft: number; freePerDay: number; price: { currency: Currency; amount: number } };
+  /** poker: hands left today, the price, the poker experience and level (to: null at the top level) */
+  poker?: PokerInfo;
   /** how many times each set of stashes was collected (by set number) */
   stashSets: Record<number, number>;
   /** нычки I ask other players for, and who sent me what lately */
@@ -76,6 +78,11 @@ export interface GameState {
   rename: { price: { currency: Currency; amount: number }; nextAt: number | null; min: number; max: number };
   /** inventory sale prices in RUB */
   sell: Record<string, number>;
+}
+export interface PokerInfo { left: number; perDay: number; price: { currency: Currency; amount: number }; xp: number; level: number; from: number; to: number | null }
+export interface PokerPlay {
+  kind: "poker"; cards: { r: number; s: number }[]; hand: import("../content/games.ts").PokerHand; used: number[]; title: string;
+  reward: Granted | null; gainedXp: number; levelUp: boolean; poker: PokerInfo;
 }
 export interface GameResult { outcome: string; title: string; reward: Granted | null; points?: number }
 export interface GameView {

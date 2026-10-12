@@ -135,3 +135,70 @@ export function upgradeTarget(value: number): string {
 }
 /** stake value × multiplier, rounded */
 export const upgradeValue = (stake: number, mult: number) => Math.max(1, Math.round(stake * mult));
+
+/* ---------------- poker (пять карт сразу) ---------------- */
+/*
+ * Платная игра: POKER_RULES.price за раздачу, не больше POKER_RULES.perDay раздач в сутки (МСК). Сразу сдаётся 5 карт
+ * из полной колоды, комбинация даёт награду из POKER_HANDS. Каждая раздача даёт опыт покера (xp комбинации); уровень
+ * покера добавляет к денежной награде POKER_LEVEL_BONUS за уровень (до POKER_MAX_LEVEL).
+ */
+export const POKER_RULES = { perDay: 20, price: { currency: "USD" as const, amount: 3 } };
+export type PokerHand = "royal" | "sflush" | "quads" | "full" | "flush" | "straight" | "trips" | "twopair" | "pair" | "high";
+export interface PokerHandDef { id: PokerHand; name: string; xp: number; pay: Reward; sample: Card[] }
+const cs = (s: string): Card[] => s.split(" ").map((t) => ({ r: RANKS.indexOf(t.slice(0, -1) as (typeof RANKS)[number]), s: "shdc".indexOf(t.slice(-1)) }));
+/** from the best down; the sample is what the row in the table shows */
+export const POKER_HANDS: PokerHandDef[] = [
+  { id: "royal", name: "Роял-флеш", xp: 100, pay: { currencies: { USD: 3000 }, items: [{ id: "rug-pull-gun", qty: 3 }] }, sample: cs("10s Js Qs Ks As") },
+  { id: "sflush", name: "Стрит-флеш", xp: 60, pay: { currencies: { USD: 1000 }, items: [{ id: "rug-pull-gun", qty: 1 }] }, sample: cs("5h 6h 7h 8h 9h") },
+  { id: "quads", name: "Каре", xp: 30, pay: { currencies: { USD: 300 }, items: [{ id: "gpu", qty: 2 }] }, sample: cs("9s 9h 9d 9c Ks") },
+  { id: "full", name: "Фулл-хаус", xp: 16, pay: { currencies: { USD: 90 }, items: [{ id: "energy-pack", qty: 2 }] }, sample: cs("Qh Qs Qd 7c 7h") },
+  { id: "flush", name: "Флеш", xp: 12, pay: { currencies: { USD: 55 }, items: [{ id: "energy-pack", qty: 1 }] }, sample: cs("2d 6d 9d Jd Kd") },
+  { id: "straight", name: "Стрит", xp: 10, pay: { currencies: { USD: 35 }, items: [{ id: "energy-drink", qty: 3 }] }, sample: cs("4c 5h 6s 7d 8c") },
+  { id: "trips", name: "Тройка", xp: 6, pay: { currencies: { USD: 14 } }, sample: cs("8s 8h 8d 3c Js") },
+  { id: "twopair", name: "Две пары", xp: 4, pay: { currencies: { USD: 7 } }, sample: cs("Js Jh 4d 4c Ah") },
+  { id: "pair", name: "Пара", xp: 2, pay: { currencies: { USD: 2 } }, sample: cs("10h 10c 3s 7d Kc") },
+  { id: "high", name: "Старшая карта", xp: 1, pay: {}, sample: cs("2s 6h 9d Jc Kh") },
+];
+export const pokerHandDef = (id: PokerHand) => POKER_HANDS.find((h) => h.id === id)!;
+
+/** the best combination of five cards and which of them make it (a lone high card: just that card) */
+export function pokerHand(cards: Card[]): { hand: PokerHand; used: number[] } {
+  const hi = (r: number) => (r === 1 ? 14 : r);
+  const all = cards.map((_, i) => i);
+  const byRank = new Map<number, number[]>();
+  cards.forEach((c, i) => byRank.set(c.r, [...(byRank.get(c.r) ?? []), i]));
+  const groups = [...byRank.values()].sort((a, b) => b.length - a.length);
+  const flush = cards.length === 5 && cards.every((c) => c.s === cards[0].s);
+  const ranks = [...new Set(cards.map((c) => hi(c.r)))].sort((a, b) => a - b);
+  const wheel = ranks.join(",") === "2,3,4,5,14";
+  const straight = cards.length === 5 && ranks.length === 5 && (ranks[4] - ranks[0] === 4 || wheel);
+  if (straight && flush) return { hand: ranks[0] === 10 ? "royal" : "sflush", used: all };
+  if (groups[0].length === 4) return { hand: "quads", used: groups[0] };
+  if (groups[0].length === 3 && groups[1]?.length === 2) return { hand: "full", used: all };
+  if (flush) return { hand: "flush", used: all };
+  if (straight) return { hand: "straight", used: all };
+  if (groups[0].length === 3) return { hand: "trips", used: groups[0] };
+  if (groups[0].length === 2 && groups[1]?.length === 2) return { hand: "twopair", used: [...groups[0], ...groups[1]].sort((a, b) => a - b) };
+  if (groups[0].length === 2) return { hand: "pair", used: groups[0] };
+  const top = cards.reduce((b, c, i) => (hi(c.r) > hi(cards[b].r) ? i : b), 0);
+  return { hand: "high", used: [top] };
+}
+
+/* poker experience: level L needs POKER_XP_STEP × L × (L + 1) / 2 xp in total */
+export const POKER_XP_STEP = 20;
+export const POKER_MAX_LEVEL = 20;
+export const POKER_LEVEL_BONUS = 0.015;
+export const pokerXpFor = (level: number) => (POKER_XP_STEP * level * (level + 1)) / 2;
+export function pokerLevel(xp: number): { level: number; from: number; to: number | null } {
+  let level = 0;
+  while (level < POKER_MAX_LEVEL && xp >= pokerXpFor(level + 1)) level++;
+  return { level, from: pokerXpFor(level), to: level >= POKER_MAX_LEVEL ? null : pokerXpFor(level + 1) };
+}
+/** a combination's prize at a poker level: the money grows by POKER_LEVEL_BONUS per level, the items stay */
+export function pokerPay(hand: PokerHand, level: number): Reward {
+  const base = pokerHandDef(hand).pay;
+  if (!base.currencies) return base;
+  const k = 1 + POKER_LEVEL_BONUS * Math.min(level, POKER_MAX_LEVEL);
+  const currencies = Object.fromEntries(Object.entries(base.currencies).map(([c, v]) => [c, Math.round((v ?? 0) * k * 100) / 100]));
+  return { ...base, currencies };
+}

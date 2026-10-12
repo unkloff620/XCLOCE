@@ -229,5 +229,5 @@ export function normalizeLook(v: unknown): Look {
 }
 
 /* ---------------- подсказки [?] ---------------- */
-export const HELP_TOPICS = ["bosses", "boss", "yard", "slots", "home", "home-menu", "yard-menu", "exchange", "locations", "clans", "shop", "computer", "talents", "tutorial", "blackjack", "zonk", "upgrader"] as const;
+export const HELP_TOPICS = ["bosses", "boss", "yard", "slots", "home", "home-menu", "yard-menu", "exchange", "locations", "clans", "shop", "computer", "talents", "tutorial", "blackjack", "zonk", "upgrader", "poker"] as const;
 export type HelpTopic = (typeof HELP_TOPICS)[number];
