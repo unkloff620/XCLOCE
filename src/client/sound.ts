@@ -106,6 +106,7 @@ export function unlockAudioOnGesture() {
 const SAMPLE_URLS = {
   music: "/assets/sound/chanson.mp3",
   battle: "/assets/sound/battle.mp3",
+  yard: "/assets/sound/yard.mp3",
   door: "/assets/sound/door.mp3",
   keys: "/assets/sound/keys.mp3",
   punch: "/assets/sound/punch.mp3",
@@ -123,11 +124,13 @@ type SampleId = string;
 /**
  * The music files: each is one period with a bit of its end before it and of its start after it, so the loop is
  * exactly that period whatever padding the decoder adds. `gain` brings each to the level of the rest of the sound.
- * calm — chanson (tools/sound/build-prison-sounds.py); battle — the blatnoy gallop of boss fights (build-battle-music.py).
+ * calm — chanson (tools/sound/build-prison-sounds.py); battle — the blatnoy gallop of boss fights (build-battle-music.py);
+ * yard — nature in the yard: leaves in the wind and a few birds (build-yard-ambience.py).
  */
 const MUSIC_FILES = {
   calm: { id: "music", start: 0.5, end: 37.42308390022676, gain: 0.17 },
   battle: { id: "battle", start: 0.5, end: 25.76315192743764, gain: 0.14 },
+  yard: { id: "yard", start: 0.5, end: 48.5, gain: 0.55 },
 } as const;
 const buffers: Partial<Record<SampleId, AudioBuffer>> = {};
 let samplesLoading = false;
@@ -405,10 +408,12 @@ function battleStep(a: AudioContext, s: number, at: number) {
   if (s === 0) noise(a, at, 1.2, { freq: 5000, type: "highpass", vol: 0.12, out });
 }
 
-export type MusicTrack = "calm" | "battle";
+export type MusicTrack = "calm" | "battle" | "yard";
 const TRACKS: Record<MusicTrack, { step: number; bars: number; play: (a: AudioContext, s: number, at: number) => void }> = {
   calm: { step: STEP, bars: 8, play: calmStep },
   battle: { step: B_STEP, bars: 8, play: battleStep },
+  // nature has no synthesized stand-in: quiet until its file is in
+  yard: { step: STEP, bars: 8, play: () => undefined },
 };
 let track: MusicTrack = "calm";
 

@@ -7,6 +7,7 @@ import { ItemArt } from "../art/items.tsx";
 import { YARD_DROPS } from "../../content/yard.ts";
 import { clock } from "../format.ts";
 import { haptic } from "../telegram.ts";
+import { setMusicTrack } from "../sound.ts";
 import Link from "next/link";
 import { Icon } from "../art/icons.tsx";
 import { DriftingSky } from "../art/sky.tsx";
@@ -40,6 +41,11 @@ export function YardScreen() {
   useEffect(() => {
     void load();
   }, [load, state?.yard.count]);
+  // the yard sounds like outdoors: leaves in the wind and birds instead of the music; the music comes back on leaving
+  useEffect(() => {
+    setMusicTrack("yard");
+    return () => setMusicTrack("calm");
+  }, []);
   // when the timer runs out, look again
   useEffect(() => {
     if (data?.nextAt && now >= data.nextAt + 500) void load();
