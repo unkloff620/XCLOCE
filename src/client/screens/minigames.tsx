@@ -3,7 +3,7 @@
  * Мини-игры двора (пока кнопками, потом станут объектами во дворе): блэкджек, зонк (кости) и апгрейдер находок.
  * Правила и выплаты — content/games.ts, карты и кости — на сервере (server/systems/games.ts).
  */
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import { useGame } from "../store.tsx";
 import { Coin, Modal, RewardChips } from "../ui.tsx";
 import { Icon } from "../art/icons.tsx";
@@ -73,7 +73,7 @@ const PIPS: Record<number, [number, number][]> = {
 function DieFace({ v }: { v: number }) {
   return (
     <svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true">
-      {PIPS[v].map(([x, y], i) => <circle key={i} cx={x} cy={y} r="9.5" fill={v === 1 ? "#e8173c" : "#1e1006"} />)}
+      {(PIPS[v] ?? []).map(([x, y], i) => <circle key={i} cx={x} cy={y} r="9.5" fill={v === 1 ? "#e8173c" : "#1e1006"} />)}
     </svg>
   );
 }
@@ -167,9 +167,16 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
   const active = state?.games?.zonk.active ?? null;
   const [last, setLast] = useState<GameView | null>(null);
   const g = active ?? last;
-  const [pick, setPick] = useState<number[]>([]);
-  useEffect(() => setPick([]), [g?.roll?.join(","), g?.status]);
   const roll = g?.roll ?? [];
+  // the picked dice belong to one roll: a new roll (fewer dice) starts with nothing picked — in the same render, so a
+  // stale index never points past the new roll
+  const rollKey = `${g?.id}:${g?.status}:${g?.round}:${g?.history?.length ?? 0}:${roll.join(",")}`;
+  const [sel, setSel] = useState<{ key: string; idx: number[] }>({ key: "", idx: [] });
+  const pick = sel.key === rollKey ? sel.idx.filter((i) => i < roll.length) : [];
+  const setPick = (f: number[] | ((p: number[]) => number[])) => setSel((s0) => {
+    const cur = s0.key === rollKey ? s0.idx : [];
+    return { key: rollKey, idx: typeof f === "function" ? f(cur) : f };
+  });
   const picked = pick.map((i) => roll[i]);
   const pts = picked.length ? zonkScore(picked) : null;
   const playing = g?.status === "active";
