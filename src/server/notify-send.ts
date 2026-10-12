@@ -71,6 +71,12 @@ async function textFor(q: Queryable, n: Due, now: number): Promise<string | null
       if (!k) return null;
       return `📦 Тебе прислали нычки: ${k} шт.\nЗагляни в «Сообщения» дома и забери подарки!`;
     }
+    case "bj_invite": {
+      const [i] = await q.query<{ n: number }>("SELECT COUNT(*)::int AS n FROM bj_invites WHERE player_id=$1 AND created_at > now() - interval '15 minutes'", [n.player_id]);
+      if (!Number(i?.n ?? 0)) return null;
+      const from = typeof n.meta.from === "string" ? n.meta.from : "Соклановец";
+      return `🃏 ${from} зовёт тебя за стол блэкджека во дворе!\nЗаходи — место держат 15 минут.`;
+    }
     default:
       return null;
   }

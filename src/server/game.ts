@@ -12,6 +12,7 @@ import * as clans from "./systems/clans.ts";
 import * as daily from "./systems/daily.ts";
 import * as extras from "./systems/extras.ts";
 import * as games from "./systems/games.ts";
+import * as bj from "./systems/blackjack.ts";
 import * as home from "./systems/home.ts";
 import * as quests from "./systems/quests.ts";
 import * as notify from "./systems/notify.ts";
@@ -52,7 +53,7 @@ export const ACTIONS = [
   "daily_claim", "sell", "rename", "slots_spin",
   "equipment_upgrade", "talent_up", "talent_reset", "room_buy", "room_set", "look_set", "decor_set", "decor_save", "piece_buy", "help_seen",
   "quest_claim", "quest_chest", "notify_set", "achievement_claim", "prize_claim", "clan_edit",
-  "game_start", "bj_move", "zonk_move", "poker_play", "upgrade", "up_sell", "up_take",
+  "game_start", "zonk_move", "poker_play", "bj_open", "bj_invite", "bj_join", "bj_decline", "bj_leave", "bj_bet", "bj_unbet", "bj_deal", "bj_move", "upgrade", "up_sell", "up_take",
   "clan_cancel", "clan_accept", "clan_reject", "stash_collect", "stash_wish", "stash_gift", "stash_accept",
 ] as const;
 export type ActionType = (typeof ACTIONS)[number];
@@ -134,8 +135,16 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "achievement_claim": return achievements.claimAchievement(ctx, str(body.id, "id", 40));
     case "prize_claim": return rating.claimPrize(ctx, num(body.id, "id"));
     case "clan_edit": return clans.editClan(ctx, str(body.name, "name", 40), str(body.emblem, "emblem", 20), str(body.color, "color", 10), typeof body.description === "string" ? body.description.slice(0, 400) : "");
-    case "game_start": return games.startGame(ctx, oneOf(body.game, ["blackjack", "zonk"] as const, "game"));
-    case "bj_move": return games.bjMove(ctx, oneOf(body.move, ["hit", "stand"] as const, "move"));
+    case "game_start": return games.startGame(ctx, oneOf(body.game, ["zonk"] as const, "game"));
+    case "bj_open": return bj.bjOpen(ctx);
+    case "bj_invite": return bj.bjInvite(ctx, num(body.playerId, "playerId"));
+    case "bj_join": return bj.bjJoin(ctx, num(body.inviteId, "inviteId"));
+    case "bj_decline": return bj.bjDecline(ctx, num(body.inviteId, "inviteId"));
+    case "bj_leave": return bj.bjLeave(ctx);
+    case "bj_bet": return bj.bjBet(ctx, body.free === true ? 0 : num(body.bet, "bet"), body.pp === undefined ? 0 : num(body.pp, "pp"), body.t3 === undefined ? 0 : num(body.t3, "t3"), body.free === true);
+    case "bj_unbet": return bj.bjUnbet(ctx);
+    case "bj_deal": return bj.bjDealNow(ctx);
+    case "bj_move": return bj.bjMove(ctx, oneOf(body.move, ["hit", "stand", "double", "split"] as const, "move"));
     case "zonk_move": return games.zonkMove(ctx, Array.isArray(body.pick) ? body.pick.slice(0, 6).map((x) => Number(x)) : [], oneOf(body.then, ["roll", "bank"] as const, "then"));
     case "poker_play": return games.playPoker(ctx);
     case "upgrade": return games.upgrade(

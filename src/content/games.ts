@@ -1,6 +1,6 @@
 /*
- * Мини-игры во дворе: блэкджек, зонк (кости) и апгрейдер находок.
- * Блэкджек — 3 бесплатные партии в день, дальше 2 USD; зонк — 1 бесплатная, дальше 2 USD. Выигрыши небольшие.
+ * Мини-игры во дворе: блэкджек (общий стол до 6 игроков, ставки), зонк (кости), покер и апгрейдер находок.
+ * Зонк — 1 бесплатная игра в день, дальше 2 USD.
  * Апгрейдер: находку из двора (или несколько одинаковых) пробуем превратить в вещь дороже; шанс = стоимость ставки /
  * стоимость цели × 0,9, не больше 75%. Проигрыш — ставка сгорает.
  * Здесь только правила и числа; сервер (server/systems/games.ts) раздаёт карты и кидает кости.
@@ -8,10 +8,9 @@
 import type { Currency } from "./currencies.ts";
 import type { Reward } from "./rewards.ts";
 
-export type GameKind = "blackjack" | "zonk";
+export type GameKind = "zonk";
 export interface GameRules { freePerDay: number; price: { currency: Currency; amount: number }; title: string }
 export const GAME_RULES: Record<GameKind, GameRules> = {
-  blackjack: { freePerDay: 3, price: { currency: "USD", amount: 2 }, title: "Блэкджек" },
   zonk: { freePerDay: 1, price: { currency: "USD", amount: 2 }, title: "Зонк" },
 };
 
@@ -33,21 +32,66 @@ export function handValue(cards: Card[]): number {
 export const isBlackjack = (cards: Card[]) => cards.length === 2 && handValue(cards) === 21;
 
 export type BjOutcome = "blackjack" | "win" | "push" | "lose";
-/** what a free and a paid game pay for each outcome (a paid push gives the stake back) */
-export const BJ_PAY: Record<"free" | "paid", Record<BjOutcome, Reward>> = {
-  free: { blackjack: { currencies: { RUB: 150 } }, win: { currencies: { RUB: 100 } }, push: { currencies: { RUB: 30 } }, lose: {} },
-  paid: { blackjack: { currencies: { USD: 4.6 } }, win: { currencies: { USD: 3.6 } }, push: { currencies: { USD: 2 } }, lose: {} },
-};
 export const BJ_TITLES: Record<BjOutcome, string> = { blackjack: "Блэкджек!", win: "Победа!", push: "Ничья", lose: "Проигрыш" };
 
-/** the result once the player stands (the dealer has drawn to 17) */
-export function bjOutcome(player: Card[], dealer: Card[]): BjOutcome {
+/** the result of a hand against the dealer once both are done (natural = the first two cards, not after a split) */
+export function bjOutcome(player: Card[], dealer: Card[], split = false): BjOutcome {
   const p = handValue(player), d = handValue(dealer);
   if (p > 21) return "lose";
-  if (isBlackjack(player) && !isBlackjack(dealer)) return "blackjack";
-  if (isBlackjack(dealer) && !isBlackjack(player)) return "lose";
+  const pBj = !split && isBlackjack(player);
+  if (pBj && !isBlackjack(dealer)) return "blackjack";
+  if (isBlackjack(dealer) && !pBj) return "lose";
   if (d > 21 || p > d) return "win";
   return p === d ? "push" : "lose";
+}
+
+/*
+ * Стол блэкджека во дворе: BJ_SEATS мест, хозяин стола зовёт игроков из своего клана на пустые места, все играют против
+ * дилера. Ставка BJ_BET.min…BJ_BET.max USD; сайды по желанию: «Идеальные пары» (две первые карты) и «21+3» (две
+ * первые карты + открытая карта дилера), каждый 0…BJ_SIDE_MAX USD. Выплаты как в казино: победа 1:1, блэкджек 3:2,
+ * ничья — ставка назад. Дилер добирает до 17 и стоит на мягких 17. Сплит — две карты одного достоинства (до 4 рук,
+ * тузы получают по одной карте), удвоение — на двух картах. Бесплатная ставка (BJ_FREE в день) — 1 USD за счёт
+ * заведения: выигрыш платится, проигрыш ничего не стоит; её нельзя удвоить или разбить.
+ */
+export const BJ_SEATS = 6;
+export const BJ_BET = { min: 1, max: 25 };
+export const BJ_SIDE_MAX = 10;
+export const BJ_FREE = { perDay: 3, bet: 1 };
+export const BJ_MAX_HANDS = 4;
+/** time for a move; time for the others to bet once the first bet is on the table */
+export const BJ_TURN_MS = 30_000;
+export const BJ_BET_MS = 25_000;
+/** what one stake returns for each outcome (the stake included) */
+export const BJ_RETURN: Record<BjOutcome, number> = { blackjack: 2.5, win: 2, push: 1, lose: 0 };
+
+export const cardValue = (c: Card) => Math.min(10, c.r);
+export const canSplitCards = (cards: Card[]) => cards.length === 2 && cardValue(cards[0]) === cardValue(cards[1]);
+
+/** «Идеальные пары»: a pair in the first two cards — mixed colours 6:1, same colour 12:1, same suit 25:1 */
+export type PairHit = "perfect" | "colored" | "mixed";
+export const PP_PAY: Record<PairHit, number> = { mixed: 6, colored: 12, perfect: 25 };
+export const PP_TITLES: Record<PairHit, string> = { mixed: "Разноцветная пара", colored: "Цветная пара", perfect: "Идеальная пара" };
+const red = (c: Card) => c.s === 1 || c.s === 2;
+export function perfectPairs(a: Card, b: Card): PairHit | null {
+  if (a.r !== b.r) return null;
+  if (a.s === b.s) return "perfect";
+  return red(a) === red(b) ? "colored" : "mixed";
+}
+
+/** «21+3»: the two cards and the dealer's open card as a three-card poker hand */
+export type T3Hit = "suited" | "sflush" | "trips" | "straight" | "flush";
+export const T3_PAY: Record<T3Hit, number> = { flush: 5, straight: 10, trips: 30, sflush: 40, suited: 100 };
+export const T3_TITLES: Record<T3Hit, string> = { flush: "Флеш", straight: "Стрит", trips: "Тройка", sflush: "Стрит-флеш", suited: "Тройка одной масти" };
+export function twentyOnePlus3(a: Card, b: Card, up: Card): T3Hit | null {
+  const cs3 = [a, b, up];
+  const flush = cs3.every((c) => c.s === a.s);
+  const trips = cs3.every((c) => c.r === a.r);
+  if (trips) return flush ? "suited" : "trips";
+  const rs = cs3.map((c) => c.r).sort((x, y) => x - y);
+  const straight = (rs[1] === rs[0] + 1 && rs[2] === rs[1] + 1) || rs.join(",") === "1,12,13";
+  if (straight && flush) return "sflush";
+  if (straight) return "straight";
+  return flush ? "flush" : null;
 }
 
 /* ---------------- zonk (кости, «Farkle») ---------------- */
@@ -92,11 +136,13 @@ export function zonkHasScore(dice: number[]): boolean {
   return false;
 }
 
-/** the prize for the game's total over ZONK_ROUNDS attempts: a free game pays rubles, a paid one dollars (a little less than the stake on average) */
+/** the prize for the game's total over ZONK_ROUNDS attempts: a free game pays rubles, a paid one dollars (1000 points = 0.5 USD) */
+export const ZONK_USD_PER_1000 = 0.5;
+export const ZONK_RUB_PER_1000 = 50;
 export function zonkPrize(points: number, paid: boolean): Reward {
   if (points <= 0) return {};
-  if (paid) return { currencies: { USD: Math.round((points / 4000) * 10) / 10 } };
-  return { currencies: { RUB: Math.round(points / 40) } };
+  if (paid) return { currencies: { USD: Math.round((points / 1000) * ZONK_USD_PER_1000 * 100) / 100 } };
+  return { currencies: { RUB: Math.round((points / 1000) * ZONK_RUB_PER_1000) } };
 }
 
 /* ---------------- upgrader ---------------- */

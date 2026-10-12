@@ -67,6 +67,8 @@ export interface GameState {
   upgradeSpins?: { freeLeft: number; freePerDay: number; price: { currency: Currency; amount: number } };
   /** poker: hands left today, the price, the poker experience and level (to: null at the top level) */
   poker?: PokerInfo;
+  /** invitations to a blackjack table waiting for me */
+  bjInvites?: number;
   /** how many times each set of stashes was collected (by set number) */
   stashSets: Record<number, number>;
   /** нычки I ask other players for, and who sent me what lately */
@@ -74,10 +76,25 @@ export interface GameState {
   stashGifts?: { id: number; fromId: number; from: string; itemId: string; at: number }[];
   /** gifts waiting in «Сообщения» to be accepted */
   stashInbox?: { id: number; fromId: number; from: string; itemId: string; at: number }[];
-  games: Record<"blackjack" | "zonk", { freeLeft: number; freePerDay: number; price: { currency: Currency; amount: number }; active: GameView | null }>;
+  games: Record<"zonk", { freeLeft: number; freePerDay: number; price: { currency: Currency; amount: number }; active: GameView | null }>;
   rename: { price: { currency: Currency; amount: number }; nextAt: number | null; min: number; max: number };
   /** inventory sale prices in RUB */
   sell: Record<string, number>;
+}
+export interface BjCardV { r: number; s: number; n: number }
+export interface BjHandV { cards: BjCardV[]; bet: number; doubled?: boolean; split?: boolean; done: boolean; outcome?: "blackjack" | "win" | "push" | "lose"; pay?: number; value: number; title: string | null }
+export interface BjSeatV {
+  pid: number; name: string; me: boolean; bet: number; pp: number; t3: number; free: boolean; ready: boolean; left: boolean;
+  side: { pp: string | null; t3: string | null; pay: number } | null; won: number | null; staked: number | null; hands: BjHandV[];
+}
+export interface BjTableV {
+  id: number; hostId: number; phase: "betting" | "playing"; round: number; settled: boolean; deadline: number | null; turn: { seat: number; hand: number } | null;
+  dealer: BjCardV[]; dealerHidden: { n: number } | null; dealerValue: number; seats: (BjSeatV | null)[];
+}
+export interface BjView {
+  table: BjTableV | null; seat: number | null; invites: { id: number; tableId: number; from: string }[];
+  free: { left: number; perDay: number; bet: number }; clan: { id: number; name: string; busy: boolean; invited: boolean }[];
+  moves?: { hit: boolean; stand: boolean; double: boolean; split: boolean }; now?: number;
 }
 export interface PokerInfo { left: number; perDay: number; price: { currency: Currency; amount: number }; xp: number; level: number; from: number; to: number | null }
 export interface PokerPlay {
@@ -86,12 +103,10 @@ export interface PokerPlay {
 }
 export interface GameResult { outcome: string; title: string; reward: Granted | null; points?: number }
 export interface GameView {
-  id: number; kind: "blackjack" | "zonk"; paid: boolean; status: "active" | "done"; result: GameResult | null;
-  /** blackjack */
-  player?: { r: number; s: number }[]; dealer?: { r: number; s: number }[]; dealerHidden?: number; playerValue?: number; dealerValue?: number;
+  id: number; kind: "zonk"; paid: boolean; status: "active" | "done"; result: GameResult | null;
   /** zonk */
   roll?: number[]; turn?: number; left?: number; history?: { kept: number[]; points: number }[];
-  round?: number; rounds?: number; total?: number; last?: { points: number; zonk: boolean } | null;
+  round?: number; rounds?: number; total?: number; last?: { points: number; zonk: boolean } | null; scores?: { points: number; zonk: boolean }[];
 }
 export interface Hit { seq: number; playerId: number; name: string; weapon: string; damage: number; phrase: number; at: number; crit?: boolean; count?: number }
 export interface FightView {

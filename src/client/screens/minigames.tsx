@@ -13,9 +13,10 @@ import { haptic } from "../telegram.ts";
 import { sfx } from "../sound.ts";
 import { full } from "../format.ts";
 import type { GameView, PokerPlay } from "../api.ts";
+import { BlackjackWindow } from "./blackjack.tsx";
 import { itemById } from "../../content/items.ts";
 import {
-  BJ_PAY, GAME_RULES, ITEM_VALUES, RANKS, SUITS, UPGRADE_MODES, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue, zonkScore, zonkPrize, ZONK_ROUNDS,
+  GAME_RULES, ZONK_RUB_PER_1000, ZONK_USD_PER_1000, ITEM_VALUES, RANKS, SUITS, UPGRADE_MODES, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue, zonkScore, zonkPrize, ZONK_ROUNDS,
   POKER_HANDS, POKER_LEVEL_BONUS, POKER_MAX_LEVEL, POKER_RULES, pokerPay,
   type GameKind, type PokerHand, type UpgradeMode,
 } from "../../content/games.ts";
@@ -51,8 +52,8 @@ function ResultLine({ g }: { g: GameView }) {
   );
 }
 
-/* ---------------- blackjack ---------------- */
-function PlayingCard({ r, s, back, i }: { r?: number; s?: number; back?: boolean; i: number }) {
+/* ---------------- a playing card (poker) ---------------- */
+export function PlayingCard({ r, s, back, i }: { r?: number; s?: number; back?: boolean; i: number }) {
   if (back || r === undefined || s === undefined) return <span className="pcard back" style={{ ["--i" as string]: i }} />;
   const red = s === 1 || s === 2;
   return (
@@ -61,66 +62,6 @@ function PlayingCard({ r, s, back, i }: { r?: number; s?: number; back?: boolean
       <i>{SUITS[s]}</i>
       <b className="pcard-low">{RANKS[r]}</b>
     </span>
-  );
-}
-
-function BlackjackHelp() {
-  const p = BJ_PAY;
-  return (
-    <Help topic="blackjack" title="Блэкджек">
-      <p>Набери больше дилера, но не больше 21. Картинки — 10, туз — 1 или 11. «Ещё» — взять карту, «Хватит» — дилер добирает до 17.</p>
-      <p>Бесплатно — {GAME_RULES.blackjack.freePerDay} партии в день, дальше {GAME_RULES.blackjack.price.amount} USD за партию.</p>
-      <ul className="small">
-        <li>Бесплатная: победа — {p.free.win.currencies?.RUB} RUB, блэкджек — {p.free.blackjack.currencies?.RUB} RUB, ничья — {p.free.push.currencies?.RUB} RUB.</li>
-        <li>Платная: победа — {p.paid.win.currencies?.USD} USD, блэкджек — {p.paid.blackjack.currencies?.USD} USD, ничья — ставка назад.</li>
-      </ul>
-    </Help>
-  );
-}
-
-export function BlackjackWindow({ onClose }: { onClose: () => void }) {
-  const { state, act, busy } = useGame();
-  const active = state?.games?.blackjack.active ?? null;
-  const [last, setLast] = useState<GameView | null>(null);
-  const g = active ?? last;
-  const run = async (type: string, body: Record<string, unknown>) => {
-    haptic.tap();
-    sfx("tap");
-    const r = await act<GameView>(type, body);
-    if (r) {
-      setLast(r);
-      if (r.status === "done") {
-        if (r.result?.reward) { haptic.ok(); sfx("reward"); } else haptic.err();
-      }
-    }
-  };
-  const playing = g?.status === "active";
-  return (
-    <Modal title={<span className="title-row">Блэкджек <BlackjackHelp /></span>} onClose={onClose}>
-      <div className="mg-table bj">
-        <div className="bj-side">
-          <span className="tiny muted">Дилер{g ? <> · <b className="num">{g.dealerValue}</b>{playing ? "+?" : ""}</> : null}</span>
-          <div className="bj-hand">
-            {g ? <>{g.dealer!.map((c, i) => <PlayingCard key={i} i={i} r={c.r} s={c.s} />)}{Array.from({ length: g.dealerHidden ?? 0 }, (_, k) => <PlayingCard key={`h${k}`} i={g.dealer!.length + k} back />)}</> : <><PlayingCard i={0} back /><PlayingCard i={1} back /></>}
-          </div>
-        </div>
-        <div className="bj-side">
-          <div className="bj-hand">
-            {g ? g.player!.map((c, i) => <PlayingCard key={i} i={i} r={c.r} s={c.s} />) : <><PlayingCard i={0} back /><PlayingCard i={1} back /></>}
-          </div>
-          <span className="tiny muted">Ты{g ? <> · <b className={`num ${(g.playerValue ?? 0) > 21 ? "bust" : ""}`}>{g.playerValue}</b></> : null}{g?.paid ? " · платная" : g ? " · бесплатная" : ""}</span>
-        </div>
-      </div>
-      {g && <ResultLine g={g} />}
-      {playing ? (
-        <div className="row" style={{ gap: 8, marginTop: 10 }}>
-          <button className="btn big grow gold" disabled={busy === "bj_move"} onClick={() => run("bj_move", { move: "hit" })}>Ещё</button>
-          <button className="btn big grow red" disabled={busy === "bj_move"} onClick={() => run("bj_move", { move: "stand" })}>Хватит</button>
-        </div>
-      ) : (
-        <div style={{ marginTop: 10 }}><StartLine kind="blackjack" again={!!g} onStart={() => run("game_start", { game: "blackjack" })} /></div>
-      )}
-    </Modal>
   );
 }
 
@@ -153,12 +94,12 @@ const counts = (dice: number[]) => {
 const COMBOS: { key: string; dice: number[]; label: string; test: (n: number[], len: number) => boolean }[] = [
   { key: "1", dice: [1], label: "100", test: (n) => n[1] >= 1 },
   { key: "5", dice: [5], label: "50", test: (n) => n[5] >= 1 },
-  { key: "111", dice: [1, 1, 1], label: "1 000", test: (n) => n[1] >= 3 },
+  { key: "111", dice: [1, 1, 1], label: "1000", test: (n) => n[1] >= 3 },
   ...[2, 3, 4, 5, 6].map((f) => ({ key: `${f}${f}${f}`, dice: [f, f, f], label: String(f * 100), test: (n: number[]) => n[f] >= 3 })),
   { key: "4k", dice: [3, 3, 3, 3], label: "×2", test: (n) => n.some((x) => x >= 4) },
   { key: "5k", dice: [3, 3, 3, 3, 3], label: "×4", test: (n) => n.some((x) => x >= 5) },
   { key: "6k", dice: [3, 3, 3, 3, 3, 3], label: "×8", test: (n) => n.some((x) => x >= 6) },
-  { key: "str", dice: [1, 2, 3, 4, 5, 6], label: "1 500", test: (n, len) => len === 6 && n.slice(1).every((x) => x === 1) },
+  { key: "str", dice: [1, 2, 3, 4, 5, 6], label: "1500", test: (n, len) => len === 6 && n.slice(1).every((x) => x === 1) },
   { key: "pairs", dice: [2, 2, 4, 4, 6, 6], label: "750", test: (n, len) => len === 6 && n.filter((x) => x === 2).length === 3 },
 ];
 /** the dice worth keeping: everything that scores (all six for a straight or three pairs) */
@@ -174,16 +115,17 @@ function scatter(seed: number, i: number) {
     return x - Math.floor(x);
   };
   const col = i % 3, row = Math.floor(i / 3);
-  return { left: `${6 + col * 25 + r(1) * 8}%`, top: `${12 + row * 38 + r(2) * 12}%`, ["--rot" as string]: `${Math.round(r(3) * 70 - 35)}deg` };
+  return { left: `${6 + col * 25 + r(1) * 8}%`, top: `${20 + row * 36 + r(2) * 10}%`, ["--rot" as string]: `${Math.round(r(3) * 70 - 35)}deg` };
 }
 
 function ZonkHelp() {
+  const p = GAME_RULES.zonk;
   return (
     <Help topic="zonk" title="Зонк">
-      <p>В партии {ZONK_ROUNDS} попыток. В каждой бросаешь 6 костей и откладываешь очковые, потом решаешь: бросить оставшиеся — рискнуть ради большего — или записать очки попытки в общий счёт. Бросок без единой очковой кости — «Зонк»: очки этой попытки сгорают, попытка потрачена. Отложил все шесть — бросаешь все шесть заново.</p>
-      <p>После {ZONK_ROUNDS}-й попытки общий счёт превращается в награду.</p>
-      <p>Таблица справа подсказывает: строка светится, если такая комбинация есть в броске, и горит ярко, когда ты её выбрал. «Подсказка» сама выберет все очковые кости.</p>
-      <p>Бесплатно — {GAME_RULES.zonk.freePerDay} игра в день: общий счёт / 40 = рубли (4000 очков = 100 RUB). Дальше {GAME_RULES.zonk.price.amount} USD за игру: 4000 очков = 1 USD.</p>
+      <p>В партии {ZONK_ROUNDS} попыток. В каждой бросаешь 6 костей и забираешь очковые (нажми на кость — она уходит с поля наверх), потом решаешь: бросить оставшиеся — рискнуть ради большего — или записать очки попытки. Бросок без единой очковой кости — «Зонк»: очки этой попытки сгорают. Забрал все шесть — бросаешь все шесть заново.</p>
+      <p>Очки каждой попытки записываются в столбик слева. Награда — только когда сыграны все {ZONK_ROUNDS} попыток: общий счёт превращается в деньги.</p>
+      <p>Бесплатно — {p.freePerDay} игра в день: 1000 очков = {ZONK_RUB_PER_1000} RUB. Дальше {p.price.amount} USD за игру: 1000 очков = {ZONK_USD_PER_1000} USD.</p>
+      <p>Таблица справа: строка светится, если такая комбинация есть в броске, и горит ярко, когда ты её забрал. «?» сама заберёт все очковые кости.</p>
     </Help>
   );
 }
@@ -199,6 +141,27 @@ function Cup() {
   );
 }
 
+function RollIcon() {
+  return (
+    <svg viewBox="0 0 48 40" width="34" height="28" aria-hidden="true">
+      <rect x="3" y="10" width="22" height="22" rx="5" fill="#fffdf6" stroke="#1e1006" strokeWidth="3" transform="rotate(-14 14 21)" />
+      <circle cx="10" cy="17" r="2.4" fill="#1e1006" /><circle cx="17" cy="24" r="2.4" fill="#1e1006" />
+      <rect x="22" y="5" width="22" height="22" rx="5" fill="#fffdf6" stroke="#1e1006" strokeWidth="3" transform="rotate(12 33 16)" />
+      <circle cx="28" cy="11" r="2.4" fill="#1e1006" /><circle cx="33" cy="16" r="2.4" fill="#e8173c" /><circle cx="38" cy="21" r="2.4" fill="#1e1006" />
+      <path d="M8 37 q8 -4 16 0 M28 33 q6 -3 12 0" stroke="#1e1006" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.6" />
+    </svg>
+  );
+}
+function BankIcon() {
+  return (
+    <svg viewBox="0 0 40 40" width="28" height="28" aria-hidden="true">
+      <rect x="6" y="4" width="26" height="32" rx="4" fill="#fffdf6" stroke="#1e1006" strokeWidth="3" />
+      <path d="M11 12 H27 M11 18 H22" stroke="#1e1006" strokeWidth="2.5" strokeLinecap="round" opacity="0.5" />
+      <path d="M12 26 l5 5 l11 -12" stroke="#13a35a" strokeWidth="4.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function ZonkWindow({ onClose }: { onClose: () => void }) {
   const { state, act, busy } = useGame();
   const active = state?.games?.zonk.active ?? null;
@@ -210,7 +173,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
   const picked = pick.map((i) => roll[i]);
   const pts = picked.length ? zonkScore(picked) : null;
   const playing = g?.status === "active";
-  const seed = (g?.id ?? 1) * 13 + (g?.history?.length ?? 0) * 7;
+  const seed = (g?.id ?? 1) * 13 + (g?.history?.length ?? 0) * 7 + (g?.round ?? 1) * 31;
   const run = async (type: string, body: Record<string, unknown>) => {
     haptic.tap();
     sfx("tap");
@@ -222,41 +185,60 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
       }
     }
   };
-  const toggle = (i: number) => setPick((p) => (p.includes(i) ? p.filter((x) => x !== i) : [...p, i]));
+  const toggle = (i: number) => { haptic.tap(); setPick((p) => (p.includes(i) ? p.filter((x) => x !== i) : [...p, i])); };
   const turn = (g?.turn ?? 0) + (pts ?? 0);
   const nRoll = counts(playing ? roll : []);
   const nPick = counts(picked);
   const hints = playing ? new Set(bestPick(roll)) : new Set<number>();
-  const kept = (g?.history ?? []).flatMap((h) => h.kept);
+  const kept = playing ? (g?.history ?? []).flatMap((h) => h.kept) : [];
+  const rounds = g?.rounds ?? ZONK_ROUNDS;
+  const scores = g?.scores ?? [];
+  const round = Math.min(g?.round ?? 1, rounds);
+  const total = playing ? g?.total ?? 0 : g?.result?.points ?? g?.total ?? 0;
+  const left = (() => { const l = (g?.left ?? 6) - pick.length; return l <= 0 ? 6 : l; })();
+  const status = !g ? "Сыграй 10 попыток — общий счёт превратится в награду"
+    : !playing ? (g.result?.title ?? "")
+    : pick.length === 0 ? "Нажми на очковые кости (подсвечены), чтобы забрать"
+    : pts === null ? "Среди забранных есть кости без очков — верни их"
+    : null;
   return (
-    <Modal title={<span className="title-row">Зонк <ZonkHelp /></span>} onClose={onClose} wide>
+    <Modal title={<span className="title-row">Зонк <ZonkHelp /></span>} onClose={onClose} maxWidth={500}>
+      <div className="zk-head">
+        <span>ПОПЫТКА <b className="num">{g ? round : 0}/{rounds}</b></span>
+        <span>ВСЕГО <b className="num">{full(total)}</b></span>
+        <span>ХОД <b className="num">{full(playing ? turn : 0)}</b></span>
+      </div>
       <div className="zk">
         <div className="zk-board">
-          <div className="zk-score">
-            <span className="tiny">ОЧКИ ХОДА</span>
-            <b className="display num">{full(playing ? turn : 0)}</b>
+          {/* every attempt's points, top to bottom */}
+          <div className="zk-rounds" aria-label="Очки попыток">
+            {Array.from({ length: rounds }, (_, i) => {
+              const sc = scores[i];
+              const now = playing && i === scores.length;
+              return (
+                <span key={i} className={`zk-rd ${sc ? (sc.zonk ? "zonk" : "ok") : ""} ${now ? "now" : ""}`}>
+                  <i>{i + 1}</i>
+                  <b className="num">{sc ? (sc.zonk ? "✕" : sc.points >= 1000 ? `${Math.round(sc.points / 100) / 10}k` : sc.points) : now ? "…" : ""}</b>
+                </span>
+              );
+            })}
           </div>
-          {g && (
-            <div className="zk-total">
-              <span className="tiny">ПОПЫТКА <b className="num">{Math.min(g.round ?? 1, g.rounds ?? 10)}/{g.rounds ?? 10}</b></span>
-              <span className="tiny">ВСЕГО <b className="num">{full(playing ? g.total ?? 0 : g.result?.points ?? g.total ?? 0)}</b></span>
-            </div>
-          )}
+          {/* what is taken this attempt: earlier throws (fixed) and the dice picked now (tap to put back) */}
+          <div className="zk-tray" aria-label="Забрано">
+            {kept.map((v, i) => <span key={`k${i}`} className="zk-tray-die old"><DieFace v={v} /></span>)}
+            {pick.map((i) => <button key={`p${i}`} className="zk-tray-die" onClick={() => toggle(i)} aria-label={`вернуть ${roll[i]}`}><DieFace v={roll[i]} /></button>)}
+          </div>
           {playing && g?.last && (
-            <div key={`${g.round}-${g.last.points}`} className={`zk-last ${g.last.zonk ? "zonk" : ""}`}>{g.last.zonk ? (g.last.points ? `Зонк! −${full(g.last.points)}` : "Зонк!") : `+${full(g.last.points)} в счёт`}</div>
+            <div key={`${g.round}-${scores.length}`} className={`zk-last ${g.last.zonk ? "zonk" : ""}`}>{g.last.zonk ? (g.last.points ? `Зонк! −${full(g.last.points)}` : "Зонк!") : `+${full(g.last.points)} в счёт`}</div>
           )}
           {playing
-            ? roll.map((v, i) => <Die key={`${seed}-${i}`} v={v} on={pick.includes(i)} hint={hints.has(i) && !pick.includes(i)} onClick={() => toggle(i)} style={scatter(seed, i)} />)
+            ? roll.map((v, i) => (pick.includes(i) ? null : <Die key={`${seed}-${i}`} v={v} hint={hints.has(i)} onClick={() => toggle(i)} style={scatter(seed, i)} />))
             : !g && [1, 2, 3, 4, 5, 6].map((v, i) => <Die key={v} v={v} style={scatter(3, i)} />)}
-          {g?.status === "done" && <div className={`zk-over display ${g.result?.outcome === "zonk" ? "zonk" : ""}`}>{g.result?.outcome === "zonk" ? "ЗОНК!" : `+${full(g.result?.points ?? 0)}`}</div>}
+          {g?.status === "done" && <div className={`zk-over display ${g.result?.outcome === "zonk" ? "zonk" : ""}`}>{g.result?.outcome === "zonk" ? "ЗОНК!" : full(g.result?.points ?? 0)}</div>}
           <span className="zk-cup"><Cup /></span>
-          {/* the kept dice line up along the left edge, like on the real board */}
-          <div className="zk-kept" aria-label="Отложено">
-            {Array.from({ length: 12 }, (_, i) => <span key={i} className="zk-slot">{kept[i] !== undefined && <Die v={kept[i]} small />}</span>)}
-          </div>
         </div>
         <div className="zk-table">
-          <b className="tiny zk-table-h">УДАЧНЫЕ КОМБИНАЦИИ</b>
+          <b className="tiny zk-table-h">КОМБИНАЦИИ</b>
           {COMBOS.map((c) => {
             const can = c.test(nRoll, roll.length);
             const on = picked.length > 0 && c.test(nPick, picked.length);
@@ -269,27 +251,29 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
           })}
         </div>
       </div>
-      {playing && (
-        <span className="tiny muted zk-note">
-          {pick.length === 0 ? "Нажми на очковые кости (они подсвечены), чтобы отложить" : pts === null ? "Среди выбранных есть кости без очков" : <>Отложено: +{pts}. Записать — и в счёте будет {full((g?.total ?? 0) + turn)}, это сейчас <RewardChips r={zonkPrize((g?.total ?? 0) + turn, !!g?.paid)} size={13} /></>}
-        </span>
-      )}
-      {g && <ResultLine g={g} />}
+      {/* one fixed-height line: the window never jumps */}
+      <div className="zk-status">
+        {status !== null ? <span className="tiny">{status}</span> : (
+          <span className="tiny zk-status-row">Забрано +{pts} → в счёте будет {full((g?.total ?? 0) + turn)} = <RewardChips r={zonkPrize((g?.total ?? 0) + turn, !!g?.paid)} size={13} /></span>
+        )}
+        {!playing && g?.result?.reward && <RewardChips r={g.result.reward} size={14} />}
+      </div>
       {playing ? (
-        <div className="row" style={{ gap: 6, marginTop: 8 }}>
-          <button className="btn dark" disabled={busy === "zonk_move"} onClick={() => setPick(bestPick(roll))}>Подсказка</button>
-          <button className="btn big grow gold" disabled={busy === "zonk_move" || pts === null} onClick={() => run("zonk_move", { pick, then: "roll" })}>
-            Бросить {(() => { const left = (g?.left ?? 6) - pick.length; return left <= 0 ? 6 : left; })()}
+        <div className="zk-ctrl">
+          <button className="zk-q" disabled={busy === "zonk_move"} onClick={() => setPick(bestPick(roll))} aria-label="Подсказка" title="Подсказка: забрать все очковые">?</button>
+          <button className="zk-act gold" disabled={busy === "zonk_move" || pts === null} onClick={() => run("zonk_move", { pick, then: "roll" })}>
+            <RollIcon /><small>Бросить {left}</small>
           </button>
-          <button className="btn big grow green" disabled={busy === "zonk_move" || pts === null} onClick={() => run("zonk_move", { pick, then: "bank" })}>{(g?.round ?? 1) >= (g?.rounds ?? 10) ? "Забрать" : "Записать"}</button>
+          <button className="zk-act green" disabled={busy === "zonk_move" || pts === null} onClick={() => run("zonk_move", { pick, then: "bank" })}>
+            <BankIcon /><small>{round >= rounds ? "Записать и закончить" : "Записать"}</small>
+          </button>
         </div>
       ) : (
-        <div style={{ marginTop: 10 }}><StartLine kind="zonk" again={!!g} onStart={() => run("game_start", { game: "zonk" })} /></div>
+        <div style={{ marginTop: 8 }}><StartLine kind="zonk" again={!!g} onStart={() => run("game_start", { game: "zonk" })} /></div>
       )}
     </Modal>
   );
 }
-
 
 /* ---------------- poker ---------------- */
 function PokerHelp() {
@@ -554,10 +538,10 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
 export function YardGames() {
   const { state } = useGame();
   const [open, setOpen] = useState<"pick" | "blackjack" | "zonk" | "poker" | null>(null);
-  const bj = state?.games?.blackjack;
   const zk = state?.games?.zonk;
-  const free = (bj?.active || zk?.active) ? "идёт" : (bj?.freeLeft ?? 0) + (zk?.freeLeft ?? 0);
-  const note = (g: typeof bj, paid: string) => (g?.active ? "партия идёт — продолжить" : g && g.freeLeft > 0 ? `бесплатно: ${g.freeLeft}` : paid);
+  const invites = state?.bjInvites ?? 0;
+  const free = invites > 0 ? "♠" : zk?.active ? "идёт" : zk?.freeLeft ?? 0;
+  const note = (g: typeof zk, paid: string) => (g?.active ? "партия идёт — продолжить" : g && g.freeLeft > 0 ? `бесплатно: ${g.freeLeft}` : paid);
   return (
     <>
       <button className="yard-obj yard-table" onClick={() => setOpen("pick")} aria-label="Блэкджек, зонк и покер" title="Блэкджек, зонк и покер">
@@ -565,13 +549,13 @@ export function YardGames() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="yard-ring" src="/assets/yard/court-table-ring.webp" alt="" draggable={false} />
         <img src="/assets/yard/court-table.webp" alt="" draggable={false} />
-        {free !== 0 && <i className={`yg-badge ${free === "идёт" ? "live" : ""}`}>{free}</i>}
+        {free !== 0 && <i className={`yg-badge ${free === "идёт" || free === "♠" ? "live" : ""}`}>{free}</i>}
       </button>
       {open === "pick" && (
         <Modal title="Во что сыграем?" onClose={() => setOpen(null)}>
           <div className="game-pick">
             <button className="btn big block green" onClick={() => setOpen("blackjack")}>
-              Блэкджек<small>{note(bj, "партия — 2 USD")}</small>
+              Блэкджек<small>{invites > 0 ? `тебя зовут за стол (${invites})` : "стол до 6 игроков · ставки 1–25 USD"}</small>
             </button>
             <button className="btn big block gold" onClick={() => setOpen("zonk")}>
               Зонк<small>{note(zk, "игра — 2 USD")}</small>

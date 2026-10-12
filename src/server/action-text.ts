@@ -83,13 +83,20 @@ export function actionText(type: string, body: Row, result: unknown): string | n
     case "clan_accept": return `принял игрока #${body.playerId}`;
     case "clan_reject": return `отклонил заявку игрока #${body.playerId}`;
     case "game_start":
-    case "bj_move":
     case "zonk_move": {
-      const g = r as { kind?: string; paid?: boolean; status?: string; result?: { title?: string; reward?: unknown } | null; playerValue?: number; dealerValue?: number; turn?: number };
-      const name = g.kind === "zonk" ? "Зонк" : "Блэкджек";
-      if (g.status !== "done") return join(name, g.paid ? "платная" : "бесплатная", g.kind === "blackjack" ? `${g.playerValue} очков` : `${g.turn ?? 0} очков`);
-      return join(name, g.paid ? "платная" : "бесплатная", g.result?.title, grantedText(g.result?.reward) || "без выигрыша");
+      const g = r as { paid?: boolean; status?: string; result?: { title?: string; reward?: unknown } | null; turn?: number };
+      if (g.status !== "done") return join("Зонк", g.paid ? "платная" : "бесплатная", `${g.turn ?? 0} очков`);
+      return join("Зонк", g.paid ? "платная" : "бесплатная", g.result?.title, grantedText(g.result?.reward) || "без выигрыша");
     }
+    case "bj_open": return "открыл стол блэкджека";
+    case "bj_invite": return `позвал за стол игрока #${body.playerId}`;
+    case "bj_join": return "сел за стол блэкджека";
+    case "bj_decline": return "отказался от приглашения";
+    case "bj_leave": return "встал из-за стола";
+    case "bj_bet": return body.free === true ? "бесплатная ставка 1 USD" : join(`ставка ${fmt(body.bet)} USD`, n(body.pp) ? `пары ${fmt(body.pp)}` : "", n(body.t3) ? `21+3 ${fmt(body.t3)}` : "");
+    case "bj_unbet": return "снял ставку";
+    case "bj_deal": return "раздача";
+    case "bj_move": return ({ hit: "ещё", stand: "хватит", double: "удвоил", split: "разбил" } as Record<string, string>)[String(body.move)] ?? "";
     case "poker_play": return join("Покер", typeof r.title === "string" ? r.title : "", grantedText(r.reward) || "без выигрыша", r.gainedXp ? `+${fmt(r.gainedXp)} опыта покера` : "", r.levelUp ? "новый уровень" : "");
     case "upgrade": return join(`${item(r.from ?? body.stake)}${body.uid !== undefined ? " ★" : body.qty && n(body.qty) > 1 ? ` ×${fmt(body.qty)}` : ""} (${fmt(r.stakeValue)} ₽) → ${item(r.target)} ★ ${fmt(r.value)} ₽`, `шанс ${fmt(Math.round(n(r.chance) * 10000) / 100)}%`, r.won ? "получилось!" : "сгорело");
     case "stash_collect": return join(`собрал набор нычек #${r.count ?? ""} (${String(body.set)})`, grantedText(r.reward));

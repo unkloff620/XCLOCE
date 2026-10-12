@@ -12,6 +12,7 @@ import { touchActivity } from "../players.ts";
 import { dailyView } from "./daily.ts";
 import { renameView, slotsView } from "./extras.ts";
 import { gamesView, pokerView, upgradedView, upgradeSpinsView } from "./games.ts";
+import { bjInviteCount } from "./blackjack.ts";
 import { requestsView } from "./clans.ts";
 import { homeView, weaponTalents } from "./home.ts";
 import { tasksHint } from "./locations.ts";
@@ -92,6 +93,7 @@ export async function gameState(ctx: Ctx) {
     upgraded: await upgradedView(ctx.q, ctx.pid),
     upgradeSpins: await upgradeSpinsView(ctx.q, ctx.pid, ctx.now),
     poker: await pokerView(ctx.q, ctx.pid, ctx.now),
+    bjInvites: await bjInviteCount(ctx.q, ctx.pid, ctx.now),
     stashWish: await stashWish(ctx.q, ctx.pid),
     stashGifts: await giftsReceived(ctx.q, ctx.pid),
     stashInbox: await giftsReceived(ctx.q, ctx.pid, true),

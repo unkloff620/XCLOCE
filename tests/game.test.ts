@@ -1042,37 +1042,128 @@ describe("batch hits, extra pass", () => {
 });
 
 describe("yard mini games", () => {
-  it("blackjack: hand values, outcomes", async () => {
-    const { handValue, bjOutcome } = await import("../src/content/games.ts");
-    const c = (r: number) => ({ r, s: 0 });
+  it("blackjack: hand values, outcomes, side bets", async () => {
+    const { handValue, bjOutcome, perfectPairs, twentyOnePlus3, canSplitCards } = await import("../src/content/games.ts");
+    const c = (r: number, s = 0) => ({ r, s });
     expect(handValue([c(1), c(13)])).toBe(21);
     expect(handValue([c(1), c(1), c(9)])).toBe(21);
     expect(handValue([c(10), c(9), c(5)])).toBe(24);
     expect(bjOutcome([c(1), c(12)], [c(10), c(9)])).toBe("blackjack");
+    expect(bjOutcome([c(1), c(12)], [c(10), c(9)], true)).toBe("win"); // 21 after a split is not a blackjack
     expect(bjOutcome([c(10), c(8)], [c(10), c(6), c(9)])).toBe("win");
     expect(bjOutcome([c(10), c(8)], [c(10), c(8)])).toBe("push");
     expect(bjOutcome([c(10), c(8), c(5)], [c(10), c(8)])).toBe("lose");
+    expect(perfectPairs(c(8, 0), c(8, 0))).toBe("perfect");
+    expect(perfectPairs(c(8, 1), c(8, 2))).toBe("colored");
+    expect(perfectPairs(c(8, 0), c(8, 1))).toBe("mixed");
+    expect(perfectPairs(c(8, 0), c(9, 0))).toBeNull();
+    expect(twentyOnePlus3(c(7, 1), c(7, 1), c(7, 1))).toBe("suited");
+    expect(twentyOnePlus3(c(7, 1), c(7, 2), c(7, 0))).toBe("trips");
+    expect(twentyOnePlus3(c(5, 1), c(6, 1), c(7, 1))).toBe("sflush");
+    expect(twentyOnePlus3(c(12, 1), c(13, 2), c(1, 0))).toBe("straight");
+    expect(twentyOnePlus3(c(2, 3), c(9, 3), c(13, 3))).toBe("flush");
+    expect(twentyOnePlus3(c(2, 3), c(9, 1), c(13, 3))).toBeNull();
+    expect(canSplitCards([c(10), c(13)])).toBe(true);
+    expect(canSplitCards([c(9), c(13)])).toBe(false);
   });
 
-  it("blackjack: 3 free hands a day, then 2 USD; one hand at a time; standing ends it", async () => {
+  /** the next cards out of the shoe, in order (the shoe is long enough not to be reshuffled at the deal) */
+  const stackShoe = async (pid: number, cards: [number, number][]) => {
+    const [seat] = await db.query<{ table_id: number }>("SELECT table_id FROM bj_seats WHERE player_id=$1", [pid]);
+    const filler = Array.from({ length: 70 }, (_, i) => ({ r: 2 + (i % 4), s: 3 }));
+    const shoe = [...filler, ...cards.map(([r, s]) => ({ r, s })).reverse()];
+    await db.query("UPDATE bj_tables SET state = jsonb_set(state, '{shoe}', $2::jsonb) WHERE id=$1", [seat.table_id, JSON.stringify(shoe)]);
+  };
+
+  it("blackjack: a solo table — bet, side bet, split, the dealer stands on 17; money adds up", async () => {
     const p = await newPlayer(db);
-    await setMoney(db, p, "USD", 3);
-    for (let i = 0; i < 3; i++) {
-      let g = await act(db, p, "game_start", { game: "blackjack" }, T0 + i * M, always(0.5));
-      expect(g.result.paid).toBe(false);
-      if (g.result.status === "active") {
-        await expect(act(db, p, "game_start", { game: "blackjack" }, T0 + i * M)).rejects.toMatchObject({ code: "game_running" });
-        expect(g.result.dealer).toHaveLength(1); // the hole card stays hidden
-        g = await act(db, p, "bj_move", { move: "stand" }, T0 + i * M, always(0.5));
-      }
-      expect(g.result.status).toBe("done");
-      expect(g.result.dealer.length).toBeGreaterThanOrEqual(2);
-    }
-    expect((await act(db, p, "equip", { itemId: "jeans" }, T0 + 5 * M)).state.games.blackjack.freeLeft).toBe(0);
-    const paid = await act(db, p, "game_start", { game: "blackjack" }, T0 + 6 * M, always(0.5));
-    expect(paid.result.paid).toBe(true);
-    const [charge] = await db.query<{ delta: number }>("SELECT delta FROM ledger WHERE player_id=$1 AND reason='game:blackjack'", [p]);
-    expect(Number(charge.delta)).toBe(-2);
+    await setMoney(db, p, "USD", 100);
+    const open = await act(db, p, "bj_open", {}, T0);
+    expect(open.result.seat).toBe(0);
+    expect(open.result.table.seats.filter(Boolean)).toHaveLength(1);
+    await expect(act(db, p, "bj_bet", { bet: 30 }, T0)).rejects.toMatchObject({ code: "bj_bad_bet" });
+    // 8♠ to me, 10♥ to the dealer, 8♠ to me (a perfect pair), 7♣ under the dealer; then 3♠ and 2♦ for the split hands
+    await stackShoe(p, [[8, 0], [10, 1], [8, 0], [7, 3], [3, 0], [2, 2]]);
+    let v = (await act(db, p, "bj_bet", { bet: 5, pp: 2 }, T0 + 1000)).result;
+    expect(v.table.phase).toBe("playing"); // the only player at the table: dealt at once
+    expect(v.table.dealer).toHaveLength(1);
+    expect(v.table.dealerHidden).not.toBeNull();
+    expect(v.table.seats[0].side.pp).toBe("perfect");
+    expect(v.moves).toMatchObject({ hit: true, stand: true, double: true, split: true });
+    expect(await wallet(db, p, "USD")).toBe(100 - 5 - 2 + 2 * 26);
+    v = (await act(db, p, "bj_move", { move: "split" }, T0 + 2000)).result;
+    expect(v.table.seats[0].hands.map((h: { cards: unknown[] }) => h.cards.length)).toEqual([2, 2]);
+    expect(await wallet(db, p, "USD")).toBe(140);
+    v = (await act(db, p, "bj_move", { move: "stand" }, T0 + 3000)).result;
+    expect(v.table.turn).toEqual({ seat: 0, hand: 1 });
+    v = (await act(db, p, "bj_move", { move: "stand" }, T0 + 4000)).result;
+    expect(v.table.phase).toBe("betting");
+    expect(v.table.settled).toBe(true);
+    expect(v.table.dealerValue).toBe(17);
+    expect(v.table.seats[0].hands.map((h: { outcome: string }) => h.outcome)).toEqual(["lose", "lose"]);
+    expect(v.table.seats[0].won).toBe(52);
+    expect(await wallet(db, p, "USD")).toBe(140);
+    // a natural pays 3:2
+    await stackShoe(p, [[1, 0], [10, 1], [13, 2], [7, 3]]);
+    v = (await act(db, p, "bj_bet", { bet: 10 }, T0 + 5000)).result;
+    expect(v.table.settled).toBe(true);
+    expect(v.table.seats[0].hands[0].outcome).toBe("blackjack");
+    expect(await wallet(db, p, "USD")).toBe(140 - 10 + 25);
+    // a free bet: a win pays, the stake is the house's
+    await stackShoe(p, [[10, 0], [10, 1], [9, 2], [7, 3]]);
+    v = (await act(db, p, "bj_bet", { free: true }, T0 + 6000)).result;
+    expect(v.moves.double).toBe(false);
+    v = (await act(db, p, "bj_move", { move: "stand" }, T0 + 7000)).result;
+    expect(v.table.seats[0].hands[0].outcome).toBe("win");
+    expect(await wallet(db, p, "USD")).toBe(155 + 1);
+    expect(v.free.left).toBe(2);
+    // getting up closes an empty table
+    v = (await act(db, p, "bj_leave", {}, T0 + 8000)).result;
+    expect(v.table).toBeNull();
+    expect((await db.query("SELECT 1 FROM bj_tables")).length).toBe(0);
+  });
+
+  it("blackjack: clan mates at one table; turns in seat order; a missed move stands by itself", async () => {
+    const a = await newPlayer(db), b = await newPlayer(db), x = await newPlayer(db);
+    for (const p of [a, b, x]) await setMoney(db, p, "USD", 50);
+    const c = await act(db, a, "clan_create", { name: "Картёжники", tag: "BJK", emblem: "bull", color: "#3ddc84" }, T0);
+    await act(db, b, "clan_join", { clanId: c.result.clanId }, T0);
+    await act(db, a, "clan_accept", { playerId: b }, T0);
+    await act(db, a, "bj_open", {}, T0);
+    await expect(act(db, a, "bj_invite", { playerId: x }, T0)).rejects.toMatchObject({ code: "bj_not_clan" });
+    const inv = await act(db, a, "bj_invite", { playerId: b }, T0);
+    expect(inv.result.clan.find((m: { id: number }) => m.id === b).invited).toBe(true);
+    const seen = await act(db, b, "equip", { itemId: "jeans" }, T0 + 1000);
+    expect(seen.state.bjInvites).toBe(1);
+    const [{ id: inviteId }] = await db.query<{ id: number }>("SELECT id FROM bj_invites WHERE player_id=$1", [b]);
+    const joined = (await act(db, b, "bj_join", { inviteId }, T0 + 2000)).result;
+    expect(joined.seat).toBe(1);
+    // a bets: the deal waits for b
+    let v = (await act(db, a, "bj_bet", { bet: 5 }, T0 + 3000)).result;
+    expect(v.table.phase).toBe("betting");
+    expect(v.table.deadline).toBe(T0 + 3000 + 25_000);
+    // a: 10♠ 6♣ (16), b: 9♥ 7♠ (16), the dealer: 10♦ up, 7♥ down; then 10♣ for b
+    await stackShoe(a, [[10, 0], [9, 1], [10, 2], [6, 3], [7, 0], [7, 1], [10, 3]]);
+    v = (await act(db, b, "bj_bet", { bet: 5 }, T0 + 4000)).result;
+    expect(v.table.phase).toBe("playing");
+    expect(v.table.turn).toEqual({ seat: 0, hand: 0 });
+    await expect(act(db, b, "bj_move", { move: "stand" }, T0 + 5000)).rejects.toMatchObject({ code: "bj_not_turn" });
+    // a never moves: 30 s later his hand stands and it is b's turn
+    v = (await act(db, b, "bj_move", { move: "hit" }, T0 + 4000 + 31_000)).result;
+    // b took 10 on 16 → bust; the dealer stands on 17 against a's 16 — the round is over
+    expect(v.table.phase).toBe("betting");
+    expect(v.table.seats[1].hands[0].value).toBe(26);
+    expect(v.table.seats[1].hands[0].outcome).toBe("lose");
+    expect(v.table.seats[0].hands[0].outcome).toBe("lose");
+    expect(v.table.dealerValue).toBe(17);
+    expect(await wallet(db, a, "USD")).toBe(45);
+    expect(await wallet(db, b, "USD")).toBe(45);
+    // the table stays when one gets up
+    await act(db, a, "bj_leave", {}, T0 + 60_000);
+    const left = (await act(db, b, "bj_unbet", {}, T0 + 61_000).catch((e) => e)) as { code?: string };
+    expect(left.code).toBe("bj_busy");
+    const [t] = await db.query<{ state: { seats: unknown[] } }>("SELECT state FROM bj_tables");
+    expect(t.state.seats.filter(Boolean)).toHaveLength(1);
   });
 
   it("poker: combinations", async () => {

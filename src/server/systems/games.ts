@@ -1,21 +1,21 @@
 /*
- * Мини-игры во дворе (правила — content/games.ts): блэкджек и зонк идут партиями, состояние партии лежит в таблице
- * games; апгрейдер — одно действие. Колоду тасует и кости кидает только сервер.
+ * Мини-игры во дворе (правила — content/games.ts): зонк идёт партиями, состояние партии лежит в таблице games;
+ * покер и апгрейдер — одно действие. Блэкджек — общий стол, он в systems/blackjack.ts. Колоду тасует и кости кидает
+ * только сервер.
  */
 import { GameError, type Queryable } from "../db.ts";
 import { addItem, addMoney, grantReward, itemQty, ledger, moscowDay, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { useItem } from "./shop.ts";
 import { UPGRADE_RULES, POKER_RULES, pokerHand, pokerHandDef, pokerLevel, pokerPay,
-  BJ_PAY, BJ_TITLES, GAME_RULES, ITEM_VALUES, ZONK_DICE, ZONK_ROUNDS, bjOutcome, handValue, isBlackjack, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue, zonkHasScore, zonkPrize, zonkScore,
-  type BjOutcome, type Card, type GameKind,
+  GAME_RULES, ITEM_VALUES, ZONK_DICE, ZONK_ROUNDS, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue, zonkHasScore, zonkPrize, zonkScore,
+  type Card, type GameKind,
 } from "../../content/games.ts";
 import { itemById } from "../../content/items.ts";
 import type { Reward } from "../../content/rewards.ts";
 
-interface BjState { deck: Card[]; player: Card[]; dealer: Card[] }
 /** round: the attempt now (1…ZONK_ROUNDS); total: points written down; last: how the previous attempt ended */
-interface ZonkState { roll: number[]; turn: number; left: number; history: { kept: number[]; points: number }[]; round?: number; total?: number; last?: { points: number; zonk: boolean } | null }
-interface GameRow { id: number; kind: GameKind; paid: boolean; status: "active" | "done"; state: BjState | ZonkState; result: GameResult | null }
+interface ZonkState { roll: number[]; turn: number; left: number; history: { kept: number[]; points: number }[]; round?: number; total?: number; last?: { points: number; zonk: boolean } | null; scores?: { points: number; zonk: boolean }[] }
+interface GameRow { id: number; kind: GameKind; paid: boolean; status: "active" | "done"; state: ZonkState; result: GameResult | null }
 interface GameResult { outcome: string; title: string; reward: Granted | null; points?: number }
 
 const isEmpty = (r: Reward) => !r.currencies && !r.items && !r.xp && !r.energy;
@@ -29,19 +29,10 @@ async function freeLeft(q: Queryable, pid: number, kind: GameKind, now: number) 
   return Math.max(0, GAME_RULES[kind].freePerDay - r.n);
 }
 
-/** What the client may see: the dealer's hole card and the deck stay hidden while the hand is on. */
+/** What the client sees of a zonk game. */
 function viewOf(g: GameRow) {
-  if (g.kind === "blackjack") {
-    const s = g.state as BjState;
-    const open = g.status === "done";
-    return {
-      id: g.id, kind: g.kind, paid: g.paid, status: g.status, result: g.result,
-      player: s.player, dealer: open ? s.dealer : s.dealer.slice(0, 1), dealerHidden: open ? 0 : s.dealer.length - 1,
-      playerValue: handValue(s.player), dealerValue: handValue(open ? s.dealer : s.dealer.slice(0, 1)),
-    };
-  }
   const s = g.state as ZonkState;
-  return { id: g.id, kind: g.kind, paid: g.paid, status: g.status, result: g.result, roll: s.roll, turn: s.turn, left: s.left, history: s.history, round: s.round ?? 1, rounds: ZONK_ROUNDS, total: s.total ?? 0, last: s.last ?? null };
+  return { id: g.id, kind: g.kind, paid: g.paid, status: g.status, result: g.result, roll: s.roll, turn: s.turn, left: s.left, history: s.history, round: s.round ?? 1, rounds: ZONK_ROUNDS, total: s.total ?? 0, last: s.last ?? null, scores: s.scores ?? [] };
 }
 
 export async function gamesView(q: Queryable, pid: number, now: number) {
@@ -53,9 +44,9 @@ export async function gamesView(q: Queryable, pid: number, now: number) {
   return out as Record<GameKind, { freeLeft: number; freePerDay: number; price: { currency: string; amount: number }; active: ReturnType<typeof viewOf> | null }>;
 }
 
-function shuffled(rng: () => number): Card[] {
+export function shuffled(rng: () => number, decks = 1): Card[] {
   const deck: Card[] = [];
-  for (let s = 0; s < 4; s++) for (let r = 1; r <= 13; r++) deck.push({ r, s });
+  for (let d = 0; d < decks; d++) for (let s = 0; s < 4; s++) for (let r = 1; r <= 13; r++) deck.push({ r, s });
   for (let i = deck.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1)) % (i + 1);
     [deck[i], deck[j]] = [deck[j], deck[i]];
@@ -75,52 +66,16 @@ export async function startGame(ctx: Ctx, kind: GameKind) {
   const free = (await freeLeft(ctx.q, ctx.pid, kind, ctx.now)) > 0;
   const price = GAME_RULES[kind].price;
   if (!free) await takeMoney(ctx, price.currency, price.amount, `game:${kind}`);
-  let state: BjState | ZonkState;
-  if (kind === "blackjack") {
-    const deck = shuffled(ctx.rng);
-    state = { deck, player: [deck.pop()!, deck.pop()!], dealer: [deck.pop()!, deck.pop()!] };
-  } else {
-    state = { roll: Array.from({ length: ZONK_DICE }, () => die(ctx.rng)), turn: 0, left: ZONK_DICE, history: [], round: 1, total: 0, last: null };
-  }
+  const state: ZonkState = { roll: Array.from({ length: ZONK_DICE }, () => die(ctx.rng)), turn: 0, left: ZONK_DICE, history: [], round: 1, total: 0, last: null };
   const [row] = await ctx.q.query<{ id: number }>(
     "INSERT INTO games (player_id, kind, day, paid, status, state, created_at, updated_at) VALUES ($1,$2,$3,$4,'active',$5,$6,$6) RETURNING id",
     [ctx.pid, kind, moscowDay(ctx.now), !free, JSON.stringify(state), new Date(ctx.now)],
   );
   const g: GameRow = { id: row.id, kind, paid: !free, status: "active", state, result: null };
-  if (kind === "blackjack") {
-    const s = state as BjState;
-    // a natural on either side ends the hand at once
-    if (isBlackjack(s.player) || isBlackjack(s.dealer)) await finishBj(ctx, g);
-  } else if (!zonkHasScore((state as ZonkState).roll)) {
-    (state as ZonkState).last = { points: 0, zonk: true };
+  if (!zonkHasScore(state.roll)) {
+    state.last = { points: 0, zonk: true };
+    state.scores = [state.last];
     await nextZonkRound(ctx, g);
-  }
-  return viewOf(g);
-}
-
-async function finishBj(ctx: Ctx, g: GameRow) {
-  const s = g.state as BjState;
-  if (handValue(s.player) <= 21 && !isBlackjack(s.player)) {
-    while (handValue(s.dealer) < 17) s.dealer.push(s.deck.pop()!);
-  }
-  const outcome: BjOutcome = bjOutcome(s.player, s.dealer);
-  const pay = BJ_PAY[g.paid ? "paid" : "free"][outcome];
-  const reward = isEmpty(pay) ? null : await grantReward(ctx, pay, `game:blackjack:${outcome}`);
-  g.status = "done";
-  g.result = { outcome, title: BJ_TITLES[outcome], reward };
-  await save(ctx, g);
-}
-
-export async function bjMove(ctx: Ctx, move: "hit" | "stand") {
-  const g = await activeGame(ctx.q, ctx.pid, "blackjack");
-  if (!g) throw new GameError("no_game", "Партия не начата");
-  const s = g.state as BjState;
-  if (move === "hit") {
-    s.player.push(s.deck.pop()!);
-    if (handValue(s.player) >= 21) await finishBj(ctx, g);
-    else await save(ctx, g);
-  } else {
-    await finishBj(ctx, g);
   }
   return viewOf(g);
 }
@@ -154,6 +109,7 @@ async function nextZonkRound(ctx: Ctx, g: GameRow) {
     s.roll = Array.from({ length: ZONK_DICE }, () => die(ctx.rng));
     if (zonkHasScore(s.roll)) return save(ctx, g);
     s.last = { points: 0, zonk: true };
+    s.scores = [...(s.scores ?? []), s.last];
   }
 }
 
@@ -174,11 +130,13 @@ export async function zonkMove(ctx: Ctx, pick: number[], then: "roll" | "bank") 
   if (then === "bank") {
     s.total = (s.total ?? 0) + s.turn;
     s.last = { points: s.turn, zonk: false };
+    s.scores = [...(s.scores ?? []), s.last];
     await nextZonkRound(ctx, g);
   } else {
     s.roll = Array.from({ length: s.left }, () => die(ctx.rng));
     if (!zonkHasScore(s.roll)) {
       s.last = { points: s.turn, zonk: true };
+      s.scores = [...(s.scores ?? []), s.last];
       await nextZonkRound(ctx, g);
     } else await save(ctx, g);
   }

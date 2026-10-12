@@ -754,4 +754,32 @@ CREATE TABLE IF NOT EXISTS upgrade_spins (
 ALTER TABLE players ADD COLUMN IF NOT EXISTS poker_xp INT NOT NULL DEFAULT 0;
 `,
   },
+  {
+    // Блэкджек — общий стол до 6 игроков: стол и раздача (state), кто где сидит, приглашения из клана.
+    id: "v2-042-bj-tables",
+    sql: `
+CREATE TABLE IF NOT EXISTS bj_tables (
+  id SERIAL PRIMARY KEY,
+  host_id INT NOT NULL,
+  state JSONB NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS bj_seats (
+  player_id INT PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
+  table_id INT NOT NULL REFERENCES bj_tables(id) ON DELETE CASCADE,
+  seat INT NOT NULL,
+  UNIQUE (table_id, seat)
+);
+CREATE TABLE IF NOT EXISTS bj_invites (
+  id SERIAL PRIMARY KEY,
+  table_id INT NOT NULL REFERENCES bj_tables(id) ON DELETE CASCADE,
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  from_id INT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (table_id, player_id)
+);
+CREATE INDEX IF NOT EXISTS bj_invites_player ON bj_invites (player_id);
+`,
+  },
 ];
