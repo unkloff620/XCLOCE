@@ -328,7 +328,7 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
   };
   const hand: PokerHand | null = play?.hand ?? null;
   return (
-    <Modal title={<span className="title-row">Покер <PokerHelp /></span>} onClose={onClose} wide>
+    <Modal title={<span className="title-row">Покер <PokerHelp /></span>} onClose={onClose} maxWidth={780}>
       <div className="pk">
         <div className="pk-lvl" title={p ? `${p.xp}${p.to !== null ? ` / ${p.to}` : ""} опыта покера` : undefined}>
           <b className="display num">{level}</b>

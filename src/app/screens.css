@@ -1420,7 +1420,7 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 @media (max-width: 420px) { .zk { grid-template-columns: 1fr; } .zk-table { display: grid; grid-template-columns: 1fr 1fr; } .zk-table-h { grid-column: 1 / -1; } }
 
 /* poker: poker level bar on the left, the felt with five cards, the prize table on the right (below on phones) */
-.pk { display: grid; grid-template-columns: 40px minmax(0, 1fr) minmax(0, 230px); gap: 8px; align-items: stretch; }
+.pk { display: grid; grid-template-columns: 40px minmax(0, 1fr) minmax(0, 250px); gap: 8px; align-items: stretch; }
 .pk-lvl { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; border-radius: 14px; background: rgba(0, 0, 0, 0.25); border: 2px solid var(--line); }
 .pk-lvl b { font-size: 20px; line-height: 1; color: #ffd23f; text-shadow: 0 2px 0 #1e1006; }
 .pk-lvl .tiny { color: #ffd1a0; margin-top: -2px; }
@@ -1450,9 +1450,10 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .pk-mini.red { color: #d0102f; }
 .pk-mini b { font-size: 8px; font-weight: 900; letter-spacing: -0.04em; }
 .pk-mini i { font-style: normal; font-size: 8px; }
-@media (max-width: 560px) {
+@media (max-width: 640px) {
   .pk { grid-template-columns: 34px minmax(0, 1fr); }
-  .pk-table { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; }
+  .pk-table { grid-column: 1 / -1; }
+  .pk-row { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "cards name pay"; min-width: 0; }
   .pk-go { min-width: 0; width: 100%; }
 }
 
