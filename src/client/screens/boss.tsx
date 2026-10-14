@@ -223,7 +223,7 @@ export function BossScreen({ id }: { id: string }) {
   const row = list?.bosses.find((b) => b.id === id);
   const hpShown = view ? Math.max(0, view.hp - pendingDmg) : state?.fight?.bossId === id ? state.fight.hp : null;
   // the boss punches at the screen now and then while the fight is on (show only, no damage)
-  const strikeFx = useBossStrike(fighting && (hpShown ?? 1) > 0 && !BOXERS.has(boss.id));
+  const strikeFx = useBossStrike(fighting && (hpShown ?? 1) > 0 && !BOXERS.has(boss?.id ?? ""));
 
   const [mult, setMult] = useState<Mult>(1);
   const attack = async (weapon: string) => {
