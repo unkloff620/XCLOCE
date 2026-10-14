@@ -7,11 +7,44 @@
  * Below half HP a boss with a "<id>-beaten" rig (tools/boss/align-variant.py) switches to its beaten look.
  * Bosses with whole arms (armL/armR + handL/handR, Гаркуша): the arm swings at the shoulder and the hand turns at the wrist
  * inside it; the irises are clipped to the eye whites so they can look around.
+ * Puppet-warped sequences (Мугонатор: brows and the lower jaw, tools/boss/assemble-mugo.py) come as one strip of frames;
+ * the frame on show steps along a schedule (FRAME_SEQ) — idle, when he is hit ("ouch") and when he punches ("strike").
+ * A tail sways behind the body; the far arm of a boss listed in BEHIND is drawn behind the body.
  */
 import type { CSSProperties } from "react";
 import { BOSS_RIGS } from "./boss-rig-data.ts";
 
-type Part = { x: number; y: number; w: number; h: number; pivot?: readonly number[] };
+type Part = { x: number; y: number; w: number; h: number; pivot?: readonly number[]; frames?: number };
+
+/** bosses whose far arm (R or L) goes behind the body */
+const BEHIND: Record<string, "L" | "R"> = { mugo: "R" };
+
+/** frame schedules of the puppet strips: [frame, ms] — idle loops, ouch/strike play once */
+const FRAME_SEQ: Record<string, Record<"idle" | "ouch" | "strike", [number, number][]>> = {
+  // a grin now and then: the jaw drops in two chuckles and closes
+  jaw: {
+    idle: [[0, 4200], [1, 70], [2, 70], [3, 90], [2, 70], [1, 70], [2, 70], [3, 90], [4, 160], [3, 80], [2, 70], [1, 70], [0, 600]],
+    ouch: [[2, 50], [3, 50], [4, 800], [3, 80], [2, 80], [1, 80], [0, 60]],
+    strike: [[1, 50], [2, 50], [3, 50], [4, 520], [3, 80], [2, 60], [1, 60], [0, 30]],
+  },
+  // a smug lift of the brows, later a short frown
+  brows: {
+    idle: [[0, 2600], [1, 80], [2, 900], [1, 80], [0, 2400], [3, 80], [4, 700], [3, 80], [0, 500]],
+    ouch: [[1, 50], [2, 1100], [1, 80], [0, 70]],
+    strike: [[3, 60], [4, 760], [3, 80], [0, 0]],
+  },
+};
+
+function seqKeyframes(name: string, w: number, seq: [number, number][]) {
+  const total = seq.reduce((t, [, ms]) => t + ms, 0) || 1;
+  let at = 0;
+  const steps = seq.map(([f, ms]) => {
+    const k = `${((at / total) * 100).toFixed(3)}% { transform: translateX(${-f * w}px); }`;
+    at += ms;
+    return k;
+  });
+  return { css: `@keyframes ${name} { ${steps.join(" ")} 100% { transform: translateX(${-seq[seq.length - 1][0] * w}px); } }`, ms: total };
+}
 
 export function hasBossRig(id: string): boolean {
   return id in BOSS_RIGS;
@@ -53,12 +86,37 @@ export function BossRig({ id: baseId, hpShare = 1 }: { id: string; hpShare?: num
         <g className={`br-hand br-hand-${side.toLowerCase()}`} style={origin(`hand${side}`)}>{img(`hand${side}`)}</g>
       </g>
     ) : null;
+  // a puppet strip: a window one frame wide, the strip slides behind it
+  const strip = (p: string) => {
+    const r: Part | undefined = P[p];
+    if (!r?.frames) return null;
+    return (
+      <svg x={r.x} y={r.y} width={r.w} height={r.h} viewBox={`0 0 ${r.w} ${r.h}`} overflow="hidden">
+        <image className={`brf brf-${p}`} href={`/bosses/${id}/rig/${p}.webp`} x={0} y={0} width={r.w * r.frames} height={r.h} preserveAspectRatio="none" />
+      </svg>
+    );
+  };
+  const frameCss = Object.keys(FRAME_SEQ).filter((p) => P[p]?.frames).map((p) => {
+    const w = P[p].w;
+    const k = (mode: "idle" | "ouch" | "strike") => seqKeyframes(`brf-${id}-${p}-${mode}`, w, FRAME_SEQ[p][mode]);
+    const idle = k("idle"), ouch = k("ouch"), strike = k("strike");
+    const sel = `.rig-${baseId}.boss-rig .brf-${p}`;
+    return `${idle.css} ${ouch.css} ${strike.css}
+      ${sel} { animation: brf-${id}-${p}-idle ${idle.ms}ms step-end infinite; }
+      .arena-photo.ouch ${sel} { animation: brf-${id}-${p}-ouch ${ouch.ms}ms step-end both; }
+      .arena-photo.strike ${sel} { animation: brf-${id}-${p}-strike ${strike.ms}ms step-end both; }
+      @media (prefers-reduced-motion: reduce) { ${sel} { animation: none; } }`;
+  }).join("\n");
+  const behind = BEHIND[baseId];
   const clipEyes = !!P.armL && !!P.pupils && !!P.eyes;
   const maskId = `br-eyes-${id}`;
   // bosses with a full face (Кедр): pupils glance around, brows and mouth change when he is hit (class "ouch" on the arena)
   return (
     <svg key={id} className={`boss-rig rig-${baseId} ${id.endsWith("-beaten") ? "beaten" : ""}`} viewBox={`0 0 ${rig.w} ${rig.h}`} width="100%" height="100%" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+      {frameCss && <style>{frameCss}</style>}
       <g className="br-breath" style={{ transformOrigin: `${rig.w / 2}px ${rig.h}px`, transformBox: "view-box" }}>
+        {P.tail && <g className="br-tail" style={origin("tail")}>{img("tail")}</g>}
+        {behind && arm(behind)}
         {img("body")}
         <g className="br-head" style={origin("head")}>
           {img("head")}
@@ -70,15 +128,17 @@ export function BossRig({ id: baseId, hpShare = 1 }: { id: string; hpShare?: num
             {P.pupils && <g mask={clipEyes ? `url(#${maskId})` : undefined}><g className="br-pupils">{img("pupils")}</g></g>}
           </g>
           {img("eyes-closed", "br-eyes-closed")}
-          {P.brows && <g className="br-brows">{img("brows", "br-brows-angry")}{img("brows-sad", "br-brows-sad")}</g>}
+          {P.brows && !P.brows.frames && <g className="br-brows">{img("brows", "br-brows-angry")}{img("brows-sad", "br-brows-sad")}</g>}
+          {P.brows?.frames && strip("brows")}
           {img("mouth", "br-mouth")}
           {img("mouth-closed", "br-mouth-closed")}
+          {strip("jaw")}
         </g>
         {img("collar")}
         {P.foreL && <g className="br-fist-l" style={{ ...origin("foreL"), ...tilt("foreL", "foreL", 9) }}>{img("foreL")}</g>}
         {P.foreR && <g className="br-fist-r" style={{ ...origin("foreR"), ...tilt("foreR", "foreR", 9) }}>{img("foreR")}</g>}
-        {arm("R")}
-        {arm("L")}
+        {behind !== "R" && arm("R")}
+        {behind !== "L" && arm("L")}
       </g>
     </svg>
   );

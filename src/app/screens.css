@@ -555,6 +555,25 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .arena-photo.hit .br-arm-l, .arena-photo.hit .br-arm-r { animation-duration: 0.4s; }
 .arena-photo.hit .br-hand-l, .arena-photo.hit .br-hand-r { animation-duration: 0.3s; }
 @media (prefers-reduced-motion: reduce) { .br-breath, .br-head, .br-fist-l, .br-fist-r, .br-pupils, .br-brows, .br-arm, .br-hand { animation: none; } }
+/* Мугонатор (the shark): the tail sways behind him, a slow heavy breath, the near arm (crossed over the belly) and the far one
+   rock a little; brows and the lower jaw are puppet strips (boss-rig.tsx FRAME_SEQ). Hit: the head jerks back. */
+.br-tail { animation: br-tail 3.6s ease-in-out infinite; }
+@keyframes br-tail { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-4.5deg); } }
+.rig-mugo .br-breath { animation-duration: 4s; }
+.rig-mugo .br-head { animation-duration: 6.8s; }
+.rig-mugo .br-arm-l { animation: mg-arm-l 4s ease-in-out infinite; }
+.rig-mugo .br-arm-r { animation: mg-arm-r 4s ease-in-out infinite 0.6s; }
+.rig-mugo .br-hand-l { animation: mg-hand 2s ease-in-out infinite 0.3s; }
+.rig-mugo .br-hand-r { animation: mg-hand 2s ease-in-out infinite 1.1s; }
+@keyframes mg-arm-l { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(1.6deg); } }
+@keyframes mg-arm-r { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-1.8deg); } }
+@keyframes mg-hand { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(3deg); } }
+.rig-mugo .br-pupils { animation-name: gk-look; animation-duration: 6s; }
+.rig-mugo .br-eyes-closed, .rig-mugo .br-eyes-open { animation-duration: 4.6s; }
+.arena-photo.ouch .rig-mugo .br-head { animation: mg-head-hit 0.45s ease-out; }
+@keyframes mg-head-hit { 0% { transform: rotate(0); } 25% { transform: rotate(4deg) translateX(-4px); } 100% { transform: rotate(0); } }
+.arena-photo.hit .rig-mugo .br-tail { animation-duration: 0.5s; }
+@media (prefers-reduced-motion: reduce) { .br-tail { animation: none; } }
 
 /* ---------- shop scene ---------- */
 .shop-spot { position: absolute; padding: 0; border: 0; background: none; cursor: pointer; z-index: 2; transition: transform 0.12s, filter 0.12s;

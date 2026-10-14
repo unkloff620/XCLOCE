@@ -95,7 +95,7 @@ export const BOSSES: BossDef[] = [
     hp: hp(4), reward: { xp: xp(4), currencies: { SOL: 0.058, RUB: 380 } },
     drop: [{ id: "energy-drink", qty: 2, chance: 0.35 }],
     wear: { items: ["gold-chain"], chance: 0.1, pity: 10 },
-    theme: { a: "#163a3a", b: "#061414", accent: "#2ee6c8" }, photo: photo("mugo"),
+    theme: { a: "#163a3a", b: "#061414", accent: "#2ee6c8" }, photo: photo("mugo", true),
     keysToUnlock: 1,
   },
   {
