@@ -782,4 +782,12 @@ CREATE TABLE IF NOT EXISTS bj_invites (
 CREATE INDEX IF NOT EXISTS bj_invites_player ON bj_invites (player_id);
 `,
   },
+  {
+    // «Бабочка» (hand-butterfly) taken out of the game: off the hand and out of the inventories
+    id: "v2-043-no-butterfly",
+    sql: `
+UPDATE appearance SET equipped = equipped - 'HAND' WHERE equipped->>'HAND' = 'hand-butterfly';
+DELETE FROM inventory WHERE item_id = 'hand-butterfly';
+`,
+  },
 ];

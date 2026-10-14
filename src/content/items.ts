@@ -93,8 +93,6 @@ const WEARABLES: ItemDef[] = ([
   // held in the left hand (slot «Кисть»): the boss's own weapon, worn for the look
   { id: "bottle-komandate", name: "Бутылка Командате", slot: "HAND", rarity: "epic", description: "Оружие Командате: горит, но не гаснет. Герой держит её в руке.", sources: ["Победа: Командате"] },
   { id: "hand-drum", name: "Нервные пальцы", slot: "HAND", rarity: "rare", description: "Пальцы сами отбивают ритм по колену, пока график грузится.", sources: ["Победа: Кедр"] },
-  // a boss reward, not given by any boss yet
-  { id: "hand-butterfly", name: "Бабочка", slot: "HAND", rarity: "epic", description: "Нож-бабочка: щёлк — открыт, щёлк — закрыт. Руки сами крутят его, пока ждёшь пампа.", sources: ["Награда за босса (скоро)"] },
   { id: "gold-chain", name: "Серебряная цепь", slot: "ACCESSORY", rarity: "epic", description: "Каждое звено — подтверждённый блок.", sources: ["Магазин", "Награда за локацию 3"] },
 ] as Omit<ItemDef, "category" | "maxStack">[]).map((w) => {
   // clothes a boss unlocks: the drop opens them in the shop, then they are bought there
