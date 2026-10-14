@@ -285,10 +285,17 @@ export const DRUM_HAND = "hand-drum";
 export const BUTTERFLY_HAND = "hand-butterfly";
 
 /**
- * «Бабочка» (tools/rig/build-butterfly.py): the fist holds the open knife, then the hand opens and flips it shut and open
- * (screens.css «Бабочка»). The knife is three pictures in its own frame (tang middle at 0,0): handle A held, the blade
- * turning on A's pin (t1), handle B turning on the blade's pin (t2). It lies under the hand: in the fist only the blade
- * and the butt show, under the open hand the swinging parts show past the fingers.
+ * where the knife is held (rig units): the grip point under the knuckles, how far up handle A it is held (knife-frame
+ * units from the tang) and the knife's size against the hand
+ */
+const BF_GRIP = { x: 705, y: 830, at: 100, scale: 0.9 };
+
+/**
+ * «Бабочка» (tools/rig/build-butterfly.py, moves: tools/rig/butterfly-moves.py → screens.css «Бабочка»), after the
+ * artist's video: the knife hangs from under the hand by handle A (its latch end in the hand) and keeps flipping round
+ * it — opens with handle B going round, held open in the fist, flipped left and thrown up over the hand, held shut.
+ * The knife is three pictures in its own frame (tang middle at 0,0, the open blade at −x): handle A held, the blade
+ * turning on A's pin (t1), handle B on the blade's pin (t2). It lies under the hand, so the held end hides in the hand.
  */
 function ButterflyHand() {
   const { skin } = useContext(LookCtx);
@@ -298,23 +305,27 @@ function ButterflyHand() {
     const r = K[p];
     return <image href={`/assets/hero/held/butterfly-${p}.webp?v=${ART_VER.heroPart}`} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" />;
   };
-  // the blade (with handle B on it) turns on t1; handle B on t2: each a group moved so its pin is at 0,0
-  const at = ([x, y]: readonly number[], body: ReactNode) => (
-    <g transform={`translate(${x} ${y})`}><g className="bf-a bf-spin">{<g transform={`translate(${-x} ${-y})`}>{body}</g>}</g></g>
+  // a group turning (CSS class cls) on the pin at x,y
+  const on = ([x, y]: readonly number[], cls: string, body: ReactNode) => (
+    <g transform={`translate(${x} ${y})`}><g className={cls}><g transform={`translate(${-x} ${-y})`}>{body}</g></g></g>
   );
-  const place = (k: { x: number; y: number; rot: number }) => `translate(${k.x} ${k.y}) rotate(${k.rot})`;
-  const fr = B.open;
+  // the knife hangs blade down (its +x up into the hand), handle A held at BF_GRIP.at
+  const knife = (ghost?: boolean) => (
+    <g className={ghost ? "bf-ghost" : undefined} transform={`translate(${BF_GRIP.x} ${BF_GRIP.y})`}>
+      <g className="bf-w">
+        <g transform={`rotate(-90) scale(${BF_GRIP.scale}) translate(${-BF_GRIP.at} 0)`}>
+          {part("handle-a")}
+          {on(K.t1, "bf-b", <>{part("blade")}{on(K.t2, "bf-h", part("handle-b"))}</>)}
+        </g>
+      </g>
+    </g>
+  );
   return (
     <g className="rig-hand bf">
-      <g className="bf-a bf-k-fist" transform={place(K.fist)}>{part("handle-a")}{part("handle-b")}{part("blade")}</g>
-      <g className="bf-a bf-k-flip" transform={place(K.open)}>
-        {part("handle-a")}
-        {at(K.t1, <>{at(K.t2, part("handle-b"))}{part("blade")}</>)}
-      </g>
-      <image className="bf-a bf-fist" href={hand("fist")} x={B.fist.x} y={B.fist.y} width={B.fist.w} height={B.fist.h} preserveAspectRatio="none" />
-      {Array.from({ length: B.frames + 1 }, (_, k) => (
-        <image key={k} className={`bf-a bf-open bf-f${k}`} href={hand(k ? `open-f${k}` : "open")} x={fr.x} y={fr.y} width={fr.w} height={fr.h} preserveAspectRatio="none" />
-      ))}
+      {knife(true)}
+      {knife()}
+      <image className="bf-fist" href={hand("fist")} x={B.fist.x} y={B.fist.y} width={B.fist.w} height={B.fist.h} preserveAspectRatio="none" />
+      <image className="bf-open" href={hand("open")} x={B.open.x} y={B.open.y} width={B.open.w} height={B.open.h} preserveAspectRatio="none" />
     </g>
   );
 }
