@@ -1,0 +1,5 @@
+{
+  "note": "The artist's two boxing poses of the near arm, fitted on the reference canvas (2745×2800): each piece's rigid move from the reference (rotate deg about the piece's own origin of coordinates, then translate px), found by SIFT/ECC matching; the shoulder of pose 1 by eye. screens.css 'he boxes' uses them as local joint transforms (rig units).",
+  "p1_windup": {"shoulderL": {"rotate": -11, "about": [1152.8, 940.3], "shift": [-130, -30]}, "foreL": {"rotate": -11.24, "t": [-486.2, 193.0]}, "handL": {"rotate": 0.03, "t": [-275.5, -138.2]}},
+  "p2_jab": {"shoulderL": {"rotate": -11, "about": [1152.8, 940.3], "shift": [0, -26]}, "foreL": {"rotate": 0.88, "t": [95.6, -40.0]}, "handL": {"rotate": 0.02, "t": [107.1, -5.0]}}
+}

@@ -561,30 +561,28 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 @keyframes br-tail { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-4.5deg); } }
 .rig-mugo .br-breath { animation-duration: 4s; }
 .rig-mugo .br-head { animation-duration: 6.8s; }
-/* he boxes: a 5 s round — 3 s of punches, left and right in turn (each 0.5 s: out in 0.18 s, back in 0.32 s), then a 2 s
-   breather. Each arm: the shoulder turns a little, the forearm turns at the elbow and shortens (it points at us), the fist
-   comes at us (grows). */
+/* he boxes (the artist's two poses, tools/boss/source/mugo/raw/poses.json): a 5 s round — wind up (pose 1: the near
+   arm pulled back), then five jabs across the body (pose 2), 0.6 s each, then a ~1.7 s breather in the guard. Shoulder,
+   forearm (at the elbow) and fist (at the wrist) each move from their own joint, so the arm bends as it goes. */
 .rig-mugo .br-arm-l { animation: mg-sh-l 5s infinite; }
 .rig-mugo .br-low-l { animation: mg-el-l 5s infinite; }
 .rig-mugo .br-hand-l { animation: mg-fi-l 5s infinite; }
-.rig-mugo .br-arm-r { animation: mg-sh-r 5s infinite; }
-.rig-mugo .br-low-r { animation: mg-el-r 5s infinite; }
-.rig-mugo .br-hand-r { animation: mg-fi-r 5s infinite; }
+.rig-mugo .br-arm-r { animation: mg-guard-r 5s ease-in-out infinite; }
+.rig-mugo .br-low-r, .rig-mugo .br-hand-r { animation: none; }
 .rig-mugo .br-head { animation: mg-head-box 5s ease-in-out infinite; }
-@keyframes mg-sh-l { 0%, 10%, 20%, 30%, 40%, 50%, 100% { transform: rotate(0); animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1); }
-  3.6%, 23.6%, 43.6% { transform: rotate(-5deg); animation-timing-function: ease-in-out; } }
-@keyframes mg-el-l { 0%, 10%, 20%, 30%, 40%, 50%, 100% { transform: rotate(3deg); animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1); }
-  3.6%, 23.6%, 43.6% { transform: rotate(-14deg) scale(0.9); animation-timing-function: ease-in-out; } 60% { transform: rotate(0); } }
-@keyframes mg-fi-l { 0%, 10%, 20%, 30%, 40%, 50%, 100% { transform: none; animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1); }
-  3.6%, 23.6%, 43.6% { transform: rotate(-6deg) scale(1.45); animation-timing-function: ease-in-out; } }
-@keyframes mg-sh-r { 0%, 10%, 20%, 30%, 40%, 50%, 60%, 100% { transform: rotate(0); animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1); }
-  13.6%, 33.6%, 53.6% { transform: rotate(7deg); animation-timing-function: ease-in-out; } }
-@keyframes mg-el-r { 0%, 10%, 20%, 30%, 40%, 50%, 60%, 100% { transform: rotate(3deg); animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1); }
-  13.6%, 33.6%, 53.6% { transform: rotate(-8deg) scale(0.82); animation-timing-function: ease-in-out; } 75% { transform: rotate(0); } }
-@keyframes mg-fi-r { 0%, 10%, 20%, 30%, 40%, 50%, 60%, 100% { transform: none; animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1); }
-  13.6%, 33.6%, 53.6% { transform: rotate(4deg) scale(1.45); animation-timing-function: ease-in-out; } }
-/* the head ducks into the punches and settles in the breather */
-@keyframes mg-head-box { 0%, 60%, 100% { transform: rotate(0); } 5%, 25%, 45% { transform: rotate(-2deg) translateY(2px); } 15%, 35%, 55% { transform: rotate(1.6deg) translateY(2px); } 80% { transform: rotate(-1deg); } }
+@keyframes mg-sh-l { 0%, 66%, 100% { transform: translate(0px, 0px) rotate(0deg); animation-timing-function: ease-in-out; }
+  5%, 17%, 29%, 41%, 53% { transform: translate(-75.8px, -6.9px) rotate(-11deg); animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.5); }
+  8.6%, 20.6%, 32.6%, 44.6%, 56.6% { transform: translate(-10.8px, -4.9px) rotate(-11deg); animation-timing-function: cubic-bezier(0.2, 0.7, 0.4, 1); } }
+@keyframes mg-el-l { 0%, 66%, 100% { transform: translate(0px, 0px) rotate(0deg); animation-timing-function: ease-in-out; }
+  5%, 17%, 29%, 41%, 53% { transform: translate(-93.6px, -28.3px) rotate(-0.24deg); animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.5); }
+  8.6%, 20.6%, 32.6%, 44.6%, 56.6% { transform: translate(28.2px, 8px) rotate(11.88deg); animation-timing-function: cubic-bezier(0.2, 0.7, 0.4, 1); } }
+@keyframes mg-fi-l { 0%, 66%, 100% { transform: translate(0px, 0px) rotate(0deg); animation-timing-function: ease-in-out; }
+  5%, 17%, 29%, 41%, 53% { transform: translate(2.4px, 4.4px) rotate(11.27deg); animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.5); }
+  8.6%, 20.6%, 32.6%, 44.6%, 56.6% { transform: translate(15px, 5.2px) rotate(-0.86deg); animation-timing-function: cubic-bezier(0.2, 0.7, 0.4, 1); } }
+/* the far fist stays up in the guard, nudging with each jab */
+@keyframes mg-guard-r { 0%, 66%, 100% { transform: rotate(0deg); } 5%, 17%, 29%, 41%, 53% { transform: rotate(-1.5deg); } 8.6%, 20.6%, 32.6%, 44.6%, 56.6% { transform: rotate(1.5deg); } }
+/* the head leans into each jab and settles in the breather */
+@keyframes mg-head-box { 0%, 66%, 100% { transform: rotate(0deg) translateY(0px); } 5%, 17%, 29%, 41%, 53% { transform: rotate(-1.2deg) translateY(1px); } 8.6%, 20.6%, 32.6%, 44.6%, 56.6% { transform: rotate(1.4deg) translateY(2px); } 82% { transform: rotate(-0.8deg) translateY(0px); } }
 .rig-mugo .br-pupils { animation-name: gk-look; animation-duration: 6s; }
 .rig-mugo .br-eyes-closed, .rig-mugo .br-eyes-open { animation-duration: 4.6s; }
 .arena-photo.ouch .rig-mugo .br-head { animation: mg-head-hit 0.45s ease-out; }

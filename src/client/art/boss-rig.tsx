@@ -39,9 +39,10 @@ const FRAME_SEQ: Record<string, Record<"idle" | "ouch" | "strike", [number, numb
 /** a boss's own schedules (one loop in step with his CSS round): Мугонатор frowns and grunts while he boxes (3 s), then chuckles */
 const FRAME_SEQ_BY_BOSS: Record<string, Partial<Record<string, [number, number][]>>> = {
   mugo: {
-    jaw: [[2, 150], [0, 350], [2, 150], [0, 350], [2, 150], [0, 350], [2, 150], [0, 350], [2, 150], [0, 350], [2, 150], [0, 350],
-      [0, 1000], [1, 70], [2, 70], [3, 100], [2, 70], [1, 70], [2, 70], [3, 100], [2, 80], [1, 70], [0, 300]],
-    brows: [[3, 80], [4, 2840], [3, 80], [0, 200], [1, 80], [2, 1200], [1, 80], [0, 440]],
+    // in step with the jabs (screens.css "he boxes"): the mouth opens on each hit, then breathes in the pause
+    jaw: [[0, 430], [2, 150], [0, 450], [2, 150], [0, 450], [2, 150], [0, 450], [2, 150], [0, 450], [2, 150],
+      [0, 1000], [1, 70], [2, 70], [3, 100], [2, 70], [1, 70], [2, 70], [3, 100], [2, 80], [1, 70], [0, 320]],
+    brows: [[3, 80], [4, 3140], [3, 80], [0, 200], [1, 80], [2, 900], [1, 80], [0, 440]],
   },
 };
 
