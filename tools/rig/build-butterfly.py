@@ -38,9 +38,9 @@ T1, T2 = np.array([403.8, 416.3]), np.array([371.3, 448.8])  # tang pin holes: h
 PA, LA = np.array([67.8, 89.2]), np.array([426.1, 430.2])  # handle A: pin hole, latch hole
 PB, LB = np.array([59.4, 95.0]), np.array([384.1, 462.0])  # handle B
 BLADE_ANG = 42.2  # direction tip → tang (the blade's long axis)
-KNIFE_SCALE = 0.55  # part pixels → rig-canvas pixels
+KNIFE_SCALE = 0.45  # part pixels → rig-canvas pixels (the handle fits across the fist)
 # where the open knife lies (rig-canvas px): the tang's middle and the direction the blade points (deg, y down)
-IN_FIST = {"at": (1550, 1678), "dir": 38}  # out of the little-finger side, along the thigh; the butt peeks at the thumb
+IN_FIST = {"at": (1520, 1676), "dir": 25}  # the handles across the fist under the knuckles, the blade out of the little-finger side
 IN_OPEN = {"at": (1246, 1678), "dir": 150}  # pinned between the thumb and the index tips; handle A under the palm
 
 # ---- the open hand's fingers (rig-canvas px): the back of the hand holds, a fingertip goes towards its knuckle
