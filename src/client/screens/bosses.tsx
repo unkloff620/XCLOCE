@@ -113,7 +113,7 @@ export function BossesScreen() {
                   ) : (
                     <span className="bcard-meta stack" title="Боёв сегодня из дневного лимита · побед над этим боссом за всё время">
                       <span>Сегодня <b className="num">{row?.fightsToday ?? 0}/{row?.fightsPerDay ?? 7}</b></span>
-                      <span>Всего побед <b className="num">{row?.myWins ?? 0}</b></span>
+                      <span>Побед <b className="num">{row?.myWins ?? 0}</b></span>
                     </span>
                   )}
                   <span className="bcard-act">

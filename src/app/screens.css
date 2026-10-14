@@ -2027,3 +2027,4 @@ body:has(.fit-page) .hud { background: linear-gradient(180deg, rgba(20, 12, 6, 0
 .bcard-killer .avatar { border: 1.5px solid #2a1606; }
 .bcard-cta { padding: 5px 9px; border-radius: 8px; font-size: 12.5px; border-width: 1.5px; box-shadow: 0 2px 0 #2a1606; }
 .bcard-main { padding-bottom: 20px; }
+.bcard-meta.stack { flex: none; overflow: visible; }
