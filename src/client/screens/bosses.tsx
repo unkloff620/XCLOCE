@@ -95,6 +95,13 @@ export function BossesScreen() {
                   <Avatar name={row.lastKiller.name} photo={row.lastKiller.photo} size={30} />
                 </span>
               )}
+              {/* the health bar stands under the boss */}
+              {!grey && (
+                <div className="bcard-hp">
+                  <div className="bcard-hpbar"><i /></div>
+                  <div className="bcard-hpnums num"><span>{hpLabel(hp, hpMax)}</span><b>{Math.round((hp / Math.max(1, hpMax)) * 100)}%</b></div>
+                </div>
+              )}
               <span className="bcard-n display">{b.order}</span>
               <div className="bcard-main">
                 <div className="bcard-head">
@@ -108,12 +115,6 @@ export function BossesScreen() {
                     <span className="bcard-pill" title="Сейчас бьют">⚔ {row.fightingNow}</span>
                   ) : null}
                 </div>
-                {!grey && (
-                  <div className="bcard-hp">
-                    <div className="bcard-hpbar"><i /></div>
-                    <div className="bcard-hpnums num"><span>{hpLabel(hp, hpMax)} HP</span><b>{Math.round((hp / Math.max(1, hpMax)) * 100)}%</b></div>
-                  </div>
-                )}
                 <div className="bcard-reward">
                   <span className="bcard-label">{b.final ? "Финал:" : "Награда:"}</span>
                   <GainLine r={{ ...b.reward, items: [...(b.final ? [] : [{ id: `key-${b.id}`, qty: 1 }]), ...(b.reward.items ?? [])] }} size={18} />

@@ -1971,3 +1971,39 @@ body:has(.fit-page) .hud { background: linear-gradient(180deg, rgba(20, 12, 6, 0
 }
 @media (max-width: 480px) { .bj-bet { grid-template-columns: 1fr; } .bj-moves .btn { font-size: 13px; } }
 @media (prefers-reduced-motion: reduce) { .bjc { animation-duration: 0.01s; } }
+
+/* ---------------- boss card: the drawn parchment frame (public/assets/ui/boss-card-frame.webp, 1200×520) ----------------
+ * nine-slice: the curled corners keep their shape at any card height; the boss on the left with his health bar under him,
+ * the text on the right in dark ink. */
+.bcard { --ink-c: #2a1606; --mute-c: #6a4524; min-height: 196px; border: 0; border-radius: 0; overflow: visible; color: var(--ink-c);
+  background: none; box-shadow: none; border-image: url("/assets/ui/boss-card-frame.webp") 120 fill / 38px stretch;
+  filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.45)); }
+.bcard::before { display: none; }
+.bcard-art { left: 5%; top: 16px; bottom: 50px; width: 35%; border-radius: 10px; }
+.bcard-art img { left: -6%; bottom: -2%; width: 112%; height: 106%; }
+.bcard-art::after { display: none; }
+.bcard-art::before { left: 6%; right: 6%; height: 80%; }
+.bcard-sil { left: 10%; width: 80%; }
+.bcard-hp { position: absolute; z-index: 2; left: 5%; width: 35%; bottom: 16px; }
+.bcard-hpbar { height: 11px; border-radius: 6px; background: rgba(42, 22, 6, 0.28); border: 1.5px solid #2a1606; box-sizing: content-box; }
+.bcard-hpbar i { border-radius: 5px; box-shadow: none; }
+.bcard-hpnums { margin-top: 2px; font-size: 10.5px; font-weight: 800; color: var(--mute-c); }
+.bcard-hpnums b { color: #b3122e; }
+.bcard-n { left: 14px; top: 14px; box-shadow: 0 2px 0 #2a1606; border: 1.5px solid #2a1606; }
+.bcard-killer { left: auto; right: calc(60% + 2px); bottom: auto; top: 14px; background: rgba(42, 22, 6, 0.82); }
+.bcard-killer-label { color: #f3d9b4; }
+.bcard-main { margin-left: 42%; padding: 16px 16px 16px 4px; gap: 7px; }
+.bcard-name { color: var(--ink-c); text-shadow: 0 1px 0 rgba(255, 240, 210, 0.6); }
+.bcard-title { color: var(--mute-c); font-weight: 700; }
+.bcard-pill { background: rgba(42, 22, 6, 0.82); color: #f3d9b4; border-color: rgba(42, 22, 6, 0.9); }
+.bcard-reward { background: rgba(90, 50, 20, 0.14); box-shadow: inset 0 0 0 1.5px rgba(42, 22, 6, 0.28); }
+.bcard-label, .bcard-meta { color: var(--mute-c); }
+.bcard-meta b { color: var(--ink-c); }
+.bcard-reward .gain { color: var(--ink-c); }
+.bcard-cta { border: 2px solid #2a1606; box-shadow: 0 3px 0 #2a1606; }
+.bcard-cta.off { color: var(--mute-c); background: rgba(42, 22, 6, 0.12); border-color: rgba(42, 22, 6, 0.4); box-shadow: none; }
+.bcard.live { border-color: transparent; box-shadow: none; filter: drop-shadow(0 0 10px rgba(255, 204, 51, 0.75)) drop-shadow(0 6px 6px rgba(0, 0, 0, 0.45)); }
+.bcard.locked { filter: grayscale(1) drop-shadow(0 6px 6px rgba(0, 0, 0, 0.45)); }
+@media (max-width: 380px) { .bcard-main { padding-right: 12px; } .bcard-name { font-size: 19px; } }
+.bcard.final:not(.locked) { animation: bcard-boss-frame 3.2s ease-in-out infinite; }
+@keyframes bcard-boss-frame { 50% { filter: drop-shadow(0 0 12px color-mix(in srgb, var(--acc) 70%, transparent)) drop-shadow(0 6px 6px rgba(0, 0, 0, 0.45)); } }
