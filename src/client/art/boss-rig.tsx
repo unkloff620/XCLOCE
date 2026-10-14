@@ -9,7 +9,8 @@
  * inside it; the irises are clipped to the eye whites so they can look around.
  * Puppet-warped sequences (Мугонатор: brows and the lower jaw, tools/boss/assemble-mugo.py) come as one strip of frames;
  * the frame on show steps along a schedule (FRAME_SEQ) — idle, when he is hit ("ouch") and when he punches ("strike").
- * A tail sways behind the body; the far arm of a boss listed in BEHIND is drawn behind the body.
+ * A tail sways behind the body; the far arm of a boss listed in BEHIND is drawn behind the body. Arms in three pieces
+ * (shoulder → forearm at the elbow → fist at the wrist) box: see screens.css "Мугонатор".
  */
 import type { CSSProperties } from "react";
 import { BOSS_RIGS } from "./boss-rig-data.ts";
@@ -32,6 +33,15 @@ const FRAME_SEQ: Record<string, Record<"idle" | "ouch" | "strike", [number, numb
     idle: [[0, 2600], [1, 80], [2, 900], [1, 80], [0, 2400], [3, 80], [4, 700], [3, 80], [0, 500]],
     ouch: [[1, 50], [2, 1100], [1, 80], [0, 70]],
     strike: [[3, 60], [4, 760], [3, 80], [0, 0]],
+  },
+};
+
+/** a boss's own schedules (one loop in step with his CSS round): Мугонатор frowns and grunts while he boxes (3 s), then chuckles */
+const FRAME_SEQ_BY_BOSS: Record<string, Partial<Record<string, [number, number][]>>> = {
+  mugo: {
+    jaw: [[2, 150], [0, 350], [2, 150], [0, 350], [2, 150], [0, 350], [2, 150], [0, 350], [2, 150], [0, 350], [2, 150], [0, 350],
+      [0, 1000], [1, 70], [2, 70], [3, 100], [2, 70], [1, 70], [2, 70], [3, 100], [2, 80], [1, 70], [0, 300]],
+    brows: [[3, 80], [4, 2840], [3, 80], [0, 200], [1, 80], [2, 1200], [1, 80], [0, 440]],
   },
 };
 
@@ -83,7 +93,15 @@ export function BossRig({ id: baseId, hpShare = 1 }: { id: string; hpShare?: num
     P[`arm${side}`] ? (
       <g className={`br-arm br-arm-${side.toLowerCase()}`} style={{ ...origin(`arm${side}`), ...tilt(`arm${side}`, `hand${side}`, 24) }}>
         {img(`arm${side}`)}
-        <g className={`br-hand br-hand-${side.toLowerCase()}`} style={origin(`hand${side}`)}>{img(`hand${side}`)}</g>
+        {P[`low${side}`] ? (
+          // three pieces (Мугонатор): the forearm bends at the elbow, the fist turns at the wrist inside it
+          <g className={`br-low br-low-${side.toLowerCase()}`} style={origin(`low${side}`)}>
+            {img(`low${side}`)}
+            <g className={`br-hand br-hand-${side.toLowerCase()}`} style={origin(`hand${side}`)}>{img(`hand${side}`)}</g>
+          </g>
+        ) : (
+          <g className={`br-hand br-hand-${side.toLowerCase()}`} style={origin(`hand${side}`)}>{img(`hand${side}`)}</g>
+        )}
       </g>
     ) : null;
   // a puppet strip: a window one frame wide, the strip slides behind it
@@ -98,7 +116,7 @@ export function BossRig({ id: baseId, hpShare = 1 }: { id: string; hpShare?: num
   };
   const frameCss = Object.keys(FRAME_SEQ).filter((p) => P[p]?.frames).map((p) => {
     const w = P[p].w;
-    const k = (mode: "idle" | "ouch" | "strike") => seqKeyframes(`brf-${id}-${p}-${mode}`, w, FRAME_SEQ[p][mode]);
+    const k = (mode: "idle" | "ouch" | "strike") => seqKeyframes(`brf-${id}-${p}-${mode}`, w, (mode === "idle" && FRAME_SEQ_BY_BOSS[baseId]?.[p]) || FRAME_SEQ[p][mode]);
     const idle = k("idle"), ouch = k("ouch"), strike = k("strike");
     const sel = `.rig-${baseId}.boss-rig .brf-${p}`;
     return `${idle.css} ${ouch.css} ${strike.css}

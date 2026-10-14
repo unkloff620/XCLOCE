@@ -5,12 +5,13 @@ Body sheets (tail, legs, torso, shoulders, forearms, fists) are drawn on the ref
 Face sheets (head, eyes, pupils, eyes-closed, brows, jaw) share a 1000×1000 canvas; one similarity transform found by
 SIFT matching of the head sheet against the reference (raw/headM.json) puts them all in place.
   tail          sways at its root, behind everything
-  armR + handR  the far arm (shoulder + forearm, swings at the shoulder) and its fist (turns at the wrist) — behind the body
+  armR / lowR / handR  the far arm in three pieces — shoulder (turns at the shoulder), forearm (bends at the elbow), fist
+                (turns at the wrist) — behind the body
   body          legs + shorts + torso (breathes)
   head          head with the open grin; eyes / pupils / eyes-closed — the eyes
   brows@0..4    puppet-warped brows (rigid MLS): 0 calm, 1-2 raised, 3-4 frowning
   jaw@0..4      puppet-warped lower jaw: the lip corners pinned, the lip and chin drop — 0 closed (covers the teeth) … 4 wide
-  armL + handL  the near arm crossed over the belly and its fist
+  armL / lowL / handL  the near arm crossed over the belly, the same three pieces: he boxes with both
 Also writes public/bosses/mugo/{full,portrait,card}.webp.
 """
 import json, os, sys
@@ -75,10 +76,12 @@ def puppet(a, src, dst, box):
 
 # ---- body
 save("tail", over(raw("tail")))
-save("armR", over(raw("shoulderR"), raw("foreR")))
+save("armR", over(raw("shoulderR")))
+save("lowR", over(raw("foreR")))
 save("handR", over(raw("handR")))
 save("body", over(raw("legs"), raw("torso")))
-save("armL", over(raw("shoulderL"), raw("foreL")))
+save("armL", over(raw("shoulderL")))
+save("lowL", over(raw("foreL")))
 save("handL", over(raw("handL")))
 
 # ---- face

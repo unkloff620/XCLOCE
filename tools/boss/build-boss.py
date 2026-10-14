@@ -12,7 +12,7 @@ from PIL import Image
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 SCALE = 0.5
-PARTS = ["tail", "body", "foreL", "foreR", "armL", "handL", "armR", "handR", "head", "eyes", "eyes-closed", "pupils", "brows", "brows-sad", "mouth", "mouth-closed", "collar"]
+PARTS = ["tail", "body", "foreL", "foreR", "armL", "lowL", "handL", "armR", "lowR", "handR", "head", "eyes", "eyes-closed", "pupils", "brows", "brows-sad", "mouth", "mouth-closed", "collar"]
 # puppet-warped sequences (<part>@0.png, <part>@1.png …): one strip <part>.webp, frames side by side, frame 0 first
 FRAMES = ["brows", "jaw"]
 # which edge of the part joins the parent: (axis, side) — y/bottom for head and left forearm, x/right for the right one
@@ -25,7 +25,9 @@ PIVOT_BY_BOSS = {
     # whole arms swing at the shoulder, the hands with money turn at the wrist (inside the arm's swing)
     "garkusha": {"armL": [290.0, 335.0], "handL": [125.0, 560.0], "armR": [540.0, 350.0], "handR": [730.0, 430.0]},
     # the shark: shoulders, wrists and the root of the tail
-    "mugo": {"armL": [470.0, 300.0], "handL": [730.0, 490.0], "armR": [755.0, 290.0], "handR": [985.0, 490.0], "tail": [460.0, 690.0]},
+    # elbows: the far end of each forearm; wrists: where forearm and fist overlap (tools/boss/assemble-mugo.py)
+    "mugo": {"armL": [470.0, 300.0], "lowL": [505.0, 415.0], "handL": [738.0, 492.0],
+             "armR": [755.0, 290.0], "lowR": [750.0, 405.0], "handR": [990.0, 484.0], "tail": [460.0, 690.0]},
 }
 
 import sys, re

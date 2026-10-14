@@ -403,11 +403,21 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
       "armL": {
         "x": 382.0,
         "y": 253.0,
-        "w": 387,
-        "h": 286,
+        "w": 240,
+        "h": 219,
         "pivot": [
           470.0,
           300.0
+        ]
+      },
+      "lowL": {
+        "x": 460.5,
+        "y": 345.5,
+        "w": 308,
+        "h": 194,
+        "pivot": [
+          505.0,
+          415.0
         ]
       },
       "handL": {
@@ -416,18 +426,28 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "w": 178,
         "h": 142,
         "pivot": [
-          730.0,
-          490.0
+          738.0,
+          492.0
         ]
       },
       "armR": {
         "x": 626.5,
         "y": 232.5,
-        "w": 387,
-        "h": 297,
+        "w": 240,
+        "h": 230,
         "pivot": [
           755.0,
           290.0
+        ]
+      },
+      "lowR": {
+        "x": 705.5,
+        "y": 336.0,
+        "w": 308,
+        "h": 194,
+        "pivot": [
+          750.0,
+          405.0
         ]
       },
       "handR": {
@@ -436,8 +456,8 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "w": 138,
         "h": 130,
         "pivot": [
-          985.0,
-          490.0
+          990.0,
+          484.0
         ]
       },
       "head": {

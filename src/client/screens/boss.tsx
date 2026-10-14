@@ -22,7 +22,7 @@ import { Modal } from "../ui.tsx";
 import { talentThreshold, talentsForDamage } from "../../content/talents.ts";
 import { TalentWindow } from "./talents.tsx";
 import { weaponStats } from "../weapon-stats.ts";
-import { StrikeFx, useBossStrike } from "../fx/boss-strike.tsx";
+import { BOXERS, useBossStrike } from "../fx/boss-strike.tsx";
 
 const POLL_MS = 1500;
 /** a hit stays in the arena feed this long */
@@ -223,7 +223,7 @@ export function BossScreen({ id }: { id: string }) {
   const row = list?.bosses.find((b) => b.id === id);
   const hpShown = view ? Math.max(0, view.hp - pendingDmg) : state?.fight?.bossId === id ? state.fight.hp : null;
   // the boss punches at the screen now and then while the fight is on (show only, no damage)
-  const strikeFx = useBossStrike(fighting && (hpShown ?? 1) > 0);
+  const strikeFx = useBossStrike(fighting && (hpShown ?? 1) > 0 && !BOXERS.has(boss.id));
 
   const [mult, setMult] = useState<Mult>(1);
   const attack = async (weapon: string) => {
@@ -313,7 +313,7 @@ export function BossScreen({ id }: { id: string }) {
   // the fight takes the whole screen: the boss's own room (the garage for the others) + drifting sky behind, the boss in the middle, weapons at the bottom
   if (fightId) {
     return (
-      <div className={`fit-page fight-page ${strikeFx.impact ? "struck" : ""}`} style={{ ["--acc" as string]: boss.theme.accent }}>
+      <div className="fit-page fight-page" style={{ ["--acc" as string]: boss.theme.accent }}>
         <div className="fight-bg" aria-hidden="true">
           <DriftingSky className="fight-sky" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -327,7 +327,6 @@ export function BossScreen({ id }: { id: string }) {
           <BossRulesHelp topic="boss" />
         </div>
         <Arena full boss={boss} hp={hpShown} hpMax={hpMax} endsAt={state!.fight!.endsAt} fx={layer} hit={hitAnim} ouch={ouch} rug={rug} feed={hits} strike={strikeFx.side} />
-        <StrikeFx impact={strikeFx.impact} />
         <div className="fight-bottom">
           {phrase && <div key={phrase.id} className={`phrase-bubble ${phrase.crit ? "crit" : ""}`}>{phrase.text}</div>}
           <MultPicker mult={mult} setMult={setMult} />
