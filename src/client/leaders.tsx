@@ -1,7 +1,7 @@
 "use client";
 /*
- * Лидеры по авторитету — полоска над нижним меню: аватар, под ним место. Свою строчку игрок видит, даже если он не в
- * топе. Полоску можно свернуть (остаётся маленький язычок «Топ»), выбор помнится в браузере. Данные — /api/top.
+ * Все игроки по авторитету — полоска над нижним меню: аватар, под ним место, зелёная точка — сейчас в игре. Свою
+ * строчку игрок видит, даже если он дальше списка. Полоску можно свернуть (остаётся маленький язычок «Игроки»), выбор помнится в браузере. Данные — /api/top.
  */
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -10,8 +10,8 @@ import { useGame } from "./store.tsx";
 import { Avatar } from "./ui.tsx";
 import { Icon } from "./art/icons.tsx";
 
-interface TopRow { id: number; name: string; photo: string | null; xp: number; place: number; frame: string | null }
-interface TopView { top: TopRow[]; me: { place: number | null; xp: number } | null }
+interface TopRow { id: number; name: string; photo: string | null; xp: number; place: number; frame: string | null; online: boolean }
+interface TopView { top: TopRow[]; me: { place: number | null; xp: number } | null; online: number }
 
 const KEY = "xc2_leaders_open";
 const readOpen = () => {
@@ -46,19 +46,25 @@ export function LeadersStrip() {
   return (
     <div className={`leaders ${open ? "open" : "closed"}`}>
       <button className="leaders-tab" onClick={toggle} aria-expanded={open} aria-label={open ? "Скрыть лидеров" : "Показать лидеров"}>
-        <Icon name="xp" size={14} /> Топ <i>{open ? "▾" : "▴"}</i>
+        <Icon name="xp" size={14} /> Игроки{data.online > 0 && <span className="leaders-online"><i />{data.online}</span>} <i>{open ? "▾" : "▴"}</i>
       </button>
       {open && (
         <div className="leaders-row">
           {data.top.map((r) => (
-            <Link key={r.id} href={`/profile?id=${r.id}`} className={`leader p${Math.min(r.place, 4)} ${r.id === meId ? "me" : ""}`} title={`${r.place}. ${r.name} · ${r.xp.toLocaleString("ru-RU")} авторитета`}>
-              <Avatar name={r.name} photo={r.photo} size={40} frame={r.frame} />
+            <Link key={r.id} href={`/profile?id=${r.id}`} className={`leader p${Math.min(r.place, 4)} ${r.id === meId ? "me" : ""}`} title={`${r.place}. ${r.name} · ${r.xp.toLocaleString("ru-RU")} авторитета${r.online ? " · в игре" : ""}`}>
+              <span className="leader-av">
+                <Avatar name={r.name} photo={r.photo} size={40} frame={r.frame} />
+                {r.online && <i className="leader-on" aria-label="в игре" />}
+              </span>
               <b className="leader-n num">{r.place}</b>
             </Link>
           ))}
           {!inTop && state && data.me?.place && (
             <Link href="/rating" className="leader me" title={`Твоё место: ${data.me.place}`}>
-              <Avatar name={state.player.name} photo={state.player.photo} size={40} />
+              <span className="leader-av">
+                <Avatar name={state.player.name} photo={state.player.photo} size={40} />
+                <i className="leader-on" aria-label="в игре" />
+              </span>
               <b className="leader-n num">{data.me.place}</b>
             </Link>
           )}

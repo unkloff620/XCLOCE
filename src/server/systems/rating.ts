@@ -137,21 +137,29 @@ export async function claimPrize(ctx: Ctx, id: number) {
 
 /* ---------------- the leaders strip ---------------- */
 
-export const TOP_STRIP = 10;
+export const TOP_STRIP = 300;
+/** a player counts as in the game if he was seen this recently (the strip itself pings every minute) */
+export const ONLINE_MS = 3 * 60_000;
 
-/** The top players by authority (avatar, name, frame) and my own place — small and cheap: no week settling here. */
+/** All players by authority (avatar, name, frame, online) and my own place; opening it also marks me as seen. */
 export async function topAuthority(q: Queryable, pid: number, now: number) {
-  const rows = await q.query<{ id: number; display_name: string; photo_url: string | null; xp: number }>(
-    "SELECT id, display_name, photo_url, xp FROM players WHERE xp > 0 AND banned_at IS NULL ORDER BY xp DESC, id LIMIT $1",
+  await q.query("UPDATE players SET last_seen_at=$2 WHERE id=$1", [pid, new Date(now)]);
+  const rows = await q.query<{ id: number; display_name: string; photo_url: string | null; xp: number; last_seen_at: Date }>(
+    "SELECT id, display_name, photo_url, xp, last_seen_at FROM players WHERE banned_at IS NULL ORDER BY xp DESC, id LIMIT $1",
     [TOP_STRIP],
   );
   const [me] = await q.query<{ xp: number; place: number }>(
-    "SELECT p.xp, (SELECT COUNT(*)::int FROM players o WHERE o.xp > p.xp AND o.banned_at IS NULL) + 1 AS place FROM players p WHERE p.id=$1",
+    "SELECT p.xp, (SELECT COUNT(*)::int FROM players o WHERE o.banned_at IS NULL AND (o.xp > p.xp OR (o.xp = p.xp AND o.id < p.id))) + 1 AS place FROM players p WHERE p.id=$1",
     [pid],
   );
   const frames = await framesFor(q, rows.map((r) => r.id), now);
+  const [on] = await q.query<{ n: number }>("SELECT COUNT(*)::int AS n FROM players WHERE banned_at IS NULL AND last_seen_at > $1", [new Date(now - ONLINE_MS)]);
   return {
-    top: rows.map((r, i) => ({ id: r.id, name: r.display_name, photo: r.photo_url, xp: Number(r.xp), place: i + 1, frame: frames.get(r.id) ?? null })),
-    me: me ? { place: Number(me.xp) > 0 ? me.place : null, xp: Number(me.xp) } : null,
+    top: rows.map((r, i) => ({
+      id: r.id, name: r.display_name, photo: r.photo_url, xp: Number(r.xp), place: i + 1, frame: frames.get(r.id) ?? null,
+      online: new Date(r.last_seen_at).getTime() > now - ONLINE_MS,
+    })),
+    me: me ? { place: me.place, xp: Number(me.xp) } : null,
+    online: Number(on?.n ?? 0),
   };
 }

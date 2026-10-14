@@ -43,7 +43,7 @@ export function Avatar({ name, photo, size = 36, frame }: { name: string; photo?
   return (
     <span className={`avatar ${frame ? `frame-${frame}` : ""}`} style={{ width: size, height: size, fontSize: size * 0.4, borderRadius: size * 0.32 }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      {photo ? <img src={photo} alt="" referrerPolicy="no-referrer" /> : letters || "?"}
+      {photo ? <img src={photo} alt="" referrerPolicy="no-referrer" loading="lazy" decoding="async" /> : letters || "?"}
     </span>
   );
 }
