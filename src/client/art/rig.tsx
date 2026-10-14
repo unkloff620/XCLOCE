@@ -5,7 +5,8 @@
  * its parent. Draw order matches the artwork: torso, legs over the shorts, arms over the torso, head on top.
  * Clothes (WEAR_FIT): shoes and pants over the legs, the shirt over the arms, the hat on the head bone.
  * Hair rides on the head bone; skin tone and hair colour come from `look` (pre-baked image variants).
- * The left hand (handR, on the screen's right) is its own part on the forearm (HandFrames): resting, drumming (an item) or holding a thing.
+ * The left hand (handR, on the screen's right) is its own part on the forearm (HandFrames): resting, drumming (an item),
+ * flipping a butterfly knife (an item) or holding a thing.
  * Animations (CSS, see screens.css): breathing, looking around, drumming fingers, a held thing turning at the wrist.
  */
 import { ART_VER } from "../preload.ts";
@@ -14,6 +15,7 @@ import { createContext, useContext, useEffect, useMemo, useRef } from "react";
 import { RIG } from "./rig-data.ts";
 import { HAIR_FIT, SKIN_ORIGINAL, WEAR_FIT } from "./rig-look.ts";
 import { HELD_FIT } from "./held-data.ts";
+import { BUTTERFLY } from "./butterfly-data.ts";
 import { SEAT } from "../../content/home-scene.ts";
 import { CHAIR_FIT } from "./desk-data.ts";
 import { DEFAULT_LOOK, type Look } from "../../content/home.ts";
@@ -83,6 +85,10 @@ function wearLayer(worn: Worn, slot: string): Box | null {
   return id ? { href: `/assets/hero/wear/${id}.webp?v=${ART_VER.wear}`, ...WEARS[id] } : null;
 }
 function handLayer(look: Look, worn: Worn): Box {
+  if (worn.HAND === BUTTERFLY_HAND) {
+    const f = BUTTERFLY.fist;
+    return { href: `${look.skin !== SKIN_ORIGINAL ? `/assets/hero/skin-${look.skin}/held-` : "/assets/hero/held/"}butterfly-fist.webp?v=${ART_VER.heroPart}`, x: f.x, y: f.y, w: f.w, h: f.h };
+  }
   const held = worn.HAND && worn.HAND in HELD_FIT ? worn.HAND : null;
   if (!held) return partLayer(look, "handR");
   const base = look.skin !== SKIN_ORIGINAL ? `/assets/hero/skin-${look.skin}/held-${held}` : `/assets/hero/held/${held}`;
@@ -275,6 +281,44 @@ function Face() {
 /** the item (slot «Кисть») that makes the left hand drum its fingers — a reward for the first win over Кедр */
 export const DRUM_HAND = "hand-drum";
 
+/** the item (slot «Кисть») that puts a butterfly knife in the left hand — a boss reward (not given by any boss yet) */
+export const BUTTERFLY_HAND = "hand-butterfly";
+
+/**
+ * «Бабочка» (tools/rig/build-butterfly.py): the fist holds the open knife, then the hand opens and flips it shut and open
+ * (screens.css «Бабочка»). The knife is three pictures in its own frame (tang middle at 0,0): handle A held, the blade
+ * turning on A's pin (t1), handle B turning on the blade's pin (t2). It lies under the hand: in the fist only the blade
+ * and the butt show, under the open hand the swinging parts show past the fingers.
+ */
+function ButterflyHand() {
+  const { skin } = useContext(LookCtx);
+  const B = BUTTERFLY, K = B.knife;
+  const hand = (name: string) => `${skin !== SKIN_ORIGINAL ? `/assets/hero/skin-${skin}/held-` : "/assets/hero/held/"}butterfly-${name}.webp?v=${ART_VER.heroPart}`;
+  const part = (p: "handle-a" | "handle-b" | "blade") => {
+    const r = K[p];
+    return <image href={`/assets/hero/held/butterfly-${p}.webp?v=${ART_VER.heroPart}`} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" />;
+  };
+  // the blade (with handle B on it) turns on t1; handle B on t2: each a group moved so its pin is at 0,0
+  const at = ([x, y]: readonly number[], body: ReactNode) => (
+    <g transform={`translate(${x} ${y})`}><g className="bf-a bf-spin">{<g transform={`translate(${-x} ${-y})`}>{body}</g>}</g></g>
+  );
+  const place = (k: { x: number; y: number; rot: number }) => `translate(${k.x} ${k.y}) rotate(${k.rot})`;
+  const fr = B.open;
+  return (
+    <g className="rig-hand bf">
+      <g className="bf-a bf-k-fist" transform={place(K.fist)}>{part("handle-a")}{part("handle-b")}{part("blade")}</g>
+      <g className="bf-a bf-k-flip" transform={place(K.open)}>
+        {part("handle-a")}
+        {at(K.t1, <>{at(K.t2, part("handle-b"))}{part("blade")}</>)}
+      </g>
+      <image className="bf-a bf-fist" href={hand("fist")} x={B.fist.x} y={B.fist.y} width={B.fist.w} height={B.fist.h} preserveAspectRatio="none" />
+      {Array.from({ length: B.frames + 1 }, (_, k) => (
+        <image key={k} className={`bf-a bf-open bf-f${k}`} href={hand(k ? `open-f${k}` : "open")} x={fr.x} y={fr.y} width={fr.w} height={fr.h} preserveAspectRatio="none" />
+      ))}
+    </g>
+  );
+}
+
 /**
  * The left hand. By default it just rests on the knee (handR). With «Нервные пальцы» (DRUM_HAND) the fingers drum:
  * frames from a puppet warp (tools/rig/build-hand.py), pinky → index, each finger half up, up, half up; the frames are
@@ -286,6 +330,7 @@ function HandFrames() {
   const r = RIG.handR;
   const { skin } = useContext(LookCtx);
   const heldId = useContext(WornCtx).HAND;
+  if (heldId === BUTTERFLY_HAND) return <ButterflyHand />;
   if (heldId && heldId in HELD_FIT) {
     const f = HELD_FIT[heldId];
     const base = skin !== SKIN_ORIGINAL ? `/assets/hero/skin-${skin}/held-${heldId}` : `/assets/hero/held/${heldId}`;
