@@ -2013,3 +2013,17 @@ body:has(.fit-page) .hud { background: linear-gradient(180deg, rgba(20, 12, 6, 0
 .bcard-foot { gap: 6px; min-width: 0; }
 .bcard-meta { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .bcard-cta { padding: 6px 11px; font-size: 13px; }
+/* boss card, round 2: a framed boss, health written inside the bar, a smaller square button with the last killer beside it */
+.bcard-art { border: 2px solid #2a1606; box-shadow: inset 0 0 0 1.5px rgba(255, 236, 200, 0.35), 0 2px 0 rgba(42, 22, 6, 0.35); background: rgba(42, 22, 6, 0.1); bottom: 40px; }
+.bcard-hp { bottom: 16px; }
+.bcard-hpbar { position: relative; height: 16px; border-radius: 7px; display: grid; place-items: center; }
+.bcard-hpbar i { border-radius: 6px; }
+.bcard-hpbar span { position: relative; z-index: 1; font-size: 10.5px; font-weight: 900; line-height: 1; color: #fff; text-shadow: 0 1px 0 #2a1606, 0 0 3px #2a1606; white-space: nowrap; }
+.bcard-n { left: 12px; top: 12px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 6px; font-size: 12px; }
+.bcard-foot { align-items: center; margin-top: -2px; }
+.bcard-act { flex: none; display: inline-flex; align-items: center; gap: 5px; }
+.bcard-killer { position: static; display: inline-flex; flex-direction: column; align-items: center; gap: 1px; padding: 0; background: none; border: 0; box-shadow: none; }
+.bcard-killer-label { font-size: 8px; color: var(--mute-c); line-height: 1; }
+.bcard-killer .avatar { border: 1.5px solid #2a1606; }
+.bcard-cta { padding: 5px 9px; border-radius: 8px; font-size: 12.5px; border-width: 1.5px; box-shadow: 0 2px 0 #2a1606; }
+.bcard-main { padding-bottom: 20px; }

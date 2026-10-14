@@ -83,23 +83,10 @@ export function BossesScreen() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 {(b.photo.card ?? b.photo.full) ? <img src={(b.photo.card ?? b.photo.full)!} alt="" draggable={false} /> : <div className="bcard-sil"><BossSilhouette accent={tierColor(b.order)} /></div>}
               </div>
-              {/* who finished this boss last: a framed avatar at the bottom of the picture → their profile */}
-              {row?.lastKiller && !grey && (
-                <span className="bcard-killer" role="link" tabIndex={0} title={`Последним добил: ${row.lastKiller.name}`} aria-label={`Последним добил: ${row.lastKiller.name}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    router.push(`/profile?id=${row.lastKiller!.id}`);
-                  }}>
-                  <span className="bcard-killer-label">добил</span>
-                  <Avatar name={row.lastKiller.name} photo={row.lastKiller.photo} size={30} />
-                </span>
-              )}
               {/* the health bar stands under the boss */}
               {!grey && (
                 <div className="bcard-hp">
-                  <div className="bcard-hpbar"><i /></div>
-                  <div className="bcard-hpnums num"><span>{hpLabel(hp, hpMax)}</span><b>{Math.round((hp / Math.max(1, hpMax)) * 100)}%</b></div>
+                  <div className="bcard-hpbar"><i /><span className="num">{hpLabel(hp, hpMax)}</span></div>
                 </div>
               )}
               <span className="bcard-n display">{b.order}</span>
@@ -129,7 +116,21 @@ export function BossesScreen() {
                       <span>Всего побед <b className="num">{row?.myWins ?? 0}</b></span>
                     </span>
                   )}
-                  <span className={`bcard-cta display ${locked ? "off" : ""}`}>{locked ? <><Icon name="lock" size={14} /> Нет карт</> : mine ? <>Бить ›</> : <>В бой ›</>}</span>
+                  <span className="bcard-act">
+                    {/* who finished this boss last: a small avatar left of the button → their profile */}
+                    {row?.lastKiller && !grey && (
+                      <span className="bcard-killer" role="link" tabIndex={0} title={`Последним добил: ${row.lastKiller.name}`} aria-label={`Последним добил: ${row.lastKiller.name}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          router.push(`/profile?id=${row.lastKiller!.id}`);
+                        }}>
+                        <span className="bcard-killer-label">добил</span>
+                        <Avatar name={row.lastKiller.name} photo={row.lastKiller.photo} size={26} />
+                      </span>
+                    )}
+                    <span className={`bcard-cta display ${locked ? "off" : ""}`}>{locked ? <><Icon name="lock" size={14} /> Нет карт</> : mine ? <>Бить ›</> : <>В бой ›</>}</span>
+                  </span>
                 </div>
               </div>
             </Link>
