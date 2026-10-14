@@ -1845,7 +1845,8 @@ body:has(.fit-page) .hud { background: linear-gradient(180deg, rgba(20, 12, 6, 0
    open knife (blade out); the hand opens and flips it shut and open twice (the blade turns 180° on handle A's pin, handle
    B a full turn on the blade's pin; the fingers lift one by one as the blade passes under them, the thumb holds it shut);
    then the fist again. The hand pictures swap by opacity steps: bf-f0 the open hand, bf-f1…7 its finger frames. */
-.bf-a { animation: 7s steps(1, end) infinite; }
+/* longhands: a shorthand without a name is minified to «animation: none» (the duration lost) */
+.bf-a { animation-duration: 7s; animation-timing-function: steps(1, end); animation-iteration-count: infinite; }
 .bf-fist, .bf-k-fist { animation-name: bf-fist; }
 @keyframes bf-fist { 0% { opacity: 1; } 34.286% { opacity: 0; } 82.857% { opacity: 1; } 100% { opacity: 1; } }
 .bf-k-flip { animation-name: bf-flip-k; opacity: 0; }
