@@ -134,3 +134,24 @@ export async function claimPrize(ctx: Ctx, id: number) {
   if (!p) throw new GameError("prize_taken", "Награда уже получена");
   return { title: p.title, reward: await grantReward(ctx, p.reward, `prize:${id}`) };
 }
+
+/* ---------------- the leaders strip ---------------- */
+
+export const TOP_STRIP = 10;
+
+/** The top players by authority (avatar, name, frame) and my own place — small and cheap: no week settling here. */
+export async function topAuthority(q: Queryable, pid: number, now: number) {
+  const rows = await q.query<{ id: number; display_name: string; photo_url: string | null; xp: number }>(
+    "SELECT id, display_name, photo_url, xp FROM players WHERE xp > 0 AND banned_at IS NULL ORDER BY xp DESC, id LIMIT $1",
+    [TOP_STRIP],
+  );
+  const [me] = await q.query<{ xp: number; place: number }>(
+    "SELECT p.xp, (SELECT COUNT(*)::int FROM players o WHERE o.xp > p.xp AND o.banned_at IS NULL) + 1 AS place FROM players p WHERE p.id=$1",
+    [pid],
+  );
+  const frames = await framesFor(q, rows.map((r) => r.id), now);
+  return {
+    top: rows.map((r, i) => ({ id: r.id, name: r.display_name, photo: r.photo_url, xp: Number(r.xp), place: i + 1, frame: frames.get(r.id) ?? null })),
+    me: me ? { place: Number(me.xp) > 0 ? me.place : null, xp: Number(me.xp) } : null,
+  };
+}

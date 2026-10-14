@@ -22,6 +22,7 @@ import { TapTips } from "./tap-tips.tsx";
 import { EventButton } from "./event-banner.tsx";
 import { EnergyWindow } from "./screens/energy.tsx";
 import { NAV_TABS } from "../content/nav.ts";
+import { LeadersStrip } from "./leaders.tsx";
 import { isLoaded, preload, sectionOfRoute, urlsFor, type LookLite } from "./preload.ts";
 
 const TABS = NAV_TABS;
@@ -145,6 +146,8 @@ function Nav() {
   const myClan = state?.clan?.id ?? null;
   return (
     <nav className="nav">
+      {/* the leaders strip sits on top of the menu (not over a boss fight) */}
+      {!/^\/bosses\/[^/]+/.test(path) && <LeadersStrip />}
       {TABS.map((t) => (
         // a member's Clans tab leads straight to the own clan (no flash of the clan list)
         <Link key={t.id} href={t.id === "clans" && myClan ? `/clans/${myClan}` : t.href} className={on === t.id ? "on" : ""} style={{ ["--glow" as string]: NAV_GLOW[t.id] }} aria-label={t.label} title={t.label}
