@@ -2007,3 +2007,9 @@ body:has(.fit-page) .hud { background: linear-gradient(180deg, rgba(20, 12, 6, 0
 @media (max-width: 380px) { .bcard-main { padding-right: 12px; } .bcard-name { font-size: 19px; } }
 .bcard.final:not(.locked) { animation: bcard-boss-frame 3.2s ease-in-out infinite; }
 @keyframes bcard-boss-frame { 50% { filter: drop-shadow(0 0 12px color-mix(in srgb, var(--acc) 70%, transparent)) drop-shadow(0 6px 6px rgba(0, 0, 0, 0.45)); } }
+.bcard-hp { left: 6%; width: 33%; bottom: 15px; }
+.bcard-hpnums { font-size: 10px; white-space: nowrap; gap: 4px; }
+.bcard-hpnums span { overflow: hidden; text-overflow: ellipsis; }
+.bcard-foot { gap: 6px; min-width: 0; }
+.bcard-meta { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.bcard-cta { padding: 6px 11px; font-size: 13px; }
