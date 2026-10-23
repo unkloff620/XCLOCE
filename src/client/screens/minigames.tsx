@@ -282,7 +282,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
 
           {/* no game running: the levels to choose from (and how the last game ended) */}
           {!playing && info && (
-            <div className="zb-menu" style={{ left: zx(420), top: zy(240), width: zx(640), height: zy(1400) }}>
+            <div className="zb-menu" style={{ left: zx(415), top: zy(215), width: zx(650), height: zy(1440) }}>
               {g?.status === "done" && g.result && (
                 <div className={`zb-res ${g.result.won ? "win" : "lose"}`}>
                   <b className="display">{g.result.won ? "Пройдено!" : g.result.outcome === "gave_up" ? "Сдался" : "Не хватило"}</b>

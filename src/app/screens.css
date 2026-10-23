@@ -2313,3 +2313,9 @@ button.bjt-stack { cursor: pointer; }
 .zb-res b { font-size: 4.6cqw; }
 .zb-lvl { padding: 1.2cqw 1.6cqw; }
 .zb-menu .chip, .zb-menu .reward-chips { font-size: 2.4cqw; }
+.zb-menu { gap: 1.1cqw; }
+.zb-lvl { padding: 1cqw 1.6cqw; gap: 1.6cqw; }
+.zb-lvl-n { width: 6cqw; height: 6cqw; font-size: 3.6cqw; }
+.zb-lvl-main > b { font-size: 3.2cqw; }
+.zb-lvl-win { font-size: 2.2cqw; }
+.zb-lvl-win .coin, .zb-lvl-pay .coin { font-size: 2.4cqw; }
