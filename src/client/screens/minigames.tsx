@@ -90,29 +90,24 @@ function ZonkHelp() {
 const rewardText = (r: { currencies?: Partial<Record<string, number>> }) =>
   Object.entries(r.currencies ?? {}).map(([c, v]) => `${v} ${c}`).join(" + ");
 
-function Cup() {
-  return (
-    <svg viewBox="0 0 80 90" width="100%" height="100%" aria-hidden="true">
-      <path d="M10 14 L70 14 L62 84 Q40 90 18 84 Z" fill="#c98a52" stroke="#3a1d0b" strokeWidth="4" strokeLinejoin="round" />
-      <ellipse cx="40" cy="14" rx="30" ry="9" fill="#2a1406" stroke="#3a1d0b" strokeWidth="4" />
-      <path d="M16 30 L64 30 M17 66 L63 66" stroke="#3a1d0b" strokeWidth="3" opacity="0.45" />
-      <path d="M22 22 L26 78" stroke="#f0c08a" strokeWidth="4" strokeLinecap="round" opacity="0.6" />
-    </svg>
-  );
-}
-
-/* the board picture (public/assets/yard/zonk-board.webp, drawn at 1429×2000 — every place below is in those pixels) */
-const ZW = 1429, ZH = 2000;
+/*
+ * The room picture (public/assets/yard/zonk-room.webp, 841×1870 — every place below is in those pixels): a lamp and the
+ * «ЗОНК» sign on top, the framed chalkboard in the middle, a table at the bottom. It covers the whole window; only the
+ * top and the bottom (the lamp and the table) may be cut on a short screen.
+ */
+const ZW = 841, ZH = 1870;
 const zx = (x: number) => `${(x / ZW) * 100}%`;
 const zy = (y: number) => `${(y / ZH) * 100}%`;
 /** chalk lines of the rounds on the left board, top to bottom */
-const ZK_LINES = [415, 525, 637, 748, 858, 970, 1081, 1192, 1303, 1416];
+const ZK_LINES = [561, 624, 688, 751, 815, 880, 946, 1014, 1081, 1148];
 /** the chalk ladder: row r (0 = the top) has r + 1 cells; the kept dice fill it from the bottom row up */
-const LADDER_ROWS = [820, 988, 1156, 1326, 1494];
-const LADDER_COLS = [433, 587, 741, 893, 1047];
+const LADDER_ROWS = [758, 842, 927, 1014, 1103, 1194];
+const LADDER_COLS = [246, 328, 409, 490, 571, 652];
+/** one chalk cell */
+const CELL = { w: 73, h: 78 };
 /** cells per ladder row, from the bottom row up */
-const LADDER_CAPS = [5, 4, 3, 2, 1];
-const ladderCell = (row: number, col: number) => ({ x: LADDER_COLS[col], y: LADDER_ROWS[4 - row] });
+const LADDER_CAPS = [6, 5, 4, 3, 2, 1];
+const ladderCell = (row: number, col: number) => ({ x: LADDER_COLS[col], y: LADDER_ROWS[LADDER_ROWS.length - 1 - row] });
 type LadderGroup = { dice: { v: number; i: number }[]; points: number | null; old: boolean };
 /**
  * The kept dice laid into the ladder, combination by combination, from the bottom row up: a combination that does not
@@ -141,18 +136,18 @@ function layoutLadder(groups: LadderGroup[]) {
   return { dice, marks };
 }
 /** where the dice land: the open chalk field above the ladder */
-const FIELD = { x: 425, y: 250, w: 520, h: 520 };
-/** the cup stands right of the field, by the sheet */
-const CUP = { x: 1015, y: 470 };
+const FIELD_SLOTS = [[250, 470], [356, 470], [250, 566], [356, 566], [250, 662], [356, 662], [462, 662]] as const;
+/** the cup lies in the field's top right corner, its mouth to the dice */
+const CUP = { x: 520, y: 545 };
 function landing(seed: number, i: number) {
   const r = (k: number) => {
     const v = Math.sin(seed * 9301 + i * 49297 + k * 233) * 10000;
     return v - Math.floor(v);
   };
-  const col = i % 3, row = Math.floor(i / 3);
-  const x = FIELD.x + col * (FIELD.w / 3) + 14 + r(1) * 24;
-  const y = FIELD.y + row * (FIELD.h / 2) + 30 + r(2) * 90;
-  return { x, y, rot: Math.round(r(3) * 44 - 22), spin: (r(4) > 0.5 ? 1 : -1) * (360 + Math.round(r(5) * 360)) };
+  // every die takes its own slot of the field (the slots shuffled by the roll), nudged a little inside it
+  const order = FIELD_SLOTS.map((_, k) => k).sort((p, q) => Math.sin(seed * 131 + p * 17) - Math.sin(seed * 131 + q * 17));
+  const [sx, sy] = FIELD_SLOTS[order[i % FIELD_SLOTS.length]];
+  return { x: sx + r(1) * 30, y: sy + r(2) * 26, rot: Math.round(r(3) * 44 - 22), spin: (r(4) > 0.5 ? 1 : -1) * (360 + Math.round(r(5) * 360)) };
 }
 
 export function ZonkWindow({ onClose }: { onClose: () => void }) {
@@ -245,14 +240,20 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
     : null;
   const rec = info?.record ?? null;
   return (
-    <Modal title={<span className="title-row">Зонк <ZonkHelp /></span>} onClose={onClose} full>
-      <div className="gstage">
+    <Modal onClose={onClose} full>
+      <div className="gstage bleed">
+        {/* the picture is the whole window: no title line, just [?] in the corner opposite [×] */}
+        <div className="zb-help"><ZonkHelp /></div>
         <div className="zb" style={{ ["--throw" as string]: throwing }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="zb-bg" src="/assets/yard/zonk-board.webp" alt="" draggable={false} />
+          <img className="zb-bg" src="/assets/yard/zonk-room.webp" alt="" draggable={false} />
+          {/* the lamp over the sign is alive: its light breathes, dims and flickers, the room darkens with it */}
+          <span className="zb-dark" aria-hidden="true" />
+          <span className="zb-lamp" aria-hidden="true" />
+          <span className="zb-bulb" aria-hidden="true" style={{ left: zx(395), top: zy(8), width: zx(60), height: zy(40) }} />
 
           {/* the paper at the top left: the best game of the day */}
-          <div className="zb-rec" style={{ left: zx(62), top: zy(66), width: zx(272), height: zy(160) }}>
+          <div className="zb-rec" style={{ left: zx(30), top: zy(350), width: zx(162), height: zy(100) }}>
             <b className="zb-rec-h">{rec?.day === "yesterday" ? "Рекорд вчера" : "Рекорд дня"}</b>
             {rec ? (
               <span className="zb-rec-who">
@@ -269,7 +270,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
           {ZK_LINES.slice(0, rounds).map((y, i) => {
             const sc = scores[i];
             return (
-              <span key={i} className={`zb-rd ${sc ? (sc.zonk ? "zonk" : "ok") : ""}`} style={{ left: zx(85), width: zx(215), top: zy(y - 92), height: zy(88) }}>
+              <span key={i} className={`zb-rd ${sc ? (sc.zonk ? "zonk" : "ok") : ""}`} style={{ left: zx(46), width: zx(132), top: zy(y - 56), height: zy(54) }}>
                 <i>{i + 1}</i>
                 <b className="num">{sc ? (sc.zonk ? "Зонк" : full(sc.points)) : ""}</b>
               </span>
@@ -278,13 +279,13 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
           {onBoard && scores.length < rounds && (
             // eslint-disable-next-line @next/next/no-img-element
             <img key={scores.length} className="zb-arrow" src="/assets/yard/zonk-arrow.webp" alt="" draggable={false}
-              style={{ left: zx(296), top: zy(ZK_LINES[scores.length] - 82), width: zx(120) }} />
+              style={{ left: zx(176), top: zy(ZK_LINES[scores.length] - 50), width: zx(64) }} />
           )}
-          <button className="zb-btn red" style={{ left: zx(70), top: zy(1765), width: zx(250), height: zy(120) }} disabled={!playing || !!show || busy === "zonk_give_up"}
+          <button className="zb-btn red" style={{ left: zx(39), top: zy(1369), width: zx(145), height: zy(76) }} disabled={!playing || !!show || busy === "zonk_give_up"}
             onClick={() => run("zonk_give_up", {})}>Сдаться</button>
 
           {/* the chalk head of the big board: the level, the score against the target, this attempt */}
-          <div className="zb-head" style={{ left: zx(420), top: zy(86), width: zx(640) }}>
+          <div className="zb-head" style={{ left: zx(244), top: zy(368), width: zx(360) }}>
             {g ? (
               <>
                 <span>Уровень <b className="num">{g.level ?? 1}</b> · попытка <b className="num">{Math.min(scores.length + (onBoard ? 1 : 0), rounds)}/{rounds}</b></span>
@@ -301,17 +302,20 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
               <button key={`${fieldSeed}-${throwing}-${i}`} className={`zb-die ${!show && hints.has(i) ? "hint" : ""} ${show ? "dead" : ""}`} disabled={!!show}
                 onClick={() => toggle(i)} aria-label={`кость ${v}`}
                 style={{ left: zx(l.x), top: zy(l.y), ["--rot" as string]: `${l.rot}deg`, ["--spin" as string]: `${l.spin}deg`,
-                  ["--fx" as string]: `${((CUP.x - l.x) / ZW) * 100}cqw`, ["--fy" as string]: `${((CUP.y - l.y) / ZW) * 100}cqw`, ["--d" as string]: `${0.28 + i * 0.05}s` }}>
+                  ["--fx" as string]: `${((CUP.x - 20 - l.x) / ZW) * 100}cqw`, ["--fy" as string]: `${((CUP.y - l.y) / ZW) * 100}cqw`, ["--d" as string]: `${0.28 + i * 0.05}s` }}>
                 <DieFace v={v} />
               </button>
             );
           })}
-          <span key={`cup-${throwing}`} className={`zb-cup ${throwing ? "pour" : ""}`} style={{ left: zx(CUP.x - 70), top: zy(CUP.y - 90), width: zx(130) }}><Cup /></span>
+          <span key={`cup-${throwing}`} className={`zb-cup ${throwing ? "pour" : ""}`} style={{ left: zx(CUP.x - 30), top: zy(CUP.y - 60), width: zx(92) }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/assets/yard/zonk-cup.webp" alt="" draggable={false} />
+          </span>
 
           {/* the chalk ladder: the dice kept this attempt (earlier throws fixed, the ones picked now go back on a tap) */}
           {ladder.dice.map((d, k) => {
             const c = ladderCell(d.row, d.col);
-            const style = { left: zx(c.x + 19), top: zy(c.y + 4), width: zx(100), height: zy(100) };
+            const style = { left: zx(c.x + 12), top: zy(c.y + 2), width: zx(48), height: zy(48) };
             return d.i < 0
               ? <span key={`k${k}`} className="zb-kept old" style={style}><DieFace v={d.v} /></span>
               : <button key={`p${d.i}`} className="zb-kept" style={style} onClick={() => toggle(d.i)} aria-label={`вернуть ${d.v}`}><DieFace v={d.v} /></button>;
@@ -320,18 +324,18 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
           {ladder.marks.map((m, k) => {
             const a = ladderCell(m.row, m.from), b = ladderCell(m.row, m.to);
             return (
-              <span key={`m${k}-${m.row}-${m.from}`} className={`zb-br ${m.bad ? "bad" : ""} ${m.old ? "old" : ""}`} style={{ left: zx(a.x + 24), width: zx(b.x + 114 - (a.x + 24)), top: zy(a.y + 108), height: zy(52) }}>
+              <span key={`m${k}-${m.row}-${m.from}`} className={`zb-br ${m.bad ? "bad" : ""} ${m.old ? "old" : ""}`} style={{ left: zx(a.x + 12), width: zx(b.x + 62 - (a.x + 12)), top: zy(a.y + 51), height: zy(30) }}>
                 <i />{m.label && <b className="num">{m.label}</b>}
               </span>
             );
           })}
           {/* this attempt's points so far: what «Сохранить» would write down */}
           {playing && !show && turn > 0 && (
-            <span key={turn} className={`zb-turn ${pts === null && pick.length ? "bad" : ""}`} style={{ left: zx(1192), top: zy(1508), width: zx(232), height: zy(120) }}>+{full(turn)}</span>
+            <span key={turn} className={`zb-turn ${pts === null && pick.length ? "bad" : ""}`} style={{ left: zx(652), top: zy(1100), width: zx(150), height: zy(84) }}>+{full(turn)}</span>
           )}
 
           {/* the sheet on the right: the combinations; a row lights up when the roll has it, brighter when it is picked */}
-          <div className="zb-sheet" style={{ left: zx(1122), top: zy(212), width: zx(270), height: zy(1010) }}>
+          <div className="zb-sheet" style={{ left: zx(670), top: zy(438), width: zx(150), height: zy(596) }}>
             <b className="zb-sheet-h">Комбинации</b>
             {COMBOS.map((c) => {
               const can = c.test(nRoll, roll.length);
@@ -346,24 +350,24 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
           </div>
 
           {show ? (
-            <div key={`z${show.key}`} className="zb-flash zonk late" style={{ left: zx(420), top: zy(540), width: zx(640) }}>
+            <div key={`z${show.key}`} className="zb-flash zonk late" style={{ left: zx(236), top: zy(560), width: zx(380) }}>
               {show.points ? `Зонк! −${full(show.points)}` : "Зонк!"}
             </div>
           ) : playing && g?.last && !g.last.zonk ? (
-            <div key={`${g.round}-${scores.length}`} className="zb-flash" style={{ left: zx(420), top: zy(560), width: zx(640) }}>
+            <div key={`${g.round}-${scores.length}`} className="zb-flash" style={{ left: zx(236), top: zy(560), width: zx(380) }}>
               +{full(g.last.points)} записано
             </div>
           ) : null}
-          {hint && <span className="zb-hint" style={{ left: zx(420), top: zy(1650), width: zx(620) }}>{hint}</span>}
+          {hint && <span className="zb-hint" style={{ left: zx(240), top: zy(1300), width: zx(380) }}>{hint}</span>}
 
-          <button className="zb-btn grey" style={{ left: zx(1065), top: zy(1670), width: zx(285), height: zy(100) }} disabled={!playing || !!show || busy === "zonk_move" || pts === null}
+          <button className="zb-btn grey" style={{ left: zx(630), top: zy(1308), width: zx(164), height: zy(61) }} disabled={!playing || !!show || busy === "zonk_move" || pts === null}
             onClick={() => run("zonk_move", { pick, then: "roll" })}>Бросить<small className="num">{left}</small></button>
-          <button className={`zb-btn grey ${canBank ? "ready" : ""}`} style={{ left: zx(1065), top: zy(1795), width: zx(285), height: zy(100) }} disabled={!canBank || busy === "zonk_move"}
+          <button className={`zb-btn grey ${canBank ? "ready" : ""}`} style={{ left: zx(630), top: zy(1383), width: zx(164), height: zy(61) }} disabled={!canBank || busy === "zonk_move"}
             onClick={() => run("zonk_move", { pick, then: "bank" })}>Сохранить</button>
 
           {/* no game running: the levels to choose from (and how the last game ended) */}
           {!playing && !show && info && (
-            <div className="zb-menu" style={{ left: zx(415), top: zy(215), width: zx(650), height: zy(1440) }}>
+            <div className="zb-menu" style={{ left: zx(236), top: zy(440), width: zx(562), height: zy(850) }}>
               {g?.status === "done" && g.result && (
                 <div className={`zb-res ${g.result.won ? "win" : "lose"}`}>
                   <b className="display">{g.result.won ? "Пройдено!" : g.result.outcome === "gave_up" ? "Сдался" : "Не хватило"}</b>

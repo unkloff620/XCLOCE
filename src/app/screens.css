@@ -2360,3 +2360,75 @@ button.bjt-stack { cursor: pointer; }
 .zb-mini i { width: 1.6cqw; height: 1.6cqw; }
 .zb-br b { margin-top: 0.4cqw; }
 .zb-combo b { font-size: 2.05cqw; }
+
+/* ---------------- zonk: the room picture fills the whole window (public/assets/yard/zonk-room.webp, 841×1870) ----------------
+ * As wide as the window, cut top and bottom on a short one (the lamp and the table may go, the board never does: at most
+ * ~15% a side, so a wide window gets the picture as tall as it is and the sides stay free). */
+.modal.full > .gstage.bleed { max-width: none; width: calc(100% + 24px); margin: calc(-1 * (var(--safe-t) + 10px)) -12px calc(-1 * (var(--safe-b) + 10px));
+  position: relative; overflow: hidden; background: #140b06; }
+.gstage.bleed .zb { width: min(max(100cqw, calc(100cqh * 0.4497)), calc(100cqh * 0.64)); aspect-ratio: 841 / 1870; flex: none; }
+.zb-help { position: absolute; z-index: 8; left: 10px; top: calc(var(--safe-t) + 8px); }
+.zb-help .help-btn, .zb-help button { box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6); }
+
+/* the lamp: a warm cone from the bulb, the room dims when it flickers */
+.zb-dark, .zb-lamp { position: absolute; inset: 0; pointer-events: none; }
+.zb-dark { background: #000; opacity: 0; animation-name: zb-dim; animation-duration: 9s; animation-timing-function: linear; animation-iteration-count: infinite; }
+.zb-lamp { mix-blend-mode: screen;
+  background: radial-gradient(ellipse 55% 22% at 50.5% 2%, rgba(255, 196, 110, 0.55), rgba(255, 170, 80, 0.18) 55%, transparent 100%),
+    radial-gradient(ellipse 18% 6% at 50.5% 1.6%, rgba(255, 240, 200, 0.9), transparent 100%);
+  animation-name: zb-flicker; animation-duration: 9s; animation-timing-function: linear; animation-iteration-count: infinite; }
+.zb-bulb { border-radius: 50%; pointer-events: none; background: radial-gradient(closest-side, rgba(255, 250, 225, 0.95), rgba(255, 210, 120, 0.5) 55%, transparent);
+  filter: blur(2px); mix-blend-mode: screen;
+  animation-name: zb-flicker; animation-duration: 9s; animation-timing-function: linear; animation-iteration-count: infinite; }
+@keyframes zb-flicker {
+  0% { opacity: 0.85; } 8% { opacity: 1; } 16% { opacity: 0.8; } 24% { opacity: 0.95; }
+  30% { opacity: 0.9; } 30.6% { opacity: 0.15; } 31.2% { opacity: 0.85; } 31.8% { opacity: 0.1; } 32.6% { opacity: 1; }
+  45% { opacity: 0.75; } 55% { opacity: 1; }
+  62% { opacity: 0.95; } 62.5% { opacity: 0.3; } 63.5% { opacity: 0.95; }
+  74% { opacity: 0.7; } 82% { opacity: 0.55; } 86% { opacity: 1; } 87% { opacity: 0.2; } 87.6% { opacity: 1; }
+  100% { opacity: 0.85; }
+}
+@keyframes zb-dim {
+  0% { opacity: 0.05; } 30% { opacity: 0.04; } 30.6% { opacity: 0.32; } 31.2% { opacity: 0.08; } 31.8% { opacity: 0.36; } 32.6% { opacity: 0; }
+  45% { opacity: 0.1; } 55% { opacity: 0; } 62.5% { opacity: 0.25; } 63.5% { opacity: 0.02; }
+  74% { opacity: 0.12; } 82% { opacity: 0.18; } 86% { opacity: 0; } 87% { opacity: 0.3; } 87.6% { opacity: 0; } 100% { opacity: 0.05; }
+}
+@media (prefers-reduced-motion: reduce) { .zb-dark, .zb-lamp, .zb-bulb { animation: none; } }
+
+/* sizes for the new picture (it is drawn narrower: 841 wide) */
+.zb-die { width: 6.9cqw; height: 6.9cqw; padding: 0.5cqw; border-width: 0.4cqw; border-radius: 0.9cqw; }
+.zb-kept { padding: 0.45cqw; border-width: 0.3cqw; border-radius: 0.7cqw; }
+.zb-cup { aspect-ratio: 420 / 364; transform: scaleX(-1); transform-origin: 50% 60%; filter: drop-shadow(0 1cqw 0.8cqw rgba(0, 0, 0, 0.55)); }
+.zb-cup img { display: block; width: 100%; height: 100%; }
+.zb-cup.pour { animation-name: zb-pour2; animation-duration: 0.95s; animation-timing-function: ease-in-out; }
+@keyframes zb-pour2 {
+  0%, 100% { transform: scaleX(-1) rotate(0); }
+  8% { transform: scaleX(-1) rotate(-14deg) translateY(-1.2cqw); } 16% { transform: scaleX(-1) rotate(12deg) translateY(-1.8cqw); }
+  24% { transform: scaleX(-1) rotate(-12deg) translateY(-1.2cqw); } 32% { transform: scaleX(-1) rotate(10deg) translateY(-1.8cqw); }
+  52% { transform: scaleX(-1) rotate(38deg) translate(-1cqw, 1.5cqw); } 78% { transform: scaleX(-1) rotate(34deg) translate(-1cqw, 1.5cqw); }
+}
+.zb-head { font-size: 2.6cqw; gap: 0.2cqw 1.6cqw; }
+.zb-score b { font-size: 5.6cqw; }
+.zb-rec { gap: 0.4cqw; padding: 0.6cqw 1cqw; }
+.zb-rec-h { font-size: 1.9cqw; }
+.zb-rec .avatar { width: 5.4cqw !important; height: 5.4cqw !important; font-size: 2cqw !important; }
+.zb-rec-name i { font-size: 2.1cqw; max-width: 10cqw; }
+.zb-rec-name b { font-size: 2.9cqw; }
+.zb-rd b { font-size: 3.2cqw; }
+.zb-rd.zonk b { font-size: 2.6cqw; }
+.zb-rd i { font-size: 1.9cqw; }
+.zb-btn { font-size: 2.7cqw; }
+.zb-btn.red { font-size: 2.8cqw; }
+.zb-br i { height: 0.7cqw; border-width: 0.25cqw; }
+.zb-br i::after { height: 0.5cqw; width: 0.25cqw; }
+.zb-br b { margin-top: 0.3cqw; font-size: 2cqw; }
+.zb-turn { font-size: 4.6cqw; padding-left: 0.6cqw; }
+.zb-sheet { transform: rotate(-3deg); padding: 0.8cqw 0.6cqw; gap: 0.2cqw; }
+.zb-sheet-h { font-size: 1.9cqw; margin-bottom: 0.3cqw; }
+.zb-combo { padding: 0 0.3cqw; gap: 0.3cqw; border-radius: 0.8cqw; }
+.zb-combo b { font-size: 1.95cqw; }
+.zb-mini { gap: 0.12cqw; }
+.zb-mini i { width: 1.45cqw; height: 1.45cqw; border-width: 0.12cqw; border-radius: 0.3cqw; }
+.zb-flash { font-size: 5.4cqw; }
+.zb-hint { font-size: 2.4cqw; }
+.zb-menu { gap: 1cqw; padding: 2cqw; }
