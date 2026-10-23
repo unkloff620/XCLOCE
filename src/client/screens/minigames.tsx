@@ -112,17 +112,17 @@ const LADDER_ROWS = [820, 988, 1156, 1326, 1494];
 const LADDER_COLS = [433, 587, 741, 893, 1047];
 const LADDER: { x: number; y: number }[] = [4, 3, 2, 1, 0].flatMap((r) => Array.from({ length: r + 1 }, (_, c) => ({ x: LADDER_COLS[c], y: LADDER_ROWS[r] })));
 /** where the dice land: the open chalk field above the ladder */
-const FIELD = { x: 430, y: 250, w: 600, h: 520 };
-/** the cup stands in the field's top right corner */
-const CUP = { x: 900, y: 190 };
+const FIELD = { x: 425, y: 250, w: 520, h: 520 };
+/** the cup stands right of the field, by the sheet */
+const CUP = { x: 1015, y: 470 };
 function landing(seed: number, i: number) {
   const r = (k: number) => {
     const v = Math.sin(seed * 9301 + i * 49297 + k * 233) * 10000;
     return v - Math.floor(v);
   };
   const col = i % 3, row = Math.floor(i / 3);
-  const x = FIELD.x + col * (FIELD.w / 3) + 18 + r(1) * 40;
-  const y = FIELD.y + row * (FIELD.h / 2) + 40 + r(2) * 70;
+  const x = FIELD.x + col * (FIELD.w / 3) + 10 + r(1) * 40;
+  const y = FIELD.y + row * (FIELD.h / 2) + 30 + r(2) * 90;
   return { x, y, rot: Math.round(r(3) * 70 - 35), spin: (r(4) > 0.5 ? 1 : -1) * (360 + Math.round(r(5) * 360)) };
 }
 
@@ -242,7 +242,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
               </button>
             );
           })}
-          <span key={`cup-${throwing}`} className={`zb-cup ${throwing ? "pour" : ""}`} style={{ left: zx(CUP.x - 20), top: zy(CUP.y - 120), width: zx(140) }}><Cup /></span>
+          <span key={`cup-${throwing}`} className={`zb-cup ${throwing ? "pour" : ""}`} style={{ left: zx(CUP.x - 70), top: zy(CUP.y - 90), width: zx(130) }}><Cup /></span>
 
           {/* the chalk ladder: the dice kept this attempt (earlier throws fixed, the ones picked now go back on a tap) */}
           {[...kept.map((v) => ({ v, i: -1 })), ...pick.map((i) => ({ v: roll[i], i }))].slice(0, LADDER.length).map((d, k) => {
@@ -254,7 +254,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
           })}
 
           {/* the sheet on the right: the combinations; a row lights up when the roll has it, brighter when it is picked */}
-          <div className="zb-sheet" style={{ left: zx(1098), top: zy(200), width: zx(300), height: zy(1040) }}>
+          <div className="zb-sheet" style={{ left: zx(1092), top: zy(200), width: zx(318), height: zy(1040) }}>
             <b className="zb-sheet-h">Комбинации</b>
             {COMBOS.map((c) => {
               const can = c.test(nRoll, roll.length);

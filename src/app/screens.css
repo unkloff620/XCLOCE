@@ -2319,3 +2319,10 @@ button.bjt-stack { cursor: pointer; }
 .zb-lvl-main > b { font-size: 3.2cqw; }
 .zb-lvl-win { font-size: 2.2cqw; }
 .zb-lvl-win .coin, .zb-lvl-pay .coin { font-size: 2.4cqw; }
+.zb-die { box-sizing: border-box; width: 8.4cqw; height: 8.4cqw; padding: 0.6cqw; }
+.zb-kept { box-sizing: border-box; padding: 0.6cqw; }
+.zb-sheet { padding: 1cqw 1.1cqw; }
+.zb-combo { padding: 0 0.5cqw; gap: 0.4cqw; }
+.zb-mini { gap: 0.2cqw; }
+.zb-mini i { width: 1.9cqw; height: 1.9cqw; border-width: 0.15cqw; }
+.zb-combo b { font-size: 2.2cqw; }
