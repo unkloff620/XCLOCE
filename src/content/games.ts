@@ -1,6 +1,6 @@
 /*
  * Мини-игры во дворе: блэкджек (общий стол до 6 игроков, ставки), зонк (кости), покер и апгрейдер находок.
- * Зонк — 1 бесплатная игра в день, дальше 2 USD.
+ * Зонк — 4 уровня сложности (ZONK_LEVELS): 1-й за рубли (первая игра дня бесплатно), 2–4-й за доллары.
  * Апгрейдер: находку из двора (или несколько одинаковых) пробуем превратить в вещь дороже; шанс = стоимость ставки /
  * стоимость цели × 0,9, не больше 75%. Проигрыш — ставка сгорает.
  * Здесь только правила и числа; сервер (server/systems/games.ts) раздаёт карты и кидает кости.
@@ -11,7 +11,7 @@ import type { Reward } from "./rewards.ts";
 export type GameKind = "zonk";
 export interface GameRules { freePerDay: number; price: { currency: Currency; amount: number }; title: string }
 export const GAME_RULES: Record<GameKind, GameRules> = {
-  zonk: { freePerDay: 1, price: { currency: "USD", amount: 2 }, title: "Зонк" },
+  zonk: { freePerDay: 1, price: { currency: "RUB", amount: 150 }, title: "Зонк" },
 };
 
 /* ---------------- blackjack ---------------- */
@@ -136,13 +136,32 @@ export function zonkHasScore(dice: number[]): boolean {
   return false;
 }
 
-/** the prize for the game's total over ZONK_ROUNDS attempts: a free game pays rubles, a paid one dollars (1000 points = 0.5 USD) */
-export const ZONK_USD_PER_1000 = 0.5;
-export const ZONK_RUB_PER_1000 = 50;
-export function zonkPrize(points: number, paid: boolean): Reward {
-  if (points <= 0) return {};
-  if (paid) return { currencies: { USD: Math.round((points / 1000) * ZONK_USD_PER_1000 * 100) / 100 } };
-  return { currencies: { RUB: Math.round((points / 1000) * ZONK_RUB_PER_1000) } };
+/** an attempt can be written down only from this many points (less — keep rolling or risk a zonk) */
+export const ZONK_BANK_MIN = 300;
+
+/*
+ * Уровни сложности зонка: за ZONK_ROUNDS попыток набери target очков. Набрал — партия сразу кончается победой: награда
+ * win и winXp опыта зонка. Не набрал за все попытки или сдался — утешение fail (немного рублей) и 1 опыт.
+ * 1-й уровень — вход за рубли и платит рублями (первая игра дня бесплатно); 2–4-й — вход за доллары и платят долларами.
+ * Цены посчитаны так, чтобы фармить было невыгодно: при хорошей игре 4000 набирают ~3 партии из 4, 5500 — ~1 из 3,
+ * 7000 — ~1 из 8, 10000 — ~1 из 70 (проверено симуляцией, tools/zonk-sim.mjs) — на круг выигрыш чуть меньше входа,
+ * в плюс выходит тот, кому везёт и кто вовремя рискует.
+ */
+export type ZonkLevel = 1 | 2 | 3 | 4;
+export interface ZonkLevelDef { level: ZonkLevel; target: number; entry: { currency: Currency; amount: number }; win: Reward; winXp: number; fail: Reward }
+export const ZONK_LEVELS: ZonkLevelDef[] = [
+  { level: 1, target: 4000, entry: { currency: "RUB", amount: 150 }, win: { currencies: { RUB: 170 } }, winXp: 10, fail: { currencies: { RUB: 20 } } },
+  { level: 2, target: 5500, entry: { currency: "USD", amount: 3 }, win: { currencies: { USD: 7 } }, winXp: 15, fail: { currencies: { RUB: 30 } } },
+  { level: 3, target: 7000, entry: { currency: "USD", amount: 5 }, win: { currencies: { USD: 30 } }, winXp: 25, fail: { currencies: { RUB: 50 } } },
+  { level: 4, target: 10000, entry: { currency: "USD", amount: 10 }, win: { currencies: { USD: 400 } }, winXp: 50, fail: { currencies: { RUB: 80 } } },
+];
+export const zonkLevelDef = (level: number) => ZONK_LEVELS.find((l) => l.level === level);
+export const ZONK_FAIL_XP = 1;
+/** zonk experience: every ZONK_XP_PER_LEVEL xp is a level */
+export const ZONK_XP_PER_LEVEL = 100;
+export function zonkXpLevel(xp: number): { level: number; from: number; to: number } {
+  const level = Math.floor(Math.max(0, xp) / ZONK_XP_PER_LEVEL);
+  return { level, from: level * ZONK_XP_PER_LEVEL, to: (level + 1) * ZONK_XP_PER_LEVEL };
 }
 
 /* ---------------- upgrader ---------------- */
@@ -186,7 +205,9 @@ export const upgradeValue = (stake: number, mult: number) => Math.max(1, Math.ro
 /*
  * Платная игра: POKER_RULES.price за раздачу, не больше POKER_RULES.perDay раздач в сутки (МСК). Сразу сдаётся 5 карт
  * из полной колоды, комбинация даёт награду из POKER_HANDS. Каждая раздача даёт опыт покера (xp комбинации); уровень
- * покера добавляет к денежной награде POKER_LEVEL_BONUS за уровень (до POKER_MAX_LEVEL).
+ * покера добавляет к денежной награде POKER_LEVEL_BONUS за уровень (до POKER_BONUS_LEVELS).
+ * Шулерство: с 20 уровня покера после раздачи можно заменить карту на столе (нажать на неё — придёт новая из колоды),
+ * с 50 — две замены, со 100 — три (POKER_CHEATS). Комбинация считается после замен.
  */
 export const POKER_RULES = { perDay: 20, price: { currency: "USD" as const, amount: 3 } };
 export type PokerHand = "royal" | "sflush" | "quads" | "full" | "flush" | "straight" | "trips" | "twopair" | "pair" | "high";
@@ -230,11 +251,16 @@ export function pokerHand(cards: Card[]): { hand: PokerHand; used: number[] } {
   return { hand: "high", used: [top] };
 }
 
-/* poker experience: level L needs POKER_XP_STEP × L × (L + 1) / 2 xp in total */
-export const POKER_XP_STEP = 20;
-export const POKER_MAX_LEVEL = 20;
+/* poker experience: level L needs POKER_XP_STEP × L + L × (L − 1) / 2 xp in total (level 20 ≈ 390, 50 ≈ 1725, 100 ≈ 5950) */
+export const POKER_XP_STEP = 10;
+export const POKER_MAX_LEVEL = 100;
+/** the money bonus grows with the level up to this one */
+export const POKER_BONUS_LEVELS = 20;
 export const POKER_LEVEL_BONUS = 0.015;
-export const pokerXpFor = (level: number) => (POKER_XP_STEP * level * (level + 1)) / 2;
+export const pokerXpFor = (level: number) => POKER_XP_STEP * level + (level * (level - 1)) / 2;
+/** card swaps after the deal, by poker level (the best that fits) */
+export const POKER_CHEATS = [{ level: 100, swaps: 3 }, { level: 50, swaps: 2 }, { level: 20, swaps: 1 }] as const;
+export const pokerCheats = (level: number) => POKER_CHEATS.find((c) => level >= c.level)?.swaps ?? 0;
 export function pokerLevel(xp: number): { level: number; from: number; to: number | null } {
   let level = 0;
   while (level < POKER_MAX_LEVEL && xp >= pokerXpFor(level + 1)) level++;
@@ -244,7 +270,7 @@ export function pokerLevel(xp: number): { level: number; from: number; to: numbe
 export function pokerPay(hand: PokerHand, level: number): Reward {
   const base = pokerHandDef(hand).pay;
   if (!base.currencies) return base;
-  const k = 1 + POKER_LEVEL_BONUS * Math.min(level, POKER_MAX_LEVEL);
+  const k = 1 + POKER_LEVEL_BONUS * Math.min(level, POKER_BONUS_LEVELS);
   const currencies = Object.fromEntries(Object.entries(base.currencies).map(([c, v]) => [c, Math.round((v ?? 0) * k * 100) / 100]));
   return { ...base, currencies };
 }

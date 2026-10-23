@@ -2116,3 +2116,184 @@ button.bjt-stack { cursor: pointer; }
 .bcard-meta.stack { flex: none; overflow: visible; }
 /* the player's hits do not hurry his round */
 .arena-photo.hit .rig-mugo .br-arm, .arena-photo.hit .rig-mugo .br-low, .arena-photo.hit .rig-mugo .br-hand { animation-duration: 5s; }
+
+/* boss card, round 3: «Дело №N» on a tag over a smaller framed boss; no health in the list — it is a surprise */
+.bcard-art { top: 44px; bottom: 16px; left: 6%; width: 33%; }
+.bcard-n { left: 6%; width: 33%; top: 14px; height: 24px; min-width: 0; padding: 0 4px; box-sizing: border-box; border-radius: 7px;
+  font-size: 13px; letter-spacing: 0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* a boss below half HP is dazed — drunk, beaten, in shock: he sways slowly from side to side (his idle motions slow down too) */
+.boss-rig.dazed, .arena-photo.dazed > img { transform-origin: 50% 100%; animation-name: boss-dazed; animation-duration: 3.6s;
+  animation-timing-function: ease-in-out; animation-iteration-count: infinite; }
+.boss-rig.beaten.dazed { animation-name: beaten-in, boss-dazed; animation-duration: 0.6s, 3.6s; animation-timing-function: ease-out, ease-in-out;
+  animation-iteration-count: 1, infinite; animation-delay: 0s, 0.6s; }
+@keyframes boss-dazed {
+  0%, 100% { transform: rotate(0deg) translateX(0); }
+  22% { transform: rotate(-3.2deg) translateX(-1.5%); }
+  48% { transform: rotate(0.6deg) translateX(0.3%) translateY(0.6%); }
+  74% { transform: rotate(3.4deg) translateX(1.6%); }
+}
+.bcard.dazed .bcard-art img { animation-name: boss-dazed; animation-duration: 3.8s; animation-timing-function: ease-in-out; animation-iteration-count: infinite; }
+@media (prefers-reduced-motion: reduce) { .boss-rig.dazed, .arena-photo.dazed > img, .bcard.dazed .bcard-art img { animation: none; } }
+
+/* ---------------- zonk and poker: the whole window is the artist's picture ----------------
+ * .gstage fills the window under its title; the picture (.zb / .pkt) is as big as fits, keeping its shape.
+ * Everything on it is placed in % of the picture (inline styles) and sized in cqw of it, so it scales with the screen. */
+.modal.full > .gstage { max-width: none; width: calc(100% + 24px); margin: 0 -12px -10px; }
+.gstage { flex: 1; min-height: 0; container-type: size; display: flex; justify-content: center; align-items: flex-start; }
+.zb, .pkt { position: relative; flex: none; container-type: inline-size; user-select: none; -webkit-user-select: none; }
+.zb { width: min(100cqw, calc(100cqh * 0.7145)); aspect-ratio: 1429 / 2000; color: #eaf7f3; }
+.pkt { width: min(100cqw, calc(100cqh * 0.7143)); aspect-ratio: 1060 / 1484; color: #f6e7cf; }
+.zb-bg, .pkt-bg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+.zb > :not(.zb-bg), .pkt > :not(.pkt-bg) { position: absolute; box-sizing: border-box; }
+
+/* the record paper (ink on paper) */
+.zb-rec { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6cqw; padding: 0.8cqw 1.2cqw; color: #3a220c; transform: rotate(-1.5deg); }
+.zb-rec-h { font-size: 2.1cqw; font-weight: 900; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.75; line-height: 1; }
+.zb-rec-who { display: flex; align-items: center; gap: 1cqw; max-width: 100%; min-width: 0; }
+.zb-rec .avatar { width: 6.2cqw !important; height: 6.2cqw !important; font-size: 2.2cqw !important; border-radius: 1.6cqw !important; border: 0.3cqw solid #3a220c; flex: none; }
+.zb-rec-name { display: flex; flex-direction: column; min-width: 0; line-height: 1.05; }
+.zb-rec-name i { font-style: normal; font-size: 2.3cqw; font-weight: 800; max-width: 11cqw; }
+.zb-rec-name b { font-size: 3.2cqw; font-weight: 900; color: #8a1a10; }
+.zb-rec-none { font-size: 2.2cqw; opacity: 0.6; }
+
+/* chalk on the boards */
+.zb-rd { display: flex; align-items: flex-end; justify-content: space-between; padding: 0 0.6cqw 0.5cqw; font-family: var(--font-display, inherit); }
+.zb-rd i { font-style: normal; font-size: 2.1cqw; opacity: 0.45; }
+.zb-rd b { font-size: 3.6cqw; font-weight: 800; color: #f2fbf8; text-shadow: 0 0 0.6cqw rgba(255, 255, 255, 0.35); }
+.zb-rd.zonk b { color: #ff8f8f; font-size: 3cqw; }
+.zb-rd.ok b { animation-name: zb-chalk; animation-duration: 0.5s; animation-timing-function: ease-out; }
+@keyframes zb-chalk { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+.zb-arrow { height: auto; pointer-events: none; filter: drop-shadow(0 0.4cqw 0.4cqw rgba(0, 0, 0, 0.5));
+  animation-name: zb-arrow; animation-duration: 1.1s; animation-timing-function: ease-in-out; animation-iteration-count: infinite; }
+@keyframes zb-arrow { 50% { transform: translateX(-1.4cqw); } }
+.zb-head { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 0.4cqw 2cqw; font-size: 2.8cqw; color: #dff3ee; }
+.zb-head b { color: #fff; }
+.zb-head em { font-style: normal; color: #ffe27a; }
+.zb-score b { font-size: 6.4cqw; font-weight: 900; line-height: 1; text-shadow: 0 0 1cqw rgba(255, 255, 255, 0.3); }
+.zb-score small { font-size: 3.2cqw; opacity: 0.7; }
+
+/* the buttons drawn on the board: the text goes on top */
+.zb-btn { display: flex; align-items: center; justify-content: center; gap: 1.2cqw; border: 0; padding: 0; border-radius: 1.6cqw; background: transparent; cursor: pointer;
+  color: #fff; font-family: var(--font-display, inherit); font-size: 3.7cqw; font-weight: 900; text-transform: uppercase; letter-spacing: 0.03em;
+  text-shadow: 0 0.3cqw 0 rgba(0, 0, 0, 0.55); transition: transform 0.08s, filter 0.15s; -webkit-tap-highlight-color: transparent; }
+.zb-btn small { font-size: 2.6cqw; min-width: 3.6cqw; padding: 0.2cqw 0.8cqw; border-radius: 1cqw; background: rgba(0, 0, 0, 0.35); }
+.zb-btn:active:not(:disabled) { transform: translateY(0.4cqw) scale(0.98); background: rgba(0, 0, 0, 0.18); }
+.zb-btn:disabled { color: rgba(255, 255, 255, 0.4); cursor: default; }
+.zb-btn.grey:not(:disabled) { box-shadow: 0 0 0 0.35cqw rgba(255, 226, 122, 0.55); }
+.zb-btn.grey.ready { box-shadow: 0 0 0 0.45cqw #3ddc84, 0 0 2cqw rgba(61, 220, 132, 0.6); }
+
+/* square dice, thrown from the cup: they fly out tumbling and bounce on the board */
+.zb-die, .zb-kept { width: 8.6cqw; aspect-ratio: 1; padding: 0.7cqw; border-radius: 1cqw; border: 0.45cqw solid #1e1006; background: linear-gradient(145deg, #ffffff, #efe6d2);
+  box-shadow: 0 0.6cqw 0 rgba(0, 0, 0, 0.45), inset 0 -0.5cqw 0 rgba(0, 0, 0, 0.08); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.zb-die svg, .zb-kept svg { display: block; }
+.zb-die { z-index: 3; transform: rotate(var(--rot)); animation-name: zb-fly; animation-duration: 0.62s; animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+  animation-delay: var(--d); animation-fill-mode: both; }
+@keyframes zb-fly {
+  0% { transform: translate(var(--fx), var(--fy)) rotate(calc(var(--rot) + var(--spin))) scale(0.35); opacity: 0; }
+  12% { opacity: 1; }
+  70% { transform: translate(0, -1.4cqw) rotate(calc(var(--rot) + 12deg)) scale(1.06); }
+  85% { transform: translate(0, 0) rotate(calc(var(--rot) - 4deg)) scale(0.97, 1.03); }
+  100% { transform: translate(0, 0) rotate(var(--rot)) scale(1); }
+}
+.zb-die.hint { box-shadow: 0 0.6cqw 0 rgba(0, 0, 0, 0.45), 0 0 0 0.5cqw rgba(255, 226, 122, 0.8), 0 0 2cqw rgba(255, 226, 122, 0.6); }
+.zb-die:active { filter: brightness(0.92); }
+.zb-kept { width: auto; z-index: 2; animation-name: zb-put; animation-duration: 0.22s; animation-timing-function: ease-out; }
+.zb-kept.old { cursor: default; filter: saturate(0.6) brightness(0.88); box-shadow: 0 0.3cqw 0 rgba(0, 0, 0, 0.35); }
+@keyframes zb-put { from { transform: scale(1.25); opacity: 0.4; } }
+.zb-cup { z-index: 4; aspect-ratio: 80 / 90; pointer-events: none; transform-origin: 50% 80%; filter: drop-shadow(0 1cqw 1cqw rgba(0, 0, 0, 0.5)); }
+.zb-cup.pour { animation-name: zb-pour; animation-duration: 0.95s; animation-timing-function: ease-in-out; }
+@keyframes zb-pour {
+  0%, 100% { transform: rotate(0); }
+  8% { transform: rotate(-16deg) translateY(-1cqw); } 16% { transform: rotate(14deg) translateY(-1.5cqw); }
+  24% { transform: rotate(-14deg) translateY(-1cqw); } 32% { transform: rotate(12deg) translateY(-1.5cqw); }
+  52% { transform: rotate(-118deg) translate(1cqw, 2cqw); } 78% { transform: rotate(-112deg) translate(1cqw, 2cqw); }
+}
+
+/* the combinations sheet (ink on paper) */
+.zb-sheet { display: flex; flex-direction: column; gap: 0.4cqw; padding: 1.2cqw 1.4cqw; color: #3a220c; transform: rotate(1.2deg); }
+.zb-sheet-h { font-size: 2.3cqw; font-weight: 900; text-transform: uppercase; letter-spacing: 0.06em; text-align: center; margin-bottom: 0.6cqw; }
+.zb-combo { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: space-between; gap: 0.6cqw; padding: 0 0.8cqw; border-radius: 1cqw; transition: background 0.2s; }
+.zb-combo b { font-size: 2.5cqw; font-weight: 900; }
+.zb-combo.can { background: rgba(255, 196, 40, 0.3); }
+.zb-combo.on { background: rgba(30, 160, 80, 0.38); box-shadow: inset 0 0 0 0.3cqw rgba(20, 120, 60, 0.6); }
+.zb-mini { display: inline-flex; gap: 0.3cqw; }
+.zb-mini i { width: 2.5cqw; height: 2.5cqw; border-radius: 0.4cqw; background: #fffdf6; border: 0.2cqw solid #3a220c; display: block; }
+.zb-mini svg { display: block; }
+
+.zb-flash { z-index: 5; text-align: center; font-family: var(--font-display, inherit); font-size: 6cqw; font-weight: 900; color: #7dffb5; pointer-events: none;
+  text-shadow: 0 0.5cqw 0 rgba(0, 0, 0, 0.5); animation-name: zb-flash; animation-duration: 1.8s; animation-timing-function: ease-out; animation-fill-mode: both; }
+.zb-flash.zonk { color: #ff6b6b; }
+@keyframes zb-flash { 0% { transform: scale(0.5); opacity: 0; } 15% { transform: scale(1.12); opacity: 1; } 70% { opacity: 1; } 100% { transform: translateY(-4cqw); opacity: 0; } }
+.zb-hint { text-align: center; font-size: 2.7cqw; color: #cfeae4; opacity: 0.9; }
+
+/* no game running: the levels written on the board */
+.zb-menu { z-index: 6; display: flex; flex-direction: column; justify-content: center; gap: 1.8cqw; padding: 3cqw; border-radius: 2cqw;
+  background: rgba(8, 46, 50, 0.94); border: 0.35cqw dashed rgba(234, 247, 243, 0.45); overflow: auto; }
+.zb-res { display: flex; flex-direction: column; align-items: center; gap: 0.6cqw; padding: 1.6cqw; border-radius: 1.6cqw; text-align: center; font-size: 3cqw; }
+.zb-res b { font-size: 5.6cqw; }
+.zb-res.win { background: rgba(61, 220, 132, 0.16); box-shadow: inset 0 0 0 0.3cqw rgba(61, 220, 132, 0.6); }
+.zb-res.win b { color: #7dffb5; }
+.zb-res.lose { background: rgba(255, 107, 107, 0.12); box-shadow: inset 0 0 0 0.3cqw rgba(255, 107, 107, 0.5); }
+.zb-res.lose b { color: #ff8f8f; }
+.zb-res-got { display: inline-flex; align-items: center; gap: 1.4cqw; flex-wrap: wrap; justify-content: center; }
+.zb-res-got em { font-style: normal; color: #ffe27a; font-weight: 800; }
+.zb-xp { display: flex; align-items: center; gap: 1.4cqw; font-size: 2.9cqw; }
+.zb-xp-bar { flex: 1; height: 1.8cqw; border-radius: 1cqw; background: rgba(255, 255, 255, 0.12); border: 0.25cqw solid rgba(234, 247, 243, 0.5); overflow: hidden; }
+.zb-xp-bar i { display: block; height: 100%; background: linear-gradient(90deg, #ffe27a, #ffb13b); }
+.zb-xp small { font-size: 2.3cqw; opacity: 0.75; }
+.zb-lvl { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 2cqw; padding: 1.6cqw 2cqw; border-radius: 1.6cqw; cursor: pointer; text-align: left;
+  color: #eaf7f3; background: rgba(255, 255, 255, 0.05); border: 0.35cqw solid rgba(234, 247, 243, 0.6); transition: transform 0.08s, background 0.15s; }
+.zb-lvl:active:not(:disabled) { transform: scale(0.98); background: rgba(255, 255, 255, 0.14); }
+.zb-lvl:disabled { opacity: 0.45; cursor: default; }
+.zb-lvl-n { width: 7cqw; height: 7cqw; display: grid; place-items: center; border-radius: 50%; border: 0.35cqw solid #ffe27a; color: #ffe27a; font-size: 4.2cqw; }
+.zb-lvl-main { display: flex; flex-direction: column; gap: 0.4cqw; min-width: 0; }
+.zb-lvl-main > b { font-size: 3.6cqw; }
+.zb-lvl-win { display: inline-flex; align-items: center; gap: 0.8cqw; flex-wrap: wrap; font-size: 2.4cqw; opacity: 0.85; }
+.zb-lvl-pay { display: inline-flex; align-items: center; gap: 0.6cqw; font-size: 3.2cqw; font-weight: 900; color: #ffe27a; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .zb-die, .zb-cup.pour, .zb-arrow, .zb-flash { animation: none; } }
+
+/* poker: the felt with the gold frames */
+.pkt-top { display: flex; align-items: center; gap: 2cqw; font-size: 2.8cqw; }
+.pkt-lvl { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 8.5cqw; height: 8.5cqw; border-radius: 50%; line-height: 1;
+  background: radial-gradient(circle at 35% 30%, #ffe9a8, #d9a536 60%, #8a6114); color: #2a1606; box-shadow: 0 0.5cqw 0 rgba(0, 0, 0, 0.4); }
+.pkt-lvl b { font-size: 3.8cqw; }
+.pkt-lvl small { font-size: 1.8cqw; font-weight: 800; }
+.pkt-xp { flex: 1; height: 1.8cqw; border-radius: 1cqw; background: rgba(0, 0, 0, 0.35); border: 0.25cqw solid rgba(230, 190, 90, 0.7); overflow: hidden; }
+.pkt-xp i { display: block; height: 100%; background: linear-gradient(90deg, #ffe08a, #e0a832); }
+.pkt-cheat { white-space: nowrap; color: #ffe08a; font-weight: 800; }
+.pkt-left { white-space: nowrap; padding: 0.4cqw 1.4cqw; border-radius: 2cqw; background: rgba(0, 0, 0, 0.35); }
+.pkt-slot { display: block; padding: 0; border: 0; background: none; cursor: default; border-radius: 1.8cqw; transition: transform 0.18s, filter 0.18s; -webkit-tap-highlight-color: transparent; }
+.pkt-slot.can { cursor: pointer; }
+.pkt-slot.can:active { transform: scale(0.95); }
+.pkt-slot.can .pcard { box-shadow: 0 0.6cqw 0 rgba(0, 0, 0, 0.35), 0 0 0 0.45cqw rgba(255, 224, 138, 0.6); }
+.pkt-slot.used { transform: translateY(-1.6cqw); }
+.pkt-slot.used .pcard { box-shadow: 0 0 0 0.5cqw #ffd54a, 0 0 2.4cqw rgba(255, 213, 74, 0.7); }
+.pkt-slot.dim { filter: brightness(0.6) saturate(0.7); }
+.pkt .pcard { width: 100%; height: 100%; margin: 0; box-sizing: border-box; padding: 1.2cqw 1.5cqw; border-radius: 1.8cqw; border-width: 0.45cqw; }
+.pkt .pcard b { font-size: 4.6cqw; }
+.pkt .pcard i { font-size: 8.5cqw; }
+.pkt .pcard.back { background: repeating-linear-gradient(45deg, #1f6b3c 0 1.2cqw, #17532e 1.2cqw 2.4cqw); border-color: #d9a536; }
+.pkt-swap { position: absolute; right: -1cqw; top: -1cqw; width: 4.6cqw; height: 4.6cqw; display: grid; place-items: center; border-radius: 50%; font-size: 2.8cqw; font-weight: 900;
+  background: #ffd54a; color: #2a1606; box-shadow: 0 0.4cqw 0 rgba(0, 0, 0, 0.4); animation-name: pkt-swap; animation-duration: 1.4s; animation-iteration-count: infinite; }
+@keyframes pkt-swap { 50% { transform: rotate(180deg) scale(1.1); } }
+.pkt-res { display: flex; justify-content: center; text-align: center; font-size: 2.9cqw; }
+.pkt-hint { opacity: 0.85; }
+.pkt-out { display: inline-flex; align-items: center; justify-content: center; gap: 0.6cqw 1.8cqw; flex-wrap: wrap; }
+.pkt-out b { font-size: 4.4cqw; color: #f6e7cf; }
+.pkt-out.win b { color: #ffd54a; text-shadow: 0 0 1.4cqw rgba(255, 213, 74, 0.6); }
+.pkt-out small { font-size: 2.5cqw; opacity: 0.85; }
+.pkt-table { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 1fr; gap: 1.6cqw; }
+.pkt-row { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.2cqw; padding: 1cqw; border-radius: 1.8cqw;
+  background: rgba(0, 0, 0, 0.22); border: 0.28cqw solid rgba(230, 190, 90, 0.4); transition: transform 0.2s, background 0.2s; }
+.pkt-row.now { border-style: dashed; border-color: rgba(255, 224, 138, 0.9); }
+.pkt-row.on { background: rgba(255, 213, 74, 0.24); border-color: #ffd54a; transform: scale(1.05); box-shadow: 0 0 2.4cqw rgba(255, 213, 74, 0.45); }
+.pkt-row-cards { display: inline-flex; gap: 0.4cqw; }
+.pkt .pk-mini { width: 3.6cqw; height: 5cqw; border-radius: 0.6cqw; border-width: 0.2cqw; }
+.pkt .pk-mini b, .pkt .pk-mini i { font-size: 1.9cqw; }
+.pkt-prize { display: inline-flex; align-items: center; gap: 2.4cqw; padding-top: 1cqw; }
+.pkt-ico { position: relative; display: inline-grid; place-items: center; }
+.pkt-ico svg { width: 6cqw !important; height: 6cqw !important; }
+.pkt-ico b { position: absolute; right: -2.2cqw; top: -1.4cqw; padding: 0.15cqw 0.6cqw; border-radius: 1cqw; font-size: 2.1cqw; font-weight: 900; line-height: 1.2;
+  color: #ffe08a; background: #1b1206; border: 0.2cqw solid rgba(230, 190, 90, 0.7); white-space: nowrap; }
+.pkt-ctrl .btn { font-size: 3.4cqw; }

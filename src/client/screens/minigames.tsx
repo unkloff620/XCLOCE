@@ -3,9 +3,9 @@
  * Мини-игры двора (пока кнопками, потом станут объектами во дворе): блэкджек, зонк (кости) и апгрейдер находок.
  * Правила и выплаты — content/games.ts, карты и кости — на сервере (server/systems/games.ts).
  */
-import { useMemo, useState, type CSSProperties } from "react";
+import { useMemo, useState } from "react";
 import { useGame } from "../store.tsx";
-import { Coin, Modal, RewardChips } from "../ui.tsx";
+import { Avatar, Coin, Modal, RewardChips } from "../ui.tsx";
 import { Icon } from "../art/icons.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { Help } from "../help.tsx";
@@ -13,44 +13,15 @@ import { haptic } from "../telegram.ts";
 import { sfx } from "../sound.ts";
 import { full } from "../format.ts";
 import type { GameView, PokerPlay } from "../api.ts";
+import type { Currency } from "../../content/currencies.ts";
 import { BlackjackWindow } from "./blackjack.tsx";
 import { itemById } from "../../content/items.ts";
 import {
-  GAME_RULES, ZONK_RUB_PER_1000, ZONK_USD_PER_1000, ITEM_VALUES, RANKS, SUITS, UPGRADE_MODES, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue, zonkScore, zonkPrize, ZONK_ROUNDS,
-  POKER_HANDS, POKER_LEVEL_BONUS, POKER_MAX_LEVEL, POKER_RULES, pokerPay,
-  type GameKind, type PokerHand, type UpgradeMode,
+  ITEM_VALUES, RANKS, SUITS, UPGRADE_MODES, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue, zonkScore, ZONK_ROUNDS,
+  ZONK_BANK_MIN, ZONK_FAIL_XP, ZONK_LEVELS,
+  POKER_BONUS_LEVELS, POKER_CHEATS, POKER_HANDS, POKER_LEVEL_BONUS, POKER_MAX_LEVEL, POKER_RULES, pokerCheats, pokerPay,
+  type PokerHand, type UpgradeMode,
 } from "../../content/games.ts";
-
-/* ---------------- shared: free games / price line and the start button ---------------- */
-function StartLine({ kind, onStart, again }: { kind: GameKind; onStart: () => void; again?: boolean }) {
-  const { state, busy } = useGame();
-  const g = state?.games?.[kind];
-  if (!g) return null;
-  const free = g.freeLeft > 0;
-  const usd = state?.wallet[g.price.currency] ?? 0;
-  return (
-    <div className="col" style={{ gap: 6 }}>
-      <button className={`btn big block ${free ? "green" : "gold"}`} disabled={busy === "game_start" || (!free && usd < g.price.amount)} onClick={onStart}>
-        {again ? "Ещё партию" : "Играть"} · {free ? "бесплатно" : <>{g.price.amount} <Icon name={g.price.currency} size={18} /></>}
-      </button>
-      <span className="tiny muted center">
-        Бесплатных сегодня: <b className="num" style={{ color: "var(--ink)" }}>{g.freeLeft}/{g.freePerDay}</b>
-        {!free && usd < g.price.amount && <span style={{ color: "var(--red)" }}> · не хватает {g.price.currency}</span>}
-      </span>
-    </div>
-  );
-}
-
-function ResultLine({ g }: { g: GameView }) {
-  if (g.status !== "done" || !g.result) return null;
-  const won = !!g.result.reward;
-  return (
-    <div className={`mg-result ${won ? "win" : "lose"}`}>
-      <b className="display">{g.result.title}</b>
-      {g.result.reward ? <RewardChips r={g.result.reward} size={16} /> : <span className="tiny muted">без выигрыша</span>}
-    </div>
-  );
-}
 
 /* ---------------- a playing card (poker) ---------------- */
 export function PlayingCard({ r, s, back, i }: { r?: number; s?: number; back?: boolean; i: number }) {
@@ -77,14 +48,6 @@ function DieFace({ v }: { v: number }) {
     </svg>
   );
 }
-function Die({ v, on, onClick, small, style, hint }: { v: number; on?: boolean; onClick?: () => void; small?: boolean; style?: CSSProperties; hint?: boolean }) {
-  return (
-    <button className={`die ${on ? "on" : ""} ${small ? "small" : ""} ${hint ? "hint" : ""}`} onClick={onClick} disabled={!onClick} aria-label={`кость ${v}`} style={style}>
-      <DieFace v={v} />
-    </button>
-  );
-}
-
 const counts = (dice: number[]) => {
   const n = [0, 0, 0, 0, 0, 0, 0];
   for (const d of dice) n[d]++;
@@ -108,68 +71,70 @@ function bestPick(roll: number[]): number[] {
   if (roll.length === 6 && (n.slice(1).every((x) => x === 1) || n.filter((x) => x === 2).length === 3)) return roll.map((_, i) => i);
   return roll.map((v, i) => (v === 1 || v === 5 || n[v] >= 3 ? i : -1)).filter((i) => i >= 0);
 }
-/** where the dice land on the board: one per cell of a 3×2 grid, nudged and turned (stable for one roll) */
-function scatter(seed: number, i: number) {
-  const r = (k: number) => {
-    const x = Math.sin(seed * 9301 + i * 49297 + k * 233) * 10000;
-    return x - Math.floor(x);
-  };
-  const col = i % 3, row = Math.floor(i / 3);
-  return { left: `${6 + col * 25 + r(1) * 8}%`, top: `${20 + row * 36 + r(2) * 10}%`, ["--rot" as string]: `${Math.round(r(3) * 70 - 35)}deg` };
-}
-
 function ZonkHelp() {
-  const p = GAME_RULES.zonk;
   return (
     <Help topic="zonk" title="Зонк">
-      <p>В партии {ZONK_ROUNDS} попыток. В каждой бросаешь 6 костей и забираешь очковые (нажми на кость — она уходит с поля наверх), потом решаешь: бросить оставшиеся — рискнуть ради большего — или записать очки попытки. Бросок без единой очковой кости — «Зонк»: очки этой попытки сгорают. Забрал все шесть — бросаешь все шесть заново.</p>
-      <p>Очки каждой попытки записываются в столбик слева. Награда — только когда сыграны все {ZONK_ROUNDS} попыток: общий счёт превращается в деньги.</p>
-      <p>Бесплатно — {p.freePerDay} игра в день: 1000 очков = {ZONK_RUB_PER_1000} RUB. Дальше {p.price.amount} USD за игру: 1000 очков = {ZONK_USD_PER_1000} USD.</p>
-      <p>Таблица справа: строка светится, если такая комбинация есть в броске, и горит ярко, когда ты её забрал. «?» сама заберёт все очковые кости.</p>
+      <p>Выбери уровень и набери его цель за {ZONK_ROUNDS} попыток. Набрал — партия сразу кончается победой.</p>
+      <ul>
+        {ZONK_LEVELS.map((l) => (
+          <li key={l.level}>Уровень {l.level}: {full(l.target)} очков. Вход {l.entry.amount} {l.entry.currency}{l.level === 1 ? " (первая игра дня — бесплатно)" : ""}, победа — {rewardText(l.win)} и +{l.winXp} опыта.</li>
+        ))}
+      </ul>
+      <p>В попытке бросаешь 6 костей и забираешь очковые (нажми на кость — она встанет в лесенку), потом решаешь: «Бросить» оставшиеся — рискнуть ради большего, или «Сохранить» очки попытки — это можно от {ZONK_BANK_MIN} очков. Бросок без единой очковой кости — «Зонк»: очки этой попытки сгорают. Забрал все шесть — бросаешь все шесть заново.</p>
+      <p>Не набрал цель или нажал «Сдаться» — немного рублей в утешение и +{ZONK_FAIL_XP} опыта. Каждые 100 опыта — новый уровень зонка.</p>
+      <p>Очки попыток пишутся мелом слева, стрелка показывает текущую. На листке сверху — лучший счёт дня среди всех игроков, на листе справа — комбинации.</p>
     </Help>
   );
 }
+
+const rewardText = (r: { currencies?: Partial<Record<string, number>> }) =>
+  Object.entries(r.currencies ?? {}).map(([c, v]) => `${v} ${c}`).join(" + ");
 
 function Cup() {
   return (
     <svg viewBox="0 0 80 90" width="100%" height="100%" aria-hidden="true">
       <path d="M10 14 L70 14 L62 84 Q40 90 18 84 Z" fill="#c98a52" stroke="#3a1d0b" strokeWidth="4" strokeLinejoin="round" />
-      <ellipse cx="40" cy="14" rx="30" ry="9" fill="#7a4720" stroke="#3a1d0b" strokeWidth="4" />
+      <ellipse cx="40" cy="14" rx="30" ry="9" fill="#2a1406" stroke="#3a1d0b" strokeWidth="4" />
       <path d="M16 30 L64 30 M17 66 L63 66" stroke="#3a1d0b" strokeWidth="3" opacity="0.45" />
       <path d="M22 22 L26 78" stroke="#f0c08a" strokeWidth="4" strokeLinecap="round" opacity="0.6" />
     </svg>
   );
 }
 
-function RollIcon() {
-  return (
-    <svg viewBox="0 0 48 40" width="34" height="28" aria-hidden="true">
-      <rect x="3" y="10" width="22" height="22" rx="5" fill="#fffdf6" stroke="#1e1006" strokeWidth="3" transform="rotate(-14 14 21)" />
-      <circle cx="10" cy="17" r="2.4" fill="#1e1006" /><circle cx="17" cy="24" r="2.4" fill="#1e1006" />
-      <rect x="22" y="5" width="22" height="22" rx="5" fill="#fffdf6" stroke="#1e1006" strokeWidth="3" transform="rotate(12 33 16)" />
-      <circle cx="28" cy="11" r="2.4" fill="#1e1006" /><circle cx="33" cy="16" r="2.4" fill="#e8173c" /><circle cx="38" cy="21" r="2.4" fill="#1e1006" />
-      <path d="M8 37 q8 -4 16 0 M28 33 q6 -3 12 0" stroke="#1e1006" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.6" />
-    </svg>
-  );
-}
-function BankIcon() {
-  return (
-    <svg viewBox="0 0 40 40" width="28" height="28" aria-hidden="true">
-      <rect x="6" y="4" width="26" height="32" rx="4" fill="#fffdf6" stroke="#1e1006" strokeWidth="3" />
-      <path d="M11 12 H27 M11 18 H22" stroke="#1e1006" strokeWidth="2.5" strokeLinecap="round" opacity="0.5" />
-      <path d="M12 26 l5 5 l11 -12" stroke="#13a35a" strokeWidth="4.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
+/* the board picture (public/assets/yard/zonk-board.webp, drawn at 1429×2000 — every place below is in those pixels) */
+const ZW = 1429, ZH = 2000;
+const zx = (x: number) => `${(x / ZW) * 100}%`;
+const zy = (y: number) => `${(y / ZH) * 100}%`;
+/** chalk lines of the rounds on the left board, top to bottom */
+const ZK_LINES = [415, 525, 637, 748, 858, 970, 1081, 1192, 1303, 1416];
+/** the chalk ladder: row r (0 = the top) has r + 1 cells; the kept dice fill it from the bottom row up */
+const LADDER_ROWS = [820, 988, 1156, 1326, 1494];
+const LADDER_COLS = [433, 587, 741, 893, 1047];
+const LADDER: { x: number; y: number }[] = [4, 3, 2, 1, 0].flatMap((r) => Array.from({ length: r + 1 }, (_, c) => ({ x: LADDER_COLS[c], y: LADDER_ROWS[r] })));
+/** where the dice land: the open chalk field above the ladder */
+const FIELD = { x: 430, y: 250, w: 600, h: 520 };
+/** the cup stands in the field's top right corner */
+const CUP = { x: 900, y: 190 };
+function landing(seed: number, i: number) {
+  const r = (k: number) => {
+    const v = Math.sin(seed * 9301 + i * 49297 + k * 233) * 10000;
+    return v - Math.floor(v);
+  };
+  const col = i % 3, row = Math.floor(i / 3);
+  const x = FIELD.x + col * (FIELD.w / 3) + 18 + r(1) * 40;
+  const y = FIELD.y + row * (FIELD.h / 2) + 40 + r(2) * 70;
+  return { x, y, rot: Math.round(r(3) * 70 - 35), spin: (r(4) > 0.5 ? 1 : -1) * (360 + Math.round(r(5) * 360)) };
 }
 
 export function ZonkWindow({ onClose }: { onClose: () => void }) {
   const { state, act, busy } = useGame();
-  const active = state?.games?.zonk.active ?? null;
+  const info = state?.games?.zonk;
+  const active = info?.active ?? null;
   const [last, setLast] = useState<GameView | null>(null);
   const g = active ?? last;
   const roll = g?.roll ?? [];
-  // the picked dice belong to one roll: a new roll (fewer dice) starts with nothing picked — in the same render, so a
-  // stale index never points past the new roll
+  // the picked dice belong to one roll: a new roll starts with nothing picked — in the same render, so a stale index
+  // never points past the new roll
   const rollKey = `${g?.id}:${g?.status}:${g?.round}:${g?.history?.length ?? 0}:${roll.join(",")}`;
   const [sel, setSel] = useState<{ key: string; idx: number[] }>({ key: "", idx: [] });
   const pick = sel.key === rollKey ? sel.idx.filter((i) => i < roll.length) : [];
@@ -181,18 +146,22 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
   const pts = picked.length ? zonkScore(picked) : null;
   const playing = g?.status === "active";
   const seed = (g?.id ?? 1) * 13 + (g?.history?.length ?? 0) * 7 + (g?.round ?? 1) * 31;
+  // the cup shakes and pours every time a new roll comes
+  const [throwing, setThrowing] = useState(0);
   const run = async (type: string, body: Record<string, unknown>) => {
     haptic.tap();
     sfx("tap");
     const r = await act<GameView>(type, body);
     if (r) {
       setLast(r);
+      if (r.status === "active") setThrowing((t) => t + 1);
       if (r.status === "done") {
-        if (r.result?.reward) { haptic.ok(); sfx("reward"); } else { haptic.err(); sfx("error"); }
+        if (r.result?.won) { haptic.ok(); sfx("reward"); } else { haptic.err(); sfx("error"); }
       }
     }
   };
   const toggle = (i: number) => { haptic.tap(); setPick((p) => (p.includes(i) ? p.filter((x) => x !== i) : [...p, i])); };
+  const bankMin = info?.bankMin ?? ZONK_BANK_MIN;
   const turn = (g?.turn ?? 0) + (pts ?? 0);
   const nRoll = counts(playing ? roll : []);
   const nPick = counts(picked);
@@ -200,84 +169,151 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
   const kept = playing ? (g?.history ?? []).flatMap((h) => h.kept) : [];
   const rounds = g?.rounds ?? ZONK_ROUNDS;
   const scores = g?.scores ?? [];
-  const round = Math.min(g?.round ?? 1, rounds);
   const total = playing ? g?.total ?? 0 : g?.result?.points ?? g?.total ?? 0;
+  const target = g?.target ?? 0;
   const left = (() => { const l = (g?.left ?? 6) - pick.length; return l <= 0 ? 6 : l; })();
-  const status = !g ? "Сыграй 10 попыток — общий счёт превратится в награду"
-    : !playing ? (g.result?.title ?? "")
-    : pick.length === 0 ? "Нажми на очковые кости (подсвечены), чтобы забрать"
-    : pts === null ? "Среди забранных есть кости без очков — верни их"
+  const canBank = playing && pts !== null && turn >= bankMin;
+  const lvl = info ? Math.max(0, Math.min(100, ((info.xp - info.from) / Math.max(1, info.to - info.from)) * 100)) : 0;
+  const hint = !playing ? null
+    : pick.length === 0 ? "Нажми на очковые кости"
+    : pts === null ? "Есть кости без очков — верни их"
+    : turn < bankMin ? `Сохранить можно от ${bankMin}`
     : null;
+  const rec = info?.record ?? null;
   return (
-    <Modal title={<span className="title-row">Зонк <ZonkHelp /></span>} onClose={onClose} maxWidth={560} full>
-      <div className="zk-head">
-        <span>ПОПЫТКА <b className="num">{g ? round : 0}/{rounds}</b></span>
-        <span>ВСЕГО <b className="num">{full(total)}</b></span>
-        <span>ХОД <b className="num">{full(playing ? turn : 0)}</b></span>
-      </div>
-      <div className="zk">
-        <div className="zk-board">
-          {/* every attempt's points, top to bottom */}
-          <div className="zk-rounds" aria-label="Очки попыток">
-            {Array.from({ length: rounds }, (_, i) => {
-              const sc = scores[i];
-              const now = playing && i === scores.length;
-              return (
-                <span key={i} className={`zk-rd ${sc ? (sc.zonk ? "zonk" : "ok") : ""} ${now ? "now" : ""}`}>
-                  <i>{i + 1}</i>
-                  <b className="num">{sc ? (sc.zonk ? "✕" : sc.points >= 1000 ? `${Math.round(sc.points / 100) / 10}k` : sc.points) : now ? "…" : ""}</b>
+    <Modal title={<span className="title-row">Зонк <ZonkHelp /></span>} onClose={onClose} full>
+      <div className="gstage">
+        <div className="zb" style={{ ["--throw" as string]: throwing }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="zb-bg" src="/assets/yard/zonk-board.webp" alt="" draggable={false} />
+
+          {/* the paper at the top left: the best game of the day */}
+          <div className="zb-rec" style={{ left: zx(62), top: zy(66), width: zx(272), height: zy(160) }}>
+            <b className="zb-rec-h">{rec?.day === "yesterday" ? "Рекорд вчера" : "Рекорд дня"}</b>
+            {rec ? (
+              <span className="zb-rec-who">
+                <Avatar name={rec.name} photo={rec.photo} size={26} />
+                <span className="zb-rec-name">
+                  <i className="ellipsis">{rec.name}</i>
+                  <b className="num">{full(rec.points)}</b>
                 </span>
+              </span>
+            ) : <span className="zb-rec-none">пока никого</span>}
+          </div>
+
+          {/* the left board: every attempt's points in chalk over its line; the arrow points at the attempt now */}
+          {ZK_LINES.slice(0, rounds).map((y, i) => {
+            const sc = scores[i];
+            return (
+              <span key={i} className={`zb-rd ${sc ? (sc.zonk ? "zonk" : "ok") : ""}`} style={{ left: zx(85), width: zx(215), top: zy(y - 92), height: zy(88) }}>
+                <i>{i + 1}</i>
+                <b className="num">{sc ? (sc.zonk ? "Зонк" : full(sc.points)) : ""}</b>
+              </span>
+            );
+          })}
+          {playing && scores.length < rounds && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img key={scores.length} className="zb-arrow" src="/assets/yard/zonk-arrow.webp" alt="" draggable={false}
+              style={{ left: zx(296), top: zy(ZK_LINES[scores.length] - 82), width: zx(120) }} />
+          )}
+          <button className="zb-btn red" style={{ left: zx(70), top: zy(1765), width: zx(250), height: zy(120) }} disabled={!playing || busy === "zonk_give_up"}
+            onClick={() => run("zonk_give_up", {})}>Сдаться</button>
+
+          {/* the chalk head of the big board: the level, the score against the target, this attempt */}
+          <div className="zb-head" style={{ left: zx(420), top: zy(86), width: zx(640) }}>
+            {g ? (
+              <>
+                <span>Уровень <b className="num">{g.level ?? 1}</b> · попытка <b className="num">{Math.min(scores.length + (playing ? 1 : 0), rounds)}/{rounds}</b></span>
+                <span className="zb-score"><b className="num">{full(total)}</b><small className="num">/{full(target)}</small></span>
+                {playing && <span>Ход <b className="num">{full(turn)}</b>{pts !== null && pts > 0 ? <em className="num"> (+{pts})</em> : null}</span>}
+              </>
+            ) : <span>Выбери уровень</span>}
+          </div>
+
+          {/* the thrown dice in the open field; a tap sends a die to the ladder */}
+          {playing && roll.map((v, i) => {
+            if (pick.includes(i)) return null;
+            const l = landing(seed, i);
+            return (
+              <button key={`${seed}-${throwing}-${i}`} className={`zb-die ${hints.has(i) ? "hint" : ""}`} onClick={() => toggle(i)} aria-label={`кость ${v}`}
+                style={{ left: zx(l.x), top: zy(l.y), ["--rot" as string]: `${l.rot}deg`, ["--spin" as string]: `${l.spin}deg`,
+                  ["--fx" as string]: `${((CUP.x - l.x) / ZW) * 100}cqw`, ["--fy" as string]: `${((CUP.y - l.y) / ZW) * 100}cqw`, ["--d" as string]: `${0.28 + i * 0.05}s` }}>
+                <DieFace v={v} />
+              </button>
+            );
+          })}
+          <span key={`cup-${throwing}`} className={`zb-cup ${throwing ? "pour" : ""}`} style={{ left: zx(CUP.x - 20), top: zy(CUP.y - 120), width: zx(140) }}><Cup /></span>
+
+          {/* the chalk ladder: the dice kept this attempt (earlier throws fixed, the ones picked now go back on a tap) */}
+          {[...kept.map((v) => ({ v, i: -1 })), ...pick.map((i) => ({ v: roll[i], i }))].slice(0, LADDER.length).map((d, k) => {
+            const c = LADDER[k];
+            const style = { left: zx(c.x + 8), top: zy(c.y + 8), width: zx(122), height: zy(132) };
+            return d.i < 0
+              ? <span key={`k${k}`} className="zb-kept old" style={style}><DieFace v={d.v} /></span>
+              : <button key={`p${d.i}`} className="zb-kept" style={style} onClick={() => toggle(d.i)} aria-label={`вернуть ${d.v}`}><DieFace v={d.v} /></button>;
+          })}
+
+          {/* the sheet on the right: the combinations; a row lights up when the roll has it, brighter when it is picked */}
+          <div className="zb-sheet" style={{ left: zx(1098), top: zy(200), width: zx(300), height: zy(1040) }}>
+            <b className="zb-sheet-h">Комбинации</b>
+            {COMBOS.map((c) => {
+              const can = c.test(nRoll, roll.length);
+              const on = picked.length > 0 && c.test(nPick, picked.length);
+              return (
+                <div key={c.key} className={`zb-combo ${can ? "can" : ""} ${on ? "on" : ""}`}>
+                  <span className="zb-mini">{c.dice.map((d, k) => <i key={k}><DieFace v={d} /></i>)}</span>
+                  <b className="num">{c.label}</b>
+                </div>
               );
             })}
           </div>
-          {/* what is taken this attempt: earlier throws (fixed) and the dice picked now (tap to put back) */}
-          <div className="zk-tray" aria-label="Забрано">
-            {kept.map((v, i) => <span key={`k${i}`} className="zk-tray-die old"><DieFace v={v} /></span>)}
-            {pick.map((i) => <button key={`p${i}`} className="zk-tray-die" onClick={() => toggle(i)} aria-label={`вернуть ${roll[i]}`}><DieFace v={roll[i]} /></button>)}
-          </div>
+
           {playing && g?.last && (
-            <div key={`${g.round}-${scores.length}`} className={`zk-last ${g.last.zonk ? "zonk" : ""}`}>{g.last.zonk ? (g.last.points ? `Зонк! −${full(g.last.points)}` : "Зонк!") : `+${full(g.last.points)} в счёт`}</div>
+            <div key={`${g.round}-${scores.length}`} className={`zb-flash ${g.last.zonk ? "zonk" : ""}`} style={{ left: zx(420), top: zy(560), width: zx(640) }}>
+              {g.last.zonk ? (g.last.points ? `Зонк! −${full(g.last.points)}` : "Зонк!") : `+${full(g.last.points)} записано`}
+            </div>
           )}
-          {playing
-            ? roll.map((v, i) => (pick.includes(i) ? null : <Die key={`${seed}-${i}`} v={v} hint={hints.has(i)} onClick={() => toggle(i)} style={scatter(seed, i)} />))
-            : !g && [1, 2, 3, 4, 5, 6].map((v, i) => <Die key={v} v={v} style={scatter(3, i)} />)}
-          {g?.status === "done" && <div className={`zk-over display ${g.result?.outcome === "zonk" ? "zonk" : ""}`}>{g.result?.outcome === "zonk" ? "ЗОНК!" : full(g.result?.points ?? 0)}</div>}
-          <span className="zk-cup"><Cup /></span>
-        </div>
-        <div className="zk-table">
-          <b className="tiny zk-table-h">КОМБИНАЦИИ</b>
-          {COMBOS.map((c) => {
-            const can = c.test(nRoll, roll.length);
-            const on = picked.length > 0 && c.test(nPick, picked.length);
-            return (
-              <div key={c.key} className={`zk-row ${can ? "can" : ""} ${on ? "on" : ""}`}>
-                <span className="zk-mini">{c.dice.map((d, k) => <i key={k}><DieFace v={d} /></i>)}</span>
-                <b className="num">{c.label}</b>
+          {hint && <span className="zb-hint" style={{ left: zx(420), top: zy(1650), width: zx(620) }}>{hint}</span>}
+
+          <button className="zb-btn grey" style={{ left: zx(1065), top: zy(1670), width: zx(285), height: zy(100) }} disabled={!playing || busy === "zonk_move" || pts === null}
+            onClick={() => run("zonk_move", { pick, then: "roll" })}>Бросить<small className="num">{left}</small></button>
+          <button className={`zb-btn grey ${canBank ? "ready" : ""}`} style={{ left: zx(1065), top: zy(1795), width: zx(285), height: zy(100) }} disabled={!canBank || busy === "zonk_move"}
+            onClick={() => run("zonk_move", { pick, then: "bank" })}>Сохранить</button>
+
+          {/* no game running: the levels to choose from (and how the last game ended) */}
+          {!playing && info && (
+            <div className="zb-menu" style={{ left: zx(420), top: zy(240), width: zx(640), height: zy(1400) }}>
+              {g?.status === "done" && g.result && (
+                <div className={`zb-res ${g.result.won ? "win" : "lose"}`}>
+                  <b className="display">{g.result.won ? "Пройдено!" : g.result.outcome === "gave_up" ? "Сдался" : "Не хватило"}</b>
+                  <span className="num">{full(g.result.points ?? 0)} из {full(g.target ?? 0)}</span>
+                  <span className="zb-res-got">{g.result.reward && <RewardChips r={g.result.reward} size={14} />}<em>+{g.result.xp ?? 0} опыта</em></span>
+                </div>
+              )}
+              <div className="zb-xp" title={`${info.xp} опыта зонка`}>
+                <span>Зонк <b className="num">{info.level}</b> ур.</span>
+                <span className="zb-xp-bar"><i style={{ width: `${lvl}%` }} /></span>
+                <small className="num">{info.xp - info.from}/{info.to - info.from}</small>
               </div>
-            );
-          })}
+              {info.levels.map((l) => {
+                const free = l.level === 1 && info.freeLeft > 0;
+                const cash = state?.wallet[l.entry.currency] ?? 0;
+                const poor = !free && cash < l.entry.amount;
+                return (
+                  <button key={l.level} className={`zb-lvl ${poor ? "poor" : ""}`} disabled={poor || busy === "game_start"} onClick={() => run("game_start", { game: "zonk", level: l.level })}>
+                    <b className="zb-lvl-n display">{l.level}</b>
+                    <span className="zb-lvl-main">
+                      <b className="num">{full(l.target)} очков</b>
+                      <span className="zb-lvl-win">приз <RewardChips r={l.win} size={13} /> · +{l.winXp} оп.</span>
+                    </span>
+                    <span className="zb-lvl-pay">{free ? "бесплатно" : <>{l.entry.amount} <Icon name={l.entry.currency} size={15} /></>}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
-      {/* one fixed-height line: the window never jumps */}
-      <div className="zk-status">
-        {status !== null ? <span className="tiny">{status}</span> : (
-          <span className="tiny zk-status-row">Забрано +{pts} → в счёте будет {full((g?.total ?? 0) + turn)} = <RewardChips r={zonkPrize((g?.total ?? 0) + turn, !!g?.paid)} size={13} /></span>
-        )}
-        {!playing && g?.result?.reward && <RewardChips r={g.result.reward} size={14} />}
-      </div>
-      {playing ? (
-        <div className="zk-ctrl">
-          <button className="zk-q" disabled={busy === "zonk_move"} onClick={() => setPick(bestPick(roll))} aria-label="Подсказка" title="Подсказка: забрать все очковые">?</button>
-          <button className="zk-act gold" disabled={busy === "zonk_move" || pts === null} onClick={() => run("zonk_move", { pick, then: "roll" })}>
-            <RollIcon /><small>Бросить {left}</small>
-          </button>
-          <button className="zk-act green" disabled={busy === "zonk_move" || pts === null} onClick={() => run("zonk_move", { pick, then: "bank" })}>
-            <BankIcon /><small>{round >= rounds ? "Записать и закончить" : "Записать"}</small>
-          </button>
-        </div>
-      ) : (
-        <div style={{ marginTop: 8 }}><StartLine kind="zonk" again={!!g} onStart={() => run("game_start", { game: "zonk" })} /></div>
-      )}
     </Modal>
   );
 }
@@ -286,9 +322,10 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
 function PokerHelp() {
   return (
     <Help topic="poker" title="Покер">
-      <p>Сразу сдаётся 5 карт. Собралась комбинация из таблицы — получаешь награду, чем старше комбинация, тем больше.</p>
+      <p>Сразу сдаётся 5 карт. Собралась комбинация из таблицы под картами — получаешь награду, чем старше комбинация, тем больше.</p>
       <p>Раздача — {POKER_RULES.price.amount} USD, до {POKER_RULES.perDay} раздач в день.</p>
-      <p>Каждая раздача даёт опыт покера (за старшие комбинации — больше). Каждый уровень покера добавляет +{Math.round(POKER_LEVEL_BONUS * 1000) / 10}% к денежной награде, максимум {POKER_MAX_LEVEL} уровень.</p>
+      <p>Каждая раздача даёт опыт покера (за старшие комбинации — больше). Каждый уровень покера до {POKER_BONUS_LEVELS}-го добавляет +{Math.round(POKER_LEVEL_BONUS * 1000) / 10}% к денежной награде; всего уровней {POKER_MAX_LEVEL}.</p>
+      <p>Шулерство: {POKER_CHEATS.slice().reverse().map((c) => `с ${c.level} уровня — ${c.swaps} ${c.swaps === 1 ? "замена" : "замены"}`).join(", ")}. После раздачи нажми на любую карту на столе — она уйдёт, а на её место придёт новая из колоды. Комбинация считается, когда замены кончатся или ты нажмёшь «Вскрыть».</p>
     </Help>
   );
 }
@@ -297,71 +334,122 @@ function MiniCard({ r, s }: { r: number; s: number }) {
   return <span className={`pk-mini ${s === 1 || s === 2 ? "red" : ""}`}><b>{RANKS[r]}</b><i>{SUITS[s]}</i></span>;
 }
 
+/** an amount over a reward icon: 3000 → 3K, 2.3 → 2.3 */
+const qtyText = (v: number) => (v >= 1000 ? `${Math.round(v / 100) / 10}K` : String(Math.round(v * 100) / 100));
+/** a combination's prize as icons only, the amount at the icon's top right */
+function PrizeIcons({ hand, level }: { hand: PokerHand; level: number }) {
+  const pay = pokerPay(hand, level);
+  const parts = [
+    ...Object.entries(pay.currencies ?? {}).map(([c, v]) => ({ key: c, icon: <Icon name={c as Currency} size={22} />, n: v ?? 0, title: `${v} ${c}` })),
+    ...(pay.items ?? []).map((it) => ({ key: it.id, icon: <ItemArt id={it.id} size={24} />, n: it.qty, title: `${itemById(it.id)?.name ?? it.id} ×${it.qty}` })),
+  ];
+  return (
+    <span className="pkt-prize">
+      {parts.map((p) => <span key={p.key} className="pkt-ico" title={p.title}>{p.icon}<b className="num">{qtyText(p.n)}</b></span>)}
+    </span>
+  );
+}
+
+/* the felt picture (public/assets/yard/poker-table.webp, 1060×1484): the five gold frames for the cards */
+const PW = 1060, PH = 1484;
+const px = (x: number) => `${(x / PW) * 100}%`;
+const py = (y: number) => `${(y / PH) * 100}%`;
+const SLOTS = [108, 280, 453, 626, 798];
+
 export function PokerWindow({ onClose }: { onClose: () => void }) {
   const { state, act, busy } = useGame();
   const info = state?.poker;
   const [play, setPlay] = useState<PokerPlay | null>(null);
   const [deal, setDeal] = useState(0);
   const p = play?.poker ?? info;
+  // a hand left waiting for its swaps (the window was closed): it comes back
+  const open = play ?? (info?.active ? { kind: "poker" as const, phase: "draw" as const, ...info.active, poker: info } : null);
   const level = p?.level ?? 0;
   const pct = !p ? 0 : p.to === null ? 100 : Math.max(0, Math.min(100, ((p.xp - p.from) / (p.to - p.from)) * 100));
   const usd = state?.wallet[POKER_RULES.price.currency] ?? 0;
   const left = p?.left ?? 0;
-  const run = async () => {
+  const cheats = p?.cheats ?? pokerCheats(level);
+  const drawing = open?.phase === "draw";
+  const nextCheat = POKER_CHEATS.slice().reverse().find((c) => level < c.level);
+  const run = async (type: string, body: Record<string, unknown> = {}) => {
     haptic.tap();
     sfx("tap");
-    const r = await act<PokerPlay>("poker_play", {});
+    const r = await act<PokerPlay>(type, body);
     if (r) {
       setPlay(r);
-      setDeal((d) => d + 1);
-      if (r.reward) { haptic.ok(); sfx("reward"); } else haptic.err();
+      if (type === "poker_play") setDeal((d) => d + 1);
+      if (r.phase === "done") { if (r.reward) { haptic.ok(); sfx("reward"); } else haptic.err(); }
     }
   };
-  const hand: PokerHand | null = play?.hand ?? null;
+  const hand: PokerHand | null = open && open.phase === "done" ? open.hand : null;
   return (
-    <Modal title={<span className="title-row">Покер <PokerHelp /></span>} onClose={onClose} maxWidth={900} full>
-      <div className="pk">
-        <div className="pk-lvl" title={p ? `${p.xp}${p.to !== null ? ` / ${p.to}` : ""} опыта покера` : undefined}>
-          <b className="display num">{level}</b>
-          <span className="tiny">ур.</span>
-          <div className="pk-bar"><i style={{ height: `${pct}%` }} /></div>
-        </div>
-        <div className="mg-table pk-felt">
-          <div className="pk-cards" key={deal}>
-            {play
-              ? play.cards.map((c, i) => (
-                <span key={i} className={`pk-slot ${play.used.includes(i) && hand !== "high" ? "used" : ""} ${hand !== "high" && !play.used.includes(i) ? "dim" : ""}`}>
-                  <PlayingCard i={i} r={c.r} s={c.s} />
-                </span>
-              ))
-              : Array.from({ length: 5 }, (_, i) => <span key={i} className="pk-slot"><PlayingCard i={i} back /></span>)}
+    <Modal title={<span className="title-row">Покер <PokerHelp /></span>} onClose={onClose} full>
+      <div className="gstage">
+        <div className="pkt">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="pkt-bg" src="/assets/yard/poker-table.webp" alt="" draggable={false} />
+
+          {/* above the title: the poker level, its experience, the swaps it gives, the hands left today */}
+          <div className="pkt-top" style={{ left: px(70), top: py(60), width: px(920) }}>
+            <span className="pkt-lvl" title={p ? `${p.xp}${p.to !== null ? ` / ${p.to}` : ""} опыта покера` : undefined}>
+              <b className="display num">{level}</b><small>ур.</small>
+            </span>
+            <span className="pkt-xp"><i style={{ width: `${pct}%` }} /></span>
+            <span className="pkt-cheat" title="Шулерство: замены карт после раздачи">
+              {cheats > 0 ? <>🃏 <b className="num">{cheats}</b> {cheats === 1 ? "замена" : "замены"}</> : nextCheat ? <>замены с {nextCheat.level} ур.</> : null}
+            </span>
+            <span className="pkt-left num">{(p?.perDay ?? POKER_RULES.perDay) - left}/{p?.perDay ?? POKER_RULES.perDay}</span>
           </div>
-          {play ? (
-            <div className={`pk-res ${play.reward ? "win" : ""}`}>
-              <b className="display">{play.title}</b>
-              {play.reward ? <RewardChips r={play.reward} size={15} /> : <span className="tiny muted">без выигрыша</span>}
-              <span className="tiny">+{play.gainedXp} опыта покера{play.levelUp ? <b className="pk-up"> · новый уровень {level}!</b> : null}</span>
-            </div>
-          ) : (
-            <div className="pk-res"><span className="tiny muted">Сдаём 5 карт — собери комбинацию из таблицы</span></div>
-          )}
-          <button className="btn big gold pk-go" disabled={busy === "poker_play" || left <= 0 || usd < POKER_RULES.price.amount} onClick={run}>
-            {play ? "Ещё раздачу" : "Раздать"} · {POKER_RULES.price.amount} <Icon name={POKER_RULES.price.currency} size={18} />
-          </button>
-          <span className="tiny pk-left">
-            Раздач сегодня: <b className="num">{(p?.perDay ?? POKER_RULES.perDay) - left}/{p?.perDay ?? POKER_RULES.perDay}</b>
-            {left > 0 && usd < POKER_RULES.price.amount && <span style={{ color: "var(--red)" }}> · не хватает USD</span>}
-            {left <= 0 && <span> · приходи завтра</span>}
-          </span>
-        </div>
-        <div className="pk-table">
-          {POKER_HANDS.filter((h) => h.id !== "high").map((h) => (
-            <div key={h.id} className={`pk-row ${hand === h.id ? "on" : ""}`}>
-              <span className="pk-row-cards">{h.sample.map((c, k) => <MiniCard key={k} r={c.r} s={c.s} />)}</span>
-              <span className="pk-row-name tiny">{h.name}</span>
-              <span className="pk-row-pay"><RewardChips r={pokerPay(h.id, level)} size={12} /></span>
-            </div>
-          ))}
+
+          {/* the five cards in the gold frames; while swaps are left a tap changes a card */}
+          {SLOTS.map((x, i) => {
+            const c = open?.cards[i];
+            const swappedNow = !!open?.swapped.includes(i);
+            const usedCard = hand && hand !== "high" ? open!.used.includes(i) : false;
+            const dim = hand && hand !== "high" && !open!.used.includes(i);
+            return (
+              <button key={i} className={`pkt-slot ${drawing ? "can" : ""} ${usedCard ? "used" : ""} ${dim ? "dim" : ""}`} style={{ left: px(x), top: py(652), width: px(155), height: py(192) }}
+                disabled={!drawing || busy === "poker_swap"} onClick={() => run("poker_swap", { index: i })} aria-label={drawing ? `Заменить карту ${i + 1}` : undefined}>
+                {c
+                  ? <PlayingCard key={`${deal}-${i}-${c.r}-${c.s}`} i={swappedNow ? 0 : i} r={c.r} s={c.s} />
+                  : <PlayingCard key={`b${i}`} i={i} back />}
+                {drawing && <span className="pkt-swap" aria-hidden="true">⇄</span>}
+              </button>
+            );
+          })}
+
+          {/* under the cards: what came (or how many swaps are left) */}
+          <div className="pkt-res" style={{ left: px(80), top: py(860), width: px(900) }}>
+            {!open ? <span className="pkt-hint">Сдаём 5 карт — собери комбинацию</span>
+              : drawing ? <span className="pkt-hint">Нажми на карту, чтобы заменить · осталось <b className="num">{open.swapsLeft}</b></span>
+              : (
+                <span className={`pkt-out ${open.reward ? "win" : ""}`}>
+                  <b className="display">{open.title}</b>
+                  {open.reward ? <RewardChips r={open.reward} size={14} /> : <small>без выигрыша</small>}
+                  <small>+{open.gainedXp} оп.{open.levelUp ? <b className="pk-up"> · уровень {level}!</b> : null}</small>
+                </span>
+              )}
+          </div>
+
+          {/* the combinations in the free felt: the sample cards and the prize as icons, no words */}
+          <div className="pkt-table" style={{ left: px(60), top: py(935), width: px(940), height: py(400) }}>
+            {POKER_HANDS.filter((h) => h.id !== "high").map((h) => (
+              <div key={h.id} className={`pkt-row ${hand === h.id ? "on" : ""} ${drawing && open?.hand === h.id ? "now" : ""}`} title={h.name}>
+                <span className="pkt-row-cards">{h.sample.map((c, k) => <MiniCard key={k} r={c.r} s={c.s} />)}</span>
+                <PrizeIcons hand={h.id} level={level} />
+              </div>
+            ))}
+          </div>
+
+          <div className="pkt-ctrl" style={{ left: px(230), top: py(1355), width: px(600) }}>
+            {drawing ? (
+              <button className="btn big green block" disabled={busy === "poker_stand" || busy === "poker_swap"} onClick={() => run("poker_stand")}>Вскрыть</button>
+            ) : (
+              <button className="btn big gold block" disabled={busy === "poker_play" || left <= 0 || usd < POKER_RULES.price.amount} onClick={() => run("poker_play")}>
+                {left <= 0 ? "Приходи завтра" : <>{open ? "Ещё раздачу" : "Раздать"} · {POKER_RULES.price.amount} <Icon name={POKER_RULES.price.currency} size={18} /></>}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </Modal>
@@ -565,10 +653,10 @@ export function YardGames() {
               Блэкджек<small>{invites > 0 ? `тебя зовут за стол (${invites})` : "стол до 6 игроков · ставки 1–25 USD"}</small>
             </button>
             <button className="btn big block gold" onClick={() => setOpen("zonk")}>
-              Зонк<small>{note(zk, "игра — 2 USD")}</small>
+              Зонк<small>{note(zk, "4 уровня · вход от 150 RUB")}</small>
             </button>
             <button className="btn big block red" onClick={() => setOpen("poker")}>
-              Покер<small>{state?.poker ? `раздача — ${state.poker.price.amount} USD · осталось ${state.poker.left}/${state.poker.perDay}` : "раздача — 3 USD"}</small>
+              Покер<small>{state?.poker?.active ? "раздача ждёт замен — продолжить" : state?.poker ? `раздача — ${state.poker.price.amount} USD · осталось ${state.poker.left}/${state.poker.perDay}` : "раздача — 3 USD"}</small>
             </button>
           </div>
         </Modal>

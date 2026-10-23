@@ -76,7 +76,7 @@ export interface GameState {
   stashGifts?: { id: number; fromId: number; from: string; itemId: string; at: number }[];
   /** gifts waiting in «Сообщения» to be accepted */
   stashInbox?: { id: number; fromId: number; from: string; itemId: string; at: number }[];
-  games: Record<"zonk", { freeLeft: number; freePerDay: number; price: { currency: Currency; amount: number }; active: GameView | null }>;
+  games: { zonk: ZonkInfo };
   rename: { price: { currency: Currency; amount: number }; nextAt: number | null; min: number; max: number };
   /** inventory sale prices in RUB */
   sell: Record<string, number>;
@@ -96,17 +96,29 @@ export interface BjView {
   free: { left: number; perDay: number; bet: number }; clan: { id: number; name: string; busy: boolean; invited: boolean }[];
   moves?: { hit: boolean; stand: boolean; double: boolean; split: boolean }; now?: number;
 }
-export interface PokerInfo { left: number; perDay: number; price: { currency: Currency; amount: number }; xp: number; level: number; from: number; to: number | null }
-export interface PokerPlay {
-  kind: "poker"; cards: { r: number; s: number }[]; hand: import("../content/games.ts").PokerHand; used: number[]; title: string;
-  reward: Granted | null; gainedXp: number; levelUp: boolean; poker: PokerInfo;
+export interface ZonkInfo {
+  freeLeft: number; freePerDay: number; price: { currency: Currency; amount: number };
+  levels: import("../content/games.ts").ZonkLevelDef[]; bankMin: number;
+  /** zonk experience and level (100 xp a level) */
+  xp: number; level: number; from: number; to: number;
+  /** the best game of the day (all levels); yesterday's while nobody has played today */
+  record: { points: number; playerId: number; name: string; photo: string | null; day: "today" | "yesterday" } | null;
+  active: GameView | null;
 }
-export interface GameResult { outcome: string; title: string; reward: Granted | null; points?: number }
+export interface PokerDraw { id: number; cards: { r: number; s: number }[]; swapsLeft: number; swapped: number[]; hand: import("../content/games.ts").PokerHand; used: number[] }
+export interface PokerInfo { left: number; perDay: number; price: { currency: Currency; amount: number }; xp: number; level: number; from: number; to: number | null; cheats?: number; active?: PokerDraw | null }
+export interface PokerPlay {
+  kind: "poker"; phase: "draw" | "done"; cards: { r: number; s: number }[]; hand: import("../content/games.ts").PokerHand; used: number[];
+  swapsLeft: number; swapped: number[];
+  title?: string; reward?: Granted | null; gainedXp?: number; levelUp?: boolean; poker: PokerInfo;
+}
+export interface GameResult { outcome: string; title: string; reward: Granted | null; points?: number; won?: boolean; xp?: number }
 export interface GameView {
   id: number; kind: "zonk"; paid: boolean; status: "active" | "done"; result: GameResult | null;
   /** zonk */
   roll?: number[]; turn?: number; left?: number; history?: { kept: number[]; points: number }[];
   round?: number; rounds?: number; total?: number; last?: { points: number; zonk: boolean } | null; scores?: { points: number; zonk: boolean }[];
+  level?: number; target?: number;
 }
 export interface Hit { seq: number; playerId: number; name: string; weapon: string; damage: number; phrase: number; at: number; crit?: boolean; count?: number }
 export interface FightView {

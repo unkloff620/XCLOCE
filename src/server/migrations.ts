@@ -790,4 +790,12 @@ UPDATE appearance SET equipped = equipped - 'HAND' WHERE equipped->>'HAND' = 'ha
 DELETE FROM inventory WHERE item_id = 'hand-butterfly';
 `,
   },
+  {
+    // Зонк по уровням сложности: опыт зонка у игрока (100 опыта = уровень); рекорд дня ищется по партиям дня.
+    id: "v2-044-zonk-levels",
+    sql: `
+ALTER TABLE players ADD COLUMN IF NOT EXISTS zonk_xp INT NOT NULL DEFAULT 0;
+CREATE INDEX IF NOT EXISTS games_kind_day ON games (kind, day, status);
+`,
+  },
 ];

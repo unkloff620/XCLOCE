@@ -17,7 +17,7 @@ import { clock, full, pct, short } from "../format.ts";
 import { setMusicTrack, sfx, weaponSfx } from "../sound.ts";
 import { haptic } from "../telegram.ts";
 import { DriftingSky } from "../art/sky.tsx";
-import { BossRig, hasBossRig } from "../art/boss-rig.tsx";
+import { BEATEN_BELOW, BossRig, hasBossRig } from "../art/boss-rig.tsx";
 import { Modal } from "../ui.tsx";
 import { talentThreshold, talentsForDamage } from "../../content/talents.ts";
 import { TalentWindow } from "./talents.tsx";
@@ -34,10 +34,12 @@ function Arena({ boss, hp, hpMax, endsAt, fx, hit, ouch, rug, feed, full: fullSc
   const now = useNow();
   const phase = boss.phases && hp !== null ? [...boss.phases].reverse().find((p) => pct(hp, hpMax) <= p.from) ?? boss.phases[0] : null;
   const hurt = hp !== null && pct(hp, hpMax) < 25;
+  // below half HP the boss is dazed: slow, swaying from side to side (the rig slows its own motions, see useDazed)
+  const dazed = hp !== null && hp / Math.max(1, hpMax) < BEATEN_BELOW;
   return (
     <div className={`arena ${boss.final ? "final" : ""} ${fullScreen ? "full" : ""}`} style={{ ["--acc" as string]: boss.theme.accent }}>
       {!fullScreen && <ArenaBackdrop theme={boss.theme} final={boss.final} />}
-      <div className={`arena-photo ${hit ? "hit" : ""} ${ouch ? "ouch" : ""} ${rug ? "rug" : ""} ${hurt ? "hurt" : ""} ${strike ? `strike strike-${strike}` : ""}`}>
+      <div className={`arena-photo ${hit ? "hit" : ""} ${ouch ? "ouch" : ""} ${rug ? "rug" : ""} ${hurt ? "hurt" : ""} ${dazed ? "dazed" : ""} ${strike ? `strike strike-${strike}` : ""}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         {hasBossRig(boss.id) ? <BossRig id={boss.id} hpShare={hp === null ? 1 : hp / Math.max(1, hpMax)} /> : boss.photo.full ? <img src={boss.photo.full} alt={boss.name} draggable={false} /> : <div className="arena-sil"><BossSilhouette accent={boss.theme.accent} /><span className="small muted">фото скоро</span></div>}
         <div className="arena-flash" />
