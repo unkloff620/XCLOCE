@@ -121,9 +121,9 @@ function landing(seed: number, i: number) {
     return v - Math.floor(v);
   };
   const col = i % 3, row = Math.floor(i / 3);
-  const x = FIELD.x + col * (FIELD.w / 3) + 10 + r(1) * 40;
+  const x = FIELD.x + col * (FIELD.w / 3) + 14 + r(1) * 24;
   const y = FIELD.y + row * (FIELD.h / 2) + 30 + r(2) * 90;
-  return { x, y, rot: Math.round(r(3) * 70 - 35), spin: (r(4) > 0.5 ? 1 : -1) * (360 + Math.round(r(5) * 360)) };
+  return { x, y, rot: Math.round(r(3) * 44 - 22), spin: (r(4) > 0.5 ? 1 : -1) * (360 + Math.round(r(5) * 360)) };
 }
 
 export function ZonkWindow({ onClose }: { onClose: () => void }) {
