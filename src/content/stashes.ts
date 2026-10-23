@@ -1,5 +1,5 @@
 /*
- * Нычки: наборы по 4 нычки, у каждой локации свои наборы (в первых трёх — по 2, в двух последних — по 3).
+ * Нычки: наборы по 4 нычки, у каждой локации свои наборы (в первых трёх — по 3, в подвале и совете директоров — по 4).
  * Нычка может найтись за шаг задания в локации (шанс STASH_CHANCE), а при закрытии локации одна нычка выпадает
  * наверняка. Нычки выпадают повторно и копятся. Есть все 4 нычки набора — нажимаешь на картинку набора в «Нычках»:
  * по одной нычке каждого вида уходит, приходит награда набора, счётчик собранных наборов растёт. За 10, 50 и 100
@@ -135,6 +135,42 @@ export const STASH_SETS: StashSet[] = [
       { id: "stash-rich-lambo", name: "Чёрная ламба", description: "Wen lambo? Now." },
       { id: "stash-rich-watch", name: "Часы с бриллиантами", description: "Показывают только время покупать." },
       { id: "stash-rich-bar", name: "Слиток BTC", description: "Тяжёлый, как бычий рынок." },
+    ],
+  },
+  {
+    id: "stash-set-15", n: 15, name: "Мемная заначка", location: "openspace", reward: LOC_REWARD.openspace,
+    items: [
+      { id: "stash-meme-mug", name: "Кружка «Hold bro»", description: "Пять палочек — пять лет холда. Внутри Пепе и котлета." },
+      { id: "stash-meme-noodles", name: "Стакан лапши BONK", description: "Лапша, BONK, пакетик и холодный кошелёк. Ужин чемпиона." },
+      { id: "stash-meme-can", name: "Банка «To the moon»", description: "Монета-ракета, флешка и записка: курс только вверх." },
+      { id: "stash-meme-cigs", name: "Пачка с Пепе в очках", description: "Вместо сигарет — Пепе в очках, зажигалка и доллары." },
+    ],
+  },
+  {
+    id: "stash-set-14", n: 14, name: "Холдер XRP", location: "market", reward: LOC_REWARD.market,
+    items: [
+      { id: "stash-xrp-paste", name: "Тюбик «Hold the line»", description: "XRP, рулон долларов и записка: «Hold the line, bro»." },
+      { id: "stash-xrp-deo", name: "Дезодорант с секретом", description: "Пахнет морем и холодным кошельком. Внутри XRP." },
+      { id: "stash-xrp-slipper", name: "Тапок-сейф", description: "Под стелькой — XRP, пачка долларов и пакетик." },
+      { id: "stash-xrp-beanie", name: "Шапка холдера", description: "В отвороте — XRP, доллары и зажигалка." },
+    ],
+  },
+  {
+    id: "stash-set-13", n: 13, name: "Заначка на Солане", location: "serverroom", reward: LOC_REWARD.serverroom,
+    items: [
+      { id: "stash-sol-canister", name: "Армейский тубус", description: "Ржавый снаружи, Solana и флешка с ключами внутри." },
+      { id: "stash-sol-pillow", name: "Подушка-сейф", description: "Вата, Solana и пачка налички. Спится спокойно." },
+      { id: "stash-sol-radio", name: "Приёмник с тайником", description: "Ловит только пампы. За панелью — Solana и кошелёк." },
+      { id: "stash-sol-paste", name: "Тюбик с Соланой", description: "Выдавил — а там монета, доллары и ключ." },
+    ],
+  },
+  {
+    id: "stash-set-16", n: 16, name: "Эфирный тайник", location: "board", reward: LOC_REWARD.board,
+    items: [
+      { id: "stash-eth-soap", name: "Мыло с эфиром", description: "Внутри — монеты Ethereum и аппаратный кошелёк. Не урони." },
+      { id: "stash-eth-sardines", name: "Шпроты-сейф", description: "Вместо рыбы — эфир и рулоны долларов." },
+      { id: "stash-eth-book", name: "Книга с вырезом", description: "Обложка с ромбом эфира, внутри монета и зажигалка." },
+      { id: "stash-eth-coffee", name: "Банка кофе с ETH", description: "Растворимый, бодрящий и с монетой эфира на дне." },
     ],
   },
 ];

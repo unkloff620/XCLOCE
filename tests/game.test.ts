@@ -1410,10 +1410,16 @@ describe("нычки", () => {
 });
 
 describe("нычки v2", () => {
-  it("two sets in the first location; closing a location always finds a missing stash", async () => {
+  it("three sets in the first location; closing a location always finds a missing stash", async () => {
     const { stashSetsByLocation, STASH_SETS } = await import("../src/content/stashes.ts");
-    expect(STASH_SETS).toHaveLength(12);
-    expect(stashSetsByLocation("openspace")).toHaveLength(2);
+    expect(STASH_SETS).toHaveLength(16);
+    expect(stashSetsByLocation("openspace")).toHaveLength(3);
+    // every stash has its picture, every set its set picture
+    const { existsSync } = await import("node:fs");
+    for (const s of STASH_SETS) {
+      expect(existsSync(`public/assets/stash/set-${s.n}.webp`)).toBe(true);
+      for (const i of s.items) expect(existsSync(`public/assets/items/${i.id}.webp`)).toBe(true);
+    }
     const p = await newPlayer(db);
     const loc = LOCATIONS.find((l) => l.id === "openspace")!;
     for (const t of loc.tasks) await db.query("INSERT INTO task_progress (player_id, task_id, steps) VALUES ($1,$2,$3)", [p, t.id, t.steps]);

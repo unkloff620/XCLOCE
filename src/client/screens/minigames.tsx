@@ -15,6 +15,7 @@ import { full } from "../format.ts";
 import type { GameView, PokerPlay } from "../api.ts";
 import type { Currency } from "../../content/currencies.ts";
 import { BlackjackWindow } from "./blackjack.tsx";
+import { Roach } from "../art/roach.tsx";
 import { itemById } from "../../content/items.ts";
 import {
   ITEM_VALUES, RANKS, SUITS, UPGRADE_MODES, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue, zonkGroups, zonkScore, ZONK_ROUNDS,
@@ -151,7 +152,40 @@ function landing(seed: number, i: number) {
   return { x: sx + r(1) * 30, y: sy + r(2) * 26, rot: Math.round(r(3) * 44 - 22), spin: (r(4) > 0.5 ? 1 : -1) * (360 + Math.round(r(5) * 360)) };
 }
 
+/**
+ * Now and then a cockroach runs across the room: along the table at the bottom of the picture or along the top edge of
+ * the board's frame, either way. Feet line and size in room pixels.
+ */
+const ROACH_LANES = { table: { feet: 1712, w: 104, dur: 4.2 }, frame: { feet: 323, w: 78, dur: 5.2 } } as const;
+type RoachRun = { key: number; lane: keyof typeof ROACH_LANES; dir: "left" | "right" };
+function useRoach() {
+  const [run, setRun] = useState<RoachRun | null>(null);
+  useEffect(() => {
+    let t: ReturnType<typeof setTimeout>;
+    const next = (first: boolean) => {
+      t = setTimeout(() => {
+        setRun({ key: Date.now(), lane: Math.random() < 0.55 ? "table" : "frame", dir: Math.random() < 0.5 ? "left" : "right" });
+        next(false);
+      }, (first ? 3 : 9 + Math.random() * 14) * 1000);
+    };
+    next(true);
+    return () => clearTimeout(t);
+  }, []);
+  return { run, done: () => setRun(null) };
+}
+function RoachRunner({ run, onDone }: { run: RoachRun; onDone: () => void }) {
+  const l = ROACH_LANES[run.lane];
+  const h = (l.w * 480) / 660;
+  return (
+    <span key={run.key} className={`zb-roach ${run.dir}`} onAnimationEnd={(e) => { if (e.target === e.currentTarget) onDone(); }}
+      style={{ top: `${((l.feet - (h * 455) / 480) / ZH) * 100}%`, width: `${(l.w / ZW) * 100}%`, ["--dur" as string]: `${l.dur}s` }}>
+      <Roach />
+    </span>
+  );
+}
+
 export function ZonkWindow({ onClose }: { onClose: () => void }) {
+  const roach = useRoach();
   const { state, act, busy } = useGame();
   const info = state?.games?.zonk;
   const active = info?.active ?? null;
@@ -252,6 +286,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
           <span className="zb-dark" aria-hidden="true" />
           <span className="zb-lamp" aria-hidden="true" />
           <span className="zb-bulb" aria-hidden="true" style={{ left: zx(395), top: zy(8), width: zx(60), height: zy(40) }} />
+          {roach.run && <RoachRunner key={roach.run.key} run={roach.run} onDone={roach.done} />}
 
           {/* the paper at the top left: the best game of the day */}
           <div className="zb-rec" style={{ left: zx(30), top: zy(350), width: zx(162), height: zy(100) }}>

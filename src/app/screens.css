@@ -2448,3 +2448,20 @@ button.bjt-stack { cursor: pointer; }
 .game-tile:hover img { transform: translateY(-3px) scale(1.04); }
 .game-tile.live { border-color: rgba(255, 204, 51, 0.75); box-shadow: 0 0 14px rgba(255, 204, 51, 0.35); }
 .game-tile.live small { color: var(--gold); }
+
+/* the cockroach of the zonk room (art/roach.tsx): runs across, legs in two tripods, the body bobbing */
+.zb-roach { position: absolute; z-index: 1; aspect-ratio: 660 / 480; pointer-events: none; filter: drop-shadow(0 0.4cqw 0.3cqw rgba(0, 0, 0, 0.55));
+  animation-duration: var(--dur, 4.5s); animation-timing-function: linear; animation-fill-mode: both; animation-iteration-count: 1; }
+.zb-roach.left { left: 100%; animation-name: rch-left; }
+.zb-roach.right { right: 100%; animation-name: rch-right; }
+.zb-roach.right .rch { transform: scaleX(-1); }
+@keyframes rch-left { 0% { transform: translateX(0); } 42% { transform: translateX(calc(-46cqw - 50%)); } 52% { transform: translateX(calc(-50cqw - 50%)); } 100% { transform: translateX(calc(-100cqw - 100%)); } }
+@keyframes rch-right { 0% { transform: translateX(0); } 42% { transform: translateX(calc(46cqw + 50%)); } 52% { transform: translateX(calc(50cqw + 50%)); } 100% { transform: translateX(calc(100cqw + 100%)); } }
+.rch { display: block; overflow: visible; }
+.rch-leg { transform-box: view-box; animation-name: rch-step; animation-duration: 0.18s; animation-timing-function: ease-in-out; animation-iteration-count: infinite; animation-direction: alternate; }
+.rch-leg.b { animation-delay: -0.18s; }
+.rch-far { filter: brightness(0.55); }
+@keyframes rch-step { from { transform: rotate(calc(var(--r) - 16deg)); } to { transform: rotate(calc(var(--r) + 16deg)); } }
+.rch-body { transform-box: view-box; animation-name: rch-bob; animation-duration: 0.09s; animation-timing-function: ease-in-out; animation-iteration-count: infinite; animation-direction: alternate; }
+@keyframes rch-bob { to { transform: translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) { .zb-roach { display: none; } }
