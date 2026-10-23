@@ -61,6 +61,17 @@ export function hasBossRig(id: string): boolean {
   return id in BOSS_RIGS;
 }
 
+/** the viewBox of a boss's bust: the head in the middle, the shoulders' top at the bottom */
+function bustBox(rig: { w: number; h: number; parts: Record<string, { x: number; y: number; w: number; h: number }> }) {
+  const head = rig.parts.head;
+  if (!head) return `0 0 ${rig.w} ${rig.h}`;
+  // the card's box is about 0.87 wide to 1 tall: at least 1.6 heads tall, and wide enough for a wide head (the shark)
+  const w = Math.max(head.w * 1.15, head.h * 1.62 * 0.87);
+  const h = w / 0.87;
+  const cx = head.x + head.w / 2;
+  return `${Math.round(cx - w / 2)} ${Math.round(head.y - head.h * 0.06)} ${Math.round(w)} ${Math.round(h)}`;
+}
+
 /** HP share (0..1) below which the beaten look is shown. */
 export const BEATEN_BELOW = 0.5;
 
@@ -90,7 +101,11 @@ export function useDazed(ref: RefObject<Element | null>, on: boolean) {
   }, [ref, on]);
 }
 
-export function BossRig({ id: baseId, hpShare = 1 }: { id: string; hpShare?: number }) {
+/**
+ * `bust`: only the head, the neck and the top of the shoulders (the boss list card) — the same live rig, the picture
+ * cut to a box around the head (wider than the head, about 1.6 heads tall from just above the crown).
+ */
+export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string; hpShare?: number; bust?: boolean }) {
   const id = hpShare < BEATEN_BELOW && `${baseId}-beaten` in BOSS_RIGS ? `${baseId}-beaten` : baseId;
   const dazed = hpShare < BEATEN_BELOW;
   const svgRef = useRef<SVGSVGElement>(null);
@@ -160,7 +175,7 @@ export function BossRig({ id: baseId, hpShare = 1 }: { id: string; hpShare?: num
   const maskId = `br-eyes-${id}`;
   // bosses with a full face (Кедр): pupils glance around, brows and mouth change when he is hit (class "ouch" on the arena)
   return (
-    <svg key={id} ref={svgRef} className={`boss-rig rig-${baseId} ${id.endsWith("-beaten") ? "beaten" : ""} ${dazed ? "dazed" : ""}`} viewBox={`0 0 ${rig.w} ${rig.h}`} width="100%" height="100%" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+    <svg key={id} ref={svgRef} className={`boss-rig rig-${baseId} ${id.endsWith("-beaten") ? "beaten" : ""} ${dazed ? "dazed" : ""}`} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} width="100%" height="100%" preserveAspectRatio={bust ? "xMidYMin slice" : "xMidYMax meet"} aria-hidden="true">
       {frameCss && <style>{frameCss}</style>}
       <g className="br-breath" style={{ transformOrigin: `${rig.w / 2}px ${rig.h}px`, transformBox: "view-box" }}>
         {P.tail && <g className="br-tail" style={origin("tail")}>{img("tail")}</g>}

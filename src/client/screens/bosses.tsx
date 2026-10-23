@@ -14,6 +14,7 @@ import { itemById } from "../../content/items.ts";
 import { Icon } from "../art/icons.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { BossSilhouette } from "../art/scenes.tsx";
+import { BossRig, hasBossRig } from "../art/boss-rig.tsx";
 import { clock } from "../format.ts";
 
 export interface BossRow {
@@ -87,7 +88,9 @@ export function BossesScreen() {
               {/* the boss stands on the left and fades into the card */}
               <div className="bcard-art" aria-hidden="true">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                {(b.photo.card ?? b.photo.full) ? <img src={(b.photo.card ?? b.photo.full)!} alt="" draggable={false} /> : <div className="bcard-sil"><BossSilhouette accent={tierColor(b.order)} /></div>}
+                {/* the live rig cut to the head and shoulders: the face blinks, looks around and frowns like in the fight */}
+                {hasBossRig(b.id) ? <BossRig id={b.id} bust hpShare={mine ? hp / Math.max(1, hpMax) : 1} />
+                  : (b.photo.card ?? b.photo.full) ? <img src={(b.photo.card ?? b.photo.full)!} alt="" draggable={false} /> : <div className="bcard-sil"><BossSilhouette accent={tierColor(b.order)} /></div>}
               </div>
               <div className="bcard-main">
                 <div className="bcard-head">
