@@ -16,7 +16,7 @@ import type { Reward } from "../../content/rewards.ts";
 
 /** round: the attempt now (1…ZONK_ROUNDS); total: points written down; last: how the previous attempt ended */
 /** level: the difficulty (ZONK_LEVELS), target: the points to reach; old games (before the levels) have neither */
-interface ZonkState { roll: number[]; turn: number; left: number; history: { kept: number[]; points: number }[]; round?: number; total?: number; last?: { points: number; zonk: boolean } | null; scores?: { points: number; zonk: boolean }[]; level?: number; target?: number }
+interface ZonkState { roll: number[]; turn: number; left: number; history: { kept: number[]; points: number }[]; round?: number; total?: number; last?: { points: number; zonk: boolean; roll?: number[] } | null; scores?: { points: number; zonk: boolean }[]; level?: number; target?: number }
 interface GameRow { id: number; kind: GameKind; paid: boolean; status: "active" | "done"; state: ZonkState; result: GameResult | null }
 interface GameResult { outcome: string; title: string; reward: Granted | null; points?: number; won?: boolean; xp?: number }
 
@@ -94,8 +94,8 @@ export async function startGame(ctx: Ctx, kind: GameKind, level = 1) {
   );
   const g: GameRow = { id: row.id, kind, paid: !free, status: "active", state, result: null };
   if (!zonkHasScore(state.roll)) {
-    state.last = { points: 0, zonk: true };
-    state.scores = [state.last];
+    state.last = { points: 0, zonk: true, roll: state.roll };
+    state.scores = [{ points: 0, zonk: true }];
     await nextZonkRound(ctx, g);
   }
   return viewOf(g);
@@ -134,8 +134,9 @@ async function nextZonkRound(ctx: Ctx, g: GameRow) {
     }
     s.roll = Array.from({ length: ZONK_DICE }, () => die(ctx.rng));
     if (zonkHasScore(s.roll)) return save(ctx, g);
-    s.last = { points: 0, zonk: true };
-    s.scores = [...(s.scores ?? []), s.last];
+    // a roll without points: the attempt burns; the dice that fell stay in «last» so the board can show them
+    s.last = { points: 0, zonk: true, roll: s.roll };
+    s.scores = [...(s.scores ?? []), { points: 0, zonk: true }];
   }
 }
 
@@ -157,15 +158,15 @@ export async function zonkMove(ctx: Ctx, pick: number[], then: "roll" | "bank") 
   if (then === "bank") {
     s.total = (s.total ?? 0) + s.turn;
     s.last = { points: s.turn, zonk: false };
-    s.scores = [...(s.scores ?? []), s.last];
+    s.scores = [...(s.scores ?? []), { points: s.turn, zonk: false }];
     // the target reached: the game ends at once with the win
     if ((s.total ?? 0) >= (s.target ?? zonkLevelDef(s.level ?? 1)!.target)) await finishZonk(ctx, g);
     else await nextZonkRound(ctx, g);
   } else {
     s.roll = Array.from({ length: s.left }, () => die(ctx.rng));
     if (!zonkHasScore(s.roll)) {
-      s.last = { points: s.turn, zonk: true };
-      s.scores = [...(s.scores ?? []), s.last];
+      s.last = { points: s.turn, zonk: true, roll: s.roll };
+      s.scores = [...(s.scores ?? []), { points: s.turn, zonk: true }];
       await nextZonkRound(ctx, g);
     } else await save(ctx, g);
   }

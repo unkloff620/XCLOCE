@@ -126,6 +126,27 @@ export function zonkScore(dice: number[]): number | null {
   return pts;
 }
 
+/**
+ * Kept dice split into the combinations that score them (how the board signs them under the dice): a straight or three
+ * pairs is one group of six; three or more of a face is one group; every lone 1 or 5 is its own group. A die that does
+ * not score is its own group with points null. The groups add up to zonkScore when every die scores.
+ */
+export function zonkGroups(dice: number[]): { dice: number[]; points: number | null }[] {
+  const n = [0, 0, 0, 0, 0, 0, 0];
+  for (const d of dice) n[d]++;
+  if (dice.length === 6 && n.slice(1).every((x) => x === 1)) return [{ dice: [1, 2, 3, 4, 5, 6], points: 1500 }];
+  if (dice.length === 6 && n.filter((x) => x === 2).length === 3) return [{ dice: [...dice].sort((a, b) => a - b), points: 750 }];
+  const out: { dice: number[]; points: number | null }[] = [];
+  for (const f of [1, 5, 2, 3, 4, 6]) {
+    const c = n[f];
+    if (!c) continue;
+    if (c >= 3) out.push({ dice: Array(c).fill(f), points: (f === 1 ? 1000 : f * 100) * 2 ** (c - 3) });
+    else for (let k = 0; k < c; k++) out.push({ dice: [f], points: f === 1 ? 100 : f === 5 ? 50 : null });
+  }
+  // the dice that score nothing go last
+  return [...out.filter((x) => x.points !== null), ...out.filter((x) => x.points === null)];
+}
+
 /** does a roll have anything that scores? */
 export function zonkHasScore(dice: number[]): boolean {
   const n = [0, 0, 0, 0, 0, 0, 0];

@@ -117,7 +117,7 @@ export interface GameView {
   id: number; kind: "zonk"; paid: boolean; status: "active" | "done"; result: GameResult | null;
   /** zonk */
   roll?: number[]; turn?: number; left?: number; history?: { kept: number[]; points: number }[];
-  round?: number; rounds?: number; total?: number; last?: { points: number; zonk: boolean } | null; scores?: { points: number; zonk: boolean }[];
+  round?: number; rounds?: number; total?: number; last?: { points: number; zonk: boolean; roll?: number[] } | null; scores?: { points: number; zonk: boolean }[];
   level?: number; target?: number;
 }
 export interface Hit { seq: number; playerId: number; name: string; weapon: string; damage: number; phrase: number; at: number; crit?: boolean; count?: number }
