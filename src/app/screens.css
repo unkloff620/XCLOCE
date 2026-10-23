@@ -2465,3 +2465,11 @@ button.bjt-stack { cursor: pointer; }
 .rch-body { transform-box: view-box; animation-name: rch-bob; animation-duration: 0.09s; animation-timing-function: ease-in-out; animation-iteration-count: infinite; animation-direction: alternate; }
 @keyframes rch-bob { to { transform: translateY(-4px); } }
 @media (prefers-reduced-motion: reduce) { .zb-roach { display: none; } }
+/* the roach, round 2: small, quick legs, a dash — a stop — a dash */
+@keyframes rch-left { 0% { transform: translateX(0); } 40%, 62% { transform: translateX(calc(-50cqw - 50%)); } 100% { transform: translateX(calc(-100cqw - 100%)); } }
+@keyframes rch-right { 0% { transform: translateX(0); } 40%, 62% { transform: translateX(calc(50cqw + 50%)); } 100% { transform: translateX(calc(100cqw + 100%)); } }
+.zb-roach { animation-timing-function: ease-in-out; }
+.rch-leg { animation-duration: 0.08s; }
+.rch-leg.b { animation-delay: -0.08s; }
+.rch-body { animation-duration: 0.05s; }
+.zb-roach.still .rch-leg, .zb-roach.still .rch-body { animation-play-state: paused; }

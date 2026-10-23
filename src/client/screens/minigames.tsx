@@ -153,10 +153,11 @@ function landing(seed: number, i: number) {
 }
 
 /**
- * Now and then a cockroach runs across the room: along the table at the bottom of the picture or along the top edge of
- * the board's frame, either way. Feet line and size in room pixels.
+ * Now and then a small cockroach dashes along the top edge of the board's frame, either way: runs, stops for a moment
+ * (legs still), runs on. Feet line and size in room pixels; the stop is between ROACH_STOP of the run.
  */
-const ROACH_LANES = { table: { feet: 1712, w: 104, dur: 4.2 }, frame: { feet: 323, w: 78, dur: 5.2 } } as const;
+const ROACH_LANES = { frame: { feet: 323, w: 50, dur: 3 } } as const;
+const ROACH_STOP = [0.4, 0.62] as const;
 type RoachRun = { key: number; lane: keyof typeof ROACH_LANES; dir: "left" | "right" };
 function useRoach() {
   const [run, setRun] = useState<RoachRun | null>(null);
@@ -164,7 +165,7 @@ function useRoach() {
     let t: ReturnType<typeof setTimeout>;
     const next = (first: boolean) => {
       t = setTimeout(() => {
-        setRun({ key: Date.now(), lane: Math.random() < 0.55 ? "table" : "frame", dir: Math.random() < 0.5 ? "left" : "right" });
+        setRun({ key: Date.now(), lane: "frame", dir: Math.random() < 0.5 ? "left" : "right" });
         next(false);
       }, (first ? 3 : 9 + Math.random() * 14) * 1000);
     };
@@ -176,8 +177,15 @@ function useRoach() {
 function RoachRunner({ run, onDone }: { run: RoachRun; onDone: () => void }) {
   const l = ROACH_LANES[run.lane];
   const h = (l.w * 480) / 660;
+  // the legs stop while it stands (the run itself holds still in the CSS keyframes over the same share)
+  const [still, setStill] = useState(false);
+  useEffect(() => {
+    const a = setTimeout(() => setStill(true), ROACH_STOP[0] * l.dur * 1000);
+    const b = setTimeout(() => setStill(false), ROACH_STOP[1] * l.dur * 1000);
+    return () => { clearTimeout(a); clearTimeout(b); };
+  }, [l.dur]);
   return (
-    <span key={run.key} className={`zb-roach ${run.dir}`} onAnimationEnd={(e) => { if (e.target === e.currentTarget) onDone(); }}
+    <span key={run.key} className={`zb-roach ${run.dir} ${still ? "still" : ""}`} onAnimationEnd={(e) => { if (e.target === e.currentTarget) onDone(); }}
       style={{ top: `${((l.feet - (h * 455) / 480) / ZH) * 100}%`, width: `${(l.w / ZW) * 100}%`, ["--dur" as string]: `${l.dur}s` }}>
       <Roach />
     </span>
