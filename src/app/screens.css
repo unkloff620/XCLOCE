@@ -2538,3 +2538,17 @@ button.bjt-stack { cursor: pointer; }
   .bj2 .bj2-panel .btn { padding-top: 5px; padding-bottom: 5px; min-height: 0; font-size: 13px; }
   .bj2 .bj2-panel .bjt-ctrl, .bj2 .bj2-panel .bjt-lobby { gap: 4px; }
 }
+/* blackjack round 3 fixes: the dealer below the top buttons, a readable wallet, the drawn boxes carry the outlines,
+ * «ПАРЫ» in the middle of its ring, my results beside the cards and the ring instead of on top of each other */
+.bj2 .bjt-dealer { top: 17.4%; }
+.bj2-top .bjt-wallet { color: #ffe9b0; background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255, 210, 63, 0.35); padding: 3px 10px; text-shadow: 0 1px 2px #000; }
+.bj2-top .bjt-wallet b { color: #ffe9b0; }
+.bj2 .bjt-box:not(.big), .bj2 .bjt-box.empty.invite:not(.big) { background: none; box-shadow: none; border: 0; animation: none; }
+.bj2 .bjt-box.empty.invite b { text-shadow: 0 0.3cqw 0 #1e1006, 0 0 1cqw rgba(0, 0, 0, 0.6); animation: bjt-glow-text 2.4s ease-in-out infinite; }
+@keyframes bjt-glow-text { 50% { opacity: 0.55; } }
+.bj2 .bjt-box:not(.big).turn { box-shadow: 0 0 0 0.45cqw #2ee88a, 0 0 3cqw rgba(46, 232, 138, 0.6); }
+.bjt-ring small { transform: none; }
+.bj2 .bjt-side.big > .bjt-stack { bottom: 30%; }
+.bj2 .bjt-side.big .bjt-side-res { top: 50%; left: calc(100% + 1.6cqw); transform: translateY(-50%); font-size: 2.6cqw; }
+.bj2 .bjt-box.big .bjt-out { bottom: auto; top: 50%; left: calc(100% + 1.2cqw); transform: translateY(-50%); font-size: 2.6cqw; }
+.bj2 .bjt-box.big .bjt-hands.n2 .bjt-out, .bj2 .bjt-box.big .bjt-hands.n3 .bjt-out, .bj2 .bjt-box.big .bjt-hands.n4 .bjt-out { top: auto; bottom: calc(100% + 0.6cqw); left: 50%; transform: translateX(-50%); font-size: 2.1cqw; }
