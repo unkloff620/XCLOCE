@@ -18,7 +18,8 @@ export function Bar({ value, max, tone = "green", label, height }: { value: numb
   );
 }
 
-export function Modal({ title, onClose, children, wide, maxWidth }: { title?: ReactNode; onClose: () => void; children: ReactNode; wide?: boolean; maxWidth?: number }) {
+/** `full` — the whole screen (mini games): content keeps `maxWidth` (if given) in the middle */
+export function Modal({ title, onClose, children, wide, maxWidth, full }: { title?: ReactNode; onClose: () => void; children: ReactNode; wide?: boolean; maxWidth?: number; full?: boolean }) {
   useEffect(() => {
     const k = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", k);
@@ -26,8 +27,8 @@ export function Modal({ title, onClose, children, wide, maxWidth }: { title?: Re
   }, [onClose]);
   // rendered into <body> so it covers the HUD even when opened from a fixed full-screen scene
   const box = (
-    <div className="modal-back" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="modal" style={maxWidth ? { maxWidth } : wide ? { maxWidth: 460 } : undefined} onClick={(e) => e.stopPropagation()}>
+    <div className={`modal-back ${full ? "full" : ""}`} onClick={full ? undefined : onClose} role="dialog" aria-modal="true">
+      <div className={`modal ${full ? "full" : ""}`} style={full ? ({ ["--mw" as string]: maxWidth ? `${maxWidth}px` : "100%" }) : maxWidth ? { maxWidth } : wide ? { maxWidth: 460 } : undefined} onClick={(e) => e.stopPropagation()}>
         <button className="x" onClick={onClose} aria-label="Закрыть">×</button>
         {title && <h3 className="display">{title}</h3>}
         {children}

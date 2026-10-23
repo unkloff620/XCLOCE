@@ -1,12 +1,16 @@
 "use client";
 /*
- * Стол блэкджека во дворе: дилер сверху, 6 мест снизу. Хозяин и гости из клана ставят 1–25 USD (+ сайды), карты
- * сдаются медленно, по одной, в том порядке, в каком их выдал сервер (номер карты n). Окно опрашивает /api/blackjack,
- * пока открыто; ходы — через действия bj_*. Правила и выплаты — content/games.ts, раздача — server/systems/blackjack.ts.
+ * Стол блэкджека во дворе — во весь экран, на сукне художника (public/assets/yard/bj-table.webp): дилер сверху, шесть
+ * боксов по дуге, под каждым кружки сайдов «Пары» и «21+3». Ставка — фишками: выбираешь номинал в лотке и жмёшь на свой
+ * бокс (основная ставка) или кружок (сайд), фишки ложатся на стол; нажатие на фишки на столе снимает верхнюю. Пустой
+ * бокс — «+», позвать соклановца. Карты сдаются по одной в том порядке, в каком их выдал сервер (номер карты n); после
+ * раздачи проигранные фишки уходят к дилеру, выигрыш приезжает рядом со ставкой. На руке — чистый выигрыш (без ставки).
+ * Окно опрашивает /api/blackjack, пока открыто; ходы — через действия bj_*. Правила и выплаты — content/games.ts,
+ * раздача — server/systems/blackjack.ts.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useGame } from "../store.tsx";
-import { api, type BjCardV, type BjSeatV, type BjView } from "../api.ts";
+import { api, type BjCardV, type BjHandV, type BjSeatV, type BjTableV, type BjView } from "../api.ts";
 import { Modal } from "../ui.tsx";
 import { Icon } from "../art/icons.tsx";
 import { Help } from "../help.tsx";
@@ -115,98 +119,131 @@ function useClock(on: boolean) {
   return now;
 }
 
-const PP_OPTS = [0, 1, 2, 5, 10];
+/* ---------------- the table picture (public/assets/yard/bj-table.webp, the artist's felt, 1060×1484) ---------------- */
+const TW = 1060, TH = 1484;
+const at = (x: number, y: number) => ({ left: `${(x / TW) * 100}%`, top: `${(y / TH) * 100}%` });
+/** the six card boxes on the felt, left to right (centre, tilt along the arc), and their side-bet circles */
+const BOXES = [
+  { x: 117.9, y: 752.8, r: 29 }, { x: 275.7, y: 823.6, r: 18 }, { x: 443.3, y: 861.1, r: 6 },
+  { x: 621.7, y: 860.8, r: -6 }, { x: 790.4, y: 822.7, r: -18 }, { x: 942.3, y: 752.4, r: -30 },
+];
+const PP_AT = [[47.3, 847.3], [208, 923], [390.5, 974.5], [597, 982], [785.3, 946.3], [950.5, 882]] as const;
+const T3_AT = [[114.2, 883.3], [279.8, 946.3], [467, 982], [674, 975.5], [857, 922], [1016.3, 845.8]] as const;
+const DENOMS = [25, 10, 5, 1] as const;
+const TRAY = [1, 5, 10, 25] as const;
 
-function BetPanel({ seat, view, onBet, busy, usd }: { seat: BjSeatV; view: BjView; onBet: (b: { bet: number; pp: number; t3: number; free: boolean }) => void; busy: boolean; usd: number }) {
-  const [bet, setBet] = useState(Math.min(BJ_BET.max, Math.max(BJ_BET.min, seat.bet || BJ_BET.min)));
-  const [pp, setPp] = useState(seat.pp || 0);
-  const [t3, setT3] = useState(seat.t3 || 0);
-  const [free, setFree] = useState(false);
-  const cost = (free ? 0 : bet) + pp + t3;
-  const add = (v: number) => { haptic.tap(); setFree(false); setBet((b) => Math.min(BJ_BET.max, (b === BJ_BET.min && v > 1 ? 0 : b) + v)); };
-  return (
-    <div className="bj-bet">
-      <div className="bj-bet-main">
-        <span className="tiny">Ставка</span>
-        <div className="bj-bet-val">
-          <button className="bj-step" disabled={free || bet <= BJ_BET.min} onClick={() => setBet((b) => Math.max(BJ_BET.min, b - 1))} aria-label="меньше">−</button>
-          <b className="display num">{free ? BJ_FREE.bet : bet}<small> USD</small></b>
-          <button className="bj-step" disabled={free || bet >= BJ_BET.max} onClick={() => setBet((b) => Math.min(BJ_BET.max, b + 1))} aria-label="больше">+</button>
-        </div>
-        <div className="bj-chips">
-          {[1, 5, 10, 25].map((v) => <button key={v} className={`bj-chip v${v}`} disabled={free} onClick={() => add(v)}>{v}</button>)}
-          <button className="bj-chip clear" disabled={free} onClick={() => setBet(BJ_BET.min)} aria-label="сброс">↺</button>
-        </div>
-        {view.free.left > 0 && (
-          <label className="bj-free tiny">
-            <input type="checkbox" checked={free} onChange={(e) => setFree(e.target.checked)} /> Бесплатная ставка {BJ_FREE.bet} USD (осталось {view.free.left}/{view.free.perDay})
-          </label>
-        )}
-      </div>
-      <div className="bj-sides">
-        <div className="bj-side-row">
-          <span className="tiny"><b>Пары</b> до {PP_PAY.perfect}:1</span>
-          <span className="bj-opts">{PP_OPTS.map((v) => <button key={v} className={pp === v ? "on" : ""} onClick={() => setPp(v)}>{v || "—"}</button>)}</span>
-        </div>
-        <div className="bj-side-row">
-          <span className="tiny"><b>21+3</b> до {T3_PAY.suited}:1</span>
-          <span className="bj-opts">{PP_OPTS.map((v) => <button key={v} className={t3 === v ? "on" : ""} onClick={() => setT3(v)}>{v || "—"}</button>)}</span>
-        </div>
-      </div>
-      <button className="btn big gold bj-place" disabled={busy || cost > usd} onClick={() => onBet({ bet, pp, t3, free })}>
-        Поставить{cost > 0 ? <> · {money(cost)} <Icon name="USD" size={18} /></> : " бесплатно"}
-      </button>
-      {cost > usd && <span className="tiny center" style={{ color: "var(--red)" }}>Не хватает USD</span>}
-    </div>
+/** an amount as casino chips (largest first): what lies on the table for a stake the server knows */
+function chipsOf(v: number): number[] {
+  const out: number[] = [];
+  let left = Math.round(v * 100) / 100;
+  for (const d of DENOMS) while (left >= d - 1e-9) { out.push(d); left = Math.round((left - d) * 100) / 100; }
+  if (left > 0) out.push(1); // half a dollar of a 3:2 payout: one small chip
+  return out;
+}
+const sum = (a: number[]) => a.reduce((t, x) => t + x, 0);
+const signed = (v: number) => (v > 0 ? `+${money(v)}` : v < 0 ? `−${money(-v)}` : "0");
+
+/** a pile of chips; new ones fly in (from the tray, or from the dealer for a payout) */
+function Stack({ chips, free, label, cls = "", onTap, title }: { chips: number[]; free?: boolean; label?: string; cls?: string; onTap?: () => void; title?: string }) {
+  if (!chips.length && !free) return null;
+  const shown = free ? [0] : chips.slice(-7);
+  const body = (
+    <>
+      {shown.map((d, k) => <i key={`${k}-${d}`} className={`chp v${d || "free"}`} style={{ ["--k" as string]: k }}>{d === 0 ? "FREE" : k === shown.length - 1 ? d : ""}</i>)}
+      {label && <b className="chp-sum num">{label}</b>}
+    </>
   );
+  return onTap
+    ? <button type="button" className={`bjt-stack ${cls}`} title={title} onClick={(e) => { e.stopPropagation(); onTap(); }}>{body}</button>
+    : <span className={`bjt-stack ${cls}`} title={title}>{body}</span>;
 }
 
-function SeatView({ s, i, table, myTurnHand, reveal, delayOf, canInvite, onInvite }: {
-  s: BjSeatV | null; i: number; table: NonNullable<BjView["table"]>; myTurnHand: number | null; reveal: boolean;
-  delayOf: (id: string) => number; canInvite: boolean; onInvite: (seat: number) => void;
+/** what a hand brought (stake included in neither): +bet on a win, +1.5×bet on a blackjack, −bet on a loss */
+function handNet(h: BjHandV, free: boolean) {
+  return Math.round(((h.pay ?? 0) - (free ? 0 : h.bet)) * 100) / 100;
+}
+function sideNets(s: BjSeatV) {
+  const pp = s.pp > 0 ? (s.side?.pp ? s.pp * PP_PAY[s.side.pp as PairHit] : -s.pp) : 0;
+  const t3 = s.t3 > 0 ? (s.side?.t3 ? s.t3 * T3_PAY[s.side.t3 as T3Hit] : -s.t3) : 0;
+  return { pp, t3 };
+}
+
+type Pending = { main: number[]; pp: number[]; t3: number[] };
+const NO_BET: Pending = { main: [], pp: [], t3: [] };
+
+/** one seat on the felt: the card box (cards, the stake under them), its two side circles and the name under them */
+function SeatSpot({ s, i, table, reveal, delayOf, myTurnHand, betting, pending, free, onBox, onSide, onUnchip, canInvite, onInvite }: {
+  s: BjSeatV | null; i: number; table: BjTableV; reveal: boolean; delayOf: (id: string) => number; myTurnHand: number | null;
+  /** my seat, stake not down yet: taps put chips on the box and the circles */
+  betting: boolean; pending: Pending; free: boolean;
+  onBox: () => void; onSide: (k: "pp" | "t3") => void; onUnchip: (k: keyof Pending) => void;
+  canInvite: boolean; onInvite: (seat: number) => void;
 }) {
+  const b = BOXES[i];
+  const box = { ...at(b.x, b.y), ["--r" as string]: `${b.r}deg` };
+  const mid = [(PP_AT[i][0] + T3_AT[i][0]) / 2, Math.max(PP_AT[i][1], T3_AT[i][1]) + 52];
   if (!s) {
-    return (
-      <div className="bj-seat empty" style={{ ["--k" as string]: i }}>
-        {canInvite ? <button className="bj-invite-btn" onClick={() => onInvite(i)}><b>+</b><small>Позвать</small></button> : <span className="tiny muted">свободно</span>}
-      </div>
-    );
+    return canInvite
+      ? <button type="button" className="bjt-box empty invite" style={box} onClick={() => onInvite(i)} aria-label="Позвать за стол"><b>+</b><small>Позвать</small></button>
+      : <span className="bjt-box empty" style={box} />;
   }
   const turn = table.phase === "playing" && table.turn?.seat === i;
-  const shown = reveal || !table.settled;
-  return (
-    <div className={`bj-seat ${s.me ? "me" : ""} ${turn ? "turn" : ""}`} style={{ ["--k" as string]: i }}>
-      <div className="bj-hands">
-        {s.hands.map((h, k) => {
-          const active = turn && table.turn?.hand === k;
-          const res = table.settled && reveal && h.outcome;
-          return (
-            <div key={k} className={`bj-hand ${active ? "active" : ""} ${res ? `res-${h.outcome}` : ""}`}>
-              <div className="bj-cards">{h.cards.map((c) => <Card key={c.n} c={c} delay={delayOf(`c${c.n}`)} />)}</div>
-              <span className="bj-hv">
-                <b className={`num ${h.value > 21 && shown ? "bust" : ""}`}>{reveal ? h.value : "…"}</b>
-                <i className="num">{money(h.bet)}${h.doubled ? " ×2" : ""}</i>
-              </span>
-              {res && <span className={`bj-out ${h.outcome}`}>{h.title}{h.pay ? ` +${money(h.pay)}` : ""}</span>}
-              {active && myTurnHand === k && <span className="bj-arrow">▲</span>}
-            </div>
-          );
-        })}
-        {!s.hands.length && (s.ready ? <span className="bj-stake num">{s.free ? "free " : ""}{money(s.free ? BJ_FREE.bet : s.bet)}$</span> : <span className="tiny muted">{table.phase === "betting" ? "ставит…" : "ждёт"}</span>)}
-      </div>
-      <div className="bj-name">
-        {table.phase === "betting" && s.ready && <span className="bj-ok">✓</span>}
-        <b>{s.name}</b>
-      </div>
-      {s.side && reveal && (s.side.pp || s.side.t3) && (
-        <span className="bj-side-win tiny">
-          {s.side.pp && PP_TITLES[s.side.pp as PairHit]}{s.side.pp && s.side.t3 ? " · " : ""}{s.side.t3 && `21+3: ${T3_TITLES[s.side.t3 as T3Hit]}`}
-        </span>
-      )}
-      {(s.pp > 0 || s.t3 > 0) && (s.ready || s.hands.length > 0) && (
-        <span className="bj-side-chips">{s.pp > 0 && <i title="Идеальные пары">П {s.pp}</i>}{s.t3 > 0 && <i title="21+3">21+3 {s.t3}</i>}</span>
-      )}
+  // a new stake started: the last round's cards and results leave the box
+  const fresh = betting && (pending.main.length > 0 || pending.pp.length > 0 || pending.t3.length > 0 || free);
+  const hands = s.hands.length && !(table.phase === "betting" && (s.ready || fresh)) ? s.hands : [];
+  const done = table.settled && reveal && hands.length > 0;
+  const nets = done ? sideNets(s) : null;
+  // the stake on the box: what I am putting down now, else what the server holds
+  const mainChips = fresh ? (free ? [] : pending.main) : s.ready ? (s.free ? [] : chipsOf(s.bet)) : [];
+  const ppChips = fresh ? pending.pp : (s.ready || hands.length) ? chipsOf(s.pp) : [];
+  const t3Chips = fresh ? pending.t3 : (s.ready || hands.length) ? chipsOf(s.t3) : [];
+  const total = done ? hands.reduce((t, h) => t + handNet(h, s.free), 0) + (nets ? nets.pp + nets.t3 : 0) : null;
+  const status = turn ? "ходит" : table.phase === "betting" ? (s.ready ? "ставка ✓" : betting ? "твоя ставка" : "ставит…") : hands.length ? "" : "ждёт";
+  const side = (k: "pp" | "t3", spot: readonly [number, number], chips: number[], net: number | null, hit: string | null) => (
+    <div className={`bjt-side ${betting ? "can" : ""} ${net !== null && net !== 0 ? (net > 0 ? "won" : "lost") : ""}`} style={at(spot[0], spot[1])}
+      onClick={betting ? () => onSide(k) : undefined} role={betting ? "button" : undefined} aria-label={betting ? (k === "pp" ? "Ставка на пары" : "Ставка 21+3") : undefined}>
+      <Stack chips={chips} cls={`side ${net !== null && net < 0 ? "gone" : ""}`} label={chips.length ? money(sum(chips)) : undefined} onTap={betting ? () => onUnchip(k) : undefined} title={betting ? "Убрать фишку" : undefined} />
+      {net !== null && net > 0 && <Stack chips={chipsOf(net)} cls="side paid" />}
+      {net !== null && net !== 0 && <span className={`bjt-side-res ${net > 0 ? "win" : "lose"}`}>{net > 0 ? `${hit} ${signed(net)}` : signed(net)}</span>}
     </div>
+  );
+  return (
+    <>
+      <div className={`bjt-box ${s.me ? "me" : ""} ${turn ? "turn" : ""} ${betting ? "can" : ""}`} style={box} onClick={betting ? onBox : undefined}
+        role={betting ? "button" : undefined} aria-label={betting ? "Поставить фишку" : undefined}>
+        <div className={`bjt-hands n${Math.min(hands.length, 4)}`}>
+          {hands.map((h, k) => {
+            const active = turn && table.turn?.hand === k;
+            const res = done && h.outcome ? h.outcome : null;
+            const net = res ? handNet(h, s.free) : 0;
+            return (
+              <div key={k} className={`bjt-hand ${active ? "active" : ""} ${res ? `res-${res}` : ""}`}>
+                {res && <span className={`bjt-out ${res}`}>{res === "lose" && h.value > 21 ? "Перебор" : h.title} {res !== "push" ? signed(net) : ""}</span>}
+                <div className="bj-cards">{h.cards.map((c) => <Card key={c.n} c={c} delay={delayOf(`c${c.n}`)} />)}</div>
+                <b className={`bjt-hv num ${h.value > 21 && reveal ? "bust" : ""}`}>{reveal ? h.value : "…"}</b>
+                {active && myTurnHand === k && <span className="bj-arrow">▼</span>}
+                <span className="bjt-bet">
+                  <Stack chips={s.free ? [] : chipsOf(h.bet)} free={s.free} cls={res === "lose" ? "gone" : ""} label={money(s.free ? BJ_FREE.bet : h.bet)} />
+                  {res && net > 0 && <Stack chips={chipsOf(net)} cls="paid" />}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+        {!hands.length && (
+          <span className="bjt-bet">
+            <Stack chips={mainChips} free={fresh ? free : s.ready && s.free} label={mainChips.length || (fresh ? free : s.ready && s.free) ? money((fresh ? free : s.free) ? BJ_FREE.bet : sum(mainChips)) : undefined}
+              onTap={betting && !free ? () => onUnchip("main") : undefined} title={betting ? "Убрать фишку" : undefined} />
+          </span>
+        )}
+      </div>
+      {side("pp", PP_AT[i], ppChips, nets ? (s.pp > 0 ? nets.pp : null) : null, s.side?.pp ? PP_TITLES[s.side.pp as PairHit] : null)}
+      {side("t3", T3_AT[i], t3Chips, nets ? (s.t3 > 0 ? nets.t3 : null) : null, s.side?.t3 ? T3_TITLES[s.side.t3 as T3Hit] : null)}
+      <span className={`bjt-name ${s.me ? "me" : ""}`} style={at(mid[0], mid[1])}>
+        <b>{s.name}</b>
+        {total !== null ? <i className={`num ${total > 0 ? "win" : total < 0 ? "lose" : ""}`}>{signed(total)}</i> : status && <i>{status}</i>}
+      </span>
+    </>
   );
 }
 
@@ -241,7 +278,7 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
     if (v.now) skew.current = v.now - Date.now();
     setView(v);
   }, []);
-  // poll while the window is open (faster while something is going on at the table)
+  // poll while the window is open
   useEffect(() => {
     let alive = true;
     let timer = 0;
@@ -265,98 +302,181 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
   const { delayOf, revealAt } = useDealQueue(view);
   const now = useClock(!!table);
   const reveal = now >= revealAt;
-  const me = table && view?.seat !== null && view?.seat !== undefined ? table.seats[view.seat] : null;
-  const myTurn = !!table && table.phase === "playing" && table.turn?.seat === view?.seat;
+  const mySeat = view?.seat ?? null;
+  const me = table && mySeat !== null ? table.seats[mySeat] : null;
+  const myTurn = !!table && table.phase === "playing" && table.turn?.seat === mySeat;
   const left = table?.deadline ? Math.max(0, Math.ceil((table.deadline - (now + skew.current)) / 1000)) : null;
   const usd = state?.wallet.USD ?? 0;
-  const result = me && table?.settled && reveal && me.won !== null && me.staked !== null ? me.won - me.staked : null;
+
+  // the stake being put down: chips go onto the box and the circles one by one, a tap on a pile takes its top chip off
+  const [chip, setChip] = useState<number>(5);
+  const [pending, setPending] = useState<Pending>(NO_BET);
+  const [free, setFree] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+  const round = table?.round ?? 0;
+  useEffect(() => { setPending(NO_BET); setFree(false); }, [round, table?.id]);
+  useEffect(() => {
+    if (!note) return;
+    const t = window.setTimeout(() => setNote(null), 1800);
+    return () => clearTimeout(t);
+  }, [note]);
+  const betting = !!me && table?.phase === "betting" && !me.ready;
+  const cost = (free ? 0 : sum(pending.main)) + sum(pending.pp) + sum(pending.t3);
+  const put = (k: keyof Pending) => {
+    if (k === "main" && free) { setNote("Бесплатная ставка — 1 USD, сайды можно добавить"); return; }
+    const cap = k === "main" ? BJ_BET.max : BJ_SIDE_MAX;
+    const have = sum(pending[k]);
+    // the chosen chip, or the largest one that still fits under the limit
+    const room = cap - have;
+    const c = chip <= room ? chip : [...TRAY].reverse().find((d) => d <= room);
+    if (!c) { haptic.err(); setNote(k === "main" ? `Ставка — до ${BJ_BET.max} USD` : `Сайд — до ${BJ_SIDE_MAX} USD`); return; }
+    if (cost + c > usd) { haptic.err(); setNote("Не хватает USD"); return; }
+    haptic.tap();
+    sfx("tap", 0.35);
+    setPending((p) => ({ ...p, [k]: [...p[k], c] }));
+  };
+  const unchip = (k: keyof Pending) => {
+    haptic.tap();
+    setPending((p) => ({ ...p, [k]: p[k].slice(0, -1) }));
+  };
+  const repeat = () => {
+    if (!me) return;
+    haptic.tap();
+    setPending({ main: chipsOf(me.bet).reverse(), pp: chipsOf(me.pp).reverse(), t3: chipsOf(me.t3).reverse() });
+  };
+  const place = async () => {
+    const r = await run("bj_bet", { bet: free ? me?.bet ?? BJ_BET.min : sum(pending.main), pp: sum(pending.pp), t3: sum(pending.t3), free });
+    if (r) { setPending(NO_BET); setFree(false); }
+  };
+
+  // what the round brought me: hands and sides, stakes back not counted
+  const mineDone = !!me && table?.settled && reveal && me.hands.length > 0 && !(table.phase === "betting" && (me.ready || pending.main.length + pending.pp.length + pending.t3.length > 0 || free));
+  const summary = useMemo(() => {
+    if (!me || !mineDone) return null;
+    const hands = me.hands.reduce((t, h) => t + handNet(h, me.free), 0);
+    const sides = sideNets(me);
+    return { total: Math.round((hands + sides.pp + sides.t3) * 100) / 100, hands, pp: me.pp > 0 ? sides.pp : null, t3: me.t3 > 0 ? sides.t3 : null };
+  }, [me, mineDone]);
   const resultKey = table ? `${table.id}:${table.round}` : "";
   const played = useRef("");
   useEffect(() => {
-    if (result === null || played.current === resultKey) return;
+    if (!summary || played.current === resultKey) return;
     played.current = resultKey;
-    if (result > 0) { haptic.ok(); sfx("reward"); } else if (result < 0) haptic.err();
-  }, [result, resultKey]);
-  const waiting = table ? table.seats.filter((x) => x && !x.ready).length : 0;
-  const order = useMemo(() => (table ? table.seats.map((s, i) => ({ s, i })) : []), [table]);
+    if (summary.total > 0) { haptic.ok(); sfx("reward"); } else if (summary.total < 0) haptic.err();
+  }, [summary, resultKey]);
+  const waiting = table ? table.seats.filter((x) => x && !x.ready && !x.left).length : 0;
+
+  const header = (
+    <span className="title-row bjt-title">
+      Блэкджек <BlackjackHelp />
+      <span className="bjt-wallet"><Icon name="USD" size={16} /><b className="num">{money(usd)}</b></span>
+    </span>
+  );
+
+  let panel: ReactNode = null;
+  if (view && !table) {
+    panel = (
+      <div className="bjt-lobby">
+        {view.invites.map((inv) => (
+          <div key={inv.id} className="bj-inv row">
+            <span className="grow"><b>{inv.from}</b> зовёт тебя за стол</span>
+            <button className="btn small green" disabled={busy === "bj_join"} onClick={() => run("bj_join", { inviteId: inv.id })}>Сесть</button>
+            <button className="btn small dark" onClick={() => run("bj_decline", { inviteId: inv.id })} aria-label="Отказаться">✕</button>
+          </div>
+        ))}
+        <button className="btn big block gold" disabled={busy === "bj_open"} onClick={() => run("bj_open")}>Сесть за стол</button>
+        <span className="tiny center bjt-hint">Ставки {BJ_BET.min}–{BJ_BET.max} USD, сайды «Пары» и «21+3» до {BJ_SIDE_MAX} USD. Сядешь — позовёшь соклановцев на свободные боксы. Бесплатных ставок сегодня: {view.free.left}/{view.free.perDay}</span>
+      </div>
+    );
+  } else if (table && view) {
+    const line = note ? <span className="bjt-note">{note}</span>
+      : summary ? (
+        <span className={`bjt-sum ${summary.total > 0 ? "win" : summary.total < 0 ? "lose" : ""}`}>
+          <b>{summary.total > 0 ? `Выигрыш ${signed(summary.total)}` : summary.total < 0 ? `Минус ${money(-summary.total)}` : "В ноль"}</b> <Icon name="USD" size={14} />
+          <small> рука {signed(summary.hands)}{summary.pp !== null ? ` · пары ${signed(summary.pp)}` : ""}{summary.t3 !== null ? ` · 21+3 ${signed(summary.t3)}` : ""}</small>
+        </span>
+      )
+      : table.phase === "playing"
+        ? (!reveal ? "Раздаём…" : myTurn ? <>Твой ход{left !== null ? ` · ${left} с` : ""}</> : table.turn ? <>Ходит <b>{table.seats[table.turn.seat]?.name}</b>{left !== null ? ` · ${left} с` : ""}</> : "Дилер открывает карты…")
+        : betting ? "Выбери фишку и нажми на свой бокс — это ставка; на кружки под ним — сайды. Нажми на фишки на столе, чтобы убрать"
+        : me?.ready ? <>Ставка на столе. {waiting > 0 ? <>Ждём остальных ({waiting}){left !== null ? ` · раздача через ${left} с` : ""}</> : "Раздаём…"}</>
+        : "";
+    panel = (
+      <div className="bjt-ctrl">
+        <div className="bjt-line tiny">{line}</div>
+        {table.phase === "playing" && myTurn && reveal ? (
+          <div className="bj-moves">
+            <button className="btn gold" disabled={!!busy || !view.moves?.hit} onClick={() => run("bj_move", { move: "hit" })}>Ещё</button>
+            <button className="btn red" disabled={!!busy || !view.moves?.stand} onClick={() => run("bj_move", { move: "stand" })}>Хватит</button>
+            <button className="btn green" disabled={!!busy || !view.moves?.double} onClick={() => run("bj_move", { move: "double" })}>Удвоить</button>
+            <button className="btn dark" disabled={!!busy || !view.moves?.split} onClick={() => run("bj_move", { move: "split" })}>Разбить</button>
+          </div>
+        ) : betting ? (
+          <>
+            <div className="bjt-tray">
+              {TRAY.map((v) => (
+                <button key={v} type="button" className={`chp big v${v} ${chip === v && !free ? "on" : ""}`} onClick={() => { haptic.tap(); setChip(v); }} aria-label={`Фишка ${v}`}>{v}</button>
+              ))}
+              {view.free.left > 0 && (
+                <button type="button" className={`chp big vfree ${free ? "on" : ""}`} onClick={() => { haptic.tap(); setFree((f) => !f); setPending((p) => ({ ...p, main: [] })); }}
+                  title={`Бесплатная ставка ${BJ_FREE.bet} USD: выигрыш твой, проигрыш ничего не стоит`}>
+                  FREE<small>{view.free.left}/{view.free.perDay}</small>
+                </button>
+              )}
+            </div>
+            <div className="bjt-acts">
+              {cost > 0 || free
+                ? <button className="btn dark" onClick={() => { haptic.tap(); setPending(NO_BET); setFree(false); }}>Убрать всё</button>
+                : <button className="btn dark" disabled={!me || (!me.bet && !me.pp && !me.t3) || round === 0} onClick={repeat}>Повторить</button>}
+              <button className="btn gold grow" disabled={busy === "bj_bet" || (!free && pending.main.length === 0) || cost > usd} onClick={place}>
+                {free ? "Поставить бесплатно" : <>Поставить · {money(cost)} <Icon name="USD" size={16} /></>}{free && cost > 0 ? <> + {money(cost)} <Icon name="USD" size={16} /></> : null}
+              </button>
+            </div>
+          </>
+        ) : me?.ready && table.phase === "betting" ? (
+          <div className="bjt-acts">
+            <button className="btn dark grow" disabled={!!busy} onClick={() => run("bj_unbet")}>Снять ставку</button>
+            {waiting > 0 && <button className="btn gold grow" disabled={!!busy} onClick={() => run("bj_deal")}>Раздать сейчас</button>}
+          </div>
+        ) : null}
+        <div className="row bjt-foot">
+          <span className="tiny grow">Блэкджек 3:2 · победа 1:1 · дилер стоит на 17</span>
+          <button className="btn small dark" disabled={!!busy} onClick={() => run("bj_leave")}>Встать из-за стола</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <Modal title={<span className="title-row">Блэкджек <BlackjackHelp /></span>} onClose={onClose} maxWidth={860}>
-      {!view ? (
-        <div className="bj-loading tiny muted center">Раскладываем стол…</div>
-      ) : !table ? (
-        <div className="bj-lobby col">
-          {view.invites.map((inv) => (
-            <div key={inv.id} className="bj-inv row">
-              <span className="grow"><b>{inv.from}</b> зовёт тебя за стол</span>
-              <button className="btn small green" disabled={busy === "bj_join"} onClick={() => run("bj_join", { inviteId: inv.id })}>Сесть</button>
-              <button className="btn small dark" onClick={() => run("bj_decline", { inviteId: inv.id })} aria-label="Отказаться">✕</button>
-            </div>
-          ))}
-          <div className="bj-felt bj-felt-lobby">
-            <span className="bj-felt-text display">BLACKJACK PAYS 3 TO 2</span>
-            <span className="tiny">Ставки {BJ_BET.min}–{BJ_BET.max} USD · сайды «Пары» и «21+3» · стол на 6 мест</span>
-          </div>
-          <button className="btn big block gold" disabled={busy === "bj_open"} onClick={() => run("bj_open")}>Сесть за стол</button>
-          <span className="tiny muted center">Сядешь — сможешь позвать соклановцев на свободные места. Бесплатных ставок сегодня: {view.free.left}/{view.free.perDay}</span>
-        </div>
-      ) : (
-        <>
-          <div className="bj-felt">
-            <div className="bj-shoe" aria-hidden="true"><span /></div>
-            <div className="bj-dealer">
-              <span className="tiny bj-lbl">Дилер{table.dealer.length ? <> · <b className="num">{reveal ? table.dealerValue : "…"}</b>{table.dealerHidden ? "+?" : ""}</> : null}</span>
-              <div className="bj-cards dealer">
-                {table.dealer.map((c) => <Card key={`c${c.n}`} c={c} delay={delayOf(`c${c.n}`)} />)}
-                {table.dealerHidden && <Card key={`h${table.dealerHidden.n}`} back delay={delayOf(`h${table.dealerHidden.n}`)} />}
-              </div>
-              <span className="bj-arc tiny">Блэкджек платит 3:2 · Дилер стоит на 17</span>
-            </div>
-            <div className="bj-seats">
-              {order.map(({ s, i }) => (
-                <SeatView key={i} s={s} i={i} table={table} myTurnHand={myTurn ? table.turn!.hand : null} reveal={reveal} delayOf={delayOf}
-                  canInvite={!!me} onInvite={(k) => setInviteSeat(k)} />
-              ))}
-            </div>
-          </div>
-          <div className="bj-panel">
-            {result !== null && (
-              <div className={`bj-result ${result > 0 ? "win" : result < 0 ? "lose" : ""}`}>
-                {result > 0 ? <>Выигрыш +{money(result)} <Icon name="USD" size={16} /></> : result < 0 ? <>Минус {money(-result)} <Icon name="USD" size={16} /></> : "В ноль"}
-              </div>
+    <Modal title={header} onClose={onClose} full>
+      <div className="bjt">
+        <div className="bjt-col">
+          <div className="bjt-stage">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="bjt-felt" src="/assets/yard/bj-table.webp" alt="" draggable={false} />
+            {!view && <span className="bjt-loading tiny">Раскладываем стол…</span>}
+            {table && (
+              <>
+                <div className="bjt-shoe" aria-hidden="true"><span /></div>
+                <div className="bjt-dealer">
+                  <div className="bj-cards dealer">
+                    {table.dealer.map((c) => <Card key={`c${c.n}`} c={c} delay={delayOf(`c${c.n}`)} />)}
+                    {table.dealerHidden && <Card key={`h${table.dealerHidden.n}`} back delay={delayOf(`h${table.dealerHidden.n}`)} />}
+                  </div>
+                  <span className="bjt-dlbl">Дилер{table.dealer.length ? <> · <b className={`num ${reveal && table.dealerValue > 21 ? "bust" : ""}`}>{reveal ? table.dealerValue : "…"}</b>{table.dealerHidden ? "+?" : ""}</> : null}</span>
+                </div>
+                {table.seats.map((s, i) => (
+                  <SeatSpot key={i} s={s} i={i} table={table} reveal={reveal} delayOf={delayOf} myTurnHand={myTurn ? table.turn!.hand : null}
+                    betting={betting && i === mySeat} pending={pending} free={free}
+                    onBox={() => put("main")} onSide={(k) => put(k)} onUnchip={unchip}
+                    canInvite={!!me} onInvite={(k) => setInviteSeat(k)} />
+                ))}
+              </>
             )}
-            {table.phase === "playing" ? (
-              myTurn && reveal ? (
-                <div className="bj-moves">
-                  <button className="btn gold" disabled={!!busy || !view.moves?.hit} onClick={() => run("bj_move", { move: "hit" })}>Ещё</button>
-                  <button className="btn red" disabled={!!busy || !view.moves?.stand} onClick={() => run("bj_move", { move: "stand" })}>Хватит</button>
-                  <button className="btn green" disabled={!!busy || !view.moves?.double} onClick={() => run("bj_move", { move: "double" })}>Удвоить</button>
-                  <button className="btn dark" disabled={!!busy || !view.moves?.split} onClick={() => run("bj_move", { move: "split" })}>Разбить</button>
-                  {left !== null && <span className="bj-timer tiny">Твой ход · {left} с</span>}
-                </div>
-              ) : (
-                <span className="tiny center bj-wait">
-                  {!reveal ? "Раздаём…" : table.turn ? <>Ходит <b>{table.seats[table.turn.seat]?.name}</b>{left !== null ? ` · ${left} с` : ""}</> : "Дилер открывает карты…"}
-                </span>
-              )
-            ) : me && !me.ready ? (
-              <BetPanel key={`${table.round}`} seat={me} view={view} busy={busy === "bj_bet"} usd={usd} onBet={(b) => run("bj_bet", b)} />
-            ) : me ? (
-              <div className="bj-waitbet col">
-                <span className="tiny center">Ставка на столе. {waiting > 0 ? <>Ждём остальных ({waiting}){left !== null ? ` · раздача через ${left} с` : ""}</> : "Раздаём…"}</span>
-                <div className="row" style={{ gap: 8 }}>
-                  <button className="btn grow dark" disabled={!!busy} onClick={() => run("bj_unbet")}>Снять ставку</button>
-                  {waiting > 0 && <button className="btn grow gold" disabled={!!busy} onClick={() => run("bj_deal")}>Раздать сейчас</button>}
-                </div>
-              </div>
-            ) : null}
-            <div className="row bj-foot">
-              <span className="tiny muted grow">Бесплатных ставок: {view.free.left}/{view.free.perDay}</span>
-              <button className="btn small dark" disabled={!!busy} onClick={() => run("bj_leave")}>Встать из-за стола</button>
-            </div>
           </div>
-        </>
-      )}
+          <div className="bjt-panel">{panel}</div>
+        </div>
+      </div>
       {inviteSeat !== null && view && (
         <InvitePicker view={view} onClose={() => setInviteSeat(null)} onPick={async (id) => { await run("bj_invite", { playerId: id }); sfx("tap"); }} />
       )}

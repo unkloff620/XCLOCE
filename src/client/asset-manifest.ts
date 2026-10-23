@@ -369,6 +369,7 @@ export const ASSET_FILES: string[] = [
  "/assets/ui/tex-grain-a.webp",
  "/assets/ui/usd.webp",
  "/assets/ui/wardrobe.webp",
+ "/assets/yard/bj-table.webp",
  "/assets/yard/court-backdrop.webp",
  "/assets/yard/court-entrance-ring.webp",
  "/assets/yard/court-entrance.webp",

@@ -209,7 +209,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
     : pts === null ? "Среди забранных есть кости без очков — верни их"
     : null;
   return (
-    <Modal title={<span className="title-row">Зонк <ZonkHelp /></span>} onClose={onClose} maxWidth={500}>
+    <Modal title={<span className="title-row">Зонк <ZonkHelp /></span>} onClose={onClose} maxWidth={560} full>
       <div className="zk-head">
         <span>ПОПЫТКА <b className="num">{g ? round : 0}/{rounds}</b></span>
         <span>ВСЕГО <b className="num">{full(total)}</b></span>
@@ -319,7 +319,7 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
   };
   const hand: PokerHand | null = play?.hand ?? null;
   return (
-    <Modal title={<span className="title-row">Покер <PokerHelp /></span>} onClose={onClose} maxWidth={780}>
+    <Modal title={<span className="title-row">Покер <PokerHelp /></span>} onClose={onClose} maxWidth={900} full>
       <div className="pk">
         <div className="pk-lvl" title={p ? `${p.xp}${p.to !== null ? ` / ${p.to}` : ""} опыта покера` : undefined}>
           <b className="display num">{level}</b>
