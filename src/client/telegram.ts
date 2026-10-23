@@ -7,6 +7,11 @@ interface TgWebApp {
   ready(): void;
   expand(): void;
   disableVerticalSwipes?(): void;
+  /** Bot API 8.0+: the Mini App over the whole screen, Telegram's own bar hidden (its buttons float on top) */
+  requestFullscreen?(): void;
+  isFullscreen?: boolean;
+  isVersionAtLeast?(v: string): boolean;
+  platform?: string;
   setHeaderColor?(c: string): void;
   setBackgroundColor?(c: string): void;
   HapticFeedback?: { impactOccurred(s: "light" | "medium" | "heavy" | "rigid" | "soft"): void; notificationOccurred(t: "error" | "success" | "warning"): void };
@@ -33,6 +38,10 @@ export function initTelegram() {
     w.ready();
     w.expand();
     w.disableVerticalSwipes?.();
+    // on a phone the game opens over the whole screen; Telegram's close and menu buttons stay on top, and
+    // telegram-web-app.js gives their height as --tg-content-safe-area-inset-top (globals.css adds it to --safe-t).
+    // Not on a computer: there fullscreen would take the whole monitor.
+    if ((w.platform === "ios" || w.platform === "android") && w.isVersionAtLeast?.("8.0") && !w.isFullscreen) w.requestFullscreen?.();
     w.setHeaderColor?.("#0c0e1c");
     w.setBackgroundColor?.("#0c0e1c");
   } catch {
