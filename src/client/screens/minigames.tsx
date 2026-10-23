@@ -136,9 +136,9 @@ function layoutLadder(groups: LadderGroup[]) {
   return { dice, marks };
 }
 /** where the dice land: the open chalk field above the ladder */
-const FIELD_SLOTS = [[250, 462], [356, 462], [250, 560], [356, 560], [462, 560], [250, 658], [356, 658], [462, 658]] as const;
+const FIELD_SLOTS = [[250, 470], [356, 470], [250, 566], [356, 566], [250, 662], [356, 662], [462, 662]] as const;
 /** the cup lies in the field's top right corner, its mouth to the dice */
-const CUP = { x: 520, y: 500 };
+const CUP = { x: 520, y: 545 };
 function landing(seed: number, i: number) {
   const r = (k: number) => {
     const v = Math.sin(seed * 9301 + i * 49297 + k * 233) * 10000;
