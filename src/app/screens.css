@@ -1989,6 +1989,10 @@ body:has(.fit-page) .hud { background: linear-gradient(180deg, rgba(20, 12, 6, 0
 .bjt-out.lose { background: #ff4d6d; color: #fff; }
 .bjt-bet { display: flex; align-items: flex-end; gap: 0.6cqw; }
 .bjt-box > .bjt-bet { position: absolute; left: 50%; bottom: 3%; transform: translateX(-50%); }
+/* the stake on the box: smaller chips, the pile stays under the box's middle (the middle puts a chip) */
+.bjt-box .bjt-stack:not(.side) { width: 4.4cqw; height: 5.6cqw; }
+.bjt-box .bjt-stack:not(.side) .chp { width: 4.4cqw; height: 4.4cqw; margin-left: -2.2cqw; font-size: 1.6cqw; border-width: 0.45cqw; bottom: calc(var(--k, 0) * 0.24cqw); }
+.bjt-box .bjt-stack:not(.side) .chp-sum { font-size: 1.8cqw; margin-top: 0; }
 .bjt-hand > .bjt-bet { position: absolute; top: calc(100% + 1.4cqw); left: 50%; transform: translateX(-50%); }
 /* chips: a pile grows up; new ones fly in from the tray, a lost pile goes to the dealer, a payout comes from him */
 .bjt-stack { position: relative; display: inline-block; flex: none; width: 5.2cqw; height: 7.2cqw; padding: 0; border: 0; background: none; font: inherit; }
