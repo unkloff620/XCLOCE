@@ -1995,13 +1995,13 @@ body:has(.fit-page) .hud { background: linear-gradient(180deg, rgba(20, 12, 6, 0
 button.bjt-stack { cursor: pointer; }
 .chp { position: absolute; left: 50%; bottom: calc(var(--k, 0) * 0.4cqw); width: 5.2cqw; height: 5.2cqw; margin-left: -2.6cqw; border-radius: 50%; display: grid; place-items: center;
   border: 0.5cqw dashed rgba(255, 243, 220, 0.92); box-shadow: 0 0 0 0.25cqw #1e1006, 0 0.35cqw 0 0.1cqw rgba(0, 0, 0, 0.55); color: #fff; font-weight: 900; font-size: 1.9cqw; line-height: 1;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5); animation: chp-in 0.38s cubic-bezier(0.2, 0.9, 0.3, 1.15) both; }
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5); animation: chp-in 0.38s cubic-bezier(0.2, 0.9, 0.3, 1.15) both; pointer-events: none; }
 .chp.v1 { background: #8a8f9c; }
 .chp.v5 { background: #d0102f; }
 .chp.v10 { background: #1f6fd0; }
 .chp.v25 { background: #13a35a; }
 .chp.vfree { background: radial-gradient(circle at 40% 35%, #fff2b0, #ffd23f 45%, #c98c00); color: #3a2206; text-shadow: none; font-size: 1.4cqw; }
-.chp-sum { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 0.3cqw; padding: 0 0.8cqw; border-radius: 1cqw; background: rgba(0, 0, 0, 0.6); color: #ffd23f; font-size: 2cqw; white-space: nowrap; }
+.chp-sum { pointer-events: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 0.3cqw; padding: 0 0.8cqw; border-radius: 1cqw; background: rgba(0, 0, 0, 0.6); color: #ffd23f; font-size: 2cqw; white-space: nowrap; }
 @keyframes chp-in { from { transform: translateY(28cqw) scale(0.7); opacity: 0; } to { transform: none; opacity: 1; } }
 .bjt-stack.gone { animation: chp-gone 0.7s ease-in 0.35s forwards; }
 @keyframes chp-gone { to { transform: translateY(-46cqw) scale(0.5); opacity: 0; } }
@@ -2036,7 +2036,7 @@ button.bjt-stack { cursor: pointer; }
 .bjt-sum.lose b { color: #ff8b9c; }
 .bjt-sum small { width: 100%; color: #cfe8d5; }
 .bjt-tray { display: flex; justify-content: center; gap: 10px; padding: 4px 0 2px; }
-.chp.big { position: relative; left: auto; bottom: auto; margin: 0; width: 48px; height: 48px; border-width: 3px; font-size: 15px; cursor: pointer; animation: none; transition: transform 0.12s;
+.chp.big { pointer-events: auto; position: relative; left: auto; bottom: auto; margin: 0; width: 48px; height: 48px; border-width: 3px; font-size: 15px; cursor: pointer; animation: none; transition: transform 0.12s;
   box-shadow: 0 0 0 2px #1e1006, 0 4px 0 2px #1e1006; flex-direction: column; }
 .chp.big.vfree { font-size: 11px; display: flex; align-items: center; justify-content: center; }
 .chp.big small { font-size: 8px; font-weight: 800; }
