@@ -29,10 +29,10 @@ const ACTION_NAMES: Record<string, string> = {
   daily_claim: "ежедневная награда", sell: "продажа", rename: "смена имени", slots_spin: "автомат 777", equipment_upgrade: "улучшение комнаты",
   talent_up: "талант", talent_reset: "сброс талантов", room_buy: "купил комнату", room_set: "сменил комнату", look_set: "внешность", decor_set: "декор", decor_save: "обставил комнату", piece_buy: "купил мебель",
   quest_claim: "задание дня", quest_chest: "сундук дня", notify_set: "уведомления", achievement_claim: "достижение", prize_claim: "приз недели",
-  game_start: "мини-игра", zonk_move: "зонк", poker_play: "покер", bj_open: "блэкджек: стол", bj_invite: "блэкджек: позвал", bj_join: "блэкджек: сел", bj_leave: "блэкджек: встал", bj_bet: "блэкджек: ставка", bj_move: "блэкджек: ход", upgrade: "апгрейдер", up_sell: "продал улучшенное", up_take: "забрал улучшенное", clan_cancel: "отменил заявку", clan_accept: "принял в клан", clan_reject: "отклонил заявку", stash_collect: "собрал набор нычек",
+  game_start: "мини-игра", zonk_move: "зонк", zonk_give_up: "зонк: сдался", poker_play: "покер", poker_swap: "покер: замена", poker_stand: "покер: вскрыл", bj_open: "блэкджек: стол", bj_invite: "блэкджек: позвал", bj_join: "блэкджек: сел", bj_leave: "блэкджек: встал", bj_bet: "блэкджек: ставка", bj_move: "блэкджек: ход", upgrade: "апгрейдер", up_sell: "продал улучшенное", up_take: "забрал улучшенное", clan_cancel: "отменил заявку", clan_accept: "принял в клан", clan_reject: "отклонил заявку", stash_collect: "собрал набор нычек",
 };
 const OP_NAMES: Record<string, string> = {
-  set_money: "валюта", set_item: "предмет", add_item: "выдал", set_xp: "авторитет", set_energy: "энергия", set_talents: "свободные таланты",
+  set_money: "валюта", set_item: "предмет", add_item: "выдал", set_xp: "авторитет", set_poker_xp: "опыт покера", set_zonk_xp: "опыт зонка", set_energy: "энергия", set_talents: "свободные таланты",
   set_talent: "ветка таланта", set_name: "имя", ban: "бан", unban: "разбан", reset: "сброс прогресса",
 };
 
@@ -756,6 +756,8 @@ function Player({ id }: { id: number }) {
           <div className="adm-form">
             {CURRENCIES.map((c) => <EditNum key={c} label={c} value={data.money[c]} step="any" onSave={(v) => edit({ op: "set_money", currency: c, amount: v }, c)} />)}
             <EditNum label="Авторитет (XP)" value={num(p.xp)} onSave={(v) => edit({ op: "set_xp", value: v }, "Авторитет")} />
+            <EditNum label="Опыт покера (20 ур. = 390, 50 = 1725, 100 = 5950)" value={num(p.poker_xp)} onSave={(v) => edit({ op: "set_poker_xp", value: v }, "Опыт покера")} />
+            <EditNum label="Опыт зонка (100 = уровень)" value={num(p.zonk_xp)} onSave={(v) => edit({ op: "set_zonk_xp", value: v }, "Опыт зонка")} />
             <EditNum label="Энергия" value={num(p.energyNow)} onSave={(v) => edit({ op: "set_energy", value: v }, "Энергия")} />
             <EditNum label="Свободные таланты" value={num(p.talents)} onSave={(v) => edit({ op: "set_talents", value: v }, "Таланты")} />
             <EditText label="Имя" value={String(p.display_name)} onSave={(v) => edit({ op: "set_name", value: v }, "Имя")} />
