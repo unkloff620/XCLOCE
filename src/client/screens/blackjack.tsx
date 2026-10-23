@@ -146,7 +146,7 @@ const signed = (v: number) => (v > 0 ? `+${money(v)}` : v < 0 ? `−${money(-v)}
 /** a pile of chips; new ones fly in (from the tray, or from the dealer for a payout) */
 function Stack({ chips, free, label, cls = "", onTap, title }: { chips: number[]; free?: boolean; label?: string; cls?: string; onTap?: () => void; title?: string }) {
   if (!chips.length && !free) return null;
-  const shown = free ? [0] : chips.slice(-7);
+  const shown = free ? [0] : chips.slice(-6);
   const body = (
     <>
       {shown.map((d, k) => <i key={`${k}-${d}`} className={`chp v${d || "free"}`} style={{ ["--k" as string]: k }}>{d === 0 ? "FREE" : k === shown.length - 1 ? d : ""}</i>)}

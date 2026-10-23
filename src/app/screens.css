@@ -1988,12 +1988,12 @@ body:has(.fit-page) .hud { background: linear-gradient(180deg, rgba(20, 12, 6, 0
 .bjt-out.push { background: #e9dcc6; color: #1e1006; }
 .bjt-out.lose { background: #ff4d6d; color: #fff; }
 .bjt-bet { display: flex; align-items: flex-end; gap: 0.6cqw; }
-.bjt-box > .bjt-bet { position: absolute; left: 50%; bottom: 16%; transform: translateX(-50%); }
+.bjt-box > .bjt-bet { position: absolute; left: 50%; bottom: 3%; transform: translateX(-50%); }
 .bjt-hand > .bjt-bet { position: absolute; top: calc(100% + 1.4cqw); left: 50%; transform: translateX(-50%); }
 /* chips: a pile grows up; new ones fly in from the tray, a lost pile goes to the dealer, a payout comes from him */
-.bjt-stack { position: relative; display: inline-block; flex: none; width: 5.2cqw; height: 8.5cqw; padding: 0; border: 0; background: none; font: inherit; }
+.bjt-stack { position: relative; display: inline-block; flex: none; width: 5.2cqw; height: 7.2cqw; padding: 0; border: 0; background: none; font: inherit; }
 button.bjt-stack { cursor: pointer; }
-.chp { position: absolute; left: 50%; bottom: calc(var(--k, 0) * 0.55cqw); width: 5.2cqw; height: 5.2cqw; margin-left: -2.6cqw; border-radius: 50%; display: grid; place-items: center;
+.chp { position: absolute; left: 50%; bottom: calc(var(--k, 0) * 0.4cqw); width: 5.2cqw; height: 5.2cqw; margin-left: -2.6cqw; border-radius: 50%; display: grid; place-items: center;
   border: 0.5cqw dashed rgba(255, 243, 220, 0.92); box-shadow: 0 0 0 0.25cqw #1e1006, 0 0.35cqw 0 0.1cqw rgba(0, 0, 0, 0.55); color: #fff; font-weight: 900; font-size: 1.9cqw; line-height: 1;
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5); animation: chp-in 0.38s cubic-bezier(0.2, 0.9, 0.3, 1.15) both; }
 .chp.v1 { background: #8a8f9c; }
