@@ -2297,3 +2297,19 @@ button.bjt-stack { cursor: pointer; }
 .pkt-ico b { position: absolute; right: -2.2cqw; top: -1.4cqw; padding: 0.15cqw 0.6cqw; border-radius: 1cqw; font-size: 2.1cqw; font-weight: 900; line-height: 1.2;
   color: #ffe08a; background: #1b1206; border: 0.2cqw solid rgba(230, 190, 90, 0.7); white-space: nowrap; }
 .pkt-ctrl .btn { font-size: 3.4cqw; }
+/* fit fixes: the picture stands in the middle of a tall window; the poker table and the zonk menu never spill */
+.gstage { align-items: center; }
+.pkt-table { gap: 1.2cqw; }
+.pkt-row { gap: 0.5cqw; padding: 0.6cqw; min-height: 0; overflow: hidden; }
+.pkt .pk-mini { width: 3.1cqw; height: 4.3cqw; }
+.pkt .pk-mini b, .pkt .pk-mini i { font-size: 1.7cqw; }
+.pkt-prize { gap: 2.6cqw; padding-top: 1.2cqw; }
+.pkt-ico svg { width: 5cqw !important; height: 5cqw !important; }
+.pkt-ico b { font-size: 1.9cqw; right: -2.4cqw; top: -1.3cqw; }
+.pkt-ctrl .btn { height: 9.5cqw; min-height: 0; padding: 0 3cqw; font-size: 3.6cqw; display: flex; align-items: center; justify-content: center; gap: 1cqw; }
+.pkt-ctrl .btn svg { width: 4.4cqw; height: 4.4cqw; }
+.zb-menu { justify-content: flex-start; gap: 1.4cqw; padding: 2.4cqw; }
+.zb-res { padding: 1cqw; gap: 0.3cqw; }
+.zb-res b { font-size: 4.6cqw; }
+.zb-lvl { padding: 1.2cqw 1.6cqw; }
+.zb-menu .chip, .zb-menu .reward-chips { font-size: 2.4cqw; }

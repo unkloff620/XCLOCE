@@ -304,7 +304,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
                     <b className="zb-lvl-n display">{l.level}</b>
                     <span className="zb-lvl-main">
                       <b className="num">{full(l.target)} очков</b>
-                      <span className="zb-lvl-win">приз <RewardChips r={l.win} size={13} /> · +{l.winXp} оп.</span>
+                      <span className="zb-lvl-win">приз {Object.entries(l.win.currencies ?? {}).map(([c, v]) => <Coin key={c} c={c as Currency} v={v ?? 0} size={13} />)} · +{l.winXp} опыта</span>
                     </span>
                     <span className="zb-lvl-pay">{free ? "бесплатно" : <>{l.entry.amount} <Icon name={l.entry.currency} size={15} /></>}</span>
                   </button>
@@ -419,7 +419,7 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
           })}
 
           {/* under the cards: what came (or how many swaps are left) */}
-          <div className="pkt-res" style={{ left: px(80), top: py(860), width: px(900) }}>
+          <div className="pkt-res" style={{ left: px(80), top: py(855), width: px(900) }}>
             {!open ? <span className="pkt-hint">Сдаём 5 карт — собери комбинацию</span>
               : drawing ? <span className="pkt-hint">Нажми на карту, чтобы заменить · осталось <b className="num">{open.swapsLeft}</b></span>
               : (
@@ -432,7 +432,7 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
           </div>
 
           {/* the combinations in the free felt: the sample cards and the prize as icons, no words */}
-          <div className="pkt-table" style={{ left: px(60), top: py(935), width: px(940), height: py(400) }}>
+          <div className="pkt-table" style={{ left: px(60), top: py(915), width: px(940), height: py(420) }}>
             {POKER_HANDS.filter((h) => h.id !== "high").map((h) => (
               <div key={h.id} className={`pkt-row ${hand === h.id ? "on" : ""} ${drawing && open?.hand === h.id ? "now" : ""}`} title={h.name}>
                 <span className="pkt-row-cards">{h.sample.map((c, k) => <MiniCard key={k} r={c.r} s={c.s} />)}</span>
