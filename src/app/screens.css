@@ -2435,3 +2435,16 @@ button.bjt-stack { cursor: pointer; }
 /* zonk: the attempt's sum under the ladder, in the middle */
 .zb-turn { justify-content: center; padding-left: 0; font-size: 4.4cqw; }
 .zb-hint { text-align: center; }
+
+/* the game pick: three pictures side by side, the name under each */
+.game-pick { flex-direction: row; gap: 8px; align-items: stretch; }
+.game-tile { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px 10px; border-radius: 16px; cursor: pointer;
+  color: var(--ink); background: radial-gradient(circle at 50% 35%, rgba(255, 204, 51, 0.16), rgba(0, 0, 0, 0.25) 70%); border: 2px solid rgba(255, 190, 120, 0.22);
+  transition: transform 0.12s, border-color 0.15s; -webkit-tap-highlight-color: transparent; }
+.game-tile img { width: 100%; max-width: 120px; aspect-ratio: 1; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5)); transition: transform 0.2s; }
+.game-tile b { font-size: 17px; line-height: 1.1; margin-top: 2px; }
+.game-tile small { font-size: 11px; line-height: 1.2; text-align: center; color: var(--muted); }
+.game-tile:active { transform: scale(0.96); }
+.game-tile:hover img { transform: translateY(-3px) scale(1.04); }
+.game-tile.live { border-color: rgba(255, 204, 51, 0.75); box-shadow: 0 0 14px rgba(255, 204, 51, 0.35); }
+.game-tile.live small { color: var(--gold); }

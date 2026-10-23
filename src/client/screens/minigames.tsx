@@ -722,7 +722,7 @@ export function YardGames() {
   const zk = state?.games?.zonk;
   const invites = state?.bjInvites ?? 0;
   const free = invites > 0 ? "♠" : zk?.active ? "идёт" : zk?.freeLeft ?? 0;
-  const note = (g: typeof zk, paid: string) => (g?.active ? "партия идёт — продолжить" : g && g.freeLeft > 0 ? `бесплатно: ${g.freeLeft}` : paid);
+  const note = (g: typeof zk, paid: string) => (g?.active ? "партия идёт" : g && g.freeLeft > 0 ? `бесплатно: ${g.freeLeft}` : paid);
   return (
     <>
       <button className="yard-obj yard-table" onClick={() => setOpen("pick")} aria-label="Блэкджек, зонк и покер" title="Блэкджек, зонк и покер">
@@ -734,16 +734,22 @@ export function YardGames() {
       </button>
       {open === "pick" && (
         <Modal title="Во что сыграем?" onClose={() => setOpen(null)}>
+          {/* three pictures in a row, the name and a short line under each */}
           <div className="game-pick">
-            <button className="btn big block green" onClick={() => setOpen("blackjack")}>
-              Блэкджек<small>{invites > 0 ? `тебя зовут за стол (${invites})` : "стол до 6 игроков · ставки 1–25 USD"}</small>
-            </button>
-            <button className="btn big block gold" onClick={() => setOpen("zonk")}>
-              Зонк<small>{note(zk, "4 уровня · вход от 150 RUB")}</small>
-            </button>
-            <button className="btn big block red" onClick={() => setOpen("poker")}>
-              Покер<small>{state?.poker?.active ? "раздача ждёт замен — продолжить" : state?.poker ? `раздача — ${state.poker.price.amount} USD · осталось ${state.poker.left}/${state.poker.perDay}` : "раздача — 3 USD"}</small>
-            </button>
+            {([
+              { id: "poker", name: "Покер", img: "/assets/yard/game-poker.webp",
+                note: state?.poker?.active ? "ждёт замен" : state?.poker ? `${state.poker.left}/${state.poker.perDay} раздач` : "3 USD", live: !!state?.poker?.active },
+              { id: "blackjack", name: "Блэкджек", img: "/assets/yard/game-blackjack.webp",
+                note: invites > 0 ? `зовут (${invites})` : "1–25 USD", live: invites > 0 },
+              { id: "zonk", name: "Зонк", img: "/assets/yard/game-zonk.webp", note: note(zk, "4 уровня"), live: !!zk?.active },
+            ] as const).map((gm) => (
+              <button key={gm.id} type="button" className={`game-tile ${gm.live ? "live" : ""}`} onClick={() => setOpen(gm.id)}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={gm.img} alt="" draggable={false} />
+                <b className="display">{gm.name}</b>
+                <small>{gm.note}</small>
+              </button>
+            ))}
           </div>
         </Modal>
       )}
