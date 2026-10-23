@@ -2528,3 +2528,13 @@ button.bjt-stack { cursor: pointer; }
 .bj2 .bj2-panel .bjt-line { min-height: 26px; }
 .bj2 .bj2-panel .chp.big { width: 42px; height: 42px; font-size: 14px; }
 .bj2 .bj2-panel .bjt-tray { gap: 8px; padding: 2px 0; }
+.bj2 .bjt-box.big { height: 26cqw; }
+.bj2 .bjt-dealer { top: 12.4%; }
+.bj2 .bj2-panel .bjt-ctrl, .bj2 .bj2-panel .bjt-lobby { gap: 5px; }
+@media (max-height: 720px) {
+  .bj2 .bj2-panel .bjt-line { min-height: 20px; font-size: 11px; }
+  .bj2 .bj2-panel .chp.big { width: 34px; height: 34px; font-size: 12px; border-width: 2px; }
+  .bj2 .bj2-panel .bjt-tray { gap: 6px; padding: 0; }
+  .bj2 .bj2-panel .btn { padding-top: 5px; padding-bottom: 5px; min-height: 0; font-size: 13px; }
+  .bj2 .bj2-panel .bjt-ctrl, .bj2 .bj2-panel .bjt-lobby { gap: 4px; }
+}

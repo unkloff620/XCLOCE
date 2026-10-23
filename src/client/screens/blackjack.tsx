@@ -134,7 +134,7 @@ const OTHER_SEATS: SeatGeo[] = [
   { box: { x: 742, y: 653, r: -19 }, pp: [785, 741], name: [770, 790] },
 ];
 /** my field under the arc (drawn by the page, not in the picture): the «Пары» circle on top, the cards, the name under */
-const MY_SEAT: SeatGeo = { box: { x: 420, y: 1078, r: 0 }, pp: [420, 912], name: [420, 1222], big: true };
+const MY_SEAT: SeatGeo = { box: { x: 420, y: 1066, r: 0 }, pp: [420, 906], name: [420, 1238], big: true };
 const DENOMS = [25, 10, 5, 1] as const;
 const TRAY = [1, 5, 10, 25] as const;
 
@@ -482,7 +482,7 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
               )}
             </>
           )}
-          <div className="bjt-panel bj2-panel" style={{ ...at(44, 1262), width: `${((841 - 88) / TW) * 100}%`, height: `${((1552 - 1262) / TH) * 100}%` }}>{panel}</div>
+          <div className="bjt-panel bj2-panel" style={{ ...at(44, 1272), width: `${((841 - 88) / TW) * 100}%`, height: `${((1575 - 1272) / TH) * 100}%` }}>{panel}</div>
         </div>
       </div>
       {inviteSeat !== null && view && (
