@@ -2432,3 +2432,6 @@ button.bjt-stack { cursor: pointer; }
 .zb-flash { font-size: 5.4cqw; }
 .zb-hint { font-size: 2.4cqw; }
 .zb-menu { gap: 1cqw; padding: 2cqw; }
+/* zonk: the attempt's sum under the ladder, in the middle */
+.zb-turn { justify-content: center; padding-left: 0; font-size: 4.4cqw; }
+.zb-hint { text-align: center; }

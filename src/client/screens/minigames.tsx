@@ -106,8 +106,9 @@ const LADDER_COLS = [246, 328, 409, 490, 571, 652];
 /** one chalk cell */
 const CELL = { w: 73, h: 78 };
 /** cells per ladder row, from the bottom row up */
-const LADDER_CAPS = [6, 5, 4, 3, 2, 1];
-const ladderCell = (row: number, col: number) => ({ x: LADDER_COLS[col], y: LADDER_ROWS[LADDER_ROWS.length - 1 - row] });
+/* the dice take every other row from the bottom (6, 4 and 2 cells): the row between is left for the points under them */
+const LADDER_CAPS = [6, 4, 2];
+const ladderCell = (row: number, col: number) => ({ x: LADDER_COLS[col], y: LADDER_ROWS[LADDER_ROWS.length - 1 - row * 2] });
 type LadderGroup = { dice: { v: number; i: number }[]; points: number | null; old: boolean };
 /**
  * The kept dice laid into the ladder, combination by combination, from the bottom row up: a combination that does not
@@ -315,7 +316,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
           {/* the chalk ladder: the dice kept this attempt (earlier throws fixed, the ones picked now go back on a tap) */}
           {ladder.dice.map((d, k) => {
             const c = ladderCell(d.row, d.col);
-            const style = { left: zx(c.x + 12), top: zy(c.y + 2), width: zx(48), height: zy(48) };
+            const style = { left: zx(c.x + 7), top: zy(c.y + 9), width: zx(59), height: zy(59) };
             return d.i < 0
               ? <span key={`k${k}`} className="zb-kept old" style={style}><DieFace v={d.v} /></span>
               : <button key={`p${d.i}`} className="zb-kept" style={style} onClick={() => toggle(d.i)} aria-label={`вернуть ${d.v}`}><DieFace v={d.v} /></button>;
@@ -324,14 +325,14 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
           {ladder.marks.map((m, k) => {
             const a = ladderCell(m.row, m.from), b = ladderCell(m.row, m.to);
             return (
-              <span key={`m${k}-${m.row}-${m.from}`} className={`zb-br ${m.bad ? "bad" : ""} ${m.old ? "old" : ""}`} style={{ left: zx(a.x + 12), width: zx(b.x + 62 - (a.x + 12)), top: zy(a.y + 51), height: zy(30) }}>
+              <span key={`m${k}-${m.row}-${m.from}`} className={`zb-br ${m.bad ? "bad" : ""} ${m.old ? "old" : ""}`} style={{ left: zx(a.x + 8), width: zx(b.x + CELL.w - 8 - (a.x + 8)), top: zy(a.y + CELL.h + 4), height: zy(34) }}>
                 <i />{m.label && <b className="num">{m.label}</b>}
               </span>
             );
           })}
           {/* this attempt's points so far: what «Сохранить» would write down */}
           {playing && !show && turn > 0 && (
-            <span key={turn} className={`zb-turn ${pts === null && pick.length ? "bad" : ""}`} style={{ left: zx(652), top: zy(1100), width: zx(150), height: zy(84) }}>+{full(turn)}</span>
+            <span key={turn} className={`zb-turn ${pts === null && pick.length ? "bad" : ""}`} style={{ left: zx(246), top: zy(1312), width: zx(372), height: zy(46) }}>+{full(turn)}</span>
           )}
 
           {/* the sheet on the right: the combinations; a row lights up when the roll has it, brighter when it is picked */}
@@ -358,7 +359,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
               +{full(g.last.points)} записано
             </div>
           ) : null}
-          {hint && <span className="zb-hint" style={{ left: zx(240), top: zy(1300), width: zx(380) }}>{hint}</span>}
+          {hint && <span className="zb-hint" style={{ left: zx(246), top: zy(1362), width: zx(372) }}>{hint}</span>}
 
           <button className="zb-btn grey" style={{ left: zx(630), top: zy(1308), width: zx(164), height: zy(61) }} disabled={!playing || !!show || busy === "zonk_move" || pts === null}
             onClick={() => run("zonk_move", { pick, then: "roll" })}>Бросить<small className="num">{left}</small></button>
