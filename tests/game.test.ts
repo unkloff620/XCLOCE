@@ -1257,6 +1257,12 @@ describe("yard mini games", () => {
     expect(zonkScore([1, 2])).toBeNull();
     expect(zonkHasScore([2, 3, 4, 6, 6, 2])).toBe(false);
     expect(zonkHasScore([2, 2, 2, 3])).toBe(true);
+    const { zonkGroups } = await import("../src/content/games.ts");
+    expect(zonkGroups([1, 5, 1, 1])).toEqual([{ dice: [1, 1, 1], points: 1000 }, { dice: [5], points: 50 }]);
+    expect(zonkGroups([5, 1, 5])).toEqual([{ dice: [1], points: 100 }, { dice: [5], points: 50 }, { dice: [5], points: 50 }]);
+    expect(zonkGroups([4, 4, 4, 4, 2])).toEqual([{ dice: [4, 4, 4, 4], points: 800 }, { dice: [2], points: null }]);
+    expect(zonkGroups([6, 5, 4, 3, 2, 1])).toEqual([{ dice: [1, 2, 3, 4, 5, 6], points: 1500 }]);
+    for (const d of [[1, 1, 5], [3, 3, 3, 1], [5, 5, 5, 5, 5], [2, 2, 3, 3, 4, 4]]) expect(zonkGroups(d).reduce((t, x) => t + (x.points ?? 0), 0)).toBe(zonkScore(d));
   });
 
   it("zonk: levels — reach the target in 10 attempts; save from 300 points; win pays, a miss or giving up gives the consolation", async () => {

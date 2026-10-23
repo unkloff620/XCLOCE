@@ -2327,3 +2327,35 @@ button.bjt-stack { cursor: pointer; }
 .zb-mini i { width: 1.9cqw; height: 1.9cqw; border-width: 0.15cqw; }
 .zb-combo b { font-size: 2.2cqw; }
 .zb-combo b { font-size: 2.4cqw; }
+
+/* zonk, round 2: smaller dice in the ladder with chalk brackets and points under each combination; the attempt's points
+ * right of the ladder; the combinations sheet turned with its paper; the button words inside the buttons */
+.zb-kept { width: auto; padding: 0.5cqw; border-width: 0.35cqw; border-radius: 0.8cqw; }
+.zb-br { z-index: 2; pointer-events: none; display: flex; flex-direction: column; align-items: center; }
+.zb-br i { display: block; width: 100%; height: 0.9cqw; border: 0.3cqw solid rgba(240, 252, 248, 0.9); border-top: 0; border-radius: 0 0 0.3cqw 0.3cqw; position: relative; }
+.zb-br i::after { content: ""; position: absolute; left: 50%; top: 100%; width: 0.3cqw; height: 0.7cqw; margin-left: -0.15cqw; background: rgba(240, 252, 248, 0.9); }
+.zb-br b { margin-top: 0.6cqw; font-size: 2.3cqw; line-height: 1; font-weight: 800; color: #f2fbf8; text-shadow: 0 0 0.5cqw rgba(255, 255, 255, 0.35); white-space: nowrap; }
+.zb-br.old i, .zb-br.old i::after { background-color: transparent; border-color: rgba(240, 252, 248, 0.55); }
+.zb-br.old i::after { background: rgba(240, 252, 248, 0.55); }
+.zb-br.old b { color: rgba(242, 251, 248, 0.7); }
+.zb-br.bad i { border-color: #ff8f8f; }
+.zb-br.bad i::after { background: #ff8f8f; }
+.zb-br.bad b { color: #ff8f8f; }
+.zb-turn { display: flex; align-items: center; justify-content: flex-start; padding-left: 1cqw; font-size: 5.4cqw; font-weight: 900; color: #f2fbf8;
+  font-family: var(--font-display, inherit); text-shadow: 0 0 1cqw rgba(255, 255, 255, 0.35); white-space: nowrap;
+  animation-name: zb-put; animation-duration: 0.25s; animation-timing-function: ease-out; }
+.zb-turn.bad { color: #ff8f8f; }
+.zb-sheet { transform: rotate(-3.4deg); transform-origin: 50% 50%; padding: 1cqw 0.9cqw; }
+.zb-sheet-h { font-size: 2.1cqw; }
+.zb-combo { padding: 0 0.4cqw; }
+.zb-combo b { font-size: 2.2cqw; }
+.zb-mini i { width: 1.75cqw; height: 1.75cqw; }
+.zb-btn { font-size: 2.8cqw; gap: 0.8cqw; letter-spacing: 0.01em; white-space: nowrap; overflow: hidden; }
+.zb-btn small { font-size: 2.1cqw; min-width: 2.8cqw; padding: 0.1cqw 0.6cqw; }
+.zb-btn.red { font-size: 3cqw; }
+/* the zonk replay: the dice lie still where they fell, the word jumps out once they have landed */
+.zb-die.dead { cursor: default; }
+.zb-flash.late { animation-delay: 1.2s; animation-duration: 1.7s; }
+.zb-mini { gap: 0.15cqw; }
+.zb-mini i { width: 1.6cqw; height: 1.6cqw; }
+.zb-br b { margin-top: 0.4cqw; }

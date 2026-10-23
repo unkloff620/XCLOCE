@@ -3,7 +3,7 @@
  * Мини-игры двора (пока кнопками, потом станут объектами во дворе): блэкджек, зонк (кости) и апгрейдер находок.
  * Правила и выплаты — content/games.ts, карты и кости — на сервере (server/systems/games.ts).
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useGame } from "../store.tsx";
 import { Avatar, Coin, Modal, RewardChips } from "../ui.tsx";
 import { Icon } from "../art/icons.tsx";
@@ -17,7 +17,7 @@ import type { Currency } from "../../content/currencies.ts";
 import { BlackjackWindow } from "./blackjack.tsx";
 import { itemById } from "../../content/items.ts";
 import {
-  ITEM_VALUES, RANKS, SUITS, UPGRADE_MODES, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue, zonkScore, ZONK_ROUNDS,
+  ITEM_VALUES, RANKS, SUITS, UPGRADE_MODES, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue, zonkGroups, zonkScore, ZONK_ROUNDS,
   ZONK_BANK_MIN, ZONK_FAIL_XP, ZONK_LEVELS,
   POKER_BONUS_LEVELS, POKER_CHEATS, POKER_HANDS, POKER_LEVEL_BONUS, POKER_MAX_LEVEL, POKER_RULES, pokerCheats, pokerPay,
   type PokerHand, type UpgradeMode,
@@ -110,7 +110,36 @@ const ZK_LINES = [415, 525, 637, 748, 858, 970, 1081, 1192, 1303, 1416];
 /** the chalk ladder: row r (0 = the top) has r + 1 cells; the kept dice fill it from the bottom row up */
 const LADDER_ROWS = [820, 988, 1156, 1326, 1494];
 const LADDER_COLS = [433, 587, 741, 893, 1047];
-const LADDER: { x: number; y: number }[] = [4, 3, 2, 1, 0].flatMap((r) => Array.from({ length: r + 1 }, (_, c) => ({ x: LADDER_COLS[c], y: LADDER_ROWS[r] })));
+/** cells per ladder row, from the bottom row up */
+const LADDER_CAPS = [5, 4, 3, 2, 1];
+const ladderCell = (row: number, col: number) => ({ x: LADDER_COLS[col], y: LADDER_ROWS[4 - row] });
+type LadderGroup = { dice: { v: number; i: number }[]; points: number | null; old: boolean };
+/**
+ * The kept dice laid into the ladder, combination by combination, from the bottom row up: a combination that does not
+ * fit what is left of a row starts the next one (a group bigger than a row wraps). Every piece of a combination in a
+ * row gets a chalk bracket under it; the points are written under the biggest piece.
+ */
+function layoutLadder(groups: LadderGroup[]) {
+  const dice: { v: number; i: number; old: boolean; row: number; col: number }[] = [];
+  const marks: { row: number; from: number; to: number; label: string | null; bad: boolean; old: boolean }[] = [];
+  let row = 0, col = 0;
+  for (const gr of groups) {
+    if (row >= LADDER_CAPS.length) break;
+    if (col > 0 && gr.dice.length <= LADDER_CAPS[row] && col + gr.dice.length > LADDER_CAPS[row]) { row++; col = 0; }
+    const pieces: { row: number; from: number; to: number }[] = [];
+    for (const d of gr.dice) {
+      if (row < LADDER_CAPS.length && col >= LADDER_CAPS[row]) { row++; col = 0; }
+      if (row >= LADDER_CAPS.length) break;
+      dice.push({ ...d, old: gr.old, row, col });
+      const last = pieces[pieces.length - 1];
+      if (last && last.row === row) last.to = col; else pieces.push({ row, from: col, to: col });
+      col++;
+    }
+    const main = pieces.reduce((b, p, k) => (p.to - p.from > pieces[b].to - pieces[b].from ? k : b), 0);
+    pieces.forEach((p, k) => marks.push({ ...p, label: k === main ? (gr.points === null ? "✕" : full(gr.points)) : null, bad: gr.points === null, old: gr.old }));
+  }
+  return { dice, marks };
+}
 /** where the dice land: the open chalk field above the ladder */
 const FIELD = { x: 425, y: 250, w: 520, h: 520 };
 /** the cup stands right of the field, by the sheet */
@@ -148,17 +177,38 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
   const seed = (g?.id ?? 1) * 13 + (g?.history?.length ?? 0) * 7 + (g?.round ?? 1) * 31;
   // the cup shakes and pours every time a new roll comes
   const [throwing, setThrowing] = useState(0);
+  /*
+   * A roll without points: the dice first fall on the board as they came (the kept ones stay in the ladder), and only
+   * then «Зонк! −N» jumps out; after that the next attempt is thrown. The server has already moved on — this is the replay.
+   */
+  const [show, setShow] = useState<{ key: number; roll: number[]; points: number; history: { kept: number[]; points: number }[] } | null>(null);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
   const run = async (type: string, body: Record<string, unknown>) => {
     haptic.tap();
     sfx("tap");
+    const before = type === "zonk_move" && body.then === "roll" ? [...(g?.history ?? []), ...(picked.length && pts !== null ? [{ kept: picked, points: pts }] : [])] : [];
+    const scoresBefore = type === "game_start" ? 0 : scores.length;
     const r = await act<GameView>(type, body);
-    if (r) {
-      setLast(r);
-      if (r.status === "active") setThrowing((t) => t + 1);
-      if (r.status === "done") {
-        if (r.result?.won) { haptic.ok(); sfx("reward"); } else { haptic.err(); sfx("error"); }
-      }
+    if (!r) return;
+    setLast(r);
+    const done = () => {
+      if (r.status === "done") { if (r.result?.won) { haptic.ok(); sfx("reward"); } else { haptic.err(); sfx("error"); } }
+    };
+    const zonk = r.last?.zonk && r.last.roll && (r.scores?.length ?? 0) > scoresBefore && type !== "zonk_give_up" ? r.last : null;
+    if (zonk) {
+      setShow({ key: Date.now() % 100000, roll: zonk.roll!, points: zonk.points, history: before });
+      setThrowing((t) => t + 1);
+      timers.current.push(setTimeout(() => { haptic.err(); sfx("error"); }, 1250));
+      timers.current.push(setTimeout(() => {
+        setShow(null);
+        if (r.status === "active") setThrowing((t) => t + 1);
+        done();
+      }, 2900));
+      return;
     }
+    if (r.status === "active") setThrowing((t) => t + 1);
+    done();
   };
   const toggle = (i: number) => { haptic.tap(); setPick((p) => (p.includes(i) ? p.filter((x) => x !== i) : [...p, i])); };
   const bankMin = info?.bankMin ?? ZONK_BANK_MIN;
@@ -166,15 +216,29 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
   const nRoll = counts(playing ? roll : []);
   const nPick = counts(picked);
   const hints = playing ? new Set(bestPick(roll)) : new Set<number>();
-  const kept = playing ? (g?.history ?? []).flatMap((h) => h.kept) : [];
+  // the ladder: earlier throws of this attempt (fixed) and the dice picked now (a tap puts one back), with their points
+  const ladder = layoutLadder([
+    ...(show ? show.history : playing ? g?.history ?? [] : []).flatMap((h) => zonkGroups(h.kept).map((gr) => ({ dice: gr.dice.map((v) => ({ v, i: -1 })), points: gr.points, old: true }))),
+    ...(show || !playing ? [] : (() => {
+      const free = [...pick];
+      return zonkGroups(picked).map((gr) => ({
+        dice: gr.dice.map((v) => { const k = free.findIndex((i) => roll[i] === v); const i = free[k]; free.splice(k, 1); return { v, i }; }),
+        points: gr.points, old: false,
+      }));
+    })()),
+  ]);
+  const onBoard = playing || !!show;
+  const fieldRoll = show ? show.roll : playing ? roll : [];
+  const fieldSeed = show ? show.key : seed;
   const rounds = g?.rounds ?? ZONK_ROUNDS;
-  const scores = g?.scores ?? [];
+  // while a zonk replays, its attempt is not written on the board yet
+  const scores = (g?.scores ?? []).slice(0, show ? -1 : undefined);
   const total = playing ? g?.total ?? 0 : g?.result?.points ?? g?.total ?? 0;
   const target = g?.target ?? 0;
   const left = (() => { const l = (g?.left ?? 6) - pick.length; return l <= 0 ? 6 : l; })();
-  const canBank = playing && pts !== null && turn >= bankMin;
+  const canBank = playing && !show && pts !== null && turn >= bankMin;
   const lvl = info ? Math.max(0, Math.min(100, ((info.xp - info.from) / Math.max(1, info.to - info.from)) * 100)) : 0;
-  const hint = !playing ? null
+  const hint = !playing || show ? null
     : pick.length === 0 ? "Нажми на очковые кости"
     : pts === null ? "Есть кости без очков — верни их"
     : turn < bankMin ? `Сохранить можно от ${bankMin}`
@@ -211,31 +275,31 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
               </span>
             );
           })}
-          {playing && scores.length < rounds && (
+          {onBoard && scores.length < rounds && (
             // eslint-disable-next-line @next/next/no-img-element
             <img key={scores.length} className="zb-arrow" src="/assets/yard/zonk-arrow.webp" alt="" draggable={false}
               style={{ left: zx(296), top: zy(ZK_LINES[scores.length] - 82), width: zx(120) }} />
           )}
-          <button className="zb-btn red" style={{ left: zx(70), top: zy(1765), width: zx(250), height: zy(120) }} disabled={!playing || busy === "zonk_give_up"}
+          <button className="zb-btn red" style={{ left: zx(70), top: zy(1765), width: zx(250), height: zy(120) }} disabled={!playing || !!show || busy === "zonk_give_up"}
             onClick={() => run("zonk_give_up", {})}>Сдаться</button>
 
           {/* the chalk head of the big board: the level, the score against the target, this attempt */}
           <div className="zb-head" style={{ left: zx(420), top: zy(86), width: zx(640) }}>
             {g ? (
               <>
-                <span>Уровень <b className="num">{g.level ?? 1}</b> · попытка <b className="num">{Math.min(scores.length + (playing ? 1 : 0), rounds)}/{rounds}</b></span>
+                <span>Уровень <b className="num">{g.level ?? 1}</b> · попытка <b className="num">{Math.min(scores.length + (onBoard ? 1 : 0), rounds)}/{rounds}</b></span>
                 <span className="zb-score"><b className="num">{full(total)}</b><small className="num">/{full(target)}</small></span>
-                {playing && <span>Ход <b className="num">{full(turn)}</b>{pts !== null && pts > 0 ? <em className="num"> (+{pts})</em> : null}</span>}
               </>
             ) : <span>Выбери уровень</span>}
           </div>
 
           {/* the thrown dice in the open field; a tap sends a die to the ladder */}
-          {playing && roll.map((v, i) => {
-            if (pick.includes(i)) return null;
-            const l = landing(seed, i);
+          {fieldRoll.map((v, i) => {
+            if (!show && pick.includes(i)) return null;
+            const l = landing(fieldSeed, i);
             return (
-              <button key={`${seed}-${throwing}-${i}`} className={`zb-die ${hints.has(i) ? "hint" : ""}`} onClick={() => toggle(i)} aria-label={`кость ${v}`}
+              <button key={`${fieldSeed}-${throwing}-${i}`} className={`zb-die ${!show && hints.has(i) ? "hint" : ""} ${show ? "dead" : ""}`} disabled={!!show}
+                onClick={() => toggle(i)} aria-label={`кость ${v}`}
                 style={{ left: zx(l.x), top: zy(l.y), ["--rot" as string]: `${l.rot}deg`, ["--spin" as string]: `${l.spin}deg`,
                   ["--fx" as string]: `${((CUP.x - l.x) / ZW) * 100}cqw`, ["--fy" as string]: `${((CUP.y - l.y) / ZW) * 100}cqw`, ["--d" as string]: `${0.28 + i * 0.05}s` }}>
                 <DieFace v={v} />
@@ -245,16 +309,29 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
           <span key={`cup-${throwing}`} className={`zb-cup ${throwing ? "pour" : ""}`} style={{ left: zx(CUP.x - 70), top: zy(CUP.y - 90), width: zx(130) }}><Cup /></span>
 
           {/* the chalk ladder: the dice kept this attempt (earlier throws fixed, the ones picked now go back on a tap) */}
-          {[...kept.map((v) => ({ v, i: -1 })), ...pick.map((i) => ({ v: roll[i], i }))].slice(0, LADDER.length).map((d, k) => {
-            const c = LADDER[k];
-            const style = { left: zx(c.x + 8), top: zy(c.y + 8), width: zx(122), height: zy(132) };
+          {ladder.dice.map((d, k) => {
+            const c = ladderCell(d.row, d.col);
+            const style = { left: zx(c.x + 19), top: zy(c.y + 4), width: zx(100), height: zy(100) };
             return d.i < 0
               ? <span key={`k${k}`} className="zb-kept old" style={style}><DieFace v={d.v} /></span>
               : <button key={`p${d.i}`} className="zb-kept" style={style} onClick={() => toggle(d.i)} aria-label={`вернуть ${d.v}`}><DieFace v={d.v} /></button>;
           })}
+          {/* chalk brackets under each combination and what it scores (picture: 1-1-1 → 1000, 5 → 50) */}
+          {ladder.marks.map((m, k) => {
+            const a = ladderCell(m.row, m.from), b = ladderCell(m.row, m.to);
+            return (
+              <span key={`m${k}-${m.row}-${m.from}`} className={`zb-br ${m.bad ? "bad" : ""} ${m.old ? "old" : ""}`} style={{ left: zx(a.x + 24), width: zx(b.x + 114 - (a.x + 24)), top: zy(a.y + 108), height: zy(52) }}>
+                <i />{m.label && <b className="num">{m.label}</b>}
+              </span>
+            );
+          })}
+          {/* this attempt's points so far: what «Сохранить» would write down */}
+          {playing && !show && turn > 0 && (
+            <span key={turn} className={`zb-turn ${pts === null && pick.length ? "bad" : ""}`} style={{ left: zx(1192), top: zy(1508), width: zx(232), height: zy(120) }}>+{full(turn)}</span>
+          )}
 
           {/* the sheet on the right: the combinations; a row lights up when the roll has it, brighter when it is picked */}
-          <div className="zb-sheet" style={{ left: zx(1092), top: zy(200), width: zx(318), height: zy(1040) }}>
+          <div className="zb-sheet" style={{ left: zx(1122), top: zy(212), width: zx(270), height: zy(1010) }}>
             <b className="zb-sheet-h">Комбинации</b>
             {COMBOS.map((c) => {
               const can = c.test(nRoll, roll.length);
@@ -268,20 +345,24 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
             })}
           </div>
 
-          {playing && g?.last && (
-            <div key={`${g.round}-${scores.length}`} className={`zb-flash ${g.last.zonk ? "zonk" : ""}`} style={{ left: zx(420), top: zy(560), width: zx(640) }}>
-              {g.last.zonk ? (g.last.points ? `Зонк! −${full(g.last.points)}` : "Зонк!") : `+${full(g.last.points)} записано`}
+          {show ? (
+            <div key={`z${show.key}`} className="zb-flash zonk late" style={{ left: zx(420), top: zy(540), width: zx(640) }}>
+              {show.points ? `Зонк! −${full(show.points)}` : "Зонк!"}
             </div>
-          )}
+          ) : playing && g?.last && !g.last.zonk ? (
+            <div key={`${g.round}-${scores.length}`} className="zb-flash" style={{ left: zx(420), top: zy(560), width: zx(640) }}>
+              +{full(g.last.points)} записано
+            </div>
+          ) : null}
           {hint && <span className="zb-hint" style={{ left: zx(420), top: zy(1650), width: zx(620) }}>{hint}</span>}
 
-          <button className="zb-btn grey" style={{ left: zx(1065), top: zy(1670), width: zx(285), height: zy(100) }} disabled={!playing || busy === "zonk_move" || pts === null}
+          <button className="zb-btn grey" style={{ left: zx(1065), top: zy(1670), width: zx(285), height: zy(100) }} disabled={!playing || !!show || busy === "zonk_move" || pts === null}
             onClick={() => run("zonk_move", { pick, then: "roll" })}>Бросить<small className="num">{left}</small></button>
           <button className={`zb-btn grey ${canBank ? "ready" : ""}`} style={{ left: zx(1065), top: zy(1795), width: zx(285), height: zy(100) }} disabled={!canBank || busy === "zonk_move"}
             onClick={() => run("zonk_move", { pick, then: "bank" })}>Сохранить</button>
 
           {/* no game running: the levels to choose from (and how the last game ended) */}
-          {!playing && info && (
+          {!playing && !show && info && (
             <div className="zb-menu" style={{ left: zx(415), top: zy(215), width: zx(650), height: zy(1440) }}>
               {g?.status === "done" && g.result && (
                 <div className={`zb-res ${g.result.won ? "win" : "lose"}`}>
