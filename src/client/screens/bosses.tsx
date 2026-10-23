@@ -14,7 +14,7 @@ import { itemById } from "../../content/items.ts";
 import { Icon } from "../art/icons.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { BossSilhouette } from "../art/scenes.tsx";
-import { clock, full, short } from "../format.ts";
+import { clock } from "../format.ts";
 
 export interface BossRow {
   id: string; unlocked: boolean; keysHave: number; keysNeed: number; myKeys: number; hpMax: number;
@@ -26,27 +26,29 @@ export interface BossListData { resetAt: number; bosses: BossRow[]; weapons: Tra
 export function useBossList() {
   const [data, setData] = useState<BossListData | null>(null);
   const load = useCallback(async () => {
-    try {
-      setData(await api.get<BossListData>("/api/bosses"));
-    } catch {
-      /* keep the last list */
+    // a phone on a weak network may drop the first request: try again a few times before giving up
+    for (let attempt = 0; attempt < 4; attempt++) {
+      try {
+        setData(await api.get<BossListData>("/api/bosses"));
+        return;
+      } catch {
+        await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
+      }
     }
   }, []);
   useEffect(() => {
     void load();
+    // back from the background (iOS keeps the Mini App frozen): the passes may have changed meanwhile
+    const onShow = () => { if (document.visibilityState === "visible") void load(); };
+    document.addEventListener("visibilitychange", onShow);
+    return () => document.removeEventListener("visibilitychange", onShow);
   }, [load]);
   return { data, load };
 }
 
-/** HP under the boss photo: full numbers while they fit, short ones for the big bosses. */
 /** card colour by boss order: grey for the first, climbing like loot rarity, red for the last */
 const CARD_TIER = ["#a3aab4", "#7fc96a", "#4fd08a", "#3fd6c4", "#3fb4e6", "#4a9dff", "#6f7dff", "#8f6bff", "#b45cff", "#e05cd6", "#ff9a2e", "#ffcc33", "#ff3b3b"];
 const tierColor = (order: number) => CARD_TIER[Math.min(CARD_TIER.length, Math.max(1, order)) - 1];
-
-function hpLabel(hp: number, max: number): string {
-  const f = max >= 100_000 ? short : full;
-  return `${f(hp)}/${f(max)}`;
-}
 
 export function BossesScreen() {
   const { state } = useGame();
@@ -70,26 +72,23 @@ export function BossesScreen() {
           const row = data?.bosses.find((x) => x.id === b.id);
           const prev = BOSSES.find((x) => x.order === b.order - 1);
           const mine = state?.fight?.bossId === b.id ? state.fight : null;
-          const locked = row ? !row.unlocked : b.order > 1;
-          // a boss the player has already fought stays in colour even without passes now; grey only for never opened ones
-          const grey = locked && !((row?.myDamage ?? 0) > 0 || (row?.myWins ?? 0) > 0);
+          // until the list has loaded nothing is locked or grey (a slow or failed request on the phone used to grey every boss)
+          const locked = row ? !row.unlocked : false;
+          // grey only for a boss never touched: no passes for him yet and never fought; with some passes he stays in colour
+          const grey = !!row && locked && row.keysHave <= 0 && row.myDamage <= 0 && row.myWins <= 0;
           const hpMax = mine ? mine.hpMax : row?.hpMax ?? b.hp;
           const hp = mine ? mine.hp : hpMax;
+          const dazed = !!mine && hp / Math.max(1, hpMax) < 0.5;
           return (
-            <Link key={b.id} href={`/bosses/${b.id}`} className={`bcard ${grey ? "locked" : ""} ${b.final ? "final" : ""} ${mine ? "live" : ""}`}
-              style={{ ["--i" as string]: b.order, ["--acc" as string]: tierColor(b.order), ["--hp" as string]: `${Math.round((hp / Math.max(1, hpMax)) * 100)}%` }}>
+            <Link key={b.id} href={`/bosses/${b.id}`} className={`bcard ${grey ? "locked" : ""} ${b.final ? "final" : ""} ${mine ? "live" : ""} ${dazed ? "dazed" : ""}`}
+              style={{ ["--i" as string]: b.order, ["--acc" as string]: tierColor(b.order) }}>
+              {/* the case number over the boss: «Дело №1», «Дело №2»… (his health is a surprise — not shown in the list) */}
+              <span className="bcard-n display">Дело №{b.order}</span>
               {/* the boss stands on the left and fades into the card */}
               <div className="bcard-art" aria-hidden="true">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 {(b.photo.card ?? b.photo.full) ? <img src={(b.photo.card ?? b.photo.full)!} alt="" draggable={false} /> : <div className="bcard-sil"><BossSilhouette accent={tierColor(b.order)} /></div>}
               </div>
-              {/* the health bar stands under the boss */}
-              {!grey && (
-                <div className="bcard-hp">
-                  <div className="bcard-hpbar"><i /><span className="num">{hpLabel(hp, hpMax)}</span></div>
-                </div>
-              )}
-              <span className="bcard-n display">{b.order}</span>
               <div className="bcard-main">
                 <div className="bcard-head">
                   <div className="col" style={{ gap: 1, minWidth: 0 }}>
@@ -129,7 +128,7 @@ export function BossesScreen() {
                         <Avatar name={row.lastKiller.name} photo={row.lastKiller.photo} size={26} />
                       </span>
                     )}
-                    <span className={`bcard-cta display ${locked ? "off" : ""}`}>{locked ? <><Icon name="lock" size={14} /> Нет карт</> : mine ? <>Бить ›</> : <>В бой ›</>}</span>
+                    <span className={`bcard-cta display ${locked ? "off" : ""}`}>{!row ? <>…</> : locked ? <><Icon name="lock" size={14} /> Нет карт</> : mine ? <>Бить ›</> : <>В бой ›</>}</span>
                   </span>
                 </div>
               </div>

@@ -6,17 +6,19 @@
 import { GameError, type Queryable } from "../db.ts";
 import { addItem, addMoney, grantReward, itemQty, ledger, moscowDay, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { useItem } from "./shop.ts";
-import { UPGRADE_RULES, POKER_RULES, pokerHand, pokerHandDef, pokerLevel, pokerPay,
-  GAME_RULES, ITEM_VALUES, ZONK_DICE, ZONK_ROUNDS, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue, zonkHasScore, zonkPrize, zonkScore,
+import { UPGRADE_RULES, POKER_RULES, pokerCheats, pokerHand, pokerHandDef, pokerLevel, pokerPay,
+  GAME_RULES, ITEM_VALUES, ZONK_BANK_MIN, ZONK_DICE, ZONK_FAIL_XP, ZONK_LEVELS, ZONK_ROUNDS, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue,
+  zonkHasScore, zonkLevelDef, zonkScore, zonkXpLevel,
   type Card, type GameKind,
 } from "../../content/games.ts";
 import { itemById } from "../../content/items.ts";
 import type { Reward } from "../../content/rewards.ts";
 
 /** round: the attempt now (1…ZONK_ROUNDS); total: points written down; last: how the previous attempt ended */
-interface ZonkState { roll: number[]; turn: number; left: number; history: { kept: number[]; points: number }[]; round?: number; total?: number; last?: { points: number; zonk: boolean } | null; scores?: { points: number; zonk: boolean }[] }
+/** level: the difficulty (ZONK_LEVELS), target: the points to reach; old games (before the levels) have neither */
+interface ZonkState { roll: number[]; turn: number; left: number; history: { kept: number[]; points: number }[]; round?: number; total?: number; last?: { points: number; zonk: boolean } | null; scores?: { points: number; zonk: boolean }[]; level?: number; target?: number }
 interface GameRow { id: number; kind: GameKind; paid: boolean; status: "active" | "done"; state: ZonkState; result: GameResult | null }
-interface GameResult { outcome: string; title: string; reward: Granted | null; points?: number }
+interface GameResult { outcome: string; title: string; reward: Granted | null; points?: number; won?: boolean; xp?: number }
 
 const isEmpty = (r: Reward) => !r.currencies && !r.items && !r.xp && !r.energy;
 
@@ -32,16 +34,34 @@ async function freeLeft(q: Queryable, pid: number, kind: GameKind, now: number) 
 /** What the client sees of a zonk game. */
 function viewOf(g: GameRow) {
   const s = g.state as ZonkState;
-  return { id: g.id, kind: g.kind, paid: g.paid, status: g.status, result: g.result, roll: s.roll, turn: s.turn, left: s.left, history: s.history, round: s.round ?? 1, rounds: ZONK_ROUNDS, total: s.total ?? 0, last: s.last ?? null, scores: s.scores ?? [] };
+  return { id: g.id, kind: g.kind, paid: g.paid, status: g.status, result: g.result, roll: s.roll, turn: s.turn, left: s.left, history: s.history, round: s.round ?? 1, rounds: ZONK_ROUNDS, total: s.total ?? 0, last: s.last ?? null, scores: s.scores ?? [], level: s.level ?? 1, target: s.target ?? zonkLevelDef(1)!.target };
+}
+
+/** the best zonk game of a Moscow day (all levels): who and how many points */
+async function zonkRecord(q: Queryable, day: string) {
+  const [r] = await q.query<{ points: number; id: number; display_name: string; photo_url: string | null }>(
+    `SELECT (g.result->>'points')::int AS points, p.id, p.display_name, p.photo_url FROM games g JOIN players p ON p.id = g.player_id
+     WHERE g.kind='zonk' AND g.day=$1 AND g.status='done' AND g.result->>'points' IS NOT NULL AND (g.result->>'points')::int > 0
+     ORDER BY (g.result->>'points')::int DESC, g.updated_at ASC LIMIT 1`, [day]);
+  return r ? { points: Number(r.points), playerId: r.id, name: r.display_name, photo: r.photo_url } : null;
 }
 
 export async function gamesView(q: Queryable, pid: number, now: number) {
-  const out: Record<string, unknown> = {};
-  for (const kind of Object.keys(GAME_RULES) as GameKind[]) {
-    const g = await activeGame(q, pid, kind);
-    out[kind] = { freeLeft: await freeLeft(q, pid, kind, now), freePerDay: GAME_RULES[kind].freePerDay, price: GAME_RULES[kind].price, active: g ? viewOf(g) : null };
-  }
-  return out as Record<GameKind, { freeLeft: number; freePerDay: number; price: { currency: string; amount: number }; active: ReturnType<typeof viewOf> | null }>;
+  const g = await activeGame(q, pid, "zonk");
+  const [p] = await q.query<{ zonk_xp: number }>("SELECT zonk_xp FROM players WHERE id=$1", [pid]);
+  const xp = Number(p?.zonk_xp ?? 0);
+  // the record of today; early in the day, before anyone has played — yesterday's
+  const today = moscowDay(now);
+  let record = await zonkRecord(q, today);
+  let recordDay: "today" | "yesterday" = "today";
+  if (!record) { record = await zonkRecord(q, moscowDay(now - 24 * 3600 * 1000)); recordDay = "yesterday"; }
+  return {
+    zonk: {
+      freeLeft: await freeLeft(q, pid, "zonk", now), freePerDay: GAME_RULES.zonk.freePerDay, price: GAME_RULES.zonk.price,
+      levels: ZONK_LEVELS, bankMin: ZONK_BANK_MIN, xp, ...zonkXpLevel(xp), record: record ? { ...record, day: recordDay } : null,
+      active: g ? viewOf(g) : null,
+    },
+  };
 }
 
 export function shuffled(rng: () => number, decks = 1): Card[] {
@@ -59,14 +79,15 @@ async function save(ctx: Ctx, g: GameRow) {
   await ctx.q.query("UPDATE games SET state=$2, status=$3, result=$4, updated_at=$5 WHERE id=$1", [g.id, JSON.stringify(g.state), g.status, g.result ? JSON.stringify(g.result) : null, new Date(ctx.now)]);
 }
 
-/** A new hand / a new game: free while the day's free games last, then it costs GAME_RULES[kind].price. */
-export async function startGame(ctx: Ctx, kind: GameKind) {
+/** A new game at a difficulty level: its entry price (the first level-1 game of the day is free). */
+export async function startGame(ctx: Ctx, kind: GameKind, level = 1) {
   if (!GAME_RULES[kind]) throw new GameError("bad_game", "Такой игры нет");
+  const def = zonkLevelDef(level);
+  if (!def) throw new GameError("bad_level", "Такого уровня нет");
   if (await activeGame(ctx.q, ctx.pid, kind)) throw new GameError("game_running", "Сначала доиграй начатую партию");
-  const free = (await freeLeft(ctx.q, ctx.pid, kind, ctx.now)) > 0;
-  const price = GAME_RULES[kind].price;
-  if (!free) await takeMoney(ctx, price.currency, price.amount, `game:${kind}`);
-  const state: ZonkState = { roll: Array.from({ length: ZONK_DICE }, () => die(ctx.rng)), turn: 0, left: ZONK_DICE, history: [], round: 1, total: 0, last: null };
+  const free = def.level === 1 && (await freeLeft(ctx.q, ctx.pid, kind, ctx.now)) > 0;
+  if (!free) await takeMoney(ctx, def.entry.currency, def.entry.amount, `game:${kind}:${def.level}`);
+  const state: ZonkState = { roll: Array.from({ length: ZONK_DICE }, () => die(ctx.rng)), turn: 0, left: ZONK_DICE, history: [], round: 1, total: 0, last: null, level: def.level, target: def.target };
   const [row] = await ctx.q.query<{ id: number }>(
     "INSERT INTO games (player_id, kind, day, paid, status, state, created_at, updated_at) VALUES ($1,$2,$3,$4,'active',$5,$6,$6) RETURNING id",
     [ctx.pid, kind, moscowDay(ctx.now), !free, JSON.stringify(state), new Date(ctx.now)],
@@ -80,17 +101,22 @@ export async function startGame(ctx: Ctx, kind: GameKind) {
   return viewOf(g);
 }
 
-/** The game is over after the last attempt: the total pays. */
-async function finishZonk(ctx: Ctx, g: GameRow) {
+/** The game is over: the target reached (a win), or all attempts spent / given up (the small consolation). */
+async function finishZonk(ctx: Ctx, g: GameRow, gaveUp = false) {
   const s = g.state as ZonkState;
+  const def = zonkLevelDef(s.level ?? 1)!;
+  const target = s.target ?? def.target;
   const points = s.total ?? 0;
-  const pay = zonkPrize(points, g.paid);
-  const reward = isEmpty(pay) ? null : await grantReward(ctx, pay, `game:zonk:${points}`);
+  const won = !gaveUp && points >= target;
+  const pay = won ? def.win : def.fail;
+  const xp = won ? def.winXp : ZONK_FAIL_XP;
+  const reward = isEmpty(pay) ? null : await grantReward(ctx, pay, `game:zonk:${def.level}:${won ? "win" : "fail"}:${points}`);
+  await ctx.q.query("UPDATE players SET zonk_xp = zonk_xp + $2 WHERE id=$1", [ctx.pid, xp]);
   s.roll = [];
   g.status = "done";
-  g.result = points > 0
-    ? { outcome: "bank", title: `Итог: ${points} очков за ${ZONK_ROUNDS} попыток`, reward, points }
-    : { outcome: "zonk", title: "Ни одного очка за все попытки", reward: null, points: 0 };
+  g.result = won
+    ? { outcome: "win", title: `Уровень ${def.level} пройден: ${points} из ${target}`, reward, points, won, xp }
+    : { outcome: gaveUp ? "gave_up" : points > 0 ? "short" : "zonk", title: gaveUp ? `Сдался на ${points} из ${target}` : `Не хватило: ${points} из ${target}`, reward, points, won, xp };
   await save(ctx, g);
 }
 
@@ -123,6 +149,7 @@ export async function zonkMove(ctx: Ctx, pick: number[], then: "roll" | "bank") 
   const kept = idx.map((i) => s.roll[i]);
   const pts = zonkScore(kept);
   if (pts === null) throw new GameError("bad_pick", "Откладывать можно только очковые кости");
+  if (then === "bank" && s.turn + pts < ZONK_BANK_MIN) throw new GameError("bank_min", `Сохранить можно от ${ZONK_BANK_MIN} очков — бросай дальше`);
   s.turn += pts;
   s.history.push({ kept, points: pts });
   s.left -= kept.length;
@@ -131,7 +158,9 @@ export async function zonkMove(ctx: Ctx, pick: number[], then: "roll" | "bank") 
     s.total = (s.total ?? 0) + s.turn;
     s.last = { points: s.turn, zonk: false };
     s.scores = [...(s.scores ?? []), s.last];
-    await nextZonkRound(ctx, g);
+    // the target reached: the game ends at once with the win
+    if ((s.total ?? 0) >= (s.target ?? zonkLevelDef(s.level ?? 1)!.target)) await finishZonk(ctx, g);
+    else await nextZonkRound(ctx, g);
   } else {
     s.roll = Array.from({ length: s.left }, () => die(ctx.rng));
     if (!zonkHasScore(s.roll)) {
@@ -140,6 +169,14 @@ export async function zonkMove(ctx: Ctx, pick: number[], then: "roll" | "bank") 
       await nextZonkRound(ctx, g);
     } else await save(ctx, g);
   }
+  return viewOf(g);
+}
+
+/** «Сдаться»: the game ends now as not passed (the consolation and 1 xp). */
+export async function zonkGiveUp(ctx: Ctx) {
+  const g = await activeGame(ctx.q, ctx.pid, "zonk");
+  if (!g) throw new GameError("no_game", "Партия не начата");
+  await finishZonk(ctx, g, true);
   return viewOf(g);
 }
 
@@ -234,34 +271,93 @@ async function pokerPlaysToday(q: Queryable, pid: number, now: number) {
   return Number(r?.n ?? 0);
 }
 
-/** hands left today, the price, the poker experience and level */
+interface PokerState { cards: Card[]; deck: Card[]; swaps: number; swapped: number[] }
+
+async function activePoker(q: Queryable, pid: number) {
+  const [g] = await q.query<{ id: number; state: PokerState }>("SELECT id, state FROM games WHERE player_id=$1 AND kind='poker' AND status='active' ORDER BY id DESC LIMIT 1", [pid]);
+  return g ?? null;
+}
+/** a hand still waiting for its swaps: the cards, the swaps left and what they make now */
+function pokerDrawView(id: number, st: PokerState) {
+  const { hand, used } = pokerHand(st.cards);
+  return { id, cards: st.cards, swapsLeft: st.swaps, swapped: st.swapped, hand, used };
+}
+
+/** hands left today, the price, the poker experience and level, the swaps the level gives, a hand not finished yet */
 export async function pokerView(q: Queryable, pid: number, now: number) {
   const [p] = await q.query<{ poker_xp: number }>("SELECT poker_xp FROM players WHERE id=$1", [pid]);
   const xp = Number(p?.poker_xp ?? 0);
   const played = await pokerPlaysToday(q, pid, now);
-  return { left: Math.max(0, POKER_RULES.perDay - played), perDay: POKER_RULES.perDay, price: POKER_RULES.price, xp, ...pokerLevel(xp) };
+  const lv = pokerLevel(xp);
+  const open = await activePoker(q, pid);
+  return { left: Math.max(0, POKER_RULES.perDay - played), perDay: POKER_RULES.perDay, price: POKER_RULES.price, xp, ...lv, cheats: pokerCheats(lv.level), active: open ? pokerDrawView(open.id, open.state) : null };
 }
 
-/** One paid hand: five cards at once, the combination pays (more with the poker level) and gives poker xp. */
-export async function playPoker(ctx: Ctx) {
-  // one hand at a time per player, so the daily limit holds
-  const [p] = await ctx.q.query<{ poker_xp: number }>("SELECT poker_xp FROM players WHERE id=$1 FOR UPDATE", [ctx.pid]);
-  if ((await pokerPlaysToday(ctx.q, ctx.pid, ctx.now)) >= POKER_RULES.perDay) throw new GameError("poker_limit", `На сегодня все ${POKER_RULES.perDay} раздач сыграны`);
-  await takeMoney(ctx, POKER_RULES.price.currency, POKER_RULES.price.amount, "game:poker");
-  const deck = shuffled(ctx.rng);
-  const cards = deck.slice(0, 5);
+/** The hand is counted: the combination pays (more with the poker level) and gives poker xp. */
+async function settlePoker(ctx: Ctx, gameId: number | null, cards: Card[], swapped: number[]) {
+  const [p] = await ctx.q.query<{ poker_xp: number }>("SELECT poker_xp FROM players WHERE id=$1", [ctx.pid]);
   const { hand, used } = pokerHand(cards);
   const def = pokerHandDef(hand);
   const before = pokerLevel(Number(p?.poker_xp ?? 0));
   const pay = pokerPay(hand, before.level);
   const reward = isEmpty(pay) ? null : await grantReward(ctx, pay, `game:poker:${hand}`);
   const [u] = await ctx.q.query<{ poker_xp: number }>("UPDATE players SET poker_xp = poker_xp + $2 WHERE id=$1 RETURNING poker_xp", [ctx.pid, def.xp]);
-  const xp = Number(u.poker_xp);
-  const after = pokerLevel(xp);
+  const after = pokerLevel(Number(u.poker_xp));
   const result: GameResult = { outcome: hand, title: def.name, reward };
-  await ctx.q.query(
-    "INSERT INTO games (player_id, kind, day, paid, status, state, result, created_at, updated_at) VALUES ($1,'poker',$2,true,'done',$3,$4,$5,$5)",
-    [ctx.pid, moscowDay(ctx.now), JSON.stringify({ cards }), JSON.stringify(result), new Date(ctx.now)],
+  if (gameId === null) {
+    await ctx.q.query(
+      "INSERT INTO games (player_id, kind, day, paid, status, state, result, created_at, updated_at) VALUES ($1,'poker',$2,true,'done',$3,$4,$5,$5)",
+      [ctx.pid, moscowDay(ctx.now), JSON.stringify({ cards }), JSON.stringify(result), new Date(ctx.now)],
+    );
+  } else {
+    await ctx.q.query("UPDATE games SET status='done', state=$2, result=$3, updated_at=$4 WHERE id=$1", [gameId, JSON.stringify({ cards, swapped }), JSON.stringify(result), new Date(ctx.now)]);
+  }
+  return { kind: "poker" as const, phase: "done" as const, cards, swapped, swapsLeft: 0, hand, used, title: def.name, reward, gainedXp: def.xp, levelUp: after.level > before.level, poker: await pokerView(ctx.q, ctx.pid, ctx.now) };
+}
+
+/**
+ * One paid hand: five cards at once. From poker level 20 the hand waits for the swaps (poker_swap / poker_stand);
+ * below it the combination is counted right away.
+ */
+export async function playPoker(ctx: Ctx) {
+  // one hand at a time per player, so the daily limit holds
+  const [p] = await ctx.q.query<{ poker_xp: number }>("SELECT poker_xp FROM players WHERE id=$1 FOR UPDATE", [ctx.pid]);
+  if (await activePoker(ctx.q, ctx.pid)) throw new GameError("poker_open", "Сначала доиграй раздачу");
+  if ((await pokerPlaysToday(ctx.q, ctx.pid, ctx.now)) >= POKER_RULES.perDay) throw new GameError("poker_limit", `На сегодня все ${POKER_RULES.perDay} раздач сыграны`);
+  await takeMoney(ctx, POKER_RULES.price.currency, POKER_RULES.price.amount, "game:poker");
+  const deck = shuffled(ctx.rng);
+  const cards = deck.slice(0, 5);
+  const swaps = pokerCheats(pokerLevel(Number(p?.poker_xp ?? 0)).level);
+  if (swaps <= 0) return settlePoker(ctx, null, cards, []);
+  const st: PokerState = { cards, deck: deck.slice(5, 5 + swaps), swaps, swapped: [] };
+  const [row] = await ctx.q.query<{ id: number }>(
+    "INSERT INTO games (player_id, kind, day, paid, status, state, created_at, updated_at) VALUES ($1,'poker',$2,true,'active',$3,$4,$4) RETURNING id",
+    [ctx.pid, moscowDay(ctx.now), JSON.stringify(st), new Date(ctx.now)],
   );
-  return { kind: "poker", cards, hand, used, title: def.name, reward, gainedXp: def.xp, levelUp: after.level > before.level, poker: await pokerView(ctx.q, ctx.pid, ctx.now) };
+  return { kind: "poker" as const, phase: "draw" as const, ...pokerDrawView(row.id, st), poker: await pokerView(ctx.q, ctx.pid, ctx.now) };
+}
+
+/** Шулерство: the card at `index` goes, the next one from the deck takes its place. The last swap counts the hand. */
+export async function pokerSwap(ctx: Ctx, index: number) {
+  await ctx.q.query("SELECT id FROM players WHERE id=$1 FOR UPDATE", [ctx.pid]);
+  const g = await activePoker(ctx.q, ctx.pid);
+  if (!g) throw new GameError("no_game", "Раздача не начата");
+  const st = g.state;
+  if (!Number.isInteger(index) || index < 0 || index >= st.cards.length) throw new GameError("bad_card", "Выбери карту");
+  if (st.swaps <= 0 || !st.deck.length) throw new GameError("no_swaps", "Замен больше нет");
+  st.cards = st.cards.map((c, i) => (i === index ? st.deck[0] : c));
+  st.deck = st.deck.slice(1);
+  st.swaps -= 1;
+  st.swapped = [...st.swapped, index];
+  if (st.swaps <= 0) return settlePoker(ctx, g.id, st.cards, st.swapped);
+  await ctx.q.query("UPDATE games SET state=$2, updated_at=$3 WHERE id=$1", [g.id, JSON.stringify(st), new Date(ctx.now)]);
+  return { kind: "poker" as const, phase: "draw" as const, ...pokerDrawView(g.id, st), poker: await pokerView(ctx.q, ctx.pid, ctx.now) };
+}
+
+/** Keep the cards as they are: the hand is counted. */
+export async function pokerStand(ctx: Ctx) {
+  await ctx.q.query("SELECT id FROM players WHERE id=$1 FOR UPDATE", [ctx.pid]);
+  const g = await activePoker(ctx.q, ctx.pid);
+  if (!g) throw new GameError("no_game", "Раздача не начата");
+  return settlePoker(ctx, g.id, g.state.cards, g.state.swapped);
 }

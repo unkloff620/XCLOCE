@@ -155,6 +155,8 @@ export type Edit =
   | { op: "set_item"; item: string; qty: number }
   | { op: "add_item"; item: string; delta: number }
   | { op: "set_xp"; value: number }
+  | { op: "set_poker_xp"; value: number }
+  | { op: "set_zonk_xp"; value: number }
   | { op: "set_energy"; value: number }
   | { op: "set_talents"; value: number }
   | { op: "set_talent"; weapon: string; branch: string; level: number }
@@ -162,7 +164,7 @@ export type Edit =
   | { op: "ban"; reason: string }
   | { op: "unban" }
   | { op: "reset" };
-export const EDIT_OPS = ["set_money", "set_item", "add_item", "set_xp", "set_energy", "set_talents", "set_talent", "set_name", "ban", "unban", "reset"] as const;
+export const EDIT_OPS = ["set_money", "set_item", "add_item", "set_xp", "set_poker_xp", "set_zonk_xp", "set_energy", "set_talents", "set_talent", "set_name", "ban", "unban", "reset"] as const;
 
 /**
  * Everything a player has earned, keyed by player_id. The reset wipes these and gives the starting kit again.
@@ -254,6 +256,16 @@ export async function edit(db: Db, adminTg: number, pid: number, e: Edit) {
         await q.query("UPDATE players SET xp=$2 WHERE id=$1", [pid, to]);
         await ledgerRow(q, pid, "xp", "xp", to - n(p.xp), adminTg);
         info = { from: n(p.xp), to };
+        break;
+      }
+      case "set_poker_xp":
+      case "set_zonk_xp": {
+        const col = e.op === "set_poker_xp" ? "poker_xp" : "zonk_xp";
+        const to = wholeIn(e.value, 0, 1e9, e.op === "set_poker_xp" ? "Опыт покера" : "Опыт зонка");
+        const from = n((p as unknown as Record<string, unknown>)[col]);
+        await q.query(`UPDATE players SET ${col}=$2 WHERE id=$1`, [pid, to]);
+        await ledgerRow(q, pid, "xp", col, to - from, adminTg);
+        info = { from, to };
         break;
       }
       case "set_energy": {

@@ -12,7 +12,7 @@
  * A tail sways behind the body; the far arm of a boss listed in BEHIND is drawn behind the body. Arms in three pieces
  * (shoulder → forearm at the elbow → fist at the wrist) box: see screens.css "Мугонатор".
  */
-import type { CSSProperties } from "react";
+import { useEffect, useRef, type CSSProperties, type RefObject } from "react";
 import { BOSS_RIGS } from "./boss-rig-data.ts";
 
 type Part = { x: number; y: number; w: number; h: number; pivot?: readonly number[]; frames?: number };
@@ -64,8 +64,37 @@ export function hasBossRig(id: string): boolean {
 /** HP share (0..1) below which the beaten look is shown. */
 export const BEATEN_BELOW = 0.5;
 
+/** how much slower a dazed boss moves (below half HP): breath, head, fists — all at this share of their speed */
+const DAZED_RATE = 0.45;
+
+/**
+ * Below half HP the boss is dazed — drunk, beaten, in shock: every idle motion inside the rig runs slower, and the whole
+ * boss sways from side to side (class "dazed", CSS). Hit reactions (punch, ouch) keep their speed so a hit still lands.
+ * CSS animations restart whenever a class changes, so the rate is put back on a short timer.
+ */
+export function useDazed(ref: RefObject<Element | null>, on: boolean) {
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof el.getAnimations !== "function") return;
+    const apply = (rate: number) => {
+      for (const a of el.getAnimations({ subtree: true })) {
+        const name = (a as CSSAnimation).animationName ?? "";
+        if (name === "boss-dazed" || /punch|hit|ouch|strike|beaten-in/.test(name)) continue;
+        if (a.playbackRate !== rate) a.playbackRate = rate;
+      }
+    };
+    if (!on) { apply(1); return; }
+    apply(DAZED_RATE);
+    const t = setInterval(() => apply(DAZED_RATE), 400);
+    return () => { clearInterval(t); apply(1); };
+  }, [ref, on]);
+}
+
 export function BossRig({ id: baseId, hpShare = 1 }: { id: string; hpShare?: number }) {
   const id = hpShare < BEATEN_BELOW && `${baseId}-beaten` in BOSS_RIGS ? `${baseId}-beaten` : baseId;
+  const dazed = hpShare < BEATEN_BELOW;
+  const svgRef = useRef<SVGSVGElement>(null);
+  useDazed(svgRef, dazed);
   const rig = BOSS_RIGS[id];
   if (!rig) return null;
   const P = rig.parts;
@@ -131,7 +160,7 @@ export function BossRig({ id: baseId, hpShare = 1 }: { id: string; hpShare?: num
   const maskId = `br-eyes-${id}`;
   // bosses with a full face (Кедр): pupils glance around, brows and mouth change when he is hit (class "ouch" on the arena)
   return (
-    <svg key={id} className={`boss-rig rig-${baseId} ${id.endsWith("-beaten") ? "beaten" : ""}`} viewBox={`0 0 ${rig.w} ${rig.h}`} width="100%" height="100%" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+    <svg key={id} ref={svgRef} className={`boss-rig rig-${baseId} ${id.endsWith("-beaten") ? "beaten" : ""} ${dazed ? "dazed" : ""}`} viewBox={`0 0 ${rig.w} ${rig.h}`} width="100%" height="100%" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
       {frameCss && <style>{frameCss}</style>}
       <g className="br-breath" style={{ transformOrigin: `${rig.w / 2}px ${rig.h}px`, transformBox: "view-box" }}>
         {P.tail && <g className="br-tail" style={origin("tail")}>{img("tail")}</g>}

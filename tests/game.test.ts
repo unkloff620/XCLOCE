@@ -1174,13 +1174,18 @@ describe("yard mini games", () => {
     expect(pokerHand([c(1, 0), c(2, 0), c(3, 0), c(4, 0), c(5, 0)]).hand).toBe("sflush");
     expect(pokerHand([c(11, 0), c(12, 1), c(13, 2), c(1, 3), c(2, 0)]).hand).toBe("high"); // no wrap-around
     expect(pokerHand([c(7, 0), c(7, 1), c(9, 2), c(2, 3), c(4, 0)]).used).toEqual([0, 1]);
+    const { pokerCheats, pokerXpFor } = await import("../src/content/games.ts");
     expect(pokerLevel(0).level).toBe(0);
+    expect(pokerLevel(10).level).toBe(1);
     expect(pokerLevel(20).level).toBe(1);
-    expect(pokerLevel(59).level).toBe(1);
-    expect(pokerLevel(60).level).toBe(2);
-    expect(pokerLevel(1e9)).toMatchObject({ level: 20, to: null });
+    expect(pokerLevel(21).level).toBe(2);
+    expect(pokerXpFor(20)).toBe(390);
+    expect(pokerLevel(1e9)).toMatchObject({ level: 100, to: null });
+    expect([0, 19, 20, 49, 50, 99, 100].map(pokerCheats)).toEqual([0, 0, 1, 1, 2, 2, 3]);
     expect(pokerPay("pair", 0).currencies?.USD).toBe(2);
     expect(pokerPay("pair", 10).currencies?.USD).toBe(2.3);
+    // the money bonus stops at level 20
+    expect(pokerPay("pair", 80).currencies?.USD).toBe(2.6);
     expect(pokerPay("high", 5)).toEqual({});
   });
 
@@ -1205,6 +1210,33 @@ describe("yard mini games", () => {
     expect(next.state.poker.left).toBe(19);
   });
 
+  it("poker: from level 20 a card on the table can be swapped (шулерство), the last swap counts the hand", async () => {
+    const { pokerXpFor } = await import("../src/content/games.ts");
+    const p = await newPlayer(db);
+    await setMoney(db, p, "USD", 100);
+    await db.query("UPDATE players SET poker_xp=$2 WHERE id=$1", [p, pokerXpFor(50)]);
+    const d = await act(db, p, "poker_play", {}, T0, always(0.37));
+    expect(d.result).toMatchObject({ phase: "draw", swapsLeft: 2 });
+    expect(d.state.poker.active).toMatchObject({ swapsLeft: 2 });
+    // no second hand while this one waits
+    await expect(act(db, p, "poker_play", {}, T0)).rejects.toMatchObject({ code: "poker_open" });
+    const usd = await wallet(db, p, "USD");
+    const s1 = await act(db, p, "poker_swap", { index: 4 }, T0, always(0.37));
+    expect(s1.result).toMatchObject({ phase: "draw", swapsLeft: 1, swapped: [4] });
+    expect(s1.result.cards[4]).not.toEqual(d.result.cards[4]);
+    expect(s1.result.cards.slice(0, 4)).toEqual(d.result.cards.slice(0, 4));
+    expect(await wallet(db, p, "USD")).toBe(usd);
+    const s2 = await act(db, p, "poker_swap", { index: 0 }, T0, always(0.37));
+    expect(s2.result).toMatchObject({ phase: "done", swapped: [4, 0] });
+    expect(s2.state.poker.active).toBeNull();
+    await expect(act(db, p, "poker_swap", { index: 0 }, T0)).rejects.toMatchObject({ code: "no_game" });
+    // stand keeps the cards
+    const d2 = await act(db, p, "poker_play", {}, T0 + 1000, always(0.37));
+    const st = await act(db, p, "poker_stand", {}, T0 + 1000, always(0.37));
+    expect(st.result).toMatchObject({ phase: "done", cards: d2.result.cards, swapped: [] });
+    expect(st.result.poker.left).toBe(18);
+  });
+
   it("poker: not enough USD", async () => {
     const p = await newPlayer(db);
     await setMoney(db, p, "USD", 2);
@@ -1227,25 +1259,36 @@ describe("yard mini games", () => {
     expect(zonkHasScore([2, 2, 2, 3])).toBe(true);
   });
 
-  it("zonk: 10 attempts, each keeps scoring dice and rolls or writes its points down; the total pays rubles in the free game", async () => {
+  it("zonk: levels — reach the target in 10 attempts; save from 300 points; win pays, a miss or giving up gives the consolation", async () => {
+    const { ZONK_LEVELS } = await import("../src/content/games.ts");
     const p = await newPlayer(db);
-    // rng 0 → every die shows 1: six ones
-    const g = await act(db, p, "game_start", { game: "zonk" }, T0, always(0));
-    expect(g.result.roll).toEqual([1, 1, 1, 1, 1, 1]);
+    // rng 0 → every die shows 1: six ones. The first level-1 game of the day is free
+    const g = await act(db, p, "game_start", { game: "zonk", level: 1 }, T0, always(0));
+    expect(g.result).toMatchObject({ roll: [1, 1, 1, 1, 1, 1], level: 1, target: 4000, paid: false });
     await expect(act(db, p, "zonk_move", { pick: [0, 0], then: "roll" }, T0, always(0))).rejects.toMatchObject({ code: "bad_pick" });
+    // one die (100) is not enough to save
+    await expect(act(db, p, "zonk_move", { pick: [0], then: "bank" }, T0, always(0))).rejects.toMatchObject({ code: "bank_min" });
     const rub = await wallet(db, p, "RUB");
-    // 10 attempts: each writes 1000 down; the game ends after the 10th, the total pays
     let b = await act(db, p, "zonk_move", { pick: [0, 1, 2], then: "bank" }, T0, always(0));
     expect(b.result).toMatchObject({ status: "active", round: 2, rounds: 10, total: 1000, last: { points: 1000, zonk: false } });
-    for (let i = 2; i <= 10; i++) b = await act(db, p, "zonk_move", { pick: [0, 1, 2], then: "bank" }, T0, always(0));
-    expect(b.result).toMatchObject({ status: "done", total: 10_000, result: { outcome: "bank", points: 10_000 } });
-    expect(b.result.scores).toHaveLength(10);
-    expect(b.result.scores[0]).toEqual({ points: 1000, zonk: false });
-    // 1000 points = 50 RUB in the free game
-    expect(await wallet(db, p, "RUB")).toBe(rub + 500);
-    // the second game today costs 2 USD
-    await setMoney(db, p, "USD", 1);
-    await expect(act(db, p, "game_start", { game: "zonk" }, T0 + M)).rejects.toMatchObject({ code: "no_money" });
+    for (let i = 2; i <= 4; i++) b = await act(db, p, "zonk_move", { pick: [0, 1, 2], then: "bank" }, T0, always(0));
+    // 4000 reached after the 4th attempt: the game ends at once with the win
+    expect(b.result).toMatchObject({ status: "done", total: 4000, result: { outcome: "win", won: true, points: 4000, xp: 10 } });
+    expect(await wallet(db, p, "RUB")).toBe(rub + (ZONK_LEVELS[0].win.currencies?.RUB ?? 0));
+    expect(b.state.games.zonk).toMatchObject({ xp: 10, level: 0, record: { points: 4000, playerId: p, day: "today" } });
+    // the second level-1 game today costs rubles
+    await setMoney(db, p, "RUB", 100);
+    await expect(act(db, p, "game_start", { game: "zonk", level: 1 }, T0 + M)).rejects.toMatchObject({ code: "no_money" });
+    // level 2 costs dollars; giving up ends it as not passed: rubles of consolation and 1 xp
+    await setMoney(db, p, "USD", 3);
+    const g2 = await act(db, p, "game_start", { game: "zonk", level: 2 }, T0 + M, always(0));
+    expect(g2.result).toMatchObject({ level: 2, target: 5500, paid: true });
+    expect(await wallet(db, p, "USD")).toBe(0);
+    const up = await act(db, p, "zonk_give_up", {}, T0 + M, always(0));
+    expect(up.result).toMatchObject({ status: "done", result: { outcome: "gave_up", won: false, xp: 1 } });
+    expect(await wallet(db, p, "RUB")).toBe(100 + (ZONK_LEVELS[1].fail.currencies?.RUB ?? 0));
+    expect(up.state.games.zonk.xp).toBe(11);
+    await expect(act(db, p, "game_start", { game: "zonk", level: 5 }, T0 + M)).rejects.toMatchObject({ code: "bad_level" });
   });
 
   it("upgrader: ×2/×4/×8 or 15/30/70%; a win gives an upgraded thing worth stake × multiplier, sold for that price", async () => {
