@@ -23,12 +23,12 @@ const KEY = "xc-first-steps";
 interface Aim { at: (path: string) => boolean; sel: string }
 interface Step { id: string; title: string; pic: string; done: string[]; aims: Aim[] }
 
-const anyPath = () => true;
-const navTo = (label: string): Aim => ({ at: anyPath, sel: `.nav a[aria-label="${label}"]` });
+/** the bottom-bar button to the screen — not while already on it (then the screen's own aims or nothing) */
+const navTo = (label: string, path: string): Aim => ({ at: (p) => p !== path && !p.startsWith(path + "/"), sel: `.nav a[aria-label="${label}"]` });
 const STEPS: Step[] = [
   {
     id: "yard", title: "Подбери находку", pic: "/assets/items/lost-wallet.webp", done: ["yard_pick"],
-    aims: [{ at: (p) => p === "/yard", sel: ".yard-item" }, navTo("Двор")],
+    aims: [{ at: (p) => p === "/yard", sel: ".yard-item" }, { at: (p) => p === "/yard", sel: ".yard-timer" }, navTo("Двор", "/yard")],
   },
   {
     id: "task", title: "Выполни задание", pic: "/assets/yard/court-entrance.webp", done: ["task"],
@@ -36,7 +36,7 @@ const STEPS: Step[] = [
       { at: (p) => p.startsWith("/locations/"), sel: ".task-go:not([disabled])" },
       { at: (p) => p === "/locations", sel: ".loc-card.current" },
       { at: (p) => p === "/yard", sel: ".yard-entrance" },
-      navTo("Двор"),
+      navTo("Двор", "/yard"),
     ],
   },
   {
@@ -45,7 +45,7 @@ const STEPS: Step[] = [
       { at: (p) => p.startsWith("/bosses/"), sel: ".weapon:not(.empty):not(.cd)" },
       { at: (p) => p.startsWith("/bosses/"), sel: ".door-leaf:not([disabled])" },
       { at: (p) => p === "/bosses", sel: '.bcard[href="/bosses/datsik"]' },
-      navTo("Боссы"),
+      navTo("Боссы", "/bosses"),
     ],
   },
   {
@@ -54,7 +54,7 @@ const STEPS: Step[] = [
       { at: (p) => p === "/yard", sel: ".zb-lvl:not([disabled])" },
       { at: (p) => p === "/yard", sel: '.game-tile[data-game="zonk"]' },
       { at: (p) => p === "/yard", sel: ".yard-table" },
-      navTo("Двор"),
+      navTo("Двор", "/yard"),
     ],
   },
 ];
