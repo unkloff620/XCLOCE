@@ -186,7 +186,7 @@ export const YARD_SPOTS = [
   { x: 14, y: 81, r: -14 },
   { x: 36, y: 82, r: 9 },
   { x: 57, y: 80, r: 18 },
-  { x: 80, y: 81, r: -8 },
+  { x: 78, y: 77, r: -8 }, // clear of the «Игроки» tab on the right
   { x: 56, y: 73, r: 12 },
 ];
 
