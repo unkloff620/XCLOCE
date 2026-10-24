@@ -2598,3 +2598,5 @@ button.bjt-stack { cursor: pointer; }
 .pkt .pcard.img { display: block; width: auto; height: 100%; aspect-ratio: 114 / 175; margin: 0 auto; border-radius: 1.2cqw; }
 .pkt .pkt-slot.can .pcard.img { box-shadow: 0 0.6cqw 0 rgba(0, 0, 0, 0.35), 0 0 0 0.45cqw rgba(255, 224, 138, 0.6); }
 .pkt .pkt-slot.used .pcard.img { box-shadow: 0 0 0 0.5cqw #ffd54a, 0 0 2.4cqw rgba(255, 213, 74, 0.7); }
+/* the drawn back: the old striped backs' shorthand must not zoom the picture */
+.pcard.img.back, .bjc.img.back, .pkt .pcard.img.back { background-color: transparent; background-repeat: no-repeat; background-position: center; background-size: 100% 100%; border: 0; }
