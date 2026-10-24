@@ -1621,6 +1621,24 @@ describe("the clan boss of the week", () => {
   });
 });
 
+describe("авторитет локации", () => {
+  it("every step adds a third of its authority (rounded) to the location; the one with the most is the leader", async () => {
+    const a = await newPlayer(db), b = await newPlayer(db);
+    await setEnergy(a, 500, T0);
+    await setEnergy(b, 500, T0);
+    const t = LOCATIONS[0].tasks[0];
+    const r = await act(db, a, "task", { taskId: t.id }, T0);
+    expect(r.result.locRep).toBe(Math.round(r.result.step.xp / 3));
+    for (let i = 0; i < 2; i++) await act(db, b, "task", { taskId: t.id }, T0);
+    const { locationsView } = await import("../src/server/systems/locations.ts");
+    const v = await locationsView(db, a);
+    const os = v.find((x) => x.id === "openspace")!;
+    expect(os.rep).toBe(r.result.locRep);
+    expect(os.leader).toMatchObject({ id: b, rep: r.result.locRep * 2 });
+    expect(v.find((x) => x.id === "market")!.rep).toBe(0);
+  });
+});
+
 describe("zonk duels", () => {
   it("call, accept, both play: a draw gives the stakes back; a duel left unplayed goes to the one who played", async () => {
     const a = await newPlayer(db), b = await newPlayer(db);

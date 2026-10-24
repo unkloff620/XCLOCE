@@ -3,6 +3,7 @@
  * and v2-000 drops every table of the old game: the new game starts from a clean database.
  */
 import { ACHIEVEMENTS } from "../content/achievements.ts";
+import { LOCATIONS, locRep } from "../content/locations.ts";
 
 const OLD_TABLES = [
   "actions", "balances", "battles", "boss_damage", "boss_defeats", "boss_instances", "boss_progress", "clan_members", "clan_requests",
@@ -888,5 +889,26 @@ CREATE INDEX IF NOT EXISTS duels_to ON duels (to_id, status);
     // нычки for spent energy: the energy spent in tasks since the last find (systems/locations.ts, a sure find at STASH_PITY)
     id: "v2-050-stash-meter",
     sql: `ALTER TABLE players ADD COLUMN IF NOT EXISTS stash_energy INT NOT NULL DEFAULT 0;`,
+  },
+  {
+    // авторитет локации (systems/locations.ts): a third of every task step's authority, per player and location.
+    // Filled back from the ledger: every step paid rubles with the reason task:<id>.
+    id: "v2-051-location-rep",
+    sql: `
+CREATE TABLE IF NOT EXISTS location_rep (
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  location_id TEXT NOT NULL,
+  rep BIGINT NOT NULL DEFAULT 0,
+  PRIMARY KEY (player_id, location_id)
+);
+CREATE INDEX IF NOT EXISTS location_rep_top ON location_rep (location_id, rep DESC);
+INSERT INTO location_rep (player_id, location_id, rep)
+SELECT l.player_id, m.loc, SUM(m.rep)
+FROM ledger l JOIN (VALUES ${LOCATIONS.flatMap((loc) => loc.tasks.map((t) => `('task:${t.id}', '${loc.id}', ${locRep(t.stepReward.xp ?? 0)})`)).join(", ")}) AS m(reason, loc, rep)
+  ON l.reason = m.reason
+WHERE l.kind = 'currency' AND l.key = 'RUB' AND l.delta > 0
+GROUP BY l.player_id, m.loc
+ON CONFLICT (player_id, location_id) DO NOTHING;
+`,
   },
 ];

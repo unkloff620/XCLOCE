@@ -3,11 +3,12 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { liveEnergy, useGame, useNow } from "../store.tsx";
 import { api, type Granted } from "../api.ts";
-import { LOCATIONS, locationById, taskOpen } from "../../content/locations.ts";
+import { LOCATIONS, locRep, locationById, taskOpen } from "../../content/locations.ts";
 import type { Reward } from "../../content/rewards.ts";
 import { LOCATION_ART, LocationScene } from "../art/scenes.tsx";
 import { Icon } from "../art/icons.tsx";
-import { Bar, Empty, Modal, RewardChips } from "../ui.tsx";
+import { Avatar, Bar, Empty, Modal, RewardChips } from "../ui.tsx";
+import { full } from "../format.ts";
 import { haptic } from "../telegram.ts";
 import { Help } from "../help.tsx";
 import { sfx } from "../sound.ts";
@@ -33,7 +34,33 @@ function StashFound({ id, onClose }: { id: string; onClose: () => void }) {
   );
 }
 
-interface LocRow { id: string; unlocked: boolean; done: number; total: number; clears: number; tasks: { id: string; steps: number; need: number }[]; nextReward: Reward }
+interface LocLeader { id: number; name: string; photo: string | null; rep: number }
+interface LocRow {
+  id: string; unlocked: boolean; done: number; total: number; clears: number; tasks: { id: string; steps: number; need: number }[]; nextReward: Reward;
+  /** my authority in this location, and who has the most here */
+  rep: number; leader: LocLeader | null;
+}
+
+/** авторитет локации: a chip of its own (it piles up in the location only) */
+function LocRepChip({ v, size = 14 }: { v: number; size?: number }) {
+  return <span className="chip loc-rep" title="Авторитет локации"><Icon name="map" size={size} />+{full(v)}</span>;
+}
+
+/** the leader of a location over its picture: avatar with a crown, name and authority there */
+function LocLeaderBadge({ l, me }: { l: LocLeader; me: boolean }) {
+  return (
+    <span className={`loc-lead ${me ? "me" : ""}`} title={`Больше всех авторитета в локации: ${l.name}`}>
+      <span className="loc-lead-ava">
+        <Avatar name={l.name} photo={l.photo} size={44} />
+        <i className="loc-lead-crown" aria-hidden="true">👑</i>
+      </span>
+      <span className="loc-lead-txt">
+        <b className="ellipsis">{me ? "Ты" : l.name}</b>
+        <small className="num"><Icon name="map" size={11} />{full(l.rep)}</small>
+      </span>
+    </span>
+  );
+}
 
 interface StashMeter { energy: number; pity: number }
 
@@ -91,7 +118,7 @@ function ClaimedModal({ got, onClose }: { got: ClaimResult; onClose: () => void 
 
 export function LocationsScreen() {
   const { rows, load } = useLocations();
-  const { act, busy } = useGame();
+  const { state, act, busy } = useGame();
   const [got, setGot] = useState<ClaimResult | null>(null);
   const claim = async (locationId: string) => {
     const res = await act<ClaimResult>("location_claim", { locationId });
@@ -112,6 +139,7 @@ export function LocationsScreen() {
               <p>Энергия тратится только здесь: каждый шаг задания стоит энергии и даёт рубли и авторитет.</p>
               <p>Задания идут по очереди, как по карте: следующее открывается, когда выполнено предыдущее. Закрой все 5 заданий — на карточке появится кнопка «Забрать награду» (доллары и вещи), откроется следующая локация.</p>
               <p>Пройденную локацию можно повторить: награда за повтор — половина валюты и авторитета.</p>
+              <p><b>Авторитет локации</b>: каждый шаг задания даёт ещё и авторитет этой локации — треть от авторитета шага (50 → 17). Он копится только в своей локации и ни на что не тратится. У кого его больше всех, тот красуется на картинке локации с короной.</p>
               <p><b>Нычки</b> находятся за потраченную энергию: каждый шаг задания — шанс 1% за каждую ⚡ (шаг за 3 ⚡ — 3%, за 20 ⚡ — 20%). Не везёт — энергия копится в «нычкомере», и после {STASH_PITY} ⚡ без находки нычка выпадает наверняка. Чаще выпадают те, которых у тебя ещё нет. У каждой локации свои наборы по 4 нычки. Собери набор целиком и забери награду в достижениях «Нычки». Найденные лежат в инвентаре во вкладке «Нычки».</p>
               <p>Энергия: +1 каждые 5 минут до 50. Купить больше — нажми на энергию вверху.</p>
             </Help>
@@ -128,6 +156,7 @@ export function LocationsScreen() {
           const inner = (
             <>
               <LocationScene scene={l.scene} />
+              {!locked && r?.leader && <LocLeaderBadge l={r.leader} me={r.leader.id === state?.player.id} />}
               <div className="loc-body">
                 <div className="row" style={{ justifyContent: "space-between" }}>
                   <span className="tiny muted display">ЛОКАЦИЯ {l.order}</span>
@@ -136,7 +165,12 @@ export function LocationsScreen() {
                 </div>
                 <b className="display" style={{ fontSize: 18 }}>{locked ? "???" : l.name}</b>
                 <div className="small muted">{locked ? `Закрой «${LOCATIONS[l.order - 2]?.name}»` : l.subtitle}</div>
-                {!locked && <Blocks done={r?.done ?? 0} total={l.tasks.length} />}
+                {!locked && (
+                  <div className="row" style={{ justifyContent: "space-between", gap: 8 }}>
+                    <Blocks done={r?.done ?? 0} total={l.tasks.length} />
+                    <span className="loc-myrep" title="Твой авторитет в этой локации"><Icon name="map" size={14} /><b className="num">{full(r?.rep ?? 0)}</b></span>
+                  </div>
+                )}
               </div>
               {locked && <div className="loc-lock"><Icon name="lock" size={44} /></div>}
             </>
@@ -202,7 +236,7 @@ export function LocationScreen({ id }: { id: string }) {
   const [stash, setStash] = useState<string | null>(null);
   const [pick, setPick] = useState<string | null>(null);
   // "+36 ₽" flying up from the tapped stop
-  const [pops, setPops] = useState<{ key: number; i: number; text: string }[]>([]);
+  const [pops, setPops] = useState<{ key: number; i: number; text: string; rep: number }[]>([]);
   if (!loc) return <Empty>Такой локации нет</Empty>;
   const r = rows?.find((x) => x.id === id);
   const energy = state ? liveEnergy(state, now).energy : 0;
@@ -225,12 +259,12 @@ export function LocationScreen({ id }: { id: string }) {
       return;
     }
     haptic.tap();
-    const res = await act<{ steps: number; need: number; step: Granted; done: Granted | null; locationComplete: boolean; stash: string | null }>("task", { taskId: x.t.id }, (y) =>
+    const res = await act<{ steps: number; need: number; step: Granted; done: Granted | null; locationComplete: boolean; stash: string | null; locRep?: number }>("task", { taskId: x.t.id }, (y) =>
       y.stash ? null : y.done ? "Задание выполнено!" : null,
     );
     if (!res) return;
     const key = Date.now();
-    setPops((p) => [...p.slice(-4), { key, i: x.i, text: `+${res.step.currencies.RUB ?? 0} ₽` }]);
+    setPops((p) => [...p.slice(-4), { key, i: x.i, text: `+${res.step.currencies.RUB ?? 0} ₽`, rep: res.locRep ?? 0 }]);
     setTimeout(() => setPops((p) => p.filter((q) => q.key !== key)), 1100);
     if (res.stash) {
       // a stash found: a moment of its own
@@ -274,6 +308,14 @@ export function LocationScreen({ id }: { id: string }) {
         <span className="tiny display">ЛОКАЦИЯ {loc.order}</span>
         <b className="display">{loc.name}</b>
         <Blocks done={r?.done ?? 0} total={loc.tasks.length} />
+        <span className="lp-rep">
+          <span title="Твой авторитет в этой локации"><Icon name="map" size={14} />твой авторитет <b className="num">{full(r?.rep ?? 0)}</b></span>
+          {r?.leader && (
+            <span className="lp-rep-lead" title="Больше всех авторитета здесь">
+              👑 <Avatar name={r.leader.name} photo={r.leader.photo} size={18} /><i className="ellipsis">{r.leader.id === state?.player.id ? "ты" : r.leader.name}</i> <b className="num">{full(r.leader.rep)}</b>
+            </span>
+          )}
+        </span>
       </div>
       {r && !r.unlocked ? (
         <Empty>Локация закрыта. Сначала пройди предыдущую.</Empty>
@@ -333,7 +375,7 @@ export function LocationScreen({ id }: { id: string }) {
                   {x.done ? <i className="lp-tag ok">✓</i>
                     : x.open ? <i className="lp-tag num">{x.steps}/{x.t.steps}<em><Icon name="energy" size={11} />{x.t.energy}</em></i>
                     : <i className="lp-tag lock"><Icon name="lock" size={14} /></i>}
-                  {pops.filter((q) => q.i === x.i).map((q) => <b key={q.key} className="lp-pop num">{q.text}</b>)}
+                  {pops.filter((q) => q.i === x.i).map((q) => <b key={q.key} className="lp-pop num">{q.text}{q.rep > 0 && <em><Icon name="map" size={14} />+{q.rep}</em>}</b>)}
                 </button>
               );
             })}
@@ -345,13 +387,13 @@ export function LocationScreen({ id }: { id: string }) {
               <img src={`/assets/items/${icons[sel.i]}.webp`} alt="" draggable={false} />
             </span>
             <div className="grow col" style={{ gap: 4, minWidth: 0 }}>
-              <span className="tiny muted display">ЗАДАНИЕ {sel.i + 1}/{loc.tasks.length}{sel.open && !sel.done ? <> · шаг <Icon name="energy" size={11} />{sel.t.energy}</> : null}</span>
+              <span className="tiny muted display lp-card-k">ЗАДАНИЕ {sel.i + 1}/{loc.tasks.length}{sel.open && !sel.done ? <> · шаг <Icon name="energy" size={12} />{sel.t.energy}</> : null}</span>
               <b>{sel.t.title}</b>
               <span className="tiny muted">
                 {sel.done ? "Выполнено" : !sel.open ? `Откроется после «${tasks[sel.i - 1]?.t.title}»` : current?.t.id === sel.t.id ? "Жми на светящийся кружок — каждый шаг тратит энергию" : sel.t.flavor}
               </span>
               <Bar value={sel.steps} max={sel.t.steps} tone={sel.done ? "green" : "gold"} label={`${sel.steps}/${sel.t.steps}`} />
-              <span className="row" style={{ gap: 6, flexWrap: "wrap" }}><small className="tiny muted">за шаг</small><RewardChips r={sel.t.stepReward} size={13} /></span>
+              <span className="row" style={{ gap: 6, flexWrap: "wrap" }}><small className="tiny muted">за шаг</small><RewardChips r={sel.t.stepReward} size={13} /><LocRepChip v={locRep(sel.t.stepReward.xp ?? 0)} size={13} /></span>
             </div>
           </div>
           {energy < Math.min(...loc.tasks.map((t) => t.energy)) && (

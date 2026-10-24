@@ -2740,3 +2740,20 @@ button.zb-res { border: 0; color: inherit; font: inherit; cursor: pointer; backg
 .lp-stop.now.tired .lp-disc { filter: saturate(0.5) brightness(0.8); }
 .lp-pop { position: absolute; left: 50%; top: 0; z-index: 4; pointer-events: none; white-space: nowrap; font-size: 18px; font-weight: 900; color: #ffe066; text-shadow: 0 2px 0 #15100c, 0 0 8px rgba(0, 0, 0, 0.7); animation-name: lp-pop; animation-duration: 1.05s; animation-timing-function: ease-out; animation-fill-mode: forwards; }
 @keyframes lp-pop { from { transform: translate(-50%, 0) scale(0.8); opacity: 0; } 20% { opacity: 1; transform: translate(-50%, -14px) scale(1.1); } to { transform: translate(-50%, -48px) scale(1); opacity: 0; } }
+
+/* ── авторитет локации: the leader over the picture, my authority, its chip ── */
+.loc-lead { position: absolute; top: 8px; right: 8px; z-index: 2; display: flex; align-items: center; gap: 6px; max-width: 58%; padding: 4px 10px 4px 4px; border-radius: 30px; border: 2.5px solid var(--line); background: rgba(24, 16, 10, 0.82); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); box-shadow: 0 3px 0 var(--line), 0 0 14px rgba(255, 204, 51, 0.35); }
+.loc-lead.me { box-shadow: 0 3px 0 var(--line), 0 0 16px rgba(61, 220, 132, 0.55); }
+.loc-lead-ava { position: relative; flex: none; display: inline-flex; border-radius: 50%; box-shadow: 0 0 0 2.5px #ffc21a; }
+.loc-lead-crown { position: absolute; top: -13px; left: 50%; transform: translateX(-50%) rotate(-8deg); font-size: 17px; font-style: normal; line-height: 1; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.8)); }
+.loc-lead-txt { display: flex; flex-direction: column; min-width: 0; line-height: 1.1; }
+.loc-lead-txt b { font-size: 13px; color: #fff; }
+.loc-lead-txt small { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 900; color: #7fe3d0; }
+.loc-myrep { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 10px; background: rgba(60, 200, 180, 0.14); border: 1.5px solid rgba(127, 227, 208, 0.45); color: #7fe3d0; font-size: 13px; }
+.chip.loc-rep { color: #7fe3d0; border-color: rgba(127, 227, 208, 0.6); }
+.lp-rep { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 12px; margin-top: 2px; font-size: 12px; color: #d8f6ef; }
+.lp-rep > span { display: inline-flex; align-items: center; gap: 4px; }
+.lp-rep b { color: #7fe3d0; }
+.lp-rep-lead i { font-style: normal; font-weight: 800; max-width: 110px; }
+.lp-card-k { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+.lp-pop em { display: inline-flex; align-items: center; gap: 2px; margin-left: 6px; font-style: normal; color: #7fe3d0; }

@@ -1,7 +1,7 @@
 import { GameError, type Queryable } from "../db.ts";
 import { addItem, grantReward, ledger, spendEnergy, type Ctx, type Granted } from "../core.ts";
 import { STASH_MISSING_WEIGHT, STASH_PITY, STASH_SETS, stashChance, stashSetsByLocation } from "../../content/stashes.ts";
-import { LOCATIONS, locationById, taskById, taskOpen, type LocationDef } from "../../content/locations.ts";
+import { LOCATIONS, locRep, locationById, taskById, taskOpen, type LocationDef } from "../../content/locations.ts";
 import type { Reward } from "../../content/rewards.ts";
 
 /*
@@ -36,11 +36,18 @@ export async function stashMeter(q: Queryable, pid: number) {
 
 export async function locationsView(q: Queryable, pid: number) {
   const { steps, clears } = await progress(q, pid);
+  const mine = new Map((await q.query<{ location_id: string; rep: number }>("SELECT location_id, rep FROM location_rep WHERE player_id=$1", [pid])).map((r) => [r.location_id, Number(r.rep)]));
+  // the leader of every location: the most authority there
+  const leaders = new Map((await q.query<{ location_id: string; id: number; rep: number; name: string; photo: string | null }>(
+    `SELECT DISTINCT ON (r.location_id) r.location_id, p.id, r.rep, p.display_name AS name, p.photo_url AS photo
+     FROM location_rep r JOIN players p ON p.id = r.player_id WHERE p.banned_at IS NULL AND r.rep > 0
+     ORDER BY r.location_id, r.rep DESC, r.player_id`,
+  )).map((r) => [r.location_id, { id: r.id, name: r.name, photo: r.photo, rep: Number(r.rep) }]));
   return LOCATIONS.map((l) => {
     const tasks = l.tasks.map((t) => ({ id: t.id, steps: Math.min(t.steps, steps.get(t.id) ?? 0), need: t.steps }));
     const done = tasks.filter((t) => t.steps >= t.need).length;
     const n = clears.get(l.id) ?? 0;
-    return { id: l.id, unlocked: unlocked(l, clears), done, total: l.tasks.length, clears: n, tasks, nextReward: n > 0 ? repeatReward(l.reward) : l.reward };
+    return { id: l.id, unlocked: unlocked(l, clears), done, total: l.tasks.length, clears: n, tasks, nextReward: n > 0 ? repeatReward(l.reward) : l.reward, rep: mine.get(l.id) ?? 0, leader: leaders.get(l.id) ?? null };
   });
 }
 
@@ -75,6 +82,14 @@ export async function doTask(ctx: Ctx, taskId: string) {
   );
   const stepNow = have + 1;
   const stepGot = await grantReward(ctx, task.stepReward, `task:${task.id}`);
+  // авторитет локации: a third of the step's authority, kept in this location only
+  const rep = locRep(stepGot.xp);
+  if (rep > 0) {
+    await ctx.q.query(
+      "INSERT INTO location_rep (player_id, location_id, rep) VALUES ($1,$2,$3) ON CONFLICT (player_id, location_id) DO UPDATE SET rep = location_rep.rep + EXCLUDED.rep",
+      [ctx.pid, loc.id, rep],
+    );
+  }
   // нычки: the energy of this step is a chance; the energy spent without a find piles up to a sure find
   const [meter] = await ctx.q.query<{ stash_energy: number }>("UPDATE players SET stash_energy = stash_energy + $2 WHERE id=$1 RETURNING stash_energy", [ctx.pid, task.energy]);
   const sure = Number(meter?.stash_energy ?? 0) >= STASH_PITY;
@@ -92,7 +107,7 @@ export async function doTask(ctx: Ctx, taskId: string) {
   }
   await ctx.q.query("UPDATE player_stats SET task_steps = task_steps + 1 WHERE player_id=$1", [ctx.pid]);
   const doneCount = loc.tasks.filter((t) => (t.id === task.id ? stepNow : steps.get(t.id) ?? 0) >= t.steps).length;
-  return { taskId: task.id, steps: stepNow, need: task.steps, energyLeft, step: stepGot, done: doneGot, locationComplete: doneCount === loc.tasks.length, stash };
+  return { taskId: task.id, steps: stepNow, need: task.steps, energyLeft, step: stepGot, done: doneGot, locationComplete: doneCount === loc.tasks.length, stash, locRep: rep };
 }
 
 /** the stashes a location gives: its own sets; a location without sets gives from all of them */

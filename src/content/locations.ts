@@ -127,6 +127,14 @@ export const LOCATIONS: LocationDef[] = [
 export const locationById = (id: string) => LOCATIONS.find((l) => l.id === id);
 
 /**
+ * Авторитет локации: every task step also adds a third of its authority (rounded) to the player's authority in that
+ * location. It only piles up there — it is not spent and not added to the player's own authority. The one with the most
+ * in a location is shown on its card.
+ */
+export const LOC_REP_DIV = 3;
+export const locRep = (xp: number) => Math.round(xp / LOC_REP_DIV);
+
+/**
  * Tasks of a location open one by one: the first is open, the next one opens when all before it are done. A task the
  * player has already started (progress from before this rule) stays open.
  */
