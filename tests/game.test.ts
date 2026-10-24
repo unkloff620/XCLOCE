@@ -1247,10 +1247,10 @@ describe("yard mini games", () => {
     const day = new Date(T0 + 3 * H).toISOString().slice(0, 10);
     await db.query("INSERT INTO games (player_id, kind, day, paid, status, state, result, created_at, updated_at) VALUES ($1,'zonk',$2,false,'done','{}',$3,$4,$4)",
       [q, day, JSON.stringify({ points: 3500, won: false }), new Date(T0)]);
-    const next = await act(db, q, "equip", { item: "jeans" }, T0 + 24 * H);
+    const next = await act(db, q, "equip", { itemId: "jeans" }, T0 + 24 * H);
     expect(next.state.prizes.map((x: { title: string }) => x.title)).toEqual(["Рекорд дня в зонке: 3500 очков"]);
     // settled once: nobody gets it twice
-    const again = await act(db, p, "equip", { item: "jeans" }, T0 + 25 * H);
+    const again = await act(db, p, "equip", { itemId: "jeans" }, T0 + 25 * H);
     expect(again.state.prizes).toHaveLength(0);
   });
 
