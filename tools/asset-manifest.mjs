@@ -7,7 +7,7 @@ const ROOT = new URL("..", import.meta.url).pathname;
 const PUB = join(ROOT, "public");
 const files = [];
 // art kept for later updates, not used by any screen yet: not preloaded
-const SKIP = new Set(["assets/textures", "assets/chips"]);
+const SKIP = new Set(["assets/textures"]);
 const walk = (d) => {
   for (const f of readdirSync(d).sort()) {
     const p = join(d, f);

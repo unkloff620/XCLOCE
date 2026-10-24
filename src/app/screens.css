@@ -2586,3 +2586,15 @@ button.bjt-stack { cursor: pointer; }
 .yard-night { background: #1c2450; color: #c9d6ff; border-color: #3a4aa0; }
 .yard.tod-night .yard-obj > img:not(.yard-ring) { filter: brightness(0.72) saturate(0.85); }
 .yard.tod-day .yard-obj > img:not(.yard-ring) { filter: brightness(1.08) saturate(0.9); }
+
+/* blackjack: the drawn clay chips (public/assets/chips, the artist's set) instead of the flat coloured discs */
+.chp.v1, .chp.v5, .chp.v10, .chp.v25 { background-color: transparent; background-repeat: no-repeat; background-position: center; background-size: 100% 100%;
+  border: 0; color: transparent; text-shadow: none; box-shadow: 0 0.25cqw 0.35cqw rgba(0, 0, 0, 0.45); }
+.chp.v1 { background-image: url(/assets/chips/chip-1.webp); }
+.chp.v5 { background-image: url(/assets/chips/chip-5.webp); }
+.chp.v10 { background-image: url(/assets/chips/chip-10.webp); }
+.chp.v25 { background-image: url(/assets/chips/chip-25.webp); }
+.chp.big.v1, .chp.big.v5, .chp.big.v10, .chp.big.v25 { box-shadow: 0 3px 4px rgba(0, 0, 0, 0.5); }
+.chp.big.on.v1, .chp.big.on.v5, .chp.big.on.v10, .chp.big.on.v25 { box-shadow: 0 0 0 3px #ffd23f, 0 0 16px 4px rgba(255, 210, 63, 0.85); }
+/* my two side circles: «Пары» on the left (its result to the left), «21+3» on the right (result to the right) */
+.bj2 .bjt-side.big.side-pp .bjt-side-res { left: auto; right: calc(100% + 1.6cqw); }
