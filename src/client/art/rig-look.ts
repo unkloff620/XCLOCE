@@ -89,6 +89,27 @@ export const WEAR_FIT = {
     "y": 227.5,
     "w": 792,
     "h": 542
+  },
+  "jacket-komandate": {
+    "slot": "SHIRT",
+    "x": 90.5,
+    "y": 246.5,
+    "w": 812,
+    "h": 553
+  },
+  "pants-komandate": {
+    "slot": "PANTS",
+    "x": 73.0,
+    "y": 670.0,
+    "w": 861,
+    "h": 522
+  },
+  "sneakers-komandate": {
+    "slot": "SHOES",
+    "x": 61.5,
+    "y": 1130.5,
+    "w": 877,
+    "h": 231
   }
 } as const;
 export const SKIN_ORIGINAL = 1;
