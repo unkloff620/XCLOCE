@@ -798,4 +798,18 @@ ALTER TABLE players ADD COLUMN IF NOT EXISTS zonk_xp INT NOT NULL DEFAULT 0;
 CREATE INDEX IF NOT EXISTS games_kind_day ON games (kind, day, status);
 `,
   },
+  {
+    // Дацкоу's pass now comes from any own hit in a won fight. Newcomers who already beat him with less than 1% of his HP
+    // and so got no pass (Кедр stayed shut) get up to 3 passes — one per such claimed win — unless they reached Кедр.
+    id: "v2-045-datsik-keys",
+    sql: `
+INSERT INTO inventory (player_id, item_id, qty, source)
+SELECT f.player_id, 'key-datsik', LEAST(3, COUNT(*))::int, 'migration:datsik-keys'
+FROM fights f
+WHERE f.boss_id = 'datsik' AND f.status = 'won' AND f.my_damage > 0 AND f.reward IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM fights k WHERE k.player_id = f.player_id AND k.boss_id = 'kedr')
+GROUP BY f.player_id
+ON CONFLICT (player_id, item_id) DO UPDATE SET qty = GREATEST(inventory.qty, excluded.qty);
+`,
+  },
 ];

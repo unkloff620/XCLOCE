@@ -154,6 +154,21 @@ describe("boss fights: personal fights, shared damage", () => {
     expect(await qty(db, b, "key-datsik")).toBe(1);
   });
 
+  it("the first boss gives his pass for any own hit in a won fight (a newcomer's fist on a big Дацкоу)", async () => {
+    await setBossHp({ datsik: 5000 });
+    const a = await newPlayer(db), c = await newPlayer(db);
+    await startDatsik(a);
+    const fc = await startDatsik(c);
+    await hit(c, "fist"); // 12 of 5000 — far under 1%
+    await give(db, a, "rug-pull-gun", 20);
+    let r = await hit(a, "rug-pull-gun");
+    while (r.result.status !== "won") r = await hit(a, "rug-pull-gun");
+    const sc = await act(db, c, "fight_claim", { fightId: fc.result.fightId }, T0, always(0.99));
+    expect(sc.result).toMatchObject({ status: "won", key: true });
+    expect(await qty(db, c, "key-datsik")).toBe(1);
+    await setBossHp({ datsik: 1000 });
+  });
+
   it("after 8 hours the fight is lost: no key, weapons not returned", async () => {
     const p = await newPlayer(db);
     const f = await startDatsik(p);
