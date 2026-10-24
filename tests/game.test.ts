@@ -1531,7 +1531,8 @@ describe("Бутылка Командате", () => {
   it("is held in the hand slot and opens from Командате for sure after 10 unlucky wins", async () => {
     await setBossHp({ bebyakyan: 10 });
     const p = await newPlayer(db);
-    await give(db, p, "tee-pump", 1); // the other thing of his is owned: only the bottle is left to drop
+    // the other things of his are owned: only the bottle is left to drop
+    for (const it of ["tee-pump", "jacket-komandate", "pants-komandate", "sneakers-komandate"]) await give(db, p, it, 1);
     await give(db, p, "key-kedr", 100);
     await give(db, p, "keyboard", 30);
     const D = 24 * H;
