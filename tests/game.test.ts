@@ -1151,7 +1151,7 @@ describe("yard mini games", () => {
     const p = await newPlayer(db);
     await setMoney(db, p, "USD", 100);
     await act(db, p, "bj_open", {}, T0);
-    await expect(act(db, p, "bj_deal", {}, T0)).rejects.toBeTruthy();
+    await expect(act(db, p, "bj_deal" as never, {}, T0)).rejects.toBeTruthy();
     // me 10♠, the dealer A♥, me 9♦, under the dealer K♣ — a dealer blackjack
     await stackShoe(p, [[10, 0], [1, 1], [9, 2], [13, 3]]);
     let v = (await act(db, p, "bj_bet", { bet: 10 }, T0 + 1000)).result;
