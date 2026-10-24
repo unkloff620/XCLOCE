@@ -1476,7 +1476,7 @@ describe("нычки", () => {
 });
 
 describe("нычки v2", () => {
-  it("three sets in the first location; closing a location always finds a missing stash", async () => {
+  it("three sets in the first location; stashes come for spent energy (chance per energy, a sure find at the pity), not for closing", async () => {
     const { stashSetsByLocation, STASH_SETS } = await import("../src/content/stashes.ts");
     expect(STASH_SETS).toHaveLength(16);
     expect(stashSetsByLocation("openspace")).toHaveLength(3);
@@ -1490,9 +1490,23 @@ describe("нычки v2", () => {
     const loc = LOCATIONS.find((l) => l.id === "openspace")!;
     for (const t of loc.tasks) await db.query("INSERT INTO task_progress (player_id, task_id, steps) VALUES ($1,$2,$3)", [p, t.id, t.steps]);
     const r = await act(db, p, "location_claim", { locationId: "openspace" }, T0, always(0.99));
-    expect(r.result.stash).toMatch(/^stash-/);
-    expect(stashSetsByLocation("openspace").some((s) => s.items.some((i) => i.id === r.result.stash))).toBe(true);
-    expect(await qty(db, p, r.result.stash)).toBe(1);
+    expect(r.result.stash).toBeNull();
+    // the chance of a step is its energy × 1%: rng 0.99 never hits, the meter fills up to the sure find
+    const { STASH_PITY, stashChance } = await import("../src/content/stashes.ts");
+    expect(stashChance(3)).toBeCloseTo(0.03);
+    await setEnergy(p, 5000, T0);
+    let found: string | null = null, spent = 0;
+    while (!found && spent <= STASH_PITY + 10) {
+      const s = await act(db, p, "task", { taskId: "os-standup" }, T0, always(0.99));
+      spent += 3;
+      found = s.result.stash;
+      if (s.result.steps >= s.result.need) await db.query("UPDATE task_progress SET steps=0, done_at=now() WHERE player_id=$1", [p]);
+    }
+    expect(found).toMatch(/^stash-/);
+    expect(spent).toBe(Math.ceil(STASH_PITY / 3) * 3);
+    expect(stashSetsByLocation("openspace").some((s) => s.items.some((i) => i.id === found))).toBe(true);
+    const [m] = await db.query<{ stash_energy: number }>("SELECT stash_energy FROM players WHERE id=$1", [p]);
+    expect(Number(m.stash_energy)).toBe(0);
   });
 });
 
@@ -1614,6 +1628,13 @@ describe("zonk duels", () => {
     await setMoney(db, b, "USD", 50);
     const c = await act(db, a, "duel_create", { to: b, stake: 5 }, T0);
     expect(await wallet(db, a, "USD")).toBe(45);
+    // b is told in Telegram (the sender skips him while he is in the game)
+    const [n] = await db.query<{ kind: string; meta: { duelId: number; stake: number } }>("SELECT kind, meta FROM notifications WHERE player_id=$1 AND kind='duel_call'", [b]);
+    expect(n.meta).toMatchObject({ duelId: c.result.duelId, stake: 5 });
+    // a finds b among the rivals by name
+    const { duelRivals } = await import("../src/server/systems/duels.ts");
+    const [bn] = await db.query<{ display_name: string }>("SELECT display_name FROM players WHERE id=$1", [b]);
+    expect((await duelRivals(db, a, bn.display_name, T0)).players.some((x) => x.id === b)).toBe(true);
     await expect(act(db, a, "duel_play", { id: c.result.duelId }, T0)).rejects.toMatchObject({ code: "duel_not_playing" });
     await act(db, b, "duel_answer", { id: c.result.duelId, answer: "accept" }, T0);
     expect(await wallet(db, b, "USD")).toBe(45);
@@ -1622,8 +1643,12 @@ describe("zonk duels", () => {
     await act(db, a, "zonk_give_up", {}, T0);
     await act(db, b, "duel_play", { id: c.result.duelId }, T0, always(0.01));
     const end = await act(db, b, "zonk_give_up", {}, T0);
-    // 0 : 0 — a draw, both stakes back
-    expect(end.state.duels[0]).toMatchObject({ status: "done", won: null });
+    // 0 : 0 — a draw, both stakes back; every attempt is in the view (a give-up writes no attempts)
+    expect(end.state.duels[0]).toMatchObject({ status: "done", won: null, rivalPoints: 0, myPoints: 0 });
+    expect(Array.isArray(end.state.duels[0].myRounds)).toBe(true);
+    // the result goes to the one who is not looking
+    const [done] = await db.query("SELECT 1 FROM notifications WHERE player_id=$1 AND kind='duel_done'", [a]);
+    expect(done).toBeTruthy();
     expect(await wallet(db, a, "USD")).toBe(50);
     expect(await wallet(db, b, "USD")).toBe(50);
     // the second one: b never plays — after a day a gets the pot (minus 5%)

@@ -77,6 +77,22 @@ async function textFor(q: Queryable, n: Due, now: number): Promise<string | null
       const from = typeof n.meta.from === "string" ? n.meta.from : "Соклановец";
       return `🃏 ${from} зовёт тебя за стол блэкджека во дворе!\nЗаходи — место держат 15 минут.`;
     }
+    case "duel_call": {
+      const [d] = await q.query<{ status: string }>("SELECT status FROM duels WHERE id=$1 AND to_id=$2", [Number(n.meta.duelId), n.player_id]);
+      if (d?.status !== "open") return null;
+      const from = typeof n.meta.from === "string" ? n.meta.from : "Игрок";
+      return `🎲 ${from} вызывает тебя на дуэль в зонк!\nСтавка ${Number(n.meta.stake) || 1} $, по 5 попыток — у кого больше очков, тот забирает банк. Ответь в зонке во дворе.`;
+    }
+    case "duel_done": {
+      const [d] = await q.query<{ from_id: number; from_points: number | null; to_points: number | null; winner_id: number | null; stake: number; status: string; rival: string }>(
+        `SELECT d.from_id, d.from_points, d.to_points, d.winner_id, d.stake, d.status, p.display_name AS rival FROM duels d
+         JOIN players p ON p.id = CASE WHEN d.from_id=$2 THEN d.to_id ELSE d.from_id END WHERE d.id=$1`, [Number(n.meta.duelId), n.player_id]);
+      if (!d || d.status !== "done") return null;
+      const me = d.from_id === n.player_id;
+      const mine = (me ? d.from_points : d.to_points) ?? 0, theirs = (me ? d.to_points : d.from_points) ?? 0;
+      const head = d.winner_id === null ? "🤝 Ничья" : d.winner_id === n.player_id ? "🏆 Победа" : "💀 Поражение";
+      return `${head} в дуэли с ${d.rival}: ${mine} : ${theirs}.\nЗагляни в зонк — там вся партия по попыткам.`;
+    }
     default:
       return null;
   }

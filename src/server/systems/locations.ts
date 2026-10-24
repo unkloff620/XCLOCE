@@ -1,6 +1,6 @@
 import { GameError, type Queryable } from "../db.ts";
 import { addItem, grantReward, ledger, spendEnergy, type Ctx, type Granted } from "../core.ts";
-import { STASH_CHANCE, STASH_SETS, stashSetsByLocation } from "../../content/stashes.ts";
+import { STASH_MISSING_WEIGHT, STASH_PITY, STASH_SETS, stashChance, stashSetsByLocation } from "../../content/stashes.ts";
 import { LOCATIONS, locationById, taskById, taskOpen, type LocationDef } from "../../content/locations.ts";
 import type { Reward } from "../../content/rewards.ts";
 
@@ -26,6 +26,12 @@ export function repeatReward(r: Reward): Reward {
   const cur: Reward["currencies"] = {};
   for (const [c, v] of Object.entries(r.currencies ?? {})) cur[c as keyof typeof cur] = (v ?? 0) / 2;
   return { currencies: cur, xp: Math.round((r.xp ?? 0) / 2) };
+}
+
+/** the stash meter: energy spent in tasks since the last find, and the sure find at STASH_PITY */
+export async function stashMeter(q: Queryable, pid: number) {
+  const [p] = await q.query<{ stash_energy: number }>("SELECT stash_energy FROM players WHERE id=$1", [pid]);
+  return { energy: Math.min(STASH_PITY, Number(p?.stash_energy ?? 0)), pity: STASH_PITY };
 }
 
 export async function locationsView(q: Queryable, pid: number) {
@@ -69,8 +75,11 @@ export async function doTask(ctx: Ctx, taskId: string) {
   );
   const stepNow = have + 1;
   const stepGot = await grantReward(ctx, task.stepReward, `task:${task.id}`);
-  // нычки: a chance that this step finds one of the location's stashes the player does not have yet
-  const stash = ctx.rng() < STASH_CHANCE ? await findStash(ctx, loc.id, stepGot) : null;
+  // нычки: the energy of this step is a chance; the energy spent without a find piles up to a sure find
+  const [meter] = await ctx.q.query<{ stash_energy: number }>("UPDATE players SET stash_energy = stash_energy + $2 WHERE id=$1 RETURNING stash_energy", [ctx.pid, task.energy]);
+  const sure = Number(meter?.stash_energy ?? 0) >= STASH_PITY;
+  const stash = sure || ctx.rng() < stashChance(task.energy) ? await findStash(ctx, loc.id, stepGot) : null;
+  if (stash) await ctx.q.query("UPDATE players SET stash_energy = 0 WHERE id=$1", [ctx.pid]);
   let doneGot = null;
   if (stepNow >= task.steps) {
     // a task finished before its step count went up (done_at is set) keeps its old reward: no second one
@@ -86,11 +95,22 @@ export async function doTask(ctx: Ctx, taskId: string) {
   return { taskId: task.id, steps: stepNow, need: task.steps, energyLeft, step: stepGot, done: doneGot, locationComplete: doneCount === loc.tasks.length, stash };
 }
 
-/** One of the location's stashes (they drop again and pile up); goes to the inventory. */
+/** the stashes a location gives: its own sets; a location without sets gives from all of them */
+export function stashPool(locationId: string): string[] {
+  const own = stashSetsByLocation(locationId).flatMap((s) => s.items.map((i) => i.id));
+  return own.length ? own : STASH_SETS.flatMap((s) => s.items.map((i) => i.id));
+}
+
+/** One of the location's stashes (they drop again and pile up; the missing ones are likelier); goes to the inventory. */
 async function findStash(ctx: Ctx, locationId: string, into: Granted): Promise<string | null> {
-  const all = stashSetsByLocation(locationId).flatMap((s) => s.items.map((i) => i.id));
+  const all = stashPool(locationId);
   if (!all.length) return null;
-  const pick = all[Math.floor(ctx.rng() * all.length) % all.length];
+  const owned = new Set((await ctx.q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id = ANY($2::text[])", [ctx.pid, all])).map((r) => r.item_id));
+  const w = all.map((id) => (owned.has(id) ? 1 : STASH_MISSING_WEIGHT));
+  let roll = ctx.rng() * w.reduce((a, b) => a + b, 0);
+  let k = 0;
+  while (k < all.length - 1 && roll >= w[k]) roll -= w[k++];
+  const pick = all[k];
   if ((await addItem(ctx, pick, 1, `stash:${locationId}`)) < 1) return null;
   into.items.push({ id: pick, qty: 1 });
   return pick;
@@ -121,12 +141,10 @@ export async function claimLocation(ctx: Ctx, locationId: string) {
   if (!loc.tasks.every((t) => (steps.get(t.id) ?? 0) >= t.steps)) throw new GameError("not_done", "Выполни все 5 заданий");
   const first = (clears.get(loc.id) ?? 0) === 0;
   const got = await grantReward(ctx, first ? loc.reward : repeatReward(loc.reward), `location:${loc.id}`);
-  // closing a location always finds one of its stashes
-  const stash = await findStash(ctx, loc.id, got);
   await ctx.q.query("INSERT INTO location_claims (player_id, location_id, claimed_at) VALUES ($1,$2,$3)", [ctx.pid, loc.id, new Date(ctx.now)]);
   if (first) await ctx.q.query("UPDATE player_stats SET locations_done = locations_done + 1 WHERE player_id=$1", [ctx.pid]);
   // reset the tasks for the next round
   await ctx.q.query("UPDATE task_progress SET steps=0, done_at=NULL WHERE player_id=$1 AND task_id = ANY($2::text[])", [ctx.pid, loc.tasks.map((t) => t.id)]);
   const next = LOCATIONS.find((l) => l.order === loc.order + 1);
-  return { locationId: loc.id, first, reward: got, opened: first && next ? next.id : null, stash };
+  return { locationId: loc.id, first, reward: got, opened: first && next ? next.id : null, stash: null };
 }

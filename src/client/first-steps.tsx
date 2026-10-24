@@ -33,7 +33,7 @@ const STEPS: Step[] = [
   {
     id: "task", title: "Выполни задание", pic: "/assets/yard/court-entrance.webp", done: ["task"],
     aims: [
-      { at: (p) => p.startsWith("/locations/"), sel: ".task-go:not([disabled])" },
+      { at: (p) => p.startsWith("/locations/"), sel: ".lp-stop.now" },
       { at: (p) => p === "/locations", sel: ".loc-card.current" },
       { at: (p) => p === "/yard", sel: ".yard-entrance" },
       navTo("Двор", "/yard"),

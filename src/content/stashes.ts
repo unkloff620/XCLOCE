@@ -1,7 +1,9 @@
 /*
  * Нычки: наборы по 4 нычки, у каждой локации свои наборы (в первых трёх — по 3, в подвале и совете директоров — по 4).
- * Нычка может найтись за шаг задания в локации (шанс STASH_CHANCE), а при закрытии локации одна нычка выпадает
- * наверняка. Нычки выпадают повторно и копятся. Есть все 4 нычки набора — нажимаешь на картинку набора в «Нычках»:
+ * Нычки находятся за трату энергии в заданиях: шанс шага — STASH_PER_ENERGY за каждую потраченную единицу энергии
+ * (шаг за 3 ⚡ — 3%, за 20 ⚡ — 20%). Невезение копится: потратил STASH_PITY энергии без находки — следующий шаг
+ * находит нычку наверняка (счётчик обнуляется при любой находке). Чаще выпадают нычки, которых у игрока ещё нет.
+ * Закрытие локации нычку не даёт. Нычки выпадают повторно и копятся. Есть все 4 нычки набора — нажимаешь на картинку набора в «Нычках»:
  * по одной нычке каждого вида уходит, приходит награда набора, счётчик собранных наборов растёт. За 10, 50 и 100
  * собранных наборов — бронзовая, серебряная и золотая медаль (как у боссов).
  */
@@ -10,8 +12,14 @@ import type { Reward } from "./rewards.ts";
 export interface StashDef { id: string; name: string; description: string }
 export interface StashSet { id: string; n: number; name: string; location: string; items: StashDef[]; reward: Reward }
 
-/** chance that a task step in the set's location finds one of its stashes */
-export const STASH_CHANCE = 0.08;
+/** chance per energy point spent on a task step that the step finds a stash (a 3-energy step: 3%) */
+export const STASH_PER_ENERGY = 0.01;
+/** energy spent in tasks without a find, after which the next step finds a stash for sure */
+export const STASH_PITY = 150;
+/** a stash the player does not have yet is this many times likelier than one he has */
+export const STASH_MISSING_WEIGHT = 3;
+/** the chance of a step that costs `energy` */
+export const stashChance = (energy: number) => Math.min(1, energy * STASH_PER_ENERGY);
 
 const LOC_REWARD: Record<string, Reward> = {
   openspace: { currencies: { RUB: 100 }, xp: 1_000 },

@@ -884,4 +884,9 @@ CREATE INDEX IF NOT EXISTS duels_from ON duels (from_id, status);
 CREATE INDEX IF NOT EXISTS duels_to ON duels (to_id, status);
 `,
   },
+  {
+    // нычки for spent energy: the energy spent in tasks since the last find (systems/locations.ts, a sure find at STASH_PITY)
+    id: "v2-050-stash-meter",
+    sql: `ALTER TABLE players ADD COLUMN IF NOT EXISTS stash_energy INT NOT NULL DEFAULT 0;`,
+  },
 ];

@@ -12,7 +12,7 @@ import { Help } from "../help.tsx";
 import { haptic } from "../telegram.ts";
 import { sfx } from "../sound.ts";
 import { full } from "../format.ts";
-import type { GameView, PokerPlay } from "../api.ts";
+import { api, type DuelView, type GameView, type PokerPlay } from "../api.ts";
 import type { Currency } from "../../content/currencies.ts";
 import { BlackjackWindow } from "./blackjack.tsx";
 import { Roach } from "../art/roach.tsx";
@@ -22,7 +22,7 @@ import {
   ITEM_VALUES, RANKS, SUITS, UPGRADE_MODES, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue, zonkGroups, zonkScore, ZONK_ROUNDS,
   ZONK_BANK_MIN, ZONK_DAY_PRIZE, ZONK_FAIL_XP, ZONK_LEVELS,
   POKER_BONUS_LEVELS, POKER_CHEATS, POKER_HANDS, POKER_LEVEL_BONUS, POKER_MAX_LEVEL, POKER_RULES, POKER_CHIP, pokerCheats, pokerPay,
-  type PokerHand, type UpgradeMode,
+  type PokerHand, type UpgradeMode, DUEL_FEE, DUEL_ROUNDS, DUEL_STAKES,
 } from "../../content/games.ts";
 
 /* ---------------- a playing card (poker) ---------------- */
@@ -92,6 +92,7 @@ function ZonkHelp() {
       <p>Не набрал цель или нажал «Сдаться» — немного рублей в утешение и +{ZONK_FAIL_XP} опыта. Каждые 100 опыта — новый уровень зонка.</p>
       <p>Очки попыток пишутся мелом слева, стрелка показывает текущую. На листке сверху — лучший счёт дня среди всех игроков: в полночь по Москве он получает приз: {ZONK_DAY_PRIZE.currencies?.USD} USD и {ZONK_DAY_PRIZE.items?.[0]?.qty} фишки. На листе справа — комбинации.</p>
       <p>По стене бегает таракан — прихлопни его, это пара рублей (иногда фишка для покера).</p>
+      <p><b>Дуэли:</b> в меню уровней нажми [+] в «Дуэлях», выбери игрока и ставку. Если он не в игре — ему придёт сообщение в Telegram. У каждого {DUEL_ROUNDS} попыток, очки соперника видны прямо во время партии. Больше очков — забираешь банк (минус {Math.round(DUEL_FEE * 100)}%), ничья — ставки назад.</p>
     </Help>
   );
 }
@@ -219,14 +220,142 @@ function RoachRunner({ run, onDone }: { run: RoachRun; onDone: () => void }) {
   );
 }
 
-/** zonk duels in the level menu: calls to me (yes / no), my calls, duels to play, results of the last days */
-function DuelsList({ onPlay }: { onPlay: (id: number) => void }) {
+interface Rival { id: number; name: string; photo: string | null; xp: number; online: boolean }
+
+/** [+] in the duels: find a player (who is in the game now, my clan, my last rivals — or by name) and the stake */
+function DuelPicker({ onClose }: { onClose: () => void }) {
   const { state, act, busy } = useGame();
+  const [q, setQ] = useState("");
+  const [list, setList] = useState<Rival[] | null>(null);
+  const [who, setWho] = useState<Rival | null>(null);
+  useEffect(() => {
+    let alive = true;
+    const t = setTimeout(() => {
+      api.get<{ players: Rival[] }>(`/api/duel-rivals?q=${encodeURIComponent(q.trim())}`).then((r) => { if (alive) setList(r.players); }).catch(() => { if (alive) setList([]); });
+    }, q ? 350 : 0);
+    return () => { alive = false; clearTimeout(t); };
+  }, [q]);
+  const usd = state?.wallet.USD ?? 0;
+  const busyWith = new Set((state?.duels ?? []).filter((d) => d.status === "open" || d.status === "playing").map((d) => d.rival.id));
+  const call = async (stake: number) => {
+    if (!who) return;
+    const r = await act("duel_create", { to: who.id, stake }, `Вызов отправлен: ${who.name}, ставка ${stake} $`);
+    if (r) { haptic.ok(); onClose(); }
+  };
+  return (
+    <Modal title="Вызов на дуэль" onClose={onClose} maxWidth={420}>
+      <div className="dp">
+        <div className="dp-rules">{DUEL_ROUNDS} попыток у каждого · у кого больше очков — забирает банк (−{Math.round(DUEL_FEE * 100)}%) · ничья — ставки назад</div>
+        {!who ? (
+          <>
+            <input className="dp-search" placeholder="Ник игрока" value={q} onChange={(e) => setQ(e.target.value)} maxLength={32} />
+            {!q && <span className="tiny muted">В игре сейчас, твой клан и прошлые соперники</span>}
+            <div className="dp-list">
+              {list === null ? <span className="tiny muted center">Ищем…</span>
+                : !list.length ? <span className="tiny muted center">{q ? "Никого не нашли" : "Сейчас никого — найди по нику"}</span>
+                : list.map((p) => {
+                  const taken = busyWith.has(p.id);
+                  return (
+                    <button key={p.id} type="button" className="dp-row" disabled={taken} onClick={() => { haptic.tap(); setWho(p); }}>
+                      <span className="dp-ava"><Avatar name={p.name} photo={p.photo} size={34} />{p.online && <i className="dp-on" aria-label="в игре" />}</span>
+                      <b className="ellipsis grow">{p.name}</b>
+                      <small>{taken ? "уже дуэль" : p.online ? "в игре" : "напишем в Telegram"}</small>
+                    </button>
+                  );
+                })}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="dp-who">
+              <Avatar name={who.name} photo={who.photo} size={48} />
+              <span className="grow col" style={{ minWidth: 0 }}>
+                <b className="ellipsis">{who.name}</b>
+                <small className="muted">{who.online ? "сейчас в игре" : "не в сети — получит уведомление в Telegram"}</small>
+              </span>
+              <button className="btn dark sm" onClick={() => setWho(null)}>Другой</button>
+            </div>
+            <span className="tiny muted">Ставка (спишется сейчас, вернётся при отказе):</span>
+            <div className="dp-stakes">
+              {DUEL_STAKES.map((st) => (
+                <button key={st} className="btn green" disabled={busy === "duel_create" || usd < st} onClick={() => call(st)}>
+                  {st} <Icon name="USD" size={15} />
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
+/** the end of a duel: who won, and both players' points attempt by attempt */
+function DuelResult({ d, onClose }: { d: DuelView; onClose: () => void }) {
+  const { state } = useGame();
+  const done = d.status === "done";
+  const head = !done ? "Ждём соперника" : d.won === true ? "Победа!" : d.won === false ? "Поражение" : "Ничья";
+  const cls = !done ? "wait" : d.won === true ? "win" : d.won === false ? "lose" : "draw";
+  const me = state?.player;
+  const myTotal = d.myPoints ?? d.myRounds.reduce((a, b) => a + b, 0);
+  const rivalTotal = d.rivalPoints ?? 0;
+  useEffect(() => {
+    if (!done) return;
+    if (d.won === true) { haptic.big(); sfx("reward"); } else if (d.won === false) { haptic.err(); sfx("error"); }
+  }, [done, d.won]);
+  return (
+    <Modal title="Дуэль в зонк" onClose={onClose} maxWidth={420}>
+      <div className={`dr ${cls}`}>
+        <b className="dr-head display">{head}</b>
+        <div className="dr-vs">
+          <span className="dr-side"><Avatar name={me?.name ?? "Я"} photo={me?.photo ?? null} size={44} /><i className="ellipsis">Ты</i></span>
+          <b className="dr-score num">{full(myTotal)} : {d.rivalPoints === null && !d.rivalRounds.length ? "—" : full(rivalTotal)}</b>
+          <span className="dr-side"><Avatar name={d.rival.name} photo={d.rival.photo} size={44} /><i className="ellipsis">{d.rival.name}</i></span>
+        </div>
+        <div className="dr-table">
+          <span className="dr-th">Попытка</span><span className="dr-th">Ты</span><span className="dr-th ellipsis">{d.rival.name}</span>
+          {Array.from({ length: DUEL_ROUNDS }, (_, i) => {
+            const a = d.myRounds[i], b = d.rivalRounds[i];
+            return [
+              <span key={`n${i}`} className="dr-n num">{i + 1}</span>,
+              <span key={`a${i}`} className={`num ${a === undefined ? "none" : a === 0 ? "zonk" : a > (b ?? -1) ? "best" : ""}`}>{a === undefined ? "—" : a === 0 ? "зонк" : full(a)}</span>,
+              <span key={`b${i}`} className={`num ${b === undefined ? "none" : b === 0 ? "zonk" : b > (a ?? -1) ? "best" : ""}`}>{b === undefined ? "—" : b === 0 ? "зонк" : full(b)}</span>,
+            ];
+          })}
+          <span className="dr-tot">Итого</span><b className="num dr-tot">{full(myTotal)}</b><b className="num dr-tot">{d.rivalPoints === null && !d.rivalRounds.length ? "—" : full(rivalTotal)}</b>
+        </div>
+        <div className="dr-money">
+          {!done ? (d.rivalPlaying ? `${d.rival.name} ещё играет: попытка ${Math.min(d.rivalRounds.length + 1, DUEL_ROUNDS)}/${DUEL_ROUNDS}` : d.rivalRounds.length ? "Соперник доигрывает" : `${d.rival.name} ещё не начинал — пришлём итог, когда сыграет`)
+            : d.won === true ? <>Банк твой: +{d.pot} <Icon name="USD" size={15} /></>
+            : d.won === false ? <>Ставка ушла: −{d.stake} <Icon name="USD" size={15} /></>
+            : "Ставки вернулись обоим"}
+        </div>
+        <button className="btn gold block" onClick={onClose}>Ок</button>
+      </div>
+    </Modal>
+  );
+}
+
+const SEEN_KEY = "xc-duels-seen";
+function seenDuels(): number[] {
+  try { return JSON.parse(localStorage.getItem(SEEN_KEY) ?? "[]"); } catch { return []; }
+}
+function markSeen(id: number) {
+  try { localStorage.setItem(SEEN_KEY, JSON.stringify([id, ...seenDuels().filter((x) => x !== id)].slice(0, 40))); } catch { /* storage blocked */ }
+}
+
+/** zonk duels in the level menu: [+] to call someone, calls to me (yes / no), my calls, duels to play, results */
+function DuelsList({ onPlay, onShow }: { onPlay: (id: number) => void; onShow: (id: number) => void }) {
+  const { state, act, busy } = useGame();
+  const [pick, setPick] = useState(false);
   const list = (state?.duels ?? []).filter((d) => d.status === "open" || d.status === "playing" || d.status === "done");
-  if (!list.length) return null;
   return (
     <div className="zb-duels">
-      <b className="zb-duels-h">Дуэли</b>
+      <div className="zb-duels-top">
+        <b className="zb-duels-h">Дуэли</b>
+        <button type="button" className="zb-duel-add" onClick={() => { haptic.tap(); setPick(true); }} aria-label="Вызвать на дуэль">+<small>вызвать</small></button>
+      </div>
+      {!list.length && <small className="zb-duels-none">Вызови игрока: {DUEL_ROUNDS} попыток у каждого, банк — тому, у кого больше</small>}
       {list.slice(0, 4).map((d) => {
         const vs = <span className="zb-duel-vs"><Avatar name={d.rival.name} photo={d.rival.photo} size={20} /><i className="ellipsis">{d.rival.name}</i></span>;
         const stake = <span className="zb-duel-stake num">{d.stake} <Icon name="USD" size={12} /></span>;
@@ -239,14 +368,15 @@ function DuelsList({ onPlay }: { onPlay: (id: number) => void }) {
         } else if (d.status === "open") {
           tail = <span className="zb-duel-acts"><small>ждём ответа</small><button className="zb-duel-btn" disabled={!!busy} onClick={() => act("duel_answer", { id: d.id, answer: "cancel" }, "Вызов отменён, ставка вернулась")}>✕</button></span>;
         } else if (d.status === "playing") {
-          tail = d.myPoints !== null ? <small>{full(d.myPoints)} · ждём соперника</small>
+          tail = d.myPoints !== null ? <button className="zb-duel-btn" onClick={() => onShow(d.id)}>{full(d.myPoints)} : {d.rivalPoints === null ? "—" : full(d.rivalPoints)}</button>
             : d.started ? <small>доиграй партию</small>
             : <button className="zb-duel-btn ok" disabled={!!busy} onClick={() => onPlay(d.id)}>Играть</button>;
         } else {
-          tail = <small className={d.won === true ? "win" : d.won === false ? "lose" : ""}>{full(d.myPoints ?? 0)}:{full(d.rivalPoints ?? 0)} · {d.won === true ? `+${d.pot}` : d.won === false ? "проигрыш" : "ничья"}</small>;
+          tail = <button className={`zb-duel-btn res ${d.won === true ? "win" : d.won === false ? "lose" : ""}`} onClick={() => onShow(d.id)}>{full(d.myPoints ?? 0)}:{full(d.rivalPoints ?? 0)} · {d.won === true ? `+${d.pot}` : d.won === false ? "проигрыш" : "ничья"}</button>;
         }
         return <div key={d.id} className={`zb-duel ${d.status}`}>{vs}{stake}{tail}</div>;
       })}
+      {pick && <DuelPicker onClose={() => setPick(false)} />}
     </div>
   );
 }
@@ -258,6 +388,21 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
   const active = info?.active ?? null;
   const [last, setLast] = useState<GameView | null>(null);
   const g = active ?? last;
+  // the duel result window: opens when my duel game ends and when a duel I played has finished since I looked
+  const [showDuel, setShowDuel] = useState<number | null>(null);
+  const duelOpen = showDuel !== null ? (state?.duels ?? []).find((d) => d.id === showDuel) ?? null : null;
+  useEffect(() => {
+    if (showDuel !== null) return;
+    const seen = seenDuels();
+    const fresh = (state?.duels ?? []).find((d) => d.status === "done" && d.started && !seen.includes(d.id));
+    if (fresh) setShowDuel(fresh.id);
+  }, [state?.duels, showDuel]);
+  const closeDuel = () => {
+    const d = duelOpen;
+    if (d && d.status === "done") markSeen(d.id);
+    setShowDuel(null);
+  };
+  const duelNow = g?.duel ? (state?.duels ?? []).find((d) => d.id === g.duel) ?? null : null;
   const roll = g?.roll ?? [];
   // the picked dice belong to one roll: a new roll starts with nothing picked — in the same render, so a stale index
   // never points past the new roll
@@ -297,6 +442,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
     if (!r) return;
     setLast(r);
     const done = () => {
+      if (r.status === "done" && r.duel) { setShowDuel(r.duel); return; }
       if (r.status === "done") { if (r.result?.won) { haptic.ok(); sfx("reward"); } else { haptic.err(); sfx("error"); } }
     };
     const zonk = r.last?.zonk && r.last.roll && (r.scores?.length ?? 0) > scoresBefore && type !== "zonk_give_up" ? r.last : null;
@@ -400,6 +546,14 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
               <>
                 <span>{g.duel ? "Дуэль" : <>Уровень <b className="num">{g.level ?? 1}</b></>} · попытка <b className="num">{Math.min(scores.length + (onBoard ? 1 : 0), rounds)}/{rounds}</b></span>
                 <span className="zb-score"><b className="num">{full(total)}</b>{!g.duel && <small className="num">/{full(target)}</small>}</span>
+                {duelNow && (
+                  <span className="zb-rival">
+                    <Avatar name={duelNow.rival.name} photo={duelNow.rival.photo} size={18} />
+                    <i className="ellipsis">{duelNow.rival.name}</i>
+                    <b className="num">{duelNow.rivalPoints === null ? "—" : full(duelNow.rivalPoints)}</b>
+                    <small className="num">{duelNow.rivalDone ? "сыграл" : duelNow.rivalRounds.length ? `${duelNow.rivalRounds.length}/${DUEL_ROUNDS}` : "ещё не играл"}</small>
+                  </span>
+                )}
               </>
             ) : <span>Выбери уровень</span>}
           </div>
@@ -479,11 +633,11 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
           {!playing && !show && info && (
             <div className="zb-menu" style={{ left: zx(236), top: zy(440), width: zx(562), height: zy(850) }}>
               {g?.status === "done" && g.result && g.duel ? (
-                <div className="zb-res">
+                <button type="button" className="zb-res" onClick={() => setShowDuel(g.duel!)}>
                   <b className="display">Дуэль сыграна</b>
                   <span className="num">{full(g.result.points ?? 0)} очков</span>
-                  <span className="zb-res-got"><em>итог — ниже, в «Дуэлях»</em></span>
-                </div>
+                  <span className="zb-res-got"><em>посмотреть итог</em></span>
+                </button>
               ) : g?.status === "done" && g.result && (
                 <div className={`zb-res ${g.result.won ? "win" : "lose"}`}>
                   <b className="display">{g.result.won ? "Пройдено!" : g.result.outcome === "gave_up" ? "Сдался" : "Не хватило"}</b>
@@ -491,7 +645,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
                   <span className="zb-res-got">{g.result.reward && <RewardChips r={g.result.reward} size={14} />}<em>+{g.result.xp ?? 0} опыта</em></span>
                 </div>
               )}
-              <DuelsList onPlay={(id) => run("duel_play", { id })} />
+              <DuelsList onPlay={(id) => run("duel_play", { id })} onShow={setShowDuel} />
               <div className="zb-xp" title={`${info.xp} опыта зонка`}>
                 <span>Зонк <b className="num">{info.level}</b> ур.</span>
                 <span className="zb-xp-bar"><i style={{ width: `${lvl}%` }} /></span>
@@ -516,6 +670,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
           )}
         </div>
       </div>
+      {duelOpen && <DuelResult d={duelOpen} onClose={closeDuel} />}
     </Modal>
   );
 }

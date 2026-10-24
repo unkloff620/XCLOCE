@@ -132,6 +132,8 @@ export interface DuelView {
   id: number; status: "open" | "playing" | "done" | "declined" | "cancelled" | "expired"; stake: number; mine: boolean;
   rival: { id: number; name: string; photo: string | null }; myPoints: number | null; rivalPoints: number | null; rivalDone: boolean;
   started: boolean; won: boolean | null; pot: number;
+  /** the points of each attempt (a zonk counts 0); the rival's are seen while he plays */
+  myRounds: number[]; rivalRounds: number[]; rivalPlaying: boolean;
 }
 export interface Hit { seq: number; playerId: number; name: string; weapon: string; damage: number; phrase: number; at: number; crit?: boolean; count?: number }
 export interface FightView {

@@ -2,6 +2,8 @@ import { GameError, type Queryable } from "../db.ts";
 import { addMoney, takeMoney, type Ctx } from "../core.ts";
 import { DUEL_ANSWER_MS, DUEL_FEE, DUEL_MAX_OPEN, DUEL_PLAY_MS, DUEL_ROUNDS, DUEL_STAKES } from "../../content/games.ts";
 import { startDuelGame } from "./games.ts";
+import { schedule } from "./notify.ts";
+import { ONLINE_MS } from "./rating.ts";
 
 /* Zonk duels 1 on 1 (content/games.ts «Zonk duels»). Money moves only here; the games are ordinary zonk games with a duel id. */
 
@@ -26,6 +28,8 @@ async function settle(ctx: Ctx, d: DuelRow) {
     await addMoney(as(ctx, d.to_id), "USD", stake, `duel:${d.id}:back`);
   }
   await ctx.q.query("UPDATE duels SET status='done', winner_id=$2, finished_at=$3 WHERE id=$1", [d.id, winner, new Date(ctx.now)]);
+  // the result goes to Telegram to whoever is not looking at it right now
+  for (const pid of [d.from_id, d.to_id]) if (pid !== ctx.pid) await schedule(ctx.q, pid, "duel_done", ctx.now, { duelId: d.id });
 }
 
 /** Calls nobody answered and duels nobody finished in time end here (whoever looks first). */
@@ -57,6 +61,9 @@ export async function createDuel(ctx: Ctx, to: number, stake: number) {
   if (dup) throw new GameError("duel_exists", "С этим игроком дуэль уже идёт");
   await takeMoney(ctx, "USD", stake, `duel:call:${to}`);
   const [row] = await ctx.q.query<{ id: number }>("INSERT INTO duels (from_id, to_id, stake, created_at) VALUES ($1,$2,$3,$4) RETURNING id", [ctx.pid, to, stake, new Date(ctx.now)]);
+  // he gets a Telegram message (the sender skips players who are in the game right now)
+  const [me] = await ctx.q.query<{ display_name: string }>("SELECT display_name FROM players WHERE id=$1", [ctx.pid]);
+  await schedule(ctx.q, to, "duel_call", ctx.now, { duelId: row.id, from: me?.display_name ?? "Игрок", stake });
   return { duelId: row.id };
 }
 
@@ -117,16 +124,45 @@ export async function duelsView(q: Queryable, pid: number) {
      ORDER BY d.id DESC LIMIT 12`,
     [pid],
   );
-  const played = new Set((await q.query<{ duel: number }>(
-    "SELECT (state->>'duel')::int AS duel FROM games WHERE player_id=$1 AND kind='zonk' AND state->>'duel' IS NOT NULL", [pid])).map((r) => Number(r.duel)));
+  // both games of every duel: the points of each attempt and the running total (the rival's is seen live)
+  const games = rows.length ? await q.query<{ player_id: number; duel: number; scores: { points: number; zonk: boolean }[] | null; total: number | null; status: string }>(
+    `SELECT player_id, (state->>'duel')::int AS duel, state->'scores' AS scores, COALESCE((result->>'points')::int, (state->>'total')::int) AS total, status
+     FROM games WHERE kind='zonk' AND state->>'duel' IS NOT NULL AND (state->>'duel')::int = ANY($1::int[])`,
+    [rows.map((d) => d.id)],
+  ) : [];
+  const gameOf = (duel: number, player: number) => games.find((x) => Number(x.duel) === duel && x.player_id === player);
+  const rounds = (x: ReturnType<typeof gameOf>) => (x?.scores ?? []).slice(0, DUEL_ROUNDS).map((r) => (r.zonk ? 0 : Number(r.points) || 0));
   return rows.map((d) => {
     const me = d.from_id === pid;
+    const rid = me ? d.to_id : d.from_id;
+    const mg = gameOf(d.id, pid), rg = gameOf(d.id, rid);
+    const myPts = me ? d.from_points : d.to_points, rivalPts = me ? d.to_points : d.from_points;
     return {
       id: d.id, status: d.status, stake: Number(d.stake), mine: me,
-      rival: { id: me ? d.to_id : d.from_id, name: me ? d.to_name : d.from_name, photo: me ? d.to_photo : d.from_photo },
-      myPoints: me ? d.from_points : d.to_points, rivalPoints: d.status === "done" ? (me ? d.to_points : d.from_points) : null,
-      rivalDone: (me ? d.to_points : d.from_points) !== null, started: played.has(d.id), won: d.status === "done" ? (d.winner_id === null ? null : d.winner_id === pid) : null,
+      rival: { id: rid, name: me ? d.to_name : d.from_name, photo: me ? d.to_photo : d.from_photo },
+      myPoints: myPts, rivalPoints: rivalPts ?? (rg ? Number(rg.total ?? 0) : null),
+      rivalDone: rivalPts !== null, started: !!mg, won: d.status === "done" ? (d.winner_id === null ? null : d.winner_id === pid) : null,
       pot: round2(Number(d.stake) * 2 * (1 - DUEL_FEE)),
+      myRounds: rounds(mg), rivalRounds: rounds(rg), rivalPlaying: rg?.status === "active",
     };
   });
+}
+
+/** whom to call: by name, or (empty search) who is in the game now, my clan and my last rivals */
+export async function duelRivals(q: Queryable, pid: number, search: string, now: number) {
+  const name = search.replace(/[%_\\]/g, "").trim().slice(0, 32);
+  const rows = name
+    ? await q.query<{ id: number; display_name: string; photo_url: string | null; last_seen_at: Date; xp: number }>(
+      `SELECT id, display_name, photo_url, last_seen_at, xp FROM players WHERE banned_at IS NULL AND id <> $1 AND display_name ILIKE $2
+       ORDER BY last_seen_at DESC NULLS LAST LIMIT 20`, [pid, `%${name}%`])
+    : await q.query<{ id: number; display_name: string; photo_url: string | null; last_seen_at: Date; xp: number }>(
+      `SELECT p.id, p.display_name, p.photo_url, p.last_seen_at, p.xp FROM players p
+       WHERE p.banned_at IS NULL AND p.id <> $1 AND (
+         p.last_seen_at > $2
+         OR p.id IN (SELECT m.player_id FROM clan_members m WHERE m.clan_id = (SELECT clan_id FROM clan_members WHERE player_id=$1))
+         OR p.id IN (SELECT CASE WHEN from_id=$1 THEN to_id ELSE from_id END FROM duels WHERE from_id=$1 OR to_id=$1))
+       ORDER BY p.last_seen_at DESC NULLS LAST LIMIT 20`, [pid, new Date(now - ONLINE_MS)]);
+  return {
+    players: rows.map((r) => ({ id: r.id, name: r.display_name, photo: r.photo_url, xp: Number(r.xp), online: !!r.last_seen_at && new Date(r.last_seen_at).getTime() > now - ONLINE_MS })),
+  };
 }

@@ -12,7 +12,7 @@ import { haptic } from "../telegram.ts";
 import { Help } from "../help.tsx";
 import { sfx } from "../sound.ts";
 import { itemById } from "../../content/items.ts";
-import { STASH_SETS, stashSetOf, stashSetsByLocation } from "../../content/stashes.ts";
+import { STASH_PITY, STASH_SETS, stashChance, stashSetOf, stashSetsByLocation } from "../../content/stashes.ts";
 
 /** A stash found during a task: the picture, its set and how many of the set are found. */
 function StashFound({ id, onClose }: { id: string; onClose: () => void }) {
@@ -35,11 +35,16 @@ function StashFound({ id, onClose }: { id: string; onClose: () => void }) {
 
 interface LocRow { id: string; unlocked: boolean; done: number; total: number; clears: number; tasks: { id: string; steps: number; need: number }[]; nextReward: Reward }
 
+interface StashMeter { energy: number; pity: number }
+
 function useLocations() {
   const [rows, setRows] = useState<LocRow[] | null>(null);
+  const [meter, setMeter] = useState<StashMeter | null>(null);
   const load = useCallback(async () => {
     try {
-      setRows((await api.get<{ locations: LocRow[] }>("/api/locations")).locations);
+      const r = await api.get<{ locations: LocRow[]; stash?: StashMeter }>("/api/locations");
+      setRows(r.locations);
+      setMeter(r.stash ?? null);
     } catch {
       /* keep */
     }
@@ -47,7 +52,7 @@ function useLocations() {
   useEffect(() => {
     void load();
   }, [load]);
-  return { rows, load };
+  return { rows, meter, load };
 }
 
 function Blocks({ done, total }: { done: number; total: number }) {
@@ -107,7 +112,7 @@ export function LocationsScreen() {
               <p>Энергия тратится только здесь: каждый шаг задания стоит энергии и даёт рубли и авторитет.</p>
               <p>Задания идут по очереди, как по карте: следующее открывается, когда выполнено предыдущее. Закрой все 5 заданий — на карточке появится кнопка «Забрать награду» (доллары и вещи), откроется следующая локация.</p>
               <p>Пройденную локацию можно повторить: награда за повтор — половина валюты и авторитета.</p>
-              <p>Иногда за шаг задания находится <b>нычка</b>, а при закрытии локации одна нычка выпадает наверняка. У каждой локации свои наборы по 4 нычки. Собери набор целиком и забери награду в достижениях «Нычки». Найденные лежат в инвентаре во вкладке «Нычки».</p>
+              <p><b>Нычки</b> находятся за потраченную энергию: каждый шаг задания — шанс 1% за каждую ⚡ (шаг за 3 ⚡ — 3%, за 20 ⚡ — 20%). Не везёт — энергия копится в «нычкомере», и после {STASH_PITY} ⚡ без находки нычка выпадает наверняка. Чаще выпадают те, которых у тебя ещё нет. У каждой локации свои наборы по 4 нычки. Собери набор целиком и забери награду в достижениях «Нычки». Найденные лежат в инвентаре во вкладке «Нычки».</p>
               <p>Энергия: +1 каждые 5 минут до 50. Купить больше — нажми на энергию вверху.</p>
             </Help>
           </div>
@@ -192,10 +197,12 @@ export function LocationScreen({ id }: { id: string }) {
   const loc = locationById(id);
   const { state, act, busy, toast } = useGame();
   const now = useNow();
-  const { rows, load } = useLocations();
+  const { rows, meter, load } = useLocations();
   const [got, setGot] = useState<ClaimResult | null>(null);
   const [stash, setStash] = useState<string | null>(null);
   const [pick, setPick] = useState<string | null>(null);
+  // "+36 ₽" flying up from the tapped stop
+  const [pops, setPops] = useState<{ key: number; i: number; text: string }[]>([]);
   if (!loc) return <Empty>Такой локации нет</Empty>;
   const r = rows?.find((x) => x.id === id);
   const energy = state ? liveEnergy(state, now).energy : 0;
@@ -210,23 +217,33 @@ export function LocationScreen({ id }: { id: string }) {
   const icons = stopIcons(loc.id, loc.order, loc.tasks.length);
   const stops = STOPS.slice(0, loc.tasks.length);
 
-  const step = async (taskId: string) => {
+  const step = async (x: (typeof tasks)[number]) => {
+    if (busy === "task") return;
+    if (energy < x.t.energy) {
+      haptic.err();
+      toast(`Не хватает энергии: нужно ${x.t.energy} ⚡`, "err");
+      return;
+    }
     haptic.tap();
-    const res = await act<{ steps: number; need: number; step: Granted; done: Granted | null; locationComplete: boolean; stash: string | null }>("task", { taskId }, (x) =>
-      x.stash ? null : x.done ? "Задание выполнено!" : `+${x.step.currencies.RUB ?? 0} ₽ · +${x.step.xp} авторитета`,
+    const res = await act<{ steps: number; need: number; step: Granted; done: Granted | null; locationComplete: boolean; stash: string | null }>("task", { taskId: x.t.id }, (y) =>
+      y.stash ? null : y.done ? "Задание выполнено!" : null,
     );
-    if (res?.stash) {
+    if (!res) return;
+    const key = Date.now();
+    setPops((p) => [...p.slice(-4), { key, i: x.i, text: `+${res.step.currencies.RUB ?? 0} ₽` }]);
+    setTimeout(() => setPops((p) => p.filter((q) => q.key !== key)), 1100);
+    if (res.stash) {
       // a stash found: a moment of its own
       haptic.big();
       sfx("levelup");
       setStash(res.stash);
     }
-    if (res?.done) {
+    if (res.done) {
       // the next stop lights up: follow it
       sfx("win");
       setPick(null);
     }
-    if (res) void load();
+    void load();
   };
   const claim = async () => {
     const res = await act<{ reward: Granted; first: boolean; opened: string | null }>("location_claim", { locationId: id });
@@ -238,10 +255,13 @@ export function LocationScreen({ id }: { id: string }) {
     }
   };
   const tapStop = (x: (typeof tasks)[number]) => {
-    haptic.tap();
     setPick(x.t.id);
+    if (x.open && !x.done) return void step(x);
+    haptic.tap();
     if (!x.open) toast(`Сначала выполни «${tasks[x.i - 1]?.t.title}»`, "err");
   };
+  const chance = Math.round(stashChance(sel.t.energy) * 100);
+  const left = meter ? Math.max(0, meter.pity - meter.energy) : null;
 
   return (
     <div className={LOCATION_ART.has(loc.scene) ? "loc-page has-bg" : "loc-page"}>
@@ -259,6 +279,23 @@ export function LocationScreen({ id }: { id: string }) {
         <Empty>Локация закрыта. Сначала пройди предыдущую.</Empty>
       ) : (
         <>
+          {/* what closing the location gives — on top */}
+          <div className={`lp-prize ${allDone ? "ready" : ""}`}>
+            <span className="lp-prize-h"><Icon name="chest" size={22} />{r?.clears ? "За повтор" : "За локацию"}</span>
+            <RewardChips r={r?.nextReward ?? loc.reward} size={13} />
+            {allDone && <button className="btn gold block lp-prize-go" disabled={busy === "location_claim"} onClick={claim}>Забрать награду</button>}
+          </div>
+          {meter && (
+            <div className="lp-meter" title="Энергия, потраченная без находки">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={`/assets/items/${icons[0]}.webp`} alt="" draggable={false} />
+              <span className="lp-meter-main">
+                <span>Нычка: <b>{chance}%</b> за шаг · наверняка через <b className="num">{left}</b> ⚡</span>
+                <i className="lp-meter-bar"><em style={{ width: `${(meter.energy / Math.max(1, meter.pity)) * 100}%` }} /></i>
+              </span>
+            </div>
+          )}
+
           <div className="lp-map" style={{ aspectRatio: `${MAP_W} / ${MAP_H}` }}>
             <svg className="lp-path" viewBox={`0 0 ${MAP_W} ${MAP_H}`} aria-hidden="true">
               {stops.slice(1).map((b, k) => {
@@ -279,11 +316,12 @@ export function LocationScreen({ id }: { id: string }) {
             {tasks.map((x) => {
               const p = stops[x.i];
               const cls = x.done ? "done" : x.open ? "open" : "shut";
+              const now_ = current?.t.id === x.t.id;
               return (
                 <button
                   key={x.t.id}
                   type="button"
-                  className={`lp-stop ${cls} ${current?.t.id === x.t.id ? "now" : ""} ${sel.t.id === x.t.id ? "sel" : ""}`}
+                  className={`lp-stop ${cls} ${now_ ? "now" : ""} ${sel.t.id === x.t.id ? "sel" : ""} ${now_ && energy < x.t.energy ? "tired" : ""}`}
                   style={{ left: `${p.x}%`, top: `${p.y}%` }}
                   onClick={() => tapStop(x)}
                   aria-label={x.t.title}
@@ -292,7 +330,10 @@ export function LocationScreen({ id }: { id: string }) {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={`/assets/items/${icons[x.i]}.webp`} alt="" draggable={false} />
                   </span>
-                  {x.done ? <i className="lp-tag ok">✓</i> : x.open ? <i className="lp-tag num">{x.steps}/{x.t.steps}</i> : <i className="lp-tag lock"><Icon name="lock" size={14} /></i>}
+                  {x.done ? <i className="lp-tag ok">✓</i>
+                    : x.open ? <i className="lp-tag num">{x.steps}/{x.t.steps}<em><Icon name="energy" size={11} />{x.t.energy}</em></i>
+                    : <i className="lp-tag lock"><Icon name="lock" size={14} /></i>}
+                  {pops.filter((q) => q.i === x.i).map((q) => <b key={q.key} className="lp-pop num">{q.text}</b>)}
                 </button>
               );
             })}
@@ -304,33 +345,14 @@ export function LocationScreen({ id }: { id: string }) {
               <img src={`/assets/items/${icons[sel.i]}.webp`} alt="" draggable={false} />
             </span>
             <div className="grow col" style={{ gap: 4, minWidth: 0 }}>
-              <span className="tiny muted display">ЗАДАНИЕ {sel.i + 1}/{loc.tasks.length}</span>
+              <span className="tiny muted display">ЗАДАНИЕ {sel.i + 1}/{loc.tasks.length}{sel.open && !sel.done ? <> · шаг <Icon name="energy" size={11} />{sel.t.energy}</> : null}</span>
               <b>{sel.t.title}</b>
-              <span className="tiny muted">{sel.open ? sel.t.flavor : `Откроется после «${tasks[sel.i - 1]?.t.title}»`}</span>
+              <span className="tiny muted">
+                {sel.done ? "Выполнено" : !sel.open ? `Откроется после «${tasks[sel.i - 1]?.t.title}»` : current?.t.id === sel.t.id ? "Жми на светящийся кружок — каждый шаг тратит энергию" : sel.t.flavor}
+              </span>
               <Bar value={sel.steps} max={sel.t.steps} tone={sel.done ? "green" : "gold"} label={`${sel.steps}/${sel.t.steps}`} />
-              <RewardChips r={sel.t.stepReward} size={14} />
+              <span className="row" style={{ gap: 6, flexWrap: "wrap" }}><small className="tiny muted">за шаг</small><RewardChips r={sel.t.stepReward} size={13} /></span>
             </div>
-            {sel.done ? (
-              <span className="task-ok display">✓</span>
-            ) : sel.open ? (
-              <button className="btn green task-go" disabled={busy === "task" || energy < sel.t.energy} onClick={() => step(sel.t.id)}>
-                <span>GO</span>
-                <small className="row" style={{ gap: 2 }}><Icon name="energy" size={14} />{sel.t.energy}</small>
-              </button>
-            ) : (
-              <span className="task-ok lp-shut"><Icon name="lock" size={22} /></span>
-            )}
-          </div>
-
-          <div className={`panel loc-reward ${allDone ? "ready" : ""}`} style={{ marginTop: 12 }}>
-            <div className="row" style={{ justifyContent: "space-between" }}>
-              <b className="display">Награда за локацию</b>
-              {!!r?.clears && <span className="tiny muted">повтор: половина валюты и авторитета</span>}
-            </div>
-            <div style={{ margin: "8px 0" }}><RewardChips r={r?.nextReward ?? loc.reward} /></div>
-            <button className="btn gold block" disabled={!allDone || busy === "location_claim"} onClick={claim}>
-              {allDone ? "Забрать награду" : `Выполни все задания (${r?.done ?? 0}/${loc.tasks.length})`}
-            </button>
           </div>
           {energy < Math.min(...loc.tasks.map((t) => t.energy)) && (
             <p className="small muted center">Энергия кончилась: +1 каждые 5 минут, или <Link href="/shop?tab=energy" style={{ color: "var(--gold)" }}>купи энергию</Link>.</p>
