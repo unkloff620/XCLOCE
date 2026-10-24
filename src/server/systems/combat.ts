@@ -322,7 +322,9 @@ export async function claimFight(ctx: Ctx, fightId: number) {
   // the reward follows my own part of this fight (see FULL_SHARE / KEY_SHARE in content/bosses.ts)
   const myDamage = Number(f.my_damage);
   const share = rewardShare(myDamage, f.hp_max, ctx.cfg.fight.fullShare);
-  const earnedKey = myDamage >= f.hp_max * ctx.cfg.fight.keyShare;
+  // the first boss is the door into the game: any own hit in a won fight gives his pass (a newcomer with a fist alone
+  // never reaches KEY_SHARE of a crowded Дацкоу); from the second boss on — KEY_SHARE of the HP
+  const earnedKey = myDamage >= f.hp_max * ctx.cfg.fight.keyShare || (def.order === 1 && myDamage > 0);
   const drops = earnedKey ? (def.drop ?? []).filter((d) => ctx.rng() < d.chance).map((d) => ({ id: d.id, qty: d.qty })) : [];
   // the pass of this boss, and with EXTRA_KEY_CHANCE a second one
   const bonusKey = !def.final && earnedKey && ctx.rng() < EXTRA_KEY_CHANCE;
