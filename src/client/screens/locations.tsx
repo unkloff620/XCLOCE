@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { liveEnergy, useGame, useNow } from "../store.tsx";
 import { api, type Granted } from "../api.ts";
-import { LOCATIONS, locationById } from "../../content/locations.ts";
+import { LOCATIONS, locationById, taskOpen } from "../../content/locations.ts";
 import type { Reward } from "../../content/rewards.ts";
 import { LOCATION_ART, LocationScene } from "../art/scenes.tsx";
 import { Icon } from "../art/icons.tsx";
@@ -12,7 +12,7 @@ import { haptic } from "../telegram.ts";
 import { Help } from "../help.tsx";
 import { sfx } from "../sound.ts";
 import { itemById } from "../../content/items.ts";
-import { stashSetOf } from "../../content/stashes.ts";
+import { STASH_SETS, stashSetOf, stashSetsByLocation } from "../../content/stashes.ts";
 
 /** A stash found during a task: the picture, its set and how many of the set are found. */
 function StashFound({ id, onClose }: { id: string; onClose: () => void }) {
@@ -105,7 +105,7 @@ export function LocationsScreen() {
             <h1 className="display">Локации</h1>
             <Help topic="locations" title="Локации">
               <p>Энергия тратится только здесь: каждый шаг задания стоит энергии и даёт рубли и авторитет.</p>
-              <p>Закрой все 5 заданий — на карточке появится кнопка «Забрать награду» (доллары и вещи), откроется следующая локация.</p>
+              <p>Задания идут по очереди, как по карте: следующее открывается, когда выполнено предыдущее. Закрой все 5 заданий — на карточке появится кнопка «Забрать награду» (доллары и вещи), откроется следующая локация.</p>
               <p>Пройденную локацию можно повторить: награда за повтор — половина валюты и авторитета.</p>
               <p>Иногда за шаг задания находится <b>нычка</b>, а при закрытии локации одна нычка выпадает наверняка. У каждой локации свои наборы по 4 нычки. Собери набор целиком и забери награду в достижениях «Нычки». Найденные лежат в инвентаре во вкладке «Нычки».</p>
               <p>Энергия: +1 каждые 5 минут до 50. Купить больше — нажми на энергию вверху.</p>
@@ -162,17 +162,53 @@ export function LocationsScreen() {
   );
 }
 
+/** where the five task stops stand on the path (percent of the map), the first one at the bottom */
+const STOPS = [
+  { x: 28, y: 90 },
+  { x: 74, y: 67 },
+  { x: 24, y: 46 },
+  { x: 66, y: 26 },
+  { x: 38, y: 8 },
+];
+const MAP_W = 360;
+const MAP_H = 560;
+
+/** a stash picture for every task: the location's own stashes (locations without sets borrow from the whole pool) */
+function stopIcons(locationId: string, order: number, n: number): string[] {
+  const own = stashSetsByLocation(locationId).flatMap((s) => s.items.map((i) => i.id));
+  const pool = own.length ? own : STASH_SETS.flatMap((s) => s.items.map((i) => i.id));
+  const offset = own.length ? 0 : order * 7;
+  const stride = own.length ? 1 : 6;
+  return Array.from({ length: n }, (_, i) => pool[(offset + i * stride) % pool.length]);
+}
+
+/** the path between two stops: across, then up (like the drawn map) */
+function legPath(a: { x: number; y: number }, b: { x: number; y: number }) {
+  const ax = (a.x / 100) * MAP_W, ay = (a.y / 100) * MAP_H, bx = (b.x / 100) * MAP_W, by = (b.y / 100) * MAP_H;
+  return `M${ax} ${ay} H${bx} V${by}`;
+}
+
 export function LocationScreen({ id }: { id: string }) {
   const loc = locationById(id);
-  const { state, act, busy } = useGame();
+  const { state, act, busy, toast } = useGame();
   const now = useNow();
   const { rows, load } = useLocations();
   const [got, setGot] = useState<ClaimResult | null>(null);
   const [stash, setStash] = useState<string | null>(null);
+  const [pick, setPick] = useState<string | null>(null);
   if (!loc) return <Empty>Такой локации нет</Empty>;
   const r = rows?.find((x) => x.id === id);
   const energy = state ? liveEnergy(state, now).energy : 0;
   const allDone = !!r && r.done === r.total;
+  const stepsOf = (taskId: string) => r?.tasks.find((x) => x.id === taskId)?.steps ?? 0;
+  const tasks = loc.tasks.map((t, i) => {
+    const steps = stepsOf(t.id);
+    return { t, i, steps, done: steps >= t.steps, open: taskOpen(loc, i, stepsOf) };
+  });
+  const current = tasks.find((x) => x.open && !x.done) ?? null;
+  const sel = tasks.find((x) => x.t.id === pick) ?? current ?? tasks[tasks.length - 1];
+  const icons = stopIcons(loc.id, loc.order, loc.tasks.length);
+  const stops = STOPS.slice(0, loc.tasks.length);
 
   const step = async (taskId: string) => {
     haptic.tap();
@@ -185,6 +221,11 @@ export function LocationScreen({ id }: { id: string }) {
       sfx("levelup");
       setStash(res.stash);
     }
+    if (res?.done) {
+      // the next stop lights up: follow it
+      sfx("win");
+      setPick(null);
+    }
     if (res) void load();
   };
   const claim = async () => {
@@ -192,8 +233,14 @@ export function LocationScreen({ id }: { id: string }) {
     if (res) {
       haptic.ok();
       setGot(res);
+      setPick(null);
       void load();
     }
+  };
+  const tapStop = (x: (typeof tasks)[number]) => {
+    haptic.tap();
+    setPick(x.t.id);
+    if (!x.open) toast(`Сначала выполни «${tasks[x.i - 1]?.t.title}»`, "err");
   };
 
   return (
@@ -203,44 +250,78 @@ export function LocationScreen({ id }: { id: string }) {
         <Link href="/locations" className="back">← Локации</Link>
         <span className="chip gold"><Icon name="energy" size={16} />{energy}</span>
       </div>
-      <div className="loc-card head">
-        <LocationScene scene={loc.scene} />
-        <div className="loc-body">
-          <span className="tiny muted display">ЛОКАЦИЯ {loc.order}</span>
-          <b className="display" style={{ fontSize: 20 }}>{loc.name}</b>
-          <div className="small muted">{loc.subtitle}</div>
-          <Blocks done={r?.done ?? 0} total={loc.tasks.length} />
-        </div>
+      <div className="lp-head">
+        <span className="tiny display">ЛОКАЦИЯ {loc.order}</span>
+        <b className="display">{loc.name}</b>
+        <Blocks done={r?.done ?? 0} total={loc.tasks.length} />
       </div>
       {r && !r.unlocked ? (
         <Empty>Локация закрыта. Сначала пройди предыдущую.</Empty>
       ) : (
         <>
-          <div className="col" style={{ gap: 10, marginTop: 12 }}>
-            {loc.tasks.map((t) => {
-              const p = r?.tasks.find((x) => x.id === t.id);
-              const steps = p?.steps ?? 0;
-              const done = steps >= t.steps;
+          <div className="lp-map" style={{ aspectRatio: `${MAP_W} / ${MAP_H}` }}>
+            <svg className="lp-path" viewBox={`0 0 ${MAP_W} ${MAP_H}`} aria-hidden="true">
+              {stops.slice(1).map((b, k) => {
+                const a = stops[k];
+                const from = tasks[k];
+                // the leg after a stop fills with that stop's steps; legs after done stops are full
+                const fill = from.done ? 1 : from.open ? from.steps / from.t.steps : 0;
+                const d = legPath(a, b);
+                return (
+                  <g key={k}>
+                    <path d={d} className="lp-edge" />
+                    <path d={d} className="lp-grey" />
+                    <path d={d} className="lp-gold" pathLength={1} strokeDasharray={`${fill} 1`} />
+                  </g>
+                );
+              })}
+            </svg>
+            {tasks.map((x) => {
+              const p = stops[x.i];
+              const cls = x.done ? "done" : x.open ? "open" : "shut";
               return (
-                <div key={t.id} className={`task ${done ? "done" : ""}`}>
-                  <div className="grow col" style={{ gap: 5 }}>
-                    <b>{t.title}</b>
-                    <span className="tiny muted">{t.flavor}</span>
-                    <Bar value={steps} max={t.steps} tone={done ? "green" : "violet"} label={`${steps}/${t.steps}`} />
-                    <RewardChips r={t.stepReward} size={14} />
-                  </div>
-                  {done ? (
-                    <span className="task-ok display">✓</span>
-                  ) : (
-                    <button className="btn green task-go" disabled={busy === "task" || energy < t.energy} onClick={() => step(t.id)}>
-                      <span>GO</span>
-                      <small className="row" style={{ gap: 2 }}><Icon name="energy" size={14} />{t.energy}</small>
-                    </button>
-                  )}
-                </div>
+                <button
+                  key={x.t.id}
+                  type="button"
+                  className={`lp-stop ${cls} ${current?.t.id === x.t.id ? "now" : ""} ${sel.t.id === x.t.id ? "sel" : ""}`}
+                  style={{ left: `${p.x}%`, top: `${p.y}%` }}
+                  onClick={() => tapStop(x)}
+                  aria-label={x.t.title}
+                >
+                  <span className="lp-disc">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={`/assets/items/${icons[x.i]}.webp`} alt="" draggable={false} />
+                  </span>
+                  {x.done ? <i className="lp-tag ok">✓</i> : x.open ? <i className="lp-tag num">{x.steps}/{x.t.steps}</i> : <i className="lp-tag lock"><Icon name="lock" size={14} /></i>}
+                </button>
               );
             })}
           </div>
+
+          <div className={`lp-card ${sel.done ? "done" : sel.open ? "" : "shut"}`} key={sel.t.id}>
+            <span className="lp-card-pic">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={`/assets/items/${icons[sel.i]}.webp`} alt="" draggable={false} />
+            </span>
+            <div className="grow col" style={{ gap: 4, minWidth: 0 }}>
+              <span className="tiny muted display">ЗАДАНИЕ {sel.i + 1}/{loc.tasks.length}</span>
+              <b>{sel.t.title}</b>
+              <span className="tiny muted">{sel.open ? sel.t.flavor : `Откроется после «${tasks[sel.i - 1]?.t.title}»`}</span>
+              <Bar value={sel.steps} max={sel.t.steps} tone={sel.done ? "green" : "gold"} label={`${sel.steps}/${sel.t.steps}`} />
+              <RewardChips r={sel.t.stepReward} size={14} />
+            </div>
+            {sel.done ? (
+              <span className="task-ok display">✓</span>
+            ) : sel.open ? (
+              <button className="btn green task-go" disabled={busy === "task" || energy < sel.t.energy} onClick={() => step(sel.t.id)}>
+                <span>GO</span>
+                <small className="row" style={{ gap: 2 }}><Icon name="energy" size={14} />{sel.t.energy}</small>
+              </button>
+            ) : (
+              <span className="task-ok lp-shut"><Icon name="lock" size={22} /></span>
+            )}
+          </div>
+
           <div className={`panel loc-reward ${allDone ? "ready" : ""}`} style={{ marginTop: 12 }}>
             <div className="row" style={{ justifyContent: "space-between" }}>
               <b className="display">Награда за локацию</b>

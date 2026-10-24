@@ -1,7 +1,7 @@
 import { GameError, type Queryable } from "../db.ts";
 import { addItem, grantReward, ledger, spendEnergy, type Ctx, type Granted } from "../core.ts";
 import { STASH_CHANCE, STASH_SETS, stashSetsByLocation } from "../../content/stashes.ts";
-import { LOCATIONS, locationById, taskById, type LocationDef } from "../../content/locations.ts";
+import { LOCATIONS, locationById, taskById, taskOpen, type LocationDef } from "../../content/locations.ts";
 import type { Reward } from "../../content/rewards.ts";
 
 /*
@@ -46,8 +46,8 @@ export async function tasksHint(q: Queryable, pid: number) {
   for (const l of LOCATIONS) {
     // a cleared location can be replayed, but it does not call for attention: only open, not yet cleared ones do
     if (!unlocked(l, clears) || (clears.get(l.id) ?? 0) > 0) continue;
-    const left = l.tasks.filter((t) => (steps.get(t.id) ?? 0) < t.steps);
-    if (!left.length) claimable = true;
+    const left = l.tasks.filter((t, i) => (steps.get(t.id) ?? 0) < t.steps && taskOpen(l, i, (id) => steps.get(id) ?? 0));
+    if (l.tasks.every((t) => (steps.get(t.id) ?? 0) >= t.steps)) claimable = true;
     for (const t of left) minEnergy = minEnergy === null ? t.energy : Math.min(minEnergy, t.energy);
   }
   return { minEnergy, claimable };
@@ -61,6 +61,7 @@ export async function doTask(ctx: Ctx, taskId: string) {
   if (!unlocked(loc, clears)) throw new GameError("location_locked", "Сначала закрой предыдущую локацию");
   const have = steps.get(task.id) ?? 0;
   if (have >= task.steps) throw new GameError("task_done", "Задание уже выполнено");
+  if (!taskOpen(loc, loc.tasks.indexOf(task), (id) => steps.get(id) ?? 0)) throw new GameError("task_locked", "Сначала выполни предыдущее задание");
   const energyLeft = await spendEnergy(ctx, task.energy);
   await ctx.q.query(
     "INSERT INTO task_progress (player_id, task_id, steps) VALUES ($1,$2,1) ON CONFLICT (player_id, task_id) DO UPDATE SET steps = task_progress.steps + 1",

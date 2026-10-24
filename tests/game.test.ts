@@ -50,7 +50,7 @@ describe("energy", () => {
     expect(r.state.player.energy).toBe(92);
     // spend down to 47, regen starts at that moment
     await setEnergy(p, 52, T0 + 11 * H);
-    r = await act(db, p, "task", { taskId: "os-coffee" }, T0 + 11 * H);
+    r = await act(db, p, "task", { taskId: "os-standup" }, T0 + 11 * H);
     expect(r.state.player.energy).toBe(49);
     const s = await act(db, p, "equip", { itemId: "jeans" }, T0 + 11 * H + 5 * M);
     expect(s.state.player.energy).toBe(50);
@@ -535,6 +535,8 @@ describe("locations", () => {
     const loc = LOCATIONS[0];
     await expect(act(db, p, "location_claim", { locationId: loc.id }, T0)).rejects.toMatchObject({ code: "not_done" });
     await expect(act(db, p, "task", { taskId: LOCATIONS[1].tasks[0].id }, T0)).rejects.toMatchObject({ code: "location_locked" });
+    // tasks open one by one
+    await expect(act(db, p, "task", { taskId: loc.tasks[1].id }, T0)).rejects.toMatchObject({ code: "task_locked" });
     let last;
     for (const t of loc.tasks) for (let i = 0; i < t.steps; i++) last = await act(db, p, "task", { taskId: t.id }, T0);
     expect(last!.result.locationComplete).toBe(true);

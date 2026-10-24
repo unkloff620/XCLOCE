@@ -125,6 +125,15 @@ export const LOCATIONS: LocationDef[] = [
 ];
 
 export const locationById = (id: string) => LOCATIONS.find((l) => l.id === id);
+
+/**
+ * Tasks of a location open one by one: the first is open, the next one opens when all before it are done. A task the
+ * player has already started (progress from before this rule) stays open.
+ */
+export function taskOpen(loc: LocationDef, index: number, stepsOf: (taskId: string) => number): boolean {
+  if (index <= 0 || stepsOf(loc.tasks[index].id) > 0) return true;
+  return loc.tasks.slice(0, index).every((t) => stepsOf(t.id) >= t.steps);
+}
 export const taskById = (id: string) => {
   for (const l of LOCATIONS) {
     const t = l.tasks.find((x) => x.id === id);
