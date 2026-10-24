@@ -173,10 +173,12 @@ type Pending = { main: number[]; pp: number[]; t3: number[] };
 const NO_BET: Pending = { main: [], pp: [], t3: [] };
 
 /** one seat on the felt: the card box (cards, the stake under them), its two side circles and the name under them */
-function SeatSpot({ s, i, geo, table, reveal, delayOf, myTurnHand, betting, pending, free, onBox, onSide, onUnchip, canInvite, onInvite }: {
+function SeatSpot({ s, i, geo, table, reveal, delayOf, myTurnHand, betting, pending, free, touched, onBox, onSide, onUnchip, canInvite, onInvite }: {
   s: BjSeatV | null; i: number; geo: SeatGeo; table: BjTableV; reveal: boolean; delayOf: (id: string) => number; myTurnHand: number | null;
   /** my seat, stake not down yet: taps put chips on the box and the circles */
   betting: boolean; pending: Pending; free: boolean;
+  /** a new stake was started this round (even if the chips were all taken back): the last round is gone */
+  touched?: boolean;
   onBox: () => void; onSide: (k: "pp" | "t3") => void; onUnchip: (k: keyof Pending) => void;
   canInvite: boolean; onInvite: (seat: number) => void;
 }) {
@@ -191,7 +193,7 @@ function SeatSpot({ s, i, geo, table, reveal, delayOf, myTurnHand, betting, pend
   }
   const turn = table.phase === "playing" && table.turn?.seat === i;
   // a new stake started: the last round's cards and results leave the box
-  const fresh = betting && (pending.main.length > 0 || pending.pp.length > 0 || pending.t3.length > 0 || free);
+  const fresh = betting && (!!touched || pending.main.length > 0 || pending.pp.length > 0 || pending.t3.length > 0 || free);
   const hands = s.hands.length && !(table.phase === "betting" && (s.ready || fresh)) ? s.hands : [];
   const done = table.settled && reveal && hands.length > 0;
   const nets = done ? sideNets(s) : null;
@@ -314,8 +316,10 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
   const [pending, setPending] = useState<Pending>(NO_BET);
   const [free, setFree] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  // once a chip went down this round, «Убрать всё» clears the stake — the last round's cards and result do not come back
+  const [touched, setTouched] = useState(false);
   const round = table?.round ?? 0;
-  useEffect(() => { setPending(NO_BET); setFree(false); }, [round, table?.id]);
+  useEffect(() => { setPending(NO_BET); setFree(false); setTouched(false); }, [round, table?.id]);
   useEffect(() => {
     if (!note) return;
     const t = window.setTimeout(() => setNote(null), 1800);
@@ -334,6 +338,7 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
     if (cost + c > usd) { haptic.err(); setNote("Не хватает USD"); return; }
     haptic.tap();
     sfx("chips");
+    setTouched(true);
     setPending((p) => ({ ...p, [k]: [...p[k], c] }));
   };
   const unchip = (k: keyof Pending) => {
@@ -343,6 +348,7 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
   const repeat = () => {
     if (!me) return;
     haptic.tap();
+    setTouched(true);
     setPending({ main: chipsOf(me.bet).reverse(), pp: chipsOf(me.pp).reverse(), t3: chipsOf(me.t3).reverse() });
   };
   const place = async () => {
@@ -351,7 +357,7 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
   };
 
   // what the round brought me: hands and sides, stakes back not counted
-  const mineDone = !!me && table?.settled && reveal && me.hands.length > 0 && !(table.phase === "betting" && (me.ready || pending.main.length + pending.pp.length + pending.t3.length > 0 || free));
+  const mineDone = !!me && table?.settled && reveal && me.hands.length > 0 && !(table.phase === "betting" && (me.ready || touched || pending.main.length + pending.pp.length + pending.t3.length > 0 || free));
   const summary = useMemo(() => {
     if (!me || !mineDone) return null;
     const hands = me.hands.reduce((t, h) => t + handNet(h, me.free), 0);
@@ -413,7 +419,7 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
                 <button key={v} type="button" className={`chp big v${v} ${chip === v && !free ? "on" : ""}`} onClick={() => { haptic.tap(); setChip(v); }} aria-label={`Фишка ${v}`}>{v}</button>
               ))}
               {view.free.left > 0 && (
-                <button type="button" className={`chp big vfree ${free ? "on" : ""}`} onClick={() => { haptic.tap(); setFree((f) => !f); setPending((p) => ({ ...p, main: [] })); }}
+                <button type="button" className={`chp big vfree ${free ? "on" : ""}`} onClick={() => { haptic.tap(); setTouched(true); setFree((f) => !f); setPending((p) => ({ ...p, main: [] })); }}
                   title={`Бесплатная ставка ${BJ_FREE.bet} USD: выигрыш твой, проигрыш ничего не стоит`}>
                   FREE<small>{view.free.left}/{view.free.perDay}</small>
                 </button>
@@ -472,7 +478,7 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
               })}
               {me && mySeat !== null && (
                 <SeatSpot s={me} i={mySeat} geo={MY_SEAT} table={table} reveal={reveal} delayOf={delayOf} myTurnHand={myTurn ? table.turn!.hand : null}
-                  betting={betting} pending={pending} free={free} onBox={() => put("main")} onSide={(k) => put(k)} onUnchip={unchip}
+                  betting={betting} pending={pending} free={free} touched={touched} onBox={() => put("main")} onSide={(k) => put(k)} onUnchip={unchip}
                   canInvite={false} onInvite={() => {}} />
               )}
             </>
