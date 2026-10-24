@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "./art/icons.tsx";
 import { ItemArt } from "./art/items.tsx";
@@ -19,12 +19,30 @@ export function Bar({ value, max, tone = "green", label, height }: { value: numb
 }
 
 /** `full` — the whole screen (mini games): content keeps `maxWidth` (if given) in the middle */
+/** how many full-screen windows are open (the main menu is raised over the window's bottom while any is) */
+let fullOpen = 0;
+
 export function Modal({ title, onClose, children, wide, maxWidth, full }: { title?: ReactNode; onClose: () => void; children: ReactNode; wide?: boolean; maxWidth?: number; full?: boolean }) {
   useEffect(() => {
     const k = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", k);
     return () => window.removeEventListener("keydown", k);
   }, [onClose]);
+  // a full-screen mini game keeps the main menu under it: a tap on a menu button closes the game and goes there
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+  useEffect(() => {
+    if (!full) return;
+    fullOpen++;
+    document.body.classList.add("has-full");
+    const nav = (e: MouseEvent) => { if ((e.target as Element | null)?.closest?.(".nav a")) closeRef.current(); };
+    document.addEventListener("click", nav, true);
+    return () => {
+      document.removeEventListener("click", nav, true);
+      // another full window may still be open (a game opened from a game)
+      if (--fullOpen <= 0) { fullOpen = 0; document.body.classList.remove("has-full"); }
+    };
+  }, [full]);
   // rendered into <body> so it covers the HUD even when opened from a fixed full-screen scene
   const box = (
     <div className={`modal-back ${full ? "full" : ""}`} onClick={full ? undefined : onClose} role="dialog" aria-modal="true">

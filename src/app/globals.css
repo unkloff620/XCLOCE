@@ -262,3 +262,4 @@ h2.h { margin: 4px 2px 8px; font-size: 16px; text-shadow: 0 2px 0 var(--line); }
 .leader-on { position: absolute; right: -1px; bottom: -1px; width: 12px; height: 12px; border-radius: 50%; background: #2ee88a; border: 2px solid #1c120b; box-shadow: 0 0 6px rgba(46, 232, 138, 0.8); }
 .leaders-online { display: inline-flex; align-items: center; gap: 3px; margin-left: 2px; color: #2ee88a; font-style: normal; }
 .leaders-online i { width: 7px; height: 7px; border-radius: 50%; background: #2ee88a; box-shadow: 0 0 4px #2ee88a; }
+
