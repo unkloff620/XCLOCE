@@ -2450,5 +2450,3 @@ button.bjt-stack { cursor: pointer; }
 @media (prefers-reduced-motion: reduce) { .fs-aim, .fs-arrow, .fs-pic, .fs-hello-pics img { animation-name: none; } }
 /* the target is low on the screen: the step card moves up under the HUD so it never covers it */
 .fs-card.top { bottom: auto; top: calc(var(--hud-h) + var(--safe-t) + 8px); }
-/* the yard's finds lie at the very bottom of the picture: the open leaders strip must not cover them */
-.fit-page .yard-stage { bottom: calc(var(--nav-h) + var(--safe-b) + var(--strip-h, 0px) - 6px); }

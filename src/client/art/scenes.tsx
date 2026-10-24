@@ -182,11 +182,12 @@ export function LocationScene({ scene }: { scene: string }) {
 export const YARD_SPOTS = [
   // on the asphalt of the drawn yard (public/assets/yard/court-night.webp): in front of the table and the machines
   // (table x 2–61%, y 58–83%; 777 and the upgrader x 60–100%, y 59–82%); r = how the thing lies
-  { x: 14, y: 89, r: -14 },
-  { x: 36, y: 92, r: 9 },
-  { x: 57, y: 87, r: 18 },
-  { x: 78, y: 90, r: -8 },
-  { x: 56, y: 74, r: 12 },
+  // high enough that the open leaders strip over the bottom bar never covers a find (the picture itself does not move)
+  { x: 14, y: 81, r: -14 },
+  { x: 36, y: 82, r: 9 },
+  { x: 57, y: 80, r: 18 },
+  { x: 80, y: 81, r: -8 },
+  { x: 56, y: 73, r: 12 },
 ];
 
 /** Night yard: houses with balconies and AC units, a 24/7 kiosk, graffiti, a lamp post, a tree, a bench, puddles. */

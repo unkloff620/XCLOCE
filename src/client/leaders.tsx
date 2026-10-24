@@ -35,11 +35,20 @@ export function LeadersStrip() {
     document.documentElement.style.setProperty("--strip-h", open && data?.top.length ? "74px" : "0px");
     return () => { document.documentElement.style.setProperty("--strip-h", "0px"); };
   }, [open, data?.top.length]);
-  const toggle = () => {
-    const v = !open;
+  const set = (v: boolean) => {
     setOpen(v);
     try { localStorage.setItem(KEY, v ? "1" : "0"); } catch { /* private mode */ }
   };
+  const toggle = () => set(!open);
+  // a tap anywhere outside the open strip folds it away
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: PointerEvent) => {
+      if (!(e.target instanceof Element) || !e.target.closest(".leaders")) set(false);
+    };
+    document.addEventListener("pointerdown", away, true);
+    return () => document.removeEventListener("pointerdown", away, true);
+  }, [open]);
   if (!data?.top.length) return null;
   const meId = state?.player.id;
   const inTop = data.top.some((r) => r.id === meId);
