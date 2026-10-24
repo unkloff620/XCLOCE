@@ -26,15 +26,9 @@ import {
 
 /* ---------------- a playing card (poker) ---------------- */
 export function PlayingCard({ r, s, back, i }: { r?: number; s?: number; back?: boolean; i: number }) {
-  if (back || r === undefined || s === undefined) return <span className="pcard back" style={{ ["--i" as string]: i }} />;
-  const red = s === 1 || s === 2;
-  return (
-    <span className={`pcard ${red ? "red" : ""}`} style={{ ["--i" as string]: i }}>
-      <b>{RANKS[r]}</b>
-      <i>{SUITS[s]}</i>
-      <b className="pcard-low">{RANKS[r]}</b>
-    </span>
-  );
+  // the drawn deck (public/assets/cards, tools/scene/build-cards.py)
+  if (back || r === undefined || s === undefined) return <span className="pcard img back" style={{ ["--i" as string]: i, backgroundImage: "url(/assets/cards/back.webp)" }} />;
+  return <span className="pcard img" role="img" aria-label={`${RANKS[r]}${SUITS[s]}`} style={{ ["--i" as string]: i, backgroundImage: `url(/assets/cards/${s}-${r}.webp)` }} />;
 }
 
 /* ---------------- zonk ---------------- */

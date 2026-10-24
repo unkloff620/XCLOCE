@@ -2589,3 +2589,12 @@ button.bjt-stack { cursor: pointer; }
 .pkt-cell b { font-size: 2.7cqw; font-weight: 900; color: #ffe08a; white-space: nowrap; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); }
 .pkt-new { position: absolute; left: 50%; bottom: -1.2cqw; transform: translateX(-50%); padding: 0.2cqw 1.2cqw; border-radius: 1.4cqw; font-size: 1.9cqw; font-weight: 900;
   background: #2ee88a; color: #0b2a17; white-space: nowrap; box-shadow: 0 0.3cqw 0 rgba(0, 0, 0, 0.4); }
+
+/* the drawn deck (public/assets/cards, 114×175): a card is its picture, no drawn border */
+.bjc.img, .pcard.img { padding: 0; border: 0; background-color: transparent; background-repeat: no-repeat; background-position: center; background-size: 100% 100%;
+  box-shadow: 0 0.5cqw 0.8cqw rgba(0, 0, 0, 0.4); }
+.bjc.img { height: calc(var(--cw) * 1.535); border-radius: calc(var(--cw) * 0.08); }
+.pcard.img { border-radius: 6%; }
+.pkt .pcard.img { display: block; width: auto; height: 100%; aspect-ratio: 114 / 175; margin: 0 auto; border-radius: 1.2cqw; }
+.pkt .pkt-slot.can .pcard.img { box-shadow: 0 0.6cqw 0 rgba(0, 0, 0, 0.35), 0 0 0 0.45cqw rgba(255, 224, 138, 0.6); }
+.pkt .pkt-slot.used .pcard.img { box-shadow: 0 0 0 0.5cqw #ffd54a, 0 0 2.4cqw rgba(255, 213, 74, 0.7); }

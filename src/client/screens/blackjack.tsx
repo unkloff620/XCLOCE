@@ -43,14 +43,9 @@ function BlackjackHelp() {
 
 /** a card on the table; it flies out of the shoe after `delay` ms */
 function Card({ c, back, delay }: { c?: BjCardV; back?: boolean; delay: number }) {
-  if (back || !c) return <span className="bjc back" style={{ animationDelay: `${delay}ms` }} />;
-  const red = c.s === 1 || c.s === 2;
-  return (
-    <span className={`bjc ${red ? "red" : ""}`} style={{ animationDelay: `${delay}ms` }}>
-      <b>{RANKS[c.r]}</b>
-      <i>{SUITS[c.s]}</i>
-    </span>
-  );
+  // the drawn deck (public/assets/cards, tools/scene/build-cards.py): <suit>-<rank>.webp and back.webp
+  if (back || !c) return <span className="bjc img back" style={{ animationDelay: `${delay}ms`, backgroundImage: "url(/assets/cards/back.webp)" }} />;
+  return <span className="bjc img" role="img" aria-label={`${RANKS[c.r]}${SUITS[c.s]}`} style={{ animationDelay: `${delay}ms`, backgroundImage: `url(/assets/cards/${c.s}-${c.r}.webp)` }} />;
 }
 
 /**
