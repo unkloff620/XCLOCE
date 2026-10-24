@@ -2552,3 +2552,24 @@ button.bjt-stack { cursor: pointer; }
 .bj2 .bjt-side.big .bjt-side-res { top: 50%; left: calc(100% + 1.6cqw); transform: translateY(-50%); font-size: 2.6cqw; }
 .bj2 .bjt-box.big .bjt-out { bottom: auto; top: 50%; left: calc(100% + 1.2cqw); transform: translateY(-50%); font-size: 2.6cqw; }
 .bj2 .bjt-box.big .bjt-hands.n2 .bjt-out, .bj2 .bjt-box.big .bjt-hands.n3 .bjt-out, .bj2 .bjt-box.big .bjt-hands.n4 .bjt-out { top: auto; bottom: calc(100% + 0.6cqw); left: 50%; transform: translateX(-50%); font-size: 2.1cqw; }
+
+/* ---------------- poker, round 3: the room felt fills the window (public/assets/yard/poker-room.webp, 1080×2400) ----------------
+ * the level line over the title, the cards in the five gold frames, what came under them on its own band, the nine
+ * combinations below in a 3×3 grid with room for their prize icons, the button at the bottom. Sizes in cqw (1080 wide). */
+.gstage.bleed .pkt { width: min(max(100cqw, calc(100cqh * 0.45)), calc(100cqh * 0.64)); aspect-ratio: 1080 / 2400; }
+.pkt-top { font-size: 2.6cqw; gap: 1.8cqw; }
+.pkt-lvl { width: 8cqw; height: 8cqw; }
+.pkt-res { display: flex; align-items: center; justify-content: center; }
+.pkt-out { padding: 0.8cqw 2.4cqw; border-radius: 3cqw; background: rgba(0, 0, 0, 0.45); border: 0.25cqw solid rgba(230, 190, 90, 0.45); gap: 0.6cqw 1.6cqw; }
+.pkt-out b { font-size: 4cqw; }
+.pkt-out .chip { font-size: 13px; }
+.pkt-hint { padding: 0.8cqw 2.4cqw; border-radius: 3cqw; background: rgba(0, 0, 0, 0.35); font-size: 2.8cqw; }
+.pkt-table { gap: 1.8cqw; grid-template-rows: repeat(3, 1fr); }
+.pkt-row { gap: 1.4cqw; padding: 1.4cqw 0.8cqw 1.2cqw; border-radius: 2cqw; overflow: visible; justify-content: space-evenly; }
+.pkt .pk-mini { width: 4.3cqw; height: 5.9cqw; border-radius: 0.7cqw; border-width: 0.22cqw; }
+.pkt .pk-mini b, .pkt .pk-mini i { font-size: 2.2cqw; }
+.pkt-row-cards { gap: 0.5cqw; }
+.pkt-prize { gap: 4cqw; padding-top: 1.6cqw; }
+.pkt-ico svg { width: 6.4cqw !important; height: 6.4cqw !important; }
+.pkt-ico b { font-size: 2.3cqw; right: -3cqw; top: -1.8cqw; padding: 0.15cqw 0.7cqw; }
+.pkt-ctrl .btn { height: 9.5cqw; font-size: 3.8cqw; }

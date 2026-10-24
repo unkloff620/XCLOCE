@@ -479,11 +479,11 @@ function PrizeIcons({ hand, level }: { hand: PokerHand; level: number }) {
   );
 }
 
-/* the felt picture (public/assets/yard/poker-table.webp, 1060×1484): the five gold frames for the cards */
-const PW = 1060, PH = 1484;
+/* the felt picture (public/assets/yard/poker-room.webp, 1080×2400, the whole window): the five gold frames for the cards */
+const PW = 1080, PH = 2400;
 const px = (x: number) => `${(x / PW) * 100}%`;
 const py = (y: number) => `${(y / PH) * 100}%`;
-const SLOTS = [108, 280, 453, 626, 798];
+const SLOTS = [107, 284, 459, 634, 810];
 
 export function PokerWindow({ onClose }: { onClose: () => void }) {
   const { state, act, busy } = useGame();
@@ -512,14 +512,16 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
   };
   const hand: PokerHand | null = open && open.phase === "done" ? open.hand : null;
   return (
-    <Modal title={<span className="title-row">Покер <PokerHelp /></span>} onClose={onClose} full>
-      <div className="gstage">
+    <Modal onClose={onClose} full>
+      <div className="gstage bleed">
+        {/* the felt is the whole window: [?] in the corner opposite [×] */}
+        <div className="zb-help"><PokerHelp /></div>
         <div className="pkt">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="pkt-bg" src="/assets/yard/poker-table.webp" alt="" draggable={false} />
+          <img className="pkt-bg" src="/assets/yard/poker-room.webp" alt="" draggable={false} />
 
           {/* above the title: the poker level, its experience, the swaps it gives, the hands left today */}
-          <div className="pkt-top" style={{ left: px(70), top: py(60), width: px(920) }}>
+          <div className="pkt-top" style={{ left: px(90), top: py(395), width: px(900) }}>
             <span className="pkt-lvl" title={p ? `${p.xp}${p.to !== null ? ` / ${p.to}` : ""} опыта покера` : undefined}>
               <b className="display num">{level}</b><small>ур.</small>
             </span>
@@ -537,7 +539,7 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
             const usedCard = hand && hand !== "high" ? open!.used.includes(i) : false;
             const dim = hand && hand !== "high" && !open!.used.includes(i);
             return (
-              <button key={i} className={`pkt-slot ${drawing ? "can" : ""} ${usedCard ? "used" : ""} ${dim ? "dim" : ""}`} style={{ left: px(x), top: py(652), width: px(155), height: py(192) }}
+              <button key={i} className={`pkt-slot ${drawing ? "can" : ""} ${usedCard ? "used" : ""} ${dim ? "dim" : ""}`} style={{ left: px(x), top: py(902), width: px(163), height: py(200) }}
                 disabled={!drawing || busy === "poker_swap"} onClick={() => run("poker_swap", { index: i })} aria-label={drawing ? `Заменить карту ${i + 1}` : undefined}>
                 {c
                   ? <PlayingCard key={`${deal}-${i}-${c.r}-${c.s}`} i={swappedNow ? 0 : i} r={c.r} s={c.s} />
@@ -548,7 +550,7 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
           })}
 
           {/* under the cards: what came (or how many swaps are left) */}
-          <div className="pkt-res" style={{ left: px(80), top: py(855), width: px(900) }}>
+          <div className="pkt-res" style={{ left: px(70), top: py(1128), width: px(940), height: py(96) }}>
             {!open ? <span className="pkt-hint">Сдаём 5 карт — собери комбинацию</span>
               : drawing ? <span className="pkt-hint">Нажми на карту, чтобы заменить · осталось <b className="num">{open.swapsLeft}</b></span>
               : (
@@ -561,7 +563,7 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
           </div>
 
           {/* the combinations in the free felt: the sample cards and the prize as icons, no words */}
-          <div className="pkt-table" style={{ left: px(60), top: py(915), width: px(940), height: py(420) }}>
+          <div className="pkt-table" style={{ left: px(70), top: py(1250), width: px(940), height: py(650) }}>
             {POKER_HANDS.filter((h) => h.id !== "high").map((h) => (
               <div key={h.id} className={`pkt-row ${hand === h.id ? "on" : ""} ${drawing && open?.hand === h.id ? "now" : ""}`} title={h.name}>
                 <span className="pkt-row-cards">{h.sample.map((c, k) => <MiniCard key={k} r={c.r} s={c.s} />)}</span>
@@ -570,7 +572,7 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
             ))}
           </div>
 
-          <div className="pkt-ctrl" style={{ left: px(230), top: py(1355), width: px(600) }}>
+          <div className="pkt-ctrl" style={{ left: px(250), top: py(1950), width: px(580) }}>
             {drawing ? (
               <button className="btn big green block" disabled={busy === "poker_stand" || busy === "poker_swap"} onClick={() => run("poker_stand")}>Вскрыть</button>
             ) : (

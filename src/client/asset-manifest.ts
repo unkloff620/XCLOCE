@@ -403,7 +403,7 @@ export const ASSET_FILES: string[] = [
  "/assets/yard/game-blackjack.webp",
  "/assets/yard/game-poker.webp",
  "/assets/yard/game-zonk.webp",
- "/assets/yard/poker-table.webp",
+ "/assets/yard/poker-room.webp",
  "/assets/yard/roach-body.webp",
  "/assets/yard/roach-leg-1.webp",
  "/assets/yard/roach-leg-2.webp",
