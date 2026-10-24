@@ -8,7 +8,9 @@
  * The mute switch is remembered on this device.
  */
 
-export type Sfx = "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" | "upgrade" | "levelup" | "error" | "win" | "step" | "door" | "locked";
+export type Sfx = "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" | "upgrade" | "levelup" | "error" | "win" | "step" | "door" | "locked"
+  /* mini-games: dice in the cup and on the table, a card flip, a deal, poker chips, a squashed roach, a zonk */
+  | "shake" | "dice" | "card" | "deal" | "chips" | "splat" | "zonk";
 
 const MUTE_KEY = "xc2_mute";
 const MUSIC_KEY = "xc2_music";
@@ -324,6 +326,45 @@ export function sfx(name: Sfx, power = 0.5) {
       [0, 0.09, 0.18].forEach((d) => noise(a, t + d, 0.06, { freq: 2600, type: "bandpass", q: 3, vol: 0.4 }));
       tone(a, 180, t + 0.02, 0.18, { type: "square", vol: 0.05 });
       break;
+    case "shake":
+      // dice rattling in the leather cup
+      for (let i = 0; i < 9; i++) noise(a, t + i * 0.055 + Math.random() * 0.02, 0.03, { freq: 1800 + Math.random() * 1400, type: "bandpass", q: 4, vol: 0.32 });
+      break;
+    case "dice":
+      // poured out: a quick rattle, then the dice knock on the table and settle
+      for (let i = 0; i < 5; i++) noise(a, t + i * 0.04, 0.025, { freq: 2600, type: "bandpass", q: 3, vol: 0.3 });
+      [0.22, 0.3, 0.36, 0.45, 0.5, 0.62].forEach((d, i) => {
+        noise(a, t + d, 0.04, { freq: 900 + i * 120, type: "bandpass", q: 2.5, vol: 0.38 - i * 0.04 });
+        tone(a, 260 + i * 25, t + d, 0.05, { type: "triangle", vol: 0.07 });
+      });
+      break;
+    case "card":
+      // a card snapped over
+      noise(a, t, 0.05, { freq: 3200, type: "highpass", vol: 0.35 });
+      noise(a, t + 0.03, 0.04, { freq: 1400, type: "bandpass", q: 1.5, vol: 0.22 });
+      break;
+    case "deal":
+      // five cards slid across the felt
+      for (let i = 0; i < 5; i++) noise(a, t + i * 0.09, 0.07, { freq: 2400, type: "bandpass", q: 1.2, vol: 0.28 });
+      break;
+    case "chips":
+      // a short stack of clay chips clicking together
+      [0, 0.07, 0.12, 0.2].forEach((d, i) => {
+        noise(a, t + d, 0.03, { freq: 4200, type: "bandpass", q: 6, vol: 0.3 });
+        tone(a, 2350 + i * 230, t + d, 0.06, { type: "triangle", vol: 0.06 });
+      });
+      break;
+    case "splat":
+      // a slipper on a roach
+      noise(a, t, 0.16, { freq: 700, vol: 0.7 });
+      tone(a, 120, t, 0.18, { type: "sine", vol: 0.45, slide: 0.5 });
+      noise(a, t + 0.06, 0.12, { freq: 2200, type: "bandpass", q: 2, vol: 0.18 });
+      break;
+    case "zonk":
+      // the sad trombone of a zonk
+      [311, 294, 277].forEach((f, i) => tone(a, f, t + i * 0.2, 0.2, { type: "sawtooth", vol: 0.05 }));
+      tone(a, 262, t + 0.6, 0.55, { type: "sawtooth", vol: 0.05, slide: 0.92 });
+      break;
     case "error":
       if (sample(a, "bars", t, 0.25, 1.15)) break;
       tone(a, 220, t, 0.12, { type: "square", vol: 0.07 });
@@ -345,7 +386,7 @@ export function yardSfx(dropId: string) {
   if (muted) return;
   const a = audio();
   if (!a || a.state !== "running") return;
-  if (!sample(a, `y-${dropId}`, a.currentTime + 0.005, 0.5)) sfx("coin");
+  if (!sample(a, `y-${dropId}`, a.currentTime + 0.005, 0.5)) sfx(dropId === "poker-chip" ? "chips" : "coin");
 }
 
 /** What a successful action sounds like (attacks and slots play their own). */

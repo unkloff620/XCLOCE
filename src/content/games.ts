@@ -224,13 +224,15 @@ export const upgradeValue = (stake: number, mult: number) => Math.max(1, Math.ro
 
 /* ---------------- poker (пять карт сразу) ---------------- */
 /*
- * Платная игра: POKER_RULES.price за раздачу, без дневного лимита (perDay 0 — без лимита). Сразу сдаётся 5 карт
+ * Платная игра: POKER_RULES.price за раздачу, до POKER_RULES.perDay раздач в сутки (МСК); «Фишка» из двора (POKER_CHIP) — одна раздача без оплаты. Сразу сдаётся 5 карт
  * из полной колоды, комбинация даёт награду из POKER_HANDS. Каждая раздача даёт опыт покера (xp комбинации); уровень
  * покера добавляет к денежной награде POKER_LEVEL_BONUS за уровень (до POKER_BONUS_LEVELS).
  * Шулерство: с 20 уровня покера после раздачи можно заменить карту на столе (нажать на неё — придёт новая из колоды),
  * с 50 — две замены, со 100 — три (POKER_CHEATS). Комбинация считается после замен.
  */
-export const POKER_RULES = { perDay: 0, price: { currency: "USD" as const, amount: 3 } };
+export const POKER_RULES = { perDay: 25, price: { currency: "USD" as const, amount: 3 } };
+/** the yard item that pays for one poker hand */
+export const POKER_CHIP = "poker-chip";
 export type PokerHand = "royal" | "sflush" | "quads" | "full" | "flush" | "straight" | "trips" | "twopair" | "pair" | "high";
 export interface PokerHandDef { id: PokerHand; name: string; xp: number; pay: Reward; sample: Card[] }
 const cs = (s: string): Card[] => s.split(" ").map((t) => ({ r: RANKS.indexOf(t.slice(0, -1) as (typeof RANKS)[number]), s: "shdc".indexOf(t.slice(-1)) }));
@@ -295,3 +297,22 @@ export function pokerPay(hand: PokerHand, level: number): Reward {
   const currencies = Object.fromEntries(Object.entries(base.currencies).map(([c, v]) => [c, Math.round((v ?? 0) * k * 100) / 100]));
   return { ...base, currencies };
 }
+
+/* ---------------- around the mini-games ---------------- */
+/** the best zonk game of a Moscow day: its player gets this the next day (a prize window, prizes table) */
+export const ZONK_DAY_PRIZE: Reward = { currencies: { USD: 5 }, items: [{ id: "poker-chip", qty: 3 }] };
+/** the weekly mini-game ratings: places 1–3 of each game get these */
+export const GAME_WEEK_PRIZES: Reward[] = [
+  { currencies: { USD: 15 }, items: [{ id: "poker-chip", qty: 5 }] },
+  { currencies: { USD: 10 }, items: [{ id: "poker-chip", qty: 3 }] },
+  { currencies: { USD: 5 }, items: [{ id: "poker-chip", qty: 2 }] },
+];
+export type GameBoard = "poker" | "zonk" | "bj";
+/** what each weekly mini-game rating counts: poker xp, zonk xp, blackjack winnings (USD, net) */
+export const GAME_BOARDS: { id: GameBoard; name: string; unit: string }[] = [
+  { id: "poker", name: "Покер", unit: "опыта" },
+  { id: "zonk", name: "Зонк", unit: "опыта" },
+  { id: "bj", name: "Блэкджек", unit: "USD" },
+];
+/** the cockroach in the zonk room: a tap squashes it for a few roubles (and now and then a «Фишка»), not too often */
+export const ROACH_RULES = { reward: { currencies: { RUB: 15 } } as Reward, chipChance: 0.05, cooldownMs: 10 * 60_000, perDay: 12 };

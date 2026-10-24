@@ -106,7 +106,7 @@ export interface ZonkInfo {
   active: GameView | null;
 }
 export interface PokerDraw { id: number; cards: { r: number; s: number }[]; swapsLeft: number; swapped: number[]; hand: import("../content/games.ts").PokerHand; used: number[] }
-export interface PokerInfo { left: number; played?: number; perDay: number; price: { currency: Currency; amount: number }; xp: number; level: number; from: number; to: number | null; cheats?: number; active?: PokerDraw | null }
+export interface PokerInfo { left: number; played?: number; perDay: number; price: { currency: Currency; amount: number }; chips?: number; xp: number; level: number; from: number; to: number | null; cheats?: number; active?: PokerDraw | null }
 export interface PokerPlay {
   kind: "poker"; phase: "draw" | "done"; cards: { r: number; s: number }[]; hand: import("../content/games.ts").PokerHand; used: number[];
   swapsLeft: number; swapped: number[];
@@ -220,8 +220,14 @@ export async function loginWidget(data: Record<string, unknown>) {
   store(TOKEN_KEY, r.token);
 }
 
+/** window event fired after each successful action, detail = the action type */
+export const ACTION_EVENT = "xc-action";
 export const api = {
   get: <T>(path: string) => raw<T>(path),
-  action: <T>(type: string, body: Record<string, unknown> = {}) =>
-    raw<{ result: T; state: GameState }>("/api/action", { method: "POST", body: JSON.stringify({ type, ...body }) }),
+  action: async <T>(type: string, body: Record<string, unknown> = {}) => {
+    const r = await raw<{ result: T; state: GameState }>("/api/action", { method: "POST", body: JSON.stringify({ type, ...body }) });
+    // every action that went through is announced (the newcomer's first steps listen for theirs)
+    if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent(ACTION_EVENT, { detail: type }));
+    return r;
+  },
 };

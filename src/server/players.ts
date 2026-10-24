@@ -1,3 +1,4 @@
+import { YARD_SPAWN_MIN } from "../content/yard.ts";
 import type { Queryable } from "./db.ts";
 import type { TelegramUser } from "./auth.ts";
 import { CURRENCIES } from "../content/currencies.ts";
@@ -36,7 +37,8 @@ export async function giveStartKit(q: Queryable, id: number) {
   for (const it of START_ITEMS) await q.query("INSERT INTO inventory (player_id, item_id, qty, source) VALUES ($1,$2,$3,'start')", [id, it.id, it.qty]);
   await q.query("INSERT INTO appearance (player_id, equipped) VALUES ($1,$2)", [id, JSON.stringify(STARTER_OUTFIT)]);
   await q.query("INSERT INTO player_stats (player_id) VALUES ($1)", [id]);
-  await q.query("INSERT INTO yard (player_id, anchor_at) VALUES ($1, now())", [id]);
+  // the yard starts one period back: the first find is already lying there (the newcomer's first step picks it)
+  await q.query("INSERT INTO yard (player_id, anchor_at) VALUES ($1, now() - make_interval(mins => $2))", [id, YARD_SPAWN_MIN]);
 }
 
 export async function upsertTelegramPlayer(q: Queryable, u: TelegramUser): Promise<number> {

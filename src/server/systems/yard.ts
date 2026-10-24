@@ -20,8 +20,10 @@ export async function yardSync(ctx: Ctx) {
   const max = ctx.cfg.yard.maxItems;
   let [y] = await ctx.q.query<{ anchor_at: Date | null }>("SELECT anchor_at FROM yard WHERE player_id=$1 FOR UPDATE", [ctx.pid]);
   if (!y) {
-    await ctx.q.query("INSERT INTO yard (player_id, anchor_at) VALUES ($1,$2) ON CONFLICT DO NOTHING", [ctx.pid, new Date(ctx.now)]);
-    y = { anchor_at: new Date(ctx.now) };
+    // a brand-new yard starts one period back: the first find is already there (the newcomer's first step picks it)
+    const start = new Date(ctx.now - period);
+    await ctx.q.query("INSERT INTO yard (player_id, anchor_at) VALUES ($1,$2) ON CONFLICT DO NOTHING", [ctx.pid, start]);
+    y = { anchor_at: start };
   }
   const items = await ctx.q.query<{ id: number; slot: number; drop_id: string; spawned_at: Date }>(
     "SELECT id, slot, drop_id, spawned_at FROM yard_items WHERE player_id=$1 ORDER BY slot",

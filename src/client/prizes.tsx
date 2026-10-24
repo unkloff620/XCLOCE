@@ -18,7 +18,7 @@ export function PrizeWindow() {
     if (r) haptic.big();
   };
   return (
-    <Modal title="Итоги недели" onClose={() => setLater(true)}>
+    <Modal title="Награда" onClose={() => setLater(true)}>
       <div className="col" style={{ alignItems: "center", gap: 12, textAlign: "center" }}>
         <div className="prize-cup"><Icon name="trophy" size={72} /></div>
         <b className="display" style={{ fontSize: 20 }}>{p.title}</b>

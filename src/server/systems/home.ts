@@ -1,6 +1,6 @@
 import { GameError, type Queryable } from "../db.ts";
-import { ledger, takeMoney, type Ctx } from "../core.ts";
-import { EQUIPMENT, HELP_TOPICS, TROPHIES, baseBit, equipmentById, hasPiece, piecesCount, normalizeLook, roomById, roomUnlockId, roomsEnergyBonus, totalBonus, type HelpTopic, type Look } from "../../content/home.ts";
+import { grantReward, ledger, takeMoney, type Ctx } from "../core.ts";
+import { EQUIPMENT, FIRST_STEPS_GIFT, HELP_TOPICS, TROPHIES, baseBit, equipmentById, hasPiece, piecesCount, normalizeLook, roomById, roomUnlockId, roomsEnergyBonus, totalBonus, type HelpTopic, type Look } from "../../content/home.ts";
 import { TALENT_RESET_PRICE, TALENT_WEAPONS, nodeOpen, talentTree, talentsSpent, type TalentBranch, type WeaponTalents } from "../../content/talents.ts";
 
 /*
@@ -195,6 +195,16 @@ export async function helpSeen(ctx: Ctx, topic: string) {
     [ctx.pid, topic],
   );
   return { topic };
+}
+
+/** The gift at the end of the newcomer's first steps: once per player (the "first-steps" help topic marks it). */
+export async function starterGift(ctx: Ctx) {
+  const r = await ctx.q.query(
+    "UPDATE players SET help_seen = help_seen || to_jsonb('first-steps'::text) WHERE id=$1 AND NOT (help_seen ? 'first-steps') RETURNING id",
+    [ctx.pid],
+  );
+  if (!r.length) throw new GameError("gift_taken", "Подарок уже получен");
+  return { reward: await grantReward(ctx, FIRST_STEPS_GIFT, "first-steps") };
 }
 
 export const EQUIPMENT_IDS = EQUIPMENT.map((e) => e.id);

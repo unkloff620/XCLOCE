@@ -7,6 +7,7 @@ import type { GameState } from "./api.ts";
 import { sfx } from "./sound.ts";
 import { haptic } from "./telegram.ts";
 import { usedUrl } from "./preload.ts";
+import { firstStepsPending } from "./first-steps.tsx";
 
 /*
  * First-visit tour on the home screen: a spotlight walks over the key places one by one, each step a picture and a
@@ -95,9 +96,9 @@ const REPLAY = "xc-tour";
 export function replayTutorial() {
   window.dispatchEvent(new Event(REPLAY));
 }
-/** a newcomer who has not finished (or skipped) the tour */
+/** a newcomer still on the first steps (first-steps.tsx): other windows wait; the tour itself is only replayed now */
 export function tutorialPending(state: GameState | null): boolean {
-  return !!state && state.player.level <= 3 && !state.helpSeen.includes(TUTORIAL);
+  return firstStepsPending(state);
 }
 
 function useRect(selector: string | undefined, tick: number) {
@@ -137,7 +138,8 @@ export function Tutorial() {
     window.addEventListener(REPLAY, again);
     return () => window.removeEventListener(REPLAY, again);
   }, []);
-  const active = mounted && !gone && path === "/" && (forced || tutorialPending(state));
+  // newcomers get the first steps (first-steps.tsx); this tour of the home screen is replayed from the profile
+  const active = mounted && !gone && path === "/" && forced;
   const step = STEPS[i];
   const rect = useRect(active ? step.target : undefined, i);
   const card = useRef<HTMLDivElement>(null);
