@@ -200,6 +200,7 @@ function Shoe({ fill, sole }: { fill: string; sole: string }) {
 const RASTER_ITEMS = new Set([
   "fist", "mouse", "red-candle", "keyboard", "gpu", "rug-pull-gun",
   "tee-white", "tee-pump", "hoodie-hodl", "jeans", "shorts-remote", "sneakers", "cap-moon", "slippers", "gold-chain", "bottle-komandate", "hand-drum",
+  "jacket-komandate", "pants-komandate", "sneakers-komandate",
   "poker-chip", "energy-drink", "energy-pack", "energy-50", "energy-100", "energy-500", "lost-wallet", "bottle-cap", "flyer-passive", "spinner", "sticker-hodl", "statue-close",
   ...STASH_IDS,
 ]);
