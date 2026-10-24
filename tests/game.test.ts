@@ -1242,6 +1242,11 @@ describe("yard mini games", () => {
     const c = await act(db, p, "roach_squash", {}, T0 + 11 * M, always(0.01));
     expect(c.result.reward.items).toEqual([{ id: "poker-chip", qty: 1 }]);
     expect(await wallet(db, p, "RUB")).toBe(rub + 30);
+    // a zonk game given up still counts its xp for the weekly mini-game rating
+    await act(db, p, "game_start", { game: "zonk", level: 1 }, T0 + 12 * M, always(0.5));
+    await act(db, p, "zonk_give_up", {}, T0 + 13 * M);
+    const [zw] = await db.query<{ zonk: number }>("SELECT zonk FROM game_weekly WHERE player_id=$1", [p]);
+    expect(Number(zw.zonk)).toBe(1);
     // a finished zonk game today → tomorrow the best player has a prize waiting
     const q = await newPlayer(db);
     const day = new Date(T0 + 3 * H).toISOString().slice(0, 10);
