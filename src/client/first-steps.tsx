@@ -88,10 +88,17 @@ function useAim(aims: Aim[] | null, path: string) {
     const find = () => {
       for (const a of aims) {
         if (!a.at(path)) continue;
-        const el = Array.from(document.querySelectorAll(a.sel)).find((e) => {
+        const all = Array.from(document.querySelectorAll(a.sel)).filter((e) => {
           const b = e.getBoundingClientRect();
           return b.width > 0 && b.height > 0;
         });
+        // the one a finger can really reach first (not under the leaders strip or the step card)
+        const reachable = (e: Element) => {
+          const b = e.getBoundingClientRect();
+          const hit = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2);
+          return !!hit && (hit === e || e.contains(hit));
+        };
+        const el = all.find(reachable) ?? all[0];
         if (el) {
           const b = el.getBoundingClientRect();
           setR((old) => (old && Math.abs(old.left - b.left) < 1 && Math.abs(old.top - b.top) < 1 && Math.abs(old.width - b.width) < 1 ? old : b));
@@ -202,7 +209,7 @@ export function FirstSteps() {
         </div>
       )}
       {step && (
-        <div className={`fs-card ${cheer ? "cheer" : ""}`} key={step.id}>
+        <div className={`fs-card ${cheer ? "cheer" : ""} ${rect && rect.bottom > window.innerHeight * 0.62 ? "top" : ""}`} key={step.id}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="fs-pic" src={usedUrl(step.pic)} alt="" draggable={false} />
           <span className="fs-main">
