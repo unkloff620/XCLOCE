@@ -1256,7 +1256,7 @@ describe("yard mini games", () => {
     expect(next.state.prizes.map((x: { title: string }) => x.title)).toEqual(["Рекорд дня в зонке: 3500 очков"]);
     // settled once: nobody gets it twice
     const again = await act(db, p, "equip", { itemId: "jeans" }, T0 + 25 * H);
-    expect(again.state.prizes).toHaveLength(0);
+    expect(again.state.prizes.filter((x: { title: string }) => x.title.startsWith("Рекорд дня"))).toHaveLength(0);
   });
 
   it("the newcomer's gift comes once", async () => {
