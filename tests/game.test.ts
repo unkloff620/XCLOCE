@@ -1236,9 +1236,13 @@ describe("yard mini games", () => {
     expect(s1.result.cards[4]).not.toEqual(d.result.cards[4]);
     expect(s1.result.cards.slice(0, 4)).toEqual(d.result.cards.slice(0, 4));
     expect(await wallet(db, p, "USD")).toBe(usd);
+    // the last swap does not count the hand: the new card is shown first
     const s2 = await act(db, p, "poker_swap", { index: 0 }, T0, always(0.37));
-    expect(s2.result).toMatchObject({ phase: "done", swapped: [4, 0] });
-    expect(s2.state.poker.active).toBeNull();
+    expect(s2.result).toMatchObject({ phase: "draw", swapsLeft: 0, swapped: [4, 0] });
+    await expect(act(db, p, "poker_swap", { index: 1 }, T0)).rejects.toMatchObject({ code: "no_swaps" });
+    const s3 = await act(db, p, "poker_stand", {}, T0, always(0.37));
+    expect(s3.result).toMatchObject({ phase: "done", swapped: [4, 0], cards: s2.result.cards });
+    expect(s3.state.poker.active).toBeNull();
     await expect(act(db, p, "poker_swap", { index: 0 }, T0)).rejects.toMatchObject({ code: "no_game" });
     // stand keeps the cards
     const d2 = await act(db, p, "poker_play", {}, T0 + 1000, always(0.37));

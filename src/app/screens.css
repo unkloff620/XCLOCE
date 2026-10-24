@@ -2573,3 +2573,19 @@ button.bjt-stack { cursor: pointer; }
 .pkt-ico svg { width: 6.4cqw !important; height: 6.4cqw !important; }
 .pkt-ico b { font-size: 2.3cqw; right: -3cqw; top: -1.8cqw; padding: 0.15cqw 0.7cqw; }
 .pkt-ctrl .btn { height: 9.5cqw; font-size: 3.8cqw; }
+/* poker, round 4: the combinations in one column — [five sample cards][prize][prize]; the one on the table lights its
+ * five cards (gold when counted, dashed while swapping), not the whole line */
+.pkt-table { display: grid; grid-template-columns: 1fr; grid-template-rows: repeat(9, 1fr); gap: 0.6cqw; }
+.pkt-row { display: grid; grid-template-columns: 1.5fr 1fr 1fr; align-items: center; justify-items: start; gap: 2cqw; padding: 0 2.4cqw;
+  flex-direction: row; border-radius: 1.4cqw; background: rgba(0, 0, 0, 0.18); border: 0; box-shadow: none; transform: none; }
+.pkt-row.on, .pkt-row.now { background: rgba(0, 0, 0, 0.18); border: 0; box-shadow: none; transform: none; }
+.pkt-row-cards { gap: 0.45cqw; }
+.pkt .pkt-row .pk-mini { width: 3.4cqw; height: 4.6cqw; border-radius: 0.55cqw; transition: transform 0.2s, box-shadow 0.2s; }
+.pkt .pkt-row .pk-mini b, .pkt .pkt-row .pk-mini i { font-size: 1.8cqw; }
+.pkt .pkt-row.on .pk-mini { transform: translateY(-0.5cqw); box-shadow: 0 0 0 0.35cqw #ffd54a, 0 0 1.6cqw rgba(255, 213, 74, 0.85); }
+.pkt .pkt-row.now:not(.on) .pk-mini { box-shadow: 0 0 0 0.3cqw rgba(255, 224, 138, 0.9); outline: 0.2cqw dashed rgba(255, 224, 138, 0.9); outline-offset: 0.35cqw; }
+.pkt-cell { display: inline-flex; align-items: center; gap: 1cqw; min-width: 0; }
+.pkt-cell svg { width: 4.6cqw !important; height: 4.6cqw !important; flex: none; }
+.pkt-cell b { font-size: 2.7cqw; font-weight: 900; color: #ffe08a; white-space: nowrap; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); }
+.pkt-new { position: absolute; left: 50%; bottom: -1.2cqw; transform: translateX(-50%); padding: 0.2cqw 1.2cqw; border-radius: 1.4cqw; font-size: 1.9cqw; font-weight: 900;
+  background: #2ee88a; color: #0b2a17; white-space: nowrap; box-shadow: 0 0.3cqw 0 rgba(0, 0, 0, 0.4); }

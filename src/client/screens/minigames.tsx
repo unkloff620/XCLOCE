@@ -472,10 +472,16 @@ function PrizeIcons({ hand, level }: { hand: PokerHand; level: number }) {
     ...Object.entries(pay.currencies ?? {}).map(([c, v]) => ({ key: c, icon: <Icon name={c as Currency} size={22} />, n: v ?? 0, title: `${v} ${c}` })),
     ...(pay.items ?? []).map((it) => ({ key: it.id, icon: <ItemArt id={it.id} size={24} />, n: it.qty, title: `${itemById(it.id)?.name ?? it.id} ×${it.qty}` })),
   ];
+  // two cells, always (an empty one when the combination pays only money): the column of the list stays even
   return (
-    <span className="pkt-prize">
-      {parts.map((p) => <span key={p.key} className="pkt-ico" title={p.title}>{p.icon}<b className="num">{qtyText(p.n)}</b></span>)}
-    </span>
+    <>
+      {[0, 1].map((k) => {
+        const p = parts[k];
+        return p
+          ? <span key={p.key} className="pkt-cell" title={p.title}>{p.icon}<b className="num">{p.key in (pay.currencies ?? {}) ? qtyText(p.n) : `×${p.n}`}</b></span>
+          : <span key={`e${k}`} className="pkt-cell empty" />;
+      })}
+    </>
   );
 }
 
@@ -539,12 +545,13 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
             const usedCard = hand && hand !== "high" ? open!.used.includes(i) : false;
             const dim = hand && hand !== "high" && !open!.used.includes(i);
             return (
-              <button key={i} className={`pkt-slot ${drawing ? "can" : ""} ${usedCard ? "used" : ""} ${dim ? "dim" : ""}`} style={{ left: px(x), top: py(902), width: px(163), height: py(200) }}
-                disabled={!drawing || busy === "poker_swap"} onClick={() => run("poker_swap", { index: i })} aria-label={drawing ? `Заменить карту ${i + 1}` : undefined}>
+              <button key={i} className={`pkt-slot ${drawing && open!.swapsLeft > 0 ? "can" : ""} ${usedCard ? "used" : ""} ${dim ? "dim" : ""}`} style={{ left: px(x), top: py(902), width: px(163), height: py(200) }}
+                disabled={!drawing || open!.swapsLeft <= 0 || busy === "poker_swap"} onClick={() => run("poker_swap", { index: i })} aria-label={drawing ? `Заменить карту ${i + 1}` : undefined}>
                 {c
                   ? <PlayingCard key={`${deal}-${i}-${c.r}-${c.s}`} i={swappedNow ? 0 : i} r={c.r} s={c.s} />
                   : <PlayingCard key={`b${i}`} i={i} back />}
-                {drawing && <span className="pkt-swap" aria-hidden="true">⇄</span>}
+                {drawing && open!.swapsLeft > 0 && <span className="pkt-swap" aria-hidden="true">⇄</span>}
+                {drawing && swappedNow && <span className="pkt-new" aria-hidden="true">новая</span>}
               </button>
             );
           })}
@@ -552,7 +559,7 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
           {/* under the cards: what came (or how many swaps are left) */}
           <div className="pkt-res" style={{ left: px(70), top: py(1128), width: px(940), height: py(96) }}>
             {!open ? <span className="pkt-hint">Сдаём 5 карт — собери комбинацию</span>
-              : drawing ? <span className="pkt-hint">Нажми на карту, чтобы заменить · осталось <b className="num">{open.swapsLeft}</b></span>
+              : drawing ? <span className="pkt-hint">{open.swapsLeft > 0 ? <>Нажми на карту, чтобы заменить · осталось <b className="num">{open.swapsLeft}</b></> : "Замены кончились — посмотри карты и вскрывай"}</span>
               : (
                 <span className={`pkt-out ${open.reward ? "win" : ""}`}>
                   <b className="display">{open.title}</b>
@@ -565,6 +572,7 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
           {/* the combinations in the free felt: the sample cards and the prize as icons, no words */}
           <div className="pkt-table" style={{ left: px(70), top: py(1250), width: px(940), height: py(650) }}>
             {POKER_HANDS.filter((h) => h.id !== "high").map((h) => (
+              // the combination on the table lights its five sample cards (not the whole line): gold when counted, dashed while swapping
               <div key={h.id} className={`pkt-row ${hand === h.id ? "on" : ""} ${drawing && open?.hand === h.id ? "now" : ""}`} title={h.name}>
                 <span className="pkt-row-cards">{h.sample.map((c, k) => <MiniCard key={k} r={c.r} s={c.s} />)}</span>
                 <PrizeIcons hand={h.id} level={level} />
