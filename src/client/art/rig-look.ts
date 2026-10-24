@@ -43,10 +43,10 @@ export const WEAR_FIT = {
   },
   "jeans": {
     "slot": "PANTS",
-    "x": 74.5,
-    "y": 678.0,
-    "w": 862,
-    "h": 530
+    "x": 73.0,
+    "y": 667.5,
+    "w": 858,
+    "h": 479
   },
   "shorts-remote": {
     "slot": "PANTS",
