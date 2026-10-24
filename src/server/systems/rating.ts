@@ -3,6 +3,7 @@ import { grantReward, nextWeekAt, weekKey, weekStart, type Ctx } from "../core.t
 import { CLAN_PRIZES, WEEKLY_PRIZES, frameOf, type Frame } from "../../content/achievements.ts";
 import { levelFromXp } from "../../content/levels.ts";
 import type { Config } from "../config.ts";
+import { gameRatingView } from "./minigame-extras.ts";
 
 /*
  * Ratings: damage this week (Moscow week from Monday 00:00), authority (all time) and clans (members' damage this week).
@@ -113,6 +114,7 @@ export async function ratingView(q: Queryable, pid: number, cfg: Config, now: nu
       authority: myAuth ? { value: Number(myAuth.value), place: myAuth.place } : null,
     },
     lastWinners: lastWinners.map((w) => ({ id: w.player_id, place: w.place, damage: Number(w.damage), name: w.display_name })),
+    games: await gameRatingView(q, pid, now),
   };
 }
 

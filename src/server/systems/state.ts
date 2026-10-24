@@ -19,6 +19,7 @@ import { tasksHint } from "./locations.ts";
 import { questsView } from "./quests.ts";
 import { notifyView, scheduleEnergy } from "./notify.ts";
 import { framesFor, prizesView, settleWeeks } from "./rating.ts";
+import { settleGameWeeks, settleZonkDay } from "./minigame-extras.ts";
 import { achievementsReady, achievementsView } from "./achievements.ts";
 import { giftsLeft, giftsReceived, stashWish } from "./swap.ts";
 
@@ -81,6 +82,8 @@ export async function gameState(ctx: Ctx) {
     notify: await notifyView(ctx.q, ctx.pid),
     prizes: await (async () => {
       await settleWeeks(ctx.q, ctx.now);
+      await settleGameWeeks(ctx.q, ctx.now);
+      await settleZonkDay(ctx.q, ctx.now);
       return prizesView(ctx.q, ctx.pid);
     })(),
     achievementsReady: await achievementsReady(ctx.q, ctx.pid, ctx.cfg),

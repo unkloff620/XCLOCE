@@ -19,17 +19,29 @@ import { Roach } from "../art/roach.tsx";
 import { itemById } from "../../content/items.ts";
 import {
   ITEM_VALUES, RANKS, SUITS, UPGRADE_MODES, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue, zonkGroups, zonkScore, ZONK_ROUNDS,
-  ZONK_BANK_MIN, ZONK_FAIL_XP, ZONK_LEVELS,
-  POKER_BONUS_LEVELS, POKER_CHEATS, POKER_HANDS, POKER_LEVEL_BONUS, POKER_MAX_LEVEL, POKER_RULES, pokerCheats, pokerPay,
+  ZONK_BANK_MIN, ZONK_DAY_PRIZE, ZONK_FAIL_XP, ZONK_LEVELS,
+  POKER_BONUS_LEVELS, POKER_CHEATS, POKER_HANDS, POKER_LEVEL_BONUS, POKER_MAX_LEVEL, POKER_RULES, POKER_CHIP, pokerCheats, pokerPay,
   type PokerHand, type UpgradeMode,
 } from "../../content/games.ts";
 
 /* ---------------- a playing card (poker) ---------------- */
-export function PlayingCard({ r, s, back, i }: { r?: number; s?: number; back?: boolean; i: number }) {
+export function PlayingCard({ r, s, back, i, flip }: { r?: number; s?: number; back?: boolean; i: number; flip?: boolean }) {
   // the drawn deck (public/assets/cards, tools/scene/build-cards.py)
   if (back || r === undefined || s === undefined) return <span className="pcard img back" style={{ ["--i" as string]: i, backgroundImage: "url(/assets/cards/back.webp)" }} />;
-  return <span className="pcard img" role="img" aria-label={`${RANKS[r]}${SUITS[s]}`} style={{ ["--i" as string]: i, backgroundImage: `url(/assets/cards/${s}-${r}.webp)` }} />;
+  const face = { ["--i" as string]: i, backgroundImage: `url(/assets/cards/${s}-${r}.webp)` };
+  // flip: the card lands face down and turns over (one after another by --i)
+  if (flip) {
+    return (
+      <span className="pflip" role="img" aria-label={`${RANKS[r]}${SUITS[s]}`} style={{ ["--i" as string]: i }}>
+        <span className="pcard img back pf-side pf-back" style={{ backgroundImage: "url(/assets/cards/back.webp)" }} />
+        <span className="pcard img pf-side" style={face} />
+      </span>
+    );
+  }
+  return <span className="pcard img" role="img" aria-label={`${RANKS[r]}${SUITS[s]}`} style={face} />;
 }
+/** when the flip of card i (0…4) shows its face, ms — keep in step with .pflip in screens.css */
+const flipAt = (i: number) => 180 + i * 140 + 220;
 
 /* ---------------- zonk ---------------- */
 const PIPS: Record<number, [number, number][]> = {
@@ -54,9 +66,8 @@ const COMBOS: { key: string; dice: number[]; label: string; test: (n: number[], 
   { key: "5", dice: [5], label: "50", test: (n) => n[5] >= 1 },
   { key: "111", dice: [1, 1, 1], label: "1000", test: (n) => n[1] >= 3 },
   ...[2, 3, 4, 5, 6].map((f) => ({ key: `${f}${f}${f}`, dice: [f, f, f], label: String(f * 100), test: (n: number[]) => n[f] >= 3 })),
-  { key: "4k", dice: [3, 3, 3, 3], label: "×2", test: (n) => n.some((x) => x >= 4) },
-  { key: "5k", dice: [3, 3, 3, 3, 3], label: "×4", test: (n) => n.some((x) => x >= 5) },
-  { key: "6k", dice: [3, 3, 3, 3, 3, 3], label: "×8", test: (n) => n.some((x) => x >= 6) },
+  // four of a kind and more in one line (×2, five ×4, six ×8 — told in the help): the sheet stays readable on a phone
+  { key: "4k", dice: [3, 3, 3, 3], label: "×2+", test: (n) => n.some((x) => x >= 4) },
   { key: "str", dice: [1, 2, 3, 4, 5, 6], label: "1500", test: (n, len) => len === 6 && n.slice(1).every((x) => x === 1) },
   { key: "pairs", dice: [2, 2, 4, 4, 6, 6], label: "750", test: (n, len) => len === 6 && n.filter((x) => x === 2).length === 3 },
 ];
@@ -76,8 +87,10 @@ function ZonkHelp() {
         ))}
       </ul>
       <p>В попытке бросаешь 6 костей и забираешь очковые (нажми на кость — она встанет в лесенку), потом решаешь: «Бросить» оставшиеся — рискнуть ради большего, или «Сохранить» очки попытки — это можно от {ZONK_BANK_MIN} очков. Бросок без единой очковой кости — «Зонк»: очки этой попытки сгорают. Забрал все шесть — бросаешь все шесть заново.</p>
+      <p>Четыре одинаковых кости — очки тройки ×2, пять — ×4, шесть — ×8. Шесть разных (1–6) — 1500, три пары — 750.</p>
       <p>Не набрал цель или нажал «Сдаться» — немного рублей в утешение и +{ZONK_FAIL_XP} опыта. Каждые 100 опыта — новый уровень зонка.</p>
-      <p>Очки попыток пишутся мелом слева, стрелка показывает текущую. На листке сверху — лучший счёт дня среди всех игроков, на листе справа — комбинации.</p>
+      <p>Очки попыток пишутся мелом слева, стрелка показывает текущую. На листке сверху — лучший счёт дня среди всех игроков: в полночь по Москве он получает приз: {ZONK_DAY_PRIZE.currencies?.USD} USD и {ZONK_DAY_PRIZE.items?.[0]?.qty} фишки. На листе справа — комбинации.</p>
+      <p>По стене бегает таракан — прихлопни его, это пара рублей (иногда фишка для покера).</p>
     </Help>
   );
 }
@@ -169,20 +182,38 @@ function useRoach() {
   return { run, done: () => setRun(null) };
 }
 function RoachRunner({ run, onDone }: { run: RoachRun; onDone: () => void }) {
+  const { act } = useGame();
   const l = ROACH_LANES[run.lane];
   const h = (l.w * 480) / 660;
   // the legs stop while it stands (the run itself holds still in the CSS keyframes over the same share)
   const [still, setStill] = useState(false);
+  // a tap squashes it: it stays flat where it was hit, what it paid floats up, then it is gone
+  const [dead, setDead] = useState<{ text: string | null } | null>(null);
   useEffect(() => {
     const a = setTimeout(() => setStill(true), ROACH_STOP[0] * l.dur * 1000);
     const b = setTimeout(() => setStill(false), ROACH_STOP[1] * l.dur * 1000);
     return () => { clearTimeout(a); clearTimeout(b); };
   }, [l.dur]);
+  const squash = async () => {
+    if (dead) return;
+    setDead({ text: null });
+    haptic.ok();
+    sfx("splat");
+    const r = await act<{ reward: { currencies?: Partial<Record<string, number>>; items?: { id: string; qty: number }[] } | null }>("roach_squash", {});
+    const rub = r?.reward?.currencies?.RUB;
+    const chip = r?.reward?.items?.some((i) => i.id === POKER_CHIP);
+    setDead({ text: r?.reward ? `+${rub ?? 0} ₽${chip ? " +фишка" : ""}` : "" });
+    if (chip) sfx("chips");
+    setTimeout(onDone, 1400);
+  };
   return (
-    <span key={run.key} className={`zb-roach ${run.dir} ${still ? "still" : ""}`} onAnimationEnd={(e) => { if (e.target === e.currentTarget) onDone(); }}
+    <button type="button" key={run.key} className={`zb-roach ${run.dir} ${still || dead ? "still" : ""} ${dead ? "dead" : ""}`} aria-label="Прихлопнуть таракана"
+      onPointerDown={(e) => { e.preventDefault(); void squash(); }}
+      onAnimationEnd={(e) => { if (e.target === e.currentTarget && !dead) onDone(); }}
       style={{ top: `${((l.feet - (h * 455) / 480) / ZH) * 100}%`, width: `${(l.w / ZW) * 100}%`, ["--dur" as string]: `${l.dur}s` }}>
       <Roach />
-    </span>
+      {dead?.text && <b className="zb-roach-got num">{dead.text}</b>}
+    </button>
   );
 }
 
@@ -209,6 +240,13 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
   const seed = (g?.id ?? 1) * 13 + (g?.history?.length ?? 0) * 7 + (g?.round ?? 1) * 31;
   // the cup shakes and pours every time a new roll comes
   const [throwing, setThrowing] = useState(0);
+  // the cup rattles, then the dice knock on the board
+  useEffect(() => {
+    if (!throwing) return;
+    sfx("shake");
+    const t = setTimeout(() => sfx("dice"), 320);
+    return () => clearTimeout(t);
+  }, [throwing]);
   /*
    * A roll without points: the dice first fall on the board as they came (the kept ones stay in the ladder), and only
    * then «Зонк! −N» jumps out; after that the next attempt is thrown. The server has already moved on — this is the replay.
@@ -231,7 +269,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
     if (zonk) {
       setShow({ key: Date.now() % 100000, roll: zonk.roll!, points: zonk.points, history: before });
       setThrowing((t) => t + 1);
-      timers.current.push(setTimeout(() => { haptic.err(); sfx("error"); }, 1250));
+      timers.current.push(setTimeout(() => { haptic.err(); sfx("zonk"); }, 1250));
       timers.current.push(setTimeout(() => {
         setShow(null);
         if (r.status === "active") setThrowing((t) => t + 1);
@@ -242,7 +280,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
     if (r.status === "active") setThrowing((t) => t + 1);
     done();
   };
-  const toggle = (i: number) => { haptic.tap(); setPick((p) => (p.includes(i) ? p.filter((x) => x !== i) : [...p, i])); };
+  const toggle = (i: number) => { haptic.tap(); sfx("tap"); setPick((p) => (p.includes(i) ? p.filter((x) => x !== i) : [...p, i])); };
   const bankMin = info?.bankMin ?? ZONK_BANK_MIN;
   const turn = (g?.turn ?? 0) + (pts ?? 0);
   const nRoll = counts(playing ? roll : []);
@@ -446,7 +484,7 @@ function PokerHelp() {
   return (
     <Help topic="poker" title="Покер">
       <p>Сразу сдаётся 5 карт. Собралась комбинация из таблицы под картами — получаешь награду, чем старше комбинация, тем больше.</p>
-      <p>Раздача — {POKER_RULES.price.amount} USD, сколько угодно раз.</p>
+      <p>Раздача — {POKER_RULES.price.amount} USD, до {POKER_RULES.perDay} раздач в сутки. «Фишка» из двора оплачивает одну раздачу вместо денег.</p>
       <p>Каждая раздача даёт опыт покера (за старшие комбинации — больше). Каждый уровень покера до {POKER_BONUS_LEVELS}-го добавляет +{Math.round(POKER_LEVEL_BONUS * 1000) / 10}% к денежной награде; всего уровней {POKER_MAX_LEVEL}.</p>
       <p>Шулерство: {POKER_CHEATS.slice().reverse().map((c) => `с ${c.level} уровня — ${c.swaps} ${c.swaps === 1 ? "замена" : "замены"}`).join(", ")}. После раздачи нажми на любую карту на столе — она уйдёт, а на её место придёт новая из колоды. Комбинация считается, когда замены кончатся или ты нажмёшь «Вскрыть».</p>
     </Help>
@@ -497,6 +535,7 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
   const pct = !p ? 0 : p.to === null ? 100 : Math.max(0, Math.min(100, ((p.xp - p.from) / (p.to - p.from)) * 100));
   const usd = state?.wallet[POKER_RULES.price.currency] ?? 0;
   const left = p?.left ?? 0;
+  const chips = p?.chips ?? 0;
   const cheats = p?.cheats ?? pokerCheats(level);
   const drawing = open?.phase === "draw";
   const nextCheat = POKER_CHEATS.slice().reverse().find((c) => level < c.level);
@@ -506,7 +545,13 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
     const r = await act<PokerPlay>(type, body);
     if (r) {
       setPlay(r);
-      if (type === "poker_play") setDeal((d) => d + 1);
+      if (type === "poker_play") {
+        setDeal((d) => d + 1);
+        // the five cards slide in, then each turns over with a snap
+        sfx(body.chip ? "chips" : "deal");
+        for (let k = 0; k < 5; k++) setTimeout(() => sfx("card"), flipAt(k));
+      }
+      if (type === "poker_swap") setTimeout(() => sfx("card"), flipAt(0));
       if (r.phase === "done") { if (r.reward) { haptic.ok(); sfx("reward"); } else haptic.err(); }
     }
   };
@@ -542,7 +587,7 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
               <button key={i} className={`pkt-slot ${drawing && open!.swapsLeft > 0 ? "can" : ""} ${usedCard ? "used" : ""} ${dim ? "dim" : ""}`} style={{ left: px(x), top: py(902), width: px(163), height: py(200) }}
                 disabled={!drawing || open!.swapsLeft <= 0 || busy === "poker_swap"} onClick={() => run("poker_swap", { index: i })} aria-label={drawing ? `Заменить карту ${i + 1}` : undefined}>
                 {c
-                  ? <PlayingCard key={`${deal}-${i}-${c.r}-${c.s}`} i={swappedNow ? 0 : i} r={c.r} s={c.s} />
+                  ? <PlayingCard key={`${deal}-${i}-${c.r}-${c.s}`} i={swappedNow ? 0 : i} r={c.r} s={c.s} flip />
                   : <PlayingCard key={`b${i}`} i={i} back />}
                 {drawing && open!.swapsLeft > 0 && <span className="pkt-swap" aria-hidden="true">⇄</span>}
                 {drawing && swappedNow && <span className="pkt-new" aria-hidden="true">новая</span>}
@@ -578,9 +623,17 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
             {drawing ? (
               <button className="btn big green block" disabled={busy === "poker_stand" || busy === "poker_swap"} onClick={() => run("poker_stand")}>Вскрыть</button>
             ) : (
-              <button className="btn big gold block" disabled={busy === "poker_play" || left <= 0 || usd < POKER_RULES.price.amount} onClick={() => run("poker_play")}>
-                {left <= 0 ? "Приходи завтра" : <>{open ? "Ещё раздачу" : "Раздать"} · {POKER_RULES.price.amount} <Icon name={POKER_RULES.price.currency} size={18} /></>}
-              </button>
+              <div className="pkt-btns">
+                <button className="btn big gold block" disabled={busy === "poker_play" || left <= 0 || usd < POKER_RULES.price.amount} onClick={() => run("poker_play")}>
+                  {left <= 0 ? "Приходи завтра" : <>{open ? "Ещё раздачу" : "Раздать"} · {POKER_RULES.price.amount} <Icon name={POKER_RULES.price.currency} size={18} /></>}
+                </button>
+                {/* a «Фишка» from the yard: one hand without the money */}
+                {chips > 0 && left > 0 && (
+                  <button className="btn big pkt-chip" disabled={busy === "poker_play"} onClick={() => run("poker_play", { chip: true })} aria-label={`Раздать за фишку, фишек: ${chips}`}>
+                    <ItemArt id={POKER_CHIP} size={30} /><b className="num">{chips}</b>
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -790,7 +843,7 @@ export function YardGames() {
                 note: invites > 0 ? `зовут (${invites})` : "1–25 USD", live: invites > 0 },
               { id: "zonk", name: "Зонк", img: "/assets/yard/game-zonk.webp", note: note(zk, "4 уровня"), live: !!zk?.active },
             ] as const).map((gm) => (
-              <button key={gm.id} type="button" className={`game-tile ${gm.live ? "live" : ""}`} onClick={() => setOpen(gm.id)}>
+              <button key={gm.id} type="button" data-game={gm.id} className={`game-tile ${gm.live ? "live" : ""}`} onClick={() => setOpen(gm.id)}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={gm.img} alt="" draggable={false} />
                 <b className="display">{gm.name}</b>

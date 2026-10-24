@@ -1204,11 +1204,11 @@ describe("yard mini games", () => {
     expect(pokerPay("high", 5)).toEqual({});
   });
 
-  it("poker: 3 USD a hand, no daily limit, poker xp grows", async () => {
+  it("poker: 3 USD a hand, 25 a day, poker xp grows; a «Фишка» pays for a hand instead", async () => {
     const p = await newPlayer(db);
-    await setMoney(db, p, "USD", 100);
+    await setMoney(db, p, "USD", 200);
     let xp = 0;
-    for (let i = 0; i < 22; i++) {
+    for (let i = 0; i < 24; i++) {
       const r = await act(db, p, "poker_play", {}, T0 + i * 1000, always(0.37));
       expect(r.result.cards).toHaveLength(5);
       xp += r.result.gainedXp;
@@ -1216,8 +1216,50 @@ describe("yard mini games", () => {
       expect(r.result.poker.played).toBe(i + 1);
     }
     const charges = await db.query<{ delta: number }>("SELECT delta FROM ledger WHERE player_id=$1 AND reason='game:poker'", [p]);
-    expect(charges).toHaveLength(22);
+    expect(charges).toHaveLength(24);
     expect(Number(charges[0].delta)).toBe(-3);
+    // no chip: an error; with a chip the 25th hand costs no money
+    await expect(act(db, p, "poker_play", { chip: true }, T0 + 30_000)).rejects.toMatchObject({ code: "no_chip" });
+    await give(db, p, "poker-chip", 2);
+    const usd = await wallet(db, p, "USD");
+    const c = await act(db, p, "poker_play", { chip: true }, T0 + 31_000, always(0.37));
+    expect(await qty(db, p, "poker-chip")).toBe(1);
+    expect(c.result.poker.chips).toBe(1);
+    expect(await wallet(db, p, "USD")).toBe(Math.round((usd + (c.result.reward?.currencies?.USD ?? 0)) * 100) / 100);
+    expect(c.result.poker.left).toBe(0);
+    await expect(act(db, p, "poker_play", { chip: true }, T0 + 32_000)).rejects.toMatchObject({ code: "poker_limit" });
+    // the weekly mini-game rating counted the poker xp
+    const [w] = await db.query<{ poker: number }>("SELECT poker FROM game_weekly WHERE player_id=$1", [p]);
+    expect(Number(w.poker)).toBe(xp + c.result.gainedXp);
+  });
+
+  it("the zonk roach pays once per 10 minutes, the daily zonk record gets its prize the next day", async () => {
+    const p = await newPlayer(db);
+    const rub = await wallet(db, p, "RUB");
+    const a = await act(db, p, "roach_squash", {}, T0, always(0.5));
+    expect(a.result.reward.currencies.RUB).toBe(15);
+    expect((await act(db, p, "roach_squash", {}, T0 + 5 * M, always(0.5))).result.reward).toBeNull();
+    const c = await act(db, p, "roach_squash", {}, T0 + 11 * M, always(0.01));
+    expect(c.result.reward.items).toEqual([{ id: "poker-chip", qty: 1 }]);
+    expect(await wallet(db, p, "RUB")).toBe(rub + 30);
+    // a finished zonk game today → tomorrow the best player has a prize waiting
+    const q = await newPlayer(db);
+    const day = new Date(T0 + 3 * H).toISOString().slice(0, 10);
+    await db.query("INSERT INTO games (player_id, kind, day, paid, status, state, result, created_at, updated_at) VALUES ($1,'zonk',$2,false,'done','{}',$3,$4,$4)",
+      [q, day, JSON.stringify({ points: 3500, won: false }), new Date(T0)]);
+    const next = await act(db, q, "equip", { item: "jeans" }, T0 + 24 * H);
+    expect(next.state.prizes.map((x: { title: string }) => x.title)).toEqual(["Рекорд дня в зонке: 3500 очков"]);
+    // settled once: nobody gets it twice
+    const again = await act(db, p, "equip", { item: "jeans" }, T0 + 25 * H);
+    expect(again.state.prizes).toHaveLength(0);
+  });
+
+  it("the newcomer's gift comes once", async () => {
+    const p = await newPlayer(db);
+    const g = await act(db, p, "starter_gift", {}, T0);
+    expect(g.result.reward.items).toEqual(expect.arrayContaining([{ id: "poker-chip", qty: 3 }]));
+    expect(g.state.helpSeen).toContain("first-steps");
+    await expect(act(db, p, "starter_gift", {}, T0)).rejects.toMatchObject({ code: "gift_taken" });
   });
 
   it("poker: from level 20 a card on the table can be swapped (шулерство), the last swap counts the hand", async () => {

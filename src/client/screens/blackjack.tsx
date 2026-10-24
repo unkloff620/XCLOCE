@@ -98,7 +98,7 @@ function useDealQueue(view: BjView | null) {
   const revealAt = busyUntil.current + CARD_ANIM - DEAL_GAP;
   useEffect(() => {
     if (!fresh.length) return;
-    const timers = fresh.map((id) => window.setTimeout(() => sfx("tap", 0.25), Math.max(0, delays.current.get(id) ?? 0)));
+    const timers = fresh.map((id) => window.setTimeout(() => sfx("card"), Math.max(0, delays.current.get(id) ?? 0)));
     return () => timers.forEach(clearTimeout);
   });
   const delayOf = useCallback((id: string) => Math.max(0, delays.current.get(id) ?? 0), []);
@@ -333,7 +333,7 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
     if (!c) { haptic.err(); setNote(k === "main" ? `Ставка — до ${BJ_BET.max} USD` : `Сайд — до ${BJ_SIDE_MAX} USD`); return; }
     if (cost + c > usd) { haptic.err(); setNote("Не хватает USD"); return; }
     haptic.tap();
-    sfx("tap", 0.35);
+    sfx("chips");
     setPending((p) => ({ ...p, [k]: [...p[k], c] }));
   };
   const unchip = (k: keyof Pending) => {

@@ -17,6 +17,7 @@ import * as home from "./systems/home.ts";
 import * as quests from "./systems/quests.ts";
 import * as notify from "./systems/notify.ts";
 import * as rating from "./systems/rating.ts";
+import * as extras2 from "./systems/minigame-extras.ts";
 import * as achievements from "./systems/achievements.ts";
 import { taskById } from "../content/locations.ts";
 import { weaponById } from "../content/items.ts";
@@ -51,9 +52,9 @@ export const ACTIONS = [
   "buy", "exchange", "use", "equip", "unequip",
   "clan_create", "clan_join", "clan_leave", "clan_kick", "clan_transfer",
   "daily_claim", "sell", "rename", "slots_spin",
-  "equipment_upgrade", "talent_up", "talent_reset", "room_buy", "room_set", "look_set", "decor_set", "decor_save", "piece_buy", "help_seen",
+  "equipment_upgrade", "talent_up", "talent_reset", "room_buy", "room_set", "look_set", "decor_set", "decor_save", "piece_buy", "help_seen", "starter_gift",
   "quest_claim", "quest_chest", "notify_set", "achievement_claim", "prize_claim", "clan_edit",
-  "game_start", "zonk_move", "zonk_give_up", "poker_play", "poker_swap", "poker_stand", "bj_open", "bj_invite", "bj_join", "bj_decline", "bj_leave", "bj_bet", "bj_unbet", "bj_deal", "bj_move", "upgrade", "up_sell", "up_take",
+  "game_start", "zonk_move", "zonk_give_up", "roach_squash", "poker_play", "poker_swap", "poker_stand", "bj_open", "bj_invite", "bj_join", "bj_decline", "bj_leave", "bj_bet", "bj_unbet", "bj_deal", "bj_move", "upgrade", "up_sell", "up_take",
   "clan_cancel", "clan_accept", "clan_reject", "stash_collect", "stash_wish", "stash_gift", "stash_accept",
 ] as const;
 export type ActionType = (typeof ACTIONS)[number];
@@ -126,6 +127,7 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "decor_set": return home.setDecor(ctx, str(body.id, "id", 40), num(body.stage, "stage"));
     case "decor_save": return home.saveDecor(ctx, (body.decor && typeof body.decor === "object" ? body.decor : {}) as Record<string, unknown>);
     case "piece_buy": return home.buyPiece(ctx, str(body.id, "id", 40), num(body.piece, "piece"));
+    case "starter_gift": return home.starterGift(ctx);
     case "help_seen": return home.helpSeen(ctx, str(body.topic, "topic", 40));
     case "clan_kick": return clans.kickMember(ctx, num(body.playerId, "playerId"));
     case "clan_transfer": return clans.transferLeader(ctx, num(body.playerId, "playerId"));
@@ -147,7 +149,8 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "bj_deal": return bj.bjDealNow(ctx);
     case "bj_move": return bj.bjMove(ctx, oneOf(body.move, ["hit", "stand", "double", "split"] as const, "move"));
     case "zonk_move": return games.zonkMove(ctx, Array.isArray(body.pick) ? body.pick.slice(0, 6).map((x) => Number(x)) : [], oneOf(body.then, ["roll", "bank"] as const, "then"));
-    case "poker_play": return games.playPoker(ctx);
+    case "poker_play": return games.playPoker(ctx, body.chip === true);
+    case "roach_squash": return extras2.squashRoach(ctx);
     case "poker_swap": return games.pokerSwap(ctx, num(body.index, "index"));
     case "poker_stand": return games.pokerStand(ctx);
     case "upgrade": return games.upgrade(

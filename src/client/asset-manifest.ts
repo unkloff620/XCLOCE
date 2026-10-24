@@ -287,6 +287,7 @@ export const ASSET_FILES: string[] = [
  "/assets/items/keyboard.webp",
  "/assets/items/lost-wallet.webp",
  "/assets/items/mouse.webp",
+ "/assets/items/poker-chip.webp",
  "/assets/items/red-candle.webp",
  "/assets/items/rug-pull-gun.webp",
  "/assets/items/shorts-remote.webp",

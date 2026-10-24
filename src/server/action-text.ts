@@ -90,6 +90,8 @@ export function actionText(type: string, body: Row, result: unknown): string | n
       if (g.status !== "done") return join("Зонк", lv, `${g.turn ?? 0} очков`);
       return join("Зонк", lv, g.result?.title, grantedText(g.result?.reward) || "без выигрыша");
     }
+    case "starter_gift": return join("подарок новичку", grantedText((r as { reward?: unknown }).reward));
+    case "roach_squash": return join("Прихлопнул таракана", grantedText((r as { reward?: unknown }).reward) || "без награды");
     case "bj_open": return "открыл стол блэкджека";
     case "bj_invite": return `позвал за стол игрока #${body.playerId}`;
     case "bj_join": return "сел за стол блэкджека";

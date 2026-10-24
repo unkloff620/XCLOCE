@@ -812,4 +812,24 @@ GROUP BY f.player_id
 ON CONFLICT (player_id, item_id) DO UPDATE SET qty = GREATEST(inventory.qty, excluded.qty);
 `,
   },
+  {
+    // Around the mini-games: weekly mini-game ratings (poker xp, zonk xp, blackjack winnings), the daily zonk record prize
+    // (one row per settled Moscow day), the squashed cockroaches of the zonk room.
+    id: "v2-046-minigame-extras",
+    sql: `
+CREATE TABLE IF NOT EXISTS game_weekly (
+  week TEXT NOT NULL,
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  poker NUMERIC(20, 2) NOT NULL DEFAULT 0,
+  zonk NUMERIC(20, 2) NOT NULL DEFAULT 0,
+  bj NUMERIC(20, 2) NOT NULL DEFAULT 0,
+  PRIMARY KEY (week, player_id)
+);
+CREATE TABLE IF NOT EXISTS game_weeks_settled (week TEXT PRIMARY KEY, at TIMESTAMPTZ NOT NULL);
+CREATE TABLE IF NOT EXISTS zonk_days (day TEXT PRIMARY KEY, player_id INT, points INT, at TIMESTAMPTZ NOT NULL);
+ALTER TABLE players ADD COLUMN IF NOT EXISTS roach_day TEXT;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS roach_n INT NOT NULL DEFAULT 0;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS roach_at TIMESTAMPTZ;
+`,
+  },
 ];

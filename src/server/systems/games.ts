@@ -4,9 +4,10 @@
  * только сервер.
  */
 import { GameError, type Queryable } from "../db.ts";
+import { addGameWeekly } from "./minigame-extras.ts";
 import { addItem, addMoney, grantReward, itemQty, ledger, moscowDay, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { useItem } from "./shop.ts";
-import { UPGRADE_RULES, POKER_RULES, pokerCheats, pokerHand, pokerHandDef, pokerLevel, pokerPay,
+import { UPGRADE_RULES, POKER_RULES, POKER_CHIP, pokerCheats, pokerHand, pokerHandDef, pokerLevel, pokerPay,
   GAME_RULES, ITEM_VALUES, ZONK_BANK_MIN, ZONK_DICE, ZONK_FAIL_XP, ZONK_LEVELS, ZONK_ROUNDS, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue,
   zonkHasScore, zonkLevelDef, zonkScore, zonkXpLevel,
   type Card, type GameKind,
@@ -112,6 +113,7 @@ async function finishZonk(ctx: Ctx, g: GameRow, gaveUp = false) {
   const xp = won ? def.winXp : ZONK_FAIL_XP;
   const reward = isEmpty(pay) ? null : await grantReward(ctx, pay, `game:zonk:${def.level}:${won ? "win" : "fail"}:${points}`);
   await ctx.q.query("UPDATE players SET zonk_xp = zonk_xp + $2 WHERE id=$1", [ctx.pid, xp]);
+  await addGameWeekly(ctx, "zonk", xp);
   s.roll = [];
   g.status = "done";
   g.result = won
@@ -291,9 +293,10 @@ export async function pokerView(q: Queryable, pid: number, now: number) {
   const played = await pokerPlaysToday(q, pid, now);
   const lv = pokerLevel(xp);
   const open = await activePoker(q, pid);
-  // perDay 0: no daily limit (left stays big, «played» is what the table shows)
+  // perDay 0 would mean no daily limit
   const left = POKER_RULES.perDay > 0 ? Math.max(0, POKER_RULES.perDay - played) : 9999;
-  return { left, played, perDay: POKER_RULES.perDay, price: POKER_RULES.price, xp, ...lv, cheats: pokerCheats(lv.level), active: open ? pokerDrawView(open.id, open.state) : null };
+  const chips = await itemQty(q, pid, POKER_CHIP);
+  return { left, played, perDay: POKER_RULES.perDay, price: POKER_RULES.price, chips, xp, ...lv, cheats: pokerCheats(lv.level), active: open ? pokerDrawView(open.id, open.state) : null };
 }
 
 /** The hand is counted: the combination pays (more with the poker level) and gives poker xp. */
@@ -305,6 +308,7 @@ async function settlePoker(ctx: Ctx, gameId: number | null, cards: Card[], swapp
   const pay = pokerPay(hand, before.level);
   const reward = isEmpty(pay) ? null : await grantReward(ctx, pay, `game:poker:${hand}`);
   const [u] = await ctx.q.query<{ poker_xp: number }>("UPDATE players SET poker_xp = poker_xp + $2 WHERE id=$1 RETURNING poker_xp", [ctx.pid, def.xp]);
+  await addGameWeekly(ctx, "poker", def.xp);
   const after = pokerLevel(Number(u.poker_xp));
   const result: GameResult = { outcome: hand, title: def.name, reward };
   if (gameId === null) {
@@ -322,12 +326,16 @@ async function settlePoker(ctx: Ctx, gameId: number | null, cards: Card[], swapp
  * One paid hand: five cards at once. From poker level 20 the hand waits for the swaps (poker_swap / poker_stand);
  * below it the combination is counted right away.
  */
-export async function playPoker(ctx: Ctx) {
+export async function playPoker(ctx: Ctx, chip = false) {
   // one hand at a time per player, so the daily limit holds
   const [p] = await ctx.q.query<{ poker_xp: number }>("SELECT poker_xp FROM players WHERE id=$1 FOR UPDATE", [ctx.pid]);
   if (await activePoker(ctx.q, ctx.pid)) throw new GameError("poker_open", "Сначала доиграй раздачу");
   if (POKER_RULES.perDay > 0 && (await pokerPlaysToday(ctx.q, ctx.pid, ctx.now)) >= POKER_RULES.perDay) throw new GameError("poker_limit", `На сегодня все ${POKER_RULES.perDay} раздач сыграны`);
-  await takeMoney(ctx, POKER_RULES.price.currency, POKER_RULES.price.amount, "game:poker");
+  // a «Фишка» from the yard pays for the hand instead of the money
+  if (chip) {
+    if ((await itemQty(ctx.q, ctx.pid, POKER_CHIP)) <= 0) throw new GameError("no_chip", "Фишек нет — их находят во дворе");
+    await takeItem(ctx, POKER_CHIP, 1, "game:poker");
+  } else await takeMoney(ctx, POKER_RULES.price.currency, POKER_RULES.price.amount, "game:poker");
   const deck = shuffled(ctx.rng);
   const cards = deck.slice(0, 5);
   const swaps = pokerCheats(pokerLevel(Number(p?.poker_xp ?? 0)).level);

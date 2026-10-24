@@ -229,5 +229,7 @@ export function normalizeLook(v: unknown): Look {
 }
 
 /* ---------------- подсказки [?] ---------------- */
-export const HELP_TOPICS = ["bosses", "boss", "yard", "slots", "home", "home-menu", "yard-menu", "exchange", "locations", "clans", "shop", "computer", "talents", "tutorial", "blackjack", "zonk", "upgrader", "poker"] as const;
+export const HELP_TOPICS = ["bosses", "boss", "yard", "slots", "home", "home-menu", "yard-menu", "exchange", "locations", "clans", "shop", "computer", "talents", "tutorial", "blackjack", "zonk", "upgrader", "poker", "first-steps"] as const;
 export type HelpTopic = (typeof HELP_TOPICS)[number];
+/** the newcomer's first steps (pick a find, do a task, hit a boss, throw the dice) end with this gift, once */
+export const FIRST_STEPS_GIFT = { currencies: { RUB: 300 }, items: [{ id: "poker-chip", qty: 3 }, { id: "energy-drink", qty: 3 }] };

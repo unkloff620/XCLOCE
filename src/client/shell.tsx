@@ -13,6 +13,7 @@ import { loginWidget } from "./api.ts";
 import { telegramBack } from "./telegram.ts";
 import { ResultWindow } from "./screens/result.tsx";
 import { LevelUpOverlay } from "./levelup.tsx";
+import { FirstSteps } from "./first-steps.tsx";
 import { Tutorial } from "./tutorial.tsx";
 import { UpdateGate } from "./update.tsx";
 import { HorizontalScroll } from "./hscroll.tsx";
@@ -329,6 +330,7 @@ export function Shell({ children }: { children: ReactNode }) {
             <Nav />
             <ResultWindow />
             <Tutorial />
+            <FirstSteps />
             <UpdateGate />
             <PrizeWindow />
             <LevelUpOverlay />
