@@ -171,7 +171,7 @@ const STOPS = [
   { x: 38, y: 8 },
 ];
 const MAP_W = 360;
-const MAP_H = 560;
+const MAP_H = 440;
 
 /** a stash picture for every task: the location's own stashes (locations without sets borrow from the whole pool) */
 function stopIcons(locationId: string, order: number, n: number): string[] {

@@ -2647,7 +2647,7 @@ button.bjt-stack { cursor: pointer; }
 .lp-edge { stroke: #120c08; stroke-width: 17; stroke-linecap: round; }
 .lp-grey { stroke: #7b7b7b; stroke-width: 9; stroke-linecap: butt; }
 .lp-gold { stroke: #ffc21a; stroke-width: 9; stroke-linecap: butt; transition-property: stroke-dasharray; transition-duration: 0.7s; transition-timing-function: ease-out; }
-.lp-stop { position: absolute; width: 23%; aspect-ratio: 1; padding: 0; border: 0; background: none; border-radius: 50%; transform: translate(-50%, -50%); -webkit-tap-highlight-color: transparent; }
+.lp-stop { position: absolute; width: 21%; aspect-ratio: 1; padding: 0; border: 0; background: none; border-radius: 50%; transform: translate(-50%, -50%); -webkit-tap-highlight-color: transparent; }
 .lp-disc { position: absolute; inset: 0; display: grid; place-items: center; border-radius: 50%; border: 6px solid #15100c; background: radial-gradient(circle at 50% 38%, #b4b4b4, #6c6c6c 75%); box-shadow: inset 0 0 0 4px rgba(0, 0, 0, 0.4), 0 6px 16px rgba(0, 0, 0, 0.55); transition-property: transform; transition-duration: 0.15s; }
 .lp-disc img { width: 80%; height: 80%; object-fit: contain; pointer-events: none; filter: grayscale(1) brightness(0.9) contrast(1.15) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.45)); }
 .lp-stop.open .lp-disc, .lp-stop.done .lp-disc { background: radial-gradient(circle at 50% 38%, #ffe066, #f2a900 78%); }
@@ -2667,7 +2667,6 @@ button.bjt-stack { cursor: pointer; }
 .lp-tag { position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%); min-width: 26px; padding: 1px 7px; border-radius: 10px; border: 2px solid #ffc21a; background: #15100c; color: #fff; font-size: 12px; font-style: normal; font-weight: 900; line-height: 16px; white-space: nowrap; display: flex; align-items: center; justify-content: center; }
 .lp-tag.ok { background: var(--green); border-color: #15100c; color: #15100c; }
 .lp-tag.lock { border-color: #7b7b7b; padding: 1px 5px; }
-.loc-page > .lp-card { position: sticky; z-index: 3; bottom: calc(var(--nav-h) + var(--safe-b) + var(--strip-h, 0px) + 8px); }
 .lp-card { display: flex; align-items: center; gap: 10px; margin-top: 8px; padding: 10px; border-radius: 16px; border: 2.5px solid var(--line); background: linear-gradient(180deg, rgba(56, 39, 26, 0.93), rgba(36, 25, 17, 0.95)); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); box-shadow: 0 4px 0 var(--line), 0 10px 24px rgba(0, 0, 0, 0.5); animation-name: lp-in; animation-duration: 0.25s; animation-timing-function: ease-out; }
 @keyframes lp-in { from { transform: translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
 .lp-card-pic { flex: none; width: 56px; height: 56px; display: grid; place-items: center; border-radius: 50%; border: 4px solid #15100c; background: radial-gradient(circle at 50% 38%, #ffe066, #f2a900 78%); }
