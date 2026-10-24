@@ -1204,25 +1204,20 @@ describe("yard mini games", () => {
     expect(pokerPay("high", 5)).toEqual({});
   });
 
-  it("poker: 3 USD a hand, 20 hands a day, poker xp grows", async () => {
+  it("poker: 3 USD a hand, no daily limit, poker xp grows", async () => {
     const p = await newPlayer(db);
     await setMoney(db, p, "USD", 100);
     let xp = 0;
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 22; i++) {
       const r = await act(db, p, "poker_play", {}, T0 + i * 1000, always(0.37));
       expect(r.result.cards).toHaveLength(5);
       xp += r.result.gainedXp;
       expect(r.result.poker.xp).toBe(xp);
-      expect(r.result.poker.left).toBe(19 - i);
+      expect(r.result.poker.played).toBe(i + 1);
     }
-    await expect(act(db, p, "poker_play", {}, T0 + 30 * 1000)).rejects.toMatchObject({ code: "poker_limit" });
     const charges = await db.query<{ delta: number }>("SELECT delta FROM ledger WHERE player_id=$1 AND reason='game:poker'", [p]);
-    expect(charges).toHaveLength(20);
+    expect(charges).toHaveLength(22);
     expect(Number(charges[0].delta)).toBe(-3);
-    // the next Moscow day: 20 more
-    const next = await act(db, p, "poker_play", {}, T0 + 24 * 3600 * 1000, always(0.37));
-    expect(next.result.poker.left).toBe(19);
-    expect(next.state.poker.left).toBe(19);
   });
 
   it("poker: from level 20 a card on the table can be swapped (шулерство), the last swap counts the hand", async () => {
@@ -1249,7 +1244,7 @@ describe("yard mini games", () => {
     const d2 = await act(db, p, "poker_play", {}, T0 + 1000, always(0.37));
     const st = await act(db, p, "poker_stand", {}, T0 + 1000, always(0.37));
     expect(st.result).toMatchObject({ phase: "done", cards: d2.result.cards, swapped: [] });
-    expect(st.result.poker.left).toBe(18);
+    expect(st.result.poker.played).toBe(2);
   });
 
   it("poker: not enough USD", async () => {

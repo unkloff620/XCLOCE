@@ -452,7 +452,7 @@ function PokerHelp() {
   return (
     <Help topic="poker" title="Покер">
       <p>Сразу сдаётся 5 карт. Собралась комбинация из таблицы под картами — получаешь награду, чем старше комбинация, тем больше.</p>
-      <p>Раздача — {POKER_RULES.price.amount} USD, до {POKER_RULES.perDay} раздач в день.</p>
+      <p>Раздача — {POKER_RULES.price.amount} USD, сколько угодно раз.</p>
       <p>Каждая раздача даёт опыт покера (за старшие комбинации — больше). Каждый уровень покера до {POKER_BONUS_LEVELS}-го добавляет +{Math.round(POKER_LEVEL_BONUS * 1000) / 10}% к денежной награде; всего уровней {POKER_MAX_LEVEL}.</p>
       <p>Шулерство: {POKER_CHEATS.slice().reverse().map((c) => `с ${c.level} уровня — ${c.swaps} ${c.swaps === 1 ? "замена" : "замены"}`).join(", ")}. После раздачи нажми на любую карту на столе — она уйдёт, а на её место придёт новая из колоды. Комбинация считается, когда замены кончатся или ты нажмёшь «Вскрыть».</p>
     </Help>
@@ -527,7 +527,7 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
             <span className="pkt-cheat" title="Шулерство: замены карт после раздачи">
               {cheats > 0 ? <>🃏 <b className="num">{cheats}</b> {cheats === 1 ? "замена" : "замены"}</> : nextCheat ? <>замены с {nextCheat.level} ур.</> : null}
             </span>
-            <span className="pkt-left num">{(p?.perDay ?? POKER_RULES.perDay) - left}/{p?.perDay ?? POKER_RULES.perDay}</span>
+            <span className="pkt-left num" title="Раздач сегодня">{p?.perDay ? `${p.perDay - left}/${p.perDay}` : `${p?.played ?? 0} сегодня`}</span>
           </div>
 
           {/* the five cards in the gold frames; while swaps are left a tap changes a card */}
@@ -781,7 +781,7 @@ export function YardGames() {
           <div className="game-pick">
             {([
               { id: "poker", name: "Покер", img: "/assets/yard/game-poker.webp",
-                note: state?.poker?.active ? "ждёт замен" : state?.poker ? `${state.poker.left}/${state.poker.perDay} раздач` : "3 USD", live: !!state?.poker?.active },
+                note: state?.poker?.active ? "ждёт замен" : state?.poker?.perDay ? `${state.poker.left}/${state.poker.perDay} раздач` : `раздача ${POKER_RULES.price.amount} USD`, live: !!state?.poker?.active },
               { id: "blackjack", name: "Блэкджек", img: "/assets/yard/game-blackjack.webp",
                 note: invites > 0 ? `зовут (${invites})` : "1–25 USD", live: invites > 0 },
               { id: "zonk", name: "Зонк", img: "/assets/yard/game-zonk.webp", note: note(zk, "4 уровня"), live: !!zk?.active },

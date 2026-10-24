@@ -224,13 +224,13 @@ export const upgradeValue = (stake: number, mult: number) => Math.max(1, Math.ro
 
 /* ---------------- poker (пять карт сразу) ---------------- */
 /*
- * Платная игра: POKER_RULES.price за раздачу, не больше POKER_RULES.perDay раздач в сутки (МСК). Сразу сдаётся 5 карт
+ * Платная игра: POKER_RULES.price за раздачу, без дневного лимита (perDay 0 — без лимита). Сразу сдаётся 5 карт
  * из полной колоды, комбинация даёт награду из POKER_HANDS. Каждая раздача даёт опыт покера (xp комбинации); уровень
  * покера добавляет к денежной награде POKER_LEVEL_BONUS за уровень (до POKER_BONUS_LEVELS).
  * Шулерство: с 20 уровня покера после раздачи можно заменить карту на столе (нажать на неё — придёт новая из колоды),
  * с 50 — две замены, со 100 — три (POKER_CHEATS). Комбинация считается после замен.
  */
-export const POKER_RULES = { perDay: 20, price: { currency: "USD" as const, amount: 3 } };
+export const POKER_RULES = { perDay: 0, price: { currency: "USD" as const, amount: 3 } };
 export type PokerHand = "royal" | "sflush" | "quads" | "full" | "flush" | "straight" | "trips" | "twopair" | "pair" | "high";
 export interface PokerHandDef { id: PokerHand; name: string; xp: number; pay: Reward; sample: Card[] }
 const cs = (s: string): Card[] => s.split(" ").map((t) => ({ r: RANKS.indexOf(t.slice(0, -1) as (typeof RANKS)[number]), s: "shdc".indexOf(t.slice(-1)) }));

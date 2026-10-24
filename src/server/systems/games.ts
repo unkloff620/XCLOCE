@@ -291,7 +291,9 @@ export async function pokerView(q: Queryable, pid: number, now: number) {
   const played = await pokerPlaysToday(q, pid, now);
   const lv = pokerLevel(xp);
   const open = await activePoker(q, pid);
-  return { left: Math.max(0, POKER_RULES.perDay - played), perDay: POKER_RULES.perDay, price: POKER_RULES.price, xp, ...lv, cheats: pokerCheats(lv.level), active: open ? pokerDrawView(open.id, open.state) : null };
+  // perDay 0: no daily limit (left stays big, «played» is what the table shows)
+  const left = POKER_RULES.perDay > 0 ? Math.max(0, POKER_RULES.perDay - played) : 9999;
+  return { left, played, perDay: POKER_RULES.perDay, price: POKER_RULES.price, xp, ...lv, cheats: pokerCheats(lv.level), active: open ? pokerDrawView(open.id, open.state) : null };
 }
 
 /** The hand is counted: the combination pays (more with the poker level) and gives poker xp. */
@@ -324,7 +326,7 @@ export async function playPoker(ctx: Ctx) {
   // one hand at a time per player, so the daily limit holds
   const [p] = await ctx.q.query<{ poker_xp: number }>("SELECT poker_xp FROM players WHERE id=$1 FOR UPDATE", [ctx.pid]);
   if (await activePoker(ctx.q, ctx.pid)) throw new GameError("poker_open", "Сначала доиграй раздачу");
-  if ((await pokerPlaysToday(ctx.q, ctx.pid, ctx.now)) >= POKER_RULES.perDay) throw new GameError("poker_limit", `На сегодня все ${POKER_RULES.perDay} раздач сыграны`);
+  if (POKER_RULES.perDay > 0 && (await pokerPlaysToday(ctx.q, ctx.pid, ctx.now)) >= POKER_RULES.perDay) throw new GameError("poker_limit", `На сегодня все ${POKER_RULES.perDay} раздач сыграны`);
   await takeMoney(ctx, POKER_RULES.price.currency, POKER_RULES.price.amount, "game:poker");
   const deck = shuffled(ctx.rng);
   const cards = deck.slice(0, 5);
