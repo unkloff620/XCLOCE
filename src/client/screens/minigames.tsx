@@ -3,7 +3,7 @@
  * Мини-игры двора (пока кнопками, потом станут объектами во дворе): блэкджек, зонк (кости) и апгрейдер находок.
  * Правила и выплаты — content/games.ts, карты и кости — на сервере (server/systems/games.ts).
  */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useGame } from "../store.tsx";
 import { Avatar, Coin, Modal, RewardChips } from "../ui.tsx";
 import { Icon } from "../art/icons.tsx";
@@ -219,6 +219,38 @@ function RoachRunner({ run, onDone }: { run: RoachRun; onDone: () => void }) {
   );
 }
 
+/** zonk duels in the level menu: calls to me (yes / no), my calls, duels to play, results of the last days */
+function DuelsList({ onPlay }: { onPlay: (id: number) => void }) {
+  const { state, act, busy } = useGame();
+  const list = (state?.duels ?? []).filter((d) => d.status === "open" || d.status === "playing" || d.status === "done");
+  if (!list.length) return null;
+  return (
+    <div className="zb-duels">
+      <b className="zb-duels-h">Дуэли</b>
+      {list.slice(0, 4).map((d) => {
+        const vs = <span className="zb-duel-vs"><Avatar name={d.rival.name} photo={d.rival.photo} size={20} /><i className="ellipsis">{d.rival.name}</i></span>;
+        const stake = <span className="zb-duel-stake num">{d.stake} <Icon name="USD" size={12} /></span>;
+        let tail: ReactNode = null;
+        if (d.status === "open" && !d.mine) {
+          tail = <span className="zb-duel-acts">
+            <button className="zb-duel-btn ok" disabled={!!busy} onClick={() => act("duel_answer", { id: d.id, answer: "accept" }, "Вызов принят — играй свою партию")}>Принять</button>
+            <button className="zb-duel-btn" disabled={!!busy} onClick={() => act("duel_answer", { id: d.id, answer: "decline" }, "Вызов отклонён")}>✕</button>
+          </span>;
+        } else if (d.status === "open") {
+          tail = <span className="zb-duel-acts"><small>ждём ответа</small><button className="zb-duel-btn" disabled={!!busy} onClick={() => act("duel_answer", { id: d.id, answer: "cancel" }, "Вызов отменён, ставка вернулась")}>✕</button></span>;
+        } else if (d.status === "playing") {
+          tail = d.myPoints !== null ? <small>{full(d.myPoints)} · ждём соперника</small>
+            : d.started ? <small>доиграй партию</small>
+            : <button className="zb-duel-btn ok" disabled={!!busy} onClick={() => onPlay(d.id)}>Играть</button>;
+        } else {
+          tail = <small className={d.won === true ? "win" : d.won === false ? "lose" : ""}>{full(d.myPoints ?? 0)}:{full(d.rivalPoints ?? 0)} · {d.won === true ? `+${d.pot}` : d.won === false ? "проигрыш" : "ничья"}</small>;
+        }
+        return <div key={d.id} className={`zb-duel ${d.status}`}>{vs}{stake}{tail}</div>;
+      })}
+    </div>
+  );
+}
+
 export function ZonkWindow({ onClose }: { onClose: () => void }) {
   const roach = useRoach();
   const { state, act, busy } = useGame();
@@ -260,7 +292,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
     haptic.tap();
     sfx("tap");
     const before = type === "zonk_move" && body.then === "roll" ? [...(g?.history ?? []), ...(picked.length && pts !== null ? [{ kept: picked, points: pts }] : [])] : [];
-    const scoresBefore = type === "game_start" ? 0 : scores.length;
+    const scoresBefore = type === "game_start" || type === "duel_play" ? 0 : scores.length;
     const r = await act<GameView>(type, body);
     if (!r) return;
     setLast(r);
@@ -366,8 +398,8 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
           <div className="zb-head" style={{ left: zx(244), top: zy(368), width: zx(360) }}>
             {g ? (
               <>
-                <span>Уровень <b className="num">{g.level ?? 1}</b> · попытка <b className="num">{Math.min(scores.length + (onBoard ? 1 : 0), rounds)}/{rounds}</b></span>
-                <span className="zb-score"><b className="num">{full(total)}</b><small className="num">/{full(target)}</small></span>
+                <span>{g.duel ? "Дуэль" : <>Уровень <b className="num">{g.level ?? 1}</b></>} · попытка <b className="num">{Math.min(scores.length + (onBoard ? 1 : 0), rounds)}/{rounds}</b></span>
+                <span className="zb-score"><b className="num">{full(total)}</b>{!g.duel && <small className="num">/{full(target)}</small>}</span>
               </>
             ) : <span>Выбери уровень</span>}
           </div>
@@ -446,13 +478,20 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
           {/* no game running: the levels to choose from (and how the last game ended) */}
           {!playing && !show && info && (
             <div className="zb-menu" style={{ left: zx(236), top: zy(440), width: zx(562), height: zy(850) }}>
-              {g?.status === "done" && g.result && (
+              {g?.status === "done" && g.result && g.duel ? (
+                <div className="zb-res">
+                  <b className="display">Дуэль сыграна</b>
+                  <span className="num">{full(g.result.points ?? 0)} очков</span>
+                  <span className="zb-res-got"><em>итог — ниже, в «Дуэлях»</em></span>
+                </div>
+              ) : g?.status === "done" && g.result && (
                 <div className={`zb-res ${g.result.won ? "win" : "lose"}`}>
                   <b className="display">{g.result.won ? "Пройдено!" : g.result.outcome === "gave_up" ? "Сдался" : "Не хватило"}</b>
                   <span className="num">{full(g.result.points ?? 0)} из {full(g.target ?? 0)}</span>
                   <span className="zb-res-got">{g.result.reward && <RewardChips r={g.result.reward} size={14} />}<em>+{g.result.xp ?? 0} опыта</em></span>
                 </div>
               )}
+              <DuelsList onPlay={(id) => run("duel_play", { id })} />
               <div className="zb-xp" title={`${info.xp} опыта зонка`}>
                 <span>Зонк <b className="num">{info.level}</b> ур.</span>
                 <span className="zb-xp-bar"><i style={{ width: `${lvl}%` }} /></span>
@@ -823,6 +862,8 @@ export function YardGames() {
   const [open, setOpen] = useState<"pick" | "blackjack" | "zonk" | "poker" | null>(null);
   const zk = state?.games?.zonk;
   const invites = state?.bjInvites ?? 0;
+  // zonk duel calls waiting for my answer (and duels where my game is still to play)
+  const calls = (state?.duels ?? []).filter((d) => (d.status === "open" && !d.mine) || (d.status === "playing" && !d.started && d.myPoints === null)).length;
   const free = invites > 0 ? "♠" : zk?.active ? "идёт" : zk?.freeLeft ?? 0;
   const note = (g: typeof zk, paid: string) => (g?.active ? "партия идёт" : g && g.freeLeft > 0 ? `бесплатно: ${g.freeLeft}` : paid);
   return (
@@ -843,7 +884,7 @@ export function YardGames() {
                 note: state?.poker?.active ? "ждёт замен" : state?.poker?.perDay ? `${state.poker.left}/${state.poker.perDay} раздач` : `раздача ${POKER_RULES.price.amount} USD`, live: !!state?.poker?.active },
               { id: "blackjack", name: "Блэкджек", img: "/assets/yard/game-blackjack.webp",
                 note: invites > 0 ? `зовут (${invites})` : "1–25 USD", live: invites > 0 },
-              { id: "zonk", name: "Зонк", img: "/assets/yard/game-zonk.webp", note: note(zk, "4 уровня"), live: !!zk?.active },
+              { id: "zonk", name: "Зонк", img: "/assets/yard/game-zonk.webp", note: calls > 0 ? `вызов (${calls})` : note(zk, "4 уровня"), live: !!zk?.active || calls > 0 },
             ] as const).map((gm) => (
               <button key={gm.id} type="button" data-game={gm.id} className={`game-tile ${gm.live ? "live" : ""}`} onClick={() => setOpen(gm.id)}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}

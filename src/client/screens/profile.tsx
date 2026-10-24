@@ -9,6 +9,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { api } from "../api.ts";
 import { bossesIn } from "../../content/bosses.ts";
+import { DUEL_ROUNDS, DUEL_STAKES } from "../../content/games.ts";
 import { itemById } from "../../content/items.ts";
 import { CURRENCIES, CURRENCY_DEFS, type Currency } from "../../content/currencies.ts";
 import { Avatar, Bar, Coin, Empty, Modal } from "../ui.tsx";
@@ -49,6 +50,35 @@ interface Profile {
 const shortDate = (ms: number) => new Date(ms).toLocaleDateString("ru-RU", { day: "numeric", month: "short", year: "numeric" }).replace(" г.", "");
 
 const FRAME_TITLE: Record<string, string> = { gold: "1 место прошлой недели", silver: "2 место прошлой недели", bronze: "3 место прошлой недели", top: "Топ-10 прошлой недели" };
+
+/** a call to a zonk duel: the stake is taken now and comes back if he says no (content/games.ts «Zonk duels») */
+function DuelCall({ to, name }: { to: number; name: string }) {
+  const { state, act, busy } = useGame();
+  const [open, setOpen] = useState(false);
+  const usd = state?.wallet.USD ?? 0;
+  const going = state?.duels?.find((d) => d.rival.id === to && (d.status === "open" || d.status === "playing"));
+  return (
+    <div className="panel col" style={{ gap: 8 }}>
+      <div className="row" style={{ justifyContent: "space-between" }}>
+        <span className="small muted">ДУЭЛЬ В ЗОНК</span>
+        <span className="tiny muted">{DUEL_ROUNDS} попыток, у кого больше очков — забирает банк</span>
+      </div>
+      {going ? <span className="small">С {name} уже идёт дуэль — смотри в зонке во дворе.</span>
+        : !open ? <button className="btn gold block" onClick={() => setOpen(true)}>Вызвать {name} на дуэль</button>
+        : (
+          <div className="row" style={{ gap: 6, flexWrap: "wrap" }}>
+            {DUEL_STAKES.map((st) => (
+              <button key={st} className="btn green grow" disabled={busy === "duel_create" || usd < st}
+                onClick={async () => { const r = await act("duel_create", { to, stake: st }, `Вызов отправлен: ставка ${st} USD`); if (r) setOpen(false); }}>
+                {st} <Icon name="USD" size={14} />
+              </button>
+            ))}
+            <button className="btn dark" onClick={() => setOpen(false)}>✕</button>
+          </div>
+        )}
+    </div>
+  );
+}
 
 function RenameWindow({ current, onClose, onDone }: { current: string; onClose: () => void; onDone: () => void }) {
   const { state, act, busy } = useGame();
@@ -213,6 +243,7 @@ export function ProfileScreen() {
         </div>
       </div>
 
+      {!p.self && <DuelCall to={p.id} name={p.name} />}
       {!p.self && p.stashGive && <StashGivePanel to={p.id} name={p.name} wish={p.stashWish ?? []} give={p.stashGive} onSent={reload} />}
 
       {p.self && <SettingsPanel />}

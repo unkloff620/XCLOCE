@@ -194,6 +194,56 @@ export interface HitResult {
 /** How many consumables one tap may use at once. The free weapons always hit once. */
 export const BATCH_SIZES = [1, 10, 100, 1000] as const;
 
+/**
+ * One tap with a weapon, paid and counted: a consumable batch uses what is left of it (up to `want`), a free weapon
+ * goes on its cooldown; the damage is the weapon's base + its talents + the room's fist bonus + the boss sets, times the
+ * home bonus %, every hit of the batch rolls its crit. Used by boss fights and by the clan boss.
+ */
+export async function strike(ctx: Ctx, w: NonNullable<ReturnType<typeof weaponById>>, want: number, reason: string) {
+  // pay with the weapon (a batch uses what is left of it — all of it: damage is global, the overkill reaches others' fights)
+  let left: number | null = null;
+  let readyAt: number | null = null;
+  let count = 1;
+  if (w.weapon.kind === "consumable") {
+    count = Math.min(want, await itemQty(ctx.q, ctx.pid, w.id));
+    if (count < 1) throw new GameError("no_item", `Нет предмета: ${w.name}`);
+  } else {
+    if ((await itemQty(ctx.q, ctx.pid, w.id)) < 1) throw new GameError("no_item", `Нет оружия: ${w.name}`);
+    const [cd] = await ctx.q.query<{ ready_at: Date }>("SELECT ready_at FROM cooldowns WHERE player_id=$1 AND item_id=$2", [ctx.pid, w.id]);
+    if (cd && new Date(cd.ready_at).getTime() > ctx.now) throw new GameError("cooldown", `${w.name} ещё перезаряжается`);
+    readyAt = ctx.now + (w.weapon.cooldownMin ?? 0) * 60_000;
+    await ctx.q.query(
+      "INSERT INTO cooldowns (player_id, item_id, ready_at) VALUES ($1,$2,$3) ON CONFLICT (player_id, item_id) DO UPDATE SET ready_at = EXCLUDED.ready_at",
+      [ctx.pid, w.id, new Date(readyAt)],
+    );
+    await ledger(ctx, "use", w.id, 1, reason);
+  }
+
+  const phrases = HIT_PHRASES[w.id] ?? [""];
+  const phraseIdx = Math.floor(ctx.rng() * phrases.length) % phrases.length;
+  // home bonuses: +damage %, crit chance and crit power (equipment + rooms); this weapon's talents: +damage %, crit power
+  const bonus = await playerBonus(ctx.q, ctx.pid);
+  const wt = weaponTalentBonus(await weaponTalents(ctx.q, ctx.pid), w.id);
+  // talents add flat damage to the weapon's base; the room and trophies multiply the sum; every hit of a batch rolls its crit
+  // a room may add flat damage to the fist (Боксёрская)
+  const roomFlat = w.id === "fist" ? bonus.fistDamage ?? 0 : 0;
+  // complete boss sets add flat damage to their weapon (Командате's set: the keyboard +30)
+  const setFlat = (await setBonuses(ctx.q, ctx.pid))[w.id] ?? 0;
+  const one = Math.round((w.weapon.damage + wt.flat + roomFlat + setFlat) * (1 + bonus.damage));
+  const critOne = Math.round(one * (BASE_CRIT_MULT + bonus.critDamage + wt.critDamage));
+  let damage = 0, crits = 0, used = 0;
+  while (used < count) {
+    const c = bonus.critChance > 0 && ctx.rng() < bonus.critChance;
+    damage += c ? critOne : one;
+    if (c) crits++;
+    used++;
+  }
+  count = used;
+  const crit = crits > 0;
+  if (w.weapon.kind === "consumable") left = await takeItem(ctx, w.id, count, reason);
+  return { damage, crit, crits, count, left, readyAt, phraseIdx, phrases };
+}
+
 export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1): Promise<HitResult> {
   return idempotent(ctx, idem ? `hit:${idem}` : undefined, async () => {
     const w = weaponById(weaponId);
@@ -209,47 +259,7 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1
       throw new GameError("fight_over", "Время боя вышло — босс ушёл");
     }
 
-    // pay with the weapon (a batch uses what is left of it — all of it: damage is global, the overkill reaches others' fights)
-    let left: number | null = null;
-    let readyAt: number | null = null;
-    let count = 1;
-    if (w.weapon.kind === "consumable") {
-      count = Math.min(want, await itemQty(ctx.q, ctx.pid, w.id));
-      if (count < 1) throw new GameError("no_item", `Нет предмета: ${w.name}`);
-    } else {
-      if ((await itemQty(ctx.q, ctx.pid, w.id)) < 1) throw new GameError("no_item", `Нет оружия: ${w.name}`);
-      const [cd] = await ctx.q.query<{ ready_at: Date }>("SELECT ready_at FROM cooldowns WHERE player_id=$1 AND item_id=$2", [ctx.pid, w.id]);
-      if (cd && new Date(cd.ready_at).getTime() > ctx.now) throw new GameError("cooldown", `${w.name} ещё перезаряжается`);
-      readyAt = ctx.now + (w.weapon.cooldownMin ?? 0) * 60_000;
-      await ctx.q.query(
-        "INSERT INTO cooldowns (player_id, item_id, ready_at) VALUES ($1,$2,$3) ON CONFLICT (player_id, item_id) DO UPDATE SET ready_at = EXCLUDED.ready_at",
-        [ctx.pid, w.id, new Date(readyAt)],
-      );
-      await ledger(ctx, "use", w.id, 1, `hit:${bossId}`);
-    }
-
-    const phrases = HIT_PHRASES[w.id] ?? [""];
-    const phraseIdx = Math.floor(ctx.rng() * phrases.length) % phrases.length;
-    // home bonuses: +damage %, crit chance and crit power (equipment + rooms); this weapon's talents: +damage %, crit power
-    const bonus = await playerBonus(ctx.q, ctx.pid);
-    const wt = weaponTalentBonus(await weaponTalents(ctx.q, ctx.pid), w.id);
-    // talents add flat damage to the weapon's base; the room and trophies multiply the sum; every hit of a batch rolls its crit
-    // a room may add flat damage to the fist (Боксёрская)
-    const roomFlat = w.id === "fist" ? bonus.fistDamage ?? 0 : 0;
-    // complete boss sets add flat damage to their weapon (Командате's set: the keyboard +30)
-    const setFlat = (await setBonuses(ctx.q, ctx.pid))[w.id] ?? 0;
-    const one = Math.round((w.weapon.damage + wt.flat + roomFlat + setFlat) * (1 + bonus.damage));
-    const critOne = Math.round(one * (BASE_CRIT_MULT + bonus.critDamage + wt.critDamage));
-    let damage = 0, crits = 0, used = 0;
-    while (used < count) {
-      const c = bonus.critChance > 0 && ctx.rng() < bonus.critChance;
-      damage += c ? critOne : one;
-      if (c) crits++;
-      used++;
-    }
-    count = used;
-    const crit = crits > 0;
-    if (w.weapon.kind === "consumable") left = await takeItem(ctx, w.id, count, `hit:${bossId}`);
+    const { damage, crit, crits, count, left, readyAt, phraseIdx, phrases } = await strike(ctx, w, want, `hit:${bossId}`);
     const seq = Number(g.last_seq) + 1;
     const total = Number(g.damage_total) + damage;
     await ctx.q.query("UPDATE bosses SET damage_total=$2, last_seq=$3 WHERE id=$1", [GLOBAL, total, seq]);

@@ -18,6 +18,8 @@ import * as quests from "./systems/quests.ts";
 import * as notify from "./systems/notify.ts";
 import * as rating from "./systems/rating.ts";
 import * as extras2 from "./systems/minigame-extras.ts";
+import * as clanBoss from "./systems/clan-boss.ts";
+import * as duels from "./systems/duels.ts";
 import * as achievements from "./systems/achievements.ts";
 import { taskById } from "../content/locations.ts";
 import { weaponById } from "../content/items.ts";
@@ -55,7 +57,7 @@ export const ACTIONS = [
   "equipment_upgrade", "talent_up", "talent_reset", "room_buy", "room_set", "look_set", "decor_set", "decor_save", "piece_buy", "help_seen", "starter_gift",
   "quest_claim", "quest_chest", "notify_set", "achievement_claim", "prize_claim", "clan_edit",
   "game_start", "zonk_move", "zonk_give_up", "roach_squash", "poker_play", "poker_swap", "poker_stand", "bj_open", "bj_invite", "bj_join", "bj_decline", "bj_leave", "bj_bet", "bj_unbet", "bj_deal", "bj_move", "upgrade", "up_sell", "up_take",
-  "clan_cancel", "clan_accept", "clan_reject", "stash_collect", "stash_wish", "stash_gift", "stash_accept",
+  "clan_cancel", "clan_accept", "clan_reject", "clan_boss_hit", "duel_create", "duel_answer", "duel_play", "stash_collect", "stash_wish", "stash_gift", "stash_accept",
 ] as const;
 export type ActionType = (typeof ACTIONS)[number];
 
@@ -100,6 +102,11 @@ async function afterAction(ctx: Ctx, type: ActionType, result: unknown) {
     case "zonk_move":
     case "zonk_give_up": return r.status === "done" ? quests.questTick(ctx, "zonk", 1) : undefined;
     case "roach_squash": return r.reward ? quests.questTick(ctx, "roach", 1) : undefined;
+    case "clan_boss_hit": {
+      await quests.questTick(ctx, "damage", Number(r.damage) || 0);
+      await quests.questTick(ctx, "hits", Number(r.count) || 1);
+      return;
+    }
     default: return;
   }
 }
@@ -159,6 +166,10 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "zonk_move": return games.zonkMove(ctx, Array.isArray(body.pick) ? body.pick.slice(0, 6).map((x) => Number(x)) : [], oneOf(body.then, ["roll", "bank"] as const, "then"));
     case "poker_play": return games.playPoker(ctx, body.chip === true);
     case "roach_squash": return extras2.squashRoach(ctx);
+    case "duel_create": return duels.createDuel(ctx, num(body.to, "to"), num(body.stake, "stake"));
+    case "duel_answer": return duels.answerDuel(ctx, num(body.id, "id"), oneOf(body.answer, ["accept", "decline", "cancel"] as const, "answer"));
+    case "duel_play": return duels.playDuel(ctx, num(body.id, "id"));
+    case "clan_boss_hit": return clanBoss.hitClanBoss(ctx, str(body.weapon, "weapon", 40), body.count === undefined ? 1 : num(body.count, "count"));
     case "poker_swap": return games.pokerSwap(ctx, num(body.index, "index"));
     case "poker_stand": return games.pokerStand(ctx);
     case "upgrade": return games.upgrade(

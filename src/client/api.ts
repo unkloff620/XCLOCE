@@ -69,6 +69,9 @@ export interface GameState {
   poker?: PokerInfo;
   /** flat damage per weapon from the complete boss sets */
   setBonus?: Record<string, number>;
+  /** my clan's boss of the week (clan-boss.tsx); null without a clan */
+  clanBoss?: import("./clan-boss.tsx").ClanBossInfo | null;
+  duels?: DuelView[];
   /** invitations to a blackjack table waiting for me */
   bjInvites?: number;
   /** how many times each set of stashes was collected (by set number) */
@@ -121,6 +124,14 @@ export interface GameView {
   roll?: number[]; turn?: number; left?: number; history?: { kept: number[]; points: number }[];
   round?: number; rounds?: number; total?: number; last?: { points: number; zonk: boolean; roll?: number[] } | null; scores?: { points: number; zonk: boolean }[];
   level?: number; target?: number;
+  /** a zonk duel's game (the duel id) */
+  duel?: number | null;
+}
+/** a zonk duel of mine (server: systems/duels.ts) */
+export interface DuelView {
+  id: number; status: "open" | "playing" | "done" | "declined" | "cancelled" | "expired"; stake: number; mine: boolean;
+  rival: { id: number; name: string; photo: string | null }; myPoints: number | null; rivalPoints: number | null; rivalDone: boolean;
+  started: boolean; won: boolean | null; pot: number;
 }
 export interface Hit { seq: number; playerId: number; name: string; weapon: string; damage: number; phrase: number; at: number; crit?: boolean; count?: number }
 export interface FightView {

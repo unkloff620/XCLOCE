@@ -1581,6 +1581,66 @@ describe("boss sets and «Дела»", () => {
   });
 });
 
+describe("the clan boss of the week", () => {
+  it("members hit it, a non-member cannot; when it falls everyone who hit gets a prize by share", async () => {
+    const a = await newPlayer(db), b = await newPlayer(db), x = await newPlayer(db);
+    const c = await act(db, a, "clan_create", { name: "Боссобои", tag: "BSB", emblem: "bull", color: "#3ddc84" }, T0);
+    await act(db, b, "clan_join", { clanId: c.result.clanId }, T0);
+    await act(db, a, "clan_accept", { playerId: b }, T0);
+    await expect(act(db, x, "clan_boss_hit", { weapon: "fist" }, T0)).rejects.toMatchObject({ code: "no_clan" });
+    const h1 = await act(db, a, "clan_boss_hit", { weapon: "red-candle" }, T0, always(0.99));
+    expect(h1.result.damage).toBe(30);
+    expect(h1.state.clanBoss).toMatchObject({ hpMax: 75_000, hp: 75_000 - 30, killed: false });
+    // the fist rests 5 hours after a hit, here too
+    await act(db, b, "clan_boss_hit", { weapon: "fist" }, T0, always(0.99));
+    await expect(act(db, b, "clan_boss_hit", { weapon: "fist" }, T0 + 1000)).rejects.toMatchObject({ code: "cooldown" });
+    // almost dead: a's next hit kills it
+    await db.query("UPDATE clan_boss SET damage = hp_max - 10 WHERE clan_id=$1", [c.result.clanId]);
+    const k = await act(db, a, "clan_boss_hit", { weapon: "mouse" }, T0 + 2000, always(0.99));
+    expect(k.result.killed).toBe(true);
+    await expect(act(db, a, "clan_boss_hit", { weapon: "fist" }, T0 + 3000)).rejects.toMatchObject({ code: "clan_boss_down" });
+    const prizes = await db.query<{ player_id: number; title: string }>("SELECT player_id, title FROM prizes ORDER BY player_id");
+    expect(prizes.map((p) => p.player_id).sort()).toEqual([a, b].sort());
+    expect(prizes[0].title).toContain("Клановый босс");
+  });
+});
+
+describe("zonk duels", () => {
+  it("call, accept, both play: a draw gives the stakes back; a duel left unplayed goes to the one who played", async () => {
+    const a = await newPlayer(db), b = await newPlayer(db);
+    await setMoney(db, a, "USD", 50);
+    await setMoney(db, b, "USD", 50);
+    const c = await act(db, a, "duel_create", { to: b, stake: 5 }, T0);
+    expect(await wallet(db, a, "USD")).toBe(45);
+    await expect(act(db, a, "duel_play", { id: c.result.duelId }, T0)).rejects.toMatchObject({ code: "duel_not_playing" });
+    await act(db, b, "duel_answer", { id: c.result.duelId, answer: "accept" }, T0);
+    expect(await wallet(db, b, "USD")).toBe(45);
+    const g = await act(db, a, "duel_play", { id: c.result.duelId }, T0, always(0.01));
+    expect(g.result).toMatchObject({ duel: c.result.duelId, rounds: 5 });
+    await act(db, a, "zonk_give_up", {}, T0);
+    await act(db, b, "duel_play", { id: c.result.duelId }, T0, always(0.01));
+    const end = await act(db, b, "zonk_give_up", {}, T0);
+    // 0 : 0 — a draw, both stakes back
+    expect(end.state.duels[0]).toMatchObject({ status: "done", won: null });
+    expect(await wallet(db, a, "USD")).toBe(50);
+    expect(await wallet(db, b, "USD")).toBe(50);
+    // the second one: b never plays — after a day a gets the pot (minus 5%)
+    const d = await act(db, a, "duel_create", { to: b, stake: 10 }, T0 + 1000);
+    await act(db, b, "duel_answer", { id: d.result.duelId, answer: "accept" }, T0 + 2000);
+    await act(db, a, "duel_play", { id: d.result.duelId }, T0 + 3000, always(0.01));
+    await act(db, a, "zonk_give_up", {}, T0 + 4000);
+    const later = await act(db, a, "equip", { itemId: "jeans" }, T0 + 25 * H);
+    expect(later.state.duels.find((x: { id: number }) => x.id === d.result.duelId)).toMatchObject({ status: "done", won: true, pot: 19 });
+    expect(await wallet(db, a, "USD")).toBe(59);
+    // a call nobody answers: the stake comes back after a day
+    const e = await act(db, a, "duel_create", { to: b, stake: 1 }, T0 + 26 * H);
+    await act(db, a, "equip", { itemId: "jeans" }, T0 + 51 * H);
+    const [row] = await db.query<{ status: string }>("SELECT status FROM duels WHERE id=$1", [e.result.duelId]);
+    expect(row.status).toBe("expired");
+    expect(await wallet(db, a, "USD")).toBe(59);
+  });
+});
+
 describe("Нервные пальцы", () => {
   it("the first win over Кедр opens the drumming hand in the shop; it is bought there and worn in the hand slot", async () => {
     await setBossHp({ kedr: 10 });

@@ -1,4 +1,5 @@
 "use client";
+import { ClanBossPanel } from "../clan-boss.tsx";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -291,6 +292,7 @@ export function ClanScreen({ id }: { id: number }) {
         ))}
         {mine && <button className="btn dark block" disabled={busy === "clan_leave"} onClick={() => act("clan_leave", {}, "Ты вышел из клана")}>Выйти из клана</button>}
       </div>
+      {mine && <ClanBossPanel />}
       {leader && c.requests && c.requests.length > 0 && (
         <div className="panel col clan-reqs" style={{ gap: 6 }}>
           <b className="display">Заявки · {c.requests.length}</b>

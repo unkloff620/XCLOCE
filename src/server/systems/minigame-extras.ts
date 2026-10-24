@@ -50,7 +50,7 @@ export async function settleZonkDay(q: Queryable, now: number) {
   if (done) return;
   const [best] = await q.query<{ player_id: number; points: number }>(
     `SELECT player_id, (result->>'points')::int AS points FROM games
-     WHERE kind='zonk' AND day=$1 AND status='done' AND result->>'points' IS NOT NULL AND (result->>'points')::int > 0
+     WHERE kind='zonk' AND day=$1 AND status='done' AND result->>'points' IS NOT NULL AND (result->>'points')::int > 0 AND result->>'duel' IS NULL
      ORDER BY (result->>'points')::int DESC, updated_at ASC LIMIT 1`,
     [day],
   );

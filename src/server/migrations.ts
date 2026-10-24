@@ -839,4 +839,49 @@ ALTER TABLE players ADD COLUMN IF NOT EXISTS roach_at TIMESTAMPTZ;
 CREATE INDEX IF NOT EXISTS boss_hits_player ON boss_hits (player_id, boss_id, damage DESC);
 `,
   },
+  {
+    // The clan boss of the week: one copy per clan and week, and every member's damage to it.
+    id: "v2-048-clan-boss",
+    sql: `
+CREATE TABLE IF NOT EXISTS clan_boss (
+  clan_id INT NOT NULL REFERENCES clans(id) ON DELETE CASCADE,
+  week TEXT NOT NULL,
+  boss_id TEXT NOT NULL,
+  hp_max BIGINT NOT NULL,
+  damage BIGINT NOT NULL DEFAULT 0,
+  killed_at TIMESTAMPTZ,
+  killer_id INT,
+  PRIMARY KEY (clan_id, week)
+);
+CREATE TABLE IF NOT EXISTS clan_boss_hits (
+  clan_id INT NOT NULL,
+  week TEXT NOT NULL,
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  damage BIGINT NOT NULL DEFAULT 0,
+  hits INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (clan_id, week, player_id)
+);
+`,
+  },
+  {
+    // Zonk duels 1 on 1 (systems/duels.ts).
+    id: "v2-049-duels",
+    sql: `
+CREATE TABLE IF NOT EXISTS duels (
+  id SERIAL PRIMARY KEY,
+  from_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  to_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  stake NUMERIC(20, 2) NOT NULL,
+  status TEXT NOT NULL DEFAULT 'open',
+  from_points INT,
+  to_points INT,
+  winner_id INT,
+  created_at TIMESTAMPTZ NOT NULL,
+  accepted_at TIMESTAMPTZ,
+  finished_at TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS duels_from ON duels (from_id, status);
+CREATE INDEX IF NOT EXISTS duels_to ON duels (to_id, status);
+`,
+  },
 ];

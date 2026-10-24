@@ -91,6 +91,10 @@ export function actionText(type: string, body: Row, result: unknown): string | n
       return join("Зонк", lv, g.result?.title, grantedText(g.result?.reward) || "без выигрыша");
     }
     case "starter_gift": return join("подарок новичку", grantedText((r as { reward?: unknown }).reward));
+    case "clan_boss_hit": { const c = r as { damage?: number; killed?: boolean }; return join("Клановый босс", `−${c.damage ?? 0}`, c.killed ? "повержен!" : ""); }
+    case "duel_create": return `вызвал игрока #${body.to} на дуэль в зонк (${body.stake} USD)`;
+    case "duel_answer": return `дуэль #${body.id}: ${body.answer === "accept" ? "принял" : body.answer === "decline" ? "отказался" : "отменил"}`;
+    case "duel_play": return `дуэль #${body.id}: начал партию`;
     case "roach_squash": return join("Прихлопнул таракана", grantedText((r as { reward?: unknown }).reward) || "без награды");
     case "bj_open": return "открыл стол блэкджека";
     case "bj_invite": return `позвал за стол игрока #${body.playerId}`;

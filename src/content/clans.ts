@@ -11,3 +11,17 @@ export function clanLevelInfo(damage: number): { level: number; from: number; to
   while (clanLevelAt(n + 1) <= d) n++;
   return { level: n, from: clanLevelAt(n), to: clanLevelAt(n + 1) };
 }
+
+/*
+ * The clan boss of the week (Moscow week from Monday 00:00): every clan gets its own copy of one of the drawn bosses
+ * (CLAN_BOSS_ROTATION by the week), HP = CLAN_BOSS_HP_PER_MEMBER × members (at least CLAN_BOSS_MIN_MEMBERS) when the
+ * first hit lands. Only the clan's members hit it, with their usual weapons. When it falls, everyone who hit gets a prize
+ * by their share of the damage (the pool grows with the clan) plus a small floor; a boss alive at the week's end leaves.
+ */
+export const CLAN_BOSS_ROTATION = ["datsik", "kedr", "bebyakyan", "garkusha", "mugo"] as const;
+export const CLAN_BOSS_HP_PER_MEMBER = 25_000;
+export const CLAN_BOSS_MIN_MEMBERS = 3;
+/** the prize pool per member of the clan (split by the share of the damage) */
+export const CLAN_BOSS_POOL_PER_MEMBER = { RUB: 3000, USD: 10, chips: 3, gpu: 1 };
+/** everyone who hit it gets at least this */
+export const CLAN_BOSS_FLOOR = { RUB: 500, chips: 1 };

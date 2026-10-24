@@ -316,3 +316,17 @@ export const GAME_BOARDS: { id: GameBoard; name: string; unit: string }[] = [
 ];
 /** the cockroach in the zonk room: a tap squashes it for a few roubles (and now and then a «Фишка»), not too often */
 export const ROACH_RULES = { reward: { currencies: { RUB: 15 } } as Reward, chipChance: 0.05, cooldownMs: 10 * 60_000, perDay: 12 };
+
+/*
+ * Zonk duels 1 on 1: a player calls another one with a stake (USD); the stake is taken from both when the call is
+ * accepted. Each plays his own DUEL_ROUNDS attempts (no target, the same rules). More points wins the pot minus
+ * DUEL_FEE; a draw gives the stakes back. A call not accepted in DUEL_ANSWER_MS is cancelled (stake back); a duel not
+ * played to the end by both in DUEL_PLAY_MS goes to the one who finished (nobody finished — stakes back).
+ */
+export const DUEL_STAKES = [1, 5, 10, 25] as const;
+export const DUEL_ROUNDS = 5;
+export const DUEL_FEE = 0.05;
+export const DUEL_ANSWER_MS = 24 * 3600_000;
+export const DUEL_PLAY_MS = 24 * 3600_000;
+/** open calls a player may have at once */
+export const DUEL_MAX_OPEN = 3;

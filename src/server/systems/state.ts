@@ -21,6 +21,8 @@ import { notifyView, scheduleEnergy } from "./notify.ts";
 import { framesFor, prizesView, settleWeeks } from "./rating.ts";
 import { settleGameWeeks, settleZonkDay } from "./minigame-extras.ts";
 import { casesView, setBonuses } from "./collection.ts";
+import { clanBossView } from "./clan-boss.ts";
+import { duelsView, expireDuels } from "./duels.ts";
 import { achievementsReady, achievementsView } from "./achievements.ts";
 import { giftsLeft, giftsReceived, stashWish } from "./swap.ts";
 
@@ -99,6 +101,8 @@ export async function gameState(ctx: Ctx) {
     poker: await pokerView(ctx.q, ctx.pid, ctx.now),
     // flat damage per weapon from the complete boss sets
     setBonus: await setBonuses(ctx.q, ctx.pid),
+    clanBoss: await clanBossView(ctx.q, ctx.pid, ctx.now),
+    duels: await (async () => { await expireDuels(ctx); return duelsView(ctx.q, ctx.pid); })(),
     bjInvites: await bjInviteCount(ctx.q, ctx.pid, ctx.now),
     stashWish: await stashWish(ctx.q, ctx.pid),
     stashGifts: await giftsReceived(ctx.q, ctx.pid),

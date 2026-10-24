@@ -5,6 +5,7 @@
  */
 import { GameError, type Queryable } from "../db.ts";
 import { addGameWeekly } from "./minigame-extras.ts";
+import { duelScore } from "./duels.ts";
 import { addItem, addMoney, grantReward, itemQty, ledger, moscowDay, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { useItem } from "./shop.ts";
 import { UPGRADE_RULES, POKER_RULES, POKER_CHIP, pokerCheats, pokerHand, pokerHandDef, pokerLevel, pokerPay,
@@ -17,9 +18,11 @@ import type { Reward } from "../../content/rewards.ts";
 
 /** round: the attempt now (1…ZONK_ROUNDS); total: points written down; last: how the previous attempt ended */
 /** level: the difficulty (ZONK_LEVELS), target: the points to reach; old games (before the levels) have neither */
-interface ZonkState { roll: number[]; turn: number; left: number; history: { kept: number[]; points: number }[]; round?: number; total?: number; last?: { points: number; zonk: boolean; roll?: number[] } | null; scores?: { points: number; zonk: boolean }[]; level?: number; target?: number }
+interface ZonkState { roll: number[]; turn: number; left: number; history: { kept: number[]; points: number }[]; round?: number; total?: number; last?: { points: number; zonk: boolean; roll?: number[] } | null; scores?: { points: number; zonk: boolean }[]; level?: number; target?: number;
+  /** a zonk duel's game (systems/duels.ts): DUEL_ROUNDS attempts, no target, the points go to the duel */
+  duel?: number; rounds?: number }
 interface GameRow { id: number; kind: GameKind; paid: boolean; status: "active" | "done"; state: ZonkState; result: GameResult | null }
-interface GameResult { outcome: string; title: string; reward: Granted | null; points?: number; won?: boolean; xp?: number }
+interface GameResult { outcome: string; title: string; reward: Granted | null; points?: number; won?: boolean; xp?: number; duel?: number }
 
 const isEmpty = (r: Reward) => !r.currencies && !r.items && !r.xp && !r.energy;
 
@@ -35,14 +38,14 @@ async function freeLeft(q: Queryable, pid: number, kind: GameKind, now: number) 
 /** What the client sees of a zonk game. */
 function viewOf(g: GameRow) {
   const s = g.state as ZonkState;
-  return { id: g.id, kind: g.kind, paid: g.paid, status: g.status, result: g.result, roll: s.roll, turn: s.turn, left: s.left, history: s.history, round: s.round ?? 1, rounds: ZONK_ROUNDS, total: s.total ?? 0, last: s.last ?? null, scores: s.scores ?? [], level: s.level ?? 1, target: s.target ?? zonkLevelDef(1)!.target };
+  return { id: g.id, kind: g.kind, paid: g.paid, status: g.status, result: g.result, roll: s.roll, turn: s.turn, left: s.left, history: s.history, round: s.round ?? 1, rounds: s.rounds ?? ZONK_ROUNDS, total: s.total ?? 0, last: s.last ?? null, scores: s.scores ?? [], level: s.level ?? 1, target: s.target ?? zonkLevelDef(1)!.target, duel: s.duel ?? null };
 }
 
 /** the best zonk game of a Moscow day (all levels): who and how many points */
 async function zonkRecord(q: Queryable, day: string) {
   const [r] = await q.query<{ points: number; id: number; display_name: string; photo_url: string | null }>(
     `SELECT (g.result->>'points')::int AS points, p.id, p.display_name, p.photo_url FROM games g JOIN players p ON p.id = g.player_id
-     WHERE g.kind='zonk' AND g.day=$1 AND g.status='done' AND g.result->>'points' IS NOT NULL AND (g.result->>'points')::int > 0
+     WHERE g.kind='zonk' AND g.day=$1 AND g.status='done' AND g.result->>'points' IS NOT NULL AND (g.result->>'points')::int > 0 AND g.result->>'duel' IS NULL
      ORDER BY (g.result->>'points')::int DESC, g.updated_at ASC LIMIT 1`, [day]);
   return r ? { points: Number(r.points), playerId: r.id, name: r.display_name, photo: r.photo_url } : null;
 }
@@ -102,9 +105,38 @@ export async function startGame(ctx: Ctx, kind: GameKind, level = 1) {
   return viewOf(g);
 }
 
+/** A duel's zonk game for this player (systems/duels.ts checks the duel): DUEL_ROUNDS attempts, no target. */
+export async function startDuelGame(ctx: Ctx, duelId: number, rounds: number) {
+  if (await activeGame(ctx.q, ctx.pid, "zonk")) throw new GameError("game_running", "Сначала доиграй начатую партию");
+  const state: ZonkState = { roll: Array.from({ length: ZONK_DICE }, () => die(ctx.rng)), turn: 0, left: ZONK_DICE, history: [], round: 1, total: 0, last: null, level: 1, target: 1e9, duel: duelId, rounds };
+  const [row] = await ctx.q.query<{ id: number }>(
+    "INSERT INTO games (player_id, kind, day, paid, status, state, created_at, updated_at) VALUES ($1,'zonk',$2,true,'active',$3,$4,$4) RETURNING id",
+    [ctx.pid, moscowDay(ctx.now), JSON.stringify(state), new Date(ctx.now)],
+  );
+  const g: GameRow = { id: row.id, kind: "zonk", paid: true, status: "active", state, result: null };
+  if (!zonkHasScore(state.roll)) {
+    state.last = { points: 0, zonk: true, roll: state.roll };
+    state.scores = [{ points: 0, zonk: true }];
+    await nextZonkRound(ctx, g);
+  }
+  return { game: viewOf(g), gameId: row.id };
+}
+
 /** The game is over: the target reached (a win), or all attempts spent / given up (the small consolation). */
 async function finishZonk(ctx: Ctx, g: GameRow, gaveUp = false) {
   const s = g.state as ZonkState;
+  if (s.duel) {
+    // a duel game: no level prize — the points go to the duel (the pot is paid when both have played)
+    const points = gaveUp ? 0 : s.total ?? 0;
+    await ctx.q.query("UPDATE players SET zonk_xp = zonk_xp + $2 WHERE id=$1", [ctx.pid, ZONK_FAIL_XP]);
+    await addGameWeekly(ctx, "zonk", ZONK_FAIL_XP);
+    s.roll = [];
+    g.status = "done";
+    g.result = { outcome: "duel", title: gaveUp ? "Дуэль: сдался" : `Дуэль: ${points} очков`, reward: null, points, xp: ZONK_FAIL_XP, duel: s.duel };
+    await save(ctx, g);
+    await duelScore(ctx, s.duel, points);
+    return;
+  }
   const def = zonkLevelDef(s.level ?? 1)!;
   const target = s.target ?? def.target;
   const points = s.total ?? 0;
@@ -130,8 +162,8 @@ async function nextZonkRound(ctx: Ctx, g: GameRow) {
     s.turn = 0;
     s.left = ZONK_DICE;
     s.history = [];
-    if (s.round > ZONK_ROUNDS) {
-      s.round = ZONK_ROUNDS;
+    if (s.round > (s.rounds ?? ZONK_ROUNDS)) {
+      s.round = s.rounds ?? ZONK_ROUNDS;
       return finishZonk(ctx, g);
     }
     s.roll = Array.from({ length: ZONK_DICE }, () => die(ctx.rng));
