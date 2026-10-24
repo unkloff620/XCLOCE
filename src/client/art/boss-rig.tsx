@@ -21,15 +21,17 @@ type Part = { x: number; y: number; w: number; h: number; pivot?: readonly numbe
 const BEHIND: Record<string, "L" | "R"> = { mugo: "R" };
 
 /** frame schedules of the puppet strips: [frame, ms] — idle loops, ouch/strike play once */
-const FRAME_SEQ: Record<string, Record<"idle" | "ouch" | "strike", [number, number][]>> = {
-  // a grin now and then: the jaw drops in two chuckles and closes
+const FRAME_SEQ: Record<string, Record<"idle" | "ouch" | "strike" | "fear", [number, number][]>> = {
+  // a grin now and then: the jaw drops in two chuckles and closes; scared (below half HP) — the teeth chatter
   jaw: {
+    fear: [[1, 90], [2, 90], [1, 90], [2, 90], [1, 90], [2, 90], [1, 120], [0, 700], [1, 90], [2, 90], [1, 90], [0, 900]],
     idle: [[0, 4200], [1, 70], [2, 70], [3, 90], [2, 70], [1, 70], [2, 70], [3, 90], [4, 160], [3, 80], [2, 70], [1, 70], [0, 600]],
     ouch: [[2, 50], [3, 50], [4, 800], [3, 80], [2, 80], [1, 80], [0, 60]],
     strike: [[1, 50], [2, 50], [3, 50], [4, 520], [3, 80], [2, 60], [1, 60], [0, 30]],
   },
-  // a smug lift of the brows, later a short frown
+  // a smug lift of the brows, later a short frown; scared — lifted high and twitching
   brows: {
+    fear: [[2, 1300], [1, 70], [2, 900], [1, 60], [2, 60], [1, 60], [2, 1100]],
     idle: [[0, 2600], [1, 80], [2, 900], [1, 80], [0, 2400], [3, 80], [4, 700], [3, 80], [0, 500]],
     ouch: [[1, 50], [2, 1100], [1, 80], [0, 70]],
     strike: [[3, 60], [4, 760], [3, 80], [0, 0]],
@@ -79,8 +81,10 @@ export const BEATEN_BELOW = 0.5;
 const DAZED_RATE = 0.45;
 
 /**
- * Below half HP the boss is dazed — drunk, beaten, in shock: every idle motion inside the rig runs slower, and the whole
- * boss sways from side to side (class "dazed", CSS). Hit reactions (punch, ouch) keep their speed so a hit still lands.
+ * Below half HP the boss is dazed — beaten and scared: the breath runs slower, the whole boss sways from side to side,
+ * he stops punching and only waves his arms limply, and his face shows fear (sad raised brows, a shut mouth, darting
+ * eyes, quick blinks, a shivering head, sweat running down — class "dazed", CSS «the scared boss»).
+ * Hit reactions (punch, ouch) and the fear motions keep their speed so a hit still lands.
  * CSS animations restart whenever a class changes, so the rate is put back on a short timer.
  */
 export function useDazed(ref: RefObject<Element | null>, on: boolean) {
@@ -90,7 +94,8 @@ export function useDazed(ref: RefObject<Element | null>, on: boolean) {
     const apply = (rate: number) => {
       for (const a of el.getAnimations({ subtree: true })) {
         const name = (a as CSSAnimation).animationName ?? "";
-        if (name === "boss-dazed" || /punch|hit|ouch|strike|beaten-in/.test(name)) continue;
+        // hit reactions and the scared face (its own tempo: shivers, darting eyes, quick blinks, limp arms) keep their speed
+        if (name === "boss-dazed" || /punch|hit|ouch|strike|beaten-in|fear|limp|shiver|sweat|blink/.test(name)) continue;
         if (a.playbackRate !== rate) a.playbackRate = rate;
       }
     };
@@ -99,6 +104,35 @@ export function useDazed(ref: RefObject<Element | null>, on: boolean) {
     const t = setInterval(() => apply(DAZED_RATE), 400);
     return () => { clearInterval(t); apply(1); };
   }, [ref, on]);
+}
+
+/** a scared boss sweats: drops at both temples and on the forehead (placed by the eyes) run down and fade, one after another */
+function Sweat({ eyes, id }: { eyes: Part; id: string }) {
+  const k = (eyes.w * 0.11) / 20;
+  const g = `br-sweat-${id}`;
+  const spots: [number, number, number][] = [
+    [eyes.x - eyes.w * 0.1, eyes.y - eyes.h * 0.15, 0],
+    [eyes.x + eyes.w * 1.1, eyes.y - eyes.h * 0.25, 0.9],
+    [eyes.x + eyes.w * 0.3, eyes.y - eyes.h * 1.1, 1.7],
+  ];
+  return (
+    <g className="br-sweat">
+      <defs>
+        <linearGradient id={g} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#e8f8ff" />
+          <stop offset="1" stopColor="#5fb6ee" />
+        </linearGradient>
+      </defs>
+      {spots.map(([x, y, d], i) => (
+        <g key={i} transform={`translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${k.toFixed(3)})`}>
+          <g className="br-drop" style={{ animationDelay: `${d}s` }}>
+            <path d="M0 -15 C5 -7 9 -1 9 4 A9 9 0 0 1 -9 4 C-9 -1 -5 -7 0 -15 Z" fill={`url(#${g})`} stroke="#1c3a55" strokeWidth="1.8" strokeLinejoin="round" />
+            <ellipse cx="-3.2" cy="2.5" rx="2" ry="3.4" fill="#fff" opacity="0.9" />
+          </g>
+        </g>
+      ))}
+    </g>
+  );
 }
 
 /**
@@ -161,11 +195,12 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
   };
   const frameCss = Object.keys(FRAME_SEQ).filter((p) => P[p]?.frames).map((p) => {
     const w = P[p].w;
-    const k = (mode: "idle" | "ouch" | "strike") => seqKeyframes(`brf-${id}-${p}-${mode}`, w, (mode === "idle" && FRAME_SEQ_BY_BOSS[baseId]?.[p]) || FRAME_SEQ[p][mode]);
-    const idle = k("idle"), ouch = k("ouch"), strike = k("strike");
+    const k = (mode: "idle" | "ouch" | "strike" | "fear") => seqKeyframes(`brf-${id}-${p}-${mode}`, w, (mode === "idle" && FRAME_SEQ_BY_BOSS[baseId]?.[p]) || FRAME_SEQ[p][mode]);
+    const idle = k("idle"), ouch = k("ouch"), strike = k("strike"), fear = k("fear");
     const sel = `.rig-${baseId}.boss-rig .brf-${p}`;
-    return `${idle.css} ${ouch.css} ${strike.css}
+    return `${idle.css} ${ouch.css} ${strike.css} ${fear.css}
       ${sel} { animation: brf-${id}-${p}-idle ${idle.ms}ms step-end infinite; }
+      .rig-${baseId}.boss-rig.dazed .brf-${p} { animation: brf-${id}-${p}-fear ${fear.ms}ms step-end infinite; }
       .arena-photo.ouch ${sel} { animation: brf-${id}-${p}-ouch ${ouch.ms}ms step-end both; }
       .arena-photo.strike ${sel} { animation: brf-${id}-${p}-strike ${strike.ms}ms step-end both; }
       @media (prefers-reduced-motion: reduce) { ${sel} { animation: none; } }`;
@@ -196,6 +231,7 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
           {img("mouth", "br-mouth")}
           {img("mouth-closed", "br-mouth-closed")}
           {strip("jaw")}
+          {dazed && P.eyes && <Sweat eyes={P.eyes} id={id} />}
         </g>
         {img("collar")}
         {P.foreL && <g className="br-fist-l" style={{ ...origin("foreL"), ...tilt("foreL", "foreL", 9) }}>{img("foreL")}</g>}

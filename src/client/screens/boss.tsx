@@ -225,7 +225,8 @@ export function BossScreen({ id }: { id: string }) {
   const row = list?.bosses.find((b) => b.id === id);
   const hpShown = view ? Math.max(0, view.hp - pendingDmg) : state?.fight?.bossId === id ? state.fight.hp : null;
   // the boss punches at the screen now and then while the fight is on (show only, no damage)
-  const strikeFx = useBossStrike(fighting && (hpShown ?? 1) > 0 && !BOXERS.has(boss?.id ?? ""));
+  // a dazed boss (below half HP) is scared: no more punches at the screen, he only waves his arms limply (screens.css)
+  const strikeFx = useBossStrike(fighting && (hpShown ?? 1) > 0 && !BOXERS.has(boss?.id ?? "") && (hpShown === null || hpShown / Math.max(1, view?.hpMax ?? row?.hpMax ?? boss?.hp ?? 1) >= BEATEN_BELOW));
 
   const [mult, setMult] = useState<Mult>(1);
   const attack = async (weapon: string) => {

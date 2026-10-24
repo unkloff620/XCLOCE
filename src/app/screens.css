@@ -2450,3 +2450,69 @@ button.bjt-stack { cursor: pointer; }
 @media (prefers-reduced-motion: reduce) { .fs-aim, .fs-arrow, .fs-pic, .fs-hello-pics img { animation-name: none; } }
 /* the target is low on the screen: the step card moves up under the HUD so it never covers it */
 .fs-card.top { bottom: auto; top: calc(var(--hud-h) + var(--safe-t) + 8px); }
+
+/* ---------- the scared boss (below half HP, class "dazed" on the rig, boss-rig.tsx): no punches, limp arms, a face of fear ---------- */
+/* the fists hang and wave weakly (the opposite way to a punch, --tilt comes from the rig's geometry) */
+.boss-rig.dazed .br-fist-l, .boss-rig.dazed .br-fist-r { animation-name: br-limp; animation-duration: 3.4s; animation-timing-function: ease-in-out; animation-iteration-count: infinite; }
+.boss-rig.dazed .br-fist-r { animation-delay: -1.2s; }
+@keyframes br-limp {
+  0%, 100% { transform: rotate(calc(var(--tilt, 9deg) * -0.55)) translateY(7px); }
+  35% { transform: rotate(calc(var(--tilt, 9deg) * -0.2)) translateY(3px); }
+  50% { transform: rotate(calc(var(--tilt, 9deg) * -0.32)) translateY(4px); }
+  70% { transform: rotate(calc(var(--tilt, 9deg) * -0.12)) translateY(2px); }
+}
+/* whole arms (Гаркуша, Мугонатор): they droop at the shoulder and sway, the hands dangle; Мугонатор stops boxing */
+.boss-rig.dazed .br-arm-l, .boss-rig.dazed .br-arm-r { animation-name: br-limp-arm; animation-duration: 3.8s; animation-timing-function: ease-in-out; animation-iteration-count: infinite; animation-delay: 0s; }
+.boss-rig.dazed .br-arm-r { animation-delay: -1.5s; }
+@keyframes br-limp-arm {
+  0%, 100% { transform: rotate(calc(var(--tilt, 24deg) * -0.16)); }
+  45% { transform: rotate(calc(var(--tilt, 24deg) * -0.05)); }
+  60% { transform: rotate(calc(var(--tilt, 24deg) * -0.09)); }
+}
+.boss-rig.dazed .br-low-l, .boss-rig.dazed .br-low-r { animation-name: br-limp-low; animation-duration: 3.8s; animation-timing-function: ease-in-out; animation-iteration-count: infinite; animation-delay: -0.6s; }
+@keyframes br-limp-low { 0%, 100% { transform: rotate(3deg); } 50% { transform: rotate(-2deg); } }
+.boss-rig.dazed .br-hand-l, .boss-rig.dazed .br-hand-r { animation-name: br-limp-hand; animation-duration: 1.9s; animation-timing-function: ease-in-out; animation-iteration-count: infinite; animation-delay: -0.4s; }
+@keyframes br-limp-hand { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(4deg); } }
+/* the head: shivers in short bursts and shrinks back now and then */
+.boss-rig.dazed .br-head { animation-name: br-fear-head; animation-duration: 3.2s; animation-timing-function: linear; animation-iteration-count: infinite; }
+@keyframes br-fear-head {
+  0%, 30%, 100% { transform: rotate(0) translateY(0); }
+  32% { transform: rotate(-0.9deg); } 34% { transform: rotate(0.9deg); } 36% { transform: rotate(-0.8deg); } 38% { transform: rotate(0.7deg); } 40% { transform: rotate(0); }
+  55%, 72% { transform: rotate(-1.4deg) translateY(3px); }
+  74% { transform: rotate(-0.6deg) translateY(3px); } 76% { transform: rotate(-1.6deg) translateY(3px); } 78% { transform: rotate(-0.8deg) translateY(2px); }
+  90% { transform: rotate(0) translateY(0); }
+}
+/* the face: sad brows raised high and quivering, the grin gone, eyes darting, quick nervous blinks */
+.boss-rig.dazed .br-brows-angry, .boss-rig.dazed .br-mouth { opacity: 0; }
+.boss-rig.dazed .br-brows-sad, .boss-rig.dazed .br-mouth-closed { opacity: 1; }
+.boss-rig.dazed .br-brows { animation-name: br-fear-brow; animation-duration: 2.4s; animation-timing-function: ease-in-out; animation-iteration-count: infinite; }
+@keyframes br-fear-brow { 0%, 100% { transform: translateY(-3px); } 40% { transform: translateY(-4.5px); } 44% { transform: translateY(-3.2px); } 48% { transform: translateY(-4.4px); } 52% { transform: translateY(-3px); } }
+.boss-rig.dazed .br-pupils { animation-name: br-fear-look; animation-duration: 2.2s; animation-timing-function: ease-out; animation-iteration-count: infinite; }
+.rig-bebyakyan.boss-rig.dazed { --look: 1.6px; }
+@keyframes br-fear-look {
+  0%, 12% { transform: translate(0, 0); }
+  16%, 30% { transform: translate(calc(var(--look, 4px) * -1), -0.5px); }
+  34%, 46% { transform: translate(var(--look, 4px), -0.5px); }
+  50%, 58% { transform: translate(calc(var(--look, 4px) * -0.6), 0); }
+  62%, 78% { transform: translate(var(--look, 4px), 0.5px); }
+  82%, 100% { transform: translate(0, 0); }
+}
+.boss-rig.dazed .br-eyes-closed { animation-name: br-blink-fear; animation-duration: 1.9s; animation-timing-function: steps(1); animation-iteration-count: infinite; }
+.boss-rig.dazed .br-eyes-open { animation-name: br-blink-fear-open; animation-duration: 1.9s; animation-timing-function: steps(1); animation-iteration-count: infinite; }
+@keyframes br-blink-fear { 0%, 40% { opacity: 0; } 41%, 46% { opacity: 1; } 47%, 82% { opacity: 0; } 83%, 87% { opacity: 1; } 88%, 100% { opacity: 0; } }
+@keyframes br-blink-fear-open { 0%, 40% { opacity: 1; } 41%, 46% { opacity: 0; } 47%, 82% { opacity: 1; } 83%, 87% { opacity: 0; } 88%, 100% { opacity: 1; } }
+/* sweat runs down the temples and the forehead */
+.br-drop { opacity: 0; animation-name: br-sweat-run; animation-duration: 2.6s; animation-timing-function: ease-in; animation-iteration-count: infinite; }
+@keyframes br-sweat-run {
+  0% { opacity: 0; transform: translateY(-4px) scale(0.6); }
+  12% { opacity: 1; transform: translateY(0) scale(1); }
+  70% { opacity: 1; transform: translateY(22px) scale(0.95, 1.1); }
+  100% { opacity: 0; transform: translateY(34px) scale(0.8, 1.2); }
+}
+/* a hit still lands: the usual flinch (the "ouch" rules come with more classes and win) */
+.arena-photo.ouch .boss-rig.dazed .br-brows-sad, .arena-photo.ouch .boss-rig.dazed .br-mouth-closed { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .boss-rig.dazed .br-head, .boss-rig.dazed .br-pupils, .boss-rig.dazed .br-brows, .boss-rig.dazed .br-fist-l, .boss-rig.dazed .br-fist-r,
+  .boss-rig.dazed .br-arm, .boss-rig.dazed .br-low, .boss-rig.dazed .br-hand, .br-drop { animation-name: none; }
+  .br-drop { opacity: 1; }
+}
