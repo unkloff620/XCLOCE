@@ -340,7 +340,7 @@ export async function playPoker(ctx: Ctx) {
   return { kind: "poker" as const, phase: "draw" as const, ...pokerDrawView(row.id, st), poker: await pokerView(ctx.q, ctx.pid, ctx.now) };
 }
 
-/** Шулерство: the card at `index` goes, the next one from the deck takes its place. The last swap counts the hand. */
+/** Шулерство: the card at `index` goes, the next one from the deck takes its place; the hand is counted by poker_stand. */
 export async function pokerSwap(ctx: Ctx, index: number) {
   await ctx.q.query("SELECT id FROM players WHERE id=$1 FOR UPDATE", [ctx.pid]);
   const g = await activePoker(ctx.q, ctx.pid);
@@ -352,7 +352,7 @@ export async function pokerSwap(ctx: Ctx, index: number) {
   st.deck = st.deck.slice(1);
   st.swaps -= 1;
   st.swapped = [...st.swapped, index];
-  if (st.swaps <= 0) return settlePoker(ctx, g.id, st.cards, st.swapped);
+  // even the last swap does not count the hand: the player sees the new card first and opens with poker_stand
   await ctx.q.query("UPDATE games SET state=$2, updated_at=$3 WHERE id=$1", [g.id, JSON.stringify(st), new Date(ctx.now)]);
   return { kind: "poker" as const, phase: "draw" as const, ...pokerDrawView(g.id, st), poker: await pokerView(ctx.q, ctx.pid, ctx.now) };
 }
