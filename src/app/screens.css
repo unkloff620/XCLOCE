@@ -2764,3 +2764,22 @@ button.zb-res { border: 0; color: inherit; font: inherit; cursor: pointer; backg
 .modal.full > .gstage.bleed { margin-bottom: -10px; }
 body.has-full .nav { z-index: 85; }
 body.has-full .modal-back:not(.full) { z-index: 88; }
+
+/* ── blackjack: the other players' side bets over their cards, the insurance, the betting timer, the sweep ── */
+.bjt-tops { position: absolute; z-index: 6; transform: translate(-50%, -100%); display: flex; gap: 0.6cqw; pointer-events: none; white-space: nowrap; }
+.bjt-top { display: inline-flex; align-items: center; gap: 0.5cqw; padding: 0.3cqw 0.9cqw 0.3cqw 0.4cqw; border-radius: 2cqw; background: rgba(12, 22, 14, 0.86); border: 0.25cqw solid rgba(222, 182, 92, 0.75); box-shadow: 0 0.3cqw 0.8cqw rgba(0, 0, 0, 0.5); font-size: 1.9cqw; color: #f5ead4; animation: zk-pop 0.3s ease-out; }
+.bjt-top .chp { position: static; width: 2.6cqw; height: 2.6cqw; margin: 0; flex: none; transform: none; border-width: 0.3cqw; }
+.bjt-top small { font-size: 1.6cqw; color: #e4cf95; font-weight: 800; }
+.bjt-top b { font-weight: 900; }
+.bjt-top.won { border-color: #2ee88a; background: rgba(18, 74, 40, 0.92); }
+.bjt-top.won b { color: #7dffb5; }
+.bjt-top.lost { opacity: 0.75; border-color: rgba(255, 77, 109, 0.7); }
+.bjt-top.lost b { color: #ff9aa9; }
+.bjt-top.ins { border-color: rgba(120, 200, 255, 0.75); }
+.bjt-ins { position: absolute; z-index: 6; transform: translate(-50%, -50%); padding: 0.4cqw 1.4cqw; border-radius: 2cqw; background: rgba(12, 30, 48, 0.88); border: 0.3cqw solid rgba(120, 200, 255, 0.8); color: #d8efff; font-size: 2.3cqw; font-weight: 900; white-space: nowrap; pointer-events: none; animation: zk-pop 0.3s ease-out; }
+.bjt-ins.won { border-color: #2ee88a; color: #7dffb5; }
+.bjt-ins.lost { opacity: 0.7; border-color: rgba(255, 77, 109, 0.7); }
+.bjt-timer { display: inline-block; margin-right: 6px; padding: 0 6px; border-radius: 8px; background: #ffd25a; color: #2e1c00; }
+/* the dealer sweeps the paid round off the table */
+.bj2-stage.sweep .bj-cards { transition-property: opacity, transform; transition-duration: 0.6s; transition-timing-function: ease-in; opacity: 0; transform: translateY(-4cqw); }
+.bj2-stage.sweep .bjt-bet, .bj2-stage.sweep .bjt-out, .bj2-stage.sweep .bjt-tops, .bj2-stage.sweep .bjt-ins, .bj2-stage.sweep .bjt-hv, .bj2-stage.sweep .bjt-side .bjt-stack, .bj2-stage.sweep .bjt-side-res, .bj2-stage.sweep .bjt-dlbl { transition-property: opacity; transition-duration: 0.6s; opacity: 0; }

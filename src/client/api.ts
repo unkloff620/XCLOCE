@@ -91,9 +91,11 @@ export interface BjHandV { cards: BjCardV[]; bet: number; doubled?: boolean; spl
 export interface BjSeatV {
   pid: number; name: string; me: boolean; bet: number; pp: number; t3: number; free: boolean; ready: boolean; left: boolean;
   side: { pp: string | null; t3: string | null; pay: number } | null; won: number | null; staked: number | null; hands: BjHandV[];
+  /** insurance against the dealer's ace: absent — not offered, null — not answered yet, 0 — no, > 0 — the amount */
+  ins?: number | null; insPay: number | null;
 }
 export interface BjTableV {
-  id: number; hostId: number; phase: "betting" | "playing"; round: number; settled: boolean; deadline: number | null; turn: { seat: number; hand: number } | null;
+  id: number; hostId: number; phase: "betting" | "insurance" | "playing"; round: number; settled: boolean; deadline: number | null; clearAt: number | null; turn: { seat: number; hand: number } | null;
   dealer: BjCardV[]; dealerHidden: { n: number } | null; dealerValue: number; seats: (BjSeatV | null)[];
 }
 export interface BjView {

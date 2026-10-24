@@ -12,7 +12,7 @@ import { shuffled } from "./games.ts";
 import { addGameWeekly } from "./minigame-extras.ts";
 import { questTick } from "./quests.ts";
 import {
-  BJ_BET, BJ_BET_MS, BJ_FREE, BJ_MAX_HANDS, BJ_RETURN, BJ_SEATS, BJ_SIDE_MAX, BJ_TITLES, BJ_TURN_MS, PP_PAY, T3_PAY,
+  BJ_BET, BJ_BET_MS, BJ_FREE, BJ_SHOW_MS, BJ_INS_MS, BJ_INS_PAY, bjInsurance, BJ_MAX_HANDS, BJ_RETURN, BJ_SEATS, BJ_SIDE_MAX, BJ_TITLES, BJ_TURN_MS, PP_PAY, T3_PAY,
   bjOutcome, canSplitCards, handValue, isBlackjack, perfectPairs, twentyOnePlus3,
   type BjOutcome, type Card, type PairHit, type T3Hit,
 } from "../../content/games.ts";
@@ -32,6 +32,10 @@ export interface BjSeat {
   won?: number; staked?: number;
   /** got up during a hand: the seat goes once the hand is paid */
   left?: boolean;
+  /** insurance against the dealer's ace: undefined — not offered, null — not answered yet, 0 — no, > 0 — the amount */
+  ins?: number | null;
+  /** what the insurance paid back (stake included) */
+  insPay?: number;
 }
 export interface BjState {
   seats: (BjSeat | null)[];
@@ -39,12 +43,14 @@ export interface BjState {
   holeOpen: boolean;
   shoe: Card[];
   n: number;
-  phase: "betting" | "playing";
+  phase: "betting" | "insurance" | "playing";
   turn: { seat: number; hand: number } | null;
   deadline: number | null;
   round: number;
-  /** the last round has been paid (results stay on the table until the next deal) */
+  /** the last round has been paid (its results stay on the table till clearAt) */
   settled: boolean;
+  /** when the paid round's cards and stakes leave the table; the betting window (BJ_BET_MS) starts then */
+  clearAt?: number | null;
 }
 interface TableRow { id: number; host_id: number; state: BjState }
 
@@ -94,6 +100,8 @@ function deal(ctx: Ctx, t: TableRow) {
     seat.hands = seat.ready ? [{ cards: [], bet: seat.free ? BJ_FREE.bet : seat.bet, done: false }] : [];
     seat.side = null;
     seat.won = undefined;
+    seat.ins = undefined;
+    seat.insPay = undefined;
     seat.staked = seat.ready ? (seat.free ? 0 : seat.bet) + seat.pp + seat.t3 : undefined;
   }
   const order = s.seats.map((x, i) => (x && x.hands.length ? i : -1)).filter((i) => i >= 0);
@@ -156,7 +164,7 @@ async function finishRound(ctx: Ctx, t: TableRow) {
   if (live && !isBlackjack(s.dealer)) while (handValue(s.dealer) < 17) s.dealer.push(draw(s, ctx.rng));
   for (const seat of sitting(s)) {
     if (!seat.hands.length) continue;
-    let won = seat.side?.pay ?? 0;
+    let won = (seat.side?.pay ?? 0) + (seat.insPay ?? 0);
     for (const h of seat.hands) {
       h.done = true;
       h.outcome = bjOutcome(h.cards, s.dealer, !!h.split);
@@ -177,6 +185,23 @@ async function finishRound(ctx: Ctx, t: TableRow) {
   s.seats = s.seats.map((x) => (x && x.left ? null : x));
   s.phase = "betting";
   s.settled = true;
+  // the results are seen for BJ_SHOW_MS, then the table is cleared and everyone has BJ_BET_MS to bet
+  s.clearAt = ctx.now + BJ_SHOW_MS;
+  s.deadline = s.clearAt + BJ_BET_MS;
+}
+
+/** The paid round leaves the table: no cards, no stakes, no results — a clean table for the next bets. */
+function clearTable(s: BjState) {
+  s.dealer = [];
+  s.holeOpen = false;
+  s.settled = false;
+  s.clearAt = null;
+  for (const seat of sitting(s)) {
+    seat.hands = [];
+    seat.side = null;
+    seat.won = undefined;
+    seat.staked = undefined;
+  }
 }
 
 /** After the deal: a dealer blackjack (peeked under an ace or a ten) ends the round at once; naturals stand. */
@@ -184,20 +209,53 @@ async function afterDeal(ctx: Ctx, t: TableRow) {
   const s = t.state;
   await paySides(ctx, t);
   for (const seat of sitting(s)) for (const h of seat.hands) if (handValue(h.cards) === 21) h.done = true;
+  // an ace up: insurance first (only paid stakes can be insured), the dealer peeks after the answers
+  const offer = s.dealer[0]?.r === 1 ? sitting(s).filter((x) => x.hands.length && !x.free) : [];
+  if (offer.length) {
+    for (const seat of offer) seat.ins = null;
+    s.phase = "insurance";
+    s.turn = null;
+    s.deadline = ctx.now + BJ_INS_MS;
+    return;
+  }
+  await peek(ctx, t, ctx.now);
+}
+
+/** The dealer looks under his card: a blackjack ends the round at once; otherwise the moves start. */
+async function peek(ctx: Ctx, t: TableRow, base: number) {
+  const s = t.state;
+  s.phase = "playing";
   if (isBlackjack(s.dealer)) return finishRound(ctx, t);
   s.turn = null;
-  await advance(ctx, t, ctx.now);
+  await advance(ctx, t, base);
+}
+
+/** The insurance answers are in (or the time is up): pay 2:1 on a dealer blackjack, then peek. */
+async function settleInsurance(ctx: Ctx, t: TableRow, base: number) {
+  const s = t.state;
+  const bj = isBlackjack(s.dealer);
+  for (const seat of sitting(s)) {
+    if (seat.ins === null) seat.ins = 0;
+    if (!seat.ins) continue;
+    seat.insPay = bj ? Math.round(seat.ins * (BJ_INS_PAY + 1) * 100) / 100 : 0;
+    if (seat.insPay > 0) await addMoney(asCtx(ctx, seat.pid), "USD", seat.insPay, "bj:insurance");
+  }
+  await peek(ctx, t, base);
 }
 
 /** Catches the table up with the time: moves nobody made, a deal nobody started. */
 async function tick(ctx: Ctx, t: TableRow) {
   const s = t.state;
+  if (s.clearAt && s.clearAt <= ctx.now) clearTable(s);
   for (let guard = 0; guard < 64 && s.deadline !== null && s.deadline <= ctx.now; guard++) {
     if (s.phase === "betting") {
+      if (s.clearAt) clearTable(s);
       if (sitting(s).some((x) => x.ready)) {
         deal(ctx, t);
         await afterDeal(ctx, t);
       } else s.deadline = null;
+    } else if (s.phase === "insurance") {
+      await settleInsurance(ctx, t, s.deadline);
     } else if (s.turn) {
       const base = s.deadline;
       const h = s.seats[s.turn.seat]?.hands[s.turn.hand];
@@ -235,11 +293,11 @@ function tableView(t: TableRow, pid: number) {
   const hide = !s.holeOpen && s.dealer.length > 1;
   const dealer = hide ? [s.dealer[0]] : s.dealer;
   return {
-    id: t.id, hostId: t.host_id, phase: s.phase, round: s.round, settled: s.settled, deadline: s.deadline, turn: s.turn,
+    id: t.id, hostId: t.host_id, phase: s.phase, round: s.round, settled: s.settled, deadline: s.deadline, clearAt: s.clearAt ?? null, turn: s.turn,
     dealer, dealerHidden: hide ? { n: s.dealer[1].n } : null, dealerValue: handValue(dealer),
     seats: s.seats.map((x) => x && {
       pid: x.pid, name: x.name, me: x.pid === pid, bet: x.bet, pp: x.pp, t3: x.t3, free: x.free, ready: x.ready, left: !!x.left,
-      side: x.side, won: x.won ?? null, staked: x.staked ?? null,
+      side: x.side, won: x.won ?? null, staked: x.staked ?? null, ins: x.ins === undefined ? undefined : x.ins, insPay: x.insPay ?? null,
       hands: x.hands.map((h) => ({ ...h, value: handValue(h.cards), canSplit: false, title: h.outcome ? BJ_TITLES[h.outcome] : null })),
     }),
   };
@@ -359,6 +417,7 @@ export async function bjLeave(ctx: Ctx) {
   } else if (seat.hands.some((h) => !h.done)) {
     for (const h of seat.hands) h.done = true;
     seat.left = true;
+    if (seat.ins === null) seat.ins = 0;
     if (s.turn?.seat === i) await advance(ctx, t, ctx.now);
     if ((s.phase as BjState["phase"]) === "betting") s.seats[i] = null; // the round ended right now
   } else if (seat.hands.length && s.phase === "playing") {
@@ -387,11 +446,12 @@ const whole = (v: number, lo: number, hi: number, what: string) => {
   return v;
 };
 
-/** Puts the stake (and side bets) down. Once everyone at the table has bet — the deal; otherwise it waits BJ_BET_MS. */
+/** Puts the stake (and side bets) down. Nobody starts the deal by hand: it comes when the betting time is up, or at once when everyone sitting has bet. */
 export async function bjBet(ctx: Ctx, bet: number, pp: number, t3: number, free: boolean) {
   const { t, seat } = await lockMine(ctx);
   const s = t.state;
   if (s.phase !== "betting") throw new GameError("bj_busy", "Идёт раздача — дождись следующей");
+  if (s.clearAt && s.clearAt > ctx.now) throw new GameError("bj_busy", "Стол убирают — ставки через пару секунд");
   if (seat.ready) throw new GameError("bj_ready", "Ставка уже на столе");
   whole(pp, 0, BJ_SIDE_MAX, "«Идеальные пары»");
   whole(t3, 0, BJ_SIDE_MAX, "«21+3»");
@@ -423,12 +483,18 @@ export async function bjUnbet(ctx: Ctx) {
   return bjView(ctx);
 }
 
-/** Starts the deal for those who bet without waiting for the rest (anyone who bet can press it). */
-export async function bjDealNow(ctx: Ctx) {
+/** Insurance against the dealer's ace: yes (half the stake) or no. When everyone has answered, the dealer peeks. */
+export async function bjInsure(ctx: Ctx, take: boolean) {
   const { t, seat } = await lockMine(ctx);
-  if (t.state.phase !== "betting" || !seat.ready) throw new GameError("bj_busy", "Сначала поставь");
-  deal(ctx, t);
-  await afterDeal(ctx, t);
+  const s = t.state;
+  if (s.phase !== "insurance" || seat.ins !== null) throw new GameError("bj_no_insurance", "Страховку сейчас не предлагают");
+  const amount = take ? bjInsurance(seat.hands[0]?.bet ?? 0) : 0;
+  if (amount > 0) {
+    await takeMoney(ctx, "USD", amount, "bj:insurance");
+    seat.staked = (seat.staked ?? 0) + amount;
+  }
+  seat.ins = amount;
+  if (sitting(s).every((x) => x.ins !== null)) await settleInsurance(ctx, t, ctx.now);
   await saveTable(ctx, t);
   return bjView(ctx);
 }

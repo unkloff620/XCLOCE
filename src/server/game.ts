@@ -56,7 +56,7 @@ export const ACTIONS = [
   "daily_claim", "sell", "rename", "slots_spin",
   "equipment_upgrade", "talent_up", "talent_reset", "room_buy", "room_set", "look_set", "decor_set", "decor_save", "piece_buy", "help_seen", "starter_gift",
   "quest_claim", "quest_chest", "notify_set", "achievement_claim", "prize_claim", "clan_edit",
-  "game_start", "zonk_move", "zonk_give_up", "roach_squash", "poker_play", "poker_swap", "poker_stand", "bj_open", "bj_invite", "bj_join", "bj_decline", "bj_leave", "bj_bet", "bj_unbet", "bj_deal", "bj_move", "upgrade", "up_sell", "up_take",
+  "game_start", "zonk_move", "zonk_give_up", "roach_squash", "poker_play", "poker_swap", "poker_stand", "bj_open", "bj_invite", "bj_join", "bj_decline", "bj_leave", "bj_bet", "bj_unbet", "bj_insure", "bj_move", "upgrade", "up_sell", "up_take",
   "clan_cancel", "clan_accept", "clan_reject", "clan_boss_hit", "duel_create", "duel_answer", "duel_play", "stash_collect", "stash_wish", "stash_gift", "stash_accept",
 ] as const;
 export type ActionType = (typeof ACTIONS)[number];
@@ -161,7 +161,7 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "bj_leave": return bj.bjLeave(ctx);
     case "bj_bet": return bj.bjBet(ctx, body.free === true ? 0 : num(body.bet, "bet"), body.pp === undefined ? 0 : num(body.pp, "pp"), body.t3 === undefined ? 0 : num(body.t3, "t3"), body.free === true);
     case "bj_unbet": return bj.bjUnbet(ctx);
-    case "bj_deal": return bj.bjDealNow(ctx);
+    case "bj_insure": return bj.bjInsure(ctx, body.take === true);
     case "bj_move": return bj.bjMove(ctx, oneOf(body.move, ["hit", "stand", "double", "split"] as const, "move"));
     case "zonk_move": return games.zonkMove(ctx, Array.isArray(body.pick) ? body.pick.slice(0, 6).map((x) => Number(x)) : [], oneOf(body.then, ["roll", "bank"] as const, "then"));
     case "poker_play": return games.playPoker(ctx, body.chip === true);

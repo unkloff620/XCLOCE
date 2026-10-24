@@ -58,9 +58,19 @@ export const BJ_BET = { min: 1, max: 25 };
 export const BJ_SIDE_MAX = 10;
 export const BJ_FREE = { perDay: 3, bet: 1 };
 export const BJ_MAX_HANDS = 4;
-/** time for a move; time for the others to bet once the first bet is on the table */
+/** time for a move; time to bet (after the table is cleared, or once the first bet is on an idle table) */
 export const BJ_TURN_MS = 30_000;
-export const BJ_BET_MS = 25_000;
+export const BJ_BET_MS = 20_000;
+/** how long the results of a round stay on the table before the cards and stakes are cleared away */
+export const BJ_SHOW_MS = 5_000;
+/**
+ * Insurance: when the dealer shows an ace, everyone with a paid stake may insure it for half the stake before the
+ * moves (BJ_INS_MS to answer). The dealer then peeks: a blackjack pays the insurance 2:1 (and the round ends), else
+ * the insurance is lost and the round goes on. A free stake cannot be insured.
+ */
+export const BJ_INS_MS = 10_000;
+export const BJ_INS_PAY = 2;
+export const bjInsurance = (bet: number) => Math.round(bet * 50) / 100;
 /** what one stake returns for each outcome (the stake included) */
 export const BJ_RETURN: Record<BjOutcome, number> = { blackjack: 2.5, win: 2, push: 1, lose: 0 };
 

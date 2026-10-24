@@ -17,7 +17,7 @@ import { Icon } from "../art/icons.tsx";
 import { Help } from "../help.tsx";
 import { haptic } from "../telegram.ts";
 import { sfx } from "../sound.ts";
-import { BJ_BET, BJ_FREE, BJ_SIDE_MAX, PP_PAY, PP_TITLES, RANKS, SUITS, T3_PAY, T3_TITLES, type PairHit, type T3Hit } from "../../content/games.ts";
+import { BJ_BET, BJ_FREE, BJ_INS_MS, BJ_SIDE_MAX, PP_PAY, bjInsurance, PP_TITLES, RANKS, SUITS, T3_PAY, T3_TITLES, type PairHit, type T3Hit } from "../../content/games.ts";
 
 /** time between two cards coming out of the shoe */
 const DEAL_GAP = 650;
@@ -37,7 +37,8 @@ function BlackjackHelp() {
         <li>Сайд «21+3» (твои две карты и открытая карта дилера как покерная тройка): флеш {T3_PAY.flush}:1, стрит {T3_PAY.straight}:1, тройка {T3_PAY.trips}:1, стрит-флеш {T3_PAY.sflush}:1, тройка одной масти {T3_PAY.suited}:1.</li>
         <li>Сайд — до {BJ_SIDE_MAX} USD. Бесплатная ставка — {BJ_FREE.perDay} в день по {BJ_FREE.bet} USD: выигрыш твой, проигрыш ничего не стоит.</li>
       </ul>
-      <p>На ход — 30 секунд, потом рука стоит сама. После первой ставки остальным даётся 25 секунд, потом раздача.</p>
+      <p><b>Страховка:</b> если у дилера открыт туз, перед ходами каждому со ставкой предлагают застраховаться на половину ставки ({BJ_INS_MS / 1000} секунд на ответ). Есть у дилера блэкджек — страховка платит 2:1, нет — она сгорает и игра идёт дальше. Бесплатную ставку не страхуют.</p>
+      <p>Стол ведёт дилер, как в казино: после раунда результаты видны 5 секунд, потом карты и ставки убираются и у всех 20 секунд на ставки. Время вышло — раздача тем, кто поставил (если поставили все — сразу). На ход — 30 секунд, потом рука стоит сама.</p>
     </Help>
   );
 }
@@ -167,15 +168,19 @@ function handNet(h: BjHandV, free: boolean) {
 function sideNets(s: BjSeatV) {
   const pp = s.pp > 0 ? (s.side?.pp ? s.pp * PP_PAY[s.side.pp as PairHit] : -s.pp) : 0;
   const t3 = s.t3 > 0 ? (s.side?.t3 ? s.t3 * T3_PAY[s.side.t3 as T3Hit] : -s.t3) : 0;
-  return { pp, t3 };
+  // the insurance: 2:1 when the dealer had blackjack, else its stake is lost
+  const ins = s.ins ? Math.round(((s.insPay ?? 0) - s.ins) * 100) / 100 : 0;
+  return { pp, t3, ins };
 }
 
 type Pending = { main: number[]; pp: number[]; t3: number[] };
 const NO_BET: Pending = { main: [], pp: [], t3: [] };
 
 /** one seat on the felt: the card box (cards, the stake under them), its two side circles and the name under them */
-function SeatSpot({ s, i, geo, table, reveal, delayOf, myTurnHand, betting, pending, free, touched, onBox, onSide, onUnchip, canInvite, onInvite }: {
-  s: BjSeatV | null; i: number; geo: SeatGeo; table: BjTableV; reveal: boolean; delayOf: (id: string) => number; myTurnHand: number | null;
+function SeatSpot({ s, i, geo, table, reveal, cleared, delayOf, myTurnHand, betting, pending, free, touched, onBox, onSide, onUnchip, canInvite, onInvite }: {
+  s: BjSeatV | null; i: number; geo: SeatGeo; table: BjTableV; reveal: boolean;
+  /** the paid round has been cleared away (its clear time passed) */
+  cleared?: boolean; delayOf: (id: string) => number; myTurnHand: number | null;
   /** my seat, stake not down yet: taps put chips on the box and the circles */
   betting: boolean; pending: Pending; free: boolean;
   /** a new stake was started this round (even if the chips were all taken back): the last round is gone */
@@ -195,15 +200,15 @@ function SeatSpot({ s, i, geo, table, reveal, delayOf, myTurnHand, betting, pend
   const turn = table.phase === "playing" && table.turn?.seat === i;
   // a new stake started: the last round's cards and results leave the box
   const fresh = betting && (!!touched || pending.main.length > 0 || pending.pp.length > 0 || pending.t3.length > 0 || free);
-  const hands = s.hands.length && !(table.phase === "betting" && (s.ready || fresh)) ? s.hands : [];
+  const hands = s.hands.length && !cleared && !(table.phase === "betting" && (s.ready || fresh)) ? s.hands : [];
   const done = table.settled && reveal && hands.length > 0;
   const nets = done ? sideNets(s) : null;
   // the stake on the box: what I am putting down now, else what the server holds
   const mainChips = fresh ? (free ? [] : pending.main) : s.ready ? (s.free ? [] : chipsOf(s.bet)) : [];
   const ppChips = fresh ? pending.pp : (s.ready || hands.length) ? chipsOf(s.pp) : [];
   const t3Chips = fresh ? pending.t3 : (s.ready || hands.length) ? chipsOf(s.t3) : [];
-  const total = done ? hands.reduce((t, h) => t + handNet(h, s.free), 0) + (nets ? nets.pp + nets.t3 : 0) : null;
-  const status = turn ? "ходит" : table.phase === "betting" ? (s.ready ? "ставка ✓" : betting ? "твоя ставка" : "ставит…") : hands.length ? "" : "ждёт";
+  const total = done ? hands.reduce((t, h) => t + handNet(h, s.free), 0) + (nets ? nets.pp + nets.t3 + nets.ins : 0) : null;
+  const status = turn ? "ходит" : table.phase === "insurance" ? (s.ins === null ? "страховка?" : s.ins ? `страховка ${money(s.ins)}` : "без страховки") : table.phase === "betting" ? (s.ready ? "ставка ✓" : betting ? "твоя ставка" : "ставит…") : hands.length ? "" : "ждёт";
   const side = (k: "pp" | "t3", spot: readonly [number, number], chips: number[], net: number | null, hit: string | null) => (
     <div className={`bjt-side ${big} side-${k} ${betting ? "can" : ""} ${net !== null && net !== 0 ? (net > 0 ? "won" : "lost") : ""}`} style={at(spot[0], spot[1])}
       onClick={betting ? () => onSide(k) : undefined} role={betting ? "button" : undefined} aria-label={betting ? (k === "pp" ? "Ставка на пары" : "Ставка 21+3") : undefined}>
@@ -243,8 +248,38 @@ function SeatSpot({ s, i, geo, table, reveal, delayOf, myTurnHand, betting, pend
           </span>
         )}
       </div>
-      {side("pp", geo.pp, ppChips, nets ? (s.pp > 0 ? nets.pp : null) : null, s.side?.pp ? PP_TITLES[s.side.pp as PairHit] : null)}
-      {geo.t3 && side("t3", geo.t3, t3Chips, nets ? (s.t3 > 0 ? nets.t3 : null) : null, s.side?.t3 ? T3_TITLES[s.side.t3 as T3Hit] : null)}
+      {geo.big ? (
+        <>
+          {!!s.ins && hands.length > 0 && (
+            <span className={`bjt-ins big ${nets ? (nets.ins > 0 ? "won" : "lost") : ""}`} style={at(b.x, b.y - 150)}>
+              страховка {money(s.ins)}{nets && nets.ins !== 0 ? ` · ${signed(nets.ins)}` : ""}
+            </span>
+          )}
+          {side("pp", geo.pp, ppChips, nets ? (s.pp > 0 ? nets.pp : null) : null, s.side?.pp ? PP_TITLES[s.side.pp as PairHit] : null)}
+          {geo.t3 && side("t3", geo.t3, t3Chips, nets ? (s.t3 > 0 ? nets.t3 : null) : null, s.side?.t3 ? T3_TITLES[s.side.t3 as T3Hit] : null)}
+        </>
+      ) : (
+        // the other players: their side bets (and insurance) in a row over their cards
+        (() => {
+          const pills: { k: string; label: string; amount: number; net: number | null; hit: string | null }[] = [];
+          const show = s.ready || hands.length > 0;
+          if (show && s.pp > 0) pills.push({ k: "pp", label: "Пары", amount: s.pp, net: nets ? nets.pp : null, hit: s.side?.pp ? PP_TITLES[s.side.pp as PairHit] : null });
+          if (show && s.t3 > 0) pills.push({ k: "t3", label: "21+3", amount: s.t3, net: nets ? nets.t3 : null, hit: s.side?.t3 ? T3_TITLES[s.side.t3 as T3Hit] : null });
+          if (hands.length > 0 && s.ins) pills.push({ k: "ins", label: "Страх.", amount: s.ins, net: nets ? nets.ins : null, hit: null });
+          if (!pills.length) return null;
+          return (
+            <span className="bjt-tops" style={at(b.x, b.y - 74)}>
+              {pills.map((p) => (
+                <span key={p.k} className={`bjt-top ${p.k} ${p.net !== null && p.net !== 0 ? (p.net > 0 ? "won" : "lost") : ""}`} title={p.hit ?? undefined}>
+                  <i className={`chp v${p.amount >= 25 ? 25 : p.amount >= 10 ? 10 : p.amount >= 5 ? 5 : 1}`} />
+                  <small>{p.label}</small>
+                  <b className="num">{p.net !== null && p.net !== 0 ? signed(p.net) : money(p.amount)}</b>
+                </span>
+              ))}
+            </span>
+          );
+        })()
+      )}
       <span className={`bjt-name ${big} ${s.me ? "me" : ""}`} style={at(mid[0], mid[1])}>
         <b>{s.name}</b>
         {total !== null ? <i className={`num ${total > 0 ? "win" : total < 0 ? "lose" : ""}`}>{signed(total)}</i> : status && <i>{status}</i>}
@@ -328,7 +363,12 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
     const t = window.setTimeout(() => setNote(null), 1800);
     return () => clearTimeout(t);
   }, [note]);
-  const betting = !!me && table?.phase === "betting" && !me.ready;
+  // the paid round stays on view for a few seconds, then the table is cleared and the betting time runs
+  const clearing = !!table?.clearAt && now + skew.current < table.clearAt;
+  // the clear time passed: the cards and stakes are gone here at once, the server agrees on the next poll
+  const cleared = !!table?.clearAt && now + skew.current >= table.clearAt;
+  const sweep = !!table?.clearAt && clearing && table.clearAt - (now + skew.current) < 700;
+  const betting = !!me && table?.phase === "betting" && !me.ready && !clearing;
   const cost = (free ? 0 : sum(pending.main)) + sum(pending.pp) + sum(pending.t3);
   const put = (k: keyof Pending) => {
     if (k === "main" && free) { setNote("Бесплатная ставка — 1 USD, сайды можно добавить"); return; }
@@ -348,24 +388,18 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
     haptic.tap();
     setPending((p) => ({ ...p, [k]: p[k].slice(0, -1) }));
   };
-  const repeat = () => {
-    if (!me) return;
-    haptic.tap();
-    setTouched(true);
-    setPending({ main: chipsOf(me.bet).reverse(), pp: chipsOf(me.pp).reverse(), t3: chipsOf(me.t3).reverse() });
-  };
   const place = async () => {
     const r = await run("bj_bet", { bet: free ? me?.bet ?? BJ_BET.min : sum(pending.main), pp: sum(pending.pp), t3: sum(pending.t3), free });
     if (r) { setPending(NO_BET); setFree(false); }
   };
 
   // what the round brought me: hands and sides, stakes back not counted
-  const mineDone = !!me && table?.settled && reveal && me.hands.length > 0 && !(table.phase === "betting" && (me.ready || touched || pending.main.length + pending.pp.length + pending.t3.length > 0 || free));
+  const mineDone = !!me && table?.settled && !cleared && reveal && me.hands.length > 0 && !(table.phase === "betting" && (me.ready || touched || pending.main.length + pending.pp.length + pending.t3.length > 0 || free));
   const summary = useMemo(() => {
     if (!me || !mineDone) return null;
     const hands = me.hands.reduce((t, h) => t + handNet(h, me.free), 0);
     const sides = sideNets(me);
-    return { total: Math.round((hands + sides.pp + sides.t3) * 100) / 100, hands, pp: me.pp > 0 ? sides.pp : null, t3: me.t3 > 0 ? sides.t3 : null };
+    return { total: Math.round((hands + sides.pp + sides.t3 + sides.ins) * 100) / 100, hands, pp: me.pp > 0 ? sides.pp : null, t3: me.t3 > 0 ? sides.t3 : null, ins: me.ins ? sides.ins : null };
   }, [me, mineDone]);
   const resultKey = table ? `${table.id}:${table.round}` : "";
   const played = useRef("");
@@ -397,18 +431,29 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
       : summary ? (
         <span className={`bjt-sum ${summary.total > 0 ? "win" : summary.total < 0 ? "lose" : ""}`}>
           <b>{summary.total > 0 ? `Выигрыш ${signed(summary.total)}` : summary.total < 0 ? `Минус ${money(-summary.total)}` : "В ноль"}</b> <Icon name="USD" size={14} />
-          <small> рука {signed(summary.hands)}{summary.pp !== null ? ` · пары ${signed(summary.pp)}` : ""}</small>
+          <small> рука {signed(summary.hands)}{summary.pp !== null ? ` · пары ${signed(summary.pp)}` : ""}{summary.ins !== null ? ` · страховка ${signed(summary.ins)}` : ""}</small>
         </span>
       )
+      : table.phase === "insurance"
+        ? (!reveal ? "Раздаём…" : me?.ins === null ? <><b className="bjt-timer num">{left !== null ? `${left} с` : ""}</b> У дилера туз — застраховать ставку? Если у него блэкджек, страховка платит 2:1</> : <>Дилер ждёт ответов по страховке{left !== null ? ` · ${left} с` : ""}</>)
       : table.phase === "playing"
         ? (!reveal ? "Раздаём…" : myTurn ? <>Твой ход{left !== null ? ` · ${left} с` : ""}</> : table.turn ? <>Ходит <b>{table.seats[table.turn.seat]?.name}</b>{left !== null ? ` · ${left} с` : ""}</> : "Дилер открывает карты…")
-        : betting ? "Фишку — на своё поле (ставка) или на кружки «Пары» и «21+3». Нажми на фишки, чтобы убрать"
-        : me?.ready ? <>Ставка на столе. {waiting > 0 ? <>Ждём остальных ({waiting}){left !== null ? ` · раздача через ${left} с` : ""}</> : "Раздаём…"}</>
+        : clearing ? "Убираем карты…"
+        : betting ? <>{left !== null ? <b className="bjt-timer num">Ставки: {left} с</b> : null} Фишку — на своё поле или на кружки «Пары» и «21+3». Нажми на фишки, чтобы убрать</>
+        : me?.ready ? <>Ставка на столе. {waiting > 0 ? <>Ждём ставок ({waiting}){left !== null ? ` · раздача через ${left} с` : ""}</> : "Раздаём…"}</>
+        : table.phase === "betting" ? <>Идёт приём ставок{left !== null ? ` · ${left} с` : ""}</>
         : "";
     panel = (
       <div className="bjt-ctrl">
         <div className="bjt-line tiny">{line}</div>
-        {table.phase === "playing" && myTurn && reveal ? (
+        {table.phase === "insurance" && me?.ins === null && reveal ? (
+          <div className="bjt-acts">
+            <button className="btn dark grow" disabled={!!busy} onClick={() => run("bj_insure", { take: false })}>Без страховки</button>
+            <button className="btn gold grow" disabled={!!busy || usd < bjInsurance(me.hands[0]?.bet ?? 0)} onClick={() => run("bj_insure", { take: true })}>
+              Страховка · {money(bjInsurance(me.hands[0]?.bet ?? 0))} <Icon name="USD" size={16} />
+            </button>
+          </div>
+        ) : table.phase === "playing" && myTurn && reveal ? (
           <div className="bj-moves">
             <button className="btn gold" disabled={!!busy || !view.moves?.hit} onClick={() => run("bj_move", { move: "hit" })}>Ещё</button>
             <button className="btn red" disabled={!!busy || !view.moves?.stand} onClick={() => run("bj_move", { move: "stand" })}>Хватит</button>
@@ -429,9 +474,7 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
               )}
             </div>
             <div className="bjt-acts">
-              {cost > 0 || free
-                ? <button className="btn dark" onClick={() => { haptic.tap(); setPending(NO_BET); setFree(false); }}>Убрать всё</button>
-                : <button className="btn dark" disabled={!me || (!me.bet && !me.pp && !me.t3) || round === 0} onClick={repeat}>Повторить</button>}
+              <button className="btn dark" disabled={!(cost > 0 || free)} onClick={() => { haptic.tap(); setPending(NO_BET); setFree(false); }}>Убрать всё</button>
               <button className="btn gold grow" disabled={busy === "bj_bet" || (!free && pending.main.length === 0) || cost > usd} onClick={place}>
                 {free ? "Поставить бесплатно" : <>Поставить · {money(cost)} <Icon name="USD" size={16} /></>}{free && cost > 0 ? <> + {money(cost)} <Icon name="USD" size={16} /></> : null}
               </button>
@@ -440,7 +483,6 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
         ) : me?.ready && table.phase === "betting" ? (
           <div className="bjt-acts">
             <button className="btn dark grow" disabled={!!busy} onClick={() => run("bj_unbet")}>Снять ставку</button>
-            {waiting > 0 && <button className="btn gold grow" disabled={!!busy} onClick={() => run("bj_deal")}>Раздать сейчас</button>}
           </div>
         ) : null}
       </div>
@@ -458,7 +500,7 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
           <span className="bjt-wallet"><Icon name="USD" size={16} /><b className="num">{money(usd)}</b></span>
           {table && <button className="btn small dark" disabled={!!busy} onClick={() => run("bj_leave")}>Встать</button>}
         </div>
-        <div className="bjt-stage bj2-stage">
+        <div className={`bjt-stage bj2-stage ${sweep ? "sweep" : ""}`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="bjt-felt" src="/assets/yard/bj-room.webp" alt="" draggable={false} />
           {!view && <span className="bjt-loading tiny">Раскладываем стол…</span>}
@@ -466,21 +508,21 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
             <>
               <div className="bjt-dealer">
                 <div className="bj-cards dealer">
-                  {table.dealer.map((c) => <Card key={`c${c.n}`} c={c} delay={delayOf(`c${c.n}`)} />)}
+                  {!cleared && table.dealer.map((c) => <Card key={`c${c.n}`} c={c} delay={delayOf(`c${c.n}`)} />)}
                   {table.dealerHidden && <Card key={`h${table.dealerHidden.n}`} back delay={delayOf(`h${table.dealerHidden.n}`)} />}
                 </div>
-                {!!table.dealer.length && <span className="bjt-dlbl">Дилер · <b className={`num ${reveal && table.dealerValue > 21 ? "bust" : ""}`}>{reveal ? table.dealerValue : "…"}</b>{table.dealerHidden ? "+?" : ""}</span>}
+                {!cleared && !!table.dealer.length && <span className="bjt-dlbl">Дилер · <b className={`num ${reveal && table.dealerValue > 21 ? "bust" : ""}`}>{reveal ? table.dealerValue : "…"}</b>{table.dealerHidden ? "+?" : ""}</span>}
               </div>
               {OTHER_SEATS.map((geo, k) => {
                 const o = others[k];
                 return (
-                  <SeatSpot key={`o${k}`} s={o?.s ?? null} i={o?.i ?? -1} geo={geo} table={table} reveal={reveal} delayOf={delayOf} myTurnHand={null}
+                  <SeatSpot key={`o${k}`} s={o?.s ?? null} i={o?.i ?? -1} geo={geo} table={table} reveal={reveal} cleared={cleared} delayOf={delayOf} myTurnHand={null}
                     betting={false} pending={NO_BET} free={false} onBox={() => {}} onSide={() => {}} onUnchip={() => {}}
                     canInvite={!!me && (!o || !o.s)} onInvite={() => setInviteSeat(k)} />
                 );
               })}
               {me && mySeat !== null && (
-                <SeatSpot s={me} i={mySeat} geo={MY_SEAT} table={table} reveal={reveal} delayOf={delayOf} myTurnHand={myTurn ? table.turn!.hand : null}
+                <SeatSpot s={me} i={mySeat} geo={MY_SEAT} table={table} reveal={reveal} cleared={cleared} delayOf={delayOf} myTurnHand={myTurn ? table.turn!.hand : null}
                   betting={betting} pending={pending} free={free} touched={touched} onBox={() => put("main")} onSide={(k) => put(k)} onUnchip={unchip}
                   canInvite={false} onInvite={() => {}} />
               )}

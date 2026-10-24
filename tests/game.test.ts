@@ -1123,24 +1123,55 @@ describe("yard mini games", () => {
     expect(v.table.seats[0].hands.map((h: { outcome: string }) => h.outcome)).toEqual(["lose", "lose"]);
     expect(v.table.seats[0].won).toBe(52);
     expect(await wallet(db, p, "USD")).toBe(140);
+    // the results stay 5 s, then the table is cleared and there are 20 s to bet
+    expect(v.table.clearAt).toBe(T0 + 4000 + 5000);
+    expect(v.table.deadline).toBe(T0 + 4000 + 5000 + 20_000);
+    await expect(act(db, p, "bj_bet", { bet: 10 }, T0 + 5000)).rejects.toMatchObject({ code: "bj_busy" });
     // a natural pays 3:2
     await stackShoe(p, [[1, 0], [10, 1], [13, 2], [7, 3]]);
-    v = (await act(db, p, "bj_bet", { bet: 10 }, T0 + 5000)).result;
+    v = (await act(db, p, "bj_bet", { bet: 10 }, T0 + 10_000)).result;
     expect(v.table.settled).toBe(true);
     expect(v.table.seats[0].hands[0].outcome).toBe("blackjack");
     expect(await wallet(db, p, "USD")).toBe(140 - 10 + 25);
     // a free bet: a win pays, the stake is the house's
     await stackShoe(p, [[10, 0], [10, 1], [9, 2], [7, 3]]);
-    v = (await act(db, p, "bj_bet", { free: true }, T0 + 6000)).result;
+    v = (await act(db, p, "bj_bet", { free: true }, T0 + 16_000)).result;
     expect(v.moves.double).toBe(false);
-    v = (await act(db, p, "bj_move", { move: "stand" }, T0 + 7000)).result;
+    v = (await act(db, p, "bj_move", { move: "stand" }, T0 + 17_000)).result;
     expect(v.table.seats[0].hands[0].outcome).toBe("win");
     expect(await wallet(db, p, "USD")).toBe(155 + 1);
     expect(v.free.left).toBe(2);
     // getting up closes an empty table
-    v = (await act(db, p, "bj_leave", {}, T0 + 8000)).result;
+    v = (await act(db, p, "bj_leave", {}, T0 + 18_000)).result;
     expect(v.table).toBeNull();
     expect((await db.query("SELECT 1 FROM bj_tables")).length).toBe(0);
+  });
+
+  it("blackjack: an ace up offers insurance — 2:1 on a dealer blackjack, lost otherwise; no deal-now, no betting while the table is cleared", async () => {
+    const p = await newPlayer(db);
+    await setMoney(db, p, "USD", 100);
+    await act(db, p, "bj_open", {}, T0);
+    await expect(act(db, p, "bj_deal", {}, T0)).rejects.toBeTruthy();
+    // me 10♠, the dealer A♥, me 9♦, under the dealer K♣ — a dealer blackjack
+    await stackShoe(p, [[10, 0], [1, 1], [9, 2], [13, 3]]);
+    let v = (await act(db, p, "bj_bet", { bet: 10 }, T0 + 1000)).result;
+    expect(v.table.phase).toBe("insurance");
+    expect(v.table.seats[0].ins).toBeNull();
+    expect(v.table.deadline).toBe(T0 + 1000 + 10_000);
+    await expect(act(db, p, "bj_move", { move: "stand" }, T0 + 1500)).rejects.toMatchObject({ code: "bj_not_turn" });
+    v = (await act(db, p, "bj_insure", { take: true }, T0 + 2000)).result;
+    // insured 5, paid 15; the hand loses 10 — even
+    expect(v.table.settled).toBe(true);
+    expect(v.table.seats[0].insPay).toBe(15);
+    expect(await wallet(db, p, "USD")).toBe(100);
+    // the next round: an ace up, no dealer blackjack (A♥ + 7♣), no answer in 10 s → no insurance, the moves start
+    await stackShoe(p, [[10, 0], [1, 1], [9, 2], [7, 3]]);
+    v = (await act(db, p, "bj_bet", { bet: 10 }, T0 + 2000 + 5000 + 1000)).result;
+    expect(v.table.phase).toBe("insurance");
+    v = (await act(db, p, "bj_move", { move: "stand" }, T0 + 8000 + 11_000)).result;
+    expect(v.table.seats[0].ins).toBe(0);
+    expect(v.table.seats[0].hands[0].outcome).toBe("win"); // 19 against 18
+    expect(await wallet(db, p, "USD")).toBe(110);
   });
 
   it("blackjack: clan mates at one table; turns in seat order; a missed move stands by itself", async () => {
@@ -1161,7 +1192,7 @@ describe("yard mini games", () => {
     // a bets: the deal waits for b
     let v = (await act(db, a, "bj_bet", { bet: 5 }, T0 + 3000)).result;
     expect(v.table.phase).toBe("betting");
-    expect(v.table.deadline).toBe(T0 + 3000 + 25_000);
+    expect(v.table.deadline).toBe(T0 + 3000 + 20_000);
     // a: 10♠ 6♣ (16), b: 9♥ 7♠ (16), the dealer: 10♦ up, 7♥ down; then 10♣ for b
     await stackShoe(a, [[10, 0], [9, 1], [10, 2], [6, 3], [7, 0], [7, 1], [10, 3]]);
     v = (await act(db, b, "bj_bet", { bet: 5 }, T0 + 4000)).result;

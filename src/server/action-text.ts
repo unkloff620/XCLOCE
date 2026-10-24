@@ -103,7 +103,7 @@ export function actionText(type: string, body: Row, result: unknown): string | n
     case "bj_leave": return "встал из-за стола";
     case "bj_bet": return body.free === true ? "бесплатная ставка 1 USD" : join(`ставка ${fmt(body.bet)} USD`, n(body.pp) ? `пары ${fmt(body.pp)}` : "", n(body.t3) ? `21+3 ${fmt(body.t3)}` : "");
     case "bj_unbet": return "снял ставку";
-    case "bj_deal": return "раздача";
+    case "bj_insure": return body.take === true ? "страховка" : "без страховки";
     case "bj_move": return ({ hit: "ещё", stand: "хватит", double: "удвоил", split: "разбил" } as Record<string, string>)[String(body.move)] ?? "";
     case "poker_swap": if (r.phase === "draw") return `Покер: заменил карту ${n(body.index) + 1}`;
     // falls through: the last swap counts the hand
