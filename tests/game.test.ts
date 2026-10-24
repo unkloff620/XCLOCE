@@ -611,8 +611,11 @@ describe("daily login reward", () => {
     expect(r3.result).toMatchObject({ day: 1, streak: 1 });
     for (let i = 1; i < 7; i++) await act(db, p, "daily_claim", {}, T0 + (3 + i) * D);
     expect(await qty(db, p, "gpu")).toBe(1);
+    // 7 days in a row: the streak bonus on top (5 chips), the next one is at 14
+    expect(await qty(db, p, "poker-chip")).toBe(5);
     const r8 = await act(db, p, "daily_claim", {}, T0 + 10 * D);
-    expect(r8.result).toMatchObject({ day: 1, streak: 8 });
+    expect(r8.result).toMatchObject({ day: 1, streak: 8, bonus: null });
+    expect(r8.state.daily.bonus.at).toBe(14);
   });
 });
 
@@ -1551,6 +1554,30 @@ describe("Бутылка Командате", () => {
     expect(e.state.look.equipped.HAND).toBe("bottle-komandate");
     const u = await act(db, p, "unequip", { slot: "HAND" }, T0 + 3 * D);
     expect(u.state.look.equipped.HAND).toBeUndefined();
+  });
+});
+
+describe("boss sets and «Дела»", () => {
+  it("the whole set of Командате (worn or not) adds +30 to the keyboard; the case shows it", async () => {
+    const p = await newPlayer(db);
+    await give(db, p, "keyboard", 5);
+    await startDatsik(p);
+    const plain = await hit(p, "keyboard", T0);
+    for (const it of ["bottle-komandate", "jacket-komandate", "pants-komandate"]) await give(db, p, it, 1);
+    const three = await hit(p, "keyboard", T0 + 1000);
+    expect(three.result.damage).toBe(plain.result.damage);
+    await give(db, p, "sneakers-komandate", 1);
+    const full4 = await hit(p, "keyboard", T0 + 2000);
+    expect(full4.result.damage).toBe(plain.result.damage + 30);
+    expect(full4.state.setBonus).toEqual({ keyboard: 30 });
+    const { profileView } = await import("../src/server/systems/state.ts");
+    const { loadConfig } = await import("../src/server/config.ts");
+    const prof = await profileView(db, p, p, await loadConfig(db), T0);
+    const kom = prof.cases.find((c: { id: string }) => c.id === "bebyakyan")!;
+    expect(kom.set).toMatchObject({ weapon: "keyboard", damage: 30, have: 4, total: 4 });
+    expect(kom.closed).toBe(false);
+    const dat = prof.cases.find((c: { id: string }) => c.id === "datsik")!;
+    expect(dat.bestHit).toBe(full4.result.damage);
   });
 });
 

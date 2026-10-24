@@ -20,6 +20,7 @@ import { questsView } from "./quests.ts";
 import { notifyView, scheduleEnergy } from "./notify.ts";
 import { framesFor, prizesView, settleWeeks } from "./rating.ts";
 import { settleGameWeeks, settleZonkDay } from "./minigame-extras.ts";
+import { casesView, setBonuses } from "./collection.ts";
 import { achievementsReady, achievementsView } from "./achievements.ts";
 import { giftsLeft, giftsReceived, stashWish } from "./swap.ts";
 
@@ -96,6 +97,8 @@ export async function gameState(ctx: Ctx) {
     upgraded: await upgradedView(ctx.q, ctx.pid),
     upgradeSpins: await upgradeSpinsView(ctx.q, ctx.pid, ctx.now),
     poker: await pokerView(ctx.q, ctx.pid, ctx.now),
+    // flat damage per weapon from the complete boss sets
+    setBonus: await setBonuses(ctx.q, ctx.pid),
     bjInvites: await bjInviteCount(ctx.q, ctx.pid, ctx.now),
     stashWish: await stashWish(ctx.q, ctx.pid),
     stashGifts: await giftsReceived(ctx.q, ctx.pid),
@@ -130,6 +133,7 @@ export async function profileView(q: Queryable, viewer: number, pid: number, cfg
   return {
     id: p.id, self, name: p.display_name, username: p.username, photo: p.photo_url,
     achPoints: Number((p as PlayerRow & { ach_points?: number }).ach_points ?? 0),
+    cases: await casesView(q, pid),
     arsenal: stockIds.map((id) => ({ id, qty: Number(stock.find((r) => r.item_id === id)?.qty ?? 0) })).filter((w) => w.qty > 0),
     level: lv.level, xp: Number(p.xp), levelXp: lv.into, levelNeed: lv.need,
     firstSeen: new Date(p.created_at).getTime(), lastSeen: new Date(p.last_seen_at).getTime(), activeDays: p.active_days,

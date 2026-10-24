@@ -25,3 +25,15 @@ export const YARD_DROPS: YardDrop[] = [
   { id: "poker-chip", name: "Фишка", icon: "poker-chip", weight: 5, reward: { items: [{ id: "poker-chip", qty: 1 }] } },
   { id: "keyboard", name: "Клавиатура", icon: "keyboard", weight: 1, reward: { items: [{ id: "keyboard", qty: 1 }] } },
 ];
+
+/*
+ * Time of day in the yard (Moscow time): the picture is tinted to match, and at night rare finds come more often.
+ * day 8–17, evening 17–22, night 22–5, morning 5–8.
+ */
+export type YardTime = "morning" | "day" | "evening" | "night";
+export function yardTime(now: number): YardTime {
+  const h = new Date(now + 3 * 3600_000).getUTCHours();
+  return h >= 22 || h < 5 ? "night" : h < 8 ? "morning" : h < 17 ? "day" : "evening";
+}
+/** at night these finds are this many times likelier (the dark hides a lot under the benches) */
+export const NIGHT_BOOST: Record<string, number> = { "poker-chip": 2, "lost-wallet": 2, keyboard: 2 };

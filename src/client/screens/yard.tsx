@@ -4,7 +4,7 @@ import { tasksReady, useGame, useNow } from "../store.tsx";
 import { api } from "../api.ts";
 import { YARD_SPOTS } from "../art/scenes.tsx";
 import { ItemArt } from "../art/items.tsx";
-import { YARD_DROPS } from "../../content/yard.ts";
+import { YARD_DROPS, yardTime } from "../../content/yard.ts";
 import { clock } from "../format.ts";
 import { haptic } from "../telegram.ts";
 import { setMusicTrack } from "../sound.ts";
@@ -28,6 +28,7 @@ export function YardScreen() {
   const now = useNow();
   const [data, setData] = useState<YardData | null>(null);
   const [flying, setFlying] = useState<number | null>(null);
+  const tod = yardTime(now);
   // enough energy for a task step (or a location reward waits) → the Locations button calls for attention
   const taskHint = tasksReady(state, now);
   const [slots, setSlots] = useState(false);
@@ -77,9 +78,12 @@ export function YardScreen() {
             <p>Стол с табло — блэкджек (3 бесплатные партии в день) и зонк (1 бесплатная игра в день), дальше партия стоит 2 USD. Нажми на стол и выбери игру.</p>
           </Help>
         </div>
-        <span className="chip">{data?.items.length ?? state?.yard.count ?? 0}/{data?.max ?? 5}</span>
+        <span className="row" style={{ gap: 6 }}>
+          {tod === "night" && <span className="chip yard-night" title="Ночью редкие находки попадаются чаще">ночь · редкие находки</span>}
+          <span className="chip">{data?.items.length ?? state?.yard.count ?? 0}/{data?.max ?? 5}</span>
+        </span>
       </div>
-      <div className="yard">
+      <div className={`yard tod-${tod}`}>
         {/* blurred copy of the yard fills the space above the scene on tall screens */}
         <div className="scene-backdrop" style={{ backgroundImage: "url(/assets/yard/court-backdrop.webp)" }} />
         {/* the sharp scene stands on the nav at full width; the objects sit where they are drawn on the 2000×3405 sheet */}
@@ -90,6 +94,8 @@ export function YardScreen() {
           <DriftingSky className="yard-reflect" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="yard-bg" src="/assets/yard/court-night.webp" alt="" draggable={false} />
+          {/* the time of day in Moscow tints the yard: a cool bright day, the drawn sunset in the evening, a dark blue night */}
+          <span className="yard-tint" aria-hidden="true" />
           {/* the entrance leads to the locations with tasks */}
           <Link href="/locations" className={`yard-obj yard-entrance ${taskHint ? "call" : ""}`} aria-label="Локации" title="Локации">
             {/* eslint-disable-next-line @next/next/no-img-element */}

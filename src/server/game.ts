@@ -92,6 +92,14 @@ async function afterAction(ctx: Ctx, type: ActionType, result: unknown) {
     case "piece_buy":
     case "talent_up": return quests.questTick(ctx, "upgrade", 1);
     case "daily_claim": return notify.scheduleStreak(ctx, Number(r.streak) || 1);
+    // the mini-game quests: a counted poker hand, a finished zonk game, a squashed roach (blackjack rounds: blackjack.ts)
+    case "poker_play":
+    case "poker_swap":
+    case "poker_stand": return r.phase === "done" ? quests.questTick(ctx, "poker", 1) : undefined;
+    case "game_start":
+    case "zonk_move":
+    case "zonk_give_up": return r.status === "done" ? quests.questTick(ctx, "zonk", 1) : undefined;
+    case "roach_squash": return r.reward ? quests.questTick(ctx, "roach", 1) : undefined;
     default: return;
   }
 }

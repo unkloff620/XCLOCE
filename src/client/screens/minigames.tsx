@@ -17,6 +17,7 @@ import type { Currency } from "../../content/currencies.ts";
 import { BlackjackWindow } from "./blackjack.tsx";
 import { Roach } from "../art/roach.tsx";
 import { itemById } from "../../content/items.ts";
+import { yardTime } from "../../content/yard.ts";
 import {
   ITEM_VALUES, RANKS, SUITS, UPGRADE_MODES, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue, zonkGroups, zonkScore, ZONK_ROUNDS,
   ZONK_BANK_MIN, ZONK_DAY_PRIZE, ZONK_FAIL_XP, ZONK_LEVELS,
@@ -174,7 +175,8 @@ function useRoach() {
       t = setTimeout(() => {
         setRun({ key: Date.now(), lane: "frame", dir: Math.random() < 0.5 ? "left" : "right" });
         next(false);
-      }, (first ? 3 : 9 + Math.random() * 14) * 1000);
+        // at night (Moscow time) the roaches come out more often
+      }, (first ? 3 : yardTime(Date.now()) === "night" ? 5 + Math.random() * 7 : 9 + Math.random() * 14) * 1000);
     };
     next(true);
     return () => clearTimeout(t);

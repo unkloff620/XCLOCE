@@ -20,6 +20,7 @@ import { HomeScene } from "../art/home-scene.tsx";
 import { ROOM_BACKDROP } from "../../content/home-scene.ts";
 import { ROOM_DEFS, placedOf } from "../../content/home.ts";
 import { BadgesPanel, type AchRow } from "../badges.tsx";
+import { CasesPanel, type CaseRow } from "../cases.tsx";
 import { TalentChip, TalentNext, TalentWindow } from "./talents.tsx";
 import { EYE_COLORS, SKIN_TONES, type Look } from "../../content/home.ts";
 import { clock, dateRu, full, money, short } from "../format.ts";
@@ -31,6 +32,7 @@ interface Profile {
   wallet: Record<Currency, number> | null; energy: number | null;
   arsenal?: { id: string; qty: number }[];
   achPoints?: number;
+  cases?: CaseRow[];
   stats: { totalDamage: number; weapons: Record<string, number>; taskSteps: number; tasksDone: number; locationsDone: number; locationsTotal: number; yardFound: number; rewardsGot: number; fightsWon: number; fightsLost: number };
   bosses: { id: string; damage: number; hits: number; wins: number }[];
   clan: { id: number; name: string; tag: string; emblem: string; color: string } | null;
@@ -198,6 +200,8 @@ export function ProfileScreen() {
       {talentsOpen && <TalentWindow onClose={() => setTalentsOpen(false)} />}
 
       <BadgesPanel rows={p.achievements} self={p.self} onClaimed={reload} points={p.achPoints ?? 0} />
+
+      {p.cases && <CasesPanel cases={p.cases} self={p.self} />}
 
       <div className="panel">
         <div className="row" style={{ justifyContent: "space-between", marginBottom: 8 }}>

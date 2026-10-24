@@ -1,6 +1,7 @@
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, moscowDay, nextMoscowMidnight, type Ctx } from "../core.ts";
 import type { Config } from "../config.ts";
+import { nextStreakBonus, streakBonus } from "../../content/daily.ts";
 
 /*
  * Награда за вход: раз в московские сутки. Серия растёт, если вчера тоже забирал; пропуск — снова день 1.
@@ -25,7 +26,9 @@ function status(row: Row | undefined, now: number, cfg: Config) {
 export async function dailyView(q: Queryable, pid: number, now: number, cfg: Config) {
   const [row] = await q.query<Row>("SELECT last_day, streak, total FROM daily_login WHERE player_id=$1", [pid]);
   const s = status(row, now, cfg);
-  return { available: s.available, day: s.day, streak: s.streak, cycle: s.cycle, nextAt: s.nextAt, rewards: cfg.daily };
+  // the next streak bonus (7, 14, 30 days in a row…): counted from the streak the next claim makes
+  const bonus = nextStreakBonus(s.available ? s.nextStreak - 1 : s.streak);
+  return { available: s.available, day: s.day, streak: s.streak, cycle: s.cycle, nextAt: s.nextAt, rewards: cfg.daily, bonus };
 }
 
 export async function claimDaily(ctx: Ctx) {
@@ -40,5 +43,8 @@ export async function claimDaily(ctx: Ctx) {
     [ctx.pid, moscowDay(ctx.now), s.nextStreak],
   );
   const got = await grantReward(ctx, reward, `daily:${s.day}`);
-  return { day: s.day, streak: s.nextStreak, reward: got };
+  // the streak bonus on top: 7, 14, 30 days in a row (then every 30)
+  const extra = streakBonus(s.nextStreak);
+  const bonus = extra ? await grantReward(ctx, extra, `daily-streak:${s.nextStreak}`) : null;
+  return { day: s.day, streak: s.nextStreak, reward: got, bonus };
 }

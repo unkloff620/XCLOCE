@@ -44,7 +44,7 @@ export interface GameState {
   clan: { id: number; name: string; tag: string; emblem: string; color: string } | null;
   /** my request to join a clan; waiting — requests to my clan (I am its leader) */
   clanRequests: { mine: { clanId: number; name: string; tag: string } | null; waiting: number };
-  daily: { available: boolean; day: number; streak: number; cycle: number; nextAt: number | null; rewards: Reward[] };
+  daily: { available: boolean; day: number; streak: number; cycle: number; nextAt: number | null; rewards: Reward[]; bonus?: { at: number; reward: Reward } };
   quests: {
     list: { id: string; progress: number; target: number; done: boolean; claimed: boolean }[];
     chest: { ready: boolean; opened: boolean; reward: Granted | null };
@@ -67,6 +67,8 @@ export interface GameState {
   upgradeSpins?: { freeLeft: number; freePerDay: number; price: { currency: Currency; amount: number } };
   /** poker: hands left today, the price, the poker experience and level (to: null at the top level) */
   poker?: PokerInfo;
+  /** flat damage per weapon from the complete boss sets */
+  setBonus?: Record<string, number>;
   /** invitations to a blackjack table waiting for me */
   bjInvites?: number;
   /** how many times each set of stashes was collected (by set number) */

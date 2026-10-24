@@ -22,10 +22,10 @@ async function setProgress(pid: number, now: number, progress: Record<string, nu
 const notes = (pid: number) => db.query<{ kind: string; due_at: Date; sent_at: Date | null; meta: Record<string, unknown> }>("SELECT kind, due_at, sent_at, meta FROM notifications WHERE player_id=$1 ORDER BY kind", [pid]);
 
 describe("daily quests", () => {
-  it("three quests a day, one from each group, the same all day, another set possible tomorrow", () => {
+  it("four quests a day, one from each group, the same all day, another set possible tomorrow", () => {
     const day = moscowDay(T0);
     const a = questsForDay(7, day);
-    expect(a).toHaveLength(3);
+    expect(a).toHaveLength(4);
     a.forEach((q, i) => expect(QUEST_GROUPS[i]).toContain(q));
     expect(questsForDay(7, day)).toEqual(a);
   });
@@ -58,7 +58,8 @@ describe("daily quests", () => {
     expect(r.state.quests.claimable).toBe(true);
     await expect(act(db, p, "quest_chest", {}, T0)).rejects.toMatchObject({ code: "chest_locked" });
     await act(db, p, "quest_claim", { id: set[1].id }, T0);
-    const s = await act(db, p, "quest_claim", { id: set[2].id }, T0);
+    await act(db, p, "quest_claim", { id: set[2].id }, T0);
+    const s = await act(db, p, "quest_claim", { id: set[3].id }, T0);
     expect(s.state.quests.chest.ready).toBe(true);
     const keyboards = await qty(db, p, "keyboard");
     // rng 0.6 → the second loot entry (keyboard)
@@ -66,6 +67,15 @@ describe("daily quests", () => {
     expect(await qty(db, p, "keyboard")).toBe(keyboards + 1);
     expect(c.state.quests).toMatchObject({ claimable: false, chest: { opened: true } });
     await expect(act(db, p, "quest_chest", {}, T0)).rejects.toMatchObject({ code: "chest_taken" });
+  });
+
+  it("the mini-game quest counts a squashed roach", async () => {
+    let p = 0;
+    // a player whose mini-game quest today is the roach
+    for (let i = 0; i < 40 && !p; i++) { const q = await newPlayer(db); if (questsForDay(q, moscowDay(T0))[3].id === "q-roach") p = q; }
+    expect(p).toBeGreaterThan(0);
+    const r = await act(db, p, "roach_squash", {}, T0, always(0.5));
+    expect(r.state.quests.list[3]).toMatchObject({ id: "q-roach", progress: 1 });
   });
 
   it("a quest not in today's set cannot be claimed; the set resets at midnight", async () => {

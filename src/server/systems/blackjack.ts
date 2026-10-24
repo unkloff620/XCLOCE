@@ -10,6 +10,7 @@ import { addMoney, moscowDay, takeMoney, type Ctx } from "../core.ts";
 import { schedule } from "./notify.ts";
 import { shuffled } from "./games.ts";
 import { addGameWeekly } from "./minigame-extras.ts";
+import { questTick } from "./quests.ts";
 import {
   BJ_BET, BJ_BET_MS, BJ_FREE, BJ_MAX_HANDS, BJ_RETURN, BJ_SEATS, BJ_SIDE_MAX, BJ_TITLES, BJ_TURN_MS, PP_PAY, T3_PAY,
   bjOutcome, canSplitCards, handValue, isBlackjack, perfectPairs, twentyOnePlus3,
@@ -167,6 +168,7 @@ async function finishRound(ctx: Ctx, t: TableRow) {
     seat.won = Math.round(won * 100) / 100;
     // the weekly blackjack rating counts the winnings of the round (paid out minus staked)
     await addGameWeekly(asCtx(ctx, seat.pid), "bj", seat.won - (seat.staked ?? 0));
+    await questTick(asCtx(ctx, seat.pid), "bj", 1);
   }
   for (const seat of sitting(s)) {
     seat.ready = false;

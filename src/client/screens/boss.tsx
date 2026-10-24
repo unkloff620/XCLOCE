@@ -5,7 +5,7 @@ import { useGame, useNow } from "../store.tsx";
 import { api, type FightView, type Hit, type Tray } from "../api.ts";
 import { BOSSES, arenaOf, bossById, type BossDef, FIGHT_HOURS, FULL_SHARE, KEY_SHARE, rewardShare } from "../../content/bosses.ts";
 import { WEAPONS, weaponById } from "../../content/items.ts";
-import { HIT_PHRASES } from "../../content/phrases.ts";
+import { HIT_PHRASES, bossLines } from "../../content/phrases.ts";
 import { ArenaBackdrop, BossSilhouette } from "../art/scenes.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { Icon } from "../art/icons.tsx";
@@ -27,6 +27,46 @@ import { BOXERS, useBossStrike } from "../fx/boss-strike.tsx";
 const POLL_MS = 1500;
 /** a hit stays in the arena feed this long */
 const FEED_MS = 5000;
+/**
+ * The boss talks in a fight: a line by his head every 7–13 s for a moment — cocky above half HP, scared below it
+ * (crossing half HP makes him blurt a scared line at once).
+ */
+function useBossTalk(bossId: string, on: boolean, scared: boolean) {
+  const [line, setLine] = useState<{ text: string; id: number } | null>(null);
+  const last = useRef("");
+  const say = useCallback(() => {
+    const pool = bossLines(bossId, scared).filter((x) => x !== last.current);
+    const text = pool[Math.floor(Math.random() * pool.length)];
+    last.current = text;
+    setLine({ text, id: Date.now() });
+  }, [bossId, scared]);
+  // a scared line right when he drops below half (not on the first look at an already beaten boss)
+  const was = useRef<boolean | null>(null);
+  useEffect(() => {
+    if (!on) return;
+    if (was.current === false && scared) say();
+    was.current = scared;
+  }, [on, scared, say]);
+  useEffect(() => {
+    if (!on) return;
+    let t: ReturnType<typeof setTimeout>;
+    const next = (first: boolean) => {
+      t = setTimeout(() => {
+        if (!document.hidden) say();
+        next(false);
+      }, first ? 2500 : 7000 + Math.random() * 6000);
+    };
+    next(true);
+    return () => clearTimeout(t);
+  }, [on, say]);
+  useEffect(() => {
+    if (!line) return;
+    const t = setTimeout(() => setLine(null), 2800);
+    return () => clearTimeout(t);
+  }, [line]);
+  return line;
+}
+
 /** the hit phrase bubble stays this long */
 const PHRASE_MS = 2200;
 
@@ -36,6 +76,7 @@ function Arena({ boss, hp, hpMax, endsAt, fx, hit, ouch, rug, feed, full: fullSc
   const hurt = hp !== null && pct(hp, hpMax) < 25;
   // below half HP the boss is dazed: slow, swaying from side to side (the rig slows its own motions, see useDazed)
   const dazed = hp !== null && hp / Math.max(1, hpMax) < BEATEN_BELOW;
+  const talk = useBossTalk(boss.id, !!fullScreen && hp !== null && hp > 0, dazed);
   return (
     <div className={`arena ${boss.final ? "final" : ""} ${fullScreen ? "full" : ""}`} style={{ ["--acc" as string]: boss.theme.accent }}>
       {!fullScreen && <ArenaBackdrop theme={boss.theme} final={boss.final} />}
@@ -43,6 +84,7 @@ function Arena({ boss, hp, hpMax, endsAt, fx, hit, ouch, rug, feed, full: fullSc
         {/* eslint-disable-next-line @next/next/no-img-element */}
         {hasBossRig(boss.id) ? <BossRig id={boss.id} hpShare={hp === null ? 1 : hp / Math.max(1, hpMax)} /> : boss.photo.full ? <img src={boss.photo.full} alt={boss.name} draggable={false} /> : <div className="arena-sil"><BossSilhouette accent={boss.theme.accent} /><span className="small muted">фото скоро</span></div>}
         <div className="arena-flash" />
+        {talk && <div key={talk.id} className={`boss-say ${dazed ? "scared" : ""}`}>{talk.text}</div>}
         {hurt && !hasBossRig(boss.id) && <div className="arena-plasters" />}
       </div>
       <div className="arena-top">

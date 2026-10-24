@@ -62,7 +62,7 @@ export function QuestsWindow({ onClose }: { onClose: () => void }) {
     <Modal title="Задания дня" onClose={onClose}>
       <div className="col" style={{ gap: 10 }}>
         <div className="small muted row" style={{ justifyContent: "space-between" }}>
-          <span>Выполни все три — откроется сундук.</span>
+          <span>Выполни все — откроется сундук.</span>
           <span className="row num" style={{ gap: 4, whiteSpace: "nowrap" }}><Icon name="clock" size={14} />{clock(q.resetAt - now)}</span>
         </div>
         {q.list.map((x) => {

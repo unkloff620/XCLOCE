@@ -832,4 +832,11 @@ ALTER TABLE players ADD COLUMN IF NOT EXISTS roach_n INT NOT NULL DEFAULT 0;
 ALTER TABLE players ADD COLUMN IF NOT EXISTS roach_at TIMESTAMPTZ;
 `,
   },
+  {
+    // «Дела»: the best hit of a player per boss is looked up by player
+    id: "v2-047-hits-by-player",
+    sql: `
+CREATE INDEX IF NOT EXISTS boss_hits_player ON boss_hits (player_id, boss_id, damage DESC);
+`,
+  },
 ];

@@ -64,7 +64,7 @@ export async function openQuestChest(ctx: Ctx) {
   const r = await row(ctx.q, ctx.pid, day, true);
   if (r.chest) throw new GameError("chest_taken", "Сундук уже открыт — новый завтра");
   const ids = questsForDay(ctx.pid, day).map((x) => x.id);
-  if (!ids.every((id) => r.claimed.includes(id))) throw new GameError("chest_locked", "Сначала забери награды за все три задания");
+  if (!ids.every((id) => r.claimed.includes(id))) throw new GameError("chest_locked", "Сначала забери награды за все задания дня");
   const loot = weighted(QUEST_CHEST_LOOT, ctx.rng);
   const got = await grantReward(ctx, mergeRewards(QUEST_CHEST_BASE, { items: [loot] }), "quest-chest");
   await ctx.q.query("UPDATE daily_quests SET chest=$3 WHERE player_id=$1 AND day=$2", [ctx.pid, day, JSON.stringify(got)]);

@@ -31,6 +31,11 @@ export interface BossDef {
   wear?: { items: string[]; chance: number; pity: number };
   /** things the first win (from KEY_SHARE damage) opens in the shop for sure; they are bought there too */
   firstWin?: string[];
+  /**
+   * the boss's set: owning every thing of his `wear` list (worn or not) adds `damage` to every hit of `weapon`
+   * (a flat bonus like the weapon's talents, before the room and trophy %)
+   */
+  set?: { weapon: string; damage: number };
 }
 
 /** Boss passes «Пропуск» (they used to be keys): the tier only sets the look and the name, every boss has its own card. */
@@ -62,6 +67,7 @@ export const BOSSES: BossDef[] = [
     hp: hp(0), reward: { xp: xp(0), currencies: { SOL: 0.02, RUB: 150 } },
     drop: [{ id: "keyboard", qty: 1, chance: 0.35 }],
     wear: { items: ["tee-white", "jeans", "sneakers"], chance: 0.1, pity: 10 },
+    set: { weapon: "mouse", damage: 10 },
     theme: { a: "#3a1430", b: "#12081a", accent: "#ff4d6d" }, photo: photo("datsik", true),
   },
   {
@@ -78,6 +84,7 @@ export const BOSSES: BossDef[] = [
     hp: hp(2), reward: { xp: xp(2), currencies: { SOL: 0.045, RUB: 300 } },
     drop: [{ id: "keyboard", qty: 3, chance: 0.3 }],
     wear: { items: ["bottle-komandate", "jacket-komandate", "pants-komandate", "sneakers-komandate"], chance: 0.1, pity: 10 },
+    set: { weapon: "keyboard", damage: 30 },
     theme: { a: "#1c2a4a", b: "#080d1c", accent: "#4da3ff" }, photo: photo("bebyakyan", true),
   },
   {
@@ -176,6 +183,10 @@ export const bossesIn = (ids?: string[] | null): BossDef[] => (ids ? BOSSES.filt
 
 
 export const bossById = (id: string) => BOSSES.find((b) => b.id === id);
+/** the things of a boss's set (his wear list) */
+export const bossSetItems = (b: BossDef) => (b.set ? b.wear?.items ?? [] : []);
+/** «Дело» of a boss is closed: CASE_WINS wins over him and every thing of his set owned */
+export const CASE_WINS = 10;
 /** each boss fights in his own room (public/assets/arena/<id>.webp); the rest still in the garage */
 export const BOSS_ARENAS = new Set(["kedr", "bebyakyan"]);
 export const arenaOf = (bossId: string) => `/assets/arena/${BOSS_ARENAS.has(bossId) ? bossId : "garage"}.webp`;

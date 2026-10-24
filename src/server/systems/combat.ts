@@ -7,6 +7,7 @@ import { boostReward, mergeRewards, scaleReward } from "../../content/rewards.ts
 import { BASE_CRIT_MULT, ROOM_DEFS, ROOM_PITY, roomUnlockId } from "../../content/home.ts";
 import { talentsForDamage, weaponTalentBonus } from "../../content/talents.ts";
 import { playerBonus, weaponTalents } from "./home.ts";
+import { setBonuses } from "./collection.ts";
 import { notifyBossLow } from "./notify.ts";
 
 /*
@@ -235,7 +236,9 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1
     // talents add flat damage to the weapon's base; the room and trophies multiply the sum; every hit of a batch rolls its crit
     // a room may add flat damage to the fist (Боксёрская)
     const roomFlat = w.id === "fist" ? bonus.fistDamage ?? 0 : 0;
-    const one = Math.round((w.weapon.damage + wt.flat + roomFlat) * (1 + bonus.damage));
+    // complete boss sets add flat damage to their weapon (Командате's set: the keyboard +30)
+    const setFlat = (await setBonuses(ctx.q, ctx.pid))[w.id] ?? 0;
+    const one = Math.round((w.weapon.damage + wt.flat + roomFlat + setFlat) * (1 + bonus.damage));
     const critOne = Math.round(one * (BASE_CRIT_MULT + bonus.critDamage + wt.critDamage));
     let damage = 0, crits = 0, used = 0;
     while (used < count) {

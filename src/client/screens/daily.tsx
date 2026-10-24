@@ -30,24 +30,37 @@ export function DailyWindow({ onClose }: { onClose: () => void }) {
   const { state, act, busy } = useGame();
   const now = useNow();
   const [got, setGot] = useState<Granted | null>(null);
+  const [bonus, setBonus] = useState<Granted | null>(null);
   if (!state) return null;
   const d = state.daily;
   // tiles before the current day are already taken in this cycle; the current one is taken too once claimed
   const taken = (i: number) => i + 1 < d.day || (!d.available && i + 1 === d.day);
   const claim = async () => {
-    const r = await act<{ day: number; reward: Granted }>("daily_claim");
+    const r = await act<{ day: number; reward: Granted; bonus: Granted | null }>("daily_claim");
     if (r) {
       haptic.ok();
       setGot(r.reward);
+      setBonus(r.bonus);
     }
   };
   return (
     <Modal title="Награда за вход" onClose={onClose} wide>
       <div className="col" style={{ gap: 12 }}>
         <div className="small muted">
-          Заходи каждый день подряд — награда растёт, на 7-й день редкое оружие. Пропустишь день — серия сгорит.
+          Заходи каждый день подряд — награда растёт, на 7-й день редкое оружие, а за 7, 14 и 30 дней подряд — бонус серии. Пропустишь день — серия сгорит.
           {d.streak > 0 && <> Серия: <b style={{ color: "var(--ink)" }}>{d.streak} дн.</b></>}
         </div>
+        {/* the streak bonus on top of the day's reward: 7, 14, 30 days in a row */}
+        {d.bonus && (
+          <div className="daily-streak">
+            <span className="daily-streak-h">
+              <b className="display">Бонус серии · {d.bonus.at} дн.</b>
+              <small className="num">{Math.min(d.streak, d.bonus.at)}/{d.bonus.at}</small>
+            </span>
+            <span className="daily-streak-bar"><i style={{ width: `${Math.min(100, (d.streak / d.bonus.at) * 100)}%` }} /></span>
+            <RewardChips r={d.bonus.reward} size={14} />
+          </div>
+        )}
         <div className="daily-grid">
           {d.rewards.map((r, i) => {
             const isNow = i + 1 === d.day;
@@ -65,6 +78,7 @@ export function DailyWindow({ onClose }: { onClose: () => void }) {
           <div className="panel col" style={{ alignItems: "center", gap: 8 }}>
             <b className="display">Получено!</b>
             <RewardChips r={got} />
+            {bonus && <><b className="display" style={{ color: "var(--gold)" }}>Бонус за серию!</b><RewardChips r={bonus} /></>}
             {got.levelUp && <div className="chip violet">Новый уровень: {got.levelUp.to}!</div>}
             <button className="btn green block" onClick={onClose}>Круто</button>
           </div>

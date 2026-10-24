@@ -1,6 +1,6 @@
 import { GameError } from "../db.ts";
 import { grantReward, itemQty, weighted, type Ctx } from "../core.ts";
-import { YARD_DROPS, type YardDrop } from "../../content/yard.ts";
+import { NIGHT_BOOST, YARD_DROPS, yardTime, type YardDrop } from "../../content/yard.ts";
 import { itemById } from "../../content/items.ts";
 
 /*
@@ -10,8 +10,10 @@ import { itemById } from "../../content/items.ts";
  * Picking from a full yard restarts the timer from the moment of the pick.
  */
 
-export function rollDrop(ctx: Ctx): YardDrop {
-  const entries = YARD_DROPS.map((d) => ({ v: d, w: ctx.cfg.yard.weights[d.id] ?? d.weight }));
+export function rollDrop(ctx: Ctx, at = ctx.now): YardDrop {
+  // a find that appears at night (Moscow time) is more often a rare one
+  const night = yardTime(at) === "night";
+  const entries = YARD_DROPS.map((d) => ({ v: d, w: (ctx.cfg.yard.weights[d.id] ?? d.weight) * (night ? NIGHT_BOOST[d.id] ?? 1 : 1) }));
   return weighted(entries, ctx.rng);
 }
 
@@ -39,7 +41,7 @@ export async function yardSync(ctx: Ctx) {
     let slot = 0;
     while (used.has(slot)) slot++;
     used.add(slot);
-    const drop = rollDrop(ctx);
+    const drop = rollDrop(ctx, at);
     const [row] = await ctx.q.query<{ id: number }>(
       "INSERT INTO yard_items (player_id, slot, drop_id, spawned_at) VALUES ($1,$2,$3,$4) RETURNING id",
       [ctx.pid, slot, drop.id, new Date(at)],

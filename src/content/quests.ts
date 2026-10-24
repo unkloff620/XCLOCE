@@ -1,13 +1,13 @@
 import type { Reward } from "./rewards.ts";
 
 /*
- * Ежедневные задания: каждый день у игрока три задания — по одному из каждой группы
- * (бой, энергия, экономика). Набор на день выбирается детерминированно от игрока и дня,
+ * Ежедневные задания: каждый день у игрока четыре задания — по одному из каждой группы
+ * (бой, энергия, экономика, мини-игры двора). Набор на день выбирается детерминированно от игрока и дня,
  * сбрасывается в полночь по Москве. Закрыл все три — открывается сундук.
  */
 
 /** what the server counts: every kind is fed by one kind of action */
-export type QuestKind = "damage" | "hits" | "steps" | "energy" | "yard" | "buy" | "exchange" | "slots" | "upgrade";
+export type QuestKind = "damage" | "hits" | "steps" | "energy" | "yard" | "buy" | "exchange" | "slots" | "upgrade" | "poker" | "zonk" | "roach" | "bj";
 
 export interface QuestDef {
   id: string;
@@ -37,6 +37,13 @@ export const QUEST_GROUPS: QuestDef[][] = [
     { id: "q-buy", kind: "buy", target: 1, title: "Купи что-нибудь в магазине", href: "/shop", reward: R(150, 300) },
     { id: "q-exchange", kind: "exchange", target: 1, title: "Обменяй валюту в обменнике", hint: "Нажми на любую валюту вверху экрана", reward: R(150, 300) },
     { id: "q-slots", kind: "slots", target: 1, title: "Крутани однорукого бандита", href: "/yard", reward: R(150, 300) },
+  ],
+  // the yard's mini-games: the prize is a «Фишка» for the poker table
+  [
+    { id: "q-poker", kind: "poker", target: 3, title: "Сыграй 3 раздачи в покер", href: "/yard", hint: "Стол во дворе → Покер", reward: R(150, 300, { items: [{ id: "poker-chip", qty: 1 }] }) },
+    { id: "q-zonk", kind: "zonk", target: 1, title: "Доиграй партию в зонк", href: "/yard", hint: "Стол во дворе → Зонк", reward: R(150, 300, { items: [{ id: "poker-chip", qty: 1 }] }) },
+    { id: "q-roach", kind: "roach", target: 1, title: "Прихлопни таракана в зонке", href: "/yard", hint: "Он бегает по раме доски", reward: R(150, 300, { items: [{ id: "poker-chip", qty: 1 }] }) },
+    { id: "q-bj", kind: "bj", target: 3, title: "Сыграй 3 раунда в блэкджек", href: "/yard", hint: "Стол во дворе → Блэкджек", reward: R(150, 300, { items: [{ id: "poker-chip", qty: 1 }] }) },
   ],
 ];
 

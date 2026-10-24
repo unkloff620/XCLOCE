@@ -15,6 +15,7 @@ export function weaponStats(state: GameState | null | undefined, weaponId: strin
   const home = state?.home.bonus ?? { damage: 0, critDamage: 0, critChance: 0 };
   const t = weaponTalentBonus(state?.weaponTalents ?? {}, weaponId);
   const bonus = home.damage;
-  const flat = t.flat + (weaponId === "fist" ? (home as { fistDamage?: number }).fistDamage ?? 0 : 0);
+  // the room's fist bonus and the complete boss sets' bonus (Командате's set: the keyboard +30)
+  const flat = t.flat + (weaponId === "fist" ? (home as { fistDamage?: number }).fistDamage ?? 0 : 0) + (state?.setBonus?.[weaponId] ?? 0);
   return { base, damage: Math.round((base + flat) * (1 + bonus)), bonus, flat, crit: BASE_CRIT_MULT + home.critDamage + t.critDamage, critChance: home.critChance };
 }
