@@ -53,6 +53,7 @@ const STEPS: Step[] = [
     aims: [
       { at: (p) => p === "/yard", sel: ".zb-lvl:not([disabled])" },
       { at: (p) => p === "/yard", sel: '.game-tile[data-game="zonk"]' },
+      { at: (p) => p === "/yard", sel: ".yard-table" },
       navTo("Двор"),
     ],
   },
