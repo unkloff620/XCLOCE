@@ -84,12 +84,12 @@ function StopArt({ n, size }: { n: TalentStop; size: number }) {
 }
 const stopTitle = (n: TalentStop) => (EXTRA_NAMES[n.target] ? n.name : `${itemById(n.target)?.name ?? n.target} · ${n.name}`);
 
-/** the stops' places on the road: a snake of three columns, top to bottom */
-const COLS = [20, 50, 80];
-const ROW_H = 126;
+/** the stops' places on the road: rows of three, the next row goes back the other way (a snake), top to bottom */
+const COLS = [18, 50, 82];
+const ROW_H = 112;
 const placeOf = (i: number) => {
   const row = Math.floor(i / 3), k = i % 3;
-  return { x: COLS[row % 2 ? 2 - k : k], y: ROW_H / 2 + i * (ROW_H / 3) + 6 };
+  return { x: COLS[row % 2 ? 2 - k : k], y: ROW_H / 2 + row * ROW_H };
 };
 
 export function TalentWindow({ onClose }: { onClose: () => void }) {
