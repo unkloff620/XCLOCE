@@ -20,7 +20,7 @@ import { BOSS_RIGS } from "./boss-rig-data.ts";
 type Part = { x: number; y: number; w: number; h: number; pivot?: readonly number[]; frames?: number };
 
 /** bosses whose far arm (R or L) goes behind the body */
-const BEHIND: Record<string, "L" | "R"> = { mugo: "R", babafey: "R" };
+const BEHIND: Record<string, "L" | "R"> = { mugo: "R", babafey: "L" };
 
 /** frame schedules of the puppet strips: [frame, ms] — idle loops, ouch/strike play once */
 const FRAME_SEQ: Record<string, Record<"idle" | "ouch" | "strike" | "fear", [number, number][]>> = {
