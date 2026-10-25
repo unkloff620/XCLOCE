@@ -23,7 +23,7 @@ import { talentThreshold, talentsForDamage } from "../../content/talents.ts";
 import { TalentWindow } from "./talents.tsx";
 import { weaponStats } from "../weapon-stats.ts";
 import { BOXERS, useBossStrike } from "../fx/boss-strike.tsx";
-import { FIGHT_MODES, MEDAL_NAMES, MEDAL_SET, fightMode, medalBonus, medalWeapon, type FightMode } from "../../content/medals.ts";
+import { FIGHT_MODES, MEDAL_NAMES, MEDAL_SET, fightMode, medalBonus, medalStep, medalWeapon, type FightMode } from "../../content/medals.ts";
 import { BossCoin } from "../art/boss-coin.tsx";
 
 /** the mode buttons on the door wall are short: the full names do not fit */
@@ -531,7 +531,7 @@ export function BossScreen({ id }: { id: string }) {
             <b className="door-plate-title">{boss.final ? "ФИНАЛ" : "НАГРАДА"}</b>
             <GainLine r={doorReward} size={14} />
             {(!!boss.drop?.length || (!!boss.wear && fightMode(mode).things)) && <MysteryDrop size={14} count={fightMode(mode).things ? bossItemsCount(boss, state) ?? undefined : undefined} />}
-            <span className="gain medal-chip" title={`Медаль «${MEDAL_NAMES[fightMode(mode).medal]}» за каждую победу; ${MEDAL_SET} — полный сет`}>
+            <span className="gain medal-chip" title={`Медаль «${MEDAL_NAMES[fightMode(mode).medal]}» за каждую победу; каждая сразу добавляет урон, ${MEDAL_SET} — полный набор`}>
               <BossCoin boss={boss} tier={fightMode(mode).medal} size={18} /><b className="num">{Math.min(MEDAL_SET, row?.medals?.[fightMode(mode).medal] ?? 0)}/{MEDAL_SET}</b>
             </span>
           </span>
@@ -543,7 +543,7 @@ export function BossScreen({ id }: { id: string }) {
       <div className="fight-bottom prefight-panel">
         <div className="tiny muted center mode-hint">
           {soloPick ? "Соло (бьёшь один): здоровье" : `${fightMode(mode).name}: здоровье`} {full(Math.round((row?.hpMax ?? boss.hp) * fightMode(mode).hp))} · медаль «{MEDAL_NAMES[fightMode(mode).medal]}»{fightMode(mode).things ? " · падают вещи босса" : ""}.
-          {" "}Сет из {MEDAL_SET} — +{medalBonus(boss, fightMode(mode).medal)} к урону «{weaponById(medalWeapon(boss))?.name}».
+          {" "}Каждая медаль — +{full(medalStep(boss, fightMode(mode).medal))} к урону «{weaponById(medalWeapon(boss))?.name}» сразу, все {MEDAL_SET} — +{full(medalBonus(boss, fightMode(mode).medal))}.
         </div>
         <div className="row small" style={{ justifyContent: "space-between", gap: 6 }}>
           <span className="chip gold"><Icon name="clock" size={14} />8 часов</span>

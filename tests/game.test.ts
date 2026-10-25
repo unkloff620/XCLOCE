@@ -1788,9 +1788,9 @@ describe("бицуха, наезд, харкнуть", () => {
 });
 
 describe("режимы боя и медали боссов", () => {
-  it("×1 / ×3 / ×6 HP; a win gives the mode's medal; 33 of a kind make a set that adds to the boss's weapon; things only in «Блатной»", async () => {
+  it("×1 / ×3 / ×6 HP; a win gives the mode's medal; each medal adds to the boss's weapon, 100 make the full set; things only in «Блатной»", async () => {
     await setBossHp({ datsik: 100 });
-    const { MEDAL_SET, medalBonus } = await import("../src/content/medals.ts");
+    const { MEDAL_SET, medalBonus, medalBonusFor } = await import("../src/content/medals.ts");
     const { bossById } = await import("../src/content/bosses.ts");
     const p = await newPlayer(db);
     await give(db, p, "gpu", 100);
@@ -1804,11 +1804,17 @@ describe("режимы боя и медали боссов", () => {
     expect(c.result.reward.medal).toEqual({ boss: "datsik", tier: "bronze", n: 1 });
     // «Пацанский» never opens his things, even with luck
     expect(c.result.reward.unlocks).toBeUndefined();
-    // a full set: the medal bonus on his weapon (the mouse)
+    // every medal adds its share to his weapon (the mouse) at once; a full set — the whole bonus
     const before = await act(db, p, "equip", { itemId: "jeans" }, T0 + 2 * M);
+    const datsik = bossById("datsik")!;
+    expect(before.state.setBonus?.mouse ?? 0).toBe(medalBonusFor(datsik, "bronze", 1));
+    await db.query("UPDATE boss_medals SET n=50 WHERE player_id=$1 AND boss_id='datsik' AND tier='bronze'", [p]);
+    const half = await act(db, p, "equip", { itemId: "jeans" }, T0 + 2 * M);
+    expect(half.state.setBonus?.mouse ?? 0).toBe(Math.round(medalBonus(datsik, "bronze") / 2));
     await db.query("UPDATE boss_medals SET n=$2 WHERE player_id=$1 AND boss_id='datsik' AND tier='bronze'", [p, MEDAL_SET]);
     const after = await act(db, p, "equip", { itemId: "jeans" }, T0 + 3 * M);
-    expect((after.state.setBonus?.mouse ?? 0) - (before.state.setBonus?.mouse ?? 0)).toBe(medalBonus(bossById("datsik")!, "bronze"));
+    expect(after.state.setBonus?.mouse ?? 0).toBe(medalBonus(datsik, "bronze"));
+    expect(MEDAL_SET).toBe(100);
     // the achievement is reached
     const done = after.state.achievementsReady ?? null;
     expect(done === null || done >= 1).toBe(true);

@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { MEDAL_ACHIEVEMENTS } from "../content/achievements.ts";
-import { MEDAL_NAMES, MEDAL_SET, MEDAL_TIERS, FIGHT_MODES, medalBonus, medalWeapon } from "../content/medals.ts";
+import { MEDAL_NAMES, MEDAL_SET, MEDAL_TIERS, FIGHT_MODES, medalBonus, medalStep, medalWeapon } from "../content/medals.ts";
 import { BossCoin } from "./art/boss-coin.tsx";
 import { ACH_CATEGORIES, BOSS_KILL_ACHIEVEMENTS, BOSS_KILL_TARGETS, SOLO_BOSS_ACHIEVEMENTS, TIER_COLORS, TIER_NAMES, achievementById, type AchCategory, type AchTier } from "../content/achievements.ts";
 import { Icon, type IconName } from "./art/icons.tsx";
@@ -357,14 +357,14 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
           <div className="col" style={{ gap: 6 }}>
             <div className="small muted center">
               Каждая победа даёт медаль с лицом босса: {FIGHT_MODES.map((m) => `«${m.name}» — ${MEDAL_NAMES[m.medal].toLowerCase()}`).join(", ")}.
-              {" "}{MEDAL_SET} медалей одного вида — полный сет: урон оружия босса растёт. Нажми на медаль — увидишь награду за сет.
+              {" "}Каждая медаль сразу добавляет урон оружию босса, {MEDAL_SET} медалей одного вида — полный набор. Нажми на медаль — увидишь награду за набор.
             </div>
             {OPEN_ALL.filter((b) => byId.has(`medal-${b.id}-bronze`)).map((b) => (
               <div key={b.id} className="bk-row">
                 <span className="bk-photo"><BossPhoto boss={b} round /></span>
                 <span className="grow col" style={{ gap: 1, minWidth: 0 }}>
                   <b className="ellipsis">{b.name}</b>
-                  <span className="tiny muted">сет: +{medalBonus(b, "bronze")}/+{medalBonus(b, "silver")}/+{medalBonus(b, "gold")} · {itemById(medalWeapon(b))?.name}</span>
+                  <span className="tiny muted">за медаль: +{medalStep(b, "bronze")}/+{medalStep(b, "silver")}/+{medalStep(b, "gold")} · {itemById(medalWeapon(b))?.name}</span>
                 </span>
                 <span className="bk-medals">
                   {MEDAL_TIERS.map((t) => {
