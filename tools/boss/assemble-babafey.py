@@ -25,7 +25,7 @@ ANCHOR = (1014, 560)
 W, H = 2000 + 2 * PAD, 3500
 CROP = (150, 10, 2340, 3496)
 HEAD_S = 0.88
-CHIN = (1014, 600)          # where the chin (sheet point 512, 922) goes on the body sheet
+CHIN = (1014, 640)          # where the chin (sheet point 512, 922) goes on the body sheet
 PUPIL_D = 27                # iris height on the face sheet
 EYE_C = [(443, 583), (633, 578)]
 
