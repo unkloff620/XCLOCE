@@ -41,9 +41,9 @@ function catState(c: AchCategory, rows: Map<string, AchRow>, self: boolean) {
 }
 
 /** Profile block: one row per category with five coloured steps; on your own profile reached steps are collected. */
-export function BadgesPanel({ rows, self, onClaimed, points = 0 }: { rows: AchRow[]; self: boolean; onClaimed?: () => void; points?: number }) {
-  // the list is folded; the header shows the count, the points and whether something waits to be collected
-  const [shown, setShown] = useState(false);
+export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = false }: { rows: AchRow[]; self: boolean; onClaimed?: () => void; points?: number; unfolded?: boolean }) {
+  // the list is folded (open at once in the «Личное дело» tab); the header shows the count, the points and what waits
+  const [shown, setShown] = useState(unfolded);
   const { act, busy } = useGame();
   const [open, setOpen] = useState<string | null>(null);
   const [soloOpen, setSoloOpen] = useState(false);

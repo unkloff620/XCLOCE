@@ -276,7 +276,7 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
               </div>
             </div>
           )}
-          {tab === "ach" && <BadgesPanel rows={p.achievements} self={p.self} onClaimed={reload} points={p.achPoints ?? 0} />}
+          {tab === "ach" && <BadgesPanel rows={p.achievements} self={p.self} onClaimed={reload} points={p.achPoints ?? 0} unfolded />}
           {tab === "cases" && p.cases && <CasesPanel cases={p.cases} self={p.self} />}
           {tab === "stash" && !p.self && p.stashGive && <StashGivePanel to={p.id} name={p.name} wish={p.stashWish ?? []} give={p.stashGive} onSent={reload} />}
           {tab === "set" && p.self && <SettingsPanel />}
