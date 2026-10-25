@@ -52,12 +52,12 @@
 .arena-flash { position: absolute; inset: 0; background: radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.85), transparent 60%); opacity: 0; pointer-events: none; mix-blend-mode: screen; }
 .arena-photo.hit { animation: shake 0.28s linear; }
 .arena-photo.hit .arena-flash { animation: flash 0.28s ease-out; }
-.arena-photo.rug { animation: rugdrop 0.7s cubic-bezier(0.5, 0, 0.3, 1.4); }
+.arena-photo.rug { animation: rug-shake 0.7s linear; } /* shaken, not dropped */
 .arena-photo.hurt img { filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.55)) saturate(0.85) contrast(1.05); }
 .arena-plasters { position: absolute; left: 38%; top: 22%; width: 26%; height: 9%; background: repeating-linear-gradient(90deg, #f4c49c 0 10px, #e8b088 10px 12px); border: 2.5px solid var(--line); border-radius: 6px; transform: rotate(-24deg); box-shadow: 34px 46px 0 -6px #f4c49c; }
 @keyframes shake { 20% { transform: translate(-6px, 2px) rotate(-1.5deg); } 40% { transform: translate(5px, -2px) rotate(1deg); } 60% { transform: translate(-4px, 1px); } 80% { transform: translate(3px, 0); } }
 @keyframes flash { 30% { opacity: 1; } }
-@keyframes rugdrop { 35% { transform: translateY(18%); } 70% { transform: translateY(-3%); } }
+@keyframes rug-shake { 10% { transform: translate(-7px, 1px) rotate(-1.8deg); } 25% { transform: translate(7px, -1px) rotate(1.6deg); } 40% { transform: translate(-6px, 1px) rotate(-1.2deg); } 55% { transform: translate(5px, 0) rotate(0.9deg); } 70% { transform: translate(-3px, 0) rotate(-0.5deg); } 85% { transform: translate(2px, 0); } }
 .arena-top { position: absolute; left: 10px; right: 10px; top: 10px; z-index: 3; }
 .arena-feed { position: absolute; left: 8px; right: 8px; bottom: 8px; z-index: 3; display: flex; flex-direction: column; gap: 3px; }
 .feed-line { align-self: flex-start; max-width: 100%; padding: 3px 8px; border-radius: 9px; background: rgba(14, 9, 5, 0.72); border: 1.5px solid rgba(255, 255, 255, 0.08); font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; animation: drop 0.25s ease; }
@@ -2993,3 +2993,9 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .door-plate .gain { text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85); }
 .door-plate .medal-chip b { font-size: 3.1cqw; }
 .door-plate .medal-chip .bcoin { width: 4.4cqw !important; height: 4.4cqw !important; }
+
+/* dialogues do not cover the boss: his line in the upper left corner under the bars, the hit phrase at the lower left */
+.arena .boss-say { left: 12px; top: 64px; translate: none; max-width: 44%; text-align: left; transform-origin: 85% 100%; }
+.arena:not(.full) .boss-say { top: 48px; }
+.arena .boss-say::after { left: auto; right: -9px; bottom: 10px; transform: rotate(-45deg); border-right: 2.5px solid #1e1006; border-bottom: 2.5px solid #1e1006; }
+.fight-bottom .phrase-bubble.side { left: 12px; right: auto; margin: 0; max-width: 46%; text-align: left; }

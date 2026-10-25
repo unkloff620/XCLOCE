@@ -84,7 +84,6 @@ function FxItem({ fx }: { fx: Fx }) {
           <div className="fx-gun"><ItemArt id="rug-pull-gun" size={90} /></div>
           <div className="fx-flash" />
           <div className="fx-rug" />
-          <div className="fx-tag display">ЛИКВИДНОСТЬ −100%</div>
         </>
       )}
       <div className="fx-dmg display">−{fx.damage}</div>
