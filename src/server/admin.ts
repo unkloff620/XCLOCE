@@ -13,7 +13,8 @@ import { ENERGY } from "../content/levels.ts";
 import { CURRENCIES, floorTo, isCurrency } from "../content/currencies.ts";
 import { itemById } from "../content/items.ts";
 import { levelFromXp } from "../content/levels.ts";
-import { TALENT_WEAPONS, talentTree } from "../content/talents.ts";
+import { talentStop } from "../content/talents.ts";
+import { syncTalentExtras } from "./systems/home.ts";
 
 const n = (v: unknown) => Number(v ?? 0);
 
@@ -110,7 +111,7 @@ export async function player(db: Db, id: number) {
   const cfg = await loadConfig(db);
   const [p] = await db.query<PlayerRow & { guest_id: string | null; banned_at: Date | null; ban_reason: string | null; talents: number }>("SELECT * FROM players WHERE id=$1", [id]);
   if (!p) throw new GameError("no_player", "Игрок не найден", 404);
-  const e = energyNow(p.energy, new Date(p.energy_at).getTime(), Date.now(), { ...cfg.energy, max: cfg.energy.max + Number(p.energy_bonus ?? 0) });
+  const e = energyNow(p.energy, new Date(p.energy_at).getTime(), Date.now(), { ...cfg.energy, max: cfg.energy.max + Number(p.energy_bonus ?? 0) + Number((p as { talent_energy?: number }).talent_energy ?? 0) });
   const [wallet, inventory, [stats], talents, [clan], fights, acts, ledger, admin] = await Promise.all([
     db.query<{ currency: string; amount: number }>("SELECT currency, amount FROM wallets WHERE player_id=$1", [id]),
     db.query<{ item_id: string; qty: number; source: string | null; updated_at: Date }>("SELECT item_id, qty, source, updated_at FROM inventory WHERE player_id=$1 AND qty > 0 ORDER BY item_id", [id]),
@@ -285,14 +286,15 @@ export async function edit(db: Db, adminTg: number, pid: number, e: Edit) {
         break;
       }
       case "set_talent": {
-        const br = TALENT_WEAPONS.includes(e.weapon) ? talentTree(e.weapon).find((b) => b.id === e.branch) : undefined;
-        if (!br) throw bad("Неизвестное оружие или улучшение");
+        const br = talentStop(String(e.weapon), String(e.branch));
+        if (!br) throw bad("Неизвестное улучшение");
         const to = wholeIn(e.level, 0, br.max, `Уровень «${br.name}»`);
         const [r] = await q.query<{ level: number }>("SELECT level FROM player_talents WHERE player_id=$1 AND weapon_id=$2 AND branch=$3", [pid, e.weapon, e.branch]);
         await q.query(
           "INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,$2,$3,$4) ON CONFLICT (player_id, weapon_id, branch) DO UPDATE SET level = EXCLUDED.level",
           [pid, e.weapon, e.branch, to],
         );
+        await syncTalentExtras(q, pid);
         info = { weapon: e.weapon, branch: e.branch, from: r?.level ?? 0, to };
         break;
       }
@@ -317,7 +319,7 @@ export async function edit(db: Db, adminTg: number, pid: number, e: Edit) {
         // out of the clan first (a leader hands the clan to the oldest member; an empty clan is closed)
         if ((await q.query("SELECT 1 FROM clan_members WHERE player_id=$1", [pid])).length) await leaveClan({ q, pid } as Ctx);
         for (const t of PROGRESS_TABLES) await q.query(`DELETE FROM ${t} WHERE player_id=$1`, [pid]);
-        await q.query("UPDATE players SET xp=0, talents=0, energy_bonus=0, energy=$2, energy_at=now(), clan_id=NULL WHERE id=$1", [pid, ENERGY.start]);
+        await q.query("UPDATE players SET xp=0, talents=0, energy_bonus=0, talent_energy=0, talent_biceps=0, energy=$2, energy_at=now(), clan_id=NULL WHERE id=$1", [pid, ENERGY.start]);
         await giveStartKit(q, pid);
         info = { before };
         break;

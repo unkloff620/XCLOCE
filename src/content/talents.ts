@@ -42,59 +42,104 @@ export function talentsForDamage(damage: number): number {
   return k;
 }
 
-/* ---------------- дерево талантов оружия ---------------- */
+/* ---------------- дорожка талантов ---------------- */
 /*
- * У каждого оружия, даже у кулака, своя ветка из четырёх улучшений, одно под другим. Следующее открывается,
- * когда предыдущее прокачано до конца:
- *   1. Урон +N за уровень, 10 уровней, по 1 таланту
- *   2. Сила крита +5% за уровень, 10 уровней, по 1 таланту
- *   3. Урон +N за уровень, 20 уровней, по 2 таланта
- *   4. Сила крита +7,5% за уровень, 20 уровней, по 2 таланта
- * Итого на оружие: +30·N урона и +200% к силе крита за 100 талантов. N — шаг урона этого оружия (≈ 1/12 базового урона).
+ * Одна общая дорожка, как задания в локации: остановки идут одна за другой, следующая открывается, когда предыдущая
+ * прокачана до конца. Так таланты расходятся понемногу на всё, а не на одно оружие сразу:
+ *   начало    — Бицуха I, Лимит энергии I, Часы I
+ *   ступень 1 — Урон у каждого оружия (кулак → мышь → свеча → клавиатура → видеокарта → Rug Pull Gun), потом Крит I
+ *               (шанс крита) у каждого, потом Сила крита у каждого
+ *   середина  — Бицуха II, Лимит энергии II, Часы II, Крит II у каждого оружия
+ *   ступень 2 — Урон II у каждого
+ *   конец     — Бицуха III, Лимит энергии III, Часы III, Крит III у каждого
+ *   финал     — Сила крита II у каждого, последняя — у Rug Pull Gun
+ * Бицуха +1 за уровень (всего 100), лимит энергии +1 (всего 50), Часы +1 минута к бою с боссом (всего 45),
+ * Крит +1% шанса крита этому оружию (всего 15% на оружие); общий шанс крита — не больше 51%.
+ * Урон: +N за уровень (N — шаг этого оружия), Сила крита: +5% (I) и +7,5% (II).
  * Сброс всех талантов — за 5 USD: потраченные таланты возвращаются.
  */
-export type TalentBranch = "n1" | "n2" | "n3" | "n4";
-export interface TalentNode { id: TalentBranch; kind: "dmg" | "crit"; name: string; per: number; max: number; cost: number }
+export type TalentKind = "dmg" | "crit" | "chance" | "biceps" | "energy" | "clock";
+export interface TalentStop {
+  /** unique key: `${target}:${branch}` */
+  key: string;
+  /** a weapon id, or "_biceps" / "_energy" / "_clock" */
+  target: string;
+  branch: string;
+  kind: TalentKind;
+  name: string;
+  per: number;
+  max: number;
+  cost: number;
+}
 /** damage added by one level of the damage upgrades of each weapon */
 export const TALENT_DMG_STEP: Record<string, number> = { fist: 1, mouse: 2, "red-candle": 3, keyboard: 3, gpu: 5, "rug-pull-gun": 20 };
-export function talentTree(weapon: string): TalentNode[] {
-  const step = TALENT_DMG_STEP[weapon] ?? 1;
-  return [
-    { id: "n1", kind: "dmg", name: "Урон", per: step, max: 10, cost: 1 },
-    { id: "n2", kind: "crit", name: "Сила крита", per: 0.05, max: 10, cost: 1 },
-    { id: "n3", kind: "dmg", name: "Урон II", per: step, max: 20, cost: 2 },
-    { id: "n4", kind: "crit", name: "Сила крита II", per: 0.075, max: 20, cost: 2 },
-  ];
-}
-export const TALENT_NODE_IDS: TalentBranch[] = ["n1", "n2", "n3", "n4"];
-/** every weapon has its own tree, the fist too */
+/** every weapon is on the path, the fist too (in this order) */
 export const TALENT_WEAPONS = WEAPONS.map((w) => w.id);
+/** the crit chance never goes above this, whatever gives it */
+export const CRIT_CHANCE_CAP = 0.51;
+export const EXTRA_NAMES: Record<string, string> = { _biceps: "Бицуха", _energy: "Лимит энергии", _clock: "Часы" };
+
+const stop = (target: string, branch: string, kind: TalentKind, name: string, per: number, max: number, cost: number): TalentStop =>
+  ({ key: `${target}:${branch}`, target, branch, kind, name, per, max, cost });
+const extras = (n: 1 | 2 | 3, biceps: number, energy: number, clock: number) => {
+  const r = ["", "I", "II", "III"][n];
+  return [
+    stop("_biceps", `s${n}`, "biceps", `Бицуха ${r}`, 1, biceps, 1),
+    stop("_energy", `s${n}`, "energy", `Лимит энергии ${r}`, 1, energy, 1),
+    stop("_clock", `s${n}`, "clock", `Часы ${r}`, 1, clock, 1),
+  ];
+};
+const each = (f: (w: string) => TalentStop) => TALENT_WEAPONS.map(f);
+const dmg = (b: "n1" | "n3", name: string, max: number, cost: number) => each((w) => stop(w, b, "dmg", name, TALENT_DMG_STEP[w] ?? 1, max, cost));
+const power = (b: "n2" | "n4", name: string, per: number, max: number, cost: number) => each((w) => stop(w, b, "crit", name, per, max, cost));
+const chance = (n: 1 | 2 | 3) => each((w) => stop(w, `c${n}`, "chance", `Крит ${["", "I", "II", "III"][n]}`, 0.01, 5, 1));
+
+export const TALENT_PATH: TalentStop[] = [
+  ...extras(1, 30, 15, 15),
+  ...dmg("n1", "Урон", 10, 1),
+  ...chance(1),
+  ...power("n2", "Сила крита", 0.05, 10, 1),
+  ...extras(2, 30, 15, 15),
+  ...chance(2),
+  ...dmg("n3", "Урон II", 20, 2),
+  ...extras(3, 40, 20, 15),
+  ...chance(3),
+  ...power("n4", "Сила крита II", 0.075, 20, 2),
+];
+export const talentStop = (target: string, branch: string) => TALENT_PATH.find((s) => s.target === target && s.branch === branch);
 /** resetting all talents (they all come back) */
 export const TALENT_RESET_PRICE = { currency: "USD" as const, amount: 5 };
 
-/** levels of the player's weapon talents: weapon → upgrade → level */
-export type WeaponTalents = Record<string, Partial<Record<TalentBranch, number>>>;
-/** an upgrade can be bought once the one above it is full */
-export function nodeOpen(levels: Partial<Record<TalentBranch, number>>, weapon: string, node: TalentBranch): boolean {
-  const tree = talentTree(weapon);
-  const i = tree.findIndex((n) => n.id === node);
-  if (i <= 0) return i === 0;
-  return (levels[tree[i - 1].id] ?? 0) >= tree[i - 1].max;
+/** levels the player has: target → branch → level */
+export type WeaponTalents = Record<string, Partial<Record<string, number>>>;
+export const stopLevel = (t: WeaponTalents, s: TalentStop) => Math.min(t[s.target]?.[s.branch] ?? 0, s.max);
+/** the index of the stop being filled now (the first not full one); TALENT_PATH.length when all are done */
+export function currentStop(t: WeaponTalents): number {
+  const i = TALENT_PATH.findIndex((s) => stopLevel(t, s) < s.max);
+  return i < 0 ? TALENT_PATH.length : i;
 }
-/** talents spent on all the upgrades (what a reset gives back) */
+/** a stop can be levelled once every stop before it is full */
+export const stopOpen = (t: WeaponTalents, s: TalentStop) => TALENT_PATH.indexOf(s) <= currentStop(t);
+/** talents spent (what a reset gives back) */
 export function talentsSpent(t: WeaponTalents): number {
-  let sum = 0;
-  for (const [w, lv] of Object.entries(t)) for (const n of talentTree(w)) sum += Math.min(lv[n.id] ?? 0, n.max) * n.cost;
-  return sum;
+  return TALENT_PATH.reduce((sum, s) => sum + stopLevel(t, s) * s.cost, 0);
 }
-/** the bonus the talents give one weapon: flat damage added to the base, and crit power */
-export function weaponTalentBonus(t: WeaponTalents, weapon: string): { flat: number; critDamage: number } {
-  const lv = t[weapon] ?? {};
-  let flat = 0, critDamage = 0;
-  for (const n of talentTree(weapon)) {
-    const l = Math.min(lv[n.id] ?? 0, n.max);
-    if (n.kind === "dmg") flat += l * n.per;
-    else critDamage += l * n.per;
+/** what the talents give one weapon: flat damage added to the base, crit power and crit chance */
+export function weaponTalentBonus(t: WeaponTalents, weapon: string): { flat: number; critDamage: number; critChance: number } {
+  let flat = 0, critDamage = 0, critChance = 0;
+  for (const s of TALENT_PATH) {
+    if (s.target !== weapon) continue;
+    const l = stopLevel(t, s);
+    if (s.kind === "dmg") flat += l * s.per;
+    else if (s.kind === "crit") critDamage += l * s.per;
+    else if (s.kind === "chance") critChance += l * s.per;
   }
-  return { flat, critDamage: Math.round(critDamage * 1000) / 1000 };
+  return { flat, critDamage: Math.round(critDamage * 1000) / 1000, critChance: Math.round(critChance * 1000) / 1000 };
 }
+/** the player's own talents: biceps, energy limit, minutes added to a boss fight */
+export function talentExtras(t: WeaponTalents): { biceps: number; energy: number; clockMin: number } {
+  const sum = (k: TalentKind) => TALENT_PATH.filter((s) => s.kind === k).reduce((n, s) => n + stopLevel(t, s) * s.per, 0);
+  return { biceps: sum("biceps"), energy: sum("energy"), clockMin: sum("clock") };
+}
+/** the whole crit chance of a weapon: the home's plus its talents, never above CRIT_CHANCE_CAP */
+export const critChanceOf = (home: number, talent: number) => Math.min(CRIT_CHANCE_CAP, home + talent);

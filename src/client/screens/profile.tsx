@@ -22,7 +22,7 @@ import { HomeScene } from "../art/home-scene.tsx";
 import { ROOM_BACKDROP } from "../../content/home-scene.ts";
 import { BadgesPanel, type AchRow } from "../badges.tsx";
 import { CasesPanel, type CaseRow } from "../cases.tsx";
-import { TalentChip, TalentNext, TalentWindow } from "./talents.tsx";
+import { TalentChip, TalentNext, TalentPanel } from "./talents.tsx";
 import { EYE_COLORS, SKIN_TONES, type Look } from "../../content/home.ts";
 import { clock, full, money, short } from "../format.ts";
 
@@ -46,6 +46,33 @@ interface Profile {
   stashGive?: { left: number; have: Record<string, number> } | null;
   /** biceps and what the viewer may do to him now (systems/social.ts) */
   social?: Social;
+  /** «Новости» of the own dossier: who pumped, spat, ran into me */
+  news?: NewsRow[] | null;
+}
+interface NewsRow { kind: string; fromId: number; from: string; photo: string | null; won: boolean | null; at: number }
+
+/** «Новости»: the latest things other players did to me */
+function NewsPanel({ rows }: { rows: NewsRow[] }) {
+  if (!rows.length) return <div className="muted small center" style={{ padding: 18 }}>Пока тихо: никто не качал бицуху, не харкал и не наезжал.</div>;
+  const when = (ms: number) => new Date(ms).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  return (
+    <div className="col news-list">
+      {rows.map((r, i) => (
+        <Link key={i} href={`/profile?id=${r.fromId}`} className={`news-row ${r.kind}`}>
+          <Avatar name={r.from} photo={r.photo} size={34} />
+          <span className="grow col" style={{ gap: 1, minWidth: 0 }}>
+            <span className="small">
+              <b>{r.from}</b>{" "}
+              {r.kind === "pump" ? "прокачал тебе бицуху" : r.kind === "spit" ? "харкнул в тебя" : r.kind === "fight" ? "наехал на тебя" : r.kind}
+            </span>
+            {r.kind === "fight" && <span className={`tiny news-res ${r.won ? "lost" : "won"}`}>{r.won ? "Ты проиграл" : "Ты устоял — он ушёл ни с чем"}</span>}
+            <span className="tiny muted">{when(r.at)}</span>
+          </span>
+          <span className="news-ico" aria-hidden="true">{r.kind === "pump" ? <BicepsArt size={26} /> : r.kind === "spit" ? <SpitArt size={26} /> : <FistArt size={26} />}</span>
+        </Link>
+      ))}
+    </div>
+  );
 }
 
 /** "3 окт. 2026" — fits a narrow side column */
@@ -105,7 +132,7 @@ function FolderArt({ size = 40 }: { size?: number }) {
   );
 }
 /** a flexed arm */
-function BicepsArt({ size = 40 }: { size?: number }) {
+export function BicepsArt({ size = 40 }: { size?: number }) {
   return (
     <svg viewBox="0 0 48 48" width={size} height={size} aria-hidden="true">
       <path d="M8 40c-2-6 0-12 4-17l6-9c2-3 6-4 9-2l2 1c2 2 1 5-1 6l-5 3 1 4c3-4 9-6 14-4 6 2 7 9 4 13-3 5-10 7-18 7H11c-1 0-2-1-3-2Z" fill="#f2b98a" stroke="#2e1c00" strokeWidth="2.5" strokeLinejoin="round" />
@@ -178,15 +205,16 @@ function Brawl({ res, name, onClose }: { res: { won: boolean; mine: number; thei
 /** «Личное дело»: the folder with tabs — the summary, achievements, the cases on bosses, нычки, settings */
 function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; reload: () => void }) {
   const { state } = useGame();
-  const [tab, setTab] = useState<"sum" | "ach" | "cases" | "stash" | "set">("sum");
+  const [tab, setTab] = useState<"sum" | "ach" | "cases" | "tal" | "stash" | "news" | "set">("sum");
   const [renaming, setRenaming] = useState(false);
-  const [talentsOpen, setTalentsOpen] = useState(false);
   const s = p.stats;
   const tabs: { id: typeof tab; label: string }[] = [
     { id: "sum", label: "Сводка" },
     { id: "ach", label: "Достижения" },
     ...(p.cases ? [{ id: "cases" as const, label: "Дела" }] : []),
-    ...(!p.self && p.stashGive ? [{ id: "stash" as const, label: "Нычки" }] : []),
+    ...(p.self ? [{ id: "tal" as const, label: "Таланты" }] : []),
+    ...(p.self || p.stashGive ? [{ id: "stash" as const, label: "Нычки" }] : []),
+    ...(p.self ? [{ id: "news" as const, label: "Новости" }] : []),
     ...(p.self ? [{ id: "set" as const, label: "Настройки" }] : []),
   ];
   return (
@@ -246,7 +274,7 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
                 <div className="tal-row">
                   <TalentChip n={state.player.talents} />
                   <div className="grow"><TalentNext dmg={state.player.talentDamage} /></div>
-                  <button className="btn gold sm tal-go" onClick={() => setTalentsOpen(true)}>Таланты ›</button>
+                  <button className="btn gold sm tal-go" onClick={() => setTab("tal")}>Таланты ›</button>
                 </div>
               )}
               <div className="stat-grid">
@@ -279,10 +307,12 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
           {tab === "ach" && <BadgesPanel rows={p.achievements} self={p.self} onClaimed={reload} points={p.achPoints ?? 0} unfolded />}
           {tab === "cases" && p.cases && <CasesPanel cases={p.cases} self={p.self} />}
           {tab === "stash" && !p.self && p.stashGive && <StashGivePanel to={p.id} name={p.name} wish={p.stashWish ?? []} give={p.stashGive} onSent={reload} />}
+          {tab === "stash" && p.self && <BadgesPanel rows={p.achievements} self onClaimed={reload} stashOnly />}
+          {tab === "tal" && p.self && <TalentPanel />}
+          {tab === "news" && p.self && <NewsPanel rows={p.news ?? []} />}
           {tab === "set" && p.self && <SettingsPanel />}
         </div>
       </div>
-      {talentsOpen && <TalentWindow onClose={() => setTalentsOpen(false)} />}
       {renaming && <RenameWindow current={p.name} onClose={() => setRenaming(false)} onDone={reload} />}
     </Modal>
   );

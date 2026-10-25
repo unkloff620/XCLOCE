@@ -23,7 +23,7 @@ import { settleGameWeeks, settleZonkDay } from "./minigame-extras.ts";
 import { casesView, setBonuses } from "./collection.ts";
 import { clanBossView } from "./clan-boss.ts";
 import { duelsView, expireDuels } from "./duels.ts";
-import { notesView, socialView } from "./social.ts";
+import { newsView, notesView, socialView } from "./social.ts";
 import { achievementsReady, achievementsView } from "./achievements.ts";
 import { giftsLeft, giftsReceived, stashWish } from "./swap.ts";
 
@@ -157,6 +157,8 @@ export async function profileView(q: Queryable, viewer: number, pid: number, cfg
     }),
     clan: clan ?? null,
     social: await socialView(q, viewer, pid, now),
+    // «Новости»: only in the own dossier
+    news: self ? await newsView(q, pid, now) : null,
     // нычки the player asks for; a visitor also sees how many of them he has himself and his gifts left today
     stashWish: await stashWish(q, pid),
     stashGive: self ? null : await (async () => {

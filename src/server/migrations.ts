@@ -1032,4 +1032,21 @@ SELECT player_id, 'key-bebyakyan', 3, 'migration:boss-swap' FROM old WHERE m >= 
 ON CONFLICT (player_id, item_id) DO UPDATE SET qty = GREATEST(inventory.qty, 3);
 `,
   },
+  {
+    // talents become one path (content/talents.ts TALENT_PATH): the old weapon trees are given back in full, to be
+    // spent again along the path; the path's biceps and energy limit live on the players row
+    id: "v2-058-talent-path",
+    sql: `
+ALTER TABLE players ADD COLUMN IF NOT EXISTS talent_energy INT NOT NULL DEFAULT 0;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS talent_biceps INT NOT NULL DEFAULT 0;
+WITH spent AS (
+  SELECT player_id, SUM(LEAST(level, CASE branch WHEN 'n1' THEN 10 WHEN 'n2' THEN 10 ELSE 20 END) * CASE WHEN branch IN ('n3', 'n4') THEN 2 ELSE 1 END)::int AS n
+  FROM player_talents WHERE branch IN ('n1', 'n2', 'n3', 'n4') GROUP BY player_id
+), back AS (
+  UPDATE players p SET talents = p.talents + s.n FROM spent s WHERE p.id = s.player_id AND s.n > 0 RETURNING p.id, s.n
+)
+INSERT INTO ledger (player_id, kind, key, delta, reason) SELECT id, 'talent', 'talent', n, 'refund:talent-path' FROM back;
+DELETE FROM player_talents;
+`,
+  },
 ];

@@ -44,7 +44,7 @@ function catState(c: AchCategory, rows: Map<string, AchRow>, self: boolean) {
 }
 
 /** Profile block: one row per category with five coloured steps; on your own profile reached steps are collected. */
-export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = false }: { rows: AchRow[]; self: boolean; onClaimed?: () => void; points?: number; unfolded?: boolean }) {
+export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = false, stashOnly = false }: { rows: AchRow[]; self: boolean; onClaimed?: () => void; points?: number; unfolded?: boolean; stashOnly?: boolean }) {
   // the list is folded (open at once in the «Личное дело» tab); the header shows the count, the points and what waits
   const [shown, setShown] = useState(unfolded);
   const { act, busy } = useGame();
@@ -77,6 +77,101 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
   };
   const cat = open ? ACH_CATEGORIES.find((c) => c.id === open) : null;
   const cs = cat ? catState(cat, byId, self) : null;
+  // the нычки list: in its own window from the achievements, or right in the «Нычки» tab of the dossier
+  const stashBody = (
+          <div className="col" style={{ gap: 8 }}>
+            <div className="small muted center">Нычки находятся за энергию, потраченную в заданиях локаций: 1% за каждую ⚡ шага, а после 150 ⚡ без находки — наверняка. Они выпадают повторно и копятся. Есть все 4 нычки набора — нажми на картинку набора и забери награду. За 10, 50 и 100 собранных наборов — медали.</div>
+            {STASH_SETS_ORDERED.map((st, k, arr) => {
+              const count = self ? state?.stashSets?.[st.n] ?? 0 : byId.get(`stashset-${st.n}-3`)?.progress ?? 0;
+              const ready = self && st.items.every((it) => (stashQty.get(it.id) ?? 0) > 0);
+              return (
+                <div key={st.id} className="col" style={{ gap: 6 }}>
+                {(k === 0 || arr[k - 1].location !== st.location) && <b className="tiny muted stash-loc">{STASH_LOCATION_NAMES[st.location]?.toUpperCase()}</b>}
+                <div className={`stash-set ${ready ? "done" : ""}`}>
+                  <div className="row" style={{ justifyContent: "space-between", gap: 6 }}>
+                    <span className="col" style={{ gap: 0, minWidth: 0 }}>
+                      <b className="ellipsis">{st.name}</b>
+                      <span className="tiny muted">собрано: <b className="num" style={{ color: "var(--ink)" }}>{count}</b></span>
+                    </span>
+                    <span className="bk-medals">
+                      {([1, 2, 3] as AchTier[]).map((t) => {
+                        const id = `stashset-${st.n}-${t}`;
+                        const r = byId.get(id);
+                        const gotM = !!r && (r.claimed || (!self && r.done));
+                        const due = self && !!r?.done && !r.claimed;
+                        return (
+                          <button key={t} className={`bk-medal ${due ? "due" : ""}`} onClick={() => setMedal(id)} aria-label={achievementById(id)?.name}>
+                            <BadgeMedal icon="chest" tier={t} earned={gotM || due} size={28} />
+                          </button>
+                        );
+                      })}
+                    </span>
+                  </div>
+                  <div className="stash-row">
+                    <button className={`stash-cell full ${ready ? "ready" : count ? "" : "off"}`} disabled={!ready || busy === "stash_collect"} onClick={() => collect(st.id, st.name)} title={ready ? "Собрать набор и забрать награду" : "Полный набор"}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={`/assets/stash/set-${st.n}.webp`} alt="Полный набор" />
+                      {ready && <i className="stash-take">Забрать</i>}
+                    </button>
+                    {st.items.map((it) => {
+                      const q = stashQty.get(it.id) ?? 0;
+                      return (
+                        <button key={it.id} className={`stash-cell ${q > 0 || (!self && count > 0) ? "" : "off"}`} onClick={() => setStashItem(it.id)} aria-label={it.name}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={`/assets/items/${it.id}.webp`} alt="" />
+                          {self && <i className={`stash-n num ${q > 0 ? "has" : ""}`}>{q}</i>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <RewardChips r={st.reward} size={13} />
+                </div>
+                </div>
+              );
+            })}
+          </div>
+  );
+  if (stashOnly) return (
+    <>
+      {stashBody}
+      {stashItem && (() => {
+        const d = itemById(stashItem);
+        const has = ownedStash.has(stashItem);
+        return (
+          <Modal title={d?.name ?? "Нычка"} onClose={() => setStashItem(null)}>
+            <div className="col" style={{ gap: 8, alignItems: "center", textAlign: "center" }}>
+              <span className={`stash-cell big ${has || !self ? "" : "off"}`}>{/* eslint-disable-next-line @next/next/no-img-element */}<img src={`/assets/items/${stashItem}.webp`} alt="" /></span>
+              <span className="small">{d?.description}</span>
+              <span className="tiny muted">{self ? (has ? "Найдена" : "Ещё не найдена — ищи в заданиях локации") : ""}</span>
+            </div>
+          </Modal>
+        );
+      })()}
+      {medal && (() => {
+        const a = achievementById(medal);
+        const r = byId.get(medal);
+        if (!a) return null;
+        const got = !!r && (r.claimed || (!self && r.done));
+        const due = self && !!r?.done && !r?.claimed;
+        return (
+          <Modal title={a.name} onClose={() => setMedal(null)}>
+            <div className="col" style={{ gap: 10, alignItems: "center", textAlign: "center" }}>
+              <BadgeMedal icon={a.icon} tier={a.tier} earned={got || due} size={72} />
+              <b className="tier-name" style={{ color: TIER_COLORS[a.tier] }}>{TIER_NAMES[a.tier]}</b>
+              <span className="small">{a.hint}</span>
+              <span className="ach-bar" style={{ width: "100%", ["--p" as string]: `${Math.round(((r?.progress ?? 0) / a.target) * 100)}%`, ["--c" as string]: TIER_COLORS[a.tier] }}>
+                <i /><span className="num">{full(r?.progress ?? 0)} / {full(a.target)}</span>
+              </span>
+              <RewardChips r={a.reward} size={15} />
+              {got ? <span className="quest-ok display">✓ получено</span> : due ? (
+                <button className="btn gold block" disabled={busy === "achievement_claim"} onClick={async () => { await claim(a.id); setMedal(null); }}>Забрать</button>
+              ) : null}
+            </div>
+          </Modal>
+        );
+      })()}
+    </>
+  );
   return (
     <div className="panel">
       <button type="button" className={`ach-head ${waiting ? "ready" : ""}`} onClick={() => setShown((v) => !v)} aria-expanded={shown}>
@@ -239,59 +334,9 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
           );
         })()}
       </div>}
-      {stashOpen && (
+      {stashOpen && !stashOnly && (
         <Modal title="Нычки" onClose={() => setStashOpen(false)}>
-          <div className="col" style={{ gap: 8 }}>
-            <div className="small muted center">Нычки находятся за энергию, потраченную в заданиях локаций: 1% за каждую ⚡ шага, а после 150 ⚡ без находки — наверняка. Они выпадают повторно и копятся. Есть все 4 нычки набора — нажми на картинку набора и забери награду. За 10, 50 и 100 собранных наборов — медали.</div>
-            {STASH_SETS_ORDERED.map((st, k, arr) => {
-              const count = self ? state?.stashSets?.[st.n] ?? 0 : byId.get(`stashset-${st.n}-3`)?.progress ?? 0;
-              const ready = self && st.items.every((it) => (stashQty.get(it.id) ?? 0) > 0);
-              return (
-                <div key={st.id} className="col" style={{ gap: 6 }}>
-                {(k === 0 || arr[k - 1].location !== st.location) && <b className="tiny muted stash-loc">{STASH_LOCATION_NAMES[st.location]?.toUpperCase()}</b>}
-                <div className={`stash-set ${ready ? "done" : ""}`}>
-                  <div className="row" style={{ justifyContent: "space-between", gap: 6 }}>
-                    <span className="col" style={{ gap: 0, minWidth: 0 }}>
-                      <b className="ellipsis">{st.name}</b>
-                      <span className="tiny muted">собрано: <b className="num" style={{ color: "var(--ink)" }}>{count}</b></span>
-                    </span>
-                    <span className="bk-medals">
-                      {([1, 2, 3] as AchTier[]).map((t) => {
-                        const id = `stashset-${st.n}-${t}`;
-                        const r = byId.get(id);
-                        const gotM = !!r && (r.claimed || (!self && r.done));
-                        const due = self && !!r?.done && !r.claimed;
-                        return (
-                          <button key={t} className={`bk-medal ${due ? "due" : ""}`} onClick={() => setMedal(id)} aria-label={achievementById(id)?.name}>
-                            <BadgeMedal icon="chest" tier={t} earned={gotM || due} size={28} />
-                          </button>
-                        );
-                      })}
-                    </span>
-                  </div>
-                  <div className="stash-row">
-                    <button className={`stash-cell full ${ready ? "ready" : count ? "" : "off"}`} disabled={!ready || busy === "stash_collect"} onClick={() => collect(st.id, st.name)} title={ready ? "Собрать набор и забрать награду" : "Полный набор"}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={`/assets/stash/set-${st.n}.webp`} alt="Полный набор" />
-                      {ready && <i className="stash-take">Забрать</i>}
-                    </button>
-                    {st.items.map((it) => {
-                      const q = stashQty.get(it.id) ?? 0;
-                      return (
-                        <button key={it.id} className={`stash-cell ${q > 0 || (!self && count > 0) ? "" : "off"}`} onClick={() => setStashItem(it.id)} aria-label={it.name}>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={`/assets/items/${it.id}.webp`} alt="" />
-                          {self && <i className={`stash-n num ${q > 0 ? "has" : ""}`}>{q}</i>}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <RewardChips r={st.reward} size={13} />
-                </div>
-                </div>
-              );
-            })}
-          </div>
+          {stashBody}
         </Modal>
       )}
       {stashItem && (() => {

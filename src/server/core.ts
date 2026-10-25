@@ -18,6 +18,7 @@ export interface PlayerRow {
   id: number;
   /** extra energy limit from the rooms */
   energy_bonus?: number;
+  talent_energy?: number;
   telegram_id: number | null;
   username: string | null;
   display_name: string;
@@ -63,9 +64,9 @@ export function energyNow(stored: number, at: number, now: number, cfg: Config["
   return { energy, at: at2, nextIn: period - (now - at2) };
 }
 
-/** The energy limit of this player: the game's plus what the rooms give (players.energy_bonus). */
-export function energyCfgOf(cfg: Ctx["cfg"], p: { energy_bonus?: number | null }) {
-  return { ...cfg.energy, max: cfg.energy.max + Number(p.energy_bonus ?? 0) };
+/** The energy limit of this player: the game's plus what the rooms give (players.energy_bonus) and the talents (talent_energy). */
+export function energyCfgOf(cfg: Ctx["cfg"], p: { energy_bonus?: number | null; talent_energy?: number | null }) {
+  return { ...cfg.energy, max: cfg.energy.max + Number(p.energy_bonus ?? 0) + Number(p.talent_energy ?? 0) };
 }
 
 /** Locks the player row for this transaction and applies pending energy regeneration. */

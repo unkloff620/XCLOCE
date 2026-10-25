@@ -730,48 +730,69 @@ describe("home: equipment, rooms, look, help", () => {
     for (let i = 0; i < Math.ceil(need / 30); i++) last = await hit(p, "keyboard", T0 + M);
     expect(last.state.fight?.myDamage).toBe(Math.ceil(need / 30) * 30);
     expect(last.state.player.talents).toBe(3);
-    // the first upgrade costs 1 talent and adds +3 damage to the keyboard only
-    const up = await act(db, p, "talent_up", { weapon: "keyboard", branch: "n1" }, T0 + M);
-    expect(up.result).toMatchObject({ level: 1, max: 10, talents: 2 });
-    expect(up.state.weaponTalents).toEqual({ keyboard: { n1: 1 } });
-    expect((await hit(p, "keyboard", T0 + M)).result.damage).toBe(33);
-    expect((await hit(p, "mouse", T0 + M)).result.damage).toBe(20);
-    // the next upgrade opens only when the one above is full
-    await expect(act(db, p, "talent_up", { weapon: "keyboard", branch: "n2" }, T0 + M)).rejects.toMatchObject({ code: "talent_locked" });
+    // one path: the first stop is «Бицуха I», the keyboard's damage is far down the road
+    await expect(act(db, p, "talent_up", { weapon: "keyboard", branch: "n1" }, T0 + M)).rejects.toMatchObject({ code: "talent_locked" });
     await expect(act(db, p, "talent_up", { weapon: "nope", branch: "n1" }, T0 + M)).rejects.toMatchObject({ code: "bad_talent" });
-    await expect(act(db, p, "talent_up", { weapon: "fist", branch: "dmg" }, T0 + M)).rejects.toMatchObject({ code: "bad_talent" });
-    // a full first upgrade opens «Сила крита»; «Урон II» costs 2 talents a level
-    await db.query("INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,'fist','n1',10),($1,'fist','n2',10)", [p]);
-    await db.query("UPDATE players SET talents = 1 WHERE id=$1", [p]);
-    await expect(act(db, p, "talent_up", { weapon: "fist", branch: "n3" }, T0 + M)).rejects.toMatchObject({ code: "no_talents" });
-    await db.query("UPDATE players SET talents = 2 WHERE id=$1", [p]);
-    const n3 = await act(db, p, "talent_up", { weapon: "fist", branch: "n3" }, T0 + M);
-    expect(n3.result).toMatchObject({ level: 1, max: 20, talents: 0 });
-    await expect(act(db, p, "talent_up", { weapon: "fist", branch: "n2" }, T0 + M)).rejects.toMatchObject({ code: "max_level" });
+    const b1 = await act(db, p, "talent_up", { weapon: "_biceps", branch: "s1" }, T0 + M);
+    expect(b1.result).toMatchObject({ level: 1, max: 30, talents: 2 });
+    const [bi] = await db.query<{ talent_biceps: number }>("SELECT talent_biceps FROM players WHERE id=$1", [p]);
+    expect(bi.talent_biceps).toBe(1);
+    // the energy limit grows with «Лимит энергии»
+    await db.query("UPDATE player_talents SET level=30 WHERE player_id=$1 AND weapon_id='_biceps'", [p]);
+    await db.query("INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,'_energy','s1',14)", [p]);
+    const max0 = b1.state.player.energyMax;
+    const e1 = await act(db, p, "talent_up", { weapon: "_energy", branch: "s1" }, T0 + M);
+    expect(e1.state.player.energyMax).toBe(max0 + 15);
+    // the clock and the first three weapons' damage done → the keyboard's damage is next: +3 to the keyboard only
+    await db.query("INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,'_clock','s1',15),($1,'fist','n1',10),($1,'mouse','n1',10),($1,'red-candle','n1',10)", [p]);
+    await expect(act(db, p, "talent_up", { weapon: "gpu", branch: "n1" }, T0 + M)).rejects.toMatchObject({ code: "talent_locked" });
+    const up = await act(db, p, "talent_up", { weapon: "keyboard", branch: "n1" }, T0 + M);
+    expect(up.result).toMatchObject({ level: 1, max: 10, talents: 0 });
+    expect((await hit(p, "keyboard", T0 + M)).result.damage).toBe(33);
+    expect((await hit(p, "mouse", T0 + M)).result.damage).toBe(40); // the mouse has its +20 «Урон»
+    await expect(act(db, p, "talent_up", { weapon: "keyboard", branch: "n1" }, T0 + M)).rejects.toMatchObject({ code: "no_talents" });
+    await expect(act(db, p, "talent_up", { weapon: "fist", branch: "n1" }, T0 + M)).rejects.toMatchObject({ code: "max_level" });
   });
 
-  it("the tree: +30 steps of damage and +200% crit power per weapon for 100 talents", async () => {
-    const { talentTree, weaponTalentBonus, talentsSpent } = await import("../src/content/talents.ts");
+  it("the path: every weapon gets +30 steps of damage, +200% crit power and +15% crit chance; biceps 100, energy 50, clock 45 min", async () => {
+    const { TALENT_PATH, weaponTalentBonus, talentsSpent, talentExtras, critChanceOf } = await import("../src/content/talents.ts");
+    const full: Record<string, Record<string, number>> = {};
+    for (const x of TALENT_PATH) (full[x.target] ??= {})[x.branch] = x.max;
     for (const w of ["fist", "mouse", "red-candle", "keyboard", "gpu", "rug-pull-gun"]) {
-      const tree = talentTree(w);
-      const full = { [w]: Object.fromEntries(tree.map((n) => [n.id, n.max])) };
-      expect(talentsSpent(full)).toBe(100);
-      expect(weaponTalentBonus(full, w).critDamage).toBeCloseTo(2);
-      expect(weaponTalentBonus(full, w).flat).toBe(30 * tree[0].per);
+      const b = weaponTalentBonus(full, w);
+      expect(b.critDamage).toBeCloseTo(2);
+      expect(b.critChance).toBeCloseTo(0.15);
+      expect(b.flat).toBe(30 * TALENT_PATH.find((x) => x.target === w && x.branch === "n1")!.per);
     }
-    expect(weaponTalentBonus({ fist: { n1: 10, n2: 0, n3: 20 } }, "fist").flat).toBe(30);
+    expect(talentExtras(full)).toEqual({ biceps: 100, energy: 50, clockMin: 45 });
+    expect(talentsSpent(full)).toBe(TALENT_PATH.reduce((n, x) => n + x.max * x.cost, 0));
+    // the last stop: «Сила крита II» of the Rug Pull Gun
+    expect(TALENT_PATH[TALENT_PATH.length - 1]).toMatchObject({ target: "rug-pull-gun", branch: "n4" });
+    expect(critChanceOf(0.45, 0.15)).toBeCloseTo(0.51);
+  });
+
+  it("the path migration gives the old weapon trees back", async () => {
+    const p = await newPlayer(db);
+    await db.query("UPDATE players SET talents = 2 WHERE id=$1", [p]);
+    await db.query("INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,'fist','n1',10),($1,'fist','n2',10),($1,'fist','n3',4),($1,'gpu','n4',20)", [p]);
+    await db.exec(MIGRATIONS.find((m) => m.id === "v2-058-talent-path")!.sql);
+    const [row] = await db.query<{ talents: number }>("SELECT talents FROM players WHERE id=$1", [p]);
+    expect(row.talents).toBe(2 + 10 + 10 + 8 + 40);
+    expect(await db.query("SELECT 1 FROM player_talents")).toHaveLength(0);
   });
 
   it("the talent reset costs 5 USD and gives every spent talent back", async () => {
     const p = await newPlayer(db);
     await expect(act(db, p, "talent_reset", {}, T0)).rejects.toMatchObject({ code: "nothing_to_reset" });
-    await db.query("INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,'fist','n1',10),($1,'fist','n2',10),($1,'gpu','n1',3),($1,'fist','n3',4)", [p]);
-    await db.query("UPDATE players SET talents = 7 WHERE id=$1", [p]);
+    await db.query("INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,'_biceps','s1',30),($1,'fist','n1',10),($1,'gpu','n1',3),($1,'fist','n3',4)", [p]);
+    await db.query("UPDATE players SET talents = 7, talent_biceps = 30 WHERE id=$1", [p]);
     await setMoney(db, p, "USD", 4);
     await expect(act(db, p, "talent_reset", {}, T0)).rejects.toMatchObject({ code: "no_money" });
     await setMoney(db, p, "USD", 12);
     const r = await act(db, p, "talent_reset", {}, T0);
-    expect(r.result).toMatchObject({ returned: 10 + 10 + 3 + 8, talents: 7 + 31 });
+    expect(r.result).toMatchObject({ returned: 30 + 10 + 3 + 8, talents: 7 + 51 });
+    const [after] = await db.query<{ talent_biceps: number }>("SELECT talent_biceps FROM players WHERE id=$1", [p]);
+    expect(after.talent_biceps).toBe(0);
     expect(r.state.weaponTalents).toEqual({});
     expect(await wallet(db, p, "USD")).toBe(7);
   });

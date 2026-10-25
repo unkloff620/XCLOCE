@@ -5,7 +5,7 @@ import { WEAPONS, itemById, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
 import { boostReward, mergeRewards, scaleReward } from "../../content/rewards.ts";
 import { BASE_CRIT_MULT, ROOM_DEFS, ROOM_PITY, roomUnlockId } from "../../content/home.ts";
-import { talentsForDamage, weaponTalentBonus } from "../../content/talents.ts";
+import { critChanceOf, talentExtras, talentsForDamage, weaponTalentBonus } from "../../content/talents.ts";
 import { playerBonus, weaponTalents } from "./home.ts";
 import { setBonuses } from "./collection.ts";
 import { fightMode, type FightMode } from "../../content/medals.ts";
@@ -158,9 +158,11 @@ export async function startFight(ctx: Ctx, bossId: string, solo = false, modeId:
   const keys = prev ? keysNeeded(def, ctx.cfg.fight.keysToUnlock) : 0;
   if (prev && keys > 0) await takeItem(ctx, keyId(prev.id), keys, `fight:${def.id}`);
   const hpMax = Math.round((ctx.cfg.bossHp[def.id] ?? def.hp) * mode.hp);
+  // «Часы» talents: minutes added to the fight
+  const clockMin = talentExtras(await weaponTalents(ctx.q, ctx.pid)).clockMin;
   const [f] = await ctx.q.query<{ id: number }>(
     "INSERT INTO fights (player_id, boss_id, hp_max, start_total, start_seq, started_at, ends_at, day, solo, keys_spent, global, mode) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,true,$11) RETURNING id",
-    [ctx.pid, def.id, hpMax, g.damage_total, g.last_seq, new Date(ctx.now), new Date(ctx.now + ctx.cfg.fight.hours * 3600_000), day, solo, keys, mode.id],
+    [ctx.pid, def.id, hpMax, g.damage_total, g.last_seq, new Date(ctx.now), new Date(ctx.now + ctx.cfg.fight.hours * 3600_000 + clockMin * 60_000), day, solo, keys, mode.id],
   );
   // every new fight starts with the free weapons (fist, mouse, candle) ready — unless the last fight was fled:
   // otherwise flee + start again would give endless free hits (fled fights do not count toward the daily limit)
@@ -236,8 +238,10 @@ export async function strike(ctx: Ctx, w: NonNullable<ReturnType<typeof weaponBy
   const one = Math.round((w.weapon.damage + wt.flat + roomFlat + setFlat) * (1 + bonus.damage));
   const critOne = Math.round(one * (BASE_CRIT_MULT + bonus.critDamage + wt.critDamage));
   let damage = 0, crits = 0, used = 0;
+  // the crit chance: the home's plus this weapon's «Крит» talents, never above 51%
+  const chance = critChanceOf(bonus.critChance, wt.critChance);
   while (used < count) {
-    const c = bonus.critChance > 0 && ctx.rng() < bonus.critChance;
+    const c = chance > 0 && ctx.rng() < chance;
     damage += c ? critOne : one;
     if (c) crits++;
     used++;

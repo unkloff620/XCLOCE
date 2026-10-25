@@ -15,7 +15,9 @@ async function target(ctx: Ctx, to: number) {
 }
 
 export async function bicepsOf(q: Queryable, pid: number): Promise<number> {
-  const [r] = await q.query<{ n: number }>("SELECT n FROM player_biceps WHERE player_id=$1", [pid]);
+  // pumped by other players + the «Бицуха» talents (a plain read of the players row, no lock)
+  const [r] = await q.query<{ n: number }>(
+    "SELECT COALESCE((SELECT n FROM player_biceps WHERE player_id=$1), 0) + COALESCE((SELECT talent_biceps FROM players WHERE id=$1), 0) AS n", [pid]);
   return Number(r?.n ?? 0);
 }
 
@@ -85,6 +87,16 @@ export async function socialView(q: Queryable, viewer: number, pid: number, now:
     fight: fc.same === 0 && fc.day < FIGHT_PER_DAY,
     spit: sc.day < SPIT_PER_DAY ? Math.max(0, (sc.last ? sc.last + SPIT_EVERY_MS : 0)) : -1,
   };
+}
+
+/** «Новости» of the own dossier: who pumped my biceps, spat at me, ran into me (and who won), the newest first */
+export async function newsView(q: Queryable, pid: number, now: number) {
+  const rows = await q.query<{ kind: string; from_id: number; name: string | null; photo: string | null; won: boolean | null; at: Date }>(
+    `SELECT l.kind, l.from_id, p.display_name AS name, p.photo_url AS photo, l.won, l.at FROM social_log l LEFT JOIN players p ON p.id = l.from_id
+     WHERE l.to_id=$1 AND l.at > $2 ORDER BY l.at DESC LIMIT 50`,
+    [pid, new Date(now - 14 * 24 * 3600_000)],
+  );
+  return rows.map((r) => ({ kind: r.kind, fromId: Number(r.from_id), from: r.name ?? "Кто-то", photo: r.photo, won: r.won, at: new Date(r.at).getTime() }));
 }
 
 /** my messages from other players (a spit, a fight), the newest first, and how many are unread */

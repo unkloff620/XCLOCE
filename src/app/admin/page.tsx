@@ -9,7 +9,7 @@ import "./admin.css";
 import { ITEMS, itemById, type ItemDef, type Slot } from "../../content/items.ts";
 import { ItemArt } from "../../client/art/items.tsx";
 import { CURRENCIES } from "../../content/currencies.ts";
-import { TALENT_NODE_IDS, TALENT_WEAPONS, talentTree } from "../../content/talents.ts";
+import { EXTRA_NAMES, TALENT_PATH, talentStop } from "../../content/talents.ts";
 import { BOSSES, bossById, bossHasArt, keyId, unlockBossOf } from "../../content/bosses.ts";
 import { offerById } from "../../content/shop.ts";
 import { taskById } from "../../content/locations.ts";
@@ -687,7 +687,7 @@ function EditInfo({ op, info }: { op: string; info: unknown }) {
   const label =
     op === "set_money" ? String(i.currency ?? "") :
     op === "set_item" || op === "add_item" ? itemById(String(i.item))?.name ?? String(i.item ?? "") :
-    op === "set_talent" ? `${itemById(String(i.weapon))?.name ?? i.weapon}: ${talentTree(String(i.weapon)).find((b) => b.id === i.branch)?.name ?? i.branch}` :
+    op === "set_talent" ? `${EXTRA_NAMES[String(i.weapon)] ?? itemById(String(i.weapon))?.name ?? i.weapon}: ${talentStop(String(i.weapon), String(i.branch))?.name ?? i.branch}` :
     op === "set_xp" ? "Авторитет" : op === "set_energy" ? "Энергия" : op === "set_talents" ? "Свободные таланты" : op === "set_name" ? "Имя" : "";
   if (op === "ban") return <span className="bad">заблокирован{i.reason ? `: ${i.reason}` : ""}</span>;
   if (op === "unban") return <span className="good">разблокирован</span>;
@@ -1055,18 +1055,20 @@ function QtyCell({ r, edit }: { r: Row; edit: EditFn }) {
 
 function Talents({ rows, edit }: { rows: Row[]; edit: EditFn }) {
   const level = (w: string, b: string) => num(rows.find((r) => r.weapon_id === w && r.branch === b)?.level);
+  // the talent path, stop by stop (content/talents.ts TALENT_PATH)
   return (
-    <Box title="Ветки талантов" closed>
-      <Table rows={TALENT_WEAPONS.map((w) => ({ id: w }))} cols={[
-        ["Оружие", (r) => itemById(String(r.id))?.name ?? String(r.id)],
-        ...TALENT_NODE_IDS.map((id, k) => [talentTree("fist")[k].name, (r: Row) => {
-          const b = talentTree(String(r.id))[k];
+    <Box title="Дорожка талантов" closed>
+      <Table rows={TALENT_PATH.map((s, i) => ({ id: s.key, i }))} cols={[
+        ["№", (r) => String(Number(r.i) + 1)],
+        ["Талант", (r) => { const s = TALENT_PATH[Number(r.i)]; return `${EXTRA_NAMES[s.target] ? "" : `${itemById(s.target)?.name ?? s.target}: `}${s.name}`; }],
+        ["Уровень", (r) => {
+          const s = TALENT_PATH[Number(r.i)];
           return (
-            <select className="adm-in sm" value={level(String(r.id), id)} onChange={(e) => edit({ op: "set_talent", weapon: r.id, branch: id, level: Number(e.target.value) }, `${itemById(String(r.id))?.name}: ${b.name}`)}>
-              {Array.from({ length: b.max + 1 }, (_, i) => <option key={i} value={i}>{i}</option>)}
+            <select className="adm-in sm" value={level(s.target, s.branch)} onChange={(e) => edit({ op: "set_talent", weapon: s.target, branch: s.branch, level: Number(e.target.value) }, s.name)}>
+              {Array.from({ length: s.max + 1 }, (_, k) => <option key={k} value={k}>{k}</option>)}
             </select>
           );
-        }, "r"] as [string, (r: Row) => ReactNode, string]),
+        }, "r"],
       ]} />
     </Box>
   );

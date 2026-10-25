@@ -10,7 +10,7 @@ import { locationById, taskById } from "../content/locations.ts";
 import { questById } from "../content/quests.ts";
 import { achievementById } from "../content/achievements.ts";
 import { equipmentById, roomById } from "../content/home.ts";
-import { talentTree } from "../content/talents.ts";
+import { EXTRA_NAMES, talentStop } from "../content/talents.ts";
 import { SLOT_SYMBOL_NAMES } from "../content/slots.ts";
 
 type Row = Record<string, unknown>;
@@ -65,7 +65,10 @@ export function actionText(type: string, body: Row, result: unknown): string | n
     case "fight_flee": return r.fightId ? `бой #${r.fightId}` : null;
     case "daily_claim": return join(`день ${r.day}`, `серия ${r.streak}`, grantedText(r.reward));
     case "rename": return `новое имя «${r.name ?? body.name}»`;
-    case "talent_up": return `${item(r.weapon ?? body.weapon)}: ${talentTree(String(r.weapon ?? body.weapon)).find((n) => n.id === (r.branch ?? body.branch))?.name ?? body.branch} → ${r.level}/${r.max}`;
+    case "talent_up": {
+      const w = String(r.weapon ?? body.weapon), st = talentStop(w, String(r.branch ?? body.branch));
+      return `${EXTRA_NAMES[w] ? "" : `${item(w)}: `}${st?.name ?? body.branch} → ${r.level}/${r.max}`;
+    }
     case "talent_reset": return `сброс талантов за ${r.price ? `${(r.price as { amount: number }).amount} USD` : "5 USD"} · вернулось ${fmt(r.returned)}`;
     case "equipment_upgrade": return `${equipmentById(String(r.id ?? body.id))?.name ?? body.id} → уровень ${r.level}`;
     case "room_buy":
