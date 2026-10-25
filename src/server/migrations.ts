@@ -1014,4 +1014,22 @@ WHERE claimed_at IS NULL AND jsonb_typeof(reward -> 'currencies') = 'object' AND
 DELETE FROM config WHERE key = 'exchange.rub';
 `,
   },
+  {
+    // Мугонатор and Командате swap places (… Кедр → Мугонатор → Гаркуша → Командате → Бабафей). Nobody loses a boss
+    // they had open: Гаркуша was opened by Командате's keys, Бабафей by Мугонатор's — the new keys are given for them.
+    id: "v2-057-mugo-bebyakyan-swap",
+    sql: `
+WITH old AS (
+  SELECT player_id,
+    MAX(CASE WHEN item_id = 'key-bebyakyan' THEN qty ELSE 0 END) AS b,
+    MAX(CASE WHEN item_id = 'key-mugo' THEN qty ELSE 0 END) AS m
+  FROM inventory WHERE item_id IN ('key-bebyakyan', 'key-mugo') GROUP BY player_id
+)
+INSERT INTO inventory (player_id, item_id, qty, source)
+SELECT player_id, 'key-mugo', 3, 'migration:boss-swap' FROM old WHERE b >= 3
+UNION ALL
+SELECT player_id, 'key-bebyakyan', 3, 'migration:boss-swap' FROM old WHERE m >= 1
+ON CONFLICT (player_id, item_id) DO UPDATE SET qty = GREATEST(inventory.qty, 3);
+`,
+  },
 ];

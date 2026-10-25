@@ -18,7 +18,7 @@ export function clanLevelInfo(damage: number): { level: number; from: number; to
  * first hit lands. Only the clan's members hit it, with their usual weapons. When it falls, everyone who hit gets a prize
  * by their share of the damage (the pool grows with the clan) plus a small floor; a boss alive at the week's end leaves.
  */
-export const CLAN_BOSS_ROTATION = ["datsik", "kedr", "bebyakyan", "garkusha", "mugo"] as const;
+export const CLAN_BOSS_ROTATION = ["datsik", "kedr", "mugo", "garkusha", "bebyakyan"] as const;
 export const CLAN_BOSS_HP_PER_MEMBER = 25_000;
 export const CLAN_BOSS_MIN_MEMBERS = 3;
 /** the prize pool per member of the clan (split by the share of the damage) */

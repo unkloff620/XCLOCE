@@ -79,13 +79,11 @@ export const BOSSES: BossDef[] = [
     theme: { a: "#173a26", b: "#07140c", accent: "#3ddc84" }, photo: photo("kedr", true),
   },
   {
-    id: "bebyakyan", order: 3, card: "bronze", name: "Командате", title: "Подчинённый Востока",
-    story: "Командует всеми, кто ниже. Таких пока немного, но он не сдаётся.",
+    id: "mugo", order: 3, card: "bronze", name: "Мугонатор", title: "Подчинённый Вадима",
+    story: "Делает всё, что сказал Вадим. Иногда даже то, что Вадим только подумал.",
     hp: hp(2), reward: { xp: xp(2), currencies: { USD: 7, RUB: 300 } },
-    drop: [{ id: "keyboard", qty: 3, chance: 0.3 }],
-    wear: { items: ["bottle-komandate", "jacket-komandate", "pants-komandate", "sneakers-komandate"], chance: 0.1, pity: 10 },
-    set: { weapon: "keyboard", damage: 30 },
-    theme: { a: "#1c2a4a", b: "#080d1c", accent: "#4da3ff" }, photo: photo("bebyakyan", true),
+    drop: [{ id: "energy-drink", qty: 2, chance: 0.35 }],
+    theme: { a: "#163a3a", b: "#061414", accent: "#2ee6c8" }, photo: photo("mugo", true),
   },
   {
     id: "garkusha", order: 4, card: "silver", name: "Гаркуша", title: "Подчинённый Князя",
@@ -95,11 +93,13 @@ export const BOSSES: BossDef[] = [
     theme: { a: "#3a1a1a", b: "#140707", accent: "#ff6b4a" }, photo: photo("garkusha", true),
   },
   {
-    id: "mugo", order: 5, card: "silver", name: "Мугонатор", title: "Подчинённый Вадима",
-    story: "Делает всё, что сказал Вадим. Иногда даже то, что Вадим только подумал.",
+    id: "bebyakyan", order: 5, card: "silver", name: "Командате", title: "Подчинённый Востока",
+    story: "Командует всеми, кто ниже. Таких пока немного, но он не сдаётся.",
     hp: hp(4), reward: { xp: xp(4), currencies: { USD: 11, RUB: 380 } },
-    drop: [{ id: "energy-drink", qty: 2, chance: 0.35 }],
-    theme: { a: "#163a3a", b: "#061414", accent: "#2ee6c8" }, photo: photo("mugo", true),
+    drop: [{ id: "keyboard", qty: 3, chance: 0.3 }],
+    wear: { items: ["bottle-komandate", "jacket-komandate", "pants-komandate", "sneakers-komandate"], chance: 0.1, pity: 10 },
+    set: { weapon: "keyboard", damage: 30 },
+    theme: { a: "#1c2a4a", b: "#080d1c", accent: "#4da3ff" }, photo: photo("bebyakyan", true),
     keysToUnlock: 1,
   },
   {
@@ -195,7 +195,7 @@ export const unlockBossOf = (itemId: string) => BOSSES.find((b) => b.wear?.items
 /** the thing opens for sure with the first win over its boss (BossDef.firstWin), not by a chance */
 export const isFirstWinItem = (itemId: string) => BOSSES.some((b) => b.firstWin?.includes(itemId));
 export const keyId = (bossId: string) => `key-${bossId}`;
-/** Keys of boss N needed to open boss N+1 (bosses after Гаркуша — from Мугонатор on — take one: keysToUnlock: 1). */
+/** Keys of boss N needed to open boss N+1 (bosses after Гаркуша — from Командате on — take one: keysToUnlock: 1). */
 export const KEYS_TO_UNLOCK = 3;
 /** Personal fight length. */
 export const FIGHT_HOURS = 8;

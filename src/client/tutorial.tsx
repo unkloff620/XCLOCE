@@ -31,7 +31,7 @@ const STEPS: Step[] = [
   },
   {
     target: '.nav a[aria-label="Боссы"]', title: "Боссы",
-    pics: [{ src: "/bosses/datsik/portrait.webp", cap: "Дацкоу" }, { src: "/bosses/kedr/portrait.webp", cap: "Кедр" }, { src: "/bosses/bebyakyan/portrait.webp", cap: "Командате" }],
+    pics: [{ src: "/bosses/datsik/portrait.webp", cap: "Дацкоу" }, { src: "/bosses/kedr/portrait.webp", cap: "Кедр" }, { src: "/bosses/mugo/portrait.webp", cap: "Мугонатор" }],
     text: "Главное в игре. Начни бой и бей босса оружием — урон всех игроков общий.",
   },
   {

@@ -316,16 +316,21 @@ describe("boss fights: personal fights, shared damage", () => {
     expect(r.state.fight?.bossId).toBe("utilizator");
   });
 
-  it("Гаркуша and Mugo stand between Командате and Бабафей; who had Бабафей open keeps it", async () => {
-    const p = await newPlayer(db);
-    await give(db, p, "key-bebyakyan", 3);
-    await expect(act(db, p, "fight_start", { boss: "babafey" }, T0)).rejects.toMatchObject({ code: "boss_locked" });
+  it("Мугонатор and Командате swapped: Кедр → Мугонатор → Гаркуша → Командате → Бабафей; nobody loses an open boss", async () => {
     const { MIGRATIONS } = await import("../src/server/migrations.ts");
-    await db.query(MIGRATIONS.find((m) => m.id === "v2-017-garkusha-mugo")!.sql);
-    expect(await qty(db, p, "key-garkusha")).toBe(3);
-    expect(await qty(db, p, "key-mugo")).toBe(3);
-    const r = await act(db, p, "fight_start", { boss: "babafey" }, T0);
-    expect(r.state.fight?.bossId).toBe("babafey");
+    // had Бабафей open (a key of Мугонатор, the old 5th) and Гаркуша open (3 keys of Командате, the old 3rd)
+    const p = await newPlayer(db), q = await newPlayer(db);
+    await give(db, p, "key-mugo", 1);
+    await give(db, q, "key-bebyakyan", 3);
+    await expect(act(db, p, "fight_start", { boss: "babafey" }, T0)).rejects.toMatchObject({ code: "boss_locked" });
+    await expect(act(db, q, "fight_start", { boss: "garkusha" }, T0)).rejects.toMatchObject({ code: "boss_locked" });
+    await db.query(MIGRATIONS.find((m) => m.id === "v2-057-mugo-bebyakyan-swap")!.sql);
+    expect((await act(db, p, "fight_start", { boss: "babafey" }, T0)).state.fight?.bossId).toBe("babafey");
+    expect((await act(db, q, "fight_start", { boss: "garkusha" }, T0)).state.fight?.bossId).toBe("garkusha");
+    // Мугонатор opens with Кедр's keys now
+    const r = await newPlayer(db);
+    await give(db, r, "key-kedr", 3);
+    expect((await act(db, r, "fight_start", { boss: "mugo" }, T0)).state.fight?.bossId).toBe("mugo");
   });
 
   it("3 keys of a boss open the next boss", async () => {
@@ -1620,7 +1625,7 @@ describe("Бутылка Командате", () => {
     const p = await newPlayer(db);
     // the other things of his are owned: only the bottle is left to drop
     for (const it of ["tee-pump", "jacket-komandate", "pants-komandate", "sneakers-komandate"]) await give(db, p, it, 1);
-    await give(db, p, "key-kedr", 100);
+    await give(db, p, "key-garkusha", 100);
     await give(db, p, "keyboard", 30);
     const D = 24 * H;
     let opened: string[] = [];
@@ -1861,7 +1866,7 @@ describe("Боксёрская", () => {
     await setBossHp({ bebyakyan: 10 });
     const p = await newPlayer(db);
     await setMoney(db, p, "RUB", 5000);
-    await give(db, p, "key-kedr", 3);
+    await give(db, p, "key-garkusha", 3);
     await give(db, p, "keyboard", 1);
     const f = await act(db, p, "fight_start", { boss: "bebyakyan", mode: "blat" }, T0);
     await hit(p, "keyboard");
