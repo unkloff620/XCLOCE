@@ -1,5 +1,6 @@
 import type { Queryable } from "../db.ts";
-import { BOSSES, CASE_WINS, bossSetItems } from "../../content/bosses.ts";
+import { BOSSES, CASE_WINS, bossById, bossSetItems } from "../../content/bosses.ts";
+import { MEDAL_SET, medalBonus, medalWeapon, type MedalTier } from "../../content/medals.ts";
 
 /*
  * Boss sets and «Дела»:
@@ -24,6 +25,14 @@ export async function setBonuses(q: Queryable, pid: number): Promise<Record<stri
     const items = bossSetItems(b);
     if (!b.set || !items.length || !items.every((id) => have.has(id))) continue;
     out[b.set.weapon] = (out[b.set.weapon] ?? 0) + b.set.damage;
+  }
+  // full sets of boss medals: MEDAL_SET of one kind add that kind's bonus to the boss's weapon
+  const full = await q.query<{ boss_id: string; tier: MedalTier }>("SELECT boss_id, tier FROM boss_medals WHERE player_id=$1 AND n >= $2", [pid, MEDAL_SET]);
+  for (const m of full) {
+    const b = bossById(m.boss_id);
+    if (!b) continue;
+    const w = medalWeapon(b);
+    out[w] = (out[w] ?? 0) + medalBonus(b, m.tier);
   }
   return out;
 }

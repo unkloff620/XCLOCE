@@ -17,6 +17,7 @@ export interface Granted {
   levelUp?: { from: number; to: number };
   /** things a boss drop opened in the shop (to be bought there) */
   unlocks?: string[];
+  medal?: { boss: string; tier: "bronze" | "silver" | "gold"; n: number };
 }
 export interface GameState {
   now: number;
@@ -39,7 +40,7 @@ export interface GameState {
   yard: { count: number; max: number; nextAt: number | null };
   /** cheapest task step left in an open location; claimable = a location reward is waiting */
   tasks: { minEnergy: number | null; claimable: boolean };
-  fight: { id: number; bossId: string; hp: number; hpMax: number; endsAt: number; myDamage: number; solo?: boolean } | null;
+  fight: { id: number; bossId: string; hp: number; hpMax: number; endsAt: number; myDamage: number; solo?: boolean; mode?: "pacan" | "blat" | "avtor" } | null;
   pending: { fightId: number; bossId: string; status: string }[];
   clan: { id: number; name: string; tag: string; emblem: string; color: string } | null;
   /** my request to join a clan; waiting — requests to my clan (I am its leader) */
@@ -151,6 +152,8 @@ export interface FightView {
   startedAt: number; endsAt: number; myDamage: number; myHits: number; killer: string | null; killerIsMe: boolean;
   reward: Granted | null; claimed: boolean; lastSeq: number; hits: Hit[];
   top: { playerId: number; name: string; damage: number; hits: number }[]; fightingNow: number;
+  /** the fight mode (content/medals.ts) */
+  mode?: "pacan" | "blat" | "avtor";
   /** «Соло»: only my own hits take this fight's HP */
   solo?: boolean;
 }

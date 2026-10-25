@@ -1,4 +1,5 @@
 "use client";
+import { FIGHT_MODES, MEDAL_NAMES, MEDAL_SET, medalBonus, medalWeapon } from "../../content/medals.ts";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -20,6 +21,8 @@ import { clock } from "../format.ts";
 export interface BossRow {
   id: string; unlocked: boolean; keysHave: number; keysNeed: number; myKeys: number; hpMax: number;
   fightsToday: number; fightsPerDay: number; myDamage: number; myWins: number; mySoloWins?: number; fightingNow: number; totalWins: number;
+  /** my medals of this boss by kind (content/medals.ts) */
+  medals?: { bronze: number; silver: number; gold: number };
   lastKiller: { id: number; name: string; photo: string | null; at: number } | null;
 }
 export interface BossListData { resetAt: number; bosses: BossRow[]; weapons: Tray[]; now: number }
@@ -159,6 +162,8 @@ export function BossRulesHelp({ topic, bossId }: { topic: "bosses" | "boss"; bos
   const boss = bossId ? bossById(bossId) : null;
   return (
     <Help topic={topic} title={boss ? `Босс ${boss.name}` : "Как бить боссов"}>
+      <p><b>Режимы боя:</b> {FIGHT_MODES.map((m) => `«${m.name}» — здоровье ×${m.hp}, медаль «${MEDAL_NAMES[m.medal]}»${m.things ? ", падают вещи босса" : ""}`).join("; ")}. Вещи босса (одежда, комнаты) выпадают только в «Блатном»; деньги, пропуска и расходники — в любом режиме.</p>
+      <p><b>Медали:</b> каждая победа (от того же урона, что и пропуск) даёт медаль с лицом босса. {MEDAL_SET} медалей одного вида — полный сет: оружие босса бьёт сильнее{boss ? ` (у ${boss.name} — «${itemById(medalWeapon(boss))?.name}»: +${medalBonus(boss, "bronze")} / +${medalBonus(boss, "silver")} / +${medalBonus(boss, "gold")} за бронзу, серебро и золото)` : ""}. Сеты медалей — в достижениях.</p>
       {boss ? (
         <>
           {boss.wear?.items.length ? (

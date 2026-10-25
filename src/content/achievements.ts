@@ -1,6 +1,7 @@
 import type { Reward } from "./rewards.ts";
 import { BOSSES, type CardTier } from "./bosses.ts";
 import { STASH_MEDAL_TARGETS, STASH_SETS_ORDERED } from "./stashes.ts";
+import { MEDAL_NAMES, MEDAL_SET, MEDAL_TIERS, FIGHT_MODES } from "./medals.ts";
 
 /*
  * Достижения: значок в профиле + разовая награда. Прогресс считается сервером из того, что уже записано
@@ -8,7 +9,7 @@ import { STASH_MEDAL_TARGETS, STASH_SETS_ORDERED } from "./stashes.ts";
  */
 
 /** what a badge measures (server: systems/achievements.ts → statsFor) */
-export type AchStat = "authority" | "damage" | "hits" | "wins" | "soloWins" | "kills" | "locations" | "tasks" | "yard" | "bestStreak" | "chests" | "weeklyTop" | `solo:${string}` | `win:${string}` | `stashsets:${number}`;
+export type AchStat = "authority" | "damage" | "hits" | "wins" | "soloWins" | "kills" | "locations" | "tasks" | "yard" | "bestStreak" | "chests" | "weeklyTop" | `solo:${string}` | `win:${string}` | `stashsets:${number}` | `medal:${string}`;
 
 /** 1 bronze · 2 silver · 3 gold · 4 platinum · 5 diamond */
 export type AchTier = 1 | 2 | 3 | 4 | 5;
@@ -98,6 +99,21 @@ export const STASH_ACHIEVEMENTS: AchievementDef[] = STASH_SETS_ORDERED.flatMap((
   }),
 );
 
+/**
+ * «Медали боссов»: a full set (MEDAL_SET) of each boss's bronze, silver and gold medals (content/medals.ts) — from his
+ * «Пацанский», «Блатной» and «Авторитетный» fights. Stat "medal:<boss id>:<tier>".
+ */
+export const MEDAL_ACHIEVEMENTS: AchievementDef[] = BOSSES.flatMap((b) =>
+  MEDAL_TIERS.map((t, i) => {
+    const tier = (i + 1) as AchTier;
+    const mode = FIGHT_MODES.find((m) => m.medal === t)!;
+    return {
+      id: `medal-${b.id}-${t}`, category: "boss-medal", name: `${b.name}: ${MEDAL_NAMES[t]} — полный сет`, hint: `Собери ${MEDAL_SET} медалей «${MEDAL_NAMES[t]}» босса ${b.name} — побеждай его в режиме «${mode.name}»`,
+      stat: `medal:${b.id}:${t}` as const, target: MEDAL_SET, tier, icon: "ach-wins", reward: TIER_REWARDS[tier], boss: b.id,
+    };
+  }),
+);
+
 export const ACHIEVEMENTS: AchievementDef[] = ([
   ...ACH_CATEGORIES.flatMap((c) =>
     c.targets.map((target, i) => {
@@ -108,6 +124,7 @@ export const ACHIEVEMENTS: AchievementDef[] = ([
   ...SOLO_BOSS_ACHIEVEMENTS,
   ...BOSS_KILL_ACHIEVEMENTS,
   ...STASH_ACHIEVEMENTS,
+  ...MEDAL_ACHIEVEMENTS,
 ] as AchievementDef[]).map((a) => ({ ...a, reward: { ...a.reward, achPoints: a.tier } }));
 
 export const achievementById = (id: string) => ACHIEVEMENTS.find((a) => a.id === id);

@@ -8,6 +8,7 @@ import { BASE_CRIT_MULT, ROOM_DEFS, ROOM_PITY, roomUnlockId } from "../../conten
 import { talentsForDamage, weaponTalentBonus } from "../../content/talents.ts";
 import { playerBonus, weaponTalents } from "./home.ts";
 import { setBonuses } from "./collection.ts";
+import { fightMode, type FightMode } from "../../content/medals.ts";
 import { notifyBossLow } from "./notify.ts";
 
 /*
@@ -42,6 +43,8 @@ interface FightRow {
   my_hits: number;
   /** «Соло»: only my own hits count, other players' damage does not take this fight's HP */
   solo: boolean;
+  /** the fight mode (content/medals.ts): the HP multiplier, the medal, whether his things can drop */
+  mode: FightMode;
   reward: Granted | null;
   seen: boolean;
 }
@@ -132,7 +135,8 @@ export async function settleMyFight(ctx: Ctx): Promise<void> {
   await expireFights(ctx, await lockBoss(ctx.q, GLOBAL));
 }
 
-export async function startFight(ctx: Ctx, bossId: string, solo = false) {
+export async function startFight(ctx: Ctx, bossId: string, solo = false, modeId: FightMode = "pacan") {
+  const mode = fightMode(modeId);
   const def = bossById(bossId);
   if (!def) throw new GameError("bad_boss", "Такого босса нет");
   if (!bossOpen(def, ctx.cfg.bossOpen)) throw new GameError("boss_hidden", "Этот босс пока не пришёл");
@@ -153,10 +157,10 @@ export async function startFight(ctx: Ctx, bossId: string, solo = false) {
   const prev = prevBoss(def);
   const keys = prev ? keysNeeded(def, ctx.cfg.fight.keysToUnlock) : 0;
   if (prev && keys > 0) await takeItem(ctx, keyId(prev.id), keys, `fight:${def.id}`);
-  const hpMax = ctx.cfg.bossHp[def.id] ?? def.hp;
+  const hpMax = Math.round((ctx.cfg.bossHp[def.id] ?? def.hp) * mode.hp);
   const [f] = await ctx.q.query<{ id: number }>(
-    "INSERT INTO fights (player_id, boss_id, hp_max, start_total, start_seq, started_at, ends_at, day, solo, keys_spent, global) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,true) RETURNING id",
-    [ctx.pid, def.id, hpMax, g.damage_total, g.last_seq, new Date(ctx.now), new Date(ctx.now + ctx.cfg.fight.hours * 3600_000), day, solo, keys],
+    "INSERT INTO fights (player_id, boss_id, hp_max, start_total, start_seq, started_at, ends_at, day, solo, keys_spent, global, mode) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,true,$11) RETURNING id",
+    [ctx.pid, def.id, hpMax, g.damage_total, g.last_seq, new Date(ctx.now), new Date(ctx.now + ctx.cfg.fight.hours * 3600_000), day, solo, keys, mode.id],
   );
   // every new fight starts with the free weapons (fist, mouse, candle) ready — unless the last fight was fled:
   // otherwise flee + start again would give endless free hits (fled fights do not count toward the daily limit)
@@ -165,7 +169,7 @@ export async function startFight(ctx: Ctx, bossId: string, solo = false) {
     [ctx.pid, f.id],
   );
   if (!last?.fled) await resetFreeWeapons(ctx.q, ctx.pid);
-  return { fightId: f.id, bossId: def.id, solo };
+  return { fightId: f.id, bossId: def.id, solo, mode: mode.id, hpMax };
 }
 
 export interface HitResult {
@@ -342,9 +346,12 @@ export async function claimFight(ctx: Ctx, fightId: number) {
   // the pass of this boss, and with EXTRA_KEY_CHANCE a second one
   const bonusKey = !def.final && earnedKey && ctx.rng() < EXTRA_KEY_CHANCE;
   const key = def.final || !earnedKey ? [] : [{ id: keyId(def.id), qty: bonusKey ? 2 : 1 }];
-  const unlocked = earnedKey ? await rollUnlocks(ctx, def) : [];
+  // the boss's own things (clothes, rooms, first-win things) drop only in «Блатной»
+  const mode = fightMode(f.mode);
+  const things = earnedKey && mode.things;
+  const unlocked = things ? await rollUnlocks(ctx, def) : [];
   // things the first win opens for sure (BossDef.firstWin) — bought in the shop afterwards
-  if (earnedKey && def.firstWin?.length) {
+  if (things && def.firstWin?.length) {
     const open = new Set(await unlockedItems(ctx.q, ctx.pid));
     for (const id of def.firstWin) {
       if (open.has(id) || (await itemQty(ctx.q, ctx.pid, id)) > 0) continue;
@@ -353,7 +360,7 @@ export async function claimFight(ctx: Ctx, fightId: number) {
     }
   }
   // a room that drops from this boss (it is bought afterwards, like the clothes)
-  if (earnedKey) {
+  if (things) {
     for (const room of ROOM_DEFS.filter((r) => r.drop?.boss === def.id)) {
       const key = roomUnlockId(room.id);
       const [have] = await ctx.q.query("SELECT 1 FROM player_unlocks WHERE player_id=$1 AND item_id=$2", [ctx.pid, key]);
@@ -379,6 +386,14 @@ export async function claimFight(ctx: Ctx, fightId: number) {
   if (base.items?.length) base.items = await notOwnedUnique(ctx, base.items);
   const granted = await grantReward(ctx, mergeRewards(base, { items: [...key, ...drops] }), `win:${def.id}`);
   if (unlocked.length) granted.unlocks = unlocked;
+  // the boss medal of this mode, for sure (the same share of damage as the pass)
+  if (earnedKey) {
+    const [m] = await ctx.q.query<{ n: number }>(
+      "INSERT INTO boss_medals (player_id, boss_id, tier, n) VALUES ($1,$2,$3,1) ON CONFLICT (player_id, boss_id, tier) DO UPDATE SET n = boss_medals.n + 1 RETURNING n",
+      [ctx.pid, def.id, mode.medal],
+    );
+    granted.medal = { boss: def.id, tier: mode.medal, n: Number(m.n) };
+  }
   await ctx.q.query("UPDATE fights SET reward=$2, seen=true WHERE id=$1", [f.id, JSON.stringify(granted)]);
   if (myDamage > 0) {
     await ctx.q.query(
@@ -484,7 +499,7 @@ export async function fightView(q: Queryable, pid: number, fightId: number, sinc
   const [killer] = f.killer_id ? await q.query<{ display_name: string }>("SELECT display_name FROM players WHERE id=$1", [f.killer_id]) : [];
   const fighting = await q.query<{ n: number }>("SELECT COUNT(*)::int AS n FROM fights WHERE boss_id=$1 AND status='active' AND ends_at > $2", [f.boss_id, new Date(now)]);
   return {
-    fightId: f.id, bossId: f.boss_id, hp, hpMax: f.hp_max, solo: !!f.solo,
+    fightId: f.id, bossId: f.boss_id, hp, hpMax: f.hp_max, solo: !!f.solo, mode: fightMode(f.mode).id,
     status: timeUp ? ("lost" as const) : f.status,
     startedAt: new Date(f.started_at).getTime(), endsAt: new Date(f.ends_at).getTime(),
     myDamage: f.my_damage, myHits: f.my_hits, killer: killer?.display_name ?? null, killerIsMe: f.killer_id === pid,
@@ -517,6 +532,12 @@ export async function bossList(q: Queryable, pid: number, cfg: Ctx["cfg"], now =
      WHERE f.status='won' AND f.killer_id IS NOT NULL ORDER BY f.boss_id, f.ended_at DESC, f.id DESC`,
   );
   const killerMap = new Map(killers.map((k) => [k.boss_id, { id: k.id, name: k.display_name, photo: k.photo_url, at: new Date(k.ended_at).getTime() }]));
+  const medalRows = await q.query<{ boss_id: string; tier: string; n: number }>("SELECT boss_id, tier, n FROM boss_medals WHERE player_id=$1", [pid]);
+  const medalsOf = (id: string) => ({
+    bronze: Number(medalRows.find((m) => m.boss_id === id && m.tier === "bronze")?.n ?? 0),
+    silver: Number(medalRows.find((m) => m.boss_id === id && m.tier === "silver")?.n ?? 0),
+    gold: Number(medalRows.find((m) => m.boss_id === id && m.tier === "gold")?.n ?? 0),
+  });
   return {
     resetAt: nextMoscowMidnight(now),
     bosses: OPEN_BOSSES(cfg.bossOpen).map((b) => {
@@ -537,6 +558,7 @@ export async function bossList(q: Queryable, pid: number, cfg: Ctx["cfg"], now =
         fightingNow: activeMap.get(b.id) ?? 0,
         totalWins: winsMap.get(b.id) ?? 0,
         lastKiller: killerMap.get(b.id) ?? null,
+        medals: medalsOf(b.id),
       };
     }),
   };

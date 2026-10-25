@@ -1,5 +1,8 @@
 "use client";
 import { useState } from "react";
+import { MEDAL_ACHIEVEMENTS } from "../content/achievements.ts";
+import { MEDAL_NAMES, MEDAL_SET, MEDAL_TIERS, FIGHT_MODES, medalBonus, medalWeapon } from "../content/medals.ts";
+import { BossCoin } from "./art/boss-coin.tsx";
 import { ACH_CATEGORIES, BOSS_KILL_ACHIEVEMENTS, BOSS_KILL_TARGETS, SOLO_BOSS_ACHIEVEMENTS, TIER_COLORS, TIER_NAMES, achievementById, type AchCategory, type AchTier } from "../content/achievements.ts";
 import { Icon, type IconName } from "./art/icons.tsx";
 import { Modal, RewardChips } from "./ui.tsx";
@@ -48,6 +51,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
   const [open, setOpen] = useState<string | null>(null);
   const [soloOpen, setSoloOpen] = useState(false);
   const [killOpen, setKillOpen] = useState(false);
+  const [coinOpen, setCoinOpen] = useState(false);
   const [stashOpen, setStashOpen] = useState(false);
   const [stashItem, setStashItem] = useState<string | null>(null);
   const { state } = useGame();
@@ -176,6 +180,35 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
             </div>
           );
         })()}
+        {/* «Медали боссов»: the face on a coin — bronze, silver, gold; MEDAL_SET of a kind is a full set */}
+        {(() => {
+          const list = MEDAL_ACHIEVEMENTS.filter((a) => byId.has(a.id));
+          const got = list.filter((a) => { const r = byId.get(a.id); return r && (r.claimed || (!self && r.done)); });
+          const ready = self ? list.find((a) => { const r = byId.get(a.id); return r?.done && !r.claimed; }) ?? null : null;
+          const coins = list.reduce((n, a) => n + Math.min(MEDAL_SET, byId.get(a.id)?.progress ?? 0), 0);
+          const n = list.length;
+          return (
+            <div role="button" tabIndex={0} className={`ach-row ${ready ? "ready" : ""}`} onClick={() => setCoinOpen(true)} onKeyDown={(e) => e.key === "Enter" && setCoinOpen(true)}>
+              <span className="ach-coin"><BossCoin boss={OPEN_ALL[0]} tier={got.some((a) => a.tier === 3) ? "gold" : got.some((a) => a.tier === 2) ? "silver" : "bronze"} size={44} dim={coins === 0} /></span>
+              <span className="ach-main">
+                <span className="row" style={{ justifyContent: "space-between", gap: 6 }}>
+                  <b className="ach-name">Медали боссов</b>
+                  <span className="tiny muted num">{got.length}/{n} сетов</span>
+                </span>
+                <span className="ach-bar sm" style={{ ["--p" as string]: `${Math.round((coins / Math.max(1, n * MEDAL_SET)) * 100)}%`, ["--c" as string]: "#ffcc33" }}>
+                  <i /><span className="num">{full(coins)} / {full(n * MEDAL_SET)} медалей</span>
+                </span>
+              </span>
+              {ready && (
+                <button className="btn gold sm ach-take" disabled={busy === "achievement_claim"}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void claim(ready.id);
+                  }}>Забрать</button>
+              )}
+            </div>
+          );
+        })()}
         {/* «Нычки»: sets of four, collected again and again; medals for 10 / 50 / 100 sets of each */}
         {(() => {
           const medals = STASH_SETS_ORDERED.flatMap((st) => ([1, 2, 3] as AchTier[]).map((t) => ({ st, t, r: byId.get(`stashset-${st.n}-${t}`) })));
@@ -274,6 +307,39 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
           </Modal>
         );
       })()}
+      {coinOpen && (
+        <Modal title="Медали боссов" onClose={() => setCoinOpen(false)}>
+          <div className="col" style={{ gap: 6 }}>
+            <div className="small muted center">
+              Каждая победа даёт медаль с лицом босса: {FIGHT_MODES.map((m) => `«${m.name}» — ${MEDAL_NAMES[m.medal].toLowerCase()}`).join(", ")}.
+              {" "}{MEDAL_SET} медалей одного вида — полный сет: урон оружия босса растёт. Нажми на медаль — увидишь награду за сет.
+            </div>
+            {OPEN_ALL.filter((b) => byId.has(`medal-${b.id}-bronze`)).map((b) => (
+              <div key={b.id} className="bk-row">
+                <span className="bk-photo"><BossPhoto boss={b} round /></span>
+                <span className="grow col" style={{ gap: 1, minWidth: 0 }}>
+                  <b className="ellipsis">{b.name}</b>
+                  <span className="tiny muted">сет: +{medalBonus(b, "bronze")}/+{medalBonus(b, "silver")}/+{medalBonus(b, "gold")} · {itemById(medalWeapon(b))?.name}</span>
+                </span>
+                <span className="bk-medals">
+                  {MEDAL_TIERS.map((t) => {
+                    const id = `medal-${b.id}-${t}`;
+                    const r = byId.get(id);
+                    const have = Math.min(MEDAL_SET, r?.progress ?? 0);
+                    const due = self && !!r?.done && !r.claimed;
+                    return (
+                      <button key={t} className={`bk-medal coin ${due ? "due" : ""}`} onClick={() => setMedal(id)} aria-label={achievementById(id)?.name}>
+                        <BossCoin boss={b} tier={t} size={30} dim={have === 0} />
+                        <small className="num">{have}/{MEDAL_SET}</small>
+                      </button>
+                    );
+                  })}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Modal>
+      )}
       {killOpen && (
         <Modal title="Убийца боссов" onClose={() => setKillOpen(false)}>
           <div className="col" style={{ gap: 6 }}>

@@ -23,6 +23,8 @@ import { talentThreshold, talentsForDamage } from "../../content/talents.ts";
 import { TalentWindow } from "./talents.tsx";
 import { weaponStats } from "../weapon-stats.ts";
 import { BOXERS, useBossStrike } from "../fx/boss-strike.tsx";
+import { FIGHT_MODES, MEDAL_NAMES, MEDAL_SET, fightMode, medalBonus, medalWeapon, type FightMode } from "../../content/medals.ts";
+import { BossCoin } from "../art/boss-coin.tsx";
 
 const POLL_MS = 1500;
 /** a hit stays in the arena feed this long */
@@ -318,8 +320,15 @@ export function BossScreen({ id }: { id: string }) {
   };
 
   // «Соло»: the same fight, but only my own hits take the boss's HP — wins count for the «Соло» badge
+  // the fight mode: «Пацанский» ×1 HP, «Блатной» ×3, «Авторитетный» ×6 (content/medals.ts); remembered per boss
+  const [mode, setModeRaw] = useState<FightMode>("pacan");
+  useEffect(() => {
+    try { const m = localStorage.getItem(`xc-mode-${id}`); if (m === "pacan" || m === "blat" || m === "avtor") setModeRaw(m); } catch { /* storage blocked */ }
+  }, [id]);
+  const setMode = (m: FightMode) => { setModeRaw(m); try { localStorage.setItem(`xc-mode-${id}`, m); } catch { /* storage blocked */ } };
   const start = async (solo = false) => {
-    const r = await act<{ fightId: number }>("fight_start", { boss: id, solo }, solo ? `Соло-бой с боссом ${boss?.name}: бьёшь только ты. 8 часов` : `Бой с боссом ${boss?.name} начался! 8 часов`);
+    const md = fightMode(mode);
+    const r = await act<{ fightId: number }>("fight_start", { boss: id, solo, mode }, `${solo ? "Соло-бой" : "Бой"} с боссом ${boss?.name} · ${md.name}${md.hp > 1 ? ` (здоровье ×${md.hp})` : ""}. 8 часов`);
     if (r) void loadList();
     return !!r;
   };
@@ -368,6 +377,7 @@ export function BossScreen({ id }: { id: string }) {
           <div className="grow" style={{ minWidth: 0 }}>
             <b className="display boss-name ellipsis">{boss.name}</b>
           </div>
+          {(view?.mode ?? state?.fight?.mode) && (view?.mode ?? state?.fight?.mode) !== "pacan" && <span className={`chip mode-chip ${view?.mode ?? state?.fight?.mode}`}>{fightMode(view?.mode ?? state?.fight?.mode).name}</span>}
           {(view?.solo ?? state?.fight?.solo) ? <span className="chip violet">соло</span> : view && <span className="chip red">бьют: {view.fightingNow}</span>}
           <BossRulesHelp topic="boss" />
         </div>
@@ -503,7 +513,10 @@ export function BossScreen({ id }: { id: string }) {
           <span className="door-plate">
             <b className="door-plate-title">{boss.final ? "ФИНАЛ" : "НАГРАДА"}</b>
             <GainLine r={doorReward} size={14} />
-            {(!!boss.drop?.length || !!boss.wear) && <MysteryDrop size={14} count={bossItemsCount(boss, state) ?? undefined} />}
+            {(!!boss.drop?.length || (!!boss.wear && fightMode(mode).things)) && <MysteryDrop size={14} count={fightMode(mode).things ? bossItemsCount(boss, state) ?? undefined : undefined} />}
+            <span className="gain medal-chip" title={`Медаль «${MEDAL_NAMES[fightMode(mode).medal]}» за каждую победу; ${MEDAL_SET} — полный сет`}>
+              <BossCoin boss={boss} tier={fightMode(mode).medal} size={18} /><b className="num">{Math.min(MEDAL_SET, row?.medals?.[fightMode(mode).medal] ?? 0)}/{MEDAL_SET}</b>
+            </span>
           </span>
           {blocked && locked && <span className="door-lock"><Icon name="lock" size={30} /></span>}
         </button>
@@ -511,6 +524,24 @@ export function BossScreen({ id }: { id: string }) {
         <div className="door-flash" />
       </div>
       <div className="fight-bottom prefight-panel">
+        {/* three ways to fight him: more HP — a better medal; his things drop only in «Блатной» */}
+        <div className="mode-pick" role="radiogroup" aria-label="Режим боя">
+          {FIGHT_MODES.map((m) => {
+            const n = row?.medals?.[m.medal] ?? 0;
+            return (
+              <button key={m.id} type="button" role="radio" aria-checked={mode === m.id} className={`mode-btn ${m.id} ${mode === m.id ? "on" : ""}`} onClick={() => { haptic.tap(); setMode(m.id); }}>
+                <BossCoin boss={boss} tier={m.medal} size={30} dim={n === 0} />
+                <b className="display">{m.name}</b>
+                <small className="num">HP ×{m.hp}</small>
+                <small className="num">{Math.min(MEDAL_SET, n)}/{MEDAL_SET}{m.things ? " · вещи" : ""}</small>
+              </button>
+            );
+          })}
+        </div>
+        <div className="tiny muted center mode-hint">
+          {fightMode(mode).name}: здоровье {full(Math.round((row?.hpMax ?? boss.hp) * fightMode(mode).hp))} · медаль «{MEDAL_NAMES[fightMode(mode).medal]}»{fightMode(mode).things ? " · падают вещи босса" : ""}.
+          {" "}Сет из {MEDAL_SET} — +{medalBonus(boss, fightMode(mode).medal)} к урону «{weaponById(medalWeapon(boss))?.name}».
+        </div>
         <div className="row small" style={{ justifyContent: "space-between", gap: 6 }}>
           <span className="chip gold"><Icon name="clock" size={14} />8 часов</span>
           <span className="chip" title="Боёв сегодня из дневного лимита · побед над этим боссом за всё время">Сегодня {row?.fightsToday ?? 0}/{row?.fightsPerDay ?? 7} · всего {row?.myWins ?? 0}</span>

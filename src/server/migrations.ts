@@ -955,4 +955,18 @@ CREATE TABLE IF NOT EXISTS notes (
 CREATE INDEX IF NOT EXISTS notes_player ON notes (player_id, id DESC);
 `,
   },
+  {
+    // fight modes and boss medals (content/medals.ts): «Пацанский» ×1, «Блатной» ×3, «Авторитетный» ×6
+    id: "v2-054-fight-modes",
+    sql: `
+ALTER TABLE fights ADD COLUMN IF NOT EXISTS mode TEXT NOT NULL DEFAULT 'pacan';
+CREATE TABLE IF NOT EXISTS boss_medals (
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  boss_id TEXT NOT NULL,
+  tier TEXT NOT NULL,
+  n INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (player_id, boss_id, tier)
+);
+`,
+  },
 ];

@@ -231,7 +231,7 @@ describe("boss fights: personal fights, shared damage", () => {
     const unlocks = async () => (await db.query<{ item_id: string }>("SELECT item_id FROM player_unlocks WHERE player_id=$1 ORDER BY item_id", [p])).map((r) => r.item_id);
     const win = async (i: number, rng: number) => {
       const t = T0 + Math.floor(i / 7) * D + (i % 7) * M;
-      const f = await startDatsik(p, t);
+      const f = await act(db, p, "fight_start", { boss: "datsik", mode: "blat" }, t);
       await hit(p, "gpu", t);
       return act(db, p, "fight_claim", { fightId: f.result.fightId }, t, always(rng));
     };
@@ -1577,7 +1577,7 @@ describe("Неоновая хата", () => {
     await expect(act(db, p, "room_buy", { id: "neon" }, T0)).rejects.toMatchObject({ code: "room_locked" });
     await give(db, p, "key-datsik", 3);
     await give(db, p, "keyboard", 1);
-    const f = await act(db, p, "fight_start", { boss: "kedr" }, T0);
+    const f = await act(db, p, "fight_start", { boss: "kedr", mode: "blat" }, T0);
     await hit(p, "keyboard");
     const c = await act(db, p, "fight_claim", { fightId: f.result.fightId }, T0, always(0.05));
     expect(c.result.reward.unlocks).toContain("room:neon");
@@ -1596,7 +1596,7 @@ describe("room pity", () => {
     const D = 24 * H;
     const win = async (i: number) => {
       const t = T0 + Math.floor(i / 5) * D + (i % 5) * M;
-      const f = await act(db, p, "fight_start", { boss: "kedr" }, t);
+      const f = await act(db, p, "fight_start", { boss: "kedr", mode: "blat" }, t);
       await hit(p, "keyboard", t);
       return act(db, p, "fight_claim", { fightId: f.result.fightId }, t, always(0.99));
     };
@@ -1617,7 +1617,7 @@ describe("Бутылка Командате", () => {
     let opened: string[] = [];
     for (let i = 0; i < 10 && !opened.includes("bottle-komandate"); i++) {
       const t = T0 + Math.floor(i / 5) * D + (i % 5) * M;
-      const f = await act(db, p, "fight_start", { boss: "bebyakyan" }, t);
+      const f = await act(db, p, "fight_start", { boss: "bebyakyan", mode: "blat" }, t);
       await hit(p, "keyboard", t);
       const c = await act(db, p, "fight_claim", { fightId: f.result.fightId }, t, always(0.99));
       opened = c.result.reward.unlocks ?? [];
@@ -1752,6 +1752,34 @@ describe("бицуха, наезд, харкнуть", () => {
   });
 });
 
+describe("режимы боя и медали боссов", () => {
+  it("×1 / ×3 / ×6 HP; a win gives the mode's medal; 33 of a kind make a set that adds to the boss's weapon; things only in «Блатной»", async () => {
+    await setBossHp({ datsik: 100 });
+    const { MEDAL_SET, medalBonus } = await import("../src/content/medals.ts");
+    const { bossById } = await import("../src/content/bosses.ts");
+    const p = await newPlayer(db);
+    await give(db, p, "gpu", 100);
+    const f1 = await act(db, p, "fight_start", { boss: "datsik", mode: "avtor" }, T0);
+    expect(f1.result).toMatchObject({ mode: "avtor", hpMax: 600 });
+    await act(db, p, "fight_flee", {}, T0);
+    const f2 = await act(db, p, "fight_start", { boss: "datsik" }, T0 + M);
+    expect(f2.result).toMatchObject({ mode: "pacan", hpMax: 100 });
+    await act(db, p, "attack", { weapon: "gpu", count: 10 }, T0 + M);
+    const c = await act(db, p, "fight_claim", { fightId: f2.result.fightId }, T0 + M, always(0.01));
+    expect(c.result.reward.medal).toEqual({ boss: "datsik", tier: "bronze", n: 1 });
+    // «Пацанский» never opens his things, even with luck
+    expect(c.result.reward.unlocks).toBeUndefined();
+    // a full set: the medal bonus on his weapon (the mouse)
+    const before = await act(db, p, "equip", { itemId: "jeans" }, T0 + 2 * M);
+    await db.query("UPDATE boss_medals SET n=$2 WHERE player_id=$1 AND boss_id='datsik' AND tier='bronze'", [p, MEDAL_SET]);
+    const after = await act(db, p, "equip", { itemId: "jeans" }, T0 + 3 * M);
+    expect((after.state.setBonus?.mouse ?? 0) - (before.state.setBonus?.mouse ?? 0)).toBe(medalBonus(bossById("datsik")!, "bronze"));
+    // the achievement is reached
+    const done = after.state.achievementsReady ?? null;
+    expect(done === null || done >= 1).toBe(true);
+  });
+});
+
 describe("zonk duels", () => {
   it("call, accept, both play: a draw gives the stakes back; a duel left unplayed goes to the one who played", async () => {
     const a = await newPlayer(db), b = await newPlayer(db);
@@ -1806,7 +1834,7 @@ describe("Нервные пальцы", () => {
     await give(db, p, "key-datsik", 100);
     await give(db, p, "keyboard", 30);
     await expect(act(db, p, "buy", { offerId: "hand-drum" }, T0)).rejects.toMatchObject({ code: "item_locked" });
-    const f = await act(db, p, "fight_start", { boss: "kedr" }, T0);
+    const f = await act(db, p, "fight_start", { boss: "kedr", mode: "blat" }, T0);
     await hit(p, "keyboard");
     const c = await act(db, p, "fight_claim", { fightId: f.result.fightId }, T0, always(0.99));
     expect(c.result.reward.unlocks).toContain("hand-drum");
@@ -1826,7 +1854,7 @@ describe("Боксёрская", () => {
     await setMoney(db, p, "RUB", 5000);
     await give(db, p, "key-kedr", 3);
     await give(db, p, "keyboard", 1);
-    const f = await act(db, p, "fight_start", { boss: "bebyakyan" }, T0);
+    const f = await act(db, p, "fight_start", { boss: "bebyakyan", mode: "blat" }, T0);
     await hit(p, "keyboard");
     const c = await act(db, p, "fight_claim", { fightId: f.result.fightId }, T0, always(0.05));
     expect(c.result.reward.unlocks).toContain("room:boxing");

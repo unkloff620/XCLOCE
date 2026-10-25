@@ -2901,3 +2901,34 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .gi-b.ok { background: linear-gradient(180deg, #46e08f, #1f9c58); }
 .gi-b.no { background: linear-gradient(180deg, #ff7a7a, #c63b3b); }
 .gi-b:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
+
+/* ── boss medals: the face on a coin ── */
+.bcoin { position: relative; flex: none; display: inline-block; border-radius: 50%; padding: 9%; box-sizing: border-box;
+  background: repeating-conic-gradient(var(--m1) 0 6deg, var(--m2) 6deg 12deg); box-shadow: 0 0 0 1.5px #1a0f05, 0 2px 4px rgba(0, 0, 0, 0.5); }
+.bcoin.bronze { --m1: #b8733a; --m2: #8a4f22; --tone: #c98447; }
+.bcoin.silver { --m1: #d7dde6; --m2: #9aa3b0; --tone: #c9d1dc; }
+.bcoin.gold { --m1: #ffd45a; --m2: #c8901a; --tone: #f2c14a; }
+.bcoin-face { position: relative; display: block; width: 100%; height: 100%; border-radius: 50%; overflow: hidden; background: var(--tone); box-shadow: inset 0 0 0 1.5px rgba(0, 0, 0, 0.35), inset 0 2px 3px rgba(255, 255, 255, 0.4); }
+.bcoin-face img, .bcoin-face svg { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.25) brightness(1.05); mix-blend-mode: multiply; }
+.bcoin-face::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.45), transparent 55%), var(--tone); mix-blend-mode: overlay; }
+.bcoin-shine { position: absolute; inset: 0; border-radius: 50%; background: linear-gradient(135deg, rgba(255, 255, 255, 0.5), transparent 40%); pointer-events: none; }
+.bcoin.dim { filter: grayscale(1) brightness(0.55); opacity: 0.7; }
+.medal-chip { display: inline-flex; align-items: center; gap: 4px; }
+.medal-chip b { font-size: 12px; }
+
+/* fight modes on the boss screen */
+.mode-pick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.mode-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px; border-radius: 14px; border: 2.5px solid var(--line); box-shadow: 0 3px 0 var(--line);
+  background: var(--tex), linear-gradient(180deg, var(--panel2), var(--panel)); color: var(--ink); cursor: pointer; min-width: 0; }
+.mode-btn b { font-size: 11px; letter-spacing: 0.02em; white-space: nowrap; }
+.mode-btn small { font-size: 10px; color: var(--muted); display: inline-flex; align-items: center; gap: 2px; white-space: nowrap; }
+.mode-btn.on { transform: translateY(-2px); }
+.mode-btn.pacan.on { border-color: #c98447; box-shadow: 0 3px 0 var(--line), 0 0 14px rgba(201, 132, 71, 0.6); }
+.mode-btn.blat.on { border-color: #c9d1dc; box-shadow: 0 3px 0 var(--line), 0 0 14px rgba(201, 209, 220, 0.6); }
+.mode-btn.avtor.on { border-color: #f2c14a; box-shadow: 0 3px 0 var(--line), 0 0 16px rgba(242, 193, 74, 0.7); }
+.mode-hint { line-height: 1.3; }
+.chip.mode-chip.blat { color: #dfe6ef; border-color: rgba(201, 209, 220, 0.7); }
+.chip.mode-chip.avtor { color: #ffd45a; border-color: rgba(242, 193, 74, 0.8); }
+.ach-coin { flex: none; display: inline-flex; }
+.bk-medal.coin { display: inline-flex; flex-direction: column; align-items: center; gap: 1px; }
+.bk-medal.coin small { font-size: 9px; color: var(--muted); }

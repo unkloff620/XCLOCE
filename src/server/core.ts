@@ -177,6 +177,8 @@ export interface Granted {
   levelUp?: { from: number; to: number };
   /** things a boss drop opened in the shop (to be bought there) */
   unlocks?: string[];
+  /** the boss medal a won fight gave (content/medals.ts) and how many of that kind the player has now */
+  medal?: { boss: string; tier: "bronze" | "silver" | "gold"; n: number };
 }
 
 export async function grantReward(ctx: Ctx, r: Reward, reason: string): Promise<Granted> {
