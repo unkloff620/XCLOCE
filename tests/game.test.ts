@@ -217,7 +217,8 @@ describe("boss fights: personal fights, shared damage", () => {
   });
 
   it("Дацкоу opens his things in the shop (10% each, the 10th unlucky win for sure); they are bought there, not given", async () => {
-    await setBossHp({ datsik: 50 });
+    // things drop only in «Блатной» (HP ×3): 20 × 3 = 60, one video card
+    await setBossHp({ datsik: 20 });
     const p = await newPlayer(db);
     expect(await qty(db, p, "tee-white")).toBe(0); // players start with no clothes
     expect(await qty(db, p, "sneakers")).toBe(0);
