@@ -290,6 +290,7 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
 
 export function ProfileScreen() {
   const q = useSearchParams();
+  const router = useRouter();
   const { state, act, busy, toast } = useGame();
   const now = useNow();
   const [p, setP] = useState<Profile | null>(null);
@@ -305,6 +306,8 @@ export function ProfileScreen() {
   }, [id, state?.player.xp, state?.player.name, tick]);
   if (err) return <Empty>{err}</Empty>;
   if (!p) return null;
+  // my own profile: no room with buttons — straight into my «Личное дело»; closing it goes back
+  if (p.self) return <Dossier p={p} reload={reload} onClose={() => (window.history.length > 1 ? router.back() : router.push("/"))} />;
   const so = p.social;
   const spitIn = so && typeof so.spit === "number" && so.spit > 0 ? Math.max(0, so.spit - now) : 0;
   const flash = (kind: "pump" | "spit") => {
