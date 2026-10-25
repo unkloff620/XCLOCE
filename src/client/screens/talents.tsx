@@ -87,6 +87,8 @@ const stopTitle = (n: TalentStop) => (EXTRA_NAMES[n.target] ? n.name : `${itemBy
 /** the stops' places on the road: rows of three, the next row goes back the other way (a snake), top to bottom */
 const COLS = [18, 50, 82];
 const ROW_H = 112;
+/** the road's own width in its units (the SVG scales evenly with the map, so the gold fill is exact) */
+const ROAD_W = 360;
 const placeOf = (i: number) => {
   const row = Math.floor(i / 3), k = i % 3;
   return { x: COLS[row % 2 ? 2 - k : k], y: ROW_H / 2 + row * ROW_H };
@@ -179,19 +181,19 @@ export function TalentPanel() {
       {selI > cur && <p className="tiny muted center" style={{ margin: "4px 0 0" }}>Откроется, когда прокачаешь всё, что раньше на дорожке</p>}
 
       <div className="tp-road" ref={roadRef}>
-        <div className="lp-map tp-map" style={{ height: H }}>
-          <svg className="lp-path" viewBox={`0 0 100 ${H}`} preserveAspectRatio="none" aria-hidden="true">
+        <div className="lp-map tp-map" style={{ aspectRatio: `${ROAD_W} / ${H}` }}>
+          <svg className="lp-path" viewBox={`0 0 ${ROAD_W} ${H}`} aria-hidden="true">
             {pts.slice(1).map((b, k) => {
               const a = pts[k];
               const from = TALENT_PATH[k];
               const lv = stopLevel(wt, from);
               const fill = lv >= from.max ? 1 : k === cur ? lv / from.max : 0;
-              const d = `M${a.x} ${a.y} L${b.x} ${b.y}`;
+              const d = `M${(a.x / 100) * ROAD_W} ${a.y} L${(b.x / 100) * ROAD_W} ${b.y}`;
               return (
                 <g key={k}>
-                  <path d={d} className="lp-edge" vectorEffect="non-scaling-stroke" />
-                  <path d={d} className="lp-grey" vectorEffect="non-scaling-stroke" />
-                  <path d={d} className="lp-gold" vectorEffect="non-scaling-stroke" pathLength={1} strokeDasharray={`${fill} 1`} />
+                  <path d={d} className="lp-edge" />
+                  <path d={d} className="lp-grey" />
+                  <path d={d} className="lp-gold" pathLength={1} strokeDasharray={`${fill} 1`} />
                 </g>
               );
             })}
@@ -203,7 +205,7 @@ export function TalentPanel() {
             const p = pts[i];
             return (
               <button key={n.key} type="button" className={`lp-stop tp-stop ${cls} ${i === cur ? "now" : ""} ${i === selI ? "sel" : ""} ${i === cur && talents < n.cost ? "tired" : ""}`}
-                style={{ left: `${p.x}%`, top: p.y }} onClick={() => tap(i)} aria-label={`${stopTitle(n)}: ${lv}/${n.max}`}>
+                style={{ left: `${p.x}%`, top: `${(p.y / H) * 100}%` }} onClick={() => tap(i)} aria-label={`${stopTitle(n)}: ${lv}/${n.max}`}>
                 <span className="lp-disc"><StopArt n={n} size={34} /></span>
                 {KIND_TAG[n.kind] && <i className={`tp-kind ${n.kind}`}>{KIND_TAG[n.kind]}</i>}
                 {done ? <i className="lp-tag ok">✓</i>

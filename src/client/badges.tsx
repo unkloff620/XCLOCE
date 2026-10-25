@@ -80,7 +80,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
   // the нычки list: in its own window from the achievements, or right in the «Нычки» tab of the dossier
   const stashBody = (
           <div className="col" style={{ gap: 8 }}>
-            <div className="small muted center">Нычки находятся за энергию, потраченную в заданиях локаций: 1% за каждую ⚡ шага, а после 150 ⚡ без находки — наверняка. Они выпадают повторно и копятся. Есть все 4 нычки набора — нажми на картинку набора и забери награду. За 10, 50 и 100 собранных наборов — медали.</div>
+            <div className="small muted center">Нычки выпадают за задания в локациях.</div>
             {STASH_SETS_ORDERED.map((st, k, arr) => {
               const count = self ? state?.stashSets?.[st.n] ?? 0 : byId.get(`stashset-${st.n}-3`)?.progress ?? 0;
               const ready = self && st.items.every((it) => (stashQty.get(it.id) ?? 0) > 0);

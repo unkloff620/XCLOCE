@@ -3100,3 +3100,6 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .news-res.won { color: #1d7a3e; }
 .news-ico { flex: none; display: grid; place-items: center; width: 32px; }
 .tp-panel { display: flex; flex-direction: column; }
+/* the talent card is dark: light text on it, also inside the light windows */
+.tp-card { --ink: #fff3e3; --muted: #cdb497; color: var(--ink); }
+.tp-card .muted { color: #cdb497; }

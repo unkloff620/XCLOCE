@@ -22,7 +22,7 @@ import { HomeScene } from "../art/home-scene.tsx";
 import { ROOM_BACKDROP } from "../../content/home-scene.ts";
 import { BadgesPanel, type AchRow } from "../badges.tsx";
 import { CasesPanel, type CaseRow } from "../cases.tsx";
-import { TalentChip, TalentNext, TalentPanel } from "./talents.tsx";
+import { TalentPanel } from "./talents.tsx";
 import { EYE_COLORS, SKIN_TONES, type Look } from "../../content/home.ts";
 import { clock, full, money, short } from "../format.ts";
 
@@ -48,6 +48,8 @@ interface Profile {
   social?: Social;
   /** «Новости» of the own dossier: who pumped, spat, ran into me */
   news?: NewsRow[] | null;
+  /** talents put in on the path */
+  talentsIn?: number;
 }
 interface NewsRow { kind: string; fromId: number; from: string; photo: string | null; won: boolean | null; at: number }
 
@@ -204,7 +206,6 @@ function Brawl({ res, name, onClose }: { res: { won: boolean; mine: number; thei
 
 /** «Личное дело»: the folder with tabs — the summary, achievements, the cases on bosses, нычки, settings */
 function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; reload: () => void }) {
-  const { state } = useGame();
   const [tab, setTab] = useState<"sum" | "ach" | "cases" | "tal" | "stash" | "news" | "set">("sum");
   const [renaming, setRenaming] = useState(false);
   const s = p.stats;
@@ -251,6 +252,7 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
               <div className="dos-facts">
                 <span><small>Авторитет</small><b className="num"><Icon name="xp" size={16} />{full(p.xp)}</b></span>
                 <span><small>Бицуха</small><b className="num"><BicepsArt size={18} />{full(p.social?.biceps ?? 0)}</b></span>
+                <span><small>Таланты</small><b className="num"><Icon name="talent" size={16} />{full(p.talentsIn ?? 0)}</b></span>
                 <span><small>В игре с</small><b>{shortDate(p.firstSeen)}</b></span>
                 <span><small>Дней в игре</small><b className="num">{full(p.activeDays)}</b></span>
                 <span><small>Был в игре</small><b>{shortDate(p.lastSeen)}</b></span>
@@ -268,13 +270,6 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
                   {p.energy !== null && (
                     <div className="balance-row"><Icon name="energy" size={24} /><span className="balance-name">Энергия</span><b className="balance-val num">{full(p.energy)}</b></div>
                   )}
-                </div>
-              )}
-              {p.self && state && (
-                <div className="tal-row">
-                  <TalentChip n={state.player.talents} />
-                  <div className="grow"><TalentNext dmg={state.player.talentDamage} /></div>
-                  <button className="btn gold sm tal-go" onClick={() => setTab("tal")}>Таланты ›</button>
                 </div>
               )}
               <div className="stat-grid">

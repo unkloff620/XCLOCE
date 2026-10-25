@@ -15,6 +15,7 @@ import { gamesView, pokerView, upgradedView, upgradeSpinsView } from "./games.ts
 import { bjInviteCount, invitesFor } from "./blackjack.ts";
 import { requestsView } from "./clans.ts";
 import { homeView, weaponTalents } from "./home.ts";
+import { talentsSpent } from "../../content/talents.ts";
 import { tasksHint } from "./locations.ts";
 import { questsView } from "./quests.ts";
 import { notifyView, scheduleEnergy } from "./notify.ts";
@@ -159,6 +160,8 @@ export async function profileView(q: Queryable, viewer: number, pid: number, cfg
     social: await socialView(q, viewer, pid, now),
     // «Новости»: only in the own dossier
     news: self ? await newsView(q, pid, now) : null,
+    // talents put in on the path (what counts in the dossier)
+    talentsIn: talentsSpent(await weaponTalents(q, pid)),
     // нычки the player asks for; a visitor also sees how many of them he has himself and his gifts left today
     stashWish: await stashWish(q, pid),
     stashGive: self ? null : await (async () => {
