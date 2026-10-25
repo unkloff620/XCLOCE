@@ -15,6 +15,7 @@
  * brows drawn one by one (browL/browR) turn at their inner ends for the emotions.
  */
 import { useEffect, useRef, type CSSProperties, type RefObject } from "react";
+import { usePuppet } from "./boss-puppet.ts";
 import { BOSS_RIGS } from "./boss-rig-data.ts";
 
 type Part = { x: number; y: number; w: number; h: number; pivot?: readonly number[]; frames?: number };
@@ -148,17 +149,24 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
   const dazed = hpShare < BEATEN_BELOW;
   const svgRef = useRef<SVGSVGElement>(null);
   useDazed(svgRef, dazed);
+  // the puppet warp (soft joints) for the full boss; the small busts on the list stay plain SVG
+  const puppet = !bust && !!BOSS_RIGS[id];
+  const wrapRef = useRef<HTMLDivElement>(null);
+  usePuppet(wrapRef, id, { w: BOSS_RIGS[id]?.w ?? 1, h: BOSS_RIGS[id]?.h ?? 1 }, puppet);
   const rig = BOSS_RIGS[id];
   if (!rig) return null;
   const P = rig.parts;
-  const img = (p: string, extra?: string) => {
+  // pp: the picture is warped by the puppet (boss-puppet.ts) on the back or front canvas; the SVG copy hides then
+  const img = (p: string, extra?: string, pp?: "back" | "front") => {
     const r: Part | undefined = P[p];
-    return r ? <image className={extra} href={`/bosses/${id}/rig/${p}.webp`} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" /> : null;
+    return r ? <image className={pp && puppet ? `pp ${extra ?? ""}` : extra} data-pp={pp && puppet ? pp : undefined} data-pp-body={pp && puppet && p === "body" ? "1" : undefined} href={`/bosses/${id}/rig/${p}.webp`} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" /> : null;
   };
   const origin = (p: string) => {
     const pv = P[p]?.pivot ?? [rig.w / 2, rig.h];
     return { transformOrigin: `${pv[0]}px ${pv[1]}px`, transformBox: "view-box" as const };
   };
+  // a joint for the puppet: the bone group's pivot
+  const joint = (p: string) => (P[p]?.pivot ? { "data-pivot": `${P[p].pivot![0]},${P[p].pivot![1]}` } : {});
   // the punch at the screen (class "strike-l/r" on the arena): which way the limb turns around its joint so the fist
   // goes towards the middle (a fist above/below the joint swings sideways; a fist beside it goes up)
   const tilt = (limb: string, fist: string, deg: number): CSSProperties => {
@@ -175,18 +183,18 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
   // whole arm: the sleeve swings at the shoulder, the hand inside it at the wrist.
   // `only`: "upper" — just the sleeve (drawn behind the body), "lower" — the same joints without the sleeve (in front):
   // a boss in SPLIT_BEHIND has its shoulder behind the body but the forearm and the hand (the balalaika) in front of all
-  const arm = (side: "L" | "R", only?: "upper" | "lower") =>
+  const arm = (side: "L" | "R", only?: "upper" | "lower", layer: "back" | "front" = "front") =>
     P[`arm${side}`] ? (
-      <g className={`br-arm br-arm-${side.toLowerCase()}`} style={{ ...origin(`arm${side}`), ...tilt(`arm${side}`, `hand${side}`, 24) }}>
-        {only !== "lower" && img(`arm${side}`)}
+      <g className={`br-arm br-arm-${side.toLowerCase()}`} {...joint(`arm${side}`)} style={{ ...origin(`arm${side}`), ...tilt(`arm${side}`, `hand${side}`, 24) }}>
+        {only !== "lower" && img(`arm${side}`, undefined, layer)}
         {only === "upper" ? null : P[`low${side}`] ? (
           // three pieces (Мугонатор): the forearm bends at the elbow, the fist turns at the wrist inside it
-          <g className={`br-low br-low-${side.toLowerCase()}`} style={origin(`low${side}`)}>
-            {img(`low${side}`)}
-            <g className={`br-hand br-hand-${side.toLowerCase()}`} style={origin(`hand${side}`)}>{img(`hand${side}`)}</g>
+          <g className={`br-low br-low-${side.toLowerCase()}`} {...joint(`low${side}`)} style={origin(`low${side}`)}>
+            {img(`low${side}`, undefined, layer)}
+            <g className={`br-hand br-hand-${side.toLowerCase()}`} {...joint(`hand${side}`)} style={origin(`hand${side}`)}>{img(`hand${side}`, undefined, layer)}</g>
           </g>
         ) : (
-          <g className={`br-hand br-hand-${side.toLowerCase()}`} style={origin(`hand${side}`)}>{img(`hand${side}`)}</g>
+          <g className={`br-hand br-hand-${side.toLowerCase()}`} {...joint(`hand${side}`)} style={origin(`hand${side}`)}>{img(`hand${side}`, undefined, layer)}</g>
         )}
       </g>
     ) : null;
@@ -217,14 +225,14 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
   const clipEyes = !!P.armL && !!P.pupils && !!P.eyes;
   const maskId = `br-eyes-${id}`;
   // bosses with a full face (Кедр): pupils glance around, brows and mouth change when he is hit (class "ouch" on the arena)
-  return (
+  const svgEl = (
     <svg key={id} ref={svgRef} className={`boss-rig rig-${baseId} ${id.endsWith("-beaten") ? "beaten" : ""} ${dazed ? "dazed" : ""}`} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} width="100%" height="100%" preserveAspectRatio={bust ? "xMidYMin slice" : "xMidYMax meet"} aria-hidden="true">
       {frameCss && <style>{frameCss}</style>}
       <g className="br-breath" style={{ transformOrigin: `${rig.w / 2}px ${rig.h}px`, transformBox: "view-box" }}>
-        {P.tail && <g className="br-tail" style={origin("tail")}>{img("tail")}</g>}
-        {behind && arm(behind, split ? "upper" : undefined)}
-        {img("body")}
-        <g className="br-head" style={origin("head")}>
+        {P.tail && <g className="br-tail" {...joint("tail")} style={origin("tail")}>{img("tail", undefined, "back")}</g>}
+        {behind && arm(behind, split ? "upper" : undefined, "back")}
+        {img("body", undefined, "back")}
+        <g className="br-head" {...joint("head")} style={origin("head")}>
           {img("head", P["head-open"] ? "br-face-closed" : undefined)}
           {/* a jaw of its own (Бабафей): the head with a hole for the mouth over the throat and both rows of teeth —
               the lower row grinds side to side and drops when he opens his mouth (screens.css «Бабафей») */}
@@ -255,12 +263,20 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
           {dazed && P.eyes && <Sweat eyes={P.eyes} id={id} />}
         </g>
         {img("collar")}
-        {P.foreL && <g className="br-fist-l" style={{ ...origin("foreL"), ...tilt("foreL", "foreL", 9) }}>{img("foreL")}</g>}
-        {P.foreR && <g className="br-fist-r" style={{ ...origin("foreR"), ...tilt("foreR", "foreR", 9) }}>{img("foreR")}</g>}
+        {P.foreL && <g className="br-fist-l" {...joint("foreL")} style={{ ...origin("foreL"), ...tilt("foreL", "foreL", 9) }}>{img("foreL", undefined, "front")}</g>}
+        {P.foreR && <g className="br-fist-r" {...joint("foreR")} style={{ ...origin("foreR"), ...tilt("foreR", "foreR", 9) }}>{img("foreR", undefined, "front")}</g>}
         {behind !== "R" && arm("R")}
         {behind !== "L" && arm("L")}
         {split && behind && arm(behind, "lower")}
       </g>
     </svg>
+    );
+  if (!puppet) return svgEl;
+  return (
+    <div ref={wrapRef} key={id} className={`br-pup rig-${baseId}-pup`}>
+      <canvas className="br-pup-back" aria-hidden="true" />
+      {svgEl}
+      <canvas className="br-pup-front" aria-hidden="true" />
+    </div>
   );
 }
