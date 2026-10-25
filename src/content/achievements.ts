@@ -47,8 +47,8 @@ export const TIER_REWARDS: Record<AchTier, Reward> = {
   1: { currencies: { RUB: 500 }, xp: 1_000 },
   2: { currencies: { USD: 10 }, xp: 10_000, items: [{ id: "keyboard", qty: 2 }] },
   3: { currencies: { USD: 30 }, xp: 50_000, items: [{ id: "gpu", qty: 2 }] },
-  4: { currencies: { SOL: 10 }, xp: 150_000, items: [{ id: "rug-pull-gun", qty: 1 }] },
-  5: { currencies: { SOL: 30 }, xp: 500_000, items: [{ id: "rug-pull-gun", qty: 3 }] },
+  4: { currencies: { USD: 18 }, xp: 150_000, items: [{ id: "rug-pull-gun", qty: 1 }] },
+  5: { currencies: { USD: 53 }, xp: 500_000, items: [{ id: "rug-pull-gun", qty: 3 }] },
 };
 
 export interface AchievementDef {
@@ -133,9 +133,9 @@ export const achievementById = (id: string) => ACHIEVEMENTS.find((a) => a.id ===
 
 /** Prizes for the weekly damage top-10, by place (index 0 = 1st place). */
 export const WEEKLY_PRIZES: Reward[] = [
-  { currencies: { SOL: 10, USD: 30 }, xp: 300_000, items: [{ id: "rug-pull-gun", qty: 2 }] },
-  { currencies: { SOL: 6, USD: 20 }, xp: 200_000, items: [{ id: "rug-pull-gun", qty: 1 }] },
-  { currencies: { SOL: 4, USD: 15 }, xp: 150_000, items: [{ id: "gpu", qty: 2 }] },
+  { currencies: { USD: 48 }, xp: 300_000, items: [{ id: "rug-pull-gun", qty: 2 }] },
+  { currencies: { USD: 31 }, xp: 200_000, items: [{ id: "rug-pull-gun", qty: 1 }] },
+  { currencies: { USD: 22 }, xp: 150_000, items: [{ id: "gpu", qty: 2 }] },
   ...Array.from({ length: 7 }, () => ({ currencies: { USD: 10 }, xp: 50_000, items: [{ id: "gpu", qty: 1 }] }) as Reward),
 ];
 /** Every member of the top-10 clans of the week (by the members' damage that week); places 4–10 get the same. */

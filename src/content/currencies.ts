@@ -13,10 +13,11 @@ export interface CurrencyDef {
 
 export const CURRENCY_DEFS: Record<Currency, CurrencyDef> = {
   RUB: { id: "RUB", name: "Рубли", decimals: 0, rub: 1 },
-  // whole numbers only (v2-055 rescaled SOL ×100 and BTC ×10 000 so the old fractions became integers at the same worth)
-  USD: { id: "USD", name: "Доллары", decimals: 0, rub: 90 },
-  SOL: { id: "SOL", name: "Solana", decimals: 0, rub: 150 },
-  BTC: { id: "BTC", name: "Bitcoin", decimals: 0, rub: 600 },
+  // whole numbers only; close to the real rates: 1 USD = 85 ₽, 1 SOL = 120 $, 1 BTC = 85 000 $.
+  // SOL and BTC are for big rewards and purchases (v2-056 moved the old SOL/BTC rewards, prices and balances to USD)
+  USD: { id: "USD", name: "Доллары", decimals: 0, rub: 85 },
+  SOL: { id: "SOL", name: "Solana", decimals: 0, rub: 10_200 },
+  BTC: { id: "BTC", name: "Bitcoin", decimals: 0, rub: 7_225_000 },
 };
 
 /** The exchanger is an event: it works one Moscow day out of every EXCHANGE_EVERY_DAYS. */

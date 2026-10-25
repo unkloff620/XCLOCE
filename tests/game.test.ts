@@ -136,16 +136,16 @@ describe("boss fights: personal fights, shared damage", () => {
     const sb = await act(db, b, "fight_claim", { fightId: fb.result.fightId }, T0, always(0.99));
     expect(sb.result).toMatchObject({ status: "won", share: 1, key: true });
     expect(await qty(db, b, "key-datsik")).toBe(1);
-    expect(await wallet(db, b, "SOL")).toBe(2);
+    expect(await wallet(db, b, "USD")).toBe(4);
 
     const sc = await act(db, c, "fight_claim", { fightId: fc.result.fightId }, T0, always(0.99));
     expect(sc.result).toMatchObject({ share: 0.6, key: true });
-    expect(await wallet(db, c, "SOL")).toBe(1); // 0.6 × 2 → whole SOL only, rounded down
+    expect(await wallet(db, c, "USD")).toBe(2); // 0.6 × 4 → whole dollars only, rounded down
     expect(await qty(db, c, "key-datsik")).toBe(1);
 
     const sd = await act(db, d, "fight_claim", { fightId: fd.result.fightId }, T0, always(0.99));
     expect(sd.result).toMatchObject({ share: 0, key: false });
-    expect(await wallet(db, d, "SOL")).toBe(0);
+    expect(await wallet(db, d, "USD")).toBe(0);
     expect(await qty(db, d, "key-datsik")).toBe(0);
 
     const va = await fightView(db, a, fa.result.fightId, 0, T0);
@@ -512,7 +512,7 @@ describe("shop and exchange", () => {
     while (!exchangeWindow(open).open) open += 24 * H;
     await expect(act(db, p, "exchange", { from: "RUB", to: "USD", amount: 900 }, open + 24 * H)).rejects.toMatchObject({ code: "exchange_closed" });
     const r = await act(db, p, "exchange", { from: "RUB", to: "USD", amount: 900 }, open);
-    expect(r.result.got).toBe(9); // 9.5 → whole dollars only
+    expect(r.result.got).toBe(10); // 900 / 85 × 0.95 = 10.06 → whole dollars only
     expect(await wallet(db, p, "RUB")).toBe(0);
     await expect(act(db, p, "exchange", { from: "RUB", to: "USD", amount: 1000 }, open)).rejects.toMatchObject({ code: "no_money" });
     await expect(act(db, p, "exchange", { from: "RUB", to: "USD", amount: 10 }, open)).rejects.toMatchObject({ code: "too_small" });
@@ -662,7 +662,7 @@ describe("selling, nickname, slot machine 777", () => {
     const s1 = await act(db, p, "slots_spin", {}, T0, always(0)); // lowest roll → first outcome = jackpot
     expect(s1.result).toMatchObject({ outcome: "jackpot", reels: ["seven", "seven", "seven"], left: 2 });
     expect(await qty(db, p, "gpu")).toBe(1);
-    expect(await wallet(db, p, "SOL")).toBe(7);
+    expect(await wallet(db, p, "USD")).toBe(12);
     const s2 = await act(db, p, "slots_spin", {}, T0 + 10 * M, always(0.999));
     expect(s2.result.kind).toBe("miss");
     expect(new Set(s2.result.reels).size).toBe(3);
@@ -837,7 +837,7 @@ describe("home: equipment, rooms, look, help", () => {
 
   it("room pieces: desk, monitors and chair are bought one by one, in any order", async () => {
     const p = await newPlayer(db);
-    await setMoney(db, p, "SOL", 100);
+    await setMoney(db, p, "USD", 200);
     await setMoney(db, p, "RUB", 3000);
     // the middle monitor first, without the right and the left ones
     const m3 = await act(db, p, "piece_buy", { id: "monitor2", piece: 3 }, T0);

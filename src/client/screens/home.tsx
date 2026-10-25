@@ -196,8 +196,8 @@ export function HomeScreen() {
             <HelpList title="Валюта (вверху)" rows={[
               { key: "RUB", icon: <Icon name="RUB" size={40} />, name: CURRENCY_DEFS.RUB.name, hint: "Основная валюта: задания, двор, боссы. Оружие и мелочи в магазине." },
               { key: "USD", icon: <Icon name="USD" size={40} />, name: CURRENCY_DEFS.USD.name, hint: "Награды за боссов и локации. Видеокарты, одежда, энергия." },
-              { key: "SOL", icon: <Icon name="SOL" size={40} />, name: CURRENCY_DEFS.SOL.name, hint: "Редкая валюта за сильных боссов. Rug Pull Gun и большие пакеты энергии." },
-              { key: "BTC", icon: <Icon name="BTC" size={40} />, name: CURRENCY_DEFS.BTC.name, hint: "Самая ценная валюта — за последних боссов." },
+              { key: "SOL", icon: <Icon name="SOL" size={40} />, name: CURRENCY_DEFS.SOL.name, hint: "Редкая валюта для крупных наград и покупок. 1 SOL ≈ 120 $, достать можно в обменнике." },
+              { key: "BTC", icon: <Icon name="BTC" size={40} />, name: CURRENCY_DEFS.BTC.name, hint: "Самая ценная валюта — для крупных наград и покупок. 1 BTC ≈ 85 000 $." },
               { key: "xp", icon: <Icon name="xp" size={40} />, name: "Авторитет", hint: "Опыт за задания, боссов и бонусы. Полоса вверху — прогресс до следующего уровня." },
               { key: "en", icon: <Icon name="energy" size={40} />, name: "Энергия", hint: "Тратится на задания в локациях и сама восстанавливается. Нажми на неё, чтобы докупить." },
             ]} />

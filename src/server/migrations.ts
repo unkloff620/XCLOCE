@@ -996,4 +996,22 @@ DELETE FROM config WHERE key = 'daily' AND (value::text LIKE '%"SOL"%' OR value:
 UPDATE config SET value = value - 'rpg-1' - 'energy-500' - 'gold-chain' WHERE key = 'prices' AND jsonb_typeof(value) = 'object';
 `,
   },
+  {
+    // SOL and BTC leave the rewards and prices (they are for big rewards later, at real-like rates): balances and open prizes go to USD at the worth they had
+    id: "v2-056-sol-btc-to-usd",
+    sql: `
+INSERT INTO wallets (player_id, currency, amount)
+SELECT player_id, 'USD', FLOOR(SUM(CASE currency WHEN 'SOL' THEN amount * 150 WHEN 'BTC' THEN amount * 600 ELSE 0 END) / 85)
+FROM wallets WHERE currency IN ('SOL', 'BTC') AND amount > 0 GROUP BY player_id
+HAVING FLOOR(SUM(CASE currency WHEN 'SOL' THEN amount * 150 WHEN 'BTC' THEN amount * 600 ELSE 0 END) / 85) > 0
+ON CONFLICT (player_id, currency) DO UPDATE SET amount = wallets.amount + EXCLUDED.amount;
+UPDATE wallets SET amount = 0 WHERE currency IN ('SOL', 'BTC');
+UPDATE prizes SET reward = jsonb_set(reward, '{currencies}',
+  ((reward -> 'currencies') - 'SOL' - 'BTC') || jsonb_build_object('USD',
+    COALESCE((reward -> 'currencies' ->> 'USD')::numeric, 0)
+    + GREATEST(1, ROUND((COALESCE((reward -> 'currencies' ->> 'SOL')::numeric, 0) * 150 + COALESCE((reward -> 'currencies' ->> 'BTC')::numeric, 0) * 600) / 85))))
+WHERE claimed_at IS NULL AND jsonb_typeof(reward -> 'currencies') = 'object' AND ((reward -> 'currencies') ? 'SOL' OR (reward -> 'currencies') ? 'BTC');
+DELETE FROM config WHERE key = 'exchange.rub';
+`,
+  },
 ];

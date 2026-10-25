@@ -21,9 +21,9 @@ export interface SlotOutcome {
 }
 
 export const SLOT_OUTCOMES: SlotOutcome[] = [
-  { id: "jackpot", title: "КУШ! 777", triple: "seven", kind: "jackpot", weight: 1, reward: { currencies: { RUB: 7777, SOL: 7 }, items: [{ id: "gpu", qty: 1 }, { id: "keyboard", qty: 3 }] } },
-  { id: "bar", title: "Три BAR", triple: "bar", kind: "triple", weight: 1, reward: { currencies: { BTC: 2 } } },
-  { id: "bell", title: "Три колокола", triple: "bell", kind: "triple", weight: 2, reward: { currencies: { SOL: 2 } } },
+  { id: "jackpot", title: "КУШ! 777", triple: "seven", kind: "jackpot", weight: 1, reward: { currencies: { RUB: 7777, USD: 12 }, items: [{ id: "gpu", qty: 1 }, { id: "keyboard", qty: 3 }] } },
+  { id: "bar", title: "Три BAR", triple: "bar", kind: "triple", weight: 1, reward: { currencies: { USD: 14 } } },
+  { id: "bell", title: "Три колокола", triple: "bell", kind: "triple", weight: 2, reward: { currencies: { USD: 4 } } },
   { id: "melon", title: "Три арбуза", triple: "melon", kind: "triple", weight: 3, reward: { items: [{ id: "keyboard", qty: 2 }] } },
   { id: "grape", title: "Три грозди", triple: "grape", kind: "triple", weight: 5, reward: { currencies: { USD: 7 } } },
   { id: "lemon", title: "Три лимона", triple: "lemon", kind: "triple", weight: 6, reward: { items: [{ id: "keyboard", qty: 3 }] } },

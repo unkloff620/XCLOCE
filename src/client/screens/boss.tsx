@@ -26,6 +26,9 @@ import { BOXERS, useBossStrike } from "../fx/boss-strike.tsx";
 import { FIGHT_MODES, MEDAL_NAMES, MEDAL_SET, fightMode, medalBonus, medalWeapon, type FightMode } from "../../content/medals.ts";
 import { BossCoin } from "../art/boss-coin.tsx";
 
+/** the mode buttons on the door wall are short: the full names do not fit */
+const MODE_SHORT: Record<FightMode, string> = { pacan: "Пац.", blat: "Блат.", avtor: "Авто." };
+
 const POLL_MS = 1500;
 /** a hit stays in the arena feed this long */
 const FEED_MS = 5000;
@@ -321,17 +324,14 @@ export function BossScreen({ id }: { id: string }) {
 
   // «Соло»: the same fight, but only my own hits take the boss's HP — wins count for the «Соло» badge
   // the fight mode: «Пацанский» ×1 HP, «Блатной» ×3, «Авторитетный» ×6 (content/medals.ts); remembered per boss
-  const [mode, setModeRaw] = useState<FightMode>("pacan");
+  // four ways, one at a time: three modes or «Соло» (a fight alone at normal HP); remembered per boss
+  const [pick, setPickRaw] = useState<FightMode | "solo">("pacan");
   useEffect(() => {
-    try { const m = localStorage.getItem(`xc-mode-${id}`); if (m === "pacan" || m === "blat" || m === "avtor") setModeRaw(m); } catch { /* storage blocked */ }
+    try { const m = localStorage.getItem(`xc-mode-${id}`); if (m === "pacan" || m === "blat" || m === "avtor" || m === "solo") setPickRaw(m); } catch { /* storage blocked */ }
   }, [id]);
-  const setMode = (m: FightMode) => { setModeRaw(m); try { localStorage.setItem(`xc-mode-${id}`, m); } catch { /* storage blocked */ } };
-  // «Соло» is only picked here (on/off, remembered per boss); the fight starts with a tap on the door
-  const [soloPick, setSoloRaw] = useState(false);
-  useEffect(() => {
-    try { setSoloRaw(localStorage.getItem(`xc-solo-${id}`) === "1"); } catch { /* storage blocked */ }
-  }, [id]);
-  const setSolo = (v: boolean) => { setSoloRaw(v); try { localStorage.setItem(`xc-solo-${id}`, v ? "1" : "0"); } catch { /* storage blocked */ } };
+  const setPick = (m: FightMode | "solo") => { setPickRaw(m); try { localStorage.setItem(`xc-mode-${id}`, m); } catch { /* storage blocked */ } };
+  const soloPick = pick === "solo";
+  const mode: FightMode = soloPick ? "pacan" : pick;
   const start = async (solo = false) => {
     const md = fightMode(mode);
     const r = await act<{ fightId: number }>("fight_start", { boss: id, solo, mode }, `${solo ? "Соло-бой" : "Бой"} с боссом ${boss?.name} · ${md.name}${md.hp > 1 ? ` (здоровье ×${md.hp})` : ""}. 8 часов`);
@@ -499,20 +499,23 @@ export function BossScreen({ id }: { id: string }) {
             <span className="tiny">вход<br />свободный</span>
           )}
         </div>
-        {/* how to fight him, a column of words on the wall under the pass: three modes and «Соло» (picking only — the door starts the fight) */}
+        {/* how to fight him: four buttons on the wall under the pass — three modes and «Соло», one of them (picking only — the door starts the fight) */}
         {!locked && (
-          <div className="door-side" role="group" aria-label="Режим боя">
+          <div className="door-side" role="radiogroup" aria-label="Режим боя">
             {FIGHT_MODES.map((m) => (
-              <button key={m.id} type="button" role="radio" aria-checked={mode === m.id} className={`door-word ${m.id} ${mode === m.id ? "on" : ""}`}
-                disabled={door !== "closed"} onClick={() => { haptic.tap(); setMode(m.id); }}
-                title={`${m.name}: здоровье ×${m.hp} · медаль «${MEDAL_NAMES[m.medal]}»${m.things ? " · падают вещи" : ""}`}>
-                {m.name}
+              <button key={m.id} type="button" role="radio" aria-checked={pick === m.id} className={`door-word ${m.id} ${pick === m.id ? "on" : ""}`}
+                disabled={door !== "closed"} onClick={() => { haptic.tap(); setPick(m.id); }}
+                aria-label={`${m.name}: здоровье ×${m.hp}, медаль «${MEDAL_NAMES[m.medal]}»${m.things ? ", падают вещи" : ""}`}>
+                {MODE_SHORT[m.id]}
               </button>
             ))}
-            <button type="button" aria-pressed={soloPick} className={`door-word solo ${soloPick ? "on" : ""}`} disabled={door !== "closed"}
-              onClick={() => { haptic.tap(); setSolo(!soloPick); }}
-              title="Соло: урон других игроков не засчитывается, только твой" aria-label={`Соло — бой в одиночку${(row?.mySoloWins ?? 0) > 0 ? ", уже побеждён соло" : ""}`}>
-              Соло{(row?.mySoloWins ?? 0) > 0 && <span className="door-word-star" aria-hidden="true">★</span>}
+            <button type="button" role="radio" aria-checked={soloPick} className={`door-word solo ${soloPick ? "on" : ""}`} disabled={door !== "closed"}
+              onClick={() => { haptic.tap(); setPick("solo"); }}
+              aria-label={`Соло — бой в одиночку, урон других не засчитывается${(row?.mySoloWins ?? 0) > 0 ? ", уже побеждён соло" : ""}`}>
+              Соло
+              <svg className={`door-solo-star ${(row?.mySoloWins ?? 0) > 0 ? "on" : ""}`} viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 2.6l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z" />
+              </svg>
             </button>
           </div>
         )}
@@ -538,7 +541,7 @@ export function BossScreen({ id }: { id: string }) {
       </div>
       <div className="fight-bottom prefight-panel">
         <div className="tiny muted center mode-hint">
-          {soloPick ? "Соло · " : ""}{fightMode(mode).name}: здоровье {full(Math.round((row?.hpMax ?? boss.hp) * fightMode(mode).hp))} · медаль «{MEDAL_NAMES[fightMode(mode).medal]}»{fightMode(mode).things ? " · падают вещи босса" : ""}.
+          {soloPick ? "Соло (бьёшь один): здоровье" : `${fightMode(mode).name}: здоровье`} {full(Math.round((row?.hpMax ?? boss.hp) * fightMode(mode).hp))} · медаль «{MEDAL_NAMES[fightMode(mode).medal]}»{fightMode(mode).things ? " · падают вещи босса" : ""}.
           {" "}Сет из {MEDAL_SET} — +{medalBonus(boss, fightMode(mode).medal)} к урону «{weaponById(medalWeapon(boss))?.name}».
         </div>
         <div className="row small" style={{ justifyContent: "space-between", gap: 6 }}>

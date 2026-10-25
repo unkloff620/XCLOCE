@@ -13,7 +13,7 @@ export const DAILY_REWARDS: Reward[] = [
   { currencies: { USD: 10 }, energy: 40, xp: 1_500 },
   { currencies: { USD: 15 }, items: [{ id: "gpu", qty: 1 }], xp: 2_500 },
   // 7th day: the rare one — a legendary weapon
-  { currencies: { SOL: 3 }, items: [{ id: "rug-pull-gun", qty: 1 }], xp: 5_000 },
+  { currencies: { USD: 5 }, items: [{ id: "rug-pull-gun", qty: 1 }], xp: 5_000 },
 ];
 
 /*
@@ -23,7 +23,7 @@ export const DAILY_REWARDS: Reward[] = [
 export const STREAK_BONUS: { at: number; reward: Reward }[] = [
   { at: 7, reward: { items: [{ id: "poker-chip", qty: 5 }] } },
   { at: 14, reward: { currencies: { USD: 20 }, items: [{ id: "gpu", qty: 2 }, { id: "poker-chip", qty: 5 }] } },
-  { at: 30, reward: { currencies: { SOL: 10 }, items: [{ id: "rug-pull-gun", qty: 3 }, { id: "poker-chip", qty: 15 }] } },
+  { at: 30, reward: { currencies: { USD: 18 }, items: [{ id: "rug-pull-gun", qty: 3 }, { id: "poker-chip", qty: 15 }] } },
 ];
 /** the streak bonus for reaching `streak` days in a row, if any (30, 60, 90… all get the 30-day one) */
 export function streakBonus(streak: number): Reward | null {
