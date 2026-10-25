@@ -30,7 +30,7 @@ PIVOT_BY_BOSS = {
              "armR": [755.0, 290.0], "lowR": [750.0, 405.0], "handR": [990.0, 484.0], "tail": [460.0, 690.0]},
     # Бабафей: shoulders, elbows, wrists (the balalaika turns in the raised hand); each brow at its inner end
     "babafey": {"armL": [379.5, 506.2], "lowL": [267.0, 725.0], "handL": [160.8, 587.5],
-                "armR": [704.5, 500.0], "lowR": [831.0, 806.0], "handR": [954.5, 837.5],
+                "armR": [704.5, 500.0], "lowR": [817.0, 700.0], "handR": [954.5, 837.5],
                 "browL": [535.5, 229.1], "browR": [556.6, 229.1]},  # printed by assemble-babafey.py
 }
 
