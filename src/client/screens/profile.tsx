@@ -219,7 +219,7 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
     ...(p.self ? [{ id: "set" as const, label: "Настройки" }] : []),
   ];
   return (
-    <Modal onClose={onClose} wide>
+    <Modal onClose={onClose} page>
       <div className="dos">
         <div className="dos-head">
           <Avatar name={p.name} photo={p.photo} size={44} frame={p.frame} />

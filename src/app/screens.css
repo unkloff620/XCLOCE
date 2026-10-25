@@ -3103,3 +3103,10 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 /* the talent card is dark: light text on it, also inside the light windows */
 .tp-card { --ink: #fff3e3; --muted: #cdb497; color: var(--ink); }
 .tp-card .muted { color: #cdb497; }
+
+/* a page-window (Modal page): fills the screen between the HUD and the main menu, both stay on */
+.modal-back.page { top: calc(var(--hud-h) + var(--safe-t)); bottom: calc(var(--nav-h) + var(--safe-b)); padding: 6px 0 4px; place-items: stretch; justify-items: center;
+  background: rgba(14, 9, 5, 0.45); backdrop-filter: none; }
+.modal.page { width: 100%; max-width: var(--col, 520px); height: 100%; max-height: 100%; border-radius: 18px; display: flex; flex-direction: column; padding: 14px 12px 10px; }
+.modal.page > .dos { flex: 1; min-height: 0; }
+.modal.page .dos-page { flex: 1; min-height: 0; max-height: none; }

@@ -22,7 +22,8 @@ export function Bar({ value, max, tone = "green", label, height }: { value: numb
 /** how many full-screen windows are open (the main menu is raised over the window's bottom while any is) */
 let fullOpen = 0;
 
-export function Modal({ title, onClose, children, wide, maxWidth, full }: { title?: ReactNode; onClose: () => void; children: ReactNode; wide?: boolean; maxWidth?: number; full?: boolean }) {
+/** `page`: a whole page between the HUD and the main menu (both stay visible; a tap on the menu closes it) */
+export function Modal({ title, onClose, children, wide, maxWidth, full, page }: { title?: ReactNode; onClose: () => void; children: ReactNode; wide?: boolean; maxWidth?: number; full?: boolean; page?: boolean }) {
   useEffect(() => {
     const k = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", k);
@@ -31,6 +32,12 @@ export function Modal({ title, onClose, children, wide, maxWidth, full }: { titl
   // a full-screen mini game keeps the main menu under it: a tap on a menu button closes the game and goes there
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
+  useEffect(() => {
+    if (!page) return;
+    const nav = (e: MouseEvent) => { if ((e.target as Element | null)?.closest?.(".nav a")) closeRef.current(); };
+    document.addEventListener("click", nav, true);
+    return () => document.removeEventListener("click", nav, true);
+  }, [page]);
   useEffect(() => {
     if (!full) return;
     fullOpen++;
@@ -45,8 +52,8 @@ export function Modal({ title, onClose, children, wide, maxWidth, full }: { titl
   }, [full]);
   // rendered into <body> so it covers the HUD even when opened from a fixed full-screen scene
   const box = (
-    <div className={`modal-back ${full ? "full" : ""}`} onClick={full ? undefined : onClose} role="dialog" aria-modal="true">
-      <div className={`modal ${full ? "full" : ""}`} style={full ? ({ ["--mw" as string]: maxWidth ? `${maxWidth}px` : "100%" }) : maxWidth ? { maxWidth } : wide ? { maxWidth: 460 } : undefined} onClick={(e) => e.stopPropagation()}>
+    <div className={`modal-back ${full ? "full" : ""} ${page ? "page" : ""}`} onClick={full || page ? undefined : onClose} role="dialog" aria-modal="true">
+      <div className={`modal ${full ? "full" : ""} ${page ? "page" : ""}`} style={full ? ({ ["--mw" as string]: maxWidth ? `${maxWidth}px` : "100%" }) : page ? undefined : maxWidth ? { maxWidth } : wide ? { maxWidth: 460 } : undefined} onClick={(e) => e.stopPropagation()}>
         <button className="x" onClick={onClose} aria-label="Закрыть">×</button>
         {title && <h3 className="display">{title}</h3>}
         {children}
