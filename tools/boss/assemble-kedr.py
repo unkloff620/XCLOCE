@@ -53,6 +53,7 @@ f = json.load(open(f"{D}/raw/fit.json"))
 g = f["mouth-grin"]
 save("mouth-closed", sheet_at("mouth-closed", g["s"], g["tx"], g["ty"]))  # drawn on the same sheet as the grin
 save("eyes-closed", sheet_at("eyes-closed", 0.2793, 814.0, 145.6))  # lids over the open eyes' corners
+# the rig data (src/client/art/boss-rig-data.ts) lifts the lids 4 px (eyes-closed y 139.5): at the bottom of the eyes they looked sunk into the head
 
 # sad brows: every brow flipped upside down in its own box and lifted a little (inner ends go up)
 b = np.array(placed("brows"))

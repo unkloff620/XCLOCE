@@ -240,7 +240,7 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
       },
       "eyes-closed": {
         "x": 302.0,
-        "y": 143.5,
+        "y": 139.5,
         "w": 100,
         "h": 16
       },
