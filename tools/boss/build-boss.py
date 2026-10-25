@@ -12,7 +12,7 @@ from PIL import Image
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 SCALE = 0.5
-PARTS = ["tail", "body", "foreL", "foreR", "armL", "lowL", "handL", "armR", "lowR", "handR", "head", "eyes", "eyes-closed", "pupils", "brows", "brows-sad", "mouth", "mouth-closed", "collar"]
+PARTS = ["tail", "body", "foreL", "foreR", "armL", "lowL", "handL", "armR", "lowR", "handR", "head", "head-open", "throat", "teeth-up", "teeth-low", "eyes", "eyes-closed", "pupils", "brows", "brows-sad", "browL", "browR", "mouth", "mouth-closed", "collar"]
 # puppet-warped sequences (<part>@0.png, <part>@1.png …): one strip <part>.webp, frames side by side, frame 0 first
 FRAMES = ["brows", "jaw"]
 # which edge of the part joins the parent: (axis, side) — y/bottom for head and left forearm, x/right for the right one
@@ -28,6 +28,10 @@ PIVOT_BY_BOSS = {
     # elbows: the far end of each forearm; wrists: where forearm and fist overlap (tools/boss/assemble-mugo.py)
     "mugo": {"armL": [470.0, 300.0], "lowL": [505.0, 415.0], "handL": [738.0, 492.0],
              "armR": [755.0, 290.0], "lowR": [750.0, 405.0], "handR": [990.0, 484.0], "tail": [460.0, 690.0]},
+    # Бабафей: shoulders, elbows, wrists (the balalaika turns in the raised hand); each brow at its inner end
+    "babafey": {"armL": [335.0, 475.0], "lowL": [245.0, 650.0], "handL": [160.0, 540.0],
+                "armR": [595.0, 470.0], "lowR": [685.0, 630.0], "handR": [795.0, 740.0],
+                "browL": [460.5, 224.0], "browR": [481.5, 224.0]},
 }
 
 import sys, re

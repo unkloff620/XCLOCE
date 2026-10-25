@@ -11,6 +11,8 @@
  * the frame on show steps along a schedule (FRAME_SEQ) — idle, when he is hit ("ouch") and when he punches ("strike").
  * A tail sways behind the body; the far arm of a boss listed in BEHIND is drawn behind the body. Arms in three pieces
  * (shoulder → forearm at the elbow → fist at the wrist) box: see screens.css "Мугонатор".
+ * A head with its own jaw (head-open + throat + teeth-up/teeth-low, Бабафей) grinds its teeth and opens its mouth;
+ * brows drawn one by one (browL/browR) turn at their inner ends for the emotions.
  */
 import { useEffect, useRef, type CSSProperties, type RefObject } from "react";
 import { BOSS_RIGS } from "./boss-rig-data.ts";
@@ -217,7 +219,17 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
         {behind && arm(behind)}
         {img("body")}
         <g className="br-head" style={origin("head")}>
-          {img("head")}
+          {img("head", P["head-open"] ? "br-face-closed" : undefined)}
+          {/* a jaw of its own (Бабафей): the head with a hole for the mouth over the throat and both rows of teeth —
+              the lower row grinds side to side and drops when he opens his mouth (screens.css «Бабафей») */}
+          {P["head-open"] && (
+            <g className="br-face-open">
+              {img("throat")}
+              <g className="br-teeth-up">{img("teeth-up")}</g>
+              <g className="br-teeth-low">{img("teeth-low")}</g>
+              {img("head-open")}
+            </g>
+          )}
           {clipEyes && (
             <mask id={maskId} style={{ maskType: "alpha" }} maskUnits="userSpaceOnUse" x="0" y="0" width={rig.w} height={rig.h}>{img("eyes")}</mask>
           )}
@@ -228,6 +240,9 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
           {img("eyes-closed", "br-eyes-closed")}
           {P.brows && !P.brows.frames && <g className="br-brows">{img("brows", "br-brows-angry")}{img("brows-sad", "br-brows-sad")}</g>}
           {P.brows?.frames && strip("brows")}
+          {/* each brow alone, turning at its inner end: the emotions are in the brows */}
+          {P.browL && <g className="br-brow-l" style={origin("browL")}>{img("browL")}</g>}
+          {P.browR && <g className="br-brow-r" style={origin("browR")}>{img("browR")}</g>}
           {img("mouth", "br-mouth")}
           {img("mouth-closed", "br-mouth-closed")}
           {strip("jaw")}

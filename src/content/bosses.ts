@@ -107,7 +107,7 @@ export const BOSSES: BossDef[] = [
     story: "Держит Close Neo в ежовых рукавицах. Каждое «ок» стоит три письма и одно совещание.",
     hp: hp(5), reward: { xp: xp(5), currencies: { USD: 12, RUB: 420 } },
     drop: [{ id: "gpu", qty: 1, chance: 0.25 }],
-    theme: { a: "#3a2a10", b: "#140d04", accent: "#ffb020" }, photo: photo("babafey"),
+    theme: { a: "#3a2a10", b: "#140d04", accent: "#ffb020" }, photo: photo("babafey", true),
     keysToUnlock: 1,
   },
   {
