@@ -503,6 +503,20 @@ export function BossScreen({ id }: { id: string }) {
             <span className="display">Соло</span>
           </button>
         )}
+        {/* three ways to fight him: more HP — a better medal; his things drop only in «Блатной» */}
+        <div className="mode-pick door-modes" role="radiogroup" aria-label="Режим боя">
+          {FIGHT_MODES.map((m) => {
+            const n = row?.medals?.[m.medal] ?? 0;
+            return (
+              <button key={m.id} type="button" role="radio" aria-checked={mode === m.id} className={`mode-btn ${m.id} ${mode === m.id ? "on" : ""}`} onClick={() => { haptic.tap(); setMode(m.id); }}>
+                <BossCoin boss={boss} tier={m.medal} size={30} dim={n === 0} />
+                <b className="display">{m.name}</b>
+                <small className="num">HP ×{m.hp}</small>
+                <small className="num">{Math.min(MEDAL_SET, n)}/{MEDAL_SET}</small>
+              </button>
+            );
+          })}
+        </div>
         <button className="door-leaf" onClick={() => openDoor(false)} aria-label={blocked ? `${locked ? "Нет карт" : "Закрыто"}: ${blocked}` : `Открыть дверь и начать бой с боссом ${boss.name}`} disabled={door === "open" || door === "enter"}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/assets/door/door.webp" alt="" draggable={false} />
@@ -524,20 +538,6 @@ export function BossScreen({ id }: { id: string }) {
         <div className="door-flash" />
       </div>
       <div className="fight-bottom prefight-panel">
-        {/* three ways to fight him: more HP — a better medal; his things drop only in «Блатной» */}
-        <div className="mode-pick" role="radiogroup" aria-label="Режим боя">
-          {FIGHT_MODES.map((m) => {
-            const n = row?.medals?.[m.medal] ?? 0;
-            return (
-              <button key={m.id} type="button" role="radio" aria-checked={mode === m.id} className={`mode-btn ${m.id} ${mode === m.id ? "on" : ""}`} onClick={() => { haptic.tap(); setMode(m.id); }}>
-                <BossCoin boss={boss} tier={m.medal} size={30} dim={n === 0} />
-                <b className="display">{m.name}</b>
-                <small className="num">HP ×{m.hp}</small>
-                <small className="num">{Math.min(MEDAL_SET, n)}/{MEDAL_SET}{m.things ? " · вещи" : ""}</small>
-              </button>
-            );
-          })}
-        </div>
         <div className="tiny muted center mode-hint">
           {fightMode(mode).name}: здоровье {full(Math.round((row?.hpMax ?? boss.hp) * fightMode(mode).hp))} · медаль «{MEDAL_NAMES[fightMode(mode).medal]}»{fightMode(mode).things ? " · падают вещи босса" : ""}.
           {" "}Сет из {MEDAL_SET} — +{medalBonus(boss, fightMode(mode).medal)} к урону «{weaponById(medalWeapon(boss))?.name}».
