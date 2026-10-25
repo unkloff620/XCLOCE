@@ -3005,17 +3005,18 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
    the emotions are in the brows (one lifted — smug, both frowned — angry, both up — when the jaw drops) */
 .rig-babafey .br-breath { animation-duration: 3.3s; }
 .rig-babafey .br-head { animation-duration: 6.2s; }
-.rig-babafey .br-arm-l { animation: bf-arm-l 2.4s ease-in-out infinite; }
-.rig-babafey .br-low-l { animation: bf-low-l 2.4s ease-in-out infinite; }
+.rig-babafey .br-arm-l { animation: bf-arm-l 2.6s cubic-bezier(0.2, 0.9, 0.3, 1) infinite; }
+.rig-babafey .br-low-l { animation: bf-low-l 2.6s cubic-bezier(0.2, 0.9, 0.3, 1) infinite; }
 .rig-babafey .br-hand-l { animation: bf-strum 0.5s ease-in-out infinite alternate; }
-.rig-babafey .br-arm-r { animation: bf-arm-r 3s ease-in-out infinite; }
-.rig-babafey .br-low-r { animation: bf-low-r 3s ease-in-out infinite; }
+.rig-babafey .br-arm-r { animation: bf-arm-r 2.6s cubic-bezier(0.2, 0.9, 0.3, 1) infinite; }
+.rig-babafey .br-low-r { animation: bf-low-r 2.6s cubic-bezier(0.2, 0.9, 0.3, 1) infinite; }
 .rig-babafey .br-hand-r { animation: bf-beckon 1.8s ease-in-out infinite; }
-@keyframes bf-arm-l { 50% { transform: rotate(-4deg); } }
-@keyframes bf-low-l { 0%, 100% { transform: rotate(-9deg); } 50% { transform: rotate(10deg); } } /* the elbow bends and straightens */
+/* sharp flails, as if he waves them off and fends them off: quick snaps with short holds, the arms in turns */
+@keyframes bf-arm-l { 0%, 30%, 55%, 76%, 100% { transform: rotate(0); } 6% { transform: rotate(-9deg); } 14% { transform: rotate(4deg); } 20% { transform: rotate(-7deg); } 60% { transform: rotate(-10deg); } 68% { transform: rotate(5deg); } }
+@keyframes bf-low-l { 0%, 30%, 55%, 76%, 100% { transform: rotate(0); } 6% { transform: rotate(12deg); } 14% { transform: rotate(-10deg); } 20% { transform: rotate(10deg); } 60% { transform: rotate(11deg); } 68% { transform: rotate(-8deg); } }
 @keyframes bf-strum { from { transform: rotate(-4deg); } to { transform: rotate(5deg); } }
-@keyframes bf-arm-r { 50% { transform: rotate(-4deg); } }
-@keyframes bf-low-r { 0%, 100% { transform: rotate(4deg); } 50% { transform: rotate(-24deg); } }
+@keyframes bf-arm-r { 0%, 25%, 54%, 80%, 100% { transform: rotate(0); } 31% { transform: rotate(10deg); } 38% { transform: rotate(-6deg); } 45% { transform: rotate(8deg); } 85% { transform: rotate(9deg); } 92% { transform: rotate(-5deg); } }
+@keyframes bf-low-r { 0%, 25%, 54%, 80%, 100% { transform: rotate(0); } 31% { transform: rotate(-28deg); } 38% { transform: rotate(10deg); } 45% { transform: rotate(-22deg); } 85% { transform: rotate(-25deg); } 92% { transform: rotate(6deg); } }
 @keyframes bf-beckon { 0%, 45%, 100% { transform: rotate(0); } 60% { transform: rotate(-14deg); } 72% { transform: rotate(-2deg); } 84% { transform: rotate(-12deg); } }
 .rig-babafey .br-pupils { animation-name: gk-look; animation-duration: 6.5s; }
 .br-face-open { opacity: 0; animation: bf-open 9s steps(1) infinite; }
@@ -3051,3 +3052,12 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 @keyframes bf-fear-brow-l { 0%, 100% { transform: translateY(-4px) rotate(-10deg); } 50% { transform: translateY(-6px) rotate(-12deg); } }
 @keyframes bf-fear-brow-r { 0%, 100% { transform: translateY(-4px) rotate(10deg); } 50% { transform: translateY(-6px) rotate(12deg); } }
 @media (prefers-reduced-motion: reduce) { .br-face-open, .br-face-closed, .br-teeth-low, .br-teeth-up, .br-brow-l, .br-brow-r, .rig-babafey .br-arm, .rig-babafey .br-low, .rig-babafey .br-hand { animation: none; } }
+
+/* every boss with arms fends off a hit: a sharp wave of both arms (Мугонатор keeps his own boxing) */
+.arena-photo.hit:not(.strike) .boss-rig:not(.rig-mugo) :is(.br-arm-l, .br-fist-l) { animation: br-hit-fend-l 0.42s cubic-bezier(0.2, 0.9, 0.3, 1); }
+.arena-photo.hit:not(.strike) .boss-rig:not(.rig-mugo) :is(.br-arm-r, .br-fist-r) { animation: br-hit-fend-r 0.42s cubic-bezier(0.2, 0.9, 0.3, 1); }
+.arena-photo.hit:not(.strike) .boss-rig:not(.rig-mugo) .br-low-l { animation: br-hit-fend-r 0.42s cubic-bezier(0.2, 0.9, 0.3, 1); }
+.arena-photo.hit:not(.strike) .boss-rig:not(.rig-mugo) .br-low-r { animation: br-hit-fend-l 0.42s cubic-bezier(0.2, 0.9, 0.3, 1); }
+@keyframes br-hit-fend-l { 25% { transform: rotate(-13deg); } 55% { transform: rotate(8deg); } 80% { transform: rotate(-4deg); } }
+@keyframes br-hit-fend-r { 25% { transform: rotate(13deg); } 55% { transform: rotate(-8deg); } 80% { transform: rotate(4deg); } }
+@media (prefers-reduced-motion: reduce) { .arena-photo.hit .boss-rig :is(.br-arm, .br-low, .br-fist-l, .br-fist-r) { animation: none; } }
