@@ -511,8 +511,7 @@ export function BossScreen({ id }: { id: string }) {
               <button key={m.id} type="button" role="radio" aria-checked={mode === m.id} className={`mode-btn ${m.id} ${mode === m.id ? "on" : ""}`} onClick={() => { haptic.tap(); setMode(m.id); }}>
                 <BossCoin boss={boss} tier={m.medal} size={30} dim={n === 0} />
                 <b className="display">{m.name}</b>
-                <small className="num">HP ×{m.hp}</small>
-                <small className="num">{Math.min(MEDAL_SET, n)}/{MEDAL_SET}</small>
+                <small className="num">×{m.hp} · {Math.min(MEDAL_SET, n)}/{MEDAL_SET}</small>
               </button>
             );
           })}
