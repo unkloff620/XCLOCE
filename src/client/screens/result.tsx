@@ -123,7 +123,7 @@ export function ResultWindow() {
           {/* the boss medal of this mode: his face on a coin, how many of that kind now */}
           {got?.medal && (
             <span className="gain medal-chip" title={`Медаль «${MEDAL_NAMES[got.medal.tier]}» — ${got.medal.n} из ${MEDAL_SET}`}>
-              <BossCoin boss={boss} tier={got.medal.tier} size={22} />+1<small className="num"> {Math.min(MEDAL_SET, got.medal.n)}/{MEDAL_SET}</small>
+              <BossCoin boss={boss} tier={got.medal.tier} size={22} /><span className="num">{Math.min(MEDAL_SET, got.medal.n)}/{MEDAL_SET}</span>
             </span>
           )}
           {/* a dropped room: one more reward plaque, glowing — [room picture] +комната */}
