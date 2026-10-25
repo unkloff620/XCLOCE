@@ -15,6 +15,7 @@ import { full } from "../format.ts";
 import { api, type DuelView, type GameView, type PokerPlay } from "../api.ts";
 import type { Currency } from "../../content/currencies.ts";
 import { BlackjackWindow } from "./blackjack.tsx";
+import { DayTopButton } from "../day-top.tsx";
 import { Roach } from "../art/roach.tsx";
 import { itemById } from "../../content/items.ts";
 import { yardTime } from "../../content/yard.ts";
@@ -756,7 +757,7 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
     <Modal onClose={onClose} full>
       <div className="gstage bleed">
         {/* the felt is the whole window: [?] in the corner opposite [×] */}
-        <div className="zb-help"><PokerHelp /></div>
+        <div className="zb-help"><PokerHelp /><DayTopButton game="poker" /></div>
         <div className="pkt">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="pkt-bg" src="/assets/yard/poker-room.webp" alt="" draggable={false} />

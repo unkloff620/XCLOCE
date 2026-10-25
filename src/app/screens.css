@@ -2783,3 +2783,20 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 /* the dealer sweeps the paid round off the table */
 .bj2-stage.sweep .bj-cards { transition-property: opacity, transform; transition-duration: 0.6s; transition-timing-function: ease-in; opacity: 0; transform: translateY(-4cqw); }
 .bj2-stage.sweep .bjt-bet, .bj2-stage.sweep .bjt-out, .bj2-stage.sweep .bjt-tops, .bj2-stage.sweep .bjt-ins, .bj2-stage.sweep .bjt-hv, .bj2-stage.sweep .bjt-side .bjt-stack, .bj2-stage.sweep .bjt-side-res, .bj2-stage.sweep .bjt-dlbl { transition-property: opacity; transition-duration: 0.6s; opacity: 0; }
+
+/* ── the daily tops of blackjack and poker ── */
+.zb-help { display: flex; align-items: center; gap: 6px; }
+.dt-btn { display: inline-flex; align-items: center; gap: 4px; height: 34px; padding: 0 10px; border-radius: 11px; border: 2.5px solid var(--line); background: rgba(0, 0, 0, 0.6); color: #ffe9b0; font: 800 12px/1 inherit; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6); cursor: pointer; }
+.dt-btn small { font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; }
+.dt { display: flex; flex-direction: column; gap: 8px; }
+.dt-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.dt-tabs button { padding: 8px; border-radius: 12px; border: 2px solid var(--line); background: var(--panel2); color: var(--muted); font: 800 13px/1 inherit; }
+.dt-tabs button.on { background: linear-gradient(180deg, #ffd25a, #e3a21a); color: #2e1c00; }
+.dt-list { display: flex; flex-direction: column; gap: 5px; }
+.dt-row { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 12px; border: 2px solid var(--line); background: var(--panel2); }
+.dt-row.p1 { border-color: #ffc21a; box-shadow: 0 0 12px rgba(255, 194, 26, 0.35); }
+.dt-row.me { background: rgba(61, 220, 132, 0.14); border-color: rgba(61, 220, 132, 0.6); }
+.dt-row.mine { margin-top: 4px; }
+.dt-place { width: 26px; flex: none; text-align: center; font-size: 18px; }
+.dt-place b { font-size: 14px; color: var(--muted); }
+.dt-val { display: inline-flex; align-items: center; gap: 3px; flex: none; color: #ffe08a; font-size: 14px; }

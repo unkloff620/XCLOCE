@@ -1,6 +1,6 @@
 import type { Queryable } from "../db.ts";
 import { grantReward, moscowDay, weekKey, weekStart, type Ctx } from "../core.ts";
-import { GAME_BOARDS, GAME_WEEK_PRIZES, ROACH_RULES, ZONK_DAY_PRIZE, type GameBoard } from "../../content/games.ts";
+import { GAME_BOARDS, GAME_WEEK_PRIZES, POKER_HANDS, ROACH_RULES, ZONK_DAY_PRIZE, type GameBoard } from "../../content/games.ts";
 
 /*
  * Around the mini-games:
@@ -109,3 +109,53 @@ export async function squashRoach(ctx: Ctx) {
   return { reward, left: ROACH_RULES.perDay - n - 1 };
 }
 
+
+/* ---------------- the daily tops: blackjack by the day's winnings, poker by the day's best combination ---------------- */
+
+/** adds the round's winnings (paid out minus staked, may be below zero) to today's blackjack score */
+export async function addBjDaily(ctx: Ctx, delta: number) {
+  if (!Number.isFinite(delta) || delta === 0) return;
+  await ctx.q.query(
+    `INSERT INTO game_daily (day, player_id, bj) VALUES ($1,$2,$3)
+     ON CONFLICT (day, player_id) DO UPDATE SET bj = game_daily.bj + EXCLUDED.bj`,
+    [moscowDay(ctx.now), ctx.pid, Math.round(delta * 100) / 100],
+  );
+}
+
+/** poker combinations from the best (royal flush) down, as an SQL CASE over result->>'outcome' */
+const POKER_RANK_SQL = `CASE g.result->>'outcome' ${POKER_HANDS.map((h, i) => `WHEN '${h.id}' THEN ${i}`).join(" ")} ELSE 99 END`;
+
+export interface DayTopRow { id: number; name: string; photo: string | null; place: number; value: number; hand?: string }
+
+/** The top 10 of a Moscow day (today or yesterday) and my own place: blackjack — the most won, poker — the best hand. */
+export async function dayTop(q: Queryable, pid: number, game: "bj" | "poker", which: "today" | "yesterday", now: number) {
+  const day = moscowDay(which === "today" ? now : now - DAY_MS);
+  if (game === "bj") {
+    const rows = await q.query<{ id: number; name: string; photo: string | null; value: number }>(
+      `SELECT p.id, p.display_name AS name, p.photo_url AS photo, d.bj AS value FROM game_daily d JOIN players p ON p.id = d.player_id
+       WHERE d.day=$1 AND d.bj > 0 AND p.banned_at IS NULL ORDER BY d.bj DESC, p.id LIMIT 10`, [day]);
+    const [me] = await q.query<{ value: number; place: number }>(
+      `SELECT d.bj AS value, (SELECT COUNT(*)::int FROM game_daily o WHERE o.day=$1 AND o.bj > d.bj) + 1 AS place
+       FROM game_daily d WHERE d.day=$1 AND d.player_id=$2`, [day, pid]);
+    return {
+      game, day: which,
+      top: rows.map((r, i) => ({ id: r.id, name: r.name, photo: r.photo, place: i + 1, value: Number(r.value) })),
+      me: me ? { place: Number(me.value) > 0 ? Number(me.place) : null, value: Number(me.value) } : null,
+    };
+  }
+  // poker: each player's best hand of the day; equal hands — whoever got it first
+  const best = `SELECT DISTINCT ON (g.player_id) g.player_id, ${POKER_RANK_SQL} AS rank, g.result->>'outcome' AS hand, g.updated_at
+     FROM games g WHERE g.kind='poker' AND g.day=$1 AND g.status='done' AND g.result->>'outcome' IS NOT NULL
+     ORDER BY g.player_id, rank, g.updated_at`;
+  const rows = await q.query<{ id: number; name: string; photo: string | null; rank: number; hand: string }>(
+    `SELECT p.id, p.display_name AS name, p.photo_url AS photo, b.rank, b.hand FROM (${best}) b JOIN players p ON p.id = b.player_id
+     WHERE p.banned_at IS NULL ORDER BY b.rank, b.updated_at, p.id LIMIT 10`, [day]);
+  const [me] = await q.query<{ rank: number; hand: string; place: number }>(
+    `WITH b AS (${best}) SELECT m.rank, m.hand, (SELECT COUNT(*)::int FROM b o WHERE o.rank < m.rank OR (o.rank = m.rank AND o.updated_at < m.updated_at)) + 1 AS place
+     FROM b m WHERE m.player_id=$2`, [day, pid]);
+  return {
+    game, day: which,
+    top: rows.map((r, i) => ({ id: r.id, name: r.name, photo: r.photo, place: i + 1, value: Number(r.rank), hand: r.hand })),
+    me: me ? { place: Number(me.place), value: Number(me.rank), hand: me.hand } : null,
+  };
+}

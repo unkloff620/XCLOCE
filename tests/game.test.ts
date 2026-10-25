@@ -1670,6 +1670,33 @@ describe("авторитет локации", () => {
   });
 });
 
+describe("daily tops of blackjack and poker", () => {
+  it("blackjack by the day's winnings, poker by the day's best hand (equal hands: who was first)", async () => {
+    const { dayTop, addBjDaily } = await import("../src/server/systems/minigame-extras.ts");
+    const { moscowDay } = await import("../src/server/core.ts");
+    const a = await newPlayer(db), b = await newPlayer(db), c = await newPlayer(db);
+    const ctx = (pid: number) => ({ q: db, pid, now: T0 } as unknown as Parameters<typeof addBjDaily>[0]);
+    await addBjDaily(ctx(a), 12);
+    await addBjDaily(ctx(a), -4);
+    await addBjDaily(ctx(b), 20);
+    await addBjDaily(ctx(c), -3);
+    const bj = await dayTop(db, c, "bj", "today", T0);
+    expect(bj.top.map((r) => [r.id, r.value])).toEqual([[b, 20], [a, 8]]);
+    expect(bj.me).toMatchObject({ place: null, value: -3 });
+    const day = moscowDay(T0);
+    const hand = (pid: number, outcome: string, at: number) => db.query(
+      "INSERT INTO games (player_id, kind, day, paid, status, state, result, created_at, updated_at) VALUES ($1,'poker',$2,true,'done','{}',$3,$4,$4)",
+      [pid, day, JSON.stringify({ outcome }), new Date(at)]);
+    await hand(a, "pair", T0); await hand(a, "full", T0 + 1000);
+    await hand(b, "full", T0 + 500);
+    await hand(c, "flush", T0);
+    const pk = await dayTop(db, a, "poker", "today", T0);
+    expect(pk.top.map((r) => [r.id, r.hand])).toEqual([[b, "full"], [a, "full"], [c, "flush"]]);
+    expect(pk.me).toMatchObject({ place: 2, hand: "full" });
+    expect((await dayTop(db, a, "poker", "yesterday", T0)).top).toHaveLength(0);
+  });
+});
+
 describe("zonk duels", () => {
   it("call, accept, both play: a draw gives the stakes back; a duel left unplayed goes to the one who played", async () => {
     const a = await newPlayer(db), b = await newPlayer(db);

@@ -911,4 +911,18 @@ GROUP BY l.player_id, m.loc
 ON CONFLICT (player_id, location_id) DO NOTHING;
 `,
   },
+  {
+    // the daily blackjack top (systems/minigame-extras.ts dayTop): the winnings of a Moscow day per player
+    id: "v2-052-game-daily",
+    sql: `
+CREATE TABLE IF NOT EXISTS game_daily (
+  day TEXT NOT NULL,
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  bj NUMERIC(20, 2) NOT NULL DEFAULT 0,
+  PRIMARY KEY (day, player_id)
+);
+CREATE INDEX IF NOT EXISTS game_daily_bj ON game_daily (day, bj DESC);
+CREATE INDEX IF NOT EXISTS games_poker_day ON games (day) WHERE kind = 'poker';
+`,
+  },
 ];
