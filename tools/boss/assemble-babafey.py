@@ -112,6 +112,7 @@ ref.crop((round(hx - 360), round(hy + 120), round(hx + 360), round(hy + 840))).r
 print("crop bbox", bb)
 # joints on the artist's sheet: shoulder, elbow, wrist of each arm; the brows' inner ends on the face sheet
 J = {"armL": (770, 770), "lowL": (590, 1120), "handL": (420, 900), "armR": (1290, 760), "lowR": (1470, 1080), "handR": (1690, 1300)}
+# lowR is overridden in build-boss.py: the bend is at the lower edge just before the cuff (the user's point)
 piv = {k: rig_px(*v) for k, v in J.items()}
 for k, (fx, fy) in {"browL": (520, 545), "browR": (568, 545)}.items():
     piv[k] = rig_px(CHIN[0] + (fx - 512) * HEAD_S, CHIN[1] + (fy - 922) * HEAD_S, False)

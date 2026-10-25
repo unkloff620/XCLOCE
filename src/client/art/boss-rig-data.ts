@@ -560,8 +560,8 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "w": 234,
         "h": 242,
         "pivot": [
-          817.0,
-          700.0
+          831.0,
+          806.0
         ]
       },
       "handR": {
