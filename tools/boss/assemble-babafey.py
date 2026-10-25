@@ -19,9 +19,11 @@ from PIL import Image
 
 D = "tools/boss/source/babafey"
 R = f"{D}/raw"
-PAD = 200
-W, H = 2000, 2800 + PAD
-CROP = (100, 20, 1960, 2980)
+PAD = 200                   # air on top (hair) and on the sides (the bigger body)
+BODY_S = 1.25               # the body sheet is drawn bigger than the artist's, around the neck (ANCHOR stays in place)
+ANCHOR = (1014, 560)
+W, H = 2000 + 2 * PAD, 3500
+CROP = (150, 10, 2340, 3496)
 HEAD_S = 0.88
 CHIN = (1014, 600)          # where the chin (sheet point 512, 922) goes on the body sheet
 PUPIL_D = 27                # iris height on the face sheet
@@ -29,15 +31,24 @@ EYE_C = [(443, 583), (633, 578)]
 
 
 def body(n):
+    im = Image.open(f"{R}/{n}.png").convert("RGBA")
+    im = im.resize((round(im.width * BODY_S), round(im.height * BODY_S)), Image.LANCZOS)
     c = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    c.alpha_composite(Image.open(f"{R}/{n}.png").convert("RGBA"), (0, PAD))
+    c.alpha_composite(im, (round(PAD + ANCHOR[0] * (1 - BODY_S)), round(PAD + ANCHOR[1] * (1 - BODY_S))))
     return c
+
+
+def rig_px(x, y, body_sheet=True):
+    """a point of the artist's body sheet → build-boss.py output px (for the pivots)"""
+    if body_sheet:
+        x, y = ANCHOR[0] + (x - ANCHOR[0]) * BODY_S, ANCHOR[1] + (y - ANCHOR[1]) * BODY_S
+    return [round((x + PAD - CROP[0]) * 0.5, 1), round((y + PAD - CROP[1]) * 0.5, 1)]
 
 
 def face_sheet(im):
     im = im.resize((round(im.width * HEAD_S), round(im.height * HEAD_S)), Image.LANCZOS)
     c = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    c.alpha_composite(im, (round(CHIN[0] - 512 * HEAD_S), round(PAD + CHIN[1] - 922 * HEAD_S)))
+    c.alpha_composite(im, (round(PAD + CHIN[0] - 512 * HEAD_S), round(PAD + CHIN[1] - 922 * HEAD_S)))
     return c
 
 
@@ -91,10 +102,17 @@ for n in ["browL", "browR"]:
     ref.alpha_composite(Image.open(f"{D}/{n}.png").convert("RGBA"), CROP[:2])
 ref.save(f"{R}/reference.png")
 os.makedirs("public/bosses/babafey", exist_ok=True)
-x0, y0, x1, y1 = 30, 20, 1970, 2930  # 2:3
+bb = ref.getbbox()
+x0, y0, x1, y1 = bb[0] - 20, bb[1] - 10, bb[2] + 20, bb[3] + 10
 full = ref.crop((x0, y0, x1, y1))
 full.resize((1024, round(1024 * full.height / full.width)), Image.LANCZOS).save("public/bosses/babafey/full.webp", quality=88, method=6)
-hx = CHIN[0]
+hx = PAD + CHIN[0]
 hy = PAD + CHIN[1] - 922 * HEAD_S
 ref.crop((round(hx - 360), round(hy + 120), round(hx + 360), round(hy + 840))).resize((512, 512), Image.LANCZOS).save("public/bosses/babafey/portrait.webp", quality=88, method=6)
-print("ok")
+print("crop bbox", bb)
+# joints on the artist's sheet: shoulder, elbow, wrist of each arm; the brows' inner ends on the face sheet
+J = {"armL": (770, 770), "lowL": (590, 1120), "handL": (420, 900), "armR": (1290, 760), "lowR": (1470, 1080), "handR": (1690, 1300)}
+piv = {k: rig_px(*v) for k, v in J.items()}
+for k, (fx, fy) in {"browL": (520, 545), "browR": (568, 545)}.items():
+    piv[k] = rig_px(CHIN[0] + (fx - 512) * HEAD_S, CHIN[1] + (fy - 922) * HEAD_S, False)
+print("pivots", piv)

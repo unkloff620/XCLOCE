@@ -3011,11 +3011,11 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .rig-babafey .br-arm-r { animation: bf-arm-r 3s ease-in-out infinite; }
 .rig-babafey .br-low-r { animation: bf-low-r 3s ease-in-out infinite; }
 .rig-babafey .br-hand-r { animation: bf-beckon 1.8s ease-in-out infinite; }
-@keyframes bf-arm-l { 50% { transform: rotate(-3deg); } }
-@keyframes bf-low-l { 50% { transform: rotate(4deg); } }
+@keyframes bf-arm-l { 50% { transform: rotate(-4deg); } }
+@keyframes bf-low-l { 0%, 100% { transform: rotate(-9deg); } 50% { transform: rotate(10deg); } } /* the elbow bends and straightens */
 @keyframes bf-strum { from { transform: rotate(-4deg); } to { transform: rotate(5deg); } }
-@keyframes bf-arm-r { 50% { transform: rotate(2deg); } }
-@keyframes bf-low-r { 50% { transform: rotate(-3deg); } }
+@keyframes bf-arm-r { 50% { transform: rotate(-4deg); } }
+@keyframes bf-low-r { 0%, 100% { transform: rotate(4deg); } 50% { transform: rotate(-24deg); } }
 @keyframes bf-beckon { 0%, 45%, 100% { transform: rotate(0); } 60% { transform: rotate(-14deg); } 72% { transform: rotate(-2deg); } 84% { transform: rotate(-12deg); } }
 .rig-babafey .br-pupils { animation-name: gk-look; animation-duration: 6.5s; }
 .br-face-open { opacity: 0; animation: bf-open 9s steps(1) infinite; }
