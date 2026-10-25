@@ -514,7 +514,8 @@ describe("shop and exchange", () => {
     const r = await act(db, p, "exchange", { from: "RUB", to: "USD", amount: 900 }, open);
     expect(r.result.got).toBe(9); // 9.5 → whole dollars only
     expect(await wallet(db, p, "RUB")).toBe(0);
-    await expect(act(db, p, "exchange", { from: "RUB", to: "USD", amount: 10 }, open)).rejects.toMatchObject({ code: "no_money" });
+    await expect(act(db, p, "exchange", { from: "RUB", to: "USD", amount: 1000 }, open)).rejects.toMatchObject({ code: "no_money" });
+    await expect(act(db, p, "exchange", { from: "RUB", to: "USD", amount: 10 }, open)).rejects.toMatchObject({ code: "too_small" });
     await expect(act(db, p, "exchange", { from: "USD", to: "RUB", amount: -5 }, open)).rejects.toMatchObject({ code: "bad_amount" });
     await setMoney(db, p, "USD", 5);
     await expect(act(db, p, "exchange", { from: "USD", to: "RUB", amount: 1.5 }, open)).rejects.toMatchObject({ code: "bad_amount" });

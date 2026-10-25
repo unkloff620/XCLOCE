@@ -2934,16 +2934,16 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .bk-medal.coin small { font-size: 9px; color: var(--muted); }
 
 /* how to fight: words on the right wall under the pass — three modes and «Соло», each in its own colour with a dark outline */
-.door-side { position: absolute; z-index: 3; left: 68.8%; top: 50.5%; width: 26%; display: flex; flex-direction: column; align-items: center; gap: 1.2cqw; pointer-events: auto; }
+.door-side { position: absolute; z-index: 3; left: 65%; top: 50.5%; width: 28%; display: flex; flex-direction: column; align-items: center; gap: 1.2cqw; pointer-events: auto; }
 .door-word { position: relative; padding: 0.8cqw 1cqw; border: 0; background: none; cursor: pointer; font-family: var(--font-display), var(--font-body), sans-serif; font-weight: 400;
-  font-size: 3.3cqw; line-height: 1.1; letter-spacing: 0.01em; white-space: nowrap; color: var(--wc, #fff3e3); opacity: 0.5;
-  -webkit-text-stroke: 0.45cqw #160b04; paint-order: stroke fill; text-shadow: 0 0.5cqw 0.8cqw rgba(0, 0, 0, 0.7);
+  font-size: 2.45cqw; line-height: 1.1; letter-spacing: -0.03em; white-space: nowrap; color: var(--wc, #fff3e3); opacity: 0.6;
+  -webkit-text-stroke: 0.4cqw #160b04; paint-order: stroke fill; text-shadow: 0 0.5cqw 0.8cqw rgba(0, 0, 0, 0.7);
   transition: opacity 0.15s, transform 0.15s, filter 0.15s; }
 .door-word.pacan { --wc: #f0a868; }
 .door-word.blat { --wc: #e4ebf3; }
 .door-word.avtor { --wc: #ffd45a; }
-.door-word.solo { --wc: #d9a8ff; margin-top: 1.4cqw; font-size: 3.8cqw; }
-.door-word.on { opacity: 1; transform: scale(1.12); filter: drop-shadow(0 0 1.6cqw color-mix(in srgb, var(--wc) 70%, transparent)); }
+.door-word.solo { --wc: #d9a8ff; margin-top: 1.2cqw; font-size: 3.1cqw; }
+.door-word.on { opacity: 1; transform: scale(1.08); filter: drop-shadow(0 0 1.6cqw color-mix(in srgb, var(--wc) 70%, transparent)); }
 .door-word:active:not(:disabled) { transform: scale(0.95); }
 .door-word:disabled { cursor: default; }
 .door-word-star { position: absolute; top: -0.6cqw; right: -2.2cqw; font-size: 2.8cqw; color: #ffcc33; -webkit-text-stroke: 0.35cqw #5a3a00; }
