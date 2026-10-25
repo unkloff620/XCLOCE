@@ -2785,9 +2785,6 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .bj2-stage.sweep .bjt-bet, .bj2-stage.sweep .bjt-out, .bj2-stage.sweep .bjt-tops, .bj2-stage.sweep .bjt-ins, .bj2-stage.sweep .bjt-hv, .bj2-stage.sweep .bjt-side .bjt-stack, .bj2-stage.sweep .bjt-side-res, .bj2-stage.sweep .bjt-dlbl { transition-property: opacity; transition-duration: 0.6s; opacity: 0; }
 
 /* ── the daily tops of blackjack and poker ── */
-.zb-help { display: flex; align-items: center; gap: 6px; }
-.dt-btn { display: inline-flex; align-items: center; gap: 4px; height: 34px; padding: 0 10px; border-radius: 11px; border: 2.5px solid var(--line); background: rgba(0, 0, 0, 0.6); color: #ffe9b0; font: 800 12px/1 inherit; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6); cursor: pointer; }
-.dt-btn small { font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; }
 .dt { display: flex; flex-direction: column; gap: 8px; }
 .dt-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .dt-tabs button { padding: 8px; border-radius: 12px; border: 2px solid var(--line); background: var(--panel2); color: var(--muted); font: 800 13px/1 inherit; }
@@ -2800,3 +2797,19 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .dt-place { width: 26px; flex: none; text-align: center; font-size: 18px; }
 .dt-place b { font-size: 14px; color: var(--muted); }
 .dt-val { display: inline-flex; align-items: center; gap: 3px; flex: none; color: #ffe08a; font-size: 14px; }
+
+/* the day's leader on an old sheet of paper: top-left corner of the poker / blackjack window, tilted, a bit off screen */
+.dt-note { position: absolute; z-index: 9; left: -16px; top: calc(var(--safe-t) - 10px); width: 160px; aspect-ratio: 520 / 364; padding: 0; border: 0; background: none; cursor: pointer;
+  transform: rotate(-7deg); transform-origin: 30% 40%; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.55)); -webkit-tap-highlight-color: transparent; }
+.dt-note:active { transform: rotate(-7deg) scale(0.97); }
+.dt-note-bg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.dt-note-in { position: absolute; left: 20%; right: 9%; top: 19%; bottom: 15%; display: flex; flex-direction: column; justify-content: center; gap: 2px; color: #3a2410; text-align: left; }
+.dt-note-h { font-size: 10px; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; color: #7a3d12; }
+.dt-note-who { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.dt-note-who .avatar { flex: none; box-shadow: 0 0 0 1.5px #7a4a1c; }
+.dt-note-who i { font-style: normal; font-weight: 900; font-size: 13px; min-width: 0; }
+.dt-note-val { font-size: 13px; font-weight: 900; color: #1f6b2c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dt-note-none { font-size: 11px; color: #6b4a2a; font-style: italic; }
+/* the [?] and the table buttons move right of the sheet */
+.zb-help.pk-help { left: 142px; }
+.bj2-top { left: 142px; }

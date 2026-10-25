@@ -1,7 +1,8 @@
 "use client";
 /*
  * The daily tops of the mini-games (server: systems/minigame-extras.ts dayTop): blackjack — who won the most today,
- * poker — the best combination of the day (equal hands: who got it first). A trophy button in the game window opens it.
+ * poker — the best combination of the day (equal hands: who got it first). The leader is on a sheet of paper in the
+ * game window's corner; a tap on it opens the whole top.
  */
 import { useEffect, useState } from "react";
 import { api } from "./api.ts";
@@ -66,12 +67,45 @@ function DayTopWindow({ game, onClose }: { game: "bj" | "poker"; onClose: () => 
   );
 }
 
-/** the trophy in the corner of a game window */
-export function DayTopButton({ game }: { game: "bj" | "poker" }) {
+/**
+ * The day's leader on an old sheet of paper in the top-left corner of the game window (tilted, a bit off the screen):
+ * avatar, nick and what he got. Early in the day, while nobody has played, yesterday's. A tap opens the whole top.
+ */
+export function DayTopNote({ game, refresh = 0 }: { game: "bj" | "poker"; refresh?: number }) {
   const [open, setOpen] = useState(false);
+  const [lead, setLead] = useState<{ row: Row; day: "today" | "yesterday" } | null | undefined>(undefined);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const t = await api.get<Top>(`/api/game-day?game=${game}&day=today`);
+        if (t.top[0]) { if (alive) setLead({ row: t.top[0], day: "today" }); return; }
+        const y = await api.get<Top>(`/api/game-day?game=${game}&day=yesterday`);
+        if (alive) setLead(y.top[0] ? { row: y.top[0], day: "yesterday" } : null);
+      } catch {
+        if (alive) setLead(null);
+      }
+    })();
+    return () => { alive = false; };
+  }, [game, refresh]);
   return (
     <>
-      <button type="button" className="dt-btn" onClick={() => { haptic.tap(); setOpen(true); }} aria-label="Топ дня">🏆<small>Топ дня</small></button>
+      <button type="button" className="dt-note" onClick={() => { haptic.tap(); setOpen(true); }} aria-label="Топ дня">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="dt-note-bg" src="/assets/yard/top-paper.webp" alt="" draggable={false} />
+        <span className="dt-note-in">
+          <b className="dt-note-h">{lead?.day === "yesterday" ? "Топ вчера" : "Топ дня"}</b>
+          {lead ? (
+            <>
+              <span className="dt-note-who">
+                <Avatar name={lead.row.name} photo={lead.row.photo} size={22} />
+                <i className="ellipsis">{lead.row.name}</i>
+              </span>
+              <b className="dt-note-val">{game === "bj" ? <>+{money(lead.row.value)} $</> : handName(lead.row.hand)}</b>
+            </>
+          ) : <span className="dt-note-none">{lead === undefined ? "…" : "пока никого"}</span>}
+        </span>
+      </button>
       {open && <DayTopWindow game={game} onClose={() => setOpen(false)} />}
     </>
   );

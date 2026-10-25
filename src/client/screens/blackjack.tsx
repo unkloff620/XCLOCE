@@ -15,7 +15,7 @@ import { api, type BjCardV, type BjHandV, type BjSeatV, type BjTableV, type BjVi
 import { Modal } from "../ui.tsx";
 import { Icon } from "../art/icons.tsx";
 import { Help } from "../help.tsx";
-import { DayTopButton } from "../day-top.tsx";
+import { DayTopNote } from "../day-top.tsx";
 import { haptic } from "../telegram.ts";
 import { sfx } from "../sound.ts";
 import { BJ_BET, BJ_FREE, BJ_INS_MS, BJ_SIDE_MAX, PP_PAY, bjInsurance, PP_TITLES, RANKS, SUITS, T3_PAY, T3_TITLES, type PairHit, type T3Hit } from "../../content/games.ts";
@@ -496,9 +496,9 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
     <Modal onClose={onClose} full>
       <div className="gstage bleed bj2">
         {/* the felt is the whole window: [?], the wallet and «встать» in the corner opposite [×] */}
+        <DayTopNote game="bj" refresh={table?.round ?? 0} />
         <div className="bj2-top">
           <BlackjackHelp />
-          <DayTopButton game="bj" />
           <span className="bjt-wallet"><Icon name="USD" size={16} /><b className="num">{money(usd)}</b></span>
           {table && <button className="btn small dark" disabled={!!busy} onClick={() => run("bj_leave")}>Встать</button>}
         </div>

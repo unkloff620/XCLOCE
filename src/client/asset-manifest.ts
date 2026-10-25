@@ -475,6 +475,7 @@ export const ASSET_FILES: string[] = [
  "/assets/yard/roach-leg-2.webp",
  "/assets/yard/roach-leg-3.webp",
  "/assets/yard/sky.webp",
+ "/assets/yard/top-paper.webp",
  "/assets/yard/zonk-arrow.webp",
  "/assets/yard/zonk-cup.webp",
  "/assets/yard/zonk-room.webp",
