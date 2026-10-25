@@ -131,10 +131,10 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "h": 77
       },
       "eyes-closed": {
-        "x": 407.5,
-        "y": 258.0,
-        "w": 206,
-        "h": 58
+        "x": 405.9,
+        "y": 256.5,
+        "w": 225,
+        "h": 63
       }
     }
   },
