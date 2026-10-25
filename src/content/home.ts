@@ -57,7 +57,7 @@ export const EQUIPMENT: EquipmentDef[] = [
     pieces: [
       { name: "Ореховый стандарт", art: "desk-002", price: { currency: "RUB", amount: 4000 }, bonus: { critChance: 0.02 } },
       { name: "Мраморный холд", art: "desk-003", price: { currency: "USD", amount: 30 }, bonus: { critChance: 0.01, damage: 0.03 } },
-      { name: "Золотой памп", art: "desk-004", price: { currency: "SOL", amount: 0.2 }, bonus: { critChance: 0.02, critDamage: 0.1, damage: 0.03 } },
+      { name: "Золотой памп", art: "desk-004", price: { currency: "SOL", amount: 20 }, bonus: { critChance: 0.02, critDamage: 0.1, damage: 0.03 } },
     ],
   },
   {
@@ -70,7 +70,7 @@ export const EQUIPMENT: EquipmentDef[] = [
     pieces: [
       { name: "Монитор справа", art: "monitor-right", price: { currency: "RUB", amount: 3000 }, bonus: { critDamage: 0.1 } },
       { name: "Монитор слева", art: "monitor-left", price: { currency: "USD", amount: 30 }, bonus: { critDamage: 0.1 } },
-      { name: "Монитор по центру", art: "monitor-center", price: { currency: "SOL", amount: 0.15 }, bonus: { critDamage: 0.15 } },
+      { name: "Монитор по центру", art: "monitor-center", price: { currency: "SOL", amount: 15 }, bonus: { critDamage: 0.15 } },
     ],
   },
   {
@@ -80,7 +80,7 @@ export const EQUIPMENT: EquipmentDef[] = [
     pieces: [
       { name: "Офисное кресло", art: "chair-1", price: { currency: "RUB", amount: 2500 }, bonus: { critChance: 0.02 } },
       { name: "Геймерское кресло", art: "chair-2", price: { currency: "USD", amount: 25 }, bonus: { critChance: 0.02 } },
-      { name: "Трон трейдера", art: "chair-3", price: { currency: "SOL", amount: 0.12 }, bonus: { critChance: 0.03 } },
+      { name: "Трон трейдера", art: "chair-3", price: { currency: "SOL", amount: 12 }, bonus: { critChance: 0.03 } },
     ],
   },
   {
@@ -103,7 +103,7 @@ export const LEGACY_EQUIPMENT: EquipmentDef[] = [
     levels: [
       { price: { currency: "RUB", amount: 5000 }, bonus: { damage: 0.03 } },
       { price: { currency: "USD", amount: 50 }, bonus: { damage: 0.06 } },
-      { price: { currency: "SOL", amount: 0.25 }, bonus: { damage: 0.1 } },
+      { price: { currency: "SOL", amount: 25 }, bonus: { damage: 0.1 } },
     ],
   },
 ];
@@ -123,7 +123,7 @@ export const ROOM_DEFS: RoomDef[] = [
   { id: "neon", name: "Неоновая хата", description: "Обои с узором, кот на крыше и RGB-лента под потолком. Выпадает с Кедра. +5 к лимиту энергии.", price: { currency: "RUB", amount: 2000 }, bonus: { energyMax: 5 }, drop: { boss: "kedr", chance: 0.15 } },
   { id: "boxing", name: "Боксёрская", description: "Перчатки на стене, плакаты легенд и полка «для храбрости». Выпадает с Командате. +30 к урону кулака.", price: { currency: "RUB", amount: 4000 }, bonus: { fistDamage: 30 }, drop: { boss: "bebyakyan", chance: 0.15 } },
   { id: "office", name: "Офис трейдера", description: "Стеклянные стены, три графика и кофемашина. Даёт шанс крита.", price: { currency: "USD", amount: 40 }, bonus: { critChance: 0.03 } },
-  { id: "penthouse", name: "Пентхаус To The Moon", description: "Вид на Луну, золото и бассейн из стейблкоинов. Урон и сила крита.", price: { currency: "SOL", amount: 0.5 }, bonus: { damage: 0.05, critDamage: 0.15 } },
+  { id: "penthouse", name: "Пентхаус To The Moon", description: "Вид на Луну, золото и бассейн из стейблкоинов. Урон и сила крита.", price: { currency: "SOL", amount: 50 }, bonus: { damage: 0.05, critDamage: 0.15 } },
 ];
 
 export const equipmentById = (id: string) => EQUIPMENT.find((e) => e.id === id);

@@ -326,6 +326,12 @@ export function BossScreen({ id }: { id: string }) {
     try { const m = localStorage.getItem(`xc-mode-${id}`); if (m === "pacan" || m === "blat" || m === "avtor") setModeRaw(m); } catch { /* storage blocked */ }
   }, [id]);
   const setMode = (m: FightMode) => { setModeRaw(m); try { localStorage.setItem(`xc-mode-${id}`, m); } catch { /* storage blocked */ } };
+  // «Соло» is only picked here (on/off, remembered per boss); the fight starts with a tap on the door
+  const [soloPick, setSoloRaw] = useState(false);
+  useEffect(() => {
+    try { setSoloRaw(localStorage.getItem(`xc-solo-${id}`) === "1"); } catch { /* storage blocked */ }
+  }, [id]);
+  const setSolo = (v: boolean) => { setSoloRaw(v); try { localStorage.setItem(`xc-solo-${id}`, v ? "1" : "0"); } catch { /* storage blocked */ } };
   const start = async (solo = false) => {
     const md = fightMode(mode);
     const r = await act<{ fightId: number }>("fight_start", { boss: id, solo, mode }, `${solo ? "Соло-бой" : "Бой"} с боссом ${boss?.name} · ${md.name}${md.hp > 1 ? ` (здоровье ×${md.hp})` : ""}. 8 часов`);
@@ -493,30 +499,24 @@ export function BossScreen({ id }: { id: string }) {
             <span className="tiny">вход<br />свободный</span>
           )}
         </div>
-        {/* «Соло» under the passes: a fight alone; the star turns gold once the player beat this boss solo */}
-        {!otherFight && !locked && limitLeft > 0 && (
-          <button className="door-solo" disabled={busy === "fight_start" || door !== "closed"} onClick={() => openDoor(true)}
-            title="Соло: урон других игроков не засчитывается, только твой" aria-label={`Соло — бой в одиночку${(row?.mySoloWins ?? 0) > 0 ? ", уже побеждён соло" : ""}`}>
-            <svg className={`door-solo-star ${(row?.mySoloWins ?? 0) > 0 ? "on" : ""}`} viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 2.6l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z" />
-            </svg>
-            <span className="display">Соло</span>
-          </button>
-        )}
-        {/* three ways to fight him: more HP — a better medal; his things drop only in «Блатной» */}
-        <div className="mode-pick door-modes" role="radiogroup" aria-label="Режим боя">
-          {FIGHT_MODES.map((m) => {
-            const n = row?.medals?.[m.medal] ?? 0;
-            return (
-              <button key={m.id} type="button" role="radio" aria-checked={mode === m.id} className={`mode-btn ${m.id} ${mode === m.id ? "on" : ""}`} onClick={() => { haptic.tap(); setMode(m.id); }}>
-                <BossCoin boss={boss} tier={m.medal} size={30} dim={n === 0} />
-                <b className="display">{m.name}</b>
-                <small className="num">×{m.hp} · {Math.min(MEDAL_SET, n)}/{MEDAL_SET}</small>
+        {/* how to fight him, a column of words on the wall under the pass: three modes and «Соло» (picking only — the door starts the fight) */}
+        {!locked && (
+          <div className="door-side" role="group" aria-label="Режим боя">
+            {FIGHT_MODES.map((m) => (
+              <button key={m.id} type="button" role="radio" aria-checked={mode === m.id} className={`door-word ${m.id} ${mode === m.id ? "on" : ""}`}
+                disabled={door !== "closed"} onClick={() => { haptic.tap(); setMode(m.id); }}
+                title={`${m.name}: здоровье ×${m.hp} · медаль «${MEDAL_NAMES[m.medal]}»${m.things ? " · падают вещи" : ""}`}>
+                {m.name}
               </button>
-            );
-          })}
-        </div>
-        <button className="door-leaf" onClick={() => openDoor(false)} aria-label={blocked ? `${locked ? "Нет карт" : "Закрыто"}: ${blocked}` : `Открыть дверь и начать бой с боссом ${boss.name}`} disabled={door === "open" || door === "enter"}>
+            ))}
+            <button type="button" aria-pressed={soloPick} className={`door-word solo ${soloPick ? "on" : ""}`} disabled={door !== "closed"}
+              onClick={() => { haptic.tap(); setSolo(!soloPick); }}
+              title="Соло: урон других игроков не засчитывается, только твой" aria-label={`Соло — бой в одиночку${(row?.mySoloWins ?? 0) > 0 ? ", уже побеждён соло" : ""}`}>
+              Соло{(row?.mySoloWins ?? 0) > 0 && <span className="door-word-star" aria-hidden="true">★</span>}
+            </button>
+          </div>
+        )}
+        <button className="door-leaf" onClick={() => openDoor(soloPick)} aria-label={blocked ? `${locked ? "Нет карт" : "Закрыто"}: ${blocked}` : `Открыть дверь и начать ${soloPick ? "соло-бой" : "бой"} с боссом ${boss.name} · ${fightMode(mode).name}`} disabled={door === "open" || door === "enter"}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/assets/door/door.webp" alt="" draggable={false} />
           <span className="door-hit" />
@@ -538,7 +538,7 @@ export function BossScreen({ id }: { id: string }) {
       </div>
       <div className="fight-bottom prefight-panel">
         <div className="tiny muted center mode-hint">
-          {fightMode(mode).name}: здоровье {full(Math.round((row?.hpMax ?? boss.hp) * fightMode(mode).hp))} · медаль «{MEDAL_NAMES[fightMode(mode).medal]}»{fightMode(mode).things ? " · падают вещи босса" : ""}.
+          {soloPick ? "Соло · " : ""}{fightMode(mode).name}: здоровье {full(Math.round((row?.hpMax ?? boss.hp) * fightMode(mode).hp))} · медаль «{MEDAL_NAMES[fightMode(mode).medal]}»{fightMode(mode).things ? " · падают вещи босса" : ""}.
           {" "}Сет из {MEDAL_SET} — +{medalBonus(boss, fightMode(mode).medal)} к урону «{weaponById(medalWeapon(boss))?.name}».
         </div>
         <div className="row small" style={{ justifyContent: "space-between", gap: 6 }}>

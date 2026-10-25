@@ -12,7 +12,7 @@ interface DuelRow {
   from_points: number | null; to_points: number | null; winner_id: number | null; created_at: Date; accepted_at: Date | null;
 }
 const as = (ctx: Ctx, pid: number): Ctx => ({ ...ctx, pid });
-const round2 = (v: number) => Math.round(v * 100) / 100;
+const round2 = (v: number) => Math.floor(v + 1e-9); // whole dollars only
 
 /** the pot is paid (or the stakes go back) once both have played */
 async function settle(ctx: Ctx, d: DuelRow) {

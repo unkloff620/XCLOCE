@@ -21,7 +21,7 @@ export const YARD_DROPS: YardDrop[] = [
   { id: "spinner", name: "Спиннер из 2017", icon: "spinner", weight: 7, reward: { items: [{ id: "spinner", qty: 1 }] } },
   { id: "flyer-passive", name: "Листовка «Пассивный доход»", icon: "flyer-passive", weight: 7, reward: { items: [{ id: "flyer-passive", qty: 1 }] } },
   { id: "energy-drink", name: "Энергетик", icon: "energy-drink", weight: 18, reward: { items: [{ id: "energy-drink", qty: 1 }] } },
-  { id: "lost-wallet", name: "Забытый кошелёк", icon: "lost-wallet", weight: 8, reward: { currencies: { USD: 0.5 }, items: [{ id: "lost-wallet", qty: 1 }] } },
+  { id: "lost-wallet", name: "Забытый кошелёк", icon: "lost-wallet", weight: 8, reward: { currencies: { USD: 1 }, items: [{ id: "lost-wallet", qty: 1 }] } },
   { id: "poker-chip", name: "Фишка", icon: "poker-chip", weight: 5, reward: { items: [{ id: "poker-chip", qty: 1 }] } },
   { id: "keyboard", name: "Клавиатура", icon: "keyboard", weight: 1, reward: { items: [{ id: "keyboard", qty: 1 }] } },
 ];

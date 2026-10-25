@@ -969,4 +969,31 @@ CREATE TABLE IF NOT EXISTS boss_medals (
 );
 `,
   },
+  {
+    // USD, SOL and BTC become whole numbers: SOL ×100 and BTC ×10 000 (same worth in rubles), USD rounded down
+    id: "v2-055-whole-currencies",
+    sql: `
+UPDATE wallets SET amount = FLOOR(amount * 100) WHERE currency = 'SOL';
+UPDATE wallets SET amount = FLOOR(amount * 10000) WHERE currency = 'BTC';
+UPDATE wallets SET amount = FLOOR(amount) WHERE currency = 'USD';
+UPDATE prizes SET reward = jsonb_set(reward, '{currencies}', (
+  SELECT jsonb_object_agg(k, CASE k
+    WHEN 'SOL' THEN to_jsonb(GREATEST(1, ROUND((v #>> '{}')::numeric * 100)))
+    WHEN 'BTC' THEN to_jsonb(GREATEST(1, ROUND((v #>> '{}')::numeric * 10000)))
+    WHEN 'USD' THEN to_jsonb(GREATEST(1, ROUND((v #>> '{}')::numeric)))
+    ELSE v END)
+  FROM jsonb_each(reward -> 'currencies') AS e(k, v)))
+WHERE claimed_at IS NULL AND jsonb_typeof(reward -> 'currencies') = 'object' AND reward -> 'currencies' <> '{}'::jsonb;
+UPDATE fights SET reward = jsonb_set(reward, '{currencies}', (
+  SELECT jsonb_object_agg(k, CASE k
+    WHEN 'SOL' THEN to_jsonb(ROUND((v #>> '{}')::numeric * 100))
+    WHEN 'BTC' THEN to_jsonb(ROUND((v #>> '{}')::numeric * 10000))
+    ELSE v END)
+  FROM jsonb_each(reward -> 'currencies') AS e(k, v)))
+WHERE reward IS NOT NULL AND jsonb_typeof(reward -> 'currencies') = 'object' AND reward -> 'currencies' <> '{}'::jsonb;
+DELETE FROM config WHERE key = 'exchange.rub';
+DELETE FROM config WHERE key = 'daily' AND (value::text LIKE '%"SOL"%' OR value::text LIKE '%"BTC"%' OR value::text ~ '"USD": *[0-9]+\\.');
+UPDATE config SET value = value - 'rpg-1' - 'energy-500' - 'gold-chain' WHERE key = 'prices' AND jsonb_typeof(value) = 'object';
+`,
+  },
 ];

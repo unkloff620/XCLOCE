@@ -1,6 +1,6 @@
 import { GameError, type Queryable } from "./db.ts";
 import type { Config } from "./config.ts";
-import { CURRENCIES, floorTo, isCurrency, type Currency } from "../content/currencies.ts";
+import { CURRENCIES, CURRENCY_DEFS, floorTo, isCurrency, type Currency } from "../content/currencies.ts";
 import { itemById } from "../content/items.ts";
 import { levelFromXp } from "../content/levels.ts";
 import type { Reward } from "../content/rewards.ts";
@@ -124,7 +124,9 @@ export async function addMoney(ctx: Ctx, c: Currency, amount: number, reason: st
 }
 
 export async function takeMoney(ctx: Ctx, c: Currency, amount: number, reason: string) {
-  const v = Math.round(amount * 1e8) / 1e8;
+  // whole units only: a fractional charge is rounded up (never takes less than asked)
+  const k = 10 ** (CURRENCY_DEFS[c]?.decimals ?? 0);
+  const v = Math.ceil(Math.round(amount * 1e8) / 1e8 * k - 1e-9) / k;
   if (!(v > 0)) throw new GameError("bad_amount", "Некорректная сумма");
   const r = await ctx.q.query("UPDATE wallets SET amount = amount - $3 WHERE player_id=$1 AND currency=$2 AND amount >= $3 RETURNING amount", [ctx.pid, c, v]);
   if (!r.length) throw new GameError("no_money", `Не хватает ${c}`);

@@ -18,7 +18,7 @@ import { GainLine, Modal } from "../ui.tsx";
 import type { Granted } from "../api.ts";
 
 const LINKS = [
-  { href: "/exchange", icon: "exchange", label: "Обменник", c: "#ffb347", hint: "Меняй одну валюту на другую (комиссия 5%)." },
+  { href: "/exchange", icon: "exchange", label: "Обменник", c: "#ffb347", hint: "Меняй одну валюту на другую. Ивент: работает один день из трёх." },
 ] as const;
 
 interface YardData { items: { id: number; slot: number; drop: string; at: number }[]; max: number; nextAt: number | null; periodMs: number }

@@ -173,11 +173,11 @@ async function finishRound(ctx: Ctx, t: TableRow) {
       h.done = true;
       h.outcome = bjOutcome(h.cards, s.dealer, !!h.split);
       h.pay = seat.free ? Math.max(0, BJ_RETURN[h.outcome] - 1) * h.bet : BJ_RETURN[h.outcome] * h.bet;
-      h.pay = Math.round(h.pay * 100) / 100;
+      h.pay = Math.floor(h.pay + 1e-9); // whole dollars only
       won += h.pay;
       if (h.pay > 0) await addMoney(asCtx(ctx, seat.pid), "USD", h.pay, `bj:${h.outcome}`);
     }
-    seat.won = Math.round(won * 100) / 100;
+    seat.won = Math.floor(won + 1e-9);
     // the weekly blackjack rating counts the winnings of the round (paid out minus staked)
     await addGameWeekly(asCtx(ctx, seat.pid), "bj", seat.won - (seat.staked ?? 0));
     await addBjDaily(asCtx(ctx, seat.pid), seat.won - (seat.staked ?? 0));
@@ -242,7 +242,7 @@ async function settleInsurance(ctx: Ctx, t: TableRow, base: number) {
   for (const seat of sitting(s)) {
     if (seat.ins === null) seat.ins = 0;
     if (!seat.ins) continue;
-    seat.insPay = bj ? Math.round(seat.ins * (BJ_INS_PAY + 1) * 100) / 100 : 0;
+    seat.insPay = bj ? Math.floor(seat.ins * (BJ_INS_PAY + 1)) : 0;
     if (seat.insPay > 0) await addMoney(asCtx(ctx, seat.pid), "USD", seat.insPay, "bj:insurance");
   }
   await peek(ctx, t, base);

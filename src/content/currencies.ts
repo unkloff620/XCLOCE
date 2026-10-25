@@ -13,10 +13,34 @@ export interface CurrencyDef {
 
 export const CURRENCY_DEFS: Record<Currency, CurrencyDef> = {
   RUB: { id: "RUB", name: "Рубли", decimals: 0, rub: 1 },
-  USD: { id: "USD", name: "Доллары", decimals: 2, rub: 90 },
-  SOL: { id: "SOL", name: "Solana", decimals: 4, rub: 15_000 },
-  BTC: { id: "BTC", name: "Bitcoin", decimals: 6, rub: 6_000_000 },
+  // whole numbers only (v2-055 rescaled SOL ×100 and BTC ×10 000 so the old fractions became integers at the same worth)
+  USD: { id: "USD", name: "Доллары", decimals: 0, rub: 90 },
+  SOL: { id: "SOL", name: "Solana", decimals: 0, rub: 150 },
+  BTC: { id: "BTC", name: "Bitcoin", decimals: 0, rub: 600 },
 };
+
+/** The exchanger is an event: it works one Moscow day out of every EXCHANGE_EVERY_DAYS. */
+export const EXCHANGE_EVERY_DAYS = 3;
+const DAY_MS = 86_400_000;
+const MSK_MS = 3 * 3_600_000;
+const mskDayNo = (now: number) => Math.floor((now + MSK_MS) / DAY_MS);
+export const exchangeOpenOnDayNo = (n: number) => ((n % EXCHANGE_EVERY_DAYS) + EXCHANGE_EVERY_DAYS) % EXCHANGE_EVERY_DAYS === 0;
+
+export interface ExchangeWindow {
+  open: boolean;
+  /** Moscow day "YYYY-MM-DD" of today */
+  day: string;
+  /** open → when it closes; closed → when it opens next (ms) */
+  until: number;
+}
+export function exchangeWindow(now: number): ExchangeWindow {
+  const n = mskDayNo(now);
+  const day = new Date(n * DAY_MS).toISOString().slice(0, 10);
+  const open = exchangeOpenOnDayNo(n);
+  let next = n + 1;
+  if (!open) while (!exchangeOpenOnDayNo(next)) next++;
+  return { open, day, until: next * DAY_MS - MSK_MS };
+}
 
 export const EXCHANGE_FEE = 0.05;
 

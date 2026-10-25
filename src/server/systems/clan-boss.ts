@@ -32,7 +32,7 @@ export function clanBossPrize(share: number, clanSize: number): Reward {
   const n = Math.max(CLAN_BOSS_MIN_MEMBERS, clanSize);
   const P = CLAN_BOSS_POOL_PER_MEMBER;
   const rub = Math.max(CLAN_BOSS_FLOOR.RUB, Math.round(P.RUB * n * share));
-  const usd = Math.round(P.USD * n * share * 100) / 100;
+  const usd = Math.round(P.USD * n * share);
   const chips = Math.max(CLAN_BOSS_FLOOR.chips, Math.round(P.chips * n * share));
   const gpu = Math.floor(P.gpu * n * share);
   const items = [{ id: "poker-chip", qty: chips }, ...(gpu > 0 ? [{ id: "gpu", qty: gpu }] : [])];

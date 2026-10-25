@@ -2933,11 +2933,56 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .bk-medal.coin { display: inline-flex; flex-direction: column; align-items: center; gap: 1px; }
 .bk-medal.coin small { font-size: 9px; color: var(--muted); }
 
-/* the fight modes on the right wall, under «Соло», one under another */
-.door-modes { position: absolute; z-index: 3; left: 73.8%; top: 61%; width: 16%; display: flex; flex-direction: column; gap: 0.9cqw; pointer-events: auto; }
-.door-modes .mode-btn { gap: 0.15cqw; padding: 0.7cqw 0.3cqw 0.6cqw; border-radius: 8px; border-width: 1.5px; box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
-  background: rgba(20, 12, 8, 0.66); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
-.door-modes .mode-btn .bcoin { width: 4.6cqw !important; height: 4.6cqw !important; }
-.door-modes .mode-btn b { font-size: 1.6cqw; letter-spacing: -0.03em; }
-.door-modes .mode-btn small { font-size: 1.6cqw; }
-.door-modes .mode-btn.on { transform: none; }
+/* how to fight: words on the right wall under the pass — three modes and «Соло», each in its own colour with a dark outline */
+.door-side { position: absolute; z-index: 3; left: 68.8%; top: 50.5%; width: 26%; display: flex; flex-direction: column; align-items: center; gap: 1.2cqw; pointer-events: auto; }
+.door-word { position: relative; padding: 0.8cqw 1cqw; border: 0; background: none; cursor: pointer; font-family: var(--font-display), var(--font-body), sans-serif; font-weight: 400;
+  font-size: 3.3cqw; line-height: 1.1; letter-spacing: 0.01em; white-space: nowrap; color: var(--wc, #fff3e3); opacity: 0.5;
+  -webkit-text-stroke: 0.45cqw #160b04; paint-order: stroke fill; text-shadow: 0 0.5cqw 0.8cqw rgba(0, 0, 0, 0.7);
+  transition: opacity 0.15s, transform 0.15s, filter 0.15s; }
+.door-word.pacan { --wc: #f0a868; }
+.door-word.blat { --wc: #e4ebf3; }
+.door-word.avtor { --wc: #ffd45a; }
+.door-word.solo { --wc: #d9a8ff; margin-top: 1.4cqw; font-size: 3.8cqw; }
+.door-word.on { opacity: 1; transform: scale(1.12); filter: drop-shadow(0 0 1.6cqw color-mix(in srgb, var(--wc) 70%, transparent)); }
+.door-word:active:not(:disabled) { transform: scale(0.95); }
+.door-word:disabled { cursor: default; }
+.door-word-star { position: absolute; top: -0.6cqw; right: -2.2cqw; font-size: 2.8cqw; color: #ffcc33; -webkit-text-stroke: 0.35cqw #5a3a00; }
+
+/* exchanger as an event: one day out of three */
+.exp-event { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 12px; border-radius: 14px; text-align: center; font-size: 12px; color: var(--muted);
+  background: var(--tex), var(--bg2); border: 2.5px solid var(--line); box-shadow: 0 3px 0 var(--line); }
+.exp-event b.display { font-size: 15px; color: #ff8a9e; letter-spacing: 0.03em; }
+.exp-event.on b.display { color: #7cf0a0; }
+.exp-event .num { color: var(--ink); }
+.exp-wrap { position: relative; }
+.exp-wrap.closed .exp-panel { filter: grayscale(0.85) brightness(0.6); pointer-events: none; }
+.exp-closed-sign { position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%) rotate(-9deg); padding: 6px 20px; border: 4px solid #ff5f6d; border-radius: 10px;
+  font-size: 34px; letter-spacing: 0.12em; color: #ff5f6d; background: rgba(20, 8, 8, 0.72); text-shadow: 0 2px 0 rgba(0, 0, 0, 0.6); pointer-events: none; }
+.ex-notice { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.ex-notice img { width: 120px; height: 120px; object-fit: contain; filter: drop-shadow(0 4px 10px rgba(255, 179, 71, 0.5)); animation: ex-notice-bob 1.8s ease-in-out infinite; }
+.ex-notice b.display { font-size: 20px; color: var(--gold); }
+@keyframes ex-notice-bob { 50% { transform: translateY(-4px) rotate(-3deg); } }
+@media (prefers-reduced-motion: reduce) { .ex-notice img { animation: none; } }
+
+/* rewards are plain text everywhere — [icon]+N with a thin dark outline, no boxes */
+.rchips .chip, .chip.loc-rep, .result-drops .chip, .result-gains .gain, .result-gains .gain.result-room, .medal-chip {
+  background: none; border: 0; padding: 0; border-radius: 0; box-shadow: none; animation: none;
+  text-shadow: -1px -1px 0 var(--line), 1px -1px 0 var(--line), -1px 1px 0 var(--line), 1px 1px 0 var(--line), 0 2px 2px rgba(0, 0, 0, 0.5); }
+.rchips .chip { font-size: 13px; color: var(--ink); }
+.rchips .chip.violet { color: #ffd2a0; }
+.rchips .chip.gold { color: var(--gold); }
+.rchips .chip.ach-pts { color: #ffd45a; }
+.rchips .chip svg, .rchips .chip img, .chip.loc-rep svg, .result-drops .chip img, .medal-chip .bcoin { filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.75)); }
+.result-gains { gap: 4px 12px; }
+.result-gains .gain { font-size: 14px; }
+.result-gains .gain.result-room { color: var(--gold); }
+.result-drops { gap: 4px 12px; }
+.result-drops .chip { font-size: 13px; color: var(--gold); }
+
+/* the rewards on the door, packed: two-three to a row instead of one long column */
+.door-plate { flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center; column-gap: 2.6cqw; row-gap: 0.9cqw; }
+.door-plate-title { width: 100%; text-align: center; }
+.door-plate .gain-line { display: contents; }
+.door-plate .gain { text-shadow: -1px -1px 0 var(--line), 1px -1px 0 var(--line), -1px 1px 0 var(--line), 1px 1px 0 var(--line); }
+.door-plate .medal-chip b { font-size: 3.1cqw; }
+.door-plate .medal-chip .bcoin { width: 4.4cqw !important; height: 4.4cqw !important; }

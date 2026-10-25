@@ -7,6 +7,7 @@ import { fightView } from "../src/server/systems/combat.ts";
 import { YARD_DROPS } from "../src/content/yard.ts";
 import { levelFromXp } from "../src/content/levels.ts";
 import { LOCATIONS } from "../src/content/locations.ts";
+import { exchangeWindow } from "../src/content/currencies.ts";
 import { TALENT_THRESHOLDS, talentThreshold, talentsForDamage } from "../src/content/talents.ts";
 import { MIGRATIONS } from "../src/server/migrations.ts";
 import { signInitData, signLoginWidget, validateInitData, validateLoginWidget } from "../src/server/auth.ts";
@@ -135,11 +136,11 @@ describe("boss fights: personal fights, shared damage", () => {
     const sb = await act(db, b, "fight_claim", { fightId: fb.result.fightId }, T0, always(0.99));
     expect(sb.result).toMatchObject({ status: "won", share: 1, key: true });
     expect(await qty(db, b, "key-datsik")).toBe(1);
-    expect(await wallet(db, b, "SOL")).toBeCloseTo(0.02);
+    expect(await wallet(db, b, "SOL")).toBe(2);
 
     const sc = await act(db, c, "fight_claim", { fightId: fc.result.fightId }, T0, always(0.99));
     expect(sc.result).toMatchObject({ share: 0.6, key: true });
-    expect(await wallet(db, c, "SOL")).toBeCloseTo(0.012, 3);
+    expect(await wallet(db, c, "SOL")).toBe(1); // 0.6 × 2 → whole SOL only, rounded down
     expect(await qty(db, c, "key-datsik")).toBe(1);
 
     const sd = await act(db, d, "fight_claim", { fightId: fd.result.fightId }, T0, always(0.99));
@@ -506,11 +507,17 @@ describe("shop and exchange", () => {
   it("exchanges at the server rate minus the fee", async () => {
     const p = await newPlayer(db);
     await setMoney(db, p, "RUB", 900);
-    const r = await act(db, p, "exchange", { from: "RUB", to: "USD", amount: 900 }, T0);
-    expect(r.result.got).toBeCloseTo(9.5);
+    // the exchanger is an event: one Moscow day out of three
+    let open = T0;
+    while (!exchangeWindow(open).open) open += 24 * H;
+    await expect(act(db, p, "exchange", { from: "RUB", to: "USD", amount: 900 }, open + 24 * H)).rejects.toMatchObject({ code: "exchange_closed" });
+    const r = await act(db, p, "exchange", { from: "RUB", to: "USD", amount: 900 }, open);
+    expect(r.result.got).toBe(9); // 9.5 → whole dollars only
     expect(await wallet(db, p, "RUB")).toBe(0);
-    await expect(act(db, p, "exchange", { from: "RUB", to: "USD", amount: 10 }, T0)).rejects.toMatchObject({ code: "no_money" });
-    await expect(act(db, p, "exchange", { from: "USD", to: "RUB", amount: -5 }, T0)).rejects.toMatchObject({ code: "bad_amount" });
+    await expect(act(db, p, "exchange", { from: "RUB", to: "USD", amount: 10 }, open)).rejects.toMatchObject({ code: "no_money" });
+    await expect(act(db, p, "exchange", { from: "USD", to: "RUB", amount: -5 }, open)).rejects.toMatchObject({ code: "bad_amount" });
+    await setMoney(db, p, "USD", 5);
+    await expect(act(db, p, "exchange", { from: "USD", to: "RUB", amount: 1.5 }, open)).rejects.toMatchObject({ code: "bad_amount" });
   });
 });
 
@@ -552,7 +559,7 @@ describe("locations", () => {
     const usd1 = await wallet(db, p, "USD");
     const c2 = await act(db, p, "location_claim", { locationId: loc.id }, T0);
     expect(c2.result.first).toBe(false);
-    expect((await wallet(db, p, "USD")) - usd1).toBe(2.5);
+    expect((await wallet(db, p, "USD")) - usd1).toBe(2); // half of 5, whole dollars
   });
 });
 
@@ -654,7 +661,7 @@ describe("selling, nickname, slot machine 777", () => {
     const s1 = await act(db, p, "slots_spin", {}, T0, always(0)); // lowest roll → first outcome = jackpot
     expect(s1.result).toMatchObject({ outcome: "jackpot", reels: ["seven", "seven", "seven"], left: 2 });
     expect(await qty(db, p, "gpu")).toBe(1);
-    expect(await wallet(db, p, "SOL")).toBeCloseTo(0.07);
+    expect(await wallet(db, p, "SOL")).toBe(7);
     const s2 = await act(db, p, "slots_spin", {}, T0 + 10 * M, always(0.999));
     expect(s2.result.kind).toBe("miss");
     expect(new Set(s2.result.reels).size).toBe(3);
@@ -829,7 +836,7 @@ describe("home: equipment, rooms, look, help", () => {
 
   it("room pieces: desk, monitors and chair are bought one by one, in any order", async () => {
     const p = await newPlayer(db);
-    await setMoney(db, p, "SOL", 1);
+    await setMoney(db, p, "SOL", 100);
     await setMoney(db, p, "RUB", 3000);
     // the middle monitor first, without the right and the left ones
     const m3 = await act(db, p, "piece_buy", { id: "monitor2", piece: 3 }, T0);
@@ -959,7 +966,7 @@ describe("action log texts", () => {
   it("says what was found in the yard and what the 777 paid", async () => {
     const { actionText } = await import("../src/server/action-text.ts");
     expect(actionText("yard_pick", { itemId: 311 }, { name: "Ржавый ключ", reward: { xp: 5, currencies: { RUB: 120 }, items: [], energy: 0 } })).toBe("нашёл «Ржавый ключ» · +120 RUB, +5 авторитета");
-    expect(actionText("slots_spin", {}, { title: "Три биткоина", reels: ["btc", "btc", "btc"], reward: { xp: 0, currencies: { BTC: 0.001 }, items: [], energy: 0 } })).toBe("Три биткоина [BTC BTC BTC] · +0,001 BTC");
+    expect(actionText("slots_spin", {}, { title: "Три биткоина", reels: ["btc", "btc", "btc"], reward: { xp: 0, currencies: { BTC: 10 }, items: [], energy: 0 } })).toBe("Три биткоина [BTC BTC BTC] · +10 BTC");
     expect(actionText("slots_spin", {}, { title: "Мимо", reels: ["btc", "sol", "rub"], reward: null })).toBe("Мимо [BTC SOL RUB] · без выигрыша");
   });
   it("is written for real actions", async () => {

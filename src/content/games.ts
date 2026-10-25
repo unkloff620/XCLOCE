@@ -70,7 +70,7 @@ export const BJ_SHOW_MS = 5_000;
  */
 export const BJ_INS_MS = 10_000;
 export const BJ_INS_PAY = 2;
-export const bjInsurance = (bet: number) => Math.round(bet * 50) / 100;
+export const bjInsurance = (bet: number) => Math.ceil(bet / 2); // whole dollars only
 /** what one stake returns for each outcome (the stake included) */
 export const BJ_RETURN: Record<BjOutcome, number> = { blackjack: 2.5, win: 2, push: 1, lose: 0 };
 

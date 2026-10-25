@@ -1,6 +1,6 @@
 /*
  * Human-readable lines for the admin's action log: what the player did and what they got,
- * e.g. «нашёл «Ржавый ключ» · +120 RUB» or «Тройка BTC [BTC BTC BTC] · +0.0001 BTC».
+ * e.g. «нашёл «Ржавый ключ» · +120 RUB» or «Тройка BTC [BTC BTC BTC] · +1 BTC».
  */
 import type { Granted } from "./core.ts";
 import { itemById } from "../content/items.ts";

@@ -17,7 +17,7 @@ import { haptic } from "../telegram.ts";
 import { weaponStats } from "../weapon-stats.ts";
 import { ShopScene } from "./shop-scene.tsx";
 
-export interface ShopData { offers: Offer[]; exchange: { rub: Record<Currency, number>; fee: number } }
+export interface ShopData { offers: Offer[]; exchange: { rub: Record<Currency, number>; fee: number; open?: boolean; until?: number } }
 
 /** The goods in the shop scene (screens/shop-scene.tsx): the weapons on the counter, the clothes rack, the energy drinks. */
 const SHOP_SPOTS = [

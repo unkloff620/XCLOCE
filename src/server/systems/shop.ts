@@ -1,7 +1,7 @@
 import { GameError, type Queryable } from "../db.ts";
 import { addEnergy, addItem, addMoney, idempotent, itemQty, takeItem, takeMoney, type Ctx } from "../core.ts";
 import { OFFERS, bulkOf, bulkPrice, offerById } from "../../content/shop.ts";
-import { CURRENCY_DEFS, floorTo, type Currency } from "../../content/currencies.ts";
+import { CURRENCY_DEFS, exchangeWindow, floorTo, type Currency } from "../../content/currencies.ts";
 import { itemById, WEARABLE_SLOTS, type Slot } from "../../content/items.ts";
 import { unlockBossOf } from "../../content/bosses.ts";
 import type { Config } from "../config.ts";
@@ -48,6 +48,8 @@ export function quote(cfg: Config, from: Currency, to: Currency, amount: number)
 export async function exchange(ctx: Ctx, from: Currency, to: Currency, amount: number, idem?: string) {
   return idempotent(ctx, idem ? `ex:${idem}` : undefined, async () => {
     if (from === to) throw new GameError("bad_exchange", "Выбери разные валюты");
+    // an event: open one Moscow day out of three
+    if (!exchangeWindow(ctx.now).open) throw new GameError("exchange_closed", "Обменник закрыт — он работает один день из трёх");
     const a = floorTo(from, amount);
     if (!(a > 0) || a !== Math.round(amount * 10 ** CURRENCY_DEFS[from].decimals) / 10 ** CURRENCY_DEFS[from].decimals) {
       throw new GameError("bad_amount", "Некорректная сумма");

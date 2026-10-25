@@ -1,3 +1,4 @@
+import { exchangeOpenOnDayNo } from "./currencies.ts";
 import type { Reward } from "./rewards.ts";
 
 /*
@@ -70,5 +71,10 @@ function hash(s: string): number {
 }
 
 export function questsForDay(pid: number, day: string): QuestDef[] {
-  return QUEST_GROUPS.map((g, i) => g[hash(`${pid}:${day}:${i}`) % g.length]);
+  // the exchanger works one day out of three — on the other days its quest is not given
+  const exOpen = exchangeOpenOnDayNo(Math.round(Date.parse(`${day}T00:00:00Z`) / 86_400_000));
+  return QUEST_GROUPS.map((g0, i) => {
+    const g = exOpen ? g0 : g0.filter((q) => q.kind !== "exchange");
+    return g[hash(`${pid}:${day}:${i}`) % g.length];
+  });
 }

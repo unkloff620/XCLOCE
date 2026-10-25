@@ -24,6 +24,7 @@ import { CURRENCY_DEFS } from "../../content/currencies.ts";
 import { Stylist, type StyleDraft } from "./stylist.tsx";
 import { MessagesWindow, messagesWaiting, StashWishWindow } from "./stash-swap.tsx";
 import { ItemArt } from "../art/items.tsx";
+import { ExchangeNotice } from "../exchange-notice.tsx";
 
 const MENU_KEY = "xc2_home_menu";
 
@@ -272,6 +273,7 @@ export function HomeScreen() {
       )}
       {styling && <Stylist draft={styling} setDraft={setStyling} onClose={() => setStyling(null)} focus={editFocus} setFocus={setEditFocus} />}
       {daily && <DailyWindow onClose={() => setDaily(false)} />}
+      <ExchangeNotice wait={busyWindow || daily || (dailyReady && !dailyAutoShown)} />
       {wish && <StashWishWindow onClose={() => setWish(false)} />}
       {messages && <MessagesWindow onClose={() => setMessages(false)} />}
       {quests && <QuestsWindow onClose={() => setQuests(false)} />}
