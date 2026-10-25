@@ -20,6 +20,7 @@ import * as rating from "./systems/rating.ts";
 import * as extras2 from "./systems/minigame-extras.ts";
 import * as clanBoss from "./systems/clan-boss.ts";
 import * as duels from "./systems/duels.ts";
+import * as social from "./systems/social.ts";
 import * as achievements from "./systems/achievements.ts";
 import { taskById } from "../content/locations.ts";
 import { weaponById } from "../content/items.ts";
@@ -56,8 +57,8 @@ export const ACTIONS = [
   "daily_claim", "sell", "rename", "slots_spin",
   "equipment_upgrade", "talent_up", "talent_reset", "room_buy", "room_set", "look_set", "decor_set", "decor_save", "piece_buy", "help_seen", "starter_gift",
   "quest_claim", "quest_chest", "notify_set", "achievement_claim", "prize_claim", "clan_edit",
-  "game_start", "zonk_move", "zonk_give_up", "roach_squash", "poker_play", "poker_swap", "poker_stand", "bj_open", "bj_invite", "bj_join", "bj_decline", "bj_leave", "bj_bet", "bj_unbet", "bj_insure", "bj_move", "upgrade", "up_sell", "up_take",
-  "clan_cancel", "clan_accept", "clan_reject", "clan_boss_hit", "duel_create", "duel_answer", "duel_play", "stash_collect", "stash_wish", "stash_gift", "stash_accept",
+  "game_start", "zonk_move", "zonk_give_up", "zonk_choice", "roach_squash", "poker_play", "poker_swap", "poker_stand", "bj_open", "bj_invite", "bj_join", "bj_decline", "bj_leave", "bj_bet", "bj_unbet", "bj_insure", "bj_move", "upgrade", "up_sell", "up_take",
+  "clan_cancel", "clan_accept", "clan_reject", "clan_boss_hit", "duel_create", "duel_answer", "duel_play", "stash_collect", "stash_wish", "stash_gift", "stash_accept", "social_pump", "social_fight", "social_spit", "notes_read",
 ] as const;
 export type ActionType = (typeof ACTIONS)[number];
 
@@ -100,6 +101,7 @@ async function afterAction(ctx: Ctx, type: ActionType, result: unknown) {
     case "poker_stand": return r.phase === "done" ? quests.questTick(ctx, "poker", 1) : undefined;
     case "game_start":
     case "zonk_move":
+    case "zonk_choice":
     case "zonk_give_up": return r.status === "done" ? quests.questTick(ctx, "zonk", 1) : undefined;
     case "roach_squash": return r.reward ? quests.questTick(ctx, "roach", 1) : undefined;
     case "clan_boss_hit": {
@@ -154,6 +156,7 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "clan_edit": return clans.editClan(ctx, str(body.name, "name", 40), str(body.emblem, "emblem", 20), str(body.color, "color", 10), typeof body.description === "string" ? body.description.slice(0, 400) : "");
     case "game_start": return games.startGame(ctx, oneOf(body.game, ["zonk"] as const, "game"), body.level === undefined ? 1 : num(body.level, "level"));
     case "zonk_give_up": return games.zonkGiveUp(ctx);
+    case "zonk_choice": return games.zonkChoice(ctx, oneOf(body.go, ["end", "continue"] as const, "go"));
     case "bj_open": return bj.bjOpen(ctx);
     case "bj_invite": return bj.bjInvite(ctx, num(body.playerId, "playerId"));
     case "bj_join": return bj.bjJoin(ctx, num(body.inviteId, "inviteId"));
@@ -182,6 +185,10 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "stash_collect": return locations.collectStashSet(ctx, str(body.set, "set", 30));
     case "stash_wish": return swap.setStashWish(ctx, body.items);
     case "stash_gift": return swap.giftStash(ctx, num(body.to, "to"), str(body.itemId, "itemId", 40));
+    case "social_pump": return social.pump(ctx, num(body.to, "to"));
+    case "social_fight": return social.fight(ctx, num(body.to, "to"));
+    case "social_spit": return social.spit(ctx, num(body.to, "to"));
+    case "notes_read": return social.readNotes(ctx);
     case "stash_accept": return swap.acceptGifts(ctx, body.id === undefined || body.id === null ? null : num(body.id, "id"));
     case "clan_cancel": return clans.cancelRequest(ctx);
     case "clan_accept": return clans.answerRequest(ctx, num(body.playerId, "playerId"), true);

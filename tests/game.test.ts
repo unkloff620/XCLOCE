@@ -1217,6 +1217,25 @@ describe("yard mini games", () => {
     expect(t.state.seats.filter(Boolean)).toHaveLength(1);
   });
 
+  it("blackjack: a player who closed the game (no polls for 40 s) gets up by himself — the stake back, the seat free", async () => {
+    const a = await newPlayer(db), b = await newPlayer(db);
+    for (const p of [a, b]) await setMoney(db, p, "USD", 50);
+    const c = await act(db, a, "clan_create", { name: "Ушедшие", tag: "GON", emblem: "bull", color: "#3ddc84" }, T0);
+    await act(db, b, "clan_join", { clanId: c.result.clanId }, T0);
+    await act(db, a, "clan_accept", { playerId: b }, T0);
+    await act(db, a, "bj_open", {}, T0);
+    await act(db, a, "bj_invite", { playerId: b }, T0);
+    const [{ id: inviteId }] = await db.query<{ id: number }>("SELECT id FROM bj_invites WHERE player_id=$1", [b]);
+    await act(db, b, "bj_join", { inviteId }, T0 + 1000);
+    await act(db, a, "bj_bet", { bet: 5 }, T0 + 2000);
+    expect(await wallet(db, a, "USD")).toBe(45);
+    // a is gone; b comes back a minute later — a's stake returns and his seat is free
+    const v = (await act(db, b, "bj_bet", { bet: 5 }, T0 + 62_000)).result;
+    expect(v.table.seats.filter(Boolean)).toHaveLength(1);
+    expect(await wallet(db, a, "USD")).toBe(50);
+    expect(await db.query("SELECT 1 FROM bj_seats WHERE player_id=$1", [a])).toHaveLength(0);
+  });
+
   it("poker: combinations", async () => {
     const { pokerHand, pokerLevel, pokerPay, POKER_HANDS } = await import("../src/content/games.ts");
     for (const h of POKER_HANDS) expect(pokerHand(h.sample).hand).toBe(h.id);
@@ -1375,10 +1394,19 @@ describe("yard mini games", () => {
     let b = await act(db, p, "zonk_move", { pick: [0, 1, 2], then: "bank" }, T0, always(0));
     expect(b.result).toMatchObject({ status: "active", round: 2, rounds: 10, total: 1000, last: { points: 1000, zonk: false } });
     for (let i = 2; i <= 4; i++) b = await act(db, p, "zonk_move", { pick: [0, 1, 2], then: "bank" }, T0, always(0));
-    // 4000 reached after the 4th attempt: the game ends at once with the win
-    expect(b.result).toMatchObject({ status: "done", total: 4000, result: { outcome: "win", won: true, points: 4000, xp: 10 } });
+    // 4000 reached after the 4th attempt: the prize is paid at once and the choice is asked
+    expect(b.result).toMatchObject({ status: "active", total: 4000, reached: true, ask: true });
     expect(await wallet(db, p, "RUB")).toBe(rub + (ZONK_LEVELS[0].win.currencies?.RUB ?? 0));
-    expect(b.state.games.zonk).toMatchObject({ xp: 10, level: 0, record: { points: 4000, playerId: p, day: "today" } });
+    await expect(act(db, p, "zonk_move", { pick: [0, 1, 2], then: "bank" }, T0, always(0))).rejects.toMatchObject({ code: "zonk_ask" });
+    // «Продолжить»: the attempts left are played for the record, the prize does not grow
+    const c = await act(db, p, "zonk_choice", { go: "continue" }, T0, always(0));
+    expect(c.result).toMatchObject({ status: "active", ask: false, cont: true });
+    b = await act(db, p, "zonk_move", { pick: [0, 1, 2], then: "bank" }, T0, always(0));
+    expect(b.result.total).toBe(5000);
+    b = await act(db, p, "zonk_give_up", {}, T0, always(0));
+    expect(b.result).toMatchObject({ status: "done", total: 5000, result: { outcome: "win", won: true, points: 5000, xp: 10 } });
+    expect(await wallet(db, p, "RUB")).toBe(rub + (ZONK_LEVELS[0].win.currencies?.RUB ?? 0));
+    expect(b.state.games.zonk).toMatchObject({ xp: 10, level: 0, record: { points: 5000, playerId: p, day: "today" } });
     // the second level-1 game today costs rubles
     await setMoney(db, p, "RUB", 100);
     await expect(act(db, p, "game_start", { game: "zonk", level: 1 }, T0 + M)).rejects.toMatchObject({ code: "no_money" });
@@ -1694,6 +1722,33 @@ describe("daily tops of blackjack and poker", () => {
     expect(pk.top.map((r) => [r.id, r.hand])).toEqual([[b, "full"], [a, "full"], [c, "flush"]]);
     expect(pk.me).toMatchObject({ place: 2, hand: "full" });
     expect((await dayTop(db, a, "poker", "yesterday", T0)).top).toHaveLength(0);
+  });
+});
+
+describe("бицуха, наезд, харкнуть", () => {
+  it("biceps pumped once a day per visitor; more biceps wins a fight (+50 ₽); a spit leaves a message", async () => {
+    const a = await newPlayer(db), b = await newPlayer(db), c = await newPlayer(db);
+    await expect(act(db, a, "social_pump", { to: a }, T0)).rejects.toMatchObject({ code: "social_self" });
+    expect((await act(db, a, "social_pump", { to: b }, T0)).result.biceps).toBe(1);
+    await expect(act(db, a, "social_pump", { to: b }, T0 + 1000)).rejects.toMatchObject({ code: "pump_done" });
+    expect((await act(db, c, "social_pump", { to: b }, T0)).result.biceps).toBe(2);
+    // a (0) on b (2): a loses; b (2) on a (0): b wins 50 ₽
+    const f1 = await act(db, a, "social_fight", { to: b }, T0);
+    expect(f1.result).toMatchObject({ won: false, mine: 0, theirs: 2 });
+    await expect(act(db, a, "social_fight", { to: b }, T0 + 1000)).rejects.toMatchObject({ code: "fight_done" });
+    const rub = await wallet(db, b, "RUB");
+    expect((await act(db, b, "social_fight", { to: a }, T0)).result.won).toBe(true);
+    expect(await wallet(db, b, "RUB")).toBe(rub + 50);
+    // the next day the same player can be pumped again
+    expect((await act(db, a, "social_pump", { to: b }, T0 + 24 * H)).result.biceps).toBe(3);
+    await act(db, c, "social_spit", { to: a }, T0);
+    await expect(act(db, c, "social_spit", { to: a }, T0 + 1000)).rejects.toMatchObject({ code: "spit_wait" });
+    const s = await act(db, a, "equip", { itemId: "jeans" }, T0 + 2000);
+    const kinds = s.state.notes.map((n: { kind: string }) => n.kind);
+    expect(kinds).toEqual(["spit", "fight"]);
+    expect(s.state.notes.every((n: { unread: boolean }) => n.unread)).toBe(true);
+    const r = await act(db, a, "notes_read", {}, T0 + 3000);
+    expect(r.state.notes.some((n: { unread: boolean }) => n.unread)).toBe(false);
   });
 });
 

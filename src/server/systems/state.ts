@@ -12,7 +12,7 @@ import { touchActivity } from "../players.ts";
 import { dailyView } from "./daily.ts";
 import { renameView, slotsView } from "./extras.ts";
 import { gamesView, pokerView, upgradedView, upgradeSpinsView } from "./games.ts";
-import { bjInviteCount } from "./blackjack.ts";
+import { bjInviteCount, invitesFor } from "./blackjack.ts";
 import { requestsView } from "./clans.ts";
 import { homeView, weaponTalents } from "./home.ts";
 import { tasksHint } from "./locations.ts";
@@ -23,6 +23,7 @@ import { settleGameWeeks, settleZonkDay } from "./minigame-extras.ts";
 import { casesView, setBonuses } from "./collection.ts";
 import { clanBossView } from "./clan-boss.ts";
 import { duelsView, expireDuels } from "./duels.ts";
+import { notesView, socialView } from "./social.ts";
 import { achievementsReady, achievementsView } from "./achievements.ts";
 import { giftsLeft, giftsReceived, stashWish } from "./swap.ts";
 
@@ -104,9 +105,11 @@ export async function gameState(ctx: Ctx) {
     clanBoss: await clanBossView(ctx.q, ctx.pid, ctx.now),
     duels: await (async () => { await expireDuels(ctx); return duelsView(ctx.q, ctx.pid); })(),
     bjInvites: await bjInviteCount(ctx.q, ctx.pid, ctx.now),
+    bjInviteList: await invitesFor(ctx.q, ctx.pid, ctx.now),
     stashWish: await stashWish(ctx.q, ctx.pid),
     stashGifts: await giftsReceived(ctx.q, ctx.pid),
     stashInbox: await giftsReceived(ctx.q, ctx.pid, true),
+    notes: await notesView(ctx.q, ctx.pid, ctx.now),
     stashSets: Object.fromEntries((await ctx.q.query<{ set_n: number; count: number }>("SELECT set_n, count FROM stash_sets WHERE player_id=$1", [ctx.pid])).map((r) => [r.set_n, Number(r.count)])) as Record<number, number>,
     rename: await renameView(ctx.q, ctx.pid, ctx.now, ctx.cfg),
     sell: ctx.cfg.sell,
@@ -153,6 +156,7 @@ export async function profileView(q: Queryable, viewer: number, pid: number, cfg
       return { id: b.id, damage: Number(r?.damage ?? 0), hits: r?.hits ?? 0, wins: r?.wins ?? 0 };
     }),
     clan: clan ?? null,
+    social: await socialView(q, viewer, pid, now),
     // нычки the player asks for; a visitor also sees how many of them he has himself and his gifts left today
     stashWish: await stashWish(q, pid),
     stashGive: self ? null : await (async () => {

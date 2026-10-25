@@ -333,10 +333,17 @@ export const ROACH_RULES = { reward: { currencies: { RUB: 15 } } as Reward, chip
  * DUEL_FEE; a draw gives the stakes back. A call not accepted in DUEL_ANSWER_MS is cancelled (stake back); a duel not
  * played to the end by both in DUEL_PLAY_MS goes to the one who finished (nobody finished — stakes back).
  */
+/**
+ * Zonk: the target reached does not end the game — the prize is paid then and there and the player chooses:
+ * «Закончить» or «Продолжить» (for the day record). Going on never adds to the prize, and every zonk after it takes
+ * ZONK_CONT_PENALTY points off.
+ */
+export const ZONK_CONT_PENALTY = 1000;
 export const DUEL_STAKES = [1, 5, 10, 25] as const;
 export const DUEL_ROUNDS = 5;
 export const DUEL_FEE = 0.05;
-export const DUEL_ANSWER_MS = 24 * 3600_000;
+/** a call waits 5 minutes for the answer, then it goes away by itself (the stake back) and the player can be called again */
+export const DUEL_ANSWER_MS = 5 * 60_000;
 export const DUEL_PLAY_MS = 24 * 3600_000;
 /** open calls a player may have at once */
 export const DUEL_MAX_OPEN = 3;

@@ -39,6 +39,7 @@ function BlackjackHelp() {
         <li>Сайд — до {BJ_SIDE_MAX} USD. Бесплатная ставка — {BJ_FREE.perDay} в день по {BJ_FREE.bet} USD: выигрыш твой, проигрыш ничего не стоит.</li>
       </ul>
       <p><b>Страховка:</b> если у дилера открыт туз, перед ходами каждому со ставкой предлагают застраховаться на половину ставки ({BJ_INS_MS / 1000} секунд на ответ). Есть у дилера блэкджек — страховка платит 2:1, нет — она сгорает и игра идёт дальше. Бесплатную ставку не страхуют.</p>
+      <p>Закрыл окно блэкджека — ты встал из-за стола (ставка, если её ещё не раздали, вернётся). Тебя снова можно позвать.</p>
       <p>Стол ведёт дилер, как в казино: после раунда результаты видны 5 секунд, потом карты и ставки убираются и у всех 20 секунд на ставки. Время вышло — раздача тем, кто поставил (если поставили все — сразу). На ход — 30 секунд, потом рука стоит сама.</p>
     </Help>
   );
@@ -319,7 +320,13 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
     if (!v) return;
     if (v.now) skew.current = v.now - Date.now();
     setView(v);
+    seated.current = v.seat !== null && !!v.table;
   }, []);
+  // closing the window gets up from the table: the seat frees and the player can be called again
+  const seated = useRef(false);
+  const actRef = useRef(act);
+  actRef.current = act;
+  useEffect(() => () => { if (seated.current) void actRef.current("bj_leave", {}); }, []);
   // poll while the window is open
   useEffect(() => {
     let alive = true;

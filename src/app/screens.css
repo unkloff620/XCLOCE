@@ -2813,3 +2813,91 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 /* the [?] and the table buttons move right of the sheet */
 .zb-help.pk-help { left: 142px; }
 .bj2-top { left: 140px; right: 50px; flex-wrap: wrap; row-gap: 4px; }
+
+/* zonk: the target reached — finish or play on for the record */
+.zb-ask { position: absolute; z-index: 7; display: flex; flex-direction: column; align-items: center; gap: 1cqw; padding: 2.4cqw; border-radius: 2cqw; text-align: center;
+  background: rgba(10, 24, 18, 0.94); border: 0.4cqw solid rgba(125, 255, 181, 0.7); box-shadow: 0 0 4cqw rgba(61, 220, 132, 0.4); animation: zk-pop 0.3s ease-out; }
+.zb-ask b.display { font-size: 5.6cqw; color: #7dffb5; }
+.zb-ask-pts { font-size: 4cqw; font-weight: 900; color: #fff; }
+.zb-ask small { font-size: 2.4cqw; color: #cfe7dd; line-height: 1.3; }
+.zb-ask-btns { display: flex; gap: 2cqw; margin-top: 0.6cqw; }
+.zb-ask-btns .zb-duel-btn { font-size: 3cqw; padding: 1.2cqw 3cqw; }
+.zb-got { color: #7dffb5; font-weight: 900; margin-left: 1cqw; }
+.btn.icon-only { min-width: 40px; padding-left: 8px; padding-right: 8px; justify-content: center; font-size: 18px; }
+.chip.rc-item { gap: 3px; }
+
+/* ── a player's profile: his room on the whole screen, the buttons on the wall on the left ── */
+.pr-page .room-view { pointer-events: none; }
+.pr-plate { position: absolute; z-index: 3; top: var(--top); left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; max-width: 62%;
+  padding: 5px 14px 5px 5px; border-radius: 30px; border: 2.5px solid var(--line); background: rgba(24, 16, 10, 0.86); box-shadow: 0 3px 0 var(--line); }
+.pr-plate-t { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
+.pr-plate-t b { font-size: 15px; }
+.pr-plate-t small { display: flex; gap: 6px; font-size: 11px; color: var(--muted); }
+.pr-lvl { color: #c9a8ff; font-weight: 900; }
+.pr-tag { color: #ffd25a; font-weight: 800; }
+.pr-rail { position: absolute; z-index: 3; left: 10px; top: calc(var(--top) + 58px); display: flex; flex-direction: column; gap: 9px; }
+.pr-btn { position: relative; width: 62px; padding: 5px 2px 4px; display: flex; flex-direction: column; align-items: center; gap: 1px; cursor: pointer; text-decoration: none;
+  border-radius: 16px; border: 2.5px solid var(--line); box-shadow: 0 3px 0 var(--line); color: var(--ink);
+  background: var(--tex), linear-gradient(160deg, color-mix(in srgb, var(--c) 45%, var(--panel2)), color-mix(in srgb, var(--c) 12%, var(--panel))); }
+.pr-btn small { max-width: 58px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pr-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
+.pr-btn.spent { filter: saturate(0.35) brightness(0.8); }
+.pr-btn.glow { animation-name: pr-glow; animation-duration: 1.6s; animation-iteration-count: infinite; animation-timing-function: ease-in-out; }
+@keyframes pr-glow { 0%, 100% { box-shadow: 0 3px 0 var(--line), 0 0 0 rgba(255, 154, 92, 0); } 50% { box-shadow: 0 3px 0 var(--line), 0 0 16px rgba(255, 154, 92, 0.9); } }
+.pr-pop { position: absolute; right: -14px; top: -6px; font-size: 20px; font-weight: 900; color: #ffd25a; text-shadow: 0 2px 0 #2e1c00; pointer-events: none;
+  animation-name: lp-pop; animation-duration: 1.1s; animation-timing-function: ease-out; animation-fill-mode: forwards; }
+/* the spit flies from the left and splats on him */
+.pr-spit { position: absolute; z-index: 4; left: 50%; top: 46%; pointer-events: none; animation-name: pr-spit; animation-duration: 1.2s; animation-timing-function: ease-out; animation-fill-mode: forwards; }
+@keyframes pr-spit { 0% { transform: translate(-260%, -40%) scale(0.3) rotate(-30deg); opacity: 0.9; } 35% { transform: translate(-50%, -50%) scale(1.25); opacity: 1; } 100% { transform: translate(-50%, -20%) scale(1.1); opacity: 0; } }
+/* the fist fight: dust and fists for a moment over the room */
+.pr-brawl { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; pointer-events: none; }
+.pr-dust { position: absolute; width: 240px; height: 200px; border-radius: 50%; background: radial-gradient(circle, rgba(210, 180, 140, 0.95) 0%, rgba(160, 130, 95, 0.85) 45%, rgba(120, 95, 70, 0) 72%);
+  animation-name: pr-dust; animation-duration: 0.35s; animation-iteration-count: infinite; animation-direction: alternate; }
+@keyframes pr-dust { from { transform: scale(0.92) rotate(-6deg); } to { transform: scale(1.08) rotate(6deg); } }
+.pr-fist { position: absolute; animation-duration: 0.28s; animation-iteration-count: infinite; animation-direction: alternate; animation-timing-function: ease-in; }
+.pr-fist.a { animation-name: pr-fist-a; }
+.pr-fist.b { animation-name: pr-fist-b; }
+@keyframes pr-fist-a { from { transform: translate(-90px, -30px) rotate(-20deg); } to { transform: translate(-20px, 10px) rotate(10deg); } }
+@keyframes pr-fist-b { from { transform: translate(90px, 30px) scaleX(-1) rotate(-20deg); } to { transform: translate(20px, -10px) scaleX(-1) rotate(10deg); } }
+.pr-pow { position: absolute; font-size: 44px; color: #ffd25a; text-shadow: 0 3px 0 #2e1c00, 0 0 18px rgba(255, 90, 61, 0.8); animation-name: pr-pow; animation-duration: 0.45s; animation-iteration-count: infinite; animation-direction: alternate; }
+@keyframes pr-pow { from { transform: scale(0.8) rotate(-8deg); } to { transform: scale(1.2) rotate(6deg); } }
+.pr-brawl-res { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+.pr-brawl-vs { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; width: 100%; }
+.pr-brawl-vs span { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.pr-brawl-vs span b { font-size: 26px; }
+.pr-brawl-vs small { font-size: 11px; color: var(--muted); }
+.pr-brawl-res.win .pr-brawl-vs span:first-child b { color: #7dffb5; }
+.pr-brawl-res.lose .pr-brawl-vs span:last-child b { color: #ff8f8f; }
+
+/* «Личное дело»: a folder with tabs */
+.dos { display: flex; flex-direction: column; gap: 0; }
+.dos-head { display: flex; align-items: center; gap: 10px; margin: -4px 40px 10px 0; }
+.dos-k { color: #b0874e; letter-spacing: 0.08em; font-weight: 900; }
+.dos-tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; margin: 0 -4px; padding: 0 4px; }
+.dos-tabs::-webkit-scrollbar { display: none; }
+.dos-tab { flex: none; padding: 7px 14px 6px; border: 2.5px solid var(--line); border-bottom: 0; border-radius: 12px 16px 0 0; background: #b9a281; color: #4a3a26;
+  font: 900 13px/1 var(--font-display), sans-serif; text-transform: uppercase; letter-spacing: 0.03em; transform: skewX(-8deg); cursor: pointer; }
+.dos-tab.on { background: #efe2c8; color: #1e140a; position: relative; z-index: 1; margin-bottom: -2.5px; padding-bottom: 8.5px; }
+.dos-page { border: 2.5px solid var(--line); border-radius: 0 12px 12px 12px; padding: 12px; background: var(--tex), linear-gradient(180deg, var(--panel2), var(--panel)); max-height: 62vh; overflow-y: auto; }
+.dos-page .panel { box-shadow: none; }
+.dos-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.dos-facts span { display: flex; flex-direction: column; gap: 1px; padding: 6px 8px; border-radius: 10px; background: rgba(0, 0, 0, 0.22); min-width: 0; }
+.dos-facts small { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.dos-facts b { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; min-width: 0; }
+
+/* buttons never break their text over two lines */
+.btn { white-space: nowrap; }
+
+/* a call into a mini-game, wherever the player is */
+.gi { position: fixed; z-index: 92; left: 50%; top: calc(var(--hud-h) + var(--safe-t) + 8px); transform: translateX(-50%); width: min(calc(100% - 20px), 400px);
+  display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 10px; border-radius: 18px; border: 2.5px solid var(--line);
+  background: var(--tex), linear-gradient(180deg, var(--panel3), var(--panel)); box-shadow: 0 4px 0 var(--line), 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 18px rgba(255, 210, 90, 0.35);
+  animation-name: gi-in; animation-duration: 0.35s; animation-timing-function: cubic-bezier(0.2, 1.4, 0.4, 1); }
+@keyframes gi-in { from { transform: translate(-50%, -30px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+.gi-t { display: flex; flex-direction: column; flex: 1; min-width: 0; line-height: 1.2; }
+.gi-t b { font-size: 15px; }
+.gi-t small { font-size: 12px; color: #ffd25a; font-weight: 800; }
+.gi-b { flex: none; width: 42px; height: 42px; border-radius: 13px; border: 2.5px solid var(--line); box-shadow: 0 3px 0 var(--line); font: 900 22px/1 inherit; color: #fff; cursor: pointer; }
+.gi-b.ok { background: linear-gradient(180deg, #46e08f, #1f9c58); }
+.gi-b.no { background: linear-gradient(180deg, #ff7a7a, #c63b3b); }
+.gi-b:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }

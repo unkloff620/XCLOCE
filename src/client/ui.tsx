@@ -87,10 +87,10 @@ export function RewardChips({ r, size = 18 }: { r: Reward | Granted | null | und
       {!!r.energy && <span className="chip gold" title="Энергия"><Icon name="energy" size={size} />+{r.energy}</span>}
       {!!r.achPoints && <span className="chip ach-pts" title="Очки достижений"><Icon name="sun" size={size} />+{r.achPoints}</span>}
       {items.map((it) => (
-        <span key={it.id} className="chip" title={itemById(it.id)?.name}>
+        // a picture and how many — no name (it is in the tooltip)
+        <span key={it.id} className="chip rc-item" title={itemById(it.id)?.name ?? it.id} aria-label={`${itemById(it.id)?.name ?? it.id} ×${it.qty}`}>
           <ItemArt id={it.id} size={size + 2} />
-          {itemById(it.id)?.name ?? it.id}
-          {it.qty > 1 ? ` ×${it.qty}` : ""}
+          <span className="num">+{it.qty}</span>
         </span>
       ))}
     </span>

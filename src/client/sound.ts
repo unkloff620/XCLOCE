@@ -10,7 +10,9 @@
 
 export type Sfx = "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" | "upgrade" | "levelup" | "error" | "win" | "step" | "door" | "locked"
   /* mini-games: dice in the cup and on the table, a card flip, a deal, poker chips, a squashed roach, a zonk */
-  | "shake" | "dice" | "card" | "deal" | "chips" | "splat" | "zonk";
+  | "shake" | "dice" | "card" | "deal" | "chips" | "splat" | "zonk"
+  /* a profile: «Ништяк!» for a pumped biceps (public/assets/sound/nishtyak.mp3, a deep voice), a spit, a fist fight */
+  | "nishtyak" | "spit" | "brawl";
 
 const MUTE_KEY = "xc2_mute";
 const MUSIC_KEY = "xc2_music";
@@ -150,6 +152,7 @@ const SAMPLE_URLS = {
   coin: "/assets/sound/coin.mp3",
   match: "/assets/sound/match.mp3",
   bars: "/assets/sound/bars.mp3",
+  nishtyak: "/assets/sound/nishtyak.mp3",
 } as Record<string, string>;
 /** a hit sound per weapon (w-<weapon id>) and a pick-up sound per yard find (y-<drop id>): tools/sound/build-item-sounds.py */
 const WEAPON_SOUNDS = ["fist", "mouse", "keyboard", "red-candle", "gpu", "rug-pull-gun"];
@@ -244,6 +247,24 @@ export function sfx(name: Sfx, power = 0.5) {
   if (!a || a.state !== "running") return;
   const t = a.currentTime + 0.005;
   switch (name) {
+    case "nishtyak":
+      if (sample(a, "nishtyak", t, 1)) break;
+      tone(a, 110, t, 0.25, { type: "sawtooth", vol: 0.2, slide: 0.8 });
+      tone(a, 90, t + 0.25, 0.35, { type: "sawtooth", vol: 0.2, slide: 0.7 });
+      break;
+    case "spit":
+      // a «тьфу»: a short wet hiss, then a splat
+      noise(a, t, 0.12, { freq: 2600, vol: 0.35 });
+      noise(a, t + 0.18, 0.08, { freq: 700, vol: 0.5 });
+      tone(a, 180, t + 0.18, 0.08, { type: "sine", vol: 0.3, slide: 0.5 });
+      break;
+    case "brawl":
+      // three punches in the dust
+      for (let k = 0; k < 3; k++) {
+        const at = t + 0.25 + k * 0.32;
+        if (!sample(a, "punch", at, 0.7, 0.9 + k * 0.08)) noise(a, at, 0.12, { freq: 900, vol: 0.5 });
+      }
+      break;
     case "tap":
       tone(a, 880, t, 0.05, { type: "triangle", vol: 0.12 });
       break;

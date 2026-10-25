@@ -4,7 +4,7 @@
  * Правила и выплаты — content/games.ts, карты и кости — на сервере (server/systems/games.ts).
  */
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { useGame } from "../store.tsx";
+import { useGame, useNow } from "../store.tsx";
 import { Avatar, Coin, Modal, RewardChips } from "../ui.tsx";
 import { Icon } from "../art/icons.tsx";
 import { ItemArt } from "../art/items.tsx";
@@ -16,12 +16,13 @@ import { api, type DuelView, type GameView, type PokerPlay } from "../api.ts";
 import type { Currency } from "../../content/currencies.ts";
 import { BlackjackWindow } from "./blackjack.tsx";
 import { DayTopNote } from "../day-top.tsx";
+import { OPEN_GAME_EVENT, takePendingGame } from "../game-invites.tsx";
 import { Roach } from "../art/roach.tsx";
 import { itemById } from "../../content/items.ts";
 import { yardTime } from "../../content/yard.ts";
 import {
   ITEM_VALUES, RANKS, SUITS, UPGRADE_MODES, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue, zonkGroups, zonkScore, ZONK_ROUNDS,
-  ZONK_BANK_MIN, ZONK_DAY_PRIZE, ZONK_FAIL_XP, ZONK_LEVELS,
+  ZONK_BANK_MIN, ZONK_CONT_PENALTY, ZONK_DAY_PRIZE, ZONK_FAIL_XP, ZONK_LEVELS,
   POKER_BONUS_LEVELS, POKER_CHEATS, POKER_HANDS, POKER_LEVEL_BONUS, POKER_MAX_LEVEL, POKER_RULES, POKER_CHIP, pokerCheats, pokerPay,
   type PokerHand, type UpgradeMode, DUEL_FEE, DUEL_ROUNDS, DUEL_STAKES,
 } from "../../content/games.ts";
@@ -92,6 +93,7 @@ function ZonkHelp() {
       <p>Четыре одинаковых кости — очки тройки ×2, пять — ×4, шесть — ×8. Шесть разных (1–6) — 1500, три пары — 750.</p>
       <p>Не набрал цель или нажал «Сдаться» — немного рублей в утешение и +{ZONK_FAIL_XP} опыта. Каждые 100 опыта — новый уровень зонка.</p>
       <p>Очки попыток пишутся мелом слева, стрелка показывает текущую. На листке сверху — лучший счёт дня среди всех игроков: в полночь по Москве он получает приз: {ZONK_DAY_PRIZE.currencies?.USD} USD и {ZONK_DAY_PRIZE.items?.[0]?.qty} фишки. На листе справа — комбинации.</p>
+      <p>Набрал цель уровня — награда приходит сразу, и можно выбрать: «Закончить» или «Продолжить» ради рекорда дня. Продолжение награду не увеличит, а каждый зонк после него отнимает {full(ZONK_CONT_PENALTY)} очков.</p>
       <p>По стене бегает таракан — прихлопни его, это пара рублей (иногда фишка для покера).</p>
       <p><b>Дуэли:</b> в меню уровней нажми [+] в «Дуэлях», выбери игрока и ставку. Если он не в игре — ему придёт сообщение в Telegram. У каждого {DUEL_ROUNDS} попыток, очки соперника видны прямо во время партии. Больше очков — забираешь банк (минус {Math.round(DUEL_FEE * 100)}%), ничья — ставки назад.</p>
     </Help>
@@ -345,9 +347,16 @@ function markSeen(id: number) {
   try { localStorage.setItem(SEEN_KEY, JSON.stringify([id, ...seenDuels().filter((x) => x !== id)].slice(0, 40))); } catch { /* storage blocked */ }
 }
 
+/** «4:12» till a call goes away */
+function clockLeft(at: number) {
+  const s = Math.max(0, Math.round((at - Date.now()) / 1000));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
+
 /** zonk duels in the level menu: [+] to call someone, calls to me (yes / no), my calls, duels to play, results */
 function DuelsList({ onPlay, onShow }: { onPlay: (id: number) => void; onShow: (id: number) => void }) {
   const { state, act, busy } = useGame();
+  useNow();
   const [pick, setPick] = useState(false);
   const list = (state?.duels ?? []).filter((d) => d.status === "open" || d.status === "playing" || d.status === "done");
   return (
@@ -363,11 +372,12 @@ function DuelsList({ onPlay, onShow }: { onPlay: (id: number) => void; onShow: (
         let tail: ReactNode = null;
         if (d.status === "open" && !d.mine) {
           tail = <span className="zb-duel-acts">
+            {d.expiresAt && <small>{clockLeft(d.expiresAt)}</small>}
             <button className="zb-duel-btn ok" disabled={!!busy} onClick={() => act("duel_answer", { id: d.id, answer: "accept" }, "Вызов принят — играй свою партию")}>Принять</button>
             <button className="zb-duel-btn" disabled={!!busy} onClick={() => act("duel_answer", { id: d.id, answer: "decline" }, "Вызов отклонён")}>✕</button>
           </span>;
         } else if (d.status === "open") {
-          tail = <span className="zb-duel-acts"><small>ждём ответа</small><button className="zb-duel-btn" disabled={!!busy} onClick={() => act("duel_answer", { id: d.id, answer: "cancel" }, "Вызов отменён, ставка вернулась")}>✕</button></span>;
+          tail = <span className="zb-duel-acts"><small>ждём{d.expiresAt ? ` · ${clockLeft(d.expiresAt)}` : ""}</small><button className="zb-duel-btn" disabled={!!busy} onClick={() => act("duel_answer", { id: d.id, answer: "cancel" }, "Вызов отменён, ставка вернулась")}>✕</button></span>;
         } else if (d.status === "playing") {
           tail = d.myPoints !== null ? <button className="zb-duel-btn" onClick={() => onShow(d.id)}>{full(d.myPoints)} : {d.rivalPoints === null ? "—" : full(d.rivalPoints)}</button>
             : d.started ? <small>доиграй партию</small>
@@ -442,6 +452,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
     const r = await act<GameView>(type, body);
     if (!r) return;
     setLast(r);
+    if (r.ask && !g?.ask) { haptic.ok(); sfx("reward"); }
     const done = () => {
       if (r.status === "done" && r.duel) { setShowDuel(r.duel); return; }
       if (r.status === "done") { if (r.result?.won) { haptic.ok(); sfx("reward"); } else { haptic.err(); sfx("error"); } }
@@ -489,7 +500,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
   const left = (() => { const l = (g?.left ?? 6) - pick.length; return l <= 0 ? 6 : l; })();
   const canBank = playing && !show && pts !== null && turn >= bankMin;
   const lvl = info ? Math.max(0, Math.min(100, ((info.xp - info.from) / Math.max(1, info.to - info.from)) * 100)) : 0;
-  const hint = !playing || show ? null
+  const hint = !playing || show || g?.ask ? null
     : pick.length === 0 ? "Нажми на очковые кости"
     : pts === null ? "Есть кости без очков — верни их"
     : turn < bankMin ? `Сохранить можно от ${bankMin}`
@@ -546,7 +557,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
             {g ? (
               <>
                 <span>{g.duel ? "Дуэль" : <>Уровень <b className="num">{g.level ?? 1}</b></>} · попытка <b className="num">{Math.min(scores.length + (onBoard ? 1 : 0), rounds)}/{rounds}</b></span>
-                <span className="zb-score"><b className="num">{full(total)}</b>{!g.duel && <small className="num">/{full(target)}</small>}</span>
+                <span className="zb-score"><b className="num">{full(total)}</b>{!g.duel && !g.reached && <small className="num">/{full(target)}</small>}{g.reached && <small className="zb-got">приз ✓</small>}</span>
                 {duelNow && (
                   <span className="zb-rival">
                     <Avatar name={duelNow.rival.name} photo={duelNow.rival.photo} size={18} />
@@ -629,6 +640,20 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
             onClick={() => run("zonk_move", { pick, then: "roll" })}>Бросить<small className="num">{left}</small></button>
           <button className={`zb-btn grey ${canBank ? "ready" : ""}`} style={{ left: zx(630), top: zy(1383), width: zx(164), height: zy(61) }} disabled={!canBank || busy === "zonk_move"}
             onClick={() => run("zonk_move", { pick, then: "bank" })}>Сохранить</button>
+
+          {/* the target reached: the prize is already paid — finish, or play on for the day record */}
+          {playing && !show && g?.ask && (
+            <div className="zb-ask" style={{ left: zx(236), top: zy(520), width: zx(562) }}>
+              <b className="display">Цель набрана!</b>
+              <span className="num zb-ask-pts">{full(total)} очков</span>
+              <span className="zb-res-got">{g.prize?.reward && <RewardChips r={g.prize.reward} size={14} />}<em>+{g.prize?.xp ?? 0} опыта</em></span>
+              <small>Награда уже твоя. Продолжишь — она не вырастет, а каждый зонк отнимет {full(ZONK_CONT_PENALTY)} очков. Зато можно побить рекорд дня.</small>
+              <span className="zb-ask-btns">
+                <button className="zb-duel-btn" disabled={!!busy} onClick={() => run("zonk_choice", { go: "end" })}>Закончить</button>
+                <button className="zb-duel-btn ok" disabled={!!busy} onClick={() => run("zonk_choice", { go: "continue" })}>Продолжить</button>
+              </span>
+            </div>
+          )}
 
           {/* no game running: the levels to choose from (and how the last game ended) */}
           {!playing && !show && info && (
@@ -823,7 +848,7 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
             ) : (
               <div className="pkt-btns">
                 <button className="btn big gold block" disabled={busy === "poker_play" || left <= 0 || usd < POKER_RULES.price.amount} onClick={() => run("poker_play")}>
-                  {left <= 0 ? "Приходи завтра" : <>{open ? "Ещё раздачу" : "Раздать"} · {POKER_RULES.price.amount} <Icon name={POKER_RULES.price.currency} size={18} /></>}
+                  {left <= 0 ? "Завтра" : <>Раздать · {POKER_RULES.price.amount} <Icon name={POKER_RULES.price.currency} size={18} /></>}
                 </button>
                 {/* a «Фишка» from the yard: one hand without the money */}
                 {chips > 0 && left > 0 && (
@@ -1017,6 +1042,14 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
 export function YardGames() {
   const { state } = useGame();
   const [open, setOpen] = useState<"pick" | "blackjack" | "zonk" | "poker" | null>(null);
+  // a call accepted from the pop-up (game-invites.tsx) opens its game here
+  useEffect(() => {
+    const g = takePendingGame();
+    if (g) setOpen(g);
+    const on = (e: Event) => { takePendingGame(); setOpen((e as CustomEvent<"blackjack" | "zonk" | "poker">).detail); };
+    window.addEventListener(OPEN_GAME_EVENT, on);
+    return () => window.removeEventListener(OPEN_GAME_EVENT, on);
+  }, []);
   const zk = state?.games?.zonk;
   const invites = state?.bjInvites ?? 0;
   // zonk duel calls waiting for my answer (and duels where my game is still to play)

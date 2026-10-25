@@ -51,6 +51,8 @@ export async function expireDuels(ctx: Ctx) {
 }
 
 export async function createDuel(ctx: Ctx, to: number, stake: number) {
+  // calls nobody answered in time go first: their players can be called again
+  await expireDuels(ctx);
   if (!(DUEL_STAKES as readonly number[]).includes(stake)) throw new GameError("bad_stake", "Такой ставки нет");
   if (to === ctx.pid) throw new GameError("self_duel", "С собой не сыграть");
   const [p] = await ctx.q.query<{ id: number }>("SELECT id FROM players WHERE id=$1 AND banned_at IS NULL", [to]);
@@ -143,6 +145,7 @@ export async function duelsView(q: Queryable, pid: number) {
       myPoints: myPts, rivalPoints: rivalPts ?? (rg ? Number(rg.total ?? 0) : null),
       rivalDone: rivalPts !== null, started: !!mg, won: d.status === "done" ? (d.winner_id === null ? null : d.winner_id === pid) : null,
       pot: round2(Number(d.stake) * 2 * (1 - DUEL_FEE)),
+      expiresAt: d.status === "open" ? new Date(d.created_at).getTime() + DUEL_ANSWER_MS : null,
       myRounds: rounds(mg), rivalRounds: rounds(rg), rivalPlaying: rg?.status === "active",
     };
   });

@@ -925,4 +925,34 @@ CREATE INDEX IF NOT EXISTS game_daily_bj ON game_daily (day, bj DESC);
 CREATE INDEX IF NOT EXISTS games_poker_day ON games (day) WHERE kind = 'poker';
 `,
   },
+  {
+    // players to players from a profile (systems/social.ts): biceps, fist fights, spits and the messages they leave
+    id: "v2-053-social",
+    sql: `
+CREATE TABLE IF NOT EXISTS player_biceps (
+  player_id INT PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
+  n INT NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS social_log (
+  id BIGSERIAL PRIMARY KEY,
+  from_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  to_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  kind TEXT NOT NULL,
+  day TEXT NOT NULL,
+  at TIMESTAMPTZ NOT NULL,
+  won BOOLEAN
+);
+CREATE INDEX IF NOT EXISTS social_log_from ON social_log (from_id, kind, at);
+CREATE TABLE IF NOT EXISTS notes (
+  id BIGSERIAL PRIMARY KEY,
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  kind TEXT NOT NULL,
+  from_id INT REFERENCES players(id) ON DELETE SET NULL,
+  meta JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL,
+  read_at TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS notes_player ON notes (player_id, id DESC);
+`,
+  },
 ];

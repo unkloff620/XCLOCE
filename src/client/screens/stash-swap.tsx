@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useGame } from "../store.tsx";
 import { Modal } from "../ui.tsx";
 import { ItemArt } from "../art/items.tsx";
@@ -109,17 +109,54 @@ export function StashGivePanel({ to, name, wish, give, onSent }: {
 }
 
 /** «Сообщения»: the stashes other players sent — accept one or all, they go to the inventory. */
+/** what a message from another player says */
+function noteText(n: { kind: string; from: string; meta: Record<string, unknown> }) {
+  if (n.kind === "spit") return <>В тебя харкнул <b>{n.from}</b></>;
+  if (n.kind === "fight") {
+    const won = n.meta.won === true;
+    return won
+      ? <><b>{n.from}</b> наехал на тебя и победил — бицуха {String(n.meta.mine ?? 0)} против твоей {String(n.meta.theirs ?? 0)}</>
+      : <><b>{n.from}</b> наехал на тебя, но ты отбился — бицуха {String(n.meta.mine ?? 0)} против твоей {String(n.meta.theirs ?? 0)}</>;
+  }
+  return <>Сообщение от <b>{n.from}</b></>;
+}
+
+/** how many messages wait: gifts to accept and unread notes */
+export function messagesWaiting(state: { stashInbox?: unknown[]; notes?: { unread: boolean }[] } | null) {
+  return (state?.stashInbox?.length ?? 0) + (state?.notes?.filter((n) => n.unread).length ?? 0);
+}
+
 export function MessagesWindow({ onClose }: { onClose: () => void }) {
   const { state, act, busy } = useGame();
+  const unread = state?.notes?.some((n) => n.unread) ?? false;
+  // opening the window reads the notes
+  useEffect(() => {
+    if (unread) void act("notes_read", {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   if (!state) return null;
+  const notes = state.notes ?? [];
   const inbox = state.stashInbox ?? [];
   const accept = (id: number | null) => act("stash_accept", id === null ? {} : { id }, id === null ? "Все подарки в инвентаре" : "Нычка в инвентаре");
   const when = (t: number) => new Date(t).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
   return (
     <Modal title="Сообщения" onClose={onClose}>
       <div className="col" style={{ gap: 10 }}>
+        {notes.length > 0 && (
+          <div className="col" style={{ gap: 6 }}>
+            {notes.map((n) => (
+              <div key={`n${n.id}`} className={`msg-row note ${n.kind} ${n.unread ? "new" : ""}`}>
+                <span className="msg-ico" aria-hidden="true">{n.kind === "spit" ? "💦" : n.kind === "fight" ? "👊" : "✉️"}</span>
+                <div className="grow" style={{ minWidth: 0 }}>
+                  <span className="small">{n.fromId ? <Link href={`/profile?id=${n.fromId}`} onClick={onClose} className="msg-who">{noteText(n)}</Link> : noteText(n)}</span>
+                  <span className="tiny muted" style={{ display: "block" }}>{when(n.at)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
         {inbox.length === 0 ? (
-          <p className="small muted" style={{ margin: 0, textAlign: "center" }}>Новых сообщений нет. Попроси нычки в меню дома — когда тебе их пришлют, подарки появятся здесь.</p>
+          notes.length ? null : <p className="small muted" style={{ margin: 0, textAlign: "center" }}>Новых сообщений нет. Попроси нычки в меню дома — когда тебе их пришлют, подарки появятся здесь.</p>
         ) : (
           <>
             <div className="col" style={{ gap: 6 }}>

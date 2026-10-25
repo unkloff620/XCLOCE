@@ -22,7 +22,7 @@ import { money } from "../format.ts";
 import { Help, HelpList } from "../help.tsx";
 import { CURRENCY_DEFS } from "../../content/currencies.ts";
 import { Stylist, type StyleDraft } from "./stylist.tsx";
-import { MessagesWindow, StashWishWindow } from "./stash-swap.tsx";
+import { MessagesWindow, messagesWaiting, StashWishWindow } from "./stash-swap.tsx";
 import { ItemArt } from "../art/items.tsx";
 
 const MENU_KEY = "xc2_home_menu";
@@ -210,9 +210,9 @@ export function HomeScreen() {
             {menuAlert && !menuOpen && <i className="side-dot" />}
           </button>
           {/* «Сообщения»: stashes sent by other players wait here to be accepted */}
-          <button className={`menu-toggle msg-toggle ${(state.stashInbox?.length ?? 0) > 0 ? "glow" : ""}`} onClick={() => setMessages(true)} aria-label="Сообщения" title="Сообщения">
+          <button className={`menu-toggle msg-toggle ${messagesWaiting(state) > 0 ? "glow" : ""}`} onClick={() => setMessages(true)} aria-label="Сообщения" title="Сообщения">
             <Icon name="mail" size={36} />
-            {(state.stashInbox?.length ?? 0) > 0 && <span className="msg-count num">{state.stashInbox!.length}</span>}
+            {messagesWaiting(state) > 0 && <span className="msg-count num">{messagesWaiting(state)}</span>}
           </button>
           {menuOpen && (
             <div className="menu-drop">

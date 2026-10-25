@@ -8,7 +8,7 @@ import { addGameWeekly } from "./minigame-extras.ts";
 import { duelScore } from "./duels.ts";
 import { addItem, addMoney, grantReward, itemQty, ledger, moscowDay, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { useItem } from "./shop.ts";
-import { UPGRADE_RULES, POKER_RULES, POKER_CHIP, pokerCheats, pokerHand, pokerHandDef, pokerLevel, pokerPay,
+import { ZONK_CONT_PENALTY, UPGRADE_RULES, POKER_RULES, POKER_CHIP, pokerCheats, pokerHand, pokerHandDef, pokerLevel, pokerPay,
   GAME_RULES, ITEM_VALUES, ZONK_BANK_MIN, ZONK_DICE, ZONK_FAIL_XP, ZONK_LEVELS, ZONK_ROUNDS, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue,
   zonkHasScore, zonkLevelDef, zonkScore, zonkXpLevel,
   type Card, type GameKind,
@@ -20,7 +20,9 @@ import type { Reward } from "../../content/rewards.ts";
 /** level: the difficulty (ZONK_LEVELS), target: the points to reach; old games (before the levels) have neither */
 interface ZonkState { roll: number[]; turn: number; left: number; history: { kept: number[]; points: number }[]; round?: number; total?: number; last?: { points: number; zonk: boolean; roll?: number[] } | null; scores?: { points: number; zonk: boolean }[]; level?: number; target?: number;
   /** a zonk duel's game (systems/duels.ts): DUEL_ROUNDS attempts, no target, the points go to the duel */
-  duel?: number; rounds?: number }
+  duel?: number; rounds?: number;
+  /** the target reached: its prize is paid (prize), the choice is asked (ask) — «Закончить» or «Продолжить» (cont) */
+  reached?: boolean; ask?: boolean; cont?: boolean; prize?: { reward: Granted | null; xp: number } }
 interface GameRow { id: number; kind: GameKind; paid: boolean; status: "active" | "done"; state: ZonkState; result: GameResult | null }
 interface GameResult { outcome: string; title: string; reward: Granted | null; points?: number; won?: boolean; xp?: number; duel?: number }
 
@@ -38,7 +40,16 @@ async function freeLeft(q: Queryable, pid: number, kind: GameKind, now: number) 
 /** What the client sees of a zonk game. */
 function viewOf(g: GameRow) {
   const s = g.state as ZonkState;
-  return { id: g.id, kind: g.kind, paid: g.paid, status: g.status, result: g.result, roll: s.roll, turn: s.turn, left: s.left, history: s.history, round: s.round ?? 1, rounds: s.rounds ?? ZONK_ROUNDS, total: s.total ?? 0, last: s.last ?? null, scores: s.scores ?? [], level: s.level ?? 1, target: s.target ?? zonkLevelDef(1)!.target, duel: s.duel ?? null };
+  return { id: g.id, kind: g.kind, paid: g.paid, status: g.status, result: g.result, roll: s.roll, turn: s.turn, left: s.left, history: s.history, round: s.round ?? 1, rounds: s.rounds ?? ZONK_ROUNDS, total: s.total ?? 0, last: s.last ?? null, scores: s.scores ?? [], level: s.level ?? 1, target: s.target ?? zonkLevelDef(1)!.target, duel: s.duel ?? null,
+    reached: !!s.reached, ask: !!s.ask, cont: !!s.cont, prize: s.prize ?? null };
+}
+
+/** a zonk after «Продолжить» costs ZONK_CONT_PENALTY points (not below zero) */
+function contPenalty(s: ZonkState) {
+  if (!s.cont) return 0;
+  const before = s.total ?? 0;
+  s.total = Math.max(0, before - ZONK_CONT_PENALTY);
+  return before - s.total;
 }
 
 /** the best zonk game of a Moscow day (all levels): who and how many points */
@@ -140,6 +151,15 @@ async function finishZonk(ctx: Ctx, g: GameRow, gaveUp = false) {
   const def = zonkLevelDef(s.level ?? 1)!;
   const target = s.target ?? def.target;
   const points = s.total ?? 0;
+  if (s.reached) {
+    // the prize was paid when the target was reached; going on changed only the points (for the day record)
+    s.roll = [];
+    s.ask = false;
+    g.status = "done";
+    g.result = { outcome: "win", title: `Уровень ${def.level} пройден: ${points} очков`, reward: s.prize?.reward ?? null, points, won: true, xp: s.prize?.xp ?? def.winXp };
+    await save(ctx, g);
+    return;
+  }
   const won = !gaveUp && points >= target;
   const pay = won ? def.win : def.fail;
   const xp = won ? def.winXp : ZONK_FAIL_XP;
@@ -169,7 +189,7 @@ async function nextZonkRound(ctx: Ctx, g: GameRow) {
     s.roll = Array.from({ length: ZONK_DICE }, () => die(ctx.rng));
     if (zonkHasScore(s.roll)) return save(ctx, g);
     // a roll without points: the attempt burns; the dice that fell stay in «last» so the board can show them
-    s.last = { points: 0, zonk: true, roll: s.roll };
+    s.last = { points: contPenalty(s), zonk: true, roll: s.roll };
     s.scores = [...(s.scores ?? []), { points: 0, zonk: true }];
   }
 }
@@ -179,6 +199,7 @@ export async function zonkMove(ctx: Ctx, pick: number[], then: "roll" | "bank") 
   const g = await activeGame(ctx.q, ctx.pid, "zonk");
   if (!g) throw new GameError("no_game", "Партия не начата");
   const s = g.state as ZonkState;
+  if (s.ask) throw new GameError("zonk_ask", "Цель набрана — выбери: закончить или продолжить");
   const idx = [...new Set(pick)];
   if (!idx.length || idx.length !== pick.length || idx.some((i) => !Number.isInteger(i) || i < 0 || i >= s.roll.length)) throw new GameError("bad_pick", "Выбери кости");
   const kept = idx.map((i) => s.roll[i]);
@@ -193,16 +214,44 @@ export async function zonkMove(ctx: Ctx, pick: number[], then: "roll" | "bank") 
     s.total = (s.total ?? 0) + s.turn;
     s.last = { points: s.turn, zonk: false };
     s.scores = [...(s.scores ?? []), { points: s.turn, zonk: false }];
-    // the target reached: the game ends at once with the win
-    if ((s.total ?? 0) >= (s.target ?? zonkLevelDef(s.level ?? 1)!.target)) await finishZonk(ctx, g);
-    else await nextZonkRound(ctx, g);
+    // the target reached: the prize is paid now and the player chooses — «Закончить» or «Продолжить» (for the record)
+    if (!s.reached && !s.duel && (s.total ?? 0) >= (s.target ?? zonkLevelDef(s.level ?? 1)!.target)) {
+      await payZonkTarget(ctx, s);
+      if ((s.round ?? 1) >= (s.rounds ?? ZONK_ROUNDS)) await finishZonk(ctx, g);
+      else { s.ask = true; await nextZonkRound(ctx, g); }
+    } else await nextZonkRound(ctx, g);
   } else {
     s.roll = Array.from({ length: s.left }, () => die(ctx.rng));
     if (!zonkHasScore(s.roll)) {
-      s.last = { points: s.turn, zonk: true, roll: s.roll };
+      s.last = { points: s.turn + contPenalty(s), zonk: true, roll: s.roll };
       s.scores = [...(s.scores ?? []), { points: s.turn, zonk: true }];
       await nextZonkRound(ctx, g);
     } else await save(ctx, g);
+  }
+  return viewOf(g);
+}
+
+/** The level's prize and zonk xp, paid the moment the target is reached (once). */
+async function payZonkTarget(ctx: Ctx, s: ZonkState) {
+  const def = zonkLevelDef(s.level ?? 1)!;
+  const reward = isEmpty(def.win) ? null : await grantReward(ctx, def.win, `game:zonk:${def.level}:win:${s.total ?? 0}`);
+  await ctx.q.query("UPDATE players SET zonk_xp = zonk_xp + $2 WHERE id=$1", [ctx.pid, def.winXp]);
+  await addGameWeekly(ctx, "zonk", def.winXp);
+  s.reached = true;
+  s.prize = { reward, xp: def.winXp };
+}
+
+/** After the target: «Закончить» ends the game, «Продолжить» plays the attempts left (each zonk −ZONK_CONT_PENALTY). */
+export async function zonkChoice(ctx: Ctx, go: "end" | "continue") {
+  const g = await activeGame(ctx.q, ctx.pid, "zonk");
+  if (!g) throw new GameError("no_game", "Партия не начата");
+  const s = g.state as ZonkState;
+  if (!s.ask) throw new GameError("zonk_no_ask", "Сейчас выбирать нечего");
+  if (go === "end") await finishZonk(ctx, g);
+  else {
+    s.ask = false;
+    s.cont = true;
+    await save(ctx, g);
   }
   return viewOf(g);
 }

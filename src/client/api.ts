@@ -74,11 +74,15 @@ export interface GameState {
   duels?: DuelView[];
   /** invitations to a blackjack table waiting for me */
   bjInvites?: number;
+  /** who calls me to his blackjack table */
+  bjInviteList?: { id: number; tableId: number; from: string; fromId: number; photo: string | null }[];
   /** how many times each set of stashes was collected (by set number) */
   stashSets: Record<number, number>;
   /** нычки I ask other players for, and who sent me what lately */
   stashWish?: string[];
   stashGifts?: { id: number; fromId: number; from: string; itemId: string; at: number }[];
+  /** messages from other players (a spit, a fist fight), the newest first */
+  notes?: { id: number; kind: string; fromId: number | null; from: string; meta: Record<string, unknown>; at: number; unread: boolean }[];
   /** gifts waiting in «Сообщения» to be accepted */
   stashInbox?: { id: number; fromId: number; from: string; itemId: string; at: number }[];
   games: { zonk: ZonkInfo };
@@ -128,6 +132,8 @@ export interface GameView {
   level?: number; target?: number;
   /** a zonk duel's game (the duel id) */
   duel?: number | null;
+  /** the target reached (its prize paid): the choice is asked; «Продолжить» chosen */
+  reached?: boolean; ask?: boolean; cont?: boolean; prize?: { reward: Granted | null; xp: number } | null;
 }
 /** a zonk duel of mine (server: systems/duels.ts) */
 export interface DuelView {
@@ -136,6 +142,8 @@ export interface DuelView {
   started: boolean; won: boolean | null; pot: number;
   /** the points of each attempt (a zonk counts 0); the rival's are seen while he plays */
   myRounds: number[]; rivalRounds: number[]; rivalPlaying: boolean;
+  /** an open call goes away by itself at this moment */
+  expiresAt: number | null;
 }
 export interface Hit { seq: number; playerId: number; name: string; weapon: string; damage: number; phrase: number; at: number; crit?: boolean; count?: number }
 export interface FightView {

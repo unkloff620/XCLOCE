@@ -316,7 +316,10 @@ export function ClanScreen({ id }: { id: number }) {
         <h2 className="h display">Участники</h2>
         {leader && (
           <div className="row" style={{ gap: 6 }}>
-            <button className={`btn sm ${editing ? "gold" : "dark"}`} onClick={() => { setEditing((v) => !v); setKickAsk(null); setLeadAsk(null); }}>{editing ? "Готово" : "✎ Редактировать"}</button>
+            <button className={`btn sm icon-only ${editing ? "gold" : "dark"}`} onClick={() => { setEditing((v) => !v); setKickAsk(null); setLeadAsk(null); }}
+              aria-label={editing ? "Готово" : "Редактировать"} title={editing ? "Готово" : "Редактировать"}>
+              {editing ? "✓" : <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z" fill="#ffcc33" stroke="#140d24" strokeWidth="2" strokeLinejoin="round" /><path d="M13 7l4 4" stroke="#140d24" strokeWidth="2" /></svg>}
+            </button>
             <button className="btn sm dark" onClick={() => setSettings(true)} aria-label="Настройки клана" title="Настройки клана">⚙</button>
           </div>
         )}

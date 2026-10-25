@@ -32,6 +32,8 @@ export interface BjSeat {
   won?: number; staked?: number;
   /** got up during a hand: the seat goes once the hand is paid */
   left?: boolean;
+  /** the last time this player looked at the table (the window polls it); gone quiet for SEAT_IDLE_MS — he got up */
+  seen?: number;
   /** insurance against the dealer's ace: undefined — not offered, null — not answered yet, 0 — no, > 0 — the amount */
   ins?: number | null;
   /** what the insurance paid back (stake included) */
@@ -56,6 +58,8 @@ interface TableRow { id: number; host_id: number; state: BjState }
 
 const SHOE_DECKS = 6;
 const INVITE_MS = 15 * 60_000;
+/** a player whose window has not polled the table for this long has left it (closed the game, the app) */
+const SEAT_IDLE_MS = 40_000;
 
 const asCtx = (ctx: Ctx, pid: number): Ctx => ({ ...ctx, pid });
 
@@ -244,9 +248,34 @@ async function settleInsurance(ctx: Ctx, t: TableRow, base: number) {
   await peek(ctx, t, base);
 }
 
+/**
+ * Players who closed the game without «Встать» get up by themselves: a stake not dealt yet comes back, hands in play
+ * stand (and are still paid); the seat frees and the player can be called again.
+ */
+async function dropIdle(ctx: Ctx, t: TableRow) {
+  const s = t.state;
+  for (let i = 0; i < s.seats.length; i++) {
+    const seat = s.seats[i];
+    if (!seat || seat.pid === ctx.pid || seat.left || !seat.seen || ctx.now - seat.seen < SEAT_IDLE_MS) continue;
+    if (s.phase === "betting") {
+      if (seat.ready) await refund(asCtx(ctx, seat.pid), seat);
+      s.seats[i] = null;
+    } else {
+      for (const h of seat.hands) h.done = true;
+      if (seat.ins === null) seat.ins = 0;
+      seat.left = true;
+      if (s.turn?.seat === i) await advance(ctx, t, ctx.now);
+      if ((s.phase as BjState["phase"]) === "betting") s.seats[i] = s.seats[i]?.left ? null : s.seats[i];
+    }
+    await ctx.q.query("DELETE FROM bj_seats WHERE player_id=$1 AND table_id=$2", [seat.pid, t.id]);
+  }
+  if (s.phase === "betting" && !sitting(s).some((x) => x.ready)) s.deadline = s.clearAt ? s.deadline : null;
+}
+
 /** Catches the table up with the time: moves nobody made, a deal nobody started. */
 async function tick(ctx: Ctx, t: TableRow) {
   const s = t.state;
+  await dropIdle(ctx, t);
   if (s.clearAt && s.clearAt <= ctx.now) clearTable(s);
   for (let guard = 0; guard < 64 && s.deadline !== null && s.deadline <= ctx.now; guard++) {
     if (s.phase === "betting") {
@@ -281,9 +310,9 @@ async function clanmates(q: Queryable, pid: number, tableId: number) {
   );
 }
 
-async function invitesFor(q: Queryable, pid: number, now: number) {
-  return q.query<{ id: number; tableId: number; from: string }>(
-    `SELECT i.id, i.table_id AS "tableId", p.display_name AS "from" FROM bj_invites i JOIN players p ON p.id = i.from_id
+export async function invitesFor(q: Queryable, pid: number, now: number) {
+  return q.query<{ id: number; tableId: number; from: string; fromId: number; photo: string | null }>(
+    `SELECT i.id, i.table_id AS "tableId", p.display_name AS "from", p.id AS "fromId", p.photo_url AS photo FROM bj_invites i JOIN players p ON p.id = i.from_id
       WHERE i.player_id = $1 AND i.created_at > $2 ORDER BY i.id DESC LIMIT 5`,
     [pid, new Date(now - INVITE_MS)],
   );
@@ -317,6 +346,8 @@ export async function bjView(ctx: Ctx) {
   }
   const before = JSON.stringify(t.state);
   await tick(ctx, t);
+  const meSeat = t.state.seats[mine.seat];
+  if (meSeat && meSeat.pid === ctx.pid && (!meSeat.seen || ctx.now - meSeat.seen > 8000)) meSeat.seen = ctx.now;
   if (JSON.stringify(t.state) !== before) await saveTable(ctx, t);
   const view = tableView(t, ctx.pid);
   // which of my hands can be split / doubled right now
@@ -341,6 +372,7 @@ async function lockMine(ctx: Ctx) {
   if (!t) throw new GameError("bj_no_table", "Стол уже закрыт");
   await tick(ctx, t);
   const seat = t.state.seats[mine.seat];
+  if (seat && seat.pid === ctx.pid) seat.seen = ctx.now;
   if (!seat || seat.pid !== ctx.pid) throw new GameError("bj_no_table", "Ты не сидишь за столом");
   return { t, i: mine.seat, seat };
 }
