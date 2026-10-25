@@ -3016,7 +3016,8 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 @keyframes bf-low-l { 0%, 30%, 55%, 76%, 100% { transform: rotate(0); } 6% { transform: rotate(12deg); } 14% { transform: rotate(-10deg); } 20% { transform: rotate(10deg); } 60% { transform: rotate(11deg); } 68% { transform: rotate(-8deg); } }
 @keyframes bf-strum { from { transform: rotate(-4deg); } to { transform: rotate(5deg); } }
 @keyframes bf-arm-r { 0%, 25%, 54%, 80%, 100% { transform: rotate(0); } 31% { transform: rotate(10deg); } 38% { transform: rotate(-6deg); } 45% { transform: rotate(8deg); } 85% { transform: rotate(9deg); } 92% { transform: rotate(-5deg); } }
-@keyframes bf-low-r { 0%, 25%, 54%, 80%, 100% { transform: rotate(0); } 31% { transform: rotate(-28deg); } 38% { transform: rotate(10deg); } 45% { transform: rotate(-22deg); } 85% { transform: rotate(-25deg); } 92% { transform: rotate(6deg); } }
+/* the right arm is mostly bent at the elbow (about −30°), the flails snap around that */
+@keyframes bf-low-r { 0%, 25%, 54%, 80%, 100% { transform: rotate(-30deg); } 31% { transform: rotate(-52deg); } 38% { transform: rotate(-12deg); } 45% { transform: rotate(-48deg); } 85% { transform: rotate(-50deg); } 92% { transform: rotate(-18deg); } }
 @keyframes bf-beckon { 0%, 45%, 100% { transform: rotate(0); } 60% { transform: rotate(-14deg); } 72% { transform: rotate(-2deg); } 84% { transform: rotate(-12deg); } }
 .rig-babafey .br-pupils { animation-name: gk-look; animation-duration: 6.5s; }
 .br-face-open { opacity: 0; animation: bf-open 9s steps(1) infinite; }
@@ -3061,3 +3062,5 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 @keyframes br-hit-fend-l { 25% { transform: rotate(-13deg); } 55% { transform: rotate(8deg); } 80% { transform: rotate(-4deg); } }
 @keyframes br-hit-fend-r { 25% { transform: rotate(13deg); } 55% { transform: rotate(-8deg); } 80% { transform: rotate(4deg); } }
 @media (prefers-reduced-motion: reduce) { .arena-photo.hit .boss-rig :is(.br-arm, .br-low, .br-fist-l, .br-fist-r) { animation: none; } }
+.arena-photo.hit:not(.strike) .boss-rig.rig-babafey .br-low-r { animation: bf-hit-low-r 0.42s cubic-bezier(0.2, 0.9, 0.3, 1); transform: rotate(-30deg); }
+@keyframes bf-hit-low-r { 0%, 100% { transform: rotate(-30deg); } 25% { transform: rotate(-50deg); } 55% { transform: rotate(-16deg); } 80% { transform: rotate(-36deg); } }

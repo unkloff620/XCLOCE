@@ -21,6 +21,8 @@ type Part = { x: number; y: number; w: number; h: number; pivot?: readonly numbe
 
 /** bosses whose far arm (R or L) goes behind the body */
 const BEHIND: Record<string, "L" | "R"> = { mugo: "R", babafey: "L" };
+/** of these the arm in BEHIND goes behind only with its shoulder: the forearm and the hand stay in front of everything */
+const SPLIT_BEHIND = new Set(["babafey"]);
 
 /** frame schedules of the puppet strips: [frame, ms] — idle loops, ouch/strike play once */
 const FRAME_SEQ: Record<string, Record<"idle" | "ouch" | "strike" | "fear", [number, number][]>> = {
@@ -170,11 +172,14 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
     return { ["--tilt" as string]: `${t * deg}deg` } as CSSProperties;
   };
   // whole arm: the sleeve swings at the shoulder, the hand inside it at the wrist
-  const arm = (side: "L" | "R") =>
+  // whole arm: the sleeve swings at the shoulder, the hand inside it at the wrist.
+  // `only`: "upper" — just the sleeve (drawn behind the body), "lower" — the same joints without the sleeve (in front):
+  // a boss in SPLIT_BEHIND has its shoulder behind the body but the forearm and the hand (the balalaika) in front of all
+  const arm = (side: "L" | "R", only?: "upper" | "lower") =>
     P[`arm${side}`] ? (
       <g className={`br-arm br-arm-${side.toLowerCase()}`} style={{ ...origin(`arm${side}`), ...tilt(`arm${side}`, `hand${side}`, 24) }}>
-        {img(`arm${side}`)}
-        {P[`low${side}`] ? (
+        {only !== "lower" && img(`arm${side}`)}
+        {only === "upper" ? null : P[`low${side}`] ? (
           // three pieces (Мугонатор): the forearm bends at the elbow, the fist turns at the wrist inside it
           <g className={`br-low br-low-${side.toLowerCase()}`} style={origin(`low${side}`)}>
             {img(`low${side}`)}
@@ -208,6 +213,7 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
       @media (prefers-reduced-motion: reduce) { ${sel} { animation: none; } }`;
   }).join("\n");
   const behind = BEHIND[baseId];
+  const split = SPLIT_BEHIND.has(baseId);
   const clipEyes = !!P.armL && !!P.pupils && !!P.eyes;
   const maskId = `br-eyes-${id}`;
   // bosses with a full face (Кедр): pupils glance around, brows and mouth change when he is hit (class "ouch" on the arena)
@@ -216,7 +222,7 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
       {frameCss && <style>{frameCss}</style>}
       <g className="br-breath" style={{ transformOrigin: `${rig.w / 2}px ${rig.h}px`, transformBox: "view-box" }}>
         {P.tail && <g className="br-tail" style={origin("tail")}>{img("tail")}</g>}
-        {behind && arm(behind)}
+        {behind && arm(behind, split ? "upper" : undefined)}
         {img("body")}
         <g className="br-head" style={origin("head")}>
           {img("head", P["head-open"] ? "br-face-closed" : undefined)}
@@ -253,6 +259,7 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
         {P.foreR && <g className="br-fist-r" style={{ ...origin("foreR"), ...tilt("foreR", "foreR", 9) }}>{img("foreR")}</g>}
         {behind !== "R" && arm("R")}
         {behind !== "L" && arm("L")}
+        {split && behind && arm(behind, "lower")}
       </g>
     </svg>
   );
