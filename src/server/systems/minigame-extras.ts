@@ -128,7 +128,9 @@ const POKER_RANK_SQL = `CASE g.result->>'outcome' ${POKER_HANDS.map((h, i) => `W
 export interface DayTopRow { id: number; name: string; photo: string | null; place: number; value: number; hand?: string }
 
 /** The top 10 of a Moscow day (today or yesterday) and my own place: blackjack — the most won, poker — the best hand. */
-export async function dayTop(q: Queryable, pid: number, game: "bj" | "poker", which: "today" | "yesterday", now: number) {
+export interface DayTopView { game: "bj" | "poker"; day: "today" | "yesterday"; top: DayTopRow[]; me: { place: number | null; value: number; hand?: string } | null }
+
+export async function dayTop(q: Queryable, pid: number, game: "bj" | "poker", which: "today" | "yesterday", now: number): Promise<DayTopView> {
   const day = moscowDay(which === "today" ? now : now - DAY_MS);
   if (game === "bj") {
     const rows = await q.query<{ id: number; name: string; photo: string | null; value: number }>(
