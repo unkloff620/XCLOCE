@@ -254,7 +254,7 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
         <div className="dos-page">
           {/* on every page: achievement points and the talents put in */}
           <div className="dos-stats">
-            <span className="dos-stat" title="Очки достижений">{/* eslint-disable-next-line @next/next/no-img-element */}<img src="/assets/ui/ach-star.webp" alt="" /><b className="num">{full(p.achPoints ?? 0)}</b></span>
+            <span className="dos-stat" title="Очки достижений"><Icon name="sun" size={20} /><b className="num">{full(p.achPoints ?? 0)}</b></span>
             <span className="dos-stat" title="Вложено талантов"><Icon name="talent" size={20} /><b className="num">{full(p.talentsIn ?? 0)}</b></span>
           </div>
           {tab === "sum" && (

@@ -429,7 +429,6 @@ export const ASSET_FILES: string[] = [
  "/assets/ui/ach-damage.webp",
  "/assets/ui/ach-hits.webp",
  "/assets/ui/ach-solo.webp",
- "/assets/ui/ach-star.webp",
  "/assets/ui/ach-weekly.webp",
  "/assets/ui/ach-wins.webp",
  "/assets/ui/ach-yard.webp",

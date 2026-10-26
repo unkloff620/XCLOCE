@@ -3120,13 +3120,12 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
   --ink: #24160a; --muted: #5a3f24; }
 .dos-stats { display: flex; justify-content: space-around; gap: 12px; margin: 0 0 14px; }
 .dos-stat { flex: 0 1 42%; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 5px 10px; border: 2.5px solid #1e140a; border-radius: 12px; font-size: 16px; }
-.dos-stat img { width: 18px; height: 22px; object-fit: contain; }
 /* «Дела»: three medals of a boss in a stack, gold on top */
 .case-medals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px 6px; padding: 6px 0 4px; }
 .case-stack { position: relative; height: 70px; border: 0; background: none; padding: 0; cursor: pointer; }
 .case-coin { position: absolute; top: 3px; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35)); }
-.case-coin.c0 { left: calc(50% - 56px); }
-.case-coin.c1 { left: calc(50% - 44px); }
-.case-coin.c2 { left: calc(50% - 22px); }
+.case-coin.c0 { left: calc(50% - 54px); }
+.case-coin.c1 { left: calc(50% - 34px); }
+.case-coin.c2 { left: calc(50% - 14px); }
 .case-stack:active { transform: scale(0.96); }
 .case-stack .case-card-stamp { z-index: 3; }
