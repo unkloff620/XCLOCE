@@ -181,13 +181,17 @@ export const tasksOf = (l: LocationDef, mode: LocMode) => (mode === "night" ? l.
 /*
  * «Бизнес»: every location is a business with two lines to build up for rubles — «Прибыль: авторитет» (location
  * authority a day) and «Прибыль: рубли» (rubles a day). Openspace has 4 cells in each line, every next location one more.
- * The profit piles up by whole days, even when the player is away, up to BUSINESS_MAX_DAYS; then it stops.
+ * The profit piles up hour by hour (a 24th of the day's profit each whole hour), even when the player is away, up to
+ * BUSINESS_MAX_DAYS; then it stops. It can be taken any time a whole hour has gone by.
  */
 export const BUSINESS_MAX_DAYS = 7;
+export const BUSINESS_MAX_HOURS = BUSINESS_MAX_DAYS * 24;
 export type BusinessLine = "rep" | "rub";
 export const businessCells = (l: LocationDef) => 3 + l.order;
+/** what one level of a line gives an hour (whole numbers, so every hour pays exactly) */
+export const businessPerHour = (l: LocationDef, line: BusinessLine) => (line === "rub" ? 3 * l.order : 1 * l.order);
 /** what one level of a line gives a day */
-export const businessPerLevel = (l: LocationDef, line: BusinessLine) => (line === "rub" ? 60 * l.order : 25 * l.order);
+export const businessPerLevel = (l: LocationDef, line: BusinessLine) => 24 * businessPerHour(l, line);
 /** the price in rubles of the next level (lv — levels already built) */
 export function businessCost(l: LocationDef, line: BusinessLine, lv: number): number {
   const base = (line === "rub" ? 400 : 300) * l.order * Math.pow(lv + 1, 1.6);

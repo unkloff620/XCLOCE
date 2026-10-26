@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { liveEnergy, useGame, useNow } from "../store.tsx";
 import { api, type Granted } from "../api.ts";
-import { BUSINESS_MAX_DAYS, LOCATIONS, locRep, locationById, taskOpen, tasksOf, type LocMode } from "../../content/locations.ts";
+import { LOCATIONS, locRep, locationById, taskOpen, tasksOf, type LocMode } from "../../content/locations.ts";
 import type { Reward } from "../../content/rewards.ts";
 import { LOCATION_ART, LocationScene } from "../art/scenes.tsx";
 import { Icon } from "../art/icons.tsx";
@@ -46,7 +46,7 @@ interface LocRow {
 interface LocBiz {
   cells: number; lvRep: number; lvRub: number; costRep: number | null; costRub: number | null;
   stepRep: number; stepRub: number; perRep: number; perRub: number;
-  days: number; pendingRep: number; pendingRub: number; full: boolean; nextAt: number | null;
+  hours: number; pendingRep: number; pendingRub: number; full: boolean; nextAt: number | null;
   /** business opens once the day and the night roads are both cleared */
   open: boolean; dayDone: boolean; nightDone: boolean;
 }
@@ -90,13 +90,13 @@ function BizPanel({ b, locId, onDone }: { b: LocBiz; locId: string; onDone: () =
     <div className="biz">
       {lines.map((x) => (
         <div className="biz-line" key={x.line}>
-          <span className="biz-h">Прибыль: {x.icon}{x.name}<small className="num">{x.per > 0 ? `+${full(x.per)} в сутки` : "нет"}</small></span>
+          <span className="biz-h">Прибыль: {x.icon}{x.name}<small className="num">{x.per > 0 ? `+${full(x.per / 24)} в час · +${full(x.per)} в сутки` : "нет"}</small></span>
           <span className="biz-cells" aria-label={`${x.lv}/${b.cells}`}>
             {Array.from({ length: b.cells }, (_, i) => <i key={i} className={i < x.lv ? "on" : ""} />)}
           </span>
           {x.cost !== null ? (
             <button className="btn gold biz-up" disabled={busy === "business_up" || rub < x.cost} onClick={() => up(x.line)}>
-              Прокачать <span className="num">{full(x.cost)} ₽</span><small>+{full(x.step)} в сутки</small>
+              Прокачать <span className="num">{full(x.cost)} ₽</span><small>+{full(x.step / 24)} в час</small>
             </button>
           ) : (
             <span className="biz-max display">МАКСИМУМ</span>
@@ -145,13 +145,13 @@ function BizTotal({ rows, onDone }: { rows: LocRow[]; onDone: () => void }) {
   const rub = live.reduce((a, x) => a + x.business.pendingRub, 0);
   const perRep = live.reduce((a, x) => a + x.business.perRep, 0);
   const perRub = live.reduce((a, x) => a + x.business.perRub, 0);
-  const days = Math.max(...live.map((x) => x.business.days));
+  const hours = Math.max(...live.map((x) => x.business.hours));
   const anyFull = live.some((x) => x.business.full);
   const next = live.map((x) => x.business.nextAt).filter((t): t is number => t !== null);
   const nextAt = next.length ? Math.min(...next) : null;
   const ready = rep > 0 || rub > 0;
   const take = async () => {
-    const res = await act<{ days: number; rub: number; rep: number }>("business_claim", {}, (y) => `Прибыль: +${full(y.rub)} ₽ · +${full(y.rep)} авторитета`);
+    const res = await act<{ hours: number; rub: number; rep: number }>("business_claim", {}, (y) => `Прибыль: +${full(y.rub)} ₽ · +${full(y.rep)} авторитета`);
     if (res) {
       haptic.big();
       sfx("win");
@@ -160,15 +160,15 @@ function BizTotal({ rows, onDone }: { rows: LocRow[]; onDone: () => void }) {
   };
   return (
     <div className={`biz-take biz-total ${ready ? "ready" : ""}`}>
-      <span className="biz-h">💼 Бизнес · {live.length} {live.length === 1 ? "локация" : live.length < 5 ? "локации" : "локаций"}<small className="num">+{full(perRub)} ₽ · <Icon name="map" size={12} />+{full(perRep)} в сутки</small></span>
+      <span className="biz-h">💼 Бизнес · {live.length} {live.length === 1 ? "локация" : live.length < 5 ? "локации" : "локаций"}<small className="num">+{full(perRub / 24)} ₽ · <Icon name="map" size={12} />+{full(perRep / 24)} в час</small></span>
       <span className="biz-take-sum num">
         {rep > 0 && <span><Icon name="map" size={15} />+{full(rep)}</span>}
         {rub > 0 && <span>+{full(rub)} ₽</span>}
         {!ready && <span className="muted">пока пусто</span>}
       </span>
-      <button className="btn gold block" disabled={!ready || busy === "business_claim"} onClick={take}>Забрать прибыль{ready ? ` за ${days}/${BUSINESS_MAX_DAYS} дн.` : ""}</button>
+      <button className="btn gold block" disabled={!ready || busy === "business_claim"} onClick={take}>Забрать прибыль{ready ? ` за ${hours < 24 ? `${hours} ч` : `${Math.floor(hours / 24)} дн. ${hours % 24} ч`}` : ""}</button>
       <span className="tiny biz-note">
-        {anyFull ? "Копилка полна: больше 7 дней не копится — забери!" : nextAt ? `Следующие сутки через ${clock(Math.max(0, nextAt - now))}` : ""}
+        {anyFull ? "Копилка полна: больше 7 дней не копится — забери!" : nextAt ? `Ещё часть прибыли через ${clock(Math.max(0, nextAt - now))}` : ""}
       </span>
     </div>
   );
@@ -253,7 +253,7 @@ export function LocationsScreen() {
               <p>Пройденную локацию можно повторить: награда за повтор — половина валюты и авторитета.</p>
               <p><b>Авторитет локации</b>: каждый шаг задания даёт ещё и авторитет этой локации — треть от авторитета шага (50 → 17). Он копится только в своей локации и ни на что не тратится. У кого его больше всех, тот красуется на картинке локации с короной.</p>
               <p><b>Нычки</b> находятся за потраченную энергию: каждый шаг задания — шанс 1% за каждую ⚡ (шаг за 3 ⚡ — 3%, за 20 ⚡ — 20%). Не везёт — энергия копится в «нычкомере», и после {STASH_PITY} ⚡ без находки нычка выпадает наверняка. Чаще выпадают те, которых у тебя ещё нет. У каждой локации свои наборы по 4 нычки. Собери набор целиком и забери награду в достижениях «Нычки». Найденные лежат в инвентаре во вкладке «Нычки».</p>
-              <p><b>Ночные</b> задания — своя дорожка с ночным авторитетом. <b>Бизнес</b> качается за рубли в каждой локации и приносит рубли и авторитет локации раз в сутки; прибыль со всех локаций забирается здесь, вверху списка, копится до 7 дней.</p>
+              <p><b>Ночные</b> задания — своя дорожка с ночным авторитетом. <b>Бизнес</b> качается за рубли в каждой локации и приносит рубли и авторитет локации: каждый час капает 1/24 суточной прибыли. Прибыль со всех локаций забирается здесь, вверху списка, в любой момент; копится до 7 дней.</p>
               <p>Энергия: +1 каждые 5 минут до 50. Купить больше — нажми на энергию вверху.</p>
             </Help>
           </div>
