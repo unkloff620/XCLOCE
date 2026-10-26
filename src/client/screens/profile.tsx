@@ -241,6 +241,7 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
           ))}
         </div>
         <div className="dos-page">
+          <div className="dos-inner">
           {/* on every page: achievement points and the talents put in */}
           {tab === "cases" && <div className="dos-stats">
             <span className="dos-stat" title="Очки достижений"><Icon name="sun" size={20} /><b className="num">{full(p.achPoints ?? 0)}</b></span>
@@ -298,6 +299,7 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
           {tab === "tal" && p.self && <TalentPanel />}
           {tab === "news" && p.self && <NewsPanel rows={p.news ?? []} />}
           {tab === "set" && p.self && <SettingsPanel />}
+          </div>
         </div>
       </div>
       {renaming && <RenameWindow current={p.name} onClose={() => setRenaming(false)} onDone={reload} />}

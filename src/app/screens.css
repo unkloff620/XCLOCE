@@ -3151,3 +3151,14 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .case-coin.off { opacity: 0.32; filter: grayscale(1) brightness(0.9); }
 .blast { display: inline-block; flex: none; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.4)); }
 .blast.dim { filter: grayscale(1) brightness(0.6); opacity: 0.6; }
+/* the paper stays still, only its inside scrolls — nothing goes over the paper's edge */
+.dos-page { overflow: hidden !important; display: flex; flex-direction: column; padding: 22px 16px 24px; }
+.dos-inner { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 2px 2px 8px; margin: 0 -2px; }
+.modal:not(.page) .dos-inner { max-height: 58vh; }
+/* the open tab lies over the paper's top edge (its line goes away), the others under it */
+.dos-tabs { margin-bottom: -24px; }
+.dos-tab { padding: 9px 16px 26px; }
+.dos-tab.on { padding-bottom: 28px; }
+/* light bars on the paper, dark numbers on them */
+.dos-page .ach-bar { background: rgba(255, 244, 222, 0.7); border-color: #6e5134; }
+.dos-page .ach-bar span { color: #24160a !important; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5); }
