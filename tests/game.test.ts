@@ -595,6 +595,10 @@ describe("locations", () => {
     const loc = LOCATIONS[0];
     const cells = businessCells(loc);
     await setMoney(db, p, "RUB", 1_000_000);
+    await expect(act(db, p, "business_up", { locationId: loc.id, line: "rub" }, T0)).rejects.toMatchObject({ code: "business_locked" });
+    await db.query("INSERT INTO location_claims (player_id, location_id, claimed_at) VALUES ($1,$2,now())", [p, loc.id]);
+    await expect(act(db, p, "business_up", { locationId: loc.id, line: "rub" }, T0)).rejects.toMatchObject({ code: "business_locked" });
+    await db.query("INSERT INTO location_claims (player_id, location_id, claimed_at) VALUES ($1,$2,now())", [p, `night:${loc.id}`]);
     await expect(act(db, p, "business_claim", { locationId: loc.id }, T0)).rejects.toMatchObject({ code: "not_yet" });
     await act(db, p, "business_up", { locationId: loc.id, line: "rub" }, T0);
     await act(db, p, "business_up", { locationId: loc.id, line: "rep" }, T0 + H);
@@ -627,7 +631,9 @@ describe("locations", () => {
     const p = await newPlayer(db);
     await setMoney(db, p, "RUB", 1_000_000);
     // the second location opened by hand
-    await db.query("INSERT INTO location_claims (player_id, location_id, claimed_at) VALUES ($1,$2,now())", [p, LOCATIONS[0].id]);
+    for (const k of [LOCATIONS[0].id, `night:${LOCATIONS[0].id}`, LOCATIONS[1].id, `night:${LOCATIONS[1].id}`]) {
+      await db.query("INSERT INTO location_claims (player_id, location_id, claimed_at) VALUES ($1,$2,now())", [p, k]);
+    }
     await act(db, p, "business_up", { locationId: LOCATIONS[0].id, line: "rub" }, T0);
     await act(db, p, "business_up", { locationId: LOCATIONS[1].id, line: "rub" }, T0 + 12 * H);
     const rub = await wallet(db, p, "RUB");
