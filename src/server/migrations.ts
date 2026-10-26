@@ -1049,4 +1049,25 @@ INSERT INTO ledger (player_id, kind, key, delta, reason) SELECT id, 'talent', 't
 DELETE FROM player_talents;
 `,
   },
+  {
+    // locations: «Ночные движухи» pay ночной авторитет (its own table), «Бизнес» has two lines built up for rubles
+    id: "v2-059-night-business",
+    sql: `
+CREATE TABLE IF NOT EXISTS location_night_rep (
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  location_id TEXT NOT NULL,
+  rep BIGINT NOT NULL DEFAULT 0,
+  PRIMARY KEY (player_id, location_id)
+);
+CREATE INDEX IF NOT EXISTS location_night_rep_top ON location_night_rep (location_id, rep DESC);
+CREATE TABLE IF NOT EXISTS location_business (
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  location_id TEXT NOT NULL,
+  lv_rep INT NOT NULL DEFAULT 0,
+  lv_rub INT NOT NULL DEFAULT 0,
+  since TIMESTAMPTZ,
+  PRIMARY KEY (player_id, location_id)
+);
+`,
+  },
 ];

@@ -129,7 +129,7 @@ export async function profileView(q: Queryable, viewer: number, pid: number, cfg
     "SELECT COUNT(*) FILTER (WHERE status='won')::int AS won, COUNT(*) FILTER (WHERE status='lost')::int AS lost FROM fights WHERE player_id=$1",
     [pid],
   );
-  const [clears] = await q.query<{ n: number }>("SELECT COUNT(DISTINCT location_id)::int AS n FROM location_claims WHERE player_id=$1", [pid]);
+  const [clears] = await q.query<{ n: number }>("SELECT COUNT(DISTINCT location_id)::int AS n FROM location_claims WHERE player_id=$1 AND location_id NOT LIKE 'night:%'", [pid]);
   const [clan] = p.clan_id ? await q.query<{ id: number; name: string; tag: string; emblem: string; color: string }>("SELECT id, name, tag, emblem, color FROM clans WHERE id=$1", [p.clan_id]) : [];
   const [app] = await q.query<{ equipped: Record<string, string>; body: unknown }>("SELECT equipped, body FROM appearance WHERE player_id=$1", [pid]);
   // weapons in stock (the free fist, mouse and candle are not counted)

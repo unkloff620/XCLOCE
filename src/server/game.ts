@@ -50,7 +50,7 @@ export async function inPlayerTx<T>(db: Db, pid: number, fn: (ctx: Ctx) => Promi
 
 export const ACTIONS = [
   "fight_start", "attack", "fight_claim", "fight_flee",
-  "task", "location_claim",
+  "task", "location_claim", "business_up", "business_claim",
   "yard_pick",
   "buy", "exchange", "use", "equip", "unequip",
   "clan_create", "clan_join", "clan_leave", "clan_kick", "clan_transfer",
@@ -121,7 +121,9 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "fight_claim": return combat.claimFight(ctx, num(body.fightId, "fightId"));
     case "fight_flee": return combat.fleeFight(ctx);
     case "task": return locations.doTask(ctx, str(body.taskId, "taskId", 40));
-    case "location_claim": return locations.claimLocation(ctx, str(body.locationId, "locationId", 40));
+    case "location_claim": return locations.claimLocation(ctx, str(body.locationId, "locationId", 40), body.mode === "night" ? "night" : "day");
+    case "business_up": return locations.businessUp(ctx, str(body.locationId, "locationId", 40), body.line === "rep" ? "rep" : "rub");
+    case "business_claim": return locations.businessClaim(ctx, str(body.locationId, "locationId", 40));
     case "yard_pick": return yard.yardPick(ctx, num(body.itemId, "itemId"));
     case "buy": return shop.buy(ctx, str(body.offerId, "offerId", 40), idem, body.qty === undefined ? 1 : num(body.qty, "qty"));
     case "exchange": return shop.exchange(ctx, oneOf(body.from, CURRENCIES, "from"), oneOf(body.to, CURRENCIES, "to"), num(body.amount, "amount"), idem);
