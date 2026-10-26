@@ -1,7 +1,7 @@
 import { GameError, type Queryable } from "../db.ts";
 import { addItem, addMoney, grantReward, ledger, spendEnergy, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { STASH_MISSING_WEIGHT, STASH_PITY, STASH_SETS, stashChance, stashSetsByLocation } from "../../content/stashes.ts";
-import { BUSINESS_MAX_DAYS, LOCATIONS, businessCells, businessCost, businessPerLevel, locRep, locationById, taskById, taskOpen, tasksOf, type BusinessLine, type LocMode, type LocationDef } from "../../content/locations.ts";
+import { BUSINESS_MAX_HOURS, LOCATIONS, businessCells, businessCost, businessPerHour, businessPerLevel, locRep, locationById, taskById, taskOpen, tasksOf, type BusinessLine, type LocMode, type LocationDef } from "../../content/locations.ts";
 import type { Reward } from "../../content/rewards.ts";
 
 /*
@@ -34,7 +34,7 @@ export async function stashMeter(q: Queryable, pid: number) {
   return { energy: Math.min(STASH_PITY, Number(p?.stash_energy ?? 0)), pity: STASH_PITY };
 }
 
-const DAY_MS = 86_400_000;
+const HOUR_MS = 3_600_000;
 const claimKey = (id: string, mode: LocMode) => (mode === "night" ? `night:${id}` : id);
 const repTable = (mode: LocMode) => (mode === "night" ? "location_night_rep" : "location_rep");
 
@@ -51,14 +51,15 @@ async function repAndLeaders(q: Queryable, pid: number, mode: LocMode) {
 }
 
 type BizRow = { location_id: string; lv_rep: number; lv_rub: number; since: Date | null };
-/** the profit waiting in a business: whole days since `since`, at most BUSINESS_MAX_DAYS */
+/** the profit waiting in a business: whole hours since `since`, at most BUSINESS_MAX_HOURS (a week) */
 function bizPending(l: LocationDef, b: BizRow | undefined, now: number) {
   const lvRep = Number(b?.lv_rep ?? 0), lvRub = Number(b?.lv_rub ?? 0);
   const since = b?.since ? new Date(b.since).getTime() : null;
   const elapsed = since === null ? 0 : Math.max(0, now - since);
-  const days = Math.min(BUSINESS_MAX_DAYS, Math.floor(elapsed / DAY_MS));
+  const hours = Math.min(BUSINESS_MAX_HOURS, Math.floor(elapsed / HOUR_MS));
   const perRep = lvRep * businessPerLevel(l, "rep"), perRub = lvRub * businessPerLevel(l, "rub");
-  return { lvRep, lvRub, since, days, perRep, perRub, rep: days * perRep, rub: days * perRub, full: elapsed >= BUSINESS_MAX_DAYS * DAY_MS };
+  const hourRep = lvRep * businessPerHour(l, "rep"), hourRub = lvRub * businessPerHour(l, "rub");
+  return { lvRep, lvRub, since, hours, perRep, perRub, rep: hours * hourRep, rub: hours * hourRub, full: elapsed >= BUSINESS_MAX_HOURS * HOUR_MS };
 }
 
 export async function locationsView(q: Queryable, pid: number, now = Date.now()) {
@@ -84,8 +85,8 @@ export async function locationsView(q: Queryable, pid: number, now = Date.now())
         costRep: b.lvRep < businessCells(l) ? businessCost(l, "rep", b.lvRep) : null,
         costRub: b.lvRub < businessCells(l) ? businessCost(l, "rub", b.lvRub) : null,
         stepRep: businessPerLevel(l, "rep"), stepRub: businessPerLevel(l, "rub"), perRep: b.perRep, perRub: b.perRub,
-        days: b.days, pendingRep: b.rep, pendingRub: b.rub, full: b.full,
-        nextAt: b.since === null || b.full ? null : b.since + (b.days + 1) * DAY_MS,
+        hours: b.hours, pendingRep: b.rep, pendingRub: b.rub, full: b.full,
+        nextAt: b.since === null || b.full ? null : b.since + (b.hours + 1) * HOUR_MS,
         ...bizOpen(l, clears),
       },
     };
@@ -121,16 +122,16 @@ export async function businessUp(ctx: Ctx, locationId: string, line: BusinessLin
   return { locationId: loc.id, line, level: lv + 1, price };
 }
 
-/** «Бизнес»: take the profit of every location at once (whole days piled up in each, at most a week) */
+/** «Бизнес»: take the profit of every location at once (whole hours piled up in each, at most a week) */
 export async function businessClaim(ctx: Ctx) {
   const rows = await ctx.q.query<BizRow>("SELECT location_id, lv_rep, lv_rub, since FROM location_business WHERE player_id=$1 FOR UPDATE", [ctx.pid]);
-  let rub = 0, rep = 0, days = 0;
-  const parts: { locationId: string; days: number; rub: number; rep: number }[] = [];
+  let rub = 0, rep = 0, hours = 0;
+  const parts: { locationId: string; hours: number; rub: number; rep: number }[] = [];
   for (const b of rows) {
     const loc = locationById(b.location_id);
     if (!loc) continue;
     const p = bizPending(loc, b, ctx.now);
-    if (p.days < 1 || (p.rep <= 0 && p.rub <= 0)) continue;
+    if (p.hours < 1 || (p.rep <= 0 && p.rub <= 0)) continue;
     if (p.rep > 0) {
       await ctx.q.query(
         "INSERT INTO location_rep (player_id, location_id, rep) VALUES ($1,$2,$3) ON CONFLICT (player_id, location_id) DO UPDATE SET rep = location_rep.rep + EXCLUDED.rep",
@@ -138,16 +139,16 @@ export async function businessClaim(ctx: Ctx) {
       );
     }
     // a full week stops the clock: it starts again from now; otherwise the part of the day already gone is kept
-    const since = p.full ? ctx.now : (p.since ?? ctx.now) + p.days * DAY_MS;
+    const since = p.full ? ctx.now : (p.since ?? ctx.now) + p.hours * HOUR_MS;
     await ctx.q.query("UPDATE location_business SET since=$3 WHERE player_id=$1 AND location_id=$2", [ctx.pid, loc.id, new Date(since)]);
     rub += p.rub;
     rep += p.rep;
-    days = Math.max(days, p.days);
-    parts.push({ locationId: loc.id, days: p.days, rub: p.rub, rep: p.rep });
+    hours = Math.max(hours, p.hours);
+    parts.push({ locationId: loc.id, hours: p.hours, rub: p.rub, rep: p.rep });
   }
-  if (!parts.length) throw new GameError("not_yet", "Прибыль ещё не набежала: забирать можно раз в сутки");
+  if (!parts.length) throw new GameError("not_yet", "Прибыль ещё не набежала: она капает каждый час");
   if (rub > 0) await addMoney(ctx, "RUB", rub, "business");
-  return { days, rub, rep, parts };
+  return { hours, rub, rep, parts };
 }
 
 /** For the "you can spend energy" hint: the cheapest step left in an open location not cleared yet, and whether its first reward waits. */

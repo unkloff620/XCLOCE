@@ -6,7 +6,7 @@ import { resetConfigCache } from "../src/server/config.ts";
 import { fightView } from "../src/server/systems/combat.ts";
 import { YARD_DROPS } from "../src/content/yard.ts";
 import { levelFromXp } from "../src/content/levels.ts";
-import { BUSINESS_MAX_DAYS, LOCATIONS, businessCells, businessCost, businessPerLevel } from "../src/content/locations.ts";
+import { BUSINESS_MAX_HOURS, LOCATIONS, businessCells, businessCost, businessPerHour, businessPerLevel } from "../src/content/locations.ts";
 import { locationsView } from "../src/server/systems/locations.ts";
 import { exchangeWindow } from "../src/content/currencies.ts";
 import { TALENT_THRESHOLDS, talentThreshold, talentsForDamage } from "../src/content/talents.ts";
@@ -590,35 +590,38 @@ describe("locations", () => {
     const view = await locationsView(db, p, T0);
     expect(view[0]).toMatchObject({ clears: 0, done: 0, night: { clears: 1, done: 0 } });
   });
-  it("business: levels for rubles, profit once a day, piles up for a week at most", async () => {
+  it("business: levels for rubles, profit every hour (a 24th of the day), piles up for a week at most", async () => {
     const p = await newPlayer(db);
     const loc = LOCATIONS[0];
     const cells = businessCells(loc);
+    const hRub = businessPerHour(loc, "rub"), hRep = businessPerHour(loc, "rep");
+    expect(businessPerLevel(loc, "rub")).toBe(24 * hRub);
     await setMoney(db, p, "RUB", 1_000_000);
     await expect(act(db, p, "business_up", { locationId: loc.id, line: "rub" }, T0)).rejects.toMatchObject({ code: "business_locked" });
     await db.query("INSERT INTO location_claims (player_id, location_id, claimed_at) VALUES ($1,$2,now())", [p, loc.id]);
     await expect(act(db, p, "business_up", { locationId: loc.id, line: "rub" }, T0)).rejects.toMatchObject({ code: "business_locked" });
     await db.query("INSERT INTO location_claims (player_id, location_id, claimed_at) VALUES ($1,$2,now())", [p, `night:${loc.id}`]);
-    await expect(act(db, p, "business_claim", { locationId: loc.id }, T0)).rejects.toMatchObject({ code: "not_yet" });
+    await expect(act(db, p, "business_claim", {}, T0)).rejects.toMatchObject({ code: "not_yet" });
     await act(db, p, "business_up", { locationId: loc.id, line: "rub" }, T0);
-    await act(db, p, "business_up", { locationId: loc.id, line: "rep" }, T0 + H);
+    await act(db, p, "business_up", { locationId: loc.id, line: "rep" }, T0 + 10 * M);
     expect(await wallet(db, p, "RUB")).toBe(1_000_000 - businessCost(loc, "rub", 0) - businessCost(loc, "rep", 0));
-    await expect(act(db, p, "business_claim", { locationId: loc.id }, T0 + 23 * H)).rejects.toMatchObject({ code: "not_yet" });
+    await expect(act(db, p, "business_claim", {}, T0 + 59 * M)).rejects.toMatchObject({ code: "not_yet" });
     let rub = await wallet(db, p, "RUB");
-    const c = await act(db, p, "business_claim", { locationId: loc.id }, T0 + 3 * 24 * H + H);
-    expect(c.result).toMatchObject({ days: 3, rub: 3 * businessPerLevel(loc, "rub"), rep: 3 * businessPerLevel(loc, "rep") });
-    expect((await wallet(db, p, "RUB")) - rub).toBe(3 * businessPerLevel(loc, "rub"));
+    const c = await act(db, p, "business_claim", {}, T0 + 3 * H + 20 * M);
+    expect(c.result).toMatchObject({ hours: 3, rub: 3 * hRub, rep: 3 * hRep });
+    expect((await wallet(db, p, "RUB")) - rub).toBe(3 * hRub);
     const [lr] = await db.query<{ rep: number }>("SELECT rep FROM location_rep WHERE player_id=$1 AND location_id=$2", [p, loc.id]);
-    expect(Number(lr.rep)).toBe(3 * businessPerLevel(loc, "rep"));
-    // the part of the day already gone is kept: the next day is due at T0 + 4 days
-    await expect(act(db, p, "business_claim", { locationId: loc.id }, T0 + 4 * 24 * H - M)).rejects.toMatchObject({ code: "not_yet" });
+    expect(Number(lr.rep)).toBe(3 * hRep);
+    // the part of the hour already gone is kept: the next hour is due at T0 + 4h
+    await expect(act(db, p, "business_claim", {}, T0 + 4 * H - M)).rejects.toMatchObject({ code: "not_yet" });
+    expect((await act(db, p, "business_claim", {}, T0 + 4 * H)).result.hours).toBe(1);
     // a month away: only a week is paid
     rub = await wallet(db, p, "RUB");
-    const c2 = await act(db, p, "business_claim", { locationId: loc.id }, T0 + 40 * 24 * H);
-    expect(c2.result.days).toBe(BUSINESS_MAX_DAYS);
-    expect((await wallet(db, p, "RUB")) - rub).toBe(BUSINESS_MAX_DAYS * businessPerLevel(loc, "rub"));
+    const c2 = await act(db, p, "business_claim", {}, T0 + 40 * 24 * H);
+    expect(c2.result.hours).toBe(BUSINESS_MAX_HOURS);
+    expect((await wallet(db, p, "RUB")) - rub).toBe(BUSINESS_MAX_HOURS * hRub);
     // the clock started again from the claim
-    await expect(act(db, p, "business_claim", { locationId: loc.id }, T0 + 40 * 24 * H + 23 * H)).rejects.toMatchObject({ code: "not_yet" });
+    await expect(act(db, p, "business_claim", {}, T0 + 40 * 24 * H + 59 * M)).rejects.toMatchObject({ code: "not_yet" });
     for (let i = 1; i < cells; i++) await act(db, p, "business_up", { locationId: loc.id, line: "rub" }, T0 + 41 * 24 * H);
     await expect(act(db, p, "business_up", { locationId: loc.id, line: "rub" }, T0 + 41 * 24 * H)).rejects.toMatchObject({ code: "max_level" });
     const v = (await locationsView(db, p, T0 + 41 * 24 * H))[0].business;
@@ -637,13 +640,13 @@ describe("locations", () => {
     await act(db, p, "business_up", { locationId: LOCATIONS[0].id, line: "rub" }, T0);
     await act(db, p, "business_up", { locationId: LOCATIONS[1].id, line: "rub" }, T0 + 12 * H);
     const rub = await wallet(db, p, "RUB");
-    // only the first has a whole day after 30 hours
-    let c = await act(db, p, "business_claim", {}, T0 + 30 * H);
+    // half a day later only the first has whole hours
+    let c = await act(db, p, "business_claim", {}, T0 + 12 * H + 30 * M);
     expect(c.result.parts).toHaveLength(1);
-    expect((await wallet(db, p, "RUB")) - rub).toBe(businessPerLevel(LOCATIONS[0], "rub"));
-    c = await act(db, p, "business_claim", {}, T0 + 2 * 24 * H + 12 * H);
+    expect((await wallet(db, p, "RUB")) - rub).toBe(12 * businessPerHour(LOCATIONS[0], "rub"));
+    c = await act(db, p, "business_claim", {}, T0 + 14 * H);
     expect(c.result.parts).toHaveLength(2);
-    expect(c.result.rub).toBe(businessPerLevel(LOCATIONS[0], "rub") + 2 * businessPerLevel(LOCATIONS[1], "rub"));
+    expect(c.result.rub).toBe(2 * businessPerHour(LOCATIONS[0], "rub") + 2 * businessPerHour(LOCATIONS[1], "rub"));
   });
 });
 
