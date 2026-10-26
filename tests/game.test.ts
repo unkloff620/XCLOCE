@@ -6,7 +6,8 @@ import { resetConfigCache } from "../src/server/config.ts";
 import { fightView } from "../src/server/systems/combat.ts";
 import { YARD_DROPS } from "../src/content/yard.ts";
 import { levelFromXp } from "../src/content/levels.ts";
-import { LOCATIONS } from "../src/content/locations.ts";
+import { BUSINESS_MAX_DAYS, LOCATIONS, businessCells, businessCost, businessPerLevel } from "../src/content/locations.ts";
+import { locationsView } from "../src/server/systems/locations.ts";
 import { exchangeWindow } from "../src/content/currencies.ts";
 import { TALENT_THRESHOLDS, talentThreshold, talentsForDamage } from "../src/content/talents.ts";
 import { MIGRATIONS } from "../src/server/migrations.ts";
@@ -566,6 +567,61 @@ describe("locations", () => {
     const c2 = await act(db, p, "location_claim", { locationId: loc.id }, T0);
     expect(c2.result.first).toBe(false);
     expect((await wallet(db, p, "USD")) - usd1).toBe(2); // half of 5, whole dollars
+  });
+  it("night road: own tasks, ночной авторитет, always the repeat reward, the day road untouched", async () => {
+    const p = await newPlayer(db);
+    await setEnergy(p, 5000, T0);
+    const loc = LOCATIONS[0];
+    expect(loc.night).toHaveLength(loc.tasks.length);
+    await expect(act(db, p, "task", { taskId: loc.night[1].id }, T0)).rejects.toMatchObject({ code: "task_locked" });
+    await expect(act(db, p, "location_claim", { locationId: loc.id, mode: "night" }, T0)).rejects.toMatchObject({ code: "not_done" });
+    let last;
+    for (const t of loc.night) for (let i = 0; i < t.steps; i++) last = await act(db, p, "task", { taskId: t.id }, T0);
+    expect(last!.result).toMatchObject({ locationComplete: true, mode: "night" });
+    const [nr] = await db.query<{ rep: number }>("SELECT rep FROM location_night_rep WHERE player_id=$1 AND location_id=$2", [p, loc.id]);
+    expect(Number(nr.rep)).toBeGreaterThan(0);
+    expect(await db.query("SELECT 1 FROM location_rep WHERE player_id=$1", [p])).toHaveLength(0);
+    const usd0 = await wallet(db, p, "USD");
+    const c = await act(db, p, "location_claim", { locationId: loc.id, mode: "night" }, T0);
+    expect(c.result).toMatchObject({ first: false, opened: null, mode: "night" });
+    expect((await wallet(db, p, "USD")) - usd0).toBe(2);
+    // the day road is still closed for the first time, the next location still shut
+    await expect(act(db, p, "task", { taskId: LOCATIONS[1].tasks[0].id }, T0)).rejects.toMatchObject({ code: "location_locked" });
+    const view = await locationsView(db, p, T0);
+    expect(view[0]).toMatchObject({ clears: 0, done: 0, night: { clears: 1, done: 0 } });
+  });
+  it("business: levels for rubles, profit once a day, piles up for a week at most", async () => {
+    const p = await newPlayer(db);
+    const loc = LOCATIONS[0];
+    const cells = businessCells(loc);
+    await setMoney(db, p, "RUB", 1_000_000);
+    await expect(act(db, p, "business_claim", { locationId: loc.id }, T0)).rejects.toMatchObject({ code: "not_yet" });
+    await act(db, p, "business_up", { locationId: loc.id, line: "rub" }, T0);
+    await act(db, p, "business_up", { locationId: loc.id, line: "rep" }, T0 + H);
+    expect(await wallet(db, p, "RUB")).toBe(1_000_000 - businessCost(loc, "rub", 0) - businessCost(loc, "rep", 0));
+    await expect(act(db, p, "business_claim", { locationId: loc.id }, T0 + 23 * H)).rejects.toMatchObject({ code: "not_yet" });
+    let rub = await wallet(db, p, "RUB");
+    const c = await act(db, p, "business_claim", { locationId: loc.id }, T0 + 3 * 24 * H + H);
+    expect(c.result).toMatchObject({ days: 3, rub: 3 * businessPerLevel(loc, "rub"), rep: 3 * businessPerLevel(loc, "rep") });
+    expect((await wallet(db, p, "RUB")) - rub).toBe(3 * businessPerLevel(loc, "rub"));
+    const [lr] = await db.query<{ rep: number }>("SELECT rep FROM location_rep WHERE player_id=$1 AND location_id=$2", [p, loc.id]);
+    expect(Number(lr.rep)).toBe(3 * businessPerLevel(loc, "rep"));
+    // the part of the day already gone is kept: the next day is due at T0 + 4 days
+    await expect(act(db, p, "business_claim", { locationId: loc.id }, T0 + 4 * 24 * H - M)).rejects.toMatchObject({ code: "not_yet" });
+    // a month away: only a week is paid
+    rub = await wallet(db, p, "RUB");
+    const c2 = await act(db, p, "business_claim", { locationId: loc.id }, T0 + 40 * 24 * H);
+    expect(c2.result.days).toBe(BUSINESS_MAX_DAYS);
+    expect((await wallet(db, p, "RUB")) - rub).toBe(BUSINESS_MAX_DAYS * businessPerLevel(loc, "rub"));
+    // the clock started again from the claim
+    await expect(act(db, p, "business_claim", { locationId: loc.id }, T0 + 40 * 24 * H + 23 * H)).rejects.toMatchObject({ code: "not_yet" });
+    for (let i = 1; i < cells; i++) await act(db, p, "business_up", { locationId: loc.id, line: "rub" }, T0 + 41 * 24 * H);
+    await expect(act(db, p, "business_up", { locationId: loc.id, line: "rub" }, T0 + 41 * 24 * H)).rejects.toMatchObject({ code: "max_level" });
+    const v = (await locationsView(db, p, T0 + 41 * 24 * H))[0].business;
+    expect(v).toMatchObject({ cells, lvRub: cells, lvRep: 1, costRub: null, perRub: cells * businessPerLevel(loc, "rub") });
+    await setMoney(db, p, "RUB", 0);
+    await expect(act(db, p, "business_up", { locationId: loc.id, line: "rep" }, T0)).rejects.toMatchObject({ code: "no_money" });
+    await expect(act(db, p, "business_up", { locationId: LOCATIONS[1].id, line: "rep" }, T0)).rejects.toMatchObject({ code: "location_locked" });
   });
 });
 

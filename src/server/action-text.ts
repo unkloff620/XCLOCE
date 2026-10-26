@@ -59,6 +59,8 @@ export function actionText(type: string, body: Row, result: unknown): string | n
       const t = taskById(String(body.taskId));
       return join(t ? `${t.loc.name}: «${t.task.title}»` : String(body.taskId), r.steps !== undefined ? `шаг ${r.steps}/${r.need}` : null, grantedText(r.step), r.done ? `задание выполнено: ${grantedText(r.done)}` : null, r.locationComplete ? "локация пройдена" : null);
     }
+    case "business_up": return `${locationById(String(body.locationId))?.name ?? body.locationId}: бизнес «${body.line === "rep" ? "авторитет" : "рубли"}» → ${r.level} за ${fmt(r.price)} ₽`;
+    case "business_claim": return `${locationById(String(body.locationId))?.name ?? body.locationId}: прибыль за ${r.days} дн. · +${fmt(r.rub)} ₽ · +${fmt(r.rep)} авторитета локации`;
     case "location_claim": return join(locationById(String(body.locationId))?.name ?? String(body.locationId), r.first ? "первое прохождение" : "повтор", grantedText(r.reward));
     case "fight_start": return join(bossById(String(body.boss))?.name ?? String(body.boss), body.solo === true ? "соло" : null, r.fightId ? `бой #${r.fightId}` : null);
     case "fight_claim": return join(`бой #${body.fightId}`, r.status === "won" ? "победа" : r.status === "lost" ? "босс ушёл" : String(r.status ?? ""), grantedText(r.reward), r.key ? "пропуск получен" : null);

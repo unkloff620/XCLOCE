@@ -21,6 +21,8 @@ export interface LocationDef {
   /** vector scene id (client/art/scenes) */
   scene: "openspace" | "market" | "serverroom" | "basement" | "board" | "accounting" | "hr" | "party";
   tasks: TaskDef[];
+  /** «Ночные движухи»: the same road at night — the same energy, steps and pay, but «ночной авторитет» (NIGHT_TASKS) */
+  night: TaskDef[];
   /** special reward for closing all five tasks, much bigger than a task reward */
   reward: Reward;
 }
@@ -33,7 +35,7 @@ const t = (id: string, title: string, flavor: string, energy: number, steps: num
   doneReward: { xp: energy * steps * 10, ...done },
 });
 
-export const LOCATIONS: LocationDef[] = [
+const DAY: Omit<LocationDef, "night">[] = [
   {
     id: "openspace", order: 1, name: "Опенспейс", subtitle: "Здесь начинается карьера и заканчивается кофе", scene: "openspace",
     tasks: [
@@ -124,7 +126,73 @@ export const LOCATIONS: LocationDef[] = [
   },
 ];
 
+/* «Ночные движухи»: every location's night tasks, one for each day task (same energy, steps and pay) */
+const NIGHT_TASKS: Record<string, [string, string][]> = {
+  openspace: [
+    ["Остаться после работы", "Охранник уже косо смотрит."], ["Доесть торт из холодильника", "Чей он — уже не важно."],
+    ["Поиграть на рабочем компе", "Админ спит. Наверное."], ["Прокатиться на кресле по коридору", "Рекорд офиса — 14 метров."],
+    ["Уснуть под столом", "Будильник — уборщица в 6:00."],
+  ],
+  market: [
+    ["Ловить памп в 3 ночи", "Азия проснулась, ты — нет."], ["Сидеть в спейсе до утра", "Ведущий обещал альфу через час."],
+    ["Шортить на эмоциях", "Ликвидация — тоже опыт."], ["Заминтить мем-токен", "Тикер $SLEEP, сапплай — бесконечность."],
+    ["Пережить ночной дамп", "Свечи красные, глаза тоже."],
+  ],
+  serverroom: [
+    ["Дежурить в ночную смену", "Алерты приходят только ночью."], ["Откатить релиз в 2:00", "git revert — лучший друг."],
+    ["Слушать гудение стоек", "Белый шум и немного паники."], ["Найти, кто положил прод", "Ты. Это был ты."],
+    ["Поспать на сервере", "Тепло, мягко, 40 градусов."],
+  ],
+  basement: [
+    ["Разогнать карты ночью", "Ночью свет дешевле. Немного."], ["Потушить искры", "Огнетушитель просрочен с 2016-го."],
+    ["Спрятать ферму от соседей", "Это не гул. Это холодильник."], ["Майнить на калькуляторе", "Хешрейт: 0,0001. Гордость: 100%."],
+    ["Встретить рассвет у рига", "Солнце встаёт, курс — нет."],
+  ],
+  board: [
+    ["Подслушать закрытое совещание", "Кофемашина всё слышит."], ["Переделать отчёт до утра", "Все цифры зелёные. Как ты."],
+    ["Спрятать провальный квартал", "Папка «Разное/Важное/Не открывать»."], ["Посидеть в кресле директора", "Кожа, массаж и чувство власти."],
+    ["Подписать себе премию", "Подпись директора тренировал год."],
+  ],
+  accounting: [
+    ["Свести баланс к полуночи", "Не сходится на 3 рубля. Ищешь до утра."], ["Отправить черновики в шредер", "Шредер работает на пределе."],
+    ["Пересчитать кассу при свечах", "Свет отключили за неуплату."], ["Спрятать чек из бара", "Представительские расходы, однозначно."],
+    ["Задобрить налоговую печеньем", "Печенье приняли. Проверку — тоже."],
+  ],
+  hr: [
+    ["Почитать личные дела коллег", "У Петрова три выговора и кот."], ["Случайно уволить себя", "Галочка не там. Отменять до утра."],
+    ["Подделать пропуск", "Фото с паспорта подойдёт."], ["Устроить тайный опрос", "Анонимный. Почти."],
+    ["Распечатать всем грамоты", "Лучший сотрудник месяца — принтер."],
+  ],
+  party: [
+    ["Остаться на афтепати", "Музыку выключили, а ты нет."], ["Найти свою куртку", "Их сорок, и все чёрные."],
+    ["Доесть мандарины", "Шкурки — в цветок директора."], ["Вызвать такси за счёт фирмы", "Тариф «Бизнес», конечно."],
+    ["Сфоткаться с ёлкой", "Ёлка уже не стоит. Ты тоже."],
+  ],
+};
+export const LOCATIONS: LocationDef[] = DAY.map((l) => ({
+  ...l,
+  night: l.tasks.map((t, i) => ({ ...t, id: `n-${t.id}`, title: NIGHT_TASKS[l.id]?.[i]?.[0] ?? `${t.title} ночью`, flavor: NIGHT_TASKS[l.id]?.[i]?.[1] ?? t.flavor })),
+}));
+
 export const locationById = (id: string) => LOCATIONS.find((l) => l.id === id);
+export type LocMode = "day" | "night";
+export const tasksOf = (l: LocationDef, mode: LocMode) => (mode === "night" ? l.night : l.tasks);
+
+/*
+ * «Бизнес»: every location is a business with two lines to build up for rubles — «Прибыль: авторитет» (location
+ * authority a day) and «Прибыль: рубли» (rubles a day). Openspace has 4 cells in each line, every next location one more.
+ * The profit piles up by whole days, even when the player is away, up to BUSINESS_MAX_DAYS; then it stops.
+ */
+export const BUSINESS_MAX_DAYS = 7;
+export type BusinessLine = "rep" | "rub";
+export const businessCells = (l: LocationDef) => 3 + l.order;
+/** what one level of a line gives a day */
+export const businessPerLevel = (l: LocationDef, line: BusinessLine) => (line === "rub" ? 60 * l.order : 25 * l.order);
+/** the price in rubles of the next level (lv — levels already built) */
+export function businessCost(l: LocationDef, line: BusinessLine, lv: number): number {
+  const base = (line === "rub" ? 400 : 300) * l.order * Math.pow(lv + 1, 1.6);
+  return Math.round(base / 50) * 50;
+}
 
 /**
  * Авторитет локации: every task step also adds a third of its authority (rounded) to the player's authority in that
@@ -138,14 +206,17 @@ export const locRep = (xp: number) => Math.round(xp / LOC_REP_DIV);
  * Tasks of a location open one by one: the first is open, the next one opens when all before it are done. A task the
  * player has already started (progress from before this rule) stays open.
  */
-export function taskOpen(loc: LocationDef, index: number, stepsOf: (taskId: string) => number): boolean {
-  if (index <= 0 || stepsOf(loc.tasks[index].id) > 0) return true;
-  return loc.tasks.slice(0, index).every((t) => stepsOf(t.id) >= t.steps);
+export function taskOpen(loc: LocationDef, index: number, stepsOf: (taskId: string) => number, mode: LocMode = "day"): boolean {
+  const list = tasksOf(loc, mode);
+  if (index <= 0 || stepsOf(list[index].id) > 0) return true;
+  return list.slice(0, index).every((t) => stepsOf(t.id) >= t.steps);
 }
 export const taskById = (id: string) => {
   for (const l of LOCATIONS) {
     const t = l.tasks.find((x) => x.id === id);
-    if (t) return { loc: l, task: t };
+    if (t) return { loc: l, task: t, mode: "day" as LocMode };
+    const n = l.night.find((x) => x.id === id);
+    if (n) return { loc: l, task: n, mode: "night" as LocMode };
   }
   return undefined;
 };

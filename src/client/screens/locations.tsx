@@ -3,12 +3,12 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { liveEnergy, useGame, useNow } from "../store.tsx";
 import { api, type Granted } from "../api.ts";
-import { LOCATIONS, locRep, locationById, taskOpen } from "../../content/locations.ts";
+import { BUSINESS_MAX_DAYS, LOCATIONS, locRep, locationById, taskOpen, tasksOf, type LocMode } from "../../content/locations.ts";
 import type { Reward } from "../../content/rewards.ts";
 import { LOCATION_ART, LocationScene } from "../art/scenes.tsx";
 import { Icon } from "../art/icons.tsx";
 import { Avatar, Bar, Empty, Modal, RewardChips } from "../ui.tsx";
-import { full } from "../format.ts";
+import { clock, full } from "../format.ts";
 import { haptic } from "../telegram.ts";
 import { Help } from "../help.tsx";
 import { sfx } from "../sound.ts";
@@ -39,6 +39,84 @@ interface LocRow {
   id: string; unlocked: boolean; done: number; total: number; clears: number; tasks: { id: string; steps: number; need: number }[]; nextReward: Reward;
   /** my authority in this location, and who has the most here */
   rep: number; leader: LocLeader | null;
+  /** the night road: its own tasks, clears and ночной авторитет */
+  night: { done: number; total: number; clears: number; tasks: { id: string; steps: number; need: number }[]; nextReward: Reward; rep: number; leader: LocLeader | null };
+  business: LocBiz;
+}
+interface LocBiz {
+  cells: number; lvRep: number; lvRub: number; costRep: number | null; costRub: number | null;
+  stepRep: number; stepRub: number; perRep: number; perRub: number;
+  days: number; pendingRep: number; pendingRub: number; full: boolean; nextAt: number | null;
+}
+type LocTab = "day" | "night" | "biz";
+
+/** night: lights blinking over the darkened picture (fixed spots, so nothing jumps between renders) */
+const NIGHT_LIGHTS = Array.from({ length: 18 }, (_, i) => ({ x: (i * 37 + 11) % 97, y: (i * 53 + 7) % 88, d: 1.6 + ((i * 7) % 10) / 4, w: ((i * 13) % 20) / 10, s: 3 + (i % 4) * 2, c: i % 3 }));
+
+/** «Бизнес»: two profit lines (authority, rubles), levels bought with rubles, profit taken once a day (piles up for a week) */
+function BizPanel({ b, locId, onDone }: { b: LocBiz; locId: string; onDone: () => void }) {
+  const { act, busy, state } = useGame();
+  const now = useNow();
+  const rub = state?.wallet?.RUB ?? 0;
+  const up = async (line: "rep" | "rub") => {
+    haptic.tap();
+    const res = await act("business_up", { locationId: locId, line }, () => "Бизнес прокачан!");
+    if (res) {
+      haptic.ok();
+      onDone();
+    }
+  };
+  const take = async () => {
+    const res = await act<{ days: number; rub: number; rep: number }>("business_claim", { locationId: locId });
+    if (res) {
+      haptic.big();
+      sfx("win");
+      onDone();
+    }
+  };
+  const lines = [
+    { line: "rep" as const, name: "авторитет", icon: <Icon name="map" size={16} />, lv: b.lvRep, cost: b.costRep, per: b.perRep, step: b.stepRep },
+    { line: "rub" as const, name: "рубли", icon: <b className="biz-rub">₽</b>, lv: b.lvRub, cost: b.costRub, per: b.perRub, step: b.stepRub },
+  ];
+  const started = b.lvRep + b.lvRub > 0;
+  const ready = b.days > 0 && (b.pendingRep > 0 || b.pendingRub > 0);
+  return (
+    <div className="biz">
+      {lines.map((x) => (
+        <div className="biz-line" key={x.line}>
+          <span className="biz-h">Прибыль: {x.icon}{x.name}<small className="num">{x.per > 0 ? `+${full(x.per)} в сутки` : "нет"}</small></span>
+          <span className="biz-cells" aria-label={`${x.lv}/${b.cells}`}>
+            {Array.from({ length: b.cells }, (_, i) => <i key={i} className={i < x.lv ? "on" : ""} />)}
+          </span>
+          {x.cost !== null ? (
+            <button className="btn gold biz-up" disabled={busy === "business_up" || rub < x.cost} onClick={() => up(x.line)}>
+              Прокачать <span className="num">{full(x.cost)} ₽</span><small>+{full(x.step)} в сутки</small>
+            </button>
+          ) : (
+            <span className="biz-max display">МАКСИМУМ</span>
+          )}
+        </div>
+      ))}
+      <div className={`biz-take ${ready ? "ready" : ""}`}>
+        {!started ? (
+          <span className="small">Прокачай бизнес — прибыль пойдёт каждые сутки, даже когда ты не в игре.</span>
+        ) : (
+          <>
+            <span className="biz-take-h">Накопилось за <b className="num">{b.days}/{BUSINESS_MAX_DAYS}</b> дн.</span>
+            <span className="biz-take-sum num">
+              {b.pendingRep > 0 && <span><Icon name="map" size={15} />+{full(b.pendingRep)}</span>}
+              {b.pendingRub > 0 && <span>+{full(b.pendingRub)} ₽</span>}
+              {!ready && <span className="muted">пока пусто</span>}
+            </span>
+            <button className="btn gold block" disabled={!ready || busy === "business_claim"} onClick={take}>Забрать прибыль</button>
+            <span className="tiny biz-note">
+              {b.full ? "Копилка полна: больше 7 дней не копится — забери!" : b.nextAt ? `Следующие сутки через ${clock(Math.max(0, b.nextAt - now))}` : ""}
+            </span>
+          </>
+        )}
+      </div>
+    </div>
+  );
 }
 
 /** авторитет локации: a chip of its own (it piles up in the location only) */
@@ -235,21 +313,27 @@ export function LocationScreen({ id }: { id: string }) {
   const [got, setGot] = useState<ClaimResult | null>(null);
   const [stash, setStash] = useState<string | null>(null);
   const [pick, setPick] = useState<string | null>(null);
+  const [tab, setTab] = useState<LocTab>("day");
   // "+36 ₽" flying up from the tapped stop
   const [pops, setPops] = useState<{ key: number; i: number; text: string; rep: number }[]>([]);
   if (!loc) return <Empty>Такой локации нет</Empty>;
-  const r = rows?.find((x) => x.id === id);
+  const row = rows?.find((x) => x.id === id);
+  const mode: LocMode = tab === "night" ? "night" : "day";
+  const night = mode === "night";
+  // the road shown: the day one (the row itself) or the night one
+  const r = row && (night ? row.night : row);
+  const list = tasksOf(loc, mode);
   const energy = state ? liveEnergy(state, now).energy : 0;
   const allDone = !!r && r.done === r.total;
   const stepsOf = (taskId: string) => r?.tasks.find((x) => x.id === taskId)?.steps ?? 0;
-  const tasks = loc.tasks.map((t, i) => {
+  const tasks = list.map((t, i) => {
     const steps = stepsOf(t.id);
-    return { t, i, steps, done: steps >= t.steps, open: taskOpen(loc, i, stepsOf) };
+    return { t, i, steps, done: steps >= t.steps, open: taskOpen(loc, i, stepsOf, mode) };
   });
   const current = tasks.find((x) => x.open && !x.done) ?? null;
   const sel = tasks.find((x) => x.t.id === pick) ?? current ?? tasks[tasks.length - 1];
-  const icons = stopIcons(loc.id, loc.order, loc.tasks.length);
-  const stops = STOPS.slice(0, loc.tasks.length);
+  const icons = stopIcons(loc.id, loc.order, list.length);
+  const stops = STOPS.slice(0, list.length);
 
   const step = async (x: (typeof tasks)[number]) => {
     if (busy === "task") return;
@@ -280,7 +364,7 @@ export function LocationScreen({ id }: { id: string }) {
     void load();
   };
   const claim = async () => {
-    const res = await act<{ reward: Granted; first: boolean; opened: string | null }>("location_claim", { locationId: id });
+    const res = await act<{ reward: Granted; first: boolean; opened: string | null }>("location_claim", night ? { locationId: id, mode: "night" } : { locationId: id });
     if (res) {
       haptic.ok();
       setGot(res);
@@ -298,18 +382,28 @@ export function LocationScreen({ id }: { id: string }) {
   const left = meter ? Math.max(0, meter.pity - meter.energy) : null;
 
   return (
-    <div className={LOCATION_ART.has(loc.scene) ? "loc-page has-bg" : "loc-page"}>
+    <div className={`loc-page ${LOCATION_ART.has(loc.scene) ? "has-bg" : ""} ${night ? "night" : ""} ${tab === "biz" ? "biz-mode" : ""}`}>
       {LOCATION_ART.has(loc.scene) && <div className="loc-page-bg" style={{ backgroundImage: `url(/assets/locations/${loc.scene}.webp)` }} aria-hidden="true" />}
+      {night && (
+        <div className="loc-night-sky" aria-hidden="true">
+          {NIGHT_LIGHTS.map((l, i) => <i key={i} className={`c${l.c}`} style={{ left: `${l.x}%`, top: `${l.y}%`, width: l.s, height: l.s, animationDuration: `${l.d}s`, animationDelay: `${l.w}s` }} />)}
+        </div>
+      )}
       <div className="title">
         <Link href="/locations" className="back">← Локации</Link>
         <span className="chip gold"><Icon name="energy" size={16} />{energy}</span>
       </div>
+      <div className="lp-tabs" role="tablist">
+        {([["day", "☀️ Дневные"], ["night", "🌙 Ночные"], ["biz", "💼 Бизнес"]] as const).map(([k, t]) => (
+          <button key={k} type="button" role="tab" aria-selected={tab === k} className={`lp-tab ${k} ${tab === k ? "on" : ""}`} onClick={() => { haptic.tap(); setTab(k); setPick(null); }}>{t}</button>
+        ))}
+      </div>
       <div className="lp-head">
         <span className="tiny display">ЛОКАЦИЯ {loc.order}</span>
         <b className="display">{loc.name}</b>
-        <Blocks done={r?.done ?? 0} total={loc.tasks.length} />
+        {tab !== "biz" && <Blocks done={r?.done ?? 0} total={list.length} />}
         <span className="lp-rep">
-          <span title="Твой авторитет в этой локации"><Icon name="map" size={14} />твой авторитет <b className="num">{full(r?.rep ?? 0)}</b></span>
+          <span title={night ? "Твой ночной авторитет в этой локации" : "Твой авторитет в этой локации"}><Icon name="map" size={14} />{night ? "ночной авторитет" : "твой авторитет"} <b className="num">{full(r?.rep ?? 0)}</b></span>
           {r?.leader && (
             <span className="lp-rep-lead" title="Больше всех авторитета здесь">
               👑 <Avatar name={r.leader.name} photo={r.leader.photo} size={18} /><i className="ellipsis">{r.leader.id === state?.player.id ? "ты" : r.leader.name}</i> <b className="num">{full(r.leader.rep)}</b>
@@ -317,13 +411,15 @@ export function LocationScreen({ id }: { id: string }) {
           )}
         </span>
       </div>
-      {r && !r.unlocked ? (
+      {row && !row.unlocked ? (
         <Empty>Локация закрыта. Сначала пройди предыдущую.</Empty>
+      ) : tab === "biz" ? (
+        row ? <BizPanel b={row.business} locId={loc.id} onDone={() => void load()} /> : null
       ) : (
         <>
           {/* what closing the location gives — on top */}
           <div className={`lp-prize ${allDone ? "ready" : ""}`}>
-            <span className="lp-prize-h"><Icon name="chest" size={22} />{r?.clears ? "За повтор" : "За локацию"}</span>
+            <span className="lp-prize-h"><Icon name="chest" size={22} />{night ? "За ночь" : r?.clears ? "За повтор" : "За локацию"}</span>
             <RewardChips r={r?.nextReward ?? loc.reward} size={13} />
             {allDone && <button className="btn gold block lp-prize-go" disabled={busy === "location_claim"} onClick={claim}>Забрать награду</button>}
           </div>
@@ -387,16 +483,16 @@ export function LocationScreen({ id }: { id: string }) {
               <img src={`/assets/items/${icons[sel.i]}.webp`} alt="" draggable={false} />
             </span>
             <div className="grow col" style={{ gap: 4, minWidth: 0 }}>
-              <span className="tiny muted display lp-card-k">ЗАДАНИЕ {sel.i + 1}/{loc.tasks.length}{sel.open && !sel.done ? <> · шаг <Icon name="energy" size={12} />{sel.t.energy}</> : null}</span>
+              <span className="tiny muted display lp-card-k">{night ? "НОЧНОЕ " : ""}ЗАДАНИЕ {sel.i + 1}/{list.length}{sel.open && !sel.done ? <> · шаг <Icon name="energy" size={12} />{sel.t.energy}</> : null}</span>
               <b>{sel.t.title}</b>
               <span className="tiny muted">
                 {sel.done ? "Выполнено" : !sel.open ? `Откроется после «${tasks[sel.i - 1]?.t.title}»` : current?.t.id === sel.t.id ? "Жми на светящийся кружок — каждый шаг тратит энергию" : sel.t.flavor}
               </span>
-              <Bar value={sel.steps} max={sel.t.steps} tone={sel.done ? "green" : "gold"} label={`${sel.steps}/${sel.t.steps}`} />
+              <Bar value={sel.steps} max={sel.t.steps} tone={sel.done ? "green" : night ? "violet" : "gold"} label={`${sel.steps}/${sel.t.steps}`} />
               <span className="row" style={{ gap: 6, flexWrap: "wrap" }}><small className="tiny muted">за шаг</small><RewardChips r={sel.t.stepReward} size={13} /><LocRepChip v={locRep(sel.t.stepReward.xp ?? 0)} size={13} /></span>
             </div>
           </div>
-          {energy < Math.min(...loc.tasks.map((t) => t.energy)) && (
+          {energy < Math.min(...list.map((t) => t.energy)) && (
             <p className="small muted center">Энергия кончилась: +1 каждые 5 минут, или <Link href="/shop?tab=energy" style={{ color: "var(--gold)" }}>купи энергию</Link>.</p>
           )}
         </>
