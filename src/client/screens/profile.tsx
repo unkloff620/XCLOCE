@@ -223,7 +223,7 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
         <div className="dos-head">
           <Avatar name={p.name} photo={p.photo} size={44} frame={p.frame} />
           <div className="grow" style={{ minWidth: 0 }}>
-            <span className="tiny dos-k">ЛИЧНОЕ ДЕЛО №{p.id}</span>
+            <span className="dos-k display">ЛИЧНОЕ ДЕЛО №{p.id}</span>
             <div className="row" style={{ gap: 6 }}>
               <b className="display ellipsis" style={{ fontSize: 19 }}>{p.name}</b>
               {p.self && (
@@ -232,7 +232,7 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
                 </button>
               )}
             </div>
-            {p.username && <a className="tg-link tiny" href={`https://t.me/${encodeURIComponent(p.username)}`} target="_blank" rel="noopener noreferrer">@{p.username}</a>}
+            {p.username && <a className="tg-link dos-tg" href={`https://t.me/${encodeURIComponent(p.username)}`} target="_blank" rel="noopener noreferrer">@{p.username}</a>}
           </div>
         </div>
         <div className="dos-tabs" role="tablist">

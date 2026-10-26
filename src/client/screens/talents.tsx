@@ -12,10 +12,9 @@ import { Icon } from "../art/icons.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { Help } from "../help.tsx";
 import { haptic } from "../telegram.ts";
-import { full } from "../format.ts";
+import { full, short } from "../format.ts";
 import { itemById } from "../../content/items.ts";
 import { weaponStats } from "../weapon-stats.ts";
-import { Bar } from "../ui.tsx";
 import { BicepsArt } from "./profile.tsx";
 import {
   CRIT_CHANCE_CAP, EXTRA_NAMES, TALENT_PATH, TALENT_RESET_PRICE, currentStop, stopLevel, talentThreshold, talentsForDamage, talentsSpent,
@@ -137,48 +136,56 @@ export function TalentPanel() {
     setPick(null);
     if (r) haptic.ok();
   };
+  const k = talentsForDamage(state.player.talentDamage ?? 0);
+  const from = talentThreshold(k), to = talentThreshold(k + 1);
+  const dmgNow = state.player.talentDamage ?? 0;
+  const nextP = Math.max(0, Math.min(1, (dmgNow - from) / Math.max(1, to - from)));
   const H = placeOf(TALENT_PATH.length - 1).y + ROW_H / 2;
   const pts = TALENT_PATH.map((_, i) => placeOf(i));
   return (
     <div className="tp-panel">
-      <div className="pc-top">
-        <TalentChip n={talents} />
-        <span className="chip" title="Шанс крита от комнаты и оборудования (у оружия ещё его «Крит»)">крит {pct(state.home.bonus.critChance)}</span>
-        <span className="grow" />
-        {!confirm ? (
-          <button className="btn dark sm tal-reset" disabled={spent === 0} onClick={() => setConfirm(true)} title="Вернуть все потраченные таланты">
-            Сброс · <Icon name="USD" size={14} /> {TALENT_RESET_PRICE.amount}
+      {/* two lines that stay in place: the counters with the reset, and what the next tap does */}
+      <div className="tp-head">
+        <div className="tp-row1">
+          <span className="tp-next" title={`До ${k + 1}-го таланта`}>
+            <span className="tp-next-bar"><i style={{ width: `${nextP * 100}%` }} /></span>
+            <small className="num">{short(Math.max(0, to - dmgNow))} урона</small>
+          </span>
+          <span className="tp-cnt" title="Получено талантов за всё время"><Icon name="talent" size={16} /><b className="num">{k}</b></span>
+          <span className="tp-cnt free" title="Не вложено"><small>свободно</small><b className="num">{talents}</b></span>
+          <button className="btn red sm tp-reset" disabled={spent === 0} onClick={() => setConfirm(true)} aria-label={`Сбросить таланты за ${TALENT_RESET_PRICE.amount} ${TALENT_RESET_PRICE.currency}`}>
+            <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            <Icon name="USD" size={13} /><b className="num">{TALENT_RESET_PRICE.amount}</b>
           </button>
-        ) : null}
-        <TalentHelp />
+          <TalentHelp />
+        </div>
+        <div className="tp-row2">
+          <span className="tp-row2-pic"><StopArt n={sel} size={28} /></span>
+          <span className="grow tp-row2-t">
+            <b>{stopTitle(sel)} · {selLv}/{sel.max}</b>
+            <small>
+              {selLv >= sel.max ? `Готово: ${effect(sel, selLv)}`
+                : selI > cur ? "Откроется, когда прокачаешь всё, что раньше на дорожке"
+                : <>Нажми: {effect(sel, 1)} · стоит <Icon name="talent" size={11} />{sel.cost}{selLv > 0 ? ` · сейчас ${effect(sel, selLv)}` : ""}</>}
+            </small>
+          </span>
+          {selI === cur && selLv < sel.max && (
+            <button className="btn gold sm tp-go" disabled={talents < sel.cost || busy === "talent_up"} onClick={() => up(sel)}>+1</button>
+          )}
+        </div>
       </div>
       {confirm && (
-        <div className="tal-confirm">
-          <span className="small">Сбросить все таланты за <b>{TALENT_RESET_PRICE.amount} USD</b>? Вернётся <b className="num">{spent}</b>.{usd < TALENT_RESET_PRICE.amount && <span style={{ color: "var(--red)" }}> Не хватает USD.</span>}</span>
-          <div className="row" style={{ gap: 6 }}>
-            <button className="btn dark sm" onClick={() => setConfirm(false)}>Нет</button>
-            <button className="btn red sm" disabled={busy === "talent_reset" || usd < TALENT_RESET_PRICE.amount} onClick={reset}>Сбросить</button>
+        <Modal title="Сброс талантов" onClose={() => setConfirm(false)}>
+          <div className="col" style={{ gap: 10, textAlign: "center" }}>
+            <span className="small">Сбросить все таланты за <b>{TALENT_RESET_PRICE.amount} USD</b>? Вернётся <b className="num">{spent}</b>, их можно вложить заново.</span>
+            {usd < TALENT_RESET_PRICE.amount && <span className="small" style={{ color: "var(--red)" }}>Не хватает USD.</span>}
+            <div className="row" style={{ gap: 8 }}>
+              <button className="btn dark grow" onClick={() => setConfirm(false)}>Нет</button>
+              <button className="btn red grow" disabled={busy === "talent_reset" || usd < TALENT_RESET_PRICE.amount} onClick={reset}>Сбросить</button>
+            </div>
           </div>
-        </div>
+        </Modal>
       )}
-      <TalentNext dmg={state.player.talentDamage ?? 0} />
-
-      {/* the stop on show: what it gives, how far, the button to put a talent in */}
-      <div className={`lp-card tp-card ${selLv >= sel.max ? "done" : selI <= cur ? "" : "shut"}`} key={sel.key}>
-        <span className="lp-card-pic"><StopArt n={sel} size={40} /></span>
-        <div className="grow col" style={{ gap: 4, minWidth: 0 }}>
-          <span className="tiny muted display lp-card-k">ТАЛАНТ {selI + 1}/{TALENT_PATH.length} · <Icon name="talent" size={12} />{sel.cost} за уровень</span>
-          <b className="ellipsis">{stopTitle(sel)}</b>
-          <span className="tiny muted">{effect(sel, 1)} за уровень · сейчас {effect(sel, selLv)}</span>
-          <Bar value={selLv} max={sel.max} tone={selLv >= sel.max ? "green" : "gold"} label={`${selLv}/${sel.max}`} />
-        </div>
-        {selI === cur && selLv < sel.max && (
-          <button className="btn gold tp-go" disabled={talents < sel.cost || busy === "talent_up"} onClick={() => up(sel)}>
-            +1<small><Icon name="talent" size={12} />{sel.cost}</small>
-          </button>
-        )}
-      </div>
-      {selI > cur && <p className="tiny muted center" style={{ margin: "4px 0 0" }}>Откроется, когда прокачаешь всё, что раньше на дорожке</p>}
 
       <div className="tp-road" ref={roadRef}>
         <div className="lp-map tp-map" style={{ aspectRatio: `${ROAD_W} / ${H}` }}>
@@ -211,7 +218,6 @@ export function TalentPanel() {
                 {done ? <i className="lp-tag ok">✓</i>
                   : i === cur ? <i className="lp-tag num">{lv}/{n.max}</i>
                   : <i className="lp-tag lock"><Icon name="lock" size={12} /></i>}
-                <span className="tp-name">{EXTRA_NAMES[n.target] ? n.name : n.name}</span>
               </button>
             );
           })}

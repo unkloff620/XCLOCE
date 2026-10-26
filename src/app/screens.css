@@ -3162,3 +3162,34 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 /* light bars on the paper, dark numbers on them */
 .dos-page .ach-bar { background: rgba(255, 244, 222, 0.7); border-color: #6e5134; }
 .dos-page .ach-bar span { color: #24160a !important; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5); }
+
+/* dossier head: «ЛИЧНОЕ ДЕЛО» bigger and darker, the @link dark and underlined like the nick */
+.dos-k { font-size: 15px; color: #3a2614; letter-spacing: 0.06em; }
+.dos-tg { color: #24160a !important; text-decoration: underline; font-weight: 800; font-size: 13px; }
+
+/* talents: the two lines on top stay, only the road scrolls */
+.tp-panel { display: flex; flex-direction: column; min-height: 0; }
+.dos-inner:has(> .tp-panel) { overflow: hidden; display: flex; flex-direction: column; }
+.dos-inner > .tp-panel { flex: 1; }
+.dos-inner > .tp-panel .tp-road { flex: 1; min-height: 0; max-height: none; }
+.tp-head { flex: none; display: flex; flex-direction: column; gap: 6px; padding-bottom: 6px; }
+.tp-row1 { display: flex; align-items: center; gap: 8px; }
+.tp-next { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.tp-next-bar { display: block; height: 8px; border-radius: 5px; border: 1.5px solid #6e5134; background: rgba(255, 244, 222, 0.7); overflow: hidden; }
+.tp-next-bar i { display: block; height: 100%; background: linear-gradient(90deg, #f2a900, #ffe066); }
+.tp-next small { font-size: 10px; color: #5a3f24; white-space: nowrap; }
+.tp-cnt { display: inline-flex; align-items: center; gap: 3px; font-size: 15px; white-space: nowrap; }
+.tp-cnt.free { flex-direction: column; gap: 0; line-height: 1; align-items: center; }
+.tp-cnt.free small { font-size: 9px; color: #5a3f24; }
+.tp-cnt b { color: #24160a; }
+.tp-reset { display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; }
+.tp-reset b { color: #fff !important; }
+.tp-row2 { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 12px; background: rgba(255, 244, 222, 0.45); border: 1.5px solid rgba(110, 81, 52, 0.5); }
+.tp-row2-pic { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: radial-gradient(circle at 50% 38%, #ffe066, #f2a900 78%); border: 3px solid #15100c; }
+.tp-row2-t { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.tp-row2-t b { font-size: 13px; color: #24160a; }
+.tp-row2-t small { font-size: 11px; color: #5a3f24; }
+.tp-go { flex: none; font-size: 16px; padding: 6px 12px; }
+/* the level on a stop: light on its dark tag */
+.lp-tag, .dos-page .lp-tag, .dos-page .lp-tag.num { color: #fff3e3 !important; }
+.dos-page .lp-tag.ok { color: #15100c !important; }
