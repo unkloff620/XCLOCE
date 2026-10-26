@@ -162,8 +162,8 @@ export function BossRulesHelp({ topic, bossId }: { topic: "bosses" | "boss"; bos
   const boss = bossId ? bossById(bossId) : null;
   return (
     <Help topic={topic} title={boss ? `Босс ${boss.name}` : "Как бить боссов"}>
-      <p><b>Режимы боя:</b> {FIGHT_MODES.map((m) => `«${m.name}» — здоровье ×${m.hp}, медаль «${MEDAL_NAMES[m.medal]}»${m.things ? ", падают вещи босса" : ""}`).join("; ")}. Вещи босса (одежда, комнаты) выпадают только в «Блатном»; деньги, пропуска и расходники — в любом режиме.</p>
-      <p><b>Медали:</b> каждая победа (от того же урона, что и пропуск) даёт медаль с лицом босса. Каждая медаль сразу усиливает оружие босса{boss ? ` (у ${boss.name} — «${itemById(medalWeapon(boss))?.name}»: +${medalStep(boss, "bronze")} / +${medalStep(boss, "silver")} / +${medalStep(boss, "gold")} за медаль бронзы, серебра и золота; полный набор из ${MEDAL_SET} — +${medalBonus(boss, "bronze")} / +${medalBonus(boss, "silver")} / +${medalBonus(boss, "gold")})` : ""}. Медали — в достижениях.</p>
+      <p><b>Режимы боя:</b> {FIGHT_MODES.map((m) => `«${m.name}» — здоровье ×${m.hp}, взрыв «${MEDAL_NAMES[m.medal]}»${m.things ? ", падают вещи босса" : ""}`).join("; ")}. Вещи босса (одежда, комнаты) выпадают только в «Блатном»; деньги, пропуска и расходники — в любом режиме.</p>
+      <p><b>Взрывы:</b> каждая победа (от того же урона, что и пропуск) даёт взрыв режима. Каждый взрыв сразу усиливает оружие босса{boss ? ` (у ${boss.name} — «${itemById(medalWeapon(boss))?.name}»: +${medalStep(boss, "bronze")} / +${medalStep(boss, "silver")} / +${medalStep(boss, "gold")} за взрыв бронзы, серебра и золота; полный набор из ${MEDAL_SET} — +${medalBonus(boss, "bronze")} / +${medalBonus(boss, "silver")} / +${medalBonus(boss, "gold")})` : ""}. Взрывы — в достижениях. Медали с лицом босса в «Делах» дают победы над ним: 10 — бронза, 50 — серебро, 100 — золото.</p>
       {boss ? (
         <>
           {boss.wear?.items.length ? (

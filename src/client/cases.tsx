@@ -13,7 +13,8 @@ import { BossPhoto } from "./screens/boss-parts.tsx";
 import { full } from "./format.ts";
 import { haptic } from "./telegram.ts";
 import { BossCoin } from "./art/boss-coin.tsx";
-import { MEDAL_NAMES, MEDAL_SET, MEDAL_TIERS, type MedalTier } from "../content/medals.ts";
+import { MEDAL_NAMES, MEDAL_TIERS, type MedalTier } from "../content/medals.ts";
+import { BOSS_KILL_TARGETS } from "../content/achievements.ts";
 
 export interface CaseRow {
   id: string; wins: number; damage: number; bestHit: number;
@@ -35,7 +36,6 @@ function CaseWindow({ c, self, onClose }: { c: CaseRow; self: boolean; onClose: 
         <div className="case-top">
           <div className="case-photo">
             <BossPhoto boss={b} />
-            {c.closed && <span className="case-stamp display">ЗАКРЫТО</span>}
           </div>
           <div className="case-facts">
             <span><small>Побед</small><b className="num">{full(c.wins)}<i>/{CASE_WINS}</i></b></span>
@@ -69,7 +69,7 @@ function CaseWindow({ c, self, onClose }: { c: CaseRow; self: boolean; onClose: 
         )}
 
         <div className="tiny muted center">
-          {c.closed ? "Дело закрыто." : `Чтобы закрыть дело: ${CASE_WINS} побед${c.things.length ? " и все его вещи" : ""}.`}
+          Медали за победы над ним: бронза — {BOSS_KILL_TARGETS[0]}, серебро — {BOSS_KILL_TARGETS[1]}, золото — {BOSS_KILL_TARGETS[2]}.
           {!self && " Это дело другого игрока."}
         </div>
       </div>
@@ -77,11 +77,9 @@ function CaseWindow({ c, self, onClose }: { c: CaseRow; self: boolean; onClose: 
   );
 }
 
-/** how many medals of each kind the player has per boss (from the achievements' progress) */
-export type MedalCounts = Record<string, Partial<Record<MedalTier, number>>>;
-
-/** «Дела»: every boss is his three medals stacked — bronze, silver, gold on top; a tap opens his case */
-export function CasesPanel({ cases, self, medals = {} }: { cases: CaseRow[]; self: boolean; medals?: MedalCounts }) {
+/** «Дела»: every boss is his three medals stacked — bronze, silver, gold on top; they open with wins over him:
+ *  BOSS_KILL_TARGETS (10 / 50 / 100); one not reached yet is a grey see-through coin. A tap opens his case. */
+export function CasesPanel({ cases, self }: { cases: CaseRow[]; self: boolean }) {
   const [open, setOpen] = useState<string | null>(null);
   const cur = cases.find((c) => c.id === open) ?? null;
   return (
@@ -89,14 +87,13 @@ export function CasesPanel({ cases, self, medals = {} }: { cases: CaseRow[]; sel
       {BOSSES.map((b) => {
         const c = cases.find((x) => x.id === b.id);
         if (!c) return null;
-        const m = medals[b.id] ?? {};
-        const label = MEDAL_TIERS.map((t) => `${MEDAL_NAMES[t]} ${Math.min(MEDAL_SET, m[t] ?? 0)}/${MEDAL_SET}`).join(", ");
+        const label = MEDAL_TIERS.map((t, k) => `${MEDAL_NAMES[t]} — ${BOSS_KILL_TARGETS[k]} побед`).join(", ");
         return (
-          <button key={b.id} type="button" className={`case-stack ${c.closed ? "closed" : ""}`} onClick={() => { haptic.tap(); setOpen(b.id); }} aria-label={`${b.name}: ${label}`} title={`${b.name} — ${label}`}>
-            {MEDAL_TIERS.map((t, k) => (
-              <span key={t} className={`case-coin c${k}`}><BossCoin boss={b} tier={t} size={64} dim={!(m[t] ?? 0)} /></span>
-            ))}
-            {c.closed && <span className="case-card-stamp display">ЗАКРЫТО</span>}
+          <button key={b.id} type="button" className="case-stack" onClick={() => { haptic.tap(); setOpen(b.id); }} aria-label={`${b.name}: побед ${c.wins}. ${label}`} title={`${b.name}: побед ${c.wins}`}>
+            {MEDAL_TIERS.map((t: MedalTier, k) => {
+              const on = c.wins >= BOSS_KILL_TARGETS[k];
+              return <span key={t} className={`case-coin c${k} ${on ? "on" : "off"}`}><BossCoin boss={b} tier={t} size={64} /></span>;
+            })}
           </button>
         );
       })}

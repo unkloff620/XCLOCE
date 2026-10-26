@@ -3147,3 +3147,7 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .dos-tabs { position: relative; z-index: auto; margin: 0 3.5% -12px; padding: 0; overflow-x: auto; overflow-y: hidden; }
 .dos-tab { position: relative; z-index: 0; }
 .dos-tab.on { z-index: 2; }
+/* «Дела» medals not won yet: grey and see-through, the one below shows through */
+.case-coin.off { opacity: 0.32; filter: grayscale(1) brightness(0.9); }
+.blast { display: inline-block; flex: none; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.4)); }
+.blast.dim { filter: grayscale(1) brightness(0.6); opacity: 0.6; }

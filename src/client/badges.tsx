@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { MEDAL_ACHIEVEMENTS } from "../content/achievements.ts";
 import { MEDAL_NAMES, MEDAL_SET, MEDAL_TIERS, FIGHT_MODES, medalBonus, medalStep, medalWeapon } from "../content/medals.ts";
-import { BossCoin } from "./art/boss-coin.tsx";
+import { BlastIcon } from "./art/blast.tsx";
 import { ACH_CATEGORIES, BOSS_KILL_ACHIEVEMENTS, BOSS_KILL_TARGETS, SOLO_BOSS_ACHIEVEMENTS, TIER_COLORS, TIER_NAMES, achievementById, type AchCategory, type AchTier } from "../content/achievements.ts";
 import { Icon, type IconName } from "./art/icons.tsx";
 import { Modal, RewardChips } from "./ui.tsx";
@@ -284,14 +284,14 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
           const n = list.length;
           return (
             <div role="button" tabIndex={0} className={`ach-row ${ready ? "ready" : ""}`} onClick={() => setCoinOpen(true)} onKeyDown={(e) => e.key === "Enter" && setCoinOpen(true)}>
-              <span className="ach-coin"><BossCoin boss={OPEN_ALL[0]} tier={got.some((a) => a.tier === 3) ? "gold" : got.some((a) => a.tier === 2) ? "silver" : "bronze"} size={44} dim={coins === 0} /></span>
+              <span className="ach-coin"><BlastIcon tier={got.some((a) => a.tier === 3) ? "gold" : got.some((a) => a.tier === 2) ? "silver" : "bronze"} size={44} dim={coins === 0} /></span>
               <span className="ach-main">
                 <span className="row" style={{ justifyContent: "space-between", gap: 6 }}>
-                  <b className="ach-name">Медали боссов</b>
+                  <b className="ach-name">Взрывы боссов</b>
                   <span className="tiny muted num">{got.length}/{n} сетов</span>
                 </span>
                 <span className="ach-bar sm" style={{ ["--p" as string]: `${Math.round((coins / Math.max(1, n * MEDAL_SET)) * 100)}%`, ["--c" as string]: "#ffcc33" }}>
-                  <i /><span className="num">{full(coins)} / {full(n * MEDAL_SET)} медалей</span>
+                  <i /><span className="num">{full(coins)} / {full(n * MEDAL_SET)} взрывов</span>
                 </span>
               </span>
               {ready && (
@@ -353,18 +353,18 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
         );
       })()}
       {coinOpen && (
-        <Modal title="Медали боссов" onClose={() => setCoinOpen(false)}>
+        <Modal title="Взрывы боссов" onClose={() => setCoinOpen(false)}>
           <div className="col" style={{ gap: 6 }}>
             <div className="small muted center">
-              Каждая победа даёт медаль с лицом босса: {FIGHT_MODES.map((m) => `«${m.name}» — ${MEDAL_NAMES[m.medal].toLowerCase()}`).join(", ")}.
-              {" "}Каждая медаль сразу добавляет урон оружию босса, {MEDAL_SET} медалей одного вида — полный набор. Нажми на медаль — увидишь награду за набор.
+              Каждая победа даёт взрыв: {FIGHT_MODES.map((m) => `«${m.name}» — ${MEDAL_NAMES[m.medal].toLowerCase()}`).join(", ")}.
+              {" "}Каждый взрыв сразу добавляет урон оружию босса, {MEDAL_SET} взрывов одного вида — полный набор. Нажми на взрыв — увидишь награду за набор.
             </div>
             {OPEN_ALL.filter((b) => byId.has(`medal-${b.id}-bronze`)).map((b) => (
               <div key={b.id} className="bk-row">
                 <span className="bk-photo"><BossPhoto boss={b} round /></span>
                 <span className="grow col" style={{ gap: 1, minWidth: 0 }}>
                   <b className="ellipsis">{b.name}</b>
-                  <span className="tiny muted">за медаль: +{medalStep(b, "bronze")}/+{medalStep(b, "silver")}/+{medalStep(b, "gold")} · {itemById(medalWeapon(b))?.name}</span>
+                  <span className="tiny muted">за взрыв: +{medalStep(b, "bronze")}/+{medalStep(b, "silver")}/+{medalStep(b, "gold")} · {itemById(medalWeapon(b))?.name}</span>
                 </span>
                 <span className="bk-medals">
                   {MEDAL_TIERS.map((t) => {
@@ -374,7 +374,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
                     const due = self && !!r?.done && !r.claimed;
                     return (
                       <button key={t} className={`bk-medal coin ${due ? "due" : ""}`} onClick={() => setMedal(id)} aria-label={achievementById(id)?.name}>
-                        <BossCoin boss={b} tier={t} size={30} dim={have === 0} />
+                        <BlastIcon tier={t} size={30} dim={have === 0} />
                         <small className="num">{have}/{MEDAL_SET}</small>
                       </button>
                     );

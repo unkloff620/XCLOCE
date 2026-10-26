@@ -20,7 +20,7 @@ import { HeroRig } from "../art/rig.tsx";
 import { HomeScene } from "../art/home-scene.tsx";
 import { ROOM_BACKDROP } from "../../content/home-scene.ts";
 import { BadgesPanel, type AchRow } from "../badges.tsx";
-import { CasesPanel, type CaseRow, type MedalCounts } from "../cases.tsx";
+import { CasesPanel, type CaseRow } from "../cases.tsx";
 import { TalentPanel } from "./talents.tsx";
 import { EYE_COLORS, SKIN_TONES, type Look } from "../../content/home.ts";
 import { clock, full, money, short } from "../format.ts";
@@ -51,16 +51,6 @@ interface Profile {
   talentsIn?: number;
 }
 interface NewsRow { kind: string; fromId: number; from: string; photo: string | null; won: boolean | null; at: number }
-
-/** the boss medals from the achievements' progress: medal-<boss>-<tier> */
-function medalCounts(rows: AchRow[]): MedalCounts {
-  const out: MedalCounts = {};
-  for (const r of rows) {
-    const m = /^medal-(.+)-(bronze|silver|gold)$/.exec(r.id);
-    if (m) (out[m[1]] ??= {})[m[2] as "bronze" | "silver" | "gold"] = Number(r.progress ?? 0);
-  }
-  return out;
-}
 
 /** «Новости»: the latest things other players did to me */
 function NewsPanel({ rows }: { rows: NewsRow[] }) {
@@ -302,7 +292,7 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
             </div>
           )}
           {tab === "ach" && <BadgesPanel rows={p.achievements} self={p.self} onClaimed={reload} points={p.achPoints ?? 0} unfolded />}
-          {tab === "cases" && p.cases && <CasesPanel cases={p.cases} self={p.self} medals={medalCounts(p.achievements)} />}
+          {tab === "cases" && p.cases && <CasesPanel cases={p.cases} self={p.self} />}
           {tab === "stash" && !p.self && p.stashGive && <StashGivePanel to={p.id} name={p.name} wish={p.stashWish ?? []} give={p.stashGive} onSent={reload} />}
           {tab === "stash" && p.self && <BadgesPanel rows={p.achievements} self onClaimed={reload} stashOnly />}
           {tab === "tal" && p.self && <TalentPanel />}

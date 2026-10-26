@@ -108,7 +108,7 @@ export const MEDAL_ACHIEVEMENTS: AchievementDef[] = BOSSES.flatMap((b) =>
     const tier = (i + 1) as AchTier;
     const mode = FIGHT_MODES.find((m) => m.medal === t)!;
     return {
-      id: `medal-${b.id}-${t}`, category: "boss-medal", name: `${b.name}: ${MEDAL_NAMES[t]} — полный сет`, hint: `Собери ${MEDAL_SET} медалей «${MEDAL_NAMES[t]}» босса ${b.name} — побеждай его в режиме «${mode.name}»`,
+      id: `medal-${b.id}-${t}`, category: "boss-medal", name: `${b.name}: ${MEDAL_NAMES[t]} — полный сет`, hint: `Собери ${MEDAL_SET} взрывов «${MEDAL_NAMES[t]}» босса ${b.name} — побеждай его в режиме «${mode.name}»`,
       stat: `medal:${b.id}:${t}` as const, target: MEDAL_SET, tier, icon: "ach-wins", reward: TIER_REWARDS[tier], boss: b.id,
     };
   }),
