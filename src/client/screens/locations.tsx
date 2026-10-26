@@ -47,13 +47,15 @@ interface LocBiz {
   cells: number; lvRep: number; lvRub: number; costRep: number | null; costRub: number | null;
   stepRep: number; stepRub: number; perRep: number; perRub: number;
   days: number; pendingRep: number; pendingRub: number; full: boolean; nextAt: number | null;
+  /** business opens once the day and the night roads are both cleared */
+  open: boolean; dayDone: boolean; nightDone: boolean;
 }
 type LocTab = "day" | "night" | "biz";
 
 /** night: lights blinking over the darkened picture (fixed spots, so nothing jumps between renders) */
 const NIGHT_LIGHTS = Array.from({ length: 18 }, (_, i) => ({ x: (i * 37 + 11) % 97, y: (i * 53 + 7) % 88, d: 1.6 + ((i * 7) % 10) / 4, w: ((i * 13) % 20) / 10, s: 4 + (i % 4) * 3, c: i % 3 }));
 
-/** «Бизнес»: two profit lines (authority, rubles), levels bought with rubles, profit taken once a day (piles up for a week) */
+/** «Бизнес» of one location: two profit lines (authority, rubles), levels bought with rubles; opens after the day and night roads; profit is taken on the list */
 function BizPanel({ b, locId, onDone }: { b: LocBiz; locId: string; onDone: () => void }) {
   const { act, busy, state } = useGame();
   const now = useNow();
@@ -70,8 +72,20 @@ function BizPanel({ b, locId, onDone }: { b: LocBiz; locId: string; onDone: () =
     { line: "rep" as const, name: "авторитет", icon: <Icon name="map" size={16} />, lv: b.lvRep, cost: b.costRep, per: b.perRep, step: b.stepRep },
     { line: "rub" as const, name: "рубли", icon: <b className="biz-rub">₽</b>, lv: b.lvRub, cost: b.costRub, per: b.perRub, step: b.stepRub },
   ];
-  const started = b.lvRep + b.lvRub > 0;
-  const ready = b.days > 0 && (b.pendingRep > 0 || b.pendingRub > 0);
+  if (!b.open) {
+    return (
+      <div className="biz">
+        <div className="biz-line biz-shut">
+          <span className="biz-h"><Icon name="lock" size={16} />Бизнес закрыт</span>
+          <span className="small">Чтобы открыть бизнес в этой локации, пройди её <b>дневные</b> и <b>ночные</b> задания (каждые хотя бы раз).</span>
+          <span className="row" style={{ gap: 8, flexWrap: "wrap" }}>
+            <span className={`chip ${b.dayDone ? "green" : ""}`}>{b.dayDone ? "✓" : "✗"} Дневные</span>
+            <span className={`chip ${b.nightDone ? "green" : ""}`}>{b.nightDone ? "✓" : "✗"} Ночные</span>
+          </span>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="biz">
       {lines.map((x) => (
@@ -89,24 +103,6 @@ function BizPanel({ b, locId, onDone }: { b: LocBiz; locId: string; onDone: () =
           )}
         </div>
       ))}
-      <div className="biz-take">
-        {!started ? (
-          <span className="small">Прокачай бизнес — прибыль пойдёт каждые сутки, даже когда ты не в игре.</span>
-        ) : (
-          <>
-            <span className="biz-take-h">Здесь накопилось за <b className="num">{b.days}/{BUSINESS_MAX_DAYS}</b> дн.</span>
-            <span className="biz-take-sum num">
-              {b.pendingRep > 0 && <span><Icon name="map" size={15} />+{full(b.pendingRep)}</span>}
-              {b.pendingRub > 0 && <span>+{full(b.pendingRub)} ₽</span>}
-              {!ready && <span className="muted">пока пусто</span>}
-            </span>
-            <Link href="/locations" className="btn dark block">Забрать прибыль — на странице «Локации»</Link>
-            <span className="tiny biz-note">
-              {b.full ? "Копилка полна: больше 7 дней не копится — забери!" : b.nextAt ? `Следующие сутки через ${clock(Math.max(0, b.nextAt - now))}` : ""}
-            </span>
-          </>
-        )}
-      </div>
     </div>
   );
 }
@@ -330,13 +326,18 @@ const STOPS = [
 const MAP_W = 360;
 const MAP_H = 440;
 
-/** a stash picture for every task: the location's own stashes (locations without sets borrow from the whole pool) */
-function stopIcons(locationId: string, order: number, n: number): string[] {
+/** a stash picture for every task: the location's own stashes (locations without sets borrow from the whole pool);
+ *  the night road takes other stashes, never the ones of the day road */
+function stopIcons(locationId: string, order: number, n: number, mode: LocMode = "day"): string[] {
   const own = stashSetsByLocation(locationId).flatMap((s) => s.items.map((i) => i.id));
-  const pool = own.length ? own : STASH_SETS.flatMap((s) => s.items.map((i) => i.id));
+  const all = STASH_SETS.flatMap((s) => s.items.map((i) => i.id));
+  const pool = own.length ? own : all;
   const offset = own.length ? 0 : order * 7;
   const stride = own.length ? 1 : 6;
-  return Array.from({ length: n }, (_, i) => pool[(offset + i * stride) % pool.length]);
+  const day = Array.from({ length: n }, (_, i) => pool[(offset + i * stride) % pool.length]);
+  if (mode === "day") return day;
+  const rest = all.filter((id) => !day.includes(id));
+  return Array.from({ length: n }, (_, i) => rest[(order * 11 + i * 5) % rest.length]);
 }
 
 /** the path between two stops: across, then up (like the drawn map) */
@@ -372,7 +373,7 @@ export function LocationScreen({ id }: { id: string }) {
   });
   const current = tasks.find((x) => x.open && !x.done) ?? null;
   const sel = tasks.find((x) => x.t.id === pick) ?? current ?? tasks[tasks.length - 1];
-  const icons = stopIcons(loc.id, loc.order, list.length);
+  const icons = stopIcons(loc.id, loc.order, list.length, mode);
   const stops = STOPS.slice(0, list.length);
 
   const step = async (x: (typeof tasks)[number]) => {

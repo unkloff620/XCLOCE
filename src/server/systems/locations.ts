@@ -86,9 +86,17 @@ export async function locationsView(q: Queryable, pid: number, now = Date.now())
         stepRep: businessPerLevel(l, "rep"), stepRub: businessPerLevel(l, "rub"), perRep: b.perRep, perRub: b.perRub,
         days: b.days, pendingRep: b.rep, pendingRub: b.rub, full: b.full,
         nextAt: b.since === null || b.full ? null : b.since + (b.days + 1) * DAY_MS,
+        ...bizOpen(l, clears),
       },
     };
   });
+}
+
+/** business opens once the day and the night roads of the location are both cleared at least once */
+function bizOpen(l: LocationDef, clears: Map<string, number>) {
+  const dayDone = (clears.get(claimKey(l.id, "day")) ?? 0) > 0;
+  const nightDone = (clears.get(claimKey(l.id, "night")) ?? 0) > 0;
+  return { open: dayDone && nightDone, dayDone, nightDone };
 }
 
 /** «Бизнес»: one more level of a line, paid in rubles; the first level starts the profit clock */
@@ -98,6 +106,7 @@ export async function businessUp(ctx: Ctx, locationId: string, line: BusinessLin
   if (line !== "rep" && line !== "rub") throw new GameError("bad_line", "Такой прибыли нет");
   const { clears } = await progress(ctx.q, ctx.pid);
   if (!unlocked(loc, clears)) throw new GameError("location_locked", "Сначала открой эту локацию");
+  if (!bizOpen(loc, clears).open) throw new GameError("business_locked", "Бизнес откроется, когда пройдёшь дневные и ночные задания локации");
   const [b] = await ctx.q.query<BizRow>("SELECT location_id, lv_rep, lv_rub, since FROM location_business WHERE player_id=$1 AND location_id=$2 FOR UPDATE", [ctx.pid, loc.id]);
   const lv = Number(line === "rep" ? b?.lv_rep ?? 0 : b?.lv_rub ?? 0);
   if (lv >= businessCells(loc)) throw new GameError("max_level", "Уже прокачано до конца");
