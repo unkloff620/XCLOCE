@@ -12,6 +12,8 @@ import { Modal } from "./ui.tsx";
 import { BossPhoto } from "./screens/boss-parts.tsx";
 import { full } from "./format.ts";
 import { haptic } from "./telegram.ts";
+import { BossCoin } from "./art/boss-coin.tsx";
+import { MEDAL_NAMES, MEDAL_SET, MEDAL_TIERS, type MedalTier } from "../content/medals.ts";
 
 export interface CaseRow {
   id: string; wins: number; damage: number; bestHit: number;
@@ -75,32 +77,29 @@ function CaseWindow({ c, self, onClose }: { c: CaseRow; self: boolean; onClose: 
   );
 }
 
-export function CasesPanel({ cases, self }: { cases: CaseRow[]; self: boolean }) {
+/** how many medals of each kind the player has per boss (from the achievements' progress) */
+export type MedalCounts = Record<string, Partial<Record<MedalTier, number>>>;
+
+/** «Дела»: every boss is his three medals stacked — bronze, silver, gold on top; a tap opens his case */
+export function CasesPanel({ cases, self, medals = {} }: { cases: CaseRow[]; self: boolean; medals?: MedalCounts }) {
   const [open, setOpen] = useState<string | null>(null);
-  const closed = cases.filter((c) => c.closed).length;
   const cur = cases.find((c) => c.id === open) ?? null;
   return (
-    <div className="panel col" style={{ gap: 8 }}>
-      <div className="row" style={{ justifyContent: "space-between" }}>
-        <span className="small muted">ДЕЛА</span>
-        <span className="tiny muted">закрыто <b className="num">{closed}/{cases.length}</b></span>
-      </div>
-      <div className="cases-grid">
-        {BOSSES.map((b) => {
-          const c = cases.find((x) => x.id === b.id);
-          if (!c) return null;
-          const touched = c.wins > 0 || c.damage > 0;
-          return (
-            <button key={b.id} type="button" className={`case-card ${c.closed ? "closed" : ""} ${touched ? "" : "blank"}`} onClick={() => { haptic.tap(); setOpen(b.id); }}>
-              <span className="case-card-ph"><BossPhoto boss={b} locked={!touched} /></span>
-              <b className="display">№{b.order}</b>
-              <small className="num">{Math.min(c.wins, CASE_WINS)}/{CASE_WINS}</small>
-              {c.set && <i className="case-card-set" aria-label={`вещи ${c.set.have}/${c.set.total}`}>{Array.from({ length: c.set.total }, (_, k) => <em key={k} className={k < c.set!.have ? "on" : ""} />)}</i>}
-              {c.closed && <span className="case-card-stamp display">ЗАКРЫТО</span>}
-            </button>
-          );
-        })}
-      </div>
+    <div className="case-medals">
+      {BOSSES.map((b) => {
+        const c = cases.find((x) => x.id === b.id);
+        if (!c) return null;
+        const m = medals[b.id] ?? {};
+        const label = MEDAL_TIERS.map((t) => `${MEDAL_NAMES[t]} ${Math.min(MEDAL_SET, m[t] ?? 0)}/${MEDAL_SET}`).join(", ");
+        return (
+          <button key={b.id} type="button" className={`case-stack ${c.closed ? "closed" : ""}`} onClick={() => { haptic.tap(); setOpen(b.id); }} aria-label={`${b.name}: ${label}`} title={`${b.name} — ${label}`}>
+            {MEDAL_TIERS.map((t, k) => (
+              <span key={t} className={`case-coin c${k}`}><BossCoin boss={b} tier={t} size={64} dim={!(m[t] ?? 0)} /></span>
+            ))}
+            {c.closed && <span className="case-card-stamp display">ЗАКРЫТО</span>}
+          </button>
+        );
+      })}
       {cur && <CaseWindow c={cur} self={self} onClose={() => setOpen(null)} />}
     </div>
   );

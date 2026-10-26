@@ -3110,3 +3110,23 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .modal.page { width: 100%; max-width: var(--col, 520px); height: 100%; max-height: 100%; border-radius: 18px; display: flex; flex-direction: column; padding: 14px 12px 10px; }
 .modal.page > .dos { flex: 1; min-height: 0; }
 .modal.page .dos-page { flex: 1; min-height: 0; max-height: none; }
+
+/* «Личное дело» on paper: the pages are an old sheet (assets/ui/dossier-paper), the tabs are folder tabs */
+.dos-tabs { gap: 0; align-items: flex-end; margin: 0 -2px -6px; padding: 0 4px; position: relative; z-index: 1; }
+.dos-tab { padding: 9px 16px 12px; border: 0; border-radius: 0; background: url(/assets/ui/dossier-tab.webp) center / 100% 100% no-repeat; color: #4a3a26;
+  filter: brightness(0.78) saturate(0.85); margin-right: -6px; }
+.dos-tab.on { background: url(/assets/ui/dossier-tab.webp) center / 100% 100% no-repeat; filter: none; color: #1e140a; margin-bottom: 0; padding-bottom: 14px; z-index: 2; }
+.dos-page { border: 0; border-radius: 0; padding: 20px 18px 22px; background: url(/assets/ui/dossier-paper.webp) center / 100% 100% no-repeat; color: #24160a;
+  --ink: #24160a; --muted: #5a3f24; }
+.dos-stats { display: flex; justify-content: space-around; gap: 12px; margin: 0 0 14px; }
+.dos-stat { flex: 0 1 42%; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 5px 10px; border: 2.5px solid #1e140a; border-radius: 12px; font-size: 16px; }
+.dos-stat img { width: 18px; height: 22px; object-fit: contain; }
+/* «Дела»: three medals of a boss in a stack, gold on top */
+.case-medals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px 6px; padding: 6px 0 4px; }
+.case-stack { position: relative; height: 70px; border: 0; background: none; padding: 0; cursor: pointer; }
+.case-coin { position: absolute; top: 3px; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35)); }
+.case-coin.c0 { left: calc(50% - 56px); }
+.case-coin.c1 { left: calc(50% - 44px); }
+.case-coin.c2 { left: calc(50% - 22px); }
+.case-stack:active { transform: scale(0.96); }
+.case-stack .case-card-stamp { z-index: 3; }
