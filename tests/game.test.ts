@@ -625,7 +625,7 @@ describe("locations", () => {
     expect(v).toMatchObject({ cells, lvRub: cells, lvRep: 1, costRub: null, perRub: cells * businessPerLevel(loc, "rub") });
     await setMoney(db, p, "RUB", 0);
     await expect(act(db, p, "business_up", { locationId: loc.id, line: "rep" }, T0)).rejects.toMatchObject({ code: "no_money" });
-    await expect(act(db, p, "business_up", { locationId: LOCATIONS[1].id, line: "rep" }, T0)).rejects.toMatchObject({ code: "location_locked" });
+    await expect(act(db, p, "business_up", { locationId: LOCATIONS[1].id, line: "rep" }, T0)).rejects.toMatchObject({ code: "business_locked" });
   });
   it("business: the profit of all locations is taken in one go", async () => {
     const p = await newPlayer(db);
