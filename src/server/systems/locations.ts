@@ -112,24 +112,33 @@ export async function businessUp(ctx: Ctx, locationId: string, line: BusinessLin
   return { locationId: loc.id, line, level: lv + 1, price };
 }
 
-/** «Бизнес»: take the profit of the whole days piled up (at most a week) */
-export async function businessClaim(ctx: Ctx, locationId: string) {
-  const loc = locationById(locationId);
-  if (!loc) throw new GameError("bad_location", "Такой локации нет");
-  const [b] = await ctx.q.query<BizRow>("SELECT location_id, lv_rep, lv_rub, since FROM location_business WHERE player_id=$1 AND location_id=$2 FOR UPDATE", [ctx.pid, loc.id]);
-  const p = bizPending(loc, b, ctx.now);
-  if (p.days < 1 || (p.rep <= 0 && p.rub <= 0)) throw new GameError("not_yet", "Прибыль ещё не набежала: забирать можно раз в сутки");
-  if (p.rub > 0) await addMoney(ctx, "RUB", p.rub, `business:${loc.id}`);
-  if (p.rep > 0) {
-    await ctx.q.query(
-      "INSERT INTO location_rep (player_id, location_id, rep) VALUES ($1,$2,$3) ON CONFLICT (player_id, location_id) DO UPDATE SET rep = location_rep.rep + EXCLUDED.rep",
-      [ctx.pid, loc.id, p.rep],
-    );
+/** «Бизнес»: take the profit of every location at once (whole days piled up in each, at most a week) */
+export async function businessClaim(ctx: Ctx) {
+  const rows = await ctx.q.query<BizRow>("SELECT location_id, lv_rep, lv_rub, since FROM location_business WHERE player_id=$1 FOR UPDATE", [ctx.pid]);
+  let rub = 0, rep = 0, days = 0;
+  const parts: { locationId: string; days: number; rub: number; rep: number }[] = [];
+  for (const b of rows) {
+    const loc = locationById(b.location_id);
+    if (!loc) continue;
+    const p = bizPending(loc, b, ctx.now);
+    if (p.days < 1 || (p.rep <= 0 && p.rub <= 0)) continue;
+    if (p.rep > 0) {
+      await ctx.q.query(
+        "INSERT INTO location_rep (player_id, location_id, rep) VALUES ($1,$2,$3) ON CONFLICT (player_id, location_id) DO UPDATE SET rep = location_rep.rep + EXCLUDED.rep",
+        [ctx.pid, loc.id, p.rep],
+      );
+    }
+    // a full week stops the clock: it starts again from now; otherwise the part of the day already gone is kept
+    const since = p.full ? ctx.now : (p.since ?? ctx.now) + p.days * DAY_MS;
+    await ctx.q.query("UPDATE location_business SET since=$3 WHERE player_id=$1 AND location_id=$2", [ctx.pid, loc.id, new Date(since)]);
+    rub += p.rub;
+    rep += p.rep;
+    days = Math.max(days, p.days);
+    parts.push({ locationId: loc.id, days: p.days, rub: p.rub, rep: p.rep });
   }
-  // a full week stops the clock: it starts again from now; otherwise the part of the day already gone is kept
-  const since = p.full ? ctx.now : (p.since ?? ctx.now) + p.days * DAY_MS;
-  await ctx.q.query("UPDATE location_business SET since=$3 WHERE player_id=$1 AND location_id=$2", [ctx.pid, loc.id, new Date(since)]);
-  return { locationId: loc.id, days: p.days, rub: p.rub, rep: p.rep };
+  if (!parts.length) throw new GameError("not_yet", "Прибыль ещё не набежала: забирать можно раз в сутки");
+  if (rub > 0) await addMoney(ctx, "RUB", rub, "business");
+  return { days, rub, rep, parts };
 }
 
 /** For the "you can spend energy" hint: the cheapest step left in an open location not cleared yet, and whether its first reward waits. */

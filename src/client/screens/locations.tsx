@@ -13,7 +13,7 @@ import { haptic } from "../telegram.ts";
 import { Help } from "../help.tsx";
 import { sfx } from "../sound.ts";
 import { itemById } from "../../content/items.ts";
-import { STASH_PITY, STASH_SETS, stashChance, stashSetOf, stashSetsByLocation } from "../../content/stashes.ts";
+import { STASH_PITY, STASH_SETS, stashSetOf, stashSetsByLocation } from "../../content/stashes.ts";
 
 /** A stash found during a task: the picture, its set and how many of the set are found. */
 function StashFound({ id, onClose }: { id: string; onClose: () => void }) {
@@ -66,14 +66,6 @@ function BizPanel({ b, locId, onDone }: { b: LocBiz; locId: string; onDone: () =
       onDone();
     }
   };
-  const take = async () => {
-    const res = await act<{ days: number; rub: number; rep: number }>("business_claim", { locationId: locId });
-    if (res) {
-      haptic.big();
-      sfx("win");
-      onDone();
-    }
-  };
   const lines = [
     { line: "rep" as const, name: "авторитет", icon: <Icon name="map" size={16} />, lv: b.lvRep, cost: b.costRep, per: b.perRep, step: b.stepRep },
     { line: "rub" as const, name: "рубли", icon: <b className="biz-rub">₽</b>, lv: b.lvRub, cost: b.costRub, per: b.perRub, step: b.stepRub },
@@ -97,18 +89,18 @@ function BizPanel({ b, locId, onDone }: { b: LocBiz; locId: string; onDone: () =
           )}
         </div>
       ))}
-      <div className={`biz-take ${ready ? "ready" : ""}`}>
+      <div className="biz-take">
         {!started ? (
           <span className="small">Прокачай бизнес — прибыль пойдёт каждые сутки, даже когда ты не в игре.</span>
         ) : (
           <>
-            <span className="biz-take-h">Накопилось за <b className="num">{b.days}/{BUSINESS_MAX_DAYS}</b> дн.</span>
+            <span className="biz-take-h">Здесь накопилось за <b className="num">{b.days}/{BUSINESS_MAX_DAYS}</b> дн.</span>
             <span className="biz-take-sum num">
               {b.pendingRep > 0 && <span><Icon name="map" size={15} />+{full(b.pendingRep)}</span>}
               {b.pendingRub > 0 && <span>+{full(b.pendingRub)} ₽</span>}
               {!ready && <span className="muted">пока пусто</span>}
             </span>
-            <button className="btn gold block" disabled={!ready || busy === "business_claim"} onClick={take}>Забрать прибыль</button>
+            <Link href="/locations" className="btn dark block">Забрать прибыль — на странице «Локации»</Link>
             <span className="tiny biz-note">
               {b.full ? "Копилка полна: больше 7 дней не копится — забери!" : b.nextAt ? `Следующие сутки через ${clock(Math.max(0, b.nextAt - now))}` : ""}
             </span>
@@ -124,19 +116,65 @@ function LocRepChip({ v, size = 14 }: { v: number; size?: number }) {
   return <span className="chip loc-rep" title="Авторитет локации"><Icon name="map" size={size} />+{full(v)}</span>;
 }
 
-/** the leader of a location over its picture: avatar with a crown, name and authority there */
-function LocLeaderBadge({ l, me }: { l: LocLeader; me: boolean }) {
+/** the leaders of a location over its picture: by day and by night, a small box each */
+function LocLeaderBadge({ l, mode, me }: { l: LocLeader; mode: LocMode; me: boolean }) {
   return (
-    <span className={`loc-lead ${me ? "me" : ""}`} title={`Больше всех авторитета в локации: ${l.name}`}>
-      <span className="loc-lead-ava">
-        <Avatar name={l.name} photo={l.photo} size={44} />
-        <i className="loc-lead-crown" aria-hidden="true">👑</i>
-      </span>
+    <span className={`loc-lead ${mode} ${me ? "me" : ""}`} title={`Больше всех ${mode === "night" ? "ночного " : ""}авторитета в локации: ${l.name}`}>
+      <span className="loc-lead-ava"><Avatar name={l.name} photo={l.photo} size={40} /></span>
       <span className="loc-lead-txt">
+        <small className="loc-lead-k">👑 {mode === "night" ? "Ночные" : "Дневные"}</small>
         <b className="ellipsis">{me ? "Ты" : l.name}</b>
         <small className="num"><Icon name="map" size={11} />{full(l.rep)}</small>
       </span>
     </span>
+  );
+}
+function LocLeaders({ r, me }: { r: LocRow; me?: number }) {
+  if (!r.leader && !r.night.leader) return null;
+  return (
+    <span className="loc-leads">
+      {r.leader && <LocLeaderBadge l={r.leader} mode="day" me={r.leader.id === me} />}
+      {r.night.leader && <LocLeaderBadge l={r.night.leader} mode="night" me={r.night.leader.id === me} />}
+    </span>
+  );
+}
+
+/** «Бизнес» of all locations together: the profit piled up everywhere, taken in one go */
+function BizTotal({ rows, onDone }: { rows: LocRow[]; onDone: () => void }) {
+  const { act, busy } = useGame();
+  const now = useNow();
+  const live = rows.filter((x) => x.business.lvRep + x.business.lvRub > 0);
+  if (!live.length) return null;
+  const rep = live.reduce((a, x) => a + x.business.pendingRep, 0);
+  const rub = live.reduce((a, x) => a + x.business.pendingRub, 0);
+  const perRep = live.reduce((a, x) => a + x.business.perRep, 0);
+  const perRub = live.reduce((a, x) => a + x.business.perRub, 0);
+  const days = Math.max(...live.map((x) => x.business.days));
+  const anyFull = live.some((x) => x.business.full);
+  const next = live.map((x) => x.business.nextAt).filter((t): t is number => t !== null);
+  const nextAt = next.length ? Math.min(...next) : null;
+  const ready = rep > 0 || rub > 0;
+  const take = async () => {
+    const res = await act<{ days: number; rub: number; rep: number }>("business_claim", {}, (y) => `Прибыль: +${full(y.rub)} ₽ · +${full(y.rep)} авторитета`);
+    if (res) {
+      haptic.big();
+      sfx("win");
+      onDone();
+    }
+  };
+  return (
+    <div className={`biz-take biz-total ${ready ? "ready" : ""}`}>
+      <span className="biz-h">💼 Бизнес · {live.length} {live.length === 1 ? "локация" : live.length < 5 ? "локации" : "локаций"}<small className="num">+{full(perRub)} ₽ · <Icon name="map" size={12} />+{full(perRep)} в сутки</small></span>
+      <span className="biz-take-sum num">
+        {rep > 0 && <span><Icon name="map" size={15} />+{full(rep)}</span>}
+        {rub > 0 && <span>+{full(rub)} ₽</span>}
+        {!ready && <span className="muted">пока пусто</span>}
+      </span>
+      <button className="btn gold block" disabled={!ready || busy === "business_claim"} onClick={take}>Забрать прибыль{ready ? ` за ${days}/${BUSINESS_MAX_DAYS} дн.` : ""}</button>
+      <span className="tiny biz-note">
+        {anyFull ? "Копилка полна: больше 7 дней не копится — забери!" : nextAt ? `Следующие сутки через ${clock(Math.max(0, nextAt - now))}` : ""}
+      </span>
+    </div>
   );
 }
 
@@ -219,12 +257,14 @@ export function LocationsScreen() {
               <p>Пройденную локацию можно повторить: награда за повтор — половина валюты и авторитета.</p>
               <p><b>Авторитет локации</b>: каждый шаг задания даёт ещё и авторитет этой локации — треть от авторитета шага (50 → 17). Он копится только в своей локации и ни на что не тратится. У кого его больше всех, тот красуется на картинке локации с короной.</p>
               <p><b>Нычки</b> находятся за потраченную энергию: каждый шаг задания — шанс 1% за каждую ⚡ (шаг за 3 ⚡ — 3%, за 20 ⚡ — 20%). Не везёт — энергия копится в «нычкомере», и после {STASH_PITY} ⚡ без находки нычка выпадает наверняка. Чаще выпадают те, которых у тебя ещё нет. У каждой локации свои наборы по 4 нычки. Собери набор целиком и забери награду в достижениях «Нычки». Найденные лежат в инвентаре во вкладке «Нычки».</p>
+              <p><b>Ночные</b> задания — своя дорожка с ночным авторитетом. <b>Бизнес</b> качается за рубли в каждой локации и приносит рубли и авторитет локации раз в сутки; прибыль со всех локаций забирается здесь, вверху списка, копится до 7 дней.</p>
               <p>Энергия: +1 каждые 5 минут до 50. Купить больше — нажми на энергию вверху.</p>
             </Help>
           </div>
         </div>
       </div>
       <div className="col" style={{ gap: 12 }}>
+        {rows && <BizTotal rows={rows} onDone={() => void load()} />}
         {LOCATIONS.map((l) => {
           const r = rows?.find((x) => x.id === l.id);
           // the one to play now: the first open location not cleared yet
@@ -234,7 +274,7 @@ export function LocationsScreen() {
           const inner = (
             <>
               <LocationScene scene={l.scene} />
-              {!locked && r?.leader && <LocLeaderBadge l={r.leader} me={r.leader.id === state?.player.id} />}
+              {!locked && r && <LocLeaders r={r} me={state?.player.id} />}
               <div className="loc-body">
                 <div className="row" style={{ justifyContent: "space-between" }}>
                   <span className="tiny muted display">ЛОКАЦИЯ {l.order}</span>
@@ -309,7 +349,7 @@ export function LocationScreen({ id }: { id: string }) {
   const loc = locationById(id);
   const { state, act, busy, toast } = useGame();
   const now = useNow();
-  const { rows, meter, load } = useLocations();
+  const { rows, load } = useLocations();
   const [got, setGot] = useState<ClaimResult | null>(null);
   const [stash, setStash] = useState<string | null>(null);
   const [pick, setPick] = useState<string | null>(null);
@@ -378,8 +418,6 @@ export function LocationScreen({ id }: { id: string }) {
     haptic.tap();
     if (!x.open) toast(`Сначала выполни «${tasks[x.i - 1]?.t.title}»`, "err");
   };
-  const chance = Math.round(stashChance(sel.t.energy) * 100);
-  const left = meter ? Math.max(0, meter.pity - meter.energy) : null;
 
   return (
     <div className={`loc-page ${LOCATION_ART.has(loc.scene) ? "has-bg" : ""} ${night ? "night" : ""} ${tab === "biz" ? "biz-mode" : ""}`}>
@@ -395,7 +433,7 @@ export function LocationScreen({ id }: { id: string }) {
       </div>
       <div className="lp-tabs" role="tablist">
         {([["day", "☀️ Дневные"], ["night", "🌙 Ночные"], ["biz", "💼 Бизнес"]] as const).map(([k, t]) => (
-          <button key={k} type="button" role="tab" aria-selected={tab === k} className={`lp-tab ${k} ${tab === k ? "on" : ""}`} onClick={() => { haptic.tap(); setTab(k); setPick(null); }}>{t}</button>
+          <button key={k} type="button" role="tab" aria-selected={tab === k} className={`lp-tab t-${k} ${tab === k ? "on" : ""}`} onClick={() => { haptic.tap(); setTab(k); setPick(null); }}>{t}</button>
         ))}
       </div>
       <div className="lp-head">
@@ -423,16 +461,6 @@ export function LocationScreen({ id }: { id: string }) {
             <RewardChips r={r?.nextReward ?? loc.reward} size={13} />
             {allDone && <button className="btn gold block lp-prize-go" disabled={busy === "location_claim"} onClick={claim}>Забрать награду</button>}
           </div>
-          {meter && (
-            <div className="lp-meter" title="Энергия, потраченная без находки">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`/assets/items/${icons[0]}.webp`} alt="" draggable={false} />
-              <span className="lp-meter-main">
-                <span>Нычка: <b>{chance}%</b> за шаг · наверняка через <b className="num">{left}</b> ⚡</span>
-                <i className="lp-meter-bar"><em style={{ width: `${(meter.energy / Math.max(1, meter.pity)) * 100}%` }} /></i>
-              </span>
-            </div>
-          )}
 
           <div className="lp-map" style={{ aspectRatio: `${MAP_W} / ${MAP_H}` }}>
             <svg className="lp-path" viewBox={`0 0 ${MAP_W} ${MAP_H}`} aria-hidden="true">

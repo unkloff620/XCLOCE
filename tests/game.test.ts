@@ -623,6 +623,22 @@ describe("locations", () => {
     await expect(act(db, p, "business_up", { locationId: loc.id, line: "rep" }, T0)).rejects.toMatchObject({ code: "no_money" });
     await expect(act(db, p, "business_up", { locationId: LOCATIONS[1].id, line: "rep" }, T0)).rejects.toMatchObject({ code: "location_locked" });
   });
+  it("business: the profit of all locations is taken in one go", async () => {
+    const p = await newPlayer(db);
+    await setMoney(db, p, "RUB", 1_000_000);
+    // the second location opened by hand
+    await db.query("INSERT INTO location_claims (player_id, location_id, claimed_at) VALUES ($1,$2,now())", [p, LOCATIONS[0].id]);
+    await act(db, p, "business_up", { locationId: LOCATIONS[0].id, line: "rub" }, T0);
+    await act(db, p, "business_up", { locationId: LOCATIONS[1].id, line: "rub" }, T0 + 12 * H);
+    const rub = await wallet(db, p, "RUB");
+    // only the first has a whole day after 30 hours
+    let c = await act(db, p, "business_claim", {}, T0 + 30 * H);
+    expect(c.result.parts).toHaveLength(1);
+    expect((await wallet(db, p, "RUB")) - rub).toBe(businessPerLevel(LOCATIONS[0], "rub"));
+    c = await act(db, p, "business_claim", {}, T0 + 2 * 24 * H + 12 * H);
+    expect(c.result.parts).toHaveLength(2);
+    expect(c.result.rub).toBe(businessPerLevel(LOCATIONS[0], "rub") + 2 * businessPerLevel(LOCATIONS[1], "rub"));
+  });
 });
 
 describe("inventory and clans", () => {
