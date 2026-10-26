@@ -3193,3 +3193,9 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 /* the level on a stop: light on its dark tag */
 .lp-tag, .dos-page .lp-tag, .dos-page .lp-tag.num { color: #fff3e3 !important; }
 .dos-page .lp-tag.ok { color: #15100c !important; }
+/* in the dossier head, after the nick: in the game now / seen N minutes ago */
+.online-mark { flex: none; display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 800; color: #5a3f24; white-space: nowrap; }
+.online-mark i { width: 8px; height: 8px; border-radius: 50%; background: #8a7a68; box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.25); }
+.online-mark b { font-weight: 700; color: #5a3f24; }
+.online-mark.on { color: #1d7a3e; }
+.online-mark.on i { background: #2ecc71; box-shadow: 0 0 6px rgba(46, 204, 113, 0.9); }

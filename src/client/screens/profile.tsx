@@ -52,6 +52,30 @@ interface Profile {
 }
 interface NewsRow { kind: string; fromId: number; from: string; photo: string | null; won: boolean | null; at: number }
 
+/** a player counts as in the game when seen this recently (the game pings every minute; server ONLINE_MS) */
+const ONLINE_MS = 3 * 60_000;
+const plural = (n: number, one: string, few: string, many: string) => {
+  const m10 = n % 10, m100 = n % 100;
+  return m10 === 1 && m100 !== 11 ? one : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? few : many;
+};
+/** "54 минуты назад", "3 часа назад", "2 дня назад" */
+function agoText(ms: number): string {
+  const min = Math.max(1, Math.floor(ms / 60_000));
+  if (min < 60) return `${min} ${plural(min, "минуту", "минуты", "минут")} назад`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `${h} ${plural(h, "час", "часа", "часов")} назад`;
+  const d = Math.floor(h / 24);
+  return `${d} ${plural(d, "день", "дня", "дней")} назад`;
+}
+/** next to the nick: «В игре» (green) now, or «В сети · 54 минуты назад» */
+function OnlineMark({ self, lastSeen }: { self: boolean; lastSeen: number }) {
+  const now = useNow();
+  const on = self || now - lastSeen < ONLINE_MS;
+  return on
+    ? <span className="online-mark on"><i />В игре</span>
+    : <span className="online-mark"><i />В сети <b>{agoText(now - lastSeen)}</b></span>;
+}
+
 /** «Новости»: the latest things other players did to me */
 function NewsPanel({ rows }: { rows: NewsRow[] }) {
   if (!rows.length) return <div className="muted small center" style={{ padding: 18 }}>Пока тихо: никто не качал бицуху, не харкал и не наезжал.</div>;
@@ -226,6 +250,7 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
             <span className="dos-k display">ЛИЧНОЕ ДЕЛО №{p.id}</span>
             <div className="row" style={{ gap: 6 }}>
               <b className="display ellipsis" style={{ fontSize: 19 }}>{p.name}</b>
+              <OnlineMark self={p.self} lastSeen={p.lastSeen} />
               {p.self && (
                 <button className="icon-btn" onClick={() => setRenaming(true)} aria-label="Сменить ник" title="Сменить ник">
                   <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z" fill="#ffcc33" stroke="#140d24" strokeWidth="2" strokeLinejoin="round" /><path d="M13 7l4 4" stroke="#140d24" strokeWidth="2" /></svg>
