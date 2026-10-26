@@ -3129,3 +3129,21 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .case-coin.c2 { left: calc(50% - 14px); }
 .case-stack:active { transform: scale(0.96); }
 .case-stack .case-card-stamp { z-index: 3; }
+
+/* the dossier is one open paper: no boxes on it, dark readable text everywhere */
+.dos-page { position: relative; z-index: 1; --ink: #24160a; --muted: #5a3f24; --dim: #6e5134; color: #24160a; }
+.dos-page :is(.panel, .ach-row, .dos-facts > span, .balance-row, .stat-grid > div, .chip, .news-row, .lp-card, .tp-road, .stash-set, .tal-next, .tal-confirm, .set-row, .case-card) {
+  background: none !important; border-color: transparent !important; box-shadow: none !important; }
+.dos-page .panel { padding: 0; }
+.dos-page :is(.muted, small, .tiny, .balance-name, .tal-next span, .lp-card-k) { color: #5a3f24 !important; }
+.dos-page :is(b, strong, .num, .ach-name, .balance-val, .tp-name, .stat-grid b) { color: #24160a; text-shadow: none; }
+.dos-page .stat-grid span, .dos-page .dos-facts small { color: #5a3f24; }
+.dos-page .tp-card { --ink: #24160a; --muted: #5a3f24; color: #24160a; }
+.dos-page .tp-name { text-shadow: 0 1px 0 rgba(255, 240, 210, 0.6); }
+.dos-page .balance-row { padding: 2px 0; }
+.dos-page .stat-grid > div { padding: 2px; }
+.dos-page .dos-facts > span { padding: 2px 0; }
+/* the tabs sit low on the paper's top edge: the open one merges with the page, the others go under it; cut at the paper's sides */
+.dos-tabs { position: relative; z-index: auto; margin: 0 3.5% -12px; padding: 0; overflow-x: auto; overflow-y: hidden; }
+.dos-tab { position: relative; z-index: 0; }
+.dos-tab.on { z-index: 2; }

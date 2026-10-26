@@ -10,7 +10,6 @@ import { useGame, useNow } from "../store.tsx";
 import { haptic } from "../telegram.ts";
 import { sfx } from "../sound.ts";
 import { api } from "../api.ts";
-import { bossesIn } from "../../content/bosses.ts";
 import { itemById } from "../../content/items.ts";
 import { CURRENCIES, CURRENCY_DEFS, type Currency } from "../../content/currencies.ts";
 import { Avatar, Bar, Empty, Modal } from "../ui.tsx";
@@ -253,10 +252,10 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
         </div>
         <div className="dos-page">
           {/* on every page: achievement points and the talents put in */}
-          <div className="dos-stats">
+          {tab === "cases" && <div className="dos-stats">
             <span className="dos-stat" title="Очки достижений"><Icon name="sun" size={20} /><b className="num">{full(p.achPoints ?? 0)}</b></span>
             <span className="dos-stat" title="Вложено талантов"><Icon name="talent" size={20} /><b className="num">{full(p.talentsIn ?? 0)}</b></span>
-          </div>
+          </div>}
           {tab === "sum" && (
             <div className="col" style={{ gap: 10 }}>
               {p.frame && <div className="center"><span className={`chip frame-chip frame-${p.frame}`}><Icon name="trophy" size={14} />{FRAME_TITLE[p.frame]}</span></div>}
@@ -300,18 +299,6 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
                   {p.arsenal.map((w) => <span key={w.id} className="chip" title={itemById(w.id)?.name}><ItemArt id={w.id} size={22} />×{full(w.qty)}</span>)}
                 </div>
               )}
-              <div className="col" style={{ gap: 4 }}>
-                {bossesIn(p.bosses.map((x) => x.id)).map((b) => {
-                  const r = p.bosses.find((x) => x.id === b.id);
-                  return (
-                    <div key={b.id} className="pb-row small">
-                      <span className="ellipsis">{b.order}. {b.name}</span>
-                      <span className="pb-wins">{!!r?.wins && <span className="chip green"><Icon name="trophy" size={14} /><b className="num">{r.wins}</b></span>}</span>
-                      <b className="num pb-dmg">{full(r?.damage ?? 0)}</b>
-                    </div>
-                  );
-                })}
-              </div>
             </div>
           )}
           {tab === "ach" && <BadgesPanel rows={p.achievements} self={p.self} onClaimed={reload} points={p.achPoints ?? 0} unfolded />}
