@@ -3240,7 +3240,7 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .biz-note { color: #cfc3ad; }
 
 /* leaders of a location over its picture: a small box for the day road and one for the night road */
-.loc-leads { position: absolute; top: 8px; right: 8px; z-index: 2; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; max-width: 52%; }
+.loc-leads { position: absolute; top: 8px; right: 8px; z-index: 2; display: flex; flex-direction: column; align-items: stretch; gap: 5px; width: 46%; max-width: 170px; }
 .loc-lead { display: flex; align-items: center; gap: 6px; max-width: 100%; padding: 3px 8px 3px 3px; border-radius: 9px; border: 2px solid var(--line); background: rgba(48, 32, 14, 0.86); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); box-shadow: 0 2px 0 var(--line), 0 0 10px rgba(255, 204, 51, 0.3); }
 .loc-lead.night { background: rgba(26, 20, 66, 0.88); box-shadow: 0 2px 0 var(--line), 0 0 10px rgba(143, 123, 255, 0.45); }
 .loc-lead.me { outline: 2px solid rgba(61, 220, 132, 0.8); outline-offset: 1px; }
