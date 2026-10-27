@@ -5,6 +5,7 @@ import { loadConfig } from "./config.ts";
 import { log } from "./log.ts";
 import { after } from "next/server";
 import { dispatchNotifications } from "./notify-send.ts";
+import { onWorkers, rememberOrigin } from "./platform.ts";
 
 /** After the response: send due Telegram reminders (throttled in the DB, so most calls do nothing). */
 function kickNotifications(db: Db) {
@@ -37,7 +38,12 @@ function allow(key: string, capacity = 40, refillPerSec = 8): boolean {
 }
 
 export function clientKey(req: Request): string {
-  return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "local";
+  return (
+    (onWorkers() && req.headers.get("cf-connecting-ip")) ||
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    "local"
+  );
 }
 
 export function json(data: unknown, status = 200): Response {
@@ -102,6 +108,7 @@ function staleClient(req: Request): boolean {
 export function authedRoute(name: string, fn: (ctx: Ctx) => Promise<unknown>) {
   return async (req: Request): Promise<Response> => {
     try {
+      rememberOrigin(req);
       if (staleClient(req)) throw new GameError("update", UPDATE_MESSAGE, 409);
       const auth = req.headers.get("authorization");
       const playerId = verifySession(auth?.startsWith("Bearer ") ? auth.slice(7) : null);

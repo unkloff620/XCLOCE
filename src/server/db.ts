@@ -1,5 +1,6 @@
 import { MIGRATIONS } from "./migrations.ts";
 import { log } from "./log.ts";
+import { isProduction, onWorkers } from "./platform.ts";
 
 /** Minimal query interface shared by node-postgres (production) and PGlite (local dev / tests). */
 export interface Queryable {
@@ -18,7 +19,7 @@ function databaseUrl(): string | undefined {
   return process.env.DATABASE_URL || process.env.POSTGRES_URL || undefined;
 }
 
-async function createPgDb(url: string): Promise<Db> {
+async function createPgDb(url: string, max = Number(process.env.DB_POOL_MAX || 5)): Promise<Db> {
   const { Pool, types } = await import("pg");
   // BIGINT (int8) -> number. Our ids stay far below 2^53.
   types.setTypeParser(20, (v: string) => Number(v));
@@ -26,7 +27,7 @@ async function createPgDb(url: string): Promise<Db> {
   types.setTypeParser(1700, (v: string) => Number(v));
   const pool = new Pool({
     connectionString: url,
-    max: Number(process.env.DB_POOL_MAX || 5),
+    max,
     idleTimeoutMillis: 10_000,
     ssl: url.includes("localhost") || url.includes("127.0.0.1") ? undefined : { rejectUnauthorized: false },
   });
@@ -67,7 +68,9 @@ async function createPgDb(url: string): Promise<Db> {
 
 /** In-process Postgres (WASM). Used when DATABASE_URL is not set: local dev and tests. */
 export async function createPgliteDb(dataDir?: string): Promise<Db> {
-  const { PGlite, types } = await import("@electric-sql/pglite");
+  // Not a literal import on purpose: the Cloudflare Worker bundle must not pull in the WASM database it never uses.
+  const PGLITE = "@electric-sql/pglite";
+  const { PGlite, types } = (await import(/* webpackIgnore: true */ /* turbopackIgnore: true */ PGLITE)) as typeof import("@electric-sql/pglite");
   const parsers = { [types.INT8]: (v: string) => Number(v), [types.NUMERIC]: (v: string) => Number(v) };
   const pg = dataDir ? new PGlite(dataDir, { parsers }) : new PGlite({ parsers });
   // PGlite is a single connection: serialize transactions ourselves so that
@@ -132,9 +135,16 @@ export function splitSql(sql: string): string[] {
 }
 
 let dbPromise: Promise<Db> | null = null;
+let workersMigrated = false;
 
-/** Lazily created singleton DB with schema applied. */
+/**
+ * Lazily created DB with schema applied.
+ * Node (Vercel, local): one shared pool per server instance.
+ * Cloudflare Workers: a connection can't be reused by another request there, so every request gets its own small pool
+ * (dropped by the runtime when the request ends); migrations still run once per isolate.
+ */
 export function getDb(): Promise<Db> {
+  if (onWorkers()) return getWorkersDb();
   if (!dbPromise) {
     dbPromise = (async () => {
       const url = databaseUrl();
@@ -142,7 +152,7 @@ export function getDb(): Promise<Db> {
       if (url) {
         db = await createPgDb(url);
       } else {
-        if (process.env.VERCEL) throw new GameError("db_missing", "База данных не подключена", 503);
+        if (process.env.VERCEL || isProduction()) throw new GameError("db_missing", "База данных не подключена", 503);
         db = await createPgliteDb(process.env.PGLITE_DIR || undefined);
         log.warn("db.pglite", { message: "DATABASE_URL not set, using in-process PGlite" });
       }
@@ -154,6 +164,17 @@ export function getDb(): Promise<Db> {
     });
   }
   return dbPromise;
+}
+
+async function getWorkersDb(): Promise<Db> {
+  const url = databaseUrl();
+  if (!url) throw new GameError("db_missing", "База данных не подключена", 503);
+  const db = await createPgDb(url, Number(process.env.DB_POOL_MAX || 3));
+  if (!workersMigrated) {
+    await migrate(db);
+    workersMigrated = true;
+  }
+  return db;
 }
 
 /** Errors that are safe to show to the player. */
