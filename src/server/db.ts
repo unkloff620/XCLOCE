@@ -19,18 +19,29 @@ function databaseUrl(): string | undefined {
   return process.env.DATABASE_URL || process.env.POSTGRES_URL || undefined;
 }
 
-async function createPgDb(url: string, max = Number(process.env.DB_POOL_MAX || 5)): Promise<Db> {
-  const { Pool, types } = await import("pg");
-  // BIGINT (int8) -> number. Our ids stay far below 2^53.
-  types.setTypeParser(20, (v: string) => Number(v));
-  // NUMERIC -> number (aggregates such as SUM over float return float8 anyway)
-  types.setTypeParser(1700, (v: string) => Number(v));
-  const pool = new Pool({
+async function createPgDb(url: string, max = Number(process.env.DB_POOL_MAX || 5), driver: "pg" | "neon" = "pg"): Promise<Db> {
+  const pg = await import("pg");
+  // BIGINT (int8) -> number. Our ids stay far below 2^53. NUMERIC -> number (aggregates such as SUM over float return float8 anyway)
+  const parse = (oid: number) => (oid === 20 || oid === 1700 ? (v: string) => Number(v) : null);
+  pg.types.setTypeParser(20, (v: string) => Number(v));
+  pg.types.setTypeParser(1700, (v: string) => Number(v));
+  // passed per pool too: the Neon driver keeps its own copy of the type registry
+  const typeOverrides = {
+    getTypeParser: (oid: number, format?: "text" | "binary") =>
+      parse(oid) ?? pg.types.getTypeParser(oid, format as "text"),
+  };
+  // Cloudflare Workers: node-postgres over raw TCP sockets pays ~40-50 ms per query there (small packets wait for
+  // delayed ACKs), so a 60-query screen took seconds. Neon's serverless driver talks WebSockets and coalesces writes.
+  const PoolCtor = (driver === "neon" ? (await import("@neondatabase/serverless")).Pool : pg.Pool) as unknown as typeof pg.Pool;
+  const pool = new PoolCtor({
     connectionString: url,
     max,
     idleTimeoutMillis: 10_000,
-    ssl: url.includes("localhost") || url.includes("127.0.0.1") ? undefined : { rejectUnauthorized: false },
-  });
+    types: typeOverrides,
+    ...(driver === "pg"
+      ? { ssl: url.includes("localhost") || url.includes("127.0.0.1") ? undefined : { rejectUnauthorized: false } }
+      : {}),
+  } as unknown as import("pg").PoolConfig);
   pool.on("error", (e: Error) => log.error("db.pool", { message: e.message }));
   return {
     kind: "postgres",
@@ -169,7 +180,7 @@ export function getDb(): Promise<Db> {
 async function getWorkersDb(): Promise<Db> {
   const url = databaseUrl();
   if (!url) throw new GameError("db_missing", "База данных не подключена", 503);
-  const db = await createPgDb(url, Number(process.env.DB_POOL_MAX || 3));
+  const db = await createPgDb(url, Number(process.env.DB_POOL_MAX || 3), "neon");
   if (!workersMigrated) {
     await migrate(db);
     workersMigrated = true;
