@@ -1,4 +1,19 @@
 import type { NextConfig } from "next";
+import { execSync } from "node:child_process";
+
+/** Commit of this build: Vercel tells it; on Cloudflare Workers Builds (and other CI) it is read from the checkout. */
+function buildVersion(): string {
+  const sha = process.env.VERCEL_GIT_COMMIT_SHA || process.env.VERCEL_DEPLOYMENT_ID;
+  if (sha) return sha;
+  if (process.env.WORKERS_CI || process.env.CI) {
+    try {
+      return execSync("git rev-parse HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim() || "dev";
+    } catch {
+      return "dev";
+    }
+  }
+  return "dev";
+}
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -11,11 +26,7 @@ const nextConfig: NextConfig = {
   },
   // the build's version, baked into both the server and the browser code: when they differ, the page is from an older
   // release and asks to be reloaded (src/client/update.tsx)
-  // (Vercel or Cloudflare Workers Builds)
-  env: {
-    NEXT_PUBLIC_APP_VERSION:
-      process.env.VERCEL_GIT_COMMIT_SHA || process.env.VERCEL_DEPLOYMENT_ID || process.env.WORKERS_CI_COMMIT_SHA || "dev",
-  },
+  env: { NEXT_PUBLIC_APP_VERSION: buildVersion() },
   async headers() {
     return [
       {

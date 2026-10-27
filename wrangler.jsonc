@@ -11,8 +11,9 @@
     "binding": "ASSETS"
   },
   "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "xcloce" }],
-  // Run the Worker next to the database (Neon), not next to the player: the API makes many queries per request.
-  "placement": { "mode": "smart" },
+  // Run the Worker next to the database (Neon, AWS us-east-1 — same region Vercel used), not next to the player:
+  // every request opens a Postgres connection and makes several queries, each a round trip.
+  "placement": { "region": "aws:us-east-1" },
   "observability": { "enabled": true },
   // Telegram reminders every 5 minutes (replaces Vercel Cron and the GitHub Actions pinger).
   "triggers": { "crons": ["*/5 * * * *"] },
