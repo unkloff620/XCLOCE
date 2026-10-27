@@ -187,3 +187,29 @@ export class GameError extends Error {
     this.status = status;
   }
 }
+
+/** Per-request database timing (Server-Timing header): how many queries and how long they took in total. */
+export interface DbStats { queries: number; ms: number; connectMs: number; firstMs: number }
+export function withStats(db: Db, connectMs = 0): { db: Db; stats: DbStats } {
+  const stats: DbStats = { queries: 0, ms: 0, connectMs, firstMs: -1 };
+  const timed = <T,>(run: () => Promise<T>): Promise<T> => {
+    const t = Date.now();
+    stats.queries++;
+    return run().finally(() => {
+      const d = Date.now() - t;
+      stats.ms += d;
+      if (stats.firstMs < 0) stats.firstMs = d; // on Workers this includes opening the connection
+    });
+  };
+  const wrap = (q: Queryable): Queryable => ({ query: (sql, params) => timed(() => q.query(sql, params)) });
+  return {
+    stats,
+    db: {
+      kind: db.kind,
+      query: (sql, params) => timed(() => db.query(sql, params)),
+      exec: (sql) => timed(() => db.exec(sql)),
+      tx: (fn) => db.tx((q) => fn(wrap(q))),
+      close: () => db.close(),
+    },
+  };
+}
