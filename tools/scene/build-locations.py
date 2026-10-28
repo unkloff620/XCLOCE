@@ -8,7 +8,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.abspath(os.path.join(HERE, "..", "..", "public", "assets", "locations"))
 os.makedirs(OUT, exist_ok=True)
 BANNER = (720, 280)  # 360×140 card at 2×
-BANNER_Y = {"openspace": 0.3, "market": 0.42, "board": 0.45, "basement": 0.45, "serverroom": 0.45}  # centre of the banner crop, share of the height
+BANNER_Y = {"openspace": 0.3, "market": 0.42, "board": 0.45, "basement": 0.45, "serverroom": 0.45, "accounting": 0.45, "hr": 0.47, "party": 0.42}  # centre of the banner crop, share of the height
 for f in sorted(glob.glob(os.path.join(HERE, "source", "locations", "*.png"))):
     name = os.path.splitext(os.path.basename(f))[0]
     im = Image.open(f).convert("RGB")
