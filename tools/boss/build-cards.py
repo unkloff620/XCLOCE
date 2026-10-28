@@ -3,6 +3,7 @@ Waist-up pictures for the boss list cards: public/bosses/<id>/card.webp (aspect 
 The whole head with some air above it, the upper clothes, no legs. Crop boxes are in the source picture's pixels;
 a negative top adds transparent space above the head.
 """
+import sys
 from PIL import Image
 
 CARDS = {
@@ -12,9 +13,13 @@ CARDS = {
     "bebyakyan": ("tools/boss/source/bebyakyan/raw/reference.png", (240, -80, 1700, 1722)),
     "garkusha": ("tools/boss/source/garkusha/raw/reference.png", (220, -40, 1760, 1860)),
     "babafey": ("tools/boss/source/babafey/raw/reference.png", (400, -60, 2180, 2138)),
+    "vodovoz": ("tools/boss/source/vodovoz/raw/reference.png", (180, -60, 940, 878)),
 }
 W = 640
+# `build-cards.py vodovoz` builds only the named cards
 for boss, (src, (x0, y0, x1, y1)) in CARDS.items():
+    if sys.argv[1:] and boss not in sys.argv[1:]:
+        continue
     im = Image.open(src).convert("RGBA")
     canvas = Image.new("RGBA", (x1 - x0, y1 - y0), (0, 0, 0, 0))
     canvas.alpha_composite(im.crop((max(0, x0), max(0, y0), min(im.width, x1), min(im.height, y1))), (max(0, -x0), max(0, -y0)))

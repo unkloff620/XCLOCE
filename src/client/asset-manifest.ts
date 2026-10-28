@@ -606,5 +606,16 @@ export const ASSET_FILES: string[] = [
  "/bosses/mugo/rig/lowL.webp",
  "/bosses/mugo/rig/lowR.webp",
  "/bosses/mugo/rig/pupils.webp",
- "/bosses/mugo/rig/tail.webp"
+ "/bosses/mugo/rig/tail.webp",
+ "/bosses/vodovoz/card.webp",
+ "/bosses/vodovoz/full.webp",
+ "/bosses/vodovoz/portrait.webp",
+ "/bosses/vodovoz/rig/armL.webp",
+ "/bosses/vodovoz/rig/armR.webp",
+ "/bosses/vodovoz/rig/bag.webp",
+ "/bosses/vodovoz/rig/body.webp",
+ "/bosses/vodovoz/rig/collar.webp",
+ "/bosses/vodovoz/rig/face.webp",
+ "/bosses/vodovoz/rig/handL.webp",
+ "/bosses/vodovoz/rig/head.webp"
 ];

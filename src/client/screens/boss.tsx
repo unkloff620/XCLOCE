@@ -84,7 +84,7 @@ function Arena({ boss, hp, hpMax, endsAt, fx, hit, ouch, rug, feed, full: fullSc
   const talk = useBossTalk(boss.id, !!fullScreen && hp !== null && hp > 0, dazed);
   return (
     <div className={`arena ${boss.final ? "final" : ""} ${fullScreen ? "full" : ""}`} style={{ ["--acc" as string]: boss.theme.accent }}>
-      <div className={`arena-photo ${hit ? "hit" : ""} ${ouch ? "ouch" : ""} ${rug ? "rug" : ""} ${hurt ? "hurt" : ""} ${dazed ? "dazed" : ""} ${strike ? `strike strike-${strike}` : ""}`}>
+      <div className={`arena-photo ${hit ? "hit" : ""} ${ouch ? "ouch" : ""} ${rug ? "rug" : ""} ${hurt ? "hurt" : ""} ${dazed ? "dazed" : ""} ${strike ? `strike strike-${strike}` : ""} ${talk ? "talking" : ""}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         {hasBossRig(boss.id) ? <BossRig id={boss.id} hpShare={hp === null ? 1 : hp / Math.max(1, hpMax)} /> : boss.photo.full ? <img src={boss.photo.full} alt={boss.name} draggable={false} /> : <div className="arena-sil"><BossSilhouette accent={boss.theme.accent} /><span className="small muted">фото скоро</span></div>}
         <div className="arena-flash" />
@@ -273,7 +273,7 @@ export function BossScreen({ id }: { id: string }) {
   const hpShown = view ? Math.max(0, view.hp - pendingDmg) : state?.fight?.bossId === id ? state.fight.hp : null;
   // the boss punches at the screen now and then while the fight is on (show only, no damage)
   // a dazed boss (below half HP) is scared: no more punches at the screen, he only waves his arms limply (screens.css)
-  const strikeFx = useBossStrike(fighting && (hpShown ?? 1) > 0 && !BOXERS.has(boss?.id ?? "") && (hpShown === null || hpShown / Math.max(1, view?.hpMax ?? row?.hpMax ?? boss?.hp ?? 1) >= BEATEN_BELOW));
+  const strikeFx = useBossStrike(boss?.id ?? "", fighting && (hpShown ?? 1) > 0 && !BOXERS.has(boss?.id ?? "") && (hpShown === null || hpShown / Math.max(1, view?.hpMax ?? row?.hpMax ?? boss?.hp ?? 1) >= BEATEN_BELOW));
 
   const [mult, setMult] = useState<Mult>(1);
   const attack = async (weapon: string) => {

@@ -15,8 +15,11 @@ export const STRIKE_MS = 900;
 /** pause between strikes, ms */
 const GAP_MIN = 5200;
 const GAP_MAX = 9000;
+/** bosses who attack far more often: Восток slams his delivery bag every few seconds */
+const GAP_BY_BOSS: Record<string, [number, number]> = { vodovoz: [1900, 3600] };
 
-export function useBossStrike(enabled: boolean) {
+export function useBossStrike(bossId: string, enabled: boolean) {
+  const [gapMin, gapMax] = GAP_BY_BOSS[bossId] ?? [GAP_MIN, GAP_MAX];
   const [side, setSide] = useState<"l" | "r" | null>(null);
   const next = useRef<"l" | "r">(Math.random() < 0.5 ? "l" : "r");
   useEffect(() => {
@@ -39,13 +42,13 @@ export function useBossStrike(enabled: boolean) {
         // now and then a quick one-two
         const combo = Math.random() < 0.25;
         strike(s, () => (combo ? later(() => strike(next.current, () => { next.current = next.current === "l" ? "r" : "l"; loop(); }), 120) : loop()));
-      }, GAP_MIN + Math.random() * (GAP_MAX - GAP_MIN));
+      }, gapMin + Math.random() * (gapMax - gapMin));
     };
     loop();
     return () => {
       timers.forEach(clearTimeout);
       setSide(null);
     };
-  }, [enabled]);
+  }, [enabled, gapMin, gapMax]);
   return { side };
 }

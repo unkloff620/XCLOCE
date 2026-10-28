@@ -24,9 +24,20 @@ type Part = { x: number; y: number; w: number; h: number; pivot?: readonly numbe
 const BEHIND: Record<string, "L" | "R"> = { mugo: "R", babafey: "L" };
 /** of these the arm in BEHIND goes behind only with its shoulder: the forearm and the hand stay in front of everything */
 const SPLIT_BEHIND = new Set(["babafey"]);
+/** rigs drawn as plain SVG only (their own layer order, see VostokRig) */
+const NO_PUPPET = new Set(["vodovoz"]);
 
 /** frame schedules of the puppet strips: [frame, ms] — idle loops, ouch/strike play once */
-const FRAME_SEQ: Record<string, Record<"idle" | "ouch" | "strike" | "fear", [number, number][]>> = {
+type SeqMode = "idle" | "ouch" | "strike" | "fear" | "talk";
+const FRAME_SEQ: Record<string, Partial<Record<SeqMode, [number, number][]>> & Record<"idle" | "ouch" | "strike" | "fear", [number, number][]>> = {
+  // Восток's whole face (tools/boss/source/vodovoz/face@N): 0 smug, 1 talking, 2 battle yell, 3 hit, 4 out of breath, 5 eyes shut
+  face: {
+    idle: [[0, 2600], [5, 110], [0, 1900], [5, 90], [0, 120], [5, 90], [0, 2300]],
+    talk: [[1, 130], [0, 90], [1, 170], [0, 80], [1, 110], [0, 120], [1, 190], [0, 90], [1, 120], [0, 100], [1, 160], [0, 90], [1, 140], [0, 140], [1, 170], [0, 400]],
+    ouch: [[3, 560], [0, 60]],
+    strike: [[0, 110], [2, 700], [0, 90]],
+    fear: [[4, 2900], [5, 150], [4, 1900], [5, 130]],
+  },
   // a grin now and then: the jaw drops in two chuckles and closes; scared (below half HP) — the teeth chatter
   jaw: {
     fear: [[1, 90], [2, 90], [1, 90], [2, 90], [1, 90], [2, 90], [1, 120], [0, 700], [1, 90], [2, 90], [1, 90], [0, 900]],
@@ -150,7 +161,7 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
   const svgRef = useRef<SVGSVGElement>(null);
   useDazed(svgRef, dazed);
   // the puppet warp (soft joints) for the full boss; the small busts on the list stay plain SVG
-  const puppet = !bust && !!BOSS_RIGS[id];
+  const puppet = !bust && !!BOSS_RIGS[id] && !NO_PUPPET.has(baseId);
   const wrapRef = useRef<HTMLDivElement>(null);
   usePuppet(wrapRef, id, { w: BOSS_RIGS[id]?.w ?? 1, h: BOSS_RIGS[id]?.h ?? 1 }, puppet);
   const rig = BOSS_RIGS[id];
@@ -210,16 +221,44 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
   };
   const frameCss = Object.keys(FRAME_SEQ).filter((p) => P[p]?.frames).map((p) => {
     const w = P[p].w;
-    const k = (mode: "idle" | "ouch" | "strike" | "fear") => seqKeyframes(`brf-${id}-${p}-${mode}`, w, (mode === "idle" && FRAME_SEQ_BY_BOSS[baseId]?.[p]) || FRAME_SEQ[p][mode]);
+    const k = (mode: SeqMode) => seqKeyframes(`brf-${id}-${p}-${mode}`, w, (mode === "idle" && FRAME_SEQ_BY_BOSS[baseId]?.[p]) || FRAME_SEQ[p][mode]!);
     const idle = k("idle"), ouch = k("ouch"), strike = k("strike"), fear = k("fear");
+    const talk = FRAME_SEQ[p].talk ? k("talk") : null;
     const sel = `.rig-${baseId}.boss-rig .brf-${p}`;
-    return `${idle.css} ${ouch.css} ${strike.css} ${fear.css}
+    return `${idle.css} ${ouch.css} ${strike.css} ${fear.css} ${talk?.css ?? ""}
       ${sel} { animation: brf-${id}-${p}-idle ${idle.ms}ms step-end infinite; }
       .rig-${baseId}.boss-rig.dazed .brf-${p} { animation: brf-${id}-${p}-fear ${fear.ms}ms step-end infinite; }
+      ${talk ? `.arena-photo.talking .rig-${baseId}.boss-rig:not(.dazed) .brf-${p} { animation: brf-${id}-${p}-talk ${talk.ms}ms step-end infinite; }` : ""}
       .arena-photo.ouch ${sel} { animation: brf-${id}-${p}-ouch ${ouch.ms}ms step-end both; }
       .arena-photo.strike ${sel} { animation: brf-${id}-${p}-strike ${strike.ms}ms step-end both; }
       @media (prefers-reduced-motion: reduce) { ${sel} { animation: none; } }`;
   }).join("\n");
+  if (baseId === "vodovoz") {
+    return (
+      <svg key={id} ref={svgRef} className={`boss-rig rig-${baseId} ${dazed ? "dazed" : ""}`} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} width="100%" height="100%" preserveAspectRatio={bust ? "xMidYMin slice" : "xMidYMax meet"} aria-hidden="true">
+        {frameCss && <style>{frameCss}</style>}
+        {/* Восток (screens.css «Восток»): sways and bounces like a boxer, pumps the delivery bag on its straps and slams it
+            at the screen on a strike; below half HP he only stands there gasping, the bag hanging down */}
+        <g className="vk-sway" style={{ transformOrigin: `${rig.w / 2}px ${rig.h - 40}px`, transformBox: "view-box" }}>
+          <g className="vk-bounce" style={{ transformOrigin: `${rig.w / 2}px ${rig.h - 40}px`, transformBox: "view-box" }}>
+            {img("body")}
+            <g className="vk-head" style={origin("head")}>
+              <g className="vk-head-bob" style={origin("head")}>{P.face?.frames ? strip("face") : img("head")}</g>
+            </g>
+            {img("collar")}
+            <g className="vk-arm-r" style={origin("armR")}>{img("armR")}</g>
+            <g className="vk-arm-l" style={origin("armL")}>
+              {img("armL")}
+              <g className="vk-bag" style={origin("bag")}>
+                <g className="vk-bag-swing" style={origin("bag")}>{img("bag")}</g>
+              </g>
+              {img("handL")}
+            </g>
+          </g>
+        </g>
+      </svg>
+    );
+  }
   const behind = BEHIND[baseId];
   const split = SPLIT_BEHIND.has(baseId);
   const clipEyes = !!P.armL && !!P.pupils && !!P.eyes;
