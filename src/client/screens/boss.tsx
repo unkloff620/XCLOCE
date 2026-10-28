@@ -6,7 +6,7 @@ import { api, type FightView, type Hit, type Tray } from "../api.ts";
 import { BOSSES, arenaOf, bossById, type BossDef, FIGHT_HOURS, FULL_SHARE, KEY_SHARE, rewardShare } from "../../content/bosses.ts";
 import { WEAPONS, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES, bossLines } from "../../content/phrases.ts";
-import { ArenaBackdrop, BossSilhouette } from "../art/scenes.tsx";
+import { BossSilhouette } from "../art/scenes.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { Icon } from "../art/icons.tsx";
 import { Bar, Empty, GainLine, MysteryDrop, bossItemsCount } from "../ui.tsx";
@@ -84,7 +84,6 @@ function Arena({ boss, hp, hpMax, endsAt, fx, hit, ouch, rug, feed, full: fullSc
   const talk = useBossTalk(boss.id, !!fullScreen && hp !== null && hp > 0, dazed);
   return (
     <div className={`arena ${boss.final ? "final" : ""} ${fullScreen ? "full" : ""}`} style={{ ["--acc" as string]: boss.theme.accent }}>
-      {!fullScreen && <ArenaBackdrop theme={boss.theme} final={boss.final} />}
       <div className={`arena-photo ${hit ? "hit" : ""} ${ouch ? "ouch" : ""} ${rug ? "rug" : ""} ${hurt ? "hurt" : ""} ${dazed ? "dazed" : ""} ${strike ? `strike strike-${strike}` : ""}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         {hasBossRig(boss.id) ? <BossRig id={boss.id} hpShare={hp === null ? 1 : hp / Math.max(1, hpMax)} /> : boss.photo.full ? <img src={boss.photo.full} alt={boss.name} draggable={false} /> : <div className="arena-sil"><BossSilhouette accent={boss.theme.accent} /><span className="small muted">фото скоро</span></div>}

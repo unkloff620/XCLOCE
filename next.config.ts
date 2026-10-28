@@ -15,9 +15,15 @@ const nextConfig: NextConfig = {
   env: { NEXT_PUBLIC_APP_VERSION: buildVersion() },
   async headers() {
     return [
+      // game art: the browser keeps it a day and then refreshes it in the background (a week at most), so players
+      // download the ~20 MB of pictures about once instead of on every visit (Render counts the traffic)
       {
         source: "/assets/:path*",
-        headers: [{ key: "Cache-Control", value: "public, max-age=300, stale-while-revalidate=86400" }],
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
+      },
+      {
+        source: "/bosses/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
       },
     ];
   },
