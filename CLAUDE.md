@@ -36,6 +36,12 @@ Asset folders:
 
 Use lowercase kebab-case filenames.
 
+## Image generation cost (OpenAI is billed per picture)
+
+- Icons and items (shown at 16–64 px): quality `low` or `medium`, never `high`. Big backgrounds and bosses: `medium` for drafts, `high` only for the approved final.
+- Show a cheap draft first; regenerate in high quality only what the user approved.
+- Keep reference images small (≤1024 px on the long side): they are billed as input too.
+
 ## Secrets
 
 The MCP server reads `OPENAI_API_KEY` and optional `OPENAI_IMAGE_MODEL` from root `.env.local`.
