@@ -1,0 +1,23 @@
+# Render Blueprint: the game as one always-on Node web service, next to the Neon database (us-east-1 → virginia).
+# Secrets are asked for in the Render dashboard when the Blueprint is created (sync: false), never stored here.
+services:
+  - type: web
+    name: xcloce
+    runtime: node
+    region: virginia
+    branch: main
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: DATABASE_URL
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: ADMIN_TELEGRAM_IDS
+        sync: false
+      - key: NEXT_PUBLIC_BOT_USERNAME
+        sync: false

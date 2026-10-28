@@ -35,3 +35,12 @@
 - Продакшен определяется по `RAILWAY_ENVIRONMENT_NAME=production` (гостевой вход и тестовый вход в админку выключены).
 - Напоминания в Telegram сервер рассылает сам раз в минуту (`src/instrumentation.ts`), отдельный крон не нужен.
 - Проверка: `/api/health`.
+
+## Хостинг: Render
+
+Постоянно работающий Node-сервер (`next start`) рядом с базой, конфиг — `render.yaml` (Blueprint).
+
+- Render → New → **Blueprint** → этот репозиторий. Регион `virginia`, тариф Starter (0.5 CPU, 512 МБ).
+- При создании Render спросит секреты: `DATABASE_URL` (строка Neon, pooled), `TELEGRAM_BOT_TOKEN`, `ADMIN_TELEGRAM_IDS`, `NEXT_PUBLIC_BOT_USERNAME`.
+- Продакшен определяется по `RENDER=true` (гостевой вход и тестовый вход в админку выключены).
+- Напоминания в Telegram сервер рассылает сам каждые 2 минуты, ночью по Москве — нет (`src/instrumentation.ts`).
