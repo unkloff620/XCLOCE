@@ -233,8 +233,10 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
     const pp = puppet ? "back" : undefined;
     // follow: the top goes with that group (the legs with the hips); fade: drawn with that group's opacity;
     // ppId / mask: the pupils are drawn only inside the eye whites
-    const pic = (p: string, o: { follow?: string; fade?: string; ppId?: string; mask?: string } = {}) => {
-      const r: Part | undefined = P[p];
+    // sx: squeeze the part's width around its centre (Восток's jaw is drawn a touch narrower than the artist's layer)
+    const pic = (p: string, o: { follow?: string; fade?: string; ppId?: string; mask?: string; sx?: number } = {}) => {
+      const r0: Part | undefined = P[p];
+      const r = r0 && o.sx ? { ...r0, x: r0.x + (r0.w * (1 - o.sx)) / 2, w: r0.w * o.sx } : r0;
       return r ? <image className={puppet ? "pp" : undefined} data-pp={pp} data-pp-follow={puppet ? o.follow : undefined}
         data-pp-fade={puppet ? o.fade : undefined} data-pp-id={puppet ? o.ppId : undefined} data-pp-mask={puppet ? o.mask : undefined}
         href={`/bosses/${id}/rig/${p}.webp${r.v ? `?v=${r.v}` : ""}`} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" /> : null;
@@ -258,7 +260,7 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
           <g className="vk-jaw"><g className="vk-grind">{pic("teeth-low", mouth)}</g></g>
           <g className="vk-teeth-up">{pic("teeth-up", mouth)}</g>
           {pic("head-open", mouth)}
-          <g className="vk-jaw">{pic("jaw", mouth)}</g>
+          <g className="vk-jaw">{pic("jaw", { ...mouth, sx: 0.88 })}</g>
         </g>
       </>
     );
