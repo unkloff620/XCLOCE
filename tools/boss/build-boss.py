@@ -14,9 +14,9 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 SCALE = 0.5
 # bosses drawn at the generator's size (1024×1536) keep it: halving would make them blurry on a phone
 SCALE_BY_BOSS = {"vodovoz": 1.0}
-PARTS = ["tail", "body", "foreL", "foreR", "armL", "lowL", "handL", "bag", "armR", "lowR", "handR", "head", "head-open", "throat", "teeth-up", "teeth-low", "eyes", "eyes-closed", "pupils", "brows", "brows-sad", "browL", "browR", "mouth", "mouth-closed", "collar"]
+PARTS = ["tail", "body", "foreL", "foreR", "armL", "lowL", "handL", "bag", "armR", "lowR", "handR", "head", "head-open", "throat", "teeth-up", "teeth-low", "jaw", "eyes", "eyes-closed", "pupils", "brows", "brows-sad", "browL", "browR", "mouth", "mouth-closed", "collar"]
 # puppet-warped sequences (<part>@0.png, <part>@1.png …): one strip <part>.webp, frames side by side, frame 0 first
-FRAMES = ["brows", "jaw", "face"]
+FRAMES = ["brows", "jaw"]
 # which edge of the part joins the parent: (axis, side) — y/bottom for head and left forearm, x/right for the right one
 JOINT = {"head": ("y", "max"), "foreL": ("y", "max"), "foreR": ("x", "max")}
 # bosses whose arms come up from below (both elbows at the bottom end)
@@ -35,7 +35,8 @@ PIVOT_BY_BOSS = {
                 "armR": [704.5, 500.0], "lowR": [817.0, 700.0], "handR": [954.5, 837.5],
                 "browL": [535.5, 249.1], "browR": [556.6, 249.1]},  # printed by assemble-babafey.py
     # Восток (generated art, cut by hand): the neck, both shoulders, the bag's straps in the raised fist
-    "vodovoz": {"head": [612.0, 292.0], "armL": [438.0, 335.0], "bag": [232.0, 292.0], "armR": [742.0, 318.0]},
+    "vodovoz": {"head": [612.0, 292.0], "armL": [438.0, 335.0], "bag": [232.0, 292.0], "armR": [742.0, 318.0],
+                "browL": [628.0, 146.0], "browR": [641.0, 150.0], "jaw": [619.0, 226.0]},
 }
 
 import sys, re

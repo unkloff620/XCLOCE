@@ -85,7 +85,9 @@ function buildMesh(gl: WebGLRenderingContext, img: SVGImageElement): Mesh {
   const kids = childBones(own);
   bones.push(...kids);
   const size = (el: Element) => {
-    // the size of the part that hangs on a joint: its first image
+    // the size of the part that hangs on a joint: data-pp-size when the rig says so, else its first image
+    const given = el.getAttribute("data-pp-size");
+    if (given) return +given;
     const im = el.querySelector("image");
     return im ? Math.min(+im.getAttribute("width")!, +im.getAttribute("height")!) : 80;
   };
