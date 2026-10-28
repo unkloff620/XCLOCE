@@ -26,6 +26,7 @@ interface Due { player_id: number; kind: string; due_at: Date; meta: Record<stri
 export function appUrl(): string | null {
   if (process.env.APP_URL) return process.env.APP_URL;
   if (process.env.VERCEL_PROJECT_PRODUCTION_URL) return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
   return knownOrigin();
 }
 

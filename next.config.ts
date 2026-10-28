@@ -1,9 +1,13 @@
 import type { NextConfig } from "next";
 import { execSync } from "node:child_process";
 
-/** Commit of this build: Vercel tells it; on Cloudflare Workers Builds (and other CI) it is read from the checkout. */
+/** Commit of this build: Vercel and Railway tell it; on Cloudflare Workers Builds (and other CI) it is read from the checkout. */
 function buildVersion(): string {
-  const sha = process.env.VERCEL_GIT_COMMIT_SHA || process.env.VERCEL_DEPLOYMENT_ID;
+  const sha =
+    process.env.VERCEL_GIT_COMMIT_SHA ||
+    process.env.VERCEL_DEPLOYMENT_ID ||
+    process.env.RAILWAY_GIT_COMMIT_SHA ||
+    process.env.RAILWAY_DEPLOYMENT_ID;
   if (sha) return sha;
   if (process.env.WORKERS_CI || process.env.CI) {
     try {

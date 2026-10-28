@@ -25,3 +25,13 @@
 - `APP_ENV=production`, `ALLOW_GUEST=false`, крон напоминаний раз в 5 минут уже заданы в `wrangler.jsonc`.
 
 Локально в рантайме Workers: `npm run cf:preview` (переменные — в `.dev.vars`, пример в `.dev.vars.example`).
+
+## Хостинг: Railway
+
+Постоянно работающий Node-сервер (`next start`), конфиг — `railway.json`. Соединения с базой держатся открытыми, поэтому игра работает так же быстро, как на Vercel.
+
+- Регион сервиса: **US East (Virginia)** — рядом с базой Neon (Settings → Deploy → Regions).
+- Переменные (Variables): `DATABASE_URL` (строка Neon, pooled), `TELEGRAM_BOT_TOKEN`, `ADMIN_TELEGRAM_IDS`, `NEXT_PUBLIC_BOT_USERNAME`.
+- Продакшен определяется по `RAILWAY_ENVIRONMENT_NAME=production` (гостевой вход и тестовый вход в админку выключены).
+- Напоминания в Telegram сервер рассылает сам раз в минуту (`src/instrumentation.ts`), отдельный крон не нужен.
+- Проверка: `/api/health`.

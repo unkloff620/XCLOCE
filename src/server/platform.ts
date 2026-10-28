@@ -1,6 +1,18 @@
-/** Where the server runs. Vercel sets VERCEL_ENV; on Cloudflare the production Worker sets APP_ENV=production (wrangler.jsonc). */
+/**
+ * Production or not. Vercel sets VERCEL_ENV; Railway names the environment (RAILWAY_ENVIRONMENT_NAME, "production" by
+ * default); on Cloudflare the Worker sets APP_ENV=production (wrangler.jsonc). APP_ENV=production works anywhere.
+ */
 export function isProduction(): boolean {
-  return process.env.VERCEL_ENV === "production" || process.env.APP_ENV === "production";
+  return (
+    process.env.VERCEL_ENV === "production" ||
+    process.env.RAILWAY_ENVIRONMENT_NAME === "production" ||
+    process.env.APP_ENV === "production"
+  );
+}
+
+/** A long-running Node server (Railway, a VPS): nothing wakes it per request, so it runs background work itself. */
+export function persistentServer(): boolean {
+  return !!process.env.RAILWAY_ENVIRONMENT_NAME || process.env.PERSISTENT_SERVER === "1";
 }
 
 /** Cloudflare Workers runtime (workerd). */
