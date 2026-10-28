@@ -11,7 +11,3 @@ next-env.d.ts
 .pglite/
 .DS_Store
 npm-debug.log*
-.open-next
-.wrangler
-.dev.vars
-cloudflare-env.d.ts

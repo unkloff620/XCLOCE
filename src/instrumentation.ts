@@ -1,7 +1,7 @@
 /**
  * Runs once when the server starts (Next.js instrumentation hook).
- * On a long-running server (Render, Railway) Telegram reminders are sent from here — there is no Vercel Cron or
- * Cloudflare cron trigger, and the after-request sender only runs while somebody plays. Sending is throttled and
+ * On a long-running server (Render) Telegram reminders are sent from here — there is no external cron, and the
+ * after-request sender only runs while somebody plays. Sending is throttled and
  * claimed in the database, so a second instance (or another host running in parallel) never sends a reminder twice.
  * Quiet hours (00:00–09:00 MSK) only hold live calls, and those are sent right after the request that creates them,
  * so the loop sleeps at night and lets the database (Neon) suspend.

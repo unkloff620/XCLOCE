@@ -1,24 +1,18 @@
 /**
- * Production or not. Vercel sets VERCEL_ENV; Railway names the environment (RAILWAY_ENVIRONMENT_NAME, "production" by
- * default); Render sets RENDER=true (and IS_PULL_REQUEST=true on preview copies); on Cloudflare the Worker sets APP_ENV=production (wrangler.jsonc). APP_ENV=production works anywhere.
+ * Production or not. Render sets RENDER=true (and IS_PULL_REQUEST=true on preview copies); Vercel sets VERCEL_ENV.
+ * APP_ENV=production works on any other host.
  */
 export function isProduction(): boolean {
   return (
     process.env.VERCEL_ENV === "production" ||
-    process.env.RAILWAY_ENVIRONMENT_NAME === "production" ||
     (process.env.RENDER === "true" && process.env.IS_PULL_REQUEST !== "true") ||
     process.env.APP_ENV === "production"
   );
 }
 
-/** A long-running Node server (Render, Railway, a VPS): nothing wakes it per request, so it runs background work itself. */
+/** A long-running Node server (Render, a VPS): nothing wakes it per request, so it runs background work itself. */
 export function persistentServer(): boolean {
-  return process.env.RENDER === "true" || !!process.env.RAILWAY_ENVIRONMENT_NAME || process.env.PERSISTENT_SERVER === "1";
-}
-
-/** Cloudflare Workers runtime (workerd). */
-export function onWorkers(): boolean {
-  return typeof navigator !== "undefined" && navigator.userAgent === "Cloudflare-Workers";
+  return process.env.RENDER === "true" || process.env.PERSISTENT_SERVER === "1";
 }
 
 /** The public address of the game as players reach it, learned from their requests (fallback for APP_URL). */

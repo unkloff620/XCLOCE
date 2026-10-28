@@ -5,7 +5,7 @@ import { loadConfig } from "./config.ts";
 import { log } from "./log.ts";
 import { after } from "next/server";
 import { dispatchNotifications } from "./notify-send.ts";
-import { onWorkers, rememberOrigin } from "./platform.ts";
+import { rememberOrigin } from "./platform.ts";
 
 /** After the response: send due Telegram reminders (throttled in the DB, so most calls do nothing). */
 function kickNotifications(db: Db) {
@@ -38,12 +38,7 @@ function allow(key: string, capacity = 40, refillPerSec = 8): boolean {
 }
 
 export function clientKey(req: Request): string {
-  return (
-    (onWorkers() && req.headers.get("cf-connecting-ip")) ||
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    req.headers.get("x-real-ip") ||
-    "local"
-  );
+  return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "local";
 }
 
 export function json(data: unknown, status = 200): Response {
