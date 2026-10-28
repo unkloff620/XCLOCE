@@ -1,10 +1,11 @@
 import { APP_VERSION } from "../version.ts";
-import { GameError, getDb, type Db } from "./db.ts";
+import { GameError, getDb, withStats, type Db, type DbStats } from "./db.ts";
 import { verifyAdminSession, verifySession } from "./auth.ts";
 import { loadConfig } from "./config.ts";
 import { log } from "./log.ts";
 import { after } from "next/server";
 import { dispatchNotifications } from "./notify-send.ts";
+import { onWorkers, rememberOrigin } from "./platform.ts";
 
 /** After the response: send due Telegram reminders (throttled in the DB, so most calls do nothing). */
 function kickNotifications(db: Db) {
@@ -37,7 +38,12 @@ function allow(key: string, capacity = 40, refillPerSec = 8): boolean {
 }
 
 export function clientKey(req: Request): string {
-  return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "local";
+  return (
+    (onWorkers() && req.headers.get("cf-connecting-ip")) ||
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    "local"
+  );
 }
 
 export function json(data: unknown, status = 200): Response {
@@ -45,6 +51,23 @@ export function json(data: unknown, status = 200): Response {
     status,
     headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", "x-app-version": APP_VERSION },
   });
+}
+
+/** Opens the DB for one request and measures it: connect time, queries, time spent in them (Server-Timing). */
+async function timedDb(): Promise<{ db: Db; stats: DbStats; started: number }> {
+  const started = Date.now();
+  const raw = await getDb();
+  const { db, stats } = withStats(raw, Date.now() - started);
+  return { db, stats, started };
+}
+function withTiming(res: Response, t: { stats: DbStats; started: number }, route: string): Response {
+  const total = Date.now() - t.started;
+  res.headers.set(
+    "server-timing",
+    `connect;dur=${t.stats.connectMs}, first;dur=${Math.max(0, t.stats.firstMs)}, db;dur=${t.stats.ms};desc="${t.stats.queries} queries", total;dur=${total}`,
+  );
+  if (total > 1500) log.warn("api.slow", { route, total, connect: t.stats.connectMs, db: t.stats.ms, queries: t.stats.queries });
+  return res;
 }
 
 function errorResponse(e: unknown, route: string): Response {
@@ -80,8 +103,8 @@ export function publicRoute(name: string, fn: (ctx: PublicCtx) => Promise<unknow
     try {
       if (!allow("ip:" + clientKey(req), 60, 10)) throw new GameError("rate_limited", "Слишком много запросов", 429);
       const body = await readBody(req);
-      const db = await getDb();
-      return json(await fn({ db, req, body }));
+      const t = await timedDb();
+      return withTiming(json(await fn({ db: t.db, req, body })), t, name);
     } catch (e) {
       return errorResponse(e, name);
     }
@@ -102,6 +125,7 @@ function staleClient(req: Request): boolean {
 export function authedRoute(name: string, fn: (ctx: Ctx) => Promise<unknown>) {
   return async (req: Request): Promise<Response> => {
     try {
+      rememberOrigin(req);
       if (staleClient(req)) throw new GameError("update", UPDATE_MESSAGE, 409);
       const auth = req.headers.get("authorization");
       const playerId = verifySession(auth?.startsWith("Bearer ") ? auth.slice(7) : null);
@@ -109,9 +133,9 @@ export function authedRoute(name: string, fn: (ctx: Ctx) => Promise<unknown>) {
         throw new GameError("rate_limited", "Слишком много запросов. Помедленнее", 429);
       }
       const body = await readBody(req);
-      const db = await getDb();
-      const out = json(await fn({ db, req, body, playerId }));
-      kickNotifications(db);
+      const t = await timedDb();
+      const out = withTiming(json(await fn({ db: t.db, req, body, playerId })), t, name);
+      kickNotifications(t.db);
       return out;
     } catch (e) {
       return errorResponse(e, name);

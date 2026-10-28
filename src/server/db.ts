@@ -1,5 +1,6 @@
 import { MIGRATIONS } from "./migrations.ts";
 import { log } from "./log.ts";
+import { isProduction, onWorkers } from "./platform.ts";
 
 /** Minimal query interface shared by node-postgres (production) and PGlite (local dev / tests). */
 export interface Queryable {
@@ -18,18 +19,29 @@ function databaseUrl(): string | undefined {
   return process.env.DATABASE_URL || process.env.POSTGRES_URL || undefined;
 }
 
-async function createPgDb(url: string): Promise<Db> {
-  const { Pool, types } = await import("pg");
-  // BIGINT (int8) -> number. Our ids stay far below 2^53.
-  types.setTypeParser(20, (v: string) => Number(v));
-  // NUMERIC -> number (aggregates such as SUM over float return float8 anyway)
-  types.setTypeParser(1700, (v: string) => Number(v));
-  const pool = new Pool({
+async function createPgDb(url: string, max = Number(process.env.DB_POOL_MAX || 5), driver: "pg" | "neon" = "pg"): Promise<Db> {
+  const pg = await import("pg");
+  // BIGINT (int8) -> number. Our ids stay far below 2^53. NUMERIC -> number (aggregates such as SUM over float return float8 anyway)
+  const parse = (oid: number) => (oid === 20 || oid === 1700 ? (v: string) => Number(v) : null);
+  pg.types.setTypeParser(20, (v: string) => Number(v));
+  pg.types.setTypeParser(1700, (v: string) => Number(v));
+  // passed per pool too: the Neon driver keeps its own copy of the type registry
+  const typeOverrides = {
+    getTypeParser: (oid: number, format?: "text" | "binary") =>
+      parse(oid) ?? pg.types.getTypeParser(oid, format as "text"),
+  };
+  // Cloudflare Workers: node-postgres over raw TCP sockets pays ~40-50 ms per query there (small packets wait for
+  // delayed ACKs), so a 60-query screen took seconds. Neon's serverless driver talks WebSockets and coalesces writes.
+  const PoolCtor = (driver === "neon" ? (await import("@neondatabase/serverless")).Pool : pg.Pool) as unknown as typeof pg.Pool;
+  const pool = new PoolCtor({
     connectionString: url,
-    max: Number(process.env.DB_POOL_MAX || 5),
+    max,
     idleTimeoutMillis: 10_000,
-    ssl: url.includes("localhost") || url.includes("127.0.0.1") ? undefined : { rejectUnauthorized: false },
-  });
+    types: typeOverrides,
+    ...(driver === "pg"
+      ? { ssl: url.includes("localhost") || url.includes("127.0.0.1") ? undefined : { rejectUnauthorized: false } }
+      : {}),
+  } as unknown as import("pg").PoolConfig);
   pool.on("error", (e: Error) => log.error("db.pool", { message: e.message }));
   return {
     kind: "postgres",
@@ -67,7 +79,9 @@ async function createPgDb(url: string): Promise<Db> {
 
 /** In-process Postgres (WASM). Used when DATABASE_URL is not set: local dev and tests. */
 export async function createPgliteDb(dataDir?: string): Promise<Db> {
-  const { PGlite, types } = await import("@electric-sql/pglite");
+  // Not a literal import on purpose: the Cloudflare Worker bundle must not pull in the WASM database it never uses.
+  const PGLITE = "@electric-sql/pglite";
+  const { PGlite, types } = (await import(/* webpackIgnore: true */ /* turbopackIgnore: true */ PGLITE)) as typeof import("@electric-sql/pglite");
   const parsers = { [types.INT8]: (v: string) => Number(v), [types.NUMERIC]: (v: string) => Number(v) };
   const pg = dataDir ? new PGlite(dataDir, { parsers }) : new PGlite({ parsers });
   // PGlite is a single connection: serialize transactions ourselves so that
@@ -132,9 +146,16 @@ export function splitSql(sql: string): string[] {
 }
 
 let dbPromise: Promise<Db> | null = null;
+let workersMigrated = false;
 
-/** Lazily created singleton DB with schema applied. */
+/**
+ * Lazily created DB with schema applied.
+ * Node (Vercel, local): one shared pool per server instance.
+ * Cloudflare Workers: a connection can't be reused by another request there, so every request gets its own small pool
+ * (dropped by the runtime when the request ends); migrations still run once per isolate.
+ */
 export function getDb(): Promise<Db> {
+  if (onWorkers()) return getWorkersDb();
   if (!dbPromise) {
     dbPromise = (async () => {
       const url = databaseUrl();
@@ -142,7 +163,7 @@ export function getDb(): Promise<Db> {
       if (url) {
         db = await createPgDb(url);
       } else {
-        if (process.env.VERCEL) throw new GameError("db_missing", "База данных не подключена", 503);
+        if (process.env.VERCEL || isProduction()) throw new GameError("db_missing", "База данных не подключена", 503);
         db = await createPgliteDb(process.env.PGLITE_DIR || undefined);
         log.warn("db.pglite", { message: "DATABASE_URL not set, using in-process PGlite" });
       }
@@ -156,6 +177,17 @@ export function getDb(): Promise<Db> {
   return dbPromise;
 }
 
+async function getWorkersDb(): Promise<Db> {
+  const url = databaseUrl();
+  if (!url) throw new GameError("db_missing", "База данных не подключена", 503);
+  const db = await createPgDb(url, Number(process.env.DB_POOL_MAX || 3), "neon");
+  if (!workersMigrated) {
+    await migrate(db);
+    workersMigrated = true;
+  }
+  return db;
+}
+
 /** Errors that are safe to show to the player. */
 export class GameError extends Error {
   code: string;
@@ -165,4 +197,30 @@ export class GameError extends Error {
     this.code = code;
     this.status = status;
   }
+}
+
+/** Per-request database timing (Server-Timing header): how many queries and how long they took in total. */
+export interface DbStats { queries: number; ms: number; connectMs: number; firstMs: number }
+export function withStats(db: Db, connectMs = 0): { db: Db; stats: DbStats } {
+  const stats: DbStats = { queries: 0, ms: 0, connectMs, firstMs: -1 };
+  const timed = <T,>(run: () => Promise<T>): Promise<T> => {
+    const t = Date.now();
+    stats.queries++;
+    return run().finally(() => {
+      const d = Date.now() - t;
+      stats.ms += d;
+      if (stats.firstMs < 0) stats.firstMs = d; // on Workers this includes opening the connection
+    });
+  };
+  const wrap = (q: Queryable): Queryable => ({ query: (sql, params) => timed(() => q.query(sql, params)) });
+  return {
+    stats,
+    db: {
+      kind: db.kind,
+      query: (sql, params) => timed(() => db.query(sql, params)),
+      exec: (sql) => timed(() => db.exec(sql)),
+      tx: (fn) => db.tx((q) => fn(wrap(q))),
+      close: () => db.close(),
+    },
+  };
 }

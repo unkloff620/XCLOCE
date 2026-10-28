@@ -14,4 +14,24 @@
 
 Предыдущая версия игры — в ветке `archive-v1`.
 
+## Хостинг: Cloudflare Workers
 
+Игра собирается под Cloudflare Workers через OpenNext (`wrangler.jsonc`, `open-next.config.ts`, `cloudflare/worker.mjs`). Код по-прежнему работает и на Vercel.
+
+Подключение (один раз): Cloudflare → Workers & Pages → Create → Import a repository → этот репозиторий.
+- Build command: `npm run cf:build`
+- Deploy command: `npx wrangler deploy`
+- Переменные (Settings → Variables and Secrets, тип Secret): `DATABASE_URL` (строка Neon, лучше pooled), `TELEGRAM_BOT_TOKEN`, `ADMIN_TELEGRAM_IDS`, по желанию `SESSION_SECRET`, `CRON_SECRET`, `APP_URL`. Те же переменные — в Build variables, плюс `NEXT_PUBLIC_BOT_USERNAME`.
+- `APP_ENV=production`, `ALLOW_GUEST=false`, крон напоминаний раз в 5 минут уже заданы в `wrangler.jsonc`.
+
+Локально в рантайме Workers: `npm run cf:preview` (переменные — в `.dev.vars`, пример в `.dev.vars.example`).
+
+## Хостинг: Railway
+
+Постоянно работающий Node-сервер (`next start`), конфиг — `railway.json`. Соединения с базой держатся открытыми, поэтому игра работает так же быстро, как на Vercel.
+
+- Регион сервиса: **US East (Virginia)** — рядом с базой Neon (Settings → Deploy → Regions).
+- Переменные (Variables): `DATABASE_URL` (строка Neon, pooled), `TELEGRAM_BOT_TOKEN`, `ADMIN_TELEGRAM_IDS`, `NEXT_PUBLIC_BOT_USERNAME`.
+- Продакшен определяется по `RAILWAY_ENVIRONMENT_NAME=production` (гостевой вход и тестовый вход в админку выключены).
+- Напоминания в Telegram сервер рассылает сам раз в минуту (`src/instrumentation.ts`), отдельный крон не нужен.
+- Проверка: `/api/health`.
