@@ -43,3 +43,5 @@ up=r.copy(); up[Y>mid[None,:]]=0
 lo=r.copy(); lo[Y<=mid[None,:]]=0
 place(up,'head-open'); place(lo,'jaw')
 print('mid at center', mid[(xs.min()+xs.max())//2])
+# afterwards the open mouth (throat, teeth, lips) was moved 7 px up (2000 canvas) so the open lips sit where his own
+# closed lips are: for n in throat teeth-up teeth-low head-open jaw — shift by (0, -7)

@@ -841,35 +841,35 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
       },
       "head-open": {
         "x": 559.5,
-        "y": 320.5,
+        "y": 317.0,
         "w": 78,
         "h": 30,
         "v": "b1fbbf44"
       },
       "throat": {
         "x": 565.5,
-        "y": 329.0,
+        "y": 325.5,
         "w": 64,
         "h": 30,
         "v": "f5562fc0"
       },
       "teeth-up": {
         "x": 571.0,
-        "y": 331.5,
+        "y": 328.0,
         "w": 51,
         "h": 19,
         "v": "d0b4303d"
       },
       "teeth-low": {
         "x": 568.5,
-        "y": 339.0,
+        "y": 335.5,
         "w": 53,
         "h": 18,
         "v": "ea5bf39f"
       },
       "jaw": {
         "x": 560.0,
-        "y": 339.0,
+        "y": 335.5,
         "w": 76,
         "h": 30,
         "v": "f20af197"

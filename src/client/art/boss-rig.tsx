@@ -255,8 +255,8 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
         <g className="vk-mouth-shut">{pic("mouth-closed", { fade: "vk-mouth-shut" })}</g>
         <g className="vk-mouth">
           {pic("throat", mouth)}
-          <g className="vk-jaw">{pic("teeth-low", mouth)}</g>
-          {pic("teeth-up", mouth)}
+          <g className="vk-jaw"><g className="vk-grind">{pic("teeth-low", mouth)}</g></g>
+          <g className="vk-teeth-up">{pic("teeth-up", mouth)}</g>
           {pic("head-open", mouth)}
           <g className="vk-jaw">{pic("jaw", mouth)}</g>
         </g>
