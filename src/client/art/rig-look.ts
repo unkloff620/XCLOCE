@@ -110,6 +110,13 @@ export const WEAR_FIT = {
     "y": 1130.5,
     "w": 877,
     "h": 231
+  },
+  "sweater-vostok": {
+    "slot": "SHIRT",
+    "x": 105.5,
+    "y": 285.5,
+    "w": 792,
+    "h": 484
   }
 } as const;
 export const SKIN_ORIGINAL = 1;

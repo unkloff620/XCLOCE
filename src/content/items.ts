@@ -97,6 +97,8 @@ const WEARABLES: ItemDef[] = ([
   { id: "jacket-komandate", name: "Олимпийка Командате", slot: "SHIRT", rarity: "epic", description: "Молния до горла — так командуют с района.", sources: ["Победа: Командате"] },
   { id: "pants-komandate", name: "Спортивки Командате", slot: "PANTS", rarity: "rare", description: "Широкие, с завязками. Для приседа у подъезда.", sources: ["Победа: Командате"] },
   { id: "sneakers-komandate", name: "Кроссовки Командате", slot: "SHOES", rarity: "rare", description: "Зелёные, как свечи в его отчётах.", sources: ["Победа: Командате"] },
+  // Восток's sweatshirt (tools/rig/make-sweater-vostok.py): the first piece of his set
+  { id: "sweater-vostok", name: "Кофта Лудомана", slot: "SHIRT", rarity: "epic", description: "Ремни застёгнуты, ставки сделаны. Снял с Востока.", sources: ["Победа: Восток"] },
   { id: "gold-chain", name: "Серебряная цепь", slot: "ACCESSORY", rarity: "epic", description: "Каждое звено — подтверждённый блок.", sources: ["Магазин", "Награда за локацию 3"] },
 ] as Omit<ItemDef, "category" | "maxStack">[]).map((w) => {
   // clothes a boss unlocks: the drop opens them in the shop, then they are bought there
