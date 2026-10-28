@@ -14,7 +14,7 @@
  * A head with its own jaw (head-open + throat + teeth-up/teeth-low, Бабафей) grinds its teeth and opens its mouth;
  * brows drawn one by one (browL/browR) turn at their inner ends for the emotions.
  */
-import { useEffect, useRef, type CSSProperties, type RefObject } from "react";
+import { useEffect, useRef, type CSSProperties, type ReactNode, type RefObject } from "react";
 import { usePuppet } from "./boss-puppet.ts";
 import { BOSS_RIGS } from "./boss-rig-data.ts";
 
@@ -25,7 +25,7 @@ const BEHIND: Record<string, "L" | "R"> = { mugo: "R", babafey: "L" };
 /** of these the arm in BEHIND goes behind only with its shoulder: the forearm and the hand stay in front of everything */
 const SPLIT_BEHIND = new Set(["babafey"]);
 /** rigs drawn as plain SVG only */
-const NO_PUPPET = new Set<string>();
+const NO_PUPPET = new Set<string>(["vodovoz"]);
 
 /** frame schedules of the puppet strips: [frame, ms] — idle loops, ouch/strike play once */
 type SeqMode = "idle" | "ouch" | "strike" | "fear";
@@ -224,53 +224,34 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
       @media (prefers-reduced-motion: reduce) { ${sel} { animation: none; } }`;
   }).join("\n");
   if (baseId === "vodovoz") {
-    // the body (back canvas) and both arms (front canvas) are soft meshes: the shoulders and the neck bend with the
-    // arms and the head instead of breaking at the cut; the head, the headset and the bag stay SVG between the two
+    // Восток in the artist's layers (screens.css «Восток»): legs planted, the upper body bobs at the hips; both shoulders
+    // go behind the torso and the forearms in front — each arm is drawn twice (shoulder piece behind, forearm + fist in
+    // front) in groups with the same class, so both copies turn together. The bag hangs from the left fist.
+    const g = (cls: string, p: string, kids: ReactNode) => <g className={cls} style={origin(p)}>{kids}</g>;
+    const hips = { transformOrigin: `${rig.w * 0.56}px ${rig.h * 0.6}px`, transformBox: "view-box" as const };
     const vk = (
       <svg key={id} ref={svgRef} className={`boss-rig rig-${baseId} ${dazed ? "dazed" : ""}`} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} width="100%" height="100%" preserveAspectRatio={bust ? "xMidYMin slice" : "xMidYMax meet"} aria-hidden="true">
-        {/* Восток (screens.css «Восток»): sways and bounces like a boxer, pumps the delivery bag on its straps and slams it
-            at the screen on a strike; below half HP he only stands there gasping, the bag hanging down */}
-        <g className="vk-sway" style={{ transformOrigin: `${rig.w / 2}px ${rig.h - 40}px`, transformBox: "view-box" }}>
-          <g className="vk-bounce" style={{ transformOrigin: `${rig.w / 2}px ${rig.h - 40}px`, transformBox: "view-box" }}>
-            {img("body", undefined, "back")}
-            <g className="vk-head" {...joint("head")} data-pp-size="150" style={origin("head")}>
-              <g className="vk-head-bob" style={origin("head")}>
-                {/* the face in layers: the mouth is a hole in the head with the throat and the teeth behind it, the lower
-                    jaw (lower lip and chin) drops to open it; pupils roll inside the whites, lids blink, brows turn */}
-                {img("throat")}
-                {img("teeth-up")}
-                <g className="vk-jaw">{img("teeth-low")}</g>
-                {img("head-open")}
-                <g className="vk-jaw">{img("jaw")}</g>
-                <mask id={`vk-eyes-${id}`} style={{ maskType: "alpha" }} maskUnits="userSpaceOnUse" x="0" y="0" width={rig.w} height={rig.h}>{img("eyes")}</mask>
-                <g mask={`url(#vk-eyes-${id})`}><g className="vk-pupils">{img("pupils")}</g></g>
-                <g className="vk-lids">{img("eyes-closed")}</g>
-                <g className="vk-brow-l" style={origin("browL")}>{img("browL")}</g>
-                <g className="vk-brow-r" style={origin("browR")}>{img("browR")}</g>
-              </g>
-            </g>
-            {img("collar")}
-            <g className="vk-arm-r" {...joint("armR")} data-pp-size="140" style={origin("armR")}>{img("armR", undefined, "front")}</g>
-            <g className="vk-arm-l" {...joint("armL")} data-pp-size="140" style={origin("armL")}>
-              {img("armL", undefined, "front")}
-              <g className="vk-bag" style={origin("bag")}>
-                <g className="vk-bag-swing" style={origin("bag")}>{img("bag")}</g>
-              </g>
-              {/* without WebGL the fist goes back over the straps; with the mesh on (class "pp") this copy hides */}
-              {img("handL", puppet ? "pp" : undefined)}
-            </g>
+        <g className="vk-root" style={{ transformOrigin: `${rig.w / 2}px ${rig.h - 30}px`, transformBox: "view-box" }}>
+          <g className="vk-up" style={hips}>{g("vk-arm-r", "armR", img("armR"))}</g>
+          {img("legs")}
+          <g className="vk-up" style={hips}>
+            {g("vk-arm-l", "armL", img("armL"))}
+            {img("body")}
+            {g("vk-arm-l", "armL", g("vk-low-l", "lowL", <>
+              {img("lowL")}
+              {g("vk-hand-l", "handL", <>{img("handL")}{g("vk-bag", "bag", img("bag"))}</>)}
+            </>))}
+            {img("headset")}
+            {g("vk-head", "head", g("vk-head-snap", "head", img("head")))}
+            {g("vk-arm-r", "armR", g("vk-low-r", "lowR", <>
+              {img("lowR")}
+              {g("vk-hand-r", "handR", img("handR"))}
+            </>))}
           </g>
         </g>
       </svg>
     );
-    if (!puppet) return vk;
-    return (
-      <div ref={wrapRef} key={id} className={`br-pup rig-${baseId}-pup`}>
-        <canvas className="br-pup-back" aria-hidden="true" />
-        {vk}
-        <canvas className="br-pup-front" aria-hidden="true" />
-      </div>
-    );
+    return vk;
   }
   const behind = BEHIND[baseId];
   const split = SPLIT_BEHIND.has(baseId);

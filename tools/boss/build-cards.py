@@ -13,7 +13,7 @@ CARDS = {
     "bebyakyan": ("tools/boss/source/bebyakyan/raw/reference.png", (240, -80, 1700, 1722)),
     "garkusha": ("tools/boss/source/garkusha/raw/reference.png", (220, -40, 1760, 1860)),
     "babafey": ("tools/boss/source/babafey/raw/reference.png", (400, -60, 2180, 2138)),
-    "vodovoz": ("tools/boss/source/vodovoz/raw/reference.png", (180, -60, 940, 878)),
+    "vodovoz": ("tools/boss/source/vodovoz/raw/reference.png", (170, -110, 1650, 1717)),
 }
 W = 640
 # `build-cards.py vodovoz` builds only the named cards

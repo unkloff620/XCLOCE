@@ -614,8 +614,11 @@ export const ASSET_FILES: string[] = [
  "/bosses/vodovoz/rig/armR.webp",
  "/bosses/vodovoz/rig/bag.webp",
  "/bosses/vodovoz/rig/body.webp",
- "/bosses/vodovoz/rig/collar.webp",
- "/bosses/vodovoz/rig/face.webp",
  "/bosses/vodovoz/rig/handL.webp",
- "/bosses/vodovoz/rig/head.webp"
+ "/bosses/vodovoz/rig/handR.webp",
+ "/bosses/vodovoz/rig/head.webp",
+ "/bosses/vodovoz/rig/headset.webp",
+ "/bosses/vodovoz/rig/legs.webp",
+ "/bosses/vodovoz/rig/lowL.webp",
+ "/bosses/vodovoz/rig/lowR.webp"
 ];
