@@ -3370,8 +3370,73 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 @keyframes vk-limp-fist { 0%, 100% { transform: rotate(-20deg); } 50% { transform: rotate(-16deg); } }
 .arena-photo.ouch .rig-vodovoz.dazed .vk-head-snap { animation: vk-head-hit 0.6s cubic-bezier(0.2, 0.7, 0.3, 1); }
 
+/* Восток's face (the artist's parts): pupils roll inside the whites, lids blink, each brow turns at its inner end
+   (left brow: + lifts the outer end; right brow: − lifts the outer end). The mouth: his own smirk (the head picture);
+   now and then a cocky grin with bared teeth (the open mouth with the jaw raised to a bite); tight lips while he heaves
+   the bag; talking — the jaw works in syllables; the yell with the slam — wide open, brows dived; a hit — eyes shut,
+   teeth clenched; dazed — the mouth hangs open gasping with the breath, sad brows, slow heavy blinks. */
+.rig-vodovoz .vk-lids { opacity: 0; animation: vk-blink 4.6s step-end infinite; }
+@keyframes vk-blink { 0% { opacity: 0; } 90% { opacity: 1; } 92.5% { opacity: 0; } 96% { opacity: 1; } 98% { opacity: 0; } }
+.rig-vodovoz .vk-pupils { animation: vk-look 5.4s var(--vk-ease) infinite; }
+@keyframes vk-look { 0%, 16%, 100% { transform: translate(0, 0); } 24%, 40% { transform: translate(-2.6px, 0.4px); } 48%, 64% { transform: translate(2.6px, -0.3px); } 72%, 88% { transform: translate(0.8px, 0.6px); } }
+.rig-vodovoz .vk-brow-l { animation: vk-brow-l 3.2s var(--vk-ease) infinite; }
+@keyframes vk-brow-l { 0%, 100% { transform: none; } 18%, 34% { transform: translateY(-3px) rotate(-4deg); } 50% { transform: none; } 70%, 82% { transform: translateY(1.5px) rotate(5deg); } }
+.rig-vodovoz .vk-brow-r { animation: vk-brow-r 3.2s var(--vk-ease) infinite; }
+@keyframes vk-brow-r { 0%, 100% { transform: none; } 18%, 34% { transform: translateY(-5px) rotate(-6deg); } 50% { transform: none; } 70%, 82% { transform: translateY(1.5px) rotate(-5deg); } }
+.rig-vodovoz .vk-mouth-shut { opacity: 0; animation: vk-lips 3.2s step-end infinite; }
+@keyframes vk-lips { 0% { opacity: 0; } 22% { opacity: 1; } 50% { opacity: 0; } }
+.rig-vodovoz .vk-mouth { opacity: 0; animation: vk-grin-show 6.4s step-end infinite; }
+@keyframes vk-grin-show { 0% { opacity: 0; } 62% { opacity: 1; } 76% { opacity: 0; } }
+.rig-vodovoz .vk-jaw { transform: translateY(-8px); animation: vk-grin 6.4s var(--vk-ease) infinite; }
+@keyframes vk-grin { 0%, 62%, 76%, 100% { transform: translateY(-8px); } 66% { transform: translateY(-5px); } 69% { transform: translateY(-8px); } 72% { transform: translateY(-5px); } }
+/* talking */
+.arena-photo.talking:not(.strike):not(.ouch) .rig-vodovoz:not(.dazed) .vk-mouth { animation: vk-talk-show 0.9s step-end infinite; }
+@keyframes vk-talk-show { 0% { opacity: 1; } 42% { opacity: 0; } 52% { opacity: 1; } 88% { opacity: 0; } }
+.arena-photo.talking:not(.strike):not(.ouch) .rig-vodovoz:not(.dazed) .vk-jaw { animation: vk-talk 0.9s var(--vk-ease) infinite; }
+@keyframes vk-talk { 0%, 100% { transform: translateY(-6px); } 18% { transform: translateY(1px); } 34% { transform: translateY(-4px); } 64% { transform: translateY(3px); } 80% { transform: translateY(-3px); } }
+.arena-photo.talking:not(.strike):not(.ouch) .rig-vodovoz:not(.dazed) .vk-mouth-shut { animation: none; opacity: 0; }
+.arena-photo.talking:not(.strike):not(.ouch) .rig-vodovoz:not(.dazed) .vk-brow-l { animation: vk-talk-brow-l 0.9s var(--vk-ease) infinite; }
+.arena-photo.talking:not(.strike):not(.ouch) .rig-vodovoz:not(.dazed) .vk-brow-r { animation: vk-talk-brow-r 0.9s var(--vk-ease) infinite; }
+@keyframes vk-talk-brow-l { 0%, 100% { transform: none; } 45% { transform: translateY(-3px) rotate(-3deg); } }
+@keyframes vk-talk-brow-r { 0%, 100% { transform: none; } 45% { transform: translateY(-4px) rotate(-4deg); } }
+/* the yell with the slam */
+.arena-photo.strike .rig-vodovoz .vk-mouth { animation: vk-yell-show 0.9s step-end both; }
+@keyframes vk-yell-show { 0% { opacity: 0; } 8% { opacity: 1; } 90% { opacity: 0; } }
+.arena-photo.strike .rig-vodovoz .vk-jaw { animation: vk-yell 0.9s var(--vk-ease) both; }
+@keyframes vk-yell { 0% { transform: translateY(-8px); } 30% { transform: translateY(-2px); } 52%, 78% { transform: translateY(5px); } 100% { transform: translateY(-8px); } }
+.arena-photo.strike .rig-vodovoz .vk-mouth-shut { animation: none; opacity: 0; }
+.arena-photo.strike .rig-vodovoz .vk-brow-l { animation: vk-angry-l 0.9s var(--vk-ease) both; }
+@keyframes vk-angry-l { 0%, 100% { transform: none; } 20%, 82% { transform: translateY(3px) rotate(10deg); } }
+.arena-photo.strike .rig-vodovoz .vk-brow-r { animation: vk-angry-r 0.9s var(--vk-ease) both; }
+@keyframes vk-angry-r { 0%, 100% { transform: none; } 20%, 82% { transform: translateY(3px) rotate(-10deg); } }
+.arena-photo.strike .rig-vodovoz .vk-pupils { animation: none; }
+/* a hit: eyes shut tight, teeth clenched, brows pinched */
+.arena-photo.ouch .rig-vodovoz .vk-lids { animation: vk-wince 0.7s step-end both; }
+@keyframes vk-wince { 0% { opacity: 1; } 100% { opacity: 0; } }
+.arena-photo.ouch .rig-vodovoz .vk-mouth { animation: vk-wince 0.7s step-end both; }
+.arena-photo.ouch .rig-vodovoz .vk-jaw { animation: none; transform: translateY(-9px); }
+.arena-photo.ouch .rig-vodovoz .vk-mouth-shut { animation: none; opacity: 0; }
+.arena-photo.ouch .rig-vodovoz .vk-brow-l { animation: vk-pinch-l 0.7s var(--vk-ease) both; }
+@keyframes vk-pinch-l { 0%, 70% { transform: translateY(3px) rotate(8deg); } 100% { transform: none; } }
+.arena-photo.ouch .rig-vodovoz .vk-brow-r { animation: vk-pinch-r 0.7s var(--vk-ease) both; }
+@keyframes vk-pinch-r { 0%, 70% { transform: translateY(3px) rotate(-8deg); } 100% { transform: none; } }
+/* dazed: gasping with the breath (1.2 s, in step with vk-fear-pant), sad brows, slow heavy blinks */
+.rig-vodovoz.dazed .vk-mouth { animation: none; opacity: 1; }
+.rig-vodovoz.dazed .vk-mouth-shut { animation: none; opacity: 0; }
+.rig-vodovoz.dazed .vk-jaw { animation: vk-fear-gasp 1.2s ease-in-out infinite; }
+@keyframes vk-fear-gasp { 0%, 100% { transform: translateY(-3px); } 40% { transform: translateY(4px); } }
+.rig-vodovoz.dazed .vk-brow-l { animation: vk-fear-brow-l 2.4s ease-in-out infinite; }
+@keyframes vk-fear-brow-l { 0%, 100% { transform: translateY(-3px) rotate(-9deg); } 50% { transform: translateY(-4px) rotate(-11deg); } }
+.rig-vodovoz.dazed .vk-brow-r { animation: vk-fear-brow-r 2.4s ease-in-out infinite; }
+@keyframes vk-fear-brow-r { 0%, 100% { transform: translateY(-3px) rotate(9deg); } 50% { transform: translateY(-4px) rotate(11deg); } }
+.rig-vodovoz.dazed .vk-lids { animation: vk-blink-fear 2.6s step-end infinite; }
+@keyframes vk-blink-fear { 0% { opacity: 0; } 66% { opacity: 1; } 84% { opacity: 0; } }
+.rig-vodovoz.dazed .vk-pupils { animation: vk-fear-look 3.4s ease-in-out infinite; }
+@keyframes vk-fear-look { 0%, 100% { transform: translate(-1px, 1.2px); } 50% { transform: translate(1.4px, 1px); } }
+
 @media (prefers-reduced-motion: reduce) {
   .rig-vodovoz .vk-root, .rig-vodovoz .vk-up, .rig-vodovoz .vk-head, .rig-vodovoz .vk-head-snap, .rig-vodovoz .vk-arm-r,
   .rig-vodovoz .vk-low-r, .rig-vodovoz .vk-hand-r, .rig-vodovoz .vk-arm-l, .rig-vodovoz .vk-low-l, .rig-vodovoz .vk-hand-l,
-  .rig-vodovoz .vk-bag, .arena-photo.strike:has(.rig-vodovoz) { animation: none; }
+  .rig-vodovoz .vk-bag, .arena-photo.strike:has(.rig-vodovoz), .rig-vodovoz .vk-pupils, .rig-vodovoz .vk-brow-l,
+  .rig-vodovoz .vk-brow-r, .rig-vodovoz .vk-lids, .rig-vodovoz .vk-mouth, .rig-vodovoz .vk-mouth-shut, .rig-vodovoz .vk-jaw { animation: none; }
 }

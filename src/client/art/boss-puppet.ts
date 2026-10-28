@@ -30,11 +30,18 @@ type Mesh = {
   posBuf: WebGLBuffer | null;
   uvBuf: WebGLBuffer | null;
   idxBuf: WebGLBuffer | null;
+  /** data-pp-fade="<class>": drawn with the opacity of that ancestor group (lids that blink, a mouth that opens) */
+  fade: Element | null;
+  /** data-pp-mask="<id>": drawn only inside the picture with data-pp-id="<id>" (pupils inside the eye whites) */
+  mask: string | null;
+  id: string | null;
 };
 
 const VS = `attribute vec2 p; attribute vec2 t; uniform vec2 r; varying vec2 v;
 void main(){ v = t; gl_Position = vec4(p.x / r.x * 2.0 - 1.0, 1.0 - p.y / r.y * 2.0, 0.0, 1.0); }`;
-const FS = `precision mediump float; varying vec2 v; uniform sampler2D s; void main(){ gl_FragColor = texture2D(s, v); }`;
+// a: the picture's opacity (data-pp-fade); cut: drop the see-through texels (drawing a mask into the stencil)
+const FS = `precision mediump float; varying vec2 v; uniform sampler2D s; uniform float a; uniform float cut;
+void main(){ vec4 c = texture2D(s, v); if (c.a < cut) discard; gl_FragColor = c * a; }`;
 
 const smooth = (a: number, b: number, x: number) => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
@@ -124,6 +131,8 @@ function buildMesh(gl: WebGLRenderingContext, img: SVGImageElement): Mesh {
     img, tex: null, pts: new Float32Array(pts), uv: new Float32Array(uv), idx: new Uint16Array(idx), w: W, bones,
     body: img.getAttribute("data-pp-body") === "1", box: [x, y, w, h],
     pos: new Float32Array(pts.length), posBuf: gl.createBuffer(), uvBuf: gl.createBuffer(), idxBuf: gl.createBuffer(),
+    fade: img.getAttribute("data-pp-fade") ? img.closest(`.${img.getAttribute("data-pp-fade")}`) : null,
+    mask: img.getAttribute("data-pp-mask"), id: img.getAttribute("data-pp-id"),
   };
   gl.bindBuffer(gl.ARRAY_BUFFER, mesh.uvBuf);
   gl.bufferData(gl.ARRAY_BUFFER, mesh.uv, gl.STATIC_DRAW);
@@ -133,7 +142,7 @@ function buildMesh(gl: WebGLRenderingContext, img: SVGImageElement): Mesh {
 }
 
 function setup(canvas: HTMLCanvasElement) {
-  const gl = canvas.getContext("webgl", { premultipliedAlpha: true, alpha: true, antialias: true }) as WebGLRenderingContext | null;
+  const gl = canvas.getContext("webgl", { premultipliedAlpha: true, alpha: true, antialias: true, stencil: true }) as WebGLRenderingContext | null;
   if (!gl) return null;
   const sh = (type: number, src: string) => {
     const s = gl.createShader(type)!;
@@ -150,7 +159,7 @@ function setup(canvas: HTMLCanvasElement) {
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
   gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
-  return { gl, aP: gl.getAttribLocation(prog, "p"), aT: gl.getAttribLocation(prog, "t"), uR: gl.getUniformLocation(prog, "r") };
+  return { gl, aP: gl.getAttribLocation(prog, "p"), aT: gl.getAttribLocation(prog, "t"), uR: gl.getUniformLocation(prog, "r"), uA: gl.getUniformLocation(prog, "a"), uC: gl.getUniformLocation(prog, "cut") };
 }
 
 function loadTex(gl: WebGLRenderingContext, href: string): Promise<WebGLTexture | null> {
@@ -253,15 +262,30 @@ export function usePuppet(wrap: RefObject<HTMLDivElement | null>, key: string, s
       const s = Math.min(cw / size.w, ch / size.h);
       const ox = (cw - size.w * s) / 2, oy = ch - size.h * s;
       for (const L of layers) {
-        const { gl, aP, aT, uR } = L.ctx;
+        const { gl, aP, aT, uR, uA, uC } = L.ctx;
         const pw = Math.round(cw * dpr), ph = Math.round(ch * dpr);
         if (L.canvas.width !== pw || L.canvas.height !== ph) { L.canvas.width = pw; L.canvas.height = ph; }
         gl.viewport(0, 0, pw, ph);
         gl.clearColor(0, 0, 0, 0);
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.uniform2f(uR, pw, ph);
+        gl.uniform1f(uA, 1);
+        gl.uniform1f(uC, -1);
+        const byId = new Map<string, Mesh>();
+        const draw = (m: Mesh) => {
+          gl.bindBuffer(gl.ARRAY_BUFFER, m.posBuf);
+          gl.enableVertexAttribArray(aP);
+          gl.vertexAttribPointer(aP, 2, gl.FLOAT, false, 0, 0);
+          gl.bindBuffer(gl.ARRAY_BUFFER, m.uvBuf);
+          gl.enableVertexAttribArray(aT);
+          gl.vertexAttribPointer(aT, 2, gl.FLOAT, false, 0, 0);
+          gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.idxBuf);
+          gl.bindTexture(gl.TEXTURE_2D, m.tex);
+          gl.drawElements(gl.TRIANGLES, m.idx.length, gl.UNSIGNED_SHORT, 0);
+        };
         for (const m of L.meshes) {
           if (!m.tex) continue;
+          const alpha = m.fade ? +getComputedStyle(m.fade).opacity : 1;
           const mats = m.bones.map((b) => rel(b, inv));
           const n = m.pts.length / 2;
           // the body's own breath: a soft swell of the chest (most at a third from the top), the legs still
@@ -287,14 +311,27 @@ export function usePuppet(wrap: RefObject<HTMLDivElement | null>, key: string, s
           }
           gl.bindBuffer(gl.ARRAY_BUFFER, m.posBuf);
           gl.bufferData(gl.ARRAY_BUFFER, m.pos, gl.DYNAMIC_DRAW);
-          gl.enableVertexAttribArray(aP);
-          gl.vertexAttribPointer(aP, 2, gl.FLOAT, false, 0, 0);
-          gl.bindBuffer(gl.ARRAY_BUFFER, m.uvBuf);
-          gl.enableVertexAttribArray(aT);
-          gl.vertexAttribPointer(aT, 2, gl.FLOAT, false, 0, 0);
-          gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.idxBuf);
-          gl.bindTexture(gl.TEXTURE_2D, m.tex);
-          gl.drawElements(gl.TRIANGLES, m.idx.length, gl.UNSIGNED_SHORT, 0);
+          if (m.id) byId.set(m.id, m);
+          if (alpha <= 0.001) continue;
+          const mask = m.mask ? byId.get(m.mask) : undefined;
+          if (mask) {
+            // the mask's opaque texels into the stencil, then this picture only where the stencil is set
+            gl.enable(gl.STENCIL_TEST);
+            gl.clear(gl.STENCIL_BUFFER_BIT);
+            gl.colorMask(false, false, false, false);
+            gl.stencilFunc(gl.ALWAYS, 1, 0xff);
+            gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
+            gl.uniform1f(uC, 0.5);
+            draw(mask);
+            gl.uniform1f(uC, -1);
+            gl.colorMask(true, true, true, true);
+            gl.stencilFunc(gl.EQUAL, 1, 0xff);
+            gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
+          }
+          if (alpha < 1) gl.uniform1f(uA, alpha);
+          draw(m);
+          if (alpha < 1) gl.uniform1f(uA, 1);
+          if (mask) gl.disable(gl.STENCIL_TEST);
         }
       }
     }

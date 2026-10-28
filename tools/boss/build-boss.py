@@ -14,6 +14,10 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 SCALE = 0.5
 # bosses drawn at the generator's size (1024×1536) keep it: halving would make them blurry on a phone
 SCALE_BY_BOSS = {}
+# parts whose picture is stored at this many times the rig's pixels (same place and size in the rig): Восток's face
+# is small on a big body, so its parts keep twice the detail
+HIRES_BY_BOSS = {"vodovoz": (2, {"head", "eyes", "pupils", "eyes-closed", "browL", "browR", "mouth-closed", "throat",
+                                 "teeth-up", "teeth-low", "head-open", "jaw"})}
 PARTS = ["tail", "legs", "body", "headset", "foreL", "foreR", "armL", "lowL", "handL", "bag", "armR", "lowR", "handR", "head", "head-open", "throat", "teeth-up", "teeth-low", "jaw", "eyes", "eyes-closed", "pupils", "brows", "brows-sad", "browL", "browR", "mouth", "mouth-closed", "collar"]
 # puppet-warped sequences (<part>@0.png, <part>@1.png …): one strip <part>.webp, frames side by side, frame 0 first
 FRAMES = ["brows", "jaw"]
@@ -36,7 +40,8 @@ PIVOT_BY_BOSS = {
                 "browL": [535.5, 249.1], "browR": [556.6, 249.1]},  # printed by assemble-babafey.py
     # Восток (layers by the artist, 2000×2800): neck, shoulders, elbows, wrists; the bag hangs from the left fist
     "vodovoz": {"head": [590.0, 395.0], "armL": [432.0, 435.0], "lowL": [322.0, 588.0], "handL": [222.0, 478.0],
-                "bag": [182.0, 448.0], "armR": [686.0, 440.0], "lowR": [722.0, 615.0], "handR": [652.0, 508.0]},
+                "bag": [182.0, 448.0], "armR": [686.0, 440.0], "lowR": [722.0, 615.0], "handR": [652.0, 508.0],
+                "browL": [604.0, 257.6], "browR": [619.0, 262.3]},
 }
 
 import sys, re
@@ -70,7 +75,9 @@ for d in sorted(x for x in glob.glob(os.path.join(HERE, "source", "*")) if os.pa
         x0, y0, x1, y1 = xs.min() - 3, ys.min() - 3, xs.max() + 4, ys.max() + 4
         crop = Image.fromarray(im[max(0, y0):y1, max(0, x0):x1])
         w, h = round(crop.width * SCALE), round(crop.height * SCALE)
-        crop.resize((w, h), Image.LANCZOS).save(os.path.join(dest, p + ".webp"), "WEBP", quality=86, method=4)
+        k, hires = HIRES_BY_BOSS.get(boss, (1, set()))
+        k = k if p in hires else 1
+        crop.resize((w * k, h * k), Image.LANCZOS).save(os.path.join(dest, p + ".webp"), "WEBP", quality=86, method=4)
         r = {"x": round(max(0, x0) * SCALE, 1), "y": round(max(0, y0) * SCALE, 1), "w": w, "h": h}
         joint = {**JOINT, **JOINT_BY_BOSS.get(boss, {})}
         if p in joint:

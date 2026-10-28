@@ -231,10 +231,37 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
     // also carries an empty elbow joint, so the end of the upper arm bends with the forearm. The bag hangs from the
     // left fist (no joint of its own: it swings rigid).
     const pp = puppet ? "back" : undefined;
-    const pic = (p: string, follow?: string) => {
+    // follow: the top goes with that group (the legs with the hips); fade: drawn with that group's opacity;
+    // ppId / mask: the pupils are drawn only inside the eye whites
+    const pic = (p: string, o: { follow?: string; fade?: string; ppId?: string; mask?: string } = {}) => {
       const r: Part | undefined = P[p];
-      return r ? <image className={puppet ? "pp" : undefined} data-pp={pp} data-pp-follow={puppet ? follow : undefined} href={`/bosses/${id}/rig/${p}.webp${r.v ? `?v=${r.v}` : ""}`} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" /> : null;
+      return r ? <image className={puppet ? "pp" : undefined} data-pp={pp} data-pp-follow={puppet ? o.follow : undefined}
+        data-pp-fade={puppet ? o.fade : undefined} data-pp-id={puppet ? o.ppId : undefined} data-pp-mask={puppet ? o.mask : undefined}
+        href={`/bosses/${id}/rig/${p}.webp${r.v ? `?v=${r.v}` : ""}`} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" /> : null;
     };
+    const mouth = { fade: "vk-mouth" };
+    // the face in layers (the artist's parts): whites, pupils rolling inside them, lids that blink, each brow turning
+    // at its inner end; the mouth: his own smirk (the head) — tight lips (mouth-closed) — or open: the throat, both
+    // rows of teeth and the lips, the lower lip with the chin (jaw) dropping to talk and yell, rising to bare the teeth
+    const face = (
+      <>
+        {pic("head")}
+        {pic("eyes", { ppId: "eyes" })}
+        {!puppet && <mask id={`vk-eyes-${id}`} style={{ maskType: "alpha" }} maskUnits="userSpaceOnUse" x="0" y="0" width={rig.w} height={rig.h}>{pic("eyes")}</mask>}
+        <g mask={puppet ? undefined : `url(#vk-eyes-${id})`}><g className="vk-pupils">{pic("pupils", { mask: "eyes" })}</g></g>
+        <g className="vk-lids">{pic("eyes-closed", { fade: "vk-lids" })}</g>
+        <g className="vk-brow-l" style={origin("browL")}>{pic("browL")}</g>
+        <g className="vk-brow-r" style={origin("browR")}>{pic("browR")}</g>
+        <g className="vk-mouth-shut">{pic("mouth-closed", { fade: "vk-mouth-shut" })}</g>
+        <g className="vk-mouth">
+          {pic("throat", mouth)}
+          <g className="vk-jaw">{pic("teeth-low", mouth)}</g>
+          {pic("teeth-up", mouth)}
+          {pic("head-open", mouth)}
+          <g className="vk-jaw">{pic("jaw", mouth)}</g>
+        </g>
+      </>
+    );
     const bone = (cls: string, p: string, kids: ReactNode, size?: number) => (
       <g className={cls} {...joint(p)} data-pp-size={size} style={origin(p)}>{kids}</g>
     );
@@ -243,7 +270,7 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
       <svg key={id} ref={svgRef} className={`boss-rig rig-${baseId} ${dazed ? "dazed" : ""}`} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} width="100%" height="100%" preserveAspectRatio={bust ? "xMidYMin slice" : "xMidYMax meet"} aria-hidden="true">
         <g className="vk-root" style={{ transformOrigin: `${rig.w / 2}px ${rig.h - 30}px`, transformBox: "view-box" }}>
           <g className="vk-up" style={hips}>{bone("vk-arm-r", "armR", <>{pic("armR")}{bone("vk-low-r", "lowR", null, 150)}</>, 150)}</g>
-          {pic("legs", "vk-up")}
+          {pic("legs", { follow: "vk-up" })}
           <g className="vk-up" style={hips}>
             {bone("vk-arm-l", "armL", <>{pic("armL")}{bone("vk-low-l", "lowL", null, 150)}</>, 150)}
             {pic("body")}
@@ -252,7 +279,7 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
               {bone("vk-hand-l", "handL", <>{pic("handL")}<g className="vk-bag" style={origin("bag")}>{pic("bag")}</g></>, 90)}
             </>, 150), 150)}
             {pic("headset")}
-            {bone("vk-head", "head", <g className="vk-head-snap" style={origin("head")}>{pic("head")}</g>, 160)}
+            {bone("vk-head", "head", <g className="vk-head-snap" style={origin("head")}>{face}</g>, 160)}
             {bone("vk-arm-r", "armR", bone("vk-low-r", "lowR", <>
               {pic("lowR")}
               {bone("vk-hand-r", "handR", pic("handR"), 90)}

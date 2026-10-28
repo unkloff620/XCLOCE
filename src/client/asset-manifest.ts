@@ -614,11 +614,22 @@ export const ASSET_FILES: string[] = [
  "/bosses/vodovoz/rig/armR.webp",
  "/bosses/vodovoz/rig/bag.webp",
  "/bosses/vodovoz/rig/body.webp",
+ "/bosses/vodovoz/rig/browL.webp",
+ "/bosses/vodovoz/rig/browR.webp",
+ "/bosses/vodovoz/rig/eyes-closed.webp",
+ "/bosses/vodovoz/rig/eyes.webp",
  "/bosses/vodovoz/rig/handL.webp",
  "/bosses/vodovoz/rig/handR.webp",
+ "/bosses/vodovoz/rig/head-open.webp",
  "/bosses/vodovoz/rig/head.webp",
  "/bosses/vodovoz/rig/headset.webp",
+ "/bosses/vodovoz/rig/jaw.webp",
  "/bosses/vodovoz/rig/legs.webp",
  "/bosses/vodovoz/rig/lowL.webp",
- "/bosses/vodovoz/rig/lowR.webp"
+ "/bosses/vodovoz/rig/lowR.webp",
+ "/bosses/vodovoz/rig/mouth-closed.webp",
+ "/bosses/vodovoz/rig/pupils.webp",
+ "/bosses/vodovoz/rig/teeth-low.webp",
+ "/bosses/vodovoz/rig/teeth-up.webp",
+ "/bosses/vodovoz/rig/throat.webp"
 ];
