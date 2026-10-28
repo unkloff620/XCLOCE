@@ -18,7 +18,7 @@ import { useEffect, useRef, type CSSProperties, type ReactNode, type RefObject }
 import { usePuppet } from "./boss-puppet.ts";
 import { BOSS_RIGS } from "./boss-rig-data.ts";
 
-type Part = { x: number; y: number; w: number; h: number; pivot?: readonly number[]; frames?: number };
+type Part = { x: number; y: number; w: number; h: number; pivot?: readonly number[]; frames?: number; v?: string };
 
 /** bosses whose far arm (R or L) goes behind the body */
 const BEHIND: Record<string, "L" | "R"> = { mugo: "R", babafey: "L" };
@@ -162,7 +162,7 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
   // pp: the picture is warped by the puppet (boss-puppet.ts) on the back or front canvas; the SVG copy hides then
   const img = (p: string, extra?: string, pp?: "back" | "front") => {
     const r: Part | undefined = P[p];
-    return r ? <image className={pp && puppet ? `pp ${extra ?? ""}` : extra} data-pp={pp && puppet ? pp : undefined} data-pp-body={pp && puppet && p === "body" ? "1" : undefined} href={`/bosses/${id}/rig/${p}.webp`} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" /> : null;
+    return r ? <image className={pp && puppet ? `pp ${extra ?? ""}` : extra} data-pp={pp && puppet ? pp : undefined} data-pp-body={pp && puppet && p === "body" ? "1" : undefined} href={`/bosses/${id}/rig/${p}.webp${r.v ? `?v=${r.v}` : ""}`} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" /> : null;
   };
   const origin = (p: string) => {
     const pv = P[p]?.pivot ?? [rig.w / 2, rig.h];
@@ -207,7 +207,7 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
     if (!r?.frames) return null;
     return (
       <svg x={r.x} y={r.y} width={r.w} height={r.h} viewBox={`0 0 ${r.w} ${r.h}`} overflow="hidden">
-        <image className={`brf brf-${p}`} href={`/bosses/${id}/rig/${p}.webp`} x={0} y={0} width={r.w * r.frames} height={r.h} preserveAspectRatio="none" />
+        <image className={`brf brf-${p}`} href={`/bosses/${id}/rig/${p}.webp${r.v ? `?v=${r.v}` : ""}`} x={0} y={0} width={r.w * r.frames} height={r.h} preserveAspectRatio="none" />
       </svg>
     );
   };

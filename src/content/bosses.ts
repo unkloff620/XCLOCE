@@ -54,7 +54,11 @@ const hp = (i: number) => HP[i];
 /** Authority for a win: 100 for Дацкоу … 1 500 000 for Солнце (×≈3.3 per boss, smaller steps across the inserted bosses). */
 const XP = [100, 350, 1_100, 1_700, 2_600, 3_700, 12_000, 40_000, 60_000, 90_000, 135_000, 450_000, 1_500_000];
 const xp = (i: number) => XP[i];
-const photo = (id: string, has = false) => (has ? { portrait: `/bosses/${id}/portrait.webp`, full: `/bosses/${id}/full.webp`, card: `/bosses/${id}/card.webp` } : { portrait: null, full: null });
+/** `v`: bump when the pictures are redrawn under the same names, so phones don't keep the old ones from the cache */
+const photo = (id: string, has = false, v = "") => {
+  const q = v ? `?v=${v}` : "";
+  return has ? { portrait: `/bosses/${id}/portrait.webp${q}`, full: `/bosses/${id}/full.webp${q}`, card: `/bosses/${id}/card.webp${q}` } : { portrait: null, full: null };
+};
 
 /**
  * Strict order, weakest first: Дацкоу → … → Солнце (final) — the Close hierarchy from the bottom up.
@@ -115,7 +119,7 @@ export const BOSSES: BossDef[] = [
     story: "Солнце встаёт на востоке, а Восток встаёт раньше Солнца. Проверяет всех ещё до начала смены.",
     hp: hp(6), reward: { xp: xp(6), currencies: { USD: 16, RUB: 560 } },
     drop: [{ id: "energy-drink", qty: 3, chance: 0.4 }],
-    theme: { a: "#0f3440", b: "#041217", accent: "#38d6ff" }, photo: photo("vodovoz", true),
+    theme: { a: "#0f3440", b: "#041217", accent: "#38d6ff" }, photo: photo("vodovoz", true, "2"),
     keysToUnlock: 1,
   },
   {
