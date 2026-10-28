@@ -91,10 +91,19 @@ function buildMesh(gl: WebGLRenderingContext, img: SVGImageElement): Mesh {
     const im = el.querySelector("image");
     return im ? Math.min(+im.getAttribute("width")!, +im.getAttribute("height")!) : 80;
   };
+  // data-pp-follow="<class>": the picture's top goes with that group and its bottom stays (Восток's legs: the hips
+  // bob with the upper body, the feet stay planted) — the weight fades from the top fifth to the middle
+  const follow = img.getAttribute("data-pp-follow");
+  const followEl = follow ? img.ownerSVGElement?.querySelector(`.${follow}`) ?? null : null;
+  const followSlot = followEl ? bones.push(followEl) - 1 : -1;
   const W: { slot: number; k: number }[][] = [];
   for (let n = 0; n < pts.length / 2; n++) {
     const px = pts[n * 2], py = pts[n * 2 + 1];
     const ws: { slot: number; k: number }[] = [{ slot: 0, k: 1 }];
+    if (followSlot >= 0) {
+      const f = 1 - smooth(y + h * 0.18, y + h * 0.6, py);
+      if (f > 0.002) { ws[0].k -= f; ws.push({ slot: followSlot, k: f }); }
+    }
     // blend towards the parent near our own joint
     if (parent && ownPivot) {
       const R = Math.max(16, Math.min(70, size(own) * 0.42));

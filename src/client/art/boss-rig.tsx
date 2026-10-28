@@ -25,7 +25,7 @@ const BEHIND: Record<string, "L" | "R"> = { mugo: "R", babafey: "L" };
 /** of these the arm in BEHIND goes behind only with its shoulder: the forearm and the hand stay in front of everything */
 const SPLIT_BEHIND = new Set(["babafey"]);
 /** rigs drawn as plain SVG only */
-const NO_PUPPET = new Set<string>(["vodovoz"]);
+const NO_PUPPET = new Set<string>();
 
 /** frame schedules of the puppet strips: [frame, ms] — idle loops, ouch/strike play once */
 type SeqMode = "idle" | "ouch" | "strike" | "fear";
@@ -224,34 +224,51 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
       @media (prefers-reduced-motion: reduce) { ${sel} { animation: none; } }`;
   }).join("\n");
   if (baseId === "vodovoz") {
-    // Восток in the artist's layers (screens.css «Восток»): legs planted, the upper body bobs at the hips; both shoulders
-    // go behind the torso and the forearms in front — each arm is drawn twice (shoulder piece behind, forearm + fist in
-    // front) in groups with the same class, so both copies turn together. The bag hangs from the left fist.
-    const g = (cls: string, p: string, kids: ReactNode) => <g className={cls} style={origin(p)}>{kids}</g>;
+    // Восток in the artist's layers (screens.css «Восток»), all drawn by the puppet as soft meshes on one canvas in this
+    // order: the shoulders, the elbows, the wrists and the neck bend smoothly, the hips bend with the upper body.
+    // Both shoulders go behind the torso and the forearms in front, so each arm is drawn twice — the shoulder piece
+    // behind, the forearm and the fist in front — in groups with the same class that turn together; the shoulder copy
+    // also carries an empty elbow joint, so the end of the upper arm bends with the forearm. The bag hangs from the
+    // left fist (no joint of its own: it swings rigid).
+    const pp = puppet ? "back" : undefined;
+    const pic = (p: string, follow?: string) => {
+      const r: Part | undefined = P[p];
+      return r ? <image className={puppet ? "pp" : undefined} data-pp={pp} data-pp-follow={puppet ? follow : undefined} href={`/bosses/${id}/rig/${p}.webp${r.v ? `?v=${r.v}` : ""}`} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" /> : null;
+    };
+    const bone = (cls: string, p: string, kids: ReactNode, size?: number) => (
+      <g className={cls} {...joint(p)} data-pp-size={size} style={origin(p)}>{kids}</g>
+    );
     const hips = { transformOrigin: `${rig.w * 0.56}px ${rig.h * 0.6}px`, transformBox: "view-box" as const };
-    const vk = (
+    const svgEl = (
       <svg key={id} ref={svgRef} className={`boss-rig rig-${baseId} ${dazed ? "dazed" : ""}`} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} width="100%" height="100%" preserveAspectRatio={bust ? "xMidYMin slice" : "xMidYMax meet"} aria-hidden="true">
         <g className="vk-root" style={{ transformOrigin: `${rig.w / 2}px ${rig.h - 30}px`, transformBox: "view-box" }}>
-          <g className="vk-up" style={hips}>{g("vk-arm-r", "armR", img("armR"))}</g>
-          {img("legs")}
+          <g className="vk-up" style={hips}>{bone("vk-arm-r", "armR", <>{pic("armR")}{bone("vk-low-r", "lowR", null, 150)}</>, 150)}</g>
+          {pic("legs", "vk-up")}
           <g className="vk-up" style={hips}>
-            {g("vk-arm-l", "armL", img("armL"))}
-            {img("body")}
-            {g("vk-arm-l", "armL", g("vk-low-l", "lowL", <>
-              {img("lowL")}
-              {g("vk-hand-l", "handL", <>{img("handL")}{g("vk-bag", "bag", img("bag"))}</>)}
-            </>))}
-            {img("headset")}
-            {g("vk-head", "head", g("vk-head-snap", "head", img("head")))}
-            {g("vk-arm-r", "armR", g("vk-low-r", "lowR", <>
-              {img("lowR")}
-              {g("vk-hand-r", "handR", img("handR"))}
-            </>))}
+            {bone("vk-arm-l", "armL", <>{pic("armL")}{bone("vk-low-l", "lowL", null, 150)}</>, 150)}
+            {pic("body")}
+            {bone("vk-arm-l", "armL", bone("vk-low-l", "lowL", <>
+              {pic("lowL")}
+              {bone("vk-hand-l", "handL", <>{pic("handL")}<g className="vk-bag" style={origin("bag")}>{pic("bag")}</g></>, 90)}
+            </>, 150), 150)}
+            {pic("headset")}
+            {bone("vk-head", "head", <g className="vk-head-snap" style={origin("head")}>{pic("head")}</g>, 160)}
+            {bone("vk-arm-r", "armR", bone("vk-low-r", "lowR", <>
+              {pic("lowR")}
+              {bone("vk-hand-r", "handR", pic("handR"), 90)}
+            </>, 150), 150)}
           </g>
         </g>
       </svg>
     );
-    return vk;
+    if (!puppet) return svgEl;
+    return (
+      <div ref={wrapRef} key={id} className={`br-pup rig-${baseId}-pup`}>
+        <canvas className="br-pup-back" aria-hidden="true" />
+        {svgEl}
+        <canvas className="br-pup-front" aria-hidden="true" />
+      </div>
+    );
   }
   const behind = BEHIND[baseId];
   const split = SPLIT_BEHIND.has(baseId);
