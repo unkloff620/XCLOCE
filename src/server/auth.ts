@@ -1,6 +1,5 @@
 import { createHash, createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { GameError } from "./db.ts";
-import { isProduction } from "./platform.ts";
 
 export interface TelegramUser {
   id: number;
@@ -103,7 +102,7 @@ export function verifySession(token: string | null | undefined, nowS = Math.floo
 export function guestAllowed(): boolean {
   if (process.env.ALLOW_GUEST === "true") return true;
   if (process.env.ALLOW_GUEST === "false") return false;
-  return !isProduction();
+  return process.env.VERCEL_ENV !== "production";
 }
 
 /**
@@ -170,5 +169,5 @@ export function verifyAdminSession(token: string | null | undefined, nowS = Math
 
 /** Sandbox / local only: sign in to the admin panel by Telegram id without the widget. Never in production. */
 export function adminDevLogin(): boolean {
-  return process.env.ADMIN_DEV_LOGIN === "true" && !isProduction();
+  return process.env.ADMIN_DEV_LOGIN === "true" && process.env.VERCEL_ENV !== "production";
 }

@@ -5,7 +5,6 @@ import { bossById } from "../content/bosses.ts";
 import { itemById } from "../content/items.ts";
 import { DUEL_ANSWER_MS } from "../content/games.ts";
 import { log } from "./log.ts";
-import { knownOrigin } from "./platform.ts";
 
 /*
  * Telegram reminders, the sending half. Runs after API requests (throttled to once per 20 s across all instances)
@@ -26,8 +25,7 @@ interface Due { player_id: number; kind: string; due_at: Date; meta: Record<stri
 export function appUrl(): string | null {
   if (process.env.APP_URL) return process.env.APP_URL;
   if (process.env.VERCEL_PROJECT_PRODUCTION_URL) return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
-  if (process.env.RAILWAY_PUBLIC_DOMAIN) return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
-  return knownOrigin();
+  return null;
 }
 
 /** The text of a reminder, or null when its reason is gone. */
