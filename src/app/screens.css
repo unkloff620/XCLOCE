@@ -3371,8 +3371,7 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 }
 .arena-photo.strike .rig-vodovoz .vk-head { animation: vk-yell-head 0.9s var(--vk-ease) both; }
 @keyframes vk-yell-head { 0% { transform: none; } 36% { transform: rotate(5deg) translateY(-6px); } 56%, 72% { transform: rotate(-8deg) translate(-6px, 6px); } 100% { transform: none; } }
-.arena-photo.strike .rig-vodovoz .vk-low-r, .arena-photo.strike .rig-vodovoz .vk-hand-r, .arena-photo.strike .rig-vodovoz .vk-arm-r,
-.arena-photo.strike .rig-vodovoz .vk-root { animation: none; }
+/* the right arm and the shuffle keep going through the slam: stopping them made the arm jump to its rest pose */
 .arena-photo.strike:has(.rig-vodovoz) { animation: vk-impact 0.9s linear both; }
 @keyframes vk-impact { 0%, 52%, 70%, 100% { transform: none; } 56% { transform: translate(-9px, 5px); } 61% { transform: translate(7px, -4px); } 66% { transform: translate(-3px, 2px); } }
 /* talking (his line on screen): nods in time with the words */
@@ -3503,3 +3502,12 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 /* Восток: the lower lip and chin stay where the artist drew them (a moving jaw showed the dark mouth at the corners);
    only the teeth move — the lower row grinds side to side */
 .rig-vodovoz .vk-jaw { animation: none !important; transform: none !important; }
+
+/* Восток: the straps hanging in the air off his right arm swing like pendulums, each in its own beat (puppet warp) */
+.rig-vodovoz .vk-strap { animation: vk-dangle 1.6s ease-in-out infinite; }
+.rig-vodovoz .vk-strap-b { animation-duration: 1.9s; animation-delay: -0.5s; }
+.rig-vodovoz .vk-strap-c { animation-duration: 1.4s; animation-delay: -0.9s; }
+@keyframes vk-dangle { 0%, 100% { transform: rotate(-9deg); } 50% { transform: rotate(9deg); } }
+.rig-vodovoz.dazed .vk-strap { animation-name: vk-dangle-slow; }
+@keyframes vk-dangle-slow { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+@media (prefers-reduced-motion: reduce) { .rig-vodovoz .vk-strap { animation: none; } }

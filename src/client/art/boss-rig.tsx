@@ -267,11 +267,17 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
     const bone = (cls: string, p: string, kids: ReactNode, size?: number) => (
       <g className={cls} {...joint(p)} data-pp-size={size} style={origin(p)}>{kids}</g>
     );
+    // a strap hanging in the air off the right arm: an empty bone at its root that swings; the puppet bends the strap
+    // (and only the strap) of the picture it lies on towards that bone, more and more down to its tip
+    const strap = (cls: string, root: [number, number], tip: [number, number], halfW: number) => (
+      <g className={cls} data-pivot={`${root[0]},${root[1]}`} data-pp-dangle={`${tip[0]},${tip[1]},${halfW}`}
+        style={{ transformOrigin: `${root[0]}px ${root[1]}px`, transformBox: "view-box" }} />
+    );
     const hips = { transformOrigin: `${rig.w * 0.56}px ${rig.h * 0.6}px`, transformBox: "view-box" as const };
     const svgEl = (
       <svg key={id} ref={svgRef} className={`boss-rig rig-${baseId} ${dazed ? "dazed" : ""}`} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} width="100%" height="100%" preserveAspectRatio={bust ? "xMidYMin slice" : "xMidYMax meet"} aria-hidden="true">
         <g className="vk-root" style={{ transformOrigin: `${rig.w / 2}px ${rig.h - 30}px`, transformBox: "view-box" }}>
-          <g className="vk-up" style={hips}>{bone("vk-arm-r", "armR", <>{pic("armR")}{bone("vk-low-r", "lowR", null, 150)}</>, 150)}</g>
+          <g className="vk-up" style={hips}>{bone("vk-arm-r", "armR", <>{pic("armR")}{bone("vk-low-r", "lowR", null, 150)}{strap("vk-strap vk-strap-a", [812, 650], [840, 785], 9)}</>, 150)}</g>
           {pic("legs", { follow: "vk-up" })}
           <g className="vk-up" style={hips}>
             {bone("vk-arm-l", "armL", <>{pic("armL")}{bone("vk-low-l", "lowL", null, 150)}</>, 150)}
@@ -284,6 +290,8 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
             {bone("vk-head", "head", <g className="vk-head-snap" style={origin("head")}>{face}</g>, 160)}
             {bone("vk-arm-r", "armR", bone("vk-low-r", "lowR", <>
               {pic("lowR")}
+              {strap("vk-strap vk-strap-b", [744, 612], [747, 750], 11)}
+              {strap("vk-strap vk-strap-c", [658, 596], [650, 668], 10)}
               {bone("vk-hand-r", "handR", pic("handR"), 90)}
             </>, 150), 150)}
           </g>

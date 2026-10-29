@@ -121,6 +121,19 @@ function buildMesh(gl: WebGLRenderingContext, img: SVGImageElement): Mesh {
     kids.forEach((kid, i) => {
       const pv = pivotOf(kid);
       if (!pv) return;
+      // a strap hanging in the air (data-pp-dangle="tipX,tipY,halfWidth"): from its root (the pivot) to its tip the
+      // strap's own bone takes over more and more, only within the strap's width — so it swings, the rest stays
+      const dangle = kid.getAttribute("data-pp-dangle");
+      if (dangle) {
+        const [tx, ty, hw] = dangle.split(",").map(Number);
+        const dx = tx - pv[0], dy = ty - pv[1], len2 = dx * dx + dy * dy || 1;
+        const t = ((px - pv[0]) * dx + (py - pv[1]) * dy) / len2;
+        if (t <= 0 || t > 2) return;
+        const d = Math.abs((px - pv[0]) * dy - (py - pv[1]) * dx) / Math.sqrt(len2);
+        const f = Math.min(ws[0].k, smooth(0, 0.7, t) * (1 - smooth(hw, hw * 1.8, d)));
+        if (f > 0.002) { ws[0].k -= f; ws.push({ slot: (parent ? 2 : 1) + i, k: f }); }
+        return;
+      }
       const R = Math.max(16, Math.min(70, size(kid) * 0.42));
       const f = 0.5 * (1 - smooth(0, R, Math.hypot(px - pv[0], py - pv[1])));
       if (f > 0.002) { ws[0].k -= f; ws.push({ slot: (parent ? 2 : 1) + i, k: f }); }
