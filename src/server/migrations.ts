@@ -1070,4 +1070,13 @@ CREATE TABLE IF NOT EXISTS location_business (
 );
 `,
   },
+  {
+    // weekly mini-game boards: zonk by the best score of one game, poker by the best hand (pokerRank), not by xp
+    // (counted from now on)
+    id: "v2-060-game-best",
+    sql: `
+ALTER TABLE game_weekly ADD COLUMN IF NOT EXISTS zonk_best INT NOT NULL DEFAULT 0;
+ALTER TABLE game_weekly ADD COLUMN IF NOT EXISTS poker_best INT NOT NULL DEFAULT 0;
+`,
+  },
 ];

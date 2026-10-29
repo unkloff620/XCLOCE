@@ -4,7 +4,7 @@
  * только сервер.
  */
 import { GameError, type Queryable } from "../db.ts";
-import { addGameWeekly } from "./minigame-extras.ts";
+import { addGameWeekly, setGameBest } from "./minigame-extras.ts";
 import { duelScore } from "./duels.ts";
 import { addItem, addMoney, grantReward, itemQty, ledger, moscowDay, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { useItem } from "./shop.ts";
@@ -12,6 +12,7 @@ import { ZONK_CONT_PENALTY, UPGRADE_RULES, POKER_RULES, POKER_CHIP, pokerCheats,
   GAME_RULES, ITEM_VALUES, ZONK_BANK_MIN, ZONK_DICE, ZONK_FAIL_XP, ZONK_LEVELS, ZONK_ROUNDS, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue,
   zonkHasScore, zonkLevelDef, zonkScore, zonkXpLevel,
   type Card, type GameKind,
+  pokerRank,
 } from "../../content/games.ts";
 import { itemById } from "../../content/items.ts";
 import type { Reward } from "../../content/rewards.ts";
@@ -146,6 +147,7 @@ async function finishZonk(ctx: Ctx, g: GameRow, gaveUp = false) {
     g.result = { outcome: "duel", title: gaveUp ? "Дуэль: сдался" : `Дуэль: ${points} очков`, reward: null, points, xp: ZONK_FAIL_XP, duel: s.duel };
     await save(ctx, g);
     await duelScore(ctx, s.duel, points);
+    await setGameBest(ctx, "zonk_best", points);
     return;
   }
   const def = zonkLevelDef(s.level ?? 1)!;
@@ -156,6 +158,7 @@ async function finishZonk(ctx: Ctx, g: GameRow, gaveUp = false) {
     s.roll = [];
     s.ask = false;
     g.status = "done";
+    await setGameBest(ctx, "zonk_best", points);
     g.result = { outcome: "win", title: `Уровень ${def.level} пройден: ${points} очков`, reward: s.prize?.reward ?? null, points, won: true, xp: s.prize?.xp ?? def.winXp };
     await save(ctx, g);
     return;
@@ -166,6 +169,7 @@ async function finishZonk(ctx: Ctx, g: GameRow, gaveUp = false) {
   const reward = isEmpty(pay) ? null : await grantReward(ctx, pay, `game:zonk:${def.level}:${won ? "win" : "fail"}:${points}`);
   await ctx.q.query("UPDATE players SET zonk_xp = zonk_xp + $2 WHERE id=$1", [ctx.pid, xp]);
   await addGameWeekly(ctx, "zonk", xp);
+  if (!gaveUp) await setGameBest(ctx, "zonk_best", points);
   s.roll = [];
   g.status = "done";
   g.result = won
@@ -390,6 +394,7 @@ async function settlePoker(ctx: Ctx, gameId: number | null, cards: Card[], swapp
   const reward = isEmpty(pay) ? null : await grantReward(ctx, pay, `game:poker:${hand}`);
   const [u] = await ctx.q.query<{ poker_xp: number }>("UPDATE players SET poker_xp = poker_xp + $2 WHERE id=$1 RETURNING poker_xp", [ctx.pid, def.xp]);
   await addGameWeekly(ctx, "poker", def.xp);
+  await setGameBest(ctx, "poker_best", pokerRank(hand));
   const after = pokerLevel(Number(u.poker_xp));
   const result: GameResult = { outcome: hand, title: def.name, reward };
   if (gameId === null) {

@@ -3596,3 +3596,6 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .modal-back:not(.full):not(.page) > .modal { max-height: 100%; }
 /* the page's inside scrolls up and down by itself; the folder only takes clear sideways swipes */
 .dos-book .dos-inner { touch-action: pan-y; -webkit-overflow-scrolling: touch; }
+/* places 1–3 in the ratings: drawn medals instead of emoji */
+.rt-medal { width: 30px; height: 30px; object-fit: contain; display: block; margin: 0 auto; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.45)); }
+.rt-last-one .rt-medal { width: 22px; height: 22px; }

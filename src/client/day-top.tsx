@@ -18,7 +18,7 @@ interface Top { game: "bj" | "poker"; day: "today" | "yesterday"; top: Row[]; me
 /** dollars: whole or with cents */
 const money = (v: number) => (Math.round(v * 100) / 100).toLocaleString("ru-RU", { maximumFractionDigits: 2 });
 const handName = (id?: string) => POKER_HANDS.find((h) => h.id === id)?.name ?? "—";
-const MEDAL = ["🥇", "🥈", "🥉"];
+const MEDAL = ["gold", "silver", "bronze"];
 
 function DayTopWindow({ game, onClose }: { game: "bj" | "poker"; onClose: () => void }) {
   const { state } = useGame();
@@ -48,7 +48,7 @@ function DayTopWindow({ game, onClose }: { game: "bj" | "poker"; onClose: () => 
             : !data.top.length ? <span className="tiny muted center">{day === "today" ? "Сегодня ещё никого — будь первым!" : "Вчера никто не играл"}</span>
             : data.top.map((r) => (
               <div key={r.id} className={`dt-row p${r.place} ${r.id === state?.player.id ? "me" : ""}`}>
-                <span className="dt-place">{MEDAL[r.place - 1] ?? <b className="num">{r.place}</b>}</span>
+                <span className="dt-place">{/* eslint-disable-next-line @next/next/no-img-element */}{MEDAL[r.place - 1] ? <img className="rt-medal" src={`/assets/ui/place-${MEDAL[r.place - 1]}.webp`} alt={`${r.place} место`} draggable={false} /> : <b className="num">{r.place}</b>}</span>
                 <Avatar name={r.name} photo={r.photo} size={30} />
                 <b className="ellipsis grow">{r.name}</b>
                 <span className="dt-val">{value(r)}</span>

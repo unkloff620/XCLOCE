@@ -114,6 +114,9 @@ function CreateClan({ emblems, colors, onClose }: { emblems: string[]; colors: s
   );
 }
 
+/** drawn place medals (public/assets/ui/place-*.webp) */
+const PLACE_ART = new Set(["gold", "silver", "bronze"]);
+
 export function ClansScreen() {
   const { state } = useGame();
   const router = useRouter();
@@ -198,7 +201,7 @@ export function ClansScreen() {
 function ClanWeek({ c }: { c: ClanPage }) {
   const p = c.week.prizes;
   const rows: { place: string; r: Reward; on: boolean }[] = [
-    ...p.slice(0, 3).map((r, i) => ({ place: ["🥇", "🥈", "🥉"][i], r, on: c.week.place === i + 1 })),
+    ...p.slice(0, 3).map((r, i) => ({ place: ["gold", "silver", "bronze"][i], r, on: c.week.place === i + 1 })),
     ...(p[3] ? [{ place: `4–${p.length}`, r: p[3], on: !!c.week.place && c.week.place >= 4 && c.week.place <= p.length }] : []),
   ];
   return (
@@ -211,7 +214,8 @@ function ClanWeek({ c }: { c: ClanPage }) {
       <div className="col" style={{ gap: 5 }}>
         {rows.map((x) => (
           <div key={x.place} className={`clan-prize${x.on ? " on" : ""}`}>
-            <span className={`clan-prize-place display${x.place.length > 2 ? " rest" : ""}`}>{x.place}</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <span className={`clan-prize-place display${PLACE_ART.has(x.place) ? "" : " rest"}`}>{PLACE_ART.has(x.place) ? <img className="rt-medal" src={`/assets/ui/place-${x.place}.webp`} alt="" draggable={false} /> : x.place}</span>
             <RewardChips r={x.r} size={15} />
           </div>
         ))}

@@ -318,12 +318,18 @@ export const GAME_WEEK_PRIZES: Reward[] = [
   { currencies: { USD: 5 }, items: [{ id: "poker-chip", qty: 2 }] },
 ];
 export type GameBoard = "poker" | "zonk" | "bj";
-/** what each weekly mini-game rating counts: poker xp, zonk xp, blackjack winnings (USD, net) */
-export const GAME_BOARDS: { id: GameBoard; name: string; unit: string }[] = [
-  { id: "poker", name: "Покер", unit: "опыта" },
-  { id: "zonk", name: "Зонк", unit: "опыта" },
-  { id: "bj", name: "Блэкджек", unit: "USD" },
+/**
+ * what each weekly mini-game rating counts (col: the game_weekly column): poker — the best combination of the week
+ * (pokerRank: royal 10 … high card 1), zonk — the best score of one game of the week, blackjack — the net winnings (USD)
+ */
+export const GAME_BOARDS: { id: GameBoard; name: string; unit: string; col: string }[] = [
+  { id: "poker", name: "Покер", unit: "комбинация", col: "poker_best" },
+  { id: "zonk", name: "Зонк", unit: "очков", col: "zonk_best" },
+  { id: "bj", name: "Блэкджек", unit: "USD", col: "bj" },
 ];
+/** a poker hand as a number for the weekly rating: royal flush 10 … high card 1 */
+export const pokerRank = (hand: PokerHand) => POKER_HANDS.length - POKER_HANDS.findIndex((h) => h.id === hand);
+export const pokerHandOfRank = (rank: number) => POKER_HANDS[POKER_HANDS.length - rank] ?? null;
 /** the cockroach in the zonk room: a tap squashes it for a few roubles (and now and then a «Фишка»), not too often */
 export const ROACH_RULES = { reward: { currencies: { RUB: 15 } } as Reward, chipChance: 0.05, cooldownMs: 10 * 60_000, perDay: 12 };
 

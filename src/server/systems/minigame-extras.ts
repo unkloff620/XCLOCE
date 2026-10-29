@@ -23,6 +23,16 @@ export async function addGameWeekly(ctx: Ctx, board: GameBoard, delta: number) {
   );
 }
 
+/** keeps the best of the week for a "best" board (the best zonk score, the best poker hand) */
+export async function setGameBest(ctx: Ctx, col: "zonk_best" | "poker_best", value: number) {
+  if (!Number.isFinite(value) || value <= 0) return;
+  await ctx.q.query(
+    `INSERT INTO game_weekly (week, player_id, ${col}) VALUES ($1,$2,$3)
+     ON CONFLICT (week, player_id) DO UPDATE SET ${col} = GREATEST(game_weekly.${col}, EXCLUDED.${col})`,
+    [weekKey(ctx.now), ctx.pid, Math.round(value)],
+  );
+}
+
 /** Closes last week's mini-game ratings once: places 1–3 of each game get their prizes. */
 export async function settleGameWeeks(q: Queryable, now: number) {
   const prev = weekKey(weekStart(now) - WEEK_MS);
@@ -32,7 +42,7 @@ export async function settleGameWeeks(q: Queryable, now: number) {
   if (!claimed.length) return;
   for (const b of GAME_BOARDS) {
     const top = await q.query<{ player_id: number }>(
-      `SELECT player_id FROM game_weekly WHERE week=$1 AND ${b.id} > 0 ORDER BY ${b.id} DESC, player_id LIMIT ${GAME_WEEK_PRIZES.length}`,
+      `SELECT player_id FROM game_weekly WHERE week=$1 AND ${b.col} > 0 ORDER BY ${b.col} DESC, player_id LIMIT ${GAME_WEEK_PRIZES.length}`,
       [prev],
     );
     for (const [i, t] of top.entries()) {
@@ -71,18 +81,18 @@ export async function gameRatingView(q: Queryable, pid: number, now: number) {
   const boards: Record<string, unknown> = {};
   for (const b of GAME_BOARDS) {
     const rows = await q.query<BoardRow>(
-      `SELECT p.id, p.display_name, p.photo_url, g.${b.id} AS value FROM game_weekly g JOIN players p ON p.id = g.player_id
-       WHERE g.week=$1 AND g.${b.id} > 0 ORDER BY g.${b.id} DESC, p.id LIMIT 50`,
+      `SELECT p.id, p.display_name, p.photo_url, g.${b.col} AS value FROM game_weekly g JOIN players p ON p.id = g.player_id
+       WHERE g.week=$1 AND g.${b.col} > 0 ORDER BY g.${b.col} DESC, p.id LIMIT 50`,
       [week],
     );
     const [me] = await q.query<{ value: number; place: number }>(
-      `SELECT g.${b.id} AS value, (SELECT COUNT(*)::int FROM game_weekly o WHERE o.week=$1 AND o.${b.id} > g.${b.id}) + 1 AS place
-       FROM game_weekly g WHERE g.week=$1 AND g.player_id=$2 AND g.${b.id} > 0`,
+      `SELECT g.${b.col} AS value, (SELECT COUNT(*)::int FROM game_weekly o WHERE o.week=$1 AND o.${b.col} > g.${b.col}) + 1 AS place
+       FROM game_weekly g WHERE g.week=$1 AND g.player_id=$2 AND g.${b.col} > 0`,
       [week, pid],
     );
     const last = await q.query<{ id: number; display_name: string }>(
       `SELECT p.id, p.display_name FROM game_weekly g JOIN players p ON p.id = g.player_id
-       WHERE g.week=$1 AND g.${b.id} > 0 ORDER BY g.${b.id} DESC, p.id LIMIT 3`,
+       WHERE g.week=$1 AND g.${b.col} > 0 ORDER BY g.${b.col} DESC, p.id LIMIT 3`,
       [prev],
     );
     boards[b.id] = {

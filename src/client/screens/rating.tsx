@@ -8,7 +8,7 @@ import { Icon } from "../art/icons.tsx";
 import { Emblem } from "../art/emblems.tsx";
 import { clock, full, short } from "../format.ts";
 import type { Reward } from "../../content/rewards.ts";
-import { GAME_BOARDS, type GameBoard } from "../../content/games.ts";
+import { GAME_BOARDS, pokerHandOfRank, type GameBoard } from "../../content/games.ts";
 
 interface PlayerRow { id: number; name: string; photo: string | null; level: number; value: number; frame: string | null }
 interface ClanRow { id: number; name: string; tag: string; emblem: string; color: string; value: number; members: number }
@@ -35,8 +35,10 @@ const TABS: { id: Tab; label: string }[] = [
 ];
 /* the weekly mini-game boards: their picture (the game tiles of the yard) and what the number means */
 const BOARD_ART: Record<GameBoard, string> = { poker: "/assets/yard/game-poker.webp", zonk: "/assets/yard/game-zonk.webp", bj: "/assets/yard/game-blackjack.webp" };
-const boardValue = (b: GameBoard, v: number) => (b === "bj" ? `${short(Math.round(v * 100) / 100)} $` : `${full(v)} оп.`);
-const MEDAL = ["🥇", "🥈", "🥉"];
+/** the value on a mini-game board: the best poker hand, the best zonk score, the blackjack winnings */
+const boardValue = (b: GameBoard, v: number) =>
+  b === "bj" ? `${short(Math.round(v * 100) / 100)} $` : b === "poker" ? pokerHandOfRank(v)?.name ?? "—" : `${full(v)} очков`;
+const MEDAL = ["gold", "silver", "bronze"];
 
 /** "5 д 3 ч" for long waits, the clock for the last day */
 function untilText(ms: number): string {
@@ -46,7 +48,9 @@ function untilText(ms: number): string {
 }
 
 function Place({ n }: { n: number }) {
-  return <span className={`rt-place display ${n <= 3 ? `p${n}` : ""}`}>{n <= 3 ? MEDAL[n - 1] : n}</span>;
+  // places 1–3: a drawn medal with the number (public/assets/ui/place-*.webp)
+  // eslint-disable-next-line @next/next/no-img-element
+  return <span className={`rt-place display ${n <= 3 ? `p${n}` : ""}`}>{n <= 3 ? <img className="rt-medal" src={`/assets/ui/place-${MEDAL[n - 1]}.webp`} alt={`${n} место`} draggable={false} /> : n}</span>;
 }
 
 export function RatingScreen() {
@@ -126,7 +130,7 @@ export function RatingScreen() {
                 </button>
               ))}
             </div>
-            <div className="tiny muted center">{board === "bj" ? "Чистый выигрыш в блэкджеке за неделю" : `Опыт ${def.name === "Покер" ? "покера" : "зонка"} за неделю`} · тройка лидеров получает приз</div>
+            <div className="tiny muted center">{board === "bj" ? "Чистый выигрыш в блэкджеке за неделю" : board === "poker" ? "Лучшая комбинация за неделю" : "Лучший счёт за одну игру за неделю"} · тройка лидеров получает приз</div>
             {!!b.last.length && (
               <div className="rt-last">
                 <span className="tiny muted">Прошлая неделя:</span>
