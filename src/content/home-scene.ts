@@ -13,9 +13,10 @@ export const SCENE_OBJECTS = {
    *  level 0 — the old CRT on the right; 1 — a flat one in its place; 2 — + left; 3 — + middle */
   monitorOld: { x: 650, y: 505, w: 215, aspect: 1.0, flip: true },
   // three in a row across the whole desk, stands on its back edge (the artist's reference): the sides turned in, the middle straight
-  monitorCenter: { x: 368, y: 430, w: 309, aspect: 0.79, flip: false },
-  monitorLeft: { x: 60, y: 400, w: 304, aspect: 1.0, flip: false },
-  monitorRight: { x: 677, y: 400, w: 304, aspect: 1.0, flip: false },
+  // a little smaller and set back: the stands stay on the desk top, the screens sit a bit higher
+  monitorCenter: { x: 385, y: 447, w: 288, aspect: 0.79, flip: false },
+  monitorLeft: { x: 96, y: 398, w: 282, aspect: 1.0, flip: false },
+  monitorRight: { x: 682, y: 398, w: 282, aspect: 1.0, flip: false },
   /** the system unit on the floor, right in the corner of the room (its back in the corner of the walls at x≈945, y≈885, the base on the floor in front of it) */
   pc: { x: 850, y: 756, w: 140, aspect: 1.4401, flip: false },
   /** trophies on the desk: the CLOSE statue (for Утилизатор) on the right end, next to the monitor */
