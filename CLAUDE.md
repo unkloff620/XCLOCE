@@ -51,3 +51,10 @@ Never commit, print, expose, or place secret values in browser code.
 
 After every release that changes something players see, add an entry at the top of `src/content/updates.ts`
 («Что нового»: shown once on the home screen, mostly pictures in `public/assets/updates/<date>-*.webp` with a short line each).
+
+## Boss rooms
+
+Every boss that has his own fight room (`BOSS_ARENAS` in `src/content/bosses.ts`, `public/assets/arena/<id>.webp`) also gives
+that room to the players' homes right away: add a `ROOM_DEFS` entry in `src/content/home.ts` with
+`drop: { boss: "<id>", chance: ROOM_DROP_CHANCE }`, the picture as `tools/scene/source/room-<room id>.png`
+(run `python3 tools/scene/build-scene.py`), and its `ROOM_BG` / `ROOM_BACKDROP` / `ROOM_LIGHTS` lines in `src/content/home-scene.ts`.

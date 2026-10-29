@@ -118,11 +118,21 @@ export interface RoomDef {
   drop?: { boss: string; chance: number };
 }
 
+/**
+ * Every boss with his own fight room (content/bosses.ts BOSS_ARENAS) gives that room to the players' homes too: it drops
+ * from his «Блатной» wins with ROOM_DROP_CHANCE (ROOM_PITY wins without luck — for sure) and is bought afterwards.
+ */
+export const ROOM_DROP_CHANCE = 0.5;
+
 export const ROOM_DEFS: RoomDef[] = [
   { id: "basic", name: "Каморка", description: "С чего все начинали: облезлые обои, старый стол, ламповый монитор и табуретка.", price: null, bonus: {} },
-  { id: "neon", name: "Неоновая хата", description: "Обои с узором, кот на крыше и RGB-лента под потолком. Выпадает с Кедра. +5 к лимиту энергии.", price: { currency: "RUB", amount: 2000 }, bonus: { energyMax: 5 }, drop: { boss: "kedr", chance: 0.15 } },
-  { id: "shark", name: "Акулья берлога", description: "Аквариум во всю стену, иллюминатор, сети и якорь — логово Мугонатора. Выпадает с Мугонатора. +2% шанса крита.", price: { currency: "RUB", amount: 3000 }, bonus: { critChance: 0.02 }, drop: { boss: "mugo", chance: 0.15 } },
-  { id: "boxing", name: "Боксёрская", description: "Перчатки на стене, плакаты легенд и полка «для храбрости». Выпадает с Командате. +30 к урону кулака.", price: { currency: "RUB", amount: 4000 }, bonus: { fistDamage: 30 }, drop: { boss: "bebyakyan", chance: 0.15 } },
+  { id: "freezer", name: "Морозилка", description: "Всё во льду: замёрзший монитор, кресло в инее и сугробы по углам. Выпадает с Дацкоу. +3 к лимиту энергии.", price: { currency: "RUB", amount: 1500 }, bonus: { energyMax: 3 }, drop: { boss: "datsik", chance: ROOM_DROP_CHANCE } },
+  { id: "neon", name: "Неоновая хата", description: "Обои с узором, кот на крыше и RGB-лента под потолком. Выпадает с Кедра. +5 к лимиту энергии.", price: { currency: "RUB", amount: 2000 }, bonus: { energyMax: 5 }, drop: { boss: "kedr", chance: ROOM_DROP_CHANCE } },
+  { id: "shark", name: "Акулья берлога", description: "Аквариум во всю стену, иллюминатор, сети и якорь — логово Мугонатора. Выпадает с Мугонатора. +2% шанса крита.", price: { currency: "RUB", amount: 3000 }, bonus: { critChance: 0.02 }, drop: { boss: "mugo", chance: ROOM_DROP_CHANCE } },
+  { id: "backroom", name: "Денежная подсобка", description: "Пачки купюр на полке, счётная машинка и тяжёлый сейф. Выпадает с Гаркуши. +3% к урону.", price: { currency: "RUB", amount: 3500 }, bonus: { damage: 0.03 }, drop: { boss: "garkusha", chance: ROOM_DROP_CHANCE } },
+  { id: "boxing", name: "Боксёрская", description: "Перчатки на стене, плакаты легенд и полка «для храбрости». Выпадает с Командате. +30 к урону кулака.", price: { currency: "RUB", amount: 4000 }, bonus: { fistDamage: 30 }, drop: { boss: "bebyakyan", chance: ROOM_DROP_CHANCE } },
+  { id: "izba", name: "Изба Бабафея", description: "Бревенчатые стены, балалайки, самовар и расписной сундук. Выпадает с Бабафея. +8 к лимиту энергии.", price: { currency: "RUB", amount: 5000 }, bonus: { energyMax: 8 }, drop: { boss: "babafey", chance: ROOM_DROP_CHANCE } },
+  { id: "ludoman", name: "Берлога лудомана", description: "Однорукий бандит у стены, гора курьерских сумок и рассвет в окне. Выпадает с Востока. +2% шанса и +10% силы крита.", price: { currency: "RUB", amount: 6000 }, bonus: { critChance: 0.02, critDamage: 0.1 }, drop: { boss: "vodovoz", chance: ROOM_DROP_CHANCE } },
   { id: "office", name: "Офис трейдера", description: "Стеклянные стены, три графика и кофемашина. Даёт шанс крита.", price: { currency: "USD", amount: 40 }, bonus: { critChance: 0.03 } },
   { id: "penthouse", name: "Пентхаус To The Moon", description: "Вид на Луну, золото и бассейн из стейблкоинов. Урон и сила крита.", price: { currency: "USD", amount: 89 }, bonus: { damage: 0.05, critDamage: 0.15 } },
 ];

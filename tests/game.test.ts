@@ -232,7 +232,8 @@ describe("boss fights: personal fights, shared damage", () => {
     await expect(act(db, p, "buy", { offerId: "tee-white" }, T0)).rejects.toMatchObject({ code: "item_locked" });
     await give(db, p, "gpu", 30);
     const D = 24 * H;
-    const unlocks = async () => (await db.query<{ item_id: string }>("SELECT item_id FROM player_unlocks WHERE player_id=$1 ORDER BY item_id", [p])).map((r) => r.item_id);
+    // the things only (Дацкоу's room drops in «Блатной» too)
+    const unlocks = async () => (await db.query<{ item_id: string }>("SELECT item_id FROM player_unlocks WHERE player_id=$1 AND item_id NOT LIKE 'room:%' ORDER BY item_id", [p])).map((r) => r.item_id);
     const win = async (i: number, rng: number) => {
       const t = T0 + Math.floor(i / 7) * D + (i % 7) * M;
       const f = await act(db, p, "fight_start", { boss: "datsik", mode: "blat" }, t);
@@ -243,7 +244,7 @@ describe("boss fights: personal fights, shared damage", () => {
     expect(await unlocks()).toEqual([]);
     const c = await win(9, 0.99);
     expect(await unlocks()).toHaveLength(1);
-    expect(c.result.reward.unlocks).toHaveLength(1);
+    expect(c.result.reward.unlocks.filter((id: string) => !id.startsWith("room:"))).toHaveLength(1);
     // a lucky roll opens all the rest (test players own jeans already — owned things do not drop); the things are not given
     await win(10, 0.01);
     expect(await unlocks()).toEqual(["sneakers", "tee-white"]);
