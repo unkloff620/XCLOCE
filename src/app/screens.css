@@ -3621,7 +3621,7 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 /* ---------------- the slot machine room (screens/slots.tsx, public/assets/slots) ----------------
  * a page between the HUD and the menu; the drawn machine is as big as fits, keeping its shape */
 .modal.page:has(.sl-stage) { background: #120a08; padding: 0; overflow: hidden; }
-.modal.page:has(.sl-stage) > .x { z-index: 6; top: 8px; right: 8px; }
+.modal.page:has(.sl-stage) > .x { position: absolute; margin: 0; z-index: 6; top: 8px; right: 8px; }
 .sl-help { position: absolute; z-index: 6; top: 8px; left: 8px; }
 .sl-stage { flex: 1; min-height: 0; width: 100%; container-type: size; display: flex; justify-content: center; align-items: center; background: #120a08; }
 .sl { position: relative; width: min(100cqw, calc(100cqh * 1024 / 1536)); aspect-ratio: 1024 / 1536; user-select: none; -webkit-user-select: none; overflow: hidden; }
