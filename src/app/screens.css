@@ -3820,3 +3820,10 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .sty-slot.on { border-color: #ffd23f; background: linear-gradient(180deg, #ffd23f, #e8a91c); color: #2a1404; box-shadow: 0 2px 0 rgba(0, 0, 0, 0.55); transform: translateY(1px); }
 .sty-slot:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.55); }
 .sty-slot i { position: absolute; top: -6px; right: -4px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: #2ee88a; color: #06301a; font-style: normal; font-size: 10px; font-weight: 900; line-height: 16px; text-align: center; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5); }
+/* poker, the new felt: the button and the chip fit inside the drawn plaque (tools/scene/source/poker-room.png) */
+.pkt-ctrl .btn { height: 7cqw; font-size: 2.7cqw; padding: 0 2cqw; white-space: nowrap; overflow: hidden; letter-spacing: 0; }
+.pkt-ctrl .btn svg { width: 3.4cqw; height: 3.4cqw; }
+.pkt-btns { gap: 1.4cqw; }
+.pkt-ctrl .btn.pkt-chip { padding: 0 1.6cqw 0 0.8cqw; border-width: 0.3cqw; }
+.pkt-ctrl .btn.pkt-chip svg { width: 5.2cqw; height: 5.2cqw; }
+.pkt-chip b { font-size: 2.8cqw; }

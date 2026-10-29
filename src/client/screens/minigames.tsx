@@ -853,7 +853,7 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
             ))}
           </div>
 
-          <div className="pkt-ctrl" style={{ left: px(310), top: py(2018), width: px(460) }}>
+          <div className="pkt-ctrl" style={{ left: px(318), top: py(2027), width: px(444) }}>
             {drawing ? (
               <button className="btn big green block" disabled={busy === "poker_stand" || busy === "poker_swap"} onClick={() => run("poker_stand")}>Вскрыть</button>
             ) : (
