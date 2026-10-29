@@ -164,7 +164,19 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
         <button className="sty-x" onClick={onClose} aria-label="Закрыть без сохранения">✕</button>
       </div>
       <div className="sty-body">
-        {title && <div className="sty-part"><b>{title}</b><span className="tiny muted">нажми на другую часть персонажа</span></div>}
+        {mode === "items" ? (
+          // the clothes slots as buttons too: a tap on the character is not the only way to find a thing
+          <div className="sty-slots" role="tablist">
+            {CLOTHES.map((s) => {
+              const n = ITEMS.filter((i) => i.slot === s && owned.has(i.id)).length;
+              return (
+                <button key={s} type="button" role="tab" aria-selected={part === s} className={`sty-slot ${part === s ? "on" : ""}`} onClick={() => { haptic.tap(); setFocus({ ...focus, mode: "items", part: s }); }}>
+                  {ITEM_PART[s]}{n > 0 && <i className="num">{n}</i>}
+                </button>
+              );
+            })}
+          </div>
+        ) : title && <div className="sty-part"><b>{title}</b><span className="tiny muted">нажми на другую часть персонажа</span></div>}
         {body}
       </div>
       <div className="sty-actions">

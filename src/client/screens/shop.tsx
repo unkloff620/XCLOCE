@@ -162,10 +162,19 @@ function Cards({ offers, batch }: { offers: Offer[]; batch: number }) {
             {def?.weapon && <span className="tiny muted" title={`база ${def.weapon.damage}`}>урон {weaponStats(state, def.id).damage}</span>}
             {def && def.maxStack > 1 && <span className="tiny dim">есть: {owned}</span>}
             {def && def.maxStack === 1 && owned > 0 && <span className="tiny" style={{ color: "var(--green)" }}>уже есть</span>}
-            <button className="btn sm gold block" disabled={!can || full || busy === "buy"} onClick={() => buy(o, n)}>
-              <Icon name={o.price.currency} size={16} />
-              {money(o.price.currency, amount)}
-            </button>
+            {def && def.maxStack === 1 && owned > 0 ? (
+              // bought already: no second price, the thing goes on right here (weapons are picked in the fight)
+              def.slot && def.slot !== "SPECIAL" && !def.weapon ? (
+                state?.look.equipped[def.slot] === def.id
+                  ? <span className="btn sm dark block" aria-disabled="true">Надето</span>
+                  : <button className="btn sm green block" disabled={!!busy} onClick={() => { haptic.tap(); void act("equip", { itemId: def.id }, `Надето: ${def.name}`); }}>Надеть</button>
+              ) : <span className="btn sm dark block" aria-disabled="true">Куплено</span>
+            ) : (
+              <button className="btn sm gold block" disabled={!can || full || busy === "buy"} onClick={() => buy(o, n)}>
+                <Icon name={o.price.currency} size={16} />
+                {money(o.price.currency, amount)}
+              </button>
+            )}
           </div>
         );
       })}

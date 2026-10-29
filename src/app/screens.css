@@ -3809,3 +3809,10 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .sl-display .sl-gain { flex-wrap: nowrap; font-size: min(2.6cqw, 11px); }
 .sl-display .sl-gain .sl-xp { font-size: min(2.6cqw, 11px); }
 .sl-display .sl-gain img, .sl-display .sl-gain svg { width: min(3cqw, 13px) !important; height: min(3cqw, 13px) !important; }
+
+/* the wardrobe: the clothes slots as a row of buttons above the things (a tap on the character still works) */
+.sty-slots { display: flex; gap: 5px; overflow-x: auto; scrollbar-width: none; padding: 1px 1px 6px; }
+.sty-slots::-webkit-scrollbar { display: none; }
+.sty-slot { flex: none; position: relative; padding: 6px 10px; border-radius: 10px; border: 2px solid rgba(255, 220, 170, 0.22); background: rgba(20, 12, 6, 0.6); color: #f1e2c8; font: inherit; font-size: 12.5px; font-weight: 800; cursor: pointer; }
+.sty-slot.on { border-color: #ffb020; background: #ffb020; color: #2a1404; }
+.sty-slot i { position: absolute; top: -6px; right: -5px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: #2ee88a; color: #06301a; font-style: normal; font-size: 10px; line-height: 16px; text-align: center; }
