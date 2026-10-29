@@ -3594,3 +3594,5 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 /* every ordinary window stays between the top HUD and the main menu: they are always visible and tappable */
 .modal-back:not(.full):not(.page) { top: calc(var(--hud-h) + var(--safe-t)); bottom: calc(var(--nav-h) + var(--safe-b)); padding: 8px 12px; }
 .modal-back:not(.full):not(.page) > .modal { max-height: 100%; }
+/* the page's inside scrolls up and down by itself; the folder only takes clear sideways swipes */
+.dos-book .dos-inner { touch-action: pan-y; -webkit-overflow-scrolling: touch; }

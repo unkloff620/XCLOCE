@@ -278,14 +278,20 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
   useEffect(() => {
     tabsRef.current?.querySelector<HTMLElement>(".dos-tab.on")?.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
   }, [view]);
-  const onStart = (e: RTouchEvent) => { const t = e.touches[0]; touch.current = { x: t.clientX, y: t.clientY, on: null }; };
+  const onStart = (e: RTouchEvent) => {
+    const t = e.touches[0];
+    // a swipe that starts on a row that scrolls sideways (the tabs, the achievement lists) never turns the page
+    const side = (e.target as Element | null)?.closest?.(".dos-tabs, .ach-groups, .tp-road");
+    touch.current = { x: t.clientX, y: t.clientY, on: side ? false : null };
+  };
   const onMove = (e: RTouchEvent) => {
     const c = touch.current;
     if (!c || anim) return;
     const t = e.touches[0];
     const dx = t.clientX - c.x, dy = t.clientY - c.y;
     // decide once: a sideways move turns pages, an up-down one scrolls the page
-    if (c.on === null && Math.abs(dx) + Math.abs(dy) > 10) c.on = Math.abs(dx) > Math.abs(dy) * 1.3;
+    // only a clearly sideways move turns pages; anything else is left to the page's own scrolling, for the whole touch
+    if (c.on === null && Math.hypot(dx, dy) > 14) c.on = Math.abs(dx) > Math.abs(dy) * 2.2;
     if (!c.on) return;
     // the cover and the last page only give a little
     const edge = dx < 0 && at === tabs.length - 1;
