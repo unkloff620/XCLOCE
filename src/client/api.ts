@@ -255,6 +255,15 @@ export async function loginWidget(data: Record<string, unknown>) {
 export const ACTION_EVENT = "xc-action";
 export const api = {
   get: <T>(path: string) => raw<T>(path),
+  /** an action that must reach the server even while the page closes (keepalive): leaving the blackjack table */
+  actionKeepalive: (type: string, body: Record<string, unknown> = {}) => {
+    try {
+      void fetch("/api/action", {
+        method: "POST", keepalive: true, cache: "no-store", body: JSON.stringify({ type, ...body }),
+        headers: { "content-type": "application/json", "x-app-version": APP_VERSION, ...(token ? { authorization: `Bearer ${token}` } : {}) },
+      }).catch(() => undefined);
+    } catch { /* the page is going away anyway */ }
+  },
   action: async <T>(type: string, body: Record<string, unknown> = {}) => {
     const r = await raw<{ result: T; state: GameState }>("/api/action", { method: "POST", body: JSON.stringify({ type, ...body }) });
     // every action that went through is announced (the newcomer's first steps listen for theirs)

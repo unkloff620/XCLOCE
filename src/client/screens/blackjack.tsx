@@ -326,7 +326,19 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
   const seated = useRef(false);
   const actRef = useRef(act);
   actRef.current = act;
-  useEffect(() => () => { if (seated.current) void actRef.current("bj_leave", {}); }, []);
+  useEffect(() => {
+    // the app itself closing (Telegram swiped away, the tab hidden) gets up from the table too: a keepalive request
+    const away = () => { if (seated.current) { seated.current = false; api.actionKeepalive("bj_leave"); } };
+    const hidden = () => { if (document.visibilityState === "hidden") away(); };
+    window.addEventListener("pagehide", away);
+    document.addEventListener("visibilitychange", hidden);
+    return () => {
+      window.removeEventListener("pagehide", away);
+      document.removeEventListener("visibilitychange", hidden);
+      // the window closed (×, «Закрыть», a menu button): leave and refresh the state
+      if (seated.current) { seated.current = false; void actRef.current("bj_leave", {}); }
+    };
+  }, []);
   // poll while the window is open
   useEffect(() => {
     let alive = true;
