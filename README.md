@@ -14,7 +14,14 @@
 
 Предыдущая версия игры — в ветке `archive-v1`.
 
-## Хостинг: Render
+## Хостинг: Vercel (основной)
+
+Игра работает на Vercel: проект `xcloce`, адрес `https://xcloce.vercel.app`, сборка из `main` автоматически.
+- Переменные (Settings → Environment Variables): `DATABASE_URL` (из интеграции Neon), `TELEGRAM_BOT_TOKEN`, `ADMIN_TELEGRAM_IDS`.
+- Продакшен определяется по `VERCEL_ENV=production`.
+- Напоминания в Telegram: `/api/cron/notify` будит GitHub Actions каждые 5 минут (`.github/workflows/notify.yml`) и Vercel Cron раз в день (`vercel.json`); после запросов игроков они тоже отправляются.
+
+## Хостинг: Render (запасной)
 
 Постоянно работающий Node-сервер (`next start`) рядом с базой, конфиг — `render.yaml` (Blueprint).
 

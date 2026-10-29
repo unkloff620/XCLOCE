@@ -1,0 +1,12 @@
+# Wakes the Telegram reminder sender every 5 minutes (Vercel Cron on the free plan runs only once a day).
+name: notify-ping
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - run: curl -fsS --max-time 60 https://xcloce.vercel.app/api/cron/notify || true
