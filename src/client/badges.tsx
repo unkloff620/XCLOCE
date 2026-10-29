@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { MEDAL_ACHIEVEMENTS } from "../content/achievements.ts";
 import { MEDAL_NAMES, MEDAL_SET, MEDAL_TIERS, FIGHT_MODES, medalBonus, medalStep, medalWeapon } from "../content/medals.ts";
 import { BlastIcon } from "./art/blast.tsx";
@@ -18,6 +18,20 @@ import { BossCoin } from "./art/boss-coin.tsx";
 export interface AchRow { id: string; progress: number; target: number; done: boolean; claimed: boolean; at: number | null }
 
 /** A hexagonal medal in its tier colour (bronze → diamond); grey until earned. */
+/**
+ * A medal that can be collected: it glows and pulses, a tap takes the reward (no separate «Забрать» button).
+ * Without an id it is just the medal.
+ */
+function ClaimMedal({ id, onClaim, busy, children }: { id?: string; onClaim: (id: string) => unknown; busy?: boolean; children: ReactNode }) {
+  if (!id) return <span className="ach-medal-slot">{children}</span>;
+  return (
+    <button type="button" className="ach-claim" disabled={busy} aria-label="Забрать награду" title="Забрать награду"
+      onClick={(e) => { e.stopPropagation(); void onClaim(id); }}>
+      {children}
+    </button>
+  );
+}
+
 export function BadgeMedal({ icon, tier, earned, size = 54 }: { icon: string; tier: AchTier | 0; earned: boolean; size?: number }) {
   // drawn achievement pictures sit inside the same medal as the simple icons, at the same size
   const art = icon.startsWith("ach-");
@@ -167,8 +181,10 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
         const ready = self ? ids.find((id) => { const r = byId.get(id); return r?.done && !r.claimed; }) ?? null : null;
         return (
           <div key={st.id} className={`ach-row ${ready ? "ready" : ""}`}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="stash-ach-art" src={`/assets/stash/set-${st.n}.webp`} alt="" draggable={false} />
+            <ClaimMedal id={ready ?? undefined} onClaim={claim} busy={busy === "achievement_claim"}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="stash-ach-art" src={`/assets/stash/set-${st.n}.webp`} alt="" draggable={false} />
+            </ClaimMedal>
             <span className="ach-main">
               <span className="row" style={{ justifyContent: "space-between", gap: 6 }}>
                 <b className="ach-name ellipsis">{st.name}</b>
@@ -189,9 +205,6 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
                 <i /><span className="num">{reached >= 3 ? `всё собрано · ${count}` : `${count} / ${next}`}</span>
               </span>
             </span>
-            {ready && (
-              <button className="btn gold sm ach-take" disabled={busy === "achievement_claim"} onClick={() => void claim(ready)}>Забрать</button>
-            )}
           </div>
         );
       })}
@@ -225,7 +238,8 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
               {(() => {
                 // a «Убийца боссов» medal is the boss's face on the coin of its tier
                 const kb = medal.startsWith("bosskill-") ? OPEN_ALL.find((b) => medal === `bosskill-${b.id}-${a.tier}`) : undefined;
-                return kb ? <BossCoin boss={kb} tier={MEDAL_TIERS[a.tier - 1]} size={80} dim={!(got || due)} /> : <BadgeMedal icon={a.icon} tier={a.tier} earned={got || due} size={72} />;
+                const m = kb ? <BossCoin boss={kb} tier={MEDAL_TIERS[a.tier - 1]} size={80} dim={!(got || due)} /> : <BadgeMedal icon={a.icon} tier={a.tier} earned={got || due} size={72} />;
+                return <ClaimMedal id={due ? a.id : undefined} onClaim={async (id) => { await claim(id); setMedal(null); }} busy={busy === "achievement_claim"}>{m}</ClaimMedal>;
               })()}
               <b className="tier-name" style={{ color: TIER_COLORS[a.tier] }}>{TIER_NAMES[a.tier]}</b>
               <span className="small">{a.hint}</span>
@@ -234,7 +248,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
               </span>
               <RewardChips r={a.reward} size={15} />
               {got ? <span className="ach-got-label">✓ получено</span> : due ? (
-                <button className="btn gold block" disabled={busy === "achievement_claim"} onClick={async () => { await claim(a.id); setMedal(null); }}>Забрать</button>
+                <span className="ach-claim-hint">Нажми на медаль — забери награду</span>
               ) : null}
             </div>
           </Modal>
@@ -269,7 +283,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
           const top = Math.max(0, ...got.map((a) => a.tier)) as AchTier | 0;
           return (
             <div role="button" tabIndex={0} className={`ach-row ${ready ? "ready" : ""}`} onClick={() => setKillOpen(true)} onKeyDown={(e) => e.key === "Enter" && setKillOpen(true)}>
-              <BadgeMedal icon="ach-wins" tier={top} earned={got.length > 0} size={44} />
+              <ClaimMedal id={ready?.id} onClaim={claim} busy={busy === "achievement_claim"}><BadgeMedal icon="ach-wins" tier={top} earned={got.length > 0} size={44} /></ClaimMedal>
               <span className="ach-main">
                 <span className="row" style={{ justifyContent: "space-between", gap: 6 }}>
                   <b className="ach-name">Убийца боссов</b>
@@ -279,13 +293,6 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
                   <i /><span className="num">{got.length >= n ? "всё собрано" : `${got.length} / ${n} медалей`}</span>
                 </span>
               </span>
-              {ready && (
-                <button className="btn gold sm ach-take" disabled={busy === "achievement_claim"}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    void claim(ready.id);
-                  }}>Забрать</button>
-              )}
             </div>
           );
         })()}
@@ -299,7 +306,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
           const top = Math.max(0, ...soloList.filter((a) => { const r = byId.get(a.id); return r && (r.claimed || (!self && r.done)); }).map((a) => a.tier)) as AchTier | 0;
           return (
             <div role="button" tabIndex={0} className={`ach-row ${ready ? "ready" : ""}`} onClick={() => setSoloOpen(true)} onKeyDown={(e) => e.key === "Enter" && setSoloOpen(true)}>
-              <BadgeMedal icon="ach-solo" tier={top} earned={got > 0} size={44} />
+              <ClaimMedal id={ready?.id} onClaim={claim} busy={busy === "achievement_claim"}><BadgeMedal icon="ach-solo" tier={top} earned={got > 0} size={44} /></ClaimMedal>
               <span className="ach-main">
                 <span className="row" style={{ justifyContent: "space-between", gap: 6 }}>
                   <b className="ach-name">Соло-убийства</b>
@@ -309,13 +316,6 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
                   <i /><span className="num">{got >= n ? "всё собрано" : `${got} / ${n} боссов`}</span>
                 </span>
               </span>
-              {ready && (
-                <button className="btn gold sm ach-take" disabled={busy === "achievement_claim"}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    void claim(ready.id);
-                  }}>Забрать</button>
-              )}
             </div>
           );
         })()}
@@ -328,7 +328,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
           const n = list.length;
           return (
             <div role="button" tabIndex={0} className={`ach-row ${ready ? "ready" : ""}`} onClick={() => setCoinOpen(true)} onKeyDown={(e) => e.key === "Enter" && setCoinOpen(true)}>
-              <span className="ach-coin"><BlastIcon tier={got.some((a) => a.tier === 3) ? "gold" : got.some((a) => a.tier === 2) ? "silver" : "bronze"} size={44} dim={coins === 0} /></span>
+              <ClaimMedal id={ready?.id} onClaim={claim} busy={busy === "achievement_claim"}><span className="ach-coin"><BlastIcon tier={got.some((a) => a.tier === 3) ? "gold" : got.some((a) => a.tier === 2) ? "silver" : "bronze"} size={44} dim={coins === 0} /></span></ClaimMedal>
               <span className="ach-main">
                 <span className="row" style={{ justifyContent: "space-between", gap: 6 }}>
                   <b className="ach-name">Взрывы боссов</b>
@@ -338,13 +338,6 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
                   <i /><span className="num">{full(coins)} / {full(n * MEDAL_SET)} взрывов</span>
                 </span>
               </span>
-              {ready && (
-                <button className="btn gold sm ach-take" disabled={busy === "achievement_claim"}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    void claim(ready.id);
-                  }}>Забрать</button>
-              )}
             </div>
           );
         })()}
@@ -355,7 +348,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
           const pct = maxed ? 100 : Math.min(100, Math.round((s.progress / s.next) * 100));
           return (
             <div key={c.id} role="button" tabIndex={0} className={`ach-row ${s.ready ? "ready" : ""}`} onClick={() => setOpen(c.id)} onKeyDown={(e) => e.key === "Enter" && setOpen(c.id)}>
-              <BadgeMedal icon={c.icon} tier={s.earned} earned={s.earned > 0} size={44} />
+              <ClaimMedal id={s.ready?.id} onClaim={claim} busy={busy === "achievement_claim"}><BadgeMedal icon={c.icon} tier={s.earned} earned={s.earned > 0} size={44} /></ClaimMedal>
               <span className="ach-main">
                 <span className="row" style={{ justifyContent: "space-between", gap: 6 }}>
                   <b className="ach-name">{c.name}</b>
@@ -375,13 +368,6 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
                 </span>
               </span>
               {/* collected right here, one after another; the row itself opens the details */}
-              {s.ready && (
-                <button className="btn gold sm ach-take" disabled={busy === "achievement_claim"}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    void claim(s.ready!.id);
-                  }}>Забрать</button>
-              )}
             </div>
           );
         })}
@@ -475,7 +461,8 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
               {(() => {
                 // a «Убийца боссов» medal is the boss's face on the coin of its tier
                 const kb = medal.startsWith("bosskill-") ? OPEN_ALL.find((b) => medal === `bosskill-${b.id}-${a.tier}`) : undefined;
-                return kb ? <BossCoin boss={kb} tier={MEDAL_TIERS[a.tier - 1]} size={80} dim={!(got || due)} /> : <BadgeMedal icon={a.icon} tier={a.tier} earned={got || due} size={72} />;
+                const m = kb ? <BossCoin boss={kb} tier={MEDAL_TIERS[a.tier - 1]} size={80} dim={!(got || due)} /> : <BadgeMedal icon={a.icon} tier={a.tier} earned={got || due} size={72} />;
+                return <ClaimMedal id={due ? a.id : undefined} onClaim={async (id) => { await claim(id); setMedal(null); }} busy={busy === "achievement_claim"}>{m}</ClaimMedal>;
               })()}
               <b className="tier-name" style={{ color: TIER_COLORS[a.tier] }}>{TIER_NAMES[a.tier]}</b>
               <span className="small">{a.hint}</span>
@@ -484,7 +471,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
               </span>
               <RewardChips r={a.reward} size={15} />
               {got ? <span className="ach-got-label">✓ получено</span> : due ? (
-                <button className="btn gold block" disabled={busy === "achievement_claim"} onClick={async () => { await claim(a.id); setMedal(null); }}>Забрать</button>
+                <span className="ach-claim-hint">Нажми на медаль — забери награду</span>
               ) : null}
             </div>
           </Modal>
@@ -501,14 +488,14 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
               return (
                 <div key={a.id} className={`ach-tier ${got ? "got" : due ? "due" : ""}`} style={{ ["--c" as string]: TIER_COLORS[a.tier] }}>
                   {/* the boss's face; dim until he is killed solo */}
-                  {(() => { const b = OPEN_ALL.find((x) => x.id === a.boss); return b ? <BossCoin boss={b} tier={a.tier >= 4 ? "gold" : a.tier >= 2 ? "silver" : "bronze"} size={40} dim={!(got || due)} /> : <BadgeMedal icon={a.icon} tier={a.tier} earned={got || due} size={38} />; })()}
+                  <ClaimMedal id={due ? a.id : undefined} onClaim={claim} busy={busy === "achievement_claim"}>
+                    {(() => { const b = OPEN_ALL.find((x) => x.id === a.boss); return b ? <BossCoin boss={b} tier={a.tier >= 4 ? "gold" : a.tier >= 2 ? "silver" : "bronze"} size={40} dim={!(got || due)} /> : <BadgeMedal icon={a.icon} tier={a.tier} earned={got || due} size={38} />; })()}
+                  </ClaimMedal>
                   <span className="grow col" style={{ gap: 3, minWidth: 0 }}>
                     <b className="ellipsis tier-name" style={{ color: TIER_COLORS[a.tier] }}>{a.name.replace("Соло: ", "")}</b>
                     <RewardChips r={achievementById(a.id)?.reward ?? a.reward} size={13} />
                   </span>
-                  {got ? <span className="quest-ok display">✓</span> : due ? (
-                    <button className="btn gold sm" disabled={busy === "achievement_claim"} onClick={() => claim(a.id)}>Забрать</button>
-                  ) : null}
+                  {got && <span className="quest-ok display">✓</span>}
                 </div>
               );
             })}
@@ -528,15 +515,13 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
               const due = self && !!r?.done && !got;
               return (
                 <div key={step} className={`ach-tier ${got ? "got" : due ? "due" : ""}`} style={{ ["--c" as string]: TIER_COLORS[t] }}>
-                  <BadgeMedal icon={cat.icon} tier={t} earned={got || (!self && !!r?.done) || due} size={38} />
+                  <ClaimMedal id={due ? def.id : undefined} onClaim={claim} busy={busy === "achievement_claim"}><BadgeMedal icon={cat.icon} tier={t} earned={got || (!self && !!r?.done) || due} size={38} /></ClaimMedal>
                   <span className="grow col" style={{ gap: 3, minWidth: 0 }}>
                     <b className="tier-name" style={{ color: TIER_COLORS[t] }}>{TIER_NAMES[t]}{cat.halves ? (step % 2 ? " ½" : "") : ""} · <span className="num">{full(def.target)}</span></b>
                     <span className="ach-hint">{def.hint}</span>
                     <RewardChips r={def.reward} size={13} />
                   </span>
-                  {got ? <span className="quest-ok display">✓</span> : due ? (
-                    <button className="btn gold sm" disabled={busy === "achievement_claim"} onClick={() => claim(def.id)}>Забрать</button>
-                  ) : null}
+                  {got && <span className="quest-ok display">✓</span>}
                 </div>
               );
             })}
