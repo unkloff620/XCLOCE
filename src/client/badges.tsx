@@ -32,6 +32,18 @@ export function BadgeMedal({ icon, tier, earned, size = 54 }: { icon: string; ti
 
 const TIERS: AchTier[] = [1, 2, 3, 4, 5];
 
+/** the lists of the achievements: everything about bosses, the money side, the locations, нычки and the rest */
+type AchGroup = "boss" | "eco" | "tasks" | "stash" | "misc";
+const ACH_GROUPS: { id: AchGroup; name: string }[] = [
+  { id: "boss", name: "Боевые" }, { id: "eco", name: "Экономика" }, { id: "tasks", name: "Задания" }, { id: "stash", name: "Нычки" }, { id: "misc", name: "Прочее" },
+];
+const GROUP_OF: Record<string, AchGroup> = {
+  damage: "boss", hits: "boss", wins: "boss", solo: "boss", kills: "boss", weekly: "boss",
+  authority: "eco", yard: "eco", chests: "eco",
+  locations: "tasks", tasks: "tasks",
+};
+const groupOf = (id: string): AchGroup => GROUP_OF[id] ?? "misc";
+
 function catState(c: AchCategory, rows: Map<string, AchRow>, self: boolean) {
   const tiers = TIERS.map((t) => rows.get(`${c.id}-${t}`));
   // a tier counts as earned once collected (others' profiles: once reached)
@@ -52,7 +64,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
   const [soloOpen, setSoloOpen] = useState(false);
   const [killOpen, setKillOpen] = useState(false);
   const [coinOpen, setCoinOpen] = useState(false);
-  const [stashOpen, setStashOpen] = useState(false);
+  const [group, setGroup] = useState<AchGroup>("boss");
   const [stashItem, setStashItem] = useState<string | null>(null);
   const { state } = useGame();
   const stashQty = new Map(self ? (state?.inventory ?? []).filter((i) => i.qty > 0 && i.id.startsWith("stash-")).map((i) => [i.id, i.qty] as const) : []);
@@ -182,8 +194,16 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
         <span className="tiny muted num">{total}/{rows.length}</span>
         <span className={`ach-caret ${shown ? "open" : ""}`} aria-hidden="true">▾</span>
       </button>
-      {shown && <div className="col" style={{ gap: 8, marginTop: 8 }}>
-        {ACH_CATEGORIES.map((c) => {
+      {shown && <div className="ach-groups" role="tablist">
+        {ACH_GROUPS.map((g) => {
+          const due = self && rows.some((r) => r.done && !r.claimed && (g.id === "boss" ? /^(soloboss|bosskill|medal)-/.test(r.id) || groupOf(r.id.replace(/-\d$/, "")) === "boss" : g.id === "stash" ? r.id.startsWith("stashset-") : !/^(soloboss|bosskill|medal|stashset)-/.test(r.id) && groupOf(r.id.replace(/-\d$/, "")) === g.id));
+          const setReady = g.id === "stash" && self && STASH_SETS_ORDERED.some((st) => st.items.every((it) => (stashQty.get(it.id) ?? 0) > 0));
+          return <button key={g.id} type="button" role="tab" aria-selected={group === g.id} className={`ach-group ${group === g.id ? "on" : ""} ${due || setReady ? "due" : ""}`} onClick={() => { haptic.tap(); setGroup(g.id); }}>{g.name}</button>;
+        })}
+      </div>}
+      {shown && group === "stash" && <div style={{ marginTop: 8 }}>{stashBody}</div>}
+      {shown && group !== "stash" && <div className="col" style={{ gap: 8, marginTop: 8 }}>
+        {ACH_CATEGORIES.filter((c) => groupOf(c.id) === group).map((c) => {
           const s = catState(c, byId, self);
           const maxed = s.reached >= 5;
           const pct = maxed ? 100 : Math.min(100, Math.round((s.progress / s.next) * 100));
@@ -217,7 +237,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
           );
         })}
         {/* one cell for the per-boss solo badges; the window lists every boss and its reward */}
-        {(() => {
+        {group === "boss" && (() => {
           const soloList = SOLO_BOSS_ACHIEVEMENTS.filter((a) => byId.has(a.id));
           const sr = soloList.map((a) => byId.get(a.id));
           const got = sr.filter((r) => r && (r.claimed || (!self && r.done))).length;
@@ -247,7 +267,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
           );
         })()}
         {/* «Убийца боссов»: every boss with three medals — 10, 50 and 100 wins */}
-        {(() => {
+        {group === "boss" && (() => {
           const killList = BOSS_KILL_ACHIEVEMENTS.filter((a) => byId.has(a.id));
           const got = killList.filter((a) => { const r = byId.get(a.id); return r && (r.claimed || (!self && r.done)); });
           const ready = self ? killList.find((a) => { const r = byId.get(a.id); return r?.done && !r.claimed; }) ?? null : null;
@@ -276,7 +296,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
           );
         })()}
         {/* «Медали боссов»: the face on a coin — bronze, silver, gold; MEDAL_SET of a kind is a full set */}
-        {(() => {
+        {group === "boss" && (() => {
           const list = MEDAL_ACHIEVEMENTS.filter((a) => byId.has(a.id));
           const got = list.filter((a) => { const r = byId.get(a.id); return r && (r.claimed || (!self && r.done)); });
           const ready = self ? list.find((a) => { const r = byId.get(a.id); return r?.done && !r.claimed; }) ?? null : null;
@@ -304,41 +324,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
             </div>
           );
         })()}
-        {/* «Нычки»: sets of four, collected again and again; medals for 10 / 50 / 100 sets of each */}
-        {(() => {
-          const medals = STASH_SETS_ORDERED.flatMap((st) => ([1, 2, 3] as AchTier[]).map((t) => ({ st, t, r: byId.get(`stashset-${st.n}-${t}`) })));
-          const got = medals.filter((x) => x.r && (x.r.claimed || (!self && x.r.done))).length;
-          const ready = self ? medals.find((x) => x.r?.done && !x.r.claimed) ?? null : null;
-          const collectable = self && STASH_SETS_ORDERED.some((st) => st.items.every((it) => (stashQty.get(it.id) ?? 0) > 0));
-          const total = STASH_SETS_ORDERED.reduce((n, st) => n + (self ? state?.stashSets?.[st.n] ?? 0 : byId.get(`stashset-${st.n}-3`)?.progress ?? 0), 0);
-          return (
-            <div role="button" tabIndex={0} className={`ach-row ${ready || collectable ? "ready" : ""}`} onClick={() => setStashOpen(true)} onKeyDown={(e) => e.key === "Enter" && setStashOpen(true)}>
-              <span className={`stash-medal ${total || stashQty.size ? "" : "off"}`}>{/* eslint-disable-next-line @next/next/no-img-element */}<img src="/assets/stash/set-1.webp" alt="" /></span>
-              <span className="ach-main">
-                <span className="row" style={{ justifyContent: "space-between", gap: 6 }}>
-                  <b className="ach-name">Нычки</b>
-                  <span className="tiny muted num">собрано наборов: {total}</span>
-                </span>
-                <span className="ach-bar sm" style={{ ["--p" as string]: `${Math.round((got / medals.length) * 100)}%`, ["--c" as string]: "#ffcc33" }}>
-                  <i /><span className="num">{got} / {medals.length} медалей</span>
-                </span>
-              </span>
-              {ready && (
-                <button className="btn gold sm ach-take" disabled={busy === "achievement_claim"}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    void claim(ready.r!.id);
-                  }}>Забрать</button>
-              )}
-            </div>
-          );
-        })()}
       </div>}
-      {stashOpen && !stashOnly && (
-        <Modal title="Нычки" onClose={() => setStashOpen(false)}>
-          {stashBody}
-        </Modal>
-      )}
       {stashItem && (() => {
         const d = itemById(stashItem);
         const has = ownedStash.has(stashItem);

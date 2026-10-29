@@ -3583,3 +3583,14 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .dos-book .dos-tab.on { height: 38px; padding-top: 7px !important; }
 .dos-book .dos-tabs { height: 50px; }
 .dos-book .dos-tab:not(.on) { transform: translateY(2px); padding-top: 4px !important; }
+
+/* achievements in lists: Боевые / Экономика / Задания / Нычки / Прочее; a red dot where something waits */
+.ach-groups { display: flex; gap: 5px; overflow-x: auto; scrollbar-width: none; margin: 8px 0 0; padding: 4px 2px 2px; }
+.ach-groups::-webkit-scrollbar { display: none; }
+.ach-group { position: relative; flex: none; padding: 6px 11px; border-radius: 10px; border: 2px solid #6e5134; background: rgba(110, 81, 52, 0.14); color: #5a3f24; font-size: 12.5px; font-weight: 800; }
+.ach-group.on { background: #6e5134; color: #f6ead2; border-color: #4a331d; }
+.ach-group.due::after, .dos-book .dos-tab.due::after { content: ""; position: absolute; top: -3px; right: -3px; width: 10px; height: 10px; border-radius: 50%; background: #ff3b4e; border: 2px solid #2a1606; }
+.dos-book .dos-tab.due::after { top: 2px; right: 30px; }
+/* every ordinary window stays between the top HUD and the main menu: they are always visible and tappable */
+.modal-back:not(.full):not(.page) { top: calc(var(--hud-h) + var(--safe-t)); bottom: calc(var(--nav-h) + var(--safe-b)); padding: 8px 12px; }
+.modal-back:not(.full):not(.page) > .modal { max-height: 100%; }

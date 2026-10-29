@@ -301,6 +301,10 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
     else setDrag(0);
   };
   const under = Math.min(2, tabs.length - 1 - Math.max(0, at));
+  // a red dot on a tab with rewards waiting: achievements to collect, нычки sets to put together
+  const dueTabs = new Set<DosTab>();
+  if (p.self && p.achievements.some((r) => r.done && !r.claimed && !r.id.startsWith("stashset-"))) dueTabs.add("ach");
+  if (p.self && p.achievements.some((r) => r.done && !r.claimed && r.id.startsWith("stashset-"))) { dueTabs.add("stash"); dueTabs.add("ach"); }
   const moving = drag ? { transform: `translateX(${drag}px) rotate(${drag * 0.015}deg)`, transition: "none" } : undefined;
   return (
     <Modal onClose={onClose} page>
@@ -310,7 +314,7 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
           <i className="dos-back" aria-hidden="true" />
           <div className="dos-tabs" role="tablist" ref={tabsRef}>
             {tabs.map((t, i) => (
-              <button key={t.id} type="button" role="tab" aria-selected={!cover && tab === t.id} className={`dos-tab ${!cover && tab === t.id ? "on" : ""} ${i < at ? "past" : ""}`} onClick={() => turn(i)}>{t.label}</button>
+              <button key={t.id} type="button" role="tab" aria-selected={!cover && tab === t.id} className={`dos-tab ${!cover && tab === t.id ? "on" : ""} ${i < at ? "past" : ""} ${dueTabs.has(t.id) ? "due" : ""}`} onClick={() => turn(i)}>{t.label}</button>
             ))}
           </div>
           <div className="dos-stack">
