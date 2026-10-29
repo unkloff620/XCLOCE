@@ -3679,3 +3679,77 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .sl-pay-sym { display: flex; gap: 2px; align-items: center; }
 .sl-pay-sym .sl-sym { width: 26px; margin: 0; }
 @media (prefers-reduced-motion: reduce) { .sl-strip, .sl-sign, .sl-btn, .sl-still, .sl-reel.hit .mid .sl-sym, .sl-coins i, .sl-rain i { animation: none !important; } }
+
+/* ---------------- the upgrader cabinet (screens/minigames.tsx UpgraderWindow, public/assets/upgrader) ----------------
+ * a page like the slot machine: the drawn cabinet as big as fits; sizes in cqw of the picture */
+.ug { position: relative; width: min(100cqw, calc(100cqh * 1024 / 1536)); aspect-ratio: 1024 / 1536; user-select: none; -webkit-user-select: none; overflow: hidden; container-type: inline-size; }
+.ug > :not(.sl-bg) { position: absolute; }
+.ug-title { display: grid; place-items: center; margin: 0; font-size: 7.6cqw; line-height: 1; letter-spacing: 0.04em; text-transform: uppercase; color: #ffd36a;
+  text-shadow: 0 0 1.2cqw rgba(255, 170, 40, 0.95), 0 0 3.5cqw rgba(255, 120, 20, 0.6), 0 0.4cqw 0 #3a1a04; pointer-events: none; animation: ug-flicker 5s infinite; }
+@keyframes ug-flicker { 0%, 91%, 95%, 100% { opacity: 1; } 93% { opacity: 0.55; } }
+.ug-slot { display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 2.2cqw 0 1.8cqw; border-radius: 1.6cqw; }
+.ug-slot .upg-art img, .ug-slot .upg-art svg { width: 9.5cqw !important; height: 9.5cqw !important; }
+.ug-slot.target .upg-art img, .ug-slot.target .upg-art svg { width: 11cqw !important; height: 11cqw !important; }
+.ug-slot .upg-art { filter: drop-shadow(0 0 1.4cqw rgba(140, 210, 255, 0.55)); }
+.ug-slot.target .upg-art, .ug-slot.upgraded .upg-art { filter: drop-shadow(0 0 1.6cqw rgba(255, 210, 63, 0.7)); }
+.ug-slot .up-star { font-size: 3cqw; top: -1cqw; right: -1.4cqw; }
+.ug-cap { font-size: 2.1cqw; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; color: #8fd3ff; text-shadow: 0 0 1cqw rgba(80, 190, 255, 0.9); }
+.ug-slot.target .ug-cap { color: #ffd23f; text-shadow: 0 0 1cqw rgba(255, 200, 40, 0.9); }
+.ug-price { font-size: 2.3cqw; font-weight: 900; color: #e8f4ff; text-shadow: 0 0.2cqw 0 #000; white-space: nowrap; }
+.ug-price.gold { color: #ffd23f; }
+.ug-empty { margin: auto; font-size: 2.2cqw; font-weight: 800; color: #9b8a7a; text-align: center; }
+.ug-plate { display: flex; align-items: center; justify-content: center; padding: 0 1cqw; font-size: 1.75cqw; line-height: 1.12; font-weight: 800; color: #f1e2c8; text-align: center;
+  text-shadow: 0 0.2cqw 0 #000; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; padding-top: 1.1cqw; hyphens: auto; }
+/* the dial: a glowing arc on the dark ring track, the arrow rides it */
+.ug-dial { pointer-events: none; }
+.ug-dial svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.ug-track { fill: none; stroke: rgba(0, 0, 0, 0.45); stroke-width: 13; }
+.ug-arc { fill: none; stroke-width: 11; stroke-linecap: round; transition: stroke-dasharray 0.35s ease; }
+.ug-dial.hi .ug-arc { stroke: #2ee88a; filter: drop-shadow(0 0 4px rgba(46, 232, 138, 0.9)); }
+.ug-dial.mid .ug-arc { stroke: #ffcc33; filter: drop-shadow(0 0 4px rgba(255, 204, 51, 0.9)); }
+.ug-dial.lo .ug-arc { stroke: #ff6a3d; filter: drop-shadow(0 0 4px rgba(255, 106, 61, 0.9)); }
+.ug-needle { position: absolute; inset: 0; transform: rotate(var(--a)); transition: transform 0.25s; }
+.ug-needle.spin { transition: transform 1.5s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.ug-needle img { position: absolute; left: 50%; height: 16%; width: auto; transform: translateX(-50%) rotate(180deg); filter: drop-shadow(0 0.4cqw 0.5cqw rgba(0, 0, 0, 0.7)); }
+.ug-center { position: absolute; inset: 22%; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 0.5cqw; }
+.ug-center b { font-size: 8.4cqw; line-height: 1; color: #ffe9b0; text-shadow: 0 0 2cqw rgba(255, 190, 60, 0.8), 0 0.4cqw 0 #000; }
+.ug-dial.hi .ug-center b { color: #6dffb4; text-shadow: 0 0 2cqw rgba(46, 232, 138, 0.8), 0 0.4cqw 0 #000; }
+.ug-dial.lo .ug-center b { color: #ffab8a; text-shadow: 0 0 2cqw rgba(255, 106, 61, 0.8), 0 0.4cqw 0 #000; }
+.ug-center span { font-size: 2.2cqw; font-weight: 800; color: #cdbba6; text-transform: uppercase; letter-spacing: 0.05em; }
+.ug-dial.won .ug-center b { color: #6dffb4; animation: sl-line 0.4s steps(2) 5; }
+.ug-dial.won .ug-center span { color: #6dffb4; }
+.ug-dial.lost .ug-center b { color: #ff5a73; text-shadow: 0 0 2cqw rgba(255, 60, 90, 0.9), 0 0.4cqw 0 #000; }
+.ug-dial.lost .ug-center span { color: #ff5a73; }
+.ug-dial.spinning .ug-center b { opacity: 0.55; }
+.res-won .ug-slot.target { box-shadow: 0 0 4cqw 1cqw rgba(255, 210, 63, 0.55), inset 0 0 3cqw rgba(255, 210, 63, 0.4); animation: ug-glow 0.9s ease-in-out 3 alternate; }
+@keyframes ug-glow { to { box-shadow: 0 0 6cqw 2cqw rgba(255, 210, 63, 0.85), inset 0 0 4cqw rgba(255, 210, 63, 0.6); } }
+.res-lost .ug-slot.stake { box-shadow: 0 0 4cqw 1cqw rgba(255, 70, 40, 0.5), inset 0 0 3cqw rgba(255, 70, 40, 0.4); }
+/* the strip under the dial */
+.ug-strip { display: flex; align-items: center; justify-content: center; gap: 2cqw; padding: 0 3cqw; font-size: 2.6cqw; font-weight: 800; color: #f1e2c8; text-shadow: 0 0.2cqw 0 #000; white-space: nowrap; overflow: hidden; }
+.ug-strip .gold { color: #ffd23f; }
+.ug-strip input[type="range"] { flex: 1; min-width: 0; accent-color: #ffd23f; height: 3cqw; }
+/* the mode buttons: drawn plates, the chosen one lit */
+.ug-mode { border: 0; padding: 0 0 0.6cqw; background: url(/assets/upgrader/btn-off.webp) center / 100% 100% no-repeat; color: #f1e2c8; font: inherit; font-size: 3.1cqw; font-weight: 900;
+  text-shadow: 0 0.25cqw 0 #000; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.ug-mode.ch-c15 { color: #ff8a9a; }
+.ug-mode.ch-c30 { color: #ffd45a; }
+.ug-mode.ch-c70 { color: #6dffb4; }
+.ug-mode.on { background-image: url(/assets/upgrader/btn-on.webp); color: #2a1404; text-shadow: 0 0.2cqw 0 rgba(255, 240, 180, 0.7); filter: drop-shadow(0 0 1.6cqw rgba(255, 200, 40, 0.75)); }
+.ug-mode:active:not(:disabled) { transform: translateY(0.4cqw); }
+.ug-mode:disabled { cursor: default; }
+/* the long button */
+.ug-go { border: 0; padding: 0; background: url(/assets/upgrader/btn-go.webp) center / 100% 100% no-repeat; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.ug-go > span { display: flex; align-items: center; justify-content: center; gap: 1cqw; height: 100%; padding-bottom: 0.6cqw; font-size: 2.8cqw; font-weight: 900; text-transform: uppercase; letter-spacing: 0.02em; white-space: nowrap; color: #2a1404; text-shadow: 0 0.2cqw 0 rgba(255, 240, 180, 0.7); }
+.ug-go:not(:disabled) { animation: ug-go 1.6s ease-in-out infinite; }
+@keyframes ug-go { 50% { filter: brightness(1.12) drop-shadow(0 0 2cqw rgba(255, 210, 63, 0.7)); } }
+.ug-go:active:not(:disabled) { transform: translateY(0.6cqw); }
+.ug-go:disabled { filter: grayscale(0.75) brightness(0.65); cursor: default; }
+/* the tray: the stake chips, scrolled sideways */
+.ug-tray { display: flex; align-items: center; gap: 1.2cqw; padding: 0 1.4cqw; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; overscroll-behavior: contain; }
+.ug-tray::-webkit-scrollbar { display: none; }
+.ug-chip { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.2cqw; width: 9.4cqw; height: 9.2cqw; padding: 0; border-radius: 1.4cqw;
+  border: 0.3cqw solid rgba(255, 190, 120, 0.25); background: rgba(20, 10, 6, 0.72); color: #f1e2c8; font: inherit; font-size: 1.7cqw; font-weight: 800; cursor: pointer; }
+.ug-chip img, .ug-chip svg { width: 5.6cqw !important; height: 5.6cqw !important; }
+.ug-chip.upgraded { border-color: rgba(255, 210, 63, 0.75); }
+.ug-chip.on { border-color: #8fd3ff; box-shadow: 0 0 1.6cqw rgba(120, 200, 255, 0.85), inset 0 0 1cqw rgba(120, 200, 255, 0.4); }
+.ug-chip:disabled { opacity: 0.6; cursor: default; }

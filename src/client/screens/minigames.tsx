@@ -879,22 +879,35 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
 /* ---------------- upgrader ---------------- */
 const pctText = (c: number) => `${(Math.round(c * 10000) / 100).toLocaleString("ru-RU")}%`;
 
+/*
+ * The upgrader cabinet (public/assets/upgrader/room.webp, 1024×1536, tools/upgrader/build-upgrader.py): the drawn
+ * machine with two empty item slots and a big round brass dial; everything else sits on it at picture coordinates.
+ */
+const UW = 1024, UH = 1536;
+const ux = (x: number) => `${(x / UW) * 100}%`;
+const uy = (y: number) => `${(y / UH) * 100}%`;
+// the dial: centre and radius of the dark ring track inside the brass rim (picture pixels)
+const DIAL = { x: 511, y: 611, r: 157, box: 420 };
+
 function Gauge({ chance, roll, spinning, won }: { chance: number; roll: number | null; spinning: boolean; won: boolean | null }) {
-  // the arc: the green part is the chance (from the top, clockwise), the needle lands on the roll
-  const r = 70, c = 2 * Math.PI * r;
+  // the arc: the lit part is the chance (from the top, clockwise), the arrow lands on the roll
+  const k = 200 / DIAL.box, r = DIAL.r * k, c = 2 * Math.PI * r;
   const angle = roll === null ? 0 : roll * 360;
+  const tone = chance >= 0.35 ? "hi" : chance >= 0.2 ? "mid" : "lo";
   return (
-    <div className={`upg-gauge ${won === true ? "won" : won === false ? "lost" : ""}`}>
-      <svg viewBox="0 0 180 180" aria-hidden="true">
-        <circle cx="90" cy="90" r={r} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="16" />
-        <circle cx="90" cy="90" r={r} fill="none" stroke={chance >= 0.35 ? "#2ee88a" : chance >= 0.2 ? "#ffcc33" : "#ff7a45"} strokeWidth="16" strokeDasharray={`${Math.max(0.5, chance * c)} ${c}`} transform="rotate(-90 90 90)" />
-        <g className={`upg-needle ${spinning ? "spin" : ""}`} style={{ ["--a" as string]: `${angle + (spinning ? 1440 : 0)}deg` }}>
-          <path d="M90 14 L84 34 H96 Z" fill="#ffd23f" stroke="#1e1006" strokeWidth="2" />
-        </g>
+    <div className={`ug-dial ${tone} ${won === true ? "won" : won === false ? "lost" : ""} ${spinning ? "spinning" : ""}`}
+      style={{ left: ux(DIAL.x - DIAL.box / 2), top: uy(DIAL.y - DIAL.box / 2), width: ux(DIAL.box), height: uy(DIAL.box) }}>
+      <svg viewBox="0 0 200 200" aria-hidden="true">
+        <circle className="ug-track" cx="100" cy="100" r={r} />
+        <circle className="ug-arc" cx="100" cy="100" r={r} strokeDasharray={`${Math.max(0.5, chance * c)} ${c}`} transform="rotate(-90 100 100)" />
       </svg>
-      <div className="upg-center">
+      <div className={`ug-needle ${spinning ? "spin" : ""}`} style={{ ["--a" as string]: `${angle + (spinning ? 1440 : 0)}deg` }} aria-hidden="true">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/assets/upgrader/needle.webp" alt="" draggable={false} style={{ top: `${50 - (DIAL.r / DIAL.box) * 100 - 8}%` }} />
+      </div>
+      <div className="ug-center">
         <b className="display num">{pctText(chance)}</b>
-        <span className="tiny muted">{won === true ? "прокачано!" : won === false ? "сгорело" : chance >= 0.35 ? "хороший шанс" : chance >= 0.2 ? "средний шанс" : "низкий шанс"}</span>
+        <span>{won === true ? "прокачано!" : won === false ? "сгорело" : spinning ? "крутим…" : tone === "hi" ? "хороший шанс" : tone === "mid" ? "средний шанс" : "низкий шанс"}</span>
       </div>
     </div>
   );
@@ -906,6 +919,7 @@ function UpgraderHelp() {
       <p>Ставишь вещь — находку, оружие, энергетик (можно несколько одинаковых) или уже улучшенную вещь — и выбираешь множитель: ×2, ×4, ×8, или шанс: 15%, 30%, 70%. Шанс = 90% ÷ множитель.</p>
       <p>Получилось — в инвентарь падает <b>улучшенная</b> вещь с золотой обводкой: она стоит «ставка × множитель» и столько же даёт при продаже. В остальном это та же вещь: энергетик даёт ту же энергию, оружие бьёт так же (возьми его в бой). Не повезло — ставка сгорает.</p>
       <p>Улучшенную вещь можно поставить снова — и так дойти хоть до Rug Pull Gun.</p>
+      <p>Вещь для ставки выбирается внизу, на полке автомата. В день есть бесплатные прокруты, дальше прокрут платный — цена на кнопке. Новые бесплатные — после полуночи по Москве.</p>
     </Help>
   );
 }
@@ -982,67 +996,89 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
       }
     }, 1600);
   };
+  const stakeName = cur ? `${itemById(curId)?.name ?? ""}${up ? " ★" : q > 1 ? ` ×${q}` : ""}` : "";
+  // the six mode buttons and the long button fill the big panel; the stake list lies in the tray at the bottom
+  const MODE_W = 115, MODE_GAP = 10, MODE_X = 150;
   return (
-    <Modal title={<span className="title-row">Апгрейдер <UpgraderHelp /></span>} onClose={onClose} wide>
-      <div className="upg">
-        {/* the name and the price sit under the box, in fixed-height lines: nothing jumps when the stake changes */}
-        <div className="upg-side">
-          <div className={`upg-box stake ${up ? "upgraded" : ""}`}>
-            <span className="tiny upg-cap">ТВОЯ СТАВКА</span>
+    <Modal onClose={onClose} page>
+      <div className="sl-help"><UpgraderHelp /></div>
+      <div className="sl-stage">
+        <div className={`ug ${won === true ? "res-won" : won === false ? "res-lost" : ""}`}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="sl-bg" src="/assets/upgrader/room.webp" alt="" draggable={false} />
+          <b className="ug-title display" style={{ left: ux(140), top: uy(160), width: ux(620), height: uy(130) }}>Апгрейдер</b>
+
+          {/* the stake slot (cyan) and its plate */}
+          <div className={`ug-slot stake ${up ? "upgraded" : ""}`} style={{ left: ux(165), top: uy(420), width: ux(110), height: uy(350) }}>
+            <span className="ug-cap">ставка</span>
             {cur || snap ? (
-              <>
-                {snap ? (
-                  <span className={`upg-art ${snap.burn ? "upg-burn" : ""}`} onAnimationEnd={(e) => { if (e.animationName === "upg-burn") setSnap(null); }}>
-                    <ItemArt id={snap.id} size={72} />{snap.up && <i className="up-star">★</i>}
-                    {snap.burn && <i className="upg-embers" aria-hidden="true" />}
-                  </span>
-                ) : (
-                  <span className="upg-art"><ItemArt id={curId} size={72} />{up && <i className="up-star">★</i>}</span>
-                )}
-                <span className="upg-range">{!snap && cur?.kind === "plain" && have > 1 && <input type="range" min={1} max={have} value={q} onChange={(e) => { setQty(Number(e.target.value)); setWon(null); }} aria-label="Сколько ставить" />}</span>
-              </>
+              snap ? (
+                <span className={`upg-art ${snap.burn ? "upg-burn" : ""}`} onAnimationEnd={(e) => { if (e.animationName === "upg-burn") setSnap(null); }}>
+                  <ItemArt id={snap.id} size={64} />{snap.up && <i className="up-star">★</i>}
+                  {snap.burn && <i className="upg-embers" aria-hidden="true" />}
+                </span>
+              ) : (
+                <span className="upg-art"><ItemArt id={curId} size={64} />{up && <i className="up-star">★</i>}</span>
+              )
             ) : (
-              <span className="small muted center">Нечего ставить. Собери находки во дворе.</span>
+              <span className="ug-empty">пусто</span>
+            )}
+            <span className="ug-price num">{cur ? `${full(stakeValue)} ₽` : ""}</span>
+          </div>
+          <span className="ug-plate" style={{ left: ux(160), top: uy(792), width: ux(122), height: uy(52) }} title={stakeName}>{stakeName}</span>
+
+          <Gauge chance={chance} roll={roll} spinning={spinning} won={won} />
+
+          {/* the target slot (gold) and its plate */}
+          <div className="ug-slot target upgraded" style={{ left: ux(748), top: uy(420), width: ux(132), height: uy(350) }}>
+            <span className="ug-cap">цель</span>
+            <span className="upg-art"><ItemArt id={target} size={64} /><i className="up-star">★</i></span>
+            <span className="ug-price num gold">{full(value)} ₽</span>
+          </div>
+          <span className="ug-plate" style={{ left: ux(742), top: uy(792), width: ux(142), height: uy(52) }}>{itemById(target)?.name} ★</span>
+
+          {/* the strip under the dial: how many of the stake go in, or what the spin is about */}
+          <div className="ug-strip" style={{ left: ux(140), top: uy(878), width: ux(744), height: uy(48) }}>
+            {!snap && cur?.kind === "plain" && have > 1 ? (
+              <>
+                <span className="num">×{q}</span>
+                <input type="range" min={1} max={have} value={q} onChange={(e) => { setQty(Number(e.target.value)); setWon(null); }} aria-label="Сколько ставить" />
+                <span className="num">из {have}</span>
+              </>
+            ) : cur ? (
+              <span>{full(stakeValue)} ₽ → <b className="gold">{full(value)} ₽</b></span>
+            ) : (
+              <span>Нечего ставить. Собери находки во дворе.</span>
             )}
           </div>
-          <b className="upg-name">{cur ? `${itemById(curId)?.name ?? ""}${up ? " ★" : q > 1 ? ` ×${q}` : ""}` : ""}</b>
-          <span className="upg-price num">{cur ? `${full(stakeValue)} ₽` : ""}</span>
-        </div>
-        <Gauge chance={chance} roll={roll} spinning={spinning} won={won} />
-        <div className="upg-side">
-          <div className="upg-box target upgraded">
-            <span className="tiny upg-cap">ЦЕЛЬ</span>
-            <span className="upg-art"><ItemArt id={target} size={72} /><i className="up-star">★</i></span>
-            <span className="upg-range" />
+
+          {UPGRADE_MODES.map((x, i) => (
+            <button key={x.id} className={`ug-mode ${x.id.startsWith("c") ? `ch-${x.id}` : ""} ${x.id === mode ? "on" : ""}`}
+              style={{ left: ux(MODE_X + i * (MODE_W + MODE_GAP)), top: uy(1024), width: ux(MODE_W), height: uy(68) }}
+              onClick={() => { setMode(x.id); setWon(null); setRoll(null); }} disabled={spinning}>
+              {x.label}
+            </button>
+          ))}
+          <button className="ug-go" style={{ left: ux(162), top: uy(1108), width: ux(700), height: uy(122) }}
+            disabled={!cur || spinning || busy === "upgrade" || !canSpin} onClick={go}>
+            <span>{spinning ? "Крутим…" : spinFree ? `Прокачать · бесплатно ${spins!.freeLeft}/${spins!.freePerDay}` : <>Прокачать · <Coin c={spinPrice.currency} v={spinPrice.amount} size={14} /></>}</span>
+          </button>
+
+          {/* the tray: what to put in */}
+          <div className="ug-tray" style={{ left: ux(132), top: uy(1292), width: ux(762), height: uy(104) }}>
+            {ups.map((u) => (
+              <button key={`u${u.uid}`} className={`ug-chip upgraded ${cur?.kind === "up" && cur.uid === u.uid ? "on" : ""}`} onClick={() => pickStake({ kind: "up", uid: u.uid })} title={`${itemById(u.itemId)?.name} ★`} disabled={spinning}>
+                <ItemArt id={u.itemId} size={30} /><span className="num">{full(u.value)}</span>
+              </button>
+            ))}
+            {plain.map((id) => (
+              <button key={id} className={`ug-chip ${cur?.kind === "plain" && cur.id === id ? "on" : ""}`} onClick={() => pickStake({ kind: "plain", id })} title={itemById(id)?.name} disabled={spinning}>
+                <ItemArt id={id} size={30} /><span className="num">×{inv.get(id)}</span>
+              </button>
+            ))}
+            {!ups.length && !plain.length && <span className="ug-empty">пусто</span>}
           </div>
-          <b className="upg-name">{itemById(target)?.name} ★</b>
-          <span className="upg-price num gold">{full(value)} ₽</span>
         </div>
-      </div>
-      <div className="upg-modes">
-        {UPGRADE_MODES.map((x) => (
-          <button key={x.id} className={`upg-mode ${x.id.startsWith("c") ? `ch ch-${x.id}` : ""} ${x.id === mode ? "on" : ""}`} onClick={() => { setMode(x.id); setWon(null); setRoll(null); }} disabled={spinning}>
-            {x.label}
-          </button>
-        ))}
-      </div>
-      <button className="btn big block gold upg-go" disabled={!cur || spinning || busy === "upgrade" || !canSpin} onClick={go}>
-        {spinning ? "Крутим…" : spinFree ? `⇪ Прокачать · бесплатно ${spins!.freeLeft}/${spins!.freePerDay}` : <>⇪ Прокачать · <Coin c={spinPrice.currency} v={spinPrice.amount} size={16} /></>}
-      </button>
-      {!spinFree && <span className="tiny muted center upg-note">Бесплатные прокруты на сегодня кончились ({spins?.freePerDay ?? 3} в день) — дальше {full(spinPrice.amount)} ₽ за прокрут. Новые — после полуночи по Москве.</span>}
-      <span className="tiny muted" style={{ display: "block" }}>Что поставить</span>
-      <div className="upg-pick">
-        {ups.map((u) => (
-          <button key={`u${u.uid}`} className={`upg-chip upgraded ${cur?.kind === "up" && cur.uid === u.uid ? "on" : ""}`} onClick={() => pickStake({ kind: "up", uid: u.uid })} title={`${itemById(u.itemId)?.name} ★`}>
-            <ItemArt id={u.itemId} size={34} /><span className="num">{full(u.value)} ₽</span>
-          </button>
-        ))}
-        {plain.map((id) => (
-          <button key={id} className={`upg-chip ${cur?.kind === "plain" && cur.id === id ? "on" : ""}`} onClick={() => pickStake({ kind: "plain", id })} title={itemById(id)?.name}>
-            <ItemArt id={id} size={34} /><span className="num">×{inv.get(id)}</span>
-          </button>
-        ))}
-        {!ups.length && !plain.length && <span className="tiny muted">пусто</span>}
       </div>
     </Modal>
   );
