@@ -5,7 +5,7 @@ import { StashGivePanel } from "./stash-swap.tsx";
 import { NotifySwitch } from "./quests.tsx";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type TouchEvent as RTouchEvent } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { haptic } from "../telegram.ts";
 import { sfx } from "../sound.ts";
@@ -231,6 +231,12 @@ function Brawl({ res, name, onClose }: { res: { won: boolean; mine: number; thei
 function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; reload: () => void }) {
   const [tab, setTab] = useState<"sum" | "ach" | "cases" | "tal" | "stash" | "news" | "set">("sum");
   const [renaming, setRenaming] = useState(false);
+  // the pages lie in a stack like a book: swipe left — the open page goes away and the next one comes up from under it,
+  // swipe right — back; a tap on a tab turns to it the same way
+  const [anim, setAnim] = useState<"" | "out-l" | "out-r" | "in-l" | "in-r">("");
+  const [drag, setDrag] = useState(0);
+  const touch = useRef<{ x: number; y: number; on: boolean | null } | null>(null);
+  const tabsRef = useRef<HTMLDivElement>(null);
   const s = p.stats;
   const tabs: { id: typeof tab; label: string }[] = [
     { id: "sum", label: "Сводка" },
@@ -241,6 +247,44 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
     ...(p.self ? [{ id: "news" as const, label: "Новости" }] : []),
     ...(p.self ? [{ id: "set" as const, label: "Настройки" }] : []),
   ];
+  const at = Math.max(0, tabs.findIndex((t) => t.id === tab));
+  const turn = (to: number) => {
+    if (anim || to === at || to < 0 || to >= tabs.length) { setDrag(0); return; }
+    haptic.tap();
+    const fwd = to > at;
+    setAnim(fwd ? "out-l" : "out-r");
+    window.setTimeout(() => {
+      setTab(tabs[to].id);
+      setDrag(0);
+      setAnim(fwd ? "in-r" : "in-l");
+      window.setTimeout(() => setAnim(""), 260);
+    }, 200);
+  };
+  useEffect(() => {
+    tabsRef.current?.querySelector<HTMLElement>(".dos-tab.on")?.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+  }, [tab]);
+  const onStart = (e: RTouchEvent) => { const t = e.touches[0]; touch.current = { x: t.clientX, y: t.clientY, on: null }; };
+  const onMove = (e: RTouchEvent) => {
+    const c = touch.current;
+    if (!c || anim) return;
+    const t = e.touches[0];
+    const dx = t.clientX - c.x, dy = t.clientY - c.y;
+    // decide once: a sideways move turns pages, an up-down one scrolls the page
+    if (c.on === null && Math.abs(dx) + Math.abs(dy) > 10) c.on = Math.abs(dx) > Math.abs(dy) * 1.3;
+    if (!c.on) return;
+    // the first and the last page only give a little
+    const edge = (dx > 0 && at === 0) || (dx < 0 && at === tabs.length - 1);
+    setDrag(edge ? dx * 0.25 : dx);
+  };
+  const onEnd = () => {
+    const c = touch.current;
+    touch.current = null;
+    if (!c?.on) return;
+    if (drag < -60) turn(at + 1);
+    else if (drag > 60) turn(at - 1);
+    else setDrag(0);
+  };
+  const under = Math.min(2, tabs.length - 1 - at);
   return (
     <Modal onClose={onClose} page>
       <div className="dos">
@@ -260,12 +304,16 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
             {p.username && <a className="tg-link dos-tg" href={`https://t.me/${encodeURIComponent(p.username)}`} target="_blank" rel="noopener noreferrer">@{p.username}</a>}
           </div>
         </div>
-        <div className="dos-tabs" role="tablist">
-          {tabs.map((t) => (
-            <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} className={`dos-tab ${tab === t.id ? "on" : ""}`} onClick={() => { haptic.tap(); setTab(t.id); }}>{t.label}</button>
+        <div className="dos-book">
+        <div className="dos-tabs" role="tablist" ref={tabsRef}>
+          {tabs.map((t, i) => (
+            <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} className={`dos-tab ${tab === t.id ? "on" : ""}`} onClick={() => turn(i)}>{t.label}</button>
           ))}
         </div>
-        <div className="dos-page">
+        <div className="dos-stack" onTouchStart={onStart} onTouchMove={onMove} onTouchEnd={onEnd} onTouchCancel={onEnd}>
+          {/* the next pages lie under the open one, their edges peek out on the right */}
+          {Array.from({ length: under }, (_, k) => <i key={k} className={`dos-under u${k + 1}`} aria-hidden="true" />)}
+        <div className={`dos-page ${anim}`} style={drag ? { transform: `translateX(${drag}px) rotate(${drag * 0.015}deg)`, transition: "none" } : undefined}>
           <div className="dos-inner">
           {/* on every page: achievement points and the talents put in */}
           {tab === "cases" && <div className="dos-stats">
@@ -325,6 +373,8 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
           {tab === "news" && p.self && <NewsPanel rows={p.news ?? []} />}
           {tab === "set" && p.self && <SettingsPanel />}
           </div>
+        </div>
+        </div>
         </div>
       </div>
       {renaming && <RenameWindow current={p.name} onClose={() => setRenaming(false)} onDone={reload} />}
