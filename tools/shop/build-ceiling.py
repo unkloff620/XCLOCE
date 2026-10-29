@@ -4,7 +4,8 @@ top of the screen, so the room goes on upward instead of a hard edge.
 The room is drawn in one-point perspective: the ceiling is a plane whose edges (the two corner beams) run to the
 vanishing point VP. Scaling the picture about VP maps the ceiling onto itself, so every row above the picture is taken
 from the ceiling band of room.webp (rows 0..BAND) scaled about VP; the band is mirrored back and forth in log-distance,
-so there are no seams, and the seam with the picture is exact (row 0 maps onto itself); the band's own top-to-bottom shading is flattened. The ceiling darkens upward
+so there are no seams, and the seam with the picture is exact (row 0 maps onto itself); the band's own top-to-bottom shading is flattened; further up the plaster
+is a drawn tileable texture in the same perspective, so cracks do not repeat. The ceiling darkens upward
 (farther from the lamp), and the lamp cord goes on up to a mount.
 """
 import numpy as np
@@ -12,6 +13,10 @@ from PIL import Image, ImageDraw, ImageFilter
 
 SRC = "public/assets/shop/v2/room.webp"
 OUT = "public/assets/shop/v2/ceiling.webp"
+TEX = "tools/shop/source/ceiling-plaster.png"
+TEX_U, TEX_V = 1150.0, 1_250_000.0     # texture px per (screen px / distance to VP) and per (1 / distance): plaster scale
+LEFT_EDGE = (40.0, 0.777)            # inner edge of the left beam: x = a + b·y (y = row, negative above the picture)
+RIGHT_EDGE = (1150.0, -0.857)
 EXT = 900                   # px above the picture (room.webp is 1200×1680)
 VP = (568.0, 679.0)         # where the corner beams meet (measured on room.webp)
 BAND = 98                   # the ceiling rows above the front beam
@@ -55,6 +60,24 @@ raw = bilinear(room, sx, sy)
 fix = bilinear(flat, sx, sy)
 a = np.clip(w / L, 0, 1)[..., None]
 out = raw * (1 - a) + fix * a
+# past the first band the plaster is a drawn tileable texture (tools/shop/source/ceiling-plaster.png, generated from
+# the room's own ceiling) laid on the ceiling plane in the same perspective: no repeated cracks. Only between the inner
+# edges of the corner beams (lines through VP); colours matched to the band; faded in so the seam stays exact.
+tex = np.asarray(Image.open(TEX).convert("RGB")).astype(np.float32)
+band = room[:BAND, 300:900].reshape(-1, 3)
+tm, ts = tex.reshape(-1, 3).mean(0), tex.reshape(-1, 3).std(0)
+tex = (tex - tm) / ts * band.std(0) + band.mean(0)
+u = (xs - vx) / r * TEX_U
+v = TEX_V / r
+tx = np.mod(u, tex.shape[1] - 1)
+ty = np.mod(v, tex.shape[0] - 1)
+proj = bilinear(tex, tx, ty)
+left = LEFT_EDGE[0] + LEFT_EDGE[1] * y          # inner edges of the beams, x on row y
+right = RIGHT_EDGE[0] + RIGHT_EDGE[1] * y
+inside = np.clip(np.minimum(xs - left, right - xs) / 6.0, 0, 1)
+fade = np.clip((w / L - 0.4) / 1.2, 0, 1)
+tw = (inside * fade)[..., None]
+out = out * (1 - tw) + proj * tw
 # farther from the lamp: darker and a little cooler upward
 k = (np.abs(y) / EXT)[..., None]
 out = out * (1 - 0.55 * k ** 0.8)
