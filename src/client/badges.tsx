@@ -10,7 +10,7 @@ import { useGame } from "./store.tsx";
 import { haptic } from "./telegram.ts";
 import { full, short } from "./format.ts";
 import { BOSSES as OPEN_ALL } from "../content/bosses.ts";
-import { STASH_LOCATION_NAMES, STASH_SETS_ORDERED } from "../content/stashes.ts";
+import { STASH_LOCATION_NAMES, STASH_MEDAL_TARGETS, STASH_SETS_ORDERED } from "../content/stashes.ts";
 import { itemById } from "../content/items.ts";
 import { BossPhoto } from "./screens/boss-parts.tsx";
 import { BossCoin } from "./art/boss-coin.tsx";
@@ -149,6 +149,49 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
             })}
           </div>
   );
+  // the achievements' «Нычки» tab: only the sets and their medals (10 — bronze, 50 — silver, 100 — gold); the нычки
+  // themselves are in the dossier's own «Нычки» tab
+  const stashAch = (
+    <div className="col" style={{ gap: 8 }}>
+      <div className="small muted center">Собери набор {STASH_MEDAL_TARGETS[0]} раз — бронза, {STASH_MEDAL_TARGETS[1]} — серебро, {STASH_MEDAL_TARGETS[2]} — золото. Сами нычки — во вкладке «Нычки».</div>
+      {STASH_SETS_ORDERED.map((st) => {
+        const count = self ? state?.stashSets?.[st.n] ?? 0 : byId.get(`stashset-${st.n}-3`)?.progress ?? 0;
+        const ids = ([1, 2, 3] as AchTier[]).map((t) => `stashset-${st.n}-${t}`);
+        const reached = STASH_MEDAL_TARGETS.filter((t) => count >= t).length;
+        const next = STASH_MEDAL_TARGETS[Math.min(2, reached)];
+        const ready = self ? ids.find((id) => { const r = byId.get(id); return r?.done && !r.claimed; }) ?? null : null;
+        return (
+          <div key={st.id} className={`ach-row ${ready ? "ready" : ""}`}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="stash-ach-art" src={`/assets/stash/set-${st.n}.webp`} alt="" draggable={false} />
+            <span className="ach-main">
+              <span className="row" style={{ justifyContent: "space-between", gap: 6 }}>
+                <b className="ach-name ellipsis">{st.name}</b>
+                <span className="bk-medals">
+                  {ids.map((id, i) => {
+                    const r = byId.get(id);
+                    const gotM = !!r && (r.claimed || (!self && r.done));
+                    const due = self && !!r?.done && !r.claimed;
+                    return (
+                      <button key={id} className={`bk-medal ${due ? "due" : ""}`} onClick={() => setMedal(id)} aria-label={achievementById(id)?.name}>
+                        <BadgeMedal icon="chest" tier={(i + 1) as AchTier} earned={gotM || due} size={24} />
+                      </button>
+                    );
+                  })}
+                </span>
+              </span>
+              <span className="ach-bar sm" style={{ ["--p" as string]: `${reached >= 3 ? 100 : Math.min(100, Math.round((count / next) * 100))}%`, ["--c" as string]: TIER_COLORS[Math.min(3, reached + 1) as AchTier] }}>
+                <i /><span className="num">{reached >= 3 ? `всё собрано · ${count}` : `${count} / ${next}`}</span>
+              </span>
+            </span>
+            {ready && (
+              <button className="btn gold sm ach-take" disabled={busy === "achievement_claim"} onClick={() => void claim(ready)}>Забрать</button>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
   if (stashOnly) return (
     <>
       {stashBody}
@@ -207,11 +250,10 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
       {shown && <div className="ach-groups" role="tablist">
         {ACH_GROUPS.map((g) => {
           const due = self && rows.some((r) => r.done && !r.claimed && (g.id === "boss" ? /^(soloboss|bosskill|medal)-/.test(r.id) || groupOf(r.id.replace(/-\d$/, "")) === "boss" : g.id === "stash" ? r.id.startsWith("stashset-") : !/^(soloboss|bosskill|medal|stashset)-/.test(r.id) && groupOf(r.id.replace(/-\d$/, "")) === g.id));
-          const setReady = g.id === "stash" && self && STASH_SETS_ORDERED.some((st) => st.items.every((it) => (stashQty.get(it.id) ?? 0) > 0));
-          return <button key={g.id} type="button" role="tab" aria-selected={group === g.id} className={`ach-group ${group === g.id ? "on" : ""} ${due || setReady ? "due" : ""}`} onClick={() => { haptic.tap(); setGroup(g.id); }}>{g.name}</button>;
+          return <button key={g.id} type="button" role="tab" aria-selected={group === g.id} className={`ach-group ${group === g.id ? "on" : ""} ${due ? "due" : ""}`} onClick={() => { haptic.tap(); setGroup(g.id); }}>{g.name}</button>;
         })}
       </div>}
-      {shown && group === "stash" && <div style={{ marginTop: 8 }}>{stashBody}</div>}
+      {shown && group === "stash" && <div style={{ marginTop: 8 }}>{stashAch}</div>}
       {shown && group !== "stash" && <div className="col" style={{ gap: 8, marginTop: 8 }}>
         {ACH_CATEGORIES.filter((c) => groupOf(c.id) === group).map((c) => {
           const s = catState(c, byId, self);

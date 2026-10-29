@@ -3841,3 +3841,5 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .achbox-pts { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; }
 .achbox-got { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 12px; background: rgba(255, 200, 60, 0.25); width: 100%; animation: pop 0.3s cubic-bezier(0.2, 1.4, 0.4, 1); }
 .achbox-got .reward-chips, .achbox-got .chips { justify-content: center; }
+/* the achievements' «Нычки» tab: a set's picture in the row */
+.stash-ach-art { flex: none; width: 44px; height: 44px; object-fit: contain; border-radius: 10px; background: rgba(120, 80, 35, 0.15); }
