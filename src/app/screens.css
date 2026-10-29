@@ -3918,3 +3918,6 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .room-right { position: absolute; right: 12px; top: var(--top); display: flex; flex-direction: column; align-items: flex-end; gap: 10px; z-index: 2; }
 .room-right .menu-drop { margin-left: 0; margin-right: -5px; }
 .fit-page.styling .room-right { display: none; }
+/* «Дела»: the achievement points and the talents as plain lines, a word before the icon, no frame */
+.dos-stat { border: 0; padding: 0; flex: 0 1 auto; }
+.dos-stat small { font-size: 14px; font-weight: 800; color: var(--muted); margin-right: 2px; }
