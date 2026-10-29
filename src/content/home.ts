@@ -121,6 +121,7 @@ export interface RoomDef {
 export const ROOM_DEFS: RoomDef[] = [
   { id: "basic", name: "Каморка", description: "С чего все начинали: облезлые обои, старый стол, ламповый монитор и табуретка.", price: null, bonus: {} },
   { id: "neon", name: "Неоновая хата", description: "Обои с узором, кот на крыше и RGB-лента под потолком. Выпадает с Кедра. +5 к лимиту энергии.", price: { currency: "RUB", amount: 2000 }, bonus: { energyMax: 5 }, drop: { boss: "kedr", chance: 0.15 } },
+  { id: "shark", name: "Акулья берлога", description: "Аквариум во всю стену, иллюминатор, сети и якорь — логово Мугонатора. Выпадает с Мугонатора. +2% шанса крита.", price: { currency: "RUB", amount: 3000 }, bonus: { critChance: 0.02 }, drop: { boss: "mugo", chance: 0.15 } },
   { id: "boxing", name: "Боксёрская", description: "Перчатки на стене, плакаты легенд и полка «для храбрости». Выпадает с Командате. +30 к урону кулака.", price: { currency: "RUB", amount: 4000 }, bonus: { fistDamage: 30 }, drop: { boss: "bebyakyan", chance: 0.15 } },
   { id: "office", name: "Офис трейдера", description: "Стеклянные стены, три графика и кофемашина. Даёт шанс крита.", price: { currency: "USD", amount: 40 }, bonus: { critChance: 0.03 } },
   { id: "penthouse", name: "Пентхаус To The Moon", description: "Вид на Луну, золото и бассейн из стейблкоинов. Урон и сила крита.", price: { currency: "USD", amount: 89 }, bonus: { damage: 0.05, critDamage: 0.15 } },
