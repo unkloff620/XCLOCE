@@ -1,5 +1,7 @@
 "use client";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+
+const AUTO_KEY = "xc-ach-auto";
 import { MEDAL_TIERS } from "../content/medals.ts";
 import { ACH_CATEGORIES, ACH_SECTIONS, TIER_COLORS, TIER_NAMES, achievementById, categoryOf, type AchCategory, type AchievementDef, type AchSection, type AchTier } from "../content/achievements.ts";
 import { Icon, type IconName } from "./art/icons.tsx";
@@ -79,14 +81,17 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
   const byId = new Map(rows.map((r) => [r.id, r]));
   const total = rows.filter((r) => r.claimed || (!self && r.done)).length;
   const waiting = self ? rows.filter((r) => r.done && !r.claimed).length : 0;
-  const claimAll = async () => {
+  // «Автосбор» is kept on this device; while it is on, a reached position is collected as soon as it shows up
+  const [auto, setAuto] = useState(() => { try { return localStorage.getItem(AUTO_KEY) === "1"; } catch { return false; } });
+  const toggleAuto = () => {
     haptic.tap();
-    const r = await act<{ ids: string[]; reward: { achPoints?: number } }>("achievement_claim_all", {}, (x) => `Забрано достижений: ${x.ids.length} · +${x.reward.achPoints ?? 0} очков`);
-    if (r) {
-      haptic.big();
-      onClaimed?.();
-    }
+    setAuto((v) => { try { localStorage.setItem(AUTO_KEY, v ? "0" : "1"); } catch { /* no storage */ } return !v; });
   };
+  useEffect(() => {
+    if (!self || !auto || waiting < 1 || busy) return;
+    const t = window.setTimeout(() => { void act("achievement_claim_all", {}).then((r) => { if (r) onClaimed?.(); }); }, 400);
+    return () => window.clearTimeout(t);
+  }, [self, auto, waiting, busy, act, onClaimed]);
   const claim = async (id: string) => {
     const r = await act("achievement_claim", { id }, "Награда за достижение получена");
     if (r) {
@@ -210,10 +215,13 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
         <span className={`ach-caret ${shown ? "open" : ""}`} aria-hidden="true">▾</span>
       </button>
       {/* everything reached, in one tap */}
-      {self && waiting > 0 && (
+      {/* «Автосбор»: on — everything reached is collected by itself; off — by a tap on the glowing picture */}
+      {self && (
         <div className="ach-uncollected">
-          <span>Не собранные: <b className="num">{waiting}</b></span>
-          <button type="button" className="ach-take-all" disabled={busy === "achievement_claim_all"} onClick={claimAll}>ВСЁ</button>
+          {waiting > 0 && !auto && <span>Не собранные: <b className="num">{waiting}</b></span>}
+          <span className="grow" />
+          <span>Автосбор</span>
+          <button type="button" role="switch" aria-checked={auto} aria-label="Автосбор достижений" className={`upd-toggle ach-auto ${auto ? "on" : ""}`} onClick={toggleAuto}><i /></button>
         </div>
       )}
       {shown && <div className="ach-groups" role="tablist">
