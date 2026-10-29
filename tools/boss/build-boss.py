@@ -40,7 +40,7 @@ PIVOT_BY_BOSS = {
                 "browL": [535.5, 249.1], "browR": [556.6, 249.1]},  # printed by assemble-babafey.py
     # Восток (layers by the artist, 2000×2800): neck, shoulders, elbows, wrists; the bag hangs from the left fist
     "vodovoz": {"head": [590.0, 395.0], "armL": [432.0, 435.0], "lowL": [322.0, 588.0], "handL": [222.0, 478.0],
-                "bag": [182.0, 448.0], "armR": [686.0, 440.0], "lowR": [722.0, 615.0], "handR": [652.0, 508.0],
+                "bag": [182.0, 448.0], "armR": [686.0, 440.0], "lowR": [772.0, 614.0], "handR": [652.0, 508.0],
                 "browL": [604.0, 257.6], "browR": [619.0, 262.3]},
 }
 

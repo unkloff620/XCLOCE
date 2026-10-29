@@ -812,8 +812,8 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "w": 221,
         "h": 291,
         "pivot": [
-          722.0,
-          615.0
+          772.0,
+          614.0
         ],
         "v": "d6bb5110"
       },
