@@ -1,7 +1,7 @@
 /*
  * Fight modes and boss medals.
  * Every boss can be fought in three modes (the HP × mult): «Пацанский» ×1, «Блатной» ×3, «Авторитетный» ×6.
- * A won fight (from KEY_SHARE of the HP, as for the pass) gives the boss's medal of the mode for sure: bronze, silver
+ * A won fight (any own hit, as for the pass) gives the boss's medal of the mode for sure: bronze, silver
  * or gold — his face on a coin. Every medal adds damage to his weapon (MEDAL_WEAPON) at once: a full set of MEDAL_SET
  * medals of one kind gives medalBonus (10 × a share of that weapon's base damage — more for silver, the most for gold),
  * each medal 1/MEDAL_SET of it.

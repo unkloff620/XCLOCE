@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useGame } from "../store.tsx";
 import { api, type FightView, type Granted } from "../api.ts";
-import { KEY_SHARE, bossById, rewardShare } from "../../content/bosses.ts";
+import { bossById, rewardShare } from "../../content/bosses.ts";
 import { scaleReward } from "../../content/rewards.ts";
 import { GainLine, Modal } from "../ui.tsx";
 import { ItemArt } from "../art/items.tsx";
@@ -92,7 +92,7 @@ export function ResultWindow() {
 
   // until the claim answers: the reward this fight earns (my part of it), the same numbers
   const share = rewardShare(view.myDamage, view.hpMax);
-  const keyOk = view.myDamage >= view.hpMax * KEY_SHARE;
+  const keyOk = view.myDamage > 0;
   const preview = { ...scaleReward(boss.reward, share), items: [...(boss.final || !keyOk ? [] : [{ id: `key-${boss.id}`, qty: 1 }]), ...(share >= 1 ? boss.reward.items ?? [] : [])] };
   const unlocks = got?.unlocks ?? [];
   const rooms = unlocks.filter((id) => id.startsWith("room:")).map((id) => id.slice(5));

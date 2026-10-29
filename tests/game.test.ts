@@ -120,14 +120,14 @@ describe("boss fights: personal fights, shared damage", () => {
     expect(Object.fromEntries(rows.map((r) => [r.id, Number(r.damage_total)]))).toEqual({ _all: 60, datsik: 30, kedr: 30 });
   });
 
-  it("one hit can finish several fights; the reward follows each one's own damage", async () => {
+  it("one hit can finish several fights; everyone who hit gets the full reward", async () => {
     await setBossHp({ datsik: 1000 });
     const a = await newPlayer(db), b = await newPlayer(db), c = await newPlayer(db), d = await newPlayer(db);
     const fa = await startDatsik(a);
     const fb = await startDatsik(b);
     const fc = await startDatsik(c);
     const fd = await startDatsik(d);
-    // b: a full share (2% = 20 → the free mouse hits for 20); c: 0.6 of a share (one fist hit = 12 = 1.2% → key); d: nothing
+    // b and c hit (a mouse, a fist): both get everything; d did not hit: nothing
     await hit(b, "mouse");
     await hit(c, "fist");
     await give(db, a, "rug-pull-gun", 4);
@@ -141,8 +141,8 @@ describe("boss fights: personal fights, shared damage", () => {
     expect(await wallet(db, b, "USD")).toBe(4);
 
     const sc = await act(db, c, "fight_claim", { fightId: fc.result.fightId }, T0, always(0.99));
-    expect(sc.result).toMatchObject({ share: 0.6, key: true });
-    expect(await wallet(db, c, "USD")).toBe(2); // 0.6 × 4 → whole dollars only, rounded down
+    expect(sc.result).toMatchObject({ share: 1, key: true });
+    expect(await wallet(db, c, "USD")).toBe(4);
     expect(await qty(db, c, "key-datsik")).toBe(1);
 
     const sd = await act(db, d, "fight_claim", { fightId: fd.result.fightId }, T0, always(0.99));

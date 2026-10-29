@@ -41,12 +41,12 @@ function LockedInfo({ itemId, onClose }: { itemId: string; onClose: () => void }
           {first ? (
             <>
               <span className="small">Награда за первую победу над боссом <b>{boss.name}</b> (№{boss.order}). Победи его — вещь откроется здесь, в магазине, и её можно будет выкупить.</span>
-              <span className="tiny muted">Нужно нанести в бою хотя бы 1% здоровья босса.</span>
+              <span className="tiny muted">Нужно хотя бы раз ударить босса в «Блатном» бою.</span>
             </>
           ) : (
             <>
               <span className="small">Выпадает с босса <b>{boss.name}</b> (№{boss.order}). Победи его — вещь откроется здесь, в магазине, и её можно будет выкупить.</span>
-              <span className="tiny muted">Шанс — секрет. Не везёт {boss.wear?.pity ?? 10} побед подряд — вещь откроется точно. Нужно нанести в бою хотя бы 1% здоровья босса.</span>
+              <span className="tiny muted">Шанс — 70% за каждую победу в «Блатном» режиме, если ударил босса хоть раз. Не везёт {boss.wear?.pity ?? 10} побед подряд — вещь откроется точно.</span>
             </>
           )}
         </div>

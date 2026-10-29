@@ -24,12 +24,12 @@ export interface BossDef {
   /** the card this boss gives for a win (item key-<id>); the final boss gives none */
   card?: CardTier;
   /**
-   * things this boss unlocks in the shop: each one not unlocked yet rolls `chance` per win (from KEY_SHARE damage);
+   * things this boss unlocks in the shop: each one not unlocked yet rolls BLAT_THING_CHANCE per «Блатной» win (any own hit; `chance` is no longer used);
    * after `pity` wins in a row without luck one of them unlocks for sure. A dropped thing is not given — it opens
    * in the shop and has to be bought there. Which ones, is a secret for the player (shown as «?» x/N)
    */
   wear?: { items: string[]; chance: number; pity: number };
-  /** things the first win (from KEY_SHARE damage) opens in the shop for sure; they are bought there too */
+  /** things the first win (any own hit) opens in the shop for sure; they are bought there too */
   firstWin?: string[];
   /**
    * the boss's set: owning every thing of his `wear` list (worn or not) adds `damage` to every hit of `weapon`
@@ -226,18 +226,20 @@ export const FIGHT_HOURS = 8;
 export const FIGHTS_PER_DAY = 7;
 /**
  * Bosses are shared: everybody's hits lower HP in every running fight, so with ~100 players a boss falls fast.
- * The win reward therefore follows your own part: full reward from FULL_SHARE of the boss HP dealt in that fight,
- * proportionally less below it, and the key (and the drop) only from KEY_SHARE. No damage — no reward.
+ * Every player who hit the boss in a won fight gets the FULL reward, the pass, the drop and the medal — however small
+ * the part was (FULL_SHARE / KEY_SHARE are kept only for old configs; the reward no longer depends on them).
+ * No damage at all — no reward.
  */
 export const FULL_SHARE = 0.02;
 export const KEY_SHARE = 0.01;
 /** a win that earned the pass gives a second pass of the same boss with this chance */
 export const EXTRA_KEY_CHANCE = 0.1;
 /** reward multiplier for damage dealt in a fight */
-export function rewardShare(myDamage: number, hpMax: number, full = FULL_SHARE): number {
-  if (!(myDamage > 0) || !(hpMax > 0)) return 0;
-  return Math.min(1, myDamage / (hpMax * full));
+export function rewardShare(myDamage: number, _hpMax?: number, _full = FULL_SHARE): number {
+  return myDamage > 0 ? 1 : 0;
 }
+/** a boss's own things (BossDef.wear) in «Блатной»: this chance per thing per win, for every boss */
+export const BLAT_THING_CHANCE = 0.7;
 
 /** How many keys of the previous boss open this one. */
 export function keysNeeded(b: BossDef, defaultKeys: number): number {

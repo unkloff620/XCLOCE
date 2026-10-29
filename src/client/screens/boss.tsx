@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { api, type FightView, type Hit, type Tray } from "../api.ts";
-import { BOSSES, arenaOf, bossById, type BossDef, FIGHT_HOURS, FULL_SHARE, KEY_SHARE, rewardShare } from "../../content/bosses.ts";
+import { BOSSES, arenaOf, bossById, type BossDef, FIGHT_HOURS, rewardShare } from "../../content/bosses.ts";
 import { WEAPONS, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES, bossLines } from "../../content/phrases.ts";
 import { BossSilhouette } from "../art/scenes.tsx";
@@ -556,15 +556,14 @@ export function BossScreen({ id }: { id: string }) {
   );
 }
 
-/** How much of the win reward this fight already earns: full from FULL_SHARE of the boss HP. */
-function ShareChip({ dmg, hpMax }: { dmg: number; hpMax: number }) {
-  const k = rewardShare(dmg, hpMax);
-  const need = Math.ceil(hpMax * FULL_SHARE);
+/** The win reward: whole for everyone who has hit the boss in this fight. */
+function ShareChip({ dmg }: { dmg: number; hpMax: number }) {
+  const k = rewardShare(dmg);
   return (
-    <span className={`chip share-chip ${k >= 1 ? "full" : ""}`} title={`Награда за победу зависит от твоего урона: полная — от ${full(need)} (2% здоровья босса), ключ — от ${full(Math.ceil(hpMax * KEY_SHARE))}`}>
+    <span className={`chip share-chip ${k >= 1 ? "full" : ""}`} title={k >= 1 ? "Ты в деле: после победы — полная награда, ключ и медаль" : "Ударь босса хотя бы раз — и после победы получишь полную награду"}>
       <i className="fill" style={{ width: `${k * 100}%` }} />
       <Icon name="chest" size={16} />
-      <b className="num">{Math.round(k * 100)}%</b>
+      <b className="num">{k >= 1 ? "100%" : "0%"}</b>
     </span>
   );
 }

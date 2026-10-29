@@ -1,6 +1,6 @@
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, idempotent, itemQty, ledger, moscowDay, nextMoscowMidnight, takeItem, type Ctx, type Granted } from "../core.ts";
-import { BOSSES, EXTRA_KEY_CHANCE, OPEN_BOSSES, bossById, bossOpen, keyId, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
+import { BLAT_THING_CHANCE, BOSSES, EXTRA_KEY_CHANCE, OPEN_BOSSES, bossById, bossOpen, keyId, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
 import { WEAPONS, itemById, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
 import { boostReward, mergeRewards, scaleReward } from "../../content/rewards.ts";
@@ -340,12 +340,10 @@ export async function claimFight(ctx: Ctx, fightId: number) {
     return { status: "won" as const, reward: f.reward };
   }
   const def = bossById(f.boss_id)!;
-  // the reward follows my own part of this fight (see FULL_SHARE / KEY_SHARE in content/bosses.ts)
+  // any own hit in a won fight earns the whole reward: money, xp, the pass, the drop, the medal (content/bosses.ts)
   const myDamage = Number(f.my_damage);
-  const share = rewardShare(myDamage, f.hp_max, ctx.cfg.fight.fullShare);
-  // the first boss is the door into the game: any own hit in a won fight gives his pass (a newcomer with a fist alone
-  // never reaches KEY_SHARE of a crowded Дацкоу); from the second boss on — KEY_SHARE of the HP
-  const earnedKey = myDamage >= f.hp_max * ctx.cfg.fight.keyShare || (def.order === 1 && myDamage > 0);
+  const share = rewardShare(myDamage);
+  const earnedKey = myDamage > 0;
   const drops = earnedKey ? (def.drop ?? []).filter((d) => ctx.rng() < d.chance).map((d) => ({ id: d.id, qty: d.qty })) : [];
   // the pass of this boss, and with EXTRA_KEY_CHANCE a second one
   const bonusKey = !def.final && earnedKey && ctx.rng() < EXTRA_KEY_CHANCE;
@@ -436,7 +434,8 @@ async function rollUnlocks(ctx: Ctx, def: BossDef): Promise<string[]> {
   if (!missing.length) return [];
   const [row] = await ctx.q.query<{ misses: number }>("SELECT misses FROM boss_pity WHERE player_id=$1 AND boss_id=$2 FOR UPDATE", [ctx.pid, def.id]);
   const misses = row?.misses ?? 0;
-  let got = missing.filter(() => ctx.rng() < def.wear!.chance);
+  // in «Блатной» (the only mode the things drop in) every thing rolls BLAT_THING_CHANCE, for every boss
+  let got = missing.filter(() => ctx.rng() < BLAT_THING_CHANCE);
   if (!got.length && misses + 1 >= def.wear.pity) got = [missing[Math.floor(ctx.rng() * missing.length) % missing.length]];
   await ctx.q.query(
     "INSERT INTO boss_pity (player_id, boss_id, misses) VALUES ($1,$2,$3) ON CONFLICT (player_id, boss_id) DO UPDATE SET misses = EXCLUDED.misses",
