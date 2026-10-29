@@ -3912,3 +3912,9 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
   background: linear-gradient(180deg, rgba(255, 200, 110, 0.3), rgba(255, 180, 90, 0.05) 85%, transparent); mix-blend-mode: screen; animation: lamp-flicker 6s steps(1) infinite; }
 @keyframes lamp-flicker { 0%, 52%, 56%, 60%, 88%, 100% { opacity: 1; } 54%, 58% { opacity: 0.25; } 89%, 91% { opacity: 0.55; } 90% { opacity: 0.1; } }
 @media (prefers-reduced-motion: reduce) { .yard-lamp::before, .yard-lamp i { animation: none; } }
+/* home: [?] on the left, under it the events and the boss fight; the [≡] menu and the messages on the right */
+.fit-page .room-help { left: 12px; right: auto; }
+.fit-page .room-left { top: calc(var(--top) + 52px); }
+.room-right { position: absolute; right: 12px; top: var(--top); display: flex; flex-direction: column; align-items: flex-end; gap: 10px; z-index: 2; }
+.room-right .menu-drop { margin-left: 0; margin-right: -5px; }
+.fit-page.styling .room-right { display: none; }

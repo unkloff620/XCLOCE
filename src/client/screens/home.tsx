@@ -206,7 +206,8 @@ export function HomeScreen() {
             <p className="small muted">Нажми на любую валюту вверху — откроется обменник. Валюта игровая и ничего не стоит в реальном мире.</p>
           </Help>
         </div>
-        <div className="room-left">
+        {/* the right side: the [≡] menu and the messages */}
+        <div className="room-right">
           {/* everything for the home sits folded in one [≡] button; its dot shows when anything inside waits */}
           <button className={`menu-toggle ${menuOpen ? "open" : ""} ${menuAlert && !menuOpen ? "glow" : ""}`} onClick={() => setMenuOpen((v) => !v)} aria-label="Меню" aria-expanded={menuOpen} title="Меню">
             <span className="menu-bars" aria-hidden="true"><i /><i /><i /></span>
@@ -245,6 +246,9 @@ export function HomeScreen() {
               </Link>
             </div>
           )}
+        </div>
+        {/* the left side: events and the running boss fight */}
+        <div className="room-left">
           {f && fb && !fightOpen && (
             <button className="fight-mini" style={{ ["--acc" as string]: fb.theme.accent, ["--hp" as string]: hpPct }} onClick={() => setFightOpen(true)} aria-label={`Идёт бой: ${fb.name}`} title="Идёт бой">
               <BossRing boss={fb} size={58} />
