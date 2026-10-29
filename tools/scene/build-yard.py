@@ -87,3 +87,12 @@ bd.paste(skyn.resize((out.width, round(out.width * skyn.height / skyn.width))), 
 bd.alpha_composite(out)
 bd.convert("RGB").resize((400, round(400 * out.height / out.width)), Image.LANCZOS).save(os.path.join(OUT, "court-backdrop-dark.webp"), "WEBP", quality=70, method=4)
 print("night yard", out.size)
+
+# the entrance at night: the same place cut from the night yard, with the day entrance's outline (court-entrance-dark.webp)
+ent = Image.open(os.path.join(OUT, "court-entrance.webp")).convert("RGBA")
+night = Image.open(os.path.join(OUT, "court-dark.webp")).convert("RGBA")
+box = (0, round(night.height * 0.3971), round(night.width * 0.3045), round(night.height * 0.3971) + round(night.height * 0.2825))
+piece = night.crop(box).resize(ent.size, Image.LANCZOS)
+piece.putalpha(ent.getchannel("A"))
+piece.save(os.path.join(OUT, "court-entrance-dark.webp"), "WEBP", quality=82, method=4)
+print("night entrance", piece.size)

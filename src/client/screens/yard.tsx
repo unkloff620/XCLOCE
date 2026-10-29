@@ -97,12 +97,14 @@ export function YardScreen() {
           <img className="yard-bg" src={tod === "night" ? "/assets/yard/court-dark.webp" : "/assets/yard/court-night.webp"} alt="" draggable={false} />
           {/* the time of day in Moscow tints the yard: a cool bright day, the drawn sunset in the evening, a dark blue night */}
           <span className="yard-tint" aria-hidden="true" />
+          {/* the street lamp at night: its light flickers now and then */}
+          {tod === "night" && <span className="yard-lamp" aria-hidden="true"><i /></span>}
           {/* the entrance leads to the locations with tasks */}
           <Link href="/locations" className={`yard-obj yard-entrance ${taskHint ? "call" : ""}`} aria-label="Локации" title="Локации">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="yard-ring" src="/assets/yard/court-entrance-ring.webp" alt="" draggable={false} />
-            <img src="/assets/yard/court-entrance.webp" alt="" draggable={false} />
+            <img src={tod === "night" ? "/assets/yard/court-entrance-dark.webp" : "/assets/yard/court-entrance.webp"} alt="" draggable={false} />
             {taskHint && <span className="side-alert">!</span>}
           </Link>
           <YardGames />
