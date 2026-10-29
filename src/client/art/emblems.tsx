@@ -9,23 +9,31 @@ import { parseEmblem, type ClanShield } from "../../content/clans.ts";
 
 const SYMBOLS = new Set(["rocket", "diamond", "bull", "bear", "moon", "skull", "crown", "flame"]);
 
-/** where the symbol sits on each shield, in the 64-unit viewBox (the boxes printed by build-shield.py, scaled up a bit) */
-const SHIELDS: Record<ClanShield, { x: number; y: number; s: number; k: number }> = {
-  gold: { x: 21.0, y: 15.0, s: 22.0, k: 1.5 },
-  silver: { x: 19.0, y: 13.0, s: 26.0, k: 1.35 },
-  iron: { x: 19.0, y: 12.0, s: 26.0, k: 1.35 },
-  bronze: { x: 20.5, y: 13.5, s: 22.0, k: 1.45 },
-  neon: { x: 19.0, y: 12.0, s: 26.0, k: 1.35 },
-  round: { x: 16.0, y: 14.5, s: 32.0, k: 1.25 },
-  crown: { x: 21.5, y: 18.0, s: 21.0, k: 1.45 },
+/** the deepest point of each shield's field (cy) and its depth (r), 64-unit viewBox, printed by build-shield.py;
+ * the symbol is centred there (every shield is centred on its field, so x is always the middle) */
+const SHIELDS: Record<ClanShield, { cy: number; r: number }> = {
+  gold: { cy: 26.8, r: 15.2 },
+  silver: { cy: 27.2, r: 17.7 },
+  iron: { cy: 26.2, r: 17.5 },
+  bronze: { cy: 26.5, r: 14.8 },
+  neon: { cy: 26.2, r: 17.8 },
+  round: { cy: 30.5, r: 24.1 },
+  crown: { cy: 29.2, r: 15.1 },
 };
 
-export function Emblem({ emblem, color, size = 44, shield }: { emblem: string; color: string; size?: number; shield?: ClanShield }) {
+/** a clan logo alone (the symbol art), for the logo picker */
+export function ClanLogo({ symbol, size = 34 }: { symbol: string; size?: number }) {
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={`/assets/ui/emblem-${SYMBOLS.has(symbol) ? symbol : "crown"}.webp`} alt="" width={size} height={size} draggable={false} style={{ display: "block", flex: "none" }} />;
+}
+
+/** `bare`: the shield alone, without the logo (the shield style picker) */
+export function Emblem({ emblem, color, size = 44, shield, bare }: { emblem: string; color: string; size?: number; shield?: ClanShield; bare?: boolean }) {
   const p = parseEmblem(emblem);
   const sym = SYMBOLS.has(p.symbol) ? p.symbol : "crown";
   const style = shield ?? p.shield;
   const b = SHIELDS[style];
-  const z = b.s * b.k, x = b.x - (z - b.s) / 2, y = b.y - (z - b.s) / 2;
+  const z = Math.min(b.r * 2.3, 38), x = 32 - z / 2, y = b.cy - z / 2;
   const uid = useId().replace(/[^a-z0-9]/gi, "");
   const mask = `embm-${uid}`, shade = `embg-${uid}`;
   return (
@@ -45,7 +53,7 @@ export function Emblem({ emblem, color, size = 44, shield }: { emblem: string; c
         <rect x="0" y="0" width="64" height="64" fill={color} />
         <rect x="0" y="0" width="64" height="64" fill={`url(#${shade})`} />
       </g>
-      <image href={`/assets/ui/emblem-${sym}.webp`} x={x} y={y} width={z} height={z} />
+      {!bare && <image href={`/assets/ui/emblem-${sym}.webp`} x={x} y={y} width={z} height={z} />}
       <image href={`/assets/ui/clan-shield-${style}.webp`} x="0" y="0" width="64" height="64" />
     </Svg>
   );

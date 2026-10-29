@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Help } from "../help.tsx";
 import { useGame } from "../store.tsx";
 import { api } from "../api.ts";
-import { Emblem } from "../art/emblems.tsx";
+import { ClanLogo, Emblem } from "../art/emblems.tsx";
 import { CLAN_SHIELDS, joinEmblem, parseEmblem } from "../../content/clans.ts";
 import { Avatar, Bar, Empty, Modal, RewardChips } from "../ui.tsx";
 import type { Reward } from "../../content/rewards.ts";
@@ -40,7 +40,7 @@ function MyRequest() {
   );
 }
 
-/** The coat of arms: the logo (symbol), the shield style and the colour. */
+/** The coat of arms builder: the shield style (shields only), the logo (logos only) and the field colour; the big preview shows them together. */
 function ArmsPicker({ symbols, colors, symbol, shield, color, onChange }: {
   symbols: string[]; colors: string[]; symbol: string; shield: string; color: string;
   onChange: (v: { symbol?: string; shield?: string; color?: string }) => void;
@@ -51,14 +51,14 @@ function ArmsPicker({ symbols, colors, symbol, shield, color, onChange }: {
       <div className="row" style={{ flexWrap: "wrap", gap: 6 }}>
         {CLAN_SHIELDS.map((x) => (
           <button key={x.id} className={`pick ${x.id === shield ? "on" : ""}`} onClick={() => onChange({ shield: x.id })} title={x.name} aria-label={x.name}>
-            <Emblem emblem={joinEmblem(symbol, x.id)} color={color} size={40} />
+            <Emblem emblem={joinEmblem(symbol, x.id)} color={color} size={40} bare />
           </button>
         ))}
       </div>
       <label className="tiny muted">Логотип</label>
       <div className="row" style={{ flexWrap: "wrap", gap: 6 }}>
         {symbols.map((e) => (
-          <button key={e} className={`pick ${e === symbol ? "on" : ""}`} onClick={() => onChange({ symbol: e })}><Emblem emblem={joinEmblem(e, shield)} color={color} size={34} /></button>
+          <button key={e} className={`pick ${e === symbol ? "on" : ""}`} onClick={() => onChange({ symbol: e })}><ClanLogo symbol={e} size={34} /></button>
         ))}
       </div>
       <label className="tiny muted">Цвет</label>
