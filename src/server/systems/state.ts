@@ -138,8 +138,13 @@ export async function profileView(q: Queryable, viewer: number, pid: number, cfg
   const lv = levelFromXp(p.xp, cfg.levels);
   const self = viewer === pid;
   const e = energyNow(p.energy, new Date(p.energy_at).getTime(), Date.now(), energyCfgOf(cfg, p));
+  // «Личное дело №N»: the place in the authority top
+  const [pl] = await q.query<{ place: number }>(
+    "SELECT COUNT(*)::int + 1 AS place FROM players o WHERE o.banned_at IS NULL AND (o.xp > $2 OR (o.xp = $2 AND o.id < $1))",
+    [p.id, p.xp],
+  );
   return {
-    id: p.id, self, name: p.display_name, username: p.username, photo: p.photo_url,
+    id: p.id, self, name: p.display_name, username: p.username, photo: p.photo_url, place: Number(pl?.place ?? 0),
     achPoints: Number((p as PlayerRow & { ach_points?: number }).ach_points ?? 0),
     cases: await casesView(q, pid),
     arsenal: stockIds.map((id) => ({ id, qty: Number(stock.find((r) => r.item_id === id)?.qty ?? 0) })).filter((w) => w.qty > 0),

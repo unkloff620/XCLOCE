@@ -3512,30 +3512,50 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 @keyframes vk-dangle-slow { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
 @media (prefers-reduced-motion: reduce) { .rig-vodovoz .vk-strap { animation: none; } }
 
-/* «Личное дело» as a book (screens/profile.tsx Dossier): the open page in front, the next pages under it with their
-   edges peeking out on the right; every page has its own folder tab on top (public/assets/ui/dossier-sheet.webp,
-   dossier-tab-on/off.webp, tools/ui/build-dossier.py). Swipe or tap a tab: the page turns away and the next comes up. */
-.dos-book { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-.dos-book .dos-tabs { position: relative; z-index: 3; display: flex; align-items: flex-end; gap: 0; margin: 0 28px -4px 2px; padding: 6px 0 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
-.dos-book .dos-tab { flex: none; position: relative; z-index: 0; margin: 0 -10px 0 0; min-height: 0; filter: none; color: #6a4c30; font-size: 13px; font-weight: 800;
-  background: none; border-style: solid; border-color: transparent; border-width: 10px 22px 0 12px; border-image: url(/assets/ui/dossier-tab-off.webp) 30 60 0 34 fill / 10px 22px 0 12px stretch;
-  padding: 3px 2px 7px; line-height: 1.1; white-space: nowrap; transform: translateY(3px); transition: transform 0.2s, color 0.2s; }
-.dos-book .dos-tab.on { z-index: 2; color: #1e140a; font-weight: 900; border-image-source: url(/assets/ui/dossier-tab-on.webp); transform: none; padding-bottom: 10px; }
-.dos-book .dos-tab:first-child { z-index: 1; }
-.dos-book .dos-tab.on:first-child { z-index: 2; }
-.dos-stack { position: relative; flex: 1; min-height: 0; display: flex; margin-right: 24px; touch-action: pan-y; }
-.dos-under { position: absolute; inset: 4px 0 6px; z-index: 0; background: url(/assets/ui/dossier-sheet.webp) center / 100% 100% no-repeat; pointer-events: none; }
-.dos-under.u1 { transform: translateX(12px); filter: brightness(0.86); }
-.dos-under.u2 { transform: translateX(23px); filter: brightness(0.74); z-index: -1; }
-.dos-book .dos-page { position: relative; z-index: 2; flex: 1; min-height: 0; max-height: none; margin: 0; padding: 24px 18px 22px 20px;
-  background: url(/assets/ui/dossier-sheet.webp) center / 100% 100% no-repeat; transform-origin: 30% 100%; transition: transform 0.2s ease-out;
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35)); }
-.dos-book .dos-page.out-l { animation: dos-out-l 0.2s ease-in forwards; }
-.dos-book .dos-page.out-r { animation: dos-out-r 0.2s ease-in forwards; }
-.dos-book .dos-page.in-r { animation: dos-in-r 0.26s ease-out; }
-.dos-book .dos-page.in-l { animation: dos-in-l 0.26s ease-out; }
-@keyframes dos-out-l { to { transform: translateX(-108%) rotate(-5deg); opacity: 0.4; } }
-@keyframes dos-in-r { from { transform: translateX(10px) scale(0.985); filter: brightness(0.86) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35)); } }
-@keyframes dos-out-r { to { transform: translateX(12px) scale(0.985); filter: brightness(0.8); opacity: 0.6; } }
-@keyframes dos-in-l { from { transform: translateX(-108%) rotate(-5deg); opacity: 0.4; } }
-@media (prefers-reduced-motion: reduce) { .dos-book .dos-page.out-l, .dos-book .dos-page.out-r, .dos-book .dos-page.in-l, .dos-book .dos-page.in-r { animation-duration: 0.01s; } }
+/* «Личное дело», round 2: the artist's folder (tools/ui/build-dossier.py). The cover (dossier-cover.webp: «Личное
+   дело №», a photo frame, «ФИО») lies on top; under it the sheets (dossier-page.webp), each with its folder tab
+   (dossier-ptab.webp, 9-slice), on the inside of the back cover (dossier-back.webp). */
+.modal.page:has(.dos-book) { background: none; border: 0; box-shadow: none; padding: 10px 6px 6px; }
+.modal.page .dos-book { flex: 1; min-height: 0; position: relative; display: flex; flex-direction: column; padding: 0 0 0 0; touch-action: pan-y; }
+.dos-back { position: absolute; left: 0; right: 0; top: 30px; bottom: 0; z-index: 0; background: url(/assets/ui/dossier-back.webp) center / 100% 100% no-repeat;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5)); pointer-events: none; }
+.dos-book .dos-tabs { position: relative; z-index: 3; display: flex; align-items: flex-end; gap: 0; margin: 0 34px -6px 14px; padding: 4px 0 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; height: 40px; }
+.dos-book .dos-tab { flex: none; position: relative; z-index: 0; margin: 0 -4px 0 0; min-height: 0; height: 30px; background: none; filter: brightness(0.82) saturate(0.9);
+  border-style: solid; border-color: transparent; border-width: 10px 26px 0 14px; border-image: url(/assets/ui/dossier-ptab.webp) 26 70 0 36 fill / 10px 26px 0 14px stretch;
+  padding: 0 0 6px; line-height: 1; white-space: nowrap; color: #5a3f24; font-size: 12.5px; font-weight: 800; transform: translateY(6px); transition: transform 0.2s, filter 0.2s; }
+.dos-book .dos-tab.past { filter: brightness(0.7) saturate(0.8); }
+.dos-book .dos-tab.on { z-index: 2; filter: none; color: #1e140a; font-weight: 900; height: 34px; transform: none; }
+.dos-book .dos-stack { position: relative; z-index: 2; flex: 1; min-height: 0; display: flex; margin: 0 26px 10px 10px; }
+.dos-book .dos-under { position: absolute; inset: 0; z-index: 0; background: url(/assets/ui/dossier-page.webp) center / 100% 100% no-repeat; pointer-events: none; }
+.dos-book .dos-under.u1 { transform: translate(8px, 3px); filter: brightness(0.88); }
+.dos-book .dos-under.u2 { transform: translate(15px, 6px); filter: brightness(0.76); z-index: -1; }
+.dos-book .dos-page { position: relative; z-index: 2; flex: 1; min-height: 0; max-height: none; margin: 0; padding: 22px 18px 24px 26px;
+  background: url(/assets/ui/dossier-page.webp) center / 100% 100% no-repeat; transform-origin: 20% 100%; transition: transform 0.2s ease-out;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.35)); }
+.dos-book .dos-page.shut { visibility: hidden; }
+/* the cover: over the stack (and over the tabs, it is the closed folder) */
+.dos-cover { position: absolute; z-index: 5; left: -10px; right: -26px; top: -40px; bottom: -10px; background: url(/assets/ui/dossier-cover.webp) center / 100% 100% no-repeat;
+  transform-origin: 0% 50%; transition: transform 0.2s ease-out; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5)); color: #2a1606; container-type: size; }
+.dos-cover-no { position: absolute; left: 76.5%; width: 15%; top: 16.2%; height: 5.6%; display: flex; align-items: flex-end; justify-content: center; font-size: min(7cqw, 30px); line-height: 1; color: #2a1606; }
+.dos-cover-photo { position: absolute; left: 27.6%; width: 43.4%; top: 30.8%; height: 40%; overflow: hidden; display: grid; place-items: center; }
+.dos-cover-photo img { width: 100%; height: 100%; object-fit: cover; filter: sepia(0.35) contrast(1.05); mix-blend-mode: multiply; opacity: 0.95; }
+.dos-cover-photo .avatar { width: 80% !important; height: auto !important; aspect-ratio: 1; font-size: 15cqw !important; }
+.dos-cover-name { position: absolute; left: 29%; width: 58%; top: 77.2%; height: 4.6%; display: flex; align-items: flex-end; gap: 6px; }
+.dos-cover-name b { font-size: min(6cqw, 24px); line-height: 1; color: #1e140a; min-width: 0; }
+.dos-cover-name .icon-btn { flex: none; padding: 2px; }
+.dos-cover-sub { position: absolute; left: 29%; width: 58%; top: 81.8%; height: 4.4%; display: flex; align-items: flex-end; gap: 8px; flex-wrap: nowrap; font-size: min(3.6cqw, 14px); }
+.dos-cover-sub .dos-tg { color: #24160a !important; text-decoration: underline; font-weight: 800; }
+.dos-cover-sub .online { color: #24160a; }
+.dos-cover-hint { position: absolute; right: 9%; bottom: 3.2%; color: #6a4a2a; font-weight: 800; animation: dos-hint 2.4s ease-in-out infinite; }
+@keyframes dos-hint { 0%, 100% { transform: translateX(0); opacity: 0.6; } 50% { transform: translateX(-8px); opacity: 1; } }
+.dos-book .dos-page.out-l, .dos-cover.out-l { animation: dos-out-l 0.22s ease-in forwards; }
+.dos-book .dos-page.out-r { animation: dos-out-r 0.22s ease-in forwards; }
+.dos-book .dos-page.in-r { animation: dos-in-r 0.28s ease-out; }
+.dos-book .dos-page.in-l, .dos-cover.in-l { animation: dos-in-l 0.28s ease-out; }
+@keyframes dos-out-l { to { transform: translateX(-112%) rotate(-6deg); opacity: 0.3; } }
+@keyframes dos-in-r { from { transform: translate(8px, 3px); filter: brightness(0.88) drop-shadow(0 3px 5px rgba(0, 0, 0, 0.35)); } }
+@keyframes dos-out-r { to { transform: translate(10px, 4px); filter: brightness(0.82); opacity: 0.5; } }
+@keyframes dos-in-l { from { transform: translateX(-112%) rotate(-6deg); opacity: 0.3; } }
+@media (prefers-reduced-motion: reduce) { .dos-book .dos-page, .dos-cover { animation-duration: 0.01s !important; } .dos-cover-hint { animation: none; } }
+/* the closed folder hides the pages' tabs */
+.dos-book:has(.dos-cover) .dos-tabs { visibility: hidden; }

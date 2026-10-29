@@ -12,7 +12,9 @@ export type Sfx = "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" |
   /* mini-games: dice in the cup and on the table, a card flip, a deal, poker chips, a squashed roach, a zonk */
   | "shake" | "dice" | "card" | "deal" | "chips" | "splat" | "zonk"
   /* a profile: «Ништяк!» for a pumped biceps (public/assets/sound/nishtyak.mp3, a deep voice), a spit, a fist fight */
-  | "nishtyak" | "spit" | "brawl";
+  | "nishtyak" | "spit" | "brawl"
+  /* «Личное дело»: a sheet of paper turned over */
+  | "page";
 
 const MUTE_KEY = "xc2_mute";
 const MUSIC_KEY = "xc2_music";
@@ -359,6 +361,14 @@ export function sfx(name: Sfx, power = 0.5) {
         tone(a, 260 + i * 25, t + d, 0.05, { type: "triangle", vol: 0.07 });
       });
       break;
+    case "page": {
+      // a paper page turned: a soft rising rustle, a crisp flick in the middle, a light settle at the end
+      noise(a, t, 0.22, { freq: 1800, type: "bandpass", q: 0.6, vol: 0.22 });
+      noise(a, t + 0.06, 0.12, { freq: 4200, type: "highpass", vol: 0.16 });
+      noise(a, t + 0.14, 0.05, { freq: 2600, type: "bandpass", q: 2, vol: 0.28 });
+      noise(a, t + 0.24, 0.1, { freq: 900, type: "lowpass", vol: 0.18 });
+      break;
+    }
     case "card":
       // a card snapped over
       noise(a, t, 0.05, { freq: 3200, type: "highpass", vol: 0.35 });

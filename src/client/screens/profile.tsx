@@ -26,7 +26,7 @@ import { EYE_COLORS, SKIN_TONES, type Look } from "../../content/home.ts";
 import { clock, full, money, short } from "../format.ts";
 
 interface Profile {
-  id: number; self: boolean; name: string; username: string | null; photo: string | null;
+  id: number; self: boolean; name: string; username: string | null; photo: string | null; place?: number;
   level: number; xp: number; levelXp: number; levelNeed: number;
   firstSeen: number; lastSeen: number; activeDays: number;
   wallet: Record<Currency, number> | null; energy: number | null;
@@ -228,17 +228,19 @@ function Brawl({ res, name, onClose }: { res: { won: boolean; mine: number; thei
 }
 
 /** «Личное дело»: the folder with tabs — the summary, achievements, the cases on bosses, нычки, settings */
+type DosTab = "sum" | "ach" | "cases" | "tal" | "stash" | "news" | "set";
+
 function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; reload: () => void }) {
-  const [tab, setTab] = useState<"sum" | "ach" | "cases" | "tal" | "stash" | "news" | "set">("sum");
   const [renaming, setRenaming] = useState(false);
-  // the pages lie in a stack like a book: swipe left — the open page goes away and the next one comes up from under it,
-  // swipe right — back; a tap on a tab turns to it the same way
+  // the folder like a book: the cover first (avatar, the case number = the place in the top, the nick), swipe left —
+  // the cover opens and the pages follow, each with its own tab; swipe right — back. A tap on a tab turns to it.
+  const [view, setView] = useState(-1);
   const [anim, setAnim] = useState<"" | "out-l" | "out-r" | "in-l" | "in-r">("");
   const [drag, setDrag] = useState(0);
   const touch = useRef<{ x: number; y: number; on: boolean | null } | null>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
   const s = p.stats;
-  const tabs: { id: typeof tab; label: string }[] = [
+  const tabs: { id: DosTab; label: string }[] = [
     { id: "sum", label: "Сводка" },
     { id: "ach", label: "Достижения" },
     ...(p.cases ? [{ id: "cases" as const, label: "Дела" }] : []),
@@ -247,22 +249,34 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
     ...(p.self ? [{ id: "news" as const, label: "Новости" }] : []),
     ...(p.self ? [{ id: "set" as const, label: "Настройки" }] : []),
   ];
-  const at = Math.max(0, tabs.findIndex((t) => t.id === tab));
+  const at = Math.min(view, tabs.length - 1);
+  const tab: DosTab = tabs[Math.max(0, at)].id;
+  const cover = at < 0;
   const turn = (to: number) => {
-    if (anim || to === at || to < 0 || to >= tabs.length) { setDrag(0); return; }
+    if (anim || to === at || to < -1 || to >= tabs.length) { setDrag(0); return; }
     haptic.tap();
+    sfx("page");
     const fwd = to > at;
+    if (to === -1) {
+      // closing the folder: the cover comes back over the pages
+      setView(-1);
+      setDrag(0);
+      setAnim("in-l");
+      window.setTimeout(() => setAnim(""), 280);
+      return;
+    }
+    // the cover goes away by itself; between pages the open page turns
     setAnim(fwd ? "out-l" : "out-r");
     window.setTimeout(() => {
-      setTab(tabs[to].id);
+      setView(to);
       setDrag(0);
       setAnim(fwd ? "in-r" : "in-l");
-      window.setTimeout(() => setAnim(""), 260);
-    }, 200);
+      window.setTimeout(() => setAnim(""), 280);
+    }, 220);
   };
   useEffect(() => {
     tabsRef.current?.querySelector<HTMLElement>(".dos-tab.on")?.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
-  }, [tab]);
+  }, [view]);
   const onStart = (e: RTouchEvent) => { const t = e.touches[0]; touch.current = { x: t.clientX, y: t.clientY, on: null }; };
   const onMove = (e: RTouchEvent) => {
     const c = touch.current;
@@ -272,8 +286,8 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
     // decide once: a sideways move turns pages, an up-down one scrolls the page
     if (c.on === null && Math.abs(dx) + Math.abs(dy) > 10) c.on = Math.abs(dx) > Math.abs(dy) * 1.3;
     if (!c.on) return;
-    // the first and the last page only give a little
-    const edge = (dx > 0 && at === 0) || (dx < 0 && at === tabs.length - 1);
+    // the cover and the last page only give a little
+    const edge = (dx > 0 && at < 0) || (dx < 0 && at === tabs.length - 1);
     setDrag(edge ? dx * 0.25 : dx);
   };
   const onEnd = () => {
@@ -284,36 +298,47 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
     else if (drag > 60) turn(at - 1);
     else setDrag(0);
   };
-  const under = Math.min(2, tabs.length - 1 - at);
+  const under = Math.min(2, tabs.length - 1 - Math.max(0, at));
+  const moving = drag ? { transform: `translateX(${drag}px) rotate(${drag * 0.015}deg)`, transition: "none" } : undefined;
   return (
     <Modal onClose={onClose} page>
       <div className="dos">
-        <div className="dos-head">
-          <Avatar name={p.name} photo={p.photo} size={44} frame={p.frame} />
-          <div className="grow" style={{ minWidth: 0 }}>
-            <span className="dos-k display">ЛИЧНОЕ ДЕЛО №{p.id}</span>
-            <div className="row" style={{ gap: 6 }}>
-              <b className="display ellipsis" style={{ fontSize: 19 }}>{p.name}</b>
-              <OnlineMark self={p.self} lastSeen={p.lastSeen} />
-              {p.self && (
-                <button className="icon-btn" onClick={() => setRenaming(true)} aria-label="Сменить ник" title="Сменить ник">
-                  <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z" fill="#ffcc33" stroke="#140d24" strokeWidth="2" strokeLinejoin="round" /><path d="M13 7l4 4" stroke="#140d24" strokeWidth="2" /></svg>
-                </button>
-              )}
-            </div>
-            {p.username && <a className="tg-link dos-tg" href={`https://t.me/${encodeURIComponent(p.username)}`} target="_blank" rel="noopener noreferrer">@{p.username}</a>}
+        <div className="dos-book" onTouchStart={onStart} onTouchMove={onMove} onTouchEnd={onEnd} onTouchCancel={onEnd}>
+          {/* the inside of the back cover, under all the pages */}
+          <i className="dos-back" aria-hidden="true" />
+          <div className="dos-tabs" role="tablist" ref={tabsRef}>
+            {tabs.map((t, i) => (
+              <button key={t.id} type="button" role="tab" aria-selected={!cover && tab === t.id} className={`dos-tab ${!cover && tab === t.id ? "on" : ""} ${i < at ? "past" : ""}`} onClick={() => turn(i)}>{t.label}</button>
+            ))}
           </div>
-        </div>
-        <div className="dos-book">
-        <div className="dos-tabs" role="tablist" ref={tabsRef}>
-          {tabs.map((t, i) => (
-            <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} className={`dos-tab ${tab === t.id ? "on" : ""}`} onClick={() => turn(i)}>{t.label}</button>
-          ))}
-        </div>
-        <div className="dos-stack" onTouchStart={onStart} onTouchMove={onMove} onTouchEnd={onEnd} onTouchCancel={onEnd}>
+          <div className="dos-stack">
           {/* the next pages lie under the open one, their edges peek out on the right */}
           {Array.from({ length: under }, (_, k) => <i key={k} className={`dos-under u${k + 1}`} aria-hidden="true" />)}
-        <div className={`dos-page ${anim}`} style={drag ? { transform: `translateX(${drag}px) rotate(${drag * 0.015}deg)`, transition: "none" } : undefined}>
+          {cover && (
+            <div className={`dos-cover ${anim}`} style={moving}>
+              <b className="dos-cover-no display">{p.place || p.id}</b>
+              <span className="dos-cover-photo">
+                {p.photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={p.photo} alt="" referrerPolicy="no-referrer" draggable={false} />
+                ) : <Avatar name={p.name} photo={null} size={140} frame={p.frame} />}
+              </span>
+              <span className="dos-cover-name">
+                <b className="display ellipsis">{p.name}</b>
+                {p.self && (
+                  <button className="icon-btn" onClick={() => setRenaming(true)} aria-label="Сменить ник" title="Сменить ник">
+                    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z" fill="#ffcc33" stroke="#140d24" strokeWidth="2" strokeLinejoin="round" /><path d="M13 7l4 4" stroke="#140d24" strokeWidth="2" /></svg>
+                  </button>
+                )}
+              </span>
+              <span className="dos-cover-sub">
+                {p.username && <a className="dos-tg" href={`https://t.me/${encodeURIComponent(p.username)}`} target="_blank" rel="noopener noreferrer">@{p.username}</a>}
+                <OnlineMark self={p.self} lastSeen={p.lastSeen} />
+              </span>
+              <span className="dos-cover-hint tiny">листай влево →</span>
+            </div>
+          )}
+        <div className={`dos-page ${cover ? "shut" : anim}`} style={cover ? undefined : moving}>
           <div className="dos-inner">
           {/* on every page: achievement points and the talents put in */}
           {tab === "cases" && <div className="dos-stats">
