@@ -1,5 +1,5 @@
 import { STASH_LOCATION_NAMES, STASH_SETS, stashLevel } from "./stashes.ts";
-import { BOSSES, CARD_TIERS, isFirstWinItem, keyId, unlockBossOf } from "./bosses.ts";
+import { BOSSES, CARD_TIERS, isFirstWinItem, keyId, passLook, unlockBossOf } from "./bosses.ts";
 
 /** "tattoo": inked on a part of the body in the hero editor (none in the game yet) */
 export type Category = "weapon" | "clothing" | "item" | "reward" | "stash" | "event" | "tattoo";
@@ -117,14 +117,18 @@ const MISC: ItemDef[] = [
   { id: "lost-wallet", name: "Забытый кошелёк", category: "item", rarity: "rare", maxStack: 999, description: "Внутри немного долларов и чек из шаурмы.", sources: ["Двор"] },
 ];
 
-/** Boss cards: ids stay key-<boss> (they used to be keys), the tier gives the look and the name. */
-const KEYS: ItemDef[] = BOSSES.filter((b) => !b.final).map((b, i, list) => {
+/** Boss passes (ids key-<boss>): the first bosses give their own key, the last five the pass cards (passLook). */
+const KEYS: ItemDef[] = BOSSES.filter((b) => !b.final).map((b) => {
   const t = CARD_TIERS[b.card ?? "bronze"];
+  const look = passLook(b.id);
+  const key = look.kind === "key";
   const next = BOSSES.find((x) => x.order === b.order + 1);
   const need = next?.keysToUnlock ?? 3;
+  const one = key ? "Один ключ — вход" : "Один пропуск — вход";
+  const many = key ? `${need} ключа — вход` : `${need} пропуска — вход`;
   return {
-    id: keyId(b.id), name: `${t.name}: ${b.name}`, category: "reward" as const, rarity: t.rarity, maxStack: 999,
-    description: `Выдаётся за победу над боссом ${b.name}. ${need === 1 ? "Один пропуск — вход" : `${need} пропуска — вход`} в бой с боссом ${next?.name ?? ""}: тратятся на старте боя, а если босс ушёл или ты сбежал — возвращаются.`.trim(),
+    id: keyId(b.id), name: key ? `Ключ: ${b.name}` : `${CARD_TIERS[look.tier].name}: ${b.name}`, category: "reward" as const, rarity: t.rarity, maxStack: 999,
+    description: `Выдаётся за победу над боссом ${b.name}. ${need === 1 ? one : many} в бой с боссом ${next?.name ?? ""}: тратятся на старте боя, а если босс ушёл или ты сбежал — возвращаются.`.trim(),
     sources: [`Победа: ${b.name}`],
   };
 });
