@@ -3497,3 +3497,7 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
   .rig-vodovoz .vk-brow-r, .rig-vodovoz .vk-lids, .rig-vodovoz .vk-mouth, .rig-vodovoz .vk-mouth-shut, .rig-vodovoz .vk-jaw,
   .rig-vodovoz .vk-grind, .rig-vodovoz .vk-teeth-up { animation: none; }
 }
+
+/* Восток: the lower lip and chin stay where the artist drew them (a moving jaw showed the dark mouth at the corners);
+   only the teeth move — the lower row grinds side to side */
+.rig-vodovoz .vk-jaw { animation: none !important; transform: none !important; }
