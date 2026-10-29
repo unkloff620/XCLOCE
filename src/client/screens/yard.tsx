@@ -141,7 +141,8 @@ export function YardScreen() {
         </div>
       </div>
       {slots && (
-        <Modal title={<span className="title-row">Игровой автомат <SlotsHelp /></span>} onClose={() => setSlots(false)}>
+        <Modal onClose={() => setSlots(false)} page>
+          <div className="sl-help"><SlotsHelp /></div>
           <SlotMachine />
         </Modal>
       )}

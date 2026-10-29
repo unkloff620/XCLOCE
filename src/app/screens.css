@@ -3610,3 +3610,72 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .zb-hints.on .zb-hints-sw em { transform: translateX(16px); }
 .zb-hints-t { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 11.5px; font-weight: 800; line-height: 1.1; }
 .zb-hints-t small { flex: none; padding: 1px 5px; border-radius: 6px; background: #ffcc33; color: #2a1a06; font-size: 10.5px; }
+
+/* ---------------- the slot machine room (screens/slots.tsx, public/assets/slots) ----------------
+ * a page between the HUD and the menu; the drawn machine is as big as fits, keeping its shape */
+.modal.page:has(.sl-stage) { background: #120a08; padding: 0; overflow: hidden; }
+.modal.page:has(.sl-stage) > .x { z-index: 6; top: 8px; right: 8px; }
+.sl-help { position: absolute; z-index: 6; top: 8px; left: 8px; }
+.sl-stage { flex: 1; min-height: 0; width: 100%; container-type: size; display: flex; justify-content: center; align-items: center; background: #120a08; }
+.sl { position: relative; width: min(100cqw, calc(100cqh * 1024 / 1536)); aspect-ratio: 1024 / 1536; user-select: none; -webkit-user-select: none; overflow: hidden; }
+.sl-bg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+.sl > :not(.sl-bg) { position: absolute; }
+/* the bulbs on the sign chase; a win makes them flash */
+.sl-sign { pointer-events: none; border-radius: 48% 48% 8% 8%; background: radial-gradient(ellipse at 50% 55%, rgba(255, 80, 60, 0.35), transparent 65%); mix-blend-mode: screen; animation: sl-sign 1.6s ease-in-out infinite; }
+@keyframes sl-sign { 0%, 100% { opacity: 0.35; } 50% { opacity: 0.85; } }
+.sl.res-triple .sl-sign, .sl.res-pair .sl-sign { animation-duration: 0.35s; }
+.sl.res-jackpot .sl-sign { animation-duration: 0.18s; background: radial-gradient(ellipse at 50% 55%, rgba(255, 220, 80, 0.6), transparent 70%); }
+/* the reels: the symbols run over the painted cream drum, shaded top and bottom like a real drum */
+.sl-reel { overflow: hidden; border-radius: 6px; }
+.sl-reel::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(60, 30, 10, 0.55) 0%, rgba(60, 30, 10, 0) 26%, rgba(60, 30, 10, 0) 74%, rgba(60, 30, 10, 0.6) 100%); }
+.sl-sym { width: 76%; height: auto; aspect-ratio: 1; display: block; margin: auto; filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.35)); pointer-events: none; }
+.sl-still, .sl-strip { position: absolute; left: 0; right: 0; display: flex; flex-direction: column; }
+.sl-still { top: 0; bottom: 0; justify-content: space-between; padding: 4% 0; animation: sl-stop 0.42s cubic-bezier(0.3, 1.6, 0.5, 1); }
+.sl-still > span { flex: 1; display: grid; place-items: center; min-height: 0; }
+.sl-still > span.dim { opacity: 0.55; filter: saturate(0.7); transform: scale(0.82); }
+@keyframes sl-stop { 0% { transform: translateY(-14%); } 60% { transform: translateY(4%); } 100% { transform: translateY(0); } }
+.sl-strip { top: 0; animation: sl-roll 0.32s linear infinite; filter: blur(2.5px); }
+.sl-reel.spin .sl-strip { height: 700%; }
+.sl-reel.spin .sl-strip > span { height: calc(100% / 21); display: grid; place-items: center; }
+@keyframes sl-roll { from { transform: translateY(-66.6667%); } to { transform: translateY(-33.3333%); } }
+.sl-reel.hit .mid .sl-sym { animation: sl-hit 0.6s ease-in-out infinite alternate; }
+@keyframes sl-hit { from { transform: scale(1); filter: drop-shadow(0 0 0 rgba(255, 220, 80, 0)); } to { transform: scale(1.12); filter: drop-shadow(0 0 12px rgba(255, 220, 80, 0.95)); } }
+.sl-line { height: 3px; border-radius: 2px; background: rgba(255, 40, 40, 0.0); pointer-events: none; }
+.sl-line.on { background: #ff3b3b; box-shadow: 0 0 10px 2px rgba(255, 60, 60, 0.9); animation: sl-line 0.3s steps(2) infinite; }
+@keyframes sl-line { 50% { opacity: 0.35; } }
+/* the display panel: neon text */
+.sl-display { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-align: center; color: #ffd9a8; font-size: min(3.4cqw, 15px); font-weight: 800;
+  text-shadow: 0 0 6px rgba(255, 150, 60, 0.7); overflow: hidden; }
+.sl-display b.display { font-size: min(4.6cqw, 20px); line-height: 1.05; }
+.sl-display b.win { color: #ffe35c; text-shadow: 0 0 10px rgba(255, 220, 80, 0.95); animation: sl-line 0.4s steps(2) 6; }
+.sl-display b.miss { color: #ff9b8a; }
+.sl-display .chips, .sl-display .reward-chips { justify-content: center; }
+/* the big red button: lights up, sinks when pressed */
+.sl-btn { border: 0; border-radius: 50%; background: radial-gradient(circle at 45% 38%, rgba(255, 255, 255, 0.35), rgba(255, 60, 60, 0.1) 40%, transparent 62%); color: #fff;
+  display: grid; place-items: center; cursor: pointer; animation: sl-btn 1.4s ease-in-out infinite; -webkit-tap-highlight-color: transparent; }
+.sl-btn span { font-size: min(3.3cqw, 14px); letter-spacing: 0.04em; text-shadow: 0 2px 0 #5a0b0b, 0 0 8px rgba(0, 0, 0, 0.6); }
+@keyframes sl-btn { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 70, 50, 0); } 50% { box-shadow: 0 0 24px 6px rgba(255, 70, 50, 0.55); } }
+.sl-btn:active:not(:disabled) { transform: scale(0.93); filter: brightness(0.85); }
+.sl-btn:disabled { animation: none; cursor: default; }
+.sl-btn.off { filter: grayscale(0.7) brightness(0.6); background: rgba(0, 0, 0, 0.45); }
+.sl.busy .sl-btn { filter: brightness(0.8); }
+.sl-lever { border: 0; background: transparent; cursor: pointer; }
+/* coins: into the tray on a win, over the whole machine on the jackpot */
+.sl-coins { pointer-events: none; overflow: hidden; }
+.sl-coins i, .sl-rain i { position: absolute; top: -10%; width: 9%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff4b0, #ffcc33 45%, #b8860b 80%); border: 2px solid #6b4a06;
+  animation: sl-coin 0.9s cubic-bezier(0.4, 0, 0.8, 1) both; }
+@keyframes sl-coin { from { transform: translateY(-120%) rotateY(0); opacity: 0; } 15% { opacity: 1; } to { transform: translateY(260%) rotateY(720deg); opacity: 1; } }
+.sl-rain { inset: 0; pointer-events: none; overflow: hidden; }
+.sl-rain i { width: 6%; animation: sl-rain 1.6s linear 2 both; }
+@keyframes sl-rain { from { transform: translateY(-20cqh) rotate(0); } to { transform: translateY(110cqh) rotate(540deg); } }
+.sl.res-jackpot { animation: jackpot 0.5s ease-in-out 6; }
+/* the pay table and the spins counter on the floor */
+.sl-pay-btn, .sl-left { display: grid; place-items: center; border-radius: 14px; border: 2.5px solid #2a1606; background: rgba(30, 14, 6, 0.82); color: #ffd25a; font-weight: 900; font-size: min(3.4cqw, 14px); }
+.sl-pay-btn { cursor: pointer; }
+.sl-paytable { position: absolute; inset: 0; z-index: 7; display: grid; place-items: center; background: rgba(10, 5, 2, 0.7); padding: 16px; }
+.sl-paytable-in { width: min(100%, 340px); display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: 16px; border: 3px solid #2a1606; background: #f1e3c6; color: #24160a; }
+.sl-paytable-in > b { text-align: center; font-size: 18px; }
+.sl-pay-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sl-pay-sym { display: flex; gap: 2px; align-items: center; }
+.sl-pay-sym .sl-sym { width: 26px; margin: 0; }
+@media (prefers-reduced-motion: reduce) { .sl-strip, .sl-sign, .sl-btn, .sl-still, .sl-reel.hit .mid .sl-sym, .sl-coins i, .sl-rain i { animation: none !important; } }

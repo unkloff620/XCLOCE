@@ -8,118 +8,27 @@ import { haptic } from "../telegram.ts";
 import { SLOT_OUTCOMES, SLOT_SYMBOLS, type SlotSymbol } from "../../content/slots.ts";
 import { api, type GameState, type Granted } from "../api.ts";
 
-const OL = "#140d24";
+/*
+ * The slot room (public/assets/slots/room.webp, 1024×1536, tools/slots/build-slots.py): the drawn machine with three
+ * empty cream reels; the symbols (public/assets/slots/<id>.webp) spin on them, the display under the reels tells the
+ * result, the big red button spins. Every place below is in the picture's pixels.
+ */
+const RW = 1024, RH = 1536;
+const px = (x: number) => `${(x / RW) * 100}%`;
+const py = (y: number) => `${(y / RH) * 100}%`;
+const REELS = [{ x: 228, w: 160 }, { x: 430, w: 162 }, { x: 634, w: 150 }];
+const REEL_TOP = 440, REEL_H = 346;
+const STRIP: SlotSymbol[] = [...SLOT_SYMBOLS, ...SLOT_SYMBOLS, ...SLOT_SYMBOLS];
 
-/** Big red "7" with an outline and a shine. */
-function Seven({ size }: { size: number }) {
-  return (
-    <svg viewBox="0 0 64 64" width={size} height={size} aria-hidden="true">
-      <path d="M12 10 H54 V20 L32 58 H18 L39 21 H12 Z" fill="#ff3b5c" stroke={OL} strokeWidth="4" strokeLinejoin="round" />
-      <path d="M16 14 H48" stroke="#ffd1da" strokeWidth="3" strokeLinecap="round" opacity="0.8" />
-    </svg>
-  );
+function Sym({ s }: { s: SlotSymbol }) {
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img className="sl-sym" src={`/assets/slots/${s}.webp`} alt={s} draggable={false} />;
 }
-
-/** BAR: a black bar plate with the word on it */
-function Bar({ size }: { size: number }) {
-  return (
-    <svg viewBox="0 0 64 64" width={size} height={size} aria-hidden="true">
-      <rect x="5" y="19" width="54" height="26" rx="5" fill="#1b1b22" stroke={OL} strokeWidth="4" />
-      <rect x="9" y="23" width="46" height="18" rx="3" fill="none" stroke="#ffd23f" strokeWidth="2" />
-      <text x="32" y="38.5" textAnchor="middle" fontSize="15" fontWeight="900" fill="#ffd23f" fontFamily="var(--font-display), sans-serif" letterSpacing="1">BAR</text>
-    </svg>
-  );
-}
-function Bell({ size }: { size: number }) {
-  return (
-    <svg viewBox="0 0 64 64" width={size} height={size} aria-hidden="true">
-      <path d="M32 8 C20 8 16 20 16 32 C16 40 12 44 8 48 H56 C52 44 48 40 48 32 C48 20 44 8 32 8 Z" fill="#ffc21a" stroke={OL} strokeWidth="4" strokeLinejoin="round" />
-      <path d="M24 18 C21 22 20 28 20 34" stroke="#fff3b0" strokeWidth="3.5" strokeLinecap="round" fill="none" />
-      <circle cx="32" cy="53" r="6" fill="#e08a00" stroke={OL} strokeWidth="3.5" />
-      <rect x="29" y="3" width="6" height="7" rx="2" fill="#e08a00" stroke={OL} strokeWidth="3" />
-    </svg>
-  );
-}
-function Melon({ size }: { size: number }) {
-  return (
-    <svg viewBox="0 0 64 64" width={size} height={size} aria-hidden="true">
-      <path d="M6 22 A26 26 0 0 0 58 22 Z" fill="#2fbf5a" stroke={OL} strokeWidth="4" strokeLinejoin="round" />
-      <path d="M11 22 A21 21 0 0 0 53 22 Z" fill="#ff4d6d" />
-      {[[22, 30], [32, 34], [42, 30], [27, 39], [37, 39]].map(([x, y], i) => <ellipse key={i} cx={x} cy={y} rx="1.8" ry="2.8" fill="#1e1006" />)}
-      <path d="M6 22 H58" stroke={OL} strokeWidth="4" strokeLinecap="round" />
-    </svg>
-  );
-}
-function Grape({ size }: { size: number }) {
-  const g = [[24, 22], [36, 22], [48, 22], [30, 32], [42, 32], [36, 42], [24, 32], [30, 51]];
-  return (
-    <svg viewBox="0 0 64 64" width={size} height={size} aria-hidden="true">
-      <path d="M36 14 C36 8 40 5 46 4" stroke="#6b3b12" strokeWidth="4" strokeLinecap="round" fill="none" />
-      <path d="M38 12 C44 8 54 10 56 16 C48 18 42 16 38 12 Z" fill="#2fbf5a" stroke={OL} strokeWidth="3" strokeLinejoin="round" />
-      {g.slice(0, 7).map(([x, y], i) => <circle key={i} cx={x} cy={y} r="7" fill="#8e44e8" stroke={OL} strokeWidth="3" />)}
-      {g.slice(0, 7).map(([x, y], i) => <circle key={`h${i}`} cx={x - 2.5} cy={y - 2.5} r="1.8" fill="#d9b8ff" />)}
-    </svg>
-  );
-}
-function Lemon({ size }: { size: number }) {
-  return (
-    <svg viewBox="0 0 64 64" width={size} height={size} aria-hidden="true">
-      <path d="M6 32 C6 20 18 12 32 12 C46 12 58 20 58 32 C58 44 46 52 32 52 C18 52 6 44 6 32 Z" fill="#ffe14a" stroke={OL} strokeWidth="4" />
-      <path d="M2 32 L7 29 M62 32 L57 29" stroke={OL} strokeWidth="4" strokeLinecap="round" />
-      <path d="M18 24 C22 19 28 17 34 17" stroke="#fff8c9" strokeWidth="3.5" strokeLinecap="round" fill="none" />
-    </svg>
-  );
-}
-function Cherry({ size }: { size: number }) {
-  return (
-    <svg viewBox="0 0 64 64" width={size} height={size} aria-hidden="true">
-      <path d="M20 42 C22 28 30 16 42 8 M44 42 C42 28 42 18 42 8" stroke="#3f7a1e" strokeWidth="3.5" strokeLinecap="round" fill="none" />
-      <path d="M42 8 C48 4 56 6 58 12 C52 14 46 12 42 8 Z" fill="#2fbf5a" stroke={OL} strokeWidth="3" strokeLinejoin="round" />
-      <circle cx="19" cy="46" r="12" fill="#e8173c" stroke={OL} strokeWidth="4" />
-      <circle cx="45" cy="46" r="12" fill="#e8173c" stroke={OL} strokeWidth="4" />
-      <circle cx="15" cy="42" r="3" fill="#ffb3c1" />
-      <circle cx="41" cy="42" r="3" fill="#ffb3c1" />
-    </svg>
-  );
-}
-
-export function SlotSymbolArt({ s, size = 44 }: { s: SlotSymbol; size?: number }) {
-  switch (s) {
-    case "seven": return <Seven size={size} />;
-    case "bar": return <Bar size={size} />;
-    case "bell": return <Bell size={size} />;
-    case "melon": return <Melon size={size} />;
-    case "grape": return <Grape size={size} />;
-    case "lemon": return <Lemon size={size} />;
-    case "cherry": return <Cherry size={size} />;
-  }
-}
-
-/** The machine as it stands in the yard (button picture). */
-export function SlotCabinet() {
-  return (
-    <svg viewBox="0 0 120 190" width="100%" height="100%" aria-hidden="true">
-      <rect x="10" y="30" width="100" height="150" rx="14" fill="#7a1730" stroke={OL} strokeWidth="5" />
-      <rect x="22" y="8" width="76" height="30" rx="10" fill="#ffd23f" stroke={OL} strokeWidth="5" />
-      <text x="60" y="31" textAnchor="middle" fontSize="22" fontWeight="900" fill="#c2143c" fontFamily="var(--font-display), sans-serif">777</text>
-      <rect x="20" y="50" width="80" height="44" rx="8" fill="#140d24" stroke="#ffd23f" strokeWidth="4" />
-      {[0, 1, 2].map((i) => <rect key={i} x={26 + i * 24} y="56" width="20" height="32" rx="4" fill="#f2f3fb" stroke={OL} strokeWidth="2.5" />)}
-      {[0, 1, 2].map((i) => <text key={i} x={36 + i * 24} y="80" textAnchor="middle" fontSize="20" fontWeight="900" fill="#ff3b5c" fontFamily="var(--font-display), sans-serif">7</text>)}
-      <rect x="26" y="106" width="68" height="14" rx="5" fill="#4a0c1f" stroke={OL} strokeWidth="3" />
-      <circle cx="44" cy="140" r="9" fill="#2ee88a" stroke={OL} strokeWidth="3" />
-      <circle cx="76" cy="140" r="9" fill="#ff4d6d" stroke={OL} strokeWidth="3" />
-      <rect x="30" y="158" width="60" height="12" rx="4" fill="#2a0614" stroke={OL} strokeWidth="3" />
-      <path d="M110 70 H116 V36" stroke={OL} strokeWidth="9" strokeLinecap="round" fill="none" />
-      <path d="M110 70 H116 V36" stroke="#c9ceea" strokeWidth="4" strokeLinecap="round" fill="none" />
-      <circle cx="116" cy="30" r="9" fill="#ff4d6d" stroke={OL} strokeWidth="3.5" />
-      {[0, 1, 2, 3, 4].map((i) => <circle key={i} className="bulb" cx={20 + i * 20} cy="44" r="3.5" fill="#ffd23f" style={{ animationDelay: `${i * 0.15}s` }} />)}
-    </svg>
-  );
-}
-
-const STRIP: SlotSymbol[] = [...SLOT_SYMBOLS, ...SLOT_SYMBOLS];
 
 interface Spin { outcome: string; kind: "jackpot" | "triple" | "pair" | "miss"; title: string; reels: SlotSymbol[]; reward: Granted | null; left: number }
+
+/** the symbol above and below the one on the line (the reel shows three) */
+const around = (s: SlotSymbol, d: number) => SLOT_SYMBOLS[(SLOT_SYMBOLS.indexOf(s) + d + SLOT_SYMBOLS.length) % SLOT_SYMBOLS.length];
 
 export function SlotMachine() {
   const { state, setState, toast } = useGame();
@@ -127,6 +36,8 @@ export function SlotMachine() {
   const [reels, setReels] = useState<SlotSymbol[]>(["seven", "seven", "seven"]);
   const [spinning, setSpinning] = useState<boolean[]>([false, false, false]);
   const [result, setResult] = useState<Spin | null>(null);
+  const [pay, setPay] = useState(false);
+  const [press, setPress] = useState(0);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
   if (!state) return null;
@@ -137,6 +48,8 @@ export function SlotMachine() {
   const spin = async () => {
     if (busy || cooling) return;
     haptic.tap();
+    sfx("card");
+    setPress((n) => n + 1);
     setResult(null);
     setSpinning([true, true, true]);
     const started = Date.now();
@@ -155,82 +68,94 @@ export function SlotMachine() {
     }
     const spinRes = r;
     const st = fresh;
-    // reels stop one by one, the result shows after the last one
-    const wait = Math.max(0, 700 - (Date.now() - started));
+    // the reels stop one by one with a little bounce, the result shows after the last one
+    const wait = Math.max(0, 900 - (Date.now() - started));
     [0, 1, 2].forEach((i) => {
       timers.current.push(
         setTimeout(() => {
           setReels((old) => old.map((x, k) => (k === i ? spinRes.reels[i] : x)));
           setSpinning((old) => old.map((x, k) => (k === i ? false : x)));
           haptic.tap();
-          sfx("tap");
+          sfx("dice");
           if (i === 2) {
             setResult(spinRes);
             setState(st); // the balance changes only when the last reel stops
-            if (spinRes.kind === "jackpot") {
-              haptic.big();
-              sfx("levelup");
-            } else if (spinRes.kind !== "miss") {
-              haptic.ok();
-              sfx("reward");
-            }
+            if (spinRes.kind === "jackpot") { haptic.big(); sfx("levelup"); timers.current.push(setTimeout(() => sfx("coin"), 300)); }
+            else if (spinRes.kind !== "miss") { haptic.ok(); sfx("coin"); }
           }
-        }, wait + i * 380),
+        }, wait + i * 420),
       );
     });
   };
 
-  const win = result && result.kind !== "miss";
+  const win = !!result && result.kind !== "miss";
+  const hit = (i: number) => win && !!result && (result.kind === "pair" ? result.reels.filter((x) => x === result.reels[i]).length >= 2 : true);
   return (
-    <div className={`slots ${result?.kind === "jackpot" ? "jackpot" : ""}`}>
-      <div className="slots-top">
-        <span className="slots-lights" aria-hidden="true">{Array.from({ length: 9 }, (_, i) => <i key={i} style={{ animationDelay: `${i * 0.12}s` }} />)}</span>
-        <b className="display slots-title">777</b>
-        <span className="tiny slots-sub">7 · BAR · ФРУКТЫ</span>
-      </div>
-      <div className="slots-window">
-        {[0, 1, 2].map((i) => (
-          <div key={i} className={`reel ${spinning[i] ? "spin" : "stop"} ${win && result?.reels[i] === reels[i] ? "hit" : ""}`}>
+    <div className="sl-stage">
+      <div className={`sl ${result ? `res-${result.kind}` : ""} ${busy ? "busy" : ""}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="sl-bg" src="/assets/slots/room.webp" alt="" draggable={false} />
+        {/* the sign's bulbs chase, brighter on a win */}
+        <span className="sl-sign" style={{ left: px(190), top: py(60), width: px(640), height: py(320) }} aria-hidden="true" />
+        {REELS.map((r, i) => (
+          <div key={i} className={`sl-reel ${spinning[i] ? "spin" : "stop"} ${hit(i) ? "hit" : ""}`} style={{ left: px(r.x), top: py(REEL_TOP), width: px(r.w), height: py(REEL_H) }}>
             {spinning[i] ? (
-              <div className="reel-strip" style={{ animationDelay: `${-i * 0.11}s` }}>
-                {STRIP.map((x, k) => <span key={k}><SlotSymbolArt s={x} size={38} /></span>)}
+              <div className="sl-strip" style={{ animationDelay: `${-i * 0.13}s` }}>
+                {STRIP.map((x, k) => <span key={k}><Sym s={x} /></span>)}
               </div>
             ) : (
-              <span className="reel-face"><SlotSymbolArt s={reels[i]} size={44} /></span>
+              <div className="sl-still" key={`${press}-${reels[i]}`}>
+                <span className="dim"><Sym s={around(reels[i], -1)} /></span>
+                <span className="mid"><Sym s={reels[i]} /></span>
+                <span className="dim"><Sym s={around(reels[i], 1)} /></span>
+              </div>
             )}
           </div>
         ))}
-        <i className="slots-line" aria-hidden="true" />
-      </div>
-      <div className="slots-result" aria-live="polite">
-        {result ? (
-          <>
-            <b className={`display ${win ? "win" : "miss"}`}>{result.title}</b>
-            {result.reward && <RewardChips r={result.reward} size={15} />}
-          </>
-        ) : (
-          <span className="tiny muted">Удачи!</span>
+        <i className={`sl-line ${win ? "on" : ""}`} style={{ left: px(222), top: py(619), width: px(570) }} aria-hidden="true" />
+        {/* the display under the reels: the result, or how many spins are left */}
+        <div className="sl-display" style={{ left: px(196), top: py(850), width: px(628), height: py(86) }} aria-live="polite">
+          {result ? (
+            <>
+              <b className={`display ${win ? "win" : "miss"}`}>{result.title}</b>
+              {result.reward && <RewardChips r={result.reward} size={13} />}
+            </>
+          ) : busy ? <b className="display">Крутится…</b> : cooling ? (
+            <span>Остывает · <b className="num">{clock((s.nextAt ?? now) - now)}</b></span>
+          ) : <span>Прокрутки: <b className="num">{s.left}/{s.max}</b> в час · жми кнопку</span>}
+        </div>
+        <button className={`sl-btn ${cooling ? "off" : ""}`} key={press} style={{ left: px(420), top: py(964), width: px(172), height: py(172) }}
+          disabled={busy || cooling} onClick={spin} aria-label="Крутить">
+          <span className="display">{cooling ? "" : "КРУТИТЬ"}</span>
+        </button>
+        {/* the lever spins too */}
+        <button className="sl-lever" style={{ left: px(880), top: py(400), width: px(110), height: py(420) }} disabled={busy || cooling} onClick={spin} aria-label="Дёрнуть рычаг" />
+        {/* a win pours coins into the tray, the jackpot showers them over the whole machine */}
+        {win && (
+          <div className="sl-coins" key={`c${press}`} style={{ left: px(236), top: py(1150), width: px(552), height: py(240) }} aria-hidden="true">
+            {Array.from({ length: result!.kind === "jackpot" ? 26 : result!.kind === "triple" ? 14 : 6 }, (_, k) => (
+              <i key={k} style={{ left: `${(k * 37) % 92}%`, animationDelay: `${(k % 7) * 0.09}s` }} />
+            ))}
+          </div>
         )}
+        {result?.kind === "jackpot" && <div className="sl-rain" aria-hidden="true">{Array.from({ length: 30 }, (_, k) => <i key={k} style={{ left: `${(k * 53) % 100}%`, animationDelay: `${(k % 10) * 0.15}s` }} />)}</div>}
+        <button className="sl-pay-btn" style={{ left: px(40), top: py(1420), width: px(250), height: py(80) }} onClick={() => setPay(true)}>Выплаты</button>
+        <span className="sl-left num" style={{ left: px(734), top: py(1420), width: px(250), height: py(80) }}>{s.left}/{s.max}</span>
       </div>
-      <button className={`btn big block ${cooling ? "dark" : "red"} slots-btn`} disabled={busy || cooling} onClick={spin}>
-        {busy ? "Крутится…" : cooling ? <>Остывает · {clock((s.nextAt ?? now) - now)}</> : "Крутить"}
-      </button>
-      <div className="row tiny muted" style={{ justifyContent: "space-between" }}>
-        <span>Прокрутки: <b className="num" style={{ color: "var(--ink)" }}>{s.left}/{s.max}</b> в час</span>
-        <details className="slots-pay">
-          <summary>Выплаты</summary>
-          <div className="col" style={{ gap: 4, marginTop: 6 }}>
+      {pay && (
+        <div className="sl-paytable" onClick={() => setPay(false)}>
+          <div className="sl-paytable-in" onClick={(e) => e.stopPropagation()}>
+            <b className="display">Выплаты</b>
             {SLOT_OUTCOMES.filter((o) => o.kind !== "miss").map((o) => (
-              <div key={o.id} className="row" style={{ gap: 6, flexWrap: "wrap" }}>
-                <span className="row" style={{ gap: 1 }}>
-                  {o.triple ? [0, 1, 2].map((k) => <SlotSymbolArt key={k} s={o.triple!} size={16} />) : <span className="tiny">любые 2</span>}
-                </span>
+              <div key={o.id} className="sl-pay-row">
+                <span className="sl-pay-sym">{o.triple ? [0, 1, 2].map((k) => <Sym key={k} s={o.triple!} />) : <span className="tiny">любые 2</span>}</span>
                 <RewardChips r={o.reward} size={13} />
               </div>
             ))}
+            <button className="btn gold block" onClick={() => setPay(false)}>Понятно</button>
           </div>
-        </details>
-      </div>
+        </div>
+      )}
     </div>
   );
 }
