@@ -2927,16 +2927,23 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .gi-b.no { background: linear-gradient(180deg, #ff7a7a, #c63b3b); }
 .gi-b:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
 
-/* ── boss medals: the face on a coin ── */
+/* ── boss medals: a struck coin (patina) — the face toned into the metal, a deep groove, a shine sweeps over it ── */
 .bcoin { position: relative; flex: none; display: inline-block; border-radius: 50%;
-  background: repeating-conic-gradient(var(--m1) 0 6deg, var(--m2) 6deg 12deg); box-shadow: 0 0 0 1.5px #1a0f05, 0 2px 4px rgba(0, 0, 0, 0.5); }
-.bcoin.bronze { --m1: #b8733a; --m2: #8a4f22; --tone: #c98447; }
-.bcoin.silver { --m1: #d7dde6; --m2: #9aa3b0; --tone: #c9d1dc; }
-.bcoin.gold { --m1: #ffd45a; --m2: #c8901a; --tone: #f2c14a; }
-.bcoin-face { position: absolute; inset: 11%; display: block; border-radius: 50%; overflow: hidden; background: var(--tone); box-shadow: inset 0 0 0 1.5px rgba(0, 0, 0, 0.35), inset 0 2px 3px rgba(255, 255, 255, 0.4); }
-.bcoin-face img, .bcoin-face svg { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.25) brightness(1.05); mix-blend-mode: multiply; }
-.bcoin-face::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.45), transparent 55%), var(--tone); mix-blend-mode: overlay; }
-.bcoin-shine { position: absolute; inset: 0; border-radius: 50%; background: linear-gradient(135deg, rgba(255, 255, 255, 0.5), transparent 40%); pointer-events: none; }
+  background: conic-gradient(from 210deg, var(--lo), var(--hi), var(--mid), var(--lo), var(--hi), var(--mid), var(--lo));
+  box-shadow: 0 0 0 1.5px #1a0f05, inset 0 2px 2px rgba(255, 255, 255, 0.65), inset 0 -3px 4px rgba(0, 0, 0, 0.5), 0 3px 5px rgba(0, 0, 0, 0.45); }
+.bcoin::before { content: ""; position: absolute; inset: 8%; border-radius: 50%; box-shadow: inset 0 2px 2px rgba(0, 0, 0, 0.45), 0 1px 0 rgba(255, 255, 255, 0.55); }
+.bcoin.bronze { --hi: #f3b777; --mid: #b8733a; --lo: #6b3714; }
+.bcoin.silver { --hi: #ffffff; --mid: #b9c2cf; --lo: #626c7a; }
+.bcoin.gold { --hi: #fff3b0; --mid: #f0b72a; --lo: #8a5a06; }
+.bcoin-face { position: absolute; inset: 14%; display: block; border-radius: 50%; overflow: hidden;
+  background: linear-gradient(160deg, var(--hi), var(--mid) 50%, var(--lo)); box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.4); }
+.bcoin-face img, .bcoin-face svg { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.35) brightness(1.15) sepia(0.25); mix-blend-mode: multiply; opacity: 0.9; }
+.bcoin-face::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.55), transparent 50%); }
+.bcoin-shine { position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.55) 47%, transparent 58%); background-size: 250% 100%; animation: bcoin-shine 4.5s ease-in-out infinite; }
+@keyframes bcoin-shine { 0%, 60% { background-position: 130% 0; } 100% { background-position: -40% 0; } }
+.bcoin.dim .bcoin-shine { animation: none; background: none; }
+@media (prefers-reduced-motion: reduce) { .bcoin-shine { animation: none; } }
 .bcoin.dim { filter: grayscale(1) brightness(0.55); opacity: 0.7; }
 .medal-chip { display: inline-flex; align-items: center; gap: 4px; }
 .medal-chip b { font-size: 12px; }
