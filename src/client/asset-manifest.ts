@@ -407,6 +407,7 @@ export const ASSET_FILES: string[] = [
  "/assets/pc/psu.webp",
  "/assets/shop/v2/armL.webp",
  "/assets/shop/v2/armR.webp",
+ "/assets/shop/v2/ceiling.webp",
  "/assets/shop/v2/cigarette.webp",
  "/assets/shop/v2/counter.webp",
  "/assets/shop/v2/drinks.webp",

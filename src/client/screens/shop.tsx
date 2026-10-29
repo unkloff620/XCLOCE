@@ -201,6 +201,9 @@ export function ShopScreen() {
       <div className="yard shop-scene">
         <div className="scene-backdrop" style={{ backgroundImage: "url(/assets/shop/v2/room.webp)" }} />
         <div className="yard-stage">
+          {/* the ceiling goes on above the picture on tall screens (tools/shop/build-ceiling.py) */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="sk-ceiling" src="/assets/shop/v2/ceiling.webp" alt="" draggable={false} aria-hidden="true" />
           <ShopScene onOpen={(id) => setOpen(id)} />
         </div>
       </div>

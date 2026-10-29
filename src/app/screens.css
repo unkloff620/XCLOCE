@@ -1209,6 +1209,8 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 /* the whole scene always fits between the title and the nav: as wide as the screen, or as tall as the space allows */
 .shop-scene .yard-stage { aspect-ratio: auto; top: calc(var(--top) + 8px); container-type: size; }
 .shop-scene .sk-scene { inset: auto; left: 50%; bottom: 0; width: 100%; width: min(100cqw, calc(100cqh * 2000 / 2800)); transform: translateX(-50%); }
+/* the ceiling above the scene: as wide as it, standing right on its top edge */
+.shop-scene .sk-ceiling { position: absolute; left: 50%; bottom: calc(min(100cqw, calc(100cqh * 2000 / 2800)) * 1.4); width: min(100cqw, calc(100cqh * 2000 / 2800)); aspect-ratio: 1200 / 900; max-width: none; transform: translateX(-50%); pointer-events: none; user-select: none; }
 .sk-scene { position: absolute; inset: 0; overflow: hidden; user-select: none; -webkit-user-select: none; }
 .sk-layer { position: absolute; display: block; max-width: none; pointer-events: none; }
 .sk-room { inset: 0; width: 100%; height: 100%; }
