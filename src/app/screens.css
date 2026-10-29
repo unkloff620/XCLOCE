@@ -2252,9 +2252,9 @@ button.bjt-stack { cursor: pointer; }
 .zb-roach.still .rch-leg, .zb-roach.still .rch-body { animation-play-state: paused; }
 
 /* boss card, round 4: the live bust (head, neck, shoulders) in a frame that stays inside the card; «Дело №N» is plain ink */
-.bcard-art { top: 42px; bottom: 34px; left: 7%; width: 30%; }
+.bcard-art { top: 50px; bottom: 30px; left: 7%; width: 30%; }
 .bcard-art .boss-rig { position: absolute; inset: 0; z-index: 1; filter: none; }
-.bcard-n { left: 7%; width: 30%; top: 15px; height: 22px; background: none; border: 0; box-shadow: none; padding: 0; color: var(--ink-c);
+.bcard-n { left: 7%; width: 30%; top: 24px; height: 22px; background: none; border: 0; box-shadow: none; padding: 0; color: var(--ink-c);
   font-size: 14px; text-shadow: 0 1px 0 rgba(255, 240, 210, 0.6); }
 .bcard.locked .bcard-n { color: var(--mute-c); }
 
