@@ -752,15 +752,15 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "v": "47563521"
       },
       "armL": {
-        "x": 293.0,
-        "y": 398.0,
-        "w": 187,
-        "h": 348,
+        "x": 284.5,
+        "y": 398.5,
+        "w": 266,
+        "h": 344,
         "pivot": [
           432.0,
           435.0
         ],
-        "v": "41446c6b"
+        "v": "a700973f"
       },
       "lowL": {
         "x": 208.0,
@@ -796,15 +796,15 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "v": "39d32deb"
       },
       "armR": {
-        "x": 629.5,
-        "y": 414.0,
-        "w": 178,
-        "h": 392,
+        "x": 620.0,
+        "y": 409.5,
+        "w": 226,
+        "h": 384,
         "pivot": [
           686.0,
           440.0
         ],
-        "v": "d35dccc5"
+        "v": "bc1c9aaa"
       },
       "lowR": {
         "x": 603.0,
