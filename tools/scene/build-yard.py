@@ -52,3 +52,38 @@ for f in sorted(os.listdir(SRC)):
         b = f[6:-4]
         Image.open(os.path.join(SRC, f)).convert("RGB").save(os.path.join(ARENA, b + ".webp"), "WEBP", quality=82, method=6)
         print(b, os.path.getsize(os.path.join(ARENA, b + ".webp")) // 1024, "KB")
+
+# the night yard (gpt-image-2 from the yard picture, the sky and the puddles kept flat magenta → cut out to see-through)
+# and its night sky (tiled like the day one): court-dark.webp, sky-dark.webp, court-backdrop-dark.webp
+src = Image.open(os.path.join(SRC, "court-dark.png")).convert("RGB")
+day = Image.open(os.path.join(OUT, "court-night.webp"))
+src = src.resize(day.size, Image.LANCZOS)
+a = np.asarray(src, dtype=np.float32)
+r, g, b2 = a[..., 0], a[..., 1], a[..., 2]
+# how magenta a pixel is: red and blue high, green low
+mag = np.clip(((r + b2) / 2 - g - 70) / 70, 0, 1) * np.clip((np.minimum(r, b2) - 100) / 60, 0, 1)
+from scipy import ndimage
+near = ndimage.binary_dilation(mag > 0.15, iterations=4)
+alpha = (1 - mag) * 255
+alpha[ndimage.binary_dilation(mag > 0.5, iterations=1)] = 0
+# despill around the cut: the purple cast of the edge pixels goes (red and blue no higher than green allows)
+a2 = a.copy()
+cast = np.clip((np.minimum(r, b2) - g) / 60, 0, 1) * near
+a2[..., 0] = r - (r - np.minimum(r, g + 25)) * cast
+a2[..., 2] = b2 - (b2 - np.minimum(b2, g + 45)) * cast
+out = Image.fromarray(np.dstack([a2.clip(0, 255), alpha.clip(0, 255)]).astype(np.uint8), "RGBA")
+out.save(os.path.join(OUT, "court-dark.webp"), "WEBP", quality=80, method=4)
+skyn = Image.open(os.path.join(SRC, "yard-sky-dark.png")).convert("RGB")
+skyn = skyn.crop((0, round(skyn.height * 0.25), skyn.width, skyn.height))
+skyn = skyn.resize((round(skyn.width * h / skyn.height * 1.8), h), Image.LANCZOS)
+arr = np.asarray(skyn, dtype=np.float32)
+w = arr.shape[1]
+b = w // 4
+t = np.linspace(0, 1, b, dtype=np.float32)[None, :, None]
+head = arr[:, w - b:] * (1 - t) + arr[:, :b] * t
+Image.fromarray(np.concatenate([head, arr[:, b:w - b]], axis=1).clip(0, 255).astype(np.uint8)).save(os.path.join(OUT, "sky-dark.webp"), "WEBP", quality=80, method=4)
+bd = Image.new("RGBA", out.size, (0, 0, 0, 255))
+bd.paste(skyn.resize((out.width, round(out.width * skyn.height / skyn.width))), (0, 0))
+bd.alpha_composite(out)
+bd.convert("RGB").resize((400, round(400 * out.height / out.width)), Image.LANCZOS).save(os.path.join(OUT, "court-backdrop-dark.webp"), "WEBP", quality=70, method=4)
+print("night yard", out.size)

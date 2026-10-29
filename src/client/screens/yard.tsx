@@ -85,15 +85,16 @@ export function YardScreen() {
       </div>
       <div className={`yard tod-${tod}`}>
         {/* blurred copy of the yard fills the space above the scene on tall screens */}
-        <div className="scene-backdrop" style={{ backgroundImage: "url(/assets/yard/court-backdrop.webp)" }} />
+        <div className="scene-backdrop" style={{ backgroundImage: `url(/assets/yard/${tod === "night" ? "court-backdrop-dark" : "court-backdrop"}.webp)` }} />
         {/* the sharp scene stands on the nav at full width; the objects sit where they are drawn on the 2000×3405 sheet */}
         <div className="yard-stage">
           {/* the sunset sky (the same as in the fights) drifts behind the see-through sky of the yard */}
-          <DriftingSky className="court-sky" />
+          <DriftingSky className="court-sky" src={tod === "night" ? "/assets/yard/sky-dark.webp" : undefined} />
           {/* the same sky upside down under the ground: it shows in the see-through puddles */}
-          <DriftingSky className="yard-reflect" />
+          <DriftingSky className="yard-reflect" src={tod === "night" ? "/assets/yard/sky-dark.webp" : undefined} />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="yard-bg" src="/assets/yard/court-night.webp" alt="" draggable={false} />
+          {/* the night has its own drawn yard (lit windows, the lamp, the neon) and its own sky: no dark filter on top */}
+          <img className="yard-bg" src={tod === "night" ? "/assets/yard/court-dark.webp" : "/assets/yard/court-night.webp"} alt="" draggable={false} />
           {/* the time of day in Moscow tints the yard: a cool bright day, the drawn sunset in the evening, a dark blue night */}
           <span className="yard-tint" aria-hidden="true" />
           {/* the entrance leads to the locations with tasks */}
