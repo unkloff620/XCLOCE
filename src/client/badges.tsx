@@ -213,7 +213,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
       {self && waiting > 0 && (
         <div className="ach-uncollected">
           <span>Не собранные: <b className="num">{waiting}</b></span>
-          <button type="button" className="btn sm gold ach-take-all" disabled={busy === "achievement_claim_all"} onClick={claimAll}>ВСЁ</button>
+          <button type="button" className="ach-take-all" disabled={busy === "achievement_claim_all"} onClick={claimAll}>ВСЁ</button>
         </div>
       )}
       {shown && <div className="ach-groups" role="tablist">

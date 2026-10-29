@@ -493,6 +493,7 @@ export const ASSET_FILES: string[] = [
  "/assets/ui/boss-card-frame-vodovoz.webp",
  "/assets/ui/boss-card-frame.webp",
  "/assets/ui/btc.webp",
+ "/assets/ui/btn-claim-all.webp",
  "/assets/ui/chest.webp",
  "/assets/ui/clan-shield-bronze-field.webp",
  "/assets/ui/clan-shield-bronze.webp",
