@@ -1,18 +1,16 @@
 "use client";
 import { useState, type ReactNode } from "react";
-import { MEDAL_ACHIEVEMENTS } from "../content/achievements.ts";
-import { MEDAL_NAMES, MEDAL_SET, MEDAL_TIERS, FIGHT_MODES, medalBonus, medalStep, medalWeapon } from "../content/medals.ts";
-import { BlastIcon } from "./art/blast.tsx";
-import { ACH_CATEGORIES, BOSS_KILL_ACHIEVEMENTS, BOSS_KILL_TARGETS, SOLO_BOSS_ACHIEVEMENTS, TIER_COLORS, TIER_NAMES, achievementById, stepTier, type AchCategory, type AchTier } from "../content/achievements.ts";
+import { MEDAL_TIERS } from "../content/medals.ts";
+import { ACH_CATEGORIES, ACH_SECTIONS, TIER_COLORS, TIER_NAMES, achievementById, categoryOf, type AchCategory, type AchievementDef, type AchSection, type AchTier } from "../content/achievements.ts";
 import { Icon, type IconName } from "./art/icons.tsx";
 import { Modal, RewardChips } from "./ui.tsx";
 import { useGame } from "./store.tsx";
 import { haptic } from "./telegram.ts";
 import { full, short } from "./format.ts";
+import { ItemArt } from "./art/items.tsx";
 import { BOSSES as OPEN_ALL } from "../content/bosses.ts";
-import { STASH_LOCATION_NAMES, STASH_MEDAL_TARGETS, STASH_SETS_ORDERED } from "../content/stashes.ts";
+import { STASH_LOCATION_NAMES, STASH_SETS_ORDERED } from "../content/stashes.ts";
 import { itemById } from "../content/items.ts";
-import { BossPhoto } from "./screens/boss-parts.tsx";
 import { BossCoin } from "./art/boss-coin.tsx";
 
 export interface AchRow { id: string; progress: number; target: number; done: boolean; claimed: boolean; at: number | null }
@@ -45,51 +43,27 @@ export function BadgeMedal({ icon, tier, earned, size = 54 }: { icon: string; ti
   );
 }
 
-const TIERS: AchTier[] = [1, 2, 3, 4, 5];
-/** a category's own tiers (most have five; a one-off like «Лидер» has fewer) */
-const tiersOf = (c: AchCategory): AchTier[] => c.targets.map((_, i) => (i + 1) as AchTier);
-/** the medals shown for a category: five (or one per step for a short one); a ten-step one has two steps per medal */
-const medalsOf = (c: AchCategory): AchTier[] => (c.halves ? [1, 2, 3, 4, 5] : tiersOf(c));
-
-/** the lists of the achievements: everything about bosses, the money side, the locations, нычки and the rest */
-type AchGroup = "boss" | "eco" | "tasks" | "stash" | "games" | "misc";
-const ACH_GROUPS: { id: AchGroup; name: string }[] = [
-  { id: "boss", name: "Боевые" }, { id: "eco", name: "Экономика" }, { id: "tasks", name: "Задания" }, { id: "stash", name: "Нычки" }, { id: "games", name: "Мини-игры" }, { id: "misc", name: "Прочее" },
-];
-const GROUP_OF: Record<string, AchGroup> = {
-  damage: "boss", "fight-damage": "boss", hits: "boss", wins: "boss", solo: "boss", kills: "boss", weekly: "boss", "wins-blat": "boss", "wins-avtor": "boss", "all-bosses": "boss",
-  authority: "eco", yard: "eco", chests: "eco", exchanger: "eco", "spent-rub": "eco", "spent-usd": "eco",
-  "save-rub": "eco", "save-usd": "eco", "save-sol": "eco", "save-btc": "eco",
-  locations: "tasks", tasks: "tasks",
-  "slots-spins": "games", "slots-777": "games", "slots-level": "games", "upg-wins": "games", "upg-low": "games", "upg-streak": "games",
-  "zonk-games": "games", "zonk-best": "games", "zonk-duels": "games", "poker-hands": "games", "poker-level": "games", "bj-blackjacks": "games", "bj-wins": "games",
-};
-const groupOf = (id: string): AchGroup => GROUP_OF[id] ?? "misc";
-
-function catState(c: AchCategory, rows: Map<string, AchRow>, self: boolean) {
-  const tiers = tiersOf(c).map((t) => rows.get(`${c.id}-${t}`));
-  // a tier counts as earned once collected (others' profiles: once reached)
-  const steps = tiers.filter((r) => r && (r.claimed || (!self && r.done))).length;
-  // the medal on the row: the tier of the last step collected (ten steps: two per medal)
-  const earned = (steps ? stepTier(c, steps) : 0) as AchTier | 0;
-  const reached = tiers.filter((r) => r?.done).length;
-  const ready = self ? tiers.find((r) => r?.done && !r.claimed) ?? null : null;
-  // each tier keeps its progress up to its own target: the highest tier shows how far it really is
-  const progress = Math.max(0, ...tiers.map((r) => r?.progress ?? 0));
-  const next = c.targets[Math.min(c.targets.length - 1, reached)];
-  return { tiers, earned, steps, reached, ready, progress, next };
+/** the picture of a position: the boss's face on a coin, a нычки set, a thing, or an icon — with its number under it */
+function AchPic({ a, cat, on, size = 46 }: { a: AchievementDef; cat: AchCategory; on: boolean; size?: number }) {
+  const boss = a.boss ? OPEN_ALL.find((b) => b.id === a.boss) : undefined;
+  const thing = itemById(a.icon);
+  return (
+    <span className={`ach-pic tier-${a.tier} ${on ? "on" : "off"}`} style={{ width: size, height: size, ["--c" as string]: TIER_COLORS[a.tier] }}>
+      {boss ? <BossCoin boss={boss} tier={a.category === "bosses" ? MEDAL_TIERS[Math.min(2, a.tier - 1)] : "gold"} size={size} dim={!on} />
+        : cat.img ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={cat.img} alt="" draggable={false} />
+        : thing ? <ItemArt id={a.icon} size={size * 0.78} />
+        : <Icon name={a.icon as IconName} size={size * 0.74} />}
+      <i className="ach-pic-n num">{a.label}</i>
+    </span>
+  );
 }
 
-/** Profile block: one row per category with five coloured steps; on your own profile reached steps are collected. */
 export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = false, stashOnly = false }: { rows: AchRow[]; self: boolean; onClaimed?: () => void; points?: number; unfolded?: boolean; stashOnly?: boolean }) {
   // the list is folded (open at once in the «Личное дело» tab); the header shows the count, the points and what waits
   const [shown, setShown] = useState(unfolded);
   const { act, busy } = useGame();
   const [open, setOpen] = useState<string | null>(null);
-  const [soloOpen, setSoloOpen] = useState(false);
-  const [killOpen, setKillOpen] = useState(false);
-  const [coinOpen, setCoinOpen] = useState(false);
-  const [group, setGroup] = useState<AchGroup>("boss");
+  const [section, setSection] = useState<AchSection>("boss");
   const [stashItem, setStashItem] = useState<string | null>(null);
   const { state } = useGame();
   const stashQty = new Map(self ? (state?.inventory ?? []).filter((i) => i.qty > 0 && i.id.startsWith("stash-")).map((i) => [i.id, i.qty] as const) : []);
@@ -112,8 +86,9 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
       onClaimed?.();
     }
   };
-  const cat = open ? ACH_CATEGORIES.find((c) => c.id === open) : null;
-  const cs = cat ? catState(cat, byId, self) : null;
+  const cat = open ? ACH_CATEGORIES.find((c) => c.id === open) ?? null : null;
+  const isOn = (id: string) => { const r = byId.get(id); return !!r && (r.claimed || (!self && r.done)); };
+  const isDue = (id: string) => { const r = byId.get(id); return self && !!r?.done && !r.claimed; };
   // the нычки list: in its own window from the achievements, or right in the «Нычки» tab of the dossier
   const stashBody = (
           <div className="col" style={{ gap: 8 }}>
@@ -168,48 +143,6 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
             })}
           </div>
   );
-  // the achievements' «Нычки» tab: only the sets and their medals (10 — bronze, 50 — silver, 100 — gold); the нычки
-  // themselves are in the dossier's own «Нычки» tab
-  const stashAch = (
-    <div className="col" style={{ gap: 8 }}>
-      <div className="small muted center">Собери набор {STASH_MEDAL_TARGETS[0]} раз — бронза, {STASH_MEDAL_TARGETS[1]} — серебро, {STASH_MEDAL_TARGETS[2]} — золото. Сами нычки — во вкладке «Нычки».</div>
-      {STASH_SETS_ORDERED.map((st) => {
-        const count = self ? state?.stashSets?.[st.n] ?? 0 : byId.get(`stashset-${st.n}-3`)?.progress ?? 0;
-        const ids = ([1, 2, 3] as AchTier[]).map((t) => `stashset-${st.n}-${t}`);
-        const reached = STASH_MEDAL_TARGETS.filter((t) => count >= t).length;
-        const next = STASH_MEDAL_TARGETS[Math.min(2, reached)];
-        const ready = self ? ids.find((id) => { const r = byId.get(id); return r?.done && !r.claimed; }) ?? null : null;
-        return (
-          <div key={st.id} className={`ach-row ${ready ? "ready" : ""}`}>
-            <ClaimMedal id={ready ?? undefined} onClaim={claim} busy={busy === "achievement_claim"}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="stash-ach-art" src={`/assets/stash/set-${st.n}.webp`} alt="" draggable={false} />
-            </ClaimMedal>
-            <span className="ach-main">
-              <span className="row" style={{ justifyContent: "space-between", gap: 6 }}>
-                <b className="ach-name ellipsis">{st.name}</b>
-                <span className="bk-medals">
-                  {ids.map((id, i) => {
-                    const r = byId.get(id);
-                    const gotM = !!r && (r.claimed || (!self && r.done));
-                    const due = self && !!r?.done && !r.claimed;
-                    return (
-                      <button key={id} className={`bk-medal ${due ? "due" : ""}`} onClick={() => setMedal(id)} aria-label={achievementById(id)?.name}>
-                        <BadgeMedal icon="chest" tier={(i + 1) as AchTier} earned={gotM || due} size={24} />
-                      </button>
-                    );
-                  })}
-                </span>
-              </span>
-              <span className="ach-bar sm" style={{ ["--p" as string]: `${reached >= 3 ? 100 : Math.min(100, Math.round((count / next) * 100))}%`, ["--c" as string]: TIER_COLORS[Math.min(3, reached + 1) as AchTier] }}>
-                <i /><span className="num">{reached >= 3 ? `всё собрано · ${count}` : `${count} / ${next}`}</span>
-              </span>
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
   if (stashOnly) return (
     <>
       {stashBody}
@@ -256,6 +189,9 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
       })()}
     </>
   );
+  // a list: its live positions (a boss not in the game yet has none), what is collected, the next to reach
+  const lines = (c: AchCategory) => c.lines.filter((x) => byId.has(x.id));
+  const sectionDue = (sec: AchSection) => self && rows.some((r) => r.done && !r.claimed && categoryOf(r.id)?.section === sec);
   return (
     <div className="panel">
       <button type="button" className={`ach-head ${waiting ? "ready" : ""}`} onClick={() => setShown((v) => !v)} aria-expanded={shown}>
@@ -267,261 +203,63 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
         <span className={`ach-caret ${shown ? "open" : ""}`} aria-hidden="true">▾</span>
       </button>
       {shown && <div className="ach-groups" role="tablist">
-        {ACH_GROUPS.map((g) => {
-          const due = self && rows.some((r) => r.done && !r.claimed && (g.id === "boss" ? /^(soloboss|bosskill|medal)-/.test(r.id) || groupOf(r.id.replace(/-\d+$/, "")) === "boss" : g.id === "stash" ? r.id.startsWith("stashset-") : !/^(soloboss|bosskill|medal|stashset)-/.test(r.id) && groupOf(r.id.replace(/-\d+$/, "")) === g.id));
-          return <button key={g.id} type="button" role="tab" aria-selected={group === g.id} className={`ach-group ${group === g.id ? "on" : ""} ${due ? "due" : ""}`} onClick={() => { haptic.tap(); setGroup(g.id); }}>{g.name}</button>;
-        })}
+        {ACH_SECTIONS.map((g) => (
+          <button key={g.id} type="button" role="tab" aria-selected={section === g.id} className={`ach-group ${section === g.id ? "on" : ""} ${sectionDue(g.id) ? "due" : ""}`} onClick={() => { haptic.tap(); setSection(g.id); }}>{g.name}</button>
+        ))}
       </div>}
-      {shown && group === "stash" && <div style={{ marginTop: 8 }}>{stashAch}</div>}
-      {shown && group !== "stash" && <div className="col" style={{ gap: 8, marginTop: 8 }}>
-        {/* «Убийца боссов»: every boss with three medals — 10, 50 and 100 wins */}
-        {group === "boss" && (() => {
-          const killList = BOSS_KILL_ACHIEVEMENTS.filter((a) => byId.has(a.id));
-          const got = killList.filter((a) => { const r = byId.get(a.id); return r && (r.claimed || (!self && r.done)); });
-          const ready = self ? killList.find((a) => { const r = byId.get(a.id); return r?.done && !r.claimed; }) ?? null : null;
-          const n = killList.length;
-          const top = Math.max(0, ...got.map((a) => a.tier)) as AchTier | 0;
+      {shown && <div className="col" style={{ gap: 8, marginTop: 8 }}>
+        {ACH_CATEGORIES.filter((c) => c.section === section).map((c) => {
+          const ls = lines(c);
+          if (!ls.length) return null;
+          const got = ls.filter((x) => isOn(x.id)).length;
+          const due = ls.find((x) => isDue(x.id));
+          const next = ls.find((x) => !byId.get(x.id)?.done);
+          const show = due ?? next ?? ls[ls.length - 1];
+          const r = byId.get(show.id);
+          const pct = !next ? 100 : Math.min(100, Math.round(((r?.progress ?? 0) / show.target) * 100));
           return (
-            <div role="button" tabIndex={0} className={`ach-row ${ready ? "ready" : ""}`} onClick={() => setKillOpen(true)} onKeyDown={(e) => e.key === "Enter" && setKillOpen(true)}>
-              <ClaimMedal id={ready?.id} onClaim={claim} busy={busy === "achievement_claim"}><BadgeMedal icon="ach-wins" tier={top} earned={got.length > 0} size={44} /></ClaimMedal>
-              <span className="ach-main">
-                <span className="row" style={{ justifyContent: "space-between", gap: 6 }}>
-                  <b className="ach-name">Убийца боссов</b>
-                  <span className="tiny muted num">{got.length}/{n}</span>
-                </span>
-                <span className="ach-bar sm" style={{ ["--p" as string]: `${Math.round((got.length / n) * 100)}%`, ["--c" as string]: "#ffcc33" }}>
-                  <i /><span className="num">{got.length >= n ? "всё собрано" : `${got.length} / ${n} медалей`}</span>
-                </span>
-              </span>
-            </div>
-          );
-        })()}
-        {/* one cell for the per-boss solo badges; the window lists every boss and its reward */}
-        {group === "boss" && (() => {
-          const soloList = SOLO_BOSS_ACHIEVEMENTS.filter((a) => byId.has(a.id));
-          const sr = soloList.map((a) => byId.get(a.id));
-          const got = sr.filter((r) => r && (r.claimed || (!self && r.done))).length;
-          const ready = self ? soloList.find((a) => { const r = byId.get(a.id); return r?.done && !r.claimed; }) ?? null : null;
-          const n = soloList.length;
-          const top = Math.max(0, ...soloList.filter((a) => { const r = byId.get(a.id); return r && (r.claimed || (!self && r.done)); }).map((a) => a.tier)) as AchTier | 0;
-          return (
-            <div role="button" tabIndex={0} className={`ach-row ${ready ? "ready" : ""}`} onClick={() => setSoloOpen(true)} onKeyDown={(e) => e.key === "Enter" && setSoloOpen(true)}>
-              <ClaimMedal id={ready?.id} onClaim={claim} busy={busy === "achievement_claim"}><BadgeMedal icon="ach-solo" tier={top} earned={got > 0} size={44} /></ClaimMedal>
-              <span className="ach-main">
-                <span className="row" style={{ justifyContent: "space-between", gap: 6 }}>
-                  <b className="ach-name">Соло-убийства</b>
-                  <span className="tiny muted num">{got}/{n}</span>
-                </span>
-                <span className="ach-bar sm" style={{ ["--p" as string]: `${Math.round((got / n) * 100)}%`, ["--c" as string]: "#ffcc33" }}>
-                  <i /><span className="num">{got >= n ? "всё собрано" : `${got} / ${n} боссов`}</span>
-                </span>
-              </span>
-            </div>
-          );
-        })()}
-        {/* «Медали боссов»: the face on a coin — bronze, silver, gold; MEDAL_SET of a kind is a full set */}
-        {group === "boss" && (() => {
-          const list = MEDAL_ACHIEVEMENTS.filter((a) => byId.has(a.id));
-          const got = list.filter((a) => { const r = byId.get(a.id); return r && (r.claimed || (!self && r.done)); });
-          const ready = self ? list.find((a) => { const r = byId.get(a.id); return r?.done && !r.claimed; }) ?? null : null;
-          const coins = list.reduce((n, a) => n + Math.min(MEDAL_SET, byId.get(a.id)?.progress ?? 0), 0);
-          const n = list.length;
-          return (
-            <div role="button" tabIndex={0} className={`ach-row ${ready ? "ready" : ""}`} onClick={() => setCoinOpen(true)} onKeyDown={(e) => e.key === "Enter" && setCoinOpen(true)}>
-              <ClaimMedal id={ready?.id} onClaim={claim} busy={busy === "achievement_claim"}><span className="ach-coin"><BlastIcon tier={got.some((a) => a.tier === 3) ? "gold" : got.some((a) => a.tier === 2) ? "silver" : "bronze"} size={44} dim={coins === 0} /></span></ClaimMedal>
-              <span className="ach-main">
-                <span className="row" style={{ justifyContent: "space-between", gap: 6 }}>
-                  <b className="ach-name">Взрывы боссов</b>
-                  <span className="tiny muted num">{got.length}/{n} сетов</span>
-                </span>
-                <span className="ach-bar sm" style={{ ["--p" as string]: `${Math.round((coins / Math.max(1, n * MEDAL_SET)) * 100)}%`, ["--c" as string]: "#ffcc33" }}>
-                  <i /><span className="num">{full(coins)} / {full(n * MEDAL_SET)} взрывов</span>
-                </span>
-              </span>
-            </div>
-          );
-        })()}
-        {/* the counted categories after the bosses */}
-        {ACH_CATEGORIES.filter((c) => groupOf(c.id) === group).map((c) => {
-          const s = catState(c, byId, self);
-          const maxed = s.reached >= c.targets.length;
-          const pct = maxed ? 100 : Math.min(100, Math.round((s.progress / s.next) * 100));
-          return (
-            <div key={c.id} role="button" tabIndex={0} className={`ach-row ${s.ready ? "ready" : ""}`} onClick={() => setOpen(c.id)} onKeyDown={(e) => e.key === "Enter" && setOpen(c.id)}>
-              <ClaimMedal id={s.ready?.id} onClaim={claim} busy={busy === "achievement_claim"}><BadgeMedal icon={c.icon} tier={s.earned} earned={s.earned > 0} size={44} /></ClaimMedal>
+            <div key={c.id} role="button" tabIndex={0} className={`ach-row ${due ? "ready" : ""}`} onClick={() => setOpen(c.id)} onKeyDown={(e) => e.key === "Enter" && setOpen(c.id)}>
+              <ClaimMedal id={due?.id} onClaim={claim} busy={busy === "achievement_claim"}>
+                {c.kind === "boss"
+                  ? <span className={`ach-pic tier-3 on`} style={{ width: 46, height: 46 }}><Icon name={c.icon as IconName} size={34} /></span>
+                  : <AchPic a={show} cat={c} on={got > 0 || !!due} />}
+              </ClaimMedal>
               <span className="ach-main">
                 <span className="row" style={{ justifyContent: "space-between", gap: 6 }}>
                   <b className="ach-name">{c.name}</b>
-                  <span className="ach-steps" aria-label={`${s.steps} из ${c.targets.length}`}>
-                    {medalsOf(c).map((t, k) => {
-                      // a ten-step category: the 1st step of a medal fills its half, the 2nd the whole circle
-                      const idx = c.halves ? [2 * k, 2 * k + 1] : [k];
-                      const on = idx.filter((i) => { const r = s.tiers[i]; return !!r && (r.claimed || (!self && r.done)); }).length;
-                      const due = idx.some((i) => { const r = s.tiers[i]; return !!r?.done && !r.claimed; });
-                      const cls = on === idx.length ? "on" : on > 0 ? "half" : due ? "due" : "";
-                      return <i key={t} className={cls} style={{ ["--c" as string]: TIER_COLORS[t] }} title={`${TIER_NAMES[t]}: ${idx.map((i) => full(c.targets[i])).join(" и ")}`} />;
-                    })}
-                  </span>
+                  <span className="tiny muted num">{got}/{ls.length}</span>
                 </span>
-                <span className="ach-bar sm" style={{ ["--p" as string]: `${pct}%`, ["--c" as string]: TIER_COLORS[stepTier(c, Math.min(c.targets.length, s.reached + 1))] }}>
-                  <i /><span className="num">{maxed ? "всё собрано" : `${short(s.progress)} / ${short(s.next)}`}</span>
+                <span className="tiny ach-hint ellipsis">{due ? `Готово: ${due.name}` : next ? next.hint : "всё собрано"}</span>
+                <span className="ach-bar sm" style={{ ["--p" as string]: `${pct}%`, ["--c" as string]: TIER_COLORS[show.tier] }}>
+                  <i /><span className="num">{!next ? "всё собрано" : `${short(r?.progress ?? 0)} / ${short(show.target)}`}</span>
                 </span>
               </span>
-              {/* collected right here, one after another; the row itself opens the details */}
             </div>
           );
         })}
       </div>}
-      {stashItem && (() => {
-        const d = itemById(stashItem);
-        const has = ownedStash.has(stashItem);
-        return (
-          <Modal title={d?.name ?? "Нычка"} onClose={() => setStashItem(null)}>
-            <div className="col" style={{ gap: 8, alignItems: "center", textAlign: "center" }}>
-              <span className={`stash-cell big ${has || !self ? "" : "off"}`}>{/* eslint-disable-next-line @next/next/no-img-element */}<img src={`/assets/items/${stashItem}.webp`} alt="" /></span>
-              <span className="small">{d?.description}</span>
-              <span className="tiny muted">{self ? (has ? "Найдена" : "Ещё не найдена — ищи в заданиях локации") : ""}</span>
-            </div>
-          </Modal>
-        );
-      })()}
-      {coinOpen && (
-        <Modal title="Взрывы боссов" onClose={() => setCoinOpen(false)}>
-          <div className="col" style={{ gap: 6 }}>
-            <div className="small muted center">
-              Каждая победа даёт взрыв: {FIGHT_MODES.map((m) => `«${m.name}» — ${MEDAL_NAMES[m.medal].toLowerCase()}`).join(", ")}.
-              {" "}Каждый взрыв сразу добавляет урон оружию босса, {MEDAL_SET} взрывов одного вида — полный набор. Нажми на взрыв — увидишь награду за набор.
-            </div>
-            {OPEN_ALL.filter((b) => byId.has(`medal-${b.id}-bronze`)).map((b) => (
-              <div key={b.id} className="bk-row">
-                <span className="bk-photo"><BossPhoto boss={b} round /></span>
-                <span className="grow col" style={{ gap: 1, minWidth: 0 }}>
-                  <b className="ellipsis">{b.name}</b>
-                  <span className="tiny muted">за взрыв: +{medalStep(b, "bronze")}/+{medalStep(b, "silver")}/+{medalStep(b, "gold")} · {itemById(medalWeapon(b))?.name}</span>
-                </span>
-                <span className="bk-medals">
-                  {MEDAL_TIERS.map((t) => {
-                    const id = `medal-${b.id}-${t}`;
-                    const r = byId.get(id);
-                    const have = Math.min(MEDAL_SET, r?.progress ?? 0);
-                    const due = self && !!r?.done && !r.claimed;
-                    return (
-                      <button key={t} className={`bk-medal coin ${due ? "due" : ""}`} onClick={() => setMedal(id)} aria-label={achievementById(id)?.name}>
-                        <BlastIcon tier={t} size={30} dim={have === 0} />
-                        <small className="num">{have}/{MEDAL_SET}</small>
-                      </button>
-                    );
-                  })}
-                </span>
-              </div>
-            ))}
-          </div>
-        </Modal>
-      )}
-      {killOpen && (
-        <Modal title="Убийца боссов" onClose={() => setKillOpen(false)}>
-          <div className="col" style={{ gap: 6 }}>
-            <div className="small muted center">Медали за победы над каждым боссом: бронза — {BOSS_KILL_TARGETS[0]}, серебро — {BOSS_KILL_TARGETS[1]}, золото — {BOSS_KILL_TARGETS[2]}. Нажми на медаль — увидишь награду.</div>
-            {OPEN_ALL.filter((b) => byId.has(`bosskill-${b.id}-1`)).map((b) => {
-              const tiers = ([1, 2, 3] as AchTier[]).map((t) => ({ t, a: achievementById(`bosskill-${b.id}-${t}`)!, r: byId.get(`bosskill-${b.id}-${t}`) }));
-              const wins = tiers[2].r?.progress ?? 0;
-              return (
-                <div key={b.id} className="bk-row">
-                  <span className="bk-photo"><BossPhoto boss={b} round /></span>
-                  <span className="grow col" style={{ gap: 1, minWidth: 0 }}>
-                    <b className="ellipsis">{b.name}</b>
-                    <span className="tiny muted">побед: <b className="num" style={{ color: "var(--ink)" }}>{full(wins)}{wins >= 100 ? "+" : ""}</b></span>
-                  </span>
-                  <span className="bk-medals">
-                    {tiers.map(({ t, a, r }) => {
-                      const got = !!r && (r.claimed || (!self && r.done));
-                      const due = self && !!r?.done && !r.claimed;
-                      return (
-                        <button key={t} className={`bk-medal ${due ? "due" : ""}`} onClick={() => setMedal(a.id)} aria-label={a.name}>
-                          <BossCoin boss={b} tier={MEDAL_TIERS[t - 1]} size={34} dim={!(got || due)} />
-                        </button>
-                      );
-                    })}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </Modal>
-      )}
-      {medal && (() => {
-        const a = achievementById(medal);
-        const r = byId.get(medal);
-        if (!a) return null;
-        const got = !!r && (r.claimed || (!self && r.done));
-        const due = self && !!r?.done && !r?.claimed;
-        return (
-          <Modal title={a.name} onClose={() => setMedal(null)}>
-            <div className="col" style={{ gap: 10, alignItems: "center", textAlign: "center" }}>
-              {(() => {
-                // a «Убийца боссов» medal is the boss's face on the coin of its tier
-                const kb = medal.startsWith("bosskill-") ? OPEN_ALL.find((b) => medal === `bosskill-${b.id}-${a.tier}`) : undefined;
-                const m = kb ? <BossCoin boss={kb} tier={MEDAL_TIERS[a.tier - 1]} size={80} dim={!(got || due)} /> : <BadgeMedal icon={a.icon} tier={a.tier} earned={got || due} size={72} />;
-                return <ClaimMedal id={due ? a.id : undefined} onClaim={async (id) => { await claim(id); setMedal(null); }} busy={busy === "achievement_claim"}>{m}</ClaimMedal>;
-              })()}
-              <b className="tier-name" style={{ color: TIER_COLORS[a.tier] }}>{TIER_NAMES[a.tier]}</b>
-              <span className="small">{a.hint}</span>
-              <span className="ach-bar" style={{ width: "100%", ["--p" as string]: `${Math.round(((r?.progress ?? 0) / a.target) * 100)}%`, ["--c" as string]: TIER_COLORS[a.tier] }}>
-                <i /><span className="num">{full(r?.progress ?? 0)} / {full(a.target)}</span>
-              </span>
-              <RewardChips r={a.reward} size={15} />
-              {got ? <span className="ach-got-label">✓ получено</span> : due ? (
-                <span className="ach-claim-hint">Нажми на медаль — забери награду</span>
-              ) : null}
-            </div>
-          </Modal>
-        );
-      })()}
-      {soloOpen && (
-        <Modal title="Соло-убийства" onClose={() => setSoloOpen(false)}>
-          <div className="col" style={{ gap: 8 }}>
-            <div className="small muted center">Победи босса в бою «Соло» — HP снимают только твои удары. За каждого босса своя награда и очки достижений: Дацкоу — 1, дальше больше, Солнце — 100.</div>
-            {SOLO_BOSS_ACHIEVEMENTS.filter((a) => byId.has(a.id)).map((a) => {
-              const r = byId.get(a.id);
-              const got = !!r && (r.claimed || (!self && r.done));
-              const due = self && !!r?.done && !r.claimed;
-              return (
-                <div key={a.id} className={`ach-tier ${got ? "got" : due ? "due" : ""}`} style={{ ["--c" as string]: TIER_COLORS[a.tier] }}>
-                  {/* the boss's face; dim until he is killed solo */}
-                  <ClaimMedal id={due ? a.id : undefined} onClaim={claim} busy={busy === "achievement_claim"}>
-                    {(() => { const b = OPEN_ALL.find((x) => x.id === a.boss); return b ? <BossCoin boss={b} tier={a.tier >= 4 ? "gold" : a.tier >= 2 ? "silver" : "bronze"} size={40} dim={!(got || due)} /> : <BadgeMedal icon={a.icon} tier={a.tier} earned={got || due} size={38} />; })()}
-                  </ClaimMedal>
-                  <span className="grow col" style={{ gap: 3, minWidth: 0 }}>
-                    <b className="ellipsis tier-name" style={{ color: TIER_COLORS[a.tier] }}>{a.name.replace("Соло: ", "")}</b>
-                    <RewardChips r={achievementById(a.id)?.reward ?? a.reward} size={13} />
-                  </span>
-                  {got && <span className="quest-ok display">✓</span>}
-                </div>
-              );
-            })}
-          </div>
-        </Modal>
-      )}
-      {cat && cs && (
+      {/* a list window: every position — its picture with the number, what to do, the progress, the points */}
+      {cat && (
         <Modal title={cat.name} onClose={() => setOpen(null)}>
-          <div className="col" style={{ gap: 8 }}>
-            <div className="small muted center">Прогресс: <b className="num" style={{ color: "var(--ink)" }}>{full(cs.progress)}</b></div>
-            {tiersOf(cat).map((step, i) => {
-              const r = cs.tiers[i];
-              const def = achievementById(`${cat.id}-${step}`);
-              if (!def) return null;
-              const t = def.tier;
-              const got = !!r?.claimed;
-              const due = self && !!r?.done && !got;
+          <div className="col" style={{ gap: 6 }}>
+            <div className="tiny muted center">Нажми на светящуюся картинку — заберёшь очки достижений</div>
+            {[...lines(cat)].sort((x, y) => Number(isDue(y.id)) - Number(isDue(x.id)) || Number(isOn(x.id)) - Number(isOn(y.id))).map((a) => {
+              const r = byId.get(a.id);
+              const on = isOn(a.id), due = isDue(a.id);
+              const pct = Math.min(100, Math.round(((r?.progress ?? 0) / a.target) * 100));
               return (
-                <div key={step} className={`ach-tier ${got ? "got" : due ? "due" : ""}`} style={{ ["--c" as string]: TIER_COLORS[t] }}>
-                  <ClaimMedal id={due ? def.id : undefined} onClaim={claim} busy={busy === "achievement_claim"}><BadgeMedal icon={cat.icon} tier={t} earned={got || (!self && !!r?.done) || due} size={38} /></ClaimMedal>
-                  <span className="grow col" style={{ gap: 3, minWidth: 0 }}>
-                    <b className="tier-name" style={{ color: TIER_COLORS[t] }}>{TIER_NAMES[t]}{cat.halves ? (step % 2 ? " ½" : "") : ""} · <span className="num">{full(def.target)}</span></b>
-                    <span className="ach-hint">{def.hint}</span>
-                    <RewardChips r={def.reward} size={13} />
+                <div key={a.id} className={`ach-line ${on ? "got" : due ? "due" : ""}`} style={{ ["--c" as string]: TIER_COLORS[a.tier] }}>
+                  <ClaimMedal id={due ? a.id : undefined} onClaim={claim} busy={busy === "achievement_claim"}>
+                    <AchPic a={a} cat={cat} on={on || due} />
+                  </ClaimMedal>
+                  <span className="grow col" style={{ gap: 2, minWidth: 0 }}>
+                    <b className="ach-line-name ellipsis">{a.name}</b>
+                    <span className="tiny ach-hint">{a.hint}</span>
+                    <span className="ach-bar sm" style={{ ["--p" as string]: `${on || r?.done ? 100 : pct}%`, ["--c" as string]: TIER_COLORS[a.tier] }}>
+                      <i /><span className="num">{full(Math.min(a.target, r?.progress ?? 0))} / {full(a.target)}</span>
+                    </span>
                   </span>
-                  {got && <span className="quest-ok display">✓</span>}
+                  <span className="ach-line-pts num">{on ? "✓" : <>+{a.points}<Icon name="sun" size={16} /></>}</span>
                 </div>
               );
             })}

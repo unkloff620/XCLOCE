@@ -6,12 +6,13 @@ import { bossById, bossOpen } from "../../content/bosses.ts";
 import { slotLevel } from "../../content/slots.ts";
 import { pokerLevel } from "../../content/games.ts";
 import { countersOf } from "./counters.ts";
+import { talentsForDamage } from "../../content/talents.ts";
 
 /** per-boss badges count only while the boss is in the game */
 const live = (cfg: Config) => ACHIEVEMENTS.filter((a) => !a.boss || (bossById(a.boss) && bossOpen(bossById(a.boss)!, cfg.bossOpen)));
 
 /** Everything the badges measure, read from what the game already stores. */
-export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promise<Partial<Record<AchStat, number>>> {
+export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promise<Record<AchStat, number>> {
   const [r] = await q.query<Record<string, number | null>>(
     `SELECT
        (SELECT COALESCE(SUM(hits), 0) FROM boss_damage WHERE player_id=$1)::bigint AS hits,
@@ -72,6 +73,33 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
   );
   const m = (k: string) => Math.max(0, Number(x?.[k] ?? 0));
   const c = await countersOf(q, pid);
+  // the third set: things collected (the ledger keeps every gain), fast kills, locations by day and night, business,
+  // poker hands, zonk combinations (counters), the talents the damage gave
+  const got = await q.query<{ key: string; n: number }>(
+    "SELECT key, SUM(delta)::bigint AS n FROM ledger WHERE player_id=$1 AND kind='item' AND delta > 0 AND key = ANY($2) GROUP BY key",
+    [pid, ["rug-pull-gun", "gpu", "keyboard", "poker-chip", "sticker-hodl"]],
+  );
+  const fast = await q.query<{ boss_id: string; n: number }>(
+    `SELECT boss_id, COUNT(*)::int AS n FROM fights WHERE player_id=$1 AND status='won' AND my_damage > 0 AND ended_at IS NOT NULL
+       AND ended_at - started_at <= interval '1 hour' GROUP BY boss_id`,
+    [pid],
+  );
+  const locs = await q.query<{ location_id: string; n: number }>("SELECT location_id, COUNT(*)::int AS n FROM location_claims WHERE player_id=$1 GROUP BY location_id", [pid]);
+  const biz = await q.query<{ location_id: string }>("SELECT location_id FROM location_business WHERE player_id=$1 AND (since IS NOT NULL OR lv_rep > 0 OR lv_rub > 0)", [pid]);
+  const hands = await q.query<{ hand: string; n: number }>(
+    "SELECT result->>'outcome' AS hand, COUNT(*)::int AS n FROM games WHERE player_id=$1 AND kind='poker' AND status='done' AND result->>'outcome' IS NOT NULL GROUP BY 1",
+    [pid],
+  );
+  const third: Record<string, number> = {
+    ...Object.fromEntries(got.map((r) => [`got:${r.key}`, Number(r.n)])),
+    ...Object.fromEntries(fast.map((r) => [`fast:${r.boss_id}`, Number(r.n)])),
+    ...Object.fromEntries(locs.map((r) => [r.location_id.startsWith("night:") ? `locn:${r.location_id.slice(6)}` : `loc:${r.location_id}`, Number(r.n)])),
+    ...Object.fromEntries(biz.map((r) => [`biz:${r.location_id}`, 1])),
+    ...Object.fromEntries(hands.map((r) => [`poker:${r.hand}`, Number(r.n)])),
+    ...Object.fromEntries(Object.entries(c).filter(([k]) => k.startsWith("zonk:")).map(([k, v]) => [k, v])),
+    talents: talentsForDamage(Number(r?.damage ?? 0)),
+    bjBestBet: c.bjBestBet ?? 0,
+  };
   const second = {
     bestFight: m("best_fight"), winsBlat: m("wins_blat"), winsAvtor: m("wins_avtor"), bossesBeaten: m("bosses"),
     exchanges: c.exchanges ?? 0, spentRUB: c.spentRUB ?? 0, spentUSD: c.spentUSD ?? 0,
@@ -85,6 +113,7 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
     spits: m("spits"), raids: m("raids"), nishtyaks: m("nishtyaks"),
   };
   return {
+    ...third,
     ...second,
     ...stash,
     ...Object.fromEntries(medals.map((m) => [`medal:${m.boss_id}:${m.tier}`, Number(m.n)])),

@@ -157,6 +157,20 @@ export function zonkGroups(dice: number[]): { dice: number[]; points: number | n
   return [...out.filter((x) => x.points !== null), ...out.filter((x) => x.points === null)];
 }
 
+/** the combinations kept dice make (the achievements «Зонк: комбинации»): x3…x6 of a face, three ones, three pairs, the straight */
+export function zonkCombos(dice: number[]): string[] {
+  const n = [0, 0, 0, 0, 0, 0, 0];
+  for (const d of dice) n[d]++;
+  if (dice.length === 6 && n.slice(1).every((x) => x === 1)) return ["straight"];
+  if (dice.length === 6 && n.filter((x) => x === 2).length === 3) return ["pairs3"];
+  const out: string[] = [];
+  for (let f = 1; f <= 6; f++) {
+    if (n[f] >= 3) out.push(`x${n[f]}`);
+    if (f === 1 && n[f] >= 3) out.push("ones3");
+  }
+  return out;
+}
+
 /** does a roll have anything that scores? */
 export function zonkHasScore(dice: number[]): boolean {
   const n = [0, 0, 0, 0, 0, 0, 0];

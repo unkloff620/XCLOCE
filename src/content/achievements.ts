@@ -1,178 +1,198 @@
 import type { Reward } from "./rewards.ts";
-import { BOSSES, type CardTier } from "./bosses.ts";
+import { BOSSES } from "./bosses.ts";
 import { STASH_MEDAL_TARGETS, STASH_SETS_ORDERED } from "./stashes.ts";
-import { MEDAL_NAMES, MEDAL_POINT_EVERY, MEDAL_SET, MEDAL_TIERS, FIGHT_MODES } from "./medals.ts";
+import { LOCATIONS } from "./locations.ts";
+import { POKER_HANDS } from "./games.ts";
 
 /*
- * Достижения: значок в профиле + разовая награда. Прогресс считается сервером из того, что уже записано
- * (статистика, бои, локации, серия входов) — отдельно ничего копить не нужно.
+ * Достижения (третья редакция): списки позиций по разделам — Боевые, Экономика, Азартные, Задания, Нычки, Прочее.
+ * Каждая позиция — картинка с числом, название, что сделать, полоска прогресса и очки достижений (солнце) за неё:
+ * других наград нет, очки копятся и открывают «Ящик ништяков». Прогресс считается сервером из того, что игра уже
+ * хранит (systems/achievements.ts → statsFor), отдельные счётчики — systems/counters.ts.
  */
 
-/** what a badge measures (server: systems/achievements.ts → statsFor) */
-export type AchStat = "authority" | "damage" | "hits" | "wins" | "soloWins" | "kills" | "locations" | "tasks" | "yard" | "bestStreak" | "chests" | "weeklyTop" | `solo:${string}` | `win:${string}` | `stashsets:${number}` | `medal:${string}`
-  // the second set: modes, money, mini games, clans, the yard's social life (server: systems/achievements.ts)
-  | "winsBlat" | "winsAvtor" | "bossesBeaten" | "exchanges" | "spentRUB" | "spentUSD" | "haveRUB" | "haveUSD" | "haveSOL" | "haveBTC"
-  | "slotSpins" | "slot777" | "slotLevel" | "upgWins" | "upgLowWins" | "upgStreak" | "zonkGames" | "zonkBest" | "zonkDuels" | "pokerHands" | "pokerLevel"
-  | "bjBlackjacks" | "bjWins" | "clanDays" | "clanBosses" | "clanCreated" | "spits" | "raids" | "nishtyaks" | "bestFight";
+/** what a position measures (the server's stats); strings like "win:<boss>", "got:<item>", "loc:<location>" */
+export type AchStat = string;
 
-/** 1 bronze · 2 silver · 3 gold · 4 platinum · 5 diamond */
+/** 1 bronze · 2 silver · 3 gold · 4 platinum · 5 diamond — the colour of a position by how far in its list it is */
 export type AchTier = 1 | 2 | 3 | 4 | 5;
 export const TIER_NAMES: Record<AchTier, string> = { 1: "Бронза", 2: "Серебро", 3: "Золото", 4: "Платина", 5: "Бриллиант" };
 export const TIER_COLORS: Record<AchTier, string> = { 1: "#d0803f", 2: "#c3cdde", 3: "#ffcc33", 4: "#5ff0dc", 5: "#c07bff" };
 
-export interface AchCategory {
-  id: string;
-  name: string;
-  /** "Набери {n} авторитета" — {n} becomes the tier's target */
-  hint: string;
-  stat: AchStat;
-  icon: string;
-  /** the thresholds, bronze → diamond (five; a one-off has one; with `halves` ten: two steps per medal) */
-  targets: number[];
-  /** ten steps, two per medal: the 1st step fills half the bronze, the 2nd the whole bronze, the 3rd half the silver… */
-  halves?: boolean;
-}
-
-export const ACH_CATEGORIES: AchCategory[] = [
-  { id: "authority", name: "Авторитет", hint: "Набери {n} авторитета", stat: "authority", icon: "xp", targets: [10_000, 500_000, 2_500_000, 5_000_000, 10_000_000] },
-  // the damage of ONE fight (the best fight so far), ten steps: two per medal
-  { id: "fight-damage", name: "Урон за бой", hint: "Нанеси боссу {n} урона за один бой", stat: "bestFight", icon: "ach-damage", halves: true,
-    targets: [1_000, 5_000, 25_000, 50_000, 100_000, 250_000, 500_000, 1_000_000, 2_500_000, 5_000_000] },
-  { id: "hits", name: "Удары", hint: "Нанеси {n} ударов", stat: "hits", icon: "ach-hits", targets: [10, 100, 1_000, 5_000, 20_000] },
-  { id: "wins", name: "Победы", hint: "Выиграй {n} боёв с боссами", stat: "wins", icon: "ach-wins", targets: [1, 10, 50, 200, 500] },
-  { id: "kills", name: "Добивающий", hint: "Нанеси последний удар боссу {n} раз", stat: "kills", icon: "key", targets: [1, 5, 25, 100, 250] },
-  { id: "locations", name: "Локации", hint: "Пройди локации {n} раз (повторы считаются)", stat: "locations", icon: "map", targets: [1, 5, 20, 50, 100] },
-  { id: "tasks", name: "Задания", hint: "Выполни {n} заданий в локациях", stat: "tasks", icon: "energy", targets: [5, 25, 100, 300, 1_000] },
-  { id: "yard", name: "Барахольщик", hint: "Подбери во дворе {n} находок", stat: "yard", icon: "ach-yard", targets: [10, 100, 500, 2_000, 5_000] },
-  { id: "streak", name: "Серия входов", hint: "Заходи {n} дней подряд", stat: "bestStreak", icon: "gift", targets: [3, 7, 14, 30, 60] },
-  { id: "chests", name: "Сундуки дня", hint: "Открой {n} сундуков за задания дня", stat: "chests", icon: "ach-chests", targets: [1, 7, 30, 100, 365] },
-  { id: "weekly", name: "Топ недели", hint: "Попади в топ-10 недели по урону {n} раз", stat: "weeklyTop", icon: "ach-weekly", targets: [1, 3, 10, 25, 50] },
-  // ---- the second set ----
-  { id: "wins-blat", name: "Блатной", hint: "Выиграй {n} боёв в режиме «Блатной»", stat: "winsBlat", icon: "ach-blat", targets: [1, 10, 50, 150, 500] },
-  { id: "wins-avtor", name: "Авторитетный", hint: "Выиграй {n} боёв в режиме «Авторитетный»", stat: "winsAvtor", icon: "ach-avtor", targets: [1, 10, 50, 150, 500] },
-  { id: "all-bosses", name: "Весь Close", hint: "Победи {n} разных боссов (хотя бы раз каждого)", stat: "bossesBeaten", icon: "ach-allboss", targets: [3, 5, 7, 10, 13] },
-  { id: "exchanger", name: "Меняла", hint: "Сделай {n} обменов в обменнике", stat: "exchanges", icon: "exchange", targets: [1, 10, 50, 150, 500] },
-  { id: "spent-rub", name: "Шопоголик ₽", hint: "Потрать в магазине {n} ₽", stat: "spentRUB", icon: "ach-shop", targets: [10_000, 50_000, 250_000, 1_000_000, 5_000_000] },
-  { id: "spent-usd", name: "Шопоголик $", hint: "Потрать в магазине {n} $", stat: "spentUSD", icon: "ach-shop", targets: [100, 500, 2_500, 10_000, 50_000] },
-  // savings: what lies in the wallet right now (1 $ = 85 ₽, 1 SOL = 120 $, 1 BTC = 85 000 $ — the BTC ones are for the richest)
-  { id: "save-rub", name: "Копилка ₽", hint: "Накопи {n} ₽", stat: "haveRUB", icon: "RUB", targets: [50_000, 250_000, 1_000_000, 3_000_000, 10_000_000] },
-  { id: "save-usd", name: "Копилка $", hint: "Накопи {n} $", stat: "haveUSD", icon: "USD", targets: [500, 2_000, 5_000, 10_000, 25_000] },
-  { id: "save-sol", name: "Копилка SOL", hint: "Накопи {n} SOL", stat: "haveSOL", icon: "SOL", targets: [3, 10, 25, 50, 100] },
-  { id: "save-btc", name: "Копилка BTC", hint: "Накопи {n} BTC", stat: "haveBTC", icon: "BTC", targets: [1, 2, 3, 4, 5] },
-  { id: "slots-spins", name: "Лудоман", hint: "Прокрути автомат 777 {n} раз", stat: "slotSpins", icon: "ach-slots", targets: [10, 100, 500, 2_000, 5_000] },
-  { id: "slots-777", name: "Три семёрки", hint: "Выбей 777 на автомате {n} раз", stat: "slot777", icon: "ach-slots", targets: [1, 3, 10, 25, 50] },
-  { id: "slots-level", name: "Уровень автомата", hint: "Подними уровень автомата 777 до {n}", stat: "slotLevel", icon: "ach-slots", targets: [2, 5, 10, 20, 40] },
-  { id: "upg-wins", name: "Апгрейдер", hint: "Прокачай вещь в апгрейдере {n} раз", stat: "upgWins", icon: "ach-upgrader", targets: [1, 10, 50, 200, 1_000] },
-  { id: "upg-low", name: "Рисковый", hint: "Прокачай вещь с шансом 15% и ниже {n} раз", stat: "upgLowWins", icon: "ach-upgrader", targets: [1, 3, 10, 25, 50] },
-  { id: "upg-streak", name: "Везунчик", hint: "Прокачай {n} раза подряд без провала", stat: "upgStreak", icon: "ach-upgrader", targets: [2, 3, 4, 5, 7] },
-  { id: "zonk-games", name: "Зонк", hint: "Сыграй {n} партий в зонк", stat: "zonkGames", icon: "ach-zonk", targets: [1, 10, 50, 200, 500] },
-  { id: "zonk-best", name: "Зонк: рекорд", hint: "Набери {n} очков за одну партию зонка", stat: "zonkBest", icon: "ach-zonk", targets: [2_000, 4_000, 6_000, 8_000, 10_000] },
-  { id: "zonk-duels", name: "Дуэлянт", hint: "Выиграй {n} дуэлей в зонк", stat: "zonkDuels", icon: "ach-zonk", targets: [1, 5, 25, 100, 250] },
-  { id: "poker-hands", name: "Покер: все комбинации", hint: "Собери {n} разных комбинаций в покере (от пары до роял-флеша)", stat: "pokerHands", icon: "ach-poker", targets: [3, 5, 7, 8, 9] },
-  { id: "poker-level", name: "Уровень покера", hint: "Подними уровень покера до {n}", stat: "pokerLevel", icon: "ach-poker", targets: [5, 10, 20, 50, 100] },
-  { id: "bj-blackjacks", name: "Блэкджек!", hint: "Собери блэкджек {n} раз", stat: "bjBlackjacks", icon: "ach-bj", targets: [1, 10, 50, 200, 500] },
-  { id: "bj-wins", name: "Игрок за столом", hint: "Выиграй {n} рук в блэкджек", stat: "bjWins", icon: "ach-bj", targets: [1, 25, 100, 500, 2_000] },
-  { id: "clan-days", name: "Клановый", hint: "Пробудь в клане {n} дней подряд", stat: "clanDays", icon: "ach-clan", targets: [1, 7, 30, 90, 365] },
-  { id: "clan-bosses", name: "Клановый босс", hint: "Победи с кланом {n} клановых боссов (бей сам)", stat: "clanBosses", icon: "ach-clan", targets: [1, 3, 10, 25, 50] },
-  { id: "clan-leader", name: "Лидер", hint: "Создай свой клан", stat: "clanCreated", icon: "ach-leader", targets: [1] },
-  { id: "spits", name: "Харкун", hint: "Харкни в игроков {n} раз", stat: "spits", icon: "ach-spit", targets: [1, 10, 50, 200, 500] },
-  { id: "raids", name: "Наезд", hint: "Наедь на игроков {n} раз", stat: "raids", icon: "ach-raid", targets: [1, 10, 50, 200, 500] },
-  { id: "nishtyaks", name: "Ништяк!", hint: "Получи {n} «ништяков» от других игроков", stat: "nishtyaks", icon: "ach-nishtyak", targets: [1, 10, 50, 200, 1_000] },
+export type AchSection = "boss" | "eco" | "games" | "tasks" | "stash" | "misc";
+export const ACH_SECTIONS: { id: AchSection; name: string }[] = [
+  { id: "boss", name: "Боевые" }, { id: "eco", name: "Экономика" }, { id: "games", name: "Азартные" },
+  { id: "tasks", name: "Задания" }, { id: "stash", name: "Нычки" }, { id: "misc", name: "Прочее" },
 ];
-
-/** the same reward for a tier in every category: the higher, the richer */
-export const TIER_REWARDS: Record<AchTier, Reward> = {
-  1: { currencies: { RUB: 500 }, xp: 1_000 },
-  2: { currencies: { USD: 10 }, xp: 10_000, items: [{ id: "keyboard", qty: 2 }] },
-  3: { currencies: { USD: 30 }, xp: 50_000, items: [{ id: "gpu", qty: 2 }] },
-  4: { currencies: { USD: 18 }, xp: 150_000, items: [{ id: "rug-pull-gun", qty: 1 }] },
-  5: { currencies: { USD: 53 }, xp: 500_000, items: [{ id: "rug-pull-gun", qty: 3 }] },
-};
 
 export interface AchievementDef {
   id: string;
+  /** the list it belongs to (AchCategory.id) */
   category: string;
   name: string;
   hint: string;
   stat: AchStat;
   target: number;
   tier: AchTier;
+  /** the picture: an icon name, or a boss («boss» categories show his face) */
   icon: string;
-  reward: Reward;
-  /** a per-boss badge: shown only while the boss is in the game */
+  /** the number on the picture (1K, 50, …) */
+  label: string;
+  /** a per-boss position: shown only while the boss is in the game */
   boss?: string;
-  /** achievement points it gives (the sun); the tier when not set */
-  points?: number;
+  /** achievement points it gives (the only reward) */
+  points: number;
+  reward: Reward;
 }
 
-/** the step's medal: the step itself, or (ten steps) two steps per medal */
-export const stepTier = (c: Pick<AchCategory, "halves">, step: number): AchTier => (c.halves ? Math.ceil(step / 2) : step) as AchTier;
+export interface AchCategory {
+  id: string;
+  section: AchSection;
+  name: string;
+  icon: string;
+  /** a picture instead of the icon (a нычки set) */
+  img?: string;
+  /** «boss»: one line per boss with his face (Соло, Боссы, Время) */
+  kind: "list" | "boss";
+  lines: AchievementDef[];
+}
 
 const fmt = (n: number) => n.toLocaleString("ru-RU").replace(/\u00a0/g, " ");
+/** 1000 → 1K, 2 500 000 → 2.5M */
+export const shortNum = (n: number) => (n >= 1e6 ? `${+(n / 1e6).toFixed(1)}M` : n >= 1e4 ? `${+(n / 1e3).toFixed(1)}K` : String(n));
+/** the points of the positions of a list of n: small first, the last ones are worth a lot */
+const POINTS: Record<number, number[]> = {
+  1: [10], 3: [3, 10, 25], 5: [2, 5, 10, 20, 40], 10: [1, 2, 3, 5, 8, 10, 15, 20, 30, 50],
+  15: [1, 2, 3, 5, 5, 8, 10, 10, 15, 20, 25, 30, 40, 50, 75], 20: [1, 1, 2, 2, 3, 3, 5, 5, 5, 8, 8, 10, 10, 15, 15, 20, 25, 30, 40, 50],
+};
+const pointsOf = (n: number, i: number) => (POINTS[n] ?? POINTS[10])[Math.min(i, (POINTS[n] ?? POINTS[10]).length - 1)];
+const tierOf = (n: number, i: number) => Math.min(5, 1 + Math.floor((5 * i) / n)) as AchTier;
+const line = (cat: string, i: number, n: number, a: Omit<AchievementDef, "category" | "tier" | "points" | "reward" | "id"> & { id?: string; points?: number; tier?: AchTier }): AchievementDef => {
+  const points = a.points ?? pointsOf(n, i);
+  return { ...a, id: a.id ?? `${cat}-${i + 1}`, category: cat, tier: a.tier ?? tierOf(n, i), points, reward: { achPoints: points } };
+};
 
-/** the pass tier of a boss → the medal and reward tier of beating him solo (the final boss counts as diamond) */
-const CARD_TO_TIER: Record<CardTier, AchTier> = { bronze: 1, silver: 2, gold: 3, platinum: 4, diamond: 5 };
-
-/** One badge per boss: win a solo fight against him once. Stat "solo:<boss id>" = solo wins over that boss. */
-/** achievement points for killing a boss solo, by his number: Дацкоу 1, then multiples of 5 up to Солнце 100 */
-export const SOLO_POINTS: Record<number, number> = { 1: 1, 2: 5, 3: 10, 4: 15, 5: 20, 6: 25, 7: 30, 8: 40, 9: 50, 10: 60, 11: 70, 12: 85, 13: 100 };
-export const SOLO_BOSS_ACHIEVEMENTS: AchievementDef[] = BOSSES.map((b) => {
-  const tier = b.card ? CARD_TO_TIER[b.card] : 5;
+/** a list of thresholds of one stat */
+function series(id: string, section: AchSection, name: string, icon: string, stat: AchStat, targets: number[], hint: (n: string) => string, names?: string[]): AchCategory {
+  const n = targets.length;
   return {
-    id: `soloboss-${b.id}`, category: "solo-boss", name: `Соло: ${b.name}`, hint: `Убей босса ${b.name} в одиночку (бой «Соло»)`,
-    stat: `solo:${b.id}` as const, target: 1, tier, icon: "ach-solo", reward: TIER_REWARDS[tier], boss: b.id, points: SOLO_POINTS[b.order] ?? 5,
+    id, section, name, icon, kind: "list",
+    lines: targets.map((t, i) => line(id, i, n, { name: names?.[i] ?? `${name} · ${shortNum(t)}`, hint: hint(fmt(t)), stat, target: t, icon, label: shortNum(t) })),
   };
-});
+}
 
-/** «Убийца боссов»: three medals per boss — bronze, silver and gold for 10, 50 and 100 wins. Stat "win:<boss id>". */
+/** achievement points for killing a boss solo (and for killing him within an hour), by his number: Дацкоу 1 … Солнце 100 */
+export const SOLO_POINTS: Record<number, number> = { 1: 1, 2: 5, 3: 10, 4: 15, 5: 20, 6: 25, 7: 30, 8: 40, 9: 50, 10: 60, 11: 70, 12: 85, 13: 100 };
+/** «Боссы»: wins over each boss for the bronze, silver and gold medal */
 export const BOSS_KILL_TARGETS = [10, 50, 100] as const;
-export const BOSS_KILL_ACHIEVEMENTS: AchievementDef[] = BOSSES.flatMap((b) =>
-  BOSS_KILL_TARGETS.map((target, i) => {
-    const tier = (i + 1) as AchTier;
+export const FAST_KILL_MS = 3_600_000;
+
+export const ACH_CATEGORIES: AchCategory[] = [
+  // ---------------- Боевые ----------------
+  series("fight-damage", "boss", "Урон", "ach-damage", "bestFight",
+    [1_000, 5_000, 25_000, 50_000, 100_000, 250_000, 500_000, 1_000_000, 2_500_000, 5_000_000], (n) => `Нанеси боссу ${n} урона за один бой`,
+    ["Первая кровь", "Опасный тип", "Раздающий боль", "Мясорубка", "Гроза офиса", "Бульдозер", "Машина урона", "Терминатор", "Апокалипсис", "Царь урона"]),
+  series("got-rpg", "boss", "Rug Pull Gun", "rug-pull-gun", "got:rug-pull-gun",
+    [10, 25, 50, 100, 200, 300, 500, 750, 1_000, 1_500, 2_000, 3_000, 5_000, 7_500, 10_000], (n) => `Собери ${n} Rug Pull Gun`),
+  series("got-gpu", "boss", "Видеокарты", "gpu", "got:gpu",
+    [10, 25, 50, 100, 250, 500, 1_000, 1_500, 2_500, 4_000, 6_000, 8_000, 12_000, 18_000, 25_000], (n) => `Собери ${n} видеокарт`),
+  series("got-keyboard", "boss", "Клавиатуры", "keyboard", "got:keyboard",
+    [10, 25, 50, 100, 250, 500, 1_000, 2_000, 3_500, 5_000, 8_000, 12_000, 20_000, 35_000, 50_000], (n) => `Собери ${n} клавиатур`),
+  {
+    id: "solo", section: "boss", name: "Соло", icon: "ach-solo", kind: "boss",
+    lines: BOSSES.map((b, i) => line("solo", i, BOSSES.length, {
+      id: `soloboss-${b.id}`, name: b.name, hint: `Убей босса ${b.name} в одиночку (бой «Соло»)`, stat: `solo:${b.id}`, target: 1,
+      icon: b.id, label: "соло", boss: b.id, points: SOLO_POINTS[b.order] ?? 5,
+    })),
+  },
+  {
+    id: "bosses", section: "boss", name: "Боссы", icon: "ach-wins", kind: "boss",
+    lines: BOSSES.flatMap((b) => BOSS_KILL_TARGETS.map((t, k) => line("bosses", k, 3, {
+      id: `bosskill-${b.id}-${k + 1}`, name: `${b.name}: ${TIER_NAMES[(k + 1) as AchTier]}`, hint: `Победи босса ${b.name} ${t} раз`, stat: `win:${b.id}`, target: t,
+      icon: b.id, label: String(t), boss: b.id, tier: (k + 1) as AchTier,
+    }))),
+  },
+  {
+    id: "fast", section: "boss", name: "Время", icon: "clock", kind: "boss",
+    lines: BOSSES.map((b, i) => line("fast", i, BOSSES.length, {
+      id: `fast-${b.id}`, name: b.name, hint: `Убей босса ${b.name} меньше чем за час после начала боя`, stat: `fast:${b.id}`, target: 1,
+      icon: b.id, label: "1 ч", boss: b.id, points: SOLO_POINTS[b.order] ?? 5,
+    })),
+  },
+  series("talents", "boss", "Таланты", "talent", "talents",
+    [10, 20, 30, 40, 50, 75, 100, 125, 150, 200, 250, 300, 350, 400, 450, 500, 600, 650, 700, 800], (n) => `Набери ${n} талантов`),
+  series("raids", "boss", "Наехать", "ach-raid", "raids", [1, 5, 10, 25, 50, 100, 250, 500, 750, 1_000], (n) => `Наедь на других игроков ${n} раз`),
+  series("spits", "boss", "Харкнуть", "ach-spit", "spits", [1, 5, 10, 25, 50, 100, 250, 500, 750, 1_000], (n) => `Харкни в других игроков ${n} раз`),
+  // ---------------- Экономика (what lies on the balance now) ----------------
+  series("authority", "eco", "Авторитет", "xp", "authority",
+    [10_000, 50_000, 100_000, 250_000, 500_000, 1_000_000, 2_500_000, 5_000_000, 7_500_000, 10_000_000], (n) => `Набери ${n} авторитета`),
+  series("save-rub", "eco", "Рубли", "RUB", "haveRUB",
+    [50_000, 100_000, 250_000, 500_000, 1_000_000, 2_000_000, 3_000_000, 5_000_000, 7_500_000, 10_000_000], (n) => `Накопи ${n} ₽`),
+  series("save-usd", "eco", "Доллары", "USD", "haveUSD", [100, 250, 500, 1_000, 2_500, 5_000, 10_000, 25_000, 50_000, 100_000], (n) => `Накопи ${n} $`),
+  series("save-sol", "eco", "Солана", "SOL", "haveSOL", [1, 3, 5, 10, 25, 50, 100, 250, 500, 1_000], (n) => `Накопи ${n} SOL`),
+  series("save-btc", "eco", "Биткоин", "BTC", "haveBTC", [1, 2, 3, 4, 5, 7, 10, 15, 20, 25], (n) => `Накопи ${n} BTC`),
+  series("got-chips", "eco", "Фишки для покера", "poker-chip", "got:poker-chip", [1, 5, 10, 25, 50, 100, 250, 500, 750, 1_000], (n) => `Собери ${n} фишек для покера`),
+  series("got-hodl", "eco", "Стикер HODL", "sticker-hodl", "got:sticker-hodl", [10, 25, 50, 100, 250, 500, 1_000, 2_500, 5_000, 10_000], (n) => `Собери ${n} стикеров HODL`),
+  // ---------------- Азартные ----------------
+  series("poker-level", "games", "Покер", "ach-poker", "pokerLevel", [5, 10, 20, 30, 40, 50, 60, 75, 90, 100], (n) => `Получи ${n} уровень в покере`,
+    ["Новичок за столом", "Азартный старт", "Сегодня везёт", "Картёжник", "Любимец карт", "Шулер со стажем", "Покерфейс", "Акула стола", "Легенда притона", "Король покера"]),
+  {
+    id: "poker-hands", section: "games", name: "Комбинатор", icon: "ach-poker", kind: "list",
+    lines: POKER_HANDS.filter((h) => h.id !== "high").reverse().map((h, i, arr) => line("poker-hands", i, arr.length, {
+      id: `poker-${h.id}`, name: h.id === "royal" || h.id === "sflush" || h.id === "quads" ? `Поймал ${h.name}` : h.name, hint: `Собери ${h.name}, играя в покер`,
+      stat: `poker:${h.id}`, target: 1, icon: "ach-poker", label: "1",
+      points: ({ pair: 1, twopair: 2, trips: 3, straight: 5, flush: 8, full: 10, quads: 20, sflush: 40, royal: 60 } as Record<string, number>)[h.id] ?? 5,
+      tier: ({ pair: 1, twopair: 1, trips: 2, straight: 2, flush: 3, full: 3, quads: 4, sflush: 5, royal: 5 } as Record<string, AchTier>)[h.id] ?? 1,
+    })),
+  },
+  series("bj-bet", "games", "Блэкджек", "ach-bj", "bjBestBet", [5, 10, 25, 50, 75, 100, 150, 250, 350, 500], (n) => `Выиграй ставку ${n} $ в блэкджек`),
+  {
+    id: "zonk-combos", section: "games", name: "Зонк: комбинации", icon: "ach-zonk", kind: "list",
+    lines: ([
+      ["x3", "Три одинаковых", 1], ["ones3", "Три единицы", 2], ["pairs3", "Три пары", 3], ["x4", "Четыре одинаковых", 5],
+      ["straight", "Стрит 1–6", 8], ["x5", "Пять одинаковых", 15], ["x6", "Шесть одинаковых", 40],
+    ] as const).map(([c, nm, pts], i) => line("zonk-combos", i, 7, { id: `zonk-${c}`, name: nm, hint: `Выброси в зонке: ${nm.toLowerCase()}`, stat: `zonk:${c}`, target: 1, icon: "ach-zonk", label: "1", points: pts })),
+  },
+  series("zonk-best", "games", "Зонк: очки", "ach-zonk", "zonkBest", [2_000, 4_000, 6_000, 8_000, 10_000], (n) => `Набери ${n} очков за одну партию зонка`),
+  // ---------------- Задания: every location by day, by night, and its business ----------------
+  ...LOCATIONS.map((l): AchCategory => {
+    const runs = [10, 25, 50, 75, 100];
     return {
-      id: `bosskill-${b.id}-${tier}`, category: "boss-kill", name: `${b.name}: ${TIER_NAMES[tier]}`, hint: `Победи босса ${b.name} ${target} раз`,
-      stat: `win:${b.id}` as const, target, tier, icon: "ach-wins", reward: TIER_REWARDS[tier], boss: b.id,
+      id: `loc-${l.id}`, section: "tasks", name: l.name, icon: "map", kind: "list",
+      lines: [
+        ...runs.map((t, i) => line(`loc-${l.id}`, i, 5, { id: `loc-${l.id}-d${t}`, name: `Днём · ${t}`, hint: `Вынеси «${l.name}» днём ${t} раз`, stat: `loc:${l.id}`, target: t, icon: "map", label: String(t) })),
+        ...runs.map((t, i) => line(`loc-${l.id}`, i, 5, { id: `loc-${l.id}-n${t}`, name: `Ночью · ${t}`, hint: `Вынеси «${l.name}» ночью ${t} раз`, stat: `locn:${l.id}`, target: t, icon: "map", label: String(t), points: pointsOf(5, i) + 1 })),
+        line(`loc-${l.id}`, 4, 5, { id: `biz-${l.id}`, name: "Свой бизнес", hint: `Открой бизнес в «${l.name}»`, stat: `biz:${l.id}`, target: 1, icon: "coins", label: "биз", points: 10 }),
+      ],
     };
   }),
-);
+  // ---------------- Нычки: the sets ----------------
+  ...STASH_SETS_ORDERED.map((st): AchCategory => ({
+    id: `stash-${st.n}`, section: "stash", name: st.name, icon: "chest", img: `/assets/stash/set-${st.n}.webp`, kind: "list",
+    lines: STASH_MEDAL_TARGETS.map((t, k) => line(`stash-${st.n}`, k, 3, {
+      id: `stashset-${st.n}-${k + 1}`, name: `${st.name}: ${TIER_NAMES[(k + 1) as AchTier]}`, hint: `Собери набор «${st.name}» ${t} раз`, stat: `stashsets:${st.n}`, target: t,
+      icon: "chest", label: String(t), tier: (k + 1) as AchTier,
+    })),
+  })),
+  // ---------------- Прочее ----------------
+  series("streak", "misc", "Серия входов", "gift", "bestStreak", [3, 7, 14, 30, 60], (n) => `Заходи ${n} дней подряд`),
+  series("chests", "misc", "Сундуки дня", "ach-chests", "chests", [1, 7, 30, 100, 365], (n) => `Открой ${n} сундуков за задания дня`),
+  series("yard", "misc", "Барахольщик", "ach-yard", "yard", [10, 100, 500, 2_000, 5_000], (n) => `Подбери во дворе ${n} находок`),
+  series("weekly", "misc", "Топ недели", "ach-weekly", "weeklyTop", [1, 3, 10, 25, 50], (n) => `Попади в топ-10 недели по урону ${n} раз`),
+  series("slots-spins", "misc", "Лудоман", "ach-slots", "slotSpins", [10, 100, 500, 2_000, 5_000], (n) => `Прокрути автомат 777 ${n} раз`),
+  series("upg-wins", "misc", "Апгрейдер", "ach-upgrader", "upgWins", [1, 10, 50, 200, 1_000], (n) => `Прокачай вещь в апгрейдере ${n} раз`),
+  series("clan-days", "misc", "Клановый", "ach-clan", "clanDays", [1, 7, 30, 90, 365], (n) => `Пробудь в клане ${n} дней подряд`),
+  series("clan-bosses", "misc", "Клановый босс", "ach-clan", "clanBosses", [1, 3, 10, 25, 50], (n) => `Победи с кланом ${n} клановых боссов (бей сам)`),
+  series("clan-leader", "misc", "Лидер", "ach-leader", "clanCreated", [1], () => "Создай свой клан"),
+  series("nishtyaks", "misc", "Ништяк!", "ach-nishtyak", "nishtyaks", [1, 10, 50, 200, 1_000], (n) => `Получи ${n} «ништяков» от других игроков`),
+];
 
-/** «Нычки»: three medals per set — bronze, silver and gold for 10, 50 and 100 sets collected. Stat "stashsets:<n>". */
-export const STASH_ACHIEVEMENTS: AchievementDef[] = STASH_SETS_ORDERED.flatMap((s) =>
-  STASH_MEDAL_TARGETS.map((target, i) => {
-    const tier = (i + 1) as AchTier;
-    return { id: `stashset-${s.n}-${tier}`, category: "stash", name: `${s.name}: ${TIER_NAMES[tier]}`, hint: `Собери набор «${s.name}» ${target} раз`, stat: `stashsets:${s.n}` as const, target, tier, icon: "chest", reward: TIER_REWARDS[tier] };
-  }),
-);
-
-/**
- * «Медали боссов»: a full set (MEDAL_SET) of each boss's bronze, silver and gold medals (content/medals.ts) — from his
- * «Пацанский», «Блатной» and «Авторитетный» fights. Stat "medal:<boss id>:<tier>".
- */
-export const MEDAL_ACHIEVEMENTS: AchievementDef[] = BOSSES.flatMap((b) =>
-  MEDAL_TIERS.map((t, i) => {
-    const tier = (i + 1) as AchTier;
-    const mode = FIGHT_MODES.find((m) => m.medal === t)!;
-    return {
-      id: `medal-${b.id}-${t}`, category: "boss-medal", name: `${b.name}: ${MEDAL_NAMES[t]} — полный сет`, hint: `Собери ${MEDAL_SET} взрывов «${MEDAL_NAMES[t]}» босса ${b.name} — побеждай его в режиме «${mode.name}». Каждые ${MEDAL_POINT_EVERY} взрывов — +1 очко достижений сразу`,
-      stat: `medal:${b.id}:${t}` as const, target: MEDAL_SET, tier, icon: "ach-wins", reward: TIER_REWARDS[tier], boss: b.id,
-    };
-  }),
-);
-
-export const ACHIEVEMENTS: AchievementDef[] = ([
-  ...ACH_CATEGORIES.flatMap((c) =>
-    c.targets.map((target, i) => {
-      // ids go by the step (1…5, or 1…10 for a ten-step category); the medal and the reward by the step's tier
-      const step = i + 1, tier = stepTier(c, step);
-      const name = c.halves ? `${c.name}: ${TIER_NAMES[tier]} ${step % 2 ? "½" : ""}`.trim() : `${c.name}: ${TIER_NAMES[tier]}`;
-      return { id: `${c.id}-${step}`, category: c.id, name, hint: c.hint.replace("{n}", fmt(target)), stat: c.stat, target, tier, icon: c.icon, reward: TIER_REWARDS[tier] };
-    }),
-  ),
-  ...SOLO_BOSS_ACHIEVEMENTS,
-  ...BOSS_KILL_ACHIEVEMENTS,
-  ...STASH_ACHIEVEMENTS,
-  ...MEDAL_ACHIEVEMENTS,
-] as AchievementDef[]).map((a) => ({ ...a, reward: { ...a.reward, achPoints: a.points ?? a.tier } }));
+export const ACHIEVEMENTS: AchievementDef[] = ACH_CATEGORIES.flatMap((c) => c.lines);
+export const categoryOf = (id: string) => ACH_CATEGORIES.find((c) => c.lines.some((a) => a.id === id));
+/** kept for older imports: the boss lists */
+export const SOLO_BOSS_ACHIEVEMENTS = ACH_CATEGORIES.find((c) => c.id === "solo")!.lines;
+export const BOSS_KILL_ACHIEVEMENTS = ACH_CATEGORIES.find((c) => c.id === "bosses")!.lines;
+export const MEDAL_ACHIEVEMENTS: AchievementDef[] = [];
 
 export const achievementById = (id: string) => ACHIEVEMENTS.find((a) => a.id === id);
 

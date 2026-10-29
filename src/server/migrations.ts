@@ -1128,4 +1128,17 @@ FROM (
 WHERE s.player_id = p.id AND s.pts > 0;
 `,
   },
+  {
+    // achievements, third edition (content/achievements.ts): new lists, the only reward is achievement points — every
+    // player starts the achievements over (what is reached is collected again, for the new points); the boxes too.
+    // The boss blasts keep their point per 5 blasts (not an achievement): given again here.
+    id: "v2-064-ach-reset",
+    sql: `
+DELETE FROM achievements;
+UPDATE players SET ach_points = 0, ach_boxes_opened = 0;
+UPDATE players p SET ach_points = s.pts
+FROM (SELECT player_id, SUM(n / 5)::int AS pts FROM boss_medals GROUP BY player_id) s
+WHERE s.player_id = p.id AND s.pts > 0;
+`,
+  },
 ];

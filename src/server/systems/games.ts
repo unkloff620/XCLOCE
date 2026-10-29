@@ -3,6 +3,7 @@
  * покер и апгрейдер — одно действие. Блэкджек — общий стол, он в systems/blackjack.ts. Колоду тасует и кости кидает
  * только сервер.
  */
+import { bump } from "./counters.ts";
 import { GameError, type Queryable } from "../db.ts";
 import { addGameWeekly, setGameBest } from "./minigame-extras.ts";
 import { duelScore } from "./duels.ts";
@@ -10,7 +11,7 @@ import { addItem, addMoney, grantReward, itemQty, ledger, moscowDay, takeItem, t
 import { useItem } from "./shop.ts";
 import { ZONK_CONT_PENALTY, UPGRADE_RULES, POKER_RULES, POKER_CHIP, pokerCheats, pokerHand, pokerHandDef, pokerLevel, pokerPay,
   GAME_RULES, ITEM_VALUES, ZONK_BANK_MIN, ZONK_DICE, ZONK_FAIL_XP, ZONK_LEVELS, ZONK_ROUNDS, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue,
-  zonkHasScore, zonkLevelDef, zonkScore, zonkXpLevel,
+  zonkCombos, zonkHasScore, zonkLevelDef, zonkScore, zonkXpLevel,
   type Card, type GameKind,
   pokerRank,
 } from "../../content/games.ts";
@@ -211,6 +212,8 @@ export async function zonkMove(ctx: Ctx, pick: number[], then: "roll" | "bank") 
   const kept = idx.map((i) => s.roll[i]);
   const pts = zonkScore(kept);
   if (pts === null) throw new GameError("bad_pick", "Откладывать можно только очковые кости");
+  // the achievements «Зонк: комбинации»: every combination put aside counts
+  for (const c of zonkCombos(kept)) await bump(ctx.q, ctx.pid, `zonk:${c}`, 1);
   if (then === "bank" && s.turn + pts < ZONK_BANK_MIN) throw new GameError("bank_min", `Сохранить можно от ${ZONK_BANK_MIN} очков — бросай дальше`);
   s.turn += pts;
   s.history.push({ kept, points: pts });
