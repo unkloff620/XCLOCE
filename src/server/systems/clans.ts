@@ -1,7 +1,7 @@
 import { GameError, type Queryable } from "../db.ts";
 import type { Ctx } from "../core.ts";
 import { levelFromXp } from "../../content/levels.ts";
-import { clanLevelInfo } from "../../content/clans.ts";
+import { clanLevelInfo, isClanShield } from "../../content/clans.ts";
 import { CLAN_PRIZES } from "../../content/achievements.ts";
 import { weekKey } from "../core.ts";
 
@@ -12,6 +12,12 @@ export const CLAN_MAX = 30;
 /** Clan level grows with the total boss damage of its members (content/clans.ts). */
 export const clanLevel = (damage: number) => clanLevelInfo(damage).level;
 
+/** "<symbol>" or "<symbol>:<shield style>" (content/clans.ts parseEmblem) */
+const validEmblem = (emblem: string) => {
+  const [symbol, shield, extra] = emblem.split(":");
+  return extra === undefined && (CLAN_EMBLEMS as readonly string[]).includes(symbol) && (shield === undefined || isClanShield(shield));
+};
+
 const clean = (s: string) => s.replace(/[\u0000-\u001f\u007f<>]/g, "").replace(/\s+/g, " ").trim();
 
 export async function createClan(ctx: Ctx, nameRaw: string, tagRaw: string, emblem: string, color: string) {
@@ -19,7 +25,7 @@ export async function createClan(ctx: Ctx, nameRaw: string, tagRaw: string, embl
   const tag = clean(tagRaw).toUpperCase();
   if (name.length < 3 || name.length > 24) throw new GameError("bad_name", "Название: от 3 до 24 символов");
   if (!/^[A-ZА-ЯЁ0-9]{2,5}$/.test(tag)) throw new GameError("bad_tag", "Тег: 2–5 букв или цифр");
-  if (!(CLAN_EMBLEMS as readonly string[]).includes(emblem)) throw new GameError("bad_emblem", "Выбери герб");
+  if (!validEmblem(emblem)) throw new GameError("bad_emblem", "Выбери герб");
   if (!(CLAN_COLORS as readonly string[]).includes(color)) throw new GameError("bad_color", "Выбери цвет");
   const [me] = await ctx.q.query<{ clan_id: number | null }>("SELECT clan_id FROM players WHERE id=$1", [ctx.pid]);
   if (me.clan_id) throw new GameError("in_clan", "Ты уже в клане");
@@ -145,7 +151,7 @@ export async function editClan(ctx: Ctx, nameRaw: string, emblem: string, color:
   const description = descRaw.replace(/[\u0000-\u0009\u000b-\u001f\u007f<>]/g, "").replace(/\n{3,}/g, "\n\n").trim();
   if (name.length < 3 || name.length > 24) throw new GameError("bad_name", "Название: от 3 до 24 символов");
   if (description.length > 300) throw new GameError("bad_description", "Описание: до 300 символов");
-  if (!(CLAN_EMBLEMS as readonly string[]).includes(emblem)) throw new GameError("bad_emblem", "Выбери герб");
+  if (!validEmblem(emblem)) throw new GameError("bad_emblem", "Выбери герб");
   if (!(CLAN_COLORS as readonly string[]).includes(color)) throw new GameError("bad_color", "Выбери цвет");
   const dup = await ctx.q.query("SELECT 1 FROM clans WHERE lower(name)=lower($1) AND id <> $2", [name, m.clan_id]);
   if (dup.length) throw new GameError("clan_exists", "Такое название уже занято");

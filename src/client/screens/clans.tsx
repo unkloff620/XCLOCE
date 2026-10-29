@@ -7,6 +7,7 @@ import { Help } from "../help.tsx";
 import { useGame } from "../store.tsx";
 import { api } from "../api.ts";
 import { Emblem } from "../art/emblems.tsx";
+import { CLAN_SHIELDS, joinEmblem, parseEmblem } from "../../content/clans.ts";
 import { Avatar, Bar, Empty, Modal, RewardChips } from "../ui.tsx";
 import type { Reward } from "../../content/rewards.ts";
 import { full, short } from "../format.ts";
@@ -39,14 +40,47 @@ function MyRequest() {
   );
 }
 
+/** The coat of arms: the logo (symbol), the shield style and the colour. */
+function ArmsPicker({ symbols, colors, symbol, shield, color, onChange }: {
+  symbols: string[]; colors: string[]; symbol: string; shield: string; color: string;
+  onChange: (v: { symbol?: string; shield?: string; color?: string }) => void;
+}) {
+  return (
+    <>
+      <label className="tiny muted">Стиль герба</label>
+      <div className="row" style={{ flexWrap: "wrap", gap: 6 }}>
+        {CLAN_SHIELDS.map((x) => (
+          <button key={x.id} className={`pick ${x.id === shield ? "on" : ""}`} onClick={() => onChange({ shield: x.id })} title={x.name} aria-label={x.name}>
+            <Emblem emblem={joinEmblem(symbol, x.id)} color={color} size={40} />
+          </button>
+        ))}
+      </div>
+      <label className="tiny muted">Логотип</label>
+      <div className="row" style={{ flexWrap: "wrap", gap: 6 }}>
+        {symbols.map((e) => (
+          <button key={e} className={`pick ${e === symbol ? "on" : ""}`} onClick={() => onChange({ symbol: e })}><Emblem emblem={joinEmblem(e, shield)} color={color} size={34} /></button>
+        ))}
+      </div>
+      <label className="tiny muted">Цвет</label>
+      <div className="row" style={{ gap: 8 }}>
+        {colors.map((x) => (
+          <button key={x} className={`swatch ${x === color ? "on" : ""}`} style={{ background: x }} onClick={() => onChange({ color: x })} aria-label={x} />
+        ))}
+      </div>
+    </>
+  );
+}
+
 /** Leader's clan settings: name, emblem and colour, description. */
 function ClanSettings({ c, onClose, onSaved }: { c: ClanPage; onClose: () => void; onSaved: () => void }) {
   const { act, busy } = useGame();
   const [opts, setOpts] = useState<{ emblems: string[]; colors: string[] } | null>(null);
   const [name, setName] = useState(c.name);
-  const [emblem, setEmblem] = useState(c.emblem);
+  const [symbol, setSymbol] = useState(parseEmblem(c.emblem).symbol);
+  const [shield, setShield] = useState<string>(parseEmblem(c.emblem).shield);
   const [color, setColor] = useState(c.color);
   const [desc, setDesc] = useState(c.description ?? "");
+  const emblem = joinEmblem(symbol, shield);
   useEffect(() => {
     api.get<{ emblems: string[]; colors: string[] }>("/api/clans").then(setOpts).catch(() => undefined);
   }, []);
@@ -63,17 +97,8 @@ function ClanSettings({ c, onClose, onSaved }: { c: ClanPage; onClose: () => voi
         <div className="row" style={{ justifyContent: "center" }}><Emblem emblem={emblem} color={color} size={84} /></div>
         <label className="tiny muted">Название</label>
         <input className="input" maxLength={24} value={name} onChange={(e) => setName(e.target.value)} />
-        <label className="tiny muted">Герб и цвет</label>
-        <div className="row" style={{ flexWrap: "wrap", gap: 6 }}>
-          {(opts?.emblems ?? [c.emblem]).map((e) => (
-            <button key={e} className={`pick ${e === emblem ? "on" : ""}`} onClick={() => setEmblem(e)}><Emblem emblem={e} color={color} size={34} /></button>
-          ))}
-        </div>
-        <div className="row" style={{ gap: 8 }}>
-          {(opts?.colors ?? [c.color]).map((x) => (
-            <button key={x} className={`swatch ${x === color ? "on" : ""}`} style={{ background: x }} onClick={() => setColor(x)} aria-label={x} />
-          ))}
-        </div>
+        <ArmsPicker symbols={opts?.emblems ?? [symbol]} colors={opts?.colors ?? [c.color]} symbol={symbol} shield={shield} color={color}
+          onChange={(v) => { if (v.symbol) setSymbol(v.symbol); if (v.shield) setShield(v.shield); if (v.color) setColor(v.color); }} />
         <label className="tiny muted">Описание <span className="num">({desc.length}/300)</span></label>
         <textarea className="input clan-desc-input" maxLength={300} rows={4} placeholder="Кто вы, кого зовёте, когда бьёте боссов…" value={desc} onChange={(e) => setDesc(e.target.value)} />
         <button className="btn green block" disabled={busy === "clan_edit" || name.trim().length < 3} onClick={save}>Сохранить</button>
@@ -86,8 +111,10 @@ function CreateClan({ emblems, colors, onClose }: { emblems: string[]; colors: s
   const { act, busy } = useGame();
   const [name, setName] = useState("");
   const [tag, setTag] = useState("");
-  const [emblem, setEmblem] = useState(emblems[0]);
+  const [symbol, setSymbol] = useState(emblems[0]);
+  const [shield, setShield] = useState<string>("gold");
   const [color, setColor] = useState(colors[0]);
+  const emblem = joinEmblem(symbol, shield);
   const go = async () => {
     const r = await act<{ clanId: number }>("clan_create", { name, tag, emblem, color }, "Клан создан!");
     if (r) onClose();
@@ -98,16 +125,8 @@ function CreateClan({ emblems, colors, onClose }: { emblems: string[]; colors: s
         <div className="row" style={{ justifyContent: "center" }}><Emblem emblem={emblem} color={color} size={84} /></div>
         <input className="input" placeholder="Название (3–24 символа)" maxLength={24} value={name} onChange={(e) => setName(e.target.value)} />
         <input className="input" placeholder="Тег (2–5 букв)" maxLength={5} value={tag} onChange={(e) => setTag(e.target.value.toUpperCase())} />
-        <div className="row" style={{ flexWrap: "wrap", gap: 6 }}>
-          {emblems.map((e) => (
-            <button key={e} className={`pick ${e === emblem ? "on" : ""}`} onClick={() => setEmblem(e)}><Emblem emblem={e} color={color} size={34} /></button>
-          ))}
-        </div>
-        <div className="row" style={{ gap: 8 }}>
-          {colors.map((c) => (
-            <button key={c} className={`swatch ${c === color ? "on" : ""}`} style={{ background: c }} onClick={() => setColor(c)} aria-label={c} />
-          ))}
-        </div>
+        <ArmsPicker symbols={emblems} colors={colors} symbol={symbol} shield={shield} color={color}
+          onChange={(v) => { if (v.symbol) setSymbol(v.symbol); if (v.shield) setShield(v.shield); if (v.color) setColor(v.color); }} />
         <button className="btn green block" disabled={busy === "clan_create" || name.trim().length < 3 || tag.length < 2} onClick={go}>Создать</button>
       </div>
     </Modal>

@@ -25,3 +25,24 @@ export const CLAN_BOSS_MIN_MEMBERS = 3;
 export const CLAN_BOSS_POOL_PER_MEMBER = { RUB: 3000, USD: 10, chips: 3, gpu: 1 };
 /** everyone who hit it gets at least this */
 export const CLAN_BOSS_FLOOR = { RUB: 500, chips: 1 };
+
+/**
+ * The clan coat of arms is one string in clans.emblem: "<symbol>" or "<symbol>:<shield style>"
+ * (the symbol is the clan logo, the style is the drawn shield; old clans have only the symbol → the gold shield).
+ */
+export const CLAN_SHIELDS = [
+  { id: "gold", name: "Золотой" },
+  { id: "silver", name: "Стальной" },
+  { id: "iron", name: "Железный" },
+  { id: "bronze", name: "Бронзовый" },
+  { id: "neon", name: "Неоновый" },
+  { id: "round", name: "Круглый" },
+  { id: "crown", name: "Королевский" },
+] as const;
+export type ClanShield = (typeof CLAN_SHIELDS)[number]["id"];
+export const isClanShield = (s: string): s is ClanShield => CLAN_SHIELDS.some((x) => x.id === s);
+export function parseEmblem(emblem: string): { symbol: string; shield: ClanShield } {
+  const [symbol, shield = "gold"] = emblem.split(":");
+  return { symbol, shield: isClanShield(shield) ? shield : "gold" };
+}
+export const joinEmblem = (symbol: string, shield: string) => (shield === "gold" ? symbol : `${symbol}:${shield}`);
