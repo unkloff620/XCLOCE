@@ -287,7 +287,7 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
     if (c.on === null && Math.abs(dx) + Math.abs(dy) > 10) c.on = Math.abs(dx) > Math.abs(dy) * 1.3;
     if (!c.on) return;
     // the cover and the last page only give a little
-    const edge = (dx > 0 && at < 0) || (dx < 0 && at === tabs.length - 1);
+    const edge = dx < 0 && at === tabs.length - 1;
     setDrag(edge ? dx * 0.25 : dx);
   };
   const onEnd = () => {
@@ -295,7 +295,8 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
     touch.current = null;
     if (!c?.on) return;
     if (drag < -60) turn(at + 1);
-    else if (drag > 60) turn(at - 1);
+    // a swipe right on the cover closes the folder
+    else if (drag > 60) { if (at < 0) onClose(); else turn(at - 1); }
     else setDrag(0);
   };
   const under = Math.min(2, tabs.length - 1 - Math.max(0, at));
