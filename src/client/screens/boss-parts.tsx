@@ -7,18 +7,22 @@ import { BossRig, hasBossRig } from "../art/boss-rig.tsx";
  * Raster boss photo inside a vector frame: thick outline like the rest of the UI, a rim in the boss colour,
  * a themed glow behind and a vignette on top so the photo sits in the vector world instead of looking pasted in.
  */
-export function BossPhoto({ boss, round, defeated, locked }: { boss: BossDef; round?: boolean; defeated?: boolean; locked?: boolean }) {
+export function BossPhoto({ boss, round, defeated, won, locked }: { boss: BossDef; round?: boolean; defeated?: boolean; won?: boolean; locked?: boolean }) {
   const src = boss.photo.portrait;
   // the beaten boss on the win screen: his live rig, sad and dazed, slowly swaying, stars going round over his head
   const ko = defeated && !locked && hasBossRig(boss.id);
+  // the boss who got away (the lose screen): his live rig, happy — grinning and bouncing with laughter
+  const glad = won && !ko && !locked && hasBossRig(boss.id);
   return (
-    <div className={`bphoto ${round ? "round" : ""} ${locked ? "locked" : ""} ${ko ? "ko" : ""}`} style={{ ["--acc" as string]: boss.theme.accent, ["--bga" as string]: boss.theme.a }}>
+    <div className={`bphoto ${round ? "round" : ""} ${locked ? "locked" : ""} ${ko ? "ko" : ""} ${glad ? "glad" : ""}`} style={{ ["--acc" as string]: boss.theme.accent, ["--bga" as string]: boss.theme.a }}>
       <div className="bphoto-in">
         {ko ? (
           <>
             <div className="bphoto-ko"><BossRig id={boss.id} bust hpShare={0} /></div>
             <KoStars />
           </>
+        ) : glad ? (
+          <div className="bphoto-glad"><BossRig id={boss.id} bust /></div>
         ) : src && !locked ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={src} alt={boss.name} draggable={false} />
@@ -27,6 +31,7 @@ export function BossPhoto({ boss, round, defeated, locked }: { boss: BossDef; ro
         )}
       </div>
       {defeated && <span className="stamp display">ПОБЕДА!</span>}
+      {won && !defeated && <span className="stamp display">ПОРАЖЕНИЕ!</span>}
     </div>
   );
 }

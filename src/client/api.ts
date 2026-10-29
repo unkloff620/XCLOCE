@@ -149,7 +149,7 @@ export interface DuelView {
 export interface Hit { seq: number; playerId: number; name: string; weapon: string; damage: number; phrase: number; at: number; crit?: boolean; count?: number }
 export interface FightView {
   fightId: number; bossId: string; hp: number; hpMax: number; status: "active" | "won" | "lost";
-  startedAt: number; endsAt: number; myDamage: number; myHits: number; killer: string | null; killerIsMe: boolean;
+  startedAt: number; endsAt: number; fled?: boolean; myDamage: number; myHits: number; killer: string | null; killerIsMe: boolean;
   reward: Granted | null; claimed: boolean; lastSeq: number; hits: Hit[];
   top: { playerId: number; name: string; damage: number; hits: number }[]; fightingNow: number;
   /** the fight mode (content/medals.ts) */

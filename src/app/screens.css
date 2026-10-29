@@ -52,7 +52,16 @@
   75% { transform: translate(0, -12px) scale(0.55) rotate(270deg); opacity: 0.55; }
   100% { transform: translate(-58px, 0) scale(0.85) rotate(360deg); opacity: 1; }
 }
-.bphoto.ko .stamp { top: 80%; font-size: 18px; padding: 4px 12px; }
+.bphoto.ko .stamp, .bphoto.glad .stamp { top: 80%; font-size: 18px; padding: 4px 12px; }
+/* the lose screen: the boss who got away is happy — grinning, bouncing with laughter now and then */
+.bphoto.glad .bphoto-in::after { display: none; }
+.bphoto-glad { position: absolute; inset: 6% 0 0; transform-origin: 50% 100%; animation: glad-laugh 2.6s ease-in-out infinite; }
+@keyframes glad-laugh { 0%, 40%, 100% { transform: translateY(0) rotate(0deg); } 48% { transform: translateY(-3%) rotate(-1.5deg); } 54% { transform: translateY(0) rotate(0deg); } 60% { transform: translateY(-3%) rotate(1.5deg); } 66% { transform: translateY(0) rotate(0deg); } 72% { transform: translateY(-2%) rotate(-1deg); } 78% { transform: translateY(0); } }
+.bphoto-glad .boss-rig .br-brows-sad, .bphoto-glad .boss-rig .br-mouth-closed { opacity: 0 !important; }
+.bphoto-glad .boss-rig .br-mouth { opacity: 1 !important; }
+.bphoto-glad .rig-vodovoz .vk-mouth { animation: none !important; opacity: 1 !important; }
+.bphoto-glad .rig-vodovoz .vk-mouth-shut { opacity: 0 !important; }
+@media (prefers-reduced-motion: reduce) { .bphoto-glad { animation: none; } }
 @media (prefers-reduced-motion: reduce) { .bphoto-ko, .ko-stars, .ko-star { animation: none; } }
 .stamp { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-14deg); padding: 3px 8px; border: 3px solid var(--red); border-radius: 8px; color: var(--red); background: rgba(10, 4, 8, 0.75); font-size: 13px; letter-spacing: 0.06em; }
 

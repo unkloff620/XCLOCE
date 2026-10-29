@@ -505,6 +505,8 @@ export async function fightView(q: Queryable, pid: number, fightId: number, sinc
   return {
     fightId: f.id, bossId: f.boss_id, hp, hpMax: f.hp_max, solo: !!f.solo, mode: fightMode(f.mode).id,
     status: timeUp ? ("lost" as const) : f.status,
+    /** lost by running away (ended before its 8 hours), not by the time running out */
+    fled: !timeUp && f.status === "lost" && !!f.ended_at && new Date(f.ended_at).getTime() < new Date(f.ends_at).getTime(),
     startedAt: new Date(f.started_at).getTime(), endsAt: new Date(f.ends_at).getTime(),
     myDamage: f.my_damage, myHits: f.my_hits, killer: killer?.display_name ?? null, killerIsMe: f.killer_id === pid,
     reward: f.reward, claimed: !!f.reward || (f.status === "lost" && f.seen),

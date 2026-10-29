@@ -7,7 +7,6 @@ import { useGame } from "../store.tsx";
 import { api, type FightView, type Granted } from "../api.ts";
 import { KEY_SHARE, bossById, rewardShare } from "../../content/bosses.ts";
 import { scaleReward } from "../../content/rewards.ts";
-import { ESCAPE_LINES } from "../../content/phrases.ts";
 import { GainLine, Modal } from "../ui.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { roomById } from "../../content/home.ts";
@@ -70,12 +69,11 @@ export function ResultWindow() {
     return (
       <Modal onClose={() => busy !== "fight_claim" && seen()}>
         <div className="center col" style={{ alignItems: "center", gap: 10 }}>
-          <div className="display result-title lose">БОСС УШЁЛ</div>
-          <div style={{ width: 150, height: 150 }}>
-            <BossPhoto boss={boss} round />
+          <div className="result-photo">
+            <BossPhoto boss={boss} round won />
           </div>
           <div className="display" style={{ fontSize: 20 }}>{boss.name}</div>
-          <div className="muted">{ESCAPE_LINES[view.fightId % ESCAPE_LINES.length]} 8 часов прошли, пропуска нет.</div>
+          <div className="muted">{view.fled ? "Ты струсил, попробуй ещё раз, когда повзрослеешь." : "8 часов прошли, ты так и не успел его убить."}</div>
           <div className="panel" style={{ width: "100%", padding: 10 }}>
             <div className="row" style={{ justifyContent: "space-between" }}>
               <span className="muted">Мой урон</span>
