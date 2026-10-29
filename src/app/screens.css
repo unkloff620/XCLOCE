@@ -3388,19 +3388,19 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 @keyframes vk-fear-head { 0%, 100% { transform: translateY(14px) rotate(9deg); } 40% { transform: translateY(5px) rotate(5deg); } }
 .rig-vodovoz.dazed .vk-head-snap { animation: none; }
 .rig-vodovoz.dazed .vk-arm-l { animation: vk-limp-arm-l 2.4s ease-in-out infinite; }
-@keyframes vk-limp-arm-l { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(3deg); } }
+@keyframes vk-limp-arm-l { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-3deg); } }
 .rig-vodovoz.dazed .vk-low-l { animation: vk-limp-low-l 2.4s ease-in-out infinite; }
-@keyframes vk-limp-low-l { 0%, 100% { transform: rotate(-135deg); } 50% { transform: rotate(-129deg); } }
-/* beaten: he has dropped the bag and lost the headphones; the arms hang down limp at his sides */
+@keyframes vk-limp-low-l { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(5deg); } }
+/* beaten: he has dropped the bag and lost the headphones; both fists up in a tired guard by his shoulders */
 .rig-vodovoz.dazed .vk-bag, .rig-vodovoz.dazed .vk-headset { opacity: 0; animation: none; }
 @keyframes vk-limp-bag { 0%, 100% { transform: rotate(92deg); } 50% { transform: rotate(85deg); } }
-.rig-vodovoz.dazed .vk-hand-l { animation: none; transform: rotate(10deg); }
+.rig-vodovoz.dazed .vk-hand-l { animation: none; }
 .rig-vodovoz.dazed .vk-arm-r { animation: vk-limp-arm-r 2.4s ease-in-out -0.8s infinite; }
-@keyframes vk-limp-arm-r { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(-7deg); } }
+@keyframes vk-limp-arm-r { 0%, 100% { transform: rotate(-40deg); } 50% { transform: rotate(-37deg); } }
 .rig-vodovoz.dazed .vk-low-r { animation: vk-limp-low-r 2.4s ease-in-out -0.8s infinite; }
-@keyframes vk-limp-low-r { 0%, 100% { transform: rotate(-145deg); } 50% { transform: rotate(-139deg); } }
+@keyframes vk-limp-low-r { 0%, 100% { transform: rotate(70deg); } 50% { transform: rotate(64deg); } }
 .rig-vodovoz.dazed .vk-hand-r { animation: vk-limp-fist 2.4s ease-in-out -0.8s infinite; }
-@keyframes vk-limp-fist { 0%, 100% { transform: rotate(10deg); } 50% { transform: rotate(14deg); } }
+@keyframes vk-limp-fist { 0%, 100% { transform: rotate(-10deg); } 50% { transform: rotate(-6deg); } }
 .arena-photo.ouch .rig-vodovoz.dazed .vk-head-snap { animation: vk-head-hit 0.6s cubic-bezier(0.2, 0.7, 0.3, 1); }
 
 /* Восток's face (the artist's parts): pupils roll inside the whites, lids blink, each brow turns at its inner end
