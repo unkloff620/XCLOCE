@@ -124,13 +124,13 @@ const TW = 841, TH = 1870;
 const at = (x: number, y: number) => ({ left: `${(x / TW) * 100}%`, top: `${(y / TH) * 100}%` });
 /** where one seat sits on the felt: its card box (centre, tilt), its «Пары» circle, its name line; `big` — my own field */
 interface SeatGeo { box: { x: number; y: number; r: number }; pp: readonly [number, number]; t3?: readonly [number, number]; name: readonly [number, number]; big?: boolean }
-/** the five boxes drawn on the felt, left to right — the other players */
+/** the five boxes drawn on the felt, left to right — the other players (tools/scene/source/bj-room.png, the XCLOCE felt) */
 const OTHER_SEATS: SeatGeo[] = [
-  { box: { x: 98, y: 653, r: 19 }, pp: [55, 741], name: [70, 790] },
-  { box: { x: 246, y: 713, r: 10 }, pp: [224, 809], name: [262, 852] },
-  { box: { x: 420, y: 733, r: 0 }, pp: [420, 832], name: [420, 878] },
-  { box: { x: 593, y: 713, r: -10 }, pp: [615, 809], name: [578, 852] },
-  { box: { x: 742, y: 653, r: -19 }, pp: [785, 741], name: [770, 790] },
+  { box: { x: 98, y: 668, r: 19 }, pp: [55, 756], name: [70, 805] },
+  { box: { x: 246, y: 728, r: 10 }, pp: [224, 824], name: [262, 867] },
+  { box: { x: 420, y: 748, r: 0 }, pp: [420, 847], name: [420, 893] },
+  { box: { x: 593, y: 728, r: -10 }, pp: [615, 824], name: [578, 867] },
+  { box: { x: 742, y: 668, r: -19 }, pp: [785, 756], name: [770, 805] },
 ];
 /** my field under the arc (drawn by the page, not in the picture): the «Пары» and «21+3» circles on top, the cards, the name under */
 const MY_SEAT: SeatGeo = { box: { x: 420, y: 1066, r: 0 }, pp: [338, 906], t3: [502, 906], name: [420, 1238], big: true };
@@ -511,7 +511,7 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
         </div>
         <div className={`bjt-stage bj2-stage ${sweep ? "sweep" : ""}`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="bjt-felt" src="/assets/yard/bj-room.webp" alt="" draggable={false} />
+          <img className="bjt-felt" src="/assets/yard/bj-room.webp?v=2" alt="" draggable={false} />
           {!view && <span className="bjt-loading tiny">Раскладываем стол…</span>}
           {table && (
             <>
