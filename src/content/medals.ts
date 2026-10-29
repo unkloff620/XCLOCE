@@ -26,6 +26,8 @@ export const MEDAL_NAMES: Record<MedalTier, string> = { bronze: "Бронза", 
 
 /** medals of one kind for the full set */
 export const MEDAL_SET = 100;
+/** every this many blasts of a kind give one achievement point */
+export const MEDAL_POINT_EVERY = 5;
 /** the full set's bonus: this share of the weapon's base damage, added to every hit of it */
 export const MEDAL_BONUS_SHARE: Record<MedalTier, number> = { bronze: 0.25, silver: 0.5, gold: 1 };
 

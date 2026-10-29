@@ -3843,3 +3843,7 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .achbox-got .reward-chips, .achbox-got .chips { justify-content: center; }
 /* the achievements' «Нычки» tab: a set's picture in the row */
 .stash-ach-art { flex: none; width: 44px; height: 44px; object-fit: contain; border-radius: 10px; background: rgba(120, 80, 35, 0.15); }
+/* a ten-step achievement: the first step of a medal fills half of its circle */
+.ach-steps i.half { background: linear-gradient(90deg, var(--c) 50%, rgba(255, 255, 255, 0.3) 50%); }
+.ach-got-label { font-weight: 900; font-size: 15px; color: #1f9e5a; white-space: nowrap; }
+.solo-pts { display: inline-flex; align-items: center; gap: 3px; font-weight: 900; font-size: 12px; color: #b8860b; }

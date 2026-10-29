@@ -1,7 +1,7 @@
 import type { Reward } from "./rewards.ts";
 import { BOSSES, type CardTier } from "./bosses.ts";
 import { STASH_MEDAL_TARGETS, STASH_SETS_ORDERED } from "./stashes.ts";
-import { MEDAL_NAMES, MEDAL_SET, MEDAL_TIERS, FIGHT_MODES } from "./medals.ts";
+import { MEDAL_NAMES, MEDAL_POINT_EVERY, MEDAL_SET, MEDAL_TIERS, FIGHT_MODES } from "./medals.ts";
 
 /*
  * Достижения: значок в профиле + разовая награда. Прогресс считается сервером из того, что уже записано
@@ -13,7 +13,7 @@ export type AchStat = "authority" | "damage" | "hits" | "wins" | "soloWins" | "k
   // the second set: modes, money, mini games, clans, the yard's social life (server: systems/achievements.ts)
   | "winsBlat" | "winsAvtor" | "bossesBeaten" | "exchanges" | "spentRUB" | "spentUSD" | "haveRUB" | "haveUSD" | "haveSOL" | "haveBTC"
   | "slotSpins" | "slot777" | "slotLevel" | "upgWins" | "upgLowWins" | "upgStreak" | "zonkGames" | "zonkBest" | "zonkDuels" | "pokerHands" | "pokerLevel"
-  | "bjBlackjacks" | "bjWins" | "clanDays" | "clanBosses" | "clanCreated" | "spits" | "raids" | "nishtyaks";
+  | "bjBlackjacks" | "bjWins" | "clanDays" | "clanBosses" | "clanCreated" | "spits" | "raids" | "nishtyaks" | "bestFight";
 
 /** 1 bronze · 2 silver · 3 gold · 4 platinum · 5 diamond */
 export type AchTier = 1 | 2 | 3 | 4 | 5;
@@ -27,16 +27,19 @@ export interface AchCategory {
   hint: string;
   stat: AchStat;
   icon: string;
-  /** the thresholds, bronze → diamond (five; a one-off has one) */
+  /** the thresholds, bronze → diamond (five; a one-off has one; with `halves` ten: two steps per medal) */
   targets: number[];
+  /** ten steps, two per medal: the 1st step fills half the bronze, the 2nd the whole bronze, the 3rd half the silver… */
+  halves?: boolean;
 }
 
 export const ACH_CATEGORIES: AchCategory[] = [
   { id: "authority", name: "Авторитет", hint: "Набери {n} авторитета", stat: "authority", icon: "xp", targets: [10_000, 500_000, 2_500_000, 5_000_000, 10_000_000] },
-  { id: "damage", name: "Урон боссам", hint: "Нанеси боссам {n} урона", stat: "damage", icon: "ach-damage", targets: [1_000, 25_000, 250_000, 1_000_000, 5_000_000] },
+  // the damage of ONE fight (the best fight so far), ten steps: two per medal
+  { id: "fight-damage", name: "Урон за бой", hint: "Нанеси боссу {n} урона за один бой", stat: "bestFight", icon: "ach-damage", halves: true,
+    targets: [1_000, 5_000, 25_000, 50_000, 100_000, 250_000, 500_000, 1_000_000, 2_500_000, 5_000_000] },
   { id: "hits", name: "Удары", hint: "Нанеси {n} ударов", stat: "hits", icon: "ach-hits", targets: [10, 100, 1_000, 5_000, 20_000] },
   { id: "wins", name: "Победы", hint: "Выиграй {n} боёв с боссами", stat: "wins", icon: "ach-wins", targets: [1, 10, 50, 200, 500] },
-  { id: "solo", name: "Соло", hint: "Победи босса в одиночку (бой «Соло») {n} раз", stat: "soloWins", icon: "ach-solo", targets: [1, 5, 25, 100, 300] },
   { id: "kills", name: "Добивающий", hint: "Нанеси последний удар боссу {n} раз", stat: "kills", icon: "key", targets: [1, 5, 25, 100, 250] },
   { id: "locations", name: "Локации", hint: "Пройди локации {n} раз (повторы считаются)", stat: "locations", icon: "map", targets: [1, 5, 20, 50, 100] },
   { id: "tasks", name: "Задания", hint: "Выполни {n} заданий в локациях", stat: "tasks", icon: "energy", targets: [5, 25, 100, 300, 1_000] },
@@ -98,7 +101,12 @@ export interface AchievementDef {
   reward: Reward;
   /** a per-boss badge: shown only while the boss is in the game */
   boss?: string;
+  /** achievement points it gives (the sun); the tier when not set */
+  points?: number;
 }
+
+/** the step's medal: the step itself, or (ten steps) two steps per medal */
+export const stepTier = (c: Pick<AchCategory, "halves">, step: number): AchTier => (c.halves ? Math.ceil(step / 2) : step) as AchTier;
 
 const fmt = (n: number) => n.toLocaleString("ru-RU").replace(/\u00a0/g, " ");
 
@@ -106,11 +114,13 @@ const fmt = (n: number) => n.toLocaleString("ru-RU").replace(/\u00a0/g, " ");
 const CARD_TO_TIER: Record<CardTier, AchTier> = { bronze: 1, silver: 2, gold: 3, platinum: 4, diamond: 5 };
 
 /** One badge per boss: win a solo fight against him once. Stat "solo:<boss id>" = solo wins over that boss. */
+/** achievement points for killing a boss solo, by his number: Дацкоу 1, then multiples of 5 up to Солнце 100 */
+export const SOLO_POINTS: Record<number, number> = { 1: 1, 2: 5, 3: 10, 4: 15, 5: 20, 6: 25, 7: 30, 8: 40, 9: 50, 10: 60, 11: 70, 12: 85, 13: 100 };
 export const SOLO_BOSS_ACHIEVEMENTS: AchievementDef[] = BOSSES.map((b) => {
   const tier = b.card ? CARD_TO_TIER[b.card] : 5;
   return {
     id: `soloboss-${b.id}`, category: "solo-boss", name: `Соло: ${b.name}`, hint: `Убей босса ${b.name} в одиночку (бой «Соло»)`,
-    stat: `solo:${b.id}` as const, target: 1, tier, icon: "ach-solo", reward: TIER_REWARDS[tier], boss: b.id,
+    stat: `solo:${b.id}` as const, target: 1, tier, icon: "ach-solo", reward: TIER_REWARDS[tier], boss: b.id, points: SOLO_POINTS[b.order] ?? 5,
   };
 });
 
@@ -143,7 +153,7 @@ export const MEDAL_ACHIEVEMENTS: AchievementDef[] = BOSSES.flatMap((b) =>
     const tier = (i + 1) as AchTier;
     const mode = FIGHT_MODES.find((m) => m.medal === t)!;
     return {
-      id: `medal-${b.id}-${t}`, category: "boss-medal", name: `${b.name}: ${MEDAL_NAMES[t]} — полный сет`, hint: `Собери ${MEDAL_SET} взрывов «${MEDAL_NAMES[t]}» босса ${b.name} — побеждай его в режиме «${mode.name}»`,
+      id: `medal-${b.id}-${t}`, category: "boss-medal", name: `${b.name}: ${MEDAL_NAMES[t]} — полный сет`, hint: `Собери ${MEDAL_SET} взрывов «${MEDAL_NAMES[t]}» босса ${b.name} — побеждай его в режиме «${mode.name}». Каждые ${MEDAL_POINT_EVERY} взрывов — +1 очко достижений сразу`,
       stat: `medal:${b.id}:${t}` as const, target: MEDAL_SET, tier, icon: "ach-wins", reward: TIER_REWARDS[tier], boss: b.id,
     };
   }),
@@ -152,15 +162,17 @@ export const MEDAL_ACHIEVEMENTS: AchievementDef[] = BOSSES.flatMap((b) =>
 export const ACHIEVEMENTS: AchievementDef[] = ([
   ...ACH_CATEGORIES.flatMap((c) =>
     c.targets.map((target, i) => {
-      const tier = (i + 1) as AchTier;
-      return { id: `${c.id}-${tier}`, category: c.id, name: `${c.name}: ${TIER_NAMES[tier]}`, hint: c.hint.replace("{n}", fmt(target)), stat: c.stat, target, tier, icon: c.icon, reward: TIER_REWARDS[tier] };
+      // ids go by the step (1…5, or 1…10 for a ten-step category); the medal and the reward by the step's tier
+      const step = i + 1, tier = stepTier(c, step);
+      const name = c.halves ? `${c.name}: ${TIER_NAMES[tier]} ${step % 2 ? "½" : ""}`.trim() : `${c.name}: ${TIER_NAMES[tier]}`;
+      return { id: `${c.id}-${step}`, category: c.id, name, hint: c.hint.replace("{n}", fmt(target)), stat: c.stat, target, tier, icon: c.icon, reward: TIER_REWARDS[tier] };
     }),
   ),
   ...SOLO_BOSS_ACHIEVEMENTS,
   ...BOSS_KILL_ACHIEVEMENTS,
   ...STASH_ACHIEVEMENTS,
   ...MEDAL_ACHIEVEMENTS,
-] as AchievementDef[]).map((a) => ({ ...a, reward: { ...a.reward, achPoints: a.tier } }));
+] as AchievementDef[]).map((a) => ({ ...a, reward: { ...a.reward, achPoints: a.points ?? a.tier } }));
 
 export const achievementById = (id: string) => ACHIEVEMENTS.find((a) => a.id === id);
 

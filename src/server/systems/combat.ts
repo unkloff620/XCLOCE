@@ -1,5 +1,6 @@
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, idempotent, itemQty, ledger, moscowDay, nextMoscowMidnight, takeItem, type Ctx, type Granted } from "../core.ts";
+import { MEDAL_POINT_EVERY } from "../../content/medals.ts";
 import { BLAT_THING_CHANCE, BOSSES, EXTRA_KEY_CHANCE, OPEN_BOSSES, bossById, bossOpen, keyId, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
 import { WEAPONS, itemById, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
@@ -395,6 +396,11 @@ export async function claimFight(ctx: Ctx, fightId: number) {
       [ctx.pid, def.id, mode.medal],
     );
     granted.medal = { boss: def.id, tier: mode.medal, n: Number(m.n) };
+    // every MEDAL_POINT_EVERY blasts of a kind: +1 achievement point (the sun)
+    if (Number(m.n) % MEDAL_POINT_EVERY === 0) {
+      await ctx.q.query("UPDATE players SET ach_points = ach_points + 1 WHERE id=$1", [ctx.pid]);
+      granted.achPoints = (granted.achPoints ?? 0) + 1;
+    }
   }
   await ctx.q.query("UPDATE fights SET reward=$2, seen=true WHERE id=$1", [f.id, JSON.stringify(granted)]);
   if (myDamage > 0) {

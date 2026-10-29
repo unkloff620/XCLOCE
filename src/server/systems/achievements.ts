@@ -47,6 +47,7 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
   // the second set: modes, money, mini games, clans, the social side (what is not stored elsewhere: player_counters)
   const [x] = await q.query<Record<string, number | null>>(
     `SELECT
+       (SELECT COALESCE(MAX(my_damage), 0) FROM fights WHERE player_id=$1)::bigint AS best_fight,
        (SELECT COUNT(*) FROM fights WHERE player_id=$1 AND status='won' AND my_damage > 0 AND mode='blat')::int AS wins_blat,
        (SELECT COUNT(*) FROM fights WHERE player_id=$1 AND status='won' AND my_damage > 0 AND mode='avtor')::int AS wins_avtor,
        (SELECT COUNT(DISTINCT boss_id) FROM fights WHERE player_id=$1 AND status='won' AND my_damage > 0)::int AS bosses,
@@ -72,7 +73,7 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
   const m = (k: string) => Math.max(0, Number(x?.[k] ?? 0));
   const c = await countersOf(q, pid);
   const second = {
-    winsBlat: m("wins_blat"), winsAvtor: m("wins_avtor"), bossesBeaten: m("bosses"),
+    bestFight: m("best_fight"), winsBlat: m("wins_blat"), winsAvtor: m("wins_avtor"), bossesBeaten: m("bosses"),
     exchanges: c.exchanges ?? 0, spentRUB: c.spentRUB ?? 0, spentUSD: c.spentUSD ?? 0,
     haveRUB: m("have_rub"), haveUSD: m("have_usd"), haveSOL: m("have_sol"), haveBTC: m("have_btc"),
     slotSpins: m("slot_spins"), slot777: m("slot_777"), slotLevel: slotLevel(m("slot_xp")).level,

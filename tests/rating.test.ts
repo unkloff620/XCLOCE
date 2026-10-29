@@ -116,7 +116,7 @@ describe("achievements and someone's profile", () => {
     expect(prof.self).toBe(false);
     expect(prof.wallet).toBeNull();
     expect(prof.achievements.find((a) => a.id === "hits-1")).toMatchObject({ done: true, claimed: true });
-    expect(prof.achievements.find((a) => a.id === "damage-1")).toMatchObject({ progress: 300, done: false });
+    expect(prof.achievements.find((a) => a.id === "fight-damage-1")).toMatchObject({ progress: 300, done: false });
     expect(prof.room).toMatchObject({ id: "basic" });
   });
 

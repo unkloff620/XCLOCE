@@ -268,7 +268,6 @@ describe("boss fights: personal fights, shared damage", () => {
     expect(ra.result.status).toBe("won");
     let sb = await act(db, b, "equip", { itemId: "jeans" }, T0);
     expect(sb.state.fight).toMatchObject({ solo: true, hp: 100 });
-    await expect(act(db, b, "achievement_claim", { id: "solo-1" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
     await expect(act(db, b, "achievement_claim", { id: "soloboss-datsik" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
     // the common (not solo) win over Датцкоу does not count for player a either
     await expect(act(db, a, "achievement_claim", { id: "soloboss-datsik" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
@@ -279,7 +278,6 @@ describe("boss fights: personal fights, shared damage", () => {
     expect(h2.result).toMatchObject({ status: "won", hp: 0 });
     const c = await act(db, b, "fight_claim", { fightId: fb.result.fightId }, T0, always(0.99));
     expect(c.result).toMatchObject({ status: "won", share: 1, key: true });
-    await act(db, b, "achievement_claim", { id: "solo-1" }, T0);
     // the per-boss badge: Датцкоу beaten solo — collected once, with its (bronze) reward; Кедр is still to do
     const rub = await wallet(db, b, "RUB");
     await act(db, b, "achievement_claim", { id: "soloboss-datsik" }, T0);

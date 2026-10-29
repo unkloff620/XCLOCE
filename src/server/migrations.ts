@@ -2,7 +2,7 @@
  * XCLOCE 2.0 schema. Migration ids are prefixed "v2-" so they never collide with the old game's ids,
  * and v2-000 drops every table of the old game: the new game starts from a clean database.
  */
-import { ACHIEVEMENTS } from "../content/achievements.ts";
+import { ACHIEVEMENTS, SOLO_BOSS_ACHIEVEMENTS } from "../content/achievements.ts";
 import { LOCATIONS, locRep } from "../content/locations.ts";
 
 const OLD_TABLES = [
@@ -1109,6 +1109,23 @@ GROUP BY player_id, substring(info from ' (RUB|USD)$')
 ON CONFLICT (player_id, key) DO NOTHING;
 INSERT INTO player_counters (player_id, key, n) SELECT DISTINCT leader_id, 'clanCreated', 1 FROM clans WHERE leader_id IN (SELECT id FROM players) ON CONFLICT (player_id, key) DO NOTHING;
 INSERT INTO player_counters (player_id, key, n) SELECT player_id, 'upgWins', COUNT(*) FROM upgraded_items GROUP BY player_id ON CONFLICT (player_id, key) DO NOTHING;
+`,
+  },
+  {
+    // achievement points: +1 for every 5 boss blasts of a kind (for the blasts already got), and the solo kills give
+    // their own points now (Дацкоу 1 … Солнце 100): the difference for the solo badges already collected
+    id: "v2-063-ach-points-2",
+    sql: `
+UPDATE players p SET ach_points = ach_points + s.pts
+FROM (SELECT player_id, SUM(n / 5)::int AS pts FROM boss_medals GROUP BY player_id) s
+WHERE s.player_id = p.id AND s.pts > 0;
+UPDATE players p SET ach_points = ach_points + s.pts
+FROM (
+  SELECT a.player_id, SUM(v.pts - v.tier)::int AS pts FROM achievements a
+  JOIN (VALUES ${SOLO_BOSS_ACHIEVEMENTS.map((a) => `('${a.id}', ${a.points ?? a.tier}, ${a.tier})`).join(", ")}) AS v(id, pts, tier) ON v.id = a.id
+  GROUP BY a.player_id
+) s
+WHERE s.player_id = p.id AND s.pts > 0;
 `,
   },
 ];
