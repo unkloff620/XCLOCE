@@ -8,6 +8,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore, type TouchEvent as RTouchEvent, type MouseEvent as RMouseEvent, type WheelEvent as RWheelEvent } from "react";
 import { useGame, useNow } from "../store.tsx";
+import { STASH_SETS_ORDERED } from "../../content/stashes.ts";
+import { TALENT_PATH, currentStop } from "../../content/talents.ts";
 import { haptic } from "../telegram.ts";
 import { sfx } from "../sound.ts";
 import { api } from "../api.ts";
@@ -233,6 +235,7 @@ type DosTab = "sum" | "ach" | "cases" | "tal" | "stash" | "news" | "set";
 
 function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; reload: () => void }) {
   const [renaming, setRenaming] = useState(false);
+  const { state } = useGame();
   // the folder like a book: the cover first (avatar, the case number = the place in the top, the nick), swipe left —
   // the cover opens and the pages follow, each with its own tab; swipe right — back. A tap on a tab turns to it.
   const [view, setView] = useState(-1);
@@ -353,6 +356,14 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
   const dueTabs = new Set<DosTab>();
   if (p.self && p.achievements.some((r) => r.done && !r.claimed && !r.id.startsWith("stashset-"))) dueTabs.add("ach");
   if (p.self && p.achievements.some((r) => r.done && !r.claimed && r.id.startsWith("stashset-"))) { dueTabs.add("stash"); dueTabs.add("ach"); }
+  if (p.self && state) {
+    // a нычки set with every piece in the bag — ready to put together
+    const have = new Set((state.inventory ?? []).filter((i) => i.qty > 0 && i.id.startsWith("stash-")).map((i) => i.id));
+    if (STASH_SETS_ORDERED.some((st) => st.items.every((it) => have.has(it.id)))) dueTabs.add("stash");
+    // enough free talents for the next stop on the path
+    const next = TALENT_PATH[currentStop(state.weaponTalents ?? {})];
+    if (next && (state.player.talents ?? 0) >= next.cost) dueTabs.add("tal");
+  }
   const moving = drag ? { transform: `translateX(${drag}px) rotate(${drag * 0.015}deg)`, transition: "none" } : undefined;
   return (
     <Modal onClose={onClose} page>
