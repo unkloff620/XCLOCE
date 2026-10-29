@@ -3017,7 +3017,7 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .door-plate .gain-line { display: contents; }
 .door-plate .gain { text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85); }
 .door-plate .medal-chip b { font-size: 3.1cqw; }
-.door-plate .medal-chip :is(.bcoin, .bmedal) { width: 4.4cqw !important; height: 4.4cqw !important; }
+.door-plate .medal-chip .bcoin { width: 4.4cqw !important; height: 4.4cqw !important; }
 
 /* dialogues do not cover the boss: his line in the upper left corner under the bars, the hit phrase at the lower left */
 .arena .boss-say { left: 12px; top: 64px; translate: none; max-width: 44%; text-align: left; transform-origin: 85% 100%; }
@@ -3874,7 +3874,7 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 /* achievements, third edition: a position's picture (a tile in its tier colour, or a boss coin) with its number */
 .ach-pic { position: relative; flex: none; display: grid; place-items: center; border-radius: 12px; border: 2.5px solid var(--c); background: radial-gradient(circle at 50% 35%, rgba(255, 245, 210, 0.9), rgba(200, 160, 100, 0.55)); box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35); overflow: visible; }
 .ach-pic > img { width: 86%; height: 86%; object-fit: contain; border-radius: 8px; }
-.ach-pic:has(.bcoin), .ach-pic:has(.bmedal) { border: 0; background: none; box-shadow: none; }
+.ach-pic:has(.bcoin) { border: 0; background: none; box-shadow: none; }
 .ach-pic.off > :not(.ach-pic-n) { filter: grayscale(0.85) brightness(0.8); opacity: 0.75; }
 .ach-pic-n { position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%); padding: 0 5px; min-width: 20px; height: 15px; border-radius: 6px; background: #1e1006; color: #ffe7b0; font-style: normal; font-size: 9.5px; font-weight: 900; line-height: 15px; text-align: center; white-space: nowrap; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5); }
 .ach-pic.on .ach-pic-n { background: var(--c); color: #1e1006; }
@@ -3921,7 +3921,3 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 /* «Дела»: the achievement points and the talents as plain lines, a word before the icon, no frame */
 .dos-stat { border: 0; padding: 0; flex: 0 1 auto; }
 .dos-stat small { font-size: 14px; font-weight: 800; color: var(--muted); margin-right: 2px; }
-/* the drawn boss medals (public/assets/medals): a medal not got yet is a grey, faded one */
-.bmedal { position: relative; display: inline-grid; place-items: center; flex: none; }
-.bmedal img { width: 100%; height: 100%; object-fit: contain; display: block; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35)); }
-.bmedal.dim img { filter: grayscale(1) brightness(1.05) contrast(0.8); opacity: 0.45; }
