@@ -130,7 +130,7 @@ export function SlotMachine() {
             </>
           ) : busy ? <b className="display">Крутится…</b> : cooling ? (
             <span>Остывает · <b className="num">{clock((s.nextAt ?? now) - now)}</b></span>
-          ) : <span>Прокрутки: <b className="num">{s.left}/{s.max}</b> в час · жми кнопку</span>}
+          ) : <span>Прокрутки: <b className="num">{s.left}/{s.max}</b> в час</span>}
         </div>
         <button className={`sl-btn ${cooling ? "off" : ""}`} key={press} style={{ left: px(420), top: py(964), width: px(172), height: py(172) }}
           disabled={busy || cooling} onClick={spin} aria-label="Крутить">

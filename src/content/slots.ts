@@ -29,7 +29,7 @@ export const SLOT_OUTCOMES: SlotOutcome[] = [
   { id: "lemon", title: "Три лимона", triple: "lemon", kind: "triple", weight: 6, reward: { items: [{ id: "keyboard", qty: 3 }] } },
   { id: "cherry", title: "Три вишни", triple: "cherry", kind: "triple", weight: 9, reward: { currencies: { RUB: 777 } } },
   { id: "pair", title: "Пара!", triple: null, kind: "pair", weight: 28, reward: { currencies: { RUB: 150 } } },
-  { id: "miss", title: "Мимо. Рынок сегодня против тебя", triple: null, kind: "miss", weight: 45, reward: {} },
+  { id: "miss", title: "Мимо!", triple: null, kind: "miss", weight: 45, reward: {} },
 ];
 
 export const SLOT_SPINS_PER_HOUR = 3;

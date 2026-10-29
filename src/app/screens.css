@@ -3801,3 +3801,11 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .sl-prize-lv { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 10px; border-radius: 12px; background: rgba(255, 200, 60, 0.25); width: 100%; }
 .sl-display:has(.sl-gain) b.display { font-size: min(3.7cqw, 16px); }
 .sl-display .sl-gain .reward-chips, .sl-display .sl-gain .chips { gap: 4px; }
+/* the display and the button are small on a phone: one line each, nothing runs out of the drawn frame */
+.sl-btn span { font-size: min(2.4cqw, 11px); letter-spacing: 0; }
+.sl-display { font-size: min(2.9cqw, 12px); gap: 1px; padding: 0 2%; line-height: 1.1; }
+.sl-display > * { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sl-display b.display, .sl-display:has(.sl-gain) b.display { font-size: min(3.2cqw, 14px); line-height: 1.1; }
+.sl-display .sl-gain { flex-wrap: nowrap; font-size: min(2.6cqw, 11px); }
+.sl-display .sl-gain .sl-xp { font-size: min(2.6cqw, 11px); }
+.sl-display .sl-gain img, .sl-display .sl-gain svg { width: min(3cqw, 13px) !important; height: min(3cqw, 13px) !important; }
