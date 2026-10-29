@@ -278,9 +278,9 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
             {pic("body")}
             {bone("vk-arm-l", "armL", bone("vk-low-l", "lowL", <>
               {pic("lowL")}
-              {bone("vk-hand-l", "handL", <>{pic("handL")}<g className="vk-bag" style={origin("bag")}>{pic("bag")}</g></>, 90)}
+              {bone("vk-hand-l", "handL", <>{pic("handL")}<g className="vk-bag" style={origin("bag")}>{pic("bag", { fade: "vk-bag" })}</g></>, 90)}
             </>, 150), 150)}
-            {pic("headset")}
+            <g className="vk-headset">{pic("headset", { fade: "vk-headset" })}</g>
             {bone("vk-head", "head", <g className="vk-head-snap" style={origin("head")}>{face}</g>, 160)}
             {bone("vk-arm-r", "armR", bone("vk-low-r", "lowR", <>
               {pic("lowR")}
