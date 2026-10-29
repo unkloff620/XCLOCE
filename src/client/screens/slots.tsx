@@ -35,7 +35,7 @@ interface Spin {
 
 /** the pictures that fall into the tray for a win: a few coins of each currency, each thing (up to 3 of a kind) */
 function dropsOf(r: Granted): { cur?: string; item?: string; x: number; r: number; delay: number }[] {
-  const out: { cur?: string; item?: string; x: number; r: number; delay: number }[] = [];
+  const out: { cur?: string; item?: string }[] = [];
   for (const [c, v] of Object.entries(r.currencies ?? {})) if (v) for (let k = 0; k < (v >= 1000 ? 5 : v >= 100 ? 4 : 3); k++) out.push({ cur: c });
   for (const it of r.items ?? []) for (let k = 0; k < Math.min(3, it.qty); k++) out.push({ item: it.id });
   const n = out.length;
