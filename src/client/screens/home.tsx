@@ -25,6 +25,7 @@ import { Stylist, type StyleDraft } from "./stylist.tsx";
 import { MessagesWindow, messagesWaiting, StashWishWindow } from "./stash-swap.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { ExchangeNotice } from "../exchange-notice.tsx";
+import { UpdatesNotice } from "../updates-notice.tsx";
 
 const MENU_KEY = "xc2_home_menu";
 
@@ -55,6 +56,7 @@ export function HomeScreen() {
     setEditFocus((f) => ({ ...f, part }));
   }, []);
   const [daily, setDaily] = useState(false);
+  const [updOpen, setUpdOpen] = useState(false);
   const [wish, setWish] = useState(false);
   const [messages, setMessages] = useState(false);
   const [quests, setQuests] = useState(false);
@@ -273,7 +275,8 @@ export function HomeScreen() {
       )}
       {styling && <Stylist draft={styling} setDraft={setStyling} onClose={() => setStyling(null)} focus={editFocus} setFocus={setEditFocus} />}
       {daily && <DailyWindow onClose={() => setDaily(false)} />}
-      <ExchangeNotice wait={busyWindow || daily || (dailyReady && !dailyAutoShown)} />
+      <UpdatesNotice wait={busyWindow || daily || (dailyReady && !dailyAutoShown)} onOpen={setUpdOpen} />
+      <ExchangeNotice wait={busyWindow || daily || updOpen || (dailyReady && !dailyAutoShown)} />
       {wish && <StashWishWindow onClose={() => setWish(false)} />}
       {messages && <MessagesWindow onClose={() => setMessages(false)} />}
       {quests && <QuestsWindow onClose={() => setQuests(false)} />}

@@ -46,3 +46,8 @@ Use lowercase kebab-case filenames.
 
 The MCP server reads `OPENAI_API_KEY` and optional `OPENAI_IMAGE_MODEL` from root `.env.local`.
 Never commit, print, expose, or place secret values in browser code.
+
+## Update notes for players
+
+After every release that changes something players see, add an entry at the top of `src/content/updates.ts`
+(«Что нового»: shown once on the home screen, mostly pictures in `public/assets/updates/<date>-*.webp` with a short line each).

@@ -3561,3 +3561,15 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .dos-book:has(.dos-cover) .dos-tabs { visibility: hidden; }
 /* the folder closes with a swipe right on the cover, a tap on the dim around it or a menu button: no cross over it */
 .modal.page:has(.dos-book) > .x { display: none; }
+
+/* «Что нового» (client/updates-notice.tsx): the switch on top, then the notes — big pictures, a short line under each */
+.upd-switch { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; margin: 0 0 10px; border-radius: 12px; background: rgba(0, 0, 0, 0.22); font-size: 13px; font-weight: 700; }
+.upd-toggle { flex: none; width: 46px; height: 26px; border-radius: 13px; border: 2px solid var(--line); background: #5b4a3a; position: relative; padding: 0; cursor: pointer; transition: background 0.2s; }
+.upd-toggle i { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #e9dcc6; transition: transform 0.2s; }
+.upd-toggle.on { background: var(--green, #3ddc84); }
+.upd-toggle.on i { transform: translateX(20px); }
+.upd-list { display: flex; flex-direction: column; gap: 14px; max-height: 60vh; overflow-y: auto; margin: 0 -4px 12px; padding: 0 4px; }
+.upd-entry h4 { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0 0 8px; font-size: 17px; }
+.upd-entry h4 small { font-size: 12px; opacity: 0.7; font-family: inherit; }
+.upd-item { margin: 0 0 12px; display: flex; flex-direction: column; gap: 6px; }
+.upd-item img { width: 100%; border-radius: 12px; border: 2.5px solid var(--line); display: block; background: #1a120c; }
