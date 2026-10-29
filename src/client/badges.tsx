@@ -204,7 +204,6 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
     <div className="panel">
       <button type="button" className={`ach-head ${waiting ? "ready" : ""}`} onClick={() => setShown((v) => !v)} aria-expanded={shown}>
         <span className="small muted">ДОСТИЖЕНИЯ</span>
-        {waiting > 0 && <span className="ach-wait">готово: <b className="num">{waiting}</b></span>}
         <span className="grow" />
         <span className="chip ach-pts" title="Очки достижений"><Icon name="sun" size={16} /><b className="num">{full(points)}</b></span>
         <span className="tiny muted num">{total}/{rows.length}</span>
@@ -212,9 +211,10 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
       </button>
       {/* everything reached, in one tap */}
       {self && waiting > 0 && (
-        <button type="button" className="btn gold block ach-take-all" disabled={busy === "achievement_claim_all"} onClick={claimAll}>
-          Забрать всё · {waiting} <Icon name="sun" size={18} />
-        </button>
+        <div className="ach-uncollected">
+          <span>Не собранные: <b className="num">{waiting}</b></span>
+          <button type="button" className="btn sm gold ach-take-all" disabled={busy === "achievement_claim_all"} onClick={claimAll}>ВСЁ</button>
+        </div>
       )}
       {shown && <div className="ach-groups" role="tablist">
         {ACH_SECTIONS.map((g) => (
