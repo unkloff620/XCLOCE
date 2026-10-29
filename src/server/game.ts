@@ -58,7 +58,7 @@ export const ACTIONS = [
   "clan_create", "clan_join", "clan_leave", "clan_kick", "clan_transfer",
   "daily_claim", "sell", "rename", "slots_spin",
   "equipment_upgrade", "talent_up", "talent_reset", "room_buy", "room_set", "look_set", "decor_set", "decor_save", "piece_buy", "help_seen", "starter_gift",
-  "quest_claim", "quest_chest", "notify_set", "achievement_claim", "ach_box_open", "prize_claim", "clan_edit",
+  "quest_claim", "quest_chest", "notify_set", "achievement_claim", "achievement_claim_all", "ach_box_open", "prize_claim", "clan_edit",
   "game_start", "zonk_move", "zonk_give_up", "zonk_hints", "zonk_choice", "roach_squash", "poker_play", "poker_swap", "poker_stand", "bj_open", "bj_invite", "bj_join", "bj_decline", "bj_leave", "bj_bet", "bj_unbet", "bj_insure", "bj_move", "upgrade", "up_sell", "up_take",
   "clan_cancel", "clan_accept", "clan_reject", "clan_boss_hit", "duel_create", "duel_answer", "duel_play", "stash_collect", "stash_wish", "stash_gift", "stash_accept", "social_pump", "social_fight", "social_spit", "notes_read",
 ] as const;
@@ -177,6 +177,7 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "quest_chest": return quests.openQuestChest(ctx);
     case "notify_set": return notify.setNotify(ctx, body.on === true, body.granted === true);
     case "achievement_claim": return achievements.claimAchievement(ctx, str(body.id, "id", 40));
+    case "achievement_claim_all": return achievements.claimAllAchievements(ctx);
     case "prize_claim": return rating.claimPrize(ctx, num(body.id, "id"));
     case "clan_edit": return clans.editClan(ctx, str(body.name, "name", 40), str(body.emblem, "emblem", 20), str(body.color, "color", 10), typeof body.description === "string" ? body.description.slice(0, 400) : "");
     case "game_start": return games.startGame(ctx, oneOf(body.game, ["zonk"] as const, "game"), body.level === undefined ? 1 : num(body.level, "level"));

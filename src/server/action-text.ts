@@ -80,6 +80,7 @@ export function actionText(type: string, body: Row, result: unknown): string | n
     case "decor_set": return `${equipmentById(String(body.id))?.name ?? body.id}, стадия ${body.stage}`;
     case "quest_claim": return join(questById(String(body.id))?.title ?? String(body.id), grantedText(r.reward));
     case "quest_chest": return join("сундук дня", grantedText(r.reward));
+    case "achievement_claim_all": return join(`достижений: ${(r.ids as unknown[] | undefined)?.length ?? 0}`, grantedText(r.reward));
     case "ach_box_open": return join("Ящик ништяков", grantedText(r.reward));
     case "achievement_claim": return join(achievementById(String(body.id))?.name ?? String(body.id), grantedText(r.reward));
     case "prize_claim": return join(r.title ? String(r.title) : `приз #${body.id}`, grantedText(r.reward));

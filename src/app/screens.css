@@ -3885,3 +3885,7 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .ach-line-pts { flex: none; display: inline-flex; align-items: center; gap: 2px; font-weight: 900; font-size: 14px; color: #8a5a10; min-width: 42px; justify-content: flex-end; }
 .ach-line.got .ach-line-pts { color: #1f9e5a; font-size: 20px; }
 .ach-row .ach-hint { display: block; color: var(--muted); }
+/* the achievements header: how many are ready, readable on the paper; «Забрать всё» under it */
+.ach-head .ach-wait { display: inline-flex; align-items: center; gap: 3px; padding: 2px 9px; border-radius: 999px; background: #c21d42; color: #fff; font-size: 12px; font-weight: 900; text-shadow: none; box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35); }
+.ach-head .ach-wait b { color: #fff; }
+.ach-take-all { margin: 8px 0 2px; display: flex; align-items: center; justify-content: center; gap: 6px; animation: ach-claim 1.4s ease-in-out infinite; }

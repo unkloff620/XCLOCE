@@ -149,3 +149,22 @@ export async function claimAchievement(ctx: Ctx, id: string) {
   if (!ins.length) throw new GameError("achievement_taken", "Награда за достижение уже получена");
   return { id, reward: await grantReward(ctx, def.reward, `ach:${id}`) };
 }
+
+/** Everything reached and not collected yet, at once: the points add up (one grant). */
+export async function claimAllAchievements(ctx: Ctx) {
+  const view = await achievementsView(ctx.q, ctx.pid, ctx.cfg);
+  const ids = view.filter((a) => a.done && !a.claimed).map((a) => a.id);
+  if (!ids.length) throw new GameError("achievement_none", "Забирать пока нечего");
+  let points = 0;
+  const taken: string[] = [];
+  for (const id of ids) {
+    const def = achievementById(id);
+    if (!def) continue;
+    const ins = await ctx.q.query("INSERT INTO achievements (player_id, id, claimed_at) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING RETURNING id", [ctx.pid, id, new Date(ctx.now)]);
+    if (!ins.length) continue;
+    taken.push(id);
+    points += def.reward.achPoints ?? 0;
+  }
+  const reward = await grantReward(ctx, { achPoints: points }, "ach:all");
+  return { ids: taken, reward };
+}

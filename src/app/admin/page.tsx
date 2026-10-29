@@ -20,7 +20,7 @@ const ACTION_TYPES = [
   "fight_start", "fight_claim", "fight_flee", "task", "location_claim", "yard_pick", "buy", "exchange", "use", "equip", "unequip",
   "clan_create", "clan_join", "clan_leave", "clan_kick", "clan_transfer", "stash_wish", "stash_gift", "stash_accept", "clan_edit", "daily_claim", "sell", "rename", "slots_spin",
   "equipment_upgrade", "talent_up", "talent_reset", "room_buy", "room_set", "look_set", "decor_set", "decor_save", "piece_buy", "quest_claim", "quest_chest",
-  "notify_set", "achievement_claim", "ach_box_open", "prize_claim", "game_start", "zonk_move", "poker_play", "bj_open", "bj_invite", "bj_join", "bj_leave", "bj_bet", "bj_move", "upgrade", "up_sell", "up_take", "clan_cancel", "clan_accept", "clan_reject", "stash_collect",
+  "notify_set", "achievement_claim", "achievement_claim_all", "ach_box_open", "prize_claim", "game_start", "zonk_move", "poker_play", "bj_open", "bj_invite", "bj_join", "bj_leave", "bj_bet", "bj_move", "upgrade", "up_sell", "up_take", "clan_cancel", "clan_accept", "clan_reject", "stash_collect",
 ];
 const ACTION_NAMES: Record<string, string> = {
   fight_start: "начал бой", fight_claim: "забрал награду боя", fight_flee: "сбежал из боя", task: "задание", location_claim: "награда локации",

@@ -79,6 +79,14 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
   const byId = new Map(rows.map((r) => [r.id, r]));
   const total = rows.filter((r) => r.claimed || (!self && r.done)).length;
   const waiting = self ? rows.filter((r) => r.done && !r.claimed).length : 0;
+  const claimAll = async () => {
+    haptic.tap();
+    const r = await act<{ ids: string[]; reward: { achPoints?: number } }>("achievement_claim_all", {}, (x) => `Забрано достижений: ${x.ids.length} · +${x.reward.achPoints ?? 0} очков`);
+    if (r) {
+      haptic.big();
+      onClaimed?.();
+    }
+  };
   const claim = async (id: string) => {
     const r = await act("achievement_claim", { id }, "Награда за достижение получена");
     if (r) {
@@ -196,12 +204,18 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
     <div className="panel">
       <button type="button" className={`ach-head ${waiting ? "ready" : ""}`} onClick={() => setShown((v) => !v)} aria-expanded={shown}>
         <span className="small muted">ДОСТИЖЕНИЯ</span>
-        {waiting > 0 && <span className="chip gold ach-wait">забрать: {waiting}</span>}
+        {waiting > 0 && <span className="ach-wait">готово: <b className="num">{waiting}</b></span>}
         <span className="grow" />
         <span className="chip ach-pts" title="Очки достижений"><Icon name="sun" size={16} /><b className="num">{full(points)}</b></span>
         <span className="tiny muted num">{total}/{rows.length}</span>
         <span className={`ach-caret ${shown ? "open" : ""}`} aria-hidden="true">▾</span>
       </button>
+      {/* everything reached, in one tap */}
+      {self && waiting > 0 && (
+        <button type="button" className="btn gold block ach-take-all" disabled={busy === "achievement_claim_all"} onClick={claimAll}>
+          Забрать всё · {waiting} <Icon name="sun" size={18} />
+        </button>
+      )}
       {shown && <div className="ach-groups" role="tablist">
         {ACH_SECTIONS.map((g) => (
           <button key={g.id} type="button" role="tab" aria-selected={section === g.id} className={`ach-group ${section === g.id ? "on" : ""} ${sectionDue(g.id) ? "due" : ""}`} onClick={() => { haptic.tap(); setSection(g.id); }}>{g.name}</button>
