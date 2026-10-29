@@ -5,6 +5,7 @@
  * игрок не походил за BJ_TURN_MS, его рука стоит; если после первой ставки прошло BJ_BET_MS — раздача тем, кто
  * поставил. Выигрыши начисляются сразу всем сидящим (деньги в кошельки, без блокировки чужих игроков).
  */
+import { bump } from "./counters.ts";
 import { GameError, type Queryable } from "../db.ts";
 import { addMoney, moscowDay, takeMoney, type Ctx } from "../core.ts";
 import { schedule } from "./notify.ts";
@@ -176,6 +177,9 @@ async function finishRound(ctx: Ctx, t: TableRow) {
       h.pay = Math.floor(h.pay + 1e-9); // whole dollars only
       won += h.pay;
       if (h.pay > 0) await addMoney(asCtx(ctx, seat.pid), "USD", h.pay, `bj:${h.outcome}`);
+      // the achievements «Блэкджек!» and «Игрок за столом»
+      if (h.outcome === "blackjack") await bump(ctx.q, seat.pid, "bjBlackjacks", 1);
+      if (h.outcome === "blackjack" || h.outcome === "win") await bump(ctx.q, seat.pid, "bjWins", 1);
     }
     seat.won = Math.floor(won + 1e-9);
     // the weekly blackjack rating counts the winnings of the round (paid out minus staked)

@@ -44,7 +44,13 @@ function Spot({ s, onOpen }: { s: (typeof SPOTS)[number]; onOpen: (id: ShopSpotI
   );
 }
 
-export function ShopScene({ onOpen, children }: { onOpen: (id: ShopSpotId) => void; children?: ReactNode }) {
+/** «Ящик ништяков» stands on the shelf under the energy drinks (public/assets/shop/v2/ach-box.webp, tools/shop/source/ach-box.png) */
+const ACH_BOX_AT = { left: 17.0, top: 26.4, width: 9.4, height: 6.8 };
+
+export function ShopScene({ onOpen, children, box, onBox }: {
+  onOpen: (id: ShopSpotId) => void; children?: ReactNode;
+  box?: { ready: number; progress: number; cost: number }; onBox?: () => void;
+}) {
   const spot = (id: ShopSpotId) => <Spot s={SPOTS.find((x) => x.id === id)!} onOpen={onOpen} />;
   const neck = SHOP_ART.neck;
   return (
@@ -53,6 +59,14 @@ export function ShopScene({ onOpen, children }: { onOpen: (id: ShopSpotId) => vo
       {/* the lamp hangs a little higher, so the cut end of its cord stays above the picture */}
       <Layer n="lamp" className="sk-lamp" style={{ transformOrigin: "50% 0%", top: `${L.lamp.top - 3.2}%` }} />
       {spot("energy")}
+      {onBox && (
+        <button className={`sk-spot sk-box ${box && box.ready > 0 ? "ready" : ""}`} onClick={onBox} aria-label="Ящик ништяков" title="Ящик ништяков"
+          style={{ left: `${ACH_BOX_AT.left}%`, top: `${ACH_BOX_AT.top}%`, width: `${ACH_BOX_AT.width}%`, height: `${ACH_BOX_AT.height}%` }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/assets/shop/v2/ach-box.webp" alt="" draggable={false} />
+          <span className="sk-tag bottom num">{box ? (box.ready > 0 ? `×${box.ready}` : `${box.progress}/${box.cost}`) : "Ящик"}</span>
+        </button>
+      )}
       {spot("clothing")}
       <div className="sk-body" style={{ transformOrigin: `${neck.x}% 70%` }}>
         <Layer n="torso" />

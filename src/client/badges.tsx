@@ -32,27 +32,32 @@ export function BadgeMedal({ icon, tier, earned, size = 54 }: { icon: string; ti
 }
 
 const TIERS: AchTier[] = [1, 2, 3, 4, 5];
+/** a category's own tiers (most have five; a one-off like «Лидер» has fewer) */
+const tiersOf = (c: AchCategory): AchTier[] => c.targets.map((_, i) => (i + 1) as AchTier);
 
 /** the lists of the achievements: everything about bosses, the money side, the locations, нычки and the rest */
-type AchGroup = "boss" | "eco" | "tasks" | "stash" | "misc";
+type AchGroup = "boss" | "eco" | "tasks" | "stash" | "games" | "misc";
 const ACH_GROUPS: { id: AchGroup; name: string }[] = [
-  { id: "boss", name: "Боевые" }, { id: "eco", name: "Экономика" }, { id: "tasks", name: "Задания" }, { id: "stash", name: "Нычки" }, { id: "misc", name: "Прочее" },
+  { id: "boss", name: "Боевые" }, { id: "eco", name: "Экономика" }, { id: "tasks", name: "Задания" }, { id: "stash", name: "Нычки" }, { id: "games", name: "Мини-игры" }, { id: "misc", name: "Прочее" },
 ];
 const GROUP_OF: Record<string, AchGroup> = {
-  damage: "boss", hits: "boss", wins: "boss", solo: "boss", kills: "boss", weekly: "boss",
-  authority: "eco", yard: "eco", chests: "eco",
+  damage: "boss", hits: "boss", wins: "boss", solo: "boss", kills: "boss", weekly: "boss", "wins-blat": "boss", "wins-avtor": "boss", "all-bosses": "boss",
+  authority: "eco", yard: "eco", chests: "eco", exchanger: "eco", "spent-rub": "eco", "spent-usd": "eco",
+  "save-rub": "eco", "save-usd": "eco", "save-sol": "eco", "save-btc": "eco",
   locations: "tasks", tasks: "tasks",
+  "slots-spins": "games", "slots-777": "games", "slots-level": "games", "upg-wins": "games", "upg-low": "games", "upg-streak": "games",
+  "zonk-games": "games", "zonk-best": "games", "zonk-duels": "games", "poker-hands": "games", "poker-level": "games", "bj-blackjacks": "games", "bj-wins": "games",
 };
 const groupOf = (id: string): AchGroup => GROUP_OF[id] ?? "misc";
 
 function catState(c: AchCategory, rows: Map<string, AchRow>, self: boolean) {
-  const tiers = TIERS.map((t) => rows.get(`${c.id}-${t}`));
+  const tiers = tiersOf(c).map((t) => rows.get(`${c.id}-${t}`));
   // a tier counts as earned once collected (others' profiles: once reached)
   const earned = tiers.filter((r) => r && (r.claimed || (!self && r.done))).length as AchTier | 0;
   const reached = tiers.filter((r) => r?.done).length;
   const ready = self ? tiers.find((r) => r?.done && !r.claimed) ?? null : null;
   const progress = tiers[0]?.progress ?? 0;
-  const next = c.targets[Math.min(4, reached)];
+  const next = c.targets[Math.min(c.targets.length - 1, reached)];
   return { tiers, earned, reached, ready, progress, next };
 }
 
@@ -210,7 +215,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
       {shown && group !== "stash" && <div className="col" style={{ gap: 8, marginTop: 8 }}>
         {ACH_CATEGORIES.filter((c) => groupOf(c.id) === group).map((c) => {
           const s = catState(c, byId, self);
-          const maxed = s.reached >= 5;
+          const maxed = s.reached >= c.targets.length;
           const pct = maxed ? 100 : Math.min(100, Math.round((s.progress / s.next) * 100));
           return (
             <div key={c.id} role="button" tabIndex={0} className={`ach-row ${s.ready ? "ready" : ""}`} onClick={() => setOpen(c.id)} onKeyDown={(e) => e.key === "Enter" && setOpen(c.id)}>
@@ -218,8 +223,8 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
               <span className="ach-main">
                 <span className="row" style={{ justifyContent: "space-between", gap: 6 }}>
                   <b className="ach-name">{c.name}</b>
-                  <span className="ach-steps" aria-label={`${s.earned} из 5`}>
-                    {TIERS.map((t, i) => {
+                  <span className="ach-steps" aria-label={`${s.earned} из ${c.targets.length}`}>
+                    {tiersOf(c).map((t, i) => {
                       const r = s.tiers[i];
                       const on = !!r && (r.claimed || (!self && r.done));
                       return <i key={t} className={`${on ? "on" : r?.done ? "due" : ""}`} style={{ ["--c" as string]: TIER_COLORS[t] }} title={`${TIER_NAMES[t]}: ${full(c.targets[i])}`} />;
@@ -462,7 +467,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
         <Modal title={cat.name} onClose={() => setOpen(null)}>
           <div className="col" style={{ gap: 8 }}>
             <div className="small muted center">Прогресс: <b className="num" style={{ color: "var(--ink)" }}>{full(cs.progress)}</b></div>
-            {TIERS.map((t, i) => {
+            {tiersOf(cat).map((t, i) => {
               const r = cs.tiers[i];
               const def = achievementById(`${cat.id}-${t}`);
               if (!def) return null;

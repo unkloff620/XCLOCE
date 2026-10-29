@@ -9,7 +9,11 @@ import { MEDAL_NAMES, MEDAL_SET, MEDAL_TIERS, FIGHT_MODES } from "./medals.ts";
  */
 
 /** what a badge measures (server: systems/achievements.ts → statsFor) */
-export type AchStat = "authority" | "damage" | "hits" | "wins" | "soloWins" | "kills" | "locations" | "tasks" | "yard" | "bestStreak" | "chests" | "weeklyTop" | `solo:${string}` | `win:${string}` | `stashsets:${number}` | `medal:${string}`;
+export type AchStat = "authority" | "damage" | "hits" | "wins" | "soloWins" | "kills" | "locations" | "tasks" | "yard" | "bestStreak" | "chests" | "weeklyTop" | `solo:${string}` | `win:${string}` | `stashsets:${number}` | `medal:${string}`
+  // the second set: modes, money, mini games, clans, the yard's social life (server: systems/achievements.ts)
+  | "winsBlat" | "winsAvtor" | "bossesBeaten" | "exchanges" | "spentRUB" | "spentUSD" | "haveRUB" | "haveUSD" | "haveSOL" | "haveBTC"
+  | "slotSpins" | "slot777" | "slotLevel" | "upgWins" | "upgLowWins" | "upgStreak" | "zonkGames" | "zonkBest" | "zonkDuels" | "pokerHands" | "pokerLevel"
+  | "bjBlackjacks" | "bjWins" | "clanDays" | "clanBosses" | "clanCreated" | "spits" | "raids" | "nishtyaks";
 
 /** 1 bronze · 2 silver · 3 gold · 4 platinum · 5 diamond */
 export type AchTier = 1 | 2 | 3 | 4 | 5;
@@ -23,8 +27,8 @@ export interface AchCategory {
   hint: string;
   stat: AchStat;
   icon: string;
-  /** five thresholds, bronze → diamond */
-  targets: [number, number, number, number, number];
+  /** the thresholds, bronze → diamond (five; a one-off has one) */
+  targets: number[];
 }
 
 export const ACH_CATEGORIES: AchCategory[] = [
@@ -40,6 +44,37 @@ export const ACH_CATEGORIES: AchCategory[] = [
   { id: "streak", name: "Серия входов", hint: "Заходи {n} дней подряд", stat: "bestStreak", icon: "gift", targets: [3, 7, 14, 30, 60] },
   { id: "chests", name: "Сундуки дня", hint: "Открой {n} сундуков за задания дня", stat: "chests", icon: "ach-chests", targets: [1, 7, 30, 100, 365] },
   { id: "weekly", name: "Топ недели", hint: "Попади в топ-10 недели по урону {n} раз", stat: "weeklyTop", icon: "ach-weekly", targets: [1, 3, 10, 25, 50] },
+  // ---- the second set ----
+  { id: "wins-blat", name: "Блатной", hint: "Выиграй {n} боёв в режиме «Блатной»", stat: "winsBlat", icon: "ach-blat", targets: [1, 10, 50, 150, 500] },
+  { id: "wins-avtor", name: "Авторитетный", hint: "Выиграй {n} боёв в режиме «Авторитетный»", stat: "winsAvtor", icon: "ach-avtor", targets: [1, 10, 50, 150, 500] },
+  { id: "all-bosses", name: "Весь Close", hint: "Победи {n} разных боссов (хотя бы раз каждого)", stat: "bossesBeaten", icon: "ach-allboss", targets: [3, 5, 7, 10, 13] },
+  { id: "exchanger", name: "Меняла", hint: "Сделай {n} обменов в обменнике", stat: "exchanges", icon: "exchange", targets: [1, 10, 50, 150, 500] },
+  { id: "spent-rub", name: "Шопоголик ₽", hint: "Потрать в магазине {n} ₽", stat: "spentRUB", icon: "ach-shop", targets: [10_000, 50_000, 250_000, 1_000_000, 5_000_000] },
+  { id: "spent-usd", name: "Шопоголик $", hint: "Потрать в магазине {n} $", stat: "spentUSD", icon: "ach-shop", targets: [100, 500, 2_500, 10_000, 50_000] },
+  // savings: what lies in the wallet right now (1 $ = 85 ₽, 1 SOL = 120 $, 1 BTC = 85 000 $ — the BTC ones are for the richest)
+  { id: "save-rub", name: "Копилка ₽", hint: "Накопи {n} ₽", stat: "haveRUB", icon: "RUB", targets: [50_000, 100_000, 250_000, 500_000, 1_000_000] },
+  { id: "save-usd", name: "Копилка $", hint: "Накопи {n} $", stat: "haveUSD", icon: "USD", targets: [500, 2_000, 5_000, 10_000, 25_000] },
+  { id: "save-sol", name: "Копилка SOL", hint: "Накопи {n} SOL", stat: "haveSOL", icon: "SOL", targets: [3, 10, 25, 50, 100] },
+  { id: "save-btc", name: "Копилка BTC", hint: "Накопи {n} BTC", stat: "haveBTC", icon: "BTC", targets: [1, 2, 3, 4, 5] },
+  { id: "slots-spins", name: "Лудоман", hint: "Прокрути автомат 777 {n} раз", stat: "slotSpins", icon: "ach-slots", targets: [10, 100, 500, 2_000, 5_000] },
+  { id: "slots-777", name: "Три семёрки", hint: "Выбей 777 на автомате {n} раз", stat: "slot777", icon: "ach-slots", targets: [1, 3, 10, 25, 50] },
+  { id: "slots-level", name: "Уровень автомата", hint: "Подними уровень автомата 777 до {n}", stat: "slotLevel", icon: "ach-slots", targets: [2, 5, 10, 20, 40] },
+  { id: "upg-wins", name: "Апгрейдер", hint: "Прокачай вещь в апгрейдере {n} раз", stat: "upgWins", icon: "ach-upgrader", targets: [1, 10, 50, 200, 1_000] },
+  { id: "upg-low", name: "Рисковый", hint: "Прокачай вещь с шансом 15% и ниже {n} раз", stat: "upgLowWins", icon: "ach-upgrader", targets: [1, 3, 10, 25, 50] },
+  { id: "upg-streak", name: "Везунчик", hint: "Прокачай {n} раза подряд без провала", stat: "upgStreak", icon: "ach-upgrader", targets: [2, 3, 4, 5, 7] },
+  { id: "zonk-games", name: "Зонк", hint: "Сыграй {n} партий в зонк", stat: "zonkGames", icon: "ach-zonk", targets: [1, 10, 50, 200, 500] },
+  { id: "zonk-best", name: "Зонк: рекорд", hint: "Набери {n} очков за одну партию зонка", stat: "zonkBest", icon: "ach-zonk", targets: [2_000, 4_000, 6_000, 8_000, 10_000] },
+  { id: "zonk-duels", name: "Дуэлянт", hint: "Выиграй {n} дуэлей в зонк", stat: "zonkDuels", icon: "ach-zonk", targets: [1, 5, 25, 100, 250] },
+  { id: "poker-hands", name: "Покер: все комбинации", hint: "Собери {n} разных комбинаций в покере (от пары до роял-флеша)", stat: "pokerHands", icon: "ach-poker", targets: [3, 5, 7, 8, 9] },
+  { id: "poker-level", name: "Уровень покера", hint: "Подними уровень покера до {n}", stat: "pokerLevel", icon: "ach-poker", targets: [5, 10, 20, 50, 100] },
+  { id: "bj-blackjacks", name: "Блэкджек!", hint: "Собери блэкджек {n} раз", stat: "bjBlackjacks", icon: "ach-bj", targets: [1, 10, 50, 200, 500] },
+  { id: "bj-wins", name: "Игрок за столом", hint: "Выиграй {n} рук в блэкджек", stat: "bjWins", icon: "ach-bj", targets: [1, 25, 100, 500, 2_000] },
+  { id: "clan-days", name: "Клановый", hint: "Пробудь в клане {n} дней подряд", stat: "clanDays", icon: "ach-clan", targets: [1, 7, 30, 90, 365] },
+  { id: "clan-bosses", name: "Клановый босс", hint: "Победи с кланом {n} клановых боссов (бей сам)", stat: "clanBosses", icon: "ach-clan", targets: [1, 3, 10, 25, 50] },
+  { id: "clan-leader", name: "Лидер", hint: "Создай свой клан", stat: "clanCreated", icon: "ach-leader", targets: [1] },
+  { id: "spits", name: "Харкун", hint: "Харкни в игроков {n} раз", stat: "spits", icon: "ach-spit", targets: [1, 10, 50, 200, 500] },
+  { id: "raids", name: "Наезд", hint: "Наедь на игроков {n} раз", stat: "raids", icon: "ach-raid", targets: [1, 10, 50, 200, 500] },
+  { id: "nishtyaks", name: "Ништяк!", hint: "Получи {n} «ништяков» от других игроков", stat: "nishtyaks", icon: "ach-nishtyak", targets: [1, 10, 50, 200, 1_000] },
 ];
 
 /** the same reward for a tier in every category: the higher, the richer */

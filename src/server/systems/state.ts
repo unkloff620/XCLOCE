@@ -26,6 +26,7 @@ import { clanBossView } from "./clan-boss.ts";
 import { duelsView, expireDuels } from "./duels.ts";
 import { newsView, notesView, socialView } from "./social.ts";
 import { achievementsReady, achievementsView } from "./achievements.ts";
+import { achBoxView } from "./achbox.ts";
 import { giftsLeft, giftsReceived, stashWish } from "./swap.ts";
 
 /** Everything the HUD and the always-visible parts of the game need. Runs inside the player's transaction. */
@@ -92,6 +93,7 @@ export async function gameState(ctx: Ctx) {
       return prizesView(ctx.q, ctx.pid);
     })(),
     achievementsReady: await achievementsReady(ctx.q, ctx.pid, ctx.cfg),
+    achBox: await achBoxView(ctx.q, ctx.pid),
     slots: await slotsView(ctx.q, ctx.pid, ctx.now, ctx.cfg),
     // game events going on now (banner + their effects); the admin's working boss tweaks are not announced
     events: ctx.cfg.events.filter((e) => !e.effects.silent),

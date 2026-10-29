@@ -8,6 +8,8 @@ import * as locations from "./systems/locations.ts";
 import * as swap from "./systems/swap.ts";
 import * as yard from "./systems/yard.ts";
 import * as shop from "./systems/shop.ts";
+import * as counters from "./systems/counters.ts";
+import { openAchBox } from "./systems/achbox.ts";
 import * as clans from "./systems/clans.ts";
 import * as daily from "./systems/daily.ts";
 import * as extras from "./systems/extras.ts";
@@ -56,7 +58,7 @@ export const ACTIONS = [
   "clan_create", "clan_join", "clan_leave", "clan_kick", "clan_transfer",
   "daily_claim", "sell", "rename", "slots_spin",
   "equipment_upgrade", "talent_up", "talent_reset", "room_buy", "room_set", "look_set", "decor_set", "decor_save", "piece_buy", "help_seen", "starter_gift",
-  "quest_claim", "quest_chest", "notify_set", "achievement_claim", "prize_claim", "clan_edit",
+  "quest_claim", "quest_chest", "notify_set", "achievement_claim", "ach_box_open", "prize_claim", "clan_edit",
   "game_start", "zonk_move", "zonk_give_up", "zonk_hints", "zonk_choice", "roach_squash", "poker_play", "poker_swap", "poker_stand", "bj_open", "bj_invite", "bj_join", "bj_decline", "bj_leave", "bj_bet", "bj_unbet", "bj_insure", "bj_move", "upgrade", "up_sell", "up_take",
   "clan_cancel", "clan_accept", "clan_reject", "clan_boss_hit", "duel_create", "duel_answer", "duel_play", "stash_collect", "stash_wish", "stash_gift", "stash_accept", "social_pump", "social_fight", "social_spit", "notes_read",
 ] as const;
@@ -88,8 +90,28 @@ async function afterAction(ctx: Ctx, type: ActionType, result: unknown) {
       return;
     }
     case "yard_pick": return quests.questTick(ctx, "yard", 1);
-    case "buy": return quests.questTick(ctx, "buy", 1);
-    case "exchange": return quests.questTick(ctx, "exchange", 1);
+    case "buy": {
+      // the achievements «Шопоголик»: money spent in the shop
+      const paid = r.paid as { currency?: string; amount?: number } | undefined;
+      if (paid && (paid.currency === "RUB" || paid.currency === "USD")) await counters.bump(ctx.q, ctx.pid, `spent${paid.currency}`, Number(paid.amount) || 0);
+      return quests.questTick(ctx, "buy", 1);
+    }
+    case "exchange": {
+      await counters.bump(ctx.q, ctx.pid, "exchanges", 1);
+      return quests.questTick(ctx, "exchange", 1);
+    }
+    case "upgrade": {
+      // «Апгрейдер», «Рисковый» (15% and less), «Везунчик» (wins in a row)
+      if (r.won) {
+        await counters.bump(ctx.q, ctx.pid, "upgWins", 1);
+        if (Number(r.chance) <= 0.1501) await counters.bump(ctx.q, ctx.pid, "upgLowWins", 1);
+        await counters.bump(ctx.q, ctx.pid, "upgRun", 1);
+        const run = (await counters.countersOf(ctx.q, ctx.pid)).upgRun ?? 0;
+        await counters.setMax(ctx.q, ctx.pid, "upgStreak", run);
+      } else await counters.setTo(ctx.q, ctx.pid, "upgRun", 0);
+      return;
+    }
+    case "clan_create": return counters.setMax(ctx.q, ctx.pid, "clanCreated", 1);
     case "slots_spin": return quests.questTick(ctx, "slots", 1);
     case "equipment_upgrade":
     case "piece_buy":
@@ -130,6 +152,7 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "use": return shop.useItem(ctx, str(body.itemId, "itemId", 40));
     case "equip": return shop.equip(ctx, str(body.itemId, "itemId", 40));
     case "unequip": return shop.unequip(ctx, oneOf(body.slot, WEARABLE_SLOTS, "slot"));
+    case "ach_box_open": return openAchBox(ctx);
     case "clan_create": return clans.createClan(ctx, str(body.name, "name", 40), str(body.tag, "tag", 8), str(body.emblem, "emblem", 20), str(body.color, "color", 10));
     case "clan_join": return clans.joinClan(ctx, num(body.clanId, "clanId"));
     case "clan_leave": return clans.leaveClan(ctx);

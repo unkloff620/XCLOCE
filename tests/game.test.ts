@@ -777,6 +777,18 @@ describe("selling, nickname, slot machine 777", () => {
   });
 });
 
+describe("«Ящик ништяков»", () => {
+  it("one box for every 5 achievement points; the points stay", async () => {
+    const p = await newPlayer(db);
+    await db.query("UPDATE players SET ach_points = 12 WHERE id=$1", [p]);
+    const a = await act(db, p, "ach_box_open", {}, T0, always(0.5));
+    expect(a.result.box).toMatchObject({ points: 12, opened: 1, ready: 1, progress: 2 });
+    expect(a.result.reward.items?.length).toBe(1);
+    await act(db, p, "ach_box_open", {}, T0, always(0.5));
+    await expect(act(db, p, "ach_box_open", {}, T0)).rejects.toMatchObject({ code: "ach_box_empty" });
+  });
+});
+
 describe("home: equipment, rooms, look, help", () => {
   it("equipment levels cost money and add crits and damage to hits", async () => {
     await setBossHp({ datsik: 100000 });

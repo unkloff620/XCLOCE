@@ -1086,4 +1086,29 @@ ALTER TABLE game_weekly ADD COLUMN IF NOT EXISTS poker_best INT NOT NULL DEFAULT
 ALTER TABLE players ADD COLUMN IF NOT EXISTS slot_xp INT NOT NULL DEFAULT 0;
 `,
   },
+  {
+    // the second set of achievements: counters for what the game kept nowhere (systems/counters.ts), filled from what is
+    // known (the action log keeps the last weeks: exchanges and shop spending; clans led now; upgraded things owned);
+    // «Ящик ништяков»: the boxes opened for the achievement points (every 5 points one box; the points are not spent)
+    id: "v2-062-counters-ach-box",
+    sql: `
+CREATE TABLE IF NOT EXISTS player_counters (
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  key TEXT NOT NULL,
+  n BIGINT NOT NULL DEFAULT 0,
+  PRIMARY KEY (player_id, key)
+);
+ALTER TABLE players ADD COLUMN IF NOT EXISTS ach_boxes_opened INT NOT NULL DEFAULT 0;
+INSERT INTO player_counters (player_id, key, n)
+SELECT player_id, 'exchanges', COUNT(*) FROM action_log WHERE type = 'exchange' AND ok AND player_id IN (SELECT id FROM players) GROUP BY player_id
+ON CONFLICT (player_id, key) DO NOTHING;
+INSERT INTO player_counters (player_id, key, n)
+SELECT player_id, 'spent' || substring(info from ' (RUB|USD)$'), COALESCE(SUM(NULLIF(regexp_replace(substring(info from 'за ([^a-zA-Zа-яА-Я«»]+) (?:RUB|USD)$'), '[^0-9]', '', 'g'), '')::bigint), 0)
+FROM action_log WHERE type = 'buy' AND ok AND player_id IN (SELECT id FROM players) AND info ~ 'за [^a-zA-Zа-яА-Я«»]+ (RUB|USD)$'
+GROUP BY player_id, substring(info from ' (RUB|USD)$')
+ON CONFLICT (player_id, key) DO NOTHING;
+INSERT INTO player_counters (player_id, key, n) SELECT DISTINCT leader_id, 'clanCreated', 1 FROM clans WHERE leader_id IN (SELECT id FROM players) ON CONFLICT (player_id, key) DO NOTHING;
+INSERT INTO player_counters (player_id, key, n) SELECT player_id, 'upgWins', COUNT(*) FROM upgraded_items GROUP BY player_id ON CONFLICT (player_id, key) DO NOTHING;
+`,
+  },
 ];

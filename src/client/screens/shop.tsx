@@ -3,9 +3,11 @@ import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { invQty, useGame } from "../store.tsx";
-import { api } from "../api.ts";
+import { api, type Granted } from "../api.ts";
 import { BULK, bulkPrice, type Offer } from "../../content/shop.ts";
-import { Modal } from "../ui.tsx";
+import { Modal, RewardChips } from "../ui.tsx";
+import { sfx } from "../sound.ts";
+import { ACH_BOX_COST } from "../../content/ach-box.ts";
 import { Help, HelpList } from "../help.tsx";
 import type { Currency } from "../../content/currencies.ts";
 import { itemById, type Slot } from "../../content/items.ts";
@@ -183,9 +185,43 @@ function Cards({ offers, batch }: { offers: Offer[]; batch: number }) {
   );
 }
 
+/** «Ящик ништяков»: one opening per ACH_BOX_COST achievement points earned; the points themselves stay */
+function AchBoxWindow({ onClose }: { onClose: () => void }) {
+  const { state, act, busy } = useGame();
+  const [got, setGot] = useState<Granted | null>(null);
+  const [shake, setShake] = useState(0);
+  const b = state?.achBox ?? { points: 0, opened: 0, ready: 0, progress: 0, cost: ACH_BOX_COST };
+  const open = async () => {
+    haptic.tap();
+    setGot(null);
+    setShake((n) => n + 1);
+    const r = await act<{ reward: Granted }>("ach_box_open", {});
+    if (r) { haptic.big(); sfx("reward"); setGot(r.reward); }
+  };
+  return (
+    <Modal title="Ящик ништяков" onClose={onClose}>
+      <div className="col achbox" style={{ gap: 10, alignItems: "center", textAlign: "center" }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img key={shake} className={`achbox-art ${shake ? "shake" : ""} ${b.ready > 0 ? "ready" : ""}`} src="/assets/shop/v2/ach-box.webp" alt="" draggable={false} />
+        <span className="small">Очки достижений не тратятся: каждые <b>{b.cost}</b> очков — ещё один ящик. Внутри — рубли, доллары и оружие.</span>
+        <span className="achbox-pts"><Icon name="sun" size={20} /><b className="num">{b.points}</b> очков · открыто ящиков: <b className="num">{b.opened}</b></span>
+        <span className="ach-bar" style={{ width: "100%", ["--p" as string]: `${Math.round((b.progress / b.cost) * 100)}%`, ["--c" as string]: "#ffcc33" }}>
+          <i /><span className="num">до следующего: {b.progress}/{b.cost}</span>
+        </span>
+        {got && <div className="achbox-got"><b className="display">Выпало:</b><RewardChips r={got} size={20} /></div>}
+        <button className="btn big gold block" disabled={b.ready < 1 || busy === "ach_box_open"} onClick={open}>
+          {b.ready > 0 ? `Открыть · осталось ${b.ready}` : `Нужно ещё ${b.cost - b.progress} очк.`}
+        </button>
+      </div>
+    </Modal>
+  );
+}
+
 export function ShopScreen() {
   const params = useSearchParams();
   const router = useRouter();
+  const { state } = useGame();
+  const [boxOpen, setBoxOpen] = useState(false);
   const [data, setData] = useState<ShopData | null>(null);
   // ?tab=weapons|clothing|energy|misc opens that window right away (links from the boss screen, wardrobe, …)
   const asked = params.get("tab") ?? "";
@@ -213,9 +249,10 @@ export function ShopScreen() {
           {/* the ceiling goes on above the picture on tall screens (tools/shop/build-ceiling.py) */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="sk-ceiling" src="/assets/shop/v2/ceiling.webp" alt="" draggable={false} aria-hidden="true" />
-          <ShopScene onOpen={(id) => setOpen(id)} />
+          <ShopScene onOpen={(id) => setOpen(id)} box={state?.achBox} onBox={() => { haptic.tap(); setBoxOpen(true); }} />
         </div>
       </div>
+      {boxOpen && <AchBoxWindow onClose={() => setBoxOpen(false)} />}
       {open && (
         <Modal title={open.name} onClose={() => setOpen(null)} wide>
           {data ? <OfferGrid offers={offers} rub={data.exchange.rub} /> : <div className="muted small center">Загрузка…</div>}

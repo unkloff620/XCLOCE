@@ -3827,3 +3827,17 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .pkt-ctrl .btn.pkt-chip { padding: 0 1.6cqw 0 0.8cqw; border-width: 0.3cqw; }
 .pkt-ctrl .btn.pkt-chip svg { width: 5.2cqw; height: 5.2cqw; }
 .pkt-chip b { font-size: 2.8cqw; }
+
+/* «Ящик ништяков»: on the shelf under the energy drinks; it glows brighter when a box is waiting */
+.sk-box { z-index: 2; }
+.sk-box img { object-fit: contain; animation-delay: 0.3s; }
+.sk-box.ready img { animation: sk-box-ready 1.2s ease-in-out infinite; }
+@keyframes sk-box-ready { 50% { filter: drop-shadow(0 0 10px rgba(255, 210, 60, 0.95)) brightness(1.15); transform: translateY(-3%); } }
+.sk-box .sk-tag { white-space: nowrap; }
+.achbox-art { width: 150px; height: 150px; object-fit: contain; filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.4)); }
+.achbox-art.ready { animation: sk-box-ready 1.4s ease-in-out infinite; }
+.achbox-art.shake { animation: achbox-shake 0.5s ease-in-out; }
+@keyframes achbox-shake { 20% { transform: rotate(-8deg) scale(1.05); } 40% { transform: rotate(7deg) scale(1.08); } 60% { transform: rotate(-5deg) scale(1.1); } 80% { transform: rotate(3deg) scale(1.05); } }
+.achbox-pts { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; }
+.achbox-got { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 12px; background: rgba(255, 200, 60, 0.25); width: 100%; animation: pop 0.3s cubic-bezier(0.2, 1.4, 0.4, 1); }
+.achbox-got .reward-chips, .achbox-got .chips { justify-content: center; }

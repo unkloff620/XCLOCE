@@ -3,6 +3,9 @@ import { grantReward, type Ctx } from "../core.ts";
 import { ACHIEVEMENTS, achievementById, type AchStat } from "../../content/achievements.ts";
 import type { Config } from "../config.ts";
 import { bossById, bossOpen } from "../../content/bosses.ts";
+import { slotLevel } from "../../content/slots.ts";
+import { pokerLevel } from "../../content/games.ts";
+import { countersOf } from "./counters.ts";
 
 /** per-boss badges count only while the boss is in the game */
 const live = (cfg: Config) => ACHIEVEMENTS.filter((a) => !a.boss || (bossById(a.boss) && bossOpen(bossById(a.boss)!, cfg.bossOpen)));
@@ -41,7 +44,47 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
   const stash = Object.fromEntries(sets.map((r) => [`stashsets:${r.set_n}`, Number(r.count)]));
   // boss medals of each kind ("medal:<boss id>:<tier>")
   const medals = await q.query<{ boss_id: string; tier: string; n: number }>("SELECT boss_id, tier, n FROM boss_medals WHERE player_id=$1", [pid]);
+  // the second set: modes, money, mini games, clans, the social side (what is not stored elsewhere: player_counters)
+  const [x] = await q.query<Record<string, number | null>>(
+    `SELECT
+       (SELECT COUNT(*) FROM fights WHERE player_id=$1 AND status='won' AND my_damage > 0 AND mode='blat')::int AS wins_blat,
+       (SELECT COUNT(*) FROM fights WHERE player_id=$1 AND status='won' AND my_damage > 0 AND mode='avtor')::int AS wins_avtor,
+       (SELECT COUNT(DISTINCT boss_id) FROM fights WHERE player_id=$1 AND status='won' AND my_damage > 0)::int AS bosses,
+       (SELECT COALESCE(SUM(amount) FILTER (WHERE currency='RUB'), 0) FROM wallets WHERE player_id=$1)::bigint AS have_rub,
+       (SELECT COALESCE(SUM(amount) FILTER (WHERE currency='USD'), 0) FROM wallets WHERE player_id=$1)::bigint AS have_usd,
+       (SELECT COALESCE(SUM(amount) FILTER (WHERE currency='SOL'), 0) FROM wallets WHERE player_id=$1)::bigint AS have_sol,
+       (SELECT COALESCE(SUM(amount) FILTER (WHERE currency='BTC'), 0) FROM wallets WHERE player_id=$1)::bigint AS have_btc,
+       (SELECT COUNT(*) FROM slot_spins WHERE player_id=$1)::int AS slot_spins,
+       (SELECT COUNT(*) FROM slot_spins WHERE player_id=$1 AND outcome='jackpot')::int AS slot_777,
+       (SELECT COALESCE(slot_xp, 0) FROM players WHERE id=$1)::int AS slot_xp,
+       (SELECT COALESCE(poker_xp, 0) FROM players WHERE id=$1)::int AS poker_xp,
+       (SELECT COUNT(*) FROM games WHERE player_id=$1 AND kind='zonk' AND status='done')::int AS zonk_games,
+       (SELECT COALESCE(MAX((result->>'points')::int), 0) FROM games WHERE player_id=$1 AND kind='zonk' AND status='done' AND result->>'outcome' IS DISTINCT FROM 'gave_up' AND result->>'points' ~ '^[0-9]+$')::int AS zonk_best,
+       (SELECT COUNT(*) FROM duels WHERE winner_id=$1)::int AS zonk_duels,
+       (SELECT COUNT(DISTINCT result->>'outcome') FROM games WHERE player_id=$1 AND kind='poker' AND status='done' AND result->>'outcome' IS NOT NULL AND result->>'outcome' <> 'high')::int AS poker_hands,
+       (SELECT FLOOR(EXTRACT(EPOCH FROM (now() - joined_at)) / 86400) FROM clan_members WHERE player_id=$1)::int AS clan_days,
+       (SELECT COUNT(*) FROM clan_boss_hits h JOIN clan_boss b ON b.clan_id = h.clan_id AND b.week = h.week WHERE h.player_id=$1 AND h.damage > 0 AND b.killed_at IS NOT NULL)::int AS clan_bosses,
+       (SELECT COUNT(*) FROM social_log WHERE from_id=$1 AND kind='spit')::int AS spits,
+       (SELECT COUNT(*) FROM social_log WHERE from_id=$1 AND kind='fight')::int AS raids,
+       (SELECT COALESCE((SELECT n FROM player_biceps WHERE player_id=$1), 0))::int AS nishtyaks`,
+    [pid],
+  );
+  const m = (k: string) => Math.max(0, Number(x?.[k] ?? 0));
+  const c = await countersOf(q, pid);
+  const second = {
+    winsBlat: m("wins_blat"), winsAvtor: m("wins_avtor"), bossesBeaten: m("bosses"),
+    exchanges: c.exchanges ?? 0, spentRUB: c.spentRUB ?? 0, spentUSD: c.spentUSD ?? 0,
+    haveRUB: m("have_rub"), haveUSD: m("have_usd"), haveSOL: m("have_sol"), haveBTC: m("have_btc"),
+    slotSpins: m("slot_spins"), slot777: m("slot_777"), slotLevel: slotLevel(m("slot_xp")).level,
+    upgWins: c.upgWins ?? 0, upgLowWins: c.upgLowWins ?? 0, upgStreak: c.upgStreak ?? 0,
+    zonkGames: m("zonk_games"), zonkBest: m("zonk_best"), zonkDuels: m("zonk_duels"),
+    pokerHands: m("poker_hands"), pokerLevel: pokerLevel(m("poker_xp")).level,
+    bjBlackjacks: c.bjBlackjacks ?? 0, bjWins: c.bjWins ?? 0,
+    clanDays: m("clan_days"), clanBosses: m("clan_bosses"), clanCreated: Math.min(1, c.clanCreated ?? 0),
+    spits: m("spits"), raids: m("raids"), nishtyaks: m("nishtyaks"),
+  };
   return {
+    ...second,
     ...stash,
     ...Object.fromEntries(medals.map((m) => [`medal:${m.boss_id}:${m.tier}`, Number(m.n)])),
     ...Object.fromEntries(solo.map((x) => [`solo:${x.boss_id}`, Number(x.n)])),
