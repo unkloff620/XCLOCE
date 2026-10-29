@@ -203,19 +203,20 @@ function Highlight({ edit }: { edit: RigEdit }) {
   const shapes = partShapes(edit, look, worn);
   return (
     <g pointerEvents="none" className="rig-hl-part">
-      {shapes.map((sh, k) => {
-        const c = sh.clip, id = `rig-clip-${k}`;
-        return (
-          <g key={`${edit.part}-${k}`} clipPath={c ? `url(#${id})` : undefined}>
-            {c && <clipPath id={id}><rect x={c.x0 ?? -200} y={c.y0 ?? -200} width={(c.x1 ?? 1200) - (c.x0 ?? -200)} height={(c.y1 ?? 1600) - (c.y0 ?? -200)} /></clipPath>}
-            <g filter="url(#rig-ring)">
+      {/* all the pieces of the part (a jacket and both sleeves) under one ring: one whole outline, not one per piece */}
+      <g filter="url(#rig-ring)">
+        {shapes.map((sh, k) => {
+          const c = sh.clip, id = `rig-clip-${k}`;
+          return (
+            <g key={`${edit.part}-${k}`} clipPath={c ? `url(#${id})` : undefined}>
+              {c && <clipPath id={id}><rect x={c.x0 ?? -200} y={c.y0 ?? -200} width={(c.x1 ?? 1200) - (c.x0 ?? -200)} height={(c.y1 ?? 1600) - (c.y0 ?? -200)} /></clipPath>}
               {sh.boxes.map((b, i) => b.rect
                 ? <rect key={i} x={b.x} y={b.y} width={b.w} height={b.h} rx={Math.min(b.w, b.h) / 2} fill="#fff" />
                 : <image key={i} href={b.href} x={b.x} y={b.y} width={b.w} height={b.h} preserveAspectRatio="none" />)}
             </g>
-          </g>
-        );
-      })}
+          );
+        })}
+      </g>
     </g>
   );
 }
