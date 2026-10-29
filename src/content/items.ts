@@ -117,7 +117,7 @@ const MISC: ItemDef[] = [
   { id: "lost-wallet", name: "Забытый кошелёк", category: "item", rarity: "rare", maxStack: 999, description: "Внутри немного долларов и чек из шаурмы.", sources: ["Двор"] },
 ];
 
-/** Boss passes (ids key-<boss>): the first bosses give their own key, the last five the pass cards (passLook). */
+/** Boss passes (ids key-<boss>): the key to the next boss, or for the last five bosses a pass card (passLook). */
 const KEYS: ItemDef[] = BOSSES.filter((b) => !b.final).map((b) => {
   const t = CARD_TIERS[b.card ?? "bronze"];
   const look = passLook(b.id);
@@ -127,7 +127,7 @@ const KEYS: ItemDef[] = BOSSES.filter((b) => !b.final).map((b) => {
   const one = key ? "Один ключ — вход" : "Один пропуск — вход";
   const many = key ? `${need} ключа — вход` : `${need} пропуска — вход`;
   return {
-    id: keyId(b.id), name: key ? `Ключ: ${b.name}` : `${CARD_TIERS[look.tier].name}: ${b.name}`, category: "reward" as const, rarity: t.rarity, maxStack: 999,
+    id: keyId(b.id), name: key ? `Ключ: ${next?.name ?? b.name}` : `${CARD_TIERS[look.tier].name}: ${next?.name ?? b.name}`, category: "reward" as const, rarity: t.rarity, maxStack: 999,
     description: `Выдаётся за победу над боссом ${b.name}. ${need === 1 ? one : many} в бой с боссом ${next?.name ?? ""}: тратятся на старте боя, а если босс ушёл или ты сбежал — возвращаются.`.trim(),
     sources: [`Победа: ${b.name}`],
   };

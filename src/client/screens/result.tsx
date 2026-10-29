@@ -111,7 +111,6 @@ export function ResultWindow() {
   return (
     <Modal onClose={() => busy !== "fight_claim" && take()}>
       <div className="result-win">
-        <div className="display result-title win">BOSS DEFEATED</div>
         <div className="result-photo">
           <BossPhoto boss={boss} round defeated />
         </div>

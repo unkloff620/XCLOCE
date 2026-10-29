@@ -201,17 +201,22 @@ export const unlockBossOf = (itemId: string) => BOSSES.find((b) => b.wear?.items
 export const isFirstWinItem = (itemId: string) => BOSSES.some((b) => b.firstWin?.includes(itemId));
 export const keyId = (bossId: string) => `key-${bossId}`;
 /**
- * What a boss's pass (item key-<id>) looks like. The first bosses drop a key of their own (public/assets/items/key-<id>.webp,
- * tools/items/source/key-<id>.png); the last PASS_CARDS.length bosses that drop one give the pass cards in order, bronze to
- * diamond. The look only sets the picture and the name; the boss's `card` tier still gives the rarity and the medal tier.
+ * What a boss's pass (item key-<id>) looks like. A pass dropped by boss N opens boss N+1, so it is drawn as the key of
+ * the boss it opens (public/assets/items/pass-key-<next id>.webp, tools/items/source/pass-key-<next id>.png): Дацкоу
+ * drops the key to Кедр, … Восток the key to Князь. The passes to the last PASS_CARDS.length bosses (Вадим … Солнце) are
+ * the pass cards in order, bronze to diamond. The look sets the picture and the name; the dropper's `card` tier still
+ * gives the rarity and the medal tier.
  */
 export const PASS_CARDS: CardTier[] = ["bronze", "silver", "gold", "platinum", "diamond"];
-export type PassLook = { kind: "key" } | { kind: "card"; tier: CardTier };
+export type PassLook = { opens: BossDef | undefined } & ({ kind: "key"; art: string } | { kind: "card"; tier: CardTier; art: string });
 export function passLook(bossId: string): PassLook {
   const droppers = BOSSES.filter((b) => !b.final);
   const i = droppers.findIndex((b) => b.id === bossId);
+  const opens = BOSSES.find((b) => b.order === (droppers[i]?.order ?? 0) + 1);
   const k = i - (droppers.length - PASS_CARDS.length);
-  return i >= 0 && k < 0 ? { kind: "key" } : { kind: "card", tier: PASS_CARDS[Math.max(0, k)] };
+  if (i >= 0 && k < 0) return { opens, kind: "key", art: `pass-key-${opens?.id ?? bossId}` };
+  const tier = PASS_CARDS[Math.max(0, k)];
+  return { opens, kind: "card", tier, art: `card-${tier}` };
 }
 /** Keys of boss N needed to open boss N+1 (bosses after Гаркуша — from Командате on — take one: keysToUnlock: 1). */
 export const KEYS_TO_UNLOCK = 3;

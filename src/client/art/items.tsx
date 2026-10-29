@@ -18,10 +18,9 @@ export function EnergyArt({ amount, size = 40 }: { amount: number; size?: number
   return RASTER_ITEMS.has(`energy-${amount}`) ? <ItemArt id={`energy-${amount}`} size={size} /> : <Icon name="energy" size={size} />;
 }
 
-/** a boss pass (item key-<boss>): the boss's own key (key-<boss>.webp), or for the last five the card of its tier */
+/** a boss pass (item key-<boss>): the key of the boss it opens (pass-key-<next>.webp), or for the last five a pass card */
 export function cardArt(id: string): string {
-  const look = passLook(id.replace(/^key-/, ""));
-  return look.kind === "key" ? id : `card-${look.tier}`;
+  return passLook(id.replace(/^key-/, "")).art;
 }
 
 /** Picture of any item; boss cards show their tier, unknown ids fall back to a chest. */
