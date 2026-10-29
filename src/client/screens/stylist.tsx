@@ -28,6 +28,9 @@ export interface StyleDraft {
 
 const CLOTHES: Slot[] = ["HEAD", "ACCESSORY", "SHIRT", "PANTS", "SHOES", "HAND"];
 const ITEM_PART: Record<string, string> = { HEAD: "Голова", ACCESSORY: "Аксессуар", SHIRT: "Верх", PANTS: "Низ", SHOES: "Обувь", HAND: "Кисть" };
+/** the slot buttons: a picture (public/assets/ui/slot-*.webp) and a short word under it */
+const SLOT_ICON: Record<string, string> = { HEAD: "slot-head", ACCESSORY: "slot-accessory", SHIRT: "slot-shirt", PANTS: "slot-pants", SHOES: "slot-shoes" };
+const SHORT_PART: Record<string, string> = { HEAD: "Голова", ACCESSORY: "Шея", SHIRT: "Верх", PANTS: "Низ", SHOES: "Обувь", HAND: "Кисть" };
 // «левое / правое» — as seen on the screen
 const BODY_PART: Record<string, string> = {
   HEAD: "Голова", EYES: "Глаза", MOUTH: "Рот", TORSO: "Торс", SHOULDER_L: "Левое плечо", SHOULDER_R: "Правое плечо",
@@ -170,8 +173,13 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
             {CLOTHES.map((s) => {
               const n = ITEMS.filter((i) => i.slot === s && owned.has(i.id)).length;
               return (
-                <button key={s} type="button" role="tab" aria-selected={part === s} className={`sty-slot ${part === s ? "on" : ""}`} onClick={() => { haptic.tap(); setFocus({ ...focus, mode: "items", part: s }); }}>
-                  {ITEM_PART[s]}{n > 0 && <i className="num">{n}</i>}
+                <button key={s} type="button" role="tab" aria-selected={part === s} aria-label={ITEM_PART[s]} title={ITEM_PART[s]} className={`sty-slot ${part === s ? "on" : ""}`} onClick={() => { haptic.tap(); setFocus({ ...focus, mode: "items", part: s }); }}>
+                  {/* the same slot pictures as the shop's filter row; the hand has none — a hand thing stands for it */}
+                  {SLOT_ICON[s]
+                    ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={`/assets/ui/${SLOT_ICON[s]}.webp`} alt="" draggable={false} />
+                    : <ItemArt id="hand-drum" size={30} />}
+                  <small>{SHORT_PART[s]}</small>
+                  {n > 0 && <i className="num">{n}</i>}
                 </button>
               );
             })}

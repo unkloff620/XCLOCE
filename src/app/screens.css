@@ -3810,9 +3810,13 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .sl-display .sl-gain .sl-xp { font-size: min(2.6cqw, 11px); }
 .sl-display .sl-gain img, .sl-display .sl-gain svg { width: min(3cqw, 13px) !important; height: min(3cqw, 13px) !important; }
 
-/* the wardrobe: the clothes slots as a row of buttons above the things (a tap on the character still works) */
-.sty-slots { display: flex; gap: 5px; overflow-x: auto; scrollbar-width: none; padding: 1px 1px 6px; }
-.sty-slots::-webkit-scrollbar { display: none; }
-.sty-slot { flex: none; position: relative; padding: 6px 10px; border-radius: 10px; border: 2px solid rgba(255, 220, 170, 0.22); background: rgba(20, 12, 6, 0.6); color: #f1e2c8; font: inherit; font-size: 12.5px; font-weight: 800; cursor: pointer; }
-.sty-slot.on { border-color: #ffb020; background: #ffb020; color: #2a1404; }
-.sty-slot i { position: absolute; top: -6px; right: -5px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: #2ee88a; color: #06301a; font-style: normal; font-size: 10px; line-height: 16px; text-align: center; }
+/* the wardrobe: the clothes slots as a row of picture buttons above the things (a tap on the character still works) */
+.sty-slots { flex: none; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 5px; padding: 7px 1px 6px; }
+.sty-slot { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-width: 0; height: 52px; padding: 3px 2px 2px;
+  border-radius: 12px; border: 2px solid rgba(255, 220, 170, 0.25); box-shadow: 0 3px 0 rgba(0, 0, 0, 0.55); background: linear-gradient(180deg, rgba(70, 46, 26, 0.9), rgba(32, 20, 11, 0.95));
+  color: #f1e2c8; font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.sty-slot img, .sty-slot svg { width: 30px !important; height: 30px !important; object-fit: contain; pointer-events: none; flex: none; }
+.sty-slot small { font-size: 9.5px; font-weight: 800; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.sty-slot.on { border-color: #ffd23f; background: linear-gradient(180deg, #ffd23f, #e8a91c); color: #2a1404; box-shadow: 0 2px 0 rgba(0, 0, 0, 0.55); transform: translateY(1px); }
+.sty-slot:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.55); }
+.sty-slot i { position: absolute; top: -6px; right: -4px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: #2ee88a; color: #06301a; font-style: normal; font-size: 10px; font-weight: 900; line-height: 16px; text-align: center; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5); }
