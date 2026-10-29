@@ -52,7 +52,7 @@ export const ACH_CATEGORIES: AchCategory[] = [
   { id: "spent-rub", name: "Шопоголик ₽", hint: "Потрать в магазине {n} ₽", stat: "spentRUB", icon: "ach-shop", targets: [10_000, 50_000, 250_000, 1_000_000, 5_000_000] },
   { id: "spent-usd", name: "Шопоголик $", hint: "Потрать в магазине {n} $", stat: "spentUSD", icon: "ach-shop", targets: [100, 500, 2_500, 10_000, 50_000] },
   // savings: what lies in the wallet right now (1 $ = 85 ₽, 1 SOL = 120 $, 1 BTC = 85 000 $ — the BTC ones are for the richest)
-  { id: "save-rub", name: "Копилка ₽", hint: "Накопи {n} ₽", stat: "haveRUB", icon: "RUB", targets: [50_000, 100_000, 250_000, 500_000, 1_000_000] },
+  { id: "save-rub", name: "Копилка ₽", hint: "Накопи {n} ₽", stat: "haveRUB", icon: "RUB", targets: [50_000, 250_000, 1_000_000, 3_000_000, 10_000_000] },
   { id: "save-usd", name: "Копилка $", hint: "Накопи {n} $", stat: "haveUSD", icon: "USD", targets: [500, 2_000, 5_000, 10_000, 25_000] },
   { id: "save-sol", name: "Копилка SOL", hint: "Накопи {n} SOL", stat: "haveSOL", icon: "SOL", targets: [3, 10, 25, 50, 100] },
   { id: "save-btc", name: "Копилка BTC", hint: "Накопи {n} BTC", stat: "haveBTC", icon: "BTC", targets: [1, 2, 3, 4, 5] },

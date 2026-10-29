@@ -56,7 +56,8 @@ function catState(c: AchCategory, rows: Map<string, AchRow>, self: boolean) {
   const earned = tiers.filter((r) => r && (r.claimed || (!self && r.done))).length as AchTier | 0;
   const reached = tiers.filter((r) => r?.done).length;
   const ready = self ? tiers.find((r) => r?.done && !r.claimed) ?? null : null;
-  const progress = tiers[0]?.progress ?? 0;
+  // each tier keeps its progress up to its own target: the highest tier shows how far it really is
+  const progress = Math.max(0, ...tiers.map((r) => r?.progress ?? 0));
   const next = c.targets[Math.min(c.targets.length - 1, reached)];
   return { tiers, earned, reached, ready, progress, next };
 }
