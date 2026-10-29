@@ -943,8 +943,8 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
   const cur: Stake | null = (() => {
     if (stake?.kind === "up" && ups.some((u) => u.uid === stake.uid)) return stake;
     if (stake?.kind === "plain" && (inv.get(stake.id) ?? 0) > 0) return stake;
-    if (ups[0]) return { kind: "up", uid: ups[0].uid };
-    return plain[0] ? { kind: "plain", id: plain[0] } : null;
+    // never pick a stake by itself: when the chosen one is gone the player chooses the next one on the shelf
+    return null;
   })();
   const up = cur?.kind === "up" ? ups.find((u) => u.uid === cur.uid) ?? null : null;
   const curId = cur ? (cur.kind === "up" ? up?.itemId ?? "" : cur.id) : "";
@@ -1021,7 +1021,7 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
                 <span className="upg-art"><ItemArt id={curId} size={64} />{up && <i className="up-star">★</i>}</span>
               )
             ) : (
-              <span className="ug-empty">пусто</span>
+              <span className="ug-empty">{ups.length || plain.length ? "выбери вещь на полке" : "пусто"}</span>
             )}
             <span className="ug-price num">{cur ? `${full(stakeValue)} ₽` : ""}</span>
           </div>
@@ -1032,10 +1032,10 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
           {/* the target slot (gold) and its plate */}
           <div className="ug-slot target upgraded" style={{ left: ux(748), top: uy(420), width: ux(132), height: uy(350) }}>
             <span className="ug-cap">цель</span>
-            <span className="upg-art"><ItemArt id={target} size={64} /><i className="up-star">★</i></span>
-            <span className="ug-price num gold">{full(value)} ₽</span>
+            {cur ? <span className="upg-art"><ItemArt id={target} size={64} /><i className="up-star">★</i></span> : <span className="ug-empty">?</span>}
+            <span className="ug-price num gold">{cur ? `${full(value)} ₽` : ""}</span>
           </div>
-          <span className="ug-plate" style={{ left: ux(742), top: uy(792), width: ux(142), height: uy(52) }}>{itemById(target)?.name} ★</span>
+          <span className="ug-plate" style={{ left: ux(742), top: uy(792), width: ux(142), height: uy(52) }}>{cur ? `${itemById(target)?.name} ★` : ""}</span>
 
           {/* the strip under the dial: how many of the stake go in, or what the spin is about */}
           <div className="ug-strip" style={{ left: ux(140), top: uy(878), width: ux(744), height: uy(48) }}>
@@ -1047,6 +1047,8 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
               </>
             ) : cur ? (
               <span>{full(stakeValue)} ₽ → <b className="gold">{full(value)} ₽</b></span>
+            ) : ups.length || plain.length ? (
+              <span>Выбери, что поставить, — на полке внизу ↓</span>
             ) : (
               <span>Нечего ставить. Собери находки во дворе.</span>
             )}
