@@ -87,6 +87,7 @@ export function actionText(type: string, body: Row, result: unknown): string | n
     case "clan_cancel": return `отменил заявку в клан #${r.clanId}`;
     case "clan_accept": return `принял игрока #${body.playerId}`;
     case "clan_reject": return `отклонил заявку игрока #${body.playerId}`;
+    case "zonk_hints": return body.on === true ? "Зонк: подсказки включены" : "Зонк: подсказки выключены";
     case "game_start":
     case "zonk_give_up":
     case "zonk_move": {

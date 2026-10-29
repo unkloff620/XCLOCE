@@ -3599,3 +3599,14 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 /* places 1–3 in the ratings: drawn medals instead of emoji */
 .rt-medal { width: 30px; height: 30px; object-fit: contain; display: block; margin: 0 auto; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.45)); }
 .rt-last-one .rt-medal { width: 22px; height: 22px; }
+
+/* zonk: the hints switch under the ladder (off at the start of each game, the first switch-on costs 2 $) */
+.zb-hints { position: absolute; z-index: 3; display: flex; align-items: center; gap: 8px; padding: 0 8px; border: 2px solid rgba(255, 255, 255, 0.55); border-radius: 10px;
+  background: rgba(10, 30, 24, 0.45); color: #e6efe9; font-family: inherit; cursor: pointer; text-align: left; }
+.zb-hints:disabled { opacity: 0.7; }
+.zb-hints-sw { flex: none; position: relative; width: 34px; height: 18px; border-radius: 9px; background: #4d5a55; border: 2px solid rgba(255, 255, 255, 0.7); }
+.zb-hints-sw em { position: absolute; top: 1px; left: 1px; width: 12px; height: 12px; border-radius: 50%; background: #f1efe6; transition: transform 0.2s; }
+.zb-hints.on .zb-hints-sw { background: #3ddc84; }
+.zb-hints.on .zb-hints-sw em { transform: translateX(16px); }
+.zb-hints-t { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 11.5px; font-weight: 800; line-height: 1.1; }
+.zb-hints-t small { flex: none; padding: 1px 5px; border-radius: 6px; background: #ffcc33; color: #2a1a06; font-size: 10.5px; }

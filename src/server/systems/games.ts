@@ -23,7 +23,9 @@ interface ZonkState { roll: number[]; turn: number; left: number; history: { kep
   /** a zonk duel's game (systems/duels.ts): DUEL_ROUNDS attempts, no target, the points go to the duel */
   duel?: number; rounds?: number;
   /** the target reached: its prize is paid (prize), the choice is asked (ask) — «Закончить» or «Продолжить» (cont) */
-  reached?: boolean; ask?: boolean; cont?: boolean; prize?: { reward: Granted | null; xp: number } }
+  reached?: boolean; ask?: boolean; cont?: boolean; prize?: { reward: Granted | null; xp: number };
+  /** hints (the scoring dice and combinations light up): bought for this game (hintsPaid), switched on or off (hints) */
+  hints?: boolean; hintsPaid?: boolean }
 interface GameRow { id: number; kind: GameKind; paid: boolean; status: "active" | "done"; state: ZonkState; result: GameResult | null }
 interface GameResult { outcome: string; title: string; reward: Granted | null; points?: number; won?: boolean; xp?: number; duel?: number }
 
@@ -42,7 +44,7 @@ async function freeLeft(q: Queryable, pid: number, kind: GameKind, now: number) 
 function viewOf(g: GameRow) {
   const s = g.state as ZonkState;
   return { id: g.id, kind: g.kind, paid: g.paid, status: g.status, result: g.result, roll: s.roll, turn: s.turn, left: s.left, history: s.history, round: s.round ?? 1, rounds: s.rounds ?? ZONK_ROUNDS, total: s.total ?? 0, last: s.last ?? null, scores: s.scores ?? [], level: s.level ?? 1, target: s.target ?? zonkLevelDef(1)!.target, duel: s.duel ?? null,
-    reached: !!s.reached, ask: !!s.ask, cont: !!s.cont, prize: s.prize ?? null };
+    reached: !!s.reached, ask: !!s.ask, cont: !!s.cont, prize: s.prize ?? null, hints: !!s.hints, hintsPaid: !!s.hintsPaid };
 }
 
 /** a zonk after «Продолжить» costs ZONK_CONT_PENALTY points (not below zero) */
@@ -257,6 +259,21 @@ export async function zonkChoice(ctx: Ctx, go: "end" | "continue") {
     s.cont = true;
     await save(ctx, g);
   }
+  return viewOf(g);
+}
+
+/** Hints in zonk: every game starts without them; switching them on costs ZONK_HINT_PRICE once a game, then free on/off. */
+export const ZONK_HINT_PRICE = { currency: "USD" as const, amount: 2 };
+export async function zonkHints(ctx: Ctx, on: boolean) {
+  const g = await activeGame(ctx.q, ctx.pid, "zonk");
+  if (!g) throw new GameError("no_game", "Партия не начата");
+  const s = g.state as ZonkState;
+  if (on && !s.hintsPaid) {
+    await takeMoney(ctx, ZONK_HINT_PRICE.currency, ZONK_HINT_PRICE.amount, `game:zonk:hints:${g.id}`);
+    s.hintsPaid = true;
+  }
+  s.hints = on;
+  await save(ctx, g);
   return viewOf(g);
 }
 

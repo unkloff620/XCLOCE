@@ -1430,6 +1430,20 @@ describe("yard mini games", () => {
     expect(again.state.prizes.filter((x: { title: string }) => x.title.startsWith("Рекорд дня"))).toHaveLength(0);
   });
 
+  it("zonk hints: off at the start, 2 $ once a game to switch on, then free on and off", async () => {
+    const p = await newPlayer(db);
+    await setMoney(db, p, "USD", 10);
+    const g = await act(db, p, "game_start", { game: "zonk", level: 1 }, T0, always(0.5));
+    expect(g.result.game?.hints ?? g.result.hints ?? false).toBe(false);
+    const on = await act(db, p, "zonk_hints", { on: true }, T0 + M);
+    expect(on.result).toMatchObject({ hints: true, hintsPaid: true });
+    expect(await wallet(db, p, "USD")).toBe(8);
+    await act(db, p, "zonk_hints", { on: false }, T0 + 2 * M);
+    const again = await act(db, p, "zonk_hints", { on: true }, T0 + 3 * M);
+    expect(again.result.hints).toBe(true);
+    expect(await wallet(db, p, "USD")).toBe(8);
+  });
+
   it("the newcomer's gift comes once", async () => {
     const p = await newPlayer(db);
     const g = await act(db, p, "starter_gift", {}, T0);

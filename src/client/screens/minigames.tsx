@@ -452,6 +452,8 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
     const r = await act<GameView>(type, body);
     if (!r) return;
     setLast(r);
+    // the hints switch changes nothing on the table: no new throw
+    if (type === "zonk_hints") return;
     if (r.ask && !g?.ask) { haptic.ok(); sfx("reward"); }
     const done = () => {
       if (r.status === "done" && r.duel) { setShowDuel(r.duel); return; }
@@ -477,7 +479,9 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
   const turn = (g?.turn ?? 0) + (pts ?? 0);
   const nRoll = counts(playing ? roll : []);
   const nPick = counts(picked);
-  const hints = playing ? new Set(bestPick(roll)) : new Set<number>();
+  // hints (the scoring dice and combinations light up) only when switched on for this game — they cost 2 $ once a game
+  const hintsOn = playing && !!g?.hints;
+  const hints = hintsOn ? new Set(bestPick(roll)) : new Set<number>();
   // the ladder: earlier throws of this attempt (fixed) and the dice picked now (a tap puts one back), with their points
   const ladder = layoutLadder([
     ...(show ? show.history : playing ? g?.history ?? [] : []).flatMap((h) => zonkGroups(h.kept).map((gr) => ({ dice: gr.dice.map((v) => ({ v, i: -1 })), points: gr.points, old: true }))),
@@ -500,7 +504,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
   const left = (() => { const l = (g?.left ?? 6) - pick.length; return l <= 0 ? 6 : l; })();
   const canBank = playing && !show && pts !== null && turn >= bankMin;
   const lvl = info ? Math.max(0, Math.min(100, ((info.xp - info.from) / Math.max(1, info.to - info.from)) * 100)) : 0;
-  const hint = !playing || show || g?.ask ? null
+  const hint = !hintsOn || show || g?.ask ? null
     : pick.length === 0 ? "Нажми на очковые кости"
     : pts === null ? "Есть кости без очков — верни их"
     : turn < bankMin ? `Сохранить можно от ${bankMin}`
@@ -614,7 +618,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
           <div className="zb-sheet" style={{ left: zx(670), top: zy(438), width: zx(150), height: zy(596) }}>
             <b className="zb-sheet-h">Комбинации</b>
             {COMBOS.map((c) => {
-              const can = c.test(nRoll, roll.length);
+              const can = hintsOn && c.test(nRoll, roll.length);
               const on = picked.length > 0 && c.test(nPick, picked.length);
               return (
                 <div key={c.key} className={`zb-combo ${can ? "can" : ""} ${on ? "on" : ""}`}>
@@ -634,7 +638,14 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
               +{full(g.last.points)} записано
             </div>
           ) : null}
-          {hint && <span className="zb-hint" style={{ left: zx(246), top: zy(1362), width: zx(372) }}>{hint}</span>}
+          {/* the hints switch: off at the start of every game; the first switch-on of a game costs 2 $ */}
+          {playing && !show && (
+            <button className={`zb-hints ${hintsOn ? "on" : ""}`} style={{ left: zx(246), top: zy(1372), width: zx(372), height: zy(66) }} disabled={busy === "zonk_hints"}
+              onClick={() => run("zonk_hints", { on: !g?.hints })} aria-pressed={hintsOn}>
+              <i className="zb-hints-sw" aria-hidden="true"><em /></i>
+              <span className="zb-hints-t">{hint ?? "Подсказки"}{!g?.hintsPaid && <small className="num">2 $</small>}</span>
+            </button>
+          )}
 
           <button className="zb-btn grey" style={{ left: zx(630), top: zy(1308), width: zx(164), height: zy(61) }} disabled={!playing || !!show || busy === "zonk_move" || pts === null}
             onClick={() => run("zonk_move", { pick, then: "roll" })}>Бросить<small className="num">{left}</small></button>
