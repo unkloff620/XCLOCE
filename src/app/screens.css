@@ -3753,3 +3753,8 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .ug-chip.upgraded { border-color: rgba(255, 210, 63, 0.75); }
 .ug-chip.on { border-color: #8fd3ff; box-shadow: 0 0 1.6cqw rgba(120, 200, 255, 0.85), inset 0 0 1cqw rgba(120, 200, 255, 0.4); }
 .ug-chip:disabled { opacity: 0.6; cursor: default; }
+
+/* the clan page: the leader's edit and settings buttons in the top right corner of the clan card */
+.clan-head { position: relative; }
+.clan-tools { position: absolute; top: 10px; right: 10px; z-index: 1; }
+#clan-members { scroll-margin-top: calc(var(--hud-h, 0px) + var(--safe-t, 0px) + 8px); }
