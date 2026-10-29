@@ -3333,13 +3333,13 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 /* the left arm (3.2 s): swings the bag out and up to the side, holds it up shaking it, lets it down; the bag lags */
 .rig-vodovoz .vk-arm-l { animation: vk-arm-l 3.2s var(--vk-ease) infinite; }
 @keyframes vk-arm-l {
-  0%, 100% { transform: rotate(0); } 10% { transform: rotate(-6deg); } 26% { transform: rotate(52deg); } 34% { transform: rotate(44deg); }
-  42% { transform: rotate(54deg); } 56% { transform: rotate(4deg); } 70% { transform: rotate(-4deg); } 84% { transform: rotate(6deg); }
+  0%, 100% { transform: rotate(0); } 10% { transform: rotate(-4deg); } 26% { transform: rotate(32deg); } 34% { transform: rotate(26deg); }
+  42% { transform: rotate(34deg); } 56% { transform: rotate(4deg); } 70% { transform: rotate(-4deg); } 84% { transform: rotate(6deg); }
 }
 .rig-vodovoz .vk-low-l { animation: vk-low-l 3.2s var(--vk-ease) infinite; }
 @keyframes vk-low-l {
-  0%, 100% { transform: rotate(0); } 10% { transform: rotate(-4deg); } 26% { transform: rotate(-26deg); } 34% { transform: rotate(-16deg); }
-  42% { transform: rotate(-28deg); } 56% { transform: rotate(2deg); } 70% { transform: rotate(-2deg); } 84% { transform: rotate(3deg); }
+  0%, 100% { transform: rotate(0); } 10% { transform: rotate(-4deg); } 26% { transform: rotate(-18deg); } 34% { transform: rotate(-12deg); }
+  42% { transform: rotate(-20deg); } 56% { transform: rotate(2deg); } 70% { transform: rotate(-2deg); } 84% { transform: rotate(3deg); }
 }
 .rig-vodovoz .vk-bag { animation: vk-bag 3.2s cubic-bezier(0.37, 0, 0.63, 1) infinite; }
 @keyframes vk-bag {
@@ -3356,9 +3356,9 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 
 /* the bag slam (strike, 0.9 s = STRIKE_MS): the bag up over his head, then down at the screen */
 .arena-photo.strike .rig-vodovoz .vk-arm-l { animation: vk-slam-arm 0.9s var(--vk-ease) both; }
-@keyframes vk-slam-arm { 0% { transform: rotate(0); } 36% { transform: rotate(100deg); } 56% { transform: rotate(-28deg); } 72% { transform: rotate(-22deg); } 100% { transform: rotate(0); } }
+@keyframes vk-slam-arm { 0% { transform: rotate(0); } 36% { transform: rotate(35deg); } 56% { transform: rotate(-12deg); } 72% { transform: rotate(-9deg); } 100% { transform: rotate(0); } }
 .arena-photo.strike .rig-vodovoz .vk-low-l { animation: vk-slam-low 0.9s var(--vk-ease) both; }
-@keyframes vk-slam-low { 0% { transform: rotate(0); } 36% { transform: rotate(-56deg); } 56% { transform: rotate(-8deg); } 72% { transform: rotate(-6deg); } 100% { transform: rotate(0); } }
+@keyframes vk-slam-low { 0% { transform: rotate(0); } 36% { transform: rotate(-25deg); } 56% { transform: rotate(-8deg); } 72% { transform: rotate(-6deg); } 100% { transform: rotate(0); } }
 .arena-photo.strike .rig-vodovoz .vk-bag { animation: vk-slam-bag 0.9s var(--vk-ease) both; }
 @keyframes vk-slam-bag {
   0% { transform: none; } 36% { transform: rotate(-30deg); }
