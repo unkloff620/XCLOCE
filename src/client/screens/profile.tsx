@@ -6,7 +6,7 @@ import { UpdatesWindow } from "../updates-notice.tsx";
 import { NotifySwitch } from "./quests.tsx";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState, useSyncExternalStore, type TouchEvent as RTouchEvent } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type TouchEvent as RTouchEvent, type MouseEvent as RMouseEvent, type WheelEvent as RWheelEvent } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { haptic } from "../telegram.ts";
 import { sfx } from "../sound.ts";
@@ -278,18 +278,16 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
   useEffect(() => {
     tabsRef.current?.querySelector<HTMLElement>(".dos-tab.on")?.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
   }, [view]);
-  const onStart = (e: RTouchEvent) => {
-    const t = e.touches[0];
+  // the same gesture from a finger (touch) and from a mouse (Telegram Desktop, a browser): start → move → end
+  const begin = (x: number, y: number, target: EventTarget | null) => {
     // a swipe that starts on a row that scrolls sideways (the tabs, the achievement lists) never turns the page
-    const side = (e.target as Element | null)?.closest?.(".dos-tabs, .ach-groups, .tp-road");
-    touch.current = { x: t.clientX, y: t.clientY, on: side ? false : null };
+    const side = (target as Element | null)?.closest?.(".dos-tabs, .ach-groups, .tp-road, input, textarea, select");
+    touch.current = { x, y, on: side ? false : null };
   };
-  const onMove = (e: RTouchEvent) => {
+  const move = (x: number, y: number) => {
     const c = touch.current;
     if (!c || anim) return;
-    const t = e.touches[0];
-    const dx = t.clientX - c.x, dy = t.clientY - c.y;
-    // decide once: a sideways move turns pages, an up-down one scrolls the page
+    const dx = x - c.x, dy = y - c.y;
     // only a clearly sideways move turns pages; anything else is left to the page's own scrolling, for the whole touch
     if (c.on === null && Math.hypot(dx, dy) > 14) c.on = Math.abs(dx) > Math.abs(dy) * 2.2;
     if (!c.on) return;
@@ -297,15 +295,59 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
     const edge = dx < 0 && at === tabs.length - 1;
     setDrag(edge ? dx * 0.25 : dx);
   };
-  const onEnd = () => {
+  const finish = () => {
     const c = touch.current;
     touch.current = null;
-    if (!c?.on) return;
+    if (!c?.on) return false;
     if (drag < -60) turn(at + 1);
     // a swipe right on the cover closes the folder
     else if (drag > 60) { if (at < 0) onClose(); else turn(at - 1); }
     else setDrag(0);
+    return true;
   };
+  const onStart = (e: RTouchEvent) => begin(e.touches[0].clientX, e.touches[0].clientY, e.target);
+  const onMove = (e: RTouchEvent) => move(e.touches[0].clientX, e.touches[0].clientY);
+  const onEnd = () => { finish(); };
+  // mouse: drag the page like a finger; a drag never counts as a click on what is under it
+  const dragged = useRef(false);
+  const onMouseDown = (e: RMouseEvent) => {
+    if (e.button !== 0) return;
+    begin(e.clientX, e.clientY, e.target);
+    dragged.current = false;
+    const mm = (ev: MouseEvent) => { move(ev.clientX, ev.clientY); if (touch.current?.on) { dragged.current = true; ev.preventDefault(); } };
+    const mu = () => { window.removeEventListener("mousemove", mm); window.removeEventListener("mouseup", mu); finishRef.current(); };
+    window.addEventListener("mousemove", mm);
+    window.addEventListener("mouseup", mu);
+  };
+  // the mouse-up handler lives outside React's render: it calls the newest finish (it reads the newest drag)
+  const finishRef = useRef(finish);
+  finishRef.current = finish;
+  const onClickCapture = (e: RMouseEvent) => { if (dragged.current) { e.stopPropagation(); e.preventDefault(); dragged.current = false; } };
+  // a trackpad's sideways scroll and the arrow keys turn pages too
+  const wheel = useRef({ sum: 0, t: 0 });
+  const onWheel = (e: RWheelEvent) => {
+    if (Math.abs(e.deltaX) <= Math.abs(e.deltaY) * 1.5 || (e.target as Element | null)?.closest?.(".dos-tabs, .ach-groups, .tp-road")) return;
+    const w = wheel.current, now = Date.now();
+    if (now - w.t > 400) w.sum = 0;
+    w.t = now;
+    w.sum += e.deltaX;
+    if (Math.abs(w.sum) > 80 && !anim) {
+      const fwd = w.sum > 0;
+      w.sum = -1e6 * Math.sign(w.sum); // one turn per gesture
+      if (fwd) turn(at + 1); else if (at >= 0) turn(at - 1);
+    }
+  };
+  const keyRef = useRef<(e: KeyboardEvent) => void>(() => {});
+  keyRef.current = (e: KeyboardEvent) => {
+    if ((e.target as Element | null)?.closest?.("input, textarea, select")) return;
+    if (e.key === "ArrowRight") turn(at + 1);
+    else if (e.key === "ArrowLeft" && at >= 0) turn(at - 1);
+  };
+  useEffect(() => {
+    const k = (e: KeyboardEvent) => keyRef.current(e);
+    window.addEventListener("keydown", k);
+    return () => window.removeEventListener("keydown", k);
+  }, []);
   const under = Math.min(2, tabs.length - 1 - Math.max(0, at));
   // a red dot on a tab with rewards waiting: achievements to collect, нычки sets to put together
   const dueTabs = new Set<DosTab>();
@@ -315,7 +357,10 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
   return (
     <Modal onClose={onClose} page>
       <div className="dos">
-        <div className="dos-book" onTouchStart={onStart} onTouchMove={onMove} onTouchEnd={onEnd} onTouchCancel={onEnd}>
+        <div className="dos-book" onTouchStart={onStart} onTouchMove={onMove} onTouchEnd={onEnd} onTouchCancel={onEnd} onMouseDown={onMouseDown} onClickCapture={onClickCapture} onWheel={onWheel}>
+          {/* with a mouse (Telegram Desktop): arrows on the sides turn the pages */}
+          <button type="button" className="dos-nav prev" onClick={() => (at < 0 ? onClose() : turn(at - 1))} aria-label={at < 0 ? "Закрыть дело" : "Предыдущая страница"}>‹</button>
+          <button type="button" className="dos-nav next" onClick={() => turn(at + 1)} disabled={at >= tabs.length - 1} aria-label="Следующая страница">›</button>
           {/* the inside of the back cover, under all the pages */}
           <i className="dos-back" aria-hidden="true" />
           <div className="dos-tabs" role="tablist" ref={tabsRef}>
