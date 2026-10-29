@@ -1836,6 +1836,8 @@ button.bjt-stack { cursor: pointer; }
   background: none; box-shadow: none; border-image: url("/assets/ui/boss-card-frame.webp") 120 fill / 38px stretch;
   filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.45)); }
 .bcard::before { display: none; }
+/* Восток's own card: the courier-bag canvas with straps and buckles (public/assets/ui/boss-card-frame-vodovoz.webp, 1200×503) */
+.bcard.bcard-boss-vodovoz { border-image: url("/assets/ui/boss-card-frame-vodovoz.webp") 130 fill / 40px stretch; }
 .bcard-art { left: 5%; top: 16px; bottom: 50px; width: 35%; border-radius: 10px; }
 .bcard-art img { left: -6%; bottom: -2%; width: 112%; height: 106%; }
 .bcard-art::after { display: none; }

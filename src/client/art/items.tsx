@@ -1,4 +1,4 @@
-import { bossById } from "../../content/bosses.ts";
+import { passLook } from "../../content/bosses.ts";
 /* Item and weapon pictures: the artist's pictures (public/assets/items) in a 64×64 SVG box; unknown ids show a chest. */
 import { Icon } from "./icons.tsx";
 import { ART_VER } from "../preload.ts";
@@ -18,9 +18,10 @@ export function EnergyArt({ amount, size = 40 }: { amount: number; size?: number
   return RASTER_ITEMS.has(`energy-${amount}`) ? <ItemArt id={`energy-${amount}`} size={size} /> : <Icon name="energy" size={size} />;
 }
 
-/** a boss card (item key-<boss>) shows the picture of its tier: bronze … diamond */
+/** a boss pass (item key-<boss>): the boss's own key (key-<boss>.webp), or for the last five the card of its tier */
 export function cardArt(id: string): string {
-  return `card-${bossById(id.replace(/^key-/, ""))?.card ?? "bronze"}`;
+  const look = passLook(id.replace(/^key-/, ""));
+  return look.kind === "key" ? id : `card-${look.tier}`;
 }
 
 /** Picture of any item; boss cards show their tier, unknown ids fall back to a chest. */
