@@ -3318,12 +3318,12 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .rig-vodovoz .vk-arm-r { animation: vk-arm-r 3.2s var(--vk-ease) infinite; }
 @keyframes vk-arm-r {
   0%, 100% { transform: rotate(0); } 12% { transform: rotate(-6deg); } 22% { transform: rotate(-2deg); } 30% { transform: rotate(-14deg); }
-  40% { transform: rotate(0); } 56% { transform: rotate(-62deg); } 64% { transform: rotate(-55deg); } 72% { transform: rotate(-64deg); } 86% { transform: rotate(-4deg); }
+  40% { transform: rotate(0); } 56% { transform: rotate(-40deg); } 64% { transform: rotate(-34deg); } 72% { transform: rotate(-42deg); } 86% { transform: rotate(-4deg); }
 }
 .rig-vodovoz .vk-low-r { animation: vk-low-r 3.2s var(--vk-ease) infinite; }
 @keyframes vk-low-r {
   0%, 100% { transform: rotate(0); } 12% { transform: rotate(-8deg); } 22% { transform: rotate(2deg); } 30% { transform: rotate(-24deg); }
-  40% { transform: rotate(0); } 56% { transform: rotate(90deg); } 64% { transform: rotate(83deg); } 72% { transform: rotate(92deg); } 86% { transform: rotate(4deg); }
+  40% { transform: rotate(0); } 56% { transform: rotate(68deg); } 64% { transform: rotate(62deg); } 72% { transform: rotate(70deg); } 86% { transform: rotate(4deg); }
 }
 .rig-vodovoz .vk-hand-r { animation: vk-hand-r 3.2s var(--vk-ease) infinite; }
 @keyframes vk-hand-r {
@@ -3397,11 +3397,11 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 @keyframes vk-limp-bag { 0%, 100% { transform: rotate(92deg); } 50% { transform: rotate(85deg); } }
 .rig-vodovoz.dazed .vk-hand-l { animation: none; }
 .rig-vodovoz.dazed .vk-arm-r { animation: vk-limp-arm-r 2.4s ease-in-out -0.8s infinite; }
-@keyframes vk-limp-arm-r { 0%, 100% { transform: rotate(-55deg); } 50% { transform: rotate(-52deg); } }
+@keyframes vk-limp-arm-r { 0%, 100% { transform: rotate(-40deg); } 50% { transform: rotate(-37deg); } }
 .rig-vodovoz.dazed .vk-low-r { animation: vk-limp-low-r 2.4s ease-in-out -0.8s infinite; }
-@keyframes vk-limp-low-r { 0%, 100% { transform: rotate(83deg); } 50% { transform: rotate(80deg); } }
+@keyframes vk-limp-low-r { 0%, 100% { transform: rotate(68deg); } 50% { transform: rotate(64deg); } }
 .rig-vodovoz.dazed .vk-hand-r { animation: vk-limp-fist 2.4s ease-in-out -0.8s infinite; }
-@keyframes vk-limp-fist { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(-2deg); } }
+@keyframes vk-limp-fist { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(-5deg); } }
 .arena-photo.ouch .rig-vodovoz.dazed .vk-head-snap { animation: vk-head-hit 0.6s cubic-bezier(0.2, 0.7, 0.3, 1); }
 
 /* Восток's face (the artist's parts): pupils roll inside the whites, lids blink, each brow turns at its inner end
