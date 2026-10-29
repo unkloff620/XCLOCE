@@ -39,6 +39,9 @@
 .bphoto.ko .bphoto-in::after { display: none; }
 .bphoto-ko { position: absolute; inset: 6% 0 0; transform-origin: 50% 100%; animation: ko-sway 4.2s ease-in-out infinite; }
 .bphoto-ko .br-sweat { display: none; }
+/* knocked out: the eyes stay shut (every rig: the shared lids and Восток's own) */
+.bphoto-ko .boss-rig .br-eyes-closed, .bphoto-ko .boss-rig .vk-lids { animation: none !important; opacity: 1 !important; }
+.bphoto-ko .boss-rig .br-eyes-open, .bphoto-ko .boss-rig .vk-pupils { animation: none !important; opacity: 0 !important; }
 @keyframes ko-sway { 0%, 100% { transform: rotate(-3.5deg) translateX(-2%); } 50% { transform: rotate(3.5deg) translateX(2%); } }
 .ko-stars { position: absolute; left: 50%; top: 9%; width: 0; height: 0; z-index: 2; pointer-events: none; animation: ko-sway 4.2s ease-in-out infinite; }
 .ko-star { position: absolute; left: -11px; top: -11px; width: 22px; height: 22px; animation: ko-orbit 2.4s linear infinite; filter: drop-shadow(0 0 4px rgba(255, 216, 74, 0.8)); }
