@@ -3847,3 +3847,14 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .ach-steps i.half { background: linear-gradient(90deg, var(--c) 50%, rgba(255, 255, 255, 0.3) 50%); }
 .ach-got-label { font-weight: 900; font-size: 15px; color: #1f9e5a; white-space: nowrap; }
 .solo-pts { display: inline-flex; align-items: center; gap: 3px; font-weight: 900; font-size: 12px; color: #b8860b; }
+/* the win in the tray: the currency coins and the things fall in and stay till the next spin; the sum glows over them */
+.sl-drops { overflow: visible; }
+.sl-drop { position: absolute; bottom: 10%; width: 15%; display: grid; place-items: center; transform-origin: 50% 100%;
+  animation: sl-drop 0.75s cubic-bezier(0.35, 1.5, 0.55, 1) both; filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.6)); }
+.sl-drop img, .sl-drop svg { width: min(9cqw, 42px) !important; height: min(9cqw, 42px) !important; }
+@keyframes sl-drop { from { transform: translateY(-260%) rotate(-40deg); opacity: 0; } 25% { opacity: 1; } to { transform: translateY(0) rotate(var(--r)); opacity: 1; } }
+.sl-drop-sum { position: absolute; left: 0; right: 0; top: -6%; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; animation: pop 0.4s 0.6s cubic-bezier(0.2, 1.4, 0.4, 1) both; }
+.sl-drop-sum b { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 999px; background: rgba(20, 10, 4, 0.85); border: 2px solid #ffd25a; color: #ffe35c; font-size: min(3.2cqw, 14px); text-shadow: 0 0 6px rgba(255, 200, 60, 0.7); }
+/* the reward chips on the dark display: light text */
+.sl-display .chip { background: rgba(255, 220, 140, 0.14); color: #ffe7b0; border-color: rgba(255, 210, 120, 0.4); }
+.sl-display .chip .num, .sl-display .chip b, .sl-display .chip span { color: #ffe7b0 !important; }

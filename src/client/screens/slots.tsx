@@ -2,7 +2,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { RewardChips } from "../ui.tsx";
-import { clock } from "../format.ts";
+import { Icon } from "../art/icons.tsx";
+import { ItemArt } from "../art/items.tsx";
+import { clock, full } from "../format.ts";
 import { sfx } from "../sound.ts";
 import { haptic } from "../telegram.ts";
 import { SLOT_OUTCOMES, SLOT_SYMBOLS, slotLevelNeed, slotXpOf, type SlotSymbol } from "../../content/slots.ts";
@@ -29,6 +31,15 @@ interface Spin {
   outcome: string; kind: "jackpot" | "triple" | "pair" | "miss"; title: string; reels: SlotSymbol[]; reward: Granted | null; left: number;
   /** the machine's xp for this spin, the level after it, the levels reached (each with its reward) */
   xp: number; level: { level: number; into: number; need: number }; levelUps: { level: number; reward: Granted }[];
+}
+
+/** the pictures that fall into the tray for a win: a few coins of each currency, each thing (up to 3 of a kind) */
+function dropsOf(r: Granted): { cur?: string; item?: string; x: number; r: number; delay: number }[] {
+  const out: { cur?: string; item?: string; x: number; r: number; delay: number }[] = [];
+  for (const [c, v] of Object.entries(r.currencies ?? {})) if (v) for (let k = 0; k < (v >= 1000 ? 5 : v >= 100 ? 4 : 3); k++) out.push({ cur: c });
+  for (const it of r.items ?? []) for (let k = 0; k < Math.min(3, it.qty); k++) out.push({ item: it.id });
+  const n = out.length;
+  return out.map((d, k) => ({ ...d, x: 6 + ((k * 61) % 80) + (n < 4 ? k * 6 : 0), r: ((k * 47) % 60) - 30, delay: (k % 8) * 0.08 }));
 }
 
 /** the symbol above and below the one on the line (the reel shows three) */
@@ -139,11 +150,18 @@ export function SlotMachine() {
         {/* the lever spins too */}
         <button className="sl-lever" style={{ left: px(880), top: py(400), width: px(110), height: py(420) }} disabled={busy || cooling} onClick={spin} aria-label="Дёрнуть рычаг" />
         {/* a win pours coins into the tray, the jackpot showers them over the whole machine */}
-        {win && (
-          <div className="sl-coins" key={`c${press}`} style={{ left: px(236), top: py(1150), width: px(552), height: py(240) }} aria-hidden="true">
-            {Array.from({ length: result!.kind === "jackpot" ? 26 : result!.kind === "triple" ? 14 : 6 }, (_, k) => (
-              <i key={k} style={{ left: `${(k * 37) % 92}%`, animationDelay: `${(k % 7) * 0.09}s` }} />
+        {/* the win falls into the tray as pictures: the coins of each currency and the things, with how much */}
+        {win && result?.reward && (
+          <div className="sl-coins sl-drops" key={`c${press}`} style={{ left: px(236), top: py(1150), width: px(552), height: py(240) }} aria-hidden="true">
+            {dropsOf(result.reward).map((d, k) => (
+              <span key={k} className="sl-drop" style={{ left: `${d.x}%`, ["--r" as string]: `${d.r}deg`, animationDelay: `${d.delay}s` }}>
+                {d.cur ? <Icon name={d.cur} size={40} /> : <ItemArt id={d.item!} size={44} />}
+              </span>
             ))}
+            <span className="sl-drop-sum">
+              {Object.entries(result.reward.currencies ?? {}).filter(([, v]) => v).map(([c, v]) => <b key={c} className="num"><Icon name={c} size={16} />+{full(v as number)}</b>)}
+              {(result.reward.items ?? []).map((it) => <b key={it.id} className="num"><ItemArt id={it.id} size={18} />+{it.qty}</b>)}
+            </span>
           </div>
         )}
         {result?.kind === "jackpot" && <div className="sl-rain" aria-hidden="true">{Array.from({ length: 30 }, (_, k) => <i key={k} style={{ left: `${(k * 53) % 100}%`, animationDelay: `${(k % 10) * 0.15}s` }} />)}</div>}
