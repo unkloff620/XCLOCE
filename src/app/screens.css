@@ -3313,16 +3313,17 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .rig-vodovoz .vk-head-snap { animation: vk-head-bob 0.8s var(--vk-ease) infinite; }
 @keyframes vk-head-bob { 0%, 50%, 100% { transform: translateY(-1px); } 25%, 75% { transform: translateY(3px); } }
 
-/* the right arm (3.2 s): guard bobbing, a jab, then a fist pump high over his head, back to the guard */
+/* the right arm (3.2 s): guard bobbing, a jab, then a fist pump — the upper arm out level to the side, the forearm
+   straight up (lifting the shoulder higher tore it off the torso) — back to the guard */
 .rig-vodovoz .vk-arm-r { animation: vk-arm-r 3.2s var(--vk-ease) infinite; }
 @keyframes vk-arm-r {
   0%, 100% { transform: rotate(0); } 12% { transform: rotate(-6deg); } 22% { transform: rotate(-2deg); } 30% { transform: rotate(-14deg); }
-  40% { transform: rotate(0); } 56% { transform: rotate(-92deg); } 64% { transform: rotate(-80deg); } 72% { transform: rotate(-94deg); } 86% { transform: rotate(-4deg); }
+  40% { transform: rotate(0); } 56% { transform: rotate(-62deg); } 64% { transform: rotate(-55deg); } 72% { transform: rotate(-64deg); } 86% { transform: rotate(-4deg); }
 }
 .rig-vodovoz .vk-low-r { animation: vk-low-r 3.2s var(--vk-ease) infinite; }
 @keyframes vk-low-r {
   0%, 100% { transform: rotate(0); } 12% { transform: rotate(-8deg); } 22% { transform: rotate(2deg); } 30% { transform: rotate(-24deg); }
-  40% { transform: rotate(0); } 56% { transform: rotate(108deg); } 64% { transform: rotate(92deg); } 72% { transform: rotate(110deg); } 86% { transform: rotate(4deg); }
+  40% { transform: rotate(0); } 56% { transform: rotate(90deg); } 64% { transform: rotate(83deg); } 72% { transform: rotate(92deg); } 86% { transform: rotate(4deg); }
 }
 .rig-vodovoz .vk-hand-r { animation: vk-hand-r 3.2s var(--vk-ease) infinite; }
 @keyframes vk-hand-r {
