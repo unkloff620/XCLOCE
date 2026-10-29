@@ -33,3 +33,24 @@ export const SLOT_OUTCOMES: SlotOutcome[] = [
 ];
 
 export const SLOT_SPINS_PER_HOUR = 3;
+
+/**
+ * The machine's own level («уровень автомата»): every spin gives xp by its outcome — a plain miss 3, the 777 jackpot 77.
+ * Level 1 → 2 takes 100 xp, every next level 12 more (100, 112, 124, …). Every new level pays slotLevelReward.
+ */
+export const SLOT_XP: Record<string, number> = { jackpot: 77, bar: 50, bell: 40, melon: 30, grape: 25, lemon: 20, cherry: 15, pair: 7, miss: 3 };
+export const slotXpOf = (outcome: string) => SLOT_XP[outcome] ?? 3;
+/** xp from level n to n + 1 */
+export const slotLevelNeed = (level: number) => 100 + 12 * (level - 1);
+/** the level of a total xp and the progress inside it */
+export function slotLevel(xp: number): { level: number; into: number; need: number } {
+  let level = 1, rest = Math.max(0, Math.floor(xp));
+  while (rest >= slotLevelNeed(level)) { rest -= slotLevelNeed(level); level++; }
+  return { level, into: rest, need: slotLevelNeed(level) };
+}
+/** what reaching this level pays: roubles growing with the level, every 5th level dollars too, every 10th a GPU */
+export function slotLevelReward(level: number): Reward {
+  const currencies: NonNullable<Reward["currencies"]> = { RUB: 150 + 50 * level };
+  if (level % 5 === 0) currencies.USD = level;
+  return { currencies, ...(level % 10 === 0 ? { items: [{ id: "gpu", qty: 1 }] } : {}) };
+}

@@ -36,3 +36,10 @@ for src, out in (("dossier-cover-src.png", "dossier-cover.webp"), ("dossier-back
     im = im.crop(im.getbbox())
     im.save("public/assets/ui/" + out, quality=88, method=6)
     print(out, im.size)
+
+# the paper's inside, without the torn edges: under the panels on the screens (background-size: cover)
+src = Image.open("tools/ui/dossier-page-src.png").convert("RGB")
+w, h = src.size
+tile = src.crop((int(w * 0.12), int(h * 0.1), int(w * 0.88), int(h * 0.9)))
+tile.thumbnail((640, 640))
+tile.save("public/assets/ui/paper-tile.webp", quality=82, method=6)

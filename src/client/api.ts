@@ -58,7 +58,8 @@ export interface GameState {
   prizes: { id: number; title: string; reward: Reward }[];
   /** badges reached but not collected */
   achievementsReady: number;
-  slots: { left: number; max: number; nextAt: number | null };
+  /** the 777 machine: spins left this hour, and its own level (content/slots.ts slotLevel) */
+  slots: { left: number; max: number; nextAt: number | null; xp: number; level: number; into: number; need: number };
   events?: import("../content/events.ts").GameEventView[];
   openBosses?: string[];
   /** yard mini games: free games left today, the price after that, the hand / game in progress */

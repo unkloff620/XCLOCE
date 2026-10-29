@@ -3773,3 +3773,31 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
   .dos-nav.prev { left: 2px; }
   .dos-nav.next { right: 2px; }
 }
+
+/* ---------------- paper everywhere: the dossier sheet (public/assets/ui/dossier-page.webp) under every window,
+ * its inside (paper-tile.webp, tools/ui/build-dossier.py) under the panels on the screens ---------------- */
+.modal { --panel: #c9ad80; --panel2: #d3b98f; --panel3: #ddc6a0; --bg2: #cbb086;
+  background: url(/assets/ui/dossier-page.webp) center / 100% 100% no-repeat; border: 0; border-radius: 10px; padding: 22px 20px 18px;
+  box-shadow: none; }
+.modal .panel { background: rgba(120, 80, 35, 0.12); }
+.panel { --panel: #c9ad80; --panel2: #d3b98f; --panel3: #ddc6a0; --bg2: #cbb086;
+  background: url(/assets/ui/paper-tile.webp) center / cover, #e3d0ac; }
+
+/* the 777 machine: its level plaque, the xp of a spin, the prize window */
+.sl-level { display: flex; align-items: center; gap: 1.6cqw; padding: 0 2cqw; border-radius: 14px; border: 2.5px solid #2a1606; background: rgba(30, 14, 6, 0.82); color: #ffd25a; }
+.sl-level > b { flex: none; display: grid; place-items: center; width: min(7cqw, 30px); height: min(7cqw, 30px); border-radius: 50%; background: #ffd25a; color: #2a1404; font-size: min(3.6cqw, 15px); }
+.sl-level-bar { position: relative; flex: 1; height: min(4.4cqw, 18px); border-radius: 99px; background: rgba(0, 0, 0, 0.6); overflow: hidden; }
+.sl-level-bar > i { position: absolute; inset: 0 auto 0 0; width: var(--p); background: linear-gradient(90deg, #ffb020, #ffe35c); border-radius: 99px; transition: width 0.5s; }
+.sl-level-bar > span { position: relative; display: grid; place-items: center; height: 100%; font-size: min(2.6cqw, 11px); font-weight: 900; color: #fff; text-shadow: 0 1px 2px #000; }
+.sl-gain { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; }
+.sl-xp { font-style: normal; font-weight: 900; color: #7dffb8; text-shadow: 0 0 6px rgba(46, 232, 138, 0.6); font-size: min(3cqw, 13px); white-space: nowrap; }
+.sl-paytable-in .sl-xp { color: #0b7a3e; text-shadow: none; font-size: 12px; }
+.sl-pay-note { color: #5a3f24; text-align: center; }
+.sl-prize-title { text-align: center; font-size: 28px !important; color: #b8860b; text-shadow: 0 2px 0 rgba(255, 240, 200, 0.8); }
+.sl-paytable-in.jackpot .sl-prize-title { color: #c21d42; animation: sl-line 0.4s steps(2) 6; }
+.sl-prize .sl-paytable-in { align-items: center; text-align: center; animation: pop 0.28s cubic-bezier(0.2, 1.4, 0.4, 1); }
+.sl-pay-sym.big .sl-sym { width: 64px; }
+.sl-prize .reward-chips, .sl-prize .chips { justify-content: center; }
+.sl-prize-lv { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 10px; border-radius: 12px; background: rgba(255, 200, 60, 0.25); width: 100%; }
+.sl-display:has(.sl-gain) b.display { font-size: min(3.7cqw, 16px); }
+.sl-display .sl-gain .reward-chips, .sl-display .sl-gain .chips { gap: 4px; }

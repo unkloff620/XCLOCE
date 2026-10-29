@@ -1079,4 +1079,11 @@ ALTER TABLE game_weekly ADD COLUMN IF NOT EXISTS zonk_best INT NOT NULL DEFAULT 
 ALTER TABLE game_weekly ADD COLUMN IF NOT EXISTS poker_best INT NOT NULL DEFAULT 0;
 `,
   },
+  {
+    // the 777 machine's own level: xp for every spin (content/slots.ts SLOT_XP), a reward for every new level
+    id: "v2-061-slot-xp",
+    sql: `
+ALTER TABLE players ADD COLUMN IF NOT EXISTS slot_xp INT NOT NULL DEFAULT 0;
+`,
+  },
 ];

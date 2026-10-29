@@ -2,7 +2,7 @@ import { GameError, type Queryable } from "../db.ts";
 import { addMoney, grantReward, takeItem, takeMoney, weighted, type Ctx } from "../core.ts";
 import { itemById } from "../../content/items.ts";
 import { NICK_RE, RENAME } from "../../content/profile.ts";
-import { SLOT_OUTCOMES, SLOT_SYMBOLS, type SlotOutcome, type SlotSymbol } from "../../content/slots.ts";
+import { SLOT_OUTCOMES, SLOT_SYMBOLS, slotLevel, slotLevelReward, slotXpOf, type SlotOutcome, type SlotSymbol } from "../../content/slots.ts";
 import type { Config } from "../config.ts";
 
 // ---------------- selling yard finds ----------------
@@ -51,7 +51,9 @@ export async function slotsView(q: Queryable, pid: number, now: number, cfg: Con
   const left = Math.max(0, cfg.slots.perHour - used);
   // the next spin frees up an hour after the oldest spin inside the window
   const nextAt = left > 0 ? null : new Date(rows[used - cfg.slots.perHour].created_at).getTime() + 3600_000;
-  return { left, max: cfg.slots.perHour, nextAt };
+  const [p] = await q.query<{ slot_xp: number }>("SELECT slot_xp FROM players WHERE id=$1", [pid]);
+  const xp = p?.slot_xp ?? 0;
+  return { left, max: cfg.slots.perHour, nextAt, xp, ...slotLevel(xp) };
 }
 
 function pick<T>(arr: readonly T[], rng: () => number): T {
@@ -81,5 +83,12 @@ export async function spinSlots(ctx: Ctx) {
   await ctx.q.query("INSERT INTO slot_spins (player_id, outcome, reels, created_at) VALUES ($1,$2,$3,$4)", [ctx.pid, o.id, reels.join(","), new Date(ctx.now)]);
   const hasReward = Object.keys(o.reward).length > 0;
   const reward = hasReward ? await grantReward(ctx, o.reward, `slots:${o.id}`) : null;
-  return { outcome: o.id, kind: o.kind, title: o.title, reels, reward, left: v.left - 1 };
+  // the machine's level: xp by the outcome, a reward for every level passed
+  const gain = slotXpOf(o.id);
+  const before = slotLevel(v.xp).level;
+  const [row] = await ctx.q.query<{ slot_xp: number }>("UPDATE players SET slot_xp = slot_xp + $2 WHERE id=$1 RETURNING slot_xp", [ctx.pid, gain]);
+  const after = slotLevel(row.slot_xp);
+  const levelUps: { level: number; reward: Awaited<ReturnType<typeof grantReward>> }[] = [];
+  for (let lv = before + 1; lv <= after.level; lv++) levelUps.push({ level: lv, reward: await grantReward(ctx, slotLevelReward(lv), `slots:level:${lv}`) });
+  return { outcome: o.id, kind: o.kind, title: o.title, reels, reward, left: v.left - 1, xp: gain, level: after, levelUps };
 }

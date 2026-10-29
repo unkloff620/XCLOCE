@@ -44,3 +44,11 @@ os.makedirs(ARENA, exist_ok=True)
 g = Image.open(os.path.join(SRC, "arena-garage.png")).convert("RGBA")
 g.save(os.path.join(ARENA, "garage.webp"), "WEBP", quality=72, method=4)
 print("garage", g.size, os.path.getsize(os.path.join(ARENA, "garage.webp")) // 1024, "KB")
+
+# the bosses' own fight rooms (gpt-image-2, the boxing room's camera): arena-<boss id>.png, 1060×1484 → arena/<boss id>.webp
+# (Кедр, Мугонатор and Командате fight in their home rooms: room-neon / room-shark / room-boxing copied to arena/)
+for f in sorted(os.listdir(SRC)):
+    if f.startswith("arena-") and f.endswith(".png") and f != "arena-garage.png":
+        b = f[6:-4]
+        Image.open(os.path.join(SRC, f)).convert("RGB").save(os.path.join(ARENA, b + ".webp"), "WEBP", quality=82, method=6)
+        print(b, os.path.getsize(os.path.join(ARENA, b + ".webp")) // 1024, "KB")

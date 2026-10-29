@@ -13,6 +13,7 @@ import { BOSSES as OPEN_ALL } from "../content/bosses.ts";
 import { STASH_LOCATION_NAMES, STASH_SETS_ORDERED } from "../content/stashes.ts";
 import { itemById } from "../content/items.ts";
 import { BossPhoto } from "./screens/boss-parts.tsx";
+import { BossCoin } from "./art/boss-coin.tsx";
 
 export interface AchRow { id: string; progress: number; target: number; done: boolean; claimed: boolean; at: number | null }
 
@@ -168,7 +169,11 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
         return (
           <Modal title={a.name} onClose={() => setMedal(null)}>
             <div className="col" style={{ gap: 10, alignItems: "center", textAlign: "center" }}>
-              <BadgeMedal icon={a.icon} tier={a.tier} earned={got || due} size={72} />
+              {(() => {
+                // a «Убийца боссов» medal is the boss's face on the coin of its tier
+                const kb = medal.startsWith("bosskill-") ? OPEN_ALL.find((b) => medal === `bosskill-${b.id}-${a.tier}`) : undefined;
+                return kb ? <BossCoin boss={kb} tier={MEDAL_TIERS[a.tier - 1]} size={80} dim={!(got || due)} /> : <BadgeMedal icon={a.icon} tier={a.tier} earned={got || due} size={72} />;
+              })()}
               <b className="tier-name" style={{ color: TIER_COLORS[a.tier] }}>{TIER_NAMES[a.tier]}</b>
               <span className="small">{a.hint}</span>
               <span className="ach-bar" style={{ width: "100%", ["--p" as string]: `${Math.round(((r?.progress ?? 0) / a.target) * 100)}%`, ["--c" as string]: TIER_COLORS[a.tier] }}>
@@ -391,7 +396,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
                       const due = self && !!r?.done && !r.claimed;
                       return (
                         <button key={t} className={`bk-medal ${due ? "due" : ""}`} onClick={() => setMedal(a.id)} aria-label={a.name}>
-                          <BadgeMedal icon="ach-wins" tier={t} earned={got || due} size={30} />
+                          <BossCoin boss={b} tier={MEDAL_TIERS[t - 1]} size={34} dim={!(got || due)} />
                         </button>
                       );
                     })}
@@ -411,7 +416,11 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
         return (
           <Modal title={a.name} onClose={() => setMedal(null)}>
             <div className="col" style={{ gap: 10, alignItems: "center", textAlign: "center" }}>
-              <BadgeMedal icon={a.icon} tier={a.tier} earned={got || due} size={72} />
+              {(() => {
+                // a «Убийца боссов» medal is the boss's face on the coin of its tier
+                const kb = medal.startsWith("bosskill-") ? OPEN_ALL.find((b) => medal === `bosskill-${b.id}-${a.tier}`) : undefined;
+                return kb ? <BossCoin boss={kb} tier={MEDAL_TIERS[a.tier - 1]} size={80} dim={!(got || due)} /> : <BadgeMedal icon={a.icon} tier={a.tier} earned={got || due} size={72} />;
+              })()}
               <b className="tier-name" style={{ color: TIER_COLORS[a.tier] }}>{TIER_NAMES[a.tier]}</b>
               <span className="small">{a.hint}</span>
               <span className="ach-bar" style={{ width: "100%", ["--p" as string]: `${Math.round(((r?.progress ?? 0) / a.target) * 100)}%`, ["--c" as string]: TIER_COLORS[a.tier] }}>

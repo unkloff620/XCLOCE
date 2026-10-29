@@ -6,6 +6,7 @@ import { resetConfigCache } from "../src/server/config.ts";
 import { fightView } from "../src/server/systems/combat.ts";
 import { YARD_DROPS } from "../src/content/yard.ts";
 import { levelFromXp } from "../src/content/levels.ts";
+import { slotLevel } from "../src/content/slots.ts";
 import { BUSINESS_MAX_HOURS, LOCATIONS, businessCells, businessCost, businessPerHour, businessPerLevel } from "../src/content/locations.ts";
 import { locationsView } from "../src/server/systems/locations.ts";
 import { exchangeWindow } from "../src/content/currencies.ts";
@@ -756,6 +757,22 @@ describe("selling, nickname, slot machine 777", () => {
     await expect(act(db, p, "slots_spin", {}, T0 + 30 * M)).rejects.toMatchObject({ code: "slots_limit" });
     const st = await act(db, p, "slots_spin", {}, T0 + 61 * M, always(0.999));
     expect(st.state.slots).toMatchObject({ left: 0, nextAt: T0 + 70 * M });
+  });
+
+  it("slots: every spin gives the machine xp, a new level pays", async () => {
+    expect(slotLevel(0)).toEqual({ level: 1, into: 0, need: 100 });
+    expect(slotLevel(100)).toEqual({ level: 2, into: 0, need: 112 });
+    expect(slotLevel(212).level).toBe(3);
+    const p = await newPlayer(db);
+    const s1 = await act(db, p, "slots_spin", {}, T0, always(0));
+    expect(s1.result).toMatchObject({ xp: 77, level: { level: 1, into: 77 }, levelUps: [] });
+    await act(db, p, "slots_spin", {}, T0 + 1 * M, always(0.999)); // miss: +3 → 80
+    const rub = await wallet(db, p, "RUB");
+    await db.query("UPDATE players SET slot_xp = 98 WHERE id=$1", [p]);
+    const s3 = await act(db, p, "slots_spin", {}, T0 + 2 * M, always(0.999)); // +3 → 101: level 2
+    expect(s3.result.levelUps).toHaveLength(1);
+    expect(s3.state.slots).toMatchObject({ level: 2, into: 1, need: 112 });
+    expect(await wallet(db, p, "RUB")).toBe(rub + 250);
   });
 });
 
