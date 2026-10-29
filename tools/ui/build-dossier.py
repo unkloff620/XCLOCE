@@ -24,6 +24,11 @@ ys, xs = np.where(t[..., 3] > 200)
 tb = tb.crop((max(0, xs.min() - 6), max(0, ys.min() - 6), xs.max() + 7, ys.max() + 7))
 tb = tb.resize((tb.width // 2, tb.height // 2), Image.LANCZOS)
 tb.save("public/assets/ui/dossier-ptab.webp", quality=90, method=6)
+# three pieces for the CSS (border-image is unreliable in iOS webviews): the cut corner, the middle, the step
+L, R = 40, 280
+tb.crop((0, 0, L, tb.height)).save("public/assets/ui/dossier-ptab-l.webp", quality=90)
+tb.crop((L, 0, tb.width - R, tb.height)).save("public/assets/ui/dossier-ptab-m.webp", quality=90)
+tb.crop((tb.width - R, 0, tb.width, tb.height)).save("public/assets/ui/dossier-ptab-r.webp", quality=90)
 print("page", pg.size, "tab", tb.size)
 
 for src, out in (("dossier-cover-src.png", "dossier-cover.webp"), ("dossier-back-src.png", "dossier-back.webp")):
