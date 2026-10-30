@@ -4106,53 +4106,19 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .dos-page .ach-pic-n, .modal .ach-pic-n { color: #ffe7b0; text-shadow: none; }
 .dos-page .ach-pic.on .ach-pic-n, .modal .ach-pic.on .ach-pic-n { color: #1e1006; }
 
-/* ── pigeons in the yard (client/art/pigeons.tsx, the artist's layers on one 509×400 canvas) ── */
+/* ── pigeons in the yard (client/art/pigeons.tsx: one animation loop per bird sets every part's transform; here only
+   the size, the layers and the joints — percent of the artist's 509×400 canvas) ── */
 .pg { position: absolute; z-index: 2; width: 12%; aspect-ratio: 509 / 400; padding: 0; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent;
-  transform: translateX(-50%) scale(var(--s, 1)); transform-origin: 50% 100%; transition-property: left, bottom; transition-timing-function: linear; }
-.pg.gone { visibility: hidden; pointer-events: none; }
-.pg-flip { position: absolute; inset: 0; transform: scaleX(var(--dir, 1)); }
+  transform: translateX(-50%); transform-origin: 50% 100%; will-change: transform, left, bottom; }
+.pg-flip { position: absolute; inset: 0; }
 .pg-l { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
-.pg-up { transform-origin: 48% 72.5%; transition: transform 0.35s ease-in-out; }
-.pg-head { transform-origin: 62% 44%; transition: transform 0.35s ease-in-out; }
-.pg-wing { transform-origin: 56% 41%; transition: transform 0.3s ease-out; }
-.pg-leg { transition: transform 0.3s ease-out; }
+.pg-up { transform-origin: 48% 72.5%; }
+.pg-head { transform-origin: 66% 32%; }
+.pg-wing { transform-origin: 56% 41%; }
 .pg-leg.f { transform-origin: 50.1% 71.3%; }
 .pg-leg.b { transform-origin: 42.2% 70%; }
-/* standing: breathes, looks about now and then */
-.pg.idle .pg-up { animation: pg-breathe 2.6s ease-in-out infinite; }
-.pg.idle .pg-head { animation: pg-look 4.2s ease-in-out infinite; }
-@keyframes pg-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.012) translateY(-0.4%); } }
-@keyframes pg-look { 0%, 40%, 100% { transform: rotate(0deg); } 50%, 62% { transform: rotate(-8deg) translateY(-1%); } 72% { transform: rotate(4deg); } }
-/* walking: the legs step in turn, the body sways up at each step, the head nods forward and back */
-.pg.walk .pg-leg.f { animation: pg-step 0.42s ease-in-out infinite alternate; }
-.pg.walk .pg-leg.b { animation: pg-step 0.42s ease-in-out infinite alternate-reverse; }
-.pg.walk .pg-up { animation: pg-sway 0.42s ease-in-out infinite; }
-.pg.walk .pg-head { animation: pg-nod 0.42s ease-in-out infinite; }
-@keyframes pg-step { from { transform: rotate(-15deg); } to { transform: rotate(13deg); } }
-@keyframes pg-sway { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-1.8%) rotate(-1.5deg); } }
-@keyframes pg-nod { 0%, 100% { transform: translateX(-3%); } 45% { transform: translateX(4%) translateY(-0.5%); } }
-/* pecking (the artist's pecking pose): the body leans forward, the head goes down to the grain, a few jabs */
-.pg.peck .pg-up { animation: pg-lean 1.5s ease-in-out infinite; }
-.pg.peck .pg-head { animation: pg-peck 1.5s ease-in-out infinite; }
-@keyframes pg-lean { 0%, 100% { transform: rotate(0deg); } 22%, 78% { transform: rotate(18deg); } }
-@keyframes pg-peck { 0%, 100% { transform: rotate(0deg); } 22% { transform: rotate(44deg) translate(-1%, 1%); } 32% { transform: rotate(52deg) translate(-1%, 3%); } 42% { transform: rotate(42deg) translate(-1%, 1%); }
-  52% { transform: rotate(52deg) translate(-1%, 3%); } 62% { transform: rotate(42deg) translate(-1%, 1%); } 78% { transform: rotate(44deg) translate(-1%, 1%); } }
-.pg-grain { position: absolute; left: 84%; top: 90%; width: 0; height: 0; }
+.pg-grain { position: absolute; left: 84%; top: 90%; width: 0; height: 0; transition: opacity 0.4s; }
 .pg-grain b { position: absolute; width: 2.6%; min-width: 2px; aspect-ratio: 1; border-radius: 50%; background: #e9c46a; box-shadow: 0 0 0 0.5px #6b4a12; }
 .pg-grain b:nth-child(1) { left: -6px; top: 0; }
 .pg-grain b:nth-child(2) { left: 1px; top: 2px; }
 .pg-grain b:nth-child(3) { left: 6px; top: -1px; }
-/* flying away (the artist's flying pose): the body tilts up, the wings beat, the legs tuck in, up and off */
-.pg.fly { pointer-events: none; animation: pg-fly 1.6s cubic-bezier(0.4, 0.1, 0.8, 0.6) forwards; }
-.pg.fly .pg-up { transform: rotate(-10deg) translateY(-4%); transition-duration: 0.2s; }
-.pg.fly .pg-wing.near { animation: pg-flap-n 0.17s ease-in-out infinite alternate; }
-.pg.fly .pg-wing.far { animation: pg-flap-f 0.17s ease-in-out -0.04s infinite alternate; }
-.pg.fly .pg-leg { transform: rotate(40deg) translateY(-6%); }
-@keyframes pg-flap-n { from { transform: rotate(78deg); } to { transform: rotate(8deg); } }
-@keyframes pg-flap-f { from { transform: rotate(88deg) translate(3%, -3%); } to { transform: rotate(18deg); } }
-@keyframes pg-fly {
-  0% { transform: translateX(-50%) scale(var(--s, 1)); opacity: 1; }
-  18% { transform: translate(calc(-50% + var(--dir) * 18%), -45%) scale(var(--s, 1)); }
-  100% { transform: translate(calc(-50% + var(--dir) * 420%), -900%) scale(calc(var(--s, 1) * 0.55)); opacity: 0; }
-}
-@media (prefers-reduced-motion: reduce) { .pg * { animation: none !important; } }
