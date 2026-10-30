@@ -84,7 +84,7 @@ function Hud() {
           {state.achievementsReady > 0 && <i className="side-dot hud-dot" title="Есть награда за достижение" />}
           <div className="grow" style={{ display: "flex", flexDirection: "column", gap: 3 }}>
             <div className="row" style={{ gap: 6 }}>
-              <span className="lvl">LVL {p.level}</span>
+              <span className="lvl">Уровень {p.level}</span>
               <span className="name ellipsis">{p.name}</span>
             </div>
             {/* progress to the next level; exact numbers are in the profile */}

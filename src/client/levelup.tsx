@@ -39,7 +39,7 @@ export function LevelUpOverlay() {
       <div className="lvlup-body">
         <div className="lvlup-kicker display">Новый уровень!</div>
         <div className="lvlup-badge display">
-          <small>LVL</small>
+          <small>Уровень</small>
           <b className="num">{levelUp.to}</b>
         </div>
         {jump > 1 && <div className="lvlup-sub">Сразу +{jump} уровня — мощно!</div>}

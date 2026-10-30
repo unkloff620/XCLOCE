@@ -852,7 +852,7 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .lvlup-badge { position: relative; display: grid; place-items: center; width: 168px; height: 168px; border-radius: 50%; color: #2e1c00;
   background: radial-gradient(circle at 35% 30%, #fff1a8, #ffcc33 45%, #e08a12 80%); border: 5px solid #5a2d00;
   box-shadow: 0 8px 0 #3a1d00, 0 0 0 10px rgba(255, 204, 51, 0.25), 0 0 60px rgba(255, 204, 51, 0.7); animation: lvl-pop 0.8s cubic-bezier(0.2, 1.8, 0.4, 1) 0.3s both, lvl-bob 2.4s ease-in-out 1.2s infinite; }
-.lvlup-badge small { position: absolute; top: 26px; font-size: 18px; letter-spacing: 0.1em; }
+.lvlup-badge small { position: absolute; top: 28px; font-size: 15px; letter-spacing: 0.04em; }
 .lvlup-badge b { font-size: 78px; line-height: 1; margin-top: 18px; text-shadow: 0 3px 0 rgba(255, 255, 255, 0.45); }
 @keyframes lvl-pop { from { opacity: 0; transform: scale(0.2) rotate(-25deg); } }
 @keyframes lvl-bob { 50% { transform: translateY(-6px) scale(1.03); } }

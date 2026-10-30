@@ -177,7 +177,7 @@ export function RatingScreen() {
             <Link key={r.id} href={`/profile?id=${r.id}`} className={`rt-row ${r.id === me ? "me" : ""} ${i < 3 ? `top${i + 1}` : ""}`}>
               <Place n={i + 1} />
               <Avatar name={r.name} photo={r.photo} size={36} frame={r.frame} />
-              <span className="rt-name"><b className="ellipsis">{r.name}</b><span className="tiny muted">LVL {r.level}</span></span>
+              <span className="rt-name"><b className="ellipsis">{r.name}</b><span className="tiny muted">Уровень {r.level}</span></span>
               <b className="rt-val num">{tab === "damage" ? short(r.value) : full(r.value)}</b>
             </Link>
           ))}

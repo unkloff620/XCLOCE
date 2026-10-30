@@ -417,7 +417,7 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
             <div className="col" style={{ gap: 10 }}>
               {p.frame && <div className="center"><span className={`chip frame-chip frame-${p.frame}`}><Icon name="trophy" size={14} />{FRAME_TITLE[p.frame]}</span></div>}
               <div className="row" style={{ gap: 8 }}>
-                <span className="lvl ph-lvl">LVL {p.level}</span>
+                <span className="lvl ph-lvl">Уровень {p.level}</span>
                 <div className="grow"><Bar value={p.levelXp} max={p.levelNeed || 1} tone="violet" label={p.levelNeed ? `${full(p.levelXp)} / ${full(p.levelNeed)}` : "макс."} /></div>
               </div>
               <div className="dos-facts">
@@ -541,7 +541,7 @@ export function ProfileScreen() {
           <Avatar name={p.name} photo={p.photo} size={34} frame={p.frame} />
           <span className="pr-plate-t">
             <b className="ellipsis">{p.name}</b>
-            <small><span className="pr-lvl num">LVL {p.level}</span>{p.clan && <span className="pr-tag">[{p.clan.tag}]</span>}</small>
+            <small><span className="pr-lvl num">Уровень {p.level}</span>{p.clan && <span className="pr-tag">[{p.clan.tag}]</span>}</small>
           </span>
         </div>
         {/* the buttons on the wall */}
