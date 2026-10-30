@@ -50,7 +50,12 @@ export async function dashboard(db: Db) {
     FROM action_log a JOIN players p ON p.id = a.player_id WHERE a.at > now() - interval '1 day'
     GROUP BY a.player_id, p.display_name, p.username, p.photo_url HAVING COUNT(*) FILTER (WHERE NOT a.ok) >= 20
     ORDER BY failed DESC LIMIT 10`);
-  return { counts: c, byType, top, suspicious };
+  // how much of every thing the players hold now (the stickers HODL, the weapons…)
+  const items = await db.query(`
+    SELECT i.item_id, SUM(i.qty)::bigint AS total, COUNT(*) FILTER (WHERE i.qty > 0)::int AS holders
+    FROM inventory i JOIN players p ON p.id = i.player_id WHERE i.qty > 0 AND p.banned_at IS NULL
+    GROUP BY i.item_id ORDER BY total DESC`);
+  return { counts: c, byType, top, suspicious, items };
 }
 
 export async function actions(db: Db, f: { playerId?: number; type?: string; failed?: boolean; before?: number; limit?: number; sinceHours?: number }) {

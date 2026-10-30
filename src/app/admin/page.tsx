@@ -458,7 +458,7 @@ const Err = ({ e }: { e: string | null }) => (e ? <p className="adm-err">{e}</p>
 
 // ---------------- overview ----------------
 function Dashboard() {
-  const { data, err, reload } = useLoad(() => admin<{ counts: Row; byType: Row[]; top: Row[]; suspicious: Row[] }>("dashboard"), []);
+  const { data, err, reload } = useLoad(() => admin<{ counts: Row; byType: Row[]; top: Row[]; suspicious: Row[]; items: Row[] }>("dashboard"), []);
   const feed = useLoad(() => admin<Row[]>("actions", { limit: 40 }), []);
   useEffect(() => {
     const t = setInterval(() => { reload(); feed.reload(); }, 30_000);
@@ -481,6 +481,14 @@ function Dashboard() {
             : <div key={t} className="adm-stat">{inner}</div>;
         })}
       </div>
+      <Box title="Предметы у игроков" closed>
+        <p className="muted tiny">Сколько каждой вещи сейчас лежит у всех игроков вместе (без забаненных) и у скольких она есть.</p>
+        <Table rows={data?.items ?? []} empty="Пусто" cols={[
+          ["Предмет", (r) => itemById(String(r.item_id))?.name ?? String(r.item_id)],
+          ["Всего", (r) => fmt(r.total), "r"],
+          ["У игроков", (r) => fmt(r.holders), "r"],
+        ]} />
+      </Box>
       <div className="adm-grid2">
         <Box title="Действия за 24 ч">
           <p className="muted tiny">Нажмите на действие или на число отказов — откроется список за 24 часа.</p>
