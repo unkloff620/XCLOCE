@@ -4149,3 +4149,7 @@ body { background-attachment: fixed; }
 /* every scroll box inside a page or a window: a soft fade at its top and bottom edges */
 .dos-inner:not(:has(> .ach-panel)):not(:has(> .tp-panel)), .tp-road, .ach-groups ~ .col.ach-scroll {
   -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 10px, #000 calc(100% - 12px), transparent 100%); mask-image: linear-gradient(180deg, transparent 0, #000 10px, #000 calc(100% - 12px), transparent 100%); }
+/* the roubles of a scared pigeon float up from where it sat and fade */
+.pg-gain { position: absolute; z-index: 40; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 3px; pointer-events: none; white-space: nowrap;
+  font-weight: 900; font-size: 17px; color: #ffe27a; text-shadow: 0 2px 0 #1a0f05, 0 0 6px rgba(0, 0, 0, 0.7); animation: pg-gain 1.6s ease-out forwards; }
+@keyframes pg-gain { 0% { opacity: 0; transform: translate(-50%, 6px) scale(0.8); } 15% { opacity: 1; transform: translate(-50%, 0) scale(1.08); } 100% { opacity: 0; transform: translate(-50%, -70px) scale(1); } }

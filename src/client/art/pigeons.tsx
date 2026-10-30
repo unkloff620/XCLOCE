@@ -4,13 +4,13 @@
  * his references: walking, pecking, flying). One animation loop per bird moves every part smoothly toward the pose of
  * what it does now — no jumps between poses: walk about (steps, the head nodding, the body swaying), stop and peck at the
  * grain (the body leans, the head goes down, a few jabs), look about, turn round (a quick squash through the middle).
- * A tap scares it: it tilts up, beats its wings, tucks its legs and flies off; a while later another one walks in.
+ * A tap scares it: it tilts up, beats its wings, tucks its legs and flies off (paying a few roubles, shown where it sat); another one walks in 5–10 minutes later.
  * Positions are percent of the yard picture: x — the middle, y — the feet, up from the bottom.
  */
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { haptic } from "../telegram.ts";
 import { useGame } from "../store.tsx";
-import { GainLine } from "../ui.tsx";
+import { Icon } from "./icons.tsx";
 import type { Granted } from "../api.ts";
 
 const P = "/assets/yard/pigeon";
@@ -23,9 +23,9 @@ interface Pose { up: number; upY: number; head: number; headX: number; headY: nu
 const ZERO: Pose = { up: 0, upY: 0, head: 0, headX: 0, headY: 0, wn: 0, wf: 0, lf: 0, lb: 0, tuck: 0 };
 
 function Pigeon({ area, delay }: { area: PigeonArea; delay: number }) {
-  const { act, toast } = useGame();
+  const { act } = useGame();
   const actRef = useRef(act); actRef.current = act;
-  const toastRef = useRef(toast); toastRef.current = toast;
+  const [gain, setGain] = useState<{ x: number; y: number; rub: number; key: number } | null>(null);
   const root = useRef<HTMLButtonElement>(null);
   const flip = useRef<HTMLSpanElement>(null);
   const up = useRef<HTMLSpanElement>(null);
@@ -69,8 +69,12 @@ function Pigeon({ area, delay }: { area: PigeonArea; delay: number }) {
     scareRef.current = () => {
       if (st.act === "fly" || st.act === "gone") return;
       haptic.tap();
-      // a scared pigeon pays a few roubles (the server keeps the pace and the daily limit)
-      void actRef.current<{ reward: Granted | null }>("pigeon_scare", {}).then((r) => { if (r?.reward) toastRef.current(<GainLine r={r.reward} />, "ok"); });
+      // a scared pigeon pays a few roubles right where it sat: the sum floats up there and fades
+      const at = { x: st.x, y: st.y };
+      void actRef.current<{ reward: Granted | null }>("pigeon_scare", {}).then((r) => {
+        const rub = r?.reward?.currencies?.RUB;
+        if (rub) setGain({ x: at.x, y: at.y, rub, key: Date.now() });
+      });
       st.act = "fly";
       st.t = 0;
       st.fly = 0;
@@ -134,7 +138,7 @@ function Pigeon({ area, delay }: { area: PigeonArea; delay: number }) {
         st.fy = -(u * 900 + u * u * 200);
         extra = ` translate(${st.fx}%, ${st.fy}%) scale(${1 - u * 0.45})`;
         op = u < 0.7 ? 1 : 1 - (u - 0.7) / 0.3;
-        if (u >= 1) { st.act = "gone"; st.until = now + rnd(12_000, 25_000); el.style.visibility = "hidden"; }
+        if (u >= 1) { st.act = "gone"; st.until = now + rnd(5 * 60_000, 10 * 60_000); el.style.visibility = "hidden"; } // the next one comes in 5–10 minutes
       }
       const depth = 1 - (st.y - area.y0) / 60;
       el.style.left = `${st.x}%`;
@@ -158,6 +162,8 @@ function Pigeon({ area, delay }: { area: PigeonArea; delay: number }) {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
+    <>
+    {gain && <span key={gain.key} className="pg-gain num" style={{ left: `${gain.x}%`, bottom: `${gain.y + 4}%` }} onAnimationEnd={() => setGain(null)}><Icon name="RUB" size={18} />+{gain.rub}</span>}
     <button ref={root} type="button" className="pg" onClick={() => scareRef.current()} aria-label="Голубь">
       <span ref={flip} className="pg-flip">
         {/* eslint-disable @next/next/no-img-element */}
@@ -174,6 +180,7 @@ function Pigeon({ area, delay }: { area: PigeonArea; delay: number }) {
         <i ref={grain} className="pg-grain" style={{ opacity: 0 }}><b /><b /><b /></i>
       </span>
     </button>
+    </>
   );
 }
 
