@@ -298,7 +298,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
 }
 
 /**
- * Notices at the top of the screen for newly reached achievements, one under another: each stays 3 seconds (a swipe to
+ * Notices at the top of the screen for newly reached achievements, one under another: each stays 5 seconds (a swipe to
  * the left takes it away sooner), a tap opens the achievement in the «Личное дело». The ones waiting at the start are
  * not announced.
  */
@@ -333,7 +333,7 @@ function AchToastCard({ id, onGone, onOpen }: { id: string; onGone: () => void; 
   const goneRef = useRef(onGone);
   goneRef.current = onGone;
   useEffect(() => {
-    const t = window.setTimeout(() => setOut(true), 3000);
+    const t = window.setTimeout(() => setOut(true), 5000);
     return () => window.clearTimeout(t);
   }, []);
   useEffect(() => {
