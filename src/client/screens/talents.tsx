@@ -24,6 +24,17 @@ const effect = (n: TalentStop, lv: number) =>
   n.kind === "dmg" ? `+${full(lv * n.per)} урона` : n.kind === "crit" ? `+${pct(lv * n.per)} к силе крита` : n.kind === "chance" ? `+${pct(lv * n.per)} к шансу крита`
     : n.kind === "biceps" ? `+${full(lv * n.per)} к бицухе` : n.kind === "energy" ? `+${full(lv * n.per)} к лимиту энергии` : `+${full(lv * n.per)} мин к бою с боссом`;
 
+/** what one more level gives, in plain words: «+3 урона к клавиатуре», «+2% к шансу крита мыши», «+1 к бицухе» */
+const TO_WEAPON: Record<string, [string, string]> = { // [к чему (дательный), чего (родительный)]
+  fist: ["кулаку", "кулака"], mouse: ["мыши", "мыши"], "red-candle": ["красной свече", "красной свечи"], keyboard: ["клавиатуре", "клавиатуры"],
+  gpu: ["видеокарте", "видеокарты"], "rug-pull-gun": ["Rug Pull Gun", "Rug Pull Gun"],
+};
+function stepText(n: TalentStop) {
+  const w = TO_WEAPON[n.target];
+  if (!w) return effect(n, 1);
+  return n.kind === "dmg" ? `+${full(n.per)} урона к ${w[0]}` : `${effect(n, 1)} ${w[1]}`;
+}
+
 export function TalentChip({ n }: { n: number }) {
   return (
     <span className="chip talent-chip" title="Таланты">
@@ -163,7 +174,7 @@ export function TalentPanel() {
             <small>
               {selLv >= sel.max ? `Готово: ${effect(sel, selLv)}`
                 : !selOpen ? "Откроется, когда закроешь блок выше и ячейку, от которой идёт стрелка"
-                : <>{stopClosed(wt, sel) && sel.need < sel.max ? `Можно идти дальше (нужно было ${sel.need}). ` : sel.need < sel.max ? `Для следующей ячейки хватит ${sel.need}. ` : ""}Нажми: {effect(sel, 1)} · стоит <Icon name="talent" size={11} />{sel.cost}{selLv > 0 ? ` · сейчас ${effect(sel, selLv)}` : ""}</>}
+                : stepText(sel)}
             </small>
           </span>
           {selOpen && selLv < sel.max && (
