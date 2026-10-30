@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-10-30-yard2",
+    date: "30 октября",
+    title: "Двор стал больше",
+    items: [
+      { img: "/assets/updates/2026-10-30-yard2.webp", text: "Свайпни во дворе влево (или нажми стрелку справа): там продолжение — ларёк-обменник, гаражи с граффити и голубятня. Днём и ночью — свой вид." },
+    ],
+  },
+  {
     id: "2026-10-30-slots-ach",
     date: "30 октября",
     title: "Достижения за автомат 777",

@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type TouchEvent } from "react";
 import { tasksReady, useGame, useNow } from "../store.tsx";
 import { api } from "../api.ts";
 import { YARD_SPOTS } from "../art/scenes.tsx";
@@ -32,6 +32,26 @@ export function YardScreen() {
   // enough energy for a task step (or a location reward waits) → the Locations button calls for attention
   const taskHint = tasksReady(state, now);
   const [slots, setSlots] = useState(false);
+  // the yard goes on to the right: a swipe left shows its second half (the kiosk, the garages, the pigeon loft), right — back
+  const [page, setPage] = useState(0);
+  const [drag, setDrag] = useState(0);
+  const touch = useRef<{ x: number; y: number; on: boolean | null } | null>(null);
+  const onStart = (e: TouchEvent) => { const t = e.touches[0]; touch.current = { x: t.clientX, y: t.clientY, on: null }; };
+  const onMove = (e: TouchEvent) => {
+    const c = touch.current, t = e.touches[0];
+    if (!c) return;
+    const dx = t.clientX - c.x, dy = t.clientY - c.y;
+    if (c.on === null && Math.hypot(dx, dy) > 12) c.on = Math.abs(dx) > Math.abs(dy) * 1.5;
+    if (c.on) setDrag(page === 0 ? Math.min(0, dx) : Math.max(0, dx));
+  };
+  const onEnd = () => {
+    const c = touch.current;
+    touch.current = null;
+    if (c?.on && Math.abs(drag) > 50) { haptic.tap(); setPage(drag < 0 ? 1 : 0); }
+    setDrag(0);
+  };
+  const turn = (to: number) => { haptic.tap(); setPage(to); };
+  const pan = (k: number) => ({ transform: `translateX(calc(${(k - page) * 100}% + ${drag}px))`, transition: drag ? "none" : undefined });
   const load = useCallback(async () => {
     try {
       setData(await api.get<YardData>("/api/yard"));
@@ -70,6 +90,7 @@ export function YardScreen() {
         <div className="title-row">
           <h1 className="display">Двор</h1>
           <Help topic="yard-menu" title="Как устроен двор">
+            <p>Двор длинный: свайпни влево (или нажми стрелку справа) — там продолжение: ларёк-обменник, гаражи и голубятня.</p>
             <p>Каждые 5 минут во дворе появляется случайная находка, максимум 5 сразу. Время идёт, даже когда игра закрыта — заходи и собирай.</p>
             <p>Изредка попадается Клавиатура. Всё найденное можно продать в инвентаре.</p>
             <HelpList title="Кнопки слева" rows={LINKS.map((b) => ({ key: b.href, icon: <Icon name={b.icon} size={44} />, name: b.label, hint: b.hint }))} />
@@ -83,11 +104,11 @@ export function YardScreen() {
           <span className="chip">{data?.items.length ?? state?.yard.count ?? 0}/{data?.max ?? 5}</span>
         </span>
       </div>
-      <div className={`yard tod-${tod}`}>
+      <div className={`yard tod-${tod} page-${page}`} onTouchStart={onStart} onTouchMove={onMove} onTouchEnd={onEnd} onTouchCancel={onEnd}>
         {/* blurred copy of the yard fills the space above the scene on tall screens */}
         <div className="scene-backdrop" style={{ backgroundImage: `url(/assets/yard/${tod === "night" ? "court-backdrop-dark" : "court-backdrop"}.webp)` }} />
         {/* the sharp scene stands on the nav at full width; the objects sit where they are drawn on the 2000×3405 sheet */}
-        <div className="yard-stage">
+        <div className="yard-stage yard-pan" style={pan(0)}>
           {/* the sunset sky (the same as in the fights) drifts behind the see-through sky of the yard */}
           <DriftingSky className="court-sky" src={tod === "night" ? "/assets/yard/sky-dark.webp" : undefined} />
           {/* the same sky upside down under the ground: it shows in the see-through puddles */}
@@ -132,6 +153,18 @@ export function YardScreen() {
             );
           })}
         </div>
+        {/* the second half of the yard (tools/scene/build-yard2.py): the exchange kiosk, the garages, the pigeon loft */}
+        <div className="yard-stage yard-pan yard-stage2" style={pan(1)} aria-hidden={page !== 1}>
+          <DriftingSky className="court-sky" src={tod === "night" ? "/assets/yard/sky-dark.webp" : undefined} />
+          <DriftingSky className="yard-reflect" src={tod === "night" ? "/assets/yard/sky-dark.webp" : undefined} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="yard-bg" src={tod === "night" ? "/assets/yard/court2-dark.webp" : "/assets/yard/court2.webp"} alt="" draggable={false} />
+          <span className="yard-tint" aria-hidden="true" />
+          <Link href="/exchange" className="yard-obj yard-kiosk" aria-label="Обменник" title="Обменник" tabIndex={page === 1 ? 0 : -1}>
+            <span className="yard-kiosk-tag">Обменник</span>
+          </Link>
+        </div>
+        <button type="button" className={`yard-pager ${page === 0 ? "next" : "prev"}`} onClick={() => turn(page === 0 ? 1 : 0)} aria-label={page === 0 ? "Дальше по двору" : "Назад во двор"}>{page === 0 ? "›" : "‹"}</button>
         <nav className="yard-side" aria-label="Места во дворе">
           {LINKS.map((b) => (
             <Link key={b.href} href={b.href} className="icon-btn-art" style={{ ["--c" as string]: b.c }} aria-label={b.label} title={b.label}>

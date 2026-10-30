@@ -769,6 +769,8 @@ export const ASSET_FILES: string[] = [
  "/assets/yard/court-table.webp",
  "/assets/yard/court-upgrader-ring.webp",
  "/assets/yard/court-upgrader.webp",
+ "/assets/yard/court2-dark.webp",
+ "/assets/yard/court2.webp",
  "/assets/yard/game-blackjack.webp",
  "/assets/yard/game-poker.webp",
  "/assets/yard/game-zonk.webp",
