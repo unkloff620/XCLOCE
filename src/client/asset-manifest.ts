@@ -755,8 +755,6 @@ export const ASSET_FILES: string[] = [
  "/assets/updates/2026-10-29-vostok.webp",
  "/assets/updates/2026-10-29-win.webp",
  "/assets/updates/2026-10-30-locations.webp",
- "/assets/updates/2026-10-30-pepe-room.webp",
- "/assets/updates/2026-10-30-pepe.webp",
  "/assets/updates/2026-10-30-talents.webp",
  "/assets/updates/2026-10-30-yard2.webp",
  "/assets/upgrader/btn-go.webp",

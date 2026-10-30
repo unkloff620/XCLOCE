@@ -167,3 +167,8 @@ a.adm-stat.link:hover { border-color: #4b6bff; background: var(--a-panel2); }
 .adm-chips button { background: var(--a-panel2); border: 1px solid transparent; color: var(--a-muted); padding: 4px 10px; border-radius: 999px; font: inherit; font-size: 13px; cursor: pointer; }
 .adm-chips button.on { color: var(--a-ink); border-color: var(--a-accent); }
 .adm-rar-rare { color: #5aa9ff; } .adm-rar-epic { color: #e0a23a; } .adm-rar-legendary { color: #ff8a3d; } .adm-rar-mythic { color: #ff5d7a; }
+/* «Ивенты: боссы» */
+.adm-evb { display: flex; flex-direction: column; gap: 8px; }
+.adm-evb-row { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.08); background: rgba(255, 255, 255, 0.03); }
+.adm-evb-row.on { border-color: rgba(61, 220, 132, 0.5); }
+.adm-evb-row img { width: 48px; height: 48px; border-radius: 10px; object-fit: cover; background: #1b2a20; }

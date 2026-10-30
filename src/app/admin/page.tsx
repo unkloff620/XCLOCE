@@ -157,7 +157,7 @@ export default function AdminPage() {
       <header className="adm-top">
         <b className="adm-logo"><span>X</span>CLOSE <small>админка</small></b>
         <nav>
-          {([["dash", "Обзор"], ["players", "Игроки"], ["actions", "Действия"], ["events", "События"], ["log", "Правки админов"]] as const).map(([k, t]) => (
+          {([["dash", "Обзор"], ["players", "Игроки"], ["actions", "Действия"], ["events", "Ивенты"], ["log", "Правки админов"]] as const).map(([k, t]) => (
             <a key={k} href={`#${k}`} className={view.tab === k || (k === "players" && view.tab === "player") ? "on" : ""}>{t}</a>
           ))}
         </nav>
@@ -1132,6 +1132,8 @@ function Events() {
   const set = (k: keyof EvForm, v: unknown) => setForm((f) => (f ? { ...f, [k]: v } : f));
   return (
     <>
+      <EventBosses />
+      <ExchangeEvent />
       <Box title="События" right={<span className="row" style={{ gap: 8 }}><button className="adm-btn ghost sm" onClick={reload}>Обновить</button><button className="adm-btn" onClick={() => { setSaveErr(null); setForm(emptyEvent()); }}>+ Новое событие</button></span>}>
         <p className="muted small" style={{ marginTop: 0 }}>Событие идёт с даты начала до даты конца (время — твоего часового пояса). Пока оно идёт, его эффекты меняют числа в игре, а игроки видят окно события и звезду в HUD. Изменения доходят до игры в течение ~30 секунд.</p>
         <Err e={err} />
@@ -1148,7 +1150,6 @@ function Events() {
           ["", (r) => <span className="row" style={{ gap: 6 }}><button className="adm-btn ghost sm" onClick={() => { setSaveErr(null); edit(r); }}>Изменить</button><button className="adm-btn danger sm" onClick={() => del(Number(r.id))}>Удалить</button></span>, "nowrap"],
         ]} />
       </Box>
-      <ExchangeEvent />
       <BossControls rows={data ?? []} onSaved={setData} />
       {form && (
         <Box title={form.id ? `Событие #${form.id}` : "Новое событие"} right={<button className="adm-btn ghost sm" onClick={() => setForm(null)}>Закрыть</button>}>
@@ -1281,6 +1282,38 @@ function BossMenu({ id, onClose, onSaved }: { id: string; onClose: () => void; o
       <span className="muted small">Дни пустые — навсегда.</span>
       <Err e={err} />
     </div>
+  );
+}
+
+/* «Ивенты: боссы» — the event bosses (content/event-bosses.ts): put one in the game or take him out */
+type EvBoss = { id: string; name: string; hp: number; portrait: string; on: boolean };
+function EventBosses() {
+  const { data, err, setData } = useLoad(() => admin<{ bosses: EvBoss[] }>("event_bosses"), []);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [saveErr, setSaveErr] = useState<string | null>(null);
+  const flip = async (b: EvBoss) => {
+    if (!confirm(b.on ? `Убрать ${b.name} из игры?` : `Включить ${b.name} в игре? Игроки увидят кнопку «Ивент» на главной.`)) return;
+    setBusy(b.id); setSaveErr(null);
+    try { setData(await admin("event_boss_set", { id: b.id, on: !b.on })); } catch (e) { setSaveErr((e as Error).message); }
+    setBusy(null);
+  };
+  return (
+    <Box title="Ивенты: боссы">
+      <p className="muted small" style={{ marginTop: 0 }}>Ивент-боссы вне обычной цепочки. Включённый босс появляется у всех игроков: кнопка «Ивент» справа на главной и его комната с дверью. Изменения доходят до игры в течение ~30 секунд.</p>
+      <Err e={err} />
+      <div className="adm-evb">
+        {(data?.bosses ?? []).map((b) => (
+          <div key={b.id} className={`adm-evb-row ${b.on ? "on" : ""}`}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={b.portrait} alt="" />
+            <span className="grow"><b>{b.name}</b><br /><span className="muted small">здоровье {b.hp.toLocaleString("ru-RU")} · пока пробный бой без наград</span></span>
+            <span className={b.on ? "adm-ok" : "muted"}>{b.on ? "в игре" : "выключен"}</span>
+            <button className={`adm-btn ${b.on ? "danger" : ""} sm`} disabled={busy === b.id} onClick={() => flip(b)}>{b.on ? "Выключить" : "Включить"}</button>
+          </div>
+        ))}
+      </div>
+      <Err e={saveErr} />
+    </Box>
   );
 }
 

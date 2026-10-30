@@ -69,6 +69,8 @@ export interface GameState {
   events?: import("../content/events.ts").GameEventView[];
   pigeons?: number[];
   exchangeSchedule?: import("../content/currencies.ts").ExchangeSchedule;
+  /** event bosses in the game now (admin panel) */
+  eventBosses?: string[];
   openBosses?: string[];
   /** yard mini games: free games left today, the price after that, the hand / game in progress */
   /** upgraded things from the upgrader: each one its own unit with its own price */

@@ -100,6 +100,8 @@ export async function gameState(ctx: Ctx) {
     events: ctx.cfg.events.filter((e) => !e.effects.silent),
     // the exchanger's working days and hours (the admin's schedule): the yard kiosk and the notice follow it
     exchangeSchedule: ctx.cfg.exchange.schedule,
+    // the event bosses in the game now (the admin panel, «Ивенты»)
+    eventBosses: Object.entries(ctx.cfg.eventBosses).filter(([, on]) => on).map(([id]) => id),
     // the yard pigeons: when each place has a pigeon (ms); the server keeps them, so they do not come back on a reload
     pigeons: await pigeonsView(ctx.q, ctx.pid),
     // bosses in the game now (art + the admin's boss controls)

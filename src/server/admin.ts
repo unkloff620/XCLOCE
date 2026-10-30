@@ -7,6 +7,7 @@ import { GameError, type Db, type Queryable } from "./db.ts";
 import { loadConfig, resetConfigCache } from "./config.ts";
 import { cleanEffects } from "../content/events.ts";
 import { cleanSchedule, exchangeScheduleText, exchangeWindow } from "../content/currencies.ts";
+import { EVENT_BOSSES, cleanEventBosses, eventBossById } from "../content/event-bosses.ts";
 import { energyNow, type Ctx, type PlayerRow } from "./core.ts";
 import { giveStartKit } from "./players.ts";
 import { leaveClan } from "./systems/clans.ts";
@@ -392,6 +393,19 @@ export async function eventDelete(db: Db, id: number) {
 }
 
 /* «Ивенты: Обменник»: the exchanger's working days and hours (config key `exchange.schedule`, content/currencies.ts) */
+/** «Ивенты: боссы» — which event bosses are in the game (config "event.bosses") */
+export async function eventBosses(db: Db) {
+  const cfg = await loadConfig(db);
+  return { bosses: EVENT_BOSSES.map((b) => ({ id: b.id, name: b.name, hp: b.hp, portrait: b.portrait, on: !!cfg.eventBosses[b.id] })) };
+}
+export async function eventBossSet(db: Db, id: unknown, on: unknown) {
+  if (typeof id !== "string" || !eventBossById(id)) throw new GameError("bad_request", "Нет такого ивент-босса", 400);
+  const cfg = await loadConfig(db);
+  const next = cleanEventBosses({ ...cfg.eventBosses, [id]: on === true });
+  await db.query("INSERT INTO config (key, value) VALUES ('event.bosses', $1) ON CONFLICT (key) DO UPDATE SET value = excluded.value", [JSON.stringify(next)]);
+  resetConfigCache();
+  return eventBosses(db);
+}
 export async function exchangeSchedule(db: Db) {
   const cfg = await loadConfig(db);
   return { schedule: cfg.exchange.schedule, window: exchangeWindow(Date.now(), cfg.exchange.schedule), text: exchangeScheduleText(cfg.exchange.schedule) };

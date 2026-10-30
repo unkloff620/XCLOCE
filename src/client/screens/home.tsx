@@ -27,6 +27,7 @@ import { ItemArt } from "../art/items.tsx";
 import { ExchangeNotice } from "../exchange-notice.tsx";
 import { UpdatesNotice, UpdatesWindow } from "../updates-notice.tsx";
 import { usedUrl } from "../preload.ts";
+import { EVENT_BOSSES, eventBossById } from "../../content/event-bosses.ts";
 import { todayUpdates } from "../../content/updates.ts";
 
 const MENU_KEY = "xc2_home_menu";
@@ -116,16 +117,18 @@ export function HomeScreen() {
     return () => document.body.classList.remove("styling");
   }, [isStyling]);
   if (!state) return null;
-  const curIdx = Math.max(0, ROOM_DEFS.findIndex((r) => r.id === state.look.room));
+  // an event boss's room shows only while his event is on (or once it is mine)
+  const rooms = ROOM_DEFS.filter((r) => !r.drop || !eventBossById(r.drop.boss) || state.eventBosses?.includes(r.drop.boss) || state.home.rooms.includes(r.id));
+  const curIdx = Math.max(0, rooms.findIndex((r) => r.id === state.look.room));
   const idx = viewIdx ?? curIdx;
-  const viewRoom = ROOM_DEFS[idx];
+  const viewRoom = rooms[idx];
   const owned = state.home.rooms.includes(viewRoom.id);
   const canPay = !viewRoom.price || (state.wallet[viewRoom.price.currency] ?? 0) >= viewRoom.price.amount;
   // a room that drops from a boss is bought only after it dropped
   const dropped = !viewRoom.drop || (state.unlocks ?? []).includes(`room:${viewRoom.id}`);
   const flip = (dir: number) => {
     const ni = idx + dir;
-    if (ni < 0 || ni >= ROOM_DEFS.length) return;
+    if (ni < 0 || ni >= rooms.length) return;
     // back on the current room: nothing to confirm
     setViewIdx(ni === curIdx ? null : ni);
   };
@@ -194,7 +197,7 @@ export function HomeScreen() {
           <div className={`room-switch ${previewing ? "" : "idle"}`}>
             <button className="room-step" onClick={() => flip(-1)} disabled={idx === 0 || busy === "room_set"} aria-label="Предыдущая комната">‹</button>
             <span className="room-name display">{viewRoom.name}</span>
-            <button className="room-step" onClick={() => flip(1)} disabled={idx >= ROOM_DEFS.length - 1 || busy === "room_set"} aria-label="Следующая комната">›</button>
+            <button className="room-step" onClick={() => flip(1)} disabled={idx >= rooms.length - 1 || busy === "room_set"} aria-label="Следующая комната">›</button>
           </div>
         </div>
         <div className="room-help">
@@ -231,12 +234,14 @@ export function HomeScreen() {
             <Icon name="mail" size={36} />
             {messagesWaiting(state) > 0 && <span className="msg-count num">{messagesWaiting(state)}</span>}
           </button>
-          {/* the event: Пепе (a test fight for now) */}
-          <Link href="/event/pepe" className="menu-toggle event-toggle" aria-label="Ивент: Пепе" title="Ивент: Пепе">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={usedUrl("/bosses/pepe/portrait.webp")} alt="" draggable={false} />
-            <span className="event-tag">ИВЕНТ</span>
-          </Link>
+          {/* the event bosses the admin has put in the game (admin panel «Ивенты») */}
+          {EVENT_BOSSES.filter((b) => state.eventBosses?.includes(b.id)).map((b) => (
+            <Link key={b.id} href={b.href} className="menu-toggle event-toggle" aria-label={`Ивент: ${b.name}`} title={`Ивент: ${b.name}`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={usedUrl(b.portrait)} alt="" draggable={false} />
+              <span className="event-tag">ИВЕНТ</span>
+            </Link>
+          ))}
           {menuOpen && (
             <div className="menu-drop">
               <button className="icon-btn-art" style={{ ["--c" as string]: "#ff9a3d" }} onClick={openWardrobe} aria-label="Гардероб" title="Гардероб">

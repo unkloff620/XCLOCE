@@ -82,6 +82,18 @@ export function PepeEventScreen() {
     setPhrase({ text: `${crit ? "КРИТ! " : ""}−${full(dmg)}`, id: Date.now(), crit });
   };
 
+  // the event is on only while the admin has put Пепе in the game (admin panel «Ивенты»)
+  if (state && !state.eventBosses?.includes("pepe")) {
+    return (
+      <div className="fit-page" style={{ display: "grid", placeItems: "center", padding: 24 }}>
+        <div className="panel col center" style={{ gap: 10, maxWidth: 320 }}>
+          <b className="display">Ивент сейчас не идёт</b>
+          <span className="small muted">Пепе вернётся позже — следи за новостями.</span>
+          <Link className="btn gold block" href="/">На главную</Link>
+        </div>
+      </div>
+    );
+  }
   if (fighting) {
     return (
       <div className="fit-page fight-page" style={{ ["--acc" as string]: PEPE_EVENT.accent }}>

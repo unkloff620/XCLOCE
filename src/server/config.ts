@@ -10,6 +10,7 @@ import { RENAME } from "../content/profile.ts";
 import { SLOT_OUTCOMES, SLOT_SPINS_PER_HOUR } from "../content/slots.ts";
 import type { Reward } from "../content/rewards.ts";
 import { cleanEffects, type GameEventView } from "../content/events.ts";
+import { cleanEventBosses } from "../content/event-bosses.ts";
 
 /**
  * Game numbers. Defaults come from src/content; rows of the `config` table override them without a deploy:
@@ -38,6 +39,8 @@ export interface Config {
   bossOpen: Record<string, boolean>;
   /** boss reward multipliers (1 = usual) */
   bossReward: Record<string, number>;
+  /** event bosses the admin has put in the game (content/event-bosses.ts) */
+  eventBosses: Record<string, boolean>;
 }
 
 export function defaultConfig(): Config {
@@ -57,6 +60,7 @@ export function defaultConfig(): Config {
     events: [],
     bossOpen: {},
     bossReward: {},
+    eventBosses: {},
   };
 }
 
@@ -78,6 +82,8 @@ const KEYS: Record<string, (c: Config, v: unknown) => void> = {
   },
   // the exchanger's working days and hours (the admin panel, «Ивенты: Обменник»)
   "exchange.schedule": (c, v) => { c.exchange.schedule = cleanSchedule(v); },
+  // the event bosses switched on in the admin panel («Ивенты»)
+  "event.bosses": (c, v) => { c.eventBosses = cleanEventBosses(v); },
   daily: (c, v) => {
     if (Array.isArray(v) && v.length >= 1 && v.length <= 31 && v.every((r) => r && typeof r === "object" && !Array.isArray(r))) c.daily = v as Reward[];
   },
