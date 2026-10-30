@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Modal } from "./ui.tsx";
-import { UPDATES } from "../content/updates.ts";
+import { UPDATES, type UpdateNote } from "../content/updates.ts";
 import { haptic } from "./telegram.ts";
 
 const SEEN = "xc-upd-seen";
@@ -20,7 +20,8 @@ export function updatesShown(): boolean {
 }
 
 /** The updates window: the switch on top, then the notes — pictures with a short line each. */
-export function UpdatesWindow({ onClose, count = UPDATES.length }: { onClose: () => void; count?: number }) {
+export function UpdatesWindow({ onClose, count = UPDATES.length, list }: { onClose: () => void; count?: number; list?: UpdateNote[] }) {
+  const notes = list ?? UPDATES.slice(0, count);
   const [show, setShow] = useState(updatesShown);
   const toggle = () => {
     haptic.tap();
@@ -35,7 +36,8 @@ export function UpdatesWindow({ onClose, count = UPDATES.length }: { onClose: ()
         <button type="button" role="switch" aria-checked={show} className={`upd-toggle ${show ? "on" : ""}`} onClick={toggle}><i /></button>
       </label>
       <div className="upd-list">
-        {UPDATES.slice(0, count).map((u) => (
+        {list && notes.length === 0 && <div className="small muted center">Сегодня обновлений не было. Лента обновляется в 0:00 по Москве.</div>}
+        {notes.map((u) => (
           <section key={u.id} className="upd-entry">
             <h4 className="display">{u.title}<small>{u.date}</small></h4>
             {u.items.map((it, i) => (

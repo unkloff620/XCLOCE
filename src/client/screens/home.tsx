@@ -25,7 +25,8 @@ import { Stylist, type StyleDraft } from "./stylist.tsx";
 import { MessagesWindow, messagesWaiting, StashWishWindow } from "./stash-swap.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { ExchangeNotice } from "../exchange-notice.tsx";
-import { UpdatesNotice } from "../updates-notice.tsx";
+import { UpdatesNotice, UpdatesWindow } from "../updates-notice.tsx";
+import { todayUpdates } from "../../content/updates.ts";
 
 const MENU_KEY = "xc2_home_menu";
 
@@ -47,6 +48,8 @@ function BossRing({ boss, size }: { boss: BossDef; size: number }) {
 export function HomeScreen() {
   const { state, act, busy } = useGame();
   const now = useNow();
+  const [newsOpen, setNewsOpen] = useState(false);
+  const todayNews = todayUpdates(now);
   const [styling, setStyling] = useState<StyleDraft | null>(null);
   // which part of the hero the editor outlines brightest
   const [editFocus, setEditFocus] = useState<RigEdit>({ mode: "items", part: "SHIRT" });
@@ -249,6 +252,11 @@ export function HomeScreen() {
         </div>
         {/* the left side: events and the running boss fight */}
         <div className="room-left">
+          {/* «Что нового»: today's notes (Moscow day), the feed starts over at 0:00 МСК */}
+          <button className={`menu-toggle news-toggle ${todayNews.length ? "glow" : ""}`} onClick={() => setNewsOpen(true)} aria-label="Что нового" title="Что нового">
+            <Icon name="news" size={40} />
+            {todayNews.length > 0 && <span className="msg-count num">{todayNews.length}</span>}
+          </button>
           {f && fb && !fightOpen && (
             <button className="fight-mini" style={{ ["--acc" as string]: fb.theme.accent, ["--hp" as string]: hpPct }} onClick={() => setFightOpen(true)} aria-label={`Идёт бой: ${fb.name}`} title="Идёт бой">
               <BossRing boss={fb} size={58} />
@@ -281,6 +289,7 @@ export function HomeScreen() {
       {daily && <DailyWindow onClose={() => setDaily(false)} />}
       <UpdatesNotice wait={busyWindow || daily || (dailyReady && !dailyAutoShown)} onOpen={setUpdOpen} />
       <ExchangeNotice wait={busyWindow || daily || updOpen || (dailyReady && !dailyAutoShown)} />
+      {newsOpen && <UpdatesWindow list={todayNews} onClose={() => setNewsOpen(false)} />}
       {wish && <StashWishWindow onClose={() => setWish(false)} />}
       {messages && <MessagesWindow onClose={() => setMessages(false)} />}
       {quests && <QuestsWindow onClose={() => setQuests(false)} />}

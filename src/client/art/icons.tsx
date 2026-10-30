@@ -16,7 +16,7 @@ export type IconName = string;
 /** Icons drawn by the artist: icon name → public/assets/ui/<file>.webp (built by tools/items/build-items.py). */
 const RASTER_ICONS: Partial<Record<string, string>> = { shirt: "wardrobe", gift: "bonus", bolt: "tech", shop: "shop", exchange: "exchange", map: "tasks",
   energy: "energy-can", key: "key", RUB: "rub", USD: "usd", SOL: "sol", BTC: "btc", coins: "coins", xp: "authority",
-  lock: "lock", clock: "clock", sun: "sun", trophy: "trophy", swords: "swords", chest: "chest", mail: "mail", fire: "fire", talent: "talent",
+  lock: "lock", clock: "clock", sun: "sun", trophy: "trophy", swords: "swords", chest: "chest", mail: "mail", news: "news", fire: "fire", talent: "talent",
   // achievement pictures (tools/ui/cut-achievements.py)
   "ach-damage": "ach-damage", "ach-hits": "ach-hits", "ach-wins": "ach-wins", "ach-yard": "ach-yard", "ach-chests": "ach-chests", "ach-weekly": "ach-weekly", "ach-solo": "ach-solo",
   // the second set (tools/ui/cut-achievements-2.py)

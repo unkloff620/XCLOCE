@@ -10,6 +10,11 @@ export interface UpdateNote {
   items: { img?: string; text: string }[];
 }
 
+/** the Moscow day (UTC+3) of a moment, "YYYY-MM-DD" — the same as the date at the start of a note's id */
+export const mskDay = (ts: number) => new Date(ts + 3 * 3_600_000).toISOString().slice(0, 10);
+/** «Что нового» on the home screen: only today's notes (Moscow time) — the feed starts over at 0:00 МСК */
+export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWith(mskDay(now)));
+
 export const UPDATES: UpdateNote[] = [
   {
     id: "2026-10-30-locations",
@@ -17,6 +22,7 @@ export const UPDATES: UpdateNote[] = [
     title: "Три новые локации и 28 наборов нычек",
     items: [
       { img: "/assets/updates/2026-10-30-locations.webp", text: "После корпоратива: Офшор, Яхта кита и Лунная база — новые задания днём и ночью, бизнес и награды за закрытие." },
+      { text: "Слева на главном экране — кнопка «Что нового»: там новости за сегодня (лента обновляется в 0:00 по Москве)." },
       { text: "В каждой локации теперь по 4 набора нычек: в Бухгалтерии, Отделе кадров и на Корпоративе — свои, в старых локациях — по новому набору." },
     ],
   },
