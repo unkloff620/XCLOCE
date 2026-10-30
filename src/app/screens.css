@@ -3579,6 +3579,10 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .upd-toggle.on { background: var(--green, #3ddc84); }
 .upd-toggle.on i { transform: translateX(20px); }
 .upd-list { display: flex; flex-direction: column; gap: 14px; max-height: 60vh; overflow-y: auto; margin: 0 -4px 12px; padding: 0 4px; }
+/* the updates window: the title, the switch and the button stay put, only the notes scroll (one scroll area, not two inside each other) */
+.modal:has(> .upd-list) { display: flex; flex-direction: column; overflow: hidden; }
+.modal:has(> .upd-list) > * { flex: none; }
+.modal:has(> .upd-list) > .upd-list { flex: 1 1 auto; min-height: 0; max-height: none; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
 .upd-entry h4 { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0 0 8px; font-size: 17px; }
 .upd-entry h4 small { font-size: 12px; opacity: 0.7; font-family: inherit; }
 .upd-item { margin: 0 0 12px; display: flex; flex-direction: column; gap: 6px; }
