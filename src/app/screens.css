@@ -4102,3 +4102,6 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
   100% { filter: brightness(0) blur(6px); opacity: 0; transform: translateY(-14px) scale(0.94); }
 }
 .ach-toast-embers { z-index: 4 !important; position: absolute !important; }
+/* the number under an achievement picture stays light on its dark pill (the dossier paints .num dark) */
+.dos-page .ach-pic-n, .modal .ach-pic-n { color: #ffe7b0; text-shadow: none; }
+.dos-page .ach-pic.on .ach-pic-n, .modal .ach-pic.on .ach-pic-n { color: #1e1006; }
