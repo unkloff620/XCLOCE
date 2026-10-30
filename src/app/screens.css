@@ -4113,7 +4113,7 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .pg-flip { position: absolute; inset: 0; }
 .pg-l { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
 .pg-up { transform-origin: 48% 72.5%; }
-.pg-head { transform-origin: 66% 32%; }
+.pg-head { transform-origin: 58% 44%; }
 .pg-wing { transform-origin: 56% 41%; }
 .pg-leg.f { transform-origin: 50.1% 71.3%; }
 .pg-leg.b { transform-origin: 42.2% 70%; }

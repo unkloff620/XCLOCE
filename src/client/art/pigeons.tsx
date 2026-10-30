@@ -103,13 +103,13 @@ function Pigeon({ area, delay }: { area: PigeonArea; delay: number }) {
         g.headX = Math.sin(st.phase * 2 + 0.6) * 3.5;
       } else if (st.act === "peck") {
         const jab = Math.max(0, Math.sin(st.t * 9)) ** 2;
-        g.up = 20; g.head = 36 + jab * 9; g.headY = 1 + jab * 2;
+        g.up = 12; g.head = 30 + jab * 5; g.headY = jab * 0.8;
       } else if (st.act === "idle" || st.act === "turn") {
         g.head = Math.sin(st.t * 1.7) * 5 - 2;
       } else if (st.act === "fly") {
         g.up = -11; g.upY = -4; g.tuck = 1;
         const f = Math.sin(st.t * 38);
-        g.wn = 44 + f * 36; g.wf = 52 + Math.sin(st.t * 38 - 0.6) * 36;
+        g.wn = 64 + f * 28; g.wf = 72 + Math.sin(st.t * 38 - 0.6) * 26;
       }
       // smoothly toward it (the wings in flight follow at once)
       const k = 1 - Math.exp(-dt * (st.act === "fly" ? 14 : 9));
