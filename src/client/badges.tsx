@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 const AUTO_KEY = "xc-ach-auto";
 import { MEDAL_TIERS } from "../content/medals.ts";
@@ -14,6 +14,8 @@ import { BOSSES as OPEN_ALL } from "../content/bosses.ts";
 import { STASH_LOCATION_NAMES, STASH_SETS_ORDERED } from "../content/stashes.ts";
 import { itemById } from "../content/items.ts";
 import { BossCoin } from "./art/boss-coin.tsx";
+import { peekAchFocus, setAchFocus, takeAchFocus } from "./ach-focus.ts";
+import { useRouter } from "next/navigation";
 
 export interface AchRow { id: string; progress: number; target: number; done: boolean; claimed: boolean; at: number | null }
 
@@ -46,7 +48,7 @@ export function BadgeMedal({ icon, tier, earned, size = 54 }: { icon: string; ti
 }
 
 /** the picture of a position: the boss's face on a coin, a нычки set, a thing, or an icon — with its number under it */
-function AchPic({ a, cat, on, size = 46 }: { a: AchievementDef; cat: AchCategory; on: boolean; size?: number }) {
+export function AchPic({ a, cat, on, size = 46 }: { a: AchievementDef; cat: AchCategory; on: boolean; size?: number }) {
   const boss = a.boss ? OPEN_ALL.find((b) => b.id === a.boss) : undefined;
   const thing = itemById(a.icon);
   return (
@@ -65,8 +67,10 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
   // the list is folded (open at once in the «Личное дело» tab); the header shows the count, the points and what waits
   const [shown, setShown] = useState(unfolded);
   const { act, busy } = useGame();
-  const [open, setOpen] = useState<string | null>(null);
-  const [section, setSection] = useState<AchSection>("boss");
+  // opened from the achievement notice: straight to that achievement's list
+  const [open, setOpen] = useState<string | null>(() => (stashOnly ? null : categoryOf(peekAchFocus() ?? "")?.id ?? null));
+  const [section, setSection] = useState<AchSection>(() => (stashOnly ? "boss" : categoryOf(peekAchFocus() ?? "")?.section ?? "boss"));
+  useEffect(() => { if (!stashOnly) takeAchFocus(); }, [stashOnly]);
   const [stashItem, setStashItem] = useState<string | null>(null);
   const { state } = useGame();
   const stashQty = new Map(self ? (state?.inventory ?? []).filter((i) => i.qty > 0 && i.id.startsWith("stash-")).map((i) => [i.id, i.qty] as const) : []);
@@ -290,5 +294,55 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
         </Modal>
       )}
     </div>
+  );
+}
+
+/**
+ * A notice at the top of the screen for every newly reached achievement: its picture, name, the full bar and the points;
+ * it stays 2 seconds, a tap opens the achievement in the «Личное дело». The ones waiting at the start are not announced.
+ */
+export function AchToast() {
+  const { state } = useGame();
+  const router = useRouter();
+  const seen = useRef<Set<string> | null>(null);
+  const [queue, setQueue] = useState<string[]>([]);
+  const ids = state?.achievementsReadyIds;
+  useEffect(() => {
+    if (!ids) return;
+    if (!seen.current) { seen.current = new Set(ids); return; }
+    const fresh = ids.filter((id) => !seen.current!.has(id));
+    if (!fresh.length) return;
+    fresh.forEach((id) => seen.current!.add(id));
+    setQueue((q) => [...q, ...fresh].slice(0, 8));
+  }, [ids]);
+  const id = queue[0];
+  useEffect(() => {
+    if (!id) return;
+    haptic.ok();
+    const t = window.setTimeout(() => setQueue((q) => q.slice(1)), 2000);
+    return () => window.clearTimeout(t);
+  }, [id]);
+  const a = id ? achievementById(id) : undefined;
+  const cat = id ? categoryOf(id) : undefined;
+  if (!a || !cat) return null;
+  const go = () => {
+    haptic.tap();
+    setAchFocus(a.id);
+    setQueue([]);
+    router.push("/profile");
+  };
+  return (
+    <button key={a.id} type="button" className="ach-toast" onClick={go} aria-label={`Достижение: ${a.name}`}>
+      <span className="ach-toast-pic">
+        <AchPic a={a} cat={cat} on size={46} />
+        <i className="ach-toast-plus">+</i>
+      </span>
+      <span className="ach-main">
+        <b className="ach-name">{a.name}</b>
+        <span className="tiny ach-hint ellipsis">{a.hint}</span>
+        <span className="ach-bar sm" style={{ ["--p" as string]: "100%", ["--c" as string]: TIER_COLORS[a.tier] }}><i /><span className="num">{short(a.target)} / {short(a.target)}</span></span>
+      </span>
+      <span className="ach-toast-pts num">+{a.points}<Icon name="sun" size={18} /></span>
+    </button>
   );
 }

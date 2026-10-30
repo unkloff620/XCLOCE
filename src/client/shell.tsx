@@ -1,4 +1,5 @@
 "use client";
+import { AchToast } from "./badges.tsx";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
@@ -338,6 +339,7 @@ export function Shell({ children }: { children: ReactNode }) {
             <LevelUpOverlay />
             <RouteLoader />
             <TapTips />
+            <AchToast />
           </>
         )}
       </div>

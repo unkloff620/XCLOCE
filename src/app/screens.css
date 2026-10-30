@@ -4036,3 +4036,27 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .kz.night.open .kz-inside { filter: brightness(1.1) saturate(1.1); }
 .kz-glow { position: absolute; left: 30%; top: 22%; width: 70%; height: 60%; pointer-events: none; background: radial-gradient(ellipse at 50% 55%, rgba(255, 180, 80, 0.28), rgba(255, 170, 60, 0) 70%); filter: blur(2cqw); }
 @media (prefers-reduced-motion: reduce) { .kz-l, .kz-tip b, .kz-puff b { animation: none !important; } }
+
+/* a newly reached achievement: a card at the top for 2 seconds, a tap opens it */
+.ach-toast { position: fixed; z-index: 96; left: 50%; top: calc(var(--hud-h) + var(--safe-t) + 8px); transform: translateX(-50%); width: min(92vw, 380px);
+  display: flex; align-items: center; gap: 10px; padding: 8px 12px 8px 8px; border-radius: 16px; border: 2.5px solid #ffcc33; text-align: left; cursor: pointer;
+  background: linear-gradient(180deg, #fbf1db, #f0dfbc); color: #24160a; box-shadow: 0 0 14px rgba(255, 204, 51, 0.55), 0 6px 18px rgba(0, 0, 0, 0.5);
+  animation: ach-toast 2s ease-in-out both; font: inherit; }
+.ach-toast .ach-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ach-toast .ach-name { font-size: 15px; color: #24160a; }
+.ach-toast .ach-hint { color: #4a3420; font-weight: 700; }
+.ach-toast-pic { position: relative; flex: none; }
+.ach-toast-plus { position: absolute; right: -5px; top: -5px; width: 18px; height: 18px; border-radius: 50%; background: #2ee88a; color: #06301a; font-style: normal; font-weight: 900; font-size: 14px; line-height: 18px; text-align: center; border: 1.5px solid #06301a; }
+.ach-toast-pts { flex: none; display: flex; align-items: center; gap: 3px; font-weight: 900; font-size: 15px; color: #8a5200; }
+@keyframes ach-toast { 0% { opacity: 0; transform: translate(-50%, -24px); } 10%, 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -16px); } }
+/* readable on the paper windows: dark ink instead of yellow */
+.ex-notice b.display { color: #9a5a00; text-shadow: 0 1px 0 rgba(255, 248, 230, 0.7); }
+.ex-notice .muted { color: #4a3420; opacity: 1; }
+.modal .frame-chip.frame-gold, .dos-page .frame-chip.frame-gold { color: #8a5a00; }
+.modal .frame-chip.frame-silver, .dos-page .frame-chip.frame-silver { color: #4f5866; }
+.modal .frame-chip.frame-bronze, .dos-page .frame-chip.frame-bronze { color: #8a4a1c; }
+.modal .frame-chip.frame-top, .dos-page .frame-chip.frame-top { color: #5c36a0; }
+/* «Уровень 77» as plain text, no box */
+.lvl, .ph-lvl { padding: 0; border: 0; border-radius: 0; background: none !important; box-shadow: none; font-size: 12px; font-weight: 900; letter-spacing: 0.02em; color: #ffcc33; text-shadow: 0 1px 0 #1a0f05, 0 0 4px rgba(0, 0, 0, 0.6); }
+.ph-lvl { font-size: 16px; }
+.modal .lvl, .modal .ph-lvl, .dos-page .lvl, .dos-page .ph-lvl { color: #8a4b00; text-shadow: none; }

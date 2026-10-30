@@ -23,6 +23,7 @@ import { HeroRig } from "../art/rig.tsx";
 import { HomeScene } from "../art/home-scene.tsx";
 import { ROOM_BACKDROP } from "../../content/home-scene.ts";
 import { BadgesPanel, type AchRow } from "../badges.tsx";
+import { peekAchFocus } from "../ach-focus.ts";
 import { CasesPanel, type CaseRow } from "../cases.tsx";
 import { TalentPanel } from "./talents.tsx";
 import { EYE_COLORS, SKIN_TONES, type Look } from "../../content/home.ts";
@@ -238,7 +239,8 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
   const { state } = useGame();
   // the folder like a book: the cover first (avatar, the case number = the place in the top, the nick), swipe left —
   // the cover opens and the pages follow, each with its own tab; swipe right — back. A tap on a tab turns to it.
-  const [view, setView] = useState(-1);
+  // opened from the achievement notice: straight to the «Достижения» page
+  const [view, setView] = useState(() => (p.self && peekAchFocus() ? 1 : -1));
   const [anim, setAnim] = useState<"" | "out-l" | "out-r" | "in-l" | "in-r">("");
   const [drag, setDrag] = useState(0);
   const touch = useRef<{ x: number; y: number; on: boolean | null } | null>(null);

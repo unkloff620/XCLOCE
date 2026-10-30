@@ -139,7 +139,11 @@ export async function achievementsView(q: Queryable, pid: number, cfg: Config) {
 
 /** Number of badges reached but not collected yet (the dot on the profile button). */
 export async function achievementsReady(q: Queryable, pid: number, cfg: Config): Promise<number> {
-  return (await achievementsView(q, pid, cfg)).filter((a) => a.done && !a.claimed).length;
+  return (await achievementsReadyIds(q, pid, cfg)).length;
+}
+/** the reached, not collected achievements (the client shows a notice for each new one) */
+export async function achievementsReadyIds(q: Queryable, pid: number, cfg: Config): Promise<string[]> {
+  return (await achievementsView(q, pid, cfg)).filter((a) => a.done && !a.claimed).map((a) => a.id);
 }
 
 export async function claimAchievement(ctx: Ctx, id: string) {

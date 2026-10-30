@@ -60,6 +60,8 @@ export interface GameState {
   prizes: { id: number; title: string; reward: Reward }[];
   /** badges reached but not collected */
   achievementsReady: number;
+  /** the reached, not collected achievements (a notice pops up for each new one) */
+  achievementsReadyIds?: string[];
   /** «Ящик ништяков» in the shop: one per 5 achievement points earned (the points stay) */
   achBox?: { points: number; opened: number; ready: number; progress: number; cost: number };
   /** the 777 machine: spins left this hour, and its own level (content/slots.ts slotLevel) */
