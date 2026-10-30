@@ -13,6 +13,8 @@ export type Sfx = "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" |
   | "shake" | "dice" | "card" | "deal" | "chips" | "splat" | "zonk"
   /* a profile: «Ништяк!» for a pumped biceps (public/assets/sound/nishtyak.mp3, a deep voice), a spit, a fist fight */
   | "nishtyak" | "spit" | "brawl"
+  /* a new achievement: «Вот это да!» in a hoarse male voice (public/assets/sound/vot-eto-da.mp3) */
+  | "wow"
   /* «Личное дело»: a sheet of paper turned over */
   | "page";
 
@@ -155,6 +157,7 @@ const SAMPLE_URLS = {
   match: "/assets/sound/match.mp3",
   bars: "/assets/sound/bars.mp3",
   nishtyak: "/assets/sound/nishtyak.mp3",
+  wow: "/assets/sound/vot-eto-da.mp3",
 } as Record<string, string>;
 /** a hit sound per weapon (w-<weapon id>) and a pick-up sound per yard find (y-<drop id>): tools/sound/build-item-sounds.py */
 const WEAPON_SOUNDS = ["fist", "mouse", "keyboard", "red-candle", "gpu", "rug-pull-gun"];
@@ -249,6 +252,11 @@ export function sfx(name: Sfx, power = 0.5) {
   if (!a || a.state !== "running") return;
   const t = a.currentTime + 0.005;
   switch (name) {
+    case "wow":
+      if (sample(a, "wow", t, 1)) break;
+      tone(a, 140, t, 0.2, { type: "sawtooth", vol: 0.18, slide: 1.2 });
+      tone(a, 170, t + 0.22, 0.4, { type: "sawtooth", vol: 0.18, slide: 0.7 });
+      break;
     case "nishtyak":
       if (sample(a, "nishtyak", t, 1)) break;
       tone(a, 110, t, 0.25, { type: "sawtooth", vol: 0.2, slide: 0.8 });

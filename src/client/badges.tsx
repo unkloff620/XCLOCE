@@ -8,6 +8,7 @@ import { Icon, type IconName } from "./art/icons.tsx";
 import { Modal, RewardChips } from "./ui.tsx";
 import { useGame } from "./store.tsx";
 import { haptic } from "./telegram.ts";
+import { sfx } from "./sound.ts";
 import { full, short } from "./format.ts";
 import { ItemArt } from "./art/items.tsx";
 import { BOSSES as OPEN_ALL } from "../content/bosses.ts";
@@ -298,15 +299,20 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
 }
 
 /**
- * Notices at the top of the screen for newly reached achievements, one under another: each stays 5 seconds (a swipe to
- * the left takes it away sooner), a tap opens the achievement in the «Личное дело». The ones waiting at the start are
- * not announced.
+ * Notices at the top of the screen for newly reached achievements: they come in one after another (a new card every
+ * REVEAL_MS, under the ones already shown), fade in, shine, and each stays LIFE_MS — so they go away in the same order,
+ * the next ones moving up into the free place. A swipe to the left takes one away sooner, a tap opens it in the «Личное
+ * дело». «Вот это да!» sounds when a batch starts. The ones waiting at the start are not announced.
  */
+const REVEAL_MS = 650;
+const LIFE_MS = 10_000;
 export function AchToast() {
   const { state } = useGame();
   const router = useRouter();
   const seen = useRef<Set<string> | null>(null);
+  const [waiting, setWaiting] = useState<string[]>([]);
   const [list, setList] = useState<string[]>([]);
+  const lastSound = useRef(0);
   const ids = state?.achievementsReadyIds;
   useEffect(() => {
     if (!ids) return;
@@ -314,14 +320,24 @@ export function AchToast() {
     const fresh = ids.filter((id) => !seen.current!.has(id));
     if (!fresh.length) return;
     fresh.forEach((id) => seen.current!.add(id));
-    haptic.ok();
-    setList((l) => [...l, ...fresh].slice(-6));
+    setWaiting((w) => [...w, ...fresh].slice(0, 12));
   }, [ids]);
+  // one by one: the next card comes REVEAL_MS after the one before
+  useEffect(() => {
+    if (!waiting.length) return;
+    const t = window.setTimeout(() => {
+      const [next, ...rest] = waiting;
+      setWaiting(rest);
+      setList((l) => [...l, next]);
+      if (Date.now() - lastSound.current > 4000) { lastSound.current = Date.now(); sfx("wow"); haptic.big(); } else haptic.ok();
+    }, list.length === 0 ? 0 : REVEAL_MS);
+    return () => window.clearTimeout(t);
+  }, [waiting, list.length]);
   const drop = (id: string) => setList((l) => l.filter((x) => x !== id));
   if (!list.length) return null;
   return (
     <div className="ach-toasts">
-      {list.map((id) => <AchToastCard key={id} id={id} onGone={() => drop(id)} onOpen={() => { setAchFocus(id); setList([]); router.push("/profile"); }} />)}
+      {list.map((id) => <AchToastCard key={id} id={id} onGone={() => drop(id)} onOpen={() => { setAchFocus(id); setList([]); setWaiting([]); router.push("/profile"); }} />)}
     </div>
   );
 }
@@ -333,12 +349,12 @@ function AchToastCard({ id, onGone, onOpen }: { id: string; onGone: () => void; 
   const goneRef = useRef(onGone);
   goneRef.current = onGone;
   useEffect(() => {
-    const t = window.setTimeout(() => setOut(true), 5000);
+    const t = window.setTimeout(() => setOut(true), LIFE_MS);
     return () => window.clearTimeout(t);
   }, []);
   useEffect(() => {
     if (!out) return;
-    const t = window.setTimeout(() => goneRef.current(), 280);
+    const t = window.setTimeout(() => goneRef.current(), 600);
     return () => window.clearTimeout(t);
   }, [out]);
   const a = achievementById(id);
@@ -360,7 +376,7 @@ function AchToastCard({ id, onGone, onOpen }: { id: string; onGone: () => void; 
   };
   return (
     <button type="button" className={`ach-toast ${out ? "out" : ""}`} aria-label={`Достижение: ${a.name}`}
-      style={dx ? { transform: `translateX(${dx}px)`, opacity: Math.max(0.2, 1 + dx / 260), transition: "none" } : undefined}
+      style={dx && !out ? { transform: `translateX(${dx}px)`, opacity: Math.max(0.2, 1 + dx / 260), transition: "none" } : undefined}
       onClick={() => { if (!dx) { haptic.tap(); onOpen(); } }}
       onTouchStart={(e) => begin(e.touches[0].clientX, e.touches[0].clientY)} onTouchMove={(e) => move(e.touches[0].clientX, e.touches[0].clientY)} onTouchEnd={end} onTouchCancel={end}>
       <span className="ach-toast-pic">

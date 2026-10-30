@@ -4038,12 +4038,13 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 @media (prefers-reduced-motion: reduce) { .kz-l, .kz-tip b, .kz-puff b { animation: none !important; } }
 
 /* a newly reached achievement: a card at the top for 2 seconds, a tap opens it */
-.ach-toasts { position: fixed; z-index: 96; left: 50%; top: calc(var(--hud-h) + var(--safe-t) + 8px); transform: translateX(-50%); width: min(92vw, 380px); display: flex; flex-direction: column; gap: 6px; pointer-events: none; }
-.ach-toast { pointer-events: auto; width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 12px 8px 8px; border-radius: 16px; border: 2.5px solid #ffcc33; text-align: left; cursor: pointer; touch-action: pan-y;
+.ach-toasts { position: fixed; z-index: 96; left: 50%; top: calc(var(--hud-h) + var(--safe-t) + 8px); transform: translateX(-50%); width: min(92vw, 380px); display: flex; flex-direction: column; pointer-events: none; }
+/* each card: fades in from see-through; on leaving it fades and folds its height, so the next ones move up smoothly */
+.ach-toast { pointer-events: auto; width: 100%; max-height: 140px; margin-bottom: 7px; display: flex; align-items: center; gap: 10px; padding: 8px 12px 8px 8px; border-radius: 16px; border: 2.5px solid #ffcc33; text-align: left; cursor: pointer; touch-action: pan-y;
   background: linear-gradient(180deg, #fbf1db, #f0dfbc); color: #24160a; box-shadow: 0 0 14px rgba(255, 204, 51, 0.55), 0 6px 18px rgba(0, 0, 0, 0.5);
-  animation: ach-toast-in 0.3s ease-out backwards; transition: transform 0.28s ease-in, opacity 0.28s ease-in; font: inherit; }
-.ach-toast.out { transform: translateX(-110%); opacity: 0; }
-@keyframes ach-toast-in { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: none; } }
+  transition: transform 0.45s ease-in, opacity 0.45s ease-in, max-height 0.45s ease-in 0.1s, margin 0.45s ease-in 0.1s, padding 0.45s ease-in 0.1s, border-width 0.45s ease-in 0.1s; font: inherit; }
+.ach-toast.out { transform: translateX(-30%); opacity: 0; max-height: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; border-width: 0; }
+@keyframes ach-toast-in { from { opacity: 0; transform: translateY(-10px) scale(0.97); filter: blur(2px); } to { opacity: 1; transform: none; filter: none; } }
 .ach-toast .ach-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .ach-toast .ach-name { font-size: 15px; color: #24160a; }
 .ach-toast .ach-hint { color: #4a3420; font-weight: 700; }
@@ -4062,17 +4063,17 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .ph-lvl { font-size: 16px; }
 .modal .lvl, .modal .ph-lvl, .dos-page .lvl, .dos-page .ph-lvl { color: #8a4b00; text-shadow: none; }
 /* the notice shines like the medals, only stronger: a bright sweep over the card and a pulsing golden glow */
-.ach-toast { position: relative; overflow: hidden; animation: ach-toast-in 0.3s ease-out backwards, ach-toast-glow 1.6s ease-in-out 0.3s infinite; }
+.ach-toast { position: relative; overflow: hidden; animation: ach-toast-in 0.8s ease-out backwards, ach-toast-glow 2.4s ease-in-out 0.4s infinite; }
 .ach-toast::after { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; mix-blend-mode: soft-light;
   background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.95) 45%, rgba(255, 236, 150, 0.9) 50%, transparent 65%); background-size: 260% 100%; background-position: 140% 0;
-  animation: ach-toast-shine 1.8s ease-in-out 0.2s infinite; }
+  animation: ach-toast-shine 2.6s cubic-bezier(0.45, 0, 0.25, 1) 0.5s infinite; }
 .ach-toast::before { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
   background: linear-gradient(110deg, transparent 38%, rgba(255, 255, 255, 0.55) 48%, transparent 58%); background-size: 260% 100%; background-position: 140% 0;
-  animation: ach-toast-shine 1.8s ease-in-out 0.2s infinite; }
+  animation: ach-toast-shine 2.6s cubic-bezier(0.45, 0, 0.25, 1) 0.5s infinite; }
 .ach-toast > * { position: relative; z-index: 1; }
 @keyframes ach-toast-shine { 0% { background-position: 140% 0; } 70%, 100% { background-position: -40% 0; } }
-@keyframes ach-toast-glow { 0%, 100% { box-shadow: 0 0 10px rgba(255, 204, 51, 0.5), 0 6px 18px rgba(0, 0, 0, 0.5); border-color: #ffcc33; }
-  50% { box-shadow: 0 0 26px 4px rgba(255, 220, 90, 0.95), 0 0 6px rgba(255, 255, 255, 0.9) inset, 0 6px 18px rgba(0, 0, 0, 0.5); border-color: #fff1a8; } }
-.ach-toast .ach-pic { animation: ach-toast-pic 1.6s ease-in-out 0.3s infinite; }
-@keyframes ach-toast-pic { 0%, 100% { filter: drop-shadow(0 0 0 rgba(255, 220, 90, 0)); } 50% { filter: drop-shadow(0 0 8px rgba(255, 220, 90, 1)); } }
+@keyframes ach-toast-glow { 0%, 100% { box-shadow: 0 0 14px 2px rgba(255, 204, 51, 0.65), 0 0 2px rgba(255, 255, 255, 0.4) inset, 0 6px 18px rgba(0, 0, 0, 0.5); border-color: #ffcc33; }
+  50% { box-shadow: 0 0 34px 10px rgba(255, 222, 90, 1), 0 0 70px 16px rgba(255, 190, 40, 0.55), 0 0 12px rgba(255, 255, 255, 1) inset, 0 6px 18px rgba(0, 0, 0, 0.5); border-color: #fffbe0; } }
+.ach-toast .ach-pic { animation: ach-toast-pic 2.4s ease-in-out 0.4s infinite; }
+@keyframes ach-toast-pic { 0%, 100% { filter: drop-shadow(0 0 0 rgba(255, 220, 90, 0)); } 50% { filter: drop-shadow(0 0 12px rgba(255, 230, 110, 1)) brightness(1.15); } }
 @media (prefers-reduced-motion: reduce) { .ach-toast, .ach-toast::before, .ach-toast::after, .ach-toast .ach-pic { animation: none; } }
