@@ -4,7 +4,7 @@ import { OL } from "./icons.tsx";
 
 /* ---------------- location banners (360×140) ---------------- */
 /** locations with a drawn background (public/assets/locations, built by tools/scene/build-locations.py) */
-export const LOCATION_ART = new Set(["openspace", "market", "serverroom", "basement", "board", "accounting", "hr", "party"]);
+export const LOCATION_ART = new Set(["openspace", "market", "serverroom", "basement", "board", "accounting", "hr", "party", "offshore", "yacht", "moonbase"]);
 
 export function LocationScene({ scene }: { scene: string }) {
   // eslint-disable-next-line @next/next/no-img-element

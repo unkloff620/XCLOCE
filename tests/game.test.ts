@@ -1692,10 +1692,12 @@ describe("нычки", () => {
 });
 
 describe("нычки v2", () => {
-  it("three sets in the first location; stashes come for spent energy (chance per energy, a sure find at the pity), not for closing", async () => {
+  it("four sets in every location; stashes come for spent energy (chance per energy, a sure find at the pity), not for closing", async () => {
     const { stashSetsByLocation, STASH_SETS } = await import("../src/content/stashes.ts");
-    expect(STASH_SETS).toHaveLength(16);
-    expect(stashSetsByLocation("openspace")).toHaveLength(3);
+    expect(STASH_SETS).toHaveLength(44);
+    const { LOCATIONS } = await import("../src/content/locations.ts");
+    expect(LOCATIONS).toHaveLength(11);
+    for (const l of LOCATIONS) expect(stashSetsByLocation(l.id)).toHaveLength(4);
     // every stash has its picture, every set its set picture
     const { existsSync } = await import("node:fs");
     for (const s of STASH_SETS) {
