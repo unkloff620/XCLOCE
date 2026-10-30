@@ -80,9 +80,13 @@ function Pigeon({ area, delay }: { area: PigeonArea; delay: number }) {
         {/* eslint-disable @next/next/no-img-element */}
         <img className="pg-l pg-leg b" src={`${P}/leg-back.webp`} alt="" draggable={false} />
         <img className="pg-l pg-leg f" src={`${P}/leg-front.webp`} alt="" draggable={false} />
-        <img className="pg-l pg-wings" src={`${P}/wings.webp`} alt="" draggable={false} />
-        <img className="pg-l pg-body" src={`${P}/body.webp`} alt="" draggable={false} />
-        <img className="pg-l pg-head" src={`${P}/head.webp`} alt="" draggable={false} />
+        {/* the upper body (it leans to peck, tilts up to fly): the far wing, the body, the head, the near wing */}
+        <span className="pg-l pg-up">
+          <img className="pg-l pg-wing far" src={`${P}/wing-far.webp`} alt="" draggable={false} />
+          <img className="pg-l pg-body" src={`${P}/body.webp`} alt="" draggable={false} />
+          <img className="pg-l pg-head" src={`${P}/head.webp`} alt="" draggable={false} />
+          <img className="pg-l pg-wing near" src={`${P}/wing-near.webp`} alt="" draggable={false} />
+        </span>
         {/* eslint-enable @next/next/no-img-element */}
         {b.mode === "peck" && <i className="pg-grain"><b /><b /><b /></i>}
       </span>
