@@ -1,6 +1,6 @@
 """The second half of the yard (swipe left in the yard): outpainted from the yard picture to the right in two steps
 (gpt-image-2 with a mask, the sky and the puddles kept flat magenta), and its night copy:
-tools/scene/source/court2-{day,night}.png → public/assets/yard/court2.webp, court2-dark.webp (1200×2043, the sky and the
+tools/scene/source/court2-{day,night}.png → public/assets/yard/yard2-bg.webp, yard2-bg-dark.webp (1200×2043, the sky and the
 puddles see-through, like court-night.webp / court-dark.webp)."""
 import os
 import numpy as np
@@ -27,12 +27,12 @@ def key_magenta(src: Image.Image) -> Image.Image:
     return Image.fromarray(np.dstack([out.clip(0, 255), alpha.clip(0, 255)]).astype(np.uint8), "RGBA")
 
 
-for src, dst in (("court2-day.png", "court2.webp"), ("court2-night.png", "court2-dark.webp")):
+for src, dst in (("court2-day.png", "yard2-bg.webp"), ("court2-night.png", "yard2-bg-dark.webp")):
     key_magenta(Image.open(os.path.join(SRC, src))).save(os.path.join(OUT, dst), "WEBP", quality=80, method=4)
     print(dst, os.path.getsize(os.path.join(OUT, dst)) // 1024, "KB")
 
 # the exchange kiosk: its own object over the yard (a button), day and night (gpt-image-1.5, transparent)
-for src, dst in (("court2-kiosk.png", "court2-kiosk.webp"), ("court2-kiosk-night.png", "court2-kiosk-dark.webp")):
+for src, dst in (("court2-kiosk.png", "yard2-kiosk.webp"), ("court2-kiosk-night.png", "yard2-kiosk-dark.webp")):
     k = Image.open(os.path.join(SRC, src)).convert("RGBA")
     k = k.crop(k.split()[3].point(lambda v: 255 if v > 16 else 0).getbbox())
     k = k.resize((420, round(k.height * 420 / k.width)), Image.LANCZOS)

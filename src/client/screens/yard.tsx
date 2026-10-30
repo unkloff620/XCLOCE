@@ -158,12 +158,12 @@ export function YardScreen() {
           <DriftingSky className="court-sky" src={tod === "night" ? "/assets/yard/sky-dark.webp" : undefined} />
           <DriftingSky className="yard-reflect" src={tod === "night" ? "/assets/yard/sky-dark.webp" : undefined} />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="yard-bg" src={tod === "night" ? "/assets/yard/court2-dark.webp" : "/assets/yard/court2.webp"} alt="" draggable={false} />
+          <img className="yard-bg" src={tod === "night" ? "/assets/yard/yard2-bg-dark.webp" : "/assets/yard/yard2-bg.webp"} alt="" draggable={false} />
           <span className="yard-tint" aria-hidden="true" />
           {/* the exchange kiosk: its own picture over the yard (a button) */}
           <Link href="/exchange" className="yard-obj yard-kiosk" aria-label="Обменник" title="Обменник" tabIndex={page === 1 ? 0 : -1}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={tod === "night" ? "/assets/yard/court2-kiosk-dark.webp" : "/assets/yard/court2-kiosk.webp"} alt="" draggable={false} />
+            <img src={tod === "night" ? "/assets/yard/yard2-kiosk-dark.webp" : "/assets/yard/yard2-kiosk.webp"} alt="" draggable={false} />
           </Link>
         </div>
         <button type="button" className={`yard-pager ${page === 0 ? "next" : "prev"}`} onClick={() => turn(page === 0 ? 1 : 0)} aria-label={page === 0 ? "Дальше по двору" : "Назад во двор"}>{page === 0 ? "›" : "‹"}</button>
