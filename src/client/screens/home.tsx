@@ -26,6 +26,7 @@ import { MessagesWindow, messagesWaiting, StashWishWindow } from "./stash-swap.t
 import { ItemArt } from "../art/items.tsx";
 import { ExchangeNotice } from "../exchange-notice.tsx";
 import { UpdatesNotice, UpdatesWindow } from "../updates-notice.tsx";
+import { usedUrl } from "../preload.ts";
 import { todayUpdates } from "../../content/updates.ts";
 
 const MENU_KEY = "xc2_home_menu";
@@ -186,7 +187,7 @@ export function HomeScreen() {
                   {!canPay && <span className="tiny" style={{ color: "#ff8a9e" }}>Не хватает {viewRoom.price!.currency}</span>}
                 </>
               ) : (
-                <span className="chip"><Icon name="lock" size={16} /> Выпадает с босса {bossById(viewRoom.drop!.boss)?.name} · {Math.round(viewRoom.drop!.chance * 100)}%</span>
+                <span className="chip"><Icon name="lock" size={16} /> {bossById(viewRoom.drop!.boss) ? `Выпадает с босса ${bossById(viewRoom.drop!.boss)!.name} · ${Math.round(viewRoom.drop!.chance * 100)}%` : "Выпадет с ивента «Пепе»"}</span>
               )}
             </div>
           )}
@@ -233,7 +234,7 @@ export function HomeScreen() {
           {/* the event: Пепе (a test fight for now) */}
           <Link href="/event/pepe" className="menu-toggle event-toggle" aria-label="Ивент: Пепе" title="Ивент: Пепе">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/bosses/pepe/portrait.webp" alt="" draggable={false} />
+            <img src={usedUrl("/bosses/pepe/portrait.webp")} alt="" draggable={false} />
             <span className="event-tag">ИВЕНТ</span>
           </Link>
           {menuOpen && (

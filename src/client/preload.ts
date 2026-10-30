@@ -8,7 +8,7 @@
 import { ASSET_FILES } from "./asset-manifest.ts";
 
 /** cache-busting versions of redrawn art (bump when the picture changes) */
-export const ART_VER = { heroPart: 5, hair: 4, wear: 3, items: 3 } as const;
+export const ART_VER = { heroPart: 5, hair: 4, wear: 3, items: 3, pepe: 2 } as const;
 
 /** the URL a screen really requests for a file from the manifest */
 export function usedUrl(path: string): string {
@@ -16,6 +16,7 @@ export function usedUrl(path: string): string {
   if (path.startsWith("/assets/hero/wear/")) return `${path}?v=${ART_VER.wear}`;
   if (path.startsWith("/assets/hero/")) return `${path}?v=${ART_VER.heroPart}`;
   if (path.startsWith("/assets/items/")) return `${path}?v=${ART_VER.items}`;
+  if (path.startsWith("/bosses/pepe/")) return `${path}?v=${ART_VER.pepe}`;
   return path;
 }
 
@@ -36,7 +37,7 @@ export function sectionOfRoute(route: string): Section | null {
   if (route === "/") return "home";
   if (route.startsWith("/yard")) return "yard";
   if (route.startsWith("/shop")) return "shop";
-  if (route.startsWith("/bosses")) return "bosses";
+  if (route.startsWith("/bosses") || route.startsWith("/event")) return "bosses";
   if (route.startsWith("/locations")) return "locations";
   return null;
 }

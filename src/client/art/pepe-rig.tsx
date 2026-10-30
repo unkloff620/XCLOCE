@@ -11,6 +11,7 @@
  */
 import { useEffect, useRef } from "react";
 import { PEPE } from "./pepe-data.ts";
+import { usedUrl } from "../preload.ts";
 
 type V = readonly [number, number];
 const P = PEPE.pts as unknown as Record<string, V>;
@@ -318,7 +319,7 @@ export function PepeRig({ view, className, sad }: { view?: readonly [number, num
     gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     let alive = true, raf = 0;
     const meshes: Mesh[] = [];
-    Promise.all(ORDER.map((id) => new Promise<HTMLImageElement>((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = `/bosses/pepe/rig/${id}.webp`; })))
+    Promise.all(ORDER.map((id) => new Promise<HTMLImageElement>((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = usedUrl(`/bosses/pepe/rig/${id}.webp`); })))
       .then((imgs) => { if (alive) imgs.forEach((im, i) => meshes.push(buildMesh(gl, ORDER[i], im))); })
       .catch(() => undefined);
     const t0 = performance.now();
