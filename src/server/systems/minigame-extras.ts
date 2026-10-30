@@ -1,5 +1,6 @@
 import type { Queryable } from "../db.ts";
 import { grantReward, moscowDay, weekKey, weekStart, type Ctx } from "../core.ts";
+import { bump, countersOf, setTo } from "./counters.ts";
 import { GAME_BOARDS, GAME_WEEK_PRIZES, POKER_HANDS, ROACH_RULES, ZONK_DAY_PRIZE, type GameBoard } from "../../content/games.ts";
 
 /*
@@ -170,4 +171,19 @@ export async function dayTop(q: Queryable, pid: number, game: "bj" | "poker", wh
     top: rows.map((r, i) => ({ id: r.id, name: r.name, photo: r.photo, place: i + 1, value: Number(r.rank), hand: r.hand })),
     me: me ? { place: Number(me.place), value: Number(me.rank), hand: me.hand } : null,
   };
+}
+
+/** A pigeon in the yard scared off: 1–5 roubles (one every 2 seconds at most, 300 a Moscow day), counted for «Прогнать голубя». */
+export const PIGEON_RULES = { min: 1, max: 5, cooldownMs: 2_000, perDay: 300 };
+export async function scarePigeon(ctx: Ctx) {
+  const c = await countersOf(ctx.q, ctx.pid);
+  const day = Number(moscowDay(ctx.now).replace(/-/g, ""));
+  const n = c.pigeonDay === day ? c.pigeonDayN ?? 0 : 0;
+  if (n >= PIGEON_RULES.perDay || ctx.now - (c.pigeonAt ?? 0) < PIGEON_RULES.cooldownMs) return { reward: null };
+  await setTo(ctx.q, ctx.pid, "pigeonAt", ctx.now);
+  await setTo(ctx.q, ctx.pid, "pigeonDay", day);
+  await setTo(ctx.q, ctx.pid, "pigeonDayN", n + 1);
+  await bump(ctx.q, ctx.pid, "pigeons", 1);
+  const rub = PIGEON_RULES.min + Math.floor(ctx.rng() * (PIGEON_RULES.max - PIGEON_RULES.min + 1));
+  return { reward: await grantReward(ctx, { currencies: { RUB: rub } }, "pigeon") };
 }

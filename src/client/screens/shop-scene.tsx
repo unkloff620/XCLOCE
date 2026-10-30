@@ -39,13 +39,12 @@ function Spot({ s, onOpen }: { s: (typeof SPOTS)[number]; onOpen: (id: ShopSpotI
     <button className={`sk-spot sk-spot-${s.id}`} style={box(s.layer)} onClick={() => onOpen(s.id)} aria-label={s.label} title={s.label}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={`/assets/shop/v2/${s.layer}.webp`} alt="" draggable={false} />
-      <span className={`sk-tag ${s.tag}`}>{s.label}</span>
     </button>
   );
 }
 
-/** «Ящик ништяков» stands on the shelf under the energy drinks (public/assets/shop/v2/ach-box.webp, tools/shop/source/ach-box.png) */
-const ACH_BOX_AT = { left: 17.0, top: 26.4, width: 9.4, height: 6.8 };
+/** «Ящик ништяков» stands on the dealer's counter on the right, a third of it past the edge (public/assets/shop/v2/ach-box.webp, tools/shop/source/ach-box.png) */
+const ACH_BOX_AT = { left: 86, top: 51, width: 21, height: 21 * (420 / 412) * (2000 / 2800) };
 
 export function ShopScene({ onOpen, children, box, onBox }: {
   onOpen: (id: ShopSpotId) => void; children?: ReactNode;
@@ -59,14 +58,6 @@ export function ShopScene({ onOpen, children, box, onBox }: {
       {/* the lamp hangs a little higher, so the cut end of its cord stays above the picture */}
       <Layer n="lamp" className="sk-lamp" style={{ transformOrigin: "50% 0%", top: `${L.lamp.top - 3.2}%` }} />
       {spot("energy")}
-      {onBox && (
-        <button className={`sk-spot sk-box ${box && box.ready > 0 ? "ready" : ""}`} onClick={onBox} aria-label="Ящик ништяков" title="Ящик ништяков"
-          style={{ left: `${ACH_BOX_AT.left}%`, top: `${ACH_BOX_AT.top}%`, width: `${ACH_BOX_AT.width}%`, height: `${ACH_BOX_AT.height}%` }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assets/shop/v2/ach-box.webp" alt="" draggable={false} />
-          <span className="sk-tag bottom num">{box ? (box.ready > 0 ? `×${box.ready}` : `${box.progress}/${box.cost}`) : "Ящик"}</span>
-        </button>
-      )}
       {spot("clothing")}
       <div className="sk-body" style={{ transformOrigin: `${neck.x}% 70%` }}>
         <Layer n="torso" />
@@ -81,6 +72,14 @@ export function ShopScene({ onOpen, children, box, onBox }: {
         </div>
       </div>
       <Layer n="counter" />
+      {onBox && (
+        <button className={`sk-spot sk-box ${box && box.ready > 0 ? "ready" : ""}`} onClick={onBox} aria-label="Ящик ништяков" title="Ящик ништяков"
+          style={{ left: `${ACH_BOX_AT.left}%`, top: `${ACH_BOX_AT.top}%`, width: `${ACH_BOX_AT.width}%`, height: `${ACH_BOX_AT.height}%` }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/assets/shop/v2/ach-box.webp" alt="" draggable={false} />
+          <span className="sk-tag bottom num">{box ? (box.ready > 0 ? `×${box.ready}` : `${box.progress}/${box.cost}`) : "Ящик"}</span>
+        </button>
+      )}
       {spot("weapons")}
       {/* the arms lie on the counter in front of the goods; they breathe with the body (same animation, same pivot) */}
       <div className="sk-body sk-arms" style={{ transformOrigin: `${neck.x}% 70%` }}>

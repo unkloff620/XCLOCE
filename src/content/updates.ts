@@ -17,6 +17,15 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-10-30-pigeons",
+    date: "30 октября",
+    title: "Голуби платят",
+    items: [
+      { text: "Прогнал голубя во дворе — получи 1–5 ₽. В «Прочем» новое достижение «Прогнать голубя»: от 1 до 1000 раз." },
+      { text: "Ящик ништяков переехал на прилавок торговца справа; надписи над товарами в магазине убраны." },
+    ],
+  },
+  {
     id: "2026-10-30-boss-things",
     date: "30 октября",
     title: "Вещи с боссов",

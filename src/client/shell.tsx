@@ -10,7 +10,7 @@ import { Avatar } from "./ui.tsx";
 import { clock, full, moneyShort } from "./format.ts";
 import { CURRENCIES } from "../content/currencies.ts";
 import { TIPS, resourceLine } from "../content/loading.ts";
-import { loginWidget } from "./api.ts";
+import { isOutdated, loginWidget, reloadFresh } from "./api.ts";
 import { telegramBack } from "./telegram.ts";
 import { ResultWindow } from "./screens/result.tsx";
 import { LevelUpOverlay } from "./levelup.tsx";
@@ -320,7 +320,10 @@ export function Shell({ children }: { children: ReactNode }) {
           <div className="loading">
             <div className="panel" style={{ maxWidth: 340 }}>
               <p>{error ?? "Не удалось подключиться"}</p>
-              <button className="btn green block" onClick={retryAuth}>Ещё раз</button>
+              {/* a new release is out: «Ещё раз» would keep the old page — reload into the new one */}
+              {isOutdated() || /обновлени/i.test(error ?? "")
+                ? <button className="btn green block" onClick={reloadFresh}>Обновить</button>
+                : <button className="btn green block" onClick={retryAuth}>Ещё раз</button>}
             </div>
           </div>
         )}

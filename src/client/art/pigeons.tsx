@@ -9,6 +9,9 @@
  */
 import { useEffect, useRef } from "react";
 import { haptic } from "../telegram.ts";
+import { useGame } from "../store.tsx";
+import { GainLine } from "../ui.tsx";
+import type { Granted } from "../api.ts";
 
 const P = "/assets/yard/pigeon";
 export interface PigeonArea { x0: number; x1: number; y0: number; y1: number }
@@ -20,6 +23,9 @@ interface Pose { up: number; upY: number; head: number; headX: number; headY: nu
 const ZERO: Pose = { up: 0, upY: 0, head: 0, headX: 0, headY: 0, wn: 0, wf: 0, lf: 0, lb: 0, tuck: 0 };
 
 function Pigeon({ area, delay }: { area: PigeonArea; delay: number }) {
+  const { act, toast } = useGame();
+  const actRef = useRef(act); actRef.current = act;
+  const toastRef = useRef(toast); toastRef.current = toast;
   const root = useRef<HTMLButtonElement>(null);
   const flip = useRef<HTMLSpanElement>(null);
   const up = useRef<HTMLSpanElement>(null);
@@ -63,6 +69,8 @@ function Pigeon({ area, delay }: { area: PigeonArea; delay: number }) {
     scareRef.current = () => {
       if (st.act === "fly" || st.act === "gone") return;
       haptic.tap();
+      // a scared pigeon pays a few roubles (the server keeps the pace and the daily limit)
+      void actRef.current<{ reward: Granted | null }>("pigeon_scare", {}).then((r) => { if (r?.reward) toastRef.current(<GainLine r={r.reward} />, "ok"); });
       st.act = "fly";
       st.t = 0;
       st.fly = 0;

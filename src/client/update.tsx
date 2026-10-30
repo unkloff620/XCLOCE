@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { UPDATE_EVENT, checkVersion, isOutdated } from "./api.ts";
+import { UPDATE_EVENT, checkVersion, isOutdated, reloadFresh } from "./api.ts";
 
 /*
  * A new release is out (the server's version differs from this page's, src/version.ts): a screen over everything
@@ -35,7 +35,7 @@ export function UpdateGate() {
         <div className="update-icon" aria-hidden="true">⟳</div>
         <b id="update-title" className="display update-title">Вышло обновление!</b>
         <p className="update-text">Игра обновилась. Обнови страницу, чтобы продолжить — до этого действия недоступны.</p>
-        <button className="btn gold block" onClick={() => window.location.reload()}>Обновить</button>
+        <button className="btn gold block" onClick={reloadFresh}>Обновить</button>
       </div>
     </div>,
     document.body,

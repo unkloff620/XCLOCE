@@ -4129,3 +4129,6 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .modal-body { flex: 1 1 auto !important; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; margin: 0 -6px; padding: 2px 6px 4px;
   -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 8px, #000 calc(100% - 10px), transparent 100%); mask-image: linear-gradient(180deg, transparent 0, #000 8px, #000 calc(100% - 10px), transparent 100%); }
 .modal-body > .upd-list { max-height: none; overflow: visible; margin-bottom: 8px; }
+
+/* the box on the counter is a third past the right edge: its number sits on the visible part */
+.sk-box .sk-tag.bottom { left: 32%; bottom: 8%; }

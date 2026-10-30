@@ -101,6 +101,7 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
     ...Object.fromEntries(Object.entries(c).filter(([k]) => k.startsWith("zonk:")).map(([k, v]) => [k, v])),
     talents: talentsForDamage(Number(r?.damage ?? 0)),
     bjBestBet: c.bjBestBet ?? 0,
+    pigeons: c.pigeons ?? 0,
   };
   const second = {
     bestFight: m("best_fight"), winsBlat: m("wins_blat"), winsAvtor: m("wins_avtor"), bossesBeaten: m("bosses"),

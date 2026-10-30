@@ -198,6 +198,12 @@ function store(k: string, v?: string | null): string | null {
 export const UPDATE_EVENT = "xc-update";
 let outdated = false;
 export const isOutdated = () => outdated;
+/** reload into the new release: a fresh address, so Telegram's webview does not serve the old page from its cache */
+export function reloadFresh() {
+  const u = new URL(window.location.href);
+  u.searchParams.set("v", String(Date.now()));
+  window.location.replace(u.toString());
+}
 export function checkVersion(v: string | null) {
   if (outdated || !v || v === "dev" || APP_VERSION === "dev" || v === APP_VERSION) return;
   outdated = true;
