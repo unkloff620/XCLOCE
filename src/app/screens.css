@@ -4153,3 +4153,14 @@ body { background-attachment: fixed; }
 .pg-gain { position: absolute; z-index: 40; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 3px; pointer-events: none; white-space: nowrap;
   font-weight: 900; font-size: 17px; color: #ffe27a; text-shadow: 0 2px 0 #1a0f05, 0 0 6px rgba(0, 0, 0, 0.7); animation: pg-gain 1.6s ease-out forwards; }
 @keyframes pg-gain { 0% { opacity: 0; transform: translate(-50%, 6px) scale(0.8); } 15% { opacity: 1; transform: translate(-50%, 0) scale(1.08); } 100% { opacity: 0; transform: translate(-50%, -70px) scale(1); } }
+/* «Ивент» on the home screen (right column, under the messages): the event boss's face, the word under it */
+.event-toggle { overflow: visible; border-color: rgba(61, 220, 132, 0.6); animation: event-glow 2.4s ease-in-out infinite; }
+.event-toggle img { width: 100%; height: 100%; object-fit: cover; border-radius: 14px; pointer-events: none; }
+.event-tag { position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%); padding: 1px 5px; border-radius: 6px; background: #3ddc84; color: #0b2414;
+  font-size: 9px; font-weight: 900; letter-spacing: 0.04em; line-height: 1.3; white-space: nowrap; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35); }
+@keyframes event-glow { 0%, 100% { box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25), 0 0 0 0 rgba(61, 220, 132, 0); } 50% { box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25), 0 0 14px 2px rgba(61, 220, 132, 0.55); } }
+/* Пепе behind the door and in the test fight */
+.pepe-door-boss canvas { width: 100%; height: 100%; }
+.pepe-won { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); z-index: 6; display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center;
+  padding: 16px 18px; border-radius: 16px; background: rgba(12, 20, 14, 0.86); border: 2px solid #3ddc84; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5); width: min(86%, 320px); }
+.pepe-won b { font-size: 24px; color: #3ddc84; }

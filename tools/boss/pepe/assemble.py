@@ -19,7 +19,7 @@ fit = json.load(open(f"{R}/fit.json"))
 LIDS = ["lidLL", "lidLR", "lidUL", "lidUR"]
 for n in ["whites", *LIDS]:
     fit[n] = fit["head"]
-ORDER = ["legs", "body", "handL", "handR", "sleeveL", "sleeveR", "whites", "pupils", *LIDS, "head", "mouth", "pill"]
+ORDER = ["legs", "sleeveR", "handR", "body", "sleeveL", "handL", "whites", "pupils", *LIDS, "head", "mouth", "pill"]
 
 def placed(n):
     f = fit[n]
@@ -37,7 +37,8 @@ for n in ORDER:
 # the whole figure's box with some air (the pill flies, the chest swells)
 bx = comp.split()[3].point(lambda v: 255 if v > 16 else 0).getbbox()
 PAD = 60
-X0, Y0, X1, Y1 = bx[0] - PAD, bx[1] - PAD, bx[2] + PAD, bx[3] + 10
+# wide sides: the arms go out and up when he flexes, the pill flies over his head
+X0, Y0, X1, Y1 = bx[0] - 5 * PAD, bx[1] - 2 * PAD, bx[2] + 5 * PAD, bx[3] + 10
 W, H = round((X1 - X0) * SCALE), round((Y1 - Y0) * SCALE)
 os.makedirs(f"{OUT}/rig", exist_ok=True)
 data = {"w": W, "h": H, "layers": {}, "pts": {}}

@@ -16,7 +16,8 @@ type V = readonly [number, number];
 const P = PEPE.pts as unknown as Record<string, V>;
 const L = PEPE.layers as unknown as Record<string, readonly [number, number, number, number]>;
 // the head has holes for the eyes: the whites, the pupils and the four lids lie behind it, the lids slide like shutters
-const ORDER = ["legs", "body", "handL", "handR", "sleeveL", "sleeveR", "whites", "pupils", "lidLL", "lidLR", "lidUL", "lidUR", "head", "mouth", "pill"] as const;
+// the far (right) arm goes behind the body; each hand lies over its own sleeve
+const ORDER = ["legs", "sleeveR", "handR", "body", "sleeveL", "handL", "whites", "pupils", "lidLL", "lidLR", "lidUL", "lidUR", "head", "mouth", "pill"] as const;
 const FACE = new Set<string>(["head", "whites", "pupils", "lidLL", "lidLR", "lidUL", "lidUR"]);
 const LID_SLIDE = PEPE.lids as unknown as Record<"UL" | "UR" | "LL" | "LR", number>;
 type LayerId = (typeof ORDER)[number];
@@ -75,6 +76,11 @@ const local = (p: V, deg: number, dx = 0, dy = 0): A => {
   const r = (deg * Math.PI) / 180, c = Math.cos(r), s = Math.sin(r);
   return [c, s, -s, c, p[0] - c * p[0] + s * p[1] + dx, p[1] - s * p[0] - c * p[1] + dy];
 };
+/** the same, scaled by k about p as well (a forearm coming towards us looks shorter) */
+const localK = (p: V, deg: number, k: number): A => {
+  const r = (deg * Math.PI) / 180, c = Math.cos(r) * k, s = Math.sin(r) * k;
+  return [c, s, -s, c, p[0] - c * p[0] + s * p[1], p[1] - s * p[0] - c * p[1]];
+};
 const ap = (m: A, x: number, y: number): V => [m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]];
 
 function distSeg(x: number, y: number, [a, b]: [V, V]) {
@@ -92,9 +98,10 @@ function breathOf(t: number) {
   const ph = (t % 1.15) / 1.15;
   return ph < 0.38 ? ease(ph / 0.38) : 1 - ease((ph - 0.38) / 0.62);
 }
-const PILL_REST_R: V = mid(P.pillA, P.pillB);
-// the left hand catches it in the same place under its fingers (mirrored)
-const PILL_REST_L: V = [mid(P.fingL1t, P.fingL2t)[0] + 18, mid(P.fingL1t, P.fingL2t)[1] + 58];
+// held between the fingers (drawn over the hand), so it rides along when the arm flexes
+const inFingers = (a: V, b: V, palm: V): V => { const m = mid(a, b); return [m[0] + (palm[0] - m[0]) * 0.3, m[1] + (palm[1] - m[1]) * 0.3]; };
+const PILL_REST_R: V = inFingers(P.fingR1t, P.fingR2t, P.handR);
+const PILL_REST_L: V = inFingers(P.fingL1t, P.fingL2t, P.handL);
 const PILL_CYCLE = 4.6;
 
 function poseAt(t: number): Pose {
@@ -104,8 +111,6 @@ function poseAt(t: number): Pose {
   // the chest rides up on the breath, the head leans back a little, the shoulders lift
   lo.chest = local(P.waist, 0, 0, -7 * b);
   lo.head = local(neck, -2.2 * b + Math.sin(t * 0.7) * 1.2, 0, -2 * b);
-  lo.armL = local(P.shL, 2.5 * b, 0, -2 * b);
-  lo.armR = local(P.shR, -2.5 * b, 0, -2 * b);
   // the pill: in the right hand, a toss over to the left one, a while there, and back
   const c = t % PILL_CYCLE;
   const fly = (u: number, from: V, to: V, dir: number) => {
@@ -121,15 +126,33 @@ function poseAt(t: number): Pose {
   else if (c < T2) pill = fly((c - T1) / (T2 - T1), PILL_REST_R, PILL_REST_L, -1);
   else if (c < T3) pill = { at: PILL_REST_L, rot: 0 };
   else pill = fly((c - T3) / (PILL_CYCLE - T3), PILL_REST_L, PILL_REST_R, 1);
-  const wristR = -24 * flick(T1 - 0.2) + 10 * give(PILL_CYCLE - 0.05) * 0 + 8 * give(0);
+  // the arm that holds the pill shows off a biceps between the tosses: the upper arm goes out, the forearm comes up at the
+  // elbow, a few pumps at the top, and down again in time for the throw
+  const curl = (u0: number, u1: number) => {
+    if (c < u0 || c > u1) return 0;
+    const u = (c - u0) / (u1 - u0);
+    const up = u < 0.28 ? ease(u / 0.28) : u > 0.75 ? 1 - ease((u - 0.75) / 0.25) : 1;
+    return up * (1 + (u > 0.28 && u < 0.75 ? 0.06 * Math.sin(((u - 0.28) / 0.47) * Math.PI * 6) : 0));
+  };
+  const cR = curl(0.05, T1 - 0.25), cL = curl(T2 + 0.15, T3 - 0.25);
+  // the forearm leads (a curl with the elbow down), the upper arm comes up after it — the fist never swings far out
+  const fR = Math.min(1.06, cR * 1.6), fL = Math.min(1.06, cL * 1.6);
+  const uR = clamp01((cR - 0.4) / 0.6), uL = clamp01((cL - 0.4) / 0.6);
+  const wristR = -24 * flick(T1 - 0.2) + 8 * give(0);
   const wristL = 24 * flick(T3 - 0.2) - 8 * give(T2);
   // the fingers squeeze together now and then (two quick squeezes), each hand on its own beat
   const sq = (ofs: number) => { const u = ((t + ofs) % 3.1) / 3.1; return u < 0.12 ? Math.sin((Math.PI * u) / 0.12) : u > 0.18 && u < 0.3 ? Math.sin((Math.PI * (u - 0.18)) / 0.12) : 0; };
   const sL = sq(0.9), sR = sq(0);
-  lo.foreL = local(P.elL, -3 * b);
-  lo.foreR = local(P.elR, 3 * b);
-  lo.handL = local(P.handL, wristL + 4 * b);
-  lo.handR = local(P.handR, wristR - 4 * b);
+  // a biceps pose: the upper arm out level with the shoulder, the forearm straight up, the fist by the head
+  lo.armL = local(P.shL, 2.5 * b + 26 * uL, 0, -2 * b - 6 * uL);
+  lo.armR = local(P.shR, -2.5 * b - 34 * uR, 0, -2 * b - 6 * uR);
+  // halfway up the forearm points at us: it looks shorter, so the fist does not swing far out to the side
+  const shortL = 1 - 0.5 * Math.sin(Math.PI * Math.min(1, fL)), shortR = 1 - 0.4 * Math.sin(Math.PI * Math.min(1, fR));
+  lo.foreL = localK(P.elL, -3 * b + 128 * fL, shortL);
+  lo.foreR = localK(P.elR, 3 * b - 108 * fR, shortR);
+  // the fist turns in a little at the top of the curl
+  lo.handL = localK(P.handL, wristL + 4 * b + 20 * cL, 1 / shortL); // the fist keeps its size
+  lo.handR = localK(P.handR, wristR - 4 * b - 20 * cR, 1 / shortR);
   lo.fingL1 = local(P.fingL1, -7 * sL);
   lo.fingL2 = local(P.handL, 9 * sL);
   lo.fingR1 = local(P.handR, -9 * sR);
@@ -198,7 +221,7 @@ function buildMesh(gl: WebGLRenderingContext, id: LayerId, img: HTMLImageElement
       // the face handles reach only near their points; the body bones blend over a wider band
       // the fingers blend softly (no cracks between them), the arms and the body a little sharper
       const id0 = bones[b];
-      const fall = id0.startsWith("brow") ? 34 : id0.startsWith("mouth") ? 60 : id0.startsWith("fing") || id0 === "handL" || id0 === "handR" ? 40 : 22;
+      const fall = id0.startsWith("brow") ? 34 : id0.startsWith("mouth") ? 60 : id0.startsWith("fing") || id0 === "handL" || id0 === "handR" ? 40 : id0.startsWith("arm") || id0.startsWith("fore") ? 30 : 22;
       const q = 1 / Math.pow(d / fall + 0.05, id0.startsWith("fing") || id0.startsWith("brow") ? 2.5 : 4);
       wt[k * bones.length + b] = q; sum += q;
     }

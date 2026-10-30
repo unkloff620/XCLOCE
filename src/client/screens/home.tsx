@@ -230,6 +230,12 @@ export function HomeScreen() {
             <Icon name="mail" size={36} />
             {messagesWaiting(state) > 0 && <span className="msg-count num">{messagesWaiting(state)}</span>}
           </button>
+          {/* the event: Пепе (a test fight for now) */}
+          <Link href="/event/pepe" className="menu-toggle event-toggle" aria-label="Ивент: Пепе" title="Ивент: Пепе">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/bosses/pepe/portrait.webp" alt="" draggable={false} />
+            <span className="event-tag">ИВЕНТ</span>
+          </Link>
           {menuOpen && (
             <div className="menu-drop">
               <button className="icon-btn-art" style={{ ["--c" as string]: "#ff9a3d" }} onClick={openWardrobe} aria-label="Гардероб" title="Гардероб">

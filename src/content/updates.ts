@@ -17,6 +17,12 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-10-30-pepe",
+    date: "30 октября",
+    title: "Скоро ивент: Пепе",
+    items: [{ img: "/assets/updates/2026-10-30-pepe.webp", text: "На главной справа — кнопка «Ивент». За дверью ждёт Пепе: пока пробный бой, вход свободный, оружие не тратится, наград нет." }],
+  },
+  {
     id: "2026-10-30-pigeons",
     date: "30 октября",
     title: "Голуби платят",
