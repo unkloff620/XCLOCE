@@ -4138,3 +4138,14 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .dos-inner > .ach-panel > * { flex: none; }
 .dos-inner > .ach-panel > .ach-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 2px 2px 8px; margin: 8px -2px 0 !important;
   -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 8px, #000 calc(100% - 10px), transparent 100%); mask-image: linear-gradient(180deg, transparent 0, #000 8px, #000 calc(100% - 10px), transparent 100%); }
+
+/* the page title stays at the top under the HUD while the page scrolls; what goes under it fades out (no hard cut) */
+body { background-attachment: fixed; }
+.main :not(.fit-page) > .title { position: sticky; top: calc(var(--hud-h) + var(--safe-t)); z-index: 6; margin-left: -12px; margin-right: -12px; padding: 8px 14px 4px;
+  background: var(--tx-dark), var(--bg); background-attachment: fixed; }
+.main :not(.fit-page) > .title::after { content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 18px; pointer-events: none;
+  background: var(--tx-dark), var(--bg); background-attachment: fixed;
+  -webkit-mask-image: linear-gradient(180deg, #000, transparent); mask-image: linear-gradient(180deg, #000, transparent); }
+/* every scroll box inside a page or a window: a soft fade at its top and bottom edges */
+.dos-inner:not(:has(> .ach-panel)):not(:has(> .tp-panel)), .tp-road, .ach-groups ~ .col.ach-scroll {
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 10px, #000 calc(100% - 12px), transparent 100%); mask-image: linear-gradient(180deg, transparent 0, #000 10px, #000 calc(100% - 12px), transparent 100%); }
