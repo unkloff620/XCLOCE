@@ -838,28 +838,29 @@ describe("home: equipment, rooms, look, help", () => {
     for (let i = 0; i < Math.ceil(need / 30); i++) last = await hit(p, "keyboard", T0 + M);
     expect(last.state.fight?.myDamage).toBe(Math.ceil(need / 30) * 30);
     expect(last.state.player.talents).toBe(3);
-    // one path: the first stop is «Бицуха I», the keyboard's damage is far down the road
-    await expect(act(db, p, "talent_up", { weapon: "keyboard", branch: "n1" }, T0 + M)).rejects.toMatchObject({ code: "talent_locked" });
+    // one path drawn as blocks: the three main weapons first — the keyboard's damage is the first stop, «Бицуха I» comes later
+    await expect(act(db, p, "talent_up", { weapon: "_biceps", branch: "s1" }, T0 + M)).rejects.toMatchObject({ code: "talent_locked" });
+    await expect(act(db, p, "talent_up", { weapon: "gpu", branch: "n1" }, T0 + M)).rejects.toMatchObject({ code: "talent_locked" });
     await expect(act(db, p, "talent_up", { weapon: "nope", branch: "n1" }, T0 + M)).rejects.toMatchObject({ code: "bad_talent" });
+    const up = await act(db, p, "talent_up", { weapon: "keyboard", branch: "n1" }, T0 + M);
+    expect(up.result).toMatchObject({ level: 1, max: 10, talents: 2 });
+    expect((await hit(p, "keyboard", T0 + M)).result.damage).toBe(33); // +3 to the keyboard only
+    // the main weapons' block done → «Бицуха I»
+    await db.query("UPDATE player_talents SET level=10 WHERE player_id=$1 AND weapon_id='keyboard'", [p]);
+    await db.query("INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,'keyboard','c1',5),($1,'gpu','n1',10),($1,'gpu','c1',5),($1,'rug-pull-gun','n1',10),($1,'rug-pull-gun','c1',5)", [p]);
     const b1 = await act(db, p, "talent_up", { weapon: "_biceps", branch: "s1" }, T0 + M);
-    expect(b1.result).toMatchObject({ level: 1, max: 30, talents: 2 });
+    expect(b1.result).toMatchObject({ level: 1, max: 30, talents: 1 });
     const [bi] = await db.query<{ talent_biceps: number }>("SELECT talent_biceps FROM players WHERE id=$1", [p]);
     expect(bi.talent_biceps).toBe(1);
     // the energy limit grows with «Лимит энергии»
     await db.query("UPDATE player_talents SET level=30 WHERE player_id=$1 AND weapon_id='_biceps'", [p]);
-    await db.query("INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,'_energy','s1',14)", [p]);
+    await db.query("INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,'_energy','s1',14),($1,'mouse','n1',10)", [p]);
     const max0 = b1.state.player.energyMax;
     const e1 = await act(db, p, "talent_up", { weapon: "_energy", branch: "s1" }, T0 + M);
     expect(e1.state.player.energyMax).toBe(max0 + 15);
-    // the clock and the first three weapons' damage done → the keyboard's damage is next: +3 to the keyboard only
-    await db.query("INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,'_clock','s1',15),($1,'fist','n1',10),($1,'mouse','n1',10),($1,'red-candle','n1',10)", [p]);
-    await expect(act(db, p, "talent_up", { weapon: "gpu", branch: "n1" }, T0 + M)).rejects.toMatchObject({ code: "talent_locked" });
-    const up = await act(db, p, "talent_up", { weapon: "keyboard", branch: "n1" }, T0 + M);
-    expect(up.result).toMatchObject({ level: 1, max: 10, talents: 0 });
-    expect((await hit(p, "keyboard", T0 + M)).result.damage).toBe(33);
     expect((await hit(p, "mouse", T0 + M)).result.damage).toBe(40); // the mouse has its +20 «Урон»
-    await expect(act(db, p, "talent_up", { weapon: "keyboard", branch: "n1" }, T0 + M)).rejects.toMatchObject({ code: "no_talents" });
-    await expect(act(db, p, "talent_up", { weapon: "fist", branch: "n1" }, T0 + M)).rejects.toMatchObject({ code: "max_level" });
+    await expect(act(db, p, "talent_up", { weapon: "_clock", branch: "s1" }, T0 + M)).rejects.toMatchObject({ code: "no_talents" });
+    await expect(act(db, p, "talent_up", { weapon: "keyboard", branch: "n1" }, T0 + M)).rejects.toMatchObject({ code: "max_level" });
   });
 
   it("the path: every weapon gets +30 steps of damage, +200% crit power and +15% crit chance; biceps 100, energy 50, clock 45 min", async () => {

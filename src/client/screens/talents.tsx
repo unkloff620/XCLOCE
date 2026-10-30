@@ -9,23 +9,20 @@ import { useEffect, useRef, useState } from "react";
 import { useGame } from "../store.tsx";
 import { Modal } from "../ui.tsx";
 import { Icon } from "../art/icons.tsx";
-import { ItemArt } from "../art/items.tsx";
 import { Help } from "../help.tsx";
 import { haptic } from "../telegram.ts";
 import { full, short } from "../format.ts";
 import { itemById } from "../../content/items.ts";
 import { weaponStats } from "../weapon-stats.ts";
-import { BicepsArt } from "./profile.tsx";
 import {
-  CRIT_CHANCE_CAP, EXTRA_NAMES, TALENT_PATH, TALENT_RESET_PRICE, currentStop, stopLevel, talentThreshold, talentsForDamage, talentsSpent,
-  type TalentStop,
+  CRIT_CHANCE_CAP, EXTRA_NAMES, TALENT_BLOCKS, TALENT_PATH, TALENT_RESET_PRICE, currentStop, stopLevel, talentArt, talentThreshold, talentsForDamage, talentsSpent,
+  type TalentBlock, type TalentStop,
 } from "../../content/talents.ts";
 
 const pct = (v: number) => `${Math.round(v * 1000) / 10}%`;
 const effect = (n: TalentStop, lv: number) =>
   n.kind === "dmg" ? `+${full(lv * n.per)} урона` : n.kind === "crit" ? `+${pct(lv * n.per)} к силе крита` : n.kind === "chance" ? `+${pct(lv * n.per)} к шансу крита`
     : n.kind === "biceps" ? `+${full(lv * n.per)} к бицухе` : n.kind === "energy" ? `+${full(lv * n.per)} к лимиту энергии` : `+${full(lv * n.per)} мин к бою с боссом`;
-const KIND_TAG: Record<TalentStop["kind"], string> = { dmg: "⚔", crit: "✦", chance: "%", biceps: "", energy: "", clock: "" };
 
 export function TalentChip({ n }: { n: number }) {
   return (
@@ -60,13 +57,11 @@ function TalentHelp() {
     <Help topic="talents" title="Таланты">
       <p>Таланты дают за урон по боссам за всё время: счётчик не сгорает — каждый бой продолжает его с того места, где остановился прошлый.</p>
       <p className="small">1-й талант — за {full(talentThreshold(1))} урона, 10-й — за {full(talentThreshold(10))}, 50-й — за {full(talentThreshold(50))}, 100-й — за {full(talentThreshold(100))}.</p>
-      <p>Таланты вкладываются по дорожке, как задания в локации: следующая остановка открывается, когда предыдущая прокачана до конца. Так прокачивается всё понемногу:</p>
+      <p>Таланты вкладываются по дорожке сверху вниз: следующая ячейка открывается, когда предыдущая прокачана до конца (стрелки показывают, куда дальше).</p>
       <ol className="small">
-        <li><b>Начало</b> — Бицуха, Лимит энергии, Часы.</li>
-        <li><b>Урон</b> у каждого оружия, потом <b>Крит</b> (шанс), потом <b>Сила крита</b>.</li>
-        <li><b>Середина</b> — ещё Бицуха, Энергия, Часы и Крит II, потом <b>Урон II</b>.</li>
-        <li><b>Конец</b> — Бицуха, Энергия, Часы, Крит III и <b>Сила крита II</b>; последняя — у Rug Pull Gun.</li>
+        {TALENT_BLOCKS.map((b) => <li key={b.id}><b>{b.title}</b></li>)}
       </ol>
+      <p className="small">Сначала — три главных оружия: клавиатура, видеокарта и Rug Pull Gun. Потом понемногу всё остальное: бицуха, энергия, время боя, кулак, свеча и мышь.</p>
       <p className="small">Бицуха — до +100, лимит энергии — до +50, Часы — до +45 минут к бою с боссом, Крит — до +15% шанса крита каждому оружию. Общий шанс крита — не больше {Math.round(CRIT_CHANCE_CAP * 100)}%.</p>
       <p className="small">Вся дорожка — {full(total)} талантов.</p>
       <p className="small muted">Сброс талантов стоит {TALENT_RESET_PRICE.amount} {TALENT_RESET_PRICE.currency}: все потраченные таланты возвращаются.</p>
@@ -74,24 +69,12 @@ function TalentHelp() {
   );
 }
 
-/** the picture of a stop: the weapon, or the biceps / energy can / clock */
+/** the picture of a stop (public/assets/talents): a meme scene with the weapon, or the biceps / energy / clock */
 function StopArt({ n, size }: { n: TalentStop; size: number }) {
-  if (n.kind === "biceps") return <BicepsArt size={size} />;
-  if (n.kind === "energy") return <Icon name="energy" size={size} />;
-  if (n.kind === "clock") return <Icon name="clock" size={size} />;
-  return <ItemArt id={n.target} size={size} />;
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img className="tb-art" src={`/assets/talents/${talentArt(n)}.webp`} alt="" width={size} height={size} draggable={false} />;
 }
 const stopTitle = (n: TalentStop) => (EXTRA_NAMES[n.target] ? n.name : `${itemById(n.target)?.name ?? n.target} · ${n.name}`);
-
-/** the stops' places on the road: rows of three, the next row goes back the other way (a snake), top to bottom */
-const COLS = [18, 50, 82];
-const ROW_H = 112;
-/** the road's own width in its units (the SVG scales evenly with the map, so the gold fill is exact) */
-const ROAD_W = 360;
-const placeOf = (i: number) => {
-  const row = Math.floor(i / 3), k = i % 3;
-  return { x: COLS[row % 2 ? 2 - k : k], y: ROW_H / 2 + row * ROW_H };
-};
 
 export function TalentWindow({ onClose }: { onClose: () => void }) {
   return (
@@ -110,7 +93,7 @@ export function TalentPanel() {
   const cur = currentStop(state?.weaponTalents ?? {});
   // open on the stop being filled now
   useEffect(() => {
-    const el = roadRef.current?.querySelector(".tp-stop.now");
+    const el = roadRef.current?.querySelector(".tb-tile.now");
     el?.scrollIntoView({ block: "center" });
   }, [state ? 1 : 0]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!state) return null;
@@ -140,8 +123,6 @@ export function TalentPanel() {
   const from = talentThreshold(k), to = talentThreshold(k + 1);
   const dmgNow = state.player.talentDamage ?? 0;
   const nextP = Math.max(0, Math.min(1, (dmgNow - from) / Math.max(1, to - from)));
-  const H = placeOf(TALENT_PATH.length - 1).y + ROW_H / 2;
-  const pts = TALENT_PATH.map((_, i) => placeOf(i));
   return (
     <div className="tp-panel">
       {/* two lines that stay in place: the counters with the reset, and what the next tap does */}
@@ -187,42 +168,50 @@ export function TalentPanel() {
         </Modal>
       )}
 
-      <div className="tp-road" ref={roadRef}>
-        <div className="lp-map tp-map" style={{ aspectRatio: `${ROAD_W} / ${H}` }}>
-          <svg className="lp-path" viewBox={`0 0 ${ROAD_W} ${H}`} aria-hidden="true">
-            {pts.slice(1).map((b, k) => {
-              const a = pts[k];
-              const from = TALENT_PATH[k];
-              const lv = stopLevel(wt, from);
-              const fill = lv >= from.max ? 1 : k === cur ? lv / from.max : 0;
-              const d = `M${(a.x / 100) * ROAD_W} ${a.y} L${(b.x / 100) * ROAD_W} ${b.y}`;
-              return (
-                <g key={k}>
-                  <path d={d} className="lp-edge" />
-                  <path d={d} className="lp-grey" />
-                  <path d={d} className="lp-gold" pathLength={1} strokeDasharray={`${fill} 1`} />
-                </g>
-              );
-            })}
-          </svg>
-          {TALENT_PATH.map((n, i) => {
-            const lv = stopLevel(wt, n);
-            const done = lv >= n.max;
-            const cls = done ? "done" : i === cur ? "open" : "shut";
-            const p = pts[i];
-            return (
-              <button key={n.key} type="button" className={`lp-stop tp-stop ${cls} ${i === cur ? "now" : ""} ${i === selI ? "sel" : ""} ${i === cur && talents < n.cost ? "tired" : ""}`}
-                style={{ left: `${p.x}%`, top: `${(p.y / H) * 100}%` }} onClick={() => tap(i)} aria-label={`${stopTitle(n)}: ${lv}/${n.max}`}>
-                <span className="lp-disc"><StopArt n={n} size={34} /></span>
-                {KIND_TAG[n.kind] && <i className={`tp-kind ${n.kind}`}>{KIND_TAG[n.kind]}</i>}
-                {done ? <i className="lp-tag ok">✓</i>
-                  : i === cur ? <i className="lp-tag num">{lv}/{n.max}</i>
-                  : <i className="lp-tag lock"><Icon name="lock" size={12} /></i>}
-              </button>
-            );
-          })}
-        </div>
+      <div className="tp-road tb-road" ref={roadRef}>
+        {TALENT_BLOCKS.map((b, bi) => (
+          <div key={b.id} className="tb-wrap">
+            {bi > 0 && <i className="tb-down" aria-hidden="true" />}
+            <TalentBlockView b={b} wt={wt} cur={cur} selI={selI} poor={talents} onTap={tap} />
+          </div>
+        ))}
       </div>
     </div>
+  );
+}
+
+/** one block of the path: the title, the stops in their grid with arrows from one to the next, the hero on the right */
+function TalentBlockView({ b, wt, cur, selI, poor, onTap }: { b: TalentBlock; wt: Record<string, Partial<Record<string, number>>>; cur: number; selI: number; poor: number; onTap: (i: number) => void }) {
+  const cols = Math.max(...b.cells.map((c) => c.col)) + 1;
+  const rowsN = Math.max(...b.cells.map((c) => c.row)) + 1;
+  const done = b.cells.every((c) => { const n = TALENT_PATH.find((x) => x.key === c.key)!; return stopLevel(wt, n) >= n.max; });
+  return (
+    <section className={`tb-block skin-${b.skin} ${b.hero ? "has-hero" : ""} ${done ? "full" : ""}`}>
+      <h4 className="tb-title display">{b.title}</h4>
+      <div className="tb-grid" style={{ ["--cols" as string]: cols, ["--rows" as string]: rowsN }}>
+        {b.cells.map((c, k) => {
+          const next = b.cells[k + 1];
+          // an arrow to the next stop when it is the neighbour (down, right or left)
+          const dir = !next ? null : next.col === c.col && next.row === c.row + 1 ? "down" : next.row === c.row && next.col === c.col + 1 ? "right" : next.row === c.row && next.col === c.col - 1 ? "left" : null;
+          return dir && <i key={`a${k}`} className={`tb-arrow ${dir}`} style={{ ["--c" as string]: c.col, ["--r" as string]: c.row }} aria-hidden="true" />;
+        })}
+        {b.cells.map((c) => {
+          const i = TALENT_PATH.findIndex((x) => x.key === c.key);
+          const n = TALENT_PATH[i];
+          const lv = stopLevel(wt, n);
+          const cls = lv >= n.max ? "done" : i === cur ? "open" : lv > 0 ? "part" : "shut";
+          return (
+            <button key={c.key} type="button" className={`tb-tile ${cls} ${i === cur ? "now" : ""} ${i === selI ? "sel" : ""} ${i === cur && poor < n.cost ? "tired" : ""}`}
+              style={{ ["--c" as string]: c.col, ["--r" as string]: c.row }} onClick={() => onTap(i)} aria-label={`${stopTitle(n)}: ${lv}/${n.max}`} title={stopTitle(n)}>
+              <StopArt n={n} size={64} />
+              {cls === "shut" && <i className="tb-lock"><Icon name="lock" size={14} /></i>}
+              <i className="tb-n num">{lv}/{n.max}</i>
+            </button>
+          );
+        })}
+      </div>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {b.hero && <img className="tb-hero" src={`/assets/talents/${b.hero}.webp`} alt="" draggable={false} />}
+    </section>
   );
 }

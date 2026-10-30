@@ -44,15 +44,9 @@ export function talentsForDamage(damage: number): number {
 
 /* ---------------- дорожка талантов ---------------- */
 /*
- * Одна общая дорожка, как задания в локации: остановки идут одна за другой, следующая открывается, когда предыдущая
- * прокачана до конца. Так таланты расходятся понемногу на всё, а не на одно оружие сразу:
- *   начало    — Бицуха I, Лимит энергии I, Часы I
- *   ступень 1 — Урон у каждого оружия (кулак → мышь → свеча → клавиатура → видеокарта → Rug Pull Gun), потом Крит I
- *               (шанс крита) у каждого, потом Сила крита у каждого
- *   середина  — Бицуха II, Лимит энергии II, Часы II, Крит II у каждого оружия
- *   ступень 2 — Урон II у каждого
- *   конец     — Бицуха III, Лимит энергии III, Часы III, Крит III у каждого
- *   финал     — Сила крита II у каждого, последняя — у Rug Pull Gun
+ * Одна общая дорожка: остановки идут одна за другой, следующая открывается, когда предыдущая прокачана до конца.
+ * Нарисована блоками (TALENT_BLOCKS): сначала три главных оружия (клавиатура, видеокарта, Rug Pull Gun) — урон и крит,
+ * потом понемногу всё остальное — бицуха, лимит энергии, часы, кулак, свеча, мышь; в конце — Сила крита II у всех.
  * Бицуха +1 за уровень (всего 100), лимит энергии +1 (всего 50), Часы +1 минута к бою с боссом (всего 45),
  * Крит +1% шанса крита этому оружию (всего 15% на оружие); общий шанс крита — не больше 51%.
  * Урон: +N за уровень (N — шаг этого оружия), Сила крита: +5% (I) и +7,5% (II).
@@ -94,7 +88,8 @@ const dmg = (b: "n1" | "n3", name: string, max: number, cost: number) => each((w
 const power = (b: "n2" | "n4", name: string, per: number, max: number, cost: number) => each((w) => stop(w, b, "crit", name, per, max, cost));
 const chance = (n: 1 | 2 | 3) => each((w) => stop(w, `c${n}`, "chance", `Крит ${["", "I", "II", "III"][n]}`, 0.01, 5, 1));
 
-export const TALENT_PATH: TalentStop[] = [
+/** every stop of the path (the order is the blocks' below) */
+const ALL_STOPS: TalentStop[] = [
   ...extras(1, 30, 15, 15),
   ...dmg("n1", "Урон", 10, 1),
   ...chance(1),
@@ -106,6 +101,40 @@ export const TALENT_PATH: TalentStop[] = [
   ...chance(3),
   ...power("n4", "Сила крита II", 0.075, 20, 2),
 ];
+
+/*
+ * The path drawn as blocks, top to bottom (screens/talents.tsx): panels with a meme hero on the right and the stops in
+ * a grid on the left (arrows from one to the next), rows of single stops between them. The three main weapons go first
+ * (keyboard, GPU, Rug Pull Gun), then a little of everything: biceps, energy, the clock, the fist, the candle, the mouse.
+ */
+export interface TalentCell { key: string; col: number; row: number }
+export interface TalentBlock { id: string; title: string; hero?: string; skin: "paper" | "metal" | "none"; cells: TalentCell[] }
+const MAIN = ["keyboard", "gpu", "rug-pull-gun"];
+const MINOR = ["fist", "red-candle", "mouse"];
+const columns = (ws: string[], top: string, bottom: string): TalentCell[] =>
+  ws.flatMap((w, i) => [{ key: `${w}:${top}`, col: i, row: 0 }, { key: `${w}:${bottom}`, col: i, row: 1 }]);
+const rows = (...lines: string[][]): TalentCell[] => lines.flatMap((l, r) => l.map((key, c) => ({ key, col: c, row: r })));
+/** six stops in a loop: along the top row, then back along the bottom one */
+const loop = (keys: string[]): TalentCell[] => keys.map((key, i) => ({ key, col: i < 3 ? i : 5 - i, row: i < 3 ? 0 : 1 }));
+const of = (ws: string[], b: string) => ws.map((w) => `${w}:${b}`);
+export const TALENT_BLOCKS: TalentBlock[] = [
+  { id: "spec", title: "Специализация в оружии", hero: "hero-pepe-hacker", skin: "paper", cells: columns(MAIN, "n1", "c1") },
+  { id: "base", title: "Основа", skin: "none", cells: rows(of(["_biceps", "_energy", "_clock"], "s1"), of(MINOR, "n1")) },
+  { id: "power", title: "Сила удара", hero: "hero-chad", skin: "metal", cells: columns(MAIN, "n2", "n3") },
+  { id: "minor", title: "Кулак, свеча и мышь", skin: "none", cells: rows(of(MINOR, "c1"), of(MINOR, "n2")) },
+  { id: "stamina", title: "Выносливость", hero: "hero-wojak", skin: "paper", cells: [{ key: "_biceps:s2", col: 0, row: 0 }, { key: "_energy:s2", col: 1, row: 0 }, { key: "_clock:s2", col: 1, row: 1 }] },
+  { id: "aim", title: "Меткость", hero: "hero-pepe-sniper", skin: "metal", cells: columns(MAIN, "c2", "c3") },
+  { id: "finish", title: "Добивание", skin: "none", cells: rows(of(MINOR, "n3"), of(MINOR, "c2")) },
+  { id: "last", title: "Последний рубеж", hero: "hero-doge", skin: "paper", cells: loop([...of(["_biceps", "_energy", "_clock"], "s3"), ...of(MINOR, "c3")]) },
+  { id: "master", title: "Мастер крита", hero: "hero-chad-gold", skin: "metal", cells: loop(of(["fist", "mouse", "red-candle", "keyboard", "gpu", "rug-pull-gun"], "n4")) },
+];
+const BY_KEY = new Map(ALL_STOPS.map((x) => [x.key, x]));
+export const TALENT_PATH: TalentStop[] = TALENT_BLOCKS.flatMap((b) => b.cells.map((c) => BY_KEY.get(c.key)!));
+/** the picture of a stop (public/assets/talents/<name>.webp): the weapon's damage / crit chance / crit power, or biceps, energy, clock */
+export function talentArt(x: TalentStop): string {
+  if (x.target.startsWith("_")) return x.target.slice(1);
+  return `${x.target}-${x.kind === "dmg" ? "dmg" : x.kind === "chance" ? "chance" : "crit"}`;
+}
 export const talentStop = (target: string, branch: string) => TALENT_PATH.find((s) => s.target === target && s.branch === branch);
 /** resetting all talents (they all come back) */
 export const TALENT_RESET_PRICE = { currency: "USD" as const, amount: 5 };
