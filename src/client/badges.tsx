@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 const AUTO_KEY = "xc-ach-auto";
 import { MEDAL_TIERS } from "../content/medals.ts";
@@ -304,7 +305,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
  * the next ones moving up into the free place. A swipe to the left takes one away sooner, a tap opens it in the «Личное
  * дело». «Вот это да!» sounds when a batch starts. The ones waiting at the start are not announced.
  */
-const REVEAL_MS = 650;
+const REVEAL_MS = 280;
 const LIFE_MS = 10_000;
 export function AchToast() {
   const { state } = useGame();
@@ -334,11 +335,13 @@ export function AchToast() {
     return () => window.clearTimeout(t);
   }, [waiting, list.length]);
   const drop = (id: string) => setList((l) => l.filter((x) => x !== id));
-  if (!list.length) return null;
-  return (
+  if (!list.length || typeof document === "undefined") return null;
+  // into <body>, above every window (modals, full-screen games, the level-up)
+  return createPortal(
     <div className="ach-toasts">
       {list.map((id) => <AchToastCard key={id} id={id} onGone={() => drop(id)} onOpen={() => { setAchFocus(id); setList([]); setWaiting([]); router.push("/profile"); }} />)}
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -379,6 +382,7 @@ function AchToastCard({ id, onGone, onOpen }: { id: string; onGone: () => void; 
       style={dx && !out ? { transform: `translateX(${dx}px)`, opacity: Math.max(0.2, 1 + dx / 260), transition: "none" } : undefined}
       onClick={() => { if (!dx) { haptic.tap(); onOpen(); } }}
       onTouchStart={(e) => begin(e.touches[0].clientX, e.touches[0].clientY)} onTouchMove={(e) => move(e.touches[0].clientX, e.touches[0].clientY)} onTouchEnd={end} onTouchCancel={end}>
+      <i className="ach-toast-flash" aria-hidden="true" />
       <span className="ach-toast-pic">
         <AchPic a={a} cat={cat} on size={46} />
         <i className="ach-toast-plus">+</i>

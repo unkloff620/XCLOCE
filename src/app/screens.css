@@ -4077,3 +4077,13 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .ach-toast .ach-pic { animation: ach-toast-pic 2.4s ease-in-out 0.4s infinite; }
 @keyframes ach-toast-pic { 0%, 100% { filter: drop-shadow(0 0 0 rgba(255, 220, 90, 0)); } 50% { filter: drop-shadow(0 0 12px rgba(255, 230, 110, 1)) brightness(1.15); } }
 @media (prefers-reduced-motion: reduce) { .ach-toast, .ach-toast::before, .ach-toast::after, .ach-toast .ach-pic { animation: none; } }
+/* above everything; quicker in; a flash when a card comes */
+.ach-toasts { z-index: 2147483000; }
+.ach-toast { animation: ach-toast-in 0.45s ease-out backwards, ach-toast-glow 2.4s ease-in-out 0.3s infinite; }
+.ach-toast-flash { position: absolute !important; inset: -2px; z-index: 3 !important; pointer-events: none; border-radius: inherit; opacity: 0;
+  background: radial-gradient(ellipse at 22% 50%, #fff 0, rgba(255, 245, 190, 0.95) 25%, rgba(255, 210, 80, 0.6) 50%, rgba(255, 200, 60, 0) 75%);
+  animation: ach-toast-flash 0.9s ease-out 0.1s 1 both; }
+@keyframes ach-toast-flash { 0% { opacity: 0; transform: scale(0.9); } 15% { opacity: 1; transform: scale(1.02); } 45% { opacity: 0.85; } 100% { opacity: 0; transform: scale(1); } }
+.ach-toast .ach-pic { animation: ach-toast-pop 0.6s cubic-bezier(0.2, 1.6, 0.4, 1) 0.1s backwards, ach-toast-pic 2.4s ease-in-out 0.7s infinite; }
+@keyframes ach-toast-pop { from { transform: scale(0.4) rotate(-20deg); filter: brightness(2.5); } }
+@media (prefers-reduced-motion: reduce) { .ach-toast-flash { animation: none; } }
