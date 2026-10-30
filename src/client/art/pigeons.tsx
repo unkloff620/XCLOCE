@@ -15,7 +15,7 @@ import type { Granted } from "../api.ts";
 
 const P = "/assets/yard/pigeon";
 export interface PigeonArea { x0: number; x1: number; y0: number; y1: number }
-type Act = "idle" | "walk" | "peck" | "turn" | "fly" | "gone";
+type Act = "idle" | "walk" | "peck" | "turn" | "fly" | "gone" | "land";
 
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 /** the pose: the upper body's lean and lift, the head's turn and shift, the wings' lift, the legs' swing */
@@ -67,7 +67,7 @@ function Pigeon({ area, delay }: { area: PigeonArea; delay: number }) {
       st.t = 0;
     };
     scareRef.current = () => {
-      if (st.act === "fly" || st.act === "gone") return;
+      if (st.act === "fly" || st.act === "gone" || st.act === "land") return;
       haptic.tap();
       // a scared pigeon pays a few roubles right where it sat: the sum floats up there and fades
       const at = { x: st.x, y: st.y };
@@ -88,7 +88,7 @@ function Pigeon({ area, delay }: { area: PigeonArea; delay: number }) {
       const el = root.current;
       if (!el) { raf = requestAnimationFrame(tick); return; }
       // what it does
-      if (st.act !== "fly" && st.act !== "gone" && st.act !== "walk" && now >= st.until) choose(now);
+      if (st.act !== "fly" && st.act !== "gone" && st.act !== "walk" && st.act !== "land" && now >= st.until) choose(now);
       if (st.act === "walk") {
         const dx = st.tx - st.x, dy = st.ty - st.y, dist = Math.hypot(dx, dy * 2);
         const v = 5.5 * dt; // percent of the yard a second
@@ -97,28 +97,29 @@ function Pigeon({ area, delay }: { area: PigeonArea; delay: number }) {
         st.phase += dt * (Math.PI * 2) / 0.5;
       }
       if (st.act === "gone" && now >= st.until) {
-        // another one walks in from the side
+        // another one flies in from the sky and lands
         const from: 1 | -1 = Math.random() < 0.5 ? 1 : -1;
-        st.x = from === 1 ? area.x0 - 14 : area.x1 + 14;
-        st.y = rnd(area.y0, area.y1);
+        st.x = rnd(area.x0, area.x1); st.y = rnd(area.y0, area.y1);
         st.dir = from; st.face = from;
-        st.tx = rnd(area.x0, area.x1); st.ty = st.y;
-        st.act = "walk"; st.fly = 0; st.fx = 0; st.fy = 0; st.pose = { ...ZERO };
+        st.act = "land"; st.fly = 0; st.t = 0; st.pose = { ...ZERO, up: -11, upY: -4, tuck: 1, wn: 64, wf: 72 };
         el.style.visibility = "";
       }
       // the pose it is going to
       const g: Pose = { ...ZERO };
       const s = Math.sin(st.phase);
       if (st.act === "walk") {
+        // walking tall: the body and the head up, the head bobbing forward and back at each step
         g.lf = s * 15; g.lb = -s * 15;
-        g.upY = -Math.abs(Math.cos(st.phase)) * 1.6; g.up = Math.sin(st.phase * 2) * 1.2;
-        g.headX = Math.sin(st.phase * 2 + 0.6) * 3.5;
+        g.up = -5 + Math.sin(st.phase * 2) * 1; g.upY = -1.5 - Math.abs(Math.cos(st.phase)) * 1.4;
+        g.head = -7; g.headX = Math.sin(st.phase * 2 + 0.6) * 4.5;
       } else if (st.act === "peck") {
-        const jab = Math.max(0, Math.sin(st.t * 9)) ** 2;
-        g.up = 12; g.head = 30 + jab * 5; g.headY = jab * 0.8;
+        // searching and pecking: the body low, the head looks about over the ground, then sharp jabs down and back
+        const cyc = st.t % 1.1;
+        const jab = cyc < 0.07 ? cyc / 0.07 : cyc < 0.15 ? 1 : cyc < 0.24 ? 1 - (cyc - 0.15) / 0.09 : cyc > 0.45 && cyc < 0.51 ? (cyc - 0.45) / 0.06 : cyc >= 0.51 && cyc < 0.58 ? 1 - (cyc - 0.51) / 0.07 : 0;
+        g.up = 12; g.head = 24 + jab * 14 + Math.sin(st.t * 2.3) * 3; g.headY = jab * 1.6; g.headX = Math.sin(st.t * 1.7) * 1.5;
       } else if (st.act === "idle" || st.act === "turn") {
         g.head = Math.sin(st.t * 1.7) * 5 - 2;
-      } else if (st.act === "fly") {
+      } else if (st.act === "fly" || st.act === "land") {
         g.up = -11; g.upY = -4; g.tuck = 1;
         const f = Math.sin(st.t * 38);
         g.wn = 64 + f * 28; g.wf = 72 + Math.sin(st.t * 38 - 0.6) * 26;
@@ -126,7 +127,9 @@ function Pigeon({ area, delay }: { area: PigeonArea; delay: number }) {
       // smoothly toward it (the wings in flight follow at once)
       const k = 1 - Math.exp(-dt * (st.act === "fly" ? 14 : 9));
       const p = st.pose;
-      for (const key of Object.keys(p) as (keyof Pose)[]) p[key] += (g[key] - p[key]) * (st.act === "fly" && (key === "wn" || key === "wf") ? 1 : k);
+      // the wings in flight and the neck's jabs follow at once (a real pigeon's neck moves in jerks)
+      const sharp = (key: keyof Pose) => ((st.act === "fly" || st.act === "land") && (key === "wn" || key === "wf")) || (st.act === "peck" && (key === "head" || key === "headY"));
+      for (const key of Object.keys(p) as (keyof Pose)[]) p[key] += (g[key] - p[key]) * (sharp(key) ? 1 : k);
       // turning round: through the middle, quick
       st.face += (st.dir - st.face) * (1 - Math.exp(-dt * 10));
       // flying off: up and away to the side, smaller and fading
@@ -139,6 +142,14 @@ function Pigeon({ area, delay }: { area: PigeonArea; delay: number }) {
         extra = ` translate(${st.fx}%, ${st.fy}%) scale(${1 - u * 0.45})`;
         op = u < 0.7 ? 1 : 1 - (u - 0.7) / 0.3;
         if (u >= 1) { st.act = "gone"; st.until = now + rnd(5 * 60_000, 10 * 60_000); el.style.visibility = "hidden"; } // the next one comes in 5–10 minutes
+      }
+      if (st.act === "land") {
+        // coming down from the sky: the way off, backwards, slowing to the ground; then the wings fold
+        st.fly += dt;
+        const u = Math.max(0, 1 - st.fly / 1.8);
+        extra = ` translate(${-st.dir * (u * u * 380 + u * 20)}%, ${-(u * 900 + u * u * 200)}%) scale(${1 - u * 0.45})`;
+        op = u > 0.85 ? (1 - u) / 0.15 : 1;
+        if (u <= 0) { st.act = "idle"; st.until = now + rnd(600, 1400); }
       }
       const depth = 1 - (st.y - area.y0) / 60;
       el.style.left = `${st.x}%`;
