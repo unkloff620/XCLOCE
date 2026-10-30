@@ -243,7 +243,7 @@ export function HomeScreen() {
               <button className={`icon-btn-art ${state.quests.claimable ? "glow" : ""}`} style={{ ["--c" as string]: "#3ddc84" }} onClick={() => setQuests(true)} aria-label="Задания дня" title="Задания дня">
                 <Icon name="map" size={58} />
                 {state.quests.claimable && <i className="side-dot" />}
-                <span className="side-count num">{state.quests.list.filter((x) => x.claimed).length}/3</span>
+                <span className="side-count num">{state.quests.list.filter((x) => x.claimed).length}/{state.quests.list.length}</span>
               </button>
               <button className="icon-btn-art" style={{ ["--c" as string]: "#3fd2ff" }} onClick={() => openRoomEditor("desk")} aria-label="Обстановка" title="Обстановка">
                 <Icon name="bolt" size={58} />

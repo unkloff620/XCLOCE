@@ -2,13 +2,13 @@ import { exchangeOpenOnDayNo, EXCHANGE_SCHEDULE, type ExchangeSchedule } from ".
 import type { Reward } from "./rewards.ts";
 
 /*
- * Ежедневные задания: каждый день у игрока четыре задания — по одному из каждой группы
- * (бой, энергия, экономика, мини-игры двора). Набор на день выбирается детерминированно от игрока и дня,
- * сбрасывается в полночь по Москве. Закрыл все три — открывается сундук.
+ * Ежедневные задания: каждый день у игрока пять заданий — по одному из каждой группы
+ * (бой, энергия, экономика, мини-игры двора, прокачка и соседи). Набор на день выбирается детерминированно от игрока
+ * и дня, сбрасывается в полночь по Москве. Закрыл все пять — открывается сундук.
  */
 
 /** what the server counts: every kind is fed by one kind of action */
-export type QuestKind = "damage" | "hits" | "steps" | "energy" | "yard" | "buy" | "exchange" | "slots" | "upgrade" | "poker" | "zonk" | "roach" | "bj";
+export type QuestKind = "damage" | "hits" | "steps" | "energy" | "yard" | "buy" | "exchange" | "slots" | "upgrade" | "poker" | "zonk" | "roach" | "bj" | "social" | "upgrader";
 
 export interface QuestDef {
   id: string;
@@ -23,7 +23,7 @@ export interface QuestDef {
 
 const R = (rub: number, xp: number, extra: Reward = {}): Reward => ({ currencies: { RUB: rub }, xp, ...extra });
 
-/** three groups → three quests a day */
+/** five groups → five quests a day */
 export const QUEST_GROUPS: QuestDef[][] = [
   [
     { id: "q-damage", kind: "damage", target: 500, title: "Нанеси 500 урона боссам", href: "/bosses", reward: R(250, 500) },
@@ -46,12 +46,18 @@ export const QUEST_GROUPS: QuestDef[][] = [
     { id: "q-roach", kind: "roach", target: 1, title: "Прихлопни таракана в зонке", href: "/yard", hint: "Он бегает по раме доски", reward: R(150, 300, { items: [{ id: "poker-chip", qty: 1 }] }) },
     { id: "q-bj", kind: "bj", target: 3, title: "Сыграй 3 раунда в блэкджек", href: "/yard", hint: "Стол во дворе → Блэкджек", reward: R(150, 300, { items: [{ id: "poker-chip", qty: 1 }] }) },
   ],
+  // getting stronger and the neighbours
+  [
+    { id: "q-upgrade", kind: "upgrade", target: 1, title: "Вложи талант или улучши комнату", href: "/profile", hint: "Личное дело → Таланты, или Обстановка дома", reward: R(200, 400) },
+    { id: "q-social", kind: "social", target: 2, title: "Наедь, харкни или накачай бицуху 2 раза", href: "/rating", hint: "Рейтинг → профиль игрока", reward: R(200, 400) },
+    { id: "q-upgrader", kind: "upgrader", target: 1, title: "Крутани апгрейдер", href: "/yard", hint: "Автомат «Апгрейдер» во дворе", reward: R(200, 400) },
+  ],
 ];
 
 export const QUESTS: QuestDef[] = QUEST_GROUPS.flat();
 export const questById = (id: string) => QUESTS.find((q) => q.id === id);
 
-/** The chest for all three: a fixed part plus one weapon by chance. */
+/** The chest for all five: a fixed part plus one weapon by chance. */
 export const QUEST_CHEST_BASE: Reward = { currencies: { RUB: 500, USD: 3 }, energy: 20, xp: 2_000 };
 export const QUEST_CHEST_LOOT: { v: { id: string; qty: number }; w: number }[] = [
   { v: { id: "keyboard", qty: 2 }, w: 45 },

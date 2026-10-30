@@ -22,10 +22,10 @@ async function setProgress(pid: number, now: number, progress: Record<string, nu
 const notes = (pid: number) => db.query<{ kind: string; due_at: Date; sent_at: Date | null; meta: Record<string, unknown> }>("SELECT kind, due_at, sent_at, meta FROM notifications WHERE player_id=$1 ORDER BY kind", [pid]);
 
 describe("daily quests", () => {
-  it("four quests a day, one from each group, the same all day, another set possible tomorrow", () => {
+  it("five quests a day, one from each group, the same all day, another set possible tomorrow", () => {
     const day = moscowDay(T0);
     const a = questsForDay(7, day);
-    expect(a).toHaveLength(4);
+    expect(a).toHaveLength(5);
     a.forEach((q, i) => expect(QUEST_GROUPS[i]).toContain(q));
     expect(questsForDay(7, day)).toEqual(a);
   });
@@ -46,7 +46,7 @@ describe("daily quests", () => {
     expect(q1.progress).toBe(expected);
   });
 
-  it("claim only when done, once; the chest opens after all three and only once", async () => {
+  it("claim only when done, once; the chest opens after all five and only once", async () => {
     const p = await newPlayer(db);
     const set = questsForDay(p, moscowDay(T0));
     await expect(act(db, p, "quest_claim", { id: set[0].id }, T0)).rejects.toMatchObject({ code: "quest_not_done" });
@@ -59,7 +59,9 @@ describe("daily quests", () => {
     await expect(act(db, p, "quest_chest", {}, T0)).rejects.toMatchObject({ code: "chest_locked" });
     await act(db, p, "quest_claim", { id: set[1].id }, T0);
     await act(db, p, "quest_claim", { id: set[2].id }, T0);
-    const s = await act(db, p, "quest_claim", { id: set[3].id }, T0);
+    const s4 = await act(db, p, "quest_claim", { id: set[3].id }, T0);
+    expect(s4.state.quests.chest.ready).toBe(false); // the fifth is still to collect
+    const s = await act(db, p, "quest_claim", { id: set[4].id }, T0);
     expect(s.state.quests.chest.ready).toBe(true);
     const keyboards = await qty(db, p, "keyboard");
     // rng 0.6 → the second loot entry (keyboard)

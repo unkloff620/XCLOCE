@@ -108,7 +108,7 @@ export function QuestsWindow({ onClose }: { onClose: () => void }) {
           ) : q.chest.ready ? (
             <button className="btn gold sm" disabled={busy === "quest_chest"} onClick={openChest}>Открыть</button>
           ) : (
-            <span className="chip num">{claimedN}/3</span>
+            <span className="chip num">{claimedN}/{q.list.length}</span>
           )}
         </div>
         <NotifySwitch />

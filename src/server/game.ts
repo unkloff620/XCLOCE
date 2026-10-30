@@ -109,8 +109,11 @@ async function afterAction(ctx: Ctx, type: ActionType, result: unknown) {
         const run = (await counters.countersOf(ctx.q, ctx.pid)).upgRun ?? 0;
         await counters.setMax(ctx.q, ctx.pid, "upgStreak", run);
       } else await counters.setTo(ctx.q, ctx.pid, "upgRun", 0);
-      return;
+      return quests.questTick(ctx, "upgrader", 1);
     }
+    case "social_pump":
+    case "social_fight":
+    case "social_spit": return quests.questTick(ctx, "social", 1);
     case "clan_create": return counters.setMax(ctx.q, ctx.pid, "clanCreated", 1);
     case "slots_spin": return quests.questTick(ctx, "slots", 1);
     case "equipment_upgrade":
