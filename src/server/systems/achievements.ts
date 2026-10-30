@@ -90,7 +90,9 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
     "SELECT result->>'outcome' AS hand, COUNT(*)::int AS n FROM games WHERE player_id=$1 AND kind='poker' AND status='done' AND result->>'outcome' IS NOT NULL GROUP BY 1",
     [pid],
   );
+  const slots = await q.query<{ outcome: string; n: number }>("SELECT outcome, COUNT(*)::int AS n FROM slot_spins WHERE player_id=$1 GROUP BY outcome", [pid]);
   const third: Record<string, number> = {
+    ...Object.fromEntries(slots.map((r) => [`slot:${r.outcome}`, Number(r.n)])),
     ...Object.fromEntries(got.map((r) => [`got:${r.key}`, Number(r.n)])),
     ...Object.fromEntries(fast.map((r) => [`fast:${r.boss_id}`, Number(r.n)])),
     ...Object.fromEntries(locs.map((r) => [r.location_id.startsWith("night:") ? `locn:${r.location_id.slice(6)}` : `loc:${r.location_id}`, Number(r.n)])),

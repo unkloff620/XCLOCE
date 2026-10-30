@@ -53,6 +53,7 @@ function AchPic({ a, cat, on, size = 46 }: { a: AchievementDef; cat: AchCategory
     <span className={`ach-pic tier-${a.tier} ${on ? "on" : "off"}`} style={{ width: size, height: size, ["--c" as string]: TIER_COLORS[a.tier] }}>
       {boss ? <BossCoin boss={boss} tier={a.category === "bosses" ? MEDAL_TIERS[Math.min(2, a.tier - 1)] : "gold"} size={size} dim={!on} />
         : cat.img ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={cat.img} alt="" draggable={false} />
+        : a.icon.startsWith("/") ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={a.icon} alt="" draggable={false} style={{ width: "74%", height: "74%", objectFit: "contain" }} />
         : thing ? <ItemArt id={a.icon} size={size * 0.78} />
         : <Icon name={a.icon as IconName} size={size * 0.74} />}
       <i className="ach-pic-n num">{a.label}</i>

@@ -153,6 +153,26 @@ export const ACH_CATEGORIES: AchCategory[] = [
       ["straight", "Стрит 1–6", 8], ["x5", "Пять одинаковых", 15], ["x6", "Шесть одинаковых", 40],
     ] as const).map(([c, nm, pts], i) => line("zonk-combos", i, 7, { id: `zonk-${c}`, name: nm, hint: `Выброси в зонке: ${nm.toLowerCase()}`, stat: `zonk:${c}`, target: 1, icon: "ach-zonk", label: "1", points: pts })),
   },
+  // the 777 machine: its own level, and every combination on its own (three steps each)
+  series("slots-level", "games", "777: уровень", "ach-slots", "slotLevel", [5, 10, 20, 30, 40, 50, 60, 75, 90, 100], (n) => `Получи ${n} уровень автомата 777`,
+    ["Первый жетон", "Завсегдатай", "Однорукий друг", "Барабанщик", "Знаток вишен", "Крутящий", "Лудоман со стажем", "Мастер барабанов", "Легенда автомата", "Король 777"]),
+  {
+    id: "slots-combos", section: "games", name: "777: комбинации", icon: "ach-slots", kind: "list",
+    lines: ([
+      // outcome, name, the counts, points, tiers
+      ["jackpot", "Три семёрки", [1, 3, 10], [10, 25, 60], [3, 4, 5], "seven"],
+      ["bar", "Три BAR", [1, 5, 25], [5, 10, 25], [2, 3, 4], "bar"],
+      ["bell", "Три колокола", [1, 10, 50], [3, 8, 20], [2, 3, 4], "bell"],
+      ["melon", "Три арбуза", [1, 10, 50], [2, 5, 15], [1, 2, 3], "melon"],
+      ["grape", "Три грозди", [1, 25, 100], [2, 5, 15], [1, 2, 3], "grape"],
+      ["lemon", "Три лимона", [1, 25, 100], [2, 5, 15], [1, 2, 3], "lemon"],
+      ["cherry", "Три вишни", [1, 25, 150], [1, 3, 10], [1, 2, 3], "cherry"],
+      ["pair", "Пара", [10, 100, 500], [1, 3, 10], [1, 2, 3], "cherry"],
+    ] as const).flatMap(([o, nm, counts, pts, tiers, sym], k) => counts.map((t, i) => line("slots-combos", k * 3 + i, 24, {
+      id: `slot-${o}-${i + 1}`, name: `${nm} · ${t}`, hint: t === 1 ? `Выбей в автомате 777: ${nm.toLowerCase()}` : `Выбей в автомате 777 «${nm.toLowerCase()}» ${t} раз`,
+      stat: `slot:${o}`, target: t, icon: `/assets/slots/${sym}.webp`, label: String(t), points: pts[i], tier: tiers[i] as AchTier,
+    }))),
+  },
   series("zonk-best", "games", "Зонк: очки", "ach-zonk", "zonkBest", [2_000, 4_000, 6_000, 8_000, 10_000], (n) => `Набери ${n} очков за одну партию зонка`),
   // ---------------- Задания: every location by day, by night, and its business ----------------
   ...LOCATIONS.map((l): AchCategory => {
