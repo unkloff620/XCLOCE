@@ -222,7 +222,7 @@ function TalentBlockView({ b, wt, cur, selI, poor, onTap }: { b: TalentBlock; wt
               style={{ ["--c" as string]: c.col, ["--r" as string]: c.row }} onClick={() => onTap(i)} aria-label={`${stopTitle(n)}: ${lv}/${n.max}`} title={stopTitle(n)}>
               <StopArt n={n} size={64} />
               {cls === "shut" && <i className="tb-lock"><Icon name="lock" size={14} /></i>}
-              <i className="tb-n num">{lv}/{n.max}</i>
+              <i className={`tb-n num ${lv >= n.max ? "full" : lv > 0 ? "half" : ""}`}>{lv}/{n.max}</i>
               {n.need < n.max && lv < n.need && <i className="tb-need num">до {n.need}</i>}
             </button>
           );
