@@ -4132,3 +4132,9 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 
 /* the box on the counter is a third past the right edge: its number sits on the visible part */
 .sk-box .sk-tag.bottom { left: 32%; bottom: 8%; }
+/* «Достижения» in the dossier: the header, the toggle and the section tabs stay, only the list scrolls */
+.dos-inner:has(> .ach-panel) { overflow: hidden; display: flex; flex-direction: column; }
+.dos-inner > .ach-panel { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.dos-inner > .ach-panel > * { flex: none; }
+.dos-inner > .ach-panel > .ach-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 2px 2px 8px; margin: 8px -2px 0 !important;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 8px, #000 calc(100% - 10px), transparent 100%); mask-image: linear-gradient(180deg, transparent 0, #000 8px, #000 calc(100% - 10px), transparent 100%); }

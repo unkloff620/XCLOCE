@@ -213,7 +213,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
   const lines = (c: AchCategory) => c.lines.filter((x) => byId.has(x.id));
   const sectionDue = (sec: AchSection) => self && rows.some((r) => r.done && !r.claimed && categoryOf(r.id)?.section === sec);
   return (
-    <div className="panel">
+    <div className="panel ach-panel">
       <button type="button" className={`ach-head ${waiting ? "ready" : ""}`} onClick={() => setShown((v) => !v)} aria-expanded={shown}>
         <span className="small muted">ДОСТИЖЕНИЯ</span>
         <span className="grow" />
@@ -236,7 +236,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
           <button key={g.id} type="button" role="tab" aria-selected={section === g.id} className={`ach-group ${section === g.id ? "on" : ""} ${sectionDue(g.id) ? "due" : ""}`} onClick={() => { haptic.tap(); setSection(g.id); }}>{g.name}</button>
         ))}
       </div>}
-      {shown && <div className="col" style={{ gap: 8, marginTop: 8 }}>
+      {shown && <div className="col ach-scroll" style={{ gap: 8, marginTop: 8 }}>
         {ACH_CATEGORIES.filter((c) => c.section === section).map((c) => {
           const ls = lines(c);
           if (!ls.length) return null;
