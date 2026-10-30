@@ -26,7 +26,8 @@ import { EventButton } from "./event-banner.tsx";
 import { EnergyWindow } from "./screens/energy.tsx";
 import { NAV_TABS } from "../content/nav.ts";
 import { LeadersStrip } from "./leaders.tsx";
-import { isLoaded, preload, sectionOfRoute, urlsFor, type LookLite } from "./preload.ts";
+import { entryUrls, isLoaded, laterUrls, preload, sectionOfRoute, sectionUrls, type LookLite } from "./preload.ts";
+import { mskDay } from "../content/updates.ts";
 
 const TABS = NAV_TABS;
 
@@ -233,23 +234,29 @@ function Loading({ prog, overlay }: { prog?: LoadProgress; overlay?: boolean }) 
   );
 }
 
-/** First entry: every picture of the game is downloaded before it shows (only the player's own hero variants). */
-function useArtReady(look: LookLite | null, active: boolean) {
+/**
+ * First entry: the game shows once the hero, the interface and the home are downloaded (only the player's own hero
+ * variants); the rest of the pictures follow in the background, three at a time, so the sections open at once later.
+ */
+function useArtReady(look: LookLite | null, room: string, active: boolean) {
   const [prog, setProg] = useState<LoadProgress>({ n: 0, total: 0, url: null });
   const [ready, setReady] = useState(false);
   const started = useRef(false);
   useEffect(() => {
     if (!active || started.current) return;
     started.current = true;
-    void preload(urlsFor("all", look), (n, total, url) => setProg((p) => ({ n, total, url: url ?? p.url }))).then(() => setReady(true));
+    void preload(entryUrls(look, mskDay(Date.now()), room), (n, total, url) => setProg((p) => ({ n, total, url: url ?? p.url }))).then(() => {
+      setReady(true);
+      setTimeout(() => void preload(laterUrls(look), undefined, 3), 1500);
+    });
   }, [active, look]);
   return { ready, prog };
 }
 
 /** A section (yard, shop, bosses…) opens only when its pictures are downloaded; until then a loading screen covers it. */
-function SectionGate({ route, look, children }: { route: string; look: LookLite | null; children: ReactNode }) {
+function SectionGate({ route, look, room, children }: { route: string; look: LookLite | null; room: string; children: ReactNode }) {
   const section = sectionOfRoute(route);
-  const urls = section ? urlsFor([section], look) : []; // hero and icons (core) were loaded on entry
+  const urls = section ? sectionUrls(section, look, room) : []; // hero and icons (core) were loaded on entry
   const ok = isLoaded(urls);
   const [prog, setProg] = useState<LoadProgress>({ n: 0, total: 0, url: null });
   const [, setTick] = useState(0);
@@ -307,7 +314,7 @@ export function Shell({ children }: { children: ReactNode }) {
   useEffect(() => telegramBack(deep, () => router.back()), [deep, router]);
   const body = state?.look.body;
   const look = useMemo<LookLite | null>(() => (body ? { hair: body.hair, hairColor: body.hairColor, skin: body.skin } : null), [body?.hair, body?.hairColor, body?.skin]); // eslint-disable-line react-hooks/exhaustive-deps
-  const art = useArtReady(look, auth === "ok" && !!state);
+  const art = useArtReady(look, state?.look.room ?? "basic", auth === "ok" && !!state);
 
   return (
     <>
@@ -331,7 +338,7 @@ export function Shell({ children }: { children: ReactNode }) {
         {auth === "ok" && state && art.ready && (
           <>
             <Hud />
-            <main className="main"><SectionGate route={path} look={look}>{children}</SectionGate></main>
+            <main className="main"><SectionGate route={path} look={look} room={state?.look.room ?? "basic"}>{children}</SectionGate></main>
             <Nav />
             <ResultWindow />
             <Tutorial />
