@@ -50,6 +50,15 @@ export function HomeScreen() {
   const now = useNow();
   const [newsOpen, setNewsOpen] = useState(false);
   const todayNews = todayUpdates(now);
+  // the notes already opened on this device: the badge counts only the unread ones
+  const [newsRead, setNewsRead] = useState<string[]>(() => { try { return JSON.parse(localStorage.getItem("xc-news-read") ?? "[]"); } catch { return []; } });
+  const newsUnread = todayNews.filter((u) => !newsRead.includes(u.id)).length;
+  const openNews = () => {
+    setNewsOpen(true);
+    const ids = todayNews.map((u) => u.id);
+    setNewsRead(ids);
+    try { localStorage.setItem("xc-news-read", JSON.stringify(ids)); } catch { /* storage blocked */ }
+  };
   const [styling, setStyling] = useState<StyleDraft | null>(null);
   // which part of the hero the editor outlines brightest
   const [editFocus, setEditFocus] = useState<RigEdit>({ mode: "items", part: "SHIRT" });
@@ -253,9 +262,9 @@ export function HomeScreen() {
         {/* the left side: events and the running boss fight */}
         <div className="room-left">
           {/* «Что нового»: today's notes (Moscow day), the feed starts over at 0:00 МСК */}
-          <button className={`menu-toggle news-toggle ${todayNews.length ? "glow" : ""}`} onClick={() => setNewsOpen(true)} aria-label="Что нового" title="Что нового">
+          <button className={`menu-toggle news-toggle ${newsUnread ? "glow" : ""}`} onClick={openNews} aria-label="Что нового" title="Что нового">
             <Icon name="news" size={40} />
-            {todayNews.length > 0 && <span className="msg-count num">{todayNews.length}</span>}
+            {newsUnread > 0 && <span className="msg-count num">{newsUnread}</span>}
           </button>
           {f && fb && !fightOpen && (
             <button className="fight-mini" style={{ ["--acc" as string]: fb.theme.accent, ["--hp" as string]: hpPct }} onClick={() => setFightOpen(true)} aria-label={`Идёт бой: ${fb.name}`} title="Идёт бой">
