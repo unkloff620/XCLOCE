@@ -3981,3 +3981,5 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
   color: #fff; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 3px #000; }
 .tb-tile .tb-n.half, .dos-page .tb-tile .tb-n.half { color: #ffd84a; }
 .tb-tile .tb-n.full, .dos-page .tb-tile .tb-n.full { color: #5dff8f; }
+/* thinner: a normal weight and a soft shadow instead of the hard outline */
+.tb-tile .tb-n, .dos-page .tb-tile .tb-n { font-weight: 500; font-size: 10.5px; letter-spacing: 0.03em; text-shadow: 0 0 2px #000, 0 0 2px #000, 0 1px 1px #000; }
