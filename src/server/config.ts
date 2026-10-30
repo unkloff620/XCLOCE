@@ -1,6 +1,6 @@
 import type { Queryable } from "./db.ts";
 import { BOSSES, FIGHT_HOURS, FIGHTS_PER_DAY, FULL_SHARE, KEY_SHARE, KEYS_TO_UNLOCK } from "../content/bosses.ts";
-import { CURRENCY_DEFS, EXCHANGE_FEE, type Currency } from "../content/currencies.ts";
+import { CURRENCY_DEFS, EXCHANGE_FEE, EXCHANGE_SCHEDULE, cleanSchedule, type Currency, type ExchangeSchedule } from "../content/currencies.ts";
 import { ENERGY, LEVELS } from "../content/levels.ts";
 import { YARD_DROPS, YARD_MAX_ITEMS, YARD_SPAWN_MIN } from "../content/yard.ts";
 import { OFFERS } from "../content/shop.ts";
@@ -22,7 +22,7 @@ export interface Config {
   levels: { a: number; b: number; p: number; max: number };
   yard: { spawnMin: number; maxItems: number; weights: Record<string, number> };
   prices: Record<string, number>;
-  exchange: { rub: Record<Currency, number>; fee: number };
+  exchange: { rub: Record<Currency, number>; fee: number; schedule: ExchangeSchedule };
   /** login reward cycle, one entry per day */
   daily: Reward[];
   /** inventory sale prices in RUB */
@@ -48,7 +48,7 @@ export function defaultConfig(): Config {
     levels: { ...LEVELS },
     yard: { spawnMin: YARD_SPAWN_MIN, maxItems: YARD_MAX_ITEMS, weights: Object.fromEntries(YARD_DROPS.map((d) => [d.id, d.weight])) },
     prices: Object.fromEntries(OFFERS.map((o) => [o.id, o.price.amount])),
-    exchange: { rub: Object.fromEntries(Object.values(CURRENCY_DEFS).map((c) => [c.id, c.rub])) as Record<Currency, number>, fee: EXCHANGE_FEE },
+    exchange: { rub: Object.fromEntries(Object.values(CURRENCY_DEFS).map((c) => [c.id, c.rub])) as Record<Currency, number>, fee: EXCHANGE_FEE, schedule: { ...EXCHANGE_SCHEDULE } },
     daily: DAILY_REWARDS.map((r) => structuredClone(r)),
     sell: { ...SELL_PRICES },
     rename: { price: RENAME.price, cooldownH: RENAME.cooldownH },
@@ -76,6 +76,8 @@ const KEYS: Record<string, (c: Config, v: unknown) => void> = {
   "exchange.fee": (c, v) => {
     if (typeof v === "number" && v >= 0 && v < 0.5) c.exchange.fee = v;
   },
+  // the exchanger's working days and hours (the admin panel, «Ивенты: Обменник»)
+  "exchange.schedule": (c, v) => { c.exchange.schedule = cleanSchedule(v); },
   daily: (c, v) => {
     if (Array.isArray(v) && v.length >= 1 && v.length <= 31 && v.every((r) => r && typeof r === "object" && !Array.isArray(r))) c.daily = v as Reward[];
   },

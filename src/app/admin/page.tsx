@@ -1140,6 +1140,7 @@ function Events() {
           ["", (r) => <span className="row" style={{ gap: 6 }}><button className="adm-btn ghost sm" onClick={() => { setSaveErr(null); edit(r); }}>Изменить</button><button className="adm-btn danger sm" onClick={() => del(Number(r.id))}>Удалить</button></span>, "nowrap"],
         ]} />
       </Box>
+      <ExchangeEvent />
       <BossControls rows={data ?? []} onSaved={setData} />
       {form && (
         <Box title={form.id ? `Событие #${form.id}` : "Новое событие"} right={<button className="adm-btn ghost sm" onClick={() => setForm(null)}>Закрыть</button>}>
@@ -1272,5 +1273,54 @@ function BossMenu({ id, onClose, onSaved }: { id: string; onClose: () => void; o
       <span className="muted small">Дни пустые — навсегда.</span>
       <Err e={err} />
     </div>
+  );
+}
+
+/* «Ивенты: Обменник» — when the exchanger works: a cycle of days (which day of it) and Moscow hours, or always / never */
+type ExSched = { mode: "cycle" | "always" | "closed"; every: number; offset: number; from: number; to: number };
+function ExchangeEvent() {
+  const { data, err, setData } = useLoad(() => admin<{ schedule: ExSched; window: { open: boolean; until: number }; text: string }>("exchange_schedule"), []);
+  const [f, setF] = useState<ExSched | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [saveErr, setSaveErr] = useState<string | null>(null);
+  const cur = f ?? data?.schedule ?? null;
+  const set = (k: keyof ExSched, v: string | number) => setF({ ...(cur as ExSched), [k]: typeof v === "string" && k !== "mode" ? Number(v) : v } as ExSched);
+  const save = async () => {
+    if (!cur) return;
+    setBusy(true); setSaveErr(null);
+    try { setData(await admin("exchange_schedule_save", { schedule: cur })); setF(null); } catch (e) { setSaveErr((e as Error).message); }
+    setBusy(false);
+  };
+  const w = data?.window;
+  return (
+    <Box title="Ивенты: Обменник" right={w && <span className={w.open ? "adm-ok" : "muted"}>{w.open ? `открыт · закроется ${when(new Date(w.until).toISOString())}` : `закрыт · откроется ${when(new Date(w.until).toISOString())}`}</span>}>
+      <p className="muted small" style={{ marginTop: 0 }}>Когда работает обменник во дворе (ларёк с барыгой). Дни и часы — по Москве. Сейчас: <b>{data?.text ?? "…"}</b>. Изменения доходят до игры в течение ~30 секунд.</p>
+      <Err e={err} />
+      {cur && (
+        <form className="adm-ev" onSubmit={(e) => { e.preventDefault(); void save(); }}>
+          <label>Режим
+            <select className="adm-in" value={cur.mode} onChange={(e) => set("mode", e.target.value)}>
+              <option value="cycle">По расписанию</option>
+              <option value="always">Открыт всегда</option>
+              <option value="closed">Закрыт</option>
+            </select>
+          </label>
+          {cur.mode === "cycle" && (
+            <div className="adm-ev-dates">
+              <label>Раз в сколько дней<input className="adm-in" type="number" min={1} max={30} value={cur.every} onChange={(e) => set("every", e.target.value)} /></label>
+              <label>Какой день цикла (0…{cur.every - 1})<input className="adm-in" type="number" min={0} max={cur.every - 1} value={cur.offset} onChange={(e) => set("offset", e.target.value)} /></label>
+              <label>Открывается в (час МСК)<input className="adm-in" type="number" min={0} max={23} value={cur.from} onChange={(e) => set("from", e.target.value)} /></label>
+              <label>Закрывается в (час МСК)<input className="adm-in" type="number" min={1} max={24} value={cur.to} onChange={(e) => set("to", e.target.value)} /></label>
+            </div>
+          )}
+          <p className="muted small">«Раз в 1 день» — каждый день; 0–24 — весь день. Сдвинуть открытие на завтра — поменяй «какой день цикла».</p>
+          <Err e={saveErr} />
+          <div className="row" style={{ gap: 8 }}>
+            <button className="adm-btn" disabled={busy || !f}>Сохранить</button>
+            {f && <button type="button" className="adm-btn ghost" onClick={() => setF(null)}>Отменить</button>}
+          </div>
+        </form>
+      )}
+    </Box>
   );
 }

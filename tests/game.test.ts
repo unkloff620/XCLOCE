@@ -509,6 +509,17 @@ describe("shop and exchange", () => {
     await act(db, p, "buy", { offerId: "keyboard-1", idem: "b1" }, T0);
     expect(await wallet(db, p, "RUB")).toBe(310);
   });
+  it("the exchanger's schedule: a cycle of days with Moscow hours, or always / never", () => {
+    const day0 = Date.UTC(2026, 0, 3) - 3 * H; // a Moscow midnight
+    const n0 = Math.floor((day0 + 3 * H) / (24 * H));
+    const s = { mode: "cycle" as const, every: 2, offset: n0 % 2, from: 12, to: 20 };
+    expect(exchangeWindow(day0 + 11 * H, s)).toMatchObject({ open: false, until: day0 + 12 * H });
+    expect(exchangeWindow(day0 + 13 * H, s)).toMatchObject({ open: true, until: day0 + 20 * H });
+    expect(exchangeWindow(day0 + 21 * H, s)).toMatchObject({ open: false, until: day0 + 2 * 24 * H + 12 * H });
+    expect(exchangeWindow(day0 + 24 * H + 13 * H, s).open).toBe(false);
+    expect(exchangeWindow(day0, { ...s, mode: "always" }).open).toBe(true);
+    expect(exchangeWindow(day0 + 13 * H, { ...s, mode: "closed" }).open).toBe(false);
+  });
   it("exchanges at the server rate minus the fee", async () => {
     const p = await newPlayer(db);
     await setMoney(db, p, "RUB", 900);

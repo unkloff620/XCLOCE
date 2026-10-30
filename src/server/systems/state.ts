@@ -98,6 +98,8 @@ export async function gameState(ctx: Ctx) {
     slots: await slotsView(ctx.q, ctx.pid, ctx.now, ctx.cfg),
     // game events going on now (banner + their effects); the admin's working boss tweaks are not announced
     events: ctx.cfg.events.filter((e) => !e.effects.silent),
+    // the exchanger's working days and hours (the admin's schedule): the yard kiosk and the notice follow it
+    exchangeSchedule: ctx.cfg.exchange.schedule,
     // bosses in the game now (art + the admin's boss controls)
     openBosses: OPEN_BOSSES(ctx.cfg.bossOpen).map((b) => b.id),
     games: await gamesView(ctx.q, ctx.pid, ctx.now),

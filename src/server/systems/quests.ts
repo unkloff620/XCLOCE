@@ -1,3 +1,4 @@
+import { loadConfig } from "../config.ts";
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, moscowDay, nextMoscowMidnight, weighted, type Ctx, type Granted } from "../core.ts";
 import { QUEST_CHEST_BASE, QUEST_CHEST_LOOT, questsForDay, type QuestKind } from "../../content/quests.ts";
@@ -19,7 +20,7 @@ async function row(q: Queryable, pid: number, day: string, lock = false): Promis
 export async function questTick(ctx: Ctx, kind: QuestKind, amount = 1) {
   if (!(amount > 0)) return;
   const day = moscowDay(ctx.now);
-  const quests = questsForDay(ctx.pid, day).filter((x) => x.kind === kind);
+  const quests = questsForDay(ctx.pid, day, ctx.cfg.exchange.schedule).filter((x) => x.kind === kind);
   if (!quests.length) return;
   const r = await row(ctx.q, ctx.pid, day, true);
   const progress = { ...r.progress };
@@ -34,7 +35,7 @@ export async function questTick(ctx: Ctx, kind: QuestKind, amount = 1) {
 export async function questsView(q: Queryable, pid: number, now: number) {
   const day = moscowDay(now);
   const r = await row(q, pid, day);
-  const list = questsForDay(pid, day).map((x) => {
+  const list = questsForDay(pid, day, (await loadConfig(q, now)).exchange.schedule).map((x) => {
     const progress = Math.min(x.target, r.progress[x.id] ?? 0);
     return { id: x.id, progress, target: x.target, done: progress >= x.target, claimed: r.claimed.includes(x.id) };
   });
@@ -50,7 +51,7 @@ export async function questsView(q: Queryable, pid: number, now: number) {
 
 export async function claimQuest(ctx: Ctx, id: string) {
   const day = moscowDay(ctx.now);
-  const def = questsForDay(ctx.pid, day).find((x) => x.id === id);
+  const def = questsForDay(ctx.pid, day, ctx.cfg.exchange.schedule).find((x) => x.id === id);
   if (!def) throw new GameError("bad_quest", "Сегодня такого задания нет");
   const r = await row(ctx.q, ctx.pid, day, true);
   if (r.claimed.includes(id)) throw new GameError("quest_taken", "Награда уже получена");
@@ -63,7 +64,7 @@ export async function openQuestChest(ctx: Ctx) {
   const day = moscowDay(ctx.now);
   const r = await row(ctx.q, ctx.pid, day, true);
   if (r.chest) throw new GameError("chest_taken", "Сундук уже открыт — новый завтра");
-  const ids = questsForDay(ctx.pid, day).map((x) => x.id);
+  const ids = questsForDay(ctx.pid, day, ctx.cfg.exchange.schedule).map((x) => x.id);
   if (!ids.every((id) => r.claimed.includes(id))) throw new GameError("chest_locked", "Сначала забери награды за все задания дня");
   const loot = weighted(QUEST_CHEST_LOOT, ctx.rng);
   const got = await grantReward(ctx, mergeRewards(QUEST_CHEST_BASE, { items: [loot] }), "quest-chest");

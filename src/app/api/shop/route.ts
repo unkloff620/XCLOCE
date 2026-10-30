@@ -7,5 +7,5 @@ import { exchangeWindow } from "../../../content/currencies.ts";
 
 export const GET = authedRoute("shop", async ({ db }) => {
   const cfg = await loadConfig(db);
-  return { offers: shopView(cfg), exchange: { rub: cfg.exchange.rub, fee: cfg.exchange.fee, ...exchangeWindow(Date.now()) } };
+  return { offers: shopView(cfg), exchange: { rub: cfg.exchange.rub, fee: cfg.exchange.fee, schedule: cfg.exchange.schedule, ...exchangeWindow(Date.now(), cfg.exchange.schedule) } };
 });

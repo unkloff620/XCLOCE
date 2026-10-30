@@ -6,6 +6,7 @@
 import { GameError, type Db, type Queryable } from "./db.ts";
 import { loadConfig, resetConfigCache } from "./config.ts";
 import { cleanEffects } from "../content/events.ts";
+import { cleanSchedule, exchangeScheduleText, exchangeWindow } from "../content/currencies.ts";
 import { energyNow, type Ctx, type PlayerRow } from "./core.ts";
 import { giveStartKit } from "./players.ts";
 import { leaveClan } from "./systems/clans.ts";
@@ -374,4 +375,16 @@ export async function eventDelete(db: Db, id: number) {
   await db.query("DELETE FROM game_events WHERE id=$1", [id]);
   resetConfigCache();
   return events(db);
+}
+
+/* «Ивенты: Обменник»: the exchanger's working days and hours (config key `exchange.schedule`, content/currencies.ts) */
+export async function exchangeSchedule(db: Db) {
+  const cfg = await loadConfig(db);
+  return { schedule: cfg.exchange.schedule, window: exchangeWindow(Date.now(), cfg.exchange.schedule), text: exchangeScheduleText(cfg.exchange.schedule) };
+}
+export async function exchangeScheduleSave(db: Db, v: unknown) {
+  const s = cleanSchedule(v);
+  await db.query("INSERT INTO config (key, value) VALUES ('exchange.schedule', $1) ON CONFLICT (key) DO UPDATE SET value = excluded.value", [JSON.stringify(s)]);
+  resetConfigCache();
+  return exchangeSchedule(db);
 }

@@ -2,7 +2,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Modal } from "./ui.tsx";
-import { EXCHANGE_EVERY_DAYS, exchangeWindow } from "../content/currencies.ts";
+import { exchangeScheduleText, exchangeWindow } from "../content/currencies.ts";
+import { useGame } from "./store.tsx";
 import { haptic } from "./telegram.ts";
 
 const seenKey = (day: string) => `xc-ex-open-${day}`;
@@ -13,9 +14,11 @@ const seenKey = (day: string) => `xc-ex-open-${day}`;
  */
 export function ExchangeNotice({ wait }: { wait: boolean }) {
   const [day, setDay] = useState<string | null>(null);
+  const { state } = useGame();
+  const sched = state?.exchangeSchedule;
   useEffect(() => {
-    if (wait || day) return;
-    const w = exchangeWindow(Date.now());
+    if (wait || day || !state) return;
+    const w = exchangeWindow(Date.now(), sched);
     if (!w.open) return;
     try {
       if (localStorage.getItem(seenKey(w.day))) return;
@@ -25,7 +28,7 @@ export function ExchangeNotice({ wait }: { wait: boolean }) {
     }
     haptic.ok();
     setDay(w.day);
-  }, [wait, day]);
+  }, [wait, day, state, sched]);
   if (!day) return null;
   const close = () => setDay("");
   return (
@@ -34,7 +37,7 @@ export function ExchangeNotice({ wait }: { wait: boolean }) {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/assets/ui/exchange.webp" alt="" draggable={false} />
         <b className="display">Обменник снова работает!</b>
-        <span className="muted small">Сегодня он готов обменять тебе валюту. Работает один день из {EXCHANGE_EVERY_DAYS} — не упусти.</span>
+        <span className="muted small">Сегодня он готов обменять тебе валюту. Он {exchangeScheduleText(sched)} — не упусти.</span>
         <div className="row" style={{ gap: 8, width: "100%" }}>
           <button className="btn grow" onClick={close}>Позже</button>
           <Link className="btn gold grow" href="/exchange" onClick={close}>В обменник</Link>

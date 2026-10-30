@@ -32,7 +32,7 @@ export function YardScreen() {
   const [flying, setFlying] = useState<number | null>(null);
   const tod = yardTime(now);
   // the exchanger works one Moscow day out of three: the kiosk is open (the dealer smokes inside) or shut
-  const exOpen = exchangeWindow(now).open;
+  const exOpen = exchangeWindow(now, state?.exchangeSchedule).open;
   // enough energy for a task step (or a location reward waits) → the Locations button calls for attention
   const taskHint = tasksReady(state, now);
   const [slots, setSlots] = useState(false);

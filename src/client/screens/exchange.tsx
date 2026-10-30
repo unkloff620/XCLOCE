@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useGame } from "../store.tsx";
 import { api } from "../api.ts";
-import { CURRENCIES, CURRENCY_DEFS, EXCHANGE_EVERY_DAYS, exchangeWindow, floorTo, type Currency } from "../../content/currencies.ts";
+import { CURRENCIES, CURRENCY_DEFS, exchangeScheduleText, exchangeWindow, floorTo, type Currency } from "../../content/currencies.ts";
 import { Icon } from "../art/icons.tsx";
 import { clock, money } from "../format.ts";
 import { haptic } from "../telegram.ts";
@@ -78,6 +78,8 @@ export function Exchanger({ ex }: { ex: ShopData["exchange"] }) {
 
 /** The exchanger is an event: one Moscow day out of three. A strip says how long it still works / when it opens. */
 function ExchangeClock({ until, open, onTurn }: { until: number; open: boolean; onTurn: () => void }) {
+  const { state } = useGame();
+  const when = exchangeScheduleText(state?.exchangeSchedule);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -92,7 +94,7 @@ function ExchangeClock({ until, open, onTurn }: { until: number; open: boolean; 
   return open ? (
     <div className="exp-event on"><b className="display">Ивент: обменник открыт</b><span>закроется через <b className="num">{t}</b></span></div>
   ) : (
-    <div className="exp-event"><b className="display">Обменник закрыт</b><span>Работает один день из {EXCHANGE_EVERY_DAYS}. Откроется через <b className="num">{t}</b></span></div>
+    <div className="exp-event"><b className="display">Обменник закрыт</b><span>{when[0].toUpperCase() + when.slice(1)}.{state?.exchangeSchedule?.mode === "closed" ? "" : <> Откроется через <b className="num">{t}</b></>}</span></div>
   );
 }
 
@@ -102,7 +104,9 @@ export function ExchangeScreen() {
   useEffect(() => {
     load();
   }, []);
-  const win = data ? { open: data.exchange.open ?? exchangeWindow(Date.now()).open, until: data.exchange.until ?? exchangeWindow(Date.now()).until } : null;
+  const { state } = useGame();
+  const sched = state?.exchangeSchedule;
+  const win = data ? { open: data.exchange.open ?? exchangeWindow(Date.now(), sched).open, until: data.exchange.until ?? exchangeWindow(Date.now(), sched).until } : null;
   return (
     <div className="col" style={{ gap: 10 }}>
       <div className="title" style={{ margin: 0 }}>
@@ -114,7 +118,7 @@ export function ExchangeScreen() {
               <li>Верхний ряд — что отдаёшь, нижний — что получаешь. Кнопка ⇅ меняет их местами.</li>
               <li>Впиши сумму или нажми «ВСЁ», ниже сразу видно, сколько получишь и по какому курсу.</li>
               <li>Комиссия {data ? Math.round(data.exchange.fee * 100) : 5}% уже учтена в сумме «Получу».</li>
-              <li>Обменник — ивент: работает один день из {EXCHANGE_EVERY_DAYS} (по Москве). В день открытия на главном экране появится уведомление.</li>
+              <li>Обменник — ивент: {exchangeScheduleText(sched)}. В день открытия на главном экране появится уведомление.</li>
               <li>Меняются только целые числа — без копеек и дробей.</li>
               <li>Валюты игровые и не связаны с настоящими кошельками.</li>
             </ul>
