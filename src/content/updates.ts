@@ -17,6 +17,12 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-10-30-boss-things",
+    date: "30 октября",
+    title: "Вещи с боссов",
+    items: [{ text: "За победу в «Блатном» с любого босса выпадает одна вещь с шансом 70% — а не все сразу." }],
+  },
+  {
     id: "2026-10-30-quests5",
     date: "30 октября",
     title: "Пять заданий дня",

@@ -442,9 +442,10 @@ async function rollUnlocks(ctx: Ctx, def: BossDef): Promise<string[]> {
   if (!missing.length) return [];
   const [row] = await ctx.q.query<{ misses: number }>("SELECT misses FROM boss_pity WHERE player_id=$1 AND boss_id=$2 FOR UPDATE", [ctx.pid, def.id]);
   const misses = row?.misses ?? 0;
-  // in «Блатной» (the only mode the things drop in) every thing rolls BLAT_THING_CHANCE, for every boss
-  let got = missing.filter(() => ctx.rng() < BLAT_THING_CHANCE);
-  if (!got.length && misses + 1 >= def.wear.pity) got = [missing[Math.floor(ctx.rng() * missing.length) % missing.length]];
+  // in «Блатной» (the only mode the things drop in): one win — at most one thing, with BLAT_THING_CHANCE, for every boss
+  // (one of the missing ones at random); the pity gives one for sure after a run of misses
+  let got: string[] = [];
+  if (ctx.rng() < BLAT_THING_CHANCE || misses + 1 >= def.wear.pity) got = [missing[Math.floor(ctx.rng() * missing.length) % missing.length]];
   await ctx.q.query(
     "INSERT INTO boss_pity (player_id, boss_id, misses) VALUES ($1,$2,$3) ON CONFLICT (player_id, boss_id) DO UPDATE SET misses = EXCLUDED.misses",
     [ctx.pid, def.id, got.length ? 0 : misses + 1],

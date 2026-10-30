@@ -24,7 +24,7 @@ export interface BossDef {
   /** the card this boss gives for a win (item key-<id>); the final boss gives none */
   card?: CardTier;
   /**
-   * things this boss unlocks in the shop: each one not unlocked yet rolls BLAT_THING_CHANCE per «Блатной» win (any own hit; `chance` is no longer used);
+   * things this boss unlocks in the shop: one of the ones not unlocked yet drops with BLAT_THING_CHANCE per «Блатной» win (any own hit; `chance` is no longer used);
    * after `pity` wins in a row without luck one of them unlocks for sure. A dropped thing is not given — it opens
    * in the shop and has to be bought there. Which ones, is a secret for the player (shown as «?» x/N)
    */
@@ -238,7 +238,7 @@ export const EXTRA_KEY_CHANCE = 0.1;
 export function rewardShare(myDamage: number, _hpMax?: number, _full = FULL_SHARE): number {
   return myDamage > 0 ? 1 : 0;
 }
-/** a boss's own things (BossDef.wear) in «Блатной»: this chance per thing per win, for every boss */
+/** a boss's own things (BossDef.wear) in «Блатной»: this chance per win that ONE of the missing things drops, for every boss */
 export const BLAT_THING_CHANCE = 0.7;
 
 /** How many keys of the previous boss open this one. */

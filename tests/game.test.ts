@@ -245,8 +245,9 @@ describe("boss fights: personal fights, shared damage", () => {
     const c = await win(9, 0.99);
     expect(await unlocks()).toHaveLength(1);
     expect(c.result.reward.unlocks.filter((id: string) => !id.startsWith("room:"))).toHaveLength(1);
-    // a lucky roll opens all the rest (test players own jeans already — owned things do not drop); the things are not given
+    // a lucky roll opens one more — never all at once (test players own jeans already — owned things do not drop)
     await win(10, 0.01);
+    expect(await unlocks()).toHaveLength(2);
     expect(await unlocks()).toEqual(["sneakers", "tee-white"]);
     expect(await qty(db, p, "tee-white")).toBe(0);
     const s = await act(db, p, "buy", { offerId: "tee-white" }, T0 + 2 * D);
