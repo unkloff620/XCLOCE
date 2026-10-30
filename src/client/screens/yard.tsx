@@ -32,7 +32,7 @@ export function YardScreen() {
   // enough energy for a task step (or a location reward waits) → the Locations button calls for attention
   const taskHint = tasksReady(state, now);
   const [slots, setSlots] = useState(false);
-  // the yard goes on to the right: a swipe left shows its second half (the kiosk, the garages, the pigeon loft), right — back
+  // the yard goes on to the right: a swipe left shows its second half (the kiosk, the pigeon loft), right — back
   const [page, setPage] = useState(0);
   const [drag, setDrag] = useState(0);
   const touch = useRef<{ x: number; y: number; on: boolean | null } | null>(null);
@@ -90,7 +90,7 @@ export function YardScreen() {
         <div className="title-row">
           <h1 className="display">Двор</h1>
           <Help topic="yard-menu" title="Как устроен двор">
-            <p>Двор длинный: свайпни влево (или нажми стрелку справа) — там продолжение: ларёк-обменник, гаражи и голубятня.</p>
+            <p>Двор длинный: свайпни влево (или нажми стрелку справа) — там продолжение: ларёк-обменник и голубятня.</p>
             <p>Каждые 5 минут во дворе появляется случайная находка, максимум 5 сразу. Время идёт, даже когда игра закрыта — заходи и собирай.</p>
             <p>Изредка попадается Клавиатура. Всё найденное можно продать в инвентаре.</p>
             <HelpList title="Кнопки слева" rows={LINKS.map((b) => ({ key: b.href, icon: <Icon name={b.icon} size={44} />, name: b.label, hint: b.hint }))} />
@@ -160,8 +160,10 @@ export function YardScreen() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="yard-bg" src={tod === "night" ? "/assets/yard/court2-dark.webp" : "/assets/yard/court2.webp"} alt="" draggable={false} />
           <span className="yard-tint" aria-hidden="true" />
+          {/* the exchange kiosk: its own picture over the yard (a button) */}
           <Link href="/exchange" className="yard-obj yard-kiosk" aria-label="Обменник" title="Обменник" tabIndex={page === 1 ? 0 : -1}>
-            <span className="yard-kiosk-tag">Обменник</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={tod === "night" ? "/assets/yard/court2-kiosk-dark.webp" : "/assets/yard/court2-kiosk.webp"} alt="" draggable={false} />
           </Link>
         </div>
         <button type="button" className={`yard-pager ${page === 0 ? "next" : "prev"}`} onClick={() => turn(page === 0 ? 1 : 0)} aria-label={page === 0 ? "Дальше по двору" : "Назад во двор"}>{page === 0 ? "›" : "‹"}</button>
