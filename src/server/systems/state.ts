@@ -20,7 +20,7 @@ import { tasksHint } from "./locations.ts";
 import { questsView } from "./quests.ts";
 import { notifyView, scheduleEnergy } from "./notify.ts";
 import { framesFor, prizesView, settleWeeks } from "./rating.ts";
-import { settleGameWeeks, settleZonkDay } from "./minigame-extras.ts";
+import { pigeonsView, settleGameWeeks, settleZonkDay } from "./minigame-extras.ts";
 import { casesView, setBonuses } from "./collection.ts";
 import { clanBossView } from "./clan-boss.ts";
 import { duelsView, expireDuels } from "./duels.ts";
@@ -100,6 +100,8 @@ export async function gameState(ctx: Ctx) {
     events: ctx.cfg.events.filter((e) => !e.effects.silent),
     // the exchanger's working days and hours (the admin's schedule): the yard kiosk and the notice follow it
     exchangeSchedule: ctx.cfg.exchange.schedule,
+    // the yard pigeons: when each place has a pigeon (ms); the server keeps them, so they do not come back on a reload
+    pigeons: await pigeonsView(ctx.q, ctx.pid),
     // bosses in the game now (art + the admin's boss controls)
     openBosses: OPEN_BOSSES(ctx.cfg.bossOpen).map((b) => b.id),
     games: await gamesView(ctx.q, ctx.pid, ctx.now),

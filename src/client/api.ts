@@ -67,6 +67,7 @@ export interface GameState {
   /** the 777 machine: spins left this hour, and its own level (content/slots.ts slotLevel) */
   slots: { left: number; max: number; nextAt: number | null; xp: number; level: number; into: number; need: number };
   events?: import("../content/events.ts").GameEventView[];
+  pigeons?: number[];
   exchangeSchedule?: import("../content/currencies.ts").ExchangeSchedule;
   openBosses?: string[];
   /** yard mini games: free games left today, the price after that, the hand / game in progress */

@@ -200,7 +200,7 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "zonk_move": return games.zonkMove(ctx, Array.isArray(body.pick) ? body.pick.slice(0, 6).map((x) => Number(x)) : [], oneOf(body.then, ["roll", "bank"] as const, "then"));
     case "poker_play": return games.playPoker(ctx, body.chip === true);
     case "roach_squash": return extras2.squashRoach(ctx);
-    case "pigeon_scare": return extras2.scarePigeon(ctx);
+    case "pigeon_scare": return extras2.scarePigeon(ctx, Number(body.slot));
     case "duel_create": return duels.createDuel(ctx, num(body.to, "to"), num(body.stake, "stake"));
     case "duel_answer": return duels.answerDuel(ctx, num(body.id, "id"), oneOf(body.answer, ["accept", "decline", "cancel"] as const, "answer"));
     case "duel_play": return duels.playDuel(ctx, num(body.id, "id"));

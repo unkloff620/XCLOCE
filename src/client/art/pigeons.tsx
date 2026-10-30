@@ -22,8 +22,12 @@ const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 interface Pose { up: number; upY: number; head: number; headX: number; headY: number; wn: number; wf: number; lf: number; lb: number; tuck: number }
 const ZERO: Pose = { up: 0, upY: 0, head: 0, headX: 0, headY: 0, wn: 0, wf: 0, lf: 0, lb: 0, tuck: 0 };
 
-function Pigeon({ area, delay }: { area: PigeonArea; delay: number }) {
-  const { act } = useGame();
+function Pigeon({ area, delay, slot }: { area: PigeonArea; delay: number; slot: number }) {
+  const { act, state } = useGame();
+  // when this place has a pigeon (the server's time, ms): a scared one does not come back on a reload
+  const nextAt = useRef(state?.pigeons?.[slot] ?? 0);
+  const serverNext = state?.pigeons?.[slot];
+  useEffect(() => { if (serverNext !== undefined && nextAt.current !== Infinity) nextAt.current = serverNext; }, [serverNext]);
   const actRef = useRef(act); actRef.current = act;
   const [gain, setGain] = useState<{ x: number; y: number; rub: number; key: number } | null>(null);
   const root = useRef<HTMLButtonElement>(null);
@@ -44,6 +48,8 @@ function Pigeon({ area, delay }: { area: PigeonArea; delay: number }) {
       pose: { ...ZERO }, fly: 0, fx: 0, fy: 0,
     };
     st.face = st.dir;
+    // no pigeon at this place yet (scared earlier): it comes when its time is up
+    if (Date.now() < nextAt.current) { st.act = "gone"; if (root.current) root.current.style.visibility = "hidden"; }
     const choose = (now: number) => {
       const r = Math.random();
       if (r < 0.42) {
@@ -71,9 +77,11 @@ function Pigeon({ area, delay }: { area: PigeonArea; delay: number }) {
       haptic.tap();
       // a scared pigeon pays a few roubles right where it sat: the sum floats up there and fades
       const at = { x: st.x, y: st.y };
-      void actRef.current<{ reward: Granted | null }>("pigeon_scare", {}).then((r) => {
+      nextAt.current = Infinity; // not back before the server says when
+      void actRef.current<{ reward: Granted | null; nextAt: number }>("pigeon_scare", { slot }).then((r) => {
+        nextAt.current = r?.nextAt || Date.now() + 5 * 60_000;
         const rub = r?.reward?.currencies?.RUB;
-        if (rub) setGain({ x: at.x, y: at.y, rub, key: Date.now() });
+        if (rub) setGain({ x: at.x, y: at.y, rub, key: Date.now() + slot });
       });
       st.act = "fly";
       st.t = 0;
@@ -96,7 +104,7 @@ function Pigeon({ area, delay }: { area: PigeonArea; delay: number }) {
         else { st.x += (dx / dist) * v; st.y += ((dy / dist) * v) / 2; }
         st.phase += dt * (Math.PI * 2) / 0.5;
       }
-      if (st.act === "gone" && now >= st.until) {
+      if (st.act === "gone" && Date.now() >= nextAt.current) {
         // another one flies in from the sky and lands
         const from: 1 | -1 = Math.random() < 0.5 ? 1 : -1;
         st.x = rnd(area.x0, area.x1); st.y = rnd(area.y0, area.y1);
@@ -141,7 +149,7 @@ function Pigeon({ area, delay }: { area: PigeonArea; delay: number }) {
         st.fy = -(u * 900 + u * u * 200);
         extra = ` translate(${st.fx}%, ${st.fy}%) scale(${1 - u * 0.45})`;
         op = u < 0.7 ? 1 : 1 - (u - 0.7) / 0.3;
-        if (u >= 1) { st.act = "gone"; st.until = now + rnd(5 * 60_000, 10 * 60_000); el.style.visibility = "hidden"; } // the next one comes in 5–10 minutes
+        if (u >= 1) { st.act = "gone"; el.style.visibility = "hidden"; } // the next one comes when the server says (5–10 minutes)
       }
       if (st.act === "land") {
         // coming down from the sky: the way off, backwards, slowing to the ground; then the wings fold
@@ -195,6 +203,6 @@ function Pigeon({ area, delay }: { area: PigeonArea; delay: number }) {
   );
 }
 
-export function Pigeons({ area, n }: { area: PigeonArea; n: number }) {
-  return <>{Array.from({ length: n }, (_, i) => <Pigeon key={i} area={area} delay={400 + i * 900} />)}</>;
+export function Pigeons({ area, n, first = 0 }: { area: PigeonArea; n: number; first?: number }) {
+  return <>{Array.from({ length: n }, (_, i) => <Pigeon key={i} slot={first + i} area={area} delay={400 + i * 900} />)}</>;
 }
