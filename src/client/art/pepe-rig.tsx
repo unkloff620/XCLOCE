@@ -104,7 +104,7 @@ function breathOf(t: number) {
   return ph < 0.38 ? ease(ph / 0.38) : 1 - ease((ph - 0.38) / 0.62);
 }
 // held between the fingers (drawn behind the hand), so it rides along when the arm bends
-const inFingers = (a: V, b: V, palm: V): V => { const m = mid(a, b); return [m[0] + (palm[0] - m[0]) * 0.3, m[1] + (palm[1] - m[1]) * 0.3]; };
+const inFingers = (a: V, b: V, palm: V): V => { const m = mid(a, b); return [m[0] + (palm[0] - m[0]) * 0.12, m[1] + (palm[1] - m[1]) * 0.12]; };
 const PILL_REST_R: V = inFingers(P.fingR1t, P.fingR2t, P.handR);
 const PILL_REST_L: V = inFingers(P.fingL1t, P.fingL2t, P.handL);
 const PILL_CYCLE = 5.1;
@@ -118,6 +118,37 @@ function swellAt(y: number) {
 }
 const FACE_X = (P.browL[0] + P.browR[0]) / 2, EYE_Y = (P.browL[1] + P.browR[1]) / 2 + 22;
 
+/* the arms: the left one bends at the elbow in to the belly (no further), the right one goes up level to the side
+   (90°) while it holds the pill, and throws from up there */
+const T1 = 1.6, T2 = 2.55, T3 = 4.15;
+function armCurves(c: number) {
+  const r = c < 0.15 ? 0 : c < 0.6 ? ease((c - 0.15) / 0.45) : c < T1 + 0.15 ? 1 : c < T1 + 0.7 ? 1 - ease((c - T1 - 0.15) / 0.55) : 0;
+  const l = c < T2 - 0.45 ? 0.5 : c < T2 - 0.05 ? 0.5 + 0.5 * ease((c - T2 + 0.45) / 0.4) : c < T3 + 0.1 ? 1 : c < T3 + 0.6 ? 1 - 0.5 * ease((c - T3 - 0.1) / 0.5) : 0.5;
+  return { r, l };
+}
+function armsAt(c: number, b: number, gS: number, wristL: number, wristR: number): Partial<Record<BoneId, A>> {
+  const { r, l } = armCurves(c);
+  // the left forearm comes in level across the belly, a little towards us (shorter); the fist keeps its size
+  const kL = 1 - 0.08 * l;
+  return {
+    armL: local(P.shL, 2.5 * b - 6 * l, (P.shL[0] - P.chest[0]) * gS, -2 * b),
+    foreL: localK(P.elL, -3 * b - 62 * l, kL),
+    handL: localK(P.handL, wristL + 4 * b - 8 * l, 1 / kL),
+    armR: local(P.shR, -2.5 * b - 40 * r, (P.shR[0] - P.chest[0]) * gS, -2 * b - 4 * r),
+    foreR: local(P.elR, 3 * b - 14 * r),
+    handR: local(P.handR, wristR - 4 * b + 6 * r),
+  };
+}
+/** where the pill leaves one hand and lands in the other (the hands' places at those moments) */
+const TOSS = (() => {
+  const at = (c: number, side: "L" | "R") => {
+    const a = armsAt(c, 0, 0, 0, 0);
+    const m = side === "L" ? mul(mul(a.armL!, a.foreL!), a.handL!) : mul(mul(a.armR!, a.foreR!), a.handR!);
+    return ap(m, ...(side === "L" ? PILL_REST_L : PILL_REST_R));
+  };
+  return { fromR: at(T1, "R"), toL: at(T2, "L"), fromL: at(T3, "L"), toR: at(0, "R") };
+})();
+
 function poseAt(t: number, sad: number): Pose {
   const b = breathOf(t);
   const lo: Record<string, A> = {};
@@ -130,26 +161,18 @@ function poseAt(t: number, sad: number): Pose {
   const fly = (u: number, from: V, to: V, dir: number) => {
     const e = ease(u);
     // tossed high up over his head (he follows it with his eyes) and caught by the other hand
-    return { at: [from[0] + (to[0] - from[0]) * e, from[1] + (to[1] - from[1]) * u - Math.sin(Math.PI * u) * 760] as V, rot: dir * 720 * u, held: null };
+    // the top of the arc is a little over his head, wherever the hands are
+    const h = (from[1] + to[1]) / 2 - (L.head[1] - 70);
+    return { at: [from[0] + (to[0] - from[0]) * e, from[1] + (to[1] - from[1]) * u - Math.sin(Math.PI * u) * h] as V, rot: dir * 720 * u, held: null };
   };
   // the throwing hand flicks up just before, the catching one gives a little under it
   const flick = (start: number) => { const u = (c - start) / 0.35; return u > 0 && u < 1 ? Math.sin(Math.PI * u) : 0; };
   const give = (land: number) => { const u = (c - land) / 0.4; return u > 0 && u < 1 ? Math.sin(Math.PI * u) : 0; };
   let pill: Pose["pill"];
-  const T1 = 1.6, T2 = 2.55, T3 = 4.15;
   if (c < T1) pill = { at: PILL_REST_R, rot: 0, held: "R" };
-  else if (c < T2) pill = fly((c - T1) / (T2 - T1), PILL_REST_R, PILL_REST_L, -1);
+  else if (c < T2) pill = fly((c - T1) / (T2 - T1), TOSS.fromR, TOSS.toL, -1);
   else if (c < T3) pill = { at: PILL_REST_L, rot: 0, held: "L" };
-  else pill = fly((c - T3) / (PILL_CYCLE - T3), PILL_REST_L, PILL_REST_R, 1);
-  // the hand that holds the pill curls it in to the body (the forearm bends at the elbow towards the chest, coming at us
-  // a little — shorter), a few pumps, and down again in time for the throw
-  const curl = (u0: number, u1: number) => {
-    if (c < u0 || c > u1) return 0;
-    const u = (c - u0) / (u1 - u0);
-    const up = u < 0.3 ? ease(u / 0.3) : u > 0.72 ? 1 - ease((u - 0.72) / 0.28) : 1;
-    return up * (1 + (u > 0.3 && u < 0.72 ? 0.07 * Math.sin(((u - 0.3) / 0.42) * Math.PI * 6) : 0));
-  };
-  const cR = curl(0.1, T1 - 0.3), cL = curl(T2 + 0.2, T3 - 0.3);
+  else pill = fly((c - T3) / (PILL_CYCLE - T3), TOSS.fromL, TOSS.toR, 1);
   const wristR = -24 * flick(T1 - 0.2) + 8 * give(0);
   const wristL = 24 * flick(T3 - 0.2) - 8 * give(T2);
   // the fingers squeeze together now and then (two quick squeezes), each hand on its own beat
@@ -157,12 +180,7 @@ function poseAt(t: number, sad: number): Pose {
   const sL = sq(0.9), sR = sq(0);
   // the shoulders go out with the swelling chest
   const gS = swellAt((P.shL[1] + P.shR[1]) / 2).g * SWELL * b;
-  lo.armL = local(P.shL, 2.5 * b - 7 * cL, (P.shL[0] - P.chest[0]) * gS, -2 * b);
-  lo.armR = local(P.shR, -2.5 * b + 7 * cR, (P.shR[0] - P.chest[0]) * gS, -2 * b);
-  lo.foreL = localK(P.elL, -3 * b - 128 * cL, 1 - 0.32 * Math.min(1, cL));
-  lo.foreR = localK(P.elR, 3 * b + 118 * cR, 1 - 0.32 * Math.min(1, cR));
-  lo.handL = localK(P.handL, wristL + 4 * b - 12 * cL, 1 / (1 - 0.32 * Math.min(1, cL))); // the fist keeps its size
-  lo.handR = localK(P.handR, wristR - 4 * b + 12 * cR, 1 / (1 - 0.32 * Math.min(1, cR)));
+  Object.assign(lo, armsAt(c, b, gS, wristL, wristR));
   lo.fingL1 = local(P.fingL1, -7 * sL);
   lo.fingL2 = local(P.handL, 9 * sL);
   lo.fingR1 = local(P.handR, -9 * sR);
