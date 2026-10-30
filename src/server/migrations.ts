@@ -1146,4 +1146,10 @@ WHERE s.player_id = p.id AND s.pts > 0;
     id: "v2-065-talent-auto",
     sql: `ALTER TABLE players ADD COLUMN IF NOT EXISTS talent_auto boolean NOT NULL DEFAULT false;`,
   },
+  {
+    // a full player reset (admin): the moment it was done — what is counted from the shared logs (the ledger for the
+    // «collected» achievements, raids and spits, zonk duels) starts from here
+    id: "v2-066-progress-reset",
+    sql: `ALTER TABLE players ADD COLUMN IF NOT EXISTS progress_reset_at TIMESTAMPTZ;`,
+  },
 ];

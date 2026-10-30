@@ -62,12 +62,12 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
        (SELECT COALESCE(poker_xp, 0) FROM players WHERE id=$1)::int AS poker_xp,
        (SELECT COUNT(*) FROM games WHERE player_id=$1 AND kind='zonk' AND status='done')::int AS zonk_games,
        (SELECT COALESCE(MAX((result->>'points')::int), 0) FROM games WHERE player_id=$1 AND kind='zonk' AND status='done' AND result->>'outcome' IS DISTINCT FROM 'gave_up' AND result->>'points' ~ '^[0-9]+$')::int AS zonk_best,
-       (SELECT COUNT(*) FROM duels WHERE winner_id=$1)::int AS zonk_duels,
+       (SELECT COUNT(*) FROM duels WHERE winner_id=$1 AND created_at >= COALESCE((SELECT progress_reset_at FROM players WHERE id=$1), '-infinity'::timestamptz))::int AS zonk_duels,
        (SELECT COUNT(DISTINCT result->>'outcome') FROM games WHERE player_id=$1 AND kind='poker' AND status='done' AND result->>'outcome' IS NOT NULL AND result->>'outcome' <> 'high')::int AS poker_hands,
        (SELECT FLOOR(EXTRACT(EPOCH FROM (now() - joined_at)) / 86400) FROM clan_members WHERE player_id=$1)::int AS clan_days,
        (SELECT COUNT(*) FROM clan_boss_hits h JOIN clan_boss b ON b.clan_id = h.clan_id AND b.week = h.week WHERE h.player_id=$1 AND h.damage > 0 AND b.killed_at IS NOT NULL)::int AS clan_bosses,
-       (SELECT COUNT(*) FROM social_log WHERE from_id=$1 AND kind='spit')::int AS spits,
-       (SELECT COUNT(*) FROM social_log WHERE from_id=$1 AND kind='fight')::int AS raids,
+       (SELECT COUNT(*) FROM social_log WHERE from_id=$1 AND kind='spit' AND at >= COALESCE((SELECT progress_reset_at FROM players WHERE id=$1), '-infinity'::timestamptz))::int AS spits,
+       (SELECT COUNT(*) FROM social_log WHERE from_id=$1 AND kind='fight' AND at >= COALESCE((SELECT progress_reset_at FROM players WHERE id=$1), '-infinity'::timestamptz))::int AS raids,
        (SELECT COALESCE((SELECT n FROM player_biceps WHERE player_id=$1), 0))::int AS nishtyaks`,
     [pid],
   );
@@ -76,7 +76,7 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
   // the third set: things collected (the ledger keeps every gain), fast kills, locations by day and night, business,
   // poker hands, zonk combinations (counters), the talents the damage gave
   const got = await q.query<{ key: string; n: number }>(
-    "SELECT key, SUM(delta)::bigint AS n FROM ledger WHERE player_id=$1 AND kind='item' AND delta > 0 AND key = ANY($2) GROUP BY key",
+    "SELECT key, SUM(delta)::bigint AS n FROM ledger WHERE player_id=$1 AND kind='item' AND delta > 0 AND key = ANY($2) AND created_at >= COALESCE((SELECT progress_reset_at FROM players WHERE id=$1), '-infinity'::timestamptz) GROUP BY key",
     [pid, ["rug-pull-gun", "gpu", "keyboard", "poker-chip", "sticker-hodl"]],
   );
   const fast = await q.query<{ boss_id: string; n: number }>(

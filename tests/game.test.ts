@@ -1182,6 +1182,11 @@ describe("admin: reset a player", () => {
     const [cl] = await db.query<{ leader_id: number }>("SELECT leader_id FROM clans WHERE id=$1", [clanId]);
     expect(cl.leader_id).toBe(other);
     expect(v.admin[0].op).toBe("reset");
+    // the achievements start over too: the 40 guns from before the reset no longer count
+    const { statsFor } = await import("../src/server/systems/achievements.ts");
+    expect((await statsFor(db, p))["got:rug-pull-gun"] ?? 0).toBe(0);
+    const [pr] = await db.query<{ ach_points: number; help_seen: unknown }>("SELECT ach_points, help_seen FROM players WHERE id=$1", [p]);
+    expect([pr.ach_points, pr.help_seen]).toEqual([0, []]);
     // the player plays on as a newcomer
     const s = await act(db, p, "task", { taskId: "os-standup" }, T0 + H);
     expect(s.result.steps).toBe(1);

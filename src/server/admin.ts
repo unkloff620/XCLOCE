@@ -171,14 +171,17 @@ export const EDIT_OPS = ["set_money", "set_item", "add_item", "set_xp", "set_pok
 /**
  * Everything a player has earned, keyed by player_id. The reset wipes these and gives the starting kit again.
  * Kept: the account itself (Telegram id, name, avatar, ban), the logs (ledger, action_log, admin_log) and the shared
- * boss history (boss_hits).
+ * history (boss_hits, social_log, duels) — what the achievements count from them starts at players.progress_reset_at.
+ * Every own counter on the players row goes back to zero too (levels of the mini games, achievement points, the
+ * tutorial and the first-steps gift), so the game starts over.
  */
 const PROGRESS_TABLES = [
   "wallets", "inventory", "cooldowns", "appearance", "player_stats", "fights", "boss_damage", "task_progress",
   "location_claims", "yard", "yard_items", "daily_login", "slot_spins", "player_equipment", "daily_quests",
   "notifications", "weekly_stats", "week_results", "prizes", "achievements", "boss_pity", "player_unlocks",
   "player_talents", "idempotency", "games", "upgraded_items", "clan_requests", "stash_sets", "stash_wishes",
-  "location_business", "location_night_rep",
+  "location_business", "location_night_rep", "boss_medals", "player_counters", "player_biceps", "location_rep", "upgrade_spins",
+  "game_daily", "game_weekly", "clan_boss_hits", "notes", "bj_seats", "bj_invites",
 ] as const;
 
 const bad = (m: string) => new GameError("bad_request", m, 400);
@@ -321,7 +324,13 @@ export async function edit(db: Db, adminTg: number, pid: number, e: Edit) {
         // out of the clan first (a leader hands the clan to the oldest member; an empty clan is closed)
         if ((await q.query("SELECT 1 FROM clan_members WHERE player_id=$1", [pid])).length) await leaveClan({ q, pid } as Ctx);
         for (const t of PROGRESS_TABLES) await q.query(`DELETE FROM ${t} WHERE player_id=$1`, [pid]);
-        await q.query("UPDATE players SET xp=0, talents=0, energy_bonus=0, talent_energy=0, talent_biceps=0, energy=$2, energy_at=now(), clan_id=NULL WHERE id=$1", [pid, ENERGY.start]);
+        await q.query("DELETE FROM stash_gifts WHERE from_id=$1 OR to_id=$1", [pid]);
+        await q.query(
+          `UPDATE players SET xp=0, talents=0, energy_bonus=0, talent_energy=0, talent_biceps=0, energy=$2, energy_at=now(), clan_id=NULL,
+             ach_points=0, ach_boxes_opened=0, poker_xp=0, zonk_xp=0, slot_xp=0, stash_energy=0, talent_auto=false,
+             roach_day=NULL, roach_n=0, roach_at=NULL, help_seen='[]'::jsonb, progress_reset_at=now() WHERE id=$1`,
+          [pid, ENERGY.start],
+        );
         await giveStartKit(q, pid);
         info = { before };
         break;
