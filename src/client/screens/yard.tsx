@@ -12,6 +12,7 @@ import Link from "next/link";
 import { Icon } from "../art/icons.tsx";
 import { DriftingSky } from "../art/sky.tsx";
 import { KioskArt } from "../art/kiosk.tsx";
+import { Pigeons } from "../art/pigeons.tsx";
 import { exchangeWindow } from "../../content/currencies.ts";
 import { SlotMachine } from "./slots.tsx";
 import { YardGames, YardUpgrader } from "./minigames.tsx";
@@ -141,6 +142,8 @@ export function YardScreen() {
             {state && <span className="yard-slots-left num">{state.slots.left}/{state.slots.max}</span>}
           </button>
           <YardUpgrader />
+          {/* pigeons on the ground in front of the machines (low, clear of the finds) */}
+          <Pigeons area={{ x0: 8, x1: 92, y0: 3, y1: 9 }} n={2} />
           {data?.items.map((it) => {
             const spot = YARD_SPOTS[it.slot % YARD_SPOTS.length];
             const drop = YARD_DROPS.find((d) => d.id === it.drop);
@@ -164,6 +167,7 @@ export function YardScreen() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="yard-bg" src={tod === "night" ? "/assets/yard/yard2-bg-dark.webp" : "/assets/yard/yard2-bg.webp"} alt="" draggable={false} />
           <span className="yard-tint" aria-hidden="true" />
+          <Pigeons area={{ x0: 55, x1: 94, y0: 6, y1: 22 }} n={3} />
           {/* the exchange kiosk: its own picture over the yard (a button) */}
           <Link href="/exchange" className={`yard-obj yard-kiosk kiosk-live ${exOpen ? "" : "closed"}`} aria-label={exOpen ? "Обменник" : "Обменник (закрыт)"} title={exOpen ? "Обменник" : "Обменник закрыт"} tabIndex={page === 1 ? 0 : -1}>
             <KioskArt open={exOpen} night={tod === "night"} />
