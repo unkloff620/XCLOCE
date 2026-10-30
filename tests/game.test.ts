@@ -780,9 +780,15 @@ describe("«Ящик ништяков»", () => {
     await db.query("UPDATE players SET ach_points = 12 WHERE id=$1", [p]);
     const a = await act(db, p, "ach_box_open", {}, T0, always(0.5));
     expect(a.result.box).toMatchObject({ points: 12, opened: 1, ready: 1, progress: 2 });
-    expect(a.result.reward.items?.length).toBe(1);
+    // every box: keyboards, a GPU and (mostly) a Rug Pull Gun
+    expect(a.result.reward.items).toEqual([{ id: "keyboard", qty: 2 }, { id: "gpu", qty: 1 }, { id: "rug-pull-gun", qty: 1 }]);
     await act(db, p, "ach_box_open", {}, T0, always(0.5));
     await expect(act(db, p, "ach_box_open", {}, T0)).rejects.toMatchObject({ code: "ach_box_empty" });
+    // «Открыть все»: every waiting box at once, one reward — the sum
+    await db.query("UPDATE players SET ach_points = 27 WHERE id=$1", [p]);
+    const all = await act(db, p, "ach_box_open", { all: true }, T0, always(0.5));
+    expect(all.result).toMatchObject({ opened: 3, box: { opened: 5, ready: 0 } });
+    expect(all.result.reward.items).toEqual([{ id: "keyboard", qty: 6 }, { id: "gpu", qty: 3 }, { id: "rug-pull-gun", qty: 3 }]);
   });
 });
 
