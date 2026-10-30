@@ -3973,3 +3973,6 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .tp-auto { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 10px; border-radius: 12px; background: rgba(0, 0, 0, 0.18); font-size: 13px; font-weight: 800; }
 .tp-auto span { display: flex; flex-direction: column; gap: 1px; }
 .tp-auto small { font-size: 10.5px; font-weight: 600; opacity: 0.75; }
+/* the tile counters stay white on a dark pill everywhere (the dossier paints .num dark) */
+.tb-tile .tb-n, .dos-page .tb-tile .tb-n { right: 2px; bottom: 2px; padding: 0 4px; border-radius: 6px; background: rgba(0, 0, 0, 0.62); color: #fff; font-size: 11px; line-height: 15px; text-shadow: 0 1px 0 #000; }
+.tb-tile .tb-need, .dos-page .tb-tile .tb-need { padding: 0 3px; border-radius: 5px; background: rgba(0, 0, 0, 0.62); color: #fff; line-height: 13px; text-shadow: 0 1px 0 #000; }
