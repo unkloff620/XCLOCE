@@ -9,14 +9,13 @@ import { clock } from "../format.ts";
 import { haptic } from "../telegram.ts";
 import { setMusicTrack } from "../sound.ts";
 import Link from "next/link";
-import { Icon } from "../art/icons.tsx";
 import { DriftingSky } from "../art/sky.tsx";
 import { KioskArt } from "../art/kiosk.tsx";
 import { Pigeons } from "../art/pigeons.tsx";
 import { exchangeWindow } from "../../content/currencies.ts";
 import { SlotMachine } from "./slots.tsx";
 import { YardGames, YardUpgrader } from "./minigames.tsx";
-import { Help, HelpList } from "../help.tsx";
+import { Help } from "../help.tsx";
 import { GainLine, Modal } from "../ui.tsx";
 import type { Granted } from "../api.ts";
 
@@ -98,7 +97,7 @@ export function YardScreen() {
             <p>Двор длинный: свайпни влево (или нажми стрелку справа) — там продолжение: ларёк-обменник и голубятня.</p>
             <p>Каждые 5 минут во дворе появляется случайная находка, максимум 5 сразу. Время идёт, даже когда игра закрыта — заходи и собирай.</p>
             <p>Изредка попадается Клавиатура. Всё найденное можно продать в инвентаре.</p>
-            <HelpList title="Кнопки слева" rows={LINKS.map((b) => ({ key: b.href, icon: <Icon name={b.icon} size={44} />, name: b.label, hint: b.hint }))} />
+            <p>Обменник — ларёк во второй половине двора (свайпни влево). {LINKS[0].hint}</p>
             <p>Игровой автомат 777 — 3 бесплатные прокрутки в час. Справа от него — автомат «Апгрейдер»: улучшай находки и оружие.</p>
             <p>Подъезд — вход в локации: задания за энергию, шаги и награды. Значок «!» — энергии хватает на задание.</p>
             <p>Стол с табло — блэкджек (3 бесплатные партии в день) и зонк (1 бесплатная игра в день), дальше партия стоит 2 USD. Нажми на стол и выбери игру.</p>
@@ -174,13 +173,6 @@ export function YardScreen() {
           </Link>
         </div>
         <button type="button" className={`yard-pager ${page === 0 ? "next" : "prev"}`} onClick={() => turn(page === 0 ? 1 : 0)} aria-label={page === 0 ? "Дальше по двору" : "Назад во двор"}>{page === 0 ? "›" : "‹"}</button>
-        <nav className="yard-side" aria-label="Места во дворе">
-          {LINKS.map((b) => (
-            <Link key={b.href} href={b.href} className="icon-btn-art" style={{ ["--c" as string]: b.c }} aria-label={b.label} title={b.label}>
-              <Icon name={b.icon} size={58} />
-            </Link>
-          ))}
-        </nav>
         <div className="yard-timer">
           {!data ? "…" : data.nextAt ? <>Следующая находка через <b className="num">{clock(data.nextAt - now)}</b></> : <>Двор полон — собери, чтобы появилось новое</>}
         </div>
