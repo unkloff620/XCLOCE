@@ -25,7 +25,8 @@ let fullOpen = 0;
 /** `page`: a whole page between the HUD and the main menu (both stay visible; a tap on the menu closes it) */
 /** a window opened from a window lies over it, whatever the order the DOM got them in (80, 81, … — below the loaders at 85) */
 let openModals = 0;
-export function Modal({ title, onClose, children, wide, maxWidth, full, page }: { title?: ReactNode; onClose: () => void; children: ReactNode; wide?: boolean; maxWidth?: number; full?: boolean; page?: boolean }) {
+/** `head`: a line that stays under the title while the rest scrolls (a plain window: only its body scrolls, inside the paper) */
+export function Modal({ title, onClose, children, wide, maxWidth, full, page, head }: { title?: ReactNode; onClose: () => void; children: ReactNode; wide?: boolean; maxWidth?: number; full?: boolean; page?: boolean; head?: ReactNode }) {
   const [z] = useState(() => 80 + Math.min(4, openModals++));
   useEffect(() => () => { openModals = Math.max(0, openModals - 1); }, []);
   useEffect(() => {
@@ -60,7 +61,12 @@ export function Modal({ title, onClose, children, wide, maxWidth, full, page }: 
       <div className={`modal ${full ? "full" : ""} ${page ? "page" : ""}`} style={full ? ({ ["--mw" as string]: maxWidth ? `${maxWidth}px` : "100%" }) : page ? undefined : maxWidth ? { maxWidth } : wide ? { maxWidth: 460 } : undefined} onClick={(e) => e.stopPropagation()}>
         <button className="x" onClick={onClose} aria-label="Закрыть">×</button>
         {title && <h3 className="display">{title}</h3>}
-        {children}
+        {full || page ? children : (
+          <>
+            {head && <div className="modal-head">{head}</div>}
+            <div className="modal-body">{children}</div>
+          </>
+        )}
       </div>
     </div>
   );

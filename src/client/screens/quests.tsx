@@ -59,12 +59,12 @@ export function QuestsWindow({ onClose }: { onClose: () => void }) {
   };
   const claimedN = q.list.filter((x) => x.claimed).length;
   return (
-    <Modal title="Задания дня" onClose={onClose}>
+    <Modal title="Задания дня" onClose={onClose} head={
+      <div className="small muted row" style={{ justifyContent: "space-between" }}>
+        <span>Выполни все — откроется сундук.</span>
+        <span className="row num" style={{ gap: 4, whiteSpace: "nowrap" }}><Icon name="clock" size={14} />{clock(q.resetAt - now)}</span>
+      </div>}>
       <div className="col" style={{ gap: 10 }}>
-        <div className="small muted row" style={{ justifyContent: "space-between" }}>
-          <span>Выполни все — откроется сундук.</span>
-          <span className="row num" style={{ gap: 4, whiteSpace: "nowrap" }}><Icon name="clock" size={14} />{clock(q.resetAt - now)}</span>
-        </div>
         {q.list.map((x) => {
           const def = questById(x.id);
           if (!def) return null;

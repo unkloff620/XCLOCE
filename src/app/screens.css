@@ -4122,3 +4122,10 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .pg-grain b:nth-child(1) { left: -6px; top: 0; }
 .pg-grain b:nth-child(2) { left: 1px; top: 2px; }
 .pg-grain b:nth-child(3) { left: 6px; top: -1px; }
+/* plain windows: the title and the head stay, only the body scrolls — inside the paper, never over its edges */
+.modal-back:not(.full):not(.page) > .modal { display: flex; flex-direction: column; overflow: hidden; }
+.modal-back:not(.full):not(.page) > .modal > * { flex: none; }
+.modal-head { padding-bottom: 8px; }
+.modal-body { flex: 1 1 auto !important; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; margin: 0 -6px; padding: 2px 6px 4px;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 8px, #000 calc(100% - 10px), transparent 100%); mask-image: linear-gradient(180deg, transparent 0, #000 8px, #000 calc(100% - 10px), transparent 100%); }
+.modal-body > .upd-list { max-height: none; overflow: visible; margin-bottom: 8px; }

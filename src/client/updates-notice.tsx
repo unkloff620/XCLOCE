@@ -30,11 +30,12 @@ export function UpdatesWindow({ onClose, count = UPDATES.length, list }: { onClo
     write(SHOW, v ? "1" : "0");
   };
   return (
-    <Modal title="Что нового" onClose={onClose}>
+    <Modal title="Что нового" onClose={onClose} head={<>
       <label className="upd-switch">
         <span>Показывать обновления при входе</span>
         <button type="button" role="switch" aria-checked={show} className={`upd-toggle ${show ? "on" : ""}`} onClick={toggle}><i /></button>
       </label>
+    </>}>
       <div className="upd-list">
         {list && notes.length === 0 && <div className="small muted center">Сегодня обновлений не было. Лента обновляется в 0:00 по Москве.</div>}
         {notes.map((u) => (

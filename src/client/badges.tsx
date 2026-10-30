@@ -269,9 +269,8 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
       </div>}
       {/* a list window: every position — its picture with the number, what to do, the progress, the points */}
       {cat && (
-        <Modal title={cat.name} onClose={() => setOpen(null)}>
+        <Modal title={cat.name} onClose={() => setOpen(null)} head={<div className="tiny muted center">Нажми на светящуюся картинку — заберёшь очки достижений</div>}>
           <div className="col" style={{ gap: 6 }}>
-            <div className="tiny muted center">Нажми на светящуюся картинку — заберёшь очки достижений</div>
             {[...lines(cat)].sort((x, y) => Number(isDue(y.id)) - Number(isDue(x.id)) || Number(isOn(x.id)) - Number(isOn(y.id))).map((a) => {
               const r = byId.get(a.id);
               const on = isOn(a.id), due = isDue(a.id);
