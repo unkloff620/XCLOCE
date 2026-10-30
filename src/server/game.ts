@@ -152,7 +152,7 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "use": return shop.useItem(ctx, str(body.itemId, "itemId", 40));
     case "equip": return shop.equip(ctx, str(body.itemId, "itemId", 40));
     case "unequip": return shop.unequip(ctx, oneOf(body.slot, WEARABLE_SLOTS, "slot"));
-    case "ach_box_open": return openAchBox(ctx);
+    case "ach_box_open": return openAchBox(ctx, body.all === true);
     case "clan_create": return clans.createClan(ctx, str(body.name, "name", 40), str(body.tag, "tag", 8), str(body.emblem, "emblem", 20), str(body.color, "color", 10));
     case "clan_join": return clans.joinClan(ctx, num(body.clanId, "clanId"));
     case "clan_leave": return clans.leaveClan(ctx);

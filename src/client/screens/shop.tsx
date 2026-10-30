@@ -189,14 +189,16 @@ function Cards({ offers, batch }: { offers: Offer[]; batch: number }) {
 function AchBoxWindow({ onClose }: { onClose: () => void }) {
   const { state, act, busy } = useGame();
   const [got, setGot] = useState<Granted | null>(null);
+  const [gotN, setGotN] = useState(1);
   const [shake, setShake] = useState(0);
   const b = state?.achBox ?? { points: 0, opened: 0, ready: 0, progress: 0, cost: ACH_BOX_COST };
-  const open = async () => {
+  // one box, or every box waiting at once (one reward: the sum of what was inside)
+  const open = async (all = false) => {
     haptic.tap();
     setGot(null);
     setShake((n) => n + 1);
-    const r = await act<{ reward: Granted }>("ach_box_open", {});
-    if (r) { haptic.big(); sfx("reward"); setGot(r.reward); }
+    const r = await act<{ reward: Granted; opened: number }>("ach_box_open", all ? { all: true } : {});
+    if (r) { haptic.big(); sfx("reward"); setGot(r.reward); setGotN(r.opened ?? 1); }
   };
   return (
     <Modal title="Ящик ништяков" onClose={onClose}>
@@ -208,10 +210,13 @@ function AchBoxWindow({ onClose }: { onClose: () => void }) {
         <span className="ach-bar" style={{ width: "100%", ["--p" as string]: `${Math.round((b.progress / b.cost) * 100)}%`, ["--c" as string]: "#ffcc33" }}>
           <i /><span className="num">до следующего: {b.progress}/{b.cost}</span>
         </span>
-        {got && <div className="achbox-got"><b className="display">Выпало:</b><RewardChips r={got} size={20} /></div>}
-        <button className="btn big gold block" disabled={b.ready < 1 || busy === "ach_box_open"} onClick={open}>
+        {got && <div className="achbox-got"><b className="display">Выпало{gotN > 1 ? ` из ${gotN} ящиков` : ""}:</b><RewardChips r={got} size={20} /></div>}
+        <button className="btn big gold block" disabled={b.ready < 1 || busy === "ach_box_open"} onClick={() => open()}>
           {b.ready > 0 ? `Открыть · осталось ${b.ready}` : `Нужно ещё ${b.cost - b.progress} очк.`}
         </button>
+        {b.ready > 1 && (
+          <button className="btn green block" disabled={busy === "ach_box_open"} onClick={() => open(true)}>Открыть все · {b.ready}</button>
+        )}
       </div>
     </Modal>
   );
