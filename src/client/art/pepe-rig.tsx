@@ -90,7 +90,12 @@ function distSeg(x: number, y: number, [a, b]: [V, V]) {
 }
 
 /* ---------------- the motion ---------------- */
-interface Pose { local: Record<BoneId, A>; breath: number; /** 0 open … 1 shut */ lid: number; look: number; pill: { at: V; rot: number } }
+interface Pose {
+  local: Record<BoneId, A>; breath: number; /** 0 open … 1 shut */ lid: number;
+  /** where the pupils look (rig px) */ gaze: V;
+  /** the pill: where it is, its turn, and which hand holds it (drawn behind that hand) — null while it flies */
+  pill: { at: V; rot: number; held: "L" | "R" | null };
+}
 const ease = (x: number) => x * x * (3 - 2 * x);
 const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 /** one fast, heavy breath: a quick gulp in, a longer breath out */
@@ -98,13 +103,22 @@ function breathOf(t: number) {
   const ph = (t % 1.15) / 1.15;
   return ph < 0.38 ? ease(ph / 0.38) : 1 - ease((ph - 0.38) / 0.62);
 }
-// held between the fingers (drawn over the hand), so it rides along when the arm flexes
+// held between the fingers (drawn behind the hand), so it rides along when the arm bends
 const inFingers = (a: V, b: V, palm: V): V => { const m = mid(a, b); return [m[0] + (palm[0] - m[0]) * 0.3, m[1] + (palm[1] - m[1]) * 0.3]; };
 const PILL_REST_R: V = inFingers(P.fingR1t, P.fingR2t, P.handR);
 const PILL_REST_L: V = inFingers(P.fingL1t, P.fingL2t, P.handL);
-const PILL_CYCLE = 4.6;
+const PILL_CYCLE = 5.1;
+/** how much wider the jumper gets at the chest on a full breath in */
+const SWELL = 0.15;
+/** the swell's strength at height y (0 at the neck and the hem, most at the chest) */
+function swellAt(y: number) {
+  const top = P.neckL[1], bot = P.waist[1];
+  const u = clamp01((y - top) / (bot - top));
+  return { g: Math.sin(Math.PI * Math.min(1, u * 1.25)) * (1 - u * 0.4), u };
+}
+const FACE_X = (P.browL[0] + P.browR[0]) / 2, EYE_Y = (P.browL[1] + P.browR[1]) / 2 + 22;
 
-function poseAt(t: number): Pose {
+function poseAt(t: number, sad: number): Pose {
   const b = breathOf(t);
   const lo: Record<string, A> = {};
   for (const k of Object.keys(BONES)) lo[k] = I;
@@ -115,64 +129,68 @@ function poseAt(t: number): Pose {
   const c = t % PILL_CYCLE;
   const fly = (u: number, from: V, to: V, dir: number) => {
     const e = ease(u);
-    return { at: [from[0] + (to[0] - from[0]) * e, from[1] + (to[1] - from[1]) * e - Math.sin(Math.PI * u) * 300] as V, rot: dir * 540 * e };
+    // tossed high up over his head (he follows it with his eyes) and caught by the other hand
+    return { at: [from[0] + (to[0] - from[0]) * e, from[1] + (to[1] - from[1]) * u - Math.sin(Math.PI * u) * 760] as V, rot: dir * 720 * u, held: null };
   };
   // the throwing hand flicks up just before, the catching one gives a little under it
   const flick = (start: number) => { const u = (c - start) / 0.35; return u > 0 && u < 1 ? Math.sin(Math.PI * u) : 0; };
   const give = (land: number) => { const u = (c - land) / 0.4; return u > 0 && u < 1 ? Math.sin(Math.PI * u) : 0; };
   let pill: Pose["pill"];
-  const T1 = 1.6, T2 = 2.35, T3 = 3.85;
-  if (c < T1) pill = { at: PILL_REST_R, rot: 0 };
+  const T1 = 1.6, T2 = 2.55, T3 = 4.15;
+  if (c < T1) pill = { at: PILL_REST_R, rot: 0, held: "R" };
   else if (c < T2) pill = fly((c - T1) / (T2 - T1), PILL_REST_R, PILL_REST_L, -1);
-  else if (c < T3) pill = { at: PILL_REST_L, rot: 0 };
+  else if (c < T3) pill = { at: PILL_REST_L, rot: 0, held: "L" };
   else pill = fly((c - T3) / (PILL_CYCLE - T3), PILL_REST_L, PILL_REST_R, 1);
-  // the arm that holds the pill shows off a biceps between the tosses: the upper arm goes out, the forearm comes up at the
-  // elbow, a few pumps at the top, and down again in time for the throw
+  // the hand that holds the pill curls it in to the body (the forearm bends at the elbow towards the chest, coming at us
+  // a little — shorter), a few pumps, and down again in time for the throw
   const curl = (u0: number, u1: number) => {
     if (c < u0 || c > u1) return 0;
     const u = (c - u0) / (u1 - u0);
-    const up = u < 0.28 ? ease(u / 0.28) : u > 0.75 ? 1 - ease((u - 0.75) / 0.25) : 1;
-    return up * (1 + (u > 0.28 && u < 0.75 ? 0.06 * Math.sin(((u - 0.28) / 0.47) * Math.PI * 6) : 0));
+    const up = u < 0.3 ? ease(u / 0.3) : u > 0.72 ? 1 - ease((u - 0.72) / 0.28) : 1;
+    return up * (1 + (u > 0.3 && u < 0.72 ? 0.07 * Math.sin(((u - 0.3) / 0.42) * Math.PI * 6) : 0));
   };
-  const cR = curl(0.05, T1 - 0.25), cL = curl(T2 + 0.15, T3 - 0.25);
-  // the forearm leads (a curl with the elbow down), the upper arm comes up after it — the fist never swings far out
-  const fR = Math.min(1.06, cR * 1.6), fL = Math.min(1.06, cL * 1.6);
-  const uR = clamp01((cR - 0.4) / 0.6), uL = clamp01((cL - 0.4) / 0.6);
+  const cR = curl(0.1, T1 - 0.3), cL = curl(T2 + 0.2, T3 - 0.3);
   const wristR = -24 * flick(T1 - 0.2) + 8 * give(0);
   const wristL = 24 * flick(T3 - 0.2) - 8 * give(T2);
   // the fingers squeeze together now and then (two quick squeezes), each hand on its own beat
   const sq = (ofs: number) => { const u = ((t + ofs) % 3.1) / 3.1; return u < 0.12 ? Math.sin((Math.PI * u) / 0.12) : u > 0.18 && u < 0.3 ? Math.sin((Math.PI * (u - 0.18)) / 0.12) : 0; };
   const sL = sq(0.9), sR = sq(0);
-  // a biceps pose: the upper arm out level with the shoulder, the forearm straight up, the fist by the head
-  lo.armL = local(P.shL, 2.5 * b + 26 * uL, 0, -2 * b - 6 * uL);
-  lo.armR = local(P.shR, -2.5 * b - 34 * uR, 0, -2 * b - 6 * uR);
-  // halfway up the forearm points at us: it looks shorter, so the fist does not swing far out to the side
-  const shortL = 1 - 0.5 * Math.sin(Math.PI * Math.min(1, fL)), shortR = 1 - 0.4 * Math.sin(Math.PI * Math.min(1, fR));
-  lo.foreL = localK(P.elL, -3 * b + 128 * fL, shortL);
-  lo.foreR = localK(P.elR, 3 * b - 108 * fR, shortR);
-  // the fist turns in a little at the top of the curl
-  lo.handL = localK(P.handL, wristL + 4 * b + 20 * cL, 1 / shortL); // the fist keeps its size
-  lo.handR = localK(P.handR, wristR - 4 * b - 20 * cR, 1 / shortR);
+  // the shoulders go out with the swelling chest
+  const gS = swellAt((P.shL[1] + P.shR[1]) / 2).g * SWELL * b;
+  lo.armL = local(P.shL, 2.5 * b - 7 * cL, (P.shL[0] - P.chest[0]) * gS, -2 * b);
+  lo.armR = local(P.shR, -2.5 * b + 7 * cR, (P.shR[0] - P.chest[0]) * gS, -2 * b);
+  lo.foreL = localK(P.elL, -3 * b - 128 * cL, 1 - 0.32 * Math.min(1, cL));
+  lo.foreR = localK(P.elR, 3 * b + 118 * cR, 1 - 0.32 * Math.min(1, cR));
+  lo.handL = localK(P.handL, wristL + 4 * b - 12 * cL, 1 / (1 - 0.32 * Math.min(1, cL))); // the fist keeps its size
+  lo.handR = localK(P.handR, wristR - 4 * b + 12 * cR, 1 / (1 - 0.32 * Math.min(1, cR)));
   lo.fingL1 = local(P.fingL1, -7 * sL);
   lo.fingL2 = local(P.handL, 9 * sL);
   lo.fingR1 = local(P.handR, -9 * sR);
   lo.fingR2 = local(P.fingR2, 8 * sR);
   // brows: raised now and then, knitted on the breath in
   const raise = (() => { const u = (t % 5.3) / 5.3; return u > 0.6 && u < 0.78 ? Math.sin((Math.PI * (u - 0.6)) / 0.18) : 0; })();
-  lo.browL = local(P.browL, -2 * raise + 1.5 * b, 0, -6 * raise - 1.5 * b);
-  lo.browR = local(P.browR, 2 * raise - 1.5 * b, 0, -6 * raise - 1.5 * b);
+  // hit: sad — the inner ends of the brows go up
+  lo.browL = local(P.browL, -2 * raise + 1.5 * b - 8 * sad, 0, -6 * raise - 1.5 * b - 3 * sad);
+  lo.browR = local(P.browR, 2 * raise - 1.5 * b + 8 * sad, 0, -6 * raise - 1.5 * b - 3 * sad);
   // the mouth: open on the breath out (the middle drops), the corners twitch
-  const out = 1 - b;
-  lo.mouthM = local(P.mouthM, 0, 0, 7 * out);
-  lo.mouthL = local(P.mouthL, 0, -1.5 * out, 2 * out + Math.sin(t * 2.1) * 1.2);
-  lo.mouthR = local(P.mouthR, 0, 1.5 * out, 2 * out - Math.sin(t * 1.7) * 1.2);
+  // hit: a glum mouth — the corners drop and come in, the middle rises, it stays shut
+  const out = (1 - b) * (1 - sad);
+  lo.mouthM = local(P.mouthM, 0, 0, 7 * out - 9 * sad);
+  lo.mouthL = local(P.mouthL, 0, -1.5 * out + 6 * sad, 2 * out + Math.sin(t * 2.1) * 1.2 + 16 * sad);
+  lo.mouthR = local(P.mouthR, 0, 1.5 * out - 6 * sad, 2 * out - Math.sin(t * 1.7) * 1.2 + 16 * sad);
   // smooth blinks every few seconds (now and then a double one): the lids close fast, stay a moment, open slower
   const shut = (u: number) => (u < 0 ? 0 : u < 0.08 ? ease(u / 0.08) : u < 0.13 ? 1 : u < 0.3 ? 1 - ease((u - 0.13) / 0.17) : 0);
   const n = Math.floor(t / 3.7), bl = t % 3.7;
-  const lid = Math.max(shut(bl), n % 3 === 2 ? shut(bl - 0.34) : 0);
-  // and the eyes look about
+  // sad eyes are half shut
+  const lid = Math.max(shut(bl), n % 3 === 2 ? shut(bl - 0.34) : 0, 0.35 * sad);
+  // the eyes look about — and follow the pill while it flies; the head tips back a little to watch it go up
   const look = Math.sin(t * 0.55) > 0.6 ? 1 : Math.sin(t * 0.55) < -0.75 ? -1 : 0;
-  return { local: lo as Record<BoneId, A>, breath: b, lid, look, pill };
+  let gaze: V = [look * 5, 0];
+  if (!pill.held) {
+    gaze = [Math.max(-1, Math.min(1, (pill.at[0] - FACE_X) / 260)) * 8, Math.max(-1, Math.min(1, (pill.at[1] - EYE_Y) / 260)) * 6];
+    lo.head = mul(lo.head, local(neck, Math.max(0, EYE_Y - pill.at[1]) * -0.02));
+  }
+  return { local: lo as Record<BoneId, A>, breath: b, lid, gaze, pill };
 }
 
 function worldOf(lo: Record<BoneId, A>): Record<BoneId, A> {
@@ -253,10 +271,8 @@ function buildMesh(gl: WebGLRenderingContext, id: LayerId, img: HTMLImageElement
 
 /** the jumper swells on the breath in: wider at the chest, the hem stays */
 function swell(x: number, y: number, b: number): V {
-  const top = P.neckL[1], bot = P.waist[1];
-  const u = clamp01((y - top) / (bot - top));
-  const g = Math.sin(Math.PI * Math.min(1, u * 1.25)) * (1 - u * 0.4);
-  return [P.chest[0] + (x - P.chest[0]) * (1 + 0.07 * b * g), y - 5 * b * g * (1 - u)];
+  const { g, u } = swellAt(y);
+  return [P.chest[0] + (x - P.chest[0]) * (1 + SWELL * b * g), y - 10 * b * g * (1 - u)];
 }
 
 const VS = `attribute vec2 p; attribute vec2 t; uniform vec4 r; varying vec2 v;
@@ -264,8 +280,11 @@ void main(){ v = t; vec2 q = (p - r.xy) / r.zw; gl_Position = vec4(q.x * 2.0 - 1
 const FS = `precision mediump float; varying vec2 v; uniform sampler2D s; uniform float a;
 void main(){ gl_FragColor = texture2D(s, v) * a; }`;
 
-export function PepeRig({ view, className }: { view?: readonly [number, number, number, number]; className?: string }) {
+/** `sad`: he has just been hit — the glum face (eases in and out) */
+export function PepeRig({ view, className, sad }: { view?: readonly [number, number, number, number]; className?: string; sad?: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null);
+  const sadRef = useRef(!!sad);
+  sadRef.current = !!sad;
   const box = view ?? [0, 0, PEPE.w, PEPE.h];
   const key = box.join(",");
   useEffect(() => {
@@ -285,6 +304,7 @@ export function PepeRig({ view, className }: { view?: readonly [number, number, 
       .then((imgs) => { if (alive) imgs.forEach((im, i) => meshes.push(buildMesh(gl, ORDER[i], im))); })
       .catch(() => undefined);
     const t0 = performance.now();
+    let lastT = 0, sadV = 0;
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
       if (!meshes.length) return;
@@ -299,14 +319,22 @@ export function PepeRig({ view, className }: { view?: readonly [number, number, 
       const vw = W / k, vh = H / k;
       gl.uniform4f(uR, box[0] - (vw - box[2]) / 2, box[1] - (vh - box[3]), vw, vh);
       const t = (now - t0) / 1000;
-      const pose = poseAt(t);
+      const dt = Math.min(0.1, Math.max(0, t - lastT)); lastT = t;
+      sadV += ((sadRef.current ? 1 : 0) - sadV) * Math.min(1, dt * (sadRef.current ? 14 : 4));
+      const pose = poseAt(t, ease(clamp01(sadV)));
+      // the pill is drawn just behind the hand that holds it, over everything while it flies
+      const pm = meshes.find((m) => m.id === "pill");
+      const hold = pose.pill.held ? (pose.pill.held === "R" ? "handR" : "handL") : null;
+      const order: Mesh[] = [];
+      for (const m of meshes) { if (m === pm) continue; if (hold && m.id === hold && pm) order.push(pm); order.push(m); }
+      if (!hold && pm) order.push(pm);
       const wd = worldOf(pose.local);
-      for (const m of meshes) {
+      for (const m of order) {
         const nb = m.bones.length;
         for (let v = 0; v < m.n; v++) {
           let x = m.rest[v * 2], y = m.rest[v * 2 + 1];
           if (m.id === "body") [x, y] = swell(x, y, pose.breath);
-          if (m.id === "pupils") x += pose.look * 5;
+          if (m.id === "pupils") { x += pose.gaze[0]; y += pose.gaze[1]; }
           if (m.id.startsWith("lid")) y += LID_SLIDE[m.id.slice(3) as "UL"] * pose.lid;
           let ox = 0, oy = 0;
           if (m.id === "pill") {
@@ -314,8 +342,7 @@ export function PepeRig({ view, className }: { view?: readonly [number, number, 
             const dx = x - c[0], dy = y - c[1];
             ox = pose.pill.at[0] + dx * Math.cos(r) - dy * Math.sin(r); oy = pose.pill.at[1] + dx * Math.sin(r) + dy * Math.cos(r);
             // in a hand it moves with that hand
-            const inR = pose.pill.at === PILL_REST_R, inL = pose.pill.at === PILL_REST_L;
-            if (inR || inL) { const q = ap(wd[inR ? "handR" : "handL"], ox, oy); ox = q[0]; oy = q[1]; }
+            if (pose.pill.held) { const q = ap(wd[pose.pill.held === "R" ? "handR" : "handL"], ox, oy); ox = q[0]; oy = q[1]; }
           } else {
             for (let b = 0; b < nb; b++) {
               const wt = m.w[v * nb + b];

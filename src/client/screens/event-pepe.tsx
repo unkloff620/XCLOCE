@@ -96,7 +96,7 @@ export function PepeEventScreen() {
         </div>
         <div className="arena full" style={{ ["--acc" as string]: PEPE_EVENT.accent }}>
           <div className={`arena-photo ${hit ? "hit" : ""} ${ouch ? "ouch" : ""}`}>
-            <PepeRig className="boss-rig" />
+            <PepeRig className="boss-rig" sad={ouch} />
             <div className="arena-flash" />
           </div>
           <div className="arena-top">
@@ -144,7 +144,7 @@ export function PepeEventScreen() {
           <DriftingSky className="fight-sky" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="door-behind-bg" src={BG} alt="" draggable={false} />
-          <div className="door-boss pepe-door-boss"><PepeRig view={[180, 0, 820, 1341]} /></div>
+          <div className="door-boss pepe-door-boss"><PepeRig view={[180, 150, 820, 1341]} /></div>
           <div className="door-light" />
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
