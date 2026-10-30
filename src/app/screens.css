@@ -3986,9 +3986,53 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 /* the yard goes on to the right: two halves side by side, a swipe or the arrow moves between them */
 .yard-pan { transition: transform 0.38s cubic-bezier(0.25, 0.8, 0.3, 1); will-change: transform; }
 .yard-stage2 .yard-kiosk { left: 2.5%; bottom: 21%; width: 34%; height: auto; z-index: 2; animation: kiosk-call 2.6s ease-in-out infinite; }
-.yard-stage2 .yard-kiosk > img { height: auto; }
 @keyframes kiosk-call { 0%, 100% { filter: drop-shadow(0 0 0 rgba(255, 179, 71, 0)); } 50% { filter: drop-shadow(0 0 10px rgba(255, 196, 90, 0.95)); } }
 .yard-pager { position: absolute; z-index: 3; top: 46%; width: 34px; height: 54px; border-radius: 12px; border: 2px solid var(--line); background: rgba(14, 9, 5, 0.62); color: #ffe066; font-size: 30px; font-weight: 900; line-height: 1; padding: 0 0 4px; cursor: pointer; }
 .yard-pager.next { right: 6px; }
 .yard-pager.prev { left: 6px; }
 .yard.page-1 .yard-side { opacity: 0; pointer-events: none; }
+
+/* ── the exchange kiosk in the yard (client/art/kiosk.tsx): the artist's layers on one box (1237×1244) ── */
+.yard-stage2 .yard-kiosk.closed { animation: none; }
+.kz { position: relative; display: block; width: 100%; aspect-ratio: 1237 / 1244; container-type: inline-size; }
+.kz-l { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+.kz.open .kz-inside { filter: brightness(1.04); }
+.kz.shut .kz-inside { filter: brightness(0.5); }
+/* he breathes, turns his head a little and leans back on a drag */
+.kz-torso { transform-origin: 63% 70%; animation: kz-breathe 4.2s ease-in-out infinite; }
+.kz-head { transform-origin: 64% 56%; animation: kz-head 9s ease-in-out infinite; }
+@keyframes kz-breathe { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.012); } }
+@keyframes kz-head { 0%, 30% { transform: rotate(0deg); } 40%, 52% { transform: rotate(-3deg) translateY(-0.3%); } 62%, 100% { transform: rotate(0deg); } }
+/* the smoking hand: away most of the time, to the mouth for a drag (the drawn pose), away again */
+.kz-arm { transform-origin: 75% 67.5%; animation: kz-drag 9s ease-in-out infinite; }
+@keyframes kz-drag { 0%, 28% { transform: rotate(26deg); } 38%, 52% { transform: rotate(0deg); } 62%, 100% { transform: rotate(26deg); } }
+/* the fist taps the counter: three knocks, then a rest */
+.kz-fist { transform-origin: 61.5% 67%; animation: kz-tap 7s ease-in-out infinite; }
+@keyframes kz-tap { 0%, 62%, 100% { transform: rotate(0deg); } 65%, 71%, 77% { transform: rotate(-14deg) translateY(-0.6%); } 68%, 74%, 80% { transform: rotate(0deg); } }
+/* smoke: soft grey puffs rising and fading */
+.kz-tip, .kz-puff { position: absolute; width: 0; height: 0; }
+.kz-tip { left: 72.4%; top: 51.2%; }
+.kz-puff { left: 68.5%; top: 53.6%; }
+.kz-tip b, .kz-puff b { position: absolute; left: 0; top: 0; border-radius: 50%; background: radial-gradient(circle, rgba(225, 225, 232, 0.95) 0, rgba(210, 210, 220, 0.6) 40%, rgba(200, 200, 212, 0) 72%); filter: blur(0.3cqw); opacity: 0; }
+.kz-tip b { width: 6cqw; height: 6cqw; margin: -3cqw; animation: kz-smoke 3.2s ease-out infinite; }
+.kz-tip b:nth-child(2) { animation-delay: -0.8s; }
+.kz-tip b:nth-child(3) { animation-delay: -1.6s; }
+.kz-tip b:nth-child(4) { animation-delay: -2.4s; }
+@keyframes kz-smoke { 0% { opacity: 0; transform: translate(0, 0) scale(0.4); } 15% { opacity: 0.9; } 100% { opacity: 0; transform: translate(3cqw, -22cqw) scale(2.6); } }
+.kz-puff b { width: 8cqw; height: 8cqw; margin: -4cqw; animation: kz-puff 9s ease-out infinite; }
+.kz-puff b:nth-child(2) { animation-name: kz-puff2; }
+.kz-puff b:nth-child(3) { animation-name: kz-puff3; }
+@keyframes kz-puff { 0%, 54% { opacity: 0; transform: translate(0, 0) scale(0.3); } 58% { opacity: 0.9; transform: translate(2cqw, -1cqw) scale(0.9); } 78%, 100% { opacity: 0; transform: translate(12cqw, -16cqw) scale(3); } }
+@keyframes kz-puff2 { 0%, 56% { opacity: 0; transform: translate(0, 0) scale(0.3); } 61% { opacity: 0.8; transform: translate(3cqw, 0.5cqw) scale(1); } 82%, 100% { opacity: 0; transform: translate(16cqw, -10cqw) scale(2.6); } }
+@keyframes kz-puff3 { 0%, 58% { opacity: 0; transform: translate(0, 0) scale(0.3); } 63% { opacity: 0.7; transform: translate(1.5cqw, 1.5cqw) scale(0.8); } 86%, 100% { opacity: 0; transform: translate(8cqw, -20cqw) scale(3.2); } }
+/* closed: the shutters knock in the wind (each on its hinge) */
+.kz-sh.l { transform-origin: 42.4% 50%; animation: kz-wind-l 5.3s ease-in-out infinite; }
+.kz-sh.r { transform-origin: 87.1% 50%; animation: kz-wind-r 6.1s ease-in-out infinite; }
+@keyframes kz-wind-l { 0%, 18%, 30%, 62%, 100% { transform: perspective(900px) rotateY(0deg); } 22% { transform: perspective(900px) rotateY(-16deg); } 26% { transform: perspective(900px) rotateY(-5deg); } 70% { transform: perspective(900px) rotateY(-24deg); } 76% { transform: perspective(900px) rotateY(-8deg); } 82% { transform: perspective(900px) rotateY(-14deg); } 88% { transform: perspective(900px) rotateY(0deg); } }
+@keyframes kz-wind-r { 0%, 40%, 55%, 100% { transform: perspective(900px) rotateY(0deg); } 45% { transform: perspective(900px) rotateY(18deg); } 50% { transform: perspective(900px) rotateY(6deg); } 80% { transform: perspective(900px) rotateY(12deg); } 86% { transform: perspective(900px) rotateY(0deg); } }
+/* night: the kiosk in the dark, the window glowing, the dealer lit by the lamp inside */
+.kz.night .kz-shell { filter: brightness(0.5) saturate(0.85) hue-rotate(-8deg); }
+.kz.night .kz-man { filter: brightness(0.85); }
+.kz.night.open .kz-inside { filter: brightness(1.1) saturate(1.1); }
+.kz-glow { position: absolute; left: 30%; top: 22%; width: 70%; height: 60%; pointer-events: none; background: radial-gradient(ellipse at 50% 55%, rgba(255, 180, 80, 0.28), rgba(255, 170, 60, 0) 70%); filter: blur(2cqw); }
+@media (prefers-reduced-motion: reduce) { .kz-l, .kz-tip b, .kz-puff b { animation: none !important; } }

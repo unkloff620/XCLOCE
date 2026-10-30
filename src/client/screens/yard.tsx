@@ -11,6 +11,8 @@ import { setMusicTrack } from "../sound.ts";
 import Link from "next/link";
 import { Icon } from "../art/icons.tsx";
 import { DriftingSky } from "../art/sky.tsx";
+import { KioskArt } from "../art/kiosk.tsx";
+import { exchangeWindow } from "../../content/currencies.ts";
 import { SlotMachine } from "./slots.tsx";
 import { YardGames, YardUpgrader } from "./minigames.tsx";
 import { Help, HelpList } from "../help.tsx";
@@ -29,6 +31,8 @@ export function YardScreen() {
   const [data, setData] = useState<YardData | null>(null);
   const [flying, setFlying] = useState<number | null>(null);
   const tod = yardTime(now);
+  // the exchanger works one Moscow day out of three: the kiosk is open (the dealer smokes inside) or shut
+  const exOpen = exchangeWindow(now).open;
   // enough energy for a task step (or a location reward waits) → the Locations button calls for attention
   const taskHint = tasksReady(state, now);
   const [slots, setSlots] = useState(false);
@@ -161,9 +165,8 @@ export function YardScreen() {
           <img className="yard-bg" src={tod === "night" ? "/assets/yard/yard2-bg-dark.webp" : "/assets/yard/yard2-bg.webp"} alt="" draggable={false} />
           <span className="yard-tint" aria-hidden="true" />
           {/* the exchange kiosk: its own picture over the yard (a button) */}
-          <Link href="/exchange" className="yard-obj yard-kiosk" aria-label="Обменник" title="Обменник" tabIndex={page === 1 ? 0 : -1}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={tod === "night" ? "/assets/yard/yard2-kiosk-dark.webp" : "/assets/yard/yard2-kiosk.webp"} alt="" draggable={false} />
+          <Link href="/exchange" className={`yard-obj yard-kiosk kiosk-live ${exOpen ? "" : "closed"}`} aria-label={exOpen ? "Обменник" : "Обменник (закрыт)"} title={exOpen ? "Обменник" : "Обменник закрыт"} tabIndex={page === 1 ? 0 : -1}>
+            <KioskArt open={exOpen} night={tod === "night"} />
           </Link>
         </div>
         <button type="button" className={`yard-pager ${page === 0 ? "next" : "prev"}`} onClick={() => turn(page === 0 ? 1 : 0)} aria-label={page === 0 ? "Дальше по двору" : "Назад во двор"}>{page === 0 ? "›" : "‹"}</button>

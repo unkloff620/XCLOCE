@@ -31,10 +31,4 @@ for src, dst in (("court2-day.png", "yard2-bg.webp"), ("court2-night.png", "yard
     key_magenta(Image.open(os.path.join(SRC, src))).save(os.path.join(OUT, dst), "WEBP", quality=80, method=4)
     print(dst, os.path.getsize(os.path.join(OUT, dst)) // 1024, "KB")
 
-# the exchange kiosk: its own object over the yard (a button), day and night (gpt-image-1.5, transparent)
-for src, dst in (("court2-kiosk.png", "yard2-kiosk.webp"), ("court2-kiosk-night.png", "yard2-kiosk-dark.webp")):
-    k = Image.open(os.path.join(SRC, src)).convert("RGBA")
-    k = k.crop(k.split()[3].point(lambda v: 255 if v > 16 else 0).getbbox())
-    k = k.resize((420, round(k.height * 420 / k.width)), Image.LANCZOS)
-    k.save(os.path.join(OUT, dst), "WEBP", quality=84, method=6)
-    print(dst, k.size)
+# the exchange kiosk is drawn in layers now: tools/yard/kiosk/build.py
