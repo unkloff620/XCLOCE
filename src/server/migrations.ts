@@ -1141,4 +1141,9 @@ FROM (SELECT player_id, SUM(n / 5)::int AS pts FROM boss_medals GROUP BY player_
 WHERE s.player_id = p.id AND s.pts > 0;
 `,
   },
+  {
+    // «Автопрокачка» of the talents: the next talent goes into the next stop by itself (screens/talents.tsx)
+    id: "v2-065-talent-auto",
+    sql: `ALTER TABLE players ADD COLUMN IF NOT EXISTS talent_auto boolean NOT NULL DEFAULT false;`,
+  },
 ];

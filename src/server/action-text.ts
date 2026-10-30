@@ -71,6 +71,7 @@ export function actionText(type: string, body: Row, result: unknown): string | n
       const w = String(r.weapon ?? body.weapon), st = talentStop(w, String(r.branch ?? body.branch));
       return `${EXTRA_NAMES[w] ? "" : `${item(w)}: `}${st?.name ?? body.branch} → ${r.level}/${r.max}`;
     }
+    case "talent_auto": return `автопрокачка ${r.on ? "включена" : "выключена"}${r.spent ? ` · вложено ${fmt(r.spent)}` : ""}`;
     case "talent_reset": return `сброс талантов за ${r.price ? `${(r.price as { amount: number }).amount} USD` : "5 USD"} · вернулось ${fmt(r.returned)}`;
     case "equipment_upgrade": return `${equipmentById(String(r.id ?? body.id))?.name ?? body.id} → уровень ${r.level}`;
     case "room_buy":

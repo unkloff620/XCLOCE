@@ -27,6 +27,8 @@ export interface GameState {
     energy: number; energyMax: number; energyNextIn: number; energyPeriodMs: number;
     talents: number;
     talentDamage: number;
+    /** «Автопрокачка»: free talents go into the next stop by themselves */
+    talentAuto?: boolean;
   };
   weaponTalents: WeaponTalents;
   wallet: Record<Currency, number>;

@@ -1,3 +1,4 @@
+import { autoSpendTalents } from "./home.ts";
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, idempotent, itemQty, ledger, moscowDay, nextMoscowMidnight, takeItem, type Ctx, type Granted } from "../core.ts";
 import { MEDAL_POINT_EVERY } from "../../content/medals.ts";
@@ -291,6 +292,7 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1
     if (talentsGained > 0) {
       await ctx.q.query("UPDATE players SET talents = talents + $2 WHERE id=$1", [ctx.pid, talentsGained]);
       await ledger(ctx, "talent", "talent", talentsGained, `fight:${mine.id}`);
+      await autoSpendTalents(ctx);
     }
     await ctx.q.query(
       "INSERT INTO boss_damage (boss_id, player_id, damage, hits) VALUES ($1,$2,$3,$4) ON CONFLICT (boss_id, player_id) DO UPDATE SET damage = boss_damage.damage + EXCLUDED.damage, hits = boss_damage.hits + EXCLUDED.hits",

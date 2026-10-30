@@ -1,3 +1,4 @@
+import { autoSpendTalents } from "./home.ts";
 import { GameError, type Queryable } from "../db.ts";
 import { ledger, nextWeekAt, weekKey, weekStart, type Ctx } from "../core.ts";
 import { weaponById } from "../../content/items.ts";
@@ -94,6 +95,7 @@ export async function hitClanBoss(ctx: Ctx, weaponId: string, want = 1) {
   if (gained > 0) {
     await ctx.q.query("UPDATE players SET talents = talents + $2 WHERE id=$1", [ctx.pid, gained]);
     await ledger(ctx, "talent", "talent", gained, `clan-boss:${week}`);
+    await autoSpendTalents(ctx);
   }
   if (killed) {
     // everyone who hit it: a prize by the share of the damage (collected from the prize window, like the weekly ones)

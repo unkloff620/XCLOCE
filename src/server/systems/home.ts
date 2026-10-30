@@ -1,7 +1,7 @@
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, ledger, takeMoney, type Ctx } from "../core.ts";
 import { EQUIPMENT, FIRST_STEPS_GIFT, HELP_TOPICS, TROPHIES, baseBit, equipmentById, hasPiece, piecesCount, normalizeLook, roomById, roomUnlockId, roomsEnergyBonus, totalBonus, type HelpTopic, type Look } from "../../content/home.ts";
-import { TALENT_RESET_PRICE, stopLevel, stopOpen, talentExtras, talentStop, talentsSpent, type WeaponTalents } from "../../content/talents.ts";
+import { TALENT_RESET_PRICE, autoStop, autoTalentsOpen, stopLevel, stopOpen, talentExtras, talentStop, talentsSpent, type WeaponTalents } from "../../content/talents.ts";
 
 /*
  * Дом: оборудование (уровни), комнаты (купить / выбрать), внешность персонажа, просмотренные подсказки.
@@ -105,7 +105,7 @@ export async function upgradeTalent(ctx: Ctx, target: string, branch: string) {
   const node = talentStop(target, branch);
   if (!node) throw new GameError("bad_talent", "Такого улучшения нет");
   const all = await weaponTalents(ctx.q, ctx.pid);
-  if (!stopOpen(all, node)) throw new GameError("talent_locked", "Сначала прокачай до конца то, что раньше на дорожке");
+  if (!stopOpen(all, node)) throw new GameError("talent_locked", "Сначала закрой то, что выше: предыдущий блок и ячейку, от которой идёт стрелка");
   const lv = stopLevel(all, node);
   if (lv >= node.max) throw new GameError("max_level", `${node.name}: уже максимальный уровень`);
   const [p] = await ctx.q.query<{ talents: number }>(
@@ -123,6 +123,30 @@ export async function upgradeTalent(ctx: Ctx, target: string, branch: string) {
   await ledger(ctx, "talent", "talent", -node.cost, `talent:${target}:${branch}`);
   if (node.kind === "energy" || node.kind === "biceps") await syncTalentExtras(ctx.q, ctx.pid);
   return { weapon: target, branch, level: lv + 1, max: node.max, talents: p.talents, name: node.name };
+}
+
+/** «Автопрокачка» on/off: only once «Специализация в оружии» and «Основа» are closed; switching it on spends what is free */
+export async function setTalentAuto(ctx: Ctx, on: boolean) {
+  if (on && !autoTalentsOpen(await weaponTalents(ctx.q, ctx.pid))) throw new GameError("talent_auto_locked", "Автопрокачка откроется, когда закроешь «Специализацию в оружии» и «Основу»");
+  await ctx.q.query("UPDATE players SET talent_auto=$2 WHERE id=$1", [ctx.pid, on]);
+  const spent = on ? await autoSpendTalents(ctx) : 0;
+  return { on, spent };
+}
+
+/** With «Автопрокачка» on: the free talents go one by one into the next stop to close (never past its `need`). */
+export async function autoSpendTalents(ctx: Ctx): Promise<number> {
+  let spent = 0;
+  for (let guard = 0; guard < 400; guard++) {
+    const [p] = await ctx.q.query<{ talents: number; talent_auto: boolean }>("SELECT talents, talent_auto FROM players WHERE id=$1", [ctx.pid]);
+    if (!p?.talent_auto) break;
+    const all = await weaponTalents(ctx.q, ctx.pid);
+    if (!autoTalentsOpen(all)) break;
+    const next = autoStop(all);
+    if (!next || p.talents < next.cost) break;
+    await upgradeTalent(ctx, next.target, next.branch);
+    spent += next.cost;
+  }
+  return spent;
 }
 
 /** All talents back for 5 USD: every upgrade goes to 0, the spent talents return to the counter. */

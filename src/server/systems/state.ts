@@ -59,6 +59,7 @@ export async function gameState(ctx: Ctx) {
       xp: Number(p.xp), level: lv.level, levelXp: lv.into, levelNeed: lv.need,
       energy: e.energy, energyMax: ec.max, energyNextIn: e.nextIn, energyPeriodMs: ctx.cfg.energy.regenMin * 60_000,
       talents: Number((p as PlayerRow & { talents?: number }).talents ?? 0),
+      talentAuto: !!(p as PlayerRow & { talent_auto?: boolean }).talent_auto,
       // the talent counter: boss damage of all time
       talentDamage: Number((await ctx.q.query<{ total_damage: number }>("SELECT total_damage FROM player_stats WHERE player_id=$1", [ctx.pid]))[0]?.total_damage ?? 0),
     },

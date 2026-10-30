@@ -15,7 +15,7 @@ import { full, short } from "../format.ts";
 import { itemById } from "../../content/items.ts";
 import { weaponStats } from "../weapon-stats.ts";
 import {
-  CRIT_CHANCE_CAP, EXTRA_NAMES, TALENT_BLOCKS, TALENT_PATH, TALENT_RESET_PRICE, currentStop, stopLevel, talentArt, talentThreshold, talentsForDamage, talentsSpent,
+  CRIT_CHANCE_CAP, EXTRA_NAMES, TALENT_BLOCKS, TALENT_PATH, TALENT_RESET_PRICE, autoTalentsOpen, currentStop, stopClosed, stopLevel, stopOpen, talentArt, talentThreshold, talentsForDamage, talentsSpent,
   type TalentBlock, type TalentStop,
 } from "../../content/talents.ts";
 
@@ -57,12 +57,13 @@ function TalentHelp() {
     <Help topic="talents" title="Таланты">
       <p>Таланты дают за урон по боссам за всё время: счётчик не сгорает — каждый бой продолжает его с того места, где остановился прошлый.</p>
       <p className="small">1-й талант — за {full(talentThreshold(1))} урона, 10-й — за {full(talentThreshold(10))}, 50-й — за {full(talentThreshold(50))}, 100-й — за {full(talentThreshold(100))}.</p>
-      <p>Таланты вкладываются по дорожке сверху вниз: следующая ячейка открывается, когда предыдущая прокачана до конца (стрелки показывают, куда дальше).</p>
+      <p>Таланты вкладываются блоками сверху вниз: следующий блок открывается, когда закрыт весь предыдущий. Внутри блока ячейка открывается, когда закрыта та, от которой к ней идёт стрелка; верхние ячейки — в любом порядке.</p>
+      <p className="small">Когда закрыты «Специализация в оружии» и «Основа», открывается тумблер «Автопрокачка»: новые таланты сами идут в следующую ячейку (бицуха — только до 10).</p>
       <ol className="small">
         {TALENT_BLOCKS.map((b) => <li key={b.id}><b>{b.title}</b></li>)}
       </ol>
       <p className="small">Сначала — три главных оружия: клавиатура, видеокарта и Rug Pull Gun. Потом понемногу всё остальное: бицуха, энергия, время боя, кулак, свеча и мышь.</p>
-      <p className="small">Бицуха — до +100, лимит энергии — до +50, Часы — до +45 минут к бою с боссом, Крит — до +15% шанса крита каждому оружию. Общий шанс крита — не больше {Math.round(CRIT_CHANCE_CAP * 100)}%.</p>
+      <p className="small">Бицуха — до +170 (в «Основе» хватит 10, дальше — по желанию), лимит энергии — до +50, Часы — до +45 минут к бою с боссом, Крит — до +15% шанса крита каждому оружию. Общий шанс крита — не больше {Math.round(CRIT_CHANCE_CAP * 100)}%.</p>
       <p className="small">Вся дорожка — {full(total)} талантов.</p>
       <p className="small muted">Сброс талантов стоит {TALENT_RESET_PRICE.amount} {TALENT_RESET_PRICE.currency}: все потраченные таланты возвращаются.</p>
     </Help>
@@ -104,14 +105,23 @@ export function TalentPanel() {
   const selI = pick ?? Math.min(cur, TALENT_PATH.length - 1);
   const sel = TALENT_PATH[selI];
   const selLv = stopLevel(wt, sel);
+  const selOpen = stopOpen(wt, sel);
+  const autoOpen = autoTalentsOpen(wt);
+  const auto = !!state.player.talentAuto;
+  const toggleAuto = async () => {
+    haptic.tap();
+    await act<{ on: boolean; spent: number }>("talent_auto", { on: !auto }, (x) => (x.on ? `Автопрокачка включена${x.spent ? ` · вложено ${x.spent}` : ""}` : "Автопрокачка выключена"));
+  };
   const up = async (n: TalentStop) => {
     const r = await act<{ level: number; max: number }>("talent_up", { weapon: n.target, branch: n.branch }, (x) => `${stopTitle(n)} — ${x.level}/${x.max}`);
     if (r) haptic.ok();
   };
+  // a tap on an open stop puts a talent in (any open one: the tops of the columns go in any order); on a shut one — what it needs
   const tap = (i: number) => {
     haptic.tap();
-    setPick(i === cur ? null : i);
-    if (i === cur && talents >= TALENT_PATH[i].cost && busy !== "talent_up") void up(TALENT_PATH[i]);
+    const n = TALENT_PATH[i];
+    setPick(i);
+    if (stopOpen(wt, n) && stopLevel(wt, n) < n.max && talents >= n.cost && busy !== "talent_up") void up(n);
   };
   const reset = async () => {
     const r = await act<{ returned: number }>("talent_reset", {}, (x) => `Таланты сброшены: вернулось ${x.returned}`);
@@ -140,17 +150,23 @@ export function TalentPanel() {
           </button>
           <TalentHelp />
         </div>
+        {autoOpen && (
+          <label className="tp-auto">
+            <span>Автопрокачка<small>свободные таланты сами идут в следующую ячейку</small></span>
+            <button type="button" role="switch" aria-checked={auto} className={`upd-toggle ${auto ? "on" : ""}`} disabled={busy === "talent_auto"} onClick={toggleAuto}><i /></button>
+          </label>
+        )}
         <div className="tp-row2">
           <span className="tp-row2-pic"><StopArt n={sel} size={28} /></span>
           <span className="grow tp-row2-t">
             <b>{stopTitle(sel)} · {selLv}/{sel.max}</b>
             <small>
               {selLv >= sel.max ? `Готово: ${effect(sel, selLv)}`
-                : selI > cur ? "Откроется, когда прокачаешь всё, что раньше на дорожке"
-                : <>Нажми: {effect(sel, 1)} · стоит <Icon name="talent" size={11} />{sel.cost}{selLv > 0 ? ` · сейчас ${effect(sel, selLv)}` : ""}</>}
+                : !selOpen ? "Откроется, когда закроешь блок выше и ячейку, от которой идёт стрелка"
+                : <>{stopClosed(wt, sel) && sel.need < sel.max ? `Можно идти дальше (нужно было ${sel.need}). ` : sel.need < sel.max ? `Для следующей ячейки хватит ${sel.need}. ` : ""}Нажми: {effect(sel, 1)} · стоит <Icon name="talent" size={11} />{sel.cost}{selLv > 0 ? ` · сейчас ${effect(sel, selLv)}` : ""}</>}
             </small>
           </span>
-          {selI === cur && selLv < sel.max && (
+          {selOpen && selLv < sel.max && (
             <button className="btn gold sm tp-go" disabled={talents < sel.cost || busy === "talent_up"} onClick={() => up(sel)}>+1</button>
           )}
         </div>
@@ -199,13 +215,15 @@ function TalentBlockView({ b, wt, cur, selI, poor, onTap }: { b: TalentBlock; wt
           const i = TALENT_PATH.findIndex((x) => x.key === c.key);
           const n = TALENT_PATH[i];
           const lv = stopLevel(wt, n);
-          const cls = lv >= n.max ? "done" : i === cur ? "open" : lv > 0 ? "part" : "shut";
+          const open = stopOpen(wt, n);
+          const cls = lv >= n.max ? "done" : open && stopClosed(wt, n) ? "more" : open ? "open" : lv > 0 ? "part" : "shut";
           return (
             <button key={c.key} type="button" className={`tb-tile ${cls} ${i === cur ? "now" : ""} ${i === selI ? "sel" : ""} ${i === cur && poor < n.cost ? "tired" : ""}`}
               style={{ ["--c" as string]: c.col, ["--r" as string]: c.row }} onClick={() => onTap(i)} aria-label={`${stopTitle(n)}: ${lv}/${n.max}`} title={stopTitle(n)}>
               <StopArt n={n} size={64} />
               {cls === "shut" && <i className="tb-lock"><Icon name="lock" size={14} /></i>}
               <i className="tb-n num">{lv}/{n.max}</i>
+              {n.need < n.max && lv < n.need && <i className="tb-need num">до {n.need}</i>}
             </button>
           );
         })}

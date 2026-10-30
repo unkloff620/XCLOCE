@@ -57,7 +57,7 @@ export const ACTIONS = [
   "buy", "exchange", "use", "equip", "unequip",
   "clan_create", "clan_join", "clan_leave", "clan_kick", "clan_transfer",
   "daily_claim", "sell", "rename", "slots_spin",
-  "equipment_upgrade", "talent_up", "talent_reset", "room_buy", "room_set", "look_set", "decor_set", "decor_save", "piece_buy", "help_seen", "starter_gift",
+  "equipment_upgrade", "talent_up", "talent_reset", "talent_auto", "room_buy", "room_set", "look_set", "decor_set", "decor_save", "piece_buy", "help_seen", "starter_gift",
   "quest_claim", "quest_chest", "notify_set", "achievement_claim", "achievement_claim_all", "ach_box_open", "prize_claim", "clan_edit",
   "game_start", "zonk_move", "zonk_give_up", "zonk_hints", "zonk_choice", "roach_squash", "poker_play", "poker_swap", "poker_stand", "bj_open", "bj_invite", "bj_join", "bj_decline", "bj_leave", "bj_bet", "bj_unbet", "bj_insure", "bj_move", "upgrade", "up_sell", "up_take",
   "clan_cancel", "clan_accept", "clan_reject", "clan_boss_hit", "duel_create", "duel_answer", "duel_play", "stash_collect", "stash_wish", "stash_gift", "stash_accept", "social_pump", "social_fight", "social_spit", "notes_read",
@@ -163,6 +163,7 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "equipment_upgrade": return home.upgradeEquipment(ctx, str(body.id, "id", 40));
     case "talent_up": return home.upgradeTalent(ctx, str(body.weapon, "weapon", 40), str(body.branch, "branch", 10));
     case "talent_reset": return home.resetTalents(ctx);
+    case "talent_auto": return home.setTalentAuto(ctx, body.on === true);
     case "room_buy": return home.buyRoom(ctx, str(body.id, "id", 40));
     case "room_set": return home.setRoom(ctx, str(body.id, "id", 40));
     case "look_set": return home.setLook(ctx, body);

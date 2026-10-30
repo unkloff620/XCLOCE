@@ -63,6 +63,8 @@ export interface TalentStop {
   name: string;
   per: number;
   max: number;
+  /** levels that close the stop: the next ones open from here (the rest up to max is the player's own choice) */
+  need: number;
   cost: number;
 }
 /** damage added by one level of the damage upgrades of each weapon */
@@ -73,12 +75,12 @@ export const TALENT_WEAPONS = WEAPONS.map((w) => w.id);
 export const CRIT_CHANCE_CAP = 0.51;
 export const EXTRA_NAMES: Record<string, string> = { _biceps: "Бицуха", _energy: "Лимит энергии", _clock: "Часы" };
 
-const stop = (target: string, branch: string, kind: TalentKind, name: string, per: number, max: number, cost: number): TalentStop =>
-  ({ key: `${target}:${branch}`, target, branch, kind, name, per, max, cost });
-const extras = (n: 1 | 2 | 3, biceps: number, energy: number, clock: number) => {
+const stop = (target: string, branch: string, kind: TalentKind, name: string, per: number, max: number, cost: number, need = max): TalentStop =>
+  ({ key: `${target}:${branch}`, target, branch, kind, name, per, max, need: Math.min(need, max), cost });
+const extras = (n: 1 | 2 | 3, biceps: number, energy: number, clock: number, bicepsNeed = biceps) => {
   const r = ["", "I", "II", "III"][n];
   return [
-    stop("_biceps", `s${n}`, "biceps", `Бицуха ${r}`, 1, biceps, 1),
+    stop("_biceps", `s${n}`, "biceps", `Бицуха ${r}`, 1, biceps, 1, bicepsNeed),
     stop("_energy", `s${n}`, "energy", `Лимит энергии ${r}`, 1, energy, 1),
     stop("_clock", `s${n}`, "clock", `Часы ${r}`, 1, clock, 1),
   ];
@@ -90,7 +92,8 @@ const chance = (n: 1 | 2 | 3) => each((w) => stop(w, `c${n}`, "chance", `Кри�
 
 /** every stop of the path (the order is the blocks' below) */
 const ALL_STOPS: TalentStop[] = [
-  ...extras(1, 30, 15, 15),
+  // «Бицуха I»: up to 100, but 10 is enough to go on — the rest is up to the player
+  ...extras(1, 100, 15, 15, 10),
   ...dmg("n1", "Урон", 10, 1),
   ...chance(1),
   ...power("n2", "Сила крита", 0.05, 10, 1),
@@ -142,13 +145,43 @@ export const TALENT_RESET_PRICE = { currency: "USD" as const, amount: 5 };
 /** levels the player has: target → branch → level */
 export type WeaponTalents = Record<string, Partial<Record<string, number>>>;
 export const stopLevel = (t: WeaponTalents, s: TalentStop) => Math.min(t[s.target]?.[s.branch] ?? 0, s.max);
-/** the index of the stop being filled now (the first not full one); TALENT_PATH.length when all are done */
+/** a stop is closed when it has its `need` levels (its max for most) */
+export const stopClosed = (t: WeaponTalents, s: TalentStop) => stopLevel(t, s) >= s.need;
+const BLOCK_OF = new Map(TALENT_BLOCKS.flatMap((b, bi) => b.cells.map((c, k) => [c.key, { bi, k }] as const)));
+/** the stop an arrow comes from inside its block (the cell before it, when it is the neighbour), or null */
+export function stopBefore(s: TalentStop): TalentStop | null {
+  const at = BLOCK_OF.get(s.key);
+  if (!at || at.k === 0) return null;
+  const cells = TALENT_BLOCKS[at.bi].cells, a = cells[at.k - 1], c = cells[at.k];
+  const near = (a.col === c.col && a.row === c.row - 1) || (a.row === c.row && Math.abs(a.col - c.col) === 1);
+  return near ? BY_KEY.get(a.key) ?? null : null;
+}
+/** a block is closed when every stop in it is */
+export const blockClosed = (t: WeaponTalents, bi: number) => TALENT_BLOCKS[bi].cells.every((c) => stopClosed(t, BY_KEY.get(c.key)!));
+/** a block opens when every block above it is closed */
+export const blockOpen = (t: WeaponTalents, bi: number) => TALENT_BLOCKS.slice(0, bi).every((_, i) => blockClosed(t, i));
+/** a stop can be levelled when its block is open and the stop its arrow comes from is closed (the tops of the columns — any order) */
+export function stopOpen(t: WeaponTalents, s: TalentStop): boolean {
+  const at = BLOCK_OF.get(s.key);
+  if (!at || !blockOpen(t, at.bi)) return false;
+  const before = stopBefore(s);
+  return !before || stopClosed(t, before);
+}
+/** the stops that take a talent now (open and not full) */
+export const openStops = (t: WeaponTalents) => TALENT_PATH.filter((s) => stopOpen(t, s) && stopLevel(t, s) < s.max);
+/** the stop the path goes on with: the first open one that is not closed yet; then the first open one not full;
+ * TALENT_PATH.length when there is none */
 export function currentStop(t: WeaponTalents): number {
-  const i = TALENT_PATH.findIndex((s) => stopLevel(t, s) < s.max);
+  let i = TALENT_PATH.findIndex((s) => stopOpen(t, s) && !stopClosed(t, s));
+  if (i < 0) i = TALENT_PATH.findIndex((s) => stopOpen(t, s) && stopLevel(t, s) < s.max);
   return i < 0 ? TALENT_PATH.length : i;
 }
-/** a stop can be levelled once every stop before it is full */
-export const stopOpen = (t: WeaponTalents, s: TalentStop) => TALENT_PATH.indexOf(s) <= currentStop(t);
+/** «Автопрокачка» opens once «Специализация в оружии» and «Основа» are closed */
+export const autoTalentsOpen = (t: WeaponTalents) => blockClosed(t, 0) && blockClosed(t, 1);
+/** what the auto levelling puts the next talent in: the next stop to close (it never goes past `need` on its own) */
+export function autoStop(t: WeaponTalents): TalentStop | null {
+  return TALENT_PATH.find((s) => stopOpen(t, s) && !stopClosed(t, s)) ?? null;
+}
 /** talents spent (what a reset gives back) */
 export function talentsSpent(t: WeaponTalents): number {
   return TALENT_PATH.reduce((sum, s) => sum + stopLevel(t, s) * s.cost, 0);

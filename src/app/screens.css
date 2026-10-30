@@ -3968,3 +3968,8 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .tb-arrow.left { left: calc(var(--c) * (var(--t) + var(--g)) - var(--g) + (var(--g) - 14px) / 2); top: calc(var(--r) * (var(--t) + var(--g)) + var(--t) / 2 - 7px); transform: rotate(90deg); }
 @media (max-width: 360px) { .tb-road { --t: 54px; --g: 16px; } }
 .tp-row2-pic .tb-art { border-radius: 6px; object-fit: cover; }
+.tb-tile.more { border-color: #3ddc84; box-shadow: 0 0 0 2px #0d3a1e, 0 0 10px rgba(255, 210, 63, 0.6); }
+.tb-need { position: absolute; left: 3px; top: 2px; font-style: normal; font-size: 9px; font-weight: 900; color: #ffe066; text-shadow: 0 1px 0 #000, 0 0 3px #000; }
+.tp-auto { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 10px; border-radius: 12px; background: rgba(0, 0, 0, 0.18); font-size: 13px; font-weight: 800; }
+.tp-auto span { display: flex; flex-direction: column; gap: 1px; }
+.tp-auto small { font-size: 10.5px; font-weight: 600; opacity: 0.75; }
