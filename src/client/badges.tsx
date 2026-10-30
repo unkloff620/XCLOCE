@@ -298,14 +298,15 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
 }
 
 /**
- * A notice at the top of the screen for every newly reached achievement: its picture, name, the full bar and the points;
- * it stays 2 seconds, a tap opens the achievement in the «Личное дело». The ones waiting at the start are not announced.
+ * Notices at the top of the screen for newly reached achievements, one under another: each stays 3 seconds (a swipe to
+ * the left takes it away sooner), a tap opens the achievement in the «Личное дело». The ones waiting at the start are
+ * not announced.
  */
 export function AchToast() {
   const { state } = useGame();
   const router = useRouter();
   const seen = useRef<Set<string> | null>(null);
-  const [queue, setQueue] = useState<string[]>([]);
+  const [list, setList] = useState<string[]>([]);
   const ids = state?.achievementsReadyIds;
   useEffect(() => {
     if (!ids) return;
@@ -313,26 +314,55 @@ export function AchToast() {
     const fresh = ids.filter((id) => !seen.current!.has(id));
     if (!fresh.length) return;
     fresh.forEach((id) => seen.current!.add(id));
-    setQueue((q) => [...q, ...fresh].slice(0, 8));
-  }, [ids]);
-  const id = queue[0];
-  useEffect(() => {
-    if (!id) return;
     haptic.ok();
-    const t = window.setTimeout(() => setQueue((q) => q.slice(1)), 2000);
+    setList((l) => [...l, ...fresh].slice(-6));
+  }, [ids]);
+  const drop = (id: string) => setList((l) => l.filter((x) => x !== id));
+  if (!list.length) return null;
+  return (
+    <div className="ach-toasts">
+      {list.map((id) => <AchToastCard key={id} id={id} onGone={() => drop(id)} onOpen={() => { setAchFocus(id); setList([]); router.push("/profile"); }} />)}
+    </div>
+  );
+}
+
+function AchToastCard({ id, onGone, onOpen }: { id: string; onGone: () => void; onOpen: () => void }) {
+  const [dx, setDx] = useState(0);
+  const [out, setOut] = useState(false);
+  const start = useRef<{ x: number; y: number; on: boolean | null } | null>(null);
+  const goneRef = useRef(onGone);
+  goneRef.current = onGone;
+  useEffect(() => {
+    const t = window.setTimeout(() => setOut(true), 3000);
     return () => window.clearTimeout(t);
-  }, [id]);
-  const a = id ? achievementById(id) : undefined;
-  const cat = id ? categoryOf(id) : undefined;
+  }, []);
+  useEffect(() => {
+    if (!out) return;
+    const t = window.setTimeout(() => goneRef.current(), 280);
+    return () => window.clearTimeout(t);
+  }, [out]);
+  const a = achievementById(id);
+  const cat = categoryOf(id);
   if (!a || !cat) return null;
-  const go = () => {
-    haptic.tap();
-    setAchFocus(a.id);
-    setQueue([]);
-    router.push("/profile");
+  const begin = (x: number, y: number) => { start.current = { x, y, on: null }; };
+  const move = (x: number, y: number) => {
+    const c = start.current;
+    if (!c) return;
+    const ddx = x - c.x, ddy = y - c.y;
+    if (c.on === null && Math.hypot(ddx, ddy) > 8) c.on = Math.abs(ddx) > Math.abs(ddy);
+    if (c.on) setDx(Math.min(0, ddx));
+  };
+  const end = () => {
+    const c = start.current;
+    start.current = null;
+    if (c?.on && dx < -60) { haptic.tap(); setOut(true); return; }
+    setDx(0);
   };
   return (
-    <button key={a.id} type="button" className="ach-toast" onClick={go} aria-label={`Достижение: ${a.name}`}>
+    <button type="button" className={`ach-toast ${out ? "out" : ""}`} aria-label={`Достижение: ${a.name}`}
+      style={dx ? { transform: `translateX(${dx}px)`, opacity: Math.max(0.2, 1 + dx / 260), transition: "none" } : undefined}
+      onClick={() => { if (!dx) { haptic.tap(); onOpen(); } }}
+      onTouchStart={(e) => begin(e.touches[0].clientX, e.touches[0].clientY)} onTouchMove={(e) => move(e.touches[0].clientX, e.touches[0].clientY)} onTouchEnd={end} onTouchCancel={end}>
       <span className="ach-toast-pic">
         <AchPic a={a} cat={cat} on size={46} />
         <i className="ach-toast-plus">+</i>
