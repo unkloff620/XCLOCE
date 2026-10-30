@@ -357,7 +357,7 @@ function AchToastCard({ id, onGone, onOpen }: { id: string; onGone: () => void; 
   }, []);
   useEffect(() => {
     if (!out) return;
-    const t = window.setTimeout(() => goneRef.current(), 600);
+    const t = window.setTimeout(() => goneRef.current(), 1500);
     return () => window.clearTimeout(t);
   }, [out]);
   const a = achievementById(id);
@@ -383,6 +383,7 @@ function AchToastCard({ id, onGone, onOpen }: { id: string; onGone: () => void; 
       onClick={() => { if (!dx) { haptic.tap(); onOpen(); } }}
       onTouchStart={(e) => begin(e.touches[0].clientX, e.touches[0].clientY)} onTouchMove={(e) => move(e.touches[0].clientX, e.touches[0].clientY)} onTouchEnd={end} onTouchCancel={end}>
       <i className="ach-toast-flash" aria-hidden="true" />
+      {out && <i className="upg-embers ach-toast-embers" aria-hidden="true" />}
       <span className="ach-toast-pic">
         <AchPic a={a} cat={cat} on size={46} />
         <i className="ach-toast-plus">+</i>
