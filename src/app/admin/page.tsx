@@ -484,7 +484,7 @@ function Dashboard() {
       <Box title="Предметы у игроков" closed>
         <p className="muted tiny">Сколько каждой вещи сейчас лежит у всех игроков вместе (без забаненных) и у скольких она есть.</p>
         <Table rows={data?.items ?? []} empty="Пусто" cols={[
-          ["Предмет", (r) => itemById(String(r.item_id))?.name ?? String(r.item_id)],
+          ["Предмет", (r) => <span className="row" style={{ gap: 8, alignItems: "center" }}><ItemArt id={String(r.item_id)} size={28} />{itemById(String(r.item_id))?.name ?? String(r.item_id)}</span>],
           ["Всего", (r) => fmt(r.total), "r"],
           ["У игроков", (r) => fmt(r.holders), "r"],
         ]} />
