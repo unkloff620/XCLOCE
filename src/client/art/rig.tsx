@@ -12,7 +12,7 @@ import { ART_VER } from "../preload.ts";
 import type { PointerEvent as ReactPointerEvent, ReactNode } from "react";
 import { createContext, useContext, useEffect, useMemo, useRef } from "react";
 import { RIG } from "./rig-data.ts";
-import { HAIR_FIT, SKIN_ORIGINAL, WEAR_FIT } from "./rig-look.ts";
+import { HAIR_CUT_HATS, HAIR_FIT, SKIN_ORIGINAL, WEAR_FIT } from "./rig-look.ts";
 import { HELD_FIT } from "./held-data.ts";
 import { TATTOO_FIT } from "./tattoo-data.ts";
 import { SEAT } from "../../content/home-scene.ts";
@@ -92,7 +92,7 @@ function handLayer(look: Look, worn: Worn): Box {
 function hairLayer(look: Look, worn: Worn): Box | null {
   if (!(look.hair in HAIR_FIT)) return null;
   const hat = wornIn(worn, "HEAD");
-  return { href: `/assets/hero/hair/${look.hair}-${look.hairColor}${hat ? `-${hat}` : ""}.webp?v=${ART_VER.hair}`, ...HAIR_FIT[look.hair as HairId] };
+  return { href: `/assets/hero/hair/${look.hair}-${look.hairColor}${hat && HAIR_CUT_HATS.includes(hat) ? `-${hat}` : ""}.webp?v=${ART_VER.hair}`, ...HAIR_FIT[look.hair as HairId] };
 }
 const EYES_BOX = { href: "", x: RIG.eyes.x - 6, y: RIG.eyes.y - 22, w: RIG.eyes.w + 12, h: RIG.eyes.h + 30, rect: true };
 const MOUTH_BOX = { href: "", x: RIG.head.x + RIG.head.w * 0.36, y: RIG.head.y + RIG.head.h * 0.72, w: RIG.head.w * 0.28, h: RIG.head.h * 0.13, rect: true };
@@ -274,7 +274,7 @@ function Hair() {
   const hat = wornIn(useContext(WornCtx), "HEAD"); // hair is cut to fit under a hat
   if (!(look.hair in HAIR_FIT)) return null; // bald
   const f = HAIR_FIT[look.hair as HairId];
-  return <image href={`/assets/hero/hair/${look.hair}-${look.hairColor}${hat ? `-${hat}` : ""}.webp?v=${ART_VER.hair}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
+  return <image href={`/assets/hero/hair/${look.hair}-${look.hairColor}${hat && HAIR_CUT_HATS.includes(hat) ? `-${hat}` : ""}.webp?v=${ART_VER.hair}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
 }
 
 /** Eyes, pupils and brows over the head: blinking, glancing around, brows moving. */

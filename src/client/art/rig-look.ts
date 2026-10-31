@@ -145,6 +145,15 @@ export const WEAR_FIT = {
     "y": 168.5,
     "w": 330,
     "h": 38
+  },
+  "headphones-vostok": {
+    "slot": "HEAD",
+    "x": 315.5,
+    "y": 0.0,
+    "w": 376,
+    "h": 304
   }
 } as const;
+/** head things that cut the hair under them (the rest are worn over the hair) */
+export const HAIR_CUT_HATS: readonly string[] = ["cap-moon", "santa-hat"];
 export const SKIN_ORIGINAL = 1;

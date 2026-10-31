@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-10-31-headphones",
+    date: "31 октября",
+    title: "Наушники Лудомана",
+    items: [
+      { img: "/assets/updates/2026-10-31-headphones.webp", text: "Новая вещь с Востока — наушники. Падают за победу в «Блатном» вместе с кофтой и штанами Лудомана, надеваются поверх причёски." },
+    ],
+  },
+  {
     id: "2026-10-31-box-tattoos",
     date: "31 октября",
     title: "Наколки в Ящике ништяков",
