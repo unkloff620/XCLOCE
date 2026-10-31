@@ -63,7 +63,9 @@ for f in sorted(os.listdir(os.path.join(HERE, "source"))):
     W = round(im.width * H / im.height)
     x0, y0 = 1000 - W // 2, CHAIR_BOX[1]
     w, h = round(W / 2), round(H / 2)
-    im.resize((w, h), Image.LANCZOS).save(os.path.join(OUT, m.group(1) + ".webp"), "WEBP", quality=88, method=6)
+    # the picture itself at most 720 px wide (shown ≈ 330 px on a phone): big ones ran phones out of memory
+    k = min(1, 720 / w)
+    im.resize((round(w * k), round(h * k)), Image.LANCZOS).save(os.path.join(OUT, m.group(1) + ".webp"), "WEBP", quality=86, method=6)
     CHAIRS[m.group(1)] = {"x": x0 / 2, "y": y0 / 2, "w": w, "h": h}
     print(m.group(1), CHAIRS[m.group(1)])
 
@@ -74,3 +76,13 @@ ts += "export const ART_ASPECT: Record<string, number> = " + json.dumps(DESKS) +
 ts += "/** chairs in rig coordinates (1000×1400): drawn behind the seated character */\n"
 ts += "export const CHAIR_FIT: Record<string, { x: number; y: number; w: number; h: number }> = " + json.dumps(CHAIRS) + ";\n"
 open(os.path.join(ROOT, "src", "client", "art", "desk-data.ts"), "w").write(ts)
+
+# small pictures for the room editor's lists (shown at 44×32): desks, monitors, chairs, the stool
+os.makedirs(os.path.join(OUT, "thumb"), exist_ok=True)
+for f in sorted(os.listdir(OUT)):
+    if re.match(r"(desk|monitor|chair|seat)-[a-z0-9]+\.webp$", f):
+        t = Image.open(os.path.join(OUT, f)).convert("RGBA")
+        t = t.crop(t.getbbox())
+        t.thumbnail((128, 128), Image.LANCZOS)
+        t.save(os.path.join(OUT, "thumb", f), "WEBP", quality=82, method=6)
+print("thumbs")

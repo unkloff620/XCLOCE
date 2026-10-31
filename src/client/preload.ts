@@ -9,7 +9,7 @@ import { ASSET_FILES } from "./asset-manifest.ts";
 import { ROOM_BACKDROP, ROOM_BG } from "../content/home-scene.ts";
 
 /** cache-busting versions of redrawn art (bump when the picture changes) */
-export const ART_VER = { heroPart: 7, hair: 7, wear: 12, items: 14, pepe: 2, tattoo: 10, monitor: 2, chair: 4 } as const;
+export const ART_VER = { heroPart: 7, hair: 7, wear: 12, items: 14, pepe: 2, tattoo: 10, monitor: 2, chair: 5 } as const;
 
 /** the URL a screen really requests for a file from the manifest */
 export function usedUrl(path: string): string {
@@ -19,8 +19,8 @@ export function usedUrl(path: string): string {
   if (path.startsWith("/assets/hero/")) return `${path}?v=${ART_VER.heroPart}`;
   if (path.startsWith("/assets/items/")) return `${path}?v=${ART_VER.items}`;
   if (path.startsWith("/bosses/pepe/")) return `${path}?v=${ART_VER.pepe}`;
-  if (path.startsWith("/assets/home/monitor-")) return `${path}?v=${ART_VER.monitor}`;
-  if (path.startsWith("/assets/home/chair-")) return `${path}?v=${ART_VER.chair}`;
+  if (/^\/assets\/home\/(thumb\/)?monitor-/.test(path)) return `${path}?v=${ART_VER.monitor}`;
+  if (/^\/assets\/home\/(thumb\/)?chair-/.test(path)) return `${path}?v=${ART_VER.chair}`;
   return path;
 }
 

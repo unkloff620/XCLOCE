@@ -108,7 +108,7 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose }: { draft: R
     const k = e.multi ? [3, 2, 1].find((n) => (v & (1 << (n - 1))) !== 0) ?? 0 : v;
     const art = k > 0 ? e.pieces![k - 1].art : e.base!.art;
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={usedUrl(`/assets/home/${art}.webp`)} alt="" draggable={false} />;
+    return <img src={usedUrl(`/assets/home/thumb/${art}.webp`)} alt="" draggable={false} />;
   };
 
   const e = tab === "rgb" ? null : equipmentById(tab)!;
@@ -148,7 +148,7 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose }: { draft: R
                 return (
                 <button className={`sty-item room-ed-item ${on ? "on" : ""}`} onClick={() => pick(tab, 0)} aria-pressed={on}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img className="room-ed-thumb" src={`/assets/home/${e.base!.art}.webp`} alt="" draggable={false} />
+                  <img className="room-ed-thumb" src={usedUrl(`/assets/home/thumb/${e.base!.art}.webp`)} alt="" draggable={false} />
                   <span className="sty-item-name">{e.base!.name}</span>
                   {e.multi && <span className={`room-ed-check ${on ? "on" : ""}`} aria-hidden="true">{on ? "✓" : ""}</span>}
                 </button>
@@ -163,7 +163,7 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose }: { draft: R
                 return (
                   <button key={pc.art} className={`sty-item room-ed-item ${on ? "on" : ""} ${have ? "" : "room-ed-new"} ${shut ? "room-ed-shut" : ""}`} onClick={() => pick(tab, k)} aria-pressed={on}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img className="room-ed-thumb" src={usedUrl(`/assets/home/${pc.art}.webp`)} alt="" draggable={false} />
+                    <img className="room-ed-thumb" src={usedUrl(`/assets/home/thumb/${pc.art}.webp`)} alt="" draggable={false} />
                     <span className="sty-item-name">{pc.name}</span>
                     {shut && <img className="ink-chain" src="/assets/ui/chain-lock.webp" alt="" draggable={false} />}
                     {!have && !shut && <span className="room-ed-price num"><Icon name={pc.price.currency} size={12} />{money(pc.price.currency, pc.price.amount)}</span>}

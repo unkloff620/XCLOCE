@@ -4404,3 +4404,6 @@ body { background-attachment: fixed; }
 .case-ink b { font-size: 12px; }
 .case-ink small { font-size: 10px; color: #6b4a22; }
 .case-ink.done { border-color: #2fae64; box-shadow: 0 0 8px rgba(47, 174, 100, 0.6); }
+/* a tattoo piece's name on the tile: small and thin, dark on the skin-coloured tile */
+.sty-item.ink-item .sty-item-name { font-size: 8.5px; font-weight: 500; line-height: 1.05; color: #3a2410; text-shadow: none; -webkit-text-stroke: 0; }
+.sty-item.ink-item.locked .sty-item-name { color: rgba(255, 243, 227, 0.7); }
