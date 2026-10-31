@@ -148,10 +148,10 @@ export const WEAR_FIT = {
   },
   "headphones-vostok": {
     "slot": "HEAD",
-    "x": 315.5,
-    "y": 0.0,
-    "w": 376,
-    "h": 304
+    "x": 336.0,
+    "y": 15.0,
+    "w": 335,
+    "h": 247
   }
 } as const;
 /** head things that cut the hair under them (the rest are worn over the hair) */
