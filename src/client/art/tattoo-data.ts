@@ -402,16 +402,16 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
  "tat-taiga-knee-l": {
   "part": "torso",
   "x": 90.0,
-  "y": 765.0,
-  "w": 180.0,
-  "h": 192.0
+  "y": 760.0,
+  "w": 249.0,
+  "h": 197.0
  },
  "tat-taiga-knee-r": {
   "part": "torso",
   "x": 662.0,
-  "y": 767.0,
+  "y": 762.0,
   "w": 253.0,
-  "h": 195.0
+  "h": 200.0
  },
  "tat-taiga-shin-l": {
   "part": "torso",
@@ -843,16 +843,16 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
  "tat-kraken-knee-l": {
   "part": "torso",
   "x": 95.0,
-  "y": 765.0,
-  "w": 164.0,
-  "h": 196.0
+  "y": 760.0,
+  "w": 220.0,
+  "h": 201.0
  },
  "tat-kraken-knee-r": {
   "part": "torso",
   "x": 663.0,
-  "y": 767.0,
+  "y": 762.0,
   "w": 237.0,
-  "h": 197.0
+  "h": 202.0
  },
  "tat-kraken-shin-l": {
   "part": "torso",
@@ -990,23 +990,23 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
  "tat-cash-knee-l": {
   "part": "torso",
   "x": 90.0,
-  "y": 765.0,
-  "w": 188.0,
-  "h": 196.0
+  "y": 760.0,
+  "w": 249.0,
+  "h": 201.0
  },
  "tat-cash-knee-r": {
   "part": "torso",
   "x": 663.0,
-  "y": 767.0,
+  "y": 763.0,
   "w": 252.0,
-  "h": 197.0
+  "h": 201.0
  },
  "tat-cash-shin-l": {
   "part": "torso",
   "x": 130.0,
-  "y": 915.0,
-  "w": 173.0,
-  "h": 223.0
+  "y": 882.0,
+  "w": 216.0,
+  "h": 256.0
  },
  "tat-cash-shin-r": {
   "part": "torso",
@@ -1137,16 +1137,16 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
  "tat-gold-knee-l": {
   "part": "torso",
   "x": 93.0,
-  "y": 765.0,
-  "w": 179.0,
-  "h": 196.0
+  "y": 760.0,
+  "w": 181.0,
+  "h": 201.0
  },
  "tat-gold-knee-r": {
   "part": "torso",
   "x": 729.0,
-  "y": 767.0,
+  "y": 762.0,
   "w": 186.0,
-  "h": 196.0
+  "h": 201.0
  },
  "tat-gold-shin-l": {
   "part": "torso",
@@ -1284,23 +1284,23 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
  "tat-ring-knee-l": {
   "part": "torso",
   "x": 90.0,
-  "y": 765.0,
-  "w": 194.0,
-  "h": 195.0
+  "y": 760.0,
+  "w": 242.0,
+  "h": 200.0
  },
  "tat-ring-knee-r": {
   "part": "torso",
   "x": 674.0,
-  "y": 767.0,
+  "y": 762.0,
   "w": 241.0,
-  "h": 196.0
+  "h": 201.0
  },
  "tat-ring-shin-l": {
   "part": "torso",
   "x": 131.0,
-  "y": 912.0,
-  "w": 188.0,
-  "h": 226.0
+  "y": 886.0,
+  "w": 215.0,
+  "h": 252.0
  },
  "tat-ring-shin-r": {
   "part": "torso",
@@ -1431,23 +1431,23 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
  "tat-fire-knee-l": {
   "part": "torso",
   "x": 90.0,
-  "y": 765.0,
-  "w": 193.0,
-  "h": 196.0
+  "y": 760.0,
+  "w": 249.0,
+  "h": 201.0
  },
  "tat-fire-knee-r": {
   "part": "torso",
   "x": 674.0,
-  "y": 769.0,
+  "y": 763.0,
   "w": 241.0,
-  "h": 191.0
+  "h": 197.0
  },
  "tat-fire-shin-l": {
   "part": "torso",
   "x": 131.0,
-  "y": 911.0,
-  "w": 188.0,
-  "h": 227.0
+  "y": 881.0,
+  "w": 215.0,
+  "h": 257.0
  },
  "tat-fire-shin-r": {
   "part": "torso",
@@ -1578,16 +1578,16 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
  "tat-izba-knee-l": {
   "part": "torso",
   "x": 90.0,
-  "y": 765.0,
-  "w": 177.0,
-  "h": 196.0
+  "y": 760.0,
+  "w": 249.0,
+  "h": 201.0
  },
  "tat-izba-knee-r": {
   "part": "torso",
   "x": 663.0,
-  "y": 767.0,
+  "y": 762.0,
   "w": 252.0,
-  "h": 194.0
+  "h": 199.0
  },
  "tat-izba-shin-l": {
   "part": "torso",
@@ -1725,23 +1725,23 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
  "tat-firebird-knee-l": {
   "part": "torso",
   "x": 90.0,
-  "y": 765.0,
-  "w": 188.0,
-  "h": 196.0
+  "y": 760.0,
+  "w": 249.0,
+  "h": 201.0
  },
  "tat-firebird-knee-r": {
   "part": "torso",
   "x": 662.0,
-  "y": 767.0,
+  "y": 762.0,
   "w": 253.0,
-  "h": 196.0
+  "h": 201.0
  },
  "tat-firebird-shin-l": {
   "part": "torso",
   "x": 128.0,
-  "y": 914.0,
-  "w": 180.0,
-  "h": 224.0
+  "y": 881.0,
+  "w": 218.0,
+  "h": 257.0
  },
  "tat-firebird-shin-r": {
   "part": "torso",
@@ -1872,23 +1872,23 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
  "tat-jackpot-knee-l": {
   "part": "torso",
   "x": 90.0,
-  "y": 765.0,
-  "w": 194.0,
-  "h": 196.0
+  "y": 760.0,
+  "w": 249.0,
+  "h": 201.0
  },
  "tat-jackpot-knee-r": {
   "part": "torso",
   "x": 663.0,
-  "y": 767.0,
+  "y": 762.0,
   "w": 252.0,
-  "h": 196.0
+  "h": 201.0
  },
  "tat-jackpot-shin-l": {
   "part": "torso",
   "x": 128.0,
-  "y": 911.0,
-  "w": 191.0,
-  "h": 227.0
+  "y": 882.0,
+  "w": 218.0,
+  "h": 256.0
  },
  "tat-jackpot-shin-r": {
   "part": "torso",
@@ -2019,23 +2019,23 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
  "tat-sunrise-knee-l": {
   "part": "torso",
   "x": 93.0,
-  "y": 766.0,
-  "w": 191.0,
-  "h": 195.0
+  "y": 760.0,
+  "w": 246.0,
+  "h": 201.0
  },
  "tat-sunrise-knee-r": {
   "part": "torso",
   "x": 663.0,
-  "y": 770.0,
+  "y": 763.0,
   "w": 246.0,
-  "h": 193.0
+  "h": 200.0
  },
  "tat-sunrise-shin-l": {
   "part": "torso",
   "x": 129.0,
-  "y": 911.0,
-  "w": 187.0,
-  "h": 227.0
+  "y": 882.0,
+  "w": 217.0,
+  "h": 256.0
  },
  "tat-sunrise-shin-r": {
   "part": "torso",
@@ -2166,23 +2166,23 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
  "tat-samurai-knee-l": {
   "part": "torso",
   "x": 90.0,
-  "y": 765.0,
-  "w": 189.0,
-  "h": 196.0
+  "y": 760.0,
+  "w": 249.0,
+  "h": 201.0
  },
  "tat-samurai-knee-r": {
   "part": "torso",
   "x": 662.0,
-  "y": 767.0,
+  "y": 762.0,
   "w": 253.0,
-  "h": 197.0
+  "h": 202.0
  },
  "tat-samurai-shin-l": {
   "part": "torso",
   "x": 128.0,
-  "y": 911.0,
-  "w": 194.0,
-  "h": 227.0
+  "y": 881.0,
+  "w": 217.0,
+  "h": 257.0
  },
  "tat-samurai-shin-r": {
   "part": "torso",
@@ -2313,23 +2313,23 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
  "tat-viking-knee-l": {
   "part": "torso",
   "x": 90.0,
-  "y": 765.0,
-  "w": 194.0,
-  "h": 196.0
+  "y": 760.0,
+  "w": 249.0,
+  "h": 201.0
  },
  "tat-viking-knee-r": {
   "part": "torso",
   "x": 662.0,
-  "y": 767.0,
+  "y": 762.0,
   "w": 253.0,
-  "h": 197.0
+  "h": 202.0
  },
  "tat-viking-shin-l": {
   "part": "torso",
   "x": 128.0,
-  "y": 911.0,
-  "w": 194.0,
-  "h": 227.0
+  "y": 882.0,
+  "w": 218.0,
+  "h": 256.0
  },
  "tat-viking-shin-r": {
   "part": "torso",
@@ -2460,23 +2460,23 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
  "tat-inferno-knee-l": {
   "part": "torso",
   "x": 90.0,
-  "y": 765.0,
-  "w": 194.0,
-  "h": 196.0
+  "y": 760.0,
+  "w": 249.0,
+  "h": 201.0
  },
  "tat-inferno-knee-r": {
   "part": "torso",
   "x": 662.0,
-  "y": 767.0,
+  "y": 762.0,
   "w": 253.0,
-  "h": 196.0
+  "h": 201.0
  },
  "tat-inferno-shin-l": {
   "part": "torso",
   "x": 128.0,
-  "y": 911.0,
-  "w": 194.0,
-  "h": 227.0
+  "y": 882.0,
+  "w": 218.0,
+  "h": 256.0
  },
  "tat-inferno-shin-r": {
   "part": "torso",

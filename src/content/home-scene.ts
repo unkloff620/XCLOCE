@@ -32,12 +32,12 @@ export const SCENE_HOT = {
 
 /** the hero's body (head + torso, scene units), laid over the monitors' zone: a tap opens the wardrobe */
 export const HERO_HOT = [
-  { x: 405, y: 425, w: 235, h: 235 },
-  { x: 265, y: 660, w: 520, h: 640 },
+  { x: 405, y: 395, w: 235, h: 235 },
+  { x: 265, y: 630, w: 520, h: 640 },
 ] as const;
 
 /** Character placement: the 1000×1400 rig canvas scaled into the scene. */
-export const CHARACTER = { x: 130, y: 405, scale: 0.78 };
+export const CHARACTER = { x: 130, y: 375, scale: 0.78 };
 
 /** Seat inside the rig canvas (under the hips). */
 export const SEAT = { x: 280, y: 670, w: 440, aspect: 1.5 }; // stretched taller: the seat hides under the shorts, the legs stand on the floor

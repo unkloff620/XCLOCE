@@ -32,7 +32,8 @@ export type Worn = Record<string, string | undefined>;
  * mode "items": HEAD, ACCESSORY, SHIRT, PANTS, SHOES, HAND — where clothes go (shown even with nothing worn);
  * mode "body": HEAD, EYES, MOUTH, TORSO, SHOULDER_L/R, ARM_L/R (forearms), HAND, LEG_L/R — «L» is the screen's left.
  */
-export type RigEdit = { mode: "items" | "body"; part: string | null; onPick?: (part: string) => void };
+/** `zones`: the tattoo editor — the places for tattoos outlined in yellow on the body */
+export type RigEdit = { mode: "items" | "body"; part: string | null; onPick?: (part: string) => void; zones?: boolean };
 const EditCtx = createContext<RigEdit | null>(null);
 
 /** the thin outline of every part in the editor (nothing outside the editor) */
@@ -403,6 +404,7 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
           </Bone>
         </Ol>
       </g>
+      {edit?.zones && <image className="rig-zones" href={`/assets/hero/tattoo/zones.webp?v=${ART_VER.tattoo}`} x={0} y={0} width={1000} height={1400} preserveAspectRatio="none" pointerEvents="none" />}
       {edit?.part && <Highlight edit={edit} />}
     </EditCtx.Provider>
     </WornCtx.Provider>

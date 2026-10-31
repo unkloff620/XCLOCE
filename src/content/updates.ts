@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-01-tattoo-zones",
+    date: "1 ноября",
+    title: "Места для наколок",
+    items: [
+      { img: "/assets/updates/2026-11-01-tattoo-zones.webp", text: "В редакторе наколок на теле жёлтым обведены места — видно, куда что набивается. Наколки на бёдрах больше не обрываются у рук." },
+    ],
+  },
+  {
     id: "2026-10-31-case",
     date: "31 октября",
     title: "Кейс у барыги",

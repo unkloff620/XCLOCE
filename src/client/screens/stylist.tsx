@@ -55,7 +55,7 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
   const openInk = () => {
     haptic.tap();
     setInkTab(true);
-    setFocus({ mode: "body", part: null });
+    setFocus({ mode: "body", part: null, zones: true });
   };
   const owned = new Set(state.inventory.map((i) => i.id));
   const slot = mode === "items" && part && (CLOTHES as string[]).includes(part) ? (part as Slot) : null;
