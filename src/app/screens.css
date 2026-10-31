@@ -4394,3 +4394,6 @@ body { background-attachment: fixed; }
 .room-ed-item.room-ed-shut { position: relative; }
 .room-ed-item.room-ed-shut .room-ed-thumb { filter: grayscale(1) brightness(0.6); }
 .room-ed-item .ink-chain { position: absolute; inset: 10% 10% auto; width: 80%; pointer-events: none; }
+/* «Дела»: «Боссы» on top, «Ивент» under them */
+.case-groups { display: flex; flex-direction: column; gap: 8px; }
+.case-groups > .case-h { font: 900 14px/1.2 var(--font-display), system-ui; letter-spacing: 0.06em; text-transform: uppercase; color: #6b4a22; text-align: center; }

@@ -5,7 +5,7 @@
  * systems/collection.ts). Closed cases get the red «ЗАКРЫТО» stamp.
  */
 import { useState } from "react";
-import { BOSSES, CASE_WINS, bossById } from "../content/bosses.ts";
+import { BOSSES, CASE_WINS, EVENT_FIGHTS, bossById, type BossDef } from "../content/bosses.ts";
 import { itemById } from "../content/items.ts";
 import { ItemArt } from "./art/items.tsx";
 import { Modal } from "./ui.tsx";
@@ -31,7 +31,7 @@ function CaseWindow({ c, self, onClose }: { c: CaseRow; self: boolean; onClose: 
   const b = bossById(c.id)!;
   const setDone = !!c.set && c.set.have === c.set.total;
   return (
-    <Modal title={<span>Дело №{b.order} · {b.name}</span>} onClose={onClose}>
+    <Modal title={<span>{b.event ? `Ивент · ${b.name}` : `Дело №${b.order} · ${b.name}`}</span>} onClose={onClose}>
       <div className="case-win">
         <div className="case-top">
           <div className="case-photo">
@@ -56,7 +56,7 @@ function CaseWindow({ c, self, onClose }: { c: CaseRow; self: boolean; onClose: 
               ))}
             </div>
           </>
-        ) : <div className="tiny muted">Вещей этого босса пока нет — скоро нарисуем.</div>}
+        ) : <div className="tiny muted">{b.event ? "Вещи ивента появятся к его началу." : "Вещей этого босса пока нет — скоро нарисуем."}</div>}
 
         {c.set && (
           <div className={`case-set ${setDone ? "done" : ""}`}>
@@ -82,9 +82,7 @@ function CaseWindow({ c, self, onClose }: { c: CaseRow; self: boolean; onClose: 
 export function CasesPanel({ cases, self }: { cases: CaseRow[]; self: boolean }) {
   const [open, setOpen] = useState<string | null>(null);
   const cur = cases.find((c) => c.id === open) ?? null;
-  return (
-    <div className="case-medals">
-      {BOSSES.map((b) => {
+  const stack = (b: BossDef) => {
         const c = cases.find((x) => x.id === b.id);
         if (!c) return null;
         const label = MEDAL_TIERS.map((t, k) => `${MEDAL_NAMES[t]} — ${BOSS_KILL_TARGETS[k]} побед`).join(", ");
@@ -96,7 +94,18 @@ export function CasesPanel({ cases, self }: { cases: CaseRow[]; self: boolean })
             })}
           </button>
         );
-      })}
+  };
+  // «Боссы» on top, the event bosses' medals under them («Ивент»)
+  return (
+    <div className="case-groups">
+      <div className="case-h">Боссы</div>
+      <div className="case-medals">{BOSSES.map(stack)}</div>
+      {EVENT_FIGHTS.some((b) => cases.some((c) => c.id === b.id)) && (
+        <>
+          <div className="case-h">Ивент</div>
+          <div className="case-medals">{EVENT_FIGHTS.map(stack)}</div>
+        </>
+      )}
       {cur && <CaseWindow c={cur} self={self} onClose={() => setOpen(null)} />}
     </div>
   );

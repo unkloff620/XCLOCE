@@ -10,7 +10,8 @@ import { talentsForDamage } from "../../content/talents.ts";
 import { TATTOO_SETS, tattooSetOf } from "../../content/tattoos.ts";
 
 /** per-boss badges count only while the boss is in the game */
-const live = (cfg: Config) => ACHIEVEMENTS.filter((a) => !a.boss || (bossById(a.boss) && bossOpen(bossById(a.boss)!, cfg.bossOpen)));
+/** (an event boss's positions stay always: his wins are kept between the events) */
+const live = (cfg: Config) => ACHIEVEMENTS.filter((a) => !a.boss || (bossById(a.boss) && (bossById(a.boss)!.event || bossOpen(bossById(a.boss)!, cfg.bossOpen))));
 
 /** Everything the badges measure, read from what the game already stores. */
 export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promise<Record<AchStat, number>> {

@@ -96,7 +96,7 @@ function Arena({ boss, hp, hpMax, endsAt, fx, hit, ouch, rug, feed, full: fullSc
         {/* eslint-disable-next-line @next/next/no-img-element */}
         {boss.id === "pepe" ? <PepeRig className="boss-rig" sad={!!ouch} /> : hasBossRig(boss.id) ? <BossRig id={boss.id} hpShare={hp === null ? 1 : hp / Math.max(1, hpMax)} /> : boss.photo.full ? <img src={boss.photo.full} alt={boss.name} draggable={false} /> : <div className="arena-sil"><BossSilhouette accent={boss.theme.accent} /><span className="small muted">фото скоро</span></div>}
         <div className="arena-flash" />
-        {hurt && !hasBossRig(boss.id) && <div className="arena-plasters" />}
+        {hurt && !hasBossRig(boss.id) && boss.id !== "pepe" && <div className="arena-plasters" />}
       </div>
       {/* the boss talks from the upper left corner, off his body (it does not shake with him) */}
       {talk && <div key={talk.id} className={`boss-say ${dazed ? "scared" : ""}`}>{talk.text}</div>}

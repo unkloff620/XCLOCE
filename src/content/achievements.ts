@@ -1,5 +1,7 @@
 import type { Reward } from "./rewards.ts";
-import { BOSSES } from "./bosses.ts";
+import { BOSSES, EVENT_FIGHTS } from "./bosses.ts";
+/** the chain bosses and the event bosses (Пепе): «Боссы» and «Время» count them all */
+const FIGHT_BOSSES = [...BOSSES, ...EVENT_FIGHTS];
 import { STASH_MEDAL_TARGETS, STASH_SETS_ORDERED } from "./stashes.ts";
 import { LOCATIONS } from "./locations.ts";
 import { POKER_HANDS } from "./games.ts";
@@ -108,16 +110,16 @@ export const ACH_CATEGORIES: AchCategory[] = [
   },
   {
     id: "bosses", section: "boss", name: "Боссы", icon: "ach-wins", kind: "boss",
-    lines: BOSSES.flatMap((b) => BOSS_KILL_TARGETS.map((t, k) => line("bosses", k, 3, {
+    lines: FIGHT_BOSSES.flatMap((b) => BOSS_KILL_TARGETS.map((t, k) => line("bosses", k, 3, {
       id: `bosskill-${b.id}-${k + 1}`, name: `${b.name}: ${TIER_NAMES[(k + 1) as AchTier]}`, hint: `Победи босса ${b.name} ${t} раз`, stat: `win:${b.id}`, target: t,
       icon: b.id, label: String(t), boss: b.id, tier: (k + 1) as AchTier,
     }))),
   },
   {
     id: "fast", section: "boss", name: "Время", icon: "clock", kind: "boss",
-    lines: BOSSES.map((b, i) => line("fast", i, BOSSES.length, {
+    lines: FIGHT_BOSSES.map((b, i) => line("fast", i, FIGHT_BOSSES.length, {
       id: `fast-${b.id}`, name: b.name, hint: `Убей босса ${b.name} меньше чем за час после начала боя`, stat: `fast:${b.id}`, target: 1,
-      icon: b.id, label: "1 ч", boss: b.id, points: SOLO_POINTS[b.order] ?? 5,
+      icon: b.id, label: "1 ч", boss: b.id, points: b.event ? 30 : SOLO_POINTS[b.order] ?? 5,
     })),
   },
   series("talents", "boss", "Таланты", "talent", "talents",

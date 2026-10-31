@@ -1,5 +1,5 @@
 import type { Queryable } from "../db.ts";
-import { BOSSES, CASE_WINS, bossById, bossSetItems } from "../../content/bosses.ts";
+import { BOSSES, CASE_WINS, EVENT_FIGHTS, bossById, bossSetItems } from "../../content/bosses.ts";
 import { medalBonusFor, medalWeapon, type MedalTier } from "../../content/medals.ts";
 import { TATTOO_IDS, TATTOO_SETS } from "../../content/tattoos.ts";
 
@@ -50,7 +50,7 @@ export async function casesView(q: Queryable, pid: number) {
     .map((r) => [r.boss_id, { wins: Number(r.wins), damage: Number(r.damage) }]));
   const best = new Map((await q.query<{ boss_id: string; best: number }>("SELECT boss_id, MAX(damage)::int AS best FROM boss_hits WHERE player_id=$1 GROUP BY boss_id", [pid]))
     .map((r) => [r.boss_id, Number(r.best)]));
-  return BOSSES.map((b) => {
+  return [...BOSSES, ...EVENT_FIGHTS].map((b) => {
     const things = (b.wear?.items ?? []).map((id) => ({ id, owned: have.has(id), opened: have.has(id) || opened.has(id) }));
     const set = b.set && things.length ? { weapon: b.set.weapon, damage: b.set.damage, have: things.filter((t) => t.owned).length, total: things.length } : null;
     const w = wins.get(b.id) ?? { wins: 0, damage: 0 };
