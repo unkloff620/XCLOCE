@@ -234,9 +234,11 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
     <div className="sty-panel">
       <div className="sty-head">
         <div className="sty-tabs three">
-          <button className={mode === "items" && !inkTab ? "on" : ""} onClick={() => setMode("items")}>Вещи</button>
-          <button className={mode === "body" && !inkTab ? "on" : ""} onClick={() => setMode("body")}>Тело</button>
-          <button className={inkTab ? "on" : ""} onClick={openInk}>Наколки</button>
+          {/* eslint-disable @next/next/no-img-element */}
+          <button className={mode === "body" && !inkTab ? "on" : ""} onClick={() => setMode("body")} aria-label="Изменить внешность" title="Изменить внешность"><img src="/assets/ui/tab-look.webp" alt="" draggable={false} /></button>
+          <button className={inkTab ? "on" : ""} onClick={openInk} aria-label="Набить наколки" title="Набить наколки"><img src="/assets/ui/drop-tattoo.webp" alt="" draggable={false} /></button>
+          <button className={mode === "items" && !inkTab ? "on" : ""} onClick={() => setMode("items")} aria-label="Сменить одежду" title="Сменить одежду"><img src="/assets/ui/slot-shirt.webp" alt="" draggable={false} /></button>
+          {/* eslint-enable @next/next/no-img-element */}
         </div>
         <button className="sty-x" onClick={onClose} aria-label="Закрыть без сохранения">✕</button>
       </div>
@@ -262,8 +264,12 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
         {body}
       </div>
       <div className="sty-actions">
-        <button className="btn dark" onClick={onClose}>Отмена</button>
-        <button className="btn green grow" disabled={!changed || saving || !!busy} onClick={save}>{changed ? "Сохранить" : "Без изменений"}</button>
+        <button className="btn dark sty-act" onClick={onClose} aria-label="Отмена" title="Отмена">
+          <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" /></svg>
+        </button>
+        <button className="btn green grow sty-act" disabled={!changed || saving || !!busy} onClick={save} aria-label={changed ? "Сохранить" : "Без изменений"} title={changed ? "Сохранить" : "Без изменений"}>
+          <svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d="M4.5 12.5l5 5L19.5 7" fill="none" stroke="currentColor" strokeWidth="3.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </button>
       </div>
     </div>,
     document.body,

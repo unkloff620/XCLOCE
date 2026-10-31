@@ -4208,3 +4208,10 @@ body { background-attachment: fixed; }
 /* the rewards on the boss door and on the boss cards: lighter figures */
 .door-plate .gain, .door-plate .gain .num, .bcard-reward .gain, .bcard-reward .gain .num { font-weight: 600; }
 .door-plate .gain { -webkit-text-stroke: 0; }
+/* the hero editor: picture tabs (looks, tattoos, clothes) and the ✕ / ✓ buttons */
+.sty-head .sty-tabs { flex: 1 1 auto; }
+.sty-tabs button { display: grid; place-items: center; padding: 4px 0; }
+.sty-tabs button img { width: 34px; height: 34px; object-fit: contain; pointer-events: none; filter: drop-shadow(0 0 2px rgba(255, 240, 220, 0.35)) drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5)); opacity: 0.85; }
+.sty-tabs button.on img { opacity: 1; transform: scale(1.08); }
+.sty-act { display: grid; place-items: center; padding: 8px 0; }
+.sty-actions .btn.dark.sty-act { width: 64px; }

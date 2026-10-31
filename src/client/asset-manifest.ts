@@ -857,6 +857,7 @@ export const ASSET_FILES: string[] = [
  "/assets/ui/sol.webp",
  "/assets/ui/sun.webp",
  "/assets/ui/swords.webp",
+ "/assets/ui/tab-look.webp",
  "/assets/ui/talent.webp",
  "/assets/ui/tasks.webp",
  "/assets/ui/tech.webp",
