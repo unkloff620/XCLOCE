@@ -4397,3 +4397,10 @@ body { background-attachment: fixed; }
 /* «Дела»: «Боссы» on top, «Ивент» under them */
 .case-groups { display: flex; flex-direction: column; gap: 8px; }
 .case-groups > .case-h { font: 900 14px/1.2 var(--font-display), system-ui; letter-spacing: 0.06em; text-transform: uppercase; color: #6b4a22; text-align: center; }
+/* a boss's case: his tattoo sets (cover, name, pieces dropped) */
+.case-inks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.case-ink { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px; border-radius: 10px; border: 2px solid var(--line); background: #f2c9a0; text-align: center; }
+.case-ink img { width: 100%; aspect-ratio: 288 / 200; object-fit: contain; }
+.case-ink b { font-size: 12px; }
+.case-ink small { font-size: 10px; color: #6b4a22; }
+.case-ink.done { border-color: #2fae64; box-shadow: 0 0 8px rgba(47, 174, 100, 0.6); }

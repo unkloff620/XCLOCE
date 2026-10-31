@@ -598,12 +598,16 @@ export async function bossList(q: Queryable, pid: number, cfg: Ctx["cfg"], now =
   });
   return {
     resetAt: nextMoscowMidnight(now),
-    bosses: OPEN_BOSSES(cfg.bossOpen).map((b) => {
-      const prev = BOSSES.find((x) => x.order === b.order - 1);
+    bosses: OPEN_BOSSES(cfg.bossOpen).map((b) => rowOf(b)),
+    /** the event bosses that are on (Пепе): the same rows, shown on their own page, not in the list */
+    events: EVENT_FIGHTS.filter((b) => cfg.eventBosses[b.id]).map((b) => rowOf(b)),
+  };
+  function rowOf(b: BossDef) {
+      const prev = b.event ? undefined : BOSSES.find((x) => x.order === b.order - 1);
       const keysHave = prev ? keyMap.get(keyId(prev.id)) ?? 0 : 0;
       return {
         id: b.id,
-        unlocked: b.order === 1 || keysHave >= keysNeeded(b, cfg.fight.keysToUnlock) || myFight?.boss_id === b.id,
+        unlocked: b.order === 1 || !!b.event || keysHave >= keysNeeded(b, cfg.fight.keysToUnlock) || myFight?.boss_id === b.id,
         keysHave,
         keysNeed: keysNeeded(b, cfg.fight.keysToUnlock),
         myKeys: keyMap.get(keyId(b.id)) ?? 0,
@@ -618,8 +622,7 @@ export async function bossList(q: Queryable, pid: number, cfg: Ctx["cfg"], now =
         lastKiller: killerMap.get(b.id) ?? null,
         medals: medalsOf(b.id),
       };
-    }),
-  };
+  }
 }
 
 /** Boss page extras: all-time top, my last hits. */

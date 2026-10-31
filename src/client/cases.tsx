@@ -7,6 +7,8 @@
 import { useState } from "react";
 import { BOSSES, CASE_WINS, EVENT_FIGHTS, bossById, type BossDef } from "../content/bosses.ts";
 import { itemById } from "../content/items.ts";
+import { TATTOO_MODE_NAME, tattooSetOf } from "../content/tattoos.ts";
+import { ART_VER } from "./preload.ts";
 import { ItemArt } from "./art/items.tsx";
 import { Modal } from "./ui.tsx";
 import { BossPhoto } from "./screens/boss-parts.tsx";
@@ -20,6 +22,8 @@ export interface CaseRow {
   id: string; wins: number; damage: number; bestHit: number;
   things: { id: string; owned: boolean; opened: boolean }[];
   set: { weapon: string; damage: number; have: number; total: number } | null;
+  /** his tattoo sets: pieces dropped of each */
+  tattoos?: { set: string; have: number; total: number }[];
   closed: boolean;
 }
 
@@ -57,6 +61,25 @@ function CaseWindow({ c, self, onClose }: { c: CaseRow; self: boolean; onClose: 
             </div>
           </>
         ) : <div className="tiny muted">{b.event ? "Вещи ивента появятся к его началу." : "Вещей этого босса пока нет — скоро нарисуем."}</div>}
+
+        {(c.tattoos ?? []).length > 0 && (
+          <>
+            <div className="case-h">Наколки босса</div>
+            <div className="case-inks">
+              {c.tattoos!.map((t) => {
+                const st = tattooSetOf(`tat-${t.set}-neck`) ?? null;
+                return (
+                  <span key={t.set} className={`case-ink ${t.have === t.total ? "done" : ""}`} title={st ? `«${st.name}» · ${TATTOO_MODE_NAME[st.mode]}` : t.set}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={`/assets/hero/tattoo/set-${t.set}.webp?v=${ART_VER.tattoo}`} alt="" draggable={false} />
+                    <b>{st?.name ?? t.set}</b>
+                    <small className="num">{t.have}/{t.total}{st ? ` · в «${TATTOO_MODE_NAME[st.mode]}»` : ""}</small>
+                  </span>
+                );
+              })}
+            </div>
+          </>
+        )}
 
         {c.set && (
           <div className={`case-set ${setDone ? "done" : ""}`}>

@@ -50,24 +50,19 @@ for f in sorted(os.listdir(os.path.join(HERE, "source"))):
 # chairs: drawn on the 2000×2800 character canvas in place (like the clothes) → trimmed, half size, and their place
 # in the 1000×1400 rig coordinates
 CHAIRS = {}
-CHAIR_BOX = (122, 389, 1877, 2733)  # chair-1 on the character canvas: where a chair stands
+CHAIR_BOX = (122, -60, 1877, 2733)  # where a chair stands on the 2000×2800 character canvas: the wheels on the floor line, the back up past the top of the head
 for f in sorted(os.listdir(os.path.join(HERE, "source"))):
     m = re.match(r"(chair-[a-z0-9]+)\.png$", f)
     if not m:
         continue
     im = Image.open(os.path.join(HERE, "source", f)).convert("RGBA")
     a = im.getchannel("A").point(lambda v: 0 if v < 30 else v); im.putalpha(a)
-    if im.size != (2000, 2800):
-        # drawn on its own canvas: stand it where the first chair stands (same height, wheels on the same line, centred)
-        im = im.crop(im.getbbox())
-        H = CHAIR_BOX[3] - CHAIR_BOX[1]
-        W = round(im.width * H / im.height)
-        canvas = Image.new("RGBA", (2000, 2800))
-        canvas.alpha_composite(im.resize((W, H), Image.LANCZOS), (1000 - W // 2, CHAIR_BOX[1]))
-        im = canvas
-    x0, y0, x1, y1 = im.getbbox()
-    im = im.crop((x0, y0, x1, y1))
-    w, h = round((x1 - x0) / 2), round((y1 - y0) / 2)
+    # drawn on its own canvas: the same height for every chair, the wheels on the same line, centred
+    im = im.crop(im.getbbox())
+    H = CHAIR_BOX[3] - CHAIR_BOX[1]
+    W = round(im.width * H / im.height)
+    x0, y0 = 1000 - W // 2, CHAIR_BOX[1]
+    w, h = round(W / 2), round(H / 2)
     im.resize((w, h), Image.LANCZOS).save(os.path.join(OUT, m.group(1) + ".webp"), "WEBP", quality=88, method=6)
     CHAIRS[m.group(1)] = {"x": x0 / 2, "y": y0 / 2, "w": w, "h": h}
     print(m.group(1), CHAIRS[m.group(1)])

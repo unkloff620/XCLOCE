@@ -278,7 +278,7 @@ export function BossScreen({ id }: { id: string }) {
     api.get<typeof details>(`/api/bosses/${id}`).then(setDetails).catch(() => undefined);
   }, [tab, id, fightId, view?.myHits]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const row = list?.bosses.find((b) => b.id === id);
+  const row = list?.bosses.find((b) => b.id === id) ?? list?.events?.find((b) => b.id === id);
   const hpShown = view ? Math.max(0, view.hp - pendingDmg) : state?.fight?.bossId === id ? state.fight.hp : null;
   // the boss punches at the screen now and then while the fight is on (show only, no damage)
   // a dazed boss (below half HP) is scared: no more punches at the screen, he only waves his arms limply (screens.css)
@@ -373,7 +373,8 @@ export function BossScreen({ id }: { id: string }) {
   const [door, setDoor] = useState<"closed" | "rattle" | "open" | "enter">("closed");
   useEffect(() => {
     if (!fightId) setDoor("closed"); // back from a fight: the door is shut again
-  }, [fightId]);
+    if (!fightId) void loadList(); // and today's fights count again (the daily limit on the door)
+  }, [fightId]); // eslint-disable-line react-hooks/exhaustive-deps
   const [fleeAsk, setFleeAsk] = useState(false);
   // a missing weapon opens the weapons shelf right here; closing it leaves you in the fight
   const [shopOpen, setShopOpen] = useState(false);

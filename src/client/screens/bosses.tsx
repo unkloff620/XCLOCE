@@ -26,7 +26,7 @@ export interface BossRow {
   medals?: { bronze: number; silver: number; gold: number };
   lastKiller: { id: number; name: string; photo: string | null; at: number } | null;
 }
-export interface BossListData { resetAt: number; bosses: BossRow[]; weapons: Tray[]; now: number }
+export interface BossListData { resetAt: number; bosses: BossRow[]; /** the event bosses that are on (their own page) */ events?: BossRow[]; weapons: Tray[]; now: number }
 
 /** the last boss list: a repeat visit shows it at once while a fresh one loads */
 let lastList: BossListData | null = null;
