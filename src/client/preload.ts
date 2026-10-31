@@ -9,7 +9,7 @@ import { ASSET_FILES } from "./asset-manifest.ts";
 import { ROOM_BACKDROP, ROOM_BG } from "../content/home-scene.ts";
 
 /** cache-busting versions of redrawn art (bump when the picture changes) */
-export const ART_VER = { heroPart: 7, hair: 7, wear: 11, items: 12, pepe: 2, tattoo: 9 } as const;
+export const ART_VER = { heroPart: 7, hair: 7, wear: 12, items: 14, pepe: 2, tattoo: 10 } as const;
 
 /** the URL a screen really requests for a file from the manifest */
 export function usedUrl(path: string): string {
@@ -60,7 +60,7 @@ export function urlsFor(sections: Section[] | "all", look: LookLite | null): str
 }
 
 /** pictures the home screen does not need at once: they come in the background after the game shows */
-const LATER = ["/assets/hero/tattoo/", "/assets/items/", "/assets/stash/", "/assets/talents/", "/assets/slots/", "/assets/upgrader/", "/assets/cards/", "/assets/chips/", "/assets/door/", "/assets/updates/"];
+const LATER = ["/assets/ui/dossier-", "/assets/ui/exchange-frame", "/assets/hero/tattoo/", "/assets/items/", "/assets/stash/", "/assets/talents/", "/assets/slots/", "/assets/upgrader/", "/assets/cards/", "/assets/chips/", "/assets/door/", "/assets/updates/"];
 /**
  * What the game waits for on entry: the hero, the interface and the home (+ today's «Что нового» pictures);
  * everything else (laterUrls) loads in the background — a section still opens only once its own pictures are there.
@@ -79,9 +79,14 @@ export function entryUrls(look: LookLite | null, today: string, room: string): s
 export function sectionUrls(section: Section, look: LookLite | null, room: string): string[] {
   return ASSET_FILES.filter((p) => sectionOf(p) === section && wanted(p, look) && !(section === "home" && otherRoom(p, room))).map(usedUrl);
 }
+/**
+ * Pictures never fetched in the background: the ~400 tattoo pieces and their item icons (~17 MB), the editor's place
+ * pictures and the old «Что нового» — a screen that shows one loads it itself, the rest of the game does not wait for them.
+ */
+const ON_DEMAND = ["/assets/hero/tattoo/", "/assets/items/tat-", "/assets/updates/"];
 /** everything else, the hero's own variants only (it is fetched after the game has shown) */
 export function laterUrls(look: LookLite | null): string[] {
-  return urlsFor("all", look).filter((u) => !done.has(u));
+  return urlsFor("all", look).filter((u) => !done.has(u) && !ON_DEMAND.some((d) => u.startsWith(d)));
 }
 
 const done = new Set<string>();

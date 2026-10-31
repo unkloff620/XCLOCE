@@ -223,7 +223,7 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
           </button>
         ))}
         {items.length === 0 && slot === "MOUTH" && (
-          <span className="sty-item shop"><span className="sty-plus" aria-hidden="true">⏳</span><span className="sty-item-name">Скоро: сигареты и зубочистки</span></span>
+          <span className="sty-item shop"><span className="sty-plus" aria-hidden="true">⏳</span><span className="sty-item-name">Выпадает из Ящика ништяков</span></span>
         )}
         {items.length === 0 && slot !== "MOUTH" && (
           <Link href="/shop?tab=clothing" className="sty-item shop" onClick={onClose}>

@@ -1,6 +1,6 @@
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, type Ctx } from "../core.ts";
-import { achBoxState, rollAchBox } from "../../content/ach-box.ts";
+import { MOUTH_ITEMS, MOUTH_ITEM_CHANCE, achBoxState, rollAchBox } from "../../content/ach-box.ts";
 import { mergeRewards } from "../../content/rewards.ts";
 import { BOX_TATTOO_CHANCE, BOX_TATTOO_SETS } from "../../content/tattoos.ts";
 
@@ -28,6 +28,15 @@ export async function openAchBox(ctx: Ctx, all = false) {
     if (!left.length) break;
     const id = left[Math.floor(ctx.rng() * left.length)];
     have.add(id); ink.push({ id, qty: 1 });
+  }
+  // a thing for the mouth (a cigarette, a toothpick): MOUTH_ITEM_CHANCE per box, one the player does not have
+  const mouthHave = new Set((await ctx.q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id = ANY($2)", [ctx.pid, [...MOUTH_ITEMS]])).map((r) => r.item_id));
+  for (let i = 0; i < n; i++) {
+    if (ctx.rng() >= MOUTH_ITEM_CHANCE) continue;
+    const left = MOUTH_ITEMS.filter((id) => !mouthHave.has(id));
+    if (!left.length) break;
+    const id = left[Math.floor(ctx.rng() * left.length)];
+    mouthHave.add(id); ink.push({ id, qty: 1 });
   }
   const reward = await grantReward(ctx, mergeRewards(...Array.from({ length: n }, () => rollAchBox(ctx.rng)), { items: ink }), "ach_box");
   return { reward, opened: n, box: await achBoxView(ctx.q, ctx.pid) };

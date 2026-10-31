@@ -3,6 +3,7 @@ import { BOSSES } from "./bosses.ts";
 import { STASH_MEDAL_TARGETS, STASH_SETS_ORDERED } from "./stashes.ts";
 import { LOCATIONS } from "./locations.ts";
 import { POKER_HANDS } from "./games.ts";
+import { TATTOO_SETS } from "./tattoos.ts";
 
 /*
  * Достижения (третья редакция): списки позиций по разделам — Боевые, Экономика, Азартные, Задания, Нычки, Прочее.
@@ -194,6 +195,14 @@ export const ACH_CATEGORIES: AchCategory[] = [
       icon: "chest", label: String(t), tier: (k + 1) as AchTier,
     })),
   })),
+  // ---------------- Наколки: every set collected whole (all its pieces dropped), +50 points each ----------------
+  {
+    id: "tattoo-sets", section: "misc", name: "Наколки", icon: "chest", img: "/assets/ui/drop-tattoo.webp", kind: "list",
+    lines: TATTOO_SETS.map((st, i) => line("tattoo-sets", i, TATTOO_SETS.length, {
+      id: `tatset-${st.id}`, name: `Сет «${st.name}»`, hint: `Собери все ${st.pieces.length} наколок сета «${st.name}»`, stat: `tatset:${st.id}`, target: st.pieces.length,
+      icon: `/assets/hero/tattoo/set-${st.id}.webp`, label: String(st.pieces.length), points: 50, tier: 4,
+    })),
+  },
   // ---------------- Прочее ----------------
   series("streak", "misc", "Серия входов", "gift", "bestStreak", [3, 7, 14, 30, 60], (n) => `Заходи ${n} дней подряд`),
   series("chests", "misc", "Сундуки дня", "ach-chests", "chests", [1, 7, 30, 100, 365], (n) => `Открой ${n} сундуков за задания дня`),

@@ -18,6 +18,7 @@ import { setMusicTrack, sfx, weaponSfx } from "../sound.ts";
 import { haptic } from "../telegram.ts";
 import { DriftingSky } from "../art/sky.tsx";
 import { BEATEN_BELOW, BossRig, hasBossRig } from "../art/boss-rig.tsx";
+import { PepeRig } from "../art/pepe-rig.tsx";
 import { Modal } from "../ui.tsx";
 import { talentThreshold, talentsForDamage } from "../../content/talents.ts";
 import { TalentWindow } from "./talents.tsx";
@@ -93,7 +94,7 @@ function Arena({ boss, hp, hpMax, endsAt, fx, hit, ouch, rug, feed, full: fullSc
     <div className={`arena ${boss.final ? "final" : ""} ${fullScreen ? "full" : ""}`} style={{ ["--acc" as string]: boss.theme.accent }}>
       <div className={`arena-photo ${hit ? "hit" : ""} ${ouch ? "ouch" : ""} ${rug ? "rug" : ""} ${hurt ? "hurt" : ""} ${dazed ? "dazed" : ""} ${strike ? `strike strike-${strike}` : ""} ${talk ? "talking" : ""}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        {hasBossRig(boss.id) ? <BossRig id={boss.id} hpShare={hp === null ? 1 : hp / Math.max(1, hpMax)} /> : boss.photo.full ? <img src={boss.photo.full} alt={boss.name} draggable={false} /> : <div className="arena-sil"><BossSilhouette accent={boss.theme.accent} /><span className="small muted">фото скоро</span></div>}
+        {boss.id === "pepe" ? <PepeRig className="boss-rig" sad={!!ouch} /> : hasBossRig(boss.id) ? <BossRig id={boss.id} hpShare={hp === null ? 1 : hp / Math.max(1, hpMax)} /> : boss.photo.full ? <img src={boss.photo.full} alt={boss.name} draggable={false} /> : <div className="arena-sil"><BossSilhouette accent={boss.theme.accent} /><span className="small muted">фото скоро</span></div>}
         <div className="arena-flash" />
         {hurt && !hasBossRig(boss.id) && <div className="arena-plasters" />}
       </div>
@@ -340,13 +341,15 @@ export function BossScreen({ id }: { id: string }) {
     try { const m = localStorage.getItem(`xc-mode-${id}`); if (m === "pacan" || m === "blat" || m === "avtor" || m === "solo") setPickRaw(m); } catch { /* storage blocked */ }
   }, [id]);
   const setPick = (m: FightMode | "solo") => { setPickRaw(m); try { localStorage.setItem(`xc-mode-${id}`, m); } catch { /* storage blocked */ } };
-  const soloPick = pick === "solo";
-  const mode: FightMode = soloPick ? "pacan" : pick;
+  // an event boss (Пепе) is fought only in «Пацанский», never «Соло»
+  const ev = !!boss?.event;
+  const soloPick = !ev && pick === "solo";
+  const mode: FightMode = soloPick || ev ? "pacan" : pick;
   // the mode pages: a swipe or the arrows go to the next / previous one (the slide comes from that side)
   const [slide, setSlide] = useState<"l" | "r" | null>(null);
   const goMode = (dir: 1 | -1) => {
     const i = MODE_ORDER.indexOf(mode) + dir;
-    if (i < 0 || i >= MODE_ORDER.length) return;
+    if (ev || i < 0 || i >= MODE_ORDER.length) return;
     haptic.tap();
     setSlide(dir > 0 ? "r" : "l");
     setPick(MODE_ORDER[i]);
@@ -394,6 +397,18 @@ export function BossScreen({ id }: { id: string }) {
   const myHits = useMemo(() => (details?.myHits ?? []).filter((h) => view && h.at >= view.startedAt), [details, view]);
 
   if (!boss) return <Empty>Такого босса нет</Empty>;
+  // an event boss is there only while the admin has the event on (a fight already started may still be finished)
+  if (ev && state && !fightId && !state.eventBosses?.includes(boss.id)) {
+    return (
+      <div className="fit-page" style={{ display: "grid", placeItems: "center", padding: 24 }}>
+        <div className="panel col center" style={{ gap: 10, maxWidth: 320 }}>
+          <b className="display">Ивент сейчас не идёт</b>
+          <span className="small muted">{boss.name} вернётся позже — следи за новостями.</span>
+          <Link className="btn gold block" href="/">На главную</Link>
+        </div>
+      </div>
+    );
+  }
   const otherFight = state?.fight && state.fight.bossId !== id ? state.fight : null;
   const limitLeft = row ? row.fightsPerDay - row.fightsToday : 1;
 
@@ -505,7 +520,7 @@ export function BossScreen({ id }: { id: string }) {
     const ok = await start(solo);
     if (!ok) setDoor("closed");
   };
-  const doorReward = { ...boss.reward, items: [...(boss.final ? [] : [{ id: `key-${boss.id}`, qty: 1 }]), ...(boss.reward.items ?? [])] };
+  const doorReward = { ...boss.reward, items: [...(boss.final || ev ? [] : [{ id: `key-${boss.id}`, qty: 1 }]), ...(boss.reward.items ?? [])] };
   return (
     <div className="fit-page door-page" style={{ ["--acc" as string]: boss.theme.accent }} onTouchStart={door === "closed" ? onTouchStart : undefined} onTouchEnd={door === "closed" ? onTouchEnd : undefined}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -519,7 +534,9 @@ export function BossScreen({ id }: { id: string }) {
           <img className="door-behind-bg" src={arenaOf(boss.id)} alt="" draggable={false} />
           {/* a boss that is not open yet stands there too, but grey */}
           <div className={`door-boss${grey ? " locked" : ""}`}>
-            {hasBossRig(boss.id) ? (
+            {boss.id === "pepe" ? (
+              <div className="pepe-door-boss"><PepeRig view={[180, 150, 820, 1341]} /></div>
+            ) : hasBossRig(boss.id) ? (
               <BossRig id={boss.id} />
             ) : boss.photo.full ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -544,7 +561,7 @@ export function BossScreen({ id }: { id: string }) {
           )}
         </div>
         {/* «Соло» (a fight alone) is only on the «Пацанский» page: a switch on the wall */}
-        {!locked && mode === "pacan" && (
+        {!locked && !ev && mode === "pacan" && (
           <div className="door-side">
             <button type="button" aria-pressed={soloPick} className={`door-word solo ${soloPick ? "on" : ""}`} disabled={door !== "closed"}
               onClick={() => { haptic.tap(); setPick(soloPick ? "pacan" : "solo"); }}
@@ -557,7 +574,7 @@ export function BossScreen({ id }: { id: string }) {
           </div>
         )}
         {/* the mode pages: their names on top, arrows at the sides (a swipe does the same) */}
-        {!locked && door === "closed" && (
+        {!locked && !ev && door === "closed" && (
           <>
             <div className="mode-pager" role="tablist" aria-label="Режим боя">
               {FIGHT_MODES.map((m, i) => (
@@ -577,6 +594,7 @@ export function BossScreen({ id }: { id: string }) {
           {/* the name above the window, the title under it, the rewards down the lower half — all on the door */}
           <b className="door-name display">{boss.name}</b>
           <span className="door-title">{boss.final ? `ФИНАЛ · ${boss.title}` : boss.title}</span>
+          {ev && <span className="door-event">ИВЕНТ</span>}
           <span className="door-plate">
             <b className="door-plate-title">{boss.final ? "ФИНАЛ" : "НАГРАДА"}</b>
             <GainLine r={doorReward} size={14} />
@@ -593,8 +611,8 @@ export function BossScreen({ id }: { id: string }) {
         {!blocked && door === "closed" && <span className="door-hint">Нажми на дверь</span>}
         <div className="door-flash" />
       </div>
-      {!locked && door === "closed" && mode !== "pacan" && <button type="button" className="mode-arrow l" onClick={() => goMode(-1)} aria-label="Предыдущий режим">‹</button>}
-      {!locked && door === "closed" && mode !== "avtor" && <button type="button" className="mode-arrow r" onClick={() => goMode(1)} aria-label="Следующий режим">›</button>}
+      {!locked && !ev && door === "closed" && mode !== "pacan" && <button type="button" className="mode-arrow l" onClick={() => goMode(-1)} aria-label="Предыдущий режим">‹</button>}
+      {!locked && !ev && door === "closed" && mode !== "avtor" && <button type="button" className="mode-arrow r" onClick={() => goMode(1)} aria-label="Следующий режим">›</button>}
       <div className="fight-bottom prefight-panel">
         <div className="tiny muted center mode-hint">
           {soloPick ? "Соло (бьёшь один): здоровье" : `${fightMode(mode).name}: здоровье`} {full(Math.round((row?.hpMax ?? boss.hp) * fightMode(mode).hp))}{BLASTS_ON ? ` · взрыв «${MEDAL_NAMES[fightMode(mode).medal]}»` : ""}{fightMode(mode).things ? " · падают вещи босса" : ""}{tattooSetsOfBoss(boss.id).some((t) => t.mode === mode) ? " · падают наколки" : ""}.

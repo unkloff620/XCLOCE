@@ -2,7 +2,7 @@ import { autoSpendTalents } from "./home.ts";
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, idempotent, itemQty, ledger, moscowDay, nextMoscowMidnight, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { MEDAL_POINT_EVERY } from "../../content/medals.ts";
-import { BLAT_THING_CHANCE, BOSSES, EXTRA_KEY_CHANCE, OPEN_BOSSES, bossById, bossOpen, keyId, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
+import { BLAT_THING_CHANCE, BOSSES, EVENT_FIGHTS, EXTRA_KEY_CHANCE, OPEN_BOSSES, bossById, bossOpen, keyId, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
 import { RUSH_PRICE, WEAPONS, itemById, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
 import { boostReward, mergeRewards, scaleReward } from "../../content/rewards.ts";
@@ -59,7 +59,7 @@ interface BossRow {
 }
 
 export async function ensureBosses(q: Queryable) {
-  for (const b of BOSSES) await q.query("INSERT INTO bosses (id) VALUES ($1) ON CONFLICT DO NOTHING", [b.id]);
+  for (const b of [...BOSSES, ...EVENT_FIGHTS]) await q.query("INSERT INTO bosses (id) VALUES ($1) ON CONFLICT DO NOTHING", [b.id]);
   await q.query("INSERT INTO bosses (id) VALUES ($1) ON CONFLICT DO NOTHING", [GLOBAL]);
 }
 
@@ -119,7 +119,7 @@ export function fightHp(f: Pick<FightRow, "hp_max" | "start_total" | "end_total"
 
 /** Boss N+1 opens after KEYS keys of boss N. */
 export async function isUnlocked(q: Queryable, pid: number, boss: BossDef, defaultKeys: number): Promise<boolean> {
-  if (boss.order === 1) return true;
+  if (boss.order === 1 || boss.event) return true;
   const prev = prevBoss(boss);
   if (!prev) return false;
   return (await itemQty(q, pid, keyId(prev.id))) >= keysNeeded(boss, defaultKeys);
@@ -142,7 +142,11 @@ export async function startFight(ctx: Ctx, bossId: string, solo = false, modeId:
   const mode = fightMode(modeId);
   const def = bossById(bossId);
   if (!def) throw new GameError("bad_boss", "Такого босса нет");
-  if (!bossOpen(def, ctx.cfg.bossOpen)) throw new GameError("boss_hidden", "Этот босс пока не пришёл");
+  if (def.event) {
+    // an event boss: only while the admin has him on, only «Пацанский», no «Соло»
+    if (!ctx.cfg.eventBosses[def.id]) throw new GameError("event_off", "Ивент сейчас не идёт");
+    if (modeId !== "pacan" || solo) throw new GameError("bad_mode", `С боссом ${def.name} — только «Пацанский»`);
+  } else if (!bossOpen(def, ctx.cfg.bossOpen)) throw new GameError("boss_hidden", "Этот босс пока не пришёл");
   await settleMyFight(ctx);
   const [active] = await ctx.q.query<{ id: number; boss_id: string }>("SELECT id, boss_id FROM fights WHERE player_id=$1 AND status='active'", [ctx.pid]);
   if (active) throw new GameError("fight_running", `Сначала закончи бой с боссом ${bossById(active.boss_id)?.name}`);
@@ -355,7 +359,7 @@ export async function claimFight(ctx: Ctx, fightId: number) {
   const drops = earnedKey ? (def.drop ?? []).filter((d) => ctx.rng() < d.chance).map((d) => ({ id: d.id, qty: d.qty })) : [];
   // the pass of this boss, and with EXTRA_KEY_CHANCE a second one
   const bonusKey = !def.final && earnedKey && ctx.rng() < EXTRA_KEY_CHANCE;
-  const key = def.final || !earnedKey ? [] : [{ id: keyId(def.id), qty: bonusKey ? 2 : 1 }];
+  const key = def.final || def.event || !earnedKey ? [] : [{ id: keyId(def.id), qty: bonusKey ? 2 : 1 }];
   // the boss's own things (clothes, rooms, first-win things) drop only in «Блатной»
   const mode = fightMode(f.mode);
   const things = earnedKey && mode.things;

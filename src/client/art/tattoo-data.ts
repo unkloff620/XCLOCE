@@ -2498,5 +2498,152 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
   "y": 1132.0,
   "w": 230.0,
   "h": 199.0
+ },
+ "tat-swamp-face": {
+  "part": "head",
+  "x": 467.0,
+  "y": 80.0,
+  "w": 135.0,
+  "h": 128.0
+ },
+ "tat-swamp-hand-r": {
+  "part": "handR",
+  "x": 644.5,
+  "y": 739.5,
+  "w": 115.0,
+  "h": 174.0
+ },
+ "tat-swamp-neck": {
+  "part": "upper",
+  "x": 398.0,
+  "y": 246.0,
+  "w": 203.0,
+  "h": 143.0
+ },
+ "tat-swamp-chest-l": {
+  "part": "upper",
+  "x": 340.0,
+  "y": 318.0,
+  "w": 163.0,
+  "h": 246.0
+ },
+ "tat-swamp-chest-r": {
+  "part": "upper",
+  "x": 499.0,
+  "y": 324.0,
+  "w": 162.0,
+  "h": 240.0
+ },
+ "tat-swamp-belly": {
+  "part": "upper",
+  "x": 372.0,
+  "y": 514.0,
+  "w": 259.0,
+  "h": 220.0
+ },
+ "tat-swamp-shoulder-l": {
+  "part": "upper",
+  "x": 230.0,
+  "y": 336.0,
+  "w": 139.0,
+  "h": 164.0
+ },
+ "tat-swamp-shoulder-r": {
+  "part": "upper",
+  "x": 633.0,
+  "y": 338.0,
+  "w": 145.0,
+  "h": 159.0
+ },
+ "tat-swamp-biceps-l": {
+  "part": "upper",
+  "x": 157.0,
+  "y": 440.0,
+  "w": 140.0,
+  "h": 134.0
+ },
+ "tat-swamp-biceps-r": {
+  "part": "upper",
+  "x": 709.0,
+  "y": 435.0,
+  "w": 144.0,
+  "h": 140.0
+ },
+ "tat-swamp-elbow-l": {
+  "part": "upper",
+  "x": 121.0,
+  "y": 536.0,
+  "w": 100.0,
+  "h": 118.0
+ },
+ "tat-swamp-elbow-r": {
+  "part": "upper",
+  "x": 781.0,
+  "y": 538.0,
+  "w": 105.0,
+  "h": 136.0
+ },
+ "tat-swamp-forearm-l": {
+  "part": "upper",
+  "x": 146.0,
+  "y": 631.0,
+  "w": 111.0,
+  "h": 119.0
+ },
+ "tat-swamp-forearm-r": {
+  "part": "upper",
+  "x": 705.0,
+  "y": 636.0,
+  "w": 138.0,
+  "h": 148.0
+ },
+ "tat-swamp-hand-l": {
+  "part": "upper",
+  "x": 228.0,
+  "y": 667.0,
+  "w": 186.0,
+  "h": 135.0
+ },
+ "tat-swamp-knee-l": {
+  "part": "torso",
+  "x": 90.0,
+  "y": 760.0,
+  "w": 249.0,
+  "h": 201.0
+ },
+ "tat-swamp-knee-r": {
+  "part": "torso",
+  "x": 662.0,
+  "y": 762.0,
+  "w": 253.0,
+  "h": 201.0
+ },
+ "tat-swamp-shin-l": {
+  "part": "torso",
+  "x": 129.0,
+  "y": 882.0,
+  "w": 217.0,
+  "h": 256.0
+ },
+ "tat-swamp-shin-r": {
+  "part": "torso",
+  "x": 652.0,
+  "y": 882.0,
+  "w": 226.0,
+  "h": 255.0
+ },
+ "tat-swamp-foot-l": {
+  "part": "torso",
+  "x": 130.0,
+  "y": 1134.0,
+  "w": 243.0,
+  "h": 181.0
+ },
+ "tat-swamp-foot-r": {
+  "part": "torso",
+  "x": 627.0,
+  "y": 1132.0,
+  "w": 238.0,
+  "h": 196.0
  }
 };

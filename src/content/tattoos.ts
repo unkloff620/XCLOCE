@@ -103,6 +103,8 @@ export const TATTOO_SETS: TattooSet[] = [
   solid("ring", "Ринг", "bebyakyan", "pacan", "fist", 120), solid("fire", "Огненный кулак", "bebyakyan", "avtor", "rug-pull-gun", 250),
   solid("izba", "Изба", "babafey", "pacan", "keyboard", 150), solid("firebird", "Жар-птица", "babafey", "avtor", "rug-pull-gun", 300),
   solid("jackpot", "Джекпот", "vodovoz", "pacan", "gpu", 200), solid("sunrise", "Восход", "vodovoz", "avtor", "rug-pull-gun", 400),
+  // Пепе (the event boss, content/bosses.ts EVENT_FIGHTS): one piece per win, «Пацанский» only
+  solid("swamp", "Болото", "pepe", "pacan", "rug-pull-gun", 300),
   boxSet("samurai", "Самурай", "rug-pull-gun", 300), boxSet("viking", "Викинг", "rug-pull-gun", 300), boxSet("inferno", "Преисподняя", "rug-pull-gun", 300),
 ];
 export const BOX_TATTOO_SETS = TATTOO_SETS.filter((s) => s.boss === "box");

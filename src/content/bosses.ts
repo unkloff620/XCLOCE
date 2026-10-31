@@ -36,6 +36,11 @@ export interface BossDef {
    * (a flat bonus like the weapon's talents, before the room and trophy %)
    */
   set?: { weapon: string; damage: number };
+  /**
+   * an event boss (EVENT_FIGHTS, not in the chain): fought only while the admin has him on («Ивенты», cfg.eventBosses),
+   * only in «Пацанский» (no other modes, no «Соло»), no pass needed and none given
+   */
+  event?: boolean;
 }
 
 /** Boss passes «Пропуск» (they used to be keys): the tier only sets the look and the name, every boss has its own card. */
@@ -119,7 +124,7 @@ export const BOSSES: BossDef[] = [
     story: "Солнце встаёт на востоке, а Восток встаёт раньше Солнца. Проверяет всех ещё до начала смены.",
     hp: hp(6), reward: { xp: xp(6), currencies: { USD: 16, RUB: 560 } },
     drop: [{ id: "energy-drink", qty: 3, chance: 0.4 }],
-    wear: { items: ["sweater-vostok", "pants-vostok", "headphones-vostok"], chance: 0.1, pity: 10 },
+    wear: { items: ["sweater-vostok", "pants-vostok", "headphones-vostok", "sneakers-black"], chance: 0.1, pity: 10 },
     theme: { a: "#0f3440", b: "#041217", accent: "#38d6ff" }, photo: photo("vodovoz", true, "3"),
     keysToUnlock: 1,
   },
@@ -187,7 +192,20 @@ export const OPEN_BOSSES = (over?: Record<string, boolean>): BossDef[] => BOSSES
 export const bossesIn = (ids?: string[] | null): BossDef[] => (ids ? BOSSES.filter((b) => ids.includes(b.id)) : OPEN_BOSSES());
 
 
-export const bossById = (id: string) => BOSSES.find((b) => b.id === id);
+/**
+ * Event bosses with a real fight (the same fights as the chain: the global damage, the weapons, the reward): not in
+ * BOSSES, so not in the boss list, the chain or the per-boss achievements. Пепе: art/pepe-rig.tsx, /event/pepe.
+ */
+export const EVENT_FIGHTS: BossDef[] = [
+  {
+    id: "pepe", order: 100, name: "Пепе", title: "Ивент-босс", event: true,
+    story: "Пришёл из болота и сел на чужую таблетку. Уходить не собирается, пока его не прогонят.",
+    hp: 250_000, reward: { xp: 100_000, currencies: { RUB: 15_000 } },
+    theme: { a: "#173d1f", b: "#06140a", accent: "#3ddc84" }, photo: { portrait: "/bosses/pepe/portrait.webp", full: null },
+    keysToUnlock: 0,
+  },
+];
+export const bossById = (id: string) => BOSSES.find((b) => b.id === id) ?? EVENT_FIGHTS.find((b) => b.id === id);
 /** the things of a boss's set (his wear list) */
 export const bossSetItems = (b: BossDef) => (b.set ? b.wear?.items ?? [] : []);
 /** «Дело» of a boss is closed: CASE_WINS wins over him and every thing of his set owned */

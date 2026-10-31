@@ -7,6 +7,7 @@ import { slotLevel } from "../../content/slots.ts";
 import { pokerLevel } from "../../content/games.ts";
 import { countersOf } from "./counters.ts";
 import { talentsForDamage } from "../../content/talents.ts";
+import { TATTOO_SETS, tattooSetOf } from "../../content/tattoos.ts";
 
 /** per-boss badges count only while the boss is in the game */
 const live = (cfg: Config) => ACHIEVEMENTS.filter((a) => !a.boss || (bossById(a.boss) && bossOpen(bossById(a.boss)!, cfg.bossOpen)));
@@ -91,7 +92,12 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
     [pid],
   );
   const slots = await q.query<{ outcome: string; n: number }>("SELECT outcome, COUNT(*)::int AS n FROM slot_spins WHERE player_id=$1 GROUP BY outcome", [pid]);
+  // the tattoo pieces owned, by set ("tatset:<set id>")
+  const ink = await q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id LIKE 'tat-%'", [pid]);
+  const tat: Record<string, number> = Object.fromEntries(TATTOO_SETS.map((s) => [`tatset:${s.id}`, 0]));
+  for (const r of ink) { const s = tattooSetOf(r.item_id); if (s) tat[`tatset:${s.id}`] += 1; }
   const third: Record<string, number> = {
+    ...tat,
     ...Object.fromEntries(slots.map((r) => [`slot:${r.outcome}`, Number(r.n)])),
     ...Object.fromEntries(got.map((r) => [`got:${r.key}`, Number(r.n)])),
     ...Object.fromEntries(fast.map((r) => [`fast:${r.boss_id}`, Number(r.n)])),

@@ -152,6 +152,20 @@ export const WEAR_FIT = {
     "y": 15.0,
     "w": 335,
     "h": 247
+  },
+  "cigarette": {
+    "slot": "MOUTH",
+    "x": 525.0,
+    "y": 248.0,
+    "w": 90,
+    "h": 56
+  },
+  "toothpick": {
+    "slot": "MOUTH",
+    "x": 523.5,
+    "y": 242.0,
+    "w": 87,
+    "h": 20
   }
 } as const;
 /** head things that cut the hair under them (the rest are worn over the hair) */

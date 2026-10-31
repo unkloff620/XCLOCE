@@ -6,7 +6,7 @@
 export interface EventBossDef { id: string; name: string; title: string; hp: number; portrait: string; href: string }
 
 export const EVENT_BOSSES: EventBossDef[] = [
-  { id: "pepe", name: "Пепе", title: "Ивент · пробный бой", hp: 250_000, portrait: "/bosses/pepe/portrait.webp", href: "/event/pepe" },
+  { id: "pepe", name: "Пепе", title: "Ивент-босс", hp: 250_000, portrait: "/bosses/pepe/portrait.webp", href: "/event/pepe" },
 ];
 
 export const eventBossById = (id: string) => EVENT_BOSSES.find((b) => b.id === id);

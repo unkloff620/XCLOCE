@@ -268,6 +268,19 @@ function Wear({ slot, hat }: { slot: string; hat?: "under" | "over" }) {
   return <image href={`/assets/hero/wear/${id}.webp?v=${ART_VER.wear}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
 }
 
+/** a lit cigarette in the mouth (slot «Рот»): smoke puffs rise from its tip */
+const SMOKE_AT: Record<string, [number, number]> = { cigarette: [611, 297] };
+function Smoke() {
+  const id = wornIn(useContext(WornCtx), "MOUTH");
+  const at = id ? SMOKE_AT[id] : null;
+  if (!at) return null;
+  return (
+    <g className="rig-smoke" pointerEvents="none">
+      {[0, 1, 2].map((i) => <circle key={i} cx={at[0]} cy={at[1]} r={7} style={{ animationDelay: `${i * 0.9}s` }} />)}
+    </g>
+  );
+}
+
 const NO_SKIN = new Set<string>(["pupils", "brows", "eyes-closed"]);
 
 function Img({ p }: { p: PartId }) {
@@ -421,6 +434,8 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
         <Ol>
           <Bone p="head" className="rig-head">
             <Face />
+            <Wear slot="MOUTH" />
+            <Smoke />
             <Wear slot="FACE" />
             <Wear slot="HEAD" hat="under" />
             <Hair />
@@ -458,6 +473,8 @@ export function RigViewport({ x, y, scale, seat, still, look, worn, seatOnly, ed
   const layers = useMemo(() => (edit?.onPick ? hitLayers(look ?? DEFAULT_LOOK, worn ?? {}) : []), [edit?.onPick, look, worn]);
   // the pictures' pixels are read once the editor opens, so the first tap is answered at once
   useEffect(() => { layers.forEach((l) => !l.rect && void alphaOf(l.href)); }, [layers]);
+  // the clothes / tattoo grid's tap map too (a picture loaded only when the editor opens)
+  useEffect(() => { if (edit?.mode === "ink" || edit?.mode === "items") void placeAt(edit.mode === "ink" ? "zone" : "slot", -1, -1); }, [edit?.mode]);
   const tap = async (e: ReactPointerEvent<SVGSVGElement>) => {
     const svg = ref.current;
     if (!svg || !edit?.onPick) return;

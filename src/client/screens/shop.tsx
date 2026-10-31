@@ -18,6 +18,7 @@ import { money } from "../format.ts";
 import { haptic } from "../telegram.ts";
 import { weaponStats } from "../weapon-stats.ts";
 import { ShopScene } from "./shop-scene.tsx";
+import { TATTOO_IDS } from "../../content/tattoos.ts";
 
 export interface ShopData { offers: Offer[]; exchange: { rub: Record<Currency, number>; fee: number; open?: boolean; until?: number } }
 
@@ -187,6 +188,7 @@ function Cards({ offers, batch }: { offers: Offer[]; batch: number }) {
 }
 
 /** a reward split into its parts, one tile each: currencies, authority, energy, every thing */
+const TATTOO_ID_SET = new Set(TATTOO_IDS);
 function lootParts(r: Granted): Granted[] {
   const one = (x: Partial<Granted>): Granted => ({ xp: 0, currencies: {}, items: [], energy: 0, ...x });
   const out: Granted[] = [];
@@ -209,12 +211,16 @@ function AchBoxWindow({ onClose }: { onClose: () => void }) {
   const [got, setGot] = useState<Granted | null>(null);
   const [gotN, setGotN] = useState(1);
   const b = state?.achBox ?? { points: 0, opened: 0, ready: 0, progress: 0, cost: ACH_BOX_COST };
-  const parts = useMemo(() => (got ? lootParts(got) : []), [got]);
+  // the tattoos go to the frame in the corner of the case, everything else comes out as tiles
+  const inkGot = useMemo(() => (got?.items ?? []).filter((it) => TATTOO_ID_SET.has(it.id)), [got]);
+  const parts = useMemo(() => (got ? lootParts({ ...got, items: (got.items ?? []).filter((it) => !TATTOO_ID_SET.has(it.id)) }) : []), [got]);
+  const inkDelay = 450 + parts.length * LOOT_STEP;
   useEffect(() => {
     if (phase !== "open" || !parts.length) return;
     const t = parts.map((_, i) => setTimeout(() => { haptic.tap(); sfx("coin"); }, 450 + i * LOOT_STEP));
+    if (inkGot.length) t.push(setTimeout(() => { haptic.big(); sfx("reward"); }, inkDelay));
     return () => t.forEach(clearTimeout);
-  }, [phase, parts]);
+  }, [phase, parts, inkGot, inkDelay]);
   const open = async (all = false) => {
     if (phase === "opening" || b.ready < 1) return;
     haptic.heavy();
@@ -240,6 +246,18 @@ function AchBoxWindow({ onClose }: { onClose: () => void }) {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="acx-open" src="/assets/shop/v2/case-front-open.webp" alt="" draggable={false} />
         <span className="acx-burst" />
+        {/* the tattoo frame, top left of the tray: «Пусто», or the tattoo that dropped (after the other things) */}
+        <div className="acx-ink" aria-label={inkGot.length ? `Наколка: ${itemById(inkGot[0].id)?.name ?? ""}` : "Наколки нет"}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="acx-ink-frame" src="/assets/ui/ink-frame.webp" alt="" draggable={false} />
+          {phase === "open" && (inkGot.length ? (
+            <span className="acx-ink-got" style={{ animationDelay: `${inkDelay}ms` }} title={itemById(inkGot[0].id)?.name}>
+              <ItemArt id={inkGot[0].id} size={44} />
+              {inkGot.length > 1 && <b className="num">+{inkGot.length - 1}</b>}
+            </span>
+          ) : <span className="acx-ink-empty">Пусто</span>)}
+          {phase !== "open" && <span className="acx-ink-empty dim">наколка</span>}
+        </div>
         <div className="acx-loot">
           {phase === "open" && parts.map((p, i) => (
             <span key={i} className="acx-item" style={{ animationDelay: `${450 + i * LOOT_STEP}ms` }}><RewardChips r={p} size={20} /></span>

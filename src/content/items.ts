@@ -95,6 +95,9 @@ const WEARABLES: ItemDef[] = ([
   { id: "cap-moon", name: "Чёрная кепка", slot: "HEAD", rarity: "rare", description: "Козырёк вперёд — курс на луну.", sources: ["Магазин", "Награда за локацию 2"] },
   { id: "santa-hat", name: "Новогодний колпак", slot: "HEAD", rarity: "epic", description: "Сезонный предмет.", sources: ["Новогодний ивент", "Награда за локацию 8"] },
   { id: "laser-eyes", name: "Лазерные глаза", slot: "FACE", rarity: "legendary", description: "Обязательный аксессуар биткоин-максималиста.", sources: ["Награда за локацию 5"] },
+  // «Рот» (slot MOUTH): drop from «Ящик ништяков» (content/ach-box.ts MOUTH_ITEMS)
+  { id: "cigarette", name: "Сигарета", slot: "MOUTH", rarity: "rare", description: "Дымится, пока ждёшь босса.", sources: ["Ящик ништяков"] },
+  { id: "toothpick", name: "Зубочистка", slot: "MOUTH", rarity: "rare", description: "Для тех, кто уже всё съел.", sources: ["Ящик ништяков"] },
   // held in the left hand (slot «Кисть»): the boss's own weapon, worn for the look
   { id: "bottle-komandate", name: "Бутылка Командате", slot: "HAND", rarity: "epic", description: "Оружие Командате: горит, но не гаснет. Герой держит её в руке.", sources: ["Победа: Командате"] },
   { id: "hand-drum", name: "Нервные пальцы", slot: "HAND", rarity: "rare", description: "Пальцы сами отбивают ритм по колену, пока график грузится.", sources: ["Победа: Кедр"] },
@@ -106,6 +109,7 @@ const WEARABLES: ItemDef[] = ([
   { id: "sweater-vostok", name: "Кофта Лудомана", slot: "SHIRT", rarity: "epic", description: "Ремни застёгнуты, ставки сделаны. Снял с Востока.", sources: ["Победа: Восток"] },
   { id: "pants-vostok", name: "Штаны Лудомана", slot: "PANTS", rarity: "epic", description: "Ремни на коленях, чтобы не убежать от автомата. Снял с Востока.", sources: ["Победа: Восток"] },
   { id: "headphones-vostok", name: "Наушники Лудомана", slot: "HEAD", rarity: "epic", description: "Чтобы не слышать, сколько уже проиграно. Снял с Востока.", sources: ["Победа: Восток"] },
+  { id: "sneakers-black", name: "Кроссовки Лудомана", slot: "SHOES", rarity: "epic", description: "Чёрные, на толстой подошве — чтобы до автомата и обратно. Снял с Востока.", sources: ["Победа: Восток"] },
   { id: "gold-chain", name: "Серебряная цепь", slot: "ACCESSORY", rarity: "epic", description: "Каждое звено — подтверждённый блок.", sources: ["Магазин", "Награда за локацию 3"] },
 ] as Omit<ItemDef, "category" | "maxStack">[]).map((w) => {
   // clothes a boss unlocks: the drop opens them in the shop, then they are bought there
