@@ -344,7 +344,7 @@ export function BossScreen({ id }: { id: string }) {
   // an event boss (Пепе) is fought only in «Пацанский», never «Соло»
   const ev = !!boss?.event;
   const soloPick = !ev && pick === "solo";
-  const mode: FightMode = soloPick || ev ? "pacan" : pick;
+  const mode: FightMode = ev || pick === "solo" ? "pacan" : pick;
   // the mode pages: a swipe or the arrows go to the next / previous one (the slide comes from that side)
   const [slide, setSlide] = useState<"l" | "r" | null>(null);
   const goMode = (dir: 1 | -1) => {
