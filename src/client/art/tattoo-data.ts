@@ -146,5 +146,152 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
   "y": 1195.0,
   "w": 98.0,
   "h": 78.0
+ },
+ "tat-king-face": {
+  "part": "head",
+  "x": 553.0,
+  "y": 141.0,
+  "w": 33.0,
+  "h": 35.0
+ },
+ "tat-king-neck": {
+  "part": "upper",
+  "x": 435.0,
+  "y": 266.0,
+  "w": 132.0,
+  "h": 86.0
+ },
+ "tat-king-chest-l": {
+  "part": "upper",
+  "x": 333.0,
+  "y": 348.0,
+  "w": 158.0,
+  "h": 188.0
+ },
+ "tat-king-chest-r": {
+  "part": "upper",
+  "x": 518.0,
+  "y": 353.0,
+  "w": 156.0,
+  "h": 182.0
+ },
+ "tat-king-belly": {
+  "part": "upper",
+  "x": 399.0,
+  "y": 548.0,
+  "w": 207.0,
+  "h": 149.0
+ },
+ "tat-king-shoulder-l": {
+  "part": "upper",
+  "x": 238.0,
+  "y": 349.0,
+  "w": 116.0,
+  "h": 101.0
+ },
+ "tat-king-shoulder-r": {
+  "part": "upper",
+  "x": 648.0,
+  "y": 348.0,
+  "w": 119.0,
+  "h": 106.0
+ },
+ "tat-king-biceps-l": {
+  "part": "upper",
+  "x": 171.0,
+  "y": 446.0,
+  "w": 95.0,
+  "h": 128.0
+ },
+ "tat-king-biceps-r": {
+  "part": "upper",
+  "x": 733.0,
+  "y": 450.0,
+  "w": 101.0,
+  "h": 134.0
+ },
+ "tat-king-elbow-l": {
+  "part": "upper",
+  "x": 122.0,
+  "y": 568.0,
+  "w": 46.0,
+  "h": 64.0
+ },
+ "tat-king-elbow-r": {
+  "part": "upper",
+  "x": 820.0,
+  "y": 568.0,
+  "w": 62.0,
+  "h": 74.0
+ },
+ "tat-king-forearm-l": {
+  "part": "upper",
+  "x": 148.0,
+  "y": 596.0,
+  "w": 114.0,
+  "h": 136.0
+ },
+ "tat-king-forearm-r": {
+  "part": "upper",
+  "x": 737.0,
+  "y": 638.0,
+  "w": 114.0,
+  "h": 141.0
+ },
+ "tat-king-hand-l": {
+  "part": "upper",
+  "x": 239.0,
+  "y": 728.0,
+  "w": 107.0,
+  "h": 92.0
+ },
+ "tat-king-hand-r": {
+  "part": "handR",
+  "x": 658.5,
+  "y": 742.5,
+  "w": 97.0,
+  "h": 119.0
+ },
+ "tat-king-knee-l": {
+  "part": "torso",
+  "x": 96.0,
+  "y": 788.0,
+  "w": 105.0,
+  "h": 129.0
+ },
+ "tat-king-knee-r": {
+  "part": "torso",
+  "x": 793.0,
+  "y": 791.0,
+  "w": 112.0,
+  "h": 133.0
+ },
+ "tat-king-shin-l": {
+  "part": "torso",
+  "x": 156.0,
+  "y": 893.0,
+  "w": 159.0,
+  "h": 289.0
+ },
+ "tat-king-shin-r": {
+  "part": "torso",
+  "x": 694.0,
+  "y": 888.0,
+  "w": 156.0,
+  "h": 291.0
+ },
+ "tat-king-foot-l": {
+  "part": "torso",
+  "x": 189.0,
+  "y": 1205.0,
+  "w": 101.0,
+  "h": 72.0
+ },
+ "tat-king-foot-r": {
+  "part": "torso",
+  "x": 711.0,
+  "y": 1206.0,
+  "w": 96.0,
+  "h": 74.0
  }
 };

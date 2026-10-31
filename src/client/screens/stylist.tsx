@@ -8,7 +8,7 @@ import { ITEMS, weaponById, type Slot } from "../../content/items.ts";
 import { HAIR_COLORS, HAIR_STYLES, type Look } from "../../content/home.ts";
 import { haptic } from "../telegram.ts";
 import type { RigEdit } from "../art/rig.tsx";
-import { TATTOO_SETS } from "../../content/tattoos.ts";
+import { TATTOO_MODE_NAME, TATTOO_SETS } from "../../content/tattoos.ts";
 import { bossById } from "../../content/bosses.ts";
 
 /*
@@ -115,7 +115,7 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
         const have = owned.has(p.id);
         return (
           <button key={p.id} className={`sty-item rar-epic ink-item ${inked.has(p.id) ? "on" : ""} ${have ? "" : "locked"}`} onClick={() => toggleInk(p.id)} disabled={!have}
-            title={have ? (inked.has(p.id) ? "Свести" : "Набить") : `Выпадает с ${bossById(s.boss)?.name} в «Пацанском»`}>
+            title={have ? (inked.has(p.id) ? "Свести" : "Набить") : `Выпадает с ${bossById(s.boss)?.name} в «${TATTOO_MODE_NAME[s.mode]}»`}>
             <ItemArt id={p.id} size={46} />
             <span className="sty-item-name">{have ? p.name : "???"}</span>
           </button>
@@ -130,7 +130,7 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
         return (
           <span key={s.id} className={`ink-set ${got === s.pieces.length ? "done" : ""}`}>
             <b>Сет «{s.name}»</b> <span className="num">{got}/{s.pieces.length}</span>
-            <small>с {bossById(s.boss)?.name} в «Пацанском» · весь сет: +{s.bonus.damage} к урону «{weaponById(s.bonus.weapon)?.name}»</small>
+            <small>с {bossById(s.boss)?.name} в «{TATTOO_MODE_NAME[s.mode]}» · весь сет: +{s.bonus.damage} к урону «{weaponById(s.bonus.weapon)?.name}»</small>
           </span>
         );
       })}

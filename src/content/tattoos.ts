@@ -34,7 +34,36 @@ export const TATTOO_SETS: TattooSet[] = [
       { id: "tat-ice-foot-r", name: "Снежный след (правая стопа)", part: "LEG_R" },
     ],
   },
+  {
+    id: "king", name: "Ледяной король", boss: "datsik", mode: "avtor", bonus: { weapon: "gpu", damage: 100 },
+    pieces: [
+      { id: "tat-king-face", name: "Ледяная корона на виске", part: "HEAD" },
+      { id: "tat-king-neck", name: "Корона из сосулек", part: "HEAD" },
+      { id: "tat-king-chest-l", name: "Снежный барс", part: "TORSO" },
+      { id: "tat-king-chest-r", name: "Ледяной дракон", part: "TORSO" },
+      { id: "tat-king-belly", name: "«Ледяной король»", part: "TORSO" },
+      { id: "tat-king-shoulder-l", name: "Ледяные кристаллы (левое плечо)", part: "SHOULDER_L" },
+      { id: "tat-king-shoulder-r", name: "Ледяные кристаллы (правое плечо)", part: "SHOULDER_R" },
+      { id: "tat-king-biceps-l", name: "Ледяной замок", part: "SHOULDER_L" },
+      { id: "tat-king-biceps-r", name: "Корона и меч", part: "SHOULDER_R" },
+      { id: "tat-king-elbow-l", name: "Ледяные соты (левый локоть)", part: "ARM_L" },
+      { id: "tat-king-elbow-r", name: "Ледяные соты (правый локоть)", part: "ARM_R" },
+      { id: "tat-king-forearm-l", name: "Замёрзшая роза", part: "ARM_L" },
+      { id: "tat-king-forearm-r", name: "Хвост дракона", part: "ARM_R" },
+      { id: "tat-king-hand-l", name: "Корона на кисти", part: "ARM_L" },
+      { id: "tat-king-hand-r", name: "Свернувшийся дракон", part: "HAND" },
+      { id: "tat-king-knee-l", name: "Кристальная розетка (левое колено)", part: "LEG_L" },
+      { id: "tat-king-knee-r", name: "Кристальная розетка (правое колено)", part: "LEG_R" },
+      { id: "tat-king-shin-l", name: "Ледопад (левая нога)", part: "LEG_L" },
+      { id: "tat-king-shin-r", name: "Ледопад (правая нога)", part: "LEG_R" },
+      { id: "tat-king-foot-l", name: "Ледяные шипы (левая стопа)", part: "LEG_L" },
+      { id: "tat-king-foot-r", name: "Ледяные шипы (правая стопа)", part: "LEG_R" },
+    ],
+  },
 ];
+
+/** the fight mode's name in the dropping text («в «Пацанском»») */
+export const TATTOO_MODE_NAME = { pacan: "Пацанском", blat: "Блатном", avtor: "Авторитетном" } as const;
 
 export const TATTOO_IDS = TATTOO_SETS.flatMap((s) => s.pieces.map((p) => p.id));
 export const tattooSetOf = (id: string) => TATTOO_SETS.find((s) => s.pieces.some((p) => p.id === id));
