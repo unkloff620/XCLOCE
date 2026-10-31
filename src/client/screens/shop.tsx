@@ -242,7 +242,7 @@ function AchBoxWindow({ onClose }: { onClose: () => void }) {
         <span className="acx-burst" />
         <div className="acx-loot">
           {phase === "open" && parts.map((p, i) => (
-            <span key={i} className="acx-item" style={{ animationDelay: `${450 + i * LOOT_STEP}ms` }}><RewardChips r={p} size={26} /></span>
+            <span key={i} className="acx-item" style={{ animationDelay: `${450 + i * LOOT_STEP}ms` }}><RewardChips r={p} size={20} /></span>
           ))}
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -255,16 +255,18 @@ function AchBoxWindow({ onClose }: { onClose: () => void }) {
           <b className="display">{b.ready > 0 ? (phase === "opening" ? "Открываем…" : "Нажми на кейс") : "Кейс закрыт"}</b>
         )}
         <span className="achbox-pts"><Icon name="sun" size={20} /><b className="num">{b.points}</b> очков · открыто: <b className="num">{b.opened}</b></span>
-        <span className="ach-bar" style={{ width: "100%", ["--p" as string]: `${Math.round((b.progress / b.cost) * 100)}%`, ["--c" as string]: "#ffcc33" }}>
-          <i /><span className="num">до следующего: {b.progress}/{b.cost}</span>
-        </span>
+        <div className="acx-row">
+          <span className="ach-bar" style={{ ["--p" as string]: `${Math.round((b.progress / b.cost) * 100)}%`, ["--c" as string]: "#ffcc33" }}>
+            <i /><span className="num">до следующего: {b.progress}/{b.cost}</span>
+          </span>
+          {b.ready > 1 && phase !== "opening" && (
+            <button className="acx-all num" disabled={busy === "ach_box_open"} onClick={() => { setPhase("closed"); void open(true); }} title="Открыть все кейсы сразу">×{b.ready}</button>
+          )}
+        </div>
         <span className="tiny acx-hint">
-          {phase === "open" ? (b.ready > 0 ? `Ещё кейсов: ${b.ready} — нажми на открытый, чтобы закрыть и открыть следующий` : "Нажми на кейс, чтобы закрыть")
-            : b.ready > 0 ? `Готово кейсов: ${b.ready}` : `Каждые ${b.cost} очков достижений — ещё один кейс (очки не тратятся). Нужно ещё ${b.cost - b.progress}.`}
+          {phase === "open" ? (b.ready > 0 ? `Ещё кейсов: ${b.ready} — нажми на кейс для следующего или ×${b.ready}, чтобы открыть все` : "Нажми на кейс, чтобы закрыть")
+            : b.ready > 0 ? (b.ready > 1 ? `Готово кейсов: ${b.ready} — ×${b.ready} откроет все сразу` : "Готов 1 кейс") : `Каждые ${b.cost} очков достижений — ещё один кейс (очки не тратятся). Нужно ещё ${b.cost - b.progress}.`}
         </span>
-        {b.ready > 1 && phase !== "opening" && (
-          <button className="btn green block" disabled={busy === "ach_box_open"} onClick={() => { setPhase("closed"); void open(true); }}>Открыть все · {b.ready}</button>
-        )}
       </div>
     </div>
   );

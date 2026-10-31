@@ -89,8 +89,7 @@ export function ShopScene({ onOpen, children, box, onBox }: {
       {onBox && (
         <button className={`sk-spot sk-box ${box && box.ready > 0 ? "ready" : ""}`} onClick={onBox} aria-label="Ящик ништяков" title="Ящик ништяков"
           style={{ left: `${ACH_BOX_AT.left}%`, top: `${ACH_BOX_AT.top}%`, width: `${ACH_BOX_AT.width}%`, height: `${ACH_BOX_AT.height}%` }}>
-          <AchCase ready={!!box && box.ready > 0} />
-          <span className="sk-tag bottom num">{box ? (box.ready > 0 ? `×${box.ready}` : `${box.progress}/${box.cost}`) : "Ящик"}</span>
+          <AchCase ready={!!box && box.ready > 0} label={box ? (box.ready > 0 ? `×${box.ready}` : `${box.progress}/${box.cost}`) : undefined} />
         </button>
       )}
       {spot("weapons")}

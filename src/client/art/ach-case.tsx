@@ -16,13 +16,14 @@ function L({ n, className }: { n: LayerId; className?: string }) {
   );
 }
 
-export function AchCase({ ready, className }: { ready?: boolean; className?: string }) {
+/** `label`: written on the lid (how many cases are ready) — it rides with the lid */
+export function AchCase({ ready, className, label }: { ready?: boolean; className?: string; label?: string }) {
   return (
     <span className={`ach-case ${ready ? "ready" : ""} ${className ?? ""}`} style={{ aspectRatio: CASE_ASPECT }} aria-hidden="true">
       <L n="inner" />
       {ready && <span className="ac-glow" />}
       <L n="base" />
-      <span className="ac-lid"><L n="lid" /></span>
+      <span className="ac-lid"><L n="lid" />{label && <b className="ac-label num">{label}</b>}</span>
       {ready && <span className="ac-leak" />}
       <L n="latch-l" className="ac-latch" />
       <L n="latch-r" className="ac-latch r" />

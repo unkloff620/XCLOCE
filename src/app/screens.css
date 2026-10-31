@@ -4131,7 +4131,12 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .modal-body > .upd-list { max-height: none; overflow: visible; margin-bottom: 8px; }
 
 /* the box on the counter is a third past the right edge: its number sits on the visible part */
-.sk-box .sk-tag.bottom { left: 50%; bottom: -2%; }
+.ach-case { container-type: inline-size; }
+/* the number on the lid: painted on the metal, in the lid's slant */
+.ac-label { position: absolute; left: 52%; top: 31%; transform: translate(-50%, -50%) rotate(-5deg) skewX(-18deg); pointer-events: none; white-space: nowrap;
+  font-family: var(--font-display), system-ui; font-weight: 900; font-size: 21cqw; line-height: 1; color: #fff; -webkit-text-stroke: 0.7cqw #1c1c22; paint-order: stroke fill;
+  text-shadow: 0 0.8cqw 0 #1c1c22, 0 1.5cqw 2.5cqw rgba(0, 0, 0, 0.5); }
+.ach-case.ready .ac-label { color: #fff3c4; text-shadow: 0 0.8cqw 0 #1c1c22, 0 0 4cqw rgba(255, 200, 60, 0.95); }
 /* «Достижения» in the dossier: the header, the toggle and the section tabs stay, only the list scrolls */
 .dos-inner:has(> .ach-panel) { overflow: hidden; display: flex; flex-direction: column; }
 .dos-inner > .ach-panel { flex: 1; min-height: 0; display: flex; flex-direction: column; }
@@ -4315,11 +4320,11 @@ body { background-attachment: fixed; }
 .achbox-case.shake { animation: achbox-shake 0.5s ease-in-out; }
 /* the case window (screens/shop.tsx AchBoxWindow): the case in the middle of the screen, closed → open, the loot comes out */
 .acx { position: fixed; inset: 0; z-index: 90; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
-  padding: 16px 16px calc(16px + var(--nav-h, 0px)); background: radial-gradient(ellipse at 50% 40%, rgba(40, 30, 20, 0.82), rgba(8, 6, 4, 0.94)); animation: acx-in 0.25s ease-out; }
+  padding: calc(var(--hud-h) + var(--safe-t) + 14px) 16px calc(var(--nav-h) + var(--safe-b, 0px) + 12px); background: radial-gradient(ellipse at 50% 40%, rgba(40, 30, 20, 0.82), rgba(8, 6, 4, 0.94)); animation: acx-in 0.25s ease-out; }
 @keyframes acx-in { from { opacity: 0; } }
-.acx-x { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: 14px; width: 36px; height: 36px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.35);
+.acx-x { position: absolute; top: calc(var(--hud-h) + var(--safe-t) + 10px); right: 14px; width: 36px; height: 36px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.35);
   background: rgba(0, 0, 0, 0.35); color: #fff; font-size: 16px; font-weight: 900; cursor: pointer; }
-.acx-case { position: relative; width: min(78vw, 320px, 42vh); aspect-ratio: 1072 / 1219; cursor: pointer; perspective: 900px; -webkit-tap-highlight-color: transparent; }
+.acx-case { position: relative; width: min(74vw, 300px, 38vh); aspect-ratio: 1072 / 1219; cursor: pointer; perspective: 900px; -webkit-tap-highlight-color: transparent; }
 .acx-case > img { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .acx-open { opacity: 0; transform-origin: 50% 100%; }
 .acx-closed { transform-origin: 50% 35.5%; filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.55)); }
@@ -4342,11 +4347,20 @@ body { background-attachment: fixed; }
 .acx-case.open .acx-burst { animation: acx-burst 1.1s ease-out 0.25s; }
 @keyframes acx-burst { 0% { opacity: 0; transform: scale(0.6); } 25% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0; transform: scale(1.3); } }
 /* the tray of the open case: the things come out one by one */
-.acx-loot { position: absolute; left: 14%; top: 44%; width: 72%; height: 35%; display: flex; flex-wrap: wrap; align-content: center; justify-content: center; gap: 6px; pointer-events: none; }
+.acx-loot { position: absolute; left: 14%; top: 44%; width: 72%; height: 35%; display: flex; flex-wrap: wrap; align-content: center; justify-content: center; gap: 4px 10px; pointer-events: none; }
 .acx-item { animation: acx-item 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) both; }
-.acx-item .chip { font-size: 15px; padding: 4px 9px; color: #1e1006; background: rgba(255, 246, 220, 0.95); box-shadow: 0 0 12px rgba(255, 210, 70, 0.75); }
+.acx-item .chip { font-size: 13px; padding: 1px 3px; color: #fff; background: none; border: 0; box-shadow: none; text-shadow: 0 1px 2px #000, 0 0 6px rgba(0, 0, 0, 0.8); }
+.acx-item .chip * { color: inherit; }
+.acx-item img, .acx-item svg { filter: drop-shadow(0 0 5px rgba(255, 210, 70, 0.7)); }
 @keyframes acx-item { from { opacity: 0; transform: translateY(40%) scale(0.3); } }
 .acx-info { width: min(100%, 340px); display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; color: #fff; }
 .acx-info .display { font-size: 20px; }
 .acx-info .achbox-pts { color: #ffe9a8; }
 .acx-hint { opacity: 0.8; min-height: 2.6em; }
+/* the progress to the next case and the [×N] button: opens every case waiting at once */
+.acx-row { display: flex; align-items: center; gap: 8px; width: 100%; }
+.acx-row .ach-bar { flex: 1; }
+.acx-all { flex: none; padding: 3px 10px; border-radius: 10px; border: 2px solid var(--line); background: linear-gradient(180deg, #5af0a0, #22b866); color: #0d2a18;
+  font: 900 14px/1.2 var(--font-display), system-ui; box-shadow: 0 2px 0 var(--line); cursor: pointer; }
+.acx-all:disabled { opacity: 0.6; }
+.acx-all:active { transform: translateY(1px); box-shadow: 0 1px 0 var(--line); }
