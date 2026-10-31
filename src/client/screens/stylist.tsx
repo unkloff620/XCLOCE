@@ -8,6 +8,7 @@ import { ITEMS, weaponById, type Slot } from "../../content/items.ts";
 import { HAIR_COLORS, HAIR_STYLES, type Look } from "../../content/home.ts";
 import { haptic } from "../telegram.ts";
 import { HeadArt, type RigEdit } from "../art/rig.tsx";
+import { ART_VER } from "../preload.ts";
 import { TATTOO_MODE_NAME, TATTOO_SETS, oneTattooPerZone, tattooZone } from "../../content/tattoos.ts";
 import { bossById } from "../../content/bosses.ts";
 
@@ -144,7 +145,10 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
         return (
           <button type="button" key={s.id} className={`ink-set ${got === s.pieces.length ? "done" : ""} ${got ? "" : "locked"}`} onClick={() => { haptic.tap(); setInkSet(s.id); }}
             title={`«${s.name}» · ${bossById(s.boss)?.name}, «${TATTOO_MODE_NAME[s.mode]}»`}>
-            <ItemArt id={s.pieces[2].id} size={44} />
+            {/* the set's main picture fills the tile; its name on top (two lines at most), the count bottom right */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="ink-set-pic" src={`/assets/hero/tattoo/${s.pieces[2].id}.webp?v=${ART_VER.tattoo}`} alt="" draggable={false} />
+            <span className="ink-set-name">{s.name}</span>
             <span className="ink-set-n num">{got}/{s.pieces.length}</span>
             {!got && <img className="ink-chain" src="/assets/ui/chain-lock.webp" alt="" draggable={false} />}
           </button>
