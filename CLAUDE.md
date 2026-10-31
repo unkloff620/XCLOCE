@@ -58,3 +58,8 @@ Every boss that has his own fight room (`BOSS_ARENAS` in `src/content/bosses.ts`
 that room to the players' homes right away: add a `ROOM_DEFS` entry in `src/content/home.ts` with
 `drop: { boss: "<id>", chance: ROOM_DROP_CHANCE }`, the picture as `tools/scene/source/room-<room id>.png`
 (run `python3 tools/scene/build-scene.py`), and its `ROOM_BG` / `ROOM_BACKDROP` / `ROOM_LIGHTS` lines in `src/content/home-scene.ts`.
+
+## Boss rewards by fight mode
+
+«Пацанский» — tattoos (a tattoo set, `src/content/tattoos.ts`, art by `tools/rig/build-tattoos.py`), «Блатной» — things (clothes, `wear` in `src/content/bosses.ts`),
+«Авторитетный» — tattoos. Every boss gets his own tattoo sets and things.
