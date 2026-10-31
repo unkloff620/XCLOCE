@@ -117,6 +117,20 @@ export const WEAR_FIT = {
     "y": 285.5,
     "w": 792,
     "h": 484
+  },
+  "santa-hat": {
+    "slot": "HEAD",
+    "x": 341.0,
+    "y": -30.5,
+    "w": 368,
+    "h": 226
+  },
+  "laser-eyes": {
+    "slot": "ACCESSORY",
+    "x": 339.5,
+    "y": 168.5,
+    "w": 330,
+    "h": 38
   }
 } as const;
 export const SKIN_ORIGINAL = 1;

@@ -69,7 +69,7 @@ def hair_recolor(im, target, ref):
 WEAR_SLOT = {"tee-white": "SHIRT", "tee-pump": "SHIRT", "jeans": "PANTS", "shorts-remote": "PANTS", "sneakers": "SHOES",
              "slippers": "SHOES", "gold-chain": "ACCESSORY", "cap-moon": "HEAD", "hoodie-hodl": "SHIRT",
              "jacket-komandate": "SHIRT", "pants-komandate": "PANTS", "sneakers-komandate": "SHOES",
-             "sweater-vostok": "SHIRT"}
+             "sweater-vostok": "SHIRT", "santa-hat": "HEAD", "laser-eyes": "ACCESSORY"}
 wear, hat_alpha = {}, {}
 for item, slot in WEAR_SLOT.items():
     a = np.array(Image.open(os.path.join(SRC, "wear", item + ".png")).convert("RGBA"))
@@ -79,13 +79,15 @@ for item, slot in WEAR_SLOT.items():
     for i in range(1, n):
         if st[i][4] < 400: al[lab_ == i] = 0
     a[al == 0, :3] = 0
+    # a canvas taller than 2800 has extra room on top (a tall hat above the rig canvas): its rows start that much higher
+    top = a.shape[0] - 2800
     ys, xs = np.nonzero(al)
-    x0, y0, x1, y1 = xs.min() - 4, ys.min() - 4, xs.max() + 5, ys.max() + 5
+    x0, y0, x1, y1 = max(0, xs.min() - 4), max(0, ys.min() - 4), xs.max() + 5, ys.max() + 5
     w, h = round((x1 - x0) * RIG_SCALE), round((y1 - y0) * RIG_SCALE)
     save(np.array(Image.fromarray(a[y0:y1, x0:x1]).resize((w, h), Image.LANCZOS)), os.path.join(OUT, "wear", item + ".webp"), 90)
-    wear[item] = {"slot": slot, "x": round(x0 * RIG_SCALE, 1), "y": round(y0 * RIG_SCALE, 1), "w": w, "h": h}
+    wear[item] = {"slot": slot, "x": round(x0 * RIG_SCALE, 1), "y": round((y0 - top) * RIG_SCALE, 1), "w": w, "h": h}
     if slot == "HEAD":
-        hat_alpha[item] = al > 128
+        hat_alpha[item] = (al > 128)[top:]
     print("wear", item, wear[item])
 
 
