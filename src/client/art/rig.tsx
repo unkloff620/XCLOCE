@@ -234,9 +234,11 @@ function wornIn(worn: Worn, slot: string): WearId | null {
 }
 
 /** a worn piece of clothing, if the item in that slot has art (the FACE slot is drawn on the head, over the eyes) */
-function Wear({ slot }: { slot: string }) {
+/** `hat`: a head thing — "under" the hair (headphones) or "over" it (hats that cut the hair, HAIR_CUT_HATS) */
+function Wear({ slot, hat }: { slot: string; hat?: "under" | "over" }) {
   const id = wornIn(useContext(WornCtx), slot);
   if (!id) return null;
+  if (hat && (hat === "over") !== HAIR_CUT_HATS.includes(id)) return null;
   const f = WEARS[id];
   return <image href={`/assets/hero/wear/${id}.webp?v=${ART_VER.wear}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
 }
@@ -395,8 +397,9 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
           <Bone p="head" className="rig-head">
             <Face />
             <Wear slot="FACE" />
+            <Wear slot="HEAD" hat="under" />
             <Hair />
-            <Wear slot="HEAD" />
+            <Wear slot="HEAD" hat="over" />
           </Bone>
         </Ol>
       </g>
