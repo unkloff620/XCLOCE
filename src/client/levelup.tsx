@@ -13,6 +13,9 @@ export function LevelUpOverlay() {
     if (!levelUp) return;
     sfx("levelup");
     haptic.big();
+    // after the fanfare: «Красавелла, брателла!»
+    const t = setTimeout(() => sfx("krasavella"), 750);
+    return () => clearTimeout(t);
   }, [levelUp]);
   // confetti: fixed per opening so re-renders do not reshuffle it
   const bits = useMemo(
