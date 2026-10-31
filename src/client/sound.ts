@@ -161,7 +161,7 @@ const SAMPLE_URLS = {
   // one voice for both: «Ништяк!» in a hoarse prison voice (a new achievement and a pumped biceps)
   nishtyak: "/assets/sound/nishtyak-4.mp3",
   wow: "/assets/sound/nishtyak-4.mp3",
-  nychka: "/assets/sound/nychka.mp3?v=2",
+  nychka: "/assets/sound/nychka.mp3?v=3",
 } as Record<string, string>;
 /** a hit sound per weapon (w-<weapon id>) and a pick-up sound per yard find (y-<drop id>): tools/sound/build-item-sounds.py */
 const WEAPON_SOUNDS = ["fist", "mouse", "keyboard", "red-candle", "gpu", "rug-pull-gun"];
