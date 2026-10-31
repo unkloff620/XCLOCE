@@ -9,7 +9,7 @@ import { HAIR_COLORS, HAIR_STYLES, type Look } from "../../content/home.ts";
 import { haptic } from "../telegram.ts";
 import { HeadArt, type RigEdit } from "../art/rig.tsx";
 import { ART_VER } from "../preload.ts";
-import { TATTOO_MODE_NAME, TATTOO_SETS, oneTattooPerZone, tattooZone } from "../../content/tattoos.ts";
+import { TATTOO_SETS, tattooSource, oneTattooPerZone, tattooZone } from "../../content/tattoos.ts";
 import { bossById } from "../../content/bosses.ts";
 
 /*
@@ -108,7 +108,7 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
     const have = owned.has(p.id);
     return (
       <button key={p.id} className={`sty-item rar-epic ink-item ${inked.has(p.id) ? "on" : ""} ${have ? "" : "locked"}`} onClick={() => toggleInk(p.id)} disabled={!have}
-        title={have ? (inked.has(p.id) ? "Свести" : "Набить") : `Выпадает с ${bossById(s.boss)?.name} в «${TATTOO_MODE_NAME[s.mode]}»`}>
+        title={have ? (inked.has(p.id) ? "Свести" : "Набить") : `Выпадает ${tattooSource(s, (b) => bossById(b)?.name)}`}>
         <ItemArt id={p.id} size={46} />
         <span className="sty-item-name">{have ? p.name : "???"}</span>
         {!have && <img className="ink-chain" src="/assets/ui/chain-lock.webp" alt="" draggable={false} />}
@@ -127,7 +127,7 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
           <button type="button" className="btn dark sm" onClick={() => { haptic.tap(); setInkSet(null); }}>‹</button>
           <span className="grow ink-open-t">
             <b>«{openSet.name}» <span className="num">{mine.length}/{openSet.pieces.length}</span></b>
-            <small>Падает с {bossById(openSet.boss)?.name} в «{TATTOO_MODE_NAME[openSet.mode]}» · весь сет: +{openSet.bonus.damage} к урону «{weaponById(openSet.bonus.weapon)?.name}»</small>
+            <small>Падает {tattooSource(openSet, (b) => bossById(b)?.name)} · весь сет: +{openSet.bonus.damage} к урону «{weaponById(openSet.bonus.weapon)?.name}»</small>
           </span>
           {all ? (
             <button type="button" className="btn dark sm" onClick={() => setInk([...inked].filter((t) => !openSet.pieces.some((p) => p.id === t)))}>Свести все</button>
@@ -144,7 +144,7 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
         const got = s.pieces.filter((p) => owned.has(p.id)).length;
         return (
           <button type="button" key={s.id} className={`ink-set ${got === s.pieces.length ? "done" : ""} ${got ? "" : "locked"}`} onClick={() => { haptic.tap(); setInkSet(s.id); }}
-            title={`«${s.name}» · ${bossById(s.boss)?.name}, «${TATTOO_MODE_NAME[s.mode]}»`}>
+            title={`«${s.name}» · ${tattooSource(s, (b) => bossById(b)?.name)}`}>
             {/* the set's main picture fills the tile; its name on top (two lines at most), the count bottom right */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="ink-set-pic" src={`/assets/hero/tattoo/set-${s.id}.webp?v=${ART_VER.tattoo}`} alt="" draggable={false} />

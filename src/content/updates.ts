@@ -17,6 +17,15 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-10-31-box-tattoos",
+    date: "31 октября",
+    title: "Наколки в Ящике ништяков",
+    items: [
+      { img: "/assets/updates/2026-10-31-box-tattoos.webp", text: "Три новых сета: «Самурай», «Викинг» и «Преисподняя». Они не падают с боссов — только из Ящика ништяков за очки достижений." },
+      { text: "Каждый открытый ящик с шансом 20% даёт случайную наколку, которой у тебя ещё нет. Полный сет — +300 к Rug Pull Gun." },
+    ],
+  },
+  {
     id: "2026-10-31-tattoo-sets",
     date: "31 октября",
     title: "Наколки со всех боссов",

@@ -78,7 +78,7 @@ ZONE_CENTRES = {
     "hand-l": ((300, 760), "upper"), "knee-l": ((160, 840), "torso"), "knee-r": ((840, 840), "torso"),
     "shin-l": ((230, 1030), "torso"), "shin-r": ((770, 1030), "torso"), "foot-l": ((230, 1240), "torso"), "foot-r": ((765, 1240), "torso"),
 }
-SOLID = ["taiga", "roots", "shark", "kraken", "cash", "gold", "ring", "fire", "izba", "firebird", "jackpot", "sunrise"]
+SOLID = ["taiga", "roots", "shark", "kraken", "cash", "gold", "ring", "fire", "izba", "firebird", "jackpot", "sunrise", "samurai", "viking", "inferno"]
 _body = np.array(Image.open(os.path.join(ROOT, "tools", "rig", "source", "v2", "torso.png")).convert("RGBA").resize((1000, 1400), Image.LANCZOS))[..., 3] > 20
 UPPER_BODY = np.array(Image.open(os.path.join(ROOT, "tools", "rig", "source", "v2", "body.png")).convert("RGBA").resize((1000, 1400), Image.LANCZOS))[..., 3] > 40
 _yy, _xx = np.mgrid[0:1400, 0:1000]

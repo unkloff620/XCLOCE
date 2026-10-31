@@ -89,6 +89,10 @@ const solid = (id: string, name: string, boss: string, mode: TattooSet["mode"], 
   id, name, boss, mode, bonus: { weapon, damage },
   pieces: ZONES.map(([z, place, part]) => ({ id: `tat-${id}-${z}`, name: `${name}: ${place}`, part })),
 });
+/** sets from «Ящик ништяков» (boss "box"): a box opened for achievement points drops a piece with BOX_TATTOO_CHANCE */
+export const BOX_TATTOO_CHANCE = 0.2;
+const boxSet = (id: string, name: string, weapon: string, damage: number): TattooSet => ({ ...solid(id, name, "box", "pacan", weapon, damage) });
+
 export const TATTOO_SETS: TattooSet[] = [
   ...DATSIK_SETS,
   solid("taiga", "Тайга", "kedr", "pacan", "mouse", 60), solid("roots", "Корни", "kedr", "avtor", "gpu", 120),
@@ -97,7 +101,12 @@ export const TATTOO_SETS: TattooSet[] = [
   solid("ring", "Ринг", "bebyakyan", "pacan", "fist", 120), solid("fire", "Огненный кулак", "bebyakyan", "avtor", "rug-pull-gun", 250),
   solid("izba", "Изба", "babafey", "pacan", "keyboard", 150), solid("firebird", "Жар-птица", "babafey", "avtor", "rug-pull-gun", 300),
   solid("jackpot", "Джекпот", "vodovoz", "pacan", "gpu", 200), solid("sunrise", "Восход", "vodovoz", "avtor", "rug-pull-gun", 400),
+  boxSet("samurai", "Самурай", "rug-pull-gun", 300), boxSet("viking", "Викинг", "rug-pull-gun", 300), boxSet("inferno", "Преисподняя", "rug-pull-gun", 300),
 ];
+export const BOX_TATTOO_SETS = TATTOO_SETS.filter((s) => s.boss === "box");
+/** where a set's pieces drop, in words: «с Дацкоу в «Пацанском»» / «из Ящика ништяков» */
+export const tattooSource = (s: TattooSet, bossName: (id: string) => string | undefined) =>
+  s.boss === "box" ? "из Ящика ништяков (шанс 20%)" : `с ${bossName(s.boss) ?? s.boss} в «${TATTOO_MODE_NAME[s.mode]}»`;
 
 export const TATTOO_IDS = TATTOO_SETS.flatMap((s) => s.pieces.map((p) => p.id));
 export const tattooSetOf = (id: string) => TATTOO_SETS.find((s) => s.pieces.some((p) => p.id === id));
