@@ -3,6 +3,7 @@
 import { CHARACTER, HERO_HOT, ROOM_BG, ROOM_LIGHTS, ROOM_RGB, ROOM_SKY, SCENE, SCENE_HOT, SCENE_OBJECTS } from "../../content/home-scene.ts";
 import { RigViewport, type RigEdit, type Worn } from "./rig.tsx";
 import { ART_ASPECT } from "./desk-data.ts";
+import { usedUrl } from "../preload.ts";
 import { placedArt, placedOf, type Look } from "../../content/home.ts";
 
 type ObjId = keyof typeof SCENE_OBJECTS;
@@ -11,7 +12,7 @@ type ObjId = keyof typeof SCENE_OBJECTS;
 function Obj({ id, art }: { id: ObjId; art: string }) {
   const o = SCENE_OBJECTS[id];
   const h = o.w * (ART_ASPECT[art] ?? o.aspect);
-  const src = `/assets/home/${art}.webp`;
+  const src = usedUrl(`/assets/home/${art}.webp`);
   const y = o.y + o.w * o.aspect - h;
   return o.flip ? (
     <g transform={`translate(${o.x + o.w} ${y}) scale(-1 1)`}>

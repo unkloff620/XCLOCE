@@ -1,4 +1,5 @@
 "use client";
+import { usedUrl } from "../preload.ts";
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { useGame } from "../store.tsx";
@@ -106,7 +107,7 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose }: { draft: R
     const k = e.multi ? [3, 2, 1].find((n) => (v & (1 << (n - 1))) !== 0) ?? 0 : v;
     const art = k > 0 ? e.pieces![k - 1].art : e.base!.art;
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={`/assets/home/${art}.webp`} alt="" draggable={false} />;
+    return <img src={usedUrl(`/assets/home/${art}.webp`)} alt="" draggable={false} />;
   };
 
   const e = tab === "rgb" ? null : equipmentById(tab)!;
