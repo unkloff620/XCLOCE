@@ -223,8 +223,8 @@ h2.h { margin: 4px 2px 8px; font-size: 16px; text-shadow: 0 2px 0 var(--line); }
 .hud-tog.off { color: var(--muted); opacity: 0.75; }
 
 /* ---------- loading screen between sections (src/client/route-loader.tsx): grey screen, a spinner, no text ---------- */
-.route-loader { position: fixed; inset: 0; z-index: 85; display: grid; place-items: center; background: rgba(14, 9, 5, 0.45);
-  -webkit-backdrop-filter: grayscale(1) brightness(0.6); backdrop-filter: grayscale(1) brightness(0.6); animation: fade 0.15s ease; }
+/* opaque: the next page is not seen until its data and pictures are in (the bottom menu and the top bar stay over it) */
+.route-loader { position: fixed; inset: 0; z-index: 35; display: grid; place-items: center; background: var(--tex, none), #140d08; animation: fade 0.12s ease; }
 .route-spin { width: 54px; height: 54px; border-radius: 50%; border: 5px solid rgba(255, 243, 227, 0.18); border-top-color: var(--gold, #ffcc33);
   box-shadow: 0 0 18px rgba(255, 204, 51, 0.25); animation: route-spin 0.8s linear infinite; }
 @keyframes route-spin { to { transform: rotate(360deg); } }

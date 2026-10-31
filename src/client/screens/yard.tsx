@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState, type TouchEvent } from "react";
+import { usePageReady } from "../route-loader.tsx";
 import { tasksReady, useGame, useNow } from "../store.tsx";
 import { api } from "../api.ts";
 import { YARD_SPOTS } from "../art/scenes.tsx";
@@ -29,6 +30,7 @@ export function YardScreen() {
   const { state, act } = useGame();
   const now = useNow();
   const [data, setData] = useState<YardData | null>(null);
+  usePageReady(!!data);
   // picked finds vanish at once (several can be picked in a row); what each gave floats up where it lay, like a pigeon's roubles
   const [gone, setGone] = useState<Set<number>>(() => new Set());
   const [gains, setGains] = useState<{ key: number; x: number; y: number; r: Granted }[]>([]);

@@ -2,6 +2,7 @@
 import { BLASTS_ON, FIGHT_MODES, MEDAL_NAMES, MEDAL_SET, medalBonus, medalStep, medalWeapon } from "../../content/medals.ts";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { usePageReady } from "../route-loader.tsx";
 import { useCallback, useEffect, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { api, type Tray } from "../api.ts";
@@ -27,13 +28,17 @@ export interface BossRow {
 }
 export interface BossListData { resetAt: number; bosses: BossRow[]; weapons: Tray[]; now: number }
 
+/** the last boss list: a repeat visit shows it at once while a fresh one loads */
+let lastList: BossListData | null = null;
 export function useBossList() {
-  const [data, setData] = useState<BossListData | null>(null);
+  const [data, setData] = useState<BossListData | null>(lastList);
   const load = useCallback(async () => {
     // a phone on a weak network may drop the first request: try again a few times before giving up
     for (let attempt = 0; attempt < 4; attempt++) {
       try {
-        setData(await api.get<BossListData>("/api/bosses"));
+        const d = await api.get<BossListData>("/api/bosses");
+        lastList = d;
+        setData(d);
         return;
       } catch {
         await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
@@ -59,6 +64,7 @@ export function BossesScreen() {
   const router = useRouter();
   const now = useNow();
   const { data, load } = useBossList();
+  usePageReady(!!data);
   useEffect(() => {
     void load();
   }, [state?.fight?.id, state?.pending.length, load]);

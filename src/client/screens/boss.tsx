@@ -25,6 +25,7 @@ import { weaponStats } from "../weapon-stats.ts";
 import { BOXERS, useBossStrike } from "../fx/boss-strike.tsx";
 import { BLASTS_ON, FIGHT_MODES, MEDAL_NAMES, MEDAL_SET, fightMode, medalBonus, medalStep, medalWeapon, type FightMode } from "../../content/medals.ts";
 import { BlastIcon } from "../art/blast.tsx";
+import { usePageReady } from "../route-loader.tsx";
 import { tattooSetsOfBoss } from "../../content/tattoos.ts";
 
 /**
@@ -186,6 +187,7 @@ export function BossScreen({ id }: { id: string }) {
   const boss = bossById(id);
   const { state, act, busy, refresh, toast } = useGame();
   const { data: list, load: loadList } = useBossList();
+  usePageReady(!!list);
   const now = useNow();
   const [view, setView] = useState<FightView | null>(null);
   const [tray, setTray] = useState<Tray[]>([]);

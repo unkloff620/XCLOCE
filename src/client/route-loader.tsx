@@ -1,6 +1,18 @@
 "use client";
 import { useEffect, useState } from "react";
 
+/** pages still waiting for their data (usePageReady): the loading screen stays until every one is ready */
+const waiting = new Set<symbol>();
+/** a page says whether its data is in; while not, a section change keeps its loading screen up */
+export function usePageReady(ready: boolean) {
+  useEffect(() => {
+    if (ready) return;
+    const k = Symbol("page");
+    waiting.add(k);
+    return () => { waiting.delete(k); };
+  }, [ready]);
+}
+
 /*
  * A short loading screen between sections: the screen goes grey and a spinner turns in the middle, no text.
  * Shown for at least MIN_MS (half a second) so the next place has time to draw its pictures; it stays a little longer
@@ -10,7 +22,7 @@ import { useEffect, useState } from "react";
  */
 
 const MIN_MS = 500;
-const MAX_MS = 4000;
+const MAX_MS = 9000;
 
 let listener: ((from: string) => void) | null = null;
 /** start the loading screen for a navigation that is about to happen */
@@ -22,7 +34,7 @@ export function startRouteLoad() {
 function wantsLoader(a: HTMLAnchorElement, path: string): boolean {
   // the open tab of the bottom menu steps back inside its section — Nav starts the loader itself then
   if (a.closest(".nav")) return !a.classList.contains("on");
-  return ["/locations", "/yard", "/shop", "/exchange"].some((p) => path === p || path.startsWith(p + "/"));
+  return ["/locations", "/yard", "/shop", "/exchange", "/bosses", "/rating", "/clans", "/inventory"].some((p) => path === p || path.startsWith(p + "/"));
 }
 
 /** waits until the pictures on the screen are decoded (or the time runs out) */
@@ -72,7 +84,10 @@ export function RouteLoader() {
       await wait(MIN_MS);
       // the new page is in place (the address changed), or the navigation never happened
       while (alive && window.location.pathname === load.from && left() > 0) await wait(50);
-      await wait(30); // let the new screen put its pictures in
+      // the new page's data (the boss list…), then its pictures (the cards drawn from that data)
+      await wait(30);
+      while (alive && waiting.size > 0 && left() > 0) await wait(50);
+      await wait(60); // let the new screen put its pictures in
       if (left() > 0) await picturesReady(left());
       if (alive) setLoad(null);
     })();

@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { usePageReady } from "../route-loader.tsx";
 import { useCallback, useEffect, useState } from "react";
 import { liveEnergy, useGame, useNow } from "../store.tsx";
 import { api, type Granted } from "../api.ts";
@@ -178,6 +179,7 @@ interface StashMeter { energy: number; pity: number }
 
 function useLocations() {
   const [rows, setRows] = useState<LocRow[] | null>(null);
+  usePageReady(!!rows);
   const [meter, setMeter] = useState<StashMeter | null>(null);
   const load = useCallback(async () => {
     try {

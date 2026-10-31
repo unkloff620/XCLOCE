@@ -237,6 +237,22 @@ function Loading({ prog, overlay }: { prog?: LoadProgress; overlay?: boolean }) 
 }
 
 /**
+ * Once per device: empty the browser's cache of the game (/api/cache-reset) — the boss pages were cached for a day by
+ * mistake and an old release of them kept coming back. The art download waits for it, so it is not wiped afterwards.
+ */
+const CACHE_RESET = "xc-cache-reset-1";
+let cacheReset: Promise<void> | null = null;
+function resetCacheOnce(): Promise<void> {
+  if (cacheReset) return cacheReset;
+  let done = false;
+  try { done = localStorage.getItem(CACHE_RESET) === "1"; } catch { done = true; }
+  cacheReset = done ? Promise.resolve() : fetch("/api/cache-reset", { cache: "no-store" })
+    .then(() => { try { localStorage.setItem(CACHE_RESET, "1"); } catch { /* storage blocked */ } })
+    .catch(() => undefined);
+  return cacheReset;
+}
+
+/**
  * First entry: the game shows once the hero, the interface and the home are downloaded (only the player's own hero
  * variants); the rest of the pictures follow in the background, three at a time, so the sections open at once later.
  */
@@ -247,10 +263,12 @@ function useArtReady(look: LookLite | null, room: string, active: boolean) {
   useEffect(() => {
     if (!active || started.current) return;
     started.current = true;
-    void preload(entryUrls(look, mskDay(Date.now()), room), (n, total, url) => setProg((p) => ({ n, total, url: url ?? p.url }))).then(() => {
-      setReady(true);
-      setTimeout(() => void preload(laterUrls(look), undefined, 3), 1500);
-    });
+    void resetCacheOnce()
+      .then(() => preload(entryUrls(look, mskDay(Date.now()), room), (n, total, url) => setProg((p) => ({ n, total, url: url ?? p.url }))))
+      .then(() => {
+        setReady(true);
+        setTimeout(() => void preload(laterUrls(look), undefined, 3), 1500);
+      });
   }, [active, look]);
   return { ready, prog };
 }
