@@ -11,9 +11,9 @@
 export type Sfx = "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" | "upgrade" | "levelup" | "error" | "win" | "step" | "door" | "locked"
   /* mini-games: dice in the cup and on the table, a card flip, a deal, poker chips, a squashed roach, a zonk */
   | "shake" | "dice" | "card" | "deal" | "chips" | "splat" | "zonk"
-  /* a profile: «Ништяк!» for a pumped biceps (public/assets/sound/nishtyak-3.mp3, a hoarse prison voice), a spit, a fist fight */
+  /* a profile: «Ништяк!» for a pumped biceps (public/assets/sound/nishtyak-4.mp3, a hoarse prison voice), a spit, a fist fight */
   | "nishtyak" | "spit" | "brawl"
-  /* a new achievement: «Ништяк!» (the same voice as for the biceps, public/assets/sound/nishtyak-3.mp3) */
+  /* a new achievement: «Ништяк!» (the same voice as for the biceps, public/assets/sound/nishtyak-4.mp3) */
   | "wow"
   /* «Личное дело»: a sheet of paper turned over */
   | "page";
@@ -157,8 +157,8 @@ const SAMPLE_URLS = {
   match: "/assets/sound/match.mp3",
   bars: "/assets/sound/bars.mp3",
   // one voice for both: «Ништяк!» in a hoarse prison voice (a new achievement and a pumped biceps)
-  nishtyak: "/assets/sound/nishtyak-3.mp3",
-  wow: "/assets/sound/nishtyak-3.mp3",
+  nishtyak: "/assets/sound/nishtyak-4.mp3",
+  wow: "/assets/sound/nishtyak-4.mp3",
 } as Record<string, string>;
 /** a hit sound per weapon (w-<weapon id>) and a pick-up sound per yard find (y-<drop id>): tools/sound/build-item-sounds.py */
 const WEAPON_SOUNDS = ["fist", "mouse", "keyboard", "red-candle", "gpu", "rug-pull-gun"];
