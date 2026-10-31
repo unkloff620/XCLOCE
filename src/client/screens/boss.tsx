@@ -511,7 +511,7 @@ export function BossScreen({ id }: { id: string }) {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="door-backdrop" src={`/assets/door/room${MODE_ART[mode]}.webp`} alt="" aria-hidden="true" draggable={false} />
       <div className="door-help"><BossRulesHelp topic="boss" bossId={boss.id} /></div>
-      <div key={mode} className={`door-scene ${door} ${slide ? `slide-${slide}` : ""}`}>
+      <div key={mode} className={`door-scene mode-${mode} ${door} ${slide ? `slide-${slide}` : ""}`}>
         {/* behind the door: the boss's own background and the boss himself */}
         <div className="door-behind">
           <DriftingSky className="fight-sky" />

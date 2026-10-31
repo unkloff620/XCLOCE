@@ -1107,12 +1107,14 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .door-scene.open .door-leaf, .door-scene.enter .door-leaf { transform: rotateY(-102deg); filter: brightness(0.7); }
 .door-scene.rattle .door-leaf { animation: door-rattle 0.42s ease-in-out; }
 @keyframes door-rattle { 20% { transform: translateX(-1.2%) rotateY(-2deg); } 40% { transform: translateX(1%); } 60% { transform: translateX(-0.8%) rotateY(-1deg); } 80% { transform: translateX(0.5%); } }
-/* written on the door: name above the window (window y 23.6–33.4%), title under it, rewards in a column on the lower half */
+/* written on the door: name above the window (window y 24.1–33.8%), title under it, rewards under the handle (y ≈39–47%);
+   the «Блатной» door hangs 1.5% lower (door-blat.webp: window y 25.6–35.2%) */
+.door-scene.mode-blat { --door-dy: 1.5%; }
 .door-name, .door-title, .door-plate { position: absolute; left: 34%; width: 34%; text-align: center; pointer-events: none; color: #fff3e3;
   text-shadow: 0 1px 0 #000, 0 0 4px rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.7); }
-.door-name { top: 18.6%; font-size: 5.2cqw; line-height: 1.05; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 0.02em; }
-.door-title { top: 34.3%; font-size: 2.5cqw; line-height: 1.2; font-weight: 700; color: #f1d9b8; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.door-plate { top: 43.5%; display: flex; flex-direction: column; align-items: center; gap: 0.6cqw; }
+.door-name { top: calc(18.6% + var(--door-dy, 0%)); font-size: 5.2cqw; line-height: 1.05; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 0.02em; }
+.door-title { top: calc(34.3% + var(--door-dy, 0%)); font-size: 2.5cqw; line-height: 1.2; font-weight: 700; color: #f1d9b8; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.door-plate { top: calc(49.5% + var(--door-dy, 0%)); display: flex; flex-direction: column; align-items: center; gap: 0.6cqw; }
 .door-plate-title { font-size: 2.6cqw; letter-spacing: 0.14em; color: var(--gold); }
 .door-plate .gain-line { display: flex; flex-direction: column; align-items: center; gap: 0.5cqw; }
 .door-plate .gain { font-size: 3.1cqw; gap: 1cqw; }
