@@ -264,3 +264,9 @@ h2.h { margin: 4px 2px 8px; font-size: 16px; text-shadow: 0 2px 0 var(--line); }
 .leaders-online { display: inline-flex; align-items: center; gap: 3px; margin-left: 2px; color: #2ee88a; font-style: normal; }
 .leaders-online i { width: 7px; height: 7px; border-radius: 50%; background: #2ee88a; box-shadow: 0 0 4px #2ee88a; }
 
+/* «Инвентарь» for now: greyed, «Скоро» on it, not a link */
+.nav .nav-soon { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px 0; border-radius: 14px; cursor: default; -webkit-tap-highlight-color: transparent; }
+.nav .nav-soon > img, .nav .nav-soon > svg, .nav .nav-soon > span:not(.nav-soon-tag) { filter: grayscale(1) brightness(0.55); }
+.nav .nav-soon-tag { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-12deg); padding: 1px 6px; border-radius: 6px; border: 2px solid #1c120a;
+  background: #ffcc33; color: #2e1c00; font: 900 11px/1.2 var(--font-display), system-ui; font-style: normal; text-transform: uppercase; letter-spacing: 0.04em; box-shadow: 0 2px 0 #1c120a; pointer-events: none; }
+.nav .nav-soon svg { width: 46px; height: 46px; }
