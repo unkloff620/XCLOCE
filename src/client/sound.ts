@@ -11,9 +11,9 @@
 export type Sfx = "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" | "upgrade" | "levelup" | "error" | "win" | "step" | "door" | "locked"
   /* mini-games: dice in the cup and on the table, a card flip, a deal, poker chips, a squashed roach, a zonk */
   | "shake" | "dice" | "card" | "deal" | "chips" | "splat" | "zonk"
-  /* a profile: «Ништяк!» for a pumped biceps (public/assets/sound/nishtyak.mp3, a deep voice), a spit, a fist fight */
+  /* a profile: «Ништяк!» for a pumped biceps (public/assets/sound/nishtyak-2.mp3, quick and half-rough), a spit, a fist fight */
   | "nishtyak" | "spit" | "brawl"
-  /* a new achievement: «Вот это да!» in a hoarse male voice (public/assets/sound/vot-eto-da.mp3) */
+  /* a new achievement: «Ништяк!» (the same voice as for the biceps, public/assets/sound/nishtyak-2.mp3) */
   | "wow"
   /* «Личное дело»: a sheet of paper turned over */
   | "page";
@@ -156,8 +156,9 @@ const SAMPLE_URLS = {
   coin: "/assets/sound/coin.mp3",
   match: "/assets/sound/match.mp3",
   bars: "/assets/sound/bars.mp3",
-  nishtyak: "/assets/sound/nishtyak.mp3",
-  wow: "/assets/sound/vot-eto-da.mp3",
+  // one voice for both: a quick, half-rough «Ништяк!» (a new achievement and a pumped biceps)
+  nishtyak: "/assets/sound/nishtyak-2.mp3",
+  wow: "/assets/sound/nishtyak-2.mp3",
 } as Record<string, string>;
 /** a hit sound per weapon (w-<weapon id>) and a pick-up sound per yard find (y-<drop id>): tools/sound/build-item-sounds.py */
 const WEAPON_SOUNDS = ["fist", "mouse", "keyboard", "red-candle", "gpu", "rug-pull-gun"];

@@ -170,6 +170,8 @@ function Nav() {
           {t.id === "yard" && !!state?.yard.count && <span className="badge">{state.yard.count}</span>}
           {t.id === "yard" && !state?.yard.count && taskHint && <span className="badge" style={{ background: "var(--gold)", color: "#2e1c00" }}>!</span>}
           {t.id === "bosses" && state?.fight && <span className="badge" style={{ background: "var(--gold)", color: "#2e1c00" }}>!</span>}
+          {/* the achievement box on the trader's counter can be opened */}
+          {t.id === "shop" && (state?.achBox?.ready ?? 0) > 0 && <span className="badge" style={{ background: "var(--gold)", color: "#2e1c00" }}>!</span>}
         </Link>
       ))}
     </nav>

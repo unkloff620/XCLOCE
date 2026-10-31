@@ -302,7 +302,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
  * Notices at the top of the screen for newly reached achievements: they come in one after another (a new card every
  * REVEAL_MS, under the ones already shown), fade in, shine, and each stays LIFE_MS — so they go away in the same order,
  * the next ones moving up into the free place. A swipe to the left takes one away sooner, a tap opens it in the «Личное
- * дело». «Вот это да!» sounds when a batch starts. The ones waiting at the start are not announced.
+ * дело». «Ништяк!» sounds when a batch starts. The ones waiting at the start are not announced.
  */
 const REVEAL_MS = 280;
 const LIFE_MS = 10_000;
