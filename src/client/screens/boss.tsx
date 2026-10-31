@@ -27,8 +27,13 @@ import { FIGHT_MODES, MEDAL_NAMES, MEDAL_SET, fightMode, medalBonus, medalStep, 
 import { BlastIcon } from "../art/blast.tsx";
 import { tattooSetsOfBoss } from "../../content/tattoos.ts";
 
-/** the mode buttons on the door wall are short: the full names do not fit */
-const MODE_SHORT: Record<FightMode, string> = { pacan: "Пац.", blat: "Блат.", avtor: "Авто." };
+/**
+ * Each fight mode is its own page of the room before the fight (swipe left/right): «Пацанский» — the old basement as it
+ * is, «Блатной» — the same after a cheap Soviet repair, «Авторитетный» — after a good one (public/assets/door/room-<mode>,
+ * door-<mode>: the same layout, so the door and the boss behind it stay in place).
+ */
+const MODE_ART: Record<FightMode, string> = { pacan: "", blat: "-blat", avtor: "-avtor" };
+const MODE_ORDER: FightMode[] = ["pacan", "blat", "avtor"];
 
 const POLL_MS = 1500;
 /** a hit stays in the arena feed this long */
@@ -333,6 +338,24 @@ export function BossScreen({ id }: { id: string }) {
   const setPick = (m: FightMode | "solo") => { setPickRaw(m); try { localStorage.setItem(`xc-mode-${id}`, m); } catch { /* storage blocked */ } };
   const soloPick = pick === "solo";
   const mode: FightMode = soloPick ? "pacan" : pick;
+  // the mode pages: a swipe or the arrows go to the next / previous one (the slide comes from that side)
+  const [slide, setSlide] = useState<"l" | "r" | null>(null);
+  const goMode = (dir: 1 | -1) => {
+    const i = MODE_ORDER.indexOf(mode) + dir;
+    if (i < 0 || i >= MODE_ORDER.length) return;
+    haptic.tap();
+    setSlide(dir > 0 ? "r" : "l");
+    setPick(MODE_ORDER[i]);
+  };
+  const swipe = useRef<{ x: number; y: number } | null>(null);
+  const onTouchStart = (e: React.TouchEvent) => { const t = e.touches[0]; swipe.current = { x: t.clientX, y: t.clientY }; };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const st = swipe.current, t = e.changedTouches[0];
+    swipe.current = null;
+    if (!st) return;
+    const dx = t.clientX - st.x, dy = t.clientY - st.y;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) goMode(dx < 0 ? 1 : -1);
+  };
   const start = async (solo = false) => {
     const md = fightMode(mode);
     const r = await act<{ fightId: number }>("fight_start", { boss: id, solo, mode }, `${solo ? "Соло-бой" : "Бой"} с боссом ${boss?.name} · ${md.name}${md.hp > 1 ? ` (здоровье ×${md.hp})` : ""}. 8 часов`);
@@ -464,11 +487,11 @@ export function BossScreen({ id }: { id: string }) {
   };
   const doorReward = { ...boss.reward, items: [...(boss.final ? [] : [{ id: `key-${boss.id}`, qty: 1 }]), ...(boss.reward.items ?? [])] };
   return (
-    <div className="fit-page door-page" style={{ ["--acc" as string]: boss.theme.accent }}>
+    <div className="fit-page door-page" style={{ ["--acc" as string]: boss.theme.accent }} onTouchStart={door === "closed" ? onTouchStart : undefined} onTouchEnd={door === "closed" ? onTouchEnd : undefined}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="door-backdrop" src="/assets/door/room.webp" alt="" aria-hidden="true" draggable={false} />
+      <img className="door-backdrop" src={`/assets/door/room${MODE_ART[mode]}.webp`} alt="" aria-hidden="true" draggable={false} />
       <div className="door-help"><BossRulesHelp topic="boss" bossId={boss.id} /></div>
-      <div className={`door-scene ${door}`}>
+      <div key={mode} className={`door-scene ${door} ${slide ? `slide-${slide}` : ""}`}>
         {/* behind the door: the boss's own background and the boss himself */}
         <div className="door-behind">
           <DriftingSky className="fight-sky" />
@@ -488,7 +511,7 @@ export function BossScreen({ id }: { id: string }) {
           <div className="door-light" />
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="door-room" src="/assets/door/room.webp" alt="" draggable={false} />
+        <img className="door-room" src={`/assets/door/room${MODE_ART[mode]}.webp`} alt="" draggable={false} />
         {/* the pass that opens this boss, on the left wall */}
         <div className={`door-pass ${locked ? "short" : ""}`}>
           {prev ? (
@@ -500,18 +523,11 @@ export function BossScreen({ id }: { id: string }) {
             <span className="tiny">вход<br />свободный</span>
           )}
         </div>
-        {/* how to fight him: four buttons on the wall under the pass — three modes and «Соло», one of them (picking only — the door starts the fight) */}
-        {!locked && (
-          <div className="door-side" role="radiogroup" aria-label="Режим боя">
-            {FIGHT_MODES.map((m) => (
-              <button key={m.id} type="button" role="radio" aria-checked={pick === m.id} className={`door-word ${m.id} ${pick === m.id ? "on" : ""}`}
-                disabled={door !== "closed"} onClick={() => { haptic.tap(); setPick(m.id); }}
-                aria-label={`${m.name}: здоровье ×${m.hp}, взрыв «${MEDAL_NAMES[m.medal]}»${m.things ? ", падают вещи" : ""}`}>
-                {MODE_SHORT[m.id]}
-              </button>
-            ))}
-            <button type="button" role="radio" aria-checked={soloPick} className={`door-word solo ${soloPick ? "on" : ""}`} disabled={door !== "closed"}
-              onClick={() => { haptic.tap(); setPick("solo"); }}
+        {/* «Соло» (a fight alone) is only on the «Пацанский» page: a switch on the wall */}
+        {!locked && mode === "pacan" && (
+          <div className="door-side">
+            <button type="button" aria-pressed={soloPick} className={`door-word solo ${soloPick ? "on" : ""}`} disabled={door !== "closed"}
+              onClick={() => { haptic.tap(); setPick(soloPick ? "pacan" : "solo"); }}
               aria-label={`Соло — бой в одиночку, урон других не засчитывается${(row?.mySoloWins ?? 0) > 0 ? ", уже побеждён соло" : ""}`}>
               Соло
               <svg className={`door-solo-star ${(row?.mySoloWins ?? 0) > 0 ? "on" : ""}`} viewBox="0 0 24 24" aria-hidden="true">
@@ -520,9 +536,23 @@ export function BossScreen({ id }: { id: string }) {
             </button>
           </div>
         )}
+        {/* the mode pages: their names on top, arrows at the sides (a swipe does the same) */}
+        {!locked && door === "closed" && (
+          <>
+            <div className="mode-pager" role="tablist" aria-label="Режим боя">
+              {FIGHT_MODES.map((m, i) => (
+                <button key={m.id} type="button" role="tab" aria-selected={mode === m.id} className={`mode-tab ${m.id} ${mode === m.id ? "on" : ""}`}
+                  onClick={() => { if (m.id === mode) return; haptic.tap(); setSlide(i > MODE_ORDER.indexOf(mode) ? "r" : "l"); setPick(m.id); }}
+                  aria-label={`${m.name}: здоровье ×${m.hp}, взрыв «${MEDAL_NAMES[m.medal]}»${m.things ? ", падают вещи" : ""}`}>
+                  {m.name}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
         <button className="door-leaf" onClick={() => openDoor(soloPick)} aria-label={blocked ? `${locked ? "Нет карт" : "Закрыто"}: ${blocked}` : `Открыть дверь и начать ${soloPick ? "соло-бой" : "бой"} с боссом ${boss.name} · ${fightMode(mode).name}`} disabled={door === "open" || door === "enter"}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assets/door/door.webp" alt="" draggable={false} />
+          <img src={`/assets/door/door${MODE_ART[mode]}.webp`} alt="" draggable={false} />
           <span className="door-hit" />
           {/* the name above the window, the title under it, the rewards down the lower half — all on the door */}
           <b className="door-name display">{boss.name}</b>
@@ -540,6 +570,8 @@ export function BossScreen({ id }: { id: string }) {
         {!blocked && door === "closed" && <span className="door-hint">Нажми на дверь</span>}
         <div className="door-flash" />
       </div>
+      {!locked && door === "closed" && mode !== "pacan" && <button type="button" className="mode-arrow l" onClick={() => goMode(-1)} aria-label="Предыдущий режим">‹</button>}
+      {!locked && door === "closed" && mode !== "avtor" && <button type="button" className="mode-arrow r" onClick={() => goMode(1)} aria-label="Следующий режим">›</button>}
       <div className="fight-bottom prefight-panel">
         <div className="tiny muted center mode-hint">
           {soloPick ? "Соло (бьёшь один): здоровье" : `${fightMode(mode).name}: здоровье`} {full(Math.round((row?.hpMax ?? boss.hp) * fightMode(mode).hp))} · взрыв «{MEDAL_NAMES[fightMode(mode).medal]}»{fightMode(mode).things ? " · падают вещи босса" : ""}{tattooSetsOfBoss(boss.id).some((t) => t.mode === mode) ? " · падают наколки" : ""}.

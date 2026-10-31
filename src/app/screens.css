@@ -4176,3 +4176,19 @@ body { background-attachment: fixed; }
 .ink-set.done { border-color: #ffcc33; }
 .sty-item.ink-item.locked { opacity: 0.45; filter: grayscale(1); cursor: default; }
 .sty-body .link-btn { border: 0; background: none; padding: 0; color: var(--gold); font: inherit; font-weight: 800; text-decoration: underline; cursor: pointer; }
+/* the fight mode pages before the fight: the names on top (the current one bright), arrows at the sides, a slide on change */
+.mode-pager { z-index: 4; left: 50.6%; top: 1.6%; transform: translateX(-50%); display: flex; gap: 1cqw; padding: 0.8cqw; border-radius: 999px; background: rgba(12, 8, 5, 0.55);
+  border: 1.5px solid rgba(255, 243, 227, 0.16); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); pointer-events: auto; }
+.mode-tab { padding: 1cqw 2.2cqw; border: 0; border-radius: 999px; background: none; color: rgba(255, 243, 227, 0.55); font-family: var(--font-display), var(--font-body), sans-serif;
+  font-size: 3cqw; letter-spacing: 0.02em; white-space: nowrap; cursor: pointer; }
+.mode-tab.on { color: #1a0f05; background: var(--wc); box-shadow: 0 0 2cqw color-mix(in srgb, var(--wc) 55%, transparent); }
+.mode-tab.pacan { --wc: #f0a868; } .mode-tab.blat { --wc: #8fd6c2; } .mode-tab.avtor { --wc: #ffd45a; }
+.mode-arrow { position: absolute; z-index: 6; top: 54%; width: 36px; height: 56px; display: grid; place-items: center; border: 0; border-radius: 12px; background: rgba(12, 8, 5, 0.55); color: #fff3e3;
+  font-size: 34px; line-height: 1; cursor: pointer; animation: mode-arrow 1.6s ease-in-out infinite; }
+.mode-arrow.l { left: 6px; --dx: -3px; }
+.mode-arrow.r { right: 6px; --dx: 3px; }
+@keyframes mode-arrow { 50% { transform: translateX(var(--dx)); } }
+.door-scene.slide-r { animation: mode-in-r 0.32s ease-out; }
+.door-scene.slide-l { animation: mode-in-l 0.32s ease-out; }
+@keyframes mode-in-r { from { transform: translateX(22%); opacity: 0.2; } to { transform: none; opacity: 1; } }
+@keyframes mode-in-l { from { transform: translateX(-22%); opacity: 0.2; } to { transform: none; opacity: 1; } }
