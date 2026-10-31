@@ -397,7 +397,7 @@ export function LocationScreen({ id }: { id: string }) {
     if (res.stash) {
       // a stash found: a moment of its own
       haptic.big();
-      sfx("levelup");
+      sfx("nychka");
       const k = key + 1, found = res.stash;
       setStashes((p) => [...p.slice(-2), { key: k, i: x.i, id: found }]);
       setTimeout(() => setStashes((p) => p.filter((q) => q.key !== k)), 2600);
