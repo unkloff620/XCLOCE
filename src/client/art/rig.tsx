@@ -407,6 +407,21 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
   );
 }
 
+/** The hero's head with a hairstyle (the hairstyle picker): the head, the face and the hair, nothing else. */
+export function HeadArt({ look, size = 56 }: { look: Look; size?: number }) {
+  return (
+    <svg viewBox="345 -22 316 336" width={size} height={size * (336 / 316)} aria-hidden="true" style={{ display: "block", overflow: "visible" }}>
+      <LookCtx.Provider value={look}>
+        <WornCtx.Provider value={{}}>
+          <Img p="head" />
+          <Face />
+          <Hair />
+        </WornCtx.Provider>
+      </LookCtx.Provider>
+    </svg>
+  );
+}
+
 /** Nested viewport so bone pivots (view-box units) stay in rig coordinates inside any scene. */
 export function RigViewport({ x, y, scale, seat, still, look, worn, seatOnly, edit }: { x: number; y: number; scale: number; seat?: boolean | number; still?: boolean; look?: Look; worn?: Worn; seatOnly?: boolean; edit?: RigEdit }) {
   const ref = useRef<SVGSVGElement>(null);

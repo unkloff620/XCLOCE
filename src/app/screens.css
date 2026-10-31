@@ -4215,3 +4215,37 @@ body { background-attachment: fixed; }
 .sty-tabs button.on img { opacity: 1; transform: scale(1.08); }
 .sty-act { display: grid; place-items: center; padding: 8px 0; }
 .sty-actions .btn.dark.sty-act { width: 64px; }
+/* the hero editor, take 3: the three editors in a column right of the hero, ✕ and ✓ over the panel, more room for the lists */
+.sty-panel { overflow: visible; }
+.sty-side-tabs { position: absolute; right: 10px; bottom: calc(100% + 86px); display: flex; flex-direction: column; gap: 8px; }
+.sty-side-tabs button { width: 54px; height: 54px; display: grid; place-items: center; padding: 0; border-radius: 14px; cursor: pointer;
+  background: rgba(24, 15, 9, 0.72); border: 2.5px solid var(--line); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45); }
+.sty-side-tabs button img { width: 38px; height: 38px; object-fit: contain; pointer-events: none; }
+.sty-side-tabs button.on { background: #e3862f; border-color: #ffd23f; box-shadow: 0 0 12px rgba(255, 154, 61, 0.7); }
+.sty-big { position: absolute; bottom: calc(100% + 12px); width: 64px; height: 64px; padding: 0; border: 0; background: none; cursor: pointer; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.6)); }
+.sty-big img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+.sty-big.x { left: 12px; }
+.sty-big.ok { right: 12px; }
+.sty-big:disabled { filter: grayscale(1) brightness(0.7); opacity: 0.6; cursor: default; }
+.sty-big:active:not(:disabled) { transform: scale(0.92); }
+/* the clothes slots: all seven in one row */
+.sty-slots { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.sty-slot { height: 50px; }
+.sty-slot img, .sty-slot svg { width: 26px !important; height: 26px !important; }
+.sty-slot small { font-size: 8.5px; }
+/* hairstyles as heads */
+.hair-picks { display: flex; gap: 6px; flex-wrap: wrap; }
+.hair-pick { width: 62px; height: 66px; display: grid; place-items: center; padding: 2px; border-radius: 12px; cursor: pointer; background: var(--tex), var(--bg2); border: 2.5px solid var(--line); }
+.hair-pick.on { box-shadow: 0 0 0 2.5px #ff9a3d, 0 0 12px rgba(255, 154, 61, 0.6); }
+/* tattoo sets: an inventory, 5 in a row; a chain on a set with no piece yet and on the pieces not dropped */
+.ink-sets { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.ink-set { position: relative; display: grid; place-items: center; aspect-ratio: 1; padding: 4px; gap: 0; border-radius: 12px; overflow: hidden; }
+.ink-set-n { position: absolute; left: 0; right: 0; bottom: 2px; text-align: center; font-size: 10px; font-weight: 900; color: var(--gold); text-shadow: 0 1px 2px #000; }
+.ink-set.locked > svg { filter: grayscale(1) brightness(0.6); }
+.ink-chain { position: absolute; inset: 8% 4% 14% 4%; width: 92%; height: 78%; object-fit: contain; pointer-events: none; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6)); }
+.ink-open-t { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.ink-open-t small { color: var(--muted); font-size: 11px; line-height: 1.2; }
+.ink-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.ink-grid .sty-item { height: 78px; }
+.sty-item.ink-item.locked { opacity: 0.75; filter: none; }
+.sty-item.ink-item.locked > svg { filter: grayscale(1) brightness(0.55); }
