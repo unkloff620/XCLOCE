@@ -57,16 +57,16 @@ export const WEAR_FIT = {
   },
   "sneakers": {
     "slot": "SHOES",
-    "x": 60.0,
+    "x": 100.5,
     "y": 1086.0,
-    "w": 882,
-    "h": 270
+    "w": 792,
+    "h": 265
   },
   "slippers": {
     "slot": "SHOES",
-    "x": 51.5,
-    "y": 1193.5,
-    "w": 898,
+    "x": 94.0,
+    "y": 1189.5,
+    "w": 804,
     "h": 170
   },
   "gold-chain": {
@@ -106,10 +106,10 @@ export const WEAR_FIT = {
   },
   "sneakers-komandate": {
     "slot": "SHOES",
-    "x": 61.5,
-    "y": 1130.5,
-    "w": 877,
-    "h": 231
+    "x": 102.5,
+    "y": 1129.5,
+    "w": 788,
+    "h": 226
   },
   "sweater-vostok": {
     "slot": "SHIRT",
@@ -127,10 +127,10 @@ export const WEAR_FIT = {
   },
   "sneakers-black": {
     "slot": "SHOES",
-    "x": 72.5,
+    "x": 110.0,
     "y": 972.5,
-    "w": 857,
-    "h": 372
+    "w": 775,
+    "h": 369
   },
   "santa-hat": {
     "slot": "HEAD",

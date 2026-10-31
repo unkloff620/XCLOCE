@@ -80,6 +80,7 @@ ZONE_CENTRES = {
 }
 SOLID = ["taiga", "roots", "shark", "kraken", "cash", "gold", "ring", "fire", "izba", "firebird", "jackpot", "sunrise"]
 _body = np.array(Image.open(os.path.join(ROOT, "tools", "rig", "source", "v2", "torso.png")).convert("RGBA").resize((1000, 1400), Image.LANCZOS))[..., 3] > 20
+UPPER_BODY = np.array(Image.open(os.path.join(ROOT, "tools", "rig", "source", "v2", "body.png")).convert("RGBA").resize((1000, 1400), Image.LANCZOS))[..., 3] > 40
 _yy, _xx = np.mgrid[0:1400, 0:1000]
 _d = np.stack([(_xx - c[0]) ** 2 + (_yy - c[1]) ** 2 for (c, _) in ZONE_CENTRES.values()])
 ZONE_OF = np.where(_body, np.argmin(_d, axis=0), -1)
@@ -103,6 +104,13 @@ for set_id, pieces in SETS.items():
             keep[y0:y1, x0:x1] = True
         else:
             keep[:] = True
+        # the chest, the belly and the arms are drawn over the trousers: their ink stays on the upper body (with the arms
+        # and the resting hand) only, never on the thigh under the hand
+        if part == "full" and where == "upper":
+            keep = keep & UPPER_BODY
+        # never past the body's own outline (the feet were redrawn shorter after the ink was drawn)
+        if part == "full":
+            keep = keep & _body
         alpha = np.where(keep, a[..., 3], 0)
         # specks: tiny blobs of ink away from the drawing go
         lab, n = ndimage.label(alpha > 20)
