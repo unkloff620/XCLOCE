@@ -32,3 +32,12 @@ ts += f"export const CASE_ASPECT = {round(W / H, 4)};\n"
 ts += "export const CASE_LAYERS = " + json.dumps(data, indent=2) + " as const;\n"
 open(os.path.join(ROOT, "src", "client", "art", "case-data.ts"), "w").write(ts)
 print(W, H, data)
+
+# the case seen from the front (the opening window, screens/shop.tsx): closed and open on one 1072×1219 canvas
+for n in ("front-closed", "front-open"):
+    a = np.array(Image.open(os.path.join(SRC, n + ".png")).convert("RGBA"))
+    a[a[:, :, 3] < 40, 3] = 0
+    a[a[:, :, 3] == 0, :3] = 0
+    im = Image.fromarray(a).resize((644, 732), Image.LANCZOS)  # shown at most ~320 px wide
+    im.save(os.path.join(OUT, f"case-{n}.webp"), quality=88, method=6)
+print("front views")

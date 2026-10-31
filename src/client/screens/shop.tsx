@@ -1,5 +1,4 @@
 "use client";
-import { AchCase } from "../art/ach-case.tsx";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -187,39 +186,87 @@ function Cards({ offers, batch }: { offers: Offer[]; batch: number }) {
   );
 }
 
-/** «Ящик ништяков»: one opening per ACH_BOX_COST achievement points earned; the points themselves stay */
+/** a reward split into its parts, one tile each: currencies, authority, energy, every thing */
+function lootParts(r: Granted): Granted[] {
+  const one = (x: Partial<Granted>): Granted => ({ xp: 0, currencies: {}, items: [], energy: 0, ...x });
+  const out: Granted[] = [];
+  for (const [c, v] of Object.entries(r.currencies ?? {})) if (v) out.push(one({ currencies: { [c]: v } }));
+  if (r.xp) out.push(one({ xp: r.xp }));
+  if (r.energy) out.push(one({ energy: r.energy }));
+  for (const it of r.items ?? []) out.push(one({ items: [it] }));
+  return out;
+}
+const LOOT_STEP = 380; // ms between the things coming out of the case
+
+/**
+ * «Ящик ништяков» — the case opens in the middle of the screen: one opening per ACH_BOX_COST achievement points
+ * earned (the points stay). Closed, it waits (and rattles while a box is ready); a tap — it shakes, the lid flips up
+ * into the open case, and the things come out of it one by one. A tap on the open case closes it for the next one.
+ */
 function AchBoxWindow({ onClose }: { onClose: () => void }) {
   const { state, act, busy } = useGame();
+  const [phase, setPhase] = useState<"closed" | "opening" | "open">("closed");
   const [got, setGot] = useState<Granted | null>(null);
   const [gotN, setGotN] = useState(1);
-  const [shake, setShake] = useState(0);
   const b = state?.achBox ?? { points: 0, opened: 0, ready: 0, progress: 0, cost: ACH_BOX_COST };
-  // one box, or every box waiting at once (one reward: the sum of what was inside)
+  const parts = useMemo(() => (got ? lootParts(got) : []), [got]);
+  useEffect(() => {
+    if (phase !== "open" || !parts.length) return;
+    const t = parts.map((_, i) => setTimeout(() => { haptic.tap(); sfx("coin"); }, 450 + i * LOOT_STEP));
+    return () => t.forEach(clearTimeout);
+  }, [phase, parts]);
   const open = async (all = false) => {
-    haptic.tap();
+    if (phase === "opening" || b.ready < 1) return;
+    haptic.heavy();
     setGot(null);
-    setShake((n) => n + 1);
-    const r = await act<{ reward: Granted; opened: number }>("ach_box_open", all ? { all: true } : {});
-    if (r) { haptic.big(); sfx("reward"); setGot(r.reward); setGotN(r.opened ?? 1); }
+    setPhase("opening");
+    const [r] = await Promise.all([
+      act<{ reward: Granted; opened: number }>("ach_box_open", all ? { all: true } : {}),
+      new Promise((res) => setTimeout(res, 650)), // the shake plays out
+    ]);
+    if (!r) { setPhase("closed"); return; }
+    haptic.big(); sfx("reward");
+    setGot(r.reward); setGotN(r.opened ?? 1); setPhase("open");
+  };
+  const tapCase = () => {
+    if (phase === "open") { haptic.tap(); setPhase("closed"); setGot(null); return; }
+    if (phase === "closed") void open();
   };
   return (
-    <Modal title="Ящик ништяков" onClose={onClose}>
-      <div className="col achbox" style={{ gap: 10, alignItems: "center", textAlign: "center" }}>
-        <AchCase key={shake} className={`achbox-case ${shake ? "shake" : ""}`} ready={b.ready > 0} />
-        <span className="small">Очки достижений не тратятся: каждые <b>{b.cost}</b> очков — ещё один кейс. Внутри — рубли, доллары и оружие.</span>
-        <span className="achbox-pts"><Icon name="sun" size={20} /><b className="num">{b.points}</b> очков · открыто ящиков: <b className="num">{b.opened}</b></span>
+    <div className="acx" role="dialog" aria-label="Ящик ништяков" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <button className="acx-x" onClick={onClose} aria-label="Закрыть">✕</button>
+      <div className={`acx-case ${phase} ${b.ready > 0 ? "ready" : ""}`} onClick={tapCase}>
+        <span className="acx-glow" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="acx-open" src="/assets/shop/v2/case-front-open.webp" alt="" draggable={false} />
+        <span className="acx-burst" />
+        <div className="acx-loot">
+          {phase === "open" && parts.map((p, i) => (
+            <span key={i} className="acx-item" style={{ animationDelay: `${450 + i * LOOT_STEP}ms` }}><RewardChips r={p} size={26} /></span>
+          ))}
+        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="acx-closed" src="/assets/shop/v2/case-front-closed.webp" alt="" draggable={false} />
+      </div>
+      <div className="acx-info">
+        {phase === "open" ? (
+          <b className="display">{gotN > 1 ? `Выпало из ${gotN} кейсов` : "Выпало из кейса"}</b>
+        ) : (
+          <b className="display">{b.ready > 0 ? (phase === "opening" ? "Открываем…" : "Нажми на кейс") : "Кейс закрыт"}</b>
+        )}
+        <span className="achbox-pts"><Icon name="sun" size={20} /><b className="num">{b.points}</b> очков · открыто: <b className="num">{b.opened}</b></span>
         <span className="ach-bar" style={{ width: "100%", ["--p" as string]: `${Math.round((b.progress / b.cost) * 100)}%`, ["--c" as string]: "#ffcc33" }}>
           <i /><span className="num">до следующего: {b.progress}/{b.cost}</span>
         </span>
-        {got && <div className="achbox-got"><b className="display">Выпало{gotN > 1 ? ` из ${gotN} ящиков` : ""}:</b><RewardChips r={got} size={20} /></div>}
-        <button className="btn big gold block" disabled={b.ready < 1 || busy === "ach_box_open"} onClick={() => open()}>
-          {b.ready > 0 ? `Открыть · осталось ${b.ready}` : `Нужно ещё ${b.cost - b.progress} очк.`}
-        </button>
-        {b.ready > 1 && (
-          <button className="btn green block" disabled={busy === "ach_box_open"} onClick={() => open(true)}>Открыть все · {b.ready}</button>
+        <span className="tiny acx-hint">
+          {phase === "open" ? (b.ready > 0 ? `Ещё кейсов: ${b.ready} — нажми на открытый, чтобы закрыть и открыть следующий` : "Нажми на кейс, чтобы закрыть")
+            : b.ready > 0 ? `Готово кейсов: ${b.ready}` : `Каждые ${b.cost} очков достижений — ещё один кейс (очки не тратятся). Нужно ещё ${b.cost - b.progress}.`}
+        </span>
+        {b.ready > 1 && phase !== "opening" && (
+          <button className="btn green block" disabled={busy === "ach_box_open"} onClick={() => { setPhase("closed"); void open(true); }}>Открыть все · {b.ready}</button>
         )}
       </div>
-    </Modal>
+    </div>
   );
 }
 

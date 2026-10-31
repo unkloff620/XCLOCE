@@ -36,19 +36,29 @@ const SPOTS: { id: ShopSpotId; layer: string; label: string; tag: "top" | "botto
   { id: "weapons", layer: "weapons", label: "Оружие", tag: "bottom" },
 ];
 
+function spotBox(layer: string): CSSProperties {
+  if (layer !== "weapons") return box(layer);
+  const b = L[layer];
+  const w = b.width * WEAPONS_SCALE, h = b.height * WEAPONS_SCALE;
+  return { left: `${WEAPONS_LEFT}%`, top: `${b.top + b.height - h}%`, width: `${w}%`, height: `${h}%` };
+}
+
 function Spot({ s, onOpen }: { s: (typeof SPOTS)[number]; onOpen: (id: ShopSpotId) => void }) {
   return (
-    <button className={`sk-spot sk-spot-${s.id}`} style={box(s.layer)} onClick={() => onOpen(s.id)} aria-label={s.label} title={s.label}>
+    <button className={`sk-spot sk-spot-${s.id}`} style={spotBox(s.layer)} onClick={() => onOpen(s.id)} aria-label={s.label} title={s.label}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={`/assets/shop/v2/${s.layer}.webp`} alt="" draggable={false} />
     </button>
   );
 }
 
-/** «Ящик ништяков» — the case (art/ach-case.tsx) lies on the dealer's counter on the right, partly past the edge */
-const ACH_BOX_W = 24;
+/** «Ящик ништяков» — the case (art/ach-case.tsx) lies whole on the right of the dealer's counter */
+const ACH_BOX_W = 29;
 const ACH_BOX_H = ACH_BOX_W * (2000 / 2800) / CASE_ASPECT;
-const ACH_BOX_AT = { left: 82, top: 66 - ACH_BOX_H, width: ACH_BOX_W, height: ACH_BOX_H };
+const ACH_BOX_AT = { left: 69.5, top: 67 - ACH_BOX_H, width: ACH_BOX_W, height: ACH_BOX_H };
+/** the weapons on the counter: smaller and moved to the left, to make room for the case */
+const WEAPONS_SCALE = 0.8;
+const WEAPONS_LEFT = 3;
 
 export function ShopScene({ onOpen, children, box, onBox }: {
   onOpen: (id: ShopSpotId) => void; children?: ReactNode;

@@ -1319,6 +1319,8 @@ export const ASSET_FILES: string[] = [
  "/assets/shop/v2/armL.webp",
  "/assets/shop/v2/armR.webp",
  "/assets/shop/v2/case-base.webp",
+ "/assets/shop/v2/case-front-closed.webp",
+ "/assets/shop/v2/case-front-open.webp",
  "/assets/shop/v2/case-inner.webp",
  "/assets/shop/v2/case-latch-l.webp",
  "/assets/shop/v2/case-latch-r.webp",
