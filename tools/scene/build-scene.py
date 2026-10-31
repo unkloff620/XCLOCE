@@ -52,7 +52,7 @@ for f in sorted(os.listdir(os.path.join(HERE, "source"))):
 CHAIRS = {}
 CHAIR_BOX = (122, 389, 1877, 2733)  # chair-1 on the character canvas: where a chair stands
 for f in sorted(os.listdir(os.path.join(HERE, "source"))):
-    m = re.match(r"(chair-\d+)\.png$", f)
+    m = re.match(r"(chair-[a-z0-9]+)\.png$", f)
     if not m:
         continue
     im = Image.open(os.path.join(HERE, "source", f)).convert("RGBA")

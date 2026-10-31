@@ -8,7 +8,7 @@
  * The left hand (handR, on the screen's right) is its own part on the forearm (HandFrames): resting, drumming (an item) or holding a thing.
  * Animations (CSS, see screens.css): breathing, looking around, drumming fingers, a held thing turning at the wrist.
  */
-import { ART_VER } from "../preload.ts";
+import { ART_VER, usedUrl } from "../preload.ts";
 import type { PointerEvent as ReactPointerEvent, ReactNode } from "react";
 import { createContext, useContext, useEffect, useMemo, useRef } from "react";
 import { RIG } from "./rig-data.ts";
@@ -18,7 +18,9 @@ import { TATTOO_FIT } from "./tattoo-data.ts";
 import { PLACES } from "./places-data.ts";
 import { SEAT } from "../../content/home-scene.ts";
 import { CHAIR_FIT } from "./desk-data.ts";
-import { DEFAULT_LOOK, type Look } from "../../content/home.ts";
+import { DEFAULT_LOOK, equipmentById, type Look } from "../../content/home.ts";
+
+const CHAIRS = equipmentById("chair")?.pieces ?? [];
 
 type PartId = keyof typeof RIG;
 type HairId = keyof typeof HAIR_FIT;
@@ -389,10 +391,10 @@ function Bone({ p, className, children }: { p: PartId; className?: string; child
 
 /** The seat, drawn behind the body: the stool at chair level 0, then the best drawn chair up to the level. */
 function Seat({ level = 0 }: { level?: number }) {
-  for (let l = level; l >= 1; l--) {
-    const f = CHAIR_FIT[`chair-${l}`];
-    if (f) return <image href={`/assets/home/chair-${l}.webp`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
-  }
+  // the chair that stands: piece `level` of the room's «Кресло» (its picture by name: chair-1 … chair-<boss>)
+  const art = level > 0 ? CHAIRS[level - 1]?.art : undefined;
+  const f = art ? CHAIR_FIT[art] : undefined;
+  if (art && f) return <image href={usedUrl(`/assets/home/${art}.webp`)} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
   return <image href="/assets/home/seat-1.webp" x={SEAT.x} y={SEAT.y} width={SEAT.w} height={SEAT.w * SEAT.aspect} preserveAspectRatio="none" />;
 }
 

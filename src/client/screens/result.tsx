@@ -9,7 +9,8 @@ import { bossById, rewardShare } from "../../content/bosses.ts";
 import { scaleReward } from "../../content/rewards.ts";
 import { GainLine, Modal } from "../ui.tsx";
 import { ItemArt } from "../art/items.tsx";
-import { roomById } from "../../content/home.ts";
+import { equipmentById, roomById } from "../../content/home.ts";
+import { usedUrl } from "../preload.ts";
 import { ROOM_BACKDROP } from "../../content/home-scene.ts";
 import { itemById } from "../../content/items.ts";
 import { BossPhoto } from "./boss-parts.tsx";
@@ -93,10 +94,12 @@ export function ResultWindow() {
   // until the claim answers: the reward this fight earns (my part of it), the same numbers
   const share = rewardShare(view.myDamage, view.hpMax);
   const keyOk = view.myDamage > 0;
-  const preview = { ...scaleReward(boss.reward, share), items: [...(boss.final || !keyOk ? [] : [{ id: `key-${boss.id}`, qty: 1 }]), ...(share >= 1 ? boss.reward.items ?? [] : [])] };
+  const preview = { ...scaleReward(boss.reward, share), items: [...(boss.final || boss.event || !keyOk ? [] : [{ id: `key-${boss.id}`, qty: 1 }]), ...(share >= 1 ? boss.reward.items ?? [] : [])] };
   const unlocks = got?.unlocks ?? [];
   const rooms = unlocks.filter((id) => id.startsWith("room:")).map((id) => id.slice(5));
-  const things = unlocks.filter((id) => !id.startsWith("room:"));
+  // a boss's chair (pieces of the room's «Кресло»): its picture, bought at home afterwards
+  const chairs = unlocks.filter((id) => id.startsWith("piece:")).map((id) => id.slice(6));
+  const things = unlocks.filter((id) => !id.startsWith("room:") && !id.startsWith("piece:"));
   const take = async () => {
     if (!got) {
       const r = await act<{ status: string; reward: Granted | null }>("fight_claim", { fightId: view.fightId });
@@ -128,6 +131,12 @@ export function ResultWindow() {
             <span key={id} className="gain result-room" title={`Комната «${roomById(id)?.name}» — купи её дома стрелками`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={`/assets/home/${ROOM_BACKDROP[id] ?? `room-${id}`}.webp`} alt="" draggable={false} />+комната
+            </span>
+          ))}
+          {chairs.map((art) => (
+            <span key={art} className="gain result-room" title={`${equipmentById("chair")?.pieces?.find((p) => p.art === art)?.name ?? "Кресло"} — купи его дома, в редакторе комнаты`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={usedUrl(`/assets/home/${art}.webp`)} alt="" draggable={false} style={{ objectFit: "contain" }} />+кресло
             </span>
           ))}
         </div>

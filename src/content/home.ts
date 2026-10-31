@@ -32,7 +32,16 @@ export interface PieceDef {
   price: Price;
   /** bonus this piece gives while owned (pieces of one kind add up) */
   bonus: Bonus;
+  /**
+   * a boss's own piece (the chairs in the style of his room): it drops from his «Авторитетный» wins (an event boss — his
+   * only mode) with PIECE_DROP_CHANCE, after PIECE_PITY wins without luck for sure; then it is bought here like the rest
+   */
+  drop?: { boss: string };
 }
+export const PIECE_DROP_CHANCE = 0.3;
+export const PIECE_PITY = 5;
+/** the unlock (player_unlocks) a dropped piece leaves: bought in the room editor afterwards */
+export const pieceUnlockId = (art: string) => `piece:${art}`;
 
 export interface EquipmentDef {
   id: string;
@@ -82,6 +91,15 @@ export const EQUIPMENT: EquipmentDef[] = [
       { name: "Офисное кресло", art: "chair-1", price: { currency: "RUB", amount: 2500 }, bonus: { critChance: 0.02 } },
       { name: "Геймерское кресло", art: "chair-2", price: { currency: "USD", amount: 25 }, bonus: { critChance: 0.02 } },
       { name: "Трон трейдера", art: "chair-3", price: { currency: "USD", amount: 22 }, bonus: { critChance: 0.03 } },
+      // the bosses' chairs, each in the style of his room: they drop in «Авторитетный» (PieceDef.drop)
+      { name: "Ледяное кресло", art: "chair-datsik", price: { currency: "RUB", amount: 2000 }, bonus: { critChance: 0.01 }, drop: { boss: "datsik" } },
+      { name: "Неоновое кресло", art: "chair-kedr", price: { currency: "RUB", amount: 2500 }, bonus: { critChance: 0.01 }, drop: { boss: "kedr" } },
+      { name: "Капитанское кресло", art: "chair-mugo", price: { currency: "RUB", amount: 3000 }, bonus: { critChance: 0.015 }, drop: { boss: "mugo" } },
+      { name: "Кресло кассира", art: "chair-garkusha", price: { currency: "RUB", amount: 3500 }, bonus: { critChance: 0.015 }, drop: { boss: "garkusha" } },
+      { name: "Угол ринга", art: "chair-bebyakyan", price: { currency: "RUB", amount: 4000 }, bonus: { critChance: 0.02 }, drop: { boss: "bebyakyan" } },
+      { name: "Расписной трон", art: "chair-babafey", price: { currency: "RUB", amount: 5000 }, bonus: { critChance: 0.02 }, drop: { boss: "babafey" } },
+      { name: "Кресло лудомана", art: "chair-vodovoz", price: { currency: "RUB", amount: 6000 }, bonus: { critChance: 0.025 }, drop: { boss: "vodovoz" } },
+      { name: "Кресло Пепе", art: "chair-pepe", price: { currency: "RUB", amount: 7000 }, bonus: { critChance: 0.025 }, drop: { boss: "pepe" } },
     ],
   },
   {

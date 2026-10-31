@@ -6,7 +6,7 @@ import { BLAT_THING_CHANCE, BOSSES, EVENT_FIGHTS, EXTRA_KEY_CHANCE, OPEN_BOSSES,
 import { RUSH_PRICE, WEAPONS, itemById, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
 import { boostReward, mergeRewards, scaleReward } from "../../content/rewards.ts";
-import { BASE_CRIT_MULT, ROOM_DEFS, ROOM_PITY, roomUnlockId } from "../../content/home.ts";
+import { BASE_CRIT_MULT, EQUIPMENT, PIECE_DROP_CHANCE, PIECE_PITY, ROOM_DEFS, ROOM_PITY, pieceUnlockId, roomUnlockId } from "../../content/home.ts";
 import { critChanceOf, talentExtras, talentsForDamage, weaponTalentBonus } from "../../content/talents.ts";
 import { playerBonus, weaponTalents } from "./home.ts";
 import { setBonuses } from "./collection.ts";
@@ -373,8 +373,8 @@ export async function claimFight(ctx: Ctx, fightId: number) {
       unlocked.push(id);
     }
   }
-  // a room that drops from this boss (it is bought afterwards, like the clothes)
-  if (things) {
+  // a room that drops from this boss (it is bought afterwards, like the clothes); an event boss: in his only mode
+  if (things || (earnedKey && def.event)) {
     for (const room of ROOM_DEFS.filter((r) => r.drop?.boss === def.id)) {
       const key = roomUnlockId(room.id);
       const [have] = await ctx.q.query("SELECT 1 FROM player_unlocks WHERE player_id=$1 AND item_id=$2", [ctx.pid, key]);
@@ -391,6 +391,31 @@ export async function claimFight(ctx: Ctx, fightId: number) {
       if (got) {
         await ctx.q.query("INSERT INTO player_unlocks (player_id, item_id, boss_id, at) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING", [ctx.pid, key, def.id, new Date(ctx.now)]);
         unlocked.push(key);
+      }
+    }
+  }
+  // a chair of this boss (EQUIPMENT pieces with drop.boss): in «Авторитетный» (an event boss: his only mode) with
+  // PIECE_DROP_CHANCE, after PIECE_PITY wins without luck for sure; it opens in the room editor to be bought there
+  if (earnedKey && (mode.id === "avtor" || def.event)) {
+    for (const e of EQUIPMENT) {
+      for (const [i, pc] of (e.pieces ?? []).entries()) {
+        if (pc.drop?.boss !== def.id) continue;
+        const key = pieceUnlockId(pc.art);
+        const [own] = await ctx.q.query<{ pieces: number }>("SELECT pieces FROM player_equipment WHERE player_id=$1 AND equipment_id=$2", [ctx.pid, e.id]);
+        if (((Number(own?.pieces ?? 0) >> i) & 1) === 1) continue;
+        const [have] = await ctx.q.query("SELECT 1 FROM player_unlocks WHERE player_id=$1 AND item_id=$2", [ctx.pid, key]);
+        if (have) continue;
+        const [pity] = await ctx.q.query<{ misses: number }>("SELECT misses FROM boss_pity WHERE player_id=$1 AND boss_id=$2 FOR UPDATE", [ctx.pid, key]);
+        const misses = pity?.misses ?? 0;
+        const got = ctx.rng() < PIECE_DROP_CHANCE || misses + 1 >= PIECE_PITY;
+        await ctx.q.query(
+          "INSERT INTO boss_pity (player_id, boss_id, misses) VALUES ($1,$2,$3) ON CONFLICT (player_id, boss_id) DO UPDATE SET misses = EXCLUDED.misses",
+          [ctx.pid, key, got ? 0 : misses + 1],
+        );
+        if (got) {
+          await ctx.q.query("INSERT INTO player_unlocks (player_id, item_id, boss_id, at) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING", [ctx.pid, key, def.id, new Date(ctx.now)]);
+          unlocked.push(key);
+        }
       }
     }
   }

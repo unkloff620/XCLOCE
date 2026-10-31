@@ -6,7 +6,8 @@ import { useGame } from "../store.tsx";
 import { Icon } from "../art/icons.tsx";
 import { money } from "../format.ts";
 import { haptic } from "../telegram.ts";
-import { EQUIPMENT, baseBit, equipmentById, hasPiece, placedOf, type Price } from "../../content/home.ts";
+import { EQUIPMENT, baseBit, equipmentById, hasPiece, pieceUnlockId, placedOf, type Price } from "../../content/home.ts";
+import { bossById } from "../../content/bosses.ts";
 import { BonusLine } from "./house.tsx";
 
 /*
@@ -156,13 +157,16 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose }: { draft: R
               {e.pieces!.map((pc, i) => {
                 const k = i + 1;
                 const have = hasPiece(owned[tab] ?? 0, k);
+                // a boss's piece not dropped yet: shown locked (it opens after a drop from him)
+                const shut = !have && !!pc.drop && !(state.unlocks ?? []).includes(pieceUnlockId(pc.art));
                 const on = e.multi ? ((draft[tab] ?? 0) & (1 << i)) !== 0 : (draft[tab] ?? 0) === k;
                 return (
-                  <button key={pc.art} className={`sty-item room-ed-item ${on ? "on" : ""} ${have ? "" : "room-ed-new"}`} onClick={() => pick(tab, k)} aria-pressed={on}>
+                  <button key={pc.art} className={`sty-item room-ed-item ${on ? "on" : ""} ${have ? "" : "room-ed-new"} ${shut ? "room-ed-shut" : ""}`} onClick={() => pick(tab, k)} aria-pressed={on}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img className="room-ed-thumb" src={`/assets/home/${pc.art}.webp`} alt="" draggable={false} />
+                    <img className="room-ed-thumb" src={usedUrl(`/assets/home/${pc.art}.webp`)} alt="" draggable={false} />
                     <span className="sty-item-name">{pc.name}</span>
-                    {!have && <span className="room-ed-price num"><Icon name={pc.price.currency} size={12} />{money(pc.price.currency, pc.price.amount)}</span>}
+                    {shut && <img className="ink-chain" src="/assets/ui/chain-lock.webp" alt="" draggable={false} />}
+                    {!have && !shut && <span className="room-ed-price num"><Icon name={pc.price.currency} size={12} />{money(pc.price.currency, pc.price.amount)}</span>}
                     {e.multi && have && <span className={`room-ed-check ${on ? "on" : ""}`} aria-hidden="true">{on ? "✓" : ""}</span>}
                   </button>
                 );
@@ -171,7 +175,9 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose }: { draft: R
             {fPiece ? (
               <div className="room-ed-info">
                 <span className="small"><b>{fPiece.name}</b> · <BonusLine b={fPiece.bonus} /></span>
-                {!fOwned && (
+                {!fOwned && fPiece.drop && !(state.unlocks ?? []).includes(pieceUnlockId(fPiece.art)) ? (
+                  <span className="tiny muted">Выпадает с босса {bossById(fPiece.drop.boss)?.name} в «{fPiece.drop.boss === "pepe" ? "ивенте" : "Авторитетном"}»: шанс 30%, после 5 побед без удачи — точно. Потом покупается здесь.</span>
+                ) : !fOwned && (
                   <button className="btn sm gold" disabled={!canPay(fPiece.price) || busy === "piece_buy"} onClick={() => buy(tab, f)}>
                     Купить · <Icon name={fPiece.price.currency} size={14} /> {money(fPiece.price.currency, fPiece.price.amount)}
                   </button>

@@ -62,4 +62,5 @@ that room to the players' homes right away: add a `ROOM_DEFS` entry in `src/cont
 ## Boss rewards by fight mode
 
 «Пацанский» — tattoos (a tattoo set, `src/content/tattoos.ts`, art by `tools/rig/build-tattoos.py`), «Блатной» — things (clothes, `wear` in `src/content/bosses.ts`),
-«Авторитетный» — tattoos. Every boss gets his own tattoo sets and things.
+«Авторитетный» — tattoos and the boss's own chair (a «Кресло» piece in the style of his room, `drop: { boss }` in `src/content/home.ts`,
+30% or for sure after 5 wins, then bought in the room editor). Every boss gets his own tattoo sets, things and chair.
