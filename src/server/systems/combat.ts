@@ -1,16 +1,16 @@
 import { autoSpendTalents } from "./home.ts";
 import { GameError, type Queryable } from "../db.ts";
-import { grantReward, idempotent, itemQty, ledger, moscowDay, nextMoscowMidnight, takeItem, type Ctx, type Granted } from "../core.ts";
+import { grantReward, idempotent, itemQty, ledger, moscowDay, nextMoscowMidnight, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { MEDAL_POINT_EVERY } from "../../content/medals.ts";
 import { BLAT_THING_CHANCE, BOSSES, EXTRA_KEY_CHANCE, OPEN_BOSSES, bossById, bossOpen, keyId, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
-import { WEAPONS, itemById, weaponById } from "../../content/items.ts";
+import { RUSH_PRICE, WEAPONS, itemById, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
 import { boostReward, mergeRewards, scaleReward } from "../../content/rewards.ts";
 import { BASE_CRIT_MULT, ROOM_DEFS, ROOM_PITY, roomUnlockId } from "../../content/home.ts";
 import { critChanceOf, talentExtras, talentsForDamage, weaponTalentBonus } from "../../content/talents.ts";
 import { playerBonus, weaponTalents } from "./home.ts";
 import { setBonuses } from "./collection.ts";
-import { fightMode, type FightMode } from "../../content/medals.ts";
+import { BLASTS_ON, fightMode, type FightMode } from "../../content/medals.ts";
 import { tattooSetsOfBoss } from "../../content/tattoos.ts";
 import { notifyBossLow } from "./notify.ts";
 
@@ -208,7 +208,7 @@ export const BATCH_SIZES = [1, 10, 100, 1000] as const;
  * goes on its cooldown; the damage is the weapon's base + its talents + the room's fist bonus + the boss sets, times the
  * home bonus %, every hit of the batch rolls its crit. Used by boss fights and by the clan boss.
  */
-export async function strike(ctx: Ctx, w: NonNullable<ReturnType<typeof weaponById>>, want: number, reason: string) {
+export async function strike(ctx: Ctx, w: NonNullable<ReturnType<typeof weaponById>>, want: number, reason: string, rush = false) {
   // pay with the weapon (a batch uses what is left of it — all of it: damage is global, the overkill reaches others' fights)
   let left: number | null = null;
   let readyAt: number | null = null;
@@ -219,7 +219,11 @@ export async function strike(ctx: Ctx, w: NonNullable<ReturnType<typeof weaponBy
   } else {
     if ((await itemQty(ctx.q, ctx.pid, w.id)) < 1) throw new GameError("no_item", `Нет оружия: ${w.name}`);
     const [cd] = await ctx.q.query<{ ready_at: Date }>("SELECT ready_at FROM cooldowns WHERE player_id=$1 AND item_id=$2", [ctx.pid, w.id]);
-    if (cd && new Date(cd.ready_at).getTime() > ctx.now) throw new GameError("cooldown", `${w.name} ещё перезаряжается`);
+    if (cd && new Date(cd.ready_at).getTime() > ctx.now) {
+      // «Ударить сейчас»: the reload is skipped for RUSH_PRICE, the weapon goes on a new cooldown after this hit
+      if (!rush) throw new GameError("cooldown", `${w.name} ещё перезаряжается`);
+      await takeMoney(ctx, RUSH_PRICE.currency, RUSH_PRICE.amount, `rush:${w.id}`);
+    }
     readyAt = ctx.now + (w.weapon.cooldownMin ?? 0) * 60_000;
     await ctx.q.query(
       "INSERT INTO cooldowns (player_id, item_id, ready_at) VALUES ($1,$2,$3) ON CONFLICT (player_id, item_id) DO UPDATE SET ready_at = EXCLUDED.ready_at",
@@ -255,7 +259,7 @@ export async function strike(ctx: Ctx, w: NonNullable<ReturnType<typeof weaponBy
   return { damage, crit, crits, count, left, readyAt, phraseIdx, phrases };
 }
 
-export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1): Promise<HitResult> {
+export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1, rush = false): Promise<HitResult> {
   return idempotent(ctx, idem ? `hit:${idem}` : undefined, async () => {
     const w = weaponById(weaponId);
     if (!w) throw new GameError("bad_weapon", "Этим нельзя бить босса");
@@ -270,7 +274,7 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1
       throw new GameError("fight_over", "Время боя вышло — босс ушёл");
     }
 
-    const { damage, crit, crits, count, left, readyAt, phraseIdx, phrases } = await strike(ctx, w, want, `hit:${bossId}`);
+    const { damage, crit, crits, count, left, readyAt, phraseIdx, phrases } = await strike(ctx, w, want, `hit:${bossId}`, rush);
     const seq = Number(g.last_seq) + 1;
     const total = Number(g.damage_total) + damage;
     await ctx.q.query("UPDATE bosses SET damage_total=$2, last_seq=$3 WHERE id=$1", [GLOBAL, total, seq]);
@@ -402,8 +406,8 @@ export async function claimFight(ctx: Ctx, fightId: number) {
   if (base.items?.length) base.items = await notOwnedUnique(ctx, base.items);
   const granted = await grantReward(ctx, mergeRewards(base, { items: [...key, ...drops, ...tattoos] }), `win:${def.id}`);
   if (unlocked.length) granted.unlocks = unlocked;
-  // the boss medal of this mode, for sure (the same share of damage as the pass)
-  if (earnedKey) {
+  // the boss medal of this mode, for sure (the same share of damage as the pass) — while the blasts are in the game
+  if (earnedKey && BLASTS_ON) {
     const [m] = await ctx.q.query<{ n: number }>(
       "INSERT INTO boss_medals (player_id, boss_id, tier, n) VALUES ($1,$2,$3,1) ON CONFLICT (player_id, boss_id, tier) DO UPDATE SET n = boss_medals.n + 1 RETURNING n",
       [ctx.pid, def.id, mode.medal],

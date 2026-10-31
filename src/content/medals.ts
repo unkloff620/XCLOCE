@@ -15,6 +15,9 @@ export type FightMode = "pacan" | "blat" | "avtor";
 export type MedalTier = "bronze" | "silver" | "gold";
 
 export interface FightModeDef { id: FightMode; name: string; hp: number; medal: MedalTier; things: boolean }
+/** the blasts (medals for every win) are out of the game for now — they will come back as «комбо» (weapon combos on a boss) */
+export const BLASTS_ON = false;
+
 export const FIGHT_MODES: FightModeDef[] = [
   { id: "pacan", name: "Пацанский", hp: 1, medal: "bronze", things: false },
   { id: "blat", name: "Блатной", hp: 3, medal: "silver", things: true },

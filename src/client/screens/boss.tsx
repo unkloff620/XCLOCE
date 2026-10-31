@@ -4,12 +4,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { api, type FightView, type Hit, type Tray } from "../api.ts";
 import { BOSSES, arenaOf, bossById, type BossDef, FIGHT_HOURS, rewardShare } from "../../content/bosses.ts";
-import { WEAPONS, weaponById } from "../../content/items.ts";
+import { RUSH_PRICE, WEAPONS, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES, bossLines } from "../../content/phrases.ts";
 import { BossSilhouette } from "../art/scenes.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { Icon } from "../art/icons.tsx";
-import { Bar, DropKind, Empty, GainLine, MysteryDrop, bossItemsCount, bossTattooCount } from "../ui.tsx";
+import { Bar, DropKind, Empty, GainLine, bossItemsCount, bossTattooCount } from "../ui.tsx";
 import { useFx, type Fx } from "../fx/attack.tsx";
 import { BossRulesHelp, useBossList } from "./bosses.tsx";
 import { WeaponShopWindow } from "./shop.tsx";
@@ -23,7 +23,7 @@ import { talentThreshold, talentsForDamage } from "../../content/talents.ts";
 import { TalentWindow } from "./talents.tsx";
 import { weaponStats } from "../weapon-stats.ts";
 import { BOXERS, useBossStrike } from "../fx/boss-strike.tsx";
-import { FIGHT_MODES, MEDAL_NAMES, MEDAL_SET, fightMode, medalBonus, medalStep, medalWeapon, type FightMode } from "../../content/medals.ts";
+import { BLASTS_ON, FIGHT_MODES, MEDAL_NAMES, MEDAL_SET, fightMode, medalBonus, medalStep, medalWeapon, type FightMode } from "../../content/medals.ts";
 import { BlastIcon } from "../art/blast.tsx";
 import { tattooSetsOfBoss } from "../../content/tattoos.ts";
 
@@ -146,7 +146,7 @@ function MultPicker({ mult, setMult }: { mult: Mult; setMult: (m: Mult) => void 
   );
 }
 
-function WeaponTray({ tray, onHit, onCooldown, onBuy, disabled, mult }: { tray: Tray[]; onHit: (id: string) => void; onCooldown: (name: string, leftMs: number) => void; onBuy: () => void; disabled: boolean; mult: Mult }) {
+function WeaponTray({ tray, onHit, onCooldown, onBuy, disabled, mult }: { tray: Tray[]; onHit: (id: string) => void; onCooldown: (name: string, leftMs: number, id: string) => void; onBuy: () => void; disabled: boolean; mult: Mult }) {
   const { state } = useGame();
   const now = useNow();
   return (
@@ -166,7 +166,7 @@ function WeaponTray({ tray, onHit, onCooldown, onBuy, disabled, mult }: { tray: 
             className={`weapon rar-${w.rarity} ${empty ? "empty" : ""} ${cd ? "cd" : ""}`}
             disabled={disabled}
             aria-disabled={!!cd}
-            onClick={() => (cd ? onCooldown(w.name, cd) : empty ? onBuy() : onHit(w.id))}
+            onClick={() => (cd ? onCooldown(w.name, cd, w.id) : empty ? onBuy() : onHit(w.id))}
             title={`${w.name}: ${w.weapon!.action}`}
           >
             <ItemArt id={w.id} size={40} />
@@ -282,7 +282,9 @@ export function BossScreen({ id }: { id: string }) {
   const strikeFx = useBossStrike(boss?.id ?? "", fighting && (hpShown ?? 1) > 0 && !BOXERS.has(boss?.id ?? "") && (hpShown === null || hpShown / Math.max(1, view?.hpMax ?? row?.hpMax ?? boss?.hp ?? 1) >= BEATEN_BELOW));
 
   const [mult, setMult] = useState<Mult>(1);
-  const attack = async (weapon: string) => {
+  // a free weapon still reloading: «ударить сейчас» for RUSH_PRICE (a window asks first), then it reloads again
+  const [rushAsk, setRushAsk] = useState<{ id: string; name: string; left: number } | null>(null);
+  const attack = async (weapon: string, rush = false) => {
     const w = weaponById(weapon)!;
     const have = tray.find((x) => x.id === weapon)?.qty ?? 0;
     const n = batchOf(w.weapon.kind, have, mult);
@@ -294,7 +296,7 @@ export function BossScreen({ id }: { id: string }) {
     setPendingDmg((d) => d + est);
     setTray((t) => t.map((x) => (x.id === weapon && w.weapon.kind === "consumable" ? { ...x, qty: Math.max(0, x.qty - n) } : x)));
     try {
-      const r = await api.action<{ damage: number; crit: boolean; crits: number; count: number; phrase: string; hp: number; status: string; left: number | null; readyAt: number | null; fightDamage: number; talentDamage: number; talentsGained: number }>("attack", { weapon, count: n, idem: crypto.randomUUID() });
+      const r = await api.action<{ damage: number; crit: boolean; crits: number; count: number; phrase: string; hp: number; status: string; left: number | null; readyAt: number | null; fightDamage: number; talentDamage: number; talentsGained: number }>("attack", { weapon, count: n, idem: crypto.randomUUID(), ...(rush ? { rush: true } : {}) });
       const batch = (r.result.count ?? 1) > 1;
       const text = batch
         ? `×${r.result.count} · −${full(r.result.damage)}${r.result.crits ? ` · критов: ${r.result.crits}` : ""}`
@@ -423,9 +425,25 @@ export function BossScreen({ id }: { id: string }) {
             <button className="btn sm dark" onClick={() => setTab("mine")}>Мои</button>
             <button className={`btn sm ${fleeAsk ? "red" : "dark"}`} onClick={flee} disabled={busy === "fight_flee"}>{fleeAsk ? "Точно?" : "Сдаться"}</button>
           </div>
-          <WeaponTray tray={tray} onHit={attack} onBuy={() => setShopOpen(true)} onCooldown={(name, left) => { haptic.err(); toast(`${name} перезаряжается: ещё ${clock(left)}`, "err"); }} disabled={view?.status !== undefined && view.status !== "active"} mult={mult} />
+          <WeaponTray tray={tray} onHit={attack} onBuy={() => setShopOpen(true)} onCooldown={(name, left, id) => { haptic.tap(); setRushAsk({ id, name, left }); }} disabled={view?.status !== undefined && view.status !== "active"} mult={mult} />
         </div>
         {shopOpen && <WeaponShopWindow onClose={closeShop} />}
+        {rushAsk && (
+          <Modal title={`${rushAsk.name} перезаряжается`} onClose={() => setRushAsk(null)}>
+            <div className="col center" style={{ gap: 12 }}>
+              <ItemArt id={rushAsk.id} size={72} />
+              <span className="small">Ещё {clock(rushAsk.left)}. Ударить сейчас за <b><Icon name={RUSH_PRICE.currency} size={14} /> {RUSH_PRICE.amount} $</b>? После удара — снова перезарядка.</span>
+              <div className="row" style={{ gap: 8, width: "100%" }}>
+                <button className="btn dark grow" onClick={() => setRushAsk(null)}>Отмена</button>
+                <button className="btn gold grow" disabled={(state?.wallet.USD ?? 0) < RUSH_PRICE.amount}
+                  onClick={() => { const id = rushAsk.id; setRushAsk(null); void attack(id, true); }}>
+                  Ударить за {RUSH_PRICE.amount} $
+                </button>
+              </div>
+              {(state?.wallet.USD ?? 0) < RUSH_PRICE.amount && <span className="tiny" style={{ color: "#ff8a9e" }}>Не хватает долларов</span>}
+            </div>
+          </Modal>
+        )}
       {talentsOpen && <TalentWindow onClose={() => setTalentsOpen(false)} />}
         {tab !== null && (
           <Modal title={tab === "top" ? "Топ боя" : "Мои удары"} onClose={() => setTab(null)}>
@@ -543,7 +561,7 @@ export function BossScreen({ id }: { id: string }) {
               {FIGHT_MODES.map((m, i) => (
                 <button key={m.id} type="button" role="tab" aria-selected={mode === m.id} className={`mode-tab ${m.id} ${mode === m.id ? "on" : ""}`}
                   onClick={() => { if (m.id === mode) return; haptic.tap(); setSlide(i > MODE_ORDER.indexOf(mode) ? "r" : "l"); setPick(m.id); }}
-                  aria-label={`${m.name}: здоровье ×${m.hp}, взрыв «${MEDAL_NAMES[m.medal]}»${m.things ? ", падают вещи" : ""}`}>
+                  aria-label={`${m.name}: здоровье ×${m.hp}${m.things ? ", падают вещи" : ""}`}>
                   {m.name}
                 </button>
               ))}
@@ -562,10 +580,11 @@ export function BossScreen({ id }: { id: string }) {
             <GainLine r={doorReward} size={14} />
             {!!boss.wear && fightMode(mode).things && <DropKind kind="wear" size={14} count={bossItemsCount(boss, state) ?? undefined} />}
             {!!bossTattooCount(boss.id, state, mode) && <DropKind kind="tattoo" size={14} count={bossTattooCount(boss.id, state, mode)!} />}
-            {!!boss.drop?.length && <MysteryDrop size={14} />}
-            <span className="gain medal-chip" title={`Взрыв «${MEDAL_NAMES[fightMode(mode).medal]}» за каждую победу; каждый сразу добавляет урон, ${MEDAL_SET} — полный набор`}>
-              <BlastIcon tier={fightMode(mode).medal} size={18} /><b className="num">{Math.min(MEDAL_SET, row?.medals?.[fightMode(mode).medal] ?? 0)}/{MEDAL_SET}</b>
-            </span>
+            {BLASTS_ON && (
+              <span className="gain medal-chip" title={`Взрыв «${MEDAL_NAMES[fightMode(mode).medal]}» за каждую победу; каждый сразу добавляет урон, ${MEDAL_SET} — полный набор`}>
+                <BlastIcon tier={fightMode(mode).medal} size={18} /><b className="num">{Math.min(MEDAL_SET, row?.medals?.[fightMode(mode).medal] ?? 0)}/{MEDAL_SET}</b>
+              </span>
+            )}
           </span>
           {blocked && locked && <span className="door-lock"><Icon name="lock" size={30} /></span>}
         </button>
@@ -576,8 +595,8 @@ export function BossScreen({ id }: { id: string }) {
       {!locked && door === "closed" && mode !== "avtor" && <button type="button" className="mode-arrow r" onClick={() => goMode(1)} aria-label="Следующий режим">›</button>}
       <div className="fight-bottom prefight-panel">
         <div className="tiny muted center mode-hint">
-          {soloPick ? "Соло (бьёшь один): здоровье" : `${fightMode(mode).name}: здоровье`} {full(Math.round((row?.hpMax ?? boss.hp) * fightMode(mode).hp))} · взрыв «{MEDAL_NAMES[fightMode(mode).medal]}»{fightMode(mode).things ? " · падают вещи босса" : ""}{tattooSetsOfBoss(boss.id).some((t) => t.mode === mode) ? " · падают наколки" : ""}.
-          {" "}Каждый взрыв — +{full(medalStep(boss, fightMode(mode).medal))} к урону «{weaponById(medalWeapon(boss))?.name}» сразу, все {MEDAL_SET} — +{full(medalBonus(boss, fightMode(mode).medal))}.
+          {soloPick ? "Соло (бьёшь один): здоровье" : `${fightMode(mode).name}: здоровье`} {full(Math.round((row?.hpMax ?? boss.hp) * fightMode(mode).hp))}{BLASTS_ON ? ` · взрыв «${MEDAL_NAMES[fightMode(mode).medal]}»` : ""}{fightMode(mode).things ? " · падают вещи босса" : ""}{tattooSetsOfBoss(boss.id).some((t) => t.mode === mode) ? " · падают наколки" : ""}.
+          {BLASTS_ON && <>{" "}Каждый взрыв — +{full(medalStep(boss, fightMode(mode).medal))} к урону «{weaponById(medalWeapon(boss))?.name}» сразу, все {MEDAL_SET} — +{full(medalBonus(boss, fightMode(mode).medal))}.</>}
         </div>
         <div className="row small" style={{ justifyContent: "space-between", gap: 6 }}>
           <span className="chip gold"><Icon name="clock" size={14} />8 часов</span>

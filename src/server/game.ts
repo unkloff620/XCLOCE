@@ -142,7 +142,7 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
   const idem = typeof body.idem === "string" ? body.idem.slice(0, 80) : undefined;
   switch (type) {
     case "fight_start": return combat.startFight(ctx, str(body.boss, "boss", 40), body.solo === true, body.mode === undefined ? "pacan" : oneOf(body.mode, ["pacan", "blat", "avtor"] as const, "mode"));
-    case "attack": return combat.attack(ctx, str(body.weapon, "weapon", 40), idem, body.count === undefined ? 1 : num(body.count, "count"));
+    case "attack": return combat.attack(ctx, str(body.weapon, "weapon", 40), idem, body.count === undefined ? 1 : num(body.count, "count"), body.rush === true);
     case "fight_claim": return combat.claimFight(ctx, num(body.fightId, "fightId"));
     case "fight_flee": return combat.fleeFight(ctx);
     case "task": return locations.doTask(ctx, str(body.taskId, "taskId", 40));

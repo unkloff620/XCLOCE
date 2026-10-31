@@ -41,6 +41,9 @@ export interface ItemDef {
   sell?: number;
 }
 
+/** a free weapon still reloading can hit at once for this (the player agrees in a window first); then it reloads again */
+export const RUSH_PRICE = { currency: "USD" as const, amount: 2 };
+
 export const WEAPONS: ItemDef[] = [
   {
     id: "fist", name: "Кулак", category: "weapon", rarity: "common", maxStack: 1,
