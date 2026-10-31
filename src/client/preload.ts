@@ -9,12 +9,13 @@ import { ASSET_FILES } from "./asset-manifest.ts";
 import { ROOM_BACKDROP, ROOM_BG } from "../content/home-scene.ts";
 
 /** cache-busting versions of redrawn art (bump when the picture changes) */
-export const ART_VER = { heroPart: 5, hair: 4, wear: 3, items: 3, pepe: 2 } as const;
+export const ART_VER = { heroPart: 5, hair: 4, wear: 3, items: 3, pepe: 2, tattoo: 1 } as const;
 
 /** the URL a screen really requests for a file from the manifest */
 export function usedUrl(path: string): string {
   if (path.startsWith("/assets/hero/hair/")) return `${path}?v=${ART_VER.hair}`;
   if (path.startsWith("/assets/hero/wear/")) return `${path}?v=${ART_VER.wear}`;
+  if (path.startsWith("/assets/hero/tattoo/")) return `${path}?v=${ART_VER.tattoo}`;
   if (path.startsWith("/assets/hero/")) return `${path}?v=${ART_VER.heroPart}`;
   if (path.startsWith("/assets/items/")) return `${path}?v=${ART_VER.items}`;
   if (path.startsWith("/bosses/pepe/")) return `${path}?v=${ART_VER.pepe}`;

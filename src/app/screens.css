@@ -4168,3 +4168,11 @@ body { background-attachment: fixed; }
 .yard-gain { transform: translate(-50%, -50%); }
 .yard-gain .gain-line { gap: 8px; }
 .yard-gain .gain { color: #ffe27a; }
+/* the hero editor «Наколки»: the set's progress and the tattoos (grey — not dropped yet) */
+.ink-sets { display: flex; flex-direction: column; gap: 4px; }
+.ink-set { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; padding: 6px 9px; border-radius: 10px; border: 2px solid var(--line); background: var(--tex), var(--bg2); font-size: 13px; }
+.ink-set .num { color: var(--gold); font-weight: 900; }
+.ink-set small { flex-basis: 100%; color: var(--muted); font-size: 11px; }
+.ink-set.done { border-color: #ffcc33; }
+.sty-item.ink-item.locked { opacity: 0.45; filter: grayscale(1); cursor: default; }
+.sty-body .link-btn { border: 0; background: none; padding: 0; color: var(--gold); font: inherit; font-weight: 800; text-decoration: underline; cursor: pointer; }

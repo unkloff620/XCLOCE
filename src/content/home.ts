@@ -1,4 +1,5 @@
 import type { Currency } from "./currencies.ts";
+import { TATTOO_IDS } from "./tattoos.ts";
 
 /*
  * Дом: оборудование на заднем плане и комнаты. Оба дают боевые бонусы.
@@ -226,8 +227,8 @@ export const SKIN_TONES = [
   { base: "#5e3a24", shade: "#432717" },
 ] as const;
 
-export interface Look { hair: string; hairColor: number; eyes: number; skin: number }
-export const DEFAULT_LOOK: Look = { hair: "bald", hairColor: 0, eyes: 0, skin: 1 };
+export interface Look { hair: string; hairColor: number; eyes: number; skin: number; /** inked tattoos (content/tattoos.ts) */ tattoos?: string[] }
+export const DEFAULT_LOOK: Look = { hair: "bald", hairColor: 0, eyes: 0, skin: 1, tattoos: [] };
 
 export function normalizeLook(v: unknown): Look {
   const o = (v && typeof v === "object" ? v : {}) as Record<string, unknown>;
@@ -237,6 +238,7 @@ export function normalizeLook(v: unknown): Look {
     hairColor: idx(o.hairColor, HAIR_COLORS.length, DEFAULT_LOOK.hairColor),
     eyes: idx(o.eyes, EYE_COLORS.length, DEFAULT_LOOK.eyes),
     skin: idx(o.skin, SKIN_TONES.length, DEFAULT_LOOK.skin),
+    tattoos: Array.isArray(o.tattoos) ? [...new Set(o.tattoos.filter((t): t is string => typeof t === "string" && TATTOO_IDS.includes(t)))] : [],
   };
 }
 

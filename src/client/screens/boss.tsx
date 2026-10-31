@@ -25,6 +25,7 @@ import { weaponStats } from "../weapon-stats.ts";
 import { BOXERS, useBossStrike } from "../fx/boss-strike.tsx";
 import { FIGHT_MODES, MEDAL_NAMES, MEDAL_SET, fightMode, medalBonus, medalStep, medalWeapon, type FightMode } from "../../content/medals.ts";
 import { BlastIcon } from "../art/blast.tsx";
+import { tattooSetsOfBoss } from "../../content/tattoos.ts";
 
 /** the mode buttons on the door wall are short: the full names do not fit */
 const MODE_SHORT: Record<FightMode, string> = { pacan: "Пац.", blat: "Блат.", avtor: "Авто." };
@@ -541,7 +542,7 @@ export function BossScreen({ id }: { id: string }) {
       </div>
       <div className="fight-bottom prefight-panel">
         <div className="tiny muted center mode-hint">
-          {soloPick ? "Соло (бьёшь один): здоровье" : `${fightMode(mode).name}: здоровье`} {full(Math.round((row?.hpMax ?? boss.hp) * fightMode(mode).hp))} · взрыв «{MEDAL_NAMES[fightMode(mode).medal]}»{fightMode(mode).things ? " · падают вещи босса" : ""}.
+          {soloPick ? "Соло (бьёшь один): здоровье" : `${fightMode(mode).name}: здоровье`} {full(Math.round((row?.hpMax ?? boss.hp) * fightMode(mode).hp))} · взрыв «{MEDAL_NAMES[fightMode(mode).medal]}»{fightMode(mode).things ? " · падают вещи босса" : ""}{tattooSetsOfBoss(boss.id).some((t) => t.mode === mode) ? " · падают наколки" : ""}.
           {" "}Каждый взрыв — +{full(medalStep(boss, fightMode(mode).medal))} к урону «{weaponById(medalWeapon(boss))?.name}» сразу, все {MEDAL_SET} — +{full(medalBonus(boss, fightMode(mode).medal))}.
         </div>
         <div className="row small" style={{ justifyContent: "space-between", gap: 6 }}>

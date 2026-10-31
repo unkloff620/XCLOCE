@@ -11,6 +11,7 @@ import { critChanceOf, talentExtras, talentsForDamage, weaponTalentBonus } from 
 import { playerBonus, weaponTalents } from "./home.ts";
 import { setBonuses } from "./collection.ts";
 import { fightMode, type FightMode } from "../../content/medals.ts";
+import { tattooSetsOfBoss } from "../../content/tattoos.ts";
 import { notifyBossLow } from "./notify.ts";
 
 /*
@@ -385,11 +386,21 @@ export async function claimFight(ctx: Ctx, fightId: number) {
       }
     }
   }
+  // a tattoo of this boss's set: one per win in the set's mode, a piece the player does not have yet (content/tattoos.ts)
+  const tattoos: { id: string; qty: number }[] = [];
+  if (earnedKey) {
+    for (const s of tattooSetsOfBoss(def.id)) {
+      if (s.mode !== mode.id) continue;
+      const have = new Set((await ctx.q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id = ANY($2)", [ctx.pid, s.pieces.map((p) => p.id)])).map((r) => r.item_id));
+      const left = s.pieces.filter((p) => !have.has(p.id));
+      if (left.length) tattoos.push({ id: left[Math.floor(ctx.rng() * left.length)].id, qty: 1 });
+    }
+  }
   // one-of-a-kind rewards (the statue) are not handed out again
   // the admin's «Увеличить награды» for this boss (rewards in % of the usual)
   const base = boostReward(scaleReward(def.reward, share), ctx.cfg.bossReward[def.id] ?? 1);
   if (base.items?.length) base.items = await notOwnedUnique(ctx, base.items);
-  const granted = await grantReward(ctx, mergeRewards(base, { items: [...key, ...drops] }), `win:${def.id}`);
+  const granted = await grantReward(ctx, mergeRewards(base, { items: [...key, ...drops, ...tattoos] }), `win:${def.id}`);
   if (unlocked.length) granted.unlocks = unlocked;
   // the boss medal of this mode, for sure (the same share of damage as the pass)
   if (earnedKey) {

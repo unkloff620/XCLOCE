@@ -1,6 +1,7 @@
 import type { Queryable } from "../db.ts";
 import { BOSSES, CASE_WINS, bossById, bossSetItems } from "../../content/bosses.ts";
 import { medalBonusFor, medalWeapon, type MedalTier } from "../../content/medals.ts";
+import { TATTOO_IDS, TATTOO_SETS } from "../../content/tattoos.ts";
 
 /*
  * Boss sets and «Дела»:
@@ -26,6 +27,9 @@ export async function setBonuses(q: Queryable, pid: number): Promise<Record<stri
     if (!b.set || !items.length || !items.every((id) => have.has(id))) continue;
     out[b.set.weapon] = (out[b.set.weapon] ?? 0) + b.set.damage;
   }
+  // tattoo sets: every piece of a set owned (inked or not) adds the set's bonus
+  const ink = new Set((await q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id = ANY($2)", [pid, TATTOO_IDS])).map((r) => r.item_id));
+  for (const s of TATTOO_SETS) if (s.pieces.every((p) => ink.has(p.id))) out[s.bonus.weapon] = (out[s.bonus.weapon] ?? 0) + s.bonus.damage;
   // boss medals: every medal adds its share at once, a full set of MEDAL_SET — the whole bonus, to the boss's weapon
   const got = await q.query<{ boss_id: string; tier: MedalTier; n: number }>("SELECT boss_id, tier, n FROM boss_medals WHERE player_id=$1 AND n > 0", [pid]);
   for (const m of got) {

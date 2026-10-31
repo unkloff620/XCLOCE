@@ -4,10 +4,12 @@ import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useGame } from "../store.tsx";
 import { ItemArt } from "../art/items.tsx";
-import { ITEMS, type Slot } from "../../content/items.ts";
+import { ITEMS, weaponById, type Slot } from "../../content/items.ts";
 import { HAIR_COLORS, HAIR_STYLES, type Look } from "../../content/home.ts";
 import { haptic } from "../telegram.ts";
 import type { RigEdit } from "../art/rig.tsx";
+import { TATTOO_SETS } from "../../content/tattoos.ts";
+import { bossById } from "../../content/bosses.ts";
 
 /*
  * The hero editor right on the home screen: the room and every button go grey, only the hero keeps his colours,
@@ -46,12 +48,20 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
 }) {
   const { state, act, busy } = useGame();
   const [saving, setSaving] = useState(false);
+  // «Наколки»: the tattoos tab (the hero is picked by body parts there too; no part — every tattoo)
+  const [inkTab, setInkTab] = useState(false);
   if (!state) return null;
   const mode = focus.mode;
   const part = focus.part;
   const setMode = (m: "items" | "body") => {
     haptic.tap();
+    setInkTab(false);
     setFocus({ mode: m, part: m === "items" ? "SHIRT" : "HEAD" });
+  };
+  const openInk = () => {
+    haptic.tap();
+    setInkTab(true);
+    setFocus({ mode: "body", part: null });
   };
   const owned = new Set(state.inventory.map((i) => i.id));
   const slot = mode === "items" && part && (CLOTHES as string[]).includes(part) ? (part as Slot) : null;
@@ -92,15 +102,57 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
     }
   };
 
-  const tattooRow = (where: string) => (
+  // a tattoo is inked on / taken off with a tap (free); the ones not dropped yet stand grey with where they drop
+  const inked = new Set(draft.look.tattoos ?? []);
+  const toggleInk = (id: string) => {
+    if (!owned.has(id)) return;
+    const next = inked.has(id) ? [...inked].filter((t) => t !== id) : [...inked, id];
+    patch({ tattoos: next });
+  };
+  const inkStrip = (where: string | null) => (
+    <div className="sty-strip">
+      {TATTOO_SETS.flatMap((s) => s.pieces.filter((p) => !where || p.part === where).map((p) => {
+        const have = owned.has(p.id);
+        return (
+          <button key={p.id} className={`sty-item rar-epic ink-item ${inked.has(p.id) ? "on" : ""} ${have ? "" : "locked"}`} onClick={() => toggleInk(p.id)} disabled={!have}
+            title={have ? (inked.has(p.id) ? "Свести" : "Набить") : `Выпадает с ${bossById(s.boss)?.name} в «Пацанском»`}>
+            <ItemArt id={p.id} size={46} />
+            <span className="sty-item-name">{have ? p.name : "???"}</span>
+          </button>
+        );
+      }))}
+    </div>
+  );
+  const inkSets = (
+    <div className="ink-sets">
+      {TATTOO_SETS.map((s) => {
+        const got = s.pieces.filter((p) => owned.has(p.id)).length;
+        return (
+          <span key={s.id} className={`ink-set ${got === s.pieces.length ? "done" : ""}`}>
+            <b>Сет «{s.name}»</b> <span className="num">{got}/{s.pieces.length}</span>
+            <small>с {bossById(s.boss)?.name} в «Пацанском» · весь сет: +{s.bonus.damage} к урону «{weaponById(s.bonus.weapon)?.name}»</small>
+          </span>
+        );
+      })}
+    </div>
+  );
+  const tattooRow = (where: string, place: string) => (
     <div className="sty-row">
-      <span className="tiny muted">Татуировки {where}</span>
-      <div className="sty-soon-box"><span className="small">Скоро: татуировки будут выпадать с боссов, их можно будет набить здесь.</span></div>
+      <span className="tiny muted">Наколки {place}</span>
+      {inkStrip(where)}
     </div>
   );
 
   let body: ReactNode;
-  if (!part) {
+  if (inkTab) {
+    body = (
+      <>
+        {inkSets}
+        {part && <span className="tiny muted">Наколки {TATTOO_WHERE[part] ?? ""} · <button type="button" className="link-btn" onClick={() => setFocus({ ...focus, part: null })}>все</button></span>}
+        {inkStrip(part && TATTOO_WHERE[part] ? part : null)}
+      </>
+    );
+  } else if (!part) {
     body = <div className="sty-hint">Нажми на персонажа — выбери, что изменить</div>;
   } else if (slot) {
     body = (
@@ -148,11 +200,11 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
             </div>
           </div>
         )}
-        {tattooRow(TATTOO_WHERE.HEAD)}
+        {tattooRow("HEAD", TATTOO_WHERE.HEAD)}
       </>
     );
   } else {
-    body = tattooRow(TATTOO_WHERE[part] ?? "");
+    body = tattooRow(part, TATTOO_WHERE[part] ?? "");
   }
   const title = part ? (mode === "items" ? ITEM_PART[part] : BODY_PART[part]) : null;
 
@@ -160,9 +212,10 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
     // the panel goes to <body>: the fixed .fit-page is its own stacking layer and would stay under the nav
     <div className="sty-panel">
       <div className="sty-head">
-        <div className="sty-tabs two">
-          <button className={mode === "items" ? "on" : ""} onClick={() => setMode("items")}>Вещи</button>
-          <button className={mode === "body" ? "on" : ""} onClick={() => setMode("body")}>Тело</button>
+        <div className="sty-tabs three">
+          <button className={mode === "items" && !inkTab ? "on" : ""} onClick={() => setMode("items")}>Вещи</button>
+          <button className={mode === "body" && !inkTab ? "on" : ""} onClick={() => setMode("body")}>Тело</button>
+          <button className={inkTab ? "on" : ""} onClick={openInk}>Наколки</button>
         </div>
         <button className="sty-x" onClick={onClose} aria-label="Закрыть без сохранения">✕</button>
       </div>
@@ -184,7 +237,7 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
               );
             })}
           </div>
-        ) : title && <div className="sty-part"><b>{title}</b><span className="tiny muted">нажми на другую часть персонажа</span></div>}
+        ) : !inkTab && title && <div className="sty-part"><b>{title}</b><span className="tiny muted">нажми на другую часть персонажа</span></div>}
         {body}
       </div>
       <div className="sty-actions">

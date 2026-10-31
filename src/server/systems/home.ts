@@ -214,6 +214,12 @@ export async function saveDecor(ctx: Ctx, raw: Record<string, unknown>) {
 
 export async function setLook(ctx: Ctx, raw: Record<string, unknown>) {
   const look = normalizeLook(raw);
+  // only tattoos the player has can be inked on
+  if (look.tattoos?.length) {
+    const have = await ctx.q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id = ANY($2)", [ctx.pid, look.tattoos]);
+    const ok = new Set(have.map((r) => r.item_id));
+    look.tattoos = look.tattoos.filter((t) => ok.has(t));
+  }
   await ctx.q.query("UPDATE appearance SET body=$2 WHERE player_id=$1", [ctx.pid, JSON.stringify(look)]);
   return { look };
 }

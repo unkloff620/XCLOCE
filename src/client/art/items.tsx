@@ -3,6 +3,7 @@ import { passLook } from "../../content/bosses.ts";
 import { Icon } from "./icons.tsx";
 import { ART_VER } from "../preload.ts";
 import { STASH_IDS } from "../../content/stashes.ts";
+import { TATTOO_IDS } from "../../content/tattoos.ts";
 
 /** Items drawn by the artist (public/assets/items/<id>.webp, built by tools/items/build-items.py). */
 const RASTER_ITEMS = new Set([
@@ -11,6 +12,7 @@ const RASTER_ITEMS = new Set([
   "jacket-komandate", "pants-komandate", "sneakers-komandate", "sweater-vostok",
   "poker-chip", "energy-drink", "energy-pack", "energy-50", "energy-100", "energy-500", "lost-wallet", "bottle-cap", "flyer-passive", "spinner", "sticker-hodl", "statue-close", "trophy-sun", "santa-hat", "laser-eyes",
   ...STASH_IDS,
+  ...TATTOO_IDS,
 ]);
 
 /** picture of an energy offer: +50 a crate, +100 a box, +500 a pile of cans (the energy icon for other amounts) */

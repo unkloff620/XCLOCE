@@ -14,6 +14,7 @@ import { createContext, useContext, useEffect, useMemo, useRef } from "react";
 import { RIG } from "./rig-data.ts";
 import { HAIR_FIT, SKIN_ORIGINAL, WEAR_FIT } from "./rig-look.ts";
 import { HELD_FIT } from "./held-data.ts";
+import { TATTOO_FIT } from "./tattoo-data.ts";
 import { SEAT } from "../../content/home-scene.ts";
 import { CHAIR_FIT } from "./desk-data.ts";
 import { DEFAULT_LOOK, type Look } from "../../content/home.ts";
@@ -251,6 +252,21 @@ function Img({ p }: { p: PartId }) {
   return <image href={src} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" />;
 }
 
+/** the inked tattoos of one hero part, right over its skin (under the clothes); the ink sinks into any skin tone */
+function Ink({ part }: { part: string }) {
+  const { tattoos } = useContext(LookCtx);
+  const list = (tattoos ?? []).filter((id) => TATTOO_FIT[id]?.part === part);
+  if (!list.length) return null;
+  return (
+    <g className="rig-ink">
+      {list.map((id) => {
+        const f = TATTOO_FIT[id];
+        return <image key={id} href={`/assets/hero/tattoo/${id}.webp?v=${ART_VER.tattoo}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
+      })}
+    </g>
+  );
+}
+
 function Hair() {
   const look = useContext(LookCtx);
   const hat = wornIn(useContext(WornCtx), "HEAD"); // hair is cut to fit under a hat
@@ -302,6 +318,7 @@ function HandFrames() {
     return (
       <g className="rig-hand">
         <image href={hand} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" />
+        <Ink part="handR" />
       </g>
     );
   }
@@ -311,6 +328,7 @@ function HandFrames() {
       {[1, 2, 3, 4, 5, 6, 7, 8].map((k) => (
         <image key={k} className={`rig-hf rig-hf-${k}`} href={`${dir}/handR-f${k}.webp?v=${ART_VER.heroPart}`} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" />
       ))}
+      <Ink part="handR" />
     </g>
   );
 }
@@ -321,6 +339,7 @@ function Bone({ p, className, children }: { p: PartId; className?: string; child
   return (
     <g className={className} style={{ transformOrigin: `${pv[0]}px ${pv[1]}px`, transformBox: "view-box" }}>
       <Img p={p} />
+      <Ink part={p} />
       {children}
     </g>
   );
@@ -349,7 +368,7 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
       {/* torso breathes; arms and head ride along in a second group with the same animation */}
       {/* the torso layer carries the legs too; only the chest breathes visibly (origin at the hips) */}
       <g className="rig-breath">
-        <Ol><Img p="torso" /></Ol>
+        <Ol><Img p="torso" /><Ink part="torso" /></Ol>
       </g>
       <Ol><Wear slot="SHOES" /></Ol>
       <Ol><Wear slot="PANTS" /></Ol>

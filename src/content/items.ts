@@ -1,7 +1,8 @@
 import { STASH_LOCATION_NAMES, STASH_SETS, stashLevel } from "./stashes.ts";
-import { BOSSES, CARD_TIERS, isFirstWinItem, keyId, passLook, unlockBossOf } from "./bosses.ts";
+import { BOSSES, CARD_TIERS, bossById, isFirstWinItem, keyId, passLook, unlockBossOf } from "./bosses.ts";
+import { TATTOO_SETS } from "./tattoos.ts";
 
-/** "tattoo": inked on a part of the body in the hero editor (none in the game yet) */
+/** "tattoo": inked on a part of the body in the hero editor («Наколки», content/tattoos.ts) */
 export type Category = "weapon" | "clothing" | "item" | "reward" | "stash" | "event" | "tattoo";
 export type Rarity = "common" | "rare" | "epic" | "legendary" | "mythic";
 export type Slot = "BODY" | "PANTS" | "SHIRT" | "SHOES" | "HEAD" | "ACCESSORY" | "SPECIAL" | "HAND";
@@ -150,7 +151,15 @@ const STASHES: ItemDef[] = STASH_SETS.flatMap((s) =>
     description: `${it.description} Набор «${s.name}».`, sources: [`Локация «${STASH_LOCATION_NAMES[s.location]}»: задания и закрытие локации`],
   })),
 );
-export const ITEMS: ItemDef[] = [...WEAPONS, ...WEARABLES, ...MISC, ...KEYS, TROPHY, STATUE, ...STASHES];
+/** Наколки (content/tattoos.ts): one of each, inked on in the hero editor */
+const TATTOOS: ItemDef[] = TATTOO_SETS.flatMap((s) =>
+  s.pieces.map((p) => ({
+    id: p.id, name: `Наколка: ${p.name}`, category: "tattoo" as const, rarity: "epic" as const, maxStack: 1,
+    description: `Из сета «${s.name}». Набивается бесплатно в редакторе персонажа → «Наколки». Весь сет: +${s.bonus.damage} к урону «${WEAPONS.find((w) => w.id === s.bonus.weapon)?.name ?? s.bonus.weapon}».`,
+    sources: [`${bossById(s.boss)?.name ?? s.boss}: по одной наколке за победу в «Пацанском»`],
+  })),
+);
+export const ITEMS: ItemDef[] = [...WEAPONS, ...WEARABLES, ...MISC, ...KEYS, TROPHY, STATUE, ...STASHES, ...TATTOOS];
 const BY_ID = new Map(ITEMS.map((i) => [i.id, i]));
 export const itemById = (id: string) => BY_ID.get(id);
 export const weaponById = (id: string) => {
