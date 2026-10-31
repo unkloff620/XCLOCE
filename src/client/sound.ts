@@ -15,8 +15,8 @@ export type Sfx = "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" |
   | "nishtyak" | "spit" | "brawl"
   /* a stash found in a task: «Ооо, нычка!» in the same hoarse prison voice (public/assets/sound/nychka.mp3, OpenAI TTS + ffmpeg) */
   | "nychka"
-  /* a new level of the player: «Красавелла, брателла!» in that voice (public/assets/sound/krasavella.mp3) */
-  | "krasavella"
+  /* a new level of the player: «Красавчик!» in that voice (public/assets/sound/krasavchik.mp3) */
+  | "krasavchik"
   /* a new achievement: «Ништяк!» (the same voice as for the biceps, public/assets/sound/nishtyak-4.mp3) */
   | "wow"
   /* «Личное дело»: a sheet of paper turned over */
@@ -164,7 +164,7 @@ const SAMPLE_URLS = {
   nishtyak: "/assets/sound/nishtyak-4.mp3",
   wow: "/assets/sound/nishtyak-4.mp3",
   nychka: "/assets/sound/nychka.mp3?v=5",
-  krasavella: "/assets/sound/krasavella.mp3",
+  krasavchik: "/assets/sound/krasavchik.mp3",
 } as Record<string, string>;
 /** a hit sound per weapon (w-<weapon id>) and a pick-up sound per yard find (y-<drop id>): tools/sound/build-item-sounds.py */
 const WEAPON_SOUNDS = ["fist", "mouse", "keyboard", "red-candle", "gpu", "rug-pull-gun"];
@@ -264,8 +264,8 @@ export function sfx(name: Sfx, power = 0.5) {
       tone(a, 140, t, 0.2, { type: "sawtooth", vol: 0.18, slide: 1.2 });
       tone(a, 170, t + 0.22, 0.4, { type: "sawtooth", vol: 0.18, slide: 0.7 });
       break;
-    case "krasavella":
-      sample(a, "krasavella", t, 1);
+    case "krasavchik":
+      sample(a, "krasavchik", t, 1);
       break;
     case "nychka":
       if (sample(a, "nychka", t, 1)) break;
