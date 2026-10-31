@@ -8,7 +8,8 @@ import { loadConfig, resetConfigCache } from "./config.ts";
 import { cleanEffects } from "../content/events.ts";
 import { cleanSchedule, exchangeScheduleText, exchangeWindow } from "../content/currencies.ts";
 import { EVENT_BOSSES, cleanEventBosses, eventBossById } from "../content/event-bosses.ts";
-import { energyNow, type Ctx, type PlayerRow } from "./core.ts";
+import { TATTOO_SETS } from "../content/tattoos.ts";
+import { energyNow, moscowDay, type Ctx, type PlayerRow } from "./core.ts";
 import { giveStartKit } from "./players.ts";
 import { leaveClan } from "./systems/clans.ts";
 import { ENERGY } from "../content/levels.ts";
@@ -169,10 +170,12 @@ export type Edit =
   | { op: "set_talents"; value: number }
   | { op: "set_talent"; weapon: string; branch: string; level: number }
   | { op: "set_name"; value: string }
+  | { op: "boss_limit_reset" }
+  | { op: "give_tattoo_set"; set: string }
   | { op: "ban"; reason: string }
   | { op: "unban" }
   | { op: "reset" };
-export const EDIT_OPS = ["set_money", "set_item", "add_item", "set_xp", "set_poker_xp", "set_zonk_xp", "set_energy", "set_talents", "set_talent", "set_name", "ban", "unban", "reset"] as const;
+export const EDIT_OPS = ["set_money", "set_item", "add_item", "set_xp", "set_poker_xp", "set_zonk_xp", "set_energy", "set_talents", "set_talent", "set_name", "ban", "unban", "reset", "boss_limit_reset", "give_tattoo_set"] as const;
 
 /**
  * Everything a player has earned, keyed by player_id. The reset wipes these and gives the starting kit again.
@@ -307,6 +310,27 @@ export async function edit(db: Db, adminTg: number, pid: number, e: Edit) {
         );
         await syncTalentExtras(q, pid);
         info = { weapon: e.weapon, branch: e.branch, from: r?.level ?? 0, to };
+        break;
+      }
+      case "boss_limit_reset": {
+        // today's finished fights stop counting toward the daily limit: their day goes back (fights.day is only for the limit)
+        const day = moscowDay(Date.now());
+        const r = await q.query("UPDATE fights SET day = day - 36500 WHERE player_id=$1 AND day=$2 AND status <> 'active' RETURNING id", [pid, day]);
+        info = { fights: r.length };
+        break;
+      }
+      case "give_tattoo_set": {
+        const set = TATTOO_SETS.find((s) => s.id === e.set);
+        if (!set) throw bad("Нет такого сета наколок");
+        let added = 0;
+        for (const piece of set.pieces) {
+          const r = await q.query(
+            "INSERT INTO inventory (player_id, item_id, qty, source, updated_at) VALUES ($1,$2,1,'admin',now()) ON CONFLICT (player_id, item_id) DO UPDATE SET qty = GREATEST(inventory.qty, 1), updated_at = now() RETURNING (xmax = 0) AS fresh",
+            [pid, piece.id],
+          );
+          if ((r[0] as { fresh?: boolean })?.fresh) { added++; await ledgerRow(q, pid, "item", piece.id, 1, adminTg); }
+        }
+        info = { set: set.name, added };
         break;
       }
       case "set_name": {

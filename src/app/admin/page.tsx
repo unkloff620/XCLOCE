@@ -11,6 +11,7 @@ import { ItemArt } from "../../client/art/items.tsx";
 import { CURRENCIES } from "../../content/currencies.ts";
 import { EXTRA_NAMES, TALENT_PATH, talentStop } from "../../content/talents.ts";
 import { BOSSES, bossById, bossHasArt, keyId, unlockBossOf } from "../../content/bosses.ts";
+import { TATTOO_SETS } from "../../content/tattoos.ts";
 import { offerById } from "../../content/shop.ts";
 import { taskById } from "../../content/locations.ts";
 import { EVENT_EFFECTS, FOREVER, effectLines, cleanEffects, type BossTweak } from "../../content/events.ts";
@@ -33,7 +34,7 @@ const ACTION_NAMES: Record<string, string> = {
 };
 const OP_NAMES: Record<string, string> = {
   set_money: "валюта", set_item: "предмет", add_item: "выдал", set_xp: "авторитет", set_poker_xp: "опыт покера", set_zonk_xp: "опыт зонка", set_energy: "энергия", set_talents: "свободные таланты",
-  set_talent: "ветка таланта", set_name: "имя", ban: "бан", unban: "разбан", reset: "сброс прогресса",
+  set_talent: "ветка таланта", set_name: "имя", ban: "бан", unban: "разбан", reset: "сброс прогресса", boss_limit_reset: "сброс лимита боссов", give_tattoo_set: "сет наколок",
 };
 
 // ---------------- api ----------------
@@ -699,6 +700,8 @@ function EditInfo({ op, info }: { op: string; info: unknown }) {
     op === "set_xp" ? "Авторитет" : op === "set_energy" ? "Энергия" : op === "set_talents" ? "Свободные таланты" : op === "set_name" ? "Имя" : "";
   if (op === "ban") return <span className="bad">заблокирован{i.reason ? `: ${i.reason}` : ""}</span>;
   if (op === "unban") return <span className="good">разблокирован</span>;
+  if (op === "boss_limit_reset") return <span className="good">лимит боссов на сегодня сброшен <span className="muted">(боёв: {fmt(i.fights)})</span></span>;
+  if (op === "give_tattoo_set") return <span className="good">выдан сет наколок «{String(i.set)}» <span className="muted">(новых: {fmt(i.added)})</span></span>;
   if (op === "reset") {
     const b = (i.before ?? {}) as Row;
     const m = (b.money ?? {}) as Row;
@@ -769,6 +772,14 @@ function Player({ id }: { id: number }) {
             <EditNum label="Энергия" value={num(p.energyNow)} onSave={(v) => edit({ op: "set_energy", value: v }, "Энергия")} />
             <EditNum label="Свободные таланты" value={num(p.talents)} onSave={(v) => edit({ op: "set_talents", value: v }, "Таланты")} />
             <EditText label="Имя" value={String(p.display_name)} onSave={(v) => edit({ op: "set_name", value: v }, "Имя")} />
+          </div>
+          <div className="adm-form" style={{ marginTop: 10 }}>
+            <button className="adm-btn" onClick={() => { if (confirm("Сбросить сегодняшний лимит боёв со всеми боссами?")) void edit({ op: "boss_limit_reset" }, "Сброс лимита на боссов"); }}>Сброс лимита на боссов</button>
+            {TATTOO_SETS.map((s) => (
+              <button key={s.id} className="adm-btn" onClick={() => { if (confirm(`Выдать весь сет наколок «${s.name}» (${bossById(s.boss)?.name})?`)) void edit({ op: "give_tattoo_set", set: s.id }, `Сет наколок «${s.name}»`); }}>
+                Сет наколок: «{s.name}» · {bossById(s.boss)?.name}
+              </button>
+            ))}
           </div>
           <BanBox banned={!!p.banned_at} onBan={(reason) => edit({ op: "ban", reason }, "Бан")} onUnban={() => edit({ op: "unban" }, "Разбан")} />
           <ResetBox name={String(p.display_name)} onReset={() => edit({ op: "reset" }, "Сброс прогресса")} />
