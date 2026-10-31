@@ -550,7 +550,7 @@ export function ProfileScreen() {
       <div className="room">
         <div className="scene-backdrop" style={{ backgroundImage: `url(/assets/home/${ROOM_BACKDROP[p.room.id] ?? ROOM_BACKDROP.basic}.webp)` }} />
         <div className="room-view">
-          <HomeScene room={p.room.id} look={p.body} worn={p.equipped} pieces={p.room.pieces} decor={p.room.decor} trophies={p.room.trophies} still />
+          <HomeScene room={p.room.id} look={p.body} worn={p.equipped} pieces={p.room.pieces} decor={p.room.decor} trophies={p.room.trophies} />
         </div>
         {/* whose room this is */}
         <div className="pr-plate">
