@@ -367,6 +367,19 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
     if (openStops(state.weaponTalents ?? {}).some((x) => (state.player.talents ?? 0) >= x.cost)) dueTabs.add("tal");
   }
   const moving = drag ? { transform: `translateX(${drag}px) rotate(${drag * 0.015}deg)`, transition: "none" } : undefined;
+  // someone else's dossier: a tap anywhere on the bottom menu closes the folder — back in his room, not off to a section
+  useEffect(() => {
+    if (p.self) return;
+    const onTap = (e: Event) => {
+      if (!(e.target as Element | null)?.closest?.(".nav")) return;
+      e.preventDefault();
+      e.stopPropagation();
+      haptic.tap();
+      onClose();
+    };
+    document.addEventListener("click", onTap, true);
+    return () => document.removeEventListener("click", onTap, true);
+  }, [p.self, onClose]);
   return (
     <Modal onClose={onClose} page>
       <div className="dos">
