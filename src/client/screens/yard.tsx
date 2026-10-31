@@ -26,10 +26,12 @@ const LINKS = [
 interface YardData { items: { id: number; slot: number; drop: string; at: number }[]; max: number; nextAt: number | null; periodMs: number }
 
 export function YardScreen() {
-  const { state, act, toast } = useGame();
+  const { state, act } = useGame();
   const now = useNow();
   const [data, setData] = useState<YardData | null>(null);
-  const [flying, setFlying] = useState<number | null>(null);
+  // picked finds vanish at once (several can be picked in a row); what each gave floats up where it lay, like a pigeon's roubles
+  const [gone, setGone] = useState<Set<number>>(() => new Set());
+  const [gains, setGains] = useState<{ key: number; x: number; y: number; r: Granted }[]>([]);
   const tod = yardTime(now);
   // the exchanger works one Moscow day out of three: the kiosk is open (the dealer smokes inside) or shut
   const exOpen = exchangeWindow(now, state?.exchangeSchedule).open;
@@ -76,16 +78,15 @@ export function YardScreen() {
     if (data?.nextAt && now >= data.nextAt + 500) void load();
   }, [now, data?.nextAt, load]);
 
-  const pick = async (id: number) => {
-    if (flying) return;
+  const pick = async (id: number, at: { x: number; y: number }) => {
+    if (gone.has(id)) return;
     haptic.tap();
-    setFlying(id);
+    setGone((g) => new Set(g).add(id));
     const r = await act<{ name: string; reward: Granted; yard: YardData }>("yard_pick", { itemId: id });
-    setTimeout(() => setFlying(null), 450);
     if (r) {
-      toast(<GainLine r={r.reward} />, "ok");
+      setGains((l) => [...l.slice(-5), { key: Date.now() + id, x: at.x, y: at.y, r: r.reward }]);
       setData(r.yard);
-    }
+    } else setGone((g) => { const n = new Set(g); n.delete(id); return n; });
   };
 
   return (
@@ -143,15 +144,20 @@ export function YardScreen() {
           <YardUpgrader />
           {/* pigeons on the ground in front of the machines (low, clear of the finds) */}
           <Pigeons area={{ x0: 8, x1: 92, y0: 3, y1: 9 }} n={2} />
-          {data?.items.map((it) => {
+          {gains.map((g) => (
+            <span key={g.key} className="pg-gain yard-gain num" style={{ left: `${g.x}%`, top: `${g.y}%` }} onAnimationEnd={() => setGains((l) => l.filter((x) => x.key !== g.key))}>
+              <GainLine r={g.r} size={20} />
+            </span>
+          ))}
+          {data?.items.filter((it) => !gone.has(it.id)).map((it) => {
             const spot = YARD_SPOTS[it.slot % YARD_SPOTS.length];
             const drop = YARD_DROPS.find((d) => d.id === it.drop);
             return (
               <button
                 key={it.id}
-                className={`yard-item ${flying === it.id ? "fly" : ""} ${drop && drop.weight <= 3 ? "rare" : ""}`}
+                className={`yard-item ${drop && drop.weight <= 3 ? "rare" : ""}`}
                 style={{ left: `${spot.x}%`, top: `${spot.y}%`, ["--r" as string]: `${spot.r}deg`, ["--d" as string]: `${(it.slot % 5) * -0.45}s` }}
-                onClick={() => pick(it.id)}
+                onClick={() => pick(it.id, spot)}
                 aria-label={drop?.name ?? "предмет"}
               >
                 <ItemArt id={drop?.icon ?? "coins"} size={52} />

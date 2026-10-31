@@ -4164,3 +4164,7 @@ body { background-attachment: fixed; }
 .pepe-won { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); z-index: 6; display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center;
   padding: 16px 18px; border-radius: 16px; background: rgba(12, 20, 14, 0.86); border: 2px solid #3ddc84; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5); width: min(86%, 320px); }
 .pepe-won b { font-size: 24px; color: #3ddc84; }
+/* a yard find's reward floats up where it lay (the same as a pigeon's roubles) */
+.yard-gain { transform: translate(-50%, -50%); }
+.yard-gain .gain-line { gap: 8px; }
+.yard-gain .gain { color: #ffe27a; }
