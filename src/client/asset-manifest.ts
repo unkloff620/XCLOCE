@@ -601,6 +601,7 @@ export const ASSET_FILES: string[] = [
  "/assets/hero/wear/santa-hat.webp",
  "/assets/hero/wear/shorts-remote.webp",
  "/assets/hero/wear/slippers.webp",
+ "/assets/hero/wear/sneakers-black.webp",
  "/assets/hero/wear/sneakers-komandate.webp",
  "/assets/hero/wear/sneakers.webp",
  "/assets/hero/wear/sweater-vostok.webp",

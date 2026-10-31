@@ -121,9 +121,16 @@ export const WEAR_FIT = {
   "pants-vostok": {
     "slot": "PANTS",
     "x": 68.0,
-    "y": 652.0,
-    "w": 854,
-    "h": 504
+    "y": 651.0,
+    "w": 855,
+    "h": 505
+  },
+  "sneakers-black": {
+    "slot": "SHOES",
+    "x": 72.5,
+    "y": 972.5,
+    "w": 857,
+    "h": 372
   },
   "santa-hat": {
     "slot": "HEAD",
