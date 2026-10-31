@@ -65,6 +65,15 @@ export const TATTOO_SETS: TattooSet[] = [
 /** the fight mode's name in the dropping text («в «Пацанском»») */
 export const TATTOO_MODE_NAME = { pacan: "Пацанском", blat: "Блатном", avtor: "Авторитетном" } as const;
 
+/** the place on the body a piece takes («chest-l»): one tattoo per place — a new one there replaces the old */
+export const tattooZone = (id: string) => id.split("-").slice(2).join("-");
+/** the inked list with one tattoo per place (the last one wins) */
+export function oneTattooPerZone(ids: string[]): string[] {
+  const byZone = new Map<string, string>();
+  for (const id of ids) byZone.set(tattooZone(id), id);
+  return [...byZone.values()];
+}
+
 export const TATTOO_IDS = TATTOO_SETS.flatMap((s) => s.pieces.map((p) => p.id));
 export const tattooSetOf = (id: string) => TATTOO_SETS.find((s) => s.pieces.some((p) => p.id === id));
 export const tattooPiece = (id: string) => TATTOO_SETS.flatMap((s) => s.pieces).find((p) => p.id === id);

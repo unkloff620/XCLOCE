@@ -8,7 +8,7 @@ import { ITEMS, weaponById, type Slot } from "../../content/items.ts";
 import { HAIR_COLORS, HAIR_STYLES, type Look } from "../../content/home.ts";
 import { haptic } from "../telegram.ts";
 import type { RigEdit } from "../art/rig.tsx";
-import { TATTOO_MODE_NAME, TATTOO_SETS } from "../../content/tattoos.ts";
+import { TATTOO_MODE_NAME, TATTOO_SETS, oneTattooPerZone, tattooZone } from "../../content/tattoos.ts";
 import { bossById } from "../../content/bosses.ts";
 
 /*
@@ -50,6 +50,7 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
   const [saving, setSaving] = useState(false);
   // «Наколки»: the tattoos tab (the hero is picked by body parts there too; no part — every tattoo)
   const [inkTab, setInkTab] = useState(false);
+  const [inkSet, setInkSet] = useState<string | null>(null);
   if (!state) return null;
   const mode = focus.mode;
   const part = focus.part;
@@ -102,36 +103,62 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
     }
   };
 
-  // a tattoo is inked on / taken off with a tap (free); the ones not dropped yet stand grey with where they drop
+  // tattoos: one per place on the body — inking one replaces whatever was in that place (another set's piece)
   const inked = new Set(draft.look.tattoos ?? []);
+  const setInk = (next: string[]) => patch({ tattoos: oneTattooPerZone(next) });
   const toggleInk = (id: string) => {
     if (!owned.has(id)) return;
-    const next = inked.has(id) ? [...inked].filter((t) => t !== id) : [...inked, id];
-    patch({ tattoos: next });
+    if (inked.has(id)) setInk([...inked].filter((t) => t !== id));
+    else setInk([...[...inked].filter((t) => tattooZone(t) !== tattooZone(id)), id]);
   };
+  const piece = (s: (typeof TATTOO_SETS)[number], p: (typeof TATTOO_SETS)[number]["pieces"][number]) => {
+    const have = owned.has(p.id);
+    return (
+      <button key={p.id} className={`sty-item rar-epic ink-item ${inked.has(p.id) ? "on" : ""} ${have ? "" : "locked"}`} onClick={() => toggleInk(p.id)} disabled={!have}
+        title={have ? (inked.has(p.id) ? "Свести" : "Набить") : `Выпадает с ${bossById(s.boss)?.name} в «${TATTOO_MODE_NAME[s.mode]}»`}>
+        <ItemArt id={p.id} size={46} />
+        <span className="sty-item-name">{have ? p.name : "???"}</span>
+        {inked.has(p.id) && <i className="ink-on" aria-hidden="true">✓</i>}
+      </button>
+    );
+  };
+  // the body view (a part tapped): the pieces of that place from every set, in one row
   const inkStrip = (where: string | null) => (
-    <div className="sty-strip">
-      {TATTOO_SETS.flatMap((s) => s.pieces.filter((p) => !where || p.part === where).map((p) => {
-        const have = owned.has(p.id);
-        return (
-          <button key={p.id} className={`sty-item rar-epic ink-item ${inked.has(p.id) ? "on" : ""} ${have ? "" : "locked"}`} onClick={() => toggleInk(p.id)} disabled={!have}
-            title={have ? (inked.has(p.id) ? "Свести" : "Набить") : `Выпадает с ${bossById(s.boss)?.name} в «${TATTOO_MODE_NAME[s.mode]}»`}>
-            <ItemArt id={p.id} size={46} />
-            <span className="sty-item-name">{have ? p.name : "???"}</span>
-          </button>
-        );
-      }))}
-    </div>
+    <div className="sty-strip">{TATTOO_SETS.flatMap((s) => s.pieces.filter((p) => !where || p.part === where).map((p) => piece(s, p)))}</div>
   );
-  const inkSets = (
+  // «Наколки»: the sets like an inventory — a set opens to its pieces (dropped ones in colour, the rest grey)
+  const openSet = TATTOO_SETS.find((s) => s.id === inkSet) ?? null;
+  const inkView = openSet ? (() => {
+    const mine = openSet.pieces.filter((p) => owned.has(p.id));
+    const all = mine.length > 0 && mine.every((p) => inked.has(p.id));
+    return (
+      <div className="ink-open">
+        <div className="ink-open-head">
+          <button type="button" className="btn dark sm" onClick={() => { haptic.tap(); setInkSet(null); }}>‹ Сеты</button>
+          <b className="grow">«{openSet.name}» <span className="num">{mine.length}/{openSet.pieces.length}</span></b>
+          {all ? (
+            <button type="button" className="btn dark sm" onClick={() => setInk([...inked].filter((t) => !openSet.pieces.some((p) => p.id === t)))}>Свести все</button>
+          ) : (
+            <button type="button" className="btn gold sm" disabled={!mine.length} onClick={() => setInk([...inked, ...mine.map((p) => p.id)])}>Набить все</button>
+          )}
+        </div>
+        <div className="ink-grid">{openSet.pieces.map((p) => piece(openSet, p))}</div>
+      </div>
+    );
+  })() : (
     <div className="ink-sets">
       {TATTOO_SETS.map((s) => {
         const got = s.pieces.filter((p) => owned.has(p.id)).length;
+        const on = s.pieces.filter((p) => inked.has(p.id)).length;
         return (
-          <span key={s.id} className={`ink-set ${got === s.pieces.length ? "done" : ""}`}>
-            <b>Сет «{s.name}»</b> <span className="num">{got}/{s.pieces.length}</span>
-            <small>с {bossById(s.boss)?.name} в «{TATTOO_MODE_NAME[s.mode]}» · весь сет: +{s.bonus.damage} к урону «{weaponById(s.bonus.weapon)?.name}»</small>
-          </span>
+          <button type="button" key={s.id} className={`ink-set ${got === s.pieces.length ? "done" : ""}`} onClick={() => { haptic.tap(); setInkSet(s.id); }}>
+            <ItemArt id={s.pieces[2].id} size={40} />
+            <span className="grow">
+              <b>Сет «{s.name}»</b> <span className="num">{got}/{s.pieces.length}</span>{on > 0 && <span className="ink-count"> · набито {on}</span>}
+              <small>с {bossById(s.boss)?.name} в «{TATTOO_MODE_NAME[s.mode]}» · весь сет: +{s.bonus.damage} к урону «{weaponById(s.bonus.weapon)?.name}»</small>
+            </span>
+            <span className="ink-go" aria-hidden="true">›</span>
+          </button>
         );
       })}
     </div>
@@ -145,13 +172,7 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
 
   let body: ReactNode;
   if (inkTab) {
-    body = (
-      <>
-        {inkSets}
-        {part && <span className="tiny muted">Наколки {TATTOO_WHERE[part] ?? ""} · <button type="button" className="link-btn" onClick={() => setFocus({ ...focus, part: null })}>все</button></span>}
-        {inkStrip(part && TATTOO_WHERE[part] ? part : null)}
-      </>
-    );
+    body = inkView;
   } else if (!part) {
     body = <div className="sty-hint">Нажми на персонажа — выбери, что изменить</div>;
   } else if (slot) {

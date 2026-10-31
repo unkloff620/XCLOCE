@@ -4170,9 +4170,18 @@ body { background-attachment: fixed; }
 .yard-gain .gain { color: #ffe27a; }
 /* the hero editor «Наколки»: the set's progress and the tattoos (grey — not dropped yet) */
 .ink-sets { display: flex; flex-direction: column; gap: 4px; }
-.ink-set { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; padding: 6px 9px; border-radius: 10px; border: 2px solid var(--line); background: var(--tex), var(--bg2); font-size: 13px; }
+.ink-set { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 12px; border: 2px solid var(--line); background: var(--tex), var(--bg2); font: inherit; font-size: 13px; color: var(--ink); text-align: left; cursor: pointer; }
+.ink-set small { display: block; }
+.ink-count { color: #8fd6c2; font-size: 12px; }
+.ink-go { font-size: 22px; color: var(--muted); }
+.ink-open { display: flex; flex-direction: column; gap: 8px; }
+.ink-open-head { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.ink-open-head .num { color: var(--gold); }
+.ink-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 6px; }
+.ink-grid .sty-item { width: auto; height: 84px; position: relative; }
+.ink-on { position: absolute; top: 3px; right: 4px; width: 16px; height: 16px; border-radius: 50%; display: grid; place-items: center; background: #3ddc84; color: #0b2414; font-size: 11px; font-style: normal; font-weight: 900; }
 .ink-set .num { color: var(--gold); font-weight: 900; }
-.ink-set small { flex-basis: 100%; color: var(--muted); font-size: 11px; }
+.ink-set small { color: var(--muted); font-size: 11px; }
 .ink-set.done { border-color: #ffcc33; }
 .sty-item.ink-item.locked { opacity: 0.45; filter: grayscale(1); cursor: default; }
 .sty-body .link-btn { border: 0; background: none; padding: 0; color: var(--gold); font: inherit; font-weight: 800; text-decoration: underline; cursor: pointer; }

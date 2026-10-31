@@ -1,5 +1,5 @@
 import type { Currency } from "./currencies.ts";
-import { TATTOO_IDS } from "./tattoos.ts";
+import { TATTOO_IDS, oneTattooPerZone } from "./tattoos.ts";
 
 /*
  * Дом: оборудование на заднем плане и комнаты. Оба дают боевые бонусы.
@@ -238,7 +238,7 @@ export function normalizeLook(v: unknown): Look {
     hairColor: idx(o.hairColor, HAIR_COLORS.length, DEFAULT_LOOK.hairColor),
     eyes: idx(o.eyes, EYE_COLORS.length, DEFAULT_LOOK.eyes),
     skin: idx(o.skin, SKIN_TONES.length, DEFAULT_LOOK.skin),
-    tattoos: Array.isArray(o.tattoos) ? [...new Set(o.tattoos.filter((t): t is string => typeof t === "string" && TATTOO_IDS.includes(t)))] : [],
+    tattoos: Array.isArray(o.tattoos) ? oneTattooPerZone([...new Set(o.tattoos.filter((t): t is string => typeof t === "string" && TATTOO_IDS.includes(t)))]) : [],
   };
 }
 
