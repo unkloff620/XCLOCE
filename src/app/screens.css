@@ -4192,3 +4192,7 @@ body { background-attachment: fixed; }
 .door-scene.slide-l { animation: mode-in-l 0.32s ease-out; }
 @keyframes mode-in-r { from { transform: translateX(22%); opacity: 0.2; } to { transform: none; opacity: 1; } }
 @keyframes mode-in-l { from { transform: translateX(-22%); opacity: 0.2; } to { transform: none; opacity: 1; } }
+/* what else a boss drops: tattoos / things, a picture and x/N */
+.drop-kind { display: inline-flex; align-items: center; gap: 2px; }
+.drop-kind img { display: block; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6)); }
+.door-leaf .door-plate .drop-kind img { position: static; inset: auto; transform: none; width: 5.4cqw; height: 5.4cqw; }

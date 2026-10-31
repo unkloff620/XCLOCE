@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { api, type Tray } from "../api.ts";
 import { BOSSES, bossesIn, bossById } from "../../content/bosses.ts";
-import { Avatar, GainLine, MysteryDrop, RewardChips, bossItemsCount } from "../ui.tsx";
+import { Avatar, DropKind, GainLine, MysteryDrop, RewardChips, bossItemsCount, bossTattooCount } from "../ui.tsx";
 import { WEAPONS } from "../../content/items.ts";
 import type { BossDef } from "../../content/bosses.ts";
 import { Help, HelpList } from "../help.tsx";
@@ -110,7 +110,9 @@ export function BossesScreen() {
                 <div className="bcard-reward">
                   <span className="bcard-label">{b.final ? "Финал:" : "Награда:"}</span>
                   <GainLine r={{ ...b.reward, items: [...(b.final ? [] : [{ id: `key-${b.id}`, qty: 1 }]), ...(b.reward.items ?? [])] }} size={18} />
-                  {(!!b.drop?.length || !!b.wear) && <MysteryDrop size={18} count={bossItemsCount(b, state) ?? undefined} />}
+                  {!!b.wear && <DropKind kind="wear" size={18} count={bossItemsCount(b, state) ?? undefined} />}
+                  {!!bossTattooCount(b.id, state) && <DropKind kind="tattoo" size={18} count={bossTattooCount(b.id, state)!} />}
+                  {!!b.drop?.length && <MysteryDrop size={18} />}
                 </div>
                 <div className="bcard-foot">
                   {locked ? (
@@ -201,7 +203,9 @@ export function BossRulesHelp({ topic, bossId }: { topic: "bosses" | "boss"; bos
           ]} />
           <p className="tiny muted" style={{ marginTop: 0 }}>Полная награда — всем, кто ударил босса в этом бою хотя бы раз. Без урона награды нет.</p>
           <HelpList title="Что может выпасть" rows={[
-            { key: "things", icon: <MysteryDrop size={36} />, name: "Вещи — «?» x/N", hint: "У каждого босса свои вещи, у некоторых их нет. Какие — секрет. Выпавшая вещь не приходит сразу: она открывается в магазине, и её нужно выкупить." },
+            { key: "things", icon: <DropKind kind="wear" size={30} />, name: "Вещи — x/N", hint: "У каждого босса свои вещи, у некоторых их нет. Падают в «Блатном». Какие — секрет. Выпавшая вещь не приходит сразу: она открывается в магазине, и её нужно выкупить." },
+            { key: "tattoo", icon: <DropKind kind="tattoo" size={30} />, name: "Наколки — x/N", hint: "Сет наколок босса: по одной за победу в «Пацанском», сразу в инвентарь. Набиваются бесплатно в редакторе персонажа → «Наколки». Весь сет даёт бонус к урону." },
+            { key: "drop", icon: <MysteryDrop size={36} />, name: "«?» — оружие", hint: "Иногда после победы падает оружие — сразу в инвентарь. Какое — секрет." },
             { key: "weapon", icon: <ItemArt id="keyboard" size={44} />, name: "Оружие", hint: "Иногда падает оружие — сразу в инвентарь." },
             { key: "shop", icon: <span className="locked-art"><ItemArt id="hoodie-hodl" size={44} /><span className="locked-badge"><Icon name="lock" size={14} /></span></span>, name: "Закрытые вещи в магазине", hint: "Вещи с замком ещё не выпали. Нажми на такую — увидишь, с какого босса она падает." },
           ]} />

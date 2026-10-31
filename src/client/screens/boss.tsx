@@ -9,7 +9,7 @@ import { HIT_PHRASES, bossLines } from "../../content/phrases.ts";
 import { BossSilhouette } from "../art/scenes.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { Icon } from "../art/icons.tsx";
-import { Bar, Empty, GainLine, MysteryDrop, bossItemsCount } from "../ui.tsx";
+import { Bar, DropKind, Empty, GainLine, MysteryDrop, bossItemsCount, bossTattooCount } from "../ui.tsx";
 import { useFx, type Fx } from "../fx/attack.tsx";
 import { BossRulesHelp, useBossList } from "./bosses.tsx";
 import { WeaponShopWindow } from "./shop.tsx";
@@ -560,7 +560,9 @@ export function BossScreen({ id }: { id: string }) {
           <span className="door-plate">
             <b className="door-plate-title">{boss.final ? "ФИНАЛ" : "НАГРАДА"}</b>
             <GainLine r={doorReward} size={14} />
-            {(!!boss.drop?.length || (!!boss.wear && fightMode(mode).things)) && <MysteryDrop size={14} count={fightMode(mode).things ? bossItemsCount(boss, state) ?? undefined : undefined} />}
+            {!!boss.wear && fightMode(mode).things && <DropKind kind="wear" size={14} count={bossItemsCount(boss, state) ?? undefined} />}
+            {!!bossTattooCount(boss.id, state, mode) && <DropKind kind="tattoo" size={14} count={bossTattooCount(boss.id, state, mode)!} />}
+            {!!boss.drop?.length && <MysteryDrop size={14} />}
             <span className="gain medal-chip" title={`Взрыв «${MEDAL_NAMES[fightMode(mode).medal]}» за каждую победу; каждый сразу добавляет урон, ${MEDAL_SET} — полный набор`}>
               <BlastIcon tier={fightMode(mode).medal} size={18} /><b className="num">{Math.min(MEDAL_SET, row?.medals?.[fightMode(mode).medal] ?? 0)}/{MEDAL_SET}</b>
             </span>

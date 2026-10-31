@@ -7,6 +7,7 @@ import { itemById } from "../content/items.ts";
 import { CURRENCY_DEFS, type Currency } from "../content/currencies.ts";
 import type { Reward } from "../content/rewards.ts";
 import type { Granted } from "./api.ts";
+import { tattooSetsOfBoss } from "../content/tattoos.ts";
 import { money, pct } from "./format.ts";
 
 export function Bar({ value, max, tone = "green", label, height }: { value: number; max: number; tone?: "green" | "red" | "gold" | "violet"; label?: ReactNode; height?: number }) {
@@ -123,6 +124,29 @@ export function MysteryDrop({ size = 18, count }: { size?: number; count?: strin
       {count && <span className="mystery-count">{count}</span>}
     </span>
   );
+}
+
+/**
+ * What else a boss drops, by its picture: «drop-tattoo» — a piece of his tattoo set (content/tattoos.ts), «drop-wear» —
+ * his things (clothes); `count` — how many of them the player has, e.g. "3/12".
+ */
+export function DropKind({ kind, size = 18, count }: { kind: "tattoo" | "wear"; size?: number; count?: string }) {
+  return (
+    <span className={`gain drop-kind ${kind}`} title={kind === "tattoo" ? `Наколки с этого босса${count ? `: ${count}` : ""}` : `Вещи с этого босса${count ? `: ${count}` : ""}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={`/assets/ui/drop-${kind}.webp`} alt={kind === "tattoo" ? "наколки" : "вещи"} width={size * 1.25} height={size * 1.25} draggable={false} />
+      {count && <span className="mystery-count">{count}</span>}
+    </span>
+  );
+}
+
+/** "x/N" of a boss's tattoo sets for this mode (or any mode); null when he has none */
+export function bossTattooCount(bossId: string, state: { inventory: { id: string; qty: number }[] } | null, mode?: string): string | null {
+  const sets = tattooSetsOfBoss(bossId).filter((s) => !mode || s.mode === mode);
+  if (!sets.length) return null;
+  const ids = sets.flatMap((s) => s.pieces.map((p) => p.id));
+  const have = ids.filter((id) => (state?.inventory.find((i) => i.id === id)?.qty ?? 0) > 0).length;
+  return `${have}/${ids.length}`;
 }
 
 /** "x/N": how many of a boss's things the player has opened (or owns); null when the boss has none */
