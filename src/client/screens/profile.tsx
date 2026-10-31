@@ -372,13 +372,14 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
     if (p.self) return;
     const onTap = (e: Event) => {
       if (!(e.target as Element | null)?.closest?.(".nav")) return;
+      // caught on the window, before anything else (the page loader, the link itself) hears the tap
       e.preventDefault();
-      e.stopPropagation();
+      e.stopImmediatePropagation();
       haptic.tap();
       onClose();
     };
-    document.addEventListener("click", onTap, true);
-    return () => document.removeEventListener("click", onTap, true);
+    window.addEventListener("click", onTap, true);
+    return () => window.removeEventListener("click", onTap, true);
   }, [p.self, onClose]);
   return (
     <Modal onClose={onClose} page>
