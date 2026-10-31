@@ -385,6 +385,8 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
             </Bone>
           </Bone>
         </Ol>
+        {/* the tattoos of the chest, the belly and the arms: over the arms, under the shirt */}
+        <Ink part="upper" />
         <Ol><Wear slot="SHIRT" /></Ol>
         <Ol><Wear slot="ACCESSORY" /></Ol>
         <Ol>

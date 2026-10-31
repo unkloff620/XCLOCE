@@ -432,7 +432,7 @@ export function BossScreen({ id }: { id: string }) {
           <Modal title={`${rushAsk.name} перезаряжается`} onClose={() => setRushAsk(null)}>
             <div className="col center" style={{ gap: 12 }}>
               <ItemArt id={rushAsk.id} size={72} />
-              <span className="small">Ещё {clock(rushAsk.left)}. Ударить сейчас за <b><Icon name={RUSH_PRICE.currency} size={14} /> {RUSH_PRICE.amount} $</b>? После удара — снова перезарядка.</span>
+              <span className="small center">Ещё {clock(rushAsk.left)}. Ударить сейчас за <b>{RUSH_PRICE.amount} $</b>? После удара — снова перезарядка.</span>
               <div className="row" style={{ gap: 8, width: "100%" }}>
                 <button className="btn dark grow" onClick={() => setRushAsk(null)}>Отмена</button>
                 <button className="btn gold grow" disabled={(state?.wallet.USD ?? 0) < RUSH_PRICE.amount}

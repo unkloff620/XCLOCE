@@ -17,28 +17,30 @@ ITEMS = os.path.join(ROOT, "public", "assets", "items")
 os.makedirs(OUT, exist_ok=True)
 rig = json.loads(open(os.path.join(ROOT, "src", "client", "art", "rig-data.ts")).read().split("=", 1)[1].strip().rstrip(";").replace(" as const", ""))
 
-# set → pieces: id, the hero part, the zone on that part's canvas (x0, y0, x1, y1) or None for the whole part
+# set → pieces: id, the ink layer ("full" — the whole body on the 1000×1400 rig canvas; or a hero part's own canvas),
+# the zone on that layer (x0, y0, x1, y1) or None for all of it, and where it is drawn: "torso" — on the legs, under
+# the trousers; "upper" — over the arms, under the shirt; or a hero part ("head", "handR") that it moves with
 SETS = {
     "ice": [
-        ("tat-ice-face", "head", None),
-        ("tat-ice-chest", "torso", (230, 60, 640, 335)),
-        ("tat-ice-belly", "torso", (260, 335, 620, 510)),
-        ("tat-ice-shoulder-l", "armUL", None),
-        ("tat-ice-shoulder-r", "armUR", None),
-        ("tat-ice-arm-l", "foreL", None),
-        ("tat-ice-arm-r", "foreR", None),
-        ("tat-ice-hand", "handR", None),
-        ("tat-ice-knee-l", "torso", (0, 510, 450, 690)),
-        ("tat-ice-knee-r", "torso", (450, 510, 868, 690)),
-        ("tat-ice-shin-l", "torso", (0, 690, 450, 1104)),
-        ("tat-ice-shin-r", "torso", (450, 690, 868, 1104)),
+        ("tat-ice-face", "head", None, "head"),
+        ("tat-ice-hand", "handR", None, "handR"),
+        ("tat-ice-chest", "full", (370, 320, 630, 615), "upper"),
+        ("tat-ice-belly", "full", (370, 615, 630, 760), "upper"),
+        ("tat-ice-shoulder-l", "full", (200, 330, 370, 490), "upper"),
+        ("tat-ice-shoulder-r", "full", (630, 330, 810, 490), "upper"),
+        ("tat-ice-arm-l", "full", (100, 570, 260, 730), "upper"),
+        ("tat-ice-arm-r", "full", (700, 570, 890, 800), "upper"),
+        ("tat-ice-knee-l", "full", (80, 755, 280, 910), "torso"),
+        ("tat-ice-knee-r", "full", (740, 755, 930, 910), "torso"),
+        ("tat-ice-shin-l", "full", (110, 910, 330, 1200), "torso"),
+        ("tat-ice-shin-r", "full", (670, 910, 890, 1200), "torso"),
     ],
 }
 SKIN = (248, 213, 180)
 
 fit = {}
 for set_id, pieces in SETS.items():
-    for pid, part, zone in pieces:
+    for pid, part, zone, where in pieces:
         ink = Image.open(os.path.join(SRC, set_id, f"{part}-ink.png")).convert("RGBA")
         a = np.array(ink)
         keep = np.zeros(a.shape[:2], bool)
@@ -63,9 +65,9 @@ for set_id, pieces in SETS.items():
         bb = (max(0, bb[0] - 2), max(0, bb[1] - 2), min(a.shape[1], bb[2] + 2), min(a.shape[0], bb[3] + 2))
         piece = piece.crop(bb)
         piece.save(os.path.join(OUT, f"{pid}.webp"), "WEBP", quality=88, method=6)
-        r = rig[part]
+        r = rig[part] if part != "full" else {"x": 0, "y": 0, "w": ink.width, "h": ink.height}
         sx, sy = r["w"] / ink.width, r["h"] / ink.height
-        fit[pid] = {"part": part, "x": round(r["x"] + bb[0] * sx, 1), "y": round(r["y"] + bb[1] * sy, 1), "w": round(piece.width * sx, 1), "h": round(piece.height * sy, 1)}
+        fit[pid] = {"part": where, "x": round(r["x"] + bb[0] * sx, 1), "y": round(r["y"] + bb[1] * sy, 1), "w": round(piece.width * sx, 1), "h": round(piece.height * sy, 1)}
         # the item picture: the piece on a round patch of skin
         S = 256
         icon = Image.new("RGBA", (S, S), (0, 0, 0, 0))

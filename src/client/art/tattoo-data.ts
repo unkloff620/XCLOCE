@@ -7,48 +7,6 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
   "w": 114.0,
   "h": 40.0
  },
- "tat-ice-chest": {
-  "part": "torso",
-  "x": 338.5,
-  "y": 319.0,
-  "w": 322.0,
-  "h": 257.0
- },
- "tat-ice-belly": {
-  "part": "torso",
-  "x": 378.5,
-  "y": 572.0,
-  "w": 242.0,
-  "h": 156.0
- },
- "tat-ice-shoulder-l": {
-  "part": "armUL",
-  "x": 143.0,
-  "y": 347.0,
-  "w": 198.0,
-  "h": 249.0
- },
- "tat-ice-shoulder-r": {
-  "part": "armUR",
-  "x": 659.5,
-  "y": 348.0,
-  "w": 183.0,
-  "h": 216.0
- },
- "tat-ice-arm-l": {
-  "part": "foreL",
-  "x": 137.5,
-  "y": 604.5,
-  "w": 103.0,
-  "h": 110.0
- },
- "tat-ice-arm-r": {
-  "part": "foreR",
-  "x": 718.0,
-  "y": 581.5,
-  "w": 158.0,
-  "h": 194.0
- },
  "tat-ice-hand": {
   "part": "handR",
   "x": 646.5,
@@ -56,32 +14,74 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
   "w": 105.0,
   "h": 153.0
  },
+ "tat-ice-chest": {
+  "part": "upper",
+  "x": 372.0,
+  "y": 329.0,
+  "w": 259.0,
+  "h": 288.0
+ },
+ "tat-ice-belly": {
+  "part": "upper",
+  "x": 397.0,
+  "y": 613.0,
+  "w": 205.0,
+  "h": 122.0
+ },
+ "tat-ice-shoulder-l": {
+  "part": "upper",
+  "x": 224.0,
+  "y": 352.0,
+  "w": 148.0,
+  "h": 121.0
+ },
+ "tat-ice-shoulder-r": {
+  "part": "upper",
+  "x": 635.0,
+  "y": 351.0,
+  "w": 148.0,
+  "h": 121.0
+ },
+ "tat-ice-arm-l": {
+  "part": "upper",
+  "x": 121.0,
+  "y": 587.0,
+  "w": 112.0,
+  "h": 128.0
+ },
+ "tat-ice-arm-r": {
+  "part": "upper",
+  "x": 724.0,
+  "y": 590.0,
+  "w": 156.0,
+  "h": 212.0
+ },
  "tat-ice-knee-l": {
   "part": "torso",
-  "x": 99.5,
+  "x": 103.0,
   "y": 768.0,
-  "w": 162.0,
-  "h": 163.0
+  "w": 150.0,
+  "h": 144.0
  },
  "tat-ice-knee-r": {
   "part": "torso",
-  "x": 737.5,
-  "y": 768.0,
+  "x": 738.0,
+  "y": 753.0,
   "w": 163.0,
-  "h": 163.0
+  "h": 159.0
  },
  "tat-ice-shin-l": {
   "part": "torso",
-  "x": 143.5,
-  "y": 927.0,
-  "w": 182.0,
-  "h": 284.0
+  "x": 158.0,
+  "y": 908.0,
+  "w": 147.0,
+  "h": 254.0
  },
  "tat-ice-shin-r": {
   "part": "torso",
-  "x": 682.5,
-  "y": 927.0,
-  "w": 174.0,
-  "h": 284.0
+  "x": 706.0,
+  "y": 915.0,
+  "w": 150.0,
+  "h": 245.0
  }
 };
