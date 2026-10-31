@@ -126,7 +126,7 @@ export const WEAR_FIT = {
     "h": 226
   },
   "laser-eyes": {
-    "slot": "ACCESSORY",
+    "slot": "FACE",
     "x": 339.5,
     "y": 168.5,
     "w": 330,

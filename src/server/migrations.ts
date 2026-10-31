@@ -1158,4 +1158,9 @@ WHERE s.player_id = p.id AND s.pts > 0;
     sql: `DELETE FROM inventory WHERE item_id LIKE 'tat-ice-%';
 UPDATE appearance SET body = body - 'tattoos' WHERE body ? 'tattoos';`,
   },
+  {
+    // laser eyes have their own slot «Лицо» now: worn ones move there from the accessory slot
+    id: "v2-068-face-slot",
+    sql: `UPDATE appearance SET equipped = (equipped - 'ACCESSORY') || '{"FACE":"laser-eyes"}'::jsonb WHERE equipped->>'ACCESSORY' = 'laser-eyes';`,
+  },
 ];

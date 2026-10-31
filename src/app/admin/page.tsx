@@ -951,7 +951,7 @@ const GIVE_TABS = [
 type GiveTab = (typeof GIVE_TABS)[number]["id"];
 const SLOT_ORDER: { slot: Slot; name: string }[] = [
   { slot: "HEAD", name: "Голова" }, { slot: "SHIRT", name: "Верх" }, { slot: "PANTS", name: "Низ" }, { slot: "SHOES", name: "Обувь" },
-  { slot: "HAND", name: "Кисть" }, { slot: "ACCESSORY", name: "Аксессуар" }, { slot: "SPECIAL", name: "Особое" }, { slot: "BODY", name: "Тело" },
+  { slot: "HAND", name: "Кисть" }, { slot: "FACE", name: "Лицо" }, { slot: "ACCESSORY", name: "Аксессуар" }, { slot: "SPECIAL", name: "Особое" }, { slot: "BODY", name: "Тело" },
 ];
 const RARITY_NAME: Record<string, string> = { common: "обычная", rare: "редкая", epic: "эпическая", legendary: "легендарная", mythic: "мифическая" };
 const RARITY_RANK: Record<string, number> = { common: 0, rare: 1, epic: 2, legendary: 3, mythic: 4 };

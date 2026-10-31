@@ -28,11 +28,11 @@ export interface StyleDraft {
   worn: Record<string, string>;
 }
 
-const CLOTHES: Slot[] = ["HEAD", "ACCESSORY", "SHIRT", "PANTS", "SHOES", "HAND"];
-const ITEM_PART: Record<string, string> = { HEAD: "Голова", ACCESSORY: "Аксессуар", SHIRT: "Верх", PANTS: "Низ", SHOES: "Обувь", HAND: "Кисть" };
+const CLOTHES: Slot[] = ["HEAD", "FACE", "ACCESSORY", "SHIRT", "PANTS", "SHOES", "HAND"];
+const ITEM_PART: Record<string, string> = { HEAD: "Голова", FACE: "Лицо", ACCESSORY: "Аксессуар", SHIRT: "Верх", PANTS: "Низ", SHOES: "Обувь", HAND: "Кисть" };
 /** the slot buttons: a picture (public/assets/ui/slot-*.webp) and a short word under it */
 const SLOT_ICON: Record<string, string> = { HEAD: "slot-head", ACCESSORY: "slot-accessory", SHIRT: "slot-shirt", PANTS: "slot-pants", SHOES: "slot-shoes" };
-const SHORT_PART: Record<string, string> = { HEAD: "Голова", ACCESSORY: "Шея", SHIRT: "Верх", PANTS: "Низ", SHOES: "Обувь", HAND: "Кисть" };
+const SHORT_PART: Record<string, string> = { HEAD: "Голова", FACE: "Лицо", ACCESSORY: "Шея", SHIRT: "Верх", PANTS: "Низ", SHOES: "Обувь", HAND: "Кисть" };
 // «левое / правое» — as seen on the screen
 const BODY_PART: Record<string, string> = {
   HEAD: "Голова", EYES: "Глаза", MOUTH: "Рот", TORSO: "Торс", SHOULDER_L: "Левое плечо", SHOULDER_R: "Правое плечо",
@@ -251,7 +251,7 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
                   {/* the same slot pictures as the shop's filter row; the hand has none — a hand thing stands for it */}
                   {SLOT_ICON[s]
                     ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={`/assets/ui/${SLOT_ICON[s]}.webp`} alt="" draggable={false} />
-                    : <ItemArt id="hand-drum" size={30} />}
+                    : <ItemArt id={s === "FACE" ? "laser-eyes" : "hand-drum"} size={30} />}
                   <small>{SHORT_PART[s]}</small>
                   {n > 0 && <i className="num">{n}</i>}
                 </button>

@@ -64,6 +64,7 @@ const WEAR_GROUPS: { slot: Slot; name: string; icon: string }[] = [
   { slot: "SHIRT", name: "Верх", icon: "slot-shirt" },
   { slot: "PANTS", name: "Низ", icon: "slot-pants" },
   { slot: "SHOES", name: "Обувь", icon: "slot-shoes" },
+  { slot: "FACE", name: "Лицо", icon: "slot-head" },
   { slot: "ACCESSORY", name: "Аксессуары", icon: "slot-accessory" },
 ];
 

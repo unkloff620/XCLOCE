@@ -5,10 +5,11 @@ import { TATTOO_MODE_NAME, TATTOO_SETS } from "./tattoos.ts";
 /** "tattoo": inked on a part of the body in the hero editor («Наколки», content/tattoos.ts) */
 export type Category = "weapon" | "clothing" | "item" | "reward" | "stash" | "event" | "tattoo";
 export type Rarity = "common" | "rare" | "epic" | "legendary" | "mythic";
-export type Slot = "BODY" | "PANTS" | "SHIRT" | "SHOES" | "HEAD" | "ACCESSORY" | "SPECIAL" | "HAND";
+/** FACE: worn on the face (laser eyes) — its own tab in the hero editor */
+export type Slot = "BODY" | "PANTS" | "SHIRT" | "SHOES" | "HEAD" | "FACE" | "ACCESSORY" | "SPECIAL" | "HAND";
 /** Drawing order of the character, bottom to top. */
-export const SLOTS: Slot[] = ["BODY", "PANTS", "SHIRT", "SHOES", "HEAD", "ACCESSORY", "SPECIAL", "HAND"];
-export const WEARABLE_SLOTS: Slot[] = ["PANTS", "SHIRT", "SHOES", "HEAD", "ACCESSORY", "SPECIAL", "HAND"];
+export const SLOTS: Slot[] = ["BODY", "PANTS", "SHIRT", "SHOES", "HEAD", "FACE", "ACCESSORY", "SPECIAL", "HAND"];
+export const WEARABLE_SLOTS: Slot[] = ["PANTS", "SHIRT", "SHOES", "HEAD", "FACE", "ACCESSORY", "SPECIAL", "HAND"];
 
 export interface WeaponStats {
   damage: number;
@@ -93,7 +94,7 @@ const WEARABLES: ItemDef[] = ([
   { id: "slippers", name: "Тапки", slot: "SHOES", rarity: "rare", description: "Офисный дресс-код, версия 2.0.", sources: ["Магазин", "Награда за локацию 3"] },
   { id: "cap-moon", name: "Чёрная кепка", slot: "HEAD", rarity: "rare", description: "Козырёк вперёд — курс на луну.", sources: ["Магазин", "Награда за локацию 2"] },
   { id: "santa-hat", name: "Новогодний колпак", slot: "HEAD", rarity: "epic", description: "Сезонный предмет.", sources: ["Новогодний ивент", "Награда за локацию 8"] },
-  { id: "laser-eyes", name: "Лазерные глаза", slot: "ACCESSORY", rarity: "legendary", description: "Обязательный аксессуар биткоин-максималиста.", sources: ["Награда за локацию 5"] },
+  { id: "laser-eyes", name: "Лазерные глаза", slot: "FACE", rarity: "legendary", description: "Обязательный аксессуар биткоин-максималиста.", sources: ["Награда за локацию 5"] },
   // held in the left hand (slot «Кисть»): the boss's own weapon, worn for the look
   { id: "bottle-komandate", name: "Бутылка Командате", slot: "HAND", rarity: "epic", description: "Оружие Командате: горит, но не гаснет. Герой держит её в руке.", sources: ["Победа: Командате"] },
   { id: "hand-drum", name: "Нервные пальцы", slot: "HAND", rarity: "rare", description: "Пальцы сами отбивают ритм по колену, пока график грузится.", sources: ["Победа: Кедр"] },

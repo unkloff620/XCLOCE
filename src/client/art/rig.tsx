@@ -102,7 +102,8 @@ function hitLayers(look: Look, worn: Worn): HitLayer[] {
   const add = (l: Box | null, items: string, body: string) => { if (l) out.push({ ...l, items, body }); };
   add(wearLayer(worn, "HEAD"), "HEAD", "HEAD");
   add(hairLayer(look, worn), "HEAD", "HEAD");
-  add(EYES_BOX, "HEAD", "EYES");
+  add(wearLayer(worn, "FACE"), "FACE", "EYES");
+  add(EYES_BOX, "FACE", "EYES");
   // no mouth layer yet: the place under the nose
   add(MOUTH_BOX, "HEAD", "MOUTH");
   add(part("head"), "HEAD", "HEAD");
@@ -174,6 +175,7 @@ function partShapes(edit: RigEdit, look: Look, worn: Worn): { boxes: Box[]; clip
     switch (edit.part) {
       case "HEAD": return [{ boxes: [wearLayer(worn, "HEAD") ?? head[0], ...head] }];
       case "ACCESSORY": return [{ boxes: [wearLayer(worn, "ACCESSORY") ?? { href: "", ...NECK, rect: true }] }];
+      case "FACE": return [{ boxes: [wearLayer(worn, "FACE") ?? EYES_BOX] }];
       case "SHIRT": {
         const shirt = wearLayer(worn, "SHIRT");
         return [shirt ? { boxes: [shirt] } : torso({ y1: HIPS_Y }), { boxes: [p("armUL"), p("foreL"), p("armUR"), p("foreR")] }];
@@ -231,13 +233,10 @@ function wornIn(worn: Worn, slot: string): WearId | null {
   return id && id in WEARS ? id : null;
 }
 
-/** worn things drawn on the face (over the eyes, they move with the head) instead of their slot's place */
-const FACE_WEAR = new Set(["laser-eyes"]);
-
-/** a worn piece of clothing, if the item in that slot has art; `face` — only the things worn on the face */
-function Wear({ slot, face }: { slot: string; face?: boolean }) {
+/** a worn piece of clothing, if the item in that slot has art (the FACE slot is drawn on the head, over the eyes) */
+function Wear({ slot }: { slot: string }) {
   const id = wornIn(useContext(WornCtx), slot);
-  if (!id || FACE_WEAR.has(id) !== !!face) return null;
+  if (!id) return null;
   const f = WEARS[id];
   return <image href={`/assets/hero/wear/${id}.webp?v=${ART_VER.wear}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
 }
@@ -395,7 +394,7 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
         <Ol>
           <Bone p="head" className="rig-head">
             <Face />
-            <Wear slot="ACCESSORY" face />
+            <Wear slot="FACE" />
             <Hair />
             <Wear slot="HEAD" />
           </Bone>
