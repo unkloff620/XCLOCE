@@ -17,6 +17,12 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-01-stash-pop",
+    date: "1 ноября",
+    title: "Нычки без окна",
+    items: [{ text: "Найденная нычка больше не закрывает экран: она вылетает прямо из задания, светится и пропадает — можно сразу идти дальше." }],
+  },
+  {
     id: "2026-11-01-chairs",
     date: "1 ноября",
     title: "Кресла боссов",

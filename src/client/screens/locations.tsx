@@ -16,22 +16,22 @@ import { sfx } from "../sound.ts";
 import { itemById } from "../../content/items.ts";
 import { STASH_PITY, STASH_SETS, stashSetOf, stashSetsByLocation } from "../../content/stashes.ts";
 
-/** A stash found during a task: the picture, its set and how many of the set are found. */
-function StashFound({ id, onClose }: { id: string; onClose: () => void }) {
+/**
+ * A stash found during a task: it flies out of the tapped stop, glows and fades (like an achievement, but right at the
+ * task) — no window, the road stays playable. Its set and how many of the set are found under the picture.
+ */
+function StashPop({ id }: { id: string }) {
   const { state } = useGame();
   const d = itemById(id);
   const set = stashSetOf(id);
   const have = set ? set.items.filter((i) => (state?.inventory ?? []).some((x) => x.id === i.id && x.qty > 0)).length : 0;
   return (
-    <Modal title="Нычка!" onClose={onClose}>
-      <div className="col" style={{ gap: 8, alignItems: "center", textAlign: "center" }}>
-        <span className="stash-cell big stash-pop">{/* eslint-disable-next-line @next/next/no-img-element */}<img src={`/assets/items/${id}.webp`} alt="" /></span>
-        <b className="display" style={{ fontSize: 20 }}>{d?.name}</b>
-        <span className="small">{d?.description}</span>
-        {set && <span className="chip gold">{set.name}: {have}/4{have >= 4 ? " — собери набор в достижениях «Нычки»" : ""}</span>}
-        <button className="btn gold block" onClick={onClose}>Забрать</button>
-      </div>
-    </Modal>
+    <span className="lp-stash" aria-live="polite">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={`/assets/items/${id}.webp`} alt="" draggable={false} />
+      <b>Нычка!</b>
+      <small>{d?.name}{set ? ` · ${have}/4` : ""}</small>
+    </span>
   );
 }
 
@@ -354,7 +354,8 @@ export function LocationScreen({ id }: { id: string }) {
   const now = useNow();
   const { rows, load } = useLocations();
   const [got, setGot] = useState<ClaimResult | null>(null);
-  const [stash, setStash] = useState<string | null>(null);
+  // stashes found: they fly out of their stop for a moment
+  const [stashes, setStashes] = useState<{ key: number; i: number; id: string }[]>([]);
   const [pick, setPick] = useState<string | null>(null);
   const [tab, setTab] = useState<LocTab>("day");
   // "+36 ₽" flying up from the tapped stop
@@ -397,7 +398,9 @@ export function LocationScreen({ id }: { id: string }) {
       // a stash found: a moment of its own
       haptic.big();
       sfx("levelup");
-      setStash(res.stash);
+      const k = key + 1, found = res.stash;
+      setStashes((p) => [...p.slice(-2), { key: k, i: x.i, id: found }]);
+      setTimeout(() => setStashes((p) => p.filter((q) => q.key !== k)), 2600);
     }
     if (res.done) {
       // the next stop lights up: follow it
@@ -503,6 +506,7 @@ export function LocationScreen({ id }: { id: string }) {
                     : x.open ? <i className="lp-tag num">{x.steps}/{x.t.steps}<em><Icon name="energy" size={11} />{x.t.energy}</em></i>
                     : <i className="lp-tag lock"><Icon name="lock" size={14} /></i>}
                   {pops.filter((q) => q.i === x.i).map((q) => <b key={q.key} className="lp-pop num">{q.text}{q.rep > 0 && <em><Icon name="map" size={14} />+{q.rep}</em>}</b>)}
+                  {stashes.filter((q) => q.i === x.i).map((q) => <StashPop key={q.key} id={q.id} />)}
                 </button>
               );
             })}
@@ -529,7 +533,7 @@ export function LocationScreen({ id }: { id: string }) {
         </>
       )}
       {got && <ClaimedModal got={got} onClose={() => setGot(null)} />}
-      {stash && <StashFound id={stash} onClose={() => setStash(null)} />}
+
     </div>
   );
 }
