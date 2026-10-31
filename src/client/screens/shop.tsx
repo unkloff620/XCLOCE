@@ -234,14 +234,18 @@ function AchBoxWindow({ onClose }: { onClose: () => void }) {
     haptic.big(); sfx("reward");
     setGot(r.reward); setGotN(r.opened ?? 1); setPhase("open");
   };
+  // no case ready: the locked case only rattles (like a door without a pass)
+  const [deny, setDeny] = useState(0);
   const tapCase = () => {
     if (phase === "open") { haptic.tap(); setPhase("closed"); setGot(null); return; }
-    if (phase === "closed") void open();
+    if (phase !== "closed") return;
+    if (b.ready < 1) { haptic.err(); sfx("locked"); setDeny(Date.now()); return; }
+    void open();
   };
   return (
     <div className="acx" role="dialog" aria-label="Ящик ништяков" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <button className="acx-x" onClick={onClose} aria-label="Закрыть">✕</button>
-      <div className={`acx-case ${phase} ${b.ready > 0 ? "ready" : ""}`} onClick={tapCase}>
+      <div key={deny} className={`acx-case ${phase} ${b.ready > 0 ? "ready" : ""} ${deny ? "deny" : ""}`} onClick={tapCase}>
         <span className="acx-glow" />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="acx-open" src="/assets/shop/v2/case-front-open.webp" alt="" draggable={false} />

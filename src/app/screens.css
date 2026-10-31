@@ -4422,3 +4422,6 @@ body { background-attachment: fixed; }
   100% { opacity: 0; transform: translate(-50%, -40px) scale(0.92); }
 }
 .lp-stop:has(.lp-stash) { z-index: 10; }
+/* no case ready: a tap only rattles the locked case */
+.acx-case.deny.closed .acx-closed { animation: acx-deny 0.45s ease-in-out; }
+@keyframes acx-deny { 15% { transform: translateX(-4%) rotate(-2deg); } 35% { transform: translateX(3.5%) rotate(1.8deg); } 55% { transform: translateX(-2.5%) rotate(-1deg); } 75% { transform: translateX(1.5%) rotate(0.5deg); } }
