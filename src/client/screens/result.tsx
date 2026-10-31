@@ -15,6 +15,7 @@ import { ROOM_BACKDROP } from "../../content/home-scene.ts";
 import { itemById } from "../../content/items.ts";
 import { BossPhoto } from "./boss-parts.tsx";
 import { full, pct } from "../format.ts";
+import { sfx } from "../sound.ts";
 import { haptic } from "../telegram.ts";
 
 /**
@@ -42,6 +43,8 @@ export function ResultWindow() {
     let alive = true;
     api.get<{ fight: FightView }>(`/api/live?fight=${active.fightId}&since=0`).then((r) => alive && setView(r.fight)).catch(() => alive && setActive(null));
     if (active.status === "won") haptic.ok();
+    // a boss that got away (time out or a flight): the loss sound
+    else { haptic.err(); sfx("fail"); }
     return () => {
       alive = false;
     };

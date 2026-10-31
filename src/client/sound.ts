@@ -13,8 +13,10 @@ export type Sfx = "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" |
   | "shake" | "dice" | "card" | "deal" | "chips" | "splat" | "zonk"
   /* a profile: «Ништяк!» for a pumped biceps (public/assets/sound/nishtyak-4.mp3, a hoarse prison voice), a spit, a fist fight */
   | "nishtyak" | "spit" | "brawl"
-  /* a stash found in a task: «Ооо, нычка!» in the same hoarse prison voice (public/assets/sound/nychka.mp3, OpenAI TTS + ffmpeg) */
+  /* a stash found in a task: «Ооо, нычка!» — one of two recordings at random (public/assets/sound/nychka-1/2.mp3) */
   | "nychka"
+  /* a loss: a burnt stake in the upgrader, a lost blackjack hand, a zonk, a boss that got away (public/assets/sound/fail.mp3) */
+  | "fail"
   /* a new level of the player: «Красавчик!» in that voice (public/assets/sound/krasavchik.mp3) */
   | "krasavchik"
   /* a new achievement: «Ништяк!» (the same voice as for the biceps, public/assets/sound/nishtyak-4.mp3) */
@@ -150,8 +152,8 @@ export function unlockAudioOnGesture() {
 
 /* ---------------- recorded sounds ---------------- */
 const SAMPLE_URLS = {
-  music: "/assets/sound/chanson.mp3",
-  battle: "/assets/sound/battle.mp3",
+  // the game's music (the player's own track, tools/sound/source/theme.mp3) — everywhere, the boss fights too
+  music: "/assets/sound/theme.mp3",
   yard: "/assets/sound/yard.mp3?v=5",
   door: "/assets/sound/door.mp3",
   keys: "/assets/sound/keys.mp3",
@@ -163,7 +165,10 @@ const SAMPLE_URLS = {
   // one voice for both: «Ништяк!» in a hoarse prison voice (a new achievement and a pumped biceps)
   nishtyak: "/assets/sound/nishtyak-4.mp3",
   wow: "/assets/sound/nishtyak-4.mp3",
-  nychka: "/assets/sound/nychka.mp3?v=5",
+  // «Ооо, нычка!»: two recordings of the player's, one of them at random each time
+  nychka1: "/assets/sound/nychka-1.mp3",
+  nychka2: "/assets/sound/nychka-2.mp3",
+  fail: "/assets/sound/fail.mp3",
   krasavchik: "/assets/sound/krasavchik.mp3",
 } as Record<string, string>;
 /** a hit sound per weapon (w-<weapon id>) and a pick-up sound per yard find (y-<drop id>): tools/sound/build-item-sounds.py */
@@ -179,8 +184,8 @@ type SampleId = string;
  * yard — nature in the yard: leaves in the wind and a few birds (build-yard-ambience.py).
  */
 const MUSIC_FILES = {
-  calm: { id: "music", start: 0.5, end: 37.42308390022676, gain: 0.17 },
-  battle: { id: "battle", start: 0.5, end: 25.76315192743764, gain: 0.14 },
+  calm: { id: "music", start: 0.5, end: 32.97641723356009, gain: 0.17 },
+  battle: { id: "music", start: 0.5, end: 32.97641723356009, gain: 0.17 }, // the same track (setMusicTrack plays «calm» for a fight)
   // the yard: the player's own recording (tools/sound/source/yard-ambience.mp3), its end crossfaded into its start
   yard: { id: "yard", start: 0.5, end: 63.571020408163264, gain: 0.12 },
 } as const;
@@ -269,7 +274,7 @@ export function sfx(name: Sfx, power = 0.5) {
       sample(a, "krasavchik", t, 1);
       break;
     case "nychka":
-      if (sample(a, "nychka", t, 1)) break;
+      if (sample(a, Math.random() < 0.5 ? "nychka1" : "nychka2", t, 1)) break;
       tone(a, 120, t, 0.3, { type: "sawtooth", vol: 0.18, slide: 1.3 });
       break;
     case "nishtyak":
@@ -414,7 +419,12 @@ export function sfx(name: Sfx, power = 0.5) {
       tone(a, 120, t, 0.18, { type: "sine", vol: 0.45, slide: 0.5 });
       noise(a, t + 0.06, 0.12, { freq: 2200, type: "bandpass", q: 2, vol: 0.18 });
       break;
+    case "fail":
+      if (sample(a, "fail", t, 1)) break;
+      [311, 294, 277].forEach((f, i) => tone(a, f, t + i * 0.2, 0.2, { type: "sawtooth", vol: 0.05 }));
+      break;
     case "zonk":
+      if (sample(a, "fail", t, 1)) break;
       // the sad trombone of a zonk
       [311, 294, 277].forEach((f, i) => tone(a, f, t + i * 0.2, 0.2, { type: "sawtooth", vol: 0.05 }));
       tone(a, 262, t + 0.6, 0.55, { type: "sawtooth", vol: 0.05, slide: 0.92 });
@@ -633,6 +643,8 @@ export function startMusic() {
  */
 let switchTimer: ReturnType<typeof setTimeout> | null = null;
 export function setMusicTrack(t: MusicTrack) {
+  // one music for the whole game now: a fight keeps the same track playing
+  if (t === "battle") t = "calm";
   if (t === track && !switchTimer) return;
   if (switchTimer) clearTimeout(switchTimer);
   switchTimer = null;
@@ -655,7 +667,7 @@ export function setMusicTrack(t: MusicTrack) {
     nextAt = ctx.currentTime + 0.05;
     musicBus.gain.cancelScheduledValues(ctx.currentTime);
     musicBus.gain.setValueAtTime(0, ctx.currentTime);
-    musicBus.gain.linearRampToValueAtTime(trackLevel(t), ctx.currentTime + (t === "battle" ? 0.6 : 2));
+    musicBus.gain.linearRampToValueAtTime(trackLevel(t), ctx.currentTime + 2);
   }, 380);
 }
 

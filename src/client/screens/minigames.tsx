@@ -991,7 +991,7 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
         setSnap(null);
       } else {
         haptic.err();
-        sfx("error");
+        sfx("fail");
         setSnap((s) => (s ? { ...s, burn: true } : null));
       }
     }, 1600);
