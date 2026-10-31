@@ -6,6 +6,8 @@
  * the clothes rack, the energy drinks on the shelf — a tap opens that window. The arms lie in front of the goods;
  * the rack and the shelf stand right after the background, behind the shopkeeper and the counter.
  */
+import { AchCase } from "../art/ach-case.tsx";
+import { CASE_ASPECT } from "../art/case-data.ts";
 import type { CSSProperties, ReactNode } from "react";
 import { SHOP_ART } from "../art/shop-data.ts";
 
@@ -43,8 +45,10 @@ function Spot({ s, onOpen }: { s: (typeof SPOTS)[number]; onOpen: (id: ShopSpotI
   );
 }
 
-/** «Ящик ништяков» stands on the dealer's counter on the right, a third of it past the edge (public/assets/shop/v2/ach-box.webp, tools/shop/source/ach-box.png) */
-const ACH_BOX_AT = { left: 86, top: 51, width: 21, height: 21 * (420 / 412) * (2000 / 2800) };
+/** «Ящик ништяков» — the case (art/ach-case.tsx) lies on the dealer's counter on the right, partly past the edge */
+const ACH_BOX_W = 24;
+const ACH_BOX_H = ACH_BOX_W * (2000 / 2800) / CASE_ASPECT;
+const ACH_BOX_AT = { left: 82, top: 66 - ACH_BOX_H, width: ACH_BOX_W, height: ACH_BOX_H };
 
 export function ShopScene({ onOpen, children, box, onBox }: {
   onOpen: (id: ShopSpotId) => void; children?: ReactNode;
@@ -75,8 +79,7 @@ export function ShopScene({ onOpen, children, box, onBox }: {
       {onBox && (
         <button className={`sk-spot sk-box ${box && box.ready > 0 ? "ready" : ""}`} onClick={onBox} aria-label="Ящик ништяков" title="Ящик ништяков"
           style={{ left: `${ACH_BOX_AT.left}%`, top: `${ACH_BOX_AT.top}%`, width: `${ACH_BOX_AT.width}%`, height: `${ACH_BOX_AT.height}%` }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assets/shop/v2/ach-box.webp" alt="" draggable={false} />
+          <AchCase ready={!!box && box.ready > 0} />
           <span className="sk-tag bottom num">{box ? (box.ready > 0 ? `×${box.ready}` : `${box.progress}/${box.cost}`) : "Ящик"}</span>
         </button>
       )}

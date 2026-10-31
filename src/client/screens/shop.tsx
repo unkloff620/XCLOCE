@@ -1,4 +1,5 @@
 "use client";
+import { AchCase } from "../art/ach-case.tsx";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -204,9 +205,8 @@ function AchBoxWindow({ onClose }: { onClose: () => void }) {
   return (
     <Modal title="Ящик ништяков" onClose={onClose}>
       <div className="col achbox" style={{ gap: 10, alignItems: "center", textAlign: "center" }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img key={shake} className={`achbox-art ${shake ? "shake" : ""} ${b.ready > 0 ? "ready" : ""}`} src="/assets/shop/v2/ach-box.webp" alt="" draggable={false} />
-        <span className="small">Очки достижений не тратятся: каждые <b>{b.cost}</b> очков — ещё один ящик. Внутри — рубли, доллары и оружие.</span>
+        <AchCase key={shake} className={`achbox-case ${shake ? "shake" : ""}`} ready={b.ready > 0} />
+        <span className="small">Очки достижений не тратятся: каждые <b>{b.cost}</b> очков — ещё один кейс. Внутри — рубли, доллары и оружие.</span>
         <span className="achbox-pts"><Icon name="sun" size={20} /><b className="num">{b.points}</b> очков · открыто ящиков: <b className="num">{b.opened}</b></span>
         <span className="ach-bar" style={{ width: "100%", ["--p" as string]: `${Math.round((b.progress / b.cost) * 100)}%`, ["--c" as string]: "#ffcc33" }}>
           <i /><span className="num">до следующего: {b.progress}/{b.cost}</span>

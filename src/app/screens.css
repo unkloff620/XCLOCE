@@ -4259,3 +4259,57 @@ body { background-attachment: fixed; }
 .ink-set-n { left: auto; right: 4px; bottom: 2px; text-align: right; color: #2ee88a; text-shadow: 0 1px 0 #0b2414, 0 0 3px #0b2414; }
 .ink-set.locked .ink-set-pic { filter: grayscale(1) brightness(0.6); }
 .ink-set.locked { background: #8a7462; }
+/* «Ящик ништяков» as a case (client/art/ach-case.tsx): the layers; while ready — a light inside, the lid knocks, the latches rattle */
+.ach-case { position: relative; display: block; width: 100%; perspective: 520px; }
+.ach-case .ac-l, .sk-spot .ach-case .ac-l { position: absolute; display: block; max-width: none; animation: none; filter: none; transform: none; pointer-events: none; }
+.sk-box .ach-case { filter: drop-shadow(0 0 1px #fff6c8) drop-shadow(0 0 4px rgba(255, 204, 51, 0.6)); }
+.ach-case .ac-lid { position: absolute; inset: 0; transform-origin: 50% 12%; }
+.ach-case .ac-latch { transform-origin: 50% 90%; }
+.ach-case.ready .ac-lid { animation: ac-lid 3.6s ease-in-out infinite; }
+.ach-case.ready .ac-latch { animation: ac-latch 3.6s ease-in-out infinite; }
+.ach-case.ready .ac-latch.r { animation-delay: 0.14s; }
+.ac-glow { position: absolute; left: 6%; top: 24%; width: 88%; height: 46%; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, #fffbe0 0%, #ffd84a 38%, rgba(255, 160, 30, 0.55) 70%, rgba(255, 140, 20, 0) 100%);
+  animation: ac-glow 3.6s ease-in-out infinite; }
+.ac-leak { position: absolute; left: 4%; top: 30%; width: 92%; height: 40%; border-radius: 50%; pointer-events: none; mix-blend-mode: screen;
+  background: radial-gradient(closest-side, rgba(255, 246, 190, 0.95), rgba(255, 200, 60, 0.5) 55%, rgba(255, 180, 40, 0) 100%);
+  opacity: 0; animation: ac-leak 3.6s ease-in-out infinite; }
+.ac-spark { position: absolute; top: 40%; width: 5%; aspect-ratio: 1; border-radius: 50%; pointer-events: none; opacity: 0;
+  background: radial-gradient(circle, #fffbe0 0 30%, rgba(255, 210, 70, 0.9) 45%, rgba(255, 190, 40, 0) 70%);
+  animation: ac-spark 3.6s ease-out infinite; }
+/* the lid: rests, then something knocks from inside twice — up, down, a smaller up, settles */
+@keyframes ac-lid {
+  0%, 30%, 100% { transform: rotateX(0) translateY(0); }
+  34% { transform: rotateX(-24deg) translateY(-4%); }
+  39% { transform: rotateX(0) translateY(0); }
+  41% { transform: rotateX(1deg) translateY(0.5%); }
+  45% { transform: rotateX(-15deg) translateY(-2.5%); }
+  50% { transform: rotateX(0) translateY(0); }
+  54% { transform: rotateX(-6deg) translateY(-1%); }
+  58% { transform: rotateX(0) translateY(0); }
+}
+/* the latches: rattle shut, flip open (down from their hinge), dangle while the lid knocks, snap shut, a last rattle */
+@keyframes ac-latch {
+  0%, 100% { transform: rotate(0) scaleY(1); }
+  4% { transform: rotate(-9deg) scaleY(1); }
+  8% { transform: rotate(8deg) scaleY(1); }
+  12% { transform: rotate(-6deg) scaleY(1); }
+  16% { transform: rotate(0) scaleY(1); }
+  21% { transform: rotate(0) scaleY(-0.9); }
+  25% { transform: rotate(16deg) scaleY(-0.9); }
+  30% { transform: rotate(-12deg) scaleY(-0.9); }
+  36% { transform: rotate(9deg) scaleY(-0.9); }
+  42% { transform: rotate(-7deg) scaleY(-0.9); }
+  48% { transform: rotate(4deg) scaleY(-0.9); }
+  55% { transform: rotate(-2deg) scaleY(-0.9); }
+  62% { transform: rotate(0) scaleY(-0.9); }
+  67% { transform: rotate(0) scaleY(1); }
+  71% { transform: rotate(-5deg) scaleY(1); }
+  75% { transform: rotate(4deg) scaleY(1); }
+  79% { transform: rotate(0) scaleY(1); }
+}
+@keyframes ac-glow { 0%, 28%, 62%, 100% { opacity: 0.55; transform: scale(0.95); } 34%, 45% { opacity: 1; transform: scale(1.06); } }
+@keyframes ac-leak { 0%, 30%, 39%, 41%, 50%, 58%, 100% { opacity: 0; } 34% { opacity: 0.6; } 45% { opacity: 0.4; } 54% { opacity: 0.15; } }
+@keyframes ac-spark { 0%, 32% { opacity: 0; transform: translateY(0) scale(0.6); } 36% { opacity: 1; } 60% { opacity: 0; transform: translateY(-260%) scale(1.1); } 100% { opacity: 0; } }
+.achbox-case { width: 220px; }
+.achbox-case.shake { animation: achbox-shake 0.5s ease-in-out; }

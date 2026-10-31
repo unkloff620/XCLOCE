@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-10-31-case",
+    date: "31 октября",
+    title: "Кейс у барыги",
+    items: [
+      { img: "/assets/updates/2026-10-31-case.webp", text: "Вместо ящика на прилавке теперь алюминиевый кейс. Когда хватает очков достижений, он оживает: внутри светится, крышка подпрыгивает, замки бренчат." },
+    ],
+  },
+  {
     id: "2026-10-31-headphones",
     date: "31 октября",
     title: "Наушники Лудомана",
