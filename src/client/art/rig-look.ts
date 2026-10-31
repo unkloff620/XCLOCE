@@ -113,10 +113,10 @@ export const WEAR_FIT = {
   },
   "sweater-vostok": {
     "slot": "SHIRT",
-    "x": 105.5,
-    "y": 285.5,
-    "w": 792,
-    "h": 484
+    "x": 59.0,
+    "y": 283.0,
+    "w": 875,
+    "h": 480
   },
   "santa-hat": {
     "slot": "HEAD",
