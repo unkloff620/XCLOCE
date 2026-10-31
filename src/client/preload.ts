@@ -9,7 +9,7 @@ import { ASSET_FILES } from "./asset-manifest.ts";
 import { ROOM_BACKDROP, ROOM_BG } from "../content/home-scene.ts";
 
 /** cache-busting versions of redrawn art (bump when the picture changes) */
-export const ART_VER = { heroPart: 6, hair: 7, wear: 6, items: 6, pepe: 2, tattoo: 4 } as const;
+export const ART_VER = { heroPart: 6, hair: 7, wear: 6, items: 7, pepe: 2, tattoo: 5 } as const;
 
 /** the URL a screen really requests for a file from the manifest */
 export function usedUrl(path: string): string {
@@ -45,7 +45,7 @@ export function sectionOfRoute(route: string): Section | null {
 }
 
 /** Hero art comes in many variants (6 skin tones × parts, 8 hair colours × hats): only the player's own are fetched. */
-export interface LookLite { hair: string; hairColor: number; skin: number }
+export interface LookLite { hair: string; hairColor: number; skin: number; /** inked tattoos: their pictures load at entry */ tattoos?: string[] }
 function wanted(path: string, look: LookLite | null): boolean {
   if (!look) return true;
   const skinDir = path.match(/^\/assets\/hero\/skin-(\d+)\//);
@@ -60,7 +60,7 @@ export function urlsFor(sections: Section[] | "all", look: LookLite | null): str
 }
 
 /** pictures the home screen does not need at once: they come in the background after the game shows */
-const LATER = ["/assets/items/", "/assets/stash/", "/assets/talents/", "/assets/slots/", "/assets/upgrader/", "/assets/cards/", "/assets/chips/", "/assets/door/", "/assets/updates/"];
+const LATER = ["/assets/hero/tattoo/", "/assets/items/", "/assets/stash/", "/assets/talents/", "/assets/slots/", "/assets/upgrader/", "/assets/cards/", "/assets/chips/", "/assets/door/", "/assets/updates/"];
 /**
  * What the game waits for on entry: the hero, the interface and the home (+ today's «Что нового» pictures);
  * everything else (laterUrls) loads in the background — a section still opens only once its own pictures are there.
@@ -73,7 +73,7 @@ function otherRoom(p: string, room: string) {
 }
 export function entryUrls(look: LookLite | null, today: string, room: string): string[] {
   return ASSET_FILES.filter((p) => ["core", "home"].includes(sectionOf(p)) && wanted(p, look) && !otherRoom(p, room)
-    && (!LATER.some((d) => p.startsWith(d)) || p.startsWith(`/assets/updates/${today}`))).map(usedUrl);
+    && (!LATER.some((d) => p.startsWith(d)) || p.startsWith(`/assets/updates/${today}`) || (look?.tattoos ?? []).some((t) => p === `/assets/hero/tattoo/${t}.webp`))).map(usedUrl);
 }
 /** what a section's screen waits for (the home: only the player's own room) */
 export function sectionUrls(section: Section, look: LookLite | null, room: string): string[] {

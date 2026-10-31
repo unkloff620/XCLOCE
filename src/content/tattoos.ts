@@ -7,7 +7,7 @@
 export interface TattooPiece { id: string; name: string; part: string }
 export interface TattooSet { id: string; name: string; boss: string; mode: "pacan" | "blat" | "avtor"; bonus: { weapon: string; damage: number }; pieces: TattooPiece[] }
 
-export const TATTOO_SETS: TattooSet[] = [
+const DATSIK_SETS: TattooSet[] = [
   {
     id: "ice", name: "Вечная мерзлота", boss: "datsik", mode: "pacan", bonus: { weapon: "keyboard", damage: 50 },
     pieces: [
@@ -73,6 +73,31 @@ export function oneTattooPerZone(ids: string[]): string[] {
   for (const id of ids) byZone.set(tattooZone(id), id);
   return [...byZone.values()];
 }
+
+/**
+ * The solid sets of the bosses after Дацкоу (tools/rig/build-tattoos.py SOLID): 21 places that join each other — the
+ * further the boss, the more of the body the set covers (Восток — a full suit).
+ */
+const ZONES: [string, string, string][] = [
+  ["face", "лицо", "HEAD"], ["neck", "шея", "HEAD"], ["chest-l", "левая грудь", "TORSO"], ["chest-r", "правая грудь", "TORSO"], ["belly", "живот", "TORSO"],
+  ["shoulder-l", "левое плечо", "SHOULDER_L"], ["shoulder-r", "правое плечо", "SHOULDER_R"], ["biceps-l", "левый бицепс", "SHOULDER_L"], ["biceps-r", "правый бицепс", "SHOULDER_R"],
+  ["elbow-l", "левый локоть", "ARM_L"], ["elbow-r", "правый локоть", "ARM_R"], ["forearm-l", "левое предплечье", "ARM_L"], ["forearm-r", "правое предплечье", "ARM_R"],
+  ["hand-l", "левая кисть", "ARM_L"], ["hand-r", "правая кисть", "HAND"], ["knee-l", "левое колено", "LEG_L"], ["knee-r", "правое колено", "LEG_R"],
+  ["shin-l", "левая голень", "LEG_L"], ["shin-r", "правая голень", "LEG_R"], ["foot-l", "левая стопа", "LEG_L"], ["foot-r", "правая стопа", "LEG_R"],
+];
+const solid = (id: string, name: string, boss: string, mode: TattooSet["mode"], weapon: string, damage: number): TattooSet => ({
+  id, name, boss, mode, bonus: { weapon, damage },
+  pieces: ZONES.map(([z, place, part]) => ({ id: `tat-${id}-${z}`, name: `${name}: ${place}`, part })),
+});
+export const TATTOO_SETS: TattooSet[] = [
+  ...DATSIK_SETS,
+  solid("taiga", "Тайга", "kedr", "pacan", "mouse", 60), solid("roots", "Корни", "kedr", "avtor", "gpu", 120),
+  solid("shark", "Акулья пасть", "mugo", "pacan", "red-candle", 80), solid("kraken", "Кракен", "mugo", "avtor", "gpu", 150),
+  solid("cash", "Нал", "garkusha", "pacan", "keyboard", 100), solid("gold", "Золотой запас", "garkusha", "avtor", "rug-pull-gun", 200),
+  solid("ring", "Ринг", "bebyakyan", "pacan", "fist", 120), solid("fire", "Огненный кулак", "bebyakyan", "avtor", "rug-pull-gun", 250),
+  solid("izba", "Изба", "babafey", "pacan", "keyboard", 150), solid("firebird", "Жар-птица", "babafey", "avtor", "rug-pull-gun", 300),
+  solid("jackpot", "Джекпот", "vodovoz", "pacan", "gpu", 200), solid("sunrise", "Восход", "vodovoz", "avtor", "rug-pull-gun", 400),
+];
 
 export const TATTOO_IDS = TATTOO_SETS.flatMap((s) => s.pieces.map((p) => p.id));
 export const tattooSetOf = (id: string) => TATTOO_SETS.find((s) => s.pieces.some((p) => p.id === id));

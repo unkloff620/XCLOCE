@@ -315,7 +315,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const deep = path.split("/").filter(Boolean).length > 1 || ["/locations", "/profile", "/rating"].includes(path);
   useEffect(() => telegramBack(deep, () => router.back()), [deep, router]);
   const body = state?.look.body;
-  const look = useMemo<LookLite | null>(() => (body ? { hair: body.hair, hairColor: body.hairColor, skin: body.skin } : null), [body?.hair, body?.hairColor, body?.skin]); // eslint-disable-line react-hooks/exhaustive-deps
+  const look = useMemo<LookLite | null>(() => (body ? { hair: body.hair, hairColor: body.hairColor, skin: body.skin, tattoos: body.tattoos } : null), [body?.hair, body?.hairColor, body?.skin]); // eslint-disable-line react-hooks/exhaustive-deps
   const art = useArtReady(look, state?.look.room ?? "basic", auth === "ok" && !!state);
 
   return (

@@ -17,6 +17,15 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-10-31-tattoo-sets",
+    date: "31 октября",
+    title: "Наколки со всех боссов",
+    items: [
+      { img: "/assets/updates/2026-10-31-tattoo-sets.webp", text: "12 новых сетов наколок: у каждого босса от Кедра до Востока по два — в «Пацанском» и «Авторитетном». Чем дальше босс, тем больше тела закрывает сет, у Востока — сплошные рукава и грудь." },
+      { text: "По одной наколке за каждую победу в этих режимах. Полный сет даёт бонус к урону оружия — до +400 к Rug Pull Gun." },
+    ],
+  },
+  {
     id: "2026-10-31-tattoos",
     date: "31 октября",
     title: "Наколки",

@@ -147,7 +147,7 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
             title={`«${s.name}» · ${bossById(s.boss)?.name}, «${TATTOO_MODE_NAME[s.mode]}»`}>
             {/* the set's main picture fills the tile; its name on top (two lines at most), the count bottom right */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="ink-set-pic" src={`/assets/hero/tattoo/${s.pieces[2].id}.webp?v=${ART_VER.tattoo}`} alt="" draggable={false} />
+            <img className="ink-set-pic" src={`/assets/hero/tattoo/set-${s.id}.webp?v=${ART_VER.tattoo}`} alt="" draggable={false} />
             <span className="ink-set-name">{s.name}</span>
             <span className="ink-set-n num">{got}/{s.pieces.length}</span>
             {!got && <img className="ink-chain" src="/assets/ui/chain-lock.webp" alt="" draggable={false} />}
