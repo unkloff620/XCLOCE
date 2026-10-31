@@ -1152,4 +1152,10 @@ WHERE s.player_id = p.id AND s.pts > 0;
     id: "v2-066-progress-reset",
     sql: `ALTER TABLE players ADD COLUMN IF NOT EXISTS progress_reset_at TIMESTAMPTZ;`,
   },
+  {
+    // the tattoo set «Вечная мерзлота» is redrawn as 21 pieces: the old pieces are taken away and come off the body
+    id: "v2-067-tattoos-21",
+    sql: `DELETE FROM inventory WHERE item_id LIKE 'tat-ice-%';
+UPDATE appearance SET body = body - 'tattoos' WHERE body ? 'tattoos';`,
+  },
 ];
