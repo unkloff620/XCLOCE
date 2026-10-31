@@ -69,7 +69,7 @@ def hair_recolor(im, target, ref):
 WEAR_SLOT = {"tee-white": "SHIRT", "tee-pump": "SHIRT", "jeans": "PANTS", "shorts-remote": "PANTS", "sneakers": "SHOES",
              "slippers": "SHOES", "gold-chain": "ACCESSORY", "cap-moon": "HEAD", "hoodie-hodl": "SHIRT",
              "jacket-komandate": "SHIRT", "pants-komandate": "PANTS", "sneakers-komandate": "SHOES",
-             "sweater-vostok": "SHIRT", "santa-hat": "HEAD", "laser-eyes": "FACE"}
+             "sweater-vostok": "SHIRT", "pants-vostok": "PANTS", "santa-hat": "HEAD", "laser-eyes": "FACE"}
 wear, hat_alpha = {}, {}
 for item, slot in WEAR_SLOT.items():
     a = np.array(Image.open(os.path.join(SRC, "wear", item + ".png")).convert("RGBA"))

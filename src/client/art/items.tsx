@@ -9,7 +9,7 @@ import { TATTOO_IDS } from "../../content/tattoos.ts";
 const RASTER_ITEMS = new Set([
   "fist", "mouse", "red-candle", "keyboard", "gpu", "rug-pull-gun",
   "tee-white", "tee-pump", "hoodie-hodl", "jeans", "shorts-remote", "sneakers", "cap-moon", "slippers", "gold-chain", "bottle-komandate", "hand-drum",
-  "jacket-komandate", "pants-komandate", "sneakers-komandate", "sweater-vostok",
+  "jacket-komandate", "pants-komandate", "sneakers-komandate", "sweater-vostok", "pants-vostok",
   "poker-chip", "energy-drink", "energy-pack", "energy-50", "energy-100", "energy-500", "lost-wallet", "bottle-cap", "flyer-passive", "spinner", "sticker-hodl", "statue-close", "trophy-sun", "santa-hat", "laser-eyes",
   ...STASH_IDS,
   ...TATTOO_IDS,

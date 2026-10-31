@@ -119,7 +119,7 @@ export const BOSSES: BossDef[] = [
     story: "Солнце встаёт на востоке, а Восток встаёт раньше Солнца. Проверяет всех ещё до начала смены.",
     hp: hp(6), reward: { xp: xp(6), currencies: { USD: 16, RUB: 560 } },
     drop: [{ id: "energy-drink", qty: 3, chance: 0.4 }],
-    wear: { items: ["sweater-vostok"], chance: 0.1, pity: 10 },
+    wear: { items: ["sweater-vostok", "pants-vostok"], chance: 0.1, pity: 10 },
     theme: { a: "#0f3440", b: "#041217", accent: "#38d6ff" }, photo: photo("vodovoz", true, "3"),
     keysToUnlock: 1,
   },

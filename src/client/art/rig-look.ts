@@ -118,6 +118,13 @@ export const WEAR_FIT = {
     "w": 875,
     "h": 480
   },
+  "pants-vostok": {
+    "slot": "PANTS",
+    "x": 68.0,
+    "y": 652.0,
+    "w": 854,
+    "h": 504
+  },
   "santa-hat": {
     "slot": "HEAD",
     "x": 341.0,
