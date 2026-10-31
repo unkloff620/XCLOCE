@@ -4425,3 +4425,16 @@ body { background-attachment: fixed; }
 /* no case ready: a tap only rattles the locked case */
 .acx-case.deny.closed .acx-closed { animation: acx-deny 0.45s ease-in-out; }
 @keyframes acx-deny { 15% { transform: translateX(-4%) rotate(-2deg); } 35% { transform: translateX(3.5%) rotate(1.8deg); } 55% { transform: translateX(-2.5%) rotate(-1deg); } 75% { transform: translateX(1.5%) rotate(0.5deg); } }
+/* «Скупка» under the exchanger (screens/exchange.tsx) */
+.bb-panel { display: flex; flex-direction: column; gap: 6px; }
+.bb-head { display: flex; flex-direction: column; gap: 1px; }
+.bb-head .display { font-size: 18px; }
+.bb-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+/* my upgraded things (★) under the upgrader */
+.ug-mine { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; padding: 10px; border-radius: 14px; background: rgba(20, 14, 8, 0.6); border: 2px solid var(--line); }
+.ug-mine-h { font: 900 14px/1.2 var(--font-display), system-ui; color: #ffd54a; }
+.ug-mine-row { display: flex; align-items: center; gap: 6px; color: #fff3e3; }
+/* «Инвентарь»: for now a «Скоро» page */
+.inv-soon { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 40px 20px; text-align: center; }
+.inv-soon img { width: 120px; height: 120px; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5)); }
+.inv-soon .display { font-size: 28px; }

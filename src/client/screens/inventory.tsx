@@ -43,7 +43,8 @@ function SellBox({ id, have, price }: { id: string; have: number; price: number 
   );
 }
 
-export function InventoryScreen() {
+/** the old full inventory (kept for the redesign; not shown for now) */
+export function InventoryFull() {
   const { state, act, busy } = useGame();
   const router = useRouter();
   const [cat, setCat] = useState<Category | "all">("all");
@@ -194,6 +195,22 @@ export function InventoryScreen() {
           </div>
         </Modal>
       )}
+    </div>
+  );
+}
+
+/**
+ * «Инвентарь» is being redone: for now a «Скоро» page that says where things are meanwhile — the yard finds are sold
+ * in the exchanger («Скупка»), the upgraded ★ things in the upgrader, clothes and tattoos in the hero editor.
+ */
+export function InventoryScreen() {
+  return (
+    <div className="inv-soon">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/assets/nav/inventory.webp" alt="" draggable={false} />
+      <b className="display">Скоро</b>
+      <span className="small muted">Инвентарь переделываем. А пока:</span>
+      <span className="small">Находки со двора — продать в обменнике, «Скупка».<br />Вещи со звездой ★ — в апгрейдере.<br />Одежда и наколки — нажми на персонажа дома.</span>
     </div>
   );
 }

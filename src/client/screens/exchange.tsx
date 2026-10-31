@@ -9,6 +9,9 @@ import { clock, money } from "../format.ts";
 import { haptic } from "../telegram.ts";
 import type { ShopData } from "./shop.tsx";
 import { Help, HelpList } from "../help.tsx";
+import { ItemArt } from "../art/items.tsx";
+import { itemById } from "../../content/items.ts";
+import { sfx } from "../sound.ts";
 
 export function Exchanger({ ex }: { ex: ShopData["exchange"] }) {
   const { state, act, busy } = useGame();
@@ -76,6 +79,53 @@ export function Exchanger({ ex }: { ex: ShopData["exchange"] }) {
 }
 
 
+/**
+ * «Скупка»: the dealer buys the yard finds (and other things with a price in state.sell) for roubles — always open,
+ * not only on the exchanger's days. A row per thing: how many, the price, «Продать»; on top «Продать всё».
+ */
+function BuyBack() {
+  const { state, act, busy } = useGame();
+  if (!state) return null;
+  const rows = Object.entries(state.sell ?? {})
+    .map(([id, price]) => ({ id, price, qty: state.inventory.find((i) => i.id === id)?.qty ?? 0, def: itemById(id) }))
+    .filter((r) => r.qty > 0 && r.def && r.price > 0);
+  const total = rows.reduce((t, r) => t + r.qty * r.price, 0);
+  const sell = async (id: string, qty: number) => {
+    const r = await act<{ got: number }>("sell", { itemId: id, qty }, (x) => `Продано за ${x.got} ₽`);
+    if (r) { haptic.ok(); sfx("coin"); }
+  };
+  const sellAll = async () => {
+    for (const r of rows) {
+      const ok = await act<{ got: number }>("sell", { itemId: r.id, qty: r.qty });
+      if (!ok) break;
+    }
+    haptic.ok(); sfx("coin");
+  };
+  return (
+    <div className="panel bb-panel">
+      <div className="bb-head">
+        <b className="display">Скупка</b>
+        <span className="tiny muted">Барыга берёт находки со двора за рубли — каждый день</span>
+      </div>
+      {rows.length ? (
+        <>
+          {rows.map((r) => (
+            <div key={r.id} className="bb-row">
+              <ItemArt id={r.id} size={36} />
+              <span className="grow col" style={{ minWidth: 0 }}>
+                <b className="small ellipsis">{r.def!.name}</b>
+                <span className="tiny muted num">×{r.qty} · {money("RUB", r.price)} ₽ за шт.</span>
+              </span>
+              <button className="btn sm gold" disabled={!!busy} onClick={() => sell(r.id, r.qty)}>{money("RUB", r.qty * r.price)} ₽</button>
+            </div>
+          ))}
+          {rows.length > 1 && <button className="btn green block" disabled={!!busy} onClick={sellAll}>Продать всё · {money("RUB", total)} ₽</button>}
+        </>
+      ) : <div className="tiny muted center">Нечего продать: подбирай находки во дворе.</div>}
+    </div>
+  );
+}
+
 /** The exchanger is an event: one Moscow day out of three. A strip says how long it still works / when it opens. */
 function ExchangeClock({ until, open, onTurn }: { until: number; open: boolean; onTurn: () => void }) {
   const { state } = useGame();
@@ -132,6 +182,7 @@ export function ExchangeScreen() {
           {!win?.open && <div className="exp-closed-sign display" aria-hidden="true">ЗАКРЫТО</div>}
         </div>
       ) : <div className="panel muted center">Загружаем курс…</div>}
+      <BuyBack />
     </div>
   );
 }
