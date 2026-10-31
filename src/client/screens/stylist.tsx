@@ -9,7 +9,7 @@ import { HAIR_COLORS, HAIR_STYLES, type Look } from "../../content/home.ts";
 import { haptic } from "../telegram.ts";
 import { HeadArt, type RigEdit } from "../art/rig.tsx";
 import { ART_VER } from "../preload.ts";
-import { TATTOO_SETS, tattooSource, oneTattooPerZone, tattooZone } from "../../content/tattoos.ts";
+import { TATTOO_SETS, TATTOO_ZONE_NAME, tattooSource, oneTattooPerZone, tattooZone } from "../../content/tattoos.ts";
 import { bossById } from "../../content/bosses.ts";
 
 /*
@@ -29,11 +29,11 @@ export interface StyleDraft {
   worn: Record<string, string>;
 }
 
-const CLOTHES: Slot[] = ["HEAD", "FACE", "ACCESSORY", "SHIRT", "PANTS", "SHOES", "HAND"];
-const ITEM_PART: Record<string, string> = { HEAD: "Голова", FACE: "Лицо", ACCESSORY: "Аксессуар", SHIRT: "Верх", PANTS: "Низ", SHOES: "Обувь", HAND: "Кисть" };
+const CLOTHES: Slot[] = ["HEAD", "FACE", "MOUTH", "ACCESSORY", "SHIRT", "PANTS", "SHOES", "HAND"];
+const ITEM_PART: Record<string, string> = { HEAD: "Голова", FACE: "Лицо", MOUTH: "Рот", ACCESSORY: "Аксессуар", SHIRT: "Верх", PANTS: "Низ", SHOES: "Обувь", HAND: "Кисть" };
 /** the slot buttons: a picture (public/assets/ui/slot-*.webp) and a short word under it */
-const SLOT_ICON: Record<string, string> = { HEAD: "slot-head", ACCESSORY: "slot-accessory", SHIRT: "slot-shirt", PANTS: "slot-pants", SHOES: "slot-shoes" };
-const SHORT_PART: Record<string, string> = { HEAD: "Голова", FACE: "Лицо", ACCESSORY: "Шея", SHIRT: "Верх", PANTS: "Низ", SHOES: "Обувь", HAND: "Кисть" };
+const SLOT_ICON: Record<string, string> = { MOUTH: "slot-mouth", HEAD: "slot-head", ACCESSORY: "slot-accessory", SHIRT: "slot-shirt", PANTS: "slot-pants", SHOES: "slot-shoes" };
+const SHORT_PART: Record<string, string> = { HEAD: "Голова", FACE: "Лицо", MOUTH: "Рот", ACCESSORY: "Шея", SHIRT: "Верх", PANTS: "Низ", SHOES: "Обувь", HAND: "Кисть" };
 // «левое / правое» — as seen on the screen
 
 export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
@@ -55,7 +55,7 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
   const openInk = () => {
     haptic.tap();
     setInkTab(true);
-    setFocus({ mode: "body", part: null, zones: true });
+    setFocus({ mode: "ink", part: null });
   };
   const owned = new Set(state.inventory.map((i) => i.id));
   const slot = mode === "items" && part && (CLOTHES as string[]).includes(part) ? (part as Slot) : null;
@@ -116,9 +116,30 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
       </button>
     );
   };
-  // «Наколки»: the sets like an inventory — a set opens to its pieces (dropped ones in colour, the rest grey)
+  // «Наколки»: a place picked on the body — every set's piece for that place; otherwise the sets like an inventory
+  // (a set opens to its pieces: dropped ones in colour, the rest grey)
+  const zone = inkTab && part && TATTOO_ZONE_NAME[part] ? part : null;
   const openSet = TATTOO_SETS.find((s) => s.id === inkSet) ?? null;
-  const inkView = openSet ? (() => {
+  const zoneView = zone ? (() => {
+    const list = TATTOO_SETS.map((s) => ({ s, p: s.pieces.find((x) => tattooZone(x.id) === zone) })).filter((x) => x.p);
+    const mineN = list.filter((x) => owned.has(x.p!.id)).length;
+    return (
+      <div className="ink-open">
+        <div className="ink-open-head">
+          <button type="button" className="btn dark sm" onClick={() => { haptic.tap(); setFocus({ ...focus, part: null }); }}>‹</button>
+          <span className="grow ink-open-t">
+            <b>Место: {TATTOO_ZONE_NAME[zone]} <span className="num">{mineN}/{list.length}</span></b>
+            <small>Сюда можно набить одну наколку — из любого сета. Новая заменит старую.</small>
+          </span>
+          {[...inked].some((t) => tattooZone(t) === zone) && (
+            <button type="button" className="btn dark sm" onClick={() => setInk([...inked].filter((t) => tattooZone(t) !== zone))}>Свести</button>
+          )}
+        </div>
+        <div className="ink-grid">{list.map(({ s, p }) => piece(s, p!))}</div>
+      </div>
+    );
+  })() : null;
+  const inkView = zoneView ?? (openSet ? (() => {
     const mine = openSet.pieces.filter((p) => owned.has(p.id));
     const all = mine.length > 0 && mine.every((p) => inked.has(p.id));
     return (
@@ -140,10 +161,11 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
     );
   })() : (
     <div className="ink-sets">
+      <span className="ink-hint tiny">Нажми на место на теле — покажу, что туда можно набить. Или открой сет.</span>
       {TATTOO_SETS.map((s) => {
         const got = s.pieces.filter((p) => owned.has(p.id)).length;
         return (
-          <button type="button" key={s.id} className={`ink-set ${got === s.pieces.length ? "done" : ""} ${got ? "" : "locked"}`} onClick={() => { haptic.tap(); setInkSet(s.id); }}
+          <button type="button" key={s.id} className={`ink-set ${got === s.pieces.length ? "done" : ""} ${got ? "" : "locked"}`} onClick={() => { haptic.tap(); setInkSet(s.id); setFocus({ ...focus, part: null }); }}
             title={`«${s.name}» · ${tattooSource(s, (b) => bossById(b)?.name)}`}>
             {/* the set's main picture fills the tile; its name on top (two lines at most), the count bottom right */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -155,7 +177,7 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
         );
       })}
     </div>
-  );
+  ));
   let body: ReactNode;
   if (inkTab) {
     body = inkView;
@@ -200,7 +222,10 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
             <span className="sty-item-name">{i.name}</span>
           </button>
         ))}
-        {items.length === 0 && (
+        {items.length === 0 && slot === "MOUTH" && (
+          <span className="sty-item shop"><span className="sty-plus" aria-hidden="true">⏳</span><span className="sty-item-name">Скоро: сигареты и зубочистки</span></span>
+        )}
+        {items.length === 0 && slot !== "MOUTH" && (
           <Link href="/shop?tab=clothing" className="sty-item shop" onClick={onClose}>
             <span className="sty-plus" aria-hidden="true">🛒</span>
             <span className="sty-item-name">{slot === "HAND" ? "Выпадают с боссов" : "В магазин"}</span>

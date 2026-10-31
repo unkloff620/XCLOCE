@@ -85,6 +85,8 @@ const ZONES: [string, string, string][] = [
   ["hand-l", "левая кисть", "ARM_L"], ["hand-r", "правая кисть", "HAND"], ["knee-l", "левое колено", "LEG_L"], ["knee-r", "правое колено", "LEG_R"],
   ["shin-l", "левая голень", "LEG_L"], ["shin-r", "правая голень", "LEG_R"], ["foot-l", "левая стопа", "LEG_L"], ["foot-r", "правая стопа", "LEG_R"],
 ];
+/** a tattoo place's name in words (the editor's grid): «левое плечо» */
+export const TATTOO_ZONE_NAME: Record<string, string> = Object.fromEntries(ZONES.map(([z, place]) => [z, place]));
 const solid = (id: string, name: string, boss: string, mode: TattooSet["mode"], weapon: string, damage: number): TattooSet => ({
   id, name, boss, mode, bonus: { weapon, damage },
   pieces: ZONES.map(([z, place, part]) => ({ id: `tat-${id}-${z}`, name: `${name}: ${place}`, part })),

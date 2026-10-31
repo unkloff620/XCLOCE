@@ -155,41 +155,88 @@ for set_id in SETS:
     cov = Image.new("RGBA", ink.size, (0, 0, 0, 0)); cov.alpha_composite(ink)
     cov.resize((288, 200), Image.LANCZOS).save(os.path.join(OUT, f"set-{set_id}.webp"), "WEBP", quality=86, method=6)
 
-# the editor's map of the places (rig/tattoo grid): every zone outlined in yellow, on the whole 1000×1400 rig canvas
-_edge = np.zeros(ZONE_OF.shape, bool)
-for dy, dx in ((0, 1), (1, 0), (1, 1), (1, -1)):
-    a_, b_ = ZONE_OF, np.roll(np.roll(ZONE_OF, dy, 0), dx, 1)
-    _edge |= (a_ != b_) & ((a_ >= 0) | (b_ >= 0))
-_edge = ndimage.binary_dilation(_edge, iterations=1)
-# not over the shorts (dark cloth of the base body): nothing is inked there
+# ---------------- the editor's places (client/art/places-data.ts) ----------------
+# Two different grids over the hero in the character editor:
+#   «Наколки» — the 21 tattoo places (the zones above, the face and the right hand);
+#   «Вещи»    — where things are worn: head, eyes, mouth, neck, top, bottom, shoes, the right hand.
+# For each: a yellow outline of every place (zones.webp / slots.webp), a map to tell which place a tap hit
+# (zone-map.png / slot-map.png: the red channel = the place's number + 1, half size) and a picture of every place
+# (filled lightly, outlined brightly) drawn over the hero when it is chosen (place-<grid>-<id>.webp).
+def _part_mask(p, thr=60):
+    r = rig[p]
+    im = Image.open(os.path.join(ROOT, "public", "assets", "hero", f"{p}.webp")).convert("RGBA").resize((round(r["w"]), round(r["h"])))
+    m = Image.new("L", (1000, 1400), 0); m.paste(im.getchannel("A"), (round(r["x"]), round(r["y"])))
+    return np.array(m) > thr
+def _oval(x0, y0, x1, y1):
+    m = Image.new("L", (1000, 1400), 0); ImageDraw.Draw(m).ellipse((x0, y0, x1, y1), fill=255)
+    return np.array(m) > 0
+HEAD_M, HANDR_M = _part_mask("head"), _part_mask("handR")
 _trq = np.array(Image.open(os.path.join(ROOT, "tools", "rig", "source", "v2", "torso.png")).convert("RGB").resize((1000, 1400), Image.LANCZOS)).astype(int)
-_cloth = ndimage.binary_opening((_trq.max(axis=2) < 80) & _body, iterations=2)
-_edge &= ~ndimage.binary_erosion(_cloth, iterations=3)
-# nor under the head and the right hand, which are drawn over the body
-for _p in ("head", "handR"):
-    _r = rig[_p]
-    _im = Image.open(os.path.join(ROOT, "public", "assets", "hero", f"{_p}.webp")).convert("RGBA").resize((round(_r["w"]), round(_r["h"])))
-    _m = Image.new("L", (1000, 1400), 0); _m.paste(_im.getchannel("A"), (round(_r["x"]), round(_r["y"])))
-    _edge &= ~(np.array(_m) > 60)
-# small closed loops (a speck of one zone inside another) are not places
-_lab, _n = ndimage.label(_edge)
-for _i, _sz in enumerate(ndimage.sum(np.ones_like(_lab), _lab, range(1, _n + 1)), 1):
-    if _sz < 200:
-        _edge[_lab == _i] = False
-# the face and the right hand are their own parts: an oval round all the face / right-hand pieces
-_ov = Image.new("L", (1000, 1400), 0)
-for _z in ("face", "hand-r"):
-    bxs = [f for k, f in fit.items() if k.endswith("-" + _z)]
-    if bxs:
-        x0 = min(f["x"] for f in bxs); y0 = min(f["y"] for f in bxs)
-        x1 = max(f["x"] + f["w"] for f in bxs); y1 = max(f["y"] + f["h"] for f in bxs)
-        ImageDraw.Draw(_ov).ellipse((x0 - 6, y0 - 6, x1 + 6, y1 + 6), outline=255, width=3)
-_edge |= np.array(_ov) > 0
-_glow = ndimage.binary_dilation(_edge, iterations=3) & ~_edge
-grid = np.zeros((1400, 1000, 4), np.uint8)
-grid[_glow] = (40, 24, 0, 150)
-grid[_edge] = (255, 214, 40, 255)
-Image.fromarray(grid).save(os.path.join(OUT, "zones.webp"), "WEBP", quality=90, method=6)
+CLOTH = ndimage.binary_opening((_trq.max(axis=2) < 80) & _body, iterations=2)  # the shorts of the base body
+_seen = _body & ~HEAD_M & ~HANDR_M  # the body where nothing is drawn over it
+def _zone(z):
+    return (ZONE_OF == ZONE_IDS.index(z)) & _seen
+_fb = [f for k, f in fit.items() if k.endswith("-face")]
+FACE_M = _oval(min(f["x"] for f in _fb) - 4, min(f["y"] for f in _fb) - 4, max(f["x"] + f["w"] for f in _fb) + 4, max(f["y"] + f["h"] for f in _fb) + 4) & HEAD_M
+zones = {"face": FACE_M, "hand-r": HANDR_M}
+for z in ZONE_IDS:
+    zones[z] = _zone(z) & ~CLOTH  # nothing is inked under the shorts
+_e, _h = rig["eyes"], rig["head"]
+slots = {
+    "MOUTH": _oval(_h["x"] + _h["w"] * 0.36, _h["y"] + _h["h"] * 0.71, _h["x"] + _h["w"] * 0.64, _h["y"] + _h["h"] * 0.86),
+    "FACE": _oval(_e["x"] - 8, _e["y"] - 20, _e["x"] + _e["w"] + 8, _e["y"] + _e["h"] + 10),
+    "HAND": HANDR_M,
+}
+slots["HEAD"] = HEAD_M & ~slots["MOUTH"] & ~slots["FACE"]
+slots["ACCESSORY"] = _zone("neck")
+slots["SHIRT"] = np.any([_zone(z) for z in ("chest-l", "chest-r", "belly", "shoulder-l", "shoulder-r", "biceps-l", "biceps-r", "elbow-l", "elbow-r", "forearm-l", "forearm-r")], axis=0)
+slots["PANTS"] = np.any([_zone(z) for z in ("knee-l", "knee-r", "shin-l", "shin-r")], axis=0)
+slots["SHOES"] = np.any([_zone(z) for z in ("foot-l", "foot-r")], axis=0)
+
+def _outline(m, w=2):
+    return m & ~ndimage.binary_erosion(m, iterations=w)
+def _grid(masks, name):
+    edge = np.zeros((1400, 1000), bool)
+    for m in masks.values():
+        edge |= _outline(ndimage.binary_opening(m, iterations=1), 2)
+    glow = ndimage.binary_dilation(edge, iterations=3) & ~edge
+    g = np.zeros((1400, 1000, 4), np.uint8)
+    g[glow] = (40, 24, 0, 140)
+    g[edge] = (255, 214, 40, 235)
+    Image.fromarray(g).save(os.path.join(OUT, f"{name}.webp"), "WEBP", quality=90, method=6)
+def _map(masks, name, order):
+    idx = np.zeros((1400, 1000), np.uint8)
+    for i, k in enumerate(order):  # later ones lie over the earlier
+        idx[masks[k]] = i + 1
+    small = idx[::2, ::2]
+    rgba = np.zeros((700, 500, 4), np.uint8); rgba[..., 0] = small; rgba[..., 3] = np.where(small > 0, 255, 0)
+    Image.fromarray(rgba).save(os.path.join(OUT, f"{name}-map.png"))
+def _pictures(masks, grid):
+    out = {}
+    for k, m in masks.items():
+        m = ndimage.binary_opening(m, iterations=1)
+        ys, xs = np.nonzero(m)
+        if not len(xs):
+            continue
+        x0, y0, x1, y1 = max(0, xs.min() - 8), max(0, ys.min() - 8), min(1000, xs.max() + 9), min(1400, ys.max() + 9)
+        edge = _outline(m, 4)
+        glow = ndimage.binary_dilation(edge, iterations=4) & ~m
+        g = np.zeros((1400, 1000, 4), np.uint8)
+        g[m] = (255, 220, 70, 120)
+        g[glow] = (255, 200, 40, 110)
+        g[edge] = (255, 236, 120, 255)
+        Image.fromarray(g[y0:y1, x0:x1]).save(os.path.join(OUT, f"place-{grid}-{k}.webp"), "WEBP", quality=88, method=6)
+        out[k] = {"x": int(x0), "y": int(y0), "w": int(x1 - x0), "h": int(y1 - y0)}
+    return out
+ZONE_ORDER = ZONE_IDS + ["face", "hand-r"]
+SLOT_ORDER = ["SHOES", "PANTS", "SHIRT", "ACCESSORY", "HEAD", "FACE", "MOUTH", "HAND"]
+_grid(zones, "zones"); _map(zones, "zone", ZONE_ORDER)
+_grid(slots, "slots"); _map(slots, "slot", SLOT_ORDER)
+places = {"zone": {"order": ZONE_ORDER, "fit": _pictures(zones, "zone")}, "slot": {"order": SLOT_ORDER, "fit": _pictures(slots, "slot")}}
+with open(os.path.join(ROOT, "src", "client", "art", "places-data.ts"), "w") as f:
+    f.write("/* Generated by tools/rig/build-tattoos.py — do not edit by hand. The character editor's places (1000×1400 rig):\n"
+            " * order — the place's number in the tap map (red channel − 1), fit — the box of its highlight picture. */\n")
+    f.write(f"export const PLACES = {json.dumps(places, indent=1)} as const;\n")
 
 with open(os.path.join(ROOT, "src", "client", "art", "tattoo-data.ts"), "w") as f:
     f.write("/* Generated by tools/rig/build-tattoos.py — do not edit by hand. Each piece's place in the 1000×1400 rig, on its hero part. */\n")

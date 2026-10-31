@@ -4236,7 +4236,7 @@ body { background-attachment: fixed; }
 .sty-big:disabled { filter: grayscale(1) brightness(0.7); opacity: 0.6; cursor: default; }
 .sty-big:active:not(:disabled) { transform: scale(0.92); }
 /* the clothes slots: all seven in one row */
-.sty-slots { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.sty-slots { grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 3px; }
 .sty-slot { height: 50px; }
 .sty-slot img, .sty-slot svg { width: 26px !important; height: 26px !important; }
 .sty-slot small { font-size: 8.5px; }
@@ -4366,3 +4366,8 @@ body { background-attachment: fixed; }
   font: 900 14px/1.2 var(--font-display), system-ui; box-shadow: 0 2px 0 var(--line); cursor: pointer; }
 .acx-all:disabled { opacity: 0.6; }
 .acx-all:active { transform: translateY(1px); box-shadow: 0 1px 0 var(--line); }
+.ink-sets .ink-hint { grid-column: 1 / -1; text-align: center; opacity: 0.75; color: #fff3e3; }
+/* the editor's grids over the hero (art/rig.tsx): the places outlined, the chosen one filled and glowing */
+.rig-grid { opacity: 0.85; }
+.rig-place { animation: rig-place 1.6s ease-in-out infinite; }
+@keyframes rig-place { 50% { opacity: 0.7; } }

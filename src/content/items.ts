@@ -6,10 +6,10 @@ import { TATTOO_MODE_NAME, TATTOO_SETS } from "./tattoos.ts";
 export type Category = "weapon" | "clothing" | "item" | "reward" | "stash" | "event" | "tattoo";
 export type Rarity = "common" | "rare" | "epic" | "legendary" | "mythic";
 /** FACE: worn on the face (laser eyes) — its own tab in the hero editor */
-export type Slot = "BODY" | "PANTS" | "SHIRT" | "SHOES" | "HEAD" | "FACE" | "ACCESSORY" | "SPECIAL" | "HAND";
+export type Slot = "BODY" | "PANTS" | "SHIRT" | "SHOES" | "HEAD" | "FACE" | "MOUTH" | "ACCESSORY" | "SPECIAL" | "HAND";
 /** Drawing order of the character, bottom to top. */
-export const SLOTS: Slot[] = ["BODY", "PANTS", "SHIRT", "SHOES", "HEAD", "FACE", "ACCESSORY", "SPECIAL", "HAND"];
-export const WEARABLE_SLOTS: Slot[] = ["PANTS", "SHIRT", "SHOES", "HEAD", "FACE", "ACCESSORY", "SPECIAL", "HAND"];
+export const SLOTS: Slot[] = ["BODY", "PANTS", "SHIRT", "SHOES", "HEAD", "FACE", "MOUTH", "ACCESSORY", "SPECIAL", "HAND"];
+export const WEARABLE_SLOTS: Slot[] = ["PANTS", "SHIRT", "SHOES", "HEAD", "FACE", "MOUTH", "ACCESSORY", "SPECIAL", "HAND"];
 
 export interface WeaponStats {
   damage: number;

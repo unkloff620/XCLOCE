@@ -15,6 +15,7 @@ import { RIG } from "./rig-data.ts";
 import { HAIR_CUT_HATS, HAIR_FIT, SKIN_ORIGINAL, WEAR_FIT } from "./rig-look.ts";
 import { HELD_FIT } from "./held-data.ts";
 import { TATTOO_FIT } from "./tattoo-data.ts";
+import { PLACES } from "./places-data.ts";
 import { SEAT } from "../../content/home-scene.ts";
 import { CHAIR_FIT } from "./desk-data.ts";
 import { DEFAULT_LOOK, type Look } from "../../content/home.ts";
@@ -32,14 +33,18 @@ export type Worn = Record<string, string | undefined>;
  * mode "items": HEAD, ACCESSORY, SHIRT, PANTS, SHOES, HAND — where clothes go (shown even with nothing worn);
  * mode "body": HEAD, EYES, MOUTH, TORSO, SHOULDER_L/R, ARM_L/R (forearms), HAND, LEG_L/R — «L» is the screen's left.
  */
-/** `zones`: the tattoo editor — the places for tattoos outlined in yellow on the body */
-export type RigEdit = { mode: "items" | "body"; part: string | null; onPick?: (part: string) => void; zones?: boolean };
+/**
+ * mode "items" — the clothes: the «вещи» grid (head, eyes, mouth, neck, top, bottom, shoes, the hand), a tap picks the slot;
+ * mode "ink" — the tattoos: the «наколки» grid (the 21 tattoo places), a tap picks the place (zone id, tattoos.ts ZONES);
+ * mode "body" — the looks (hair): every part outlined, as before.
+ */
+export type RigEdit = { mode: "items" | "body" | "ink"; part: string | null; onPick?: (part: string) => void };
 const EditCtx = createContext<RigEdit | null>(null);
 
-/** the thin outline of every part in the editor (nothing outside the editor) */
+/** the thin outline of every part in the looks editor (the clothes and the tattoos have their own grids) */
 function Ol({ children }: { children: ReactNode }) {
   const e = useContext(EditCtx);
-  if (!e) return <>{children}</>;
+  if (!e || e.mode !== "body") return <>{children}</>;
   return <g filter="url(#rig-ol)">{children}</g>;
 }
 
@@ -105,8 +110,8 @@ function hitLayers(look: Look, worn: Worn): HitLayer[] {
   add(hairLayer(look, worn), "HEAD", "HEAD");
   add(wearLayer(worn, "FACE"), "FACE", "EYES");
   add(EYES_BOX, "FACE", "EYES");
-  // no mouth layer yet: the place under the nose
-  add(MOUTH_BOX, "HEAD", "MOUTH");
+  // the mouth: a cigarette, a toothpick (the «Рот» slot)
+  add(MOUTH_BOX, "MOUTH", "");
   add(part("head"), "HEAD", "HEAD");
   add(wearLayer(worn, "ACCESSORY") ?? { href: "", ...NECK, rect: true }, "ACCESSORY", "");
   add(wearLayer(worn, "SHIRT"), "SHIRT", "TORSO");
@@ -120,7 +125,25 @@ function hitLayers(look: Look, worn: Worn): HitLayer[] {
   add(part("torso"), "TORSO", "TORSO");
   return out;
 }
-async function pickAt(x: number, y: number, layers: HitLayer[], mode: "items" | "body"): Promise<string | null> {
+type Grid = keyof typeof PLACES;
+const PLACE_ART_V = ART_VER.tattoo;
+/** which place of a grid is at a rig point (the grid's tap map: red channel = the place's number + 1) */
+async function placeAt(grid: Grid, x: number, y: number): Promise<string | null> {
+  const a = await alphaOf(`/assets/hero/tattoo/${grid}-map.png?v=${PLACE_ART_V}`);
+  if (!a) return null;
+  const px = Math.floor(x / 2), py = Math.floor(y / 2);
+  if (px < 0 || py < 0 || px >= a.width || py >= a.height) return null;
+  const n = a.data[(py * a.width + px) * 4];
+  const order = PLACES[grid].order as readonly string[];
+  return n > 0 && a.data[(py * a.width + px) * 4 + 3] > 0 ? order[n - 1] ?? null : null;
+}
+async function pickAt(x: number, y: number, layers: HitLayer[], mode: RigEdit["mode"]): Promise<string | null> {
+  if (mode === "ink") return placeAt("zone", x, y);
+  if (mode === "items") {
+    // a worn thing that sticks out past the body (a hat, a jacket) is still its slot; the body itself by the grid
+    const hit = await placeAt("slot", x, y);
+    if (hit) return hit;
+  }
   for (const l of layers) {
     if (x < l.x || y < l.y || x >= l.x + l.w || y >= l.y + l.h) continue;
     if (!(mode === "items" ? l.items : l.body)) continue;
@@ -170,23 +193,17 @@ type Clip = { x0?: number; x1?: number; y0?: number; y1?: number };
 function partShapes(edit: RigEdit, look: Look, worn: Worn): { boxes: Box[]; clip?: Clip }[] {
   const p = (id: PartId) => partLayer(look, id);
   const torso = (clip: Clip) => ({ boxes: [p("torso")], clip });
-  const legs = { y0: HIPS_Y, y1: FEET_Y }, feet = { y0: FEET_Y };
   const head = [p("head"), hairLayer(look, worn)].filter(Boolean) as Box[];
   if (edit.mode === "items") {
+    // a worn thing: the ring round its picture (the place's own picture is drawn by Highlight)
     switch (edit.part) {
-      case "HEAD": return [{ boxes: [wearLayer(worn, "HEAD") ?? head[0], ...head] }];
-      case "ACCESSORY": return [{ boxes: [wearLayer(worn, "ACCESSORY") ?? { href: "", ...NECK, rect: true }] }];
-      case "FACE": return [{ boxes: [wearLayer(worn, "FACE") ?? EYES_BOX] }];
-      case "SHIRT": {
-        const shirt = wearLayer(worn, "SHIRT");
-        return [shirt ? { boxes: [shirt] } : torso({ y1: HIPS_Y }), { boxes: [p("armUL"), p("foreL"), p("armUR"), p("foreR")] }];
-      }
-      case "PANTS": { const w = wearLayer(worn, "PANTS"); return [w ? { boxes: [w] } : torso(legs)]; }
-      case "SHOES": { const w = wearLayer(worn, "SHOES"); return [w ? { boxes: [w] } : torso(feet)]; }
-      case "HAND": return [{ boxes: [handLayer(look, worn)] }];
+      case "HEAD": { const w = wearLayer(worn, "HEAD"); return w ? [{ boxes: [w, ...head] }] : []; }
+      case "ACCESSORY": case "FACE": case "SHIRT": case "PANTS": case "SHOES": { const w = wearLayer(worn, edit.part); return w ? [{ boxes: [w] }] : []; }
+      case "HAND": return worn.HAND && worn.HAND in HELD_FIT ? [{ boxes: [handLayer(look, worn)] }] : [];
     }
     return [];
   }
+  if (edit.mode === "ink") return [];
   switch (edit.part) {
     case "HEAD": return [{ boxes: head }];
     case "EYES": return [{ boxes: [EYES_BOX] }];
@@ -202,11 +219,18 @@ function partShapes(edit: RigEdit, look: Look, worn: Worn): { boxes: Box[]; clip
   }
   return [];
 }
+/** the chosen place of the clothes / tattoo grid: its own picture (lightly filled, brightly outlined) */
+function PlacePic({ grid, id }: { grid: Grid; id: string }) {
+  const f = (PLACES[grid].fit as Record<string, { x: number; y: number; w: number; h: number }>)[id];
+  if (!f) return null;
+  return <image className="rig-place" href={`/assets/hero/tattoo/place-${grid}-${id}.webp?v=${PLACE_ART_V}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
+}
 function Highlight({ edit }: { edit: RigEdit }) {
   const look = useContext(LookCtx), worn = useContext(WornCtx);
   const shapes = partShapes(edit, look, worn);
   return (
     <g pointerEvents="none" className="rig-hl-part">
+      {edit.part && edit.mode !== "body" && <PlacePic grid={edit.mode === "ink" ? "zone" : "slot"} id={edit.part} />}
       {/* all the pieces of the part (a jacket and both sleeves) under one ring: one whole outline, not one per piece */}
       <g filter="url(#rig-ring)">
         {shapes.map((sh, k) => {
@@ -404,7 +428,8 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
           </Bone>
         </Ol>
       </g>
-      {edit?.zones && <image className="rig-zones" href={`/assets/hero/tattoo/zones.webp?v=${ART_VER.tattoo}`} x={0} y={0} width={1000} height={1400} preserveAspectRatio="none" pointerEvents="none" />}
+      {/* the grid of the places: the tattoo places or the clothes places */}
+      {edit && edit.mode !== "body" && <image className="rig-grid" href={`/assets/hero/tattoo/${edit.mode === "ink" ? "zones" : "slots"}.webp?v=${PLACE_ART_V}`} x={0} y={0} width={1000} height={1400} preserveAspectRatio="none" pointerEvents="none" />}
       {edit?.part && <Highlight edit={edit} />}
     </EditCtx.Provider>
     </WornCtx.Provider>
