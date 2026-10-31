@@ -21,8 +21,10 @@ const nextConfig: NextConfig = {
         source: "/assets/:path*",
         headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
       },
+      // only the boss pictures (public/bosses/…): the game pages /bosses and /bosses/<id> must never be cached, or a phone
+      // keeps an old release of the page and the game says «Вышло обновление» on every visit
       {
-        source: "/bosses/:path*",
+        source: "/bosses/:file(.+\\.(?:webp|png|jpg))",
         headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
       },
     ];
