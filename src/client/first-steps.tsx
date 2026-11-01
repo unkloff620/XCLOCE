@@ -5,6 +5,7 @@
  * A step is done when its action goes through (api.ts fires ACTION_EVENT), then the next one starts. At the end —
  * a gift (server: starter_gift, once; it also marks the "first-steps" help topic). Progress is kept on this device.
  */
+import { uiZoom, zoomRect } from "./phone-mode.ts";
 import { usePathname } from "next/navigation";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
@@ -100,7 +101,7 @@ function useAim(aims: Aim[] | null, path: string) {
         };
         const el = all.find(reachable) ?? all[0];
         if (el) {
-          const b = el.getBoundingClientRect();
+          const b = zoomRect(el.getBoundingClientRect());
           setR((old) => (old && Math.abs(old.left - b.left) < 1 && Math.abs(old.top - b.top) < 1 && Math.abs(old.width - b.width) < 1 ? old : b));
           return;
         }
@@ -209,7 +210,7 @@ export function FirstSteps() {
         </div>
       )}
       {step && (
-        <div className={`fs-card ${cheer ? "cheer" : ""} ${rect && rect.bottom > window.innerHeight * 0.62 ? "top" : ""}`} key={step.id}>
+        <div className={`fs-card ${cheer ? "cheer" : ""} ${rect && rect.bottom > (window.innerHeight / uiZoom()) * 0.62 ? "top" : ""}`} key={step.id}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="fs-pic" src={usedUrl(step.pic)} alt="" draggable={false} />
           <span className="fs-main">

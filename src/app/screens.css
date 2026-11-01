@@ -788,7 +788,7 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .tour-spot { position: fixed; border-radius: 18px; box-shadow: 0 0 0 9999px rgba(8, 5, 3, 0.78), 0 0 0 3px var(--gold), 0 0 26px rgba(255, 204, 51, 0.6);
   transition: left 0.35s ease, top 0.35s ease, width 0.35s ease, height 0.35s ease; pointer-events: none; animation: tour-pulse 1.6s ease-in-out infinite; }
 @keyframes tour-pulse { 50% { box-shadow: 0 0 0 9999px rgba(8, 5, 3, 0.78), 0 0 0 5px var(--gold), 0 0 38px rgba(255, 204, 51, 0.8); } }
-.tour-card { position: fixed; left: 50%; width: min(340px, calc(100vw - 32px)); margin-left: calc(min(340px, calc(100vw - 32px)) / -2);
+.tour-card { position: fixed; left: 50%; width: min(340px, calc(calc(100 * var(--vw)) - 32px)); margin-left: calc(min(340px, calc(calc(100 * var(--vw)) - 32px)) / -2);
   display: flex; flex-direction: column; gap: 8px; padding: 14px 14px 12px; border-radius: 18px; border: 2.5px solid var(--line);
   background: linear-gradient(170deg, #3a2716, #1e140c); box-shadow: 0 5px 0 var(--line), 0 18px 40px rgba(0, 0, 0, 0.55); animation: tour-in 0.3s cubic-bezier(0.2, 1.4, 0.4, 1) both; }
 @keyframes tour-in { from { opacity: 0; translate: 0 10px; scale: 0.96; } }
@@ -800,7 +800,7 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .tour-steps i { flex: 1 1 0; max-width: 18px; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, 0.15); }
 .tour-steps i.done { background: rgba(255, 204, 51, 0.55); }
 .tour-steps i.on { background: var(--gold); flex-grow: 2; max-width: 28px; }
-.tour-card { max-height: calc(100dvh - 24px); overflow-y: auto; }
+.tour-card { max-height: calc(calc(100 * var(--vh)) - 24px); overflow-y: auto; }
 /* the step's pictures: a row of squares with captions, or one wide card */
 .tour-pics { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; padding: 8px 6px; border-radius: 14px; background: radial-gradient(ellipse at 50% 40%, rgba(255, 204, 51, 0.14), rgba(0, 0, 0, 0.25) 70%); border: 1.5px solid rgba(255, 204, 51, 0.18); }
 .tour-pics figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; width: 64px; }
@@ -819,7 +819,7 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .lvlup { position: fixed; inset: 0; z-index: 95; display: grid; place-items: center; overflow: hidden; cursor: pointer;
   background: radial-gradient(circle at 50% 45%, rgba(120, 70, 10, 0.75), rgba(10, 6, 3, 0.94) 65%); animation: lvl-fade 0.35s ease-out both; }
 @keyframes lvl-fade { from { opacity: 0; } }
-.lvlup-rays { position: absolute; left: 50%; top: 45%; width: 180vmax; height: 180vmax; margin: -90vmax 0 0 -90vmax; opacity: 0.35;
+.lvlup-rays { position: absolute; left: 50%; top: 45%; width: calc(180 * max(var(--vw), var(--vh))); height: calc(180 * max(var(--vw), var(--vh))); margin: -90vmax 0 0 -90vmax; opacity: 0.35;
   background: repeating-conic-gradient(from 0deg, rgba(255, 204, 51, 0.9) 0deg 7deg, transparent 7deg 22deg);
   mask: radial-gradient(circle, #000 0, transparent 55%); -webkit-mask: radial-gradient(circle, #000 0, transparent 55%); animation: lvl-spin 18s linear infinite; }
 @keyframes lvl-spin { to { transform: rotate(360deg); } }
@@ -838,7 +838,7 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .lvlup .btn { min-width: 180px; animation: lvl-fade 0.4s ease-out 1s both; }
 .lvlup-confetti { position: absolute; inset: 0; pointer-events: none; }
 .lvlup-confetti i { position: absolute; top: -20px; width: 9px; height: 15px; border-radius: 2px; transform: rotate(var(--r)); animation: lvl-fall linear 0.3s both; animation-iteration-count: 2; }
-@keyframes lvl-fall { from { transform: translateY(-20px) rotate(var(--r)); } to { transform: translateY(110vh) rotate(calc(var(--r) + 540deg)); } }
+@keyframes lvl-fall { from { transform: translateY(-20px) rotate(var(--r)); } to { transform: translateY(calc(110 * var(--vh))) rotate(calc(var(--r) + 540deg)); } }
 @media (prefers-reduced-motion: reduce) { .lvlup-rays, .lvlup-badge, .lvlup-confetti i, .tour-spot { animation: none; } }
 
 /* ---------------- rating ---------------- */
@@ -1017,7 +1017,7 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 /* the scene stands on the panel; on short screens (Telegram on a PC) it shrinks so the whole hero fits under the HUD
    (the hero takes the lower ~73% of the 1060×1484 scene: width = free height / (0.73 × 1.4)) */
 .fit-page.styling .room-view { bottom: calc(var(--sty-h) - 14px); left: 50%; right: auto; transform: translateX(-50%);
-  width: min(100%, calc((100dvh - var(--sty-h) - var(--hud-h) - var(--safe-t) + 10px) / 1.02)); }
+  width: min(100%, calc((calc(100 * var(--vh)) - var(--sty-h) - var(--hud-h) - var(--safe-t) + 10px) / 1.02)); }
 .sty-side { position: absolute; z-index: 5; top: var(--top); bottom: calc(var(--sty-h) + 10px); display: flex; flex-direction: column; justify-content: center; gap: 10px; animation: fade 0.25s ease; }
 .sty-side.left { left: 10px; }
 .sty-side.right { right: 10px; }
@@ -1060,7 +1060,7 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .door-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; filter: blur(8px) brightness(0.45); transform: scale(1.08); }
 .door-page .fight-head { position: absolute; left: 12px; right: 12px; top: var(--top); z-index: 4; }
 /* the room fills the height between the HUD and the menu (cover): on a tall screen it grows and the side walls go off screen, the ceiling stays */
-.door-scene { position: absolute; --dw: max(100%, calc((100dvh - var(--hud-h) - var(--safe-t) - var(--nav-h) - var(--safe-b) + 6px) * 2000 / 2800)); width: var(--dw); left: calc((100% - var(--dw)) / 2);
+.door-scene { position: absolute; --dw: max(100%, calc((calc(100 * var(--vh)) - var(--hud-h) - var(--safe-t) - var(--nav-h) - var(--safe-b) + 6px) * 2000 / 2800)); width: var(--dw); left: calc((100% - var(--dw)) / 2);
   bottom: calc(var(--nav-h) + var(--safe-b) - 6px); aspect-ratio: 2000 / 2800; perspective: 1100px; perspective-origin: 50% 42%;
   transform-origin: 50.6% 42%; transition: transform 0.4s ease-in; container-type: inline-size; }
 .door-scene > * { position: absolute; }
@@ -1395,7 +1395,7 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .fit-page .room-confirm { top: var(--top); }
 @keyframes room-confirm-in { from { opacity: 0; transform: translate(-50%, -8px); } }
 .room-confirm-name { display: flex; flex-direction: column; align-items: center; min-width: 0; font-size: 11px; color: var(--muted); line-height: 1.15; text-align: center; }
-.room-confirm-name b { font-size: 14px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 52vw; }
+.room-confirm-name b { font-size: 14px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(52 * var(--vw)); }
 .room-confirm-x, .room-confirm-ok { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; padding: 0; cursor: pointer; font-size: 20px; font-weight: 900; line-height: 1; box-shadow: 0 3px 0 var(--line); }
 .room-confirm-x { background: #5a2430; color: #ffd1da; }
 .room-confirm-ok { background: linear-gradient(180deg, #4dfaa0, var(--green)); color: #0b2a17; }
@@ -1433,7 +1433,7 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 
 /* ---------- victory window: big beaten boss, rewards under him, «Забрать» in the middle ---------- */
 .result-win { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
-.result-photo { width: min(230px, 64vw); aspect-ratio: 1; }
+.result-photo { width: min(230px, calc(64 * var(--vw))); aspect-ratio: 1; }
 .result-photo .stamp { font-size: 20px; padding: 4px 12px; border-width: 4px; }
 .result-name { font-size: 24px; line-height: 1.1; }
 .result-gains { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 8px; width: 100%; padding: 2px 0; }
@@ -1564,9 +1564,9 @@ body:has(.fit-page) .hud { background: linear-gradient(180deg, rgba(20, 12, 6, 0
 .strike-fx { position: absolute; inset: 0; z-index: 6; pointer-events: none; overflow: hidden; }
 .strike-vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 50%, transparent 45%, rgba(230, 20, 50, 0.5) 100%); animation: strike-vig 0.65s ease-out both; }
 @keyframes strike-vig { 0% { opacity: 0; } 15% { opacity: 1; } 100% { opacity: 0; } }
-.strike-burst { position: absolute; width: min(36vw, 150px); height: min(36vw, 150px); translate: -50% -50%; animation: strike-pop 0.65s cubic-bezier(0.2, 1.6, 0.4, 1) both; filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.35)); }
+.strike-burst { position: absolute; width: min(calc(36 * var(--vw)), 150px); height: min(calc(36 * var(--vw)), 150px); translate: -50% -50%; animation: strike-pop 0.65s cubic-bezier(0.2, 1.6, 0.4, 1) both; filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.35)); }
 @keyframes strike-pop { 0% { transform: scale(0.2) rotate(var(--r)); opacity: 1; } 30% { transform: scale(1.1) rotate(var(--r)); opacity: 1; } 75% { opacity: 1; } 100% { transform: scale(1) rotate(var(--r)); opacity: 0; } }
-.strike-crack { position: absolute; width: min(70vw, 300px); height: min(70vw, 300px); translate: -50% -50%; animation: strike-crack 0.65s ease-out both; }
+.strike-crack { position: absolute; width: min(calc(70 * var(--vw)), 300px); height: min(calc(70 * var(--vw)), 300px); translate: -50% -50%; animation: strike-crack 0.65s ease-out both; }
 @keyframes strike-crack { 0% { opacity: 0; transform: scale(0.6); } 20% { opacity: 1; transform: scale(1); } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
   .arena-photo.strike .br-breath, .arena-photo.strike > img, .fight-page.struck .arena, .fight-page.struck .fight-bg { animation: none; }
@@ -1663,7 +1663,7 @@ body:has(.fit-page) .hud { background: linear-gradient(180deg, rgba(20, 12, 6, 0
 @media (prefers-reduced-motion: reduce) { .update-icon { animation: none; } }
 
 /* нычки between players (src/client/screens/stash-swap.tsx) */
-.swap-sets { gap: 8px; max-height: 46vh; overflow-y: auto; padding-right: 2px; }
+.swap-sets { gap: 8px; max-height: calc(46 * var(--vh)); overflow-y: auto; padding-right: 2px; }
 .swap-set { display: flex; flex-direction: column; gap: 4px; }
 .swap-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 .swap-tile { position: relative; display: grid; place-items: center; aspect-ratio: 1; padding: 4px; border-radius: 12px; border: 2px solid rgba(0, 0, 0, 0.35); background: rgba(0, 0, 0, 0.18); cursor: pointer; }
@@ -2705,7 +2705,7 @@ button.zb-res { border: 0; color: inherit; font: inherit; cursor: pointer; backg
 .dp { display: flex; flex-direction: column; gap: 8px; }
 .dp-rules { font-size: 12px; color: var(--muted); }
 .dp-search { width: 100%; padding: 10px 12px; border-radius: 12px; border: 2.5px solid var(--line); background: rgba(0, 0, 0, 0.3); color: var(--ink); font: 700 15px/1.2 inherit; }
-.dp-list { display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow-y: auto; }
+.dp-list { display: flex; flex-direction: column; gap: 6px; max-height: calc(50 * var(--vh)); overflow-y: auto; }
 .dp-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; border: 2px solid var(--line); background: var(--panel2); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
 .dp-row:disabled { opacity: 0.5; }
 .dp-row small { flex: none; font-size: 11px; color: var(--muted); }
@@ -2895,7 +2895,7 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .dos-tab { flex: none; padding: 7px 14px 6px; border: 2.5px solid var(--line); border-bottom: 0; border-radius: 12px 16px 0 0; background: #b9a281; color: #4a3a26;
   font: 900 13px/1 var(--font-display), sans-serif; text-transform: uppercase; letter-spacing: 0.03em; transform: skewX(-8deg); cursor: pointer; }
 .dos-tab.on { background: #efe2c8; color: #1e140a; position: relative; z-index: 1; margin-bottom: -2.5px; padding-bottom: 8.5px; }
-.dos-page { border: 2.5px solid var(--line); border-radius: 0 12px 12px 12px; padding: 12px; background: var(--tex), linear-gradient(180deg, var(--panel2), var(--panel)); max-height: 62vh; overflow-y: auto; }
+.dos-page { border: 2.5px solid var(--line); border-radius: 0 12px 12px 12px; padding: 12px; background: var(--tex), linear-gradient(180deg, var(--panel2), var(--panel)); max-height: calc(62 * var(--vh)); overflow-y: auto; }
 .dos-page .panel { box-shadow: none; }
 .dos-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .dos-facts span { display: flex; flex-direction: column; gap: 1px; padding: 6px 8px; border-radius: 10px; background: rgba(0, 0, 0, 0.22); min-width: 0; }
@@ -3093,7 +3093,7 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .br-pup[data-on="1"] .boss-rig image.pp { visibility: hidden; }
 
 /* the talent path (screens/talents.tsx): a winding road of stops like a location's tasks */
-.tp-road { max-height: 54vh; overflow-y: auto; margin-top: 8px; padding: 4px 0 10px; border-radius: 16px; background: rgba(20, 14, 10, 0.32); overscroll-behavior: contain; }
+.tp-road { max-height: calc(54 * var(--vh)); overflow-y: auto; margin-top: 8px; padding: 4px 0 10px; border-radius: 16px; background: rgba(20, 14, 10, 0.32); overscroll-behavior: contain; }
 .tp-map { max-width: 420px; }
 .tp-stop { width: 17%; }
 .tp-stop .lp-disc { border-width: 5px; }
@@ -3174,7 +3174,7 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 /* the paper stays still, only its inside scrolls — nothing goes over the paper's edge */
 .dos-page { overflow: hidden !important; display: flex; flex-direction: column; padding: 22px 16px 24px; }
 .dos-inner { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 2px 2px 8px; margin: 0 -2px; }
-.modal:not(.page) .dos-inner { max-height: 58vh; }
+.modal:not(.page) .dos-inner { max-height: calc(58 * var(--vh)); }
 /* the open tab lies over the paper's top edge (its line goes away), the others under it */
 .dos-tabs { margin-bottom: -24px; }
 .dos-tab { padding: 9px 16px 26px; }
@@ -3571,7 +3571,7 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .upd-toggle i { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #e9dcc6; transition: transform 0.2s; }
 .upd-toggle.on { background: var(--green, #3ddc84); }
 .upd-toggle.on i { transform: translateX(20px); }
-.upd-list { display: flex; flex-direction: column; gap: 14px; max-height: 60vh; overflow-y: auto; margin: 0 -4px 12px; padding: 0 4px; }
+.upd-list { display: flex; flex-direction: column; gap: 14px; max-height: calc(60 * var(--vh)); overflow-y: auto; margin: 0 -4px 12px; padding: 0 4px; }
 /* the updates window: the title, the switch and the button stay put, only the notes scroll (one scroll area, not two inside each other) */
 .modal:has(> .upd-list) { display: flex; flex-direction: column; overflow: hidden; }
 .modal:has(> .upd-list) > * { flex: none; }
@@ -4047,7 +4047,7 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 @media (prefers-reduced-motion: reduce) { .kz-l, .kz-tip b, .kz-puff b { animation: none !important; } }
 
 /* a newly reached achievement: a card at the top for 2 seconds, a tap opens it */
-.ach-toasts { position: fixed; z-index: 96; left: 50%; top: calc(var(--hud-h) + var(--safe-t) + 8px); transform: translateX(-50%); width: min(92vw, 380px); display: flex; flex-direction: column; pointer-events: none; }
+.ach-toasts { position: fixed; z-index: 96; left: 50%; top: calc(var(--hud-h) + var(--safe-t) + 8px); transform: translateX(-50%); width: min(calc(92 * var(--vw)), 380px); display: flex; flex-direction: column; pointer-events: none; }
 /* each card: fades in from see-through; on leaving it fades and folds its height, so the next ones move up smoothly */
 .ach-toast { pointer-events: auto; width: 100%; max-height: 140px; margin-bottom: 7px; display: flex; align-items: center; gap: 10px; padding: 8px 12px 8px 8px; border-radius: 16px; border: 2.5px solid #ffcc33; text-align: left; cursor: pointer; touch-action: pan-y;
   background: linear-gradient(180deg, #fbf1db, #f0dfbc); color: #24160a; box-shadow: 0 0 14px rgba(255, 204, 51, 0.55), 0 6px 18px rgba(0, 0, 0, 0.5);
@@ -4333,7 +4333,7 @@ body { background-attachment: fixed; }
 @keyframes acx-in { from { opacity: 0; } }
 .acx-x { position: absolute; top: calc(var(--hud-h) + var(--safe-t) + 10px); right: 14px; width: 36px; height: 36px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.35);
   background: rgba(0, 0, 0, 0.35); color: #fff; font-size: 16px; font-weight: 900; cursor: pointer; }
-.acx-case { position: relative; width: min(94vw, 440px, 54vh); aspect-ratio: 1072 / 1219; cursor: pointer; perspective: 900px; -webkit-tap-highlight-color: transparent; }
+.acx-case { position: relative; width: min(calc(94 * var(--vw)), 440px, calc(54 * var(--vh))); aspect-ratio: 1072 / 1219; cursor: pointer; perspective: 900px; -webkit-tap-highlight-color: transparent; }
 .acx-case > img { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .acx-open { opacity: 0; transform-origin: 50% 100%; }
 .acx-closed { transform-origin: 50% 35.5%; filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.55)); }
@@ -4532,7 +4532,7 @@ body { background-attachment: fixed; }
 .bb-head .display { font-size: 18px; }
 .bb-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-top: 1px solid rgba(255, 255, 255, 0.08); }
 /* my upgraded things (★) under the upgrader */
-.ug-mine { display: flex; flex-direction: column; gap: 8px; max-height: 60vh; overflow-y: auto; overscroll-behavior: contain; }
+.ug-mine { display: flex; flex-direction: column; gap: 8px; max-height: calc(60 * var(--vh)); overflow-y: auto; overscroll-behavior: contain; }
 /* the «Мои улучшенные» button at the top right of the upgrader, left of the close button: a gold star and how many */
 .ug-mine-btn { position: absolute; z-index: 6; top: 8px; right: 52px; height: 34px; min-width: 40px; padding: 0 8px; display: flex; align-items: center; gap: 3px; cursor: pointer;
   border-radius: 11px; border: 2.5px solid var(--line); background: linear-gradient(#ffe066, #f2a900); box-shadow: 0 3px 0 var(--line); color: #2e1c00; font-weight: 900; font-size: 14px; }
@@ -4551,7 +4551,7 @@ body { background-attachment: fixed; }
 
 /* ── the exchanger's garage (screens/exchange.tsx ExchangeGarage): the 1080×2400 scene covering the whole screen (like the yard) ── */
 .xg { position: absolute; inset: 0; overflow: hidden; background: #120d09; }
-.xg-box { position: absolute; left: 50%; top: 50%; width: max(100%, 45dvh); aspect-ratio: 1080 / 2400; transform: translate(-50%, -50%); container-type: inline-size; }
+.xg-box { position: absolute; left: 50%; top: 50%; width: max(100%, calc(45 * var(--vh))); aspect-ratio: 1080 / 2400; transform: translate(-50%, -50%); container-type: inline-size; }
 .xg-l { position: absolute; display: block; pointer-events: none; }
 .xg-bg { inset: 0; width: 100%; height: 100%; }
 /* the dealer: the kiosk's layers (box 1237×1244), big, his arm lying on the newspaper; a little darker for the garage light */
@@ -4602,7 +4602,7 @@ body { background-attachment: fixed; }
 .bb-qty .bb-qty-n { width: auto; min-width: 26px; padding: 0 3px; font-size: 13px; border-left: 1px solid rgba(107, 74, 36, 0.4); border-right: 1px solid rgba(107, 74, 36, 0.4); }
 
 /* «Скупка» v2: one fixed window size (the tabs don't make it jump); the dealer, the tabs and «Продать» stay on top, only the list scrolls */
-.modal.bb-modal { height: min(760px, calc(100dvh - 32px)); display: flex; flex-direction: column; overflow: hidden; }
+.modal.bb-modal { height: min(760px, calc(calc(100 * var(--vh)) - 32px)); display: flex; flex-direction: column; overflow: hidden; }
 .modal.bb-modal > .modal-body { flex: 1 1 auto; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
 .bb-modal .bb-panel { flex: 1; min-height: 0; gap: 0; }
 .bb-top { flex: none; display: flex; flex-direction: column; gap: 8px; padding-bottom: 8px; border-bottom: 2px solid rgba(58, 36, 16, 0.3); }
@@ -4693,7 +4693,7 @@ body { background-attachment: fixed; }
 /* the scheme: a sheet of parchment instead of the window */
 .modal.cf-scheme-modal { background: none; border: 0; box-shadow: none; padding: 0; max-width: 380px; overflow: visible; }
 .modal.cf-scheme-modal > .x { position: absolute; top: 10px; right: 6px; margin: 0; z-index: 3; }
-.cf-scheme { position: relative; aspect-ratio: 720 / 1091; max-height: calc(100dvh - var(--hud-h) - var(--nav-h) - 40px); margin: 0 auto; padding: 30% 9% 10%;
+.cf-scheme { position: relative; aspect-ratio: 720 / 1091; max-height: calc(calc(100 * var(--vh)) - var(--hud-h) - var(--nav-h) - 40px); margin: 0 auto; padding: 30% 9% 10%;
   background: url(/assets/craft/paper-recipe.webp) center / 100% 100% no-repeat; color: #2e1c08; display: flex; flex-direction: column; container-type: inline-size; }
 .cf-scheme-body { flex: 1; display: grid; grid-template-columns: auto auto auto auto; align-items: center; justify-content: space-between; column-gap: 2cqw; }
 .cf-scheme-col { display: flex; flex-direction: column; gap: 4cqw; justify-content: center; }
@@ -4743,7 +4743,7 @@ body { background-attachment: fixed; }
 
 /* ── the dealer at the exchange machine (screens/exchange.tsx DealerChat): a chat on the paper — his lines on the left with
    his face, mine on the right; the answers are paper slips under it; the exchange happens right there ── */
-.modal.dl-modal { height: min(640px, calc(100dvh - 32px)); display: flex; flex-direction: column; overflow: hidden; }
+.modal.dl-modal { height: min(640px, calc(calc(100 * var(--vh)) - 32px)); display: flex; flex-direction: column; overflow: hidden; }
 .modal.dl-modal > .modal-body { flex: 1 1 auto; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
 .dl-chat { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; }
 .dl-log { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 8px; padding: 4px 2px 8px;

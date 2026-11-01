@@ -5,6 +5,7 @@
  * so every `title` in the game works without extra code. Taps on buttons and links keep their normal action.
  * The bubble goes away on the next tap, a scroll, or after a few seconds. Mouse users keep the native hover hint.
  */
+import { uiZoom, zoomRect } from "./phone-mode.ts";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -35,7 +36,7 @@ export function TapTips() {
       if (!el || t.closest(INTERACTIVE)) return hide();
       const text = el.getAttribute("title")!.trim();
       if (!text) return hide();
-      const r = el.getBoundingClientRect();
+      const r = zoomRect(el.getBoundingClientRect());
       const below = r.top < 70;
       setLeft(null);
       setTip({ text, x: r.left + r.width / 2, y: below ? r.bottom + 8 : r.top - 8, below });
@@ -58,7 +59,7 @@ export function TapTips() {
     if (!tip || !bubble.current) return;
     const w = bubble.current.offsetWidth;
     const pad = 8;
-    setLeft(Math.max(pad, Math.min(window.innerWidth - w - pad, tip.x - w / 2)));
+    setLeft(Math.max(pad, Math.min(window.innerWidth / uiZoom() - w - pad, tip.x - w / 2)));
   }, [tip]);
 
   if (!tip) return null;

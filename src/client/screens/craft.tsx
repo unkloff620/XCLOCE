@@ -7,6 +7,7 @@
  * then drag it onto an empty cell to put one in the stash; a tap on a thing that is made opens its scheme on paper
  * («Схема создания вещи»: the ingredients with have/need, the arrow, the result, «Создать»).
  */
+import { uiZoom, zoomRect } from "../phone-mode.ts";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useGame } from "../store.tsx";
 import { ItemArt } from "../art/items.tsx";
@@ -246,7 +247,7 @@ export function CraftScreen() {
       </div>
 
       {/* the card under the finger while dragging */}
-      {drag && <span className="cf-ghost" style={{ left: drag.x, top: drag.y }}><ItemArt id={drag.id} size={56} /></span>}
+      {drag && <span className="cf-ghost" style={{ left: drag.x / uiZoom(), top: drag.y / uiZoom() }}><ItemArt id={drag.id} size={56} /></span>}
 
       {buy !== null && (
         <Modal title="Открыть ячейку" onClose={() => setBuy(null)}>

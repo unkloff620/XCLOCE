@@ -2,6 +2,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api, ApiError, authenticate, type AuthResult, type GameState } from "./api.ts";
 import { haptic, initTelegram } from "./telegram.ts";
+import { initPhoneMode } from "./phone-mode.ts";
 import { ACTION_SFX, sfx, unlockAudioOnGesture, yardSfx } from "./sound.ts";
 
 type Toast = { id: number; text: ReactNode; kind: "ok" | "err" | "info" };
@@ -105,6 +106,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   // auth + first state
   useEffect(() => {
     initTelegram();
+    initPhoneMode();
     unlockAudioOnGesture();
     let alive = true;
     (async () => {

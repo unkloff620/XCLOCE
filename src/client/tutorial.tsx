@@ -1,4 +1,5 @@
 "use client";
+import { uiZoom, zoomRect } from "./phone-mode.ts";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -107,7 +108,7 @@ function useRect(selector: string | undefined, tick: number) {
     if (!selector) return setR(null);
     const measure = () => {
       const el = document.querySelector(selector);
-      setR(el ? el.getBoundingClientRect() : null);
+      setR(el ? zoomRect(el.getBoundingClientRect()) : null);
     };
     measure();
     // the room scene can settle a moment later: re-measure briefly, and on resize
@@ -178,7 +179,7 @@ export function Tutorial() {
   const pad = 8;
   const spot = rect ? { left: rect.left - pad, top: rect.top - pad, width: rect.width + pad * 2, height: rect.height + pad * 2 } : null;
   // the card goes under the target when the target is in the upper half, above it otherwise
-  const vh = typeof window !== "undefined" ? window.innerHeight : 800;
+  const vh = typeof window !== "undefined" ? window.innerHeight / uiZoom() : 800;
   const below = !spot || spot.top + spot.height / 2 < vh / 2;
   const cardStyle = !spot
     ? { top: "50%", transform: "translateY(-50%)" }
