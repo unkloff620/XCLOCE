@@ -209,7 +209,7 @@ export function TalentPanel() {
 }
 
 /** one block of the path: the title, the stops in their grid with arrows from one to the next, the hero on the right */
-function TalentBlockView({ b, wt, cur, selI, poor, onTap }: { b: TalentBlock; wt: Record<string, Partial<Record<string, number>>>; cur: number; selI: number; poor: number; onTap: (i: number) => void }) {
+export function TalentBlockView({ b, wt, cur, selI, poor, onTap }: { b: TalentBlock; wt: Record<string, Partial<Record<string, number>>>; cur: number; selI: number; poor: number; onTap: (i: number) => void }) {
   const cols = Math.max(...b.cells.map((c) => c.col)) + 1;
   const rowsN = Math.max(...b.cells.map((c) => c.row)) + 1;
   const done = b.cells.every((c) => { const n = TALENT_PATH.find((x) => x.key === c.key)!; return stopLevel(wt, n) >= n.max; });
