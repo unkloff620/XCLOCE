@@ -4025,6 +4025,7 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .yard-stage2 .yard-kiosk.closed { animation: none; }
 .kz { position: relative; display: block; width: 100%; aspect-ratio: 1237 / 1244; container-type: inline-size; }
 .kz-l { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+.kz-crop { position: absolute; display: block; pointer-events: none; }
 .kz.open .kz-inside { filter: brightness(1.04); }
 .kz.shut .kz-inside { filter: brightness(0.5); }
 /* he breathes, turns his head a little and leans back on a drag */
