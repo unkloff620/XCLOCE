@@ -19,6 +19,8 @@ export type Sfx = "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" |
   | "fail"
   /* a big win: a won blackjack hand, three of a kind in the 777 machine (public/assets/sound/big-win.mp3) */
   | "bigwin"
+  /* a tattoo or a thing out of the case: one of two recordings at random (public/assets/sound/case-drop-1/2.mp3) */
+  | "casedrop"
   /* a new level of the player: one of two recordings of the player's at random (public/assets/sound/levelup-voice-1/2.mp3) */
   | "lvlvoice"
   /* a new achievement: «Ништяк!» (the same voice as for the biceps, public/assets/sound/nishtyak-4.mp3) */
@@ -172,6 +174,8 @@ const SAMPLE_URLS = {
   nychka2: "/assets/sound/nychka-2.mp3",
   fail: "/assets/sound/fail.mp3",
   bigwin: "/assets/sound/big-win.mp3",
+  casedrop1: "/assets/sound/case-drop-1.mp3",
+  casedrop2: "/assets/sound/case-drop-2.mp3",
   lvlvoice1: "/assets/sound/levelup-voice-1.mp3",
   lvlvoice2: "/assets/sound/levelup-voice-2.mp3",
 } as Record<string, string>;
@@ -422,6 +426,10 @@ export function sfx(name: Sfx, power = 0.5) {
       noise(a, t, 0.16, { freq: 700, vol: 0.7 });
       tone(a, 120, t, 0.18, { type: "sine", vol: 0.45, slide: 0.5 });
       noise(a, t + 0.06, 0.12, { freq: 2200, type: "bandpass", q: 2, vol: 0.18 });
+      break;
+    case "casedrop":
+      if (sample(a, Math.random() < 0.5 ? "casedrop1" : "casedrop2", t, 1)) break;
+      tone(a, 784, t, 0.3, { type: "triangle", vol: 0.12 });
       break;
     case "bigwin":
       if (sample(a, "bigwin", t, 1)) break;

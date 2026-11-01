@@ -7,7 +7,7 @@ import { api, type Granted } from "../api.ts";
 import { BULK, bulkPrice, type Offer } from "../../content/shop.ts";
 import { Modal, RewardChips } from "../ui.tsx";
 import { sfx } from "../sound.ts";
-import { ACH_BOX_COST } from "../../content/ach-box.ts";
+import { ACH_BOX_COST, MOUTH_ITEMS } from "../../content/ach-box.ts";
 import { Help, HelpList } from "../help.tsx";
 import type { Currency } from "../../content/currencies.ts";
 import { itemById, type Slot } from "../../content/items.ts";
@@ -218,9 +218,11 @@ function AchBoxWindow({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     if (phase !== "open" || !parts.length) return;
     const t = parts.map((_, i) => setTimeout(() => { haptic.tap(); sfx("coin"); }, 450 + i * LOOT_STEP));
-    if (inkGot.length) t.push(setTimeout(() => { haptic.big(); sfx("reward"); }, inkDelay));
+    // a tattoo or a thing (a cigarette, a toothpick) came out: its own voice once all the tiles are out
+    const thing = (got?.items ?? []).some((it) => (MOUTH_ITEMS as readonly string[]).includes(it.id));
+    if (inkGot.length || thing) t.push(setTimeout(() => { haptic.big(); sfx("casedrop"); }, inkDelay));
     return () => t.forEach(clearTimeout);
-  }, [phase, parts, inkGot, inkDelay]);
+  }, [phase, parts, inkGot, inkDelay, got]);
   const open = async (all = false) => {
     if (phase === "opening" || b.ready < 1) return;
     haptic.heavy();
