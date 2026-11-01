@@ -871,7 +871,7 @@ describe("home: equipment, rooms, look, help", () => {
     const b1 = await act(db, p, "talent_up", { weapon: "_biceps", branch: "s1" }, T0 + M);
     expect(b1.result).toMatchObject({ level: 1, max: 100, talents: 1 }); // up to 100, but 10 opens the next cell
     const [bi] = await db.query<{ talent_biceps: number }>("SELECT talent_biceps FROM players WHERE id=$1", [p]);
-    expect(bi.talent_biceps).toBe(1);
+    expect(bi.talent_biceps).toBe(10);
     // the energy limit grows with «Лимит энергии»
     await expect(act(db, p, "talent_up", { weapon: "_energy", branch: "s1" }, T0 + M)).rejects.toMatchObject({ code: "talent_locked" });
     await db.query("UPDATE player_talents SET level=10 WHERE player_id=$1 AND weapon_id='_biceps'", [p]);
@@ -884,7 +884,7 @@ describe("home: equipment, rooms, look, help", () => {
     await expect(act(db, p, "talent_up", { weapon: "keyboard", branch: "n1" }, T0 + M)).rejects.toMatchObject({ code: "max_level" });
   });
 
-  it("the path: every weapon gets +30 steps of damage, +200% crit power and +15% crit chance; biceps 170, energy 50, clock 45 min", async () => {
+  it("the path: 800 talents; every weapon gets +30 steps of damage and «Урон III», +200% crit power and +15% crit chance; biceps 1000, energy 50, clock 90 min, +3 boss fights", async () => {
     const { TALENT_PATH, weaponTalentBonus, talentsSpent, talentExtras, critChanceOf } = await import("../src/content/talents.ts");
     const full: Record<string, Record<string, number>> = {};
     for (const x of TALENT_PATH) (full[x.target] ??= {})[x.branch] = x.max;
@@ -892,13 +892,35 @@ describe("home: equipment, rooms, look, help", () => {
       const b = weaponTalentBonus(full, w);
       expect(b.critDamage).toBeCloseTo(2);
       expect(b.critChance).toBeCloseTo(0.15);
-      expect(b.flat).toBe(30 * TALENT_PATH.find((x) => x.target === w && x.branch === "n1")!.per);
+      const n5 = TALENT_PATH.find((x) => x.target === w && x.branch === "n5")!;
+      expect(b.flat).toBe((30 + n5.max) * n5.per);
     }
-    expect(talentExtras(full)).toEqual({ biceps: 170, energy: 50, clockMin: 45 });
+    expect(talentExtras(full)).toEqual({ biceps: 1000, energy: 50, clockMin: 90, bossFights: 3 });
+    expect(TALENT_PATH.reduce((n, x) => n + x.max * x.cost, 0)).toBe(800);
     expect(talentsSpent(full)).toBe(TALENT_PATH.reduce((n, x) => n + x.max * x.cost, 0));
-    // the last stop: «Сила крита II» of the Rug Pull Gun
-    expect(TALENT_PATH[TALENT_PATH.length - 1]).toMatchObject({ target: "rug-pull-gun", branch: "n4" });
+    // the last stop: «Урон III» of the fist
+    expect(TALENT_PATH[TALENT_PATH.length - 1]).toMatchObject({ target: "fist", branch: "n5" });
     expect(critChanceOf(0.45, 0.15)).toBeCloseTo(0.51);
+  });
+
+  it("the 800-talent migration gives «Бицуха II/III» back and counts the biceps ×10", async () => {
+    const p = await newPlayer(db);
+    await db.query("UPDATE players SET talents = 3, talent_biceps = 170 WHERE id=$1", [p]);
+    await db.query("INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,'_biceps','s1',100),($1,'_biceps','s2',30),($1,'_biceps','s3',12)", [p]);
+    await db.exec(MIGRATIONS.find((m) => m.id === "v2-070-talents-800")!.sql);
+    const [row] = await db.query<{ talents: number; talent_biceps: number }>("SELECT talents, talent_biceps FROM players WHERE id=$1", [p]);
+    expect(row).toMatchObject({ talents: 3 + 42, talent_biceps: 1000 });
+    expect(await db.query("SELECT 1 FROM player_talents WHERE player_id=$1", [p])).toHaveLength(1);
+  });
+
+  it("«Лимит боссов»: every level is one more fight a day", async () => {
+    const p = await newPlayer(db);
+    await db.query("INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,'_bosses','s1',2)", [p]);
+    const { bossList } = await import("../src/server/systems/combat.ts");
+    const { loadConfig } = await import("../src/server/config.ts");
+    const cfg = await loadConfig(db, T0);
+    const list = await bossList(db, p, cfg, T0);
+    expect(list.bosses[0].fightsPerDay).toBe(cfg.fight.perDay + 2);
   });
 
   it("the path migration gives the old weapon trees back", async () => {

@@ -22,7 +22,8 @@ import {
 const pct = (v: number) => `${Math.round(v * 1000) / 10}%`;
 const effect = (n: TalentStop, lv: number) =>
   n.kind === "dmg" ? `+${full(lv * n.per)} урона` : n.kind === "crit" ? `+${pct(lv * n.per)} к силе крита` : n.kind === "chance" ? `+${pct(lv * n.per)} к шансу крита`
-    : n.kind === "biceps" ? `+${full(lv * n.per)} к бицухе` : n.kind === "energy" ? `+${full(lv * n.per)} к лимиту энергии` : `+${full(lv * n.per)} мин к бою с боссом`;
+    : n.kind === "biceps" ? `+${full(lv * n.per)} к бицухе` : n.kind === "energy" ? `+${full(lv * n.per)} к лимиту энергии`
+    : n.kind === "bosses" ? `+${full(lv * n.per)} ${lv * n.per === 1 ? "бой" : "боя"} в день с каждым боссом` : `+${full(lv * n.per)} мин к бою с боссом`;
 
 /** what one more level gives, in plain words: «+3 урона к клавиатуре», «+2% к шансу крита мыши», «+1 к бицухе» */
 const TO_WEAPON: Record<string, [string, string]> = { // [к чему (дательный), чего (родительный)]

@@ -155,8 +155,11 @@ export async function startFight(ctx: Ctx, bossId: string, solo = false, modeId:
     throw new GameError("boss_locked", n === 1 ? "Нужен пропуск предыдущего босса" : `Нужно ${n} пропуска предыдущего босса`);
   }
   const day = moscowDay(ctx.now);
-  if ((await fightsToday(ctx.q, ctx.pid, def.id, day)) >= ctx.cfg.fight.perDay) {
-    throw new GameError("fight_limit", `Лимит боёв с боссом ${def.name} на сегодня исчерпан (${ctx.cfg.fight.perDay}). Новые — после полуночи по Москве`);
+  // «Часы» talents: minutes added to the fight; «Лимит боссов»: more fights a day with every boss
+  const extras = talentExtras(await weaponTalents(ctx.q, ctx.pid));
+  const perDay = ctx.cfg.fight.perDay + extras.bossFights;
+  if ((await fightsToday(ctx.q, ctx.pid, def.id, day)) >= perDay) {
+    throw new GameError("fight_limit", `Лимит боёв с боссом ${def.name} на сегодня исчерпан (${perDay}). Новые — после полуночи по Москве`);
   }
   const g = await lockBoss(ctx.q, GLOBAL);
   await expireFights(ctx, g);
@@ -165,8 +168,7 @@ export async function startFight(ctx: Ctx, bossId: string, solo = false, modeId:
   const keys = prev ? keysNeeded(def, ctx.cfg.fight.keysToUnlock) : 0;
   if (prev && keys > 0) await takeItem(ctx, keyId(prev.id), keys, `fight:${def.id}`);
   const hpMax = Math.round((ctx.cfg.bossHp[def.id] ?? def.hp) * mode.hp);
-  // «Часы» talents: minutes added to the fight
-  const clockMin = talentExtras(await weaponTalents(ctx.q, ctx.pid)).clockMin;
+  const clockMin = extras.clockMin;
   const [f] = await ctx.q.query<{ id: number }>(
     "INSERT INTO fights (player_id, boss_id, hp_max, start_total, start_seq, started_at, ends_at, day, solo, keys_spent, global, mode) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,true,$11) RETURNING id",
     [ctx.pid, def.id, hpMax, g.damage_total, g.last_seq, new Date(ctx.now), new Date(ctx.now + ctx.cfg.fight.hours * 3600_000 + clockMin * 60_000), day, solo, keys, mode.id],
@@ -570,6 +572,7 @@ export async function fightView(q: Queryable, pid: number, fightId: number, sinc
 /** Boss list for one player: same list for everybody, access and limits are personal. */
 export async function bossList(q: Queryable, pid: number, cfg: Ctx["cfg"], now = Date.now()) {
   const day = moscowDay(now);
+  const perDay = cfg.fight.perDay + talentExtras(await weaponTalents(q, pid)).bossFights;
   const keys = await q.query<{ item_id: string; qty: number }>("SELECT item_id, qty FROM inventory WHERE player_id=$1 AND item_id LIKE 'key-%'", [pid]);
   const keyMap = new Map(keys.map((k) => [k.item_id, k.qty]));
   const today = await q.query<{ boss_id: string; n: number }>("SELECT boss_id, COUNT(*)::int AS n FROM fights WHERE player_id=$1 AND day=$2 AND status <> 'lost' GROUP BY boss_id", [pid, day]);
@@ -613,7 +616,7 @@ export async function bossList(q: Queryable, pid: number, cfg: Ctx["cfg"], now =
         myKeys: keyMap.get(keyId(b.id)) ?? 0,
         hpMax: cfg.bossHp[b.id] ?? b.hp,
         fightsToday: todayMap.get(b.id) ?? 0,
-        fightsPerDay: cfg.fight.perDay,
+        fightsPerDay: perDay,
         myDamage: mineMap.get(b.id)?.damage ?? 0,
         myWins: mineMap.get(b.id)?.wins ?? 0,
         mySoloWins: soloMap.get(b.id) ?? 0,

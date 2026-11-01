@@ -1170,4 +1170,13 @@ UPDATE appearance SET body = body - 'tattoos' WHERE body ? 'tattoos';`,
 FROM (SELECT player_id, SUM(level)::int AS n FROM player_talents WHERE branch IN ('n3', 'n4') AND level > 0 GROUP BY player_id) s
 WHERE p.id = s.player_id;`,
   },
+  {
+    // biceps only in «Основа» now (+10 a level): «Бицуха II/III» are gone — their talents come back; the biceps on the players row is counted anew
+    id: "v2-070-talents-800",
+    sql: `UPDATE players p SET talents = p.talents + s.n
+FROM (SELECT player_id, SUM(LEAST(level, CASE branch WHEN 's2' THEN 30 ELSE 40 END))::int AS n FROM player_talents WHERE weapon_id = '_biceps' AND branch IN ('s2', 's3') AND level > 0 GROUP BY player_id) s
+WHERE p.id = s.player_id;
+DELETE FROM player_talents WHERE weapon_id = '_biceps' AND branch IN ('s2', 's3');
+UPDATE players p SET talent_biceps = 10 * COALESCE((SELECT LEAST(level, 100) FROM player_talents t WHERE t.player_id = p.id AND t.weapon_id = '_biceps' AND t.branch = 's1'), 0);`,
+  },
 ];
