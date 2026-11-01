@@ -14,6 +14,7 @@ import { itemById } from "../../content/items.ts";
 import { sfx } from "../sound.ts";
 import { Modal } from "../ui.tsx";
 import { KioskDealer } from "../art/kiosk.tsx";
+import { XG_BOX } from "../art/exchange-data.ts";
 
 export function Exchanger({ ex }: { ex: ShopData["exchange"] }) {
   const { state, act, busy } = useGame();
@@ -162,8 +163,10 @@ export function ExchangeScreen() {
   const sched = state?.exchangeSchedule;
   const win = data ? { open: data.exchange.open ?? exchangeWindow(Date.now(), sched).open, until: data.exchange.until ?? exchangeWindow(Date.now(), sched).until } : null;
   return (
-    <div className="col" style={{ gap: 10 }}>
-      <div className="title" style={{ margin: 0 }}>
+    <div className="fit-page xg-page">
+      <ExchangeGarage data={data} win={win} onTurn={load} />
+      {/* over the scene: back to the yard and the help */}
+      <div className="xg-top">
         <div className="title-row">
           <Link href="/yard" className="back-btn" aria-label="Во двор">‹</Link>
           <Help topic="exchange" title="Обменник">
@@ -179,39 +182,61 @@ export function ExchangeScreen() {
           </Help>
         </div>
       </div>
-      <ExchangeGarage data={data} win={win} onTurn={load} />
+      {/* when the exchange works: in the dark strip under the table, over the menu */}
+      {win && <div className="xg-clock"><ExchangeClock key={win.until} open={win.open} until={win.until} onTurn={load} /></div>}
     </div>
   );
 }
 
 /**
- * The garage (public/assets/exchange/garage.webp, tools/exchange/build.py): the dealer behind the table (the yard kiosk's
- * animated layers), the yard finds on the newspaper on the left — a tap sells them to him («Скупка», every day),
- * the exchange machine on the right — a tap opens the currency exchange (open on its days; the strip says when).
+ * The garage (the artist's layers, tools/exchange/build.py → public/assets/exchange, boxes in XG_BOX): it fills the
+ * whole screen like the yard (the 1080×2400 picture covers it, the HUD and the menu lie over its top and bottom).
+ * The dealer behind the table is the yard kiosk's animated layers (his body behind the table, his arms on it); the
+ * lamp swings and its light flickers. The finds on the newspaper on the left — a tap sells them to him («Скупка»,
+ * every day); the exchange machine on the right — a tap opens the currency exchange (its screen shows the rate).
  */
-function ExchangeGarage({ data, win, onTurn }: { data: ShopData | null; win: { open: boolean; until: number } | null; onTurn: () => void }) {
+const XG = "/assets/exchange";
+function XgLayer({ id, className }: { id: string; className?: string }) {
+  const [l, t, w, h] = XG_BOX[id];
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img className={`xg-l ${className ?? ""}`} src={`${XG}/${id}.webp`} alt="" draggable={false} style={{ left: `${l}%`, top: `${t}%`, width: `${w}%`, height: `${h}%` }} />;
+}
+function ExchangeGarage({ data, win }: { data: ShopData | null; win: { open: boolean; until: number } | null; onTurn: () => void }) {
   const { state } = useGame();
   const [open, setOpen] = useState<"sell" | "ex" | null>(null);
   const worth = Object.entries(state?.sell ?? {}).reduce((t, [id, price]) => t + (state?.inventory.find((i) => i.id === id)?.qty ?? 0) * price, 0);
   const ex = data?.exchange;
   const rate = ex ? Math.ceil(ex.rub.USD / ex.rub.RUB / (1 - ex.fee)) : null;
+  const [ml, mt, mw, mh] = XG_BOX.machine;
+  const [pl, pt, pw, ph] = XG_BOX.paper;
   return (
     <>
-      {win && <ExchangeClock key={win.until} open={win.open} until={win.until} onTurn={onTurn} />}
-      <div className="xg-scene">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="xg-bg" src="/assets/exchange/garage.webp" alt="" draggable={false} />
-        <span className="xg-dealer"><KioskDealer /></span>
-        {/* the machine's green screen: the rate, or «закрыто» */}
-        <span className={`xg-screen ${win?.open ? "" : "off"}`} aria-hidden="true">
-          {win?.open ? <>{rate ? <><b>$1</b><b>={rate}₽</b></> : <b>…</b>}</> : <><b>ЗАКРЫТО</b></>}
-        </span>
-        <button type="button" className="xg-zone xg-sell" onClick={() => { haptic.tap(); setOpen("sell"); }} aria-label="Продать барыге">
-          <span className="xg-tag">Продать барыге{worth > 0 && <b className="num"> · {money("RUB", worth)} ₽</b>}</span>
-        </button>
-        <button type="button" className={`xg-zone xg-ex ${win?.open ? "" : "closed"}`} onClick={() => { haptic.tap(); setOpen("ex"); }} aria-label="Обмен валют">
-          <span className="xg-tag">{win?.open ? "Обмен валют" : "Обмен закрыт"}</span>
-        </button>
+      <div className="xg">
+        <div className="xg-box">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="xg-l xg-bg" src={`${XG}/bg.webp`} alt="" draggable={false} />
+          <span className="xg-dealer"><KioskDealer part="back" /></span>
+          <XgLayer id="table" />
+          <span className="xg-dealer"><KioskDealer part="front" /></span>
+          <XgLayer id="paper" />
+          <XgLayer id="junk" />
+          <XgLayer id="machine" />
+          {/* the machine's green display: the rate, or «закрыто» */}
+          <span className={`xg-screen ${win?.open ? "" : "off"}`} aria-hidden="true">
+            {win?.open ? (rate ? <><b>$1</b><b>={rate}₽</b></> : <b>…</b>) : <b>ЗАКРЫТО</b>}
+          </span>
+          {/* the lamp swings on its wire, its light flickers */}
+          <span className="xg-lamp">
+            <i className="xg-light" />
+            <XgLayer id="lamp" />
+          </span>
+          <button type="button" className="xg-zone xg-sell" style={{ left: `${pl}%`, top: `${pt}%`, width: `${pw}%`, height: `${ph}%` }} onClick={() => { haptic.tap(); setOpen("sell"); }} aria-label="Продать барыге">
+            <span className="xg-tag">Продать барыге{worth > 0 && <b className="num"> · {money("RUB", worth)} ₽</b>}</span>
+          </button>
+          <button type="button" className={`xg-zone xg-ex ${win?.open ? "" : "closed"}`} style={{ left: `${ml}%`, top: `${mt}%`, width: `${mw}%`, height: `${mh}%` }} onClick={() => { haptic.tap(); setOpen("ex"); }} aria-label="Обмен валют">
+            <span className="xg-tag">{win?.open ? "Обмен валют" : "Обмен закрыт"}</span>
+          </button>
+        </div>
       </div>
       {open === "sell" && (
         <Modal title="Скупка" onClose={() => setOpen(null)}>
