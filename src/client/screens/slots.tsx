@@ -100,6 +100,7 @@ export function SlotMachine() {
             // three of a kind (the jackpot too): the big win sound; a pair: a coin
             if (spinRes.kind === "jackpot" || spinRes.kind === "triple") { haptic.big(); sfx("bigwin"); }
             else if (spinRes.kind !== "miss") { haptic.ok(); sfx("coin"); }
+            else sfx("failgame");
             if (spinRes.levelUps?.length && spinRes.kind !== "jackpot") timers.current.push(setTimeout(() => sfx("levelup"), 250));
             if (spinRes.kind === "jackpot" || spinRes.kind === "triple" || spinRes.levelUps?.length) timers.current.push(setTimeout(() => setPrize(spinRes), 650));
           }

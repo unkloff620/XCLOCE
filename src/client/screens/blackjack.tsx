@@ -426,7 +426,7 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     if (!summary || played.current === resultKey) return;
     played.current = resultKey;
-    if (summary.total > 0) { haptic.ok(); sfx("bigwin"); } else if (summary.total < 0) { haptic.err(); sfx("fail"); }
+    if (summary.total > 0) { haptic.ok(); sfx("bigwin"); } else if (summary.total < 0) { haptic.err(); sfx("failgame"); }
   }, [summary, resultKey]);
   const waiting = table ? table.seats.filter((x) => x && !x.ready && !x.left).length : 0;
 

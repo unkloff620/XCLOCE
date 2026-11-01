@@ -17,6 +17,8 @@ export type Sfx = "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" |
   | "nychka"
   /* a loss: a burnt stake in the upgrader, a lost blackjack hand, a zonk, a boss that got away (public/assets/sound/fail.mp3) */
   | "fail"
+  /* a lost game (blackjack, a zonk, a miss in 777, a burnt stake): fail.mp3 or fail-2.mp3 at random */
+  | "failgame"
   /* a big win: a won blackjack hand, three of a kind in the 777 machine (public/assets/sound/big-win.mp3) */
   | "bigwin"
   /* a tattoo or a thing out of the case: one of two recordings at random (public/assets/sound/case-drop-1/2.mp3) */
@@ -176,6 +178,7 @@ const SAMPLE_URLS = {
   nychka1: "/assets/sound/nychka-1.mp3",
   nychka2: "/assets/sound/nychka-2.mp3",
   fail: "/assets/sound/fail.mp3",
+  fail2: "/assets/sound/fail-2.mp3",
   bigwin: "/assets/sound/big-win.mp3",
   raid1: "/assets/sound/raid-voice-1.mp3",
   raid2: "/assets/sound/raid-voice-2.mp3",
@@ -448,12 +451,16 @@ export function sfx(name: Sfx, power = 0.5) {
       if (sample(a, "bigwin", t, 1)) break;
       [523, 659, 784, 1047].forEach((f, i) => tone(a, f, t + i * 0.09, 0.25, { type: "square", vol: 0.08 }));
       break;
+    case "failgame":
+      if (sample(a, Math.random() < 0.5 ? "fail" : "fail2", t, 1)) break;
+      [311, 294, 277].forEach((f, i) => tone(a, f, t + i * 0.2, 0.2, { type: "sawtooth", vol: 0.05 }));
+      break;
     case "fail":
       if (sample(a, "fail", t, 1)) break;
       [311, 294, 277].forEach((f, i) => tone(a, f, t + i * 0.2, 0.2, { type: "sawtooth", vol: 0.05 }));
       break;
     case "zonk":
-      if (sample(a, "fail", t, 1)) break;
+      if (sample(a, Math.random() < 0.5 ? "fail" : "fail2", t, 1)) break;
       // the sad trombone of a zonk
       [311, 294, 277].forEach((f, i) => tone(a, f, t + i * 0.2, 0.2, { type: "sawtooth", vol: 0.05 }));
       tone(a, 262, t + 0.6, 0.55, { type: "sawtooth", vol: 0.05, slide: 0.92 });
