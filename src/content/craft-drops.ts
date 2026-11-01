@@ -31,6 +31,25 @@ export const BOSS_PARTS: Record<string, string> = {
   utilizator: "part-cooler", fokus: "part-laser", solntse: "part-saltpeter", pepe: "part-sulfur",
 };
 
+/**
+ * The parts for a win over a boss: the harder the boss (his order, 1…13) and the mode, the more and the rarer.
+ * «Пацанский» ×1, «Блатной» ×1.8, «Авторитетный» ×3 on a base of 3 parts that grows ×0.55 (the first boss) … ×2.35
+ * (the last); his own very rare part: «Пацанский» never, «Блатной» 15…45%, «Авторитетный» for sure, 1…3 of it.
+ */
+export function craftBossParts(order: number, mode: string) {
+  const o = Math.max(1, Math.min(13, order));
+  const boss = 0.4 + 0.15 * o;
+  const m = mode === "avtor" ? 3 : mode === "blat" ? 1.8 : 1;
+  const mid = 3 * boss * m;
+  return {
+    min: Math.max(1, Math.round(mid * 0.75)), max: Math.max(2, Math.round(mid * 1.25)),
+    rare: Math.min(0.6, 0.12 + 0.02 * o + (mode === "pacan" ? 0 : 0.08)),
+    epic: Math.min(0.15, 0.003 * o * m),
+    sigChance: mode === "avtor" ? 1 : mode === "blat" ? 0.12 + 0.025 * o : 0,
+    sigMin: 1, sigMax: mode === "avtor" ? 1 + Math.floor(o / 5) : 1,
+  };
+}
+
 type Rng = () => number;
 const pick = <T,>(list: T[], rng: Rng) => list[Math.floor(rng() * list.length) % list.length];
 /** a whole number from min to max, both included */
