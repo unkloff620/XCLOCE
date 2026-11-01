@@ -2390,6 +2390,7 @@ button.bjt-stack { cursor: pointer; }
 /* ---------- mini-games round 5: the «Фишка», the card flip, the squashable roach, the zonk sheet for phones ---------- */
 .pkt-btns { display: flex; gap: 2cqw; align-items: stretch; }
 .pkt-btns .btn.gold { flex: 1; min-width: 0; }
+.pkt-ctrl .btn.block { width: 100%; min-width: 0; margin-left: 0; align-self: stretch; }
 .pkt-ctrl .btn.pkt-chip { flex: 0 0 auto; padding: 0 2.2cqw 0 1.2cqw; gap: 0.8cqw; background: linear-gradient(#2a1a0c, #140c05); border: 0.4cqw solid #e0b04a; color: #ffe08a; }
 .pkt-ctrl .btn.pkt-chip svg { width: 7.2cqw; height: 7.2cqw; }
 .pkt-chip b { font-size: 3.8cqw; }

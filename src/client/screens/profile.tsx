@@ -618,12 +618,12 @@ function SettingsPanel() {
     <div className="panel col" style={{ gap: 8 }}>
       <div className="small muted">НАСТРОЙКИ</div>
       <VolumeSliders />
-      <button className="btn dark block" onClick={() => setLooks(true)}>Внешность: кожа и глаза</button>
+      <button className="btn dark block wide" onClick={() => setLooks(true)}>Внешность: кожа и глаза</button>
       {looks && <LooksWindow onClose={() => setLooks(false)} />}
       <NotifySwitch />
-      <button className="btn dark block" onClick={() => setNews(true)}>Что нового в игре</button>
+      <button className="btn dark block wide" onClick={() => setNews(true)}>Что нового в игре</button>
       {news && <UpdatesWindow onClose={() => setNews(false)} />}
-      <button className="btn dark block" onClick={() => { router.push("/"); setTimeout(replayTutorial, 400); }}>Пройти обучение заново</button>
+      <button className="btn dark block wide" onClick={() => { router.push("/"); setTimeout(replayTutorial, 400); }}>Пройти обучение заново</button>
     </div>
   );
 }
