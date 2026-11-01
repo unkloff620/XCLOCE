@@ -4785,3 +4785,12 @@ body { background-attachment: fixed; }
 .dl-ex-go { display: flex; justify-content: space-between; gap: 8px; }
 /* the machine's screen shows the better rate in a brighter green */
 .xg-screen.up b { color: #b8ffcf; text-shadow: 0 0 6px #5dff9a, 0 0 12px #5dff9a; }
+/* many boxes opened at once: the loot gets smaller, and what still doesn't fit scrolls inside the tray (never past it) */
+.acx-loot { overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; pointer-events: auto; touch-action: pan-y; }
+.acx-loot::-webkit-scrollbar { display: none; }
+.acx-loot.many, .acx-loot.lots { align-content: flex-start; padding-top: 1cqw; padding-bottom: 1cqw; }
+.acx-loot.many .acx-item .chip { font-size: 2.6cqw; }
+.acx-loot.many .acx-item svg, .acx-loot.many .acx-item img { width: 4.2cqw !important; height: 4.2cqw !important; }
+.acx-loot.lots { gap: 0.6cqw 1.4cqw; }
+.acx-loot.lots .acx-item .chip { font-size: 2.3cqw; }
+.acx-loot.lots .acx-item svg, .acx-loot.lots .acx-item img { width: 3.6cqw !important; height: 3.6cqw !important; }

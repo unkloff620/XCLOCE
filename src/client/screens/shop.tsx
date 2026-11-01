@@ -234,11 +234,13 @@ function AchBoxWindow({ onClose }: { onClose: () => void }) {
   const inkGot = useMemo(() => (got?.items ?? []).filter((it) => TATTOO_ID_SET.has(it.id)), [got]);
   const thingGot = useMemo(() => (got?.items ?? []).filter((it) => isThing(it.id)), [got]); // eslint-disable-line react-hooks/exhaustive-deps
   const parts = useMemo(() => (got ? lootParts({ ...got, items: (got.items ?? []).filter((it) => !TATTOO_ID_SET.has(it.id) && !isThing(it.id)) }) : []), [got]); // eslint-disable-line react-hooks/exhaustive-deps
-  const inkDelay = 450 + parts.length * LOOT_STEP;
+  // many boxes at once: the things come out faster (the whole pour stays within ~3 s)
+  const step = Math.min(LOOT_STEP, Math.max(60, Math.round(3000 / Math.max(1, parts.length))));
+  const inkDelay = 450 + parts.length * step;
   const thingDelay = inkDelay + (inkGot.length ? 900 : 0);
   useEffect(() => {
     if (phase !== "open") return;
-    const t = parts.map((_, i) => setTimeout(() => { haptic.tap(); sfx("coinsoft"); }, 450 + i * LOOT_STEP));
+    const t = parts.map((_, i) => setTimeout(() => { if (i < 24) { haptic.tap(); sfx("coinsoft"); } }, 450 + i * step));
     // each frame that gets something: its own voice as it lights up
     if (inkGot.length) t.push(setTimeout(() => { haptic.big(); sfx("casedrop"); }, inkDelay));
     if (thingGot.length) t.push(setTimeout(() => { haptic.big(); sfx("thingdrop"); }, thingDelay));
@@ -276,9 +278,9 @@ function AchBoxWindow({ onClose }: { onClose: () => void }) {
         {/* two frames, top left of the tray: the tattoo and the thing — «Пусто», or what dropped (after the other things) */}
         <LootFrame kind="ink" items={inkGot} delay={inkDelay} open={phase === "open"} />
         <LootFrame kind="thing" items={thingGot} delay={thingDelay} open={phase === "open"} />
-        <div className="acx-loot">
+        <div className={`acx-loot${parts.length > 30 ? " lots" : parts.length > 15 ? " many" : ""}`}>
           {phase === "open" && parts.map((p, i) => (
-            <span key={i} className="acx-item" style={{ animationDelay: `${450 + i * LOOT_STEP}ms` }}><RewardChips r={p} size={20} /></span>
+            <span key={i} className="acx-item" style={{ animationDelay: `${450 + i * step}ms` }}><RewardChips r={p} size={20} /></span>
           ))}
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
