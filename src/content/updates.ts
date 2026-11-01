@@ -17,6 +17,12 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-01-chew",
+    date: "1 ноября",
+    title: "Сигарета в зубах",
+    items: [{ text: "С сигаретой или зубочисткой во рту герой сжимает её зубами, а время от времени приоткрывает челюсть и перекатывает её в другой угол рта." }],
+  },
+  {
     id: "2026-11-01-profile-icons",
     date: "1 ноября",
     title: "Новые кнопки в профиле",

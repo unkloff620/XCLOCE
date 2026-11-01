@@ -4396,6 +4396,26 @@ body { background-attachment: fixed; }
 .rig-smoke circle { fill: rgba(220, 220, 225, 0.55); opacity: 0; transform-box: fill-box; transform-origin: center; animation: rig-smoke 2.7s ease-out infinite; }
 @keyframes rig-smoke { 0% { opacity: 0; transform: translate(0, 0) scale(0.5); } 15% { opacity: 0.8; } 100% { opacity: 0; transform: translate(14px, -70px) scale(2.4); } }
 .rig.still .rig-smoke circle { animation-play-state: running; }
+/* the jaw with a thing in the mouth (rig.tsx Mouth): 10 s — clenched, the jaw drops (frames 1–3), the thing rolls to the other corner, the jaw closes; and back */
+.rig-jaw-f { animation: rig-jaw 10s step-end infinite; }
+@keyframes rig-jaw {
+  0%, 38%, 88%, 100% { transform: translateY(0); }
+  22%, 36%, 72%, 86% { transform: translateY(calc(var(--fh) * -1)); }
+  24%, 34%, 74%, 84% { transform: translateY(calc(var(--fh) * -2)); }
+  26%, 76% { transform: translateY(calc(var(--fh) * -3)); }
+}
+.rig-chew { transform-box: view-box; animation: rig-chew 10s ease-in-out infinite; }
+/* the thing slides along the teeth to the middle of the mouth, turns over there and slides on into the other corner */
+@keyframes rig-chew {
+  0%, 26%, 84%, 100% { transform: scaleX(1) translateX(0); }
+  30% { transform: scaleX(1) translateX(-25px); }
+  30.6% { transform: scaleX(-1) translateX(-25px); }
+  34%, 76% { transform: scaleX(-1) translateX(0); }
+  80% { transform: scaleX(-1) translateX(-25px); }
+  80.6% { transform: scaleX(1) translateX(-25px); }
+}
+.rig.still .rig-jaw-f, .rig.still .rig-chew { animation: none; }
+@media (prefers-reduced-motion: reduce) { .rig-jaw-f, .rig-chew { animation: none; } }
 /* the tattoo frame in the top left corner of the open case's tray (screens/shop.tsx) */
 .acx-ink { position: absolute; left: 15%; top: 44.5%; width: 18%; aspect-ratio: 1; display: grid; place-items: center; pointer-events: none; opacity: 0; transition: opacity 0.3s 0.35s; }
 .acx-case.open .acx-ink { opacity: 1; }
