@@ -1163,4 +1163,11 @@ UPDATE appearance SET body = body - 'tattoos' WHERE body ? 'tattoos';`,
     id: "v2-068-face-slot",
     sql: `UPDATE appearance SET equipped = (equipped - 'ACCESSORY') || '{"FACE":"laser-eyes"}'::jsonb WHERE equipped->>'ACCESSORY' = 'laser-eyes';`,
   },
+  {
+    // «Урон II» and «Сила крита II» cost 1 talent a level now (they were 2): the extra talent of every level taken is given back
+    id: "v2-069-talents-cost-1",
+    sql: `UPDATE players p SET talents = p.talents + s.n
+FROM (SELECT player_id, SUM(level)::int AS n FROM player_talents WHERE branch IN ('n3', 'n4') AND level > 0 GROUP BY player_id) s
+WHERE p.id = s.player_id;`,
+  },
 ];
