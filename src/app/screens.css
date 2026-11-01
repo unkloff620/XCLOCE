@@ -4809,3 +4809,6 @@ body { background-attachment: fixed; }
   text-shadow: 0 1px 2px #000, 0 0 4px rgba(0, 0, 0, 0.9); }
 .weapon.empty .w-qty { background: none; color: rgba(255, 255, 255, 0.55); }
 .weapon .w-qty { font-size: 10px; font-weight: 600; letter-spacing: 0.01em; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.9); }
+/* the machine's screen: $1 — what buying costs and what selling gives */
+.xg-screen:not(.off) { gap: 0.2cqw; font-size: 2.9cqw; }
+.xg-screen small { font-size: 2.4cqw; opacity: 0.8; }

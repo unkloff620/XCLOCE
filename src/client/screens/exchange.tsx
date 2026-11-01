@@ -355,7 +355,9 @@ function ExchangeGarage({ data, win }: { data: ShopData | null; win: { open: boo
   const { state } = useGame();
   // the machine's screen: what $1 costs in roubles (less after a good talk with the dealer)
   const bonus = state?.dealerTalk && state.dealerTalk.until && state.dealerTalk.until > Date.now() ? state.dealerTalk.bonus : 0;
-  const rate = ex ? Math.ceil(ex.rub.USD / ex.rub.RUB / (1 - ex.fee) / (1 + bonus)) : null;
+  // the fee works both ways: buying $1 costs more roubles than selling $1 gives
+  const k = ex ? (1 - ex.fee) * (1 + bonus) : 1;
+  const rate = ex ? { buy: Math.ceil(ex.rub.USD / ex.rub.RUB / k), sell: Math.floor((ex.rub.USD / ex.rub.RUB) * k) } : null;
   const [ml, mt, mw, mh] = XG_BOX.machine;
   const [pl, pt, pw, ph] = XG_BOX.paper;
   return (
@@ -373,7 +375,7 @@ function ExchangeGarage({ data, win }: { data: ShopData | null; win: { open: boo
           <XgLayer id="machine" />
           {/* the machine's green display: the rate, or «закрыто» */}
           <span className={`xg-screen ${win?.open ? "" : "off"} ${bonus > 0 ? "up" : ""}`} aria-hidden="true">
-            {win?.open ? (rate ? <><b>$1</b><b>={rate}₽</b></> : <b>…</b>) : <b>ЗАКРЫТО</b>}
+            {win?.open ? (rate ? <><small>$1</small><b>куп {rate.buy}₽</b><b>прод {rate.sell}₽</b></> : <b>…</b>) : <b>ЗАКРЫТО</b>}
           </span>
           {/* the lamp swings on its wire, its light flickers */}
           <span className="xg-lamp">
