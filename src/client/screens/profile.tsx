@@ -148,6 +148,18 @@ function RenameWindow({ current, onClose, onDone }: { current: string; onClose: 
 
 /* ---------------- the buttons on the wall of the room ---------------- */
 
+/** a social button reloading: the grey part shrinks clockwise like a weapon's (the icon stays), the time left under it */
+function Reload({ ms }: { ms: number }) {
+  if (!ms) return null;
+  const done = ms < 0 ? 0 : Math.max(0, Math.min(1, 1 - ms / SOCIAL_CD));
+  return (
+    <>
+      <span className="pr-cd" style={{ ["--p" as string]: `${done * 360}deg` }} />
+      <span className="pr-cd-time num">{ms < 0 ? "завтра" : clock(ms)}</span>
+    </>
+  );
+}
+
 /** the pictures on the profile's wall buttons (public/assets/ui/pr-*.webp): the dossier, pumping the biceps, a fight, a spit */
 function PrIcon({ name }: { name: "dossier" | "biceps" | "fight" | "spit" }) {
   // eslint-disable-next-line @next/next/no-img-element
@@ -187,7 +199,10 @@ function SpitArt({ size = 40 }: { size?: number }) {
   );
 }
 
-type Social = { biceps: number; mine: number; pump: boolean | null; fight: boolean | null; spit: number | null };
+/** pump / fight / spit: when it is ready again (0 — now, -1 — the day's limit is used up; null — my own profile) */
+type Social = { biceps: number; mine: number; pump: number | null; fight: number | null; spit: number | null };
+/** the same player again after an hour (content/social.ts SOCIAL_COOLDOWN_MS) */
+const SOCIAL_CD = 60 * 60_000;
 
 /** the fist fight in the background: a dust cloud over the room, then who won — after the raid voice line has finished (≈3 s) */
 function Brawl({ res, name, onClose }: { res: { won: boolean; mine: number; theirs: number; reward: unknown } | null; name: string; onClose: () => void }) {
@@ -505,7 +520,13 @@ export function ProfileScreen() {
   // my own profile: no room with buttons — straight into my «Личное дело»; closing it goes back
   if (p.self) return <Dossier p={p} reload={reload} onClose={() => (window.history.length > 1 ? router.back() : router.push("/"))} />;
   const so = p.social;
-  const spitIn = so && typeof so.spit === "number" && so.spit > 0 ? Math.max(0, so.spit - now) : 0;
+  // how long each button still reloads (ms; -1 — no more today)
+  const left = (at: number | null | undefined) => (at === -1 ? -1 : at && at > now ? at - now : 0);
+  const pumpIn = left(so?.pump), fightIn = left(so?.fight), spitIn = left(so?.spit);
+  const wait = (ms: number, what: string) => {
+    haptic.err();
+    toast(ms < 0 ? `${what}: на сегодня хватит` : `${what}: ещё ${clock(ms)}`, "err");
+  };
   const flash = (kind: "pump" | "spit") => {
     const key = Date.now();
     setFx({ key, kind });
@@ -513,14 +534,14 @@ export function ProfileScreen() {
   };
   const pump = async () => {
     if (p.self) { haptic.tap(); toast("Бицуху качают другие — зайди к кому-нибудь и прокачай ему", "info"); return; }
-    if (!so?.pump) { haptic.err(); toast("Сегодня ты ему уже качал — приходи завтра", "err"); return; }
+    if (pumpIn) { wait(pumpIn, "Бицуха"); return; }
     sfx("pump");
     haptic.big();
     const r = await act<{ biceps: number }>("social_pump", { to: p.id });
     if (r) { flash("pump"); reload(); }
   };
   const fight = async () => {
-    if (!so?.fight) { haptic.err(); toast("С ним ты сегодня уже махался — завтра", "err"); return; }
+    if (fightIn) { wait(fightIn, "Наезд"); return; }
     haptic.tap();
     sfx("raid");
     sfx("brawl");
@@ -532,8 +553,7 @@ export function ProfileScreen() {
     reload();
   };
   const spit = async () => {
-    if (spitIn > 0) { haptic.err(); toast(`Слюна кончилась — ещё ${clock(spitIn)}`, "err"); return; }
-    if (so?.spit === -1) { haptic.err(); toast("На сегодня хватит харкать", "err"); return; }
+    if (spitIn) { wait(spitIn, "Слюна кончилась"); return; }
     sfx("spit");
     haptic.tap();
     const r = await act("social_spit", { to: p.id }, `Харкнул в ${p.name}`);
@@ -559,17 +579,17 @@ export function ProfileScreen() {
           <button type="button" className="pr-btn bare" onClick={() => { haptic.tap(); setDossier(true); }} aria-label="Личное дело">
             <PrIcon name="dossier" />
           </button>
-          <button type="button" className={`pr-btn bare ${!p.self && so?.pump ? "glow" : ""} ${!p.self && !so?.pump ? "spent" : ""}`} disabled={busy === "social_pump"} onClick={pump} aria-label="Прокачать бицуху">
-            <PrIcon name="biceps" />
+          <button type="button" className={`pr-btn bare ${!pumpIn ? "glow" : ""}`} disabled={busy === "social_pump"} onClick={pump} aria-label="Прокачать бицуху">
+            <PrIcon name="biceps" /><Reload ms={pumpIn} />
             {fx?.kind === "pump" && <b key={fx.key} className="pr-pop num">+1</b>}
           </button>
           {!p.self && (
             <>
-              <button type="button" className={`pr-btn bare ${so?.fight ? "" : "spent"}`} disabled={!!brawl || busy === "social_fight"} onClick={fight} aria-label="Наехать">
-                <PrIcon name="fight" />
+              <button type="button" className="pr-btn bare" disabled={!!brawl || busy === "social_fight"} onClick={fight} aria-label="Наехать">
+                <PrIcon name="fight" /><Reload ms={fightIn} />
               </button>
-              <button type="button" className={`pr-btn bare ${spitIn > 0 || so?.spit === -1 ? "spent" : ""}`} disabled={busy === "social_spit"} onClick={spit} aria-label="Харкнуть">
-                <PrIcon name="spit" />
+              <button type="button" className="pr-btn bare" disabled={busy === "social_spit"} onClick={spit} aria-label="Харкнуть">
+                <PrIcon name="spit" /><Reload ms={spitIn} />
               </button>
             </>
           )}

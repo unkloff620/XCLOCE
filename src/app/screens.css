@@ -2874,8 +2874,13 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .pr-btn.bare { width: 56px; padding: 0; border: 0; background: none; box-shadow: none; border-radius: 13px; }
 .pr-btn.bare .pr-ico { width: 56px; height: 56px; border-radius: 13px; filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.55)); }
 .pr-btn.bare:active { box-shadow: none; }
-.pr-btn.bare.glow { animation-name: pr-glow-bare; }
-@keyframes pr-glow-bare { 0%, 100% { filter: drop-shadow(0 0 0 rgba(255, 154, 92, 0)); } 50% { filter: drop-shadow(0 0 10px rgba(255, 154, 92, 0.95)); } }
+/* reloading: a grey veil over the icon shrinking clockwise (like the weapons' .w-cd), the time left on it */
+.pr-cd { position: absolute; inset: 0; border-radius: 13px; pointer-events: none; z-index: 1; background: rgba(20, 14, 10, 0.62);
+  -webkit-mask-image: conic-gradient(from 0deg, transparent var(--p), #000 var(--p)); mask-image: conic-gradient(from 0deg, transparent var(--p), #000 var(--p)); }
+.pr-cd-time { position: absolute; left: 0; right: 0; bottom: 4px; z-index: 2; text-align: center; font-size: 10.5px; font-weight: 900; color: #ffd25a; text-shadow: 0 1px 2px #000, 0 0 3px #000; pointer-events: none; }
+.pr-btn.bare.glow { animation: none; }
+.pr-btn.bare.glow .pr-ico { animation: pr-glow-bare 1.6s ease-in-out infinite; }
+@keyframes pr-glow-bare { 0%, 100% { filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.55)) drop-shadow(0 0 0 rgba(255, 154, 92, 0)); } 50% { filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.55)) drop-shadow(0 0 10px rgba(255, 154, 92, 0.95)); } }
 .pr-btn.glow { animation-name: pr-glow; animation-duration: 1.6s; animation-iteration-count: infinite; animation-timing-function: ease-in-out; }
 @keyframes pr-glow { 0%, 100% { box-shadow: 0 3px 0 var(--line), 0 0 0 rgba(255, 154, 92, 0); } 50% { box-shadow: 0 3px 0 var(--line), 0 0 16px rgba(255, 154, 92, 0.9); } }
 .pr-pop { position: absolute; right: -14px; top: -6px; font-size: 20px; font-weight: 900; color: #ffd25a; text-shadow: 0 2px 0 #2e1c00; pointer-events: none;

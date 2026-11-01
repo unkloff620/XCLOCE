@@ -1935,21 +1935,21 @@ describe("daily tops of blackjack and poker", () => {
 });
 
 describe("бицуха, наезд, харкнуть", () => {
-  it("biceps pumped once a day per visitor; more biceps wins a fight (+50 ₽); a spit leaves a message", async () => {
+  it("biceps pumped once an hour per visitor; more biceps wins a fight (+50 ₽); a spit leaves a message", async () => {
     const a = await newPlayer(db), b = await newPlayer(db), c = await newPlayer(db);
     await expect(act(db, a, "social_pump", { to: a }, T0)).rejects.toMatchObject({ code: "social_self" });
     expect((await act(db, a, "social_pump", { to: b }, T0)).result.biceps).toBe(1);
-    await expect(act(db, a, "social_pump", { to: b }, T0 + 1000)).rejects.toMatchObject({ code: "pump_done" });
+    await expect(act(db, a, "social_pump", { to: b }, T0 + 1000)).rejects.toMatchObject({ code: "pump_wait" });
     expect((await act(db, c, "social_pump", { to: b }, T0)).result.biceps).toBe(2);
     // a (0) on b (2): a loses; b (2) on a (0): b wins 50 ₽
     const f1 = await act(db, a, "social_fight", { to: b }, T0);
     expect(f1.result).toMatchObject({ won: false, mine: 0, theirs: 2 });
-    await expect(act(db, a, "social_fight", { to: b }, T0 + 1000)).rejects.toMatchObject({ code: "fight_done" });
+    await expect(act(db, a, "social_fight", { to: b }, T0 + 1000)).rejects.toMatchObject({ code: "fight_wait" });
     const rub = await wallet(db, b, "RUB");
     expect((await act(db, b, "social_fight", { to: a }, T0)).result.won).toBe(true);
     expect(await wallet(db, b, "RUB")).toBe(rub + 50);
-    // the next day the same player can be pumped again
-    expect((await act(db, a, "social_pump", { to: b }, T0 + 24 * H)).result.biceps).toBe(3);
+    // an hour later the same player can be pumped again
+    expect((await act(db, a, "social_pump", { to: b }, T0 + H)).result.biceps).toBe(3);
     await act(db, c, "social_spit", { to: a }, T0);
     await expect(act(db, c, "social_spit", { to: a }, T0 + 1000)).rejects.toMatchObject({ code: "spit_wait" });
     const s = await act(db, a, "equip", { itemId: "jeans" }, T0 + 2000);

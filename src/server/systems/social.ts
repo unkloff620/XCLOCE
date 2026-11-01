@@ -1,6 +1,6 @@
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, moscowDay, type Ctx } from "../core.ts";
-import { FIGHT_PER_DAY, FIGHT_WIN, NOTE_KEEP_MS, PUMP_PER_DAY, SPIT_EVERY_MS, SPIT_PER_DAY } from "../../content/social.ts";
+import { FIGHT_PER_DAY, FIGHT_WIN, NOTE_KEEP_MS, PUMP_PER_DAY, SOCIAL_COOLDOWN_MS, SPIT_PER_DAY } from "../../content/social.ts";
 import { rollParts } from "../../content/craft-drops.ts";
 import { mergeRewards } from "../../content/rewards.ts";
 
@@ -45,7 +45,7 @@ async function note(ctx: Ctx, to: number, kind: string, meta: Record<string, unk
 export async function pump(ctx: Ctx, to: number) {
   const p = await target(ctx, to);
   const c = await counts(ctx.q, ctx.pid, "pump", to, ctx.now);
-  if (c.same > 0) throw new GameError("pump_done", "Сегодня ты уже качал ему бицуху — приходи завтра");
+  if (c.last && ctx.now - c.last < SOCIAL_COOLDOWN_MS) throw new GameError("pump_wait", "Ты недавно ему качал — руки ещё отдыхают");
   if (c.day >= PUMP_PER_DAY) throw new GameError("pump_limit", "На сегодня хватит — руки отваливаются");
   const [u] = await ctx.q.query<{ n: number }>(
     "INSERT INTO player_biceps (player_id, n) VALUES ($1,1) ON CONFLICT (player_id) DO UPDATE SET n = player_biceps.n + 1 RETURNING n", [p.id]);
@@ -57,7 +57,7 @@ export async function pump(ctx: Ctx, to: number) {
 export async function fight(ctx: Ctx, to: number) {
   const p = await target(ctx, to);
   const c = await counts(ctx.q, ctx.pid, "fight", to, ctx.now);
-  if (c.same > 0) throw new GameError("fight_done", "С ним ты сегодня уже махался — завтра");
+  if (c.last && ctx.now - c.last < SOCIAL_COOLDOWN_MS) throw new GameError("fight_wait", "С ним ты недавно махался — отдышись");
   if (c.day >= FIGHT_PER_DAY) throw new GameError("fight_limit", `Не больше ${FIGHT_PER_DAY} наездов в день`);
   const mine = await bicepsOf(ctx.q, ctx.pid), theirs = p.biceps;
   const won = mine > theirs;
@@ -72,23 +72,24 @@ export async function fight(ctx: Ctx, to: number) {
 export async function spit(ctx: Ctx, to: number) {
   await target(ctx, to);
   const c = await counts(ctx.q, ctx.pid, "spit", to, ctx.now);
-  if (c.last && ctx.now - c.last < SPIT_EVERY_MS) throw new GameError("spit_wait", "Слюна кончилась — подожди немного");
+  if (c.last && ctx.now - c.last < SOCIAL_COOLDOWN_MS) throw new GameError("spit_wait", "Слюна кончилась — подожди немного");
   if (c.day >= SPIT_PER_DAY) throw new GameError("spit_limit", "На сегодня хватит харкать");
   await log(ctx, "spit", to);
   await note(ctx, to, "spit");
   return { ok: true };
 }
 
-/** what the viewer may do to this player now (null — the own profile) */
+const readyAt = (c: { day: number; last: number }, perDay: number) => (c.day >= perDay ? -1 : c.last ? c.last + SOCIAL_COOLDOWN_MS : 0);
+/** what the viewer may do to this player: for each — when it is ready again (0 — now, -1 — the day's limit is used up; null — the own profile) */
 export async function socialView(q: Queryable, viewer: number, pid: number, now: number) {
   const biceps = await bicepsOf(q, pid);
   if (viewer === pid) return { biceps, mine: biceps, pump: null, fight: null, spit: null };
   const [pc, fc, sc] = await Promise.all((["pump", "fight", "spit"] as const).map((k) => counts(q, viewer, k, pid, now)));
   return {
     biceps, mine: await bicepsOf(q, viewer),
-    pump: pc.same === 0 && pc.day < PUMP_PER_DAY,
-    fight: fc.same === 0 && fc.day < FIGHT_PER_DAY,
-    spit: sc.day < SPIT_PER_DAY ? Math.max(0, (sc.last ? sc.last + SPIT_EVERY_MS : 0)) : -1,
+    pump: readyAt(pc, PUMP_PER_DAY),
+    fight: readyAt(fc, FIGHT_PER_DAY),
+    spit: readyAt(sc, SPIT_PER_DAY),
   };
 }
 
