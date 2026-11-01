@@ -2074,24 +2074,24 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
  },
  "tat-samurai-neck": {
   "part": "upper",
-  "x": 398.0,
-  "y": 245.0,
-  "w": 203.0,
-  "h": 144.0
+  "x": 394.0,
+  "y": 241.0,
+  "w": 212.0,
+  "h": 148.0
  },
  "tat-samurai-chest-l": {
   "part": "upper",
-  "x": 341.0,
-  "y": 318.0,
-  "w": 162.0,
-  "h": 246.0
+  "x": 340.0,
+  "y": 315.0,
+  "w": 163.0,
+  "h": 249.0
  },
  "tat-samurai-chest-r": {
   "part": "upper",
   "x": 499.0,
-  "y": 319.0,
-  "w": 160.0,
-  "h": 244.0
+  "y": 317.0,
+  "w": 161.0,
+  "h": 246.0
  },
  "tat-samurai-belly": {
   "part": "upper",
@@ -2102,108 +2102,108 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
  },
  "tat-samurai-shoulder-l": {
   "part": "upper",
-  "x": 231.0,
-  "y": 339.0,
-  "w": 137.0,
-  "h": 153.0
+  "x": 225.0,
+  "y": 330.0,
+  "w": 144.0,
+  "h": 167.0
  },
  "tat-samurai-shoulder-r": {
   "part": "upper",
-  "x": 633.0,
-  "y": 338.0,
-  "w": 145.0,
-  "h": 146.0
+  "x": 632.0,
+  "y": 332.0,
+  "w": 151.0,
+  "h": 164.0
  },
  "tat-samurai-biceps-l": {
   "part": "upper",
-  "x": 157.0,
-  "y": 440.0,
-  "w": 131.0,
-  "h": 134.0
+  "x": 153.0,
+  "y": 436.0,
+  "w": 143.0,
+  "h": 138.0
  },
  "tat-samurai-biceps-r": {
   "part": "upper",
-  "x": 714.0,
-  "y": 435.0,
-  "w": 139.0,
-  "h": 140.0
+  "x": 710.0,
+  "y": 431.0,
+  "w": 147.0,
+  "h": 144.0
  },
  "tat-samurai-elbow-l": {
   "part": "upper",
-  "x": 123.0,
-  "y": 536.0,
-  "w": 98.0,
-  "h": 116.0
+  "x": 114.0,
+  "y": 534.0,
+  "w": 107.0,
+  "h": 122.0
  },
  "tat-samurai-elbow-r": {
   "part": "upper",
   "x": 781.0,
-  "y": 538.0,
-  "w": 104.0,
-  "h": 130.0
+  "y": 535.0,
+  "w": 114.0,
+  "h": 140.0
  },
  "tat-samurai-forearm-l": {
   "part": "upper",
-  "x": 156.0,
+  "x": 142.0,
   "y": 631.0,
-  "w": 101.0,
-  "h": 117.0
+  "w": 115.0,
+  "h": 123.0
  },
  "tat-samurai-forearm-r": {
   "part": "upper",
   "x": 705.0,
   "y": 635.0,
-  "w": 129.0,
+  "w": 142.0,
   "h": 149.0
  },
  "tat-samurai-hand-l": {
   "part": "upper",
-  "x": 227.0,
+  "x": 225.0,
   "y": 667.0,
-  "w": 187.0,
+  "w": 189.0,
   "h": 135.0
  },
  "tat-samurai-knee-l": {
   "part": "torso",
-  "x": 90.0,
-  "y": 760.0,
-  "w": 249.0,
-  "h": 201.0
+  "x": 83.0,
+  "y": 753.0,
+  "w": 256.0,
+  "h": 211.0
  },
  "tat-samurai-knee-r": {
   "part": "torso",
   "x": 662.0,
-  "y": 762.0,
-  "w": 253.0,
-  "h": 202.0
+  "y": 755.0,
+  "w": 260.0,
+  "h": 211.0
  },
  "tat-samurai-shin-l": {
   "part": "torso",
-  "x": 128.0,
+  "x": 123.0,
   "y": 881.0,
-  "w": 217.0,
+  "w": 222.0,
   "h": 257.0
  },
  "tat-samurai-shin-r": {
   "part": "torso",
   "x": 655.0,
   "y": 882.0,
-  "w": 224.0,
-  "h": 255.0
+  "w": 229.0,
+  "h": 256.0
  },
  "tat-samurai-foot-l": {
   "part": "torso",
-  "x": 115.0,
+  "x": 106.0,
   "y": 1134.0,
-  "w": 259.0,
+  "w": 268.0,
   "h": 186.0
  },
  "tat-samurai-foot-r": {
   "part": "torso",
   "x": 629.0,
   "y": 1132.0,
-  "w": 246.0,
-  "h": 189.0
+  "w": 253.0,
+  "h": 196.0
  },
  "tat-viking-face": {
   "part": "head",
