@@ -13,8 +13,8 @@ export function LevelUpOverlay() {
     if (!levelUp) return;
     sfx("levelup");
     haptic.big();
-    // after the fanfare: «Красавчик!»
-    const t = setTimeout(() => sfx("krasavchik"), 750);
+    // after the fanfare: a voice (one of two at random)
+    const t = setTimeout(() => sfx("lvlvoice"), 750);
     return () => clearTimeout(t);
   }, [levelUp]);
   // confetti: fixed per opening so re-renders do not reshuffle it

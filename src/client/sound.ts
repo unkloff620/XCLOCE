@@ -19,8 +19,8 @@ export type Sfx = "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" |
   | "fail"
   /* a big win: a won blackjack hand, three of a kind in the 777 machine (public/assets/sound/big-win.mp3) */
   | "bigwin"
-  /* a new level of the player: «Красавчик!» in that voice (public/assets/sound/krasavchik.mp3) */
-  | "krasavchik"
+  /* a new level of the player: one of two recordings of the player's at random (public/assets/sound/levelup-voice-1/2.mp3) */
+  | "lvlvoice"
   /* a new achievement: «Ништяк!» (the same voice as for the biceps, public/assets/sound/nishtyak-4.mp3) */
   | "wow"
   /* «Личное дело»: a sheet of paper turned over */
@@ -172,7 +172,8 @@ const SAMPLE_URLS = {
   nychka2: "/assets/sound/nychka-2.mp3",
   fail: "/assets/sound/fail.mp3",
   bigwin: "/assets/sound/big-win.mp3",
-  krasavchik: "/assets/sound/krasavchik.mp3",
+  lvlvoice1: "/assets/sound/levelup-voice-1.mp3",
+  lvlvoice2: "/assets/sound/levelup-voice-2.mp3",
 } as Record<string, string>;
 /** a hit sound per weapon (w-<weapon id>) and a pick-up sound per yard find (y-<drop id>): tools/sound/build-item-sounds.py */
 const WEAPON_SOUNDS = ["fist", "mouse", "keyboard", "red-candle", "gpu", "rug-pull-gun"];
@@ -273,8 +274,8 @@ export function sfx(name: Sfx, power = 0.5) {
       tone(a, 140, t, 0.2, { type: "sawtooth", vol: 0.18, slide: 1.2 });
       tone(a, 170, t + 0.22, 0.4, { type: "sawtooth", vol: 0.18, slide: 0.7 });
       break;
-    case "krasavchik":
-      sample(a, "krasavchik", t, 1);
+    case "lvlvoice":
+      sample(a, Math.random() < 0.5 ? "lvlvoice1" : "lvlvoice2", t, 1);
       break;
     case "nychka":
       if (sample(a, Math.random() < 0.5 ? "nychka1" : "nychka2", t, 1)) break;
