@@ -173,8 +173,9 @@ function Nav() {
       {/* the leaders strip sits on top of the menu (not over a boss fight) */}
       {!/^\/bosses\/[^/]+/.test(path) && <LeadersStrip />}
       {TABS.map((t) => (
-        // a member's Clans tab leads straight to the own clan (no flash of the clan list)
-        <Link key={t.id} href={t.id === "clans" && myClan ? `/clans/${myClan}` : t.href} className={on === t.id ? "on" : ""} style={{ ["--glow" as string]: NAV_GLOW[t.id] }} aria-label={t.label} title={t.label}
+        // a member's Clans tab leads straight to the own clan (no flash of the clan list);
+        // a running boss fight: the Bosses tab leads straight into it (from the fight a second tap opens the list)
+        <Link key={t.id} href={t.id === "clans" && myClan ? `/clans/${myClan}` : t.id === "bosses" && state?.fight && on !== "bosses" ? `/bosses/${state.fight.bossId}` : t.href} className={on === t.id ? "on" : ""} style={{ ["--glow" as string]: NAV_GLOW[t.id] }} aria-label={t.label} title={t.label}
           onClick={(e) => {
             window.scrollTo({ top: 0 });
             if (on !== t.id) return;
