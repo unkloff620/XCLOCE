@@ -17,6 +17,8 @@ export type Sfx = "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" |
   | "nychka"
   /* a loss: a burnt stake in the upgrader, a lost blackjack hand, a zonk, a boss that got away (public/assets/sound/fail.mp3) */
   | "fail"
+  /* a big win: a won blackjack hand, three of a kind in the 777 machine (public/assets/sound/big-win.mp3) */
+  | "bigwin"
   /* a new level of the player: «Красавчик!» in that voice (public/assets/sound/krasavchik.mp3) */
   | "krasavchik"
   /* a new achievement: «Ништяк!» (the same voice as for the biceps, public/assets/sound/nishtyak-4.mp3) */
@@ -169,6 +171,7 @@ const SAMPLE_URLS = {
   nychka1: "/assets/sound/nychka-1.mp3",
   nychka2: "/assets/sound/nychka-2.mp3",
   fail: "/assets/sound/fail.mp3",
+  bigwin: "/assets/sound/big-win.mp3",
   krasavchik: "/assets/sound/krasavchik.mp3",
 } as Record<string, string>;
 /** a hit sound per weapon (w-<weapon id>) and a pick-up sound per yard find (y-<drop id>): tools/sound/build-item-sounds.py */
@@ -418,6 +421,10 @@ export function sfx(name: Sfx, power = 0.5) {
       noise(a, t, 0.16, { freq: 700, vol: 0.7 });
       tone(a, 120, t, 0.18, { type: "sine", vol: 0.45, slide: 0.5 });
       noise(a, t + 0.06, 0.12, { freq: 2200, type: "bandpass", q: 2, vol: 0.18 });
+      break;
+    case "bigwin":
+      if (sample(a, "bigwin", t, 1)) break;
+      [523, 659, 784, 1047].forEach((f, i) => tone(a, f, t + i * 0.09, 0.25, { type: "square", vol: 0.08 }));
       break;
     case "fail":
       if (sample(a, "fail", t, 1)) break;
