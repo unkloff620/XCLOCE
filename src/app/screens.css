@@ -4606,9 +4606,23 @@ body { background-attachment: fixed; }
 /* the dealer's craft parts for today */
 .bb-dealer { display: flex; flex-direction: column; gap: 6px; padding-bottom: 8px; border-bottom: 2px dashed rgba(58, 36, 16, 0.35); }
 .bb-offers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-.bb-offer { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 3px; border-radius: 10px; border: 2px solid #6b4a24; background: linear-gradient(#fff3d0, #ecd09a); color: #24160a; cursor: pointer; min-width: 0; }
-.bb-offer:disabled { opacity: 0.55; cursor: default; }
+.bb-offer { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 3px 5px; border-radius: 10px; border: 2px solid #6b4a24; background: linear-gradient(#fff3d0, #ecd09a); color: #24160a; min-width: 0; }
 .bb-offer > .ellipsis { max-width: 100%; }
+.bb-offer-pic { position: relative; display: grid; place-items: center; }
+.bb-offer-n { position: absolute; left: -6px; top: -4px; font-style: normal; font-size: 11px; font-weight: 900; color: #fff; text-shadow: 0 1px 0 #000, 0 0 3px #000; }
+.bb-offer.out .bb-offer-pic svg { opacity: 0.45; filter: grayscale(0.6); }
+/* sold out: a stamp across the picture */
+.bb-offer-stamp { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-28deg); font-style: normal; font: 900 10px/1 var(--font-display), system-ui; letter-spacing: 0.04em;
+  text-transform: uppercase; color: #c0281e; padding: 2px 4px; border: 1.5px solid #c0281e; border-radius: 3px; background: rgba(255, 245, 225, 0.75); white-space: nowrap; }
+/* the thin green «купить» */
+.bb-buy { margin-top: 3px; width: 92%; padding: 1px 0; border-radius: 6px; border: 1px solid #0d5a2e; background: linear-gradient(#5fe39a, #27b866); color: #08321a;
+  font: 900 10px/1.15 var(--font-display), system-ui; text-transform: uppercase; cursor: pointer; }
+.bb-buy:disabled { filter: grayscale(0.7); opacity: 0.6; cursor: default; }
+/* how many to sell */
+.bb-qty { display: inline-flex; align-items: center; border: 1.5px solid #6b4a24; border-radius: 8px; overflow: hidden; background: rgba(255, 246, 220, 0.7); flex: none; }
+.bb-qty button { width: 24px; height: 26px; padding: 0; border: 0; background: none; color: #3a2410; font-weight: 900; font-size: 15px; cursor: pointer; }
+.bb-qty button:disabled { opacity: 0.35; }
+.bb-qty .bb-qty-n { width: auto; min-width: 26px; padding: 0 3px; font-size: 13px; border-left: 1px solid rgba(107, 74, 36, 0.4); border-right: 1px solid rgba(107, 74, 36, 0.4); }
 
 /* ── «Крафт» (screens/craft.tsx): the stash fixed on top (crumpled paper, blueprint cells), the filters, the cards (press, hold, drag), the scheme ── */
 .cf-stash { position: sticky; z-index: 6; top: calc(var(--hud-h) + var(--safe-t) + 2px); display: flex; flex-direction: column; gap: 6px; padding: 10px 12px 9px; border-radius: 6px;
