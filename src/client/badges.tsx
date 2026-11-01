@@ -306,7 +306,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
  * дело». «Ништяк!» sounds when a batch starts. The ones waiting at the start are not announced.
  */
 const REVEAL_MS = 280;
-const LIFE_MS = 10_000;
+const LIFE_MS = 5_000;
 export function AchToast() {
   const { state } = useGame();
   const router = useRouter();
