@@ -6,6 +6,7 @@ import { Icon } from "../art/icons.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { clock } from "../format.ts";
 import { haptic } from "../telegram.ts";
+import { sfx } from "../sound.ts";
 import { itemById } from "../../content/items.ts";
 import type { Currency } from "../../content/currencies.ts";
 import type { Reward } from "../../content/rewards.ts";
@@ -39,6 +40,7 @@ export function DailyWindow({ onClose }: { onClose: () => void }) {
     const r = await act<{ day: number; reward: Granted; bonus: Granted | null }>("daily_claim");
     if (r) {
       haptic.ok();
+      sfx("nishtyak"); // «Ништяк!» for the daily login gift
       setGot(r.reward);
       setBonus(r.bonus);
     }
