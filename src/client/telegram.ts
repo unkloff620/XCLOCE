@@ -9,7 +9,10 @@ interface TgWebApp {
   disableVerticalSwipes?(): void;
   /** Bot API 8.0+: the Mini App over the whole screen, Telegram's own bar hidden (its buttons float on top) */
   requestFullscreen?(): void;
+  exitFullscreen?(): void;
   isFullscreen?: boolean;
+  onEvent?(e: string, f: () => void): void;
+  offEvent?(e: string, f: () => void): void;
   isVersionAtLeast?(v: string): boolean;
   platform?: string;
   setHeaderColor?(c: string): void;
@@ -47,6 +50,36 @@ export function initTelegram() {
   } catch {
     /* older clients */
   }
+}
+
+/**
+ * «Развернуть» on a computer (Telegram Desktop / macOS / web, or a plain browser): the game over the whole screen —
+ * the same tall column as on a phone. On a phone the game is always full screen, so there is no button.
+ */
+export function canFullscreen(): boolean {
+  const w = tg();
+  if (w) return w.platform !== "ios" && w.platform !== "android" && !!w.isVersionAtLeast?.("8.0") && !!w.requestFullscreen;
+  return typeof document !== "undefined" && !!document.documentElement.requestFullscreen && !matchMedia("(pointer: coarse)").matches;
+}
+export function isFullscreen(): boolean {
+  const w = tg();
+  if (w) return !!w.isFullscreen;
+  return typeof document !== "undefined" && !!document.fullscreenElement;
+}
+export function toggleFullscreen() {
+  const w = tg();
+  try {
+    if (w) { if (w.isFullscreen) w.exitFullscreen?.(); else w.requestFullscreen?.(); return; }
+    if (document.fullscreenElement) void document.exitFullscreen(); else void document.documentElement.requestFullscreen();
+  } catch { /* not allowed here */ }
+}
+/** calls `f` when the game goes in or out of full screen; returns the unsubscribe */
+export function onFullscreenChange(f: () => void): () => void {
+  const w = tg();
+  if (w?.onEvent) { w.onEvent("fullscreenChanged", f); w.onEvent("fullscreenFailed", f); return () => { w.offEvent?.("fullscreenChanged", f); w.offEvent?.("fullscreenFailed", f); }; }
+  if (typeof document === "undefined") return () => {};
+  document.addEventListener("fullscreenchange", f);
+  return () => document.removeEventListener("fullscreenchange", f);
 }
 
 export const haptic = {

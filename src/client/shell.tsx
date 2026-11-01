@@ -11,7 +11,7 @@ import { clock, full, moneyShort } from "./format.ts";
 import { CURRENCIES } from "../content/currencies.ts";
 import { TIPS, resourceLine } from "../content/loading.ts";
 import { isOutdated, loginWidget, reloadFresh } from "./api.ts";
-import { telegramBack } from "./telegram.ts";
+import { canFullscreen, isFullscreen, onFullscreenChange, telegramBack, toggleFullscreen } from "./telegram.ts";
 import { ResultWindow } from "./screens/result.tsx";
 import { LevelUpOverlay } from "./levelup.tsx";
 import { GameInvites } from "./game-invites.tsx";
@@ -66,8 +66,31 @@ function SoundToggles() {
           {!music && <path d="M3 3l18 18" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />}
         </svg>
       </button>
+      <FullscreenButton />
       <EventButton />
     </div>
+  );
+}
+
+/** «Развернуть» (on a computer only): the game over the whole screen, as on a phone; again — back to the window */
+function FullscreenButton() {
+  const [can, setCan] = useState(false);
+  const [full, setFull] = useState(false);
+  useEffect(() => {
+    setCan(canFullscreen());
+    setFull(isFullscreen());
+    return onFullscreenChange(() => setFull(isFullscreen()));
+  }, []);
+  if (!can) return null;
+  return (
+    <button type="button" className={`hud-tog ${full ? "" : "off"}`} aria-pressed={full} aria-label={full ? "Свернуть в окно" : "Развернуть на весь экран"} title={full ? "Свернуть" : "Развернуть"}
+      onClick={() => { toggleFullscreen(); setTimeout(() => setFull(isFullscreen()), 400); }}>
+      <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+        {full
+          ? <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" />
+          : <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />}
+      </svg>
+    </button>
   );
 }
 
