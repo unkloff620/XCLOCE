@@ -1092,7 +1092,7 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
       {/* my upgraded things (★): sold here for their price, a weapon taken into the fight, a drink drunk */}
       {ups.length > 0 && (
         <div className="ug-mine">
-          <b className="ug-mine-h">Мои улучшенные ★</b>
+          <b className="ug-mine-h">Мои улучшенные ★ <span className="num">{ups.length}</span></b>
           {ups.map((u) => {
             const d = itemById(u.itemId);
             if (!d) return null;

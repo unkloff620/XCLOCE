@@ -4431,7 +4431,7 @@ body { background-attachment: fixed; }
 .bb-head .display { font-size: 18px; }
 .bb-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-top: 1px solid rgba(255, 255, 255, 0.08); }
 /* my upgraded things (★) under the upgrader */
-.ug-mine { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; padding: 10px; border-radius: 14px; background: rgba(20, 14, 8, 0.6); border: 2px solid var(--line); }
+.ug-mine { flex: none; max-height: 128px; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 6px; margin-top: 10px; padding: 10px; border-radius: 14px; background: rgba(20, 14, 8, 0.6); border: 2px solid var(--line); }
 .ug-mine-h { font: 900 14px/1.2 var(--font-display), system-ui; color: #ffd54a; }
 .ug-mine-row { display: flex; align-items: center; gap: 6px; color: #fff3e3; }
 /* «Инвентарь»: for now a «Скоро» page */
@@ -4442,3 +4442,4 @@ body { background-attachment: fixed; }
 .acx-ink.thing { top: 62%; }
 .acx-ink-word { position: absolute; left: 50%; top: -2px; transform: translate(-50%, -50%); padding: 0 4px; border-radius: 4px; background: #15110c; font-family: var(--font-display), system-ui; font-weight: 800; font-size: 8px; line-height: 1.3; font-style: normal; color: #ffd54a; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
 .acx-ink-empty { font-size: 9px; }
+.ug-mine-h { position: sticky; top: -10px; z-index: 1; margin: -10px -10px 0; padding: 8px 10px 4px; background: rgba(20, 14, 8, 0.96); }
