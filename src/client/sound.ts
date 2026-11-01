@@ -27,6 +27,8 @@ export type Sfx = "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" |
   | "thingdrop"
   /* the coin at half the volume: the tiles coming out of the case one by one */
   | "coinsoft"
+  /* a win: one of the player's victory recordings at random (victory-1…5.mp3 and big-win.mp3) — the upgrader, the games, a boss, a brawl */
+  | "victory"
   /* a fist fight with a player («Наехать»): a voice as it starts (one of two at random), another one when we lose */
   | "raid" | "brawllose"
   /* a new level of the player: one of two recordings of the player's at random (public/assets/sound/levelup-voice-1/2.mp3) */
@@ -186,6 +188,11 @@ const SAMPLE_URLS = {
   fail: "/assets/sound/fail.mp3",
   fail2: "/assets/sound/fail-2.mp3",
   bigwin: "/assets/sound/big-win.mp3",
+  victory1: "/assets/sound/victory-1.mp3",
+  victory2: "/assets/sound/victory-2.mp3",
+  victory3: "/assets/sound/victory-3.mp3",
+  victory4: "/assets/sound/victory-4.mp3",
+  victory5: "/assets/sound/victory-5.mp3",
   raid1: "/assets/sound/raid-voice-1.mp3",
   raid2: "/assets/sound/raid-voice-2.mp3",
   brawllose: "/assets/sound/brawl-lose.mp3",
@@ -469,6 +476,12 @@ export function sfx(name: Sfx, power = 0.5) {
       if (sample(a, Math.random() < 0.5 ? "casedrop1" : "casedrop2", t, 1)) break;
       tone(a, 784, t, 0.3, { type: "triangle", vol: 0.12 });
       break;
+    case "victory": {
+      const pool = ["victory1", "victory2", "victory3", "victory4", "victory5", "bigwin"];
+      if (sample(a, pool[Math.floor(Math.random() * pool.length)], t, 1)) break;
+      [523, 659, 784, 1047].forEach((f, i) => tone(a, f, t + i * 0.09, 0.25, { type: "square", vol: 0.08 }));
+      break;
+    }
     case "bigwin":
       if (sample(a, "bigwin", t, 1)) break;
       [523, 659, 784, 1047].forEach((f, i) => tone(a, f, t + i * 0.09, 0.25, { type: "square", vol: 0.08 }));

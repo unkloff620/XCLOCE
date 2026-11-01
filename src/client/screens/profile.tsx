@@ -204,7 +204,7 @@ function Brawl({ res, name, onClose }: { res: { won: boolean; mine: number; thei
     return () => clearTimeout(t);
   }, []);
   useEffect(() => {
-    if (shown && res) { if (res.won) { haptic.big(); sfx("win"); } else { haptic.err(); sfx("brawllose"); } }
+    if (shown && res) { if (res.won) { haptic.big(); sfx("victory"); } else { haptic.err(); sfx("brawllose"); } }
   }, [shown, res]);
   if (!shown || !res) {
     return (

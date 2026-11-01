@@ -304,7 +304,7 @@ function DuelResult({ d, onClose }: { d: DuelView; onClose: () => void }) {
   const rivalTotal = d.rivalPoints ?? 0;
   useEffect(() => {
     if (!done) return;
-    if (d.won === true) { haptic.big(); sfx("reward"); } else if (d.won === false) { haptic.err(); sfx("error"); }
+    if (d.won === true) { haptic.big(); sfx("victory"); } else if (d.won === false) { haptic.err(); sfx("error"); }
   }, [done, d.won]);
   return (
     <Modal title="Дуэль в зонк" onClose={onClose} maxWidth={420}>
@@ -457,7 +457,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
     if (r.ask && !g?.ask) { haptic.ok(); sfx("reward"); }
     const done = () => {
       if (r.status === "done" && r.duel) { setShowDuel(r.duel); return; }
-      if (r.status === "done") { if (r.result?.won) { haptic.ok(); sfx("reward"); } else { haptic.err(); sfx("error"); } }
+      if (r.status === "done") { if (r.result?.won) { haptic.ok(); sfx("victory"); } else { haptic.err(); sfx("error"); } }
     };
     const zonk = r.last?.zonk && r.last.roll && (r.scores?.length ?? 0) > scoresBefore && type !== "zonk_give_up" ? r.last : null;
     if (zonk) {
@@ -785,7 +785,7 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
         for (let k = 0; k < 5; k++) setTimeout(() => sfx("card"), flipAt(k));
       }
       if (type === "poker_swap") setTimeout(() => sfx("card"), flipAt(0));
-      if (r.phase === "done") { if (r.reward) { haptic.ok(); sfx("reward"); } else haptic.err(); }
+      if (r.phase === "done") { if (r.reward) { haptic.ok(); sfx("victory"); } else haptic.err(); }
     }
   };
   const hand: PokerHand | null = open && open.phase === "done" ? open.hand : null;
@@ -992,7 +992,7 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
       setWon(r.won);
       if (r.won) {
         haptic.big();
-        sfx("levelup");
+        sfx("victory");
         // the prize becomes the next stake: one more tap to go higher
         if (r.uid) setStake({ kind: "up", uid: r.uid });
         setSnap(null);

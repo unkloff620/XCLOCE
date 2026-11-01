@@ -98,7 +98,7 @@ export function SlotMachine() {
             setResult(spinRes);
             setState(st); // the balance changes only when the last reel stops
             // three of a kind (the jackpot too): the big win sound; a pair: a coin
-            if (spinRes.kind === "jackpot" || spinRes.kind === "triple") { haptic.big(); sfx("bigwin"); }
+            if (spinRes.kind === "jackpot" || spinRes.kind === "triple") { haptic.big(); sfx("victory"); }
             else if (spinRes.kind !== "miss") { haptic.ok(); sfx("coin"); }
             else sfx("failgame");
             if (spinRes.levelUps?.length && spinRes.kind !== "jackpot") timers.current.push(setTimeout(() => sfx("levelup"), 250));

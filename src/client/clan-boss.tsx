@@ -50,7 +50,7 @@ export function ClanBossPanel() {
       (x) => (x.killed ? "Босс повержен! Призы — в окне наград" : `−${full(x.damage)}${x.crit ? " · КРИТ" : ""}`));
     if (r) {
       setOuch((k) => k + 1);
-      if (r.killed) { haptic.big(); sfx("win"); }
+      if (r.killed) { haptic.big(); sfx("victory"); }
     }
   };
   const mine = cb.top.find((t) => t.id === state.player.id);

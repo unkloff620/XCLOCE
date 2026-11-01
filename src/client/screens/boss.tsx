@@ -314,7 +314,7 @@ export function BossScreen({ id }: { id: string }) {
       setTalentDmg(r.result.talentDamage);
       if (r.result.status === "won") {
         haptic.big();
-        sfx("win");
+        sfx("victory");
       }
       if (r.result.talentsGained > 0) {
         haptic.ok();
