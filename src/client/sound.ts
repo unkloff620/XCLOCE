@@ -23,6 +23,8 @@ export type Sfx = "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" |
   | "bigwin"
   /* a tattoo or a thing out of the case: one of two recordings at random (public/assets/sound/case-drop-1/2.mp3) */
   | "casedrop"
+  /* a thing out of the case (a cigarette, a toothpick): one of two recordings at random (thing-drop-1/2.mp3) */
+  | "thingdrop"
   /* a fist fight with a player («Наехать»): a voice as it starts (one of two at random), another one when we lose */
   | "raid" | "brawllose"
   /* a new level of the player: one of two recordings of the player's at random (public/assets/sound/levelup-voice-1/2.mp3) */
@@ -185,6 +187,8 @@ const SAMPLE_URLS = {
   raid1: "/assets/sound/raid-voice-1.mp3",
   raid2: "/assets/sound/raid-voice-2.mp3",
   brawllose: "/assets/sound/brawl-lose.mp3",
+  thingdrop1: "/assets/sound/thing-drop-1.mp3",
+  thingdrop2: "/assets/sound/thing-drop-2.mp3",
   casedrop1: "/assets/sound/case-drop-1.mp3",
   casedrop2: "/assets/sound/case-drop-2.mp3",
   levelupbg: "/assets/sound/levelup-bg.mp3",
@@ -449,6 +453,10 @@ export function sfx(name: Sfx, power = 0.5) {
     case "brawllose":
       if (sample(a, "brawllose", t, 1)) break;
       [311, 294, 277].forEach((f, i) => tone(a, f, t + i * 0.2, 0.2, { type: "sawtooth", vol: 0.05 }));
+      break;
+    case "thingdrop":
+      if (sample(a, Math.random() < 0.5 ? "thingdrop1" : "thingdrop2", t, 1)) break;
+      tone(a, 659, t, 0.3, { type: "triangle", vol: 0.12 });
       break;
     case "casedrop":
       if (sample(a, Math.random() < 0.5 ? "casedrop1" : "casedrop2", t, 1)) break;

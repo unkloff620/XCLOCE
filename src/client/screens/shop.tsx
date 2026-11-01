@@ -187,6 +187,24 @@ function Cards({ offers, batch }: { offers: Offer[]; batch: number }) {
   );
 }
 
+/** a frame in the open case: a tattoo («Наколка») or a thing («Вещь»), or «Пусто» */
+function LootFrame({ kind, items, delay, open }: { kind: "ink" | "thing"; items: { id: string; qty: number }[]; delay: number; open: boolean }) {
+  const word = kind === "ink" ? "Наколка" : "Вещь";
+  return (
+    <div className={`acx-ink ${kind}`} aria-label={items.length ? `${word}: ${itemById(items[0].id)?.name ?? ""}` : `${word}: пусто`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className="acx-ink-frame" src="/assets/ui/ink-frame.webp" alt="" draggable={false} />
+      <i className="acx-ink-word">{word}</i>
+      {open && (items.length ? (
+        <span className="acx-ink-got" style={{ animationDelay: `${delay}ms` }} title={itemById(items[0].id)?.name}>
+          <ItemArt id={items[0].id} size={38} />
+          {items.length > 1 && <b className="num">+{items.length - 1}</b>}
+        </span>
+      ) : <span className="acx-ink-empty">Пусто</span>)}
+    </div>
+  );
+}
+
 /** a reward split into its parts, one tile each: currencies, authority, energy, every thing */
 const TATTOO_ID_SET = new Set(TATTOO_IDS);
 function lootParts(r: Granted): Granted[] {
@@ -211,18 +229,21 @@ function AchBoxWindow({ onClose }: { onClose: () => void }) {
   const [got, setGot] = useState<Granted | null>(null);
   const [gotN, setGotN] = useState(1);
   const b = state?.achBox ?? { points: 0, opened: 0, ready: 0, progress: 0, cost: ACH_BOX_COST };
-  // the tattoos go to the frame in the corner of the case, everything else comes out as tiles
+  // a tattoo and a thing (a cigarette, a toothpick) go to their frames in the corner of the case, the rest comes out as tiles
+  const isThing = (id: string) => (MOUTH_ITEMS as readonly string[]).includes(id);
   const inkGot = useMemo(() => (got?.items ?? []).filter((it) => TATTOO_ID_SET.has(it.id)), [got]);
-  const parts = useMemo(() => (got ? lootParts({ ...got, items: (got.items ?? []).filter((it) => !TATTOO_ID_SET.has(it.id)) }) : []), [got]);
+  const thingGot = useMemo(() => (got?.items ?? []).filter((it) => isThing(it.id)), [got]); // eslint-disable-line react-hooks/exhaustive-deps
+  const parts = useMemo(() => (got ? lootParts({ ...got, items: (got.items ?? []).filter((it) => !TATTOO_ID_SET.has(it.id) && !isThing(it.id)) }) : []), [got]); // eslint-disable-line react-hooks/exhaustive-deps
   const inkDelay = 450 + parts.length * LOOT_STEP;
+  const thingDelay = inkDelay + (inkGot.length ? 900 : 0);
   useEffect(() => {
-    if (phase !== "open" || !parts.length) return;
+    if (phase !== "open") return;
     const t = parts.map((_, i) => setTimeout(() => { haptic.tap(); sfx("coin"); }, 450 + i * LOOT_STEP));
-    // a tattoo or a thing (a cigarette, a toothpick) came out: its own voice once all the tiles are out
-    const thing = (got?.items ?? []).some((it) => (MOUTH_ITEMS as readonly string[]).includes(it.id));
-    if (inkGot.length || thing) t.push(setTimeout(() => { haptic.big(); sfx("casedrop"); }, inkDelay));
+    // each frame that gets something: its own voice as it lights up
+    if (inkGot.length) t.push(setTimeout(() => { haptic.big(); sfx("casedrop"); }, inkDelay));
+    if (thingGot.length) t.push(setTimeout(() => { haptic.big(); sfx("thingdrop"); }, thingDelay));
     return () => t.forEach(clearTimeout);
-  }, [phase, parts, inkGot, inkDelay, got]);
+  }, [phase, parts, inkGot, thingGot, inkDelay, thingDelay]);
   const open = async (all = false) => {
     if (phase === "opening" || b.ready < 1) return;
     haptic.heavy();
@@ -252,18 +273,9 @@ function AchBoxWindow({ onClose }: { onClose: () => void }) {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="acx-open" src="/assets/shop/v2/case-front-open.webp" alt="" draggable={false} />
         <span className="acx-burst" />
-        {/* the tattoo frame, top left of the tray: «Пусто», or the tattoo that dropped (after the other things) */}
-        <div className="acx-ink" aria-label={inkGot.length ? `Наколка: ${itemById(inkGot[0].id)?.name ?? ""}` : "Наколки нет"}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="acx-ink-frame" src="/assets/ui/ink-frame.webp" alt="" draggable={false} />
-          {phase === "open" && (inkGot.length ? (
-            <span className="acx-ink-got" style={{ animationDelay: `${inkDelay}ms` }} title={itemById(inkGot[0].id)?.name}>
-              <ItemArt id={inkGot[0].id} size={44} />
-              {inkGot.length > 1 && <b className="num">+{inkGot.length - 1}</b>}
-            </span>
-          ) : <span className="acx-ink-empty">Пусто</span>)}
-          {phase !== "open" && <span className="acx-ink-empty dim">наколка</span>}
-        </div>
+        {/* two frames, top left of the tray: the tattoo and the thing — «Пусто», or what dropped (after the other things) */}
+        <LootFrame kind="ink" items={inkGot} delay={inkDelay} open={phase === "open"} />
+        <LootFrame kind="thing" items={thingGot} delay={thingDelay} open={phase === "open"} />
         <div className="acx-loot">
           {phase === "open" && parts.map((p, i) => (
             <span key={i} className="acx-item" style={{ animationDelay: `${450 + i * LOOT_STEP}ms` }}><RewardChips r={p} size={20} /></span>
