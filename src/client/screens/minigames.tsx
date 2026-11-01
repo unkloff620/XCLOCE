@@ -928,8 +928,12 @@ type Stake = { kind: "plain"; id: string } | { kind: "up"; uid: number };
 
 export function UpgraderWindow({ onClose }: { onClose: () => void }) {
   const { state, act, busy } = useGame();
-  const inv = useMemo(() => new Map((state?.inventory ?? []).map((x) => [x.id, x.qty])), [state?.inventory]);
-  const ups = state?.upgraded ?? [];
+  // while the needle runs the shelf and «Мои улучшенные» stay as they were before the spin: the server has answered
+  // already, but the result must not show (the stake gone, the prize there) before the needle stops
+  const [frozen, setFrozen] = useState<{ inventory: NonNullable<typeof state>["inventory"]; upgraded: NonNullable<typeof state>["upgraded"] } | null>(null);
+  const invList = frozen?.inventory ?? state?.inventory;
+  const inv = useMemo(() => new Map((invList ?? []).map((x) => [x.id, x.qty])), [invList]);
+  const ups = (frozen ? frozen.upgraded : state?.upgraded) ?? [];
   const plain = Object.keys(ITEM_VALUES).filter((id) => (inv.get(id) ?? 0) > 0).sort((a, b) => ITEM_VALUES[a] - ITEM_VALUES[b]);
   const [stake, setStake] = useState<Stake | null>(null);
   const [qty, setQty] = useState(1);
@@ -969,6 +973,7 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
     if (!cur || spinning) return;
     setWon(null);
     setSpinning(true);
+    if (state) setFrozen({ inventory: state.inventory, upgraded: state.upgraded });
     setSnap({ id: curId, up: !!up, burn: false });
     haptic.tap();
     sfx("tap");
@@ -976,12 +981,14 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
     const r = await act<{ won: boolean; roll: number; uid: number | null }>("upgrade", body);
     if (!r) {
       setSpinning(false);
+      setFrozen(null);
       setSnap(null);
       return;
     }
     setRoll(r.roll);
     setTimeout(() => {
       setSpinning(false);
+      setFrozen(null);
       setWon(r.won);
       if (r.won) {
         haptic.big();
