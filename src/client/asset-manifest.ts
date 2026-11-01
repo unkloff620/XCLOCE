@@ -1524,6 +1524,7 @@ export const ASSET_FILES: string[] = [
  "/assets/talents/mouse-chance.webp",
  "/assets/talents/mouse-crit.webp",
  "/assets/talents/mouse-dmg.webp",
+ "/assets/talents/panel-fire.webp",
  "/assets/talents/panel-metal.webp",
  "/assets/talents/panel-paper.webp",
  "/assets/talents/red-candle-chance.webp",

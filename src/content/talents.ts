@@ -121,7 +121,7 @@ const ALL_STOPS: TalentStop[] = [
  * (keyboard, GPU, Rug Pull Gun), then a little of everything: biceps, energy, the clock, the fist, the candle, the mouse.
  */
 export interface TalentCell { key: string; col: number; row: number }
-export interface TalentBlock { id: string; title: string; hero?: string; skin: "paper" | "metal" | "none"; cells: TalentCell[] }
+export interface TalentBlock { id: string; title: string; hero?: string; skin: "paper" | "metal" | "none" | "fire"; cells: TalentCell[] }
 const MAIN = ["keyboard", "gpu", "rug-pull-gun"];
 const MINOR = ["fist", "red-candle", "mouse"];
 const columns = (ws: string[], top: string, bottom: string): TalentCell[] =>
@@ -141,7 +141,7 @@ export const TALENT_BLOCKS: TalentBlock[] = [
   { id: "finish", title: "Добивание", skin: "none", cells: rows(of(MINOR, "n3"), of(MINOR, "c2")) },
   { id: "last", title: "Последний рубеж", hero: "hero-doge", skin: "paper", cells: loop(["_clock:s4", ...of(["_energy", "_clock"], "s3"), ...of(MINOR, "c3")]) },
   { id: "master", title: "Мастер крита", hero: "hero-chad-gold", skin: "metal", cells: loop(of(["fist", "mouse", "red-candle", "keyboard", "gpu", "rug-pull-gun"], "n4")) },
-  { id: "rage", title: "Ярость", hero: "hero-berserk", skin: "paper", cells: loop(of(["keyboard", "gpu", "rug-pull-gun", "mouse", "red-candle", "fist"], "n5")) },
+  { id: "rage", title: "Ярость", hero: "hero-berserk", skin: "fire", cells: loop(of(["keyboard", "gpu", "rug-pull-gun", "mouse", "red-candle", "fist"], "n5")) },
 ];
 const BY_KEY = new Map(ALL_STOPS.map((x) => [x.key, x]));
 export const TALENT_PATH: TalentStop[] = TALENT_BLOCKS.flatMap((b) => b.cells.map((c) => BY_KEY.get(c.key)!));

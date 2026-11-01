@@ -16,7 +16,8 @@ for f in sorted(glob.glob(os.path.join(HERE, "source", "*.png"))):
         im = im.resize((round(im.width * k), 640), Image.LANCZOS)
         im.save(os.path.join(OUT, name + ".webp"), quality=86, method=6)
     elif name.startswith("panel-"):
-        im = im.convert("RGB")
+        # the fire panel has a shaped (transparent) outline; the paper and metal ones are plain
+        im = im.convert("RGBA" if im.mode == "RGBA" else "RGB")
         im.resize((900, round(900 * im.height / im.width)), Image.LANCZOS).save(os.path.join(OUT, name + ".webp"), quality=74, method=6)
     else:
         im.convert("RGB").resize((192, 192), Image.LANCZOS).save(os.path.join(OUT, name + ".webp"), quality=84, method=6)
