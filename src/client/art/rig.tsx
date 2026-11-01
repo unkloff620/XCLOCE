@@ -19,6 +19,7 @@ import { PLACES } from "./places-data.ts";
 import { SEAT } from "../../content/home-scene.ts";
 import { CHAIR_FIT } from "./desk-data.ts";
 import { JAW } from "./jaw-data.ts";
+import { MOUTH_HELD } from "./mouth-held-data.ts";
 import { DEFAULT_LOOK, equipmentById, type Look } from "../../content/home.ts";
 
 const CHAIRS = equipmentById("chair")?.pieces ?? [];
@@ -272,39 +273,37 @@ function Wear({ slot, hat }: { slot: string; hat?: "under" | "over" }) {
 }
 
 /**
- * Something in the mouth (slot «Рот»: a cigarette, a toothpick): the teeth are clenched on it (jaw.webp, tools/rig/build-mouth.py),
- * and now and then the lower jaw drops a little (the chin is pulled down with it) while the thing rolls to the other corner.
- * The jaw is a sprite of JAW.frames frames shown one at a time (.rig-jaw-f); the thing and its smoke flip around the mouth (.rig-chew).
+ * Something in the mouth (slot «Рот»: a cigarette, a toothpick): the teeth are clenched on it (jaw.webp, tools/rig/build-mouth.py).
+ * Now and then the lower jaw drops a little (the chin is pulled down with it — JAW.frames frames shown one at a time, .rig-jaw-f),
+ * and the thing is turned quickly from one corner of the mouth to the other: through the front of the teeth, pointing at us
+ * (shorter there), then on into the other corner; the jaw closes. The picture (mouth-<id>.webp, build-held-mouth.py) lies level
+ * with the end in the mouth at 0,0 — .rig-chew moves and turns it around that end; the smoke (.rig-smoke-at) follows the lit tip.
  */
 function Mouth() {
   const id = wornIn(useContext(WornCtx), "MOUTH");
   const { skin } = useContext(LookCtx);
   if (!id) return null;
   const href = `${skin !== SKIN_ORIGINAL ? `/assets/hero/skin-${skin}` : "/assets/hero"}/jaw.webp?v=${ART_VER.heroPart}`;
+  const held = MOUTH_HELD[id];
   return (
     <>
       <svg x={JAW.x} y={JAW.y} width={JAW.w} height={JAW.h} viewBox={`0 0 ${JAW.w} ${JAW.h}`} overflow="hidden" pointerEvents="none">
         <image className="rig-jaw-f" href={href} x={0} y={0} width={JAW.w} height={JAW.h * JAW.frames} preserveAspectRatio="none"
           style={{ ["--fh" as string]: `${JAW.h}px` }} />
       </svg>
-      <g className="rig-chew" style={{ transformOrigin: `${JAW.mouth[0]}px ${JAW.mouth[1]}px` }}>
-        <Wear slot="MOUTH" />
-        <Smoke />
-      </g>
+      {held ? (
+        <g className="rig-chew" pointerEvents="none">
+          <image href={`/assets/hero/mouth-${id}.webp?v=${ART_VER.wear}`} x={0} y={-held.thick / 2} width={held.len} height={held.thick} preserveAspectRatio="none" />
+        </g>
+      ) : <Wear slot="MOUTH" />}
+      {id === "cigarette" && (
+        <g className="rig-smoke-at" pointerEvents="none">
+          <g className="rig-smoke">
+            {[0, 1, 2].map((i) => <circle key={i} cx={0} cy={0} r={6} style={{ animationDelay: `${i * 0.9}s` }} />)}
+          </g>
+        </g>
+      )}
     </>
-  );
-}
-
-/** a lit cigarette in the mouth (slot «Рот»): smoke puffs rise from its tip */
-const SMOKE_AT: Record<string, [number, number]> = { cigarette: [610, 285] };
-function Smoke() {
-  const id = wornIn(useContext(WornCtx), "MOUTH");
-  const at = id ? SMOKE_AT[id] : null;
-  if (!at) return null;
-  return (
-    <g className="rig-smoke" pointerEvents="none">
-      {[0, 1, 2].map((i) => <circle key={i} cx={at[0]} cy={at[1]} r={7} style={{ animationDelay: `${i * 0.9}s` }} />)}
-    </g>
   );
 }
 

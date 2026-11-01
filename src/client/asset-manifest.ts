@@ -189,6 +189,8 @@ export const ASSET_FILES: string[] = [
  "/assets/hero/head.webp",
  "/assets/hero/held/bottle-komandate.webp",
  "/assets/hero/jaw.webp",
+ "/assets/hero/mouth-cigarette.webp",
+ "/assets/hero/mouth-toothpick.webp",
  "/assets/hero/pupils-1.webp",
  "/assets/hero/pupils-2.webp",
  "/assets/hero/pupils-3.webp",

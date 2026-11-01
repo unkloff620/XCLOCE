@@ -22,7 +22,7 @@ SKIN_ORIGINAL = 1
 # the layers' canvas → rig: the head (public/assets/hero/head.webp at RIG.head) fitted on ref-full.png
 K = 581 / 254
 RIG_X0, RIG_Y0, REF_X0, REF_Y0 = 376, 43, 19, 7
-FRAMES, DROP = 4, 13          # frames of the jaw opening; how far the jaw drops (canvas px)
+FRAMES, DROP = 8, 13          # frames of the jaw opening; how far the jaw drops (canvas px)
 BOX = (180, 434, 434, 650)    # the part of the canvas the frames cover (x0, y0, x1, y1)
 PX = 2                        # output pixels per rig unit
 
