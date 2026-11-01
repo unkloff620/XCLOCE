@@ -23,7 +23,7 @@ export type Sfx = "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" |
   | "casedrop"
   /* a new level of the player: one of two recordings of the player's at random (public/assets/sound/levelup-voice-1/2.mp3) */
   | "lvlvoice"
-  /* a new achievement: «Ништяк!» (the same voice as for the biceps, public/assets/sound/nishtyak-4.mp3) */
+  /* a new achievement: one of two recordings of the player's at random (public/assets/sound/ach-voice-1/2.mp3) */
   | "wow"
   /* «Личное дело»: a sheet of paper turned over */
   | "page";
@@ -168,7 +168,8 @@ const SAMPLE_URLS = {
   bars: "/assets/sound/bars.mp3",
   // one voice for both: «Ништяк!» in a hoarse prison voice (a new achievement and a pumped biceps)
   nishtyak: "/assets/sound/nishtyak-4.mp3",
-  wow: "/assets/sound/nishtyak-4.mp3",
+  wow1: "/assets/sound/ach-voice-1.mp3",
+  wow2: "/assets/sound/ach-voice-2.mp3",
   // «Ооо, нычка!»: two recordings of the player's, one of them at random each time
   nychka1: "/assets/sound/nychka-1.mp3",
   nychka2: "/assets/sound/nychka-2.mp3",
@@ -274,7 +275,7 @@ export function sfx(name: Sfx, power = 0.5) {
   const t = a.currentTime + 0.005;
   switch (name) {
     case "wow":
-      if (sample(a, "wow", t, 1)) break;
+      if (sample(a, Math.random() < 0.5 ? "wow1" : "wow2", t, 1)) break;
       tone(a, 140, t, 0.2, { type: "sawtooth", vol: 0.18, slide: 1.2 });
       tone(a, 170, t + 0.22, 0.4, { type: "sawtooth", vol: 0.18, slide: 0.7 });
       break;
