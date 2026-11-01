@@ -21,6 +21,8 @@ export type Sfx = "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" |
   | "bigwin"
   /* a tattoo or a thing out of the case: one of two recordings at random (public/assets/sound/case-drop-1/2.mp3) */
   | "casedrop"
+  /* a fist fight with a player («Наехать»): a voice as it starts (one of two at random), another one when we lose */
+  | "raid" | "brawllose"
   /* a new level of the player: one of two recordings of the player's at random (public/assets/sound/levelup-voice-1/2.mp3) */
   | "lvlvoice"
   /* a new achievement: one of two recordings of the player's at random (public/assets/sound/ach-voice-1/2.mp3) */
@@ -175,6 +177,9 @@ const SAMPLE_URLS = {
   nychka2: "/assets/sound/nychka-2.mp3",
   fail: "/assets/sound/fail.mp3",
   bigwin: "/assets/sound/big-win.mp3",
+  raid1: "/assets/sound/raid-voice-1.mp3",
+  raid2: "/assets/sound/raid-voice-2.mp3",
+  brawllose: "/assets/sound/brawl-lose.mp3",
   casedrop1: "/assets/sound/case-drop-1.mp3",
   casedrop2: "/assets/sound/case-drop-2.mp3",
   lvlvoice1: "/assets/sound/levelup-voice-1.mp3",
@@ -427,6 +432,13 @@ export function sfx(name: Sfx, power = 0.5) {
       noise(a, t, 0.16, { freq: 700, vol: 0.7 });
       tone(a, 120, t, 0.18, { type: "sine", vol: 0.45, slide: 0.5 });
       noise(a, t + 0.06, 0.12, { freq: 2200, type: "bandpass", q: 2, vol: 0.18 });
+      break;
+    case "raid":
+      sample(a, Math.random() < 0.5 ? "raid1" : "raid2", t, 1);
+      break;
+    case "brawllose":
+      if (sample(a, "brawllose", t, 1)) break;
+      [311, 294, 277].forEach((f, i) => tone(a, f, t + i * 0.2, 0.2, { type: "sawtooth", vol: 0.05 }));
       break;
     case "casedrop":
       if (sample(a, Math.random() < 0.5 ? "casedrop1" : "casedrop2", t, 1)) break;

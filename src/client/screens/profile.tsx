@@ -204,7 +204,7 @@ function Brawl({ res, name, onClose }: { res: { won: boolean; mine: number; thei
     return () => clearTimeout(t);
   }, []);
   useEffect(() => {
-    if (shown && res) { if (res.won) { haptic.big(); sfx("win"); } else { haptic.err(); sfx("error"); } }
+    if (shown && res) { if (res.won) { haptic.big(); sfx("win"); } else { haptic.err(); sfx("brawllose"); } }
   }, [shown, res]);
   if (!shown || !res) {
     return (
@@ -529,6 +529,7 @@ export function ProfileScreen() {
   const fight = async () => {
     if (!so?.fight) { haptic.err(); toast("С ним ты сегодня уже махался — завтра", "err"); return; }
     haptic.tap();
+    sfx("raid");
     sfx("brawl");
     const key = Date.now();
     setBrawl({ key, res: null });
