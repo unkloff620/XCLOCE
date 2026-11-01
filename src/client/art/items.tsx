@@ -4,6 +4,7 @@ import { Icon } from "./icons.tsx";
 import { ART_VER } from "../preload.ts";
 import { STASH_IDS } from "../../content/stashes.ts";
 import { TATTOO_IDS } from "../../content/tattoos.ts";
+import { CRAFT_ALL } from "../../content/craft.ts";
 
 /** Items drawn by the artist (public/assets/items/<id>.webp, built by tools/items/build-items.py). */
 const RASTER_ITEMS = new Set([
@@ -13,6 +14,7 @@ const RASTER_ITEMS = new Set([
   "poker-chip", "energy-drink", "energy-pack", "energy-50", "energy-100", "energy-500", "lost-wallet", "bottle-cap", "flyer-passive", "spinner", "sticker-hodl", "statue-close", "trophy-sun", "santa-hat", "laser-eyes",
   ...STASH_IDS,
   ...TATTOO_IDS,
+  ...CRAFT_ALL.map((c) => c.id),
 ]);
 
 /** picture of an energy offer: +50 a crate, +100 a box, +500 a pile of cans (the energy icon for other amounts) */

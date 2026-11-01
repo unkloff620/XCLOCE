@@ -4594,3 +4594,45 @@ body { background-attachment: fixed; }
 .bb-title { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .bb-all { font-size: 12px; padding: 4px 10px; }
 .bb-sub { color: #4a3018; font-weight: 700; }
+
+/* ── «Крафт» (screens/craft.tsx): the stash of 12 cells, what it gives, the filters, the cards, the recipe ── */
+.cf-stash { display: flex; flex-direction: column; gap: 8px; padding: 10px; }
+.cf-h { font-size: 16px; }
+.cf-cells { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.cf-block { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 5px; border-radius: 10px; background: linear-gradient(#9a6a33, #6f4a22); border: 2.5px solid #3a2410; box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.45); }
+.cf-block + .cf-block { background: linear-gradient(#6fa53a, #4a7a22); border-color: #23400d; }
+.cf-cell { aspect-ratio: 1; padding: 0; display: grid; place-items: center; border-radius: 7px; border: 2px solid rgba(0, 0, 0, 0.45); background: rgba(30, 18, 8, 0.45); box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.55); cursor: default; }
+.cf-cell.full { cursor: pointer; background: radial-gradient(circle, rgba(255, 236, 190, 0.35), rgba(30, 18, 8, 0.35)); }
+.cf-cell.full:active { transform: translateY(1px); }
+.cf-cell svg { width: 86% !important; height: 86% !important; }
+.cf-total { display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; border-radius: 10px; background: rgba(255, 246, 220, 0.55); border: 2px solid rgba(58, 36, 16, 0.35); }
+.cf-power { align-self: flex-end; font-size: 13px; font-weight: 800; }
+.cf-sub { color: #5a3f24; font-weight: 700; }
+.cf-bonus { display: flex; flex-direction: column; gap: 2px; font-size: 12px; font-weight: 700; color: #2e1c08; }
+.cf-bonus > span { display: flex; align-items: center; gap: 5px; }
+.cf-bonus svg { flex: none; }
+.cf-ok { color: #1f9d55; font-size: 13px; }
+.cf-tabs { display: flex; gap: 5px; overflow-x: auto; scrollbar-width: none; }
+.cf-tab { flex: none; padding: 6px 12px; border-radius: 10px; border: 2.5px solid var(--line); background: linear-gradient(#f3d27a, #d7a43c); color: #2e1c00; font-weight: 900; font-size: 13px; box-shadow: 0 3px 0 var(--line); cursor: pointer; }
+.cf-tab.on { background: linear-gradient(#5a3a1a, #3a2410); color: #ffe6a8; }
+.cf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)); gap: 8px; }
+.cf-card { display: flex; flex-direction: column; gap: 5px; padding: 8px; border-radius: 12px; border: 2.5px solid #6b4a24; color: #24160a;
+  background: linear-gradient(170deg, #f8e3b4, #e9c47e); box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35); }
+.cf-card.none { filter: saturate(0.7); }
+.cf-card.none .cf-pic svg { opacity: 0.55; }
+.cf-card.r-rare { border-color: #2f6fb0; }
+.cf-card.r-epic { border-color: #8a3fc2; }
+.cf-card-top { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.cf-pic { position: relative; flex: none; width: 52px; height: 52px; display: grid; place-items: center; border-radius: 9px; background: rgba(90, 50, 20, 0.85); border: 2px solid #3a2410; }
+.cf-n { position: absolute; left: 2px; top: 1px; font-style: normal; font-size: 10px; font-weight: 900; color: #fff; text-shadow: 0 1px 0 #000, 0 0 3px #000; }
+.cf-btns { display: flex; gap: 5px; margin-top: auto; }
+.cf-btns .btn { flex: 1; padding-left: 4px; padding-right: 4px; }
+.cf-recipe { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.cf-parts { flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 6px; }
+.cf-part { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 5px 3px; border-radius: 10px; background: rgba(255, 246, 220, 0.6); border: 2px solid #b23a2a; text-align: center; min-width: 0; }
+.cf-part b { max-width: 100%; }
+.cf-part .num { color: #b23a2a; font-weight: 900; }
+.cf-part.ok { border-color: #1f9d55; }
+.cf-part.ok .num { color: #1f7a45; }
+.cf-arrow { font-size: 22px; color: #6b4a24; }
+.cf-result { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px; border-radius: 12px; border: 2.5px solid #d7a43c; background: radial-gradient(circle, #fff4c8, #f0d48a); text-align: center; max-width: 92px; }

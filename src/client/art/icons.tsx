@@ -36,9 +36,9 @@ export function Icon({ name, size = 28, className }: { name: IconName; size?: nu
 }
 
 /* ---------- bottom menu icons (the active tab glows in its colour) ---------- */
-export const NAV_GLOW: Record<string, string> = { home: "#ffcc33", bosses: "#ff4d6d", yard: "#3ddc84", shop: "#ff4d6d", inventory: "#3fd2ff", clans: "#ffb347" };
+export const NAV_GLOW: Record<string, string> = { home: "#ffcc33", bosses: "#ff4d6d", yard: "#3ddc84", shop: "#ff4d6d", inventory: "#3fd2ff", craft: "#3fd2ff", clans: "#ffb347" };
 /** Bottom-menu icons drawn by the artist (public/assets/nav, cut from the sheet by tools/items/build-nav.py). */
-const NAV_ART = new Set(["home", "bosses", "yard", "shop", "inventory", "clans"]);
+const NAV_ART = new Set(["home", "bosses", "yard", "shop", "inventory", "craft", "clans"]);
 
 export function NavIcon({ id, size = 34 }: { id: string; size?: number }) {
   if (NAV_ART.has(id)) {

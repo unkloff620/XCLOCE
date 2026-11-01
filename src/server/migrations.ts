@@ -1179,4 +1179,14 @@ WHERE p.id = s.player_id;
 DELETE FROM player_talents WHERE weapon_id = '_biceps' AND branch IN ('s2', 's3');
 UPDATE players p SET talent_biceps = 10 * COALESCE((SELECT LEAST(level, 100) FROM player_talents t WHERE t.player_id = p.id AND t.weapon_id = '_biceps' AND t.branch = 's1'), 0);`,
   },
+  {
+    // «Крафт»: the stash of 12 cells, one thing in a cell (content/craft.ts)
+    id: "v2-071-craft-boxes",
+    sql: `CREATE TABLE IF NOT EXISTS player_craft_box (
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  slot INT NOT NULL,
+  item_id TEXT NOT NULL,
+  PRIMARY KEY (player_id, slot)
+);`,
+  },
 ];

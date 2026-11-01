@@ -2,6 +2,7 @@ import { GameError, type Queryable } from "../db.ts";
 import { grantReward, ledger, takeMoney, type Ctx } from "../core.ts";
 import { EQUIPMENT, FIRST_STEPS_GIFT, pieceUnlockId, HELP_TOPICS, TROPHIES, baseBit, equipmentById, hasPiece, piecesCount, normalizeLook, roomById, roomUnlockId, roomsEnergyBonus, totalBonus, type HelpTopic, type Look } from "../../content/home.ts";
 import { bossById } from "../../content/bosses.ts";
+import { craftBonus } from "./craft.ts";
 import { TALENT_RESET_PRICE, autoStop, autoTalentsOpen, stopLevel, stopOpen, talentExtras, talentStop, talentsSpent, type WeaponTalents } from "../../content/talents.ts";
 
 /*
@@ -102,7 +103,9 @@ export async function weaponTalents(q: Queryable, pid: number): Promise<WeaponTa
 /** the talents' biceps and energy limit live on the players row too (read by the energy and profile code) */
 export async function syncTalentExtras(q: Queryable, pid: number) {
   const x = talentExtras(await weaponTalents(q, pid));
-  await q.query("UPDATE players SET talent_energy=$2, talent_biceps=$3 WHERE id=$1", [pid, x.energy, x.biceps]);
+  // what lies in the craft stash adds its energy limit and biceps (systems/craft.ts)
+  const c = await craftBonus(q, pid);
+  await q.query("UPDATE players SET talent_energy=$2, talent_biceps=$3 WHERE id=$1", [pid, x.energy + c.energy, x.biceps + c.biceps]);
   return x;
 }
 
@@ -162,7 +165,8 @@ export async function resetTalents(ctx: Ctx) {
   if (back <= 0) throw new GameError("nothing_to_reset", "Таланты ещё не вложены — сбрасывать нечего");
   await takeMoney(ctx, TALENT_RESET_PRICE.currency, TALENT_RESET_PRICE.amount, "talent-reset");
   await ctx.q.query("DELETE FROM player_talents WHERE player_id=$1", [ctx.pid]);
-  const [p] = await ctx.q.query<{ talents: number }>("UPDATE players SET talents = talents + $2, talent_energy=0, talent_biceps=0 WHERE id=$1 RETURNING talents", [ctx.pid, back]);
+  const [p] = await ctx.q.query<{ talents: number }>("UPDATE players SET talents = talents + $2 WHERE id=$1 RETURNING talents", [ctx.pid, back]);
+  await syncTalentExtras(ctx.q, ctx.pid); // the talents' part is gone, the craft stash's stays
   await ledger(ctx, "talent", "talent", back, "talent-reset");
   return { returned: back, talents: p.talents, price: TALENT_RESET_PRICE };
 }

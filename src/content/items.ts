@@ -1,9 +1,10 @@
 import { STASH_LOCATION_NAMES, STASH_SETS, stashLevel } from "./stashes.ts";
 import { BOSSES, CARD_TIERS, bossById, isFirstWinItem, keyId, passLook, unlockBossOf } from "./bosses.ts";
 import { TATTOO_MODE_NAME, TATTOO_SETS } from "./tattoos.ts";
+import { CRAFT_ALL } from "./craft.ts";
 
 /** "tattoo": inked on a part of the body in the hero editor («Наколки», content/tattoos.ts) */
-export type Category = "weapon" | "clothing" | "item" | "reward" | "stash" | "event" | "tattoo";
+export type Category = "weapon" | "clothing" | "item" | "reward" | "stash" | "event" | "tattoo" | "craft";
 export type Rarity = "common" | "rare" | "epic" | "legendary" | "mythic";
 /** FACE: worn on the face (laser eyes) — its own tab in the hero editor */
 export type Slot = "BODY" | "PANTS" | "SHIRT" | "SHOES" | "HEAD" | "FACE" | "MOUTH" | "ACCESSORY" | "SPECIAL" | "HAND";
@@ -169,7 +170,12 @@ const TATTOOS: ItemDef[] = TATTOO_SETS.flatMap((s) =>
     sources: [s.boss === "box" ? "Ящик ништяков: шанс 20% за открытие" : `${bossById(s.boss)?.name ?? s.boss}: по одной наколке за победу в «${TATTOO_MODE_NAME[s.mode]}»`],
   })),
 );
-export const ITEMS: ItemDef[] = [...WEAPONS, ...WEARABLES, ...MISC, ...KEYS, TROPHY, STATUE, ...STASHES, ...TATTOOS];
+/** «Крафт» (content/craft.ts): детали и собранные вещи — лежат на складе, бонус дают из заныка */
+const CRAFT: ItemDef[] = CRAFT_ALL.map((c) => ({
+  id: c.id, name: c.name, category: "craft" as const, rarity: c.rarity, maxStack: 99999, description: c.description,
+  sources: [c.level ? "Собирается в «Крафте»" : "Скоро: откуда падают детали — решаем"],
+}));
+export const ITEMS: ItemDef[] = [...WEAPONS, ...WEARABLES, ...MISC, ...KEYS, TROPHY, STATUE, ...STASHES, ...TATTOOS, ...CRAFT];
 const BY_ID = new Map(ITEMS.map((i) => [i.id, i]));
 export const itemById = (id: string) => BY_ID.get(id);
 export const weaponById = (id: string) => {
@@ -180,7 +186,7 @@ export const weaponById = (id: string) => {
 /** Starting outfit: a new player starts with nothing on (clothes come from the shop and from bosses). */
 export const STARTER_OUTFIT: Partial<Record<Slot, string>> = {};
 export const RARITY_NAME: Record<Rarity, string> = { common: "Обычный", rare: "Редкий", epic: "Эпический", legendary: "Легендарный", mythic: "Мифический" };
-export const CATEGORY_NAME: Record<Category, string> = { weapon: "Оружие", clothing: "Одежда", item: "Предметы", reward: "Награды", stash: "Нычки", event: "Ивентовые", tattoo: "Татуировки" };
+export const CATEGORY_NAME: Record<Category, string> = { weapon: "Оружие", clothing: "Одежда", item: "Предметы", reward: "Награды", stash: "Нычки", event: "Ивентовые", tattoo: "Татуировки", craft: "Крафт" };
 
 /** The yard finds the dealer buys for RUB (about half of the shop price). Overridable via config "sell".
  * Weapons (a keyboard from the yard) are not bought here — only an upgraded ★ one, in «Скупка» or the upgrader. */

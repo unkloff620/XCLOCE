@@ -2130,3 +2130,27 @@ describe("upgrader spins", () => {
     expect(next.result.paid).toBe(false);
   });
 });
+
+describe("«Крафт»", () => {
+  it("makes a thing from 5×5 parts, puts it in the stash: its bonus works (energy, biceps, weapon damage); out again — gone", async () => {
+    const p = await newPlayer(db);
+    for (const id of ["part-board", "part-nails", "part-scotch", "part-rope", "part-sandpaper"]) await give(db, p, id, 5);
+    await expect(act(db, p, "craft_make", { itemId: "craft-flamethrower" }, T0)).rejects.toMatchObject({ code: "no_item" });
+    const m = await act(db, p, "craft_make", { itemId: "craft-nail-bat" }, T0);
+    expect(m.result).toMatchObject({ itemId: "craft-nail-bat" });
+    expect(await qty(db, p, "craft-nail-bat")).toBe(1);
+    expect(await qty(db, p, "part-board")).toBe(0);
+    const put = await act(db, p, "craft_put", { itemId: "craft-nail-bat" }, T0);
+    expect(put.result).toMatchObject({ slot: 0 });
+    expect(put.state.craftBoxes[0]).toBe("craft-nail-bat");
+    expect(put.state.setBonus.fist).toBe(8);
+    const [row] = await db.query<{ talent_biceps: number }>("SELECT talent_biceps FROM players WHERE id=$1", [p]);
+    expect(row.talent_biceps).toBe(50);
+    await expect(act(db, p, "craft_put", { itemId: "craft-nail-bat" }, T0)).rejects.toMatchObject({ code: "no_item" });
+    const out = await act(db, p, "craft_take", { slot: 0 }, T0);
+    expect(out.state.craftBoxes[0]).toBe(null);
+    expect(await qty(db, p, "craft-nail-bat")).toBe(1);
+    const [row2] = await db.query<{ talent_biceps: number }>("SELECT talent_biceps FROM players WHERE id=$1", [p]);
+    expect(row2.talent_biceps).toBe(0);
+  });
+});

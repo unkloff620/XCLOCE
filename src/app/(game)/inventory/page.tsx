@@ -1,6 +1,7 @@
 "use client";
-import { InventoryScreen } from "../../../client/screens/inventory.tsx";
+// «Инвентарь» became «Крафт»: the old address shows it
+import { CraftScreen } from "../../../client/screens/craft.tsx";
 
 export default function Page() {
-  return <InventoryScreen />;
+  return <CraftScreen />;
 }

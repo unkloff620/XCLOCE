@@ -14,6 +14,7 @@ import * as clans from "./systems/clans.ts";
 import * as daily from "./systems/daily.ts";
 import * as extras from "./systems/extras.ts";
 import * as games from "./systems/games.ts";
+import * as craft from "./systems/craft.ts";
 import * as bj from "./systems/blackjack.ts";
 import * as home from "./systems/home.ts";
 import * as quests from "./systems/quests.ts";
@@ -59,7 +60,7 @@ export const ACTIONS = [
   "daily_claim", "sell", "rename", "slots_spin",
   "equipment_upgrade", "talent_up", "talent_reset", "talent_auto", "room_buy", "room_set", "look_set", "decor_set", "decor_save", "piece_buy", "help_seen", "starter_gift",
   "quest_claim", "quest_chest", "notify_set", "achievement_claim", "achievement_claim_all", "ach_box_open", "prize_claim", "clan_edit",
-  "game_start", "zonk_move", "zonk_give_up", "zonk_hints", "zonk_choice", "roach_squash", "pigeon_scare", "poker_play", "poker_swap", "poker_stand", "bj_open", "bj_invite", "bj_join", "bj_decline", "bj_leave", "bj_bet", "bj_unbet", "bj_insure", "bj_move", "upgrade", "up_sell", "up_take",
+  "game_start", "zonk_move", "zonk_give_up", "zonk_hints", "zonk_choice", "roach_squash", "pigeon_scare", "poker_play", "poker_swap", "poker_stand", "bj_open", "bj_invite", "bj_join", "bj_decline", "bj_leave", "bj_bet", "bj_unbet", "bj_insure", "bj_move", "upgrade", "up_sell", "up_take", "craft_put", "craft_take", "craft_make",
   "clan_cancel", "clan_accept", "clan_reject", "clan_boss_hit", "duel_create", "duel_answer", "duel_play", "stash_collect", "stash_wish", "stash_gift", "stash_accept", "social_pump", "social_fight", "social_spit", "notes_read",
 ] as const;
 export type ActionType = (typeof ACTIONS)[number];
@@ -213,6 +214,9 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
       str(body.mode, "mode", 8),
     );
     case "up_sell": return games.sellUpgraded(ctx, num(body.uid, "uid"));
+    case "craft_put": return craft.craftPut(ctx, str(body.itemId, "itemId", 40), body.slot === undefined ? undefined : num(body.slot, "slot"));
+    case "craft_take": return craft.craftTake(ctx, num(body.slot, "slot"));
+    case "craft_make": return craft.craftMake(ctx, str(body.itemId, "itemId", 40));
     case "up_take": return games.takeUpgradedOut(ctx, num(body.uid, "uid"), body.use === true);
     case "stash_collect": return locations.collectStashSet(ctx, str(body.set, "set", 30));
     case "stash_wish": return swap.setStashWish(ctx, body.items);

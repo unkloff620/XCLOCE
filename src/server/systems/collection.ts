@@ -3,6 +3,7 @@ import { tattooSetsOfBoss } from "../../content/tattoos.ts";
 import { BOSSES, CASE_WINS, EVENT_FIGHTS, bossById, bossSetItems } from "../../content/bosses.ts";
 import { medalBonusFor, medalWeapon, type MedalTier } from "../../content/medals.ts";
 import { TATTOO_IDS, TATTOO_SETS } from "../../content/tattoos.ts";
+import { craftBonus } from "./craft.ts";
 
 /*
  * Boss sets and «Дела»:
@@ -40,6 +41,8 @@ export async function setBonuses(q: Queryable, pid: number): Promise<Record<stri
     const add = medalBonusFor(b, m.tier, Number(m.n));
     if (add > 0) out[w] = (out[w] ?? 0) + add;
   }
+  // the craft stash: the damage its things add to weapons
+  for (const [w, v] of Object.entries((await craftBonus(q, pid)).dmg)) out[w] = (out[w] ?? 0) + v;
   return out;
 }
 

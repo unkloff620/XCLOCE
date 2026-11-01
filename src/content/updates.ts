@@ -17,6 +17,12 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-01-craft",
+    date: "1 ноября",
+    title: "Крафт",
+    items: [{ img: "/assets/updates/2026-11-01-craft.webp", text: "Вместо «Инвентаря» — «Крафт». Детали собираются в вещи (5 разных деталей по 5 штук), а детали и вещи кладутся в заначку из 12 ячеек — каждая даёт свой бонус: урон оружию, бицуху, энергию, время боя. Откуда падают детали — скоро." }],
+  },
+  {
     id: "2026-11-01-exchange-garage",
     date: "1 ноября",
     title: "Гараж барыги",

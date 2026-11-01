@@ -75,6 +75,8 @@ export interface GameState {
   /** yard mini games: free games left today, the price after that, the hand / game in progress */
   /** upgraded things from the upgrader: each one its own unit with its own price */
   upgraded: { uid: number; itemId: string; value: number }[];
+  /** «Крафт»: the stash cells, an item id or null */
+  craftBoxes?: (string | null)[];
   /** upgrader spins: free ones left today, then each costs `price` */
   upgradeSpins?: { freeLeft: number; freePerDay: number; price: { currency: Currency; amount: number } };
   /** poker: hands left today, the price, the poker experience and level (to: null at the top level) */

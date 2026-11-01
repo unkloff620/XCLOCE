@@ -10,6 +10,7 @@ import { BASE_CRIT_MULT, EQUIPMENT, PIECE_DROP_CHANCE, PIECE_PITY, ROOM_DEFS, RO
 import { critChanceOf, talentExtras, talentsForDamage, weaponTalentBonus } from "../../content/talents.ts";
 import { playerBonus, weaponTalents } from "./home.ts";
 import { setBonuses } from "./collection.ts";
+import { craftBonus } from "./craft.ts";
 import { BLASTS_ON, fightMode, type FightMode } from "../../content/medals.ts";
 import { tattooSetsOfBoss } from "../../content/tattoos.ts";
 import { notifyBossLow } from "./notify.ts";
@@ -168,7 +169,7 @@ export async function startFight(ctx: Ctx, bossId: string, solo = false, modeId:
   const keys = prev ? keysNeeded(def, ctx.cfg.fight.keysToUnlock) : 0;
   if (prev && keys > 0) await takeItem(ctx, keyId(prev.id), keys, `fight:${def.id}`);
   const hpMax = Math.round((ctx.cfg.bossHp[def.id] ?? def.hp) * mode.hp);
-  const clockMin = extras.clockMin;
+  const clockMin = extras.clockMin + (await craftBonus(ctx.q, ctx.pid)).clock; // + the craft stash's minutes
   const [f] = await ctx.q.query<{ id: number }>(
     "INSERT INTO fights (player_id, boss_id, hp_max, start_total, start_seq, started_at, ends_at, day, solo, keys_spent, global, mode) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,true,$11) RETURNING id",
     [ctx.pid, def.id, hpMax, g.damage_total, g.last_seq, new Date(ctx.now), new Date(ctx.now + ctx.cfg.fight.hours * 3600_000 + clockMin * 60_000), day, solo, keys, mode.id],

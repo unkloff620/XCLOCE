@@ -36,7 +36,7 @@ function activeTab(path: string): string {
   if (path.startsWith("/bosses")) return "bosses";
   if (path.startsWith("/shop")) return "shop";
   if (["/yard", "/exchange", "/locations"].some((p) => path.startsWith(p))) return "yard"; // places opened from the yard
-  if (path.startsWith("/inventory")) return "inventory";
+  if (path.startsWith("/craft") || path.startsWith("/inventory")) return "craft";
   if (path.startsWith("/clans")) return "clans";
   return "home";
 }
@@ -153,14 +153,7 @@ function Nav() {
     <nav className="nav">
       {/* the leaders strip sits on top of the menu (not over a boss fight) */}
       {!/^\/bosses\/[^/]+/.test(path) && <LeadersStrip />}
-      {TABS.map((t) => t.id === "inventory" ? (
-        // «Инвентарь» is being redone: the tab stays, greyed with «Скоро», and does not open
-        <span key={t.id} className="nav-soon" aria-label={`${t.label}: скоро`} title={`${t.label}: скоро`} aria-disabled="true"
-          onClick={() => { haptic.err(); }}>
-          <NavIcon id={t.id} />
-          <i className="nav-soon-tag">Скоро</i>
-        </span>
-      ) : (
+      {TABS.map((t) => (
         // a member's Clans tab leads straight to the own clan (no flash of the clan list)
         <Link key={t.id} href={t.id === "clans" && myClan ? `/clans/${myClan}` : t.href} className={on === t.id ? "on" : ""} style={{ ["--glow" as string]: NAV_GLOW[t.id] }} aria-label={t.label} title={t.label}
           onClick={(e) => {
