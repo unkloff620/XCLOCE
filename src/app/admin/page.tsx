@@ -1317,13 +1317,21 @@ function EventBosses() {
           <div key={b.id} className={`adm-evb-row ${b.on ? "on" : ""}`}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={b.portrait} alt="" />
-            <span className="grow"><b>{b.name}</b><br /><span className="muted small">здоровье {b.hp.toLocaleString("ru-RU")} · пока пробный бой без наград</span></span>
+            <span className="grow"><b>{b.name}</b><br /><span className="muted small">здоровье {b.hp.toLocaleString("ru-RU")} · «Пацанский», награда за победу</span></span>
             <span className={b.on ? "adm-ok" : "muted"}>{b.on ? "в игре" : "выключен"}</span>
             <button className={`adm-btn ${b.on ? "danger" : ""} sm`} disabled={busy === b.id} onClick={() => flip(b)}>{b.on ? "Выключить" : "Включить"}</button>
           </div>
         ))}
       </div>
       <Err e={saveErr} />
+      <div className="adm-form" style={{ marginTop: 10 }}>
+        <button className="adm-btn danger" disabled={busy === "all"} onClick={async () => {
+          if (!confirm("Сбросить сегодняшний лимит боёв с боссами у ВСЕХ игроков?")) return;
+          setBusy("all"); setSaveErr(null);
+          try { const r = await admin<{ fights: number; players: number }>("boss_limit_reset_all"); alert(`Готово: лимит сброшен у ${r.players} игроков (${r.fights} боёв)`); } catch (e) { setSaveErr((e as Error).message); }
+          setBusy(null);
+        }}>Сбросить лимит на боссов всем</button>
+      </div>
     </Box>
   );
 }

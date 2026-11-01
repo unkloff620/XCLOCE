@@ -422,6 +422,14 @@ export async function eventBosses(db: Db) {
   const cfg = await loadConfig(db);
   return { bosses: EVENT_BOSSES.map((b) => ({ id: b.id, name: b.name, hp: b.hp, portrait: b.portrait, on: !!cfg.eventBosses[b.id] })) };
 }
+/** «Сбросить лимит на боссов всем»: today's finished fights of every player stop counting toward the daily limit */
+export async function bossLimitResetAll(db: Db, adminTg: number) {
+  const day = moscowDay(Date.now());
+  const r = await db.query<{ player_id: number }>("UPDATE fights SET day = day - 36500 WHERE day=$1 AND status <> 'active' RETURNING player_id", [day]);
+  const players = new Set(r.map((x) => x.player_id)).size;
+  await db.query("INSERT INTO admin_log (admin_tg, player_id, op, info) VALUES ($1, NULL, 'boss_limit_reset_all', $2)", [adminTg, JSON.stringify({ fights: r.length, players })]).catch(() => undefined);
+  return { fights: r.length, players };
+}
 export async function eventBossSet(db: Db, id: unknown, on: unknown) {
   if (typeof id !== "string" || !eventBossById(id)) throw new GameError("bad_request", "Нет такого ивент-босса", 400);
   const cfg = await loadConfig(db);
