@@ -95,19 +95,11 @@ function sellRows(state: ReturnType<typeof useGame>["state"]) {
 export function BuyBack() {
   const { state, act, busy } = useGame();
   const [tab, setTab] = useState<"finds" | "parts">("finds");
-  // how many of each thing to sell (by default — all of it)
+  // how many of each thing to sell (0 by default); upgraded ★ things by "u<uid>" (0 or 1)
   const [pick, setPick] = useState<Record<string, number>>({});
   if (!state) return null;
   const rows = sellRows(state);
   const ups = state.upgraded ?? [];
-  const sell = async (id: string, qty: number) => {
-    const r = await act<{ got: number }>("sell", { itemId: id, qty }, (x) => `Продано за ${x.got} ₽`);
-    if (r) { haptic.ok(); sfx("coin"); setPick((p) => { const n = { ...p }; delete n[id]; return n; }); }
-  };
-  const sellUp = async (uid: number) => {
-    const r = await act<{ got: number }>("up_sell", { uid }, (x) => `Продано за ${x.got} ₽`);
-    if (r) { haptic.ok(); sfx("coin"); }
-  };
   const dealer = state.dealer ?? [];
   const buyPart = async (id: string) => {
     const r = await act<{ qty: number; paid: number }>("dealer_buy", { itemId: id, qty: 1 }, (x) => `Куплено: ${itemById(id)?.name} · −${money("RUB", x.paid)} ₽`);
@@ -116,67 +108,91 @@ export function BuyBack() {
   const finds = rows.filter((r) => !r.id.startsWith("part-"));
   const parts = rows.filter((r) => r.id.startsWith("part-"));
   const list = tab === "finds" ? finds : parts;
+  // what is picked, clamped to what the player still has
+  const items = rows.map((r) => ({ itemId: r.id, qty: Math.min(r.qty, pick[r.id] ?? 0), price: r.price })).filter((x) => x.qty > 0);
+  const uids = ups.filter((u) => (pick[`u${u.uid}`] ?? 0) > 0);
+  const total = items.reduce((t, x) => t + x.qty * x.price, 0) + uids.reduce((t, u) => t + u.value, 0);
+  const picked = (ids: string[]) => ids.reduce((t, id) => t + (pick[id] ?? 0), 0);
+  const sellAll = async () => {
+    const r = await act<{ got: number; count: number }>("sell_many", { items: items.map(({ itemId, qty }) => ({ itemId, qty })), uids: uids.map((u) => u.uid) }, (x) => `Продано ${x.count} шт. за ${money("RUB", x.got)} ₽`);
+    if (r) { haptic.ok(); sfx("coin"); setPick({}); }
+  };
+  const stepper = (key: string, max: number) => {
+    const n = Math.min(max, pick[key] ?? 0);
+    const set = (v: number) => { haptic.tap(); setPick((p) => ({ ...p, [key]: Math.max(0, Math.min(max, v)) })); };
+    return (
+      <span className={`bb-qty ${n > 0 ? "on" : ""}`}>
+        <button type="button" disabled={n <= 0} onClick={() => set(n - 1)} aria-label="Меньше">−</button>
+        {/* a tap on the number: all of it / none */}
+        <button type="button" className="num bb-qty-n" onClick={() => set(n >= max ? 0 : max)} title="Все">{n}</button>
+        <button type="button" disabled={n >= max} onClick={() => set(n + 1)} aria-label="Больше">+</button>
+      </span>
+    );
+  };
+  const tabBtn = (id: "finds" | "parts", label: string, n: number) => (
+    <button type="button" role="tab" aria-selected={tab === id} className={`bb-tab ${tab === id ? "on" : ""}`} onClick={() => { haptic.tap(); setTab(id); }}>
+      {label}
+      {n > 0 && <i className="bb-tab-n num">{n}</i>}
+    </button>
+  );
   return (
     <div className="bb-panel">
-      {/* the dealer sells a few craft parts today (the same for everybody, a few of each for every player) */}
-      {dealer.length > 0 && (
-        <div className="bb-dealer">
-          <b className="small">Барыга продаёт сегодня</b>
-          <div className="bb-offers">
-            {dealer.map((o) => {
-              const out = o.left < 1;
-              return (
-                <div key={o.id} className={`bb-offer ${out ? "out" : ""}`} title={itemById(o.id)?.name}>
-                  <span className="bb-offer-pic">
-                    <ItemArt id={o.id} size={40} />
-                    {!out && <i className="bb-offer-n num">×{o.left}</i>}
-                    {out && <i className="bb-offer-stamp">куплено</i>}
-                  </span>
-                  <span className="tiny ellipsis">{itemById(o.id)?.name}</span>
-                  <b className="num small">{money("RUB", o.price)} ₽</b>
-                  <button type="button" className="bb-buy" disabled={!!busy || out || (state.wallet.RUB ?? 0) < o.price} onClick={() => buyPart(o.id)}>купить</button>
-                </div>
-              );
-            })}
+      {/* the fixed top: the dealer's offers, the tabs and the «Продать» button; only the list under it scrolls */}
+      <div className="bb-top">
+        {dealer.length > 0 && (
+          <div className="bb-dealer">
+            <b className="small">Барыга продаёт сегодня</b>
+            <div className="bb-offers">
+              {dealer.map((o) => {
+                const out = o.left < 1;
+                return (
+                  <div key={o.id} className={`bb-offer ${out ? "out" : ""}`} title={itemById(o.id)?.name}>
+                    <span className="bb-offer-pic">
+                      <ItemArt id={o.id} size={40} />
+                      {!out && <i className="bb-offer-n num">×{o.left}</i>}
+                      {out && <i className="bb-offer-stamp">куплено</i>}
+                    </span>
+                    <span className="tiny ellipsis">{itemById(o.id)?.name}</span>
+                    <b className="num small">{money("RUB", o.price)} ₽</b>
+                    <button type="button" className="bb-buy" disabled={!!busy || out || (state.wallet.RUB ?? 0) < o.price} onClick={() => buyPart(o.id)}>купить</button>
+                  </div>
+                );
+              })}
+            </div>
           </div>
+        )}
+        <div className="bb-bar">
+          <div className="bb-tabs" role="tablist">
+            {tabBtn("finds", "Находки", picked([...finds.map((r) => r.id), ...ups.map((u) => `u${u.uid}`)]))}
+            {tabBtn("parts", "Детали", picked(parts.map((r) => r.id)))}
+          </div>
+          <b className={`bb-total num ${total > 0 ? "on" : ""}`}>+{money("RUB", total)} ₽</b>
+          <button type="button" className="btn sm gold bb-sell" disabled={!!busy || total <= 0} onClick={sellAll}>Продать</button>
         </div>
-      )}
-      {/* what to sell: the yard finds (and the upgraded ★ things) or the craft parts */}
-      <div className="cf-tabs">
-        <button type="button" className={`cf-tab ${tab === "finds" ? "on" : ""}`} onClick={() => setTab("finds")}>Находки</button>
-        <button type="button" className={`cf-tab ${tab === "parts" ? "on" : ""}`} onClick={() => setTab("parts")}>Детали</button>
       </div>
-      {list.map((r) => {
-        const n = Math.max(1, Math.min(r.qty, pick[r.id] ?? r.qty));
-        const set = (v: number) => setPick((p) => ({ ...p, [r.id]: Math.max(1, Math.min(r.qty, v)) }));
-        return (
+      <div className="bb-list">
+        {list.map((r) => (
           <div key={r.id} className="bb-row">
             <ItemArt id={r.id} size={36} />
             <span className="grow col" style={{ minWidth: 0 }}>
               <b className="small ellipsis">{r.def!.name}</b>
               <span className="tiny bb-sub num">есть {r.qty} · {money("RUB", r.price)} ₽ за шт.</span>
             </span>
-            {/* how many: − n + (a tap on the number — all of it) */}
-            <span className="bb-qty">
-              <button type="button" disabled={n <= 1} onClick={() => set(n - 1)} aria-label="Меньше">−</button>
-              <button type="button" className="num bb-qty-n" onClick={() => set(r.qty)} title="Все">{n}</button>
-              <button type="button" disabled={n >= r.qty} onClick={() => set(n + 1)} aria-label="Больше">+</button>
-            </span>
-            <button className="btn sm gold" disabled={!!busy} onClick={() => sell(r.id, n)}>{money("RUB", n * r.price)} ₽</button>
+            {stepper(r.id, r.qty)}
           </div>
-        );
-      })}
-      {tab === "finds" && ups.map((u) => (
-        <div key={`u${u.uid}`} className="bb-row">
-          <span className="upg-art"><ItemArt id={u.itemId} size={36} /><i className="up-star">★</i></span>
-          <span className="grow col" style={{ minWidth: 0 }}>
-            <b className="small ellipsis">{itemById(u.itemId)?.name} ★</b>
-            <span className="tiny bb-sub">улучшенная</span>
-          </span>
-          <button className="btn sm gold" disabled={!!busy} onClick={() => sellUp(u.uid)}>{money("RUB", u.value)} ₽</button>
-        </div>
-      ))}
-      {!list.length && !(tab === "finds" && ups.length) && <div className="small bb-sub center">{tab === "finds" ? "Нечего продать: подбирай находки во дворе." : "Деталей пока нет."}</div>}
+        ))}
+        {tab === "finds" && ups.map((u) => (
+          <div key={`u${u.uid}`} className="bb-row">
+            <span className="upg-art"><ItemArt id={u.itemId} size={36} /><i className="up-star">★</i></span>
+            <span className="grow col" style={{ minWidth: 0 }}>
+              <b className="small ellipsis">{itemById(u.itemId)?.name} ★</b>
+              <span className="tiny bb-sub num">улучшенная · {money("RUB", u.value)} ₽</span>
+            </span>
+            {stepper(`u${u.uid}`, 1)}
+          </div>
+        ))}
+        {!list.length && !(tab === "finds" && ups.length) && <div className="small bb-sub center bb-empty">{tab === "finds" ? "Нечего продать: подбирай находки во дворе." : "Деталей пока нет."}</div>}
+      </div>
     </div>
   );
 }
@@ -286,7 +302,7 @@ function ExchangeGarage({ data, win }: { data: ShopData | null; win: { open: boo
         </div>
       </div>
       {open === "sell" && (
-        <Modal title="Скупка" onClose={() => setOpen(null)}>
+        <Modal title="Скупка" className="bb-modal" onClose={() => setOpen(null)}>
           <BuyBack />
         </Modal>
       )}

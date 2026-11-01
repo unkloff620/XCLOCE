@@ -738,6 +738,17 @@ describe("selling, nickname, slot machine 777", () => {
     await expect(act(db, p, "sell", { itemId: "fist" }, T0)).rejects.toMatchObject({ code: "not_sellable" });
   });
 
+  it("«Скупка»: everything picked sells in one go, all or nothing", async () => {
+    const p = await newPlayer(db);
+    await give(db, p, "spinner", 3);
+    await expect(act(db, p, "sell_many", { items: [] }, T0)).rejects.toMatchObject({ code: "nothing" });
+    await expect(act(db, p, "sell_many", { items: [{ itemId: "spinner", qty: 1 }, { itemId: "spinner", qty: 3 }] }, T0)).rejects.toMatchObject({ code: "no_item" });
+    expect(await qty(db, p, "spinner")).toBe(3);
+    const r = await act(db, p, "sell_many", { items: [{ itemId: "spinner", qty: 2 }] }, T0);
+    expect(r.result).toMatchObject({ got: 120, count: 2 });
+    expect(await qty(db, p, "spinner")).toBe(1);
+  });
+
   it("nickname: paid, once per 24 h, unique, survives a Telegram re-login", async () => {
     const a = await newPlayer(db), b = await newPlayer(db);
     await setMoney(db, a, "RUB", 5000);

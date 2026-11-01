@@ -57,7 +57,7 @@ export const ACTIONS = [
   "yard_pick",
   "buy", "exchange", "use", "equip", "unequip",
   "clan_create", "clan_join", "clan_leave", "clan_kick", "clan_transfer",
-  "daily_claim", "sell", "rename", "slots_spin",
+  "daily_claim", "sell", "sell_many", "rename", "slots_spin",
   "equipment_upgrade", "talent_up", "talent_reset", "talent_auto", "room_buy", "room_set", "look_set", "decor_set", "decor_save", "piece_buy", "help_seen", "starter_gift",
   "quest_claim", "quest_chest", "notify_set", "achievement_claim", "achievement_claim_all", "ach_box_open", "prize_claim", "clan_edit",
   "game_start", "zonk_move", "zonk_give_up", "zonk_hints", "zonk_choice", "roach_squash", "pigeon_scare", "poker_play", "poker_swap", "poker_stand", "bj_open", "bj_invite", "bj_join", "bj_decline", "bj_leave", "bj_bet", "bj_unbet", "bj_insure", "bj_move", "upgrade", "up_sell", "up_take", "craft_put", "craft_take", "craft_make", "craft_box_buy", "dealer_buy", "craft_split",
@@ -162,6 +162,7 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "clan_leave": return clans.leaveClan(ctx);
     case "daily_claim": return daily.claimDaily(ctx);
     case "sell": return extras.sellItem(ctx, str(body.itemId, "itemId", 40), body.qty === undefined ? 1 : num(body.qty, "qty"));
+    case "sell_many": return sellMany(ctx, body);
     case "rename": return extras.rename(ctx, str(body.name, "name", 60));
     case "slots_spin": return extras.spinSlots(ctx);
     case "equipment_upgrade": return home.upgradeEquipment(ctx, str(body.id, "id", 40));
@@ -257,4 +258,23 @@ export async function runAction(db: Db, pid: number, type: ActionType, body: Rec
     }
     throw e;
   }
+}
+
+/** «Скупка»: everything the player picked (finds and parts by count, upgraded ★ things by uid) in one go. */
+async function sellMany(ctx: Ctx, body: Record<string, unknown>) {
+  const want = new Map<string, number>();
+  for (const x of (Array.isArray(body.items) ? body.items : []).slice(0, 200)) {
+    const o = (x ?? {}) as Record<string, unknown>;
+    const id = str(o.itemId, "itemId", 40);
+    const qty = num(o.qty, "qty");
+    if (!Number.isInteger(qty) || qty < 1) throw new GameError("bad_qty", "Некорректное количество");
+    want.set(id, (want.get(id) ?? 0) + qty);
+  }
+  const uids = [...new Set((Array.isArray(body.uids) ? body.uids : []).slice(0, 50).map((u) => num(u, "uid")))];
+  if (!want.size && !uids.length) throw new GameError("nothing", "Ничего не выбрано");
+  let got = 0;
+  let count = 0;
+  for (const [id, qty] of want) { const r = await extras.sellItem(ctx, id, qty); got += Number(r.got) || 0; count += qty; }
+  for (const uid of uids) { const r = await games.sellUpgraded(ctx, uid); got += Number(r.got) || 0; count += 1; }
+  return { got, count };
 }

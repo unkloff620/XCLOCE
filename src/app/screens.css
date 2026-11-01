@@ -4627,6 +4627,35 @@ body { background-attachment: fixed; }
 .bb-qty button:disabled { opacity: 0.35; }
 .bb-qty .bb-qty-n { width: auto; min-width: 26px; padding: 0 3px; font-size: 13px; border-left: 1px solid rgba(107, 74, 36, 0.4); border-right: 1px solid rgba(107, 74, 36, 0.4); }
 
+/* «Скупка» v2: one fixed window size (the tabs don't make it jump); the dealer, the tabs and «Продать» stay on top, only the list scrolls */
+.modal.bb-modal { height: min(760px, calc(100dvh - 32px)); display: flex; flex-direction: column; overflow: hidden; }
+.modal.bb-modal > .modal-body { flex: 1 1 auto; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+.bb-modal .bb-panel { flex: 1; min-height: 0; gap: 0; }
+.bb-top { flex: none; display: flex; flex-direction: column; gap: 8px; padding-bottom: 8px; border-bottom: 2px solid rgba(58, 36, 16, 0.3); }
+.bb-list { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 2px 2px 6px; margin: 0 -2px; }
+.bb-list > .bb-row:first-child { border-top: 0; }
+.bb-row { border-top: 1px solid rgba(58, 36, 16, 0.14); }
+.bb-empty { padding: 24px 0; }
+/* the tabs: a sunken leather track, the chosen one a raised brass plate; a little count of what's picked */
+.bb-bar { display: flex; align-items: center; gap: 6px; }
+.bb-tabs { display: flex; flex: none; padding: 3px; gap: 2px; border-radius: 12px; background: linear-gradient(#5a3a1a, #3a2410); box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.55), 0 1px 0 rgba(255, 240, 210, 0.5); }
+.bb-tab { position: relative; padding: 6px 10px; border: 0; border-radius: 9px; background: none; color: #e9cf96; font: 900 12.5px/1 var(--font-display), system-ui; letter-spacing: 0.02em; cursor: pointer; transition: background 0.15s, color 0.15s; }
+.bb-tab.on { background: linear-gradient(#ffe39a, #e2ab3c 60%, #c88a22); color: #2e1c00; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 2px 0 #6b4a1a; }
+.bb-tab-n { position: absolute; top: -6px; right: -4px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 8px; background: #27b866; border: 1.5px solid #0d5a2e; color: #fff; font: 900 9.5px/12px system-ui; font-style: normal; text-align: center; }
+/* the sum of everything picked and the one «Продать» */
+.bb-total { margin-left: auto; font-size: 14px; font-weight: 900; color: rgba(58, 36, 16, 0.4); white-space: nowrap; }
+.bb-total.on { color: #0b6a33; text-shadow: 0 1px 0 rgba(255, 245, 220, 0.6); }
+.bb-sell { flex: none; padding: 6px 12px; }
+/* the stepper: one width whatever the number, starts at 0 */
+.bb-qty .bb-qty-n { width: 34px; min-width: 0; padding: 0; }
+.bb-qty button { width: 28px; height: 28px; }
+.bb-qty.on { border-color: #0d5a2e; background: rgba(210, 250, 220, 0.75); }
+@media (max-width: 350px) {
+  .bb-tab { padding: 6px 7px; font-size: 11.5px; }
+  .bb-total { font-size: 12.5px; }
+  .bb-sell { padding: 6px 9px; }
+}
+
 /* ── «Крафт» (screens/craft.tsx): the stash fixed on top (crumpled paper, blueprint cells), the filters, the cards (press, hold, drag), the scheme ── */
 .cf-stash { position: sticky; z-index: 6; top: calc(var(--hud-h) + var(--safe-t) + 2px); display: flex; flex-direction: column; gap: 6px; padding: 10px 12px 9px; border-radius: 6px;
   background: url(/assets/craft/paper-stash.webp) center / cover, #e5cf9e; color: #2e1c08; box-shadow: 0 6px 14px rgba(0, 0, 0, 0.55), inset 0 0 18px rgba(90, 50, 10, 0.35); }
