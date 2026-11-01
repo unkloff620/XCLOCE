@@ -52,7 +52,7 @@ export function actionText(type: string, body: Row, result: unknown): string | n
     }
     case "exchange": return `${fmt(r.paid)} ${r.from} → ${fmt(r.got)} ${r.to}`;
     case "sell": return join(`${item(r.itemId)} ×${fmt(r.qty)}`, grantedText(r.got) || (typeof r.got === "number" ? `+${fmt(r.got)} RUB` : null));
-    case "dealer_talk": return `поболтал с барыгой (${fmt(r.score)}/6)${r.bonus ? " · курс получше на 2 ч" : ""}`;
+    case "dealer_talk": return `поболтал с барыгой (${fmt(r.score)} очков)${r.bonus ? " · курс получше на 2 ч" : ""}`;
     case "sell_many": return `продал ${fmt(r.count)} шт. · +${fmt(r.got)} RUB`;
     case "use": return join(item(r.itemId), n(r.energy) ? `энергия ${fmt(r.energy)}` : null);
     case "equip": return item(r.itemId ?? body.itemId);

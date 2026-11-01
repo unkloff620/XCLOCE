@@ -219,7 +219,7 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "craft_take": return craft.craftTake(ctx, num(body.slot, "slot"));
     case "craft_make": return craft.craftMake(ctx, str(body.itemId, "itemId", 40));
     case "craft_box_buy": return craft.craftBoxBuy(ctx);
-    case "dealer_talk": return shop.dealerTalk(ctx, (Array.isArray(body.answers) ? body.answers : []).slice(0, 5).map((x) => Number(x)));
+    case "dealer_talk": return shop.dealerTalk(ctx, (Array.isArray(body.answers) ? body.answers : []).slice(0, 12).map((x) => Number(x)));
     case "dealer_buy": return craft.dealerBuy(ctx, str(body.itemId, "itemId", 40), body.qty === undefined ? 1 : num(body.qty, "qty"));
     case "craft_split": return craft.craftSplit(ctx, str(body.itemId, "itemId", 40));
     case "up_take": return games.takeUpgradedOut(ctx, num(body.uid, "uid"), body.use === true);

@@ -62,7 +62,7 @@ export async function dealerTalk(ctx: Ctx, answers: number[]) {
   const talk = talkOfDay(day, ctx.pid);
   if (answers.length !== talk.steps.length || answers.some((x) => !Number.isInteger(x) || x < 0 || x > 2)) throw new GameError("bad_answers", "Некорректные ответы");
   const score = talkScore(talk, answers);
-  const won = ctx.rng() < talkChance(score);
+  const won = ctx.rng() < talkChance(score, talk.steps.length * 2);
   const until = won ? ctx.now + TALK_BONUS_MS : null;
   await ctx.q.query("UPDATE players SET dealer_talk_day=$2, dealer_bonus_until=COALESCE($3, dealer_bonus_until) WHERE id=$1", [ctx.pid, day, until ? new Date(until) : null]);
   return { talk: talk.id, score, bonus: won ? TALK_BONUS : 0, until };

@@ -15,11 +15,11 @@ import { sfx } from "../sound.ts";
 import { Modal } from "../ui.tsx";
 import { KioskDealer } from "../art/kiosk.tsx";
 import { XG_BOX } from "../art/exchange-data.ts";
-import { DEALER_BYE, DEALER_CLOSED, DEALER_END, DEALER_EXCHANGED, DEALER_HELLO, DEALER_TALKED, TALK_BONUS, talkOfDay } from "../../content/dealer-talk.ts";
+import { DEALER_BYE, DEALER_CLOSED, DEALER_END, DEALER_EXCHANGED, DEALER_HELLO, DEALER_TALKED, TALK_BONUS, talkOfDay, talkWasGood } from "../../content/dealer-talk.ts";
 
 /**
  * The exchange machine: a tap starts a talk with the dealer. «Чё надо?» — a talk (once a day while the exchange works:
- * three of his lines, three answers each; a good talk may give a better rate for 2 hours) or an exchange at the rate
+ * five of his lines, three answers each; a good talk may give a better rate for 2 hours) or an exchange at the rate
  * on the machine's screen, right in the chat.
  */
 type Line = { who: "d" | "me"; text: string };
@@ -68,7 +68,7 @@ export function DealerChat({ ex, open, onClose }: { ex: ShopData["exchange"]; op
     setTimeout(() => {
       if (!r) { setMode("menu"); return; }
       if (r.bonus > 0) { haptic.ok(); sfx("coin"); }
-      later(r.bonus > 0 ? DEALER_END.bonus : r.score >= 4 ? DEALER_END.nice : DEALER_END.meh, () => setMode("menu"));
+      later(r.bonus > 0 ? DEALER_END.bonus : talkWasGood(r.score, talk.steps.length * 2) ? DEALER_END.nice : DEALER_END.meh, () => setMode("menu"));
     }, 700);
   };
   const toExchange = () => {
