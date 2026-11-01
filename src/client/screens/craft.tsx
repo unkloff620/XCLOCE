@@ -1,12 +1,13 @@
 "use client";
 /*
  * «Крафт» (content/craft.ts, server/systems/craft.ts) — the tab instead of «Инвентарь».
- * On top «Заныкано»: 12 cells (two blocks of 3×2); a tap on a full cell takes the thing back to the store. Under them —
- * what the stash gives in all and its «крутизна». Below — the cards of every part and thing, sorted by level (filters:
- * все / мои / детали / ур. 1…): the count, what one gives, «Заныкать» (into the first empty cell) and, for the things
- * that are made, «Собрать» — the recipe window: five ingredients, have/need, the result.
+ * On top, fixed while the cards scroll: «Заныкано» — 12 blueprint cells drawn on crumpled paper (two blocks of 3×2),
+ * a tap on a full cell takes the thing back to the store; under them what the stash gives and its «крутизна».
+ * Below — the cards of every part and thing (filters: все / мои / детали / ур. 1…), no buttons: press and hold a card,
+ * then drag it onto an empty cell to put one in the stash; a tap on a thing that is made opens its scheme on paper
+ * («Схема создания вещи»: the ingredients with have/need, the arrow, the result, «Создать»).
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useGame } from "../store.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { Icon } from "../art/icons.tsx";
@@ -36,7 +37,7 @@ function BonusLines({ b, on }: { b: CraftBonus; on?: boolean }) {
 }
 
 export function CraftScreen() {
-  const { state, act, busy } = useGame();
+  const { state, act, busy, toast } = useGame();
   const [filter, setFilter] = useState<Filter>("all");
   const [recipe, setRecipe] = useState<CraftDef | null>(null);
   const boxes = state?.craftBoxes ?? Array.from({ length: CRAFT_BOXES }, () => null);
@@ -44,15 +45,14 @@ export function CraftScreen() {
   const inBox = new Map<string, number>();
   for (const id of boxes) if (id) inBox.set(id, (inBox.get(id) ?? 0) + 1);
   const total = craftBonusOf(boxes);
-  const free = boxes.some((b) => !b);
   const levels = [...new Set(CRAFT_ALL.map((c) => c.level))].sort();
   const list = CRAFT_ALL
     .filter((c) => filter === "all" || (filter === "mine" ? (qty.get(c.id) ?? 0) + (inBox.get(c.id) ?? 0) > 0 : c.level === filter))
-    // the ones you have first, then by level and rarity
+    // the ones you have first, then by level
     .sort((a, b) => Number((qty.get(b.id) ?? 0) > 0) - Number((qty.get(a.id) ?? 0) > 0) || a.level - b.level);
 
-  const put = async (id: string) => {
-    const r = await act("craft_put", { itemId: id }, () => `${craftById(id)?.name} — в заныке`);
+  const put = async (id: string, slot: number) => {
+    const r = await act("craft_put", { itemId: id, slot }, () => `${craftById(id)?.name} — в заныке`);
     if (r) { haptic.ok(); sfx("coinsoft"); }
   };
   const take = async (slot: number) => {
@@ -64,6 +64,68 @@ export function CraftScreen() {
     if (r) { haptic.big(); sfx("victory"); }
   };
 
+  // ---- press, hold and drag a card onto an empty cell ----
+  const [drag, setDrag] = useState<{ id: string; x: number; y: number; over: number | null } | null>(null);
+  const press = useRef<{ id: string; x: number; y: number; timer: number; pid: number } | null>(null);
+  const dragging = useRef(false);
+  const dropped = useRef(0);
+  const slotAt = (x: number, y: number) => {
+    const el = document.elementFromPoint(x, y)?.closest("[data-slot]") as HTMLElement | null;
+    return el ? Number(el.dataset.slot) : null;
+  };
+  useEffect(() => {
+    // while dragging the page must not scroll under the finger
+    const stop = (e: TouchEvent) => { if (dragging.current) e.preventDefault(); };
+    document.addEventListener("touchmove", stop, { passive: false });
+    return () => document.removeEventListener("touchmove", stop);
+  }, []);
+  const onDown = (e: React.PointerEvent, c: CraftDef) => {
+    if ((qty.get(c.id) ?? 0) < 1) return;
+    const { clientX: x, clientY: y, pointerId } = e;
+    // the moves and the release come to this card even when the finger is over a cell
+    try { (e.currentTarget as HTMLElement).setPointerCapture(pointerId); } catch { /* not supported */ }
+    const timer = window.setTimeout(() => {
+      dragging.current = true;
+      haptic.tap();
+      setDrag({ id: c.id, x, y, over: null });
+    }, 320);
+    press.current = { id: c.id, x, y, timer, pid: pointerId };
+  };
+  const onMove = (e: React.PointerEvent) => {
+    const p = press.current;
+    if (!p) return;
+    if (!dragging.current) {
+      // moved before the hold: it is a scroll, not a drag
+      if (Math.hypot(e.clientX - p.x, e.clientY - p.y) > 8) { clearTimeout(p.timer); press.current = null; }
+      return;
+    }
+    const over = slotAt(e.clientX, e.clientY);
+    setDrag((d) => (d ? { ...d, x: e.clientX, y: e.clientY, over: over !== null && !boxes[over] ? over : null } : d));
+  };
+  const onUp = (e: React.PointerEvent) => {
+    const p = press.current;
+    press.current = null;
+    if (p) clearTimeout(p.timer);
+    if (!dragging.current) return;
+    dragging.current = false;
+    dropped.current = Date.now(); // the click that follows the release is not a tap
+    const slot = slotAt(e.clientX, e.clientY);
+    setDrag(null);
+    if (slot === null) return;
+    if (boxes[slot]) { haptic.err(); toast("Ячейка занята — перетащи в свободную", "err"); return; }
+    if (p) void put(p.id, slot);
+  };
+  const onCancel = () => {
+    if (press.current) clearTimeout(press.current.timer);
+    press.current = null;
+    if (dragging.current) { dragging.current = false; setDrag(null); }
+  };
+  const tapCard = (c: CraftDef) => {
+    if (dragging.current || Date.now() - dropped.current < 400) return;
+    if (c.recipe) { haptic.tap(); setRecipe(c); return; }
+    toast(`${c.name}: удерживай и перетащи в свободную ячейку, чтобы заныкать`, "info");
+  };
+
   return (
     <div className="col cf-page" style={{ gap: 10 }}>
       <div className="title" style={{ margin: 0 }}>
@@ -72,16 +134,17 @@ export function CraftScreen() {
           <Help topic="craft" title="Крафт">
             <ul>
               <li>Детали собираются в вещи: на вещь 1 уровня нужно 5 разных деталей по 5 штук. Из вещей потом соберутся вещи посильнее.</li>
-              <li>Бонус даёт только то, что лежит в <b>заныке</b> — 12 ячеек сверху, по одной штуке в ячейку. Нажми на ячейку — вещь вернётся на склад.</li>
-              <li>«Заныкать» на карточке кладёт одну штуку в первую свободную ячейку. Зелёная галочка — бонус уже действует.</li>
+              <li>Бонус даёт только то, что лежит в <b>заныке</b> — 12 ячеек сверху, по одной штуке в ячейку.</li>
+              <li>Чтобы заныкать: нажми на карточку, подержи и перетащи в свободную ячейку. Нажми на ячейку — вещь вернётся на склад.</li>
+              <li>Нажми на вещь, которая собирается, — откроется схема: что нужно и сколько уже есть.</li>
               <li>Откуда падают детали — скоро.</li>
             </ul>
           </Help>
         </div>
       </div>
 
-      {/* the stash: 12 cells in two blocks of 3×2 */}
-      <div className="panel cf-stash">
+      {/* the stash: fixed on top; 12 blueprint cells on crumpled paper, two blocks of 3×2 */}
+      <div className="cf-stash">
         <b className="display cf-h">Заныкано</b>
         <div className="cf-cells">
           {[0, 1].map((half) => (
@@ -89,7 +152,7 @@ export function CraftScreen() {
               {boxes.slice(half * 6, half * 6 + 6).map((id, k) => {
                 const slot = half * 6 + k;
                 return (
-                  <button key={slot} type="button" className={`cf-cell ${id ? "full" : ""}`} disabled={!id || !!busy} onClick={() => id && take(slot)}
+                  <button key={slot} type="button" data-slot={slot} className={`cf-cell ${id ? "full" : ""} ${drag?.over === slot ? "over" : ""}`} disabled={!id || !!busy} onClick={() => id && take(slot)}
                     title={id ? `${craftById(id)?.name} — нажми, чтобы вытащить` : "Пусто"} aria-label={id ? `Вытащить: ${craftById(id)?.name}` : "Пустая ячейка"}>
                     {id && <ItemArt id={id} size={40} />}
                   </button>
@@ -99,9 +162,8 @@ export function CraftScreen() {
           ))}
         </div>
         <div className="cf-total">
-          <span className="small"><b>Заныканное усиливает:</b></span>
-          {total.power > 0 ? <BonusLines b={total} /> : <span className="tiny cf-sub">Пока ничего — положи детали или вещи в ячейки.</span>}
-          <span className="cf-power">Общая крутизна: <b className="num">{full(total.power)}</b></span>
+          {total.power > 0 ? <BonusLines b={total} /> : <span className="tiny cf-sub">Удерживай карточку и перетащи в ячейку — бонус заработает.</span>}
+          <span className="cf-power">Крутизна: <b className="num">{full(total.power)}</b></span>
         </div>
       </div>
 
@@ -119,7 +181,9 @@ export function CraftScreen() {
           const have = qty.get(c.id) ?? 0;
           const boxed = inBox.get(c.id) ?? 0;
           return (
-            <div key={c.id} className={`cf-card r-${c.rarity} ${have ? "" : "none"}`}>
+            <div key={c.id} className={`cf-card r-${c.rarity} ${have ? "" : "none"} ${drag?.id === c.id ? "lifted" : ""}`} role="button" tabIndex={0}
+              onPointerDown={(e) => onDown(e, c)} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onCancel} onContextMenu={(e) => e.preventDefault()}
+              onClick={() => tapCard(c)}>
               <div className="cf-card-top">
                 <span className="cf-pic"><ItemArt id={c.id} size={48} />{have > 0 && <i className="cf-n num">×{full(have)}</i>}</span>
                 <span className="col" style={{ minWidth: 0 }}>
@@ -129,40 +193,54 @@ export function CraftScreen() {
               </div>
               <BonusLines b={c.bonus} on={boxed > 0} />
               <span className="tiny cf-sub">Крутизна +{c.power}</span>
-              <div className="cf-btns">
-                {c.recipe && <button type="button" className="btn sm green" onClick={() => { haptic.tap(); setRecipe(c); }}>Собрать</button>}
-                <button type="button" className="btn sm gold" disabled={!have || !free || !!busy} onClick={() => put(c.id)} title={!free ? "Все ячейки заняты" : ""}>Заныкать</button>
-              </div>
             </div>
           );
         })}
       </div>
 
-      {recipe && (
-        <Modal title="Схема сборки" onClose={() => setRecipe(null)}>
-          <div className="cf-recipe">
-            <div className="cf-parts">
-              {recipe.recipe!.map((r) => {
+      {/* the card under the finger while dragging */}
+      {drag && <span className="cf-ghost" style={{ left: drag.x, top: drag.y }}><ItemArt id={drag.id} size={56} /></span>}
+
+      {recipe && <Scheme d={recipe} qty={qty} busy={!!busy} onMake={() => make(recipe)} onOpen={setRecipe} onClose={() => setRecipe(null)} />}
+    </div>
+  );
+}
+
+/** «Схема создания вещи»: a sheet of paper — the ingredients (a picture, have/need; one that is made itself — «Собрать»
+ * opens its own scheme), an arrow, the result and «Создать». */
+function Scheme({ d, qty, busy, onMake, onOpen, onClose }: { d: CraftDef; qty: Map<string, number>; busy: boolean; onMake: () => void; onOpen: (d: CraftDef) => void; onClose: () => void }) {
+  const parts = d.recipe ?? [];
+  const lacks = parts.some((r) => (qty.get(r.id) ?? 0) < r.qty);
+  const cols = [parts.slice(0, 3), parts.slice(3)];
+  return (
+    <Modal onClose={onClose} className="cf-scheme-modal">
+      <div className="cf-scheme">
+        <div className="cf-scheme-body">
+          {cols.map((col, i) => (
+            <div key={i} className="cf-scheme-col">
+              {col.map((r) => {
                 const h = qty.get(r.id) ?? 0;
+                const sub = craftById(r.id);
                 return (
-                  <span key={r.id} className={`cf-part ${h >= r.qty ? "ok" : ""}`}>
-                    <ItemArt id={r.id} size={44} />
-                    <b className="tiny ellipsis">{craftById(r.id)?.name}</b>
-                    <span className="num small">{full(h)}/{r.qty}</span>
+                  <span key={r.id} className={`cf-ing ${h >= r.qty ? "ok" : ""}`} title={sub?.name}>
+                    <span className="cf-ing-pic"><ItemArt id={r.id} size={46} /></span>
+                    <b className="num">{full(h)}/{r.qty}</b>
+                    {sub?.recipe && <button type="button" className="cf-ing-btn" onClick={() => onOpen(sub)}>Собрать</button>}
+                    <i className="cf-ing-name">{sub?.name}</i>
                   </span>
                 );
               })}
             </div>
-            <span className="cf-arrow" aria-hidden="true">➜</span>
-            <span className="cf-result"><ItemArt id={recipe.id} size={64} /><b className="small">{recipe.name}</b></span>
-          </div>
-          <BonusLines b={recipe.bonus} />
-          <button type="button" className="btn green block" style={{ marginTop: 10 }}
-            disabled={!!busy || recipe.recipe!.some((r) => (qty.get(r.id) ?? 0) < r.qty)} onClick={() => make(recipe)}>
-            {recipe.recipe!.some((r) => (qty.get(r.id) ?? 0) < r.qty) ? "Не хватает деталей" : "Собрать"}
-          </button>
-        </Modal>
-      )}
-    </div>
+          ))}
+          <span className="cf-scheme-arrow" aria-hidden="true">⟶</span>
+          <span className="cf-scheme-res">
+            <span className="cf-ing-pic big"><ItemArt id={d.id} size={64} /></span>
+            <b className="small">{d.name}</b>
+            <button type="button" className="cf-ing-btn go" disabled={busy || lacks} onClick={onMake}>Создать</button>
+          </span>
+        </div>
+        <div className="cf-scheme-foot"><BonusLines b={d.bonus} /></div>
+      </div>
+    </Modal>
   );
 }

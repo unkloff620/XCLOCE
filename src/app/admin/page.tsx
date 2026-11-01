@@ -947,6 +947,7 @@ const GIVE_TABS = [
   { id: "reward", name: "Пропуски и награды" },
   { id: "stash", name: "Нычки" },
   { id: "event", name: "Ивенты" },
+  { id: "craft", name: "Крафт: детали и вещи" },
 ] as const;
 type GiveTab = (typeof GIVE_TABS)[number]["id"];
 const SLOT_ORDER: { slot: Slot; name: string }[] = [

@@ -27,7 +27,7 @@ let fullOpen = 0;
 /** a window opened from a window lies over it, whatever the order the DOM got them in (80, 81, … — below the loaders at 85) */
 let openModals = 0;
 /** `head`: a line that stays under the title while the rest scrolls (a plain window: only its body scrolls, inside the paper) */
-export function Modal({ title, onClose, children, wide, maxWidth, full, page, head }: { title?: ReactNode; onClose: () => void; children: ReactNode; wide?: boolean; maxWidth?: number; full?: boolean; page?: boolean; head?: ReactNode }) {
+export function Modal({ title, onClose, children, wide, maxWidth, full, page, head, className }: { title?: ReactNode; onClose: () => void; children: ReactNode; wide?: boolean; maxWidth?: number; full?: boolean; page?: boolean; head?: ReactNode; /** an extra class on the window (its own look) */ className?: string }) {
   const [z] = useState(() => 80 + Math.min(4, openModals++));
   useEffect(() => () => { openModals = Math.max(0, openModals - 1); }, []);
   useEffect(() => {
@@ -59,7 +59,7 @@ export function Modal({ title, onClose, children, wide, maxWidth, full, page, he
   // rendered into <body> so it covers the HUD even when opened from a fixed full-screen scene
   const box = (
     <div className={`modal-back ${full ? "full" : ""} ${page ? "page" : ""}`} style={{ zIndex: z }} onClick={full || page ? undefined : onClose} role="dialog" aria-modal="true">
-      <div className={`modal ${full ? "full" : ""} ${page ? "page" : ""}`} style={full ? ({ ["--mw" as string]: maxWidth ? `${maxWidth}px` : "100%" }) : page ? undefined : maxWidth ? { maxWidth } : wide ? { maxWidth: 460 } : undefined} onClick={(e) => e.stopPropagation()}>
+      <div className={`modal ${full ? "full" : ""} ${page ? "page" : ""} ${className ?? ""}`} style={full ? ({ ["--mw" as string]: maxWidth ? `${maxWidth}px` : "100%" }) : page ? undefined : maxWidth ? { maxWidth } : wide ? { maxWidth: 460 } : undefined} onClick={(e) => e.stopPropagation()}>
         <button className="x" onClick={onClose} aria-label="Закрыть">×</button>
         {title && <h3 className="display">{title}</h3>}
         {full || page ? children : (
