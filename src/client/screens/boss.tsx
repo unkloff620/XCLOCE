@@ -439,7 +439,6 @@ export function BossScreen({ id }: { id: string }) {
           <MultPicker mult={mult} setMult={setMult} />
           <div className="row fight-bar">
             <TalentProgress dmg={talentDmg ?? state?.player.talentDamage ?? 0} pop={talentPop} share={myShare} onOpen={() => setTalentsOpen(true)} />
-            {view && <ShareChip dmg={view.myDamage} hpMax={view.hpMax} />}
             <span className="grow" />
             <button className="btn sm dark" onClick={() => setTab("top")}>Топ</button>
             <button className="btn sm dark" onClick={() => setTab("mine")}>Мои</button>
@@ -630,18 +629,6 @@ export function BossScreen({ id }: { id: string }) {
         )}
       </div>
     </div>
-  );
-}
-
-/** The win reward: whole for everyone who has hit the boss in this fight. */
-function ShareChip({ dmg }: { dmg: number; hpMax: number }) {
-  const k = rewardShare(dmg);
-  return (
-    <span className={`chip share-chip ${k >= 1 ? "full" : ""}`} title={k >= 1 ? "Ты в деле: после победы — полная награда, ключ и медаль" : "Ударь босса хотя бы раз — и после победы получишь полную награду"}>
-      <i className="fill" style={{ width: `${k * 100}%` }} />
-      <Icon name="chest" size={16} />
-      <b className="num">{k >= 1 ? "100%" : "0%"}</b>
-    </span>
   );
 }
 

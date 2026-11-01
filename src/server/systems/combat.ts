@@ -357,10 +357,10 @@ export async function claimFight(ctx: Ctx, fightId: number) {
     return { status: "won" as const, reward: f.reward };
   }
   const def = bossById(f.boss_id)!;
-  // any own hit in a won fight earns the whole reward: money, xp, the pass, the drop, the medal (content/bosses.ts)
+  // being in a won fight earns the whole reward, hits or not: money, xp, the pass, the drop, the medal (content/bosses.ts)
   const myDamage = Number(f.my_damage);
   const share = rewardShare(myDamage);
-  const earnedKey = myDamage > 0;
+  const earnedKey = true;
   const drops = earnedKey ? (def.drop ?? []).filter((d) => ctx.rng() < d.chance).map((d) => ({ id: d.id, qty: d.qty })) : [];
   // the pass of this boss, and with EXTRA_KEY_CHANCE a second one
   const bonusKey = !def.final && earnedKey && ctx.rng() < EXTRA_KEY_CHANCE;
@@ -463,7 +463,7 @@ export async function claimFight(ctx: Ctx, fightId: number) {
     }
   }
   await ctx.q.query("UPDATE fights SET reward=$2, seen=true WHERE id=$1", [f.id, JSON.stringify(granted)]);
-  if (myDamage > 0) {
+  {
     await ctx.q.query(
       "INSERT INTO boss_damage (boss_id, player_id, wins) VALUES ($1,$2,1) ON CONFLICT (boss_id, player_id) DO UPDATE SET wins = boss_damage.wins + 1",
       [def.id, ctx.pid],

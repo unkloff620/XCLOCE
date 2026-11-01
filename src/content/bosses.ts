@@ -245,17 +245,16 @@ export const FIGHT_HOURS = 8;
 export const FIGHTS_PER_DAY = 7;
 /**
  * Bosses are shared: everybody's hits lower HP in every running fight, so with ~100 players a boss falls fast.
- * Every player who hit the boss in a won fight gets the FULL reward, the pass, the drop and the medal — however small
- * the part was (FULL_SHARE / KEY_SHARE are kept only for old configs; the reward no longer depends on them).
- * No damage at all — no reward.
+ * Every player who was in a won fight gets the FULL reward, the pass, the drop and the medal — even without a single hit
+ * (FULL_SHARE / KEY_SHARE are kept only for old configs; the reward no longer depends on them).
  */
 export const FULL_SHARE = 0.02;
 export const KEY_SHARE = 0.01;
 /** a win that earned the pass gives a second pass of the same boss with this chance */
 export const EXTRA_KEY_CHANCE = 0.1;
 /** reward multiplier for damage dealt in a fight */
-export function rewardShare(myDamage: number, _hpMax?: number, _full = FULL_SHARE): number {
-  return myDamage > 0 ? 1 : 0;
+export function rewardShare(_myDamage?: number, _hpMax?: number, _full = FULL_SHARE): number {
+  return 1;
 }
 /** a boss's own things (BossDef.wear) in «Блатной»: this chance per win that ONE of the missing things drops, for every boss */
 export const BLAT_THING_CHANCE = 0.7;

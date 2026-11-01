@@ -44,7 +44,7 @@ function LockedInfo({ itemId, onClose }: { itemId: string; onClose: () => void }
           {first ? (
             <>
               <span className="small">Награда за первую победу над боссом <b>{boss.name}</b> (№{boss.order}). Победи его — вещь откроется здесь, в магазине, и её можно будет выкупить.</span>
-              <span className="tiny muted">Нужно хотя бы раз ударить босса в «Блатном» бою.</span>
+              <span className="tiny muted">Нужно победить босса в «Блатном» бою.</span>
             </>
           ) : (
             <>

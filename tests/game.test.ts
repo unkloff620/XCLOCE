@@ -121,14 +121,14 @@ describe("boss fights: personal fights, shared damage", () => {
     expect(Object.fromEntries(rows.map((r) => [r.id, Number(r.damage_total)]))).toEqual({ _all: 60, datsik: 30, kedr: 30 });
   });
 
-  it("one hit can finish several fights; everyone who hit gets the full reward", async () => {
+  it("one hit can finish several fights; everyone in the fight gets the full reward", async () => {
     await setBossHp({ datsik: 1000 });
     const a = await newPlayer(db), b = await newPlayer(db), c = await newPlayer(db), d = await newPlayer(db);
     const fa = await startDatsik(a);
     const fb = await startDatsik(b);
     const fc = await startDatsik(c);
     const fd = await startDatsik(d);
-    // b and c hit (a mouse, a fist): both get everything; d did not hit: nothing
+    // b and c hit (a mouse, a fist), d did not: everyone in the fight gets everything
     await hit(b, "mouse");
     await hit(c, "fist");
     await give(db, a, "rug-pull-gun", 4);
@@ -147,9 +147,9 @@ describe("boss fights: personal fights, shared damage", () => {
     expect(await qty(db, c, "key-datsik")).toBe(1);
 
     const sd = await act(db, d, "fight_claim", { fightId: fd.result.fightId }, T0, always(0.99));
-    expect(sd.result).toMatchObject({ share: 0, key: false });
-    expect(await wallet(db, d, "USD")).toBe(0);
-    expect(await qty(db, d, "key-datsik")).toBe(0);
+    // d was in the fight without a hit: the full reward too
+    expect(sd.result).toMatchObject({ share: 1, key: true });
+    expect(await qty(db, d, "key-datsik")).toBe(1);
 
     const va = await fightView(db, a, fa.result.fightId, 0, T0);
     expect(va).toMatchObject({ status: "won", killerIsMe: true });

@@ -96,7 +96,7 @@ export function ResultWindow() {
 
   // until the claim answers: the reward this fight earns (my part of it), the same numbers
   const share = rewardShare(view.myDamage, view.hpMax);
-  const keyOk = view.myDamage > 0;
+  const keyOk = true;
   const preview = { ...scaleReward(boss.reward, share), items: [...(boss.final || boss.event || !keyOk ? [] : [{ id: `key-${boss.id}`, qty: 1 }]), ...(share >= 1 ? boss.reward.items ?? [] : [])] };
   const unlocks = got?.unlocks ?? [];
   const rooms = unlocks.filter((id) => id.startsWith("room:")).map((id) => id.slice(5));

@@ -19,7 +19,7 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
     `SELECT
        (SELECT COALESCE(SUM(hits), 0) FROM boss_damage WHERE player_id=$1)::bigint AS hits,
        (SELECT COALESCE(total_damage, 0) FROM player_stats WHERE player_id=$1)::bigint AS damage,
-       (SELECT COUNT(*) FROM fights WHERE player_id=$1 AND status='won' AND my_damage > 0)::int AS wins,
+       (SELECT COUNT(*) FROM fights WHERE player_id=$1 AND status='won')::int AS wins,
        (SELECT COUNT(*) FROM fights WHERE player_id=$1 AND status='won' AND solo)::int AS solo_wins,
        (SELECT COUNT(*) FROM fights WHERE killer_id=$1 AND player_id=$1)::int AS kills,
        (SELECT COUNT(*) FROM location_claims WHERE player_id=$1)::int AS locations,
@@ -39,7 +39,7 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
   );
   // wins over each boss where I dealt damage ("win:<boss id>")
   const wins = await q.query<{ boss_id: string; n: number }>(
-    "SELECT boss_id, COUNT(*)::int AS n FROM fights WHERE player_id=$1 AND status='won' AND my_damage > 0 GROUP BY boss_id",
+    "SELECT boss_id, COUNT(*)::int AS n FROM fights WHERE player_id=$1 AND status='won' GROUP BY boss_id",
     [pid],
   );
   // sets of stashes collected ("stashsets:<n>")
@@ -51,9 +51,9 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
   const [x] = await q.query<Record<string, number | null>>(
     `SELECT
        (SELECT COALESCE(MAX(my_damage), 0) FROM fights WHERE player_id=$1)::bigint AS best_fight,
-       (SELECT COUNT(*) FROM fights WHERE player_id=$1 AND status='won' AND my_damage > 0 AND mode='blat')::int AS wins_blat,
-       (SELECT COUNT(*) FROM fights WHERE player_id=$1 AND status='won' AND my_damage > 0 AND mode='avtor')::int AS wins_avtor,
-       (SELECT COUNT(DISTINCT boss_id) FROM fights WHERE player_id=$1 AND status='won' AND my_damage > 0)::int AS bosses,
+       (SELECT COUNT(*) FROM fights WHERE player_id=$1 AND status='won' AND mode='blat')::int AS wins_blat,
+       (SELECT COUNT(*) FROM fights WHERE player_id=$1 AND status='won' AND mode='avtor')::int AS wins_avtor,
+       (SELECT COUNT(DISTINCT boss_id) FROM fights WHERE player_id=$1 AND status='won')::int AS bosses,
        (SELECT COALESCE(SUM(amount) FILTER (WHERE currency='RUB'), 0) FROM wallets WHERE player_id=$1)::bigint AS have_rub,
        (SELECT COALESCE(SUM(amount) FILTER (WHERE currency='USD'), 0) FROM wallets WHERE player_id=$1)::bigint AS have_usd,
        (SELECT COALESCE(SUM(amount) FILTER (WHERE currency='SOL'), 0) FROM wallets WHERE player_id=$1)::bigint AS have_sol,
@@ -92,7 +92,7 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
     [pid, ["rug-pull-gun", "gpu", "keyboard", "poker-chip", "sticker-hodl"]],
   );
   const fast = await q.query<{ boss_id: string; n: number }>(
-    `SELECT boss_id, COUNT(*)::int AS n FROM fights WHERE player_id=$1 AND status='won' AND my_damage > 0 AND ended_at IS NOT NULL
+    `SELECT boss_id, COUNT(*)::int AS n FROM fights WHERE player_id=$1 AND status='won' AND ended_at IS NOT NULL
        AND ended_at - started_at <= interval '1 hour' GROUP BY boss_id`,
     [pid],
   );
