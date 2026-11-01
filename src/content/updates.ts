@@ -17,6 +17,12 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-01-exchange-garage",
+    date: "1 ноября",
+    title: "Гараж барыги",
+    items: [{ img: "/assets/updates/2026-11-01-exchange-garage.webp", text: "Обменник теперь — гараж барыги. Нажми на хлам на столе слева — продашь находки со двора за рубли. Справа аппарат обмена валют: на его экране курс, а в закрытые дни — «ЗАКРЫТО»." }],
+  },
+  {
     id: "2026-11-01-upgrader-mine",
     date: "1 ноября",
     title: "Улучшенные вещи — отдельно",

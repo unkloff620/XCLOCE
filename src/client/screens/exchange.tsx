@@ -12,6 +12,8 @@ import { Help, HelpList } from "../help.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { itemById } from "../../content/items.ts";
 import { sfx } from "../sound.ts";
+import { Modal } from "../ui.tsx";
+import { KioskDealer } from "../art/kiosk.tsx";
 
 export function Exchanger({ ex }: { ex: ShopData["exchange"] }) {
   const { state, act, busy } = useGame();
@@ -83,7 +85,7 @@ export function Exchanger({ ex }: { ex: ShopData["exchange"] }) {
  * «Скупка»: the dealer buys the yard finds (and other things with a price in state.sell) for roubles — always open,
  * not only on the exchanger's days. A row per thing: how many, the price, «Продать»; on top «Продать всё».
  */
-function BuyBack() {
+function BuyBack({ bare }: { bare?: boolean } = {}) {
   const { state, act, busy } = useGame();
   if (!state) return null;
   const rows = Object.entries(state.sell ?? {})
@@ -102,11 +104,13 @@ function BuyBack() {
     haptic.ok(); sfx("coin");
   };
   return (
-    <div className="panel bb-panel">
-      <div className="bb-head">
-        <b className="display">Скупка</b>
-        <span className="tiny muted">Барыга берёт находки со двора за рубли — каждый день</span>
-      </div>
+    <div className={bare ? "bb-panel" : "panel bb-panel"}>
+      {!bare && (
+        <div className="bb-head">
+          <b className="display">Скупка</b>
+          <span className="tiny muted">Барыга берёт находки со двора за рубли — каждый день</span>
+        </div>
+      )}
       {rows.length ? (
         <>
           {rows.map((r) => (
@@ -175,14 +179,56 @@ export function ExchangeScreen() {
           </Help>
         </div>
       </div>
-      {win && <ExchangeClock key={win.until} open={win.open} until={win.until} onTurn={load} />}
-      {data ? (
-        <div className={`exp-wrap${win?.open ? "" : " closed"}`}>
-          <Exchanger ex={data.exchange} />
-          {!win?.open && <div className="exp-closed-sign display" aria-hidden="true">ЗАКРЫТО</div>}
-        </div>
-      ) : <div className="panel muted center">Загружаем курс…</div>}
-      <BuyBack />
+      <ExchangeGarage data={data} win={win} onTurn={load} />
     </div>
+  );
+}
+
+/**
+ * The garage (public/assets/exchange/garage.webp, tools/exchange/build.py): the dealer behind the table (the yard kiosk's
+ * animated layers), the yard finds on the newspaper on the left — a tap sells them to him («Скупка», every day),
+ * the exchange machine on the right — a tap opens the currency exchange (open on its days; the strip says when).
+ */
+function ExchangeGarage({ data, win, onTurn }: { data: ShopData | null; win: { open: boolean; until: number } | null; onTurn: () => void }) {
+  const { state } = useGame();
+  const [open, setOpen] = useState<"sell" | "ex" | null>(null);
+  const worth = Object.entries(state?.sell ?? {}).reduce((t, [id, price]) => t + (state?.inventory.find((i) => i.id === id)?.qty ?? 0) * price, 0);
+  const ex = data?.exchange;
+  const rate = ex ? Math.ceil(ex.rub.USD / ex.rub.RUB / (1 - ex.fee)) : null;
+  return (
+    <>
+      {win && <ExchangeClock key={win.until} open={win.open} until={win.until} onTurn={onTurn} />}
+      <div className="xg-scene">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="xg-bg" src="/assets/exchange/garage.webp" alt="" draggable={false} />
+        <span className="xg-dealer"><KioskDealer /></span>
+        {/* the machine's green screen: the rate, or «закрыто» */}
+        <span className={`xg-screen ${win?.open ? "" : "off"}`} aria-hidden="true">
+          {win?.open ? <>{rate ? <><b>$1</b><b>={rate}₽</b></> : <b>…</b>}</> : <><b>ЗАКРЫТО</b></>}
+        </span>
+        <button type="button" className="xg-zone xg-sell" onClick={() => { haptic.tap(); setOpen("sell"); }} aria-label="Продать барыге">
+          <span className="xg-tag">Продать барыге{worth > 0 && <b className="num"> · {money("RUB", worth)} ₽</b>}</span>
+        </button>
+        <button type="button" className={`xg-zone xg-ex ${win?.open ? "" : "closed"}`} onClick={() => { haptic.tap(); setOpen("ex"); }} aria-label="Обмен валют">
+          <span className="xg-tag">{win?.open ? "Обмен валют" : "Обмен закрыт"}</span>
+        </button>
+      </div>
+      {open === "sell" && (
+        <Modal title="Скупка" onClose={() => setOpen(null)}>
+          <p className="tiny muted" style={{ margin: "-6px 0 8px" }}>Барыга берёт находки со двора за рубли — каждый день.</p>
+          <BuyBack bare />
+        </Modal>
+      )}
+      {open === "ex" && (
+        <Modal onClose={() => setOpen(null)}>
+          {data ? (
+            <div className={`exp-wrap${win?.open ? "" : " closed"}`}>
+              <Exchanger ex={data.exchange} />
+              {!win?.open && <div className="exp-closed-sign display" aria-hidden="true">ЗАКРЫТО</div>}
+            </div>
+          ) : <div className="panel muted center">Загружаем курс…</div>}
+        </Modal>
+      )}
+    </>
   );
 }

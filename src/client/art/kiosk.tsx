@@ -44,3 +44,22 @@ export function KioskArt({ open, night }: { open: boolean; night: boolean }) {
     </span>
   );
 }
+
+/** The same dealer without his kiosk: behind the table in the exchanger's garage (screens/exchange.tsx) — smokes, taps the table. */
+export function KioskDealer() {
+  return (
+    <span className="kz open" aria-hidden="true">
+      {/* eslint-disable @next/next/no-img-element */}
+      <img className="kz-l kz-man kz-torso" src={`${K}/torso.webp`} alt="" draggable={false} />
+      <img className="kz-l kz-man kz-head" src={`${K}/head.webp`} alt="" draggable={false} />
+      <img className="kz-l kz-man" src={`${K}/forearm.webp`} alt="" draggable={false} />
+      <img className="kz-l kz-man kz-fist" src={`${K}/fist.webp`} alt="" draggable={false} />
+      <span className="kz-l kz-arm">
+        <img className="kz-l kz-man" src={`${K}/arm-smoke.webp`} alt="" draggable={false} />
+        <i className="kz-tip"><b /><b /><b /><b /></i>
+      </span>
+      <i className="kz-puff"><b /><b /><b /></i>
+      {/* eslint-enable @next/next/no-img-element */}
+    </span>
+  );
+}
