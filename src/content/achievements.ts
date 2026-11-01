@@ -126,6 +126,8 @@ export const ACH_CATEGORIES: AchCategory[] = [
     [10, 20, 30, 40, 50, 75, 100, 125, 150, 200, 250, 300, 350, 400, 450, 500, 600, 650, 700, 800], (n) => `Набери ${n} талантов`),
   series("raids", "boss", "Наехать", "ach-raid", "raids", [1, 5, 10, 25, 50, 100, 250, 500, 750, 1_000], (n) => `Наедь на других игроков ${n} раз`),
   series("spits", "boss", "Харкнуть", "ach-spit", "spits", [1, 5, 10, 25, 50, 100, 250, 500, 750, 1_000], (n) => `Харкни в других игроков ${n} раз`),
+  series("raids-won", "boss", "Победитель", "ach-winner", "raidsWon", [1, 5, 25, 100, 250, 500, 1_000], (n) => `Выиграй ${n} наездов`),
+  series("raids-held", "boss", "Стена", "ach-wall", "raidsHeld", [1, 5, 25, 100, 250, 500], (n) => `Отбейся от ${n} наездов`),
   // ---------------- Экономика (what lies on the balance now) ----------------
   series("authority", "eco", "Авторитет", "xp", "authority",
     [10_000, 50_000, 100_000, 250_000, 500_000, 1_000_000, 2_500_000, 5_000_000, 7_500_000, 10_000_000], (n) => `Набери ${n} авторитета`),
@@ -217,6 +219,20 @@ export const ACH_CATEGORIES: AchCategory[] = [
   series("clan-bosses", "misc", "Клановый босс", "ach-clan", "clanBosses", [1, 3, 10, 25, 50], (n) => `Победи с кланом ${n} клановых боссов (бей сам)`),
   series("clan-leader", "misc", "Лидер", "ach-leader", "clanCreated", [1], () => "Создай свой клан"),
   series("nishtyaks", "misc", "Ништяк!", "ach-nishtyak", "nishtyaks", [1, 10, 50, 200, 1_000], (n) => `Получи ${n} «ништяков» от других игроков`),
+  series("pumps", "misc", "Тренер", "ach-trainer", "pumps", [1, 10, 50, 100, 250, 500, 1_000, 2_500], (n) => `Накачай бицуху другим игрокам ${n} раз`),
+  // ---------------- «Крафт» ----------------
+  series("craft1", "misc", "Мастер: 1 уровень", "ach-craft1", "craft1", [1, 5, 10, 25, 50, 100], (n) => `Собери ${n} вещей 1 уровня в крафте`),
+  series("craft2", "misc", "Мастер: 2 уровень", "ach-craft2", "craft2", [1, 3, 6, 10], (n) => `Собери ${n} вещей 2 уровня в крафте`),
+  series("craft3", "misc", "Мастер: оружие", "ach-craft3", "craft3", [1, 2, 3], (n) => `Собери ${n} оружия 3 уровня в крафте`),
+  series("craft-boxes", "misc", "Заначка", "ach-stashbox", "craftBoxes", [1, 3, 6, 9, 12], (n) => `Открой ${n} ячеек заначки в крафте`),
+  {
+    id: "craft-blocks", section: "misc", name: "Полная заначка", icon: "ach-stashbox", kind: "list",
+    lines: [
+      line("craft-blocks", 0, 2, { id: "craft-block-left", name: "Левый блок", hint: "Заполни все 6 левых ячеек заначки (+15 к энергии)", stat: "craftLeft", target: 1, icon: "ach-stashbox", label: "6" }),
+      line("craft-blocks", 1, 2, { id: "craft-block-right", name: "Правый блок", hint: "Заполни все 6 правых ячеек заначки (+100 к бицухе)", stat: "craftRight", target: 1, icon: "ach-stashbox", label: "6" }),
+    ],
+  },
+  series("parts", "misc", "Старьёвщик", "ach-parts", "parts", [100, 500, 1_000, 5_000, 10_000], (n) => `Собери ${n} деталей для крафта`),
 ];
 
 export const ACHIEVEMENTS: AchievementDef[] = ACH_CATEGORIES.flatMap((c) => c.lines);

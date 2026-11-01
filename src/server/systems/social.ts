@@ -1,6 +1,6 @@
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, moscowDay, type Ctx } from "../core.ts";
-import { FIGHT_WIN, NOTE_KEEP_MS, SOCIAL_COOLDOWN_MS } from "../../content/social.ts";
+import { FIGHT_WIN, NOTE_KEEP_MS, SOCIAL_COOLDOWN_MS, fightChance } from "../../content/social.ts";
 import { rollParts } from "../../content/craft-drops.ts";
 import { mergeRewards } from "../../content/rewards.ts";
 
@@ -58,12 +58,14 @@ export async function fight(ctx: Ctx, to: number) {
   const c = await counts(ctx.q, ctx.pid, "fight", to, ctx.now);
   if (c.last && ctx.now - c.last < SOCIAL_COOLDOWN_MS) throw new GameError("fight_wait", "С ним ты недавно махался — отдышись");
   const mine = await bicepsOf(ctx.q, ctx.pid), theirs = p.biceps;
-  const won = mine > theirs;
+  // luck: the stronger one usually wins, but not always (content/social.ts fightChance)
+  const chance = fightChance(mine, theirs);
+  const won = ctx.rng() < chance;
   // a won fist fight: 30% on a craft part on top
   const reward = won ? await grantReward(ctx, mergeRewards(FIGHT_WIN, { items: ctx.rng() < 0.3 ? rollParts(ctx.rng, 1, { rare: 0.25 }) : [] }), `fight:${to}`) : null;
   await log(ctx, "fight", to, won);
   await note(ctx, to, "fight", { won, mine, theirs });
-  return { won, mine, theirs, reward };
+  return { won, mine, theirs, chance, reward };
 }
 
 /** «Харкнуть»: «В тебя харкнул …» in his messages; the same player once an hour. */

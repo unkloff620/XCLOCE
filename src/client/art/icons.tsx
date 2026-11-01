@@ -20,7 +20,7 @@ const RASTER_ICONS: Partial<Record<string, string>> = { shirt: "wardrobe", gift:
   // achievement pictures (tools/ui/cut-achievements.py)
   "ach-damage": "ach-damage", "ach-hits": "ach-hits", "ach-wins": "ach-wins", "ach-yard": "ach-yard", "ach-chests": "ach-chests", "ach-weekly": "ach-weekly", "ach-solo": "ach-solo",
   // the second set (tools/ui/cut-achievements-2.py)
-  ...Object.fromEntries(["ach-blat", "ach-avtor", "ach-allboss", "ach-savings", "ach-slots", "ach-upgrader", "ach-zonk", "ach-poker", "ach-clan", "ach-leader", "ach-raid", "ach-nishtyak", "ach-shop", "ach-bj", "ach-spit"].map((n) => [n, n])),
+  ...Object.fromEntries(["ach-blat", "ach-avtor", "ach-allboss", "ach-savings", "ach-slots", "ach-upgrader", "ach-zonk", "ach-poker", "ach-clan", "ach-leader", "ach-raid", "ach-nishtyak", "ach-shop", "ach-bj", "ach-spit", "ach-trainer", "ach-winner", "ach-wall", "ach-craft1", "ach-craft2", "ach-craft3", "ach-stashbox", "ach-parts"].map((n) => [n, n])),
 };
 
 export function Icon({ name, size = 28, className }: { name: IconName; size?: number; className?: string }) {

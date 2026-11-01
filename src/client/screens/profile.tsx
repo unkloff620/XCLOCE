@@ -205,7 +205,7 @@ type Social = { biceps: number; mine: number; pump: number | null; fight: number
 const SOCIAL_CD = 60 * 60_000;
 
 /** the fist fight in the background: a dust cloud over the room, then who won — after the raid voice line has finished (≈3 s) */
-function Brawl({ res, name, onClose }: { res: { won: boolean; mine: number; theirs: number; reward: unknown } | null; name: string; onClose: () => void }) {
+function Brawl({ res, name, onClose }: { res: { won: boolean; mine: number; theirs: number; chance?: number; reward: unknown } | null; name: string; onClose: () => void }) {
   const [shown, setShown] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setShown(true), 3300);
@@ -232,7 +232,9 @@ function Brawl({ res, name, onClose }: { res: { won: boolean; mine: number; thei
           <b className="display">VS</b>
           <span><BicepsArt size={36} /><b className="num">{res.theirs}</b><small>у {name}</small></span>
         </div>
-        <p className="small">{res.won ? <>Наехал на {name} и вышел победителем: <b>+50 ₽</b></> : <>{name} крепче — качай бицуху, и в следующий раз он не устоит.</>}</p>
+        <p className="small">{res.won
+          ? <>Наехал на {name} и вышел победителем: <b>+50 ₽</b>{res.chance !== undefined && res.chance < 0.5 && <> — повезло, шанс был {Math.round(res.chance * 100)}%</>}</>
+          : <>{name} в этот раз оказался сильнее{res.chance !== undefined && <> — твой шанс был {Math.max(1, Math.round(res.chance * 100))}%</>}. Качай бицуху и пробуй ещё.</>}</p>
         <button className="btn gold block" onClick={onClose}>Ок</button>
       </div>
     </Modal>
@@ -507,7 +509,7 @@ export function ProfileScreen() {
   const [p, setP] = useState<Profile | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [dossier, setDossier] = useState(false);
-  const [brawl, setBrawl] = useState<{ key: number; res: { won: boolean; mine: number; theirs: number; reward: unknown } | null } | null>(null);
+  const [brawl, setBrawl] = useState<{ key: number; res: { won: boolean; mine: number; theirs: number; chance?: number; reward: unknown } | null } | null>(null);
   const [fx, setFx] = useState<{ key: number; kind: "pump" | "spit" } | null>(null);
   const id = q.get("id");
   const [tick, setTick] = useState(0);
@@ -547,7 +549,7 @@ export function ProfileScreen() {
     sfx("brawl");
     const key = Date.now();
     setBrawl({ key, res: null });
-    const r = await act<{ won: boolean; mine: number; theirs: number; reward: unknown }>("social_fight", { to: p.id });
+    const r = await act<{ won: boolean; mine: number; theirs: number; chance: number; reward: unknown }>("social_fight", { to: p.id });
     if (!r) { setBrawl(null); return; }
     setBrawl({ key, res: r });
     reload();

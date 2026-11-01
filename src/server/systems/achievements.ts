@@ -70,7 +70,17 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
        (SELECT COUNT(*) FROM clan_boss_hits h JOIN clan_boss b ON b.clan_id = h.clan_id AND b.week = h.week WHERE h.player_id=$1 AND h.damage > 0 AND b.killed_at IS NOT NULL)::int AS clan_bosses,
        (SELECT COUNT(*) FROM social_log WHERE from_id=$1 AND kind='spit' AND at >= COALESCE((SELECT progress_reset_at FROM players WHERE id=$1), '-infinity'::timestamptz))::int AS spits,
        (SELECT COUNT(*) FROM social_log WHERE from_id=$1 AND kind='fight' AND at >= COALESCE((SELECT progress_reset_at FROM players WHERE id=$1), '-infinity'::timestamptz))::int AS raids,
-       (SELECT COALESCE((SELECT n FROM player_biceps WHERE player_id=$1), 0))::int AS nishtyaks`,
+       (SELECT COALESCE((SELECT n FROM player_biceps WHERE player_id=$1), 0))::int AS nishtyaks,
+       (SELECT COUNT(*) FROM social_log WHERE from_id=$1 AND kind='pump' AND at >= COALESCE((SELECT progress_reset_at FROM players WHERE id=$1), '-infinity'::timestamptz))::int AS pumps,
+       (SELECT COUNT(*) FROM social_log WHERE from_id=$1 AND kind='fight' AND won IS TRUE AND at >= COALESCE((SELECT progress_reset_at FROM players WHERE id=$1), '-infinity'::timestamptz))::int AS raids_won,
+       (SELECT COUNT(*) FROM social_log WHERE to_id=$1 AND kind='fight' AND won IS FALSE AND at >= COALESCE((SELECT progress_reset_at FROM players WHERE id=$1), '-infinity'::timestamptz))::int AS raids_held,
+       (SELECT COALESCE(SUM(delta) FILTER (WHERE key LIKE 'craft-%'), 0) FROM ledger WHERE player_id=$1 AND kind='craft' AND created_at >= COALESCE((SELECT progress_reset_at FROM players WHERE id=$1), '-infinity'::timestamptz))::int AS craft1,
+       (SELECT COALESCE(SUM(delta) FILTER (WHERE key LIKE 'craft2-%'), 0) FROM ledger WHERE player_id=$1 AND kind='craft' AND created_at >= COALESCE((SELECT progress_reset_at FROM players WHERE id=$1), '-infinity'::timestamptz))::int AS craft2,
+       (SELECT COALESCE(SUM(delta) FILTER (WHERE key LIKE 'craft3-%'), 0) FROM ledger WHERE player_id=$1 AND kind='craft' AND created_at >= COALESCE((SELECT progress_reset_at FROM players WHERE id=$1), '-infinity'::timestamptz))::int AS craft3,
+       (SELECT COALESCE(craft_boxes, 0) FROM players WHERE id=$1)::int AS craft_boxes,
+       (SELECT COUNT(*) FROM player_craft_box WHERE player_id=$1 AND slot < 6)::int AS craft_left,
+       (SELECT COUNT(*) FROM player_craft_box WHERE player_id=$1 AND slot >= 6)::int AS craft_right,
+       (SELECT COALESCE(SUM(delta), 0) FROM ledger WHERE player_id=$1 AND kind='item' AND delta > 0 AND key LIKE 'part-%' AND reason NOT LIKE 'craft-%' AND reason NOT LIKE 'gift-from%' AND created_at >= COALESCE((SELECT progress_reset_at FROM players WHERE id=$1), '-infinity'::timestamptz))::bigint AS parts`,
     [pid],
   );
   const m = (k: string) => Math.max(0, Number(x?.[k] ?? 0));
@@ -121,6 +131,9 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
     bjBlackjacks: c.bjBlackjacks ?? 0, bjWins: c.bjWins ?? 0,
     clanDays: m("clan_days"), clanBosses: m("clan_bosses"), clanCreated: Math.min(1, c.clanCreated ?? 0),
     spits: m("spits"), raids: m("raids"), nishtyaks: m("nishtyaks"),
+    pumps: m("pumps"), raidsWon: m("raids_won"), raidsHeld: m("raids_held"),
+    craft1: m("craft1"), craft2: m("craft2"), craft3: m("craft3"), craftBoxes: m("craft_boxes"),
+    craftLeft: m("craft_left") >= 6 ? 1 : 0, craftRight: m("craft_right") >= 6 ? 1 : 0, parts: m("parts"),
   };
   return {
     ...third,

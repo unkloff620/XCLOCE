@@ -1942,11 +1942,14 @@ describe("бицуха, наезд, харкнуть", () => {
     await expect(act(db, a, "social_pump", { to: b }, T0 + 1000)).rejects.toMatchObject({ code: "pump_wait" });
     expect((await act(db, c, "social_pump", { to: b }, T0)).result.biceps).toBe(2);
     // a (0) on b (2): a loses; b (2) on a (0): b wins 50 ₽
-    const f1 = await act(db, a, "social_fight", { to: b }, T0);
+    const f1 = await act(db, a, "social_fight", { to: b }, T0, always(0.5)); // 0 against 2: 1% luck
     expect(f1.result).toMatchObject({ won: false, mine: 0, theirs: 2 });
     await expect(act(db, a, "social_fight", { to: b }, T0 + 1000)).rejects.toMatchObject({ code: "fight_wait" });
     const rub = await wallet(db, b, "RUB");
-    expect((await act(db, b, "social_fight", { to: a }, T0)).result.won).toBe(true);
+    expect((await act(db, b, "social_fight", { to: a }, T0, always(0.5))).result.won).toBe(true);
+    // luck: the weaker one wins now and then (0 against 2 — 1%)
+    const lucky = await act(db, c, "social_fight", { to: b }, T0, always(0.001));
+    expect(lucky.result).toMatchObject({ won: true, chance: 0.01 });
     expect(await wallet(db, b, "RUB")).toBe(rub + 50);
     // an hour later the same player can be pumped again
     expect((await act(db, a, "social_pump", { to: b }, T0 + H)).result.biceps).toBe(3);
