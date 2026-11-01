@@ -267,10 +267,10 @@ function SeatSpot({ s, i, geo, table, reveal, cleared, delayOf, myTurnHand, bett
           const show = s.ready || hands.length > 0;
           if (show && s.pp > 0) pills.push({ k: "pp", label: "Пары", amount: s.pp, net: nets ? nets.pp : null, hit: s.side?.pp ? PP_TITLES[s.side.pp as PairHit] : null });
           if (show && s.t3 > 0) pills.push({ k: "t3", label: "21+3", amount: s.t3, net: nets ? nets.t3 : null, hit: s.side?.t3 ? T3_TITLES[s.side.t3 as T3Hit] : null });
-          if (hands.length > 0 && s.ins) pills.push({ k: "ins", label: "Страх.", amount: s.ins, net: nets ? nets.ins : null, hit: null });
+          if (hands.length > 0 && s.ins) pills.push({ k: "ins", label: "Стр.", amount: s.ins, net: nets ? nets.ins : null, hit: null });
           if (!pills.length) return null;
           return (
-            <span className="bjt-tops" style={at(b.x, b.y - 74)}>
+            <span className="bjt-tops" style={{ ...at(b.x, b.y - 74), ["--r" as string]: `${b.r}deg` }}>
               {pills.map((p) => (
                 <span key={p.k} className={`bjt-top ${p.k} ${p.net !== null && p.net !== 0 ? (p.net > 0 ? "won" : "lost") : ""}`} title={p.hit ?? undefined}>
                   <i className={`chp v${p.amount >= 25 ? 25 : p.amount >= 10 ? 10 : p.amount >= 5 ? 5 : 1}`} />
@@ -494,9 +494,9 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
               )}
             </div>
             <div className="bjt-acts">
-              <button className="btn dark" disabled={!(cost > 0 || free)} onClick={() => { haptic.tap(); setPending(NO_BET); setFree(false); }}>Убрать всё</button>
+              <button className="btn dark" disabled={!(cost > 0 || free)} onClick={() => { haptic.tap(); setPending(NO_BET); setFree(false); }}>Убрать</button>
               <button className="btn gold grow" disabled={busy === "bj_bet" || (!free && pending.main.length === 0) || cost > usd} onClick={place}>
-                {free ? "Поставить бесплатно" : <>Поставить · {money(cost)} <Icon name="USD" size={16} /></>}{free && cost > 0 ? <> + {money(cost)} <Icon name="USD" size={16} /></> : null}
+                {free ? "Бесплатно" : <>Ставка {money(cost)} <Icon name="USD" size={16} /></>}{free && cost > 0 ? <> + {money(cost)} <Icon name="USD" size={16} /></> : null}
               </button>
             </div>
           </>

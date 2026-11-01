@@ -4797,3 +4797,10 @@ body { background-attachment: fixed; }
 /* the rating: my prizes to take, above the tabs */
 .rt-mine-prizes { display: flex; flex-direction: column; gap: 8px; border-color: #ffcc33; box-shadow: 0 0 0 1px rgba(255, 204, 51, 0.35), 0 0 18px rgba(255, 204, 51, 0.25); }
 .rt-prize-row { display: flex; align-items: center; gap: 10px; padding-top: 8px; border-top: 1px dashed rgba(255, 204, 51, 0.35); }
+/* the other players' side bets: a small column over their box, turned with it, never wider than the box */
+.bjt-tops { flex-direction: column; align-items: center; gap: 0.4cqw; transform: translate(-50%, -100%) rotate(var(--r, 0deg)); transform-origin: 50% 100%; }
+.bjt-top { padding: 0.2cqw 0.8cqw 0.2cqw 0.3cqw; font-size: 1.7cqw; }
+.bjt-top small { font-size: 1.45cqw; }
+.bjt-top .chp { width: 2.2cqw; height: 2.2cqw; }
+/* the bet buttons: tighter letters so the words fit */
+.bjt-acts .btn { letter-spacing: 0.02em; padding-left: 10px; padding-right: 10px; min-width: 0; }
