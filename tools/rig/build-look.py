@@ -70,7 +70,7 @@ WEAR_SLOT = {"tee-white": "SHIRT", "tee-pump": "SHIRT", "jeans": "PANTS", "short
              "slippers": "SHOES", "gold-chain": "ACCESSORY", "cap-moon": "HEAD", "hoodie-hodl": "SHIRT",
              "jacket-komandate": "SHIRT", "pants-komandate": "PANTS", "sneakers-komandate": "SHOES",
              "sweater-vostok": "SHIRT", "pants-vostok": "PANTS", "sneakers-black": "SHOES", "santa-hat": "HEAD", "laser-eyes": "FACE",
-             "headphones-vostok": "HEAD", "cigarette": "MOUTH", "toothpick": "MOUTH"}
+             "headphones-vostok": "HEAD", "cigarette": "MOUTH", "toothpick": "MOUTH", "shades-gold": "FACE", "chain-cuban": "ACCESSORY"}
 # head things worn over the hair (no hair variants cut under them)
 OVER_HAIR = {"headphones-vostok"}
 wear, hat_alpha = {}, {}

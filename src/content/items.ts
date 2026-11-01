@@ -100,6 +100,9 @@ const WEARABLES: ItemDef[] = ([
   // «Рот» (slot MOUTH): drop from «Ящик ништяков» (content/ach-box.ts MOUTH_ITEMS)
   { id: "cigarette", name: "Сигарета", slot: "MOUTH", rarity: "rare", description: "Дымится, пока ждёшь босса.", sources: ["Ящик ништяков"] },
   { id: "toothpick", name: "Зубочистка", slot: "MOUTH", rarity: "rare", description: "Для тех, кто уже всё съел.", sources: ["Ящик ништяков"] },
+  // only from «Ящик ништяков» (content/ach-box.ts CASE_THINGS)
+  { id: "shades-gold", name: "Очки «Кит»", slot: "FACE", rarity: "epic", description: "Чёрные стёкла, золотая оправа. Графики через них всегда зелёные.", sources: ["Ящик ништяков"] },
+  { id: "chain-cuban", name: "Золотая цепь", slot: "ACCESSORY", rarity: "legendary", description: "Толстая, как профит после халвинга. Звенит на весь двор.", sources: ["Ящик ништяков"] },
   // held in the left hand (slot «Кисть»): the boss's own weapon, worn for the look
   { id: "bottle-komandate", name: "Бутылка Командате", slot: "HAND", rarity: "epic", description: "Оружие Командате: горит, но не гаснет. Герой держит её в руке.", sources: ["Победа: Командате"] },
   { id: "hand-drum", name: "Нервные пальцы", slot: "HAND", rarity: "rare", description: "Пальцы сами отбивают ритм по колену, пока график грузится.", sources: ["Победа: Кедр"] },

@@ -166,6 +166,20 @@ export const WEAR_FIT = {
     "y": 229.0,
     "w": 88,
     "h": 32
+  },
+  "shades-gold": {
+    "slot": "FACE",
+    "x": 394.0,
+    "y": 156.0,
+    "w": 218,
+    "h": 63
+  },
+  "chain-cuban": {
+    "slot": "ACCESSORY",
+    "x": 376.0,
+    "y": 279.0,
+    "w": 234,
+    "h": 134
   }
 } as const;
 /** head things that cut the hair under them (the rest are worn over the hair) */

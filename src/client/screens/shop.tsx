@@ -7,7 +7,7 @@ import { api, type Granted } from "../api.ts";
 import { BULK, bulkPrice, type Offer } from "../../content/shop.ts";
 import { Modal, RewardChips } from "../ui.tsx";
 import { sfx } from "../sound.ts";
-import { ACH_BOX_COST, MOUTH_ITEMS } from "../../content/ach-box.ts";
+import { ACH_BOX_COST, CASE_THINGS } from "../../content/ach-box.ts";
 import { Help, HelpList } from "../help.tsx";
 import type { Currency } from "../../content/currencies.ts";
 import { itemById, type Slot } from "../../content/items.ts";
@@ -229,8 +229,8 @@ function AchBoxWindow({ onClose }: { onClose: () => void }) {
   const [got, setGot] = useState<Granted | null>(null);
   const [gotN, setGotN] = useState(1);
   const b = state?.achBox ?? { points: 0, opened: 0, ready: 0, progress: 0, cost: ACH_BOX_COST };
-  // a tattoo and a thing (a cigarette, a toothpick) go to their frames in the corner of the case, the rest comes out as tiles
-  const isThing = (id: string) => (MOUTH_ITEMS as readonly string[]).includes(id);
+  // a tattoo and a thing (a cigarette, a toothpick, the glasses, the gold chain) go to their frames in the corner of the case, the rest comes out as tiles
+  const isThing = (id: string) => (CASE_THINGS as readonly string[]).includes(id);
   const inkGot = useMemo(() => (got?.items ?? []).filter((it) => TATTOO_ID_SET.has(it.id)), [got]);
   const thingGot = useMemo(() => (got?.items ?? []).filter((it) => isThing(it.id)), [got]); // eslint-disable-line react-hooks/exhaustive-deps
   const parts = useMemo(() => (got ? lootParts({ ...got, items: (got.items ?? []).filter((it) => !TATTOO_ID_SET.has(it.id) && !isThing(it.id)) }) : []), [got]); // eslint-disable-line react-hooks/exhaustive-deps

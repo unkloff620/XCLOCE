@@ -23,6 +23,9 @@ export const ACH_BOX_WEAPONS = [
 /** things for the mouth (slot «Рот»): each opened box with this chance gives one the player does not have yet */
 export const MOUTH_ITEMS = ["cigarette", "toothpick"] as const;
 export const MOUTH_ITEM_CHANCE = 0.1;
+/** things that drop only from the case (the mouth things, the glasses, the gold chain): one the player does not have yet,
+ * MOUTH_ITEM_CHANCE per opened box; they land in the case's «Вещь» frame */
+export const CASE_THINGS = [...MOUTH_ITEMS, "shades-gold", "chain-cuban"] as const;
 export const ACH_BOX_RUB = { min: 300, max: 2_000, step: 50 };
 export const ACH_BOX_USD = { min: 3, max: 25 };
 
