@@ -176,10 +176,10 @@ export const WEAR_FIT = {
   },
   "chain-cuban": {
     "slot": "ACCESSORY",
-    "x": 376.0,
-    "y": 279.0,
-    "w": 234,
-    "h": 134
+    "x": 389.5,
+    "y": 281.0,
+    "w": 220,
+    "h": 160
   }
 } as const;
 /** head things that cut the hair under them (the rest are worn over the hair) */
