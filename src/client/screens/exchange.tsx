@@ -176,7 +176,7 @@ export function BuyBack() {
             <ItemArt id={r.id} size={36} />
             <span className="grow col" style={{ minWidth: 0 }}>
               <b className="small ellipsis">{r.def!.name}</b>
-              <span className="tiny bb-sub num">есть {r.qty} · {money("RUB", r.price)} ₽ за шт.</span>
+              <span className="tiny bb-sub num">есть <b className={(pick[r.id] ?? 0) > 0 ? "bb-left" : undefined}>{r.qty - Math.min(r.qty, pick[r.id] ?? 0)}</b> · {money("RUB", r.price)} ₽ за шт.</span>
             </span>
             {stepper(r.id, r.qty)}
           </div>
