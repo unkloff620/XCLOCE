@@ -65,9 +65,9 @@ export const EQUIPMENT: EquipmentDef[] = [
     levels: [],
     base: { name: "Стол с Авито", art: "desk-001" },
     pieces: [
-      { name: "Ореховый стандарт", art: "desk-002", price: { currency: "RUB", amount: 4000 }, bonus: { critChance: 0.02 } },
-      { name: "Мраморный холд", art: "desk-003", price: { currency: "RUB", amount: 2_600 }, bonus: { critChance: 0.01, damage: 0.03 } },
-      { name: "Золотой памп", art: "desk-004", price: { currency: "RUB", amount: 3_100 }, bonus: { critChance: 0.02, critDamage: 0.1, damage: 0.03 } },
+      { name: "Ореховый стандарт", art: "desk-002", price: { currency: "RUB", amount: 4_000 }, bonus: { critChance: 0.02 } },
+      { name: "Мраморный холд", art: "desk-003", price: { currency: "RUB", amount: 6_000 }, bonus: { critChance: 0.01, damage: 0.03 } },
+      { name: "Золотой памп", art: "desk-004", price: { currency: "RUB", amount: 9_000 }, bonus: { critChance: 0.02, critDamage: 0.1, damage: 0.03 } },
     ],
   },
   {
@@ -79,8 +79,8 @@ export const EQUIPMENT: EquipmentDef[] = [
     baseSpot: 1,
     pieces: [
       { name: "Монитор справа", art: "monitor-right", price: { currency: "RUB", amount: 3000 }, bonus: { critDamage: 0.1 } },
-      { name: "Монитор слева", art: "monitor-left", price: { currency: "RUB", amount: 2_600 }, bonus: { critDamage: 0.1 } },
-      { name: "Монитор по центру", art: "monitor-center", price: { currency: "RUB", amount: 2_300 }, bonus: { critDamage: 0.15 } },
+      { name: "Монитор слева", art: "monitor-left", price: { currency: "RUB", amount: 4_000 }, bonus: { critDamage: 0.1 } },
+      { name: "Монитор по центру", art: "monitor-center", price: { currency: "RUB", amount: 5_500 }, bonus: { critDamage: 0.15 } },
     ],
   },
   {
@@ -89,8 +89,8 @@ export const EQUIPMENT: EquipmentDef[] = [
     base: { name: "Табуретка", art: "seat-1" },
     pieces: [
       { name: "Офисное кресло", art: "chair-1", price: { currency: "RUB", amount: 2500 }, bonus: { critChance: 0.02 } },
-      { name: "Геймерское кресло", art: "chair-2", price: { currency: "RUB", amount: 2_100 }, bonus: { critChance: 0.02 } },
-      { name: "Трон трейдера", art: "chair-3", price: { currency: "RUB", amount: 1_900 }, bonus: { critChance: 0.03 } },
+      { name: "Геймерское кресло", art: "chair-2", price: { currency: "RUB", amount: 4_000 }, bonus: { critChance: 0.02 } },
+      { name: "Трон трейдера", art: "chair-3", price: { currency: "RUB", amount: 6_000 }, bonus: { critChance: 0.03 } },
       // the bosses' chairs, each in the style of his room: they drop in «Авторитетный» (PieceDef.drop)
       { name: "Ледяное кресло", art: "chair-datsik", price: { currency: "RUB", amount: 2000 }, bonus: { critChance: 0.01 }, drop: { boss: "datsik" } },
       { name: "Неоновое кресло", art: "chair-kedr", price: { currency: "RUB", amount: 2500 }, bonus: { critChance: 0.01 }, drop: { boss: "kedr" } },
@@ -107,7 +107,7 @@ export const EQUIPMENT: EquipmentDef[] = [
     levels: [
       { price: { currency: "RUB", amount: 1200 }, bonus: { critChance: 0.01 } },
       { price: { currency: "RUB", amount: 2400 }, bonus: { critChance: 0.02 } },
-      { price: { currency: "RUB", amount: 1_300 }, bonus: { critChance: 0.03, critDamage: 0.05 } },
+      { price: { currency: "RUB", amount: 4_000 }, bonus: { critChance: 0.03, critDamage: 0.05 } },
     ],
   },
 ];
