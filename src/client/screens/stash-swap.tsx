@@ -162,7 +162,9 @@ export function messagesWaiting(state: { stashInbox?: unknown[]; notes?: { unrea
 }
 
 export function MessagesWindow({ onClose }: { onClose: () => void }) {
-  const { state, act, busy } = useGame();
+  const { state, act, busy, refresh } = useGame();
+  // what was sent a moment ago shows up right away, not on the next poll
+  useEffect(() => { void refresh(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const unread = state?.notes?.some((n) => n.unread) ?? false;
   // opening the window reads the notes
   useEffect(() => {
@@ -174,41 +176,36 @@ export function MessagesWindow({ onClose }: { onClose: () => void }) {
   const inbox = state.stashInbox ?? [];
   const accept = (id: number | null) => act("stash_accept", id === null ? {} : { id }, id === null ? "Все подарки на складе" : "Подарок на складе");
   const when = (t: number) => new Date(t).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  // one feed, the newest on top: the gifts to accept and the notes (spits, fights)
+  const feed = [
+    ...inbox.map((g) => ({ t: g.at, key: `g${g.id}`, gift: g, note: null as null | (typeof notes)[number] })),
+    ...notes.map((n) => ({ t: n.at, key: `n${n.id}`, gift: null as null | (typeof inbox)[number], note: n })),
+  ].sort((x, y) => y.t - x.t);
   return (
     <Modal title="Сообщения" onClose={onClose}>
       <div className="col" style={{ gap: 10 }}>
-        {notes.length > 0 && (
-          <div className="col" style={{ gap: 6 }}>
-            {notes.map((n) => (
-              <div key={`n${n.id}`} className={`msg-row note ${n.kind} ${n.unread ? "new" : ""}`}>
-                <span className="msg-ico" aria-hidden="true">{n.kind === "spit" ? "💦" : n.kind === "fight" ? "👊" : "✉️"}</span>
-                <div className="grow" style={{ minWidth: 0 }}>
-                  <span className="small">{n.fromId ? <Link href={`/profile?id=${n.fromId}`} onClick={onClose} className="msg-who">{noteText(n)}</Link> : noteText(n)}</span>
-                  <span className="tiny muted" style={{ display: "block" }}>{when(n.at)}</span>
-                </div>
+        {inbox.length > 1 && <button className="btn gold sm" style={{ alignSelf: "flex-end" }} disabled={!!busy} onClick={() => accept(null)}>Принять все подарки ({inbox.length})</button>}
+        {feed.length === 0 && <p className="small muted" style={{ margin: 0, textAlign: "center" }}>Новых сообщений нет. Попроси нычки в меню дома — когда тебе их пришлют, подарки появятся здесь.</p>}
+        <div className="col" style={{ gap: 6 }}>
+          {feed.map(({ key, gift: g, note: n }) => g ? (
+            <div key={key} className="msg-row gift new">
+              <ItemArt id={g.itemId} size={40} />
+              <div className="grow" style={{ minWidth: 0 }}>
+                <b className="small ellipsis" style={{ display: "block" }}>{itemById(g.itemId)?.name ?? g.itemId}{(g.qty ?? 1) > 1 && ` ×${g.qty}`}</b>
+                <span className="tiny muted">подарок от <Link href={`/profile?id=${g.fromId}`} onClick={onClose}>{g.from}</Link> · {when(g.at)}</span>
               </div>
-            ))}
-          </div>
-        )}
-        {inbox.length === 0 ? (
-          notes.length ? null : <p className="small muted" style={{ margin: 0, textAlign: "center" }}>Новых сообщений нет. Попроси нычки в меню дома — когда тебе их пришлют, подарки появятся здесь.</p>
-        ) : (
-          <>
-            <div className="col" style={{ gap: 6 }}>
-              {inbox.map((g) => (
-                <div key={g.id} className="msg-row">
-                  <ItemArt id={g.itemId} size={40} />
-                  <div className="grow" style={{ minWidth: 0 }}>
-                    <b className="small ellipsis" style={{ display: "block" }}>{itemById(g.itemId)?.name ?? g.itemId}{(g.qty ?? 1) > 1 && ` ×${g.qty}`}</b>
-                    <span className="tiny muted">от <Link href={`/profile?id=${g.fromId}`} onClick={onClose}>{g.from}</Link> · {when(g.at)}</span>
-                  </div>
-                  <button className="btn green sm" disabled={!!busy} onClick={() => accept(g.id)}>Принять</button>
-                </div>
-              ))}
+              <button className="btn green sm" disabled={!!busy} onClick={() => accept(g.id)}>Принять</button>
             </div>
-            {inbox.length > 1 && <button className="btn gold block" disabled={!!busy} onClick={() => accept(null)}>Принять всё ({inbox.length})</button>}
-          </>
-        )}
+          ) : n && (
+            <div key={key} className={`msg-row note ${n.kind} ${n.unread ? "new" : ""}`}>
+              <span className="msg-ico" aria-hidden="true">{n.kind === "spit" ? "💦" : n.kind === "fight" ? "👊" : "✉️"}</span>
+              <div className="grow" style={{ minWidth: 0 }}>
+                <span className="small">{n.fromId ? <Link href={`/profile?id=${n.fromId}`} onClick={onClose} className="msg-who">{noteText(n)}</Link> : noteText(n)}</span>
+                <span className="tiny muted" style={{ display: "block" }}>{when(n.at)}</span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </Modal>
   );
