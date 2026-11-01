@@ -133,7 +133,7 @@ export function parentOf(path: string, search: string, myClan: number | null): s
   if (parts[0] === "shop") return search.includes("tab=") ? "/shop" : null; // an open shop window → the shop
   if (parts[0] === "exchange") return "/yard";
   if (parts[0] === "bosses" && parts.length > 1) return "/bosses";
-  if (parts[0] === "profile" || parts[0] === "rating") return "/";
+  if (parts[0] === "profile" || parts[0] === "rating" || parts[0] === "event") return "/"; // an event (Пепе) is opened from the room
   if (parts[0] === "clans") {
     if (parts.length > 1) return Number(parts[1]) === myClan ? null : myClan ? "/clans?all=1" : "/clans";
     return myClan && search.includes("all") ? `/clans/${myClan}` : null;
@@ -339,7 +339,13 @@ export function Shell({ children }: { children: ReactNode }) {
   const path = usePathname();
   const router = useRouter();
   const deep = path.split("/").filter(Boolean).length > 1 || ["/locations", "/profile", "/rating"].includes(path);
-  useEffect(() => telegramBack(deep, () => router.back()), [deep, router]);
+  // Telegram's «Назад»: one step up the section (an event → the room), or back in the history
+  const myClan = state?.clan?.id ?? null;
+  useEffect(() => telegramBack(deep, () => {
+    const up = parentOf(path, window.location.search, myClan);
+    if (up) router.push(up);
+    else router.back();
+  }), [deep, router, path, myClan]);
   const body = state?.look.body;
   const look = useMemo<LookLite | null>(() => (body ? { hair: body.hair, hairColor: body.hairColor, skin: body.skin, tattoos: body.tattoos } : null), [body?.hair, body?.hairColor, body?.skin]); // eslint-disable-line react-hooks/exhaustive-deps
   const art = useArtReady(look, state?.look.room ?? "basic", auth === "ok" && !!state);
