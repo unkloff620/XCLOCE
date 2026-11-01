@@ -4739,3 +4739,30 @@ body { background-attachment: fixed; }
 .cf-ing-btn.split { background: linear-gradient(#e8d2b0, #c9a87a); }
 .cf-ask { margin-left: auto; }
 .cf-scheme-foot .cf-bonus { align-items: center; }
+
+/* ── tabs everywhere: a carved strip of light walnut, the words burnt into it, carved lines between them;
+   the open tab is a beige banknote lifted off the wood (the buttons are banknotes too) ── */
+:is(.tabs, .cf-tabs, .bb-tabs, .rt-tabs, .dt-tabs, .lp-tabs) {
+  gap: 0; padding: 3px; max-width: 100%; border-radius: 10px; border: 2px solid #150d07;
+  background: repeating-linear-gradient(91deg, rgba(255, 255, 255, 0.06) 0 2px, transparent 2px 9px, rgba(0, 0, 0, 0.08) 9px 10px, transparent 10px 16px), linear-gradient(#9a6a3c, #74491f);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6), 0 2px 0 #150d07;
+}
+:is(.tabs, .cf-tabs, .bb-tabs) { width: fit-content; }
+.tabs { padding: 3px; }
+:is(.tabs button, .cf-tab, .bb-tab, .rt-tabs button, .dt-tabs button, .lp-tab) {
+  position: relative; border: 0; border-radius: 6px; background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none;
+  color: #24140a; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.28);
+  font-family: var(--font-display), sans-serif; font-weight: 400; font-size: 12.5px; letter-spacing: 0.06em; text-transform: uppercase; padding: 7px 12px;
+  transition: transform 0.12s, color 0.12s;
+}
+/* the carved line between two tabs (not next to the open one) */
+:is(.tabs, .cf-tabs, .bb-tabs, .rt-tabs, .dt-tabs, .lp-tabs) > button + button::before {
+  content: ""; position: absolute; left: -1px; top: 22%; bottom: 22%; width: 1px; background: rgba(0, 0, 0, 0.4); box-shadow: 1px 0 0 rgba(255, 255, 255, 0.12); pointer-events: none;
+}
+:is(.tabs, .cf-tabs, .bb-tabs, .rt-tabs, .dt-tabs, .lp-tabs) > button:is(.on, [aria-selected="true"])::before,
+:is(.tabs, .cf-tabs, .bb-tabs, .rt-tabs, .dt-tabs, .lp-tabs) > button:is(.on, [aria-selected="true"]) + button::before { display: none; }
+:is(.tabs button.on, .cf-tab.on, .bb-tab.on, .rt-tabs button.on, .dt-tabs button.on, .lp-tab.on) {
+  z-index: 1; color: #4a2e14; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55); transform: translateY(-1px);
+  background: repeating-radial-gradient(circle at 0 50%, transparent 0 5px, rgba(255, 255, 255, 0.25) 5px 6px), repeating-radial-gradient(circle at 100% 50%, transparent 0 5px, rgba(0, 0, 0, 0.06) 5px 6px), linear-gradient(#fbecc8, #dcb47e);
+  box-shadow: inset 0 0 0 1px #4a2e14, inset 0 0 0 3px rgba(255, 255, 255, 0.4), 0 3px 0 #150d07, 0 4px 5px rgba(0, 0, 0, 0.45);
+}
