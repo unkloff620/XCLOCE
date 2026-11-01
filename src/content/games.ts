@@ -318,7 +318,7 @@ export function pokerPay(hand: PokerHand, level: number): Reward {
   const base = pokerHandDef(hand).pay;
   if (!base.currencies) return base;
   const k = 1 + POKER_LEVEL_BONUS * Math.min(level, POKER_BONUS_LEVELS);
-  const currencies = Object.fromEntries(Object.entries(base.currencies).map(([c, v]) => [c, Math.round((v ?? 0) * k * 100) / 100]));
+  const currencies = Object.fromEntries(Object.entries(base.currencies).map(([c, v]) => [c, Math.max(1, Math.round((v ?? 0) * k))]));
   return { ...base, currencies };
 }
 

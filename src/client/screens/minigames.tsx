@@ -806,7 +806,7 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
             </span>
             <span className="pkt-xp"><i style={{ width: `${pct}%` }} /></span>
             <span className="pkt-cheat" title="Шулерство: замены карт после раздачи">
-              {cheats > 0 ? <>🃏 <b className="num">{cheats}</b> {cheats === 1 ? "замена" : "замены"}</> : nextCheat ? <>замены с {nextCheat.level} ур.</> : null}
+              {cheats > 0 ? (() => { const n = drawing ? open!.swapsLeft : cheats; return <>🃏 <b className="num">{n}</b> {n === 1 ? "замена" : n >= 2 && n <= 4 ? "замены" : "замен"}</>; })() : nextCheat ? <>замены с {nextCheat.level} ур.</> : null}
             </span>
             <span className="pkt-left num" title="Раздач сегодня">{p?.perDay ? `${p.perDay - left}/${p.perDay}` : `${p?.played ?? 0} сегодня`}</span>
           </div>

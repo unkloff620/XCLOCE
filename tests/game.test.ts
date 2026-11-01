@@ -1477,9 +1477,10 @@ describe("yard mini games", () => {
     expect(pokerLevel(1e9)).toMatchObject({ level: 100, to: null });
     expect([0, 19, 20, 49, 50, 99, 100].map(pokerCheats)).toEqual([0, 0, 1, 1, 2, 2, 3]);
     expect(pokerPay("pair", 0).currencies?.USD).toBe(2);
-    expect(pokerPay("pair", 10).currencies?.USD).toBe(2.3);
-    // the money bonus stops at level 20
-    expect(pokerPay("pair", 80).currencies?.USD).toBe(2.6);
+    // whole dollars only (2 × 1.15 = 2.3 → 2)
+    expect(pokerPay("pair", 10).currencies?.USD).toBe(2);
+    // the money bonus stops at level 20: 2 × 1.3 = 2.6 → 3
+    expect(pokerPay("pair", 80).currencies?.USD).toBe(3);
     expect(pokerPay("high", 5)).toEqual({});
   });
 
