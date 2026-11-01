@@ -17,6 +17,12 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-01-profile-icons",
+    date: "1 ноября",
+    title: "Новые кнопки в профиле",
+    items: [{ img: "/assets/ui/pr-biceps.webp", text: "В профиле игрока новые иконки: «Дело», «Прокачать бицуху», «Наехать» и «Харкнуть»." }],
+  },
+  {
     id: "2026-11-01-talents-800",
     date: "1 ноября",
     title: "800 талантов",

@@ -148,17 +148,10 @@ function RenameWindow({ current, onClose, onDone }: { current: string; onClose: 
 
 /* ---------------- the buttons on the wall of the room ---------------- */
 
-/** a dossier folder */
-function FolderArt({ size = 40 }: { size?: number }) {
-  return (
-    <svg viewBox="0 0 48 48" width={size} height={size} aria-hidden="true">
-      <path d="M5 13a3 3 0 0 1 3-3h11l4 4h17a3 3 0 0 1 3 3v21a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3Z" fill="#c9974f" stroke="#2e1c00" strokeWidth="2.5" strokeLinejoin="round" />
-      <path d="M5 19h38v19a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3Z" fill="#e8bb6c" stroke="#2e1c00" strokeWidth="2.5" strokeLinejoin="round" />
-      <rect x="12" y="24" width="15" height="4" rx="1" fill="#7a4a1c" />
-      <rect x="12" y="31" width="22" height="3" rx="1" fill="#a8743a" />
-      <path d="M33 22l7 0 0 6-3.5-2-3.5 2Z" fill="#d0102f" stroke="#2e1c00" strokeWidth="1.5" strokeLinejoin="round" />
-    </svg>
-  );
+/** the pictures on the profile's wall buttons (public/assets/ui/pr-*.webp): the dossier, pumping the biceps, a fight, a spit */
+function PrIcon({ name }: { name: "dossier" | "biceps" | "fight" | "spit" }) {
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img className="pr-ico" src={`/assets/ui/pr-${name}.webp`} alt="" width={40} height={40} draggable={false} />;
 }
 /** a flexed arm */
 export function BicepsArt({ size = 40 }: { size?: number }) {
@@ -564,19 +557,19 @@ export function ProfileScreen() {
         {/* the buttons on the wall */}
         <div className="pr-rail">
           <button type="button" className="pr-btn" style={{ ["--c" as string]: "#e8bb6c" }} onClick={() => { haptic.tap(); setDossier(true); }} aria-label="Личное дело">
-            <FolderArt size={40} /><small>Дело</small>
+            <PrIcon name="dossier" /><small>Дело</small>
           </button>
           <button type="button" className={`pr-btn ${!p.self && so?.pump ? "glow" : ""} ${!p.self && !so?.pump ? "spent" : ""}`} style={{ ["--c" as string]: "#ff9a5c" }} disabled={busy === "social_pump"} onClick={pump} aria-label="Прокачать бицуху">
-            <BicepsArt size={40} /><small className="num">{full(so?.biceps ?? 0)}</small>
+            <PrIcon name="biceps" /><small className="num">{full(so?.biceps ?? 0)}</small>
             {fx?.kind === "pump" && <b key={fx.key} className="pr-pop num">+1</b>}
           </button>
           {!p.self && (
             <>
               <button type="button" className={`pr-btn ${so?.fight ? "" : "spent"}`} style={{ ["--c" as string]: "#ff5a3d" }} disabled={!!brawl || busy === "social_fight"} onClick={fight} aria-label="Наехать">
-                <FistArt size={40} /><small>Наехать</small>
+                <PrIcon name="fight" /><small>Наехать</small>
               </button>
               <button type="button" className={`pr-btn ${spitIn > 0 || so?.spit === -1 ? "spent" : ""}`} style={{ ["--c" as string]: "#8fd17a" }} disabled={busy === "social_spit"} onClick={spit} aria-label="Харкнуть">
-                <SpitArt size={40} /><small>{spitIn > 0 ? clock(spitIn) : "Харкнуть"}</small>
+                <PrIcon name="spit" /><small>{spitIn > 0 ? clock(spitIn) : "Харкнуть"}</small>
               </button>
             </>
           )}
