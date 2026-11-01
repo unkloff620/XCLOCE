@@ -4567,8 +4567,8 @@ body { background-attachment: fixed; }
 .xg-box { position: absolute; left: 50%; top: 50%; width: max(100%, 45dvh); aspect-ratio: 1080 / 2400; transform: translate(-50%, -50%); container-type: inline-size; }
 .xg-l { position: absolute; display: block; pointer-events: none; }
 .xg-bg { inset: 0; width: 100%; height: 100%; }
-/* the dealer: the kiosk's layers (box 1237×1244); his forearms lie on the table's far edge; a little darker for the garage light */
-.xg-dealer { position: absolute; left: -55.09%; top: 8.92%; width: 154.35%; pointer-events: none; filter: brightness(0.86) sepia(0.1); }
+/* the dealer: the kiosk's layers (box 1237×1244), big, his arm lying on the newspaper; a little darker for the garage light */
+.xg-dealer { position: absolute; left: -118.52%; top: -16.58%; width: 246.3%; pointer-events: none; filter: brightness(0.86) sepia(0.1); }
 /* the machine's green display */
 .xg-screen { position: absolute; left: 72%; top: 43.5%; width: 16.2%; height: 5.3%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5cqw; pointer-events: none;
   font: 900 4.4cqw/1 ui-monospace, "Courier New", monospace; color: #8dff9a; text-shadow: 0 0 1.4cqw rgba(110, 255, 140, 0.9); animation: xg-flicker 4s steps(1) infinite; }
@@ -4584,12 +4584,12 @@ body { background-attachment: fixed; }
 @keyframes xg-bulb { 0%, 100%, 8%, 10%, 13%, 65% { filter: brightness(1); } 9%, 11%, 63% { filter: brightness(0.7); } }
 .xg-zone { position: absolute; padding: 0; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; border-radius: 4cqw; }
 .xg-zone:active { background: rgba(255, 210, 90, 0.12); }
-.xg-tag { position: absolute; left: 50%; bottom: -3cqw; transform: translateX(-50%); white-space: nowrap; padding: 1.6cqw 3.4cqw; border-radius: 99px; border: 2px solid #2a1606;
-  background: linear-gradient(#ffe066, #f2a900); color: #2e1c00; font: 900 3.8cqw/1.1 var(--font-display), system-ui; box-shadow: 0 3px 0 #2a1606; animation: xg-call 2.4s ease-in-out infinite; }
-.xg-ex.closed .xg-tag { background: linear-gradient(#cbb9a0, #8d7a62); animation: none; }
-@keyframes xg-call { 0%, 100% { box-shadow: 0 3px 0 #2a1606, 0 0 0 rgba(255, 210, 90, 0); } 50% { box-shadow: 0 3px 0 #2a1606, 0 0 12px rgba(255, 210, 90, 0.9); } }
-/* over the scene: the back button and the help under the HUD; the exchange's clock above the menu */
+.xg-ex.closed /* over the scene: the back button and the help under the HUD; the exchange's clock above the menu */
 .xg-top { position: absolute; z-index: 3; left: 10px; right: 10px; top: var(--top); display: flex; flex-direction: column; gap: 8px; }
 .xg-clock { position: absolute; z-index: 3; left: 10px; right: 10px; bottom: var(--bottom); }
 @media (prefers-reduced-motion: reduce) { .xg-lamp, .xg-light, .xg-lamp .xg-l { animation: none; } }
 .bb-panel:not(.panel) { display: flex; flex-direction: column; gap: 8px; }
+/* «Скупка» window: the title with a small «Продать всё» on its right; the lines readable on the paper */
+.bb-title { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.bb-all { font-size: 12px; padding: 4px 10px; }
+.bb-sub { color: #4a3018; font-weight: 700; }

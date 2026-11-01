@@ -182,7 +182,8 @@ export const STARTER_OUTFIT: Partial<Record<Slot, string>> = {};
 export const RARITY_NAME: Record<Rarity, string> = { common: "Обычный", rare: "Редкий", epic: "Эпический", legendary: "Легендарный", mythic: "Мифический" };
 export const CATEGORY_NAME: Record<Category, string> = { weapon: "Оружие", clothing: "Одежда", item: "Предметы", reward: "Награды", stash: "Нычки", event: "Ивентовые", tattoo: "Татуировки" };
 
-/** Everything that drops in the yard can be sold back for RUB (about half of the shop price). Overridable via config "sell". */
+/** The yard finds the dealer buys for RUB (about half of the shop price). Overridable via config "sell".
+ * Weapons (a keyboard from the yard) are not bought here — only an upgraded ★ one, in «Скупка» or the upgrader. */
 export const SELL_PRICES: Record<string, number> = {
   "bottle-cap": 15,
   "flyer-passive": 25,
@@ -190,7 +191,6 @@ export const SELL_PRICES: Record<string, number> = {
   "spinner": 60,
   "energy-drink": 90,
   "lost-wallet": 150,
-  "keyboard": 95,
 };
 for (const [id, price] of Object.entries(SELL_PRICES)) {
   const it = ITEMS.find((i) => i.id === id);

@@ -9,7 +9,7 @@ import type { Config } from "../config.ts";
 export async function sellItem(ctx: Ctx, itemId: string, qty: number) {
   const def = itemById(itemId);
   const price = def ? ctx.cfg.sell[def.id] : undefined;
-  if (!def || !price) throw new GameError("not_sellable", "Это нельзя продать");
+  if (!def || !price || def.weapon) throw new GameError("not_sellable", "Это нельзя продать");
   if (!Number.isInteger(qty) || qty < 1 || qty > 9999) throw new GameError("bad_qty", "Некорректное количество");
   const left = await takeItem(ctx, def.id, qty, "sell");
   const got = await addMoney(ctx, "RUB", price * qty, `sell:${def.id}`);

@@ -83,20 +83,20 @@ export function Exchanger({ ex }: { ex: ShopData["exchange"] }) {
 
 
 /**
- * «Скупка»: the dealer buys the yard finds (and other things with a price in state.sell) for roubles — always open,
- * not only on the exchanger's days. A row per thing: how many, the price, «Продать»; on top «Продать всё».
+ * «Скупка»: the dealer buys the yard finds (things with a price in state.sell, no weapons) for roubles — always open,
+ * not only on the exchanger's days — and the upgraded ★ things for their price. A row per thing; «Продать всё»
+ * (the finds) sits in the window's head (SellAllButton).
  */
-function BuyBack({ bare }: { bare?: boolean } = {}) {
+function sellRows(state: ReturnType<typeof useGame>["state"]) {
+  return Object.entries(state?.sell ?? {})
+    .map(([id, price]) => ({ id, price, qty: state?.inventory.find((i) => i.id === id)?.qty ?? 0, def: itemById(id) }))
+    .filter((r) => r.qty > 0 && r.def && !r.def.weapon && r.price > 0);
+}
+function SellAllButton() {
   const { state, act, busy } = useGame();
-  if (!state) return null;
-  const rows = Object.entries(state.sell ?? {})
-    .map(([id, price]) => ({ id, price, qty: state.inventory.find((i) => i.id === id)?.qty ?? 0, def: itemById(id) }))
-    .filter((r) => r.qty > 0 && r.def && r.price > 0);
+  const rows = sellRows(state);
   const total = rows.reduce((t, r) => t + r.qty * r.price, 0);
-  const sell = async (id: string, qty: number) => {
-    const r = await act<{ got: number }>("sell", { itemId: id, qty }, (x) => `Продано за ${x.got} ₽`);
-    if (r) { haptic.ok(); sfx("coin"); }
-  };
+  if (rows.length < 2) return null;
   const sellAll = async () => {
     for (const r of rows) {
       const ok = await act<{ got: number }>("sell", { itemId: r.id, qty: r.qty });
@@ -104,29 +104,44 @@ function BuyBack({ bare }: { bare?: boolean } = {}) {
     }
     haptic.ok(); sfx("coin");
   };
+  return <button className="btn sm green bb-all" disabled={!!busy} onClick={sellAll}>Продать всё · {money("RUB", total)} ₽</button>;
+}
+function BuyBack() {
+  const { state, act, busy } = useGame();
+  if (!state) return null;
+  const rows = sellRows(state);
+  const ups = state.upgraded ?? [];
+  const sell = async (id: string, qty: number) => {
+    const r = await act<{ got: number }>("sell", { itemId: id, qty }, (x) => `Продано за ${x.got} ₽`);
+    if (r) { haptic.ok(); sfx("coin"); }
+  };
+  const sellUp = async (uid: number) => {
+    const r = await act<{ got: number }>("up_sell", { uid }, (x) => `Продано за ${x.got} ₽`);
+    if (r) { haptic.ok(); sfx("coin"); }
+  };
   return (
-    <div className={bare ? "bb-panel" : "panel bb-panel"}>
-      {!bare && (
-        <div className="bb-head">
-          <b className="display">Скупка</b>
-          <span className="tiny muted">Барыга берёт находки со двора за рубли — каждый день</span>
+    <div className="bb-panel">
+      {rows.map((r) => (
+        <div key={r.id} className="bb-row">
+          <ItemArt id={r.id} size={36} />
+          <span className="grow col" style={{ minWidth: 0 }}>
+            <b className="small ellipsis">{r.def!.name}</b>
+            <span className="tiny bb-sub num">×{r.qty} · {money("RUB", r.price)} ₽ за шт.</span>
+          </span>
+          <button className="btn sm gold" disabled={!!busy} onClick={() => sell(r.id, r.qty)}>{money("RUB", r.qty * r.price)} ₽</button>
         </div>
-      )}
-      {rows.length ? (
-        <>
-          {rows.map((r) => (
-            <div key={r.id} className="bb-row">
-              <ItemArt id={r.id} size={36} />
-              <span className="grow col" style={{ minWidth: 0 }}>
-                <b className="small ellipsis">{r.def!.name}</b>
-                <span className="tiny muted num">×{r.qty} · {money("RUB", r.price)} ₽ за шт.</span>
-              </span>
-              <button className="btn sm gold" disabled={!!busy} onClick={() => sell(r.id, r.qty)}>{money("RUB", r.qty * r.price)} ₽</button>
-            </div>
-          ))}
-          {rows.length > 1 && <button className="btn green block" disabled={!!busy} onClick={sellAll}>Продать всё · {money("RUB", total)} ₽</button>}
-        </>
-      ) : <div className="tiny muted center">Нечего продать: подбирай находки во дворе.</div>}
+      ))}
+      {ups.map((u) => (
+        <div key={`u${u.uid}`} className="bb-row">
+          <span className="upg-art"><ItemArt id={u.itemId} size={36} /><i className="up-star">★</i></span>
+          <span className="grow col" style={{ minWidth: 0 }}>
+            <b className="small ellipsis">{itemById(u.itemId)?.name} ★</b>
+            <span className="tiny bb-sub">улучшенная</span>
+          </span>
+          <button className="btn sm gold" disabled={!!busy} onClick={() => sellUp(u.uid)}>{money("RUB", u.value)} ₽</button>
+        </div>
+      ))}
+      {!rows.length && !ups.length && <div className="small bb-sub center">Нечего продать: подбирай находки во дворе.</div>}
     </div>
   );
 }
@@ -147,7 +162,7 @@ function ExchangeClock({ until, open, onTurn }: { until: number; open: boolean; 
   const days = Math.floor(Math.max(0, left) / 86_400_000);
   const t = `${days > 0 ? `${days} д ` : ""}${clock(left % 86_400_000)}`;
   return open ? (
-    <div className="exp-event on"><b className="display">Ивент: обменник открыт</b><span>закроется через <b className="num">{t}</b></span></div>
+    <div className="exp-event on"><b className="display">Обменник открыт</b><span>Закроется через <b className="num">{t}</b></span></div>
   ) : (
     <div className="exp-event"><b className="display">Обменник закрыт</b><span>{when[0].toUpperCase() + when.slice(1)}.{state?.exchangeSchedule?.mode === "closed" ? "" : <> Откроется через <b className="num">{t}</b></>}</span></div>
   );
@@ -202,9 +217,7 @@ function XgLayer({ id, className }: { id: string; className?: string }) {
   return <img className={`xg-l ${className ?? ""}`} src={`${XG}/${id}.webp`} alt="" draggable={false} style={{ left: `${l}%`, top: `${t}%`, width: `${w}%`, height: `${h}%` }} />;
 }
 function ExchangeGarage({ data, win }: { data: ShopData | null; win: { open: boolean; until: number } | null; onTurn: () => void }) {
-  const { state } = useGame();
   const [open, setOpen] = useState<"sell" | "ex" | null>(null);
-  const worth = Object.entries(state?.sell ?? {}).reduce((t, [id, price]) => t + (state?.inventory.find((i) => i.id === id)?.qty ?? 0) * price, 0);
   const ex = data?.exchange;
   const rate = ex ? Math.ceil(ex.rub.USD / ex.rub.RUB / (1 - ex.fee)) : null;
   const [ml, mt, mw, mh] = XG_BOX.machine;
@@ -217,9 +230,10 @@ function ExchangeGarage({ data, win }: { data: ShopData | null; win: { open: boo
           <img className="xg-l xg-bg" src={`${XG}/bg.webp`} alt="" draggable={false} />
           <span className="xg-dealer"><KioskDealer part="back" /></span>
           <XgLayer id="table" />
-          <span className="xg-dealer"><KioskDealer part="front" /></span>
           <XgLayer id="paper" />
           <XgLayer id="junk" />
+          {/* his arm lies on the newspaper, over the finds */}
+          <span className="xg-dealer"><KioskDealer part="front" /></span>
           <XgLayer id="machine" />
           {/* the machine's green display: the rate, or «закрыто» */}
           <span className={`xg-screen ${win?.open ? "" : "off"}`} aria-hidden="true">
@@ -231,17 +245,14 @@ function ExchangeGarage({ data, win }: { data: ShopData | null; win: { open: boo
             <XgLayer id="lamp" />
           </span>
           <button type="button" className="xg-zone xg-sell" style={{ left: `${pl}%`, top: `${pt}%`, width: `${pw}%`, height: `${ph}%` }} onClick={() => { haptic.tap(); setOpen("sell"); }} aria-label="Продать барыге">
-            <span className="xg-tag">Продать барыге{worth > 0 && <b className="num"> · {money("RUB", worth)} ₽</b>}</span>
           </button>
           <button type="button" className={`xg-zone xg-ex ${win?.open ? "" : "closed"}`} style={{ left: `${ml}%`, top: `${mt}%`, width: `${mw}%`, height: `${mh}%` }} onClick={() => { haptic.tap(); setOpen("ex"); }} aria-label="Обмен валют">
-            <span className="xg-tag">{win?.open ? "Обмен валют" : "Обмен закрыт"}</span>
           </button>
         </div>
       </div>
       {open === "sell" && (
-        <Modal title="Скупка" onClose={() => setOpen(null)}>
-          <p className="tiny muted" style={{ margin: "-6px 0 8px" }}>Барыга берёт находки со двора за рубли — каждый день.</p>
-          <BuyBack bare />
+        <Modal title={<span className="bb-title">Скупка <SellAllButton /></span>} onClose={() => setOpen(null)}>
+          <BuyBack />
         </Modal>
       )}
       {open === "ex" && (
