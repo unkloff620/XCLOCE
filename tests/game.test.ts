@@ -1792,7 +1792,7 @@ describe("нычки v2", () => {
     expect(r.result.stash).toBeNull();
     // the chance of a step is its energy × 1%: rng 0.99 never hits, the meter fills up to the sure find
     const { STASH_PITY, stashChance } = await import("../src/content/stashes.ts");
-    expect(stashChance(3)).toBeCloseTo(0.03);
+    expect(stashChance(3)).toBeCloseTo(0.2);
     await setEnergy(p, 5000, T0);
     let found: string | null = null, spent = 0;
     while (!found && spent <= STASH_PITY + 10) {

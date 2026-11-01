@@ -1,6 +1,6 @@
 /*
  * Нычки: наборы по 4 нычки, у каждой локации свои 4 набора.
- * Нычки находятся за трату энергии в заданиях: шанс шага — STASH_PER_ENERGY за каждую потраченную единицу энергии
+ * Нычки находятся за трату энергии в заданиях: шанс каждого шага — STASH_CHANCE
  * (шаг за 3 ⚡ — 3%, за 20 ⚡ — 20%). Невезение копится: потратил STASH_PITY энергии без находки — следующий шаг
  * находит нычку наверняка (счётчик обнуляется при любой находке). Чаще выпадают нычки, которых у игрока ещё нет.
  * Закрытие локации нычку не даёт. Нычки выпадают повторно и копятся. Есть все 4 нычки набора — нажимаешь на картинку набора в «Нычках»:
@@ -12,14 +12,14 @@ import type { Reward } from "./rewards.ts";
 export interface StashDef { id: string; name: string; description: string }
 export interface StashSet { id: string; n: number; name: string; location: string; items: StashDef[]; reward: Reward }
 
-/** chance per energy point spent on a task step that the step finds a stash (a 3-energy step: 3%) */
-export const STASH_PER_ENERGY = 0.01;
+/** the chance that a task step finds a stash (any step, whatever its energy) */
+export const STASH_CHANCE = 0.2;
 /** energy spent in tasks without a find, after which the next step finds a stash for sure */
 export const STASH_PITY = 150;
 /** a stash the player does not have yet is this many times likelier than one he has */
 export const STASH_MISSING_WEIGHT = 3;
-/** the chance of a step that costs `energy` */
-export const stashChance = (energy: number) => Math.min(1, energy * STASH_PER_ENERGY);
+/** the chance of a step (the same for every step; the energy argument is kept for the callers) */
+export const stashChance = (_energy?: number) => STASH_CHANCE;
 
 const LOC_REWARD: Record<string, Reward> = {
   openspace: { currencies: { RUB: 100 }, xp: 1_000 },
