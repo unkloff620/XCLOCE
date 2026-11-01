@@ -234,7 +234,7 @@ export function CraftScreen() {
               <div className="cf-card-top">
                 <span className="cf-pic"><ItemArt id={c.id} size={48} />{have > 0 && <i className="cf-n num">×{full(have)}</i>}</span>
                 <span className="col" style={{ minWidth: 0 }}>
-                  <b className="small ellipsis">{c.name}</b>
+                  <b className="small cf-name">{c.name}</b>
                   <span className="tiny cf-sub">{CRAFT_LEVEL_NAME[c.level]}{boxed > 0 && ` · в заныке ${boxed}`}</span>
                 </span>
               </div>

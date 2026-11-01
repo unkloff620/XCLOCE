@@ -4713,6 +4713,7 @@ body { background-attachment: fixed; }
 .cf-card.r-rare { border-color: #2f6fb0; }
 .cf-card.r-epic { border-color: #8a3fc2; }
 .cf-card-top { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.cf-name { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; line-height: 1.15; overflow-wrap: break-word; }
 .cf-pic { position: relative; flex: none; width: 52px; height: 52px; display: grid; place-items: center; border-radius: 9px; background: rgba(90, 50, 20, 0.85); border: 2px solid #3a2410; }
 .cf-n { position: absolute; left: 2px; top: 1px; font-style: normal; font-size: 10px; font-weight: 900; color: #fff; text-shadow: 0 1px 0 #000, 0 0 3px #000; }
 .cf-ghost { position: fixed; z-index: 120; pointer-events: none; transform: translate(-50%, -60%) scale(1.15); filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.6)); }
