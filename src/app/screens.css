@@ -4808,3 +4808,4 @@ body { background-attachment: fixed; }
 .weapon .w-qty { top: 3px; right: 5px; min-width: 0; height: auto; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; color: #fff; font-size: 12px; font-weight: 900;
   text-shadow: 0 1px 2px #000, 0 0 4px rgba(0, 0, 0, 0.9); }
 .weapon.empty .w-qty { background: none; color: rgba(255, 255, 255, 0.55); }
+.weapon .w-qty { font-size: 10px; font-weight: 600; letter-spacing: 0.01em; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.9); }
