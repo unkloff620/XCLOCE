@@ -808,7 +808,7 @@ describe("home: equipment, rooms, look, help", () => {
   it("equipment levels cost money and add crits and damage to hits", async () => {
     await setBossHp({ datsik: 100000 });
     const p = await newPlayer(db);
-    await setMoney(db, p, "RUB", 20000);
+    await setMoney(db, p, "RUB", 30000);
     await startDatsik(p);
     await give(db, p, "keyboard", 3);
     const plain = await hit(p, "keyboard");
@@ -817,10 +817,11 @@ describe("home: equipment, rooms, look, help", () => {
     await act(db, p, "equipment_upgrade", { id: "monitor2" }, T0);
     // the old money-bought system unit is gone from the shop (the computer is upgraded for talents now)
     await expect(act(db, p, "equipment_upgrade", { id: "pc" }, T0)).rejects.toMatchObject({ code: "bad_equipment" });
-    expect(await wallet(db, p, "RUB")).toBe(20000 - 2500 - 3000);
+    expect(await wallet(db, p, "RUB")).toBe(30000 - 2500 - 3000);
     const r = await hit(p, "keyboard"); // rng 0 → always a crit once the chance is above zero
     expect(r.result).toMatchObject({ crit: true, damage: Math.round(30 * 1.6) });
-    // level 2 of the monitor costs USD
+    // level 2 of the monitor costs more than is left (the RGB still fits)
+    await setMoney(db, p, "RUB", 1500);
     await expect(act(db, p, "equipment_upgrade", { id: "monitor2" }, T0)).rejects.toMatchObject({ code: "no_money" });
     const st = await act(db, p, "equipment_upgrade", { id: "rgb" }, T0);
     expect(st.state.home.levels).toMatchObject({ chair: 1, monitor2: 1, rgb: 1 });
@@ -919,7 +920,7 @@ describe("home: equipment, rooms, look, help", () => {
     await expect(act(db, p, "talent_reset", {}, T0)).rejects.toMatchObject({ code: "no_money" });
     await setMoney(db, p, "USD", 12);
     const r = await act(db, p, "talent_reset", {}, T0);
-    expect(r.result).toMatchObject({ returned: 30 + 10 + 3 + 8, talents: 7 + 51 });
+    expect(r.result).toMatchObject({ returned: 30 + 10 + 3 + 4, talents: 7 + 47 });
     const [after] = await db.query<{ talent_biceps: number }>("SELECT talent_biceps FROM players WHERE id=$1", [p]);
     expect(after.talent_biceps).toBe(0);
     expect(r.state.weaponTalents).toEqual({});
@@ -992,8 +993,7 @@ describe("home: equipment, rooms, look, help", () => {
 
   it("room pieces: desk, monitors and chair are bought one by one, in any order", async () => {
     const p = await newPlayer(db);
-    await setMoney(db, p, "USD", 200);
-    await setMoney(db, p, "RUB", 3000);
+    await setMoney(db, p, "RUB", 30000);
     // the middle monitor first, without the right and the left ones
     const m3 = await act(db, p, "piece_buy", { id: "monitor2", piece: 3 }, T0);
     expect(m3.state.home.pieces).toMatchObject({ monitor2: 4 });
@@ -1017,7 +1017,7 @@ describe("home: equipment, rooms, look, help", () => {
   it("rooms: buy, switch, the bonus of every owned room counts", async () => {
     const p = await newPlayer(db);
     await expect(act(db, p, "room_set", { id: "office" }, T0)).rejects.toMatchObject({ code: "room_locked" });
-    await setMoney(db, p, "USD", 50);
+    await setMoney(db, p, "RUB", 5000);
     const b = await act(db, p, "room_buy", { id: "office" }, T0);
     expect(b.state.look.room).toBe("office");
     expect(b.state.home.bonus.critChance).toBeCloseTo(0.03);
@@ -1030,7 +1030,7 @@ describe("home: equipment, rooms, look, help", () => {
   it("look: only known options are kept; help topics are remembered once", async () => {
     const p = await newPlayer(db);
     const r = await act(db, p, "look_set", { hair: "spiky", hairColor: 5, eyes: 99, skin: 3 }, T0);
-    expect(r.state.look.body).toEqual({ hair: "spiky", hairColor: 5, eyes: 0, skin: 3 });
+    expect(r.state.look.body).toEqual({ hair: "spiky", hairColor: 5, eyes: 0, skin: 3, tattoos: [] });
     await act(db, p, "help_seen", { topic: "boss" }, T0);
     const h = await act(db, p, "help_seen", { topic: "boss" }, T0);
     expect(h.state.helpSeen).toEqual(["boss"]);

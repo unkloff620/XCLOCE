@@ -17,6 +17,15 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-01-rub-prices",
+    date: "1 ноября",
+    title: "Всё за рубли",
+    items: [
+      { text: "Оружие, одежда, энергия, вещи для комнаты и сами комнаты теперь покупаются только за рубли ₽." },
+      { text: "Энергия подешевела: +500 — самая выгодная пачка, 30 ₽ за единицу." },
+    ],
+  },
+  {
     id: "2026-11-01-buyback",
     date: "1 ноября",
     title: "Скупка у барыги",

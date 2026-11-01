@@ -66,8 +66,8 @@ export const EQUIPMENT: EquipmentDef[] = [
     base: { name: "Стол с Авито", art: "desk-001" },
     pieces: [
       { name: "Ореховый стандарт", art: "desk-002", price: { currency: "RUB", amount: 4000 }, bonus: { critChance: 0.02 } },
-      { name: "Мраморный холд", art: "desk-003", price: { currency: "USD", amount: 30 }, bonus: { critChance: 0.01, damage: 0.03 } },
-      { name: "Золотой памп", art: "desk-004", price: { currency: "USD", amount: 36 }, bonus: { critChance: 0.02, critDamage: 0.1, damage: 0.03 } },
+      { name: "Мраморный холд", art: "desk-003", price: { currency: "RUB", amount: 2_600 }, bonus: { critChance: 0.01, damage: 0.03 } },
+      { name: "Золотой памп", art: "desk-004", price: { currency: "RUB", amount: 3_100 }, bonus: { critChance: 0.02, critDamage: 0.1, damage: 0.03 } },
     ],
   },
   {
@@ -79,8 +79,8 @@ export const EQUIPMENT: EquipmentDef[] = [
     baseSpot: 1,
     pieces: [
       { name: "Монитор справа", art: "monitor-right", price: { currency: "RUB", amount: 3000 }, bonus: { critDamage: 0.1 } },
-      { name: "Монитор слева", art: "monitor-left", price: { currency: "USD", amount: 30 }, bonus: { critDamage: 0.1 } },
-      { name: "Монитор по центру", art: "monitor-center", price: { currency: "USD", amount: 27 }, bonus: { critDamage: 0.15 } },
+      { name: "Монитор слева", art: "monitor-left", price: { currency: "RUB", amount: 2_600 }, bonus: { critDamage: 0.1 } },
+      { name: "Монитор по центру", art: "monitor-center", price: { currency: "RUB", amount: 2_300 }, bonus: { critDamage: 0.15 } },
     ],
   },
   {
@@ -89,8 +89,8 @@ export const EQUIPMENT: EquipmentDef[] = [
     base: { name: "Табуретка", art: "seat-1" },
     pieces: [
       { name: "Офисное кресло", art: "chair-1", price: { currency: "RUB", amount: 2500 }, bonus: { critChance: 0.02 } },
-      { name: "Геймерское кресло", art: "chair-2", price: { currency: "USD", amount: 25 }, bonus: { critChance: 0.02 } },
-      { name: "Трон трейдера", art: "chair-3", price: { currency: "USD", amount: 22 }, bonus: { critChance: 0.03 } },
+      { name: "Геймерское кресло", art: "chair-2", price: { currency: "RUB", amount: 2_100 }, bonus: { critChance: 0.02 } },
+      { name: "Трон трейдера", art: "chair-3", price: { currency: "RUB", amount: 1_900 }, bonus: { critChance: 0.03 } },
       // the bosses' chairs, each in the style of his room: they drop in «Авторитетный» (PieceDef.drop)
       { name: "Ледяное кресло", art: "chair-datsik", price: { currency: "RUB", amount: 2000 }, bonus: { critChance: 0.01 }, drop: { boss: "datsik" } },
       { name: "Неоновое кресло", art: "chair-kedr", price: { currency: "RUB", amount: 2500 }, bonus: { critChance: 0.01 }, drop: { boss: "kedr" } },
@@ -107,7 +107,7 @@ export const EQUIPMENT: EquipmentDef[] = [
     levels: [
       { price: { currency: "RUB", amount: 1200 }, bonus: { critChance: 0.01 } },
       { price: { currency: "RUB", amount: 2400 }, bonus: { critChance: 0.02 } },
-      { price: { currency: "USD", amount: 15 }, bonus: { critChance: 0.03, critDamage: 0.05 } },
+      { price: { currency: "RUB", amount: 1_300 }, bonus: { critChance: 0.03, critDamage: 0.05 } },
     ],
   },
 ];
@@ -121,8 +121,8 @@ export const LEGACY_EQUIPMENT: EquipmentDef[] = [
     id: "pc", name: "Мощный системник", description: "Рендерит удары быстрее, чем босс успевает моргнуть. Добавляет урон любому оружию.",
     levels: [
       { price: { currency: "RUB", amount: 5000 }, bonus: { damage: 0.03 } },
-      { price: { currency: "USD", amount: 50 }, bonus: { damage: 0.06 } },
-      { price: { currency: "USD", amount: 45 }, bonus: { damage: 0.1 } },
+      { price: { currency: "RUB", amount: 4_200 }, bonus: { damage: 0.06 } },
+      { price: { currency: "RUB", amount: 3_800 }, bonus: { damage: 0.1 } },
     ],
   },
 ];
@@ -153,8 +153,8 @@ export const ROOM_DEFS: RoomDef[] = [
   { id: "izba", name: "Изба Бабафея", description: "Бревенчатые стены, балалайки, самовар и расписной сундук. Выпадает с Бабафея. +8 к лимиту энергии.", price: { currency: "RUB", amount: 5000 }, bonus: { energyMax: 8 }, drop: { boss: "babafey", chance: ROOM_DROP_CHANCE } },
   { id: "ludoman", name: "Берлога лудомана", description: "Однорукий бандит у стены, гора курьерских сумок и рассвет в окне. Выпадает с Востока. +2% шанса и +10% силы крита.", price: { currency: "RUB", amount: 6000 }, bonus: { critChance: 0.02, critDamage: 0.1 }, drop: { boss: "vodovoz", chance: ROOM_DROP_CHANCE } },
   { id: "pepe", name: "Гардеробная Пепе", description: "Синие свитера на вешалке, гантели, флаг с быком и светящаяся таблетка на полке. Выпадает с ивента «Пепе». +4% к урону и +1% шанса крита.", price: { currency: "RUB", amount: 7000 }, bonus: { damage: 0.04, critChance: 0.01 }, drop: { boss: "pepe", chance: ROOM_DROP_CHANCE } },
-  { id: "office", name: "Офис трейдера", description: "Стеклянные стены, три графика и кофемашина. Даёт шанс крита.", price: { currency: "USD", amount: 40 }, bonus: { critChance: 0.03 } },
-  { id: "penthouse", name: "Пентхаус To The Moon", description: "Вид на Луну, золото и бассейн из стейблкоинов. Урон и сила крита.", price: { currency: "USD", amount: 89 }, bonus: { damage: 0.05, critDamage: 0.15 } },
+  { id: "office", name: "Офис трейдера", description: "Стеклянные стены, три графика и кофемашина. Даёт шанс крита.", price: { currency: "RUB", amount: 3_400 }, bonus: { critChance: 0.03 } },
+  { id: "penthouse", name: "Пентхаус To The Moon", description: "Вид на Луну, золото и бассейн из стейблкоинов. Урон и сила крита.", price: { currency: "RUB", amount: 7_600 }, bonus: { damage: 0.05, critDamage: 0.15 } },
 ];
 
 export const equipmentById = (id: string) => EQUIPMENT.find((e) => e.id === id);

@@ -13,7 +13,7 @@ export type Sfx = "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" |
   | "shake" | "dice" | "card" | "deal" | "chips" | "splat" | "zonk"
   /* a profile: «Ништяк!» for a pumped biceps (public/assets/sound/nishtyak-4.mp3, a hoarse prison voice), a spit, a fist fight */
   | "nishtyak" | "spit" | "brawl"
-  /* a stash found in a task: «Ооо, нычка!» — one of two recordings at random (public/assets/sound/nychka-1/2.mp3) */
+  /* a stash found in a task: «Ооо, нычка!» — one of four recordings at random (public/assets/sound/nychka-1..4.mp3) */
   | "nychka"
   /* a loss: a burnt stake in the upgrader, a lost blackjack hand, a zonk, a boss that got away (public/assets/sound/fail.mp3) */
   | "fail"
@@ -185,6 +185,8 @@ const SAMPLE_URLS = {
   // «Ооо, нычка!»: two recordings of the player's, one of them at random each time
   nychka1: "/assets/sound/nychka-1.mp3",
   nychka2: "/assets/sound/nychka-2.mp3",
+  nychka3: "/assets/sound/nychka-3.mp3",
+  nychka4: "/assets/sound/nychka-4.mp3",
   fail: "/assets/sound/fail.mp3",
   fail2: "/assets/sound/fail-2.mp3",
   bigwin: "/assets/sound/big-win.mp3",
@@ -311,7 +313,7 @@ export function sfx(name: Sfx, power = 0.5) {
       sample(a, Math.random() < 0.5 ? "lvlvoice1" : "lvlvoice2", t, 1);
       break;
     case "nychka":
-      if (sample(a, Math.random() < 0.5 ? "nychka1" : "nychka2", t, 1)) break;
+      if (sample(a, `nychka${1 + Math.floor(Math.random() * 4)}`, t, 1)) break;
       tone(a, 120, t, 0.3, { type: "sawtooth", vol: 0.18, slide: 1.3 });
       break;
     case "nishtyak":

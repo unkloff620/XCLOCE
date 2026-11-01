@@ -35,14 +35,14 @@ export const SHOP_SECTIONS = [
   { id: "misc", name: "Разное" },
 ] as const;
 
-// Draft prices. Energy costs 40 RUB-equivalent per point (+50 — 2000 ₽; the bigger packs are the same in USD / SOL, rounded up), far more than the best task pays (16), so it cannot be farmed.
+// Everything is sold for RUB. Energy: +50 — 40 ₽ a point, +100 — 36, +500 — 30 (the best deal); all far above the best task pay (16), so it cannot be farmed.
 export const OFFERS: Offer[] = [
   { id: "keyboard-1", section: "weapons", give: { item: "keyboard", qty: 1 }, price: { currency: "RUB", amount: 190 }, title: "Клавиатура", bulk: true },
-  { id: "gpu-1", section: "weapons", give: { item: "gpu", qty: 1 }, price: { currency: "USD", amount: 4 }, title: "Видеокарта", bulk: true },
-  { id: "rpg-1", section: "weapons", give: { item: "rug-pull-gun", qty: 1 }, price: { currency: "USD", amount: 6 }, title: "Rug Pull Gun", bulk: true },
+  { id: "gpu-1", section: "weapons", give: { item: "gpu", qty: 1 }, price: { currency: "RUB", amount: 350 }, title: "Видеокарта", bulk: true },
+  { id: "rpg-1", section: "weapons", give: { item: "rug-pull-gun", qty: 1 }, price: { currency: "RUB", amount: 500 }, title: "Rug Pull Gun", bulk: true },
   { id: "energy-50", section: "energy", give: { energy: 50, qty: 1 }, price: { currency: "RUB", amount: 2000 }, title: "+50 энергии" },
-  { id: "energy-100", section: "energy", give: { energy: 100, qty: 1 }, price: { currency: "USD", amount: 45 }, title: "+100 энергии" },
-  { id: "energy-500", section: "energy", give: { energy: 500, qty: 1 }, price: { currency: "USD", amount: 239 }, title: "+500 энергии", note: "сверх лимита" },
+  { id: "energy-100", section: "energy", give: { energy: 100, qty: 1 }, price: { currency: "RUB", amount: 3_600 }, title: "+100 энергии" },
+  { id: "energy-500", section: "energy", give: { energy: 500, qty: 1 }, price: { currency: "RUB", amount: 15_000 }, title: "+500 энергии", note: "самое выгодное" },
   { id: "tee-white", section: "clothing", give: { item: "tee-white", qty: 1 }, price: { currency: "RUB", amount: 400 }, title: "Белая футболка" },
   { id: "slippers", section: "clothing", give: { item: "slippers", qty: 1 }, price: { currency: "RUB", amount: 900 }, title: "Тапки" },
   { id: "sneakers", section: "clothing", give: { item: "sneakers", qty: 1 }, price: { currency: "RUB", amount: 500 }, title: "Кеды" },
@@ -50,17 +50,17 @@ export const OFFERS: Offer[] = [
   { id: "tee-pump", section: "clothing", give: { item: "tee-pump", qty: 1 }, price: { currency: "RUB", amount: 1500 }, title: "Футболка PUMP" },
   { id: "hand-drum", section: "clothing", give: { item: "hand-drum", qty: 1 }, price: { currency: "RUB", amount: 2000 }, title: "Нервные пальцы" },
   { id: "bottle-komandate", section: "clothing", give: { item: "bottle-komandate", qty: 1 }, price: { currency: "RUB", amount: 3000 }, title: "Бутылка Командате" },
-  { id: "jacket-komandate", section: "clothing", give: { item: "jacket-komandate", qty: 1 }, price: { currency: "USD", amount: 25 }, title: "Олимпийка Командате" },
+  { id: "jacket-komandate", section: "clothing", give: { item: "jacket-komandate", qty: 1 }, price: { currency: "RUB", amount: 2_100 }, title: "Олимпийка Командате" },
   { id: "pants-komandate", section: "clothing", give: { item: "pants-komandate", qty: 1 }, price: { currency: "RUB", amount: 2500 }, title: "Спортивки Командате" },
   { id: "sneakers-komandate", section: "clothing", give: { item: "sneakers-komandate", qty: 1 }, price: { currency: "RUB", amount: 2500 }, title: "Кроссовки Командате" },
-  { id: "sweater-vostok", section: "clothing", give: { item: "sweater-vostok", qty: 1 }, price: { currency: "USD", amount: 30 }, title: "Кофта Лудомана" },
-  { id: "pants-vostok", section: "clothing", give: { item: "pants-vostok", qty: 1 }, price: { currency: "USD", amount: 30 }, title: "Штаны Лудомана" },
-  { id: "headphones-vostok", section: "clothing", give: { item: "headphones-vostok", qty: 1 }, price: { currency: "USD", amount: 25 }, title: "Наушники Лудомана" },
+  { id: "sweater-vostok", section: "clothing", give: { item: "sweater-vostok", qty: 1 }, price: { currency: "RUB", amount: 2_600 }, title: "Кофта Лудомана" },
+  { id: "pants-vostok", section: "clothing", give: { item: "pants-vostok", qty: 1 }, price: { currency: "RUB", amount: 2_600 }, title: "Штаны Лудомана" },
+  { id: "headphones-vostok", section: "clothing", give: { item: "headphones-vostok", qty: 1 }, price: { currency: "RUB", amount: 2_100 }, title: "Наушники Лудомана" },
   { id: "sneakers-black", section: "clothing", give: { item: "sneakers-black", qty: 1 }, price: { currency: "RUB", amount: 3000 }, title: "Кроссовки Лудомана" },
   { id: "shorts-remote", section: "clothing", give: { item: "shorts-remote", qty: 1 }, price: { currency: "RUB", amount: 1800 }, title: "Шорты «на удалёнке»" },
-  { id: "cap-moon", section: "clothing", give: { item: "cap-moon", qty: 1 }, price: { currency: "USD", amount: 15 }, title: "Чёрная кепка" },
-  { id: "hoodie-hodl", section: "clothing", give: { item: "hoodie-hodl", qty: 1 }, price: { currency: "USD", amount: 35 }, title: "Худи HODL" },
-  { id: "gold-chain", section: "clothing", give: { item: "gold-chain", qty: 1 }, price: { currency: "USD", amount: 22 }, title: "Серебряная цепь" },
+  { id: "cap-moon", section: "clothing", give: { item: "cap-moon", qty: 1 }, price: { currency: "RUB", amount: 1_300 }, title: "Чёрная кепка" },
+  { id: "hoodie-hodl", section: "clothing", give: { item: "hoodie-hodl", qty: 1 }, price: { currency: "RUB", amount: 3_000 }, title: "Худи HODL" },
+  { id: "gold-chain", section: "clothing", give: { item: "gold-chain", qty: 1 }, price: { currency: "RUB", amount: 1_900 }, title: "Серебряная цепь" },
   { id: "energy-drink", section: "misc", give: { item: "energy-drink", qty: 1 }, price: { currency: "RUB", amount: 180 }, title: "Энергетик" },
 ];
 export const offerById = (id: string) => OFFERS.find((o) => o.id === id);
