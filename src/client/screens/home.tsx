@@ -260,7 +260,7 @@ export function HomeScreen() {
               <button className="icon-btn-art" style={{ ["--c" as string]: "#3fd2ff" }} onClick={() => openRoomEditor("desk")} aria-label="Обстановка" title="Обстановка">
                 <Icon name="bolt" size={58} />
               </button>
-              <button className="icon-btn-art" style={{ ["--c" as string]: "#b98bff" }} onClick={() => setWish(true)} aria-label="Попросить нычки" title="Попросить нычки">
+              <button className="icon-btn-art" style={{ ["--c" as string]: "#b98bff" }} onClick={() => setWish(true)} aria-label="Попросить нычки и детали" title="Попросить нычки и детали">
                 <ItemArt id="stash-cigs" size={54} />
                 {(state.stashWish?.length ?? 0) > 0 && <span className="side-count num">{state.stashWish!.length}/6</span>}
               </button>

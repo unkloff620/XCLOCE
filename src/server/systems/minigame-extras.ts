@@ -2,6 +2,8 @@ import type { Queryable } from "../db.ts";
 import { grantReward, moscowDay, weekKey, weekStart, type Ctx } from "../core.ts";
 import { bump, countersOf, setTo } from "./counters.ts";
 import { GAME_BOARDS, GAME_WEEK_PRIZES, POKER_HANDS, ROACH_RULES, ZONK_DAY_PRIZE, type GameBoard } from "../../content/games.ts";
+import { between, rollParts } from "../../content/craft-drops.ts";
+import { mergeRewards } from "../../content/rewards.ts";
 
 /*
  * Around the mini-games:
@@ -116,7 +118,9 @@ export async function squashRoach(ctx: Ctx) {
   if (n >= ROACH_RULES.perDay || ctx.now - at < ROACH_RULES.cooldownMs) return { reward: null, left: Math.max(0, ROACH_RULES.perDay - n) };
   await ctx.q.query("UPDATE players SET roach_day=$2, roach_n=$3, roach_at=$4 WHERE id=$1", [ctx.pid, day, n + 1, new Date(ctx.now)]);
   const chip = ctx.rng() < ROACH_RULES.chipChance;
-  const reward = await grantReward(ctx, chip ? { ...ROACH_RULES.reward, items: [{ id: "poker-chip", qty: 1 }] } : ROACH_RULES.reward, "roach");
+  // «Крафт»: 10% on a common part under the slipper
+  const part = ctx.rng() < 0.1 ? rollParts(ctx.rng, 1, { rare: 0 }) : [];
+  const reward = await grantReward(ctx, mergeRewards(ROACH_RULES.reward, { items: [...(chip ? [{ id: "poker-chip", qty: 1 }] : []), ...part] }), "roach");
   return { reward, left: ROACH_RULES.perDay - n - 1 };
 }
 
@@ -200,5 +204,6 @@ export async function scarePigeon(ctx: Ctx, slot: number) {
   const rub = Math.min(PIGEON_RULES.rubPerDay - paid, PIGEON_RULES.min + Math.floor(ctx.rng() * (PIGEON_RULES.max - PIGEON_RULES.min + 1)));
   await setTo(ctx.q, ctx.pid, "pigeonDay", day);
   await setTo(ctx.q, ctx.pid, "pigeonDayRub", paid + rub);
-  return { reward: await grantReward(ctx, { currencies: { RUB: rub } }, "pigeon"), nextAt, slot };
+  // «Крафт»: 10% on a common part the pigeons left behind
+  return { reward: await grantReward(ctx, { currencies: { RUB: rub }, items: ctx.rng() < 0.1 ? rollParts(ctx.rng, 1, { rare: 0 }) : [] }, "pigeon"), nextAt, slot };
 }

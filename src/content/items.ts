@@ -1,7 +1,8 @@
 import { STASH_LOCATION_NAMES, STASH_SETS, stashLevel } from "./stashes.ts";
 import { BOSSES, CARD_TIERS, bossById, isFirstWinItem, keyId, passLook, unlockBossOf } from "./bosses.ts";
 import { TATTOO_MODE_NAME, TATTOO_SETS } from "./tattoos.ts";
-import { CRAFT_ALL } from "./craft.ts";
+import { CRAFT_ALL, CRAFT_PARTS } from "./craft.ts";
+import { PART_SELL } from "./craft-drops.ts";
 
 /** "tattoo": inked on a part of the body in the hero editor («Наколки», content/tattoos.ts) */
 export type Category = "weapon" | "clothing" | "item" | "reward" | "stash" | "event" | "tattoo" | "craft";
@@ -199,6 +200,8 @@ export const SELL_PRICES: Record<string, number> = {
   "spinner": 60,
   "energy-drink": 90,
   "lost-wallet": 150,
+  // «Крафт»: the dealer buys the parts too (content/craft-drops.ts PART_SELL)
+  ...Object.fromEntries(CRAFT_PARTS.map((p) => [p.id, PART_SELL[p.rarity] ?? 50])),
 };
 for (const [id, price] of Object.entries(SELL_PRICES)) {
   const it = ITEMS.find((i) => i.id === id);

@@ -6,10 +6,17 @@ import { Modal } from "../ui.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { itemById } from "../../content/items.ts";
 import { STASH_SETS } from "../../content/stashes.ts";
+import { CRAFT_PARTS } from "../../content/craft.ts";
+
+const isPart = (id: string) => id.startsWith("part-");
+/** one gift of a part may carry up to this many (server: swap.ts PART_GIFT_MAX) */
+const PART_GIFT_MAX = 5;
+const RARITY_GROUPS = [{ r: "common", name: "Обычные детали" }, { r: "rare", name: "Редкие детали" }, { r: "epic", name: "Очень редкие детали" }] as const;
 
 /*
- * Нычки between players. At home: «Попросить нычки» — pick up to WISH_MAX stashes you still need. In a player's
- * profile: the stashes he asks for, each with «Отправить» (one of your own copies goes to him), GIFTS_PER_DAY a day.
+ * Нычки and craft parts between players. At home: «Попросить нычки и детали» — pick up to WISH_MAX stashes or parts you
+ * need. In a player's profile: what he asks for, each with «Отправить» (a stash — one copy; a part — ×1 or ×5),
+ * GIFTS_PER_DAY gifts a day.
  * The numbers are checked on the server (src/server/systems/swap.ts).
  */
 export const WISH_MAX = 6;
@@ -20,6 +27,7 @@ const qtyOf = (inv: { id: string; qty: number }[], id: string) => inv.find((i) =
 export function StashWishWindow({ onClose }: { onClose: () => void }) {
   const { state, act, busy } = useGame();
   const [pick, setPick] = useState<string[]>(state?.stashWish ?? []);
+  const [tab, setTab] = useState<"stash" | "parts">("stash");
   if (!state) return null;
   const toggle = (id: string) => setPick((p) => (p.includes(id) ? p.filter((x) => x !== id) : p.length >= WISH_MAX ? p : [...p, id]));
   const changed = JSON.stringify([...pick].sort()) !== JSON.stringify([...(state.stashWish ?? [])].sort());
@@ -28,17 +36,39 @@ export function StashWishWindow({ onClose }: { onClose: () => void }) {
   };
   const gifts = state.stashGifts ?? [];
   return (
-    <Modal title="Попросить нычки" onClose={onClose}>
+    <Modal title="Попросить нычки и детали" onClose={onClose}>
       <div className="col" style={{ gap: 10 }}>
         <p className="small" style={{ margin: 0 }}>
-          Выбери до {WISH_MAX} нычек, которых не хватает для наборов. Их увидят в твоём профиле, и любой игрок сможет прислать тебе свою — до {GIFTS_PER_DAY} нычек в день от каждого.
+          Выбери до {WISH_MAX} нычек или деталей, которых не хватает. Их увидят в твоём профиле, и любой игрок сможет прислать тебе свои — до {GIFTS_PER_DAY} подарков в день от каждого (деталей — до {PART_GIFT_MAX} штук за раз).
         </p>
         <div className="row" style={{ justifyContent: "space-between" }}>
           <b className="small">Выбрано: <span className="num">{pick.length}/{WISH_MAX}</span></b>
           {pick.length > 0 && <button className="btn dark sm" onClick={() => setPick([])}>Сбросить</button>}
         </div>
+        <div className="cf-tabs">
+          <button type="button" className={`cf-tab ${tab === "stash" ? "on" : ""}`} onClick={() => setTab("stash")}>Нычки</button>
+          <button type="button" className={`cf-tab ${tab === "parts" ? "on" : ""}`} onClick={() => setTab("parts")}>Детали</button>
+        </div>
         <div className="col swap-sets">
-          {STASH_SETS.map((set) => (
+          {tab === "parts" && RARITY_GROUPS.map((g) => (
+            <div key={g.r} className="swap-set">
+              <span className="tiny muted">{g.name}</span>
+              <div className="swap-row">
+                {CRAFT_PARTS.filter((p) => p.rarity === g.r).map((it) => {
+                  const on = pick.includes(it.id);
+                  const n = qtyOf(state.inventory, it.id);
+                  return (
+                    <button key={it.id} className={`swap-tile ${on ? "on" : ""}`} onClick={() => toggle(it.id)} disabled={!on && pick.length >= WISH_MAX} aria-pressed={on} title={it.name}>
+                      <ItemArt id={it.id} size={44} />
+                      <span className="swap-have num">×{n}</span>
+                      {on && <span className="swap-check" aria-hidden="true">✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+          {tab === "stash" && STASH_SETS.map((set) => (
             <div key={set.id} className="swap-set">
               <span className="tiny muted">{set.name}</span>
               <div className="swap-row">
@@ -63,7 +93,7 @@ export function StashWishWindow({ onClose }: { onClose: () => void }) {
             {gifts.map((g, i) => (
               <div key={i} className="row small" style={{ gap: 6 }}>
                 <ItemArt id={g.itemId} size={22} />
-                <span className="ellipsis grow">{itemById(g.itemId)?.name ?? g.itemId}</span>
+                <span className="ellipsis grow">{itemById(g.itemId)?.name ?? g.itemId}{(g.qty ?? 1) > 1 && ` ×${g.qty}`}</span>
                 <Link href={`/profile?id=${g.fromId}`} className="tiny" onClick={onClose}>от {g.from}</Link>
               </div>
             ))}
@@ -81,14 +111,14 @@ export function StashGivePanel({ to, name, wish, give, onSent }: {
 }) {
   const { act, busy } = useGame();
   if (!wish.length) return null;
-  const send = async (id: string) => {
-    const r = await act<{ left: number }>("stash_gift", { to, itemId: id }, `«${itemById(id)?.name ?? id}» отправлена — ${name} скажет спасибо`);
+  const send = async (id: string, qty = 1) => {
+    const r = await act<{ left: number }>("stash_gift", { to, itemId: id, qty }, `«${itemById(id)?.name ?? id}»${qty > 1 ? ` ×${qty}` : ""} — отправлено, ${name} скажет спасибо`);
     if (r) onSent();
   };
   return (
     <div className="panel col" style={{ gap: 8 }}>
       <div className="row" style={{ justifyContent: "space-between" }}>
-        <span className="small muted">ПРОСИТ НЫЧКИ</span>
+        <span className="small muted">ПРОСИТ НЫЧКИ И ДЕТАЛИ</span>
         <span className="tiny muted">можно отправить сегодня: <b className="num">{give.left}/{GIFTS_PER_DAY}</b></span>
       </div>
       <div className="swap-give">
@@ -99,7 +129,12 @@ export function StashGivePanel({ to, name, wish, give, onSent }: {
               <ItemArt id={id} size={48} />
               <span className="tiny ellipsis" style={{ maxWidth: "100%" }}>{itemById(id)?.name ?? id}</span>
               <span className="tiny muted">у тебя ×{have}</span>
-              <button className="btn gold sm block" disabled={have < 1 || give.left < 1 || busy === "stash_gift"} onClick={() => send(id)}>Отправить</button>
+              {isPart(id) ? (
+                <span className="row" style={{ gap: 4, width: "100%" }}>
+                  <button className="btn gold sm grow" disabled={have < 1 || give.left < 1 || busy === "stash_gift"} onClick={() => send(id, 1)}>×1</button>
+                  <button className="btn gold sm grow" disabled={have < PART_GIFT_MAX || give.left < 1 || busy === "stash_gift"} onClick={() => send(id, PART_GIFT_MAX)}>×{PART_GIFT_MAX}</button>
+                </span>
+              ) : <button className="btn gold sm block" disabled={have < 1 || give.left < 1 || busy === "stash_gift"} onClick={() => send(id)}>Отправить</button>}
             </div>
           );
         })}
@@ -137,7 +172,7 @@ export function MessagesWindow({ onClose }: { onClose: () => void }) {
   if (!state) return null;
   const notes = state.notes ?? [];
   const inbox = state.stashInbox ?? [];
-  const accept = (id: number | null) => act("stash_accept", id === null ? {} : { id }, id === null ? "Все подарки в инвентаре" : "Нычка в инвентаре");
+  const accept = (id: number | null) => act("stash_accept", id === null ? {} : { id }, id === null ? "Все подарки на складе" : "Подарок на складе");
   const when = (t: number) => new Date(t).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
   return (
     <Modal title="Сообщения" onClose={onClose}>
@@ -164,7 +199,7 @@ export function MessagesWindow({ onClose }: { onClose: () => void }) {
                 <div key={g.id} className="msg-row">
                   <ItemArt id={g.itemId} size={40} />
                   <div className="grow" style={{ minWidth: 0 }}>
-                    <b className="small ellipsis" style={{ display: "block" }}>{itemById(g.itemId)?.name ?? g.itemId}</b>
+                    <b className="small ellipsis" style={{ display: "block" }}>{itemById(g.itemId)?.name ?? g.itemId}{(g.qty ?? 1) > 1 && ` ×${g.qty}`}</b>
                     <span className="tiny muted">от <Link href={`/profile?id=${g.fromId}`} onClick={onClose}>{g.from}</Link> · {when(g.at)}</span>
                   </div>
                   <button className="btn green sm" disabled={!!busy} onClick={() => accept(g.id)}>Принять</button>

@@ -1,6 +1,8 @@
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, moscowDay, type Ctx } from "../core.ts";
 import { FIGHT_PER_DAY, FIGHT_WIN, NOTE_KEEP_MS, PUMP_PER_DAY, SPIT_EVERY_MS, SPIT_PER_DAY } from "../../content/social.ts";
+import { rollParts } from "../../content/craft-drops.ts";
+import { mergeRewards } from "../../content/rewards.ts";
 
 /* Players to players from a profile (content/social.ts): biceps, a fist fight, a spit, and the messages they leave. */
 
@@ -59,7 +61,8 @@ export async function fight(ctx: Ctx, to: number) {
   if (c.day >= FIGHT_PER_DAY) throw new GameError("fight_limit", `Не больше ${FIGHT_PER_DAY} наездов в день`);
   const mine = await bicepsOf(ctx.q, ctx.pid), theirs = p.biceps;
   const won = mine > theirs;
-  const reward = won ? await grantReward(ctx, FIGHT_WIN, `fight:${to}`) : null;
+  // a won fist fight: 30% on a craft part on top
+  const reward = won ? await grantReward(ctx, mergeRewards(FIGHT_WIN, { items: ctx.rng() < 0.3 ? rollParts(ctx.rng, 1, { rare: 0.25 }) : [] }), `fight:${to}`) : null;
   await log(ctx, "fight", to, won);
   await note(ctx, to, "fight", { won, mine, theirs });
   return { won, mine, theirs, reward };

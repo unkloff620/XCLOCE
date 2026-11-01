@@ -793,14 +793,16 @@ describe("«Ящик ништяков»", () => {
     const a = await act(db, p, "ach_box_open", {}, T0, always(0.5));
     expect(a.result.box).toMatchObject({ points: 12, opened: 1, ready: 1, progress: 2 });
     // every box: keyboards, a GPU and (mostly) a Rug Pull Gun
-    expect(a.result.reward.items).toEqual([{ id: "keyboard", qty: 2 }, { id: "gpu", qty: 1 }, { id: "rug-pull-gun", qty: 1 }]);
+    const noParts = (l: { id: string }[]) => l.filter((i) => !i.id.startsWith("part-")); // the box has craft parts too
+    expect(noParts(a.result.reward.items)).toEqual([{ id: "keyboard", qty: 2 }, { id: "gpu", qty: 1 }, { id: "rug-pull-gun", qty: 1 }]);
+    expect(a.result.reward.items.some((i: { id: string }) => i.id.startsWith("part-"))).toBe(true);
     await act(db, p, "ach_box_open", {}, T0, always(0.5));
     await expect(act(db, p, "ach_box_open", {}, T0)).rejects.toMatchObject({ code: "ach_box_empty" });
     // «Открыть все»: every waiting box at once, one reward — the sum
     await db.query("UPDATE players SET ach_points = 27 WHERE id=$1", [p]);
     const all = await act(db, p, "ach_box_open", { all: true }, T0, always(0.5));
     expect(all.result).toMatchObject({ opened: 3, box: { opened: 5, ready: 0 } });
-    expect(all.result.reward.items).toEqual([{ id: "keyboard", qty: 6 }, { id: "gpu", qty: 3 }, { id: "rug-pull-gun", qty: 3 }]);
+    expect(noParts(all.result.reward.items)).toEqual([{ id: "keyboard", qty: 6 }, { id: "gpu", qty: 3 }, { id: "rug-pull-gun", qty: 3 }]);
   });
 });
 
@@ -1486,7 +1488,7 @@ describe("yard mini games", () => {
     expect(a.result.reward.currencies.RUB).toBe(15);
     expect((await act(db, p, "roach_squash", {}, T0 + 5 * M, always(0.5))).result.reward).toBeNull();
     const c = await act(db, p, "roach_squash", {}, T0 + 11 * M, always(0.01));
-    expect(c.result.reward.items).toEqual([{ id: "poker-chip", qty: 1 }]);
+    expect(c.result.reward.items.filter((i: { id: string }) => !i.id.startsWith("part-"))).toEqual([{ id: "poker-chip", qty: 1 }]); // a craft part may come too
     expect(await wallet(db, p, "RUB")).toBe(rub + 30);
     // a zonk game given up still counts its xp for the weekly mini-game rating
     await act(db, p, "game_start", { game: "zonk", level: 1 }, T0 + 12 * M, always(0.5));
@@ -2172,5 +2174,30 @@ describe("«Крафт»", () => {
     const r = await hit(p, "craft3-railgun");
     expect(r.result.damage).toBeGreaterThanOrEqual(1200);
     await expect(hit(p, "craft3-railgun", T0 + M)).rejects.toMatchObject({ code: "cooldown" });
+  });
+
+  it("the dealer sells today's parts (a few of each), takes them back; a thing is taken apart; parts are asked for and sent ×5", async () => {
+    const p = await newPlayer(db);
+    await setMoney(db, p, "RUB", 10000);
+    const { dealerParts } = await import("../src/content/craft-drops.ts");
+    const { moscowDay } = await import("../src/server/core.ts");
+    const id = dealerParts(moscowDay(T0))[0];
+    const b = await act(db, p, "dealer_buy", { itemId: id, qty: 9 }, T0);
+    expect(b.result).toMatchObject({ itemId: id, qty: 5, paid: 750 });
+    await expect(act(db, p, "dealer_buy", { itemId: id }, T0)).rejects.toMatchObject({ code: "sold_out" });
+    const sold = await act(db, p, "sell", { itemId: id, qty: 5 }, T0);
+    expect(sold.result.got).toBe(250);
+    for (const pid of ["part-board", "part-nails", "part-scotch", "part-rope", "part-sandpaper"]) await give(db, p, pid, 5);
+    await act(db, p, "craft_make", { itemId: "craft-nail-bat" }, T0);
+    const sp = await act(db, p, "craft_split", { itemId: "craft-nail-bat" }, T0, always(0.5));
+    expect(sp.result.back).toHaveLength(5);
+    expect(await qty(db, p, "part-board")).toBe(2);
+    const q = await newPlayer(db);
+    await act(db, q, "stash_wish", { items: ["part-board"] }, T0);
+    await give(db, p, "part-board", 10);
+    const g = await act(db, p, "stash_gift", { to: q, itemId: "part-board", qty: 5 }, T0);
+    expect(g.result).toMatchObject({ qty: 5 });
+    await act(db, q, "stash_accept", {}, T0);
+    expect(await qty(db, q, "part-board")).toBe(5);
   });
 });

@@ -2,6 +2,8 @@ import { GameError } from "../db.ts";
 import { grantReward, itemQty, weighted, type Ctx } from "../core.ts";
 import { NIGHT_BOOST, YARD_DROPS, yardTime, type YardDrop } from "../../content/yard.ts";
 import { itemById } from "../../content/items.ts";
+import { onePart } from "../../content/craft-drops.ts";
+import { craftById } from "../../content/craft.ts";
 
 /*
  * One item appears every spawnMin minutes, at most maxItems lie on the ground at once.
@@ -42,11 +44,13 @@ export async function yardSync(ctx: Ctx) {
     while (used.has(slot)) slot++;
     used.add(slot);
     const drop = rollDrop(ctx, at);
+    // a part: which one is decided now, so the yard shows its picture
+    const dropId = drop.id === "parts-common" ? onePart(ctx.rng, "common") : drop.id === "parts-rare" ? onePart(ctx.rng, "rare") : drop.id;
     const [row] = await ctx.q.query<{ id: number }>(
       "INSERT INTO yard_items (player_id, slot, drop_id, spawned_at) VALUES ($1,$2,$3,$4) RETURNING id",
-      [ctx.pid, slot, drop.id, new Date(at)],
+      [ctx.pid, slot, dropId, new Date(at)],
     );
-    items.push({ id: row.id, slot, drop_id: drop.id, spawned_at: new Date(at) });
+    items.push({ id: row.id, slot, drop_id: dropId, spawned_at: new Date(at) });
     anchor = at;
     changed = true;
   }
@@ -65,7 +69,9 @@ export async function yardPick(ctx: Ctx, itemId: number) {
   const before = await yardSync(ctx);
   const it = before.items.find((i) => i.id === itemId);
   if (!it) throw new GameError("yard_gone", "Этого предмета уже нет");
-  const drop = YARD_DROPS.find((d) => d.id === it.drop) ?? YARD_DROPS[0];
+  // a part lying there: its own reward
+  const part = it.drop.startsWith("part-") ? craftById(it.drop) : null;
+  const drop: YardDrop = part ? { id: part.id, name: part.name, icon: part.id, weight: 0, reward: { items: [{ id: part.id, qty: 1 }] } } : YARD_DROPS.find((d) => d.id === it.drop) ?? YARD_DROPS[0];
   // do not lose a weapon to a full stack: it stays on the ground
   for (const ri of drop.reward.items ?? []) {
     const def = itemById(ri.id);

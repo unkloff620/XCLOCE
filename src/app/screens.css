@@ -4594,6 +4594,12 @@ body { background-attachment: fixed; }
 .bb-title { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .bb-all { font-size: 12px; padding: 4px 10px; }
 .bb-sub { color: #4a3018; font-weight: 700; }
+/* the dealer's craft parts for today */
+.bb-dealer { display: flex; flex-direction: column; gap: 6px; padding-bottom: 8px; border-bottom: 2px dashed rgba(58, 36, 16, 0.35); }
+.bb-offers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.bb-offer { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 3px; border-radius: 10px; border: 2px solid #6b4a24; background: linear-gradient(#fff3d0, #ecd09a); color: #24160a; cursor: pointer; min-width: 0; }
+.bb-offer:disabled { opacity: 0.55; cursor: default; }
+.bb-offer > .ellipsis { max-width: 100%; }
 
 /* ── «Крафт» (screens/craft.tsx): the stash fixed on top (crumpled paper, blueprint cells), the filters, the cards (press, hold, drag), the scheme ── */
 .cf-stash { position: sticky; z-index: 6; top: calc(var(--hud-h) + var(--safe-t) + 2px); display: flex; flex-direction: column; gap: 6px; padding: 10px 12px 9px; border-radius: 6px;
@@ -4671,5 +4677,7 @@ body { background-attachment: fixed; }
 .cf-ing-btn:disabled { filter: grayscale(0.8) brightness(0.9); cursor: default; }
 .cf-scheme-arrow { font-size: 8cqw; color: #3a2410; }
 .cf-scheme-res { display: flex; flex-direction: column; align-items: center; gap: 1.2cqw; text-align: center; max-width: 26cqw; }
-.cf-scheme-foot { padding-top: 3cqw; }
+.cf-scheme-foot { padding-top: 3cqw; display: flex; flex-direction: column; align-items: center; gap: 2cqw; }
+.cf-ing-btn.split { background: linear-gradient(#e8d2b0, #c9a87a); }
+.cf-ask { margin-left: auto; }
 .cf-scheme-foot .cf-bonus { align-items: center; }

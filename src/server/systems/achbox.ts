@@ -3,6 +3,7 @@ import { grantReward, type Ctx } from "../core.ts";
 import { MOUTH_ITEMS, MOUTH_ITEM_CHANCE, achBoxState, rollAchBox } from "../../content/ach-box.ts";
 import { mergeRewards } from "../../content/rewards.ts";
 import { BOX_TATTOO_CHANCE, BOX_TATTOO_SETS } from "../../content/tattoos.ts";
+import { between, rollParts } from "../../content/craft-drops.ts";
 
 /** «Ящик ништяков» (content/ach-box.ts): how many are waiting for the achievement points, the way to the next one */
 export async function achBoxView(q: Queryable, pid: number) {
@@ -38,6 +39,8 @@ export async function openAchBox(ctx: Ctx, all = false) {
     const id = left[Math.floor(ctx.rng() * left.length)];
     mouthHave.add(id); ink.push({ id, qty: 1 });
   }
-  const reward = await grantReward(ctx, mergeRewards(...Array.from({ length: n }, () => rollAchBox(ctx.rng)), { items: ink }), "ach_box");
+  // «Крафт»: every box opened — 2–4 parts, 15% on a very rare one
+  const parts = Array.from({ length: n }, () => rollParts(ctx.rng, between(2, 4, ctx.rng), { rare: 0.3, epic: 0.15 / 3 })).flat();
+  const reward = await grantReward(ctx, mergeRewards(...Array.from({ length: n }, () => rollAchBox(ctx.rng)), { items: [...ink, ...parts] }), "ach_box");
   return { reward, opened: n, box: await achBoxView(ctx.q, ctx.pid) };
 }

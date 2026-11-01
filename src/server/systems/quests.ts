@@ -3,6 +3,7 @@ import { GameError, type Queryable } from "../db.ts";
 import { grantReward, moscowDay, nextMoscowMidnight, weighted, type Ctx, type Granted } from "../core.ts";
 import { QUEST_CHEST_BASE, QUEST_CHEST_LOOT, questsForDay, type QuestKind } from "../../content/quests.ts";
 import { mergeRewards } from "../../content/rewards.ts";
+import { between, rollParts } from "../../content/craft-drops.ts";
 
 /*
  * Daily quests: three a day (content/quests.ts), progress counted by the actions themselves (game.ts → questTick).
@@ -67,7 +68,9 @@ export async function openQuestChest(ctx: Ctx) {
   const ids = questsForDay(ctx.pid, day, ctx.cfg.exchange.schedule).map((x) => x.id);
   if (!ids.every((id) => r.claimed.includes(id))) throw new GameError("chest_locked", "Сначала забери награды за все задания дня");
   const loot = weighted(QUEST_CHEST_LOOT, ctx.rng);
-  const got = await grantReward(ctx, mergeRewards(QUEST_CHEST_BASE, { items: [loot] }), "quest-chest");
+  // «Крафт»: the day's chest holds 5 parts and a rare one too
+  const parts = [...rollParts(ctx.rng, 5, { rare: 0.2 }), ...rollParts(ctx.rng, 1, { rare: 1 })];
+  const got = await grantReward(ctx, mergeRewards(QUEST_CHEST_BASE, { items: [loot, ...parts] }), "quest-chest");
   await ctx.q.query("UPDATE daily_quests SET chest=$3 WHERE player_id=$1 AND day=$2", [ctx.pid, day, JSON.stringify(got)]);
   return { reward: got };
 }

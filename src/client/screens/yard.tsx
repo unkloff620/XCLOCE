@@ -6,6 +6,7 @@ import { api } from "../api.ts";
 import { YARD_SPOTS } from "../art/scenes.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { YARD_DROPS, yardTime } from "../../content/yard.ts";
+import { craftById } from "../../content/craft.ts";
 import { clock } from "../format.ts";
 import { haptic } from "../telegram.ts";
 import { setMusicTrack } from "../sound.ts";
@@ -153,7 +154,9 @@ export function YardScreen() {
           ))}
           {data?.items.filter((it) => !gone.has(it.id)).map((it) => {
             const spot = YARD_SPOTS[it.slot % YARD_SPOTS.length];
-            const drop = YARD_DROPS.find((d) => d.id === it.drop);
+            // a craft part lies there by its own id
+            const part = it.drop.startsWith("part-") ? craftById(it.drop) : null;
+            const drop = part ? { name: part.name, icon: part.id, weight: part.rarity === "common" ? 22 : 3 } : YARD_DROPS.find((d) => d.id === it.drop);
             return (
               <button
                 key={it.id}

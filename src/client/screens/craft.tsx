@@ -18,6 +18,7 @@ import { sfx } from "../sound.ts";
 import { full } from "../format.ts";
 import { itemById } from "../../content/items.ts";
 import { BicepsArt } from "./profile.tsx";
+import { StashWishWindow } from "./stash-swap.tsx";
 import { CRAFT_ALL, CRAFT_BLOCK_BONUS, CRAFT_BOXES, CRAFT_BOX_PRICES, CRAFT_BOX_TALENTS, CRAFT_LEVEL_NAME, craftBonusOf, craftById, craftBoxesOpen, type CraftBonus, type CraftDef } from "../../content/craft.ts";
 import { talentsForDamage } from "../../content/talents.ts";
 
@@ -41,6 +42,7 @@ export function CraftScreen() {
   const { state, act, busy, toast } = useGame();
   const [filter, setFilter] = useState<Filter>("all");
   const [recipe, setRecipe] = useState<CraftDef | null>(null);
+  const [ask, setAsk] = useState(false);
   const boxes = state?.craftBoxes ?? Array.from({ length: CRAFT_BOXES }, () => null);
   const qty = useMemo(() => new Map((state?.inventory ?? []).map((i) => [i.id, i.qty])), [state?.inventory]);
   const inBox = new Map<string, number>();
@@ -154,6 +156,7 @@ export function CraftScreen() {
       <div className="title" style={{ margin: 0 }}>
         <div className="title-row">
           <h2 className="display" style={{ margin: 0 }}>Крафт</h2>
+          <button type="button" className="btn sm gold cf-ask" onClick={() => { haptic.tap(); setAsk(true); }}>Попросить детали</button>
           <Help topic="craft" title="Крафт">
             <ul>
               <li>Детали собираются в вещи: на вещь 1 уровня нужно 5 разных деталей по 5 штук. Из вещей потом соберутся вещи посильнее.</li>
@@ -162,7 +165,9 @@ export function CraftScreen() {
               <li>Вещи 3 уровня — оружие: новые удары по боссам, появляются в бою рядом с остальным оружием.</li>
               <li>Чтобы заныкать: нажми на карточку, подержи и перетащи в свободную ячейку. Нажми на ячейку — вещь вернётся на склад.</li>
               <li>Нажми на вещь, которая собирается, — откроется схема: что нужно и сколько уже есть.</li>
-              <li>Откуда падают детали — скоро.</li>
+              <li>Детали падают почти отовсюду, понемногу и наугад: двор, задания и закрытие локаций, боссы (в «Блатном» и «Авторитетном» — больше и с фирменной очень редкой деталью босса), ящик ништяков, вход и сундук дня, мини-игры, таракан и голуби, наезды, клан-босс.</li>
+              <li>Барыга в гараже каждый день продаёт несколько деталей и скупает лишние. Ненужную вещь 1–2 уровня можно разобрать — вернётся примерно 40% деталей.</li>
+              <li>«Попросить детали» — просьба видна в твоём профиле, другие игроки могут прислать до 5 штук за раз.</li>
             </ul>
           </Help>
         </div>
@@ -255,14 +260,18 @@ export function CraftScreen() {
         </Modal>
       )}
 
-      {recipe && <Scheme d={recipe} qty={qty} busy={!!busy} onMake={() => make(recipe)} onOpen={setRecipe} onClose={() => setRecipe(null)} />}
+      {recipe && <Scheme d={recipe} qty={qty} busy={!!busy} onMake={() => make(recipe)} onOpen={setRecipe} onClose={() => setRecipe(null)}
+        onSplit={async () => { const r = await act<{ back: { id: string; qty: number }[] }>("craft_split", { itemId: recipe.id }, (x) => `Разобрано: вернулось ${x.back.reduce((t, b) => t + b.qty, 0)} шт.`); if (r) haptic.ok(); }} />}
+      {ask && <StashWishWindow onClose={() => setAsk(false)} />}
     </div>
   );
 }
 
 /** «Схема создания вещи»: a sheet of paper — the ingredients (a picture, have/need; one that is made itself — «Собрать»
  * opens its own scheme), an arrow, the result and «Создать». */
-function Scheme({ d, qty, busy, onMake, onOpen, onClose }: { d: CraftDef; qty: Map<string, number>; busy: boolean; onMake: () => void; onOpen: (d: CraftDef) => void; onClose: () => void }) {
+function Scheme({ d, qty, busy, onMake, onOpen, onClose, onSplit }: { d: CraftDef; qty: Map<string, number>; busy: boolean; onMake: () => void; onOpen: (d: CraftDef) => void; onClose: () => void; onSplit: () => void }) {
+  const [sure, setSure] = useState(false);
+  const own = qty.get(d.id) ?? 0;
   const parts = d.recipe ?? [];
   const lacks = parts.some((r) => (qty.get(r.id) ?? 0) < r.qty);
   const cols = [parts.slice(0, 3), parts.slice(3)];
@@ -293,7 +302,15 @@ function Scheme({ d, qty, busy, onMake, onOpen, onClose }: { d: CraftDef; qty: M
             <button type="button" className="cf-ing-btn go" disabled={busy || lacks} onClick={onMake}>Создать</button>
           </span>
         </div>
-        <div className="cf-scheme-foot"><BonusLines b={d.bonus} /></div>
+        <div className="cf-scheme-foot">
+          <BonusLines b={d.bonus} />
+          {/* a thing you have (level 1–2): take it apart, about 40% of the ingredients come back */}
+          {own > 0 && d.level <= 2 && (
+            <button type="button" className="cf-ing-btn split" disabled={busy} onClick={() => (sure ? (setSure(false), onSplit()) : setSure(true))}>
+              {sure ? "Точно разобрать?" : `Разобрать (есть ${own})`}
+            </button>
+          )}
+        </div>
       </div>
     </Modal>
   );

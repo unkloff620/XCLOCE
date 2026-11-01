@@ -17,6 +17,8 @@ import { ZONK_CONT_PENALTY, UPGRADE_RULES, POKER_RULES, POKER_CHIP, pokerCheats,
 } from "../../content/games.ts";
 import { itemById } from "../../content/items.ts";
 import type { Reward } from "../../content/rewards.ts";
+import { between, rollParts } from "../../content/craft-drops.ts";
+import { mergeRewards } from "../../content/rewards.ts";
 
 /** round: the attempt now (1…ZONK_ROUNDS); total: points written down; last: how the previous attempt ended */
 /** level: the difficulty (ZONK_LEVELS), target: the points to reach; old games (before the levels) have neither */
@@ -167,7 +169,8 @@ async function finishZonk(ctx: Ctx, g: GameRow, gaveUp = false) {
     return;
   }
   const won = !gaveUp && points >= target;
-  const pay = won ? def.win : def.fail;
+  // a won zonk: a few craft parts on top
+  const pay = won ? mergeRewards(def.win, { items: rollParts(ctx.rng, between(1, 3, ctx.rng), { rare: 0.25 }) }) : def.fail;
   const xp = won ? def.winXp : ZONK_FAIL_XP;
   const reward = isEmpty(pay) ? null : await grantReward(ctx, pay, `game:zonk:${def.level}:${won ? "win" : "fail"}:${points}`);
   await ctx.q.query("UPDATE players SET zonk_xp = zonk_xp + $2 WHERE id=$1", [ctx.pid, xp]);
@@ -243,7 +246,8 @@ export async function zonkMove(ctx: Ctx, pick: number[], then: "roll" | "bank") 
 /** The level's prize and zonk xp, paid the moment the target is reached (once). */
 async function payZonkTarget(ctx: Ctx, s: ZonkState) {
   const def = zonkLevelDef(s.level ?? 1)!;
-  const reward = isEmpty(def.win) ? null : await grantReward(ctx, def.win, `game:zonk:${def.level}:win:${s.total ?? 0}`);
+  const win = mergeRewards(def.win, { items: rollParts(ctx.rng, between(1, 3, ctx.rng), { rare: 0.25 }) });
+  const reward = isEmpty(win) ? null : await grantReward(ctx, win, `game:zonk:${def.level}:win:${s.total ?? 0}`);
   await ctx.q.query("UPDATE players SET zonk_xp = zonk_xp + $2 WHERE id=$1", [ctx.pid, def.winXp]);
   await addGameWeekly(ctx, "zonk", def.winXp);
   s.reached = true;
@@ -410,7 +414,9 @@ async function settlePoker(ctx: Ctx, gameId: number | null, cards: Card[], swapp
   const { hand, used } = pokerHand(cards);
   const def = pokerHandDef(hand);
   const before = pokerLevel(Number(p?.poker_xp ?? 0));
-  const pay = pokerPay(hand, before.level);
+  const base = pokerPay(hand, before.level);
+  // a paying hand: a craft part or two on top
+  const pay = isEmpty(base) ? base : mergeRewards(base, { items: rollParts(ctx.rng, between(1, 2, ctx.rng), { rare: 0.25 }) });
   const reward = isEmpty(pay) ? null : await grantReward(ctx, pay, `game:poker:${hand}`);
   const [u] = await ctx.q.query<{ poker_xp: number }>("UPDATE players SET poker_xp = poker_xp + $2 WHERE id=$1 RETURNING poker_xp", [ctx.pid, def.xp]);
   await addGameWeekly(ctx, "poker", def.xp);

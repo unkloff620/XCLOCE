@@ -15,7 +15,10 @@ export const YARD_MAX_ITEMS = 5;
 
 // Weapons never drop in the yard except a rare keyboard (the fist, the mouse and the candle are everyone's anyway).
 export const YARD_DROPS: YardDrop[] = [
-  { id: "coins", name: "Мелочь из-под лавки", icon: "coins", weight: 43, reward: { currencies: { RUB: 25 } } },
+  { id: "coins", name: "Мелочь из-под лавки", icon: "coins", weight: 18, reward: { currencies: { RUB: 25 } } },
+  // «Крафт»: a part lies on the ground (which one is rolled when it appears — the drop id becomes the part's id)
+  { id: "parts-common", name: "Деталь", icon: "part-nails", weight: 22, reward: {} },
+  { id: "parts-rare", name: "Редкая деталь", icon: "part-battery", weight: 3, reward: {} },
   { id: "sticker-hodl", name: "Стикер HODL", icon: "sticker-hodl", weight: 8, reward: { items: [{ id: "sticker-hodl", qty: 1 }] } },
   { id: "bottle-cap", name: "Крышка от энергетика", icon: "bottle-cap", weight: 8, reward: { items: [{ id: "bottle-cap", qty: 1 }] } },
   { id: "spinner", name: "Спиннер из 2017", icon: "spinner", weight: 7, reward: { items: [{ id: "spinner", qty: 1 }] } },

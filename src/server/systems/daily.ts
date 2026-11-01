@@ -2,6 +2,8 @@ import { GameError, type Queryable } from "../db.ts";
 import { grantReward, moscowDay, nextMoscowMidnight, type Ctx } from "../core.ts";
 import type { Config } from "../config.ts";
 import { nextStreakBonus, streakBonus } from "../../content/daily.ts";
+import { between, rollParts } from "../../content/craft-drops.ts";
+import { mergeRewards } from "../../content/rewards.ts";
 
 /*
  * Награда за вход: раз в московские сутки. Серия растёт, если вчера тоже забирал; пропуск — снова день 1.
@@ -42,7 +44,9 @@ export async function claimDaily(ctx: Ctx) {
        best_streak=GREATEST(daily_login.best_streak, EXCLUDED.streak)`,
     [ctx.pid, moscowDay(ctx.now), s.nextStreak],
   );
-  const got = await grantReward(ctx, reward, `daily:${s.day}`);
+  // «Крафт»: a handful of parts every day (one rare among them)
+  const parts = [...rollParts(ctx.rng, between(3, 6, ctx.rng)), ...rollParts(ctx.rng, 1, { rare: 1 })];
+  const got = await grantReward(ctx, mergeRewards(reward, { items: parts }), `daily:${s.day}`);
   // the streak bonus on top: 7, 14, 30 days in a row (then every 30)
   const extra = streakBonus(s.nextStreak);
   const bonus = extra ? await grantReward(ctx, extra, `daily-streak:${s.nextStreak}`) : null;

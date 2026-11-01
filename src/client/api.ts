@@ -79,6 +79,8 @@ export interface GameState {
   craftBoxes?: (string | null)[];
   /** «Крафт»: how many cells are opened (bought) */
   craftBoxesOpen?: number;
+  /** the dealer in the garage: today's parts on sale */
+  dealer?: { id: string; price: number; left: number }[];
   /** upgrader spins: free ones left today, then each costs `price` */
   upgradeSpins?: { freeLeft: number; freePerDay: number; price: { currency: Currency; amount: number } };
   /** poker: hands left today, the price, the poker experience and level (to: null at the top level) */
@@ -96,11 +98,11 @@ export interface GameState {
   stashSets: Record<number, number>;
   /** нычки I ask other players for, and who sent me what lately */
   stashWish?: string[];
-  stashGifts?: { id: number; fromId: number; from: string; itemId: string; at: number }[];
+  stashGifts?: { id: number; fromId: number; from: string; itemId: string; qty?: number; at: number }[];
   /** messages from other players (a spit, a fist fight), the newest first */
   notes?: { id: number; kind: string; fromId: number | null; from: string; meta: Record<string, unknown>; at: number; unread: boolean }[];
   /** gifts waiting in «Сообщения» to be accepted */
-  stashInbox?: { id: number; fromId: number; from: string; itemId: string; at: number }[];
+  stashInbox?: { id: number; fromId: number; from: string; itemId: string; qty?: number; at: number }[];
   games: { zonk: ZonkInfo };
   rename: { price: { currency: Currency; amount: number }; nextAt: number | null; min: number; max: number };
   /** inventory sale prices in RUB */

@@ -1202,4 +1202,9 @@ DELETE FROM player_craft_box;`,
     id: "v2-073-craft-boxes-bought",
     sql: `ALTER TABLE players ADD COLUMN IF NOT EXISTS craft_boxes INT NOT NULL DEFAULT 0;`,
   },
+  {
+    // «Крафт»: parts can be sent to each other several at once
+    id: "v2-074-gift-qty",
+    sql: `ALTER TABLE stash_gifts ADD COLUMN IF NOT EXISTS qty INT NOT NULL DEFAULT 1;`,
+  },
 ];

@@ -5,7 +5,8 @@
  * setBonuses), the minutes to a boss fight in combat.ts startFight.
  */
 import { GameError, type Queryable } from "../db.ts";
-import { addItem, ledger, takeItem, takeMoney, type Ctx } from "../core.ts";
+import { addItem, ledger, moscowDay, takeItem, takeMoney, type Ctx } from "../core.ts";
+import { DEALER_STOCK, PART_BUY, dealerParts } from "../../content/craft-drops.ts";
 import { CRAFT_BOXES, CRAFT_BOX_PRICES, CRAFT_BOX_TALENTS, craftBonusOf, craftById, craftBoxesOpen } from "../../content/craft.ts";
 import { talentsForDamage } from "../../content/talents.ts";
 import { syncTalentExtras } from "./home.ts";
@@ -76,4 +77,35 @@ export async function craftBoxBuy(ctx: Ctx) {
   const [r] = await ctx.q.query<{ craft_boxes: number }>("UPDATE players SET craft_boxes = craft_boxes + 1 WHERE id=$1 AND craft_boxes=$2 RETURNING craft_boxes", [ctx.pid, bought]);
   if (!r) throw new GameError("conflict", "Ячейка уже открыта, обнови экран");
   return { slot: bought, price, open: Number(r.craft_boxes) };
+}
+
+/** the dealer in the garage today: DEALER_OFFERS parts, DEALER_STOCK of each for every player, at PART_BUY prices */
+export async function dealerView(q: Queryable, pid: number, now: number) {
+  const day = moscowDay(now);
+  const ids = dealerParts(day);
+  const rows = await q.query<{ key: string; n: number }>("SELECT key, SUM(delta)::int AS n FROM ledger WHERE player_id=$1 AND kind='item' AND reason=$2 GROUP BY key", [pid, `dealer:${day}`]);
+  const bought = new Map(rows.map((r) => [r.key, Number(r.n)]));
+  return ids.map((id) => ({ id, price: PART_BUY[craftById(id)?.rarity ?? "common"] ?? 150, left: Math.max(0, DEALER_STOCK - (bought.get(id) ?? 0)) }));
+}
+export async function dealerBuy(ctx: Ctx, itemId: string, want: number) {
+  const offer = (await dealerView(ctx.q, ctx.pid, ctx.now)).find((o) => o.id === itemId);
+  if (!offer) throw new GameError("not_sold", "Сегодня барыга этим не торгует");
+  const qty = Math.max(1, Math.min(offer.left, Math.floor(want)));
+  if (offer.left < 1) throw new GameError("sold_out", "На сегодня кончилось — завтра будет другое");
+  await takeMoney(ctx, "RUB", offer.price * qty, `dealer:${itemId}`);
+  const got = await addItem(ctx, itemId, qty, `dealer:${moscowDay(ctx.now)}`);
+  return { itemId, qty: got, paid: offer.price * qty };
+}
+
+/** takes a level-1/2 thing apart: about 40% of each ingredient comes back (at random), the thing is gone */
+export async function craftSplit(ctx: Ctx, itemId: string) {
+  const def = craftById(itemId);
+  if (!def?.recipe || def.level > 2) throw new GameError("bad_item", "Это не разбирается");
+  await takeItem(ctx, def.id, 1, "craft-split");
+  const back: { id: string; qty: number }[] = [];
+  for (const r of def.recipe) {
+    const n = Math.floor(r.qty * 0.4 + ctx.rng());
+    if (n > 0) { await addItem(ctx, r.id, n, `craft-split:${def.id}`); back.push({ id: r.id, qty: n }); }
+  }
+  return { itemId: def.id, back };
 }

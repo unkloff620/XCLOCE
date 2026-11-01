@@ -94,7 +94,8 @@ function sellRows(state: ReturnType<typeof useGame>["state"]) {
 }
 function SellAllButton() {
   const { state, act, busy } = useGame();
-  const rows = sellRows(state);
+  // the yard finds only: the craft parts are sold one by one (not to lose them to a careless tap)
+  const rows = sellRows(state).filter((r) => !r.id.startsWith("part-"));
   const total = rows.reduce((t, r) => t + r.qty * r.price, 0);
   if (rows.length < 2) return null;
   const sellAll = async () => {
@@ -119,9 +120,44 @@ function BuyBack() {
     const r = await act<{ got: number }>("up_sell", { uid }, (x) => `Продано за ${x.got} ₽`);
     if (r) { haptic.ok(); sfx("coin"); }
   };
+  const dealer = state.dealer ?? [];
+  const buyPart = async (id: string) => {
+    const r = await act<{ qty: number; paid: number }>("dealer_buy", { itemId: id, qty: 1 }, (x) => `Куплено: ${itemById(id)?.name} · −${money("RUB", x.paid)} ₽`);
+    if (r) { haptic.ok(); sfx("coinsoft"); }
+  };
+  const finds = rows.filter((r) => !r.id.startsWith("part-"));
+  const parts = rows.filter((r) => r.id.startsWith("part-"));
   return (
     <div className="bb-panel">
-      {rows.map((r) => (
+      {/* the dealer sells a few craft parts today (the same for everybody, a few of each for every player) */}
+      {dealer.length > 0 && (
+        <div className="bb-dealer">
+          <b className="small">Барыга продаёт сегодня</b>
+          <div className="bb-offers">
+            {dealer.map((o) => (
+              <button key={o.id} type="button" className="bb-offer" disabled={!!busy || o.left < 1 || (state.wallet.RUB ?? 0) < o.price} onClick={() => buyPart(o.id)} title={itemById(o.id)?.name}>
+                <ItemArt id={o.id} size={40} />
+                <span className="tiny ellipsis">{itemById(o.id)?.name}</span>
+                <b className="num small">{money("RUB", o.price)} ₽</b>
+                <span className="tiny bb-sub num">{o.left > 0 ? `осталось ${o.left}` : "кончилось"}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {finds.length > 0 && parts.length > 0 && <b className="small">Находки</b>}
+      {finds.map((r) => (
+        <div key={r.id} className="bb-row">
+          <ItemArt id={r.id} size={36} />
+          <span className="grow col" style={{ minWidth: 0 }}>
+            <b className="small ellipsis">{r.def!.name}</b>
+            <span className="tiny bb-sub num">×{r.qty} · {money("RUB", r.price)} ₽ за шт.</span>
+          </span>
+          <button className="btn sm gold" disabled={!!busy} onClick={() => sell(r.id, r.qty)}>{money("RUB", r.qty * r.price)} ₽</button>
+        </div>
+      ))}
+      {parts.length > 0 && <b className="small">Детали крафта</b>}
+      {parts.map((r) => (
         <div key={r.id} className="bb-row">
           <ItemArt id={r.id} size={36} />
           <span className="grow col" style={{ minWidth: 0 }}>

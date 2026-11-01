@@ -12,6 +12,7 @@ import { playerBonus, weaponTalents } from "./home.ts";
 import { setBonuses } from "./collection.ts";
 import { craftBonus } from "./craft.ts";
 import { CRAFT_WEAPONS } from "../../content/craft.ts";
+import { BOSS_PARTS, between, rollParts } from "../../content/craft-drops.ts";
 import { BLASTS_ON, fightMode, type FightMode } from "../../content/medals.ts";
 import { tattooSetsOfBoss } from "../../content/tattoos.ts";
 import { notifyBossLow } from "./notify.ts";
@@ -437,7 +438,16 @@ export async function claimFight(ctx: Ctx, fightId: number) {
   // the admin's «Увеличить награды» for this boss (rewards in % of the usual)
   const base = boostReward(scaleReward(def.reward, share), ctx.cfg.bossReward[def.id] ?? 1);
   if (base.items?.length) base.items = await notOwnedUnique(ctx, base.items);
-  const granted = await grantReward(ctx, mergeRewards(base, { items: [...key, ...drops, ...tattoos] }), `win:${def.id}`);
+  // «Крафт»: parts for the win (only for a fair share of the damage): «Пацанский» 3–5, «Блатной» 5–8 and 30% on
+  // the boss's own very rare part, «Авторитетный» 10 and 1–2 of it for sure; an event boss (Пепе) — like «Блатной»
+  const parts: { id: string; qty: number }[] = [];
+  if (earnedKey) {
+    const tough = def.event ? "blat" : mode.id;
+    parts.push(...rollParts(ctx.rng, tough === "avtor" ? 10 : tough === "blat" ? between(5, 8, ctx.rng) : between(3, 5, ctx.rng), { rare: tough === "pacan" ? 0.2 : 0.35, epic: tough === "pacan" ? 0.02 : 0.05 }));
+    const sig = BOSS_PARTS[def.id];
+    if (sig && (tough === "avtor" || (tough === "blat" && ctx.rng() < 0.3))) parts.push({ id: sig, qty: tough === "avtor" ? between(1, 2, ctx.rng) : 1 });
+  }
+  const granted = await grantReward(ctx, mergeRewards(base, { items: [...key, ...drops, ...tattoos, ...parts] }), `win:${def.id}`);
   if (unlocked.length) granted.unlocks = unlocked;
   // the boss medal of this mode, for sure (the same share of damage as the pass) — while the blasts are in the game
   if (earnedKey && BLASTS_ON) {

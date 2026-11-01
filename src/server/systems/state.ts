@@ -22,7 +22,7 @@ import { notifyView, scheduleEnergy } from "./notify.ts";
 import { framesFor, prizesView, settleWeeks } from "./rating.ts";
 import { pigeonsView, settleGameWeeks, settleZonkDay } from "./minigame-extras.ts";
 import { casesView, setBonuses } from "./collection.ts";
-import { craftBoxes, craftBoxesBought } from "./craft.ts";
+import { craftBoxes, craftBoxesBought, dealerView } from "./craft.ts";
 import { clanBossView } from "./clan-boss.ts";
 import { duelsView, expireDuels } from "./duels.ts";
 import { newsView, notesView, socialView } from "./social.ts";
@@ -113,6 +113,8 @@ export async function gameState(ctx: Ctx) {
     craftBoxes: await craftBoxes(ctx.q, ctx.pid),
     /** «Крафт»: how many cells are opened (bought) */
     craftBoxesOpen: await craftBoxesBought(ctx.q, ctx.pid),
+    /** the dealer in the garage: today's parts on sale */
+    dealer: await dealerView(ctx.q, ctx.pid, ctx.now),
     upgradeSpins: await upgradeSpinsView(ctx.q, ctx.pid, ctx.now),
     poker: await pokerView(ctx.q, ctx.pid, ctx.now),
     // flat damage per weapon from the complete boss sets

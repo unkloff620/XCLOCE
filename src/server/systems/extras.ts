@@ -4,6 +4,8 @@ import { itemById } from "../../content/items.ts";
 import { NICK_RE, RENAME } from "../../content/profile.ts";
 import { SLOT_OUTCOMES, SLOT_SYMBOLS, slotLevel, slotLevelReward, slotXpOf, type SlotOutcome, type SlotSymbol } from "../../content/slots.ts";
 import type { Config } from "../config.ts";
+import { between, rollParts } from "../../content/craft-drops.ts";
+import { mergeRewards } from "../../content/rewards.ts";
 
 // ---------------- selling yard finds ----------------
 export async function sellItem(ctx: Ctx, itemId: string, qty: number) {
@@ -82,7 +84,9 @@ export async function spinSlots(ctx: Ctx) {
   const reels = reelsFor(o, ctx.rng);
   await ctx.q.query("INSERT INTO slot_spins (player_id, outcome, reels, created_at) VALUES ($1,$2,$3,$4)", [ctx.pid, o.id, reels.join(","), new Date(ctx.now)]);
   const hasReward = Object.keys(o.reward).length > 0;
-  const reward = hasReward ? await grantReward(ctx, o.reward, `slots:${o.id}`) : null;
+  // three alike or the jackpot: a few craft parts on top
+  const parts = o.kind === "jackpot" || o.kind === "triple" ? rollParts(ctx.rng, between(1, 3, ctx.rng), { rare: 0.3, epic: o.kind === "jackpot" ? 0.2 : 0 }) : [];
+  const reward = hasReward || parts.length ? await grantReward(ctx, mergeRewards(o.reward, { items: parts }), `slots:${o.id}`) : null;
   // the machine's level: xp by the outcome, a reward for every level passed
   const gain = slotXpOf(o.id);
   const before = slotLevel(v.xp).level;
