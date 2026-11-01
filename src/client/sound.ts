@@ -27,6 +27,8 @@ export type Sfx = "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" |
   | "raid" | "brawllose"
   /* a new level of the player: one of two recordings of the player's at random (public/assets/sound/levelup-voice-1/2.mp3) */
   | "lvlvoice"
+  /* the player's new level: the background under the voice (public/assets/sound/levelup-bg.mp3) */
+  | "levelupbg"
   /* a new achievement: one of two recordings of the player's at random (public/assets/sound/ach-voice-1/2.mp3) */
   | "wow"
   /* «Личное дело»: a sheet of paper turned over */
@@ -185,6 +187,7 @@ const SAMPLE_URLS = {
   brawllose: "/assets/sound/brawl-lose.mp3",
   casedrop1: "/assets/sound/case-drop-1.mp3",
   casedrop2: "/assets/sound/case-drop-2.mp3",
+  levelupbg: "/assets/sound/levelup-bg.mp3",
   lvlvoice1: "/assets/sound/levelup-voice-1.mp3",
   lvlvoice2: "/assets/sound/levelup-voice-2.mp3",
 } as Record<string, string>;
@@ -286,6 +289,10 @@ export function sfx(name: Sfx, power = 0.5) {
       if (sample(a, Math.random() < 0.5 ? "wow1" : "wow2", t, 1)) break;
       tone(a, 140, t, 0.2, { type: "sawtooth", vol: 0.18, slide: 1.2 });
       tone(a, 170, t + 0.22, 0.4, { type: "sawtooth", vol: 0.18, slide: 0.7 });
+      break;
+    case "levelupbg":
+      if (sample(a, "levelupbg", t, 0.8)) break;
+      [392, 523, 659, 784].forEach((f, i) => tone(a, f, t + i * 0.09, 0.25, { type: "square", vol: 0.08 }));
       break;
     case "lvlvoice":
       sample(a, Math.random() < 0.5 ? "lvlvoice1" : "lvlvoice2", t, 1);

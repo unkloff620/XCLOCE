@@ -11,7 +11,8 @@ export function LevelUpOverlay() {
   const { levelUp, clearLevelUp, state } = useGame();
   useEffect(() => {
     if (!levelUp) return;
-    sfx("levelup");
+    // the background of a new level, the voice over it
+    sfx("levelupbg");
     haptic.big();
     // after the fanfare: a voice (one of two at random)
     const t = setTimeout(() => sfx("lvlvoice"), 750);
