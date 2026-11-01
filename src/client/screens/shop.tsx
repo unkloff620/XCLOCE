@@ -238,14 +238,16 @@ function AchBoxWindow({ onClose }: { onClose: () => void }) {
   const step = Math.min(LOOT_STEP, Math.max(60, Math.round(3000 / Math.max(1, parts.length))));
   const inkDelay = 450 + parts.length * step;
   const thingDelay = inkDelay + (inkGot.length ? 900 : 0);
+  const [shownAt, setShownAt] = useState(0);
+  const [skip, setSkip] = useState(false);
   useEffect(() => {
-    if (phase !== "open") return;
+    if (phase !== "open" || skip) return;
     const t = parts.map((_, i) => setTimeout(() => { if (i < 24) { haptic.tap(); sfx("coinsoft"); } }, 450 + i * step));
     // each frame that gets something: its own voice as it lights up
     if (inkGot.length) t.push(setTimeout(() => { haptic.big(); sfx("casedrop"); }, inkDelay));
     if (thingGot.length) t.push(setTimeout(() => { haptic.big(); sfx("thingdrop"); }, thingDelay));
     return () => t.forEach(clearTimeout);
-  }, [phase, parts, inkGot, thingGot, inkDelay, thingDelay]);
+  }, [phase, parts, inkGot, thingGot, inkDelay, thingDelay, skip]);
   const open = async (all = false) => {
     if (phase === "opening" || b.ready < 1) return;
     haptic.heavy();
@@ -257,11 +259,14 @@ function AchBoxWindow({ onClose }: { onClose: () => void }) {
     ]);
     if (!r) { setPhase("closed"); return; }
     haptic.big(); sfx("reward");
-    setGot(r.reward); setGotN(r.opened ?? 1); setPhase("open");
+    setGot(r.reward); setGotN(r.opened ?? 1); setPhase("open"); setSkip(false); setShownAt(Date.now());
   };
   // no case ready: the locked case only rattles (like a door without a pass)
   const [deny, setDeny] = useState(0);
+  // the loot is still coming out: a tap shows it all at once (skips the animation); the next tap closes the case
+  const pourMs = thingDelay + 900;
   const tapCase = () => {
+    if (phase === "open" && !skip && Date.now() - shownAt < pourMs) { haptic.tap(); setSkip(true); return; }
     if (phase === "open") { haptic.tap(); setPhase("closed"); setGot(null); return; }
     if (phase !== "closed") return;
     if (b.ready < 1) { haptic.err(); sfx("locked"); setDeny(Date.now()); return; }
@@ -270,7 +275,7 @@ function AchBoxWindow({ onClose }: { onClose: () => void }) {
   return (
     <div className="acx" role="dialog" aria-label="Ящик ништяков" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <button className="acx-x" onClick={onClose} aria-label="Закрыть">✕</button>
-      <div key={deny} className={`acx-case ${phase} ${b.ready > 0 ? "ready" : ""} ${deny ? "deny" : ""}`} onClick={tapCase}>
+      <div key={deny} className={`acx-case ${phase} ${b.ready > 0 ? "ready" : ""} ${deny ? "deny" : ""} ${skip ? "skip" : ""}`} onClick={tapCase}>
         <span className="acx-glow" />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="acx-open" src="/assets/shop/v2/case-front-open.webp" alt="" draggable={false} />

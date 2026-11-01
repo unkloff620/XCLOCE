@@ -120,11 +120,6 @@ export function InventoryFull() {
               <button className="btn gold block" disabled={!!busy} onClick={async () => { const r = await act<{ got: number }>("up_sell", { uid: upOpen.uid }, (x) => `Продано за ${x.got} ₽`); if (r) { haptic.ok(); setOpenUp(null); } }}>
                 Продать за {upOpen.value} ₽
               </button>
-              {upDef.weapon && (
-                <button className="btn red block" disabled={!!busy} onClick={async () => { const r = await act("up_take", { uid: upOpen.uid }, `${upDef.name} — в бою`); if (r) setOpenUp(null); }}>
-                  Взять в бой
-                </button>
-              )}
               {upDef.use && (
                 <button className="btn green block" disabled={!!busy} onClick={async () => { const r = await act("up_take", { uid: upOpen.uid, use: true }, `+${upDef.use?.energy} энергии`); if (r) setOpenUp(null); }}>
                   Использовать

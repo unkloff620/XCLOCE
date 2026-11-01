@@ -4816,3 +4816,5 @@ body { background-attachment: fixed; }
 .xg-screen { transform: rotate(2.5deg) skewX(-5deg); transform-origin: 50% 50%; }
 /* «купить» the missing parts in the craft scheme: the dealer's thin green button */
 .cf-buy { width: auto; min-width: 64px; padding: 2px 6px; margin-top: 2px; white-space: nowrap; }
+/* a tap during the pour: everything is shown at once */
+.acx-case.skip .acx-item, .acx-case.skip .acx-ink-got { animation-delay: 0s !important; animation-duration: 0.15s !important; }

@@ -1106,7 +1106,6 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
                 <div key={u.uid} className="ug-mine-row">
                   <ItemArt id={u.itemId} size={34} />
                   <span className="grow ellipsis small"><b>{d.name} ★</b></span>
-                  {d.weapon && <button className="btn sm red" disabled={!!busy || spinning} onClick={() => void act("up_take", { uid: u.uid }, `${d.name} — в бою`)}>В бой</button>}
                   {d.use && <button className="btn sm green" disabled={!!busy || spinning} onClick={() => void act("up_take", { uid: u.uid, use: true }, `+${d.use?.energy} энергии`)}>Выпить</button>}
                   <button className="btn sm gold" disabled={!!busy || spinning} onClick={async () => { const r = await act<{ got: number }>("up_sell", { uid: u.uid }, (x) => `Продано за ${x.got} ₽`); if (r) haptic.ok(); }}>
                     {full(u.value)} ₽

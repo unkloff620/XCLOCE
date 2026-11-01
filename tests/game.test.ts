@@ -1705,11 +1705,11 @@ describe("yard mini games", () => {
     await act(db, p, "up_sell", { uid: again.result.uid }, T0);
     expect(await wallet(db, p, "RUB")).toBe(rub + 960);
     await expect(act(db, p, "up_sell", { uid: again.result.uid }, T0)).rejects.toMatchObject({ code: "no_item" });
-    // an upgraded weapon taken into the fight becomes a plain one
+    // an upgraded weapon can only be sold, not taken back into the fight
     await give(db, p, "keyboard", 1);
     const kb = await act(db, p, "upgrade", { stake: "keyboard", qty: 1, mode: "c70" }, T0, always(0.01));
-    await act(db, p, "up_take", { uid: kb.result.uid }, T0);
-    expect(await qty(db, p, "keyboard")).toBe(1);
+    await expect(act(db, p, "up_take", { uid: kb.result.uid }, T0)).rejects.toMatchObject({ code: "sell_only" });
+    expect(await qty(db, p, "keyboard")).toBe(0);
     await expect(act(db, p, "upgrade", { stake: "spinner", qty: 1, mode: "x3" }, T0)).rejects.toMatchObject({ code: "bad_upgrade" });
     await expect(act(db, p, "upgrade", { stake: "jeans", qty: 1, mode: "x2" }, T0)).rejects.toMatchObject({ code: "bad_upgrade" });
   });

@@ -369,6 +369,9 @@ export async function sellUpgraded(ctx: Ctx, uid: number) {
 
 /** Back to a plain thing: a weapon goes into the fight stack, an energy drink is drunk right away. */
 export async function takeUpgradedOut(ctx: Ctx, uid: number, use: boolean) {
+  // an upgraded weapon can only be sold (it no longer goes back into the fight)
+  const [row] = await ctx.q.query<{ item_id: string }>("SELECT item_id FROM upgraded_items WHERE id=$1 AND player_id=$2", [uid, ctx.pid]);
+  if (row && !itemById(row.item_id)?.use) throw new GameError("sell_only", "Улучшенное оружие можно только продать");
   const r = await takeUpgraded(ctx, uid);
   const added = await addItem(ctx, r.item_id, 1, `up-take:${uid}`);
   if (added < 1) throw new GameError("stack_full", "Нет места в инвентаре");
