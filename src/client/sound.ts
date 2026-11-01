@@ -229,6 +229,7 @@ const MUSIC_FILES = {
   yard: { id: "yard", start: 0.5, end: 63.571020408163264, gain: 0.12 },
 } as const;
 const buffers: Partial<Record<SampleId, AudioBuffer>> = {};
+const loading: Partial<Record<SampleId, Promise<AudioBuffer | undefined>>> = {};
 let samplesLoading = false;
 
 function decode(a: AudioContext, data: ArrayBuffer): Promise<AudioBuffer> {
@@ -242,12 +243,21 @@ function loadSamples(a: AudioContext) {
   if (samplesLoading) return;
   samplesLoading = true;
   for (const [id, url] of Object.entries(SAMPLE_URLS) as [SampleId, string][]) {
-    fetch(url)
+    loading[id] = fetch(url)
       .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(String(r.status)))))
       .then((d) => decode(a, d))
-      .then((b) => { buffers[id] = b; })
+      .then((b) => { buffers[id] = b; return b; })
       .catch(() => undefined); // the synthesized sound stays
   }
+}
+/** a recorded voice that must be ours (no synthesized stand-in): plays now, or as soon as it has loaded (within `wait` ms) */
+function sampleSoon(a: AudioContext, id: SampleId, vol = 1, wait = 4000): boolean {
+  if (sample(a, id, a.currentTime, vol)) return true;
+  const p = loading[id];
+  if (!p) return false;
+  const asked = performance.now();
+  void p.then((b) => { if (b && performance.now() - asked < wait) sample(a, id, a.currentTime, vol); });
+  return true;
 }
 /** plays a recorded sound; false when it is not loaded (the caller falls back to the synthesized one) */
 function sample(a: AudioContext, id: SampleId, at: number, vol = 0.5, rate = 1): boolean {
@@ -321,7 +331,8 @@ export function sfx(name: Sfx, power = 0.5) {
       tone(a, 120, t, 0.3, { type: "sawtooth", vol: 0.18, slide: 1.3 });
       break;
     case "nishtyak":
-      if (sample(a, "nishtyak", t, 1)) break;
+      // the first tap of the session may be this very one: the voice is still loading — wait for it, no stand-in
+      if (sampleSoon(a, "nishtyak", 1)) break;
       tone(a, 110, t, 0.25, { type: "sawtooth", vol: 0.2, slide: 0.8 });
       tone(a, 90, t + 0.25, 0.35, { type: "sawtooth", vol: 0.2, slide: 0.7 });
       break;
