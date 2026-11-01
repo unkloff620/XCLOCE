@@ -4,7 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { api, type FightView, type Hit, type Tray } from "../api.ts";
 import { BOSSES, arenaOf, bossById, type BossDef, FIGHT_HOURS, rewardShare } from "../../content/bosses.ts";
-import { RUSH_PRICE, WEAPONS, weaponById } from "../../content/items.ts";
+import { RUSH_PRICE, WEAPONS, itemById, weaponById } from "../../content/items.ts";
+import { CRAFT_WEAPONS } from "../../content/craft.ts";
 import { HIT_PHRASES, bossLines } from "../../content/phrases.ts";
 import { BossSilhouette } from "../art/scenes.tsx";
 import { ItemArt } from "../art/items.tsx";
@@ -153,7 +154,8 @@ function WeaponTray({ tray, onHit, onCooldown, onBuy, disabled, mult }: { tray: 
   const now = useNow();
   return (
     <div className="tray" style={{ gridTemplateColumns: `repeat(${WEAPONS.length}, minmax(0, 1fr))` }}>
-      {WEAPONS.map((w) => {
+      {/* the six weapons, then the craft weapons (вещи 3 ур.) you have — on a second row */}
+      {[...WEAPONS, ...CRAFT_WEAPONS.filter((c) => (tray.find((x) => x.id === c.id)?.qty ?? 0) > 0).map((c) => itemById(c.id)!)].map((w) => {
         const t = tray.find((x) => x.id === w.id);
         const qty = t?.qty ?? 0;
         const cd = t?.readyAt && t.readyAt > now ? t.readyAt - now : 0;

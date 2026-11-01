@@ -6,7 +6,8 @@
  */
 import { GameError, type Queryable } from "../db.ts";
 import { addItem, ledger, takeItem, type Ctx } from "../core.ts";
-import { CRAFT_BOXES, craftBonusOf, craftById } from "../../content/craft.ts";
+import { CRAFT_BOXES, craftBonusOf, craftById, craftBoxesOpen } from "../../content/craft.ts";
+import { talentsForDamage } from "../../content/talents.ts";
 import { syncTalentExtras } from "./home.ts";
 
 /** the stash: CRAFT_BOXES cells, an item id or null */
@@ -25,8 +26,12 @@ export async function craftPut(ctx: Ctx, itemId: string, slot?: number) {
   const def = craftById(itemId);
   if (!def) throw new GameError("bad_item", "Это нельзя заныкать");
   const boxes = await craftBoxes(ctx.q, ctx.pid);
-  const at = slot !== undefined && slot >= 0 && slot < CRAFT_BOXES && !boxes[slot] ? slot : boxes.findIndex((b) => !b);
-  if (at < 0) throw new GameError("boxes_full", "Все ячейки заняты — вытащи что-нибудь");
+  // the cells open one by one with the talents earned (content/craft.ts CRAFT_BOX_TALENTS)
+  const [st] = await ctx.q.query<{ total_damage: number }>("SELECT total_damage FROM player_stats WHERE player_id=$1", [ctx.pid]);
+  const open = craftBoxesOpen(talentsForDamage(Number(st?.total_damage ?? 0)));
+  if (slot !== undefined && slot >= open) throw new GameError("box_locked", "Эта ячейка ещё закрыта — она откроется с талантами");
+  const at = slot !== undefined && slot >= 0 && slot < CRAFT_BOXES && !boxes[slot] ? slot : boxes.findIndex((b, i) => !b && i < open);
+  if (at < 0) throw new GameError("boxes_full", open ? "Все открытые ячейки заняты — вытащи что-нибудь" : "Ячейки откроются с первым талантом");
   await takeItem(ctx, def.id, 1, "craft-put");
   await ctx.q.query("INSERT INTO player_craft_box (player_id, slot, item_id) VALUES ($1,$2,$3)", [ctx.pid, at, def.id]);
   await syncTalentExtras(ctx.q, ctx.pid);

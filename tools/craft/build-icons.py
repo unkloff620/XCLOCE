@@ -42,7 +42,7 @@ for si, sheet in enumerate(sheets):
         cell = im[r * h // 3:(r + 1) * h // 3, c * w // 3:(c + 1) * w // 3]
         save(cut(cell), id_)
 for f in os.listdir(SRC):
-    if f.startswith("craft-") and f.endswith(".png"):
+    if f.startswith(("craft-", "craft2-", "craft3-")) and f.endswith(".png"):
         save(cut(np.array(Image.open(os.path.join(SRC, f)).convert("RGB"))), f[:-4])
 # the bottom-menu icon «Крафт» (public/assets/nav/craft.webp, 128×128 like the others)
 nav = cut(np.array(Image.open(os.path.join(SRC, "nav-craft.png")).convert("RGB")))

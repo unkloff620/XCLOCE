@@ -174,6 +174,8 @@ const TATTOOS: ItemDef[] = TATTOO_SETS.flatMap((s) =>
 const CRAFT: ItemDef[] = CRAFT_ALL.map((c) => ({
   id: c.id, name: c.name, category: "craft" as const, rarity: c.rarity, maxStack: 99999, description: c.description,
   sources: [c.level ? "Собирается в «Крафте»" : "Скоро: откуда падают детали — решаем"],
+  // вещь 3 ур. — оружие: бьёт боссов, как кулак, со своей перезарядкой
+  ...(c.weapon ? { weapon: { ...c.weapon, kind: "permanent" as const } } : {}),
 }));
 export const ITEMS: ItemDef[] = [...WEAPONS, ...WEARABLES, ...MISC, ...KEYS, TROPHY, STATUE, ...STASHES, ...TATTOOS, ...CRAFT];
 const BY_ID = new Map(ITEMS.map((i) => [i.id, i]));

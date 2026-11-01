@@ -4600,11 +4600,16 @@ body { background-attachment: fixed; }
   background: url(/assets/craft/paper-stash.webp) center / cover, #e5cf9e; color: #2e1c08; box-shadow: 0 6px 14px rgba(0, 0, 0, 0.55), inset 0 0 18px rgba(90, 50, 10, 0.35); }
 .cf-h { font-size: 15px; color: #3a2410; }
 .cf-cells { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.cf-blockwrap { display: flex; flex-direction: column; gap: 2px; }
 .cf-block { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; }
+.cf-blockbonus { align-self: center; font-size: 11px; font-weight: 800; color: #6b4a24; }
+.cf-blockbonus.on { color: #1f7a45; }
+.cf-cell.locked::before { opacity: 0.45; }
+.cf-lock { display: grid; place-items: center; width: 52%; height: 52%; border-radius: 50%; background: rgba(58, 36, 16, 0.18); opacity: 0.85; }
 /* a cell: the blueprint box (white parts vanish on the paper by multiply), the thing lying on it */
 .cf-cell { position: relative; aspect-ratio: 1; padding: 0; display: grid; place-items: center; border: 0; background: none; cursor: default; }
 .cf-cell::before { content: ""; position: absolute; inset: 0; z-index: -1; background: url(/assets/craft/cell.webp) center / contain no-repeat; mix-blend-mode: multiply; opacity: 0.9; }
-.cf-block + .cf-block .cf-cell::before { filter: hue-rotate(-60deg) saturate(0.9); }
+.cf-blockwrap + .cf-blockwrap .cf-cell::before { filter: hue-rotate(-60deg) saturate(0.9); }
 .cf-cell.full { cursor: pointer; }
 .cf-cell.full svg { filter: drop-shadow(0 2px 2px rgba(60, 30, 0, 0.45)); }
 .cf-cell.full:active { transform: translateY(1px); }

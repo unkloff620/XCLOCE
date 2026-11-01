@@ -11,6 +11,7 @@ import { critChanceOf, talentExtras, talentsForDamage, weaponTalentBonus } from 
 import { playerBonus, weaponTalents } from "./home.ts";
 import { setBonuses } from "./collection.ts";
 import { craftBonus } from "./craft.ts";
+import { CRAFT_WEAPONS } from "../../content/craft.ts";
 import { BLASTS_ON, fightMode, type FightMode } from "../../content/medals.ts";
 import { tattooSetsOfBoss } from "../../content/tattoos.ts";
 import { notifyBossLow } from "./notify.ts";
@@ -652,6 +653,8 @@ export async function weaponTray(q: Queryable, pid: number, now = Date.now()) {
   const cds = await q.query<{ item_id: string; ready_at: Date }>("SELECT item_id, ready_at FROM cooldowns WHERE player_id=$1", [pid]);
   const invMap = new Map(inv.map((i) => [i.item_id, i.qty]));
   const cdMap = new Map(cds.map((c) => [c.item_id, new Date(c.ready_at).getTime()]));
-  return WEAPONS.map((w) => ({ id: w.id, qty: invMap.get(w.id) ?? 0, readyAt: (cdMap.get(w.id) ?? 0) > now ? cdMap.get(w.id)! : null }));
+  // the craft weapons (вещи 3 ур.) only when you have one
+  const craft = CRAFT_WEAPONS.filter((c) => (invMap.get(c.id) ?? 0) > 0).map((c) => ({ id: c.id }));
+  return [...WEAPONS, ...craft].map((w) => ({ id: w.id, qty: invMap.get(w.id) ?? 0, readyAt: (cdMap.get(w.id) ?? 0) > now ? cdMap.get(w.id)! : null }));
 }
 

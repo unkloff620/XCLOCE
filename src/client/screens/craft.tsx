@@ -18,7 +18,8 @@ import { sfx } from "../sound.ts";
 import { full } from "../format.ts";
 import { itemById } from "../../content/items.ts";
 import { BicepsArt } from "./profile.tsx";
-import { CRAFT_ALL, CRAFT_BOXES, CRAFT_LEVEL_NAME, craftBonusOf, craftById, type CraftBonus, type CraftDef } from "../../content/craft.ts";
+import { CRAFT_ALL, CRAFT_BLOCK_BONUS, CRAFT_BOXES, CRAFT_BOX_TALENTS, CRAFT_LEVEL_NAME, craftBonusOf, craftById, craftBoxesOpen, type CraftBonus, type CraftDef } from "../../content/craft.ts";
+import { talentsForDamage } from "../../content/talents.ts";
 
 type Filter = "all" | "mine" | 0 | 1 | 2 | 3;
 
@@ -45,6 +46,8 @@ export function CraftScreen() {
   const inBox = new Map<string, number>();
   for (const id of boxes) if (id) inBox.set(id, (inBox.get(id) ?? 0) + 1);
   const total = craftBonusOf(boxes);
+  // the cells open one by one with the talents earned; they go down the columns (slot = block·6 + column·2 + row)
+  const open = craftBoxesOpen(talentsForDamage(state?.player.talentDamage ?? 0));
   const levels = [...new Set(CRAFT_ALL.map((c) => c.level))].sort();
   const list = CRAFT_ALL
     .filter((c) => filter === "all" || (filter === "mine" ? (qty.get(c.id) ?? 0) + (inBox.get(c.id) ?? 0) > 0 : c.level === filter))
@@ -100,7 +103,7 @@ export function CraftScreen() {
       return;
     }
     const over = slotAt(e.clientX, e.clientY);
-    setDrag((d) => (d ? { ...d, x: e.clientX, y: e.clientY, over: over !== null && !boxes[over] ? over : null } : d));
+    setDrag((d) => (d ? { ...d, x: e.clientX, y: e.clientY, over: over !== null && over < open && !boxes[over] ? over : null } : d));
   };
   const onUp = (e: React.PointerEvent) => {
     const p = press.current;
@@ -112,6 +115,7 @@ export function CraftScreen() {
     const slot = slotAt(e.clientX, e.clientY);
     setDrag(null);
     if (slot === null) return;
+    if (slot >= open) { haptic.err(); toast(`Ячейка закрыта — откроется, когда будет ${CRAFT_BOX_TALENTS[slot]} талантов`, "err"); return; }
     if (boxes[slot]) { haptic.err(); toast("Ячейка занята — перетащи в свободную", "err"); return; }
     if (p) void put(p.id, slot);
   };
@@ -135,6 +139,8 @@ export function CraftScreen() {
             <ul>
               <li>Детали собираются в вещи: на вещь 1 уровня нужно 5 разных деталей по 5 штук. Из вещей потом соберутся вещи посильнее.</li>
               <li>Бонус даёт только то, что лежит в <b>заныке</b> — 12 ячеек сверху, по одной штуке в ячейку.</li>
+              <li>Ячейки открываются с талантами: первая — с 1 талантом, последняя — со 150. Заполнишь все 6 левых — ещё +15 к энергии, все 6 правых — +100 к бицухе.</li>
+              <li>Вещи 3 уровня — оружие: новые удары по боссам, появляются в бою рядом с остальным оружием.</li>
               <li>Чтобы заныкать: нажми на карточку, подержи и перетащи в свободную ячейку. Нажми на ячейку — вещь вернётся на склад.</li>
               <li>Нажми на вещь, которая собирается, — откроется схема: что нужно и сколько уже есть.</li>
               <li>Откуда падают детали — скоро.</li>
@@ -147,19 +153,33 @@ export function CraftScreen() {
       <div className="cf-stash">
         <b className="display cf-h">Заныкано</b>
         <div className="cf-cells">
-          {[0, 1].map((half) => (
-            <div key={half} className="cf-block">
-              {boxes.slice(half * 6, half * 6 + 6).map((id, k) => {
-                const slot = half * 6 + k;
-                return (
-                  <button key={slot} type="button" data-slot={slot} className={`cf-cell ${id ? "full" : ""} ${drag?.over === slot ? "over" : ""}`} disabled={!id || !!busy} onClick={() => id && take(slot)}
-                    title={id ? `${craftById(id)?.name} — нажми, чтобы вытащить` : "Пусто"} aria-label={id ? `Вытащить: ${craftById(id)?.name}` : "Пустая ячейка"}>
-                    {id && <ItemArt id={id} size={40} />}
-                  </button>
-                );
-              })}
-            </div>
-          ))}
+          {[0, 1].map((half) => {
+            const filled = boxes.slice(half * 6, half * 6 + 6).filter(Boolean).length;
+            const bb = CRAFT_BLOCK_BONUS[half];
+            return (
+              <div key={half} className="cf-blockwrap">
+                <div className="cf-block">
+                  {[0, 1].flatMap((row) => [0, 1, 2].map((col) => {
+                    const slot = half * 6 + col * 2 + row;
+                    const id = boxes[slot];
+                    const locked = slot >= open;
+                    return (
+                      <button key={slot} type="button" data-slot={slot} className={`cf-cell ${id ? "full" : ""} ${locked ? "locked" : ""} ${drag?.over === slot ? "over" : ""}`}
+                        disabled={!id || !!busy} onClick={() => id && take(slot)}
+                        title={locked ? `Откроется, когда будет ${CRAFT_BOX_TALENTS[slot]} талантов` : id ? `${craftById(id)?.name} — нажми, чтобы вытащить` : "Пусто"}
+                        aria-label={locked ? "Закрытая ячейка" : id ? `Вытащить: ${craftById(id)?.name}` : "Пустая ячейка"}>
+                        {id ? <ItemArt id={id} size={40} /> : locked && <span className="cf-lock"><Icon name="lock" size={18} /></span>}
+                      </button>
+                    );
+                  }))}
+                </div>
+                {/* all six full: the block's own bonus */}
+                <span className={`cf-blockbonus ${filled === 6 ? "on" : ""}`}>
+                  {filled === 6 ? "✓ " : `${filled}/6 · `}{bb.energy ? `+${bb.energy} к энергии` : `+${bb.biceps} к бицухе`}
+                </span>
+              </div>
+            );
+          })}
         </div>
         <div className="cf-total">
           {total.power > 0 ? <BonusLines b={total} /> : <span className="tiny cf-sub">Удерживай карточку и перетащи в ячейку — бонус заработает.</span>}

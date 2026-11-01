@@ -2140,17 +2140,31 @@ describe("«Крафт»", () => {
     expect(m.result).toMatchObject({ itemId: "craft-nail-bat" });
     expect(await qty(db, p, "craft-nail-bat")).toBe(1);
     expect(await qty(db, p, "part-board")).toBe(0);
+    // the cells are closed until the first talent
+    await expect(act(db, p, "craft_put", { itemId: "craft-nail-bat" }, T0)).rejects.toMatchObject({ code: "boxes_full" });
+    await db.query("INSERT INTO player_stats (player_id, total_damage) VALUES ($1, 100) ON CONFLICT (player_id) DO UPDATE SET total_damage = 100", [p]);
+    await expect(act(db, p, "craft_put", { itemId: "craft-nail-bat", slot: 1 }, T0)).rejects.toMatchObject({ code: "box_locked" });
     const put = await act(db, p, "craft_put", { itemId: "craft-nail-bat" }, T0);
     expect(put.result).toMatchObject({ slot: 0 });
     expect(put.state.craftBoxes[0]).toBe("craft-nail-bat");
     expect(put.state.setBonus.fist).toBe(8);
     const [row] = await db.query<{ talent_biceps: number }>("SELECT talent_biceps FROM players WHERE id=$1", [p]);
     expect(row.talent_biceps).toBe(50);
-    await expect(act(db, p, "craft_put", { itemId: "craft-nail-bat" }, T0)).rejects.toMatchObject({ code: "no_item" });
+    await expect(act(db, p, "craft_put", { itemId: "craft-nail-bat" }, T0)).rejects.toMatchObject({ code: "boxes_full" }); // one open cell, taken
     const out = await act(db, p, "craft_take", { slot: 0 }, T0);
     expect(out.state.craftBoxes[0]).toBe(null);
     expect(await qty(db, p, "craft-nail-bat")).toBe(1);
     const [row2] = await db.query<{ talent_biceps: number }>("SELECT talent_biceps FROM players WHERE id=$1", [p]);
     expect(row2.talent_biceps).toBe(0);
+  });
+
+  it("a level-3 thing is a weapon: it hits the boss once and goes on its reload", async () => {
+    await setBossHp({ datsik: 100000 });
+    const p = await newPlayer(db);
+    await give(db, p, "craft3-railgun", 1);
+    await startDatsik(p);
+    const r = await hit(p, "craft3-railgun");
+    expect(r.result.damage).toBeGreaterThanOrEqual(1200);
+    await expect(hit(p, "craft3-railgun", T0 + M)).rejects.toMatchObject({ code: "cooldown" });
   });
 });

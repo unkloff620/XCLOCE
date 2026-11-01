@@ -1189,4 +1189,12 @@ UPDATE players p SET talent_biceps = 10 * COALESCE((SELECT LEAST(level, 100) FRO
   PRIMARY KEY (player_id, slot)
 );`,
   },
+  {
+    // the stash cells are numbered down the columns now and open with the talents: whatever was put in goes back to the store
+    id: "v2-072-craft-boxes-reorder",
+    sql: `INSERT INTO inventory (player_id, item_id, qty, source, updated_at)
+SELECT player_id, item_id, COUNT(*)::int, 'craft-reset', now() FROM player_craft_box GROUP BY player_id, item_id
+ON CONFLICT (player_id, item_id) DO UPDATE SET qty = inventory.qty + EXCLUDED.qty, updated_at = EXCLUDED.updated_at;
+DELETE FROM player_craft_box;`,
+  },
 ];
