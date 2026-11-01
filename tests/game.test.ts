@@ -1505,11 +1505,16 @@ describe("yard mini games", () => {
     expect(await qty(db, p, "poker-chip")).toBe(1);
     expect(c.result.poker.chips).toBe(1);
     expect(await wallet(db, p, "USD")).toBe(Math.round((usd + (c.result.reward?.currencies?.USD ?? 0)) * 100) / 100);
-    expect(c.result.poker.left).toBe(0);
-    await expect(act(db, p, "poker_play", { chip: true }, T0 + 32_000)).rejects.toMatchObject({ code: "poker_limit" });
+    // a chip hand does not use up the day's money hands, and chips play on past the limit
+    expect(c.result.poker.left).toBe(1);
+    const last = await act(db, p, "poker_play", {}, T0 + 32_000, always(0.37));
+    await expect(act(db, p, "poker_play", {}, T0 + 33_000)).rejects.toMatchObject({ code: "poker_limit" });
+    const over = await act(db, p, "poker_play", { chip: true }, T0 + 34_000, always(0.37));
+    expect(await qty(db, p, "poker-chip")).toBe(0);
+    expect(over.result.poker.left).toBe(0);
     // the weekly mini-game rating counted the poker xp
     const [w] = await db.query<{ poker: number }>("SELECT poker FROM game_weekly WHERE player_id=$1", [p]);
-    expect(Number(w.poker)).toBe(xp + c.result.gainedXp);
+    expect(Number(w.poker)).toBe(xp + c.result.gainedXp + last.result.gainedXp + over.result.gainedXp);
   });
 
   it("the zonk roach pays once per 10 minutes, the daily zonk record gets its prize the next day", async () => {

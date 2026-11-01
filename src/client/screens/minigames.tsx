@@ -862,7 +862,7 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
                   {left <= 0 ? "Завтра" : <>Раздать · {POKER_RULES.price.amount} <Icon name={POKER_RULES.price.currency} size={18} /></>}
                 </button>
                 {/* a «Фишка» from the yard: one hand without the money */}
-                {chips > 0 && left > 0 && (
+                {chips > 0 && (
                   <button className="btn big pkt-chip" disabled={busy === "poker_play"} onClick={() => run("poker_play", { chip: true })} aria-label={`Раздать за фишку, фишек: ${chips}`}>
                     <ItemArt id={POKER_CHIP} size={30} /><b className="num">{chips}</b>
                   </button>

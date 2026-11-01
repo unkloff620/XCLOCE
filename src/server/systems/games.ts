@@ -379,7 +379,7 @@ export async function takeUpgradedOut(ctx: Ctx, uid: number, use: boolean) {
 
 /* ---------------- poker ---------------- */
 async function pokerPlaysToday(q: Queryable, pid: number, now: number) {
-  const [r] = await q.query<{ n: number }>("SELECT COUNT(*)::int AS n FROM games WHERE player_id=$1 AND kind='poker' AND day=$2", [pid, moscowDay(now)]);
+  const [r] = await q.query<{ n: number }>("SELECT COUNT(*)::int AS n FROM games WHERE player_id=$1 AND kind='poker' AND day=$2 AND paid", [pid, moscowDay(now)]);
   return Number(r?.n ?? 0);
 }
 
@@ -409,7 +409,7 @@ export async function pokerView(q: Queryable, pid: number, now: number) {
 }
 
 /** The hand is counted: the combination pays (more with the poker level) and gives poker xp. */
-async function settlePoker(ctx: Ctx, gameId: number | null, cards: Card[], swapped: number[]) {
+async function settlePoker(ctx: Ctx, gameId: number | null, cards: Card[], swapped: number[], chip = false) {
   const [p] = await ctx.q.query<{ poker_xp: number }>("SELECT poker_xp FROM players WHERE id=$1", [ctx.pid]);
   const { hand, used } = pokerHand(cards);
   const def = pokerHandDef(hand);
@@ -425,8 +425,8 @@ async function settlePoker(ctx: Ctx, gameId: number | null, cards: Card[], swapp
   const result: GameResult = { outcome: hand, title: def.name, reward };
   if (gameId === null) {
     await ctx.q.query(
-      "INSERT INTO games (player_id, kind, day, paid, status, state, result, created_at, updated_at) VALUES ($1,'poker',$2,true,'done',$3,$4,$5,$5)",
-      [ctx.pid, moscowDay(ctx.now), JSON.stringify({ cards }), JSON.stringify(result), new Date(ctx.now)],
+      "INSERT INTO games (player_id, kind, day, paid, status, state, result, created_at, updated_at) VALUES ($1,'poker',$2,$6,'done',$3,$4,$5,$5)",
+      [ctx.pid, moscowDay(ctx.now), JSON.stringify({ cards }), JSON.stringify(result), new Date(ctx.now), !chip],
     );
   } else {
     await ctx.q.query("UPDATE games SET status='done', state=$2, result=$3, updated_at=$4 WHERE id=$1", [gameId, JSON.stringify({ cards, swapped }), JSON.stringify(result), new Date(ctx.now)]);
@@ -442,7 +442,8 @@ export async function playPoker(ctx: Ctx, chip = false) {
   // one hand at a time per player, so the daily limit holds
   const [p] = await ctx.q.query<{ poker_xp: number }>("SELECT poker_xp FROM players WHERE id=$1 FOR UPDATE", [ctx.pid]);
   if (await activePoker(ctx.q, ctx.pid)) throw new GameError("poker_open", "Сначала доиграй раздачу");
-  if (POKER_RULES.perDay > 0 && (await pokerPlaysToday(ctx.q, ctx.pid, ctx.now)) >= POKER_RULES.perDay) throw new GameError("poker_limit", `На сегодня все ${POKER_RULES.perDay} раздач сыграны`);
+  // the daily limit is for the hands paid with money; a chip hand can be played over it
+  if (!chip && POKER_RULES.perDay > 0 && (await pokerPlaysToday(ctx.q, ctx.pid, ctx.now)) >= POKER_RULES.perDay) throw new GameError("poker_limit", `На сегодня все ${POKER_RULES.perDay} раздач сыграны`);
   // a «Фишка» from the yard pays for the hand instead of the money
   if (chip) {
     if ((await itemQty(ctx.q, ctx.pid, POKER_CHIP)) <= 0) throw new GameError("no_chip", "Фишек нет — их находят во дворе");
@@ -451,11 +452,11 @@ export async function playPoker(ctx: Ctx, chip = false) {
   const deck = shuffled(ctx.rng);
   const cards = deck.slice(0, 5);
   const swaps = pokerCheats(pokerLevel(Number(p?.poker_xp ?? 0)).level);
-  if (swaps <= 0) return settlePoker(ctx, null, cards, []);
+  if (swaps <= 0) return settlePoker(ctx, null, cards, [], chip);
   const st: PokerState = { cards, deck: deck.slice(5, 5 + swaps), swaps, swapped: [] };
   const [row] = await ctx.q.query<{ id: number }>(
-    "INSERT INTO games (player_id, kind, day, paid, status, state, created_at, updated_at) VALUES ($1,'poker',$2,true,'active',$3,$4,$4) RETURNING id",
-    [ctx.pid, moscowDay(ctx.now), JSON.stringify(st), new Date(ctx.now)],
+    "INSERT INTO games (player_id, kind, day, paid, status, state, created_at, updated_at) VALUES ($1,'poker',$2,$5,'active',$3,$4,$4) RETURNING id",
+    [ctx.pid, moscowDay(ctx.now), JSON.stringify(st), new Date(ctx.now), !chip],
   );
   return { kind: "poker" as const, phase: "draw" as const, ...pokerDrawView(row.id, st), poker: await pokerView(ctx.q, ctx.pid, ctx.now) };
 }
