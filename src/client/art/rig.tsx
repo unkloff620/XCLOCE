@@ -296,7 +296,7 @@ function Mouth() {
 }
 
 /** a lit cigarette in the mouth (slot «Рот»): smoke puffs rise from its tip */
-const SMOKE_AT: Record<string, [number, number]> = { cigarette: [611, 297] };
+const SMOKE_AT: Record<string, [number, number]> = { cigarette: [610, 285] };
 function Smoke() {
   const id = wornIn(useContext(WornCtx), "MOUTH");
   const at = id ? SMOKE_AT[id] : null;
