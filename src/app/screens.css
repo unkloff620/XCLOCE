@@ -2870,6 +2870,12 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .pr-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
 .pr-btn.spent { filter: saturate(0.35) brightness(0.8); }
 .pr-ico { display: block; width: 40px; height: 40px; object-fit: contain; filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.45)); }
+/* the social buttons: only the picture, rounded, no plate and no caption (the clan button keeps its plate) */
+.pr-btn.bare { width: 56px; padding: 0; border: 0; background: none; box-shadow: none; border-radius: 13px; }
+.pr-btn.bare .pr-ico { width: 56px; height: 56px; border-radius: 13px; filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.55)); }
+.pr-btn.bare:active { box-shadow: none; }
+.pr-btn.bare.glow { animation-name: pr-glow-bare; }
+@keyframes pr-glow-bare { 0%, 100% { filter: drop-shadow(0 0 0 rgba(255, 154, 92, 0)); } 50% { filter: drop-shadow(0 0 10px rgba(255, 154, 92, 0.95)); } }
 .pr-btn.glow { animation-name: pr-glow; animation-duration: 1.6s; animation-iteration-count: infinite; animation-timing-function: ease-in-out; }
 @keyframes pr-glow { 0%, 100% { box-shadow: 0 3px 0 var(--line), 0 0 0 rgba(255, 154, 92, 0); } 50% { box-shadow: 0 3px 0 var(--line), 0 0 16px rgba(255, 154, 92, 0.9); } }
 .pr-pop { position: absolute; right: -14px; top: -6px; font-size: 20px; font-weight: 900; color: #ffd25a; text-shadow: 0 2px 0 #2e1c00; pointer-events: none;

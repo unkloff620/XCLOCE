@@ -556,20 +556,20 @@ export function ProfileScreen() {
         </div>
         {/* the buttons on the wall */}
         <div className="pr-rail">
-          <button type="button" className="pr-btn" style={{ ["--c" as string]: "#e8bb6c" }} onClick={() => { haptic.tap(); setDossier(true); }} aria-label="Личное дело">
-            <PrIcon name="dossier" /><small>Дело</small>
+          <button type="button" className="pr-btn bare" onClick={() => { haptic.tap(); setDossier(true); }} aria-label="Личное дело">
+            <PrIcon name="dossier" />
           </button>
-          <button type="button" className={`pr-btn ${!p.self && so?.pump ? "glow" : ""} ${!p.self && !so?.pump ? "spent" : ""}`} style={{ ["--c" as string]: "#ff9a5c" }} disabled={busy === "social_pump"} onClick={pump} aria-label="Прокачать бицуху">
-            <PrIcon name="biceps" /><small className="num">{full(so?.biceps ?? 0)}</small>
+          <button type="button" className={`pr-btn bare ${!p.self && so?.pump ? "glow" : ""} ${!p.self && !so?.pump ? "spent" : ""}`} disabled={busy === "social_pump"} onClick={pump} aria-label="Прокачать бицуху">
+            <PrIcon name="biceps" />
             {fx?.kind === "pump" && <b key={fx.key} className="pr-pop num">+1</b>}
           </button>
           {!p.self && (
             <>
-              <button type="button" className={`pr-btn ${so?.fight ? "" : "spent"}`} style={{ ["--c" as string]: "#ff5a3d" }} disabled={!!brawl || busy === "social_fight"} onClick={fight} aria-label="Наехать">
-                <PrIcon name="fight" /><small>Наехать</small>
+              <button type="button" className={`pr-btn bare ${so?.fight ? "" : "spent"}`} disabled={!!brawl || busy === "social_fight"} onClick={fight} aria-label="Наехать">
+                <PrIcon name="fight" />
               </button>
-              <button type="button" className={`pr-btn ${spitIn > 0 || so?.spit === -1 ? "spent" : ""}`} style={{ ["--c" as string]: "#8fd17a" }} disabled={busy === "social_spit"} onClick={spit} aria-label="Харкнуть">
-                <PrIcon name="spit" /><small>{spitIn > 0 ? clock(spitIn) : "Харкнуть"}</small>
+              <button type="button" className={`pr-btn bare ${spitIn > 0 || so?.spit === -1 ? "spent" : ""}`} disabled={busy === "social_spit"} onClick={spit} aria-label="Харкнуть">
+                <PrIcon name="spit" />
               </button>
             </>
           )}
