@@ -6,7 +6,7 @@
  */
 import { GameError, type Queryable } from "../db.ts";
 import { addItem, ledger, moscowDay, takeItem, takeMoney, type Ctx } from "../core.ts";
-import { DEALER_STOCK, PART_BUY, dealerParts } from "../../content/craft-drops.ts";
+import { DEALER_STOCK, PART_BUY, dealerParts, PART_USD } from "../../content/craft-drops.ts";
 import { CRAFT_BOXES, CRAFT_BOX_PRICES, CRAFT_BOX_TALENTS, craftBonusOf, craftById, craftBoxesOpen } from "../../content/craft.ts";
 import { talentsForDamage } from "../../content/talents.ts";
 import { syncTalentExtras } from "./home.ts";
@@ -87,6 +87,17 @@ export async function dealerView(q: Queryable, pid: number, now: number) {
   const bought = new Map(rows.map((r) => [r.key, Number(r.n)]));
   return ids.map((id) => ({ id, price: PART_BUY[craftById(id)?.rarity ?? "common"] ?? 150, left: Math.max(0, DEALER_STOCK - (bought.get(id) ?? 0)) }));
 }
+/** «Купить» in the scheme: the missing parts of a recipe for dollars (PART_USD by rarity) */
+export async function partBuy(ctx: Ctx, itemId: string, want: number) {
+  const def = craftById(itemId);
+  if (!def || def.level !== 0) throw new GameError("bad_item", "Купить можно только детали");
+  if (!Number.isInteger(want) || want < 1 || want > 100) throw new GameError("bad_qty", "Некорректное количество");
+  const price = PART_USD[def.rarity] ?? PART_USD.common;
+  await takeMoney(ctx, "USD", price * want, `part-buy:${def.id}`);
+  const got = await addItem(ctx, def.id, want, "part-buy");
+  return { itemId: def.id, qty: got, paid: price * want };
+}
+
 export async function dealerBuy(ctx: Ctx, itemId: string, want: number) {
   const offer = (await dealerView(ctx.q, ctx.pid, ctx.now)).find((o) => o.id === itemId);
   if (!offer) throw new GameError("not_sold", "Сегодня барыга этим не торгует");

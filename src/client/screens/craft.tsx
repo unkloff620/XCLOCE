@@ -22,6 +22,7 @@ import { BicepsArt } from "./profile.tsx";
 import { StashWishWindow } from "./stash-swap.tsx";
 import { CRAFT_ALL, CRAFT_BLOCK_BONUS, CRAFT_BOXES, CRAFT_BOX_PRICES, CRAFT_BOX_TALENTS, CRAFT_LEVEL_NAME, craftBonusOf, craftById, craftBoxesOpen, type CraftBonus, type CraftDef } from "../../content/craft.ts";
 import { talentsForDamage } from "../../content/talents.ts";
+import { PART_USD } from "../../content/craft-drops.ts";
 
 type Filter = "all" | "mine" | 0 | 1 | 2 | 3;
 
@@ -272,6 +273,13 @@ export function CraftScreen() {
  * opens its own scheme), an arrow, the result and «Создать». */
 function Scheme({ d, qty, busy, onMake, onOpen, onClose, onSplit }: { d: CraftDef; qty: Map<string, number>; busy: boolean; onMake: () => void; onOpen: (d: CraftDef) => void; onClose: () => void; onSplit: () => void }) {
   const [sure, setSure] = useState(false);
+  const { state, act } = useGame();
+  const usd = state?.wallet.USD ?? 0;
+  // a missing part: «Купить» the missing ones for dollars
+  const buy = async (id: string, n: number) => {
+    const r = await act<{ qty: number; paid: number }>("part_buy", { itemId: id, qty: n }, (x) => `Куплено ×${x.qty} · −${x.paid} $`);
+    if (r) { haptic.ok(); sfx("coinsoft"); }
+  };
   const own = qty.get(d.id) ?? 0;
   const parts = d.recipe ?? [];
   const lacks = parts.some((r) => (qty.get(r.id) ?? 0) < r.qty);
@@ -290,6 +298,11 @@ function Scheme({ d, qty, busy, onMake, onOpen, onClose, onSplit }: { d: CraftDe
                     <span className="cf-ing-pic"><ItemArt id={r.id} size={46} /></span>
                     <b className="num">{full(h)}/{r.qty}</b>
                     {sub?.recipe && <button type="button" className="cf-ing-btn" onClick={() => onOpen(sub)}>Собрать</button>}
+                    {sub && sub.level === 0 && h < r.qty && (() => {
+                      const n = r.qty - h;
+                      const cost = n * (PART_USD[sub.rarity] ?? PART_USD.common);
+                      return <button type="button" className="bb-buy cf-buy" disabled={busy || usd < cost} onClick={() => void buy(r.id, n)} title={`Купить ${n} шт. за ${cost} $`}>купить · {cost}$</button>;
+                    })()}
                     <i className="cf-ing-name">{sub?.name}</i>
                   </span>
                 );

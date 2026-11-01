@@ -538,6 +538,18 @@ describe("shop and exchange", () => {
     await setMoney(db, p, "USD", 5);
     await expect(act(db, p, "exchange", { from: "USD", to: "RUB", amount: 1.5 }, open)).rejects.toMatchObject({ code: "bad_amount" });
   });
+  it("craft: a missing part is bought for dollars, 5 $ a common one, twice as much a rarity up", async () => {
+    const p = await newPlayer(db);
+    await setMoney(db, p, "USD", 100);
+    await expect(act(db, p, "part_buy", { itemId: "craft-flamethrower", qty: 1 }, T0)).rejects.toMatchObject({ code: "bad_item" });
+    const { CRAFT_PARTS } = await import("../src/content/craft.ts");
+    const common = CRAFT_PARTS.find((x) => x.rarity === "common")!, epic = CRAFT_PARTS.find((x) => x.rarity === "epic")!;
+    const r = await act(db, p, "part_buy", { itemId: common.id, qty: 3 }, T0);
+    expect(r.result).toMatchObject({ qty: 3, paid: 15 });
+    await act(db, p, "part_buy", { itemId: epic.id, qty: 1 }, T0);
+    expect(await wallet(db, p, "USD")).toBe(65);
+    expect(await qty(db, p, common.id)).toBe(3);
+  });
   it("a good talk with the dealer may give a better rate for 2 hours; once a day, only while the exchange works", async () => {
     const p = await newPlayer(db);
     let open = T0;

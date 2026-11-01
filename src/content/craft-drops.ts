@@ -79,6 +79,8 @@ export const onePart = (rng: Rng, rarity: Rarity) => pick(PARTS_BY_RARITY[rarity
 /** the dealer: sell prices (₽ a part he pays) and his own prices; every day he has DEALER_OFFERS parts, DEALER_STOCK of each */
 export const PART_SELL: Record<string, number> = { common: 50, rare: 130, epic: 400 };
 export const PART_BUY: Record<string, number> = { common: 150, rare: 400 };
+/** a missing part bought right in the scheme, for dollars: common 5 $, then twice as much a rarity up */
+export const PART_USD: Record<string, number> = { common: 5, rare: 10, epic: 20 };
 export const DEALER_OFFERS = 4;
 export const DEALER_STOCK = 5;
 /** the same four parts for everybody on a Moscow day: three common and one rare, picked by the day */
