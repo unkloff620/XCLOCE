@@ -3206,6 +3206,11 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .dos-inner:has(> .tp-panel) { overflow: hidden; display: flex; flex-direction: column; }
 .dos-inner > .tp-panel { flex: 1; }
 .dos-inner > .tp-panel .tp-road { flex: 1; min-height: 0; max-height: none; }
+/* the «Таланты» window (TalentWindow): the window never grows past the screen — the road takes what is left and scrolls to its very end */
+.modal:has(> .modal-body > .tp-panel) { display: flex; flex-direction: column; overflow: hidden; }
+.modal:has(> .modal-body > .tp-panel) > .modal-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.modal-body > .tp-panel { flex: 1; min-height: 0; }
+.modal-body > .tp-panel .tp-road { flex: 1; min-height: 0; max-height: none; }
 .tp-head { flex: none; display: flex; flex-direction: column; gap: 6px; padding-bottom: 6px; }
 .tp-row1 { display: flex; align-items: center; gap: 8px; }
 .tp-next { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
