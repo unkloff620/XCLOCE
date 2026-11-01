@@ -7,7 +7,7 @@ import { talentsForDamage } from "../../content/talents.ts";
 import {
   CLAN_BOSS_FLOOR, CLAN_BOSS_HP_PER_MEMBER, CLAN_BOSS_MIN_MEMBERS, CLAN_BOSS_POOL_PER_MEMBER, CLAN_BOSS_ROTATION,
 } from "../../content/clans.ts";
-import { BATCH_SIZES, strike } from "./combat.ts";
+import { isBatch, strike } from "./combat.ts";
 import type { Reward } from "../../content/rewards.ts";
 import { mergeRewards } from "../../content/rewards.ts";
 import { between, rollParts } from "../../content/craft-drops.ts";
@@ -66,7 +66,7 @@ export async function clanBossView(q: Queryable, pid: number, now: number) {
 export async function hitClanBoss(ctx: Ctx, weaponId: string, want = 1) {
   const w = weaponById(weaponId);
   if (!w) throw new GameError("bad_weapon", "Этим нельзя бить босса");
-  if (!(BATCH_SIZES as readonly number[]).includes(want)) throw new GameError("bad_count", "Можно бить по 1, 10, 100 или 1000");
+  if (!isBatch(want)) throw new GameError("bad_count", "Можно бить по 1, 10, 100 или 1000");
   if (want > 1 && w.weapon.kind !== "consumable") throw new GameError("bad_count", `${w.name} бьёт только по одному разу`);
   const clanId = await myClan(ctx.q, ctx.pid);
   if (!clanId) throw new GameError("no_clan", "Клановый босс — только для участников клана");

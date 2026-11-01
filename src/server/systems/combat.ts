@@ -211,6 +211,8 @@ export interface HitResult {
 
 /** How many consumables one tap may use at once. The free weapons always hit once. */
 export const BATCH_SIZES = [1, 10, 100, 1000] as const;
+/** a batch size the client may send: any whole number up to the biggest batch (it is cut to what the player has) */
+export const isBatch = (n: number) => Number.isInteger(n) && n >= 1 && n <= BATCH_SIZES[BATCH_SIZES.length - 1];
 
 /**
  * One tap with a weapon, paid and counted: a consumable batch uses what is left of it (up to `want`), a free weapon
@@ -272,7 +274,8 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1
   return idempotent(ctx, idem ? `hit:${idem}` : undefined, async () => {
     const w = weaponById(weaponId);
     if (!w) throw new GameError("bad_weapon", "Этим нельзя бить босса");
-    if (!(BATCH_SIZES as readonly number[]).includes(want)) throw new GameError("bad_count", "Можно бить по 1, 10, 100 или 1000");
+    // ×1 / ×10 / ×100 / ×1000, or what is left when there is less of the weapon (×1000 with 455 in stock — all 455)
+    if (!isBatch(want)) throw new GameError("bad_count", "Можно бить по 1, 10, 100 или 1000");
     if (want > 1 && w.weapon.kind !== "consumable") throw new GameError("bad_count", `${w.name} бьёт только по одному разу`);
     const [mine] = await ctx.q.query<FightRow>("SELECT * FROM fights WHERE player_id=$1 AND status='active'", [ctx.pid]);
     if (!mine) throw new GameError("no_fight", "Сначала начни бой с боссом");

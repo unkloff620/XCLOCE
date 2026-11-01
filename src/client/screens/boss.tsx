@@ -175,7 +175,6 @@ function WeaponTray({ tray, onHit, onCooldown, onBuy, disabled, mult }: { tray: 
           >
             <ItemArt id={w.id} size={40} />
             <span className="w-dmg display">−{short(weaponStats(state, w.id).damage * batchOf(w.weapon!.kind, qty, mult))}</span>
-            {!perm && mult > 1 && qty > 1 && <span className="w-mult">×{Math.min(mult, qty)}</span>}
             {!perm && <span className="w-qty num">{qty}</span>}
             {cd > 0 && <span className="w-cd" style={{ ["--p" as string]: `${done * 360}deg` }} />}
           </button>

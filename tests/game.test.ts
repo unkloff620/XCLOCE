@@ -1263,7 +1263,7 @@ describe("batch hits, extra pass", () => {
     expect(w.state.fight).toBeNull();
     await startDatsik(p, T0 + M);
     await expect(act(db, p, "attack", { weapon: "fist", count: 10 }, T0 + M)).rejects.toMatchObject({ code: "bad_count" });
-    await expect(act(db, p, "attack", { weapon: "keyboard", count: 7 }, T0 + M)).rejects.toMatchObject({ code: "bad_count" });
+    await expect(act(db, p, "attack", { weapon: "keyboard", count: 1001 }, T0 + M)).rejects.toMatchObject({ code: "bad_count" });
     const { fightView } = await import("../src/server/systems/combat.ts");
     const v = await fightView(db, p, r.result.fightId, 0, T0);
     expect(v.hits[v.hits.length - 1]).toMatchObject({ count: 10, damage: 300 });

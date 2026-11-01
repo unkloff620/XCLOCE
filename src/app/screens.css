@@ -4804,3 +4804,7 @@ body { background-attachment: fixed; }
 .bjt-top .chp { width: 2.2cqw; height: 2.2cqw; }
 /* the bet buttons: tighter letters so the words fit */
 .bjt-acts .btn { letter-spacing: 0.02em; padding-left: 10px; padding-right: 10px; min-width: 0; }
+/* the weapon's count: plain white figures in the top corner, no badge */
+.weapon .w-qty { top: 3px; right: 5px; min-width: 0; height: auto; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; color: #fff; font-size: 12px; font-weight: 900;
+  text-shadow: 0 1px 2px #000, 0 0 4px rgba(0, 0, 0, 0.9); }
+.weapon.empty .w-qty { background: none; color: rgba(255, 255, 255, 0.55); }
