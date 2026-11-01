@@ -31,6 +31,8 @@ export type Sfx = "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" |
   | "victory"
   /* a fist fight with a player («Наехать»): a voice as it starts (one of two at random), another one when we lose */
   | "raid" | "brawllose"
+  /* pumping someone's biceps on his profile: one of two recordings at random (pump-1/2.mp3) */
+  | "pump"
   /* a new level of the player: one of two recordings of the player's at random (public/assets/sound/levelup-voice-1/2.mp3) */
   | "lvlvoice"
   /* the player's new level: the background under the voice (public/assets/sound/levelup-bg.mp3) */
@@ -198,6 +200,8 @@ const SAMPLE_URLS = {
   raid1: "/assets/sound/raid-voice-1.mp3",
   raid2: "/assets/sound/raid-voice-2.mp3",
   brawllose: "/assets/sound/brawl-lose.mp3",
+  pump1: "/assets/sound/pump-1.mp3",
+  pump2: "/assets/sound/pump-2.mp3",
   thingdrop1: "/assets/sound/thing-drop-1.mp3",
   thingdrop2: "/assets/sound/thing-drop-2.mp3",
   casedrop1: "/assets/sound/case-drop-1.mp3",
@@ -462,6 +466,9 @@ export function sfx(name: Sfx, power = 0.5) {
       noise(a, t, 0.16, { freq: 700, vol: 0.7 });
       tone(a, 120, t, 0.18, { type: "sine", vol: 0.45, slide: 0.5 });
       noise(a, t + 0.06, 0.12, { freq: 2200, type: "bandpass", q: 2, vol: 0.18 });
+      break;
+    case "pump":
+      sample(a, Math.random() < 0.5 ? "pump1" : "pump2", t, 1);
       break;
     case "raid":
       sample(a, Math.random() < 0.5 ? "raid1" : "raid2", t, 1);

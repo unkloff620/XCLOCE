@@ -196,11 +196,11 @@ function SpitArt({ size = 40 }: { size?: number }) {
 
 type Social = { biceps: number; mine: number; pump: boolean | null; fight: boolean | null; spit: number | null };
 
-/** the fist fight in the background: a dust cloud over the room, then who won */
+/** the fist fight in the background: a dust cloud over the room, then who won — after the raid voice line has finished (≈3 s) */
 function Brawl({ res, name, onClose }: { res: { won: boolean; mine: number; theirs: number; reward: unknown } | null; name: string; onClose: () => void }) {
   const [shown, setShown] = useState(false);
   useEffect(() => {
-    const t = setTimeout(() => setShown(true), 1400);
+    const t = setTimeout(() => setShown(true), 3300);
     return () => clearTimeout(t);
   }, []);
   useEffect(() => {
@@ -521,7 +521,7 @@ export function ProfileScreen() {
   const pump = async () => {
     if (p.self) { haptic.tap(); toast("Бицуху качают другие — зайди к кому-нибудь и прокачай ему", "info"); return; }
     if (!so?.pump) { haptic.err(); toast("Сегодня ты ему уже качал — приходи завтра", "err"); return; }
-    sfx("nishtyak");
+    sfx("pump");
     haptic.big();
     const r = await act<{ biceps: number }>("social_pump", { to: p.id });
     if (r) { flash("pump"); reload(); }
