@@ -8,6 +8,8 @@ import { Icon } from "../art/icons.tsx";
 import { Emblem } from "../art/emblems.tsx";
 import { clock, full, short } from "../format.ts";
 import type { Reward } from "../../content/rewards.ts";
+import { haptic } from "../telegram.ts";
+import { sfx } from "../sound.ts";
 import { GAME_BOARDS, pokerHandOfRank, type GameBoard } from "../../content/games.ts";
 
 interface PlayerRow { id: number; name: string; photo: string | null; level: number; value: number; frame: string | null }
@@ -53,6 +55,31 @@ function Place({ n }: { n: number }) {
   return <span className={`rt-place display ${n <= 3 ? `p${n}` : ""}`}>{n <= 3 ? <img className="rt-medal" src={`/assets/ui/place-${MEDAL[n - 1]}.webp`} alt={`${n} место`} draggable={false} /> : n}</span>;
 }
 
+/** My won prizes waiting to be taken (the weekly tops, the games): here they can always be collected */
+function MyPrizes() {
+  const { state, act, busy } = useGame();
+  const list = state?.prizes ?? [];
+  if (!list.length) return null;
+  const take = async (id: number) => {
+    const r = await act("prize_claim", { id }, "Приз получен!");
+    if (r) { haptic.big(); sfx("casedrop"); }
+  };
+  return (
+    <div className="panel rt-mine-prizes">
+      <b className="display row" style={{ gap: 6 }}><Icon name="trophy" size={22} />Твои призы</b>
+      {list.map((p) => (
+        <div key={p.id} className="rt-prize-row">
+          <span className="col grow" style={{ minWidth: 0, gap: 3 }}>
+            <b className="small">{p.title}</b>
+            <RewardChips r={p.reward} size={14} />
+          </span>
+          <button className="btn gold sm" disabled={busy === "prize_claim"} onClick={() => void take(p.id)}>Забрать</button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function RatingScreen() {
   const { state } = useGame();
   const now = useNow();
@@ -78,6 +105,8 @@ export function RatingScreen() {
           <h1 className="display">Рейтинг</h1>
         </div>
       </div>
+
+      <MyPrizes />
 
       <div className="rt-tabs">
         {TABS.map((t) => <button key={t.id} className={tab === t.id ? "on" : ""} onClick={() => setTab(t.id)}>{t.label}</button>)}

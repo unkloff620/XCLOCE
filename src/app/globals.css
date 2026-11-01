@@ -288,4 +288,6 @@ h2.h { margin: 4px 2px 8px; font-size: 16px; text-shadow: 0 2px 0 var(--line); }
 /* «как на телефоне» on a computer (phone-mode.ts): the page is zoomed so a phone screen fits the window; the column is phone-wide */
 html.phone { --col: 390px; background: #07050a; }
 /* the windows keep to the phone column (the window may be wider than a phone), the dim still covers everything */
+/* a full-screen window (a mini game) is the phone column too, not the whole window */
+html.phone .modal-back.full, html.phone .modal-back.page { left: max(0px, calc((100 * var(--vw) - var(--col)) / 2)); right: max(0px, calc((100 * var(--vw) - var(--col)) / 2)); }
 html.phone .modal-back:not(.full):not(.page) { padding-left: max(16px, calc((100 * var(--vw) - var(--col)) / 2 + 12px)); padding-right: max(16px, calc((100 * var(--vw) - var(--col)) / 2 + 12px)); }

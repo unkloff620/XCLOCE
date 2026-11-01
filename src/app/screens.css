@@ -4794,3 +4794,6 @@ body { background-attachment: fixed; }
 .acx-loot.lots { gap: 0.6cqw 1.4cqw; }
 .acx-loot.lots .acx-item .chip { font-size: 2.3cqw; }
 .acx-loot.lots .acx-item svg, .acx-loot.lots .acx-item img { width: 3.6cqw !important; height: 3.6cqw !important; }
+/* the rating: my prizes to take, above the tabs */
+.rt-mine-prizes { display: flex; flex-direction: column; gap: 8px; border-color: #ffcc33; box-shadow: 0 0 0 1px rgba(255, 204, 51, 0.35), 0 0 18px rgba(255, 204, 51, 0.25); }
+.rt-prize-row { display: flex; align-items: center; gap: 10px; padding-top: 8px; border-top: 1px dashed rgba(255, 204, 51, 0.35); }
