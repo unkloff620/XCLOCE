@@ -16,6 +16,8 @@ export interface Ctx {
 
 export interface PlayerRow {
   id: number;
+  /** the dealer talk: the Moscow day of the last one */
+  dealer_talk_day?: string | null;
   /** extra energy limit from the rooms */
   energy_bonus?: number;
   talent_energy?: number;

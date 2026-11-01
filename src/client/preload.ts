@@ -62,7 +62,7 @@ export function urlsFor(sections: Section[] | "all", look: LookLite | null): str
 }
 
 /** pictures the home screen does not need at once: they come in the background after the game shows */
-const LATER = ["/assets/ui/dossier-", "/assets/ui/exchange-frame", "/assets/hero/tattoo/", "/assets/items/", "/assets/stash/", "/assets/talents/", "/assets/slots/", "/assets/upgrader/", "/assets/cards/", "/assets/chips/", "/assets/door/", "/assets/updates/"];
+const LATER = ["/assets/ui/dossier-", "/assets/hero/tattoo/", "/assets/items/", "/assets/stash/", "/assets/talents/", "/assets/slots/", "/assets/upgrader/", "/assets/cards/", "/assets/chips/", "/assets/door/", "/assets/updates/"];
 /**
  * What the game waits for on entry: the hero, the interface and the home (+ today's «Что нового» pictures);
  * everything else (laterUrls) loads in the background — a section still opens only once its own pictures are there.

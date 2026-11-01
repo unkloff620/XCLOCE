@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useGame } from "../store.tsx";
 import { api } from "../api.ts";
 import { CURRENCIES, CURRENCY_DEFS, exchangeScheduleText, exchangeWindow, floorTo, type Currency } from "../../content/currencies.ts";
@@ -15,72 +15,153 @@ import { sfx } from "../sound.ts";
 import { Modal } from "../ui.tsx";
 import { KioskDealer } from "../art/kiosk.tsx";
 import { XG_BOX } from "../art/exchange-data.ts";
+import { DEALER_BYE, DEALER_CLOSED, DEALER_END, DEALER_EXCHANGED, DEALER_HELLO, DEALER_TALKED, TALK_BONUS, talkOfDay } from "../../content/dealer-talk.ts";
 
-export function Exchanger({ ex }: { ex: ShopData["exchange"] }) {
+/**
+ * The exchange machine: a tap starts a talk with the dealer. «Чё надо?» — a talk (once a day while the exchange works:
+ * three of his lines, three answers each; a good talk may give a better rate for 2 hours) or an exchange at the rate
+ * on the machine's screen, right in the chat.
+ */
+type Line = { who: "d" | "me"; text: string };
+const pick = <T,>(xs: T[]) => xs[Math.floor(Math.random() * xs.length)];
+const mskDay = () => new Date(Date.now() + 3 * 3600_000).toISOString().slice(0, 10);
+/** the answers in a mixed order (the good one is not always first), the same for a step */
+const order = (seed: string) => [0, 1, 2].sort((x, y) => ((seed.charCodeAt(x % seed.length) * (x + 7)) % 5) - ((seed.charCodeAt(y % seed.length) * (y + 7)) % 5) || x - y);
+
+export function DealerChat({ ex, open, onClose }: { ex: ShopData["exchange"]; open: boolean; onClose: () => void }) {
   const { state, act, busy } = useGame();
+  const talkState = state?.dealerTalk;
+  const [log, setLog] = useState<Line[]>(() => [{ who: "d", text: pick(DEALER_HELLO) }]);
+  const [mode, setMode] = useState<"menu" | "talk" | "ex" | "end">("menu");
+  const [step, setStep] = useState(0);
+  const [answers, setAnswers] = useState<number[]>([]);
+  const [typing, setTyping] = useState(false);
+  const logRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: "smooth" }); }, [log, mode, typing]);
+  const talk = useMemo(() => talkOfDay(mskDay(), state?.player.id ?? 0), [state?.player.id]);
+  const say = (who: Line["who"], text: string) => setLog((l) => [...l, { who, text }]);
+  // his line comes a moment later, as if he thinks
+  const later = (text: string, then?: () => void) => {
+    setTyping(true);
+    setTimeout(() => { setTyping(false); say("d", text); sfx("tap"); then?.(); }, 650);
+  };
+
+  const startTalk = () => {
+    say("me", "Да просто поговорить.");
+    if (open && talkState?.talked) { later(DEALER_TALKED); return; }
+    if (!open) later(DEALER_CLOSED, () => later(talk.steps[0].say, () => { setMode("talk"); setStep(0); setAnswers([]); }));
+    else later(talk.steps[0].say, () => { setMode("talk"); setStep(0); setAnswers([]); });
+  };
+  const answer = async (i: number) => {
+    const st = talk.steps[step];
+    say("me", st.answers[i].text);
+    const all = [...answers, i];
+    setAnswers(all);
+    setMode("end");
+    if (step + 1 < talk.steps.length) {
+      later(st.answers[i].reply, () => later(talk.steps[step + 1].say, () => { setStep(step + 1); setMode("talk"); }));
+      return;
+    }
+    later(st.answers[i].reply);
+    if (!open) { setTimeout(() => later(DEALER_END.closed, () => setMode("menu")), 700); return; }
+    const r = await act<{ score: number; bonus: number; until: number | null }>("dealer_talk", { answers: all });
+    setTimeout(() => {
+      if (!r) { setMode("menu"); return; }
+      if (r.bonus > 0) { haptic.ok(); sfx("coin"); }
+      later(r.bonus > 0 ? DEALER_END.bonus : r.score >= 4 ? DEALER_END.nice : DEALER_END.meh, () => setMode("menu"));
+    }, 700);
+  };
+  const toExchange = () => {
+    say("me", "Обменять бы кое-что.");
+    later(open ? "Давай. Курс на экране, всё честно." : DEALER_CLOSED.split(".")[0] + ". " + "Приходи, когда откроется.", () => setMode(open ? "ex" : "menu"));
+  };
+  const bye = () => { say("me", "Да ничё, бывай."); later(pick(DEALER_BYE), () => setTimeout(onClose, 600)); };
+
+  return (
+    <div className="dl-chat">
+      <div className="dl-log" ref={logRef}>
+        {log.map((l, i) => (
+          <div key={i} className={`dl-line ${l.who}`}>
+            {l.who === "d" && <i className="dl-ava" aria-hidden="true" />}
+            <span className="dl-bubble">{l.text}</span>
+          </div>
+        ))}
+        {typing && <div className="dl-line d"><i className="dl-ava" aria-hidden="true" /><span className="dl-bubble dl-dots"><i /><i /><i /></span></div>}
+      </div>
+      {(talkState?.bonus ?? 0) > 0 && talkState?.until && <BonusStrip until={talkState.until} bonus={talkState.bonus} />}
+      <div className="dl-acts">
+        {!typing && mode === "menu" && (
+          <>
+            <button type="button" className="dl-opt" onClick={startTalk}>Поговорить по душам{open && talkState?.talked ? " (уже говорили)" : ""}</button>
+            <button type="button" className="dl-opt" onClick={toExchange}>Обменять валюту</button>
+            <button type="button" className="dl-opt dim" onClick={bye}>Да ничё, бывай</button>
+          </>
+        )}
+        {!typing && mode === "talk" && order(talk.id + step).map((i) => (
+          <button key={i} type="button" className="dl-opt" onClick={() => void answer(i)}>{talk.steps[step].answers[i].text}</button>
+        ))}
+        {mode === "ex" && <ChatExchange ex={ex} bonus={talkState?.bonus ?? 0} disabled={!!busy} onDone={(t) => later(t)} onBack={() => { setMode("menu"); later("Ещё чё-то?"); }} />}
+        {mode === "end" && busy === "dealer_talk" && <div className="tiny muted center">…</div>}
+      </div>
+    </div>
+  );
+}
+
+function BonusStrip({ until, bonus }: { until: number; bonus: number }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
+  if (until <= now) return null;
+  return <div className="dl-bonus">Курс по-братски: <b>+{Math.round(bonus * 100)}%</b> · ещё <b className="num">{clock(until - now)}</b></div>;
+}
+
+/** the exchange inside the chat: what I give, what I get, how much; at the rate on the machine (and his better rate) */
+function ChatExchange({ ex, bonus, disabled, onDone, onBack }: { ex: ShopData["exchange"]; bonus: number; disabled: boolean; onDone: (line: string) => void; onBack: () => void }) {
+  const { state, act } = useGame();
   const [from, setFrom] = useState<Currency>("RUB");
   const [to, setTo] = useState<Currency>("USD");
   const [amount, setAmount] = useState("");
   const have = state?.wallet[from] ?? 0;
   const a = Math.floor(Number(amount) || 0);
-  const quote = a > 0 && from !== to ? floorTo(to, ((a * ex.rub[from]) / ex.rub[to]) * (1 - ex.fee)) : 0;
-  const rate = (ex.rub[from] / ex.rub[to]) * (1 - ex.fee);
-  const swap = () => {
-    setFrom(to);
-    setTo(from);
-    setAmount("");
-  };
+  const k = (1 - ex.fee) * (1 + bonus);
+  const quote = a > 0 && from !== to ? floorTo(to, ((a * ex.rub[from]) / ex.rub[to]) * k) : 0;
+  const rate = (ex.rub[from] / ex.rub[to]) * k;
   const go = async () => {
     const r = await act<{ paid: number; got: number }>("exchange", { from, to, amount: floorTo(from, a), idem: crypto.randomUUID() }, (x) => `Обмен: ${money(from, x.paid)} ${from} → ${money(to, x.got)} ${to}`);
-    if (r) {
-      haptic.ok();
-      setAmount("");
-    }
+    if (r) { haptic.ok(); sfx("coin"); setAmount(""); onDone(pick(DEALER_EXCHANGED)); }
   };
-  // regions of the drawn frame (public/assets/ui/exchange-frame.webp), percent of 1117×1301
-  const COLS = [8.6, 31.3, 53.6, 75.7];
-  const box = (l: number, t: number, w: number, h: number) => ({ left: `${l}%`, top: `${t}%`, width: `${w}%`, height: `${h}%` });
-  const row = (top: number, v: Currency, set: (c: Currency) => void, other: Currency) =>
-    CURRENCIES.map((c, i) => (
-      <button key={c} className={`exp-btn exp-cur ${v === c ? "on" : ""}`} style={box(COLS[i], top, 20.1, 8)} disabled={c === other} onClick={() => set(c)} aria-label={CURRENCY_DEFS[c].name}>
-        <Icon name={c} size={26} />
-        <b>{c}</b>
-      </button>
-    ));
-  const can = a > 0 && a <= have && quote > 0 && busy !== "exchange" && ex.open !== false;
+  const row = (v: Currency, set: (c: Currency) => void, other: Currency) => (
+    <div className="dl-curs">
+      {CURRENCIES.map((c) => (
+        <button key={c} type="button" className={`dl-cur ${v === c ? "on" : ""}`} disabled={c === other} onClick={() => { haptic.tap(); set(c); }} aria-label={CURRENCY_DEFS[c].name}>
+          <Icon name={c} size={22} /><b>{c}</b>
+        </button>
+      ))}
+    </div>
+  );
   return (
-    <div className="exp-panel">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="exp-bg" src="/assets/ui/exchange-frame.webp" alt="" draggable={false} />
-      <div className="exp-cell exp-title display" style={box(17.9, 2.2, 68.5, 6)}>Обменник</div>
-      <div className="exp-cell exp-info" style={box(9, 11.3, 86.1, 8.8)}>
-        <span className="exp-label">Отдаю</span>
-        <Icon name={from} size={24} />
-        <span className="grow">{CURRENCY_DEFS[from].name}</span>
-        <span className="exp-have">есть <b className="num">{money(from, have)}</b></span>
-      </div>
-      {row(23, from, setFrom, to)}
-      <div className="exp-cell exp-input" style={box(9, 34.4, 67.6, 8.8)}>
-        <Icon name={from} size={24} />
+    <div className="dl-ex">
+      <div className="dl-ex-h"><span>Отдаю</span><span className="tiny">есть <b className="num">{money(from, have)}</b></span></div>
+      {row(from, setFrom, to)}
+      <div className="dl-ex-in">
+        <Icon name={from} size={22} />
         <input inputMode="numeric" placeholder="0" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^0-9]/g, "").replace(/^0+(?=\d)/, ""))} aria-label="Сколько отдать" />
+        <button type="button" className="dl-all" onClick={() => setAmount(String(floorTo(from, have)))}>всё</button>
+        <button type="button" className="dl-swap" onClick={() => { setFrom(to); setTo(from); setAmount(""); }} aria-label="Поменять местами">⇅</button>
       </div>
-      <button className="exp-btn exp-max display" style={box(80.9, 34.3, 13.1, 8.3)} onClick={() => setAmount(String(floorTo(from, have)))}>ВСЁ</button>
-      <button className="exp-btn exp-swap" style={box(45.7, 46, 12.1, 8.8)} onClick={swap} aria-label="Поменять местами">⇅</button>
-      {row(57.9, to, setTo, from)}
-      <div className="exp-cell exp-info" style={box(9, 68.6, 86.1, 7.5)}>
-        <span className="exp-label">Получу</span>
-        <Icon name={to} size={24} />
-        <b className="num grow exp-quote">{money(to, quote)}</b>
-        <span className="exp-rate">{rate >= 1 ? `1 ${from} = ${money(to, floorTo(to, rate))} ${to}` : `${Math.ceil(1 / rate)} ${from} = 1 ${to}`}</span>
+      <div className="dl-ex-h"><span>Получаю</span></div>
+      {row(to, setTo, from)}
+      <div className="dl-ex-got">
+        <Icon name={to} size={22} /><b className="num grow">{money(to, quote)}</b>
+        <span className="tiny">{rate >= 1 ? `1 ${from} = ${money(to, floorTo(to, rate))} ${to}` : `${Math.ceil(1 / rate)} ${from} = 1 ${to}`}{bonus > 0 && <b className="dl-up"> +{Math.round(bonus * 100)}%</b>}</span>
       </div>
-      <button className="exp-btn exp-go display" style={box(9, 78.2, 86.1, 10.5)} disabled={!can} onClick={go}>
-        {a > have ? "Не хватает" : "Обменять"}
-      </button>
-      <div className="exp-cell exp-foot" style={box(9, 89.6, 86.1, 3.6)}>Комиссия {Math.round(ex.fee * 100)}% · валюта игровая</div>
+      <div className="dl-ex-go">
+        <button type="button" className="btn dark sm" onClick={onBack}>Назад</button>
+        <button type="button" className="btn gold sm" disabled={disabled || !(a > 0 && a <= have && quote > 0)} onClick={go}>{a > have ? "Не хватает" : "Обменять"}</button>
+      </div>
+      <div className="tiny muted center">Комиссия {Math.round(ex.fee * 100)}%{bonus > 0 ? ", но барыга накинул сверху" : ""} · валюта игровая</div>
     </div>
   );
 }
-
 
 /**
  * «Скупка»: the dealer buys the yard finds (things with a price in state.sell, no weapons) for roubles — always open,
@@ -238,8 +319,9 @@ export function ExchangeScreen() {
           <Help topic="exchange" title="Обменник">
             <HelpList title="Валюты" rows={CURRENCIES.map((c) => ({ key: c, icon: <Icon name={c} size={40} />, name: CURRENCY_DEFS[c].name, hint: `1 ${c} ≈ ${money("RUB", CURRENCY_DEFS[c].rub)} ₽ по базовому курсу` }))} />
             <ul>
-              <li>Верхний ряд — что отдаёшь, нижний — что получаешь. Кнопка ⇅ меняет их местами.</li>
-              <li>Впиши сумму или нажми «ВСЁ», ниже сразу видно, сколько получишь и по какому курсу.</li>
+              <li>Нажми на автомат — барыга спросит, чё надо: поговорить или обменять.</li>
+              <li>Обмен идёт прямо в разговоре по курсу с экрана автомата: выбери, что отдаёшь и что получаешь, впиши сумму или нажми «всё».</li>
+              <li>Раз в день, пока обменник открыт, можно поговорить с ним по душам. Отвечай по-человечески — и с шансом он даст курс на {Math.round(TALK_BONUS * 100)}% лучше на 2 часа.</li>
               <li>Комиссия {data ? Math.round(data.exchange.fee * 100) : 5}% уже учтена в сумме «Получу».</li>
               <li>Обменник — ивент: {exchangeScheduleText(sched)}. В день открытия на главном экране появится уведомление.</li>
               <li>Меняются только целые числа — без копеек и дробей.</li>
@@ -270,7 +352,10 @@ function XgLayer({ id, className }: { id: string; className?: string }) {
 function ExchangeGarage({ data, win }: { data: ShopData | null; win: { open: boolean; until: number } | null; onTurn: () => void }) {
   const [open, setOpen] = useState<"sell" | "ex" | null>(null);
   const ex = data?.exchange;
-  const rate = ex ? Math.ceil(ex.rub.USD / ex.rub.RUB / (1 - ex.fee)) : null;
+  const { state } = useGame();
+  // the machine's screen: what $1 costs in roubles (less after a good talk with the dealer)
+  const bonus = state?.dealerTalk && state.dealerTalk.until && state.dealerTalk.until > Date.now() ? state.dealerTalk.bonus : 0;
+  const rate = ex ? Math.ceil(ex.rub.USD / ex.rub.RUB / (1 - ex.fee) / (1 + bonus)) : null;
   const [ml, mt, mw, mh] = XG_BOX.machine;
   const [pl, pt, pw, ph] = XG_BOX.paper;
   return (
@@ -287,7 +372,7 @@ function ExchangeGarage({ data, win }: { data: ShopData | null; win: { open: boo
           <span className="xg-dealer"><KioskDealer part="front" /></span>
           <XgLayer id="machine" />
           {/* the machine's green display: the rate, or «закрыто» */}
-          <span className={`xg-screen ${win?.open ? "" : "off"}`} aria-hidden="true">
+          <span className={`xg-screen ${win?.open ? "" : "off"} ${bonus > 0 ? "up" : ""}`} aria-hidden="true">
             {win?.open ? (rate ? <><b>$1</b><b>={rate}₽</b></> : <b>…</b>) : <b>ЗАКРЫТО</b>}
           </span>
           {/* the lamp swings on its wire, its light flickers */}
@@ -297,7 +382,7 @@ function ExchangeGarage({ data, win }: { data: ShopData | null; win: { open: boo
           </span>
           <button type="button" className="xg-zone xg-sell" style={{ left: `${pl}%`, top: `${pt}%`, width: `${pw}%`, height: `${ph}%` }} onClick={() => { haptic.tap(); setOpen("sell"); }} aria-label="Продать барыге">
           </button>
-          <button type="button" className={`xg-zone xg-ex ${win?.open ? "" : "closed"}`} style={{ left: `${ml}%`, top: `${mt}%`, width: `${mw}%`, height: `${mh}%` }} onClick={() => { haptic.tap(); setOpen("ex"); }} aria-label="Обмен валют">
+          <button type="button" className={`xg-zone xg-ex ${win?.open ? "" : "closed"}`} style={{ left: `${ml}%`, top: `${mt}%`, width: `${mw}%`, height: `${mh}%` }} onClick={() => { haptic.tap(); setOpen("ex"); }} aria-label="Поговорить с барыгой">
           </button>
         </div>
       </div>
@@ -307,13 +392,8 @@ function ExchangeGarage({ data, win }: { data: ShopData | null; win: { open: boo
         </Modal>
       )}
       {open === "ex" && (
-        <Modal onClose={() => setOpen(null)}>
-          {data ? (
-            <div className={`exp-wrap${win?.open ? "" : " closed"}`}>
-              <Exchanger ex={data.exchange} />
-              {!win?.open && <div className="exp-closed-sign display" aria-hidden="true">ЗАКРЫТО</div>}
-            </div>
-          ) : <div className="panel muted center">Загружаем курс…</div>}
+        <Modal title="Барыга" className="dl-modal" onClose={() => setOpen(null)}>
+          {data ? <DealerChat ex={data.exchange} open={!!win?.open} onClose={() => setOpen(null)} /> : <div className="panel muted center">Загружаем курс…</div>}
         </Modal>
       )}
     </>

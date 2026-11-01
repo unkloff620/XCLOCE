@@ -1,3 +1,4 @@
+import { talkOfDay } from "../src/content/dealer-talk.ts";
 import { describe, it, expect, beforeEach } from "vitest";
 import type { Db } from "../src/server/db.ts";
 import { act, always, freshDb, give, H, M, newPlayer, qty, setMoney, wallet } from "./helpers.ts";
@@ -536,6 +537,23 @@ describe("shop and exchange", () => {
     await expect(act(db, p, "exchange", { from: "USD", to: "RUB", amount: -5 }, open)).rejects.toMatchObject({ code: "bad_amount" });
     await setMoney(db, p, "USD", 5);
     await expect(act(db, p, "exchange", { from: "USD", to: "RUB", amount: 1.5 }, open)).rejects.toMatchObject({ code: "bad_amount" });
+  });
+  it("a good talk with the dealer may give a better rate for 2 hours; once a day, only while the exchange works", async () => {
+    const p = await newPlayer(db);
+    let open = T0;
+    while (!exchangeWindow(open).open) open += 24 * H;
+    let closed = open;
+    while (exchangeWindow(closed).open) closed += 3 * H;
+    await expect(act(db, p, "dealer_talk", { answers: [0, 0, 0] }, closed)).rejects.toMatchObject({ code: "exchange_closed" });
+    const talk = talkOfDay(new Date(open + 3 * H).toISOString().slice(0, 10), p);
+    const best = talk.steps.map((st) => st.answers.findIndex((x) => x.score === 2));
+    const r = await act(db, p, "dealer_talk", { answers: best }, open, always(0.1));
+    expect(r.result).toMatchObject({ score: 6, bonus: 0.1 });
+    expect(r.state.dealerTalk).toMatchObject({ talked: true, bonus: 0.1 });
+    await expect(act(db, p, "dealer_talk", { answers: best }, open + 60_000)).rejects.toMatchObject({ code: "talked" });
+    await setMoney(db, p, "RUB", 900);
+    const ex = await act(db, p, "exchange", { from: "RUB", to: "USD", amount: 900 }, open + 60_000);
+    expect(ex.result.got).toBe(11); // 900 / 85 × 0.95 × 1.1 = 11.06
   });
 });
 

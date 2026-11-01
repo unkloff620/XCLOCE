@@ -1207,4 +1207,10 @@ DELETE FROM player_craft_box;`,
     id: "v2-074-gift-qty",
     sql: `ALTER TABLE stash_gifts ADD COLUMN IF NOT EXISTS qty INT NOT NULL DEFAULT 1;`,
   },
+  {
+    // the dealer at the exchange machine: the day of the last talk, and the better rate it gave (until when)
+    id: "v2-075-dealer-talk",
+    sql: `ALTER TABLE players ADD COLUMN IF NOT EXISTS dealer_talk_day TEXT;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS dealer_bonus_until TIMESTAMPTZ;`,
+  },
 ];

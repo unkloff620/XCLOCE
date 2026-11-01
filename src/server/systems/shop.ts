@@ -1,5 +1,6 @@
 import { GameError, type Queryable } from "../db.ts";
-import { addEnergy, addItem, addMoney, idempotent, itemQty, takeItem, takeMoney, type Ctx } from "../core.ts";
+import { addEnergy, addItem, addMoney, idempotent, itemQty, moscowDay, takeItem, takeMoney, type Ctx } from "../core.ts";
+import { TALK_BONUS, TALK_BONUS_MS, talkChance, talkOfDay, talkScore } from "../../content/dealer-talk.ts";
 import { OFFERS, bulkOf, bulkPrice, offerById } from "../../content/shop.ts";
 import { CURRENCY_DEFS, exchangeScheduleText, exchangeWindow, floorTo, type Currency } from "../../content/currencies.ts";
 import { itemById, WEARABLE_SLOTS, type Slot } from "../../content/items.ts";
@@ -40,9 +41,31 @@ export async function buy(ctx: Ctx, offerId: string, idem?: string, batch = 1) {
 }
 
 /** Rate is taken on the server; the client only says from, to and how much. */
-export function quote(cfg: Config, from: Currency, to: Currency, amount: number) {
+export function quote(cfg: Config, from: Currency, to: Currency, amount: number, bonus = 0) {
   const gross = (amount * cfg.exchange.rub[from]) / cfg.exchange.rub[to];
-  return floorTo(to, gross * (1 - cfg.exchange.fee));
+  return floorTo(to, gross * (1 - cfg.exchange.fee) * (1 + bonus));
+}
+
+/** the better rate the dealer gave after a good talk (0 when none or it's over) */
+export async function dealerBonus(q: Queryable, pid: number, now: number) {
+  const [r] = await q.query<{ dealer_bonus_until: Date | null }>("SELECT dealer_bonus_until FROM players WHERE id=$1", [pid]);
+  const until = r?.dealer_bonus_until ? new Date(r.dealer_bonus_until).getTime() : 0;
+  return until > now ? { bonus: TALK_BONUS, until } : { bonus: 0, until: null };
+}
+
+/** the talk with the dealer: once a Moscow day, while the exchange works; the answers decide the chance of a better rate */
+export async function dealerTalk(ctx: Ctx, answers: number[]) {
+  if (!exchangeWindow(ctx.now, ctx.cfg.exchange.schedule).open) throw new GameError("exchange_closed", "Обменник закрыт — поговорить о курсе можно, когда он работает");
+  const day = moscowDay(ctx.now);
+  const [p] = await ctx.q.query<{ dealer_talk_day: string | null }>("SELECT dealer_talk_day FROM players WHERE id=$1 FOR UPDATE", [ctx.pid]);
+  if (p?.dealer_talk_day === day) throw new GameError("talked", "Сегодня уже поговорили — приходи завтра");
+  const talk = talkOfDay(day, ctx.pid);
+  if (answers.length !== talk.steps.length || answers.some((x) => !Number.isInteger(x) || x < 0 || x > 2)) throw new GameError("bad_answers", "Некорректные ответы");
+  const score = talkScore(talk, answers);
+  const won = ctx.rng() < talkChance(score);
+  const until = won ? ctx.now + TALK_BONUS_MS : null;
+  await ctx.q.query("UPDATE players SET dealer_talk_day=$2, dealer_bonus_until=COALESCE($3, dealer_bonus_until) WHERE id=$1", [ctx.pid, day, until ? new Date(until) : null]);
+  return { talk: talk.id, score, bonus: won ? TALK_BONUS : 0, until };
 }
 
 export async function exchange(ctx: Ctx, from: Currency, to: Currency, amount: number, idem?: string) {
@@ -54,7 +77,7 @@ export async function exchange(ctx: Ctx, from: Currency, to: Currency, amount: n
     if (!(a > 0) || a !== Math.round(amount * 10 ** CURRENCY_DEFS[from].decimals) / 10 ** CURRENCY_DEFS[from].decimals) {
       throw new GameError("bad_amount", "Некорректная сумма");
     }
-    const out = quote(ctx.cfg, from, to, a);
+    const out = quote(ctx.cfg, from, to, a, (await dealerBonus(ctx.q, ctx.pid, ctx.now)).bonus);
     if (!(out > 0)) throw new GameError("too_small", "Слишком маленькая сумма для обмена");
     await takeMoney(ctx, from, a, `exchange:${to}`);
     await addMoney(ctx, to, out, `exchange:${from}`);

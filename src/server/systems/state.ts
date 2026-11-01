@@ -1,7 +1,7 @@
 import { GameError, type Queryable } from "../db.ts";
 import { balances, energyCfgOf, energyNow, moscowDay, type Ctx, type PlayerRow } from "../core.ts";
 import { fightHp, settleMyFight, unlockedItems } from "./combat.ts";
-import { inventoryView } from "./shop.ts";
+import { dealerBonus, inventoryView } from "./shop.ts";
 import { yardSync } from "./yard.ts";
 import { levelFromXp } from "../../content/levels.ts";
 import { OPEN_BOSSES } from "../../content/bosses.ts";
@@ -115,6 +115,8 @@ export async function gameState(ctx: Ctx) {
     craftBoxesOpen: await craftBoxesBought(ctx.q, ctx.pid),
     /** the dealer in the garage: today's parts on sale */
     dealer: await dealerView(ctx.q, ctx.pid, ctx.now),
+    /** the talk at the exchange machine: today's talk done? the better rate it gave (until when) */
+    dealerTalk: { talked: p.dealer_talk_day === moscowDay(ctx.now), ...(await dealerBonus(ctx.q, ctx.pid, ctx.now)) },
     upgradeSpins: await upgradeSpinsView(ctx.q, ctx.pid, ctx.now),
     poker: await pokerView(ctx.q, ctx.pid, ctx.now),
     // flat damage per weapon from the complete boss sets

@@ -81,6 +81,8 @@ export interface GameState {
   craftBoxesOpen?: number;
   /** the dealer in the garage: today's parts on sale */
   dealer?: { id: string; price: number; left: number }[];
+  /** the talk with the dealer at the exchange machine */
+  dealerTalk?: { talked: boolean; bonus: number; until: number | null };
   /** upgrader spins: free ones left today, then each costs `price` */
   upgradeSpins?: { freeLeft: number; freePerDay: number; price: { currency: Currency; amount: number } };
   /** poker: hands left today, the price, the poker experience and level (to: null at the top level) */
