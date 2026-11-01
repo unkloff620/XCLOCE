@@ -25,6 +25,8 @@ export type Sfx = "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" |
   | "casedrop"
   /* a thing out of the case (a cigarette, a toothpick): one of two recordings at random (thing-drop-1/2.mp3) */
   | "thingdrop"
+  /* the coin at half the volume: the tiles coming out of the case one by one */
+  | "coinsoft"
   /* a fist fight with a player («Наехать»): a voice as it starts (one of two at random), another one when we lose */
   | "raid" | "brawllose"
   /* a new level of the player: one of two recordings of the player's at random (public/assets/sound/levelup-voice-1/2.mp3) */
@@ -344,6 +346,11 @@ export function sfx(name: Sfx, power = 0.5) {
       tone(a, 110, t, 0.3, { type: "sine", vol: 0.6, slide: 0.4 });
       tone(a, 1320, t + 0.03, 0.25, { type: "square", vol: 0.08 });
       tone(a, 1760, t + 0.09, 0.3, { type: "square", vol: 0.07 });
+      break;
+    case "coinsoft":
+      if (sample(a, "coin", t, 0.2)) break;
+      tone(a, 1319, t, 0.07, { type: "square", vol: 0.045 });
+      tone(a, 1976, t + 0.06, 0.18, { type: "square", vol: 0.045 });
       break;
     case "coin":
       if (sample(a, "coin", t, 0.4)) break;

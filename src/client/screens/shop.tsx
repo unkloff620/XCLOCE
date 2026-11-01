@@ -238,7 +238,7 @@ function AchBoxWindow({ onClose }: { onClose: () => void }) {
   const thingDelay = inkDelay + (inkGot.length ? 900 : 0);
   useEffect(() => {
     if (phase !== "open") return;
-    const t = parts.map((_, i) => setTimeout(() => { haptic.tap(); sfx("coin"); }, 450 + i * LOOT_STEP));
+    const t = parts.map((_, i) => setTimeout(() => { haptic.tap(); sfx("coinsoft"); }, 450 + i * LOOT_STEP));
     // each frame that gets something: its own voice as it lights up
     if (inkGot.length) t.push(setTimeout(() => { haptic.big(); sfx("casedrop"); }, inkDelay));
     if (thingGot.length) t.push(setTimeout(() => { haptic.big(); sfx("thingdrop"); }, thingDelay));
