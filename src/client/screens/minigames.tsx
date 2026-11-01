@@ -943,6 +943,8 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
   const [won, setWon] = useState<boolean | null>(null);
   // the stake as it was when the spin started: shown while the needle runs, then it burns away on a loss
   const [snap, setSnap] = useState<{ id: string; up: boolean; burn: boolean } | null>(null);
+  // «Мои улучшенные» opens in its own window from the button at the top right
+  const [mineOpen, setMineOpen] = useState(false);
   // the stake that is still there (after a spin the old one may be gone)
   const cur: Stake | null = (() => {
     if (stake?.kind === "up" && ups.some((u) => u.uid === stake.uid)) return stake;
@@ -1009,6 +1011,9 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
   return (
     <Modal onClose={onClose} page>
       <div className="sl-help"><UpgraderHelp /></div>
+      <button type="button" className="ug-mine-btn" onClick={() => { haptic.tap(); setMineOpen(true); }} aria-label="Мои улучшенные" title="Мои улучшенные ★">
+        <i className="up-star">★</i>{ups.length > 0 && <b className="num">{ups.length}</b>}
+      </button>
       <div className="sl-stage">
         <div className={`ug ${won === true ? "res-won" : won === false ? "res-lost" : ""}`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1089,26 +1094,28 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
           </div>
         </div>
       </div>
-      {/* my upgraded things (★): sold here for their price, a weapon taken into the fight, a drink drunk */}
-      {ups.length > 0 && (
-        <div className="ug-mine">
-          <b className="ug-mine-h">Мои улучшенные ★ <span className="num">{ups.length}</span></b>
-          {ups.map((u) => {
-            const d = itemById(u.itemId);
-            if (!d) return null;
-            return (
-              <div key={u.uid} className="ug-mine-row">
-                <ItemArt id={u.itemId} size={34} />
-                <span className="grow ellipsis small"><b>{d.name} ★</b></span>
-                {d.weapon && <button className="btn sm red" disabled={!!busy || spinning} onClick={() => void act("up_take", { uid: u.uid }, `${d.name} — в бою`)}>В бой</button>}
-                {d.use && <button className="btn sm green" disabled={!!busy || spinning} onClick={() => void act("up_take", { uid: u.uid, use: true }, `+${d.use?.energy} энергии`)}>Выпить</button>}
-                <button className="btn sm gold" disabled={!!busy || spinning} onClick={async () => { const r = await act<{ got: number }>("up_sell", { uid: u.uid }, (x) => `Продано за ${x.got} ₽`); if (r) haptic.ok(); }}>
-                  {full(u.value)} ₽
-                </button>
-              </div>
-            );
-          })}
-        </div>
+      {/* my upgraded things (★), in their own window: sold here for their price, a weapon taken into the fight, a drink drunk */}
+      {mineOpen && (
+        <Modal title={<>Мои улучшенные ★ <span className="num">{ups.length}</span></>} onClose={() => setMineOpen(false)}>
+          <div className="ug-mine">
+            {!ups.length && <span className="muted small">Пока пусто — прокачай вещь, и она появится здесь.</span>}
+            {ups.map((u) => {
+              const d = itemById(u.itemId);
+              if (!d) return null;
+              return (
+                <div key={u.uid} className="ug-mine-row">
+                  <ItemArt id={u.itemId} size={34} />
+                  <span className="grow ellipsis small"><b>{d.name} ★</b></span>
+                  {d.weapon && <button className="btn sm red" disabled={!!busy || spinning} onClick={() => void act("up_take", { uid: u.uid }, `${d.name} — в бою`)}>В бой</button>}
+                  {d.use && <button className="btn sm green" disabled={!!busy || spinning} onClick={() => void act("up_take", { uid: u.uid, use: true }, `+${d.use?.energy} энергии`)}>Выпить</button>}
+                  <button className="btn sm gold" disabled={!!busy || spinning} onClick={async () => { const r = await act<{ got: number }>("up_sell", { uid: u.uid }, (x) => `Продано за ${x.got} ₽`); if (r) haptic.ok(); }}>
+                    {full(u.value)} ₽
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </Modal>
       )}
     </Modal>
   );

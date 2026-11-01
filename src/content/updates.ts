@@ -17,6 +17,12 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-01-upgrader-mine",
+    date: "1 ноября",
+    title: "Улучшенные вещи — отдельно",
+    items: [{ text: "В апгрейдере улучшенные вещи ★ теперь открываются золотой кнопкой со звездой справа сверху: там их можно продать, взять в бой или выпить. Под автоматом больше ничего не вылезает." }],
+  },
+  {
     id: "2026-11-01-chew",
     date: "1 ноября",
     title: "Сигарета в зубах",
