@@ -4605,7 +4605,20 @@ body { background-attachment: fixed; }
 .cf-blockbonus { align-self: center; font-size: 11px; font-weight: 800; color: #6b4a24; }
 .cf-blockbonus.on { color: #1f7a45; }
 .cf-cell.locked::before { opacity: 0.45; }
-.cf-lock { display: grid; place-items: center; width: 52%; height: 52%; border-radius: 50%; background: rgba(58, 36, 16, 0.18); opacity: 0.85; }
+.cf-lock { display: grid; place-items: center; width: 52%; height: 52%; border-radius: 50%; background: rgba(58, 36, 16, 0.18); opacity: 0.85; transform-origin: 50% 20%; }
+/* a tap on a closed lock: it jerks on its shackle */
+.cf-lock.shake { animation: cf-lock-shake 0.5s ease-in-out; }
+@keyframes cf-lock-shake { 0%, 100% { transform: rotate(0); } 15% { transform: rotate(-16deg); } 35% { transform: rotate(13deg); } 55% { transform: rotate(-9deg); } 75% { transform: rotate(5deg); } }
+/* enough talents: the next lock glows gold and breathes */
+.cf-cell.ready { cursor: pointer; }
+.cf-cell.ready .cf-lock { opacity: 1; background: radial-gradient(circle, rgba(255, 214, 90, 0.75), rgba(255, 170, 40, 0.25) 70%); animation: cf-lock-glow 1.4s ease-in-out infinite; }
+.cf-cell.ready .cf-lock.shake { animation: cf-lock-shake 0.5s ease-in-out; }
+@keyframes cf-lock-glow { 0%, 100% { box-shadow: 0 0 4px 1px rgba(255, 200, 60, 0.5); transform: scale(1); } 50% { box-shadow: 0 0 14px 5px rgba(255, 200, 60, 0.95); transform: scale(1.08); } }
+/* bought: the lock springs up, turns and fades */
+.cf-lock.opening { position: absolute; animation: cf-lock-open 0.9s ease-out forwards; }
+@keyframes cf-lock-open { 0% { transform: translateY(0) rotate(0) scale(1); opacity: 1; } 30% { transform: translateY(-18%) rotate(-14deg) scale(1.2); opacity: 1; } 100% { transform: translateY(-80%) rotate(25deg) scale(0.6); opacity: 0; } }
+.cf-lock.big { width: 72px; height: 72px; opacity: 1; background: radial-gradient(circle, rgba(255, 214, 90, 0.75), rgba(255, 170, 40, 0.2) 70%); }
+.cf-buy { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
 /* a cell: the blueprint box (white parts vanish on the paper by multiply), the thing lying on it */
 .cf-cell { position: relative; aspect-ratio: 1; padding: 0; display: grid; place-items: center; border: 0; background: none; cursor: default; }
 .cf-cell::before { content: ""; position: absolute; inset: 0; z-index: -1; background: url(/assets/craft/cell.webp) center / contain no-repeat; mix-blend-mode: multiply; opacity: 0.9; }

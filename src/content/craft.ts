@@ -3,7 +3,7 @@
  * Детали и собранные вещи кладутся в ЗАНЫК — 12 ячеек; бонус даёт только то, что лежит в занык (по штуке на ячейку).
  * Уровни: 85 деталей → 24 вещи 1 ур. (5 разных деталей × 5) → 6 вещей 2 ур. (3× вещь 1 ур. + 4 других) → 3 вещи 3 ур.
  * (оружие: новые удары по боссам). В одном рецепте ингредиенты не повторяются; между рецептами — могут.
- * Ячейки открываются по талантам (CRAFT_BOX_TALENTS); полный левый блок — +15 к энергии, полный правый — +100 к бицухе.
+ * Ячейки становятся доступны по талантам (CRAFT_BOX_TALENTS) и покупаются за рубли по порядку (CRAFT_BOX_PRICES); полный левый блок — +15 к энергии, полный правый — +100 к бицухе.
  * Откуда падают детали — решаем дальше.
  * «Крутизна» — очки за всё, что лежит в заныке.
  */
@@ -33,6 +33,8 @@ export const CRAFT_BOXES = 12;
  * the left block 0–5 — top/bottom of column 1, then 2, then 3 — then the right block 6–11) */
 export const CRAFT_BOX_TALENTS = [1, 5, 10, 20, 30, 45, 60, 75, 90, 110, 130, 150];
 export const craftBoxesOpen = (talents: number) => CRAFT_BOX_TALENTS.filter((t) => talents >= t).length;
+/** …and then is bought for roubles, in order: the first — 1 000 ₽, the last — 30 000 ₽ */
+export const CRAFT_BOX_PRICES = [1_000, 1_500, 2_000, 3_000, 4_000, 5_500, 7_500, 10_000, 13_000, 17_000, 23_000, 30_000];
 /** all six cells of a block full: a bonus on top (the left block — energy, the right one — biceps) */
 export const CRAFT_BLOCK_BONUS: CraftBonus[] = [{ energy: 15 }, { biceps: 100 }];
 

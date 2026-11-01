@@ -18,7 +18,7 @@ import { sfx } from "../sound.ts";
 import { full } from "../format.ts";
 import { itemById } from "../../content/items.ts";
 import { BicepsArt } from "./profile.tsx";
-import { CRAFT_ALL, CRAFT_BLOCK_BONUS, CRAFT_BOXES, CRAFT_BOX_TALENTS, CRAFT_LEVEL_NAME, craftBonusOf, craftById, craftBoxesOpen, type CraftBonus, type CraftDef } from "../../content/craft.ts";
+import { CRAFT_ALL, CRAFT_BLOCK_BONUS, CRAFT_BOXES, CRAFT_BOX_PRICES, CRAFT_BOX_TALENTS, CRAFT_LEVEL_NAME, craftBonusOf, craftById, craftBoxesOpen, type CraftBonus, type CraftDef } from "../../content/craft.ts";
 import { talentsForDamage } from "../../content/talents.ts";
 
 type Filter = "all" | "mine" | 0 | 1 | 2 | 3;
@@ -46,8 +46,27 @@ export function CraftScreen() {
   const inBox = new Map<string, number>();
   for (const id of boxes) if (id) inBox.set(id, (inBox.get(id) ?? 0) + 1);
   const total = craftBonusOf(boxes);
-  // the cells open one by one with the talents earned; they go down the columns (slot = block·6 + column·2 + row)
-  const open = craftBoxesOpen(talentsForDamage(state?.player.talentDamage ?? 0));
+  // the cells go down the columns (slot = block·6 + column·2 + row); they become available with the talents earned
+  // and are bought for roubles in order: `open` — bought, `avail` — allowed by the talents
+  const open = state?.craftBoxesOpen ?? 0;
+  const avail = craftBoxesOpen(talentsForDamage(state?.player.talentDamage ?? 0));
+  const [shake, setShake] = useState<{ slot: number; key: number } | null>(null);
+  const [buy, setBuy] = useState<number | null>(null);
+  const [opening, setOpening] = useState<number | null>(null);
+  const tapLock = (slot: number) => {
+    if (slot === open && slot < avail) { haptic.tap(); setBuy(slot); return; }
+    haptic.err();
+    setShake({ slot, key: Date.now() });
+    toast(slot > open ? "Сначала открой ячейки по порядку" : `Ячейка откроется, когда будет ${CRAFT_BOX_TALENTS[slot]} талантов`, "err");
+  };
+  const buyBox = async (slot: number) => {
+    const r = await act<{ slot: number }>("craft_box_buy", {}, () => "Ячейка открыта");
+    setBuy(null);
+    if (!r) return;
+    haptic.big(); sfx("coinsoft");
+    setOpening(slot);
+    setTimeout(() => setOpening((o) => (o === slot ? null : o)), 900);
+  };
   const levels = [...new Set(CRAFT_ALL.map((c) => c.level))].sort();
   const list = CRAFT_ALL
     .filter((c) => filter === "all" || (filter === "mine" ? (qty.get(c.id) ?? 0) + (inBox.get(c.id) ?? 0) > 0 : c.level === filter))
@@ -139,7 +158,7 @@ export function CraftScreen() {
             <ul>
               <li>Детали собираются в вещи: на вещь 1 уровня нужно 5 разных деталей по 5 штук. Из вещей потом соберутся вещи посильнее.</li>
               <li>Бонус даёт только то, что лежит в <b>заныке</b> — 12 ячеек сверху, по одной штуке в ячейку.</li>
-              <li>Ячейки открываются с талантами: первая — с 1 талантом, последняя — со 150. Заполнишь все 6 левых — ещё +15 к энергии, все 6 правых — +100 к бицухе.</li>
+              <li>Ячейки открываются по порядку: когда хватает талантов (первая — с 1, последняя — со 150), замок светится — нажми и открой за рубли (от 1 000 до 30 000 ₽). Заполнишь все 6 левых — ещё +15 к энергии, все 6 правых — +100 к бицухе.</li>
               <li>Вещи 3 уровня — оружие: новые удары по боссам, появляются в бою рядом с остальным оружием.</li>
               <li>Чтобы заныкать: нажми на карточку, подержи и перетащи в свободную ячейку. Нажми на ячейку — вещь вернётся на склад.</li>
               <li>Нажми на вещь, которая собирается, — откроется схема: что нужно и сколько уже есть.</li>
@@ -163,12 +182,15 @@ export function CraftScreen() {
                     const slot = half * 6 + col * 2 + row;
                     const id = boxes[slot];
                     const locked = slot >= open;
+                    const ready = locked && slot === open && slot < avail;
                     return (
-                      <button key={slot} type="button" data-slot={slot} className={`cf-cell ${id ? "full" : ""} ${locked ? "locked" : ""} ${drag?.over === slot ? "over" : ""}`}
-                        disabled={!id || !!busy} onClick={() => id && take(slot)}
-                        title={locked ? `Откроется, когда будет ${CRAFT_BOX_TALENTS[slot]} талантов` : id ? `${craftById(id)?.name} — нажми, чтобы вытащить` : "Пусто"}
-                        aria-label={locked ? "Закрытая ячейка" : id ? `Вытащить: ${craftById(id)?.name}` : "Пустая ячейка"}>
-                        {id ? <ItemArt id={id} size={40} /> : locked && <span className="cf-lock"><Icon name="lock" size={18} /></span>}
+                      <button key={slot} type="button" data-slot={slot} className={`cf-cell ${id ? "full" : ""} ${locked ? "locked" : ""} ${ready ? "ready" : ""} ${drag?.over === slot ? "over" : ""}`}
+                        disabled={(!id && !locked) || !!busy} onClick={() => (locked ? tapLock(slot) : id && take(slot))}
+                        title={ready ? `Открыть за ${full(CRAFT_BOX_PRICES[slot])} ₽` : locked ? `Откроется, когда будет ${CRAFT_BOX_TALENTS[slot]} талантов` : id ? `${craftById(id)?.name} — нажми, чтобы вытащить` : "Пусто"}
+                        aria-label={ready ? "Открыть ячейку" : locked ? "Закрытая ячейка" : id ? `Вытащить: ${craftById(id)?.name}` : "Пустая ячейка"}>
+                        {id ? <ItemArt id={id} size={40} /> : locked ? (
+                          <span key={shake?.slot === slot ? shake.key : 0} className={`cf-lock ${shake?.slot === slot ? "shake" : ""}`}><Icon name="lock" size={18} /></span>
+                        ) : opening === slot && <span className="cf-lock opening"><Icon name="lock" size={18} /></span>}
                       </button>
                     );
                   }))}
@@ -220,6 +242,18 @@ export function CraftScreen() {
 
       {/* the card under the finger while dragging */}
       {drag && <span className="cf-ghost" style={{ left: drag.x, top: drag.y }}><ItemArt id={drag.id} size={56} /></span>}
+
+      {buy !== null && (
+        <Modal title="Открыть ячейку" onClose={() => setBuy(null)}>
+          <div className="cf-buy">
+            <span className="cf-lock big"><Icon name="lock" size={40} /></span>
+            <p className="small" style={{ margin: 0 }}>Новая ячейка в заныке — ещё одна вещь будет давать бонус.</p>
+            <button type="button" className="btn gold block" disabled={!!busy || (state?.wallet.RUB ?? 0) < CRAFT_BOX_PRICES[buy]} onClick={() => buyBox(buy)}>
+              {(state?.wallet.RUB ?? 0) < CRAFT_BOX_PRICES[buy] ? `Не хватает · ${full(CRAFT_BOX_PRICES[buy])} ₽` : `Открыть за ${full(CRAFT_BOX_PRICES[buy])} ₽`}
+            </button>
+          </div>
+        </Modal>
+      )}
 
       {recipe && <Scheme d={recipe} qty={qty} busy={!!busy} onMake={() => make(recipe)} onOpen={setRecipe} onClose={() => setRecipe(null)} />}
     </div>

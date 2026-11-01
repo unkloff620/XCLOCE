@@ -1197,4 +1197,9 @@ SELECT player_id, item_id, COUNT(*)::int, 'craft-reset', now() FROM player_craft
 ON CONFLICT (player_id, item_id) DO UPDATE SET qty = inventory.qty + EXCLUDED.qty, updated_at = EXCLUDED.updated_at;
 DELETE FROM player_craft_box;`,
   },
+  {
+    // the stash cells are bought for roubles (once the talents allow): how many each player has opened
+    id: "v2-073-craft-boxes-bought",
+    sql: `ALTER TABLE players ADD COLUMN IF NOT EXISTS craft_boxes INT NOT NULL DEFAULT 0;`,
+  },
 ];

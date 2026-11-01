@@ -2140,9 +2140,15 @@ describe("«Крафт»", () => {
     expect(m.result).toMatchObject({ itemId: "craft-nail-bat" });
     expect(await qty(db, p, "craft-nail-bat")).toBe(1);
     expect(await qty(db, p, "part-board")).toBe(0);
-    // the cells are closed until the first talent
+    // the cells are closed until bought
     await expect(act(db, p, "craft_put", { itemId: "craft-nail-bat" }, T0)).rejects.toMatchObject({ code: "boxes_full" });
+    await expect(act(db, p, "craft_box_buy", {}, T0)).rejects.toMatchObject({ code: "need_talents" });
     await db.query("INSERT INTO player_stats (player_id, total_damage) VALUES ($1, 100) ON CONFLICT (player_id) DO UPDATE SET total_damage = 100", [p]);
+    await setMoney(db, p, "RUB", 1500);
+    const b = await act(db, p, "craft_box_buy", {}, T0); // the first cell: 1 000 ₽
+    expect(b.result).toMatchObject({ slot: 0, price: 1000, open: 1 });
+    expect(b.state.craftBoxesOpen).toBe(1);
+    await expect(act(db, p, "craft_box_buy", {}, T0)).rejects.toMatchObject({ code: "need_talents" }); // the second needs 5 talents
     await expect(act(db, p, "craft_put", { itemId: "craft-nail-bat", slot: 1 }, T0)).rejects.toMatchObject({ code: "box_locked" });
     const put = await act(db, p, "craft_put", { itemId: "craft-nail-bat" }, T0);
     expect(put.result).toMatchObject({ slot: 0 });
