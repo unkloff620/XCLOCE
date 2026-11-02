@@ -5072,3 +5072,10 @@ body { background-attachment: fixed; }
 .acx-item .chip .num { font-family: var(--font-body), system-ui; font-weight: 500; font-size: 2.6cqw; letter-spacing: 0.02em; color: #f3ead8; text-shadow: 0 1px 2px #000; }
 .acx-loot.many .acx-item .chip .num { font-size: 2.3cqw; }
 .acx-loot.lots .acx-item .chip .num { font-size: 2cqw; }
+/* the «×N» in the top right corner of the picture, a little over it */
+.acx-item .chip { position: relative; display: block; padding: 0; margin: 1.6cqw 2.4cqw 0 0; }
+.acx-item .chip .num { position: absolute; left: 62%; top: -1.2cqw; white-space: nowrap; line-height: 1; pointer-events: none;
+  text-shadow: 0 0 2px #000, 0 1px 2px #000, 0 0 4px rgba(0, 0, 0, 0.8); }
+.acx-loot { padding-top: 1.4cqw; }
+.acx-item .chip .num { left: auto; right: -1.6cqw; }
+.acx-item .chip { margin: 1.6cqw 1.6cqw 0 0; }
