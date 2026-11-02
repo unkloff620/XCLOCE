@@ -56,6 +56,20 @@ const FRAME_SEQ_BY_BOSS: Record<string, Partial<Record<string, [number, number][
   },
 };
 
+/** a frame schedule sampled from a curve (0…1 of the loop → frame), ~30 steps a second, equal neighbours merged:
+ *  a strip of frames 2° apart stepped this fast reads as a smooth bend */
+function sampled(ms: number, frameAt: (t: number) => number): [number, number][] {
+  const STEP = 33;
+  const out: [number, number][] = [];
+  for (let t = 0; t < ms; t += STEP) {
+    const f = Math.round(frameAt(t / ms));
+    const d = Math.min(STEP, ms - t);
+    if (out.length && out[out.length - 1][0] === f) out[out.length - 1][1] += d;
+    else out.push([f, d]);
+  }
+  return out;
+}
+
 /** a boss's schedules for the other modes: Князь — sad brows (the inner ends up, frames 5–6) when hit and when beaten */
 const FRAME_SEQ_MODE_BY_BOSS: Record<string, Partial<Record<string, Partial<Record<SeqMode, [number, number][]>>>>> = {
   knyaz: { brows: { fear: [[6, 2400], [5, 300], [6, 1800], [5, 200]], ouch: [[5, 60], [6, 900], [5, 120], [0, 60]] } },
@@ -387,7 +401,7 @@ type Rig = { w: number; h: number; parts: Record<string, Part> };
 const KZ_SHOULDER_R = [737, 370] as const;
 const KZ_SHOULDER_L = [440, 400] as const;
 /** the wallet arm's elbow (rig units) and the bend of each frame of its strip (tools/boss/assemble-knyaz.py ARM_L_DEG) */
-const KZ_ELBOW_L = { at: [215, 634] as const, deg: [0, 6, 12, 18, 24] };
+const KZ_ELBOW_L = { at: [215, 634] as const, deg: Array.from({ length: 13 }, (_, k) => k * 2) };
 const KZ_CIG = { r: [555, 270.5], l: [494, 285.5], f: [525, 281], len: 42, thick: 6 } as const;
 /** the cigarette's way through one 8 s loop: [%, x, y, angle, squeeze] — the hero's schedule (rig-chew) on his mouth */
 const KZ_CHEW: [number, number, number, number, number][] = (() => {
@@ -441,13 +455,18 @@ function KnyazRig({ id, rig, bust, dazed, svgRef, frameCss, strip }: {
   const css: string[] = [frameCss, kzChewCss()];
   // the fist arm (frames 0…4, straight … bent): up and down with the guard, a quick double bend now and then
   if (P.armRb?.frames) {
-    const k = seqKeyframes(`kz-elbow-r-${id}`, P.armRb.w, [[0, 300], [1, 120], [2, 120], [3, 160], [4, 500], [3, 140], [2, 140], [1, 160], [0, 400], [2, 90], [4, 220], [2, 90], [0, 260]]);
+    const n = P.armRb.frames - 1;
+    const k = seqKeyframes(`kz-elbow-r-${id}`, P.armRb.w, sampled(2400, (t) => n * (0.5 - 0.5 * Math.cos(2 * Math.PI * t))));
     css.push(`${k.css} .rig-knyaz .kz-elbow-r { animation: kz-elbow-r-${id} ${k.ms}ms step-end infinite; }`);
   }
   // the wallet arm: the elbow snaps in with each cut (in step with kz-slash, 2.1 s), the hand turns around the elbow by
   // the frame's angle (KZ_ELBOW_L.deg) so it stays on the cuff
   if (P.armLb?.frames) {
-    const seq: [number, number][] = [[0, 600], [2, 60], [4, 240], [2, 80], [0, 250], [2, 60], [4, 240], [2, 80], [0, 200], [3, 90], [1, 200], [0, 200]];
+    const n = P.armLb.frames - 1;
+    // in step with kz-slash (2.1 s): snapped in with each cut (fast in, eased out), a smaller bend with the stab
+    const ease = (x: number) => x * x * (3 - 2 * x);
+    const bump = (t: number, a: number, b: number, c: number, d: number) => (t < a || t > d ? 0 : t < b ? ease((t - a) / (b - a)) : t < c ? 1 : 1 - ease((t - c) / (d - c)));
+    const seq = sampled(2100, (t) => n * Math.max(bump(t, 0.3, 0.335, 0.41, 0.48), bump(t, 0.455, 0.49, 0.56, 0.64), 0.55 * bump(t, 0.7, 0.745, 0.8, 0.9)));
     const k = seqKeyframes(`kz-elbow-l-${id}`, P.armLb.w, seq);
     const total = seq.reduce((t, [, ms]) => t + ms, 0);
     let t0 = 0;

@@ -1060,16 +1060,16 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "y": 335.0,
         "w": 320,
         "h": 360,
-        "frames": 5,
-        "v": "f68c3d8c"
+        "frames": 9,
+        "v": "f76f6c33"
       },
       "armLb": {
         "x": 91.5,
         "y": 352.5,
         "w": 377,
         "h": 330,
-        "frames": 5,
-        "v": "1bbdff18"
+        "frames": 13,
+        "v": "ea69510a"
       }
     }
   }

@@ -5079,7 +5079,10 @@ body { background-attachment: fixed; }
 .rig-knyaz.dazed .kz-hand-l { animation: kz-limp-hand 3.4s ease-in-out infinite; }
 @keyframes kz-limp-hand { 0%, 100% { transform: rotate(4deg); } 50% { transform: rotate(-8deg); } }
 .rig-knyaz.dazed .kz-elbow-l, .rig-knyaz.dazed .kz-turn-l { animation: none; }
-.rig-knyaz.dazed .kz-root { animation: vk-fear-sway 5s ease-in-out infinite; }
+/* beaten: the feet stay planted, only the upper body sways a little over the hips */
+.rig-knyaz.boss-rig.dazed, .rig-knyaz.dazed .kz-root { animation: none; }
+.rig-knyaz.dazed .kz-up { animation: kz-daze 3.6s ease-in-out infinite; }
+@keyframes kz-daze { 0%, 100% { transform: rotate(-1.6deg); } 50% { transform: rotate(1.6deg) translateY(2px); } }
 @media (prefers-reduced-motion: reduce) { .rig-knyaz .kz-up, .rig-knyaz .kz-root, .rig-knyaz .kz-head, .rig-knyaz .kz-arm-r, .rig-knyaz .kz-elbow-l, .rig-knyaz .kz-elbow-r, .rig-knyaz .kz-turn-l, .rig-knyaz .kz-arm-l, .rig-knyaz .kz-hand-l, .rig-knyaz .kz-jaw { animation: none; } }
 
 /* rewards with «×N» at the picture's top right corner (ui.tsx RewardChips / GainLine, `times`): no plate, the count

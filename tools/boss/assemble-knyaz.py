@@ -53,7 +53,7 @@ yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
 vx, vy = CUFF_L[0] - EL_L[0], CUFF_L[1] - EL_L[1]
 tt = ((xx - EL_L[0]) * vx + (yy - EL_L[1]) * vy) / (vx * vx + vy * vy)
 wl = np.clip((tt - 0.02) / 0.4, 0, 1).astype(np.float32)
-ARM_L_DEG = [0, 6, 12, 18, 24]
+ARM_L_DEG = list(range(0, 26, 2))          # 13 frames, 2° apart: stepped fast they read as a smooth bend
 for k, deg in enumerate(ARM_L_DEG):
     th = np.deg2rad(deg) * wl
     c, s_ = np.cos(th), np.sin(th)
@@ -90,7 +90,7 @@ yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
 dist = np.hypot(xx - ELBOW[0], yy - ELBOW[1])
 # the forearm turns fully a little past the elbow, the part right at the elbow turns less (it bends, not snaps)
 wgt = np.clip((dist - 20) / 110, 0, 1).astype(np.float32)
-for k, deg in enumerate([0, 4, 8, 12, 16]):
+for k, deg in enumerate(range(0, 18, 2)):   # 9 frames, 2° apart
     th = np.deg2rad(deg) * wgt
     c, s_ = np.cos(th), np.sin(th)
     dx, dy = xx - ELBOW[0], yy - ELBOW[1]
