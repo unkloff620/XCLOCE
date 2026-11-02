@@ -27,6 +27,27 @@ export const HAIR_FIT = {
 } as const;
 /** worn clothes drawn on the rig; hats in this list also have hair variants cut under them */
 export const WEAR_FIT = {
+  "tee-actclose": {
+    "slot": "SHIRT",
+    "x": 186.0,
+    "y": 284.0,
+    "w": 626,
+    "h": 484
+  },
+  "shorts-actclose": {
+    "slot": "PANTS",
+    "x": 178.0,
+    "y": 694.5,
+    "w": 656,
+    "h": 294
+  },
+  "badge-actclose": {
+    "slot": "ACCESSORY",
+    "x": 418.0,
+    "y": 292.0,
+    "w": 164,
+    "h": 393
+  },
   "tee-white": {
     "slot": "SHIRT",
     "x": 187.0,

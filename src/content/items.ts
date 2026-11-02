@@ -116,6 +116,10 @@ const WEARABLES: ItemDef[] = ([
   // held in the left hand (slot «Кисть»): the boss's own weapon, worn for the look
   { id: "bottle-komandate", name: "Бутылка Командате", slot: "HAND", rarity: "epic", description: "Оружие Командате: горит, но не гаснет. Герой держит её в руке.", sources: ["Победа: Командате"] },
   { id: "hand-drum", name: "Нервные пальцы", slot: "HAND", rarity: "rare", description: "Пальцы сами отбивают ритм по колену, пока график грузится.", sources: ["Победа: Кедр"] },
+  // Кедр's set (cut from the hero on tools/rig/source/wear)
+  { id: "tee-actclose", name: "Футболка ActClose", slot: "SHIRT", rarity: "rare", description: "Чёрная, с красным actclose на груди. Сайт лежит — футболка стоит.", sources: ["Победа: Кедр (Блатной)"] },
+  { id: "shorts-actclose", name: "Шорты ActClose", slot: "PANTS", rarity: "rare", description: "Чёрные, с белыми шнурками. Дежурить по сайту можно и в шортах.", sources: ["Победа: Кедр (Блатной)"] },
+  { id: "badge-actclose", name: "Бейдж ActClose", slot: "ACCESSORY", rarity: "epic", description: "ACTCLOSE · ADMIN. Пускает в серверную и в любую очередь без очереди.", sources: ["Победа: Кедр (Блатной)"] },
   // Командате's tracksuit: the drawn set (tools/rig/source/wear, icons in tools/items/source)
   { id: "jacket-komandate", name: "Олимпийка Командате", slot: "SHIRT", rarity: "epic", description: "Молния до горла — так командуют с района.", sources: ["Победа: Командате"] },
   { id: "pants-komandate", name: "Спортивки Командате", slot: "PANTS", rarity: "rare", description: "Широкие, с завязками. Для приседа у подъезда.", sources: ["Победа: Командате"] },

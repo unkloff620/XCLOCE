@@ -84,6 +84,8 @@ export const BOSSES: BossDef[] = [
     story: "Сайт лежит — Кедр стоит. Сайт стоит — Кедр всё равно стоит, корни глубоко.",
     hp: hp(1), reward: { xp: xp(1), currencies: { USD: 5, RUB: 720 } },
     drop: [{ id: "keyboard", qty: 2, chance: 0.3 }],
+    wear: { items: ["tee-actclose", "shorts-actclose", "badge-actclose"], chance: 0.1, pity: 10 },
+    set: { weapon: "fist", damage: 15 },
     firstWin: ["hand-drum"],
     theme: { a: "#173a26", b: "#07140c", accent: "#3ddc84" }, photo: photo("kedr", true),
   },
