@@ -233,6 +233,8 @@ export const ACH_CATEGORIES: AchCategory[] = [
     ],
   },
   series("parts", "misc", "Старьёвщик", "ach-parts", "parts", [100, 500, 1_000, 5_000, 10_000], (n) => `Собери ${n} деталей для крафта`),
+  series("unshaven", "misc", "Небритый", "ach-razor", "unshaven", [1, 2, 3, 5, 10], (n) => `Не брейся ${n} дн. подряд`),
+  series("shaves", "misc", "Брадобрей", "ach-razor", "shaves", [1, 3, 5, 10, 25], (n) => `Побрейся ${n} раз`),
   series("craft-power", "misc", "Крутизна шмота", "ach-craft2", "craftPower", [10, 50, 150, 400, 800, 1_500, 3_000, 5_000, 8_000, 12_000], (n) => `Набери ${n} крутизны в заначке крафта`),
 ];
 

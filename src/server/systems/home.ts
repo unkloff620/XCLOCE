@@ -1,6 +1,6 @@
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, ledger, takeMoney, type Ctx } from "../core.ts";
-import { EQUIPMENT, FIRST_STEPS_GIFT, pieceUnlockId, HELP_TOPICS, TROPHIES, baseBit, equipmentById, hasPiece, piecesCount, normalizeLook, roomById, roomUnlockId, roomsEnergyBonus, totalBonus, type HelpTopic, type Look } from "../../content/home.ts";
+import { EQUIPMENT, FIRST_STEPS_GIFT, pieceUnlockId, HELP_TOPICS, TROPHIES, baseBit, equipmentById, hasPiece, piecesCount, normalizeLook, roomById, roomUnlockId, roomsEnergyBonus, totalBonus, type HelpTopic, type Look, beardLevel, unshavenDays } from "../../content/home.ts";
 import { bossById } from "../../content/bosses.ts";
 import { craftBonus } from "./craft.ts";
 import { TALENT_RESET_PRICE, autoStop, autoTalentsOpen, stopLevel, stopOpen, talentExtras, talentStop, talentsSpent, type WeaponTalents } from "../../content/talents.ts";
@@ -16,12 +16,13 @@ export async function homeData(q: Queryable, pid: number): Promise<HomeRow> {
   const [a] = await q.query<{ room: string; rooms: string[] | null; body: unknown; decor: Record<string, number> | null }>("SELECT room, rooms, body, decor FROM appearance WHERE player_id=$1", [pid]);
   const rooms = Array.isArray(a?.rooms) && a.rooms.length ? a.rooms : ["basic"];
   const tr = await q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id = ANY($2)", [pid, TROPHIES.map((t) => t.id)]);
+  const [sh] = await q.query<{ shaved_at: Date | null }>("SELECT shaved_at FROM players WHERE id=$1", [pid]);
   return {
     levels: Object.fromEntries(eq.map((e) => [e.equipment_id, e.level])),
     pieces: Object.fromEntries(eq.filter((e) => e.pieces > 0).map((e) => [e.equipment_id, Number(e.pieces)])),
     rooms,
     room: a && rooms.includes(a.room) ? a.room : "basic",
-    body: normalizeLook(a?.body),
+    body: { ...normalizeLook(a?.body), beard: sh?.shaved_at ? beardLevel(new Date(sh.shaved_at).getTime(), Date.now()) : 0 },
     decor: a?.decor && typeof a.decor === "object" ? a.decor : {},
     trophies: tr.map((t) => t.item_id),
   };
@@ -254,3 +255,15 @@ export async function starterGift(ctx: Ctx) {
 }
 
 export const EQUIPMENT_IDS = EQUIPMENT.map((e) => e.id);
+
+/** «Побриться»: the beard is gone, it starts growing again; counts the shaves and the longest unshaven run */
+export async function shave(ctx: Ctx) {
+  const [p] = await ctx.q.query<{ shaved_at: Date }>("SELECT shaved_at FROM players WHERE id=$1 FOR UPDATE", [ctx.pid]);
+  const days = unshavenDays(new Date(p?.shaved_at ?? ctx.now).getTime(), ctx.now);
+  if (days < 1) throw new GameError("no_beard", "Ещё нечего брить — щетина вырастет через сутки");
+  const [r] = await ctx.q.query<{ shaves: number }>(
+    "UPDATE players SET shaved_at=$2, shaves = shaves + 1, beard_best = GREATEST(beard_best, $3) WHERE id=$1 RETURNING shaves",
+    [ctx.pid, new Date(ctx.now), days],
+  );
+  return { days, shaves: Number(r?.shaves ?? 0) };
+}

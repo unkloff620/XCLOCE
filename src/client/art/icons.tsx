@@ -14,13 +14,13 @@ export function Svg({ size = 32, children, vb = "0 0 64 64", className }: { size
 
 export type IconName = string;
 /** Icons drawn by the artist: icon name → public/assets/ui/<file>.webp (built by tools/items/build-items.py). */
-const RASTER_ICONS: Partial<Record<string, string>> = { shirt: "wardrobe", gift: "bonus", bolt: "tech", shop: "shop", exchange: "exchange", map: "tasks", rep: "rep-crown", parts: "parts-pile",
+const RASTER_ICONS: Partial<Record<string, string>> = { shirt: "wardrobe", gift: "bonus", bolt: "tech", shop: "shop", exchange: "exchange", map: "tasks", rep: "rep-crown", parts: "parts-pile", razor: "razor",
   energy: "energy-can", key: "key", RUB: "coin-rub", USD: "coin-usd", SOL: "coin-sol", BTC: "coin-btc", coins: "coins", xp: "authority",
   lock: "lock", clock: "clock", sun: "sun", trophy: "trophy", swords: "swords", chest: "chest", mail: "mail", news: "news", fire: "fire", talent: "talent",
   // achievement pictures (tools/ui/cut-achievements.py)
   "ach-damage": "ach-damage", "ach-hits": "ach-hits", "ach-wins": "ach-wins", "ach-yard": "ach-yard", "ach-chests": "ach-chests", "ach-weekly": "ach-weekly", "ach-solo": "ach-solo",
   // the second set (tools/ui/cut-achievements-2.py)
-  ...Object.fromEntries(["ach-blat", "ach-avtor", "ach-allboss", "ach-savings", "ach-slots", "ach-upgrader", "ach-zonk", "ach-poker", "ach-clan", "ach-leader", "ach-raid", "ach-nishtyak", "ach-shop", "ach-bj", "ach-spit", "ach-trainer", "ach-winner", "ach-wall", "ach-craft1", "ach-craft2", "ach-craft3", "ach-stashbox", "ach-parts"].map((n) => [n, n])),
+  ...Object.fromEntries(["ach-blat", "ach-avtor", "ach-allboss", "ach-savings", "ach-slots", "ach-upgrader", "ach-zonk", "ach-poker", "ach-clan", "ach-leader", "ach-raid", "ach-nishtyak", "ach-shop", "ach-bj", "ach-spit", "ach-trainer", "ach-winner", "ach-wall", "ach-craft1", "ach-craft2", "ach-craft3", "ach-stashbox", "ach-parts", "ach-razor"].map((n) => [n, n])),
 };
 
 export function Icon({ name, size = 28, className }: { name: IconName; size?: number; className?: string }) {

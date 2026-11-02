@@ -245,7 +245,12 @@ export const SKIN_TONES = [
   { base: "#5e3a24", shade: "#432717" },
 ] as const;
 
-export interface Look { hair: string; hairColor: number; eyes: number; skin: number; /** inked tattoos (content/tattoos.ts) */ tattoos?: string[] }
+export interface Look { hair: string; hairColor: number; eyes: number; skin: number; /** inked tattoos (content/tattoos.ts) */ tattoos?: string[]; /** the beard level 0–3 (a level a day unshaven; server-made) */ beard?: number }
+/** the beard: a level a day since the last shave, at most BEARD_MAX */
+export const BEARD_MAX = 3;
+export const DAY_MS = 86_400_000;
+export const unshavenDays = (shavedAt: number, now: number) => Math.max(0, Math.floor((now - shavedAt) / DAY_MS));
+export const beardLevel = (shavedAt: number, now: number) => Math.min(BEARD_MAX, unshavenDays(shavedAt, now));
 export const DEFAULT_LOOK: Look = { hair: "bald", hairColor: 0, eyes: 0, skin: 1, tattoos: [] };
 
 export function normalizeLook(v: unknown): Look {

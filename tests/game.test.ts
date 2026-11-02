@@ -829,6 +829,18 @@ describe("selling, nickname, slot machine 777", () => {
   });
 });
 
+describe("the beard", () => {
+  it("grows a level a day (3 at most); a shave takes it off, counts the shaves and the longest run", async () => {
+    const p = await newPlayer(db);
+    await db.query("UPDATE players SET shaved_at=$2 WHERE id=$1", [p, new Date(T0)]);
+    await expect(act(db, p, "shave", {}, T0 + 3600_000)).rejects.toMatchObject({ code: "no_beard" });
+    const r = await act(db, p, "shave", {}, T0 + 5 * 86_400_000 + 1000);
+    expect(r.result).toMatchObject({ days: 5, shaves: 1 });
+    const [row] = await db.query<{ beard_best: number }>("SELECT beard_best FROM players WHERE id=$1", [p]);
+    expect(Number(row.beard_best)).toBe(5);
+  });
+});
+
 describe("«Ящик ништяков»", () => {
   it("one box for every 5 achievement points; the points stay", async () => {
     const p = await newPlayer(db);

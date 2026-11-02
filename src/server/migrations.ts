@@ -1218,4 +1218,11 @@ ALTER TABLE players ADD COLUMN IF NOT EXISTS dealer_bonus_until TIMESTAMPTZ;`,
     id: "v2-076-case-thing-miss",
     sql: `ALTER TABLE players ADD COLUMN IF NOT EXISTS case_thing_miss INT NOT NULL DEFAULT 0;`,
   },
+  {
+    // the beard: it grows a level a day since the last shave (3 at most); how many shaves, the longest unshaven run
+    id: "v2-077-beard",
+    sql: `ALTER TABLE players ADD COLUMN IF NOT EXISTS shaved_at TIMESTAMPTZ NOT NULL DEFAULT now();
+ALTER TABLE players ADD COLUMN IF NOT EXISTS shaves INT NOT NULL DEFAULT 0;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS beard_best INT NOT NULL DEFAULT 0;`,
+  },
 ];

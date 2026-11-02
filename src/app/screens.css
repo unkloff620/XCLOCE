@@ -4895,3 +4895,4 @@ body { background-attachment: fixed; }
 .boss-soon { display: flex; flex-direction: column; gap: 6px; padding: 28px 16px; }
 .ach-last { white-space: normal; line-height: 1.25; }
 .ach-last b { color: inherit; }
+.sty-side-tabs .sty-shave.idle { opacity: 0.45; }

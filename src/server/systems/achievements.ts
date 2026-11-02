@@ -7,6 +7,7 @@ import { slotLevel } from "../../content/slots.ts";
 import { pokerLevel } from "../../content/games.ts";
 import { countersOf } from "./counters.ts";
 import { CRAFT_BOXES, craftBonusOf } from "../../content/craft.ts";
+import { unshavenDays } from "../../content/home.ts";
 import { talentsForDamage } from "../../content/talents.ts";
 import { TATTOO_SETS, tattooSetOf } from "../../content/tattoos.ts";
 
@@ -140,8 +141,12 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
   const craftStash: (string | null)[] = Array(CRAFT_BOXES).fill(null);
   for (const r of await q.query<{ slot: number; item_id: string }>("SELECT slot, item_id FROM player_craft_box WHERE player_id=$1", [pid])) if (r.slot >= 0 && r.slot < CRAFT_BOXES) craftStash[r.slot] = r.item_id;
   const craftPower = craftBonusOf(craftStash).power;
+  // the beard: shaves, and the longest unshaven run (the current one counts too)
+  const [bd] = await q.query<{ shaves: number; beard_best: number; shaved_at: Date }>("SELECT shaves, beard_best, shaved_at FROM players WHERE id=$1", [pid]);
+  const unshaven = Math.max(Number(bd?.beard_best ?? 0), bd?.shaved_at ? unshavenDays(new Date(bd.shaved_at).getTime(), Date.now()) : 0);
+  const shaves = Number(bd?.shaves ?? 0);
   return {
-    craftPower,
+    craftPower, unshaven, shaves,
     ...third,
     ...second,
     ...stash,

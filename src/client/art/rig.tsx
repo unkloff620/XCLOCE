@@ -12,6 +12,7 @@ import { ART_VER, usedUrl } from "../preload.ts";
 import type { PointerEvent as ReactPointerEvent, ReactNode } from "react";
 import { createContext, useContext, useEffect, useId, useMemo, useRef } from "react";
 import { RIG } from "./rig-data.ts";
+import { BEARD_FIT } from "./beard-data.ts";
 import { HAIR_CUT_HATS, HAIR_FIT, HATS_ON_HAIR, SKIN_ORIGINAL, WEAR_FIT } from "./rig-look.ts";
 import { HELD_FIT } from "./held-data.ts";
 import { TATTOO_FIT } from "./tattoo-data.ts";
@@ -339,6 +340,14 @@ function Mouth() {
   );
 }
 
+/** the beard: a level a day unshaven (look.beard 1–3), over the face and the jaw, under the face things */
+function Beard() {
+  const { beard } = useContext(LookCtx);
+  const f = beard ? BEARD_FIT[beard] : null;
+  if (!f) return null;
+  return <image href={`/assets/hero/beard-${beard}.webp?v=${ART_VER.heroPart}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" pointerEvents="none" />;
+}
+
 /** where the diamond teeth glint (rig coordinates over the mouth) and when (s) */
 const GLINTS: [number, number, number][] = [[485, 253, 0], [503, 256, 1.3], [520, 252, 2.6], [495, 266, 3.7], [515, 267, 5.1]];
 
@@ -496,6 +505,7 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
           <Bone p="head" className="rig-head">
             <Face />
             <Mouth />
+            <Beard />
             <Wear slot="FACE" />
             <Wear slot="HEAD" hat="under" />
             <Hair />

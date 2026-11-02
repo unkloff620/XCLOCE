@@ -9,7 +9,7 @@ import { ASSET_FILES } from "./asset-manifest.ts";
 import { ROOM_BACKDROP, ROOM_BG } from "../content/home-scene.ts";
 
 /** cache-busting versions of redrawn art (bump when the picture changes) */
-export const ART_VER = { heroPart: 10, hair: 8, wear: 17, items: 20, pepe: 2, tattoo: 11, monitor: 2, chair: 5 } as const;
+export const ART_VER = { heroPart: 11, hair: 8, wear: 18, items: 21, pepe: 2, tattoo: 11, monitor: 2, chair: 5 } as const;
 
 /** the URL a screen really requests for a file from the manifest */
 export function usedUrl(path: string): string {

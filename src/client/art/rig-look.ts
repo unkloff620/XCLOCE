@@ -190,10 +190,10 @@ export const WEAR_FIT = {
   },
   "monocle-whale": {
     "slot": "FACE",
-    "x": 433.0,
-    "y": 162.0,
-    "w": 156,
-    "h": 107
+    "x": 429.8,
+    "y": 154.9,
+    "w": 160.0,
+    "h": 113.0
   },
   "bruise-liq": {
     "slot": "FACE",

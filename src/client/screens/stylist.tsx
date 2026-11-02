@@ -7,6 +7,7 @@ import { ItemArt } from "../art/items.tsx";
 import { ITEMS, weaponById, type Slot } from "../../content/items.ts";
 import { HAIR_COLORS, HAIR_STYLES, type Look } from "../../content/home.ts";
 import { haptic } from "../telegram.ts";
+import { sfx } from "../sound.ts";
 import { HeadArt, type RigEdit } from "../art/rig.tsx";
 import { ART_VER } from "../preload.ts";
 import { TATTOO_SETS, TATTOO_ZONE_NAME, tattooSource, oneTattooPerZone, tattooZone } from "../../content/tattoos.ts";
@@ -244,6 +245,10 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
         <button type="button" className={mode === "body" && !inkTab ? "on" : ""} onClick={() => setMode("body")} aria-label="Изменить внешность" title="Изменить внешность"><img src="/assets/ui/tab-look.webp" alt="" draggable={false} /></button>
         <button type="button" className={inkTab ? "on" : ""} onClick={openInk} aria-label="Набить наколки" title="Набить наколки"><img src="/assets/ui/drop-tattoo.webp" alt="" draggable={false} /></button>
         <button type="button" className={mode === "items" && !inkTab ? "on" : ""} onClick={() => setMode("items")} aria-label="Сменить одежду" title="Сменить одежду"><img src="/assets/ui/slot-shirt.webp" alt="" draggable={false} /></button>
+        {/* «Побриться»: the beard (a level a day unshaven) goes; greyed while there is nothing to shave */}
+        <button type="button" className={`sty-shave ${(state?.look.body.beard ?? 0) > 0 ? "" : "idle"}`} disabled={!!busy || (state?.look.body.beard ?? 0) < 1}
+          onClick={async () => { const r = await act<{ days: number }>("shave", {}, (x) => `Побрился — небрит был ${x.days} дн.`); if (r) { haptic.ok(); sfx("tap"); } }}
+          aria-label="Побриться" title={(state?.look.body.beard ?? 0) > 0 ? "Побриться" : "Пока нечего брить — щетина растёт сутки"}><img src="/assets/ui/razor.webp" alt="" draggable={false} /></button>
       </div>
       {/* cancel and save: over the panel, on the sides of the hero's feet */}
       <button type="button" className="sty-big x" onClick={onClose} aria-label="Отмена" title="Отмена"><img src="/assets/ui/btn-cancel.webp" alt="" draggable={false} /></button>
