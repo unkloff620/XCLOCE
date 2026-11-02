@@ -5067,3 +5067,8 @@ body { background-attachment: fixed; }
 @keyframes lvl-write { to { clip-path: inset(-20% -10% -40% -10%); } }
 .lvlup .btn { animation-delay: 1.2s; }
 @media (prefers-reduced-motion: reduce) { .lvl-paper, .lvl-w1, .lvl-w2, .lvl-w3, .lvl-w4, .lvl-w5 { animation: none; clip-path: none; } .lvl-under path, .lvl-ring path { animation: none; stroke-dashoffset: 0; } }
+/* the case loot: no tile behind the things, just the picture and a thin small «×N» above it */
+.acx-item .chip { background: none; border: 0; box-shadow: none; padding: 0.3cqw 0.6cqw; min-width: 0; }
+.acx-item .chip .num { font-family: var(--font-body), system-ui; font-weight: 500; font-size: 2.6cqw; letter-spacing: 0.02em; color: #f3ead8; text-shadow: 0 1px 2px #000; }
+.acx-loot.many .acx-item .chip .num { font-size: 2.3cqw; }
+.acx-loot.lots .acx-item .chip .num { font-size: 2cqw; }

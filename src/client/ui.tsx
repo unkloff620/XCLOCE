@@ -95,7 +95,7 @@ export function Coin({ c, v, size = 18, bold = true }: { c: Currency; v: number;
 }
 
 /** Reward preview (from the catalog) or what was actually granted. */
-export function RewardChips({ r, size = 18 }: { r: Reward | Granted | null | undefined; size?: number }) {
+export function RewardChips({ r, size = 18, times = false }: { r: Reward | Granted | null | undefined; size?: number; times?: boolean }) {
   if (!r) return null;
   // nothing for 0 (a one-of-a-kind thing already owned); the craft parts — one chip «×N» with the parts pile, the names in the tooltip
   const all = (r.items ?? []).filter((it) => it.qty > 0);
@@ -105,15 +105,19 @@ export function RewardChips({ r, size = 18 }: { r: Reward | Granted | null | und
   const partsTip = parts.map((it) => `${itemById(it.id)?.name ?? it.id} ×${it.qty}`).join(", ");
   return (
     <span className="row rchips" style={{ flexWrap: "wrap", gap: "4px 10px" }}>
-      {Object.entries(r.currencies ?? {}).map(([c, v]) => (v ? <span key={c} className="chip"><Coin c={c as Currency} v={v} size={size} /></span> : null))}
-      {!!r.xp && <span className="chip violet" title="Авторитет"><Icon name="xp" size={size} />+{r.xp}</span>}
-      {!!r.energy && <span className="chip gold" title="Энергия"><Icon name="energy" size={size} />+{r.energy}</span>}
-      {!!r.achPoints && <span className="chip ach-pts" title="Очки достижений"><Icon name="sun" size={size} />+{r.achPoints}</span>}
+      {Object.entries(r.currencies ?? {}).map(([c, v]) => (v ? (
+        // `times`: a picture with «×N» (the case loot) instead of the coin and its amount
+        times ? <span key={c} className="chip" title={CURRENCY_DEFS[c as Currency]?.name}><Icon name={c} size={size} /><span className="num">×{money(c as Currency, v)}</span></span>
+          : <span key={c} className="chip"><Coin c={c as Currency} v={v} size={size} /></span>
+      ) : null))}
+      {!!r.xp && <span className="chip violet" title="Авторитет"><Icon name="xp" size={size} />{times ? <span className="num">×{r.xp}</span> : `+${r.xp}`}</span>}
+      {!!r.energy && <span className="chip gold" title="Энергия"><Icon name="energy" size={size} />{times ? <span className="num">×{r.energy}</span> : `+${r.energy}`}</span>}
+      {!!r.achPoints && <span className="chip ach-pts" title="Очки достижений"><Icon name="sun" size={size} />{times ? <span className="num">×{r.achPoints}</span> : `+${r.achPoints}`}</span>}
       {items.map((it) => (
         // a picture and how many — no name (it is in the tooltip)
         <span key={it.id} className="chip rc-item" title={itemById(it.id)?.name ?? it.id} aria-label={`${itemById(it.id)?.name ?? it.id} ×${it.qty}`}>
           <ItemArt id={it.id} size={size + 2} />
-          <span className="num">+{it.qty}</span>
+          <span className="num">{times ? "×" : "+"}{it.qty}</span>
         </span>
       ))}
       {partsN > 0 && (
