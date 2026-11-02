@@ -157,7 +157,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
                       );
                     })}
                   </div>
-                  <RewardChips r={st.reward} size={13} />
+                  <RewardChips times={false} r={st.reward} size={13} />
                 </div>
                 </div>
               );
@@ -202,7 +202,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
                   <i /><span className="num">{full(r?.progress ?? 0)} / {full(a.target)}</span>
                 </span>
               )}
-              <RewardChips r={a.reward} size={15} />
+              <RewardChips times={false} r={a.reward} size={15} />
               {got ? <span className="ach-got-label">✓ получено</span> : due ? (
                 <span className="ach-claim-hint">Нажми на медаль — забери награду</span>
               ) : null}

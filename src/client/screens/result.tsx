@@ -123,7 +123,7 @@ export function ResultWindow() {
         <div className="muted small">Последний удар: <b style={{ color: "var(--ink)" }}>{view.killerIsMe ? "ты" : view.killer}</b></div>
 
         <div className="result-gains">
-          <GainLine r={got ?? preview} size={16} />
+          <GainLine r={got ?? preview} size={30} />
           {/* the boss medal of this mode: his face on a coin, how many of that kind now */}
           {got?.medal && (
             <span className="gain medal-chip" title={`Взрыв «${MEDAL_NAMES[got.medal.tier]}» — ${got.medal.n} из ${MEDAL_SET}`}>

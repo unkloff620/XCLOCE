@@ -170,7 +170,7 @@ export function RatingScreen() {
               <Link key={r.id} href={`/profile?id=${r.id}`} className={`rt-row ${r.id === me ? "me" : ""} ${i < 3 ? `top${i + 1}` : ""}`}>
                 <Place n={i + 1} />
                 <Avatar name={r.name} photo={r.photo} size={36} />
-                <span className="rt-name"><b className="ellipsis">{r.name}</b>{i < 3 && <RewardChips r={data.games!.prizes[i]} size={12} />}</span>
+                <span className="rt-name"><b className="ellipsis">{r.name}</b>{i < 3 && <RewardChips r={data.games!.prizes[i]} size={12} times={false} />}</span>
                 <b className="rt-val num">{boardValue(board, r.value)}</b>
               </Link>
             )) : <Empty>На этой неделе в {def.name.toLowerCase()} ещё никто не играл. Стань первым!</Empty>}

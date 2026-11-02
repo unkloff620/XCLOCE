@@ -149,7 +149,7 @@ export function YardScreen() {
           <Pigeons area={{ x0: 8, x1: 92, y0: 3, y1: 9 }} n={2} />
           {gains.map((g) => (
             <span key={g.key} className="pg-gain yard-gain num" style={{ left: `${g.x}%`, top: `${g.y}%` }} onAnimationEnd={() => setGains((l) => l.filter((x) => x.key !== g.key))}>
-              <GainLine r={g.r} size={20} />
+              <GainLine r={g.r} size={20} times={false} />
             </span>
           ))}
           {data?.items.filter((it) => !gone.has(it.id)).map((it) => {

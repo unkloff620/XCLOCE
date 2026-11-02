@@ -217,7 +217,7 @@ function ClaimedModal({ got, onClose }: { got: ClaimResult; onClose: () => void 
   return (
     <Modal title="Локация пройдена!" onClose={onClose}>
       <div className="col" style={{ alignItems: "center", textAlign: "center" }}>
-        <RewardChips r={got.reward} />
+        <RewardChips r={got.reward} size={30} />
         {got.stash && (
           <div className="col" style={{ alignItems: "center", gap: 4 }}>
             <span className="stash-cell big stash-pop" style={{ width: 120 }}>{/* eslint-disable-next-line @next/next/no-img-element */}<img src={`/assets/items/${got.stash}.webp`} alt="" /></span>

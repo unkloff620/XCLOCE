@@ -5014,6 +5014,13 @@ body { background-attachment: fixed; }
 @keyframes sk-forearm { 0%, 100% { transform: rotate(-3.5deg); } 50% { transform: rotate(3.5deg); } }
 /* the case lies on the counter over the shopkeeper's arm */
 .sk-spot.sk-box { z-index: 4; }
+/* rewards with «×N» at the picture's top right corner (ui.tsx RewardChips / GainLine, `times`): no plate, the count
+   thin and small, a little over the picture; a long number goes on to the right and pushes the next reward */
+.rc-times { align-items: flex-end; }
+.rc-times > .chip, .rc-times > .gain { display: inline-flex; align-items: flex-start; padding: 8px 0 0; margin: 0; gap: 0; background: none !important; border: 0 !important; box-shadow: none !important; line-height: 1; }
+.rc-times > :is(.chip, .gain) > :is(svg, img) { flex: none; }
+.rc-times .rc-n { position: relative; margin: -8px 0 0 -8px; font: 500 11px/1 var(--font-body), system-ui; letter-spacing: 0.02em; white-space: nowrap; color: #fff8e8 !important;
+  text-shadow: 0 0 1px #000, 0 1px 1.5px rgba(0, 0, 0, 0.9) !important; pointer-events: none; }
 /* the case loot as tiles, like the upgrader's tray: a bigger picture, how many — above it */
 .acx-loot { gap: 1.4cqw; align-items: center; }
 .acx-item .rchips { display: contents; }
@@ -5079,3 +5086,4 @@ body { background-attachment: fixed; }
 .acx-loot { padding-top: 1.4cqw; }
 .acx-item .chip .num { left: auto; right: -1.6cqw; }
 .acx-item .chip { margin: 1.6cqw 1.6cqw 0 0; }
+.acx-item .chip .rc-n { margin: 0; }

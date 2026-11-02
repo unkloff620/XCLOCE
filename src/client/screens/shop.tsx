@@ -348,7 +348,7 @@ function AchBoxWindow({ onClose }: { onClose: () => void }) {
         <LootFrame kind="thing" items={thingGot} delay={thingDelay} open={phase === "open"} />
         <div className={`acx-loot${parts.length > 30 ? " lots" : parts.length > 15 ? " many" : ""}`}>
           {phase === "open" && parts.map((p, i) => (
-            <span key={i} className="acx-item" style={{ animationDelay: `${450 + i * step}ms` }}><RewardChips r={p} size={40} times /></span>
+            <span key={i} className="acx-item" style={{ animationDelay: `${450 + i * step}ms` }}><RewardChips r={p} size={40} /></span>
           ))}
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}

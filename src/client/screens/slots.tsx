@@ -200,7 +200,7 @@ export function SlotMachine() {
                 <b className="display sl-prize-title">{prize.kind === "jackpot" ? "КУШ!" : "Выигрыш!"}</b>
                 <span className="sl-pay-sym big">{prize.reels.map((x, k) => <Sym key={k} s={x} />)}</span>
                 <span className="small">{prize.title}</span>
-                {prize.reward && <RewardChips r={prize.reward} size={22} />}
+                {prize.reward && <RewardChips r={prize.reward} size={28} />}
               </>
             ) : <b className="display sl-prize-title">Новый уровень!</b>}
             <i className="sl-xp num">+{prize.xp} опыта автомата</i>
