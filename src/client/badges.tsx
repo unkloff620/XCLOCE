@@ -197,9 +197,11 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
               })()}
               <b className="tier-name" style={{ color: TIER_COLORS[a.tier] }}>{TIER_NAMES[a.tier]}</b>
               <span className="small">{a.hint}</span>
-              <span className="ach-bar" style={{ width: "100%", ["--p" as string]: `${Math.round(((r?.progress ?? 0) / a.target) * 100)}%`, ["--c" as string]: TIER_COLORS[a.tier] }}>
-                <i /><span className="num">{full(r?.progress ?? 0)} / {full(a.target)}</span>
-              </span>
+              {self && (
+                <span className="ach-bar" style={{ width: "100%", ["--p" as string]: `${Math.round(((r?.progress ?? 0) / a.target) * 100)}%`, ["--c" as string]: TIER_COLORS[a.tier] }}>
+                  <i /><span className="num">{full(r?.progress ?? 0)} / {full(a.target)}</span>
+                </span>
+              )}
               <RewardChips r={a.reward} size={15} />
               {got ? <span className="ach-got-label">✓ получено</span> : due ? (
                 <span className="ach-claim-hint">Нажми на медаль — забери награду</span>
@@ -211,7 +213,8 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
     </>
   );
   // a list: its live positions (a boss not in the game yet has none), what is collected, the next to reach
-  const lines = (c: AchCategory) => c.lines.filter((x) => byId.has(x.id));
+  // someone else's achievements: only what he has reached — no progress, nothing still to do
+  const lines = (c: AchCategory) => c.lines.filter((x) => byId.has(x.id) && (self || isOn(x.id) || !!byId.get(x.id)?.done));
   const sectionDue = (sec: AchSection) => self && rows.some((r) => r.done && !r.claimed && categoryOf(r.id)?.section === sec);
   return (
     <div className="panel ach-panel">
@@ -247,6 +250,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
           const show = due ?? next ?? ls[ls.length - 1];
           const r = byId.get(show.id);
           const pct = !next ? 100 : Math.min(100, Math.round(((r?.progress ?? 0) / show.target) * 100));
+          const all = c.lines.filter((x) => byId.has(x.id)).length;
           return (
             <div key={c.id} role="button" tabIndex={0} className={`ach-row ${due ? "ready" : ""}`} onClick={() => setOpen(c.id)} onKeyDown={(e) => e.key === "Enter" && setOpen(c.id)}>
               <ClaimMedal id={due?.id} onClaim={claim} busy={busy === "achievement_claim"}>
@@ -257,12 +261,16 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
               <span className="ach-main">
                 <span className="row" style={{ justifyContent: "space-between", gap: 6 }}>
                   <b className="ach-name">{c.name}</b>
-                  <span className="tiny muted num">{got}/{ls.length}</span>
+                  <span className="tiny muted num">{self ? `${got}/${ls.length}` : `${ls.length}/${all}`}</span>
                 </span>
-                <span className="tiny ach-hint ellipsis">{due ? `Готово: ${due.name}` : next ? next.hint : "всё собрано"}</span>
-                <span className="ach-bar sm" style={{ ["--p" as string]: `${pct}%`, ["--c" as string]: TIER_COLORS[show.tier] }}>
-                  <i /><span className="num">{!next ? "всё собрано" : `${short(r?.progress ?? 0)} / ${short(show.target)}`}</span>
-                </span>
+                {self ? (
+                  <>
+                    <span className="tiny ach-hint ellipsis">{due ? `Готово: ${due.name}` : next ? next.hint : "всё собрано"}</span>
+                    <span className="ach-bar sm" style={{ ["--p" as string]: `${pct}%`, ["--c" as string]: TIER_COLORS[show.tier] }}>
+                      <i /><span className="num">{!next ? "всё собрано" : `${short(r?.progress ?? 0)} / ${short(show.target)}`}</span>
+                    </span>
+                  </>
+                ) : <span className="tiny ach-hint ellipsis">{ls.length >= all ? "всё собрано" : `Высшее: ${ls[ls.length - 1].name}`}</span>}
               </span>
             </div>
           );
@@ -270,7 +278,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
       </div>}
       {/* a list window: every position — its picture with the number, what to do, the progress, the points */}
       {cat && (
-        <Modal title={cat.name} onClose={() => setOpen(null)} head={<div className="tiny muted center">Нажми на светящуюся картинку — заберёшь очки достижений</div>}>
+        <Modal title={cat.name} onClose={() => setOpen(null)} head={self ? <div className="tiny muted center">Нажми на светящуюся картинку — заберёшь очки достижений</div> : undefined}>
           <div className="col" style={{ gap: 6 }}>
             {[...lines(cat)].sort((x, y) => Number(isDue(y.id)) - Number(isDue(x.id)) || Number(isOn(x.id)) - Number(isOn(y.id))).map((a) => {
               const r = byId.get(a.id);
@@ -284,9 +292,11 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
                   <span className="grow col" style={{ gap: 2, minWidth: 0 }}>
                     <b className="ach-line-name ellipsis">{a.name}</b>
                     <span className="tiny ach-hint">{a.hint}</span>
-                    <span className="ach-bar sm" style={{ ["--p" as string]: `${on || r?.done ? 100 : pct}%`, ["--c" as string]: TIER_COLORS[a.tier] }}>
-                      <i /><span className="num">{full(Math.min(a.target, r?.progress ?? 0))} / {full(a.target)}</span>
-                    </span>
+                    {self && (
+                      <span className="ach-bar sm" style={{ ["--p" as string]: `${on || r?.done ? 100 : pct}%`, ["--c" as string]: TIER_COLORS[a.tier] }}>
+                        <i /><span className="num">{full(Math.min(a.target, r?.progress ?? 0))} / {full(a.target)}</span>
+                      </span>
+                    )}
                   </span>
                   <span className="ach-line-pts num">{on ? "✓" : <>+{a.points}<Icon name="sun" size={16} /></>}</span>
                 </div>
