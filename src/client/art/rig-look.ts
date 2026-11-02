@@ -183,10 +183,10 @@ export const WEAR_FIT = {
   },
   "mask-anon": {
     "slot": "FACE",
-    "x": 402.0,
-    "y": 85.0,
-    "w": 202,
-    "h": 180
+    "x": 408.5,
+    "y": 124.0,
+    "w": 188,
+    "h": 208
   },
   "monocle-whale": {
     "slot": "FACE",

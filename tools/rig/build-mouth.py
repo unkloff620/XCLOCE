@@ -96,6 +96,22 @@ for name, vu, vd in VARIANTS:
     im = Image.fromarray((np.clip(np.nan_to_num(sheet), 0, 1) * 255 + 0.5).astype(np.uint8), "RGBA")
     path = os.path.join(OUT, f"{name}.webp") if tone == SKIN_ORIGINAL else os.path.join(OUT, f"skin-{tone}", f"{name}.webp")
     im.save(path, "WEBP", quality=90, method=6)
+# the diamond teeth's shine mask: white where the teeth show in each frame, black elsewhere (the rig sweeps a glare through it)
+def solid(l, v):
+    o = l.copy(); o[:, :, :3] = v; return o
+du, dd = load("teeth-up-diamond"), load("teeth-down-diamond")
+mask = np.zeros((oh * FRAMES, ow, 4), np.float32)
+for i in range(FRAMES):
+    t = i / (FRAMES - 1); d = DROP * t
+    mapy = (yy - d * vy * hx).astype(np.float32)
+    warped = cv2.remap(solid(lips, 0), xx, mapy, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+    low = cv2.warpAffine(solid(dd, 1), np.float32([[1, 0, 0], [0, 1, d]]), (W, H), flags=cv2.INTER_LINEAR)
+    c = np.zeros((H, W, 4), np.float32); c[:, :, 3] = 1
+    for layer in (solid(inside, 0), solid(du, 1), low, warped): c = over(c, layer)
+    f = c[y0:y1, x0:x1]
+    mask[i * oh:(i + 1) * oh] = cv2.resize(f, (ow, oh), interpolation=cv2.INTER_AREA)
+mask[:, :, 3] = 1
+Image.fromarray((np.clip(mask, 0, 1) * 255 + 0.5).astype(np.uint8), "RGBA").convert("L").save(os.path.join(OUT, "jaw-diamond-mask.webp"), "WEBP", quality=90)
 data = {"x": round(RIG_X0 + (x0 - REF_X0) / K, 2), "y": round(RIG_Y0 + (y0 - REF_Y0) / K, 2), "w": round(fw, 2), "h": round(fh, 2), "frames": FRAMES,
         # the middle of the mouth (rig): the thing in the mouth is flipped around it to the other corner
         "mouth": [round(float(RIG_X0 + (cx - REF_X0) / K), 1), round(float(RIG_Y0 + (split - REF_Y0) / K), 1)]}

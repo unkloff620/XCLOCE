@@ -10,7 +10,7 @@
  */
 import { ART_VER, usedUrl } from "../preload.ts";
 import type { PointerEvent as ReactPointerEvent, ReactNode } from "react";
-import { createContext, useContext, useEffect, useMemo, useRef } from "react";
+import { createContext, useContext, useEffect, useId, useMemo, useRef } from "react";
 import { RIG } from "./rig-data.ts";
 import { HAIR_CUT_HATS, HAIR_FIT, HATS_ON_HAIR, SKIN_ORIGINAL, WEAR_FIT } from "./rig-look.ts";
 import { HELD_FIT } from "./held-data.ts";
@@ -284,6 +284,7 @@ function Mouth() {
   const id = wornIn(worn, "MOUTH") ?? (worn.MOUTH && worn.MOUTH in MOUTH_HELD ? worn.MOUTH : null);
   // «Зубы»: the diamond grills — the same jaw with diamond teeth; with nothing in the mouth he grins with them
   const diamond = worn.TEETH === "grillz-diamond";
+  const uid = useId().replace(/:/g, "");
   const { skin } = useContext(LookCtx);
   if (!id && !diamond) return null;
   const href = `${skin !== SKIN_ORIGINAL ? `/assets/hero/skin-${skin}` : "/assets/hero"}/${diamond ? "jaw-diamond" : "jaw"}.webp?v=${ART_VER.heroPart}`;
@@ -293,6 +294,25 @@ function Mouth() {
       <svg x={JAW.x} y={JAW.y} width={JAW.w} height={JAW.h} viewBox={`0 0 ${JAW.w} ${JAW.h}`} overflow="hidden" pointerEvents="none">
         <image className="rig-jaw-f" href={href} x={0} y={0} width={JAW.w} height={JAW.h * JAW.frames} preserveAspectRatio="none"
           style={{ ["--fh" as string]: `${JAW.h}px` }} />
+        {/* the diamonds: a glare sweeps across the teeth (like on the medals), only where the teeth show */}
+        {diamond && (
+          <>
+            <defs>
+              <mask id={`${uid}-m`} maskUnits="userSpaceOnUse" x={0} y={0} width={JAW.w} height={JAW.h}>
+                <image className="rig-jaw-f" href={`/assets/hero/jaw-diamond-mask.webp?v=${ART_VER.heroPart}`} x={0} y={0} width={JAW.w} height={JAW.h * JAW.frames} preserveAspectRatio="none"
+                  style={{ ["--fh" as string]: `${JAW.h}px` }} />
+              </mask>
+              <linearGradient id={`${uid}-g`} x1="0" y1="0" x2="1" y2="0.35">
+                <stop offset="0" stopColor="#fff" stopOpacity="0" />
+                <stop offset="0.42" stopColor="#fff" stopOpacity="0.7" /><stop offset="0.5" stopColor="#fff" stopOpacity="1" /><stop offset="0.58" stopColor="#fff" stopOpacity="0.7" />
+                <stop offset="1" stopColor="#fff" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <g mask={`url(#${uid}-m)`}>
+              <rect className="rig-teeth-shine" x={0} y={0} width={JAW.w * 0.42} height={JAW.h} fill={`url(#${uid}-g)`} />
+            </g>
+          </>
+        )}
       </svg>
       {/* the diamonds glint: little stars flash on the teeth now and then */}
       {diamond && (

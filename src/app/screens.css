@@ -4823,3 +4823,8 @@ body { background-attachment: fixed; }
 @keyframes rig-glint { 0%, 100% { opacity: 0; scale: 0.2; } 4% { opacity: 1; scale: 1.15; rotate: 20deg; } 9% { opacity: 0; scale: 0.3; rotate: 45deg; } }
 .rig.still .rig-glint path { animation: none; }
 @media (prefers-reduced-motion: reduce) { .rig-glint path { animation: none; } }
+/* the diamond teeth: a glare runs across them now and then, like over the medals */
+.rig-teeth-shine { transform-box: view-box; animation: rig-teeth-shine 3.2s ease-in-out infinite; transform: translateX(-40px); }
+@keyframes rig-teeth-shine { 0%, 40% { transform: translateX(-50px); } 80%, 100% { transform: translateX(125px); } }
+.rig.still .rig-teeth-shine { animation: none; transform: translateX(40px); }
+@media (prefers-reduced-motion: reduce) { .rig-teeth-shine { animation: none; } }
