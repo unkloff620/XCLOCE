@@ -4893,3 +4893,5 @@ body { background-attachment: fixed; }
 .door-plate .gain svg { width: 3.8cqw; height: 3.8cqw; }
 .boss-tabs { margin: 0 auto 12px; }
 .boss-soon { display: flex; flex-direction: column; gap: 6px; padding: 28px 16px; }
+.ach-last { white-space: normal; line-height: 1.25; }
+.ach-last b { color: inherit; }

@@ -270,7 +270,10 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
                       <i /><span className="num">{!next ? "всё собрано" : `${short(r?.progress ?? 0)} / ${short(show.target)}`}</span>
                     </span>
                   </>
-                ) : <span className="tiny ach-hint ellipsis">{ls.length >= all ? "всё собрано" : `Высшее: ${ls[ls.length - 1].name}`}</span>}
+                ) : (
+                  // the last one reached: its name and what it took (Апокалипсис · Нанеси боссу 2 500 000 урона за один бой)
+                  <span className="tiny ach-hint ach-last"><b>{ls[ls.length - 1].name}</b> · {ls[ls.length - 1].hint}</span>
+                )}
               </span>
             </div>
           );
