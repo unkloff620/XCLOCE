@@ -4982,3 +4982,9 @@ body { background-attachment: fixed; }
 .offer.locked .offer-art img { filter: grayscale(1) brightness(0.55); }
 .shop-grid .offer.locked { justify-content: flex-start; }
 .shop-grid .offer .offer-from { margin-top: auto; padding: 2px 0 3px; font-weight: 700; color: var(--muted); }
+
+/* «Попросить нычки и детали»: what is asked for, from both tabs, in one row on top — a tap takes it off */
+.swap-picked { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 5px; }
+.swap-tile.sm { padding: 3px; border-radius: 10px; }
+.swap-x { position: absolute; right: -5px; top: -6px; width: 17px; height: 17px; border-radius: 50%; display: grid; place-items: center; background: #3a2410; color: #ffe6a8; font-size: 13px; font-weight: 900; line-height: 1; border: 1.5px solid var(--gold); }
+.swap-tab-n { display: inline-grid; place-items: center; min-width: 17px; height: 17px; margin-left: 5px; padding: 0 4px; border-radius: 9px; background: var(--gold); color: #2a1808; font-size: 11px; vertical-align: 1px; }

@@ -30,6 +30,7 @@ export function StashWishWindow({ onClose }: { onClose: () => void }) {
   const [tab, setTab] = useState<"stash" | "parts">("stash");
   if (!state) return null;
   const toggle = (id: string) => setPick((p) => (p.includes(id) ? p.filter((x) => x !== id) : p.length >= WISH_MAX ? p : [...p, id]));
+  const pickedStash = pick.filter((id) => !isPart(id)).length;
   const changed = JSON.stringify([...pick].sort()) !== JSON.stringify([...(state.stashWish ?? [])].sort());
   const save = async () => {
     if ((await act("stash_wish", { items: pick }, pick.length ? "Просьба сохранена — её видно в твоём профиле" : "Просьба снята")) !== null) onClose();
@@ -45,10 +46,22 @@ export function StashWishWindow({ onClose }: { onClose: () => void }) {
           <b className="small">Выбрано: <span className="num">{pick.length}/{WISH_MAX}</span></b>
           {pick.length > 0 && <button className="btn dark sm" onClick={() => setPick([])}>Сбросить</button>}
         </div>
+        {/* everything asked for, from both tabs: a tap takes it off (the limit is shared by the stashes and the parts) */}
+        {pick.length > 0 && (
+          <div className="swap-picked">
+            {pick.map((id) => (
+              <button key={id} type="button" className="swap-tile on sm" onClick={() => toggle(id)} title={`${itemById(id)?.name ?? id} — убрать`} aria-label={`Убрать: ${itemById(id)?.name ?? id}`}>
+                <ItemArt id={id} size={30} />
+                <span className="swap-x" aria-hidden="true">×</span>
+              </button>
+            ))}
+          </div>
+        )}
         <div className="cf-tabs">
-          <button type="button" className={`cf-tab ${tab === "stash" ? "on" : ""}`} onClick={() => setTab("stash")}>Нычки</button>
-          <button type="button" className={`cf-tab ${tab === "parts" ? "on" : ""}`} onClick={() => setTab("parts")}>Детали</button>
+          <button type="button" className={`cf-tab ${tab === "stash" ? "on" : ""}`} onClick={() => setTab("stash")}>Нычки{pickedStash > 0 && <b className="swap-tab-n num">{pickedStash}</b>}</button>
+          <button type="button" className={`cf-tab ${tab === "parts" ? "on" : ""}`} onClick={() => setTab("parts")}>Детали{pick.length - pickedStash > 0 && <b className="swap-tab-n num">{pick.length - pickedStash}</b>}</button>
         </div>
+        {pick.length >= WISH_MAX && <p className="tiny muted" style={{ margin: 0 }}>Выбрано {WISH_MAX} из {WISH_MAX} — чтобы попросить другое, убери что-то из выбранного выше.</p>}
         <div className="col swap-sets">
           {tab === "parts" && RARITY_GROUPS.map((g) => (
             <div key={g.r} className="swap-set">
