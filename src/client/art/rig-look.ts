@@ -120,10 +120,10 @@ export const WEAR_FIT = {
   },
   "pants-komandate": {
     "slot": "PANTS",
-    "x": 73.0,
-    "y": 670.0,
-    "w": 861,
-    "h": 522
+    "x": 69.0,
+    "y": 676.0,
+    "w": 862,
+    "h": 484
   },
   "sneakers-komandate": {
     "slot": "SHOES",
