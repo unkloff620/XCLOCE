@@ -574,6 +574,8 @@ export function ProfileScreen() {
           <span className="pr-plate-t">
             <b className="ellipsis">{p.name}</b>
             <small><span className="pr-lvl num">Уровень {p.level}</span>{p.clan && <span className="pr-tag">[{p.clan.tag}]</span>}</small>
+            {/* his authority */}
+            <small className="pr-auth"><Icon name="xp" size={13} /><b className="num">{full(p.xp)}</b> авторитета</small>
           </span>
         </div>
         {/* the buttons on the wall */}

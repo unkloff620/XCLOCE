@@ -1868,6 +1868,7 @@ export const ASSET_FILES: string[] = [
  "/assets/ui/pr-dossier.webp",
  "/assets/ui/pr-fight.webp",
  "/assets/ui/pr-spit.webp",
+ "/assets/ui/rep-crown.webp",
  "/assets/ui/rub.webp",
  "/assets/ui/shop.webp",
  "/assets/ui/slot-accessory.webp",

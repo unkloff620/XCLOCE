@@ -1093,7 +1093,7 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
           ))}
           <button className="ug-go" style={{ left: ux(162), top: uy(1108), width: ux(700), height: uy(122) }}
             disabled={!cur || spinning || busy === "upgrade" || !canSpin} onClick={go}>
-            <span>{spinning ? "Крутим…" : spinFree ? `Прокачать · бесплатно ${spins!.freeLeft}/${spins!.freePerDay}` : <>Прокачать · <Coin c={spinPrice.currency} v={spinPrice.amount} size={14} /></>}</span>
+            <span>{spinning ? "Крутим…" : spinFree ? `Бесплатно ${spins!.freeLeft}/${spins!.freePerDay}` : <Coin c={spinPrice.currency} v={spinPrice.amount} size={16} />}</span>
           </button>
 
           {/* the tray: what to put in */}

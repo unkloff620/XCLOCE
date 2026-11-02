@@ -304,13 +304,20 @@ function Scheme({ d, qty, busy, onMake, onOpen, onClose, onSplit }: { d: CraftDe
                     <span className="cf-ing-pic"><ItemArt id={r.id} size={46} /></span>
                     <b className="num">{full(h)}/{r.qty}</b>
                     {sub?.recipe && <button type="button" className="cf-ing-btn" onClick={() => onOpen(sub)}>Собрать</button>}
-                    {sub && sub.level === 0 && h < r.qty && (() => {
-                      // one at a time, or (the «Всё сразу» switch) all the missing ones
-                      const n = bulk ? r.qty - h : 1;
-                      const cost = n * (PART_USD[sub.rarity] ?? PART_USD.common);
-                      return <button type="button" className="bb-buy cf-buy" disabled={busy || usd < cost} onClick={() => void buy(r.id, n)} title={`Купить ${n} шт. за ${cost} $`}>купить{n > 1 ? ` ×${n}` : ""} · {cost}$</button>;
-                    })()}
+
                     <i className="cf-ing-name">{sub?.name}</i>
+                    {/* «купить» under the name; the row keeps its place when there is nothing to buy (the pictures don't jump) */}
+                    {sub && sub.level === 0 && (() => {
+                      const need = h < r.qty;
+                      const n = need ? (bulk ? r.qty - h : 1) : 1;
+                      const cost = n * (PART_USD[sub.rarity] ?? PART_USD.common);
+                      return (
+                        <span className={`cf-buy-row ${need ? "" : "idle"}`}>
+                          <button type="button" className="bb-buy cf-buy" disabled={!need || busy || usd < cost} onClick={() => void buy(r.id, n)} title={`Купить ${n} шт. за ${cost} $`}>купить{n > 1 ? ` ×${n}` : ""}</button>
+                          <i className="cf-buy-cost num">{cost}$</i>
+                        </span>
+                      );
+                    })()}
                   </span>
                 );
               })}

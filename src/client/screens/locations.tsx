@@ -70,7 +70,7 @@ function BizPanel({ b, locId, onDone }: { b: LocBiz; locId: string; onDone: () =
     }
   };
   const lines = [
-    { line: "rep" as const, name: "авторитет", icon: <Icon name="map" size={16} />, lv: b.lvRep, cost: b.costRep, per: b.perRep, step: b.stepRep },
+    { line: "rep" as const, name: "авторитет", icon: <Icon name="rep" size={16} />, lv: b.lvRep, cost: b.costRep, per: b.perRep, step: b.stepRep },
     { line: "rub" as const, name: "рубли", icon: <b className="biz-rub">₽</b>, lv: b.lvRub, cost: b.costRub, per: b.perRub, step: b.stepRub },
   ];
   if (!b.open) {
@@ -110,7 +110,7 @@ function BizPanel({ b, locId, onDone }: { b: LocBiz; locId: string; onDone: () =
 
 /** авторитет локации: a chip of its own (it piles up in the location only) */
 function LocRepChip({ v, size = 14 }: { v: number; size?: number }) {
-  return <span className="chip loc-rep" title="Авторитет локации"><Icon name="map" size={size} />+{full(v)}</span>;
+  return <span className="chip loc-rep" title="Авторитет локации"><Icon name="rep" size={size} />+{full(v)}</span>;
 }
 
 /** the leaders of a location over its picture: by day and by night, a small box each */
@@ -121,7 +121,7 @@ function LocLeaderBadge({ l, mode, me }: { l: LocLeader; mode: LocMode; me: bool
       <span className="loc-lead-txt">
         <small className="loc-lead-k">👑 {mode === "night" ? "Ночные" : "Дневные"}</small>
         <b className="ellipsis">{me ? "Ты" : l.name}</b>
-        <small className="num"><Icon name="map" size={11} />{full(l.rep)}</small>
+        <small className="num"><Icon name="rep" size={11} />{full(l.rep)}</small>
       </span>
     </span>
   );
@@ -161,10 +161,16 @@ function BizTotal({ rows, onDone }: { rows: LocRow[]; onDone: () => void }) {
   };
   return (
     <div className={`biz-take biz-total ${ready ? "ready" : ""}`}>
-      <span className="biz-h">💼 Бизнес · {live.length} {live.length === 1 ? "локация" : live.length < 5 ? "локации" : "локаций"}<small className="num">+{full(perRub / 24)} ₽ · <Icon name="map" size={12} />+{full(perRep / 24)} в час</small></span>
+      <span className="biz-h">💼 Бизнес · {live.length} {live.length === 1 ? "локация" : live.length < 5 ? "локации" : "локаций"}
+        <span className="biz-hour">
+          <small>Каждый час:</small>
+          <b className="num">+{full(perRub / 24)} <Icon name="RUB" size={14} /></b>
+          <b className="num">+{full(perRep / 24)} <Icon name="rep" size={14} /></b>
+        </span>
+      </span>
       <span className="biz-take-sum num">
-        {rep > 0 && <span><Icon name="map" size={15} />+{full(rep)}</span>}
-        {rub > 0 && <span>+{full(rub)} ₽</span>}
+        {rep > 0 && <span><Icon name="rep" size={15} />+{full(rep)}</span>}
+        {rub > 0 && <span>+{full(rub)} <Icon name="RUB" size={18} /></span>}
         {!ready && <span className="muted">пока пусто</span>}
       </span>
       <button className="btn gold block" disabled={!ready || busy === "business_claim"} onClick={take}>Забрать прибыль{ready ? ` за ${hours < 24 ? `${hours} ч` : `${Math.floor(hours / 24)} дн. ${hours % 24} ч`}` : ""}</button>
@@ -284,7 +290,7 @@ export function LocationsScreen() {
                 {!locked && (
                   <div className="row" style={{ justifyContent: "space-between", gap: 8 }}>
                     <Blocks done={r?.done ?? 0} total={l.tasks.length} />
-                    <span className="loc-myrep" title="Твой авторитет в этой локации"><Icon name="map" size={14} /><b className="num">{full(r?.rep ?? 0)}</b></span>
+                    <span className="loc-myrep" title="Твой авторитет в этой локации"><Icon name="rep" size={14} /><b className="num">{full(r?.rep ?? 0)}</b></span>
                   </div>
                 )}
               </div>
@@ -447,7 +453,7 @@ export function LocationScreen({ id }: { id: string }) {
         <b className="display">{loc.name}</b>
         {tab !== "biz" && <Blocks done={r?.done ?? 0} total={list.length} />}
         <span className="lp-rep">
-          <span title={night ? "Твой ночной авторитет в этой локации" : "Твой авторитет в этой локации"}><Icon name="map" size={14} />{night ? "ночной авторитет" : "твой авторитет"} <b className="num">{full(r?.rep ?? 0)}</b></span>
+          <span title={night ? "Твой ночной авторитет в этой локации" : "Твой авторитет в этой локации"}><Icon name="rep" size={14} />{night ? "ночной авторитет" : "твой авторитет"} <b className="num">{full(r?.rep ?? 0)}</b></span>
           {r?.leader && (
             <span className="lp-rep-lead" title="Больше всех авторитета здесь">
               👑 <Avatar name={r.leader.name} photo={r.leader.photo} size={18} /><i className="ellipsis">{r.leader.id === state?.player.id ? "ты" : r.leader.name}</i> <b className="num">{full(r.leader.rep)}</b>
@@ -505,7 +511,7 @@ export function LocationScreen({ id }: { id: string }) {
                   {x.done ? <i className="lp-tag ok">✓</i>
                     : x.open ? <i className="lp-tag num">{x.steps}/{x.t.steps}<em><Icon name="energy" size={11} />{x.t.energy}</em></i>
                     : <i className="lp-tag lock"><Icon name="lock" size={14} /></i>}
-                  {pops.filter((q) => q.i === x.i).map((q) => <b key={q.key} className="lp-pop num">{q.text}{q.rep > 0 && <em><Icon name="map" size={14} />+{q.rep}</em>}</b>)}
+                  {pops.filter((q) => q.i === x.i).map((q) => <b key={q.key} className="lp-pop num">{q.text}{q.rep > 0 && <em><Icon name="rep" size={14} />+{q.rep}</em>}</b>)}
                   {stashes.filter((q) => q.i === x.i).map((q) => <StashPop key={q.key} id={q.id} />)}
                 </button>
               );

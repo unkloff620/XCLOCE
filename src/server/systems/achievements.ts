@@ -6,6 +6,7 @@ import { bossById, bossOpen } from "../../content/bosses.ts";
 import { slotLevel } from "../../content/slots.ts";
 import { pokerLevel } from "../../content/games.ts";
 import { countersOf } from "./counters.ts";
+import { CRAFT_BOXES, craftBonusOf } from "../../content/craft.ts";
 import { talentsForDamage } from "../../content/talents.ts";
 import { TATTOO_SETS, tattooSetOf } from "../../content/tattoos.ts";
 
@@ -135,7 +136,12 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
     craft1: m("craft1"), craft2: m("craft2"), craft3: m("craft3"), craftBoxes: m("craft_boxes"),
     craftLeft: m("craft_left") >= 6 ? 1 : 0, craftRight: m("craft_right") >= 6 ? 1 : 0, parts: m("parts"),
   };
+  // «Крутизна» of what lies in the craft stash now
+  const craftStash: (string | null)[] = Array(CRAFT_BOXES).fill(null);
+  for (const r of await q.query<{ slot: number; item_id: string }>("SELECT slot, item_id FROM player_craft_box WHERE player_id=$1", [pid])) if (r.slot >= 0 && r.slot < CRAFT_BOXES) craftStash[r.slot] = r.item_id;
+  const craftPower = craftBonusOf(craftStash).power;
   return {
+    craftPower,
     ...third,
     ...second,
     ...stash,

@@ -7,7 +7,7 @@ import { isMusicOn, isMuted, onSoundChange, setMuted, setMusic, sfx } from "./so
 import { liveEnergy, tasksReady, useGame, useNow } from "./store.tsx";
 import { Icon, NAV_GLOW, NavIcon } from "./art/icons.tsx";
 import { Avatar, Modal } from "./ui.tsx";
-import { clock, full, moneyShort } from "./format.ts";
+import { clock, full, money, moneyShort } from "./format.ts";
 import { CURRENCIES, CURRENCY_DEFS, type Currency } from "../content/currencies.ts";
 import { TIPS, resourceLine } from "../content/loading.ts";
 import { isOutdated, loginWidget, reloadFresh } from "./api.ts";
@@ -122,7 +122,7 @@ function HudMoney({ wallet }: { wallet: Partial<Record<Currency, number>> }) {
         <div key={i} className="coin-slot">
           <button type="button" className={`coin-chip ${box === i ? "open" : ""}`} title={`${CURRENCY_DEFS[c].name} — выбрать валюту`} aria-expanded={box === i} onClick={() => setBox(box === i ? null : (i as 0 | 1))}>
             <Icon name={c} size={20} />
-            <b className="num">{moneyShort(c, wallet[c] ?? 0)}</b>
+            <b className="num">{money(c, wallet[c] ?? 0)}</b>
             <span className="coin-caret" aria-hidden="true">▾</span>
           </button>
           {/* the drop-down list right under the box */}
@@ -130,7 +130,7 @@ function HudMoney({ wallet }: { wallet: Partial<Record<Currency, number>> }) {
             <div className="coin-drop" role="listbox">
               {CURRENCIES.map((x) => (
                 <button key={x} type="button" role="option" aria-selected={c === x} className={`coin-opt ${c === x ? "on" : ""}`} onClick={() => pick(x)}>
-                  <Icon name={x} size={18} /><b className="num">{moneyShort(x, wallet[x] ?? 0)}</b><small>{CURRENCY_DEFS[x].name}</small>
+                  <Icon name={x} size={18} /><b className="num">{money(x, wallet[x] ?? 0)}</b><small>{CURRENCY_DEFS[x].name}</small>
                 </button>
               ))}
               <Link href="/exchange" className="coin-opt ex" onClick={() => setBox(null)}>Обменник ›</Link>

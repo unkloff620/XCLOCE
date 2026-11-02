@@ -4860,3 +4860,34 @@ body { background-attachment: fixed; }
 .coin-opt.on { background: rgba(255, 204, 51, 0.16); box-shadow: inset 0 0 0 1px rgba(255, 204, 51, 0.6); }
 .coin-opt:active { background: rgba(255, 255, 255, 0.08); }
 .coin-opt.ex { justify-content: center; color: var(--muted); font-size: 12px; border-top: 1px solid rgba(255, 255, 255, 0.08); border-radius: 0; margin-top: 2px; }
+/* the business card: a proper wooden plate; «Каждый час» — the roubles and the authority in a column on the right */
+.biz-total { background: linear-gradient(180deg, rgba(255, 236, 200, 0.06), rgba(0, 0, 0, 0.25)), var(--tx-dark), #3a2718; border: 2.5px solid #150d07; box-shadow: inset 0 1px 0 rgba(255, 230, 190, 0.18), 0 4px 0 #150d07, 0 8px 16px rgba(0, 0, 0, 0.45); }
+.biz-total.ready { border-color: #7ff0c4; box-shadow: inset 0 1px 0 rgba(255, 230, 190, 0.18), 0 4px 0 #150d07, 0 0 20px rgba(127, 240, 196, 0.45); }
+.biz-total .biz-h { align-items: flex-start; }
+.biz-hour { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; line-height: 1.1; }
+.biz-hour small { font-size: 10.5px; color: #cdb497; font-weight: 800; }
+.biz-hour b { display: inline-flex; align-items: center; gap: 3px; font-size: 13px; color: #9ff0cf; white-space: nowrap; }
+.biz-total .biz-take-sum .muted { color: #cdb497; }
+/* the HUD money in full figures: a little smaller so 3 900 000 fits */
+.hud-money .coin-chip b { font-size: 13px; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+/* the craft scheme: the pictures in frames drawn by pencil — a little crooked, the line doubled here and there */
+.cf-ing-pic { border: 0; border-radius: 0; box-shadow: none; position: relative;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cg fill='none' stroke='%232e2620' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 5.5 C30 3.5 62 6 96.5 3.8 C95 30 97.5 62 95.6 96 C66 97.8 33 95.2 3.6 96.8 C5.2 66 2.6 34 4 5.5' stroke-width='2.6' opacity='.85'/%3E%3Cpath d='M6 3 C40 5.2 70 2.4 94 6 M97.4 8 C96 40 98.2 70 94 94 M92 98 C60 95.4 30 98.6 7 94.6 M2.4 92 C4.6 60 1.8 30 6.4 8' stroke-width='1.2' opacity='.45'/%3E%3C/g%3E%3C/svg%3E") center / 100% 100% no-repeat,
+    rgba(255, 250, 235, 0.35); }
+.cf-scheme-col .cf-ing:nth-child(2n) .cf-ing-pic { transform: rotate(-1.2deg); }
+.cf-scheme-col .cf-ing:nth-child(2n + 1) .cf-ing-pic { transform: rotate(0.9deg); }
+.cf-ing-pic.big { transform: rotate(-0.6deg); }
+/* «купить ×5» and the grey price beside it, under the name; the row stays when idle so nothing jumps */
+.cf-buy-row { display: inline-flex; align-items: center; gap: 4px; min-height: 18px; }
+.cf-buy-row.idle { visibility: hidden; }
+.cf-buy-row .cf-buy { margin: 0; min-width: 0; padding: 2px 6px; font-size: 2.6cqw; }
+.cf-buy-cost { font-style: normal; font-size: 2.7cqw; font-weight: 800; color: #7a6a58; }
+.pr-auth { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: #cdb497; }
+.pr-auth b { color: #ffd25a; }
+/* the upgrader: the button shows the price only, the text sits higher; the dial's % thinner so it fits */
+.ug-go > span { padding-bottom: 2.2cqw; font-size: 3.4cqw; }
+.ug-center b { font-size: 7.4cqw; font-weight: 600; letter-spacing: -0.02em; }
+/* the door's reward plate: wider and a touch smaller, so bigger rewards (+7 260 ₽, +12 000) stay on the door in two rows */
+.door-plate { left: 27%; width: 48%; column-gap: 2cqw; }
+.door-plate .gain { font-size: 2.8cqw; }
+.door-plate .gain svg { width: 3.8cqw; height: 3.8cqw; }

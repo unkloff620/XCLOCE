@@ -14,7 +14,7 @@ export function Svg({ size = 32, children, vb = "0 0 64 64", className }: { size
 
 export type IconName = string;
 /** Icons drawn by the artist: icon name → public/assets/ui/<file>.webp (built by tools/items/build-items.py). */
-const RASTER_ICONS: Partial<Record<string, string>> = { shirt: "wardrobe", gift: "bonus", bolt: "tech", shop: "shop", exchange: "exchange", map: "tasks",
+const RASTER_ICONS: Partial<Record<string, string>> = { shirt: "wardrobe", gift: "bonus", bolt: "tech", shop: "shop", exchange: "exchange", map: "tasks", rep: "rep-crown",
   energy: "energy-can", key: "key", RUB: "coin-rub", USD: "coin-usd", SOL: "coin-sol", BTC: "coin-btc", coins: "coins", xp: "authority",
   lock: "lock", clock: "clock", sun: "sun", trophy: "trophy", swords: "swords", chest: "chest", mail: "mail", news: "news", fire: "fire", talent: "talent",
   // achievement pictures (tools/ui/cut-achievements.py)
