@@ -97,7 +97,12 @@ export function Coin({ c, v, size = 18, bold = true }: { c: Currency; v: number;
 /** Reward preview (from the catalog) or what was actually granted. */
 export function RewardChips({ r, size = 18 }: { r: Reward | Granted | null | undefined; size?: number }) {
   if (!r) return null;
-  const items = r.items ?? [];
+  // nothing for 0 (a one-of-a-kind thing already owned); the craft parts — one chip «×N» with the parts pile, the names in the tooltip
+  const all = (r.items ?? []).filter((it) => it.qty > 0);
+  const parts = all.filter((it) => it.id.startsWith("part-"));
+  const items = all.filter((it) => !it.id.startsWith("part-"));
+  const partsN = parts.reduce((t, it) => t + it.qty, 0);
+  const partsTip = parts.map((it) => `${itemById(it.id)?.name ?? it.id} ×${it.qty}`).join(", ");
   return (
     <span className="row rchips" style={{ flexWrap: "wrap", gap: "4px 10px" }}>
       {Object.entries(r.currencies ?? {}).map(([c, v]) => (v ? <span key={c} className="chip"><Coin c={c as Currency} v={v} size={size} /></span> : null))}
@@ -111,6 +116,12 @@ export function RewardChips({ r, size = 18 }: { r: Reward | Granted | null | und
           <span className="num">+{it.qty}</span>
         </span>
       ))}
+      {partsN > 0 && (
+        <span className="chip rc-item rc-parts" title={`Детали: ${partsTip}`} aria-label={`Детали ×${partsN}`}>
+          <Icon name="parts" size={size + 2} />
+          <span className="num">×{partsN}</span>
+        </span>
+      )}
     </span>
   );
 }

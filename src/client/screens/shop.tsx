@@ -213,7 +213,10 @@ function lootParts(r: Granted): Granted[] {
   for (const [c, v] of Object.entries(r.currencies ?? {})) if (v) out.push(one({ currencies: { [c]: v } }));
   if (r.xp) out.push(one({ xp: r.xp }));
   if (r.energy) out.push(one({ energy: r.energy }));
-  for (const it of r.items ?? []) out.push(one({ items: [it] }));
+  for (const it of r.items ?? []) if (!it.id.startsWith("part-")) out.push(one({ items: [it] }));
+  // the craft parts: one tile «×N» (RewardChips sums them)
+  const parts = (r.items ?? []).filter((it) => it.id.startsWith("part-"));
+  if (parts.length) out.push(one({ items: parts }));
   return out;
 }
 const LOOT_STEP = 380; // ms between the things coming out of the case
