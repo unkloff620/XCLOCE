@@ -368,6 +368,39 @@ function Img({ p }: { p: PartId }) {
   return <image href={src} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" />;
 }
 
+/** the belly's tattoos are drawn over the arms, so over the trousers too: worn trousers mask them out, the edge blurred so the
+ *  ink fades smoothly under the waistband instead of lying on the cloth */
+function UnderPants({ children }: { children: ReactNode }) {
+  const pants = wornIn(useContext(WornCtx), "PANTS");
+  const { tattoos } = useContext(LookCtx);
+  const uid = useId().replace(/:/g, "");
+  if (!pants || !WEARS[pants] || !(tattoos ?? []).some((id) => TATTOO_FIT[id]?.part === "upper")) return <>{children}</>;
+  const f = WEARS[pants];
+  return (
+    <>
+      <defs>
+        <filter id={`${uid}-pk`} x="-10%" y="-10%" width="120%" height="120%">
+          <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" />
+          <feGaussianBlur stdDeviation="7" />
+        </filter>
+        <filter id={`${uid}-pw`} x="-5%" y="-5%" width="110%" height="110%">
+          <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0" />
+        </filter>
+        <mask id={`${uid}-pm`} maskUnits="userSpaceOnUse" x={-200} y={-200} width={1400} height={1800}>
+          <rect x={-200} y={-200} width={1400} height={1800} fill="#fff" />
+          <image href={`/assets/hero/wear/${pants}.webp?v=${ART_VER.wear}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" filter={`url(#${uid}-pk)`} />
+          {/* the arms lie over the trousers (a hand on the knee): their ink stays */}
+          <g filter={`url(#${uid}-pw)`}>
+            <Bone p="armUL"><Bone p="foreL" /></Bone>
+            <Bone p="armUR"><Bone p="foreR" /></Bone>
+          </g>
+        </mask>
+      </defs>
+      <g mask={`url(#${uid}-pm)`}>{children}</g>
+    </>
+  );
+}
+
 /** the inked tattoos of one hero part, right over its skin (under the clothes); the ink sinks into any skin tone */
 function Ink({ part }: { part: string }) {
   const { tattoos } = useContext(LookCtx);
@@ -501,8 +534,8 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
             </Bone>
           </Bone>
         </Ol>
-        {/* the tattoos of the chest, the belly and the arms: over the arms, under the shirt */}
-        <Ink part="upper" />
+        {/* the tattoos of the chest, the belly and the arms: over the arms, under the shirt — and under the trousers (they fade out under the waistband) */}
+        <UnderPants><Ink part="upper" /></UnderPants>
         {/* a chain lies over a T-shirt, but under an open jacket (on the bare chest between its flaps) */}
         {OPEN_JACKETS.includes(worn?.SHIRT ?? "") ? (
           <>
