@@ -5081,3 +5081,86 @@ body { background-attachment: fixed; }
 @keyframes kz-shake { from { transform: rotate(-3deg); } to { transform: rotate(3deg); } }
 .rig-knyaz.dazed .kz-root { animation: vk-fear-sway 5s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .rig-knyaz .kz-up, .rig-knyaz .kz-root, .rig-knyaz .kz-head, .rig-knyaz .kz-arm-r, .rig-knyaz .kz-low-r, .rig-knyaz .kz-arm-l, .rig-knyaz .kz-hand-l, .rig-knyaz .kz-jaw { animation: none; } }
+
+/* rewards with «×N» at the picture's top right corner (ui.tsx RewardChips / GainLine, `times`): no plate, the count
+   thin and small, a little over the picture; a long number goes on to the right and pushes the next reward */
+.rc-times { align-items: flex-end; }
+.rc-times > .chip, .rc-times > .gain { display: inline-flex; align-items: flex-start; padding: 8px 0 0; margin: 0; gap: 0; background: none !important; border: 0 !important; box-shadow: none !important; line-height: 1; }
+.rc-times > :is(.chip, .gain) > :is(svg, img) { flex: none; }
+.rc-times .rc-n { position: relative; margin: -8px 0 0 -8px; font: 500 11px/1 var(--font-body), system-ui; letter-spacing: 0.02em; white-space: nowrap; color: #fff8e8 !important;
+  text-shadow: 0 0 1px #000, 0 1px 1.5px rgba(0, 0, 0, 0.9) !important; pointer-events: none; }
+/* the case loot as tiles, like the upgrader's tray: a bigger picture, how many — above it */
+.acx-loot { gap: 1.4cqw; align-items: center; }
+.acx-item .rchips { display: contents; }
+.acx-item .chip { display: flex; flex-direction: column-reverse; align-items: center; justify-content: center; gap: 0.3cqw; min-width: 11cqw; padding: 0.7cqw 0.9cqw 0.8cqw;
+  border-radius: 1.6cqw; border: 0.3cqw solid rgba(255, 190, 120, 0.3); background: rgba(20, 10, 6, 0.72); font-size: 3.2cqw; line-height: 1; box-sizing: border-box; }
+.acx-item .chip > .row { flex-direction: column-reverse; align-items: center; gap: 0.3cqw !important; }
+.acx-item svg, .acx-item img { width: 9cqw !important; height: 9cqw !important; }
+.acx-loot.many { gap: 1cqw; }
+.acx-loot.many .acx-item .chip { min-width: 9cqw; font-size: 2.7cqw; }
+.acx-loot.many .acx-item svg, .acx-loot.many .acx-item img { width: 7cqw !important; height: 7cqw !important; }
+.acx-loot.lots { gap: 0.8cqw; }
+.acx-loot.lots .acx-item .chip { min-width: 7.5cqw; padding: 0.5cqw 0.6cqw; font-size: 2.3cqw; }
+.acx-loot.lots .acx-item svg, .acx-loot.lots .acx-item img { width: 5.4cqw !important; height: 5.4cqw !important; }
+/* the HUD numbers running to the new value (client/count-up.tsx): a gain glows gold while it runs */
+.count-up { font-variant-numeric: tabular-nums; transition: color 0.25s, text-shadow 0.25s; }
+.count-up.up { color: #ffe066; text-shadow: 0 0 6px rgba(255, 210, 60, 0.85); }
+.count-up.down { color: #ffb1a3; }
+/* ---- the new level as a newspaper sheet, written in by pen (client/levelup.tsx) ---- */
+.lvlup-body { gap: 14px; padding: 0 16px; }
+.lvl-paper { position: relative; width: min(calc(100 * var(--vw, 1vw) - 32px), 420px, calc((100 * var(--vh, 1vh) - 150px) * 900 / 1260)); aspect-ratio: 900 / 1260; container-type: inline-size;
+  transform: rotate(-2deg); filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.6)); animation: lvl-paper 0.7s cubic-bezier(0.2, 1.3, 0.4, 1) 0.1s both; }
+@keyframes lvl-paper { from { opacity: 0; transform: translateY(-60%) rotate(-24deg) scale(0.6); } }
+.lvl-paper-bg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+/* the box of the notice: x 6–94%, y 22.7–71.1% of the sheet */
+.lvl-note { position: absolute; left: 7.5%; right: 7.5%; top: 24.4%; height: 45%; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly;
+  color: #1c2c78; text-align: center; pointer-events: none; }
+.lvl-hand { font-family: var(--font-hand), "Comic Sans MS", cursive; font-weight: 700; line-height: 1; letter-spacing: 0.01em; text-shadow: 0 0 0.3px currentColor; }
+.lvl-w1 { font-size: 9cqw; transform: rotate(-4deg); align-self: flex-start; margin-left: 4cqw; }
+.lvl-title { position: relative; font-size: 12.5cqw; transform: rotate(-1.5deg); }
+.lvl-under { position: absolute; left: -2%; bottom: -1.6cqw; width: 104%; height: 2.6cqw; overflow: visible; }
+.lvl-under path, .lvl-ring path { fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 400; stroke-dashoffset: 400; vector-effect: non-scaling-stroke; }
+.lvl-under path { animation: lvl-stroke 0.5s ease-out 1.25s forwards; }
+.lvl-row { display: flex; align-items: center; justify-content: center; gap: 3cqw; }
+.lvl-sketch { width: 25cqw; height: 25cqw; transform: rotate(-6deg); }
+.lvl-level { display: flex; flex-direction: column; align-items: center; color: #b4232a; transform: rotate(3deg); }
+.lvl-num { position: relative; font-size: 21cqw; padding: 0 3cqw; }
+.lvl-ring { position: absolute; left: -6%; top: -12%; width: 112%; height: 122%; overflow: visible; }
+.lvl-ring path { stroke-width: 3.5; animation: lvl-stroke 0.6s ease-out 1.9s forwards; }
+.lvl-word { font-style: normal; font-size: 7.5cqw; margin-top: 0.6cqw; }
+.lvl-jump { position: absolute; right: 1cqw; top: 0; font-size: 6.5cqw; color: #b4232a; transform: rotate(9deg); }
+.lvl-stat { font-size: 7cqw; font-weight: 600; }
+.lvl-stat b { font-weight: 700; color: #b4232a; }
+@keyframes lvl-stroke { to { stroke-dashoffset: 0; } }
+/* the pen writes line by line: each one is uncovered left to right */
+.lvl-w1, .lvl-w2, .lvl-w3, .lvl-w4, .lvl-w5 { clip-path: inset(-20% 100% -40% -10%); animation: lvl-write 0.55s steps(14, end) both; }
+.lvl-w1 { animation-delay: 0.6s; }
+.lvl-w2 { animation-delay: 0.95s; }
+.lvl-w3 { animation-delay: 1.45s; animation-timing-function: ease-out; }
+.lvl-w4 { animation-delay: 2.2s; }
+.lvl-w5 { animation-delay: 2.6s; }
+@keyframes lvl-write { to { clip-path: inset(-20% -10% -40% -10%); } }
+.lvlup .btn { animation-delay: 1.2s; }
+@media (prefers-reduced-motion: reduce) { .lvl-paper, .lvl-w1, .lvl-w2, .lvl-w3, .lvl-w4, .lvl-w5 { animation: none; clip-path: none; } .lvl-under path, .lvl-ring path { animation: none; stroke-dashoffset: 0; } }
+/* the case loot: no tile behind the things, just the picture and a thin small «×N» above it */
+.acx-item .chip { background: none; border: 0; box-shadow: none; padding: 0.3cqw 0.6cqw; min-width: 0; }
+.acx-item .chip .num { font-family: var(--font-body), system-ui; font-weight: 500; font-size: 2.6cqw; letter-spacing: 0.02em; color: #f3ead8; text-shadow: 0 1px 2px #000; }
+.acx-loot.many .acx-item .chip .num { font-size: 2.3cqw; }
+.acx-loot.lots .acx-item .chip .num { font-size: 2cqw; }
+/* the «×N» in the top right corner of the picture, a little over it */
+.acx-item .chip { position: relative; display: block; padding: 0; margin: 1.6cqw 2.4cqw 0 0; }
+.acx-item .chip .num { position: absolute; left: 62%; top: -1.2cqw; white-space: nowrap; line-height: 1; pointer-events: none;
+  text-shadow: 0 0 2px #000, 0 1px 2px #000, 0 0 4px rgba(0, 0, 0, 0.8); }
+.acx-loot { padding-top: 1.4cqw; }
+.acx-item .chip .num { left: auto; right: -1.6cqw; }
+.acx-item .chip { margin: 1.6cqw 1.6cqw 0 0; }
+.acx-item .chip .rc-n { margin: 0; }
+/* the case window's ✕ always on top of the case (its lid turns in 3D, and iPhone may hit-test it above the button) */
+.acx-x { z-index: 5; transform: translateZ(200px); touch-action: manipulation; }
+/* blackjack: the dealer's cards bigger and lower (clear of the buttons on top); my money at the bottom, on the rail */
+.bj2 .bjt-dealer { top: 19%; gap: 1cqw; }
+.bj2 .bj-cards.dealer .bjc { --cw: 13.5cqw; }
+.bj2 .bjt-dlbl { font-size: 3.2cqw; }
+.bj2 .bj2-wallet { position: absolute; z-index: 5; left: 50% !important; transform: translateX(-50%); margin: 0; color: #ffe9b0; background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 210, 63, 0.35); padding: 4px 14px; font-size: 16px; text-shadow: 0 1px 2px #000; }
+.bj2 .bj2-wallet b { color: #ffe9b0; }

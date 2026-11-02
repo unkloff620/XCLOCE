@@ -147,7 +147,7 @@ function audio(): AudioContext | null {
     musicBus.connect(lp).connect(ctx.destination);
     loadSamples(ctx);
   }
-  if (ctx.state === "suspended") void ctx.resume().catch(() => undefined);
+  if (ctx.state !== "running" && ctx.state !== "closed") void ctx.resume().catch(() => undefined);
   return ctx;
 }
 
@@ -162,12 +162,73 @@ export function unlockAudioOnGesture() {
   };
   window.addEventListener("pointerdown", go, { passive: true });
   window.addEventListener("keydown", go);
-  // the game in the background (Telegram minimised, another tab): silence
+  // the game in the background (Telegram minimised, another tab): silence; back — the sound comes back
   document.addEventListener("visibilitychange", () => {
     if (!ctx) return;
     if (document.visibilityState === "hidden") void ctx.suspend().catch(() => undefined);
-    else void ctx.resume().catch(() => undefined);
+    else wakeAudio();
   });
+  window.addEventListener("pageshow", () => wakeAudio());
+  window.addEventListener("focus", () => wakeAudio());
+  // Telegram (Bot API 8.0+) says when the Mini App is minimised and opened again
+  const w = (window as unknown as { Telegram?: { WebApp?: { onEvent?(e: string, f: () => void): void } } }).Telegram?.WebApp;
+  w?.onEvent?.("activated", () => wakeAudio());
+  w?.onEvent?.("deactivated", () => { if (ctx) void ctx.suspend().catch(() => undefined); });
+}
+
+/**
+ * Back from the background. On iPhone the audio is "interrupted" while Telegram is minimised, and after it the
+ * context may say "running" and still be silent — so it is suspended and resumed again. If it cannot start without a
+ * touch, the next touch wakes it; if even that does not help, the audio is built anew (the loaded sounds are kept).
+ */
+let waking = false;
+function wakeAudio() {
+  const c = ctx;
+  if (!c || waking || (typeof document !== "undefined" && document.visibilityState === "hidden")) return;
+  waking = true;
+  void (async () => {
+    try {
+      if (c.state === "running") await c.suspend();
+      await c.resume();
+    } catch { /* needs a touch */ }
+    waking = false;
+    if (c.state !== "running") armTouchWake();
+    else if (musicOn && !seqTimer) startMusic();
+  })();
+}
+let touchArmed = false;
+function armTouchWake() {
+  if (touchArmed || typeof window === "undefined") return;
+  touchArmed = true;
+  const go = () => {
+    window.removeEventListener("pointerdown", go, true);
+    window.removeEventListener("touchend", go, true);
+    touchArmed = false;
+    const c = ctx;
+    if (!c) return;
+    void c.resume().catch(() => undefined).then(() => {
+      // still dead after a real touch: a fresh context
+      if (c.state !== "running") rebuildAudio();
+      else if (musicOn && !seqTimer) startMusic();
+    });
+  };
+  window.addEventListener("pointerdown", go, true);
+  window.addEventListener("touchend", go, true);
+}
+function rebuildAudio() {
+  const old = ctx;
+  if (seqTimer) clearInterval(seqTimer);
+  seqTimer = null;
+  fileSrc = null;
+  fileTrack = null;
+  ctx = null;
+  master = null;
+  musicBus = null;
+  musicLp = null;
+  samplesLoading = false; // the sounds that had not loaded yet load again into the new context
+  void old?.close().catch(() => undefined);
+  audio();
+  if (musicOn) startMusic();
 }
 
 /* ---------------- recorded sounds ---------------- */
@@ -245,6 +306,7 @@ function loadSamples(a: AudioContext) {
   if (samplesLoading) return;
   samplesLoading = true;
   for (const [id, url] of Object.entries(SAMPLE_URLS) as [SampleId, string][]) {
+    if (buffers[id]) continue;
     loading[id] = fetch(url)
       .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(String(r.status)))))
       .then((d) => decode(a, d))

@@ -518,7 +518,6 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
         <DayTopNote game="bj" refresh={table?.round ?? 0} />
         <div className="bj2-top">
           <BlackjackHelp />
-          <span className="bjt-wallet"><Icon name="USD" size={16} /><b className="num">{money(usd)}</b></span>
           {table && <button className="btn small dark" disabled={!!busy} onClick={() => run("bj_leave")}>Встать</button>}
         </div>
         <div className={`bjt-stage bj2-stage ${sweep ? "sweep" : ""}`}>
@@ -549,6 +548,8 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
               )}
             </>
           )}
+          {/* my money: at the bottom, on the rail under the controls */}
+          <span className="bjt-wallet bj2-wallet" style={at(0, 1600)}><Icon name="USD" size={18} /><b className="num">{money(usd)}</b></span>
           <div className="bjt-panel bj2-panel" style={{ ...at(44, 1272), width: `${((841 - 88) / TW) * 100}%`, height: `${((1575 - 1272) / TH) * 100}%` }}>{panel}</div>
         </div>
       </div>

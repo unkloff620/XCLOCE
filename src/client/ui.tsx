@@ -8,7 +8,7 @@ import { CURRENCY_DEFS, type Currency } from "../content/currencies.ts";
 import type { Reward } from "../content/rewards.ts";
 import type { Granted } from "./api.ts";
 import { tattooSetsOfBoss } from "../content/tattoos.ts";
-import { money, pct } from "./format.ts";
+import { full, money, pct } from "./format.ts";
 
 export function Bar({ value, max, tone = "green", label, height }: { value: number; max: number; tone?: "green" | "red" | "gold" | "violet"; label?: ReactNode; height?: number }) {
   return (
@@ -94,8 +94,14 @@ export function Coin({ c, v, size = 18, bold = true }: { c: Currency; v: number;
   );
 }
 
-/** Reward preview (from the catalog) or what was actually granted. */
-export function RewardChips({ r, size = 18 }: { r: Reward | Granted | null | undefined; size?: number }) {
+/**
+ * Reward preview (from the catalog) or what was actually granted.
+ * `times` (the default): no plate, a picture and a thin small «×N» at its top right corner, a little over it;
+ * `times={false}` — the old line «picture +N».
+ * In the corner mode a picture is never smaller than CORNER_MIN px (smaller than in the case, bigger than a text line).
+ */
+const CORNER_MIN = 22;
+export function RewardChips({ r, size = 18, times = true }: { r: Reward | Granted | null | undefined; size?: number; times?: boolean }) {
   if (!r) return null;
   // nothing for 0 (a one-of-a-kind thing already owned); the craft parts — one chip «×N» with the parts pile, the names in the tooltip
   const all = (r.items ?? []).filter((it) => it.qty > 0);
@@ -103,23 +109,28 @@ export function RewardChips({ r, size = 18 }: { r: Reward | Granted | null | und
   const items = all.filter((it) => !it.id.startsWith("part-"));
   const partsN = parts.reduce((t, it) => t + it.qty, 0);
   const partsTip = parts.map((it) => `${itemById(it.id)?.name ?? it.id} ×${it.qty}`).join(", ");
+  const sz = times ? Math.max(size, CORNER_MIN) : size;
+  const n = (v: string) => <span className="num rc-n">×{v}</span>;
   return (
-    <span className="row rchips" style={{ flexWrap: "wrap", gap: "4px 10px" }}>
-      {Object.entries(r.currencies ?? {}).map(([c, v]) => (v ? <span key={c} className="chip"><Coin c={c as Currency} v={v} size={size} /></span> : null))}
-      {!!r.xp && <span className="chip violet" title="Авторитет"><Icon name="xp" size={size} />+{r.xp}</span>}
-      {!!r.energy && <span className="chip gold" title="Энергия"><Icon name="energy" size={size} />+{r.energy}</span>}
-      {!!r.achPoints && <span className="chip ach-pts" title="Очки достижений"><Icon name="sun" size={size} />+{r.achPoints}</span>}
+    <span className={`row rchips${times ? " rc-times" : ""}`} style={{ flexWrap: "wrap", gap: times ? "6px 8px" : "4px 10px" }}>
+      {Object.entries(r.currencies ?? {}).map(([c, v]) => (v ? (
+        times ? <span key={c} className="chip" title={CURRENCY_DEFS[c as Currency]?.name}><Icon name={c} size={sz} />{n(money(c as Currency, v))}</span>
+          : <span key={c} className="chip"><Coin c={c as Currency} v={v} size={size} /></span>
+      ) : null))}
+      {!!r.xp && <span className="chip violet" title="Авторитет"><Icon name="xp" size={sz} />{times ? n(full(r.xp)) : `+${r.xp}`}</span>}
+      {!!r.energy && <span className="chip gold" title="Энергия"><Icon name="energy" size={sz} />{times ? n(full(r.energy)) : `+${r.energy}`}</span>}
+      {!!r.achPoints && <span className="chip ach-pts" title="Очки достижений"><Icon name="sun" size={sz} />{times ? n(full(r.achPoints)) : `+${r.achPoints}`}</span>}
       {items.map((it) => (
         // a picture and how many — no name (it is in the tooltip)
         <span key={it.id} className="chip rc-item" title={itemById(it.id)?.name ?? it.id} aria-label={`${itemById(it.id)?.name ?? it.id} ×${it.qty}`}>
-          <ItemArt id={it.id} size={size + 2} />
-          <span className="num">+{it.qty}</span>
+          <ItemArt id={it.id} size={sz + 2} />
+          {times ? n(full(it.qty)) : <span className="num">+{it.qty}</span>}
         </span>
       ))}
       {partsN > 0 && (
         <span className="chip rc-item rc-parts" title={`Детали: ${partsTip}`} aria-label={`Детали ×${partsN}`}>
-          <Icon name="parts" size={size + 2} />
-          <span className="num">×{partsN}</span>
+          <Icon name="parts" size={sz + 2} />
+          {times ? n(full(partsN)) : <span className="num">×{partsN}</span>}
         </span>
       )}
     </span>
@@ -167,19 +178,22 @@ export function bossItemsCount(boss: { wear?: { items: string[] } }, state: { un
   return `${have}/${boss.wear.items.length}`;
 }
 
-export function GainLine({ r, size = 26 }: { r: Reward | Granted | null | undefined; size?: number }) {
+/** What was gained or will be: pictures with «×N» at their corner (`times`, the default) or «+N» after them. */
+export function GainLine({ r, size = 26, times = true }: { r: Reward | Granted | null | undefined; size?: number; times?: boolean }) {
   if (!r) return null;
+  const sz = times ? Math.max(size, CORNER_MIN) : size;
+  const n = (v: string) => (times ? <span className="num rc-n">×{v}</span> : <>+{v}</>);
   return (
-    <span className="gain-line">
+    <span className={`gain-line${times ? " rc-times" : ""}`}>
       {(r.items ?? []).map((it) => (
-        <span key={it.id} className="gain" title={itemById(it.id)?.name}><ItemArt id={it.id} size={size} />+{it.qty}</span>
+        <span key={it.id} className="gain" title={itemById(it.id)?.name}><ItemArt id={it.id} size={sz} />{n(full(it.qty))}</span>
       ))}
       {Object.entries(r.currencies ?? {}).map(([c, v]) => (v ? (
-        <span key={c} className="gain" title={CURRENCY_DEFS[c as Currency]?.name ?? c}><Icon name={c} size={size} />+{money(c as Currency, v)}</span>
+        <span key={c} className="gain" title={CURRENCY_DEFS[c as Currency]?.name ?? c}><Icon name={c} size={sz} />{n(money(c as Currency, v))}</span>
       ) : null))}
-      {!!r.energy && <span className="gain" title="Энергия"><Icon name="energy" size={size} />+{r.energy}</span>}
-      {!!r.xp && <span className="gain" title="Авторитет"><Icon name="xp" size={size} />+{r.xp}</span>}
-      {!!r.achPoints && <span className="gain" title="Очки достижений"><Icon name="sun" size={size} />+{r.achPoints}</span>}
+      {!!r.energy && <span className="gain" title="Энергия"><Icon name="energy" size={sz} />{n(full(r.energy))}</span>}
+      {!!r.xp && <span className="gain" title="Авторитет"><Icon name="xp" size={sz} />{n(full(r.xp))}</span>}
+      {!!r.achPoints && <span className="gain" title="Очки достижений"><Icon name="sun" size={sz} />{n(full(r.achPoints))}</span>}
     </span>
   );
 }
