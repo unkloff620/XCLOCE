@@ -11,6 +11,7 @@ import { CASE_ASPECT } from "../art/case-data.ts";
 import type { CSSProperties, ReactNode } from "react";
 import { SHOP_ART } from "../art/shop-data.ts";
 import { ART_VER } from "../preload.ts";
+import { FINGER_FRAMES, FINGERS as FINGER_BOX } from "../art/finger-data.ts";
 
 const L = SHOP_ART.layers;
 const box = (n: string): CSSProperties => {
@@ -30,8 +31,11 @@ function Layer({ n, className = "", style }: { n: string; className?: string; st
   );
 }
 
-/** the fingers on the counter in the order they tap (the little finger first) */
-const FINGERS = ["f3", "f2", "f1", "f4"] as const;
+/** the fingers on the counter, drawn back to front: index (f1), middle (f4), ring (f2), little (f3); they tap little finger first */
+const FINGER_ORDER = ["f1", "f4", "f2", "f3"] as const;
+const TAP_AT: Record<string, number> = { f3: 0, f2: 0.1, f4: 0.2, f1: 0.3 };
+/** the elbow on the counter: the raised forearm sways around it (canvas percent) */
+const ELBOW = { x: 25.5, y: 58.2 };
 
 export type ShopSpotId = "weapons" | "clothing" | "energy";
 const SPOTS: { id: ShopSpotId; layer: string; label: string; tag: "top" | "bottom" }[] = [
@@ -83,11 +87,16 @@ export function ShopScene({ onOpen, children, box, onBox }: {
         <div className="sk-head" style={{ transformOrigin: `${neck.x}% ${neck.y}%` }}>
           <Layer n="head" />
         </div>
-        {/* the raised hand with the pen, its wrist inside the sleeve's cuff */}
-        <Layer n="pen" className="sk-pen" style={{ transformOrigin: originAt("pen", pv.pen.x, pv.pen.y) }} />
-        <Layer n="sleeveL" />
       </div>
       <Layer n="counter" />
+      {/* the raised forearm: the elbow lies on the counter, the forearm sways slowly left and right around it, the hand with
+          the pen (in front of the cuff) goes with it and wags the pen fast on its own */}
+      <div className="sk-body">
+        <div className="sk-forearm" style={{ transformOrigin: `${ELBOW.x}% ${ELBOW.y}%` }}>
+          <Layer n="sleeveL" />
+          <Layer n="pen" className="sk-pen" style={{ transformOrigin: originAt("pen", pv.pen.x, pv.pen.y) }} />
+        </div>
+      </div>
       {onBox && (
         <button className={`sk-spot sk-box ${box && box.ready > 0 ? "ready" : ""}`} onClick={onBox} aria-label="Ящик ништяков" title="Ящик ништяков"
           style={{ left: `${ACH_BOX_AT.left}%`, top: `${ACH_BOX_AT.top}%`, width: `${ACH_BOX_AT.width}%`, height: `${ACH_BOX_AT.height}%` }}>
@@ -99,7 +108,11 @@ export function ShopScene({ onOpen, children, box, onBox }: {
       <div className="sk-body sk-arms" style={{ transformOrigin: `${neck.x}% 70%` }}>
         <Layer n="sleeveR" />
         {/* the fingers drum the counter one after another, each around its knuckle (under the palm) */}
-        {FINGERS.map((f, i) => <Layer key={f} n={f} className="sk-finger" style={{ transformOrigin: originAt(f, pv[f].x, pv[f].y), animationDelay: `${i * 0.11}s` }} />)}
+        {/* back to front: index, middle, ring, little; each a strip of bent frames (tools/shop/build-fingers.py), the little finger taps first */}
+        {FINGER_ORDER.map((f) => {
+          const b = FINGER_BOX[f];
+          return <i key={f} className="sk-finger" style={{ left: `${b.left}%`, top: `${b.top}%`, width: `${b.width}%`, height: `${b.height}%`, backgroundImage: `url(/assets/shop/v2/finger-${f}.webp?v=${ART_VER.shop})`, backgroundSize: `${FINGER_FRAMES * 100}% 100%`, animationDelay: `${TAP_AT[f]}s` }} />;
+        })}
         <Layer n="palm" />
       </div>
       {children}

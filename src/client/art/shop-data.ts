@@ -69,30 +69,6 @@ export const SHOP_ART = {
     "width": 25.7,
     "height": 26.107
   },
-  "f1": {
-    "left": 37.7,
-    "top": 55.214,
-    "width": 9.3,
-    "height": 5.036
-  },
-  "f2": {
-    "left": 40.15,
-    "top": 56.893,
-    "width": 8.3,
-    "height": 4.143
-  },
-  "f3": {
-    "left": 42.15,
-    "top": 58.286,
-    "width": 6.65,
-    "height": 3.0
-  },
-  "f4": {
-    "left": 38.5,
-    "top": 55.821,
-    "width": 9.3,
-    "height": 5.143
-  },
   "palm": {
     "left": 44.15,
     "top": 54.929,

@@ -12,7 +12,7 @@ D = "tools/boss/source/shopkeeper"
 OUT = "public/assets/shop/v2"
 W, H = 2000, 2800
 K = 0.6                                  # 2000 px → 1200 px: sharp on a phone at 3× density
-LAYERS = ["room", "lamp", "drinks", "rack", "torso", "head", "pen", "sleeveL", "counter", "weapons", "sleeveR", "f1", "f2", "f3", "f4", "palm"]
+LAYERS = ["room", "lamp", "drinks", "rack", "torso", "head", "pen", "sleeveL", "counter", "weapons", "sleeveR", "palm"]
 import os
 os.makedirs(OUT, exist_ok=True)
 data = {}
