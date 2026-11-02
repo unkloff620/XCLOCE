@@ -5014,3 +5014,70 @@ body { background-attachment: fixed; }
 @keyframes sk-forearm { 0%, 100% { transform: rotate(-3.5deg); } 50% { transform: rotate(3.5deg); } }
 /* the case lies on the counter over the shopkeeper's arm */
 .sk-spot.sk-box { z-index: 4; }
+
+/* Князь (art/boss-rig.tsx KnyazRig): breathes, sways, keeps the right fist up; the left hand slashes with the wallet held
+   like a knife — sharp short cuts and a stab, the wrist flicking the "blade"; never reaching out at the screen */
+.rig-knyaz { --kz-snap: cubic-bezier(0.15, 0.9, 0.25, 1); }
+.rig-knyaz .kz-up { animation: kz-breath 3s ease-in-out infinite; }
+@keyframes kz-breath { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.006, 1.014) translateY(-2px); } }
+.rig-knyaz .kz-root { animation: kz-shift 6s ease-in-out infinite; }
+@keyframes kz-shift { 0%, 100% { transform: translateX(0) rotate(0deg); } 50% { transform: translateX(6px) rotate(0.6deg); } }
+.rig-knyaz .kz-head { animation: kz-head 5s ease-in-out infinite; }
+@keyframes kz-head { 0%, 100% { transform: rotate(0deg); } 30% { transform: rotate(-2.2deg); } 70% { transform: rotate(1.6deg); } }
+.rig-knyaz .kz-arm-r { animation: kz-guard 2.2s ease-in-out infinite; }
+@keyframes kz-guard { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-3deg); } }
+.rig-knyaz .kz-low-r { animation: kz-guard-low 2.2s ease-in-out infinite; }
+@keyframes kz-guard-low { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(5deg); } }
+/* the cuts: a short wind-up, a snap down across (fast in, held a beat), back; twice, then a stab with the wrist */
+.rig-knyaz .kz-arm-l { animation: kz-slash 3s linear infinite; }
+@keyframes kz-slash {
+  0%, 26% { transform: rotate(0deg); animation-timing-function: ease-in-out; }
+  31% { transform: rotate(11deg); animation-timing-function: var(--kz-snap); }
+  34% { transform: rotate(-20deg); animation-timing-function: ease-out; }
+  40% { transform: rotate(-17deg); animation-timing-function: ease-in-out; }
+  46% { transform: rotate(9deg); animation-timing-function: var(--kz-snap); }
+  49% { transform: rotate(-22deg); animation-timing-function: ease-out; }
+  56% { transform: rotate(-18deg); animation-timing-function: ease-in-out; }
+  64% { transform: rotate(-2deg); animation-timing-function: ease-in-out; }
+  72% { transform: rotate(4deg); animation-timing-function: var(--kz-snap); }
+  75% { transform: rotate(-9deg); animation-timing-function: ease-out; }
+  82% { transform: rotate(-7deg); animation-timing-function: ease-in-out; }
+  100% { transform: rotate(0deg); }
+}
+.rig-knyaz .kz-hand-l { animation: kz-flick 3s linear infinite; }
+@keyframes kz-flick {
+  0%, 26% { transform: rotate(0deg); animation-timing-function: ease-in-out; }
+  31% { transform: rotate(18deg); animation-timing-function: var(--kz-snap); }
+  34% { transform: rotate(-26deg); animation-timing-function: ease-out; }
+  40% { transform: rotate(-20deg); animation-timing-function: ease-in-out; }
+  46% { transform: rotate(16deg); animation-timing-function: var(--kz-snap); }
+  49% { transform: rotate(-30deg); animation-timing-function: ease-out; }
+  56% { transform: rotate(-22deg); animation-timing-function: ease-in-out; }
+  64% { transform: rotate(0deg); animation-timing-function: ease-in-out; }
+  72% { transform: rotate(-14deg); animation-timing-function: var(--kz-snap); }
+  75% { transform: rotate(34deg); animation-timing-function: ease-out; }
+  82% { transform: rotate(28deg); animation-timing-function: ease-in-out; }
+  100% { transform: rotate(0deg); }
+}
+/* the mouth: teeth clenched on the cigarette; the jaw drops a little to let it go round, then grinds it */
+.rig-knyaz .kz-jaw { animation: kz-jaw 8s ease-in-out infinite; }
+@keyframes kz-jaw { 0%, 9%, 50%, 59%, 100% { transform: translateY(0); } 1.5%, 7.5%, 51.5%, 57.5% { transform: translateY(5px); }
+  16%, 26%, 36%, 66%, 76%, 86% { transform: translateY(0); } 16.8%, 26.8%, 36.8%, 66.8%, 76.8%, 86.8% { transform: translateY(1.6px) translateX(-0.8px); } }
+.rig-knyaz .kz-cig { animation: kz-chew 8s ease-in-out infinite; }
+.rig-knyaz .kz-tip { animation: kz-tip 8s ease-in-out infinite; }
+.rig-knyaz .rig-smoke circle { animation-duration: 2.4s; }
+/* in the fight: three quick cuts; hit: the head snaps back */
+.arena-photo.strike .rig-knyaz .kz-arm-l { animation: kz-strike 0.9s linear both; }
+.arena-photo.strike .rig-knyaz .kz-hand-l { animation: kz-strike-hand 0.9s linear both; }
+@keyframes kz-strike { 0% { transform: rotate(0); } 8% { transform: rotate(12deg); animation-timing-function: var(--kz-snap); } 16% { transform: rotate(-24deg); } 26% { transform: rotate(10deg); animation-timing-function: var(--kz-snap); }
+  34% { transform: rotate(-26deg); } 46% { transform: rotate(8deg); animation-timing-function: var(--kz-snap); } 54% { transform: rotate(-28deg); } 80% { transform: rotate(-20deg); } 100% { transform: rotate(0); } }
+@keyframes kz-strike-hand { 0% { transform: rotate(0); } 8% { transform: rotate(20deg); } 16% { transform: rotate(-30deg); } 26% { transform: rotate(18deg); } 34% { transform: rotate(-32deg); } 46% { transform: rotate(16deg); } 54% { transform: rotate(-34deg); } 100% { transform: rotate(0); } }
+.arena-photo.ouch .rig-knyaz .kz-head { animation: kz-hit 0.5s cubic-bezier(0.2, 0.7, 0.3, 1); }
+@keyframes kz-hit { 0% { transform: rotate(0); } 25% { transform: rotate(7deg) translateY(-4px); } 100% { transform: rotate(0); } }
+/* scared (below half HP): the knife arm hangs and shakes, the body sways */
+.rig-knyaz.dazed .kz-arm-l { animation: kz-limp 2.6s ease-in-out infinite; }
+@keyframes kz-limp { 0%, 100% { transform: rotate(-14deg); } 50% { transform: rotate(-20deg); } }
+.rig-knyaz.dazed .kz-hand-l { animation: kz-shake 0.18s linear infinite alternate; }
+@keyframes kz-shake { from { transform: rotate(-3deg); } to { transform: rotate(3deg); } }
+.rig-knyaz.dazed .kz-root { animation: vk-fear-sway 5s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .rig-knyaz .kz-up, .rig-knyaz .kz-root, .rig-knyaz .kz-head, .rig-knyaz .kz-arm-r, .rig-knyaz .kz-low-r, .rig-knyaz .kz-arm-l, .rig-knyaz .kz-hand-l, .rig-knyaz .kz-jaw { animation: none; } }

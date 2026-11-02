@@ -17,8 +17,9 @@ SCALE_BY_BOSS = {}
 # parts whose picture is stored at this many times the rig's pixels (same place and size in the rig): Восток's face
 # is small on a big body, so its parts keep twice the detail
 HIRES_BY_BOSS = {"vodovoz": (2, {"head", "eyes", "pupils", "eyes-closed", "browL", "browR", "mouth-closed", "throat",
-                                 "teeth-up", "teeth-low", "head-open", "jaw"})}
-PARTS = ["tail", "legs", "body", "headset", "foreL", "foreR", "armL", "lowL", "handL", "bag", "armR", "lowR", "handR", "head", "head-open", "throat", "teeth-up", "teeth-low", "jaw", "eyes", "eyes-closed", "pupils", "brows", "brows-sad", "browL", "browR", "mouth", "mouth-closed", "collar"]
+                                 "teeth-up", "teeth-low", "head-open", "jaw"}),
+                  "knyaz": (2, {"head", "head-open", "eyes", "pupils", "eyes-closed", "throat", "teeth-up", "teeth-low", "lips", "mouth-closed"})}
+PARTS = ["tail", "legs", "body", "headset", "foreL", "foreR", "armL", "lowL", "handL", "bag", "armR", "lowR", "handR", "head", "head-open", "throat", "teeth-up", "teeth-low", "jaw", "lips", "eyes", "eyes-closed", "pupils", "brows", "brows-sad", "browL", "browR", "mouth", "mouth-closed", "collar"]
 # puppet-warped sequences (<part>@0.png, <part>@1.png …): one strip <part>.webp, frames side by side, frame 0 first
 FRAMES = ["brows", "jaw"]
 # which edge of the part joins the parent: (axis, side) — y/bottom for head and left forearm, x/right for the right one
@@ -42,6 +43,8 @@ PIVOT_BY_BOSS = {
     "vodovoz": {"head": [590.0, 395.0], "armL": [432.0, 435.0], "lowL": [322.0, 588.0], "handL": [222.0, 478.0],
                 "bag": [182.0, 448.0], "armR": [686.0, 440.0], "lowR": [772.0, 614.0], "handR": [652.0, 508.0],
                 "browL": [604.0, 257.6], "browR": [619.0, 262.3]},
+    # Князь (2000×3000 sheet, tools/boss/assemble-knyaz.py): the neck, the shoulders, the right elbow, the wrist with the wallet
+    "knyaz": {"head": [533.0, 320.0], "armL": [440.0, 400.0], "handL": [132.0, 515.0], "armR": [737.0, 370.0], "lowR": [840.0, 645.0]},
 }
 
 import sys, re

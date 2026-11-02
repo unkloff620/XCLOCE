@@ -135,7 +135,7 @@ export const BOSSES: BossDef[] = [
     story: "Правит своим Close как княжеством. Отчёты принимает только в правильном шрифте — шрифт каждый раз новый.",
     hp: hp(7), reward: { xp: xp(7), currencies: { USD: 23, RUB: 11_750 } },
     drop: [{ id: "gpu", qty: 1, chance: 0.35 }],
-    theme: { a: "#2e1846", b: "#0e0718", accent: "#b06bff" }, photo: photo("knyaz"),
+    theme: { a: "#2e1846", b: "#0e0718", accent: "#b06bff" }, photo: photo("knyaz", true),
     keysToUnlock: 1,
   },
   {

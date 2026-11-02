@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-03-knyaz",
+    date: "3 ноября",
+    title: "Князь ожил",
+    items: [
+      { img: "/assets/updates/2026-11-03-knyaz.webp", text: "У босса Князя своя анимация: держит леджер как нож и режет — хрясь, хрясь, пырнул. Дышит, моргает, водит бровями и гоняет сигарету зубами из угла в угол." },
+    ],
+  },
+  {
     id: "2026-11-02-door-rewards",
     date: "2 ноября",
     title: "Наезд как в аниме и вещи Кедра",

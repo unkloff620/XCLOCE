@@ -25,7 +25,7 @@ const BEHIND: Record<string, "L" | "R"> = { mugo: "R", babafey: "L" };
 /** of these the arm in BEHIND goes behind only with its shoulder: the forearm and the hand stay in front of everything */
 const SPLIT_BEHIND = new Set(["babafey"]);
 /** rigs drawn as plain SVG only */
-const NO_PUPPET = new Set<string>();
+const NO_PUPPET = new Set<string>(["knyaz"]);
 
 /** frame schedules of the puppet strips: [frame, ms] — idle loops, ouch/strike play once */
 type SeqMode = "idle" | "ouch" | "strike" | "fear";
@@ -307,6 +307,7 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
       </div>
     );
   }
+  if (baseId === "knyaz") return <KnyazRig id={id} rig={rig} bust={bust} dazed={dazed} svgRef={svgRef} frameCss={frameCss} strip={strip} />;
   const behind = BEHIND[baseId];
   const split = SPLIT_BEHIND.has(baseId);
   const clipEyes = !!P.armL && !!P.pupils && !!P.eyes;
@@ -365,5 +366,94 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
       {svgEl}
       <canvas className="br-pup-front" aria-hidden="true" />
     </div>
+  );
+}
+
+/*
+ * Князь (tools/boss/assemble-knyaz.py): plain layers, no puppet mesh. He breathes and sways, keeps the right fist up in a
+ * guard and slashes with the hardware wallet held like a knife in the left — sharp short cuts and a stab, the wrist flicking
+ * (screens.css «Князь»). The face: whites with rolling irises, lids that blink, the brows bent like a puppet (a strip of
+ * frames, FRAME_SEQ.brows); the mouth is a grin with the teeth clenched on a cigarette — now and then the jaw drops and the
+ * cigarette goes from one corner of the mouth to the other through the front, like the hero's (rig-chew), smoke from its tip.
+ */
+type Rig = { w: number; h: number; parts: Record<string, Part> };
+/** the cigarette in rig units: the corners of the mouth, its length and thickness */
+const KZ_CIG = { r: [555, 270.5], l: [494, 285.5], f: [525, 281], len: 42, thick: 6 } as const;
+/** the cigarette's way through one 8 s loop: [%, x, y, angle, squeeze] — the hero's schedule (rig-chew) on his mouth */
+const KZ_CHEW: [number, number, number, number, number][] = (() => {
+  const R = KZ_CIG.r, L = KZ_CIG.l, F = KZ_CIG.f;
+  const at = (p: number, c: readonly number[], a: number, sx = 1): [number, number, number, number, number] => [p, c[0], c[1], a, sx];
+  const bite = (p: number, c: readonly number[], a: number, d: number) =>
+    [at(p, c, a), at(p + 1.6, [c[0], c[1] + 1.2], a - 5 * d), at(p + 3.4, [c[0], c[1] - 0.6], a + 9 * d), at(p + 5.4, c, a)];
+  return [
+    at(0, R, 24), at(0.5, R, 24), at(3.6, F, 92, 0.64), at(6.8, L, 156),
+    ...bite(15, L, 156, -1), ...bite(25, L, 156, -1), ...bite(35, L, 156, -1),
+    at(50, L, 156), at(50.5, L, 156), at(53.6, F, 92, 0.64), at(56.8, R, 24),
+    ...bite(65, R, 24, 1), ...bite(75, R, 24, 1), ...bite(85, R, 24, 1), at(100, R, 24),
+  ];
+})();
+const kzChewCss = () => {
+  const cig = KZ_CHEW.map(([p, x, y, a, sx]) => `${p}% { transform: translate(${x}px, ${y}px) rotate(${a}deg) scaleX(${sx}); }`).join(" ");
+  const tip = KZ_CHEW.map(([p, x, y, a, sx]) => {
+    const r = (a * Math.PI) / 180;
+    return `${p}% { transform: translate(${(x + Math.cos(r) * KZ_CIG.len * sx).toFixed(1)}px, ${(y + Math.sin(r) * KZ_CIG.len).toFixed(1)}px); }`;
+  }).join(" ");
+  return `@keyframes kz-chew { ${cig} } @keyframes kz-tip { ${tip} }`;
+};
+
+function KnyazRig({ id, rig, bust, dazed, svgRef, frameCss, strip }: {
+  id: string; rig: Rig; bust: boolean; dazed: boolean; svgRef: RefObject<SVGSVGElement | null>; frameCss: string; strip: (p: string) => ReactNode;
+}) {
+  const P = rig.parts;
+  const img = (p: string, cls?: string) => {
+    const r = P[p];
+    return r ? <image className={cls} href={`/bosses/${id}/rig/${p}.webp${r.v ? `?v=${r.v}` : ""}`} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" /> : null;
+  };
+  const origin = (p: string): CSSProperties => {
+    const pv = P[p]?.pivot ?? [rig.w / 2, rig.h];
+    return { transformOrigin: `${pv[0]}px ${pv[1]}px`, transformBox: "view-box" };
+  };
+  const vb: CSSProperties = { transformBox: "view-box", transformOrigin: "0 0" };
+  const maskId = `kz-eyes-${id}`;
+  return (
+    <svg ref={svgRef} className={`boss-rig rig-knyaz ${dazed ? "dazed" : ""}`} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} width="100%" height="100%" preserveAspectRatio={bust ? "xMidYMin slice" : "xMidYMax meet"} aria-hidden="true">
+      <style>{frameCss + kzChewCss()}</style>
+      <g className="kz-root" style={{ transformOrigin: `${rig.w / 2}px ${rig.h - 20}px`, transformBox: "view-box" }}>
+        {img("legs")}
+        <g className="kz-up" style={{ transformOrigin: `${rig.w / 2}px ${rig.h * 0.56}px`, transformBox: "view-box" }}>
+          {/* the right arm: the shoulder behind the body, the forearm with the fist in front (the same turns) */}
+          <g className="kz-arm-r" style={origin("armR")}>{img("armR")}</g>
+          {img("body")}
+          <g className="kz-head" style={origin("head")}>
+            {img("head-open")}
+            <g className="kz-mouth">
+              {img("throat")}
+              {img("teeth-up")}
+              <g className="kz-jaw">{img("teeth-low")}</g>
+              {img("lips")}
+              <g className="kz-cig" style={vb}>
+                <image href={`/assets/hero/mouth-cigarette.webp`} x={0} y={-KZ_CIG.thick / 2} width={KZ_CIG.len} height={KZ_CIG.thick} preserveAspectRatio="none" />
+              </g>
+              <g className="kz-tip" style={vb}>
+                <g className="rig-smoke">{[0, 1, 2].map((i) => <circle key={i} cx={0} cy={0} r={5} style={{ animationDelay: `${i * 0.9}s` }} />)}</g>
+              </g>
+            </g>
+            <mask id={maskId} style={{ maskType: "alpha" }} maskUnits="userSpaceOnUse" x="0" y="0" width={rig.w} height={rig.h}>{img("eyes")}</mask>
+            <g className="br-eyes-open">
+              {img("eyes")}
+              <g mask={`url(#${maskId})`}><g className="br-pupils">{img("pupils")}</g></g>
+            </g>
+            {img("eyes-closed", "br-eyes-closed")}
+            {strip("brows")}
+          </g>
+          <g className="kz-arm-r" style={origin("armR")}><g className="kz-low-r" style={origin("lowR")}>{img("lowR")}</g></g>
+          {/* the left arm with the wallet: the shoulder swings, the wrist flicks the "blade" */}
+          <g className="kz-arm-l" style={origin("armL")}>
+            {img("armL")}
+            <g className="kz-hand-l" style={origin("handL")}>{img("handL")}</g>
+          </g>
+        </g>
+      </g>
+    </svg>
   );
 }
