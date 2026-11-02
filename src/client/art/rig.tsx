@@ -284,9 +284,10 @@ function Mouth() {
   const id = wornIn(worn, "MOUTH") ?? (worn.MOUTH && worn.MOUTH in MOUTH_HELD ? worn.MOUTH : null);
   // «Зубы»: the diamond grills — the same jaw with diamond teeth; with nothing in the mouth he grins with them
   const diamond = worn.TEETH === "grillz-diamond";
+  const teeth = !!worn.TEETH;
   const uid = useId().replace(/:/g, "");
   const { skin } = useContext(LookCtx);
-  if (!id && !diamond) return null;
+  if (!id && !teeth) return null;
   const href = `${skin !== SKIN_ORIGINAL ? `/assets/hero/skin-${skin}` : "/assets/hero"}/${diamond ? "jaw-diamond" : "jaw"}.webp?v=${ART_VER.heroPart}`;
   const held = id ? MOUTH_HELD[id] : undefined;
   return (

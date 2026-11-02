@@ -23,9 +23,14 @@ export const ACH_BOX_WEAPONS = [
 /** things for the mouth (slot «Рот»): each opened box with this chance gives one the player does not have yet */
 export const MOUTH_ITEMS = ["cigarette", "toothpick"] as const;
 export const MOUTH_ITEM_CHANCE = 0.1;
-/** things that drop only from the case (the mouth things, the glasses, the gold chain): one the player does not have yet,
- * MOUTH_ITEM_CHANCE per opened box; they land in the case's «Вещь» frame */
-export const CASE_THINGS = [...MOUTH_ITEMS, "shades-gold", "chain-cuban", "mask-anon", "monocle-whale", "bruise-liq", "crown-cash", "ushanka-star", "helmet-miner", "bandana-hodl", "cigar", "grillz-diamond"] as const;
+/** things that drop only from the case (the mouth things, the teeth, the face things, the hats, the chain): each with its own
+ * chance (CASE_THING_CHANCE), only while the player has none of it; they land in the case's «Вещь» frame */
+export const CASE_THINGS = [...MOUTH_ITEMS, "shades-gold", "chain-cuban", "mask-anon", "monocle-whale", "bruise-liq", "crown-cash", "ushanka-star", "helmet-miner", "bandana-hodl", "cigar", "teeth-grin", "grillz-diamond"] as const;
+/** each case thing drops on its own with this chance per opened box (only one the player does not have yet) */
+export const CASE_THING_CHANCE: Record<(typeof CASE_THINGS)[number], number> = {
+  cigarette: 0.05, toothpick: 0.08, cigar: 0.04, "teeth-grin": 0.03, "grillz-diamond": 0.02, "shades-gold": 0.09, "mask-anon": 0.1, "monocle-whale": 0.1,
+  "bruise-liq": 0.13, "crown-cash": 0.15, "ushanka-star": 0.2, "helmet-miner": 0.24, "bandana-hodl": 0.18, "chain-cuban": 0.14,
+};
 export const ACH_BOX_RUB = { min: 300, max: 2_000, step: 50 };
 export const ACH_BOX_USD = { min: 3, max: 25 };
 

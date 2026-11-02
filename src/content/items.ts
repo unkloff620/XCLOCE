@@ -110,6 +110,7 @@ const WEARABLES: ItemDef[] = ([
   { id: "helmet-miner", name: "Каска майнера", slot: "HEAD", rarity: "epic", description: "С фонарём — копать биток в любой темноте.", sources: ["Ящик ништяков"] },
   { id: "bandana-hodl", name: "Бандана HODL", slot: "HEAD", rarity: "rare", description: "Повязал — и держишь. Что бы ни случилось.", sources: ["Ящик ништяков"] },
   { id: "cigar", name: "Сигара", slot: "MOUTH", rarity: "epic", description: "Кубинская. Для тех, у кого всё в плюсе.", sources: ["Ящик ништяков"] },
+  { id: "teeth-grin", name: "Оскал", slot: "TEETH", rarity: "epic", description: "Зубы напоказ: челюсть ходит, герой скалится. Можно держать в них сигарету, сигару или зубочистку.", sources: ["Ящик ништяков"] },
   { id: "grillz-diamond", name: "Бриллиантовые зубы", slot: "TEETH", rarity: "legendary", description: "Улыбнулся — и весь двор ослеп. Можно держать в них сигарету, сигару или зубочистку.", sources: ["Ящик ништяков"] },
   { id: "chain-cuban", name: "Золотая цепь", slot: "ACCESSORY", rarity: "legendary", description: "Толстая, как профит после халвинга. Звенит на весь двор.", sources: ["Ящик ништяков"] },
   // held in the left hand (slot «Кисть»): the boss's own weapon, worn for the look

@@ -1623,6 +1623,7 @@ export const ASSET_FILES: string[] = [
  "/assets/items/tat-viking-shoulder-r.webp",
  "/assets/items/tee-pump.webp",
  "/assets/items/tee-white.webp",
+ "/assets/items/teeth-grin.webp",
  "/assets/items/toothpick.webp",
  "/assets/items/trophy-sun.webp",
  "/assets/items/ushanka-star.webp",

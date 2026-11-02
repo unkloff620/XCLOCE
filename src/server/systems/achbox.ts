@@ -1,6 +1,6 @@
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, type Ctx } from "../core.ts";
-import { CASE_THINGS, MOUTH_ITEM_CHANCE, achBoxState, rollAchBox } from "../../content/ach-box.ts";
+import { CASE_THINGS, CASE_THING_CHANCE, achBoxState, rollAchBox } from "../../content/ach-box.ts";
 import { mergeRewards } from "../../content/rewards.ts";
 import { BOX_TATTOO_CHANCE, BOX_TATTOO_SETS } from "../../content/tattoos.ts";
 import { between, rollParts } from "../../content/craft-drops.ts";
@@ -30,14 +30,13 @@ export async function openAchBox(ctx: Ctx, all = false) {
     const id = left[Math.floor(ctx.rng() * left.length)];
     have.add(id); ink.push({ id, qty: 1 });
   }
-  // a case-only thing (a cigarette, a toothpick, the glasses, the gold chain): MOUTH_ITEM_CHANCE per box, one the player does not have
+  // the case-only things: each one drops on its own with its chance (CASE_THING_CHANCE) per box, only while the player has none
   const mouthHave = new Set((await ctx.q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id = ANY($2)", [ctx.pid, [...CASE_THINGS]])).map((r) => r.item_id));
   for (let i = 0; i < n; i++) {
-    if (ctx.rng() >= MOUTH_ITEM_CHANCE) continue;
-    const left = CASE_THINGS.filter((id) => !mouthHave.has(id));
-    if (!left.length) break;
-    const id = left[Math.floor(ctx.rng() * left.length)];
-    mouthHave.add(id); ink.push({ id, qty: 1 });
+    for (const id of CASE_THINGS) {
+      if (mouthHave.has(id) || ctx.rng() >= CASE_THING_CHANCE[id]) continue;
+      mouthHave.add(id); ink.push({ id, qty: 1 });
+    }
   }
   // «Крафт»: every box opened — 2–4 parts, 15% on a very rare one
   const parts = Array.from({ length: n }, () => rollParts(ctx.rng, between(2, 4, ctx.rng), { rare: 0.3, epic: 0.15 / 3 })).flat();
