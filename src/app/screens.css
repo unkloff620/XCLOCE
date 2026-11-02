@@ -4942,3 +4942,27 @@ body { background-attachment: fixed; }
 .cut-flash { position: absolute; inset: 0; background: #fff; opacity: 0; animation: cut-flash 2.45s both; }
 @keyframes cut-flash { 0%, 92% { opacity: 0; } 95% { opacity: 0.95; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .cut-lines, .cut-eyes svg { animation: none; } }
+
+/* the fight itself (profile.tsx DustFight): black screen, the dust cloud in the middle, fists out of it, debris flying out */
+.pr-fight { position: fixed; inset: 0; z-index: 70; pointer-events: none; overflow: hidden; background: #050505; animation: fight-out var(--fight) linear both; }
+@keyframes fight-out { 0%, 92% { opacity: 1; } 100% { opacity: 0; } }
+.fight-cloud { position: absolute; left: 50%; top: 50%; width: min(300px, 78vw); max-width: none; margin: calc(min(300px, 78vw) * -0.44) 0 0 calc(min(300px, 78vw) * -0.5);
+  animation: fight-cloud 0.3s ease-in-out infinite alternate, fight-pop 0.35s cubic-bezier(0.2, 1.6, 0.4, 1) both; }
+.fight-cloud.back { filter: brightness(0.7); animation: fight-cloud-b 0.42s ease-in-out infinite alternate, fight-pop 0.35s ease-out both; }
+@keyframes fight-cloud { from { transform: scale(0.95) rotate(-5deg) translate(-4px, 2px); } to { transform: scale(1.06) rotate(5deg) translate(4px, -3px); } }
+@keyframes fight-cloud-b { from { transform: scale(1.12) rotate(170deg); } to { transform: scale(1.22) rotate(186deg); } }
+@keyframes fight-pop { from { scale: 0.1; } to { scale: 1; } }
+/* an arm: turned to its direction around the cloud's centre; the fist on it punches out and back */
+.fight-arm { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform: rotate(var(--ang)); }
+.fight-fist { position: absolute; width: 84px; max-width: none; left: 0; top: -34px; transform-origin: 0 50%;
+  animation-name: fight-punch; animation-iteration-count: infinite; animation-timing-function: cubic-bezier(0.3, 0, 0.2, 1); }
+@keyframes fight-punch { 0%, 100% { transform: translateX(30px) scale(0.5); opacity: 0; } 20% { opacity: 1; } 45% { transform: translateX(120px) scale(1.15); opacity: 1; } 70% { transform: translateX(95px) scale(1); opacity: 1; } 92% { opacity: 0; } }
+/* the debris: out of the cloud along its own line, spinning, falling off a little, gone */
+.fight-bit { position: absolute; left: 50%; top: 50%; width: var(--sz); max-width: none; margin: calc(var(--sz) * -0.5) 0 0 calc(var(--sz) * -0.5); opacity: 0;
+  animation-name: fight-fly; animation-timing-function: cubic-bezier(0.15, 0.6, 0.35, 1); animation-fill-mode: both; }
+.fight-bit.dust { filter: brightness(0.85); }
+@keyframes fight-fly { 0% { transform: translate(0, 0) rotate(0) scale(0.3); opacity: 0; } 8% { opacity: 1; } 75% { opacity: 1; } 100% { transform: translate(var(--dx), calc(var(--dy) + 60px)) rotate(var(--rot)) scale(1); opacity: 0; } }
+.fight-bang { position: absolute; font-size: clamp(28px, 10vw, 46px); color: #ffd25a; transform: translate(-50%, -50%) rotate(var(--tilt)); opacity: 0;
+  text-shadow: 0 3px 0 #2e1c00, 3px 3px 0 #e2231a, 0 0 18px rgba(255, 90, 61, 0.8); animation: fight-bang 0.5s cubic-bezier(0.2, 1.8, 0.4, 1) both; }
+@keyframes fight-bang { 0% { opacity: 0; scale: 0.2; } 25% { opacity: 1; scale: 1.25; } 70% { opacity: 1; scale: 1; } 100% { opacity: 0; scale: 1.1; } }
+@media (prefers-reduced-motion: reduce) { .fight-cloud, .fight-fist { animation-iteration-count: 1; } }

@@ -309,6 +309,23 @@ function noise(a: AudioContext, at: number, dur: number, opts: { freq?: number; 
   src.start(at);
 }
 
+/** the fist fight's voice («Наехать»): one of the two recordings at random, with punches under it all the way through;
+ *  returns how long it lasts (s) — the dust fight on the screen runs that long */
+export function raidVoice(): number {
+  const id = Math.random() < 0.5 ? "raid1" : "raid2";
+  const dur = buffers[id]?.duration ?? 2.5;
+  if (muted) return dur;
+  const a = audio();
+  if (!a || a.state !== "running") return dur;
+  sampleSoon(a, id, 1);
+  const t = a.currentTime + 0.005;
+  for (let at = 0.12; at < dur - 0.1; at += 0.24 + Math.random() * 0.14) {
+    const r = 0.85 + Math.random() * 0.35;
+    if (!sample(a, "punch", t + at, 0.55, r)) noise(a, t + at, 0.12, { freq: 900, vol: 0.4 });
+  }
+  return dur;
+}
+
 /** Plays a sound. `power` 0..1 makes hits heavier. */
 export function sfx(name: Sfx, power = 0.5) {
   if (muted) return;

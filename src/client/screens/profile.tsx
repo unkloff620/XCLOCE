@@ -6,12 +6,12 @@ import { UpdatesWindow } from "../updates-notice.tsx";
 import { NotifySwitch } from "./quests.tsx";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState, useSyncExternalStore, type TouchEvent as RTouchEvent, type MouseEvent as RMouseEvent, type WheelEvent as RWheelEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, useSyncExternalStore, type TouchEvent as RTouchEvent, type MouseEvent as RMouseEvent, type WheelEvent as RWheelEvent } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { STASH_SETS_ORDERED } from "../../content/stashes.ts";
 import { openStops } from "../../content/talents.ts";
 import { haptic } from "../telegram.ts";
-import { sfx } from "../sound.ts";
+import { raidVoice, sfx } from "../sound.ts";
 import { api } from "../api.ts";
 import { itemById } from "../../content/items.ts";
 import { CURRENCIES, CURRENCY_DEFS, type Currency } from "../../content/currencies.ts";
@@ -204,6 +204,56 @@ type Social = { biceps: number; mine: number; pump: number | null; fight: number
 /** the same player again after an hour (content/social.ts SOCIAL_COOLDOWN_MS) */
 const SOCIAL_CD = 60 * 60_000;
 
+/** the fight itself on a black screen: a dust cloud in the middle, fists punching out of it, bricks, bottles, teeth and
+ *  puffs of dust flying out, comic words popping — `ms` long (the voice over it). Pictures: public/assets/generated/brawl-*.webp */
+const DEBRIS = ["brick", "bottle", "tooth", "tooth", "dust", "brick", "tooth", "bottle", "dust", "tooth"] as const;
+const BANGS = ["БАЦ!", "ХРЯСЬ!", "БДЫЩ!", "ТЫЩ!"];
+export function DustFight({ ms }: { ms: number }) {
+  const bits = useMemo(() => {
+    const n = Math.round(ms / 75);
+    return Array.from({ length: n }, (_, i) => {
+      const kind = DEBRIS[i % DEBRIS.length];
+      const ang = Math.random() * Math.PI * 2;
+      const far = 160 + Math.random() * 180;
+      return {
+        kind, key: i,
+        style: {
+          "--dx": `${Math.cos(ang) * far}px`, "--dy": `${Math.sin(ang) * far * 1.25 - 40}px`, "--rot": `${(Math.random() < 0.5 ? -1 : 1) * (240 + Math.random() * 480)}deg`,
+          "--sz": `${kind === "tooth" ? 18 + Math.random() * 10 : kind === "dust" ? 70 + Math.random() * 50 : 38 + Math.random() * 16}px`,
+          animationDelay: `${Math.round((i / n) * (ms - 700))}ms`, animationDuration: `${650 + Math.round(Math.random() * 350)}ms`,
+        } as CSSProperties,
+      };
+    });
+  }, [ms]);
+  const fists = useMemo(() => Array.from({ length: 6 }, (_, i) => {
+    const ang = -150 + i * 60 + (Math.random() * 24 - 12);
+    return { key: i, style: { "--ang": `${ang}deg`, animationDelay: `${i * 90}ms`, animationDuration: `${360 + (i % 3) * 60}ms` } as CSSProperties };
+  }), []);
+  const bangs = useMemo(() => Array.from({ length: Math.max(3, Math.round(ms / 650)) }, (_, i) => ({
+    key: i, word: BANGS[i % BANGS.length],
+    style: { left: `${18 + Math.random() * 64}%`, top: `${26 + Math.random() * 48}%`, "--tilt": `${Math.random() * 30 - 15}deg`, animationDelay: `${Math.round(120 + (i / Math.max(3, Math.round(ms / 650))) * (ms - 500))}ms` } as CSSProperties,
+  })), [ms]);
+  return (
+    <div className="pr-fight" aria-hidden="true" style={{ ["--fight" as string]: `${ms}ms` }}>
+      {bits.map((b) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img key={b.key} className={`fight-bit ${b.kind}`} src={`/assets/generated/brawl-${b.kind}.webp`} alt="" style={b.style} draggable={false} />
+      ))}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className="fight-cloud back" src="/assets/generated/brawl-dust.webp" alt="" draggable={false} />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className="fight-cloud" src="/assets/generated/brawl-dust.webp" alt="" draggable={false} />
+      {fists.map((f) => (
+        <span key={f.key} className="fight-arm" style={f.style}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="fight-fist" src="/assets/generated/brawl-fist.webp" alt="" draggable={false} style={{ animationDelay: f.style.animationDelay, animationDuration: f.style.animationDuration }} />
+        </span>
+      ))}
+      {bangs.map((b) => <b key={b.key} className="fight-bang display" style={b.style}>{b.word}</b>)}
+    </div>
+  );
+}
+
 type Fighter = { name: string; look?: Look; worn?: Worn };
 /** a time line of the anime cut-in (ms): the curtains, my eyes, his eyes, the slam — then the dust (CSS .pr-cut uses the same) */
 const CUT_MS = 2450;
@@ -233,13 +283,19 @@ function CutIn({ me, them }: { me: Fighter; them: Fighter }) {
 /** the fist fight: the anime cut-in (my eyes, his eyes), a dust cloud over the room, then who won — after the raid voice line (≈3.5 s) */
 function Brawl({ res, name, me, them, onClose }: { res: { won: boolean; mine: number; theirs: number; chance?: number; reward: unknown } | null; name: string; me: Fighter; them: Fighter; onClose: () => void }) {
   const [shown, setShown] = useState(false);
-  const [dust, setDust] = useState(false);
+  const [dust, setDust] = useState(0);
   useEffect(() => {
     sfx("cutin");
     const w = setTimeout(() => sfx("cutin"), 1150);
-    const d = setTimeout(() => { setDust(true); sfx("brawl"); haptic.big(); }, CUT_MS);
-    const t = setTimeout(() => setShown(true), CUT_MS + 1100);
-    return () => { clearTimeout(w); clearTimeout(d); clearTimeout(t); };
+    let t: ReturnType<typeof setTimeout> | undefined;
+    // the dust fight lasts as long as the raid voice playing over it (plus a breath), then who won
+    const d = setTimeout(() => {
+      const ms = Math.round(Math.min(4, Math.max(2, raidVoice() + 0.3)) * 1000);
+      setDust(ms);
+      haptic.big();
+      t = setTimeout(() => setShown(true), ms);
+    }, CUT_MS);
+    return () => { clearTimeout(w); clearTimeout(d); if (t) clearTimeout(t); };
   }, []);
   useEffect(() => {
     if (shown && res) { if (res.won) { haptic.big(); sfx("victory"); } else { haptic.err(); sfx("brawllose"); } }
@@ -248,12 +304,7 @@ function Brawl({ res, name, me, them, onClose }: { res: { won: boolean; mine: nu
   if (!dust) return <CutIn me={me} them={them} />;
   if (!shown || !res) {
     return (
-      <div className="pr-brawl" aria-hidden="true">
-        <span className="pr-dust" />
-        <span className="pr-fist a"><FistArt size={70} /></span>
-        <span className="pr-fist b"><FistArt size={70} /></span>
-        <b className="pr-pow display">БАЦ!</b>
-      </div>
+      <DustFight ms={dust} />
     );
   }
   return (
