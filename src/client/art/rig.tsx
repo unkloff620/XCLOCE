@@ -293,7 +293,8 @@ function Mouth() {
   const held = id ? MOUTH_HELD[id] : undefined;
   return (
     <>
-      <svg x={JAW.x} y={JAW.y} width={JAW.w} height={JAW.h} viewBox={`0 0 ${JAW.w} ${JAW.h}`} overflow="hidden" pointerEvents="none">
+      {/* the jaw (teeth, chewing) only with «Зубы» worn; without them the thing just sits in the corner of the closed mouth */}
+      {teeth && <svg x={JAW.x} y={JAW.y} width={JAW.w} height={JAW.h} viewBox={`0 0 ${JAW.w} ${JAW.h}`} overflow="hidden" pointerEvents="none">
         <image className="rig-jaw-f" href={href} x={0} y={0} width={JAW.w} height={JAW.h * JAW.frames} preserveAspectRatio="none"
           style={{ ["--fh" as string]: `${JAW.h}px` }} />
         {/* the diamonds: a glare sweeps across the teeth (like on the medals), only where the teeth show */}
@@ -315,7 +316,7 @@ function Mouth() {
             </g>
           </>
         )}
-      </svg>
+      </svg>}
       {/* the diamonds glint: little stars flash on the teeth now and then */}
       {diamond && (
         <g className="rig-glint" pointerEvents="none">
@@ -325,12 +326,12 @@ function Mouth() {
         </g>
       )}
       {held ? (
-        <g className="rig-chew" pointerEvents="none">
+        <g className={`rig-chew ${teeth ? "" : "fixed"}`} pointerEvents="none">
           <image href={`/assets/hero/mouth-${id}.webp?v=${ART_VER.wear}`} x={0} y={-held.thick / 2} width={held.len} height={held.thick} preserveAspectRatio="none" />
         </g>
       ) : id ? <Wear slot="MOUTH" /> : null}
       {(id === "cigarette" || id === "cigar") && (
-        <g className="rig-smoke-at" pointerEvents="none">
+        <g className={`rig-smoke-at ${teeth ? "" : "fixed"}`} pointerEvents="none">
           <g className="rig-smoke">
             {[0, 1, 2].map((i) => <circle key={i} cx={0} cy={0} r={6} style={{ animationDelay: `${i * 0.9}s` }} />)}
           </g>

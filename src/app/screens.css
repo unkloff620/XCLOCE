@@ -4896,3 +4896,5 @@ body { background-attachment: fixed; }
 .ach-last { white-space: normal; line-height: 1.25; }
 .ach-last b { color: inherit; }
 .sty-side-tabs .sty-shave.idle { opacity: 0.45; }
+/* no teeth worn: the cigarette / toothpick stays put in the corner of the mouth (no chewing) */
+.rig-chew.fixed, .rig-smoke-at.fixed { animation: none; }
