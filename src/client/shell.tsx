@@ -109,29 +109,36 @@ function HudMoney({ wallet }: { wallet: Partial<Record<Currency, number>> }) {
     try { localStorage.setItem(MONEY_KEY, JSON.stringify(next)); } catch { /* private mode */ }
     setBox(null);
   };
+  // a tap outside closes the open list
+  useEffect(() => {
+    if (box === null) return;
+    const off = (e: PointerEvent) => { if (!(e.target as Element | null)?.closest?.(".hud-money")) setBox(null); };
+    document.addEventListener("pointerdown", off, true);
+    return () => document.removeEventListener("pointerdown", off, true);
+  }, [box]);
   return (
-    <>
-      <div className="hud-money">
-        {shown.map((c, i) => (
-          <button key={i} type="button" className="coin-chip" title={`${CURRENCY_DEFS[c].name} — выбрать валюту`} onClick={() => setBox(i as 0 | 1)}>
+    <div className="hud-money">
+      {shown.map((c, i) => (
+        <div key={i} className="coin-slot">
+          <button type="button" className={`coin-chip ${box === i ? "open" : ""}`} title={`${CURRENCY_DEFS[c].name} — выбрать валюту`} aria-expanded={box === i} onClick={() => setBox(box === i ? null : (i as 0 | 1))}>
             <Icon name={c} size={20} />
             <b className="num">{moneyShort(c, wallet[c] ?? 0)}</b>
+            <span className="coin-caret" aria-hidden="true">▾</span>
           </button>
-        ))}
-      </div>
-      {box !== null && (
-        <Modal title="Какую валюту показать" onClose={() => setBox(null)}>
-          <div className="coin-pick">
-            {CURRENCIES.map((c) => (
-              <button key={c} type="button" className={`coin-chip ${shown[box] === c ? "on" : ""}`} onClick={() => pick(c)}>
-                <Icon name={c} size={22} /><b className="num">{moneyShort(c, wallet[c] ?? 0)}</b><small>{CURRENCY_DEFS[c].name}</small>
-              </button>
-            ))}
-          </div>
-          <Link href="/exchange" className="tiny muted" style={{ display: "block", textAlign: "center", marginTop: 10 }} onClick={() => setBox(null)}>Обменник ›</Link>
-        </Modal>
-      )}
-    </>
+          {/* the drop-down list right under the box */}
+          {box === i && (
+            <div className="coin-drop" role="listbox">
+              {CURRENCIES.map((x) => (
+                <button key={x} type="button" role="option" aria-selected={c === x} className={`coin-opt ${c === x ? "on" : ""}`} onClick={() => pick(x)}>
+                  <Icon name={x} size={18} /><b className="num">{moneyShort(x, wallet[x] ?? 0)}</b><small>{CURRENCY_DEFS[x].name}</small>
+                </button>
+              ))}
+              <Link href="/exchange" className="coin-opt ex" onClick={() => setBox(null)}>Обменник ›</Link>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
   );
 }
 

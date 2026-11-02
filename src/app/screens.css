@@ -4848,3 +4848,15 @@ body { background-attachment: fixed; }
 .coin-pick { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .coin-pick .coin-chip { justify-content: center; padding: 8px; font-size: 15px; }
 .coin-pick .coin-chip.on { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
+/* the HUD money boxes: a drop-down list under the tapped box */
+.coin-slot { position: relative; min-width: 0; }
+.coin-slot .coin-chip { width: 100%; }
+.coin-caret { margin-left: auto; font-size: 10px; opacity: 0.7; transition: transform 0.15s; }
+.coin-chip.open .coin-caret { transform: rotate(180deg); }
+.coin-drop { position: absolute; z-index: 60; left: 0; right: 0; top: calc(100% + 4px); display: flex; flex-direction: column; padding: 4px; border-radius: 12px; border: 2px solid var(--line);
+  background: var(--tex), #2a1d14; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.55); animation: fade 0.12s ease; }
+.coin-opt { display: flex; align-items: center; gap: 6px; padding: 7px 6px; border: 0; border-radius: 8px; background: none; color: var(--ink); font-size: 13px; text-align: left; cursor: pointer; }
+.coin-opt small { margin-left: auto; color: var(--muted); font-size: 11px; }
+.coin-opt.on { background: rgba(255, 204, 51, 0.16); box-shadow: inset 0 0 0 1px rgba(255, 204, 51, 0.6); }
+.coin-opt:active { background: rgba(255, 255, 255, 0.08); }
+.coin-opt.ex { justify-content: center; color: var(--muted); font-size: 12px; border-top: 1px solid rgba(255, 255, 255, 0.08); border-radius: 0; margin-top: 2px; }
