@@ -102,6 +102,11 @@ function sourceShort(def: ItemDef): string {
   if (s.some((x) => x.includes("локаци"))) return "с локации";
   return s[0]?.toLowerCase() ?? "скоро";
 }
+/** the boss a thing drops from (its source «Победа: <name>…»), lower case for the second line under «с босса» */
+function bossFrom(def: ItemDef): string | null {
+  const m = (def.sources ?? []).map((x) => /^Победа:\s*([^(]+)/.exec(x)).find(Boolean);
+  return m ? m[1].trim().toLowerCase() : null;
+}
 function sourceLong(s: string): string {
   if (s.includes("Ящик")) return "Выпадает из «Ящика ништяков» (кейс на прилавке за очки достижений).";
   if (s.startsWith("Победа")) return `${s.replace("Победа:", "Победа над боссом:")}.`;
@@ -198,7 +203,7 @@ function Cards({ offers, batch }: { offers: Offer[]; batch: number }) {
             <button key={o.id} className={`offer locked rar-${def.rarity}`} onClick={() => { haptic.tap(); setInfo(def.id); }} aria-label={`${o.title}: закрыто, ${sourceShort(def)}`}>
               <div className="offer-art"><ItemArt id={def.id} size={56} /><span className="locked-badge"><Icon name="lock" size={18} /></span></div>
               <b className="small">{o.title}</b>
-              <span className="tiny muted offer-from">{sourceShort(def)}</span>
+              <span className="tiny muted offer-from">{sourceShort(def)}{bossFrom(def) && <><br />{bossFrom(def)}</>}</span>
             </button>
           );
         }
@@ -207,7 +212,7 @@ function Cards({ offers, batch }: { offers: Offer[]; batch: number }) {
             <button key={o.id} className={`offer locked rar-${def!.rarity}`} onClick={() => setInfo(def!.id)} aria-label={`${o.title}: закрыто, выпадает с босса ${boss!.name}`}>
               <div className="offer-art"><ItemArt id={def!.id} size={56} /><span className="locked-badge"><Icon name="lock" size={18} /></span></div>
               <b className="small">{o.title}</b>
-              <span className="tiny muted offer-from">с босса</span>
+              <span className="tiny muted offer-from">с босса<br />{boss!.name.toLowerCase()}</span>
             </button>
           );
         }
