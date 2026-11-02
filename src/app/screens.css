@@ -1266,7 +1266,7 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .sk-spot-weapons .sk-tag { bottom: 8%; }
 .sk-spot-energy .sk-tag { bottom: auto; top: 100%; margin-top: 3px; }
 @media (prefers-reduced-motion: reduce) {
-  .sk-body, .sk-head, .sk-lids, .sk-iris, .sk-cig, .sk-ember, .sk-smoke, .sk-armL, .sk-armR, .sk-fist, .sk-lamp, .sk-spot img { animation: none; }
+  .sk-body, .sk-head, .sk-pen, .sk-finger, .sk-lamp, .sk-spot img { animation: none; }
   .sk-spot img { filter: drop-shadow(0 0 2px #fff6c8) drop-shadow(0 0 6px rgba(255, 204, 51, 0.8)); }
 }
 
@@ -5000,3 +5000,10 @@ body { background-attachment: fixed; }
 .sl-tray .sl-drop.gone { animation: sl-pick 0.85s cubic-bezier(0.2, 0.7, 0.3, 1) both; pointer-events: none; }
 .sl-tray .sl-drop.gone .sl-drop-n { right: auto; left: 50%; bottom: 105%; transform: translateX(-50%); font-size: min(4.2cqw, 18px); color: #7dffb8; text-shadow: 0 0 8px rgba(46, 232, 138, 0.8), 0 2px 0 #000; }
 @keyframes sl-pick { from { transform: translateY(0) rotate(var(--r)) scale(1); opacity: 1; } 60% { opacity: 1; } to { transform: translateY(-260%) rotate(0deg) scale(1.25); opacity: 0; } }
+
+/* the new shopkeeper: the pen wagged fast in bursts, the fingers drumming the counter one after another */
+.sk-pen { animation: sk-pen 2.6s linear infinite; }
+@keyframes sk-pen { 0%, 52%, 100% { transform: rotate(0deg); } 4% { transform: rotate(-9deg); } 8% { transform: rotate(8deg); } 12% { transform: rotate(-9deg); } 16% { transform: rotate(8deg); }
+  20% { transform: rotate(-9deg); } 24% { transform: rotate(8deg); } 28% { transform: rotate(-9deg); } 32% { transform: rotate(8deg); } 36% { transform: rotate(-7deg); } 40% { transform: rotate(5deg); } 46% { transform: rotate(0deg); } }
+.sk-finger { animation: sk-drum 1.15s ease-in-out infinite; }
+@keyframes sk-drum { 0%, 34%, 100% { transform: rotate(0deg); } 12% { transform: rotate(16deg); } 22% { transform: rotate(-1deg); } 27% { transform: rotate(0deg); } }

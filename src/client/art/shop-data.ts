@@ -28,52 +28,28 @@ export const SHOP_ART = {
     "height": 32.75
   },
   "torso": {
-    "left": 28.7,
-    "top": 29.607,
-    "width": 40.45,
-    "height": 40.643
-  },
-  "armR": {
-    "left": 56.35,
-    "top": 35.214,
-    "width": 18.6,
-    "height": 23.5
-  },
-  "armL": {
-    "left": 14.95,
-    "top": 35.5,
-    "width": 22.15,
-    "height": 23.5
+    "left": 22.2,
+    "top": 28.464,
+    "width": 48.35,
+    "height": 38.036
   },
   "head": {
-    "left": 40.6,
-    "top": 18.464,
-    "width": 15.1,
-    "height": 12.571
+    "left": 40.3,
+    "top": 17.214,
+    "width": 17.65,
+    "height": 17.893
   },
-  "sclera": {
-    "left": 44.85,
-    "top": 24.214,
-    "width": 7.9,
-    "height": 1.321
+  "pen": {
+    "left": 17.15,
+    "top": 21.071,
+    "width": 9.45,
+    "height": 15.75
   },
-  "iris": {
-    "left": 45.75,
-    "top": 24.214,
-    "width": 6.25,
-    "height": 1.25
-  },
-  "lids": {
-    "left": 43.9,
-    "top": 23.393,
-    "width": 9.65,
-    "height": 2.5
-  },
-  "cigarette": {
-    "left": 46.1,
-    "top": 27.714,
-    "width": 2.8,
-    "height": 3.071
+  "sleeveL": {
+    "left": 16.75,
+    "top": 34.643,
+    "width": 15.9,
+    "height": 24.321
   },
   "counter": {
     "left": 0.0,
@@ -87,13 +63,43 @@ export const SHOP_ART = {
     "width": 71.6,
     "height": 20.25
   },
-  "fist": {
-    "left": 45.7,
-    "top": 55.571,
-    "width": 20.05,
-    "height": 6.786
+  "sleeveR": {
+    "left": 52.7,
+    "top": 35.071,
+    "width": 25.7,
+    "height": 26.107
+  },
+  "f1": {
+    "left": 37.7,
+    "top": 55.214,
+    "width": 9.3,
+    "height": 5.036
+  },
+  "f2": {
+    "left": 40.15,
+    "top": 56.893,
+    "width": 8.3,
+    "height": 4.143
+  },
+  "f3": {
+    "left": 42.15,
+    "top": 58.286,
+    "width": 6.65,
+    "height": 3.0
+  },
+  "f4": {
+    "left": 38.5,
+    "top": 55.821,
+    "width": 9.3,
+    "height": 5.143
+  },
+  "palm": {
+    "left": 44.15,
+    "top": 54.929,
+    "width": 13.05,
+    "height": 5.5
   }
 } as Record<string, ShopLayer>,
-  smoke: {"x": 46.5, "y": 30.45},
-  neck: {"x": 48.17, "y": 30.76},
+  neck: {"x": 49.25, "y": 34.29},
+  pivots: {"pen": {"x": 22.5, "y": 35.71}, "f1": {"x": 46.13, "y": 56.43}, "f2": {"x": 47.67, "y": 57.83}, "f3": {"x": 48.11, "y": 59.14}, "f4": {"x": 46.93, "y": 57.03}} as Record<string, { x: number; y: number }>,
 };

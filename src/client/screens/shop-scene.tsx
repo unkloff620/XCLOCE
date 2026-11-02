@@ -1,8 +1,8 @@
 "use client";
 /*
  * The shop: the shopkeeper behind the counter (tools/shop/build-shop.py cuts the artist's parts into layers).
- * He breathes, sways his head, blinks, glances around, smokes (the cigarette bobs, the tip glows, smoke rises),
- * moves the open hand and taps the counter with the fist. The goods glow and pulse: the weapons on the counter,
+ * He breathes and sways his head, wags the pen in his raised hand and drums the counter with his fingers
+ * (each finger taps on its own, one after another). The eyes and the mouth come later. The goods glow and pulse: the weapons on the counter,
  * the clothes rack, the energy drinks on the shelf — a tap opens that window. The arms lie in front of the goods;
  * the rack and the shelf stand right after the background, behind the shopkeeper and the counter.
  */
@@ -28,6 +28,9 @@ function Layer({ n, className = "", style }: { n: string; className?: string; st
     <img className={`sk-layer ${className}`} src={`/assets/shop/v2/${n}.webp`} alt="" draggable={false} style={{ ...box(n), ...style }} />
   );
 }
+
+/** the fingers on the counter in the order they tap (the little finger first) */
+const FINGERS = ["f3", "f2", "f1", "f4"] as const;
 
 export type ShopSpotId = "weapons" | "clothing" | "energy";
 const SPOTS: { id: ShopSpotId; layer: string; label: string; tag: "top" | "bottom" }[] = [
@@ -66,6 +69,7 @@ export function ShopScene({ onOpen, children, box, onBox }: {
 }) {
   const spot = (id: ShopSpotId) => <Spot s={SPOTS.find((x) => x.id === id)!} onOpen={onOpen} />;
   const neck = SHOP_ART.neck;
+  const pv = SHOP_ART.pivots;
   return (
     <div className="sk-scene" style={{ aspectRatio: SHOP_ART.aspect }}>
       <Layer n="room" className="sk-room" />
@@ -77,13 +81,10 @@ export function ShopScene({ onOpen, children, box, onBox }: {
         <Layer n="torso" />
         <div className="sk-head" style={{ transformOrigin: `${neck.x}% ${neck.y}%` }}>
           <Layer n="head" />
-          <Layer n="sclera" />
-          <Layer n="iris" className="sk-iris" />
-          <Layer n="lids" className="sk-lids" />
-          <Layer n="cigarette" className="sk-cig" style={{ transformOrigin: originAt("cigarette", L.cigarette.left + L.cigarette.width * 0.95, L.cigarette.top + 2) }} />
-          <span className="sk-ember" style={{ left: `${SHOP_ART.smoke.x}%`, top: `${SHOP_ART.smoke.y}%` }} />
-          {[0, 1, 2, 3].map((i) => <span key={i} className="sk-smoke" style={{ left: `${SHOP_ART.smoke.x}%`, top: `${SHOP_ART.smoke.y}%`, animationDelay: `${i * 1.1}s` }} />)}
         </div>
+        {/* the raised hand with the pen, its wrist inside the sleeve's cuff */}
+        <Layer n="pen" className="sk-pen" style={{ transformOrigin: originAt("pen", pv.pen.x, pv.pen.y) }} />
+        <Layer n="sleeveL" />
       </div>
       <Layer n="counter" />
       {onBox && (
@@ -95,9 +96,10 @@ export function ShopScene({ onOpen, children, box, onBox }: {
       {spot("weapons")}
       {/* the arms lie on the counter in front of the goods; they breathe with the body (same animation, same pivot) */}
       <div className="sk-body sk-arms" style={{ transformOrigin: `${neck.x}% 70%` }}>
-        <Layer n="armR" className="sk-armR" style={{ transformOrigin: "72% 4%" }} />
-        <Layer n="armL" className="sk-armL" style={{ transformOrigin: "88% 6%" }} />
-        <Layer n="fist" className="sk-fist" style={{ transformOrigin: "96% 55%" }} />
+        <Layer n="sleeveR" />
+        {/* the fingers drum the counter one after another, each around its knuckle (under the palm) */}
+        {FINGERS.map((f, i) => <Layer key={f} n={f} className="sk-finger" style={{ transformOrigin: originAt(f, pv[f].x, pv[f].y), animationDelay: `${i * 0.11}s` }} />)}
+        <Layer n="palm" />
       </div>
       {children}
     </div>
