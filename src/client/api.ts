@@ -63,7 +63,7 @@ export interface GameState {
   /** the reached, not collected achievements (a notice pops up for each new one) */
   achievementsReadyIds?: string[];
   /** «Ящик ништяков» in the shop: one per 5 achievement points earned (the points stay) */
-  achBox?: { points: number; opened: number; ready: number; progress: number; cost: number };
+  achBox?: { points: number; opened: number; ready: number; progress: number; cost: number; thingMiss?: number | null; thingPity?: number };
   /** the 777 machine: spins left this hour, and its own level (content/slots.ts slotLevel) */
   slots: { left: number; max: number; nextAt: number | null; xp: number; level: number; into: number; need: number };
   events?: import("../content/events.ts").GameEventView[];

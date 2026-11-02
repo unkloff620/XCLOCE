@@ -306,6 +306,12 @@ function AchBoxWindow({ onClose }: { onClose: () => void }) {
             <button className="acx-all num" disabled={busy === "ach_box_open"} onClick={() => { setPhase("closed"); void open(true); }} title="Открыть все кейсы сразу">×{b.ready}</button>
           )}
         </div>
+        {/* the way to the sure thing: CASE_THING_PITY boxes in a row without one — the next gives one */}
+        {b.thingMiss != null && b.thingPity ? (
+          <span className="ach-bar acx-pity" style={{ ["--p" as string]: `${Math.round((b.thingMiss / b.thingPity) * 100)}%`, ["--c" as string]: "#b98bff" }}>
+            <i /><span className="num">вещь наверняка: {b.thingMiss}/{b.thingPity}</span>
+          </span>
+        ) : null}
         <span className="tiny acx-hint">
           {phase === "open" ? (b.ready > 0 ? `Ещё кейсов: ${b.ready} — нажми на кейс для следующего или ×${b.ready}, чтобы открыть все` : "Нажми на кейс, чтобы закрыть")
             : b.ready > 0 ? (b.ready > 1 ? `Готово кейсов: ${b.ready} — ×${b.ready} откроет все сразу` : "Готов 1 кейс") : `Каждые ${b.cost} очков достижений — ещё один кейс (очки не тратятся). Нужно ещё ${b.cost - b.progress}.`}

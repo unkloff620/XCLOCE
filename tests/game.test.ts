@@ -847,6 +847,23 @@ describe("«Ящик ништяков»", () => {
     expect(all.result).toMatchObject({ opened: 3, box: { opened: 5, ready: 0 } });
     expect(noParts(all.result.reward.items)).toEqual([{ id: "keyboard", qty: 6 }, { id: "gpu", qty: 3 }, { id: "rug-pull-gun", qty: 3 }]);
   });
+
+  it("case things: at most one a box; 20 boxes in a row without one — the 21st gives one for sure", async () => {
+    const { CASE_THINGS } = await import("../src/content/ach-box.ts");
+    const p = await newPlayer(db);
+    await db.query("UPDATE players SET ach_points = 1000 WHERE id=$1", [p]);
+    const things = (r: { reward: { items: { id: string }[] } }) => r.reward.items.filter((i) => (CASE_THINGS as readonly string[]).includes(i.id));
+    // a very lucky roll still gives one thing only
+    const lucky = await act(db, p, "ach_box_open", {}, T0, always(0.001));
+    expect(things(lucky.result)).toHaveLength(1);
+    expect(lucky.result.box.thingMiss).toBe(0);
+    // no luck: 20 misses, then the sure one
+    for (let i = 1; i <= 20; i++) {
+      const r = await act(db, p, "ach_box_open", {}, T0, always(0.99));
+      if (i < 20) { expect(things(r.result)).toHaveLength(0); expect(r.result.box.thingMiss).toBe(i); }
+      else { expect(things(r.result)).toHaveLength(1); expect(r.result.box.thingMiss).toBe(0); }
+    }
+  });
 });
 
 describe("home: equipment, rooms, look, help", () => {

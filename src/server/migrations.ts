@@ -1213,4 +1213,9 @@ DELETE FROM player_craft_box;`,
     sql: `ALTER TABLE players ADD COLUMN IF NOT EXISTS dealer_talk_day TEXT;
 ALTER TABLE players ADD COLUMN IF NOT EXISTS dealer_bonus_until TIMESTAMPTZ;`,
   },
+  {
+    // the case: boxes opened in a row without a case thing (at CASE_THING_PITY the next one gives one for sure)
+    id: "v2-076-case-thing-miss",
+    sql: `ALTER TABLE players ADD COLUMN IF NOT EXISTS case_thing_miss INT NOT NULL DEFAULT 0;`,
+  },
 ];
