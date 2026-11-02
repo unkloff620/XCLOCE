@@ -5002,9 +5002,9 @@ body { background-attachment: fixed; }
 @keyframes sl-pick { from { transform: translateY(0) rotate(var(--r)) scale(1); opacity: 1; } 60% { opacity: 1; } to { transform: translateY(-260%) rotate(0deg) scale(1.25); opacity: 0; } }
 
 /* the new shopkeeper: the pen wagged fast in bursts, the fingers drumming the counter one after another */
-.sk-pen { animation: sk-pen 2.6s linear infinite; }
-@keyframes sk-pen { 0%, 52%, 100% { transform: rotate(0deg); } 4% { transform: rotate(-9deg); } 8% { transform: rotate(8deg); } 12% { transform: rotate(-9deg); } 16% { transform: rotate(8deg); }
-  20% { transform: rotate(-9deg); } 24% { transform: rotate(8deg); } 28% { transform: rotate(-9deg); } 32% { transform: rotate(8deg); } 36% { transform: rotate(-7deg); } 40% { transform: rotate(5deg); } 46% { transform: rotate(0deg); } }
+/* the hand with the pen lags behind the forearm's sway (same period): behind while the forearm swings, caught up at the ends */
+.sk-pen { animation: sk-pen 4.4s ease-in-out infinite; }
+@keyframes sk-pen { 0%, 50%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-5deg); } 75% { transform: rotate(5deg); } }
 .sk-finger { position: absolute; pointer-events: none; background-repeat: no-repeat; background-position: 0 0; animation: sk-drum 1.2s steps(1, end) infinite; }
 /* the frames of the strip: flat (0) … fully up (7); up in a breath, down with a tap */
 @keyframes sk-drum { 0% { background-position-x: 0%; } 4% { background-position-x: calc(2 * 100% / 7); } 8% { background-position-x: calc(4 * 100% / 7); }
@@ -5012,3 +5012,5 @@ body { background-attachment: fixed; }
   28% { background-position-x: calc(3 * 100% / 7); } 31% { background-position-x: calc(1 * 100% / 7); } 34%, 100% { background-position-x: 0%; } }
 .sk-forearm { position: absolute; inset: 0; pointer-events: none; animation: sk-forearm 4.4s ease-in-out infinite; }
 @keyframes sk-forearm { 0%, 100% { transform: rotate(-3.5deg); } 50% { transform: rotate(3.5deg); } }
+/* the case lies on the counter over the shopkeeper's arm */
+.sk-spot.sk-box { z-index: 4; }

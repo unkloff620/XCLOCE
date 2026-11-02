@@ -1,7 +1,7 @@
 "use client";
 /*
  * The shop: the shopkeeper behind the counter (tools/shop/build-shop.py cuts the artist's parts into layers).
- * He breathes and sways his head, wags the pen in his raised hand and drums the counter with his fingers
+ * He breathes and sways his head, sways the raised forearm (the hand with the pen lags behind it) and drums the counter with his fingers
  * (each finger taps on its own, one after another). The eyes and the mouth come later. The goods glow and pulse: the weapons on the counter,
  * the clothes rack, the energy drinks on the shelf — a tap opens that window. The arms lie in front of the goods;
  * the rack and the shelf stand right after the background, behind the shopkeeper and the counter.
@@ -63,7 +63,7 @@ function Spot({ s, onOpen }: { s: (typeof SPOTS)[number]; onOpen: (id: ShopSpotI
 /** «Ящик ништяков» — the case (art/ach-case.tsx) lies whole on the right of the dealer's counter */
 const ACH_BOX_W = 29;
 const ACH_BOX_H = ACH_BOX_W * (2000 / 2800) / CASE_ASPECT;
-const ACH_BOX_AT = { left: 69.5, top: 67 - ACH_BOX_H, width: ACH_BOX_W, height: ACH_BOX_H };
+const ACH_BOX_AT = { left: 69.5, top: 73 - ACH_BOX_H, width: ACH_BOX_W, height: ACH_BOX_H };
 /** the weapons on the counter: smaller and moved to the left, to make room for the case */
 const WEAPONS_SCALE = 0.8;
 const WEAPONS_LEFT = 3;
@@ -90,7 +90,7 @@ export function ShopScene({ onOpen, children, box, onBox }: {
       </div>
       <Layer n="counter" />
       {/* the raised forearm: the elbow lies on the counter, the forearm sways slowly left and right around it, the hand with
-          the pen (in front of the cuff) goes with it and wags the pen fast on its own */}
+          the pen (in front of the cuff) follows it a little late, catching up at the ends */}
       <div className="sk-body">
         <div className="sk-forearm" style={{ transformOrigin: `${ELBOW.x}% ${ELBOW.y}%` }}>
           <Layer n="sleeveL" />
