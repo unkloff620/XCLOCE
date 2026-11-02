@@ -274,6 +274,9 @@ export function CraftScreen() {
 function Scheme({ d, qty, busy, onMake, onOpen, onClose, onSplit }: { d: CraftDef; qty: Map<string, number>; busy: boolean; onMake: () => void; onOpen: (d: CraftDef) => void; onClose: () => void; onSplit: () => void }) {
   const [sure, setSure] = useState(false);
   const { state, act } = useGame();
+  // «Всё сразу»: «купить» buys every missing part of that kind at once (remembered on this device)
+  const [bulk, setBulk] = useState(() => { try { return localStorage.getItem("xc-craft-bulk") === "1"; } catch { return false; } });
+  const toggleBulk = () => { haptic.tap(); setBulk((b) => { try { localStorage.setItem("xc-craft-bulk", b ? "0" : "1"); } catch { /* private mode */ } return !b; }); };
   const usd = state?.wallet.USD ?? 0;
   // a missing part: «Купить» the missing ones for dollars
   const buy = async (id: string, n: number) => {
@@ -287,6 +290,9 @@ function Scheme({ d, qty, busy, onMake, onOpen, onClose, onSplit }: { d: CraftDe
   return (
     <Modal onClose={onClose} className="cf-scheme-modal">
       <div className="cf-scheme">
+        <button type="button" role="switch" aria-checked={bulk} className={`cf-bulk ${bulk ? "on" : ""}`} onClick={toggleBulk}>
+          <i aria-hidden="true" /><span>Покупать всё сразу</span>
+        </button>
         <div className="cf-scheme-body">
           {cols.map((col, i) => (
             <div key={i} className="cf-scheme-col">
@@ -299,9 +305,10 @@ function Scheme({ d, qty, busy, onMake, onOpen, onClose, onSplit }: { d: CraftDe
                     <b className="num">{full(h)}/{r.qty}</b>
                     {sub?.recipe && <button type="button" className="cf-ing-btn" onClick={() => onOpen(sub)}>Собрать</button>}
                     {sub && sub.level === 0 && h < r.qty && (() => {
-                      // one at a time: each tap buys one part
-                      const cost = PART_USD[sub.rarity] ?? PART_USD.common;
-                      return <button type="button" className="bb-buy cf-buy" disabled={busy || usd < cost} onClick={() => void buy(r.id, 1)} title={`Купить 1 шт. за ${cost} $`}>купить · {cost}$</button>;
+                      // one at a time, or (the «Всё сразу» switch) all the missing ones
+                      const n = bulk ? r.qty - h : 1;
+                      const cost = n * (PART_USD[sub.rarity] ?? PART_USD.common);
+                      return <button type="button" className="bb-buy cf-buy" disabled={busy || usd < cost} onClick={() => void buy(r.id, n)} title={`Купить ${n} шт. за ${cost} $`}>купить{n > 1 ? ` ×${n}` : ""} · {cost}$</button>;
                     })()}
                     <i className="cf-ing-name">{sub?.name}</i>
                   </span>
