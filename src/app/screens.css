@@ -4891,3 +4891,5 @@ body { background-attachment: fixed; }
 .door-plate { left: 27%; width: 48%; column-gap: 2cqw; }
 .door-plate .gain { font-size: 2.8cqw; }
 .door-plate .gain svg { width: 3.8cqw; height: 3.8cqw; }
+.boss-tabs { margin: 0 auto 12px; }
+.boss-soon { display: flex; flex-direction: column; gap: 6px; padding: 28px 16px; }

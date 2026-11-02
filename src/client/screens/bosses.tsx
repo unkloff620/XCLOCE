@@ -64,6 +64,7 @@ export function BossesScreen() {
   const router = useRouter();
   const now = useNow();
   const { data, load } = useBossList();
+  const [tab, setTab] = useState<(typeof BOSS_TABS)[number]["id"]>("admins");
   usePageReady(!!data);
   useEffect(() => {
     void load();
@@ -77,7 +78,19 @@ export function BossesScreen() {
         </div>
         {data && <span className="small muted">Лимиты обновятся через {clock(data.resetAt - now)}</span>}
       </div>
-      <div className="col" style={{ gap: 12 }}>
+      {/* the kinds of bosses: the admins (all of them for now), the mentors and the brigade ones (soon) */}
+      <div className="tabs boss-tabs" role="tablist">
+        {BOSS_TABS.map((t) => (
+          <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} className={tab === t.id ? "on" : ""} onClick={() => setTab(t.id)}>{t.label}</button>
+        ))}
+      </div>
+      {tab !== "admins" && (
+        <div className="panel center boss-soon">
+          <b className="display">Скоро</b>
+          <span className="small muted">{tab === "mentors" ? "Боссы-менторы скоро появятся." : "Бригадные боссы скоро появятся: бьёт вся бригада (клан), урон идёт только от своих."}</span>
+        </div>
+      )}
+      {tab === "admins" && <div className="col" style={{ gap: 12 }}>
         {bossesIn(data?.bosses.map((x) => x.id) ?? state?.openBosses).map((b) => {
           const row = data?.bosses.find((x) => x.id === b.id);
           const prev = BOSSES.find((x) => x.order === b.order - 1);
@@ -146,10 +159,12 @@ export function BossesScreen() {
             </Link>
           );
         })}
-      </div>
+      </div>}
     </div>
   );
 }
+
+const BOSS_TABS = [{ id: "admins", label: "Админы" }, { id: "mentors", label: "Менторы" }, { id: "brigade", label: "Бригадные" }] as const;
 
 /** a picture for the help rows */
 const helpImg = (src: string) => (
