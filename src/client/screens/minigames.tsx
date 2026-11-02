@@ -353,7 +353,26 @@ function clockLeft(at: number) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
-/** zonk duels in the level menu: [+] to call someone, calls to me (yes / no), my calls, duels to play, results */
+/** «Дуэли» over the level menu: who I played, who won; a dot when a call waits or a duel is mine to play */
+function DuelsButton({ onPlay, onShow }: { onPlay: (id: number) => void; onShow: (id: number) => void }) {
+  const { state } = useGame();
+  const [open, setOpen] = useState(false);
+  const waits = (state?.duels ?? []).filter((d) => (d.status === "open" && !d.mine) || (d.status === "playing" && d.myPoints === null)).length;
+  return (
+    <>
+      <button type="button" className="zb-duels-btn" onClick={() => { haptic.tap(); setOpen(true); }} aria-label="Дуэли">
+        ⚔ Дуэли{waits > 0 && <i className="num">{waits}</i>}
+      </button>
+      {open && (
+        <Modal title="Дуэли" onClose={() => setOpen(false)}>
+          <DuelsList onPlay={(id) => { setOpen(false); onPlay(id); }} onShow={(id) => { setOpen(false); onShow(id); }} />
+        </Modal>
+      )}
+    </>
+  );
+}
+
+/** zonk duels (in the «Дуэли» window): [+] to call someone, calls to me (yes / no), my calls, duels to play, results */
 function DuelsList({ onPlay, onShow }: { onPlay: (id: number) => void; onShow: (id: number) => void }) {
   const { state, act, busy } = useGame();
   useNow();
@@ -571,7 +590,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
                   </span>
                 )}
               </>
-            ) : <span>Выбери уровень</span>}
+            ) : <span className="zb-head-menu">Выбери уровень<DuelsButton onPlay={(id) => run("duel_play", { id })} onShow={setShowDuel} /></span>}
           </div>
 
           {/* the thrown dice in the open field; a tap sends a die to the ladder */}
@@ -682,7 +701,6 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
                   <span className="zb-res-got">{g.result.reward && <RewardChips r={g.result.reward} size={14} />}<em>+{g.result.xp ?? 0} опыта</em></span>
                 </div>
               )}
-              <DuelsList onPlay={(id) => run("duel_play", { id })} onShow={setShowDuel} />
               <div className="zb-xp" title={`${info.xp} опыта зонка`}>
                 <span>Зонк <b className="num">{info.level}</b> ур.</span>
                 <span className="zb-xp-bar"><i style={{ width: `${lvl}%` }} /></span>

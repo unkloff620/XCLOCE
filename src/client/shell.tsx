@@ -6,9 +6,9 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactN
 import { isMusicOn, isMuted, onSoundChange, setMuted, setMusic, sfx } from "./sound.ts";
 import { liveEnergy, tasksReady, useGame, useNow } from "./store.tsx";
 import { Icon, NAV_GLOW, NavIcon } from "./art/icons.tsx";
-import { Avatar } from "./ui.tsx";
+import { Avatar, Modal } from "./ui.tsx";
 import { clock, full, moneyShort } from "./format.ts";
-import { CURRENCIES } from "../content/currencies.ts";
+import { CURRENCIES, CURRENCY_DEFS, type Currency } from "../content/currencies.ts";
 import { TIPS, resourceLine } from "../content/loading.ts";
 import { isOutdated, loginWidget, reloadFresh } from "./api.ts";
 import { telegramBack } from "./telegram.ts";
@@ -90,6 +90,51 @@ function PhoneModeButton() {
   );
 }
 
+/** the money in the HUD: two boxes (roubles and dollars at first); a tap on one — pick the currency it shows; picking the one
+ * the other box shows swaps them. Remembered on this device. */
+const MONEY_KEY = "xc-hud-money";
+function HudMoney({ wallet }: { wallet: Partial<Record<Currency, number>> }) {
+  const [shown, setShown] = useState<[Currency, Currency]>(() => {
+    try { const v = JSON.parse(localStorage.getItem(MONEY_KEY) ?? "null"); if (Array.isArray(v) && v.length === 2 && v.every((c) => (CURRENCIES as readonly string[]).includes(c)) && v[0] !== v[1]) return v as [Currency, Currency]; } catch { /* none */ }
+    return ["RUB", "USD"];
+  });
+  const [box, setBox] = useState<0 | 1 | null>(null);
+  const pick = (c: Currency) => {
+    if (box === null) return;
+    const next: [Currency, Currency] = [...shown];
+    const other = (1 - box) as 0 | 1;
+    if (next[other] === c) next[other] = next[box];
+    next[box] = c;
+    setShown(next);
+    try { localStorage.setItem(MONEY_KEY, JSON.stringify(next)); } catch { /* private mode */ }
+    setBox(null);
+  };
+  return (
+    <>
+      <div className="hud-money">
+        {shown.map((c, i) => (
+          <button key={i} type="button" className="coin-chip" title={`${CURRENCY_DEFS[c].name} — выбрать валюту`} onClick={() => setBox(i as 0 | 1)}>
+            <Icon name={c} size={20} />
+            <b className="num">{moneyShort(c, wallet[c] ?? 0)}</b>
+          </button>
+        ))}
+      </div>
+      {box !== null && (
+        <Modal title="Какую валюту показать" onClose={() => setBox(null)}>
+          <div className="coin-pick">
+            {CURRENCIES.map((c) => (
+              <button key={c} type="button" className={`coin-chip ${shown[box] === c ? "on" : ""}`} onClick={() => pick(c)}>
+                <Icon name={c} size={22} /><b className="num">{moneyShort(c, wallet[c] ?? 0)}</b><small>{CURRENCY_DEFS[c].name}</small>
+              </button>
+            ))}
+          </div>
+          <Link href="/exchange" className="tiny muted" style={{ display: "block", textAlign: "center", marginTop: 10 }} onClick={() => setBox(null)}>Обменник ›</Link>
+        </Modal>
+      )}
+    </>
+  );
+}
+
 function Hud() {
   const { state } = useGame();
   const now = useNow();
@@ -128,14 +173,7 @@ function Hud() {
           <SoundToggles />
         </div>
       </div>
-      <div className="hud-money">
-        {CURRENCIES.map((c) => (
-          <Link key={c} href="/exchange" className="coin-chip" title={`${c} — обменник`}>
-            <Icon name={c} size={20} />
-            <b className="num">{moneyShort(c, state.wallet[c] ?? 0)}</b>
-          </Link>
-        ))}
-      </div>
+      <HudMoney wallet={state.wallet} />
     </header>
     {energyOpen && <EnergyWindow onClose={() => setEnergyOpen(false)} />}
     </>

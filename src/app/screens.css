@@ -4836,3 +4836,15 @@ body { background-attachment: fixed; }
 .cf-bulk.on i { background: #27b866; border-color: #0d5a2e; }
 .cf-bulk.on i::after { transform: translateX(13px); }
 .acx-pity { width: 100%; }
+/* zonk: «Дуэли» opens the duels window (it is no longer a list in the level menu) */
+.zb-head-menu { display: flex; align-items: center; justify-content: space-between; gap: 2cqw; width: 100%; }
+.zb-duels-btn { position: relative; padding: 0.8cqw 2.4cqw; border-radius: 1.6cqw; border: 0.3cqw solid #e0b04a; background: linear-gradient(#3a2a12, #1c1308); color: #ffe08a; font: 900 2.6cqw/1 var(--font-display), sans-serif; text-transform: uppercase; cursor: pointer; }
+.zb-duels-btn i { position: absolute; top: -1.4cqw; right: -1.4cqw; min-width: 3.4cqw; height: 3.4cqw; padding: 0 0.6cqw; border-radius: 2cqw; background: #e8384f; color: #fff; font: 900 2.2cqw/3.4cqw system-ui; font-style: normal; }
+/* poker: the button a bit narrower inside its frame */
+.pkt-ctrl .btn.block, .pkt-ctrl .pkt-btns { width: 82%; margin-left: auto; margin-right: auto; }
+.pkt-ctrl .pkt-btns .btn.block { width: auto; }
+/* the HUD money: two boxes; a tap picks which currency a box shows */
+.coin-chip { cursor: pointer; }
+.coin-pick { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.coin-pick .coin-chip { justify-content: center; padding: 8px; font-size: 15px; }
+.coin-pick .coin-chip.on { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }

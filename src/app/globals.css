@@ -90,7 +90,7 @@ img { max-width: 100%; }
 .energy-chip { flex: none; color: inherit; font: inherit; cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 5px 9px 5px 6px; border-radius: 14px; background: var(--tex), var(--panel); border: 2.5px solid var(--line); font-weight: 800; }
 .energy-chip.over b { color: var(--gold); }
 .energy-chip small { display: block; font-size: 10px; font-weight: 600; color: var(--muted); line-height: 1; }
-.hud-money { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
+.hud-money { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
 .coin-chip { display: flex; align-items: center; gap: 4px; min-width: 0; padding: 3px 6px 3px 3px; border-radius: 11px; background: var(--tex), var(--bg2); border: 2px solid var(--line); font-weight: 800; font-size: 12px; }
 .coin-chip b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
@@ -140,7 +140,7 @@ h2.h { margin: 4px 2px 8px; font-size: 16px; text-shadow: 0 2px 0 var(--line); }
 .btn.dark { --b1: #8a6a4c; --b2: #6d513b; --b4: #150d07; --bt: #ffe6b0; --bl: #c9a26b; text-shadow: 0 -1px 0 #000; }
 .btn.big { min-height: 54px; font-size: 18px; border-radius: 6px; outline-offset: -7px; }
 /* a «block» button is not stretched any more: normal size, on the right; small ones in cards, menu lists (.wide) and the poker table still fill their place */
-.btn.block { display: flex; width: fit-content; min-width: 140px; max-width: 100%; margin-left: auto; align-self: flex-end; }
+.btn.block { display: flex; width: fit-content; min-width: 140px; max-width: 100%; margin-left: auto; margin-right: auto; align-self: center; }
 .btn.block:is(.sm, .wide) { width: 100%; min-width: 0; margin-left: 0; align-self: stretch; }
 .btn.sm { min-height: 34px; padding: 0 12px; font-size: 12.5px; border-radius: 4px; outline-offset: -5px; box-shadow: 0 2px 0 var(--b4), 0 4px 7px rgba(0, 0, 0, 0.35); }
 .btn.sm:active:not(:disabled) { box-shadow: 0 0 0 var(--b4), 0 1px 3px rgba(0, 0, 0, 0.35); }
