@@ -4888,9 +4888,14 @@ body { background-attachment: fixed; }
 .ug-go > span { padding-bottom: 2.2cqw; font-size: 3.4cqw; }
 .ug-center b { font-size: 7.4cqw; font-weight: 600; letter-spacing: -0.02em; }
 /* the door's reward plate: wider and a touch smaller, so bigger rewards (+7 260 ₽, +12 000) stay on the door in two rows */
-.door-plate { left: 27%; width: 48%; column-gap: 2cqw; }
-.door-plate .gain { font-size: 2.8cqw; }
-.door-plate .gain svg { width: 3.8cqw; height: 3.8cqw; }
+/* the rewards sit in the lower panel of the door (under the handle, inside the leaf): «НАГРАДА» on top, chips wrap below */
+.door-plate { left: 37.5%; width: 28.5%; top: calc(47.6% + var(--door-dy, 0%)); max-height: 16%; align-content: flex-start; column-gap: 1.5cqw; row-gap: 0.6cqw; }
+.door-plate-title { font-size: 2.3cqw; margin-bottom: 0.2cqw; }
+.door-plate .gain { font-size: 2.45cqw; gap: 0.7cqw; white-space: nowrap; }
+.door-plate .gain svg, .door-plate .mystery-box { width: 3.3cqw !important; height: 3.3cqw !important; }
+.door-leaf .door-plate .drop-kind img { width: 4.4cqw; height: 4.4cqw; }
+.door-plate .medal-chip b { font-size: 2.5cqw; }
+.door-plate .medal-chip .bcoin { width: 3.5cqw !important; height: 3.5cqw !important; }
 .boss-tabs { margin: 0 auto 12px; }
 .boss-soon { display: flex; flex-direction: column; gap: 6px; padding: 28px 16px; }
 .ach-last { white-space: normal; line-height: 1.25; }

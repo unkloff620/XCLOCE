@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-02-door-rewards",
+    date: "2 ноября",
+    title: "Награды на дверях боссов",
+    items: [
+      { text: "Награды на двери босса теперь аккуратно стоят в нижней части двери под «НАГРАДА» и больше не вылезают за край." },
+    ],
+  },
+  {
     id: "2026-11-01-luck-achievements",
     date: "1 ноября",
     title: "Удача в наездах и новые достижения",
