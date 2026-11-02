@@ -180,8 +180,59 @@ export const WEAR_FIT = {
     "y": 281.0,
     "w": 220,
     "h": 160
+  },
+  "mask-anon": {
+    "slot": "FACE",
+    "x": 402.0,
+    "y": 85.0,
+    "w": 202,
+    "h": 180
+  },
+  "monocle-whale": {
+    "slot": "FACE",
+    "x": 433.0,
+    "y": 162.0,
+    "w": 156,
+    "h": 107
+  },
+  "bruise-liq": {
+    "slot": "FACE",
+    "x": 509.0,
+    "y": 156.5,
+    "w": 79,
+    "h": 106
+  },
+  "crown-cash": {
+    "slot": "HEAD",
+    "x": 364.0,
+    "y": -34.5,
+    "w": 258,
+    "h": 134
+  },
+  "ushanka-star": {
+    "slot": "HEAD",
+    "x": 363.5,
+    "y": -16.0,
+    "w": 274,
+    "h": 188
+  },
+  "helmet-miner": {
+    "slot": "HEAD",
+    "x": 368.5,
+    "y": -17.5,
+    "w": 263,
+    "h": 172
+  },
+  "bandana-hodl": {
+    "slot": "HEAD",
+    "x": 341.0,
+    "y": 80.5,
+    "w": 260,
+    "h": 74
   }
 } as const;
 /** head things that cut the hair under them (the rest are worn over the hair) */
-export const HAIR_CUT_HATS: readonly string[] = ["cap-moon", "santa-hat"];
+export const HAIR_CUT_HATS: readonly string[] = ["cap-moon", "helmet-miner", "santa-hat", "ushanka-star"];
+/** head things drawn over the hair without cutting it (a crown, a bandana) */
+export const HATS_ON_HAIR: readonly string[] = ["bandana-hodl", "crown-cash"];
 export const SKIN_ORIGINAL = 1;

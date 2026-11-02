@@ -70,9 +70,13 @@ WEAR_SLOT = {"tee-white": "SHIRT", "tee-pump": "SHIRT", "jeans": "PANTS", "short
              "slippers": "SHOES", "gold-chain": "ACCESSORY", "cap-moon": "HEAD", "hoodie-hodl": "SHIRT",
              "jacket-komandate": "SHIRT", "pants-komandate": "PANTS", "sneakers-komandate": "SHOES",
              "sweater-vostok": "SHIRT", "pants-vostok": "PANTS", "sneakers-black": "SHOES", "santa-hat": "HEAD", "laser-eyes": "FACE",
-             "headphones-vostok": "HEAD", "cigarette": "MOUTH", "toothpick": "MOUTH", "shades-gold": "FACE", "chain-cuban": "ACCESSORY"}
+             "headphones-vostok": "HEAD", "cigarette": "MOUTH", "toothpick": "MOUTH", "shades-gold": "FACE", "chain-cuban": "ACCESSORY",
+             "mask-anon": "FACE", "monocle-whale": "FACE", "bruise-liq": "FACE",
+             "crown-cash": "HEAD", "ushanka-star": "HEAD", "helmet-miner": "HEAD", "bandana-hodl": "HEAD"}
 # head things worn over the hair (no hair variants cut under them)
-OVER_HAIR = {"headphones-vostok"}
+OVER_HAIR = {"headphones-vostok", "crown-cash", "bandana-hodl"}
+# of those: drawn on top of the hair (the crown sits on it, the bandana is tied over it) — the hair is not cut
+ON_HAIR = ["bandana-hodl", "crown-cash"]
 wear, hat_alpha = {}, {}
 for item, slot in WEAR_SLOT.items():
     a = np.array(Image.open(os.path.join(SRC, "wear", item + ".png")).convert("RGBA"))
@@ -173,5 +177,7 @@ ts += "/** worn clothes drawn on the rig; hats in this list also have hair varia
 ts += "export const WEAR_FIT = " + json.dumps(wear, indent=2) + " as const;\n"
 ts += "/** head things that cut the hair under them (the rest are worn over the hair) */\n"
 ts += "export const HAIR_CUT_HATS: readonly string[] = " + json.dumps(sorted(hat_alpha)) + ";\n"
+ts += "/** head things drawn over the hair without cutting it (a crown, a bandana) */\n"
+ts += "export const HATS_ON_HAIR: readonly string[] = " + json.dumps(ON_HAIR) + ";\n"
 ts += f"export const SKIN_ORIGINAL = {SKIN_ORIGINAL};\n"
 open(os.path.join(ROOT, "src", "client", "art", "rig-look.ts"), "w").write(ts)

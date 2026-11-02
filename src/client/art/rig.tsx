@@ -12,7 +12,7 @@ import { ART_VER, usedUrl } from "../preload.ts";
 import type { PointerEvent as ReactPointerEvent, ReactNode } from "react";
 import { createContext, useContext, useEffect, useMemo, useRef } from "react";
 import { RIG } from "./rig-data.ts";
-import { HAIR_CUT_HATS, HAIR_FIT, SKIN_ORIGINAL, WEAR_FIT } from "./rig-look.ts";
+import { HAIR_CUT_HATS, HAIR_FIT, HATS_ON_HAIR, SKIN_ORIGINAL, WEAR_FIT } from "./rig-look.ts";
 import { HELD_FIT } from "./held-data.ts";
 import { TATTOO_FIT } from "./tattoo-data.ts";
 import { PLACES } from "./places-data.ts";
@@ -211,7 +211,7 @@ function partShapes(edit: RigEdit, look: Look, worn: Worn): { boxes: Box[]; clip
   switch (edit.part) {
     case "HEAD": return [{ boxes: head }];
     case "EYES": return [{ boxes: [EYES_BOX] }];
-    case "MOUTH": return [{ boxes: [MOUTH_BOX] }];
+    case "MOUTH": case "TEETH": return [{ boxes: [MOUTH_BOX] }];
     case "TORSO": return [torso({ y1: HIPS_Y })];
     case "SHOULDER_L": return [{ boxes: [p("armUL")] }];
     case "SHOULDER_R": return [{ boxes: [p("armUR")] }];
@@ -267,7 +267,7 @@ function wornIn(worn: Worn, slot: string): WearId | null {
 function Wear({ slot, hat }: { slot: string; hat?: "under" | "over" }) {
   const id = wornIn(useContext(WornCtx), slot);
   if (!id) return null;
-  if (hat && (hat === "over") !== HAIR_CUT_HATS.includes(id)) return null;
+  if (hat && (hat === "over") !== (HAIR_CUT_HATS.includes(id) || HATS_ON_HAIR.includes(id))) return null;
   const f = WEARS[id];
   return <image href={`/assets/hero/wear/${id}.webp?v=${ART_VER.wear}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
 }
@@ -280,23 +280,34 @@ function Wear({ slot, hat }: { slot: string; hat?: "under" | "over" }) {
  * with the end in the mouth at 0,0 — .rig-chew moves and turns it around that end; the smoke (.rig-smoke-at) follows the lit tip.
  */
 function Mouth() {
-  const id = wornIn(useContext(WornCtx), "MOUTH");
+  const worn = useContext(WornCtx);
+  const id = wornIn(worn, "MOUTH") ?? (worn.MOUTH && worn.MOUTH in MOUTH_HELD ? worn.MOUTH : null);
+  // «Зубы»: the diamond grills — the same jaw with diamond teeth; with nothing in the mouth he grins with them
+  const diamond = worn.TEETH === "grillz-diamond";
   const { skin } = useContext(LookCtx);
-  if (!id) return null;
-  const href = `${skin !== SKIN_ORIGINAL ? `/assets/hero/skin-${skin}` : "/assets/hero"}/jaw.webp?v=${ART_VER.heroPart}`;
-  const held = MOUTH_HELD[id];
+  if (!id && !diamond) return null;
+  const href = `${skin !== SKIN_ORIGINAL ? `/assets/hero/skin-${skin}` : "/assets/hero"}/${diamond ? "jaw-diamond" : "jaw"}.webp?v=${ART_VER.heroPart}`;
+  const held = id ? MOUTH_HELD[id] : undefined;
   return (
     <>
       <svg x={JAW.x} y={JAW.y} width={JAW.w} height={JAW.h} viewBox={`0 0 ${JAW.w} ${JAW.h}`} overflow="hidden" pointerEvents="none">
         <image className="rig-jaw-f" href={href} x={0} y={0} width={JAW.w} height={JAW.h * JAW.frames} preserveAspectRatio="none"
           style={{ ["--fh" as string]: `${JAW.h}px` }} />
       </svg>
+      {/* the diamonds glint: little stars flash on the teeth now and then */}
+      {diamond && (
+        <g className="rig-glint" pointerEvents="none">
+          {GLINTS.map(([x, y, d], i) => (
+            <path key={i} d="M0 -4 L0.9 -0.9 L4 0 L0.9 0.9 L0 4 L-0.9 0.9 L-4 0 L-0.9 -0.9 Z" transform={`translate(${x} ${y})`} style={{ animationDelay: `${d}s` }} />
+          ))}
+        </g>
+      )}
       {held ? (
         <g className="rig-chew" pointerEvents="none">
           <image href={`/assets/hero/mouth-${id}.webp?v=${ART_VER.wear}`} x={0} y={-held.thick / 2} width={held.len} height={held.thick} preserveAspectRatio="none" />
         </g>
-      ) : <Wear slot="MOUTH" />}
-      {id === "cigarette" && (
+      ) : id ? <Wear slot="MOUTH" /> : null}
+      {(id === "cigarette" || id === "cigar") && (
         <g className="rig-smoke-at" pointerEvents="none">
           <g className="rig-smoke">
             {[0, 1, 2].map((i) => <circle key={i} cx={0} cy={0} r={6} style={{ animationDelay: `${i * 0.9}s` }} />)}
@@ -306,6 +317,9 @@ function Mouth() {
     </>
   );
 }
+
+/** where the diamond teeth glint (rig coordinates over the mouth) and when (s) */
+const GLINTS: [number, number, number][] = [[485, 253, 0], [503, 256, 1.3], [520, 252, 2.6], [495, 266, 3.7], [515, 267, 5.1]];
 
 const NO_SKIN = new Set<string>(["pupils", "brows", "eyes-closed"]);
 

@@ -72,7 +72,7 @@ def smooth(a, b, v): t = np.clip((v - a) / (b - a), 0, 1); return t * t * (3 - 2
 vy = smooth(split - 5, split + 7, yy)                       # 0 above the lips' line, 1 under it
 hx = 1 - smooth(70, 118, np.abs(xx - cx))                    # full in the middle, nothing at the cheeks
 
-def frame(t, lips_t):
+def frame(t, lips_t, up=up, down=down):
     d = DROP * t
     mapy = (yy - d * vy * hx).astype(np.float32)             # pull the lower lip and the chin down
     warped = cv2.remap(lips_t, xx, mapy, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
@@ -84,14 +84,17 @@ def frame(t, lips_t):
 x0, y0, x1, y1 = BOX
 fw, fh = (x1 - x0) / K, (y1 - y0) / K                       # one frame in rig units
 ow, oh = round(fw * PX), round(fh * PX)
-for tone in range(len(SKIN_TONES)):
+# the plain teeth, and the diamond grills (slot «Зубы»: teeth-*-diamond.png, the same teeth set with diamonds) → jaw-diamond.webp
+VARIANTS = [("jaw", up, down), ("jaw-diamond", load("teeth-up-diamond"), load("teeth-down-diamond"))]
+for name, vu, vd in VARIANTS:
+  for tone in range(len(SKIN_TONES)):
     lt = recolor(lips, tone)
     sheet = np.zeros((oh * FRAMES, ow, 4), np.float32)
     for i in range(FRAMES):
-        f = frame(i / (FRAMES - 1), lt)[y0:y1, x0:x1]
+        f = frame(i / (FRAMES - 1), lt, vu, vd)[y0:y1, x0:x1]
         sheet[i * oh:(i + 1) * oh] = cv2.resize(f, (ow, oh), interpolation=cv2.INTER_AREA)
     im = Image.fromarray((np.clip(np.nan_to_num(sheet), 0, 1) * 255 + 0.5).astype(np.uint8), "RGBA")
-    path = os.path.join(OUT, "jaw.webp") if tone == SKIN_ORIGINAL else os.path.join(OUT, f"skin-{tone}", "jaw.webp")
+    path = os.path.join(OUT, f"{name}.webp") if tone == SKIN_ORIGINAL else os.path.join(OUT, f"skin-{tone}", f"{name}.webp")
     im.save(path, "WEBP", quality=90, method=6)
 data = {"x": round(RIG_X0 + (x0 - REF_X0) / K, 2), "y": round(RIG_Y0 + (y0 - REF_Y0) / K, 2), "w": round(fw, 2), "h": round(fh, 2), "frames": FRAMES,
         # the middle of the mouth (rig): the thing in the mouth is flipped around it to the other corner

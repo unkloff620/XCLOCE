@@ -29,11 +29,11 @@ export interface StyleDraft {
   worn: Record<string, string>;
 }
 
-const CLOTHES: Slot[] = ["HEAD", "FACE", "MOUTH", "ACCESSORY", "SHIRT", "PANTS", "SHOES", "HAND"];
-const ITEM_PART: Record<string, string> = { HEAD: "Голова", FACE: "Лицо", MOUTH: "Рот", ACCESSORY: "Аксессуар", SHIRT: "Верх", PANTS: "Низ", SHOES: "Обувь", HAND: "Кисть" };
+const CLOTHES: Slot[] = ["HEAD", "FACE", "MOUTH", "TEETH", "ACCESSORY", "SHIRT", "PANTS", "SHOES", "HAND"];
+const ITEM_PART: Record<string, string> = { HEAD: "Голова", FACE: "Лицо", MOUTH: "Рот", TEETH: "Зубы", ACCESSORY: "Аксессуар", SHIRT: "Верх", PANTS: "Низ", SHOES: "Обувь", HAND: "Кисть" };
 /** the slot buttons: a picture (public/assets/ui/slot-*.webp) and a short word under it */
 const SLOT_ICON: Record<string, string> = { MOUTH: "slot-mouth", HEAD: "slot-head", ACCESSORY: "slot-accessory", SHIRT: "slot-shirt", PANTS: "slot-pants", SHOES: "slot-shoes" };
-const SHORT_PART: Record<string, string> = { HEAD: "Голова", FACE: "Лицо", MOUTH: "Рот", ACCESSORY: "Шея", SHIRT: "Верх", PANTS: "Низ", SHOES: "Обувь", HAND: "Кисть" };
+const SHORT_PART: Record<string, string> = { HEAD: "Голова", FACE: "Лицо", MOUTH: "Рот", TEETH: "Зубы", ACCESSORY: "Шея", SHIRT: "Верх", PANTS: "Низ", SHOES: "Обувь", HAND: "Кисть" };
 // «левое / правое» — as seen on the screen
 
 export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
@@ -222,10 +222,10 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
             <span className="sty-item-name">{i.name}</span>
           </button>
         ))}
-        {items.length === 0 && slot === "MOUTH" && (
+        {items.length === 0 && (slot === "MOUTH" || slot === "TEETH") && (
           <span className="sty-item shop"><span className="sty-plus" aria-hidden="true">⏳</span><span className="sty-item-name">Выпадает из Ящика ништяков</span></span>
         )}
-        {items.length === 0 && slot !== "MOUTH" && (
+        {items.length === 0 && slot !== "MOUTH" && slot !== "TEETH" && (
           <Link href="/shop?tab=clothing" className="sty-item shop" onClick={onClose}>
             <span className="sty-plus" aria-hidden="true">🛒</span>
             <span className="sty-item-name">{slot === "HAND" ? "Выпадают с боссов" : "В магазин"}</span>

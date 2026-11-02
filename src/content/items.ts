@@ -8,10 +8,10 @@ import { PART_SELL } from "./craft-drops.ts";
 export type Category = "weapon" | "clothing" | "item" | "reward" | "stash" | "event" | "tattoo" | "craft";
 export type Rarity = "common" | "rare" | "epic" | "legendary" | "mythic";
 /** FACE: worn on the face (laser eyes) — its own tab in the hero editor */
-export type Slot = "BODY" | "PANTS" | "SHIRT" | "SHOES" | "HEAD" | "FACE" | "MOUTH" | "ACCESSORY" | "SPECIAL" | "HAND";
+export type Slot = "BODY" | "PANTS" | "SHIRT" | "SHOES" | "HEAD" | "FACE" | "MOUTH" | "TEETH" | "ACCESSORY" | "SPECIAL" | "HAND";
 /** Drawing order of the character, bottom to top. */
-export const SLOTS: Slot[] = ["BODY", "PANTS", "SHIRT", "SHOES", "HEAD", "FACE", "MOUTH", "ACCESSORY", "SPECIAL", "HAND"];
-export const WEARABLE_SLOTS: Slot[] = ["PANTS", "SHIRT", "SHOES", "HEAD", "FACE", "MOUTH", "ACCESSORY", "SPECIAL", "HAND"];
+export const SLOTS: Slot[] = ["BODY", "PANTS", "SHIRT", "SHOES", "HEAD", "FACE", "MOUTH", "TEETH", "ACCESSORY", "SPECIAL", "HAND"];
+export const WEARABLE_SLOTS: Slot[] = ["PANTS", "SHIRT", "SHOES", "HEAD", "FACE", "MOUTH", "TEETH", "ACCESSORY", "SPECIAL", "HAND"];
 
 export interface WeaponStats {
   damage: number;
@@ -102,6 +102,15 @@ const WEARABLES: ItemDef[] = ([
   { id: "toothpick", name: "Зубочистка", slot: "MOUTH", rarity: "rare", description: "Для тех, кто уже всё съел.", sources: ["Ящик ништяков"] },
   // only from «Ящик ништяков» (content/ach-box.ts CASE_THINGS)
   { id: "shades-gold", name: "Очки «Кит»", slot: "FACE", rarity: "epic", description: "Чёрные стёкла, золотая оправа. Графики через них всегда зелёные.", sources: ["Ящик ништяков"] },
+  { id: "mask-anon", name: "Маска Анонимуса", slot: "FACE", rarity: "epic", description: "Хакер, который слил биржу. Никто не знает, кто под маской.", sources: ["Ящик ништяков"] },
+  { id: "monocle-whale", name: "Монокль и усы", slot: "FACE", rarity: "epic", description: "Кит старой школы: держит биток с 2011-го.", sources: ["Ящик ништяков"] },
+  { id: "bruise-liq", name: "Фингал и пластырь", slot: "FACE", rarity: "rare", description: "Так выглядят после ликвидации на сотом плече.", sources: ["Ящик ништяков"] },
+  { id: "crown-cash", name: "Корона из купюр", slot: "HEAD", rarity: "legendary", description: "Король памп-дампа. Сложена из настоящих бумажных долларов.", sources: ["Ящик ништяков"] },
+  { id: "ushanka-star", name: "Ушанка со звездой", slot: "HEAD", rarity: "rare", description: "Тепло, мех и красная звезда. Зима близко.", sources: ["Ящик ништяков"] },
+  { id: "helmet-miner", name: "Каска майнера", slot: "HEAD", rarity: "epic", description: "С фонарём — копать биток в любой темноте.", sources: ["Ящик ништяков"] },
+  { id: "bandana-hodl", name: "Бандана HODL", slot: "HEAD", rarity: "rare", description: "Повязал — и держишь. Что бы ни случилось.", sources: ["Ящик ништяков"] },
+  { id: "cigar", name: "Сигара", slot: "MOUTH", rarity: "epic", description: "Кубинская. Для тех, у кого всё в плюсе.", sources: ["Ящик ништяков"] },
+  { id: "grillz-diamond", name: "Бриллиантовые зубы", slot: "TEETH", rarity: "legendary", description: "Улыбнулся — и весь двор ослеп. Можно держать в них сигарету, сигару или зубочистку.", sources: ["Ящик ништяков"] },
   { id: "chain-cuban", name: "Золотая цепь", slot: "ACCESSORY", rarity: "legendary", description: "Толстая, как профит после халвинга. Звенит на весь двор.", sources: ["Ящик ништяков"] },
   // held in the left hand (slot «Кисть»): the boss's own weapon, worn for the look
   { id: "bottle-komandate", name: "Бутылка Командате", slot: "HAND", rarity: "epic", description: "Оружие Командате: горит, но не гаснет. Герой держит её в руке.", sources: ["Победа: Командате"] },

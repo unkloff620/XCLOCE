@@ -4818,3 +4818,8 @@ body { background-attachment: fixed; }
 .cf-buy { width: auto; min-width: 64px; padding: 2px 6px; margin-top: 2px; white-space: nowrap; }
 /* a tap during the pour: everything is shown at once */
 .acx-case.skip .acx-item, .acx-case.skip .acx-ink-got { animation-delay: 0s !important; animation-duration: 0.15s !important; }
+/* the diamond teeth: little white stars flash on them, one after another */
+.rig-glint path { fill: #fff; opacity: 0; transform-box: fill-box; transform-origin: center; filter: drop-shadow(0 0 1.5px #bfe9ff); animation: rig-glint 6.4s ease-in-out infinite; }
+@keyframes rig-glint { 0%, 100% { opacity: 0; scale: 0.2; } 4% { opacity: 1; scale: 1.15; rotate: 20deg; } 9% { opacity: 0; scale: 0.3; rotate: 45deg; } }
+.rig.still .rig-glint path { animation: none; }
+@media (prefers-reduced-motion: reduce) { .rig-glint path { animation: none; } }

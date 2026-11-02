@@ -13,7 +13,7 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 SRC = os.path.join(HERE, "source", "mouth")
 OUT = os.path.join(ROOT, "public", "assets", "hero")
 # id: (length in rig units, the end in the mouth is on the right of the source picture)
-HELD = {"cigarette": (50, True), "toothpick": (52, False)}
+HELD = {"cigarette": (50, True), "toothpick": (52, False), "cigar": (48, True)}
 PX = 4  # output pixels per rig unit
 data = {}
 for n, (length, flip) in HELD.items():
