@@ -36,10 +36,10 @@ export const WEAR_FIT = {
   },
   "shorts-actclose": {
     "slot": "PANTS",
-    "x": 178.0,
-    "y": 694.5,
-    "w": 656,
-    "h": 294
+    "x": 177.5,
+    "y": 694.0,
+    "w": 652,
+    "h": 291
   },
   "badge-actclose": {
     "slot": "ACCESSORY",
