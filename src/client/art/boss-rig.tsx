@@ -456,7 +456,10 @@ function KnyazRig({ id, rig, bust, dazed, svgRef, frameCss, strip }: {
   // the fist arm (frames 0…4, straight … bent): up and down with the guard, a quick double bend now and then
   if (P.armRb?.frames) {
     const n = P.armRb.frames - 1;
-    const k = seqKeyframes(`kz-elbow-r-${id}`, P.armRb.w, sampled(2400, (t) => n * (0.5 - 0.5 * Math.cos(2 * Math.PI * t))));
+    // in step with kz-jab (1.6 s): the elbow snaps in for each of the two jerks, quick enough that the frames don't show
+    const ease = (x: number) => x * x * (3 - 2 * x);
+    const bump = (t: number, a: number, b: number, c: number, d: number) => (t < a || t > d ? 0 : t < b ? ease((t - a) / (b - a)) : t < c ? 1 : 1 - ease((t - c) / (d - c)));
+    const k = seqKeyframes(`kz-elbow-r-${id}`, P.armRb.w, sampled(1600, (t) => n * Math.max(bump(t, 0.5, 0.55, 0.6, 0.66), bump(t, 0.72, 0.77, 0.82, 0.9))));
     css.push(`${k.css} .rig-knyaz .kz-elbow-r { animation: kz-elbow-r-${id} ${k.ms}ms step-end infinite; }`);
   }
   // the wallet arm: the elbow snaps in with each cut (in step with kz-slash, 2.1 s), the hand turns around the elbow by
@@ -483,15 +486,7 @@ function KnyazRig({ id, rig, bust, dazed, svgRef, frameCss, strip }: {
         <g className="kz-up" style={{ transformOrigin: `${rig.w / 2}px ${rig.h * 0.56}px`, transformBox: "view-box" }}>
           {/* the wallet arm (viewer's left) behind the body: it swings at the shoulder, the elbow bends like a puppet,
               the hand rides on the forearm and flicks at the wrist; the swivel cover hangs free on its pin (useCoverSwing) */}
-          <g className="kz-arm-l" style={at(KZ_SHOULDER_L)}>
-            {bent("armLb", "kz-elbow-l")}
-            <g className="kz-turn-l" style={at(KZ_ELBOW_L.at)}>
-              <g className="kz-hand-l" ref={handRef} style={origin("handL")}>
-                {img("handL")}
-                <g ref={coverRef}>{img("cover")}</g>
-              </g>
-            </g>
-          </g>
+          <g className="kz-arm-l" style={at(KZ_SHOULDER_L)}>{bent("armLb", "kz-elbow-l")}</g>
           {img("body")}
           <g className="kz-head" style={origin("head")}>
             {img("head-open")}
@@ -519,6 +514,15 @@ function KnyazRig({ id, rig, bust, dazed, svgRef, frameCss, strip }: {
           </g>
           {/* the fist arm (viewer's right) in front of the body, its elbow bending like a puppet */}
           <g className="kz-arm-r" style={at(KZ_SHOULDER_R)}>{bent("armRb", "kz-elbow-r")}</g>
+          {/* the hand with the wallet in front of everything: the same shoulder and elbow turns as its sleeve behind */}
+          <g className="kz-arm-l" style={at(KZ_SHOULDER_L)}>
+            <g className="kz-turn-l" style={at(KZ_ELBOW_L.at)}>
+              <g className="kz-hand-l" ref={handRef} style={origin("handL")}>
+                {img("handL")}
+                <g ref={coverRef}>{img("cover")}</g>
+              </g>
+            </g>
+          </g>
         </g>
       </g>
     </svg>

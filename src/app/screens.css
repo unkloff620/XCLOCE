@@ -5018,14 +5018,24 @@ body { background-attachment: fixed; }
 /* Князь (art/boss-rig.tsx KnyazRig): breathes, sways, keeps the right fist up; the left hand slashes with the wallet held
    like a knife — sharp short cuts and a stab, the wrist flicking the "blade"; never reaching out at the screen */
 .rig-knyaz { --kz-snap: cubic-bezier(0.15, 0.9, 0.25, 1); }
-.rig-knyaz .kz-up { animation: kz-breath 3s ease-in-out infinite; }
-@keyframes kz-breath { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.006, 1.014) translateY(-2px); } }
+/* heavy breathing: the chest heaves up and swells, the shoulders rise, out with a slump */
+.rig-knyaz .kz-up { animation: kz-breath 2.4s ease-in-out infinite; }
+@keyframes kz-breath { 0%, 100% { transform: scale(1, 1) translateY(0); } 42% { transform: scale(1.018, 1.034) translateY(-7px); } 55% { transform: scale(1.016, 1.03) translateY(-6px); } }
 .rig-knyaz .kz-root { animation: kz-shift 6s ease-in-out infinite; }
 @keyframes kz-shift { 0%, 100% { transform: translateX(0) rotate(0deg); } 50% { transform: translateX(6px) rotate(0.6deg); } }
 .rig-knyaz .kz-head { animation: kz-head 5s ease-in-out infinite; }
 @keyframes kz-head { 0%, 100% { transform: rotate(0deg); } 30% { transform: rotate(-2.2deg); } 70% { transform: rotate(1.6deg); } }
-.rig-knyaz .kz-arm-r { animation: kz-guard 2.2s ease-in-out infinite; }
-@keyframes kz-guard { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-3deg); } }
+/* the fist: a bob in the guard, then two quick jerks at the shoulder (the elbow snaps with them, kz-elbow-r) */
+.rig-knyaz .kz-arm-r { animation: kz-jab 1.6s linear infinite; }
+@keyframes kz-jab {
+  0% { transform: rotate(0deg); animation-timing-function: ease-in-out; }
+  25% { transform: rotate(-2deg); animation-timing-function: ease-in-out; }
+  50% { transform: rotate(1deg); animation-timing-function: cubic-bezier(0.15, 0.9, 0.25, 1); }
+  55% { transform: rotate(-9deg); animation-timing-function: ease-out; }
+  66% { transform: rotate(0deg); animation-timing-function: cubic-bezier(0.15, 0.9, 0.25, 1); }
+  77% { transform: rotate(-11deg); animation-timing-function: ease-out; }
+  90%, 100% { transform: rotate(0deg); }
+}
 /* the cuts: a short wind-up, a snap down across (fast in, held a beat), back; twice, then a stab with the wrist */
 .rig-knyaz .kz-arm-l { animation: kz-slash 2.1s linear infinite; }
 @keyframes kz-slash {
@@ -5175,3 +5185,7 @@ body { background-attachment: fixed; }
 /* sad: the cigarette hangs from the corner of the shut mouth, the smoke still curls up */
 .arena-photo.ouch .rig-knyaz .kz-cig, .rig-knyaz.dazed .kz-cig { animation: none; transform: translate(549px, 279px) rotate(72deg); }
 .arena-photo.ouch .rig-knyaz .kz-tip, .rig-knyaz.dazed .kz-tip { animation: none; transform: translate(562px, 319px); }
+.rig-knyaz.dazed .kz-cig, .rig-knyaz.dazed .kz-tip { display: none; }
+.rig-knyaz.dazed .kz-arm-r { animation: kz-limp-r 3.4s ease-in-out infinite; }
+@keyframes kz-limp-r { 0%, 100% { transform: rotate(3deg); } 50% { transform: rotate(8deg); } }
+.rig-knyaz.dazed .kz-elbow-r { animation: none; }
