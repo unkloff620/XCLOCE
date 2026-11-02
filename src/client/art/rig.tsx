@@ -348,6 +348,9 @@ function Beard() {
   return <image href={`/assets/hero/beard-${beard}.webp?v=${ART_VER.heroPart}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" pointerEvents="none" />;
 }
 
+/** open jackets: the chain goes under them */
+const OPEN_JACKETS = ["jacket-komandate"];
+
 /** where the diamond teeth glint (rig coordinates over the mouth) and when (s) */
 const GLINTS: [number, number, number][] = [[485, 253, 0], [503, 256, 1.3], [520, 252, 2.6], [495, 266, 3.7], [515, 267, 5.1]];
 
@@ -499,8 +502,18 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
         </Ol>
         {/* the tattoos of the chest, the belly and the arms: over the arms, under the shirt */}
         <Ink part="upper" />
-        <Ol><Wear slot="SHIRT" /></Ol>
-        <Ol><Wear slot="ACCESSORY" /></Ol>
+        {/* a chain lies over a T-shirt, but under an open jacket (on the bare chest between its flaps) */}
+        {OPEN_JACKETS.includes(worn?.SHIRT ?? "") ? (
+          <>
+            <Ol><Wear slot="ACCESSORY" /></Ol>
+            <Ol><Wear slot="SHIRT" /></Ol>
+          </>
+        ) : (
+          <>
+            <Ol><Wear slot="SHIRT" /></Ol>
+            <Ol><Wear slot="ACCESSORY" /></Ol>
+          </>
+        )}
         <Ol>
           <Bone p="head" className="rig-head">
             <Face />
