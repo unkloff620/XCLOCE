@@ -10,7 +10,7 @@ import { sfx } from "../sound.ts";
 import { ACH_BOX_COST, CASE_THINGS } from "../../content/ach-box.ts";
 import { Help, HelpList } from "../help.tsx";
 import type { Currency } from "../../content/currencies.ts";
-import { itemById, type Slot } from "../../content/items.ts";
+import { ITEMS, itemById, type ItemDef, type Slot } from "../../content/items.ts";
 import { isFirstWinItem, unlockBossOf } from "../../content/bosses.ts";
 import { EnergyArt, ItemArt } from "../art/items.tsx";
 import { Icon } from "../art/icons.tsx";
@@ -32,8 +32,26 @@ const SHOP_SPOTS = [
 /** A locked thing: which boss drops it, and that it is bought here after it drops. */
 function LockedInfo({ itemId, onClose }: { itemId: string; onClose: () => void }) {
   const def = itemById(itemId)!;
-  const boss = unlockBossOf(itemId)!;
+  const boss = unlockBossOf(itemId);
   const first = isFirstWinItem(itemId);
+  if (!boss) {
+    // not sold here at all: where it comes from (the case, a location, an event)
+    const from = (def.sources ?? []).filter((s) => s !== "Магазин");
+    return (
+      <Modal title={def.name} onClose={onClose}>
+        <div className="col" style={{ gap: 10, alignItems: "center", textAlign: "center" }}>
+          <div className="locked-art"><ItemArt id={itemId} size={84} /><span className="locked-badge"><Icon name="lock" size={22} /></span></div>
+          <p className="small" style={{ margin: 0 }}>{def.description}</p>
+          <div className="panel col" style={{ gap: 6, width: "100%" }}>
+            <b>Где получить</b>
+            {from.map((s) => <span key={s} className="small">{sourceLong(s)}</span>)}
+            <span className="tiny muted">В магазине не продаётся — только так. Получишь — наденешь здесь или в гардеробе.</span>
+          </div>
+          {from.some((s) => s.includes("Ящик")) && <button className="btn gold block" onClick={onClose}>Ящик ништяков — на прилавке</button>}
+        </div>
+      </Modal>
+    );
+  }
   return (
     <Modal title={def.name} onClose={onClose}>
       <div className="col" style={{ gap: 10, alignItems: "center", textAlign: "center" }}>
@@ -62,12 +80,34 @@ function LockedInfo({ itemId, onClose }: { itemId: string; onClose: () => void }
 /** clothes on the rack go from the head down; the filter row shows these as icons */
 const WEAR_GROUPS: { slot: Slot; name: string; icon: string }[] = [
   { slot: "HEAD", name: "Голова", icon: "slot-head" },
+  { slot: "FACE", name: "Лицо", icon: "slot-face" },
+  { slot: "MOUTH", name: "Рот", icon: "slot-mouth" },
+  { slot: "TEETH", name: "Зубы", icon: "slot-teeth" },
   { slot: "SHIRT", name: "Верх", icon: "slot-shirt" },
   { slot: "PANTS", name: "Низ", icon: "slot-pants" },
   { slot: "SHOES", name: "Обувь", icon: "slot-shoes" },
-  { slot: "FACE", name: "Лицо", icon: "slot-head" },
-  { slot: "ACCESSORY", name: "Аксессуары", icon: "slot-accessory" },
+  { slot: "ACCESSORY", name: "Шея", icon: "slot-accessory" },
+  { slot: "HAND", name: "Руки и анимации", icon: "slot-hand" },
 ];
+const WEAR_SLOTS = new Set(WEAR_GROUPS.map((g) => g.slot));
+/** every thing the hero can wear — the rack shows them all: sold ones with a price, the rest locked with where they come from */
+const ALL_WEAR: ItemDef[] = ITEMS.filter((i) => i.slot && WEAR_SLOTS.has(i.slot) && !i.weapon);
+/** where a thing comes from, a few words under a locked card */
+function sourceShort(def: ItemDef): string {
+  const s = (def.sources ?? []).filter((x) => x !== "Магазин");
+  if (s.some((x) => x.includes("Ящик"))) return "с кейса";
+  if (s.some((x) => x.startsWith("Победа"))) return "с босса";
+  if (s.some((x) => x.toLowerCase().includes("задани"))) return "с задания";
+  if (s.some((x) => x.toLowerCase().includes("ивент"))) return "с ивента";
+  if (s.some((x) => x.includes("локаци"))) return "с локации";
+  return s[0]?.toLowerCase() ?? "скоро";
+}
+function sourceLong(s: string): string {
+  if (s.includes("Ящик")) return "Выпадает из «Ящика ништяков» (кейс на прилавке за очки достижений).";
+  if (s.startsWith("Победа")) return `${s.replace("Победа:", "Победа над боссом:")}.`;
+  if (s.includes("локаци")) return `${s} — закрой локацию на карте.`;
+  return `${s}.`;
+}
 
 /** the filter row above the clothes: everything, or one slot */
 function SlotRow({ slot, onPick }: { slot: Slot | null; onPick: (s: Slot | null) => void }) {
@@ -101,16 +141,22 @@ function BatchRow({ qty, onPick }: { qty: number; onPick: (n: number) => void })
   );
 }
 
-function OfferGrid({ offers, rub }: { offers: Offer[]; rub?: Record<Currency, number> }) {
+/** a thing not sold in the shop, shown on the rack anyway (its offer id starts with this) */
+const CATALOG = "catalog:";
+
+export function OfferGrid({ offers, rub }: { offers: Offer[]; rub?: Record<Currency, number> }) {
   const [batch, setBatch] = useState(1);
   const bulk = offers.some((o) => o.bulk);
   const wear = offers.length > 0 && offers.every((o) => o.section === "clothing");
   const [slot, setSlot] = useState<Slot | null>(null);
   if (wear) {
     // by slot (head, top, bottom, shoes, accessories), cheaper first inside a slot
-    const val = (o: Offer) => o.price.amount * (rub?.[o.price.currency] ?? 1);
+    // the sold ones and, after them in their slot, the things not sold here (from the case, a location, an event)
+    const sold = new Set(offers.map((o) => o.give.item));
+    const all: Offer[] = [...offers, ...ALL_WEAR.filter((d) => !sold.has(d.id)).map((d) => ({ id: `${CATALOG}${d.id}`, section: "clothing" as const, give: { item: d.id, qty: 1 }, price: { currency: "RUB" as Currency, amount: 0 }, title: d.name }))];
+    const val = (o: Offer) => (o.id.startsWith(CATALOG) ? 1e12 : o.price.amount * (rub?.[o.price.currency] ?? 1));
     const order = (o: Offer) => WEAR_GROUPS.findIndex((g) => g.slot === itemById(o.give.item ?? "")?.slot);
-    const shown = offers
+    const shown = all
       .filter((o) => slot === null || itemById(o.give.item ?? "")?.slot === slot)
       .sort((a, b) => order(a) - order(b) || val(a) - val(b));
     return (
@@ -147,13 +193,21 @@ function Cards({ offers, batch }: { offers: Offer[]; batch: number }) {
         // things from bosses are sold only after they dropped (or if already owned)
         const boss = def ? unlockBossOf(def.id) : null;
         const locked = !!boss && owned === 0 && !state?.unlocks?.includes(def!.id);
+        if (def && o.id.startsWith(CATALOG) && owned === 0) {
+          return (
+            <button key={o.id} className={`offer locked rar-${def.rarity}`} onClick={() => { haptic.tap(); setInfo(def.id); }} aria-label={`${o.title}: закрыто, ${sourceShort(def)}`}>
+              <div className="offer-art"><ItemArt id={def.id} size={56} /><span className="locked-badge"><Icon name="lock" size={18} /></span></div>
+              <b className="small">{o.title}</b>
+              <span className="tiny muted offer-from">{sourceShort(def)}</span>
+            </button>
+          );
+        }
         if (locked) {
           return (
             <button key={o.id} className={`offer locked rar-${def!.rarity}`} onClick={() => setInfo(def!.id)} aria-label={`${o.title}: закрыто, выпадает с босса ${boss!.name}`}>
               <div className="offer-art"><ItemArt id={def!.id} size={56} /><span className="locked-badge"><Icon name="lock" size={18} /></span></div>
               <b className="small">{o.title}</b>
-              <span className="tiny muted">{isFirstWinItem(def!.id) ? `победа над ${boss!.name}` : `с босса ${boss!.name}`}</span>
-              <span className="btn sm dark block">Где взять</span>
+              <span className="tiny muted offer-from">с босса</span>
             </button>
           );
         }
@@ -361,7 +415,7 @@ export function ShopScreen() {
       </div>
       {boxOpen && <AchBoxWindow onClose={() => setBoxOpen(false)} />}
       {open && (
-        <Modal title={open.name} onClose={() => setOpen(null)} wide>
+        <Modal title={open.name} onClose={() => setOpen(null)} wide className={open.id === "clothing" ? "wear-shop" : undefined}>
           {data ? <OfferGrid offers={offers} rub={data.exchange.rub} /> : <div className="muted small center">Загрузка…</div>}
           <p className="tiny muted center" style={{ marginTop: 12 }}>Не хватает валюты? Загляни в <Link href="/exchange" style={{ textDecoration: "underline" }}>обменник</Link>.</p>
         </Modal>

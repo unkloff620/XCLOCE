@@ -4966,3 +4966,18 @@ body { background-attachment: fixed; }
   text-shadow: 0 3px 0 #2e1c00, 3px 3px 0 #e2231a, 0 0 18px rgba(255, 90, 61, 0.8); animation: fight-bang 0.5s cubic-bezier(0.2, 1.8, 0.4, 1) both; }
 @keyframes fight-bang { 0% { opacity: 0; scale: 0.2; } 25% { opacity: 1; scale: 1.25; } 70% { opacity: 1; scale: 1; } 100% { opacity: 0; scale: 1.1; } }
 @media (prefers-reduced-motion: reduce) { .fight-cloud, .fight-fist { animation-iteration-count: 1; } }
+
+/* the clothes rack: the window keeps its full height whatever the tab (the page does not jump); the title and the slot tabs
+   stay put, only the cards scroll */
+.modal.wear-shop { height: calc(calc(100 * var(--vh)) - 32px); display: flex; flex-direction: column; overflow: hidden; }
+.modal.wear-shop > * { flex: none; }
+.modal.wear-shop > .modal-body { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
+.modal.wear-shop > .modal-body > * { flex: none; }
+.modal.wear-shop .slot-row { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.modal.wear-shop .slot-btn { max-height: 46px; justify-self: center; width: 100%; max-width: 54px; }
+.modal.wear-shop > .modal-body > .shop-grid { flex: 1 1 0; min-height: 0; overflow-y: auto; align-content: start; margin: 0 -6px; padding: 2px 6px 8px; }
+.modal.wear-shop > .modal-body > p.tiny { margin-top: 8px !important; }
+/* a locked thing: grey picture with the lock, and where it comes from in small letters at the bottom of the card */
+.offer.locked .offer-art img { filter: grayscale(1) brightness(0.55); }
+.shop-grid .offer.locked { justify-content: flex-start; }
+.shop-grid .offer .offer-from { margin-top: auto; padding: 2px 0 3px; font-weight: 700; color: var(--muted); }
