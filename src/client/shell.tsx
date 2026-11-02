@@ -225,6 +225,8 @@ function Nav() {
           onClick={(e) => {
             window.scrollTo({ top: 0 });
             if (on !== t.id) return;
+            // the open section's own windows (the case at the trader's…) close on a tap of its tab
+            window.dispatchEvent(new Event("xc:tab-again"));
             // the tab of the open section: one step back inside it
             const up = parentOf(path, window.location.search, myClan);
             e.preventDefault();

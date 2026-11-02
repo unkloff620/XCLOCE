@@ -5087,3 +5087,12 @@ body { background-attachment: fixed; }
 .acx-item .chip .num { left: auto; right: -1.6cqw; }
 .acx-item .chip { margin: 1.6cqw 1.6cqw 0 0; }
 .acx-item .chip .rc-n { margin: 0; }
+/* the case window's ✕ always on top of the case (its lid turns in 3D, and iPhone may hit-test it above the button) */
+.acx-x { z-index: 5; transform: translateZ(200px); touch-action: manipulation; }
+/* blackjack: the dealer's cards bigger and lower (clear of the buttons on top); my money at the bottom, on the rail */
+.bj2 .bjt-dealer { top: 19%; gap: 1cqw; }
+.bj2 .bj-cards.dealer .bjc { --cw: 13.5cqw; }
+.bj2 .bjt-dlbl { font-size: 3.2cqw; }
+.bj2 .bj2-wallet { position: absolute; z-index: 5; left: 50% !important; transform: translateX(-50%); margin: 0; color: #ffe9b0; background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 210, 63, 0.35); padding: 4px 14px; font-size: 16px; text-shadow: 0 1px 2px #000; }
+.bj2 .bj2-wallet b { color: #ffe9b0; }

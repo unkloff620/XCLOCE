@@ -337,7 +337,7 @@ function AchBoxWindow({ onClose }: { onClose: () => void }) {
   };
   return (
     <div className="acx" role="dialog" aria-label="Ящик ништяков" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <button className="acx-x" onClick={onClose} aria-label="Закрыть">✕</button>
+      <button className="acx-x" onClick={(e) => { e.stopPropagation(); onClose(); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); onClose(); }} aria-label="Закрыть">✕</button>
       <div key={deny} className={`acx-case ${phase} ${b.ready > 0 ? "ready" : ""} ${deny ? "deny" : ""} ${skip ? "skip" : ""}`} onClick={tapCase}>
         <span className="acx-glow" />
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -389,6 +389,12 @@ export function ShopScreen() {
   const router = useRouter();
   const { state } = useGame();
   const [boxOpen, setBoxOpen] = useState(false);
+  // a tap on «Магазин» in the menu closes the case window
+  useEffect(() => {
+    const off = () => setBoxOpen(false);
+    window.addEventListener("xc:tab-again", off);
+    return () => window.removeEventListener("xc:tab-again", off);
+  }, []);
   const [data, setData] = useState<ShopData | null>(null);
   // ?tab=weapons|clothing|energy|misc opens that window right away (links from the boss screen, wardrobe, …)
   const asked = params.get("tab") ?? "";
