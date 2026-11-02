@@ -299,9 +299,9 @@ function Scheme({ d, qty, busy, onMake, onOpen, onClose, onSplit }: { d: CraftDe
                     <b className="num">{full(h)}/{r.qty}</b>
                     {sub?.recipe && <button type="button" className="cf-ing-btn" onClick={() => onOpen(sub)}>Собрать</button>}
                     {sub && sub.level === 0 && h < r.qty && (() => {
-                      const n = r.qty - h;
-                      const cost = n * (PART_USD[sub.rarity] ?? PART_USD.common);
-                      return <button type="button" className="bb-buy cf-buy" disabled={busy || usd < cost} onClick={() => void buy(r.id, n)} title={`Купить ${n} шт. за ${cost} $`}>купить · {cost}$</button>;
+                      // one at a time: each tap buys one part
+                      const cost = PART_USD[sub.rarity] ?? PART_USD.common;
+                      return <button type="button" className="bb-buy cf-buy" disabled={busy || usd < cost} onClick={() => void buy(r.id, 1)} title={`Купить 1 шт. за ${cost} $`}>купить · {cost}$</button>;
                     })()}
                     <i className="cf-ing-name">{sub?.name}</i>
                   </span>
