@@ -10,6 +10,7 @@ import { AchCase } from "../art/ach-case.tsx";
 import { CASE_ASPECT } from "../art/case-data.ts";
 import type { CSSProperties, ReactNode } from "react";
 import { SHOP_ART } from "../art/shop-data.ts";
+import { ART_VER } from "../preload.ts";
 
 const L = SHOP_ART.layers;
 const box = (n: string): CSSProperties => {
@@ -25,7 +26,7 @@ const originAt = (n: string, x: number, y: number) => {
 function Layer({ n, className = "", style }: { n: string; className?: string; style?: CSSProperties }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img className={`sk-layer ${className}`} src={`/assets/shop/v2/${n}.webp`} alt="" draggable={false} style={{ ...box(n), ...style }} />
+    <img className={`sk-layer ${className}`} src={`/assets/shop/v2/${n}.webp?v=${ART_VER.shop}`} alt="" draggable={false} style={{ ...box(n), ...style }} />
   );
 }
 
@@ -50,7 +51,7 @@ function Spot({ s, onOpen }: { s: (typeof SPOTS)[number]; onOpen: (id: ShopSpotI
   return (
     <button className={`sk-spot sk-spot-${s.id}`} style={spotBox(s.layer)} onClick={() => onOpen(s.id)} aria-label={s.label} title={s.label}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={`/assets/shop/v2/${s.layer}.webp`} alt="" draggable={false} />
+      <img src={`/assets/shop/v2/${s.layer}.webp?v=${ART_VER.shop}`} alt="" draggable={false} />
     </button>
   );
 }

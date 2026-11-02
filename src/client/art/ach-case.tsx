@@ -3,6 +3,7 @@
  * While a box can be opened (`ready`), something lives inside: a light glows in it, the lid knocks up and drops back,
  * the latches rattle, flip open, dangle and snap shut again (screens.css «ac-»). Otherwise the case just stands.
  */
+import { ART_VER } from "../preload.ts";
 import { CASE_ASPECT, CASE_LAYERS } from "./case-data.ts";
 
 type LayerId = keyof typeof CASE_LAYERS;
@@ -11,7 +12,7 @@ function L({ n, className }: { n: LayerId; className?: string }) {
   const b = CASE_LAYERS[n];
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img className={`ac-l ${className ?? ""}`} src={`/assets/shop/v2/case-${n}.webp`} alt="" draggable={false}
+    <img className={`ac-l ${className ?? ""}`} src={`/assets/shop/v2/case-${n}.webp?v=${ART_VER.shop}`} alt="" draggable={false}
       style={{ left: `${b.left}%`, top: `${b.top}%`, width: `${b.width}%`, height: `${b.height}%` }} />
   );
 }

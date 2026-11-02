@@ -1,4 +1,5 @@
 "use client";
+import { ART_VER } from "../preload.ts";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -340,7 +341,7 @@ function AchBoxWindow({ onClose }: { onClose: () => void }) {
       <div key={deny} className={`acx-case ${phase} ${b.ready > 0 ? "ready" : ""} ${deny ? "deny" : ""} ${skip ? "skip" : ""}`} onClick={tapCase}>
         <span className="acx-glow" />
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="acx-open" src="/assets/shop/v2/case-front-open.webp" alt="" draggable={false} />
+        <img className="acx-open" src={`/assets/shop/v2/case-front-open.webp?v=${ART_VER.shop}`} alt="" draggable={false} />
         <span className="acx-burst" />
         {/* two frames, top left of the tray: the tattoo and the thing — «Пусто», or what dropped (after the other things) */}
         <LootFrame kind="ink" items={inkGot} delay={inkDelay} open={phase === "open"} />
@@ -351,7 +352,7 @@ function AchBoxWindow({ onClose }: { onClose: () => void }) {
           ))}
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="acx-closed" src="/assets/shop/v2/case-front-closed.webp" alt="" draggable={false} />
+        <img className="acx-closed" src={`/assets/shop/v2/case-front-closed.webp?v=${ART_VER.shop}`} alt="" draggable={false} />
       </div>
       <div className="acx-info">
         {phase === "open" ? (
@@ -404,17 +405,17 @@ export function ShopScreen() {
         <div className="title-row">
           <h1 className="display">Магазин</h1>
           <Help topic="shop" title="Магазин">
-            <HelpList title="Что где лежит" rows={SHOP_SPOTS.map((x) => ({ key: x.id, icon: /* eslint-disable-next-line @next/next/no-img-element */ <img src={`/assets/shop/v2/${x.img}.webp`} alt="" width={44} height={44} style={{ objectFit: "contain" }} />, name: x.name, hint: x.hint }))} />
+            <HelpList title="Что где лежит" rows={SHOP_SPOTS.map((x) => ({ key: x.id, icon: /* eslint-disable-next-line @next/next/no-img-element */ <img src={`/assets/shop/v2/${x.img}.webp?v=${ART_VER.shop}`} alt="" width={44} height={44} style={{ objectFit: "contain" }} />, name: x.name, hint: x.hint }))} />
             <p className="small muted">Нажми на оружие на прилавке, вешалку или энергетики на полке — они подсвечены — откроется витрина. Все цены во внутриигровой валюте; не хватает — загляни в обменник.</p>
           </Help>
         </div>
       </div>
       <div className="yard shop-scene">
-        <div className="scene-backdrop" style={{ backgroundImage: "url(/assets/shop/v2/room.webp)" }} />
+        <div className="scene-backdrop" style={{ backgroundImage: `url(/assets/shop/v2/room.webp?v=${ART_VER.shop})` }} />
         <div className="yard-stage">
           {/* the ceiling goes on above the picture on tall screens (tools/shop/build-ceiling.py) */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="sk-ceiling" src="/assets/shop/v2/ceiling.webp" alt="" draggable={false} aria-hidden="true" />
+          <img className="sk-ceiling" src={`/assets/shop/v2/ceiling.webp?v=${ART_VER.shop}`} alt="" draggable={false} aria-hidden="true" />
           <ShopScene onOpen={(id) => setOpen(id)} box={state?.achBox} onBox={() => { haptic.tap(); setBoxOpen(true); }} />
         </div>
       </div>
