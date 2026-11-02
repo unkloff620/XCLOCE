@@ -241,10 +241,11 @@ function Brawl({ res, name, me, them, onClose }: { res: { won: boolean; mine: nu
     const t = setTimeout(() => setShown(true), CUT_MS + 1100);
     return () => { clearTimeout(w); clearTimeout(d); clearTimeout(t); };
   }, []);
-  if (!dust) return <CutIn me={me} them={them} />;
   useEffect(() => {
     if (shown && res) { if (res.won) { haptic.big(); sfx("victory"); } else { haptic.err(); sfx("brawllose"); } }
   }, [shown, res]);
+  // every hook above this line: the cut-in returns early
+  if (!dust) return <CutIn me={me} them={them} />;
   if (!shown || !res) {
     return (
       <div className="pr-brawl" aria-hidden="true">
