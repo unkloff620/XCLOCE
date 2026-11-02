@@ -5014,3 +5014,16 @@ body { background-attachment: fixed; }
 @keyframes sk-forearm { 0%, 100% { transform: rotate(-3.5deg); } 50% { transform: rotate(3.5deg); } }
 /* the case lies on the counter over the shopkeeper's arm */
 .sk-spot.sk-box { z-index: 4; }
+/* the case loot as tiles, like the upgrader's tray: a bigger picture, how many — above it */
+.acx-loot { gap: 1.4cqw; align-items: center; }
+.acx-item .rchips { display: contents; }
+.acx-item .chip { display: flex; flex-direction: column-reverse; align-items: center; justify-content: center; gap: 0.3cqw; min-width: 11cqw; padding: 0.7cqw 0.9cqw 0.8cqw;
+  border-radius: 1.6cqw; border: 0.3cqw solid rgba(255, 190, 120, 0.3); background: rgba(20, 10, 6, 0.72); font-size: 3.2cqw; line-height: 1; box-sizing: border-box; }
+.acx-item .chip > .row { flex-direction: column-reverse; align-items: center; gap: 0.3cqw !important; }
+.acx-item svg, .acx-item img { width: 9cqw !important; height: 9cqw !important; }
+.acx-loot.many { gap: 1cqw; }
+.acx-loot.many .acx-item .chip { min-width: 9cqw; font-size: 2.7cqw; }
+.acx-loot.many .acx-item svg, .acx-loot.many .acx-item img { width: 7cqw !important; height: 7cqw !important; }
+.acx-loot.lots { gap: 0.8cqw; }
+.acx-loot.lots .acx-item .chip { min-width: 7.5cqw; padding: 0.5cqw 0.6cqw; font-size: 2.3cqw; }
+.acx-loot.lots .acx-item svg, .acx-loot.lots .acx-item img { width: 5.4cqw !important; height: 5.4cqw !important; }
