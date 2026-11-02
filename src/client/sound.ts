@@ -31,6 +31,8 @@ export type Sfx = "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" |
   | "victory"
   /* a fist fight with a player («Наехать»): a voice as it starts (one of two at random), another one when we lose */
   | "raid" | "brawllose"
+  /* the anime cut-in before a fist fight: a sharp whoosh with a low boom under it, as the eyes' strip slides in */
+  | "cutin"
   /* pumping someone's biceps on his profile: one of two recordings at random (pump-1/2.mp3) */
   | "pump"
   /* a new level of the player: one of two recordings of the player's at random (public/assets/sound/levelup-voice-1/2.mp3) */
@@ -341,6 +343,10 @@ export function sfx(name: Sfx, power = 0.5) {
       noise(a, t, 0.12, { freq: 2600, vol: 0.35 });
       noise(a, t + 0.18, 0.08, { freq: 700, vol: 0.5 });
       tone(a, 180, t + 0.18, 0.08, { type: "sine", vol: 0.3, slide: 0.5 });
+      break;
+    case "cutin":
+      noise(a, t, 0.32, { freq: 2600, q: 0.6, type: "bandpass", vol: 0.5 });
+      noise(a, t + 0.04, 0.55, { freq: 220, vol: 0.45 });
       break;
     case "brawl":
       // three punches in the dust

@@ -19,7 +19,7 @@ import { Avatar, Bar, Empty, Modal } from "../ui.tsx";
 import { Emblem } from "../art/emblems.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { Icon } from "../art/icons.tsx";
-import { HeroRig } from "../art/rig.tsx";
+import { EyesArt, HeroRig, type Worn } from "../art/rig.tsx";
 import { HomeScene } from "../art/home-scene.tsx";
 import { ROOM_BACKDROP } from "../../content/home-scene.ts";
 import { BadgesPanel, type AchRow } from "../badges.tsx";
@@ -204,13 +204,44 @@ type Social = { biceps: number; mine: number; pump: number | null; fight: number
 /** the same player again after an hour (content/social.ts SOCIAL_COOLDOWN_MS) */
 const SOCIAL_CD = 60 * 60_000;
 
-/** the fist fight in the background: a dust cloud over the room, then who won — after the raid voice line has finished (≈3 s) */
-function Brawl({ res, name, onClose }: { res: { won: boolean; mine: number; theirs: number; chance?: number; reward: unknown } | null; name: string; onClose: () => void }) {
+type Fighter = { name: string; look?: Look; worn?: Worn };
+/** a time line of the anime cut-in (ms): the curtains, my eyes, his eyes, the slam — then the dust (CSS .pr-cut uses the same) */
+const CUT_MS = 2450;
+
+/** the anime cut-in: black curtains from above and below stop short of each other, a slanted strip between them shows
+ *  my eyes, then his (the strip tilts the other way), the curtains slam shut with a flash */
+function CutIn({ me, them }: { me: Fighter; them: Fighter }) {
+  return (
+    <div className="pr-cut" aria-hidden="true">
+      <i className="cut-curtain top" />
+      <i className="cut-curtain bot" />
+      <div className="cut-strip a">
+        <div className="cut-eyes"><EyesArt look={me.look} worn={me.worn} /></div>
+        <i className="cut-lines" />
+      </div>
+      <b className="cut-name a display">{me.name}</b>
+      <div className="cut-strip b">
+        <div className="cut-eyes"><EyesArt look={them.look} worn={them.worn} /></div>
+        <i className="cut-lines" />
+      </div>
+      <b className="cut-name b display">{them.name}</b>
+      <i className="cut-flash" />
+    </div>
+  );
+}
+
+/** the fist fight: the anime cut-in (my eyes, his eyes), a dust cloud over the room, then who won — after the raid voice line (≈3.5 s) */
+function Brawl({ res, name, me, them, onClose }: { res: { won: boolean; mine: number; theirs: number; chance?: number; reward: unknown } | null; name: string; me: Fighter; them: Fighter; onClose: () => void }) {
   const [shown, setShown] = useState(false);
+  const [dust, setDust] = useState(false);
   useEffect(() => {
-    const t = setTimeout(() => setShown(true), 3300);
-    return () => clearTimeout(t);
+    sfx("cutin");
+    const w = setTimeout(() => sfx("cutin"), 1150);
+    const d = setTimeout(() => { setDust(true); sfx("brawl"); haptic.big(); }, CUT_MS);
+    const t = setTimeout(() => setShown(true), CUT_MS + 1100);
+    return () => { clearTimeout(w); clearTimeout(d); clearTimeout(t); };
   }, []);
+  if (!dust) return <CutIn me={me} them={them} />;
   useEffect(() => {
     if (shown && res) { if (res.won) { haptic.big(); sfx("victory"); } else { haptic.err(); sfx("brawllose"); } }
   }, [shown, res]);
@@ -546,7 +577,6 @@ export function ProfileScreen() {
     if (fightIn) { wait(fightIn, "Наезд"); return; }
     haptic.tap();
     sfx("raid");
-    sfx("brawl");
     const key = Date.now();
     setBrawl({ key, res: null });
     const r = await act<{ won: boolean; mine: number; theirs: number; chance: number; reward: unknown }>("social_fight", { to: p.id });
@@ -605,7 +635,7 @@ export function ProfileScreen() {
         </div>
         {fx?.kind === "spit" && <span key={fx.key} className="pr-spit" aria-hidden="true"><SpitArt size={90} /></span>}
       </div>
-      {brawl && <Brawl key={brawl.key} res={brawl.res} name={p.name} onClose={() => setBrawl(null)} />}
+      {brawl && <Brawl key={brawl.key} res={brawl.res} name={p.name} me={{ name: state?.player.name ?? "Ты", look: state?.look.body, worn: state?.look.equipped }} them={{ name: p.name, look: p.body, worn: p.equipped }} onClose={() => setBrawl(null)} />}
       {dossier && <Dossier p={p} onClose={() => setDossier(false)} reload={reload} />}
     </div>
   );

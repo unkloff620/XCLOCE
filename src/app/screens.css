@@ -4903,3 +4903,42 @@ body { background-attachment: fixed; }
 .sty-side-tabs .sty-shave.idle { opacity: 0.45; }
 /* no teeth worn: the cigarette / toothpick stays put in the corner of the mouth (no chewing) */
 .rig-chew.fixed, .rig-smoke-at.fixed { animation: none; }
+
+/* the anime cut-in before a fist fight (profile.tsx CutIn, 2.45 s): curtains 0–0.3 s, my eyes 0.25–1.2 s, his 1.15–2.2 s, the slam 2.2–2.45 s */
+.pr-cut { position: fixed; inset: 0; z-index: 70; pointer-events: none; overflow: hidden; --slant: 7vh;
+  animation: cut-bg 2.45s linear both; }
+@keyframes cut-bg { 0% { background: rgba(0, 0, 0, 0); } 12%, 100% { background: rgba(0, 0, 0, 0.92); } }
+.cut-curtain { position: absolute; left: -5%; right: -5%; height: 50%; background: #050505; }
+.cut-curtain.top { top: 0; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); animation: cut-top 2.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.cut-curtain.bot { bottom: 0; animation: cut-bot 2.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+/* they stop short (a 26% gap), close in a little more on his eyes, then slam shut */
+@keyframes cut-top { 0% { transform: translateY(-100%); } 12% { transform: translateY(-30%); } 88% { transform: translateY(-27%); } 95%, 100% { transform: translateY(0); } }
+@keyframes cut-bot { 0% { transform: translateY(100%); } 12% { transform: translateY(30%); } 88% { transform: translateY(27%); } 95%, 100% { transform: translateY(0); } }
+/* the strip: slanted, with white edges (the white back shows a few px around the picture) */
+.cut-strip { position: absolute; left: -6%; right: -6%; top: 50%; height: 21vh; margin-top: -10.5vh; background: #fff; opacity: 0; }
+.cut-strip.a { clip-path: polygon(0 var(--slant), 100% 0, 100% calc(100% - var(--slant)), 0 100%); animation: cut-in-l 2.45s both; }
+.cut-strip.b { clip-path: polygon(0 0, 100% var(--slant), 100% 100%, 0 calc(100% - var(--slant))); animation: cut-in-r 2.45s both; }
+.cut-eyes { position: absolute; inset: 6px 0; overflow: hidden; background: radial-gradient(ellipse at 50% 50%, #7a1d14 0%, #2a0806 70%, #120302 100%); clip-path: inherit; }
+.cut-strip.b .cut-eyes { background: radial-gradient(ellipse at 50% 50%, #142c63 0%, #08122b 70%, #03060f 100%); }
+.cut-eyes svg { animation: cut-zoom 2.45s ease-out both; transform-origin: 50% 55%; }
+@keyframes cut-zoom { 0% { transform: scale(1.18); } 100% { transform: scale(1); } }
+/* speed lines racing across the strip */
+.cut-lines { position: absolute; inset: 0; mix-blend-mode: screen; opacity: 0.55;
+  background: repeating-linear-gradient(90deg, transparent 0 46px, rgba(255, 255, 255, 0.35) 46px 48px, transparent 48px 120px, rgba(255, 255, 255, 0.18) 120px 121px);
+  -webkit-mask: linear-gradient(90deg, #000 0%, transparent 28%, transparent 72%, #000 100%); mask: linear-gradient(90deg, #000 0%, transparent 28%, transparent 72%, #000 100%);
+  animation: cut-lines 0.3s linear infinite; }
+.cut-strip.b .cut-lines { animation-direction: reverse; }
+@keyframes cut-lines { from { background-position: 0 0; } to { background-position: 120px 0; } }
+@keyframes cut-in-l { 0%, 10% { opacity: 1; transform: translateX(-110%); } 18% { transform: translateX(2%); } 22% { transform: translateX(0); } 44% { opacity: 1; transform: translateX(-3%); } 48% { opacity: 1; transform: translateX(110%); } 49%, 100% { opacity: 0; transform: translateX(110%); } }
+@keyframes cut-in-r { 0%, 46% { opacity: 0; transform: translateX(110%); } 47% { opacity: 1; transform: translateX(110%); } 55% { transform: translateX(-2%); } 59% { transform: translateX(0); } 87% { opacity: 1; transform: translateX(3%); } 92%, 100% { opacity: 1; transform: translateX(3%); } }
+/* the names on the curtains: mine above the strip, his below */
+.cut-name { position: absolute; left: 0; right: 0; text-align: center; font-size: clamp(22px, 7.5vw, 40px); color: #fff; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0;
+  text-shadow: 3px 3px 0 #e2231a, 0 0 18px rgba(255, 60, 40, 0.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 16px; }
+.cut-name.a { bottom: calc(50% + 11.5vh + 6px); animation: cut-name-a 2.45s both; }
+.cut-name.b { top: calc(50% + 11.5vh + 6px); text-shadow: 3px 3px 0 #2a6bff, 0 0 18px rgba(60, 120, 255, 0.6); animation: cut-name-b 2.45s both; }
+@keyframes cut-name-a { 0%, 14% { opacity: 0; transform: translateX(-30px) skewX(-12deg); } 20% { opacity: 1; transform: translateX(0) skewX(-12deg); } 44% { opacity: 1; transform: translateX(10px) skewX(-12deg); } 48%, 100% { opacity: 0; transform: translateX(40px) skewX(-12deg); } }
+@keyframes cut-name-b { 0%, 52% { opacity: 0; transform: translateX(30px) skewX(-12deg); } 58% { opacity: 1; transform: translateX(0) skewX(-12deg); } 86% { opacity: 1; transform: translateX(-10px) skewX(-12deg); } 90%, 100% { opacity: 0; } }
+/* the slam: a white flash as the curtains shut */
+.cut-flash { position: absolute; inset: 0; background: #fff; opacity: 0; animation: cut-flash 2.45s both; }
+@keyframes cut-flash { 0%, 92% { opacity: 0; } 95% { opacity: 0.95; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .cut-lines, .cut-eyes svg { animation: none; } }

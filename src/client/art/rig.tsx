@@ -536,6 +536,15 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
   );
 }
 
+/** A close-up of the hero's eyes (brows, eyes, glasses and a hat brim — the whole rig, cropped): the anime cut-in before a fight. */
+export function EyesArt({ look, worn }: { look?: Look; worn?: Worn }) {
+  return (
+    <svg className="rig still" viewBox="338 118 330 128" preserveAspectRatio="xMidYMid slice" width="100%" height="100%" aria-hidden="true" style={{ display: "block" }}>
+      <RigBody look={look} worn={worn} />
+    </svg>
+  );
+}
+
 /** The hero's head with a hairstyle (the hairstyle picker): the head, the face and the hair, nothing else. */
 export function HeadArt({ look, size = 56 }: { look: Look; size?: number }) {
   return (
