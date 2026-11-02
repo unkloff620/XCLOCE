@@ -28,6 +28,7 @@ import { EnergyWindow } from "./screens/energy.tsx";
 import { NAV_TABS } from "../content/nav.ts";
 import { haptic } from "./telegram.ts";
 import { LeadersStrip } from "./leaders.tsx";
+import { CountUp } from "./count-up.tsx";
 import { entryUrls, isLoaded, laterUrls, preload, sectionOfRoute, sectionUrls, type LookLite } from "./preload.ts";
 import { mskDay } from "../content/updates.ts";
 
@@ -122,7 +123,7 @@ function HudMoney({ wallet }: { wallet: Partial<Record<Currency, number>> }) {
         <div key={i} className="coin-slot">
           <button type="button" className={`coin-chip ${box === i ? "open" : ""}`} title={`${CURRENCY_DEFS[c].name} — выбрать валюту`} aria-expanded={box === i} onClick={() => setBox(box === i ? null : (i as 0 | 1))}>
             <Icon name={c} size={20} />
-            <b className="num">{money(c, wallet[c] ?? 0)}</b>
+            <CountUp key={c} value={wallet[c] ?? 0} format={(v) => money(c, v)} />
             <span className="coin-caret" aria-hidden="true">▾</span>
           </button>
           {/* the drop-down list right under the box */}
@@ -165,7 +166,7 @@ function Hud() {
             <div className="xpbar" title="Прогресс уровня"><i style={{ width: `${p.levelNeed ? (p.levelXp / p.levelNeed) * 100 : 100}%` }} /></div>
             <div className="row hud-xp" title="Авторитет">
               <Icon name="xp" size={16} />
-              <b className="num">{full(p.xp)}</b>
+              <CountUp value={p.xp} format={(v) => full(Math.round(v))} />
             </div>
           </div>
         </Link>
