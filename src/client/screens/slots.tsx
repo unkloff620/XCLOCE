@@ -4,6 +4,7 @@ import { useGame, useNow } from "../store.tsx";
 import { RewardChips } from "../ui.tsx";
 import { Icon } from "../art/icons.tsx";
 import { ItemArt } from "../art/items.tsx";
+import { itemById } from "../../content/items.ts";
 import { clock, full } from "../format.ts";
 import { sfx } from "../sound.ts";
 import { haptic } from "../telegram.ts";
@@ -33,13 +34,18 @@ interface Spin {
   xp: number; level: { level: number; into: number; need: number }; levelUps: { level: number; reward: Granted }[];
 }
 
-/** the pictures that fall into the tray for a win: a few coins of each currency, each thing (up to 3 of a kind) */
-function dropsOf(r: Granted): { cur?: string; item?: string; x: number; r: number; delay: number }[] {
-  const out: { cur?: string; item?: string }[] = [];
-  for (const [c, v] of Object.entries(r.currencies ?? {})) if (v) for (let k = 0; k < (v >= 1000 ? 5 : v >= 100 ? 4 : 3); k++) out.push({ cur: c });
-  for (const it of r.items ?? []) for (let k = 0; k < Math.min(3, it.qty); k++) out.push({ item: it.id });
-  const n = out.length;
-  return out.map((d, k) => ({ ...d, x: 6 + ((k * 61) % 80) + (n < 4 ? k * 6 : 0), r: ((k * 47) % 60) - 30, delay: (k % 8) * 0.08 }));
+/** a win lying in the tray: one picture per currency and per thing, with how much — a tap picks it up (it is already
+ *  credited on the server with the spin: the tray is only the show, leaving the room loses nothing) */
+interface TrayBit { key: string; cur?: string; item?: string; qty: number; x: number; r: number; delay: number; gone?: boolean }
+const TRAY_MAX = 8;
+function trayOf(r: Granted, spin: number, have: number): TrayBit[] {
+  const out: { cur?: string; item?: string; qty: number }[] = [];
+  for (const [c, v] of Object.entries(r.currencies ?? {})) if (v) out.push({ cur: c, qty: v as number });
+  for (const it of r.items ?? []) if (it.qty) out.push({ item: it.id, qty: it.qty });
+  return out.map((d, k) => {
+    const slot = (have + k) % TRAY_MAX;
+    return { ...d, key: `${spin}-${k}`, x: 3 + (slot % 4) * 24 + ((spin * 7 + k * 5) % 6), r: ((spin * 31 + k * 47) % 40) - 20, delay: k * 0.12 };
+  });
 }
 
 /** the symbol above and below the one on the line (the reel shows three) */
@@ -55,6 +61,14 @@ export function SlotMachine() {
   // three of a kind (or a new level) opens a window with what was won
   const [prize, setPrize] = useState<Spin | null>(null);
   const [press, setPress] = useState(0);
+  const [tray, setTray] = useState<TrayBit[]>([]);
+  // a tap on a thing in the tray: it flies up with «+N» and is gone
+  const pick = (key: string) => {
+    haptic.tap();
+    sfx("coinsoft");
+    setTray((t) => t.map((b) => (b.key === key ? { ...b, gone: true } : b)));
+    timers.current.push(setTimeout(() => setTray((t) => t.filter((b) => b.key !== key)), 900));
+  };
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
   if (!state) return null;
@@ -96,6 +110,10 @@ export function SlotMachine() {
           sfx("dice");
           if (i === 2) {
             setResult(spinRes);
+            if (spinRes.kind !== "miss" && spinRes.reward) {
+              const add = spinRes.reward;
+              setTray((t) => [...t.filter((b) => !b.gone), ...trayOf(add, Date.now() % 100000, t.length)].slice(-TRAY_MAX));
+            }
             setState(st); // the balance changes only when the last reel stops
             // three of a kind (the jackpot too): the big win sound; a pair: a coin
             if (spinRes.kind === "jackpot" || spinRes.kind === "triple") { haptic.big(); sfx("victory"); }
@@ -153,17 +171,16 @@ export function SlotMachine() {
         <button className="sl-lever" style={{ left: px(880), top: py(400), width: px(110), height: py(420) }} disabled={busy || cooling} onClick={spin} aria-label="Дёрнуть рычаг" />
         {/* a win pours coins into the tray, the jackpot showers them over the whole machine */}
         {/* the win falls into the tray as pictures: the coins of each currency and the things, with how much */}
-        {win && result?.reward && (
-          <div className="sl-coins sl-drops" key={`c${press}`} style={{ left: px(236), top: py(1150), width: px(552), height: py(240) }} aria-hidden="true">
-            {dropsOf(result.reward).map((d, k) => (
-              <span key={k} className="sl-drop" style={{ left: `${d.x}%`, ["--r" as string]: `${d.r}deg`, animationDelay: `${d.delay}s` }}>
+        {tray.length > 0 && (
+          <div className="sl-drops sl-tray" style={{ left: px(236), top: py(1150), width: px(552), height: py(240) }}>
+            {tray.map((d, k) => (
+              <button key={d.key} type="button" className={`sl-drop ${d.gone ? "gone" : ""} ${k >= 4 ? "back" : ""}`} disabled={d.gone}
+                style={{ left: `${d.x}%`, ["--r" as string]: `${d.r}deg`, animationDelay: d.gone ? "0s" : `${d.delay}s` }}
+                onClick={() => pick(d.key)} aria-label={`Забрать: ${d.cur ?? (itemById(d.item!)?.name ?? d.item)} ×${d.qty}`}>
                 {d.cur ? <Icon name={d.cur} size={40} /> : <ItemArt id={d.item!} size={44} />}
-              </span>
+                <i className="sl-drop-n num">{d.gone ? "+" : "×"}{d.cur ? full(d.qty) : d.qty}</i>
+              </button>
             ))}
-            <span className="sl-drop-sum">
-              {Object.entries(result.reward.currencies ?? {}).filter(([, v]) => v).map(([c, v]) => <b key={c} className="num"><Icon name={c} size={16} />+{full(v as number)}</b>)}
-              {(result.reward.items ?? []).map((it) => <b key={it.id} className="num"><ItemArt id={it.id} size={18} />+{it.qty}</b>)}
-            </span>
           </div>
         )}
         {result?.kind === "jackpot" && <div className="sl-rain" aria-hidden="true">{Array.from({ length: 30 }, (_, k) => <i key={k} style={{ left: `${(k * 53) % 100}%`, animationDelay: `${(k % 10) * 0.15}s` }} />)}</div>}

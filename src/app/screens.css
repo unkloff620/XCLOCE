@@ -3857,7 +3857,7 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
   animation: sl-drop 0.75s cubic-bezier(0.35, 1.5, 0.55, 1) both; filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.6)); }
 .sl-drop img, .sl-drop svg { width: min(9cqw, 42px) !important; height: min(9cqw, 42px) !important; }
 @keyframes sl-drop { from { transform: translateY(-260%) rotate(-40deg); opacity: 0; } 25% { opacity: 1; } to { transform: translateY(0) rotate(var(--r)); opacity: 1; } }
-.sl-drop-sum { position: absolute; left: 0; right: 0; top: -6%; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; animation: pop 0.4s 0.6s cubic-bezier(0.2, 1.4, 0.4, 1) both; }
+.sl-drop-sum { display: none; position: absolute; left: 0; right: 0; top: -6%; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; animation: pop 0.4s 0.6s cubic-bezier(0.2, 1.4, 0.4, 1) both; }
 .sl-drop-sum b { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 999px; background: rgba(20, 10, 4, 0.85); border: 2px solid #ffd25a; color: #ffe35c; font-size: min(3.2cqw, 14px); text-shadow: 0 0 6px rgba(255, 200, 60, 0.7); }
 /* the reward chips on the dark display: light text */
 .sl-display .chip { background: rgba(255, 220, 140, 0.14); color: #ffe7b0; border-color: rgba(255, 210, 120, 0.4); }
@@ -4988,3 +4988,15 @@ body { background-attachment: fixed; }
 .swap-tile.sm { padding: 3px; border-radius: 10px; }
 .swap-x { position: absolute; right: -5px; top: -6px; width: 17px; height: 17px; border-radius: 50%; display: grid; place-items: center; background: #3a2410; color: #ffe6a8; font-size: 13px; font-weight: 900; line-height: 1; border: 1.5px solid var(--gold); }
 .swap-tab-n { display: inline-grid; place-items: center; min-width: 17px; height: 17px; margin-left: 5px; padding: 0 4px; border-radius: 9px; background: var(--gold); color: #2a1808; font-size: 11px; vertical-align: 1px; }
+
+/* the slot display: the result and the win as plain glowing text on the machine's screen, no plates */
+.sl-display .chip { background: none !important; border: 0 !important; box-shadow: none !important; padding: 0 !important; }
+/* the win in the tray: a tap picks a thing up — it flies up with «+N»; it is credited already, leaving the room loses nothing */
+.sl-tray { pointer-events: none; overflow: visible; }
+.sl-tray .sl-drop { pointer-events: auto; padding: 0; border: 0; background: none; cursor: pointer; font: inherit; color: inherit; }
+.sl-tray .sl-drop.back { bottom: 34%; }
+.sl-drop-n { position: absolute; right: 0; bottom: -8%; font-style: normal; font-weight: 900; font-size: min(2.6cqw, 11px); color: #fff3c4; line-height: 1;
+  text-shadow: 0 1px 0 #000, 0 0 3px #000, 0 0 6px rgba(0, 0, 0, 0.9); pointer-events: none; }
+.sl-tray .sl-drop.gone { animation: sl-pick 0.85s cubic-bezier(0.2, 0.7, 0.3, 1) both; pointer-events: none; }
+.sl-tray .sl-drop.gone .sl-drop-n { right: auto; left: 50%; bottom: 105%; transform: translateX(-50%); font-size: min(4.2cqw, 18px); color: #7dffb8; text-shadow: 0 0 8px rgba(46, 232, 138, 0.8), 0 2px 0 #000; }
+@keyframes sl-pick { from { transform: translateY(0) rotate(var(--r)) scale(1); opacity: 1; } 60% { opacity: 1; } to { transform: translateY(-260%) rotate(0deg) scale(1.25); opacity: 0; } }
