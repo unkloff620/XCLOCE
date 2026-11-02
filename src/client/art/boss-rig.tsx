@@ -56,6 +56,11 @@ const FRAME_SEQ_BY_BOSS: Record<string, Partial<Record<string, [number, number][
   },
 };
 
+/** a boss's schedules for the other modes: Князь — sad brows (the inner ends up, frames 5–6) when hit and when beaten */
+const FRAME_SEQ_MODE_BY_BOSS: Record<string, Partial<Record<string, Partial<Record<SeqMode, [number, number][]>>>>> = {
+  knyaz: { brows: { fear: [[6, 2400], [5, 300], [6, 1800], [5, 200]], ouch: [[5, 60], [6, 900], [5, 120], [0, 60]] } },
+};
+
 function seqKeyframes(name: string, w: number, seq: [number, number][]) {
   const total = seq.reduce((t, [, ms]) => t + ms, 0) || 1;
   let at = 0;
@@ -213,7 +218,7 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
   };
   const frameCss = Object.keys(FRAME_SEQ).filter((p) => P[p]?.frames).map((p) => {
     const w = P[p].w;
-    const k = (mode: SeqMode) => seqKeyframes(`brf-${id}-${p}-${mode}`, w, (mode === "idle" && FRAME_SEQ_BY_BOSS[baseId]?.[p]) || FRAME_SEQ[p][mode]);
+    const k = (mode: SeqMode) => seqKeyframes(`brf-${id}-${p}-${mode}`, w, FRAME_SEQ_MODE_BY_BOSS[baseId]?.[p]?.[mode] || (mode === "idle" && FRAME_SEQ_BY_BOSS[baseId]?.[p]) || FRAME_SEQ[p][mode]);
     const idle = k("idle"), ouch = k("ouch"), strike = k("strike"), fear = k("fear");
     const sel = `.rig-${baseId}.boss-rig .brf-${p}`;
     return `${idle.css} ${ouch.css} ${strike.css} ${fear.css}
@@ -378,8 +383,11 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
  */
 type Rig = { w: number; h: number; parts: Record<string, Part> };
 /** the cigarette in rig units: the corners of the mouth, its length and thickness */
-/** the shoulder of the arm behind the body (rig units): the whole bent arm swings around it */
+/** the shoulders (rig units): each whole arm swings around its own */
 const KZ_SHOULDER_R = [737, 370] as const;
+const KZ_SHOULDER_L = [440, 400] as const;
+/** the wallet arm's elbow (rig units) and the bend of each frame of its strip (tools/boss/assemble-knyaz.py ARM_L_DEG) */
+const KZ_ELBOW_L = { at: [215, 634] as const, deg: [0, 6, 12, 18, 24] };
 const KZ_CIG = { r: [555, 270.5], l: [494, 285.5], f: [525, 281], len: 42, thick: 6 } as const;
 /** the cigarette's way through one 8 s loop: [%, x, y, angle, squeeze] — the hero's schedule (rig-chew) on his mouth */
 const KZ_CHEW: [number, number, number, number, number][] = (() => {
@@ -407,6 +415,9 @@ function KnyazRig({ id, rig, bust, dazed, svgRef, frameCss, strip }: {
   id: string; rig: Rig; bust: boolean; dazed: boolean; svgRef: RefObject<SVGSVGElement | null>; frameCss: string; strip: (p: string) => ReactNode;
 }) {
   const P = rig.parts;
+  const coverRef = useRef<SVGGElement>(null);
+  const handRef = useRef<SVGGElement>(null);
+  useCoverSwing(coverRef, handRef, P.cover?.pivot, !bust);
   const img = (p: string, cls?: string) => {
     const r = P[p];
     return r ? <image className={cls} href={`/bosses/${id}/rig/${p}.webp${r.v ? `?v=${r.v}` : ""}`} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" /> : null;
@@ -415,40 +426,69 @@ function KnyazRig({ id, rig, bust, dazed, svgRef, frameCss, strip }: {
     const pv = P[p]?.pivot ?? [rig.w / 2, rig.h];
     return { transformOrigin: `${pv[0]}px ${pv[1]}px`, transformBox: "view-box" };
   };
+  const at = (pt: readonly number[]): CSSProperties => ({ transformOrigin: `${pt[0]}px ${pt[1]}px`, transformBox: "view-box" });
   const vb: CSSProperties = { transformBox: "view-box", transformOrigin: "0 0" };
   const maskId = `kz-eyes-${id}`;
-  // the bent arm: a window one frame wide over the strip, the strip steps through the frames (kz-elbow)
-  const ar = P.armRb;
-  const armStrip = () => ar?.frames ? (
-    <svg x={ar.x} y={ar.y} width={ar.w} height={ar.h} viewBox={`0 0 ${ar.w} ${ar.h}`} overflow="hidden">
-      <image className="kz-elbow" href={`/bosses/${id}/rig/armRb.webp${ar.v ? `?v=${ar.v}` : ""}`} x={0} y={0} width={ar.w * ar.frames} height={ar.h} preserveAspectRatio="none" />
-    </svg>
-  ) : null;
-  // frames 0…4 (straight … bent): up and down with the guard, a quick double bend now and then
-  const elbow = ar?.frames ? seqKeyframes(`kz-elbow-${id}`, ar.w, [[0, 300], [1, 120], [2, 120], [3, 160], [4, 500], [3, 140], [2, 140], [1, 160], [0, 400], [2, 90], [4, 220], [2, 90], [0, 260]]) : null;
+  // a puppet-bent limb: a window one frame wide over its strip, the strip steps through the frames
+  const bent = (p: string, cls: string) => {
+    const r = P[p];
+    return r?.frames ? (
+      <svg x={r.x} y={r.y} width={r.w} height={r.h} viewBox={`0 0 ${r.w} ${r.h}`} overflow="hidden">
+        <image className={cls} href={`/bosses/${id}/rig/${p}.webp${r.v ? `?v=${r.v}` : ""}`} x={0} y={0} width={r.w * r.frames} height={r.h} preserveAspectRatio="none" />
+      </svg>
+    ) : null;
+  };
+  const css: string[] = [frameCss, kzChewCss()];
+  // the fist arm (frames 0…4, straight … bent): up and down with the guard, a quick double bend now and then
+  if (P.armRb?.frames) {
+    const k = seqKeyframes(`kz-elbow-r-${id}`, P.armRb.w, [[0, 300], [1, 120], [2, 120], [3, 160], [4, 500], [3, 140], [2, 140], [1, 160], [0, 400], [2, 90], [4, 220], [2, 90], [0, 260]]);
+    css.push(`${k.css} .rig-knyaz .kz-elbow-r { animation: kz-elbow-r-${id} ${k.ms}ms step-end infinite; }`);
+  }
+  // the wallet arm: the elbow snaps in with each cut (in step with kz-slash, 2.1 s), the hand turns around the elbow by
+  // the frame's angle (KZ_ELBOW_L.deg) so it stays on the cuff
+  if (P.armLb?.frames) {
+    const seq: [number, number][] = [[0, 600], [2, 60], [4, 240], [2, 80], [0, 250], [2, 60], [4, 240], [2, 80], [0, 200], [3, 90], [1, 200], [0, 200]];
+    const k = seqKeyframes(`kz-elbow-l-${id}`, P.armLb.w, seq);
+    const total = seq.reduce((t, [, ms]) => t + ms, 0);
+    let t0 = 0;
+    const turn = seq.map(([f, ms]) => { const step = `${((t0 / total) * 100).toFixed(3)}% { transform: rotate(${KZ_ELBOW_L.deg[f]}deg); }`; t0 += ms; return step; }).join(" ");
+    css.push(`${k.css} @keyframes kz-turn-l-${id} { ${turn} 100% { transform: rotate(0deg); } }
+      .rig-knyaz .kz-elbow-l { animation: kz-elbow-l-${id} ${k.ms}ms step-end infinite; }
+      .rig-knyaz .kz-turn-l { animation: kz-turn-l-${id} ${k.ms}ms step-end infinite; }`);
+  }
   return (
     <svg ref={svgRef} className={`boss-rig rig-knyaz ${dazed ? "dazed" : ""}`} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} width="100%" height="100%" preserveAspectRatio={bust ? "xMidYMin slice" : "xMidYMax meet"} aria-hidden="true">
-      <style>{frameCss + kzChewCss() + (elbow ? `${elbow.css} .rig-knyaz .kz-elbow { animation: kz-elbow-${id} ${elbow.ms}ms step-end infinite; }` : "")}</style>
+      <style>{css.join("\n")}</style>
       <g className="kz-root" style={{ transformOrigin: `${rig.w / 2}px ${rig.h - 20}px`, transformBox: "view-box" }}>
         {img("legs")}
         <g className="kz-up" style={{ transformOrigin: `${rig.w / 2}px ${rig.h * 0.56}px`, transformBox: "view-box" }}>
-          {/* the arm on the viewer's right: all of it behind the body; it swings at the shoulder and its elbow bends like a
-              puppet (a strip of frames, the forearm turning around the elbow, tools/boss/assemble-knyaz.py) */}
-          <g className="kz-arm-r" style={{ transformOrigin: `${KZ_SHOULDER_R[0]}px ${KZ_SHOULDER_R[1]}px`, transformBox: "view-box" }}>{armStrip()}</g>
+          {/* the wallet arm (viewer's left) behind the body: it swings at the shoulder, the elbow bends like a puppet,
+              the hand rides on the forearm and flicks at the wrist; the swivel cover hangs free on its pin (useCoverSwing) */}
+          <g className="kz-arm-l" style={at(KZ_SHOULDER_L)}>
+            {bent("armLb", "kz-elbow-l")}
+            <g className="kz-turn-l" style={at(KZ_ELBOW_L.at)}>
+              <g className="kz-hand-l" ref={handRef} style={origin("handL")}>
+                {img("handL")}
+                <g ref={coverRef}>{img("cover")}</g>
+              </g>
+            </g>
+          </g>
           {img("body")}
           <g className="kz-head" style={origin("head")}>
             {img("head-open")}
-            <g className="kz-mouth">
+            {/* the grin with the teeth clenched on the cigarette; hit or beaten — the sad mouth instead */}
+            <g className="kz-grin">
               {img("throat")}
               {img("teeth-up")}
               <g className="kz-jaw">{img("teeth-low")}</g>
               {img("lips")}
-              <g className="kz-cig" style={vb}>
-                <image href={`/assets/hero/mouth-cigarette.webp`} x={0} y={-KZ_CIG.thick / 2} width={KZ_CIG.len} height={KZ_CIG.thick} preserveAspectRatio="none" />
-              </g>
-              <g className="kz-tip" style={vb}>
-                <g className="rig-smoke">{[0, 1, 2].map((i) => <circle key={i} cx={0} cy={0} r={5} style={{ animationDelay: `${i * 0.9}s` }} />)}</g>
-              </g>
+            </g>
+            {img("mouth-sad", "kz-sad")}
+            <g className="kz-cig" style={vb}>
+              <image href={`/assets/hero/mouth-cigarette.webp`} x={0} y={-KZ_CIG.thick / 2} width={KZ_CIG.len} height={KZ_CIG.thick} preserveAspectRatio="none" />
+            </g>
+            <g className="kz-tip" style={vb}>
+              <g className="rig-smoke">{[0, 1, 2].map((i) => <circle key={i} cx={0} cy={0} r={5} style={{ animationDelay: `${i * 0.9}s` }} />)}</g>
             </g>
             <mask id={maskId} style={{ maskType: "alpha" }} maskUnits="userSpaceOnUse" x="0" y="0" width={rig.w} height={rig.h}>{img("eyes")}</mask>
             <g className="br-eyes-open">
@@ -458,17 +498,58 @@ function KnyazRig({ id, rig, bust, dazed, svgRef, frameCss, strip }: {
             {img("eyes-closed", "br-eyes-closed")}
             {strip("brows")}
           </g>
-          {/* the left arm with the wallet: the shoulder swings, the wrist flicks the "blade" */}
-          <g className="kz-arm-l" style={origin("armL")}>
-            {img("armL")}
-            <g className="kz-hand-l" style={origin("handL")}>
-              {img("handL")}
-              {/* the swivel cover of the wallet hangs on its pin and swings behind every cut */}
-              <g className="kz-cover" style={origin("cover")}>{img("cover")}</g>
-            </g>
-          </g>
+          {/* the fist arm (viewer's right) in front of the body, its elbow bending like a puppet */}
+          <g className="kz-arm-r" style={at(KZ_SHOULDER_R)}>{bent("armRb", "kz-elbow-r")}</g>
         </g>
       </g>
     </svg>
   );
+}
+
+/**
+ * The wallet's swivel cover hangs free on its pin: a damped pendulum in the screen's frame. Every frame the hand's
+ * turn and the pin's place are read off the hand group (getCTM — the CSS animations included); the cover keeps its own
+ * angle, so when the hand turns or jerks the cover lags, swings out and settles back to hanging the way it is drawn.
+ */
+function useCoverSwing(coverRef: RefObject<SVGGElement | null>, handRef: RefObject<SVGGElement | null>, pin: readonly number[] | undefined, on: boolean) {
+  useEffect(() => {
+    const cover = coverRef.current, hand = handRef.current;
+    if (!on || !cover || !hand || !pin || typeof window === "undefined") return;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    const L = 46;                      // the cover's length (rig units): its swing period
+    const G = 2600;                    // gravity in rig units / s²
+    const DAMP = 2.2;
+    let phi = 0, vel = 0;              // the cover's angle in the screen (0 — hanging as drawn) and its speed
+    let last = 0, raf = 0;
+    let prev: { x: number; y: number; vx: number; vy: number } | null = null;
+    const svg = hand.ownerSVGElement;
+    const step = (t: number) => {
+      raf = requestAnimationFrame(step);
+      const m = hand.getCTM();
+      const root = svg?.getCTM();
+      if (!m || !root) return;
+      // the hand's matrix in the rig's own units (the screen scale taken out)
+      const r = root.inverse().multiply(m);
+      const handAng = Math.atan2(r.b, r.a);
+      const px = r.a * pin[0] + r.c * pin[1] + r.e, py = r.b * pin[0] + r.d * pin[1] + r.f;
+      const dt = last ? Math.min(0.05, (t - last) / 1000) : 0;
+      last = t;
+      if (dt > 0) {
+        const vx = prev ? (px - prev.x) / dt : 0, vy = prev ? (py - prev.y) / dt : 0;
+        const ax = prev ? (vx - prev.vx) / dt : 0, ay = prev ? (vy - prev.vy) / dt : 0;
+        prev = { x: px, y: py, vx, vy };
+        // the pin's jolt pushes the cover the other way (its tangent), gravity pulls it back to hanging, the air damps it
+        const tx = -Math.cos(phi), ty = Math.sin(phi);
+        const acc = (-G * Math.sin(phi) - (ax * tx + ay * ty) * 0.6) / L - DAMP * vel;
+        vel += acc * dt;
+        phi += vel * dt;
+        phi = Math.max(-1.4, Math.min(1.4, phi));
+      } else prev = { x: px, y: py, vx: 0, vy: 0 };
+      // drawn inside the hand: its own turn is the screen angle minus the hand's
+      const rel = ((phi - handAng) * 180) / Math.PI;
+      cover.setAttribute("transform", `rotate(${rel.toFixed(2)} ${pin[0]} ${pin[1]})`);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [coverRef, handRef, pin, on]);
 }

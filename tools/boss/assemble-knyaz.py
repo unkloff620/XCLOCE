@@ -41,8 +41,28 @@ def clean(a, lim=24):
     return a
 
 
-for n in ["legs", "body", "armL"]:
+for n in ["legs", "body"]:
     put(n, clean(load(n)))
+if os.path.exists(f"{D}/armL.png"):
+    os.remove(f"{D}/armL.png")
+# ---- the sleeve with the wallet hand (viewer's left): the elbow bends like a puppet — the forearm (towards the cuff)
+# turns around the elbow, the turn growing from the elbow out; the hand turns with it by the same angle (boss-rig.tsx) ----
+sl = clean(load("armL")).astype(np.float32)
+EL_L, CUFF_L = (430.0, 1268.0), (222.0, 1164.0)
+yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+vx, vy = CUFF_L[0] - EL_L[0], CUFF_L[1] - EL_L[1]
+tt = ((xx - EL_L[0]) * vx + (yy - EL_L[1]) * vy) / (vx * vx + vy * vy)
+wl = np.clip((tt - 0.02) / 0.4, 0, 1).astype(np.float32)
+ARM_L_DEG = [0, 6, 12, 18, 24]
+for k, deg in enumerate(ARM_L_DEG):
+    th = np.deg2rad(deg) * wl
+    c, s_ = np.cos(th), np.sin(th)
+    dx, dy = xx - EL_L[0], yy - EL_L[1]
+    sx = (EL_L[0] + c * dx + s_ * dy).astype(np.float32)
+    sy = (EL_L[1] - s_ * dx + c * dy).astype(np.float32)
+    o = cv2.remap(np.ascontiguousarray(sl), sx, sy, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0, 0))
+    put(f"armLb@{k}", np.clip(np.nan_to_num(o), 0, 255).astype(np.uint8))
+print("left elbow", EL_L, "angles", ARM_L_DEG)
 # the hand with the wallet, redrawn: the fist with the body of the wallet, and its swivel cover on its own (it swings);
 # both were cut from a 331×671 box that sits at HAND_AT on the sheet
 HAND_AT = (54, 864)
@@ -132,16 +152,27 @@ x0r, x1r = xs[xs >= MID].min(), xs[xs >= MID].max()
 # t: 0 at the outer end, 1 at the inner end of each brow
 t = np.where(left, (xx - x0l) / max(1, x1l - x0l), (x1r - xx) / max(1, x1r - x0r)).clip(0, 1)
 arch = np.sin(np.pi * t)                     # the middle of the brow
-FR = [("calm", 0, 0), ("up", 5, 0), ("up2", 10, 0), ("frown", 0, 6), ("frown2", 0, 11)]
+FR = [("calm", 0, 0), ("up", 5, 0), ("up2", 10, 0), ("frown", 0, 6), ("frown2", 0, 11), ("sad", 0, -6), ("sad2", 0, -10)]
 for k, (_, up, frown) in enumerate(FR):
     # a pixel moves by dy (down +): raised — the whole brow up, the middle most; frowning — the inner end down, the outer up
     dy = -up * (0.55 + 0.45 * arch) + frown * (t * 1.2 - 0.25)
     out = cv2.remap(np.ascontiguousarray(brows), xx, (yy - dy).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0, 0))
     put(f"brows@{k}", face(np.clip(np.nan_to_num(out), 0, 255).astype(np.uint8)))
 
+# ---- the sad mouth: the closed lips with their corners pulled down (hit, and always below half HP) ----
+lips = clean(load("f-mouth-closed")).astype(np.float32)
+lm = lips[:, :, 3] > 40
+ys_, xs_ = np.nonzero(lm)
+cx, half = (xs_.min() + xs_.max()) / 2, (xs_.max() - xs_.min()) / 2
+yy2, xx2 = np.mgrid[0:lips.shape[0], 0:lips.shape[1]].astype(np.float32)
+tq = np.clip(np.abs(xx2 - cx) / half, 0, 1)
+dyq = 9 * tq ** 1.6 - 2 * (1 - tq)          # the corners down, the middle a touch up
+sad = cv2.remap(np.ascontiguousarray(lips), xx2, (yy2 - dyq).astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0, 0))
+put("mouth-sad", face(np.clip(np.nan_to_num(sad), 0, 255).astype(np.uint8)))
+
 # ---- the whole boss (closed mouth, calm brows) for the cards ----
 ref = Image.new("RGBA", (W, H))
-for n in ["legs", "armRb@0", "body", "head", "eyes", "pupils", "brows@0", "armL", "cover", "handL"]:
+for n in ["legs", "armLb@0", "handL", "cover", "body", "head", "eyes", "pupils", "brows@0", "armRb@0"]:
     ref.alpha_composite(Image.open(f"{D}/{n}.png").convert("RGBA"))
 ref.save(f"{R}/reference-rig.png")
 os.makedirs("public/bosses/knyaz", exist_ok=True)

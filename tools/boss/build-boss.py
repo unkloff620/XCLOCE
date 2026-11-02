@@ -18,10 +18,10 @@ SCALE_BY_BOSS = {}
 # is small on a big body, so its parts keep twice the detail
 HIRES_BY_BOSS = {"vodovoz": (2, {"head", "eyes", "pupils", "eyes-closed", "browL", "browR", "mouth-closed", "throat",
                                  "teeth-up", "teeth-low", "head-open", "jaw"}),
-                  "knyaz": (2, {"head", "head-open", "eyes", "pupils", "eyes-closed", "throat", "teeth-up", "teeth-low", "lips", "mouth-closed"})}
-PARTS = ["tail", "legs", "body", "headset", "foreL", "foreR", "armL", "lowL", "handL", "bag", "cover", "armR", "lowR", "handR", "head", "head-open", "throat", "teeth-up", "teeth-low", "jaw", "lips", "eyes", "eyes-closed", "pupils", "brows", "brows-sad", "browL", "browR", "mouth", "mouth-closed", "collar"]
+                  "knyaz": (2, {"head", "head-open", "eyes", "pupils", "eyes-closed", "throat", "teeth-up", "teeth-low", "lips", "mouth-closed", "mouth-sad"})}
+PARTS = ["tail", "legs", "body", "headset", "foreL", "foreR", "armL", "lowL", "handL", "bag", "cover", "armR", "lowR", "handR", "head", "head-open", "throat", "teeth-up", "teeth-low", "jaw", "lips", "mouth-sad", "eyes", "eyes-closed", "pupils", "brows", "brows-sad", "browL", "browR", "mouth", "mouth-closed", "collar"]
 # puppet-warped sequences (<part>@0.png, <part>@1.png …): one strip <part>.webp, frames side by side, frame 0 first
-FRAMES = ["brows", "jaw", "armRb"]
+FRAMES = ["brows", "jaw", "armRb", "armLb"]
 # which edge of the part joins the parent: (axis, side) — y/bottom for head and left forearm, x/right for the right one
 JOINT = {"head": ("y", "max"), "foreL": ("y", "max"), "foreR": ("x", "max")}
 # bosses whose arms come up from below (both elbows at the bottom end)
@@ -44,7 +44,7 @@ PIVOT_BY_BOSS = {
                 "bag": [182.0, 448.0], "armR": [686.0, 440.0], "lowR": [772.0, 614.0], "handR": [652.0, 508.0],
                 "browL": [604.0, 257.6], "browR": [619.0, 262.3]},
     # Князь (2000×3000 sheet, tools/boss/assemble-knyaz.py): the neck, the shoulders, the right elbow, the wrist with the wallet
-    "knyaz": {"head": [533.0, 320.0], "armL": [440.0, 400.0], "handL": [132.0, 515.0], "cover": [98.5, 645.5]},
+    "knyaz": {"head": [533.0, 320.0], "handL": [132.0, 515.0], "cover": [98.5, 645.5]},
 }
 
 import sys, re

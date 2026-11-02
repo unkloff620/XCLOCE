@@ -5043,24 +5043,7 @@ body { background-attachment: fixed; }
   100% { transform: rotate(0deg); }
 }
 .rig-knyaz .kz-hand-l { animation: kz-flick 2.1s linear infinite; }
-/* the cover on its pin: thrown the other way by every cut, swinging out and settling (a beat behind the hand) */
-.rig-knyaz .kz-cover { animation: kz-cover 2.1s linear infinite; }
-@keyframes kz-cover {
-  0%, 27% { transform: rotate(0deg); animation-timing-function: ease-in-out; }
-  33% { transform: rotate(-22deg); animation-timing-function: ease-out; }
-  37% { transform: rotate(38deg); animation-timing-function: ease-in-out; }
-  42% { transform: rotate(-12deg); animation-timing-function: ease-in-out; }
-  48% { transform: rotate(-24deg); animation-timing-function: ease-out; }
-  52% { transform: rotate(42deg); animation-timing-function: ease-in-out; }
-  58% { transform: rotate(-16deg); animation-timing-function: ease-in-out; }
-  64% { transform: rotate(8deg); animation-timing-function: ease-in-out; }
-  74% { transform: rotate(18deg); animation-timing-function: ease-out; }
-  78% { transform: rotate(-34deg); animation-timing-function: ease-in-out; }
-  85% { transform: rotate(12deg); animation-timing-function: ease-in-out; }
-  92% { transform: rotate(-5deg); animation-timing-function: ease-in-out; }
-  100% { transform: rotate(0deg); }
-}
-.arena-photo.strike .rig-knyaz .kz-cover { animation: kz-cover 0.9s linear both; }
+
 @keyframes kz-flick {
   0%, 26% { transform: rotate(0deg); animation-timing-function: ease-in-out; }
   31% { transform: rotate(18deg); animation-timing-function: var(--kz-snap); }
@@ -5091,12 +5074,13 @@ body { background-attachment: fixed; }
 .arena-photo.ouch .rig-knyaz .kz-head { animation: kz-hit 0.5s cubic-bezier(0.2, 0.7, 0.3, 1); }
 @keyframes kz-hit { 0% { transform: rotate(0); } 25% { transform: rotate(7deg) translateY(-4px); } 100% { transform: rotate(0); } }
 /* scared (below half HP): the knife arm hangs and shakes, the body sways */
-.rig-knyaz.dazed .kz-arm-l { animation: kz-limp 2.6s ease-in-out infinite; }
-@keyframes kz-limp { 0%, 100% { transform: rotate(-14deg); } 50% { transform: rotate(-20deg); } }
-.rig-knyaz.dazed .kz-hand-l { animation: kz-shake 0.18s linear infinite alternate; }
-@keyframes kz-shake { from { transform: rotate(-3deg); } to { transform: rotate(3deg); } }
+.rig-knyaz.dazed .kz-arm-l { animation: kz-limp 3.4s ease-in-out infinite; }
+@keyframes kz-limp { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(-12deg); } }
+.rig-knyaz.dazed .kz-hand-l { animation: kz-limp-hand 3.4s ease-in-out infinite; }
+@keyframes kz-limp-hand { 0%, 100% { transform: rotate(4deg); } 50% { transform: rotate(-8deg); } }
+.rig-knyaz.dazed .kz-elbow-l, .rig-knyaz.dazed .kz-turn-l { animation: none; }
 .rig-knyaz.dazed .kz-root { animation: vk-fear-sway 5s ease-in-out infinite; }
-@media (prefers-reduced-motion: reduce) { .rig-knyaz .kz-up, .rig-knyaz .kz-root, .rig-knyaz .kz-head, .rig-knyaz .kz-arm-r, .rig-knyaz .kz-cover, .rig-knyaz .kz-elbow, .rig-knyaz .kz-arm-l, .rig-knyaz .kz-hand-l, .rig-knyaz .kz-jaw { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .rig-knyaz .kz-up, .rig-knyaz .kz-root, .rig-knyaz .kz-head, .rig-knyaz .kz-arm-r, .rig-knyaz .kz-elbow-l, .rig-knyaz .kz-elbow-r, .rig-knyaz .kz-turn-l, .rig-knyaz .kz-arm-l, .rig-knyaz .kz-hand-l, .rig-knyaz .kz-jaw { animation: none; } }
 
 /* rewards with «×N» at the picture's top right corner (ui.tsx RewardChips / GainLine, `times`): no plate, the count
    thin and small, a little over the picture; a long number goes on to the right and pushes the next reward */
@@ -5180,3 +5164,11 @@ body { background-attachment: fixed; }
 .bj2 .bj2-wallet { position: absolute; z-index: 5; left: 50% !important; transform: translateX(-50%); margin: 0; color: #ffe9b0; background: rgba(0, 0, 0, 0.6);
   border: 1px solid rgba(255, 210, 63, 0.35); padding: 4px 14px; font-size: 16px; text-shadow: 0 1px 2px #000; }
 .bj2 .bj2-wallet b { color: #ffe9b0; }
+
+/* Князь's mouth: the grin with the cigarette; hit — the sad mouth for a moment; below half HP — always sad */
+.rig-knyaz .kz-sad { opacity: 0; }
+.arena-photo.ouch .rig-knyaz .kz-grin, .rig-knyaz.dazed .kz-grin { opacity: 0; }
+.arena-photo.ouch .rig-knyaz .kz-sad, .rig-knyaz.dazed .kz-sad { opacity: 1; }
+/* sad: the cigarette hangs from the corner of the shut mouth, the smoke still curls up */
+.arena-photo.ouch .rig-knyaz .kz-cig, .rig-knyaz.dazed .kz-cig { animation: none; transform: translate(549px, 279px) rotate(72deg); }
+.arena-photo.ouch .rig-knyaz .kz-tip, .rig-knyaz.dazed .kz-tip { animation: none; transform: translate(562px, 319px); }
