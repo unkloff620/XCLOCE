@@ -3,7 +3,7 @@ import { addItem, addMoney, grantReward, ledger, spendEnergy, takeMoney, type Ct
 import { STASH_MISSING_WEIGHT, STASH_PITY, STASH_SETS, stashChance, stashSetsByLocation } from "../../content/stashes.ts";
 import { BUSINESS_MAX_HOURS, LOCATIONS, businessCells, businessCost, businessPerHour, businessPerLevel, locRep, locationById, taskById, taskOpen, tasksOf, type BusinessLine, type LocMode, type LocationDef } from "../../content/locations.ts";
 import type { Reward } from "../../content/rewards.ts";
-import { LOCATION_PARTS, between, rollParts } from "../../content/craft-drops.ts";
+import { LOCATION_PARTS, between, locClaimParts, locStepParts, rollParts } from "../../content/craft-drops.ts";
 import { mergeRewards } from "../../content/rewards.ts";
 
 /*
@@ -184,8 +184,9 @@ export async function doTask(ctx: Ctx, taskId: string) {
     [ctx.pid, task.id],
   );
   const stepNow = have + 1;
-  // «Крафт»: 1–2 parts a step, half of them from the location's own set (its very rare ones too, now and then)
-  const parts = rollParts(ctx.rng, between(1, 2, ctx.rng), { rare: 0.2, epic: 0.02, pool: LOCATION_PARTS[loc.id] });
+  // «Крафт»: 1–2 parts a step (more in the far locations), half of them from the location's own set (its very rare ones too, now and then)
+  const sp = locStepParts(loc.order);
+  const parts = rollParts(ctx.rng, between(sp.min, sp.max, ctx.rng), { rare: sp.rare, epic: sp.epic, pool: LOCATION_PARTS[loc.id] });
   const stepGot = await grantReward(ctx, mergeRewards(task.stepReward, { items: parts }), `task:${task.id}`);
   // авторитет локации (by day) or ночной авторитет (by night): a third of the step's authority, kept in this location only
   const rep = locRep(stepGot.xp);
@@ -264,8 +265,9 @@ export async function claimLocation(ctx: Ctx, locationId: string, mode: LocMode 
   const key = claimKey(loc.id, mode);
   const first = (clears.get(key) ?? 0) === 0;
   // the night road always pays the repeat reward
-  // «Крафт»: 10 parts of the location's set and one very rare
-  const parts = [...rollParts(ctx.rng, 10, { rare: 0.3, pool: LOCATION_PARTS[loc.id] }), ...rollParts(ctx.rng, 1, { epic: 1 })];
+  // «Крафт»: parts of the location's set and very rare ones — the farther the location, the more (locClaimParts)
+  const cp = locClaimParts(loc.order);
+  const parts = [...rollParts(ctx.rng, cp.n, { rare: cp.rare, pool: LOCATION_PARTS[loc.id] }), ...rollParts(ctx.rng, cp.epic, { epic: 1 })];
   const got = await grantReward(ctx, mergeRewards(first && mode === "day" ? loc.reward : repeatReward(loc.reward), { items: parts }), `location:${key}`);
   await ctx.q.query("INSERT INTO location_claims (player_id, location_id, claimed_at) VALUES ($1,$2,$3)", [ctx.pid, key, new Date(ctx.now)]);
   if (first && mode === "day") await ctx.q.query("UPDATE player_stats SET locations_done = locations_done + 1 WHERE player_id=$1", [ctx.pid]);

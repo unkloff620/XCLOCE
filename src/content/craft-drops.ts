@@ -22,7 +22,20 @@ export const LOCATION_PARTS: Record<string, string[]> = {
   serverroom: P("cable", "wire", "copper", "bulb", "speaker", "screwdriver", "pliers", "gear", "tape", "chip"),
   basement: P("battery", "gasoline", "hose", "wheel", "bearing", "sandpaper", "drill", "cooler", "solder", "accu"),
   board: P("glass", "lens", "metal", "chain", "clamp", "wrench", "quartz", "laser", "titanium", "carbon"),
+  accounting: P("clip", "staples", "pencil", "cardboard", "glue", "button", "file", "magnet", "chip", "quartz"),
+  hr: P("thread", "needle", "zipper", "clothespin", "rag", "sock", "scotch", "paint", "mirror", "glass"),
+  party: P("bottle", "cork", "cup", "straw", "foil", "matches", "lighter", "stub", "speaker", "bulb"),
+  offshore: P("rope", "sponge", "hose", "funnel", "pump", "stone", "can", "copper", "gasoline", "neodym"),
+  yacht: P("rope", "chain", "tire", "pump", "motor", "bearing", "gear", "pipe", "titanium", "carbon"),
+  moonbase: P("metal", "titanium", "accu", "tesla", "gyro", "laser", "solder", "cooler", "neodym", "chip"),
 };
+
+/**
+ * The parts from location tasks grow with the location: a step gives 1…(2 + order/4) parts, the closing
+ * 10 + 4 per location after the first (Опенспейс 10, Лунная база 50) and 1 + order/4 very rare ones.
+ */
+export const locStepParts = (order: number) => ({ min: 1, max: 2 + Math.floor(order / 4), rare: Math.min(0.4, 0.18 + 0.02 * order), epic: Math.min(0.06, 0.01 + 0.004 * order) });
+export const locClaimParts = (order: number) => ({ n: 10 + 4 * (order - 1), rare: Math.min(0.5, 0.25 + 0.02 * order), epic: 1 + Math.floor(order / 4) });
 
 /** each boss's own very rare part: it may drop for a win over him */
 export const BOSS_PARTS: Record<string, string> = {

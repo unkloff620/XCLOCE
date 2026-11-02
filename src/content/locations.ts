@@ -237,13 +237,16 @@ export const BUSINESS_MAX_HOURS = BUSINESS_MAX_DAYS * 24;
 export type BusinessLine = "rep" | "rub";
 export const businessCells = (l: LocationDef) => 3 + l.order;
 /** what one level of a line gives an hour (whole numbers, so every hour pays exactly) */
-export const businessPerHour = (l: LocationDef, line: BusinessLine) => (line === "rub" ? 3 * l.order : 1 * l.order);
+export const businessPerHour = (l: LocationDef, line: BusinessLine) => (line === "rub" ? 10 * l.order : 5 * l.order);
 /** what one level of a line gives a day */
 export const businessPerLevel = (l: LocationDef, line: BusinessLine) => 24 * businessPerHour(l, line);
 /** the price in rubles of the next level (lv — levels already built) */
 export function businessCost(l: LocationDef, line: BusinessLine, lv: number): number {
-  const base = (line === "rub" ? 400 : 300) * l.order * Math.pow(lv + 1, 1.6);
-  return Math.round(base / 50) * 50;
+  // a ruble level pays itself back in 3 days at first, +1.5 days every next level (the 14th — in ~22 days);
+  // an authority level costs 60% of the ruble one of the same location and level
+  const rubDay = 24 * businessPerHour(l, "rub");
+  const base = rubDay * (3 + 1.5 * lv) * (line === "rub" ? 1 : 0.6);
+  return Math.max(50, Math.round(base / 50) * 50);
 }
 
 /**
