@@ -956,37 +956,26 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "v": "ad8ce3d7"
       },
       "handL": {
-        "x": 27.5,
-        "y": 432.5,
-        "w": 143,
-        "h": 329,
+        "x": 33.0,
+        "y": 433.5,
+        "w": 138,
+        "h": 226,
         "pivot": [
           132.0,
           515.0
         ],
-        "v": "4ee30b71"
+        "v": "349539b1"
       },
-      "armR": {
-        "x": 676.5,
-        "y": 335.0,
-        "w": 224,
-        "h": 338,
+      "cover": {
+        "x": 25.5,
+        "y": 626.0,
+        "w": 96,
+        "h": 130,
         "pivot": [
-          737.0,
-          370.0
+          98.5,
+          645.5
         ],
-        "v": "f60467ad"
-      },
-      "lowR": {
-        "x": 580.0,
-        "y": 451.0,
-        "w": 308,
-        "h": 244,
-        "pivot": [
-          840.0,
-          645.0
-        ],
-        "v": "d581472a"
+        "v": "6def886b"
       },
       "head": {
         "x": 399.5,
@@ -1042,11 +1031,11 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "v": "c35750e6"
       },
       "eyes-closed": {
-        "x": 468.0,
-        "y": 202.5,
-        "w": 104,
-        "h": 32,
-        "v": "46ed75dd"
+        "x": 458.5,
+        "y": 200.0,
+        "w": 124,
+        "h": 40,
+        "v": "e074a3d5"
       },
       "pupils": {
         "x": 474.0,
@@ -1069,6 +1058,14 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "h": 40,
         "frames": 5,
         "v": "0bd22ba5"
+      },
+      "armRb": {
+        "x": 580.0,
+        "y": 335.0,
+        "w": 320,
+        "h": 360,
+        "frames": 5,
+        "v": "f68c3d8c"
       }
     }
   }

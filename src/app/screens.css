@@ -5026,10 +5026,8 @@ body { background-attachment: fixed; }
 @keyframes kz-head { 0%, 100% { transform: rotate(0deg); } 30% { transform: rotate(-2.2deg); } 70% { transform: rotate(1.6deg); } }
 .rig-knyaz .kz-arm-r { animation: kz-guard 2.2s ease-in-out infinite; }
 @keyframes kz-guard { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-3deg); } }
-.rig-knyaz .kz-low-r { animation: kz-guard-low 2.2s ease-in-out infinite; }
-@keyframes kz-guard-low { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(5deg); } }
 /* the cuts: a short wind-up, a snap down across (fast in, held a beat), back; twice, then a stab with the wrist */
-.rig-knyaz .kz-arm-l { animation: kz-slash 3s linear infinite; }
+.rig-knyaz .kz-arm-l { animation: kz-slash 2.1s linear infinite; }
 @keyframes kz-slash {
   0%, 26% { transform: rotate(0deg); animation-timing-function: ease-in-out; }
   31% { transform: rotate(11deg); animation-timing-function: var(--kz-snap); }
@@ -5044,7 +5042,25 @@ body { background-attachment: fixed; }
   82% { transform: rotate(-7deg); animation-timing-function: ease-in-out; }
   100% { transform: rotate(0deg); }
 }
-.rig-knyaz .kz-hand-l { animation: kz-flick 3s linear infinite; }
+.rig-knyaz .kz-hand-l { animation: kz-flick 2.1s linear infinite; }
+/* the cover on its pin: thrown the other way by every cut, swinging out and settling (a beat behind the hand) */
+.rig-knyaz .kz-cover { animation: kz-cover 2.1s linear infinite; }
+@keyframes kz-cover {
+  0%, 27% { transform: rotate(0deg); animation-timing-function: ease-in-out; }
+  33% { transform: rotate(-22deg); animation-timing-function: ease-out; }
+  37% { transform: rotate(38deg); animation-timing-function: ease-in-out; }
+  42% { transform: rotate(-12deg); animation-timing-function: ease-in-out; }
+  48% { transform: rotate(-24deg); animation-timing-function: ease-out; }
+  52% { transform: rotate(42deg); animation-timing-function: ease-in-out; }
+  58% { transform: rotate(-16deg); animation-timing-function: ease-in-out; }
+  64% { transform: rotate(8deg); animation-timing-function: ease-in-out; }
+  74% { transform: rotate(18deg); animation-timing-function: ease-out; }
+  78% { transform: rotate(-34deg); animation-timing-function: ease-in-out; }
+  85% { transform: rotate(12deg); animation-timing-function: ease-in-out; }
+  92% { transform: rotate(-5deg); animation-timing-function: ease-in-out; }
+  100% { transform: rotate(0deg); }
+}
+.arena-photo.strike .rig-knyaz .kz-cover { animation: kz-cover 0.9s linear both; }
 @keyframes kz-flick {
   0%, 26% { transform: rotate(0deg); animation-timing-function: ease-in-out; }
   31% { transform: rotate(18deg); animation-timing-function: var(--kz-snap); }
@@ -5080,7 +5096,7 @@ body { background-attachment: fixed; }
 .rig-knyaz.dazed .kz-hand-l { animation: kz-shake 0.18s linear infinite alternate; }
 @keyframes kz-shake { from { transform: rotate(-3deg); } to { transform: rotate(3deg); } }
 .rig-knyaz.dazed .kz-root { animation: vk-fear-sway 5s ease-in-out infinite; }
-@media (prefers-reduced-motion: reduce) { .rig-knyaz .kz-up, .rig-knyaz .kz-root, .rig-knyaz .kz-head, .rig-knyaz .kz-arm-r, .rig-knyaz .kz-low-r, .rig-knyaz .kz-arm-l, .rig-knyaz .kz-hand-l, .rig-knyaz .kz-jaw { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .rig-knyaz .kz-up, .rig-knyaz .kz-root, .rig-knyaz .kz-head, .rig-knyaz .kz-arm-r, .rig-knyaz .kz-cover, .rig-knyaz .kz-elbow, .rig-knyaz .kz-arm-l, .rig-knyaz .kz-hand-l, .rig-knyaz .kz-jaw { animation: none; } }
 
 /* rewards with «×N» at the picture's top right corner (ui.tsx RewardChips / GainLine, `times`): no plate, the count
    thin and small, a little over the picture; a long number goes on to the right and pushes the next reward */

@@ -41,8 +41,46 @@ def clean(a, lim=24):
     return a
 
 
-for n in ["legs", "body", "armL", "handL", "armR", "lowR"]:
+for n in ["legs", "body", "armL"]:
     put(n, clean(load(n)))
+# the hand with the wallet, redrawn: the fist with the body of the wallet, and its swivel cover on its own (it swings);
+# both were cut from a 331×671 box that sits at HAND_AT on the sheet
+HAND_AT = (54, 864)
+
+
+def boxed(n):
+    out = np.zeros((H, W, 4), np.uint8)
+    a = clean(load(n))
+    h, w = a.shape[:2]
+    out[HAND_AT[1]:HAND_AT[1] + h, HAND_AT[0]:HAND_AT[0] + w] = a
+    return out
+
+
+put("handL", boxed("handL2-crop"))
+put("cover", boxed("cover-crop"))
+for old in ["armR", "lowR"]:
+    if os.path.exists(f"{D}/{old}.png"):
+        os.remove(f"{D}/{old}.png")
+
+# ---- the arm on the viewer's right (behind the body): upper arm + forearm with the fist in one picture, the elbow bent
+# like a puppet — the forearm turns around the elbow, the turn fading out across the joint (no seam) ----
+up, low = clean(load("armR")), clean(load("lowR"))
+ELBOW = (1655.0, 1290.0)
+yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+dist = np.hypot(xx - ELBOW[0], yy - ELBOW[1])
+# the forearm turns fully a little past the elbow, the part right at the elbow turns less (it bends, not snaps)
+wgt = np.clip((dist - 20) / 110, 0, 1).astype(np.float32)
+for k, deg in enumerate([0, 4, 8, 12, 16]):
+    th = np.deg2rad(deg) * wgt
+    c, s_ = np.cos(th), np.sin(th)
+    dx, dy = xx - ELBOW[0], yy - ELBOW[1]
+    sx = (ELBOW[0] + c * dx + s_ * dy).astype(np.float32)
+    sy = (ELBOW[1] - s_ * dx + c * dy).astype(np.float32)
+    lw = cv2.remap(np.ascontiguousarray(low.astype(np.float32)), sx, sy, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0, 0))
+    fr = Image.fromarray(up)
+    fr.alpha_composite(Image.fromarray(np.clip(np.nan_to_num(lw), 0, 255).astype(np.uint8)))
+    out = np.array(fr)
+    put(f"armRb@{k}", np.clip(np.nan_to_num(out), 0, 255).astype(np.uint8))
 names = {"head": "f-head", "head-open": "f-head-open", "throat": "f-throat", "teeth-up": "f-teeth-up", "teeth-low": "f-teeth-low",
          "lips": "f-lips-open", "mouth-closed": "f-mouth-closed", "eyes": "f-eyes", "pupils": "f-pupils"}
 for k, n in names.items():
@@ -78,7 +116,8 @@ for i in range(1, n):
     d.line(pts, fill=(40, 22, 14, 255), width=3, joint="curve")
     lids = np.array(img)
 lids[:, :, 3] = (cv2.GaussianBlur(lids[:, :, 3].astype(np.float32), (0, 0), 0.6)).astype(np.uint8)
-put("eyes-closed", face(lids))
+# the lids drawn by the artist (f-eyes-closed) win over the painted ones
+put("eyes-closed", face(clean(load("f-eyes-closed"))) if os.path.exists(f"{R}/f-eyes-closed.png") else face(lids))
 
 # ---- the brows bent like a puppet: each brow on its own, its inner end (towards the nose) and its middle move ----
 brows = load("f-brows").astype(np.float32)
@@ -102,7 +141,7 @@ for k, (_, up, frown) in enumerate(FR):
 
 # ---- the whole boss (closed mouth, calm brows) for the cards ----
 ref = Image.new("RGBA", (W, H))
-for n in ["armR", "legs", "body", "lowR", "head", "eyes", "pupils", "brows@0", "armL", "handL"]:
+for n in ["legs", "armRb@0", "body", "head", "eyes", "pupils", "brows@0", "armL", "cover", "handL"]:
     ref.alpha_composite(Image.open(f"{D}/{n}.png").convert("RGBA"))
 ref.save(f"{R}/reference-rig.png")
 os.makedirs("public/bosses/knyaz", exist_ok=True)

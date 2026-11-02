@@ -378,6 +378,8 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
  */
 type Rig = { w: number; h: number; parts: Record<string, Part> };
 /** the cigarette in rig units: the corners of the mouth, its length and thickness */
+/** the shoulder of the arm behind the body (rig units): the whole bent arm swings around it */
+const KZ_SHOULDER_R = [737, 370] as const;
 const KZ_CIG = { r: [555, 270.5], l: [494, 285.5], f: [525, 281], len: 42, thick: 6 } as const;
 /** the cigarette's way through one 8 s loop: [%, x, y, angle, squeeze] — the hero's schedule (rig-chew) on his mouth */
 const KZ_CHEW: [number, number, number, number, number][] = (() => {
@@ -415,14 +417,24 @@ function KnyazRig({ id, rig, bust, dazed, svgRef, frameCss, strip }: {
   };
   const vb: CSSProperties = { transformBox: "view-box", transformOrigin: "0 0" };
   const maskId = `kz-eyes-${id}`;
+  // the bent arm: a window one frame wide over the strip, the strip steps through the frames (kz-elbow)
+  const ar = P.armRb;
+  const armStrip = () => ar?.frames ? (
+    <svg x={ar.x} y={ar.y} width={ar.w} height={ar.h} viewBox={`0 0 ${ar.w} ${ar.h}`} overflow="hidden">
+      <image className="kz-elbow" href={`/bosses/${id}/rig/armRb.webp${ar.v ? `?v=${ar.v}` : ""}`} x={0} y={0} width={ar.w * ar.frames} height={ar.h} preserveAspectRatio="none" />
+    </svg>
+  ) : null;
+  // frames 0…4 (straight … bent): up and down with the guard, a quick double bend now and then
+  const elbow = ar?.frames ? seqKeyframes(`kz-elbow-${id}`, ar.w, [[0, 300], [1, 120], [2, 120], [3, 160], [4, 500], [3, 140], [2, 140], [1, 160], [0, 400], [2, 90], [4, 220], [2, 90], [0, 260]]) : null;
   return (
     <svg ref={svgRef} className={`boss-rig rig-knyaz ${dazed ? "dazed" : ""}`} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} width="100%" height="100%" preserveAspectRatio={bust ? "xMidYMin slice" : "xMidYMax meet"} aria-hidden="true">
-      <style>{frameCss + kzChewCss()}</style>
+      <style>{frameCss + kzChewCss() + (elbow ? `${elbow.css} .rig-knyaz .kz-elbow { animation: kz-elbow-${id} ${elbow.ms}ms step-end infinite; }` : "")}</style>
       <g className="kz-root" style={{ transformOrigin: `${rig.w / 2}px ${rig.h - 20}px`, transformBox: "view-box" }}>
         {img("legs")}
         <g className="kz-up" style={{ transformOrigin: `${rig.w / 2}px ${rig.h * 0.56}px`, transformBox: "view-box" }}>
-          {/* the right arm: the shoulder behind the body, the forearm with the fist in front (the same turns) */}
-          <g className="kz-arm-r" style={origin("armR")}>{img("armR")}</g>
+          {/* the arm on the viewer's right: all of it behind the body; it swings at the shoulder and its elbow bends like a
+              puppet (a strip of frames, the forearm turning around the elbow, tools/boss/assemble-knyaz.py) */}
+          <g className="kz-arm-r" style={{ transformOrigin: `${KZ_SHOULDER_R[0]}px ${KZ_SHOULDER_R[1]}px`, transformBox: "view-box" }}>{armStrip()}</g>
           {img("body")}
           <g className="kz-head" style={origin("head")}>
             {img("head-open")}
@@ -446,11 +458,14 @@ function KnyazRig({ id, rig, bust, dazed, svgRef, frameCss, strip }: {
             {img("eyes-closed", "br-eyes-closed")}
             {strip("brows")}
           </g>
-          <g className="kz-arm-r" style={origin("armR")}><g className="kz-low-r" style={origin("lowR")}>{img("lowR")}</g></g>
           {/* the left arm with the wallet: the shoulder swings, the wrist flicks the "blade" */}
           <g className="kz-arm-l" style={origin("armL")}>
             {img("armL")}
-            <g className="kz-hand-l" style={origin("handL")}>{img("handL")}</g>
+            <g className="kz-hand-l" style={origin("handL")}>
+              {img("handL")}
+              {/* the swivel cover of the wallet hangs on its pin and swings behind every cut */}
+              <g className="kz-cover" style={origin("cover")}>{img("cover")}</g>
+            </g>
           </g>
         </g>
       </g>
