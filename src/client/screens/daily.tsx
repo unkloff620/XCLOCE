@@ -80,7 +80,7 @@ export function DailyWindow({ onClose }: { onClose: () => void }) {
           <div className="panel col" style={{ alignItems: "center", gap: 8 }}>
             <b className="display">Получено!</b>
             <RewardChips r={got} size={28} />
-            {bonus && <><b className="display" style={{ color: "var(--gold)" }}>Бонус за серию!</b><RewardChips r={bonus} size={28} /></>}
+            {bonus && <><b className="display" style={{ color: "var(--gold)", textShadow: "1px 0 0 #2e1c00, -1px 0 0 #2e1c00, 0 1px 0 #2e1c00, 0 -1px 0 #2e1c00" }}>Бонус за серию!</b><RewardChips r={bonus} size={28} /></>}
             {got.levelUp && <div className="chip violet">Новый уровень: {got.levelUp.to}!</div>}
             <button className="btn green block" onClick={onClose}>Круто</button>
           </div>

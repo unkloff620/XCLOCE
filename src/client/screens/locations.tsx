@@ -534,7 +534,7 @@ export function LocationScreen({ id }: { id: string }) {
             </div>
           </div>
           {energy < Math.min(...list.map((t) => t.energy)) && (
-            <p className="small muted center">Энергия кончилась: +1 каждые 5 минут, или <Link href="/shop?tab=energy" style={{ color: "var(--gold)" }}>купи энергию</Link>.</p>
+            <p className="small muted center">Энергия кончилась: +1 каждые 5 минут, или <Link href="/shop?tab=energy" style={{ color: "var(--gold)", textShadow: "1px 0 0 #2e1c00, -1px 0 0 #2e1c00, 0 1px 0 #2e1c00, 0 -1px 0 #2e1c00" }}>купи энергию</Link>.</p>
           )}
         </>
       )}

@@ -548,6 +548,7 @@ function useCoverSwing(coverRef: RefObject<SVGGElement | null>, handRef: RefObje
     const svg = hand.ownerSVGElement;
     const step = (t: number) => {
       raf = requestAnimationFrame(step);
+      if (document.hidden) { last = 0; return; }
       const m = hand.getCTM();
       const root = svg?.getCTM();
       if (!m || !root) return;

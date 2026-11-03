@@ -336,6 +336,16 @@ function resetCacheOnce(): Promise<void> {
  * First entry: the game shows once the hero, the interface and the home are downloaded (only the player's own hero
  * variants); the rest of the pictures follow in the background, three at a time, so the sections open at once later.
  */
+/** while Telegram is folded (the page hidden) every CSS animation stands still: class "paused" on <html> */
+function usePauseWhenHidden() {
+  useEffect(() => {
+    const set = () => document.documentElement.classList.toggle("paused", document.hidden);
+    set();
+    document.addEventListener("visibilitychange", set);
+    return () => document.removeEventListener("visibilitychange", set);
+  }, []);
+}
+
 function useArtReady(look: LookLite | null, room: string, active: boolean) {
   const [prog, setProg] = useState<LoadProgress>({ n: 0, total: 0, url: null });
   const [ready, setReady] = useState(false);
@@ -347,7 +357,8 @@ function useArtReady(look: LookLite | null, room: string, active: boolean) {
       .then(() => preload(entryUrls(look, mskDay(Date.now()), room), (n, total, url) => setProg((p) => ({ n, total, url: url ?? p.url }))))
       .then(() => {
         setReady(true);
-        setTimeout(() => void preload(laterUrls(look), undefined, 3), 1500);
+        // the light, likely-next screens only, two at a time, after the home has settled
+        setTimeout(() => void preload(laterUrls(look), undefined, 2), 4000);
       });
   }, [active, look]);
   return { ready, prog };
@@ -420,6 +431,7 @@ export function Shell({ children }: { children: ReactNode }) {
   }), [deep, router, path, myClan]);
   const body = state?.look.body;
   const look = useMemo<LookLite | null>(() => (body ? { hair: body.hair, hairColor: body.hairColor, skin: body.skin, tattoos: body.tattoos } : null), [body?.hair, body?.hairColor, body?.skin]); // eslint-disable-line react-hooks/exhaustive-deps
+  usePauseWhenHidden();
   const art = useArtReady(look, state?.look.room ?? "basic", auth === "ok" && !!state);
 
   return (

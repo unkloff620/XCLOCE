@@ -186,7 +186,7 @@ export function HomeScreen() {
           {/* the switcher pill always stays at the bottom; a locked room's offer sits above it */}
           {!owned && (
             <div className="room-unlock">
-              <span className="tiny" style={{ color: "var(--gold)" }}><BonusLine b={viewRoom.bonus} /></span>
+              <span className="tiny" style={{ color: "var(--gold)", textShadow: "1px 0 0 #2e1c00, -1px 0 0 #2e1c00, 0 1px 0 #2e1c00, 0 -1px 0 #2e1c00" }}><BonusLine b={viewRoom.bonus} /></span>
               {dropped ? (
                 <>
                   <button className="btn gold sm" disabled={!canPay || busy === "room_buy"} onClick={unlock}>

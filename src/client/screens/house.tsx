@@ -34,7 +34,7 @@ export function RoomsWindow({ onClose }: { onClose: () => void }) {
               <div className="room-thumb"><HomeScene room={r.id} still pieces={state.home.pieces} decor={state.home.decor} trophies={state.home.trophies} /></div>
               <b className="display">{r.name}</b>
               <div className="tiny muted">{r.description}</div>
-              <div className="tiny" style={{ color: "var(--gold)" }}><BonusLine b={r.bonus} /></div>
+              <div className="tiny" style={{ color: "var(--gold)", textShadow: "1px 0 0 #2e1c00, -1px 0 0 #2e1c00, 0 1px 0 #2e1c00, 0 -1px 0 #2e1c00" }}><BonusLine b={r.bonus} /></div>
               {here ? (
                 <span className="chip green">Ты здесь</span>
               ) : owned ? (

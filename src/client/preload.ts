@@ -87,9 +87,15 @@ export function sectionUrls(section: Section, look: LookLite | null, room: strin
  * pictures and the old «Что нового» — a screen that shows one loads it itself, the rest of the game does not wait for them.
  */
 const ON_DEMAND = ["/assets/hero/tattoo/", "/assets/items/tat-", "/assets/updates/"];
-/** everything else, the hero's own variants only (it is fetched after the game has shown) */
+/**
+ * What comes in the background after the game has shown: only the screens a player goes to first and that are light —
+ * the yard and the shop (≈4 MB). Everything else (the bosses ≈8 MB, the locations, the editors' icons, the cases…) is
+ * fetched when its screen opens: the old «download the whole game in the background» (≈30 MB) cost phones their data,
+ * memory and battery in the first minutes.
+ */
+const BACKGROUND: Section[] = ["yard", "shop"];
 export function laterUrls(look: LookLite | null): string[] {
-  return urlsFor("all", look).filter((u) => !done.has(u) && !ON_DEMAND.some((d) => u.startsWith(d)));
+  return urlsFor(BACKGROUND, look).filter((u) => !done.has(u) && !ON_DEMAND.some((d) => u.startsWith(d)));
 }
 
 const done = new Set<string>();
