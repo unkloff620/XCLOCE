@@ -5349,3 +5349,19 @@ html.paused *, html.paused *::before, html.paused *::after { animation-play-stat
 .pkt .pk-mini b { letter-spacing: -0.08em; }
 /* the gold outline is inherited by the tables' dark text on light plates and by the cards: those stay clean */
 :is(.bjt-out, .bjt-side-res, .bjt-timer, .bjc, .bjc *, .pkt-lvl, .pkt-swap, .pkt-new, .bb-tab.on, .tabs button, .lp-tab, .rt-tabs button, .dt-tabs button) { text-shadow: none; }
+
+/* ---------- HUD and the bottom menu: chalkboards in a wooden frame with faint crypto doodles in chalk ---------- */
+:root { --slate-frame: url(/assets/textures/slate-frame.webp); --slate: url(/assets/textures/slate-doodles.webp) 0 0 / 560px auto repeat; }
+.hud { background: linear-gradient(180deg, #1d1f1d, #171917); border-bottom: 2px solid #0c0d0c; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5); }
+.hud-me, .energy-chip, .coin-chip, .hud-tog, .nav, body:has(.fit-page) .nav {
+  border: 6px solid transparent; border-image: var(--slate-frame) 22 / 6px stretch;
+  background: var(--slate), #232a25; background-origin: border-box; box-shadow: 0 2px 0 rgba(0, 0, 0, 0.55); }
+.coin-chip, .hud-tog { border-width: 5px; border-image-width: 5px; }
+.hud-me .xpbar { background: #0e110f; border-color: #0a0b0a; }
+.nav { border-width: 7px; border-image-width: 7px; border-radius: 0; padding: 2px 2px calc(var(--safe-b) + 2px); gap: 0; backdrop-filter: none; }
+.nav a { border-radius: 6px; }
+.nav a + a { box-shadow: -1px 0 0 rgba(235, 240, 225, 0.1); }
+.nav a.on { background: radial-gradient(ellipse at 50% 55%, rgba(80, 220, 120, 0.2), rgba(80, 220, 120, 0.04) 75%); transform: none;
+  box-shadow: inset 0 0 0 2px #46c46e, 0 0 12px rgba(70, 196, 110, 0.45); }
+.nav a.on::after { bottom: 3px; background: #46c46e; box-shadow: 0 0 8px rgba(70, 196, 110, 0.9); }
+.hud-tog { border-width: 4px; border-image-width: 4px; }
