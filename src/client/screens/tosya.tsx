@@ -35,7 +35,7 @@ export function TosyaScreen() {
   return (
     <div className="fit-page ts-page">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="ts-bg" src="/assets/tosya/kitchen.webp?v=1" alt="" draggable={false} />
+      <img className="ts-bg" src="/assets/home/room-kitchen.webp?v=1" alt="" draggable={false} />
       <div className="ts-top">
         <div className="title-row">
           <Link href="/" className="back-btn" aria-label="Домой">‹</Link>
