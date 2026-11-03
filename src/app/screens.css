@@ -5235,7 +5235,6 @@ body > .coin-drop { z-index: 120; }
 .ach-pic-n,
 .acx-info .achbox-pts,
 .acx-ink-word,
-.bb-tab,
 .bcard-pill.live,
 .biz-h,
 .biz-rub,
@@ -5252,7 +5251,6 @@ body > .coin-drop { z-index: 120; }
 .boot-tip b,
 .case-set.done b,
 .cb-share,
-.cf-tab.on,
 .chip.gold,
 .chip.mode-chip.avtor,
 .chp-sum,
@@ -5298,9 +5296,7 @@ body > .coin-drop { z-index: 120; }
 .pkt-out b,
 .pr-auth b,
 .pr-tag,
-.rchips .chip.ach-pts,
 .rchips .chip.gold,
-.result-drops .chip,
 .result-gains .gain.result-room,
 .room-ed-price,
 .rt-game.on,
@@ -5351,3 +5347,5 @@ html.paused *, html.paused *::before, html.paused *::after { animation-play-stat
 .pkt .pk-mini { width: 3.6cqw; height: 5cqw; }
 .pkt .pk-mini b, .pkt .pk-mini i { font-size: 2.3cqw; }
 .pkt .pk-mini b { letter-spacing: -0.08em; }
+/* the gold outline is inherited by the tables' dark text on light plates and by the cards: those stay clean */
+:is(.bjt-out, .bjt-side-res, .bjt-timer, .bjc, .bjc *, .pkt-lvl, .pkt-swap, .pkt-new, .bb-tab.on, .tabs button, .lp-tab, .rt-tabs button, .dt-tabs button) { text-shadow: none; }
