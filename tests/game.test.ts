@@ -2203,7 +2203,7 @@ describe("Боксёрская", () => {
     const c = await act(db, p, "fight_claim", { fightId: f.result.fightId }, T0, always(0.03));
     expect(c.result.reward.unlocks).toContain("room:boxing");
     await act(db, p, "room_buy", { id: "boxing" }, T0);
-    expect(await wallet(db, p, "RUB")).toBeLessThanOrEqual(1000 + 5000);
+    expect(await wallet(db, p, "RUB")).toBe(5000 + (c.result.reward.currencies?.RUB ?? 0) - 4000);
     await setBossHp({ datsik: 1000 });
     await startDatsik(p, T0 + M);
     expect((await hit(p, "fist", T0 + M)).result.damage).toBe(42);

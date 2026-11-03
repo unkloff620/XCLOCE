@@ -1,4 +1,5 @@
 "use client";
+import { boostReward } from "../../content/rewards.ts";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
@@ -367,7 +368,7 @@ export function BossScreen({ id }: { id: string }) {
   };
   const start = async (solo = false) => {
     const md = fightMode(mode);
-    const r = await act<{ fightId: number }>("fight_start", { boss: id, solo, mode }, `${solo ? "Соло-бой" : "Бой"} с боссом ${boss?.name} · ${md.name}${md.hp > 1 ? ` (здоровье ×${md.hp})` : ""}. 8 часов`);
+    const r = await act<{ fightId: number }>("fight_start", { boss: id, solo, mode }, `${solo ? "Соло-бой" : "Бой"} с боссом ${boss?.name} · ${md.name}${md.hp > 1 ? ` (здоровье ×${md.hp}, награда ×${md.reward})` : ""}. 8 часов`);
     if (r) void loadList();
     return !!r;
   };
@@ -521,7 +522,7 @@ export function BossScreen({ id }: { id: string }) {
     const ok = await start(solo);
     if (!ok) setDoor("closed");
   };
-  const doorReward = { ...boss.reward, items: [...(boss.final || ev ? [] : [{ id: `key-${boss.id}`, qty: 1 }]), ...(boss.reward.items ?? [])] };
+  const doorReward = { ...boostReward(boss.reward, fightMode(mode).reward), items: [...(boss.final || ev ? [] : [{ id: `key-${boss.id}`, qty: 1 }]), ...(boss.reward.items ?? [])] };
   return (
     <div className="fit-page door-page" style={{ ["--acc" as string]: boss.theme.accent }} onTouchStart={door === "closed" ? onTouchStart : undefined} onTouchEnd={door === "closed" ? onTouchEnd : undefined}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -580,7 +581,7 @@ export function BossScreen({ id }: { id: string }) {
               {FIGHT_MODES.map((m, i) => (
                 <button key={m.id} type="button" role="tab" aria-selected={mode === m.id} className={`mode-tab ${m.id} ${mode === m.id ? "on" : ""}`}
                   onClick={() => { if (m.id === mode) return; haptic.tap(); setSlide(i > MODE_ORDER.indexOf(mode) ? "r" : "l"); setPick(m.id); }}
-                  aria-label={`${m.name}: здоровье ×${m.hp}${m.things ? ", падают вещи" : ""}`}>
+                  aria-label={`${m.name}: здоровье ×${m.hp}, награда ×${m.reward}${m.things ? ", падают вещи" : ""}`}>
                   {m.name}
                 </button>
               ))}

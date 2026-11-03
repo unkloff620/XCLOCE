@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-04-mode-rewards",
+    date: "4 ноября",
+    title: "Сложные режимы платят больше",
+    items: [
+      { text: "Деньги и авторитет за победу над боссом: «Блатной» — ×2, «Авторитетный» — ×4 к «Пацанскому». Вещи, комнаты и наколки — как и раньше." },
+    ],
+  },
+  {
     id: "2026-11-04-zina",
     date: "4 ноября",
     title: "Баба Зина встречает новичков",

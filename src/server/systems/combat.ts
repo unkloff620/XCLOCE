@@ -452,7 +452,8 @@ export async function claimFight(ctx: Ctx, fightId: number) {
   }
   // one-of-a-kind rewards (the statue) are not handed out again
   // the admin's «Увеличить награды» for this boss (rewards in % of the usual)
-  const base = boostReward(scaleReward(def.reward, share), ctx.cfg.bossReward[def.id] ?? 1);
+  // the mode's money and authority (× FightModeDef.reward), then the admin's boost
+  const base = boostReward(boostReward(scaleReward(def.reward, share), mode.reward), ctx.cfg.bossReward[def.id] ?? 1);
   if (base.items?.length) base.items = await notOwnedUnique(ctx, base.items);
   // «Крафт»: parts for the win (only for a fair share of the damage) — the harder the boss and the mode, the more
   // (craftBossParts): the count, the rare and very rare chances, and his own very rare part

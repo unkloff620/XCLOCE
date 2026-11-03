@@ -14,14 +14,15 @@ import { WEAPONS } from "./items.ts";
 export type FightMode = "pacan" | "blat" | "avtor";
 export type MedalTier = "bronze" | "silver" | "gold";
 
-export interface FightModeDef { id: FightMode; name: string; hp: number; medal: MedalTier; things: boolean }
+/** `reward`: the money and authority of a win × this (the harder mode pays more) */
+export interface FightModeDef { id: FightMode; name: string; hp: number; medal: MedalTier; things: boolean; reward: number }
 /** the blasts (medals for every win) are out of the game for now — they will come back as «комбо» (weapon combos on a boss) */
 export const BLASTS_ON = false;
 
 export const FIGHT_MODES: FightModeDef[] = [
-  { id: "pacan", name: "Пацанский", hp: 1, medal: "bronze", things: false },
-  { id: "blat", name: "Блатной", hp: 3, medal: "silver", things: true },
-  { id: "avtor", name: "Авторитетный", hp: 6, medal: "gold", things: false },
+  { id: "pacan", name: "Пацанский", hp: 1, medal: "bronze", things: false, reward: 1 },
+  { id: "blat", name: "Блатной", hp: 3, medal: "silver", things: true, reward: 2 },
+  { id: "avtor", name: "Авторитетный", hp: 6, medal: "gold", things: false, reward: 4 },
 ];
 export const fightMode = (id: string | null | undefined): FightModeDef => FIGHT_MODES.find((m) => m.id === id) ?? FIGHT_MODES[0];
 export const MEDAL_TIERS: MedalTier[] = ["bronze", "silver", "gold"];
