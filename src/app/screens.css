@@ -5216,10 +5216,11 @@ body { background-attachment: fixed; }
 @media (prefers-reduced-motion: reduce) { .kzr-live .kzr-shine, .kzr-live .kzr-door, .kzr-live .kzr-glow, .kzr-live .kzr-spill, .kzr-live .kzr-leaves { animation: none; } }
 /* the room editor's «Убрать»: an empty tile with a cross */
 .room-ed-x { display: grid; place-items: center; font-size: 22px; font-weight: 900; color: var(--muted, #8a6a4a); }
-/* the hero editor: the room things on the left (the room behind is not tapped any more) — a tap opens the room editor there */
-.sty-room-tabs { position: absolute; left: 10px; bottom: calc(100% + 86px); display: flex; flex-direction: column; gap: 6px; }
-.sty-room-tabs button { width: 54px; height: 54px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 3px 2px 2px; border-radius: 14px; cursor: pointer;
-  border: 2.5px solid #2a1606; background: linear-gradient(180deg, #6a4524, #3e2610); box-shadow: 0 3px 0 #1a0e05; color: #ffe6a8; }
-.sty-room-tabs img, .sty-room-tabs svg { width: 34px; height: 30px; object-fit: contain; pointer-events: none; }
-.sty-room-tabs span { font-size: 8.5px; font-weight: 800; line-height: 1; text-transform: uppercase; letter-spacing: 0.02em; white-space: nowrap; }
-@media (max-height: 700px) { .sty-room-tabs button { width: 48px; height: 48px; } .sty-room-tabs img, .sty-room-tabs svg { width: 28px; height: 24px; } }
+/* the hero editor: the room things on the left (the room behind is not tapped any more) — a tap opens the room editor
+   there; the same look as the editors' column on the right */
+.sty-room-tabs { position: absolute; left: 10px; bottom: calc(100% + 86px); display: flex; flex-direction: column; gap: 8px; }
+.sty-room-tabs button { width: 54px; height: 54px; display: grid; place-items: center; padding: 0; border-radius: 14px; cursor: pointer; color: #ffe6a8;
+  background: rgba(24, 15, 9, 0.72); border: 2.5px solid var(--line); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45); }
+.sty-room-tabs img, .sty-room-tabs svg { width: 38px; height: 38px; object-fit: contain; pointer-events: none; }
+@media (max-height: 700px) { .sty-room-tabs button { width: 48px; height: 48px; } .sty-room-tabs img, .sty-room-tabs svg { width: 32px; height: 32px; } }
+.room-ed-back { flex: none; min-width: 64px; display: grid; place-items: center; padding: 0 14px; }

@@ -254,7 +254,6 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
           {ROOM_SIDE.map((s) => (
             <button key={s.id} type="button" onClick={() => { haptic.tap(); onRoom(s.id); }} aria-label={s.name} title={s.name}>
               {s.id === "rgb" ? <Icon name="bolt" size={30} /> : <img src={`/assets/home/thumb/${ROOM_THUMB[s.id]}.webp`} alt="" draggable={false} />}
-              <span>{s.name}</span>
             </button>
           ))}
         </div>

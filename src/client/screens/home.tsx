@@ -97,6 +97,7 @@ export function HomeScreen() {
   const [decorating, setDecorating] = useState<RoomDraft | null>(null);
   const [roomTab, setRoomTab] = useState<RoomTab>("monitor2");
   const [pc, setPc] = useState(false);
+  const [styledBefore, setStyledBefore] = useState<StyleDraft | null>(null);
   // the running fight sits folded in the left column; a tap unfolds the full card
   const [fightOpen, setFightOpen] = useState(false);
   // room browser: arrows flip through rooms as a preview; a bar on top confirms the choice (✓) or goes back (✕)
@@ -152,6 +153,8 @@ export function HomeScreen() {
     setStyling({ look: { ...state.look.body }, worn: { ...state.look.equipped } });
   };
   const openRoomEditor = (tab: RoomTab) => {
+    // from the hero editor: «назад» in the room editor brings the hero editor back as it was
+    setStyledBefore(styling);
     setStyling(null);
     setRoomTab(tab);
     setDecorating(roomDraftOf(state.home.pieces ?? {}, state.home.decor));
@@ -316,7 +319,9 @@ export function HomeScreen() {
       {wish && <StashWishWindow onClose={() => setWish(false)} />}
       {messages && <MessagesWindow onClose={() => setMessages(false)} />}
       {quests && <QuestsWindow onClose={() => setQuests(false)} />}
-      {decorating && <RoomEditor draft={decorating} setDraft={setDecorating} tab={roomTab} setTab={setRoomTab} onClose={() => setDecorating(null)} />}
+      {decorating && <RoomEditor draft={decorating} setDraft={setDecorating} tab={roomTab} setTab={setRoomTab}
+        onClose={() => { setDecorating(null); setStyledBefore(null); }}
+        onBack={() => { setDecorating(null); if (styledBefore) setStyling(styledBefore); setStyledBefore(null); }} />}
       {pc && <ComputerWindow onClose={() => setPc(false)} />}
     </div>
   );

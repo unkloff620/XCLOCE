@@ -48,7 +48,9 @@ export function previewPieces(pieces: Record<string, number>, draft: RoomDraft):
   return out;
 }
 
-export function RoomEditor({ draft, setDraft, tab, setTab, onClose }: { draft: RoomDraft; setDraft: (d: RoomDraft) => void; tab: RoomTab; setTab: (t: RoomTab) => void; onClose: () => void }) {
+export function RoomEditor({ draft, setDraft, tab, setTab, onClose, onBack }: { draft: RoomDraft; setDraft: (d: RoomDraft) => void; tab: RoomTab; setTab: (t: RoomTab) => void; onClose: () => void;
+  /** «назад»: without saving, back to where the editor was opened from (the hero editor) */
+  onBack?: () => void }) {
   const { state, act, busy } = useGame();
   const [saving, setSaving] = useState(false);
   // the piece the panel talks about (its bonus and the «Купить» button); for monitors — the last tapped one
@@ -238,7 +240,9 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose }: { draft: R
         )}
 
         <div className="sty-actions">
-          <button className="btn dark" onClick={onClose}>Отмена</button>
+          <button className="btn dark room-ed-back" onClick={onBack ?? onClose} aria-label="Назад без сохранения" title="Назад">
+            <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M15 4 7 12l8 8" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          </button>
           <button className="btn green grow" disabled={!changed || notOwned.length > 0 || saving || !!busy} onClick={save}>
             {notOwned.length ? "Сначала купи выбранное" : changed ? "Сохранить" : "Без изменений"}
           </button>
