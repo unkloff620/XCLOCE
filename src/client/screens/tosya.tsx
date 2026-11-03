@@ -12,7 +12,7 @@ import { TosyaRig } from "../art/tosya-rig.tsx";
 import { haptic } from "../telegram.ts";
 import { money } from "../format.ts";
 import { leftText } from "../event-banner.tsx";
-import { TOSYA_MULT, TOSYA_PRICE } from "../../content/tosya.ts";
+import { ItemArt } from "../art/items.tsx";
 import type { Granted } from "../api.ts";
 
 export function TosyaScreen() {
@@ -51,6 +51,15 @@ export function TosyaScreen() {
               : <>Все пирожки твои. Тося доволен — ты покушал.</>}
           </div>
         )}
+        {/* what the pies may hold: a sheet out of the left edge, icons only */}
+        {t && (
+          <div className="ts-sheet" aria-label="Что бывает в пирожках">
+            {["keyboard", "gpu", "rug-pull-gun", "part-gear"].map((id) => <ItemArt key={id} id={id} size={30} />)}
+            <Icon name="xp" size={28} />
+            <Icon name="RUB" size={28} />
+            <Icon name="USD" size={28} />
+          </div>
+        )}
       </div>
       {t && (
         <div className="ts-stage">
@@ -62,7 +71,6 @@ export function TosyaScreen() {
           <div className="col" style={{ gap: 10, alignItems: "center", textAlign: "center" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/assets/tosya/pie-c.webp?v=1" alt="" width={140} draggable={false} />
-            <p className="small" style={{ margin: 0 }}>Внутри — оружие, детали, авторитет, рубли, а может и доллары: всего примерно на {money("USD", (t.next || TOSYA_PRICE) * TOSYA_MULT)} $. Что именно — узнаешь, когда купишь.</p>
             <button className="btn gold block" disabled={busy === "tosya_buy" || usd < t.next} onClick={buy}>
               {t.next === 0 ? "Взять бесплатно" : <>Купить за <Icon name="USD" size={18} /> {money("USD", t.next)}</>}
             </button>

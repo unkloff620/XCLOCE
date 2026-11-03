@@ -5405,3 +5405,8 @@ html.paused *, html.paused *::before, html.paused *::after { animation-play-stat
 @keyframes ts-tray { 0%, 100% { transform: translateY(0) rotate(0deg); } 30% { transform: translateY(-4px) rotate(-0.7deg); } 70% { transform: translateY(2px) rotate(0.6deg); } }
 .ts-pie { cursor: pointer; transition: transform 0.15s; transform-origin: center; transform-box: fill-box !important; }
 .ts-pie:active, .ts-pie.on { transform: translateY(-10px) scale(1.06); filter: drop-shadow(0 0 10px rgba(255, 210, 90, 0.9)); }
+/* the sheet with what the pies hold: out of the left edge, under the notes */
+.ts-sheet { align-self: flex-start; margin-left: -10px; display: grid; grid-template-columns: repeat(2, 30px); gap: 6px 8px; justify-items: center; align-items: center;
+  padding: 10px 12px 10px 10px; border-radius: 0 12px 12px 0; background: linear-gradient(170deg, #fff6df, #ecd9b0); border: 2px solid #6b4a24; border-left: 0;
+  box-shadow: 3px 4px 0 rgba(40, 22, 8, 0.35); transform: rotate(-2deg); transform-origin: left center; animation: ts-sheet-in 0.5s ease-out both; }
+@keyframes ts-sheet-in { from { transform: translateX(-110%) rotate(-2deg); } to { transform: translateX(0) rotate(-2deg); } }
