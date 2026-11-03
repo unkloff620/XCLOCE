@@ -116,6 +116,10 @@ const WEARABLES: ItemDef[] = ([
   // held in the left hand (slot «Кисть»): the boss's own weapon, worn for the look
   { id: "bottle-komandate", name: "Бутылка Командате", slot: "HAND", rarity: "epic", description: "Оружие Командате: горит, но не гаснет. Герой держит её в руке.", sources: ["Победа: Командате"] },
   { id: "hand-drum", name: "Нервные пальцы", slot: "HAND", rarity: "rare", description: "Пальцы сами отбивают ритм по колену, пока график грузится.", sources: ["Победа: Кедр"] },
+  // Гаркуша's set: all in black (cut from the hero on tools/rig/source/wear); the jacket is worn open over the bare chest
+  { id: "jacket-puffer", name: "Пуховик Гаркуши", slot: "SHIRT", rarity: "epic", description: "Чёрный, дутый, нараспашку — чтобы наколки было видно. Карманы под пачки.", sources: ["Победа: Гаркуша (Блатной)"] },
+  { id: "pants-black", name: "Чёрные штаны Гаркуши", slot: "PANTS", rarity: "rare", description: "Плотные, прямые. В них удобно стоять у кассы.", sources: ["Победа: Гаркуша (Блатной)"] },
+  { id: "sneakers-chunky", name: "Кроссовки Гаркуши", slot: "SHOES", rarity: "rare", description: "Чёрные, на толстой подошве. Шаг тяжёлый, как пачка пятитысячных.", sources: ["Победа: Гаркуша (Блатной)"] },
   // Мугонатор's set: the sea captain (cut from the hero on tools/rig/source/wear)
   { id: "tee-sailor", name: "Тельняшка Мугонатора", slot: "SHIRT", rarity: "rare", description: "Полоски — чтобы акула видела, кого не трогать. Край уже кто-то откусил.", sources: ["Победа: Мугонатор (Блатной)"] },
   { id: "cap-captain", name: "Капитанская фуражка", slot: "HEAD", rarity: "epic", description: "Белая, с якорем. Вадим сказал — Мугонатор надел.", sources: ["Победа: Мугонатор (Блатной)"] },

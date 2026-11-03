@@ -103,6 +103,8 @@ export const BOSSES: BossDef[] = [
     story: "Правая рука Князя. Левой подписывает всё, что Князь не успел прочитать.",
     hp: hp(3), reward: { xp: xp(3), currencies: { USD: 9, RUB: 1_740 } },
     drop: [{ id: "keyboard", qty: 3, chance: 0.35 }],
+    wear: { items: ["jacket-puffer", "pants-black", "sneakers-chunky"], chance: 0.1, pity: 10 },
+    set: { weapon: "red-candle", damage: 25 },
     theme: { a: "#3a1a1a", b: "#140707", accent: "#ff6b4a" }, photo: photo("garkusha", true),
   },
   {

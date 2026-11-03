@@ -350,7 +350,7 @@ function Beard() {
 }
 
 /** open jackets: the chain goes under them */
-const OPEN_JACKETS = ["jacket-komandate"];
+const OPEN_JACKETS = ["jacket-komandate", "jacket-puffer"];
 
 /** where the diamond teeth glint (rig coordinates over the mouth) and when (s) */
 const GLINTS: [number, number, number][] = [[485, 253, 0], [503, 256, 1.3], [520, 252, 2.6], [495, 266, 3.7], [515, 267, 5.1]];

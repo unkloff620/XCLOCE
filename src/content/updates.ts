@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-03-garkusha-wear",
+    date: "3 ноября",
+    title: "Вещи Гаркуши",
+    items: [
+      { img: "/assets/updates/2026-11-03-garkusha-wear.webp", text: "С Гаркуши в «Блатном» падают его вещи: чёрный пуховик нараспашку (наколки видно), чёрные штаны и массивные кроссовки. Собери все три — красная свеча бьёт сильнее." },
+    ],
+  },
+  {
     id: "2026-11-03-mugo-wear",
     date: "3 ноября",
     title: "Вещи Мугонатора",

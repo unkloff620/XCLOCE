@@ -68,6 +68,7 @@ def hair_recolor(im, target, ref):
 # clothes drawn on the v2 body (the v1 ones are kept in tools/rig/source/wear/v1)
 WEAR_SLOT = {"tee-white": "SHIRT", "tee-pump": "SHIRT", "jeans": "PANTS", "shorts-remote": "PANTS", "sneakers": "SHOES",
              "slippers": "SHOES", "gold-chain": "ACCESSORY", "cap-moon": "HEAD", "hoodie-hodl": "SHIRT",
+             "jacket-puffer": "SHIRT", "pants-black": "PANTS", "sneakers-chunky": "SHOES",
              "tee-sailor": "SHIRT", "cap-captain": "HEAD", "mask-diver": "FACE", "teeth-necklace": "ACCESSORY",
              "tee-actclose": "SHIRT", "shorts-actclose": "PANTS", "badge-actclose": "ACCESSORY",
              "jacket-komandate": "SHIRT", "pants-komandate": "PANTS", "sneakers-komandate": "SHOES",
