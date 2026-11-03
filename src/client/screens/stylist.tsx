@@ -1,4 +1,6 @@
 "use client";
+import { ROOM_SIDE, type RoomTab } from "./decorator.tsx";
+import { Icon } from "../art/icons.tsx";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -37,8 +39,13 @@ const SLOT_ICON: Record<string, string> = { MOUTH: "slot-mouth", HEAD: "slot-hea
 const SHORT_PART: Record<string, string> = { HEAD: "Голова", FACE: "Лицо", MOUTH: "Рот", TEETH: "Зубы", ACCESSORY: "Шея", SHIRT: "Верх", PANTS: "Низ", SHOES: "Обувь", HAND: "Кисть" };
 // «левое / правое» — as seen on the screen
 
-export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
+/** the picture on each room button in the hero editor */
+const ROOM_THUMB: Record<string, string> = { desk: "desk-001", monitor2: "monitor-center", chair: "chair-1", pc: "pc-1" };
+
+export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
   draft: StyleDraft; setDraft: (d: StyleDraft) => void; onClose: () => void; focus: RigEdit; setFocus: (f: RigEdit) => void;
+  /** the room things (desk, monitors, chair, PC, light): a tap opens the room editor on that one */
+  onRoom?: (tab: RoomTab) => void;
 }) {
   const { state, act, busy } = useGame();
   const [saving, setSaving] = useState(false);
@@ -241,6 +248,17 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus }: {
     <div className="sty-panel">
       {/* eslint-disable @next/next/no-img-element */}
       {/* the three editors: a column on the right of the hero */}
+      {onRoom && (
+        // the room things on the left: the room itself is not tapped any more (the hero is edited over it)
+        <div className="sty-room-tabs">
+          {ROOM_SIDE.map((s) => (
+            <button key={s.id} type="button" onClick={() => { haptic.tap(); onRoom(s.id); }} aria-label={s.name} title={s.name}>
+              {s.id === "rgb" ? <Icon name="bolt" size={30} /> : <img src={`/assets/home/thumb/${ROOM_THUMB[s.id]}.webp`} alt="" draggable={false} />}
+              <span>{s.name}</span>
+            </button>
+          ))}
+        </div>
+      )}
       <div className="sty-side-tabs" role="tablist">
         <button type="button" className={mode === "body" && !inkTab ? "on" : ""} onClick={() => setMode("body")} aria-label="Изменить внешность" title="Изменить внешность"><img src="/assets/ui/tab-look.webp" alt="" draggable={false} /></button>
         <button type="button" className={inkTab ? "on" : ""} onClick={openInk} aria-label="Набить наколки" title="Набить наколки"><img src="/assets/ui/drop-tattoo.webp" alt="" draggable={false} /></button>

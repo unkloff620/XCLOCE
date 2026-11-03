@@ -42,8 +42,9 @@ function Hot({ id, onPick }: { id: keyof typeof SCENE_HOT; onPick: (equipment: s
 export function HomeScene({ room = "basic", onPick, onHero, still, look, worn, pieces = {}, decor = {}, trophies = [], focusHero, hideHero, edit }: { edit?: RigEdit; room?: string; onPick?: (equipment: string) => void; onHero?: () => void; still?: boolean; look?: Look; worn?: Worn; pieces?: Record<string, number>; decor?: Record<string, number>; trophies?: string[]; focusHero?: boolean; hideHero?: boolean }) {
   const bg = ROOM_BG[room] ?? ROOM_BG.basic;
   const sky = ROOM_SKY[room];
-  // the desk taken away (room editor «Убрать»): the computer and the monitors on it go with it
+  // the desk taken away (room editor «Убрать»): the monitors on it go with it; the computer stands on its own
   const noDesk = placedOf("desk", pieces, decor) < 0;
+  const noPc = placedOf("pc", pieces, decor) < 0;
   const desk = placedArt("desk", pieces, decor) ?? "desk-001";
   // shown monitors: bit 1 — right, 2 — left, 4 — middle, 8 — the old CRT (in the right one's place)
   const monitors = placedOf("monitor2", pieces, decor);
@@ -108,7 +109,7 @@ export function HomeScene({ room = "basic", onPick, onHero, still, look, worn, p
           ))}
         </g>
       )}
-      {!noDesk && <Obj id="pc" art="pc-1" />}
+      {!noPc && <Obj id="pc" art="pc-1" />}
       {!noDesk && <Obj id="desk" art={desk} />}
       {!noDesk && (monitors & 4) !== 0 && <Obj id="monitorCenter" art="monitor-center" />}
       {!noDesk && (monitors & 2) !== 0 && <Obj id="monitorLeft" art="monitor-left" />}

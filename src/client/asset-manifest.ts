@@ -961,6 +961,7 @@ export const ASSET_FILES: string[] = [
  "/assets/home/thumb/monitor-center.webp",
  "/assets/home/thumb/monitor-left.webp",
  "/assets/home/thumb/monitor-right.webp",
+ "/assets/home/thumb/pc-1.webp",
  "/assets/home/thumb/seat-1.webp",
  "/assets/items/badge-actclose.webp",
  "/assets/items/bandana-hodl.webp",

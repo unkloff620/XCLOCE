@@ -189,9 +189,9 @@ export function placedOf(id: string, pieces: Record<string, number>, decor: Reco
   for (let k = e?.pieces?.length ?? 0; k >= 1; k--) if (hasPiece(owned, k)) return k;
   return 0;
 }
-/** the room things that can be taken away altogether (the desk goes with the computer and the monitors on it); the seat
- *  always stays — the hero sits on it */
-export const REMOVABLE = new Set(["desk"]);
+/** the room things that can be taken away altogether (the desk goes with the monitors on it; the computer stands on its
+ *  own — "pc": 0 standing, -1 taken away); the seat always stays — the hero sits on it */
+export const REMOVABLE = new Set(["desk", "pc"]);
 /** the picture of what stands in the room (desk / chair); undefined — taken away */
 export const placedArt = (id: string, pieces: Record<string, number>, decor: Record<string, number> = {}) => {
   const e = equipmentById(id);

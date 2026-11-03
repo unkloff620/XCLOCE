@@ -82,7 +82,7 @@ open(os.path.join(ROOT, "src", "client", "art", "desk-data.ts"), "w").write(ts)
 # small pictures for the room editor's lists (shown at 44×32): desks, monitors, chairs, the stool
 os.makedirs(os.path.join(OUT, "thumb"), exist_ok=True)
 for f in sorted(os.listdir(OUT)):
-    if re.match(r"(desk|monitor|chair|seat)-[a-z0-9]+\.webp$", f):
+    if re.match(r"(desk|monitor|chair|seat|pc)-[a-z0-9]+\.webp$", f):
         t = Image.open(os.path.join(OUT, f)).convert("RGBA")
         t = t.crop(t.getbbox())
         t.thumbnail((128, 128), Image.LANCZOS)

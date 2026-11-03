@@ -197,6 +197,11 @@ export async function setRoom(ctx: Ctx, id: string) {
 
 /** Check one decor value: desk / chair — 0 (the free one) or an owned piece; monitors — a mask of owned ones. */
 function decorValue(id: string, v: unknown, pieces: Record<string, number>): number {
+  // the computer: only stands or is taken away
+  if (id === "pc") {
+    if (v !== 0 && v !== -1) throw new GameError("bad_value", "Неверное значение");
+    return v;
+  }
   const def = equipmentById(id);
   if (!def?.pieces?.length) throw new GameError("bad_equipment", "Это нельзя поставить");
   const owned = pieces[def.id] ?? 0;
@@ -217,7 +222,7 @@ export async function setDecor(ctx: Ctx, id: string, stage: number) {
 export async function saveDecor(ctx: Ctx, raw: Record<string, unknown>) {
   const h = await homeData(ctx.q, ctx.pid);
   const entries = Object.entries(raw ?? {});
-  if (!entries.length || entries.length > EQUIPMENT.length) throw new GameError("bad_value", "Нечего сохранять");
+  if (!entries.length || entries.length > EQUIPMENT.length + 1) throw new GameError("bad_value", "Нечего сохранять");
   const decor = { ...h.decor };
   for (const [id, v] of entries) decor[id] = decorValue(id, v, h.pieces);
   await ctx.q.query("UPDATE appearance SET decor=$2 WHERE player_id=$1", [ctx.pid, JSON.stringify(decor)]);

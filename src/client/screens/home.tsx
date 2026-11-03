@@ -166,7 +166,6 @@ export function HomeScreen() {
           <HomeScene room={viewRoom.id} look={styling?.look ?? state.look.body} worn={styling?.worn ?? state.look.equipped}
             pieces={decorating ? previewPieces(state.home.pieces ?? {}, decorating) : state.home.pieces} decor={decorating ?? state.home.decor} trophies={state.home.trophies}
             focusHero={!!styling} hideHero={!!decorating} edit={styling ? { ...editFocus, onPick: pickPart } : undefined}
-            onPick={owned && !editing ? (id) => (id === "pc" ? setPc(true) : openRoomEditor("monitor2")) : undefined}
             onHero={owned && !editing ? openWardrobe : undefined} />
         </div>
         {/* looking at another room: confirm it (✓) or go back to the current one (✕) */}
@@ -309,7 +308,7 @@ export function HomeScreen() {
           </Link>
         </div>
       )}
-      {styling && <Stylist draft={styling} setDraft={setStyling} onClose={() => setStyling(null)} focus={editFocus} setFocus={setEditFocus} />}
+      {styling && <Stylist draft={styling} setDraft={setStyling} onClose={() => setStyling(null)} focus={editFocus} setFocus={setEditFocus} onRoom={openRoomEditor} />}
       {daily && <DailyWindow onClose={() => setDaily(false)} />}
       <UpdatesNotice wait={busyWindow || daily || (dailyReady && !dailyAutoShown)} onOpen={setUpdOpen} />
       <ExchangeNotice wait={busyWindow || daily || updOpen || (dailyReady && !dailyAutoShown)} />
