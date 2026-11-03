@@ -1,5 +1,5 @@
 """
-Tattoo sets (content/tattoos.ts) from ink layers: tools/rig/source/tattoo/<set>/<part>-ink.png — the ink of the whole set on
+Tattoo sets (content/tattoos.ts) from ink layers made by tools/rig/tattoo-ink.py: tools/rig/source/tattoo/<set>/<part>-ink.png — the ink of the whole set on
 one hero part, on that part's own canvas (public/assets/hero/<part>.webp), made by an image edit of the part and the
 difference against it. Each piece is cut out of its part's layer (a zone box for the parts that carry several pieces),
 cropped to its ink and saved as public/assets/hero/tattoo/<id>.webp; its place in rig coordinates goes to

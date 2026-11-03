@@ -1,6 +1,6 @@
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, ledger, takeMoney, type Ctx } from "../core.ts";
-import { EQUIPMENT, FIRST_STEPS_GIFT, pieceUnlockId, HELP_TOPICS, TROPHIES, baseBit, equipmentById, hasPiece, piecesCount, normalizeLook, roomById, roomUnlockId, roomsEnergyBonus, totalBonus, type HelpTopic, type Look, beardLevel, unshavenDays } from "../../content/home.ts";
+import { EQUIPMENT, FIRST_STEPS_GIFT, pieceUnlockId, HELP_TOPICS, TROPHIES, baseBit, equipmentById, hasPiece, piecesCount, normalizeLook, roomById, roomUnlockId, roomsEnergyBonus, totalBonus, type HelpTopic, type Look, beardLevel, unshavenDays, REMOVABLE } from "../../content/home.ts";
 import { bossById } from "../../content/bosses.ts";
 import { craftBonus } from "./craft.ts";
 import { TALENT_RESET_PRICE, autoStop, autoTalentsOpen, stopLevel, stopOpen, talentExtras, talentStop, talentsSpent, type WeaponTalents } from "../../content/talents.ts";
@@ -200,6 +200,7 @@ function decorValue(id: string, v: unknown, pieces: Record<string, number>): num
   const def = equipmentById(id);
   if (!def?.pieces?.length) throw new GameError("bad_equipment", "Это нельзя поставить");
   const owned = pieces[def.id] ?? 0;
+  if (v === -1 && REMOVABLE.has(def.id)) return -1;
   if (typeof v !== "number" || !Number.isInteger(v) || v < 0) throw new GameError("bad_value", "Неверное значение");
   if (def.multi ? (v & ~(owned | baseBit(def))) !== 0 : v !== 0 && !hasPiece(owned, v)) throw new GameError("locked", "Сначала купи эту вещь");
   // the base and the piece in its place cannot stand together

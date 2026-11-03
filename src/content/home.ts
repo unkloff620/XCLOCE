@@ -183,14 +183,20 @@ export function placedOf(id: string, pieces: Record<string, number>, decor: Reco
     if (m & spot) m &= ~base;
     return m;
   }
+  // -1: taken away (an empty corner; only the things that may go — REMOVABLE)
+  if (pick === -1 && REMOVABLE.has(id)) return -1;
   if (typeof pick === "number" && (pick === 0 || hasPiece(owned, pick))) return pick;
   for (let k = e?.pieces?.length ?? 0; k >= 1; k--) if (hasPiece(owned, k)) return k;
   return 0;
 }
-/** the picture of what stands in the room (desk / chair) */
+/** the room things that can be taken away altogether (the desk goes with the computer and the monitors on it); the seat
+ *  always stays — the hero sits on it */
+export const REMOVABLE = new Set(["desk"]);
+/** the picture of what stands in the room (desk / chair); undefined — taken away */
 export const placedArt = (id: string, pieces: Record<string, number>, decor: Record<string, number> = {}) => {
   const e = equipmentById(id);
   const k = placedOf(id, pieces, decor);
+  if (k < 0) return undefined;
   return k > 0 ? e?.pieces?.[k - 1]?.art : e?.base?.art;
 };
 export const roomById = (id: string) => ROOM_DEFS.find((r) => r.id === id);

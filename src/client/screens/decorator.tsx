@@ -6,7 +6,7 @@ import { useGame } from "../store.tsx";
 import { Icon } from "../art/icons.tsx";
 import { money } from "../format.ts";
 import { haptic } from "../telegram.ts";
-import { EQUIPMENT, baseBit, equipmentById, hasPiece, pieceUnlockId, placedOf, type Price } from "../../content/home.ts";
+import { EQUIPMENT, REMOVABLE, baseBit, equipmentById, hasPiece, pieceUnlockId, placedOf, type Price } from "../../content/home.ts";
 import { bossById } from "../../content/bosses.ts";
 import { BonusLine } from "./house.tsx";
 
@@ -143,6 +143,13 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose }: { draft: R
           <div className="sty-body">
             <div className="tiny muted">{e.multi ? "Каждый монитор покупается отдельно. Нажми, чтобы поставить или убрать." : "Купленные остаются навсегда и дают бонус, а поставить можно любой."}</div>
             <div className="sty-strip room-ed-strip">
+              {REMOVABLE.has(tab) && (
+                // take it away: an empty corner (the stool stays — the hero sits on it)
+                <button className={`sty-item room-ed-item room-ed-none ${(draft[tab] ?? 0) === -1 ? "on" : ""}`} onClick={() => pick(tab, -1)} aria-pressed={(draft[tab] ?? 0) === -1}>
+                  <span className="room-ed-thumb room-ed-x" aria-hidden="true">✕</span>
+                  <span className="sty-item-name">Убрать</span>
+                </button>
+              )}
               {(() => {
                 const on = e.multi ? ((draft[tab] ?? 0) & baseBit(e)) !== 0 : (draft[tab] ?? 0) === 0;
                 return (

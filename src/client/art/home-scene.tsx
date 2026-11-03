@@ -4,6 +4,7 @@ import { CHARACTER, HERO_HOT, ROOM_BG, ROOM_LIGHTS, ROOM_RGB, ROOM_SKY, SCENE, S
 import { RigViewport, type RigEdit, type Worn } from "./rig.tsx";
 import { ART_ASPECT } from "./desk-data.ts";
 import { usedUrl } from "../preload.ts";
+import { KnyazRoom } from "./arena-bg.tsx";
 import { placedArt, placedOf, type Look } from "../../content/home.ts";
 
 type ObjId = keyof typeof SCENE_OBJECTS;
@@ -41,6 +42,8 @@ function Hot({ id, onPick }: { id: keyof typeof SCENE_HOT; onPick: (equipment: s
 export function HomeScene({ room = "basic", onPick, onHero, still, look, worn, pieces = {}, decor = {}, trophies = [], focusHero, hideHero, edit }: { edit?: RigEdit; room?: string; onPick?: (equipment: string) => void; onHero?: () => void; still?: boolean; look?: Look; worn?: Worn; pieces?: Record<string, number>; decor?: Record<string, number>; trophies?: string[]; focusHero?: boolean; hideHero?: boolean }) {
   const bg = ROOM_BG[room] ?? ROOM_BG.basic;
   const sky = ROOM_SKY[room];
+  // the desk taken away (room editor «Убрать»): the computer and the monitors on it go with it
+  const noDesk = placedOf("desk", pieces, decor) < 0;
   const desk = placedArt("desk", pieces, decor) ?? "desk-001";
   // shown monitors: bit 1 — right, 2 — left, 4 — middle, 8 — the old CRT (in the right one's place)
   const monitors = placedOf("monitor2", pieces, decor);
@@ -65,7 +68,10 @@ export function HomeScene({ room = "basic", onPick, onHero, still, look, worn, p
           <image href={sky.src} x={2 * sky.w} y={sky.y} width={sky.w} height={sky.h} preserveAspectRatio="none" />
         </g>
       )}
-      <image href={`/assets/home/${bg}.webp`} x="0" y="0" width={SCENE.w} height={SCENE.h} preserveAspectRatio="none" />
+      {room === "vault" && !still ? (
+        // «Хранилище Князя» is alive like his fight room: his 1024×1536 picture scaled onto the scene (tools/scene: ×1060/1024, 53 px off the top)
+        <g transform={`translate(0 -53) scale(${SCENE.w / 1024})`}><KnyazRoom uid="home" /></g>
+      ) : <image href={`/assets/home/${bg}.webp`} x="0" y="0" width={SCENE.w} height={SCENE.h} preserveAspectRatio="none" />}
       {lights.length > 0 && (
         <g className={still ? undefined : "room-lights"} style={{ mixBlendMode: "screen" }} aria-hidden="true">
           <defs>
@@ -102,12 +108,12 @@ export function HomeScene({ room = "basic", onPick, onHero, still, look, worn, p
           ))}
         </g>
       )}
-      <Obj id="pc" art="pc-1" />
-      <Obj id="desk" art={desk} />
-      {(monitors & 4) !== 0 && <Obj id="monitorCenter" art="monitor-center" />}
-      {(monitors & 2) !== 0 && <Obj id="monitorLeft" art="monitor-left" />}
-      {(monitors & 1) !== 0 && <Obj id="monitorRight" art="monitor-right" />}
-      {(monitors & 8) !== 0 && <Obj id="monitorOld" art="monitor-1" />}
+      {!noDesk && <Obj id="pc" art="pc-1" />}
+      {!noDesk && <Obj id="desk" art={desk} />}
+      {!noDesk && (monitors & 4) !== 0 && <Obj id="monitorCenter" art="monitor-center" />}
+      {!noDesk && (monitors & 2) !== 0 && <Obj id="monitorLeft" art="monitor-left" />}
+      {!noDesk && (monitors & 1) !== 0 && <Obj id="monitorRight" art="monitor-right" />}
+      {!noDesk && (monitors & 8) !== 0 && <Obj id="monitorOld" art="monitor-1" />}
       {trophies.includes("statue-close") && <Obj id="statueClose" art="statue-close" />}
       </g>
       <RigViewport x={CHARACTER.x} y={CHARACTER.y} scale={CHARACTER.scale} seat={placedOf("chair", pieces, decor)} still={still} look={look} worn={worn} seatOnly={hideHero} edit={edit} />
