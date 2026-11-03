@@ -67,19 +67,19 @@ export const WEAPONS: ItemDef[] = [
     weapon: { damage: 30, kind: "permanent", cooldownMin: 300, animation: "candle", action: "Уронить капу" },
   },
   {
-    id: "keyboard", name: "Клавиатура", category: "weapon", rarity: "rare", maxStack: 9999,
+    id: "keyboard", name: "Клавиатура", category: "weapon", rarity: "rare", maxStack: 99_999_999,
     description: "Механическая, с синими свичами. Громкая в полёте.",
     sources: ["Магазин", "Двор (редко)"],
     weapon: { damage: 30, kind: "consumable", animation: "keyboard", action: "Пиздануть клавой" },
   },
   {
-    id: "gpu", name: "Видеокарта", category: "weapon", rarity: "epic", maxStack: 9999,
+    id: "gpu", name: "Видеокарта", category: "weapon", rarity: "epic", maxStack: 99_999_999,
     description: "Три кулера, RGB и полное отсутствие сожалений.",
     sources: ["Магазин"],
     weapon: { damage: 60, kind: "consumable", animation: "gpu", action: "Снять видюху и кинуть в босса" },
   },
   {
-    id: "rug-pull-gun", name: "Rug Pull Gun", category: "weapon", rarity: "legendary", maxStack: 9999,
+    id: "rug-pull-gun", name: "Rug Pull Gun", category: "weapon", rarity: "legendary", maxStack: 99_999_999,
     description: "Один выстрел — и под ногами босса исчезает ликвидность.",
     sources: ["Магазин"],
     weapon: { damage: 250, kind: "consumable", animation: "rugpull", action: "Выдернуть ковёр" },

@@ -139,7 +139,7 @@ function BatchRow({ qty, onPick }: { qty: number; onPick: (n: number) => void })
     <div className="batch-row" role="radiogroup" aria-label="Сколько штук">
       {BULK.map((b) => (
         <button key={b.qty} role="radio" aria-checked={qty === b.qty} className={`batch-btn${qty === b.qty ? " on" : ""}`} onClick={() => { haptic.tap(); onPick(b.qty); }}>
-          <b className="num">×{b.qty}</b>
+          <b className="num">×{b.qty >= 10000 ? b.qty.toLocaleString("ru-RU") : b.qty}</b>
           {b.off > 0 && <span className="batch-off">−{Math.round(b.off * 100)}%</span>}
         </button>
       ))}

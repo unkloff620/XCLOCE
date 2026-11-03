@@ -18,6 +18,8 @@ export const BULK = [
   { qty: 10, off: 0.02 },
   { qty: 100, off: 0.05 },
   { qty: 1000, off: 0.1 },
+  { qty: 10000, off: 0.1 },
+  { qty: 99999, off: 0.1 },
 ] as const;
 export const bulkOf = (qty: number) => BULK.find((b) => b.qty === qty);
 
