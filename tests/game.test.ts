@@ -488,11 +488,12 @@ describe("shop and exchange", () => {
     await expect(act(db, p, "buy", { offerId: "gpu-1" }, T0)).rejects.toMatchObject({ code: "no_money" });
     expect(await qty(db, p, "gpu")).toBe(0);
   });
-  it("respects the 9999 stack", async () => {
+  it("weapons have no practical stack limit: ×99 999 at once", async () => {
     const p = await newPlayer(db);
     await give(db, p, "keyboard", 9995);
-    await setMoney(db, p, "RUB", 100000);
-    await expect(act(db, p, "buy", { offerId: "keyboard-1", qty: 10 }, T0)).rejects.toMatchObject({ code: "stack_full" });
+    await setMoney(db, p, "RUB", 100_000_000);
+    await act(db, p, "buy", { offerId: "keyboard-1", qty: 99999 }, T0);
+    expect(await qty(db, p, "keyboard")).toBe(9995 + 99999);
   });
   it("sells weapons in batches with a discount", async () => {
     const p = await newPlayer(db);
