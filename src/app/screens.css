@@ -5226,5 +5226,5 @@ body { background-attachment: fixed; }
 .room-ed-back { flex: none; min-width: 64px; display: grid; place-items: center; padding: 0 14px; }
 /* the upgrader's count: a fixed-width box with tabular digits — the slider next to it never shifts */
 .ug-strip .ug-q { display: inline-block; flex: none; text-align: left; font-variant-numeric: tabular-nums; }
-/* the currency dropdown hangs below the HUD: while it is open the HUD goes over the windows under it (the dossier, any page window) */
-.hud:has(.coin-drop) { z-index: 95; }
+/* the currency dropdown is drawn in <body> (fixed, under its box): over every window, the dossier too */
+body > .coin-drop { z-index: 120; }

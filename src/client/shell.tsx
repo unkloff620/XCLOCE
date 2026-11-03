@@ -1,4 +1,6 @@
 "use client";
+import { zoomRect } from "./phone-mode.ts";
+import { createPortal } from "react-dom";
 import { AchToast } from "./badges.tsx";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -100,6 +102,15 @@ function HudMoney({ wallet }: { wallet: Partial<Record<Currency, number>> }) {
     return ["RUB", "USD"];
   });
   const [box, setBox] = useState<0 | 1 | null>(null);
+  // where the open box is on screen: the list goes into <body> under it (the HUD lives in the page's own layer, every
+  // window over the page would cover a list drawn inside it)
+  const [at, setAt] = useState<{ left: number; top: number; width: number } | null>(null);
+  const open = (i: 0 | 1, el: HTMLElement) => {
+    if (box === i) { setBox(null); return; }
+    const r = zoomRect(el.getBoundingClientRect());
+    setAt({ left: r.left, top: r.bottom + 4, width: r.width });
+    setBox(i);
+  };
   const pick = (c: Currency) => {
     if (box === null) return;
     const next: [Currency, Currency] = [...shown];
@@ -113,7 +124,7 @@ function HudMoney({ wallet }: { wallet: Partial<Record<Currency, number>> }) {
   // a tap outside closes the open list
   useEffect(() => {
     if (box === null) return;
-    const off = (e: PointerEvent) => { if (!(e.target as Element | null)?.closest?.(".hud-money")) setBox(null); };
+    const off = (e: PointerEvent) => { if (!(e.target as Element | null)?.closest?.(".hud-money, .coin-drop")) setBox(null); };
     document.addEventListener("pointerdown", off, true);
     return () => document.removeEventListener("pointerdown", off, true);
   }, [box]);
@@ -121,21 +132,21 @@ function HudMoney({ wallet }: { wallet: Partial<Record<Currency, number>> }) {
     <div className="hud-money">
       {shown.map((c, i) => (
         <div key={i} className="coin-slot">
-          <button type="button" className={`coin-chip ${box === i ? "open" : ""}`} title={`${CURRENCY_DEFS[c].name} — выбрать валюту`} aria-expanded={box === i} onClick={() => setBox(box === i ? null : (i as 0 | 1))}>
+          <button type="button" className={`coin-chip ${box === i ? "open" : ""}`} title={`${CURRENCY_DEFS[c].name} — выбрать валюту`} aria-expanded={box === i} onClick={(e) => open(i as 0 | 1, e.currentTarget)}>
             <Icon name={c} size={20} />
             <CountUp key={c} value={wallet[c] ?? 0} format={(v) => money(c, v)} />
             <span className="coin-caret" aria-hidden="true">▾</span>
           </button>
           {/* the drop-down list right under the box */}
-          {box === i && (
-            <div className="coin-drop" role="listbox">
+          {box === i && at && createPortal(
+            <div className="coin-drop" role="listbox" style={{ position: "fixed", left: at.left, top: at.top, width: at.width, right: "auto" }}>
               {CURRENCIES.map((x) => (
                 <button key={x} type="button" role="option" aria-selected={c === x} className={`coin-opt ${c === x ? "on" : ""}`} onClick={() => pick(x)}>
                   <Icon name={x} size={18} /><b className="num">{money(x, wallet[x] ?? 0)}</b><small>{CURRENCY_DEFS[x].name}</small>
                 </button>
               ))}
               <Link href="/exchange" className="coin-opt ex" onClick={() => setBox(null)}>Обменник ›</Link>
-            </div>
+            </div>, document.body,
           )}
         </div>
       ))}
