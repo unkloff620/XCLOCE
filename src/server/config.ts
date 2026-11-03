@@ -67,7 +67,7 @@ export function defaultConfig(): Config {
     bossReward: {},
     eventBosses: {},
     maintenance: { on: false, text: MAINTENANCE_TEXT },
-    tosya: "auto",
+    tosya: { mode: "auto", at: 0 },
   };
 }
 

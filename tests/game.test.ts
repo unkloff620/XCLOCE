@@ -2343,14 +2343,16 @@ describe("Тося", () => {
     expect(tosyaWorth(pie)).toBeGreaterThan(100);
     expect([0, 1, 2, 3].map((b) => tosyaPrice(b, 4))).toEqual([20, 40, 80, 160]);
     expect([0, 1, 2, 3, 4].map((b) => tosyaPrice(b, 5))).toEqual([0, 20, 40, 80, 160]);
-    expect(tosyaVisit(T0, "off")).toBeNull();
-    expect(tosyaVisit(T0, "on")).not.toBeNull();
+    expect(tosyaVisit(T0, { mode: "off", at: 0 })).toBeNull();
+    // started by hand: here for 3 hours, a new start is a new visit
+    expect(tosyaVisit(T0 + 3600_000, { mode: "run", at: T0 })).toMatchObject({ id: `run-${T0}`, endsAt: T0 + 3 * 3600_000 });
+    expect(tosyaVisit(T0 + 3600_000, { mode: "run", at: T0 + 60_000 })!.id).not.toBe(`run-${T0}`);
     const p = tosyaPies(7, "x");
     expect(p).toBeGreaterThanOrEqual(3);
     expect(p).toBeLessThanOrEqual(5);
   });
   it("buys pies off the tray for dollars, each one once", async () => {
-    await db.query("INSERT INTO config (key, value) VALUES ('tosya', '\"on\"') ON CONFLICT (key) DO UPDATE SET value = excluded.value");
+    await db.query("INSERT INTO config (key, value) VALUES ('tosya', $1) ON CONFLICT (key) DO UPDATE SET value = excluded.value", [JSON.stringify({ mode: "run", at: T0 - 60_000 })]);
     resetConfigCache();
     const p = await newPlayer(db);
     await setMoney(db, p, "USD", 1000);

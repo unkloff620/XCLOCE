@@ -466,10 +466,12 @@ export async function maintenanceSet(db: Db, adminTg: number, on: boolean, text:
 export async function tosya(db: Db) {
   const cfg = await loadConfig(db);
   const v = tosyaVisit(Date.now(), cfg.tosya);
-  return { mode: cfg.tosya, here: !!v, endsAt: v?.endsAt ?? null };
+  return { mode: cfg.tosya.mode, here: !!v, endsAt: v?.endsAt ?? null };
 }
+/** «Запустить» / «Обнулить» (run: a new visit from now — every tray full again), «Остановить» (off), «Сам» (auto) */
 export async function tosyaSet(db: Db, mode: unknown) {
-  await db.query("INSERT INTO config (key, value) VALUES ('tosya', $1) ON CONFLICT (key) DO UPDATE SET value = excluded.value", [JSON.stringify(cleanTosyaMode(mode))]);
+  const m = cleanTosyaMode(mode === "run" ? { mode: "run", at: Date.now() } : mode === "off" ? "off" : "auto");
+  await db.query("INSERT INTO config (key, value) VALUES ('tosya', $1) ON CONFLICT (key) DO UPDATE SET value = excluded.value", [JSON.stringify(m)]);
   resetConfigCache();
   return tosya(db);
 }

@@ -24,8 +24,18 @@ export const TOSYA_XP_PER_USD = 100;
 /** Тося's own tattoos (one in every pie): empty until his sets are drawn */
 export const TOSYA_TATTOOS: string[] = [];
 
-export type TosyaMode = "auto" | "on" | "off";
-export const cleanTosyaMode = (v: unknown): TosyaMode => (v === "on" || v === "off" ? v : "auto");
+/**
+ * The admin's control (config "tosya"): `auto` — his own schedule; `off` — he does not come; `run` — started by hand at
+ * `at` for TOSYA_HOURS (a new start is a new visit: every tray is full again), then his own schedule again.
+ */
+export type TosyaMode = { mode: "auto" | "off" | "run"; at: number };
+export function cleanTosyaMode(v: unknown): TosyaMode {
+  if (v === "off") return { mode: "off", at: 0 };
+  const o = (v ?? {}) as { mode?: unknown; at?: unknown };
+  if (o.mode === "off") return { mode: "off", at: 0 };
+  if (o.mode === "run" && typeof o.at === "number" && o.at > 0) return { mode: "run", at: o.at };
+  return { mode: "auto", at: 0 };
+}
 
 const hash = (s: string) => [...s].reduce((h, c) => (Math.imul(h, 31) + c.charCodeAt(0)) >>> 0, 2166136261);
 const seeded = (s: string) => {
@@ -36,11 +46,11 @@ const MSK = 3 * 3600_000;
 const dayOf = (now: number) => new Date(now + MSK).toISOString().slice(0, 10);
 
 /** the visit going on at `now` (its id and when he leaves), or null */
-export function tosyaVisit(now: number, mode: TosyaMode = "auto"): { id: string; endsAt: number } | null {
-  if (mode === "off") return null;
+export function tosyaVisit(now: number, m: TosyaMode = { mode: "auto", at: 0 }): { id: string; endsAt: number } | null {
+  if (m.mode === "off") return null;
+  if (m.mode === "run" && now >= m.at && now < m.at + TOSYA_HOURS * 3600_000) return { id: `run-${m.at}`, endsAt: m.at + TOSYA_HOURS * 3600_000 };
   const day = dayOf(now);
   const midnight = Date.parse(`${day}T00:00:00Z`) - MSK;
-  if (mode === "on") return { id: `admin-${day}`, endsAt: midnight + 24 * 3600_000 };
   const r = seeded(`tosya:${day}`);
   if (r() >= TOSYA_DAY_CHANCE) return null;
   const start = midnight + (TOSYA_FIRST_HOUR + r() * (TOSYA_LAST_HOUR - TOSYA_FIRST_HOUR)) * 3600_000;

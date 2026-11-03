@@ -484,18 +484,27 @@ function Maintenance() {
   );
 }
 
-/** «Тося»: by his own schedule, called in for today, or sent off */
+/** «Тося»: start the event by hand (3 hours), reset it (a new visit — every tray full again), stop it, or his own schedule */
 function TosyaAdmin() {
-  const t = useLoad(() => admin<{ mode: "auto" | "on" | "off"; here: boolean; endsAt: number | null }>("tosya"), []);
-  const set = async (mode: string) => { try { await admin("tosya_set", { mode }); t.reload(); } catch (e) { alert((e as Error).message); } };
-  const m = t.data?.mode;
+  const t = useLoad(() => admin<{ mode: "auto" | "off" | "run"; here: boolean; endsAt: number | null }>("tosya"), []);
+  const [busy, setBusy] = useState(false);
+  const set = async (mode: string, ask?: string) => {
+    if (ask && !confirm(ask)) return;
+    setBusy(true);
+    try { await admin("tosya_set", { mode }); t.reload(); } catch (e) { alert((e as Error).message); }
+    setBusy(false);
+  };
+  const d = t.data;
+  const status = !d ? "…" : d.here ? `в игре до ${when(d.endsAt)}` : d.mode === "off" ? "выключен" : "сейчас не в игре";
   return (
-    <Box title={`Тося ${t.data?.here ? "— сейчас в игре" : "— не приехал"}`} closed>
-      <p className="muted tiny">«Сам» — приезжает в случайные дни на 3 часа. «Позвать» — в игре весь день. «Не пускать» — не приезжает.</p>
-      <div className="row" style={{ gap: 8 }}>
-        <button className={`adm-btn ${m === "auto" ? "" : "ghost"}`} onClick={() => set("auto")}>Сам</button>
-        <button className={`adm-btn ${m === "on" ? "" : "ghost"}`} onClick={() => set("on")}>Позвать</button>
-        <button className={`adm-btn ${m === "off" ? "danger" : "ghost"}`} onClick={() => set("off")}>Не пускать</button>
+    <Box title={`Ивент «Тося» — ${status}`}>
+      <p className="muted tiny">«Запустить» — Тося приезжает сейчас на 3 часа. «Обнулить» — начать заново: у всех игроков снова полный поднос и цены с начала. «Остановить» — уехал и не приезжает сам. «Авто» — приезжает сам в случайные дни.</p>
+      <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
+        {!d?.here
+          ? <button className="adm-btn" disabled={busy} onClick={() => set("run")}>Запустить</button>
+          : <button className="adm-btn" disabled={busy} onClick={() => set("run", "Обнулить ивент? У всех игроков снова будет полный поднос, купленные пирожки останутся у них.")}>Обнулить</button>}
+        <button className="adm-btn danger" disabled={busy || d?.mode === "off"} onClick={() => set("off")}>Остановить</button>
+        <button className="adm-btn ghost" disabled={busy || d?.mode === "auto"} onClick={() => set("auto")}>Авто</button>
       </div>
     </Box>
   );
