@@ -5224,3 +5224,5 @@ body { background-attachment: fixed; }
 .sty-room-tabs img, .sty-room-tabs svg { width: 38px; height: 38px; object-fit: contain; pointer-events: none; }
 @media (max-height: 700px) { .sty-room-tabs button { width: 48px; height: 48px; } .sty-room-tabs img, .sty-room-tabs svg { width: 32px; height: 32px; } }
 .room-ed-back { flex: none; min-width: 64px; display: grid; place-items: center; padding: 0 14px; }
+/* the upgrader's count: a fixed-width box with tabular digits — the slider next to it never shifts */
+.ug-strip .ug-q { display: inline-block; flex: none; text-align: left; font-variant-numeric: tabular-nums; }

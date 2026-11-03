@@ -1071,7 +1071,8 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
           <div className="ug-strip" style={{ left: ux(140), top: uy(878), width: ux(744), height: uy(48) }}>
             {!snap && cur?.kind === "plain" && have > 1 ? (
               <>
-                <span className="num">×{q}</span>
+                {/* the count keeps the width of the biggest one: the slider does not jump while it grows (×5 → ×500) */}
+                <span className="num ug-q" style={{ minWidth: `${String(have).length + 1}ch` }}>×{q}</span>
                 <input type="range" min={1} max={have} value={q} onChange={(e) => { setQty(Number(e.target.value)); setWon(null); }} aria-label="Сколько ставить" />
                 <span className="num">из {have}</span>
               </>
