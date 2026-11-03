@@ -484,6 +484,23 @@ function Maintenance() {
   );
 }
 
+/** «Тося»: by his own schedule, called in for today, or sent off */
+function TosyaAdmin() {
+  const t = useLoad(() => admin<{ mode: "auto" | "on" | "off"; here: boolean; endsAt: number | null }>("tosya"), []);
+  const set = async (mode: string) => { try { await admin("tosya_set", { mode }); t.reload(); } catch (e) { alert((e as Error).message); } };
+  const m = t.data?.mode;
+  return (
+    <Box title={`Тося ${t.data?.here ? "— сейчас в игре" : "— не приехал"}`} closed>
+      <p className="muted tiny">«Сам» — приезжает в случайные дни на 3 часа. «Позвать» — в игре весь день. «Не пускать» — не приезжает.</p>
+      <div className="row" style={{ gap: 8 }}>
+        <button className={`adm-btn ${m === "auto" ? "" : "ghost"}`} onClick={() => set("auto")}>Сам</button>
+        <button className={`adm-btn ${m === "on" ? "" : "ghost"}`} onClick={() => set("on")}>Позвать</button>
+        <button className={`adm-btn ${m === "off" ? "danger" : "ghost"}`} onClick={() => set("off")}>Не пускать</button>
+      </div>
+    </Box>
+  );
+}
+
 function Dashboard() {
   const { data, err, reload } = useLoad(() => admin<{ counts: Row; byType: Row[]; top: Row[]; suspicious: Row[]; items: Row[] }>("dashboard"), []);
   const feed = useLoad(() => admin<Row[]>("actions", { limit: 40 }), []);
@@ -500,6 +517,7 @@ function Dashboard() {
     <>
       <Err e={err} />
       <Maintenance />
+      <TosyaAdmin />
       <div className="adm-stats">
         {stats.map(([t, v, s]) => {
           const inner = <><span className="muted small">{t}</span><b>{data ? fmt(v) : "…"}</b>{s && <span className="muted tiny">{s}</span>}</>;

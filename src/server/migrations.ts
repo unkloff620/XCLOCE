@@ -1225,4 +1225,9 @@ ALTER TABLE players ADD COLUMN IF NOT EXISTS dealer_bonus_until TIMESTAMPTZ;`,
 ALTER TABLE players ADD COLUMN IF NOT EXISTS shaves INT NOT NULL DEFAULT 0;
 ALTER TABLE players ADD COLUMN IF NOT EXISTS beard_best INT NOT NULL DEFAULT 0;`,
   },
+  {
+    // «Тося»: the pies a player took from his tray on a visit (a bit per pie on the tray)
+    id: "v2-078-tosya",
+    sql: `CREATE TABLE IF NOT EXISTS tosya_pies (player_id INT NOT NULL, visit TEXT NOT NULL, taken INT NOT NULL DEFAULT 0, PRIMARY KEY (player_id, visit));`,
+  },
 ];

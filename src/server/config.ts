@@ -11,6 +11,7 @@ import { SLOT_OUTCOMES, SLOT_SPINS_PER_HOUR } from "../content/slots.ts";
 import type { Reward } from "../content/rewards.ts";
 import { cleanEffects, type GameEventView } from "../content/events.ts";
 import { cleanEventBosses } from "../content/event-bosses.ts";
+import { cleanTosyaMode, type TosyaMode } from "../content/tosya.ts";
 
 /**
  * Game numbers. Defaults come from src/content; rows of the `config` table override them without a deploy:
@@ -43,6 +44,8 @@ export interface Config {
   eventBosses: Record<string, boolean>;
   /** «Технические работы»: the game is closed for everyone but the admins (they check the release), with this text */
   maintenance: { on: boolean; text: string };
+  /** «Тося»: comes by his own schedule (auto), called in (on) or sent off (off) by the admin */
+  tosya: TosyaMode;
 }
 
 export function defaultConfig(): Config {
@@ -64,12 +67,14 @@ export function defaultConfig(): Config {
     bossReward: {},
     eventBosses: {},
     maintenance: { on: false, text: MAINTENANCE_TEXT },
+    tosya: "auto",
   };
 }
 
 export const MAINTENANCE_TEXT = "Идут технические работы — скоро вернёмся. Зайди чуть позже!";
 
 const KEYS: Record<string, (c: Config, v: unknown) => void> = {
+  tosya: (c, v) => { c.tosya = cleanTosyaMode(v); },
   maintenance: (c, v) => {
     const m = (v ?? {}) as { on?: unknown; text?: unknown };
     c.maintenance = { on: m.on === true, text: typeof m.text === "string" && m.text.trim() ? m.text.trim().slice(0, 300) : MAINTENANCE_TEXT };

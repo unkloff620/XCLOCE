@@ -5382,3 +5382,26 @@ html.paused *, html.paused *::before, html.paused *::after { animation-play-stat
 .sty-grid .sty-item .sty-item-name { font-size: 8.5px; line-height: 1.05; max-width: 100%; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; text-align: center; }
 .sty-grid .sty-why { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; max-width: 100%; }
 .sty-grid .sty-price { font-size: 9px; padding: 1px 3px; }
+
+/* ---------- «Тося»: the kitchen, he stands with the tray of pies ---------- */
+.ts-page { background: #2a1a0e; }
+.ts-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center bottom; }
+.ts-top { position: absolute; z-index: 3; left: 10px; right: 10px; top: var(--top); display: flex; flex-direction: column; gap: 8px; }
+.ts-title { display: flex; flex-direction: column; padding: 6px 10px; border-radius: 12px; background: rgba(30, 18, 10, 0.78); border: 2px solid var(--line); color: #f6ead8; line-height: 1.2; }
+.ts-title > b { font-size: 20px; color: #ffd27a; }
+.ts-note { padding: 7px 10px; border-radius: 10px; background: rgba(255, 246, 225, 0.92); color: #2a1a0e; border: 2px solid #6b4a24; }
+.ts-stage { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(var(--nav-h) + var(--safe-b) - 4px); width: min(100%, calc((100 * var(--vh, 1vh) - var(--nav-h) - var(--hud-h) - 130px) * 1000 / 1385)); aspect-ratio: 1000 / 1385; }
+.tosya-rig { display: block; width: 100%; height: 100%; overflow: visible; }
+.tosya-rig g { transform-box: view-box; }
+.ts-breath { transform-origin: 500px 1380px; animation: ts-breath 3.6s ease-in-out infinite; }
+@keyframes ts-breath { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.012, 1.018); } }
+.ts-head { transform-origin: 510px 600px; animation: ts-head 7.2s ease-in-out infinite; }
+@keyframes ts-head { 0%, 100% { transform: translateY(0) rotate(0deg); } 25% { transform: translateY(-6px) rotate(1.2deg); } 50% { transform: translateY(0) rotate(0deg); } 75% { transform: translateY(-6px) rotate(-1.4deg); } }
+.ts-pupils { animation: ts-look 6.5s ease-in-out infinite; }
+@keyframes ts-look { 0%, 18% { transform: translate(0, 0); } 24%, 40% { transform: translate(-7px, 1px); } 46%, 62% { transform: translate(6px, 0); } 68%, 80% { transform: translate(0, 3px); } 86%, 100% { transform: translate(0, 0); } }
+.ts-lids { opacity: 0; animation: ts-blink 4.3s steps(1, end) infinite; }
+@keyframes ts-blink { 0%, 92% { opacity: 0; } 93%, 96% { opacity: 1; } 97%, 100% { opacity: 0; } }
+.ts-tray { transform-origin: 500px 1200px; animation: ts-tray 3.6s ease-in-out infinite; }
+@keyframes ts-tray { 0%, 100% { transform: translateY(0) rotate(0deg); } 30% { transform: translateY(-4px) rotate(-0.7deg); } 70% { transform: translateY(2px) rotate(0.6deg); } }
+.ts-pie { cursor: pointer; transition: transform 0.15s; transform-origin: center; transform-box: fill-box !important; }
+.ts-pie:active, .ts-pie.on { transform: translateY(-10px) scale(1.06); filter: drop-shadow(0 0 10px rgba(255, 210, 90, 0.9)); }

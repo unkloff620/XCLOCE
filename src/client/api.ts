@@ -79,6 +79,8 @@ export interface GameState {
   craftBoxes?: (string | null)[];
   /** «Крафт»: how many cells are opened (bought) */
   craftBoxesOpen?: number;
+  /** «Тося» is here (null — not): his visit, the pies he brought this player, the ones taken (bits), the next price ($) */
+  tosya?: { visit: string; endsAt: number; pies: number; taken: number; next: number | null } | null;
   /** the dealer in the garage: today's parts on sale */
   dealer?: { id: string; price: number; left: number }[];
   /** the talk with the dealer at the exchange machine */

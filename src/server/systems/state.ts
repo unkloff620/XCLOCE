@@ -1,3 +1,4 @@
+import { tosyaView } from "./tosya.ts";
 import { GameError, type Queryable } from "../db.ts";
 import { balances, energyCfgOf, energyNow, moscowDay, type Ctx, type PlayerRow } from "../core.ts";
 import { fightHp, settleMyFight, unlockedItems } from "./combat.ts";
@@ -115,6 +116,7 @@ export async function gameState(ctx: Ctx) {
     craftBoxesOpen: await craftBoxesBought(ctx.q, ctx.pid),
     /** the dealer in the garage: today's parts on sale */
     dealer: await dealerView(ctx.q, ctx.pid, ctx.now),
+    tosya: await tosyaView(ctx.q, ctx.pid, ctx.cfg, ctx.now),
     /** the talk at the exchange machine: today's talk done? the better rate it gave (until when) */
     dealerTalk: { talked: p.dealer_talk_day === moscowDay(ctx.now), ...(await dealerBonus(ctx.q, ctx.pid, ctx.now)) },
     upgradeSpins: await upgradeSpinsView(ctx.q, ctx.pid, ctx.now),

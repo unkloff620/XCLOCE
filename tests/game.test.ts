@@ -2330,3 +2330,35 @@ describe("«Крафт»", () => {
     expect(await qty(db, q, "part-board")).toBe(5);
   });
 });
+
+describe("Тося", () => {
+  it("a pie holds 5× its price; prices double; with five pies the first is free; he comes and goes", async () => {
+    const { rollPie, tosyaWorth, tosyaPrice, tosyaVisit, tosyaPies } = await import("../src/content/tosya.ts");
+    let s = 1;
+    const rng = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+    for (const usd of [100, 200, 800]) for (let i = 0; i < 20; i++) expect(Math.abs(tosyaWorth(rollPie(rng, usd)) - usd)).toBeLessThan(0.6);
+    expect([0, 1, 2, 3].map((b) => tosyaPrice(b, 4))).toEqual([20, 40, 80, 160]);
+    expect([0, 1, 2, 3, 4].map((b) => tosyaPrice(b, 5))).toEqual([0, 20, 40, 80, 160]);
+    expect(tosyaVisit(T0, "off")).toBeNull();
+    expect(tosyaVisit(T0, "on")).not.toBeNull();
+    const p = tosyaPies(7, "x");
+    expect(p).toBeGreaterThanOrEqual(3);
+    expect(p).toBeLessThanOrEqual(5);
+  });
+  it("buys pies off the tray for dollars, each one once", async () => {
+    await db.query("INSERT INTO config (key, value) VALUES ('tosya', '\"on\"') ON CONFLICT (key) DO UPDATE SET value = excluded.value");
+    resetConfigCache();
+    const p = await newPlayer(db);
+    await setMoney(db, p, "USD", 1000);
+    const r1 = await act(db, p, "tosya_buy", { slot: 0 }, T0);
+    const pies = r1.state.tosya!.pies;
+    expect(r1.result.price).toBe(pies === 5 ? 0 : 20);
+    await expect(act(db, p, "tosya_buy", { slot: 0 }, T0)).rejects.toMatchObject({ code: "tosya_taken" });
+    const r2 = await act(db, p, "tosya_buy", { slot: 1 }, T0);
+    expect(r2.result.price).toBe(pies === 5 ? 20 : 40);
+    expect(await wallet(db, p, "USD")).toBeGreaterThanOrEqual(1000 - r1.result.price - r2.result.price);
+    expect(r2.state.tosya!.taken).toBe(3);
+    await db.query("DELETE FROM config WHERE key='tosya'");
+    resetConfigCache();
+  });
+});

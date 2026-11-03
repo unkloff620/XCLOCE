@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { adminRoute, num, oneOf } from "../../../server/http.ts";
 import * as admin from "../../../server/admin.ts";
 
-const OPS = ["me", "dashboard", "players", "player", "actions", "admin_log", "edit", "events", "event_save", "event_delete", "exchange_schedule", "exchange_schedule_save", "event_bosses", "event_boss_set", "boss_limit_reset_all", "maintenance", "maintenance_set"] as const;
+const OPS = ["me", "dashboard", "players", "player", "actions", "admin_log", "edit", "events", "event_save", "event_delete", "exchange_schedule", "exchange_schedule_save", "event_bosses", "event_boss_set", "boss_limit_reset_all", "maintenance", "maintenance_set", "tosya", "tosya_set"] as const;
 const optNum = (v: unknown) => (v === undefined || v === null || v === "" ? undefined : num(v, "number"));
 const optStr = (v: unknown) => (typeof v === "string" && v ? v.slice(0, 100) : undefined);
 
@@ -23,6 +23,8 @@ export const POST = adminRoute("admin", async ({ db, body, adminTg }) => {
     case "exchange_schedule_save": return admin.exchangeScheduleSave(db, body.schedule);
     case "event_bosses": return admin.eventBosses(db);
     case "event_boss_set": return admin.eventBossSet(db, body.id, body.on);
+    case "tosya": return admin.tosya(db);
+    case "tosya_set": return admin.tosyaSet(db, body.mode);
     case "maintenance": return admin.maintenance(db);
     case "maintenance_set": return admin.maintenanceSet(db, adminTg, body.on === true, body.text);
     case "boss_limit_reset_all": return admin.bossLimitResetAll(db, adminTg);

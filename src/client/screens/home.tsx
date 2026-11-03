@@ -239,6 +239,14 @@ export function HomeScreen() {
             <Icon name="mail" size={36} />
             {messagesWaiting(state) > 0 && <span className="msg-count num">{messagesWaiting(state)}</span>}
           </button>
+          {/* «Тося» is here: his pies (screens/tosya.tsx) */}
+          {state.tosya && (
+            <Link href="/event/tosya" className="menu-toggle event-toggle" aria-label="Ивент: Тося" title="Тося привёз пирожки">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/assets/tosya/portrait.webp?v=1" alt="" draggable={false} />
+              <span className="event-tag">ТОСЯ</span>
+            </Link>
+          )}
           {/* the event bosses the admin has put in the game (admin panel «Ивенты») */}
           {EVENT_BOSSES.filter((b) => state.eventBosses?.includes(b.id)).map((b) => (
             <Link key={b.id} href={b.href} className="menu-toggle event-toggle" aria-label={`Ивент: ${b.name}`} title={`Ивент: ${b.name}`}>

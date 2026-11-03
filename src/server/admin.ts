@@ -3,6 +3,7 @@
  * log, and edits. Every edit goes through one transaction with the player row locked, is written to the ledger with
  * reason `admin:<telegram id>` and to admin_log (who, whom, what, before → after).
  */
+import { cleanTosyaMode, tosyaVisit } from "../content/tosya.ts";
 import { GameError, type Db, type Queryable } from "./db.ts";
 import { loadConfig, resetConfigCache } from "./config.ts";
 import { cleanEffects } from "../content/events.ts";
@@ -459,4 +460,16 @@ export async function maintenanceSet(db: Db, adminTg: number, on: boolean, text:
   resetConfigCache();
   console.info(JSON.stringify({ msg: "admin.maintenance", adminTg, on }));
   return maintenance(db);
+}
+
+/** «Тося»: his own schedule (auto), here all day (on) or away (off) */
+export async function tosya(db: Db) {
+  const cfg = await loadConfig(db);
+  const v = tosyaVisit(Date.now(), cfg.tosya);
+  return { mode: cfg.tosya, here: !!v, endsAt: v?.endsAt ?? null };
+}
+export async function tosyaSet(db: Db, mode: unknown) {
+  await db.query("INSERT INTO config (key, value) VALUES ('tosya', $1) ON CONFLICT (key) DO UPDATE SET value = excluded.value", [JSON.stringify(cleanTosyaMode(mode))]);
+  resetConfigCache();
+  return tosya(db);
 }
