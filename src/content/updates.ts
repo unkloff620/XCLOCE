@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-04-kedr-beaten",
+    date: "4 ноября",
+    title: "Кедр получает по заслугам",
+    items: [
+      { img: "/assets/updates/2026-11-04-kedr-beaten.webp", text: "Когда у Кедра меньше половины здоровья, видно, что ему досталось: одежда порвана и в крови, фингал, разбитый нос, ссадины на руках и ногах. Скоро — у остальных боссов." },
+    ],
+  },
+  {
     id: "2026-11-04-clan-levels",
     date: "4 ноября",
     title: "Уровни кланов",

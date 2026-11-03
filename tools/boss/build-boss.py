@@ -25,7 +25,7 @@ FRAMES = ["brows", "jaw", "armRb", "armLb"]
 # which edge of the part joins the parent: (axis, side) — y/bottom for head and left forearm, x/right for the right one
 JOINT = {"head": ("y", "max"), "foreL": ("y", "max"), "foreR": ("x", "max")}
 # bosses whose arms come up from below (both elbows at the bottom end)
-JOINT_BY_BOSS = {"kedr": {"foreR": ("y", "max")}}
+JOINT_BY_BOSS = {"kedr": {"foreR": ("y", "max")}, "kedr-beaten": {"foreR": ("y", "max")}}
 # hand-placed joints (output px): where the arm piece lies over the end of the torso's sleeve, so it turns without a gap
 PIVOT_BY_BOSS = {
     "bebyakyan": {"foreL": [228.0, 405.0], "foreR": [617.0, 437.0]},
