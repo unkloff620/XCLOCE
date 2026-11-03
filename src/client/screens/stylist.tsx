@@ -13,7 +13,9 @@ import { sfx } from "../sound.ts";
 import { HeadArt, type RigEdit } from "../art/rig.tsx";
 import { ART_VER } from "../preload.ts";
 import { TATTOO_SETS, TATTOO_ZONE_NAME, tattooSource, oneTattooPerZone, tattooZone } from "../../content/tattoos.ts";
-import { bossById } from "../../content/bosses.ts";
+import { bossById, unlockBossOf } from "../../content/bosses.ts";
+import { OFFERS } from "../../content/shop.ts";
+import { money } from "../format.ts";
 
 /*
  * The hero editor right on the home screen: the room and every button go grey, only the hero keeps his colours,
@@ -52,6 +54,8 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
   // «Наколки»: the tattoos tab (the hero is picked by body parts there too; no part — every tattoo)
   const [inkTab, setInkTab] = useState(false);
   const [inkSet, setInkSet] = useState<string | null>(null);
+  // a thing not owned yet, tapped once: tried on (not saved) — the second tap buys it
+  const [trying, setTrying] = useState<string | null>(null);
   if (!state) return null;
   const mode = focus.mode;
   const part = focus.part;
@@ -68,14 +72,26 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
   const owned = new Set(state.inventory.map((i) => i.id));
   const slot = mode === "items" && part && (CLOTHES as string[]).includes(part) ? (part as Slot) : null;
   const items = slot ? ITEMS.filter((i) => i.slot === slot && owned.has(i.id)) : [];
+  // the rest of the slot's things: sold in the shop (a boss's thing — once it dropped) with a price, the others locked
+  const others = slot ? ITEMS.filter((i) => i.slot === slot && !owned.has(i.id) && !i.weapon).map((d) => {
+    const offer = OFFERS.find((o) => o.section === "clothing" && o.give.item === d.id && !o.give.energy);
+    const boss = unlockBossOf(d.id);
+    const open = !!offer && (!boss || !!state.unlocks?.includes(d.id));
+    const from = (d.sources ?? []).filter((x) => x !== "Магазин");
+    const bossName = boss?.name ?? /^Победа:\s*([^(]+)/.exec(from.find((x) => x.startsWith("Победа")) ?? "")?.[1]?.trim();
+    const why = bossName ? `с босса ${bossName}` : from.some((x) => x.includes("Ящик")) ? "из Ящика ништяков" : from[0]?.toLowerCase() ?? "скоро";
+    return { d, offer: open ? offer! : null, why };
+  }).sort((a, b) => Number(!!b.offer) - Number(!!a.offer)) : [];
   const now = state.look.equipped;
   const lookChanged = JSON.stringify(draft.look) !== JSON.stringify(state.look.body);
-  const slotsChanged = CLOTHES.filter((s) => (draft.worn[s] ?? null) !== (now[s] ?? null));
+  // a thing only tried on (not bought) is not saved: that slot keeps what is worn now
+  const slotsChanged = CLOTHES.filter((s) => (draft.worn[s] ?? null) !== (now[s] ?? null) && (!draft.worn[s] || owned.has(draft.worn[s]!)));
   const changed = lookChanged || slotsChanged.length > 0;
 
   const wear = (id: string | null) => {
     if (!slot) return;
     haptic.tap();
+    if (!id || owned.has(id)) setTrying(null);
     const worn = { ...draft.worn };
     if (id) worn[slot] = id;
     else delete worn[slot];
@@ -84,6 +100,19 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
   const patch = (p: Partial<Look>) => {
     haptic.tap();
     setDraft({ ...draft, look: { ...draft.look, ...p } });
+  };
+  const tryOrBuy = async (id: string, offerId: string) => {
+    if (trying !== id) {
+      wear(id);
+      setTrying(id);
+      return;
+    }
+    const name = ITEMS.find((i) => i.id === id)?.name ?? id;
+    const r = await act("buy", { offerId, idem: crypto.randomUUID() }, `Куплено: ${name}`);
+    if (r !== null) {
+      haptic.ok();
+      setTrying(null);
+    }
   };
   const save = async () => {
     setSaving(true);
@@ -230,10 +259,24 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
             <span className="sty-item-name">{i.name}</span>
           </button>
         ))}
-        {items.length === 0 && (slot === "MOUTH" || slot === "TEETH") && (
+        {others.map(({ d, offer, why }) => offer ? (
+          <button key={d.id} className={`sty-item rar-${d.rarity} sty-buy ${draft.worn[slot] === d.id ? "on" : ""}`} disabled={busy === "buy"}
+            onClick={() => void tryOrBuy(d.id, offer.id)} title={trying === d.id ? "Нажми ещё раз — купить" : "Примерить"}>
+            <ItemArt id={d.id} size={40} />
+            <span className="sty-item-name">{d.name}</span>
+            <span className={`sty-price num ${trying === d.id ? "go" : ""}`}>{trying === d.id ? "Купить " : ""}<Icon name={offer.price.currency} size={11} />{money(offer.price.currency, offer.price.amount)}</span>
+          </button>
+        ) : (
+          <span key={d.id} className={`sty-item rar-${d.rarity} sty-locked`} title={`${d.name}: ${why}`}>
+            <ItemArt id={d.id} size={40} />
+            <span className="sty-item-name">{d.name}</span>
+            <span className="sty-why">🔒 {why}</span>
+          </span>
+        ))}
+        {items.length === 0 && others.length === 0 && (slot === "MOUTH" || slot === "TEETH") && (
           <span className="sty-item shop"><span className="sty-plus" aria-hidden="true">⏳</span><span className="sty-item-name">Выпадает из Ящика ништяков</span></span>
         )}
-        {items.length === 0 && slot !== "MOUTH" && slot !== "TEETH" && (
+        {items.length === 0 && others.length === 0 && slot !== "MOUTH" && slot !== "TEETH" && (
           <Link href="/shop?tab=clothing" className="sty-item shop" onClick={onClose}>
             <span className="sty-plus" aria-hidden="true">🛒</span>
             <span className="sty-item-name">{slot === "HAND" ? "Выпадают с боссов" : "В магазин"}</span>

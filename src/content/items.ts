@@ -122,7 +122,7 @@ const WEARABLES: ItemDef[] = ([
   { id: "sneakers-chunky", name: "Кроссовки Гаркуши", slot: "SHOES", rarity: "rare", description: "Чёрные, на толстой подошве. Шаг тяжёлый, как пачка пятитысячных.", sources: ["Победа: Гаркуша (Блатной)"] },
   // Мугонатор's set: the sea captain (cut from the hero on tools/rig/source/wear)
   { id: "tee-sailor", name: "Тельняшка Мугонатора", slot: "SHIRT", rarity: "rare", description: "Полоски — чтобы акула видела, кого не трогать. Край уже кто-то откусил.", sources: ["Победа: Мугонатор (Блатной)"] },
-  { id: "anchor-mugo", name: "Якорь Мугонатора", slot: "HAND", rarity: "epic", description: "Мугонатор качает его на верёвке и ждёт, когда Вадим скажет «бросай». Герой держит его в руке.", sources: ["Победа: Мугонатор (Блатной)"] },
+  { id: "anchor-mugo", name: "Якорь", slot: "HAND", rarity: "epic", description: "Мугонатор качает его на верёвке и ждёт, когда Вадим скажет «бросай». Герой держит его в руке.", sources: ["Победа: Мугонатор (Блатной)"] },
   { id: "cap-captain", name: "Капитанская фуражка", slot: "HEAD", rarity: "epic", description: "Белая, с якорем. Вадим сказал — Мугонатор надел.", sources: ["Победа: Мугонатор (Блатной)"] },
   { id: "mask-diver", name: "Маска для ныряния", slot: "FACE", rarity: "rare", description: "Ныряет на самое дно графика и дышит через трубку.", sources: ["Победа: Мугонатор (Блатной)"] },
   { id: "teeth-necklace", name: "Ожерелье из акульих зубов", slot: "ACCESSORY", rarity: "epic", description: "Зубы свои, выпавшие. Растут новые.", sources: ["Победа: Мугонатор (Блатной)"] },
