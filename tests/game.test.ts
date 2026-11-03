@@ -2368,3 +2368,19 @@ describe("Тося", () => {
     resetConfigCache();
   });
 });
+
+describe("admin broadcast", () => {
+  it("queues the message for every player with Telegram and notifications on", async () => {
+    const { broadcast } = await import("../src/server/admin.ts");
+    const a = await newPlayer(db);
+    const b = await newPlayer(db);
+    await db.query("UPDATE players SET telegram_id = 700000 + id WHERE id IN ($1,$2)", [a, b]);
+    await db.query("UPDATE players SET notify_on=false WHERE id=$1", [b]);
+    const r = await broadcast(db, 1, "Новый ивент!", false);
+    expect(r.queued).toBeGreaterThanOrEqual(1);
+    const rows = await db.query<{ player_id: number; meta: { text: string } }>("SELECT player_id, meta FROM notifications WHERE kind='broadcast'");
+    expect(rows.some((x) => x.player_id === a && x.meta.text === "Новый ивент!")).toBe(true);
+    expect(rows.some((x) => x.player_id === b)).toBe(false);
+    await expect(broadcast(db, 1, "  ", false)).rejects.toMatchObject({ code: "bad_request" });
+  });
+});

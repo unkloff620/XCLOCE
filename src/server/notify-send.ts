@@ -99,12 +99,17 @@ async function textFor(q: Queryable, n: Due, now: number): Promise<string | null
       const head = d.winner_id === null ? "🤝 Ничья" : d.winner_id === n.player_id ? "🏆 Победа" : "💀 Поражение";
       return `${head} в дуэли с ${d.rival}: ${mine} : ${theirs}.\nЗагляни в зонк — там вся партия по попыткам.`;
     }
+    case "broadcast": {
+      // the admin's message to everyone (admin panel «Рассылка»)
+      const t = typeof n.meta.text === "string" ? n.meta.text.trim() : "";
+      return t || null;
+    }
     default:
       return null;
   }
 }
 
-async function send(token: string, chatId: number, text: string): Promise<"ok" | "blocked" | "error"> {
+export async function send(token: string, chatId: number, text: string): Promise<"ok" | "blocked" | "error"> {
   const url = appUrl();
   try {
     const r = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
@@ -150,7 +155,7 @@ export async function dispatchNotifications(db: Db, now = Date.now()): Promise<{
     const ok = await db.query("UPDATE notifications SET sent_at=$4 WHERE player_id=$1 AND kind=$2 AND due_at=$3 AND sent_at IS NULL RETURNING 1", [n.player_id, n.kind, n.due_at, new Date(now)]);
     if (!ok.length) continue;
     // a player in the game right now is not disturbed — except for a live call: he may be on another screen
-    if (!URGENT.includes(n.kind) && now - new Date(n.last_seen_at).getTime() < ACTIVE_MS) {
+    if (!URGENT.includes(n.kind) && n.kind !== "broadcast" && now - new Date(n.last_seen_at).getTime() < ACTIVE_MS) {
       skipped++;
       continue;
     }

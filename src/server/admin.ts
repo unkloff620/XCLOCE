@@ -3,6 +3,7 @@
  * log, and edits. Every edit goes through one transaction with the player row locked, is written to the ledger with
  * reason `admin:<telegram id>` and to admin_log (who, whom, what, before → after).
  */
+import { send } from "./notify-send.ts";
 import { cleanTosyaMode, tosyaVisit } from "../content/tosya.ts";
 import { GameError, type Db, type Queryable } from "./db.ts";
 import { loadConfig, resetConfigCache } from "./config.ts";
@@ -474,4 +475,33 @@ export async function tosyaSet(db: Db, mode: unknown) {
   await db.query("INSERT INTO config (key, value) VALUES ('tosya', $1) ON CONFLICT (key) DO UPDATE SET value = excluded.value", [JSON.stringify(m)]);
   resetConfigCache();
   return tosya(db);
+}
+
+/**
+ * «Рассылка»: a message from the bot to every player who has notifications on (with the «Играть» button). `test` — only
+ * to the admin himself, at once. The rest go out through the reminder queue (notify-send.ts): ~40 every 20 seconds,
+ * not at night (00:00–09:00 МСК — they wait till the morning).
+ */
+export async function broadcast(db: Db, adminTg: number, text: unknown, test: boolean) {
+  const t = typeof text === "string" ? text.trim().slice(0, 1000) : "";
+  if (!t) throw new GameError("bad_request", "Напишите текст рассылки", 400);
+  if (test) {
+    const token = process.env.TELEGRAM_BOT_TOKEN;
+    if (!token) throw new GameError("no_bot", "Бот не настроен", 400);
+    const r = await send(token, adminTg, t);
+    if (r !== "ok") throw new GameError("send_failed", r === "blocked" ? "Бот не может написать вам — откройте бота и нажмите «Старт»" : "Telegram не ответил, попробуйте ещё раз", 400);
+    return { test: true, sent: 1 };
+  }
+  const rows = await db.query<{ n: number }>(
+    `WITH r AS (
+       INSERT INTO notifications (player_id, kind, due_at, sent_at, meta)
+       SELECT id, 'broadcast', now(), NULL, jsonb_build_object('text', $1::text) FROM players
+       WHERE telegram_id IS NOT NULL AND notify_on AND NOT pm_blocked AND banned_at IS NULL
+       ON CONFLICT (player_id, kind) DO UPDATE SET due_at = excluded.due_at, sent_at = NULL, meta = excluded.meta
+       RETURNING 1)
+     SELECT COUNT(*)::int AS n FROM r`,
+    [t],
+  );
+  console.info(JSON.stringify({ msg: "admin.broadcast", adminTg, n: rows[0]?.n ?? 0 }));
+  return { test: false, queued: Number(rows[0]?.n ?? 0) };
 }

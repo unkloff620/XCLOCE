@@ -510,6 +510,35 @@ function TosyaAdmin() {
   );
 }
 
+/** «Рассылка»: a message from the bot to every player (test — to yourself first) */
+function Broadcast() {
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const go = async (test: boolean) => {
+    if (!test && !confirm("Отправить это сообщение всем игрокам?")) return;
+    setBusy(true);
+    setMsg(null);
+    try {
+      const r = await admin<{ test: boolean; queued?: number }>("broadcast", { text, test });
+      setMsg(r.test ? "Отправлено вам в Telegram — проверьте, как выглядит." : `Поставлено в очередь: ${fmt(r.queued)} игрокам. Уходит примерно по 40 сообщений каждые 20 секунд, ночью (00–09 МСК) ждёт утра.`);
+    } catch (e) { setMsg((e as Error).message); }
+    setBusy(false);
+  };
+  return (
+    <Box title="Рассылка в Telegram" closed>
+      <p className="muted tiny">Сообщение от бота всем игрокам, у которых включены уведомления, с кнопкой «Играть». Сначала отправьте себе — проверить текст.</p>
+      <textarea className="adm-in" rows={4} style={{ width: "100%" }} maxLength={1000} placeholder="🥟 Приехал Тося! Привёз пирожки с оружием, деталями и деньгами — заходи, пока не уехал!" value={text} onChange={(e) => setText(e.target.value)} />
+      <div className="row" style={{ gap: 8, marginTop: 8, alignItems: "center" }}>
+        <button className="adm-btn ghost" disabled={busy || !text.trim()} onClick={() => go(true)}>Отправить себе</button>
+        <button className="adm-btn" disabled={busy || !text.trim()} onClick={() => go(false)}>Отправить всем</button>
+        <span className="muted tiny">{text.length}/1000</span>
+      </div>
+      {msg && <p className="small" style={{ marginTop: 8 }}>{msg}</p>}
+    </Box>
+  );
+}
+
 function Dashboard() {
   const { data, err, reload } = useLoad(() => admin<{ counts: Row; byType: Row[]; top: Row[]; suspicious: Row[]; items: Row[] }>("dashboard"), []);
   const feed = useLoad(() => admin<Row[]>("actions", { limit: 40 }), []);
@@ -527,6 +556,7 @@ function Dashboard() {
       <Err e={err} />
       <Maintenance />
       <TosyaAdmin />
+      <Broadcast />
       <div className="adm-stats">
         {stats.map(([t, v, s]) => {
           const inner = <><span className="muted small">{t}</span><b>{data ? fmt(v) : "…"}</b>{s && <span className="muted tiny">{s}</span>}</>;
