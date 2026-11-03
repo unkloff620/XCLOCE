@@ -5410,3 +5410,5 @@ html.paused *, html.paused *::before, html.paused *::after { animation-play-stat
   padding: 10px 12px 10px 10px; border-radius: 0 12px 12px 0; background: linear-gradient(170deg, #fff6df, #ecd9b0); border: 2px solid #6b4a24; border-left: 0;
   box-shadow: 3px 4px 0 rgba(40, 22, 8, 0.35); transform: rotate(-2deg); transform-origin: left center; animation: ts-sheet-in 0.5s ease-out both; }
 @keyframes ts-sheet-in { from { transform: translateX(-110%) rotate(-2deg); } to { transform: translateX(0) rotate(-2deg); } }
+/* the earned achievement's number: dark on its colour plate — no outline */
+.ach-pic.on .ach-pic-n { text-shadow: none; }
