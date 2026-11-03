@@ -2417,3 +2417,28 @@ describe("admin funnel", () => {
     expect(f.day1).toBeGreaterThanOrEqual(1);
   });
 });
+
+describe("Новичок", () => {
+  it("a chain of tasks for the first 3 days: done by the action log, claimed in order, then the chest", async () => {
+    const { NEWBIE_TASKS } = await import("../src/content/newbie.ts");
+    const p = await newPlayer(db);
+    await db.query("UPDATE players SET created_at=$2 WHERE id=$1", [p, new Date(T0 - 60_000)]);
+    const st = async () => (await act(db, p, "help_seen", { topic: "zonk" }, T0)).state.newbie!;
+    let v = await st();
+    expect(v.tasks).toHaveLength(NEWBIE_TASKS.length);
+    expect(v.tasks[0]).toMatchObject({ id: "yard3", have: 0, n: 3, claimed: false });
+    await expect(act(db, p, "newbie_claim", { id: "yard3" }, T0)).rejects.toMatchObject({ code: "newbie_not_done" });
+    await db.query("INSERT INTO action_log (player_id, type, ok, at) VALUES ($1,'yard_pick',true,$2),($1,'yard_pick',true,$2),($1,'yard_pick',true,$2),($1,'task',true,$2),($1,'task',true,$2),($1,'task',true,$2)", [p, new Date(T0)]);
+    v = await st();
+    expect(v.tasks[0].have).toBe(3);
+    // in order: the second one waits for the first
+    await expect(act(db, p, "newbie_claim", { id: "task3" }, T0)).rejects.toMatchObject({ code: "newbie_order" });
+    const r = await act(db, p, "newbie_claim", { id: "yard3" }, T0);
+    expect(r.result.reward.xp).toBe(900);
+    await expect(act(db, p, "newbie_claim", { id: "yard3" }, T0)).rejects.toMatchObject({ code: "newbie_claimed" });
+    await act(db, p, "newbie_claim", { id: "task3" }, T0);
+    await expect(act(db, p, "newbie_claim", { id: "chest" }, T0)).rejects.toMatchObject({ code: "newbie_not_done" });
+    // after 3 days the event is gone
+    expect((await act(db, p, "help_seen", { topic: "poker" }, T0 + 3 * 24 * 3600_000)).state.newbie).toBeNull();
+  });
+});

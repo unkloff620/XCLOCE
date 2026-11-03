@@ -8,7 +8,7 @@ import type { GameState } from "./api.ts";
 import { sfx } from "./sound.ts";
 import { haptic } from "./telegram.ts";
 import { usedUrl } from "./preload.ts";
-import { firstStepsPending } from "./first-steps.tsx";
+import { GUIDE_REPLAY, firstStepsPending } from "./first-steps.tsx";
 
 /*
  * First-visit tour on the home screen: a spotlight walks over the key places one by one, each step a picture and a
@@ -95,7 +95,8 @@ export const TUTORIAL = "tutorial";
 const REPLAY = "xc-tour";
 /** Starts the tour again (from the profile settings); the home screen shows it. */
 export function replayTutorial() {
-  window.dispatchEvent(new Event(REPLAY));
+  // Баба Зина leads the tour now (first-steps.tsx); the old slideshow stays only for its REPLAY event
+  window.dispatchEvent(new Event(GUIDE_REPLAY));
 }
 /** a newcomer still on the first steps (first-steps.tsx): other windows wait; the tour itself is only replayed now */
 export function tutorialPending(state: GameState | null): boolean {

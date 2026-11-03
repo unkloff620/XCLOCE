@@ -79,6 +79,8 @@ export interface GameState {
   craftBoxes?: (string | null)[];
   /** «Крафт»: how many cells are opened (bought) */
   craftBoxesOpen?: number;
+  /** «Новичок»: the newcomer's chain (null — over): when it ends, each task's progress and whether it is claimed */
+  newbie?: { endsAt: number; tasks: { id: string; have: number; n: number; claimed: boolean }[]; chest: boolean } | null;
   /** «Тося» is here (null — not): his visit, the pies he brought this player, the ones taken (bits), the next price ($) */
   tosya?: { visit: string; endsAt: number; pies: number; taken: number; next: number | null } | null;
   /** the dealer in the garage: today's parts on sale */

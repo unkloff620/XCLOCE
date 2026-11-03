@@ -1,3 +1,4 @@
+import { newbieClaim } from "./systems/newbie.ts";
 import { tosyaBuy } from "./systems/tosya.ts";
 import { randomInt } from "node:crypto";
 import { GameError, type Db, type Queryable } from "./db.ts";
@@ -61,7 +62,7 @@ export const ACTIONS = [
   "daily_claim", "sell", "sell_many", "rename", "slots_spin",
   "equipment_upgrade", "talent_up", "talent_reset", "talent_auto", "room_buy", "room_set", "look_set", "decor_set", "decor_save", "piece_buy", "help_seen", "starter_gift",
   "quest_claim", "quest_chest", "notify_set", "achievement_claim", "achievement_claim_all", "ach_box_open", "prize_claim", "clan_edit",
-  "game_start", "zonk_move", "zonk_give_up", "zonk_hints", "zonk_choice", "roach_squash", "pigeon_scare", "poker_play", "poker_swap", "poker_stand", "bj_open", "bj_invite", "bj_join", "bj_decline", "bj_leave", "bj_bet", "bj_unbet", "bj_insure", "bj_move", "upgrade", "up_sell", "up_take", "craft_put", "craft_take", "craft_make", "craft_box_buy", "dealer_buy", "craft_split", "dealer_talk", "part_buy", "shave", "tosya_buy",
+  "game_start", "zonk_move", "zonk_give_up", "zonk_hints", "zonk_choice", "roach_squash", "pigeon_scare", "poker_play", "poker_swap", "poker_stand", "bj_open", "bj_invite", "bj_join", "bj_decline", "bj_leave", "bj_bet", "bj_unbet", "bj_insure", "bj_move", "upgrade", "up_sell", "up_take", "craft_put", "craft_take", "craft_make", "craft_box_buy", "dealer_buy", "craft_split", "dealer_talk", "part_buy", "shave", "tosya_buy", "newbie_claim",
   "clan_cancel", "clan_accept", "clan_reject", "clan_boss_hit", "duel_create", "duel_answer", "duel_play", "stash_collect", "stash_wish", "stash_gift", "stash_accept", "social_pump", "social_fight", "social_spit", "notes_read",
 ] as const;
 export type ActionType = (typeof ACTIONS)[number];
@@ -222,6 +223,7 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "craft_box_buy": return craft.craftBoxBuy(ctx);
     case "dealer_talk": return shop.dealerTalk(ctx, (Array.isArray(body.answers) ? body.answers : []).slice(0, 12).map((x) => Number(x)));
     case "shave": return home.shave(ctx);
+    case "newbie_claim": return newbieClaim(ctx, String(body.id ?? ""));
     case "tosya_buy": return tosyaBuy(ctx, Number(body.slot));
     case "part_buy": return craft.partBuy(ctx, str(body.itemId, "itemId", 40), num(body.qty, "qty"));
     case "dealer_buy": return craft.dealerBuy(ctx, str(body.itemId, "itemId", 40), body.qty === undefined ? 1 : num(body.qty, "qty"));

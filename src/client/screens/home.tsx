@@ -1,4 +1,5 @@
 "use client";
+import { NewbieButton } from "./newbie.tsx";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { haptic } from "../telegram.ts";
@@ -239,6 +240,8 @@ export function HomeScreen() {
             <Icon name="mail" size={36} />
             {messagesWaiting(state) > 0 && <span className="msg-count num">{messagesWaiting(state)}</span>}
           </button>
+          {/* «Новичок»: Баба Зина's tasks for the first 3 days */}
+          <NewbieButton />
           {/* «Тося» is here: his pies (screens/tosya.tsx) */}
           {state.tosya && (
             <Link href="/event/tosya" className="menu-toggle event-toggle" aria-label="Ивент: Тося" title="Тося привёз пирожки">

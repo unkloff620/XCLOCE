@@ -101,6 +101,8 @@ export const ASSET_FILES: string[] = [
  "/assets/generated/brawl-dust.webp",
  "/assets/generated/brawl-fist.webp",
  "/assets/generated/brawl-tooth.webp",
+ "/assets/guide/zina-face.webp",
+ "/assets/guide/zina.webp",
  "/assets/hero/armUL.webp",
  "/assets/hero/armUR.webp",
  "/assets/hero/beard-1.webp",

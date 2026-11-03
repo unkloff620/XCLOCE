@@ -1230,4 +1230,9 @@ ALTER TABLE players ADD COLUMN IF NOT EXISTS beard_best INT NOT NULL DEFAULT 0;`
     id: "v2-078-tosya",
     sql: `CREATE TABLE IF NOT EXISTS tosya_pies (player_id INT NOT NULL, visit TEXT NOT NULL, taken INT NOT NULL DEFAULT 0, PRIMARY KEY (player_id, visit));`,
   },
+  {
+    // «Новичок»: the tasks of the newcomer's chain (and "chest") he claimed
+    id: "v2-079-newbie",
+    sql: `CREATE TABLE IF NOT EXISTS newbie_claims (player_id INT NOT NULL, task_id TEXT NOT NULL, at TIMESTAMPTZ NOT NULL, PRIMARY KEY (player_id, task_id));`,
+  },
 ];

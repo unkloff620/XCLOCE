@@ -536,11 +536,16 @@ export async function funnel(db: Db, days = 30) {
   );
   const steps = [];
   for (const s of FUNNEL_STEPS) {
+    // hits are not in the action log — they are in boss_hits
     const [r] = await db.query<{ ever: number; hour: number }>(
-      `SELECT COUNT(DISTINCT c.id)::int AS ever,
-              COUNT(DISTINCT c.id) FILTER (WHERE a.at < c.created_at + interval '1 hour')::int AS hour
-       FROM (${cohort}) c JOIN action_log a ON a.player_id = c.id AND a.ok AND a.type = ANY($1)`,
-      [s.types],
+      s.id === "hit"
+        ? `SELECT COUNT(DISTINCT c.id)::int AS ever,
+                  COUNT(DISTINCT c.id) FILTER (WHERE h.created_at < c.created_at + interval '1 hour')::int AS hour
+           FROM (${cohort}) c JOIN fights f ON f.player_id = c.id JOIN boss_hits h ON h.fight_id = f.id AND h.player_id = c.id`
+        : `SELECT COUNT(DISTINCT c.id)::int AS ever,
+                  COUNT(DISTINCT c.id) FILTER (WHERE a.at < c.created_at + interval '1 hour')::int AS hour
+           FROM (${cohort}) c JOIN action_log a ON a.player_id = c.id AND a.ok AND a.type = ANY($1)`,
+      s.id === "hit" ? [] : [s.types],
     );
     steps.push({ id: s.id, name: s.name, ever: Number(r?.ever ?? 0), hour: Number(r?.hour ?? 0) });
   }

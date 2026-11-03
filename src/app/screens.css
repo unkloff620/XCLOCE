@@ -5417,3 +5417,48 @@ html.paused *, html.paused *::before, html.paused *::after { animation-play-stat
 /* a visited room: «Нычки и детали» on the right, across from the rail */
 .pr-stash { position: absolute; z-index: 3; right: 10px; top: calc(var(--top) + 58px); }
 .pr-stash-n { position: absolute; top: -4px; right: 2px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: #2ee88a; color: #06301a; font-size: 11px; line-height: 18px; text-align: center; }
+
+/* ---------- Баба Зина: the newcomer's guide ---------- */
+.zn-hello { padding-top: 0; overflow: visible; }
+.zn-big { width: 190px; margin-top: -120px; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5)); animation: zn-bob 3s ease-in-out infinite; }
+.zn-big.small { width: 150px; margin-top: -100px; }
+@keyframes zn-bob { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-5px) rotate(-1deg); } }
+.zn-hello-t { margin: 0; text-align: center; font-size: 14px; line-height: 1.35; color: #fff3d6; }
+.zn-card { position: fixed; z-index: 96; left: 50%; bottom: calc(var(--nav-h) + var(--safe-b) + var(--strip-h, 0px) + 8px); transform: translateX(-50%);
+  width: min(calc(100% - 16px), 400px); display: flex; align-items: flex-end; gap: 0; pointer-events: none; animation: zn-in 0.35s ease-out both; }
+.zn-card.top { bottom: auto; top: calc(var(--hud-h) + var(--safe-t) + 8px); }
+@keyframes zn-in { from { opacity: 0; transform: translate(-50%, 16px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.zn-face { flex: none; width: 96px; margin-right: -14px; position: relative; z-index: 1; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5)); animation: zn-bob 3s ease-in-out infinite; }
+.zn-card.cheer .zn-face { animation: zn-hop 0.5s ease-out 2; }
+@keyframes zn-hop { 50% { transform: translateY(-14px) rotate(4deg); } }
+.zn-bubble { flex: 1; min-width: 0; pointer-events: auto; padding: 10px 12px 8px 22px; border-radius: 18px; background: linear-gradient(170deg, #fff6df, #ecd9b0); border: 2.5px solid #4a2e14;
+  box-shadow: 0 4px 0 rgba(40, 22, 8, 0.45), 0 10px 22px rgba(0, 0, 0, 0.4); color: #2a1a0e; margin-bottom: 8px; }
+.zn-card.cheer .zn-bubble { border-color: #2f9a4e; }
+.zn-title { display: block; font-size: 16px; color: #8a3d0c; text-shadow: none; }
+.zn-say { margin: 3px 0 6px; font-size: 13.5px; line-height: 1.35; }
+.zn-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.zn-foot .fs-dots i { background: rgba(74, 46, 20, 0.25); }
+.zn-foot .fs-dots i.on { background: #e3862f; }
+.zn-foot .fs-dots i.done { background: #2f9a4e; }
+.zn-card .fs-x { pointer-events: auto; position: absolute; top: -6px; right: -4px; }
+.zn-foot .fs-dots { gap: 3px; flex-wrap: wrap; }
+.zn-foot .fs-dots i { width: 9px; height: 5px; }
+.zn-card .fs-x { background: #4a2e14; color: #ffe6b0; width: 26px; height: 26px; font-size: 16px; }
+
+/* «Новичок»: Баба Зина's tasks */
+.nb-head { display: flex; align-items: flex-end; gap: 8px; }
+.nb-head img { flex: none; width: 92px; margin: -18px 0 -6px -6px; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.35)); }
+.nb-say { flex: 1; display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; border-radius: 14px; background: rgba(255, 250, 235, 0.7); border: 2px solid #8a6a40; font-size: 13px; line-height: 1.35; font-style: italic; }
+.nb-left { font-style: normal; }
+.nb-cur { display: flex; flex-direction: column; gap: 8px; align-items: stretch; padding: 10px; border-radius: 14px; background: rgba(255, 246, 220, 0.65); border: 2px solid #6b4a24; }
+.nb-bar { position: relative; height: 18px; border-radius: 9px; background: #3a2410; overflow: hidden; }
+.nb-bar i { display: block; height: 100%; background: linear-gradient(90deg, #4ccd6a, #a8f07a); }
+.nb-bar span { position: absolute; inset: 0; display: grid; place-items: center; font-size: 11px; font-weight: 900; color: #fff; text-shadow: 0 1px 2px #000; }
+.nb-list { display: flex; flex-direction: column; gap: 3px; max-height: 190px; overflow-y: auto;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 8px, #000 calc(100% - 10px), transparent); mask-image: linear-gradient(180deg, transparent 0, #000 8px, #000 calc(100% - 10px), transparent); padding: 4px 0; }
+.nb-row { display: flex; align-items: center; gap: 8px; padding: 4px 8px; border-radius: 9px; font-size: 13px; }
+.nb-row.done { opacity: 0.6; text-decoration: line-through; }
+.nb-row.now { background: rgba(255, 210, 90, 0.35); font-weight: 800; }
+.nb-row.wait { opacity: 0.55; }
+.nb-n { flex: none; width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; background: #4a2e14; color: #ffe6b0; font-size: 11px; font-weight: 900; }
+.nb-row.done .nb-n { background: #2f9a4e; color: #fff; }
