@@ -818,7 +818,7 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
           <img className="pkt-bg" src="/assets/yard/poker-room.webp?v=2" alt="" draggable={false} />
 
           {/* above the title: the poker level, its experience, the swaps it gives, the hands left today */}
-          <div className="pkt-top" style={{ left: px(110), top: py(330), width: px(860) }}>
+          <div className="pkt-top" style={{ left: px(370), top: py(330), width: px(600) }}>
             <span className="pkt-lvl" title={p ? `${p.xp}${p.to !== null ? ` / ${p.to}` : ""} опыта покера` : undefined}>
               <b className="display num">{level}</b><small>ур.</small>
             </span>
