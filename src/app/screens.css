@@ -5346,3 +5346,8 @@ html.paused *, html.paused *::before, html.paused *::after { animation-play-stat
   .modal-back { background: rgba(14, 9, 5, 0.82); }
 }
 .modal .frame-chip.frame-silver, .modal .frame-chip.frame-bronze, .dos-page .frame-chip.frame-silver, .dos-page .frame-chip.frame-bronze { text-shadow: none; }
+/* the poker table's outline is for its gold text only: the cards and the gold deal button stay clean */
+.pkt .pk-mini, .pkt .pk-mini *, .pkt-ctrl .btn.gold, .pkt-ctrl .btn.gold * { text-shadow: none; }
+.pkt .pk-mini { width: 3.6cqw; height: 5cqw; }
+.pkt .pk-mini b, .pkt .pk-mini i { font-size: 2.3cqw; }
+.pkt .pk-mini b { letter-spacing: -0.08em; }

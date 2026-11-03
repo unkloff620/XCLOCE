@@ -876,8 +876,8 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
               <button className="btn big green block" disabled={busy === "poker_stand" || busy === "poker_swap"} onClick={() => run("poker_stand")}>Вскрыть</button>
             ) : (
               <div className="pkt-btns">
-                <button className="btn big gold block" disabled={busy === "poker_play" || left <= 0 || usd < POKER_RULES.price.amount} onClick={() => run("poker_play")}>
-                  {left <= 0 ? "Завтра" : <>Раздать · {POKER_RULES.price.amount} <Icon name={POKER_RULES.price.currency} size={18} /></>}
+                <button className="btn big gold block" disabled={busy === "poker_play" || left <= 0 || usd < POKER_RULES.price.amount} onClick={() => run("poker_play")} aria-label="Раздать">
+                  {left <= 0 ? "Завтра" : <><Icon name={POKER_RULES.price.currency} size={18} /><b className="num">{POKER_RULES.price.amount}</b></>}
                 </button>
                 {/* a «Фишка» from the yard: one hand without the money */}
                 {chips > 0 && (
