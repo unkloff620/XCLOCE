@@ -5,6 +5,7 @@
  * стоимость цели × 0,9, не больше 75%. Проигрыш — ставка сгорает.
  * Здесь только правила и числа; сервер (server/systems/games.ts) раздаёт карты и кидает кости.
  */
+import { OFFERS } from "./shop.ts";
 import type { Currency } from "./currencies.ts";
 import type { Reward } from "./rewards.ts";
 
@@ -217,10 +218,13 @@ export function zonkXpLevel(xp: number): { level: number; from: number; to: numb
  * продаётся за свою стоимость; в остальном это та же вещь: энергетик даёт ту же энергию, оружие бьёт так же
  * (чтобы ударить им, её берут в бой — она становится обычной). Её можно поставить в апгрейдер снова.
  */
-/** what things are worth in the upgrader (rubles): the sell price of yard finds, a fair price for the rest */
+/**
+ * what things are worth in the upgrader (rubles): a thing sold in the shop is worth exactly its shop price (never more —
+ * a thing bought cheap and staked dear was a farm), the yard finds their sell price
+ */
 export const ITEM_VALUES: Record<string, number> = {
-  "bottle-cap": 15, "flyer-passive": 25, "sticker-hodl": 40, spinner: 60, "energy-drink": 90, keyboard: 95,
-  "lost-wallet": 150, "energy-pack": 250, gpu: 300, "rug-pull-gun": 2000,
+  "bottle-cap": 15, "flyer-passive": 25, "sticker-hodl": 40, spinner: 60, "lost-wallet": 150, "energy-pack": 250,
+  ...Object.fromEntries(OFFERS.filter((o) => o.give.item && o.price.currency === "RUB" && ["weapons", "misc"].includes(o.section)).map((o) => [o.give.item!, o.price.amount])),
 };
 export const UPGRADE_EDGE = 0.9;
 /** a spin of the upgrader: the first ones of a Moscow day are free, then each costs `price` */

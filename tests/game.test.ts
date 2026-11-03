@@ -1712,7 +1712,7 @@ describe("yard mini games", () => {
     expect(upgradeChanceOf(upgradeMode("x2")!.mult)).toBeCloseTo(0.45, 4);
     expect(upgradeChanceOf(upgradeMode("x8")!.mult)).toBeCloseTo(0.1125, 4);
     expect(upgradeChanceOf(upgradeMode("c70")!.mult)).toBeCloseTo(0.7, 4);
-    expect(upgradeTarget(240)).toBe("lost-wallet");
+    expect(upgradeTarget(240)).toBe("keyboard");
     expect(upgradeTarget(2500)).toBe("rug-pull-gun");
     const p = await newPlayer(db);
     await give(db, p, "spinner", 4);
@@ -1727,7 +1727,7 @@ describe("yard mini games", () => {
     expect(await qty(db, p, "spinner")).toBe(1);
     // the upgraded thing can go again: 240 ×4 = 960
     const again = await act(db, p, "upgrade", { uid: win.result.uid, mode: "x4" }, T0, always(0.01));
-    expect(again.result).toMatchObject({ won: true, stakeValue: 240, value: 960, target: "gpu" });
+    expect(again.result).toMatchObject({ won: true, stakeValue: 240, value: 960, target: upgradeTarget(960) });
     expect(again.state.upgraded).toHaveLength(1);
     // sold for its own price
     const rub = await wallet(db, p, "RUB");
