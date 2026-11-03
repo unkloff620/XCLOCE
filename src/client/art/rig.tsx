@@ -14,7 +14,7 @@ import { createContext, useContext, useEffect, useId, useMemo, useRef } from "re
 import { RIG } from "./rig-data.ts";
 import { BEARD_FIT } from "./beard-data.ts";
 import { HAIR_CUT_HATS, HAIR_FIT, HATS_ON_HAIR, SKIN_ORIGINAL, WEAR_FIT } from "./rig-look.ts";
-import { HELD_FIT } from "./held-data.ts";
+import { HELD_FIT, HELD_SWING } from "./held-data.ts";
 import { TATTOO_FIT } from "./tattoo-data.ts";
 import { PLACES } from "./places-data.ts";
 import { SEAT } from "../../content/home-scene.ts";
@@ -454,9 +454,18 @@ function HandFrames() {
   const heldId = useContext(WornCtx).HAND;
   if (heldId && heldId in HELD_FIT) {
     const f = HELD_FIT[heldId];
+    const sw = HELD_SWING[heldId];
     const base = skin !== SKIN_ORIGINAL ? `/assets/hero/skin-${skin}/held-${heldId}` : `/assets/hero/held/${heldId}`;
     return (
-      <g className="rig-hand held">
+      <g className={`rig-hand held ${sw ? "swing" : ""}`}>
+        {/* what hangs from the fist (the anchor on its rope) swings behind the hand as a pendulum, a beat behind it */}
+        {sw && (
+          <g className="rig-pendulum" style={{ transformOrigin: `${sw.pivot[0]}px ${sw.pivot[1]}px`, transformBox: "view-box" }}>
+            {Object.entries(sw.parts).map(([k, b]) => (
+              <image key={k} href={`/assets/hero/held/${heldId}-${k}.webp?v=${ART_VER.heroPart}`} x={b.x} y={b.y} width={b.w} height={b.h} preserveAspectRatio="none" />
+            ))}
+          </g>
+        )}
         <image href={`${base}.webp?v=${ART_VER.heroPart}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />
       </g>
     );

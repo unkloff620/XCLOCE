@@ -6,5 +6,34 @@ export const HELD_FIT: Record<string, { x: number; y: number; w: number; h: numb
     "y": 736.0,
     "w": 224,
     "h": 288
+  },
+  "anchor-mugo": {
+    "x": 602.0,
+    "y": 733.5,
+    "w": 161,
+    "h": 154
+  }
+};
+/** what hangs from the fist and swings (drawn behind the hand, in order): the pivot and the parts */
+export const HELD_SWING: Record<string, { pivot: [number, number]; parts: Record<string, { x: number; y: number; w: number; h: number }> }> = {
+  "anchor-mugo": {
+    "pivot": [
+      664.0,
+      874.0
+    ],
+    "parts": {
+      "rope": {
+        "x": 653.5,
+        "y": 869.5,
+        "w": 22,
+        "h": 176
+      },
+      "anchor": {
+        "x": 569.0,
+        "y": 1031.0,
+        "w": 190,
+        "h": 244
+      }
+    }
   }
 };

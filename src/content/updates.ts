@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-03-anchor-mugo",
+    date: "3 ноября",
+    title: "Якорь Мугонатора",
+    items: [
+      { img: "/assets/updates/2026-11-03-anchor-mugo.webp", text: "Новая вещь в руку за Мугонатора (Блатной): герой качает якорь на верёвке, якорь раскачивается следом как маятник. Есть и в магазине одежды." },
+    ],
+  },
+  {
     id: "2026-11-03-zonk-risk",
     date: "3 ноября",
     title: "Зонк: продолжение на свой риск",
