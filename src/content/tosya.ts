@@ -3,7 +3,8 @@
  * A visit: some Moscow days, at a random hour, for TOSYA_HOURS (the same for everybody; the admin can call him in or
  * send him off: config "tosya"). Each player gets his own 3…5 pies a visit; with 5 the first one is free.
  * A pie costs TOSYA_PRICE $, every next one twice as much. What is inside is not known until it is bought: weapons,
- * craft parts, authority, roubles and dollars worth TOSYA_MULT × its price (a free pie as a TOSYA_PRICE one), and one of
+ * craft parts, authority, roubles and dollars worth TOSYA_MULT × its price (a free pie as a TOSYA_PRICE one) — then
+ * roubles ×2, authority ×5 and parts ×10 on top (TOSYA_BOOST) — every weapon kind in each, and one of
  * Тося's own tattoos (TOSYA_TATTOOS — the sets come later).
  */
 import type { Reward } from "./rewards.ts";
@@ -66,7 +67,7 @@ const WEAPONS = OFFERS.filter((o) => o.section === "weapons" && o.give.item && o
  * A pie's contents worth `usd` dollars, at random: the value is shared out between weapons, parts, authority, dollars and
  * roubles (roubles take whatever is left, so the whole is exactly the value), plus one of Тося's tattoos.
  */
-export function rollPie(rng: () => number, usd: number): Reward {
+export function rollPieBase(rng: () => number, usd: number): Reward {
   const pick = <T,>(a: T[]) => a[Math.floor(rng() * a.length) % a.length];
   const w = { weapons: 0.3 + rng(), parts: 0.3 + rng(), xp: 0.3 + rng(), usd: 0.2 + rng() * 0.8, rub: 0.3 + rng() };
   const sum = Object.values(w).reduce((a, b) => a + b, 0);
@@ -74,10 +75,9 @@ export function rollPie(rng: () => number, usd: number): Reward {
   const items = new Map<string, number>();
   const add = (id: string, n: number) => n > 0 && items.set(id, (items.get(id) ?? 0) + n);
   let spent = 0;
-  // weapons: one kind, as many as its share buys
-  const wpn = pick(WEAPONS);
-  if (wpn) {
-    const n = Math.floor(share("weapons") / wpn.usd);
+  // weapons: every kind, the share split between them evenly (at least one of each)
+  for (const wpn of WEAPONS) {
+    const n = Math.max(1, Math.floor(share("weapons") / WEAPONS.length / wpn.usd));
     add(wpn.id, n);
     spent += n * wpn.usd;
   }
@@ -100,6 +100,18 @@ export function rollPie(rng: () => number, usd: number): Reward {
     ...(xp > 0 ? { xp } : {}),
     currencies: { ...(dollars > 0 ? { USD: dollars } : {}), ...(rub > 0 ? { RUB: rub } : {}) },
     items: [...items].map(([id, qty]) => ({ id, qty })),
+  };
+}
+
+/** on top of the even split: roubles ×2, authority ×5, parts ×10 (TOSYA_BOOST) */
+export const TOSYA_BOOST = { rub: 2, xp: 5, parts: 10 };
+const PART_SET = new Set([...PARTS_BY_RARITY.common, ...PARTS_BY_RARITY.rare, ...PARTS_BY_RARITY.epic]);
+export function rollPie(rng: () => number, usd: number): Reward {
+  const r = rollPieBase(rng, usd);
+  return {
+    ...(r.xp ? { xp: r.xp * TOSYA_BOOST.xp } : {}),
+    currencies: { ...r.currencies, ...(r.currencies?.RUB ? { RUB: r.currencies.RUB * TOSYA_BOOST.rub } : {}) },
+    items: (r.items ?? []).map((it) => (PART_SET.has(it.id) ? { id: it.id, qty: it.qty * TOSYA_BOOST.parts } : it)),
   };
 }
 

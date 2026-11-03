@@ -2333,10 +2333,14 @@ describe("«Крафт»", () => {
 
 describe("Тося", () => {
   it("a pie holds 5× its price; prices double; with five pies the first is free; he comes and goes", async () => {
-    const { rollPie, tosyaWorth, tosyaPrice, tosyaVisit, tosyaPies } = await import("../src/content/tosya.ts");
+    const { rollPie, rollPieBase, tosyaWorth, tosyaPrice, tosyaVisit, tosyaPies } = await import("../src/content/tosya.ts");
     let s = 1;
     const rng = () => ((s = (s * 16807) % 2147483647) / 2147483647);
-    for (const usd of [100, 200, 800]) for (let i = 0; i < 20; i++) expect(Math.abs(tosyaWorth(rollPie(rng, usd)) - usd)).toBeLessThan(0.6);
+    for (const usd of [100, 200, 800]) for (let i = 0; i < 20; i++) expect(Math.abs(tosyaWorth(rollPieBase(rng, usd)) - usd)).toBeLessThan(0.6);
+    // every weapon in each pie; roubles ×2, authority ×5, parts ×10 on top
+    const pie = rollPie(rng, 100);
+    for (const w of ["keyboard", "gpu", "rug-pull-gun"]) expect(pie.items!.find((i) => i.id === w)?.qty ?? 0).toBeGreaterThan(0);
+    expect(tosyaWorth(pie)).toBeGreaterThan(100);
     expect([0, 1, 2, 3].map((b) => tosyaPrice(b, 4))).toEqual([20, 40, 80, 160]);
     expect([0, 1, 2, 3, 4].map((b) => tosyaPrice(b, 5))).toEqual([0, 20, 40, 80, 160]);
     expect(tosyaVisit(T0, "off")).toBeNull();
