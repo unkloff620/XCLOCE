@@ -27,6 +27,34 @@ export const HAIR_FIT = {
 } as const;
 /** worn clothes drawn on the rig; hats in this list also have hair variants cut under them */
 export const WEAR_FIT = {
+  "tee-sailor": {
+    "slot": "SHIRT",
+    "x": 187.0,
+    "y": 284.5,
+    "w": 625,
+    "h": 484
+  },
+  "cap-captain": {
+    "slot": "HEAD",
+    "x": 358.5,
+    "y": -9.5,
+    "w": 286,
+    "h": 172
+  },
+  "mask-diver": {
+    "slot": "FACE",
+    "x": 386.0,
+    "y": 47.0,
+    "w": 250,
+    "h": 230
+  },
+  "teeth-necklace": {
+    "slot": "ACCESSORY",
+    "x": 401.5,
+    "y": 301.0,
+    "w": 196,
+    "h": 184
+  },
   "tee-actclose": {
     "slot": "SHIRT",
     "x": 186.0,
@@ -255,5 +283,5 @@ export const WEAR_FIT = {
 /** head things that cut the hair under them (the rest are worn over the hair) */
 export const HAIR_CUT_HATS: readonly string[] = ["cap-moon", "helmet-miner", "santa-hat", "ushanka-star"];
 /** head things drawn over the hair without cutting it (a crown, a bandana) */
-export const HATS_ON_HAIR: readonly string[] = ["bandana-hodl", "crown-cash"];
+export const HATS_ON_HAIR: readonly string[] = ["bandana-hodl", "crown-cash", "cap-captain"];
 export const SKIN_ORIGINAL = 1;

@@ -68,6 +68,7 @@ def hair_recolor(im, target, ref):
 # clothes drawn on the v2 body (the v1 ones are kept in tools/rig/source/wear/v1)
 WEAR_SLOT = {"tee-white": "SHIRT", "tee-pump": "SHIRT", "jeans": "PANTS", "shorts-remote": "PANTS", "sneakers": "SHOES",
              "slippers": "SHOES", "gold-chain": "ACCESSORY", "cap-moon": "HEAD", "hoodie-hodl": "SHIRT",
+             "tee-sailor": "SHIRT", "cap-captain": "HEAD", "mask-diver": "FACE", "teeth-necklace": "ACCESSORY",
              "tee-actclose": "SHIRT", "shorts-actclose": "PANTS", "badge-actclose": "ACCESSORY",
              "jacket-komandate": "SHIRT", "pants-komandate": "PANTS", "sneakers-komandate": "SHOES",
              "sweater-vostok": "SHIRT", "pants-vostok": "PANTS", "sneakers-black": "SHOES", "santa-hat": "HEAD", "laser-eyes": "FACE",
@@ -75,9 +76,9 @@ WEAR_SLOT = {"tee-white": "SHIRT", "tee-pump": "SHIRT", "jeans": "PANTS", "short
              "mask-anon": "FACE", "monocle-whale": "FACE", "bruise-liq": "FACE",
              "crown-cash": "HEAD", "ushanka-star": "HEAD", "helmet-miner": "HEAD", "bandana-hodl": "HEAD"}
 # head things worn over the hair (no hair variants cut under them)
-OVER_HAIR = {"headphones-vostok", "crown-cash", "bandana-hodl"}
+OVER_HAIR = {"headphones-vostok", "crown-cash", "bandana-hodl", "cap-captain"}
 # of those: drawn on top of the hair (the crown sits on it, the bandana is tied over it) — the hair is not cut
-ON_HAIR = ["bandana-hodl", "crown-cash"]
+ON_HAIR = ["bandana-hodl", "crown-cash", "cap-captain"]
 wear, hat_alpha = {}, {}
 for item, slot in WEAR_SLOT.items():
     a = np.array(Image.open(os.path.join(SRC, "wear", item + ".png")).convert("RGBA"))

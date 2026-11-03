@@ -116,6 +116,11 @@ const WEARABLES: ItemDef[] = ([
   // held in the left hand (slot «Кисть»): the boss's own weapon, worn for the look
   { id: "bottle-komandate", name: "Бутылка Командате", slot: "HAND", rarity: "epic", description: "Оружие Командате: горит, но не гаснет. Герой держит её в руке.", sources: ["Победа: Командате"] },
   { id: "hand-drum", name: "Нервные пальцы", slot: "HAND", rarity: "rare", description: "Пальцы сами отбивают ритм по колену, пока график грузится.", sources: ["Победа: Кедр"] },
+  // Мугонатор's set: the sea captain (cut from the hero on tools/rig/source/wear)
+  { id: "tee-sailor", name: "Тельняшка Мугонатора", slot: "SHIRT", rarity: "rare", description: "Полоски — чтобы акула видела, кого не трогать. Край уже кто-то откусил.", sources: ["Победа: Мугонатор (Блатной)"] },
+  { id: "cap-captain", name: "Капитанская фуражка", slot: "HEAD", rarity: "epic", description: "Белая, с якорем. Вадим сказал — Мугонатор надел.", sources: ["Победа: Мугонатор (Блатной)"] },
+  { id: "mask-diver", name: "Маска для ныряния", slot: "FACE", rarity: "rare", description: "Ныряет на самое дно графика и дышит через трубку.", sources: ["Победа: Мугонатор (Блатной)"] },
+  { id: "teeth-necklace", name: "Ожерелье из акульих зубов", slot: "ACCESSORY", rarity: "epic", description: "Зубы свои, выпавшие. Растут новые.", sources: ["Победа: Мугонатор (Блатной)"] },
   // Кедр's set (cut from the hero on tools/rig/source/wear)
   { id: "tee-actclose", name: "Футболка ActClose", slot: "SHIRT", rarity: "rare", description: "Чёрная, с красным actclose на груди. Сайт лежит — футболка стоит.", sources: ["Победа: Кедр (Блатной)"] },
   { id: "shorts-actclose", name: "Шорты ActClose", slot: "PANTS", rarity: "rare", description: "Чёрные, с белыми шнурками. Дежурить по сайту можно и в шортах.", sources: ["Победа: Кедр (Блатной)"] },

@@ -94,6 +94,8 @@ export const BOSSES: BossDef[] = [
     story: "Делает всё, что сказал Вадим. Иногда даже то, что Вадим только подумал.",
     hp: hp(2), reward: { xp: xp(2), currencies: { USD: 7, RUB: 1_150 } },
     drop: [{ id: "energy-drink", qty: 2, chance: 0.35 }],
+    wear: { items: ["tee-sailor", "cap-captain", "mask-diver", "teeth-necklace"], chance: 0.1, pity: 10 },
+    set: { weapon: "keyboard", damage: 20 },
     theme: { a: "#163a3a", b: "#061414", accent: "#2ee6c8" }, photo: photo("mugo", true),
   },
   {

@@ -10,7 +10,7 @@ import { CRAFT_ALL } from "../../content/craft.ts";
 const RASTER_ITEMS = new Set([
   "fist", "mouse", "red-candle", "keyboard", "gpu", "rug-pull-gun",
   "tee-white", "tee-pump", "hoodie-hodl", "jeans", "shorts-remote", "sneakers", "cap-moon", "slippers", "gold-chain", "bottle-komandate", "hand-drum",
-  "tee-actclose", "shorts-actclose", "badge-actclose", "jacket-komandate", "pants-komandate", "sneakers-komandate", "sweater-vostok", "pants-vostok", "headphones-vostok", "sneakers-black", "cigarette", "toothpick", "shades-gold", "chain-cuban", "mask-anon", "monocle-whale", "bruise-liq", "crown-cash", "ushanka-star", "helmet-miner", "bandana-hodl", "cigar", "teeth-grin", "grillz-diamond",
+  "tee-sailor", "cap-captain", "mask-diver", "teeth-necklace", "tee-actclose", "shorts-actclose", "badge-actclose", "jacket-komandate", "pants-komandate", "sneakers-komandate", "sweater-vostok", "pants-vostok", "headphones-vostok", "sneakers-black", "cigarette", "toothpick", "shades-gold", "chain-cuban", "mask-anon", "monocle-whale", "bruise-liq", "crown-cash", "ushanka-star", "helmet-miner", "bandana-hodl", "cigar", "teeth-grin", "grillz-diamond",
   "poker-chip", "energy-drink", "energy-pack", "energy-50", "energy-100", "energy-500", "lost-wallet", "bottle-cap", "flyer-passive", "spinner", "sticker-hodl", "statue-close", "trophy-sun", "santa-hat", "laser-eyes",
   ...STASH_IDS,
   ...TATTOO_IDS,

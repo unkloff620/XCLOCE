@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-03-mugo-wear",
+    date: "3 ноября",
+    title: "Вещи Мугонатора",
+    items: [
+      { img: "/assets/updates/2026-11-03-mugo-wear.webp", text: "С Мугонатора в «Блатном» падают его вещи: тельняшка, капитанская фуражка, маска для ныряния и ожерелье из акульих зубов. Собери все четыре — клавиатура бьёт сильнее." },
+    ],
+  },
+  {
     id: "2026-11-03-knyaz",
     date: "3 ноября",
     title: "Князь ожил: его комната и трон",
