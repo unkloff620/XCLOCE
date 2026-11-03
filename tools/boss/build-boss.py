@@ -60,7 +60,10 @@ for d in sorted(x for x in glob.glob(os.path.join(HERE, "source", "*")) if os.pa
         continue
     if not os.path.exists(os.path.join(d, "body.png")):
         continue
-    SCALE = SCALE_BY_BOSS.get(boss, 0.5)
+    # a variant (<boss>-beaten) takes its boss's settings
+    base = boss.split("-")[0]
+    pick = lambda m, dflt: m.get(boss, m.get(base, dflt))
+    SCALE = pick(SCALE_BY_BOSS, 0.5)
     dest = os.path.join(ROOT, "public", "bosses", boss, "rig")
     os.makedirs(dest, exist_ok=True)
     rig = {}
@@ -78,11 +81,11 @@ for d in sorted(x for x in glob.glob(os.path.join(HERE, "source", "*")) if os.pa
         x0, y0, x1, y1 = xs.min() - 3, ys.min() - 3, xs.max() + 4, ys.max() + 4
         crop = Image.fromarray(im[max(0, y0):y1, max(0, x0):x1])
         w, h = round(crop.width * SCALE), round(crop.height * SCALE)
-        k, hires = HIRES_BY_BOSS.get(boss, (1, set()))
+        k, hires = pick(HIRES_BY_BOSS, (1, set()))
         k = k if p in hires else 1
         crop.resize((w * k, h * k), Image.LANCZOS).save(os.path.join(dest, p + ".webp"), "WEBP", quality=86, method=4)
         r = {"x": round(max(0, x0) * SCALE, 1), "y": round(max(0, y0) * SCALE, 1), "w": w, "h": h}
-        joint = {**JOINT, **JOINT_BY_BOSS.get(boss, {})}
+        joint = {**JOINT, **pick(JOINT_BY_BOSS, {})}
         if p in joint:
             axis, _ = joint[p]
             m = a > 128
@@ -93,8 +96,8 @@ for d in sorted(x for x in glob.glob(os.path.join(HERE, "source", "*")) if os.pa
                 band = xs.max() - (xs.max() - xs.min()) * 0.15
                 sel = np.nonzero(m & (np.arange(W)[None, :] >= band))
             r["pivot"] = [round(sel[1].mean() * SCALE, 1), round(sel[0].mean() * SCALE, 1)]
-        if p in PIVOT_BY_BOSS.get(boss, {}):
-            r["pivot"] = PIVOT_BY_BOSS[boss][p]
+        if p in pick(PIVOT_BY_BOSS, {}):
+            r["pivot"] = pick(PIVOT_BY_BOSS, {})[p]
         rig[p] = r
     for p in FRAMES:
         fs = sorted(glob.glob(os.path.join(d, f"{p}@*.png")), key=lambda f: int(f.rsplit("@", 1)[1].split(".")[0]))

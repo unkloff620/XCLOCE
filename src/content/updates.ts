@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-04-mugo-beaten",
+    date: "4 ноября",
+    title: "Мугонатору тоже досталось",
+    items: [
+      { img: "/assets/updates/2026-11-04-mugo-beaten.webp", text: "Ниже половины здоровья Мугонатор весь в синяках и порезах, шорты порваны и в крови." },
+    ],
+  },
+  {
     id: "2026-11-04-kedr-beaten",
     date: "4 ноября",
     title: "Кедр получает по заслугам",
