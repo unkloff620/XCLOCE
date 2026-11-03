@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-03-penthouse",
+    date: "3 ноября",
+    title: "Пентхаус — с Утилизатора",
+    items: [
+      { text: "«Пентхаус To The Moon» теперь не продаётся просто так: он выпадает с Утилизатора в «Блатном» бою, потом покупается дома. Кто уже купил — пентхаус остаётся у него." },
+    ],
+  },
+  {
     id: "2026-11-03-room-buttons",
     date: "3 ноября",
     title: "Обстановка из гардероба",
