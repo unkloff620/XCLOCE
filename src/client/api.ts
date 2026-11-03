@@ -152,7 +152,7 @@ export interface GameView {
   level?: number; target?: number;
   /** a zonk duel's game (the duel id) */
   duel?: number | null;
-  /** the target reached (its prize paid): the choice is asked; «Продолжить» chosen */
+  /** the target reached (the prize is paid at the end if still at the target): the choice is asked; «Продолжить» chosen */
   reached?: boolean; ask?: boolean; cont?: boolean; prize?: { reward: Granted | null; xp: number } | null;
   /** hints bought for this game (hintsPaid) and switched on (hints) */
   hints?: boolean; hintsPaid?: boolean;

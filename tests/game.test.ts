@@ -1679,11 +1679,11 @@ describe("yard mini games", () => {
     let b = await act(db, p, "zonk_move", { pick: [0, 1, 2], then: "bank" }, T0, always(0));
     expect(b.result).toMatchObject({ status: "active", round: 2, rounds: 10, total: 1000, last: { points: 1000, zonk: false } });
     for (let i = 2; i <= 4; i++) b = await act(db, p, "zonk_move", { pick: [0, 1, 2], then: "bank" }, T0, always(0));
-    // 4000 reached after the 4th attempt: the prize is paid at once and the choice is asked
+    // 4000 reached after the 4th attempt: the choice is asked; the prize waits for the end
     expect(b.result).toMatchObject({ status: "active", total: 4000, reached: true, ask: true });
-    expect(await wallet(db, p, "RUB")).toBe(rub + (ZONK_LEVELS[0].win.currencies?.RUB ?? 0));
+    expect(await wallet(db, p, "RUB")).toBe(rub);
     await expect(act(db, p, "zonk_move", { pick: [0, 1, 2], then: "bank" }, T0, always(0))).rejects.toMatchObject({ code: "zonk_ask" });
-    // «Продолжить»: the attempts left are played for the record, the prize does not grow
+    // «Продолжить»: the attempts left are played for the record at the player's own risk, the prize does not grow
     const c = await act(db, p, "zonk_choice", { go: "continue" }, T0, always(0));
     expect(c.result).toMatchObject({ status: "active", ask: false, cont: true });
     b = await act(db, p, "zonk_move", { pick: [0, 1, 2], then: "bank" }, T0, always(0));
@@ -1705,6 +1705,23 @@ describe("yard mini games", () => {
     expect(await wallet(db, p, "RUB")).toBe(100 + (ZONK_LEVELS[1].fail.currencies?.RUB ?? 0));
     expect(up.state.games.zonk.xp).toBe(11);
     await expect(act(db, p, "game_start", { game: "zonk", level: 5 }, T0 + M)).rejects.toMatchObject({ code: "bad_level" });
+  });
+
+  it("zonk: after «Продолжить» two zonks in a row cost 1000; below the target at the end — not passed, no prize", async () => {
+    const { ZONK_LEVELS } = await import("../src/content/games.ts");
+    const p = await newPlayer(db);
+    await act(db, p, "game_start", { game: "zonk", level: 1 }, T0, always(0));
+    const rub = await wallet(db, p, "RUB");
+    for (let i = 1; i <= 4; i++) await act(db, p, "zonk_move", { pick: [0, 1, 2], then: "bank" }, T0, always(0));
+    await act(db, p, "zonk_choice", { go: "continue" }, T0, always(0));
+    // the dice 2 3 4 6 6 2 again and again: every attempt after this one is a zonk
+    const faces = [2, 3, 4, 6, 6, 2];
+    let k = 0;
+    const zonks = () => (faces[k++ % faces.length] - 1) / 6 + 0.01;
+    const b = await act(db, p, "zonk_move", { pick: [0, 1, 2], then: "bank" }, T0, zonks);
+    // 5000, then 5 zonks: the 2nd and the 4th cost 1000 each → 3000 < 4000
+    expect(b.result).toMatchObject({ status: "done", total: 3000, result: { won: false, points: 3000 } });
+    expect(await wallet(db, p, "RUB")).toBe(rub + (ZONK_LEVELS[0].fail.currencies?.RUB ?? 0));
   });
 
   it("upgrader: ×2/×4/×8 or 15/30/70%; a win gives an upgraded thing worth stake × multiplier, sold for that price", async () => {

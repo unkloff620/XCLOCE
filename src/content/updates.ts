@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-03-zonk-risk",
+    date: "3 ноября",
+    title: "Зонк: продолжение на свой риск",
+    items: [
+      { text: "Набрал цель и нажал «Продолжить» — теперь это риск: награда выдаётся в конце, только если очков всё ещё не меньше цели. Штраф −1000 — только за два зонка подряд, а не за каждый." },
+    ],
+  },
+  {
     id: "2026-11-03-faster",
     date: "3 ноября",
     title: "Игра легче",

@@ -93,7 +93,7 @@ function ZonkHelp() {
       <p>Четыре одинаковых кости — очки тройки ×2, пять — ×4, шесть — ×8. Шесть разных (1–6) — 1500, три пары — 750.</p>
       <p>Не набрал цель или нажал «Сдаться» — немного рублей в утешение и +{ZONK_FAIL_XP} опыта. Каждые 100 опыта — новый уровень зонка.</p>
       <p>Очки попыток пишутся мелом слева, стрелка показывает текущую. На листке сверху — лучший счёт дня среди всех игроков: в полночь по Москве он получает приз: {ZONK_DAY_PRIZE.currencies?.USD} USD и {ZONK_DAY_PRIZE.items?.[0]?.qty} фишки. На листе справа — комбинации.</p>
-      <p>Набрал цель уровня — награда приходит сразу, и можно выбрать: «Закончить» или «Продолжить» ради рекорда дня. Продолжение награду не увеличит, а каждый зонк после него отнимает {full(ZONK_CONT_PENALTY)} очков.</p>
+      <p>Набрал цель уровня — можно выбрать: «Закончить» и забрать награду или «Продолжить» ради рекорда дня на свой страх и риск. Продолжение награду не увеличит, два зонка подряд отнимают {full(ZONK_CONT_PENALTY)} очков, и если к концу очков станет меньше цели — уровень не пройден.</p>
       <p>По стене бегает таракан — прихлопни его, это пара рублей (иногда фишка для покера).</p>
       <p><b>Дуэли:</b> в меню уровней нажми [+] в «Дуэлях», выбери игрока и ставку. Если он не в игре — ему придёт сообщение в Telegram. У каждого {DUEL_ROUNDS} попыток, очки соперника видны прямо во время партии. Больше очков — забираешь банк (минус {Math.round(DUEL_FEE * 100)}%), ничья — ставки назад.</p>
     </Help>
@@ -580,7 +580,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
             {g ? (
               <>
                 <span>{g.duel ? "Дуэль" : <>Уровень <b className="num">{g.level ?? 1}</b></>} · попытка <b className="num">{Math.min(scores.length + (onBoard ? 1 : 0), rounds)}/{rounds}</b></span>
-                <span className="zb-score"><b className="num">{full(total)}</b>{!g.duel && !g.reached && <small className="num">/{full(target)}</small>}{g.reached && <small className="zb-got">приз ✓</small>}</span>
+                <span className="zb-score"><b className="num">{full(total)}</b>{!g.duel && total < target && <small className="num">/{full(target)}</small>}{!g.duel && total >= target && <small className="zb-got">цель ✓</small>}</span>
                 {duelNow && (
                   <span className="zb-rival">
                     <Avatar name={duelNow.rival.name} photo={duelNow.rival.photo} size={18} />
@@ -677,7 +677,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
               <b className="display">Цель набрана!</b>
               <span className="num zb-ask-pts">{full(total)} очков</span>
               <span className="zb-res-got">{g.prize?.reward && <RewardChips r={g.prize.reward} size={14} />}<em>+{g.prize?.xp ?? 0} опыта</em></span>
-              <small>Награда уже твоя. Продолжишь — она не вырастет, а каждый зонк отнимет {full(ZONK_CONT_PENALTY)} очков. Зато можно побить рекорд дня.</small>
+              <small>Закончишь — награда твоя. Продолжишь — она не вырастет, два зонка подряд отнимут {full(ZONK_CONT_PENALTY)} очков, а если к концу очков станет меньше цели — проиграл. Зато можно побить рекорд дня.</small>
               <span className="zb-ask-btns">
                 <button className="zb-duel-btn" disabled={!!busy} onClick={() => run("zonk_choice", { go: "end" })}>Закончить</button>
                 <button className="zb-duel-btn ok" disabled={!!busy} onClick={() => run("zonk_choice", { go: "continue" })}>Продолжить</button>
