@@ -539,6 +539,42 @@ function Broadcast() {
   );
 }
 
+/** «Воронка новичков»: how far the players of the last N days got, and where the ones who left stopped */
+type FunnelData = { days: number; players: number; old48h: number; old8d: number; acted: number; after1h: number; day1: number; day7: number;
+  medianFirstDayMin: number | null; medianActionsH1: number | null; steps: { id: string; name: string; ever: number; hour: number }[]; lastBeforeQuit: { type: string; n: number }[] };
+function Funnel() {
+  const [days, setDays] = useState(30);
+  const f = useLoad(() => admin<FunnelData>("funnel", { days }), [days]);
+  const d = f.data;
+  const pct = (n: number, of: number) => (of ? `${Math.round((n / of) * 100)}%` : "—");
+  return (
+    <Box title="Воронка новичков" closed>
+      <div className="row" style={{ gap: 8, alignItems: "center" }}>
+        <span className="muted small">Новички за</span>
+        {[7, 14, 30, 60].map((n) => <button key={n} className={`adm-btn sm ${days === n ? "" : "ghost"}`} onClick={() => setDays(n)}>{n} дн.</button>)}
+      </div>
+      <Err e={f.err} />
+      {d && (
+        <>
+          <p className="small">Пришло (с Telegram): <b>{fmt(d.players)}</b> · сделали хоть что-то: <b>{fmt(d.acted)}</b> ({pct(d.acted, d.players)}) · вернулись после первого часа: <b>{fmt(d.after1h)}</b> ({pct(d.after1h, d.players)})</p>
+          <p className="small">Зашли на следующий день: <b>{pct(d.day1, d.old48h)}</b> (из {fmt(d.old48h)}, кто пришёл раньше 2 дней назад) · через неделю: <b>{pct(d.day7, d.old8d)}</b> (из {fmt(d.old8d)})</p>
+          <p className="small">Медиана: первый день длится <b>{d.medianFirstDayMin ?? "—"} мин</b> (от входа до последнего действия), действий за первый час — <b>{d.medianActionsH1 ?? "—"}</b></p>
+          <Table rows={d.steps as unknown as Row[]} cols={[
+            ["Шаг", (r) => String(r.name)],
+            ["За первый час", (r) => `${fmt(r.hour)} · ${pct(num(r.hour), d.players)}`, "r"],
+            ["Хоть раз", (r) => `${fmt(r.ever)} · ${pct(num(r.ever), d.players)}`, "r"],
+          ]} />
+          <p className="muted tiny" style={{ marginTop: 10 }}>Кто не вернулся после первого часа — их последнее действие (где остановились):</p>
+          <Table rows={d.lastBeforeQuit as unknown as Row[]} cols={[
+            ["Последнее действие", (r) => (String(r.type).startsWith("—") ? String(r.type) : <ActionName t={r.type} />)],
+            ["Игроков", (r) => fmt(r.n), "r"],
+          ]} />
+        </>
+      )}
+    </Box>
+  );
+}
+
 function Dashboard() {
   const { data, err, reload } = useLoad(() => admin<{ counts: Row; byType: Row[]; top: Row[]; suspicious: Row[]; items: Row[] }>("dashboard"), []);
   const feed = useLoad(() => admin<Row[]>("actions", { limit: 40 }), []);
@@ -557,6 +593,7 @@ function Dashboard() {
       <Maintenance />
       <TosyaAdmin />
       <Broadcast />
+      <Funnel />
       <div className="adm-stats">
         {stats.map(([t, v, s]) => {
           const inner = <><span className="muted small">{t}</span><b>{data ? fmt(v) : "…"}</b>{s && <span className="muted tiny">{s}</span>}</>;

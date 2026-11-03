@@ -2404,3 +2404,16 @@ describe("gifts limit", () => {
     expect((await act(db, a, "stash_gift", { to: b, itemId: "part-gear", qty: 1 }, T0 + 24 * 3600_000)).result.qty).toBe(1);
   });
 });
+
+describe("admin funnel", () => {
+  it("counts the newcomers' steps", async () => {
+    const { funnel } = await import("../src/server/admin.ts");
+    const p = await newPlayer(db);
+    await db.query("UPDATE players SET telegram_id = 900000 + id, created_at = now() - interval '3 days' WHERE id=$1", [p]);
+    await db.query("INSERT INTO action_log (player_id, type, ok, at) VALUES ($1,'yard_pick',true, now() - interval '3 days' + interval '5 minutes'), ($1,'task',true, now() - interval '2 days' + interval '1 hour')", [p]);
+    const f = await funnel(db, 30);
+    expect(f.players).toBeGreaterThanOrEqual(1);
+    expect(f.steps.find((s) => s.id === "yard")!.hour).toBeGreaterThanOrEqual(1);
+    expect(f.day1).toBeGreaterThanOrEqual(1);
+  });
+});

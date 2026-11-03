@@ -505,3 +505,75 @@ export async function broadcast(db: Db, adminTg: number, text: unknown, test: bo
   console.info(JSON.stringify({ msg: "admin.broadcast", adminTg, n: rows[0]?.n ?? 0 }));
   return { test: false, queued: Number(rows[0]?.n ?? 0) };
 }
+
+/**
+ * «Воронка новичков»: players who came in the last `days` days (Telegram only, not banned) and how far they got:
+ * the share who ever did each step, who did it within their first hour, the comebacks, and what the ones who never
+ * came back did last (where they stopped). From action_log (kept ACTION_LOG_DAYS days).
+ */
+export const FUNNEL_STEPS: { id: string; name: string; types: string[] }[] = [
+  { id: "yard", name: "Подобрал находку во дворе", types: ["yard_pick"] },
+  { id: "task", name: "Выполнил задание в локации", types: ["task"] },
+  { id: "hit", name: "Ударил босса", types: ["attack"] },
+  { id: "zonk", name: "Сыграл в зонк", types: ["game_start", "zonk_move"] },
+  { id: "starter", name: "Забрал подарок «Первых шагов»", types: ["starter_gift"] },
+  { id: "won", name: "Забрал награду за босса", types: ["fight_claim"] },
+  { id: "buy", name: "Купил в магазине", types: ["buy"] },
+  { id: "equip", name: "Надел вещь", types: ["equip"] },
+  { id: "look", name: "Менял внешность / комнату", types: ["look_set", "decor_set", "decor_save", "room_set"] },
+  { id: "daily", name: "Забрал бонус за вход", types: ["daily_claim"] },
+  { id: "quest", name: "Забрал задание дня", types: ["quest_claim", "quest_chest"] },
+  { id: "talent", name: "Вложил талант", types: ["talent_up", "talent_auto"] },
+  { id: "social", name: "Зашёл к другому (бицуха/наезд/харк)", types: ["social_pump", "social_fight", "social_spit"] },
+  { id: "slots", name: "Крутил 777", types: ["slots_spin"] },
+];
+export async function funnel(db: Db, days = 30) {
+  const d = Math.max(1, Math.min(60, Math.floor(days)));
+  const cohort = `SELECT id, created_at FROM players WHERE telegram_id IS NOT NULL AND banned_at IS NULL AND created_at > now() - interval '${d} days'`;
+  const [tot] = await db.query<{ n: number; old24: number; old7d: number }>(
+    `SELECT COUNT(*)::int AS n, COUNT(*) FILTER (WHERE created_at < now() - interval '48 hours')::int AS old24,
+            COUNT(*) FILTER (WHERE created_at < now() - interval '8 days')::int AS old7d FROM (${cohort}) c`,
+  );
+  const steps = [];
+  for (const s of FUNNEL_STEPS) {
+    const [r] = await db.query<{ ever: number; hour: number }>(
+      `SELECT COUNT(DISTINCT c.id)::int AS ever,
+              COUNT(DISTINCT c.id) FILTER (WHERE a.at < c.created_at + interval '1 hour')::int AS hour
+       FROM (${cohort}) c JOIN action_log a ON a.player_id = c.id AND a.ok AND a.type = ANY($1)`,
+      [s.types],
+    );
+    steps.push({ id: s.id, name: s.name, ever: Number(r?.ever ?? 0), hour: Number(r?.hour ?? 0) });
+  }
+  // the comebacks: any action after the first hour / on the next day (24–48 h) / a week later (7–8 days)
+  const ret = await db.query<{ any: number; after1h: number; d1: number; d7: number; median_min: number | null; actions_h1: number | null }>(
+    `WITH c AS (${cohort}),
+     s AS (SELECT c.id, c.created_at, COUNT(a.id) AS n,
+             BOOL_OR(a.at >= c.created_at + interval '1 hour') AS after1h,
+             BOOL_OR(a.at >= c.created_at + interval '24 hours' AND a.at < c.created_at + interval '48 hours') AS d1,
+             BOOL_OR(a.at >= c.created_at + interval '7 days' AND a.at < c.created_at + interval '8 days') AS d7,
+             EXTRACT(EPOCH FROM MAX(a.at) FILTER (WHERE a.at < c.created_at + interval '24 hours') - c.created_at) / 60 AS first_day_min,
+             COUNT(a.id) FILTER (WHERE a.at < c.created_at + interval '1 hour') AS h1
+           FROM c LEFT JOIN action_log a ON a.player_id = c.id AND a.ok GROUP BY c.id, c.created_at)
+     SELECT COUNT(*) FILTER (WHERE n > 0)::int AS any, COUNT(*) FILTER (WHERE after1h)::int AS after1h,
+            COUNT(*) FILTER (WHERE d1 AND created_at < now() - interval '48 hours')::int AS d1,
+            COUNT(*) FILTER (WHERE d7 AND created_at < now() - interval '8 days')::int AS d7,
+            percentile_cont(0.5) WITHIN GROUP (ORDER BY first_day_min) FILTER (WHERE first_day_min IS NOT NULL) AS median_min,
+            percentile_cont(0.5) WITHIN GROUP (ORDER BY h1) AS actions_h1
+     FROM s`,
+  );
+  // where the ones who did not come back after the first hour stopped: their last action
+  const last = await db.query<{ type: string; n: number }>(
+    `WITH c AS (${cohort}),
+     q AS (SELECT c.id FROM c WHERE c.created_at < now() - interval '2 hours'
+             AND NOT EXISTS (SELECT 1 FROM action_log a WHERE a.player_id = c.id AND a.at >= c.created_at + interval '1 hour')),
+     l AS (SELECT DISTINCT ON (a.player_id) a.player_id, a.type FROM q JOIN action_log a ON a.player_id = q.id ORDER BY a.player_id, a.id DESC)
+     SELECT COALESCE(l.type, '— ничего не сделал') AS type, COUNT(*)::int AS n FROM q LEFT JOIN l ON l.player_id = q.id GROUP BY 1 ORDER BY 2 DESC LIMIT 12`,
+  );
+  const r = ret[0];
+  return {
+    days: d, players: Number(tot?.n ?? 0), old48h: Number(tot?.old24 ?? 0), old8d: Number(tot?.old7d ?? 0),
+    acted: Number(r?.any ?? 0), after1h: Number(r?.after1h ?? 0), day1: Number(r?.d1 ?? 0), day7: Number(r?.d7 ?? 0),
+    medianFirstDayMin: r?.median_min == null ? null : Math.round(Number(r.median_min)), medianActionsH1: r?.actions_h1 == null ? null : Math.round(Number(r.actions_h1)),
+    steps, lastBeforeQuit: last.map((x) => ({ type: x.type, n: Number(x.n) })),
+  };
+}
