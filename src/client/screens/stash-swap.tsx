@@ -132,7 +132,7 @@ export function StashGivePanel({ to, name, wish, give, onSent }: {
     <div className="panel col" style={{ gap: 8 }}>
       <div className="row" style={{ justifyContent: "space-between" }}>
         <span className="small muted">ПРОСИТ НЫЧКИ И ДЕТАЛИ</span>
-        <span className="tiny muted">можно отправить сегодня: <b className="num">{give.left}/{GIFTS_PER_DAY}</b></span>
+        <span className="tiny muted">можно отправить ему сегодня: <b className="num">{give.left}/{GIFTS_PER_DAY}</b> шт.</span>
       </div>
       <div className="swap-give">
         {wish.map((id) => {
@@ -145,7 +145,7 @@ export function StashGivePanel({ to, name, wish, give, onSent }: {
               {isPart(id) ? (
                 <span className="row" style={{ gap: 4, width: "100%" }}>
                   <button className="btn gold sm grow" disabled={have < 1 || give.left < 1 || busy === "stash_gift"} onClick={() => send(id, 1)}>×1</button>
-                  <button className="btn gold sm grow" disabled={have < PART_GIFT_MAX || give.left < 1 || busy === "stash_gift"} onClick={() => send(id, PART_GIFT_MAX)}>×{PART_GIFT_MAX}</button>
+                  <button className="btn gold sm grow" disabled={have < PART_GIFT_MAX || give.left < PART_GIFT_MAX || busy === "stash_gift"} onClick={() => send(id, PART_GIFT_MAX)}>×{PART_GIFT_MAX}</button>
                 </span>
               ) : <button className="btn gold sm block" disabled={have < 1 || give.left < 1 || busy === "stash_gift"} onClick={() => send(id)}>Отправить</button>}
             </div>

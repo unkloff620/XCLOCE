@@ -13,7 +13,7 @@ import { schedule } from "./notify.ts";
 /*
  * Нычки и детали крафта между игроками. A player asks for up to STASH_WISH_MAX stashes he still needs («Попросить нычки» at home);
  * anyone who opens his profile sees them and may send one of his own copies of a stash from that list. A sender gives
- * at most STASH_GIFTS_PER_DAY stashes per Moscow day (to anyone, in total). The stash leaves the sender's inventory at
+ * one player at most STASH_GIFTS_PER_DAY pieces per Moscow day — stashes and parts together (the limit renews at 0:00 МСК). The stash leaves the sender's inventory at
  * once and waits in the receiver's «Сообщения» (stash_gifts, accepted_at NULL) until he accepts it; then it lands in
  * his inventory. Both moves go to the ledger. The receiver also gets a Telegram reminder.
  */
@@ -37,23 +37,26 @@ export async function stashWish(q: Queryable, pid: number): Promise<string[]> {
   return (r?.items ?? []).filter(wishable);
 }
 
-export async function giftsLeft(q: Queryable, pid: number, now: number): Promise<number> {
-  const [r] = await q.query<{ n: number }>("SELECT COUNT(*)::int AS n FROM stash_gifts WHERE from_id=$1 AND day=$2", [pid, moscowDay(now)]);
+/** what the sender may still give this player today (pieces: a stash is 1, parts count each one) */
+export async function giftsLeft(q: Queryable, pid: number, now: number, to: number): Promise<number> {
+  const [r] = await q.query<{ n: number }>("SELECT COALESCE(SUM(qty), 0)::int AS n FROM stash_gifts WHERE from_id=$1 AND to_id=$2 AND day=$3", [pid, to, moscowDay(now)]);
   return Math.max(0, STASH_GIFTS_PER_DAY - Number(r?.n ?? 0));
 }
 
 export async function giftStash(ctx: Ctx, to: number, itemId: string, want = 1) {
   // a part: up to PART_GIFT_MAX at once; a stash: one
-  const qty = PART_IDS.has(itemId) ? Math.max(1, Math.min(PART_GIFT_MAX, Math.floor(want))) : 1;
+  let qty = PART_IDS.has(itemId) ? Math.max(1, Math.min(PART_GIFT_MAX, Math.floor(want))) : 1;
   if (to === ctx.pid) throw new GameError("bad_request", "Себе отправить нельзя");
   const [p] = await ctx.q.query<{ id: number; display_name: string }>("SELECT id, display_name FROM players WHERE id=$1", [to]);
   if (!p) throw new GameError("no_player", "Игрок не найден", 404);
   if (!(await stashWish(ctx.q, to)).includes(itemId)) throw new GameError("not_wished", "Игрок это не просит");
-  if ((await giftsLeft(ctx.q, ctx.pid, ctx.now)) <= 0) throw new GameError("gift_limit", `Сегодня ты уже отправил ${STASH_GIFTS_PER_DAY} нычек — новые завтра`);
+  const left = await giftsLeft(ctx.q, ctx.pid, ctx.now, to);
+  if (left <= 0) throw new GameError("gift_limit", `Сегодня ты уже отправил ${p.display_name} ${STASH_GIFTS_PER_DAY} шт. — снова можно после 0:00 МСК`);
+  qty = Math.min(qty, left);
   await takeItem(ctx, itemId, qty, `gift-to:${to}`);
   await ctx.q.query("INSERT INTO stash_gifts (from_id, to_id, item_id, day, at, qty) VALUES ($1,$2,$3,$4,$5,$6)", [ctx.pid, to, itemId, moscowDay(ctx.now), new Date(ctx.now), qty]);
   await schedule(ctx.q, to, "stash_gift", ctx.now);
-  return { to, itemId, qty, name: p.display_name, left: await giftsLeft(ctx.q, ctx.pid, ctx.now) };
+  return { to, itemId, qty, name: p.display_name, left: await giftsLeft(ctx.q, ctx.pid, ctx.now, to) };
 }
 
 /** for the receiver: accepted gifts (pending = false: the latest ones) or the ones waiting in «Сообщения» */

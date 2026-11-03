@@ -192,7 +192,7 @@ export async function profileView(q: Queryable, viewer: number, pid: number, cfg
     stashGive: self ? null : await (async () => {
       const wish = await stashWish(q, pid);
       const mine = wish.length ? await q.query<{ item_id: string; qty: number }>("SELECT item_id, qty FROM inventory WHERE player_id=$1 AND item_id = ANY($2)", [viewer, wish]) : [];
-      return { left: await giftsLeft(q, viewer, now), have: Object.fromEntries(mine.map((r) => [r.item_id, Number(r.qty)])) as Record<string, number> };
+      return { left: await giftsLeft(q, viewer, now, pid), have: Object.fromEntries(mine.map((r) => [r.item_id, Number(r.qty)])) as Record<string, number> };
     })(),
     equipped: app?.equipped ?? {},
     body: normalizeLook(app?.body),

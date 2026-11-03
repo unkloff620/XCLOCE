@@ -2384,3 +2384,23 @@ describe("admin broadcast", () => {
     await expect(broadcast(db, 1, "  ", false)).rejects.toMatchObject({ code: "bad_request" });
   });
 });
+
+describe("gifts limit", () => {
+  it("one player gets at most 6 pieces a day from one sender — stashes and parts together", async () => {
+    const a = await newPlayer(db);
+    const b = await newPlayer(db);
+    const c = await newPlayer(db);
+    await give(db, a, "part-gear", 20);
+    for (const to of [b, c]) await act(db, to, "stash_wish", { items: ["part-gear"] }, T0);
+    const r1 = await act(db, a, "stash_gift", { to: b, itemId: "part-gear", qty: 5 }, T0);
+    expect(r1.result).toMatchObject({ qty: 5, left: 1 });
+    // ×5 with one left sends one
+    const r2 = await act(db, a, "stash_gift", { to: b, itemId: "part-gear", qty: 5 }, T0);
+    expect(r2.result).toMatchObject({ qty: 1, left: 0 });
+    await expect(act(db, a, "stash_gift", { to: b, itemId: "part-gear", qty: 1 }, T0)).rejects.toMatchObject({ code: "gift_limit" });
+    // another player has his own 6
+    expect((await act(db, a, "stash_gift", { to: c, itemId: "part-gear", qty: 5 }, T0)).result.qty).toBe(5);
+    // the next Moscow day — again
+    expect((await act(db, a, "stash_gift", { to: b, itemId: "part-gear", qty: 1 }, T0 + 24 * 3600_000)).result.qty).toBe(1);
+  });
+});
