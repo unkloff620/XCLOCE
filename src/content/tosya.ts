@@ -4,7 +4,7 @@
  * send him off: config "tosya"). Each player gets his own 3…5 pies a visit; with 5 the first one is free.
  * A pie costs TOSYA_PRICE $, every next one twice as much. What is inside is not known until it is bought: weapons,
  * craft parts, authority, roubles and dollars worth TOSYA_MULT × its price (a free pie as a TOSYA_PRICE one) — then
- * roubles ×2, authority ×5 and parts ×10 on top (TOSYA_BOOST) — every weapon kind in each, and one of
+ * on top (TOSYA_BOOST) roubles ×2/1.2, dollars ÷10, authority ×5, parts ×10, weapons ×2 — every weapon kind in each, and one of
  * Тося's own tattoos (TOSYA_TATTOOS — the sets come later).
  */
 import type { Reward } from "./rewards.ts";
@@ -113,15 +113,18 @@ export function rollPieBase(rng: () => number, usd: number): Reward {
   };
 }
 
-/** on top of the even split: roubles ×2, authority ×5, parts ×10 (TOSYA_BOOST) */
-export const TOSYA_BOOST = { rub: 2, xp: 5, parts: 10 };
+/** on top of the even split (TOSYA_BOOST): roubles ×2 / 1.2, dollars ÷10, authority ×5, parts ×10, weapons ×2 */
+export const TOSYA_BOOST = { rub: 2 / 1.2, usd: 0.1, xp: 5, parts: 10, weapons: 2 };
 const PART_SET = new Set([...PARTS_BY_RARITY.common, ...PARTS_BY_RARITY.rare, ...PARTS_BY_RARITY.epic]);
+const WEAPON_SET = new Set(WEAPONS.map((w) => w.id));
 export function rollPie(rng: () => number, usd: number): Reward {
   const r = rollPieBase(rng, usd);
+  const rub = Math.round((r.currencies?.RUB ?? 0) * TOSYA_BOOST.rub);
+  const dollars = Math.round((r.currencies?.USD ?? 0) * TOSYA_BOOST.usd);
   return {
     ...(r.xp ? { xp: r.xp * TOSYA_BOOST.xp } : {}),
-    currencies: { ...r.currencies, ...(r.currencies?.RUB ? { RUB: r.currencies.RUB * TOSYA_BOOST.rub } : {}) },
-    items: (r.items ?? []).map((it) => (PART_SET.has(it.id) ? { id: it.id, qty: it.qty * TOSYA_BOOST.parts } : it)),
+    currencies: { ...(dollars > 0 ? { USD: dollars } : {}), ...(rub > 0 ? { RUB: rub } : {}) },
+    items: (r.items ?? []).map((it) => ({ id: it.id, qty: it.qty * (PART_SET.has(it.id) ? TOSYA_BOOST.parts : WEAPON_SET.has(it.id) ? TOSYA_BOOST.weapons : 1) })),
   };
 }
 
