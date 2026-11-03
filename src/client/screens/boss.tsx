@@ -19,6 +19,7 @@ import { setMusicTrack, sfx, weaponSfx } from "../sound.ts";
 import { haptic } from "../telegram.ts";
 import { DriftingSky } from "../art/sky.tsx";
 import { BEATEN_BELOW, BossRig, hasBossRig } from "../art/boss-rig.tsx";
+import { ArenaBg } from "../art/arena-bg.tsx";
 import { PepeRig } from "../art/pepe-rig.tsx";
 import { Modal } from "../ui.tsx";
 import { talentThreshold, talentsForDamage } from "../../content/talents.ts";
@@ -421,8 +422,7 @@ export function BossScreen({ id }: { id: string }) {
       <div className="fit-page fight-page" style={{ ["--acc" as string]: boss.theme.accent }}>
         <div className="fight-bg" aria-hidden="true">
           <DriftingSky className="fight-sky" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={arenaOf(boss.id)} alt="" draggable={false} />
+          <ArenaBg bossId={boss.id} />
         </div>
         <div className="fight-head">
           <div className="grow" style={{ minWidth: 0 }}>
@@ -531,8 +531,7 @@ export function BossScreen({ id }: { id: string }) {
         {/* behind the door: the boss's own background and the boss himself */}
         <div className="door-behind">
           <DriftingSky className="fight-sky" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="door-behind-bg" src={arenaOf(boss.id)} alt="" draggable={false} />
+          <ArenaBg bossId={boss.id} className="door-behind-bg" focus="middle" />
           {/* a boss that is not open yet stands there too, but grey */}
           <div className={`door-boss${grey ? " locked" : ""}`}>
             {boss.id === "pepe" ? (

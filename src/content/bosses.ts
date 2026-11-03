@@ -214,7 +214,7 @@ export const bossSetItems = (b: BossDef) => (b.set ? b.wear?.items ?? [] : []);
 export const CASE_WINS = 10;
 /** each boss fights in his own room (public/assets/arena/<id>.webp); the rest still in the garage */
 // "pepe": the event boss (client/screens/event-pepe.tsx), not in BOSSES
-export const BOSS_ARENAS = new Set(["datsik", "kedr", "mugo", "garkusha", "bebyakyan", "babafey", "vodovoz", "pepe"]);
+export const BOSS_ARENAS = new Set(["datsik", "kedr", "mugo", "garkusha", "bebyakyan", "babafey", "vodovoz", "pepe", "knyaz"]);
 export const arenaOf = (bossId: string) => `/assets/arena/${BOSS_ARENAS.has(bossId) ? bossId : "garage"}.webp`;
 /** the boss that unlocks this shop item (BossDef.wear), if any */
 export const unlockBossOf = (itemId: string) => BOSSES.find((b) => b.wear?.items.includes(itemId) || b.firstWin?.includes(itemId));
