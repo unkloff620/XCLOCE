@@ -264,7 +264,7 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
             onClick={() => void tryOrBuy(d.id, offer.id)} title={trying === d.id ? "Нажми ещё раз — купить" : "Примерить"}>
             <ItemArt id={d.id} size={40} />
             <span className="sty-item-name">{d.name}</span>
-            <span className={`sty-price num ${trying === d.id ? "go" : ""}`}>{trying === d.id ? "Купить " : ""}<Icon name={offer.price.currency} size={11} />{money(offer.price.currency, offer.price.amount)}</span>
+            <span className={`sty-price num ${trying === d.id ? "go" : ""}`}>{trying === d.id ? "Купить" : <><Icon name={offer.price.currency} size={11} />{money(offer.price.currency, offer.price.amount)}</>}</span>
           </button>
         ) : (
           <span key={d.id} className={`sty-item rar-${d.rarity} sty-locked`} title={`${d.name}: ${why}`}>
