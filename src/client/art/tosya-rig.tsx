@@ -6,7 +6,7 @@
  */
 import { TOSYA_PARTS as P, TOSYA_SIZE } from "./tosya-data.ts";
 
-const SRC = (n: string) => `/assets/tosya/${n}.webp?v=1`;
+const SRC = (n: string) => `/assets/tosya/${n}.webp?v=2`;
 const img = (n: string, dx = 0, dy = 0) => {
   const b = P[n];
   return <image href={SRC(n)} x={b.x + dx} y={b.y + dy} width={b.w} height={b.h} preserveAspectRatio="none" />;
