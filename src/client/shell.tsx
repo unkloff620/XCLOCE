@@ -21,6 +21,7 @@ import { GameInvites } from "./game-invites.tsx";
 import { FirstSteps } from "./first-steps.tsx";
 import { Tutorial } from "./tutorial.tsx";
 import { UpdateGate } from "./update.tsx";
+import { MaintenanceGate } from "./maintenance.tsx";
 import { HorizontalScroll } from "./hscroll.tsx";
 import { RouteLoader, startRouteLoad } from "./route-loader.tsx";
 import { PrizeWindow } from "./prizes.tsx";
@@ -439,6 +440,7 @@ export function Shell({ children }: { children: ReactNode }) {
       <HorizontalScroll />
       <div className="backdrop" />
       <div className="shell">
+        <MaintenanceGate />
         {auth === "loading" && <Loading />}
         {auth === "login" && <Login bot={authInfo && !authInfo.ok ? authInfo.bot : null} />}
         {auth === "error" && (

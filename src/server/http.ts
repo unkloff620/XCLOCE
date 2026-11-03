@@ -117,6 +117,15 @@ function staleClient(req: Request): boolean {
   return v !== "dev" && v !== APP_VERSION;
 }
 
+/** «Технические работы» on: every player but the admins (their Telegram id) gets the notice instead of the game */
+export async function maintenanceGate(db: Db, playerId: number) {
+  const cfg = await loadConfig(db);
+  if (!cfg.maintenance.on) return;
+  const [p] = await db.query<{ telegram_id: string | number | null }>("SELECT telegram_id FROM players WHERE id=$1", [playerId]);
+  if (p?.telegram_id != null && cfg.admins.includes(Number(p.telegram_id))) return;
+  throw new GameError("maintenance", cfg.maintenance.text, 503);
+}
+
 export function authedRoute(name: string, fn: (ctx: Ctx) => Promise<unknown>) {
   return async (req: Request): Promise<Response> => {
     try {
@@ -129,6 +138,7 @@ export function authedRoute(name: string, fn: (ctx: Ctx) => Promise<unknown>) {
       }
       const body = await readBody(req);
       const t = await timedDb();
+      await maintenanceGate(t.db, playerId);
       const out = withTiming(json(await fn({ db: t.db, req, body, playerId })), t, name);
       kickNotifications(t.db);
       return out;

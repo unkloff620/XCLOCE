@@ -1207,6 +1207,21 @@ describe("admin", () => {
     await edit(db, 1, p, { op: "unban" });
     await act(db, p, "equip", { itemId: "jeans" }, T0);
   });
+  it("«Технические работы»: players get the notice, the admins (by Telegram id) are let in; off — everyone plays", async () => {
+    const { maintenanceSet } = await import("../src/server/admin.ts");
+    const { maintenanceGate } = await import("../src/server/http.ts");
+    const p = await newPlayer(db);
+    const a = await newPlayer(db);
+    await db.query("UPDATE players SET telegram_id=9001 WHERE id=$1", [a]);
+    await db.query("INSERT INTO config (key, value) VALUES ('admins', '[9001]') ON CONFLICT (key) DO UPDATE SET value = excluded.value");
+    await maintenanceSet(db, 9001, true, "Чиним двор");
+    await expect(maintenanceGate(db, p)).rejects.toMatchObject({ code: "maintenance", message: "Чиним двор" });
+    await maintenanceGate(db, a);
+    await maintenanceSet(db, 9001, false, undefined);
+    await maintenanceGate(db, p);
+    await db.query("DELETE FROM config WHERE key IN ('admins', 'maintenance')");
+    resetConfigCache();
+  });
   it("admin sessions are separate from game sessions", async () => {
     const { issueAdminSession, verifyAdminSession, issueSession } = await import("../src/server/auth.ts");
     expect(verifyAdminSession(issueAdminSession(42))).toBe(42);

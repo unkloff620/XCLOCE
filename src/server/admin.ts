@@ -448,3 +448,15 @@ export async function exchangeScheduleSave(db: Db, v: unknown) {
   resetConfigCache();
   return exchangeSchedule(db);
 }
+
+/** «Технические работы»: closes the game for everyone but the admins (http.ts maintenanceGate) */
+export async function maintenance(db: Db) {
+  return (await loadConfig(db)).maintenance;
+}
+export async function maintenanceSet(db: Db, adminTg: number, on: boolean, text: unknown) {
+  const t = typeof text === "string" && text.trim() ? text.trim().slice(0, 300) : undefined;
+  await db.query("INSERT INTO config (key, value) VALUES ('maintenance', $1) ON CONFLICT (key) DO UPDATE SET value = excluded.value", [JSON.stringify({ on, ...(t ? { text: t } : {}) })]);
+  resetConfigCache();
+  console.info(JSON.stringify({ msg: "admin.maintenance", adminTg, on }));
+  return maintenance(db);
+}

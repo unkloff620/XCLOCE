@@ -458,6 +458,32 @@ const ActionName = ({ t }: { t: unknown }) => <span title={String(t)}>{ACTION_NA
 const Err = ({ e }: { e: string | null }) => (e ? <p className="adm-err">{e}</p> : null);
 
 // ---------------- overview ----------------
+/** «Технические работы»: the game closed for players while the admins check a release */
+function Maintenance() {
+  const m = useLoad(() => admin<{ on: boolean; text: string }>("maintenance"), []);
+  const [text, setText] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const on = !!m.data?.on;
+  const set = async (next: boolean) => {
+    if (next && !confirm("Закрыть игру для всех игроков (кроме админов)?")) return;
+    setBusy(true);
+    try { await admin("maintenance_set", { on: next, text: text ?? m.data?.text }); m.reload(); } catch (e) { alert((e as Error).message); }
+    setBusy(false);
+  };
+  return (
+    <Box title={on ? "🛠 Технические работы — ИГРА ЗАКРЫТА" : "Технические работы"}>
+      <p className="muted tiny">Включите перед выкладкой: игроки увидят текст ниже вместо игры, а админы (их Telegram id) заходят как обычно и всё проверяют. Срабатывает у всех в течение ~30 секунд.</p>
+      <textarea className="adm-in" rows={2} style={{ width: "100%" }} value={text ?? m.data?.text ?? ""} onChange={(e) => setText(e.target.value)} />
+      <div className="row" style={{ gap: 8, marginTop: 8 }}>
+        {on
+          ? <button className="adm-btn" disabled={busy} onClick={() => set(false)}>Выключить — открыть игру</button>
+          : <button className="adm-btn danger" disabled={busy} onClick={() => set(true)}>Включить технические работы</button>}
+        {on && <button className="adm-btn ghost" disabled={busy} onClick={() => set(true)}>Сохранить текст</button>}
+      </div>
+    </Box>
+  );
+}
+
 function Dashboard() {
   const { data, err, reload } = useLoad(() => admin<{ counts: Row; byType: Row[]; top: Row[]; suspicious: Row[]; items: Row[] }>("dashboard"), []);
   const feed = useLoad(() => admin<Row[]>("actions", { limit: 40 }), []);
@@ -473,6 +499,7 @@ function Dashboard() {
   return (
     <>
       <Err e={err} />
+      <Maintenance />
       <div className="adm-stats">
         {stats.map(([t, v, s]) => {
           const inner = <><span className="muted small">{t}</span><b>{data ? fmt(v) : "…"}</b>{s && <span className="muted tiny">{s}</span>}</>;

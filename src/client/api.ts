@@ -221,6 +221,11 @@ export function checkVersion(v: string | null) {
   window.dispatchEvent(new Event(UPDATE_EVENT));
 }
 
+/** «Технические работы»: the server closed the game for players (the admin checks a release) — src/client/maintenance.tsx */
+export const MAINT_EVENT = "xc-maint";
+let maintText: string | null = null;
+export const maintenanceText = () => maintText;
+
 async function raw<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (outdated) throw new ApiError("update", "Вышло обновление — обнови страницу", 409);
   const r = await fetch(path, {
@@ -230,6 +235,10 @@ async function raw<T>(path: string, init: RequestInit = {}): Promise<T> {
   });
   checkVersion(r.headers.get("x-app-version"));
   const j = (await r.json().catch(() => ({}))) as { error?: { code: string; message: string } };
+  if (!r.ok && j.error?.code === "maintenance") {
+    maintText = j.error.message;
+    window.dispatchEvent(new Event(MAINT_EVENT));
+  }
   if (!r.ok) throw new ApiError(j.error?.code ?? "http", j.error?.message ?? `Ошибка ${r.status}`, r.status);
   return j as T;
 }
@@ -251,7 +260,9 @@ export async function authenticate(): Promise<AuthResult> {
     try {
       await raw("/api/state");
       return { ok: true, mode: "saved" };
-    } catch {
+    } catch (e) {
+      // closed for works: the session is fine — keep it for when the game opens again
+      if ((e as ApiError).code === "maintenance") throw e;
       token = null;
       store(TOKEN_KEY, null);
     }

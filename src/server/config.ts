@@ -41,6 +41,8 @@ export interface Config {
   bossReward: Record<string, number>;
   /** event bosses the admin has put in the game (content/event-bosses.ts) */
   eventBosses: Record<string, boolean>;
+  /** «Технические работы»: the game is closed for everyone but the admins (they check the release), with this text */
+  maintenance: { on: boolean; text: string };
 }
 
 export function defaultConfig(): Config {
@@ -61,10 +63,17 @@ export function defaultConfig(): Config {
     bossOpen: {},
     bossReward: {},
     eventBosses: {},
+    maintenance: { on: false, text: MAINTENANCE_TEXT },
   };
 }
 
+export const MAINTENANCE_TEXT = "Идут технические работы — скоро вернёмся. Зайди чуть позже!";
+
 const KEYS: Record<string, (c: Config, v: unknown) => void> = {
+  maintenance: (c, v) => {
+    const m = (v ?? {}) as { on?: unknown; text?: unknown };
+    c.maintenance = { on: m.on === true, text: typeof m.text === "string" && m.text.trim() ? m.text.trim().slice(0, 300) : MAINTENANCE_TEXT };
+  },
   "boss.hp": (c, v) => Object.assign(c.bossHp, numMap(v)),
   fight: (c, v) => Object.assign(c.fight, numMap(v)),
   energy: (c, v) => Object.assign(c.energy, numMap(v)),
