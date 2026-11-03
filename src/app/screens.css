@@ -5349,28 +5349,3 @@ html.paused *, html.paused *::before, html.paused *::after { animation-play-stat
 .pkt .pk-mini b { letter-spacing: -0.08em; }
 /* the gold outline is inherited by the tables' dark text on light plates and by the cards: those stay clean */
 :is(.bjt-out, .bjt-side-res, .bjt-timer, .bjc, .bjc *, .pkt-lvl, .pkt-swap, .pkt-new, .bb-tab.on, .tabs button, .lp-tab, .rt-tabs button, .dt-tabs button) { text-shadow: none; }
-
-/* ---------- HUD and the bottom menu: torn parchment plates on a light paper strip (dark ink text) ---------- */
-:root { --parch-plate: url(/assets/textures/parchment-plate.webp); }
-.hud { color: #2a1a0e; --muted: #6b4e30; --ink: #2a1a0e;
-  background: linear-gradient(180deg, rgba(255, 248, 230, 0.35), rgba(120, 80, 30, 0.12)), var(--tx-light), #e6d3ac;
-  border-bottom: 2px solid #6b4a24; box-shadow: 0 4px 12px rgba(40, 20, 5, 0.35); }
-body:has(.fit-page) .hud { background: linear-gradient(180deg, rgba(60, 35, 12, 0.55), rgba(60, 35, 12, 0)); border-bottom-color: transparent; box-shadow: none; }
-.hud-me, .energy-chip, .coin-chip, .hud-tog, .nav, body:has(.fit-page) .nav {
-  background: none; border-style: solid; border-color: transparent;
-  border-image: var(--parch-plate) 22 fill / 9px / 0 round; box-shadow: none; }
-.hud-me, .energy-chip, .coin-chip, .hud-tog { filter: drop-shadow(0 1.5px 0 rgba(70, 40, 10, 0.35)); }
-.nav { border-width: 2px; border-image-width: 12px; border-image-outset: 0; padding-top: 8px; filter: none;
-  box-shadow: 0 -4px 12px rgba(40, 20, 5, 0.35); }
-.nav::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--tx-light), #e6d3ac; }
-.hud :is(.name, b, small), .nav a { text-shadow: none; }
-.hud .lvl { color: #b5650a; text-shadow: none; }
-.hud .muted, .energy-chip small { color: #6b4e30; }
-.hud-tog { color: #5a3a18; text-shadow: none; }
-.hud-tog.off { color: #8a6a48; }
-.energy-chip.over b { color: #b5650a; text-shadow: none; }
-.nav a { color: #6b4e30; }
-.nav a svg { filter: saturate(0.75) brightness(0.95); }
-.nav a.on { color: #2a1a0e; background: radial-gradient(ellipse at 50% 60%, rgba(90, 210, 120, 0.28), rgba(90, 210, 120, 0) 70%);
-  box-shadow: none; outline: 2px solid rgba(70, 150, 80, 0.55); outline-offset: -2px; }
-.nav a.on::after { background: #3fbf6a; box-shadow: 0 0 8px rgba(63, 191, 106, 0.8); }
