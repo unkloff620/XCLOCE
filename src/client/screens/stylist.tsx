@@ -37,7 +37,7 @@ export interface StyleDraft {
 const CLOTHES: Slot[] = ["HEAD", "FACE", "MOUTH", "TEETH", "ACCESSORY", "SHIRT", "PANTS", "SHOES", "HAND"];
 const ITEM_PART: Record<string, string> = { HEAD: "Голова", FACE: "Лицо", MOUTH: "Рот", TEETH: "Зубы", ACCESSORY: "Аксессуар", SHIRT: "Верх", PANTS: "Низ", SHOES: "Обувь", HAND: "Кисть" };
 /** the slot buttons: a picture (public/assets/ui/slot-*.webp) and a short word under it */
-const SLOT_ICON: Record<string, string> = { MOUTH: "slot-mouth", HEAD: "slot-head", ACCESSORY: "slot-accessory", SHIRT: "slot-shirt", PANTS: "slot-pants", SHOES: "slot-shoes" };
+const SLOT_ICON: Record<string, string> = { MOUTH: "slot-mouth", TEETH: "slot-teeth", HEAD: "slot-head", ACCESSORY: "slot-accessory", SHIRT: "slot-shirt", PANTS: "slot-pants", SHOES: "slot-shoes" };
 const SHORT_PART: Record<string, string> = { HEAD: "Голова", FACE: "Лицо", MOUTH: "Рот", TEETH: "Зубы", ACCESSORY: "Шея", SHIRT: "Верх", PANTS: "Низ", SHOES: "Обувь", HAND: "Кисть" };
 // «левое / правое» — as seen on the screen
 
