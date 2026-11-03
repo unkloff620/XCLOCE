@@ -9,8 +9,8 @@ export const CLAN_EMBLEMS = ["rocket", "diamond", "bull", "bear", "moon", "skull
 export const CLAN_COLORS = ["#ff4d6d", "#3ddc84", "#4da3ff", "#ffb020", "#b06bff", "#38d6ff"] as const;
 export const CLAN_MAX = 30;
 
-/** Clan level grows with the total boss damage of its members (content/clans.ts). */
-export const clanLevel = (damage: number) => clanLevelInfo(damage).level;
+/** Clan level grows with the total authority of its members (content/clans.ts). */
+export const clanLevel = (xp: number) => clanLevelInfo(xp).level;
 
 /** "<symbol>" or "<symbol>:<shield style>" (content/clans.ts parseEmblem) */
 const validEmblem = (emblem: string) => {
@@ -160,14 +160,17 @@ export async function editClan(ctx: Ctx, nameRaw: string, emblem: string, color:
 }
 
 export async function clanList(q: Queryable) {
-  const rows = await q.query<{ id: number; name: string; tag: string; emblem: string; color: string; description: string; members: number; damage: number; leader: string }>(
-    `SELECT c.id, c.name, c.tag, c.emblem, c.color, c.description, COUNT(m.player_id)::int AS members, COALESCE(SUM(s.total_damage), 0)::bigint AS damage, lp.display_name AS leader
-     FROM clans c LEFT JOIN clan_members m ON m.clan_id=c.id LEFT JOIN player_stats s ON s.player_id=m.player_id JOIN players lp ON lp.id=c.leader_id
-     GROUP BY c.id, lp.display_name ORDER BY damage DESC, c.id`,
+  // the level and the order: the members' total authority; the damage stays as a stat
+  const rows = await q.query<{ id: number; name: string; tag: string; emblem: string; color: string; description: string; members: number; damage: number; xp: number; leader: string }>(
+    `SELECT c.id, c.name, c.tag, c.emblem, c.color, c.description, COUNT(m.player_id)::int AS members, COALESCE(SUM(s.total_damage), 0)::bigint AS damage,
+            COALESCE(SUM(mp.xp), 0)::bigint AS xp, lp.display_name AS leader
+     FROM clans c LEFT JOIN clan_members m ON m.clan_id=c.id LEFT JOIN player_stats s ON s.player_id=m.player_id LEFT JOIN players mp ON mp.id=m.player_id
+     JOIN players lp ON lp.id=c.leader_id
+     GROUP BY c.id, lp.display_name ORDER BY xp DESC, c.id`,
   );
   return rows.map((r, i) => {
-    const lv = clanLevelInfo(Number(r.damage));
-    return { ...r, damage: Number(r.damage), level: lv.level, levelFrom: lv.from, levelTo: lv.to, rank: i + 1 };
+    const lv = clanLevelInfo(Number(r.xp));
+    return { ...r, damage: Number(r.damage), xp: Number(r.xp), level: lv.level, levelFrom: lv.from, levelTo: lv.to, rank: i + 1 };
   });
 }
 

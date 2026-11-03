@@ -12,7 +12,7 @@ import type { Reward } from "../../content/rewards.ts";
 import { full, short } from "../format.ts";
 import { Icon } from "../art/icons.tsx";
 
-interface ClanRow { id: number; name: string; tag: string; emblem: string; color: string; description: string; members: number; damage: number; leader: string; level: number; levelFrom: number; levelTo: number; rank: number }
+interface ClanRow { id: number; name: string; tag: string; emblem: string; color: string; description: string; members: number; damage: number; xp: number; leader: string; level: number; levelFrom: number; levelTo: number; rank: number }
 interface ClanPage extends Omit<ClanRow, "members"> {
   wins: number;
   max: number;
@@ -162,8 +162,8 @@ export function ClansScreen() {
         <div className="title-row">
           <h1 className="display">Кланы</h1>
           <Help topic="clans" title="Кланы">
-            <p>Клан — до 30 человек. Рейтинг считается по общему урону участников по боссам.</p>
-            <p>Уровень клана растёт от общего урона участников: 1 уровень — 5 000 урона, 2 — 11 000, 3 — 18 000, и каждый следующий шаг на 1 000 длиннее.</p>
+            <p>Клан — до 30 человек. Рейтинг кланов и уровень клана считаются по общему авторитету участников.</p>
+            <p>Уровни: 1 — 50 тыс. авторитета, 5 — 3,3 млн, 10 — 20 млн, 25 — 220 млн, 50 — 1,3 млрд, 100 — 8 млрд.</p>
             <p>Каждую неделю топ-10 кланов по урону за неделю получают награды — их получает каждый участник: авторитет, рубли и оружие.</p>
             <p>Создать клан можно бесплатно. Чтобы вступить, подай заявку — лидер примет её или отклонит. Заявка одна: отмени её, чтобы подать в другой клан. Создал свой — заявка снимается сама.</p>
             <p>Лидер разбирает заявки и может исключать участников; если лидер уходит, роль переходит дальше.</p>
@@ -205,7 +205,7 @@ export function ClansScreen() {
                 <b className="ellipsis" style={{ display: "block" }}>{c.name} <span className="muted">[{c.tag}]</span></b>
                 <span className="tiny muted">ур. {c.level} · {c.members} чел. · лидер {c.leader}</span>
               </div>
-              <b className="num">{short(c.damage)}</b>
+              <b className="num row" style={{ gap: 3 }}><Icon name="xp" size={14} />{short(c.xp)}</b>
             </Link>
           ))}
         </div>
@@ -304,8 +304,8 @@ export function ClanScreen({ id }: { id: number }) {
         <div className="clan-level">
           <span className="clan-lv display">{c.level}</span>
           <div className="grow col" style={{ gap: 2, minWidth: 0 }}>
-            <Bar value={c.damage - c.levelFrom} max={c.levelTo - c.levelFrom} tone="gold" height={16} label={`${short(c.damage)} / ${short(c.levelTo)}`} />
-            <span className="tiny muted">до {c.level + 1} уровня: {short(c.levelTo - c.damage)} урона</span>
+            <Bar value={c.xp - c.levelFrom} max={c.levelTo - c.levelFrom} tone="gold" height={16} label={`${short(c.xp)} / ${short(c.levelTo)}`} />
+            <span className="tiny muted">до {c.level + 1} уровня: {short(c.levelTo - c.xp)} авторитета</span>
           </div>
         </div>
         <b className="display" style={{ fontSize: 22 }}>{c.name}</b>
@@ -314,7 +314,7 @@ export function ClanScreen({ id }: { id: number }) {
         <div className="stat-grid" style={{ width: "100%" }}>
           <div><b className="num">{c.week.place ? `#${c.week.place}` : "—"}</b><span>место недели</span></div>
           <div><b className="num">{c.members.length}/{c.max}</b><span>участников</span></div>
-          <div><b className="num">{short(c.damage)}</b><span>общий урон</span></div>
+          <div><b className="num">{short(c.xp)}</b><span>общий авторитет</span></div>
           <div><b className="num">{c.wins}</b><span>побед</span></div>
         </div>
         {!state?.clan && (req?.clanId === c.id ? (
