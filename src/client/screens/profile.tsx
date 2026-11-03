@@ -684,6 +684,10 @@ export function ProfileScreen() {
               <Emblem emblem={p.clan.emblem} color={p.clan.color} size={38} /><small className="ellipsis">{p.clan.tag}</small>
             </Link>
           )}
+          {/* his talents put in — seen without opening the dossier */}
+          <button type="button" className="pr-btn pr-tal" onClick={() => { haptic.tap(); setDossier(true); }} aria-label={`Таланты: ${p.talentsIn ?? 0}`} title="Вложено талантов">
+            <Icon name="talent" size={38} /><small className="num">{full(p.talentsIn ?? 0)}</small>
+          </button>
         </div>
         {fx?.kind === "spit" && <span key={fx.key} className="pr-spit" aria-hidden="true"><SpitArt size={90} /></span>}
       </div>

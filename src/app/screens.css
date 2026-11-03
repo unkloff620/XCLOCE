@@ -5412,3 +5412,5 @@ html.paused *, html.paused *::before, html.paused *::after { animation-play-stat
 @keyframes ts-sheet-in { from { transform: translateX(-110%) rotate(-2deg); } to { transform: translateX(0) rotate(-2deg); } }
 /* the earned achievement's number: dark on its colour plate — no outline */
 .ach-pic.on .ach-pic-n { text-shadow: none; }
+.pr-tal { --c: #6a3fb8; }
+.pr-tal small { font-size: 12px; text-transform: none; }
