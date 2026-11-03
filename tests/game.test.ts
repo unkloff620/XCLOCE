@@ -200,7 +200,7 @@ describe("boss fights: personal fights, shared damage", () => {
     expect((await fightView(db, a, fa.result.fightId, 0, T0 + 9 * H)).status).toBe("lost");
   });
 
-  it("only one running fight; 7 won fights per boss per day, lost fights do not count", async () => {
+  it("only one running fight; 12 won fights a day with Дацкоу, lost fights do not count", async () => {
     await setBossHp({ datsik: 10 });
     const p = await newPlayer(db);
     await give(db, p, "keyboard", 20);
@@ -212,7 +212,7 @@ describe("boss fights: personal fights, shared damage", () => {
       await startDatsik(p, T0 + i * M);
       await act(db, p, "fight_flee", {}, T0 + i * M);
     }
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 12; i++) {
       await startDatsik(p, T0 + (20 + i) * M);
       const r = await hit(p, "keyboard", T0 + (20 + i) * M);
       expect(r.result.status).toBe("won");
@@ -994,7 +994,8 @@ describe("home: equipment, rooms, look, help", () => {
     const { loadConfig } = await import("../src/server/config.ts");
     const cfg = await loadConfig(db, T0);
     const list = await bossList(db, p, cfg, T0);
-    expect(list.bosses[0].fightsPerDay).toBe(cfg.fight.perDay + 2);
+    expect(list.bosses[0].fightsPerDay).toBe(12 + 2); // Дацкоу: his own 12
+    expect(list.bosses[1].fightsPerDay).toBe(cfg.fight.perDay + 2);
   });
 
   it("the path migration gives the old weapon trees back", async () => {
