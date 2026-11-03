@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-03-parchment-hud",
+    date: "3 ноября",
+    title: "Новый верх и низ экрана",
+    items: [
+      { img: "/assets/updates/2026-11-03-parchment-hud.webp", text: "Панель сверху и нижнее меню теперь на рваном пергаменте — светлые, с тёмными цифрами." },
+    ],
+  },
+  {
     id: "2026-11-03-zonk-risk",
     date: "3 ноября",
     title: "Зонк: продолжение на свой риск",
