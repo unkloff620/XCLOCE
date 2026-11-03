@@ -71,3 +71,9 @@ A new set's ink is made ONLY by `python3 tools/rig/tattoo-ink.py <set>` from the
 (`<set>-hq.png` on `_base/in.png`, `<set>-head.png`, `<set>-hand.png`), then `python3 tools/rig/build-tattoos.py`.
 The script fits the edit onto the hero, fills the holes and the outline strip and fails if more than 4% of the skin stays bare.
 Before release, look at the set on the hero next to the edit: the colours must match and no bare stripes may show.
+
+## Hero clothes from templates
+
+A new piece of clothing keeps the shape of an existing one and only gets a new texture/design: take the template's own layer
+(`tools/rig/source/wear/<template>.png` — trousers: `pants-komandate`, `pants-black`; shoes: `sneakers-chunky`; tee: `tee-white`, …),
+recolour/redraw it by an image edit of that layer alone, keep its alpha (outline) exactly, and reuse its `WEAR_FIT` box. No new cut-outs from the hero.
