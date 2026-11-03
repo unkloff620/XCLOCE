@@ -2,7 +2,7 @@ import { autoSpendTalents } from "./home.ts";
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, idempotent, itemQty, ledger, moscowDay, nextMoscowMidnight, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { MEDAL_POINT_EVERY } from "../../content/medals.ts";
-import { BLAT_THING_CHANCE, BOSSES, EVENT_FIGHTS, EXTRA_KEY_CHANCE, OPEN_BOSSES, bossById, bossOpen, keyId, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
+import { BLAT_THING_CHANCE, BOTH_DROP_CHANCE, BOSSES, EVENT_FIGHTS, EXTRA_KEY_CHANCE, OPEN_BOSSES, bossById, bossOpen, keyId, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
 import { RUSH_PRICE, WEAPONS, itemById, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
 import { boostReward, mergeRewards, scaleReward } from "../../content/rewards.ts";
@@ -160,7 +160,7 @@ export async function startFight(ctx: Ctx, bossId: string, solo = false, modeId:
   const day = moscowDay(ctx.now);
   // «Часы» talents: minutes added to the fight; «Лимит боссов»: more fights a day with every boss
   const extras = talentExtras(await weaponTalents(ctx.q, ctx.pid));
-  const perDay = ctx.cfg.fight.perDay + extras.bossFights;
+  const perDay = (def.perDay ?? ctx.cfg.fight.perDay) + extras.bossFights;
   if ((await fightsToday(ctx.q, ctx.pid, def.id, day)) >= perDay) {
     throw new GameError("fight_limit", `Лимит боёв с боссом ${def.name} на сегодня исчерпан (${perDay}). Новые — после полуночи по Москве`);
   }
@@ -371,7 +371,9 @@ export async function claimFight(ctx: Ctx, fightId: number) {
   // the boss's own things (clothes, rooms, first-win things) drop only in «Блатной»
   const mode = fightMode(f.mode);
   const things = earnedKey && mode.things;
-  const unlocked = things ? await rollUnlocks(ctx, def) : [];
+  // the thing and the room are rolled first, then written: one win gives one of them — both only with BOTH_DROP_CHANCE
+  const thingPlan = things ? await planUnlock(ctx, def) : null;
+  const unlocked: string[] = [];
   // things the first win opens for sure (BossDef.firstWin) — bought in the shop afterwards
   if (things && def.firstWin?.length) {
     const open = new Set(await unlockedItems(ctx.q, ctx.pid));
@@ -382,6 +384,7 @@ export async function claimFight(ctx: Ctx, fightId: number) {
     }
   }
   // a room that drops from this boss (it is bought afterwards, like the clothes); an event boss: in his only mode
+  const roomPlans: (Plan & { held?: boolean })[] = [];
   if (things || (earnedKey && def.event)) {
     for (const room of ROOM_DEFS.filter((r) => r.drop?.boss === def.id)) {
       const key = roomUnlockId(room.id);
@@ -391,16 +394,26 @@ export async function claimFight(ctx: Ctx, fightId: number) {
       // the miss counter (boss_pity, keyed "room:<id>"): after ROOM_PITY wins without luck the room drops for sure
       const [pity] = await ctx.q.query<{ misses: number }>("SELECT misses FROM boss_pity WHERE player_id=$1 AND boss_id=$2 FOR UPDATE", [ctx.pid, key]);
       const misses = pity?.misses ?? 0;
-      const got = ctx.rng() < room.drop!.chance || misses + 1 >= ROOM_PITY;
-      await ctx.q.query(
-        "INSERT INTO boss_pity (player_id, boss_id, misses) VALUES ($1,$2,$3) ON CONFLICT (player_id, boss_id) DO UPDATE SET misses = EXCLUDED.misses",
-        [ctx.pid, key, got ? 0 : misses + 1],
-      );
-      if (got) {
-        await ctx.q.query("INSERT INTO player_unlocks (player_id, item_id, boss_id, at) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING", [ctx.pid, key, def.id, new Date(ctx.now)]);
-        unlocked.push(key);
-      }
+      const forced = misses + 1 >= ROOM_PITY;
+      roomPlans.push({ key, got: ctx.rng() < room.drop!.chance || forced ? key : null, misses, forced });
     }
+  }
+  // both a thing and a room came up: only one of them drops (one held back by the pity keeps its counter as it was),
+  // unless the BOTH_DROP_CHANCE luck — the one the pity forces wins, otherwise a coin decides
+  const roomGot = roomPlans.filter((r) => r.got);
+  // (both forced by their pity: both drop — the pity is a promise)
+  if (thingPlan?.got && roomGot.length && !(thingPlan.forced && roomGot.some((r) => r.forced)) && ctx.rng() >= BOTH_DROP_CHANCE) {
+    const keepThing = thingPlan.forced && !roomGot.some((r) => r.forced) ? true : roomGot.some((r) => r.forced) && !thingPlan.forced ? false : ctx.rng() < 0.5;
+    if (keepThing) for (const r of roomGot) r.held = true;
+    else thingPlan.held = true;
+  }
+  if (thingPlan) {
+    await commitUnlock(ctx, def, thingPlan, thingPlan.held);
+    if (thingPlan.got && !thingPlan.held) unlocked.unshift(thingPlan.got);
+  }
+  for (const r of roomPlans) {
+    await commitUnlock(ctx, def, r, r.held);
+    if (r.got && !r.held) unlocked.push(r.got);
   }
   // a chair of this boss (EQUIPMENT pieces with drop.boss): in «Авторитетный» (an event boss: his only mode) with
   // PIECE_DROP_CHANCE, after PIECE_PITY wins without luck for sure; it opens in the room editor to be bought there
@@ -495,26 +508,28 @@ export async function unlockedItems(q: Queryable, pid: number): Promise<string[]
  * wins in a row without luck one of them opens for sure. The thing itself is bought in the shop afterwards.
  * The miss counter lives in boss_pity.
  */
-async function rollUnlocks(ctx: Ctx, def: BossDef): Promise<string[]> {
-  if (!def.wear) return [];
+type Plan = { key: string; got: string | null; misses: number; forced: boolean; held?: boolean };
+async function planUnlock(ctx: Ctx, def: BossDef): Promise<Plan | null> {
+  if (!def.wear) return null;
   const open = new Set(await unlockedItems(ctx.q, ctx.pid));
   const missing: string[] = [];
   for (const id of def.wear.items) if (!open.has(id) && (await itemQty(ctx.q, ctx.pid, id)) === 0) missing.push(id);
-  if (!missing.length) return [];
+  if (!missing.length) return null;
   const [row] = await ctx.q.query<{ misses: number }>("SELECT misses FROM boss_pity WHERE player_id=$1 AND boss_id=$2 FOR UPDATE", [ctx.pid, def.id]);
   const misses = row?.misses ?? 0;
   // in «Блатной» (the only mode the things drop in): one win — at most one thing, with BLAT_THING_CHANCE, for every boss
   // (one of the missing ones at random); the pity gives one for sure after a run of misses
-  let got: string[] = [];
-  if (ctx.rng() < BLAT_THING_CHANCE || misses + 1 >= def.wear.pity) got = [missing[Math.floor(ctx.rng() * missing.length) % missing.length]];
+  const forced = misses + 1 >= def.wear.pity;
+  const got = ctx.rng() < BLAT_THING_CHANCE || forced ? missing[Math.floor(ctx.rng() * missing.length) % missing.length] : null;
+  return { key: def.id, got, misses, forced };
+}
+/** writes a planned drop: the miss counter (reset on a drop, +1 on a miss, as it was when the drop was held back) and the unlock */
+async function commitUnlock(ctx: Ctx, def: BossDef, p: Plan, held = false) {
   await ctx.q.query(
     "INSERT INTO boss_pity (player_id, boss_id, misses) VALUES ($1,$2,$3) ON CONFLICT (player_id, boss_id) DO UPDATE SET misses = EXCLUDED.misses",
-    [ctx.pid, def.id, got.length ? 0 : misses + 1],
+    [ctx.pid, p.key, held ? p.misses : p.got ? 0 : p.misses + 1],
   );
-  for (const id of got) {
-    await ctx.q.query("INSERT INTO player_unlocks (player_id, item_id, boss_id, at) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING", [ctx.pid, id, def.id, new Date(ctx.now)]);
-  }
-  return got;
+  if (p.got && !held) await ctx.q.query("INSERT INTO player_unlocks (player_id, item_id, boss_id, at) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING", [ctx.pid, p.got, def.id, new Date(ctx.now)]);
 }
 
 /** Gives up the running fight (counts as a loss). */
@@ -631,7 +646,7 @@ export async function bossList(q: Queryable, pid: number, cfg: Ctx["cfg"], now =
         myKeys: keyMap.get(keyId(b.id)) ?? 0,
         hpMax: cfg.bossHp[b.id] ?? b.hp,
         fightsToday: todayMap.get(b.id) ?? 0,
-        fightsPerDay: perDay,
+        fightsPerDay: (b.perDay ?? cfg.fight.perDay) - cfg.fight.perDay + perDay,
         myDamage: mineMap.get(b.id)?.damage ?? 0,
         myWins: mineMap.get(b.id)?.wins ?? 0,
         mySoloWins: soloMap.get(b.id) ?? 0,

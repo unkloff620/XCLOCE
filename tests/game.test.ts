@@ -1888,6 +1888,21 @@ describe("нычки v2", () => {
   });
 });
 
+describe("thing or room", () => {
+  it("a «Блатной» win gives the boss's thing or his room, not both (both only with 5% luck)", async () => {
+    await setBossHp({ kedr: 10 });
+    const p = await newPlayer(db);
+    await give(db, p, "key-datsik", 3);
+    await give(db, p, "keyboard", 1);
+    const f = await act(db, p, "fight_start", { boss: "kedr", mode: "blat" }, T0);
+    await hit(p, "keyboard");
+    // 0.3: the thing (70%) and the room (50%) both come up, no 5% luck — the coin keeps one
+    const c = await act(db, p, "fight_claim", { fightId: f.result.fightId }, T0, always(0.3));
+    const u: string[] = c.result.reward.unlocks;
+    expect(u.filter((id) => id.startsWith("room:")).length + u.filter((id) => !id.startsWith("room:") && id !== "hand-drum").length).toBe(1);
+  });
+});
+
 describe("Неоновая хата", () => {
   it("drops from Кедр (15% per win with the pass), then is bought for 2000 RUB and adds +5 to the energy limit", async () => {
     await setBossHp({ kedr: 10 });
@@ -1898,7 +1913,7 @@ describe("Неоновая хата", () => {
     await give(db, p, "keyboard", 1);
     const f = await act(db, p, "fight_start", { boss: "kedr", mode: "blat" }, T0);
     await hit(p, "keyboard");
-    const c = await act(db, p, "fight_claim", { fightId: f.result.fightId }, T0, always(0.05));
+    const c = await act(db, p, "fight_claim", { fightId: f.result.fightId }, T0, always(0.03));
     expect(c.result.reward.unlocks).toContain("room:neon");
     const b = await act(db, p, "room_buy", { id: "neon" }, T0);
     expect(b.state.player.energyMax).toBe(55);
@@ -2184,7 +2199,7 @@ describe("Боксёрская", () => {
     await give(db, p, "keyboard", 1);
     const f = await act(db, p, "fight_start", { boss: "bebyakyan", mode: "blat" }, T0);
     await hit(p, "keyboard");
-    const c = await act(db, p, "fight_claim", { fightId: f.result.fightId }, T0, always(0.05));
+    const c = await act(db, p, "fight_claim", { fightId: f.result.fightId }, T0, always(0.03));
     expect(c.result.reward.unlocks).toContain("room:boxing");
     await act(db, p, "room_buy", { id: "boxing" }, T0);
     expect(await wallet(db, p, "RUB")).toBeLessThanOrEqual(1000 + 5000);

@@ -2,6 +2,8 @@ import type { Reward } from "./rewards.ts";
 
 export interface BossDef {
   id: string;
+  /** this boss's own wins a day (instead of FIGHTS_PER_DAY) */
+  perDay?: number;
   order: number;
   name: string;
   title: string;
@@ -71,7 +73,7 @@ const photo = (id: string, has = false, v = "") => {
  */
 export const BOSSES: BossDef[] = [
   {
-    id: "datsik", order: 1, card: "bronze", name: "Дацкоу", title: "Замороженный подчинённый Бабафея",
+    id: "datsik", perDay: 12, order: 1, card: "bronze", name: "Дацкоу", title: "Замороженный подчинённый Бабафея",
     story: "Числится в штате, но давно заморожен. Оттаивает, только когда кто-то пытается пройти мимо.",
     hp: hp(0), reward: { xp: xp(0), currencies: { USD: 4, RUB: 150 } },
     drop: [{ id: "keyboard", qty: 1, chance: 0.35 }],
@@ -264,6 +266,8 @@ export function rewardShare(_myDamage?: number, _hpMax?: number, _full = FULL_SH
 }
 /** a boss's own things (BossDef.wear) in «Блатной»: this chance per win that ONE of the missing things drops, for every boss */
 export const BLAT_THING_CHANCE = 0.7;
+/** a «Блатной» win gives the boss's thing or his room, not both — both at once only with this luck */
+export const BOTH_DROP_CHANCE = 0.05;
 
 /** How many keys of the previous boss open this one. */
 export function keysNeeded(b: BossDef, defaultKeys: number): number {

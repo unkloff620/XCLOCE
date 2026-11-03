@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-03-boss-drops",
+    date: "3 ноября",
+    title: "Боссы: вещь или комната",
+    items: [
+      { text: "В «Блатном» за победу выпадает что-то одно — вещь босса или его комната. Обе сразу — редкая удача, 5%. С Дацкоу теперь можно биться 12 раз в день." },
+    ],
+  },
+  {
     id: "2026-11-03-stylist-buy",
     date: "3 ноября",
     title: "Покупки прямо в редакторе",
