@@ -99,6 +99,7 @@ export const EQUIPMENT: EquipmentDef[] = [
       { name: "Угол ринга", art: "chair-bebyakyan", price: { currency: "RUB", amount: 4000 }, bonus: { critChance: 0.02 }, drop: { boss: "bebyakyan" } },
       { name: "Расписной трон", art: "chair-babafey", price: { currency: "RUB", amount: 5000 }, bonus: { critChance: 0.02 }, drop: { boss: "babafey" } },
       { name: "Кресло лудомана", art: "chair-vodovoz", price: { currency: "RUB", amount: 6000 }, bonus: { critChance: 0.025 }, drop: { boss: "vodovoz" } },
+      { name: "Белый трон", art: "chair-knyaz", price: { currency: "RUB", amount: 6500 }, bonus: { critChance: 0.025 }, drop: { boss: "knyaz" } },
       { name: "Кресло Пепе", art: "chair-pepe", price: { currency: "RUB", amount: 7000 }, bonus: { critChance: 0.025 }, drop: { boss: "pepe" } },
     ],
   },
