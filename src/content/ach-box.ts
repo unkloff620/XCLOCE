@@ -28,7 +28,7 @@ export const MOUTH_ITEM_CHANCE = 0.1;
 export const CASE_THINGS = [...MOUTH_ITEMS, "shades-gold", "chain-cuban", "mask-anon", "monocle-whale", "bruise-liq", "crown-cash", "ushanka-star", "helmet-miner", "bandana-hodl", "cigar", "teeth-grin", "grillz-diamond"] as const;
 /** each case thing's chance per opened box; at most ONE thing a box (the chances of the ones the player lacks add up) */
 export const CASE_THING_CHANCE: Record<(typeof CASE_THINGS)[number], number> = {
-  cigarette: 0.005, toothpick: 0.008, cigar: 0.004, "teeth-grin": 0.003, "grillz-diamond": 0.002, "shades-gold": 0.009, "mask-anon": 0.01, "monocle-whale": 0.01,
+  cigarette: 0.005, toothpick: 0.008, cigar: 0.004, "teeth-grin": 0.003, "grillz-diamond": 0.0015, "shades-gold": 0.009, "mask-anon": 0.01, "monocle-whale": 0.01,
   "bruise-liq": 0.013, "crown-cash": 0.015, "ushanka-star": 0.02, "helmet-miner": 0.024, "bandana-hodl": 0.018, "chain-cuban": 0.014,
 };
 /** this many boxes in a row without a thing — the next one gives a thing (a random missing one) for sure */
