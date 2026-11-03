@@ -344,7 +344,8 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
     { id: "ach", label: "Достижения" },
     ...(p.cases ? [{ id: "cases" as const, label: "Дела" }] : []),
     ...(p.self ? [{ id: "tal" as const, label: "Таланты" }] : []),
-    ...(p.self || p.stashGive ? [{ id: "stash" as const, label: "Нычки" }] : []),
+    // another player's wishes are sent from the button in his room (not a dossier tab)
+    ...(p.self ? [{ id: "stash" as const, label: "Нычки" }] : []),
     ...(p.self ? [{ id: "news" as const, label: "Новости" }] : []),
     ...(p.self ? [{ id: "set" as const, label: "Настройки" }] : []),
   ];
@@ -569,7 +570,6 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
           )}
           {tab === "ach" && <BadgesPanel rows={p.achievements} self={p.self} onClaimed={reload} points={p.achPoints ?? 0} unfolded />}
           {tab === "cases" && p.cases && <CasesPanel cases={p.cases} self={p.self} />}
-          {tab === "stash" && !p.self && p.stashGive && <StashGivePanel to={p.id} name={p.name} wish={p.stashWish ?? []} give={p.stashGive} onSent={reload} />}
           {tab === "stash" && p.self && <BadgesPanel rows={p.achievements} self onClaimed={reload} stashOnly />}
           {tab === "tal" && p.self && <TalentPanel />}
           {tab === "news" && p.self && <NewsPanel rows={p.news ?? []} />}
@@ -592,6 +592,7 @@ export function ProfileScreen() {
   const [p, setP] = useState<Profile | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [dossier, setDossier] = useState(false);
+  const [give, setGive] = useState(false);
   const [brawl, setBrawl] = useState<{ key: number; res: { won: boolean; mine: number; theirs: number; chance?: number; reward: unknown } | null } | null>(null);
   const [fx, setFx] = useState<{ key: number; kind: "pump" | "spit" } | null>(null);
   const id = q.get("id");
@@ -689,10 +690,22 @@ export function ProfileScreen() {
             <Icon name="talent" size={38} /><small className="num">{full(p.talentsIn ?? 0)}</small>
           </button>
         </div>
+        {/* «Нычки и детали»: what he asks for — sent from here */}
+        {p.stashGive && (
+          <button type="button" className={`pr-btn pr-stash ${(p.stashWish?.length ?? 0) > 0 ? "glow" : ""}`} onClick={() => { haptic.tap(); setGive(true); }} aria-label="Нычки и детали" title="Отправить нычки и детали">
+            <ItemArt id="stash-cigs" size={44} />
+            {(p.stashWish?.length ?? 0) > 0 && <b className="pr-stash-n num">{p.stashWish!.length}</b>}
+          </button>
+        )}
         {fx?.kind === "spit" && <span key={fx.key} className="pr-spit" aria-hidden="true"><SpitArt size={90} /></span>}
       </div>
       {brawl && <Brawl key={brawl.key} res={brawl.res} name={p.name} me={{ name: state?.player.name ?? "Ты", look: state?.look.body, worn: state?.look.equipped }} them={{ name: p.name, look: p.body, worn: p.equipped }} onClose={() => setBrawl(null)} />}
       {dossier && <Dossier p={p} onClose={() => setDossier(false)} reload={reload} />}
+      {give && p.stashGive && (
+        <Modal title="Нычки и детали" onClose={() => setGive(false)}>
+          <StashGivePanel to={p.id} name={p.name} wish={p.stashWish ?? []} give={p.stashGive} onSent={reload} />
+        </Modal>
+      )}
     </div>
   );
 }

@@ -5414,3 +5414,6 @@ html.paused *, html.paused *::before, html.paused *::after { animation-play-stat
 .ach-pic.on .ach-pic-n { text-shadow: none; }
 .pr-tal { --c: #6a3fb8; }
 .pr-tal small { font-size: 12px; text-transform: none; }
+/* a visited room: «Нычки и детали» on the right, across from the rail */
+.pr-stash { position: absolute; z-index: 3; right: 10px; top: calc(var(--top) + 58px); }
+.pr-stash-n { position: absolute; top: -4px; right: 2px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: #2ee88a; color: #06301a; font-size: 11px; line-height: 18px; text-align: center; }
