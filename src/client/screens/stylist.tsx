@@ -248,7 +248,7 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
     body = <div className="sty-hint">Нажми на персонажа — выбери, что изменить</div>;
   } else if (slot) {
     body = (
-      <div className="sty-strip">
+      <div className="sty-strip sty-grid">
         <button className={`sty-item none ${!draft.worn[slot] ? "on" : ""}`} onClick={() => wear(null)}>
           <span className="sty-plus" aria-hidden="true">∅</span>
           <span className="sty-item-name">{slot === "HAND" ? "Обычная" : "Ничего"}</span>
