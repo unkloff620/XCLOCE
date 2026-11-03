@@ -36,17 +36,17 @@ export const WEAR_FIT = {
   },
   "pants-black": {
     "slot": "PANTS",
-    "x": 81.5,
-    "y": 687.5,
-    "w": 842,
-    "h": 554
+    "x": 69.0,
+    "y": 676.0,
+    "w": 862,
+    "h": 484
   },
   "sneakers-chunky": {
     "slot": "SHOES",
-    "x": 113.5,
-    "y": 1137.5,
-    "w": 772,
-    "h": 198
+    "x": 88.5,
+    "y": 1136.0,
+    "w": 808,
+    "h": 206
   },
   "tee-sailor": {
     "slot": "SHIRT",
