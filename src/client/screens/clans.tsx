@@ -11,6 +11,7 @@ import { Avatar, Bar, Empty, Modal, RewardChips } from "../ui.tsx";
 import type { Reward } from "../../content/rewards.ts";
 import { full, short } from "../format.ts";
 import { Icon } from "../art/icons.tsx";
+import { ClanChat } from "./clan-chat.tsx";
 
 interface ClanRow { id: number; name: string; tag: string; emblem: string; color: string; description: string; members: number; damage: number; xp: number; leader: string; level: number; levelFrom: number; levelTo: number; rank: number }
 interface ClanPage extends Omit<ClanRow, "members"> {
@@ -181,6 +182,7 @@ export function ClansScreen() {
             <b className="display">{state.clan.name} <span className="muted">[{state.clan.tag}]</span></b>
           </div>
           {(state.clanRequests?.waiting ?? 0) > 0 && <span className="chip red">заявки: {state.clanRequests.waiting}</span>}
+          {(state.clanRequests?.chat ?? 0) > 0 && <span className="chip green">💬 {state.clanRequests.chat}</span>}
           <span className="display" style={{ fontSize: 22 }}>›</span>
         </Link>
       )}
@@ -248,6 +250,7 @@ export function ClanScreen({ id }: { id: number }) {
   const [settings, setSettings] = useState(false);
   const [kickAsk, setKickAsk] = useState<number | null>(null);
   const [leadAsk, setLeadAsk] = useState<number | null>(null);
+  const [tab, setTab] = useState<"clan" | "chat">(() => (typeof location !== "undefined" && location.hash === "#chat" ? "chat" : "clan"));
   const [c, setC] = useState<ClanPage | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const load = useCallback(() => api.get<ClanPage>(`/api/clans/${id}`).then(setC).catch((e) => setErr(e.message)), [id]);
@@ -277,12 +280,34 @@ export function ClanScreen({ id }: { id: number }) {
     const r = await act("clan_kick", { playerId: id }, `${name} исключён`);
     if (r) void load();
   };
+  const unread = state?.clanRequests?.chat ?? 0;
+  const tabs = mine && (
+    <div className="clan-tabs" role="tablist">
+      <button type="button" role="tab" aria-selected={tab === "clan"} className={`btn sm ${tab === "clan" ? "gold" : "dark"}`} onClick={() => { setTab("clan"); history.replaceState(null, "", "#"); }}>🛡 Клан</button>
+      <button type="button" role="tab" aria-selected={tab === "chat"} className={`btn sm ${tab === "chat" ? "gold" : "dark"}`} onClick={() => { setTab("chat"); history.replaceState(null, "", "#chat"); }}>
+        💬 Чат{tab !== "chat" && unread > 0 && <span className="badge">{unread}</span>}
+      </button>
+    </div>
+  );
+  if (mine && tab === "chat") {
+    return (
+      <div>
+        <div className="title">
+          <b className="display ellipsis" style={{ minWidth: 0 }}>{c.name} <span className="muted">[{c.tag}]</span></b>
+          <span className="chip">{c.members.length} чел.</span>
+        </div>
+        {tabs}
+        <ClanChat />
+      </div>
+    );
+  }
   return (
     <div>
       <div className="title">
         <span className="chip">#{c.rank} в рейтинге</span>
         <Link href="/clans?all=1" className="btn dark sm">🔍 Все кланы</Link>
       </div>
+      {tabs}
       <div className="panel center col clan-head" style={{ alignItems: "center" }}>
         {/* the leader's tools: edit the member list, the clan settings */}
         {leader && (

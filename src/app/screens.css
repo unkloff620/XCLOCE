@@ -5478,3 +5478,31 @@ html.paused *, html.paused *::before, html.paused *::after { animation-play-stat
 @keyframes kz-sleep { 0%, 100% { transform: rotate(-1.6deg) translateX(-6px); } 50% { transform: rotate(1.6deg) translateX(6px); } }
 @keyframes kz-sleep-breath { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.006, 1.012); } }
 @keyframes kz-nod { 0%, 100% { transform: rotate(-2deg) translateY(3px); } 50% { transform: rotate(2.5deg) translateY(6px); } }
+
+/* the clan chat */
+.clan-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+.clan-tabs .btn { position: relative; }
+.clan-tabs .badge { position: absolute; top: -7px; right: -4px; }
+.cchat { display: flex; flex-direction: column; gap: 8px; padding: 8px; height: calc(var(--vh) * 100 - var(--hud-h) - var(--nav-h) - var(--safe-t) - var(--safe-b) - 120px); min-height: 320px; }
+.cchat-list { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 4px; padding: 4px 2px; }
+.cchat-list > div { display: contents; }
+.cchat-empty { margin: auto; text-align: center; padding: 20px; color: #6b5034; }
+.cchat-day { align-self: center; margin: 8px 0 4px; }
+.cchat-day span { font-size: 11px; color: #5a4128; background: rgba(90, 60, 30, 0.14); border-radius: 999px; padding: 2px 10px; }
+.cchat-news { align-self: center; max-width: 90%; text-align: center; font-size: 12px; color: #6b5034; font-style: italic; padding: 2px 8px; }
+.cchat-msg { display: flex; align-items: flex-end; gap: 6px; max-width: 86%; margin-top: 4px; }
+.cchat-msg.cont { margin-top: 0; }
+.cchat-msg.mine { align-self: flex-end; flex-direction: row-reverse; }
+.cchat-ava { width: 30px; flex: none; display: block; }
+.cchat-bub { position: relative; display: flex; flex-direction: column; gap: 1px; min-width: 0; padding: 6px 10px 5px; border-radius: 14px 14px 14px 4px; background: #fffaf0; border: 2px solid #2b1a0e; color: #2b1a0e; cursor: default; }
+.cchat-msg.mine .cchat-bub { border-radius: 14px 14px 4px 14px; background: #d4efb8; }
+.cchat-bub.on { box-shadow: 0 0 0 2px var(--red); }
+.cchat-name { font-size: 12px; color: #b5520f; }
+.cchat-name.lead { color: #8a5d00; }
+.cchat-text { font-size: 14px; line-height: 1.35; color: #2b1a0e; white-space: pre-wrap; overflow-wrap: anywhere; }
+.cchat-time { align-self: flex-end; font-size: 10px; color: #7a6248; line-height: 1; }
+.cchat-del { margin-top: 5px; align-self: flex-start; }
+.cchat-form { display: flex; gap: 6px; align-items: flex-end; }
+.cchat-input { flex: 1; min-width: 0; resize: none; font: inherit; font-size: 15px; padding: 10px 12px; max-height: 96px; field-sizing: content; }
+.cchat-send { flex: none; width: 46px; height: 44px; padding: 0; display: grid; place-items: center; }
+.cchat-count { align-self: flex-end; margin-top: -4px; }

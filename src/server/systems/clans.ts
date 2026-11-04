@@ -4,6 +4,9 @@ import { levelFromXp } from "../../content/levels.ts";
 import { clanLevelInfo, isClanShield } from "../../content/clans.ts";
 import { CLAN_PRIZES } from "../../content/achievements.ts";
 import { weekKey } from "../core.ts";
+import { chatNews, chatUnread } from "./clan-chat.ts";
+
+const nameOf = async (q: Queryable, pid: number) => (await q.query<{ display_name: string }>("SELECT display_name FROM players WHERE id=$1", [pid]))[0]?.display_name ?? "Игрок";
 
 export const CLAN_EMBLEMS = ["rocket", "diamond", "bull", "bear", "moon", "skull", "crown", "flame"] as const;
 export const CLAN_COLORS = ["#ff4d6d", "#3ddc84", "#4da3ff", "#ffb020", "#b06bff", "#38d6ff"] as const;
@@ -73,6 +76,7 @@ export async function answerRequest(ctx: Ctx, playerId: number, accept: boolean)
   if (n.n >= CLAN_MAX) throw new GameError("clan_full", `В клане уже ${CLAN_MAX} человек`);
   await ctx.q.query("INSERT INTO clan_members (player_id, clan_id) VALUES ($1,$2)", [playerId, m.clan_id]);
   await ctx.q.query("UPDATE players SET clan_id=$2 WHERE id=$1", [playerId, m.clan_id]);
+  await chatNews(ctx.q, m.clan_id, `${await nameOf(ctx.q, playerId)} вступил в клан`);
   return { playerId, accepted: true };
 }
 
@@ -87,7 +91,7 @@ export async function requestsView(q: Queryable, pid: number, clanId: number | n
     const [l] = await q.query<{ n: number }>("SELECT COUNT(*)::int AS n FROM clan_requests r JOIN clans c ON c.id=r.clan_id WHERE c.id=$1 AND c.leader_id=$2", [clanId, pid]);
     waiting = l?.n ?? 0;
   }
-  return { mine: mine ? { clanId: mine.clan_id, name: mine.name, tag: mine.tag } : null, waiting };
+  return { mine: mine ? { clanId: mine.clan_id, name: mine.name, tag: mine.tag } : null, waiting, chat: await chatUnread(q, pid, clanId) };
 }
 
 /** The requests to a clan, shown to its leader only. */
@@ -113,9 +117,12 @@ export async function leaveClan(ctx: Ctx) {
     if (heir) {
       await ctx.q.query("UPDATE clan_members SET role='leader' WHERE player_id=$1", [heir.player_id]);
       await ctx.q.query("UPDATE clans SET leader_id=$2 WHERE id=$1", [m.clan_id, heir.player_id]);
+      await chatNews(ctx.q, m.clan_id, `${await nameOf(ctx.q, ctx.pid)} вышел из клана. Новый лидер — ${await nameOf(ctx.q, heir.player_id)}`);
     } else {
       await ctx.q.query("DELETE FROM clans WHERE id=$1", [m.clan_id]);
     }
+  } else {
+    await chatNews(ctx.q, m.clan_id, `${await nameOf(ctx.q, ctx.pid)} вышел из клана`);
   }
   return { left: m.clan_id };
 }
@@ -127,6 +134,7 @@ export async function kickMember(ctx: Ctx, playerId: number) {
   const r = await ctx.q.query("DELETE FROM clan_members WHERE player_id=$1 AND clan_id=$2 RETURNING player_id", [playerId, m.clan_id]);
   if (!r.length) throw new GameError("not_member", "Этого игрока нет в клане");
   await ctx.q.query("UPDATE players SET clan_id=NULL WHERE id=$1", [playerId]);
+  await chatNews(ctx.q, m.clan_id, `${await nameOf(ctx.q, playerId)} исключён из клана`);
   return { kicked: playerId };
 }
 
@@ -140,6 +148,7 @@ export async function transferLeader(ctx: Ctx, playerId: number) {
   await ctx.q.query("UPDATE clan_members SET role='member' WHERE player_id=$1", [ctx.pid]);
   await ctx.q.query("UPDATE clan_members SET role='leader' WHERE player_id=$1", [playerId]);
   await ctx.q.query("UPDATE clans SET leader_id=$2 WHERE id=$1", [m.clan_id, playerId]);
+  await chatNews(ctx.q, m.clan_id, `Новый лидер клана — ${await nameOf(ctx.q, playerId)}`);
   return { leader: playerId };
 }
 

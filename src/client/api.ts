@@ -46,7 +46,7 @@ export interface GameState {
   pending: { fightId: number; bossId: string; status: string }[];
   clan: { id: number; name: string; tag: string; emblem: string; color: string } | null;
   /** my request to join a clan; waiting — requests to my clan (I am its leader) */
-  clanRequests: { mine: { clanId: number; name: string; tag: string } | null; waiting: number };
+  clanRequests: { mine: { clanId: number; name: string; tag: string } | null; waiting: number; /** unread clan chat messages */ chat?: number };
   daily: { available: boolean; day: number; streak: number; cycle: number; nextAt: number | null; rewards: Reward[]; bonus?: { at: number; reward: Reward } };
   quests: {
     list: { id: string; progress: number; target: number; done: boolean; claimed: boolean }[];
@@ -294,6 +294,7 @@ export async function loginWidget(data: Record<string, unknown>) {
 export const ACTION_EVENT = "xc-action";
 export const api = {
   get: <T>(path: string) => raw<T>(path),
+  post: <T>(path: string, body: Record<string, unknown>) => raw<T>(path, { method: "POST", body: JSON.stringify(body) }),
   /** an action that must reach the server even while the page closes (keepalive): leaving the blackjack table */
   actionKeepalive: (type: string, body: Record<string, unknown> = {}) => {
     try {

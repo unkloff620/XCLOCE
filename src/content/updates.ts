@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-04-clan-chat",
+    date: "4 ноября",
+    title: "Чат клана",
+    items: [
+      { img: "/assets/updates/2026-11-04-clan-chat.webp", text: "У каждого клана теперь свой чат: Кланы → вкладка «Чат». Договаривайтесь о боссах, делитесь деталями. Новые сообщения видно по цифре на кнопке «Кланы»." },
+    ],
+  },
+  {
     id: "2026-11-04-tosya-tattoos",
     date: "4 ноября",
     title: "Наколки в пирожках Тоси",

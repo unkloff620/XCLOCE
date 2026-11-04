@@ -1241,4 +1241,17 @@ ALTER TABLE players ADD COLUMN IF NOT EXISTS beard_best INT NOT NULL DEFAULT 0;`
     sql: `INSERT INTO config (key, value) VALUES ('exchange.schedule', '{"mode":"cycle","every":1,"offset":0,"from":11,"to":27}')
 ON CONFLICT (key) DO UPDATE SET value = excluded.value;`,
   },
+  {
+    // the clan chat (systems/clan-chat.ts) and the last message each member has seen
+    id: "v2-081-clan-chat",
+    sql: `CREATE TABLE IF NOT EXISTS clan_chat (
+  id SERIAL PRIMARY KEY,
+  clan_id INT NOT NULL REFERENCES clans(id) ON DELETE CASCADE,
+  player_id INT,
+  text TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS clan_chat_clan ON clan_chat (clan_id, id);
+ALTER TABLE clan_members ADD COLUMN IF NOT EXISTS chat_seen INT NOT NULL DEFAULT 0;`,
+  },
 ];

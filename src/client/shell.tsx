@@ -250,6 +250,8 @@ function Nav() {
           <NavIcon id={t.id} />
           {t.id === "yard" && !!state?.yard.count && <span className="badge">{state.yard.count}</span>}
           {t.id === "yard" && !state?.yard.count && taskHint && <span className="badge" style={{ background: "var(--gold)", color: "#2e1c00" }}>!</span>}
+          {/* new messages in the clan chat, requests to my clan */}
+          {t.id === "clans" && ((state?.clanRequests?.chat ?? 0) + (state?.clanRequests?.waiting ?? 0)) > 0 && <span className="badge">{Math.min(99, (state?.clanRequests?.chat ?? 0) + (state?.clanRequests?.waiting ?? 0))}</span>}
           {t.id === "bosses" && state?.fight && <span className="badge" style={{ background: "var(--gold)", color: "#2e1c00" }}>!</span>}
           {/* the achievement box on the trader's counter can be opened */}
           {t.id === "shop" && (state?.achBox?.ready ?? 0) > 0 && <span className="badge" style={{ background: "var(--gold)", color: "#2e1c00" }}>!</span>}
