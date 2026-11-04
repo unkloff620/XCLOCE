@@ -17,6 +17,12 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-04-leaders-slide",
+    date: "4 ноября",
+    title: "Плавная полоса игроков",
+    items: [{ text: "Полоса «Игроки» над нижним меню теперь плавно выезжает и прячется." }],
+  },
+  {
     id: "2026-11-04-clan-chat",
     date: "4 ноября",
     title: "Чат клана",

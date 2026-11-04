@@ -55,10 +55,10 @@ export function LeadersStrip() {
   return (
     <div className={`leaders ${open ? "open" : "closed"}`}>
       <button className="leaders-tab" onClick={toggle} aria-expanded={open} aria-label={open ? "Скрыть лидеров" : "Показать лидеров"}>
-        <Icon name="xp" size={14} /> Игроки{data.online > 0 && <span className="leaders-online"><i />{data.online}</span>} <i>{open ? "▾" : "▴"}</i>
+        <Icon name="xp" size={14} /> Игроки{data.online > 0 && <span className="leaders-online"><i />{data.online}</span>} <i className="leaders-arrow">▾</i>
       </button>
-      {open && (
-        <div className="leaders-row">
+      {/* always there: opening and closing slide it (the height), folded it takes no taps */}
+      <div className="leaders-row" inert={!open} aria-hidden={!open}>
           {data.top.map((r) => (
             <Link key={r.id} href={`/profile?id=${r.id}`} className={`leader p${Math.min(r.place, 4)} ${r.id === meId ? "me" : ""}`} title={`${r.place}. ${r.name} · ${r.xp.toLocaleString("ru-RU")} авторитета${r.online ? " · в игре" : ""}`}>
               <span className="leader-av">
@@ -78,8 +78,7 @@ export function LeadersStrip() {
             </Link>
           )}
           <Link href="/rating" className="leader more" aria-label="Весь рейтинг">›</Link>
-        </div>
-      )}
+      </div>
     </div>
   );
 }
