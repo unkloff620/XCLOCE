@@ -2035,14 +2035,14 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "y": 777.0,
         "w": 917,
         "h": 696,
-        "v": "e3993721"
+        "v": "4c590b07"
       },
       "body": {
         "x": 294.0,
         "y": 237.0,
         "w": 484,
         "h": 624,
-        "v": "39faefa6"
+        "v": "fcb5eef8"
       },
       "handL": {
         "x": 33.0,
@@ -2053,7 +2053,7 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
           132.0,
           515.0
         ],
-        "v": "892bb423"
+        "v": "eaba5106"
       },
       "cover": {
         "x": 25.5,
@@ -2075,14 +2075,14 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
           533.0,
           320.0
         ],
-        "v": "a40c77be"
+        "v": "4aec82a8"
       },
       "head-open": {
         "x": 399.5,
         "y": 48.0,
         "w": 272,
         "h": 300,
-        "v": "430fa35d"
+        "v": "f6065dbe"
       },
       "throat": {
         "x": 489.5,
@@ -2148,11 +2148,11 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "v": "c33246c2"
       },
       "gag": {
-        "x": 433.5,
-        "y": 213.5,
-        "w": 232,
-        "h": 129,
-        "v": "5a3ebc33"
+        "x": 480.5,
+        "y": 247.0,
+        "w": 102,
+        "h": 127,
+        "v": "22a5b521"
       },
       "brows": {
         "x": 460.0,
@@ -2168,7 +2168,7 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "w": 320,
         "h": 360,
         "frames": 9,
-        "v": "848e24f3"
+        "v": "3ee2e8fa"
       },
       "armLb": {
         "x": 91.5,
@@ -2176,7 +2176,7 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "w": 377,
         "h": 330,
         "frames": 13,
-        "v": "152b2ded"
+        "v": "ea10c560"
       }
     }
   }

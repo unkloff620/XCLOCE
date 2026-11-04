@@ -5466,3 +5466,15 @@ html.paused *, html.paused *::before, html.paused *::after { animation-play-stat
 .bj2-top { left: 10px; right: auto; top: calc(var(--safe-t) + 86px); flex-direction: column; align-items: flex-start; flex-wrap: nowrap; }
 /* Князь below a quarter of HP: gagged — no grin, no sad mouth, no cigarette over the rag */
 .rig-knyaz.gagged .kz-grin > :not(:first-child), .rig-knyaz.gagged .kz-sad, .rig-knyaz.gagged .kz-cig, .rig-knyaz.gagged .kz-tip { display: none; }
+/* …and out cold: the eyes shut, the arms hang still, he sways very slowly as if asleep on his feet */
+.rig-knyaz.gagged .br-eyes-open { opacity: 0 !important; }
+.rig-knyaz.gagged .br-eyes-closed { opacity: 1 !important; animation: none !important; }
+.rig-knyaz.gagged .kz-arm-l, .rig-knyaz.gagged .kz-arm-r, .rig-knyaz.gagged .kz-hand-l, .rig-knyaz.gagged .kz-elbow-l, .rig-knyaz.gagged .kz-elbow-r,
+.rig-knyaz.gagged .kz-turn-l, .rig-knyaz.gagged .kz-jaw, .rig-knyaz.gagged .br-pupils, .rig-knyaz.gagged .kz-brows { animation: none !important; }
+.rig-knyaz.boss-rig.gagged { animation: none !important; }
+.rig-knyaz.gagged .kz-root { animation: kz-sleep 9s ease-in-out infinite !important; }
+.rig-knyaz.gagged .kz-up { animation: kz-sleep-breath 5.5s ease-in-out infinite !important; }
+.rig-knyaz.gagged .kz-head { animation: kz-nod 9s ease-in-out infinite !important; }
+@keyframes kz-sleep { 0%, 100% { transform: rotate(-1.6deg) translateX(-6px); } 50% { transform: rotate(1.6deg) translateX(6px); } }
+@keyframes kz-sleep-breath { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.006, 1.012); } }
+@keyframes kz-nod { 0%, 100% { transform: rotate(-2deg) translateY(3px); } 50% { transform: rotate(2.5deg) translateY(6px); } }
