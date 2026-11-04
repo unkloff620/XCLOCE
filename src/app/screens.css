@@ -1483,7 +1483,7 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .game-pick small { font-family: var(--font-body), sans-serif; text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 700; opacity: 0.85; }
 .yard .yard-item { z-index: 4; }
 /* the yard's sky: the drifting sunset behind the see-through sky of the background */
-.court-sky { position: absolute; left: 0; right: 0; top: 0; height: 40.5%; overflow: hidden; background: #3a3150; }
+.court-sky { position: absolute; left: 0; right: 0; top: 0; height: 43.5%; overflow: hidden; background: #3a3150; }
 .court-sky .yard-sky-strip, .yard-reflect .yard-sky-strip { animation-duration: 110s; }
 /* the back yard's sky goes lower (behind the arch, down to 48% of the picture) */
 .yard-stage0 .court-sky { height: 49.5%; }
