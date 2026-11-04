@@ -47,6 +47,8 @@ describe("daily quests", () => {
   });
 
   it("claim only when done, once; the chest opens after all five and only once", async () => {
+    await db.query("DELETE FROM config WHERE key='exchange.schedule'");
+    (await import("../src/server/config.ts")).resetConfigCache();
     const p = await newPlayer(db);
     const set = questsForDay(p, moscowDay(T0));
     await expect(act(db, p, "quest_claim", { id: set[0].id }, T0)).rejects.toMatchObject({ code: "quest_not_done" });

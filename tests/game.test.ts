@@ -524,6 +524,9 @@ describe("shop and exchange", () => {
     expect(exchangeWindow(day0 + 13 * H, { ...s, mode: "closed" }).open).toBe(false);
   });
   it("exchanges at the server rate minus the fee", async () => {
+    // the default schedule (the live one from the migration — 11:00–3:00 — is not what these times expect)
+    await db.query("DELETE FROM config WHERE key='exchange.schedule'");
+    resetConfigCache();
     const p = await newPlayer(db);
     await setMoney(db, p, "RUB", 900);
     // the exchanger is an event: one Moscow day out of three
@@ -552,6 +555,9 @@ describe("shop and exchange", () => {
     expect(await qty(db, p, common.id)).toBe(3);
   });
   it("a good talk with the dealer may give a better rate for 2 hours; once a day, only while the exchange works", async () => {
+    // the default schedule (the live one from the migration — 11:00–3:00 — is not what these times expect)
+    await db.query("DELETE FROM config WHERE key='exchange.schedule'");
+    resetConfigCache();
     const p = await newPlayer(db);
     let open = T0;
     while (!exchangeWindow(open).open) open += 24 * H;
