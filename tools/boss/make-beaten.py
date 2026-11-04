@@ -31,7 +31,8 @@ ORDER = {
     "bebyakyan": ["body", "head", "eyes", "pupils", "brows", "mouth", "foreL", "foreR"],
     "babafey": ["armL", "body", "head", "eyes", "pupils", "browL", "browR", "armR", "lowR", "handR", "lowL", "handL"],
     "vodovoz": ["armR", "armL", "legs", "body", "head", "eyes", "pupils", "browL", "browR", "mouth-closed", "headset", "lowL", "handL", "bag", "lowR", "handR"],
-    "knyaz": ["armRb@0", "legs", "body", "head", "eyes", "pupils", "brows@0", "armLb@0", "handL", "cover"],
+    # the wallet sleeve (viewer's left) behind the body, the fist arm (viewer's right) in front (boss-rig.tsx KnyazRig)
+    "knyaz": ["legs", "armLb@0", "body", "head", "eyes", "pupils", "brows@0", "armRb@0", "handL", "cover"],
 }
 SKIN_AND_CLOTHES = {"body", "head", "head-open", "legs", "foreL", "foreR", "armL", "armR", "lowL", "lowR", "handL", "handR", "armLb@0", "armRb@0"}
 LOOK = {
@@ -84,6 +85,39 @@ def carry(frame0, frame0_hurt, frame):
     return out
 
 
+def knyaz_frames(S, O):
+    """Князь's elbows bend by formulas (tools/boss/assemble-knyaz.py): the damaged frame 0 is bent the same way, so every
+    frame carries the same blood and tears (the flow between frames cannot follow the fist that far)"""
+    W, H = 2000, 3000
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    raw = os.path.join(S, "raw")
+    def turn(img, at, th):
+        c, s_ = np.cos(th), np.sin(th)
+        dx, dy = xx - at[0], yy - at[1]
+        sx = (at[0] + c * dx + s_ * dy).astype(np.float32)
+        sy = (at[1] - s_ * dx + c * dy).astype(np.float32)
+        return cv2.remap(np.ascontiguousarray(img.astype(np.float32)), sx, sy, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0, 0))
+    # the wallet sleeve: one picture bent at the elbow
+    sl = np.array(Image.open(os.path.join(O, "armLb@0.png")).convert("RGBA"))
+    EL, CUFF = (430.0, 1268.0), (222.0, 1164.0)
+    vx, vy = CUFF[0] - EL[0], CUFF[1] - EL[1]
+    wl = np.clip((((xx - EL[0]) * vx + (yy - EL[1]) * vy) / (vx * vx + vy * vy) - 0.02) / 0.4, 0, 1)
+    for k, deg in enumerate(range(0, 26, 2)):
+        Image.fromarray(np.clip(np.nan_to_num(turn(sl, EL, np.deg2rad(deg) * wl)), 0, 255).astype(np.uint8)).save(os.path.join(O, f"armLb@{k}.png"))
+    # the fist arm: the upper arm stays, the forearm with the fist turns at the elbow — split frame 0 back into the two
+    f0 = np.array(Image.open(os.path.join(O, "armRb@0.png")).convert("RGBA"))
+    up = np.array(Image.open(os.path.join(raw, "armR.png")).convert("RGBA")); up[up[..., 3] < 24] = 0
+    low = np.array(Image.open(os.path.join(raw, "lowR.png")).convert("RGBA")); low[low[..., 3] < 24] = 0
+    lo = low.copy(); lo[..., :3] = np.where(low[..., 3:4] > 0, f0[..., :3], low[..., :3])
+    u = up.copy(); u[..., :3] = np.where((up[..., 3:4] > 0) & (low[..., 3:4] < 200), f0[..., :3], up[..., :3])
+    EL = (1655.0, 1290.0)
+    wgt = np.clip((np.hypot(xx - EL[0], yy - EL[1]) - 20) / 110, 0, 1)
+    for k, deg in enumerate(range(0, 18, 2)):
+        lw = np.clip(np.nan_to_num(turn(lo, EL, np.deg2rad(deg) * wgt)), 0, 255).astype(np.uint8)
+        fr = Image.fromarray(u); fr.alpha_composite(Image.fromarray(lw))
+        fr.save(os.path.join(O, f"armRb@{k}.png"))
+
+
 def main(boss):
     S = os.path.join(HERE, "source", boss)
     O = os.path.join(HERE, "source", boss + "-beaten")
@@ -134,6 +168,8 @@ def main(boss):
             Image.fromarray(carry(L[f0], hurt[f0], np.array(Image.open(f).convert("RGBA")))).save(os.path.join(O, n + ".png"))
         else:
             shutil.copy(f, os.path.join(O, n + ".png"))
+    if boss == "knyaz":
+        knyaz_frames(S, O)
     print(boss, "beaten:", sorted(hurt))
 
 

@@ -81,7 +81,10 @@ if n:
     # the piece over the mouth and whatever touches it
     over = [i + 1 for i in range(n) if (mouth & (lab == i + 1)).any() or sz[i] > sz.max() * 0.25]
     gag = np.isin(lab, over)
-gag = ndimage.binary_closing(gag, iterations=3) & head
+gag = ndimage.binary_fill_holes(ndimage.binary_closing(gag, iterations=4)) & head
+# a smooth edge: no specks of skin at the rim of the rag
+gag = ndimage.gaussian_filter(gag.astype(np.float32), 2.5) > 0.5
+gag = ndimage.binary_erosion(gag, iterations=1)
 out = np.zeros((H, W, 4), np.uint8)
 out[..., :3] = np.clip(rgb, 0, 255).astype(np.uint8)
 out[..., 3] = (ndimage.gaussian_filter(gag.astype(np.float32), 0.8) * 255).astype(np.uint8)

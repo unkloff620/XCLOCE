@@ -2083,6 +2083,7 @@ export const ASSET_FILES: string[] = [
  "/assets/updates/2026-11-03-tosya.webp",
  "/assets/updates/2026-11-04-all-beaten.webp",
  "/assets/updates/2026-11-04-kedr-beaten.webp",
+ "/assets/updates/2026-11-04-knyaz-dying.webp",
  "/assets/updates/2026-11-04-mugo-beaten.webp",
  "/assets/updates/2026-11-04-zina.webp",
  "/assets/upgrader/btn-go.webp",
