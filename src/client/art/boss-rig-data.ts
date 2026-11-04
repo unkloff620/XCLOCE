@@ -1814,7 +1814,7 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "w": 320,
         "h": 360,
         "frames": 9,
-        "v": "3ee2e8fa"
+        "v": "20e58daf"
       },
       "armLb": {
         "x": 91.5,
@@ -2168,7 +2168,7 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "w": 320,
         "h": 360,
         "frames": 9,
-        "v": "3ee2e8fa"
+        "v": "20e58daf"
       },
       "armLb": {
         "x": 91.5,

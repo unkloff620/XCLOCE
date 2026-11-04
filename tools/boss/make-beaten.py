@@ -106,6 +106,17 @@ def knyaz_frames(S, O):
         Image.fromarray(np.clip(np.nan_to_num(turn(sl, EL, np.deg2rad(deg) * wl)), 0, 255).astype(np.uint8)).save(os.path.join(O, f"armLb@{k}.png"))
     # the fist arm: the upper arm stays, the forearm with the fist turns at the elbow — split frame 0 back into the two
     f0 = np.array(Image.open(os.path.join(O, "armRb@0.png")).convert("RGBA"))
+    # the fist: the edit draws it a little elsewhere, so its pasted colours are the sleeve's — the fist keeps its own skin
+    o0 = np.array(Image.open(os.path.join(S, "armRb@0.png")).convert("RGBA"))
+    hsv = cv2.cvtColor(np.ascontiguousarray(o0[..., :3]), cv2.COLOR_RGB2HSV).astype(int)
+    skin = (hsv[..., 0] <= 25) & (hsv[..., 1] > 60) & (hsv[..., 2] > 110) & (o0[..., 3] > 0)
+    skin = ndimage.binary_dilation(ndimage.binary_opening(skin, iterations=2), iterations=3)
+    lab, n = ndimage.label(skin)
+    if n:
+        sz = ndimage.sum(skin, lab, range(1, n + 1))
+        skin = np.isin(lab, [i + 1 for i in range(n) if sz[i] > 2000])
+    f0[skin] = o0[skin]
+    Image.fromarray(f0).save(os.path.join(O, "armRb@0.png"))
     up = np.array(Image.open(os.path.join(raw, "armR.png")).convert("RGBA")); up[up[..., 3] < 24] = 0
     low = np.array(Image.open(os.path.join(raw, "lowR.png")).convert("RGBA")); low[low[..., 3] < 24] = 0
     lo = low.copy(); lo[..., :3] = np.where(low[..., 3:4] > 0, f0[..., :3], low[..., :3])
