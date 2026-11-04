@@ -41,7 +41,8 @@ export function YardScreen() {
   // enough energy for a task step (or a location reward waits) → the Locations button calls for attention
   const taskHint = tasksReady(state, now);
   const [slots, setSlots] = useState(false);
-  // the yard goes on to the right: a swipe left shows its second half (the kiosk, the pigeon loft), right — back
+  // the yard is three pictures side by side: -1 the back yard on the left (the mural wall, the arch), 0 the court, 1 the kiosk and
+  // the pigeon loft on the right; a swipe or the arrows move between them
   const [page, setPage] = useState(0);
   const [drag, setDrag] = useState(0);
   const touch = useRef<{ x: number; y: number; on: boolean | null } | null>(null);
@@ -51,12 +52,12 @@ export function YardScreen() {
     if (!c) return;
     const dx = t.clientX - c.x, dy = t.clientY - c.y;
     if (c.on === null && Math.hypot(dx, dy) > 12) c.on = Math.abs(dx) > Math.abs(dy) * 1.5;
-    if (c.on) setDrag(page === 0 ? Math.min(0, dx) : Math.max(0, dx));
+    if (c.on) setDrag(Math.max(page === 1 ? 0 : -Infinity, Math.min(page === -1 ? 0 : Infinity, dx)));
   };
   const onEnd = () => {
     const c = touch.current;
     touch.current = null;
-    if (c?.on && Math.abs(drag) > 50) { haptic.tap(); setPage(drag < 0 ? 1 : 0); }
+    if (c?.on && Math.abs(drag) > 50) { haptic.tap(); setPage(Math.max(-1, Math.min(1, page + (drag < 0 ? 1 : -1)))); }
     setDrag(0);
   };
   const turn = (to: number) => { haptic.tap(); setPage(to); };
@@ -98,7 +99,7 @@ export function YardScreen() {
         <div className="title-row">
           <h1 className="display">Двор</h1>
           <Help topic="yard-menu" title="Как устроен двор">
-            <p>Двор длинный: свайпни влево (или нажми стрелку справа) — там продолжение: ларёк-обменник и голубятня.</p>
+            <p>Двор длинный: свайпни влево (или нажми стрелку справа) — там продолжение: ларёк-обменник и голубятня. Свайп вправо (стрелка слева) — задний двор.</p>
             <p>Каждые 5 минут во дворе появляется случайная находка, максимум 5 сразу. Время идёт, даже когда игра закрыта — заходи и собирай.</p>
             <p>Изредка попадается Клавиатура. Всё найденное можно продать в инвентаре.</p>
             <p>Обменник — ларёк во второй половине двора (свайпни влево). {LINKS[0].hint}</p>
@@ -112,7 +113,7 @@ export function YardScreen() {
           <span className="chip">{data?.items.length ?? state?.yard.count ?? 0}/{data?.max ?? 5}</span>
         </span>
       </div>
-      <div className={`yard tod-${tod} page-${page}`} onTouchStart={onStart} onTouchMove={onMove} onTouchEnd={onEnd} onTouchCancel={onEnd}>
+      <div className={`yard tod-${tod} page-${page < 0 ? "left" : page}`} onTouchStart={onStart} onTouchMove={onMove} onTouchEnd={onEnd} onTouchCancel={onEnd}>
         {/* blurred copy of the yard fills the space above the scene on tall screens */}
         <div className="scene-backdrop" style={{ backgroundImage: `url(/assets/yard/${tod === "night" ? "court-backdrop-dark" : "court-backdrop"}.webp)` }} />
         {/* the sharp scene stands on the nav at full width; the objects sit where they are drawn on the 2000×3405 sheet */}
@@ -170,6 +171,14 @@ export function YardScreen() {
             );
           })}
         </div>
+        {/* the back yard on the left (tools/scene/build-yard0.py): empty for now, things come later */}
+        <div className="yard-stage yard-pan yard-stage0" style={pan(-1)} aria-hidden={page !== -1}>
+          <DriftingSky className="court-sky" src={tod === "night" ? "/assets/yard/sky-dark.webp" : undefined} />
+          <DriftingSky className="yard-reflect" src={tod === "night" ? "/assets/yard/sky-dark.webp" : undefined} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="yard-bg" src={tod === "night" ? "/assets/yard/yard0-bg-dark.webp" : "/assets/yard/yard0-bg.webp"} alt="" draggable={false} />
+          <span className="yard-tint" aria-hidden="true" />
+        </div>
         {/* the second half of the yard (tools/scene/build-yard2.py): the exchange kiosk, the garages, the pigeon loft */}
         <div className="yard-stage yard-pan yard-stage2" style={pan(1)} aria-hidden={page !== 1}>
           <DriftingSky className="court-sky" src={tod === "night" ? "/assets/yard/sky-dark.webp" : undefined} />
@@ -183,7 +192,8 @@ export function YardScreen() {
             <KioskArt open={exOpen} night={tod === "night"} />
           </Link>
         </div>
-        <button type="button" className={`yard-pager ${page === 0 ? "next" : "prev"}`} onClick={() => turn(page === 0 ? 1 : 0)} aria-label={page === 0 ? "Дальше по двору" : "Назад во двор"}>{page === 0 ? "›" : "‹"}</button>
+        {page > -1 && <button type="button" className="yard-pager prev" onClick={() => turn(page - 1)} aria-label={page === 0 ? "Задний двор" : "Назад во двор"}>‹</button>}
+        {page < 1 && <button type="button" className="yard-pager next" onClick={() => turn(page + 1)} aria-label={page === 0 ? "Дальше по двору" : "Назад во двор"}>›</button>}
         <div className="yard-timer">
           {!data ? "…" : data.nextAt ? <>Следующая находка через <b className="num">{clock(data.nextAt - now)}</b></> : <>Двор полон — собери, чтобы появилось новое</>}
         </div>

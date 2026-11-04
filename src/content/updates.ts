@@ -17,6 +17,12 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-04-back-yard",
+    date: "4 ноября",
+    title: "Задний двор",
+    items: [{ img: "/assets/updates/2026-11-04-back-yard.webp", text: "Во дворе свайпни вправо (или нажми стрелку «‹» слева) — там задний двор: стена с мозаикой и арка. Скоро там кое-что появится." }],
+  },
+  {
     id: "2026-11-04-leaders-slide",
     date: "4 ноября",
     title: "Плавная полоса игроков",
