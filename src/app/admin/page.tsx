@@ -80,6 +80,18 @@ function ago(v: unknown) {
   if (s < 86400) return `${Math.floor(s / 3600)} ч назад`;
   return `${Math.floor(s / 86400)} дн назад`;
 }
+/** «через 2 ч 15 мин» / «через 3 дн 4 ч» to a moment (ms) */
+function inTime(t: number | null | undefined, now = Date.now()) {
+  if (!t) return "—";
+  const m = Math.max(0, Math.round((t - now) / 60_000));
+  const d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60), mm = m % 60;
+  return d ? `${d} дн ${h} ч` : h ? `${h} ч ${mm} мин` : `${Math.max(1, mm)} мин`;
+}
+/** re-renders every 30 s (the countdowns) */
+function useTick(ms = 30_000) {
+  const [, set] = useState(0);
+  useEffect(() => { const t = setInterval(() => set((x) => x + 1), ms); return () => clearInterval(t); }, [ms]);
+}
 const who = (r: Row) => `${r.display_name ?? "?"}${r.username ? ` @${r.username}` : ""}`;
 function infoText(v: unknown): string {
   if (!v) return "";
@@ -501,7 +513,7 @@ const ActionName = ({ t }: { t: unknown }) => <span title={String(t)}>{ACTION_NA
 const Err = ({ e }: { e: string | null }) => (e ? <p className="adm-err">{e}</p> : null);
 
 // ---------------- overview ----------------
-type GameState = { works?: { on: boolean }; tosya?: { mode: string; here: boolean; endsAt: number | null }; events?: Row[]; exchange?: { window: { open: boolean; until: number } }; evb?: { bosses: { id: string; name: string; on: boolean }[] } };
+type GameState = { works?: { on: boolean }; tosya?: { mode: string; here: boolean; endsAt: number | null; nextAt?: number | null }; events?: Row[]; exchange?: { window: { open: boolean; until: number } }; evb?: { bosses: { id: string; name: string; on: boolean }[] } };
 /** the state of the game at a glance: each tile opens its control */
 function GameStatus() {
   const { data } = useLoad(async (): Promise<GameState> => {
@@ -511,15 +523,16 @@ function GameStatus() {
     ]);
     return { works, tosya, events, exchange, evb };
   }, []);
+  useTick();
   const now = Date.now();
   const live = (data?.events ?? []).filter((r) => r.enabled !== false && new Date(String(r.starts_at)).getTime() <= now && new Date(String(r.ends_at)).getTime() > now && !cleanEffects(r.effects).silent);
   const evbOn = (data?.evb?.bosses ?? []).filter((b) => b.on);
   const tiles: [string, string, string, ReactNode, boolean][] = [
     ["works", "🛠", "Тех. работы", data?.works ? (data.works.on ? "игра закрыта" : "выключены") : "…", !!data?.works?.on],
-    ["tosya", "🥟", "Тося", data?.tosya ? (data.tosya.here ? `в игре до ${when(data.tosya.endsAt)}` : data.tosya.mode === "off" ? "выключен" : "не приехал") : "…", !!data?.tosya?.here],
+    ["tosya", "🥟", "Тося", data?.tosya ? (data.tosya.here ? `в игре ещё ${inTime(data.tosya.endsAt)}` : data.tosya.mode === "off" ? "выключен" : data.tosya.nextAt ? `приедет через ${inTime(data.tosya.nextAt)}` : "не приехал") : "…", !!data?.tosya?.here],
     ["events", "🎉", "События", data?.events ? (live.length ? `идёт: ${live.map((r) => r.title).join(", ")}` : "нет активных") : "…", live.length > 0],
     ["bosses", "👹", "Ивент-боссы", data?.evb ? (evbOn.length ? evbOn.map((b) => b.name).join(", ") : "выключены") : "…", evbOn.length > 0],
-    ["exchange", "💱", "Обменник", data?.exchange ? (data.exchange.window.open ? `открыт до ${when(new Date(data.exchange.window.until).toISOString())}` : "закрыт") : "…", !!data?.exchange?.window.open],
+    ["exchange", "💱", "Обменник", data?.exchange ? (data.exchange.window.open ? `открыт ещё ${inTime(data.exchange.window.until)}` : `откроется через ${inTime(data.exchange.window.until)}`) : "…", !!data?.exchange?.window.open],
   ];
   return (
     <div className="adm-status">
@@ -961,7 +974,8 @@ function Maintenance() {
 
 /** «Тося»: start the event by hand (3 hours), reset it (a new visit — every tray full again), stop it, or his own schedule */
 function TosyaAdmin() {
-  const t = useLoad(() => admin<{ mode: "auto" | "off" | "run"; here: boolean; endsAt: number | null }>("tosya"), []);
+  const t = useLoad(() => admin<{ mode: "auto" | "off" | "run"; here: boolean; endsAt: number | null; nextAt: number | null }>("tosya"), []);
+  useTick();
   const [busy, setBusy] = useState(false);
   const set = async (mode: string, ask?: string) => {
     if (ask && !confirm(ask)) return;
@@ -970,7 +984,7 @@ function TosyaAdmin() {
     setBusy(false);
   };
   const d = t.data;
-  const status = !d ? "…" : d.here ? `в игре до ${when(d.endsAt)}` : d.mode === "off" ? "выключен" : "сейчас не в игре";
+  const status = !d ? "…" : d.here ? `в игре до ${when(d.endsAt)} (ещё ${inTime(d.endsAt)})` : d.mode === "off" ? "выключен" : d.nextAt ? `приедет через ${inTime(d.nextAt)} (${when(d.nextAt)})` : "сейчас не в игре";
   return (
     <Box title={`🥟 Тося — ${status}`}>
       <p className="muted tiny">«Запустить» — Тося приезжает сейчас на 3 часа. «Обнулить» — начать заново: у всех игроков снова полный поднос и цены с начала. «Остановить» — уехал и не приезжает сам. «Авто» — приезжает сам в случайные дни.</p>
@@ -1554,8 +1568,9 @@ function ExchangeEvent() {
     setBusy(false);
   };
   const w = data?.window;
+  useTick();
   return (
-    <Box title="💱 Обменник" right={w && <span className={w.open ? "adm-ok" : "muted"}>{w.open ? `открыт · закроется ${when(new Date(w.until).toISOString())}` : `закрыт · откроется ${when(new Date(w.until).toISOString())}`}</span>}>
+    <Box title="💱 Обменник" right={w && <span className={w.open ? "adm-ok" : "muted"}>{w.open ? `открыт · закроется через ${inTime(w.until)} (${when(w.until)})` : `закрыт · откроется через ${inTime(w.until)} (${when(w.until)})`}</span>}>
       <p className="muted small" style={{ marginTop: 0 }}>Когда работает обменник во дворе (ларёк с барыгой). Дни и часы — по Москве. Сейчас: <b>{data?.text ?? "…"}</b>. Изменения доходят до игры в течение ~30 секунд.</p>
       <Err e={err} />
       {cur && (

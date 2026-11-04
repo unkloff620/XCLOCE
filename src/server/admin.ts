@@ -4,7 +4,7 @@
  * reason `admin:<telegram id>` and to admin_log (who, whom, what, before → after).
  */
 import { send } from "./notify-send.ts";
-import { cleanTosyaMode, tosyaVisit } from "../content/tosya.ts";
+import { cleanTosyaMode, tosyaNextAt, tosyaVisit } from "../content/tosya.ts";
 import { GameError, type Db, type Queryable } from "./db.ts";
 import { loadConfig, resetConfigCache } from "./config.ts";
 import { cleanEffects } from "../content/events.ts";
@@ -467,7 +467,7 @@ export async function maintenanceSet(db: Db, adminTg: number, on: boolean, text:
 export async function tosya(db: Db) {
   const cfg = await loadConfig(db);
   const v = tosyaVisit(Date.now(), cfg.tosya);
-  return { mode: cfg.tosya.mode, here: !!v, endsAt: v?.endsAt ?? null };
+  return { mode: cfg.tosya.mode, here: !!v, endsAt: v?.endsAt ?? null, nextAt: v ? null : tosyaNextAt(Date.now(), cfg.tosya) };
 }
 /** «Запустить» / «Обнулить» (run: a new visit from now — every tray full again), «Остановить» (off), «Сам» (auto) */
 export async function tosyaSet(db: Db, mode: unknown) {

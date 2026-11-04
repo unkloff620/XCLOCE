@@ -58,6 +58,22 @@ export function tosyaVisit(now: number, m: TosyaMode = { mode: "auto", at: 0 }):
   return now >= start && now < end ? { id: day, endsAt: Math.round(end) } : null;
 }
 
+/** when he comes next (ms), or null: stopped by the admin / no visit in the next 60 days */
+export function tosyaNextAt(now: number, m: TosyaMode = { mode: "auto", at: 0 }): number | null {
+  if (m.mode === "off") return null;
+  if (m.mode === "run" && now < m.at) return m.at;
+  const first = Date.parse(`${dayOf(now)}T00:00:00Z`) - MSK;
+  for (let k = 0; k < 60; k++) {
+    const midnight = first + k * 24 * 3600_000;
+    const day = dayOf(midnight + 3600_000);
+    const r = seeded(`tosya:${day}`);
+    if (r() >= TOSYA_DAY_CHANCE) continue;
+    const start = Math.round(midnight + (TOSYA_FIRST_HOUR + r() * (TOSYA_LAST_HOUR - TOSYA_FIRST_HOUR)) * 3600_000);
+    if (start > now) return start;
+  }
+  return null;
+}
+
 /** how many pies he brought this player on this visit: 3…5 */
 export const tosyaPies = (pid: number, visit: string) => 3 + (hash(`pies:${pid}:${visit}`) % 3);
 
