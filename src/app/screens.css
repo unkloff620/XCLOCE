@@ -2010,6 +2010,10 @@ button.bjt-stack { cursor: pointer; }
 /* no game running: the levels written on the board */
 .zb-menu { z-index: 6; display: flex; flex-direction: column; justify-content: center; gap: 1.8cqw; padding: 3cqw; border-radius: 2cqw;
   background: rgba(8, 46, 50, 0.94); border: 0.35cqw dashed rgba(234, 247, 243, 0.45); overflow: auto; }
+.zb-res-wrap { position: relative; }
+.zb-res-wrap > .zb-res { width: 100%; }
+.zb-res-x { position: absolute; top: 1cqw; right: 1cqw; width: 6.4cqw; height: 6.4cqw; display: grid; place-items: center; padding: 0; border-radius: 1.4cqw; border: 2px solid rgba(255, 220, 140, 0.55);
+  background: rgba(0, 0, 0, 0.45); color: #ffe7b0; font-size: 3.4cqw; font-weight: 900; line-height: 1; cursor: pointer; }
 .zb-res { display: flex; flex-direction: column; align-items: center; gap: 0.6cqw; padding: 1.6cqw; border-radius: 1.6cqw; text-align: center; font-size: 3cqw; }
 .zb-res b { font-size: 5.6cqw; }
 .zb-res.win { background: rgba(61, 220, 132, 0.16); box-shadow: inset 0 0 0 0.3cqw rgba(61, 220, 132, 0.6); }
@@ -4838,6 +4842,10 @@ body { background-attachment: fixed; }
 .rig.still .rig-teeth-shine { animation: none; transform: translateX(40px); }
 @media (prefers-reduced-motion: reduce) { .rig-teeth-shine { animation: none; } }
 /* the craft scheme: the «Покупать всё сразу» switch in the top-left corner of the paper */
+.cf-back { position: absolute; z-index: 3; left: 6%; top: 11.5%; display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px 2px 6px; border-radius: 999px;
+  border: 2px solid #3a2410; background: linear-gradient(180deg, #ffe27a, #e6a91c); color: #2a1606; font-size: 12px; font-weight: 800; cursor: pointer; box-shadow: 0 2px 0 #3a2410; }
+.cf-back > span { font-size: 18px; line-height: 1; margin-top: -2px; }
+.cf-back > i { font-style: normal; }
 .cf-bulk { position: absolute; z-index: 3; left: 6%; top: 5.5%; display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px 3px 4px; border: 0; border-radius: 999px;
   background: rgba(120, 80, 30, 0.12); color: #3a2410; font-weight: 800; font-size: 11.5px; cursor: pointer; }
 .cf-bulk i { position: relative; flex: none; width: 30px; height: 17px; border-radius: 9px; background: #b9a07a; border: 1.5px solid #6b4a24; transition: background 0.15s; }

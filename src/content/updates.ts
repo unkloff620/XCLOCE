@@ -17,6 +17,15 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-04-back-buttons",
+    date: "4 ноября",
+    title: "Удобнее в зонке и крафте",
+    items: [
+      { text: "Зонк: у итога партии и дуэли теперь есть ✕ — закрыл, и снова видно меню с кнопкой «Дуэли», выходить из зонка не нужно." },
+      { text: "Крафт: открыл «Собрать» у детали — в схеме есть кнопка «‹ Назад» к предыдущей вещи." },
+    ],
+  },
+  {
     id: "2026-11-04-back-yard",
     date: "4 ноября",
     title: "Задний двор",

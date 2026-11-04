@@ -688,17 +688,23 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
           {/* no game running: the levels to choose from (and how the last game ended) */}
           {!playing && !show && info && (
             <div className="zb-menu" style={{ left: zx(236), top: zy(440), width: zx(562), height: zy(850) }}>
-              {g?.status === "done" && g.result && g.duel ? (
-                <button type="button" className="zb-res" onClick={() => setShowDuel(g.duel!)}>
-                  <b className="display">Дуэль сыграна</b>
-                  <span className="num">{full(g.result.points ?? 0)} очков</span>
-                  <span className="zb-res-got"><em>посмотреть итог</em></span>
-                </button>
-              ) : g?.status === "done" && g.result && (
-                <div className={`zb-res ${g.result.won ? "win" : "lose"}`}>
-                  <b className="display">{g.result.won ? "Пройдено!" : g.result.outcome === "gave_up" ? "Сдался" : "Не хватило"}</b>
-                  <span className="num">{full(g.result.points ?? 0)} из {full(g.target ?? 0)}</span>
-                  <span className="zb-res-got">{g.result.reward && <RewardChips r={g.result.reward} size={14} />}<em>+{g.result.xp ?? 0} опыта</em></span>
+              {/* the last game's result; ✕ puts it away — back to the menu with «Дуэли» on top */}
+              {g?.status === "done" && g.result && (
+                <div className="zb-res-wrap">
+                  {g.duel ? (
+                    <button type="button" className="zb-res" onClick={() => setShowDuel(g.duel!)}>
+                      <b className="display">Дуэль сыграна</b>
+                      <span className="num">{full(g.result.points ?? 0)} очков</span>
+                      <span className="zb-res-got"><em>посмотреть итог</em></span>
+                    </button>
+                  ) : (
+                    <div className={`zb-res ${g.result.won ? "win" : "lose"}`}>
+                      <b className="display">{g.result.won ? "Пройдено!" : g.result.outcome === "gave_up" ? "Сдался" : "Не хватило"}</b>
+                      <span className="num">{full(g.result.points ?? 0)} из {full(g.target ?? 0)}</span>
+                      <span className="zb-res-got">{g.result.reward && <RewardChips r={g.result.reward} size={14} />}<em>+{g.result.xp ?? 0} опыта</em></span>
+                    </div>
+                  )}
+                  <button type="button" className="zb-res-x" onClick={() => { haptic.tap(); setLast(null); }} aria-label="Закрыть итог" title="Закрыть">✕</button>
                 </div>
               )}
               <div className="zb-xp" title={`${info.xp} опыта зонка`}>

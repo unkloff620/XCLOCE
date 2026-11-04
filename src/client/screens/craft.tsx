@@ -43,7 +43,10 @@ function BonusLines({ b, on }: { b: CraftBonus; on?: boolean }) {
 export function CraftScreen() {
   const { state, act, busy, toast } = useGame();
   const [filter, setFilter] = useState<Filter>("all");
-  const [recipe, setRecipe] = useState<CraftDef | null>(null);
+  // the open schemes: «Собрать» on an ingredient opens its own scheme on top, «Назад» goes back to the one before
+  const [trail, setTrail] = useState<CraftDef[]>([]);
+  const recipe = trail.at(-1) ?? null;
+  const setRecipe = (d: CraftDef | null) => setTrail(d ? [d] : []);
   const [ask, setAsk] = useState(false);
   const boxes = state?.craftBoxes ?? Array.from({ length: CRAFT_BOXES }, () => null);
   const qty = useMemo(() => new Map((state?.inventory ?? []).map((i) => [i.id, i.qty])), [state?.inventory]);
@@ -262,7 +265,8 @@ export function CraftScreen() {
         </Modal>
       )}
 
-      {recipe && <Scheme d={recipe} qty={qty} busy={!!busy} onMake={() => make(recipe)} onOpen={setRecipe} onClose={() => setRecipe(null)}
+      {recipe && <Scheme key={recipe.id} d={recipe} qty={qty} busy={!!busy} onMake={() => make(recipe)} onOpen={(d) => { haptic.tap(); setTrail((t) => [...t, d]); }} onClose={() => setRecipe(null)}
+        back={trail.length > 1 ? trail[trail.length - 2] : null} onBack={() => { haptic.tap(); setTrail((t) => t.slice(0, -1)); }}
         onSplit={async () => { const r = await act<{ back: { id: string; qty: number }[] }>("craft_split", { itemId: recipe.id }, (x) => `Разобрано: вернулось ${x.back.reduce((t, b) => t + b.qty, 0)} шт.`); if (r) haptic.ok(); }} />}
       {ask && <StashWishWindow onClose={() => setAsk(false)} />}
     </div>
@@ -271,7 +275,7 @@ export function CraftScreen() {
 
 /** «Схема создания вещи»: a sheet of paper — the ingredients (a picture, have/need; one that is made itself — «Собрать»
  * opens its own scheme), an arrow, the result and «Создать». */
-function Scheme({ d, qty, busy, onMake, onOpen, onClose, onSplit }: { d: CraftDef; qty: Map<string, number>; busy: boolean; onMake: () => void; onOpen: (d: CraftDef) => void; onClose: () => void; onSplit: () => void }) {
+function Scheme({ d, qty, busy, onMake, onOpen, onClose, onSplit, back, onBack }: { d: CraftDef; qty: Map<string, number>; busy: boolean; onMake: () => void; onOpen: (d: CraftDef) => void; onClose: () => void; onSplit: () => void; back: CraftDef | null; onBack: () => void }) {
   const [sure, setSure] = useState(false);
   const { state, act } = useGame();
   // «Всё сразу»: «купить» buys every missing part of that kind at once (remembered on this device)
@@ -293,6 +297,12 @@ function Scheme({ d, qty, busy, onMake, onOpen, onClose, onSplit }: { d: CraftDe
         <button type="button" role="switch" aria-checked={bulk} className={`cf-bulk ${bulk ? "on" : ""}`} onClick={toggleBulk}>
           <i aria-hidden="true" /><span>Покупать всё сразу</span>
         </button>
+        {/* opened by «Собрать» from another scheme: back to it */}
+        {back && (
+          <button type="button" className="cf-back" onClick={onBack} title={`Назад: ${back.name}`}>
+            <span aria-hidden="true">‹</span><ItemArt id={back.id} size={22} /><i>Назад</i>
+          </button>
+        )}
         <div className="cf-scheme-body">
           {cols.map((col, i) => (
             <div key={i} className="cf-scheme-col">
