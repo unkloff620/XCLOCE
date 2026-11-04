@@ -25,6 +25,7 @@ import {
   ZONK_BANK_MIN, ZONK_CONT_PENALTY, ZONK_DAY_PRIZE, ZONK_FAIL_XP, ZONK_LEVELS,
   POKER_BONUS_LEVELS, POKER_CHEATS, POKER_HANDS, POKER_LEVEL_BONUS, POKER_MAX_LEVEL, POKER_RULES, POKER_CHIP, pokerCheats, pokerPay,
   type PokerHand, type UpgradeMode, DUEL_FEE, DUEL_ROUNDS, DUEL_STAKES,
+  ZONK_DICE,
 } from "../../content/games.ts";
 
 /* ---------------- a playing card (poker) ---------------- */
@@ -502,8 +503,16 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
   const hintsOn = playing && !!g?.hints;
   const hints = hintsOn ? new Set(bestPick(roll)) : new Set<number>();
   // the ladder: earlier throws of this attempt (fixed) and the dice picked now (a tap puts one back), with their points
+  // by the rules all six dice scored ("hot dice") are thrown again: the ladder shows the throws of the current six only,
+  // the sixes played before are one chalk line above it (how many and their points)
+  const hist = show ? show.history : playing ? g?.history ?? [] : [];
+  let setStart = 0, used = 0, past = 0, pastSets = 0;
+  hist.forEach((h, k) => {
+    used += h.kept.length;
+    if (used >= ZONK_DICE) { past += hist.slice(setStart, k + 1).reduce((t, x) => t + (x.points ?? 0), 0); pastSets++; used = 0; setStart = k + 1; }
+  });
   const ladder = layoutLadder([
-    ...(show ? show.history : playing ? g?.history ?? [] : []).flatMap((h) => zonkGroups(h.kept).map((gr) => ({ dice: gr.dice.map((v) => ({ v, i: -1 })), points: gr.points, old: true }))),
+    ...hist.slice(setStart).flatMap((h) => zonkGroups(h.kept).map((gr) => ({ dice: gr.dice.map((v) => ({ v, i: -1 })), points: gr.points, old: true }))),
     ...(show || !playing ? [] : (() => {
       const free = [...pick];
       return zonkGroups(picked).map((gr) => ({
@@ -619,6 +628,11 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
               ? <span key={`k${k}`} className="zb-kept old" style={style}><DieFace v={d.v} /></span>
               : <button key={`p${d.i}`} className="zb-kept" style={style} onClick={() => toggle(d.i)} aria-label={`вернуть ${d.v}`}><DieFace v={d.v} /></button>;
           })}
+          {pastSets > 0 && (
+            <span className="zb-hot num" style={{ left: zx(246), top: zy(LADDER_ROWS[0] - 4), width: zx(479), height: zy(CELL.h) }}>
+              {pastSets > 1 ? `${pastSets}×` : ""}все 6 костей сыграны · +{full(past)} <small>бросаешь все 6 заново</small>
+            </span>
+          )}
           {/* chalk brackets under each combination and what it scores (picture: 1-1-1 → 1000, 5 → 50) */}
           {ladder.marks.map((m, k) => {
             const a = ladderCell(m.row, m.from), b = ladderCell(m.row, m.to);

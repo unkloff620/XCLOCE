@@ -17,6 +17,12 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-04-zonk-hot-dice",
+    date: "4 ноября",
+    title: "Зонк: все шесть костей",
+    items: [{ text: "Когда сыграны все 6 костей и бросаешь все шесть заново, лесенка очищается под новый бросок, а прошлые шестёрки с их очками записаны строкой сверху. Кубики больше не пропадают." }],
+  },
+  {
     id: "2026-11-04-back-buttons",
     date: "4 ноября",
     title: "Удобнее в зонке и крафте",
