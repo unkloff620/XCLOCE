@@ -54,7 +54,7 @@ export function TosyaScreen() {
         {/* what the pies may hold: a sheet out of the left edge, icons only */}
         {t && (
           <div className="ts-sheet" aria-label="Что бывает в пирожках">
-            {["keyboard", "gpu", "rug-pull-gun", "part-gear"].map((id) => <ItemArt key={id} id={id} size={30} />)}
+            {["keyboard", "gpu", "rug-pull-gun", "part-gear", "tat-yakuza-chest-l"].map((id) => <ItemArt key={id} id={id} size={30} />)}
             <Icon name="xp" size={28} />
             <Icon name="RUB" size={28} />
             <Icon name="USD" size={28} />

@@ -897,8 +897,8 @@ function Player({ id }: { id: number }) {
           <div className="adm-form" style={{ marginTop: 10 }}>
             <button className="adm-btn" onClick={() => { if (confirm("Сбросить сегодняшний лимит боёв со всеми боссами?")) void edit({ op: "boss_limit_reset" }, "Сброс лимита на боссов"); }}>Сброс лимита на боссов</button>
             {TATTOO_SETS.map((s) => (
-              <button key={s.id} className="adm-btn" onClick={() => { if (confirm(`Выдать весь сет наколок «${s.name}» (${bossById(s.boss)?.name ?? "Ящик ништяков"})?`)) void edit({ op: "give_tattoo_set", set: s.id }, `Сет наколок «${s.name}»`); }}>
-                Сет наколок: «{s.name}» · {bossById(s.boss)?.name ?? "Ящик ништяков"}
+              <button key={s.id} className="adm-btn" onClick={() => { if (confirm(`Выдать весь сет наколок «${s.name}» (${s.boss === "tosya" ? "Тося" : bossById(s.boss)?.name ?? "Ящик ништяков"})?`)) void edit({ op: "give_tattoo_set", set: s.id }, `Сет наколок «${s.name}»`); }}>
+                Сет наколок: «{s.name}» · {s.boss === "tosya" ? "Тося" : bossById(s.boss)?.name ?? "Ящик ништяков"}
               </button>
             ))}
           </div>

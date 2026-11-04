@@ -195,7 +195,7 @@ const TATTOOS: ItemDef[] = TATTOO_SETS.flatMap((s) =>
   s.pieces.map((p) => ({
     id: p.id, name: `Наколка: ${p.name}`, category: "tattoo" as const, rarity: "epic" as const, maxStack: 1,
     description: `Из сета «${s.name}». Набивается бесплатно в редакторе персонажа → «Наколки». Весь сет: +${s.bonus.damage} к урону «${WEAPONS.find((w) => w.id === s.bonus.weapon)?.name ?? s.bonus.weapon}».`,
-    sources: [s.boss === "box" ? "Ящик ништяков: шанс 20% за открытие" : `${bossById(s.boss)?.name ?? s.boss}: по одной наколке за победу в «${TATTOO_MODE_NAME[s.mode]}»`],
+    sources: [s.boss === "box" ? "Ящик ништяков: шанс 20% за открытие" : s.boss === "tosya" ? "Тося: одна наколка в каждом пирожке" : `${bossById(s.boss)?.name ?? s.boss}: по одной наколке за победу в «${TATTOO_MODE_NAME[s.mode]}»`],
   })),
 );
 /** «Крафт» (content/craft.ts): детали и собранные вещи — лежат на складе, бонус дают из заныка */

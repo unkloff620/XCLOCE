@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-04-tosya-tattoos",
+    date: "4 ноября",
+    title: "Наколки в пирожках Тоси",
+    items: [
+      { img: "/assets/updates/2026-11-04-tosya-tattoos.webp", text: "В каждом пирожке Тоси теперь наколка — из трёх новых сетов: «Пирожковая», «Горничная» и «Кухня якудзы». Каждый раз новая, которой у тебя ещё нет." },
+    ],
+  },
+  {
     id: "2026-11-04-knyaz-dying",
     date: "4 ноября",
     title: "Князь на последнем издыхании",

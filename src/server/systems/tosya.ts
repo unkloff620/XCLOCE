@@ -1,4 +1,5 @@
 /* «Тося» and his pies (content/tosya.ts): the visit, the player's tray, a pie bought. */
+import { TATTOO_SETS } from "../../content/tattoos.ts";
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, takeMoney, type Ctx } from "../core.ts";
 import type { Config } from "../config.ts";
@@ -28,7 +29,13 @@ export async function tosyaBuy(ctx: Ctx, slot: number) {
   if (taken & (1 << slot)) throw new GameError("tosya_taken", "Этот пирожок уже твой");
   const price = tosyaPrice(bits(taken), pies);
   if (price > 0) await takeMoney(ctx, "USD", price, `tosya:${v.id}:${slot}`);
-  const reward = await grantReward(ctx, rollPie(ctx.rng, tosyaValue(price)), `tosya:${v.id}:${slot}`);
+  // one of Тося's tattoos the player does not have yet (all three sets — content/tattoos.ts boss "tosya")
+  const pie = rollPie(ctx.rng, tosyaValue(price));
+  const all = TATTOO_SETS.filter((s) => s.boss === "tosya").flatMap((s) => s.pieces.map((x) => x.id));
+  const have = new Set((await ctx.q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND item_id = ANY($2) AND qty > 0", [ctx.pid, all])).map((r) => r.item_id));
+  const left = all.filter((id) => !have.has(id));
+  if (left.length) pie.items = [...(pie.items ?? []), { id: left[Math.floor(ctx.rng() * left.length) % left.length], qty: 1 }];
+  const reward = await grantReward(ctx, pie, `tosya:${v.id}:${slot}`);
   await ctx.q.query("UPDATE tosya_pies SET taken = taken | $3 WHERE player_id=$1 AND visit=$2", [ctx.pid, v.id, 1 << slot]);
   return { slot, price, reward };
 }
