@@ -1578,7 +1578,7 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "y": 226.0,
         "w": 442,
         "h": 724,
-        "v": "f65eaa0e"
+        "v": "a43f4e6a"
       },
       "armL": {
         "x": 82.0,
@@ -1589,7 +1589,7 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
           290.0,
           335.0
         ],
-        "v": "0ab7d692"
+        "v": "173495ff"
       },
       "handL": {
         "x": 22.5,
@@ -1600,7 +1600,7 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
           125.0,
           560.0
         ],
-        "v": "226e55ba"
+        "v": "3a4bfaf7"
       },
       "armR": {
         "x": 481.0,
@@ -1611,7 +1611,7 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
           540.0,
           350.0
         ],
-        "v": "5afd0a3a"
+        "v": "068d6435"
       },
       "handR": {
         "x": 566.5,
@@ -1622,7 +1622,7 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
           730.0,
           430.0
         ],
-        "v": "399ddf29"
+        "v": "2684245b"
       },
       "head": {
         "x": 320.5,
@@ -1633,7 +1633,7 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
           428.1,
           274.7
         ],
-        "v": "7f7a8335"
+        "v": "f171a31b"
       },
       "eyes": {
         "x": 399.5,

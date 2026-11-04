@@ -102,18 +102,26 @@ def main(boss):
         top[L[p][..., 3] > 128] = i
     white = ndimage.binary_dilation(warped.min(2) > 225, iterations=2)
     hurt = {}
+    # the face keeps its own eyes, brows and mouth (they are layers of their own and move): the edit's around them is not
+    # taken — swollen or shut eyes from the edit would show under the rig's open ones
+    face = np.zeros((H, W), bool)
+    for f in ["eyes", "eyes-closed", "pupils", "brows", "brows-sad", "browL", "browR", "mouth", "mouth-closed", "mouth-sad", "lips", "brows@0", "jaw@0"]:
+        fp = os.path.join(S, f + ".png")
+        if os.path.exists(fp):
+            face |= np.array(Image.open(fp).convert("RGBA"))[..., 3] > 40
+    face = ndimage.binary_dilation(face, iterations=14)
     for i, p in enumerate(order):
         if p not in SKIN_AND_CLOTHES:
             continue
         im = L[p].copy()
-        m = (top == i) & ndimage.binary_erosion(L[p][..., 3] > 128, iterations=7) & ~white
+        m = (top == i) & ndimage.binary_erosion(L[p][..., 3] > 128, iterations=7) & ~white & ~face
         w = ndimage.gaussian_filter(m.astype(np.float32), 2)[..., None]
         im[..., :3] = np.clip(im[..., :3] * (1 - w) + warped * w, 0, 255).astype(np.uint8)
         hurt[p] = im
     # the head with the mouth open looks like the head: the same damage where the head is on top
     if os.path.exists(os.path.join(S, "head-open.png")) and "head" in order:
         ho = np.array(Image.open(os.path.join(S, "head-open.png")).convert("RGBA"))
-        m = (top == order.index("head")) & ndimage.binary_erosion(ho[..., 3] > 128, iterations=7) & ~white
+        m = (top == order.index("head")) & ndimage.binary_erosion(ho[..., 3] > 128, iterations=7) & ~white & ~face
         w = ndimage.gaussian_filter(m.astype(np.float32), 2)[..., None]
         ho[..., :3] = np.clip(ho[..., :3] * (1 - w) + warped * w, 0, 255).astype(np.uint8)
         hurt["head-open"] = ho
