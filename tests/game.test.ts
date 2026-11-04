@@ -2447,3 +2447,17 @@ describe("Новичок", () => {
     expect((await act(db, p, "help_seen", { topic: "poker" }, T0 + 3 * 24 * 3600_000)).state.newbie).toBeNull();
   });
 });
+
+describe("exchanger overnight", () => {
+  it("11 → 3: open from 11:00 till 3:00 at night every day (Moscow)", async () => {
+    const { cleanSchedule, exchangeWindow, exchangeScheduleText } = await import("../src/content/currencies.ts");
+    const s = cleanSchedule({ mode: "cycle", every: 1, offset: 0, from: 11, to: 3 });
+    expect(s.to).toBe(27);
+    const msk = (d: string, h: number) => Date.parse(`${d}T00:00:00Z`) + (h - 3) * 3600_000;
+    expect(exchangeWindow(msk("2026-11-05", 10), s).open).toBe(false);
+    expect(exchangeWindow(msk("2026-11-05", 12), s)).toMatchObject({ open: true, until: msk("2026-11-06", 3) });
+    expect(exchangeWindow(msk("2026-11-06", 2), s)).toMatchObject({ open: true, until: msk("2026-11-06", 3) });
+    expect(exchangeWindow(msk("2026-11-06", 4), s)).toMatchObject({ open: false, until: msk("2026-11-06", 11) });
+    expect(exchangeScheduleText(s)).toBe("каждый день · с 11:00 до 03:00 ночи по Москве");
+  });
+});

@@ -1572,10 +1572,10 @@ function ExchangeEvent() {
               <label>Раз в сколько дней<input className="adm-in" type="number" min={1} max={30} value={cur.every} onChange={(e) => set("every", e.target.value)} /></label>
               <label>Какой день цикла (0…{cur.every - 1})<input className="adm-in" type="number" min={0} max={cur.every - 1} value={cur.offset} onChange={(e) => set("offset", e.target.value)} /></label>
               <label>Открывается в (час МСК)<input className="adm-in" type="number" min={0} max={23} value={cur.from} onChange={(e) => set("from", e.target.value)} /></label>
-              <label>Закрывается в (час МСК)<input className="adm-in" type="number" min={1} max={24} value={cur.to} onChange={(e) => set("to", e.target.value)} /></label>
+              <label>Закрывается в (час МСК){cur.to > 24 ? " — следующего дня" : ""}<input className="adm-in" type="number" min={0} max={24} value={cur.to > 24 ? cur.to - 24 : cur.to} onChange={(e) => { const h = Number(e.target.value); set("to", h <= cur.from ? h + 24 : h); }} /></label>
             </div>
           )}
-          <p className="muted small">«Раз в 1 день» — каждый день; 0–24 — весь день. Сдвинуть открытие на завтра — поменяй «какой день цикла».</p>
+          <p className="muted small">«Раз в 1 день» — каждый день; 0–24 — весь день. Час закрытия меньше часа открытия — это следующий день (11 → 3: до 3 ночи). Сдвинуть открытие на завтра — поменяй «какой день цикла».</p>
           <Err e={saveErr} />
           <div className="row" style={{ gap: 8 }}>
             <button className="adm-btn" disabled={busy || !f}>Сохранить</button>

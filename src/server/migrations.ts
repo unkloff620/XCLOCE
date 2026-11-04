@@ -1235,4 +1235,10 @@ ALTER TABLE players ADD COLUMN IF NOT EXISTS beard_best INT NOT NULL DEFAULT 0;`
     id: "v2-079-newbie",
     sql: `CREATE TABLE IF NOT EXISTS newbie_claims (player_id INT NOT NULL, task_id TEXT NOT NULL, at TIMESTAMPTZ NOT NULL, PRIMARY KEY (player_id, task_id));`,
   },
+  {
+    // the exchanger: every day from 11:00 till 3:00 at night (Moscow) — the admin's request (later edited in the admin panel)
+    id: "v2-080-exchange-overnight",
+    sql: `INSERT INTO config (key, value) VALUES ('exchange.schedule', '{"mode":"cycle","every":1,"offset":0,"from":11,"to":27}')
+ON CONFLICT (key) DO UPDATE SET value = excluded.value;`,
+  },
 ];

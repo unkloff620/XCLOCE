@@ -48,7 +48,11 @@ export function cleanSchedule(v: unknown): ExchangeSchedule {
   const mode = o.mode === "always" || o.mode === "closed" ? o.mode : "cycle";
   const every = n(o.every, 1, 30, EXCHANGE_SCHEDULE.every);
   const from = n(o.from, 0, 23, 0);
-  const to = Math.max(from + 1, n(o.to, 1, 24, 24));
+  // a closing hour at or before the opening one is the next day's (11 → 3: till 3 at night); kept as hours past the
+  // opening day's midnight (27), at most a whole day open
+  let to = n(o.to, 1, 47, 24);
+  if (to <= from) to += 24;
+  to = Math.min(to, from + 24);
   return { mode, every, offset: n(o.offset, 0, every - 1, 0), from, to };
 }
 export const exchangeOpenOnDayNo = (n: number, s: ExchangeSchedule = EXCHANGE_SCHEDULE) =>
@@ -58,7 +62,8 @@ export function exchangeScheduleText(s: ExchangeSchedule = EXCHANGE_SCHEDULE): s
   if (s.mode === "always") return "работает каждый день";
   if (s.mode === "closed") return "сейчас не работает";
   const days = s.every === 1 ? "каждый день" : `один день из ${s.every}`;
-  return s.from === 0 && s.to === 24 ? days : `${days} · с ${s.from}:00 до ${s.to}:00 по Москве`;
+  const till = s.to > 24 ? `${String(s.to - 24).padStart(2, "0")}:00 ночи` : `${s.to}:00`;
+  return s.from === 0 && s.to === 24 ? days : `${days} · с ${s.from}:00 до ${till} по Москве`;
 }
 
 export interface ExchangeWindow {
@@ -74,10 +79,10 @@ export function exchangeWindow(now: number, s: ExchangeSchedule = EXCHANGE_SCHED
   const at = (dayNo: number, h: number) => dayNo * DAY_MS + h * HOUR_MS - MSK_MS;
   if (s.mode === "always") return { open: true, day, until: now + 365 * DAY_MS };
   if (s.mode === "closed") return { open: false, day, until: now + 365 * DAY_MS };
-  const hour = Math.floor(((now + MSK_MS) % DAY_MS) / HOUR_MS);
-  if (exchangeOpenOnDayNo(n, s) && hour >= s.from && hour < s.to) return { open: true, day, until: at(n, s.to) };
-  let next = exchangeOpenOnDayNo(n, s) && hour < s.from ? n : n + 1;
-  while (!exchangeOpenOnDayNo(next, s)) next++;
+  // a window may run past midnight (to > 24): yesterday's can still be open
+  for (const d of [n, n - 1]) if (exchangeOpenOnDayNo(d, s) && now >= at(d, s.from) && now < at(d, s.to)) return { open: true, day, until: at(d, s.to) };
+  let next = n;
+  while (!exchangeOpenOnDayNo(next, s) || at(next, s.from) <= now) next++;
   return { open: false, day, until: at(next, s.from) };
 }
 export const EXCHANGE_FEE = 0.05;
