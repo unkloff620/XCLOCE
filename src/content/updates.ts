@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-04-knyaz-dying",
+    date: "4 ноября",
+    title: "Князь на последнем издыхании",
+    items: [
+      { img: "/assets/updates/2026-11-04-knyaz-dying.webp", text: "Когда у Князя меньше четверти здоровья — куртка в лохмотьях, весь в крови и с кляпом во рту. Добивай!" },
+    ],
+  },
+  {
     id: "2026-11-04-all-beaten",
     date: "4 ноября",
     title: "Боссам больно",

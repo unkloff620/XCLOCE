@@ -5464,3 +5464,5 @@ html.paused *, html.paused *::before, html.paused *::after { animation-play-stat
 .nb-row.done .nb-n { background: #2f9a4e; color: #fff; }
 /* blackjack: [?] and «Встать» under the day-top note on the left — not over the dealer's cards */
 .bj2-top { left: 10px; right: auto; top: calc(var(--safe-t) + 86px); flex-direction: column; align-items: flex-start; flex-wrap: nowrap; }
+/* Князь below a quarter of HP: gagged — no grin, no sad mouth, no cigarette over the rag */
+.rig-knyaz.gagged .kz-grin > :not(:first-child), .rig-knyaz.gagged .kz-sad, .rig-knyaz.gagged .kz-cig, .rig-knyaz.gagged .kz-tip { display: none; }

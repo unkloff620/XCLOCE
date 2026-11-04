@@ -103,6 +103,8 @@ function bustBox(rig: { w: number; h: number; parts: Record<string, { x: number;
 
 /** HP share (0..1) below which the beaten look is shown. */
 export const BEATEN_BELOW = 0.5;
+/** HP share below which a boss with a "<id>-dying" rig shows it (rags, a gag) */
+export const DYING_BELOW = 0.25;
 
 /** how much slower a dazed boss moves (below half HP): breath, head, fists — all at this share of their speed */
 const DAZED_RATE = 0.45;
@@ -167,7 +169,9 @@ function Sweat({ eyes, id }: { eyes: Part; id: string }) {
  * cut to a box around the head (wider than the head, about 1.6 heads tall from just above the crown).
  */
 export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string; hpShare?: number; bust?: boolean }) {
-  const id = hpShare < BEATEN_BELOW && `${baseId}-beaten` in BOSS_RIGS ? `${baseId}-beaten` : baseId;
+  // below a quarter: the last look (Князь — rags and a gag, «<id>-dying»), below half: beaten
+  const id = hpShare < DYING_BELOW && `${baseId}-dying` in BOSS_RIGS ? `${baseId}-dying`
+    : hpShare < BEATEN_BELOW && `${baseId}-beaten` in BOSS_RIGS ? `${baseId}-beaten` : baseId;
   const dazed = hpShare < BEATEN_BELOW;
   const svgRef = useRef<SVGSVGElement>(null);
   useDazed(svgRef, dazed);
@@ -479,7 +483,7 @@ function KnyazRig({ id, rig, bust, dazed, svgRef, frameCss, strip }: {
       .rig-knyaz .kz-turn-l { animation: kz-turn-l-${id} ${k.ms}ms step-end infinite; }`);
   }
   return (
-    <svg ref={svgRef} className={`boss-rig rig-knyaz ${dazed ? "dazed" : ""}`} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} width="100%" height="100%" preserveAspectRatio={bust ? "xMidYMin slice" : "xMidYMax meet"} aria-hidden="true">
+    <svg ref={svgRef} className={`boss-rig rig-knyaz ${dazed ? "dazed" : ""} ${P.gag ? "gagged" : ""}`} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} width="100%" height="100%" preserveAspectRatio={bust ? "xMidYMin slice" : "xMidYMax meet"} aria-hidden="true">
       <style>{css.join("\n")}</style>
       <g className="kz-root" style={{ transformOrigin: `${rig.w / 2}px ${rig.h - 20}px`, transformBox: "view-box" }}>
         {img("legs")}
@@ -498,6 +502,8 @@ function KnyazRig({ id, rig, bust, dazed, svgRef, frameCss, strip }: {
               {img("lips")}
             </g>
             {img("mouth-sad", "kz-sad")}
+            {/* below a quarter: a rag in his mouth (knyaz-dying) — the grin, the jaw and the cigarette are hidden */}
+            {P.gag && img("gag")}
             <g className="kz-cig" style={vb}>
               <image href={`/assets/hero/mouth-cigarette.webp`} x={0} y={-KZ_CIG.thick / 2} width={KZ_CIG.len} height={KZ_CIG.thick} preserveAspectRatio="none" />
             </g>
