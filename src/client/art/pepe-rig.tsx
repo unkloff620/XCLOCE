@@ -300,7 +300,8 @@ const FS = `precision mediump float; varying vec2 v; uniform sampler2D s; unifor
 void main(){ gl_FragColor = texture2D(s, v) * a; }`;
 
 /** `sad`: he has just been hit — the glum face (eases in and out) */
-export function PepeRig({ view, className, sad }: { view?: readonly [number, number, number, number]; className?: string; sad?: boolean }) {
+/** `beaten`: below half HP — torn bloodied clothes, bruises (public/bosses/pepe/rig-beaten, tools/boss/pepe/make-beaten.py) */
+export function PepeRig({ view, className, sad, beaten }: { view?: readonly [number, number, number, number]; className?: string; sad?: boolean; beaten?: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const sadRef = useRef(!!sad);
   sadRef.current = !!sad;
@@ -319,7 +320,7 @@ export function PepeRig({ view, className, sad }: { view?: readonly [number, num
     gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     let alive = true, raf = 0;
     const meshes: Mesh[] = [];
-    Promise.all(ORDER.map((id) => new Promise<HTMLImageElement>((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = usedUrl(`/bosses/pepe/rig/${id}.webp`); })))
+    Promise.all(ORDER.map((id) => new Promise<HTMLImageElement>((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = usedUrl(`/bosses/pepe/${beaten ? "rig-beaten" : "rig"}/${id}.webp`); })))
       .then((imgs) => { if (alive) imgs.forEach((im, i) => meshes.push(buildMesh(gl, ORDER[i], im))); })
       .catch(() => undefined);
     const t0 = performance.now();
@@ -383,6 +384,6 @@ export function PepeRig({ view, className, sad }: { view?: readonly [number, num
     };
     raf = requestAnimationFrame(frame);
     return () => { alive = false; cancelAnimationFrame(raf); };
-  }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [key, beaten]); // eslint-disable-line react-hooks/exhaustive-deps
   return <canvas ref={ref} className={className} style={{ display: "block", width: "100%", height: "100%" }} aria-hidden="true" />;
 }

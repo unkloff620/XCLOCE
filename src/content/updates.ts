@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-04-all-beaten",
+    date: "4 ноября",
+    title: "Боссам больно",
+    items: [
+      { img: "/assets/updates/2026-11-04-all-beaten.webp", text: "Теперь у всех боссов ниже половины здоровья видно, что им досталось: одежда порвана и в крови, фингалы, ссадины и порезы — у Дацкоу, Гаркуши, Командате, Бабафея, Востока, Князя и Пепе." },
+    ],
+  },
+  {
     id: "2026-11-04-mugo-beaten",
     date: "4 ноября",
     title: "Мугонатору тоже досталось",

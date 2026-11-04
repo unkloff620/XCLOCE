@@ -97,7 +97,7 @@ function Arena({ boss, hp, hpMax, endsAt, fx, hit, ouch, rug, feed, full: fullSc
     <div className={`arena ${boss.final ? "final" : ""} ${fullScreen ? "full" : ""}`} style={{ ["--acc" as string]: boss.theme.accent }}>
       <div className={`arena-photo ${hit ? "hit" : ""} ${ouch ? "ouch" : ""} ${rug ? "rug" : ""} ${hurt ? "hurt" : ""} ${dazed ? "dazed" : ""} ${strike ? `strike strike-${strike}` : ""} ${talk ? "talking" : ""}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        {boss.id === "pepe" ? <PepeRig className="boss-rig" sad={!!ouch} /> : hasBossRig(boss.id) ? <BossRig id={boss.id} hpShare={hp === null ? 1 : hp / Math.max(1, hpMax)} /> : boss.photo.full ? <img src={boss.photo.full} alt={boss.name} draggable={false} /> : <div className="arena-sil"><BossSilhouette accent={boss.theme.accent} /><span className="small muted">фото скоро</span></div>}
+        {boss.id === "pepe" ? <PepeRig className="boss-rig" sad={!!ouch} beaten={hp !== null && hp / Math.max(1, hpMax) < 0.5} /> : hasBossRig(boss.id) ? <BossRig id={boss.id} hpShare={hp === null ? 1 : hp / Math.max(1, hpMax)} /> : boss.photo.full ? <img src={boss.photo.full} alt={boss.name} draggable={false} /> : <div className="arena-sil"><BossSilhouette accent={boss.theme.accent} /><span className="small muted">фото скоро</span></div>}
         <div className="arena-flash" />
         {hurt && !hasBossRig(boss.id) && boss.id !== "pepe" && <div className="arena-plasters" />}
       </div>
