@@ -2,12 +2,14 @@
 /*
  * XCLOSE admin panel (outside the game): /admin. Sign-in from the Telegram app (Mini App) or the Login Widget; the Telegram id must be in
  * ADMIN_TELEGRAM_IDS. Overview, players, a player's card (edit money, items, authority, energy, talents, name, ban),
- * the action log and the admins' own log. Views are in the URL hash, so a player's card can be linked: #player/42.
+ * the action log and the admins' own log. Sections: Обзор, Игра (live controls), Игроки, Аналитика, Журнал — in the URL hash,
+ * so a player's card can be linked: #player/42.
  */
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import "./admin.css";
 import { ITEMS, itemById, type ItemDef, type Slot } from "../../content/items.ts";
 import { ItemArt } from "../../client/art/items.tsx";
+import { Icon } from "../../client/art/icons.tsx";
 import { CURRENCIES } from "../../content/currencies.ts";
 import { EXTRA_NAMES, TALENT_PATH, talentStop } from "../../content/talents.ts";
 import { BOSSES, bossById, bossHasArt, keyId, unlockBossOf } from "../../content/bosses.ts";
@@ -67,7 +69,7 @@ const num = (v: unknown) => Number(v ?? 0);
 const fmt = (v: unknown) => num(v).toLocaleString("ru-RU", { maximumFractionDigits: 8 });
 function when(v: unknown) {
   if (!v) return "—";
-  const d = new Date(String(v));
+  const d = new Date(typeof v === "number" ? v : String(v));
   return d.toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
 }
 function ago(v: unknown) {
@@ -108,18 +110,40 @@ function legacyInfo(v: unknown): string {
 }
 
 // ---------------- routing ----------------
+/*
+ * Sections (the URL hash): #dash — overview; #live/<sub> — running the game (works, broadcast, Тося, bosses, events,
+ * the exchanger); #players and #player/<id>; #stats/<sub> — analytics; #log/<sub> — the action log and the admins' edits
+ * (#actions?… is the action log with filters, for links).
+ */
 type ActionsQuery = { type?: string; failed?: boolean; sinceHours?: number; playerId?: string };
-type View = { tab: "dash" | "log" | "events" } | { tab: "players" } | { tab: "actions"; q: ActionsQuery; key: string } | { tab: "player"; id: number };
+type View =
+  | { tab: "dash" }
+  | { tab: "live"; sub: LiveSub }
+  | { tab: "players" }
+  | { tab: "player"; id: number }
+  | { tab: "stats"; sub: StatsSub }
+  | { tab: "log"; sub: "actions" | "admins"; q: ActionsQuery; key: string };
+type LiveSub = "works" | "news" | "tosya" | "bosses" | "events" | "exchange";
+type StatsSub = "funnel" | "items" | "actions";
+const LIVE: [LiveSub, string, string][] = [
+  ["works", "🛠", "Тех. работы"], ["news", "📣", "Рассылка"], ["tosya", "🥟", "Тося"], ["bosses", "👹", "Боссы"], ["events", "🎉", "События"], ["exchange", "💱", "Обменник"],
+];
+const STATS: [StatsSub, string, string][] = [["funnel", "🧭", "Воронка новичков"], ["items", "📦", "Предметы у игроков"], ["actions", "⚡", "Действия за 24 ч"]];
+const NAV: [View["tab"], string, string][] = [["dash", "📊", "Обзор"], ["live", "🎮", "Игра"], ["players", "👥", "Игроки"], ["stats", "📈", "Аналитика"], ["log", "📜", "Журнал"]];
+
 function parseHash(): View {
   const h = typeof location === "undefined" ? "" : location.hash.slice(1);
   const [path, query = ""] = h.split("?");
-  const m = /^player\/(\d+)$/.exec(path);
-  if (m) return { tab: "player", id: Number(m[1]) };
-  if (path === "actions") {
+  const [a, b] = path.split("/");
+  if (a === "player" && /^\d+$/.test(b ?? "")) return { tab: "player", id: Number(b) };
+  if (a === "actions" || (a === "log" && b !== "admins")) {
     const p = new URLSearchParams(query);
-    return { tab: "actions", key: query, q: { type: p.get("type") ?? undefined, failed: p.get("failed") === "1", sinceHours: p.get("since") ? Number(p.get("since")) : undefined, playerId: p.get("player") ?? undefined } };
+    return { tab: "log", sub: "actions", key: query, q: { type: p.get("type") ?? undefined, failed: p.get("failed") === "1", sinceHours: p.get("since") ? Number(p.get("since")) : undefined, playerId: p.get("player") ?? undefined } };
   }
-  if (path === "players" || path === "log" || path === "events") return { tab: path };
+  if (a === "log") return { tab: "log", sub: "admins", key: "admins", q: {} };
+  if (a === "live" || a === "events") return { tab: "live", sub: (LIVE.find(([k]) => k === b)?.[0] ?? (a === "events" ? "events" : "works")) };
+  if (a === "stats") return { tab: "stats", sub: STATS.find(([k]) => k === b)?.[0] ?? "funnel" };
+  if (a === "players") return { tab: "players" };
   return { tab: "dash" };
 }
 /** link to the action log with filters */
@@ -132,7 +156,6 @@ const actionsHref = (q: { type?: string; failed?: boolean; since?: number; playe
   const s = p.toString();
   return `#actions${s ? "?" + s : ""}`;
 };
-const go = (h: string) => { location.hash = h; };
 
 // ---------------- page ----------------
 export default function AdminPage() {
@@ -153,27 +176,47 @@ export default function AdminPage() {
   if (me === undefined) return <div className="adm-center muted">Загрузка…</div>;
   if (me === null) return <Login onIn={setMe} />;
   const out = () => { saveToken(null); setMe(null); };
+  const active = view.tab === "player" ? "players" : view.tab;
   return (
     <div className="adm">
       <header className="adm-top">
         <b className="adm-logo"><span>X</span>CLOSE <small>админка</small></b>
         <nav>
-          {([["dash", "Обзор"], ["players", "Игроки"], ["actions", "Действия"], ["events", "Ивенты"], ["log", "Правки админов"]] as const).map(([k, t]) => (
-            <a key={k} href={`#${k}`} className={view.tab === k || (k === "players" && view.tab === "player") ? "on" : ""}>{t}</a>
+          {NAV.map(([k, ic, t]) => (
+            <a key={k} href={`#${k}`} className={active === k ? "on" : ""}><span className="adm-ic" aria-hidden="true">{ic}</span>{t}</a>
           ))}
         </nav>
         <span className="grow" />
-        <span className="muted small">TG {me}</span>
-        <button className="adm-btn ghost" onClick={out}>Выйти</button>
+        <span className="muted small" title="Ваш Telegram id">🔑 {me}</span>
+        <button className="adm-btn ghost sm" onClick={out} title="Выйти">⎋ Выйти</button>
       </header>
       <main className="adm-main">
         {view.tab === "dash" && <Dashboard />}
+        {view.tab === "live" && <Live sub={view.sub} />}
         {view.tab === "players" && <Players />}
-        {view.tab === "actions" && <Actions key={view.key} initial={view.q} />}
-        {view.tab === "log" && <AdminLog />}
-        {view.tab === "events" && <Events />}
         {view.tab === "player" && <Player key={view.id} id={view.id} />}
+        {view.tab === "stats" && <Stats sub={view.sub} />}
+        {view.tab === "log" && (
+          <>
+            <SubTabs items={[["actions", "🧾", "Действия игроков"], ["admins", "🛡", "Правки админов"]]} value={view.sub} href={(k) => (k === "actions" ? "#log" : "#log/admins")} />
+            {view.sub === "actions" ? <Actions key={view.key} initial={view.q} /> : <AdminLog />}
+          </>
+        )}
       </main>
+    </div>
+  );
+}
+
+/** a row of icon tabs; with `href` each tab is a link (the hash), otherwise `onPick` */
+function SubTabs<T extends string>({ items, value, href, onPick }: { items: [T, string, string][]; value: T; href?: (k: T) => string; onPick?: (k: T) => void }) {
+  return (
+    <div className="adm-sub" role="tablist">
+      {items.map(([k, ic, t]) => {
+        const inner = <><span className="adm-ic" aria-hidden="true">{ic}</span><span>{t}</span></>;
+        return href
+          ? <a key={k} role="tab" aria-selected={value === k} href={href(k)} className={value === k ? "on" : ""}>{inner}</a>
+          : <button key={k} type="button" role="tab" aria-selected={value === k} className={value === k ? "on" : ""} onClick={() => onPick?.(k)}>{inner}</button>;
+      })}
     </div>
   );
 }
@@ -458,6 +501,438 @@ const ActionName = ({ t }: { t: unknown }) => <span title={String(t)}>{ACTION_NA
 const Err = ({ e }: { e: string | null }) => (e ? <p className="adm-err">{e}</p> : null);
 
 // ---------------- overview ----------------
+type GameState = { works?: { on: boolean }; tosya?: { mode: string; here: boolean; endsAt: number | null }; events?: Row[]; exchange?: { window: { open: boolean; until: number } }; evb?: { bosses: { id: string; name: string; on: boolean }[] } };
+/** the state of the game at a glance: each tile opens its control */
+function GameStatus() {
+  const { data } = useLoad(async (): Promise<GameState> => {
+    const [works, tosya, events, exchange, evb] = await Promise.all([
+      admin<{ on: boolean }>("maintenance").catch(() => undefined), admin<GameState["tosya"]>("tosya").catch(() => undefined), admin<Row[]>("events").catch(() => undefined),
+      admin<GameState["exchange"]>("exchange_schedule").catch(() => undefined), admin<GameState["evb"]>("event_bosses").catch(() => undefined),
+    ]);
+    return { works, tosya, events, exchange, evb };
+  }, []);
+  const now = Date.now();
+  const live = (data?.events ?? []).filter((r) => r.enabled !== false && new Date(String(r.starts_at)).getTime() <= now && new Date(String(r.ends_at)).getTime() > now && !cleanEffects(r.effects).silent);
+  const evbOn = (data?.evb?.bosses ?? []).filter((b) => b.on);
+  const tiles: [string, string, string, ReactNode, boolean][] = [
+    ["works", "🛠", "Тех. работы", data?.works ? (data.works.on ? "игра закрыта" : "выключены") : "…", !!data?.works?.on],
+    ["tosya", "🥟", "Тося", data?.tosya ? (data.tosya.here ? `в игре до ${when(data.tosya.endsAt)}` : data.tosya.mode === "off" ? "выключен" : "не приехал") : "…", !!data?.tosya?.here],
+    ["events", "🎉", "События", data?.events ? (live.length ? `идёт: ${live.map((r) => r.title).join(", ")}` : "нет активных") : "…", live.length > 0],
+    ["bosses", "👹", "Ивент-боссы", data?.evb ? (evbOn.length ? evbOn.map((b) => b.name).join(", ") : "выключены") : "…", evbOn.length > 0],
+    ["exchange", "💱", "Обменник", data?.exchange ? (data.exchange.window.open ? `открыт до ${when(new Date(data.exchange.window.until).toISOString())}` : "закрыт") : "…", !!data?.exchange?.window.open],
+  ];
+  return (
+    <div className="adm-status">
+      {tiles.map(([k, ic, t, v, on]) => (
+        <a key={k} href={`#live/${k}`} className={`adm-st ${on ? (k === "works" ? "warn" : "on") : ""}`}>
+          <span className="adm-st-ic" aria-hidden="true">{ic}</span>
+          <span className="col" style={{ minWidth: 0 }}><b>{t}</b><span className="small ellipsis">{v}</span></span>
+        </a>
+      ))}
+    </div>
+  );
+}
+
+function Dashboard() {
+  const { data, err, reload } = useLoad(() => admin<{ counts: Row; byType: Row[]; top: Row[]; suspicious: Row[]; items: Row[] }>("dashboard"), []);
+  const feed = useLoad(() => admin<Row[]>("actions", { limit: 30 }), []);
+  useEffect(() => {
+    const t = setInterval(() => { reload(); feed.reload(); }, 30_000);
+    return () => clearInterval(t);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const c = data?.counts ?? {};
+  const stats: [string, string, unknown, string?, string?][] = [
+    ["👥", "Игроков", c.players, `Telegram: ${fmt(c.telegram)}`, "#players"], ["🟢", "Онлайн (15 мин)", c.online], ["📅", "Активны за 24 ч", c.active24], ["🗓", "Активны за 7 дн", c.active7],
+    ["🆕", "Новых за 24 ч", c.new24, undefined, "#stats/funnel"], ["⚔️", "Идёт боёв", c.fights], ["💥", "Ударов за 24 ч", c.hits24, `урон ${fmt(c.damage24)}`],
+    ["⚡", "Действий за 24 ч", c.actions24, `отказов ${fmt(c.failed24)}`, actionsHref({ failed: true, since: 24 })], ["🚫", "В бане", c.banned, undefined, "#players"],
+  ];
+  return (
+    <>
+      <Err e={err} />
+      <GameStatus />
+      <div className="adm-stats">
+        {stats.map(([ic, t, v, s, href]) => {
+          const inner = <><span className="adm-stat-h"><span aria-hidden="true">{ic}</span>{t}</span><b>{data ? fmt(v) : "…"}</b>{s && <span className="muted tiny">{s}</span>}</>;
+          return href ? <a key={t} className="adm-stat link" href={href}>{inner}</a> : <div key={t} className="adm-stat">{inner}</div>;
+        })}
+      </div>
+      {!!data?.suspicious.length && (
+        <Box title="⚠️ Подозрительно много отказов за 24 ч">
+          <p className="muted small">Сервер отклонил 20+ действий: спам кнопок, скрипт или попытка обмануть сервер.</p>
+          <Table rows={data.suspicious} cols={[["Игрок", (r) => <PlayerLink r={r} />], ["Действий", (r) => <a href={actionsHref({ player: String(r.id), since: 24 })}>{fmt(r.total)}</a>, "r"], ["Отказов", (r) => <a className="bad" href={actionsHref({ player: String(r.id), failed: true, since: 24 })}>{fmt(r.failed)}</a>, "r"]]} />
+        </Box>
+      )}
+      <div className="adm-grid2">
+        <Box title="🧾 Последние действия" right={<a href="#log" className="small">все →</a>}>
+          <ActionRows rows={feed.data ?? []} withPlayer />
+        </Box>
+        <Box title="🏆 Топ по урону">
+          <Table rows={data?.top ?? []} cols={[["#", (r) => (data!.top.indexOf(r) + 1)], ["Игрок", (r) => <PlayerLink r={r} />], ["Урон", (r) => fmt(r.total_damage), "r"]]} />
+        </Box>
+      </div>
+    </>
+  );
+}
+
+// ---------------- the game: live controls ----------------
+function Live({ sub }: { sub: LiveSub }) {
+  return (
+    <>
+      <SubTabs items={LIVE} value={sub} href={(k) => `#live/${k}`} />
+      {sub === "works" && <Maintenance />}
+      {sub === "news" && <Broadcast />}
+      {sub === "tosya" && <TosyaAdmin />}
+      {sub === "bosses" && <BossesLive />}
+      {sub === "events" && <Events />}
+      {sub === "exchange" && <ExchangeEvent />}
+    </>
+  );
+}
+
+/** «Боссы»: the chain bosses (in / out, HP, rewards), the event bosses, and the daily limit for everybody */
+function BossesLive() {
+  const { data, setData } = useLoad(() => admin<Row[]>("events"), []);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const resetAll = async () => {
+    if (!confirm("Сбросить сегодняшний лимит боёв с боссами у ВСЕХ игроков?")) return;
+    setBusy(true);
+    try { const r = await admin<{ fights: number; players: number }>("boss_limit_reset_all"); setMsg(`Лимит сброшен у ${fmt(r.players)} игроков (боёв: ${fmt(r.fights)})`); } catch (e) { setMsg((e as Error).message); }
+    setBusy(false);
+  };
+  return (
+    <>
+      <div className="adm-actions">
+        <button className="adm-btn danger" disabled={busy} onClick={resetAll}>🔄 Сбросить лимит боёв всем</button>
+        {msg && <span className="small">{msg}</span>}
+      </div>
+      <BossControls rows={data ?? []} onSaved={setData} />
+      <EventBosses />
+    </>
+  );
+}
+
+// ---------------- analytics ----------------
+function Stats({ sub }: { sub: StatsSub }) {
+  return (
+    <>
+      <SubTabs items={STATS} value={sub} href={(k) => `#stats/${k}`} />
+      {sub === "funnel" && <Funnel />}
+      {sub !== "funnel" && <DashTables sub={sub} />}
+    </>
+  );
+}
+function DashTables({ sub }: { sub: "items" | "actions" }) {
+  const { data, err } = useLoad(() => admin<{ byType: Row[]; items: Row[] }>("dashboard"), []);
+  return (
+    <>
+      <Err e={err} />
+      {sub === "items" ? (
+        <Box title="📦 Предметы у игроков">
+          <p className="muted tiny">Сколько каждой вещи сейчас у всех игроков вместе (без забаненных) и у скольких она есть.</p>
+          <Table rows={data?.items ?? []} empty={data ? "Пусто" : "Загрузка…"} cols={[
+            ["Предмет", (r) => <span className="row" style={{ gap: 8 }}><ItemArt id={String(r.item_id)} size={28} />{itemById(String(r.item_id))?.name ?? String(r.item_id)}</span>],
+            ["Всего", (r) => fmt(r.total), "r"], ["У игроков", (r) => fmt(r.holders), "r"],
+          ]} />
+        </Box>
+      ) : (
+        <Box title="⚡ Действия за 24 ч">
+          <p className="muted tiny">Нажмите на действие или на число отказов — откроется журнал.</p>
+          <Table rows={data?.byType ?? []} empty={data ? "Пусто" : "Загрузка…"} cols={[
+            ["Действие", (r) => <a href={actionsHref({ type: String(r.type), since: 24 })}><ActionName t={r.type} /></a>],
+            ["Всего", (r) => <a href={actionsHref({ type: String(r.type), since: 24 })}>{fmt(r.total)}</a>, "r"],
+            ["Отказов", (r) => (num(r.failed) ? <a className="bad" href={actionsHref({ type: String(r.type), failed: true, since: 24 })}>{fmt(r.failed)}</a> : "0"), "r"],
+          ]} />
+        </Box>
+      )}
+    </>
+  );
+}
+
+// ---------------- player card ----------------
+type PlayerData = {
+  player: Row; money: Record<string, number>; inventory: Row[]; stats: Row | null; talents: Row[]; clan: Row | null;
+  fights: Row[]; actions: Row[]; ledger: Row[]; admin: Row[];
+};
+type PTab = "res" | "items" | "talents" | "stats" | "history" | "mod";
+const PTABS: [PTab, string, string][] = [["res", "💰", "Ресурсы"], ["items", "🎒", "Вещи и наколки"], ["talents", "⭐", "Таланты"], ["stats", "📊", "Статистика"], ["history", "📜", "История"], ["mod", "🚫", "Модерация"]];
+
+function Player({ id }: { id: number }) {
+  const { data, err, reload } = useLoad(() => admin<PlayerData>("player", { id }), [id]);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [tab, setTab] = useState<PTab>(() => { try { return (localStorage.getItem("xcloce.admin.ptab") as PTab) || "res"; } catch { return "res"; } });
+  const pick = (t: PTab) => { setTab(t); try { localStorage.setItem("xcloce.admin.ptab", t); } catch { /* no storage */ } };
+  const edit = useCallback(async (e: Row, label: string) => {
+    setMsg(null);
+    try {
+      const r = await admin<Row>("edit", { id, edit: e });
+      setMsg({ ok: true, text: `${label}: ${"from" in r && "to" in r ? `${r.from} → ${r.to}` : "готово"}` });
+      reload();
+      return true;
+    } catch (x) {
+      setMsg({ ok: false, text: (x as Error).message });
+      return false;
+    }
+  }, [id, reload]);
+  if (err) return <><a href="#players">← игроки</a><Err e={err} /></>;
+  if (!data) return <div className="muted">Загрузка…</div>;
+  const p = data.player;
+  const quick: [ReactNode, string, unknown][] = [
+    [<Icon key="x" name="xp" size={20} />, "Авторитет", p.xp], [<Icon key="r" name="RUB" size={20} />, "Рубли", data.money.RUB], [<Icon key="u" name="USD" size={20} />, "Доллары", data.money.USD],
+    [<Icon key="e" name="energy" size={20} />, "Энергия", p.energyNow], [<Icon key="t" name="talent" size={20} />, "Своб. таланты", p.talents],
+  ];
+  return (
+    <>
+      <div className="adm-ph">
+        <a href="#players" className="small">← игроки</a>
+        <div className="adm-ph-top">
+          <Avatar r={p} size={56} />
+          <div className="col" style={{ gap: 4, minWidth: 0 }}>
+            <h2 className="adm-who-h">{String(p.display_name)} <span className="tag">ур. {String(p.level)}</span>{p.banned_at ? <span className="tag bad">🚫 бан{p.ban_reason ? `: ${p.ban_reason}` : ""}</span> : null}</h2>
+            <div className="muted small adm-meta">
+              <span title="Игровой ID">🆔 {String(p.id)}</span>
+              {p.telegram_id ? <span title="Telegram">✈️ <TgId r={p} /></span> : <span className="tag">гость</span>}
+              {p.username ? <a href={`https://t.me/${p.username}`} target="_blank" rel="noreferrer">@{String(p.username)}</a> : null}
+              <span title="Создан">🐣 {when(p.created_at)}</span>
+              <span title="Последний вход">👁 {ago(p.last_seen_at)}</span>
+              <span title="Дней в игре">📅 {String(p.active_days)} дн.</span>
+              {data.clan && <span title="Клан">🛡 [{String(data.clan.tag)}] {String(data.clan.name)}{data.clan.role === "leader" ? " · лидер" : ""}</span>}
+            </div>
+          </div>
+        </div>
+        <div className="adm-quick">
+          {quick.map(([ic, t, v]) => <div key={t} className="adm-q" title={t}>{ic}<b>{fmt(v)}</b><span className="muted tiny">{t}</span></div>)}
+        </div>
+      </div>
+      {msg && <p className={msg.ok ? "adm-ok" : "adm-err"}>{msg.text}</p>}
+      <SubTabs items={PTABS} value={tab} onPick={pick} />
+      {tab === "res" && (
+        <section className="adm-card">
+          <div className="adm-fields">
+            {CURRENCIES.map((c) => <EditNum key={c} icon={<Icon name={c} size={22} />} label={c} value={data.money[c]} step="any" onSave={(v) => edit({ op: "set_money", currency: c, amount: v }, c)} />)}
+            <EditNum icon={<Icon name="xp" size={22} />} label="Авторитет" value={num(p.xp)} onSave={(v) => edit({ op: "set_xp", value: v }, "Авторитет")} />
+            <EditNum icon={<Icon name="energy" size={22} />} label="Энергия" value={num(p.energyNow)} onSave={(v) => edit({ op: "set_energy", value: v }, "Энергия")} />
+            <EditNum icon={<Icon name="talent" size={22} />} label="Свободные таланты" value={num(p.talents)} onSave={(v) => edit({ op: "set_talents", value: v }, "Таланты")} />
+            <EditNum icon="🃏" label="Опыт покера" hint="20 ур. = 390 · 50 = 1725 · 100 = 5950" value={num(p.poker_xp)} onSave={(v) => edit({ op: "set_poker_xp", value: v }, "Опыт покера")} />
+            <EditNum icon="🎲" label="Опыт зонка" hint="100 опыта = уровень" value={num(p.zonk_xp)} onSave={(v) => edit({ op: "set_zonk_xp", value: v }, "Опыт зонка")} />
+            <EditText icon="✏️" label="Имя" value={String(p.display_name)} onSave={(v) => edit({ op: "set_name", value: v }, "Имя")} />
+          </div>
+        </section>
+      )}
+      {tab === "items" && <Catalog rows={data.inventory} edit={edit} />}
+      {tab === "talents" && <Talents rows={data.talents} edit={edit} />}
+      {tab === "stats" && (
+        <section className="adm-card">
+          {data.stats ? (
+            <dl className="adm-dl">
+              {([["💥", "Урон всего", "total_damage"], ["🏆", "Побед", "fights_won"], ["💀", "Поражений", "fights_lost"], ["📋", "Заданий", "tasks_done"], ["👣", "Шагов заданий", "task_steps"], ["🗺", "Локаций", "locations_done"], ["🔎", "Находок во дворе", "yard_found"], ["🎁", "Наград", "rewards_got"]] as const).map(([ic, t, k]) => (
+                <div key={k}><dt>{ic} {t}</dt><dd>{fmt(data.stats![k])}</dd></div>
+              ))}
+            </dl>
+          ) : <p className="muted small">Нет статистики</p>}
+          {!!data.stats?.weapons && Object.keys(data.stats.weapons as Row).length > 0 && (
+            <div className="adm-wstats">
+              {Object.entries(data.stats.weapons as Row).map(([w, v]) => (
+                <span key={w} className="adm-wstat" title={itemById(w)?.name ?? w}><ItemArt id={w} size={28} /><b>{fmt(typeof v === "object" ? (v as Row).hits ?? 0 : v)}</b></span>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+      {tab === "history" && <History data={data} />}
+      {tab === "mod" && (
+        <section className="adm-card">
+          <div className="adm-actions">
+            <button className="adm-btn" onClick={() => { if (confirm("Сбросить сегодняшний лимит боёв со всеми боссами?")) void edit({ op: "boss_limit_reset" }, "Сброс лимита на боссов"); }}>🔄 Сбросить лимит боёв на сегодня</button>
+          </div>
+          <BanBox banned={!!p.banned_at} onBan={(reason) => edit({ op: "ban", reason }, "Бан")} onUnban={() => edit({ op: "unban" }, "Разбан")} />
+          <ResetBox name={String(p.display_name)} onReset={() => edit({ op: "reset" }, "Сброс прогресса")} />
+        </section>
+      )}
+    </>
+  );
+}
+
+function History({ data }: { data: PlayerData }) {
+  const [tab, setTab] = useState<"actions" | "fights" | "ledger" | "admin">("actions");
+  return (
+    <section className="adm-card">
+      <select className="adm-in" value={tab} onChange={(e) => setTab(e.target.value as typeof tab)} style={{ marginBottom: 10 }}>
+        <option value="actions">🧾 Действия ({data.actions.length})</option>
+        <option value="fights">⚔️ Бои ({data.fights.length})</option>
+        <option value="ledger">💸 Движения валют и вещей ({data.ledger.length})</option>
+        <option value="admin">🛡 Правки админов ({data.admin.length})</option>
+      </select>
+      {tab === "actions" && <ActionRows rows={data.actions} />}
+      {tab === "fights" && (
+        <Table rows={data.fights} empty="Боёв нет" cols={[
+          ["Босс", (r) => <span className="row" style={{ gap: 6 }}><BossFace id={String(r.boss_id)} />{bossById(String(r.boss_id))?.name ?? String(r.boss_id)}</span>], ["Статус", (r) => `${FIGHT_STATUS[String(r.status)] ?? r.status}${r.solo ? " · соло" : ""}`],
+          ["Урон", (r) => fmt(r.my_damage), "r"], ["Ударов", (r) => fmt(r.my_hits), "r"], ["Начат", (r) => when(r.started_at), "nowrap"],
+          ["Награда", (r) => <code className="adm-code">{infoText(r.reward)}</code>],
+        ]} />
+      )}
+      {tab === "ledger" && (
+        <Table rows={data.ledger} empty="Пусто" cols={[
+          ["Когда", (r) => when(r.created_at), "nowrap"],
+          ["Что", (r) => (r.kind === "item" || r.kind === "use" ? <span className="row" style={{ gap: 6 }}><ItemArt id={String(r.key)} size={22} />{itemById(String(r.key))?.name ?? String(r.key)}</span> : String(r.key))],
+          ["Изм.", (r) => <span className={num(r.delta) < 0 ? "bad" : "good"}>{num(r.delta) > 0 ? "+" : ""}{fmt(r.delta)}</span>, "r"], ["Причина", (r) => <code className="adm-code">{String(r.reason)}</code>],
+        ]} />
+      )}
+      {tab === "admin" && (
+        <Table rows={data.admin} empty="Админ не правил этого игрока" cols={[
+          ["Когда", (r) => when(r.at), "nowrap"], ["Админ", (r) => <AdminWho r={r} />], ["Что", (r) => OP_NAMES[String(r.op)] ?? String(r.op), "nowrap"], ["Изменение", (r) => <EditInfo op={String(r.op)} info={r.info} />],
+        ]} />
+      )}
+    </section>
+  );
+}
+const FIGHT_STATUS: Record<string, string> = { active: "идёт", won: "победа", lost: "проигрыш" };
+const BossFace = ({ id }: { id: string }) => {
+  const b = bossById(id);
+  // eslint-disable-next-line @next/next/no-img-element
+  return b?.photo.portrait ? <img src={b.photo.portrait} alt="" className="adm-boss-mini" /> : null;
+};
+
+type EditFn = (e: Row, label: string) => Promise<boolean>;
+
+function EditNum({ icon, label, hint, value, onSave, step = "1" }: { icon?: ReactNode; label: string; hint?: string; value: number; onSave: (v: number) => Promise<boolean>; step?: string }) {
+  const [v, setV] = useState(String(value));
+  useEffect(() => setV(String(value)), [value]);
+  const changed = v !== String(value) && v.trim() !== "" && Number.isFinite(Number(v));
+  return (
+    <form className="adm-fld" onSubmit={(e) => { e.preventDefault(); if (changed) onSave(Number(v)); }}>
+      <span className="adm-fld-h">{icon && <span className="adm-fld-ic">{icon}</span>}<span className="col"><b>{label}</b>{hint && <span className="muted tiny">{hint}</span>}</span></span>
+      <span className="row"><input className="adm-in grow" type="number" step={step} min={0} value={v} onChange={(e) => setV(e.target.value)} /><button className="adm-btn" disabled={!changed} title="Сохранить">✓</button></span>
+    </form>
+  );
+}
+function EditText({ icon, label, value, onSave }: { icon?: ReactNode; label: string; value: string; onSave: (v: string) => Promise<boolean> }) {
+  const [v, setV] = useState(value);
+  useEffect(() => setV(value), [value]);
+  const changed = v.trim() !== value && v.trim() !== "";
+  return (
+    <form className="adm-fld" onSubmit={(e) => { e.preventDefault(); if (changed) onSave(v.trim()); }}>
+      <span className="adm-fld-h">{icon && <span className="adm-fld-ic">{icon}</span>}<b>{label}</b></span>
+      <span className="row"><input className="adm-in grow" maxLength={32} value={v} onChange={(e) => setV(e.target.value)} /><button className="adm-btn" disabled={!changed} title="Сохранить">✓</button></span>
+    </form>
+  );
+}
+
+/*
+ * «Вещи и наколки»: everything in the game in one catalog — a drop-down for the kind (what the player has, clothes,
+ * weapons, tattoo sets, passes, rewards, stashes, craft, things, event things), a drop-down for the clothes slot, a
+ * search; each thing is a tile: its picture, name, how many the player has and the buttons. Tattoos come as sets:
+ * a tile per set (its picture and name); a tap opens its pieces and «Выдать весь сет».
+ */
+type Cat = "owned" | "clothing" | "weapon" | "tattoo" | "pass" | "reward" | "stash" | "craft" | "item" | "event";
+const CATS: [Cat, string, string][] = [
+  ["owned", "🎒", "Есть у игрока"], ["clothing", "👕", "Одежда"], ["weapon", "⚔️", "Оружие"], ["tattoo", "🖋", "Наколки"], ["pass", "🎟", "Пропуски"],
+  ["reward", "🎁", "Награды"], ["stash", "🚬", "Нычки"], ["craft", "🔩", "Крафт"], ["item", "📦", "Предметы"], ["event", "🎉", "Ивенты"],
+];
+const SLOT_ORDER: { slot: Slot; name: string }[] = [
+  { slot: "HEAD", name: "Голова" }, { slot: "FACE", name: "Лицо" }, { slot: "MOUTH", name: "Рот" }, { slot: "TEETH" as Slot, name: "Зубы" }, { slot: "ACCESSORY", name: "Шея" },
+  { slot: "SHIRT", name: "Верх" }, { slot: "PANTS", name: "Низ" }, { slot: "SHOES", name: "Обувь" }, { slot: "HAND", name: "Кисть" }, { slot: "SPECIAL", name: "Особое" }, { slot: "BODY", name: "Тело" },
+];
+const RARITY_RANK: Record<string, number> = { common: 0, rare: 1, epic: 2, legendary: 3, mythic: 4 };
+const PASS_IDS = new Set(BOSSES.filter((b) => !b.final).map((b) => keyId(b.id)));
+const catOf = (i: ItemDef): Cat => (PASS_IDS.has(i.id) ? "pass" : (i.category as Cat));
+const setPic = (sid: string) => `tat-${sid}-chest-l`;
+const setFrom = (boss: string) => (boss === "tosya" ? "Тося" : boss === "box" ? "Ящик ништяков" : bossById(boss)?.name ?? boss);
+
+function Catalog({ rows, edit }: { rows: Row[]; edit: EditFn }) {
+  const [cat, setCat] = useState<Cat>("owned");
+  const [slot, setSlot] = useState<Slot | "all">("all");
+  const [q, setQ] = useState("");
+  const [set, setSet] = useState<string | null>(null);
+  const have = (id: string) => num(rows.find((r) => r.item_id === id)?.qty);
+  const all = useMemo(() => ITEMS.filter((i) => i.maxStack > 0), []);
+  const needle = q.trim().toLowerCase();
+  const count = (c: Cat) => (c === "owned" ? rows.filter((r) => num(r.qty) > 0 && itemById(String(r.item_id))?.category !== "tattoo").length : c === "tattoo" ? TATTOO_SETS.length : all.filter((i) => catOf(i) === c).length);
+  const showSets = !needle && cat === "tattoo";
+  const list = showSets ? [] : all
+    .filter((i) => catOf(i) !== "tattoo" || !!needle)
+    .filter((i) => (needle ? i.name.toLowerCase().includes(needle) || i.id.includes(needle) : cat === "owned" ? have(i.id) > 0 : catOf(i) === cat))
+    .filter((i) => needle || cat !== "clothing" || slot === "all" || i.slot === slot)
+    .sort((a, b) => (a.slot ? SLOT_ORDER.findIndex((s) => s.slot === a.slot) : 99) - (b.slot ? SLOT_ORDER.findIndex((s) => s.slot === b.slot) : 99) || RARITY_RANK[a.rarity] - RARITY_RANK[b.rarity] || a.name.localeCompare(b.name, "ru"));
+  const slots = SLOT_ORDER.filter((s) => all.some((i) => i.category === "clothing" && i.slot === s.slot));
+  const open = set ? TATTOO_SETS.find((s) => s.id === set) : null;
+  return (
+    <section className="adm-card">
+      <div className="adm-filters">
+        <select className="adm-in" value={cat} onChange={(e) => { setCat(e.target.value as Cat); setSet(null); setQ(""); }}>
+          {CATS.map(([k, ic, t]) => <option key={k} value={k}>{ic} {t} · {count(k)}</option>)}
+        </select>
+        {cat === "clothing" && !needle && (
+          <select className="adm-in" value={slot} onChange={(e) => setSlot(e.target.value as Slot | "all")}>
+            <option value="all">Все места</option>
+            {slots.map((s) => <option key={s.slot} value={s.slot}>{s.name}</option>)}
+          </select>
+        )}
+        <input className="adm-in grow" placeholder="🔎 Поиск по всем вещам" value={q} onChange={(e) => setQ(e.target.value)} />
+      </div>
+      {showSets ? (
+        <>
+          <div className="adm-tiles sets">
+            {TATTOO_SETS.map((s) => {
+              const got = s.pieces.filter((x) => have(x.id) > 0).length;
+              return (
+                <button key={s.id} type="button" className={`adm-tile set ${set === s.id ? "on" : ""} ${got === s.pieces.length ? "full" : ""}`} onClick={() => setSet(set === s.id ? null : s.id)} title={`${s.name} · ${setFrom(s.boss)}`}>
+                  <ItemArt id={setPic(s.id)} size={52} />
+                  <span className="adm-tile-n">{s.name}</span>
+                  <span className="adm-tile-q">{got}/{s.pieces.length}</span>
+                </button>
+              );
+            })}
+          </div>
+          {open && (
+            <div className="adm-setbox">
+              <div className="row" style={{ justifyContent: "space-between", flexWrap: "wrap" }}>
+                <b>🖋 {open.name} <span className="muted small">· {setFrom(open.boss)} · +{open.bonus.damage} к «{itemById(open.bonus.weapon)?.name ?? open.bonus.weapon}»</span></b>
+                <button className="adm-btn" onClick={() => { if (confirm(`Выдать весь сет «${open.name}»?`)) void edit({ op: "give_tattoo_set", set: open.id }, `Сет наколок «${open.name}»`); }}>Выдать весь сет</button>
+              </div>
+              <div className="adm-tiles">
+                {open.pieces.map((x) => <ItemTile key={x.id} i={itemById(x.id)!} have={have(x.id)} edit={edit} short={x.name.split(": ").pop()} />)}
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="adm-tiles">
+          {list.length ? list.map((i) => <ItemTile key={i.id} i={i} have={have(i.id)} edit={edit} />) : <p className="muted small">{cat === "owned" && !needle ? "У игрока пока ничего нет" : "Ничего не найдено"}</p>}
+        </div>
+      )}
+      <p className="muted tiny" style={{ marginTop: 10 }}>Выданная одежда и наколки сразу появляются у игрока в редакторе персонажа. «−» и отрицательное число забирают.</p>
+    </section>
+  );
+}
+
+function ItemTile({ i, have, edit, short }: { i: ItemDef; have: number; edit: EditFn; short?: string }) {
+  const [n, setN] = useState("");
+  const add = (d: number) => { if (d) void edit({ op: "add_item", item: i.id, delta: d }, `${i.name} ${d > 0 ? "+" : ""}${d}`).then((ok) => ok && setN("")); };
+  const boss = unlockBossOf(i.id);
+  const from = boss ? `босс ${boss.name}` : i.sources.slice(0, 2).join(", ");
+  return (
+    <div className={`adm-tile rar-${i.rarity} ${have > 0 ? "have" : ""}`} title={`${i.name}${from ? ` — ${from}` : ""}`}>
+      <ItemArt id={i.id} size={44} />
+      <span className="adm-tile-n">{short ?? i.name}</span>
+      {have > 0 && <span className="adm-tile-q">{i.maxStack === 1 ? "✓" : `×${fmt(have)}`}</span>}
+      {i.maxStack === 1 ? (
+        have > 0
+          ? <button className="adm-btn sm ghost danger-text" onClick={() => edit({ op: "set_item", item: i.id, qty: 0 }, i.name)}>Забрать</button>
+          : <button className="adm-btn sm" onClick={() => edit({ op: "set_item", item: i.id, qty: 1 }, i.name)}>Выдать</button>
+      ) : (
+        <form className="adm-tile-act" onSubmit={(e) => { e.preventDefault(); add(Math.trunc(Number(n))); }}>
+          <button type="button" className="adm-btn sm ghost" disabled={have < 1} onClick={() => add(-1)}>−</button>
+          <button type="button" className="adm-btn sm" onClick={() => add(1)}>+1</button>
+          <button type="button" className="adm-btn sm" onClick={() => add(10)}>+10</button>
+          <input className="adm-in xs" type="number" placeholder="±N" value={n} onChange={(e) => setN(e.target.value)} />
+        </form>
+      )}
+    </div>
+  );
+}
+
+// ---------------- overview ----------------
 /** «Технические работы»: the game closed for players while the admins check a release */
 function Maintenance() {
   const m = useLoad(() => admin<{ on: boolean; text: string }>("maintenance"), []);
@@ -471,7 +946,7 @@ function Maintenance() {
     setBusy(false);
   };
   return (
-    <Box title={on ? "🛠 Технические работы — ИГРА ЗАКРЫТА" : "Технические работы"}>
+    <Box title={on ? "🛠 Технические работы — ИГРА ЗАКРЫТА" : "🛠 Технические работы"}>
       <p className="muted tiny">Включите перед выкладкой: игроки увидят текст ниже вместо игры, а админы (их Telegram id) заходят как обычно и всё проверяют. Срабатывает у всех в течение ~30 секунд.</p>
       <textarea className="adm-in" rows={2} style={{ width: "100%" }} value={text ?? m.data?.text ?? ""} onChange={(e) => setText(e.target.value)} />
       <div className="row" style={{ gap: 8, marginTop: 8 }}>
@@ -497,7 +972,7 @@ function TosyaAdmin() {
   const d = t.data;
   const status = !d ? "…" : d.here ? `в игре до ${when(d.endsAt)}` : d.mode === "off" ? "выключен" : "сейчас не в игре";
   return (
-    <Box title={`Ивент «Тося» — ${status}`}>
+    <Box title={`🥟 Тося — ${status}`}>
       <p className="muted tiny">«Запустить» — Тося приезжает сейчас на 3 часа. «Обнулить» — начать заново: у всех игроков снова полный поднос и цены с начала. «Остановить» — уехал и не приезжает сам. «Авто» — приезжает сам в случайные дни.</p>
       <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
         {!d?.here
@@ -526,7 +1001,7 @@ function Broadcast() {
     setBusy(false);
   };
   return (
-    <Box title="Рассылка в Telegram" closed>
+    <Box title="📣 Рассылка в Telegram">
       <p className="muted tiny">Сообщение от бота всем игрокам, у которых включены уведомления, с кнопкой «Играть». Сначала отправьте себе — проверить текст.</p>
       <textarea className="adm-in" rows={4} style={{ width: "100%" }} maxLength={1000} placeholder="🥟 Приехал Тося! Привёз пирожки с оружием, деталями и деньгами — заходи, пока не уехал!" value={text} onChange={(e) => setText(e.target.value)} />
       <div className="row" style={{ gap: 8, marginTop: 8, alignItems: "center" }}>
@@ -548,7 +1023,7 @@ function Funnel() {
   const d = f.data;
   const pct = (n: number, of: number) => (of ? `${Math.round((n / of) * 100)}%` : "—");
   return (
-    <Box title="Воронка новичков" closed>
+    <Box title="🧭 Воронка новичков">
       <div className="row" style={{ gap: 8, alignItems: "center" }}>
         <span className="muted small">Новички за</span>
         {[7, 14, 30, 60].map((n) => <button key={n} className={`adm-btn sm ${days === n ? "" : "ghost"}`} onClick={() => setDays(n)}>{n} дн.</button>)}
@@ -575,68 +1050,6 @@ function Funnel() {
   );
 }
 
-function Dashboard() {
-  const { data, err, reload } = useLoad(() => admin<{ counts: Row; byType: Row[]; top: Row[]; suspicious: Row[]; items: Row[] }>("dashboard"), []);
-  const feed = useLoad(() => admin<Row[]>("actions", { limit: 40 }), []);
-  useEffect(() => {
-    const t = setInterval(() => { reload(); feed.reload(); }, 30_000);
-    return () => clearInterval(t);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const c = data?.counts ?? {};
-  const stats: [string, unknown, string?][] = [
-    ["Игроков", c.players, `из них Telegram: ${fmt(c.telegram)}`], ["Онлайн (15 мин)", c.online], ["Активны за 24 ч", c.active24], ["Активны за 7 дн", c.active7],
-    ["Новых за 24 ч", c.new24], ["Идёт боёв", c.fights], ["Ударов за 24 ч", c.hits24, `урон ${fmt(c.damage24)}`], ["Действий за 24 ч", c.actions24, `отказов ${fmt(c.failed24)} — открыть`], ["В бане", c.banned],
-  ];
-  return (
-    <>
-      <Err e={err} />
-      <Maintenance />
-      <TosyaAdmin />
-      <Broadcast />
-      <Funnel />
-      <div className="adm-stats">
-        {stats.map(([t, v, s]) => {
-          const inner = <><span className="muted small">{t}</span><b>{data ? fmt(v) : "…"}</b>{s && <span className="muted tiny">{s}</span>}</>;
-          // the actions tile opens the day's refusals
-          return t === "Действий за 24 ч"
-            ? <a key={t} className="adm-stat link" href={actionsHref({ failed: true, since: 24 })} title="Все отказы за 24 часа">{inner}</a>
-            : <div key={t} className="adm-stat">{inner}</div>;
-        })}
-      </div>
-      <Box title="Предметы у игроков" closed>
-        <p className="muted tiny">Сколько каждой вещи сейчас лежит у всех игроков вместе (без забаненных) и у скольких она есть.</p>
-        <Table rows={data?.items ?? []} empty="Пусто" cols={[
-          ["Предмет", (r) => <span className="row" style={{ gap: 8, alignItems: "center" }}><ItemArt id={String(r.item_id)} size={28} />{itemById(String(r.item_id))?.name ?? String(r.item_id)}</span>],
-          ["Всего", (r) => fmt(r.total), "r"],
-          ["У игроков", (r) => fmt(r.holders), "r"],
-        ]} />
-      </Box>
-      <div className="adm-grid2">
-        <Box title="Действия за 24 ч">
-          <p className="muted tiny">Нажмите на действие или на число отказов — откроется список за 24 часа.</p>
-          <Table rows={data?.byType ?? []} cols={[
-            ["Действие", (r) => <a href={actionsHref({ type: String(r.type), since: 24 })}><ActionName t={r.type} /></a>],
-            ["Всего", (r) => <a href={actionsHref({ type: String(r.type), since: 24 })}>{fmt(r.total)}</a>, "r"],
-            ["Отказов", (r) => (num(r.failed) ? <a className="bad" href={actionsHref({ type: String(r.type), failed: true, since: 24 })}>{fmt(r.failed)}</a> : "0"), "r"],
-          ]} />
-        </Box>
-        <Box title="Топ по урону за всё время">
-          <Table rows={data?.top ?? []} cols={[["#", (r) => (data!.top.indexOf(r) + 1)], ["Игрок", (r) => <PlayerLink r={r} />], ["Урон", (r) => fmt(r.total_damage), "r"]]} />
-        </Box>
-      </div>
-      {!!data?.suspicious.length && (
-        <Box title="Подозрительно много отказов за 24 ч">
-          <p className="muted small">Сервер отклонил 20+ действий: так выглядит спам кнопок, скрипт или попытка обмануть сервер.</p>
-          <Table rows={data.suspicious} cols={[["Игрок", (r) => <PlayerLink r={r} />], ["Действий", (r) => <a href={actionsHref({ player: String(r.id), since: 24 })}>{fmt(r.total)}</a>, "r"], ["Отказов", (r) => <a className="bad" href={actionsHref({ player: String(r.id), failed: true, since: 24 })}>{fmt(r.failed)}</a>, "r"]]} />
-        </Box>
-      )}
-      <Box title="Последние действия" right={<a href="#actions" className="small">все →</a>}>
-        <ActionRows rows={feed.data ?? []} withPlayer />
-      </Box>
-    </>
-  );
-}
-
 function ActionRows({ rows, withPlayer }: { rows: Row[]; withPlayer?: boolean }) {
   return (
     <Table rows={rows} empty="Действий нет" cols={[
@@ -657,7 +1070,7 @@ function Players() {
   const [offset, setOffset] = useState(0);
   const { data, err } = useLoad(() => admin<{ total: number; rows: Row[] }>("players", { q: query, sort, banned, offset }), [query, sort, banned, offset]);
   return (
-    <Box title={`Игроки${data ? ` · ${fmt(data.total)}` : ""}`}>
+    <Box title={`👥 Игроки${data ? ` · ${fmt(data.total)}` : ""}`}>
       <form className="adm-filters" onSubmit={(e) => { e.preventDefault(); setOffset(0); setQuery(q); }}>
         <input className="adm-in grow" placeholder="ID, Telegram ID, имя или @username" value={q} onChange={(e) => setQ(e.target.value)} />
         <select className="adm-in" value={sort} onChange={(e) => { setOffset(0); setSort(e.target.value); }}>
@@ -711,7 +1124,7 @@ function Actions({ initial }: { initial: ActionsQuery }) {
   }, [type, pid, failed, since]);
   useEffect(() => { load(); }, [load]);
   return (
-    <Box title={failed ? "Отказы" : "Действия игроков"} right={<button className="adm-btn ghost" onClick={() => load()}>Обновить</button>}>
+    <Box title={failed ? "⛔ Отказы" : "🧾 Действия игроков"} right={<button className="adm-btn ghost" onClick={() => load()}>Обновить</button>}>
       <p className="muted small">Каждое действие в игре, кроме ударов по боссу (их видно в боях игрока). Красная точка — сервер отказал. Хранится 60 дней.</p>
       <form className="adm-filters" onSubmit={(e) => { e.preventDefault(); setPid(playerId.trim()); }}>
         <select className="adm-in" value={type} onChange={(e) => setType(e.target.value)}>
@@ -784,7 +1197,7 @@ function PlayerPicker({ onPick }: { onPick: (id: number) => void }) {
 function AdminLog() {
   const { data, err } = useLoad(() => admin<Row[]>("admin_log"), []);
   return (
-    <Box title="Правки админов">
+    <Box title="🛡 Правки админов">
       <Err e={err} />
       <Table rows={data ?? []} empty="Правок ещё не было" cols={[
         ["Когда", (r) => when(r.at), "nowrap"],
@@ -840,147 +1253,6 @@ function EditInfo({ op, info }: { op: string; info: unknown }) {
     </span>
   );
 }
-
-// ---------------- player card ----------------
-type PlayerData = {
-  player: Row; money: Record<string, number>; inventory: Row[]; stats: Row | null; talents: Row[]; clan: Row | null;
-  fights: Row[]; actions: Row[]; ledger: Row[]; admin: Row[];
-};
-
-function Player({ id }: { id: number }) {
-  const { data, err, reload } = useLoad(() => admin<PlayerData>("player", { id }), [id]);
-  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
-  const [tab, setTab] = useState<"actions" | "fights" | "ledger" | "admin">("actions");
-  const edit = useCallback(async (e: Row, label: string) => {
-    setMsg(null);
-    try {
-      const r = await admin<Row>("edit", { id, edit: e });
-      setMsg({ ok: true, text: `${label}: ${"from" in r && "to" in r ? `${r.from} → ${r.to}` : "готово"}` });
-      reload();
-      return true;
-    } catch (x) {
-      setMsg({ ok: false, text: (x as Error).message });
-      return false;
-    }
-  }, [id, reload]);
-  if (err) return <><a href="#players">← игроки</a><Err e={err} /></>;
-  if (!data) return <div className="muted">Загрузка…</div>;
-  const p = data.player;
-  return (
-    <>
-      <div className="adm-ph">
-        <a href="#players" className="small">← игроки</a>
-        <h2 className="adm-who-h"><Avatar r={p} size={40} />{String(p.display_name)} {p.banned_at ? <span className="tag bad">бан{p.ban_reason ? `: ${p.ban_reason}` : ""}</span> : null}</h2>
-        <div className="muted small adm-meta">
-          <span>ID {String(p.id)}</span>
-          {p.telegram_id ? <span>TG <TgId r={p} /></span> : <span className="tag">гость</span>}
-          {p.username ? <a href={`https://t.me/${p.username}`} target="_blank" rel="noreferrer">@{String(p.username)}</a> : null}
-          <span>ур. {String(p.level)}</span>
-          <span>создан {when(p.created_at)}</span>
-          <span>был {ago(p.last_seen_at)}</span>
-          <span>дней в игре {String(p.active_days)}</span>
-          {data.clan && <span>клан [{String(data.clan.tag)}] {String(data.clan.name)}{data.clan.role === "leader" ? " (лидер)" : ""}</span>}
-        </div>
-      </div>
-      {msg && <p className={msg.ok ? "adm-ok" : "adm-err"}>{msg.text}</p>}
-      <div className="adm-grid2">
-        <Box title="Валюта и параметры" closed>
-          <div className="adm-form">
-            {CURRENCIES.map((c) => <EditNum key={c} label={c} value={data.money[c]} step="any" onSave={(v) => edit({ op: "set_money", currency: c, amount: v }, c)} />)}
-            <EditNum label="Авторитет (XP)" value={num(p.xp)} onSave={(v) => edit({ op: "set_xp", value: v }, "Авторитет")} />
-            <EditNum label="Опыт покера (20 ур. = 390, 50 = 1725, 100 = 5950)" value={num(p.poker_xp)} onSave={(v) => edit({ op: "set_poker_xp", value: v }, "Опыт покера")} />
-            <EditNum label="Опыт зонка (100 = уровень)" value={num(p.zonk_xp)} onSave={(v) => edit({ op: "set_zonk_xp", value: v }, "Опыт зонка")} />
-            <EditNum label="Энергия" value={num(p.energyNow)} onSave={(v) => edit({ op: "set_energy", value: v }, "Энергия")} />
-            <EditNum label="Свободные таланты" value={num(p.talents)} onSave={(v) => edit({ op: "set_talents", value: v }, "Таланты")} />
-            <EditText label="Имя" value={String(p.display_name)} onSave={(v) => edit({ op: "set_name", value: v }, "Имя")} />
-          </div>
-          <div className="adm-form" style={{ marginTop: 10 }}>
-            <button className="adm-btn" onClick={() => { if (confirm("Сбросить сегодняшний лимит боёв со всеми боссами?")) void edit({ op: "boss_limit_reset" }, "Сброс лимита на боссов"); }}>Сброс лимита на боссов</button>
-            {TATTOO_SETS.map((s) => (
-              <button key={s.id} className="adm-btn" onClick={() => { if (confirm(`Выдать весь сет наколок «${s.name}» (${s.boss === "tosya" ? "Тося" : bossById(s.boss)?.name ?? "Ящик ништяков"})?`)) void edit({ op: "give_tattoo_set", set: s.id }, `Сет наколок «${s.name}»`); }}>
-                Сет наколок: «{s.name}» · {s.boss === "tosya" ? "Тося" : bossById(s.boss)?.name ?? "Ящик ништяков"}
-              </button>
-            ))}
-          </div>
-          <BanBox banned={!!p.banned_at} onBan={(reason) => edit({ op: "ban", reason }, "Бан")} onUnban={() => edit({ op: "unban" }, "Разбан")} />
-          <ResetBox name={String(p.display_name)} onReset={() => edit({ op: "reset" }, "Сброс прогресса")} />
-        </Box>
-        <Box title="Статистика" closed>
-          {data.stats ? (
-            <dl className="adm-dl">
-              {([["Урон всего", "total_damage"], ["Побед", "fights_won"], ["Поражений", "fights_lost"], ["Заданий", "tasks_done"], ["Шагов заданий", "task_steps"], ["Локаций", "locations_done"], ["Находок во дворе", "yard_found"], ["Наград", "rewards_got"]] as const).map(([t, k]) => (
-                <div key={k}><dt>{t}</dt><dd>{fmt(data.stats![k])}</dd></div>
-              ))}
-            </dl>
-          ) : <p className="muted small">Нет статистики</p>}
-          {!!data.stats?.weapons && Object.keys(data.stats.weapons as Row).length > 0 && (
-            <p className="small muted">Удары по оружию: {Object.entries(data.stats.weapons as Row).map(([w, v]) => `${itemById(w)?.name ?? w} ${fmt(typeof v === "object" ? (v as Row).hits ?? JSON.stringify(v) : v)}`).join(" · ")}</p>
-          )}
-        </Box>
-      </div>
-      <Passes rows={data.inventory} edit={edit} />
-      <GiveItems rows={data.inventory} edit={edit} />
-      <Inventory rows={data.inventory} edit={edit} />
-      <Talents rows={data.talents} edit={edit} />
-      <Box title="История" closed>
-        <div className="adm-tabs">
-          {([["actions", `Действия (${data.actions.length})`], ["fights", `Бои (${data.fights.length})`], ["ledger", `Движения (${data.ledger.length})`], ["admin", `Правки (${data.admin.length})`]] as const).map(([k, t]) => (
-            <button key={k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>{t}</button>
-          ))}
-        </div>
-        {tab === "actions" && <ActionRows rows={data.actions} />}
-        {tab === "fights" && (
-          <Table rows={data.fights} empty="Боёв нет" cols={[
-            ["#", (r) => String(r.id)], ["Босс", (r) => bossById(String(r.boss_id))?.name ?? String(r.boss_id)], ["Статус", (r) => `${r.status}${r.solo ? " · соло" : ""}`],
-            ["Урон", (r) => fmt(r.my_damage), "r"], ["Ударов", (r) => fmt(r.my_hits), "r"], ["Начат", (r) => when(r.started_at), "nowrap"],
-            ["Награда", (r) => <code className="adm-code">{infoText(r.reward)}</code>],
-          ]} />
-        )}
-        {tab === "ledger" && (
-          <>
-            <p className="muted small">Все изменения валют, предметов, энергии и талантов (последние 300).</p>
-            <Table rows={data.ledger} cols={[
-              ["Когда", (r) => when(r.created_at), "nowrap"], ["Что", (r) => (r.kind === "item" || r.kind === "use" ? itemById(String(r.key))?.name ?? String(r.key) : String(r.key))],
-              ["Изм.", (r) => <span className={num(r.delta) < 0 ? "bad" : "good"}>{num(r.delta) > 0 ? "+" : ""}{fmt(r.delta)}</span>, "r"], ["Причина", (r) => <code className="adm-code">{String(r.reason)}</code>],
-            ]} />
-          </>
-        )}
-        {tab === "admin" && (
-          <Table rows={data.admin} empty="Админ не правил этого игрока" cols={[
-            ["Когда", (r) => when(r.at), "nowrap"], ["Админ", (r) => <AdminWho r={r} />], ["Что", (r) => OP_NAMES[String(r.op)] ?? String(r.op), "nowrap"], ["Изменение", (r) => <EditInfo op={String(r.op)} info={r.info} />],
-          ]} />
-        )}
-      </Box>
-    </>
-  );
-}
-
-type EditFn = (e: Row, label: string) => Promise<boolean>;
-
-function EditNum({ label, value, onSave, step = "1" }: { label: string; value: number; onSave: (v: number) => Promise<boolean>; step?: string }) {
-  const [v, setV] = useState(String(value));
-  useEffect(() => setV(String(value)), [value]);
-  const changed = v !== String(value) && v.trim() !== "" && Number.isFinite(Number(v));
-  return (
-    <form className="adm-field" onSubmit={(e) => { e.preventDefault(); if (changed) onSave(Number(v)); }}>
-      <label>{label}</label>
-      <input className="adm-in" type="number" step={step} min={0} value={v} onChange={(e) => setV(e.target.value)} />
-      <button className="adm-btn" disabled={!changed}>Сохранить</button>
-    </form>
-  );
-}
-function EditText({ label, value, onSave }: { label: string; value: string; onSave: (v: string) => Promise<boolean> }) {
-  const [v, setV] = useState(value);
-  useEffect(() => setV(value), [value]);
-  const changed = v.trim() !== value && v.trim() !== "";
-  return (
-    <form className="adm-field" onSubmit={(e) => { e.preventDefault(); if (changed) onSave(v.trim()); }}>
-      <label>{label}</label>
-      <input className="adm-in" maxLength={32} value={v} onChange={(e) => setV(e.target.value)} />
-      <button className="adm-btn" disabled={!changed}>Сохранить</button>
-    </form>
-  );
-}
 /** Wipes the player's progress back to the starting kit: two steps and a typed word, it cannot be undone */
 function ResetBox({ name, onReset }: { name: string; onReset: () => Promise<boolean> }) {
   const [open, setOpen] = useState(false);
@@ -1013,192 +1285,11 @@ function BanBox({ banned, onBan, onUnban }: { banned: boolean; onBan: (reason: s
   );
 }
 
-/** Boss passes: one row per boss card — how many the player has, how many open the next boss, quick buttons to add. */
-function Passes({ rows, edit }: { rows: Row[]; edit: EditFn }) {
-  const [n, setN] = useState<Record<string, string>>({});
-  const have = (id: string) => num(rows.find((r) => r.item_id === id)?.qty);
-  const add = (id: string, delta: number) => {
-    if (!delta) return;
-    const name = itemById(id)?.name ?? id;
-    void edit({ op: "add_item", item: id, delta }, `${name} ${delta > 0 ? "+" : ""}${delta}`).then((ok) => ok && setN((x) => ({ ...x, [id]: "" })));
-  };
-  return (
-    <Box title="Пропуски на боссов" closed>
-      <Table rows={BOSSES.filter((b) => !b.final).map((b) => ({ id: keyId(b.id), boss: b.id, order: b.order }))} empty="Нет боссов" cols={[
-        ["Пропуск", (r) => {
-          const b = bossById(String(r.boss))!;
-          return <><b>{itemById(String(r.id))?.name ?? String(r.id)}</b> <span className="muted tiny">#{b.order}</span></>;
-        }],
-        ["Есть", (r) => <b>{fmt(have(String(r.id)))}</b>, "r"],
-        ["Открывает", (r) => {
-          const next = BOSSES.find((x) => x.order === Number(r.order) + 1);
-          if (!next) return <span className="muted small">—</span>;
-          const need = next.keysToUnlock ?? 3;
-          const ok = have(String(r.id)) >= need;
-          return <span className={`small ${ok ? "" : "muted"}`}>{next.name}: нужно {need}{ok ? " ✓" : ""}</span>;
-        }],
-        ["Выдать", (r) => {
-          const id = String(r.id);
-          const v = n[id] ?? "";
-          return (
-            <form className="adm-qty" onSubmit={(e) => { e.preventDefault(); add(id, Math.trunc(Number(v))); }}>
-              <button type="button" className="adm-btn sm" onClick={() => add(id, 1)}>+1</button>
-              <button type="button" className="adm-btn sm" onClick={() => add(id, 3)}>+3</button>
-              <input className="adm-in sm" type="number" placeholder="±N" value={v} onChange={(e) => setN((x) => ({ ...x, [id]: e.target.value }))} />
-              <button className="adm-btn sm" disabled={!v || !Number(v)}>✓</button>
-            </form>
-          );
-        }],
-      ]} />
-      <p className="muted small">Пропуски тратятся при входе в бой со следующим боссом. Отрицательное число забирает пропуски.</p>
-    </Box>
-  );
-}
-
-/**
- * Everything that exists in the game, to hand out: tabs by kind (clothes — with the slot: head, top, bottom, shoes,
- * hand…; tattoos; weapons; things; passes and rewards; stash finds), a search, and per item how many the player has
- * with quick buttons. One-of-a-kind things (clothes) are given / taken away; stackable ones get +1 / +10 / ±N.
- */
-const GIVE_TABS = [
-  { id: "clothing", name: "Одежда" },
-  { id: "tattoo", name: "Татуировки" },
-  { id: "weapon", name: "Оружие" },
-  { id: "item", name: "Предметы" },
-  { id: "reward", name: "Пропуски и награды" },
-  { id: "stash", name: "Нычки" },
-  { id: "event", name: "Ивенты" },
-  { id: "craft", name: "Крафт: детали и вещи" },
-] as const;
-type GiveTab = (typeof GIVE_TABS)[number]["id"];
-const SLOT_ORDER: { slot: Slot; name: string }[] = [
-  { slot: "HEAD", name: "Голова" }, { slot: "SHIRT", name: "Верх" }, { slot: "PANTS", name: "Низ" }, { slot: "SHOES", name: "Обувь" },
-  { slot: "HAND", name: "Кисть" }, { slot: "FACE", name: "Лицо" }, { slot: "MOUTH", name: "Рот" }, { slot: "ACCESSORY", name: "Аксессуар" }, { slot: "SPECIAL", name: "Особое" }, { slot: "BODY", name: "Тело" },
-];
-const RARITY_NAME: Record<string, string> = { common: "обычная", rare: "редкая", epic: "эпическая", legendary: "легендарная", mythic: "мифическая" };
-const RARITY_RANK: Record<string, number> = { common: 0, rare: 1, epic: 2, legendary: 3, mythic: 4 };
-/** a tattoo is any item of the category "tattoo" (none in the game yet) */
-const kindOf = (i: ItemDef): string => i.category;
-
-function GiveItems({ rows, edit }: { rows: Row[]; edit: EditFn }) {
-  const [tab, setTab] = useState<GiveTab>("clothing");
-  const [slot, setSlot] = useState<Slot | "all">("all");
-  const [q, setQ] = useState("");
-  const [owned, setOwned] = useState<"all" | "no" | "yes">("all");
-  const [n, setN] = useState<Record<string, string>>({});
-  const have = (id: string) => num(rows.find((r) => r.item_id === id)?.qty);
-  const all = useMemo(() => ITEMS.filter((i) => i.maxStack > 0), []);
-  const count = (t: string) => all.filter((i) => kindOf(i) === t).length;
-  const slots = SLOT_ORDER.filter((s) => all.some((i) => i.category === "clothing" && i.slot === s.slot));
-  const needle = q.trim().toLowerCase();
-  const list = all
-    .filter((i) => (needle ? true : kindOf(i) === tab))
-    .filter((i) => needle || tab !== "clothing" || slot === "all" || i.slot === slot)
-    .filter((i) => !needle || i.name.toLowerCase().includes(needle) || i.id.includes(needle))
-    .filter((i) => owned === "all" || (owned === "yes") === have(i.id) > 0)
-    .sort((a, b) =>
-      (a.slot ? SLOT_ORDER.findIndex((s) => s.slot === a.slot) : 99) - (b.slot ? SLOT_ORDER.findIndex((s) => s.slot === b.slot) : 99) ||
-      RARITY_RANK[a.rarity] - RARITY_RANK[b.rarity] || a.name.localeCompare(b.name, "ru"));
-  const give = (i: ItemDef, delta: number) => {
-    if (!delta) return;
-    void edit({ op: "add_item", item: i.id, delta }, `${i.name} ${delta > 0 ? "+" : ""}${delta}`).then((ok) => ok && setN((x) => ({ ...x, [i.id]: "" })));
-  };
-  const setTo = (i: ItemDef, qty: number) => edit({ op: "set_item", item: i.id, qty }, i.name);
-  const where = (i: ItemDef) => {
-    const b = unlockBossOf(i.id);
-    return b ? `босс ${b.name}` : i.sources.slice(0, 2).join(", ");
-  };
-  return (
-    <Box title="Выдать вещи" closed right={<input className="adm-in" placeholder="поиск по всем вещам" value={q} onChange={(e) => setQ(e.target.value)} />}>
-      {!needle && (
-        <div className="adm-tabs">
-          {GIVE_TABS.filter((t) => t.id === "tattoo" || count(t.id) > 0).map((t) => (
-            <button key={t.id} className={tab === t.id ? "on" : ""} onClick={() => setTab(t.id)}>{t.name} · {count(t.id)}</button>
-          ))}
-        </div>
-      )}
-      {!needle && tab === "clothing" && (
-        <div className="adm-chips">
-          <button className={slot === "all" ? "on" : ""} onClick={() => setSlot("all")}>Все</button>
-          {slots.map((s) => (
-            <button key={s.slot} className={slot === s.slot ? "on" : ""} onClick={() => setSlot(s.slot)}>
-              {s.name} · {all.filter((i) => i.category === "clothing" && i.slot === s.slot).length}
-            </button>
-          ))}
-        </div>
-      )}
-      <div className="adm-chips">
-        {([["all", "Все"], ["no", "Нет у игрока"], ["yes", "Есть у игрока"]] as const).map(([k, t]) => (
-          <button key={k} className={owned === k ? "on" : ""} onClick={() => setOwned(k)}>{t}</button>
-        ))}
-      </div>
-      {!needle && tab === "tattoo" && count("tattoo") === 0 ? (
-        <p className="muted small">Татуировок в игре пока нет. Как только они появятся (они будут выпадать с боссов), их можно будет выдать здесь.</p>
-      ) : (
-        <Table rows={list.map((i) => ({ id: i.id }))} empty="Ничего не найдено" cols={[
-          ["", (r) => <ItemArt id={String(r.id)} size={32} />],
-          ["Вещь", (r) => {
-            const i = itemById(String(r.id))!;
-            return <><b>{i.name}</b> <span className="muted tiny">{i.id}</span><br /><span className={`muted tiny adm-rar-${i.rarity}`}>{RARITY_NAME[i.rarity]}{i.slot ? ` · ${SLOT_ORDER.find((s) => s.slot === i.slot)?.name ?? i.slot}` : ""}</span></>;
-          }],
-          ["Откуда", (r) => <span className="muted small">{where(itemById(String(r.id))!)}</span>],
-          ["Есть", (r) => <b>{fmt(have(String(r.id)))}</b>, "r"],
-          ["Выдать", (r) => {
-            const i = itemById(String(r.id))!;
-            const h = have(i.id);
-            if (i.maxStack === 1) {
-              return h > 0
-                ? <button className="adm-btn sm danger-text" onClick={() => setTo(i, 0)}>Забрать</button>
-                : <button className="adm-btn sm" onClick={() => setTo(i, 1)}>Выдать</button>;
-            }
-            const v = n[i.id] ?? "";
-            return (
-              <form className="adm-qty" onSubmit={(e) => { e.preventDefault(); give(i, Math.trunc(Number(v))); }}>
-                <button type="button" className="adm-btn sm" onClick={() => give(i, 1)}>+1</button>
-                <button type="button" className="adm-btn sm" onClick={() => give(i, 10)}>+10</button>
-                <input className="adm-in sm" type="number" placeholder="±N" value={v} onChange={(e) => setN((x) => ({ ...x, [i.id]: e.target.value }))} />
-                <button className="adm-btn sm" disabled={!v || !Number(v)}>✓</button>
-              </form>
-            );
-          }, "r"],
-        ]} />
-      )}
-      <p className="muted small">Выданная одежда сразу появляется в редакторе персонажа, надеть её игрок может сам. Отрицательное число забирает.</p>
-    </Box>
-  );
-}
-
-function Inventory({ rows, edit }: { rows: Row[]; edit: EditFn }) {
-  const [filter, setFilter] = useState("");
-  const shown = rows.filter((r) => !filter || String(r.name).toLowerCase().includes(filter.toLowerCase()) || String(r.item_id).includes(filter));
-  return (
-    <Box title={`Инвентарь · ${rows.length}`} closed right={<input className="adm-in sm" placeholder="фильтр" value={filter} onChange={(e) => setFilter(e.target.value)} />}>
-      <Table rows={shown} empty="Инвентарь пуст" cols={[
-        ["Предмет", (r) => <><b>{String(r.name)}</b> <span className="muted tiny">{String(r.item_id)}</span></>],
-        ["Тип", (r) => String(r.category)],
-        ["Кол-во", (r) => <QtyCell r={r} edit={edit} />, "r"],
-        ["Откуда", (r) => <span className="muted small">{String(r.source ?? "")}</span>],
-      ]} />
-    </Box>
-  );
-}
-function QtyCell({ r, edit }: { r: Row; edit: EditFn }) {
-  const [v, setV] = useState(String(r.qty));
-  useEffect(() => setV(String(r.qty)), [r.qty]);
-  const changed = v !== String(r.qty) && v !== "";
-  return (
-    <form className="adm-qty" onSubmit={(e) => { e.preventDefault(); if (changed) edit({ op: "set_item", item: r.item_id, qty: Number(v) }, String(r.name)); }}>
-      <input className="adm-in sm" type="number" min={0} value={v} onChange={(e) => setV(e.target.value)} />
-      {changed && <button className="adm-btn sm">✓</button>}
-    </form>
-  );
-}
-
 function Talents({ rows, edit }: { rows: Row[]; edit: EditFn }) {
   const level = (w: string, b: string) => num(rows.find((r) => r.weapon_id === w && r.branch === b)?.level);
   // the talent path, stop by stop (content/talents.ts TALENT_PATH)
   return (
-    <Box title="Дорожка талантов" closed>
+    <Box title="⭐ Дорожка талантов">
       <Table rows={TALENT_PATH.map((s, i) => ({ id: s.key, i }))} cols={[
         ["№", (r) => String(Number(r.i) + 1)],
         ["Талант", (r) => { const s = TALENT_PATH[Number(r.i)]; return `${EXTRA_NAMES[s.target] ? "" : `${itemById(s.target)?.name ?? s.target}: `}${s.name}`; }],
@@ -1265,9 +1356,7 @@ function Events() {
   const set = (k: keyof EvForm, v: unknown) => setForm((f) => (f ? { ...f, [k]: v } : f));
   return (
     <>
-      <EventBosses />
-      <ExchangeEvent />
-      <Box title="События" right={<span className="row" style={{ gap: 8 }}><button className="adm-btn ghost sm" onClick={reload}>Обновить</button><button className="adm-btn" onClick={() => { setSaveErr(null); setForm(emptyEvent()); }}>+ Новое событие</button></span>}>
+      <Box title="🎉 События" right={<span className="row" style={{ gap: 8 }}><button className="adm-btn ghost sm" onClick={reload}>Обновить</button><button className="adm-btn" onClick={() => { setSaveErr(null); setForm(emptyEvent()); }}>+ Новое событие</button></span>}>
         <p className="muted small" style={{ marginTop: 0 }}>Событие идёт с даты начала до даты конца (время — твоего часового пояса). Пока оно идёт, его эффекты меняют числа в игре, а игроки видят окно события и звезду в HUD. Изменения доходят до игры в течение ~30 секунд.</p>
         <Err e={err} />
         <Table rows={data ?? []} empty="Событий пока нет" cols={[
@@ -1283,7 +1372,6 @@ function Events() {
           ["", (r) => <span className="row" style={{ gap: 6 }}><button className="adm-btn ghost sm" onClick={() => { setSaveErr(null); edit(r); }}>Изменить</button><button className="adm-btn danger sm" onClick={() => del(Number(r.id))}>Удалить</button></span>, "nowrap"],
         ]} />
       </Box>
-      <BossControls rows={data ?? []} onSaved={setData} />
       {form && (
         <Box title={form.id ? `Событие #${form.id}` : "Новое событие"} right={<button className="adm-btn ghost sm" onClick={() => setForm(null)}>Закрыть</button>}>
           <form className="adm-ev" onSubmit={(e) => { e.preventDefault(); void save(); }}>
@@ -1345,7 +1433,7 @@ function BossControls({ rows, onSaved }: { rows: Row[]; onSaved: (r: Row[]) => v
   const [menu, setMenu] = useState<string | null>(null);
   const now = Date.now();
   return (
-    <Box title="Боссы">
+    <Box title="👹 Боссы цепочки">
       <p className="muted small" style={{ marginTop: 0 }}>Нажми «+» у босса: убрать или добавить его в игру (навсегда или на N дней), изменить здоровье или награды. Каждое действие — служебное событие в списке выше (игрокам окно не показывается); удали событие, чтобы отменить. Здоровье меняется у новых боёв, награды — при получении.</p>
       <div className="adm-bosses">
         {BOSSES.map((b) => {
@@ -1431,7 +1519,7 @@ function EventBosses() {
     setBusy(null);
   };
   return (
-    <Box title="Ивенты: боссы">
+    <Box title="🐸 Ивент-боссы">
       <p className="muted small" style={{ marginTop: 0 }}>Ивент-боссы вне обычной цепочки. Включённый босс появляется у всех игроков: кнопка «Ивент» справа на главной и его комната с дверью. Изменения доходят до игры в течение ~30 секунд.</p>
       <Err e={err} />
       <div className="adm-evb">
@@ -1446,14 +1534,6 @@ function EventBosses() {
         ))}
       </div>
       <Err e={saveErr} />
-      <div className="adm-form" style={{ marginTop: 10 }}>
-        <button className="adm-btn danger" disabled={busy === "all"} onClick={async () => {
-          if (!confirm("Сбросить сегодняшний лимит боёв с боссами у ВСЕХ игроков?")) return;
-          setBusy("all"); setSaveErr(null);
-          try { const r = await admin<{ fights: number; players: number }>("boss_limit_reset_all"); alert(`Готово: лимит сброшен у ${r.players} игроков (${r.fights} боёв)`); } catch (e) { setSaveErr((e as Error).message); }
-          setBusy(null);
-        }}>Сбросить лимит на боссов всем</button>
-      </div>
     </Box>
   );
 }
@@ -1475,7 +1555,7 @@ function ExchangeEvent() {
   };
   const w = data?.window;
   return (
-    <Box title="Ивенты: Обменник" right={w && <span className={w.open ? "adm-ok" : "muted"}>{w.open ? `открыт · закроется ${when(new Date(w.until).toISOString())}` : `закрыт · откроется ${when(new Date(w.until).toISOString())}`}</span>}>
+    <Box title="💱 Обменник" right={w && <span className={w.open ? "adm-ok" : "muted"}>{w.open ? `открыт · закроется ${when(new Date(w.until).toISOString())}` : `закрыт · откроется ${when(new Date(w.until).toISOString())}`}</span>}>
       <p className="muted small" style={{ marginTop: 0 }}>Когда работает обменник во дворе (ларёк с барыгой). Дни и часы — по Москве. Сейчас: <b>{data?.text ?? "…"}</b>. Изменения доходят до игры в течение ~30 секунд.</p>
       <Err e={err} />
       {cur && (
