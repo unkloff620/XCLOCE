@@ -12,6 +12,7 @@
 import { useEffect, useRef } from "react";
 import { PEPE } from "./pepe-data.ts";
 import { usedUrl } from "../preload.ts";
+import { frameGate } from "../eco.ts";
 
 type V = readonly [number, number];
 const P = PEPE.pts as unknown as Record<string, V>;
@@ -325,9 +326,10 @@ export function PepeRig({ view, className, sad, beaten }: { view?: readonly [num
       .catch(() => undefined);
     const t0 = performance.now();
     let lastT = 0, sadV = 0;
+    const gate = frameGate();
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
-      if (!meshes.length) return;
+      if (!meshes.length || !gate(now)) return;
       const dpr = Math.min(2, window.devicePixelRatio || 1);
       const W = Math.round(cv.clientWidth * dpr), H = Math.round(cv.clientHeight * dpr);
       if (!W || !H) return;

@@ -8,6 +8,7 @@
  * Positions are percent of the yard picture: x — the middle, y — the feet, up from the bottom.
  */
 import { useEffect, useRef, useState } from "react";
+import { frameGate } from "../eco.ts";
 import { haptic } from "../telegram.ts";
 import { useGame } from "../store.tsx";
 import { Icon } from "./icons.tsx";
@@ -89,8 +90,10 @@ function Pigeon({ area, delay, slot }: { area: PigeonArea; delay: number; slot: 
     };
     let last = performance.now();
     let raf = 0;
+    const gate = frameGate();
     const tick = (now: number) => {
-      const dt = Math.min(0.05, (now - last) / 1000);
+      if (!gate(now)) { raf = requestAnimationFrame(tick); return; }
+      const dt = Math.min(0.1, (now - last) / 1000);
       last = now;
       st.t += dt;
       const el = root.current;

@@ -297,3 +297,6 @@ html.phone { --col: 390px; background: #07050a; }
 /* a full-screen window (a mini game) is the phone column too, not the whole window */
 html.phone .modal-back.full, html.phone .modal-back.page { left: max(0px, calc((100 * var(--vw) - var(--col)) / 2)); right: max(0px, calc((100 * var(--vw) - var(--col)) / 2)); }
 html.phone .modal-back:not(.full):not(.page) { padding-left: max(16px, calc((100 * var(--vw) - var(--col)) / 2 + 12px)); padding-right: max(16px, calc((100 * var(--vw) - var(--col)) / 2 + 12px)); }
+
+/* «Экономия заряда» (client/eco.ts): the endless glows, shines and sways play once and stop — they repaint the screen every frame */
+html.eco *, html.eco *::before, html.eco *::after { animation-iteration-count: 1 !important; }

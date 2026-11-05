@@ -9,6 +9,7 @@
  * Two canvases: "back" under the SVG (tail, the arm behind the body, the body) and "front" over it (forearms, arms).
  */
 import { useEffect, type RefObject } from "react";
+import { frameGate } from "../eco.ts";
 
 type M = DOMMatrix;
 type Mesh = {
@@ -246,10 +247,11 @@ export function usePuppet(wrap: RefObject<HTMLDivElement | null>, key: string, s
     let moved = false;
     const started = performance.now();
     const probe = svg.querySelector(".br-breath");
+    const gate = frameGate();
     function frame(now: number) {
       if (dead) return;
       raf = requestAnimationFrame(frame);
-      if (document.hidden) return;
+      if (!gate(now)) return;
       if (!moved && probe) {
         const c = (probe as SVGGraphicsElement).getCTM();
         const k = c ? `${c.a.toFixed(4)},${c.d.toFixed(4)},${c.f.toFixed(2)}` : "";
