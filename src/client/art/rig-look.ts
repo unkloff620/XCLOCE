@@ -316,10 +316,10 @@ export const WEAR_FIT = {
   },
   "shoes-vadim": {
     "slot": "SHOES",
-    "x": 88.5,
-    "y": 1136.0,
-    "w": 808,
-    "h": 206
+    "x": 94.0,
+    "y": 1148.0,
+    "w": 798,
+    "h": 194
   },
   "tie-vadim": {
     "slot": "ACCESSORY",

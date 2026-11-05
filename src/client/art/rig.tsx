@@ -467,6 +467,11 @@ function HandFrames() {
           </g>
         )}
         <image href={`${base}.webp?v=${ART_VER.heroPart}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />
+        {/* the hand's tattoos over the hand that holds it, cut to that hand's outline: they turn with it */}
+        <mask id={`rig-held-${heldId}`} maskUnits="userSpaceOnUse" x={0} y={0} width={1000} height={1400} style={{ maskType: "alpha" }}>
+          <image href={`${base}.webp?v=${ART_VER.heroPart}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />
+        </mask>
+        <g mask={`url(#rig-held-${heldId})`}><Ink part="handR" /></g>
       </g>
     );
   }
