@@ -1848,11 +1848,11 @@ button.bjt-stack { cursor: pointer; }
 .bcard::before { display: none; }
 /* Восток's own card: the courier-bag canvas with straps and buckles (public/assets/ui/boss-card-frame-vodovoz.webp, 1200×503) */
 .bcard.bcard-boss-vodovoz { border-image: url("/assets/ui/boss-card-frame-vodovoz.webp") 130 fill / 40px stretch; }
-/* Князь's card: a gold plate in chains with gold bars (boss-card-frame-knyaz.webp, 1200×514); a golden glint sweeps over
-   it like over the medals (bcoin-shine) */
-.bcard.bcard-boss-knyaz { --ink-c: #2e1a02; --mute-c: #6a4a12; border-image: url("/assets/ui/boss-card-frame-knyaz.webp") 130 fill / 40px stretch; }
+/* Князь's card: a silver plate in chains with silver bars (boss-card-frame-knyaz.webp, 1200×514, tools/ui/silver-knyaz-frame.py);
+   a silver glint sweeps over it like over the medals (bcoin-shine) */
+.bcard.bcard-boss-knyaz { --ink-c: #1b2029; --mute-c: #4a5466; border-image: url("/assets/ui/boss-card-frame-knyaz.webp?v=2") 130 fill / 40px stretch; }
 .bcard.bcard-boss-knyaz::after { content: ""; position: absolute; inset: 6px; z-index: 4; border-radius: 16px; pointer-events: none; mix-blend-mode: overlay;
-  background: linear-gradient(115deg, transparent 38%, rgba(255, 246, 200, 0.85) 47%, rgba(255, 255, 255, 0.95) 50%, rgba(255, 236, 160, 0.85) 53%, transparent 62%);
+  background: linear-gradient(115deg, transparent 38%, rgba(225, 235, 250, 0.85) 47%, rgba(255, 255, 255, 0.95) 50%, rgba(205, 218, 238, 0.85) 53%, transparent 62%);
   background-size: 260% 100%; background-repeat: no-repeat; animation: bcard-gold-shine 4.5s ease-in-out infinite; }
 @keyframes bcard-gold-shine { 0%, 55% { background-position: 130% 0; } 100% { background-position: -40% 0; } }
 .bcard.bcard-boss-knyaz.locked::after { display: none; }
