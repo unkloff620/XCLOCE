@@ -17,6 +17,12 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-05-vadim-tattoos",
+    date: "5 ноября",
+    title: "Наколки Вадима и избитый Вадим",
+    items: [{ img: "/assets/updates/2026-11-05-vadim-tattoos.webp", text: "С Вадима падают два новых сета наколок: «Уточка» в «Пацанском» и «Тачка» в «Авторитетном». А ниже половины здоровья его костюм рвётся и пачкается кровью." }],
+  },
+  {
     id: "2026-11-05-vadim",
     date: "5 ноября",
     title: "Вадим ожил",
