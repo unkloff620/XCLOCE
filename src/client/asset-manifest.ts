@@ -2625,6 +2625,7 @@ export const ASSET_FILES: string[] = [
  "/bosses/pepe/rig-beaten/sleeveL.webp",
  "/bosses/pepe/rig-beaten/sleeveR.webp",
  "/bosses/pepe/rig-beaten/whites.webp",
+ "/bosses/vadim/card.webp",
  "/bosses/vadim/full.webp",
  "/bosses/vadim/portrait.webp",
  "/bosses/vadim/rig/armL.webp",

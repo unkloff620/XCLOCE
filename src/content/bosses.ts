@@ -150,7 +150,7 @@ export const BOSSES: BossDef[] = [
     hp: hp(8), reward: { xp: xp(8), currencies: { USD: 30, RUB: 19_820 } },
     drop: [{ id: "gpu", qty: 1, chance: 0.4 }],
     wear: { items: ["jacket-vadim", "pants-vadim", "shoes-vadim", "tie-vadim"], chance: 0.1, pity: 10 },
-    theme: { a: "#3a2416", b: "#140b05", accent: "#ff8a3d" }, photo: photo("vadim"),
+    theme: { a: "#3a2416", b: "#140b05", accent: "#ff8a3d" }, photo: photo("vadim", true, "1"),
     keysToUnlock: 1,
   },
   {
