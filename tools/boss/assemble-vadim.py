@@ -6,9 +6,9 @@ on their own sheets: fistKeys (the left fist holding a car key), link (a small s
 car fob), key (a door key), and refKeys — the artist's picture of how they hang together (1000×1000).
 The key pieces are laid out as on refKeys, scaled by KS and moved so the fist's wrist lies on the left cuff (WRIST).
 Every piece of the bunch is its own layer and hangs free (boss-rig.tsx VadimRig, useDangle):
-  keyLink — the split ring through the hole of the key in the fist;  keyRing — the big ring on it;
+  keyRing — the big ring with the split ring through the hole of the key in the fist (one piece: they never come apart);
   keyFob  — the fob on its own little ring at the bottom of the big one;  keyKey — the door key on its ring at the side.
-Writes tools/boss/source/vadim/{legs,body,head,armL,lowL,handL,keyLink,keyRing,keyFob,keyKey,armR,lowR,handR}.png and
+Writes tools/boss/source/vadim/{legs,body,head,armL,lowL,handL,keyRing,keyFob,keyKey,armR,lowR,handR}.png and
 public/bosses/vadim/{full,portrait}.webp.
 """
 import os, json
@@ -30,8 +30,10 @@ LINK2 = ("link", (468, 592), 0)
 FOB = ("fob", (369, 628), 0)
 LINK3 = ("link", (541.5, 562.5), 49)
 KEY = ("key", (547, 595), 0)
-# the pins on refKeys: where each piece hangs from its parent
-PINS = {"keyLink": (477, 410), "keyRing": (476, 476), "keyFob": (474, 600), "keyKey": (521, 578)}
+# the pins on refKeys: where each piece hangs from its parent (the big ring with its split ring — from the key's hole)
+PINS = {"keyRing": (477, 410), "keyFob": (474, 600), "keyKey": (521, 578)}
+KK = 0.72                       # the bunch smaller than on refKeys (the fist keeps its size), shrunk towards the key's hole
+HOLE = PINS["keyRing"]
 
 
 def load(n):
@@ -42,8 +44,12 @@ def to_body(p):
     return (WRIST[0] + (p[0] - REF_WRIST[0]) * KS, WRIST[1] + (p[1] - REF_WRIST[1]) * KS)
 
 
+def to_body_keys(p):
+    return to_body((HOLE[0] + (p[0] - HOLE[0]) * KK, HOLE[1] + (p[1] - HOLE[1]) * KK))
+
+
 def keys_layer(pieces):
-    """pieces drawn on a refKeys-sized sheet, then moved and scaled onto the body sheet"""
+    """pieces drawn on a refKeys-sized sheet, shrunk by KK towards the key's hole, then moved and scaled onto the body sheet"""
     ref = Image.new("RGBA", (1000, 1000), (0, 0, 0, 0))
     for name, (x, y), deg in pieces:
         im = load(name)
@@ -52,9 +58,10 @@ def keys_layer(pieces):
             im = im.rotate(deg, resample=Image.BICUBIC, expand=True)
             x, y = cx - im.width / 2, cy - im.height / 2
         ref.alpha_composite(im, (round(x), round(y)))
-    big = ref.resize((round(1000 * KS), round(1000 * KS)), Image.LANCZOS)
+    k = KS * KK
+    big = ref.resize((round(1000 * k), round(1000 * k)), Image.LANCZOS)
     out = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    ox, oy = to_body((0, 0))
+    ox, oy = to_body_keys((0, 0))
     out.alpha_composite(big, (round(ox), round(oy)))
     return out
 
@@ -76,16 +83,15 @@ hand = Image.new("RGBA", (W, H), (0, 0, 0, 0))
 ox, oy = to_body((0, 0))
 hand.alpha_composite(big, (round(ox), round(oy)))
 save("handL", hand)
-save("keyLink", keys_layer([LINK1]))
-save("keyRing", keys_layer([RING]))
+save("keyRing", keys_layer([RING, LINK1]))
 save("keyFob", keys_layer([LINK2, FOB]))
 save("keyKey", keys_layer([LINK3, KEY]))
-pins = {k: [round(c * 0.5, 1) for c in to_body(p)] for k, p in PINS.items()}
+pins = {k: [round(c * 0.5, 1) for c in to_body_keys(p)] for k, p in PINS.items()}
 print("pins (rig units):", json.dumps(pins))
 
 # the whole boss (lists, the profile): the layers in their drawing order
 full = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-for n in ["legs", "armL", "armR", "body", "lowL", "lowR", "handR", "head", "handL", "keyRing", "keyLink", "keyFob", "keyKey"]:
+for n in ["legs", "armL", "armR", "body", "lowL", "lowR", "handR", "head", "handL", "keyRing", "keyFob", "keyKey"]:
     full.alpha_composite(Image.open(f"{D}/{n}.png").convert("RGBA"))
 a = np.array(full)[:, :, 3]
 ys, xs = np.nonzero(a > 20)

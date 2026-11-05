@@ -588,22 +588,20 @@ function useCoverSwing(coverRef: RefObject<SVGGElement | null>, handRef: RefObje
 /*
  * Вадим (tools/boss/assemble-vadim.py): plain layers, no puppet mesh. He breathes and sways, waves a knife in the right
  * fist and jangles his car keys in the left (screens.css «Вадим»). The bunch hangs free — every piece is its own
- * pendulum on its pin (useDangle): the split ring in the key's hole, the big ring on it, the fob and the door key on the
+ * pendulum on its pin (useDangle): the big ring (with its split ring) in the key's hole, the fob and the door key on the
  * ring; each lags behind what it hangs on, swings out and settles, so a flick of the wrist sends them all jangling.
  */
 function VadimRig({ id, rig, bust, dazed, svgRef }: { id: string; rig: Rig; bust: boolean; dazed: boolean; svgRef: RefObject<SVGSVGElement | null> }) {
   const P = rig.parts;
   const hand = useRef<SVGGElement>(null);
-  const link = useRef<SVGGElement>(null);
   const ring = useRef<SVGGElement>(null);
   const fob = useRef<SVGGElement>(null);
   const key = useRef<SVGGElement>(null);
   // length (rig units: the swing's period), damping and the widest swing (radians) of each piece
   useDangle([
-    { el: link, parent: hand, pin: P.keyLink?.pivot, len: 40, damp: 4.5, max: 0.7 },
-    { el: ring, parent: link, pin: P.keyRing?.pivot, len: 60, damp: 2.4, max: 1.1 },
-    { el: fob, parent: ring, pin: P.keyFob?.pivot, len: 95, damp: 1.9, max: 1.2 },
-    { el: key, parent: ring, pin: P.keyKey?.pivot, len: 50, damp: 1.4, max: 1.3 },
+    { el: ring, parent: hand, pin: P.keyRing?.pivot, len: 50, damp: 2.6, max: 1.1 },
+    { el: fob, parent: ring, pin: P.keyFob?.pivot, len: 70, damp: 1.9, max: 1.2 },
+    { el: key, parent: ring, pin: P.keyKey?.pivot, len: 36, damp: 1.4, max: 1.3 },
   ], !bust);
   const img = (p: string) => {
     const r = P[p];
@@ -618,12 +616,13 @@ function VadimRig({ id, rig, bust, dazed, svgRef }: { id: string; rig: Rig; bust
       <g className="vd-root" style={{ transformOrigin: `${rig.w / 2}px ${rig.h - 20}px`, transformBox: "view-box" }}>
         {img("legs")}
         <g className="vd-up" style={{ transformOrigin: `${rig.w / 2}px ${rig.h * 0.52}px`, transformBox: "view-box" }}>
-          {/* the upper sleeves behind the body; the same shoulder turns carry the forearms drawn in front */}
+          {/* the key arm's upper sleeve behind the body (the same shoulder turn carries its forearm drawn in front); the
+              knife arm is all in front: he thrusts it at you */}
           <g className="vd-arm-l" style={origin("armL")}>{img("armL")}</g>
-          <g className="vd-arm-r" style={origin("armR")}>{img("armR")}</g>
           {img("body")}
           <g className="vd-head" style={origin("head")}>{img("head")}</g>
           <g className="vd-arm-r" style={origin("armR")}>
+            {img("armR")}
             <g className="vd-low-r" style={origin("lowR")}>
               {img("lowR")}
               <g className="vd-hand-r" style={origin("handR")}>{img("handR")}</g>
@@ -634,14 +633,11 @@ function VadimRig({ id, rig, bust, dazed, svgRef }: { id: string; rig: Rig; bust
               {img("lowL")}
               <g className="vd-hand-l" ref={hand} style={origin("handL")}>
                 {img("handL")}
-                {/* the bunch: the split ring in the key's hole carries the big ring, the fob and the key hang on that */}
-                <g ref={link}>
-                  <g ref={ring}>
-                    {img("keyRing")}
-                    <g ref={fob}>{img("keyFob")}</g>
-                    <g ref={key}>{img("keyKey")}</g>
-                  </g>
-                  {img("keyLink")}
+                {/* the bunch: the big ring (with its split ring) hangs in the key's hole, the fob and the key hang on it */}
+                <g ref={ring}>
+                  {img("keyRing")}
+                  <g ref={fob}>{img("keyFob")}</g>
+                  <g ref={key}>{img("keyKey")}</g>
                 </g>
               </g>
             </g>
