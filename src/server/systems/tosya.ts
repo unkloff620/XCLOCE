@@ -3,7 +3,7 @@ import { TATTOO_SETS } from "../../content/tattoos.ts";
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, takeMoney, type Ctx } from "../core.ts";
 import type { Config } from "../config.ts";
-import { rollPie, tosyaPies, tosyaPrice, tosyaValue, tosyaVisit } from "../../content/tosya.ts";
+import { rollPie, tosyaLook, tosyaPies, tosyaPrice, tosyaValue, tosyaVisit } from "../../content/tosya.ts";
 
 const bits = (n: number) => { let c = 0; for (let x = n; x; x &= x - 1) c++; return c; };
 
@@ -14,7 +14,7 @@ export async function tosyaView(q: Queryable, pid: number, cfg: Config, now: num
   const pies = tosyaPies(pid, v.id);
   const [r] = await q.query<{ taken: number }>("SELECT taken FROM tosya_pies WHERE player_id=$1 AND visit=$2", [pid, v.id]);
   const taken = Number(r?.taken ?? 0);
-  return { visit: v.id, endsAt: v.endsAt, pies, taken, next: bits(taken) < pies ? tosyaPrice(bits(taken), pies) : null };
+  return { visit: v.id, look: tosyaLook(v.id).id, endsAt: v.endsAt, pies, taken, next: bits(taken) < pies ? tosyaPrice(bits(taken), pies) : null };
 }
 
 /** a pie off the tray (slot 0…pies-1): paid in dollars, the next one twice as dear; its contents are granted */
@@ -22,11 +22,11 @@ export async function tosyaBuy(ctx: Ctx, slot: number) {
   const v = tosyaVisit(ctx.now, ctx.cfg.tosya);
   if (!v) throw new GameError("tosya_gone", "Тося уже уехал");
   const pies = tosyaPies(ctx.pid, v.id);
-  if (!Number.isInteger(slot) || slot < 0 || slot >= pies) throw new GameError("bad_request", "Нет такого пирожка", 400);
+  if (!Number.isInteger(slot) || slot < 0 || slot >= pies) throw new GameError("bad_request", `Нет такого: ${tosyaLook(v.id).w.one}`, 400);
   await ctx.q.query("INSERT INTO tosya_pies (player_id, visit) VALUES ($1,$2) ON CONFLICT DO NOTHING", [ctx.pid, v.id]);
   const [r] = await ctx.q.query<{ taken: number }>("SELECT taken FROM tosya_pies WHERE player_id=$1 AND visit=$2 FOR UPDATE", [ctx.pid, v.id]);
   const taken = Number(r?.taken ?? 0);
-  if (taken & (1 << slot)) throw new GameError("tosya_taken", "Этот пирожок уже твой");
+  if (taken & (1 << slot)) throw new GameError("tosya_taken", "Это уже твоё");
   const price = tosyaPrice(bits(taken), pies);
   if (price > 0) await takeMoney(ctx, "USD", price, `tosya:${v.id}:${slot}`);
   // one of Тося's tattoos the player does not have yet (all three sets — content/tattoos.ts boss "tosya")

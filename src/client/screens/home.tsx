@@ -30,6 +30,7 @@ import { UpdatesNotice, UpdatesWindow } from "../updates-notice.tsx";
 import { usedUrl } from "../preload.ts";
 import { EVENT_BOSSES, eventBossById } from "../../content/event-bosses.ts";
 import { todayUpdates } from "../../content/updates.ts";
+import { tosyaLookById } from "../../content/tosya.ts";
 
 const MENU_KEY = "xc2_home_menu";
 
@@ -244,9 +245,9 @@ export function HomeScreen() {
           <NewbieButton />
           {/* «Тося» is here: his pies (screens/tosya.tsx) */}
           {state.tosya && (
-            <Link href="/event/tosya" className="menu-toggle event-toggle" aria-label="Ивент: Тося" title="Тося привёз пирожки">
+            <Link href="/event/tosya" className="menu-toggle event-toggle" aria-label="Ивент: Тося" title={tosyaLookById(state.tosya.look).w.brought}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/assets/tosya/portrait.webp?v=1" alt="" draggable={false} />
+              <img src={`/assets/tosya/portrait${tosyaLookById(state.tosya.look).art}.webp?v=2`} alt="" draggable={false} />
               <span className="event-tag">ТОСЯ</span>
             </Link>
           )}

@@ -74,6 +74,30 @@ export function tosyaNextAt(now: number, m: TosyaMode = { mode: "auto", at: 0 })
   return null;
 }
 
+/**
+ * His looks: every visit he comes in one of them (the same for everybody, by the visit), and brings its own goods on the
+ * tray — pies, gold bars, grenades or fishing spoons; what is inside works the same. The words for the goods in the
+ * cases the screens need; `full` — said when the tray is empty.
+ */
+export interface TosyaLook {
+  id: string; name: string; art: string;
+  w: { one: string; acc: string; many: string; pl: string; inOne: string; inMany: string; next: string; from: string; brought: string };
+  full: string;
+}
+export const TOSYA_LOOKS: TosyaLook[] = [
+  { id: "maid", name: "Домработница", art: "", full: "Тося доволен — ты покушал.",
+    w: { one: "пирожок", acc: "пирожок", many: "пирожков", pl: "пирожки", inOne: "В пирожке", inMany: "в пирожках", next: "следующему пирожку", from: "Пирожок от Тоси", brought: "Тося привёз пирожки" } },
+  { id: "business", name: "Бизнесмен", art: "-business", full: "Тося доволен — теперь ты при золоте.",
+    w: { one: "слиток", acc: "слиток", many: "слитков", pl: "слитки", inOne: "В слитке", inMany: "в слитках", next: "следующему слитку", from: "Слиток от Тоси", brought: "Тося привёз золото" } },
+  { id: "military", name: "Военный", art: "-military", full: "Тося доволен — ты вооружён.",
+    w: { one: "граната", acc: "гранату", many: "гранат", pl: "гранаты", inOne: "В гранате", inMany: "в гранатах", next: "следующей гранате", from: "Граната от Тоси", brought: "Тося привёз гранаты" } },
+  { id: "fisher", name: "Рыбак", art: "-fisher", full: "Тося доволен — теперь у тебя клюёт.",
+    w: { one: "блесна", acc: "блесну", many: "блёсен", pl: "блёсны", inOne: "В блесне", inMany: "в блёснах", next: "следующей блесне", from: "Блесна от Тоси", brought: "Тося привёз блёсны" } },
+];
+/** the look of a visit (the same for everybody) */
+export const tosyaLook = (visit: string): TosyaLook => TOSYA_LOOKS[hash(`look:${visit}`) % TOSYA_LOOKS.length];
+export const tosyaLookById = (id: string | undefined): TosyaLook => TOSYA_LOOKS.find((l) => l.id === id) ?? TOSYA_LOOKS[0];
+
 /** how many pies he brought this player on this visit: 3…5 */
 export const tosyaPies = (pid: number, visit: string) => 3 + (hash(`pies:${pid}:${visit}`) % 3);
 

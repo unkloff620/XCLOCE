@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-05-tosya-looks",
+    date: "5 ноября",
+    title: "Тося переодевается",
+    items: [
+      { img: "/assets/updates/2026-11-05-tosya-looks.webp", text: "Тося теперь приезжает в разных образах: домработницей с пирожками, бизнесменом со слитками золота, военным с гранатами или рыбаком с блёснами. Внутри — всё те же сюрпризы." },
+    ],
+  },
+  {
     id: "2026-11-05-vadim-all",
     date: "5 ноября",
     title: "Вадим",
