@@ -139,6 +139,11 @@ const WEARABLES: ItemDef[] = ([
   { id: "pants-vostok", name: "Штаны Лудомана", slot: "PANTS", rarity: "epic", description: "Ремни на коленях, чтобы не убежать от автомата. Снял с Востока.", sources: ["Победа: Восток"] },
   { id: "headphones-vostok", name: "Наушники Лудомана", slot: "HEAD", rarity: "epic", description: "Чтобы не слышать, сколько уже проиграно. Снял с Востока.", sources: ["Победа: Восток"] },
   { id: "sneakers-black", name: "Кроссовки Лудомана", slot: "SHOES", rarity: "epic", description: "Чёрные, на толстой подошве — чтобы до автомата и обратно. Снял с Востока.", sources: ["Победа: Восток"] },
+  // Вадим's suit (the jacket, the trousers and the shoes keep the cut of Гаркуша's things; the tie is his own)
+  { id: "jacket-vadim", name: "Пиджак Вадима", slot: "SHIRT", rarity: "epic", description: "Тёмно-синий, нараспашку — пуговицы застёгивают только подчинённые. Снял с Вадима.", sources: ["Победа: Вадим (Блатной)"] },
+  { id: "pants-vadim", name: "Брюки Вадима", slot: "PANTS", rarity: "epic", description: "Стрелки острее кухонного ножа. Снял с Вадима.", sources: ["Победа: Вадим (Блатной)"] },
+  { id: "shoes-vadim", name: "Туфли Вадима", slot: "SHOES", rarity: "epic", description: "Коричневые лоферы с золотой пряжкой — в них заходят в кабинет без стука. Снял с Вадима.", sources: ["Победа: Вадим (Блатной)"] },
+  { id: "tie-vadim", name: "Галстук Вадима", slot: "ACCESSORY", rarity: "epic", description: "Красный, в косую полоску. Можно носить и без рубашки — Вадим разрешил. Снял с Вадима.", sources: ["Победа: Вадим (Блатной)"] },
   { id: "gold-chain", name: "Серебряная цепь", slot: "ACCESSORY", rarity: "epic", description: "Каждое звено — подтверждённый блок.", sources: ["Магазин", "Награда за локацию 3"] },
 ] as Omit<ItemDef, "category" | "maxStack">[]).map((w) => {
   // clothes a boss unlocks: the drop opens them in the shop, then they are bought there

@@ -27,6 +27,69 @@ export const HAIR_FIT = {
 } as const;
 /** worn clothes drawn on the rig; hats in this list also have hair variants cut under them */
 export const WEAR_FIT = {
+  "tee-white": {
+    "slot": "SHIRT",
+    "x": 187.0,
+    "y": 285.5,
+    "w": 624,
+    "h": 481
+  },
+  "tee-pump": {
+    "slot": "SHIRT",
+    "x": 179.5,
+    "y": 291.0,
+    "w": 646,
+    "h": 476
+  },
+  "jeans": {
+    "slot": "PANTS",
+    "x": 73.0,
+    "y": 667.5,
+    "w": 858,
+    "h": 479
+  },
+  "shorts-remote": {
+    "slot": "PANTS",
+    "x": 179.5,
+    "y": 696.5,
+    "w": 652,
+    "h": 291
+  },
+  "sneakers": {
+    "slot": "SHOES",
+    "x": 100.5,
+    "y": 1086.0,
+    "w": 792,
+    "h": 265
+  },
+  "slippers": {
+    "slot": "SHOES",
+    "x": 94.0,
+    "y": 1189.5,
+    "w": 804,
+    "h": 170
+  },
+  "gold-chain": {
+    "slot": "ACCESSORY",
+    "x": 413.5,
+    "y": 291.5,
+    "w": 173,
+    "h": 108
+  },
+  "cap-moon": {
+    "slot": "HEAD",
+    "x": 393.0,
+    "y": 13.5,
+    "w": 219,
+    "h": 170
+  },
+  "hoodie-hodl": {
+    "slot": "SHIRT",
+    "x": 105.5,
+    "y": 227.5,
+    "w": 792,
+    "h": 542
+  },
   "jacket-puffer": {
     "slot": "SHIRT",
     "x": 115.0,
@@ -96,69 +159,6 @@ export const WEAR_FIT = {
     "y": 292.0,
     "w": 164,
     "h": 393
-  },
-  "tee-white": {
-    "slot": "SHIRT",
-    "x": 187.0,
-    "y": 285.5,
-    "w": 624,
-    "h": 481
-  },
-  "tee-pump": {
-    "slot": "SHIRT",
-    "x": 179.5,
-    "y": 291.0,
-    "w": 646,
-    "h": 476
-  },
-  "jeans": {
-    "slot": "PANTS",
-    "x": 73.0,
-    "y": 667.5,
-    "w": 858,
-    "h": 479
-  },
-  "shorts-remote": {
-    "slot": "PANTS",
-    "x": 179.5,
-    "y": 696.5,
-    "w": 652,
-    "h": 291
-  },
-  "sneakers": {
-    "slot": "SHOES",
-    "x": 100.5,
-    "y": 1086.0,
-    "w": 792,
-    "h": 265
-  },
-  "slippers": {
-    "slot": "SHOES",
-    "x": 94.0,
-    "y": 1189.5,
-    "w": 804,
-    "h": 170
-  },
-  "gold-chain": {
-    "slot": "ACCESSORY",
-    "x": 413.5,
-    "y": 291.5,
-    "w": 173,
-    "h": 108
-  },
-  "cap-moon": {
-    "slot": "HEAD",
-    "x": 393.0,
-    "y": 13.5,
-    "w": 219,
-    "h": 170
-  },
-  "hoodie-hodl": {
-    "slot": "SHIRT",
-    "x": 105.5,
-    "y": 227.5,
-    "w": 792,
-    "h": 542
   },
   "jacket-komandate": {
     "slot": "SHIRT",
@@ -299,6 +299,34 @@ export const WEAR_FIT = {
     "y": 80.5,
     "w": 260,
     "h": 74
+  },
+  "jacket-vadim": {
+    "slot": "SHIRT",
+    "x": 115.0,
+    "y": 238.5,
+    "w": 776,
+    "h": 528
+  },
+  "pants-vadim": {
+    "slot": "PANTS",
+    "x": 69.0,
+    "y": 676.0,
+    "w": 862,
+    "h": 484
+  },
+  "shoes-vadim": {
+    "slot": "SHOES",
+    "x": 88.5,
+    "y": 1136.0,
+    "w": 808,
+    "h": 206
+  },
+  "tie-vadim": {
+    "slot": "ACCESSORY",
+    "x": 431.0,
+    "y": 288.5,
+    "w": 138,
+    "h": 423
   }
 } as const;
 /** head things that cut the hair under them (the rest are worn over the hair) */

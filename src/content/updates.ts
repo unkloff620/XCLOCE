@@ -17,6 +17,12 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-05-vadim-wear",
+    date: "5 ноября",
+    title: "Костюм Вадима",
+    items: [{ img: "/assets/updates/2026-11-05-vadim-wear.webp", text: "С Вадима в «Блатном» падают его вещи: пиджак нараспашку, брюки со стрелками, лоферы с пряжкой и красный галстук. Выпавшая вещь открывается в магазине одежды." }],
+  },
+  {
     id: "2026-11-05-vadim-tattoos",
     date: "5 ноября",
     title: "Наколки Вадима и избитый Вадим",
