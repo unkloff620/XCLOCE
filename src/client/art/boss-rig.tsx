@@ -25,7 +25,7 @@ const BEHIND: Record<string, "L" | "R"> = { mugo: "R", babafey: "L" };
 /** of these the arm in BEHIND goes behind only with its shoulder: the forearm and the hand stay in front of everything */
 const SPLIT_BEHIND = new Set(["babafey"]);
 /** rigs drawn as plain SVG only */
-const NO_PUPPET = new Set<string>(["knyaz", "vadim"]);
+const NO_PUPPET = new Set<string>(["knyaz"]);
 
 /** frame schedules of the puppet strips: [frame, ms] — idle loops, ouch/strike play once */
 type SeqMode = "idle" | "ouch" | "strike" | "fear";
@@ -331,7 +331,7 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
     );
   }
   if (baseId === "knyaz") return <KnyazRig id={id} rig={rig} bust={bust} dazed={dazed} svgRef={svgRef} frameCss={frameCss} strip={strip} />;
-  if (baseId === "vadim") return <VadimRig id={id} rig={rig} bust={bust} dazed={dazed} svgRef={svgRef} />;
+  if (baseId === "vadim") return <VadimRig id={id} rig={rig} bust={bust} dazed={dazed} svgRef={svgRef} wrapRef={wrapRef} puppet={puppet} />;
   const behind = BEHIND[baseId];
   const split = SPLIT_BEHIND.has(baseId);
   const clipEyes = !!P.armL && !!P.pupils && !!P.eyes;
@@ -586,12 +586,15 @@ function useCoverSwing(coverRef: RefObject<SVGGElement | null>, handRef: RefObje
 }
 
 /*
- * Вадим (tools/boss/assemble-vadim.py): plain layers, no puppet mesh. He breathes and sways, waves a knife in the right
- * fist and jangles his car keys in the left (screens.css «Вадим»). The bunch hangs free — every piece is its own
- * pendulum on its pin (useDangle): the big ring (with its split ring) in the key's hole, the fob and the door key on the
- * ring; each lags behind what it hangs on, swings out and settles, so a flick of the wrist sends them all jangling.
+ * Вадим (tools/boss/assemble-vadim.py): soft joints like Восток's — the puppet (boss-puppet.ts) bends the sleeves at the
+ * shoulders, the elbows and the wrists, the body round the shoulders and the neck; the limbs only turn (screens.css
+ * «Вадим»): he stabs with the knife in the right fist and beats with the car keys in the left. The bunch hangs free —
+ * every piece is its own pendulum on its pin (useDangle): the big ring (with its split ring) in the key's hole, the fob
+ * and the door key on the ring; each lags behind what it hangs on, swings out and settles.
  */
-function VadimRig({ id, rig, bust, dazed, svgRef }: { id: string; rig: Rig; bust: boolean; dazed: boolean; svgRef: RefObject<SVGSVGElement | null> }) {
+function VadimRig({ id, rig, bust, dazed, svgRef, wrapRef, puppet }: {
+  id: string; rig: Rig; bust: boolean; dazed: boolean; svgRef: RefObject<SVGSVGElement | null>; wrapRef: RefObject<HTMLDivElement | null>; puppet: boolean;
+}) {
   const P = rig.parts;
   const hand = useRef<SVGGElement>(null);
   const ring = useRef<SVGGElement>(null);
@@ -603,48 +606,61 @@ function VadimRig({ id, rig, bust, dazed, svgRef }: { id: string; rig: Rig; bust
     { el: fob, parent: ring, pin: P.keyFob?.pivot, len: 70, damp: 1.9, max: 1.2 },
     { el: key, parent: ring, pin: P.keyKey?.pivot, len: 36, damp: 1.4, max: 1.3 },
   ], !bust);
-  const img = (p: string) => {
+  // a picture: warped by the puppet on the back or the front canvas (the SVG copy hides then)
+  const pic = (p: string, pp: "back" | "front") => {
     const r = P[p];
-    return r ? <image href={`/bosses/${id}/rig/${p}.webp${r.v ? `?v=${r.v}` : ""}`} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" /> : null;
+    return r ? <image className={puppet ? "pp" : undefined} data-pp={puppet ? pp : undefined} data-pp-body={puppet && p === "body" ? "1" : undefined}
+      href={`/bosses/${id}/rig/${p}.webp${r.v ? `?v=${r.v}` : ""}`} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" /> : null;
   };
   const origin = (p: string): CSSProperties => {
     const pv = P[p]?.pivot ?? [rig.w / 2, rig.h];
     return { transformOrigin: `${pv[0]}px ${pv[1]}px`, transformBox: "view-box" };
   };
-  return (
-    <svg ref={svgRef} className={`boss-rig rig-vadim ${dazed ? "dazed" : ""}`} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} width="100%" height="100%" preserveAspectRatio={bust ? "xMidYMin slice" : "xMidYMax meet"} aria-hidden="true">
+  // a joint: the group turns round the part's pivot; the puppet blends the pictures on both sides of it
+  const bone = (cls: string, p: string, kids: ReactNode, size?: number, ref?: RefObject<SVGGElement | null>) => (
+    <g className={cls} ref={ref} data-pivot={P[p]?.pivot ? `${P[p].pivot![0]},${P[p].pivot![1]}` : undefined} data-pp-size={size} style={origin(p)}>{kids}</g>
+  );
+  const svgEl = (
+    <svg key={id} ref={svgRef} className={`boss-rig rig-vadim ${dazed ? "dazed" : ""}`} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} width="100%" height="100%" preserveAspectRatio={bust ? "xMidYMin slice" : "xMidYMax meet"} aria-hidden="true">
       <g className="vd-root" style={{ transformOrigin: `${rig.w / 2}px ${rig.h - 20}px`, transformBox: "view-box" }}>
-        {img("legs")}
+        {pic("legs", "back")}
         <g className="vd-up" style={{ transformOrigin: `${rig.w / 2}px ${rig.h * 0.52}px`, transformBox: "view-box" }}>
-          {/* the key arm's upper sleeve behind the body (the same shoulder turn carries its forearm drawn in front); the
-              knife arm is all in front: he thrusts it at you */}
-          <g className="vd-arm-l" style={origin("armL")}>{img("armL")}</g>
-          {img("body")}
-          <g className="vd-head" style={origin("head")}>{img("head")}</g>
-          <g className="vd-arm-r" style={origin("armR")}>
-            {img("armR")}
-            <g className="vd-low-r" style={origin("lowR")}>
-              {img("lowR")}
-              <g className="vd-hand-r" style={origin("handR")}>{img("handR")}</g>
-            </g>
-          </g>
-          <g className="vd-arm-l" style={origin("armL")}>
-            <g className="vd-low-l" style={origin("lowL")}>
-              {img("lowL")}
-              <g className="vd-hand-l" ref={hand} style={origin("handL")}>
-                {img("handL")}
-                {/* the bunch: the big ring (with its split ring) hangs in the key's hole, the fob and the key hang on it */}
-                <g ref={ring}>
-                  {img("keyRing")}
-                  <g ref={fob}>{img("keyFob")}</g>
-                  <g ref={key}>{img("keyKey")}</g>
-                </g>
+          {/* the key arm's upper sleeve behind the body (with an empty elbow, so its end bends with the forearm) */}
+          {bone("vd-arm-l", "armL", <>{pic("armL", "back")}{bone("vd-low-l", "lowL", null, 120)}</>, 140)}
+          {pic("body", "back")}
+          {bone("vd-head", "head", pic("head", "back"), 160)}
+          {/* the key arm's forearm and fist in front: the same shoulder and elbow turns */}
+          {bone("vd-arm-l", "armL", bone("vd-low-l", "lowL", <>
+            {pic("lowL", "front")}
+            {bone("vd-hand-l", "handL", <>
+              {pic("handL", "front")}
+              {/* the bunch: the big ring (with its split ring) hangs in the key's hole, the fob and the key hang on it */}
+              <g ref={ring}>
+                {pic("keyRing", "front")}
+                <g ref={fob}>{pic("keyFob", "front")}</g>
+                <g ref={key}>{pic("keyKey", "front")}</g>
               </g>
-            </g>
-          </g>
+            </>, 90, hand)}
+          </>, 120), 140)}
+          {/* the knife arm, all in front of the body */}
+          {bone("vd-arm-r", "armR", <>
+            {pic("armR", "front")}
+            {bone("vd-low-r", "lowR", <>
+              {pic("lowR", "front")}
+              {bone("vd-hand-r", "handR", pic("handR", "front"), 90)}
+            </>, 120)}
+          </>, 140)}
         </g>
       </g>
     </svg>
+  );
+  if (!puppet) return svgEl;
+  return (
+    <div ref={wrapRef} key={id} className={`br-pup rig-${id.split("-")[0]}-pup`}>
+      <canvas className="br-pup-back" aria-hidden="true" />
+      {svgEl}
+      <canvas className="br-pup-front" aria-hidden="true" />
+    </div>
   );
 }
 

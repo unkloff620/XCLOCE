@@ -5529,60 +5529,80 @@ html.paused *, html.paused *::before, html.paused *::after { animation-play-stat
 @keyframes vd-shift { 0%, 100% { transform: translateX(0) rotate(0deg); } 50% { transform: translateX(-6px) rotate(-0.7deg); } }
 .rig-vadim .vd-head { animation: vd-head 5.2s ease-in-out infinite; }
 @keyframes vd-head { 0%, 100% { transform: rotate(0deg); } 30% { transform: rotate(2.4deg); } 65% { transform: rotate(-1.8deg); } }
-/* the keys: quick blows — a short swing back and a snap forward at you (the arm comes closer: it grows), twice, a breath */
-.rig-vadim .vd-arm-l { animation: vd-blows 1.7s linear infinite; }
-@keyframes vd-blows {
-  0% { transform: rotate(0deg) scale(1); animation-timing-function: ease-in-out; }
-  30% { transform: rotate(2deg) scale(1); animation-timing-function: ease-in; }
-  38% { transform: rotate(9deg) scale(0.97); animation-timing-function: var(--vd-snap); }
-  43% { transform: translate(60px, 18px) rotate(-12deg) scale(1.3); animation-timing-function: ease-out; }
-  50% { transform: translate(52px, 16px) rotate(-9deg) scale(1.26); animation-timing-function: ease-in; }
-  56% { transform: rotate(10deg) scale(0.97); animation-timing-function: var(--vd-snap); }
-  61% { transform: translate(66px, 20px) rotate(-14deg) scale(1.34); animation-timing-function: ease-out; }
-  70% { transform: translate(36px, 10px) rotate(-7deg) scale(1.18); animation-timing-function: ease-in-out; }
-  84%, 100% { transform: rotate(0deg) scale(1); }
+/* the keys: quick blows, turns only — the shoulder lifts, the elbow cocks, the wrist bends back, then all snap down
+   at once (fast in, a short hold), twice, a breath; the bunch flies and jangles by itself (useDangle) */
+.rig-vadim .vd-arm-l { animation: vd-blow-arm 1.6s linear infinite; }
+@keyframes vd-blow-arm {
+  0% { transform: rotate(0deg); animation-timing-function: ease-in-out; }
+  30% { transform: rotate(2deg); animation-timing-function: ease-in; }
+  37% { transform: rotate(9deg); animation-timing-function: var(--vd-snap); }
+  41% { transform: rotate(-8deg); animation-timing-function: ease-out; }
+  49% { transform: rotate(-5deg); animation-timing-function: ease-in; }
+  55% { transform: rotate(9deg); animation-timing-function: var(--vd-snap); }
+  59% { transform: rotate(-9deg); animation-timing-function: ease-out; }
+  70%, 100% { transform: rotate(0deg); }
 }
-.rig-vadim .vd-hand-l { animation: vd-blows-hand 1.7s linear infinite; }
-@keyframes vd-blows-hand {
+.rig-vadim .vd-low-l { animation: vd-blow-low 1.6s linear infinite; }
+@keyframes vd-blow-low {
   0%, 30% { transform: rotate(0deg); animation-timing-function: ease-in; }
-  38% { transform: rotate(20deg); animation-timing-function: var(--vd-snap); }
-  43% { transform: rotate(-24deg); animation-timing-function: ease-out; }
-  50% { transform: rotate(-12deg); animation-timing-function: ease-in; }
-  56% { transform: rotate(22deg); animation-timing-function: var(--vd-snap); }
-  61% { transform: rotate(-28deg); animation-timing-function: ease-out; }
-  70% { transform: rotate(-8deg); animation-timing-function: ease-in-out; }
-  84%, 100% { transform: rotate(0deg); }
+  37% { transform: rotate(22deg); animation-timing-function: var(--vd-snap); }
+  41% { transform: rotate(-16deg); animation-timing-function: ease-out; }
+  49% { transform: rotate(-8deg); animation-timing-function: ease-in; }
+  55% { transform: rotate(24deg); animation-timing-function: var(--vd-snap); }
+  59% { transform: rotate(-18deg); animation-timing-function: ease-out; }
+  70%, 100% { transform: rotate(0deg); }
 }
-/* the knife: held out in front; a wind-up and a sharp stab at you — the arm shoots forward (it grows) and down to the
-   middle, the blade turned in — three times, fast, like stabbing with a kitchen knife */
-.rig-vadim .vd-arm-r { animation: vd-stab 1.5s linear infinite; }
-@keyframes vd-stab {
-  0% { transform: translate(-34px, 6px) rotate(8deg) scale(1.1); animation-timing-function: ease-in-out; }
-  22% { transform: translate(-30px, 4px) rotate(7deg) scale(1.09); animation-timing-function: ease-in; }
-  28% { transform: translate(-14px, -8px) rotate(-6deg) scale(1.02); animation-timing-function: var(--vd-snap); }
-  32% { transform: translate(-118px, 30px) rotate(22deg) scale(1.46); animation-timing-function: ease-out; }
-  38% { transform: translate(-108px, 27px) rotate(20deg) scale(1.4); animation-timing-function: ease-in; }
-  44% { transform: translate(-14px, -8px) rotate(-6deg) scale(1.02); animation-timing-function: var(--vd-snap); }
-  48% { transform: translate(-126px, 34px) rotate(24deg) scale(1.5); animation-timing-function: ease-out; }
-  54% { transform: translate(-114px, 30px) rotate(21deg) scale(1.43); animation-timing-function: ease-in; }
-  60% { transform: translate(-14px, -8px) rotate(-6deg) scale(1.02); animation-timing-function: var(--vd-snap); }
-  64% { transform: translate(-122px, 32px) rotate(23deg) scale(1.48); animation-timing-function: ease-out; }
-  72% { transform: translate(-90px, 22px) rotate(17deg) scale(1.32); animation-timing-function: ease-in-out; }
-  88%, 100% { transform: translate(-34px, 6px) rotate(8deg) scale(1.1); }
+.rig-vadim .vd-hand-l { animation: vd-blow-hand 1.6s linear infinite; }
+@keyframes vd-blow-hand {
+  0%, 30% { transform: rotate(0deg); animation-timing-function: ease-in; }
+  37% { transform: rotate(18deg); animation-timing-function: var(--vd-snap); }
+  41% { transform: rotate(-22deg); animation-timing-function: ease-out; }
+  49% { transform: rotate(-10deg); animation-timing-function: ease-in; }
+  55% { transform: rotate(20deg); animation-timing-function: var(--vd-snap); }
+  59% { transform: rotate(-24deg); animation-timing-function: ease-out; }
+  70%, 100% { transform: rotate(0deg); }
 }
-.rig-vadim .vd-hand-r { animation: vd-stab-hand 1.5s linear infinite; }
+/* the knife: stabs like with a kitchen knife, turns only — a cock of the elbow and the wrist, a snap down with the
+   blade turned in, three times fast, a breath */
+.rig-vadim .vd-arm-r { animation: vd-stab-arm 1.4s linear infinite; }
+@keyframes vd-stab-arm {
+  0% { transform: rotate(0deg); animation-timing-function: ease-in-out; }
+  24% { transform: rotate(-2deg); animation-timing-function: ease-in; }
+  29% { transform: rotate(-8deg); animation-timing-function: var(--vd-snap); }
+  33% { transform: rotate(9deg); animation-timing-function: ease-out; }
+  39% { transform: rotate(6deg); animation-timing-function: ease-in; }
+  44% { transform: rotate(-8deg); animation-timing-function: var(--vd-snap); }
+  48% { transform: rotate(10deg); animation-timing-function: ease-out; }
+  54% { transform: rotate(7deg); animation-timing-function: ease-in; }
+  59% { transform: rotate(-8deg); animation-timing-function: var(--vd-snap); }
+  63% { transform: rotate(10deg); animation-timing-function: ease-out; }
+  76%, 100% { transform: rotate(0deg); }
+}
+.rig-vadim .vd-low-r { animation: vd-stab-low 1.4s linear infinite; }
+@keyframes vd-stab-low {
+  0%, 24% { transform: rotate(0deg); animation-timing-function: ease-in; }
+  29% { transform: rotate(-24deg); animation-timing-function: var(--vd-snap); }
+  33% { transform: rotate(20deg); animation-timing-function: ease-out; }
+  39% { transform: rotate(14deg); animation-timing-function: ease-in; }
+  44% { transform: rotate(-24deg); animation-timing-function: var(--vd-snap); }
+  48% { transform: rotate(22deg); animation-timing-function: ease-out; }
+  54% { transform: rotate(15deg); animation-timing-function: ease-in; }
+  59% { transform: rotate(-24deg); animation-timing-function: var(--vd-snap); }
+  63% { transform: rotate(22deg); animation-timing-function: ease-out; }
+  76%, 100% { transform: rotate(0deg); }
+}
+.rig-vadim .vd-hand-r { animation: vd-stab-hand 1.4s linear infinite; }
 @keyframes vd-stab-hand {
-  0%, 22% { transform: rotate(10deg); animation-timing-function: ease-in; }
-  28% { transform: rotate(-16deg); animation-timing-function: var(--vd-snap); }
-  32% { transform: rotate(36deg); animation-timing-function: ease-out; }
-  38% { transform: rotate(30deg); animation-timing-function: ease-in; }
-  44% { transform: rotate(-16deg); animation-timing-function: var(--vd-snap); }
-  48% { transform: rotate(38deg); animation-timing-function: ease-out; }
-  54% { transform: rotate(31deg); animation-timing-function: ease-in; }
-  60% { transform: rotate(-16deg); animation-timing-function: var(--vd-snap); }
-  64% { transform: rotate(37deg); animation-timing-function: ease-out; }
-  72% { transform: rotate(22deg); animation-timing-function: ease-in-out; }
-  88%, 100% { transform: rotate(10deg); }
+  0%, 24% { transform: rotate(0deg); animation-timing-function: ease-in; }
+  29% { transform: rotate(-18deg); animation-timing-function: var(--vd-snap); }
+  33% { transform: rotate(26deg); animation-timing-function: ease-out; }
+  39% { transform: rotate(20deg); animation-timing-function: ease-in; }
+  44% { transform: rotate(-18deg); animation-timing-function: var(--vd-snap); }
+  48% { transform: rotate(28deg); animation-timing-function: ease-out; }
+  54% { transform: rotate(21deg); animation-timing-function: ease-in; }
+  59% { transform: rotate(-18deg); animation-timing-function: var(--vd-snap); }
+  63% { transform: rotate(27deg); animation-timing-function: ease-out; }
+  76%, 100% { transform: rotate(0deg); }
 }
 /* in the fight: he swings the keys at you like a flail; hit: the head snaps back */
 .arena-photo.strike .rig-vadim .vd-arm-l { animation: vd-strike 0.9s linear both; }
@@ -5595,11 +5615,11 @@ html.paused *, html.paused *::before, html.paused *::after { animation-play-stat
 /* scared (below half HP): both arms hang, the keys dangle from the limp hand, the body sways over the hips */
 .rig-vadim.dazed .vd-arm-l { animation: vd-limp-l 3.4s ease-in-out infinite; }
 @keyframes vd-limp-l { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(-12deg); } }
-.rig-vadim.dazed .vd-hand-l { animation: none; }
+.rig-vadim.dazed .vd-hand-l, .rig-vadim.dazed .vd-low-l, .rig-vadim.dazed .vd-low-r { animation: none; }
 .rig-vadim.dazed .vd-arm-r { animation: vd-limp-r 3.4s ease-in-out infinite; }
 @keyframes vd-limp-r { 0%, 100% { transform: rotate(6deg); } 50% { transform: rotate(12deg); } }
 .rig-vadim.dazed .vd-hand-r { animation: none; }
 .rig-vadim.boss-rig.dazed, .rig-vadim.dazed .vd-root { animation: none; }
 .rig-vadim.dazed .vd-up { animation: vd-daze 3.6s ease-in-out infinite; }
 @keyframes vd-daze { 0%, 100% { transform: rotate(-1.6deg); } 50% { transform: rotate(1.6deg) translateY(2px); } }
-@media (prefers-reduced-motion: reduce) { .rig-vadim .vd-up, .rig-vadim .vd-root, .rig-vadim .vd-head, .rig-vadim .vd-arm-l, .rig-vadim .vd-arm-r, .rig-vadim .vd-hand-l, .rig-vadim .vd-hand-r { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .rig-vadim .vd-up, .rig-vadim .vd-root, .rig-vadim .vd-head, .rig-vadim .vd-arm-l, .rig-vadim .vd-arm-r, .rig-vadim .vd-hand-l, .rig-vadim .vd-hand-r, .rig-vadim .vd-low-l, .rig-vadim .vd-low-r { animation: none; } }
