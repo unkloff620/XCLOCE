@@ -75,5 +75,5 @@ Before release, look at the set on the hero next to the edit: the colours must m
 ## Hero clothes from templates
 
 A new piece of clothing keeps the shape of an existing one and only gets a new texture/design: take the template's own layer
-(`tools/rig/source/wear/<template>.png` — trousers: `pants-komandate`, `pants-black`; shoes: `sneakers-chunky`; tee: `tee-white`, …),
+(`tools/rig/source/wear/<template>.png` — trousers: `pants-vadim` (the artist's own shape — new trousers follow it), `pants-komandate`, `pants-black`; shoes: `sneakers-chunky`; tee: `tee-white`, …),
 recolour/redraw it by an image edit of that layer alone, keep its alpha (outline) exactly, and reuse its `WEAR_FIT` box. No new cut-outs from the hero.
