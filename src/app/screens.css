@@ -1903,6 +1903,11 @@ button.bjt-stack { cursor: pointer; }
 .bcard-n { left: 12px; top: 12px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 6px; font-size: 12px; }
 .bcard-foot { align-items: center; margin-top: -2px; }
 .bcard-act { flex: none; display: inline-flex; align-items: center; gap: 5px; }
+/* the boss's three medals in the card's corner (instead of a button): bronze, silver, gold overlapping, gold on top */
+.bcard-medals { position: relative; flex: none; width: 76px; height: 40px; }
+.bcard-coin { position: absolute; top: 1px; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.4)); }
+.bcard-coin.c0 { left: 0; } .bcard-coin.c1 { left: 19px; } .bcard-coin.c2 { left: 38px; }
+.bcard-coin.off { opacity: 0.32; filter: grayscale(1) brightness(0.9); }
 .bcard-killer { position: static; display: inline-flex; flex-direction: column; align-items: center; gap: 1px; padding: 0; background: none; border: 0; box-shadow: none; }
 .bcard-killer-label { font-size: 8px; color: var(--mute-c); line-height: 1; }
 .bcard-killer .avatar { border: 1.5px solid #2a1606; }

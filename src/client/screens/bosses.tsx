@@ -18,6 +18,9 @@ import { ItemArt } from "../art/items.tsx";
 import { BossSilhouette } from "../art/scenes.tsx";
 import { BossRig, hasBossRig } from "../art/boss-rig.tsx";
 import { clock } from "../format.ts";
+import { BossCoin } from "../art/boss-coin.tsx";
+import { MEDAL_TIERS } from "../../content/medals.ts";
+import { BOSS_KILL_TARGETS } from "../../content/achievements.ts";
 
 export interface BossRow {
   id: string; unlocked: boolean; keysHave: number; keysNeed: number; myKeys: number; hpMax: number;
@@ -152,7 +155,17 @@ export function BossesScreen() {
                         <Avatar name={row.lastKiller.name} photo={row.lastKiller.photo} size={26} />
                       </span>
                     )}
-                    <span className={`bcard-cta display ${locked ? "off" : ""}`}>{!row ? <>…</> : locked ? <><Icon name="lock" size={14} /> Нет карт</> : mine ? <>Бить ›</> : <>В бой ›</>}</span>
+                    {/* his three medals as in «Дела» (bronze, silver, gold — for 10 / 50 / 100 wins), grey till reached;
+                        the whole card opens the fight */}
+                    {locked ? (
+                      <span className="bcard-cta display off"><Icon name="lock" size={14} /> Нет карт</span>
+                    ) : (
+                      <span className="bcard-medals" title={`Побед: ${row?.myWins ?? 0}. Медали: ${BOSS_KILL_TARGETS.join(" / ")} побед`}>
+                        {MEDAL_TIERS.map((t, k) => (
+                          <span key={t} className={`bcard-coin c${k} ${(row?.myWins ?? 0) >= BOSS_KILL_TARGETS[k] ? "on" : "off"}`}><BossCoin boss={b} tier={t} size={38} /></span>
+                        ))}
+                      </span>
+                    )}
                   </span>
                 </div>
               </div>
