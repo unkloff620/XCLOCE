@@ -491,6 +491,12 @@ function HandFrames() {
   );
 }
 
+/** a bone's joint only (no picture): carries a part drawn in another layer, e.g. the hand over the clothes */
+function Joint({ p, children }: { p: PartId; children?: ReactNode }) {
+  const pv = "pivot" in RIG[p] ? (RIG[p] as { pivot: readonly [number, number] }).pivot : [500, 900];
+  return <g style={{ transformOrigin: `${pv[0]}px ${pv[1]}px`, transformBox: "view-box" }}>{children}</g>;
+}
+
 /** a bone: rotates around its joint (pivot) */
 function Bone({ p, className, children }: { p: PartId; className?: string; children?: ReactNode }) {
   const pv = "pivot" in RIG[p] ? (RIG[p] as { pivot: readonly [number, number] }).pivot : [500, 900];
@@ -538,9 +544,7 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
         </Ol>
         <Ol>
           <Bone p="armUR">
-            <Bone p="foreR">
-              <Ol><HandFrames /></Ol>
-            </Bone>
+            <Bone p="foreR" />
           </Bone>
         </Ol>
         {/* the tattoos of the chest, the belly and the arms: over the arms, under the shirt — and under the trousers (they fade out under the waistband) */}
@@ -557,6 +561,13 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
             <Ol><Wear slot="ACCESSORY" /></Ol>
           </>
         )}
+        {/* the hand (and what it holds, its animations) over everything worn: a sleeve never covers it — the same
+            shoulder and elbow joints as the arm above, without their pictures */}
+        <Joint p="armUR">
+          <Joint p="foreR">
+            <Ol><HandFrames /></Ol>
+          </Joint>
+        </Joint>
         <Ol>
           <Bone p="head" className="rig-head">
             <Face />
