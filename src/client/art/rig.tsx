@@ -467,11 +467,6 @@ function HandFrames() {
           </g>
         )}
         <image href={`${base}.webp?v=${ART_VER.heroPart}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />
-        {/* the hand's tattoos over the hand that holds it, cut to that hand's outline: they turn with it */}
-        <mask id={`rig-held-${heldId}`} maskUnits="userSpaceOnUse" x={0} y={0} width={1000} height={1400} style={{ maskType: "alpha" }}>
-          <image href={`${base}.webp?v=${ART_VER.heroPart}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />
-        </mask>
-        <g mask={`url(#rig-held-${heldId})`}><Ink part="handR" /></g>
       </g>
     );
   }
@@ -493,6 +488,34 @@ function HandFrames() {
       ))}
       <Ink part="handR" />
     </g>
+  );
+}
+
+/**
+ * A hand that holds something (an animated picture of its own) gets no hand tattoos; the body's tattoos (the forearm
+ * round the wrist) lie over it instead — only near the hand and never over the shirt (its sleeve keeps covering them).
+ */
+function WristInk() {
+  const worn = useContext(WornCtx);
+  const { tattoos } = useContext(LookCtx);
+  const uid = useId().replace(/:/g, "");
+  const held = worn.HAND && worn.HAND in HELD_FIT ? worn.HAND : null;
+  if (!held || !(tattoos ?? []).some((id) => TATTOO_FIT[id]?.part === "upper")) return null;
+  const h = RIG.handR;
+  const shirt = wearLayer(worn, "SHIRT");
+  const m = 50;
+  return (
+    <>
+      <defs>
+        <clipPath id={`${uid}-wc`}><rect x={h.x - m} y={h.y - m} width={h.w + m * 2} height={h.h + m * 2} /></clipPath>
+        <filter id={`${uid}-wk`}><feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" /></filter>
+        <mask id={`${uid}-wm`} maskUnits="userSpaceOnUse" x={0} y={0} width={1000} height={1400}>
+          <rect x={0} y={0} width={1000} height={1400} fill="#fff" />
+          {shirt && <image href={shirt.href} x={shirt.x} y={shirt.y} width={shirt.w} height={shirt.h} preserveAspectRatio="none" filter={`url(#${uid}-wk)`} />}
+        </mask>
+      </defs>
+      <g clipPath={`url(#${uid}-wc)`} mask={`url(#${uid}-wm)`}><Ink part="upper" /></g>
+    </>
   );
 }
 
@@ -573,6 +596,7 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
             <Ol><HandFrames /></Ol>
           </Joint>
         </Joint>
+        <WristInk />
         <Ol>
           <Bone p="head" className="rig-head">
             <Face />
