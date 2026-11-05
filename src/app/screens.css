@@ -322,7 +322,8 @@
 .look-chip.on { background: #e3862f; }
 
 /* ---------- seated character rig ---------- */
-.rig-breath { transform-box: view-box; transform-origin: 500px 1340px; animation: rig-breath 3.8s ease-in-out infinite; }
+/* the body and the legs hold still (no breathing): the clothes, drawn as separate layers, then never slip off its edges */
+.rig-breath { transform-box: view-box; transform-origin: 500px 1340px; }
 @keyframes rig-breath { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.004, 1.008); } }
 .rig-head { animation: rig-head 9s ease-in-out infinite; }
 @keyframes rig-head { 0%, 100% { transform: rotate(0deg); } 20% { transform: rotate(-3deg); } 45% { transform: rotate(-3deg); } 60% { transform: rotate(2.5deg) translateY(2px); } 85% { transform: rotate(2.5deg); } }

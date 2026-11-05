@@ -302,10 +302,10 @@ export const WEAR_FIT = {
   },
   "jacket-vadim": {
     "slot": "SHIRT",
-    "x": 115.0,
-    "y": 238.5,
-    "w": 776,
-    "h": 528
+    "x": 102.5,
+    "y": 235.5,
+    "w": 801,
+    "h": 576
   },
   "pants-vadim": {
     "slot": "PANTS",
