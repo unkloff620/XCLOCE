@@ -1856,6 +1856,18 @@ button.bjt-stack { cursor: pointer; }
   background-size: 260% 100%; background-repeat: no-repeat; animation: bcard-gold-shine 4.5s ease-in-out infinite; }
 @keyframes bcard-gold-shine { 0%, 55% { background-position: 130% 0; } 100% { background-position: -40% 0; } }
 .bcard.bcard-boss-knyaz.locked::after { display: none; }
+/* Вадим's card: a navy plate in a gold frame — his suit and tie on top, the knife and the car key, the duck in a suit with
+   ducklings (boss-card-frame-vadim.webp, 1200×520, the artist's); a golden glint runs along the frame only (the ring is
+   masked out of the middle), light text on the navy */
+.bcard.bcard-boss-vadim { --ink-c: #fff1d6; --mute-c: #d6bf8e; border-image: url("/assets/ui/boss-card-frame-vadim.webp?v=1") 130 fill / 40px stretch; }
+.bcard.bcard-boss-vadim .bcard-name { text-shadow: 0 2px 0 rgba(0, 0, 0, 0.55); }
+.bcard.bcard-boss-vadim .bcard-reward { background: rgba(0, 0, 0, 0.22); box-shadow: inset 0 0 0 1.5px rgba(214, 170, 90, 0.45); }
+.bcard.bcard-boss-vadim::after { content: ""; position: absolute; inset: 2px; z-index: 4; border-radius: 18px; pointer-events: none; mix-blend-mode: overlay; padding: 24px;
+  background: linear-gradient(115deg, transparent 38%, rgba(255, 236, 170, 0.9) 47%, rgba(255, 255, 255, 1) 50%, rgba(255, 214, 120, 0.9) 53%, transparent 62%);
+  background-size: 260% 100%; background-repeat: no-repeat; animation: bcard-gold-shine 4.5s ease-in-out infinite;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
+.bcard.bcard-boss-vadim.locked::after { display: none; }
+@media (prefers-reduced-motion: reduce) { .bcard.bcard-boss-vadim::after { animation: none; background: none; } }
 @media (prefers-reduced-motion: reduce) { .bcard.bcard-boss-knyaz::after { animation: none; background: none; } }
 .bcard-art { left: 5%; top: 16px; bottom: 50px; width: 35%; border-radius: 10px; }
 .bcard-art img { left: -6%; bottom: -2%; width: 112%; height: 106%; }

@@ -2178,6 +2178,7 @@ export const ASSET_FILES: string[] = [
  "/assets/ui/blast-silver.webp",
  "/assets/ui/bonus.webp",
  "/assets/ui/boss-card-frame-knyaz.webp",
+ "/assets/ui/boss-card-frame-vadim.webp",
  "/assets/ui/boss-card-frame-vodovoz.webp",
  "/assets/ui/boss-card-frame.webp",
  "/assets/ui/btc.webp",
