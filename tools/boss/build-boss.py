@@ -18,7 +18,7 @@ SCALE_BY_BOSS = {}
 # is small on a big body, so its parts keep twice the detail
 HIRES_BY_BOSS = {"vodovoz": (2, {"head", "eyes", "pupils", "eyes-closed", "browL", "browR", "mouth-closed", "throat",
                                  "teeth-up", "teeth-low", "head-open", "jaw"}),
-                  "vadim": (2, {"head", "eyes", "pupils", "eyes-closed", "brows", "throat", "teeth-up", "teeth-low", "lips", "mouth-sad"}),
+                  "vadim": (2, {"head", "eyes", "pupils", "eyes-closed", "browL", "browR", "throat", "teeth-up", "teeth-low", "lips", "mouth-sad"}),
                   "knyaz": (2, {"head", "head-open", "eyes", "pupils", "eyes-closed", "throat", "teeth-up", "teeth-low", "lips", "mouth-closed", "mouth-sad", "gag"})}
 PARTS = ["tail", "legs", "body", "headset", "foreL", "foreR", "armL", "lowL", "handL", "bag", "cover", "keyRing", "keyFob", "keyKey", "armR", "lowR", "handR", "head", "head-open", "throat", "teeth-up", "teeth-low", "jaw", "lips", "mouth-sad", "eyes", "eyes-closed", "pupils", "brows", "brows-sad", "browL", "browR", "mouth", "mouth-closed", "collar", "gag"]
 # puppet-warped sequences (<part>@0.png, <part>@1.png …): one strip <part>.webp, frames side by side, frame 0 first
@@ -50,7 +50,8 @@ PIVOT_BY_BOSS = {
     # fist — each piece hangs on its pin (the big ring with its split ring in the key's hole, the fob and the key on the ring)
     "vadim": {"head": [510.0, 370.0], "armL": [400.0, 460.0], "lowL": [272.0, 555.0], "handL": [148.0, 508.0],
               "armR": [665.0, 450.0], "lowR": [750.0, 570.0], "handR": [858.0, 492.0],
-              "keyRing": [98.8, 552.2], "keyFob": [97.5, 636.3], "keyKey": [118.3, 626.6]},
+              "keyRing": [98.8, 552.2], "keyFob": [97.5, 636.3], "keyKey": [118.3, 626.6],
+              "browL": [488.3, 267.1], "browR": [497.6, 266.6]},
 }
 
 import sys, re

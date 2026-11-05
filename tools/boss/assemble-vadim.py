@@ -8,7 +8,7 @@ The key pieces are laid out as on refKeys, scaled by KS and moved so the fist's 
 Every piece of the bunch is its own layer and hangs free (boss-rig.tsx VadimRig, useDangle):
   keyRing — the big ring with the split ring through the hole of the key in the fist (one piece: they never come apart);
   keyFob  — the fob on its own little ring at the bottom of the big one;  keyKey — the door key on its ring at the side.
-The face: raw/face/ (see FACE below) → head, eyes, pupils, eyes-closed, brows, throat, teeth-up, teeth-low, lips, mouth-sad.
+The face: raw/face/ (see FACE below) → head, eyes, pupils, eyes-closed, browL / browR (the brows split at their gap), throat, teeth-up, teeth-low, lips, mouth-sad.
 Writes tools/boss/source/vadim/{legs,body,head,armL,lowL,handL,keyRing,keyFob,keyKey,armR,lowR,handR}.png and
 public/bosses/vadim/{full,portrait}.webp.
 """
@@ -81,6 +81,8 @@ for n, src in [("legs", "legs"), ("body", "body"), ("armL", "armL"), ("lowL", "f
 # (the throat, the upper and the lower teeth, the lips round them) and the sad mouth — put on the body sheet where the
 # old head was (fitted by its outline)
 FACE_K, FACE_AT = 0.432, (806, 335)
+BROW_GAP = 416                  # the gap between the brows on the face sheet (x)
+BROW_INNER = {"browL": (395, 461), "browR": (438, 459)}   # their inner ends on the face sheet
 FACE = {"head": "head", "eyes": "eyes", "pupils": "pupils", "eyes-closed": "eyesClosed", "brows": "brows",
         "throat": "throat", "teeth-up": "teethUp", "teeth-low": "teethLow", "lips": "lipsOpen", "mouth-sad": "mouthSad"}
 for n, src in FACE.items():
@@ -88,7 +90,17 @@ for n, src in FACE.items():
     f = f.resize((round(f.width * FACE_K), round(f.height * FACE_K)), Image.LANCZOS)
     sheet = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     sheet.alpha_composite(f, FACE_AT)
-    save(n, sheet)
+    if n != "brows":
+        save(n, sheet)
+    else:
+        # each brow alone (they turn at their inner ends for the emotions): split at the gap between them
+        a = np.array(sheet)
+        cut = round(FACE_AT[0] + BROW_GAP * FACE_K)
+        left, right = a.copy(), a.copy()
+        left[:, cut:] = 0
+        right[:, :cut] = 0
+        save("browL", Image.fromarray(left))
+        save("browR", Image.fromarray(right))
 fist = Image.new("RGBA", (1000, 1000), (0, 0, 0, 0))
 fk = load("fistKeys")
 fist.alpha_composite(fk.resize((round(fk.width * FIST_K), round(fk.height * FIST_K)), Image.LANCZOS), FIST_AT)
@@ -101,11 +113,12 @@ save("keyRing", keys_layer([RING, LINK1]))
 save("keyFob", keys_layer([LINK2, FOB]))
 save("keyKey", keys_layer([LINK3, KEY]))
 pins = {k: [round(c * 0.5, 1) for c in to_body_keys(p)] for k, p in PINS.items()}
+pins.update({k: [round((FACE_AT[0] + x * FACE_K) * 0.5, 1), round((FACE_AT[1] + y * FACE_K) * 0.5, 1)] for k, (x, y) in BROW_INNER.items()})
 print("pins (rig units):", json.dumps(pins))
 
 # the whole boss (lists, the profile): the layers in their drawing order
 full = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-for n in ["legs", "armL", "armR", "body", "eyes", "pupils", "head", "brows", "lowL", "lowR", "handR", "handL", "keyRing", "keyFob", "keyKey"]:
+for n in ["legs", "armL", "armR", "body", "eyes", "pupils", "head", "browL", "browR", "lowL", "lowR", "handR", "handL", "keyRing", "keyFob", "keyKey"]:
     full.alpha_composite(Image.open(f"{D}/{n}.png").convert("RGBA"))
 a = np.array(full)[:, :, 3]
 ys, xs = np.nonzero(a > 20)

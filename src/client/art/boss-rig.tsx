@@ -644,7 +644,11 @@ function VadimRig({ id, rig, bust, dazed, sleepy, svgRef, wrapRef, puppet }: {
             </g>
             <g className="vd-sad">{pic("mouth-sad", "back", "vd-sad")}</g>
             <g className="vd-lids">{pic("eyes-closed", "back", "vd-lids")}</g>
-            <g className="vd-brows">{pic("brows", "back")}</g>
+            {/* each brow turns at its inner end: a smug lift and a frown now and then, sad (the outer ends down) when hit */}
+            <g className="vd-brows">
+              <g className="vd-brow-l" style={origin("browL")}>{pic("browL", "back")}</g>
+              <g className="vd-brow-r" style={origin("browR")}>{pic("browR", "back")}</g>
+            </g>
           </>, 160)}
           {/* the key arm's forearm and fist in front: the same shoulder and elbow turns */}
           {bone("vd-arm-l", "armL", bone("vd-low-l", "lowL", <>

@@ -2364,12 +2364,27 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "h": 12,
         "v": "f44d70b1"
       },
-      "brows": {
+      "browL": {
         "x": 450.5,
-        "y": 258.5,
-        "w": 90,
+        "y": 259.5,
+        "w": 40,
         "h": 14,
-        "v": "8b117e1d"
+        "pivot": [
+          488.3,
+          267.1
+        ],
+        "v": "66d6c9a6"
+      },
+      "browR": {
+        "x": 496.5,
+        "y": 258.5,
+        "w": 44,
+        "h": 14,
+        "pivot": [
+          497.6,
+          266.6
+        ],
+        "v": "52ce7c20"
       }
     }
   }

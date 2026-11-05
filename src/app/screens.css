@@ -5618,8 +5618,14 @@ html.paused *, html.paused *::before, html.paused *::after { animation-play-stat
 .rig-vadim .vd-sad { opacity: 0; }
 .arena-photo.ouch .rig-vadim .vd-mouth, .rig-vadim.dazed .vd-mouth { opacity: 0; }
 .arena-photo.ouch .rig-vadim .vd-sad, .rig-vadim.dazed .vd-sad { opacity: 1; }
-.arena-photo.ouch .rig-vadim .vd-brows { transform: translateY(-3px); }
-.rig-vadim.dazed .vd-brows { transform: translateY(-2px); }
+/* the brows (each turns at its inner end): now and then a smug lift of one, later a short frown of both */
+.rig-vadim .vd-brow-l { animation: vd-brow-l 6.6s ease-in-out infinite; }
+.rig-vadim .vd-brow-r { animation: vd-brow-r 6.6s ease-in-out infinite; }
+@keyframes vd-brow-l { 0%, 30%, 52%, 70%, 86%, 100% { transform: rotate(0) translateY(0); } 36%, 46% { transform: rotate(6deg) translateY(-2.5px); } 74%, 82% { transform: rotate(9deg) translateY(1px); } }
+@keyframes vd-brow-r { 0%, 70%, 86%, 100% { transform: rotate(0) translateY(0); } 74%, 82% { transform: rotate(-9deg) translateY(1px); } }
+/* hit / beaten: sad — the outer ends drop, the brows go up */
+.arena-photo.ouch .rig-vadim .vd-brow-l, .rig-vadim.dazed .vd-brow-l { animation: none; transform: rotate(-13deg) translateY(-2px); }
+.arena-photo.ouch .rig-vadim .vd-brow-r, .rig-vadim.dazed .vd-brow-r { animation: none; transform: rotate(13deg) translateY(-2px); }
 .rig-vadim.dazed .vd-lids { animation-duration: 2.2s; }
 .rig-vadim.sleepy .vd-lids { animation: none; opacity: 1; }
 .rig-vadim.sleepy .vd-pupils { animation: none; }
@@ -5641,4 +5647,4 @@ html.paused *, html.paused *::before, html.paused *::after { animation-play-stat
 .rig-vadim.boss-rig.dazed, .rig-vadim.dazed .vd-root { animation: none; }
 .rig-vadim.dazed .vd-up { animation: vd-daze 3.6s ease-in-out infinite; }
 @keyframes vd-daze { 0%, 100% { transform: rotate(-1.6deg); } 50% { transform: rotate(1.6deg) translateY(2px); } }
-@media (prefers-reduced-motion: reduce) { .rig-vadim .vd-up, .rig-vadim .vd-root, .rig-vadim .vd-head, .rig-vadim .vd-arm-l, .rig-vadim .vd-arm-r, .rig-vadim .vd-hand-l, .rig-vadim .vd-hand-r, .rig-vadim .vd-low-l, .rig-vadim .vd-low-r, .rig-vadim .vd-jaw, .rig-vadim .vd-grind, .rig-vadim .vd-pupils { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .rig-vadim .vd-up, .rig-vadim .vd-root, .rig-vadim .vd-head, .rig-vadim .vd-arm-l, .rig-vadim .vd-arm-r, .rig-vadim .vd-hand-l, .rig-vadim .vd-hand-r, .rig-vadim .vd-low-l, .rig-vadim .vd-low-r, .rig-vadim .vd-jaw, .rig-vadim .vd-grind, .rig-vadim .vd-pupils, .rig-vadim .vd-brow-l, .rig-vadim .vd-brow-r { animation: none; } }
