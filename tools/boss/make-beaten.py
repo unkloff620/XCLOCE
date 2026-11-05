@@ -33,6 +33,8 @@ ORDER = {
     "vodovoz": ["armR", "armL", "legs", "body", "head", "eyes", "pupils", "browL", "browR", "mouth-closed", "headset", "lowL", "handL", "bag", "lowR", "handR"],
     # the wallet sleeve (viewer's left) behind the body, the fist arm (viewer's right) in front (boss-rig.tsx KnyazRig)
     "knyaz": ["legs", "armLb@0", "body", "head", "eyes", "pupils", "brows@0", "armRb@0", "handL", "cover"],
+    # Вадим (boss-rig.tsx VadimRig): the eye whites and the irises behind the head, the key arm's sleeve behind the body
+    "vadim": ["legs", "armL", "body", "eyes", "pupils", "head", "browL", "browR", "lowL", "handL", "keyRing", "keyFob", "keyKey", "armR", "lowR", "handR"],
 }
 SKIN_AND_CLOTHES = {"body", "head", "head-open", "legs", "foreL", "foreR", "armL", "armR", "lowL", "lowR", "handL", "handR", "armLb@0", "armRb@0"}
 LOOK = {
@@ -42,6 +44,7 @@ LOOK = {
     "babafey": "a guy in an embroidered folk shirt and black trousers with a balalaika",
     "vodovoz": "a guy in a beige strapped jumpsuit with a yellow delivery bag and headphones",
     "knyaz": "a curly-haired guy in a fluffy cream jacket, a black t-shirt and grey sweatpants with a hardware wallet",
+    "vadim": "a chubby guy in a navy blue suit, a white shirt and a red tie, brown loafers, with a kitchen knife and a bunch of car keys",
 }
 PROMPT = ("Edit this game boss character ({look}): keep exactly the same character, pose, outline, face, proportions, colours and cartoon style "
           "with dark outlines, exactly the same position and size in the picture. He is badly beaten in a fight: his clothes are torn and battle-damaged — "
