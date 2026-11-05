@@ -49,7 +49,7 @@ export interface GameState {
   clanRequests: { mine: { clanId: number; name: string; tag: string } | null; waiting: number; /** unread clan chat messages */ chat?: number };
   daily: { available: boolean; day: number; streak: number; cycle: number; nextAt: number | null; rewards: Reward[]; bonus?: { at: number; reward: Reward } };
   quests: {
-    list: { id: string; progress: number; target: number; done: boolean; claimed: boolean }[];
+    list: { id: string; progress: number; target: number; done: boolean; claimed: boolean; auto?: boolean }[];
     chest: { ready: boolean; opened: boolean; reward: Granted | null };
     claimable: boolean;
     resetAt: number;

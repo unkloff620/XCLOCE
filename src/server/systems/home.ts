@@ -1,9 +1,10 @@
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, ledger, takeMoney, type Ctx } from "../core.ts";
-import { EQUIPMENT, FIRST_STEPS_GIFT, pieceUnlockId, HELP_TOPICS, TROPHIES, baseBit, equipmentById, hasPiece, piecesCount, normalizeLook, roomById, roomUnlockId, roomsEnergyBonus, totalBonus, type HelpTopic, type Look, beardLevel, unshavenDays, REMOVABLE } from "../../content/home.ts";
+import { EQUIPMENT, ROOM_DEFS, FIRST_STEPS_GIFT, pieceUnlockId, HELP_TOPICS, TROPHIES, baseBit, equipmentById, hasPiece, piecesCount, normalizeLook, roomById, roomUnlockId, roomsEnergyBonus, totalBonus, type HelpTopic, type Look, beardLevel, unshavenDays, REMOVABLE } from "../../content/home.ts";
 import { bossById } from "../../content/bosses.ts";
 import { craftBonus } from "./craft.ts";
-import { TALENT_RESET_PRICE, autoStop, autoTalentsOpen, stopLevel, stopOpen, talentExtras, talentStop, talentsSpent, type WeaponTalents } from "../../content/talents.ts";
+import { questTick } from "./quests.ts";
+import { TALENT_PATH, TALENT_RESET_PRICE, autoStop, autoTalentsOpen, stopLevel, stopOpen, talentExtras, talentStop, talentsSpent, type WeaponTalents } from "../../content/talents.ts";
 
 /*
  * Дом: оборудование (уровни), комнаты (купить / выбрать), внешность персонажа, просмотренные подсказки.
@@ -144,6 +145,28 @@ export async function setTalentAuto(ctx: Ctx, on: boolean) {
 }
 
 /** With «Автопрокачка» on: the free talents go one by one into the next stop to close (never past its `need`). */
+/**
+ * Is there anything left for the daily «Вложи талант или улучши комнату»: a talent that can be put in right now,
+ * a room thing or an equipment level not bought yet (a boss's thing only after it dropped), a room ready to be bought.
+ * A player who has it all gets that quest counted by itself.
+ */
+export async function canUpgrade(q: Queryable, pid: number): Promise<boolean> {
+  const [p] = await q.query<{ talents: number }>("SELECT talents FROM players WHERE id=$1", [pid]);
+  const free = Number(p?.talents ?? 0);
+  if (free > 0) {
+    const all = await weaponTalents(q, pid);
+    if (TALENT_PATH.some((x) => x.cost <= free && stopOpen(all, x) && stopLevel(all, x) < x.max)) return true;
+  }
+  const h = await homeData(q, pid);
+  const unlocks = new Set((await q.query<{ item_id: string }>("SELECT item_id FROM player_unlocks WHERE player_id=$1", [pid])).map((r) => r.item_id));
+  for (const e of EQUIPMENT) {
+    if (e.pieces?.length) {
+      if (e.pieces.some((x, i) => !hasPiece(h.pieces[e.id] ?? 0, i + 1) && (!x.drop || unlocks.has(pieceUnlockId(x.art))))) return true;
+    } else if ((h.levels[e.id] ?? 0) < e.levels.length) return true;
+  }
+  return ROOM_DEFS.some((r) => r.price && !h.rooms.includes(r.id) && (!r.drop || unlocks.has(roomUnlockId(r.id))));
+}
+
 export async function autoSpendTalents(ctx: Ctx): Promise<number> {
   let spent = 0;
   for (let guard = 0; guard < 400; guard++) {
@@ -156,6 +179,8 @@ export async function autoSpendTalents(ctx: Ctx): Promise<number> {
     await upgradeTalent(ctx, next.target, next.branch);
     spent += next.cost;
   }
+  // the daily «Вложи талант»: auto-spent talents count too
+  if (spent > 0) await questTick(ctx, "upgrade", 1);
   return spent;
 }
 

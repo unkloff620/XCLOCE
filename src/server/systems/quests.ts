@@ -4,6 +4,7 @@ import { grantReward, moscowDay, nextMoscowMidnight, weighted, type Ctx, type Gr
 import { QUEST_CHEST_BASE, QUEST_CHEST_LOOT, questsForDay, type QuestKind } from "../../content/quests.ts";
 import { mergeRewards } from "../../content/rewards.ts";
 import { between, rollParts } from "../../content/craft-drops.ts";
+import { canUpgrade } from "./home.ts";
 
 /*
  * Daily quests: three a day (content/quests.ts), progress counted by the actions themselves (game.ts → questTick).
@@ -36,9 +37,14 @@ export async function questTick(ctx: Ctx, kind: QuestKind, amount = 1) {
 export async function questsView(q: Queryable, pid: number, now: number) {
   const day = moscowDay(now);
   const r = await row(q, pid, day);
-  const list = questsForDay(pid, day, (await loadConfig(q, now)).exchange.schedule).map((x) => {
-    const progress = Math.min(x.target, r.progress[x.id] ?? 0);
-    return { id: x.id, progress, target: x.target, done: progress >= x.target, claimed: r.claimed.includes(x.id) };
+  const defs = questsForDay(pid, day, (await loadConfig(q, now)).exchange.schedule);
+  const up = defs.find((x) => x.kind === "upgrade");
+  // nothing left to put a talent into or to buy for the home → that quest is counted by itself
+  const maxed = up && !r.claimed.includes(up.id) && (r.progress[up.id] ?? 0) < up.target ? !(await canUpgrade(q, pid)) : false;
+  const list = defs.map((x) => {
+    const auto = maxed && x.kind === "upgrade";
+    const progress = auto ? x.target : Math.min(x.target, r.progress[x.id] ?? 0);
+    return { id: x.id, progress, target: x.target, done: progress >= x.target, claimed: r.claimed.includes(x.id), ...(auto ? { auto: true } : {}) };
   });
   const allClaimed = list.every((x) => x.claimed);
   return {
@@ -56,7 +62,7 @@ export async function claimQuest(ctx: Ctx, id: string) {
   if (!def) throw new GameError("bad_quest", "Сегодня такого задания нет");
   const r = await row(ctx.q, ctx.pid, day, true);
   if (r.claimed.includes(id)) throw new GameError("quest_taken", "Награда уже получена");
-  if ((r.progress[id] ?? 0) < def.target) throw new GameError("quest_not_done", "Задание ещё не выполнено");
+  if ((r.progress[id] ?? 0) < def.target && !(def.kind === "upgrade" && !(await canUpgrade(ctx.q, ctx.pid)))) throw new GameError("quest_not_done", "Задание ещё не выполнено");
   await ctx.q.query("UPDATE daily_quests SET claimed = claimed || $3::jsonb WHERE player_id=$1 AND day=$2", [ctx.pid, day, JSON.stringify([id])]);
   return { id, reward: await grantReward(ctx, def.reward, `quest:${id}`) };
 }

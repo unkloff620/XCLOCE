@@ -48,7 +48,7 @@ export const QUEST_GROUPS: QuestDef[][] = [
   ],
   // getting stronger and the neighbours
   [
-    { id: "q-upgrade", kind: "upgrade", target: 1, title: "Вложи талант или улучши комнату", href: "/profile", hint: "Личное дело → Таланты, или Обстановка дома", reward: R(200, 400) },
+    { id: "q-upgrade", kind: "upgrade", target: 1, title: "Вложи талант или улучши комнату", href: "/profile", hint: "Личное дело → Таланты, или Обстановка дома: мебель или новая комната", reward: R(200, 400) },
     { id: "q-social", kind: "social", target: 2, title: "Наедь, харкни или накачай бицуху 2 раза", href: "/rating", hint: "Рейтинг → профиль игрока", reward: R(200, 400) },
     { id: "q-upgrader", kind: "upgrader", target: 1, title: "Крутани апгрейдер", href: "/yard", hint: "Автомат «Апгрейдер» во дворе", reward: R(200, 400) },
   ],
