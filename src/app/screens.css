@@ -5633,7 +5633,23 @@ html.paused *, html.paused *::before, html.paused *::after { animation-play-stat
 .rig-vadim.sleepy .vd-pupils { animation: none; }
 /* below a quarter: the duck's head (it pops on) */
 .rig-vadim .vd-duck { opacity: 0; }
-.rig-vadim.sleepy .vd-duck { opacity: 1; animation: vd-duck-on 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both; }
+.rig-vadim.sleepy .vd-duck { opacity: 0.5; animation: vd-duck-on 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both; }
+/* … and he chokes in it: the head jerks back and shakes in fits, a pause, again (the name keeps its speed when dazed) */
+.rig-vadim.sleepy .vd-head { animation: vd-shiver-choke 1.7s linear infinite; }
+@keyframes vd-shiver-choke {
+  0%, 100% { transform: rotate(0deg) translateY(0); }
+  6% { transform: rotate(-7deg) translateY(-5px); }
+  10% { transform: rotate(5deg) translateY(-2px); }
+  14% { transform: rotate(-6deg) translateY(-4px); }
+  18% { transform: rotate(4deg) translateY(-1px); }
+  23% { transform: rotate(-2deg) translateY(0); }
+  30%, 48% { transform: rotate(0deg) translateY(0); }
+  54% { transform: rotate(6deg) translateY(-6px); }
+  58% { transform: rotate(-5deg) translateY(-3px); }
+  62% { transform: rotate(4deg) translateY(-4px); }
+  66% { transform: rotate(-3deg) translateY(-1px); }
+  72% { transform: rotate(1deg) translateY(0); }
+}
 @keyframes vd-duck-on { 0% { transform: scale(0.4) translateY(-20px); } 100% { transform: scale(1) translateY(0); } }
 /* in the fight: he swings the keys at you like a flail; hit: the head snaps back */
 .arena-photo.strike .rig-vadim .vd-arm-l { animation: vd-strike 0.9s linear both; }
