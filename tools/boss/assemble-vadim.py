@@ -101,6 +101,18 @@ for n, src in FACE.items():
         right[:, :cut] = 0
         save("browL", Image.fromarray(left))
         save("browR", Image.fromarray(right))
+# below a quarter of his HP a duck's head sits over his (raw/face/duck.png, drawn see-through by the artist: made solid
+# here); placed on the face sheet as on raw/face/duck-placement.png (fitted by the beak tip and the duck's eye)
+DUCK_K, DUCK_AT = 1.045, (-26, -186)
+dk = Image.open(f"{R}/face/duck.png").convert("RGBA")
+da = np.array(dk)
+da[:, :, 3] = np.clip(da[:, :, 3].astype(np.float32) * 255 / 196, 0, 255).astype(np.uint8)
+dk = Image.fromarray(da)
+k = DUCK_K * FACE_K
+dk = dk.resize((round(dk.width * k), round(dk.height * k)), Image.LANCZOS)
+sheet = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+sheet.alpha_composite(dk, (round(FACE_AT[0] + DUCK_AT[0] * FACE_K), round(FACE_AT[1] + DUCK_AT[1] * FACE_K)))
+save("duck", sheet)
 fist = Image.new("RGBA", (1000, 1000), (0, 0, 0, 0))
 fk = load("fistKeys")
 fist.alpha_composite(fk.resize((round(fk.width * FIST_K), round(fk.height * FIST_K)), Image.LANCZOS), FIST_AT)

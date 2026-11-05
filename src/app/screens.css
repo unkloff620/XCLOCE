@@ -5631,6 +5631,10 @@ html.paused *, html.paused *::before, html.paused *::after { animation-play-stat
 .rig-vadim.dazed .vd-lids { animation-duration: 2.2s; }
 .rig-vadim.sleepy .vd-lids { animation: none; opacity: 1; }
 .rig-vadim.sleepy .vd-pupils { animation: none; }
+/* below a quarter: the duck's head (it pops on) */
+.rig-vadim .vd-duck { opacity: 0; }
+.rig-vadim.sleepy .vd-duck { opacity: 1; animation: vd-duck-on 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both; }
+@keyframes vd-duck-on { 0% { transform: scale(0.4) translateY(-20px); } 100% { transform: scale(1) translateY(0); } }
 /* in the fight: he swings the keys at you like a flail; hit: the head snaps back */
 .arena-photo.strike .rig-vadim .vd-arm-l { animation: vd-strike 0.9s linear both; }
 .arena-photo.strike .rig-vadim .vd-hand-l { animation: vd-strike-hand 0.9s linear both; }

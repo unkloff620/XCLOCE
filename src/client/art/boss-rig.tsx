@@ -653,6 +653,12 @@ function VadimRig({ id, rig, bust, dazed, sleepy, svgRef, wrapRef, puppet }: {
               <g className="vd-brow-l" style={origin("browL")}>{pic("browL", "back")}</g>
               <g className="vd-brow-r" style={origin("browR")}>{pic("browR", "back")}</g>
             </g>
+            {/* below a quarter: a duck's head over his (it pops on, then sways with the head) */}
+            {P.duck && (
+              <g className="vd-duck" style={{ transformOrigin: `${P.duck.x + P.duck.w / 2}px ${P.duck.y + P.duck.h * 0.8}px`, transformBox: "view-box" }}>
+                {pic("duck", "back", "vd-duck")}
+              </g>
+            )}
           </>, 160)}
           {/* the key arm's forearm and fist in front: the same shoulder and elbow turns */}
           {bone("vd-arm-l", "armL", bone("vd-low-l", "lowL", <>

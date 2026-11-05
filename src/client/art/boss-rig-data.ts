@@ -2264,6 +2264,13 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         ],
         "v": "fd1e2ae9"
       },
+      "duck": {
+        "x": 413.0,
+        "y": 129.0,
+        "w": 186,
+        "h": 214,
+        "v": "c34de59b"
+      },
       "armR": {
         "x": 627.5,
         "y": 405.5,
