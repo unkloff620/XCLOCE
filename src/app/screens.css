@@ -5519,3 +5519,75 @@ html.paused *, html.paused *::before, html.paused *::after { animation-play-stat
 .cchat-input { flex: 1; min-width: 0; resize: none; font: inherit; font-size: 15px; padding: 10px 12px; max-height: 96px; field-sizing: content; }
 .cchat-send { flex: none; width: 46px; height: 44px; padding: 0; display: grid; place-items: center; }
 .cchat-count { align-self: flex-end; margin-top: -4px; }
+
+/* Вадим (art/boss-rig.tsx VadimRig): breathes and sways; the right fist waves the knife in short slashes, the left one
+   shakes the car keys — the bunch hangs free (useDangle), so every shake sends the ring, the fob and the key jangling */
+.rig-vadim { --vd-snap: cubic-bezier(0.15, 0.9, 0.25, 1); }
+.rig-vadim .vd-up { animation: vd-breath 2.8s ease-in-out infinite; }
+@keyframes vd-breath { 0%, 100% { transform: scale(1, 1) translateY(0); } 45% { transform: scale(1.014, 1.026) translateY(-5px); } }
+.rig-vadim .vd-root { animation: vd-shift 6.4s ease-in-out infinite; }
+@keyframes vd-shift { 0%, 100% { transform: translateX(0) rotate(0deg); } 50% { transform: translateX(-6px) rotate(-0.7deg); } }
+.rig-vadim .vd-head { animation: vd-head 5.2s ease-in-out infinite; }
+@keyframes vd-head { 0%, 100% { transform: rotate(0deg); } 30% { transform: rotate(2.4deg); } 65% { transform: rotate(-1.8deg); } }
+/* the keys: a lazy bob, then a shake — up and down at the shoulder, the wrist flicking (the keys do the rest) */
+.rig-vadim .vd-arm-l { animation: vd-shake 3.4s linear infinite; }
+@keyframes vd-shake {
+  0% { transform: rotate(0deg); animation-timing-function: ease-in-out; }
+  28% { transform: rotate(2.5deg); animation-timing-function: ease-in-out; }
+  54% { transform: rotate(0deg); animation-timing-function: var(--vd-snap); }
+  58% { transform: rotate(7deg); animation-timing-function: var(--vd-snap); }
+  62% { transform: rotate(-3deg); animation-timing-function: var(--vd-snap); }
+  66% { transform: rotate(6deg); animation-timing-function: var(--vd-snap); }
+  70% { transform: rotate(-2deg); animation-timing-function: ease-out; }
+  78%, 100% { transform: rotate(0deg); }
+}
+.rig-vadim .vd-hand-l { animation: vd-jangle 3.4s linear infinite; }
+@keyframes vd-jangle {
+  0%, 54% { transform: rotate(0deg); animation-timing-function: var(--vd-snap); }
+  58% { transform: rotate(16deg); animation-timing-function: var(--vd-snap); }
+  62% { transform: rotate(-14deg); animation-timing-function: var(--vd-snap); }
+  66% { transform: rotate(13deg); animation-timing-function: var(--vd-snap); }
+  70% { transform: rotate(-8deg); animation-timing-function: ease-out; }
+  78%, 100% { transform: rotate(0deg); }
+}
+/* the knife: a bob in the guard, a wind-up and a slash down, twice */
+.rig-vadim .vd-arm-r { animation: vd-slash 2.6s linear infinite; }
+@keyframes vd-slash {
+  0% { transform: rotate(0deg); animation-timing-function: ease-in-out; }
+  30% { transform: rotate(-2deg); animation-timing-function: ease-in-out; }
+  44% { transform: rotate(-9deg); animation-timing-function: var(--vd-snap); }
+  49% { transform: rotate(12deg); animation-timing-function: ease-out; }
+  58% { transform: rotate(8deg); animation-timing-function: ease-in-out; }
+  66% { transform: rotate(-7deg); animation-timing-function: var(--vd-snap); }
+  71% { transform: rotate(13deg); animation-timing-function: ease-out; }
+  84%, 100% { transform: rotate(0deg); }
+}
+.rig-vadim .vd-hand-r { animation: vd-flick 2.6s linear infinite; }
+@keyframes vd-flick {
+  0%, 30% { transform: rotate(0deg); animation-timing-function: ease-in-out; }
+  44% { transform: rotate(-16deg); animation-timing-function: var(--vd-snap); }
+  49% { transform: rotate(22deg); animation-timing-function: ease-out; }
+  58% { transform: rotate(10deg); animation-timing-function: ease-in-out; }
+  66% { transform: rotate(-14deg); animation-timing-function: var(--vd-snap); }
+  71% { transform: rotate(24deg); animation-timing-function: ease-out; }
+  84%, 100% { transform: rotate(0deg); }
+}
+/* in the fight: he swings the keys at you like a flail; hit: the head snaps back */
+.arena-photo.strike .rig-vadim .vd-arm-l { animation: vd-strike 0.9s linear both; }
+.arena-photo.strike .rig-vadim .vd-hand-l { animation: vd-strike-hand 0.9s linear both; }
+@keyframes vd-strike { 0% { transform: rotate(0); } 12% { transform: rotate(16deg); animation-timing-function: var(--vd-snap); } 26% { transform: rotate(-14deg); }
+  40% { transform: rotate(14deg); animation-timing-function: var(--vd-snap); } 54% { transform: rotate(-12deg); } 75% { transform: rotate(-6deg); } 100% { transform: rotate(0); } }
+@keyframes vd-strike-hand { 0% { transform: rotate(0); } 12% { transform: rotate(24deg); } 26% { transform: rotate(-26deg); } 40% { transform: rotate(22deg); } 54% { transform: rotate(-24deg); } 100% { transform: rotate(0); } }
+.arena-photo.ouch .rig-vadim .vd-head { animation: vd-hit 0.5s cubic-bezier(0.2, 0.7, 0.3, 1); }
+@keyframes vd-hit { 0% { transform: rotate(0); } 25% { transform: rotate(-7deg) translateY(-4px); } 100% { transform: rotate(0); } }
+/* scared (below half HP): both arms hang, the keys dangle from the limp hand, the body sways over the hips */
+.rig-vadim.dazed .vd-arm-l { animation: vd-limp-l 3.4s ease-in-out infinite; }
+@keyframes vd-limp-l { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(-12deg); } }
+.rig-vadim.dazed .vd-hand-l { animation: none; }
+.rig-vadim.dazed .vd-arm-r { animation: vd-limp-r 3.4s ease-in-out infinite; }
+@keyframes vd-limp-r { 0%, 100% { transform: rotate(6deg); } 50% { transform: rotate(12deg); } }
+.rig-vadim.dazed .vd-hand-r { animation: none; }
+.rig-vadim.boss-rig.dazed, .rig-vadim.dazed .vd-root { animation: none; }
+.rig-vadim.dazed .vd-up { animation: vd-daze 3.6s ease-in-out infinite; }
+@keyframes vd-daze { 0%, 100% { transform: rotate(-1.6deg); } 50% { transform: rotate(1.6deg) translateY(2px); } }
+@media (prefers-reduced-motion: reduce) { .rig-vadim .vd-up, .rig-vadim .vd-root, .rig-vadim .vd-head, .rig-vadim .vd-arm-l, .rig-vadim .vd-arm-r, .rig-vadim .vd-hand-l, .rig-vadim .vd-hand-r { animation: none; } }

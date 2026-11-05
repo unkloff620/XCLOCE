@@ -19,7 +19,7 @@ SCALE_BY_BOSS = {}
 HIRES_BY_BOSS = {"vodovoz": (2, {"head", "eyes", "pupils", "eyes-closed", "browL", "browR", "mouth-closed", "throat",
                                  "teeth-up", "teeth-low", "head-open", "jaw"}),
                   "knyaz": (2, {"head", "head-open", "eyes", "pupils", "eyes-closed", "throat", "teeth-up", "teeth-low", "lips", "mouth-closed", "mouth-sad", "gag"})}
-PARTS = ["tail", "legs", "body", "headset", "foreL", "foreR", "armL", "lowL", "handL", "bag", "cover", "armR", "lowR", "handR", "head", "head-open", "throat", "teeth-up", "teeth-low", "jaw", "lips", "mouth-sad", "eyes", "eyes-closed", "pupils", "brows", "brows-sad", "browL", "browR", "mouth", "mouth-closed", "collar", "gag"]
+PARTS = ["tail", "legs", "body", "headset", "foreL", "foreR", "armL", "lowL", "handL", "bag", "cover", "keyRing", "keyLink", "keyFob", "keyKey", "armR", "lowR", "handR", "head", "head-open", "throat", "teeth-up", "teeth-low", "jaw", "lips", "mouth-sad", "eyes", "eyes-closed", "pupils", "brows", "brows-sad", "browL", "browR", "mouth", "mouth-closed", "collar", "gag"]
 # puppet-warped sequences (<part>@0.png, <part>@1.png …): one strip <part>.webp, frames side by side, frame 0 first
 FRAMES = ["brows", "jaw", "armRb", "armLb"]
 # which edge of the part joins the parent: (axis, side) — y/bottom for head and left forearm, x/right for the right one
@@ -45,6 +45,11 @@ PIVOT_BY_BOSS = {
                 "browL": [604.0, 257.6], "browR": [619.0, 262.3]},
     # Князь (2000×3000 sheet, tools/boss/assemble-knyaz.py): the neck, the shoulders, the right elbow, the wrist with the wallet
     "knyaz": {"head": [533.0, 320.0], "handL": [132.0, 515.0], "cover": [98.5, 645.5]},
+    # Вадим (2000×3000 sheet, tools/boss/assemble-vadim.py): neck, shoulders, elbows, wrists; the key bunch in the left
+    # fist — each piece hangs on its pin (the split ring in the key's hole, the big ring on it, the fob and the key on the ring)
+    "vadim": {"head": [510.0, 370.0], "armL": [400.0, 460.0], "lowL": [272.0, 555.0], "handL": [148.0, 508.0],
+              "armR": [665.0, 450.0], "lowR": [750.0, 570.0], "handR": [858.0, 492.0],
+              "keyLink": [98.8, 552.2], "keyRing": [98.2, 592.8], "keyFob": [97.0, 669.0], "keyKey": [125.9, 655.5]},
 }
 
 import sys, re

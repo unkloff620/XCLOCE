@@ -25,7 +25,7 @@ const BEHIND: Record<string, "L" | "R"> = { mugo: "R", babafey: "L" };
 /** of these the arm in BEHIND goes behind only with its shoulder: the forearm and the hand stay in front of everything */
 const SPLIT_BEHIND = new Set(["babafey"]);
 /** rigs drawn as plain SVG only */
-const NO_PUPPET = new Set<string>(["knyaz"]);
+const NO_PUPPET = new Set<string>(["knyaz", "vadim"]);
 
 /** frame schedules of the puppet strips: [frame, ms] — idle loops, ouch/strike play once */
 type SeqMode = "idle" | "ouch" | "strike" | "fear";
@@ -331,6 +331,7 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
     );
   }
   if (baseId === "knyaz") return <KnyazRig id={id} rig={rig} bust={bust} dazed={dazed} svgRef={svgRef} frameCss={frameCss} strip={strip} />;
+  if (baseId === "vadim") return <VadimRig id={id} rig={rig} bust={bust} dazed={dazed} svgRef={svgRef} />;
   const behind = BEHIND[baseId];
   const split = SPLIT_BEHIND.has(baseId);
   const clipEyes = !!P.armL && !!P.pupils && !!P.eyes;
@@ -582,4 +583,121 @@ function useCoverSwing(coverRef: RefObject<SVGGElement | null>, handRef: RefObje
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
   }, [coverRef, handRef, pin, on]);
+}
+
+/*
+ * Вадим (tools/boss/assemble-vadim.py): plain layers, no puppet mesh. He breathes and sways, waves a knife in the right
+ * fist and jangles his car keys in the left (screens.css «Вадим»). The bunch hangs free — every piece is its own
+ * pendulum on its pin (useDangle): the split ring in the key's hole, the big ring on it, the fob and the door key on the
+ * ring; each lags behind what it hangs on, swings out and settles, so a flick of the wrist sends them all jangling.
+ */
+function VadimRig({ id, rig, bust, dazed, svgRef }: { id: string; rig: Rig; bust: boolean; dazed: boolean; svgRef: RefObject<SVGSVGElement | null> }) {
+  const P = rig.parts;
+  const hand = useRef<SVGGElement>(null);
+  const link = useRef<SVGGElement>(null);
+  const ring = useRef<SVGGElement>(null);
+  const fob = useRef<SVGGElement>(null);
+  const key = useRef<SVGGElement>(null);
+  // length (rig units: the swing's period), damping and the widest swing (radians) of each piece
+  useDangle([
+    { el: link, parent: hand, pin: P.keyLink?.pivot, len: 40, damp: 4.5, max: 0.7 },
+    { el: ring, parent: link, pin: P.keyRing?.pivot, len: 60, damp: 2.4, max: 1.1 },
+    { el: fob, parent: ring, pin: P.keyFob?.pivot, len: 95, damp: 1.9, max: 1.2 },
+    { el: key, parent: ring, pin: P.keyKey?.pivot, len: 50, damp: 1.4, max: 1.3 },
+  ], !bust);
+  const img = (p: string) => {
+    const r = P[p];
+    return r ? <image href={`/bosses/${id}/rig/${p}.webp${r.v ? `?v=${r.v}` : ""}`} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" /> : null;
+  };
+  const origin = (p: string): CSSProperties => {
+    const pv = P[p]?.pivot ?? [rig.w / 2, rig.h];
+    return { transformOrigin: `${pv[0]}px ${pv[1]}px`, transformBox: "view-box" };
+  };
+  return (
+    <svg ref={svgRef} className={`boss-rig rig-vadim ${dazed ? "dazed" : ""}`} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} width="100%" height="100%" preserveAspectRatio={bust ? "xMidYMin slice" : "xMidYMax meet"} aria-hidden="true">
+      <g className="vd-root" style={{ transformOrigin: `${rig.w / 2}px ${rig.h - 20}px`, transformBox: "view-box" }}>
+        {img("legs")}
+        <g className="vd-up" style={{ transformOrigin: `${rig.w / 2}px ${rig.h * 0.52}px`, transformBox: "view-box" }}>
+          {/* the upper sleeves behind the body; the same shoulder turns carry the forearms drawn in front */}
+          <g className="vd-arm-l" style={origin("armL")}>{img("armL")}</g>
+          <g className="vd-arm-r" style={origin("armR")}>{img("armR")}</g>
+          {img("body")}
+          <g className="vd-head" style={origin("head")}>{img("head")}</g>
+          <g className="vd-arm-r" style={origin("armR")}>
+            <g className="vd-low-r" style={origin("lowR")}>
+              {img("lowR")}
+              <g className="vd-hand-r" style={origin("handR")}>{img("handR")}</g>
+            </g>
+          </g>
+          <g className="vd-arm-l" style={origin("armL")}>
+            <g className="vd-low-l" style={origin("lowL")}>
+              {img("lowL")}
+              <g className="vd-hand-l" ref={hand} style={origin("handL")}>
+                {img("handL")}
+                {/* the bunch: the split ring in the key's hole carries the big ring, the fob and the key hang on that */}
+                <g ref={link}>
+                  <g ref={ring}>
+                    {img("keyRing")}
+                    <g ref={fob}>{img("keyFob")}</g>
+                    <g ref={key}>{img("keyKey")}</g>
+                  </g>
+                  {img("keyLink")}
+                </g>
+              </g>
+            </g>
+          </g>
+        </g>
+      </g>
+    </svg>
+  );
+}
+
+/**
+ * Things hanging free, each on its pin, each a damped pendulum in the screen's frame (like useCoverSwing, for a chain):
+ * every frame, in order, the parent's turn and the pin's place are read off the parent group (getCTM — its CSS
+ * animations and the turn just given to it included); the piece keeps its own angle, so a jerk of what it hangs on makes
+ * it lag, swing out and settle back to hanging the way it is drawn. A piece's parent may be another piece (a chain).
+ */
+type Dangle = { el: RefObject<SVGGElement | null>; parent: RefObject<SVGGElement | null>; pin: readonly number[] | undefined; len: number; damp: number; max: number };
+function useDangle(list: Dangle[], on: boolean) {
+  const cfg = useRef(list);
+  cfg.current = list;
+  useEffect(() => {
+    if (!on || typeof window === "undefined") return;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    const G = 4000;                    // gravity, rig units / s²
+    const st = cfg.current.map(() => ({ phi: 0, vel: 0, prev: null as { x: number; y: number; vx: number; vy: number } | null }));
+    let last = 0, raf = 0;
+    const step = (t: number) => {
+      raf = requestAnimationFrame(step);
+      if (document.hidden) { last = 0; return; }
+      const dt = last ? Math.min(0.04, (t - last) / 1000) : 0;
+      last = t;
+      cfg.current.forEach((d, i) => {
+        const el = d.el.current, par = d.parent.current, pin = d.pin, s = st[i];
+        if (!el || !par || !pin) return;
+        const m = par.getCTM();
+        const root = par.ownerSVGElement?.getCTM();
+        if (!m || !root) return;
+        const r = root.inverse().multiply(m);
+        const parAng = Math.atan2(r.b, r.a);
+        const px = r.a * pin[0] + r.c * pin[1] + r.e, py = r.b * pin[0] + r.d * pin[1] + r.f;
+        if (dt > 0) {
+          const vx = s.prev ? (px - s.prev.x) / dt : 0, vy = s.prev ? (py - s.prev.y) / dt : 0;
+          const ax = s.prev ? (vx - s.prev.vx) / dt : 0, ay = s.prev ? (vy - s.prev.vy) / dt : 0;
+          s.prev = { x: px, y: py, vx, vy };
+          // the pin's jolt throws the piece the other way (along its swing), gravity pulls it back, the air damps it
+          const tx = -Math.cos(s.phi), ty = Math.sin(s.phi);
+          const acc = (-G * Math.sin(s.phi) - (ax * tx + ay * ty) * 0.8) / d.len - d.damp * s.vel;
+          s.vel += acc * dt;
+          s.phi = Math.max(-d.max, Math.min(d.max, s.phi + s.vel * dt));
+          if (Math.abs(s.phi) >= d.max) s.vel *= -0.3;
+        } else s.prev = { x: px, y: py, vx: 0, vy: 0 };
+        // drawn inside the parent: its own turn is the screen angle minus the parent's
+        el.setAttribute("transform", `rotate(${(((s.phi - parAng) * 180) / Math.PI).toFixed(2)} ${pin[0]} ${pin[1]})`);
+      });
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [on]);
 }
