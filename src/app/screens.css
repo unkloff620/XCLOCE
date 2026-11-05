@@ -3849,6 +3849,10 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .sl-display .sl-gain { flex-wrap: nowrap; font-size: min(2.6cqw, 11px); }
 .sl-display .sl-gain .sl-xp { font-size: min(2.6cqw, 11px); }
 .sl-display .sl-gain img, .sl-display .sl-gain svg { width: min(3cqw, 13px) !important; height: min(3cqw, 13px) !important; }
+/* in the one-line display the corner «×N» would be cut off above the icon — the count stands to the right of it instead */
+.sl-display .sl-gain .rc-times { align-items: center; flex-wrap: nowrap; gap: 0 min(2cqw, 8px) !important; }
+.sl-display .sl-gain .rc-times > :is(.chip, .gain) { align-items: center; padding: 0; gap: min(0.8cqw, 3px); }
+.sl-display .sl-gain .rc-times .rc-n { margin: 0; position: static; font: 800 min(2.6cqw, 11px)/1 var(--font-body), system-ui; color: #ffe9a8 !important; text-shadow: 0 1px 2px #000; }
 
 /* the wardrobe: the clothes slots as a row of picture buttons above the things (a tap on the character still works) */
 .sty-slots { flex: none; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 5px; padding: 7px 1px 6px; }
