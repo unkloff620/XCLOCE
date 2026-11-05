@@ -5545,11 +5545,11 @@ html.paused *, html.paused *::before, html.paused *::after { animation-play-stat
 .rig-vadim .vd-low-l { animation: vd-blow-low 1.6s linear infinite; }
 @keyframes vd-blow-low {
   0%, 30% { transform: rotate(0deg); animation-timing-function: ease-in; }
-  37% { transform: rotate(22deg); animation-timing-function: var(--vd-snap); }
-  41% { transform: rotate(-16deg); animation-timing-function: ease-out; }
-  49% { transform: rotate(-8deg); animation-timing-function: ease-in; }
-  55% { transform: rotate(24deg); animation-timing-function: var(--vd-snap); }
-  59% { transform: rotate(-18deg); animation-timing-function: ease-out; }
+  37% { transform: rotate(36deg); animation-timing-function: var(--vd-snap); }
+  41% { transform: rotate(-26deg); animation-timing-function: ease-out; }
+  49% { transform: rotate(-12deg); animation-timing-function: ease-in; }
+  55% { transform: rotate(38deg); animation-timing-function: var(--vd-snap); }
+  59% { transform: rotate(-28deg); animation-timing-function: ease-out; }
   70%, 100% { transform: rotate(0deg); }
 }
 .rig-vadim .vd-hand-l { animation: vd-blow-hand 1.6s linear infinite; }
