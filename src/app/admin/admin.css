@@ -215,6 +215,7 @@ a.adm-stat.link:hover { border-color: #4b6bff; background: var(--a-panel2); }
 .adm-tile.set { cursor: pointer; }
 .adm-tile.set:hover { border-color: #4b6bff; }
 .adm-tile.set.on { border-color: var(--a-accent); background: #262b36; }
+.adm-room img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 8px; }
 .adm-tile.set.full .adm-tile-q { background: rgba(255, 204, 51, 0.2); color: #ffcc33; }
 .adm-tile.set .adm-tile-q { background: rgba(255, 255, 255, 0.08); color: var(--a-muted); }
 .adm-setbox { display: grid; gap: 10px; margin-top: 12px; padding: 12px; border-radius: 12px; border: 1px solid var(--a-accent); background: rgba(255, 77, 77, 0.04); }

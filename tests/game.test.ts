@@ -1196,6 +1196,20 @@ describe("admin", () => {
     expect(v.admin.length).toBe(6);
     expect(v.ledger.some((l) => l.reason === "admin:777" && l.key === "keyboard" && Number(l.delta) === -50)).toBe(true);
   });
+  it("admin gives a home room (energy bonus too) and can take it back", async () => {
+    const { edit, player } = await import("../src/server/admin.ts");
+    const { roomsEnergyBonus } = await import("../src/content/home.ts");
+    const p = await newPlayer(db);
+    await edit(db, 777, p, { op: "give_room", room: "cabinet" });
+    await edit(db, 777, p, { op: "give_room", room: "freezer" });
+    let v = await player(db, p);
+    expect(v.rooms.have).toEqual(["basic", "cabinet", "freezer"]);
+    expect(Number(v.player.energy_bonus)).toBe(roomsEnergyBonus(["basic", "cabinet", "freezer"]));
+    await edit(db, 777, p, { op: "give_room", room: "freezer", own: false });
+    v = await player(db, p);
+    expect(v.rooms.have).toEqual(["basic", "cabinet"]);
+    await expect(edit(db, 777, p, { op: "give_room", room: "nope" })).rejects.toThrow();
+  });
   it("admin adds boss passes on top of what the player has (and can take them away)", async () => {
     const { edit } = await import("../src/server/admin.ts");
     const p = await newPlayer(db);

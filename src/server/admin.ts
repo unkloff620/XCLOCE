@@ -20,6 +20,7 @@ import { itemById } from "../content/items.ts";
 import { levelFromXp } from "../content/levels.ts";
 import { talentStop } from "../content/talents.ts";
 import { syncTalentExtras } from "./systems/home.ts";
+import { roomById, roomsEnergyBonus } from "../content/home.ts";
 
 const n = (v: unknown) => Number(v ?? 0);
 
@@ -122,7 +123,7 @@ export async function player(db: Db, id: number) {
   const [p] = await db.query<PlayerRow & { guest_id: string | null; banned_at: Date | null; ban_reason: string | null; talents: number }>("SELECT * FROM players WHERE id=$1", [id]);
   if (!p) throw new GameError("no_player", "Игрок не найден", 404);
   const e = energyNow(p.energy, new Date(p.energy_at).getTime(), Date.now(), { ...cfg.energy, max: cfg.energy.max + Number(p.energy_bonus ?? 0) + Number((p as { talent_energy?: number }).talent_energy ?? 0) });
-  const [wallet, inventory, [stats], talents, [clan], fights, acts, ledger, admin] = await Promise.all([
+  const [wallet, inventory, [stats], talents, [clan], fights, acts, ledger, admin, [look]] = await Promise.all([
     db.query<{ currency: string; amount: number }>("SELECT currency, amount FROM wallets WHERE player_id=$1", [id]),
     db.query<{ item_id: string; qty: number; source: string | null; updated_at: Date }>("SELECT item_id, qty, source, updated_at FROM inventory WHERE player_id=$1 AND qty > 0 ORDER BY item_id", [id]),
     db.query("SELECT * FROM player_stats WHERE player_id=$1", [id]),
@@ -132,7 +133,9 @@ export async function player(db: Db, id: number) {
     actions(db, { playerId: id, limit: 200 }),
     db.query("SELECT id, kind, key, delta, reason, created_at FROM ledger WHERE player_id=$1 ORDER BY id DESC LIMIT 300", [id]),
     db.query(`SELECT a.id, a.admin_tg, ${ADMIN_COLS}, a.op, a.info, a.at FROM admin_log a LEFT JOIN players ap ON ap.telegram_id = a.admin_tg WHERE a.player_id=$1 ORDER BY a.id DESC LIMIT 100`, [id]),
+    db.query<{ room: string | null; rooms: unknown }>("SELECT room, rooms FROM appearance WHERE player_id=$1", [id]),
   ]);
+  const roomsRaw = typeof look?.rooms === "string" ? JSON.parse(look.rooms) : look?.rooms;
   const money = Object.fromEntries(CURRENCIES.map((c) => [c, n(wallet.find((w) => w.currency === c)?.amount)]));
   return {
     player: { ...p, level: levelFromXp(n(p.xp), cfg.levels).level, energyNow: e.energy },
@@ -145,6 +148,7 @@ export async function player(db: Db, id: number) {
     actions: acts,
     ledger,
     admin,
+    rooms: { have: Array.isArray(roomsRaw) && roomsRaw.length ? roomsRaw.map(String) : ["basic"], current: look?.room ?? "basic" },
   };
 }
 
@@ -174,10 +178,11 @@ export type Edit =
   | { op: "set_name"; value: string }
   | { op: "boss_limit_reset" }
   | { op: "give_tattoo_set"; set: string }
+  | { op: "give_room"; room: string; own?: boolean }
   | { op: "ban"; reason: string }
   | { op: "unban" }
   | { op: "reset" };
-export const EDIT_OPS = ["set_money", "set_item", "add_item", "set_xp", "set_poker_xp", "set_zonk_xp", "set_energy", "set_talents", "set_talent", "set_name", "ban", "unban", "reset", "boss_limit_reset", "give_tattoo_set"] as const;
+export const EDIT_OPS = ["set_money", "set_item", "add_item", "set_xp", "set_poker_xp", "set_zonk_xp", "set_energy", "set_talents", "set_talent", "set_name", "ban", "unban", "reset", "boss_limit_reset", "give_tattoo_set", "give_room"] as const;
 
 /**
  * Everything a player has earned, keyed by player_id. The reset wipes these and gives the starting kit again.
@@ -333,6 +338,22 @@ export async function edit(db: Db, adminTg: number, pid: number, e: Edit) {
           if ((r[0] as { fresh?: boolean })?.fresh) { added++; await ledgerRow(q, pid, "item", piece.id, 1, adminTg); }
         }
         info = { set: set.name, added };
+        break;
+      }
+      case "give_room": {
+        const def = roomById(e.room);
+        if (!def || def.id === "basic") throw bad("Нет такой комнаты");
+        const own = e.own !== false;
+        const [a] = await q.query<{ room: string | null; rooms: unknown }>("SELECT room, rooms FROM appearance WHERE player_id=$1 FOR UPDATE", [pid]);
+        if (!a) throw bad("У игрока нет внешности — пусть зайдёт в игру");
+        const raw = typeof a.rooms === "string" ? JSON.parse(a.rooms) : a.rooms;
+        const have: string[] = Array.isArray(raw) && raw.length ? raw.map(String) : ["basic"];
+        if (!have.includes("basic")) have.unshift("basic");
+        const rooms = own ? (have.includes(def.id) ? have : [...have, def.id]) : have.filter((r) => r !== def.id);
+        const room = !own && a.room === def.id ? "basic" : a.room;
+        await q.query("UPDATE appearance SET rooms=$2, room=$3 WHERE player_id=$1", [pid, JSON.stringify(rooms), room]);
+        await q.query("UPDATE players SET energy_bonus=$2 WHERE id=$1", [pid, roomsEnergyBonus(rooms)]);
+        info = { room: def.name, own, changed: rooms.length !== have.length };
         break;
       }
       case "set_name": {

@@ -14,6 +14,8 @@ import { CURRENCIES } from "../../content/currencies.ts";
 import { EXTRA_NAMES, TALENT_PATH, talentStop } from "../../content/talents.ts";
 import { BOSSES, bossById, bossHasArt, keyId, unlockBossOf } from "../../content/bosses.ts";
 import { TATTOO_SETS } from "../../content/tattoos.ts";
+import { ROOM_DEFS } from "../../content/home.ts";
+import { ROOM_BACKDROP } from "../../content/home-scene.ts";
 import { offerById } from "../../content/shop.ts";
 import { taskById } from "../../content/locations.ts";
 import { EVENT_EFFECTS, FOREVER, effectLines, cleanEffects, type BossTweak } from "../../content/events.ts";
@@ -36,7 +38,7 @@ const ACTION_NAMES: Record<string, string> = {
 };
 const OP_NAMES: Record<string, string> = {
   set_money: "валюта", set_item: "предмет", add_item: "выдал", set_xp: "авторитет", set_poker_xp: "опыт покера", set_zonk_xp: "опыт зонка", set_energy: "энергия", set_talents: "свободные таланты",
-  set_talent: "ветка таланта", set_name: "имя", ban: "бан", unban: "разбан", reset: "сброс прогресса", boss_limit_reset: "сброс лимита боссов", give_tattoo_set: "сет наколок",
+  set_talent: "ветка таланта", set_name: "имя", ban: "бан", unban: "разбан", reset: "сброс прогресса", boss_limit_reset: "сброс лимита боссов", give_tattoo_set: "сет наколок", give_room: "комната",
 };
 
 // ---------------- api ----------------
@@ -665,7 +667,7 @@ function DashTables({ sub }: { sub: "items" | "actions" }) {
 // ---------------- player card ----------------
 type PlayerData = {
   player: Row; money: Record<string, number>; inventory: Row[]; stats: Row | null; talents: Row[]; clan: Row | null;
-  fights: Row[]; actions: Row[]; ledger: Row[]; admin: Row[];
+  fights: Row[]; actions: Row[]; ledger: Row[]; admin: Row[]; rooms?: { have: string[]; current: string };
 };
 type PTab = "res" | "items" | "talents" | "stats" | "history" | "mod";
 const PTABS: [PTab, string, string][] = [["res", "💰", "Ресурсы"], ["items", "🎒", "Вещи и наколки"], ["talents", "⭐", "Таланты"], ["stats", "📊", "Статистика"], ["history", "📜", "История"], ["mod", "🚫", "Модерация"]];
@@ -732,7 +734,7 @@ function Player({ id }: { id: number }) {
           </div>
         </section>
       )}
-      {tab === "items" && <Catalog rows={data.inventory} edit={edit} />}
+      {tab === "items" && <><Rooms have={data.rooms?.have ?? ["basic"]} current={data.rooms?.current ?? "basic"} edit={edit} /><Catalog rows={data.inventory} edit={edit} /></>}
       {tab === "talents" && <Talents rows={data.talents} edit={edit} />}
       {tab === "stats" && (
         <section className="adm-card">
@@ -851,6 +853,34 @@ const PASS_IDS = new Set(BOSSES.filter((b) => !b.final).map((b) => keyId(b.id)))
 const catOf = (i: ItemDef): Cat => (PASS_IDS.has(i.id) ? "pass" : (i.category as Cat));
 const setPic = (sid: string) => `tat-${sid}-chest-l`;
 const setFrom = (boss: string) => (boss === "tosya" ? "Тося" : boss === "box" ? "Ящик ништяков" : bossById(boss)?.name ?? boss);
+
+/** the player's home rooms: give one (or take it back) without the boss drop and the price */
+function Rooms({ have, current, edit }: { have: string[]; current: string; edit: EditFn }) {
+  const list = ROOM_DEFS.filter((r) => r.id !== "basic");
+  return (
+    <section className="adm-card">
+      <h3>🏠 Комнаты <span className="muted small">({list.filter((r) => have.includes(r.id)).length}/{list.length})</span></h3>
+      <div className="adm-tiles">
+        {list.map((r) => {
+          const own = have.includes(r.id);
+          return (
+            <div key={r.id} className={`adm-tile adm-room ${own ? "have" : ""}`}>
+              {own && <span className="adm-tile-q">{r.id === current ? "стоит" : "есть"}</span>}
+              <img src={`/assets/home/${ROOM_BACKDROP[r.id] ?? ROOM_BACKDROP.basic}.webp`} alt="" loading="lazy" />
+              <span className="adm-tile-n">{r.name}</span>
+              <span className="muted tiny">{r.drop ? `с босса ${bossById(r.drop.boss)?.name ?? r.drop.boss}` : "магазин"}</span>
+              <div className="adm-tile-act">
+                {own
+                  ? <button className="adm-btn ghost" onClick={() => { if (confirm(`Забрать комнату «${r.name}»?`)) void edit({ op: "give_room", room: r.id, own: false }, `Комната «${r.name}» забрана`); }}>Забрать</button>
+                  : <button className="adm-btn" onClick={() => void edit({ op: "give_room", room: r.id }, `Комната «${r.name}»`)}>Выдать</button>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
 
 function Catalog({ rows, edit }: { rows: Row[]; edit: EditFn }) {
   const [cat, setCat] = useState<Cat>("owned");
@@ -1249,6 +1279,7 @@ function EditInfo({ op, info }: { op: string; info: unknown }) {
   if (op === "ban") return <span className="bad">заблокирован{i.reason ? `: ${i.reason}` : ""}</span>;
   if (op === "unban") return <span className="good">разблокирован</span>;
   if (op === "boss_limit_reset") return <span className="good">лимит боссов на сегодня сброшен <span className="muted">(боёв: {fmt(i.fights)})</span></span>;
+  if (op === "give_room") return <span className={i.own === false ? "bad" : "good"}>{i.own === false ? "забрана" : "выдана"} комната «{String(i.room)}»{i.changed ? "" : <span className="muted"> (без изменений)</span>}</span>;
   if (op === "give_tattoo_set") return <span className="good">выдан сет наколок «{String(i.set)}» <span className="muted">(новых: {fmt(i.added)})</span></span>;
   if (op === "reset") {
     const b = (i.before ?? {}) as Row;
