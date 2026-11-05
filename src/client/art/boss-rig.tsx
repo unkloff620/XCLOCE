@@ -592,6 +592,9 @@ function useCoverSwing(coverRef: RefObject<SVGGElement | null>, handRef: RefObje
  * every piece is its own pendulum on its pin (useDangle): the big ring (with its split ring) in the key's hole, the fob
  * and the door key on the ring; each lags behind what it hangs on, swings out and settles.
  */
+/** his fast heavy breath: the chest grows by 18 % round its middle and rises 8 px at a full breath in (screens.css
+ *  vd-breath: the upper body's height scale 1.03) */
+const VD_BREATH = "0.18,8,1.03";
 function VadimRig({ id, rig, bust, dazed, sleepy, svgRef, wrapRef, puppet }: {
   id: string; rig: Rig; bust: boolean; dazed: boolean; sleepy: boolean; svgRef: RefObject<SVGSVGElement | null>; wrapRef: RefObject<HTMLDivElement | null>; puppet: boolean;
 }) {
@@ -611,6 +614,7 @@ function VadimRig({ id, rig, bust, dazed, sleepy, svgRef, wrapRef, puppet }: {
   const pic = (p: string, pp: "back" | "front", fade?: string) => {
     const r = P[p];
     return r ? <image className={puppet ? "pp" : undefined} data-pp={puppet ? pp : undefined} data-pp-body={puppet && p === "body" ? "1" : undefined} data-pp-fade={puppet ? fade : undefined}
+      data-pp-breath={puppet && p === "body" ? VD_BREATH : undefined}
       href={`/bosses/${id}/rig/${p}.webp${r.v ? `?v=${r.v}` : ""}`} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" /> : null;
   };
   const origin = (p: string): CSSProperties => {

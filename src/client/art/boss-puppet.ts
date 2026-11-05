@@ -26,6 +26,10 @@ type Mesh = {
   body: boolean;
   /** body only: rig box, for the breathing */
   box: [number, number, number, number];
+  /** data-pp-breath="swell,lift,full": the chest swells with the breath of its own group (Вадим) instead of the slow
+   *  built-in one — the breath's depth is read off that group's height scale (full = the scale at a full breath in);
+   *  swell: how much the chest grows round its middle, lift: how far it rises (rig px) */
+  breath: [number, number, number] | null;
   pos: Float32Array;
   posBuf: WebGLBuffer | null;
   uvBuf: WebGLBuffer | null;
@@ -143,6 +147,7 @@ function buildMesh(gl: WebGLRenderingContext, img: SVGImageElement): Mesh {
   const mesh: Mesh = {
     img, tex: null, pts: new Float32Array(pts), uv: new Float32Array(uv), idx: new Uint16Array(idx), w: W, bones,
     body: img.getAttribute("data-pp-body") === "1", box: [x, y, w, h],
+    breath: img.getAttribute("data-pp-breath") ? (img.getAttribute("data-pp-breath")!.split(",").map(Number) as [number, number, number]) : null,
     pos: new Float32Array(pts.length), posBuf: gl.createBuffer(), uvBuf: gl.createBuffer(), idxBuf: gl.createBuffer(),
     fade: img.getAttribute("data-pp-fade") ? img.closest(`.${img.getAttribute("data-pp-fade")}`) : null,
     mask: img.getAttribute("data-pp-mask"), id: img.getAttribute("data-pp-id"),
@@ -303,10 +308,19 @@ export function usePuppet(wrap: RefObject<HTMLDivElement | null>, key: string, s
           const n = m.pts.length / 2;
           // the body's own breath: a soft swell of the chest (most at a third from the top), the legs still
           const [bx, by, bw, bh] = m.box;
-          const br = m.body ? (Math.sin((now / 3400) * Math.PI * 2) + 1) / 2 : 0;
+          const own = mats[0];
+          const br = m.breath ? Math.min(1, Math.max(0, (Math.hypot(own.c, own.d) - 1) / (m.breath[2] - 1)))
+            : m.body ? (Math.sin((now / 3400) * Math.PI * 2) + 1) / 2 : 0;
           for (let v = 0; v < n; v++) {
             let x = m.pts[v * 2], y = m.pts[v * 2 + 1];
-            if (br) {
+            if (br && m.breath) {
+              // a deep breath: the chest grows round its middle (most there, nothing at the hem and the collar), and rises
+              const cx = bx + bw / 2, cy = by + bh * 0.36;
+              const d = Math.hypot((x - cx) / (bw * 0.5), (y - cy) / (bh * 0.42));
+              const g = Math.max(0, 1 - d * d);
+              x = cx + (x - cx) * (1 + m.breath[0] * br * g);
+              y = cy + (y - cy) * (1 + m.breath[0] * 0.7 * br * g) - m.breath[1] * br * g;
+            } else if (br) {
               const t = (y - by) / bh;
               const g = Math.max(0, 1 - Math.abs(t - 0.3) / 0.32);
               const cx = bx + bw / 2;

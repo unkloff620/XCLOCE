@@ -5523,8 +5523,10 @@ html.paused *, html.paused *::before, html.paused *::after { animation-play-stat
 /* Вадим (art/boss-rig.tsx VadimRig): breathes and sways; the right fist waves the knife in short slashes, the left one
    shakes the car keys — the bunch hangs free (useDangle), so every shake sends the ring, the fob and the key jangling */
 .rig-vadim { --vd-snap: cubic-bezier(0.15, 0.9, 0.25, 1); }
-.rig-vadim .vd-up { animation: vd-breath 2.8s ease-in-out infinite; }
-@keyframes vd-breath { 0%, 100% { transform: scale(1, 1) translateY(0); } 45% { transform: scale(1.014, 1.026) translateY(-5px); } }
+/* fast heavy breathing: a quick deep breath in (the chest swells — boss-puppet.ts data-pp-breath reads this group's
+   height scale), a short hold, out; the jaw drops with every breath in (vd-jaw, the same beat) */
+.rig-vadim .vd-up { animation: vd-breath 1.05s ease-in-out infinite; }
+@keyframes vd-breath { 0%, 100% { transform: scale(1, 1) translateY(0); } 38%, 50% { transform: scale(1.016, 1.03) translateY(-4px); } }
 .rig-vadim .vd-root { animation: vd-shift 6.4s ease-in-out infinite; }
 @keyframes vd-shift { 0%, 100% { transform: translateX(0) rotate(0deg); } 50% { transform: translateX(-6px) rotate(-0.7deg); } }
 .rig-vadim .vd-head { animation: vd-head 5.2s ease-in-out infinite; }
@@ -5606,8 +5608,8 @@ html.paused *, html.paused *::before, html.paused *::after { animation-play-stat
 }
 /* the face: the jaw drops a little with every breath in (in step with vd-breath) and now and then grinds side to side;
    the irises look around; he blinks; hit or beaten — the sad mouth; below a quarter — the eyes stay shut */
-.rig-vadim .vd-jaw { animation: vd-jaw 2.8s ease-in-out infinite; }
-@keyframes vd-jaw { 0%, 100% { transform: translateY(0); } 45% { transform: translateY(4px); } 60% { transform: translateY(3.4px); } }
+.rig-vadim .vd-jaw { animation: vd-jaw 1.05s ease-in-out infinite; }
+@keyframes vd-jaw { 0%, 100% { transform: translateY(0); } 38%, 50% { transform: translateY(4px); } }
 .rig-vadim .vd-grind { animation: vd-grind 7.4s linear infinite; }
 @keyframes vd-grind { 0%, 62%, 80%, 100% { transform: translateX(0); }
   64%, 68%, 72%, 76% { transform: translateX(-1.6px); } 66%, 70%, 74%, 78% { transform: translateX(1.6px); } }
