@@ -17,6 +17,12 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-05-vadim",
+    date: "5 ноября",
+    title: "Вадим ожил",
+    items: [{ img: "/assets/updates/2026-11-05-vadim.webp", text: "Вадим теперь живой: тычет кухонным ножом, лупит связкой ключей — брелок и ключи болтаются сами, — тяжело дышит и скрипит зубами. Дерётся в своём кабинете, а кабинет может выпасть тебе домой." }],
+  },
+  {
     id: "2026-11-04-zonk-hot-dice",
     date: "4 ноября",
     title: "Зонк: все шесть костей",

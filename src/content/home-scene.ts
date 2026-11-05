@@ -42,9 +42,9 @@ export const CHARACTER = { x: 130, y: 375, scale: 0.78 };
 /** Seat inside the rig canvas (under the hips). */
 export const SEAT = { x: 280, y: 670, w: 440, aspect: 1.5 }; // stretched taller: the seat hides under the shorts, the legs stand on the floor
 
-export const ROOM_BG: Record<string, string> = { basic: "room-basic", freezer: "room-freezer", neon: "room-neon", shark: "room-shark", backroom: "room-backroom", boxing: "room-boxing", izba: "room-izba", ludoman: "room-ludoman", pepe: "room-pepe", vault: "room-vault", office: "room-office", penthouse: "room-penthouse", kitchen: "room-kitchen" };
+export const ROOM_BG: Record<string, string> = { basic: "room-basic", freezer: "room-freezer", neon: "room-neon", shark: "room-shark", backroom: "room-backroom", boxing: "room-boxing", izba: "room-izba", ludoman: "room-ludoman", pepe: "room-pepe", vault: "room-vault", office: "room-office", penthouse: "room-penthouse", kitchen: "room-kitchen", cabinet: "room-cabinet" };
 /** opaque picture for the blurred backdrop around the scene (a room with a see-through window has a flat copy) */
-export const ROOM_BACKDROP: Record<string, string> = { basic: "room-basic", freezer: "room-freezer", neon: "room-neon", shark: "room-shark", backroom: "room-backroom", boxing: "room-boxing", izba: "room-izba", ludoman: "room-ludoman", pepe: "room-pepe", vault: "room-vault", office: "room-office", penthouse: "room-penthouse-flat", kitchen: "room-kitchen" };
+export const ROOM_BACKDROP: Record<string, string> = { basic: "room-basic", freezer: "room-freezer", neon: "room-neon", shark: "room-shark", backroom: "room-backroom", boxing: "room-boxing", izba: "room-izba", ludoman: "room-ludoman", pepe: "room-pepe", vault: "room-vault", office: "room-office", penthouse: "room-penthouse-flat", kitchen: "room-kitchen", cabinet: "room-cabinet" };
 /** RGB LED strip (violet → blue) along the ceiling and the sides: polylines in scene units */
 export const ROOM_RGB: Record<string, number[][][]> = {
   neon: [
@@ -74,6 +74,7 @@ export const ROOM_LIGHTS: Record<string, { x: number; y: number; r: number; colo
   kitchen: [{ x: 517, y: 210, r: 150, color: "#ffd08a", kind: "lamp" }],
   ludoman: [{ x: 532, y: 72, r: 140, color: "#ffc46b", kind: "lamp" }],
   vault: [{ x: 530, y: 137, r: 140, color: "#ffc46b", kind: "lamp" }, { x: 530, y: 140, r: 420, color: "#a46bff", kind: "strip" }],
+  cabinet: [{ x: 530, y: 133, r: 140, color: "#ffc46b", kind: "lamp" }, { x: 238, y: 564, r: 100, color: "#ffc46b", kind: "lamp" }, { x: 530, y: 30, r: 460, color: "#ffb35c", kind: "strip" }],
   // the two wall lamps by the shelves and the glowing pill on the shelf
   pepe: [
     { x: 165, y: 300, r: 110, color: "#ffb347", kind: "lamp" },
