@@ -101,7 +101,8 @@ export function Coin({ c, v, size = 18, bold = true }: { c: Currency; v: number;
  * In the corner mode a picture is never smaller than CORNER_MIN px (smaller than in the case, bigger than a text line).
  */
 const CORNER_MIN = 22;
-export function RewardChips({ r, size = 18, times = true }: { r: Reward | Granted | null | undefined; size?: number; times?: boolean }) {
+/** `side`: the «×N» stands to the right of the icon (not in its corner), and the icon may be smaller than the corner minimum. */
+export function RewardChips({ r, size = 18, times = true, side = false }: { r: Reward | Granted | null | undefined; size?: number; times?: boolean; side?: boolean }) {
   if (!r) return null;
   // nothing for 0 (a one-of-a-kind thing already owned); the craft parts — one chip «×N» with the parts pile, the names in the tooltip
   const all = (r.items ?? []).filter((it) => it.qty > 0);
@@ -109,10 +110,11 @@ export function RewardChips({ r, size = 18, times = true }: { r: Reward | Grante
   const items = all.filter((it) => !it.id.startsWith("part-"));
   const partsN = parts.reduce((t, it) => t + it.qty, 0);
   const partsTip = parts.map((it) => `${itemById(it.id)?.name ?? it.id} ×${it.qty}`).join(", ");
-  const sz = times ? Math.max(size, CORNER_MIN) : size;
+  if (side) times = true;
+  const sz = times && !side ? Math.max(size, CORNER_MIN) : size;
   const n = (v: string) => <span className="num rc-n">×{v}</span>;
   return (
-    <span className={`row rchips${times ? " rc-times" : ""}`} style={{ flexWrap: "wrap", gap: times ? "6px 8px" : "4px 10px" }}>
+    <span className={`row rchips${side ? " rc-side" : times ? " rc-times" : ""}`} style={{ flexWrap: "wrap", gap: times ? "6px 8px" : "4px 10px" }}>
       {Object.entries(r.currencies ?? {}).map(([c, v]) => (v ? (
         times ? <span key={c} className="chip" title={CURRENCY_DEFS[c as Currency]?.name}><Icon name={c} size={sz} />{n(money(c as Currency, v))}</span>
           : <span key={c} className="chip"><Coin c={c as Currency} v={v} size={size} /></span>
@@ -179,12 +181,13 @@ export function bossItemsCount(boss: { wear?: { items: string[] } }, state: { un
 }
 
 /** What was gained or will be: pictures with «×N» at their corner (`times`, the default) or «+N» after them. */
-export function GainLine({ r, size = 26, times = true }: { r: Reward | Granted | null | undefined; size?: number; times?: boolean }) {
+export function GainLine({ r, size = 26, times = true, side = false }: { r: Reward | Granted | null | undefined; size?: number; times?: boolean; side?: boolean }) {
   if (!r) return null;
-  const sz = times ? Math.max(size, CORNER_MIN) : size;
+  if (side) times = true;
+  const sz = times && !side ? Math.max(size, CORNER_MIN) : size;
   const n = (v: string) => (times ? <span className="num rc-n">×{v}</span> : <>+{v}</>);
   return (
-    <span className={`gain-line${times ? " rc-times" : ""}`}>
+    <span className={`gain-line${side ? " rc-side" : times ? " rc-times" : ""}`}>
       {(r.items ?? []).map((it) => (
         <span key={it.id} className="gain" title={itemById(it.id)?.name}><ItemArt id={it.id} size={sz} />{n(full(it.qty))}</span>
       ))}

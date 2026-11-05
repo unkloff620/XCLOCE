@@ -131,7 +131,7 @@ export function BossesScreen() {
                 </div>
                 <div className="bcard-reward">
                   <span className="bcard-label">{b.final ? "Финал:" : "Награда:"}</span>
-                  <GainLine r={{ ...b.reward, items: [...(b.final ? [] : [{ id: `key-${b.id}`, qty: 1 }]), ...(b.reward.items ?? [])] }} size={18} />
+                  <GainLine r={{ ...b.reward, items: [...(b.final ? [] : [{ id: `key-${b.id}`, qty: 1 }]), ...(b.reward.items ?? [])] }} size={16} side />
                 </div>
                 <div className="bcard-foot">
                   {locked ? (
@@ -267,10 +267,10 @@ export function BossRewardsPanel({ bossId }: { bossId: string }) {
   return (
     <div className="col">
       <div className="small muted">За каждую победу:</div>
-      <RewardChips r={{ ...b.reward, items: [...(b.final ? [] : [{ id: `key-${b.id}`, qty: 1 }]), ...(b.reward.items ?? [])] }} />
+      <RewardChips r={{ ...b.reward, items: [...(b.final ? [] : [{ id: `key-${b.id}`, qty: 1 }]), ...(b.reward.items ?? [])] }} size={18} side />
       {/* what can drop is a secret: just a «?» */}
       {(!!b.drop?.length || !!b.wear) && (
-        <div className="row small muted" style={{ gap: 6 }}><MysteryDrop size={20} /> и шанс выбить что-то ещё</div>
+        <div className="row small muted" style={{ gap: 6 }}><MysteryDrop size={18} /> и шанс выбить что-то ещё</div>
       )}
     </div>
   );

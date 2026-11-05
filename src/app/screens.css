@@ -5146,6 +5146,12 @@ body { background-attachment: fixed; }
 .rc-times > :is(.chip, .gain) > :is(svg, img) { flex: none; }
 .rc-times .rc-n { position: relative; margin: -8px 0 0 -8px; font: 500 11px/1 var(--font-body), system-ui; letter-spacing: 0.02em; white-space: nowrap; color: #fff8e8 !important;
   text-shadow: 0 0 1px #000, 0 1px 1.5px rgba(0, 0, 0, 0.9) !important; pointer-events: none; }
+/* `side`: the same plate-less look, but the «×N» stands right of a smaller picture (boss rewards) */
+.rc-side { align-items: center; flex-wrap: wrap; gap: 4px 10px !important; }
+.rc-side > .chip, .rc-side > .gain { display: inline-flex; align-items: center; padding: 0; margin: 0; gap: 3px; background: none !important; border: 0 !important; box-shadow: none !important; line-height: 1; }
+.rc-side > :is(.chip, .gain) > :is(svg, img) { flex: none; }
+.rc-side .rc-n { font: 700 12px/1 var(--font-body), system-ui; letter-spacing: 0.02em; white-space: nowrap; color: #fff8e8 !important;
+  text-shadow: 0 0 1px #000, 0 1px 1.5px rgba(0, 0, 0, 0.9) !important; }
 /* the case loot as tiles, like the upgrader's tray: a bigger picture, how many — above it */
 .acx-loot { gap: 1.4cqw; align-items: center; }
 .acx-item .rchips { display: contents; }
