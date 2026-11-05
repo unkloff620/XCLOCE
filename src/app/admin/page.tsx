@@ -981,15 +981,15 @@ function ItemTile({ i, have, edit, short }: { i: ItemDef; have: number; edit: Ed
 // ---------------- overview ----------------
 /** «Технические работы»: the game closed for players while the admins check a release */
 // ---------------- «Расходы» ----------------
-type CostLine = { name: string; usd: number; note?: string };
+type CostLine = { name: string; usd: number; paid?: number; times?: number; note?: string; spent?: number };
 type CostsView = {
   period: { start: string; end: string; share: number };
   prices: { cuHour: number; storageGbMonth: number; transferFreeGb: number; transferGb: number };
-  neon: { live: true; cuHours: number; activeHours: number; transferGb: number; storageGb: number; awakeShare: number; soFar: number; month: number; cuMonth: number; transferMonth: number }
-    | { live: false; storageGb: number; error: string | null; month: number };
+  neon: ({ live: true; cuHours: number; activeHours: number; transferGb: number; storageGb: number; awakeShare: number; soFar: number; month: number; cuMonth: number; transferMonth: number }
+    | { live: false; storageGb: number; error: string | null; month: number }) & { paid: number; spent: number };
   subs: CostLine[];
   feePct: number;
-  total: { base: number; fee: number; withFee: number };
+  total: { price: number; month: number; fee: number; spent: number };
 };
 const usd = (v: number) => `$${v.toLocaleString("ru-RU", { minimumFractionDigits: v % 1 ? 2 : 0, maximumFractionDigits: 2 })}`;
 const dayOf = (iso: string) => new Date(iso).toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
@@ -1014,11 +1014,20 @@ function Costs() {
   return (
     <>
       <section className="adm-card adm-cost-total">
-        <div className="muted small">В месяц всего{d.feePct ? `, с комиссией ${d.feePct}%` : ""}</div>
-        <b className="adm-cost-big">{usd(d.total.withFee)}</b>
-        <div className="muted small">
-          подписки {usd(d.subs.reduce((a, s) => a + s.usd, 0))} + база Neon ≈ {usd(n.month)}{d.total.fee ? ` + комиссия ${usd(d.total.fee)}` : ""} · в день ≈ {usd(d.total.withFee / 30)}
+        <div className="adm-quick">
+          <div className="adm-q"><b className="adm-cost-big">{usd(d.total.month)}</b><span className="muted small">в месяц с комиссиями</span></div>
+          <div className="adm-q"><b className="adm-cost-big">{usd(d.total.spent)}</b><span className="muted small">уже потрачено всего</span></div>
         </div>
+        <div className="muted small">
+          по ценам {usd(d.total.price)} + комиссии банков {usd(d.total.fee)} · в день ≈ {usd(d.total.month / 30)}
+        </div>
+        <div className="adm-scroll"><table className="adm-table adm-cost-table">
+          <thead><tr><th>Что</th><th>Цена</th><th>Плачу в месяц</th><th>Оплат</th><th>Потрачено</th></tr></thead>
+          <tbody>
+            {d.subs.map((s) => <tr key={s.name}><td>{s.name}</td><td>{usd(s.usd)}</td><td>{usd(s.paid ?? s.usd)}</td><td>{s.times ?? 0}</td><td>{usd(s.spent ?? 0)}</td></tr>)}
+            <tr><td>База Neon</td><td>≈ {usd(n.month)}</td><td>≈ {usd(n.paid)}</td><td className="muted">по факту</td><td>{usd(n.spent)}</td></tr>
+          </tbody>
+        </table></div>
       </section>
 
       <Box title="🐘 База данных Neon (тариф Launch, оплата по факту)">
@@ -1028,7 +1037,7 @@ function Costs() {
             <div className="adm-quick">
               <div className="adm-q"><b>{usd(n.soFar)}</b><span className="muted tiny">уже набежало</span></div>
               <div className="adm-q"><b>{usd(n.month)}</b><span className="muted tiny">прогноз на месяц</span></div>
-              <div className="adm-q"><b>{usd(fee(n.month))}</b><span className="muted tiny">с комиссией</span></div>
+              <div className="adm-q"><b>{usd(fee(n.month))}</b><span className="muted tiny">с комиссией {d.feePct}%</span></div>
             </div>
             <div className="adm-scroll"><table className="adm-table adm-cost-table">
               <thead><tr><th>Что</th><th>Сейчас</th><th>За месяц ≈</th><th>Цена</th></tr></thead>
@@ -1050,20 +1059,22 @@ function Costs() {
       </Box>
 
       <Box title="🧾 Подписки и комиссия">
-        <p className="muted tiny">Суммы в долларах за месяц. Меняй, добавляй строки, жми «Сохранить» — итог пересчитается.</p>
+        <p className="muted tiny">Цена — сколько стоит тариф, «Плачу» — сколько на деле списывают с карты (с комиссией банка), «Оплат» — сколько раз уже заплатил. Меняй и жми «Сохранить».</p>
+        <div className="row adm-cost-row muted tiny"><span style={{ width: 140 }}>Название</span><span style={{ width: 90 }}>Цена $</span><span style={{ width: 90 }}>Плачу $</span><span style={{ width: 70 }}>Оплат</span><span className="grow">Заметка</span></div>
         <div className="col" style={{ gap: 6 }}>
           {edit.subs.map((s, i) => (
             <div key={i} className="row adm-cost-row">
               <input className="adm-in" value={s.name} placeholder="Название" onChange={(e) => setLine(i, { name: e.target.value })} />
-              <input className="adm-in num" type="number" min={0} step="0.01" value={s.usd} onChange={(e) => setLine(i, { usd: Number(e.target.value) })} />
+              <input className="adm-in num" type="number" min={0} step="0.01" title="Цена тарифа" value={s.usd} onChange={(e) => setLine(i, { usd: Number(e.target.value) })} />
+              <input className="adm-in num" type="number" min={0} step="0.01" title="Списывают с карты" value={s.paid ?? s.usd} onChange={(e) => setLine(i, { paid: Number(e.target.value) })} />
+              <input className="adm-in num adm-cost-times" type="number" min={0} step="1" title="Сколько раз уже оплачено" value={s.times ?? 0} onChange={(e) => setLine(i, { times: Number(e.target.value) })} />
               <input className="adm-in grow" value={s.note ?? ""} placeholder="Заметка" onChange={(e) => setLine(i, { note: e.target.value })} />
-              <span className="muted small num" title="С комиссией">{usd(fee(s.usd))}</span>
               <button className="adm-btn ghost sm" title="Убрать" onClick={() => setDraft({ ...edit, subs: edit.subs.filter((_, k) => k !== i) })}>✕</button>
             </div>
           ))}
           <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
-            <button className="adm-btn ghost sm" onClick={() => setDraft({ ...edit, subs: [...edit.subs, { name: "", usd: 0 }] })}>＋ Строка</button>
-            <label className="row small" style={{ gap: 6 }}>Комиссия банка/карты, %
+            <button className="adm-btn ghost sm" onClick={() => setDraft({ ...edit, subs: [...edit.subs, { name: "", usd: 0, paid: 0, times: 0 }] })}>＋ Строка</button>
+            <label className="row small" style={{ gap: 6 }}>Комиссия на счёт за базу Neon (идёт через Vercel), %
               <input className="adm-in num" style={{ width: 80 }} type="number" min={0} max={50} step="0.1" value={edit.feePct} onChange={(e) => setDraft({ ...edit, feePct: Number(e.target.value) })} />
             </label>
             <span className="grow" />
