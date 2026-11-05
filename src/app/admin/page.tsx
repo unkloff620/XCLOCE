@@ -136,14 +136,15 @@ type View =
   | { tab: "players" }
   | { tab: "player"; id: number }
   | { tab: "stats"; sub: StatsSub }
-  | { tab: "log"; sub: "actions" | "admins"; q: ActionsQuery; key: string };
+  | { tab: "log"; sub: "actions" | "admins"; q: ActionsQuery; key: string }
+  | { tab: "costs" };
 type LiveSub = "works" | "news" | "tosya" | "bosses" | "events" | "exchange";
 type StatsSub = "funnel" | "items" | "actions";
 const LIVE: [LiveSub, string, string][] = [
   ["works", "🛠", "Тех. работы"], ["news", "📣", "Рассылка"], ["tosya", "🥟", "Тося"], ["bosses", "👹", "Боссы"], ["events", "🎉", "События"], ["exchange", "💱", "Обменник"],
 ];
 const STATS: [StatsSub, string, string][] = [["funnel", "🧭", "Воронка новичков"], ["items", "📦", "Предметы у игроков"], ["actions", "⚡", "Действия за 24 ч"]];
-const NAV: [View["tab"], string, string][] = [["dash", "📊", "Обзор"], ["live", "🎮", "Игра"], ["players", "👥", "Игроки"], ["stats", "📈", "Аналитика"], ["log", "📜", "Журнал"]];
+const NAV: [View["tab"], string, string][] = [["dash", "📊", "Обзор"], ["live", "🎮", "Игра"], ["players", "👥", "Игроки"], ["stats", "📈", "Аналитика"], ["log", "📜", "Журнал"], ["costs", "💸", "Расходы"]];
 
 function parseHash(): View {
   const h = typeof location === "undefined" ? "" : location.hash.slice(1);
@@ -158,6 +159,7 @@ function parseHash(): View {
   if (a === "live" || a === "events") return { tab: "live", sub: (LIVE.find(([k]) => k === b)?.[0] ?? (a === "events" ? "events" : "works")) };
   if (a === "stats") return { tab: "stats", sub: STATS.find(([k]) => k === b)?.[0] ?? "funnel" };
   if (a === "players") return { tab: "players" };
+  if (a === "costs") return { tab: "costs" };
   return { tab: "dash" };
 }
 /** link to the action log with filters */
@@ -210,6 +212,7 @@ export default function AdminPage() {
         {view.tab === "players" && <Players />}
         {view.tab === "player" && <Player key={view.id} id={view.id} />}
         {view.tab === "stats" && <Stats sub={view.sub} />}
+        {view.tab === "costs" && <Costs />}
         {view.tab === "log" && (
           <>
             <SubTabs items={[["actions", "🧾", "Действия игроков"], ["admins", "🛡", "Правки админов"]]} value={view.sub} href={(k) => (k === "actions" ? "#log" : "#log/admins")} />
@@ -977,6 +980,102 @@ function ItemTile({ i, have, edit, short }: { i: ItemDef; have: number; edit: Ed
 
 // ---------------- overview ----------------
 /** «Технические работы»: the game closed for players while the admins check a release */
+// ---------------- «Расходы» ----------------
+type CostLine = { name: string; usd: number; note?: string };
+type CostsView = {
+  period: { start: string; end: string; share: number };
+  prices: { cuHour: number; storageGbMonth: number; transferFreeGb: number; transferGb: number };
+  neon: { live: true; cuHours: number; activeHours: number; transferGb: number; storageGb: number; awakeShare: number; soFar: number; month: number; cuMonth: number; transferMonth: number }
+    | { live: false; storageGb: number; error: string | null; month: number };
+  subs: CostLine[];
+  feePct: number;
+  total: { base: number; fee: number; withFee: number };
+};
+const usd = (v: number) => `$${v.toLocaleString("ru-RU", { minimumFractionDigits: v % 1 ? 2 : 0, maximumFractionDigits: 2 })}`;
+const dayOf = (iso: string) => new Date(iso).toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+
+/** What the game costs a month: the subscriptions (typed in here) + the database by use (Neon API) + the card fee */
+function Costs() {
+  const c = useLoad(() => admin<CostsView>("costs"), []);
+  const [draft, setDraft] = useState<{ subs: CostLine[]; feePct: number } | null>(null);
+  const [busy, setBusy] = useState(false);
+  if (c.err) return <Err e={c.err} />;
+  if (!c.data) return <div className="muted">Загрузка…</div>;
+  const d = c.data;
+  const n = d.neon;
+  const edit = draft ?? { subs: d.subs, feePct: d.feePct };
+  const setLine = (i: number, patch: Partial<CostLine>) => setDraft({ ...edit, subs: edit.subs.map((s, k) => (k === i ? { ...s, ...patch } : s)) });
+  const save = async () => {
+    setBusy(true);
+    try { await admin("costs_save", { costs: edit }); setDraft(null); c.reload(); } catch (e) { alert((e as Error).message); }
+    setBusy(false);
+  };
+  const fee = (v: number) => v * (1 + d.feePct / 100);
+  return (
+    <>
+      <section className="adm-card adm-cost-total">
+        <div className="muted small">В месяц всего{d.feePct ? `, с комиссией ${d.feePct}%` : ""}</div>
+        <b className="adm-cost-big">{usd(d.total.withFee)}</b>
+        <div className="muted small">
+          подписки {usd(d.subs.reduce((a, s) => a + s.usd, 0))} + база Neon ≈ {usd(n.month)}{d.total.fee ? ` + комиссия ${usd(d.total.fee)}` : ""} · в день ≈ {usd(d.total.withFee / 30)}
+        </div>
+      </section>
+
+      <Box title="🐘 База данных Neon (тариф Launch, оплата по факту)">
+        {n.live ? (
+          <>
+            <p className="muted tiny">Период {dayOf(d.period.start)} — {dayOf(d.period.end)}, прошло {Math.round(d.period.share * 100)}%. Прогноз — если дальше будет так же.</p>
+            <div className="adm-quick">
+              <div className="adm-q"><b>{usd(n.soFar)}</b><span className="muted tiny">уже набежало</span></div>
+              <div className="adm-q"><b>{usd(n.month)}</b><span className="muted tiny">прогноз на месяц</span></div>
+              <div className="adm-q"><b>{usd(fee(n.month))}</b><span className="muted tiny">с комиссией</span></div>
+            </div>
+            <div className="adm-scroll"><table className="adm-table adm-cost-table">
+              <thead><tr><th>Что</th><th>Сейчас</th><th>За месяц ≈</th><th>Цена</th></tr></thead>
+              <tbody>
+                <tr><td>Работа базы</td><td>{n.cuHours} CU-ч</td><td>{n.cuMonth} CU-ч → {usd(n.cuMonth * d.prices.cuHour)}</td><td className="muted">{usd(d.prices.cuHour)} за CU-час</td></tr>
+                <tr><td>База не спала</td><td>{n.activeHours} ч</td><td>{Math.round(n.awakeShare * 100)}% времени</td><td className="muted">спит, когда никто не играет</td></tr>
+                <tr><td>Хранилище</td><td>{n.storageGb} ГБ</td><td>{usd(n.storageGb * d.prices.storageGbMonth)}</td><td className="muted">{usd(d.prices.storageGbMonth)} за ГБ в месяц</td></tr>
+                <tr><td>Трафик</td><td>{n.transferGb} ГБ</td><td>{n.transferMonth} ГБ{n.transferMonth > d.prices.transferFreeGb ? ` → ${usd((n.transferMonth - d.prices.transferFreeGb) * d.prices.transferGb)}` : " — бесплатно"}</td><td className="muted">{d.prices.transferFreeGb} ГБ включено</td></tr>
+              </tbody>
+            </table></div>
+          </>
+        ) : (
+          <>
+            <p className="adm-err small">{n.error ?? "Живые данные Neon не подключены — нужен ключ NEON_API_KEY."}</p>
+            <p className="muted tiny">Пока считаю худший случай: база не спит круглые сутки на минимальных 0.25 CU ≈ {usd(n.month)} в месяц. Хранилище сейчас {n.storageGb} ГБ.</p>
+            <p className="muted tiny">Как подключить: console.neon.tech → слева внизу Settings организации → API keys → Create new API key (имя «xclose-admin») → скопировать ключ. Потом Vercel → проект xcloce → Settings → Environment Variables → Add: имя <code>NEON_API_KEY</code>, значение — ключ, окружение Production, тип Sensitive → Save → Redeploy.</p>
+          </>
+        )}
+      </Box>
+
+      <Box title="🧾 Подписки и комиссия">
+        <p className="muted tiny">Суммы в долларах за месяц. Меняй, добавляй строки, жми «Сохранить» — итог пересчитается.</p>
+        <div className="col" style={{ gap: 6 }}>
+          {edit.subs.map((s, i) => (
+            <div key={i} className="row adm-cost-row">
+              <input className="adm-in" value={s.name} placeholder="Название" onChange={(e) => setLine(i, { name: e.target.value })} />
+              <input className="adm-in num" type="number" min={0} step="0.01" value={s.usd} onChange={(e) => setLine(i, { usd: Number(e.target.value) })} />
+              <input className="adm-in grow" value={s.note ?? ""} placeholder="Заметка" onChange={(e) => setLine(i, { note: e.target.value })} />
+              <span className="muted small num" title="С комиссией">{usd(fee(s.usd))}</span>
+              <button className="adm-btn ghost sm" title="Убрать" onClick={() => setDraft({ ...edit, subs: edit.subs.filter((_, k) => k !== i) })}>✕</button>
+            </div>
+          ))}
+          <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
+            <button className="adm-btn ghost sm" onClick={() => setDraft({ ...edit, subs: [...edit.subs, { name: "", usd: 0 }] })}>＋ Строка</button>
+            <label className="row small" style={{ gap: 6 }}>Комиссия банка/карты, %
+              <input className="adm-in num" style={{ width: 80 }} type="number" min={0} max={50} step="0.1" value={edit.feePct} onChange={(e) => setDraft({ ...edit, feePct: Number(e.target.value) })} />
+            </label>
+            <span className="grow" />
+            {draft && <button className="adm-btn ghost" disabled={busy} onClick={() => setDraft(null)}>Отмена</button>}
+            <button className="adm-btn" disabled={busy || !draft} onClick={save}>Сохранить</button>
+          </div>
+        </div>
+      </Box>
+    </>
+  );
+}
+
 function Maintenance() {
   const m = useLoad(() => admin<{ on: boolean; text: string }>("maintenance"), []);
   const [text, setText] = useState<string | null>(null);

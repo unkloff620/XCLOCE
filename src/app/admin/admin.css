@@ -228,3 +228,13 @@ a.adm-stat.link:hover { border-color: #4b6bff; background: var(--a-panel2); }
   .adm-tiles { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); }
   .adm-ph-top { align-items: flex-start; }
 }
+
+/* «Расходы» */
+.adm-cost-total { text-align: center; }
+.adm-cost-big { display: block; font-size: 40px; font-weight: 800; line-height: 1.1; margin: 4px 0; font-variant-numeric: tabular-nums; }
+.adm-cost-table { width: 100%; margin-top: 10px; }
+.adm-cost-table td, .adm-cost-table th { padding: 6px 8px; text-align: left; font-size: 13px; }
+.adm-cost-row { gap: 6px; align-items: center; flex-wrap: wrap; }
+.adm-cost-row .adm-in:first-child { width: 140px; }
+.adm-cost-row .adm-in.num { width: 90px; }
+.adm-cost-row .grow { flex: 1; min-width: 120px; }
