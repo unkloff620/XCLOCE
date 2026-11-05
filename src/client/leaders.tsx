@@ -27,7 +27,8 @@ export function LeadersStrip() {
     let alive = true;
     const load = () => api.get<TopView>("/api/top").then((v) => { if (alive) setData(v); }).catch(() => {});
     load();
-    const t = window.setInterval(load, 60_000);
+    // only while the game is on screen: a minimized app must not keep the database awake
+    const t = window.setInterval(() => document.visibilityState === "visible" && load(), 60_000);
     return () => { alive = false; clearInterval(t); };
   }, []);
   // the page below makes room for the open strip
