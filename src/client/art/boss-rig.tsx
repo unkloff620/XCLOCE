@@ -331,7 +331,7 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
     );
   }
   if (baseId === "knyaz") return <KnyazRig id={id} rig={rig} bust={bust} dazed={dazed} svgRef={svgRef} frameCss={frameCss} strip={strip} />;
-  if (baseId === "vadim") return <VadimRig id={id} rig={rig} bust={bust} dazed={dazed} svgRef={svgRef} wrapRef={wrapRef} puppet={puppet} />;
+  if (baseId === "vadim") return <VadimRig id={id} rig={rig} bust={bust} dazed={dazed} sleepy={hpShare < DYING_BELOW} svgRef={svgRef} wrapRef={wrapRef} puppet={puppet} />;
   const behind = BEHIND[baseId];
   const split = SPLIT_BEHIND.has(baseId);
   const clipEyes = !!P.armL && !!P.pupils && !!P.eyes;
@@ -592,8 +592,8 @@ function useCoverSwing(coverRef: RefObject<SVGGElement | null>, handRef: RefObje
  * every piece is its own pendulum on its pin (useDangle): the big ring (with its split ring) in the key's hole, the fob
  * and the door key on the ring; each lags behind what it hangs on, swings out and settles.
  */
-function VadimRig({ id, rig, bust, dazed, svgRef, wrapRef, puppet }: {
-  id: string; rig: Rig; bust: boolean; dazed: boolean; svgRef: RefObject<SVGSVGElement | null>; wrapRef: RefObject<HTMLDivElement | null>; puppet: boolean;
+function VadimRig({ id, rig, bust, dazed, sleepy, svgRef, wrapRef, puppet }: {
+  id: string; rig: Rig; bust: boolean; dazed: boolean; sleepy: boolean; svgRef: RefObject<SVGSVGElement | null>; wrapRef: RefObject<HTMLDivElement | null>; puppet: boolean;
 }) {
   const P = rig.parts;
   const hand = useRef<SVGGElement>(null);
@@ -607,9 +607,10 @@ function VadimRig({ id, rig, bust, dazed, svgRef, wrapRef, puppet }: {
     { el: key, parent: ring, pin: P.keyKey?.pivot, len: 36, damp: 1.4, max: 1.3 },
   ], !bust);
   // a picture: warped by the puppet on the back or the front canvas (the SVG copy hides then)
-  const pic = (p: string, pp: "back" | "front") => {
+  // fade: drawn with the opacity of that ancestor group (the lids, the open and the sad mouth)
+  const pic = (p: string, pp: "back" | "front", fade?: string) => {
     const r = P[p];
-    return r ? <image className={puppet ? "pp" : undefined} data-pp={puppet ? pp : undefined} data-pp-body={puppet && p === "body" ? "1" : undefined}
+    return r ? <image className={puppet ? "pp" : undefined} data-pp={puppet ? pp : undefined} data-pp-body={puppet && p === "body" ? "1" : undefined} data-pp-fade={puppet ? fade : undefined}
       href={`/bosses/${id}/rig/${p}.webp${r.v ? `?v=${r.v}` : ""}`} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" /> : null;
   };
   const origin = (p: string): CSSProperties => {
@@ -621,14 +622,30 @@ function VadimRig({ id, rig, bust, dazed, svgRef, wrapRef, puppet }: {
     <g className={cls} ref={ref} data-pivot={P[p]?.pivot ? `${P[p].pivot![0]},${P[p].pivot![1]}` : undefined} data-pp-size={size} style={origin(p)}>{kids}</g>
   );
   const svgEl = (
-    <svg key={id} ref={svgRef} className={`boss-rig rig-vadim ${dazed ? "dazed" : ""}`} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} width="100%" height="100%" preserveAspectRatio={bust ? "xMidYMin slice" : "xMidYMax meet"} aria-hidden="true">
+    <svg key={id} ref={svgRef} className={`boss-rig rig-vadim ${dazed ? "dazed" : ""} ${sleepy ? "sleepy" : ""}`} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} width="100%" height="100%" preserveAspectRatio={bust ? "xMidYMin slice" : "xMidYMax meet"} aria-hidden="true">
       <g className="vd-root" style={{ transformOrigin: `${rig.w / 2}px ${rig.h - 20}px`, transformBox: "view-box" }}>
         {pic("legs", "back")}
         <g className="vd-up" style={{ transformOrigin: `${rig.w / 2}px ${rig.h * 0.52}px`, transformBox: "view-box" }}>
           {/* the key arm's upper sleeve behind the body (with an empty elbow, so its end bends with the forearm) */}
           {bone("vd-arm-l", "armL", <>{pic("armL", "back")}{bone("vd-low-l", "lowL", null, 120)}</>, 140)}
           {pic("body", "back")}
-          {bone("vd-head", "head", pic("head", "back"), 160)}
+          {/* the face: the eye whites and the irises behind the head (it has see-through eye holes), the head with its own
+              closed smile; over it the open mouth (the throat, the upper teeth, the lower teeth on the jaw that drops with
+              the breath and grinds now and then, the lips round them), the sad mouth (hit, beaten), the lids, the brows */}
+          {bone("vd-head", "head", <>
+            {pic("eyes", "back")}
+            <g className="vd-pupils">{pic("pupils", "back")}</g>
+            {pic("head", "back")}
+            <g className="vd-mouth">
+              {pic("throat", "back", "vd-mouth")}
+              {pic("teeth-up", "back", "vd-mouth")}
+              <g className="vd-jaw"><g className="vd-grind">{pic("teeth-low", "back", "vd-mouth")}</g></g>
+              {pic("lips", "back", "vd-mouth")}
+            </g>
+            <g className="vd-sad">{pic("mouth-sad", "back", "vd-sad")}</g>
+            <g className="vd-lids">{pic("eyes-closed", "back", "vd-lids")}</g>
+            <g className="vd-brows">{pic("brows", "back")}</g>
+          </>, 160)}
           {/* the key arm's forearm and fist in front: the same shoulder and elbow turns */}
           {bone("vd-arm-l", "armL", bone("vd-low-l", "lowL", <>
             {pic("lowL", "front")}

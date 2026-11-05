@@ -18,6 +18,7 @@ SCALE_BY_BOSS = {}
 # is small on a big body, so its parts keep twice the detail
 HIRES_BY_BOSS = {"vodovoz": (2, {"head", "eyes", "pupils", "eyes-closed", "browL", "browR", "mouth-closed", "throat",
                                  "teeth-up", "teeth-low", "head-open", "jaw"}),
+                  "vadim": (2, {"head", "eyes", "pupils", "eyes-closed", "brows", "throat", "teeth-up", "teeth-low", "lips", "mouth-sad"}),
                   "knyaz": (2, {"head", "head-open", "eyes", "pupils", "eyes-closed", "throat", "teeth-up", "teeth-low", "lips", "mouth-closed", "mouth-sad", "gag"})}
 PARTS = ["tail", "legs", "body", "headset", "foreL", "foreR", "armL", "lowL", "handL", "bag", "cover", "keyRing", "keyFob", "keyKey", "armR", "lowR", "handR", "head", "head-open", "throat", "teeth-up", "teeth-low", "jaw", "lips", "mouth-sad", "eyes", "eyes-closed", "pupils", "brows", "brows-sad", "browL", "browR", "mouth", "mouth-closed", "collar", "gag"]
 # puppet-warped sequences (<part>@0.png, <part>@1.png …): one strip <part>.webp, frames side by side, frame 0 first

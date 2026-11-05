@@ -8,6 +8,7 @@ The key pieces are laid out as on refKeys, scaled by KS and moved so the fist's 
 Every piece of the bunch is its own layer and hangs free (boss-rig.tsx VadimRig, useDangle):
   keyRing — the big ring with the split ring through the hole of the key in the fist (one piece: they never come apart);
   keyFob  — the fob on its own little ring at the bottom of the big one;  keyKey — the door key on its ring at the side.
+The face: raw/face/ (see FACE below) → head, eyes, pupils, eyes-closed, brows, throat, teeth-up, teeth-low, lips, mouth-sad.
 Writes tools/boss/source/vadim/{legs,body,head,armL,lowL,handL,keyRing,keyFob,keyKey,armR,lowR,handR}.png and
 public/bosses/vadim/{full,portrait}.webp.
 """
@@ -72,9 +73,22 @@ def save(n, im):
     Image.fromarray(a).save(f"{D}/{n}.png")
 
 
-for n, src in [("legs", "legs"), ("body", "body"), ("head", "head"), ("armL", "armL"), ("lowL", "foreL"),
+for n, src in [("legs", "legs"), ("body", "body"), ("armL", "armL"), ("lowL", "foreL"),
                ("armR", "armR"), ("lowR", "foreR"), ("handR", "handR")]:
     save(n, load(src))
+# the face (raw/face/, the artist's 1000×1000 sheets, all in place on one face): the head with see-through eye holes and
+# its own closed smile, the eye whites and the irises (drawn behind the head), the lids (blink), the brows, the open mouth
+# (the throat, the upper and the lower teeth, the lips round them) and the sad mouth — put on the body sheet where the
+# old head was (fitted by its outline)
+FACE_K, FACE_AT = 0.432, (806, 335)
+FACE = {"head": "head", "eyes": "eyes", "pupils": "pupils", "eyes-closed": "eyesClosed", "brows": "brows",
+        "throat": "throat", "teeth-up": "teethUp", "teeth-low": "teethLow", "lips": "lipsOpen", "mouth-sad": "mouthSad"}
+for n, src in FACE.items():
+    f = Image.open(f"{R}/face/{src}.png").convert("RGBA")
+    f = f.resize((round(f.width * FACE_K), round(f.height * FACE_K)), Image.LANCZOS)
+    sheet = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    sheet.alpha_composite(f, FACE_AT)
+    save(n, sheet)
 fist = Image.new("RGBA", (1000, 1000), (0, 0, 0, 0))
 fk = load("fistKeys")
 fist.alpha_composite(fk.resize((round(fk.width * FIST_K), round(fk.height * FIST_K)), Image.LANCZOS), FIST_AT)
@@ -91,7 +105,7 @@ print("pins (rig units):", json.dumps(pins))
 
 # the whole boss (lists, the profile): the layers in their drawing order
 full = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-for n in ["legs", "armL", "armR", "body", "lowL", "lowR", "handR", "head", "handL", "keyRing", "keyFob", "keyKey"]:
+for n in ["legs", "armL", "armR", "body", "eyes", "pupils", "head", "brows", "lowL", "lowR", "handR", "handL", "keyRing", "keyFob", "keyKey"]:
     full.alpha_composite(Image.open(f"{D}/{n}.png").convert("RGBA"))
 a = np.array(full)[:, :, 3]
 ys, xs = np.nonzero(a > 20)
