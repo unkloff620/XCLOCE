@@ -1511,6 +1511,7 @@ function Events() {
   const set = (k: keyof EvForm, v: unknown) => setForm((f) => (f ? { ...f, [k]: v } : f));
   return (
     <>
+      <HeistAdmin rows={data ?? []} onSaved={setData} />
       <Box title="🎉 События" right={<span className="row" style={{ gap: 8 }}><button className="adm-btn ghost sm" onClick={reload}>Обновить</button><button className="adm-btn" onClick={() => { setSaveErr(null); setForm(emptyEvent()); }}>+ Новое событие</button></span>}>
         <p className="muted small" style={{ marginTop: 0 }}>Событие идёт с даты начала до даты конца (время — твоего часового пояса). Пока оно идёт, его эффекты меняют числа в игре, а игроки видят окно события и звезду в HUD. Изменения доходят до игры в течение ~30 секунд.</p>
         <Err e={err} />
@@ -1552,6 +1553,55 @@ function Events() {
         </Box>
       )}
     </>
+  );
+}
+
+/** «Взлом» (content/heist.ts) in one button: an event with the «heistBoxes» effect for 3 days, or switched off */
+function HeistAdmin({ rows, onSaved }: { rows: Row[]; onSaved: (r: Row[]) => void }) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [days, setDays] = useState(3);
+  const now = Date.now();
+  const mine = rows.filter((r) => cleanEffects(r.effects).heistBoxes);
+  const live = mine.filter((r) => r.enabled !== false && new Date(String(r.starts_at)).getTime() <= now && new Date(String(r.ends_at)).getTime() > now);
+  const run = async (fn: () => Promise<Row[]>) => {
+    setBusy(true); setErr(null);
+    try { onSaved(await fn()); } catch (e) { setErr((e as Error).message); }
+    setBusy(false);
+  };
+  const start = () => {
+    if (!confirm(`Запустить ивент «Взлом» на ${days} дн. для всех игроков?`)) return;
+    void run(() => admin<Row[]>("event_save", { event: {
+      title: "Взлом", startsAt: new Date().toISOString(), endsAt: new Date(Date.now() + days * 86_400_000).toISOString(), enabled: true, effects: { heistBoxes: 1 },
+      description: "С каждого босса падает ящик с замками. Взламывай замки отмычками — внутри рубли, доллары, оружие, детали, нычки и наколки сетов «Динамит», «Маски» и «Ночная смена». Кнопка ивента — на главном экране.",
+    } }));
+  };
+  const stop = () => {
+    if (!confirm("Остановить «Взлом»? Новые ящики перестанут падать, упавшие можно будет довскрыть.")) return;
+    void run(async () => {
+      let out: Row[] = rows;
+      for (const r of live) out = await admin<Row[]>("event_save", { event: { id: Number(r.id), title: String(r.title), description: String(r.description ?? ""), startsAt: new Date(String(r.starts_at)).toISOString(), endsAt: new Date().toISOString(), effects: r.effects, enabled: true } });
+      return out;
+    });
+  };
+  const ends = live.length ? Math.max(...live.map((r) => new Date(String(r.ends_at)).getTime())) : 0;
+  return (
+    <Box title="🧰 Ивент «Взлом»">
+      <p className="muted small" style={{ marginTop: 0 }}>С каждого босса падает ящик с замками в 5 ячеек; замок — час или $100; внутри награды и наколки сетов «Динамит», «Маски», «Ночная смена». Пока ивент не запущен, игроки его не видят.</p>
+      {live.length ? (
+        <div className="adm-actions">
+          <b style={{ color: "#3ddc84" }}>Идёт</b><span className="small">до {when(new Date(ends).toISOString())}</span>
+          <button className="adm-btn danger" disabled={busy} onClick={stop}>Остановить</button>
+        </div>
+      ) : (
+        <div className="adm-actions">
+          <span className="muted">Не запущен</span>
+          <label className="row small" style={{ gap: 6 }}>на <input className="adm-in sm" type="number" min={1} max={14} value={days} onChange={(e) => setDays(Math.max(1, Math.min(14, Number(e.target.value) || 3)))} style={{ width: 60 }} /> дн.</label>
+          <button className="adm-btn" disabled={busy} onClick={start}>▶ Запустить</button>
+        </div>
+      )}
+      <Err e={err} />
+    </Box>
   );
 }
 
