@@ -43,15 +43,29 @@ export async function makeCtx(q: Queryable, pid: number, opts: { now?: number; r
   return { q, pid, now, cfg: await loadConfig(q, now), rng: opts.rng ?? secureRng };
 }
 
-/** Runs fn in one transaction with the player row locked (regen applied), then returns its result plus fresh state. */
-export async function inPlayerTx<T>(db: Db, pid: number, fn: (ctx: Ctx) => Promise<T>, opts: { now?: number; rng?: () => number } = {}) {
-  return db.tx(async (q) => {
+/**
+ * Runs fn in one transaction with the player row locked (regen applied), then returns its result plus fresh state.
+ * `split`: the state is built in a second transaction after the first commits. An action may hold shared locks (a hit
+ * holds the GLOBAL boss row) — building the whole state (~90 queries) inside that transaction made every player's
+ * hit wait for everyone else's state: the game crawled when many fought at once.
+ */
+export async function inPlayerTx<T>(db: Db, pid: number, fn: (ctx: Ctx) => Promise<T>, opts: { now?: number; rng?: () => number; split?: boolean } = {}) {
+  const begin = async (q: Queryable) => {
     const ctx = await makeCtx(q, pid, opts);
     const p = await lockPlayer(ctx);
     if (p.banned_at) throw new GameError("banned", `Аккаунт заблокирован${p.ban_reason ? `: ${p.ban_reason}` : ""}`, 403);
-    const result = await fn(ctx);
-    return { result, state: await gameState(ctx) };
-  });
+    return ctx;
+  };
+  if (!opts.split) {
+    return db.tx(async (q) => {
+      const ctx = await begin(q);
+      const result = await fn(ctx);
+      return { result, state: await gameState(ctx) };
+    });
+  }
+  const result = await db.tx(async (q) => fn(await begin(q)));
+  const state = await db.tx(async (q) => gameState(await begin(q)));
+  return { result, state };
 }
 
 export const ACTIONS = [
@@ -262,7 +276,7 @@ export async function runAction(db: Db, pid: number, type: ActionType, body: Rec
       const r = await dispatch(ctx, type, body);
       if (!NOT_LOGGED.has(type)) await logAction(ctx.q, pid, type, true, actionText(type, body, r)?.slice(0, 500) ?? null, ctx.now);
       return r;
-    }, opts);
+    }, { ...opts, split: true });
   } catch (e) {
     // refused actions are logged too (outside the rolled-back transaction): spam and cheating attempts show up here
     if (e instanceof GameError && e.status < 500 && e.code !== "banned" && !NOT_LOGGED.has(type)) {
