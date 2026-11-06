@@ -6,7 +6,7 @@
  * «Вскрыть сейчас» opens it for dollars; with every padlock off the box opens — the loot lies on its bottom.
  */
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { Modal, RewardChips } from "../ui.tsx";
 import { Icon } from "../art/icons.tsx";
@@ -32,8 +32,9 @@ export function heistReady(h: Heist, now: number) {
   return h.boxes.filter((b) => !picking(b, now)).length;
 }
 
-/** a chest from the front with its padlocks in a row on its band; the one being picked shakes and the picks poke it */
-function Chest({ box, now }: { box: Box; now: number }) {
+/** a chest from the front with its padlocks in a row on its band; the one being picked shakes and the picks poke it.
+ * `onLock`: the padlocks are buttons (the big chest); `face`: text or a button on the plain lower panel of its front */
+function Chest({ box, now, onLock, face }: { box: Box; now: number; onLock?: (i: number) => void; face?: ReactNode }) {
   const d = heistBox(box.kind);
   const done = doneNow(box, now);
   const busy = picking(box, now);
@@ -45,7 +46,9 @@ function Chest({ box, now }: { box: Box; now: number }) {
         const off = i < done, live = busy && i === done;
         const x = 0.5 + (i - (d.locks - 1) / 2) * LOCK_ROW.gap;
         return (
-          <span key={i} className={`hs-lock ${off ? "off" : ""} ${live ? "live" : ""}`} style={{ left: `${x * 100}%`, top: `${LOCK_ROW.y * 100}%`, width: `${LOCK_ROW.w * 100}%` }}>
+          <span key={i} className={`hs-lock ${off ? "off" : ""} ${live ? "live" : ""} ${onLock && !off ? "tap" : ""}`} style={{ left: `${x * 100}%`, top: `${LOCK_ROW.y * 100}%`, width: `${LOCK_ROW.w * 100}%` }}
+            role={onLock && !off ? "button" : undefined} aria-label={onLock && !off ? (live ? "Открыть замок сразу" : "Взломать замок") : undefined}
+            onClick={onLock && !off ? (e) => { e.stopPropagation(); onLock(i); } : undefined}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={`${A}/${off ? "lock-open" : "lock"}.webp`} alt="" draggable={false} />
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -53,6 +56,7 @@ function Chest({ box, now }: { box: Box; now: number }) {
           </span>
         );
       })}
+      {face && <div className="hs-face">{face}</div>}
     </div>
   );
 }
@@ -89,6 +93,8 @@ export function HeistScreen() {
   const [sel, setSel] = useState<number | null>(null);
   const [got, setGot] = useState<{ kind: HeistKind; reward: Granted; tattoo: string | null } | null>(null);
   const [help, setHelp] = useState(false);
+  // «Открыть сразу за $100?» for the padlock being picked
+  const [ask, setAsk] = useState<number | null>(null);
   const boxes = h?.boxes ?? [];
   // the chosen box: the one tapped, else the first there is
   const box = boxes.find((b) => b.slot === sel) ?? boxes[0] ?? null;
@@ -137,20 +143,16 @@ export function HeistScreen() {
             </>
           ) : box && d ? (
             <>
-              <Chest box={box} now={now} />
-              <div className="hs-status">
-                {done >= d.locks ? <b>Все замки сняты!</b>
-                  : busyLock ? <>Замок {done + 1}/{d.locks} · <b className="num">{clock(box.pickEnds! - now)}</b></>
-                  : <>Замки <b className="num">{done}/{d.locks}</b> · один — {Math.round((h?.lockMs ?? 3_600_000) / 3_600_000)} ч</>}
-              </div>
-              {done >= d.locks ? (
-                <button className="btn gold block" disabled={busy === "heist_open"} onClick={() => openBox(box.slot)}>Открыть ящик</button>
-              ) : (
-                <div className="hs-btns">
-                  {!busyLock && <button className="btn gold" disabled={busy === "heist_pick"} onClick={() => pick(box.slot)}>Взломать</button>}
-                  <button className="btn dark" disabled={busy === "heist_rush"} onClick={() => rush(box.slot)}>Сразу · <Icon name="USD" size={14} />{h?.rush ?? 100}</button>
-                </div>
-              )}
+              {/* tap a padlock: the next one starts being picked; tapped again while it is — open it at once for dollars */}
+              <Chest box={box} now={now}
+                onLock={(i) => {
+                  if (busyLock) { if (i === done) { haptic.tap(); setAsk(box.slot); } return; }
+                  if (busy !== "heist_pick") void pick(box.slot);
+                }}
+                face={done >= d.locks
+                  ? <button type="button" className="hs-face-btn display" disabled={busy === "heist_open"} onClick={() => openBox(box.slot)}>Открыть</button>
+                  : busyLock ? <span className="hs-face-t num">{clock(box.pickEnds! - now)}</span>
+                  : <span className="hs-face-t sm">Нажми на замок</span>} />
             </>
           ) : (
             <div className="hs-status hs-none">Победи любого босса — ящик упадёт в ячейку снизу.</div>
@@ -179,12 +181,22 @@ export function HeistScreen() {
         </div>
       </div>
 
+      {ask !== null && (
+        <Modal title="Открыть сразу?" onClose={() => setAsk(null)}>
+          <p className="center" style={{ margin: "4px 0 12px" }}>Открыть замок сразу за <Icon name="USD" size={16} /> <b>{h?.rush ?? 100}</b>?</p>
+          <div className="row" style={{ gap: 8 }}>
+            <button className="btn dark" style={{ flex: 1 }} onClick={() => setAsk(null)}>Нет</button>
+            <button className="btn gold" style={{ flex: 1 }} disabled={busy === "heist_rush"} onClick={async () => { const s0 = ask; setAsk(null); await rush(s0); }}>Открыть</button>
+          </div>
+        </Modal>
+      )}
+
       {help && (
         <Modal title="Как работает взлом" onClose={() => setHelp(false)}>
           <ul className="small" style={{ paddingLeft: 18, display: "grid", gap: 6 }}>
             <li>Пока идёт ивент, с каждой победы над любым боссом в любом режиме падает ящик. Он ложится в свободную ячейку; когда все 5 заняты, ящики не падают.</li>
             <li>Чем сильнее босс, тем чаще дорогие ящики: {HEIST_BOXES.map((b) => b.name.split(" ")[0].toLowerCase()).join(", ")}. С Солнца бриллиантовый — примерно 1 из {Math.round(1 / heistOdds(1).diamond)}.</li>
-            <li>На ящике от 1 до 4 замков. Замок взламывается час; следующий начинаешь сам, так что заходи каждый час. Сразу — за ${h?.rush ?? 100} замок.</li>
+            <li>На ящике от 1 до 4 замков. Нажми на замок — его начнут взламывать, это час; следующий начинаешь сам, так что заходи каждый час. Нажми на взламываемый замок ещё раз — откроешь его сразу за ${h?.rush ?? 100}.</li>
             <li>Внутри рубли, доллары, оружие, детали и нычки — чем дороже ящик, тем больше. И шанс на наколку из сетов ивента: бронза 25%, серебро 50%, золото 75%, бриллиант 100%.</li>
             <li>Сеты: «Динамит» +300 к Rug Pull Gun, «Маски» +200 к видеокарте, «Ночная смена» +100 к клавиатуре.</li>
           </ul>

@@ -5730,7 +5730,16 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .hs-btns .btn { display: inline-flex; align-items: center; gap: 3px; }
 .hs-main > .btn.block { width: 80%; }
 /* a chest from the front; its padlocks hang in a row on its band (LOCK_ROW in content/heist.ts) */
-.hs-chest { position: relative; }
+.hs-chest { position: relative; container-type: inline-size; }
+.hs-lock.tap { cursor: pointer; }
+.hs-lock.tap:active > img:first-child { transform: scale(0.94); }
+/* on the plain lower panel of the chest's front: the timer, a hint, or «Открыть» — text with no plate behind it */
+.hs-face { position: absolute; left: 22%; right: 22%; top: 62%; height: 19%; display: flex; align-items: center; justify-content: center; }
+.hs-face-t { font: 800 11cqw/1 var(--font-body), system-ui; color: #fff4dc; letter-spacing: 0.02em; white-space: nowrap;
+  text-shadow: 0 0 2px #000, 0 2px 3px rgba(0, 0, 0, 0.85), 0 0 1px #000; }
+.hs-face-t.sm { font-size: 5.6cqw; font-weight: 700; }
+.hs-face-btn { padding: 2cqw 6cqw; border-radius: 3cqw; border: 2px solid #3a1e04; background: linear-gradient(#ffe07a, #f2b21c); color: #2a1404;
+  font-size: 7.5cqw; font-weight: 800; text-transform: uppercase; box-shadow: 0 2px 0 #3a1e04, 0 4px 8px rgba(0, 0, 0, 0.5); cursor: pointer; animation: pulse 1.2s ease-in-out infinite; }
 .hs-chest-pic { display: block; width: 100%; height: auto; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.55)); }
 .hs-lock { position: absolute; transform: translate(-50%, -50%); }
 .hs-lock > img:first-child { display: block; width: 100%; height: auto; transform-origin: 50% 6%; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6)); }
@@ -5761,8 +5770,8 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .hs-card.on { outline: 3px solid #ffd250; outline-offset: 1px; }
 .hs-card-bg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .hs-card .hs-chest { position: absolute; left: 13%; right: 13%; top: 20%; }
-.hs-card-st { position: absolute; left: 6%; right: 6%; bottom: 7%; padding: 2px 0; border-radius: 6px; background: rgba(20, 12, 6, 0.88); color: #ffd678; font-size: min(2.6cqw, 11px); font-weight: 800; white-space: nowrap; }
-.hs-card-st.ready { background: #ffcc33; color: #2a1404; }
+.hs-card-st { position: absolute; left: 4%; right: 4%; bottom: 3%; color: #2e1a0a; font-size: min(2.6cqw, 11px); font-weight: 800; white-space: nowrap; text-align: center; }
+.hs-card-st.ready { color: #7a2a00; text-transform: uppercase; }
 .hs-card.empty .hs-card-st { background: none; color: #8a6a48; font-weight: 700; bottom: 44%; }
 @media (prefers-reduced-motion: reduce) { .hs-lock.live > img:first-child, .hs-picks { animation: none; } }
 /* a locked boss card: not enough keys from the one before */
