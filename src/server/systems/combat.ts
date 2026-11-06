@@ -217,7 +217,7 @@ export const isBatch = (n: number) => Number.isInteger(n) && n >= 1 && n <= BATC
 /**
  * One tap with a weapon, paid and counted: a consumable batch uses what is left of it (up to `want`), a free weapon
  * goes on its cooldown; the damage is the weapon's base + its talents + the room's fist bonus + the boss sets, times the
- * home bonus %, every hit of the batch rolls its crit. Used by boss fights and by the clan boss.
+ * home bonus %, one crit roll for the whole batch. Used by boss fights and by the clan boss.
  */
 export async function strike(ctx: Ctx, w: NonNullable<ReturnType<typeof weaponById>>, want: number, reason: string, rush = false) {
   // pay with the weapon (a batch uses what is left of it — all of it: damage is global, the overkill reaches others' fights)
@@ -248,24 +248,19 @@ export async function strike(ctx: Ctx, w: NonNullable<ReturnType<typeof weaponBy
   // home bonuses: +damage %, crit chance and crit power (equipment + rooms); this weapon's talents: +damage %, crit power
   const bonus = await playerBonus(ctx.q, ctx.pid);
   const wt = weaponTalentBonus(await weaponTalents(ctx.q, ctx.pid), w.id);
-  // talents add flat damage to the weapon's base; the room and trophies multiply the sum; every hit of a batch rolls its crit
+  // talents add flat damage to the weapon's base; the room and trophies multiply the sum; a batch rolls its crit once
   // a room may add flat damage to the fist (Боксёрская)
   const roomFlat = w.id === "fist" ? bonus.fistDamage ?? 0 : 0;
   // complete boss sets add flat damage to their weapon (Командате's set: the keyboard +30)
   const setFlat = (await setBonuses(ctx.q, ctx.pid))[w.id] ?? 0;
   const one = Math.round((w.weapon.damage + wt.flat + roomFlat + setFlat) * (1 + bonus.damage));
   const critOne = Math.round(one * Math.min(CRIT_MULT_MAX, BASE_CRIT_MULT + wt.critDamage));
-  let damage = 0, crits = 0, used = 0;
-  // the crit chance: the home's plus this weapon's «Крит» talents, never above 51%
+  // the crit chance: the home's plus this weapon's «Крит» talents, never above 51%. One roll for the whole action:
+  // ×1000 at once is one blow — a crit makes all of it ×2, else none of it
   const chance = critChanceOf(bonus.critChance, wt.critChance);
-  while (used < count) {
-    const c = chance > 0 && ctx.rng() < chance;
-    damage += c ? critOne : one;
-    if (c) crits++;
-    used++;
-  }
-  count = used;
-  const crit = crits > 0;
+  const crit = chance > 0 && ctx.rng() < chance;
+  const damage = (crit ? critOne : one) * count;
+  const crits = crit ? count : 0;
   if (w.weapon.kind === "consumable") left = await takeItem(ctx, w.id, count, reason);
   return { damage, crit, crits, count, left, readyAt, phraseIdx, phrases };
 }

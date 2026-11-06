@@ -22,6 +22,7 @@ import { DriftingSky } from "../art/sky.tsx";
 import { BEATEN_BELOW, BossRig, hasBossRig } from "../art/boss-rig.tsx";
 import { ArenaBg } from "../art/arena-bg.tsx";
 import { PepeRig } from "../art/pepe-rig.tsx";
+import { CritBurn, preloadCritBanner } from "../art/crit-burn.tsx";
 import { Modal } from "../ui.tsx";
 import { talentThreshold, talentsForDamage } from "../../content/talents.ts";
 import { TalentWindow } from "./talents.tsx";
@@ -83,8 +84,6 @@ function useBossTalk(bossId: string, on: boolean, scared: boolean) {
   return line;
 }
 
-/** the hit phrase bubble stays this long */
-const PHRASE_MS = 2200;
 
 function Arena({ boss, hp, hpMax, endsAt, fx, hit, ouch, rug, feed, full: fullScreen, strike }: { boss: BossDef; hp: number | null; hpMax: number; endsAt: number | null; fx: React.ReactNode; hit: boolean; ouch?: boolean; rug: boolean; feed: Hit[]; full?: boolean; strike?: "l" | "r" | null }) {
   const now = useNow();
@@ -202,20 +201,13 @@ export function BossScreen({ id }: { id: string }) {
   const ouchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [rug, setRug] = useState(false);
   const [pendingDmg, setPendingDmg] = useState(0);
-  const [phrase, setPhrase] = useState<{ text: string; id: number; crit?: boolean } | null>(null);
-  // «КРИТ ×2» bursts over the boss for a moment (a new key restarts the animation)
+  // «Критический урон ×2» catches fire above the weapons and burns away (a new key restarts it)
   const [critPop, setCritPop] = useState(0);
-  useEffect(() => { const im = new Image(); im.src = "/assets/generated/crit-x2.webp"; }, []);
+  useEffect(() => preloadCritBanner(), []);
   const [talentPop, setTalentPop] = useState(0);
   // the talent counter after my last hit (the state catches up on the next refresh)
   const [talentDmg, setTalentDmg] = useState<number | null>(null);
   const [talentsOpen, setTalentsOpen] = useState(false);
-  // the phrase bubble goes away by itself
-  useEffect(() => {
-    if (!phrase) return;
-    const t = setTimeout(() => setPhrase(null), PHRASE_MS);
-    return () => clearTimeout(t);
-  }, [phrase]);
   const [tab, setTab] = useState<"top" | "mine" | null>(null);
   const [details, setDetails] = useState<{ top: { playerId: number; name: string; damage: number; wins: number }[]; myHits: { weapon: string; damage: number; phrase: number; at: number; count?: number }[] } | null>(null);
   const lastSeq = useRef(0);
@@ -306,11 +298,6 @@ export function BossScreen({ id }: { id: string }) {
     setTray((t) => t.map((x) => (x.id === weapon && w.weapon.kind === "consumable" ? { ...x, qty: Math.max(0, x.qty - n) } : x)));
     try {
       const r = await api.action<{ damage: number; crit: boolean; crits: number; count: number; phrase: string; hp: number; status: string; left: number | null; readyAt: number | null; fightDamage: number; talentDamage: number; talentsGained: number }>("attack", { weapon, count: n, idem: crypto.randomUUID(), ...(rush ? { rush: true } : {}) });
-      const batch = (r.result.count ?? 1) > 1;
-      const text = batch
-        ? `×${r.result.count} · −${full(r.result.damage)}${r.result.crits ? ` · критов: ${r.result.crits}` : ""}`
-        : r.result.crit ? `КРИТ! −${r.result.damage} · ${r.result.phrase || w.weapon.action}` : r.result.phrase || w.weapon.action;
-      setPhrase({ text, id: Date.now(), crit: r.result.crit });
       if (r.result.crit) {
         setCritPop(Date.now());
         haptic.heavy();
@@ -438,9 +425,8 @@ export function BossScreen({ id }: { id: string }) {
           <BossRulesHelp topic="boss" />
         </div>
         <Arena full boss={boss} hp={hpShown} hpMax={hpMax} endsAt={state!.fight!.endsAt} fx={layer} hit={hitAnim} ouch={ouch} rug={rug} feed={hits} strike={strikeFx.side} />
-        {critPop > 0 && <img key={critPop} className="crit-burst" src="/assets/generated/crit-x2.webp" alt="" aria-hidden="true" draggable={false} onAnimationEnd={() => setCritPop(0)} />}
         <div className="fight-bottom">
-          {phrase && <div key={phrase.id} className={`phrase-bubble side ${phrase.crit ? "crit" : ""}`}>{phrase.text}</div>}
+          {critPop > 0 && <CritBurn key={critPop} className="crit-burn" onDone={() => setCritPop(0)} />}
           <MultPicker mult={mult} setMult={setMult} />
           <div className="row fight-bar">
             <TalentProgress dmg={talentDmg ?? state?.player.talentDamage ?? 0} pop={talentPop} share={myShare} onOpen={() => setTalentsOpen(true)} />
