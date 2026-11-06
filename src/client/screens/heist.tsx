@@ -183,7 +183,9 @@ export function HeistScreen() {
 
       {ask !== null && (
         <Modal title="Открыть сразу?" onClose={() => setAsk(null)}>
-          <p className="center" style={{ margin: "4px 0 12px" }}>Открыть замок сразу за <Icon name="USD" size={16} /> <b>{h?.rush ?? 100}</b>?</p>
+          <p style={{ margin: "4px 0 12px", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, flexWrap: "wrap" }}>
+            Открыть замок сразу за <span style={{ display: "inline-flex", alignItems: "center", gap: 3, whiteSpace: "nowrap" }}><Icon name="USD" size={16} /><b>{h?.rush ?? 100}</b>?</span>
+          </p>
           <div className="row" style={{ gap: 8 }}>
             <button className="btn dark" style={{ flex: 1 }} onClick={() => setAsk(null)}>Нет</button>
             <button className="btn gold" style={{ flex: 1 }} disabled={busy === "heist_rush"} onClick={async () => { const s0 = ask; setAsk(null); await rush(s0); }}>Открыть</button>
