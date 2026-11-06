@@ -5,7 +5,7 @@
  */
 import { useEffect, useRef } from "react";
 
-export const CRIT_BANNER = "/assets/generated/crit-x2.webp";
+export const CRIT_BANNER = "/assets/generated/crit-damage-x2.webp";
 
 const IGNITE_MS = 520;
 const HOLD_MS = 900;
