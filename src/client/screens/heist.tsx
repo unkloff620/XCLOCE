@@ -150,7 +150,7 @@ export function HeistScreen() {
                   if (busy !== "heist_pick") void pick(box.slot);
                 }}
                 face={done >= d.locks
-                  ? <button type="button" className="hs-face-btn display" disabled={busy === "heist_open"} onClick={() => openBox(box.slot)}>Открыть</button>
+                  ? <button type="button" className="hs-face-btn" disabled={busy === "heist_open"} onClick={() => openBox(box.slot)}>Открыть</button>
                   : busyLock ? <span className="hs-face-t num">{clock(box.pickEnds! - now)}</span>
                   : <span className="hs-face-t sm">Нажми на замок</span>} />
             </>
