@@ -143,7 +143,7 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose, onBack }: { 
         <div className="sty-head">
           <div className="room-ed-title">
             <b className="display">{e ? e.name : rgb.name}</b>
-            <span className="tiny muted">крит {Math.round(b.critChance * 1000) / 10}% · сила ×{(1.5 + b.critDamage).toFixed(2)} · урон +{Math.round(b.damage * 1000) / 10}%</span>
+            <span className="tiny muted">крит {Math.round(b.critChance * 1000) / 10}% · урон +{Math.round(b.damage * 1000) / 10}%</span>
           </div>
           <button className="sty-x" onClick={onClose} aria-label="Закрыть без сохранения">✕</button>
         </div>

@@ -203,6 +203,9 @@ export function BossScreen({ id }: { id: string }) {
   const [rug, setRug] = useState(false);
   const [pendingDmg, setPendingDmg] = useState(0);
   const [phrase, setPhrase] = useState<{ text: string; id: number; crit?: boolean } | null>(null);
+  // «КРИТ ×2» bursts over the boss for a moment (a new key restarts the animation)
+  const [critPop, setCritPop] = useState(0);
+  useEffect(() => { const im = new Image(); im.src = "/assets/generated/crit-x2.webp"; }, []);
   const [talentPop, setTalentPop] = useState(0);
   // the talent counter after my last hit (the state catches up on the next refresh)
   const [talentDmg, setTalentDmg] = useState<number | null>(null);
@@ -309,6 +312,7 @@ export function BossScreen({ id }: { id: string }) {
         : r.result.crit ? `КРИТ! −${r.result.damage} · ${r.result.phrase || w.weapon.action}` : r.result.phrase || w.weapon.action;
       setPhrase({ text, id: Date.now(), crit: r.result.crit });
       if (r.result.crit) {
+        setCritPop(Date.now());
         haptic.heavy();
         sfx("crit");
       }
@@ -434,6 +438,7 @@ export function BossScreen({ id }: { id: string }) {
           <BossRulesHelp topic="boss" />
         </div>
         <Arena full boss={boss} hp={hpShown} hpMax={hpMax} endsAt={state!.fight!.endsAt} fx={layer} hit={hitAnim} ouch={ouch} rug={rug} feed={hits} strike={strikeFx.side} />
+        {critPop > 0 && <img key={critPop} className="crit-burst" src="/assets/generated/crit-x2.webp" alt="" aria-hidden="true" draggable={false} onAnimationEnd={() => setCritPop(0)} />}
         <div className="fight-bottom">
           {phrase && <div key={phrase.id} className={`phrase-bubble side ${phrase.crit ? "crit" : ""}`}>{phrase.text}</div>}
           <MultPicker mult={mult} setMult={setMult} />

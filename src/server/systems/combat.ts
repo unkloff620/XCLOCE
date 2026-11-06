@@ -7,7 +7,7 @@ import { RUSH_PRICE, WEAPONS, itemById, weaponById } from "../../content/items.t
 import { HIT_PHRASES } from "../../content/phrases.ts";
 import { boostReward, mergeRewards, scaleReward } from "../../content/rewards.ts";
 import { BASE_CRIT_MULT, EQUIPMENT, PIECE_DROP_CHANCE, PIECE_PITY, ROOM_DEFS, ROOM_PITY, pieceUnlockId, roomUnlockId } from "../../content/home.ts";
-import { critChanceOf, talentExtras, talentsForDamage, weaponTalentBonus } from "../../content/talents.ts";
+import { CRIT_MULT_MAX, critChanceOf, talentExtras, talentsForDamage, weaponTalentBonus } from "../../content/talents.ts";
 import { playerBonus, weaponTalents } from "./home.ts";
 import { setBonuses } from "./collection.ts";
 import { craftBonus } from "./craft.ts";
@@ -254,7 +254,7 @@ export async function strike(ctx: Ctx, w: NonNullable<ReturnType<typeof weaponBy
   // complete boss sets add flat damage to their weapon (Командате's set: the keyboard +30)
   const setFlat = (await setBonuses(ctx.q, ctx.pid))[w.id] ?? 0;
   const one = Math.round((w.weapon.damage + wt.flat + roomFlat + setFlat) * (1 + bonus.damage));
-  const critOne = Math.round(one * (BASE_CRIT_MULT + bonus.critDamage + wt.critDamage));
+  const critOne = Math.round(one * Math.min(CRIT_MULT_MAX, BASE_CRIT_MULT + wt.critDamage));
   let damage = 0, crits = 0, used = 0;
   // the crit chance: the home's plus this weapon's «Крит» talents, never above 51%
   const chance = critChanceOf(bonus.critChance, wt.critChance);

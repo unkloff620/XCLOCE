@@ -50,7 +50,7 @@ export function talentsForDamage(damage: number): number {
  * Бицуха +10 за уровень (только в «Основе», всего 1000), лимит энергии +1 (всего 50), Часы +1 минута к бою с боссом (I–III, всего 45),
  * Часы IV +3 минуты (15 уровней, ещё 45), Лимит боссов +1 бой в день с каждым боссом (всего +3), Урон III — остаток до 800 талантов,
  * Крит +1% шанса крита этому оружию (всего 15% на оружие); общий шанс крита — не больше 51%.
- * Урон: +N за уровень (N — шаг этого оружия), Сила крита: +5% (I) и +7,5% (II).
+ * Урон: +N за уровень (N — шаг этого оружия), Сила крита: +2% (I) и +1,5% (II) за уровень — с ×1,5 до ×2 на максимуме.
  * Сброс всех талантов — за 5 USD: потраченные таланты возвращаются.
  */
 export type TalentKind = "dmg" | "crit" | "chance" | "biceps" | "energy" | "clock" | "bosses";
@@ -72,6 +72,8 @@ export interface TalentStop {
 export const TALENT_DMG_STEP: Record<string, number> = { fist: 1, mouse: 2, "red-candle": 3, keyboard: 3, gpu: 5, "rug-pull-gun": 20 };
 /** every weapon is on the path, the fist too (in this order) */
 export const TALENT_WEAPONS = WEAPONS.map((w) => w.id);
+/** the crit hits ×1.5 at first; «Сила крита» I (+0.2) and II (+0.3) take it to ×2 at most — nothing else adds to it */
+export const CRIT_MULT_MAX = 2;
 /** the crit chance never goes above this, whatever gives it */
 export const CRIT_CHANCE_CAP = 0.51;
 export const EXTRA_NAMES: Record<string, string> = { _biceps: "Бицуха", _energy: "Лимит энергии", _clock: "Часы", _bosses: "Лимит боссов" };
@@ -101,7 +103,7 @@ const ALL_STOPS: TalentStop[] = [
   ...extras(1, 15, 15),
   ...dmg("n1", "Урон", 10, 1),
   ...chance(1),
-  ...power("n2", "Сила крита", 0.05, 10, 1),
+  ...power("n2", "Сила крита", 0.02, 10, 1),
   ...extras(2, 15, 15),
   // one more fight a day with every boss, up to +3
   stop("_bosses", "s1", "bosses", "Лимит боссов", 1, 3, 1),
@@ -111,7 +113,7 @@ const ALL_STOPS: TalentStop[] = [
   // «Часы IV»: +3 minutes to a boss fight a level, 15 levels
   stop("_clock", "s4", "clock", "Часы IV", 3, 15, 1),
   ...chance(3),
-  ...power("n4", "Сила крита II", 0.075, 20, 1),
+  ...power("n4", "Сила крита II", 0.015, 20, 1),
   ...each((w) => stop(w, "n5", "dmg", "Урон III", TALENT_DMG_STEP[w] ?? 1, DMG3_MAX[w] ?? 20, 1)),
 ];
 

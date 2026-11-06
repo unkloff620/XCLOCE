@@ -10,7 +10,7 @@ import { TATTOO_IDS, oneTattooPerZone } from "./tattoos.ts";
 export interface Bonus {
   /** шанс крита, доля (0.05 = 5%) */
   critChance?: number;
-  /** добавка к множителю крита (база ×1.5; 0.2 → ×1.7) */
+  /** не используется: сила крита — только от талантов оружия (×1.5 → ×2 на максимуме) */
   critDamage?: number;
   /** добавка к урону оружия, доля */
   damage?: number;
@@ -67,7 +67,7 @@ export const EQUIPMENT: EquipmentDef[] = [
     pieces: [
       { name: "Ореховый стандарт", art: "desk-002", price: { currency: "RUB", amount: 4_000 }, bonus: { critChance: 0.02 } },
       { name: "Мраморный холд", art: "desk-003", price: { currency: "RUB", amount: 6_000 }, bonus: { critChance: 0.01, damage: 0.03 } },
-      { name: "Золотой памп", art: "desk-004", price: { currency: "RUB", amount: 9_000 }, bonus: { critChance: 0.02, critDamage: 0.1, damage: 0.03 } },
+      { name: "Золотой памп", art: "desk-004", price: { currency: "RUB", amount: 9_000 }, bonus: { critChance: 0.02, damage: 0.04 } },
     ],
   },
   {
@@ -78,9 +78,9 @@ export const EQUIPMENT: EquipmentDef[] = [
     multi: true,
     baseSpot: 1,
     pieces: [
-      { name: "Монитор справа", art: "monitor-right", price: { currency: "RUB", amount: 3000 }, bonus: { critDamage: 0.1 } },
-      { name: "Монитор слева", art: "monitor-left", price: { currency: "RUB", amount: 4_000 }, bonus: { critDamage: 0.1 } },
-      { name: "Монитор по центру", art: "monitor-center", price: { currency: "RUB", amount: 5_500 }, bonus: { critDamage: 0.15 } },
+      { name: "Монитор справа", art: "monitor-right", price: { currency: "RUB", amount: 3000 }, bonus: { damage: 0.01 } },
+      { name: "Монитор слева", art: "monitor-left", price: { currency: "RUB", amount: 4_000 }, bonus: { damage: 0.01 } },
+      { name: "Монитор по центру", art: "monitor-center", price: { currency: "RUB", amount: 5_500 }, bonus: { damage: 0.02 } },
     ],
   },
   {
@@ -108,7 +108,7 @@ export const EQUIPMENT: EquipmentDef[] = [
     levels: [
       { price: { currency: "RUB", amount: 1200 }, bonus: { critChance: 0.01 } },
       { price: { currency: "RUB", amount: 2400 }, bonus: { critChance: 0.02 } },
-      { price: { currency: "RUB", amount: 4_000 }, bonus: { critChance: 0.03, critDamage: 0.05 } },
+      { price: { currency: "RUB", amount: 4_000 }, bonus: { critChance: 0.03, damage: 0.01 } },
     ],
   },
 ];
@@ -152,12 +152,12 @@ export const ROOM_DEFS: RoomDef[] = [
   { id: "backroom", name: "Денежная подсобка", description: "Пачки купюр на полке, счётная машинка и тяжёлый сейф. Выпадает с Гаркуши. +3% к урону.", price: { currency: "RUB", amount: 3500 }, bonus: { damage: 0.03 }, drop: { boss: "garkusha", chance: ROOM_DROP_CHANCE } },
   { id: "boxing", name: "Боксёрская", description: "Перчатки на стене, плакаты легенд и полка «для храбрости». Выпадает с Командате. +30 к урону кулака.", price: { currency: "RUB", amount: 4000 }, bonus: { fistDamage: 30 }, drop: { boss: "bebyakyan", chance: ROOM_DROP_CHANCE } },
   { id: "izba", name: "Изба Бабафея", description: "Бревенчатые стены, балалайки, самовар и расписной сундук. Выпадает с Бабафея. +8 к лимиту энергии.", price: { currency: "RUB", amount: 5000 }, bonus: { energyMax: 8 }, drop: { boss: "babafey", chance: ROOM_DROP_CHANCE } },
-  { id: "ludoman", name: "Берлога лудомана", description: "Однорукий бандит у стены, гора курьерских сумок и рассвет в окне. Выпадает с Востока. +2% шанса и +10% силы крита.", price: { currency: "RUB", amount: 6000 }, bonus: { critChance: 0.02, critDamage: 0.1 }, drop: { boss: "vodovoz", chance: ROOM_DROP_CHANCE } },
+  { id: "ludoman", name: "Берлога лудомана", description: "Однорукий бандит у стены, гора курьерских сумок и рассвет в окне. Выпадает с Востока. +2% шанса крита и +1% к урону.", price: { currency: "RUB", amount: 6000 }, bonus: { critChance: 0.02, damage: 0.01 }, drop: { boss: "vodovoz", chance: ROOM_DROP_CHANCE } },
   { id: "pepe", name: "Гардеробная Пепе", description: "Синие свитера на вешалке, гантели, флаг с быком и светящаяся таблетка на полке. Выпадает с ивента «Пепе». +4% к урону и +1% шанса крита.", price: { currency: "RUB", amount: 7000 }, bonus: { damage: 0.04, critChance: 0.01 }, drop: { boss: "pepe", chance: ROOM_DROP_CHANCE } },
-  { id: "vault", name: "Хранилище Князя", description: "Светлые обои, круглая дверь сейфа, полка с леджерами, портреты классиков и листва за окном. Выпадает с Князя. +3% к урону и +10% силы крита.", price: { currency: "RUB", amount: 6500 }, bonus: { damage: 0.03, critDamage: 0.1 }, drop: { boss: "knyaz", chance: ROOM_DROP_CHANCE } },
-  { id: "cabinet", name: "Кабинет Вадима", description: "Тёмное дерево, ночной город за окном, полка с брелоками от тачек и спорткар в золотой раме. Выпадает с Вадима. +4% к урону и +12% силы крита.", price: { currency: "RUB", amount: 7500 }, bonus: { damage: 0.04, critDamage: 0.12 }, drop: { boss: "vadim", chance: ROOM_DROP_CHANCE } },
+  { id: "vault", name: "Хранилище Князя", description: "Светлые обои, круглая дверь сейфа, полка с леджерами, портреты классиков и листва за окном. Выпадает с Князя. +4% к урону.", price: { currency: "RUB", amount: 6500 }, bonus: { damage: 0.04 }, drop: { boss: "knyaz", chance: ROOM_DROP_CHANCE } },
+  { id: "cabinet", name: "Кабинет Вадима", description: "Тёмное дерево, ночной город за окном, полка с брелоками от тачек и спорткар в золотой раме. Выпадает с Вадима. +5% к урону.", price: { currency: "RUB", amount: 7500 }, bonus: { damage: 0.05 }, drop: { boss: "vadim", chance: ROOM_DROP_CHANCE } },
   { id: "office", name: "Офис трейдера", description: "Стеклянные стены, три графика и кофемашина. Даёт шанс крита.", price: { currency: "RUB", amount: 3_400 }, bonus: { critChance: 0.03 } },
-  { id: "penthouse", name: "Пентхаус To The Moon", description: "Вид на Луну, золото и бассейн из стейблкоинов. Выпадает с Утилизатора. Урон и сила крита.", price: { currency: "RUB", amount: 7_600 }, bonus: { damage: 0.05, critDamage: 0.15 }, drop: { boss: "utilizator", chance: ROOM_DROP_CHANCE } },
+  { id: "penthouse", name: "Пентхаус To The Moon", description: "Вид на Луну, золото и бассейн из стейблкоинов. Выпадает с Утилизатора. +7% к урону.", price: { currency: "RUB", amount: 7_600 }, bonus: { damage: 0.07 }, drop: { boss: "utilizator", chance: ROOM_DROP_CHANCE } },
 ];
 
 export const equipmentById = (id: string) => EQUIPMENT.find((e) => e.id === id);
@@ -214,7 +214,7 @@ export function addBonus(a: Bonus, b: Bonus): Bonus {
 
 /** Trophies: reward items that stand in the room by themselves and add a bonus while owned. */
 export const TROPHIES: { id: string; bonus: Bonus }[] = [
-  { id: "statue-close", bonus: { critDamage: 0.25 } },
+  { id: "statue-close", bonus: { damage: 0.03 } },
 ];
 
 /** Total bonus from equipment levels, owned rooms and trophies (weapon talents are added per weapon in combat). */
@@ -230,7 +230,7 @@ export function totalBonus(levels: Record<string, number>, rooms: string[], trop
   }
   for (const id of rooms) b = addBonus(b, roomById(id)?.bonus ?? {});
   for (const t of TROPHIES) if (trophies.includes(t.id)) b = addBonus(b, t.bonus);
-  return { critChance: Math.min(0.75, b.critChance ?? 0), critDamage: b.critDamage ?? 0, damage: b.damage ?? 0, energyMax: b.energyMax ?? 0, fistDamage: b.fistDamage ?? 0 };
+  return { critChance: Math.min(0.75, b.critChance ?? 0), critDamage: 0, damage: b.damage ?? 0, energyMax: b.energyMax ?? 0, fistDamage: b.fistDamage ?? 0 };
 }
 
 /* ---------------- внешность ---------------- */

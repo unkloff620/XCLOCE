@@ -289,10 +289,11 @@ describe("boss fights: personal fights, shared damage", () => {
     expect(sb.state.fight).toBeNull();
   });
 
-  it("the CLOSE statue adds crit damage while owned", async () => {
+  it("the CLOSE statue adds damage while owned (crit power comes from talents only)", async () => {
     const { totalBonus } = await import("../src/content/home.ts");
-    expect(totalBonus({}, ["basic"], ["statue-close"]).critDamage).toBeCloseTo(0.25);
-    expect(totalBonus({}, ["basic"], []).critDamage).toBe(0);
+    expect(totalBonus({}, ["basic"], ["statue-close"]).damage).toBeCloseTo(0.03);
+    expect(totalBonus({}, ["basic"], ["statue-close"]).critDamage).toBe(0);
+    expect(totalBonus({}, ["basic"], []).damage).toBe(0);
   });
 
   it("Фокус and Солнце open with a single key", async () => {
@@ -900,7 +901,7 @@ describe("home: equipment, rooms, look, help", () => {
     await expect(act(db, p, "equipment_upgrade", { id: "pc" }, T0)).rejects.toMatchObject({ code: "bad_equipment" });
     expect(await wallet(db, p, "RUB")).toBe(30000 - 2500 - 3000);
     const r = await hit(p, "keyboard"); // rng 0 → always a crit once the chance is above zero
-    expect(r.result).toMatchObject({ crit: true, damage: Math.round(30 * 1.6) });
+    expect(r.result).toMatchObject({ crit: true, damage: Math.round(Math.round(30 * 1.01) * 1.5) }); // the home adds no crit power: ×1.5
     // level 2 of the monitor costs more than is left (the RGB still fits)
     await setMoney(db, p, "RUB", 1500);
     await expect(act(db, p, "equipment_upgrade", { id: "monitor2" }, T0)).rejects.toMatchObject({ code: "no_money" });
@@ -909,7 +910,7 @@ describe("home: equipment, rooms, look, help", () => {
     // players who bought it earlier keep its bonus
     await db.query("INSERT INTO player_equipment (player_id, equipment_id, level) VALUES ($1, 'pc', 1)", [p]);
     const legacy = await hit(p, "keyboard");
-    expect(legacy.result.damage).toBe(Math.round(Math.round(30 * 1.03) * 1.6));
+    expect(legacy.result.damage).toBe(Math.round(Math.round(30 * 1.04) * 1.5)); // +1% monitor, +3% old computer; crit ×1.5
   });
 
   it("talents: the 1st for 100 damage, the 100th for 1 000 000, uneven steps in between", () => {
@@ -965,13 +966,13 @@ describe("home: equipment, rooms, look, help", () => {
     await expect(act(db, p, "talent_up", { weapon: "keyboard", branch: "n1" }, T0 + M)).rejects.toMatchObject({ code: "max_level" });
   });
 
-  it("the path: 800 talents; every weapon gets +30 steps of damage and «Урон III», +200% crit power and +15% crit chance; biceps 1000, energy 50, clock 90 min, +3 boss fights", async () => {
+  it("the path: 800 talents; every weapon gets +30 steps of damage and «Урон III», +50% crit power (×1.5 → ×2) and +15% crit chance; biceps 1000, energy 50, clock 90 min, +3 boss fights", async () => {
     const { TALENT_PATH, weaponTalentBonus, talentsSpent, talentExtras, critChanceOf } = await import("../src/content/talents.ts");
     const full: Record<string, Record<string, number>> = {};
     for (const x of TALENT_PATH) (full[x.target] ??= {})[x.branch] = x.max;
     for (const w of ["fist", "mouse", "red-candle", "keyboard", "gpu", "rug-pull-gun"]) {
       const b = weaponTalentBonus(full, w);
-      expect(b.critDamage).toBeCloseTo(2);
+      expect(b.critDamage).toBeCloseTo(0.5);
       expect(b.critChance).toBeCloseTo(0.15);
       const n5 = TALENT_PATH.find((x) => x.target === w && x.branch === "n5")!;
       expect(b.flat).toBe((30 + n5.max) * n5.per);
@@ -1101,11 +1102,11 @@ describe("home: equipment, rooms, look, help", () => {
     // the middle monitor first, without the right and the left ones
     const m3 = await act(db, p, "piece_buy", { id: "monitor2", piece: 3 }, T0);
     expect(m3.state.home.pieces).toMatchObject({ monitor2: 4 });
-    expect(m3.state.home.bonus.critDamage).toBeCloseTo(0.15);
+    expect(m3.state.home.bonus.damage).toBeCloseTo(0.02);
     await expect(act(db, p, "piece_buy", { id: "monitor2", piece: 3 }, T0)).rejects.toMatchObject({ code: "owned" });
     const m1 = await act(db, p, "piece_buy", { id: "monitor2", piece: 1 }, T0);
     expect(m1.state.home.pieces).toMatchObject({ monitor2: 5 });
-    expect(m1.state.home.bonus.critDamage).toBeCloseTo(0.25);
+    expect(m1.state.home.bonus.damage).toBeCloseTo(0.03);
     // the throne straight away
     const ch = await act(db, p, "piece_buy", { id: "chair", piece: 3 }, T0);
     expect(ch.state.home.decor).toMatchObject({ chair: 3 });
@@ -1115,7 +1116,7 @@ describe("home: equipment, rooms, look, help", () => {
     await expect(act(db, p, "decor_save", { decor: { chair: 1 } }, T0)).rejects.toMatchObject({ code: "locked" });
     const saved = await act(db, p, "decor_save", { decor: { desk: 0, chair: 0, monitor2: 4 } }, T0);
     expect(saved.state.home.decor).toMatchObject({ desk: 0, chair: 0, monitor2: 4 });
-    expect(saved.state.home.bonus.critDamage).toBeCloseTo(0.25); // hidden things keep their bonus
+    expect(saved.state.home.bonus.damage).toBeCloseTo(0.03); // hidden things keep their bonus
   });
 
   it("rooms: buy, switch, the bonus of every owned room counts", async () => {
@@ -2318,7 +2319,7 @@ describe("«Крафт»", () => {
     const put = await act(db, p, "craft_put", { itemId: "craft-nail-bat" }, T0);
     expect(put.result).toMatchObject({ slot: 0 });
     expect(put.state.craftBoxes[0]).toBe("craft-nail-bat");
-    expect(put.state.setBonus.fist).toBe(8);
+    expect(put.state.setBonus.fist).toBe(3);
     const [row] = await db.query<{ talent_biceps: number }>("SELECT talent_biceps FROM players WHERE id=$1", [p]);
     expect(row.talent_biceps).toBe(50);
     await expect(act(db, p, "craft_put", { itemId: "craft-nail-bat" }, T0)).rejects.toMatchObject({ code: "boxes_full" }); // one open cell, taken

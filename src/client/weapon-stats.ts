@@ -1,12 +1,12 @@
 /*
  * What a weapon really hits for, as the server counts it (systems/combat.ts):
- * (base damage + this weapon's talent damage) × (1 + room/equipment/trophy bonus); crit = × (1.5 + crit bonuses).
+ * (base damage + this weapon's talent damage) × (1 + room/equipment/trophy bonus); crit = × (1.5 + the weapon's «Сила крита» talents), ×2 at most.
  * Every place that shows a weapon's damage uses this, so the number is the same everywhere.
  */
 import type { GameState } from "./api.ts";
 import { itemById } from "../content/items.ts";
 import { BASE_CRIT_MULT } from "../content/home.ts";
-import { critChanceOf, weaponTalentBonus } from "../content/talents.ts";
+import { CRIT_MULT_MAX, critChanceOf, weaponTalentBonus } from "../content/talents.ts";
 
 export interface WeaponStats { base: number; damage: number; bonus: number; flat: number; crit: number; critChance: number }
 
@@ -17,5 +17,5 @@ export function weaponStats(state: GameState | null | undefined, weaponId: strin
   const bonus = home.damage;
   // the room's fist bonus and the complete boss sets' bonus (Командате's set: the keyboard +30)
   const flat = t.flat + (weaponId === "fist" ? (home as { fistDamage?: number }).fistDamage ?? 0 : 0) + (state?.setBonus?.[weaponId] ?? 0);
-  return { base, damage: Math.round((base + flat) * (1 + bonus)), bonus, flat, crit: BASE_CRIT_MULT + home.critDamage + t.critDamage, critChance: critChanceOf(home.critChance, t.critChance) };
+  return { base, damage: Math.round((base + flat) * (1 + bonus)), bonus, flat, crit: Math.min(CRIT_MULT_MAX, BASE_CRIT_MULT + t.critDamage), critChance: critChanceOf(home.critChance, t.critChance) };
 }

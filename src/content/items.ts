@@ -180,7 +180,7 @@ const KEYS: ItemDef[] = BOSSES.filter((b) => !b.final).map((b) => {
 /** Trophies stand in the room by themselves and give a bonus (TROPHIES in content/home.ts). */
 const STATUE: ItemDef = {
   id: "statue-close", name: "Статуэтка CLOSE", category: "reward", rarity: "legendary", maxStack: 1,
-  description: "Награда за Утилизатора. Сама встаёт на стол в комнате: +25% к силе крита.", sources: ["Победа: Утилизатор"],
+  description: "Награда за Утилизатора. Сама встаёт на стол в комнате: +3% к урону всего оружия.", sources: ["Победа: Утилизатор"],
 };
 const TROPHY: ItemDef = {
   id: "trophy-sun", name: "Осколок Солнца", category: "reward", rarity: "mythic", maxStack: 999,

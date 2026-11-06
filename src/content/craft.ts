@@ -138,27 +138,27 @@ const item1 = (id: string, name: string, parts: string[], bonus: CraftBonus, des
 /** вещи 1 уровня (24): 5 разных деталей × 5 */
 export const CRAFT_ITEMS: CraftDef[] = [
   item1("flamethrower", "Огнемёт", ["metal", "gasoline", "tape", "pipe", "lighter"], { dmg: { gpu: 15 } }, "Труба, бензин и изолента. Что может пойти не так?"),
-  item1("nail-bat", "Палка с гвоздями", ["board", "nails", "scotch", "rope", "sandpaper"], { dmg: { fist: 8 }, biceps: 50 }, "Классика дворовой дипломатии."),
+  item1("nail-bat", "Палка с гвоздями", ["board", "nails", "scotch", "rope", "sandpaper"], { dmg: { fist: 3 }, biceps: 50 }, "Классика дворовой дипломатии."),
   item1("molotov", "Коктейль", ["bottle", "gasoline", "rag", "fuse", "matches"], { dmg: { "red-candle": 10 } }, "Не для питья. Для красных свечей."),
   item1("fan", "Вентилятор", ["battery", "motor", "button", "plastic", "solder"], { energy: 5 }, "Обдувает, бодрит, шумит."),
-  item1("knuckles", "Кастет", ["metal", "bolt", "nut", "blade", "chain"], { dmg: { fist: 6 }, biceps: 80 }, "Кулак, но с аргументами."),
+  item1("knuckles", "Кастет", ["metal", "bolt", "nut", "blade", "chain"], { dmg: { fist: 3 }, biceps: 80 }, "Кулак, но с аргументами."),
   item1("samopal", "Самопал", ["pipe", "sulfur", "saltpeter", "foil", "string"], { dmg: { keyboard: 10 } }, "Стреляет криво, но громко."),
   item1("keychain", "Брелок", ["chain", "thread", "stone", "screw", "screwdriver"], { clock: 5 }, "На удачу. +5 минут к бою с боссом."),
   item1("scooter", "Самокат-самоделка", ["wheel", "board", "bolt", "spring", "bag"], { energy: 5 }, "Едет. Иногда даже вперёд."),
   item1("flashlight", "Фонарик", ["bulb", "battery", "wire", "can", "button"], { energy: 4, clock: 2 }, "Светит в самые тёмные графики."),
   item1("radio", "Радиоприёмник", ["speaker", "cable", "chip", "pliers", "solder"], { clock: 5 }, "Ловит только новости о дампах."),
-  item1("slingshot", "Рогатка", ["rubber-band", "board", "stone", "rope", "clothespin"], { dmg: { mouse: 6 } }, "Дворовое ПВО."),
-  item1("trap", "Капкан", ["spring", "chain", "metal", "clamp", "hammer"], { dmg: { fist: 6 }, biceps: 40 }, "Для медведей. Рыночных."),
+  item1("slingshot", "Рогатка", ["rubber-band", "board", "stone", "rope", "clothespin"], { dmg: { mouse: 10 } }, "Дворовое ПВО."),
+  item1("trap", "Капкан", ["spring", "chain", "metal", "clamp", "hammer"], { dmg: { fist: 2 }, biceps: 40 }, "Для медведей. Рыночных."),
   item1("boombox", "Бумбокс", ["speaker", "accu", "cardboard", "funnel", "gear"], { energy: 6 }, "Качает весь двор."),
   item1("drone", "Дрон", ["motor", "cooler", "chip", "plastic", "gyro"], { dmg: { gpu: 12 } }, "Летает над боссом и бесит его."),
   item1("miner", "Майнер на коленке", ["chip", "cooler", "cable", "copper", "glue"], { dmg: { gpu: 10 }, energy: 3 }, "Майнит три сатоши в год. Зато свои."),
-  item1("whip", "Кнут из провода", ["cable", "rubber-band", "zipper", "wire", "staples"], { dmg: { mouse: 8 } }, "Щёлкает по нервам."),
+  item1("whip", "Кнут из провода", ["cable", "rubber-band", "zipper", "wire", "staples"], { dmg: { mouse: 12 } }, "Щёлкает по нервам."),
   item1("torch", "Факел", ["stub", "sock", "board", "matches", "glue"], { dmg: { "red-candle": 8 } }, "Освещает путь и поджигает свечи."),
   item1("helmet", "Каска", ["can", "sponge", "tire", "clip", "paint"], { biceps: 70 }, "Защищает голову от плохих решений."),
   item1("shield", "Щит из знака", ["metal", "paint", "bolt", "washer", "clamp"], { biceps: 60, energy: 2 }, "Знак «Стоп». Остановит кого угодно."),
   item1("taser", "Шокер", ["accu", "wire", "button", "plastic", "tesla"], { dmg: { keyboard: 12 } }, "Бодрит лучше энергетика."),
   item1("laser-gun", "Лазер", ["laser", "lens", "battery", "mirror", "pipe"], { dmg: { "rug-pull-gun": 12 } }, "Красный луч прямо в график."),
-  item1("hook", "Кошка на верёвке", ["rope", "metal", "file", "wrench", "drill"], { biceps: 50, dmg: { fist: 4 } }, "Цепляется за любую соломинку."),
+  item1("hook", "Кошка на верёвке", ["rope", "metal", "file", "wrench", "drill"], { biceps: 50, dmg: { fist: 2 } }, "Цепляется за любую соломинку."),
   item1("water-gun", "Водомёт", ["pump", "hose", "straw", "cork", "cup"], { dmg: { "red-candle": 10 } }, "Тушит свечи. Красные."),
   item1("compass", "Компас удачи", ["magnet", "needle", "chalk", "glass", "pencil"], { clock: 6 }, "Всегда показывает на луну."),
 ];
@@ -168,7 +168,7 @@ const item2 = (id: string, name: string, recipe: [string, number][], bonus: Craf
   ({ id: `craft2-${id}`, name, level: 2, rarity: "epic", bonus, power: 150, description, recipe: recipe.map(([rid, qty]) => ({ id: rid, qty })) });
 export const CRAFT_ITEMS_2: CraftDef[] = [
   item2("fuel-crossbow", "Арбалет на топливе", [["craft-flamethrower", 3], ["craft-slingshot", 1], ["craft-trap", 1], ["part-titanium", 10], ["part-gear", 10]], { dmg: { gpu: 60 } }, "Стреляет огненными болтами. Наверное."),
-  item2("chainsaw", "Бензопила «Ликвидация»", [["craft-nail-bat", 3], ["craft-knuckles", 1], ["craft-scooter", 1], ["part-motor", 10], ["part-hacksaw", 10]], { dmg: { fist: 40 }, biceps: 300 }, "Пилит позиции под ноль."),
+  item2("chainsaw", "Бензопила «Ликвидация»", [["craft-nail-bat", 3], ["craft-knuckles", 1], ["craft-scooter", 1], ["part-motor", 10], ["part-hacksaw", 10]], { dmg: { fist: 10 }, biceps: 300 }, "Пилит позиции под ноль."),
   item2("exoskeleton", "Экзоскелет из мусора", [["craft-helmet", 3], ["craft-shield", 1], ["craft-hook", 1], ["part-gyro", 10], ["part-bearing", 10]], { biceps: 500, energy: 10 }, "Скрипит, но держит."),
   item2("tesla-glove", "Перчатка Теслы", [["craft-taser", 3], ["craft-flashlight", 1], ["craft-whip", 1], ["part-tesla", 10], ["part-copper", 10]], { dmg: { keyboard: 60 } }, "Каждый щелчок — молния."),
   item2("mining-rig", "Ферма в гараже", [["craft-miner", 3], ["craft-drone", 1], ["craft-radio", 1], ["part-chip", 10], ["part-cable", 10]], { dmg: { gpu: 50 }, energy: 10 }, "Шумит, греется и иногда майнит."),
@@ -183,7 +183,7 @@ export const CRAFT_ITEMS_3: CraftDef[] = [
     "Разгоняет видеокарты до скорости света и швыряет в босса.", { damage: 1200, cooldownMin: 360, animation: "gpu", action: "Выстрелить из рельсотрона" }),
   item3("bear-market", "Огнемёт «Медвежий рынок»", [["craft2-fuel-crossbow", 3], ["craft2-fire-show", 1], ["craft-samopal", 3], ["part-carbon", 20], ["part-pump", 20]], { dmg: { "rug-pull-gun": 150 } },
     "Выжигает всё зелёное. Остаются только красные свечи.", { damage: 2000, cooldownMin: 480, animation: "rugpull", action: "Залить босса огнём" }),
-  item3("mech-fist", "Кулак экзоскелета", [["craft2-exoskeleton", 3], ["craft2-chainsaw", 1], ["craft-knuckles", 3], ["part-titanium", 20], ["part-gyro", 20]], { dmg: { fist: 150 }, biceps: 1000 },
+  item3("mech-fist", "Кулак экзоскелета", [["craft2-exoskeleton", 3], ["craft2-chainsaw", 1], ["craft-knuckles", 3], ["part-titanium", 20], ["part-gyro", 20]], { dmg: { fist: 15 }, biceps: 1000 },
     "Гидравлика, титан и злость. Один удар — и босс в нокауте.", { damage: 3000, cooldownMin: 720, animation: "fist", action: "Врезать кулаком экзоскелета" }),
 ];
 

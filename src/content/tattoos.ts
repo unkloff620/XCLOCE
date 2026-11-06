@@ -97,10 +97,10 @@ const boxSet = (id: string, name: string, weapon: string, damage: number): Tatto
 
 export const TATTOO_SETS: TattooSet[] = [
   ...DATSIK_SETS,
-  solid("taiga", "Тайга", "kedr", "pacan", "mouse", 60), solid("roots", "Корни", "kedr", "avtor", "gpu", 120),
+  solid("taiga", "Тайга", "kedr", "pacan", "mouse", 100), solid("roots", "Корни", "kedr", "avtor", "gpu", 120),
   solid("shark", "Акулья пасть", "mugo", "pacan", "red-candle", 80), solid("kraken", "Кракен", "mugo", "avtor", "gpu", 150),
   solid("cash", "Нал", "garkusha", "pacan", "keyboard", 100), solid("gold", "Золотой запас", "garkusha", "avtor", "rug-pull-gun", 200),
-  solid("ring", "Ринг", "bebyakyan", "pacan", "fist", 120), solid("fire", "Огненный кулак", "bebyakyan", "avtor", "rug-pull-gun", 250),
+  solid("ring", "Ринг", "bebyakyan", "pacan", "fist", 40), solid("fire", "Огненный кулак", "bebyakyan", "avtor", "rug-pull-gun", 250),
   solid("izba", "Изба", "babafey", "pacan", "keyboard", 150), solid("firebird", "Жар-птица", "babafey", "avtor", "rug-pull-gun", 300),
   solid("jackpot", "Джекпот", "vodovoz", "pacan", "gpu", 200), solid("sunrise", "Восход", "vodovoz", "avtor", "rug-pull-gun", 400),
   solid("safe", "Сейф", "knyaz", "pacan", "gpu", 250), solid("realm", "Княжество", "knyaz", "avtor", "rug-pull-gun", 500),
