@@ -1269,7 +1269,7 @@ ALTER TABLE clan_members ADD COLUMN IF NOT EXISTS chat_seen INT NOT NULL DEFAULT
 );`,
   },
   {
-    // «Взлом»: how many padlocks of the box were opened for dollars — such a box holds less (HEIST_RUSH_LOOT)
+    // «Взлом»: how many padlocks of the box were opened for dollars — each cuts the loot (rushedShare)
     id: "v2-083-heist-rushed",
     sql: `ALTER TABLE heist_boxes ADD COLUMN IF NOT EXISTS rushed INT NOT NULL DEFAULT 0;`,
   },

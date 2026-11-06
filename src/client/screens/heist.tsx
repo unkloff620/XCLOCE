@@ -15,7 +15,7 @@ import { haptic } from "../telegram.ts";
 import { clock } from "../format.ts";
 import { leftText } from "../event-banner.tsx";
 import type { GameState, Granted } from "../api.ts";
-import { HEIST_BOXES, HEIST_SET_BOSS, LOCK_ROW, heistBox, heistLoot, heistOdds, type HeistKind } from "../../content/heist.ts";
+import { rushCut, rushedShare, HEIST_BOXES, HEIST_SET_BOSS, LOCK_ROW, heistBox, heistLoot, heistOdds, type HeistKind } from "../../content/heist.ts";
 import { TATTOO_SETS } from "../../content/tattoos.ts";
 import { STASH_IDS } from "../../content/stashes.ts";
 
@@ -186,7 +186,12 @@ export function HeistScreen() {
           <p style={{ margin: "4px 0 12px", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, flexWrap: "wrap" }}>
             Открыть замок сразу за <span style={{ display: "inline-flex", alignItems: "center", gap: 3, whiteSpace: "nowrap" }}><Icon name="USD" size={16} /><b>{h?.rush ?? 100}</b>?</span>
           </p>
-          {!boxes.find((b) => b.slot === ask)?.rushed && <p className="small center muted" style={{ margin: "-6px 0 12px" }}>Награда в ящике станет меньше на 30%. Если дождаться таймера — вся награда.</p>}
+          {(() => {
+            const bx = boxes.find((b) => b.slot === ask);
+            if (!bx) return null;
+            const cut = Math.round(rushCut(bx.locks) * 100), after = Math.round((1 - rushedShare(bx.locks, (bx.rushed ?? 0) + 1)) * 100);
+            return <p className="small center muted" style={{ margin: "-6px 0 12px" }}>Награда в ящике станет меньше на {cut}%{after > cut ? ` (всего −${after}%)` : ""}. Если дождаться таймера — без потерь.</p>;
+          })()}
           <div className="row" style={{ gap: 8 }}>
             <button className="btn dark" style={{ flex: 1 }} onClick={() => setAsk(null)}>Нет</button>
             <button className="btn gold" style={{ flex: 1 }} disabled={busy === "heist_rush"} onClick={async () => { const s0 = ask; setAsk(null); await rush(s0); }}>Открыть</button>
@@ -199,7 +204,7 @@ export function HeistScreen() {
           <ul className="small" style={{ paddingLeft: 18, display: "grid", gap: 6 }}>
             <li>Пока идёт ивент, с каждой победы над любым боссом в любом режиме падает ящик. Он ложится в свободную ячейку; когда все 5 заняты, ящики не падают.</li>
             <li>Чем сильнее босс, тем чаще дорогие ящики: {HEIST_BOXES.map((b) => b.name.split(" ")[0].toLowerCase()).join(", ")}. С Солнца бриллиантовый — примерно 1 из {Math.round(1 / heistOdds(1).diamond)}.</li>
-            <li>На ящике от 1 до 4 замков. Нажми на замок — его начнут взламывать, это час; следующий начинаешь сам, так что заходи каждый час. Нажми на взламываемый замок ещё раз — откроешь его сразу за ${h?.rush ?? 100}, но награда в таком ящике будет на 30% меньше.</li>
+            <li>На ящике от 1 до 4 замков. Нажми на замок — его начнут взламывать, это час; следующий начинаешь сам, так что заходи каждый час. Нажми на взламываемый замок ещё раз — откроешь его сразу за ${h?.rush ?? 100}, но каждый такой замок срезает награду ящика: бриллиантовый −10%, золотой −13%, серебряный −20%, бронзовый −40% за замок.</li>
             <li>Внутри рубли, доллары, оружие, детали и нычки — чем дороже ящик, тем больше. И шанс на наколку из сетов ивента: бронза 25%, серебро 50%, золото 75%, бриллиант 100%.</li>
             <li>Сеты: «Динамит» +300 к Rug Pull Gun, «Маски» +200 к видеокарте, «Ночная смена» +100 к клавиатуре.</li>
           </ul>

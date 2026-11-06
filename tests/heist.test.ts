@@ -3,7 +3,7 @@ import { act, always, freshDb, give, H, M, newPlayer, qty, setMoney, wallet } fr
 import { resetConfigCache } from "../src/server/config.ts";
 import { eventSave } from "../src/server/admin.ts";
 import type { Db } from "../src/server/db.ts";
-import { HEIST_BOXES, HEIST_SLOTS, LOCK_RUSH, heistOdds, rollHeistLoot } from "../src/content/heist.ts";
+import { HEIST_BOXES, HEIST_SLOTS, LOCK_RUSH, heistOdds, rollHeistLoot, rushCut, rushedShare } from "../src/content/heist.ts";
 import { TATTOO_SETS } from "../src/content/tattoos.ts";
 
 const T = Date.UTC(2026, 10, 10, 12);
@@ -83,7 +83,7 @@ describe("«Взлом»: boxes with padlocks", () => {
     expect(o2.result.tattoo).not.toBe(o.result.tattoo);
   });
 
-  it("a box with a padlock opened for dollars holds 30% less; waited out — all of it", async () => {
+  it("each padlock opened for dollars cuts the loot (−40% for all of them); waited out — all of it", async () => {
     const db = await freshDb();
     await heistOn(db);
     const p = await newPlayer(db);
@@ -100,7 +100,10 @@ describe("«Взлом»: boxes with padlocks", () => {
     expect(full.result.rushed).toBe(false);
     expect(cut.result.rushed).toBe(true);
     const rub = (r: { result: { reward: { currencies: Record<string, number> } } }) => r.result.reward.currencies.RUB;
-    expect(rub(cut)).toBe(Math.floor((rub(full) * 0.7) / 100) * 100);
+    // silver: 2 padlocks, one paid — −20%
+    expect(rub(cut)).toBe(Math.floor((rub(full) * 0.8) / 100) * 100);
+    expect([1, 2, 3, 4].map((l) => Math.round((1 - rushedShare(l, l)) * 100))).toEqual([40, 40, 40, 40]);
+    expect(Math.round(rushCut(4) * 100)).toBe(10);
   });
 
   it("odds: weak bosses mostly bronze, the strongest a diamond about one time in four; richer boxes hold more", () => {

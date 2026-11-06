@@ -2,7 +2,7 @@
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, takeMoney, type Ctx, type Granted } from "../core.ts";
 import type { Config } from "../config.ts";
-import { HEIST_RUSH_LOOT, HEIST_SET_BOSS, HEIST_SLOTS, LOCK_MS, LOCK_RUSH, heistBox, scaleLoot, heistStrength, rollHeistKind, rollHeistLoot, type HeistKind } from "../../content/heist.ts";
+import { rushedShare, HEIST_SET_BOSS, HEIST_SLOTS, LOCK_MS, LOCK_RUSH, heistBox, scaleLoot, heistStrength, rollHeistKind, rollHeistLoot, type HeistKind } from "../../content/heist.ts";
 import { TATTOO_SETS } from "../../content/tattoos.ts";
 
 interface Row { slot: number; kind: string; locks_done: number; pick_ends: Date | null; boss_id: string | null; rushed?: number }
@@ -12,7 +12,7 @@ async function settle(q: Queryable, pid: number, now: number) {
   await q.query("UPDATE heist_boxes SET locks_done = locks_done + 1, pick_ends = NULL WHERE player_id=$1 AND pick_ends IS NOT NULL AND pick_ends <= $2", [pid, new Date(now)]);
 }
 
-export interface HeistBoxView { slot: number; kind: HeistKind; locks: number; done: number; pickEnds: number | null; boss: string | null; rushed: boolean }
+export interface HeistBoxView { slot: number; kind: HeistKind; locks: number; done: number; pickEnds: number | null; boss: string | null; rushed: number }
 export interface HeistView { on: boolean; endsAt: number | null; slots: number; boxes: HeistBoxView[]; lockMs: number; rush: number }
 
 /** what the player sees: null while the event is off and his cells are empty (he sees nothing of it then) */
@@ -25,7 +25,7 @@ export async function heistView(q: Queryable, pid: number, cfg: Config, now: num
     on, endsAt: on ? cfg.heist!.endsAt : null, slots: HEIST_SLOTS, lockMs: LOCK_MS, rush: LOCK_RUSH,
     boxes: rows.map((r) => {
       const d = heistBox(r.kind);
-      return { slot: Number(r.slot), kind: d.id, locks: d.locks, done: Math.min(d.locks, Number(r.locks_done)), pickEnds: r.pick_ends ? new Date(r.pick_ends).getTime() : null, boss: r.boss_id, rushed: Number(r.rushed ?? 0) > 0 };
+      return { slot: Number(r.slot), kind: d.id, locks: d.locks, done: Math.min(d.locks, Number(r.locks_done)), pickEnds: r.pick_ends ? new Date(r.pick_ends).getTime() : null, boss: r.boss_id, rushed: Number(r.rushed ?? 0) };
     }),
   };
 }
@@ -76,9 +76,10 @@ export async function heistOpen(ctx: Ctx, slot: number) {
   const r = await boxRow(ctx, slot);
   const d = heistBox(r.kind);
   if (Number(r.locks_done) < d.locks) throw new GameError("heist_locked", "Сначала сними все замки");
-  // a padlock opened for dollars: the box holds 30% less (the tattoo chance stays)
-  const rushed = Number(r.rushed ?? 0) > 0;
-  const loot = scaleLoot(rollHeistLoot(d.id, ctx.rng), rushed ? HEIST_RUSH_LOOT : 1);
+  // every padlock opened for dollars takes its share off the loot (the tattoo chance stays)
+  const paid = Number(r.rushed ?? 0);
+  const rushed = paid > 0;
+  const loot = scaleLoot(rollHeistLoot(d.id, ctx.rng), rushedShare(d.locks, paid));
   let tattoo: string | null = null;
   if (ctx.rng() < d.tattoo) {
     const all = TATTOO_SETS.filter((s) => s.boss === HEIST_SET_BOSS).flatMap((s) => s.pieces.map((p) => p.id));

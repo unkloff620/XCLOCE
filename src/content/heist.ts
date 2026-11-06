@@ -37,8 +37,12 @@ export const HEIST_SLOTS = 5;
 export const LOCK_MS = 60 * 60_000;
 /** a padlock opened at once, in dollars */
 export const LOCK_RUSH = 100;
-/** a box with any padlock opened for dollars holds this share of the loot (−30%); waited out — all of it */
-export const HEIST_RUSH_LOOT = 0.7;
+/** every padlock opened for dollars takes a share off the box's loot; all of them — HEIST_RUSH_MAX (−40%) whatever the box:
+ * diamond −10% a lock, gold −13%, silver −20%, bronze −40%. Waited out — all of it */
+export const HEIST_RUSH_MAX = 0.4;
+export const rushCut = (locks: number) => HEIST_RUSH_MAX / Math.max(1, locks);
+/** the share of the loot left after `rushed` paid padlocks */
+export const rushedShare = (locks: number, rushed: number) => Math.max(0, 1 - rushCut(locks) * Math.min(rushed, locks));
 /** the loot scaled (a rushed box): money rounded down to hundreds, things down but at least 1 */
 export function scaleLoot(r: Reward, k: number): Reward {
   if (k >= 1) return r;
