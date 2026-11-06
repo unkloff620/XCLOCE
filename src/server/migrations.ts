@@ -1273,4 +1273,19 @@ ALTER TABLE clan_members ADD COLUMN IF NOT EXISTS chat_seen INT NOT NULL DEFAULT
     id: "v2-083-heist-rushed",
     sql: `ALTER TABLE heist_boxes ADD COLUMN IF NOT EXISTS rushed INT NOT NULL DEFAULT 0;`,
   },
+  {
+    // automation (systems/autos.ts): «Автовзлом» of a box; the day's toggles — one zone spends the energy, a mode per boss fights by itself
+    id: "v2-084-autos",
+    sql: `ALTER TABLE heist_boxes ADD COLUMN IF NOT EXISTS auto BOOLEAN NOT NULL DEFAULT false;
+CREATE TABLE IF NOT EXISTS autos (
+  player_id INT NOT NULL,
+  kind TEXT NOT NULL,
+  target TEXT NOT NULL,
+  mode TEXT NOT NULL DEFAULT '',
+  day DATE NOT NULL,
+  at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (player_id, kind, target)
+);
+CREATE INDEX IF NOT EXISTS autos_day ON autos (day);`,
+  },
 ];

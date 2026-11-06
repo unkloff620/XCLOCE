@@ -207,3 +207,14 @@ export function GainLine({ r, size = 26, times = true, side = false, extra }: { 
 export function Empty({ children }: { children: ReactNode }) {
   return <div className="panel center muted" style={{ padding: 22 }}>{children}</div>;
 }
+
+/** an on/off switch (automation toggles): a pill with a sliding knob; `children` — what it says next to it */
+export function Toggle({ on, onChange, disabled, title, children }: { on: boolean; onChange: (v: boolean) => void; disabled?: boolean; title?: string; children?: ReactNode }) {
+  return (
+    <button type="button" role="switch" aria-checked={on} className={`toggle ${on ? "on" : ""}`} disabled={disabled} title={title}
+      onClick={(e) => { e.preventDefault(); e.stopPropagation(); onChange(!on); }}>
+      <span className="toggle-track"><span className="toggle-knob" /></span>
+      {children && <span className="toggle-label">{children}</span>}
+    </button>
+  );
+}

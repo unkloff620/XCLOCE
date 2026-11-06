@@ -23,7 +23,7 @@ import { BEATEN_BELOW, BossRig, hasBossRig } from "../art/boss-rig.tsx";
 import { ArenaBg } from "../art/arena-bg.tsx";
 import { PepeRig } from "../art/pepe-rig.tsx";
 import { CritBurn, preloadCritBanner } from "../art/crit-burn.tsx";
-import { Modal } from "../ui.tsx";
+import { Modal, Toggle } from "../ui.tsx";
 import { talentThreshold, talentsForDamage } from "../../content/talents.ts";
 import { TalentWindow } from "./talents.tsx";
 import { weaponStats } from "../weapon-stats.ts";
@@ -610,6 +610,16 @@ export function BossScreen({ id }: { id: string }) {
           {soloPick ? "Соло (бьёшь один): здоровье" : `${fightMode(mode).name}: здоровье`} {full(Math.round((row?.hpMax ?? boss.hp) * fightMode(mode).hp))}{BLASTS_ON ? ` · взрыв «${MEDAL_NAMES[fightMode(mode).medal]}»` : ""}{fightMode(mode).things ? " · падают вещи босса" : ""}{tattooSetsOfBoss(boss.id).some((t) => t.mode === mode) ? " · падают наколки" : ""}.
           {BLASTS_ON && <>{" "}Каждый взрыв — +{full(medalStep(boss, fightMode(mode).medal))} к урону «{weaponById(medalWeapon(boss))?.name}» сразу, все {MEDAL_SET} — +{full(medalBonus(boss, fightMode(mode).medal))}.</>}
         </div>
+        {/* auto-fight: this mode fights by itself today — up to the day's limit, free weapons only (one mode per boss) */}
+        {!locked && !ev && !soloPick && (
+          <div className="boss-auto">
+            <Toggle on={state?.autos?.bosses?.[boss.id] === mode} disabled={busy === "auto_set"}
+              title="Сегодня бой с этим боссом в этом режиме идёт сам: заходит до лимита и бьёт бесплатным оружием, когда оно отдохнёт"
+              onChange={(v) => void act("auto_set", { kind: "boss", target: boss.id, on: v, mode })}>
+              Автобой
+            </Toggle>
+          </div>
+        )}
         <div className="row small" style={{ justifyContent: "space-between", gap: 6 }}>
           <span className="chip gold"><Icon name="clock" size={14} />8 часов</span>
           <span className="chip" title="Боёв сегодня из дневного лимита · побед над этим боссом за всё время">Сегодня {row?.fightsToday ?? 0}/{row?.fightsPerDay ?? 7} · всего {row?.myWins ?? 0}</span>

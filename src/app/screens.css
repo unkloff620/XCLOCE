@@ -5776,3 +5776,10 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 @media (prefers-reduced-motion: reduce) { .hs-lock.live > img:first-child, .hs-picks { animation: none; } }
 /* a locked boss card: not enough keys from the one before */
 .bcard-meta b.bcard-nokeys { color: #b8321c; font-size: 11px; }
+
+/* «Взлом»: the «Автовзлом» toggle above the chest */
+.hs-auto { display: flex; justify-content: center; margin-bottom: -2px; }
+/* a location card: the zone toggle (energy goes there today) */
+.loc-auto { position: absolute; right: 10px; bottom: 44px; z-index: 2; }
+/* a boss door: the auto-fight toggle of this mode */
+.boss-auto { display: flex; justify-content: flex-end; }

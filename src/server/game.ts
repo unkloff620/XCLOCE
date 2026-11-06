@@ -1,6 +1,7 @@
 import { newbieClaim } from "./systems/newbie.ts";
 import { tosyaBuy } from "./systems/tosya.ts";
-import { heistOpen, heistPick, heistRush } from "./systems/heist.ts";
+import { heistAuto, heistOpen, heistPick, heistRush } from "./systems/heist.ts";
+import { autoSet, runAutos } from "./systems/autos.ts";
 import { randomInt } from "node:crypto";
 import { GameError, type Db, type Queryable } from "./db.ts";
 import { loadConfig } from "./config.ts";
@@ -77,7 +78,7 @@ export const ACTIONS = [
   "daily_claim", "sell", "sell_many", "rename", "slots_spin",
   "equipment_upgrade", "talent_up", "talent_reset", "talent_auto", "room_buy", "room_set", "look_set", "decor_set", "decor_save", "piece_buy", "help_seen", "starter_gift",
   "quest_claim", "quest_chest", "notify_set", "achievement_claim", "achievement_claim_all", "ach_box_open", "prize_claim", "clan_edit",
-  "game_start", "zonk_move", "zonk_give_up", "zonk_hints", "zonk_choice", "roach_squash", "pigeon_scare", "poker_play", "poker_swap", "poker_stand", "bj_open", "bj_invite", "bj_join", "bj_decline", "bj_leave", "bj_bet", "bj_unbet", "bj_insure", "bj_move", "upgrade", "up_sell", "up_take", "craft_put", "craft_take", "craft_make", "craft_box_buy", "dealer_buy", "craft_split", "dealer_talk", "part_buy", "shave", "tosya_buy", "newbie_claim", "heist_pick", "heist_rush", "heist_open",
+  "game_start", "zonk_move", "zonk_give_up", "zonk_hints", "zonk_choice", "roach_squash", "pigeon_scare", "poker_play", "poker_swap", "poker_stand", "bj_open", "bj_invite", "bj_join", "bj_decline", "bj_leave", "bj_bet", "bj_unbet", "bj_insure", "bj_move", "upgrade", "up_sell", "up_take", "craft_put", "craft_take", "craft_make", "craft_box_buy", "dealer_buy", "craft_split", "dealer_talk", "part_buy", "shave", "tosya_buy", "newbie_claim", "heist_pick", "heist_rush", "heist_open", "heist_auto", "auto_set",
   "clan_cancel", "clan_accept", "clan_reject", "clan_boss_hit", "duel_create", "duel_answer", "duel_play", "stash_collect", "stash_wish", "stash_gift", "stash_accept", "social_pump", "social_fight", "social_spit", "notes_read",
 ] as const;
 export type ActionType = (typeof ACTIONS)[number];
@@ -244,6 +245,8 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "heist_pick": return heistPick(ctx, Number(body.slot));
     case "heist_rush": return heistRush(ctx, Number(body.slot));
     case "heist_open": return heistOpen(ctx, Number(body.slot));
+    case "heist_auto": return heistAuto(ctx, Number(body.slot));
+    case "auto_set": return autoSet(ctx, str(body.kind, "kind", 10), str(body.target, "target", 40), body.on === true, body.mode === undefined ? "" : str(body.mode, "mode", 10));
     case "part_buy": return craft.partBuy(ctx, str(body.itemId, "itemId", 40), num(body.qty, "qty"));
     case "dealer_buy": return craft.dealerBuy(ctx, str(body.itemId, "itemId", 40), body.qty === undefined ? 1 : num(body.qty, "qty"));
     case "craft_split": return craft.craftSplit(ctx, str(body.itemId, "itemId", 40));
@@ -272,11 +275,17 @@ export async function logAction(q: Queryable, pid: number, type: string, ok: boo
 
 export async function runAction(db: Db, pid: number, type: ActionType, body: Record<string, unknown>, opts: { now?: number; rng?: () => number } = {}) {
   try {
-    return await inPlayerTx(db, pid, async (ctx) => {
+    const out = await inPlayerTx(db, pid, async (ctx) => {
       const r = await dispatch(ctx, type, body);
       if (!NOT_LOGGED.has(type)) await logAction(ctx.q, pid, type, true, actionText(type, body, r)?.slice(0, 500) ?? null, ctx.now);
       return r;
     }, { ...opts, split: true });
+    // a toggle switched on: the automation does its part at once (then every 15 min by the cron), the state shows it
+    if (type === "auto_set" && body.on === true) {
+      await runAutos(db, pid, opts.now ?? Date.now());
+      return { result: out.result, state: (await inPlayerTx(db, pid, async () => null, opts)).state };
+    }
+    return out;
   } catch (e) {
     // refused actions are logged too (outside the rolled-back transaction): spam and cheating attempts show up here
     if (e instanceof GameError && e.status < 500 && e.code !== "banned" && !NOT_LOGGED.has(type)) {

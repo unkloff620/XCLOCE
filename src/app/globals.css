@@ -300,3 +300,13 @@ html.phone .modal-back:not(.full):not(.page) { padding-left: max(16px, calc((100
 
 /* «Экономия заряда» (client/eco.ts): the endless glows, shines and sways play once and stop — they repaint the screen every frame */
 html.eco *, html.eco *::before, html.eco *::after { animation-iteration-count: 1 !important; }
+
+/* Toggle (client/ui.tsx): the automation switches */
+.toggle { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px 3px 4px; border-radius: 999px; border: 1.5px solid #2a1808;
+  background: rgba(24, 14, 6, 0.82); color: #f6ead8; font: 700 12px/1 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; cursor: pointer; white-space: nowrap; }
+.toggle:disabled { opacity: 0.55; cursor: default; }
+.toggle-track { position: relative; width: 30px; height: 17px; border-radius: 999px; background: #5a4634; box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6); transition: background 0.2s; flex: none; }
+.toggle-knob { position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; border-radius: 50%; background: #e8dccb; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); transition: transform 0.2s; }
+.toggle.on .toggle-track { background: #3dbb5c; }
+.toggle.on .toggle-knob { transform: translateX(13px); background: #fff; }
+.toggle-label { display: inline-flex; align-items: center; gap: 3px; }

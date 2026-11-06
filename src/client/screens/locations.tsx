@@ -8,7 +8,7 @@ import { LOCATIONS, locRep, locationById, taskOpen, tasksOf, type LocMode } from
 import type { Reward } from "../../content/rewards.ts";
 import { LOCATION_ART, LocationScene } from "../art/scenes.tsx";
 import { Icon } from "../art/icons.tsx";
-import { Avatar, Bar, Empty, Modal, RewardChips } from "../ui.tsx";
+import { Avatar, Bar, Empty, Modal, RewardChips, Toggle } from "../ui.tsx";
 import { clock, full } from "../format.ts";
 import { haptic } from "../telegram.ts";
 import { Help } from "../help.tsx";
@@ -295,6 +295,15 @@ export function LocationsScreen() {
                 )}
               </div>
               {locked && <div className="loc-lock"><Icon name="lock" size={44} /></div>}
+              {/* the zone toggle: today the energy goes into this location's tasks by itself (one zone, for today only) */}
+              {!locked && (
+                <div className="loc-auto">
+                  <Toggle on={state?.autos?.zone === l.id} disabled={busy === "auto_set"} title="Энергия сама тратится на задания этой локации — сегодня. Можно выбрать одну"
+                    onChange={(v) => void act("auto_set", { kind: "zone", target: l.id, on: v })}>
+                    <Icon name="energy" size={13} />Авто
+                  </Toggle>
+                </div>
+              )}
             </>
           );
           const ready = !locked && !!r && r.done === r.total;

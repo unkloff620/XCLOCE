@@ -1,8 +1,10 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 import { getDb } from "../../../../server/db.ts";
 import { json } from "../../../../server/http.ts";
 import { dispatchNotifications } from "../../../../server/notify-send.ts";
+import { runAllAutos } from "../../../../server/systems/autos.ts";
 
 /**
  * Sends due Telegram reminders. Called by Vercel Cron (every 15 min, 09:00–23:59 MSK) and maybe an external pinger.
@@ -19,7 +21,10 @@ export async function GET(req: Request) {
   if (secret && req.headers.get("authorization") !== `Bearer ${secret}`) return json({ error: "unauthorized" }, 401);
   if (!wakeDbNow()) return json({ sent: 0, skipped: 0, idle: true });
   try {
-    return json(await dispatchNotifications(await getDb()));
+    const db = await getDb();
+    // the automation (toggles of today: a zone's energy, the bosses' free hits), then the reminders
+    const autos = await runAllAutos(db).catch(() => ({ players: 0 }));
+    return json({ ...(await dispatchNotifications(db)), autos });
   } catch {
     return json({ error: "failed" }, 500);
   }

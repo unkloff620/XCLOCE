@@ -5,27 +5,38 @@ import type { Config } from "../config.ts";
 import { rushedShare, HEIST_SET_BOSS, HEIST_SLOTS, LOCK_MS, LOCK_RUSH, heistBox, scaleLoot, heistStrength, rollHeistKind, rollHeistLoot, type HeistKind } from "../../content/heist.ts";
 import { TATTOO_SETS } from "../../content/tattoos.ts";
 
-interface Row { slot: number; kind: string; locks_done: number; pick_ends: Date | null; boss_id: string | null; rushed?: number }
+interface Row { slot: number; kind: string; locks_done: number; pick_ends: Date | null; boss_id: string | null; rushed?: number; auto?: boolean }
 
-/** a lock whose time ran out is off — counted in the row (a player who comes back finds it opened) */
+/** a lock whose time ran out is off — counted in the row (a player who comes back finds it opened).
+ * «Автовзлом» boxes go on by themselves: every LOCK_MS the next padlock is off, until all are. */
 async function settle(q: Queryable, pid: number, now: number) {
+  const autos = await q.query<{ slot: number; kind: string; locks_done: number; pick_ends: Date }>(
+    "SELECT slot, kind, locks_done, pick_ends FROM heist_boxes WHERE player_id=$1 AND auto AND pick_ends IS NOT NULL AND pick_ends <= $2", [pid, new Date(now)]);
+  for (const a of autos) {
+    const locks = heistBox(a.kind).locks;
+    const ends = new Date(a.pick_ends).getTime();
+    const n = 1 + Math.floor((now - ends) / LOCK_MS);
+    const doneNow = Math.min(locks, Number(a.locks_done) + n);
+    await q.query("UPDATE heist_boxes SET locks_done=$3, pick_ends=$4 WHERE player_id=$1 AND slot=$2",
+      [pid, a.slot, doneNow, doneNow < locks ? new Date(ends + n * LOCK_MS) : null]);
+  }
   await q.query("UPDATE heist_boxes SET locks_done = locks_done + 1, pick_ends = NULL WHERE player_id=$1 AND pick_ends IS NOT NULL AND pick_ends <= $2", [pid, new Date(now)]);
 }
 
-export interface HeistBoxView { slot: number; kind: HeistKind; locks: number; done: number; pickEnds: number | null; boss: string | null; rushed: number }
+export interface HeistBoxView { slot: number; kind: HeistKind; locks: number; done: number; pickEnds: number | null; boss: string | null; rushed: number; auto: boolean }
 export interface HeistView { on: boolean; endsAt: number | null; slots: number; boxes: HeistBoxView[]; lockMs: number; rush: number }
 
 /** what the player sees: null while the event is off and his cells are empty (he sees nothing of it then) */
 export async function heistView(q: Queryable, pid: number, cfg: Config, now: number): Promise<HeistView | null> {
   await settle(q, pid, now);
-  const rows = await q.query<Row>("SELECT slot, kind, locks_done, pick_ends, boss_id, rushed FROM heist_boxes WHERE player_id=$1 ORDER BY slot", [pid]);
+  const rows = await q.query<Row>("SELECT slot, kind, locks_done, pick_ends, boss_id, rushed, auto FROM heist_boxes WHERE player_id=$1 ORDER BY slot", [pid]);
   const on = !!cfg.heist && cfg.heist.endsAt > now;
   if (!on && !rows.length) return null;
   return {
     on, endsAt: on ? cfg.heist!.endsAt : null, slots: HEIST_SLOTS, lockMs: LOCK_MS, rush: LOCK_RUSH,
     boxes: rows.map((r) => {
       const d = heistBox(r.kind);
-      return { slot: Number(r.slot), kind: d.id, locks: d.locks, done: Math.min(d.locks, Number(r.locks_done)), pickEnds: r.pick_ends ? new Date(r.pick_ends).getTime() : null, boss: r.boss_id, rushed: Number(r.rushed ?? 0) };
+      return { slot: Number(r.slot), kind: d.id, locks: d.locks, done: Math.min(d.locks, Number(r.locks_done)), pickEnds: r.pick_ends ? new Date(r.pick_ends).getTime() : null, boss: r.boss_id, rushed: Number(r.rushed ?? 0), auto: !!r.auto };
     }),
   };
 }
@@ -45,7 +56,7 @@ export async function heistDrop(ctx: Ctx, boss: { id: string; order: number; eve
 async function boxRow(ctx: Ctx, slot: number): Promise<Row> {
   if (!Number.isInteger(slot) || slot < 0 || slot >= HEIST_SLOTS) throw new GameError("bad_request", "Нет такой ячейки", 400);
   await settle(ctx.q, ctx.pid, ctx.now);
-  const [r] = await ctx.q.query<Row>("SELECT slot, kind, locks_done, pick_ends, boss_id, rushed FROM heist_boxes WHERE player_id=$1 AND slot=$2 FOR UPDATE", [ctx.pid, slot]);
+  const [r] = await ctx.q.query<Row>("SELECT slot, kind, locks_done, pick_ends, boss_id, rushed, auto FROM heist_boxes WHERE player_id=$1 AND slot=$2 FOR UPDATE", [ctx.pid, slot]);
   if (!r) throw new GameError("heist_empty", "Ячейка пустая");
   return r;
 }
@@ -69,6 +80,19 @@ export async function heistRush(ctx: Ctx, slot: number) {
   await takeMoney(ctx, "USD", LOCK_RUSH, `heist_rush:${slot}`);
   await ctx.q.query("UPDATE heist_boxes SET locks_done = locks_done + 1, pick_ends = NULL, rushed = rushed + 1 WHERE player_id=$1 AND slot=$2", [ctx.pid, slot]);
   return { slot, done: Number(r.locks_done) + 1 };
+}
+
+/** «Автовзлом»: the padlocks left are paid now ($LOCK_RUSH each) and picked one after another by themselves,
+ * an hour each — no need to come back every hour; the loot stays whole (nothing is opened at once) */
+export async function heistAuto(ctx: Ctx, slot: number) {
+  const r = await boxRow(ctx, slot);
+  const d = heistBox(r.kind);
+  if (r.auto) throw new GameError("heist_auto", "Автовзлом уже включён");
+  const left = d.locks - Number(r.locks_done);
+  if (left <= 0) throw new GameError("heist_done", "Все замки сняты — открывай");
+  await takeMoney(ctx, "USD", LOCK_RUSH * left, `heist_auto:${slot}`);
+  await ctx.q.query("UPDATE heist_boxes SET auto=true, pick_ends=COALESCE(pick_ends, $3) WHERE player_id=$1 AND slot=$2", [ctx.pid, slot, new Date(ctx.now + LOCK_MS)]);
+  return { slot, paid: LOCK_RUSH * left };
 }
 
 /** every padlock is off: the box opens — its loot, maybe a piece of the event's tattoos; the cell is free again */

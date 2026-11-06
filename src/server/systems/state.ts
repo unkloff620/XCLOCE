@@ -1,6 +1,7 @@
 import { newbieView } from "./newbie.ts";
 import { tosyaView } from "./tosya.ts";
 import { heistView } from "./heist.ts";
+import { autosView } from "./autos.ts";
 import { GameError, type Queryable } from "../db.ts";
 import { balances, energyCfgOf, energyNow, moscowDay, type Ctx, type PlayerRow } from "../core.ts";
 import { fightHp, settleMyFight, unlockedItems } from "./combat.ts";
@@ -120,6 +121,7 @@ export async function gameState(ctx: Ctx) {
     dealer: await dealerView(ctx.q, ctx.pid, ctx.now),
     tosya: await tosyaView(ctx.q, ctx.pid, ctx.cfg, ctx.now),
     heist: await heistView(ctx.q, ctx.pid, ctx.cfg, ctx.now),
+    autos: await autosView(ctx.q, ctx.pid, ctx.now),
     newbie: await newbieView(ctx.q, ctx.pid, ctx.now),
     /** the talk at the exchange machine: today's talk done? the better rate it gave (until when) */
     dealerTalk: { talked: p.dealer_talk_day === moscowDay(ctx.now), ...(await dealerBonus(ctx.q, ctx.pid, ctx.now)) },

@@ -88,7 +88,7 @@ async function expireFights(ctx: Ctx, g: BossRow) {
 }
 
 /** the free weapons (fist, mouse, candle): permanent, with a rest after each hit */
-const FREE_WEAPONS = WEAPONS.filter((w) => w.weapon?.kind === "permanent").map((w) => w.id);
+export const FREE_WEAPONS = WEAPONS.filter((w) => w.weapon?.kind === "permanent").map((w) => w.id);
 async function resetFreeWeapons(q: Queryable, pid: number) {
   await q.query("DELETE FROM cooldowns WHERE player_id=$1 AND item_id = ANY($2::text[])", [pid, FREE_WEAPONS]);
 }
