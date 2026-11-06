@@ -27,7 +27,6 @@ import { HorizontalScroll } from "./hscroll.tsx";
 import { RouteLoader, startRouteLoad } from "./route-loader.tsx";
 import { PrizeWindow } from "./prizes.tsx";
 import { TapTips } from "./tap-tips.tsx";
-import { EventButton } from "./event-banner.tsx";
 import { EnergyWindow } from "./screens/energy.tsx";
 import { NAV_TABS } from "../content/nav.ts";
 import { haptic } from "./telegram.ts";
@@ -74,7 +73,6 @@ function SoundToggles() {
       </button>
       <EcoButton />
       <PhoneModeButton />
-      <EventButton />
     </div>
   );
 }
