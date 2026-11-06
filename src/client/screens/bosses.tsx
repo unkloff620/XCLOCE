@@ -135,7 +135,10 @@ export function BossesScreen() {
                 </div>
                 <div className="bcard-foot">
                   {locked ? (
-                    <span className="bcard-meta">{prev && <ItemArt id={`key-${prev.id}`} size={22} />} {row?.keysHave ?? 0}/{row?.keysNeed ?? 3}</span>
+                    <span className="bcard-meta stack" title="Пропуски для входа к боссу">
+                      <span className="row" style={{ gap: 4 }}>{prev && <ItemArt id={`key-${prev.id}`} size={22} />} {row?.keysHave ?? 0}/{row?.keysNeed ?? 3}</span>
+                      {(row?.keysHave ?? 0) < (row?.keysNeed ?? 3) && <b className="bcard-nokeys">Нет ключей</b>}
+                    </span>
                   ) : (
                     <span className="bcard-meta stack" title="Боёв сегодня из дневного лимита · побед над этим боссом за всё время">
                       <span>Сегодня <b className="num">{row?.fightsToday ?? 0}/{row?.fightsPerDay ?? 7}</b></span>
@@ -157,9 +160,7 @@ export function BossesScreen() {
                     )}
                     {/* his three medals as in «Дела» (bronze, silver, gold — for 10 / 50 / 100 wins), grey till reached;
                         the whole card opens the fight */}
-                    {locked ? (
-                      <span className="bcard-cta display off"><Icon name="lock" size={14} /> Нет карт</span>
-                    ) : (
+                    {(
                       <span className="bcard-medals" title={`Побед: ${row?.myWins ?? 0}. Медали: ${BOSS_KILL_TARGETS.join(" / ")} побед`}>
                         {MEDAL_TIERS.map((t, k) => (
                           <span key={t} className={`bcard-coin c${k} ${(row?.myWins ?? 0) >= BOSS_KILL_TARGETS[k] ? "on" : "off"}`}><BossCoin boss={b} tier={t} size={38} /></span>

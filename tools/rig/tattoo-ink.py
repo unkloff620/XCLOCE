@@ -59,8 +59,9 @@ def fit_box(target, moving_mask, moving_img):
     return m, img
 
 
-def warp_onto(target, moving_mask, moving_img):
-    """warp moving_img so its figure (moving_mask) lies on target (rule 1): box fit, then a dense flow between outlines"""
+def warp_onto(target, moving_mask, moving_img, with_mask=False):
+    """warp moving_img so its figure (moving_mask) lies on target (rule 1): box fit, then a dense flow between outlines;
+    `with_mask`: also the warped figure (where the edit's own outline ended up)"""
     moving_mask, moving_img = fit_box(target, moving_mask, moving_img)
     H, W = target.shape
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
@@ -76,7 +77,8 @@ def warp_onto(target, moving_mask, moving_img):
         ny = cv2.remap(my, xx + flow[..., 0], yy + flow[..., 1], cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
         mx, my = nx, ny
         cur = cv2.remap(moving_mask.astype(np.uint8) * 255, mx, my, cv2.INTER_LINEAR) > 127
-    return cv2.remap(moving_img, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    img = cv2.remap(moving_img, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    return (img, cur) if with_mask else img
 
 
 def unmix(a, b, inside):
@@ -138,9 +140,14 @@ def main(sid):
     skin = body & ~shorts & (ndimage.distance_transform_edt(body) > 3)
     b0 = prep(os.path.join(T, "_edits", f"{sid}-hq.png"))
     # both figures by the same rule (holes between the arms and the body filled), so the outlines compare like for like
-    b = warp_onto(figure(a), figure(b0), b0)
+    b, bm = warp_onto(figure(a), figure(b0), b0, with_mask=True)
     out, lines = unmix(a, b, ndimage.binary_erosion(body, iterations=3) & ~shorts)
-    out = fill_gaps(out, skin, lines)
+    # the edit's own outline: where its limbs are thinner than the hero's (the flow does not always get them all the
+    # way), it lands inside the body as a dark line along the edge — taken out and inpainted like the hero's own lines
+    own = (np.abs(sdf(bm)) < 8) & (b.mean(2) < 110) & (ndimage.distance_transform_edt(body) > 5)
+    own = ndimage.binary_dilation(own, iterations=2) & body
+    out[own, 3] = 0
+    out = fill_gaps(out, skin, lines | own)
     covered = ndimage.binary_fill_holes(ndimage.binary_closing(out[..., 3] > 30, iterations=3))
     bare = (skin & ~covered).sum() / skin.sum()
     os.makedirs(os.path.join(T, sid), exist_ok=True)

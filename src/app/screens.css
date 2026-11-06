@@ -5755,3 +5755,5 @@ html.paused *, html.paused *::before, html.paused *::after { animation-play-stat
 .hs-card-st.ready { background: #ffcc33; color: #2a1404; }
 .hs-card.empty .hs-card-st { background: none; color: #8a6a48; font-weight: 700; bottom: 44%; }
 @media (prefers-reduced-motion: reduce) { .hs-lock.live > img:first-child, .hs-picks { animation: none; } }
+/* a locked boss card: not enough keys from the one before */
+.bcard-meta b.bcard-nokeys { color: #b8321c; font-size: 11px; }
