@@ -9,7 +9,8 @@
  */
 import { GameError, type Db, type Queryable } from "../db.ts";
 import { moscowDay, type Ctx } from "../core.ts";
-import { dispatch, makeCtx, type ActionType } from "../game.ts";
+import { dispatch, logAction, makeCtx, type ActionType } from "../game.ts";
+import { actionText } from "../action-text.ts";
 import { lockPlayer } from "../core.ts";
 import { BOSSES, bossById } from "../../content/bosses.ts";
 import { LOCATIONS, locationById, taskOpen, tasksOf } from "../../content/locations.ts";
@@ -53,7 +54,10 @@ async function step(db: Db, pid: number, now: number, type: ActionType, body: Re
       const ctx = await makeCtx(q, pid, { now });
       const p = await lockPlayer(ctx);
       if (p.banned_at) throw new GameError("banned", "banned", 403);
-      return dispatch(ctx, type, body);
+      const r = await dispatch(ctx, type, body);
+      // the admin's journal: every automatic step, marked «авто» (hits too — by hand they are only in the fight)
+      await logAction(q, pid, type, true, `🤖 авто · ${actionText(type, body, r) ?? ""}`.slice(0, 500), now);
+      return r;
     });
   } catch (e) {
     if (e instanceof GameError) return false;

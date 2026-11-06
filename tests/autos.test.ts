@@ -33,6 +33,9 @@ describe("automation toggles", () => {
     const [f] = await db.query<{ id: number; my_hits: number; mode: string }>("SELECT id, my_hits, mode FROM fights WHERE player_id=$1", [p]);
     expect(f.mode).toBe("pacan");
     expect(Number(f.my_hits)).toBeGreaterThan(0);
+    // the admin's journal shows what the automation did
+    const log = await db.query<{ type: string; info: string }>("SELECT type, info FROM action_log WHERE player_id=$1 AND info LIKE '🤖 авто%'", [p]);
+    expect(log.map((l) => l.type)).toEqual(expect.arrayContaining(["fight_start", "attack"]));
     const r = await act(db, p, "auto_set", { kind: "boss", target: "datsik", on: true, mode: "blat" }, T + M);
     expect(r.state.autos.bosses).toEqual({ datsik: "blat" });
     // the cron runs everybody with a toggle today

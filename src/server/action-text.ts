@@ -2,6 +2,7 @@
  * Human-readable lines for the admin's action log: what the player did and what they got,
  * e.g. «нашёл «Ржавый ключ» · +120 RUB» or «Тройка BTC [BTC BTC BTC] · +1 BTC».
  */
+import { weaponById } from "../content/items.ts";
 import type { Granted } from "./core.ts";
 import { itemById } from "../content/items.ts";
 import { bossById } from "../content/bosses.ts";
@@ -67,6 +68,12 @@ export function actionText(type: string, body: Row, result: unknown): string | n
     case "business_claim": return `Бизнес: прибыль с ${Array.isArray(r.parts) ? r.parts.length : 0} локаций за ${r.hours} ч · +${fmt(r.rub)} ₽ · +${fmt(r.rep)} авторитета локации`;
     case "location_claim": return join(locationById(String(body.locationId))?.name ?? String(body.locationId), r.first ? "первое прохождение" : "повтор", grantedText(r.reward));
     case "fight_start": return join(bossById(String(body.boss))?.name ?? String(body.boss), body.solo === true ? "соло" : null, r.fightId ? `бой #${r.fightId}` : null);
+    case "attack": return join(weaponById(String(body.weapon))?.name ?? String(body.weapon), r.damage !== undefined ? `−${fmt(r.damage)}${r.crit ? " крит" : ""}` : null, r.fightId ? `бой #${r.fightId}` : null, r.status === "won" ? "босс побеждён" : null);
+    case "auto_set": return join(body.kind === "zone" ? `зона «${locationById(String(body.target))?.name ?? body.target}»` : `автобой ${bossById(String(body.target))?.name ?? body.target}${body.mode ? ` (${body.mode})` : ""}`, body.on === true ? "включил" : "выключил");
+    case "heist_pick": return `ящик ${Number(body.slot) + 1}: взлом замка`;
+    case "heist_rush": return join(`ящик ${Number(body.slot) + 1}: замок сразу`, r.done !== undefined ? `снято ${fmt(r.done)}` : null);
+    case "heist_auto": return join(`ящик ${Number(body.slot) + 1}: автовзлом`, r.paid !== undefined ? `за ${fmt(r.paid)} USD` : null);
+    case "heist_open": return join(`${String(r.kind ?? "")} ящик открыт`, r.rushed ? "со срезом за платные замки" : null, grantedText(r.reward), r.tattoo ? "наколка" : null);
     case "fight_claim": return join(`бой #${body.fightId}`, r.status === "won" ? "победа" : r.status === "lost" ? "босс ушёл" : String(r.status ?? ""), grantedText(r.reward), r.key ? "пропуск получен" : null);
     case "fight_flee": return r.fightId ? `бой #${r.fightId}` : null;
     case "daily_claim": return join(`день ${r.day}`, `серия ${r.streak}`, grantedText(r.reward));
