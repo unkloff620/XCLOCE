@@ -102,7 +102,8 @@ export function Coin({ c, v, size = 18, bold = true }: { c: Currency; v: number;
  */
 const CORNER_MIN = 22;
 /** `side`: the «×N» stands to the right of the icon (not in its corner), and the icon may be smaller than the corner minimum. */
-export function RewardChips({ r, size = 18, times = true, side = false }: { r: Reward | Granted | null | undefined; size?: number; times?: boolean; side?: boolean }) {
+/** `extra`: more chips at the end, in the same row (e.g. the event box on the boss cards) */
+export function RewardChips({ r, size = 18, times = true, side = false, extra }: { r: Reward | Granted | null | undefined; size?: number; times?: boolean; side?: boolean; extra?: ReactNode }) {
   if (!r) return null;
   // nothing for 0 (a one-of-a-kind thing already owned); the craft parts — one chip «×N» with the parts pile, the names in the tooltip
   const all = (r.items ?? []).filter((it) => it.qty > 0);
@@ -135,6 +136,7 @@ export function RewardChips({ r, size = 18, times = true, side = false }: { r: R
           {times ? n(full(partsN)) : <span className="num">×{partsN}</span>}
         </span>
       )}
+      {extra}
     </span>
   );
 }
@@ -181,7 +183,7 @@ export function bossItemsCount(boss: { wear?: { items: string[] } }, state: { un
 }
 
 /** What was gained or will be: pictures with «×N» at their corner (`times`, the default) or «+N» after them. */
-export function GainLine({ r, size = 26, times = true, side = false }: { r: Reward | Granted | null | undefined; size?: number; times?: boolean; side?: boolean }) {
+export function GainLine({ r, size = 26, times = true, side = false, extra }: { r: Reward | Granted | null | undefined; size?: number; times?: boolean; side?: boolean; extra?: ReactNode }) {
   if (!r) return null;
   if (side) times = true;
   const sz = times && !side ? Math.max(size, CORNER_MIN) : size;
@@ -197,6 +199,7 @@ export function GainLine({ r, size = 26, times = true, side = false }: { r: Rewa
       {!!r.energy && <span className="gain" title="Энергия"><Icon name="energy" size={sz} />{n(full(r.energy))}</span>}
       {!!r.xp && <span className="gain" title="Авторитет"><Icon name="xp" size={sz} />{n(full(r.xp))}</span>}
       {!!r.achPoints && <span className="gain" title="Очки достижений"><Icon name="sun" size={sz} />{n(full(r.achPoints))}</span>}
+      {extra}
     </span>
   );
 }

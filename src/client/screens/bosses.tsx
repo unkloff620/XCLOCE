@@ -131,7 +131,7 @@ export function BossesScreen() {
                 </div>
                 <div className="bcard-reward">
                   <span className="bcard-label">{b.final ? "Финал:" : "Награда:"}</span>
-                  <GainLine r={{ ...b.reward, items: [...(b.final ? [] : [{ id: `key-${b.id}`, qty: 1 }]), ...(b.reward.items ?? [])] }} size={16} side />
+                  <GainLine r={{ ...b.reward, items: [...(b.final ? [] : [{ id: `key-${b.id}`, qty: 1 }]), ...(b.reward.items ?? [])] }} size={16} side extra={state?.heist?.on ? <HeistBoxChip size={16} /> : null} />
                 </div>
                 <div className="bcard-foot">
                   {locked ? (
@@ -262,12 +262,24 @@ export function BossRulesHelp({ topic, bossId }: { topic: "bosses" | "boss"; bos
   );
 }
 
+/** «Взлом»: while the event is on, every boss gives a box too — a bronze chest «×1» at the end of his rewards */
+function HeistBoxChip({ size }: { size: number }) {
+  return (
+    <span className="gain" title="Ящик ивента «Взлом» — с каждой победы, если есть свободная ячейка">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/assets/heist/chest-bronze.webp" alt="" width={Math.round(size * 1.2)} height={size} style={{ objectFit: "contain" }} draggable={false} />
+      <span className="num rc-n">×1</span>
+    </span>
+  );
+}
+
 export function BossRewardsPanel({ bossId }: { bossId: string }) {
+  const { state } = useGame();
   const b = bossById(bossId)!;
   return (
     <div className="col">
       <div className="small muted">За каждую победу:</div>
-      <RewardChips r={{ ...b.reward, items: [...(b.final ? [] : [{ id: `key-${b.id}`, qty: 1 }]), ...(b.reward.items ?? [])] }} size={18} side />
+      <RewardChips r={{ ...b.reward, items: [...(b.final ? [] : [{ id: `key-${b.id}`, qty: 1 }]), ...(b.reward.items ?? [])] }} size={18} side extra={state?.heist?.on ? <HeistBoxChip size={18} /> : null} />
       {/* what can drop is a secret: just a «?» */}
       {(!!b.drop?.length || !!b.wear) && (
         <div className="row small muted" style={{ gap: 6 }}><MysteryDrop size={18} /> и шанс выбить что-то ещё</div>
