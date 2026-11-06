@@ -256,7 +256,7 @@ export function HomeScreen() {
           {state.heist && (
             <Link href="/event/heist" className="menu-toggle event-toggle" aria-label="Ивент: Взлом" title="Ивент «Взлом»: ящики с замками">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/assets/heist/box-gold.webp" alt="" draggable={false} style={{ objectFit: "contain" }} />
+              <img src="/assets/heist/chest-gold.webp" alt="" draggable={false} style={{ objectFit: "contain" }} />
               <span className="event-tag">ВЗЛОМ</span>
               {heistReady(state.heist, Date.now()) > 0 && <span className="msg-count num">{heistReady(state.heist, Date.now())}</span>}
             </Link>

@@ -5703,36 +5703,55 @@ html.paused *, html.paused *::before, html.paused *::after { animation-play-stat
 .crit-burn { position: absolute; left: 0; right: 0; bottom: calc(100% + 6px); margin: 0 auto; width: min(80vw, 330px); height: auto; aspect-ratio: 560 / 282;
   opacity: 0.85; pointer-events: none; z-index: 4; filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5)); }
 
-/* «Взлом» (screens/heist.tsx): the basement, 5 cells (3 + 2), boxes with padlocks on their hasps */
-.hs-page { background: #1e140c; }
+/* «Взлом» (screens/heist.tsx): the basement; the chosen chest big with the «possible reward» paper on its right; 5 paper cards below */
+.hs-page { background: #1e140c; container-type: inline-size; }
 .hs-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 40%; }
 .hs-top { position: absolute; z-index: 3; left: 10px; right: 10px; top: var(--top); }
 .hs-top .title-row { align-items: center; gap: 8px; }
 .hs-title { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 6px 10px; border-radius: 12px; background: rgba(30, 18, 10, 0.8); border: 2px solid var(--line); color: #f6ead8; line-height: 1.2; }
 .hs-title > b { font-size: 20px; color: #ffd27a; }
-.hs-cells { position: absolute; z-index: 2; left: 0; right: 0; top: 30%; display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 3%; padding: 0 3%; }
-.hs-cell { position: relative; width: 30%; aspect-ratio: 320 / 301; padding: 0; border: 0; background: none; cursor: pointer; margin-bottom: 26px; }
-.hs-cell.empty { cursor: default; }
-.hs-cell-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6)); }
-.hs-cell .hs-box { position: absolute; left: 13%; right: 13%; top: 18%; }
-.hs-cell-st { position: absolute; left: 0; right: 0; margin: 0 auto; width: fit-content; top: calc(100% + 4px); white-space: nowrap; padding: 3px 10px; border-radius: 10px; background: rgba(20, 12, 6, 0.88); color: #ffd678; font-size: 12px; font-weight: 800; }
-.hs-cell-st.ready { background: #ffcc33; color: #2a1404; animation: pulse 1.2s ease-in-out infinite; }
-.hs-cell.empty .hs-cell-st { color: #a89070; font-weight: 600; }
-.hs-empty { position: absolute; z-index: 2; left: 16px; right: 16px; bottom: calc(var(--bottom) + 16px); padding: 8px 12px; border-radius: 12px; background: rgba(255, 246, 225, 0.92); color: #2a1a0e; text-align: center; }
-/* a box and its padlocks: each lock hangs from its hasp (the top of the shackle at the hasp's centre) */
-.hs-box { position: relative; width: 100%; }
-.hs-box-pic { display: block; width: 100%; height: auto; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5)); }
-.hs-lock { position: absolute; transform: translate(-50%, -8%); }
-.hs-lock > img:first-child { display: block; width: 100%; height: auto; transform-origin: 50% 4%; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6)); }
-.hs-lock.off > img:first-child { width: 112%; margin-left: 2%; opacity: 0.95; }
+/* stands on the workbench, right above the cards (their row is ~22% of the width tall, the hint ~30px) */
+.hs-stage { position: absolute; z-index: 2; left: 8px; right: 8px; bottom: calc(var(--bottom) + 22cqw + 52px); display: flex; align-items: flex-end; gap: 2%; }
+.hs-main { flex: 0 0 58%; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.hs-main > .hs-chest { width: 100%; }
+.hs-status { padding: 5px 12px; border-radius: 12px; background: rgba(20, 12, 6, 0.88); color: #ffd678; font-size: 13px; font-weight: 700; text-align: center; }
+.hs-none { color: #f6ead8; font-weight: 600; }
+.hs-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.hs-btns .btn { display: inline-flex; align-items: center; gap: 3px; }
+.hs-main > .btn.block { width: 80%; }
+/* a chest from the front; its padlocks hang in a row on its band (LOCK_ROW in content/heist.ts) */
+.hs-chest { position: relative; }
+.hs-chest-pic { display: block; width: 100%; height: auto; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.55)); }
+.hs-lock { position: absolute; transform: translate(-50%, -50%); }
+.hs-lock > img:first-child { display: block; width: 100%; height: auto; transform-origin: 50% 6%; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6)); }
+.hs-lock.off > img:first-child { width: 112%; margin-left: 3%; }
 .hs-lock.live > img:first-child { animation: hs-shake 0.42s ease-in-out infinite; }
-.hs-picks { position: absolute; left: 44%; top: 52%; width: 92%; height: auto; transform-origin: 6% 6%; animation: hs-picks 0.36s ease-in-out infinite alternate; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6)); }
+.hs-picks { position: absolute; left: 42%; top: 55%; width: 95%; height: auto; transform-origin: 6% 6%; animation: hs-picks 0.36s ease-in-out infinite alternate; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6)); }
 @keyframes hs-shake { 0%, 100% { transform: rotate(-6deg); } 25% { transform: rotate(4deg) translateX(1px); } 50% { transform: rotate(-3deg); } 75% { transform: rotate(6deg) translateX(-1px); } }
 @keyframes hs-picks { 0% { transform: rotate(-8deg) translate(0, 0); } 50% { transform: rotate(4deg) translate(2px, -1px); } 100% { transform: rotate(10deg) translate(-1px, 2px); } }
-.hs-modal .hs-big { width: min(86%, 340px); margin: 6px auto 10px; }
-.hs-status { text-align: center; margin-bottom: 10px; }
-.hs-opened { position: relative; width: min(90%, 340px); margin: 0 auto 8px; }
-.hs-opened > img { display: block; width: 100%; height: auto; }
-.hs-loot { position: absolute; left: 12%; right: 12%; top: 40%; display: flex; justify-content: center; }
-.hs-loot .rchips { justify-content: center; }
-@media (prefers-reduced-motion: reduce) { .hs-lock.live > img:first-child, .hs-picks, .hs-cell-st.ready { animation: none; } }
+/* the opened chest: the loot lies on its bottom */
+.hs-opened { position: relative; width: 100%; }
+.hs-opened > img { display: block; width: 100%; height: auto; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.55)); }
+.hs-floor { position: absolute; left: 20%; right: 20%; top: 44%; bottom: 26%; display: flex; align-items: center; justify-content: center; }
+.hs-floor .rchips { justify-content: center; gap: 8px 10px !important; }
+/* «Возможная награда»: a sheet of paper on nails */
+.hs-panel { position: relative; flex: 1; align-self: flex-start; aspect-ratio: 298 / 393; }
+.hs-panel-bg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.hs-panel-in { position: absolute; inset: 11% 9% 8%; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #4a3220; text-align: center; }
+.hs-panel-t { font: 800 min(3.8cqw, 15px)/1.1 var(--font-display, inherit); text-transform: uppercase; letter-spacing: 0.02em; }
+.hs-panel-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; place-items: center; width: 100%; }
+.hs-panel-note { margin-top: auto; font-size: 10px; white-space: nowrap; font-weight: 700; line-height: 1.3; opacity: 0.85; }
+/* below: a hint and 5 paper cards with the boxes */
+.hs-bottom { position: absolute; z-index: 2; left: 6px; right: 6px; bottom: calc(var(--bottom) + 8px); container-type: inline-size; }
+.hs-hint { margin: 0 auto 6px; width: fit-content; max-width: 100%; padding: 3px 10px; border-radius: 10px; background: rgba(20, 12, 6, 0.8); color: #e9d9c0; font-size: 11px; font-weight: 700; text-align: center; }
+.hs-hint.warn { color: #ff7a64; }
+.hs-cards { display: flex; gap: 1.6%; }
+.hs-card { position: relative; flex: 1; aspect-ratio: 277 / 300; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 8px; }
+.hs-card.empty { cursor: default; }
+.hs-card.on { outline: 3px solid #ffd250; outline-offset: 1px; }
+.hs-card-bg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.hs-card .hs-chest { position: absolute; left: 13%; right: 13%; top: 20%; }
+.hs-card-st { position: absolute; left: 6%; right: 6%; bottom: 7%; padding: 2px 0; border-radius: 6px; background: rgba(20, 12, 6, 0.88); color: #ffd678; font-size: min(2.6cqw, 11px); font-weight: 800; white-space: nowrap; }
+.hs-card-st.ready { background: #ffcc33; color: #2a1404; }
+.hs-card.empty .hs-card-st { background: none; color: #8a6a48; font-weight: 700; bottom: 44%; }
+@media (prefers-reduced-motion: reduce) { .hs-lock.live > img:first-child, .hs-picks { animation: none; } }

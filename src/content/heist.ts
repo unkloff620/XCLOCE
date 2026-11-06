@@ -18,17 +18,17 @@ export interface HeistBoxDef {
   locks: number;
   /** the chance that an opened box holds a piece of the event's tattoo sets */
   tattoo: number;
-  /** where its padlocks hang: the hasp loops on its picture (0…1 of public/assets/heist/box-<id>.webp) and the lock's width */
-  rings: [number, number][];
-  lockW: number;
 }
 
 export const HEIST_BOXES: HeistBoxDef[] = [
-  { id: "bronze", name: "Бронзовый ящик", locks: 1, tattoo: 0.25, rings: [[0.415, 0.58]], lockW: 0.224 },
-  { id: "silver", name: "Серебряный ящик", locks: 2, tattoo: 0.5, rings: [[0.258, 0.554], [0.461, 0.554]], lockW: 0.166 },
-  { id: "gold", name: "Золотой ящик", locks: 3, tattoo: 0.75, rings: [[0.243, 0.48], [0.411, 0.48], [0.581, 0.48]], lockW: 0.155 },
-  { id: "diamond", name: "Бриллиантовый ящик", locks: 4, tattoo: 1, rings: [[0.2, 0.527], [0.332, 0.527], [0.466, 0.527], [0.592, 0.527]], lockW: 0.127 },
+  { id: "bronze", name: "Бронзовый ящик", locks: 1, tattoo: 0.25 },
+  { id: "silver", name: "Серебряный ящик", locks: 2, tattoo: 0.5 },
+  { id: "gold", name: "Золотой ящик", locks: 3, tattoo: 0.75 },
+  { id: "diamond", name: "Бриллиантовый ящик", locks: 4, tattoo: 1 },
 ];
+/** the padlocks hang in a row across the plain band of the chest's front (public/assets/heist/chest-<kind>.webp, all one shape):
+ * centred at `y` of its height, `gap` apart and `w` wide — in parts of its width */
+export const LOCK_ROW = { y: 0.47, gap: 0.22, w: 0.15 };
 export const heistBox = (id: string) => HEIST_BOXES.find((b) => b.id === id) ?? HEIST_BOXES[0];
 
 /** the player's cells for boxes */

@@ -1,24 +1,29 @@
 "use client";
 /*
- * «Взлом» (content/heist.ts): the basement with 5 cells (3 + 2). A box in a cell shows its padlocks; a tap opens it big:
- * the padlocks hang on its hasps — the one being picked shakes while the lockpicks poke it, a timer under the box.
- * «Взломать» starts the next padlock (an hour; the player comes back for each), «Вскрыть сейчас» opens it for dollars,
- * and with every padlock off the box opens: the loot lies in the open box, like the case.
+ * «Взлом» (content/heist.ts): the basement. Below — 5 paper cards with the boxes; the chosen box stands big above them
+ * with its padlocks in a row on its front: the one being picked shakes while the lockpicks poke it, a timer under it.
+ * On the right — what the box may hold. «Взломать» starts the next padlock (an hour; the player comes back for each),
+ * «Вскрыть сейчас» opens it for dollars; with every padlock off the box opens — the loot lies on its bottom.
  */
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { Modal, RewardChips } from "../ui.tsx";
+import { Icon } from "../art/icons.tsx";
+import { ItemArt } from "../art/items.tsx";
 import { haptic } from "../telegram.ts";
 import { clock } from "../format.ts";
 import { leftText } from "../event-banner.tsx";
 import type { GameState, Granted } from "../api.ts";
-import { HEIST_BOXES, heistBox, heistOdds, type HeistKind } from "../../content/heist.ts";
+import { HEIST_BOXES, HEIST_SET_BOSS, LOCK_ROW, heistBox, heistLoot, heistOdds, type HeistKind } from "../../content/heist.ts";
+import { TATTOO_SETS } from "../../content/tattoos.ts";
+import { STASH_IDS } from "../../content/stashes.ts";
 
 type Heist = NonNullable<GameState["heist"]>;
 type Box = Heist["boxes"][number];
 
 const A = "/assets/heist";
+const SET_PIECES = TATTOO_SETS.filter((s) => s.boss === HEIST_SET_BOSS).flatMap((s) => s.pieces.map((p) => p.id));
 /** padlocks off by now (a lock whose timer ran out counts, before the server settles it) */
 const doneNow = (b: Box, now: number) => Math.min(b.locks, b.done + (b.pickEnds !== null && b.pickEnds <= now ? 1 : 0));
 const picking = (b: Box, now: number) => b.pickEnds !== null && b.pickEnds > now;
@@ -27,19 +32,20 @@ export function heistReady(h: Heist, now: number) {
   return h.boxes.filter((b) => !picking(b, now)).length;
 }
 
-/** a box with its padlocks on the hasps; `live` — the one being picked shakes and the picks poke it */
-function LockedBox({ box, now, big }: { box: Box; now: number; big?: boolean }) {
+/** a chest from the front with its padlocks in a row on its band; the one being picked shakes and the picks poke it */
+function Chest({ box, now }: { box: Box; now: number }) {
   const d = heistBox(box.kind);
   const done = doneNow(box, now);
   const busy = picking(box, now);
   return (
-    <div className={`hs-box ${big ? "big" : ""}`}>
+    <div className="hs-chest">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="hs-box-pic" src={`${A}/box-${box.kind}.webp`} alt={d.name} draggable={false} />
-      {d.rings.map(([x, y], i) => {
+      <img className="hs-chest-pic" src={`${A}/chest-${box.kind}.webp`} alt={d.name} draggable={false} />
+      {Array.from({ length: d.locks }, (_, i) => {
         const off = i < done, live = busy && i === done;
+        const x = 0.5 + (i - (d.locks - 1) / 2) * LOCK_ROW.gap;
         return (
-          <span key={i} className={`hs-lock ${off ? "off" : ""} ${live ? "live" : ""}`} style={{ left: `${x * 100}%`, top: `${y * 100}%`, width: `${d.lockW * 100}%` }}>
+          <span key={i} className={`hs-lock ${off ? "off" : ""} ${live ? "live" : ""}`} style={{ left: `${x * 100}%`, top: `${LOCK_ROW.y * 100}%`, width: `${LOCK_ROW.w * 100}%` }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={`${A}/${off ? "lock-open" : "lock"}.webp`} alt="" draggable={false} />
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -51,25 +57,57 @@ function LockedBox({ box, now, big }: { box: Box; now: number; big?: boolean }) 
   );
 }
 
+/** «Возможная награда» on the paper on the right: what this kind of box may hold */
+function Possible({ kind, owned }: { kind: HeistKind; owned: Set<string> }) {
+  const L = heistLoot(kind);
+  const d = heistBox(kind);
+  const got = SET_PIECES.filter((id) => owned.has(id)).length;
+  return (
+    <div className="hs-panel">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className="hs-panel-bg" src={`${A}/panel.webp`} alt="" draggable={false} />
+      <div className="hs-panel-in">
+        <b className="hs-panel-t">Возможная награда</b>
+        <div className="hs-panel-grid">
+          <span title="Рубли"><Icon name="RUB" size={24} /></span>
+          <span title="Доллары"><Icon name="USD" size={24} /></span>
+          {L.weapons.map(([id]) => <span key={id}><ItemArt id={id} size={28} /></span>)}
+          <span title="Детали"><Icon name="parts" size={24} /></span>
+          {L.stashes[1] > 0 && <span title="Нычки"><ItemArt id={STASH_IDS[0]} size={28} /></span>}
+          {SET_PIECES[0] && <span title="Наколки сетов ивента"><ItemArt id={SET_PIECES[0]} size={28} /></span>}
+        </div>
+        <span className="hs-panel-note">Наколка {Math.round(d.tattoo * 100)}% · {got}/{SET_PIECES.length}</span>
+      </div>
+    </div>
+  );
+}
+
 export function HeistScreen() {
   const { state, act, busy } = useGame();
   const now = useNow();
   const h = state?.heist ?? null;
-  const [open, setOpen] = useState<number | null>(null);
+  const [sel, setSel] = useState<number | null>(null);
   const [got, setGot] = useState<{ kind: HeistKind; reward: Granted; tattoo: string | null } | null>(null);
   const [help, setHelp] = useState(false);
-  const box = h?.boxes.find((b) => b.slot === open) ?? null;
-  // the box went away (opened elsewhere): close its window
-  useEffect(() => { if (open !== null && h && !h.boxes.some((b) => b.slot === open)) setOpen(null); }, [h, open]);
+  const boxes = h?.boxes ?? [];
+  // the chosen box: the one tapped, else the first there is
+  const box = boxes.find((b) => b.slot === sel) ?? boxes[0] ?? null;
+  useEffect(() => { if (sel !== null && !boxes.some((b) => b.slot === sel)) setSel(null); }, [boxes, sel]);
+  const owned = new Set((state?.inventory ?? []).map((i) => i.id));
 
   const pick = async (slot: number) => { if (await act("heist_pick", { slot })) haptic.ok(); };
   const rush = async (slot: number) => { if (await act("heist_rush", { slot })) haptic.ok(); };
   const openBox = async (slot: number) => {
     const r = await act<{ kind: HeistKind; reward: Granted; tattoo: string | null }>("heist_open", { slot });
-    if (r) { haptic.big(); setOpen(null); setGot(r); }
+    if (r) { haptic.big(); setGot(r); }
   };
 
-  const cells = Array.from({ length: h?.slots ?? 5 }, (_, i) => h?.boxes.find((b) => b.slot === i) ?? null);
+  const d = box ? heistBox(box.kind) : null;
+  const done = box ? doneNow(box, now) : 0;
+  const busyLock = box ? picking(box, now) : false;
+  const cells = Array.from({ length: h?.slots ?? 5 }, (_, i) => boxes.find((b) => b.slot === i) ?? null);
+  const full = !!h && boxes.length >= h.slots;
+
   return (
     <div className="fit-page hs-page">
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -84,63 +122,62 @@ export function HeistScreen() {
           <button type="button" className="btn dark sm" onClick={() => setHelp(true)} aria-label="Как это работает">?</button>
         </div>
       </div>
-      <div className="hs-cells">
-        {cells.map((b, i) => {
-          const done = b ? doneNow(b, now) : 0;
-          return (
-            <button type="button" key={i} className={`hs-cell ${b ? "" : "empty"}`} disabled={!b} onClick={() => { if (b) { haptic.tap(); setOpen(b.slot); } }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="hs-cell-bg" src={`${A}/cell.webp`} alt="" draggable={false} />
-              {b && <LockedBox box={b} now={now} />}
-              <span className={`hs-cell-st num ${b && done >= b.locks ? "ready" : ""}`}>
-                {!b ? "пусто" : done >= b.locks ? "Открыть!" : picking(b, now) ? clock(b.pickEnds! - now) : `замки ${done}/${b.locks}`}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-      {h && !h.boxes.length && <div className="hs-empty small">Победи любого босса — ящик упадёт сюда. Ячеек 5: когда все заняты, новые ящики не падают.</div>}
 
-      {box && (() => {
-        const d = heistBox(box.kind);
-        const done = doneNow(box, now);
-        const busyLock = picking(box, now);
-        return (
-          <Modal title={d.name} onClose={() => setOpen(null)} className="hs-modal">
-            <div className="hs-big">
-              <LockedBox box={box} now={now} big />
-            </div>
-            <div className="hs-status">
-              {done >= d.locks ? <b>Все замки сняты!</b>
-                : busyLock ? <>Замок {done + 1}/{d.locks} · <b className="num">{clock(box.pickEnds! - now)}</b></>
-                : <>Замки: <b className="num">{done}/{d.locks}</b>. Один замок — {Math.round((h?.lockMs ?? 3_600_000) / 3_600_000)} ч</>}
-            </div>
-            <div className="col" style={{ gap: 8 }}>
+      <div className="hs-stage">
+        <div className="hs-main">
+          {got ? (
+            <>
+              <div className="hs-opened">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={`${A}/chest-open-${got.kind}.webp`} alt="" draggable={false} />
+                <div className="hs-floor"><RewardChips r={got.reward} size={26} /></div>
+              </div>
+              {got.tattoo && <div className="hs-status">Внутри — наколка из сета ивента!</div>}
+              <button className="btn gold block" onClick={() => setGot(null)}>Забрать</button>
+            </>
+          ) : box && d ? (
+            <>
+              <Chest box={box} now={now} />
+              <div className="hs-status">
+                {done >= d.locks ? <b>Все замки сняты!</b>
+                  : busyLock ? <>Замок {done + 1}/{d.locks} · <b className="num">{clock(box.pickEnds! - now)}</b></>
+                  : <>Замки <b className="num">{done}/{d.locks}</b> · один — {Math.round((h?.lockMs ?? 3_600_000) / 3_600_000)} ч</>}
+              </div>
               {done >= d.locks ? (
                 <button className="btn gold block" disabled={busy === "heist_open"} onClick={() => openBox(box.slot)}>Открыть ящик</button>
               ) : (
-                <>
-                  {!busyLock && <button className="btn gold block" disabled={busy === "heist_pick"} onClick={() => pick(box.slot)}>Взломать замок {done + 1}</button>}
-                  {busyLock && <span className="small muted center">Отмычки работают. Загляни, когда таймер дойдёт до нуля, — и начни следующий замок.</span>}
-                  <button className="btn dark block" disabled={busy === "heist_rush"} onClick={() => rush(box.slot)}>Вскрыть сейчас · ${h?.rush ?? 100}</button>
-                </>
+                <div className="hs-btns">
+                  {!busyLock && <button className="btn gold" disabled={busy === "heist_pick"} onClick={() => pick(box.slot)}>Взломать</button>}
+                  <button className="btn dark" disabled={busy === "heist_rush"} onClick={() => rush(box.slot)}>Сразу · <Icon name="USD" size={14} />{h?.rush ?? 100}</button>
+                </div>
               )}
-            </div>
-          </Modal>
-        );
-      })()}
+            </>
+          ) : (
+            <div className="hs-status hs-none">Победи любого босса — ящик упадёт в ячейку снизу.</div>
+          )}
+        </div>
+        <Possible kind={got?.kind ?? box?.kind ?? "bronze"} owned={owned} />
+      </div>
 
-      {got && (
-        <Modal title={`${heistBox(got.kind).name} вскрыт!`} onClose={() => setGot(null)} className="hs-modal">
-          <div className="hs-opened">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`${A}/open-${got.kind}.webp`} alt="" draggable={false} />
-            <div className="hs-loot"><RewardChips r={got.reward} size={34} /></div>
-          </div>
-          {got.tattoo && <div className="small center">Внутри — наколка из сета ивента!</div>}
-          <button className="btn gold block" onClick={() => setGot(null)}>Забрать</button>
-        </Modal>
-      )}
+      <div className="hs-bottom">
+        <div className={`hs-hint ${full ? "warn" : ""}`}>{full ? "Нет места под ящик — с босса он не выпадет!" : "Если не будет места под ящик, он не выпадет с босса"}</div>
+        <div className="hs-cards">
+          {cells.map((b, i) => {
+            const dn = b ? doneNow(b, now) : 0;
+            return (
+              <button type="button" key={i} className={`hs-card ${b ? "" : "empty"} ${b && box?.slot === b.slot && !got ? "on" : ""}`} disabled={!b}
+                onClick={() => { if (b) { haptic.tap(); setGot(null); setSel(b.slot); } }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="hs-card-bg" src={`${A}/card.webp`} alt="" draggable={false} />
+                {b && <Chest box={b} now={now} />}
+                <span className={`hs-card-st num ${b && dn >= b.locks ? "ready" : ""}`}>
+                  {!b ? "пусто" : dn >= b.locks ? "Открыть" : picking(b, now) ? clock(b.pickEnds! - now) : `замки ${dn}/${b.locks}`}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       {help && (
         <Modal title="Как работает взлом" onClose={() => setHelp(false)}>

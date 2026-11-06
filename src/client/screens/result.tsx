@@ -141,7 +141,7 @@ export function ResultWindow() {
           {got?.heistBox && got.heistBox !== "full" && (
             <span className="gain result-room" title="Ящик ушёл в ячейки ивента «Взлом»">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`/assets/heist/box-${got.heistBox}.webp`} alt="" draggable={false} style={{ objectFit: "contain" }} />+ящик
+              <img src={`/assets/heist/chest-${got.heistBox}.webp`} alt="" draggable={false} style={{ objectFit: "contain" }} />+ящик
             </span>
           )}
           {got?.heistBox === "full" && <span className="gain small" title="Освободи ячейку в ивенте «Взлом»">Ячейки ящиков заняты</span>}
