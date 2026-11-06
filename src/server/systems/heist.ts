@@ -2,30 +2,30 @@
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, takeMoney, type Ctx, type Granted } from "../core.ts";
 import type { Config } from "../config.ts";
-import { HEIST_SET_BOSS, HEIST_SLOTS, LOCK_MS, LOCK_RUSH, heistBox, heistStrength, rollHeistKind, rollHeistLoot, type HeistKind } from "../../content/heist.ts";
+import { HEIST_RUSH_LOOT, HEIST_SET_BOSS, HEIST_SLOTS, LOCK_MS, LOCK_RUSH, heistBox, scaleLoot, heistStrength, rollHeistKind, rollHeistLoot, type HeistKind } from "../../content/heist.ts";
 import { TATTOO_SETS } from "../../content/tattoos.ts";
 
-interface Row { slot: number; kind: string; locks_done: number; pick_ends: Date | null; boss_id: string | null }
+interface Row { slot: number; kind: string; locks_done: number; pick_ends: Date | null; boss_id: string | null; rushed?: number }
 
 /** a lock whose time ran out is off — counted in the row (a player who comes back finds it opened) */
 async function settle(q: Queryable, pid: number, now: number) {
   await q.query("UPDATE heist_boxes SET locks_done = locks_done + 1, pick_ends = NULL WHERE player_id=$1 AND pick_ends IS NOT NULL AND pick_ends <= $2", [pid, new Date(now)]);
 }
 
-export interface HeistBoxView { slot: number; kind: HeistKind; locks: number; done: number; pickEnds: number | null; boss: string | null }
+export interface HeistBoxView { slot: number; kind: HeistKind; locks: number; done: number; pickEnds: number | null; boss: string | null; rushed: boolean }
 export interface HeistView { on: boolean; endsAt: number | null; slots: number; boxes: HeistBoxView[]; lockMs: number; rush: number }
 
 /** what the player sees: null while the event is off and his cells are empty (he sees nothing of it then) */
 export async function heistView(q: Queryable, pid: number, cfg: Config, now: number): Promise<HeistView | null> {
   await settle(q, pid, now);
-  const rows = await q.query<Row>("SELECT slot, kind, locks_done, pick_ends, boss_id FROM heist_boxes WHERE player_id=$1 ORDER BY slot", [pid]);
+  const rows = await q.query<Row>("SELECT slot, kind, locks_done, pick_ends, boss_id, rushed FROM heist_boxes WHERE player_id=$1 ORDER BY slot", [pid]);
   const on = !!cfg.heist && cfg.heist.endsAt > now;
   if (!on && !rows.length) return null;
   return {
     on, endsAt: on ? cfg.heist!.endsAt : null, slots: HEIST_SLOTS, lockMs: LOCK_MS, rush: LOCK_RUSH,
     boxes: rows.map((r) => {
       const d = heistBox(r.kind);
-      return { slot: Number(r.slot), kind: d.id, locks: d.locks, done: Math.min(d.locks, Number(r.locks_done)), pickEnds: r.pick_ends ? new Date(r.pick_ends).getTime() : null, boss: r.boss_id };
+      return { slot: Number(r.slot), kind: d.id, locks: d.locks, done: Math.min(d.locks, Number(r.locks_done)), pickEnds: r.pick_ends ? new Date(r.pick_ends).getTime() : null, boss: r.boss_id, rushed: Number(r.rushed ?? 0) > 0 };
     }),
   };
 }
@@ -45,7 +45,7 @@ export async function heistDrop(ctx: Ctx, boss: { id: string; order: number; eve
 async function boxRow(ctx: Ctx, slot: number): Promise<Row> {
   if (!Number.isInteger(slot) || slot < 0 || slot >= HEIST_SLOTS) throw new GameError("bad_request", "Нет такой ячейки", 400);
   await settle(ctx.q, ctx.pid, ctx.now);
-  const [r] = await ctx.q.query<Row>("SELECT slot, kind, locks_done, pick_ends, boss_id FROM heist_boxes WHERE player_id=$1 AND slot=$2 FOR UPDATE", [ctx.pid, slot]);
+  const [r] = await ctx.q.query<Row>("SELECT slot, kind, locks_done, pick_ends, boss_id, rushed FROM heist_boxes WHERE player_id=$1 AND slot=$2 FOR UPDATE", [ctx.pid, slot]);
   if (!r) throw new GameError("heist_empty", "Ячейка пустая");
   return r;
 }
@@ -67,7 +67,7 @@ export async function heistRush(ctx: Ctx, slot: number) {
   const d = heistBox(r.kind);
   if (Number(r.locks_done) >= d.locks) throw new GameError("heist_done", "Все замки сняты — открывай");
   await takeMoney(ctx, "USD", LOCK_RUSH, `heist_rush:${slot}`);
-  await ctx.q.query("UPDATE heist_boxes SET locks_done = locks_done + 1, pick_ends = NULL WHERE player_id=$1 AND slot=$2", [ctx.pid, slot]);
+  await ctx.q.query("UPDATE heist_boxes SET locks_done = locks_done + 1, pick_ends = NULL, rushed = rushed + 1 WHERE player_id=$1 AND slot=$2", [ctx.pid, slot]);
   return { slot, done: Number(r.locks_done) + 1 };
 }
 
@@ -76,7 +76,9 @@ export async function heistOpen(ctx: Ctx, slot: number) {
   const r = await boxRow(ctx, slot);
   const d = heistBox(r.kind);
   if (Number(r.locks_done) < d.locks) throw new GameError("heist_locked", "Сначала сними все замки");
-  const loot = rollHeistLoot(d.id, ctx.rng);
+  // a padlock opened for dollars: the box holds 30% less (the tattoo chance stays)
+  const rushed = Number(r.rushed ?? 0) > 0;
+  const loot = scaleLoot(rollHeistLoot(d.id, ctx.rng), rushed ? HEIST_RUSH_LOOT : 1);
   let tattoo: string | null = null;
   if (ctx.rng() < d.tattoo) {
     const all = TATTOO_SETS.filter((s) => s.boss === HEIST_SET_BOSS).flatMap((s) => s.pieces.map((p) => p.id));
@@ -86,5 +88,5 @@ export async function heistOpen(ctx: Ctx, slot: number) {
   }
   await ctx.q.query("DELETE FROM heist_boxes WHERE player_id=$1 AND slot=$2", [ctx.pid, slot]);
   const reward = await grantReward(ctx, loot, `heist_open:${d.id}`);
-  return { slot, kind: d.id, reward, tattoo };
+  return { slot, kind: d.id, reward, tattoo, rushed };
 }

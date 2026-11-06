@@ -86,7 +86,7 @@ export interface GameState {
   /** «Тося» is here (null — not): his visit, the pies he brought this player, the ones taken (bits), the next price ($) */
   tosya?: { visit: string; look?: string; endsAt: number; pies: number; taken: number; next: number | null } | null;
   /** «Взлом» (content/heist.ts): null while the event is off and the cells are empty */
-  heist?: { on: boolean; endsAt: number | null; slots: number; lockMs: number; rush: number; boxes: { slot: number; kind: "bronze" | "silver" | "gold" | "diamond"; locks: number; done: number; pickEnds: number | null; boss: string | null }[] } | null;
+  heist?: { on: boolean; endsAt: number | null; slots: number; lockMs: number; rush: number; boxes: { slot: number; kind: "bronze" | "silver" | "gold" | "diamond"; locks: number; done: number; pickEnds: number | null; boss: string | null; rushed?: boolean }[] } | null;
   /** the dealer in the garage: today's parts on sale */
   dealer?: { id: string; price: number; left: number }[];
   /** the talk with the dealer at the exchange machine */

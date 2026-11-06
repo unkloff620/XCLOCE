@@ -83,6 +83,26 @@ describe("«Взлом»: boxes with padlocks", () => {
     expect(o2.result.tattoo).not.toBe(o.result.tattoo);
   });
 
+  it("a box with a padlock opened for dollars holds 30% less; waited out — all of it", async () => {
+    const db = await freshDb();
+    await heistOn(db);
+    const p = await newPlayer(db);
+    await db.query("INSERT INTO heist_boxes (player_id, slot, kind) VALUES ($1, 0, 'silver'), ($1, 1, 'silver')", [p]);
+    await setMoney(db, p, "USD", LOCK_RUSH * 2);
+    // box 0: both padlocks waited out
+    await act(db, p, "heist_pick", { slot: 0 }, T);
+    await act(db, p, "heist_pick", { slot: 0 }, T + H + M);
+    const full = await act(db, p, "heist_open", { slot: 0 }, T + 2 * H + 2 * M, always(0.5));
+    // box 1: one waited, one paid
+    await act(db, p, "heist_pick", { slot: 1 }, T + 3 * H);
+    await act(db, p, "heist_rush", { slot: 1 }, T + 4 * H + M);
+    const cut = await act(db, p, "heist_open", { slot: 1 }, T + 4 * H + 2 * M, always(0.5));
+    expect(full.result.rushed).toBe(false);
+    expect(cut.result.rushed).toBe(true);
+    const rub = (r: { result: { reward: { currencies: Record<string, number> } } }) => r.result.reward.currencies.RUB;
+    expect(rub(cut)).toBe(Math.floor((rub(full) * 0.7) / 100) * 100);
+  });
+
   it("odds: weak bosses mostly bronze, the strongest a diamond about one time in four; richer boxes hold more", () => {
     expect(heistOdds(0).bronze).toBeGreaterThan(0.6);
     expect(heistOdds(1).diamond).toBeCloseTo(0.25);

@@ -37,6 +37,15 @@ export const HEIST_SLOTS = 5;
 export const LOCK_MS = 60 * 60_000;
 /** a padlock opened at once, in dollars */
 export const LOCK_RUSH = 100;
+/** a box with any padlock opened for dollars holds this share of the loot (−30%); waited out — all of it */
+export const HEIST_RUSH_LOOT = 0.7;
+/** the loot scaled (a rushed box): money rounded down to hundreds, things down but at least 1 */
+export function scaleLoot(r: Reward, k: number): Reward {
+  if (k >= 1) return r;
+  const cur: Record<string, number> = {};
+  for (const [c, v] of Object.entries(r.currencies ?? {})) cur[c] = c === "RUB" ? Math.floor((Number(v) * k) / 100) * 100 : Math.max(1, Math.floor(Number(v) * k));
+  return { ...r, currencies: cur, items: (r.items ?? []).map((it) => ({ ...it, qty: Math.max(1, Math.floor(it.qty * k)) })) };
+}
 /** the tattoo sets of the event */
 export const HEIST_SET_BOSS = "heist";
 
