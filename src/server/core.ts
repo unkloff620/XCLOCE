@@ -184,6 +184,8 @@ export interface Granted {
   unlocks?: string[];
   /** the boss medal a won fight gave (content/medals.ts) and how many of that kind the player has now */
   medal?: { boss: string; tier: "bronze" | "silver" | "gold"; n: number };
+  /** «Взлом»: the box this win dropped into the cells, or "full" — the cells were all taken */
+  heistBox?: string;
 }
 
 export async function grantReward(ctx: Ctx, r: Reward, reason: string): Promise<Granted> {

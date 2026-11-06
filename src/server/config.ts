@@ -46,6 +46,8 @@ export interface Config {
   maintenance: { on: boolean; text: string };
   /** «Тося»: comes by his own schedule (auto), called in (on) or sent off (off) by the admin */
   tosya: TosyaMode;
+  /** «Взлом» (content/heist.ts): on while an event with the «heistBoxes» effect is going on, till it ends */
+  heist?: { endsAt: number } | null;
 }
 
 export function defaultConfig(): Config {
@@ -162,6 +164,8 @@ async function applyEvents(q: Queryable, cfg: Config, now: number) {
       if (t.rewardPct) cfg.bossReward[id] = (cfg.bossReward[id] ?? 1) * (t.rewardPct / 100);
     }
   }
+  // «Взлом»: on while any event with it is on; it ends with the last of them
+  for (const ev of cfg.events) if (ev.effects.heistBoxes) cfg.heist = { endsAt: Math.max(cfg.heist?.endsAt ?? 0, ev.endsAt) };
   if (energy > 1) cfg.energy.regenMin = cfg.energy.regenMin / energy;
   if (yard > 1) cfg.yard.spawnMin = cfg.yard.spawnMin / yard;
   if (spins > 1) cfg.slots.perHour = Math.round(cfg.slots.perHour * spins);

@@ -137,6 +137,14 @@ export function ResultWindow() {
               <img src={`/assets/home/${ROOM_BACKDROP[id] ?? `room-${id}`}.webp`} alt="" draggable={false} />+комната
             </span>
           ))}
+          {/* «Взлом»: the box that fell into the cells (or none — they are all taken) */}
+          {got?.heistBox && got.heistBox !== "full" && (
+            <span className="gain result-room" title="Ящик ушёл в ячейки ивента «Взлом»">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={`/assets/heist/box-${got.heistBox}.webp`} alt="" draggable={false} style={{ objectFit: "contain" }} />+ящик
+            </span>
+          )}
+          {got?.heistBox === "full" && <span className="gain small" title="Освободи ячейку в ивенте «Взлом»">Ячейки ящиков заняты</span>}
           {chairs.map((art) => (
             <span key={art} className="gain result-room" title={`${equipmentById("chair")?.pieces?.find((p) => p.art === art)?.name ?? "Кресло"} — купи его дома, в редакторе комнаты`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}

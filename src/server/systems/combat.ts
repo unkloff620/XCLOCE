@@ -10,6 +10,7 @@ import { BASE_CRIT_MULT, EQUIPMENT, PIECE_DROP_CHANCE, PIECE_PITY, ROOM_DEFS, RO
 import { CRIT_MULT_MAX, critChanceOf, talentExtras, talentsForDamage, weaponTalentBonus } from "../../content/talents.ts";
 import { playerBonus, weaponTalents } from "./home.ts";
 import { setBonuses } from "./collection.ts";
+import { heistDrop } from "./heist.ts";
 import { craftBonus } from "./craft.ts";
 import { CRAFT_WEAPONS } from "../../content/craft.ts";
 import { BOSS_PARTS, between, craftBossParts, rollParts } from "../../content/craft-drops.ts";
@@ -461,6 +462,8 @@ export async function claimFight(ctx: Ctx, fightId: number) {
   }
   const granted = await grantReward(ctx, mergeRewards(base, { items: [...key, ...drops, ...tattoos, ...parts] }), `win:${def.id}`);
   if (unlocked.length) granted.unlocks = unlocked;
+  // «Взлом»: while the event is on, a box for the win (any mode, the same fair share as the pass)
+  if (earnedKey) await heistDrop(ctx, def, granted);
   // the boss medal of this mode, for sure (the same share of damage as the pass) — while the blasts are in the game
   if (earnedKey && BLASTS_ON) {
     const [m] = await ctx.q.query<{ n: number }>(

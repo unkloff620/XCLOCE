@@ -27,9 +27,9 @@ export const PLACES = {
   ],
   "fit": {
    "face": {
-    "x": 394,
+    "x": 390,
     "y": 35,
-    "w": 244,
+    "w": 248,
     "h": 288
    },
    "hand-r": {

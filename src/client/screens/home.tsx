@@ -31,6 +31,7 @@ import { usedUrl } from "../preload.ts";
 import { EVENT_BOSSES, eventBossById } from "../../content/event-bosses.ts";
 import { todayUpdates } from "../../content/updates.ts";
 import { tosyaLookById } from "../../content/tosya.ts";
+import { heistReady } from "./heist.tsx";
 
 const MENU_KEY = "xc2_home_menu";
 
@@ -249,6 +250,15 @@ export function HomeScreen() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={`/assets/tosya/portrait${tosyaLookById(state.tosya.look).art}.webp?v=2`} alt="" draggable={false} />
               <span className="event-tag">ТОСЯ</span>
+            </Link>
+          )}
+          {/* «Взлом» (screens/heist.tsx): while the event is on, or boxes are still in the cells */}
+          {state.heist && (
+            <Link href="/event/heist" className="menu-toggle event-toggle" aria-label="Ивент: Взлом" title="Ивент «Взлом»: ящики с замками">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/assets/heist/box-gold.webp" alt="" draggable={false} style={{ objectFit: "contain" }} />
+              <span className="event-tag">ВЗЛОМ</span>
+              {heistReady(state.heist, Date.now()) > 0 && <span className="msg-count num">{heistReady(state.heist, Date.now())}</span>}
             </Link>
           )}
           {/* the event bosses the admin has put in the game (admin panel «Ивенты») */}

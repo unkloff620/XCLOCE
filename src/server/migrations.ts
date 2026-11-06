@@ -1254,4 +1254,18 @@ ON CONFLICT (key) DO UPDATE SET value = excluded.value;`,
 CREATE INDEX IF NOT EXISTS clan_chat_clan ON clan_chat (clan_id, id);
 ALTER TABLE clan_members ADD COLUMN IF NOT EXISTS chat_seen INT NOT NULL DEFAULT 0;`,
   },
+  {
+    // «Взлом» (content/heist.ts): the player's boxes in their cells — how many padlocks are off, the one being picked
+    id: "v2-082-heist",
+    sql: `CREATE TABLE IF NOT EXISTS heist_boxes (
+  player_id INT NOT NULL,
+  slot INT NOT NULL,
+  kind TEXT NOT NULL,
+  locks_done INT NOT NULL DEFAULT 0,
+  pick_ends TIMESTAMPTZ,
+  boss_id TEXT,
+  got_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (player_id, slot)
+);`,
+  },
 ];

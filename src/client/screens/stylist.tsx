@@ -70,6 +70,8 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
     setFocus({ mode: "ink", part: null });
   };
   const owned = new Set(state.inventory.map((i) => i.id));
+  // the event's sets (boss "heist", «Взлом») stay out of sight until the event starts or a piece is owned
+  const SETS = TATTOO_SETS.filter((s) => s.boss !== "heist" || !!state.heist || s.pieces.some((p) => owned.has(p.id)));
   const slot = mode === "items" && part && (CLOTHES as string[]).includes(part) ? (part as Slot) : null;
   const items = slot ? ITEMS.filter((i) => i.slot === slot && owned.has(i.id)) : [];
   // the rest of the slot's things: sold in the shop (a boss's thing — once it dropped) with a price, the others locked
@@ -156,9 +158,9 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
   // «Наколки»: a place picked on the body — every set's piece for that place; otherwise the sets like an inventory
   // (a set opens to its pieces: dropped ones in colour, the rest grey)
   const zone = inkTab && part && TATTOO_ZONE_NAME[part] ? part : null;
-  const openSet = TATTOO_SETS.find((s) => s.id === inkSet) ?? null;
+  const openSet = SETS.find((s) => s.id === inkSet) ?? null;
   const zoneView = zone ? (() => {
-    const list = TATTOO_SETS.map((s) => ({ s, p: s.pieces.find((x) => tattooZone(x.id) === zone) })).filter((x) => x.p);
+    const list = SETS.map((s) => ({ s, p: s.pieces.find((x) => tattooZone(x.id) === zone) })).filter((x) => x.p);
     const mineN = list.filter((x) => owned.has(x.p!.id)).length;
     return (
       <div className="ink-open">
@@ -199,7 +201,7 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
   })() : (
     <div className="ink-sets">
       <span className="ink-hint tiny">Нажми на место на теле — покажу, что туда можно набить. Или открой сет.</span>
-      {TATTOO_SETS.map((s) => {
+      {SETS.map((s) => {
         const got = s.pieces.filter((p) => owned.has(p.id)).length;
         return (
           <button type="button" key={s.id} className={`ink-set ${got === s.pieces.length ? "done" : ""} ${got ? "" : "locked"}`} onClick={() => { haptic.tap(); setInkSet(s.id); setFocus({ ...focus, part: null }); }}

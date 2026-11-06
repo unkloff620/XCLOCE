@@ -4,7 +4,7 @@
  * the event's banner. Several events at once stack (multipliers multiply, the lowest fee / boss HP wins).
  */
 
-export type EventEffectId = "energyRegen" | "yardSpeed" | "slotsSpins" | "exchangeFee" | "bossHp";
+export type EventEffectId = "energyRegen" | "yardSpeed" | "slotsSpins" | "exchangeFee" | "bossHp" | "heistBoxes";
 
 export interface EventEffectDef {
   id: EventEffectId;
@@ -25,6 +25,8 @@ export const EVENT_EFFECTS: EventEffectDef[] = [
   { id: "slotsSpins", name: "Прокрутки автомата 777", hint: "×N бесплатных прокруток в час", neutral: 1, min: 1, max: 10, step: 1, show: (v) => `Прокрутки 777 ×${v}` },
   { id: "exchangeFee", name: "Комиссия обменника, %", hint: "0 — обмен без комиссии (обычно 5)", neutral: 5, min: 0, max: 5, step: 0.5, show: (v) => (v === 0 ? "Обмен без комиссии" : `Комиссия обменника ${v}%`) },
   { id: "bossHp", name: "HP боссов, % от обычного", hint: "50 — у новых боёв вдвое меньше HP", neutral: 100, min: 10, max: 100, step: 5, show: (v) => `HP боссов ${v}%` },
+  // «Взлом» (content/heist.ts): 1 — every boss drops a box with padlocks, the event page opens; usually 3 days
+  { id: "heistBoxes", name: "Ивент «Взлом»: ящики с боссов", hint: "1 — включить: с каждого босса падает ящик с замками (обычно на 3 дня)", neutral: 0, min: 0, max: 1, step: 1, show: () => "Ивент «Взлом»: ящики с боссов" },
 ];
 
 /**
