@@ -50,7 +50,8 @@ for f in sorted(os.listdir(os.path.join(HERE, "source"))):
 # chairs: drawn on the 2000×2800 character canvas in place (like the clothes) → trimmed, half size, and their place
 # in the 1000×1400 rig coordinates
 CHAIRS = {}
-CHAIR_LIFT = {"chair-knyaz": 70}  # rig units
+CHAIR_LIFT = {"chair-knyaz": 70, "chair-vadim": -30}  # rig units (negative — lower)
+CHAIR_DX = {"chair-vadim": 18}  # rig units, a nudge to the right where a picture sits off-centre
 CHAIR_BOX = (122, -60, 1877, 2733)  # where a chair stands on the 2000×2800 character canvas: the wheels on the floor line, the back up past the top of the head
 for f in sorted(os.listdir(os.path.join(HERE, "source"))):
     m = re.match(r"(chair-[a-z0-9]+)\.png$", f)
@@ -68,7 +69,7 @@ for f in sorted(os.listdir(os.path.join(HERE, "source"))):
     k = min(1, 720 / w)
     im.resize((round(w * k), round(h * k)), Image.LANCZOS).save(os.path.join(OUT, m.group(1) + ".webp"), "WEBP", quality=86, method=6)
     # a chair drawn without wheels (the throne stands on its own base): lifted so the hero's feet rest on its base
-    CHAIRS[m.group(1)] = {"x": x0 / 2, "y": y0 / 2 - CHAIR_LIFT.get(m.group(1), 0), "w": w, "h": h}
+    CHAIRS[m.group(1)] = {"x": x0 / 2 + CHAIR_DX.get(m.group(1), 0), "y": y0 / 2 - CHAIR_LIFT.get(m.group(1), 0), "w": w, "h": h}
     print(m.group(1), CHAIRS[m.group(1)])
 
 # desks and monitors: picture aspect (h/w) → the room scene places them by level
