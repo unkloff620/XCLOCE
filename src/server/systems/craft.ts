@@ -120,3 +120,60 @@ export async function craftSplit(ctx: Ctx, itemId: string) {
   }
   return { itemId: def.id, back };
 }
+
+/* ---------------- presets: saved layouts of the stash ---------------- */
+export const CRAFT_PRESETS_MAX = 6;
+export interface CraftPreset { id: number; name: string; boxes: (string | null)[] }
+
+export async function craftPresets(q: Queryable, pid: number): Promise<CraftPreset[]> {
+  const rows = await q.query<{ id: number; name: string; boxes: (string | null)[] }>("SELECT id, name, boxes FROM craft_presets WHERE player_id=$1 ORDER BY id", [pid]);
+  return rows.map((r) => ({ id: Number(r.id), name: r.name, boxes: Array.isArray(r.boxes) ? r.boxes : [] }));
+}
+
+/** the stash as it is now saved under a name (a new preset, or over an old one with `id`) */
+export async function craftPresetSave(ctx: Ctx, name: string, id?: number) {
+  const nm = name.trim().replace(/\s+/g, " ").slice(0, 24);
+  if (!nm) throw new GameError("bad_name", "Назови пресет");
+  const boxes = await craftBoxes(ctx.q, ctx.pid);
+  if (!boxes.some(Boolean)) throw new GameError("empty", "Ячейки пустые — нечего сохранять");
+  if (id !== undefined) {
+    const [r] = await ctx.q.query<{ id: number }>("UPDATE craft_presets SET name=$3, boxes=$4, at=$5 WHERE id=$1 AND player_id=$2 RETURNING id", [id, ctx.pid, nm, JSON.stringify(boxes), new Date(ctx.now)]);
+    if (!r) throw new GameError("no_preset", "Пресет не найден");
+    return { id, name: nm };
+  }
+  const [{ n }] = await ctx.q.query<{ n: number }>("SELECT COUNT(*)::int AS n FROM craft_presets WHERE player_id=$1", [ctx.pid]);
+  if (n >= CRAFT_PRESETS_MAX) throw new GameError("presets_full", `Пресетов не больше ${CRAFT_PRESETS_MAX} — удали или перезапиши старый`);
+  const [r] = await ctx.q.query<{ id: number }>("INSERT INTO craft_presets (player_id, name, boxes, at) VALUES ($1,$2,$3,$4) RETURNING id", [ctx.pid, nm, JSON.stringify(boxes), new Date(ctx.now)]);
+  return { id: Number(r.id), name: nm };
+}
+
+export async function craftPresetDelete(ctx: Ctx, id: number) {
+  await ctx.q.query("DELETE FROM craft_presets WHERE id=$1 AND player_id=$2", [id, ctx.pid]);
+  return { id };
+}
+
+/**
+ * Puts the preset's layout in: everything in the cells goes back to the store, then each cell takes its thing from
+ * the store if there is one (a thing used up or a cell not bought — that cell stays empty; `missing` says how many).
+ */
+export async function craftPresetApply(ctx: Ctx, id: number) {
+  const [p] = await ctx.q.query<{ name: string; boxes: (string | null)[] }>("SELECT name, boxes FROM craft_presets WHERE id=$1 AND player_id=$2", [id, ctx.pid]);
+  if (!p) throw new GameError("no_preset", "Пресет не найден");
+  const open = await craftBoxesBought(ctx.q, ctx.pid);
+  const back = await ctx.q.query<{ item_id: string }>("DELETE FROM player_craft_box WHERE player_id=$1 RETURNING item_id", [ctx.pid]);
+  for (const r of back) await addItem(ctx, r.item_id, 1, "craft-preset");
+  let missing = 0;
+  for (const [slot, itemId] of (Array.isArray(p.boxes) ? p.boxes : []).entries()) {
+    if (!itemId || !craftById(itemId)) continue;
+    if (slot >= open || slot >= CRAFT_BOXES) { missing++; continue; }
+    try {
+      await takeItem(ctx, itemId, 1, "craft-preset");
+    } catch (e) {
+      if (e instanceof GameError) { missing++; continue; }
+      throw e;
+    }
+    await ctx.q.query("INSERT INTO player_craft_box (player_id, slot, item_id) VALUES ($1,$2,$3)", [ctx.pid, slot, itemId]);
+  }
+  await syncTalentExtras(ctx.q, ctx.pid);
+  return { id, name: p.name, missing };
+}

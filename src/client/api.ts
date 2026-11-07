@@ -79,6 +79,8 @@ export interface GameState {
   upgraded: { uid: number; itemId: string; value: number }[];
   /** «Крафт»: the stash cells, an item id or null */
   craftBoxes?: (string | null)[];
+  /** saved layouts of the stash (systems/craft.ts) */
+  craftPresets?: { id: number; name: string; boxes: (string | null)[] }[];
   /** «Крафт»: how many cells are opened (bought) */
   craftBoxesOpen?: number;
   /** «Новичок»: the newcomer's chain (null — over): when it ends, each task's progress and whether it is claimed */

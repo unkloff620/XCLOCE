@@ -1288,4 +1288,16 @@ CREATE TABLE IF NOT EXISTS autos (
 );
 CREATE INDEX IF NOT EXISTS autos_day ON autos (day);`,
   },
+  {
+    // «Крафт»: saved layouts of the stash cells to switch between (systems/craft.ts craftPreset*)
+    id: "v2-085-craft-presets",
+    sql: `CREATE TABLE IF NOT EXISTS craft_presets (
+  id SERIAL PRIMARY KEY,
+  player_id INT NOT NULL,
+  name TEXT NOT NULL,
+  boxes JSONB NOT NULL,
+  at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS craft_presets_player ON craft_presets (player_id, id);`,
+  },
 ];

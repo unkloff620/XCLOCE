@@ -180,7 +180,10 @@ export function CraftScreen() {
 
       {/* the stash: fixed on top; 12 blueprint cells on crumpled paper, two blocks of 3×2 */}
       <div className="cf-stash">
-        <b className="display cf-h">Заныкано</b>
+        <div className="cf-head">
+          <b className="display cf-h">Заныкано</b>
+          <Presets boxes={boxes} />
+        </div>
         <div className="cf-cells">
           {[0, 1].map((half) => {
             const filled = boxes.slice(half * 6, half * 6 + 6).filter(Boolean).length;
@@ -351,5 +354,70 @@ function Scheme({ d, qty, busy, onMake, onOpen, onClose, onSplit, back, onBack }
         </div>
       </div>
     </Modal>
+  );
+}
+
+/**
+ * «Пресеты»: saved layouts of the stash. The button opens a list — a tap puts that layout in (the things go back to the
+ * store and the saved ones come out of it), ✎ saves the current cells over it, ✕ deletes; «Сохранить текущий» names
+ * a new one.
+ */
+function Presets({ boxes }: { boxes: (string | null)[] }) {
+  const { state, act, busy } = useGame();
+  const list = state?.craftPresets ?? [];
+  const [open, setOpen] = useState(false);
+  const [naming, setNaming] = useState<{ id?: number; name: string } | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+  // a tap outside closes the list
+  useEffect(() => {
+    if (!open) return;
+    const off = (e: PointerEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("pointerdown", off);
+    return () => document.removeEventListener("pointerdown", off);
+  }, [open]);
+  const same = (p: { boxes: (string | null)[] }) => boxes.every((b, i) => (b ?? null) === (p.boxes[i] ?? null));
+  const current = list.find(same);
+  const apply = async (id: number) => {
+    setOpen(false);
+    const r = await act<{ name: string; missing: number }>("craft_preset_apply", { id }, (x) => (x.missing ? `«${x.name}»: не хватило ${x.missing} шт. — эти ячейки пустые` : `Пресет «${x.name}»`));
+    if (r) haptic.ok();
+  };
+  const save = async () => {
+    if (!naming) return;
+    const r = await act("craft_preset_save", { name: naming.name, ...(naming.id ? { id: naming.id } : {}) }, "Пресет сохранён");
+    if (r) { haptic.ok(); setNaming(null); }
+  };
+  return (
+    <div className="cf-presets" ref={ref}>
+      <button type="button" className="cf-preset-btn" onClick={() => { haptic.tap(); setOpen(!open); }} aria-expanded={open}>
+        <span className="ellipsis">{current ? current.name : "Пресеты"}</span><span aria-hidden="true">▾</span>
+      </button>
+      {open && (
+        <div className="cf-preset-list" role="menu">
+          {!list.length && <div className="cf-preset-empty">Пока пусто. Расставь вещи и сохрани.</div>}
+          {list.map((p) => (
+            <div key={p.id} className={`cf-preset-row ${current?.id === p.id ? "on" : ""}`}>
+              <button type="button" className="cf-preset-name" disabled={!!busy} onClick={() => apply(p.id)} role="menuitem">
+                <span className="ellipsis">{p.name}</span>
+                <span className="cf-preset-n num">{p.boxes.filter(Boolean).length}</span>
+              </button>
+              <button type="button" className="cf-preset-ic" title="Перезаписать текущими ячейками" aria-label="Перезаписать" onClick={() => { setOpen(false); setNaming({ id: p.id, name: p.name }); }}>✎</button>
+              <button type="button" className="cf-preset-ic" title="Удалить" aria-label="Удалить" disabled={!!busy}
+                onClick={() => { if (confirm(`Удалить пресет «${p.name}»?`)) void act("craft_preset_delete", { id: p.id }); }}>✕</button>
+            </div>
+          ))}
+          <button type="button" className="cf-preset-add" disabled={!boxes.some(Boolean)} onClick={() => { setOpen(false); setNaming({ name: "" }); }}>+ Сохранить текущий</button>
+        </div>
+      )}
+      {naming && (
+        <Modal title={naming.id ? "Перезаписать пресет" : "Новый пресет"} onClose={() => setNaming(null)}>
+          <form className="col" style={{ gap: 10 }} onSubmit={(e) => { e.preventDefault(); void save(); }}>
+            <input className="cf-preset-input" autoFocus maxLength={24} placeholder="Например: Урон по боссам" value={naming.name} onChange={(e) => setNaming({ ...naming, name: e.target.value })} />
+            <span className="small muted">Сохранится то, что лежит в ячейках сейчас.</span>
+            <button className="btn gold block" disabled={!naming.name.trim() || busy === "craft_preset_save"}>Сохранить</button>
+          </form>
+        </Modal>
+      )}
+    </div>
   );
 }

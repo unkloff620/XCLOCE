@@ -2003,23 +2003,23 @@ describe("Бутылка Командате", () => {
 });
 
 describe("boss sets and «Дела»", () => {
-  it("the whole set of Командате (worn or not) adds +30 to the keyboard; the case shows it", async () => {
+  it("the whole set of Командате (worn or not) adds +160 to the GPU; the case shows it", async () => {
     const p = await newPlayer(db);
-    await give(db, p, "keyboard", 5);
+    await give(db, p, "gpu", 5);
     await startDatsik(p);
-    const plain = await hit(p, "keyboard", T0);
+    const plain = await hit(p, "gpu", T0);
     for (const it of ["bottle-komandate", "jacket-komandate", "pants-komandate"]) await give(db, p, it, 1);
-    const three = await hit(p, "keyboard", T0 + 1000);
+    const three = await hit(p, "gpu", T0 + 1000);
     expect(three.result.damage).toBe(plain.result.damage);
     await give(db, p, "sneakers-komandate", 1);
-    const full4 = await hit(p, "keyboard", T0 + 2000);
-    expect(full4.result.damage).toBe(plain.result.damage + 30);
-    expect(full4.state.setBonus).toEqual({ keyboard: 30 });
+    const full4 = await hit(p, "gpu", T0 + 2000);
+    expect(full4.result.damage).toBe(plain.result.damage + 160);
+    expect(full4.state.setBonus).toEqual({ gpu: 160 });
     const { profileView } = await import("../src/server/systems/state.ts");
     const { loadConfig } = await import("../src/server/config.ts");
     const prof = await profileView(db, p, p, await loadConfig(db), T0);
     const kom = prof.cases.find((c: { id: string }) => c.id === "bebyakyan")!;
-    expect(kom.set).toMatchObject({ weapon: "keyboard", damage: 30, have: 4, total: 4 });
+    expect(kom.set).toMatchObject({ weapon: "gpu", damage: 160, have: 4, total: 4 });
     expect(kom.closed).toBe(false);
     const dat = prof.cases.find((c: { id: string }) => c.id === "datsik")!;
     expect(dat.bestHit).toBe(full4.result.damage);
