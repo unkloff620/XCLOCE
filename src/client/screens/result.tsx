@@ -1,6 +1,4 @@
 "use client";
-import { MEDAL_NAMES, MEDAL_SET } from "../../content/medals.ts";
-import { BlastIcon } from "../art/blast.tsx";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useGame } from "../store.tsx";
@@ -124,12 +122,6 @@ export function ResultWindow() {
 
         <div className="result-gains">
           <GainLine r={got ?? preview} size={30} />
-          {/* the boss medal of this mode: his face on a coin, how many of that kind now */}
-          {got?.medal && (
-            <span className="gain medal-chip" title={`Взрыв «${MEDAL_NAMES[got.medal.tier]}» — ${got.medal.n} из ${MEDAL_SET}`}>
-              <BlastIcon tier={got.medal.tier} size={22} /><span className="num">{Math.min(MEDAL_SET, got.medal.n)}/{MEDAL_SET}</span>
-            </span>
-          )}
           {/* a dropped room: one more reward plaque, glowing — [room picture] +комната */}
           {rooms.map((id) => (
             <span key={id} className="gain result-room" title={`Комната «${roomById(id)?.name}» — купи её дома стрелками`}>

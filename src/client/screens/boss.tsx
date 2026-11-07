@@ -28,8 +28,7 @@ import { talentThreshold, talentsForDamage } from "../../content/talents.ts";
 import { TalentWindow } from "./talents.tsx";
 import { weaponStats } from "../weapon-stats.ts";
 import { BOXERS, useBossStrike } from "../fx/boss-strike.tsx";
-import { BLASTS_ON, FIGHT_MODES, MEDAL_NAMES, MEDAL_SET, fightMode, medalBonus, medalStep, medalWeapon, type FightMode } from "../../content/medals.ts";
-import { BlastIcon } from "../art/blast.tsx";
+import { FIGHT_MODES, fightMode, type FightMode } from "../../content/medals.ts";
 import { usePageReady } from "../route-loader.tsx";
 import { tattooSetsOfBoss } from "../../content/tattoos.ts";
 
@@ -592,11 +591,6 @@ export function BossScreen({ id }: { id: string }) {
             <GainLine r={doorReward} size={14} />
             {!!boss.wear && fightMode(mode).things && <DropKind kind="wear" size={14} count={bossItemsCount(boss, state) ?? undefined} />}
             {!!bossTattooCount(boss.id, state, mode) && <DropKind kind="tattoo" size={14} count={bossTattooCount(boss.id, state, mode)!} />}
-            {BLASTS_ON && (
-              <span className="gain medal-chip" title={`Взрыв «${MEDAL_NAMES[fightMode(mode).medal]}» за каждую победу; каждый сразу добавляет урон, ${MEDAL_SET} — полный набор`}>
-                <BlastIcon tier={fightMode(mode).medal} size={18} /><b className="num">{Math.min(MEDAL_SET, row?.medals?.[fightMode(mode).medal] ?? 0)}/{MEDAL_SET}</b>
-              </span>
-            )}
           </span>
           {blocked && locked && <span className="door-lock"><Icon name="lock" size={30} /></span>}
         </button>
@@ -607,8 +601,7 @@ export function BossScreen({ id }: { id: string }) {
       {!locked && !ev && door === "closed" && mode !== "avtor" && <button type="button" className="mode-arrow r" onClick={() => goMode(1)} aria-label="Следующий режим">›</button>}
       <div className="fight-bottom prefight-panel">
         <div className="tiny muted center mode-hint">
-          {soloPick ? "Соло (бьёшь один): здоровье" : `${fightMode(mode).name}: здоровье`} {full(Math.round((row?.hpMax ?? boss.hp) * fightMode(mode).hp))}{BLASTS_ON ? ` · взрыв «${MEDAL_NAMES[fightMode(mode).medal]}»` : ""}{fightMode(mode).things ? " · падают вещи босса" : ""}{tattooSetsOfBoss(boss.id).some((t) => t.mode === mode) ? " · падают наколки" : ""}.
-          {BLASTS_ON && <>{" "}Каждый взрыв — +{full(medalStep(boss, fightMode(mode).medal))} к урону «{weaponById(medalWeapon(boss))?.name}» сразу, все {MEDAL_SET} — +{full(medalBonus(boss, fightMode(mode).medal))}.</>}
+          {soloPick ? "Соло (бьёшь один): здоровье" : `${fightMode(mode).name}: здоровье`} {full(Math.round((row?.hpMax ?? boss.hp) * fightMode(mode).hp))}{fightMode(mode).things ? " · падают вещи босса" : ""}{tattooSetsOfBoss(boss.id).some((t) => t.mode === mode) ? " · падают наколки" : ""}.
         </div>
         {/* auto-fight: this mode fights by itself today — up to the day's limit, free weapons only (one mode per boss) */}
         {!locked && !ev && !soloPick && (

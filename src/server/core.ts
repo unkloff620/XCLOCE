@@ -182,8 +182,6 @@ export interface Granted {
   levelUp?: { from: number; to: number };
   /** things a boss drop opened in the shop (to be bought there) */
   unlocks?: string[];
-  /** the boss medal a won fight gave (content/medals.ts) and how many of that kind the player has now */
-  medal?: { boss: string; tier: "bronze" | "silver" | "gold"; n: number };
   /** «Взлом»: the box this win dropped into the cells, or "full" — the cells were all taken */
   heistBox?: string;
 }

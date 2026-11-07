@@ -17,7 +17,6 @@ export interface Granted {
   levelUp?: { from: number; to: number };
   /** things a boss drop opened in the shop (to be bought there) */
   unlocks?: string[];
-  medal?: { boss: string; tier: "bronze" | "silver" | "gold"; n: number };
   /** «Взлом»: the box this win dropped, or "full" — the cells were all taken */
   heistBox?: string;
 }

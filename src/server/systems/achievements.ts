@@ -47,8 +47,6 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
   // sets of stashes collected ("stashsets:<n>")
   const sets = await q.query<{ set_n: number; count: number }>("SELECT set_n, count FROM stash_sets WHERE player_id=$1", [pid]);
   const stash = Object.fromEntries(sets.map((r) => [`stashsets:${r.set_n}`, Number(r.count)]));
-  // boss medals of each kind ("medal:<boss id>:<tier>")
-  const medals = await q.query<{ boss_id: string; tier: string; n: number }>("SELECT boss_id, tier, n FROM boss_medals WHERE player_id=$1", [pid]);
   // the second set: modes, money, mini games, clans, the social side (what is not stored elsewhere: player_counters)
   const [x] = await q.query<Record<string, number | null>>(
     `SELECT
@@ -150,7 +148,6 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
     ...third,
     ...second,
     ...stash,
-    ...Object.fromEntries(medals.map((m) => [`medal:${m.boss_id}:${m.tier}`, Number(m.n)])),
     ...Object.fromEntries(solo.map((x) => [`solo:${x.boss_id}`, Number(x.n)])),
     ...Object.fromEntries(wins.map((x) => [`win:${x.boss_id}`, Number(x.n)])),
     authority: n("xp"), hits: n("hits"), damage: n("damage"), wins: n("wins"), soloWins: n("solo_wins"), kills: n("kills"), locations: n("locations"), tasks: n("tasks"),

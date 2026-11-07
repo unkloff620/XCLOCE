@@ -1,7 +1,6 @@
 import { autoSpendTalents } from "./home.ts";
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, idempotent, itemQty, ledger, moscowDay, nextMoscowMidnight, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
-import { MEDAL_POINT_EVERY } from "../../content/medals.ts";
 import { BLAT_THING_CHANCE, BOTH_DROP_CHANCE, BOSSES, EVENT_FIGHTS, EXTRA_KEY_CHANCE, OPEN_BOSSES, bossById, bossOpen, keyId, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
 import { RUSH_PRICE, WEAPONS, itemById, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
@@ -14,7 +13,7 @@ import { heistDrop } from "./heist.ts";
 import { craftBonus } from "./craft.ts";
 import { CRAFT_WEAPONS } from "../../content/craft.ts";
 import { BOSS_PARTS, between, craftBossParts, rollParts } from "../../content/craft-drops.ts";
-import { BLASTS_ON, fightMode, type FightMode } from "../../content/medals.ts";
+import { fightMode, type FightMode } from "../../content/medals.ts";
 import { tattooSetsOfBoss } from "../../content/tattoos.ts";
 import { notifyBossLow } from "./notify.ts";
 
@@ -464,19 +463,6 @@ export async function claimFight(ctx: Ctx, fightId: number) {
   if (unlocked.length) granted.unlocks = unlocked;
   // «Взлом»: while the event is on, a box for the win (any mode, the same fair share as the pass)
   if (earnedKey) await heistDrop(ctx, def, granted);
-  // the boss medal of this mode, for sure (the same share of damage as the pass) — while the blasts are in the game
-  if (earnedKey && BLASTS_ON) {
-    const [m] = await ctx.q.query<{ n: number }>(
-      "INSERT INTO boss_medals (player_id, boss_id, tier, n) VALUES ($1,$2,$3,1) ON CONFLICT (player_id, boss_id, tier) DO UPDATE SET n = boss_medals.n + 1 RETURNING n",
-      [ctx.pid, def.id, mode.medal],
-    );
-    granted.medal = { boss: def.id, tier: mode.medal, n: Number(m.n) };
-    // every MEDAL_POINT_EVERY blasts of a kind: +1 achievement point (the sun)
-    if (Number(m.n) % MEDAL_POINT_EVERY === 0) {
-      await ctx.q.query("UPDATE players SET ach_points = ach_points + 1 WHERE id=$1", [ctx.pid]);
-      granted.achPoints = (granted.achPoints ?? 0) + 1;
-    }
-  }
   await ctx.q.query("UPDATE fights SET reward=$2, seen=true WHERE id=$1", [f.id, JSON.stringify(granted)]);
   {
     await ctx.q.query(
@@ -622,12 +608,6 @@ export async function bossList(q: Queryable, pid: number, cfg: Ctx["cfg"], now =
      WHERE f.status='won' AND f.killer_id IS NOT NULL ORDER BY f.boss_id, f.ended_at DESC, f.id DESC`,
   );
   const killerMap = new Map(killers.map((k) => [k.boss_id, { id: k.id, name: k.display_name, photo: k.photo_url, at: new Date(k.ended_at).getTime() }]));
-  const medalRows = await q.query<{ boss_id: string; tier: string; n: number }>("SELECT boss_id, tier, n FROM boss_medals WHERE player_id=$1", [pid]);
-  const medalsOf = (id: string) => ({
-    bronze: Number(medalRows.find((m) => m.boss_id === id && m.tier === "bronze")?.n ?? 0),
-    silver: Number(medalRows.find((m) => m.boss_id === id && m.tier === "silver")?.n ?? 0),
-    gold: Number(medalRows.find((m) => m.boss_id === id && m.tier === "gold")?.n ?? 0),
-  });
   return {
     resetAt: nextMoscowMidnight(now),
     bosses: OPEN_BOSSES(cfg.bossOpen).map((b) => rowOf(b)),
@@ -652,7 +632,6 @@ export async function bossList(q: Queryable, pid: number, cfg: Ctx["cfg"], now =
         fightingNow: activeMap.get(b.id) ?? 0,
         totalWins: winsMap.get(b.id) ?? 0,
         lastKiller: killerMap.get(b.id) ?? null,
-        medals: medalsOf(b.id),
       };
   }
 }

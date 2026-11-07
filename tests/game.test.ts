@@ -13,7 +13,6 @@ import { locationsView } from "../src/server/systems/locations.ts";
 import { exchangeWindow } from "../src/content/currencies.ts";
 import { TALENT_THRESHOLDS, talentThreshold, talentsForDamage } from "../src/content/talents.ts";
 import { MIGRATIONS } from "../src/server/migrations.ts";
-import { BLASTS_ON } from "../src/content/medals.ts";
 import { signInitData, signLoginWidget, validateInitData, validateLoginWidget } from "../src/server/auth.ts";
 
 let db: Db;
@@ -2127,36 +2126,21 @@ describe("бицуха, наезд, харкнуть", () => {
 });
 
 describe("режимы боя и медали боссов", () => {
-  it.skipIf(!BLASTS_ON)("×1 / ×3 / ×6 HP; a win gives the mode's medal; each medal adds to the boss's weapon, 100 make the full set; things only in «Блатной»", async () => {
-    await setBossHp({ datsik: 100 });
-    const { MEDAL_SET, medalBonus, medalBonusFor } = await import("../src/content/medals.ts");
-    const { bossById } = await import("../src/content/bosses.ts");
+  it("×1 / ×3 / ×6 HP by mode; a win gives no blasts (taken out of the game)", async () => {
+    await setBossHp({ datsik: 1000 });
+    for (const [mode, k] of [["pacan", 1], ["blat", 3], ["avtor", 6]] as const) {
+      const p = await newPlayer(db);
+      const f = await act(db, p, "fight_start", { boss: "datsik", mode }, T0);
+      expect(f.result.hpMax).toBe(1000 * k);
+    }
     const p = await newPlayer(db);
-    await give(db, p, "gpu", 100);
-    const f1 = await act(db, p, "fight_start", { boss: "datsik", mode: "avtor" }, T0);
-    expect(f1.result).toMatchObject({ mode: "avtor", hpMax: 600 });
-    await act(db, p, "fight_flee", {}, T0);
-    const f2 = await act(db, p, "fight_start", { boss: "datsik" }, T0 + M);
-    expect(f2.result).toMatchObject({ mode: "pacan", hpMax: 100 });
-    await act(db, p, "attack", { weapon: "gpu", count: 10 }, T0 + M);
-    const c = await act(db, p, "fight_claim", { fightId: f2.result.fightId }, T0 + M, always(0.01));
-    expect(c.result.reward.medal).toEqual({ boss: "datsik", tier: "bronze", n: 1 });
-    // «Пацанский» never opens his things, even with luck
-    expect(c.result.reward.unlocks).toBeUndefined();
-    // every medal adds its share to his weapon (the mouse) at once; a full set — the whole bonus
-    const before = await act(db, p, "equip", { itemId: "jeans" }, T0 + 2 * M);
-    const datsik = bossById("datsik")!;
-    expect(before.state.setBonus?.mouse ?? 0).toBe(medalBonusFor(datsik, "bronze", 1));
-    await db.query("UPDATE boss_medals SET n=50 WHERE player_id=$1 AND boss_id='datsik' AND tier='bronze'", [p]);
-    const half = await act(db, p, "equip", { itemId: "jeans" }, T0 + 2 * M);
-    expect(half.state.setBonus?.mouse ?? 0).toBe(Math.round(medalBonus(datsik, "bronze") / 2));
-    await db.query("UPDATE boss_medals SET n=$2 WHERE player_id=$1 AND boss_id='datsik' AND tier='bronze'", [p, MEDAL_SET]);
-    const after = await act(db, p, "equip", { itemId: "jeans" }, T0 + 3 * M);
-    expect(after.state.setBonus?.mouse ?? 0).toBe(medalBonus(datsik, "bronze"));
-    expect(MEDAL_SET).toBe(100);
-    // the achievement is reached
-    const done = after.state.achievementsReady ?? null;
-    expect(done === null || done >= 1).toBe(true);
+    await setBossHp({ datsik: 10 });
+    const f = await startDatsik(p);
+    await give(db, p, "rug-pull-gun", 1);
+    await hit(p, "rug-pull-gun");
+    const won = await act(db, p, "fight_claim", { fightId: f.result.fightId }, T0, always(0.99));
+    expect(won.result.reward.medal).toBeUndefined();
+    expect(won.state.setBonus ?? {}).toEqual({});
   });
 });
 
