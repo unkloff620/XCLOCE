@@ -22,7 +22,6 @@
 .daily-lines { display: flex; flex-direction: column; gap: 3px; font-size: 12px; }
 .daily-lines > span { display: inline-flex; align-items: center; gap: 3px; }
 .daily-check { position: absolute; top: 4px; right: 6px; font-weight: 900; color: #3ddc84; font-size: 16px; }
-@media (min-width: 560px) { .daily-grid { grid-template-columns: repeat(7, 1fr); } .daily-tile.big { grid-column: auto; } }
 
 .wardrobe { display: flex; gap: 12px; }
 
