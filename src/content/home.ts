@@ -101,6 +101,8 @@ export const EQUIPMENT: EquipmentDef[] = [
       { name: "Кресло лудомана", art: "chair-vodovoz", price: { currency: "RUB", amount: 6000 }, bonus: { critChance: 0.025 }, drop: { boss: "vodovoz" } },
       { name: "Белый трон", art: "chair-knyaz", price: { currency: "RUB", amount: 6500 }, bonus: { critChance: 0.025 }, drop: { boss: "knyaz" } },
       { name: "Кресло Пепе", art: "chair-pepe", price: { currency: "RUB", amount: 7000 }, bonus: { critChance: 0.025 }, drop: { boss: "pepe" } },
+      // new pieces go at the end: a piece is a bit of the owned mask by its place in this list
+      { name: "Кресло Вадима", art: "chair-vadim", price: { currency: "RUB", amount: 7500 }, bonus: { critChance: 0.03 }, drop: { boss: "vadim" } },
     ],
   },
   {

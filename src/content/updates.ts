@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-07-chair-vadim",
+    date: "7 ноября",
+    title: "Кресло Вадима",
+    items: [
+      { img: "/assets/updates/2026-11-07-chair-vadim.webp", text: "С Вадима в «Авторитетном» теперь падает его кресло: тёмно-синяя кожа с каретной стяжкой, ореховое дерево и связка ключей от тачек на подлокотнике. +3% к шансу крита. Выпало — купи в редакторе комнаты." },
+    ],
+  },
+  {
     id: "2026-11-07-sets-presets",
     date: "7 ноября",
     title: "Сеты вещей и пресеты крафта",
