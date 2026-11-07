@@ -30,9 +30,16 @@ export async function craftPut(ctx: Ctx, itemId: string, slot?: number) {
   // the cells bought so far (they become available with the talents, then are bought in order)
   const open = await craftBoxesBought(ctx.q, ctx.pid);
   if (slot !== undefined && slot >= open) throw new GameError("box_locked", "Эта ячейка ещё закрыта");
-  const at = slot !== undefined && slot >= 0 && slot < CRAFT_BOXES && !boxes[slot] ? slot : boxes.findIndex((b, i) => !b && i < open);
+  // dropped onto a taken cell: the thing there goes back to the store and this one takes its place
+  const swap = slot !== undefined && slot >= 0 && slot < CRAFT_BOXES && !!boxes[slot];
+  if (swap && boxes[slot!] === def.id) throw new GameError("same_item", "Здесь уже лежит эта вещь");
+  const at = slot !== undefined && slot >= 0 && slot < CRAFT_BOXES && (swap || !boxes[slot]) ? slot : boxes.findIndex((b, i) => !b && i < open);
   if (at < 0) throw new GameError("boxes_full", open ? "Все открытые ячейки заняты — вытащи что-нибудь" : "Сначала открой ячейку");
   await takeItem(ctx, def.id, 1, "craft-put");
+  if (swap) {
+    const [old] = await ctx.q.query<{ item_id: string }>("DELETE FROM player_craft_box WHERE player_id=$1 AND slot=$2 RETURNING item_id", [ctx.pid, at]);
+    if (old) await addItem(ctx, old.item_id, 1, "craft-swap");
+  }
   await ctx.q.query("INSERT INTO player_craft_box (player_id, slot, item_id) VALUES ($1,$2,$3)", [ctx.pid, at, def.id]);
   await syncTalentExtras(ctx.q, ctx.pid);
   return { slot: at, itemId: def.id };

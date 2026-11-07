@@ -28,3 +28,19 @@ describe("«Крафт» presets", () => {
     expect(left.state.craftPresets.map((x: { name: string }) => x.name)).toEqual(["x"]);
   });
 });
+
+describe("«Крафт» cells", () => {
+  it("a thing dropped onto a taken cell replaces it; the old one goes back to the store", async () => {
+    const db = await freshDb();
+    const p = await newPlayer(db);
+    await db.query("UPDATE players SET craft_boxes=2 WHERE id=$1", [p]);
+    const [a, b] = CRAFT_ALL;
+    await give(db, p, a.id, 1);
+    await give(db, p, b.id, 1);
+    await act(db, p, "craft_put", { itemId: a.id, slot: 0 });
+    const r = await act(db, p, "craft_put", { itemId: b.id, slot: 0 });
+    expect(r.state.craftBoxes[0]).toBe(b.id);
+    expect(await qty(db, p, a.id)).toBe(1);
+    expect(await qty(db, p, b.id)).toBe(0);
+  });
+});
