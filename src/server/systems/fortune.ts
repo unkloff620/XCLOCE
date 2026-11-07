@@ -3,7 +3,7 @@ import { GameError, type Queryable } from "../db.ts";
 import { addItem, grantReward, itemQty, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
 import type { Config } from "../config.ts";
 import { mergeRewards, type Reward } from "../../content/rewards.ts";
-import { JACKPOT_ADD, JACKPOT_SEED, KEYCAP_ID, SECTORS, SPIN_ALL_MAX, TICKET_ID, TICKET_PRICE, fortuneLevel, rollSector } from "../../content/fortune.ts";
+import { JACKPOT_ADD, JACKPOT_SEED, KEYCAP_ID, SECTORS, SPIN_ALL_MAX, TICKET_ID, TICKET_PRICE, fortuneLevel, rollCupKind, rollCups, rollSector, type Cup } from "../../content/fortune.ts";
 
 /** the wheel is in the back yard for everybody once the admin shows it; the admins see it always */
 export async function fortuneOn(q: Queryable, pid: number, cfg: Config): Promise<boolean> {
@@ -20,6 +20,8 @@ export interface FortuneView {
   xp: number; level: number; into: number; need: number;
   /** «ПРИЗ» fell: the cups waiting to be played */
   cups: number;
+  /** a cups game started and not finished (the prizes shown) */
+  cupsLayout: Cup[] | null;
   tickets: number; keycaps: number;
   price: number; add: number;
 }
@@ -27,7 +29,7 @@ export interface FortuneView {
 export async function fortuneView(q: Queryable, pid: number): Promise<FortuneView> {
   const [g] = await q.query<{ jackpot: number; spins: number; winner_id: number | null; winner_amount: number | null; won_at: Date | null; name: string | null; photo: string | null }>(
     "SELECT g.jackpot, g.spins, g.winner_id, g.winner_amount, g.won_at, p.display_name AS name, p.photo_url AS photo FROM fortune_global g LEFT JOIN players p ON p.id = g.winner_id WHERE g.id='_all'");
-  const [me] = await q.query<{ xp: number; cups: number }>("SELECT xp, cups FROM fortune_players WHERE player_id=$1", [pid]);
+  const [me] = await q.query<{ xp: number; cups: number; cups_layout: Cup[] | null }>("SELECT xp, cups, cups_layout FROM fortune_players WHERE player_id=$1", [pid]);
   const xp = Number(me?.xp ?? 0);
   return {
     jackpot: Number(g?.jackpot ?? JACKPOT_SEED),
@@ -35,6 +37,7 @@ export async function fortuneView(q: Queryable, pid: number): Promise<FortuneVie
     winner: g?.winner_id ? { id: Number(g.winner_id), name: g.name ?? "Игрок", photo: g.photo, amount: Number(g.winner_amount ?? 0), at: g.won_at ? new Date(g.won_at).getTime() : 0 } : null,
     xp, ...fortuneLevel(xp),
     cups: Number(me?.cups ?? 0),
+    cupsLayout: me?.cups_layout ?? null,
     tickets: await itemQty(q, pid, TICKET_ID),
     keycaps: await itemQty(q, pid, KEYCAP_ID),
     price: TICKET_PRICE, add: JACKPOT_ADD,
@@ -81,4 +84,40 @@ export async function fortuneSpin(ctx: Ctx, all = false) {
   await ctx.q.query("UPDATE fortune_global SET jackpot = jackpot + $1, spins = spins + $2 WHERE id='_all'", [JACKPOT_ADD * n, n]);
   const reward: Granted | null = rewards.length ? await grantReward(ctx, mergeRewards(...rewards), "fortune_spin") : null;
   return { spins: n, hits, last: hits[hits.length - 1], sector: SECTORS[hits[hits.length - 1]].id, reward, xp, cups, empty, fortune: await fortuneView(ctx.q, ctx.pid) };
+}
+
+/** a cups game: the nine prizes, shown to the player before the cups are shuffled (a game already started comes back as it was) */
+export async function fortuneCupsStart(ctx: Ctx) {
+  await mustBeOn(ctx);
+  const [me] = await ctx.q.query<{ cups: number; cups_layout: Cup[] | null }>("SELECT cups, cups_layout FROM fortune_players WHERE player_id=$1 FOR UPDATE", [ctx.pid]);
+  if (me?.cups_layout) return { layout: me.cups_layout, fortune: await fortuneView(ctx.q, ctx.pid) };
+  if (!me || Number(me.cups) < 1) throw new GameError("fortune_no_cups", "Чашки — за сектор «ПРИЗ» на колесе");
+  const layout = rollCups(ctx.rng);
+  await ctx.q.query("UPDATE fortune_players SET cups = cups - 1, cups_layout = $2 WHERE player_id=$1", [ctx.pid, JSON.stringify(layout)]);
+  return { layout, fortune: await fortuneView(ctx.q, ctx.pid) };
+}
+
+/** a cup lifted: what is under it is drawn by the weights; the jackpot goes to the player whole and starts again */
+export async function fortuneCupsPick(ctx: Ctx, index: number) {
+  await mustBeOn(ctx);
+  const [me] = await ctx.q.query<{ cups_layout: Cup[] | null }>("SELECT cups_layout FROM fortune_players WHERE player_id=$1 FOR UPDATE", [ctx.pid]);
+  const layout = me?.cups_layout;
+  if (!layout) throw new GameError("fortune_no_cups", "Сначала выпади «ПРИЗ» на колесе");
+  if (!Number.isInteger(index) || index < 0 || index >= layout.length) throw new GameError("bad_request", "Нет такой чашки", 400);
+  const kind = rollCupKind(ctx.rng);
+  const same = layout.map((c, i) => (c.kind === kind ? i : -1)).filter((i) => i >= 0);
+  const j = same.length ? same[Math.floor(ctx.rng() * same.length) % same.length] : index;
+  const final = layout.slice();
+  [final[index], final[j]] = [final[j], final[index]];
+  const cup = final[index];
+  await ctx.q.query("UPDATE fortune_players SET cups_layout = NULL WHERE player_id=$1", [ctx.pid]);
+  let jackpot = 0;
+  let reward: Granted | null = null;
+  if (cup.kind === "jackpot") {
+    const [g] = await ctx.q.query<{ jackpot: number }>("SELECT jackpot FROM fortune_global WHERE id='_all' FOR UPDATE");
+    jackpot = Number(g?.jackpot ?? JACKPOT_SEED);
+    await ctx.q.query("UPDATE fortune_global SET jackpot=$1, winner_id=$2, winner_amount=$3, won_at=$4 WHERE id='_all'", [JACKPOT_SEED, ctx.pid, jackpot, new Date(ctx.now)]);
+    reward = await grantReward(ctx, { currencies: { RUB: jackpot } }, "fortune_jackpot");
+  } else if (cup.reward) reward = await grantReward(ctx, cup.reward, `fortune_cup:${cup.kind}`);
+  return { index, kind: cup.kind, final, reward, jackpot, fortune: await fortuneView(ctx.q, ctx.pid) };
 }

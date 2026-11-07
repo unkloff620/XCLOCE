@@ -15,7 +15,7 @@ export const TICKET_PRICE = 150;
 /** every spin adds this to the jackpot */
 export const JACKPOT_ADD = 150;
 /** the jackpot starts again from this after it is won */
-export const JACKPOT_SEED = 10_000;
+export const JACKPOT_SEED = 5_000;
 /** «Ящик ништяков» in the shop: this many tickets a box, and one more with the chance `extra` */
 export const CASE_TICKETS = { min: 1, extra: 0.4 };
 /** «Крутить на все»: at most this many spins at once */
@@ -69,4 +69,46 @@ export function rollSector(rng: () => number): number {
     if (r < 0) return i;
   }
   return SECTORS.length - 1;
+}
+
+/*
+ * «ПРИЗ» — the cups: nine upside-down mugs, each over a prize (one over the jackpot). They are lifted, put down and
+ * shuffled; the player lifts one. What lies under it is drawn by the server by CUP_WEIGHTS (the shuffle on the screen
+ * is only a show — following the jackpot cup with the eye does not win it).
+ */
+export type CupKind = "rub" | "weapon" | "usd" | "chips" | "jackpot" | "case" | "keys";
+export interface Cup { kind: CupKind; reward?: Reward }
+/** the nine cups: what lies under them (amounts rolled a little) */
+export const CUP_SET: CupKind[] = ["jackpot", "rub", "rub", "weapon", "usd", "chips", "case", "keys", "keys"];
+/** how often each kind is the one lifted (for a kind with two cups — either of them) */
+export const CUP_WEIGHTS: Record<CupKind, number> = { jackpot: 4, rub: 26, weapon: 14, usd: 12, chips: 12, case: 8, keys: 24 };
+/** «Ящик ништяков» = this many achievement points (one more opening of the case in the shop) */
+export const CUP_CASE_POINTS = 5;
+
+function pick(rng: () => number, from: number, to: number, step = 1) {
+  return from + Math.floor(rng() * ((to - from) / step + 1)) * step;
+}
+export function cupReward(kind: CupKind, rng: () => number): Reward | undefined {
+  switch (kind) {
+    case "rub": return { currencies: { RUB: pick(rng, 1000, 3000, 250) } };
+    case "usd": return { currencies: { USD: pick(rng, 10, 30, 5) } };
+    case "weapon": return rng() < 0.5 ? { items: [{ id: "rug-pull-gun", qty: pick(rng, 1, 2) }] } : { items: [{ id: "gpu", qty: pick(rng, 2, 3) }] };
+    case "chips": return { items: [{ id: "poker-chip", qty: pick(rng, 3, 5) }] };
+    case "case": return { achPoints: CUP_CASE_POINTS };
+    case "keys": return { items: [{ id: KEYCAP_ID, qty: pick(rng, 50, 150, 10) }] };
+    case "jackpot": return undefined;
+  }
+}
+/** the nine cups in a random order, each with its prize */
+export function rollCups(rng: () => number): Cup[] {
+  const list = CUP_SET.map((kind) => ({ kind, reward: cupReward(kind, rng) }));
+  for (let i = list.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [list[i], list[j]] = [list[j], list[i]]; }
+  return list;
+}
+/** the kind under the lifted cup */
+export function rollCupKind(rng: () => number): CupKind {
+  const e = Object.entries(CUP_WEIGHTS) as [CupKind, number][];
+  let r = rng() * e.reduce((s, [, w]) => s + w, 0);
+  for (const [k, w] of e) { r -= w; if (r < 0) return k; }
+  return "rub";
 }

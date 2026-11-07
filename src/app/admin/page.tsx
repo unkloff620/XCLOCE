@@ -25,11 +25,11 @@ const ACTION_TYPES = [
   "fight_start", "fight_claim", "fight_flee", "task", "location_claim", "yard_pick", "buy", "exchange", "use", "equip", "unequip",
   "clan_create", "clan_join", "clan_leave", "clan_kick", "clan_transfer", "stash_wish", "stash_gift", "stash_accept", "clan_edit", "daily_claim", "sell", "rename", "slots_spin",
   "equipment_upgrade", "talent_up", "talent_reset", "room_buy", "room_set", "look_set", "decor_set", "decor_save", "piece_buy", "quest_claim", "quest_chest",
-  "attack", "auto_set", "heist_pick", "heist_rush", "heist_auto", "heist_open", "fortune_buy", "fortune_spin",
+  "attack", "auto_set", "heist_pick", "heist_rush", "heist_auto", "heist_open", "fortune_buy", "fortune_spin", "fortune_cups", "fortune_cup_pick",
   "notify_set", "achievement_claim", "achievement_claim_all", "ach_box_open", "prize_claim", "game_start", "zonk_move", "poker_play", "bj_open", "bj_invite", "bj_join", "bj_leave", "bj_bet", "bj_move", "upgrade", "up_sell", "up_take", "clan_cancel", "clan_accept", "clan_reject", "stash_collect",
 ];
 const ACTION_NAMES: Record<string, string> = {
-  attack: "удар", auto_set: "автоматика", heist_pick: "взлом замка", heist_rush: "замок сразу", heist_auto: "автовзлом", heist_open: "открыл ящик", fortune_buy: "колесо: билеты", fortune_spin: "колесо: прокрутка",
+  attack: "удар", auto_set: "автоматика", heist_pick: "взлом замка", heist_rush: "замок сразу", heist_auto: "автовзлом", heist_open: "открыл ящик", fortune_buy: "колесо: билеты", fortune_spin: "колесо: прокрутка", fortune_cups: "колесо: чашки", fortune_cup_pick: "колесо: подняв чашку",
   fight_start: "начал бой", fight_claim: "забрал награду боя", fight_flee: "сбежал из боя", task: "задание", location_claim: "награда локации",
   yard_pick: "находка во дворе", buy: "покупка", exchange: "обмен", use: "использовал", equip: "надел", unequip: "снял",
   clan_create: "создал клан", clan_join: "заявка в клан", clan_leave: "вышел из клана", clan_kick: "исключил из клана", clan_transfer: "передал лидерство", stash_wish: "попросил нычки", stash_gift: "отправил нычку", stash_accept: "принял нычки", clan_edit: "изменил клан",
@@ -1132,7 +1132,7 @@ function FortuneAdmin() {
   const d = f.data;
   return (
     <Box title={`🎡 Колесо удачи — ${!d ? "…" : d.on ? "у всех игроков" : "только у админов"}`}>
-      <p className="muted tiny">Люк на заднем дворе. Пока выключено — колесо видят только админы (по Telegram id) и могут всё проверить. Билет 150 ₽, каждая прокрутка +150 ₽ к джекпоту. Билеты падают из «Ящика ништяков» только когда колесо видно игроку.</p>
+      <p className="muted tiny">Люк на заднем дворе. Пока выключено — колесо видят только админы (по Telegram id) и могут всё проверить. Билет 150 ₽, каждая прокрутка +150 ₽ к джекпоту, после выигрыша джекпот начинается с 5000 ₽. Билеты падают из «Ящика ништяков» только когда колесо видно игроку.</p>
       <p className="small">Джекпот: <b>{d ? fmt(d.jackpot) : "…"} ₽</b> · прокруток всего: {d ? fmt(d.spins) : "…"} · последний куш: {d?.winner ? <><a href={`#player/${d.winner.id}`}>{d.winner.name ?? d.winner.id}</a> — {fmt(d.winner.amount)} ₽</> : "ещё никто"}</p>
       <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: "wrap" }}>
         {d?.on

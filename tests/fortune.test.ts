@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { act, always, freshDb, give, newPlayer, qty, setMoney, wallet } from "./helpers.ts";
 import { resetConfigCache } from "../src/server/config.ts";
 import type { Db } from "../src/server/db.ts";
-import { JACKPOT_ADD, JACKPOT_SEED, SECTORS, TICKET_ID, TICKET_PRICE, rollSector } from "../src/content/fortune.ts";
+import { CUP_WEIGHTS, JACKPOT_ADD, JACKPOT_SEED, SECTORS, TICKET_ID, TICKET_PRICE, rollSector } from "../src/content/fortune.ts";
 
 const T = Date.UTC(2026, 10, 10, 12);
 async function wheelOn(db: Db) {
@@ -57,6 +57,33 @@ describe("«Колесо удачи»", () => {
     const r = await act(db, p, "fortune_spin", {}, T, always((before + 0.5) / total));
     expect(r.result.sector).toBe("prize");
     expect(r.result.fortune.cups).toBe(1);
+  });
+
+  it("the cups: nine prizes shown, one lifted; the jackpot goes to the player and starts again", async () => {
+    const db = await freshDb();
+    await wheelOn(db);
+    const p = await newPlayer(db);
+    await expect(act(db, p, "fortune_cups", {}, T)).rejects.toMatchObject({ code: "fortune_no_cups" });
+    await db.query("INSERT INTO fortune_players (player_id, cups) VALUES ($1, 2)", [p]);
+    await db.query("UPDATE fortune_global SET jackpot=12345 WHERE id='_all'");
+    const s = await act(db, p, "fortune_cups", {}, T);
+    expect(s.result.layout).toHaveLength(9);
+    expect(s.result.layout.filter((c: { kind: string }) => c.kind === "jackpot")).toHaveLength(1);
+    // leaving and coming back: the same game, no new cups spent
+    const again = await act(db, p, "fortune_cups", {}, T);
+    expect(again.result.layout).toEqual(s.result.layout);
+    expect(again.result.fortune.cups).toBe(1);
+    // a roll at the very start of the weights: the jackpot (its weight comes first)
+    expect(Object.keys(CUP_WEIGHTS)[0]).toBe("jackpot");
+    const rub = await wallet(db, p, "RUB");
+    const r = await act(db, p, "fortune_cup_pick", { index: 4 }, T, always(0.001));
+    expect(r.result.kind).toBe("jackpot");
+    expect(r.result.final[4].kind).toBe("jackpot");
+    expect(r.result.jackpot).toBe(12345);
+    expect(await wallet(db, p, "RUB")).toBe(rub + 12345);
+    expect(r.result.fortune.jackpot).toBe(JACKPOT_SEED);
+    expect(r.result.fortune.winner).toMatchObject({ id: p, amount: 12345 });
+    await expect(act(db, p, "fortune_cup_pick", { index: 0 }, T)).rejects.toMatchObject({ code: "fortune_no_cups" });
   });
 
   it("the weights add up to the sectors' order", () => {

@@ -5809,17 +5809,17 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 /* the jackpot in a chalk frame (two strokes, a little crooked — drawn by hand) */
 .fo-jack { flex: 1; min-width: 0; position: relative; display: flex; flex-direction: column; align-items: center; padding: 4px 10px 6px; border-radius: 6px;
   background: rgba(30, 32, 36, 0.55); border: 3px solid #f5ec5c; box-shadow: 2px -2px 0 -1px rgba(245, 236, 92, 0.55), inset 0 0 0 1px rgba(0, 0, 0, 0.3); transform: rotate(-0.6deg); }
-.fo-jack-t { font-family: var(--font-display, inherit); font-size: 17px; letter-spacing: 1px; text-transform: uppercase; color: #f5ec5c; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45); line-height: 1.1; }
-.fo-jack-v { display: inline-flex; align-items: center; gap: 6px; font-size: 28px; color: #fff; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.55); line-height: 1.1; }
+.fo-jack-t { font-family: var(--font-display, inherit); font-size: 14px; letter-spacing: 1px; text-transform: uppercase; color: #f5ec5c; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45); line-height: 1.1; }
+.fo-jack-v { display: inline-flex; align-items: center; gap: 6px; font-size: 23px; color: #fff; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.55); line-height: 1.1; }
 .fo-winner { display: flex; justify-content: center; }
-.fo-winner-in { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; padding: 4px 12px 4px 4px; border-radius: 22px; background: rgba(24, 26, 30, 0.72); border: 2px solid rgba(255, 255, 255, 0.6); color: #fff; text-decoration: none; font-size: 13px; }
+.fo-winner-in { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; padding: 4px 12px 4px 4px; border-radius: 22px; background: rgba(24, 26, 30, 0.72); border: 2px solid rgba(255, 255, 255, 0.6); color: #fff; text-decoration: none; font-size: 12px; }
 .fo-winner-n { font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 34cqw; }
 .fo-winner-s { color: #f5ec5c; white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; }
 .fo-winner-s b { color: #fff; }
 .fo-muted { color: #cfd3d8; padding: 6px 12px; text-align: center; font-size: 12px; }
 /* the wheel's level: a chalk-drawn bar on the left */
 .fo-level { position: absolute; z-index: 3; left: 6px; top: calc(var(--top) + 118px); display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.fo-level > b { font-size: 18px; color: #f5ec5c; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.6); line-height: 1; }
+.fo-level > b { font-size: 15px; color: #f5ec5c; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.6); line-height: 1; }
 .fo-level > b small { font-size: 10px; margin-left: 1px; }
 .fo-level-bar { position: relative; width: 12px; height: 32cqw; border-radius: 7px; border: 2px solid #f0efe6; background: rgba(0, 0, 0, 0.45); overflow: hidden; }
 .fo-level-bar > i { position: absolute; left: 0; right: 0; bottom: 0; background: linear-gradient(0deg, #f5b81c, #f5ec5c); border-radius: 5px; transition: height 0.6s; }
@@ -5828,27 +5828,51 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .fo-wheel { position: absolute; inset: 0; transition-property: transform; transition-timing-function: cubic-bezier(0.16, 0.84, 0.18, 1); will-change: transform; filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.55)); }
 .fo-wheel-pic { position: absolute; inset: 0; width: 100%; height: 100%; user-select: none; pointer-events: none; }
 .fo-ic { position: absolute; display: block; line-height: 0; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.4)); }
-.fo-ic > svg, .fo-ic > img { width: 10.5cqw !important; height: 10.5cqw !important; max-width: 46px; max-height: 46px; }
-.fo-lb { position: absolute; font-weight: 900; font-size: min(4.6cqw, 20px); color: #2b2b2b; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6); white-space: nowrap; }
-.fo-prize { position: absolute; width: 24%; user-select: none; pointer-events: none; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45)); }
+.fo-ic > svg, .fo-ic > img { width: 7.6cqw !important; height: 7.6cqw !important; max-width: 34px; max-height: 34px; }
+.fo-lb { position: absolute; font-weight: 900; font-size: min(3.5cqw, 15px); color: #2b2b2b; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6); white-space: nowrap; }
+.fo-prize { position: absolute; width: 17%; user-select: none; pointer-events: none; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45)); }
 .fo-arrow { position: absolute; z-index: 2; left: 50%; top: -6%; width: 13%; transform: translateX(-50%); filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.6)); }
 .fo-arrow path { fill: #f4f2ea; stroke: #2b2b2b; stroke-width: 3; stroke-linejoin: round; }
 /* below: the tickets and keycaps, the green «Крутить» */
 .fo-bottom { position: absolute; z-index: 3; left: 10px; right: 10px; bottom: calc(var(--bottom) + 16px); display: flex; flex-direction: column; gap: 8px; }
-.fo-cups { align-self: center; padding: 5px 12px; border-radius: 12px; background: rgba(160, 20, 20, 0.88); border: 2px solid #ffd23f; color: #fff; font-size: 13px; font-weight: 700; }
+.fo-cups { align-self: center; display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px 4px 6px; border-radius: 12px; background: rgba(28, 30, 34, 0.85); border: 2px solid #ffd23f; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; animation: fo-pulse 1.4s ease-in-out infinite; }
+@keyframes fo-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+.fo-cups img { height: 22px; }
+.fo-spin.stop { background: linear-gradient(180deg, #ff8a6a, #e0442a 55%, #b02a14); border-color: #4a120a; box-shadow: 0 4px 0 #4a120a, inset 0 2px 0 rgba(255, 255, 255, 0.4); }
+/* «ПРИЗ»: nine mugs on the asphalt, the prizes under them */
+.fo-cups-layer { position: absolute; inset: 0; z-index: 20; container-type: inline-size; background: #3b3e42; }
+.fo-cups-head { position: absolute; z-index: 2; left: 10px; right: 10px; top: var(--top); display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.fo-cups-head img { height: 40px; }
+.fo-cups-head span { padding: 4px 14px; border-radius: 12px; background: rgba(24, 26, 30, 0.75); color: #fff; font-size: 15px; font-weight: 800; }
+.fo-table { position: absolute; z-index: 2; left: 50%; top: calc(var(--top) + 118px); transform: translateX(-50%); width: min(94cqw, calc(100dvh - var(--top) - var(--bottom) - 200px)); aspect-ratio: 1; }
+.fo-cup { position: absolute; width: 29%; aspect-ratio: 1; transform: translate(-50%, -50%); padding: 0; border: 0; background: none; transition: left 0.2s ease-in-out, top 0.2s ease-in-out; -webkit-tap-highlight-color: transparent; }
+.fo-cup:disabled { cursor: default; }
+.fo-cup.pickable { cursor: pointer; }
+.fo-cup.pickable:active .fo-cup-pic { transform: scale(0.95); }
+.fo-cup-pic { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; transition: transform 0.35s ease, opacity 0.35s; filter: drop-shadow(0 6px 5px rgba(0, 0, 0, 0.5)); pointer-events: none; }
+/* lifted: the mug slides up and fades a little, the prize shows on the ground */
+.fo-cup.up .fo-cup-pic { transform: translate(26%, -58%) scale(0.72); opacity: 0.45; }
+.fo-cup-prize { position: absolute; inset: 12%; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 50%; background: radial-gradient(closest-side, rgba(0, 0, 0, 0.35), transparent); color: #fff; font-size: 13px; text-shadow: 0 1px 2px #000; }
+.fo-cup-prize img { width: 62%; }
+.fo-cup-prize b { font-size: 14px; }
+.fo-cup-prize.k-jackpot b { color: #f5ec5c; }
+.fo-cup.mine .fo-cup-prize { background: radial-gradient(closest-side, rgba(255, 220, 90, 0.55), transparent); }
+.fo-cup.mine.up .fo-cup-pic { opacity: 0.25; }
+.fo-cups-foot { position: absolute; z-index: 2; left: 16px; right: 16px; bottom: calc(var(--bottom) + 16px); display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.fo-cups-jack { font-size: 20px; color: #f5ec5c; text-shadow: 0 2px 0 #000; }
 .fo-row { display: flex; align-items: stretch; gap: 10px; }
 .fo-stock { flex: 1; display: flex; flex-direction: column; gap: 6px; justify-content: center; }
-.fo-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 6px 3px 6px; border-radius: 8px; border: 2px solid #f0efe6; background: rgba(28, 30, 34, 0.72); color: #fff; font-size: 16px; }
+.fo-chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 6px; border-radius: 8px; border: 2px solid #f0efe6; background: rgba(28, 30, 34, 0.72); color: #fff; font-size: 14px; }
 .fo-chip b { flex: 1; }
-.fo-plus { width: 26px; height: 26px; border-radius: 6px; border: 2px solid #2b2b2b; background: #f5ec5c; color: #2b2b2b; font-weight: 900; font-size: 18px; line-height: 1; padding: 0; cursor: pointer; }
+.fo-plus { width: 22px; height: 22px; border-radius: 6px; border: 2px solid #2b2b2b; background: #f5ec5c; color: #2b2b2b; font-weight: 900; font-size: 18px; line-height: 1; padding: 0; cursor: pointer; }
 .fo-go { flex: 1.1; display: flex; flex-direction: column; gap: 4px; }
 .fo-spin { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 8px 10px; border-radius: 12px; cursor: pointer;
   border: 3px solid #1d3a10; background: linear-gradient(180deg, #8ef05a, #3fb31f 55%, #2e8f14); color: #fff; box-shadow: 0 4px 0 #1d3a10, inset 0 2px 0 rgba(255, 255, 255, 0.45); text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45); }
-.fo-spin b { font-size: 22px; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.05; }
-.fo-spin span { display: inline-flex; align-items: center; gap: 4px; font-size: 15px; font-weight: 800; }
+.fo-spin b { font-size: 18px; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.05; }
+.fo-spin span { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 800; }
 .fo-spin:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 #1d3a10, inset 0 2px 0 rgba(255, 255, 255, 0.45); }
 .fo-spin:disabled { filter: saturate(0.5) brightness(0.85); cursor: default; }
-.fo-all { display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: #fff; font-size: 13px; font-weight: 700; text-shadow: 0 1px 2px #000; }
+.fo-all { display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: #fff; font-size: 12px; font-weight: 700; text-shadow: 0 1px 2px #000; }
 .fo-all input { width: 18px; height: 18px; accent-color: #3fb31f; }
 .fo-res { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
 .fo-got { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 20px; }

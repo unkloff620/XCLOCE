@@ -1319,4 +1319,10 @@ CREATE TABLE IF NOT EXISTS fortune_players (
   cups INT NOT NULL DEFAULT 0
 );`,
   },
+  {
+    // «Колесо удачи»: the cups game in progress (the nine prizes shown, until one is lifted); the jackpot starts from 5000
+    id: "v2-087-fortune-cups",
+    sql: `ALTER TABLE fortune_players ADD COLUMN IF NOT EXISTS cups_layout JSONB;
+UPDATE fortune_global SET jackpot = 5000 + 150 * spins WHERE id='_all' AND winner_id IS NULL;`,
+  },
 ];
