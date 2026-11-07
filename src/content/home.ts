@@ -33,8 +33,7 @@ export interface PieceDef {
   /** bonus this piece gives while owned (pieces of one kind add up) */
   bonus: Bonus;
   /**
-   * a boss's own piece (the chairs in the style of his room): it drops from his «Авторитетный» wins (an event boss — his
-   * only mode) with PIECE_DROP_CHANCE, after PIECE_PITY wins without luck for sure; then it is bought here like the rest
+   * a boss's own piece (the chairs in the style of his room): it drops from his wins in any mode with PIECE_DROP_CHANCE, after PIECE_PITY wins without luck for sure; then it is bought here like the rest
    */
   drop?: { boss: string };
 }
@@ -91,7 +90,7 @@ export const EQUIPMENT: EquipmentDef[] = [
       { name: "Офисное кресло", art: "chair-1", price: { currency: "RUB", amount: 2500 }, bonus: { critChance: 0.02 } },
       { name: "Геймерское кресло", art: "chair-2", price: { currency: "RUB", amount: 4_000 }, bonus: { critChance: 0.02 } },
       { name: "Трон трейдера", art: "chair-3", price: { currency: "RUB", amount: 6_000 }, bonus: { critChance: 0.03 } },
-      // the bosses' chairs, each in the style of his room: they drop in «Авторитетный» (PieceDef.drop)
+      // the bosses' chairs, each in the style of his room: they drop in any mode (PieceDef.drop)
       { name: "Ледяное кресло", art: "chair-datsik", price: { currency: "RUB", amount: 2000 }, bonus: { critChance: 0.01 }, drop: { boss: "datsik" } },
       { name: "Неоновое кресло", art: "chair-kedr", price: { currency: "RUB", amount: 2500 }, bonus: { critChance: 0.01 }, drop: { boss: "kedr" } },
       { name: "Капитанское кресло", art: "chair-mugo", price: { currency: "RUB", amount: 3000 }, bonus: { critChance: 0.015 }, drop: { boss: "mugo" } },

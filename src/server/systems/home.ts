@@ -74,7 +74,7 @@ export async function buyPiece(ctx: Ctx, id: string, k: number) {
   // a boss's piece: bought only after it dropped from him
   if (piece.drop) {
     const [u] = await ctx.q.query("SELECT 1 FROM player_unlocks WHERE player_id=$1 AND item_id=$2", [ctx.pid, pieceUnlockId(piece.art)]);
-    if (!u) throw new GameError("piece_locked", `${piece.name}: сначала выбей его с босса ${bossById(piece.drop.boss)?.name ?? ""} в «Авторитетном»`);
+    if (!u) throw new GameError("piece_locked", `${piece.name}: сначала выбей его с босса ${bossById(piece.drop.boss)?.name ?? ""}`);
   }
   await takeMoney(ctx, piece.price.currency, piece.price.amount, `piece:${def.id}:${k}`);
   const mask = owned | (1 << (k - 1));

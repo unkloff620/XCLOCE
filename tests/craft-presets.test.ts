@@ -44,3 +44,17 @@ describe("«Крафт» cells", () => {
     expect(await qty(db, p, b.id)).toBe(0);
   });
 });
+
+describe("admin: chairs", () => {
+  it("gives any chair outright and takes it back", async () => {
+    const { edit } = await import("../src/server/admin.ts");
+    const db = await freshDb();
+    const p = await newPlayer(db);
+    await edit(db, 1, p, { op: "give_piece", equipment: "chair", piece: 13 }); // Кресло Вадима
+    const [r] = await db.query<{ pieces: number }>("SELECT pieces FROM player_equipment WHERE player_id=$1 AND equipment_id='chair'", [p]);
+    expect((Number(r.pieces) >> 12) & 1).toBe(1);
+    await edit(db, 1, p, { op: "give_piece", equipment: "chair", piece: 13, own: false });
+    const [r2] = await db.query<{ pieces: number }>("SELECT pieces FROM player_equipment WHERE player_id=$1 AND equipment_id='chair'", [p]);
+    expect(Number(r2.pieces)).toBe(0);
+  });
+});

@@ -410,9 +410,9 @@ export async function claimFight(ctx: Ctx, fightId: number) {
     await commitUnlock(ctx, def, r, r.held);
     if (r.got && !r.held) unlocked.push(r.got);
   }
-  // a chair of this boss (EQUIPMENT pieces with drop.boss): in «Авторитетный» (an event boss: his only mode) with
-  // PIECE_DROP_CHANCE, after PIECE_PITY wins without luck for sure; it opens in the room editor to be bought there
-  if (earnedKey && (mode.id === "avtor" || def.event)) {
+  // a chair of this boss (EQUIPMENT pieces with drop.boss): in any mode with PIECE_DROP_CHANCE, after PIECE_PITY
+  // wins without luck for sure; it opens in the room editor to be bought there
+  if (earnedKey) {
     for (const e of EQUIPMENT) {
       for (const [i, pc] of (e.pieces ?? []).entries()) {
         if (pc.drop?.boss !== def.id) continue;

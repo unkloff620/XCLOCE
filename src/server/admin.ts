@@ -20,7 +20,7 @@ import { itemById } from "../content/items.ts";
 import { levelFromXp } from "../content/levels.ts";
 import { talentStop } from "../content/talents.ts";
 import { syncTalentExtras } from "./systems/home.ts";
-import { roomById, roomsEnergyBonus } from "../content/home.ts";
+import { equipmentById, pieceUnlockId, piecesCount, roomById, roomsEnergyBonus } from "../content/home.ts";
 
 const n = (v: unknown) => Number(v ?? 0);
 
@@ -135,6 +135,7 @@ export async function player(db: Db, id: number) {
     db.query(`SELECT a.id, a.admin_tg, ${ADMIN_COLS}, a.op, a.info, a.at FROM admin_log a LEFT JOIN players ap ON ap.telegram_id = a.admin_tg WHERE a.player_id=$1 ORDER BY a.id DESC LIMIT 100`, [id]),
     db.query<{ room: string | null; rooms: unknown }>("SELECT room, rooms FROM appearance WHERE player_id=$1", [id]),
   ]);
+  const chairMask = Number((await db.query<{ pieces: number }>("SELECT pieces FROM player_equipment WHERE player_id=$1 AND equipment_id='chair'", [id]))[0]?.pieces ?? 0);
   const roomsRaw = typeof look?.rooms === "string" ? JSON.parse(look.rooms) : look?.rooms;
   const money = Object.fromEntries(CURRENCIES.map((c) => [c, n(wallet.find((w) => w.currency === c)?.amount)]));
   return {
@@ -149,6 +150,7 @@ export async function player(db: Db, id: number) {
     ledger,
     admin,
     rooms: { have: Array.isArray(roomsRaw) && roomsRaw.length ? roomsRaw.map(String) : ["basic"], current: look?.room ?? "basic" },
+    chairs: chairMask,
   };
 }
 
@@ -179,10 +181,11 @@ export type Edit =
   | { op: "boss_limit_reset" }
   | { op: "give_tattoo_set"; set: string }
   | { op: "give_room"; room: string; own?: boolean }
+  | { op: "give_piece"; equipment: string; piece: number; own?: boolean }
   | { op: "ban"; reason: string }
   | { op: "unban" }
   | { op: "reset" };
-export const EDIT_OPS = ["set_money", "set_item", "add_item", "set_xp", "set_poker_xp", "set_zonk_xp", "set_energy", "set_talents", "set_talent", "set_name", "ban", "unban", "reset", "boss_limit_reset", "give_tattoo_set", "give_room"] as const;
+export const EDIT_OPS = ["set_money", "set_item", "add_item", "set_xp", "set_poker_xp", "set_zonk_xp", "set_energy", "set_talents", "set_talent", "set_name", "ban", "unban", "reset", "boss_limit_reset", "give_tattoo_set", "give_room", "give_piece"] as const;
 
 /**
  * Everything a player has earned, keyed by player_id. The reset wipes these and gives the starting kit again.
@@ -354,6 +357,27 @@ export async function edit(db: Db, adminTg: number, pid: number, e: Edit) {
         await q.query("UPDATE appearance SET rooms=$2, room=$3 WHERE player_id=$1", [pid, JSON.stringify(rooms), room]);
         await q.query("UPDATE players SET energy_bonus=$2 WHERE id=$1", [pid, roomsEnergyBonus(rooms)]);
         info = { room: def.name, own, changed: rooms.length !== have.length };
+        break;
+      }
+      // a room thing (a chair, a desk, a monitor) owned outright — or taken back — without its boss drop and its price
+      case "give_piece": {
+        const def = equipmentById(e.equipment);
+        const k = Math.floor(Number(e.piece));
+        const pc = def?.pieces?.[k - 1];
+        if (!def || !pc) throw bad("Нет такой вещи");
+        const own = e.own !== false;
+        const [row] = await q.query<{ pieces: number }>("SELECT pieces FROM player_equipment WHERE player_id=$1 AND equipment_id=$2 FOR UPDATE", [pid, def.id]);
+        const before = Number(row?.pieces ?? 0);
+        const mask = own ? before | (1 << (k - 1)) : before & ~(1 << (k - 1));
+        await q.query(
+          `INSERT INTO player_equipment (player_id, equipment_id, level, pieces) VALUES ($1,$2,$3,$4)
+           ON CONFLICT (player_id, equipment_id) DO UPDATE SET pieces = EXCLUDED.pieces, level = EXCLUDED.level`,
+          [pid, def.id, piecesCount(mask), mask],
+        );
+        if (own && pc.drop) await q.query("INSERT INTO player_unlocks (player_id, item_id, boss_id, at) VALUES ($1,$2,$3,now()) ON CONFLICT DO NOTHING", [pid, pieceUnlockId(pc.art), pc.drop.boss]);
+        // taken back while it stands in the room: the room shows the free one (the stool) instead
+        if (!own) await q.query("UPDATE appearance SET decor = decor - $2::text WHERE player_id=$1 AND (decor->>$2)::int = $3", [pid, def.id, k]);
+        info = { piece: pc.name, own, changed: mask !== before };
         break;
       }
       case "set_name": {

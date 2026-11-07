@@ -14,7 +14,7 @@ import { CURRENCIES } from "../../content/currencies.ts";
 import { EXTRA_NAMES, TALENT_PATH, talentStop } from "../../content/talents.ts";
 import { BOSSES, bossById, bossHasArt, keyId, unlockBossOf } from "../../content/bosses.ts";
 import { TATTOO_SETS } from "../../content/tattoos.ts";
-import { ROOM_DEFS } from "../../content/home.ts";
+import { ROOM_DEFS, equipmentById } from "../../content/home.ts";
 import { ROOM_BACKDROP } from "../../content/home-scene.ts";
 import { offerById } from "../../content/shop.ts";
 import { taskById } from "../../content/locations.ts";
@@ -40,7 +40,7 @@ const ACTION_NAMES: Record<string, string> = {
 };
 const OP_NAMES: Record<string, string> = {
   set_money: "валюта", set_item: "предмет", add_item: "выдал", set_xp: "авторитет", set_poker_xp: "опыт покера", set_zonk_xp: "опыт зонка", set_energy: "энергия", set_talents: "свободные таланты",
-  set_talent: "ветка таланта", set_name: "имя", ban: "бан", unban: "разбан", reset: "сброс прогресса", boss_limit_reset: "сброс лимита боссов", give_tattoo_set: "сет наколок", give_room: "комната",
+  set_talent: "ветка таланта", set_name: "имя", ban: "бан", unban: "разбан", reset: "сброс прогресса", boss_limit_reset: "сброс лимита боссов", give_tattoo_set: "сет наколок", give_room: "комната", give_piece: "кресло",
 };
 
 // ---------------- api ----------------
@@ -672,7 +672,7 @@ function DashTables({ sub }: { sub: "items" | "actions" }) {
 // ---------------- player card ----------------
 type PlayerData = {
   player: Row; money: Record<string, number>; inventory: Row[]; stats: Row | null; talents: Row[]; clan: Row | null;
-  fights: Row[]; actions: Row[]; ledger: Row[]; admin: Row[]; rooms?: { have: string[]; current: string };
+  fights: Row[]; actions: Row[]; ledger: Row[]; admin: Row[]; rooms?: { have: string[]; current: string }; chairs?: number;
 };
 type PTab = "res" | "items" | "talents" | "stats" | "history" | "mod";
 const PTABS: [PTab, string, string][] = [["res", "💰", "Ресурсы"], ["items", "🎒", "Вещи и наколки"], ["talents", "⭐", "Таланты"], ["stats", "📊", "Статистика"], ["history", "📜", "История"], ["mod", "🚫", "Модерация"]];
@@ -739,7 +739,7 @@ function Player({ id }: { id: number }) {
           </div>
         </section>
       )}
-      {tab === "items" && <><Rooms have={data.rooms?.have ?? ["basic"]} current={data.rooms?.current ?? "basic"} edit={edit} /><Catalog rows={data.inventory} edit={edit} /></>}
+      {tab === "items" && <><Rooms have={data.rooms?.have ?? ["basic"]} current={data.rooms?.current ?? "basic"} edit={edit} /><Chairs mask={Number(data.chairs ?? 0)} edit={edit} /><Catalog rows={data.inventory} edit={edit} /></>}
       {tab === "talents" && <Talents rows={data.talents} edit={edit} />}
       {tab === "stats" && (
         <section className="adm-card">
@@ -878,6 +878,34 @@ function Rooms({ have, current, edit }: { have: string[]; current: string; edit:
                 {own
                   ? <button className="adm-btn ghost" onClick={() => { if (confirm(`Забрать комнату «${r.name}»?`)) void edit({ op: "give_room", room: r.id, own: false }, `Комната «${r.name}» забрана`); }}>Забрать</button>
                   : <button className="adm-btn" onClick={() => void edit({ op: "give_room", room: r.id }, `Комната «${r.name}»`)}>Выдать</button>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+/** the chairs (the shop's and the bosses'): give one outright (no boss drop, no price) or take it back */
+function Chairs({ mask, edit }: { mask: number; edit: EditFn }) {
+  const list = equipmentById("chair")?.pieces ?? [];
+  return (
+    <section className="adm-card">
+      <h3>🪑 Кресла <span className="muted small">({list.filter((_, i) => (mask >> i) & 1).length}/{list.length})</span></h3>
+      <div className="adm-tiles">
+        {list.map((c, i) => {
+          const own = ((mask >> i) & 1) === 1;
+          return (
+            <div key={c.art} className={`adm-tile adm-room ${own ? "have" : ""}`}>
+              {own && <span className="adm-tile-q">есть</span>}
+              <img src={`/assets/home/thumb/${c.art}.webp`} alt="" loading="lazy" style={{ objectFit: "contain" }} />
+              <span className="adm-tile-n">{c.name}</span>
+              <span className="muted tiny">{c.drop ? `с босса ${bossById(c.drop.boss)?.name ?? c.drop.boss}` : "магазин"}</span>
+              <div className="adm-tile-act">
+                {own
+                  ? <button className="adm-btn ghost" onClick={() => { if (confirm(`Забрать «${c.name}»?`)) void edit({ op: "give_piece", equipment: "chair", piece: i + 1, own: false }, `«${c.name}» забрано`); }}>Забрать</button>
+                  : <button className="adm-btn" onClick={() => void edit({ op: "give_piece", equipment: "chair", piece: i + 1 }, `«${c.name}» выдано`)}>Выдать</button>}
               </div>
             </div>
           );
@@ -1391,6 +1419,7 @@ function EditInfo({ op, info }: { op: string; info: unknown }) {
   if (op === "ban") return <span className="bad">заблокирован{i.reason ? `: ${i.reason}` : ""}</span>;
   if (op === "unban") return <span className="good">разблокирован</span>;
   if (op === "boss_limit_reset") return <span className="good">лимит боссов на сегодня сброшен <span className="muted">(боёв: {fmt(i.fights)})</span></span>;
+  if (op === "give_piece") return <span className={i.own === false ? "bad" : "good"}>{i.own === false ? "забрано" : "выдано"} «{String(i.piece)}»{i.changed ? "" : <span className="muted"> (без изменений)</span>}</span>;
   if (op === "give_room") return <span className={i.own === false ? "bad" : "good"}>{i.own === false ? "забрана" : "выдана"} комната «{String(i.room)}»{i.changed ? "" : <span className="muted"> (без изменений)</span>}</span>;
   if (op === "give_tattoo_set") return <span className="good">выдан сет наколок «{String(i.set)}» <span className="muted">(новых: {fmt(i.added)})</span></span>;
   if (op === "reset") {
