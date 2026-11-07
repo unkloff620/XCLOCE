@@ -1,4 +1,5 @@
 "use client";
+import { WidePanels } from "./wide-panels.tsx";
 import { zoomRect } from "./phone-mode.ts";
 import { createPortal } from "react-dom";
 import { AchToast } from "./badges.tsx";
@@ -477,6 +478,7 @@ export function Shell({ children }: { children: ReactNode }) {
             <Hud />
             <main className="main"><SectionGate route={path} look={look} room={state?.look.room ?? "basic"}>{children}</SectionGate></main>
             <Nav />
+            <WidePanels />
             <ResultWindow />
             <Tutorial />
             <FirstSteps />
