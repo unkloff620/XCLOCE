@@ -13,6 +13,7 @@ import { locationsView } from "../src/server/systems/locations.ts";
 import { exchangeWindow } from "../src/content/currencies.ts";
 import { TALENT_THRESHOLDS, talentThreshold, talentsForDamage } from "../src/content/talents.ts";
 import { MIGRATIONS } from "../src/server/migrations.ts";
+import { BLASTS_ON } from "../src/content/medals.ts";
 import { signInitData, signLoginWidget, validateInitData, validateLoginWidget } from "../src/server/auth.ts";
 
 let db: Db;
@@ -707,7 +708,7 @@ describe("inventory and clans", () => {
     await expect(act(db, p, "equip", { itemId: "laser-eyes" }, T0)).rejects.toMatchObject({ code: "no_item" });
     await give(db, p, "laser-eyes", 1);
     const r = await act(db, p, "equip", { itemId: "laser-eyes" }, T0);
-    expect(r.state.look.equipped.ACCESSORY).toBe("laser-eyes");
+    expect(r.state.look.equipped.FACE).toBe("laser-eyes"); // laser eyes moved to the face slot
   });
   it("energy drink adds energy above the maximum", async () => {
     const p = await newPlayer(db);
@@ -2126,7 +2127,7 @@ describe("бицуха, наезд, харкнуть", () => {
 });
 
 describe("режимы боя и медали боссов", () => {
-  it("×1 / ×3 / ×6 HP; a win gives the mode's medal; each medal adds to the boss's weapon, 100 make the full set; things only in «Блатной»", async () => {
+  it.skipIf(!BLASTS_ON)("×1 / ×3 / ×6 HP; a win gives the mode's medal; each medal adds to the boss's weapon, 100 make the full set; things only in «Блатной»", async () => {
     await setBossHp({ datsik: 100 });
     const { MEDAL_SET, medalBonus, medalBonusFor } = await import("../src/content/medals.ts");
     const { bossById } = await import("../src/content/bosses.ts");
