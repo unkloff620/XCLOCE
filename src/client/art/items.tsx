@@ -11,7 +11,7 @@ const RASTER_ITEMS = new Set([
   "fist", "mouse", "red-candle", "keyboard", "gpu", "rug-pull-gun",
   "tee-white", "tee-pump", "hoodie-hodl", "jeans", "shorts-remote", "sneakers", "cap-moon", "slippers", "gold-chain", "bottle-komandate", "anchor-mugo", "hand-drum",
   "jacket-puffer", "pants-black", "sneakers-chunky", "tee-sailor", "cap-captain", "mask-diver", "teeth-necklace", "tee-actclose", "shorts-actclose", "badge-actclose", "jacket-komandate", "pants-komandate", "sneakers-komandate", "jacket-vadim", "pants-vadim", "shoes-vadim", "tie-vadim", "sweater-vostok", "pants-vostok", "headphones-vostok", "sneakers-black", "cigarette", "toothpick", "shades-gold", "chain-cuban", "mask-anon", "monocle-whale", "bruise-liq", "crown-cash", "ushanka-star", "helmet-miner", "bandana-hodl", "cigar", "teeth-grin", "grillz-diamond",
-  "poker-chip", "energy-drink", "energy-pack", "energy-50", "energy-100", "energy-500", "lost-wallet", "bottle-cap", "flyer-passive", "spinner", "sticker-hodl", "statue-close", "trophy-sun", "santa-hat", "laser-eyes",
+  "poker-chip", "energy-drink", "energy-pack", "energy-50", "energy-100", "energy-500", "lost-wallet", "bottle-cap", "flyer-passive", "spinner", "sticker-hodl", "statue-close", "trophy-sun", "santa-hat", "laser-eyes", "fortune-ticket", "keycap",
   ...STASH_IDS,
   ...TATTOO_IDS,
   ...CRAFT_ALL.map((c) => c.id),

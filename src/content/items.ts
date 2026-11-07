@@ -160,6 +160,9 @@ const MISC: ItemDef[] = [
   { id: "flyer-passive", name: "Листовка «Пассивный доход»", category: "item", rarity: "common", maxStack: 999, description: "Звоните прямо сейчас!", sources: ["Двор"] },
   { id: "poker-chip", name: "Фишка", category: "item", rarity: "rare", maxStack: 999, description: "Одна бесплатная раздача в покере.", sources: ["Двор"] },
   { id: "lost-wallet", name: "Забытый кошелёк", category: "item", rarity: "rare", maxStack: 999, description: "Внутри немного долларов и чек из шаурмы.", sources: ["Двор"] },
+  // «Колесо удачи» (content/fortune.ts): the ticket is one spin; the keycaps open the boxes of the bag
+  { id: "fortune-ticket", name: "Билет колеса", category: "item", rarity: "rare", maxStack: 99_999, description: "Одна прокрутка «Колеса удачи» на заднем дворе. Каждая прокрутка растит общий джекпот.", sources: ["Ящик ништяков в магазине", "Колесо удачи: купить за 150 ₽", "Колесо удачи"] },
+  { id: "keycap", name: "Кнопка клавиатуры", category: "item", rarity: "common", maxStack: 99_999_999, description: "Кнопки, выбитые на «Колесе удачи». За них открываются коробки с наколками в сумке колеса.", sources: ["Колесо удачи"] },
 ];
 
 /** Boss passes (ids key-<boss>): the key to the next boss, or for the last five bosses a pass card (passLook). */

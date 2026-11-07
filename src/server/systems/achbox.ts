@@ -4,6 +4,8 @@ import { CASE_THINGS, CASE_THING_CHANCE, CASE_THING_PITY, achBoxState, rollAchBo
 import { mergeRewards } from "../../content/rewards.ts";
 import { BOX_TATTOO_CHANCE, BOX_TATTOO_SETS } from "../../content/tattoos.ts";
 import { between, rollParts } from "../../content/craft-drops.ts";
+import { CASE_TICKETS, TICKET_ID } from "../../content/fortune.ts";
+import { fortuneOn } from "./fortune.ts";
 
 /** «Ящик ништяков» (content/ach-box.ts): how many are waiting for the achievement points, the way to the next one */
 export async function achBoxView(q: Queryable, pid: number) {
@@ -52,6 +54,9 @@ export async function openAchBox(ctx: Ctx, all = false) {
   await ctx.q.query("UPDATE players SET case_thing_miss=$2 WHERE id=$1", [ctx.pid, miss]);
   // «Крафт»: every box opened — 2–4 parts, 15% on a very rare one
   const parts = Array.from({ length: n }, () => rollParts(ctx.rng, between(2, 4, ctx.rng), { rare: 0.3, epic: 0.15 / 3 })).flat();
-  const reward = await grantReward(ctx, mergeRewards(...Array.from({ length: n }, () => rollAchBox(ctx.rng)), { items: [...ink, ...parts] }), "ach_box");
+  // «Колесо удачи»: tickets in every box (once the wheel is in the yard for this player)
+  let tickets = 0;
+  if (await fortuneOn(ctx.q, ctx.pid, ctx.cfg)) for (let i = 0; i < n; i++) tickets += CASE_TICKETS.min + (ctx.rng() < CASE_TICKETS.extra ? 1 : 0);
+  const reward = await grantReward(ctx, mergeRewards(...Array.from({ length: n }, () => rollAchBox(ctx.rng)), { items: [...ink, ...parts, ...(tickets ? [{ id: TICKET_ID, qty: tickets }] : [])] }), "ach_box");
   return { reward, opened: n, box: await achBoxView(ctx.q, ctx.pid) };
 }

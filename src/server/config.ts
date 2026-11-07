@@ -48,6 +48,8 @@ export interface Config {
   tosya: TosyaMode;
   /** «Взлом» (content/heist.ts): on while an event with the «heistBoxes» effect is going on, till it ends */
   heist?: { endsAt: number } | null;
+  /** «Колесо удачи» (content/fortune.ts): shown to the players (the admins see it always, to check it before) */
+  fortune: { on: boolean };
 }
 
 export function defaultConfig(): Config {
@@ -70,6 +72,7 @@ export function defaultConfig(): Config {
     eventBosses: {},
     maintenance: { on: false, text: MAINTENANCE_TEXT },
     tosya: { mode: "auto", at: 0 },
+    fortune: { on: false },
   };
 }
 
@@ -77,6 +80,7 @@ export const MAINTENANCE_TEXT = "Идут технические работы �
 
 const KEYS: Record<string, (c: Config, v: unknown) => void> = {
   tosya: (c, v) => { c.tosya = cleanTosyaMode(v); },
+  fortune: (c, v) => { c.fortune = { on: (v as { on?: unknown } | null)?.on === true }; },
   maintenance: (c, v) => {
     const m = (v ?? {}) as { on?: unknown; text?: unknown };
     c.maintenance = { on: m.on === true, text: typeof m.text === "string" && m.text.trim() ? m.text.trim().slice(0, 300) : MAINTENANCE_TEXT };

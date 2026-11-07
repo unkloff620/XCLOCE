@@ -104,6 +104,7 @@ export function YardScreen() {
             <p>Изредка попадается Клавиатура. Всё найденное можно продать в инвентаре.</p>
             <p>Обменник — ларёк во второй половине двора (свайпни влево). {LINKS[0].hint}</p>
             <p>Игровой автомат 777 — 3 бесплатные прокрутки в час. Справа от него — автомат «Апгрейдер»: улучшай находки и оружие.</p>
+            {state?.fortune?.on && <p>Задний двор (свайп вправо) — люк «Колесо удачи»: крути за билеты, джекпот растёт с каждой прокруткой.</p>}
             <p>Подъезд — вход в локации: задания за энергию, шаги и награды. Значок «!» — энергии хватает на задание.</p>
             <p>Стол с табло — блэкджек (3 бесплатные партии в день) и зонк (1 бесплатная игра в день), дальше партия стоит 2 USD. Нажми на стол и выбери игру.</p>
           </Help>
@@ -171,13 +172,21 @@ export function YardScreen() {
             );
           })}
         </div>
-        {/* the back yard on the left (tools/scene/build-yard0.py): empty for now, things come later */}
+        {/* the back yard on the left (tools/scene/build-yard0.py): the manhole of «Колесо удачи» */}
         <div className="yard-stage yard-pan yard-stage0" style={pan(-1)} aria-hidden={page !== -1}>
           <DriftingSky className="court-sky" src={tod === "night" ? "/assets/yard/sky-dark.webp" : undefined} />
           <DriftingSky className="yard-reflect" src={tod === "night" ? "/assets/yard/sky-dark.webp" : undefined} />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="yard-bg" src={tod === "night" ? "/assets/yard/yard0-bg-dark.webp" : "/assets/yard/yard0-bg.webp"} alt="" draggable={false} />
           <span className="yard-tint" aria-hidden="true" />
+          {/* «Колесо удачи»: a manhole on the ground (the admins see it before the players) */}
+          {state?.fortune?.on && (
+            <Link href="/yard/fortune" className="yard-obj yard-fortune" aria-label="Колесо удачи" title="Колесо удачи" tabIndex={page === -1 ? 0 : -1}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/assets/fortune/wheel.webp" alt="" draggable={false} />
+              <span>Колесо удачи</span>
+            </Link>
+          )}
         </div>
         {/* the second half of the yard (tools/scene/build-yard2.py): the exchange kiosk, the garages, the pigeon loft */}
         <div className="yard-stage yard-pan yard-stage2" style={pan(1)} aria-hidden={page !== 1}>

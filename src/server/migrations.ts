@@ -1300,4 +1300,23 @@ CREATE INDEX IF NOT EXISTS autos_day ON autos (day);`,
 );
 CREATE INDEX IF NOT EXISTS craft_presets_player ON craft_presets (player_id, id);`,
   },
+  {
+    // «Колесо удачи» (systems/fortune.ts): the shared jackpot and its last winner; each player's wheel experience and the cups waiting
+    id: "v2-086-fortune",
+    sql: `CREATE TABLE IF NOT EXISTS fortune_global (
+  id TEXT PRIMARY KEY,
+  jackpot BIGINT NOT NULL DEFAULT 0,
+  spins BIGINT NOT NULL DEFAULT 0,
+  winner_id INT,
+  winner_amount BIGINT,
+  won_at TIMESTAMPTZ
+);
+INSERT INTO fortune_global (id, jackpot) VALUES ('_all', 10000) ON CONFLICT DO NOTHING;
+CREATE TABLE IF NOT EXISTS fortune_players (
+  player_id INT PRIMARY KEY,
+  xp INT NOT NULL DEFAULT 0,
+  spins INT NOT NULL DEFAULT 0,
+  cups INT NOT NULL DEFAULT 0
+);`,
+  },
 ];

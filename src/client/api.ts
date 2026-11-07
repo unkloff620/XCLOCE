@@ -87,6 +87,8 @@ export interface GameState {
   /** «Тося» is here (null — not): his visit, the pies he brought this player, the ones taken (bits), the next price ($) */
   tosya?: { visit: string; look?: string; endsAt: number; pies: number; taken: number; next: number | null } | null;
   /** «Взлом» (content/heist.ts): null while the event is off and the cells are empty */
+  /** «Колесо удачи» in the back yard */
+  fortune?: { on: boolean };
   heist?: { on: boolean; endsAt: number | null; slots: number; lockMs: number; rush: number; boxes: { slot: number; kind: "bronze" | "silver" | "gold" | "diamond"; locks: number; done: number; pickEnds: number | null; boss: string | null; rushed?: number; auto?: boolean }[] } | null;
   /** today's automation toggles (systems/autos.ts): the zone spending the energy, the mode per boss */
   autos?: { zone: string | null; bosses: Record<string, string> };

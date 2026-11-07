@@ -496,6 +496,25 @@ export async function exchangeScheduleSave(db: Db, v: unknown) {
   return exchangeSchedule(db);
 }
 
+/** «Колесо удачи»: shown to the players or not (the admins see it always); the jackpot can be set by hand */
+export async function fortuneAdmin(db: Db) {
+  const cfg = await loadConfig(db);
+  const [g] = await db.query<{ jackpot: number; spins: number; winner_id: number | null; winner_amount: number | null; won_at: Date | null; name: string | null }>(
+    "SELECT g.jackpot, g.spins, g.winner_id, g.winner_amount, g.won_at, p.display_name AS name FROM fortune_global g LEFT JOIN players p ON p.id = g.winner_id WHERE g.id='_all'");
+  return { on: cfg.fortune.on, jackpot: Number(g?.jackpot ?? 0), spins: Number(g?.spins ?? 0), winner: g?.winner_id ? { id: Number(g.winner_id), name: g.name, amount: Number(g.winner_amount ?? 0), at: g.won_at ? new Date(g.won_at).getTime() : 0 } : null };
+}
+export async function fortuneSet(db: Db, adminTg: number, body: Record<string, unknown>) {
+  if (typeof body.on === "boolean") {
+    await db.query("INSERT INTO config (key, value) VALUES ('fortune', $1) ON CONFLICT (key) DO UPDATE SET value = excluded.value", [JSON.stringify({ on: body.on })]);
+    resetConfigCache();
+  }
+  if (typeof body.jackpot === "number" && Number.isFinite(body.jackpot) && body.jackpot >= 0) {
+    await db.query("UPDATE fortune_global SET jackpot=$1 WHERE id='_all'", [Math.floor(body.jackpot)]);
+  }
+  console.info(JSON.stringify({ msg: "admin.fortune", adminTg, on: body.on, jackpot: body.jackpot }));
+  return fortuneAdmin(db);
+}
+
 /** «Технические работы»: closes the game for everyone but the admins (http.ts maintenanceGate) */
 export async function maintenance(db: Db) {
   return (await loadConfig(db)).maintenance;
