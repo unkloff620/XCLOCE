@@ -16,10 +16,10 @@ import { Icon } from "../art/icons.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { haptic } from "../telegram.ts";
 import { sfx } from "../sound.ts";
-import { FRAME_SCALE, KEYCAP_ID, SECTORS, TICKET_ID, WHEEL_R, spokeBend, type CupKind, type Sector } from "../../content/fortune.ts";
+import { KEYCAP_ID, SECTORS, TICKET_ID, WHEEL_R, spokeBend, type CupKind, type Sector } from "../../content/fortune.ts";
 
 const A = "/assets/fortune";
-const WHEEL_IMG = `${A}/lid.webp`;
+const WHEEL_IMG = `${A}/lid-v1.webp`;
 const PRIZE_IMG = `${A}/prize.webp?v=2`;
 const N = SECTORS.length;
 const STEP = 360 / N;
@@ -62,7 +62,7 @@ function Sparks({ on }: { on: boolean }) {
     const W = cv.clientWidth, H = cv.clientHeight;
     cv.width = W * dpr; cv.height = H * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const R = (W / SPARK_PAD) / 2; // the lid's radius (the canvas is SPARK_PAD times the lid)
+    const R = (W / SPARK_PAD) / 2 * (424 / 512); // the groove between the lid and the rim (the canvas is SPARK_PAD times the wheel)
     type P = { x: number; y: number; vx: number; vy: number; life: number; max: number };
     const ps: P[] = [];
     const t0 = performance.now();
@@ -244,9 +244,6 @@ export function FortuneScreen() {
       </div>
 
       <div className="fo-stage">
-        {/* the iron seat in the broken asphalt: it stays; the lid turns in it, sparks fly from under its edge */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="fo-frame" src={`${A}/frame.webp`} alt="" draggable={false} style={{ width: `${FRAME_SCALE * 100}%` }} />
         <Sparks on={spinning} />
         <svg className="fo-arrow" viewBox="0 0 60 70" aria-hidden="true">
           <path d="M8 6 C 20 12, 40 10, 52 5 L 34 58 C 32 64, 28 64, 26 58 Z" />
@@ -254,6 +251,9 @@ export function FortuneScreen() {
         <div className="fo-wheel" style={{ transform: `rotate(${turn}deg)`, transitionDuration: spinning ? `${SPIN_MS}ms` : "0ms" }}>
           <WheelFace />
         </div>
+        {/* the toothed rim of the manhole stays; the lid turns inside it, sparks fly from the groove between them */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="fo-frame" src={`${A}/rim.webp`} alt="" draggable={false} />
       </div>
 
       {/* the bag: the boxes of tattoo sets for keycaps */}

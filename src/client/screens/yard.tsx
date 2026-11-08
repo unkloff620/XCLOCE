@@ -183,7 +183,9 @@ export function YardScreen() {
           {state?.fortune?.on && (
             <Link href="/yard/fortune" className="yard-obj yard-fortune" aria-label="Колесо удачи" title="Колесо удачи" tabIndex={page === -1 ? 0 : -1}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/assets/fortune/lid.webp" alt="" draggable={false} />
+              <img src="/assets/fortune/lid-v1.webp" alt="" draggable={false} />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/assets/fortune/rim.webp" alt="" draggable={false} />
               <span>Колесо удачи</span>
             </Link>
           )}
