@@ -2,8 +2,10 @@
 import { GameError, type Queryable } from "../db.ts";
 import { addItem, grantReward, itemQty, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
 import type { Config } from "../config.ts";
+import { STASH_IDS } from "../../content/stashes.ts";
+import { TATTOO_SETS } from "../../content/tattoos.ts";
 import { mergeRewards, type Reward } from "../../content/rewards.ts";
-import { JACKPOT_ADD, JACKPOT_SEED, KEYCAP_ID, SECTORS, SPIN_ALL_MAX, TICKET_ID, TICKET_PRICE, fortuneLevel, rollCupKind, rollCups, rollSector, type Cup } from "../../content/fortune.ts";
+import { BAG_TATTOO_CHANCE, bagById, rollBagPrize, JACKPOT_ADD, JACKPOT_SEED, KEYCAP_ID, SECTORS, SPIN_ALL_MAX, TICKET_ID, TICKET_PRICE, fortuneLevel, rollCupKind, rollCups, rollSector, type Cup } from "../../content/fortune.ts";
 
 /** the wheel is in the back yard for everybody once the admin shows it; the admins see it always */
 export async function fortuneOn(q: Queryable, pid: number, cfg: Config): Promise<boolean> {
@@ -120,4 +122,29 @@ export async function fortuneCupsPick(ctx: Ctx, index: number) {
     reward = await grantReward(ctx, { currencies: { RUB: jackpot } }, "fortune_jackpot");
   } else if (cup.reward) reward = await grantReward(ctx, cup.reward, `fortune_cup:${cup.kind}`);
   return { index, kind: cup.kind, final, reward, jackpot, fortune: await fortuneView(ctx.q, ctx.pid) };
+}
+
+/** a bag opened for keycaps: one prize, and with BAG_TATTOO_CHANCE a piece of its set not owned yet */
+export async function fortuneBagOpen(ctx: Ctx, id: string) {
+  await mustBeOn(ctx);
+  const bag = bagById(id);
+  if (!bag) throw new GameError("bad_request", "Нет такой сумки", 400);
+  const have = await itemQty(ctx.q, ctx.pid, KEYCAP_ID);
+  if (have < bag.price) throw new GameError("fortune_no_keycaps", `Нужно ${bag.price} кнопок клавиатуры`);
+  await takeItem(ctx, KEYCAP_ID, bag.price, `fortune_bag:${bag.id}`);
+  const prize = rollBagPrize(bag, ctx.rng);
+  const loot: Reward = prize.kind === "xp" ? { xp: prize.amount }
+    : prize.kind === "rub" ? { currencies: { RUB: prize.amount } }
+    : prize.kind === "usd" ? { currencies: { USD: prize.amount } }
+    : { items: Array.from({ length: prize.amount }, () => ({ id: STASH_IDS[Math.floor(ctx.rng() * STASH_IDS.length) % STASH_IDS.length], qty: 1 })) };
+  let tattoo: string | null = null;
+  const set = bag.set ? TATTOO_SETS.find((s) => s.id === bag.set) : undefined;
+  if (set && ctx.rng() < BAG_TATTOO_CHANCE) {
+    const all = set.pieces.map((p) => p.id);
+    const own = new Set((await ctx.q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id = ANY($2)", [ctx.pid, all])).map((x) => x.item_id));
+    const left = all.filter((x) => !own.has(x));
+    if (left.length) { tattoo = left[Math.floor(ctx.rng() * left.length) % left.length]; loot.items = [...(loot.items ?? []), { id: tattoo, qty: 1 }]; }
+  }
+  const reward = await grantReward(ctx, mergeRewards(loot), `fortune_bag:${bag.id}`);
+  return { bag: bag.id, prize: prize.kind, amount: prize.amount, reward, tattoo, fortune: await fortuneView(ctx.q, ctx.pid) };
 }

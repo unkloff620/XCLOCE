@@ -86,6 +86,18 @@ describe("«Колесо удачи»", () => {
     await expect(act(db, p, "fortune_cup_pick", { index: 0 }, T)).rejects.toMatchObject({ code: "fortune_no_cups" });
   });
 
+  it("a bag for keycaps: one prize; too few keycaps — refused", async () => {
+    const db = await freshDb();
+    await wheelOn(db);
+    const p = await newPlayer(db);
+    await give(db, p, "keycap", 150);
+    await expect(act(db, p, "fortune_bag", { bag: "bag2" }, T)).rejects.toMatchObject({ code: "fortune_no_keycaps" });
+    const r = await act(db, p, "fortune_bag", { bag: "bag1" }, T, always(0.5));
+    expect(r.result.prize).toBe("rub");
+    expect(r.result.reward.currencies.RUB).toBeGreaterThanOrEqual(1500);
+    expect(await qty(db, p, "keycap")).toBe(10);
+  });
+
   it("the weights add up to the sectors' order", () => {
     expect(SECTORS).toHaveLength(13);
     expect(rollSector(() => 0)).toBe(0);

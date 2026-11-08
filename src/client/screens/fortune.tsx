@@ -7,16 +7,17 @@
  */
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { TATTOO_SETS } from "../../content/tattoos.ts";
 import { useGame } from "../store.tsx";
 import { api, type Granted } from "../api.ts";
 import { usePageReady } from "../route-loader.tsx";
-import { Avatar, Modal } from "../ui.tsx";
+import { Avatar, Modal, RewardChips } from "../ui.tsx";
 import { Help } from "../help.tsx";
 import { Icon } from "../art/icons.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { haptic } from "../telegram.ts";
 import { sfx } from "../sound.ts";
-import { KEYCAP_ID, SECTORS, TICKET_ID, WHEEL_R, spokeBend, type CupKind, type Sector } from "../../content/fortune.ts";
+import { BAG_TATTOO_CHANCE, FORTUNE_BAGS, KEYCAP_ID, SECTORS, TICKET_ID, WHEEL_R, spokeBend, type CupKind, type Sector } from "../../content/fortune.ts";
 
 const A = "/assets/fortune";
 const WHEEL_IMG = `${A}/lid-v1.webp`;
@@ -286,17 +287,90 @@ export function FortuneScreen() {
       </div>
 
       {buy && f && <BuyTickets price={f.price} onClose={() => setBuy(false)} onDone={() => { void load(); }} />}
-      {bag && (
-        <Modal onClose={() => setBag(false)} title="Сумка">
-          <div className="fo-res">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`${A}/bag.webp`} alt="" width={120} />
-            <p className="small">Здесь будут 4 коробки с сетами наколок — открываются за кнопки клавиатуры (140, 300, 600 и 1200). Копи кнопки!</p>
-            <button className="btn gold block" onClick={() => setBag(false)}>Ок</button>
-          </div>
-        </Modal>
-      )}
+      {bag && <Bags keycaps={keycaps} onClose={() => { setBag(false); void load(); }} />}
       {cups && <CupsGame onClose={() => { setCups(false); void load(); }} />}
+    </div>
+  );
+}
+
+/* ---------------- the bag: four bags for keycaps, ‹ › or a swipe ---------------- */
+interface BagOpen { bag: string; prize: "xp" | "rub" | "stash" | "usd"; amount: number; reward: Granted; tattoo: string | null }
+const fmtN = (n: number) => n.toLocaleString("ru-RU");
+
+function Bags({ keycaps, onClose }: { keycaps: number; onClose: () => void }) {
+  const { act, busy } = useGame();
+  const [i, setI] = useState(0);
+  const [have, setHave] = useState(keycaps);
+  const [got, setGot] = useState<BagOpen | null>(null);
+  const [shake, setShake] = useState(0);
+  const touch = useRef<number | null>(null);
+  const b = FORTUNE_BAGS[i];
+  const set = b.set ? TATTOO_SETS.find((x) => x.id === b.set) : undefined;
+  const go = (d: number) => { setI((v) => (v + d + FORTUNE_BAGS.length) % FORTUNE_BAGS.length); setGot(null); haptic.tap(); };
+  const open = async () => {
+    if (have < b.price) return;
+    setGot(null);
+    setShake((v) => v + 1);
+    const r = await act<BagOpen & { fortune: FortuneView }>("fortune_bag", { bag: b.id });
+    if (!r) return;
+    setHave(r.fortune.keycaps);
+    setGot(r);
+    if (r.tattoo) { haptic.big(); sfx("win"); } else { haptic.ok(); sfx("reward"); }
+  };
+  return (
+    <div className="fo-bags" role="dialog" aria-label="Сумка"
+      onTouchStart={(e) => { touch.current = e.touches[0].clientX; }}
+      onTouchEnd={(e) => { const x0 = touch.current; touch.current = null; if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1); }}>
+      <div className="fo-bags-head">
+        <button type="button" className="back-btn" onClick={onClose} aria-label="Назад">‹</button>
+        <b>{b.name}</b>
+        <span className="fo-chip"><ItemArt id={KEYCAP_ID} size={20} /><b className="num">{fmtN(have)}</b></span>
+      </div>
+      <div className="fo-bags-dots">{FORTUNE_BAGS.map((x, k) => <i key={x.id} className={k === i ? "on" : ""} />)}</div>
+      <div className="fo-bags-stage">
+        <button type="button" className="fo-bags-arrow" onClick={() => go(-1)} aria-label="Предыдущая">‹</button>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img key={`${b.id}-${shake}`} className={`fo-bags-pic ${shake ? "shake" : ""}`} src={`${A}/bag.webp`} alt="" draggable={false} style={{ filter: b.hue ? `hue-rotate(${b.hue}deg) saturate(1.6)` : undefined }} />
+        <button type="button" className="fo-bags-arrow" onClick={() => go(1)} aria-label="Следующая">›</button>
+      </div>
+
+      {got ? (
+        <div className="fo-bags-got">
+          <div className="fo-bags-prize">
+            {got.prize === "xp" ? <Icon name="xp" size={64} /> : got.prize === "rub" ? <Icon name="RUB" size={64} /> : got.prize === "usd" ? <Icon name="USD" size={64} /> : <Icon name="chest" size={64} />}
+            <b className="fo-chalk num">+{fmtN(got.amount)}{got.prize === "stash" ? " шт." : ""}</b>
+            <span>{got.prize === "xp" ? "авторитета" : got.prize === "rub" ? "рублей" : got.prize === "usd" ? "долларов" : got.amount > 1 ? "нычки" : "нычка"}</span>
+          </div>
+          {got.prize === "stash" && <RewardChips r={{ ...got.reward, items: got.reward.items?.filter((x) => x.id !== got.tattoo) }} size={30} />}
+          {got.tattoo && (
+            <div className="fo-paper">
+              <ItemArt id={got.tattoo} size={84} />
+              <span>Наколка!</span>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="fo-bags-list">
+          <span className="fo-bags-t">Что может выпасть:</span>
+          <span className="fo-bags-row"><Icon name="xp" size={18} /> Авторитет <b className="num">{fmtN(b.xp[0])}–{fmtN(b.xp[1])}</b></span>
+          <span className="fo-bags-row"><Icon name="RUB" size={18} /> Рубли <b className="num">{fmtN(b.rub[0])}–{fmtN(b.rub[1])}</b></span>
+          <span className="fo-bags-row"><Icon name="USD" size={18} /> Доллары <b className="num">{b.usd[0]}–{b.usd[1]}</b></span>
+          <span className="fo-bags-row"><Icon name="chest" size={18} /> Нычки <b className="num">{b.stash[0] === b.stash[1] ? b.stash[0] : `${b.stash[0]}–${b.stash[1]}`} шт.</b></span>
+          <span className="fo-bags-row fo-bags-tat">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            {set ? <img src={`/assets/hero/tattoo/set-${set.id}.webp`} alt="" /> : <Icon name="chest" size={18} />}
+            {set ? <>Наколка сета «{set.name}»</> : <>Наколка своего сета (скоро)</>} <b className="num">{Math.round(BAG_TATTOO_CHANCE * 100)}%</b>
+          </span>
+        </div>
+      )}
+
+      <div className="fo-bags-foot">
+        <button type="button" className="fo-spin" disabled={busy === "fortune_bag" || have < b.price} onClick={open}>
+          <b>{got ? "Ещё раз" : "Открыть"}</b>
+          <span className="num"><ItemArt id={KEYCAP_ID} size={16} />{fmtN(b.price)}</span>
+        </button>
+        {have < b.price && <span className="fo-muted">Не хватает {fmtN(b.price - have)} кнопок — крути колесо</span>}
+      </div>
     </div>
   );
 }

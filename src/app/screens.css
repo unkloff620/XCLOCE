@@ -5820,7 +5820,7 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .fo-winner .fo-chalk { display: inline-flex; align-items: center; gap: 4px; font-size: 21px; line-height: 1; }
 .fo-winner-none { display: block; font-family: var(--font-hand), cursive; font-weight: 700; font-size: 17px; line-height: 1.05; color: #e9e7dc; text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.6); }
 /* the bag of tattoo boxes: lying on the asphalt left of the wheel's foot */
-.fo-bag { position: absolute; z-index: 3; left: 2px; bottom: calc(var(--bottom) + 110px); width: 25cqw; max-width: 112px; padding: 0; border: 0; background: none; cursor: pointer; }
+.fo-bag { position: absolute; z-index: 4; left: 2px; bottom: calc(var(--bottom) + 110px); width: 25cqw; max-width: 112px; padding: 0; border: 0; background: none; cursor: pointer; }
 .fo-bag img { width: 100%; height: auto; display: block; filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.55)); transition: transform 0.15s; }
 .fo-bag:active img { transform: scale(0.94); }
 .fo-muted { color: #cfd3d8; padding: 6px 12px; text-align: center; font-size: 12px; }
@@ -5843,7 +5843,8 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .fo-arrow { position: absolute; z-index: 4; left: 50%; top: -6%; width: 13%; transform: translateX(-50%); filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.6)); }
 .fo-arrow path { fill: #f4f2ea; stroke: #2b2b2b; stroke-width: 3; stroke-linejoin: round; }
 /* below: the tickets and keycaps, the green «Крутить» */
-.fo-bottom { position: absolute; z-index: 3; left: 10px; right: 10px; bottom: calc(var(--bottom) + 16px); display: flex; flex-direction: column; gap: 8px; }
+.fo-bottom { position: absolute; z-index: 3; left: 10px; right: 10px; bottom: calc(var(--bottom) + 16px); display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.fo-bottom > * { pointer-events: auto; }
 .fo-cups { align-self: flex-end; display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px 4px 6px; border-radius: 12px; background: rgba(28, 30, 34, 0.85); border: 2px solid #ffd23f; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; animation: fo-pulse 1.4s ease-in-out infinite; }
 @keyframes fo-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 .fo-cups img { height: 22px; }
@@ -5894,3 +5895,31 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .yard-fortune > span { position: absolute; left: 50%; bottom: -20%; transform: translateX(-50%); white-space: nowrap; padding: 1px 9px; border-radius: 9px; font-size: 11px; font-weight: 800; background: #f5ec5c; color: #1e1006; border: 2px solid var(--line); }
 @keyframes fo-call { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .yard-fortune::before { animation: none; } }
+
+/* the bag of the wheel (fortune.tsx Bags): no picture behind — the wheel's screen darkened; the bag, what it holds, «Открыть» */
+.fo-bags { position: absolute; inset: 0; z-index: 20; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: var(--top) 14px var(--bottom); background: rgba(12, 13, 16, 0.86); backdrop-filter: blur(3px); container-type: inline-size; color: #fff; }
+.fo-bags-head { width: 100%; display: flex; align-items: center; gap: 10px; }
+.fo-bags-head > b { flex: 1; text-align: center; font-family: var(--font-display, inherit); font-size: 18px; color: #f5ec5c; }
+.fo-bags-dots { display: flex; gap: 6px; }
+.fo-bags-dots i { width: 8px; height: 8px; border-radius: 50%; background: rgba(255, 255, 255, 0.3); }
+.fo-bags-dots i.on { background: #f5ec5c; }
+.fo-bags-stage { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.fo-bags-arrow { width: 44px; height: 64px; border-radius: 12px; border: 2px solid rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.08); color: #fff; font-size: 34px; line-height: 1; cursor: pointer; flex: none; }
+.fo-bags-pic { flex: 1; min-width: 0; max-width: 66cqw; height: auto; filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.6)); user-select: none; }
+.fo-bags-pic.shake { animation: fo-bag-shake 0.45s ease-in-out; }
+@keyframes fo-bag-shake { 0%, 100% { transform: none; } 20% { transform: rotate(-6deg) scale(1.03); } 45% { transform: rotate(5deg) scale(1.05); } 70% { transform: rotate(-3deg); } }
+.fo-bags-list { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 5px; padding: 10px 12px; border-radius: 12px; background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.15); font-size: 14px; }
+.fo-bags-t { color: #cfd3d8; font-size: 12px; }
+.fo-bags-row { display: flex; align-items: center; gap: 8px; }
+.fo-bags-row b { margin-left: auto; }
+.fo-bags-tat img { width: 22px; height: 22px; object-fit: contain; }
+.fo-bags-got { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; min-height: 120px; justify-content: center; animation: fo-pop 0.35s ease-out; }
+@keyframes fo-pop { from { transform: scale(0.8); opacity: 0; } to { transform: none; opacity: 1; } }
+.fo-bags-prize { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.fo-bags-prize b { font-size: 34px; line-height: 1; }
+.fo-bags-prize span { color: #cfd3d8; font-size: 13px; }
+/* the tattoo dropped: a scrap of paper with the piece on it */
+.fo-paper { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 14px 8px; background: #efe3c4; color: #3a2a14; font-weight: 800; transform: rotate(-3deg);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5), inset 0 0 18px rgba(120, 90, 40, 0.35); clip-path: polygon(0 4%, 8% 0, 22% 3%, 40% 0, 58% 2%, 76% 0, 92% 3%, 100% 0, 98% 30%, 100% 62%, 97% 100%, 80% 97%, 60% 100%, 38% 97%, 18% 100%, 2% 96%, 0 70%, 2% 36%); }
+.fo-bags-foot { margin-top: auto; width: 100%; max-width: 360px; display: flex; flex-direction: column; align-items: center; gap: 6px; padding-bottom: 14px; }
+.fo-bags-foot .fo-spin { width: 100%; min-height: 64px; }
