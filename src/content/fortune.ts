@@ -58,8 +58,10 @@ export const SECTORS: Sector[] = [
 /** the spokes bend this many degrees from the hub to the rim (tools/fortune/build-wheel.py CURVE); t = 0 hub … 1 rim */
 export const WHEEL_CURVE = 34;
 export const spokeBend = (t: number) => WHEEL_CURVE * Math.pow(Math.max(0, Math.min(1, t)), 1.35);
-/** the wheel picture: the hub's and the rim's radius as a share of the half-width (140 and 398 px of 512) */
-export const WHEEL_R = { hub: 140 / 512, rim: 398 / 512 };
+/** the wheel picture: the hub's and the rim's radius as a share of the half-width (200 and 432 px of 512 of fortune/lid.webp) */
+export const WHEEL_R = { hub: 200 / 512, rim: 432 / 512 };
+/** the frame picture (fortune/frame.webp) is this many times wider than the lid lying in it */
+export const FRAME_SCALE = 1 / 0.6;
 
 export function rollSector(rng: () => number): number {
   const total = SECTORS.reduce((s, x) => s + x.weight, 0);

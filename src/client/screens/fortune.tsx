@@ -16,10 +16,10 @@ import { Icon } from "../art/icons.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { haptic } from "../telegram.ts";
 import { sfx } from "../sound.ts";
-import { KEYCAP_ID, SECTORS, TICKET_ID, WHEEL_R, spokeBend, type CupKind, type Sector } from "../../content/fortune.ts";
+import { FRAME_SCALE, KEYCAP_ID, SECTORS, TICKET_ID, WHEEL_R, spokeBend, type CupKind, type Sector } from "../../content/fortune.ts";
 
 const A = "/assets/fortune";
-const WHEEL_IMG = `${A}/wheel-v3.webp`;
+const WHEEL_IMG = `${A}/lid.webp`;
 const PRIZE_IMG = `${A}/prize.webp?v=2`;
 const N = SECTORS.length;
 const STEP = 360 / N;
@@ -46,6 +46,66 @@ function at(k: number, t: number) {
   const a = (sectorAngle(k, t) * Math.PI) / 180;
   return { left: `${50 + r * Math.cos(a)}%`, top: `${50 + r * Math.sin(a)}%`, a: sectorAngle(k, t) };
 }
+
+/**
+ * Sparks from under the lid while it turns: orange streaks born on the lid's edge, flying along the turn (clockwise) and
+ * a little outward, fading in a few tenths of a second. A canvas over the stage, drawn only while the wheel turns.
+ */
+function Sparks({ on }: { on: boolean }) {
+  const ref = useRef<HTMLCanvasElement | null>(null);
+  useEffect(() => {
+    const cv = ref.current;
+    if (!on || !cv || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    const ctx = cv.getContext("2d");
+    if (!ctx) return;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const W = cv.clientWidth, H = cv.clientHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const R = (W / SPARK_PAD) / 2; // the lid's radius (the canvas is SPARK_PAD times the lid)
+    type P = { x: number; y: number; vx: number; vy: number; life: number; max: number };
+    const ps: P[] = [];
+    const t0 = performance.now();
+    let last = t0, raf = 0;
+    const tick = (now: number) => {
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      const k = Math.max(0, 1 - (now - t0) / SPIN_MS); // the turn slows down: fewer, slower sparks
+      for (let n = Math.round(16 * k * k + (k > 0.05 ? 2 : 0)); n > 0; n--) {
+        // most of them from the lower half, where the lid scrapes the seat
+        const a = Math.random() < 0.7 ? Math.PI * (0.1 + Math.random() * 0.8) : Math.random() * Math.PI * 2;
+        const sp = (260 + Math.random() * 420) * (0.35 + k);
+        const out = 40 + Math.random() * 120;
+        ps.push({ x: W / 2 + Math.cos(a) * R, y: H / 2 + Math.sin(a) * R, vx: -Math.sin(a) * sp + Math.cos(a) * out, vy: Math.cos(a) * sp + Math.sin(a) * out, life: 0, max: 0.18 + Math.random() * 0.3 });
+      }
+      ctx.clearRect(0, 0, W, H);
+      ctx.globalCompositeOperation = "lighter";
+      ctx.lineCap = "round";
+      for (let i = ps.length - 1; i >= 0; i--) {
+        const p = ps[i];
+        p.life += dt;
+        if (p.life >= p.max) { ps.splice(i, 1); continue; }
+        p.vx *= 1 - 2.5 * dt; p.vy = p.vy * (1 - 2.5 * dt) + 380 * dt;
+        p.x += p.vx * dt; p.y += p.vy * dt;
+        const f = 1 - p.life / p.max;
+        ctx.strokeStyle = `rgba(255, ${150 + Math.round(90 * f)}, ${40 + Math.round(80 * f)}, ${f})`;
+        ctx.lineWidth = 1.6 + 2.2 * f;
+        ctx.shadowColor = "rgba(255, 170, 40, 0.9)";
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(p.x - p.vx * 0.03, p.y - p.vy * 0.03);
+        ctx.stroke();
+      }
+      if (k > 0 || ps.length) raf = requestAnimationFrame(tick);
+      else ctx.clearRect(0, 0, W, H);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => { cancelAnimationFrame(raf); ctx.clearRect(0, 0, W, H); };
+  }, [on]);
+  return <canvas ref={ref} className="fo-sparks" style={{ width: `${SPARK_PAD * 100}%`, height: `${SPARK_PAD * 100}%` }} aria-hidden="true" />;
+}
+const SPARK_PAD = 1.5;
 
 function SectorIcon({ s, size }: { s: Sector; size: number }) {
   if (s.icon === "RUB" || s.icon === "USD") return <Icon name={s.icon} size={size} />;
@@ -184,6 +244,10 @@ export function FortuneScreen() {
       </div>
 
       <div className="fo-stage">
+        {/* the iron seat in the broken asphalt: it stays; the lid turns in it, sparks fly from under its edge */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="fo-frame" src={`${A}/frame.webp`} alt="" draggable={false} style={{ width: `${FRAME_SCALE * 100}%` }} />
+        <Sparks on={spinning} />
         <svg className="fo-arrow" viewBox="0 0 60 70" aria-hidden="true">
           <path d="M8 6 C 20 12, 40 10, 52 5 L 34 58 C 32 64, 28 64, 26 58 Z" />
         </svg>

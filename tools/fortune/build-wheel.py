@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""«Колесо удачи»: the wheel picture with SECTORS curved steel spokes.
+"""«Колесо удачи»: a manhole lid turning in its frame.
 
-The rim with its bulbs and the hub: source/wheel-metal.png (an image edit of the street wheel in the metal of the artist's
-first wheel); the disc between them: source/wheel-plate.png (the artist's dotted rusty plate without spokes). The spokes are
-drawn here, evenly, in the same light steel. The client places the prizes with the same curve and radii
-(src/content/fortune.ts WHEEL_CURVE, WHEEL_R).
+  - the lid (source/manhole-lid.png, empty between the boss and the lip) gets SECTORS curved raised ribs drawn here →
+    public/assets/fortune/lid.webp (it turns; the client places the prizes with the same curve and radii:
+    src/content/fortune.ts WHEEL_CURVE, WHEEL_R);
+  - the frame (source/manhole-frame.png: the iron seat in broken asphalt, drawn a little squashed) is made round around its
+    hole and cut square → public/assets/fortune/frame.webp; its hole is FRAME_HOLE of the half-width (fortune.ts).
 
-    python3 tools/fortune/build-wheel.py   →  public/assets/fortune/wheel-v3.webp
+    python3 tools/fortune/build-wheel.py
 """
 import math
 from pathlib import Path
@@ -14,26 +15,24 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "tools/fortune/source"
-OUT = ROOT / "public/assets/fortune/wheel-v3.webp"
+OUT = ROOT / "public/assets/fortune"
 SECTORS, CURVE, SS = 13, 34, 2
-R_HUB, R_RIM = 140, 398          # px on the 1024 sheet (fortune.ts WHEEL_R)
+R_HUB, R_RIM, R_LID = 200, 432, 498     # px on the 1024 lid sheet: the boss, the lip's inner edge, the lid's edge
 C = 512
+# the frame's hole as drawn (px of the 1024 source): x 263…766, y 260…717
+HOLE_X, HOLE_Y = (263, 766), (260, 717)
+FRAME_SIZE, HOLE_R = 1024, 252          # the made-round frame: its sheet and its hole's radius on it
 
 
-def disc(r, blur=0.0):
-    m = Image.new("L", (1024, 1024), 0)
-    ImageDraw.Draw(m).ellipse([C - r, C - r, C + r, C + r], fill=255)
+def disc(r, size=1024, c=C, blur=0.0):
+    m = Image.new("L", (size, size), 0)
+    ImageDraw.Draw(m).ellipse([c - r, c - r, c + r, c + r], fill=255)
     return m.filter(ImageFilter.GaussianBlur(blur)) if blur else m
 
 
-def main():
-    metal = Image.open(SRC / "wheel-metal.png").convert("RGBA").resize((1024, 1024), Image.LANCZOS)
-    plate = Image.open(SRC / "wheel-plate.png").convert("RGBA").resize((1024, 1024), Image.LANCZOS)
-    # the artist's plate filled the ring 134…404: stretch it a little to 140…398 is not needed — it covers the whole inside
-    wheel = metal.copy()
-    inside = ImageChops.subtract(disc(R_RIM + 1, 1.5), disc(R_HUB - 1, 1.5))
-    wheel.paste(plate, (0, 0), inside)
-
+def lid():
+    src = Image.open(SRC / "manhole-lid.png").convert("RGBA").resize((1024, 1024), Image.LANCZOS)
+    src.putalpha(ImageChops.multiply(src.getchannel("A"), disc(R_LID, blur=1)))
     S = 1024 * SS
     shadow = Image.new("L", (S, S), 0)
     line = Image.new("RGBA", (S, S), (0, 0, 0, 0))
@@ -43,26 +42,44 @@ def main():
         pts = []
         for k in range(41):
             t = k / 40
-            r = R_HUB - 6 + (R_RIM + 10 - (R_HUB - 6)) * t
+            r = R_HUB - 8 + (R_RIM + 6 - (R_HUB - 8)) * t
             th = math.radians(a0 + CURVE * t ** 1.35)
             pts.append(((C + r * math.cos(th)) * SS, (C + r * math.sin(th)) * SS))
-        sd.line([(x + 4 * SS, y + 5 * SS) for x, y in pts], fill=150, width=16 * SS, joint="curve")
-        ld.line(pts, fill=(48, 46, 44, 255), width=18 * SS, joint="curve")
-        ld.line(pts, fill=(200, 197, 191, 255), width=12 * SS, joint="curve")
-        ld.line([(x - 1.5 * SS, y - 1.5 * SS) for x, y in pts], fill=(240, 238, 233, 255), width=5 * SS, joint="curve")
-    clip = ImageChops.subtract(disc(R_RIM + 2), disc(R_HUB - 2))
-    shadow = ImageChops.multiply(shadow.resize((1024, 1024), Image.LANCZOS).filter(ImageFilter.GaussianBlur(4)), clip)
-    dark = Image.new("RGBA", (1024, 1024), (20, 16, 12, 255))
-    dark.putalpha(shadow.point(lambda v: int(v * 0.5)))
-    wheel = Image.alpha_composite(wheel, dark)
+        sd.line([(x + 3 * SS, y + 4 * SS) for x, y in pts], fill=140, width=12 * SS, joint="curve")
+        ld.line(pts, fill=(46, 48, 52, 255), width=15 * SS, joint="curve")
+        ld.line(pts, fill=(196, 199, 204, 255), width=9 * SS, joint="curve")
+        ld.line([(x - 1.2 * SS, y - 1.2 * SS) for x, y in pts], fill=(236, 238, 241, 255), width=3 * SS, joint="curve")
+    clip = ImageChops.subtract(disc(R_RIM + 2), disc(R_HUB - 4))
+    shadow = ImageChops.multiply(shadow.resize((1024, 1024), Image.LANCZOS).filter(ImageFilter.GaussianBlur(3)), clip)
+    dark = Image.new("RGBA", (1024, 1024), (20, 20, 24, 255))
+    dark.putalpha(shadow.point(lambda v: int(v * 0.45)))
+    out = Image.alpha_composite(src, dark)
     line = line.resize((1024, 1024), Image.LANCZOS)
     line.putalpha(ImageChops.multiply(line.getchannel("A"), clip.filter(ImageFilter.GaussianBlur(1))))
-    wheel = Image.alpha_composite(wheel, line)
-    wheel.paste(metal, (0, 0), disc(R_HUB - 3, 1.5))   # the hub over the spokes' ends
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    wheel.resize((900, 900), Image.LANCZOS).save(OUT, "WEBP", quality=88, method=6)
-    print("wrote", OUT)
+    out = Image.alpha_composite(out, line)
+    out.paste(src, (0, 0), disc(R_HUB - 6, blur=1.5))      # the boss over the ribs' ends
+    out.resize((900, 900), Image.LANCZOS).save(OUT / "lid.webp", "WEBP", quality=88, method=6)
+
+
+def frame():
+    src = Image.open(SRC / "manhole-frame.png").convert("RGBA")
+    cx, cy = sum(HOLE_X) / 2, sum(HOLE_Y) / 2
+    rx, ry = (HOLE_X[1] - HOLE_X[0]) / 2, (HOLE_Y[1] - HOLE_Y[0]) / 2
+    k = HOLE_R / rx
+    w, h = round(src.width * k), round(src.height * k * rx / ry)
+    big = src.resize((w, h), Image.LANCZOS)
+    ox, oy = round(cx * k) - FRAME_SIZE // 2, round(cy * k * rx / ry) - FRAME_SIZE // 2
+    sheet = Image.new("RGBA", (FRAME_SIZE, FRAME_SIZE), (0, 0, 0, 0))
+    sheet.paste(big, (-ox, -oy), big)
+    # the hole: dark, deeper in the middle (the lid covers all but a thin gap)
+    hole = Image.new("RGBA", (FRAME_SIZE, FRAME_SIZE), (8, 8, 10, 255))
+    hole.putalpha(disc(HOLE_R + 6, FRAME_SIZE, FRAME_SIZE // 2, 2))
+    sheet = Image.alpha_composite(hole, sheet)
+    sheet.resize((900, 900), Image.LANCZOS).save(OUT / "frame.webp", "WEBP", quality=86, method=6)
+    print("frame: hole", HOLE_R / (FRAME_SIZE / 2), "of the half-width")
 
 
 if __name__ == "__main__":
-    main()
+    lid()
+    frame()
+    print("wrote", OUT / "lid.webp", OUT / "frame.webp")
