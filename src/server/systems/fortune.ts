@@ -5,7 +5,7 @@ import type { Config } from "../config.ts";
 import { STASH_IDS } from "../../content/stashes.ts";
 import { TATTOO_SETS } from "../../content/tattoos.ts";
 import { mergeRewards, type Reward } from "../../content/rewards.ts";
-import { BAG_TATTOO_CHANCE, bagById, rollBagLoot, JACKPOT_ADD, JACKPOT_SEED, KEYCAP_ID, SECTORS, SPIN_ALL_MAX, TICKET_ID, TICKET_PRICE, fortuneLevel, rollCupKind, rollCups, rollSector, type Cup } from "../../content/fortune.ts";
+import { BAG_TATTOO_CHANCE, bagById, rollBagLoot, JACKPOT_ADD, JACKPOT_SEED, KEYCAP_ID, SECTORS, SPIN_ALL_MAX, TICKET_ID, TICKET_PRICE, fortuneLevel, rollCups, rollSector, type Cup } from "../../content/fortune.ts";
 
 /** the wheel is in the back yard for everybody once the admin shows it; the admins see it always */
 export async function fortuneOn(q: Queryable, pid: number, cfg: Config): Promise<boolean> {
@@ -106,9 +106,8 @@ export async function fortuneCupsPick(ctx: Ctx, index: number) {
   const layout = me?.cups_layout;
   if (!layout) throw new GameError("fortune_no_cups", "Сначала выпади «ПРИЗ» на колесе");
   if (!Number.isInteger(index) || index < 0 || index >= layout.length) throw new GameError("bad_request", "Нет такой чашки", 400);
-  const kind = rollCupKind(ctx.rng);
-  const same = layout.map((c, i) => (c.kind === kind ? i : -1)).filter((i) => i >= 0);
-  const j = same.length ? same[Math.floor(ctx.rng() * same.length) % same.length] : index;
+  // every cup is as likely as any other (the jackpot too): the lifted one gets what lies under a random cup
+  const j = Math.floor(ctx.rng() * layout.length) % layout.length;
   const final = layout.slice();
   [final[index], final[j]] = [final[j], final[index]];
   const cup = final[index];

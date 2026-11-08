@@ -11,7 +11,7 @@ import { TATTOO_SETS } from "../../content/tattoos.ts";
 import { useGame } from "../store.tsx";
 import { api, type Granted } from "../api.ts";
 import { usePageReady } from "../route-loader.tsx";
-import { Avatar, Modal, RewardChips } from "../ui.tsx";
+import { Avatar, Modal, RewardChips, Toggle } from "../ui.tsx";
 import { Help } from "../help.tsx";
 import { Icon } from "../art/icons.tsx";
 import { ItemArt } from "../art/items.tsx";
@@ -25,9 +25,10 @@ const PRIZE_IMG = `${A}/prize.webp?v=2`;
 const N = SECTORS.length;
 const STEP = 360 / N;
 /** one turn of the wheel; the pause between the turns of «Крутить на все»; the shuffle of the cups */
-const SPIN_MS = 1000;
+const SPIN_MS = 1500;
 const PAUSE_MS = 350;
-const CUPS_SHUFFLE_MS = 2000;
+/** the cups: slow swaps at first, faster and faster (the last ones too quick to follow) */
+const CUPS_SWAPS = [420, 380, 330, 280, 230, 190, 150, 120, 95, 75, 60, 50, 42, 36, 32, 30];
 
 interface FortuneView {
   jackpot: number; spins: number;
@@ -71,7 +72,7 @@ function Sparks({ on }: { on: boolean }) {
     const tick = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      const k = Math.max(0, 1 - (now - t0) / SPIN_MS); // the turn slows down: fewer, slower sparks
+      const k = Math.max(0, 1 - (now - t0) / (SPIN_MS * 0.6)); // sparks while the lid turns fast (the first part of the turn)
       for (let n = Math.round(16 * k * k + (k > 0.05 ? 2 : 0)); n > 0; n--) {
         // most of them from the lower half, where the lid scrapes the seat
         const a = Math.random() < 0.7 ? Math.PI * (0.1 + Math.random() * 0.8) : Math.random() * Math.PI * 2;
@@ -150,8 +151,10 @@ export function FortuneScreen() {
   usePageReady(!!f);
   const [turn, setTurn] = useState(0);
   const [spinning, setSpinning] = useState(false);
-  // «Крутить на все»: the wheel turns by itself, one ticket after another, until they run out (or «ПРИЗ», or «Стоп»)
-  const [auto, setAuto] = useState(false);
+  // the lid is actually turning (after the server's answer): the sparks and the turn's transition go with it
+  const [turning, setTurning] = useState(false);
+  const [out, setOut] = useState(false);
+  // «Автопрокрутка»: the wheel turns by itself, one ticket after another, until they run out (or «ПРИЗ», or switched off)
   const [running, setRunning] = useState(false);
   const runRef = useRef(false);
   const [buy, setBuy] = useState(false);
@@ -184,29 +187,38 @@ export function FortuneScreen() {
       if (next - cur < 360 * 1.5) next += 360;
       return next;
     });
+    setTurning(true);
     sfx("tap");
     await new Promise<void>((res) => { timer.current = window.setTimeout(res, SPIN_MS); });
+    setTurning(false);
     setSpinning(false);
     setF(r.fortune);
     setStock(null);
     const s = SECTORS[r.last];
     if (s.kind === "prize") { haptic.big(); sfx("win"); stop(); setCups(true); return; }
     if (s.kind === "empty") haptic.tap(); else { haptic.ok(); sfx("coin"); }
-    if (runRef.current && r.fortune.tickets > 0) {
+    if (runRef.current) {
+      if (r.fortune.tickets < 1) { stop(); setOut(true); return; }
       await new Promise<void>((res) => { timer.current = window.setTimeout(res, PAUSE_MS); });
       if (runRef.current) return spinOnce();
     }
-    stop();
   };
 
+  /** one spin by the button */
   const go = () => {
-    if (running) { stop(); return; }
-    if (spinning) return;
-    if (tickets < 1) { setBuy(true); return; }
+    if (spinning || running) return;
+    if (tickets < 1) { setOut(true); return; }
     haptic.tap();
-    runRef.current = auto;
-    setRunning(auto);
     void spinOnce();
+  };
+  /** «Автопрокрутка»: on — the wheel turns by itself through every ticket; off — stops after the current turn */
+  const setAutoOn = (on: boolean) => {
+    if (!on) { stop(); return; }
+    if (tickets < 1) { setOut(true); return; }
+    haptic.tap();
+    runRef.current = true;
+    setRunning(true);
+    if (!spinning) void spinOnce();
   };
 
   const lvlShare = f ? f.into / f.need : 0;
@@ -249,11 +261,11 @@ export function FortuneScreen() {
       </div>
 
       <div className="fo-stage">
-        <Sparks on={spinning} />
+        <Sparks on={turning} />
         <svg className="fo-arrow" viewBox="0 0 60 70" aria-hidden="true">
           <path d="M8 6 C 20 12, 40 10, 52 5 L 34 58 C 32 64, 28 64, 26 58 Z" />
         </svg>
-        <div className="fo-wheel" style={{ transform: `rotate(${turn}deg)`, transitionDuration: spinning ? `${SPIN_MS}ms` : "0ms" }}>
+        <div className="fo-wheel" style={{ transform: `rotate(${turn}deg)`, transitionDuration: turning ? `${SPIN_MS}ms` : "0ms" }}>
           <WheelFace />
         </div>
         {/* the toothed rim of the manhole stays; the lid turns inside it, sparks fly from the groove between them */}
@@ -276,20 +288,33 @@ export function FortuneScreen() {
         )}
         <div className="fo-row">
           <div className="fo-stock">
-            <span className="fo-chip" title="Билеты"><ItemArt id={TICKET_ID} size={22} /><b className="num">{tickets}</b>
-              <button type="button" className="fo-plus" onClick={() => setBuy(true)} aria-label="Купить билеты">+</button></span>
-            <span className="fo-chip" title="Кнопки клавиатуры"><ItemArt id={KEYCAP_ID} size={22} /><b className="num">{keycaps.toLocaleString("ru-RU")}</b></span>
+            <span className="fo-field" title="Билеты">
+              <span className="fo-chip"><ItemArt id={TICKET_ID} size={22} /><b className="num">{tickets.toLocaleString("ru-RU")}</b></span>
+              <button type="button" className="fo-plus" onClick={() => setBuy(true)} aria-label="Купить билеты">+</button>
+            </span>
+            <span className="fo-field" title="Кнопки клавиатуры">
+              <span className="fo-chip"><ItemArt id={KEYCAP_ID} size={22} /><b className="num">{keycaps.toLocaleString("ru-RU")}</b></span>
+            </span>
           </div>
           <div className="fo-go">
-            <button type="button" className={`fo-spin ${running ? "stop" : ""}`} disabled={!running && (spinning || busy === "fortune_spin")} onClick={go}>
-              <b>{running ? "Стоп" : tickets < 1 ? "Купить билет" : "Крутить"}</b>
-              {!running && <span className="num"><ItemArt id={TICKET_ID} size={16} />{auto ? tickets || 1 : 1}</span>}
+            <Toggle on={running} onChange={setAutoOn}>Автопрокрутка</Toggle>
+            <button type="button" className="fo-spin" disabled={running || spinning || busy === "fortune_spin"} onClick={go}>
+              <b>Крутить</b>
+              <span className="num"><ItemArt id={TICKET_ID} size={14} />1</span>
             </button>
-            <label className="fo-all"><input type="checkbox" checked={auto} onChange={(e) => { setAuto(e.target.checked); if (!e.target.checked) stop(); }} /> Крутить на все</label>
           </div>
         </div>
       </div>
 
+      {out && (
+        <Modal onClose={() => setOut(false)} title="Билеты кончились">
+          <div className="fo-res">
+            <ItemArt id={TICKET_ID} size={72} />
+            <p><b>Браток, билеты кончились.</b> Купи ещё или достань из «Ящика ништяков» в магазине.</p>
+            <button className="btn gold block" onClick={() => { setOut(false); setBuy(true); }}>Купить билеты</button>
+          </div>
+        </Modal>
+      )}
       {buy && f && <BuyTickets price={f.price} onClose={() => setBuy(false)} onDone={() => { void load(); }} />}
       {bag && <Bags keycaps={keycaps} onClose={() => { setBag(false); void load(); }} />}
       {cups && <CupsGame onClose={() => { setCups(false); void load(); }} />}
@@ -414,6 +439,7 @@ function CupsGame({ onClose }: { onClose: () => void }) {
   const [pos, setPos] = useState<number[]>(() => Array.from({ length: 9 }, (_, i) => i));
   const [phase, setPhase] = useState<"load" | "show" | "down" | "shuffle" | "pick" | "busy" | "open" | "all">("load");
   const [res, setRes] = useState<CupsPick | null>(null);
+  const [swapMs, setSwapMs] = useState(300);
   const [jp, setJp] = useState(0);
   const timers = useRef<number[]>([]);
   const later = (ms: number, fn: () => void) => { timers.current.push(window.setTimeout(fn, ms)); };
@@ -432,9 +458,10 @@ function CupsGame({ onClose }: { onClose: () => void }) {
       later(1800, () => setPhase("down"));
       later(2400, () => {
         setPhase("shuffle");
-        const swaps = 9;
-        for (let k = 0; k < swaps; k++) {
-          later((k * CUPS_SHUFFLE_MS) / swaps, () => {
+        let t = 0;
+        for (const ms of CUPS_SWAPS) {
+          later(t, () => {
+            setSwapMs(ms);
             setPos((p) => {
               const a = Math.floor(Math.random() * 9);
               let b = Math.floor(Math.random() * 8);
@@ -446,8 +473,9 @@ function CupsGame({ onClose }: { onClose: () => void }) {
             });
             sfx("tap");
           });
+          t += ms;
         }
-        later(CUPS_SHUFFLE_MS + 250, () => setPhase("pick"));
+        later(t + 250, () => setPhase("pick"));
       });
     })();
     return () => { alive = false; };
@@ -485,7 +513,7 @@ function CupsGame({ onClose }: { onClose: () => void }) {
           const mine = res?.index === slot;
           return (
             <button key={cup} type="button" className={`fo-cup ${lifted(slot) ? "up" : ""} ${mine ? "mine" : ""} ${phase === "pick" ? "pickable" : ""}`}
-              style={{ ...slotXY(slot), transitionDuration: phase === "shuffle" ? `${Math.round((CUPS_SHUFFLE_MS / 9) * 0.9)}ms` : undefined }}
+              style={{ ...slotXY(slot), transitionDuration: phase === "shuffle" ? `${Math.round(swapMs * 0.92)}ms` : undefined }}
               onClick={() => pick(slot)} disabled={phase !== "pick"} aria-label={`Чашка ${slot + 1}`}>
               {c && <CupPrize c={c} jackpot={c.kind === "jackpot" ? (mine && res?.jackpot ? res.jackpot : jp) : undefined} />}
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -539,7 +567,7 @@ function FortuneHelp() {
       <p>На колесе: оружие, энергетик, рубли, доллары, билет, кнопки клавиатуры, опыт колеса, пустой сектор и <b>ПРИЗ</b>.</p>
       <p><b>ПРИЗ</b> — игра в чашки: девять чашек, под каждой приз (рубли, оружие, доллары, фишки, ящик ништяков, кнопки), под одной — джекпот. Чашки показывают призы, накрываются и перемешиваются — выбери одну. Кто сорвал джекпот, того видно наверху, а джекпот начинается заново с 5000 ₽.</p>
       <p>Кнопки клавиатуры копятся — за них будут открываться коробки с наколками.</p>
-      <p>«Крутить на все» — колесо крутится само, билет за билетом, пока они не кончатся (остановится на «ПРИЗ» или по кнопке «Стоп»).</p>
+      <p>«Автопрокрутка» — включи, и колесо крутится само, билет за билетом, пока они не кончатся (остановится на «ПРИЗ» или когда выключишь).</p>
     </Help>
   );
 }

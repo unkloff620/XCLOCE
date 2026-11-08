@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { act, always, freshDb, give, newPlayer, qty, setMoney, wallet } from "./helpers.ts";
 import { resetConfigCache } from "../src/server/config.ts";
 import type { Db } from "../src/server/db.ts";
-import { CUP_WEIGHTS, JACKPOT_ADD, JACKPOT_SEED, SECTORS, TICKET_ID, TICKET_PRICE, rollSector } from "../src/content/fortune.ts";
+import { JACKPOT_ADD, JACKPOT_SEED, SECTORS, TICKET_ID, TICKET_PRICE, rollSector } from "../src/content/fortune.ts";
 
 const T = Date.UTC(2026, 10, 10, 12);
 async function wheelOn(db: Db) {
@@ -73,10 +73,10 @@ describe("«Колесо удачи»", () => {
     const again = await act(db, p, "fortune_cups", {}, T);
     expect(again.result.layout).toEqual(s.result.layout);
     expect(again.result.fortune.cups).toBe(1);
-    // a roll at the very start of the weights: the jackpot (its weight comes first)
-    expect(Object.keys(CUP_WEIGHTS)[0]).toBe("jackpot");
+    // the roll picks the cup whose prize goes under the lifted one: aim it at the jackpot's cup
+    const jk = s.result.layout.findIndex((c: { kind: string }) => c.kind === "jackpot");
     const rub = await wallet(db, p, "RUB");
-    const r = await act(db, p, "fortune_cup_pick", { index: 4 }, T, always(0.001));
+    const r = await act(db, p, "fortune_cup_pick", { index: 4 }, T, always((jk + 0.5) / 9));
     expect(r.result.kind).toBe("jackpot");
     expect(r.result.final[4].kind).toBe("jackpot");
     expect(r.result.jackpot).toBe(12345);

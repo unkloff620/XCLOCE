@@ -73,15 +73,13 @@ export function rollSector(rng: () => number): number {
 
 /*
  * «ПРИЗ» — the cups: nine upside-down mugs, each over a prize (one over the jackpot). They are lifted, put down and
- * shuffled; the player lifts one. What lies under it is drawn by the server by CUP_WEIGHTS (the shuffle on the screen
- * is only a show — following the jackpot cup with the eye does not win it).
+ * shuffled; the player lifts one. What lies under it is drawn by the server — any of the nine with the same chance,
+ * the jackpot too (the shuffle on the screen is only a show — following the jackpot cup with the eye does not win it).
  */
 export type CupKind = "rub" | "weapon" | "usd" | "chips" | "jackpot" | "case" | "keys";
 export interface Cup { kind: CupKind; reward?: Reward }
 /** the nine cups: what lies under them (amounts rolled a little) */
 export const CUP_SET: CupKind[] = ["jackpot", "rub", "rub", "weapon", "usd", "chips", "case", "keys", "keys"];
-/** how often each kind is the one lifted (for a kind with two cups — either of them) */
-export const CUP_WEIGHTS: Record<CupKind, number> = { jackpot: 4, rub: 26, weapon: 14, usd: 12, chips: 12, case: 8, keys: 24 };
 /** «Ящик ништяков» = this many achievement points (one more opening of the case in the shop) */
 export const CUP_CASE_POINTS = 5;
 
@@ -104,13 +102,6 @@ export function rollCups(rng: () => number): Cup[] {
   const list = CUP_SET.map((kind) => ({ kind, reward: cupReward(kind, rng) }));
   for (let i = list.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [list[i], list[j]] = [list[j], list[i]]; }
   return list;
-}
-/** the kind under the lifted cup */
-export function rollCupKind(rng: () => number): CupKind {
-  const e = Object.entries(CUP_WEIGHTS) as [CupKind, number][];
-  let r = rng() * e.reduce((s, [, w]) => s + w, 0);
-  for (const [k, w] of e) { r -= w; if (r < 0) return k; }
-  return "rub";
 }
 
 /*
