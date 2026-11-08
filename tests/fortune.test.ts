@@ -96,6 +96,11 @@ describe("«Колесо удачи»", () => {
     expect(r.result.prize).toBe("rub");
     expect(r.result.reward.currencies.RUB).toBeGreaterThanOrEqual(1500);
     expect(await qty(db, p, "keycap")).toBe(10);
+    // a low roll: a piece of the bag's own set (Фарт for the first bag)
+    await give(db, p, "keycap", 140);
+    const t = await act(db, p, "fortune_bag", { bag: "bag1" }, T, always(0.01));
+    expect(t.result.tattoo).toMatch(/^tat-luck-/);
+    expect(await qty(db, p, t.result.tattoo)).toBe(1);
   });
 
   it("the weights add up to the sectors' order", () => {

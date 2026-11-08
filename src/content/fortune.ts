@@ -122,7 +122,7 @@ export interface FortuneBag {
   id: string; name: string;
   /** keycaps to open it */
   price: number;
-  /** its tattoo set (content/tattoos.ts, boss "fortune"); null — the set is not drawn yet */
+  /** its tattoo set (content/tattoos.ts, boss "fortune") */
   set: string | null;
   /** the bag picture's colour (a CSS hue turn of the black bag's stripe and glow) */
   hue: number;
@@ -131,10 +131,10 @@ export interface FortuneBag {
 export const BAG_TATTOO_CHANCE = 0.3;
 export const BAG_PRIZE_WEIGHTS: Record<BagPrize, number> = { xp: 30, rub: 35, stash: 15, usd: 20 };
 export const FORTUNE_BAGS: FortuneBag[] = [
-  { id: "bag1", name: "Сумка с района", price: 140, set: null, hue: 0, xp: [300, 800], rub: [1_500, 3_000], usd: [5, 15], stash: [1, 1] },
-  { id: "bag2", name: "Сумка барыги", price: 300, set: null, hue: 140, xp: [800, 2_000], rub: [3_000, 6_000], usd: [15, 30], stash: [1, 2] },
-  { id: "bag3", name: "Сумка катрана", price: 600, set: null, hue: 220, xp: [2_000, 4_500], rub: [6_000, 12_000], usd: [30, 60], stash: [2, 3] },
-  { id: "bag4", name: "Сумка смотрящего", price: 1_200, set: null, hue: 300, xp: [4_500, 9_000], rub: [12_000, 25_000], usd: [60, 120], stash: [3, 5] },
+  { id: "bag1", name: "Сумка с района", price: 140, set: "luck", hue: 0, xp: [300, 800], rub: [1_500, 3_000], usd: [5, 15], stash: [1, 1] },
+  { id: "bag2", name: "Сумка барыги", price: 300, set: "hustler", hue: 140, xp: [800, 2_000], rub: [3_000, 6_000], usd: [15, 30], stash: [1, 2] },
+  { id: "bag3", name: "Сумка катрана", price: 600, set: "katran", hue: 220, xp: [2_000, 4_500], rub: [6_000, 12_000], usd: [30, 60], stash: [2, 3] },
+  { id: "bag4", name: "Сумка смотрящего", price: 1_200, set: "smotr", hue: 300, xp: [4_500, 9_000], rub: [12_000, 25_000], usd: [60, 120], stash: [3, 5] },
 ];
 export const bagById = (id: string) => FORTUNE_BAGS.find((b) => b.id === id);
 
