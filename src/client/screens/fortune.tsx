@@ -11,7 +11,7 @@ import { TATTOO_SETS } from "../../content/tattoos.ts";
 import { useGame } from "../store.tsx";
 import { api, type Granted } from "../api.ts";
 import { usePageReady } from "../route-loader.tsx";
-import { Avatar, Modal } from "../ui.tsx";
+import { Avatar, Modal, RewardChips } from "../ui.tsx";
 import { Help } from "../help.tsx";
 import { Icon } from "../art/icons.tsx";
 import { ItemArt } from "../art/items.tsx";
@@ -298,7 +298,7 @@ export function FortuneScreen() {
 }
 
 /* ---------------- the bag: four bags for keycaps, ‹ › or a swipe ---------------- */
-interface BagOpen { bag: string; prize: "xp" | "rub" | "stash" | "usd"; amount: number; reward: Granted; tattoo: string | null }
+interface BagOpen { bag: string; reward: Granted; tattoo: string | null }
 const fmtN = (n: number) => n.toLocaleString("ru-RU");
 
 function Bags({ keycaps, onClose }: { keycaps: number; onClose: () => void }) {
@@ -309,7 +309,7 @@ function Bags({ keycaps, onClose }: { keycaps: number; onClose: () => void }) {
   const [shake, setShake] = useState(0);
   const touch = useRef<number | null>(null);
   const b = FORTUNE_BAGS[i];
-  const set = b.set ? TATTOO_SETS.find((x) => x.id === b.set) : undefined;
+  const set = TATTOO_SETS.find((x) => x.id === b.set);
   const go = (d: number) => { setI((v) => (v + d + FORTUNE_BAGS.length) % FORTUNE_BAGS.length); setGot(null); haptic.tap(); };
   const open = async () => {
     if (have < b.price) return;
@@ -351,23 +351,24 @@ function Bags({ keycaps, onClose }: { keycaps: number; onClose: () => void }) {
               )}
             </div>
           )}
-          {got && (
-            <div className="fo-bags-got">
-              <div className="fo-bags-prize">
-                {got.prize === "xp" ? <Icon name="xp" size={56} /> : got.prize === "rub" ? <Icon name="RUB" size={56} /> : got.prize === "usd" ? <Icon name="USD" size={56} /> : <Icon name="chest" size={56} />}
-                <b className="fo-chalk num">+{fmtN(got.amount)}{got.prize === "stash" ? " шт." : ""}</b>
-              </div>
-              {got.tattoo && (
-                <div className="fo-paper">
-                  <ItemArt id={got.tattoo} size={72} />
-                  <span>Наколка!</span>
-                </div>
-              )}
-            </div>
-          )}
         </div>
         <button type="button" className="fo-bags-arrow" onClick={() => go(1)} aria-label="Следующая">›</button>
       </div>
+
+      {/* what fell out: under the bag; a tap clears it (the bag with its icons again) */}
+      <button type="button" className={`fo-bags-out ${got ? "on" : ""}`} onClick={() => setGot(null)} disabled={!got} aria-label="Убрать награду">
+        {got && (
+          <>
+            <RewardChips r={{ ...got.reward, items: got.reward.items?.filter((x) => x.id !== got.tattoo) }} size={40} />
+            {got.tattoo && (
+              <span className="fo-paper">
+                <ItemArt id={got.tattoo} size={64} />
+                <span>Наколка!</span>
+              </span>
+            )}
+          </>
+        )}
+      </button>
 
       <div className="fo-bags-foot">
         <button type="button" className="fo-spin" disabled={busy === "fortune_bag" || have < b.price} onClick={open}>

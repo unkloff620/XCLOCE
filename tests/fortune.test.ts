@@ -93,8 +93,11 @@ describe("«Колесо удачи»", () => {
     await give(db, p, "keycap", 150);
     await expect(act(db, p, "fortune_bag", { bag: "bag2" }, T)).rejects.toMatchObject({ code: "fortune_no_keycaps" });
     const r = await act(db, p, "fortune_bag", { bag: "bag1" }, T, always(0.5));
-    expect(r.result.prize).toBe("rub");
-    expect(r.result.reward.currencies.RUB).toBeGreaterThanOrEqual(1500);
+    // everything at once: authority, roubles, dollars, a stash piece
+    expect(r.result.reward.xp).toBeGreaterThanOrEqual(200);
+    expect(r.result.reward.currencies.RUB).toBeGreaterThanOrEqual(800);
+    expect(r.result.reward.currencies.USD).toBeGreaterThanOrEqual(3);
+    expect(r.result.reward.items.length).toBeGreaterThanOrEqual(1);
     expect(await qty(db, p, "keycap")).toBe(10);
     // a low roll: a piece of the bag's own set (Фарт for the first bag)
     await give(db, p, "keycap", 140);

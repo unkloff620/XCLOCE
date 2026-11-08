@@ -5917,6 +5917,9 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .fo-bags-row { display: flex; align-items: center; gap: 8px; }
 .fo-bags-row b { margin-left: auto; }
 .fo-bags-tat img { width: 22px; height: 22px; object-fit: contain; }
+.fo-bags-out { width: 100%; max-width: 380px; min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 6px; border: 0; background: none; color: #fff; cursor: pointer; }
+.fo-bags-out:disabled { cursor: default; }
+.fo-bags-out.on > * { animation: fo-pop 0.35s ease-out; }
 .fo-bags-got { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; justify-content: center; animation: fo-pop 0.35s ease-out; }
 @keyframes fo-pop { from { transform: scale(0.8); opacity: 0; } to { transform: none; opacity: 1; } }
 .fo-bags-prize { display: flex; flex-direction: column; align-items: center; gap: 2px; }

@@ -114,37 +114,30 @@ export function rollCupKind(rng: () => number): CupKind {
 }
 
 /*
- * The bag of the wheel: four bags opened for keycaps. A bag gives one prize — authority, roubles, a stash or dollars — and
- * with BAG_TATTOO_CHANCE a piece of its own tattoo set (one not owned yet), shown in a paper frame.
+ * The bag of the wheel: four bags opened for keycaps. A bag gives all of it at once — authority, roubles, dollars and
+ * stash pieces — and with BAG_TATTOO_CHANCE a piece of its own tattoo set (one not owned yet), shown in a paper frame.
  */
-export type BagPrize = "xp" | "rub" | "stash" | "usd";
 export interface FortuneBag {
   id: string; name: string;
   /** keycaps to open it */
   price: number;
   /** its tattoo set (content/tattoos.ts, boss "fortune") */
-  set: string | null;
+  set: string;
   /** the bag picture's colour (a CSS hue turn of the black bag's stripe and glow) */
   hue: number;
   xp: [number, number]; rub: [number, number]; usd: [number, number]; stash: [number, number];
 }
 export const BAG_TATTOO_CHANCE = 0.3;
-export const BAG_PRIZE_WEIGHTS: Record<BagPrize, number> = { xp: 30, rub: 35, stash: 15, usd: 20 };
 export const FORTUNE_BAGS: FortuneBag[] = [
-  { id: "bag1", name: "Сумка с района", price: 140, set: "luck", hue: 0, xp: [300, 800], rub: [1_500, 3_000], usd: [5, 15], stash: [1, 1] },
-  { id: "bag2", name: "Сумка барыги", price: 300, set: "hustler", hue: 140, xp: [800, 2_000], rub: [3_000, 6_000], usd: [15, 30], stash: [1, 2] },
-  { id: "bag3", name: "Сумка катрана", price: 600, set: "katran", hue: 220, xp: [2_000, 4_500], rub: [6_000, 12_000], usd: [30, 60], stash: [2, 3] },
-  { id: "bag4", name: "Сумка смотрящего", price: 1_200, set: "smotr", hue: 300, xp: [4_500, 9_000], rub: [12_000, 25_000], usd: [60, 120], stash: [3, 5] },
+  { id: "bag1", name: "Сумка с района", price: 140, set: "luck", hue: 0, xp: [200, 400], rub: [800, 1_500], usd: [3, 8], stash: [1, 1] },
+  { id: "bag2", name: "Сумка барыги", price: 300, set: "hustler", hue: 140, xp: [500, 1_000], rub: [1_500, 3_000], usd: [8, 15], stash: [1, 1] },
+  { id: "bag3", name: "Сумка катрана", price: 600, set: "katran", hue: 220, xp: [1_200, 2_200], rub: [3_000, 6_000], usd: [15, 30], stash: [1, 2] },
+  { id: "bag4", name: "Сумка смотрящего", price: 1_200, set: "smotr", hue: 300, xp: [2_500, 4_500], rub: [6_000, 12_000], usd: [30, 60], stash: [2, 3] },
 ];
 export const bagById = (id: string) => FORTUNE_BAGS.find((b) => b.id === id);
 
-/** the bag's prize: which kind, and how much (a stash — that many random stash pieces, picked by the caller) */
-export function rollBagPrize(bag: FortuneBag, rng: () => number): { kind: BagPrize; amount: number } {
-  const e = Object.entries(BAG_PRIZE_WEIGHTS) as [BagPrize, number][];
-  let r = rng() * e.reduce((s, [, w]) => s + w, 0);
-  let kind: BagPrize = "rub";
-  for (const [k, w] of e) { r -= w; if (r < 0) { kind = k; break; } }
-  const [a, b] = bag[kind];
-  const step = kind === "rub" ? 100 : kind === "xp" ? 50 : 1;
-  return { kind, amount: a + Math.floor(rng() * ((b - a) / step + 1)) * step };
+/** what the bag gives: every kind, an amount in its range (stash — that many random stash pieces, picked by the caller) */
+export function rollBagLoot(bag: FortuneBag, rng: () => number) {
+  const roll = ([a, b]: [number, number], step: number) => a + Math.floor(rng() * ((b - a) / step + 1)) * step;
+  return { xp: roll(bag.xp, 50), rub: roll(bag.rub, 100), usd: roll(bag.usd, 1), stash: roll(bag.stash, 1) };
 }
