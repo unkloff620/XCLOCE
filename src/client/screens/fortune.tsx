@@ -19,6 +19,7 @@ import { sfx } from "../sound.ts";
 import { KEYCAP_ID, SECTORS, TICKET_ID, WHEEL_R, spokeBend, type CupKind, type Sector } from "../../content/fortune.ts";
 
 const A = "/assets/fortune";
+const WHEEL_IMG = `${A}/wheel.webp`;
 const PRIZE_IMG = `${A}/prize.webp?v=2`;
 const N = SECTORS.length;
 const STEP = 360 / N;
@@ -57,7 +58,7 @@ function WheelFace() {
   return (
     <>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="fo-wheel-pic" src={`${A}/wheel.webp`} alt="" draggable={false} />
+      <img className="fo-wheel-pic" src={WHEEL_IMG} alt="" draggable={false} />
       {SECTORS.map((s, k) => {
         if (s.kind === "empty") return null;
         if (s.kind === "prize") {
@@ -91,6 +92,7 @@ export function FortuneScreen() {
   const runRef = useRef(false);
   const [buy, setBuy] = useState(false);
   const [cups, setCups] = useState(false);
+  const [bag, setBag] = useState(false);
   const timer = useRef<number | null>(null);
   // the tickets and keycaps change at once; the jackpot and the level — when the wheel stops
   const [stock, setStock] = useState<{ tickets: number; keycaps: number } | null>(null);
@@ -152,20 +154,24 @@ export function FortuneScreen() {
       <div className="fo-top">
         <div className="title-row">
           <Link href="/yard" className="back-btn" aria-label="Во двор">‹</Link>
-          <div className="fo-jack">
-            <span className="fo-jack-t">👑 Джекпот</span>
-            <b className="fo-jack-v num"><Icon name="RUB" size={20} />{f ? f.jackpot.toLocaleString("ru-RU") : "…"}</b>
-          </div>
+          <span className="grow" />
           <FortuneHelp />
         </div>
-        <div className="fo-winner">
+        {/* left: who took the jackpot last; right: the jackpot itself, written in chalk on the asphalt */}
+        <div className="fo-head">
           {f?.winner ? (
-            <Link href={`/profile?id=${f.winner.id}`} className="fo-winner-in">
-              <Avatar name={f.winner.name} photo={f.winner.photo} size={30} />
+            <Link href={`/profile?id=${f.winner.id}`} className="fo-winner">
+              <Avatar name={f.winner.name} photo={f.winner.photo} size={40} />
               <span className="fo-winner-n">{f.winner.name}</span>
-              <span className="fo-winner-s">сорвал куш: <b className="num">{f.winner.amount.toLocaleString("ru-RU")}</b> <Icon name="RUB" size={13} /></span>
+              <span className="fo-winner-s">сорвал куш</span>
+              <b className="fo-chalk num">{f.winner.amount.toLocaleString("ru-RU")} <Icon name="RUB" size={15} /></b>
             </Link>
-          ) : <span className="fo-winner-in fo-muted">Куш ещё никто не сорвал — он растёт с каждой прокруткой</span>}
+          ) : <span className="fo-winner fo-winner-none">Куш ещё никто<br />не сорвал</span>}
+          <div className="fo-jack">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="fo-jack-t" src={`${A}/jackpot-title.webp`} alt="Джекпот" draggable={false} />
+            <b className="fo-jack-v fo-chalk num"><Icon name="RUB" size={22} />{f ? f.jackpot.toLocaleString("ru-RU") : "…"}</b>
+          </div>
         </div>
       </div>
 
@@ -185,6 +191,12 @@ export function FortuneScreen() {
           <WheelFace />
         </div>
       </div>
+
+      {/* the bag: the boxes of tattoo sets for keycaps */}
+      <button type="button" className="fo-bag" onClick={() => setBag(true)} aria-label="Сумка">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={`${A}/bag.webp`} alt="" draggable={false} />
+      </button>
 
       <div className="fo-bottom">
         {cupsWaiting > 0 && !cups && (
@@ -210,6 +222,16 @@ export function FortuneScreen() {
       </div>
 
       {buy && f && <BuyTickets price={f.price} onClose={() => setBuy(false)} onDone={() => { void load(); }} />}
+      {bag && (
+        <Modal onClose={() => setBag(false)} title="Сумка">
+          <div className="fo-res">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`${A}/bag.webp`} alt="" width={120} />
+            <p className="small">Здесь будут 4 коробки с сетами наколок — открываются за кнопки клавиатуры (140, 300, 600 и 1200). Копи кнопки!</p>
+            <button className="btn gold block" onClick={() => setBag(false)}>Ок</button>
+          </div>
+        </Modal>
+      )}
       {cups && <CupsGame onClose={() => { setCups(false); void load(); }} />}
     </div>
   );
