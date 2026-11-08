@@ -5903,9 +5903,13 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .fo-bags-dots { display: flex; gap: 6px; }
 .fo-bags-dots i { width: 8px; height: 8px; border-radius: 50%; background: rgba(255, 255, 255, 0.3); }
 .fo-bags-dots i.on { background: #f5ec5c; }
-.fo-bags-stage { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.fo-bags-stage { width: 100%; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.fo-bags-bag { position: relative; flex: 1; min-width: 0; display: flex; justify-content: center; align-items: center; }
+.fo-bags-can { position: absolute; left: 50%; bottom: 4%; transform: translateX(-50%); display: flex; gap: 6px; padding: 5px 8px; border-radius: 16px; background: rgba(12, 13, 16, 0.72); border: 1px solid rgba(255, 255, 255, 0.25); }
+.fo-bags-can > span { display: inline-flex; width: 30px; height: 30px; align-items: center; justify-content: center; }
+.fo-bags-can .tat img { width: 30px; height: 30px; object-fit: cover; object-position: top; border-radius: 50%; border: 2px solid #f5ec5c; background: #f5ec5c; }
 .fo-bags-arrow { width: 44px; height: 64px; border-radius: 12px; border: 2px solid rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.08); color: #fff; font-size: 34px; line-height: 1; cursor: pointer; flex: none; }
-.fo-bags-pic { flex: 1; min-width: 0; max-width: 66cqw; height: auto; filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.6)); user-select: none; }
+.fo-bags-pic { width: 100%; max-width: 70cqw; height: auto; filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.6)); user-select: none; }
 .fo-bags-pic.shake { animation: fo-bag-shake 0.45s ease-in-out; }
 @keyframes fo-bag-shake { 0%, 100% { transform: none; } 20% { transform: rotate(-6deg) scale(1.03); } 45% { transform: rotate(5deg) scale(1.05); } 70% { transform: rotate(-3deg); } }
 .fo-bags-list { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 5px; padding: 10px 12px; border-radius: 12px; background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.15); font-size: 14px; }
@@ -5913,7 +5917,7 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .fo-bags-row { display: flex; align-items: center; gap: 8px; }
 .fo-bags-row b { margin-left: auto; }
 .fo-bags-tat img { width: 22px; height: 22px; object-fit: contain; }
-.fo-bags-got { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; min-height: 120px; justify-content: center; animation: fo-pop 0.35s ease-out; }
+.fo-bags-got { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; justify-content: center; animation: fo-pop 0.35s ease-out; }
 @keyframes fo-pop { from { transform: scale(0.8); opacity: 0; } to { transform: none; opacity: 1; } }
 .fo-bags-prize { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .fo-bags-prize b { font-size: 34px; line-height: 1; }
@@ -5921,5 +5925,5 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 /* the tattoo dropped: a scrap of paper with the piece on it */
 .fo-paper { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 14px 8px; background: #efe3c4; color: #3a2a14; font-weight: 800; transform: rotate(-3deg);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5), inset 0 0 18px rgba(120, 90, 40, 0.35); clip-path: polygon(0 4%, 8% 0, 22% 3%, 40% 0, 58% 2%, 76% 0, 92% 3%, 100% 0, 98% 30%, 100% 62%, 97% 100%, 80% 97%, 60% 100%, 38% 97%, 18% 100%, 2% 96%, 0 70%, 2% 36%); }
-.fo-bags-foot { margin-top: auto; width: 100%; max-width: 360px; display: flex; flex-direction: column; align-items: center; gap: 6px; padding-bottom: 14px; }
+.fo-bags-foot { width: 100%; max-width: 360px; display: flex; flex-direction: column; align-items: center; gap: 6px; padding-bottom: 14px; }
 .fo-bags-foot .fo-spin { width: 100%; min-height: 64px; }
