@@ -143,7 +143,10 @@ function WheelFace() {
 
 export function FortuneScreen() {
   const { act, busy } = useGame();
-  const [f, setF] = useState<FortuneView | null>(null);
+  const [f, setF0] = useState<FortuneView | null>(null);
+  // the last known view, for the spins of «Крутить на все» (they run on in one closure, its `f` would be the first one)
+  const fRef = useRef<FortuneView | null>(null);
+  const setF = useCallback((v: FortuneView) => { fRef.current = v; setF0(v); }, []);
   usePageReady(!!f);
   const [turn, setTurn] = useState(0);
   const [spinning, setSpinning] = useState(false);
@@ -158,7 +161,7 @@ export function FortuneScreen() {
   // the tickets and keycaps change at once; the jackpot and the level — when the wheel stops
   const [stock, setStock] = useState<{ tickets: number; keycaps: number } | null>(null);
 
-  const load = useCallback(() => api.get<FortuneView>("/api/fortune").then((v) => { setF(v); setStock(null); }).catch(() => {}), []);
+  const load = useCallback(() => api.get<FortuneView>("/api/fortune").then((v) => { setF(v); setStock(null); }).catch(() => {}), [setF]);
   useEffect(() => { void load(); const t = window.setInterval(() => document.visibilityState === "visible" && !runRef.current && load(), 20_000); return () => clearInterval(t); }, [load]);
   useEffect(() => () => { runRef.current = false; if (timer.current) clearTimeout(timer.current); }, []);
 
@@ -170,7 +173,8 @@ export function FortuneScreen() {
     setSpinning(true);
     const r = await act<SpinResult>("fortune_spin", {});
     if (!r) { setSpinning(false); stop(); return; }
-    setStock({ tickets: r.fortune.tickets, keycaps: stock?.keycaps ?? f?.keycaps ?? r.fortune.keycaps });
+    // the ticket goes at once; the keycaps won show when the wheel stops (until then — what there was before this spin)
+    setStock({ tickets: r.fortune.tickets, keycaps: fRef.current?.keycaps ?? r.fortune.keycaps });
     // turn to the sector fallen: two full turns more, a little off its middle (where the arrow meets it, near the rim)
     const jitter = (Math.random() - 0.5) * STEP * 0.55;
     const target = -(sectorAngle(r.last, 0.92) + 90) + jitter;
