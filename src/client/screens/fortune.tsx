@@ -19,7 +19,7 @@ import { sfx } from "../sound.ts";
 import { KEYCAP_ID, SECTORS, TICKET_ID, WHEEL_R, spokeBend, type CupKind, type Sector } from "../../content/fortune.ts";
 
 const A = "/assets/fortune";
-const WHEEL_IMG = `${A}/wheel-v2.webp`;
+const WHEEL_IMG = `${A}/wheel-v3.webp`;
 const PRIZE_IMG = `${A}/prize.webp?v=2`;
 const N = SECTORS.length;
 const STEP = 360 / N;
