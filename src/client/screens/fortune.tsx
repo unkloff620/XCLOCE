@@ -371,7 +371,7 @@ function Bags({ keycaps, onClose }: { keycaps: number; onClose: () => void }) {
               {set && (
                 <span className="tat" title={`Наколка сета «${set.name}» — ${Math.round(BAG_TATTOO_CHANCE * 100)}%`}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={`/assets/hero/tattoo/set-${set.id}.webp`} alt="" />
+                  <img src={`${A}/tattoo-icon.webp`} alt="" />
                 </span>
               )}
             </div>

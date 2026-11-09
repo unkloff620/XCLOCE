@@ -5925,7 +5925,7 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .fo-bags-bag { position: relative; flex: 1; min-width: 0; display: flex; justify-content: center; align-items: center; }
 .fo-bags-can { position: absolute; left: 50%; bottom: 4%; transform: translateX(-50%); display: flex; gap: 6px; padding: 5px 8px; border-radius: 16px; background: rgba(12, 13, 16, 0.72); border: 1px solid rgba(255, 255, 255, 0.25); }
 .fo-bags-can > span { display: inline-flex; width: 30px; height: 30px; align-items: center; justify-content: center; }
-.fo-bags-can .tat img { width: 30px; height: 30px; object-fit: cover; object-position: top; border-radius: 50%; border: 2px solid #f5ec5c; background: #f5ec5c; }
+.fo-bags-can .tat img { width: 30px; height: 30px; object-fit: contain; }
 .fo-bags-arrow { width: 44px; height: 64px; border-radius: 12px; border: 2px solid rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.08); color: #fff; font-size: 34px; line-height: 1; cursor: pointer; flex: none; }
 .fo-bags-pic { width: 100%; max-width: 70cqw; height: auto; filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.6)); user-select: none; }
 .fo-bags-pic.shake { animation: fo-bag-shake 0.45s ease-in-out; }
