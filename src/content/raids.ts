@@ -34,14 +34,15 @@ export interface RaidYard {
  * one at the top (twice as big). `kinds` — the six ordinary ones, from the bottom up, left to right.
  */
 // in % of the yard's ground picture (public/assets/raids/yard-ground2.webp, 1024×1536, drawn with places for them)
+// a phone shows only the middle ~70% of the picture's width (it covers the screen), so the outer ones are pulled in a bit
 const SPOTS = [
-  { x: 56, y: 88, w: 20 },
-  { x: 38.5, y: 74, w: 19 }, { x: 61, y: 74, w: 20 },
-  { x: 27.5, y: 58, w: 19 }, { x: 51.5, y: 58, w: 23 }, { x: 77, y: 58, w: 22 },
+  { x: 55, y: 88, w: 16 },
+  { x: 40.5, y: 74, w: 15 }, { x: 59.5, y: 74, w: 16 },
+  { x: 31, y: 58, w: 15.5 }, { x: 51, y: 58, w: 18.5 }, { x: 71, y: 58, w: 17.5 },
 ];
 const plan = (yard: string, kinds: BuildingKind[]): RaidBuilding[] => [
   ...kinds.map((kind, i) => ({ id: `${yard}-${i + 1}`, kind, ...SPOTS[i] })),
-  { id: `${yard}-main`, kind: "main" as const, x: 50, y: 38, w: 34 },
+  { id: `${yard}-main`, kind: "main" as const, x: 50, y: 38, w: 29 },
 ];
 
 export const RAID_YARDS: RaidYard[] = [
