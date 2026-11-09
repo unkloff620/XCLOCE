@@ -111,7 +111,7 @@ export async function fortuneCupsPick(ctx: Ctx, index: number) {
   const final = layout.slice();
   [final[index], final[j]] = [final[j], final[index]];
   const cup = final[index];
-  await ctx.q.query("UPDATE fortune_players SET cups_layout = NULL WHERE player_id=$1", [ctx.pid]);
+  await ctx.q.query("UPDATE fortune_players SET cups_layout = NULL, cups_played = cups_played + 1, jackpots = jackpots + $2 WHERE player_id=$1", [ctx.pid, cup.kind === "jackpot" ? 1 : 0]);
   let jackpot = 0;
   let reward: Granted | null = null;
   if (cup.kind === "jackpot") {

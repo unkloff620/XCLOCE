@@ -4,6 +4,7 @@ import { ACHIEVEMENTS, achievementById, type AchStat } from "../../content/achie
 import type { Config } from "../config.ts";
 import { bossById, bossOpen } from "../../content/bosses.ts";
 import { slotLevel } from "../../content/slots.ts";
+import { fortuneLevel } from "../../content/fortune.ts";
 import { pokerLevel } from "../../content/games.ts";
 import { countersOf } from "./counters.ts";
 import { CRAFT_BOXES, craftBonusOf } from "../../content/craft.ts";
@@ -62,6 +63,9 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
        (SELECT COUNT(*) FROM slot_spins WHERE player_id=$1 AND outcome='jackpot')::int AS slot_777,
        (SELECT COALESCE(slot_xp, 0) FROM players WHERE id=$1)::int AS slot_xp,
        (SELECT COALESCE(poker_xp, 0) FROM players WHERE id=$1)::int AS poker_xp,
+       (SELECT COALESCE((SELECT xp FROM fortune_players WHERE player_id=$1), 0))::int AS fortune_xp,
+       (SELECT COALESCE((SELECT cups_played FROM fortune_players WHERE player_id=$1), 0))::int AS fortune_cups,
+       (SELECT COALESCE((SELECT jackpots FROM fortune_players WHERE player_id=$1), 0))::int AS fortune_jackpots,
        (SELECT COUNT(*) FROM games WHERE player_id=$1 AND kind='zonk' AND status='done')::int AS zonk_games,
        (SELECT COALESCE(MAX((result->>'points')::int), 0) FROM games WHERE player_id=$1 AND kind='zonk' AND status='done' AND result->>'outcome' IS DISTINCT FROM 'gave_up' AND result->>'points' ~ '^[0-9]+$')::int AS zonk_best,
        (SELECT COUNT(*) FROM duels WHERE winner_id=$1 AND created_at >= COALESCE((SELECT progress_reset_at FROM players WHERE id=$1), '-infinity'::timestamptz))::int AS zonk_duels,
@@ -128,6 +132,7 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
     upgWins: c.upgWins ?? 0, upgLowWins: c.upgLowWins ?? 0, upgStreak: c.upgStreak ?? 0,
     zonkGames: m("zonk_games"), zonkBest: m("zonk_best"), zonkDuels: m("zonk_duels"),
     pokerHands: m("poker_hands"), pokerLevel: pokerLevel(m("poker_xp")).level,
+    fortuneLevel: fortuneLevel(m("fortune_xp")).level, fortuneCups: m("fortune_cups"), fortuneJackpots: m("fortune_jackpots"),
     bjBlackjacks: c.bjBlackjacks ?? 0, bjWins: c.bjWins ?? 0,
     clanDays: m("clan_days"), clanBosses: m("clan_bosses"), clanCreated: Math.min(1, c.clanCreated ?? 0),
     spits: m("spits"), raids: m("raids"), nishtyaks: m("nishtyaks"),

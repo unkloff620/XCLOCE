@@ -241,7 +241,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
         ))}
       </div>}
       {shown && <div className="col ach-scroll" style={{ gap: 8, marginTop: 8 }}>
-        {ACH_CATEGORIES.filter((c) => c.section === section).map((c) => {
+        {ACH_CATEGORIES.filter((c) => c.section === section && (!c.id.startsWith("fortune-") || !!state?.fortune?.on)).map((c) => {
           const ls = lines(c);
           if (!ls.length) return null;
           const got = ls.filter((x) => isOn(x.id)).length;

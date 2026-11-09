@@ -178,6 +178,13 @@ export const ACH_CATEGORIES: AchCategory[] = [
       stat: `slot:${o}`, target: t, icon: `/assets/slots/${sym}.webp`, label: String(t), points: pts[i], tier: tiers[i] as AchTier,
     }))),
   },
+  // «Колесо удачи» (content/fortune.ts): its level, the cups games played, the jackpots won (shown once the wheel is in the yard)
+  series("fortune-level", "games", "Колесо: уровень", "/assets/fortune/xp.webp", "fortuneLevel", [2, 5, 10, 15, 20, 30, 40, 55, 75, 100], (n) => `Получи ${n} уровень «Колеса удачи»`,
+    ["Первый оборот", "Крутильщик", "Знакомый люк", "Свой у колеса", "Любимец фортуны", "Колесо в руке", "Мастер оборота", "Хозяин люка", "Легенда двора", "Король колеса"]),
+  series("fortune-cups", "games", "Колесо: чашки", "/assets/fortune/cup.webp", "fortuneCups", [1, 3, 5, 10, 15, 25, 40, 60, 80, 100], (n) => `Сыграй в чашки ${n} раз (сектор «ПРИЗ»)`,
+    ["Первая чашка", "Напёрсточник", "Ловкие руки", "Глаз-алмаз", "Чашечник", "Стаканщик", "Мастер чашек", "Профи напёрстков", "Чашечный король", "Сто чашек"]),
+  series("fortune-jackpots", "games", "Колесо: джекпот", "/assets/fortune/jackpot.webp", "fortuneJackpots", [1, 2, 3, 5, 10, 15, 25, 40, 60, 100], (n) => `Сорви джекпот «Колеса удачи» ${n} раз`,
+    ["Сорвал куш", "Снова куш", "Везунчик", "Счастливчик", "Магнит удачи", "Гроза джекпота", "Банкир двора", "Обнулитель", "Миллионер люка", "Сто джекпотов"]),
   series("zonk-best", "games", "Зонк: очки", "ach-zonk", "zonkBest", [2_000, 4_000, 6_000, 8_000, 10_000], (n) => `Набери ${n} очков за одну партию зонка`),
   // ---------------- Задания: every location by day, by night, and its business ----------------
   ...LOCATIONS.map((l): AchCategory => {

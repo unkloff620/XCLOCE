@@ -1331,4 +1331,11 @@ UPDATE fortune_global SET jackpot = 5000 + 150 * spins WHERE id='_all' AND winne
     id: "v2-088-fortune-usd",
     sql: `UPDATE fortune_global SET jackpot = GREATEST(300, ROUND(jackpot / 15.0)), winner_amount = ROUND(winner_amount / 15.0) WHERE id='_all';`,
   },
+  {
+    // «Колесо удачи» achievements: the cups games played and the jackpots won, per player
+    id: "v2-089-fortune-counts",
+    sql: `ALTER TABLE fortune_players ADD COLUMN IF NOT EXISTS cups_played INT NOT NULL DEFAULT 0;
+ALTER TABLE fortune_players ADD COLUMN IF NOT EXISTS jackpots INT NOT NULL DEFAULT 0;
+UPDATE fortune_players f SET jackpots = 1 FROM fortune_global g WHERE g.id='_all' AND g.winner_id = f.player_id;`,
+  },
 ];

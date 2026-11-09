@@ -84,6 +84,9 @@ describe("«Колесо удачи»", () => {
     expect(r.result.fortune.jackpot).toBe(JACKPOT_SEED);
     expect(r.result.fortune.winner).toMatchObject({ id: p, amount: 12345 });
     await expect(act(db, p, "fortune_cup_pick", { index: 0 }, T)).rejects.toMatchObject({ code: "fortune_no_cups" });
+    // the achievements count the game and the jackpot
+    const [c] = await db.query<{ cups_played: number; jackpots: number }>("SELECT cups_played, jackpots FROM fortune_players WHERE player_id=$1", [p]);
+    expect(c).toMatchObject({ cups_played: 1, jackpots: 1 });
   });
 
   it("a bag for keycaps: one prize; too few keycaps — refused", async () => {
