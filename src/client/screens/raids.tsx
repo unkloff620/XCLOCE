@@ -93,8 +93,11 @@ function YardLife() {
           style={{ ["--x1" as string]: `${w.from[0]}%`, ["--y1" as string]: `${w.from[1]}%`, ["--x2" as string]: `${w.to[0]}%`, ["--y2" as string]: `${w.to[1]}%`,
             zIndex: Math.round(Math.max(w.from[1], w.to[1]) * 10), animationDuration: `${w.s * 2}s`, animationDelay: `${-i * 7}s` }}>
           <i style={{ animationDuration: `${w.s * 2}s`, animationDelay: `${-i * 7}s` }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`${A}/man${w.n}.webp`} alt="" draggable={false} />
+            {/* the same picture three times: the body (above the hips), and each leg (its half below the hips) swinging
+                the opposite way — steps without separate frames */}
+            <b className="rd-w-body" style={{ backgroundImage: `url(${A}/man${w.n}.webp)` }} />
+            <b className="rd-w-leg l" style={{ backgroundImage: `url(${A}/man${w.n}.webp)` }} />
+            <b className="rd-w-leg r" style={{ backgroundImage: `url(${A}/man${w.n}.webp)` }} />
           </i>
         </span>
       ))}
