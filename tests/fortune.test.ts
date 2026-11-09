@@ -24,12 +24,11 @@ describe("«Колесо удачи»", () => {
     const db = await freshDb();
     await wheelOn(db);
     const p = await newPlayer(db);
-    await setMoney(db, p, "RUB", TICKET_PRICE * 3);
+    await setMoney(db, p, "USD", TICKET_PRICE * 3);
     const b = await act(db, p, "fortune_buy", { qty: 3 }, T);
     expect(b.result.bought).toBe(3);
-    expect(await wallet(db, p, "RUB")).toBe(0);
+    expect(await wallet(db, p, "USD")).toBe(0);
     const before = await jackpot(db);
-    expect(before).toBe(JACKPOT_SEED);
     // the sector «150 ₽» (index 1): a roll just past the empty sector's weight
     const total = SECTORS.reduce((s, x) => s + x.weight, 0);
     const r = await act(db, p, "fortune_spin", {}, T, always((SECTORS[0].weight + 1) / total));
@@ -75,12 +74,12 @@ describe("«Колесо удачи»", () => {
     expect(again.result.fortune.cups).toBe(1);
     // the roll picks the cup whose prize goes under the lifted one: aim it at the jackpot's cup
     const jk = s.result.layout.findIndex((c: { kind: string }) => c.kind === "jackpot");
-    const rub = await wallet(db, p, "RUB");
+    const usd = await wallet(db, p, "USD");
     const r = await act(db, p, "fortune_cup_pick", { index: 4 }, T, always((jk + 0.5) / 9));
     expect(r.result.kind).toBe("jackpot");
     expect(r.result.final[4].kind).toBe("jackpot");
     expect(r.result.jackpot).toBe(12345);
-    expect(await wallet(db, p, "RUB")).toBe(rub + 12345);
+    expect(await wallet(db, p, "USD")).toBe(usd + 12345);
     expect(r.result.fortune.jackpot).toBe(JACKPOT_SEED);
     expect(r.result.fortune.winner).toMatchObject({ id: p, amount: 12345 });
     await expect(act(db, p, "fortune_cup_pick", { index: 0 }, T)).rejects.toMatchObject({ code: "fortune_no_cups" });

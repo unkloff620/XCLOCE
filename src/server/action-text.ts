@@ -70,11 +70,11 @@ export function actionText(type: string, body: Row, result: unknown): string | n
     case "fight_start": return join(bossById(String(body.boss))?.name ?? String(body.boss), body.solo === true ? "соло" : null, r.fightId ? `бой #${r.fightId}` : null);
     case "attack": return join(weaponById(String(body.weapon))?.name ?? String(body.weapon), r.damage !== undefined ? `−${fmt(r.damage)}${r.crit ? " крит" : ""}` : null, r.fightId ? `бой #${r.fightId}` : null, r.status === "won" ? "босс побеждён" : null);
     case "auto_set": return join(body.kind === "zone" ? `зона «${locationById(String(body.target))?.name ?? body.target}»` : `автобой ${bossById(String(body.target))?.name ?? body.target}${body.mode ? ` (${body.mode})` : ""}`, body.on === true ? "включил" : "выключил");
-    case "fortune_buy": return join(`колесо: куплено билетов ${fmt(Number(body.qty) || 0)}`, r.paid !== undefined ? `за ${fmt(r.paid)} ₽` : null);
+    case "fortune_buy": return join(`колесо: куплено билетов ${fmt(Number(body.qty) || 0)}`, r.paid !== undefined ? `за ${fmt(r.paid)} $` : null);
     case "fortune_spin": return join(`колесо: прокруток ${fmt(r.spins ?? 1)}`, r.sector ? `последний сектор ${String(r.sector)}` : null, grantedText(r.reward), r.cups ? `ПРИЗ ×${fmt(r.cups)}` : null, r.xp ? `опыт колеса +${fmt(r.xp)}` : null);
     case "fortune_cups": return "колесо: чашки";
     case "fortune_bag": return join(`колесо: сумка ${String(body.bag ?? "")}`, grantedText(r.reward), r.tattoo ? `наколка ${String(r.tattoo)}` : null);
-    case "fortune_cup_pick": return join(`колесо: чашка ${Number(body.index) + 1} — ${String(r.kind ?? "")}`, r.jackpot ? `ДЖЕКПОТ ${fmt(r.jackpot)} ₽` : grantedText(r.reward));
+    case "fortune_cup_pick": return join(`колесо: чашка ${Number(body.index) + 1} — ${String(r.kind ?? "")}`, r.jackpot ? `ДЖЕКПОТ ${fmt(r.jackpot)} $` : grantedText(r.reward));
     case "heist_pick": return `ящик ${Number(body.slot) + 1}: взлом замка`;
     case "heist_rush": return join(`ящик ${Number(body.slot) + 1}: замок сразу`, r.done !== undefined ? `снято ${fmt(r.done)}` : null);
     case "heist_auto": return join(`ящик ${Number(body.slot) + 1}: автовзлом`, r.paid !== undefined ? `за ${fmt(r.paid)} USD` : null);

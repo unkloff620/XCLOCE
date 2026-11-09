@@ -2,7 +2,7 @@ import type { Reward } from "./rewards.ts";
 
 /*
  * «Колесо удачи» — a manhole wheel in the back yard. A spin costs one ticket (from the case in the shop, or bought for
- * TICKET_PRICE roubles); every spin of anybody adds JACKPOT_ADD to the shared jackpot. The wheel stops on one of its
+ * TICKET_PRICE dollars); every spin of anybody adds JACKPOT_ADD to the shared jackpot. The wheel stops on one of its
  * sectors: a prize, nothing («Пусто»), or «ПРИЗ» — the cups game (nine cups, one of them holds the jackpot).
  * The sectors are equal on the picture; how often each comes is its weight (the wheel is turned to it by the server).
  */
@@ -11,11 +11,11 @@ export const TICKET_ID = "fortune-ticket";
 /** «кнопки от клавиатуры» — the wheel's own money: the bag's boxes of tattoo sets are opened for them */
 export const KEYCAP_ID = "keycap";
 /** a ticket in the shop of the wheel, roubles */
-export const TICKET_PRICE = 150;
+export const TICKET_PRICE = 10;
 /** every spin adds this to the jackpot */
-export const JACKPOT_ADD = 150;
+export const JACKPOT_ADD = 10;
 /** the jackpot starts again from this after it is won */
-export const JACKPOT_SEED = 5_000;
+export const JACKPOT_SEED = 300;
 /** «Ящик ништяков» in the shop: this many tickets a box, and one more with the chance `extra` */
 export const CASE_TICKETS = { min: 1, extra: 0.4 };
 /** «Крутить на все»: at most this many spins at once */
@@ -43,7 +43,7 @@ export const SECTORS: Sector[] = [
   { id: "empty", kind: "empty", icon: "empty", label: "", name: "Пусто", weight: 14 },
   { id: "rub", kind: "reward", icon: "RUB", label: "150", name: "150 ₽", weight: 14, reward: { currencies: { RUB: 150 } } },
   { id: "keys15", kind: "reward", icon: KEYCAP_ID, label: "15", name: "15 кнопок", weight: 12, reward: { items: [{ id: KEYCAP_ID, qty: 15 }] } },
-  { id: "gpu", kind: "reward", icon: "gpu", label: "1", name: "Видеокарта", weight: 4, reward: { items: [{ id: "gpu", qty: 1 }] } },
+  { id: "gpu", kind: "reward", icon: "gpu", label: "2", name: "2 видеокарты", weight: 4, reward: { items: [{ id: "gpu", qty: 2 }] } },
   { id: "xp", kind: "xp", icon: "fortune-xp", label: "30", name: "30 опыта колеса", weight: 12, xp: 30 },
   { id: "keys30", kind: "reward", icon: KEYCAP_ID, label: "30", name: "30 кнопок", weight: 9, reward: { items: [{ id: KEYCAP_ID, qty: 30 }] } },
   { id: "prize", kind: "prize", icon: "prize", label: "", name: "ПРИЗ", weight: 3 },
@@ -52,7 +52,7 @@ export const SECTORS: Sector[] = [
   { id: "ticket", kind: "reward", icon: TICKET_ID, label: "1", name: "Билет", weight: 9, reward: { items: [{ id: TICKET_ID, qty: 1 }] } },
   { id: "usd", kind: "reward", icon: "USD", label: "10", name: "10 $", weight: 2, reward: { currencies: { USD: 10 } } },
   { id: "keys75", kind: "reward", icon: KEYCAP_ID, label: "75", name: "75 кнопок", weight: 3, reward: { items: [{ id: KEYCAP_ID, qty: 75 }] } },
-  { id: "rpg", kind: "reward", icon: "rug-pull-gun", label: "1", name: "Rug Pull Gun", weight: 2, reward: { items: [{ id: "rug-pull-gun", qty: 1 }] } },
+  { id: "rpg", kind: "reward", icon: "rug-pull-gun", label: "2", name: "2 Rug Pull Gun", weight: 2, reward: { items: [{ id: "rug-pull-gun", qty: 2 }] } },
 ];
 
 /** the spokes bend this many degrees from the hub to the rim (tools/fortune/build-wheel.py CURVE); t = 0 hub … 1 rim */
@@ -90,7 +90,7 @@ export function cupReward(kind: CupKind, rng: () => number): Reward | undefined 
   switch (kind) {
     case "rub": return { currencies: { RUB: pick(rng, 1000, 3000, 250) } };
     case "usd": return { currencies: { USD: pick(rng, 10, 30, 5) } };
-    case "weapon": return rng() < 0.5 ? { items: [{ id: "rug-pull-gun", qty: pick(rng, 1, 2) }] } : { items: [{ id: "gpu", qty: pick(rng, 2, 3) }] };
+    case "weapon": return rng() < 0.5 ? { items: [{ id: "rug-pull-gun", qty: pick(rng, 2, 4) }] } : { items: [{ id: "gpu", qty: pick(rng, 4, 6) }] };
     case "chips": return { items: [{ id: "poker-chip", qty: pick(rng, 3, 5) }] };
     case "case": return { achPoints: CUP_CASE_POINTS };
     case "keys": return { items: [{ id: KEYCAP_ID, qty: pick(rng, 50, 150, 10) }] };

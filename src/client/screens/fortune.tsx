@@ -241,13 +241,13 @@ export function FortuneScreen() {
               <Avatar name={f.winner.name} photo={f.winner.photo} size={40} />
               <span className="fo-winner-n">{f.winner.name}</span>
               <span className="fo-winner-s">сорвал куш</span>
-              <b className="fo-chalk num">{f.winner.amount.toLocaleString("ru-RU")} <Icon name="RUB" size={15} /></b>
+              <b className="fo-chalk num">{f.winner.amount.toLocaleString("ru-RU")} <Icon name="USD" size={15} /></b>
             </Link>
           ) : <span className="fo-winner fo-winner-none">Куш ещё никто<br />не сорвал</span>}
           <div className="fo-jack">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="fo-jack-t" src={`${A}/jackpot-title.webp`} alt="Джекпот" draggable={false} />
-            <b className="fo-jack-v fo-chalk num"><Icon name="RUB" size={22} />{f ? f.jackpot.toLocaleString("ru-RU") : "…"}</b>
+            <b className="fo-jack-v fo-chalk num"><Icon name="USD" size={22} />{f ? f.jackpot.toLocaleString("ru-RU") : "…"}</b>
           </div>
         </div>
       </div>
@@ -525,7 +525,7 @@ function CupsGame({ onClose }: { onClose: () => void }) {
       <div className="fo-cups-foot">
         {res && phase === "all" && (
           <>
-            {res.kind === "jackpot" && <b className="fo-cups-jack">Сорвал куш: {res.jackpot.toLocaleString("ru-RU")} ₽!</b>}
+            {res.kind === "jackpot" && <b className="fo-cups-jack">Сорвал куш: {res.jackpot.toLocaleString("ru-RU")} $!</b>}
             <button className="btn gold block" onClick={onClose}>Забрать</button>
           </>
         )}
@@ -537,8 +537,8 @@ function CupsGame({ onClose }: { onClose: () => void }) {
 function BuyTickets({ price, onClose, onDone }: { price: number; onClose: () => void; onDone: () => void }) {
   const { act, busy, state } = useGame();
   const [n, setN] = useState(1);
-  const rub = state?.wallet.RUB ?? 0;
-  const max = Math.max(1, Math.min(1000, Math.floor(rub / price)));
+  const usd = state?.wallet.USD ?? 0;
+  const max = Math.max(1, Math.min(1000, Math.floor(usd / price)));
   return (
     <Modal onClose={onClose} title="Билеты колеса">
       <div className="fo-res">
@@ -548,12 +548,12 @@ function BuyTickets({ price, onClose, onDone }: { price: number; onClose: () => 
           {[1, 5, 10, 25].map((q) => <button key={q} type="button" className={`btn sm ${n === q ? "gold" : "dark"}`} onClick={() => setN(q)}>{q}</button>)}
           <button type="button" className={`btn sm ${n === max ? "gold" : "dark"}`} onClick={() => setN(max)}>макс</button>
         </div>
-        <button className="btn gold block" disabled={busy === "fortune_buy" || rub < price * n} onClick={async () => {
+        <button className="btn gold block" disabled={busy === "fortune_buy" || usd < price * n} onClick={async () => {
           if (await act("fortune_buy", { qty: n }, `Билетов: +${n}`)) { haptic.ok(); onDone(); onClose(); }
         }}>
-          Купить {n} за <Icon name="RUB" size={16} /> <b className="num">{(price * n).toLocaleString("ru-RU")}</b>
+          Купить {n} за <Icon name="USD" size={16} /> <b className="num">{(price * n).toLocaleString("ru-RU")}</b>
         </button>
-        {rub < price * n && <p className="small fo-muted">Не хватает рублей</p>}
+        {usd < price * n && <p className="small fo-muted">Не хватает долларов</p>}
       </div>
     </Modal>
   );
@@ -562,10 +562,10 @@ function BuyTickets({ price, onClose, onDone }: { price: number; onClose: () => 
 function FortuneHelp() {
   return (
     <Help topic="fortune" title="Колесо удачи">
-      <p>Одна прокрутка — один билет. Билеты падают из «Ящика ништяков» в магазине или покупаются здесь по 150 ₽ (кнопка «+»).</p>
-      <p>Каждая прокрутка любого игрока добавляет 150 ₽ к общему джекпоту.</p>
+      <p>Одна прокрутка — один билет. Билеты падают из «Ящика ништяков» в магазине или покупаются здесь по 10 $ (кнопка «+»).</p>
+      <p>Каждая прокрутка любого игрока добавляет 10 $ к общему джекпоту.</p>
       <p>На колесе: оружие, энергетик, рубли, доллары, билет, кнопки клавиатуры, опыт колеса, пустой сектор и <b>ПРИЗ</b>.</p>
-      <p><b>ПРИЗ</b> — игра в чашки: девять чашек, под каждой приз (рубли, оружие, доллары, фишки, ящик ништяков, кнопки), под одной — джекпот. Чашки показывают призы, накрываются и перемешиваются — выбери одну. Кто сорвал джекпот, того видно наверху, а джекпот начинается заново с 5000 ₽.</p>
+      <p><b>ПРИЗ</b> — игра в чашки: девять чашек, под каждой приз (рубли, оружие, доллары, фишки, ящик ништяков, кнопки), под одной — джекпот. Чашки показывают призы, накрываются и перемешиваются — выбери одну. Кто сорвал джекпот, того видно наверху, а джекпот начинается заново с 300 $.</p>
       <p>Кнопки клавиатуры копятся — за них будут открываться коробки с наколками.</p>
       <p>«Автопрокрутка» — включи, и колесо крутится само, билет за билетом, пока они не кончатся (остановится на «ПРИЗ» или когда выключишь).</p>
     </Help>

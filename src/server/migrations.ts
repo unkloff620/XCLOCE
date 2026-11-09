@@ -1325,4 +1325,10 @@ CREATE TABLE IF NOT EXISTS fortune_players (
     sql: `ALTER TABLE fortune_players ADD COLUMN IF NOT EXISTS cups_layout JSONB;
 UPDATE fortune_global SET jackpot = 5000 + 150 * spins WHERE id='_all' AND winner_id IS NULL;`,
   },
+  {
+    // «Колесо удачи» goes over to dollars: the ticket 10 $, every spin +10 $ to the jackpot (from 300 $). The jackpot so far
+    // and the last win, counted in roubles at 15 ₽ a dollar (150 ₽ a ticket then, 10 $ now)
+    id: "v2-088-fortune-usd",
+    sql: `UPDATE fortune_global SET jackpot = GREATEST(300, ROUND(jackpot / 15.0)), winner_amount = ROUND(winner_amount / 15.0) WHERE id='_all';`,
+  },
 ];

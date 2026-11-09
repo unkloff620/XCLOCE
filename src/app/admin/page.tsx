@@ -1132,14 +1132,14 @@ function FortuneAdmin() {
   const d = f.data;
   return (
     <Box title={`🎡 Колесо удачи — ${!d ? "…" : d.on ? "у всех игроков" : "только у админов"}`}>
-      <p className="muted tiny">Люк на заднем дворе. Пока выключено — колесо видят только админы (по Telegram id) и могут всё проверить. Билет 150 ₽, каждая прокрутка +150 ₽ к джекпоту, после выигрыша джекпот начинается с 5000 ₽. Билеты падают из «Ящика ништяков» только когда колесо видно игроку.</p>
-      <p className="small">Джекпот: <b>{d ? fmt(d.jackpot) : "…"} ₽</b> · прокруток всего: {d ? fmt(d.spins) : "…"} · последний куш: {d?.winner ? <><a href={`#player/${d.winner.id}`}>{d.winner.name ?? d.winner.id}</a> — {fmt(d.winner.amount)} ₽</> : "ещё никто"}</p>
+      <p className="muted tiny">Люк на заднем дворе. Пока выключено — колесо видят только админы (по Telegram id) и могут всё проверить. Билет 10 $, каждая прокрутка +10 $ к джекпоту, после выигрыша джекпот начинается с 300 $. Билеты падают из «Ящика ништяков» только когда колесо видно игроку.</p>
+      <p className="small">Джекпот: <b>{d ? fmt(d.jackpot) : "…"} $</b> · прокруток всего: {d ? fmt(d.spins) : "…"} · последний куш: {d?.winner ? <><a href={`#player/${d.winner.id}`}>{d.winner.name ?? d.winner.id}</a> — {fmt(d.winner.amount)} $</> : "ещё никто"}</p>
       <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: "wrap" }}>
         {d?.on
           ? <button className="adm-btn ghost" disabled={busy} onClick={() => set({ on: false }, "Спрятать колесо от игроков?")}>Спрятать от игроков</button>
           : <button className="adm-btn" disabled={busy || !d} onClick={() => set({ on: true }, "Открыть колесо удачи всем игрокам?")}>Открыть всем игрокам</button>}
-        <input className="adm-in" inputMode="numeric" placeholder="джекпот, ₽" value={jp} onChange={(e) => setJp(e.target.value.replace(/\D/g, ""))} style={{ width: 130 }} />
-        <button className="adm-btn ghost" disabled={busy || !jp} onClick={() => set({ jackpot: Number(jp) }, `Поставить джекпот ${jp} ₽?`)}>Поставить джекпот</button>
+        <input className="adm-in" inputMode="numeric" placeholder="джекпот, $" value={jp} onChange={(e) => setJp(e.target.value.replace(/\D/g, ""))} style={{ width: 130 }} />
+        <button className="adm-btn ghost" disabled={busy || !jp} onClick={() => set({ jackpot: Number(jp) }, `Поставить джекпот ${jp} $?`)}>Поставить джекпот</button>
       </div>
     </Box>
   );
