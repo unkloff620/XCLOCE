@@ -6031,3 +6031,7 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .rd-tray { width: 100%; display: flex; flex-direction: column; gap: 6px; padding: 8px; border-radius: 14px; background: rgba(20, 16, 12, 0.72); }
 .rd-bld-flag { position: absolute; left: 50%; top: -6%; transform: translateX(-50%); line-height: 0; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6)); }
 .rd-bld.taken > img { filter: drop-shadow(-5px 6px 5px rgba(15, 20, 10, 0.55)) saturate(0.75); }
+/* the raid fight (boss-like): damage numbers in the middle of the room, the room jolts at a hit */
+.rd-pops { position: absolute; left: 0; right: 0; top: 38%; height: 0; pointer-events: none; }
+.rd-fight .fight-bg > img.rd-hitbg { animation: rd-shake 0.25s ease-out; }
+.rd-fight-r { display: inline-flex; align-items: center; gap: 3px; color: #fff; text-shadow: 0 1px 2px #000; }

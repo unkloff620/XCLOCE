@@ -204,6 +204,42 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
   };
   const flee = async () => { if (await act("raid_flee", {})) await load(); };
 
+  // the fight takes the whole screen like a boss fight: the building's room, the HP on top, the weapons at the bottom
+  if (fight && v) {
+    return (
+      <div className="fit-page fight-page rd-fight">
+        <div className="fight-bg" aria-hidden="true">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img key={shake} className={shake ? "rd-hitbg" : ""} src={`${A}/arena-garage.webp`} alt="" draggable={false} />
+        </div>
+        <div className="fight-head">
+          <Link href={`/clans/raids/${y.id}`} className="back-btn" aria-label="Во двор">‹</Link>
+          <div className="grow" style={{ minWidth: 0 }}>
+            <b className="display boss-name ellipsis">{BUILDING_NAMES[b.kind]}</b>
+          </div>
+          <span className="chip red">побед клана: {prog?.wins ?? 0}/{prog?.need ?? "?"}</span>
+        </div>
+        <div className="arena full">
+          <div className="arena-top">
+            <Bar value={fight.hp} max={fight.hpMax} tone="red" height={24} label={`${fight.hp.toLocaleString("ru-RU")} / ${fight.hpMax.toLocaleString("ru-RU")}`} />
+          </div>
+          <div className="rd-pops">{pops.map((p) => <b key={p.id} className={`rd-pop ${p.crit ? "crit" : ""}`}>{p.text}{p.crit ? " КРИТ" : ""}</b>)}</div>
+        </div>
+        <div className="fight-bottom">
+          <MultPicker mult={mult} setMult={setMult} />
+          <div className="row fight-bar">
+            <span className="small rd-fight-r"><Icon name="xp" size={16} />+{r.xp.toLocaleString("ru-RU")} <Icon name="RUB" size={16} />+{r.rub.toLocaleString("ru-RU")} за победу</span>
+            <span className="grow" />
+            <button className="btn sm dark" onClick={flee} disabled={busy === "raid_flee"}>Уйти</button>
+          </div>
+          <WeaponTray tray={v.weapons} mult={mult} disabled={busy === "raid_attack"} onHit={hit}
+            onCooldown={(name, left) => toast(`${name} перезаряжается: ещё ${Math.ceil(left / 60_000)} мин`)}
+            onBuy={() => toast("Оружие — в магазине")} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fit-page rd-page rd-attack">
       <div className="rd-scene">
@@ -224,26 +260,10 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
       <div className="title-row rd-title">
         <Link href={`/clans/raids/${y.id}`} className="back-btn" aria-label="Во двор">‹</Link>
         <b>Двор №{y.n} · {BUILDING_NAMES[b.kind]}</b>
-        {fight && <button type="button" className="btn sm dark" onClick={flee}>Уйти</button>}
       </div>
-      {fight && (
-        <div className="rd-hp">
-          <Bar value={fight.hp} max={fight.hpMax} tone="red" height={22} label={`${fight.hp.toLocaleString("ru-RU")} / ${fight.hpMax.toLocaleString("ru-RU")}`} />
-          {pops.map((p) => <b key={p.id} className={`rd-pop ${p.crit ? "crit" : ""}`}>{p.text}{p.crit ? " КРИТ" : ""}</b>)}
-        </div>
-      )}
       <div className="rd-attack-foot">
         {!v ? null : !v.clanId ? <span className="rd-attack-note">Ходки — только для клана</span>
-          : fight ? (
-            <>
-              <div className="rd-tray">
-                <MultPicker mult={mult} setMult={setMult} />
-                <WeaponTray tray={v.weapons} mult={mult} disabled={busy === "raid_attack"} onHit={hit}
-                  onCooldown={(name, left) => toast(`${name} перезаряжается: ещё ${Math.ceil(left / 60_000)} мин`)}
-                  onBuy={() => toast("Оружие — в магазине")} />
-              </div>
-            </>
-          ) : elsewhere ? <span className="rd-attack-note">Ты уже в бою за другое здание</span>
+          : elsewhere ? <span className="rd-attack-note">Ты уже в бою за другое здание</span>
           : prog?.taken ? <span className="rd-attack-note">Здание уже захвачено кланом</span>
           : <button type="button" className="btn gold block rd-attack-go" disabled={busy === "raid_start"} onClick={start}>Атаковать</button>}
       </div>
