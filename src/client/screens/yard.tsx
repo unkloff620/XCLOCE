@@ -182,11 +182,10 @@ export function YardScreen() {
           {/* «Колесо удачи»: a manhole on the ground (the admins see it before the players) */}
           {state?.fortune?.on && (
             <Link href="/yard/fortune" className="yard-obj yard-fortune" aria-label="Колесо удачи" title="Колесо удачи" tabIndex={page === -1 ? 0 : -1}>
+              {/* the hole under the lid: light from below, brighter when the lid jumps */}
+              <span className="yard-fortune-hole" aria-hidden="true" />
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/assets/fortune/lid-v1.webp" alt="" draggable={false} />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/assets/fortune/rim.webp" alt="" draggable={false} />
-              <span>Колесо удачи</span>
+              <img src="/assets/fortune/yard-lid.webp" alt="" draggable={false} />
             </Link>
           )}
         </div>

@@ -5893,12 +5893,26 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .fo-got-prize { width: 70%; max-width: 260px; }
 .fo-qty { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
 /* the manhole in the back yard: the wheel lying on the ground (an ellipse), a soft glow calls to it */
-.yard-fortune { left: 27%; top: 79%; width: 46%; height: 9.5%; z-index: 2; }
-.yard-fortune > img { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.55)); }
-.yard-fortune::before { content: ""; position: absolute; inset: -12% -6%; border-radius: 50%; background: radial-gradient(closest-side, rgba(255, 230, 120, 0.45), transparent); animation: fo-call 2.4s ease-in-out infinite; }
-.yard-fortune > span { position: absolute; left: 50%; bottom: -20%; transform: translateX(-50%); white-space: nowrap; padding: 1px 9px; border-radius: 9px; font-size: 11px; font-weight: 800; background: #f5ec5c; color: #1e1006; border: 2px solid var(--line); }
+.yard-fortune { left: 27%; top: 78%; width: 46%; height: 12%; z-index: 2; }
+/* the lid jumps now and then (something pushes from below), the light of the hole flares up under it */
+.yard-fortune > img { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: auto; transform-origin: 50% 100%; animation: yard-lid-jump 3.2s ease-in-out infinite; }
+.yard-fortune-hole { position: absolute; left: 6%; right: 6%; top: 18%; bottom: 10%; border-radius: 50%; background: radial-gradient(closest-side, #fff6c8 0%, #ffd04a 35%, rgba(255, 150, 20, 0.85) 62%, rgba(40, 20, 0, 0.9) 100%);
+  box-shadow: 0 0 22px 8px rgba(255, 196, 60, 0.55); animation: yard-hole-glow 3.2s ease-in-out infinite; }
+@keyframes yard-lid-jump {
+  0%, 62%, 100% { transform: none; }
+  66% { transform: translateY(-16%) rotate(-2deg); }
+  70% { transform: translateY(0) rotate(0); }
+  74% { transform: translateY(-8%) rotate(1.5deg); }
+  78% { transform: none; }
+}
+@keyframes yard-hole-glow {
+  0%, 60%, 100% { opacity: 0.55; box-shadow: 0 0 16px 4px rgba(255, 196, 60, 0.4); }
+  66%, 74% { opacity: 1; box-shadow: 0 0 34px 14px rgba(255, 206, 80, 0.8); }
+}
+.yard.tod-night .yard-fortune > img { filter: brightness(0.5) saturate(0.7); }
+.yard.tod-morning .yard-fortune > img { filter: brightness(0.9); }
+@media (prefers-reduced-motion: reduce) { .yard-fortune > img, .yard-fortune-hole { animation: none; } }
 @keyframes fo-call { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .yard-fortune::before { animation: none; } }
 
 /* the bag of the wheel (fortune.tsx Bags): no picture behind — the wheel's screen darkened; the bag, what it holds, «Открыть» */
 .fo-bags { position: absolute; inset: 0; z-index: 20; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: var(--top) 14px var(--bottom); background: rgba(12, 13, 16, 0.86); backdrop-filter: blur(3px); container-type: inline-size; color: #fff; }
