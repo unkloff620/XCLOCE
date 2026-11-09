@@ -68,7 +68,10 @@ export function RaidsScreen() {
   );
 }
 
-/** a building on the yard; the one to attack now glows */
+/**
+ * A building on the yard: it is painted into the picture, so here it is only the place to tap; the one to attack now
+ * is drawn over its painted self (the same sprite at the same spot) and glows.
+ */
 function Building({ b, target }: { b: RaidBuilding; target: boolean }) {
   return (
     <button type="button" className={`rd-bld k-${b.kind} ${target ? "target" : ""}`} style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%` }}
@@ -86,9 +89,10 @@ export function RaidYardScreen({ id }: { id: string }) {
   if (!y || !state) return null;
   return (
     <div className="fit-page rd-page rd-yard">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="rd-map-bg" src={`${A}/yard-ground.webp`} alt="" draggable={false} />
-      <div className="rd-map">
+      <div className="rd-scene">
+        {/* the painted yard (only «Гаражи» is painted so far; the other yards are closed until it is taken) */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="rd-map-bg" src={`${A}/yard-garages.webp`} alt="" draggable={false} />
         {/* the main one first in the markup: it stands behind (higher on the picture) */}
         {[...y.buildings].reverse().map((b) => <Building key={b.id} b={b} target={b.id === y.buildings[0].id} />)}
       </div>

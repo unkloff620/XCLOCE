@@ -5975,14 +5975,15 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .rd-h { margin-top: auto; font-family: var(--font-hand), cursive; font-size: 18px; color: #1f3a8a; }
 .rd-rewards { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; font-size: 11px; font-weight: 700; color: #3a2a14; }
 .rd-rewards > span { display: flex; flex-direction: column; align-items: center; gap: 1px; }
-/* the yard from above: the ground covers the whole screen; the buildings stand in the box under the title (in % of it) */
-.rd-map-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; user-select: none; }
-.rd-map { position: absolute; left: 0; right: 0; top: calc(var(--top) + 44px); bottom: calc(var(--bottom) + 6px); }
+/* the yard from above: one painted picture (the buildings in it) covering the screen; the places to tap over it, in % of it */
+.rd-scene { position: absolute; top: 0; bottom: 0; left: 50%; transform: translateX(-50%); aspect-ratio: 1024 / 1536; min-width: 100%; }
+.rd-map-bg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; user-select: none; }
 .rd-bld { position: absolute; transform: translate(-50%, -100%); padding: 0; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.rd-bld > img { width: 100%; height: auto; display: block; filter: drop-shadow(-6px 8px 6px rgba(20, 16, 10, 0.55)); transition: transform 0.15s; }
+.rd-bld > img { width: 100%; height: auto; display: block; opacity: 0; transition: transform 0.15s; }
+.rd-bld.target > img, .rd-bld:active > img { opacity: 1; }
 .rd-bld:active > img { transform: scale(0.95); }
 /* the building to attack now: a warm glow pulsing around it */
 .rd-bld.target > img { animation: rd-target 1.6s ease-in-out infinite; }
-@keyframes rd-target { 0%, 100% { filter: drop-shadow(0 0 4px rgba(255, 210, 70, 0.7)) drop-shadow(-6px 8px 6px rgba(20, 16, 10, 0.55)); } 50% { filter: drop-shadow(0 0 14px rgba(255, 210, 70, 1)) drop-shadow(-6px 8px 6px rgba(20, 16, 10, 0.55)); } }
+@keyframes rd-target { 0%, 100% { filter: drop-shadow(0 0 4px #ffd246) drop-shadow(0 0 2px #ffd246) brightness(1.05); } 50% { filter: drop-shadow(0 0 16px #ffd246) drop-shadow(0 0 4px #fff2a8) brightness(1.18); } }
 @media (prefers-reduced-motion: reduce) { .rd-bld.target > img { animation: none; filter: drop-shadow(0 0 10px rgba(255, 210, 70, 0.9)); } }
 .rd-progress { padding: 2px 10px; border-radius: 10px; background: rgba(0, 0, 0, 0.6); font-weight: 800; }
