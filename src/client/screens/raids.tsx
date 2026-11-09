@@ -68,13 +68,13 @@ export function RaidsScreen() {
   );
 }
 
-function Building({ b, yard }: { b: RaidBuilding; yard: string }) {
+/** a building on the yard; the one to attack now glows */
+function Building({ b, target }: { b: RaidBuilding; target: boolean }) {
   return (
-    <button type="button" className={`rd-bld k-${b.kind}`} style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%` }}
-      onClick={() => haptic.tap()} aria-label={BUILDING_NAMES[b.kind]} data-yard={yard}>
+    <button type="button" className={`rd-bld k-${b.kind} ${target ? "target" : ""}`} style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%` }}
+      onClick={() => haptic.tap()} aria-label={BUILDING_NAMES[b.kind]}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={`${A}/b-${b.kind}.webp`} alt="" draggable={false} />
-      <span className="rd-bld-n">{BUILDING_NAMES[b.kind]}</span>
     </button>
   );
 }
@@ -86,10 +86,11 @@ export function RaidYardScreen({ id }: { id: string }) {
   if (!y || !state) return null;
   return (
     <div className="fit-page rd-page rd-yard">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className="rd-map-bg" src={`${A}/yard-ground.webp`} alt="" draggable={false} />
       <div className="rd-map">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="rd-map-bg" src={`${A}/yard-bg.webp`} alt="" draggable={false} />
-        {y.buildings.map((b) => <Building key={b.id} b={b} yard={y.id} />)}
+        {/* the main one first in the markup: it stands behind (higher on the picture) */}
+        {[...y.buildings].reverse().map((b) => <Building key={b.id} b={b} target={b.id === y.buildings[0].id} />)}
       </div>
       <div className="title-row rd-title">
         <Link href="/clans/raids" className="back-btn" aria-label="К дворам">‹</Link>

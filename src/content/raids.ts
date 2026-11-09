@@ -29,10 +29,14 @@ export interface RaidYard {
   buildings: RaidBuilding[];
 }
 
-/** the same plan for every yard for now: two rows of three, the main one at the top */
+/**
+ * The plan of a yard, in the order of the attack: one building at the bottom, two above it, three above those, the main
+ * one at the top (twice as big). `kinds` — the six ordinary ones, from the bottom up, left to right.
+ */
+const SPOTS = [{ x: 50, y: 97 }, { x: 30, y: 78 }, { x: 70, y: 78 }, { x: 17, y: 58 }, { x: 50, y: 58 }, { x: 83, y: 58 }];
 const plan = (yard: string, kinds: BuildingKind[]): RaidBuilding[] => [
-  { id: `${yard}-main`, kind: "main", x: 50, y: 38, w: 50 },
-  ...kinds.map((kind, i) => ({ id: `${yard}-${i + 1}`, kind, x: [19, 50, 81][i % 3], y: i < 3 ? 65 : 92, w: 25 })),
+  ...kinds.map((kind, i) => ({ id: `${yard}-${i + 1}`, kind, ...SPOTS[i], w: 25 })),
+  { id: `${yard}-main`, kind: "main" as const, x: 50, y: 37, w: 50 },
 ];
 
 export const RAID_YARDS: RaidYard[] = [
