@@ -53,3 +53,19 @@ export const RAID_YARDS: RaidYard[] = [
   { id: "center", n: 5, name: "Центр района", subtitle: "Главный двор. Кто держит его — держит район", wins: 50, buildings: plan("center", ["shop", "khrush", "shop", "khrush", "boiler", "khrush"]) },
 ];
 export const raidYardById = (id: string) => RAID_YARDS.find((y) => y.id === id);
+
+/**
+ * The life of a yard (on every yard's ground, in % of its picture): trees swaying in the wind and little people walking
+ * slowly back and forth along the paths (public/assets/raids/tree<n>.webp, man<n>.webp).
+ */
+export const YARD_TREES: { n: number; x: number; y: number; w: number }[] = [
+  { n: 1, x: 19, y: 50, w: 10 }, { n: 2, x: 82, y: 41, w: 6 }, { n: 3, x: 22, y: 81, w: 8 },
+  { n: 1, x: 79, y: 87, w: 9 }, { n: 3, x: 67, y: 30, w: 7 },
+];
+export const YARD_WALKERS: { n: number; from: [number, number]; to: [number, number]; s: number }[] = [
+  { n: 1, from: [20, 64.5], to: [44, 64], s: 26 },
+  { n: 2, from: [46, 77.5], to: [63, 75.5], s: 30 },
+  { n: 3, from: [40, 46], to: [47, 55], s: 22 },
+  { n: 4, from: [33, 89.5], to: [53, 92], s: 24 },
+  { n: 5, from: [60, 44], to: [74, 49.5], s: 28 },
+];

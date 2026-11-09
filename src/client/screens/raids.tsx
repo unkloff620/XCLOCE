@@ -12,7 +12,7 @@ import { usePageReady } from "../route-loader.tsx";
 import { useGame } from "../store.tsx";
 import { Icon } from "../art/icons.tsx";
 import { haptic } from "../telegram.ts";
-import { BUILDING_NAMES, RAID_YARDS, raidYardById, type RaidBuilding } from "../../content/raids.ts";
+import { BUILDING_NAMES, RAID_YARDS, YARD_TREES, YARD_WALKERS, raidYardById, type RaidBuilding } from "../../content/raids.ts";
 
 const A = "/assets/raids";
 
@@ -71,11 +71,34 @@ export function RaidsScreen() {
 /** a building on the yard's ground; the one to attack now glows */
 function Building({ b, target }: { b: RaidBuilding; target: boolean }) {
   return (
-    <button type="button" className={`rd-bld k-${b.kind} ${target ? "target" : ""}`} style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%` }}
+    <button type="button" className={`rd-bld k-${b.kind} ${target ? "target" : ""}`} style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%`, zIndex: Math.round(b.y * 10) }}
       onClick={() => haptic.tap()} aria-label={BUILDING_NAMES[b.kind]}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={`${A}/b-${b.kind}.webp`} alt="" draggable={false} />
     </button>
+  );
+}
+
+/** the yard's life: trees swaying (each at its own pace) and little people walking slowly back and forth */
+function YardLife() {
+  return (
+    <>
+      {YARD_TREES.map((t, i) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img key={`t${i}`} className="rd-tree" src={`${A}/tree${t.n}.webp`} alt="" draggable={false}
+          style={{ left: `${t.x}%`, top: `${t.y}%`, width: `${t.w}%`, zIndex: Math.round(t.y * 10), animationDuration: `${3.6 + i * 0.7}s`, animationDelay: `${-i * 1.3}s` }} />
+      ))}
+      {YARD_WALKERS.map((w, i) => (
+        <span key={`w${i}`} className="rd-walker" aria-hidden="true"
+          style={{ ["--x1" as string]: `${w.from[0]}%`, ["--y1" as string]: `${w.from[1]}%`, ["--x2" as string]: `${w.to[0]}%`, ["--y2" as string]: `${w.to[1]}%`,
+            zIndex: Math.round(Math.max(w.from[1], w.to[1]) * 10), animationDuration: `${w.s * 2}s`, animationDelay: `${-i * 7}s` }}>
+          <i style={{ animationDuration: `${w.s * 2}s`, animationDelay: `${-i * 7}s` }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`${A}/man${w.n}.webp`} alt="" draggable={false} />
+          </i>
+        </span>
+      ))}
+    </>
   );
 }
 
@@ -90,6 +113,7 @@ export function RaidYardScreen({ id }: { id: string }) {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="rd-map-bg" src={`${A}/yard-ground2.webp`} alt="" draggable={false} />
         {/* the main one first in the markup: it stands behind (higher on the picture) */}
+        <YardLife />
         {[...y.buildings].reverse().map((b) => <Building key={b.id} b={b} target={b.id === y.buildings[0].id} />)}
       </div>
       <div className="title-row rd-title">
