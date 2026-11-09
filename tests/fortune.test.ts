@@ -20,7 +20,7 @@ describe("«Колесо удачи»", () => {
     await expect(act(db, p, "fortune_spin", {}, T)).rejects.toMatchObject({ code: "fortune_off" });
   });
 
-  it("tickets for roubles; a spin takes one, grows the jackpot and gives its sector", async () => {
+  it("tickets for dollars; a spin takes one, grows the jackpot and gives its sector", async () => {
     const db = await freshDb();
     await wheelOn(db);
     const p = await newPlayer(db);
@@ -29,11 +29,12 @@ describe("«Колесо удачи»", () => {
     expect(b.result.bought).toBe(3);
     expect(await wallet(db, p, "USD")).toBe(0);
     const before = await jackpot(db);
+    const rub0 = await wallet(db, p, "RUB");
     // the sector «150 ₽» (index 1): a roll just past the empty sector's weight
     const total = SECTORS.reduce((s, x) => s + x.weight, 0);
     const r = await act(db, p, "fortune_spin", {}, T, always((SECTORS[0].weight + 1) / total));
     expect(r.result.sector).toBe("rub");
-    expect(await wallet(db, p, "RUB")).toBe(150);
+    expect(await wallet(db, p, "RUB")).toBe(rub0 + 150);
     expect(await qty(db, p, TICKET_ID)).toBe(2);
     expect(await jackpot(db)).toBe(before + JACKPOT_ADD);
     // all at once: both tickets left
