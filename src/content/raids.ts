@@ -3,7 +3,8 @@
  * taken). A yard has six ordinary buildings and its main building (twice as big, at the top). A building is taken by
  * fights like the boss fights (weapons); a taken building gives authority and roubles, all of a yard — clan experience,
  * authority and the yard's flag (the flags open the bags of tattoo sets).
- * Step 1: the look (the yard cards, the yard with its buildings). The fights and the rewards come next.
+ * The fights are each player's own (like a boss: weapons, the building's HP); every win counts for the clan, and the
+ * clan takes a building with enough wins — then the next one (from the bottom up, the main one last).
  */
 
 export type BuildingKind = "garage" | "barrack" | "khrush" | "kiosk" | "boiler" | "shop" | "main";
@@ -74,3 +75,17 @@ export const YARD_WALKERS: { n: number; from: [number, number]; to: [number, num
 export const buildingReward = (yardN: number, main: boolean) => ({ xp: (main ? 600 : 250) * yardN, rub: (main ? 5_000 : 2_000) * yardN });
 /** wins over a building to take it: the yard's count (the main one — twice as many) */
 export const buildingWins = (y: RaidYard, main: boolean) => y.wins * (main ? 2 : 1);
+
+/** the building's HP in one fight */
+export const BUILDING_HP = 100_000;
+export const MAIN_HP = 150_000;
+export const buildingHp = (main: boolean) => (main ? MAIN_HP : BUILDING_HP);
+/** a taken yard gives each clan member who won a fight there: authority and the yard's flag; the clan — its experience */
+export const yardReward = (n: number) => ({ clanXp: 1_000 * n, xp: 2_000 * n, flag: flagId(n) });
+/** the yards' flags (items): «Флаг двора» with 1…5 stars, the bags of tattoo sets are opened for them */
+export const flagId = (n: number) => `raid-flag-${n}`;
+export const FLAG_IDS = [1, 2, 3, 4, 5].map(flagId);
+export const buildingById = (id: string) => {
+  for (const y of RAID_YARDS) { const b = y.buildings.find((x) => x.id === id); if (b) return { yard: y, b }; }
+  return null;
+};

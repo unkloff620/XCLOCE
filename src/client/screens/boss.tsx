@@ -130,11 +130,11 @@ function Arena({ boss, hp, hpMax, endsAt, fx, hit, ouch, rug, feed, full: fullSc
 
 /** consumables used per tap: ×1, ×10, ×100, ×1000 (the free weapons always hit once) */
 const MULTS = [1, 10, 100, 1000] as const;
-type Mult = (typeof MULTS)[number];
+export type Mult = (typeof MULTS)[number];
 /** how many of this weapon one tap uses now */
 const batchOf = (kind: string, qty: number, mult: Mult) => (kind === "consumable" ? Math.max(1, Math.min(mult, qty)) : 1);
 
-function MultPicker({ mult, setMult }: { mult: Mult; setMult: (m: Mult) => void }) {
+export function MultPicker({ mult, setMult }: { mult: Mult; setMult: (m: Mult) => void }) {
   const [open, setOpen] = useState(false);
   return (
     <div className={`mult-pick ${open ? "open" : ""}`}>
@@ -149,7 +149,7 @@ function MultPicker({ mult, setMult }: { mult: Mult; setMult: (m: Mult) => void 
   );
 }
 
-function WeaponTray({ tray, onHit, onCooldown, onBuy, disabled, mult }: { tray: Tray[]; onHit: (id: string) => void; onCooldown: (name: string, leftMs: number, id: string) => void; onBuy: () => void; disabled: boolean; mult: Mult }) {
+export function WeaponTray({ tray, onHit, onCooldown, onBuy, disabled, mult }: { tray: Tray[]; onHit: (id: string) => void; onCooldown: (name: string, leftMs: number, id: string) => void; onBuy: () => void; disabled: boolean; mult: Mult }) {
   const { state } = useGame();
   const now = useNow();
   return (

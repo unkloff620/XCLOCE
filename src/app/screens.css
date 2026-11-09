@@ -6021,3 +6021,13 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
    above it the page shows the same brick colour */
 .rd-attack { background: #6b2e20; }
 .rd-attack .rd-scene { top: calc(var(--top) + 40px); bottom: auto; height: 100%; transform: translate(-50%, -12%); }
+/* the fight for a building: the HP under the title, damage numbers flying up, the weapons at the bottom */
+.rd-hp { position: absolute; z-index: 4; left: 14px; right: 14px; top: calc(var(--top) + 50px); }
+.rd-pop { position: absolute; left: 50%; top: 30px; transform: translateX(-50%); font-family: var(--font-display, inherit); font-size: 22px; color: #fff; text-shadow: 0 2px 0 #000, 0 0 6px #c00; animation: rd-pop 1.1s ease-out forwards; pointer-events: none; white-space: nowrap; }
+.rd-pop.crit { color: #ffd23f; font-size: 28px; }
+@keyframes rd-pop { from { opacity: 1; transform: translate(-50%, 0) scale(1.15); } to { opacity: 0; transform: translate(-50%, 60px) scale(0.9); } }
+.rd-room.hit { animation: rd-shake 0.25s ease-out; }
+@keyframes rd-shake { 0%, 100% { transform: none; } 30% { transform: translate(-4px, 2px); } 60% { transform: translate(4px, -2px); } }
+.rd-tray { width: 100%; display: flex; flex-direction: column; gap: 6px; padding: 8px; border-radius: 14px; background: rgba(20, 16, 12, 0.72); }
+.rd-bld-flag { position: absolute; left: 50%; top: -6%; transform: translateX(-50%); line-height: 0; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6)); }
+.rd-bld.taken > img { filter: drop-shadow(-5px 6px 5px rgba(15, 20, 10, 0.55)) saturate(0.75); }

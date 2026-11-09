@@ -162,6 +162,8 @@ const MISC: ItemDef[] = [
   { id: "lost-wallet", name: "Забытый кошелёк", category: "item", rarity: "rare", maxStack: 999, description: "Внутри немного долларов и чек из шаурмы.", sources: ["Двор"] },
   // «Колесо удачи» (content/fortune.ts): the ticket is one spin; the keycaps open the boxes of the bag
   { id: "fortune-ticket", name: "Билет колеса", category: "item", rarity: "rare", maxStack: 99_999, description: "Одна прокрутка «Колеса удачи» на заднем дворе. Каждая прокрутка растит общий джекпот.", sources: ["Ящик ништяков в магазине", "Колесо удачи: купить за 10 $", "Колесо удачи"] },
+  // «Ходки» (content/raids.ts): a taken yard's flag, 1…5 stars — the bags of tattoo sets are opened for them
+  ...[1, 2, 3, 4, 5].map((n) => ({ id: `raid-flag-${n}`, name: `Флаг двора ${"★".repeat(n)}`, category: "item" as const, rarity: (["common", "rare", "rare", "epic", "legendary"] as const)[n - 1], maxStack: 99_999, description: `Флаг захваченного двора №${n}. За флаги открываются сумки с сетами наколок.`, sources: ["Ходки: захват двора"] })),
   { id: "keycap", name: "Кнопка клавиатуры", category: "item", rarity: "common", maxStack: 99_999_999, description: "Кнопки, выбитые на «Колесе удачи». За них открываются коробки с наколками в сумке колеса.", sources: ["Колесо удачи"] },
 ];
 

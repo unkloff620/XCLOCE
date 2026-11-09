@@ -153,6 +153,9 @@ export async function startFight(ctx: Ctx, bossId: string, solo = false, modeId:
   await settleMyFight(ctx);
   const [active] = await ctx.q.query<{ id: number; boss_id: string }>("SELECT id, boss_id FROM fights WHERE player_id=$1 AND status='active'", [ctx.pid]);
   if (active) throw new GameError("fight_running", `Сначала закончи бой с боссом ${bossById(active.boss_id)?.name}`);
+  // «Ходки»: not while a fight for a building runs
+  const [raid] = await ctx.q.query("SELECT 1 FROM raid_fights WHERE player_id=$1 AND status='active'", [ctx.pid]);
+  if (raid) throw new GameError("raid_running", "Сначала закончи бой за здание в ходке");
   if (!(await isUnlocked(ctx.q, ctx.pid, def, ctx.cfg.fight.keysToUnlock))) {
     const n = keysNeeded(def, ctx.cfg.fight.keysToUnlock);
     throw new GameError("boss_locked", n === 1 ? "Нужен пропуск предыдущего босса" : `Нужно ${n} пропуска предыдущего босса`);

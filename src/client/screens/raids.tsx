@@ -4,27 +4,50 @@
  *  - RaidsScreen: the yards as case-file cards (‹ › or a swipe): the yard's photo on a paper clip, the wins to take it,
  *    what taking it gives; «Захватить» leads into the yard (only the first one is open until it is taken);
  *  - RaidYardScreen: the yard from above — its six buildings in rows and the main one (twice as big) at the top.
- * Step 1: the look. The fights for the buildings and the rewards come next.
+ *  - RaidAttackScreen: the fight for a building — the wall with its window, the board (the clan's wins, a win's reward),
+ *    the HP and the weapons like in a boss fight.
+ * The progress is the clan's (GET /api/raids); the fights are each player's own.
  */
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { api, type Tray } from "../api.ts";
+import { Bar } from "../ui.tsx";
+import { ItemArt } from "../art/items.tsx";
+import { MultPicker, WeaponTray, type Mult } from "./boss.tsx";
 import { usePageReady } from "../route-loader.tsx";
 import { useGame } from "../store.tsx";
 import { Icon } from "../art/icons.tsx";
 import { haptic } from "../telegram.ts";
 import { useRouter } from "next/navigation";
-import { BUILDING_NAMES, RAID_YARDS, YARD_TREES, YARD_WALKERS, buildingReward, buildingWins, raidYardById, type RaidBuilding } from "../../content/raids.ts";
+import { BUILDING_NAMES, RAID_YARDS, YARD_TREES, YARD_WALKERS, buildingReward, flagId, raidYardById, type RaidBuilding } from "../../content/raids.ts";
+import { itemById } from "../../content/items.ts";
 
 const A = "/assets/raids";
 
+interface RaidsView {
+  clanId: number | null;
+  yards: { id: string; open: boolean; taken: boolean; target: string | null; buildings: { id: string; wins: number; need: number; taken: boolean }[] }[];
+  fight: { id: number; building: string; hp: number; hpMax: number; hits: number } | null;
+  weapons: Tray[];
+}
+/** the clan's progress (refreshed while the screen is open) */
+function useRaids() {
+  const [v, setV] = useState<RaidsView | null>(null);
+  const load = useCallback(() => api.get<RaidsView>("/api/raids").then(setV).catch(() => {}), []);
+  useEffect(() => { void load(); const t = window.setInterval(() => document.visibilityState === "visible" && load(), 15_000); return () => clearInterval(t); }, [load]);
+  return { v, setV, load };
+}
+
 export function RaidsScreen() {
-  usePageReady(true);
+  const { v } = useRaids();
+  usePageReady(!!v);
   const [i, setI] = useState(0);
   const touch = useRef<number | null>(null);
   const y = RAID_YARDS[i];
   const go = (d: number) => { setI((v) => (v + d + RAID_YARDS.length) % RAID_YARDS.length); haptic.tap(); };
-  // step 1: only the first yard is open (the next opens when the one before is taken)
-  const open = i === 0;
+  const yv = v?.yards.find((x) => x.id === y.id);
+  const open = !!yv?.open;
+  const taken = yv?.buildings.filter((b) => b.taken).length ?? 0;
   return (
     <div className="fit-page rd-page"
       onTouchStart={(e) => { touch.current = e.touches[0].clientX; }}
@@ -44,22 +67,21 @@ export function RaidsScreen() {
           <div className="rd-photo">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={`${A}/yard-bg.webp`} alt="" draggable={false} />
-            <span className="rd-wins num">Побед 0/{y.wins}</span>
+            <span className="rd-wins num">{yv?.taken ? "Двор наш" : `Захвачено ${taken}/${y.buildings.length}`}</span>
             {!open && <span className="rd-lock"><Icon name="lock" size={34} /></span>}
           </div>
           <div className="rd-body">
             <span className="rd-kicker">двор №{y.n}</span>
             <b className="rd-name">{y.name}</b>
             <span className="rd-sub">{y.subtitle}</span>
-            {open
-              ? <Link href={`/clans/raids/${y.id}`} className="btn gold rd-go">Захватить</Link>
-              : <span className="rd-closed">Сначала захвати двор «{RAID_YARDS[i - 1].name}»</span>}
+            {v && !v.clanId ? <span className="rd-closed">Ходки — для клана. Вступи в клан или создай свой</span>
+              : open ? <Link href={`/clans/raids/${y.id}`} className="btn gold rd-go">{yv?.taken ? "Во двор" : "Захватить"}</Link>
+              : <span className="rd-closed">Сначала захвати двор «{RAID_YARDS[i - 1]?.name}»</span>}
             <span className="rd-h">Награды за захват двора</span>
             <div className="rd-rewards">
               <span><Icon name="ach-clan" size={26} />опыт клана</span>
               <span><Icon name="xp" size={26} />авторитет</span>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <span><img src={`${A}/flag.webp`} alt="" width={26} height={26} />флаг {y.n} ур.</span>
+              <span><ItemArt id={flagId(y.n)} size={26} />флаг {"★".repeat(y.n)}</span>
             </div>
           </div>
         </div>
@@ -69,14 +91,15 @@ export function RaidsScreen() {
   );
 }
 
-/** a building on the yard's ground; the one to attack now glows */
-function Building({ b, target, yard }: { b: RaidBuilding; target: boolean; yard: string }) {
+/** a building on the yard's ground; the one to attack now glows, a taken one carries the clan's flag */
+function Building({ b, target, taken, yard }: { b: RaidBuilding; target: boolean; taken: boolean; yard: string }) {
   const router = useRouter();
   return (
-    <button type="button" className={`rd-bld k-${b.kind} ${target ? "target" : ""}`} style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%`, zIndex: Math.round(b.y * 10) }}
+    <button type="button" className={`rd-bld k-${b.kind} ${target ? "target" : ""} ${taken ? "taken" : ""}`} style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%`, zIndex: Math.round(b.y * 10) }}
       onClick={() => { haptic.tap(); if (target) router.push(`/clans/raids/${yard}/${b.id}`); }} aria-label={BUILDING_NAMES[b.kind]}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={`${A}/b-${b.kind}.webp`} alt="" draggable={false} />
+      {taken && <span className="rd-bld-flag"><ItemArt id={flagId(1)} size={24} /></span>}
     </button>
   );
 }
@@ -108,10 +131,12 @@ function YardLife() {
 }
 
 export function RaidYardScreen({ id }: { id: string }) {
-  usePageReady(true);
+  const { v } = useRaids();
+  usePageReady(!!v);
   const { state } = useGame();
   const y = raidYardById(id);
   if (!y || !state) return null;
+  const yv = v?.yards.find((x) => x.id === y.id);
   return (
     <div className="fit-page rd-page rd-yard">
       <div className="rd-scene">
@@ -119,40 +144,76 @@ export function RaidYardScreen({ id }: { id: string }) {
         <img className="rd-map-bg" src={`${A}/yard-ground2.webp`} alt="" draggable={false} />
         {/* the main one first in the markup: it stands behind (higher on the picture) */}
         <YardLife />
-        {[...y.buildings].reverse().map((b) => <Building key={b.id} b={b} yard={y.id} target={b.id === y.buildings[0].id} />)}
+        {[...y.buildings].reverse().map((b) => <Building key={b.id} b={b} yard={y.id} target={!!yv?.open && yv.target === b.id} taken={!!yv?.buildings.find((x) => x.id === b.id)?.taken} />)}
       </div>
       <div className="title-row rd-title">
         <Link href="/clans/raids" className="back-btn" aria-label="К дворам">‹</Link>
         <b>Двор №{y.n} · {y.name}</b>
-        <span className="rd-progress num">0/{y.buildings.length}</span>
+        <span className="rd-progress num">{yv?.buildings.filter((b) => b.taken).length ?? 0}/{y.buildings.length}</span>
       </div>
     </div>
   );
 }
 
+interface RaidHit { weapon: string; damage: number; crit: boolean; count: number; left: number | null; readyAt: number | null; status: "active" | "won"; hp: number; hpMax: number;
+  reward?: { xp?: number; currencies?: Record<string, number> }; buildingTaken?: boolean; yardTaken?: boolean }
+
 /**
  * The attack on a building: a brick wall over the whole screen, the room behind its window (the defenders will stand
- * there, animated like the bosses, behind the bars), the board under the window — the wins left and what a win gives,
- * the attack below it.
+ * there, animated like the bosses, behind the bars), the board under the window — the clan's wins and what a win gives;
+ * «Атаковать» starts my fight, then the HP and the weapons (like a boss fight).
  */
 export function RaidAttackScreen({ yard, building }: { yard: string; building: string }) {
-  usePageReady(true);
+  const { v, setV, load } = useRaids();
+  usePageReady(!!v);
+  const { act, busy, toast } = useGame();
+  const router = useRouter();
+  const [mult, setMult] = useState<Mult>(1);
+  const [pops, setPops] = useState<{ id: number; text: string; crit: boolean }[]>([]);
+  const [shake, setShake] = useState(0);
   const y = raidYardById(yard);
   const b = y?.buildings.find((x) => x.id === building);
   if (!y || !b) return null;
   const main = b.kind === "main";
   const r = buildingReward(y.n, main);
-  const wins = buildingWins(y, main);
+  const prog = v?.yards.find((x) => x.id === y.id)?.buildings.find((x) => x.id === b.id);
+  const fight = v?.fight && v.fight.building === b.id ? v.fight : null;
+  const elsewhere = v?.fight && v.fight.building !== b.id ? v.fight : null;
+
+  const start = async () => {
+    haptic.tap();
+    if (await act("raid_start", { building: b.id })) await load();
+  };
+  const hit = async (weapon: string) => {
+    if (!v || !fight) return;
+    const w = itemById(weapon);
+    const r2 = await act<RaidHit>("raid_attack", { weapon, count: w?.weapon?.kind === "consumable" ? mult : 1 });
+    if (!r2) return;
+    haptic.tap();
+    setShake((x) => x + 1);
+    const id = Date.now() + Math.random();
+    setPops((p) => [...p.slice(-4), { id, text: `−${r2.damage.toLocaleString("ru-RU")}`, crit: r2.crit }]);
+    window.setTimeout(() => setPops((p) => p.filter((x) => x.id !== id)), 1100);
+    setV({ ...v, fight: r2.status === "won" ? null : { ...fight, hp: r2.hp }, weapons: v.weapons.map((x) => (x.id === weapon ? { ...x, qty: r2.left ?? x.qty, readyAt: r2.readyAt ?? x.readyAt } : x)) });
+    if (r2.status === "won") {
+      haptic.big();
+      toast(r2.yardTaken ? "Двор захвачен! Флаг — в инвентаре" : r2.buildingTaken ? `${BUILDING_NAMES[b.kind]} захвачен кланом!` : `Победа! +${(r2.reward?.xp ?? 0).toLocaleString("ru-RU")} авторитета, +${(r2.reward?.currencies?.RUB ?? 0).toLocaleString("ru-RU")} ₽`);
+      await load();
+      if (r2.buildingTaken) router.push(`/clans/raids/${y.id}`);
+    }
+  };
+  const flee = async () => { if (await act("raid_flee", {})) await load(); };
+
   return (
     <div className="fit-page rd-page rd-attack">
       <div className="rd-scene">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="rd-room" src={`${A}/attack-room.webp`} alt="" draggable={false} />
+        <img key={shake} className={`rd-room ${shake ? "hit" : ""}`} src={`${A}/attack-room.webp`} alt="" draggable={false} />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="rd-map-bg rd-wall" src={`${A}/attack-wall.webp`} alt="" draggable={false} />
         <div className="rd-board">
           <b className="rd-board-t">{BUILDING_NAMES[b.kind]}</b>
-          <span className="rd-board-w">Осталось побед до захвата: <b className="num">{wins}</b></span>
+          <span className="rd-board-w">Побед клана: <b className="num">{prog?.wins ?? 0}/{prog?.need ?? y.wins * (main ? 2 : 1)}</b>{prog?.taken ? " — захвачено" : ""}</span>
           <span className="rd-board-h">За каждую победу</span>
           <span className="rd-board-r">
             <span><Icon name="xp" size={22} /><b className="num">+{r.xp.toLocaleString("ru-RU")}</b></span>
@@ -163,10 +224,28 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
       <div className="title-row rd-title">
         <Link href={`/clans/raids/${y.id}`} className="back-btn" aria-label="Во двор">‹</Link>
         <b>Двор №{y.n} · {BUILDING_NAMES[b.kind]}</b>
+        {fight && <button type="button" className="btn sm dark" onClick={flee}>Уйти</button>}
       </div>
+      {fight && (
+        <div className="rd-hp">
+          <Bar value={fight.hp} max={fight.hpMax} tone="red" height={22} label={`${fight.hp.toLocaleString("ru-RU")} / ${fight.hpMax.toLocaleString("ru-RU")}`} />
+          {pops.map((p) => <b key={p.id} className={`rd-pop ${p.crit ? "crit" : ""}`}>{p.text}{p.crit ? " КРИТ" : ""}</b>)}
+        </div>
+      )}
       <div className="rd-attack-foot">
-        <button type="button" className="btn gold block rd-attack-go" disabled>Атаковать</button>
-        <span className="rd-attack-note">Бой за здание — следующий шаг</span>
+        {!v ? null : !v.clanId ? <span className="rd-attack-note">Ходки — только для клана</span>
+          : fight ? (
+            <>
+              <div className="rd-tray">
+                <MultPicker mult={mult} setMult={setMult} />
+                <WeaponTray tray={v.weapons} mult={mult} disabled={busy === "raid_attack"} onHit={hit}
+                  onCooldown={(name, left) => toast(`${name} перезаряжается: ещё ${Math.ceil(left / 60_000)} мин`)}
+                  onBuy={() => toast("Оружие — в магазине")} />
+              </div>
+            </>
+          ) : elsewhere ? <span className="rd-attack-note">Ты уже в бою за другое здание</span>
+          : prog?.taken ? <span className="rd-attack-note">Здание уже захвачено кланом</span>
+          : <button type="button" className="btn gold block rd-attack-go" disabled={busy === "raid_start"} onClick={start}>Атаковать</button>}
       </div>
     </div>
   );

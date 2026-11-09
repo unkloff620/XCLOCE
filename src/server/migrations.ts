@@ -1338,4 +1338,38 @@ UPDATE fortune_global SET jackpot = 5000 + 150 * spins WHERE id='_all' AND winne
 ALTER TABLE fortune_players ADD COLUMN IF NOT EXISTS jackpots INT NOT NULL DEFAULT 0;
 UPDATE fortune_players f SET jackpots = 1 FROM fortune_global g WHERE g.id='_all' AND g.winner_id = f.player_id;`,
   },
+  {
+    // «Ходки» (systems/raids.ts): a player's fight with a building; the clan's wins over each building and the yards it took;
+    // the clan's own experience from the yards
+    id: "v2-090-raids",
+    sql: `CREATE TABLE IF NOT EXISTS raid_fights (
+  id SERIAL PRIMARY KEY,
+  player_id INT NOT NULL,
+  clan_id INT NOT NULL,
+  yard_id TEXT NOT NULL,
+  building_id TEXT NOT NULL,
+  hp_max INT NOT NULL,
+  damage BIGINT NOT NULL DEFAULT 0,
+  hits INT NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'active',
+  started_at TIMESTAMPTZ NOT NULL,
+  ended_at TIMESTAMPTZ
+);
+CREATE UNIQUE INDEX IF NOT EXISTS raid_fights_active ON raid_fights (player_id) WHERE status = 'active';
+CREATE INDEX IF NOT EXISTS raid_fights_clan_yard ON raid_fights (clan_id, yard_id) WHERE status = 'won';
+CREATE TABLE IF NOT EXISTS raid_progress (
+  clan_id INT NOT NULL,
+  building_id TEXT NOT NULL,
+  wins INT NOT NULL DEFAULT 0,
+  taken_at TIMESTAMPTZ,
+  PRIMARY KEY (clan_id, building_id)
+);
+CREATE TABLE IF NOT EXISTS raid_yards (
+  clan_id INT NOT NULL,
+  yard_id TEXT NOT NULL,
+  taken_at TIMESTAMPTZ NOT NULL,
+  PRIMARY KEY (clan_id, yard_id)
+);
+ALTER TABLE clans ADD COLUMN IF NOT EXISTS raid_xp BIGINT NOT NULL DEFAULT 0;`,
+  },
 ];
