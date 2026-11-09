@@ -280,7 +280,8 @@ function Wear({ slot, hat }: { slot: string; hat?: "under" | "over" }) {
  * (shorter there), then on into the other corner; the jaw closes. The picture (mouth-<id>.webp, build-held-mouth.py) lies level
  * with the end in the mouth at 0,0 — .rig-chew moves and turns it around that end; the smoke (.rig-smoke-at) follows the lit tip.
  */
-function Mouth() {
+/** part «jaw» — the teeth (under the beard); «held» — the thing in the mouth and its smoke (over the beard: it grows a level a day) */
+function Mouth({ part }: { part: "jaw" | "held" }) {
   const worn = useContext(WornCtx);
   const id = wornIn(worn, "MOUTH") ?? (worn.MOUTH && worn.MOUTH in MOUTH_HELD ? worn.MOUTH : null);
   // «Зубы»: the diamond grills — the same jaw with diamond teeth; with nothing in the mouth he grins with them
@@ -291,6 +292,24 @@ function Mouth() {
   if (!id && !teeth) return null;
   const href = `${skin !== SKIN_ORIGINAL ? `/assets/hero/skin-${skin}` : "/assets/hero"}/${diamond ? "jaw-diamond" : "jaw"}.webp?v=${ART_VER.heroPart}`;
   const held = id ? MOUTH_HELD[id] : undefined;
+  if (part === "held") {
+    return (
+      <>
+        {held ? (
+          <g className={`rig-chew ${teeth ? "" : "fixed"}`} pointerEvents="none">
+            <image href={`/assets/hero/mouth-${id}.webp?v=${ART_VER.wear}`} x={0} y={-held.thick / 2} width={held.len} height={held.thick} preserveAspectRatio="none" />
+          </g>
+        ) : id ? <Wear slot="MOUTH" /> : null}
+        {(id === "cigarette" || id === "cigar") && (
+          <g className={`rig-smoke-at ${teeth ? "" : "fixed"}`} pointerEvents="none">
+            <g className="rig-smoke">
+              {[0, 1, 2].map((i) => <circle key={i} cx={0} cy={0} r={6} style={{ animationDelay: `${i * 0.9}s` }} />)}
+            </g>
+          </g>
+        )}
+      </>
+    );
+  }
   return (
     <>
       {/* the jaw (teeth, chewing) only with «Зубы» worn; without them the thing just sits in the corner of the closed mouth */}
@@ -323,18 +342,6 @@ function Mouth() {
           {GLINTS.map(([x, y, d], i) => (
             <path key={i} d="M0 -4 L0.9 -0.9 L4 0 L0.9 0.9 L0 4 L-0.9 0.9 L-4 0 L-0.9 -0.9 Z" transform={`translate(${x} ${y})`} style={{ animationDelay: `${d}s` }} />
           ))}
-        </g>
-      )}
-      {held ? (
-        <g className={`rig-chew ${teeth ? "" : "fixed"}`} pointerEvents="none">
-          <image href={`/assets/hero/mouth-${id}.webp?v=${ART_VER.wear}`} x={0} y={-held.thick / 2} width={held.len} height={held.thick} preserveAspectRatio="none" />
-        </g>
-      ) : id ? <Wear slot="MOUTH" /> : null}
-      {(id === "cigarette" || id === "cigar") && (
-        <g className={`rig-smoke-at ${teeth ? "" : "fixed"}`} pointerEvents="none">
-          <g className="rig-smoke">
-            {[0, 1, 2].map((i) => <circle key={i} cx={0} cy={0} r={6} style={{ animationDelay: `${i * 0.9}s` }} />)}
-          </g>
         </g>
       )}
     </>
@@ -600,8 +607,10 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
         <Ol>
           <Bone p="head" className="rig-head">
             <Face />
-            <Mouth />
+            <Mouth part="jaw" />
             <Beard />
+            {/* the cigarette, the toothpick, the cigar — over the beard */}
+            <Mouth part="held" />
             <Wear slot="FACE" />
             <Wear slot="HEAD" hat="under" />
             <Hair />
