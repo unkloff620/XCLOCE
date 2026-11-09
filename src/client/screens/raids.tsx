@@ -12,7 +12,8 @@ import { usePageReady } from "../route-loader.tsx";
 import { useGame } from "../store.tsx";
 import { Icon } from "../art/icons.tsx";
 import { haptic } from "../telegram.ts";
-import { BUILDING_NAMES, RAID_YARDS, YARD_TREES, YARD_WALKERS, raidYardById, type RaidBuilding } from "../../content/raids.ts";
+import { useRouter } from "next/navigation";
+import { BUILDING_NAMES, RAID_YARDS, YARD_TREES, YARD_WALKERS, buildingReward, buildingWins, raidYardById, type RaidBuilding } from "../../content/raids.ts";
 
 const A = "/assets/raids";
 
@@ -69,10 +70,11 @@ export function RaidsScreen() {
 }
 
 /** a building on the yard's ground; the one to attack now glows */
-function Building({ b, target }: { b: RaidBuilding; target: boolean }) {
+function Building({ b, target, yard }: { b: RaidBuilding; target: boolean; yard: string }) {
+  const router = useRouter();
   return (
     <button type="button" className={`rd-bld k-${b.kind} ${target ? "target" : ""}`} style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%`, zIndex: Math.round(b.y * 10) }}
-      onClick={() => haptic.tap()} aria-label={BUILDING_NAMES[b.kind]}>
+      onClick={() => { haptic.tap(); if (target) router.push(`/clans/raids/${yard}/${b.id}`); }} aria-label={BUILDING_NAMES[b.kind]}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={`${A}/b-${b.kind}.webp`} alt="" draggable={false} />
     </button>
@@ -117,12 +119,54 @@ export function RaidYardScreen({ id }: { id: string }) {
         <img className="rd-map-bg" src={`${A}/yard-ground2.webp`} alt="" draggable={false} />
         {/* the main one first in the markup: it stands behind (higher on the picture) */}
         <YardLife />
-        {[...y.buildings].reverse().map((b) => <Building key={b.id} b={b} target={b.id === y.buildings[0].id} />)}
+        {[...y.buildings].reverse().map((b) => <Building key={b.id} b={b} yard={y.id} target={b.id === y.buildings[0].id} />)}
       </div>
       <div className="title-row rd-title">
         <Link href="/clans/raids" className="back-btn" aria-label="К дворам">‹</Link>
         <b>Двор №{y.n} · {y.name}</b>
         <span className="rd-progress num">0/{y.buildings.length}</span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The attack on a building: a brick wall over the whole screen, the room behind its window (the defenders will stand
+ * there, animated like the bosses, behind the bars), the board under the window — the wins left and what a win gives,
+ * the attack below it.
+ */
+export function RaidAttackScreen({ yard, building }: { yard: string; building: string }) {
+  usePageReady(true);
+  const y = raidYardById(yard);
+  const b = y?.buildings.find((x) => x.id === building);
+  if (!y || !b) return null;
+  const main = b.kind === "main";
+  const r = buildingReward(y.n, main);
+  const wins = buildingWins(y, main);
+  return (
+    <div className="fit-page rd-page rd-attack">
+      <div className="rd-scene">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="rd-room" src={`${A}/attack-room.webp`} alt="" draggable={false} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="rd-map-bg rd-wall" src={`${A}/attack-wall.webp`} alt="" draggable={false} />
+        <div className="rd-board">
+          <b className="rd-board-t">{BUILDING_NAMES[b.kind]}</b>
+          <span className="rd-board-w">Осталось побед до захвата: <b className="num">{wins}</b></span>
+          <span className="rd-board-h">За каждую победу</span>
+          <span className="rd-board-r">
+            <span><Icon name="xp" size={22} /><b className="num">+{r.xp.toLocaleString("ru-RU")}</b></span>
+            <span><Icon name="RUB" size={22} /><b className="num">+{r.rub.toLocaleString("ru-RU")}</b></span>
+          </span>
+        </div>
+      </div>
+      <div className="title-row rd-title">
+        <Link href={`/clans/raids/${y.id}`} className="back-btn" aria-label="Во двор">‹</Link>
+        <b>Двор №{y.n} · {BUILDING_NAMES[b.kind]}</b>
+      </div>
+      <div className="rd-attack-foot">
+        <button type="button" className="btn gold block rd-attack-go" disabled>Атаковать</button>
+        <span className="rd-attack-note">Бой за здание — следующий шаг</span>
       </div>
     </div>
   );

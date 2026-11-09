@@ -6003,3 +6003,21 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 @keyframes rd-face { 0% { transform: none; } 50% { transform: scaleX(-1); } }
 @keyframes rd-bob { from { transform: translateY(0); } to { transform: translateY(-5%); } }
 @media (prefers-reduced-motion: reduce) { .rd-tree, .rd-walker, .rd-walker > i, .rd-walker b { animation: none; } .rd-walker { left: var(--x1); top: var(--y1); } }
+
+/* the attack on a building: the wall covers the screen (the same box as the yard: 1024×1536, cover); the room shows
+   through the window (19…80% × 12…37%), the board under it (22.5…77% × 49…63%) holds the wins and the reward */
+.rd-room { position: absolute; left: 17%; top: 10.5%; width: 65.5%; height: 29%; object-fit: cover; pointer-events: none; }
+.rd-wall { z-index: 2; }
+.rd-board { position: absolute; z-index: 3; left: 23.5%; right: 24%; top: 50%; height: 12.5%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #2b1c0e; text-align: center; }
+.rd-board-t { font-family: var(--font-display, inherit); font-size: 16px; text-transform: uppercase; }
+.rd-board-w { font-size: 12px; font-weight: 700; color: #7a1a0e; }
+.rd-board-h { font-family: var(--font-hand), cursive; font-size: 15px; color: #3a2a14; }
+.rd-board-r { display: flex; gap: 12px; }
+.rd-board-r > span { display: inline-flex; align-items: center; gap: 3px; font-size: 14px; }
+.rd-attack-foot { position: absolute; z-index: 4; left: 16px; right: 16px; bottom: calc(var(--bottom) + 18px); display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.rd-attack-go { max-width: 320px; }
+.rd-attack-note { font-size: 12px; color: #fff; text-shadow: 0 1px 2px #000; }
+/* the window just under the title: the wall's box starts there, moved up by the window's own top (12.4% of it);
+   above it the page shows the same brick colour */
+.rd-attack { background: #6b2e20; }
+.rd-attack .rd-scene { top: calc(var(--top) + 40px); bottom: auto; height: 100%; transform: translate(-50%, -12%); }

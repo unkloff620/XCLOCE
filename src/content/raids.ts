@@ -24,7 +24,7 @@ export interface RaidYard {
   n: number;
   name: string;
   subtitle: string;
-  /** wins over the yard's buildings to take it (shown on the card) */
+  /** wins over each of its buildings to take it (the main one — twice as many) */
   wins: number;
   buildings: RaidBuilding[];
 }
@@ -69,3 +69,8 @@ export const YARD_WALKERS: { n: number; from: [number, number]; to: [number, num
   { n: 4, from: [33, 89.5], to: [53, 92], s: 24 },
   { n: 5, from: [60, 44], to: [74, 49.5], s: 28 },
 ];
+
+/** a win over a building gives (the yard's number makes it bigger): authority and roubles */
+export const buildingReward = (yardN: number, main: boolean) => ({ xp: (main ? 600 : 250) * yardN, rub: (main ? 5_000 : 2_000) * yardN });
+/** wins over a building to take it: the yard's count (the main one — twice as many) */
+export const buildingWins = (y: RaidYard, main: boolean) => y.wins * (main ? 2 : 1);
