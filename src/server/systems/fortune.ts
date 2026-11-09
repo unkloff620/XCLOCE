@@ -10,6 +10,11 @@ import { BAG_TATTOO_CHANCE, bagById, rollBagLoot, JACKPOT_ADD, JACKPOT_SEED, KEY
 /** the wheel is in the back yard for everybody once the admin shows it; the admins see it always */
 export async function fortuneOn(q: Queryable, pid: number, cfg: Config): Promise<boolean> {
   if (cfg.fortune.on) return true;
+  return isAdminPlayer(q, pid, cfg);
+}
+
+/** the player is one of the admins (by Telegram id): they see what is not shown to the players yet */
+export async function isAdminPlayer(q: Queryable, pid: number, cfg: Config): Promise<boolean> {
   if (!cfg.admins.length) return false;
   const [p] = await q.query<{ telegram_id: number | null }>("SELECT telegram_id FROM players WHERE id=$1", [pid]);
   return !!p?.telegram_id && cfg.admins.includes(Number(p.telegram_id));

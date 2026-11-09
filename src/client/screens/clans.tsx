@@ -283,6 +283,7 @@ export function ClanScreen({ id }: { id: number }) {
   const unread = state?.clanRequests?.chat ?? 0;
   const tabs = mine && (
     <div className="clan-tabs" role="tablist">
+      {state?.raids?.on && <Link href="/clans/raids" className="btn sm dark">🚔 Ходки</Link>}
       <button type="button" role="tab" aria-selected={tab === "clan"} className={`btn sm ${tab === "clan" ? "gold" : "dark"}`} onClick={() => { setTab("clan"); history.replaceState(null, "", "#"); }}>🛡 Клан</button>
       <button type="button" role="tab" aria-selected={tab === "chat"} className={`btn sm ${tab === "chat" ? "gold" : "dark"}`} onClick={() => { setTab("chat"); history.replaceState(null, "", "#chat"); }}>
         💬 Чат{tab !== "chat" && unread > 0 && <span className="badge">{unread}</span>}

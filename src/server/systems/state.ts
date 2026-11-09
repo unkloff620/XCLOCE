@@ -2,7 +2,7 @@ import { newbieView } from "./newbie.ts";
 import { tosyaView } from "./tosya.ts";
 import { heistView } from "./heist.ts";
 import { autosView } from "./autos.ts";
-import { fortuneOn } from "./fortune.ts";
+import { fortuneOn, isAdminPlayer } from "./fortune.ts";
 import { GameError, type Queryable } from "../db.ts";
 import { balances, energyCfgOf, energyNow, moscowDay, type Ctx, type PlayerRow } from "../core.ts";
 import { fightHp, settleMyFight, unlockedItems } from "./combat.ts";
@@ -126,6 +126,8 @@ export async function gameState(ctx: Ctx) {
     autos: await autosView(ctx.q, ctx.pid, ctx.now),
     /** «Колесо удачи»: the manhole in the back yard (the admins see it before the players) */
     fortune: { on: await fortuneOn(ctx.q, ctx.pid, ctx.cfg) },
+    /** «Ходки» of the clans (the admins see them before the players) */
+    raids: { on: ctx.cfg.raids.on || (await isAdminPlayer(ctx.q, ctx.pid, ctx.cfg)) },
     newbie: await newbieView(ctx.q, ctx.pid, ctx.now),
     /** the talk at the exchange machine: today's talk done? the better rate it gave (until when) */
     dealerTalk: { talked: p.dealer_talk_day === moscowDay(ctx.now), ...(await dealerBonus(ctx.q, ctx.pid, ctx.now)) },
