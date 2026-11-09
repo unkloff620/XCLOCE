@@ -210,7 +210,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
       <div className="fit-page fight-page rd-fight">
         <div className="fight-bg" aria-hidden="true">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img key={shake} className={shake ? "rd-hitbg" : ""} src={`${A}/arena-garage.webp`} alt="" draggable={false} />
+          <img key={shake} className={shake ? "rd-hitbg" : ""} src={`${A}/arena-garage2.webp`} alt="" draggable={false} />
         </div>
         <div className="fight-head">
           <Link href={`/clans/raids/${y.id}`} className="back-btn" aria-label="Во двор">‹</Link>
