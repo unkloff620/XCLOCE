@@ -33,12 +33,15 @@ export interface RaidYard {
  * The plan of a yard, in the order of the attack: one building at the bottom, two above it, three above those, the main
  * one at the top (twice as big). `kinds` — the six ordinary ones, from the bottom up, left to right.
  */
-// in % of the yard picture (public/assets/raids/yard-<id>.webp, 1024×1536): the buildings are painted into it there —
-// the sprites were laid at these spots and the ground around them repainted (the buildings kept by a mask)
-const SPOTS = [{ x: 50, y: 89 }, { x: 39, y: 76 }, { x: 61, y: 76 }, { x: 28, y: 63 }, { x: 50, y: 63 }, { x: 72, y: 63 }];
+// in % of the yard's ground picture (public/assets/raids/yard-ground2.webp, 1024×1536, drawn with places for them)
+const SPOTS = [
+  { x: 56, y: 88, w: 20 },
+  { x: 38.5, y: 74, w: 19 }, { x: 61, y: 74, w: 20 },
+  { x: 27.5, y: 58, w: 19 }, { x: 51.5, y: 58, w: 23 }, { x: 77, y: 58, w: 22 },
+];
 const plan = (yard: string, kinds: BuildingKind[]): RaidBuilding[] => [
-  ...kinds.map((kind, i) => ({ id: `${yard}-${i + 1}`, kind, ...SPOTS[i], w: 20 })),
-  { id: `${yard}-main`, kind: "main" as const, x: 50, y: 47, w: 34 },
+  ...kinds.map((kind, i) => ({ id: `${yard}-${i + 1}`, kind, ...SPOTS[i] })),
+  { id: `${yard}-main`, kind: "main" as const, x: 50, y: 38, w: 34 },
 ];
 
 export const RAID_YARDS: RaidYard[] = [
