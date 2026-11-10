@@ -12,11 +12,14 @@ async function wheelOn(db: Db) {
 const jackpot = async (db: Db) => Number((await db.query<{ jackpot: number }>("SELECT jackpot FROM fortune_global WHERE id='_all'"))[0].jackpot);
 
 describe("«Колесо удачи»", () => {
-  it("closed for the players until the admin shows it", async () => {
+  it("open to every player; closed again when the admin turns it off", async () => {
     const db = await freshDb();
     resetConfigCache();
     const p = await newPlayer(db);
-    await give(db, p, TICKET_ID, 1);
+    await give(db, p, TICKET_ID, 2);
+    expect((await act(db, p, "fortune_spin", {}, T)).result.spins).toBe(1);
+    await db.query("UPDATE config SET value = '{\"on\": false}' WHERE key='fortune'");
+    resetConfigCache();
     await expect(act(db, p, "fortune_spin", {}, T)).rejects.toMatchObject({ code: "fortune_off" });
   });
 

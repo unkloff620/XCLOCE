@@ -855,8 +855,9 @@ describe("«Ящик ништяков»", () => {
     await db.query("UPDATE players SET ach_points = 12 WHERE id=$1", [p]);
     const a = await act(db, p, "ach_box_open", {}, T0, always(0.5));
     expect(a.result.box).toMatchObject({ points: 12, opened: 1, ready: 1, progress: 2 });
-    // every box: keyboards, a GPU and (mostly) a Rug Pull Gun
-    const noParts = (l: { id: string }[]) => l.filter((i) => !i.id.startsWith("part-")); // the box has craft parts too
+    // every box: keyboards, a GPU and (mostly) a Rug Pull Gun; the wheel's tickets (the wheel is open) are checked apart
+    expect(a.result.reward.items.some((i: { id: string }) => i.id === "fortune-ticket")).toBe(true);
+    const noParts = (l: { id: string }[]) => l.filter((i) => !i.id.startsWith("part-") && i.id !== "fortune-ticket"); // the box has craft parts too
     expect(noParts(a.result.reward.items)).toEqual([{ id: "keyboard", qty: 2 }, { id: "gpu", qty: 1 }, { id: "rug-pull-gun", qty: 1 }]);
     expect(a.result.reward.items.some((i: { id: string }) => i.id.startsWith("part-"))).toBe(true);
     await act(db, p, "ach_box_open", {}, T0, always(0.5));

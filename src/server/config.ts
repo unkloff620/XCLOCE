@@ -74,7 +74,7 @@ export function defaultConfig(): Config {
     eventBosses: {},
     maintenance: { on: false, text: MAINTENANCE_TEXT },
     tosya: { mode: "auto", at: 0 },
-    fortune: { on: false },
+    fortune: { on: true },
     raids: { on: false },
   };
 }

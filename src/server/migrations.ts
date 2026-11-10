@@ -1372,4 +1372,10 @@ CREATE TABLE IF NOT EXISTS raid_yards (
 );
 ALTER TABLE clans ADD COLUMN IF NOT EXISTS raid_xp BIGINT NOT NULL DEFAULT 0;`,
   },
+  {
+    // «Колесо удачи» goes out to every player (the news about it is out): the admin's switch turned on once; it can still
+    // be turned off in the admin page
+    id: "v2-091-fortune-open",
+    sql: `INSERT INTO config (key, value) VALUES ('fortune', '{"on": true}') ON CONFLICT (key) DO UPDATE SET value = '{"on": true}', updated_at = now();`,
+  },
 ];
