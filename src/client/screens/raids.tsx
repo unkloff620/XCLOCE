@@ -57,7 +57,7 @@ export function RaidsScreen() {
   const [i, setI] = useState(0);
   const touch = useRef<number | null>(null);
   const y = RAID_YARDS[i];
-  const go = (d: number) => { setI((v) => (v + d + RAID_YARDS.length) % RAID_YARDS.length); haptic.tap(); };
+  const go = (d: number) => { setI((v) => (v + d + RAID_YARDS.length) % RAID_YARDS.length); haptic.tap(); sfx("page"); };
   const yv = v?.yards.find((x) => x.id === y.id);
   const open = !!yv?.open;
   const taken = yv?.buildings.filter((b) => b.taken).length ?? 0;
@@ -73,7 +73,7 @@ export function RaidsScreen() {
         <span className="rd-dots">{RAID_YARDS.map((x, k) => <i key={x.id} className={k === i ? "on" : ""} />)}</span>
       </div>
       <div className="rd-cardrow">
-        <button type="button" className="rd-arrow" onClick={() => go(-1)} aria-label="Предыдущий двор">‹</button>
+        <button type="button" className="rd-arrow" data-nosfx onClick={() => go(-1)} aria-label="Предыдущий двор">‹</button>
         <div className="rd-card" key={y.id}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="rd-card-paper" src={`${A}/card.webp`} alt="" draggable={false} />
@@ -98,7 +98,7 @@ export function RaidsScreen() {
             </div>
           </div>
         </div>
-        <button type="button" className="rd-arrow" onClick={() => go(1)} aria-label="Следующий двор">›</button>
+        <button type="button" className="rd-arrow" data-nosfx onClick={() => go(1)} aria-label="Следующий двор">›</button>
       </div>
     </div>
   );

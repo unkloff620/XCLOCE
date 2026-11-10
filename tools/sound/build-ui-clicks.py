@@ -2,7 +2,8 @@
 Interface sounds in the character of an old browser prison game:
   tap.mp3  — the key «тык» on every button: the player's own recording (tools/sound/source/tap.mp3), its silence cut off
              (from 70 ms, 70 ms long, normalized) — this script does not write it; the noise «тык» below is only kept as a sketch
-  page.mp3 — a paper page turned (the «Личное дело» tabs), made here from noise: a light catch, a crackling rustle, a tick, a soft slap
+  page.mp3 — a page turned («Личное дело», the yards of «Захват»): the player's own recording (tools/sound/source/page.mp3),
+             trimmed to its sound; the noise page below is only kept as a sketch
 Run from the repo root:  python3 tools/sound/build-ui-clicks.py   (writes public/assets/sound/tap.mp3, page.mp3)
 """
 import subprocess, tempfile, os
@@ -57,5 +58,5 @@ put(page, biq(biq(crackle * shape, "bandpass", 2600, 0.9), "highpass", 1000, 0.7
 put(page, biq(burst(0.008, 0.0015), "bandpass", 2900, 1.5), 0.19, 0.45)        # a tick at the fold
 put(page, biq(burst(0.03, 0.006), "bandpass", 2100, 0.9), 0.275, 1.0)          # the page lies down
 put(page, biq(burst(0.04, 0.01), "lowpass", 700, 0.7), 0.275, 0.35)
-save(page, "page", 0.65)
+# save(page, "page", 0.65)  — the player's recording is used instead
 print("ok")

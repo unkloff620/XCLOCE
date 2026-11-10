@@ -236,7 +236,7 @@ const SAMPLE_URLS = {
   // the game's music (the player's own track, tools/sound/source/theme.mp3) — everywhere, the boss fights too
   music: "/assets/sound/theme.mp3",
   yard: "/assets/sound/yard.mp3?v=5",
-  // the key «тык» on every button (the player's recording, tools/sound/source/tap.mp3) and a paper page turned (tools/sound/build-ui-clicks.py)
+  // the key «тык» on every button and a page turned (the player's recordings, tools/sound/source/tap.mp3, page.mp3)
   tap: "/assets/sound/tap.mp3",
   page: "/assets/sound/page.mp3",
   door: "/assets/sound/door.mp3",

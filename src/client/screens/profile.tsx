@@ -480,13 +480,13 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
       <div className="dos">
         <div className="dos-book" onTouchStart={onStart} onTouchMove={onMove} onTouchEnd={onEnd} onTouchCancel={onEnd} onMouseDown={onMouseDown} onClickCapture={onClickCapture} onWheel={onWheel}>
           {/* with a mouse (Telegram Desktop): arrows on the sides turn the pages */}
-          <button type="button" className="dos-nav prev" onClick={() => (at < 0 ? onClose() : turn(at - 1))} aria-label={at < 0 ? "Закрыть дело" : "Предыдущая страница"}>‹</button>
-          <button type="button" className="dos-nav next" onClick={() => turn(at + 1)} disabled={at >= tabs.length - 1} aria-label="Следующая страница">›</button>
+          <button type="button" className="dos-nav prev" data-nosfx={at >= 0 || undefined} onClick={() => (at < 0 ? onClose() : turn(at - 1))} aria-label={at < 0 ? "Закрыть дело" : "Предыдущая страница"}>‹</button>
+          <button type="button" className="dos-nav next" data-nosfx onClick={() => turn(at + 1)} disabled={at >= tabs.length - 1} aria-label="Следующая страница">›</button>
           {/* the inside of the back cover, under all the pages */}
           <i className="dos-back" aria-hidden="true" />
           <div className="dos-tabs" role="tablist" ref={tabsRef}>
             {tabs.map((t, i) => (
-              <button key={t.id} type="button" role="tab" aria-selected={!cover && tab === t.id} className={`dos-tab ${!cover && tab === t.id ? "on" : ""} ${i < at ? "past" : ""} ${dueTabs.has(t.id) ? "due" : ""}`} onClick={() => turn(i)}>{t.label}</button>
+              <button key={t.id} type="button" role="tab" data-nosfx aria-selected={!cover && tab === t.id} className={`dos-tab ${!cover && tab === t.id ? "on" : ""} ${i < at ? "past" : ""} ${dueTabs.has(t.id) ? "due" : ""}`} onClick={() => turn(i)}>{t.label}</button>
             ))}
           </div>
           <div className="dos-stack">
