@@ -6046,7 +6046,7 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .rig-gopnik .br-hand-r { animation: gp-fi-r 2.4s infinite 0.12s; }
 .rig-gopnik .br-arm-l { animation: gp-sh-l 3.6s infinite; }
 .rig-gopnik .br-low-l { animation: gp-el-l 3.6s infinite; }
-.rig-gopnik .br-hand-l { animation: gp-fi-l 3.6s infinite 0.09s; }
+.rig-gopnik .br-hand-l { animation: gp-fi-l 3.6s infinite 0.06s; }
 @keyframes gp-sh-r { 0%, 100% { transform: rotate(0deg); } 35% { transform: rotate(-4deg); } 70% { transform: rotate(2.5deg); } }
 @keyframes gp-el-r {
   0%, 44%, 100% { transform: rotate(0deg); animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.4); }
@@ -6061,31 +6061,38 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
   62% { transform: rotate(-6deg); animation-timing-function: ease-in-out; }
   80% { transform: rotate(3deg); animation-timing-function: ease-in-out; } }
 @keyframes gp-sh-l {
-  0%, 25% { transform: rotate(0deg); animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.4); }
-  5%, 18% { transform: rotate(-8deg); animation-timing-function: cubic-bezier(0.2, 0.8, 0.4, 1); }
-  11% { transform: rotate(-1deg); animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.4); }
+  0%, 14% { transform: rotate(0deg); animation-timing-function: cubic-bezier(0.75, 0, 1, 0.9); }
+  3.5%, 17.5% { transform: rotate(-11deg); animation-timing-function: cubic-bezier(0.1, 0.6, 0.3, 1); }
+  10%, 25% { transform: rotate(0deg); animation-timing-function: ease-in-out; }
   50% { transform: rotate(2deg); animation-timing-function: ease-in-out; }
   75% { transform: rotate(-2deg); animation-timing-function: ease-in-out; }
   100% { transform: rotate(0deg); } }
 @keyframes gp-el-l {
-  0%, 25% { transform: rotate(0deg); animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.4); }
-  5%, 18% { transform: rotate(30deg); animation-timing-function: cubic-bezier(0.2, 0.8, 0.4, 1); }
-  11% { transform: rotate(3deg); animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.4); }
+  0%, 14% { transform: rotate(0deg); animation-timing-function: cubic-bezier(0.75, 0, 1, 0.9); }
+  3.5%, 17.5% { transform: rotate(36deg); animation-timing-function: cubic-bezier(0.1, 0.6, 0.3, 1); }
+  10%, 25% { transform: rotate(0deg); animation-timing-function: ease-in-out; }
   55% { transform: rotate(6deg); animation-timing-function: ease-in-out; }
   80% { transform: rotate(-2deg); animation-timing-function: ease-in-out; }
   100% { transform: rotate(0deg); } }
 @keyframes gp-fi-l {
-  0%, 25% { transform: rotate(0deg); animation-timing-function: cubic-bezier(0.7, 0, 0.9, 0.3); }
-  5%, 18% { transform: rotate(-15deg); animation-timing-function: cubic-bezier(0.15, 0.85, 0.35, 1); }
-  11% { transform: rotate(5deg); animation-timing-function: cubic-bezier(0.7, 0, 0.9, 0.3); }
+  0%, 14% { transform: rotate(0deg); animation-timing-function: cubic-bezier(0.75, 0, 1, 0.9); }
+  3.5%, 17.5% { transform: rotate(-18deg); animation-timing-function: cubic-bezier(0.1, 0.6, 0.3, 1); }
+  10%, 25% { transform: rotate(0deg); animation-timing-function: ease-in-out; }
   60% { transform: rotate(-4deg); animation-timing-function: ease-in-out; }
   100% { transform: rotate(0deg); } }
+/* the body goes into each punch of the right arm: it leans over from the hips with the blow and comes back */
+.rig-gopnik-pup, svg.rig-gopnik:not(.br-pup svg) { animation: gp-lean 3.6s infinite; transform-origin: 50% 100%; }
+@keyframes gp-lean {
+  0%, 14% { transform: rotate(0deg) translateX(0px); animation-timing-function: cubic-bezier(0.75, 0, 1, 0.9); }
+  3.5%, 17.5% { transform: rotate(-4deg) translateX(-8px); animation-timing-function: cubic-bezier(0.1, 0.6, 0.3, 1); }
+  11%, 26% { transform: rotate(0deg) translateX(0px); }
+  100% { transform: rotate(0deg) translateX(0px); } }
 /* a hit does not stop his boxing: the head jerks back */
 .arena-photo.hit .rig-gopnik .br-arm-r { animation-duration: 4.8s; }
 .arena-photo.hit .rig-gopnik :is(.br-low-r, .br-hand-r) { animation-duration: 2.4s; }
 .arena-photo.hit .rig-gopnik :is(.br-arm-l, .br-low-l, .br-hand-l) { animation-duration: 3.6s; }
 .arena-photo.ouch .rig-gopnik .br-head { animation: mg-head-hit 0.42s ease-out; }
-@media (prefers-reduced-motion: reduce) { .rig-gopnik :is(.br-arm, .br-low, .br-hand) { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .rig-gopnik :is(.br-arm, .br-low, .br-hand), .rig-gopnik-pup { animation: none; } }
 /* the raid fight: he stands in the room, down to the hips */
 .rd-fight .arena.full .arena-photo.rd-defender-fight { left: -4%; right: -4%; top: 64px; bottom: 120px;
   -webkit-mask-image: linear-gradient(to bottom, #000 84%, transparent); mask-image: linear-gradient(to bottom, #000 84%, transparent); }
