@@ -3110,10 +3110,10 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 @media (prefers-reduced-motion: reduce) { .br-face-open, .br-face-closed, .br-teeth-low, .br-teeth-up, .br-brow-l, .br-brow-r, .rig-babafey .br-arm, .rig-babafey .br-low, .rig-babafey .br-hand { animation: none; } }
 
 /* every boss with arms fends off a hit: a sharp wave of both arms (Мугонатор keeps his own boxing) */
-.arena-photo.hit:not(.strike) .boss-rig:not(.rig-mugo) :is(.br-arm-l, .br-fist-l) { animation: br-hit-fend-l 0.42s cubic-bezier(0.2, 0.9, 0.3, 1); }
-.arena-photo.hit:not(.strike) .boss-rig:not(.rig-mugo) :is(.br-arm-r, .br-fist-r) { animation: br-hit-fend-r 0.42s cubic-bezier(0.2, 0.9, 0.3, 1); }
-.arena-photo.hit:not(.strike) .boss-rig:not(.rig-mugo) .br-low-l { animation: br-hit-fend-r 0.42s cubic-bezier(0.2, 0.9, 0.3, 1); }
-.arena-photo.hit:not(.strike) .boss-rig:not(.rig-mugo) .br-low-r { animation: br-hit-fend-l 0.42s cubic-bezier(0.2, 0.9, 0.3, 1); }
+.arena-photo.hit:not(.strike) .boss-rig:not(.rig-mugo):not(.rig-gopnik) :is(.br-arm-l, .br-fist-l) { animation: br-hit-fend-l 0.42s cubic-bezier(0.2, 0.9, 0.3, 1); }
+.arena-photo.hit:not(.strike) .boss-rig:not(.rig-mugo):not(.rig-gopnik) :is(.br-arm-r, .br-fist-r) { animation: br-hit-fend-r 0.42s cubic-bezier(0.2, 0.9, 0.3, 1); }
+.arena-photo.hit:not(.strike) .boss-rig:not(.rig-mugo):not(.rig-gopnik) .br-low-l { animation: br-hit-fend-r 0.42s cubic-bezier(0.2, 0.9, 0.3, 1); }
+.arena-photo.hit:not(.strike) .boss-rig:not(.rig-mugo):not(.rig-gopnik) .br-low-r { animation: br-hit-fend-l 0.42s cubic-bezier(0.2, 0.9, 0.3, 1); }
 @keyframes br-hit-fend-l { 25% { transform: rotate(-13deg); } 55% { transform: rotate(8deg); } 80% { transform: rotate(-4deg); } }
 @keyframes br-hit-fend-r { 25% { transform: rotate(13deg); } 55% { transform: rotate(-8deg); } 80% { transform: rotate(4deg); } }
 @media (prefers-reduced-motion: reduce) { .arena-photo.hit .boss-rig :is(.br-arm, .br-low, .br-fist-l, .br-fist-r) { animation: none; } }
@@ -6035,3 +6035,60 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .rd-pops { position: absolute; left: 0; right: 0; top: 38%; height: 0; pointer-events: none; }
 .rd-fight .fight-bg > img.rd-hitbg { animation: rd-shake 0.25s ease-out; }
 .rd-fight-r { display: inline-flex; align-items: center; gap: 3px; color: #fff; text-shadow: 0 1px 2px #000; }
+
+/* Гопник — the defender of the raid buildings (tools/boss/assemble-gopnik.py), shown down to the hips.
+   His left arm (on the right of the picture, the forearm across the belly): the shoulder drifts slowly, the forearm
+   works hard at the elbow, the fist snaps after it a beat late at the wrist.
+   His right arm (on the left, hanging out): two sharp punches, then a breather with the arm only swaying, then again. */
+.rig-gopnik .br-breath { animation-duration: 3.4s; }
+.rig-gopnik .br-arm-r { animation: gp-sh-r 4.8s ease-in-out infinite; }
+.rig-gopnik .br-low-r { animation: gp-el-r 2.4s infinite; }
+.rig-gopnik .br-hand-r { animation: gp-fi-r 2.4s infinite 0.12s; }
+.rig-gopnik .br-arm-l { animation: gp-sh-l 3.6s infinite; }
+.rig-gopnik .br-low-l { animation: gp-el-l 3.6s infinite; }
+.rig-gopnik .br-hand-l { animation: gp-fi-l 3.6s infinite 0.09s; }
+@keyframes gp-sh-r { 0%, 100% { transform: rotate(0deg); } 35% { transform: rotate(-4deg); } 70% { transform: rotate(2.5deg); } }
+@keyframes gp-el-r {
+  0%, 44%, 100% { transform: rotate(0deg); animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.4); }
+  9%, 31% { transform: rotate(30deg); animation-timing-function: cubic-bezier(0.2, 0.8, 0.4, 1); }
+  20% { transform: rotate(5deg); animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.4); }
+  62% { transform: rotate(9deg); animation-timing-function: ease-in-out; }
+  80% { transform: rotate(-3deg); animation-timing-function: ease-in-out; } }
+@keyframes gp-fi-r {
+  0%, 44%, 100% { transform: rotate(0deg) scale(1); animation-timing-function: cubic-bezier(0.7, 0, 0.9, 0.3); }
+  9%, 31% { transform: rotate(-18deg) scale(1.3); animation-timing-function: cubic-bezier(0.15, 0.85, 0.35, 1); }
+  20% { transform: rotate(6deg) scale(1); animation-timing-function: cubic-bezier(0.7, 0, 0.9, 0.3); }
+  62% { transform: rotate(-6deg) scale(1.05); animation-timing-function: ease-in-out; }
+  80% { transform: rotate(3deg) scale(1); animation-timing-function: ease-in-out; } }
+@keyframes gp-sh-l {
+  0%, 25% { transform: rotate(0deg); animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.4); }
+  5%, 18% { transform: rotate(-8deg); animation-timing-function: cubic-bezier(0.2, 0.8, 0.4, 1); }
+  11% { transform: rotate(-1deg); animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.4); }
+  50% { transform: rotate(2deg); animation-timing-function: ease-in-out; }
+  75% { transform: rotate(-2deg); animation-timing-function: ease-in-out; }
+  100% { transform: rotate(0deg); } }
+@keyframes gp-el-l {
+  0%, 25% { transform: rotate(0deg); animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.4); }
+  5%, 18% { transform: rotate(30deg); animation-timing-function: cubic-bezier(0.2, 0.8, 0.4, 1); }
+  11% { transform: rotate(3deg); animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.4); }
+  55% { transform: rotate(6deg); animation-timing-function: ease-in-out; }
+  80% { transform: rotate(-2deg); animation-timing-function: ease-in-out; }
+  100% { transform: rotate(0deg); } }
+@keyframes gp-fi-l {
+  0%, 25% { transform: rotate(0deg) scale(1); animation-timing-function: cubic-bezier(0.7, 0, 0.9, 0.3); }
+  5%, 18% { transform: rotate(-15deg) scale(1.3); animation-timing-function: cubic-bezier(0.15, 0.85, 0.35, 1); }
+  11% { transform: rotate(5deg) scale(1); animation-timing-function: cubic-bezier(0.7, 0, 0.9, 0.3); }
+  60% { transform: rotate(-4deg) scale(1); animation-timing-function: ease-in-out; }
+  100% { transform: rotate(0deg) scale(1); } }
+/* a hit does not stop his boxing: the head jerks back */
+.arena-photo.hit .rig-gopnik .br-arm-r { animation-duration: 4.8s; }
+.arena-photo.hit .rig-gopnik :is(.br-low-r, .br-hand-r) { animation-duration: 2.4s; }
+.arena-photo.hit .rig-gopnik :is(.br-arm-l, .br-low-l, .br-hand-l) { animation-duration: 3.6s; }
+.arena-photo.ouch .rig-gopnik .br-head { animation: mg-head-hit 0.42s ease-out; }
+@media (prefers-reduced-motion: reduce) { .rig-gopnik :is(.br-arm, .br-low, .br-hand) { animation: none; } }
+/* the raid fight: he stands in the room, down to the hips */
+.rd-fight .arena.full .arena-photo.rd-defender-fight { left: -4%; right: -4%; top: 64px; bottom: 120px;
+  -webkit-mask-image: linear-gradient(to bottom, #000 84%, transparent); mask-image: linear-gradient(to bottom, #000 84%, transparent); }
+/* the attack page: he waits behind the window */
+.rd-defender { position: absolute; left: 17%; top: 10.5%; width: 65.5%; height: 29%; overflow: hidden; pointer-events: none; }
+.rd-defender-in { position: absolute; left: 50%; top: 8%; width: 62%; aspect-ratio: 850 / 875; transform: translateX(-50%); }

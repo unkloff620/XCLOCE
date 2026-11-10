@@ -48,6 +48,9 @@ PIVOT_BY_BOSS = {
     "knyaz": {"head": [533.0, 320.0], "handL": [132.0, 515.0], "cover": [98.5, 645.5]},
     # Вадим (2000×3000 sheet, tools/boss/assemble-vadim.py): neck, shoulders, elbows, wrists; the key bunch in the left
     # fist — each piece hangs on its pin (the big ring with its split ring in the key's hole, the fob and the key on the ring)
+    # Гопник (Ходки, tools/boss/assemble-gopnik.py): neck, shoulders, elbows, wrists — the middles of the pieces' overlaps
+    "gopnik": {"head": [475.0, 260.0], "armL": [365.0, 345.0], "lowL": [307.0, 509.0], "handL": [145.5, 648.0],
+               "armR": [598.0, 345.0], "lowR": [627.5, 501.0], "handR": [449.5, 583.5]},
     "vadim": {"head": [510.0, 370.0], "armL": [400.0, 460.0], "lowL": [272.0, 555.0], "handL": [148.0, 508.0],
               "armR": [665.0, 450.0], "lowR": [750.0, 570.0], "handR": [858.0, 492.0],
               "keyRing": [98.8, 552.2], "keyFob": [97.5, 636.3], "keyKey": [118.3, 626.6],

@@ -13,6 +13,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api, type Tray } from "../api.ts";
 import { Bar } from "../ui.tsx";
 import { ItemArt } from "../art/items.tsx";
+import { BossRig } from "../art/boss-rig.tsx";
 import { MultPicker, WeaponTray, type Mult } from "./boss.tsx";
 import { usePageReady } from "../route-loader.tsx";
 import { useGame } from "../store.tsx";
@@ -155,6 +156,9 @@ export function RaidYardScreen({ id }: { id: string }) {
   );
 }
 
+/** the defender in every raid building (a boss rig of his own, src/client/art/boss-rig-data.ts) */
+const RAID_BOSS = "gopnik";
+
 interface RaidHit { weapon: string; damage: number; crit: boolean; count: number; left: number | null; readyAt: number | null; status: "active" | "won"; hp: number; hpMax: number;
   reward?: { xp?: number; currencies?: Record<string, number> }; buildingTaken?: boolean; yardTaken?: boolean }
 
@@ -171,6 +175,8 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
   const [mult, setMult] = useState<Mult>(1);
   const [pops, setPops] = useState<{ id: number; text: string; crit: boolean }[]>([]);
   const [shake, setShake] = useState(0);
+  // the defender flinches for a moment after each hit (the arena's "hit" / "ouch", like a boss)
+  const [hitFx, setHitFx] = useState(false);
   const y = raidYardById(yard);
   const b = y?.buildings.find((x) => x.id === building);
   if (!y || !b) return null;
@@ -191,6 +197,8 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
     if (!r2) return;
     haptic.tap();
     setShake((x) => x + 1);
+    setHitFx(true);
+    window.setTimeout(() => setHitFx(false), 420);
     const id = Date.now() + Math.random();
     setPops((p) => [...p.slice(-4), { id, text: `−${r2.damage.toLocaleString("ru-RU")}`, crit: r2.crit }]);
     window.setTimeout(() => setPops((p) => p.filter((x) => x.id !== id)), 1100);
@@ -223,6 +231,10 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
           <div className="arena-top">
             <Bar value={fight.hp} max={fight.hpMax} tone="red" height={24} label={`${fight.hp.toLocaleString("ru-RU")} / ${fight.hpMax.toLocaleString("ru-RU")}`} />
           </div>
+          {/* the defender of every building: Гопник (tools/boss/assemble-gopnik.py), down to the hips, boxing */}
+          <div className={`arena-photo rd-defender-fight ${hitFx ? "hit ouch" : ""}`}>
+            <BossRig id={RAID_BOSS} hpShare={fight.hp / Math.max(1, fight.hpMax)} />
+          </div>
           <div className="rd-pops">{pops.map((p) => <b key={p.id} className={`rd-pop ${p.crit ? "crit" : ""}`}>{p.text}{p.crit ? " КРИТ" : ""}</b>)}</div>
         </div>
         <div className="fight-bottom">
@@ -245,6 +257,8 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
       <div className="rd-scene">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img key={shake} className={`rd-room ${shake ? "hit" : ""}`} src={`${A}/attack-room.webp`} alt="" draggable={false} />
+        {/* he waits behind the window */}
+        <div className="rd-defender"><div className="rd-defender-in"><BossRig id={RAID_BOSS} /></div></div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="rd-map-bg rd-wall" src={`${A}/attack-wall.webp`} alt="" draggable={false} />
         <div className="rd-board">
