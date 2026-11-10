@@ -14,6 +14,8 @@ import { api, type Tray } from "../api.ts";
 import { Bar } from "../ui.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { BossRig } from "../art/boss-rig.tsx";
+import { useFx } from "../fx/attack.tsx";
+import { setMusicTrack, sfx, weaponSfx } from "../sound.ts";
 import { MultPicker, WeaponTray, type Mult } from "./boss.tsx";
 import { usePageReady } from "../route-loader.tsx";
 import { useGame } from "../store.tsx";
@@ -177,6 +179,18 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
   const [shake, setShake] = useState(0);
   // the defender flinches for a moment after each hit (the arena's "hit" / "ouch", like a boss)
   const [hitFx, setHitFx] = useState(false);
+  // the weapon flies at him like at a boss; he flinches when it lands
+  const { play, layer } = useFx(useCallback(() => {
+    setHitFx(true);
+    window.setTimeout(() => setHitFx(false), 420);
+  }, []));
+  // battle music while my fight for this building is on
+  const fighting = !!(v?.fight && v.fight.building === building);
+  useEffect(() => {
+    if (!fighting) return;
+    setMusicTrack("battle");
+    return () => setMusicTrack("calm");
+  }, [fighting]);
   const y = raidYardById(yard);
   const b = y?.buildings.find((x) => x.id === building);
   if (!y || !b) return null;
@@ -193,18 +207,26 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
   const hit = async (weapon: string) => {
     if (!v || !fight) return;
     const w = itemById(weapon);
+    // the sound and the flying weapon on the tap, like in a boss fight: heavier weapons sound heavier (10 dmg → 0, 500+ → 1)
+    if (w?.weapon) {
+      haptic.hit();
+      weaponSfx(w.id, Math.min(1, Math.log10(Math.max(10, w.weapon.damage) / 10) / Math.log10(50)));
+      play(weapon, w.weapon.damage, w.weapon.action, true);
+    }
     const r2 = await act<RaidHit>("raid_attack", { weapon, count: w?.weapon?.kind === "consumable" ? mult : 1 });
-    if (!r2) return;
-    haptic.tap();
+    if (!r2) { sfx("error"); return; }
+    if (r2.crit) { haptic.heavy(); sfx("crit"); }
     setShake((x) => x + 1);
-    setHitFx(true);
-    window.setTimeout(() => setHitFx(false), 420);
     const id = Date.now() + Math.random();
-    setPops((p) => [...p.slice(-4), { id, text: `−${r2.damage.toLocaleString("ru-RU")}`, crit: r2.crit }]);
-    window.setTimeout(() => setPops((p) => p.filter((x) => x.id !== id)), 1100);
+    // the flying weapon shows the damage; a crit also flashes its real number
+    if (r2.crit) {
+      setPops((p) => [...p.slice(-4), { id, text: `−${r2.damage.toLocaleString("ru-RU")}`, crit: true }]);
+      window.setTimeout(() => setPops((p) => p.filter((x) => x.id !== id)), 1100);
+    }
     setV({ ...v, fight: r2.status === "won" ? null : { ...fight, hp: r2.hp }, weapons: v.weapons.map((x) => (x.id === weapon ? { ...x, qty: r2.left ?? x.qty, readyAt: r2.readyAt ?? x.readyAt } : x)) });
     if (r2.status === "won") {
       haptic.big();
+      sfx("victory");
       toast(r2.yardTaken ? "Двор захвачен! Флаг — в инвентаре" : r2.buildingTaken ? `${BUILDING_NAMES[b.kind]} захвачен кланом!` : `Победа! +${(r2.reward?.xp ?? 0).toLocaleString("ru-RU")} авторитета, +${(r2.reward?.currencies?.RUB ?? 0).toLocaleString("ru-RU")} ₽`);
       await load();
       if (r2.buildingTaken) router.push(`/clans/raids/${y.id}`);
@@ -235,6 +257,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
           <div className={`arena-photo rd-defender-fight ${hitFx ? "hit ouch" : ""}`}>
             <BossRig id={RAID_BOSS} hpShare={fight.hp / Math.max(1, fight.hpMax)} />
           </div>
+          {layer}
           <div className="rd-pops">{pops.map((p) => <b key={p.id} className={`rd-pop ${p.crit ? "crit" : ""}`}>{p.text}{p.crit ? " КРИТ" : ""}</b>)}</div>
         </div>
         <div className="fight-bottom">
