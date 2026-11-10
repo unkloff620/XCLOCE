@@ -17,7 +17,7 @@ import { Icon } from "../art/icons.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { haptic } from "../telegram.ts";
 import { sfx } from "../sound.ts";
-import { BAG_TATTOO_CHANCE, FORTUNE_BAGS, KEYCAP_ID, SECTORS, TICKET_ID, WHEEL_R, spokeBend, type CupKind, type Sector } from "../../content/fortune.ts";
+import { BAG_TATTOO_CHANCE, FORTUNE_BAGS, JACKPOT_ADD, JACKPOT_SEED, KEYCAP_ID, TICKET_PRICE, SECTORS, TICKET_ID, WHEEL_R, spokeBend, type CupKind, type Sector } from "../../content/fortune.ts";
 
 const A = "/assets/fortune";
 const WHEEL_IMG = `${A}/lid-v1.webp`;
@@ -562,10 +562,10 @@ function BuyTickets({ price, onClose, onDone }: { price: number; onClose: () => 
 function FortuneHelp() {
   return (
     <Help topic="fortune" title="Колесо удачи">
-      <p>Одна прокрутка — один билет. Билеты падают из «Ящика ништяков» в магазине или покупаются здесь по 10 $ (кнопка «+»).</p>
-      <p>Каждая прокрутка любого игрока добавляет 10 $ к общему джекпоту.</p>
+      <p>Одна прокрутка — один билет. Билеты падают из «Ящика ништяков» в магазине или покупаются здесь по {TICKET_PRICE} $ (кнопка «+»).</p>
+      <p>Каждая прокрутка любого игрока добавляет {JACKPOT_ADD} $ к общему джекпоту.</p>
       <p>На колесе: оружие, энергетик, рубли, доллары, билет, кнопки клавиатуры, опыт колеса, пустой сектор и <b>ПРИЗ</b>.</p>
-      <p><b>ПРИЗ</b> — игра в чашки: девять чашек, под каждой приз (рубли, оружие, доллары, фишки, ящик ништяков, кнопки), под одной — джекпот. Чашки показывают призы, накрываются и перемешиваются — выбери одну. Кто сорвал джекпот, того видно наверху, а джекпот начинается заново с 300 $.</p>
+      <p><b>ПРИЗ</b> — игра в чашки: девять чашек, под каждой приз (рубли, оружие, доллары, фишки, ящик ништяков, кнопки), под одной — джекпот. Чашки показывают призы, накрываются и перемешиваются — выбери одну. Кто сорвал джекпот, того видно наверху, а джекпот начинается заново с {JACKPOT_SEED} $.</p>
       <p>Кнопки клавиатуры копятся — за них будут открываться коробки с наколками.</p>
       <p>«Автопрокрутка» — включи, и колесо крутится само, билет за билетом, пока они не кончатся (остановится на «ПРИЗ» или когда выключишь).</p>
     </Help>

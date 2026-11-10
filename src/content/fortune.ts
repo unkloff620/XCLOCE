@@ -13,7 +13,7 @@ export const KEYCAP_ID = "keycap";
 /** a ticket in the shop of the wheel, roubles */
 export const TICKET_PRICE = 10;
 /** every spin adds this to the jackpot */
-export const JACKPOT_ADD = 10;
+export const JACKPOT_ADD = 3;
 /** the jackpot starts again from this after it is won */
 export const JACKPOT_SEED = 300;
 /** «Ящик ништяков» in the shop: this many tickets a box, and one more with the chance `extra` */
