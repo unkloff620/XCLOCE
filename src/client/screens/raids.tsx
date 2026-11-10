@@ -21,6 +21,8 @@ import { WeaponShopWindow } from "./shop.tsx";
 import { TalentWindow } from "./talents.tsx";
 import { CritBurn, preloadCritBanner } from "../art/crit-burn.tsx";
 import { GainLine, Modal } from "../ui.tsx";
+import { BossPhoto } from "./boss-parts.tsx";
+import type { BossDef } from "../../content/bosses.ts";
 import { RUSH_PRICE } from "../../content/items.ts";
 import { clock } from "../format.ts";
 import { usePageReady } from "../route-loader.tsx";
@@ -166,6 +168,8 @@ export function RaidYardScreen({ id }: { id: string }) {
 
 /** the defender in every raid building (a boss rig of his own, src/client/art/boss-rig-data.ts) */
 const RAID_BOSS = "gopnik";
+/** the defender as a boss for the win card (BossPhoto: his live rig knocked out, stars over the head) */
+const RAID_BOSS_DEF = { id: RAID_BOSS, name: "Гопник", photo: {}, theme: { accent: "#e6b65a", a: "#3a2614" } } as unknown as BossDef;
 
 interface RaidHit { weapon: string; damage: number; crit: boolean; count: number; left: number | null; readyAt: number | null; status: "active" | "won"; hp: number; hpMax: number;
   talentDamage: number; talentsGained: number;
@@ -277,10 +281,6 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
     await load();
     router.push(`/clans/raids/${y.id}`);
   };
-  const again = async () => {
-    setWon(null);
-    await load();
-  };
 
   // the fight takes the whole screen like a boss fight: the building's room, the HP on top, the weapons at the bottom
   if (fight && v) {
@@ -339,20 +339,22 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
           </Modal>
         )}
         {talentsOpen && <TalentWindow onClose={() => setTalentsOpen(false)} />}
+        {/* the win: the same card as after a boss — the beaten defender with the stamp, the rewards, «Забрать» → the yard */}
         {won && (
-          <Modal title={won.yardTaken ? "Двор захвачен!" : won.buildingTaken ? `${BUILDING_NAMES[b.kind]} захвачен!` : "Победа!"} onClose={() => void toYard()}>
-            <div className="col center rd-win" style={{ gap: 12 }}>
-              <span className="small center">
-                {won.yardTaken ? `Клан взял весь двор «${y.name}». Флаг — у каждого, кто здесь побеждал.`
-                  : won.buildingTaken ? "Клан набрал нужные победы — здание ваше."
-                  : `Гопник лёг. Побед клана: ${(prog?.wins ?? 0) + 1}/${prog?.need ?? "?"}`}
-              </span>
-              <GainLine r={won.reward} />
-              {won.yardGot && <GainLine r={won.yardGot} />}
-              <div className="row" style={{ gap: 8, width: "100%" }}>
-                {!won.buildingTaken && <button className="btn dark grow" onClick={() => void again()}>Ещё бой</button>}
-                <button className="btn gold grow" onClick={() => void toYard()}>Во двор</button>
+          <Modal onClose={() => void toYard()}>
+            <div className="result-win">
+              <div className="result-photo">
+                <BossPhoto boss={RAID_BOSS_DEF} round defeated />
               </div>
+              <div className="display result-name">{won.yardTaken ? "Двор захвачен!" : won.buildingTaken ? `${BUILDING_NAMES[b.kind]} захвачен!` : RAID_BOSS_DEF.name}</div>
+              <div className="muted small">
+                {won.yardTaken ? `Клан взял весь двор «${y.name}»` : won.buildingTaken ? "Здание теперь ваше" : <>Побед клана: <b style={{ color: "var(--ink)" }}>{(prog?.wins ?? 0) + 1}/{prog?.need ?? "?"}</b></>}
+              </div>
+              <div className="result-gains">
+                <GainLine r={won.reward} size={30} />
+                {won.yardGot && <GainLine r={won.yardGot} size={30} />}
+              </div>
+              <button className="btn gold big result-take" onClick={() => void toYard()}>Забрать</button>
             </div>
           </Modal>
         )}
