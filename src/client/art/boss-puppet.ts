@@ -223,8 +223,15 @@ export function usePuppet(wrap: RefObject<HTMLDivElement | null>, key: string, s
     const root = wrap.current;
     if (!root || !enabled) return;
     const svg = root.querySelector("svg") as SVGSVGElement | null;
-    const back = root.querySelector("canvas.br-pup-back") as HTMLCanvasElement | null;
-    const front = root.querySelector("canvas.br-pup-front") as HTMLCanvasElement | null;
+    // a canvas whose context was let go by the previous run (React's dev double mount) cannot draw again: a fresh copy
+    const fresh = (c: HTMLCanvasElement | null) => {
+      if (!c || c.dataset.lost !== "1") return c;
+      const n = c.cloneNode() as HTMLCanvasElement;
+      c.replaceWith(n);
+      return n;
+    };
+    const back = fresh(root.querySelector("canvas.br-pup-back") as HTMLCanvasElement | null);
+    const front = fresh(root.querySelector("canvas.br-pup-front") as HTMLCanvasElement | null);
     if (!svg || !back || !front) return;
     const B = setup(back), F = setup(front);
     if (!B || !F) return;
@@ -383,7 +390,10 @@ export function usePuppet(wrap: RefObject<HTMLDivElement | null>, key: string, s
       dead = true;
       cancelAnimationFrame(raf);
       delete root.dataset.on;
-      for (const L of layers) L.ctx.gl.getExtension("WEBGL_lose_context")?.loseContext();
+      for (const L of layers) {
+        L.ctx.gl.getExtension("WEBGL_lose_context")?.loseContext();
+        L.canvas.dataset.lost = "1";
+      }
     };
   }, [wrap, key, size.w, size.h, enabled]);
 }
