@@ -105,13 +105,15 @@ export function RaidsScreen() {
 }
 
 /** a building on the yard's ground; the one to attack now glows, a taken one carries the clan's flag */
-function Building({ b, target, taken, yard, clan }: { b: RaidBuilding; target: boolean; taken: boolean; yard: string; clan: RaidsView["clan"] }) {
+function Building({ b, target, taken, yard, clan, prog }: { b: RaidBuilding; target: boolean; taken: boolean; yard: string; clan: RaidsView["clan"]; prog?: { wins: number; need: number } }) {
   const router = useRouter();
   return (
     <button type="button" className={`rd-bld k-${b.kind} ${target ? "target" : ""} ${taken ? "taken" : ""}`} style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%`, zIndex: Math.round(b.y * 10), ["--pic" as string]: `url(${A}/b-${b.kind}.webp)` }}
       onClick={() => { haptic.tap(); if (target) router.push(`/clans/raids/${yard}/${b.id}`); }} aria-label={BUILDING_NAMES[b.kind]}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={`${A}/b-${b.kind}.webp`} alt="" draggable={false} />
+      {/* the one being taken: the clan's wins over it so far, small on its left */}
+      {target && prog && <span className="rd-bld-count">{prog.wins}/{prog.need}</span>}
       {/* taken: the clan's logo over its top-left corner */}
       {taken && <span className="rd-bld-logo">{clan ? <Emblem emblem={clan.emblem} color={clan.color} size={34} /> : <ItemArt id={flagId(1)} size={24} />}</span>}
     </button>
@@ -158,7 +160,7 @@ export function RaidYardScreen({ id }: { id: string }) {
         <img className="rd-map-bg" src={`${A}/yard-ground2.webp`} alt="" draggable={false} />
         {/* the main one first in the markup: it stands behind (higher on the picture) */}
         <YardLife />
-        {[...y.buildings].reverse().map((b) => <Building key={b.id} b={b} yard={y.id} clan={v?.clan ?? null} target={!!yv?.open && yv.target === b.id} taken={!!yv?.buildings.find((x) => x.id === b.id)?.taken} />)}
+        {[...y.buildings].reverse().map((b) => <Building key={b.id} b={b} yard={y.id} clan={v?.clan ?? null} target={!!yv?.open && yv.target === b.id} taken={!!yv?.buildings.find((x) => x.id === b.id)?.taken} prog={yv?.buildings.find((x) => x.id === b.id)} />)}
       </div>
       <div className="title-row rd-title">
         <Link href="/clans/raids" className="back-btn" aria-label="К дворам">‹</Link>
