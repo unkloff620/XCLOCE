@@ -381,8 +381,8 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
           <span className="rd-board-w">Побед клана: <b className="num">{prog?.wins ?? 0}/{prog?.need ?? y.wins * (main ? 2 : 1)}</b>{prog?.taken ? " — захвачено" : ""}</span>
           <span className="rd-board-h">За каждую победу</span>
           <span className="rd-board-r">
-            <span><Icon name="xp" size={22} /><b className="num">+{r.xp.toLocaleString("ru-RU")}</b></span>
-            <span><Icon name="RUB" size={22} /><b className="num">+{r.rub.toLocaleString("ru-RU")}</b></span>
+            <span><Icon name="xp" size={26} /><b className="num">+{r.xp.toLocaleString("ru-RU")}</b></span>
+            <span><Icon name="RUB" size={26} /><b className="num">+{r.rub.toLocaleString("ru-RU")}</b></span>
           </span>
         </div>
       </div>

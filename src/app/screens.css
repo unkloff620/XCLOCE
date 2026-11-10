@@ -6033,11 +6033,13 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .rd-room { position: absolute; left: 17%; top: 10.5%; width: 65.5%; height: 29%; object-fit: cover; pointer-events: none; }
 .rd-wall { z-index: 2; }
 .rd-board { position: absolute; z-index: 3; left: 23.5%; right: 24%; top: 50%; height: 12.5%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #2b1c0e; text-align: center; }
-.rd-board-t { font-family: var(--font-display, inherit); font-size: 16px; text-transform: uppercase; }
-.rd-board-w { font-size: 12px; font-weight: 700; color: #7a1a0e; }
-.rd-board-h { font-family: var(--font-hand), cursive; font-size: 15px; color: #3a2a14; }
-.rd-board-r { display: flex; gap: 12px; }
-.rd-board-r > span { display: inline-flex; align-items: center; gap: 3px; font-size: 14px; }
+/* the words burned into the board: dark, big, with a light edge so they read on the wood */
+.rd-board-t { font-family: var(--font-display, inherit); font-size: 21px; text-transform: uppercase; color: #1a0f05; letter-spacing: 0.5px;
+  text-shadow: 0 1px 0 rgba(255, 230, 180, 0.55); }
+.rd-board-w { font-size: 15px; font-weight: 900; color: #8e0f05; text-shadow: 0 1px 0 rgba(255, 230, 180, 0.5); }
+.rd-board-h { font-family: var(--font-hand), cursive; font-size: 18px; font-weight: 700; color: #241606; text-shadow: 0 1px 0 rgba(255, 230, 180, 0.45); }
+.rd-board-r { display: flex; gap: 14px; }
+.rd-board-r > span { display: inline-flex; align-items: center; gap: 4px; font-size: 18px; font-weight: 900; color: #1a0f05; text-shadow: 0 1px 0 rgba(255, 230, 180, 0.5); }
 .rd-attack-foot { position: absolute; z-index: 4; left: 16px; right: 16px; bottom: calc(var(--bottom) + 18px); display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .rd-attack-go { max-width: 320px; }
 .rd-attack-note { font-size: 12px; color: #fff; text-shadow: 0 1px 2px #000; }
