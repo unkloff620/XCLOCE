@@ -5,7 +5,9 @@
  * No raid while a boss fight runs (and no boss fight while a raid fight runs).
  */
 import { GameError, type Queryable } from "../db.ts";
-import { grantReward, type Ctx, type Granted } from "../core.ts";
+import { grantReward, ledger, type Ctx, type Granted } from "../core.ts";
+import { autoSpendTalents } from "./home.ts";
+import { talentsForDamage } from "../../content/talents.ts";
 import type { Config } from "../config.ts";
 import { strike } from "./combat.ts";
 import { isAdminPlayer } from "./fortune.ts";
@@ -97,7 +99,18 @@ export async function raidAttack(ctx: Ctx, weaponId: string, want = 1, rush = fa
   const hit = await strike(ctx, w, w.weapon.kind === "consumable" ? want : 1, `raid:${f.building_id}`, rush);
   const damage = Number(f.damage) + hit.damage;
   await ctx.q.query("UPDATE raid_fights SET damage=$2, hits = hits + $3 WHERE id=$1", [f.id, damage, hit.count]);
-  const base = { weapon: w.id, damage: hit.damage, crit: hit.crit, crits: hit.crits, count: hit.count, left: hit.left, readyAt: hit.readyAt, phrase: hit.phrases[hit.phraseIdx] ?? "" };
+  // the damage counts for the talents like any boss damage (the counter of all time)
+  const [st] = await ctx.q.query<{ total_damage: number }>("SELECT total_damage FROM player_stats WHERE player_id=$1", [ctx.pid]);
+  const before = Number(st?.total_damage ?? 0);
+  const talentDamage = before + hit.damage;
+  const talentsGained = talentsForDamage(talentDamage) - talentsForDamage(before);
+  await ctx.q.query("UPDATE player_stats SET total_damage = total_damage + $2 WHERE player_id=$1", [ctx.pid, hit.damage]);
+  if (talentsGained > 0) {
+    await ctx.q.query("UPDATE players SET talents = talents + $2 WHERE id=$1", [ctx.pid, talentsGained]);
+    await ledger(ctx, "talent", "talent", talentsGained, `raid:${f.building_id}`);
+    await autoSpendTalents(ctx);
+  }
+  const base = { weapon: w.id, damage: hit.damage, crit: hit.crit, crits: hit.crits, count: hit.count, left: hit.left, readyAt: hit.readyAt, phrase: hit.phrases[hit.phraseIdx] ?? "", talentDamage, talentsGained, fightDamage: damage };
   if (damage < Number(f.hp_max)) return { ...base, status: "active" as const, hp: Number(f.hp_max) - damage, hpMax: Number(f.hp_max) };
 
   // the building is down: the player's reward, the clan's win

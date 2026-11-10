@@ -16,7 +16,13 @@ import { ItemArt } from "../art/items.tsx";
 import { BossRig } from "../art/boss-rig.tsx";
 import { useFx } from "../fx/attack.tsx";
 import { setMusicTrack, sfx, weaponSfx } from "../sound.ts";
-import { MultPicker, WeaponTray, type Mult } from "./boss.tsx";
+import { MultPicker, TalentProgress, WeaponTray, type Mult } from "./boss.tsx";
+import { WeaponShopWindow } from "./shop.tsx";
+import { TalentWindow } from "./talents.tsx";
+import { CritBurn, preloadCritBanner } from "../art/crit-burn.tsx";
+import { GainLine, Modal } from "../ui.tsx";
+import { RUSH_PRICE } from "../../content/items.ts";
+import { clock } from "../format.ts";
 import { usePageReady } from "../route-loader.tsx";
 import { useGame } from "../store.tsx";
 import { Icon } from "../art/icons.tsx";
@@ -162,7 +168,9 @@ export function RaidYardScreen({ id }: { id: string }) {
 const RAID_BOSS = "gopnik";
 
 interface RaidHit { weapon: string; damage: number; crit: boolean; count: number; left: number | null; readyAt: number | null; status: "active" | "won"; hp: number; hpMax: number;
-  reward?: { xp?: number; currencies?: Record<string, number> }; buildingTaken?: boolean; yardTaken?: boolean }
+  talentDamage: number; talentsGained: number;
+  reward?: Granted; buildingTaken?: boolean; yardTaken?: boolean; yardGot?: Granted | null }
+type Granted = Parameters<typeof GainLine>[0]["r"];
 
 /**
  * The attack on a building: a brick wall over the whole screen, the room behind its window (the defenders will stand
@@ -172,9 +180,20 @@ interface RaidHit { weapon: string; damage: number; crit: boolean; count: number
 export function RaidAttackScreen({ yard, building }: { yard: string; building: string }) {
   const { v, setV, load } = useRaids();
   usePageReady(!!v);
-  const { act, busy, toast } = useGame();
+  const { state, act, busy, toast } = useGame();
   const router = useRouter();
   const [mult, setMult] = useState<Mult>(1);
+  // everything of a boss fight: the talents' counter, the crit banner, the weapons shelf, «ударить сейчас» for dollars
+  const [talentDmg, setTalentDmg] = useState<number | null>(null);
+  const [talentPop, setTalentPop] = useState(0);
+  const [talentsOpen, setTalentsOpen] = useState(false);
+  const [critPop, setCritPop] = useState(0);
+  useEffect(() => preloadCritBanner(), []);
+  const [shopOpen, setShopOpen] = useState(false);
+  const [rushAsk, setRushAsk] = useState<{ id: string; name: string; left: number } | null>(null);
+  const [fleeAsk, setFleeAsk] = useState(false);
+  // the win: shown first, then «Во двор»
+  const [won, setWon] = useState<RaidHit | null>(null);
   const [pops, setPops] = useState<{ id: number; text: string; crit: boolean }[]>([]);
   const [shake, setShake] = useState(0);
   // the defender flinches for a moment after each hit (the arena's "hit" / "ouch", like a boss)
@@ -204,7 +223,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
     haptic.tap();
     if (await act("raid_start", { building: b.id })) await load();
   };
-  const hit = async (weapon: string) => {
+  const hit = async (weapon: string, rush = false) => {
     if (!v || !fight) return;
     const w = itemById(weapon);
     // the sound and the flying weapon on the tap, like in a boss fight: heavier weapons sound heavier (10 dmg → 0, 500+ → 1)
@@ -213,9 +232,9 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
       weaponSfx(w.id, Math.min(1, Math.log10(Math.max(10, w.weapon.damage) / 10) / Math.log10(50)));
       play(weapon, w.weapon.damage, w.weapon.action, true);
     }
-    const r2 = await act<RaidHit>("raid_attack", { weapon, count: w?.weapon?.kind === "consumable" ? mult : 1 });
-    if (!r2) { sfx("error"); return; }
-    if (r2.crit) { haptic.heavy(); sfx("crit"); }
+    const r2 = await act<RaidHit>("raid_attack", { weapon, count: w?.weapon?.kind === "consumable" ? mult : 1, ...(rush ? { rush: true } : {}) });
+    if (!r2) { haptic.err(); sfx("error"); return; }
+    if (r2.crit) { setCritPop(Date.now()); haptic.heavy(); sfx("crit"); }
     setShake((x) => x + 1);
     const id = Date.now() + Math.random();
     // the flying weapon shows the damage; a crit also flashes its real number
@@ -223,16 +242,45 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
       setPops((p) => [...p.slice(-4), { id, text: `−${r2.damage.toLocaleString("ru-RU")}`, crit: true }]);
       window.setTimeout(() => setPops((p) => p.filter((x) => x.id !== id)), 1100);
     }
-    setV({ ...v, fight: r2.status === "won" ? null : { ...fight, hp: r2.hp }, weapons: v.weapons.map((x) => (x.id === weapon ? { ...x, qty: r2.left ?? x.qty, readyAt: r2.readyAt ?? x.readyAt } : x)) });
+    setTalentDmg(r2.talentDamage);
+    if (r2.talentsGained > 0) {
+      haptic.ok();
+      sfx("coin");
+      toast(<span className="gain-line"><span className="gain"><Icon name="talent" size={26} />+{r2.talentsGained}</span></span>, "ok");
+      setTalentPop(Date.now());
+    }
     if (r2.status === "won") {
       haptic.big();
       sfx("victory");
-      toast(r2.yardTaken ? "Двор захвачен! Флаг — в инвентаре" : r2.buildingTaken ? `${BUILDING_NAMES[b.kind]} захвачен кланом!` : `Победа! +${(r2.reward?.xp ?? 0).toLocaleString("ru-RU")} авторитета, +${(r2.reward?.currencies?.RUB ?? 0).toLocaleString("ru-RU")} ₽`);
-      await load();
-      if (r2.buildingTaken) router.push(`/clans/raids/${y.id}`);
+      // the fight stays on the screen under the win window; the yard is loaded when the window is closed
+      setV({ ...v, fight: { ...fight, hp: 0 }, weapons: v.weapons.map((x) => (x.id === weapon ? { ...x, qty: r2.left ?? x.qty, readyAt: r2.readyAt ?? x.readyAt } : x)) });
+      setWon(r2);
+      return;
     }
+    setV({ ...v, fight: { ...fight, hp: r2.hp }, weapons: v.weapons.map((x) => (x.id === weapon ? { ...x, qty: r2.left ?? x.qty, readyAt: r2.readyAt ?? x.readyAt } : x)) });
   };
-  const flee = async () => { if (await act("raid_flee", {})) await load(); };
+  const flee = async () => {
+    if (!fleeAsk) {
+      setFleeAsk(true);
+      window.setTimeout(() => setFleeAsk(false), 3000);
+      return;
+    }
+    setFleeAsk(false);
+    if (await act("raid_flee", {})) await load();
+  };
+  const closeShop = () => {
+    setShopOpen(false);
+    void load();
+  };
+  const toYard = async () => {
+    setWon(null);
+    await load();
+    router.push(`/clans/raids/${y.id}`);
+  };
+  const again = async () => {
+    setWon(null);
+    await load();
+  };
 
   // the fight takes the whole screen like a boss fight: the building's room, the HP on top, the weapons at the bottom
   if (fight && v) {
@@ -261,16 +309,53 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
           <div className="rd-pops">{pops.map((p) => <b key={p.id} className={`rd-pop ${p.crit ? "crit" : ""}`}>{p.text}{p.crit ? " КРИТ" : ""}</b>)}</div>
         </div>
         <div className="fight-bottom">
+          {critPop > 0 && <CritBurn key={critPop} className="crit-burn" onDone={() => setCritPop(0)} />}
           <MultPicker mult={mult} setMult={setMult} />
           <div className="row fight-bar">
-            <span className="small rd-fight-r"><Icon name="xp" size={16} />+{r.xp.toLocaleString("ru-RU")} <Icon name="RUB" size={16} />+{r.rub.toLocaleString("ru-RU")} за победу</span>
+            <TalentProgress dmg={talentDmg ?? state?.player.talentDamage ?? 0} pop={talentPop} share={(1 - fight.hp / Math.max(1, fight.hpMax)) * 100} onOpen={() => setTalentsOpen(true)} />
+            <span className="small rd-fight-r"><Icon name="xp" size={16} />+{r.xp.toLocaleString("ru-RU")} <Icon name="RUB" size={16} />+{r.rub.toLocaleString("ru-RU")}</span>
             <span className="grow" />
-            <button className="btn sm dark" onClick={flee} disabled={busy === "raid_flee"}>Уйти</button>
+            <button className={`btn sm ${fleeAsk ? "red" : "dark"}`} onClick={flee} disabled={busy === "raid_flee" || !!won}>{fleeAsk ? "Точно?" : "Уйти"}</button>
           </div>
-          <WeaponTray tray={v.weapons} mult={mult} disabled={busy === "raid_attack"} onHit={hit}
-            onCooldown={(name, left) => toast(`${name} перезаряжается: ещё ${Math.ceil(left / 60_000)} мин`)}
-            onBuy={() => toast("Оружие — в магазине")} />
+          <WeaponTray tray={v.weapons} mult={mult} disabled={busy === "raid_attack" || !!won} onHit={(id) => void hit(id)}
+            onCooldown={(name, left, id) => { haptic.tap(); setRushAsk({ id, name, left }); }}
+            onBuy={() => setShopOpen(true)} />
         </div>
+        {shopOpen && <WeaponShopWindow onClose={closeShop} />}
+        {rushAsk && (
+          <Modal title={`${rushAsk.name} перезаряжается`} onClose={() => setRushAsk(null)}>
+            <div className="col center" style={{ gap: 12 }}>
+              <ItemArt id={rushAsk.id} size={72} />
+              <span className="small center">Ещё {clock(rushAsk.left)}. Ударить сейчас за <b>{RUSH_PRICE.amount} $</b>? После удара — снова перезарядка.</span>
+              <div className="row" style={{ gap: 8, width: "100%" }}>
+                <button className="btn dark grow" onClick={() => setRushAsk(null)}>Отмена</button>
+                <button className="btn gold grow" disabled={(state?.wallet.USD ?? 0) < RUSH_PRICE.amount}
+                  onClick={() => { const id = rushAsk.id; setRushAsk(null); void hit(id, true); }}>
+                  Ударить за {RUSH_PRICE.amount} $
+                </button>
+              </div>
+              {(state?.wallet.USD ?? 0) < RUSH_PRICE.amount && <span className="tiny" style={{ color: "#ff8a9e" }}>Не хватает долларов</span>}
+            </div>
+          </Modal>
+        )}
+        {talentsOpen && <TalentWindow onClose={() => setTalentsOpen(false)} />}
+        {won && (
+          <Modal title={won.yardTaken ? "Двор захвачен!" : won.buildingTaken ? `${BUILDING_NAMES[b.kind]} захвачен!` : "Победа!"} onClose={() => void toYard()}>
+            <div className="col center rd-win" style={{ gap: 12 }}>
+              <span className="small center">
+                {won.yardTaken ? `Клан взял весь двор «${y.name}». Флаг — у каждого, кто здесь побеждал.`
+                  : won.buildingTaken ? "Клан набрал нужные победы — здание ваше."
+                  : `Гопник лёг. Побед клана: ${(prog?.wins ?? 0) + 1}/${prog?.need ?? "?"}`}
+              </span>
+              <GainLine r={won.reward} />
+              {won.yardGot && <GainLine r={won.yardGot} />}
+              <div className="row" style={{ gap: 8, width: "100%" }}>
+                {!won.buildingTaken && <button className="btn dark grow" onClick={() => void again()}>Ещё бой</button>}
+                <button className="btn gold grow" onClick={() => void toYard()}>Во двор</button>
+              </div>
+            </div>
+          </Modal>
+        )}
       </div>
     );
   }

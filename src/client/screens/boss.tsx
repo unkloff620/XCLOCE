@@ -626,7 +626,7 @@ export function BossScreen({ id }: { id: string }) {
 }
 
 /** Boss damage of all time towards the next talent (the counter carries over from fight to fight). */
-function TalentProgress({ dmg, pop, share, onOpen }: { dmg: number; pop: number; share: number; onOpen: () => void }) {
+export function TalentProgress({ dmg, pop, share, onOpen }: { dmg: number; pop: number; share: number; onOpen: () => void }) {
   const k = talentsForDamage(dmg);
   const from = talentThreshold(k);
   const to = talentThreshold(k + 1);

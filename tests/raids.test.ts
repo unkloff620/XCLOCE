@@ -27,6 +27,9 @@ describe("«Ходки»", () => {
     const h = await act(db, p, "raid_attack", { weapon: "rug-pull-gun", count: 1000 }, T);
     expect(h.result.status).toBe("won");
     expect(await wallet(db, p, "RUB")).toBe(rub + buildingReward(1, false).rub);
+    // the raid damage counts for the talents like any boss damage
+    expect(h.result.talentDamage).toBeGreaterThanOrEqual(h.result.damage);
+    expect(h.result.talentsGained).toBeGreaterThan(0);
     const [pr] = await db.query<{ wins: number }>("SELECT wins FROM raid_progress WHERE clan_id=$1 AND building_id=$2", [clan, yard.buildings[0].id]);
     expect(Number(pr.wins)).toBe(1);
     // no boss fight while a raid fight runs
