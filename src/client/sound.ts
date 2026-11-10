@@ -8,7 +8,7 @@
  * The mute switch is remembered on this device.
  */
 
-export type Sfx = "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" | "upgrade" | "levelup" | "error" | "win" | "step" | "door" | "locked"
+export type Sfx = "spin" | "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" | "upgrade" | "levelup" | "error" | "win" | "step" | "door" | "locked"
   /* mini-games: dice in the cup and on the table, a card flip, a deal, poker chips, a squashed roach, a zonk */
   | "shake" | "dice" | "card" | "deal" | "chips" | "splat" | "zonk"
   /* a profile: «Ништяк!» for a pumped biceps (public/assets/sound/nishtyak-4.mp3, a hoarse prison voice), a spit, a fist fight */
@@ -239,6 +239,8 @@ const SAMPLE_URLS = {
   // the key «тык» on every button and a page turned (the player's recordings, tools/sound/source/tap.mp3, page.mp3)
   tap: "/assets/sound/tap.mp3",
   page: "/assets/sound/page.mp3",
+  // the wheel of «Колесо удачи» turning (the player's recording, tools/sound/source/fortune-spin.mp3, cut to the 1.5 s turn)
+  fortunespin: "/assets/sound/fortune-spin.mp3",
   door: "/assets/sound/door.mp3",
   keys: "/assets/sound/keys.mp3",
   punch: "/assets/sound/punch.mp3",
@@ -436,6 +438,10 @@ export function sfx(name: Sfx, power = 0.5) {
         const at = t + 0.25 + k * 0.32;
         if (!sample(a, "punch", at, 0.7, 0.9 + k * 0.08)) noise(a, at, 0.12, { freq: 900, vol: 0.5 });
       }
+      break;
+    case "spin":
+      if (sample(a, "fortunespin", t, 0.7)) break;
+      for (let i = 0; i < 14; i++) noise(a, t + 1.4 * (1 - Math.pow(1 - i / 14, 1.6)), 0.02, { freq: 2200, type: "bandpass", q: 3, vol: 0.25 });
       break;
     case "tap":
       if (sample(a, "tap", t, 0.6)) break;

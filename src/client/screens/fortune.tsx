@@ -188,7 +188,7 @@ export function FortuneScreen() {
       return next;
     });
     setTurning(true);
-    sfx("tap");
+    sfx("spin");
     await new Promise<void>((res) => { timer.current = window.setTimeout(res, SPIN_MS); });
     setTurning(false);
     setSpinning(false);
