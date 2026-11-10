@@ -5921,7 +5921,21 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .fo-bags-dots { display: flex; gap: 6px; }
 .fo-bags-dots i { width: 8px; height: 8px; border-radius: 50%; background: rgba(255, 255, 255, 0.3); }
 .fo-bags-dots i.on { background: #f5ec5c; }
-.fo-bags-stage { width: 100%; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.fo-bags-stage { width: 100%; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: space-between; gap: 6px; position: relative; overflow: hidden; }
+/* the bags slide when turned: in from the side they come from, the old one out the other way (it lies over the new one's place) */
+.fo-bags-arrow { position: relative; z-index: 2; }
+.fo-bags-pic-wrap { display: contents; }
+.fo-bags-bag.in-r { animation: fo-bag-in-r 0.38s cubic-bezier(0.2, 0.85, 0.3, 1) both; }
+.fo-bags-bag.in-l { animation: fo-bag-in-l 0.38s cubic-bezier(0.2, 0.85, 0.3, 1) both; }
+.fo-bags-bag.fo-bags-out-bag { position: absolute; left: 50px; right: 50px; top: 0; bottom: 0; pointer-events: none; }
+.fo-bags-out-bag.out-l { animation: fo-bag-out-l 0.38s cubic-bezier(0.5, 0, 0.8, 0.4) both; }
+.fo-bags-out-bag.out-r { animation: fo-bag-out-r 0.38s cubic-bezier(0.5, 0, 0.8, 0.4) both; }
+.fo-bags-bag.drag { transition: none; }
+@keyframes fo-bag-in-r { from { transform: translateX(105%) rotate(8deg); opacity: 0.2; } to { transform: none; opacity: 1; } }
+@keyframes fo-bag-in-l { from { transform: translateX(-105%) rotate(-8deg); opacity: 0.2; } to { transform: none; opacity: 1; } }
+@keyframes fo-bag-out-l { to { transform: translateX(-105%) rotate(-8deg); opacity: 0; } }
+@keyframes fo-bag-out-r { to { transform: translateX(105%) rotate(8deg); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .fo-bags-bag.in-r, .fo-bags-bag.in-l, .fo-bags-out-bag { animation-duration: 0.01s; } }
 .fo-bags-bag { position: relative; flex: 1; min-width: 0; display: flex; justify-content: center; align-items: center; }
 .fo-bags-can { position: absolute; left: 50%; bottom: 4%; transform: translateX(-50%); display: flex; gap: 6px; padding: 5px 8px; border-radius: 16px; background: rgba(12, 13, 16, 0.72); border: 1px solid rgba(255, 255, 255, 0.25); }
 .fo-bags-can > span { display: inline-flex; width: 30px; height: 30px; align-items: center; justify-content: center; }

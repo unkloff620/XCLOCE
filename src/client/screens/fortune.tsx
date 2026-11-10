@@ -333,9 +333,27 @@ function Bags({ keycaps, onClose }: { keycaps: number; onClose: () => void }) {
   const [got, setGot] = useState<BagOpen | null>(null);
   const [shake, setShake] = useState(0);
   const touch = useRef<number | null>(null);
+  // the bags slide: the new one comes in from the side it is on, the old one goes out the other way; a swipe drags the
+  // bag after the finger first
+  const [turn, setTurn] = useState<{ n: number; dir: 1 | -1; from: number } | null>(null);
+  const [drag, setDrag] = useState(0);
   const b = FORTUNE_BAGS[i];
   const set = TATTOO_SETS.find((x) => x.id === b.set);
-  const go = (d: number) => { setI((v) => (v + d + FORTUNE_BAGS.length) % FORTUNE_BAGS.length); setGot(null); haptic.tap(); };
+  const go = (d: 1 | -1) => {
+    setTurn((t) => ({ n: (t?.n ?? 0) + 1, dir: d, from: i }));
+    setI((v) => (v + d + FORTUNE_BAGS.length) % FORTUNE_BAGS.length);
+    setGot(null);
+    haptic.tap();
+  };
+  useEffect(() => {
+    if (!turn) return;
+    const t = window.setTimeout(() => setTurn((x) => (x && x.n === turn.n ? { ...x, from: -1 } : x)), 380);
+    return () => clearTimeout(t);
+  }, [turn]);
+  const bagPic = (k: number, extra = "") => (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img className={`fo-bags-pic ${extra}`} src={`${A}/bag.webp`} alt="" draggable={false} style={{ filter: FORTUNE_BAGS[k].hue ? `hue-rotate(${FORTUNE_BAGS[k].hue}deg) saturate(1.6)` : undefined }} />
+  );
   const open = async () => {
     if (have < b.price) return;
     setGot(null);
@@ -348,8 +366,9 @@ function Bags({ keycaps, onClose }: { keycaps: number; onClose: () => void }) {
   };
   return (
     <div className="fo-bags" role="dialog" aria-label="Сумка"
-      onTouchStart={(e) => { touch.current = e.touches[0].clientX; }}
-      onTouchEnd={(e) => { const x0 = touch.current; touch.current = null; if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1); }}>
+      onTouchStart={(e) => { touch.current = e.touches[0].clientX; setDrag(0); }}
+      onTouchMove={(e) => { if (touch.current != null) setDrag(e.touches[0].clientX - touch.current); }}
+      onTouchEnd={(e) => { const x0 = touch.current; touch.current = null; setDrag(0); if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1); }}>
       <div className="fo-bags-head">
         <button type="button" className="back-btn" onClick={onClose} aria-label="Назад">‹</button>
         <b>{b.name}</b>
@@ -358,9 +377,13 @@ function Bags({ keycaps, onClose }: { keycaps: number; onClose: () => void }) {
       <div className="fo-bags-dots">{FORTUNE_BAGS.map((x, k) => <i key={x.id} className={k === i ? "on" : ""} />)}</div>
       <div className="fo-bags-stage">
         <button type="button" className="fo-bags-arrow" onClick={() => go(-1)} aria-label="Предыдущая">‹</button>
-        <div className="fo-bags-bag">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img key={`${b.id}-${shake}`} className={`fo-bags-pic ${shake ? "shake" : ""}`} src={`${A}/bag.webp`} alt="" draggable={false} style={{ filter: b.hue ? `hue-rotate(${b.hue}deg) saturate(1.6)` : undefined }} />
+        {/* the bag going away */}
+        {turn && turn.from >= 0 && (
+          <div key={`out-${turn.n}`} className={`fo-bags-bag fo-bags-out-bag ${turn.dir > 0 ? "out-l" : "out-r"}`} aria-hidden="true">{bagPic(turn.from)}</div>
+        )}
+        <div key={`in-${turn?.n ?? 0}`} className={`fo-bags-bag ${turn ? (turn.dir > 0 ? "in-r" : "in-l") : ""} ${drag ? "drag" : ""}`}
+          style={drag ? { transform: `translateX(${drag}px) rotate(${drag / 40}deg)` } : undefined}>
+          <span key={`${b.id}-${shake}`} className="fo-bags-pic-wrap">{bagPic(i, shake ? "shake" : "")}</span>
           {/* what can drop: just the icons, on the bag */}
           {!got && (
             <div className="fo-bags-can" aria-label="Что может выпасть">
