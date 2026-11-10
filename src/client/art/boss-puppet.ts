@@ -65,7 +65,12 @@ function childBones(g: Element): Element[] {
   const out: Element[] = [];
   const seen = new Set<string>();
   for (const c of Array.from(g.children)) {
-    if (c.tagName.toLowerCase() !== "g" || !c.hasAttribute("data-pivot")) continue;
+    if (c.tagName.toLowerCase() !== "g") continue;
+    // the upper body's wrapper (br-up: Гопник leans over at the waist) is not a joint: its joints are ours too
+    if (!c.hasAttribute("data-pivot")) {
+      if (c.classList.contains("br-up")) out.push(...childBones(c).filter((x) => !seen.has(x.getAttribute("class") ?? "")));
+      continue;
+    }
     // an arm split in two copies (shoulder behind, forearm in front) is one joint
     const k = c.getAttribute("class") ?? "";
     if (seen.has(k)) continue;
@@ -89,7 +94,10 @@ function buildMesh(gl: WebGLRenderingContext, img: SVGImageElement): Mesh {
     idx.push(a, b, c, b, d, c);
   }
   // bones: own frame (the image's parent group), its parent (when the own group is a joint), its child joints
-  const own = img.parentElement!;
+  // data-pp-own="<class>": the picture's own frame is that group, not its parent (Гопник's torso stands with the legs,
+  // its top follows the leaning upper body — data-pp-follow)
+  const ownCls = img.getAttribute("data-pp-own");
+  const own = (ownCls ? img.closest(`.${ownCls}`) : null) ?? img.parentElement!;
   const bones: Element[] = [own];
   const ownPivot = pivotOf(own);
   const parent = ownPivot ? own.parentElement : null;
@@ -108,19 +116,26 @@ function buildMesh(gl: WebGLRenderingContext, img: SVGImageElement): Mesh {
   const follow = img.getAttribute("data-pp-follow");
   const followEl = follow ? img.ownerSVGElement?.querySelector(`.${follow}`) ?? null : null;
   const followSlot = followEl ? bones.push(followEl) - 1 : -1;
+  // data-pp-follow-at="a,b": the top follows fully down to a (share of the height) and not at all from b — a bend at the
+  // waist; the joints then take their share from all the weights (so the shoulders and the neck go with the lean too)
+  const followAt = img.getAttribute("data-pp-follow-at")?.split(",").map(Number) ?? null;
+  const take = (ws: { slot: number; k: number }[], f: number, slot: number) => {
+    if (followAt) { for (const x of ws) x.k *= 1 - f; } else ws[0].k -= f;
+    ws.push({ slot, k: f });
+  };
   const W: { slot: number; k: number }[][] = [];
   for (let n = 0; n < pts.length / 2; n++) {
     const px = pts[n * 2], py = pts[n * 2 + 1];
     const ws: { slot: number; k: number }[] = [{ slot: 0, k: 1 }];
     if (followSlot >= 0) {
-      const f = 1 - smooth(y + h * 0.18, y + h * 0.6, py);
+      const f = 1 - smooth(y + h * (followAt?.[0] ?? 0.18), y + h * (followAt?.[1] ?? 0.6), py);
       if (f > 0.002) { ws[0].k -= f; ws.push({ slot: followSlot, k: f }); }
     }
     // blend towards the parent near our own joint
     if (parent && ownPivot) {
       const R = Math.max(16, Math.min(70, size(own) * 0.42));
       const f = 0.5 * (1 - smooth(0, R, Math.hypot(px - ownPivot[0], py - ownPivot[1])));
-      if (f > 0.002) { ws[0].k -= f; ws.push({ slot: 1, k: f }); }
+      if (f > 0.002) take(ws, f, 1);
     }
     // and towards each child near its joint
     kids.forEach((kid, i) => {
@@ -141,7 +156,7 @@ function buildMesh(gl: WebGLRenderingContext, img: SVGImageElement): Mesh {
       }
       const R = Math.max(16, Math.min(70, size(kid) * 0.42));
       const f = 0.5 * (1 - smooth(0, R, Math.hypot(px - pv[0], py - pv[1])));
-      if (f > 0.002) { ws[0].k -= f; ws.push({ slot: (parent ? 2 : 1) + i, k: f }); }
+      if (f > 0.002) take(ws, f, (parent ? 2 : 1) + i);
     });
     W.push(ws);
   }

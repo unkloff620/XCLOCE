@@ -346,7 +346,12 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
         <g className="br-up" style={P.legs ? { transformOrigin: `${P.legs.x + P.legs.w / 2}px ${P.legs.y + P.legs.h * 0.2}px`, transformBox: "view-box" } : undefined}>
         {P.tail && <g className="br-tail" {...joint("tail")} style={origin("tail")}>{img("tail", undefined, "back")}</g>}
         {behind && arm(behind, split ? "upper" : undefined, "back")}
-        {img("body", undefined, "back")}
+        {/* with legs of its own the torso bends at the waist (the puppet): its frame is the standing one, the top
+            follows the leaning upper body; without the puppet it leans whole with br-up */}
+        {P.legs && puppet ? (
+          <image className="pp" data-pp="back" data-pp-body="1" data-pp-own="br-breath" data-pp-follow="br-up" data-pp-follow-at="0.3,0.93"
+            href={`/bosses/${id}/rig/body.webp${P.body.v ? `?v=${P.body.v}` : ""}`} x={P.body.x} y={P.body.y} width={P.body.w} height={P.body.h} preserveAspectRatio="none" />
+        ) : img("body", undefined, "back")}
         <g className="br-head" {...joint("head")} style={origin("head")}>
           {img("head", P["head-open"] ? "br-face-closed" : undefined)}
           {/* a jaw of its own (Бабафей): the head with a hole for the mouth over the throat and both rows of teeth —
