@@ -32,7 +32,11 @@ import { money } from "../format.ts";
 export interface StyleDraft {
   look: Look;
   worn: Record<string, string>;
+  /** «Наколки»: the clothes hidden for a look at the ink (only the preview — nothing is taken off) */
+  bare?: boolean;
 }
+/** the slots hidden by «Без одежды» in the tattoo tab: what covers the skin */
+export const BARE_HIDES: string[] = ["HEAD", "ACCESSORY", "SHIRT", "PANTS", "SHOES"];
 
 const CLOTHES: Slot[] = ["HEAD", "FACE", "MOUTH", "TEETH", "ACCESSORY", "SHIRT", "PANTS", "SHOES", "HAND"];
 const ITEM_PART: Record<string, string> = { HEAD: "Голова", FACE: "Лицо", MOUTH: "Рот", TEETH: "Зубы", ACCESSORY: "Аксессуар", SHIRT: "Верх", PANTS: "Низ", SHOES: "Обувь", HAND: "Кисть" };
@@ -315,6 +319,14 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
       </div>
       {/* cancel and save: over the panel, on the sides of the hero's feet */}
       <button type="button" className="sty-big x" onClick={onClose} aria-label="Отмена" title="Отмена"><img src="/assets/ui/btn-cancel.webp" alt="" draggable={false} /></button>
+      {/* «Наколки»: the clothes off for a look (a preview only, nothing is taken off) */}
+      {inkTab && (
+        <button type="button" className={`sty-bare ${draft.bare ? "on" : ""}`} onClick={() => { haptic.tap(); setDraft({ ...draft, bare: !draft.bare }); }}
+          aria-pressed={!!draft.bare} aria-label={draft.bare ? "Показать одежду" : "Скрыть одежду"} title={draft.bare ? "Показать одежду" : "Скрыть одежду"}>
+          <img src="/assets/ui/slot-shirt.webp" alt="" draggable={false} />
+          <small>{draft.bare ? "Одеться" : "Раздеться"}</small>
+        </button>
+      )}
       <button type="button" className="sty-big ok" disabled={!changed || saving || !!busy} onClick={save} aria-label={changed ? "Сохранить" : "Без изменений"} title={changed ? "Сохранить" : "Без изменений"}><img src="/assets/ui/btn-ok.webp" alt="" draggable={false} /></button>
       {/* eslint-enable @next/next/no-img-element */}
       <div className="sty-body">

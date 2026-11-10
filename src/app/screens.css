@@ -4305,6 +4305,14 @@ body { background-attachment: fixed; }
 /* the editor's ✕ / ✓ half the size; a tattoo set tile: the picture fills it, the name on top, the count bottom right */
 .sty-big { width: 34px; height: 34px; bottom: calc(100% + 10px); }
 .sty-big.x { left: 14px; } .sty-big.ok { right: 14px; }
+/* «Раздеться» in the tattoo tab: between ✕ and ✓, under the hero's feet — the clothes hidden to see the ink */
+.sty-bare { position: absolute; left: 50%; bottom: calc(100% + 6px); transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 1px;
+  padding: 3px 8px 2px; border-radius: 10px; border: 2px solid rgba(255, 210, 90, 0.75); background: rgba(20, 16, 10, 0.78); color: #ffe6a8; cursor: pointer; }
+.sty-bare img { width: 26px; height: 26px; object-fit: contain; pointer-events: none; }
+.sty-bare small { font-size: 9.5px; font-weight: 800; line-height: 1; }
+.sty-bare.on { background: #ffd04a; color: #2a1606; border-color: #2a1606; }
+.sty-bare.on img { opacity: 0.35; }
+.sty-bare:active { transform: translateX(-50%) scale(0.94); }
 .ink-set { padding: 0; background: #f2c9a0; border-color: var(--line); }
 .ink-set-pic { position: absolute; inset: 16% 3% 3% 3%; width: 94%; height: 81%; object-fit: contain; pointer-events: none; }
 .ink-set-name { position: absolute; left: 3px; right: 3px; top: 3px; text-align: center; font-size: 9.5px; font-weight: 900; line-height: 1.05; color: #2ee88a;

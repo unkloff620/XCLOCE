@@ -22,7 +22,7 @@ import { ROOM_DEFS } from "../../content/home.ts";
 import { money } from "../format.ts";
 import { Help, HelpList } from "../help.tsx";
 import { CURRENCY_DEFS } from "../../content/currencies.ts";
-import { Stylist, type StyleDraft } from "./stylist.tsx";
+import { BARE_HIDES, Stylist, type StyleDraft } from "./stylist.tsx";
 import { MessagesWindow, messagesWaiting, StashWishWindow } from "./stash-swap.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { ExchangeNotice } from "../exchange-notice.tsx";
@@ -169,7 +169,7 @@ export function HomeScreen() {
       <div className="room">
         <div className={`scene-backdrop ${owned ? "" : "locked"}`} style={{ backgroundImage: `url(/assets/home/${ROOM_BACKDROP[viewRoom.id] ?? ROOM_BACKDROP.basic}.webp)` }} />
         <div className={`room-view ${owned ? "" : "locked"}`}>
-          <HomeScene room={viewRoom.id} look={styling?.look ?? state.look.body} worn={styling?.worn ?? state.look.equipped}
+          <HomeScene room={viewRoom.id} look={styling?.look ?? state.look.body} worn={styling ? (styling.bare && editFocus.mode === "ink" ? Object.fromEntries(Object.entries(styling.worn).filter(([k]) => !BARE_HIDES.includes(k))) : styling.worn) : state.look.equipped}
             pieces={decorating ? previewPieces(state.home.pieces ?? {}, decorating) : state.home.pieces} decor={decorating ?? state.home.decor} trophies={state.home.trophies}
             focusHero={!!styling} hideHero={!!decorating} edit={styling ? { ...editFocus, onPick: pickPart } : undefined}
             onHero={owned && !editing ? openWardrobe : undefined} />
