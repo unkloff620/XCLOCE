@@ -236,7 +236,7 @@ const SAMPLE_URLS = {
   // the game's music (the player's own track, tools/sound/source/theme.mp3) — everywhere, the boss fights too
   music: "/assets/sound/theme.mp3",
   yard: "/assets/sound/yard.mp3?v=5",
-  // a dry key «тык» on every button and a paper page turned (tools/sound/build-ui-clicks.py)
+  // the key «тык» on every button (the player's recording, tools/sound/source/tap.mp3) and a paper page turned (tools/sound/build-ui-clicks.py)
   tap: "/assets/sound/tap.mp3",
   page: "/assets/sound/page.mp3",
   door: "/assets/sound/door.mp3",
@@ -438,7 +438,7 @@ export function sfx(name: Sfx, power = 0.5) {
       }
       break;
     case "tap":
-      if (sample(a, "tap", t, 0.55)) break;
+      if (sample(a, "tap", t, 0.6)) break;
       noise(a, t, 0.012, { freq: 2400, type: "bandpass", q: 1.1, vol: 0.35 });
       break;
     case "step":
