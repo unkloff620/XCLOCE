@@ -6080,19 +6080,20 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
   10%, 25% { transform: rotate(0deg); animation-timing-function: ease-in-out; }
   60% { transform: rotate(-4deg); animation-timing-function: ease-in-out; }
   100% { transform: rotate(0deg); } }
-/* the body goes into each punch of the right arm: it leans over from the hips with the blow and comes back */
-.rig-gopnik-pup, svg.rig-gopnik:not(.br-pup svg) { animation: gp-lean 3.6s infinite; transform-origin: 50% 100%; }
+/* the body goes into each punch of the right arm: everything above the waist leans with the blow and comes back smoothly,
+   the legs stay put */
+.rig-gopnik .br-up { animation: gp-lean 3.6s infinite; }
 @keyframes gp-lean {
   0%, 14% { transform: rotate(0deg) translateX(0px); animation-timing-function: cubic-bezier(0.75, 0, 1, 0.9); }
-  3.5%, 17.5% { transform: rotate(-4deg) translateX(-8px); animation-timing-function: cubic-bezier(0.1, 0.6, 0.3, 1); }
-  11%, 26% { transform: rotate(0deg) translateX(0px); }
+  3.5%, 17.5% { transform: rotate(-5deg) translateX(-6px); animation-timing-function: cubic-bezier(0.25, 0.5, 0.4, 1); }
+  12%, 27% { transform: rotate(0deg) translateX(0px); }
   100% { transform: rotate(0deg) translateX(0px); } }
 /* a hit does not stop his boxing: the head jerks back */
 .arena-photo.hit .rig-gopnik .br-arm-r { animation-duration: 4.8s; }
 .arena-photo.hit .rig-gopnik :is(.br-low-r, .br-hand-r) { animation-duration: 2.4s; }
 .arena-photo.hit .rig-gopnik :is(.br-arm-l, .br-low-l, .br-hand-l) { animation-duration: 3.6s; }
 .arena-photo.ouch .rig-gopnik .br-head { animation: mg-head-hit 0.42s ease-out; }
-@media (prefers-reduced-motion: reduce) { .rig-gopnik :is(.br-arm, .br-low, .br-hand), .rig-gopnik-pup { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .rig-gopnik :is(.br-arm, .br-low, .br-hand, .br-up) { animation: none; } }
 /* the raid fight: he stands in the room, down to the hips */
 .rd-fight .arena.full .arena-photo.rd-defender-fight { left: -4%; right: -4%; top: 64px; bottom: 120px;
   -webkit-mask-image: linear-gradient(to bottom, #000 84%, transparent); mask-image: linear-gradient(to bottom, #000 84%, transparent); }

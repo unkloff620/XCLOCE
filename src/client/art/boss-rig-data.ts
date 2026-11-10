@@ -2614,12 +2614,19 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
     "w": 850,
     "h": 875,
     "parts": {
-      "body": {
+      "legs": {
         "x": 293.5,
-        "y": 213.0,
+        "y": 650.0,
         "w": 340,
-        "h": 662,
-        "v": "682b27c7"
+        "h": 225,
+        "v": "b18eeb72"
+      },
+      "body": {
+        "x": 335.5,
+        "y": 213.0,
+        "w": 294,
+        "h": 470,
+        "v": "ae7852ae"
       },
       "armL": {
         "x": 277.0,

@@ -341,6 +341,9 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
     <svg key={id} ref={svgRef} className={`boss-rig rig-${baseId} ${id.endsWith("-beaten") ? "beaten" : ""} ${dazed ? "dazed" : ""}`} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} width="100%" height="100%" preserveAspectRatio={bust ? "xMidYMin slice" : "xMidYMax meet"} aria-hidden="true">
       {frameCss && <style>{frameCss}</style>}
       <g className="br-breath" style={{ transformOrigin: `${rig.w / 2}px ${rig.h}px`, transformBox: "view-box" }}>
+        {/* legs of their own (Гопник): they stay put, everything above the waist leans in br-up (screens.css «Гопник») */}
+        {img("legs", undefined, "back")}
+        <g className="br-up" style={P.legs ? { transformOrigin: `${P.legs.x + P.legs.w / 2}px ${P.legs.y + P.legs.h * 0.2}px`, transformBox: "view-box" } : undefined}>
         {P.tail && <g className="br-tail" {...joint("tail")} style={origin("tail")}>{img("tail", undefined, "back")}</g>}
         {behind && arm(behind, split ? "upper" : undefined, "back")}
         {img("body", undefined, "back")}
@@ -380,6 +383,7 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
         {behind !== "R" && arm("R")}
         {behind !== "L" && arm("L")}
         {split && behind && arm(behind, "lower")}
+        </g>
       </g>
     </svg>
     );

@@ -2866,6 +2866,7 @@ export const ASSET_FILES: string[] = [
  "/bosses/gopnik/rig/handL.webp",
  "/bosses/gopnik/rig/handR.webp",
  "/bosses/gopnik/rig/head.webp",
+ "/bosses/gopnik/rig/legs.webp",
  "/bosses/gopnik/rig/lowL.webp",
  "/bosses/gopnik/rig/lowR.webp",
  "/bosses/kedr/card.webp",
