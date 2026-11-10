@@ -236,6 +236,9 @@ const SAMPLE_URLS = {
   // the game's music (the player's own track, tools/sound/source/theme.mp3) — everywhere, the boss fights too
   music: "/assets/sound/theme.mp3",
   yard: "/assets/sound/yard.mp3?v=5",
+  // a dry key «тык» on every button and a paper page turned (tools/sound/build-ui-clicks.py)
+  tap: "/assets/sound/tap.mp3",
+  page: "/assets/sound/page.mp3",
   door: "/assets/sound/door.mp3",
   keys: "/assets/sound/keys.mp3",
   punch: "/assets/sound/punch.mp3",
@@ -435,7 +438,8 @@ export function sfx(name: Sfx, power = 0.5) {
       }
       break;
     case "tap":
-      tone(a, 880, t, 0.05, { type: "triangle", vol: 0.12 });
+      if (sample(a, "tap", t, 0.55)) break;
+      noise(a, t, 0.012, { freq: 2400, type: "bandpass", q: 1.1, vol: 0.35 });
       break;
     case "step":
       tone(a, 520, t, 0.07, { type: "triangle", vol: 0.16 });
@@ -534,6 +538,7 @@ export function sfx(name: Sfx, power = 0.5) {
       });
       break;
     case "page": {
+      if (sample(a, "page", t, 0.6)) break;
       // a paper page turned: a soft rising rustle, a crisp flick in the middle, a light settle at the end
       noise(a, t, 0.22, { freq: 1800, type: "bandpass", q: 0.6, vol: 0.22 });
       noise(a, t + 0.06, 0.12, { freq: 4200, type: "highpass", vol: 0.16 });
