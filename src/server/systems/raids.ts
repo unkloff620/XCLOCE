@@ -44,8 +44,11 @@ export async function raidsView(q: Queryable, pid: number) {
   const p = clanId ? await progressOf(q, clanId) : { wins: new Map<string, number>(), taken: new Set<string>(), yards: new Set<string>() };
   const [f] = await q.query<{ id: number; building_id: string; hp_max: number; damage: number; hits: number }>(
     "SELECT id, building_id, hp_max, damage, hits FROM raid_fights WHERE player_id=$1 AND status='active'", [pid]);
+  // the clan's logo: it stands over every building the clan has taken
+  const [c] = clanId ? await q.query<{ emblem: string; color: string }>("SELECT emblem, color FROM clans WHERE id=$1", [clanId]) : [];
   return {
     clanId,
+    clan: c ? { emblem: c.emblem, color: c.color } : null,
     yards: RAID_YARDS.map((y) => ({
       id: y.id,
       open: yardOpen(y, p.yards),

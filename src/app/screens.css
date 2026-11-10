@@ -5982,9 +5982,11 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .rd-bld > img { width: 100%; height: auto; display: block; filter: drop-shadow(-5px 6px 5px rgba(15, 20, 10, 0.55)); transition: transform 0.15s; }
 .rd-bld:active > img { transform: scale(0.95); }
 /* the building to attack now: a warm glow pulsing around it */
-.rd-bld.target > img { animation: rd-target 1.6s ease-in-out infinite; }
-@keyframes rd-target { 0%, 100% { filter: drop-shadow(0 0 4px #ffd246) drop-shadow(0 0 2px #ffd246) brightness(1.05); } 50% { filter: drop-shadow(0 0 16px #ffd246) drop-shadow(0 0 4px #fff2a8) brightness(1.18); } }
-@media (prefers-reduced-motion: reduce) { .rd-bld.target > img { animation: none; filter: drop-shadow(0 0 10px rgba(255, 210, 70, 0.9)); } }
+/* the building being taken: its picture flows between its own colours and red (no glow) */
+.rd-bld.target::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: #ff1e1e; mix-blend-mode: multiply;
+  -webkit-mask: var(--pic) center / 100% 100% no-repeat; mask: var(--pic) center / 100% 100% no-repeat; animation: rd-target 1.8s ease-in-out infinite; }
+@keyframes rd-target { 0%, 100% { opacity: 0; } 50% { opacity: 0.85; } }
+@media (prefers-reduced-motion: reduce) { .rd-bld.target::after { animation: none; opacity: 0.5; } }
 .rd-progress { padding: 2px 10px; border-radius: 10px; background: rgba(0, 0, 0, 0.6); font-weight: 800; }
 
 /* the yard's life: trees sway from the root, people walk there and back (turning round at the ends) with a little bob */
@@ -6029,7 +6031,7 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .rd-room.hit { animation: rd-shake 0.25s ease-out; }
 @keyframes rd-shake { 0%, 100% { transform: none; } 30% { transform: translate(-4px, 2px); } 60% { transform: translate(4px, -2px); } }
 .rd-tray { width: 100%; display: flex; flex-direction: column; gap: 6px; padding: 8px; border-radius: 14px; background: rgba(20, 16, 12, 0.72); }
-.rd-bld-flag { position: absolute; left: 50%; top: -6%; transform: translateX(-50%); line-height: 0; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6)); }
+.rd-bld-logo { position: absolute; left: -2%; top: -12%; line-height: 0; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6)); pointer-events: none; }
 .rd-bld.taken > img { filter: drop-shadow(-5px 6px 5px rgba(15, 20, 10, 0.55)) saturate(0.75); }
 /* the raid fight (boss-like): damage numbers in the middle of the room, the room jolts at a hit */
 .rd-pops { position: absolute; left: 0; right: 0; top: 38%; height: 0; pointer-events: none; }
