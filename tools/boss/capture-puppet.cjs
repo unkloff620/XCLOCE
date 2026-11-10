@@ -10,7 +10,8 @@ const { chromium } = require('playwright');
   await ctx.addInitScript(() => { const g = HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext = function (t, o) { return g.call(this, t, Object.assign({}, o, { preserveDrawingBuffer: true })); }; });
   const p = await ctx.newPage();
   await p.goto(url, { waitUntil: 'networkidle', timeout: 120000 });
-  await p.waitForTimeout(5000);
+  await p.waitForSelector(".br-pup", { timeout: 120000 }).catch(() => {});
+  await p.waitForTimeout(4000);
   const [x, y, w, h] = clip.split(',').map(Number);
   for (let i = 0; i < +n; i++) {
     await p.evaluate(() => {

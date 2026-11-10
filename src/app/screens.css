@@ -6094,14 +6094,14 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
   100% { transform: rotate(0deg); } }
 @keyframes gp-el-l {
   0%, 14% { transform: rotate(0deg); animation-timing-function: cubic-bezier(0.75, 0, 1, 0.9); }
-  3.5%, 17.5% { transform: rotate(36deg); animation-timing-function: cubic-bezier(0.1, 0.6, 0.3, 1); }
+  3.5%, 17.5% { transform: rotate(74deg); animation-timing-function: cubic-bezier(0.1, 0.6, 0.3, 1); }
   10%, 25% { transform: rotate(0deg); animation-timing-function: ease-in-out; }
   55% { transform: rotate(6deg); animation-timing-function: ease-in-out; }
   80% { transform: rotate(-2deg); animation-timing-function: ease-in-out; }
   100% { transform: rotate(0deg); } }
 @keyframes gp-fi-l {
   0%, 14% { transform: rotate(0deg); animation-timing-function: cubic-bezier(0.75, 0, 1, 0.9); }
-  3.5%, 17.5% { transform: rotate(-18deg); animation-timing-function: cubic-bezier(0.1, 0.6, 0.3, 1); }
+  3.5%, 17.5% { transform: rotate(-26deg); animation-timing-function: cubic-bezier(0.1, 0.6, 0.3, 1); }
   10%, 25% { transform: rotate(0deg); animation-timing-function: ease-in-out; }
   60% { transform: rotate(-4deg); animation-timing-function: ease-in-out; }
   100% { transform: rotate(0deg); } }
