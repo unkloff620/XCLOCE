@@ -21,7 +21,7 @@ import { BOSS_RIGS } from "./boss-rig-data.ts";
 type Part = { x: number; y: number; w: number; h: number; pivot?: readonly number[]; frames?: number; v?: string };
 
 /** bosses whose far arm (R or L) goes behind the body */
-const BEHIND: Record<string, "L" | "R"> = { mugo: "R", babafey: "L" };
+const BEHIND: Record<string, "L" | "R"> = { mugo: "R", babafey: "L", gopnik: "L" };
 /** of these the arm in BEHIND goes behind only with its shoulder: the forearm and the hand stay in front of everything */
 const SPLIT_BEHIND = new Set(["babafey"]);
 /** rigs drawn as plain SVG only */
