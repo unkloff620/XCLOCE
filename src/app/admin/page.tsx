@@ -29,7 +29,7 @@ const ACTION_TYPES = [
   "notify_set", "achievement_claim", "achievement_claim_all", "ach_box_open", "prize_claim", "game_start", "zonk_move", "poker_play", "bj_open", "bj_invite", "bj_join", "bj_leave", "bj_bet", "bj_move", "upgrade", "up_sell", "up_take", "clan_cancel", "clan_accept", "clan_reject", "stash_collect",
 ];
 const ACTION_NAMES: Record<string, string> = {
-  attack: "удар", auto_set: "автоматика", heist_pick: "взлом замка", heist_rush: "замок сразу", heist_auto: "автовзлом", heist_open: "открыл ящик", fortune_buy: "колесо: билеты", fortune_spin: "колесо: прокрутка", fortune_cups: "колесо: чашки", fortune_cup_pick: "колесо: поднял чашку", fortune_bag: "колесо: открыл сумку", raid_start: "ходка: бой", raid_attack: "ходка: удар", raid_flee: "ходка: ушёл",
+  attack: "удар", auto_set: "автоматика", heist_pick: "взлом замка", heist_rush: "замок сразу", heist_auto: "автовзлом", heist_open: "открыл ящик", fortune_buy: "колесо: билеты", fortune_spin: "колесо: прокрутка", fortune_cups: "колесо: чашки", fortune_cup_pick: "колесо: поднял чашку", fortune_bag: "колесо: открыл сумку", raid_start: "захват: бой", raid_attack: "захват: удар", raid_flee: "захват: ушёл",
   fight_start: "начал бой", fight_claim: "забрал награду боя", fight_flee: "сбежал из боя", task: "задание", location_claim: "награда локации",
   yard_pick: "находка во дворе", buy: "покупка", exchange: "обмен", use: "использовал", equip: "надел", unequip: "снял",
   clan_create: "создал клан", clan_join: "заявка в клан", clan_leave: "вышел из клана", clan_kick: "исключил из клана", clan_transfer: "передал лидерство", stash_wish: "попросил нычки", stash_gift: "отправил нычку", stash_accept: "принял нычки", clan_edit: "изменил клан",

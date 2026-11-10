@@ -61,9 +61,9 @@ export async function raidsView(q: Queryable, pid: number) {
 }
 
 async function guard(ctx: Ctx) {
-  if (!(await raidsOn(ctx.q, ctx.pid, ctx.cfg))) throw new GameError("raids_off", "Ходки пока закрыты");
+  if (!(await raidsOn(ctx.q, ctx.pid, ctx.cfg))) throw new GameError("raids_off", "Захват пока закрыт");
   const clanId = await myClan(ctx.q, ctx.pid);
-  if (!clanId) throw new GameError("no_clan", "Ходки — только для клана. Вступи в клан или создай свой");
+  if (!clanId) throw new GameError("no_clan", "Захват — только для клана. Вступи в клан или создай свой");
   const [boss] = await ctx.q.query("SELECT 1 FROM fights WHERE player_id=$1 AND status='active'", [ctx.pid]);
   if (boss) throw new GameError("fight_running", "Сначала закончи бой с боссом");
   return clanId;

@@ -73,9 +73,9 @@ export function actionText(type: string, body: Row, result: unknown): string | n
     case "fortune_buy": return join(`колесо: куплено билетов ${fmt(Number(body.qty) || 0)}`, r.paid !== undefined ? `за ${fmt(r.paid)} $` : null);
     case "fortune_spin": return join(`колесо: прокруток ${fmt(r.spins ?? 1)}`, r.sector ? `последний сектор ${String(r.sector)}` : null, grantedText(r.reward), r.cups ? `ПРИЗ ×${fmt(r.cups)}` : null, r.xp ? `опыт колеса +${fmt(r.xp)}` : null);
     case "fortune_cups": return "колесо: чашки";
-    case "raid_start": return `ходка: бой за ${String(body.building ?? "")}`;
-    case "raid_attack": return join(`ходка: удар ${String(body.weapon ?? "")}`, r.damage !== undefined ? `−${fmt(r.damage)}` : null, r.status === "won" ? `здание пало, ${grantedText(r.reward) ?? ""}` : null, r.buildingTaken ? "здание захвачено" : null, r.yardTaken ? "ДВОР ЗАХВАЧЕН" : null);
-    case "raid_flee": return "ходка: ушёл из боя";
+    case "raid_start": return `захват: бой за ${String(body.building ?? "")}`;
+    case "raid_attack": return join(`захват: удар ${String(body.weapon ?? "")}`, r.damage !== undefined ? `−${fmt(r.damage)}` : null, r.status === "won" ? `здание пало, ${grantedText(r.reward) ?? ""}` : null, r.buildingTaken ? "здание захвачено" : null, r.yardTaken ? "ДВОР ЗАХВАЧЕН" : null);
+    case "raid_flee": return "захват: ушёл из боя";
     case "fortune_bag": return join(`колесо: сумка ${String(body.bag ?? "")}`, grantedText(r.reward), r.tattoo ? `наколка ${String(r.tattoo)}` : null);
     case "fortune_cup_pick": return join(`колесо: чашка ${Number(body.index) + 1} — ${String(r.kind ?? "")}`, r.jackpot ? `ДЖЕКПОТ ${fmt(r.jackpot)} $` : grantedText(r.reward));
     case "heist_pick": return `ящик ${Number(body.slot) + 1}: взлом замка`;

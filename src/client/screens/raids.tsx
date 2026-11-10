@@ -1,6 +1,6 @@
 "use client";
 /*
- * «Ходки» (content/raids.ts): the clan takes the district's yards one after another.
+ * «Захват» (бывшие «Ходки») (content/raids.ts): the clan takes the district's yards one after another.
  *  - RaidsScreen: the yards as case-file cards (‹ › or a swipe): the yard's photo on a paper clip, the wins to take it,
  *    what taking it gives; «Захватить» leads into the yard (only the first one is open until it is taken);
  *  - RaidYardScreen: the yard from above — its six buildings in rows and the main one (twice as big) at the top.
@@ -69,7 +69,7 @@ export function RaidsScreen() {
       <img className="rd-bg" src={`${A}/yard-bg.webp`} alt="" draggable={false} />
       <div className="title-row rd-title">
         <Link href="/clans" className="back-btn" aria-label="К кланам">‹</Link>
-        <b>Ходки</b>
+        <b>Захват</b>
         <span className="rd-dots">{RAID_YARDS.map((x, k) => <i key={x.id} className={k === i ? "on" : ""} />)}</span>
       </div>
       <div className="rd-cardrow">
@@ -87,7 +87,7 @@ export function RaidsScreen() {
             <span className="rd-kicker">двор №{y.n}</span>
             <b className="rd-name">{y.name}</b>
             <span className="rd-sub">{y.subtitle}</span>
-            {v && !v.clanId ? <span className="rd-closed">Ходки — для клана. Вступи в клан или создай свой</span>
+            {v && !v.clanId ? <span className="rd-closed">Захват — для клана. Вступи в клан или создай свой</span>
               : open ? <Link href={`/clans/raids/${y.id}`} className="btn gold rd-go">{yv?.taken ? "Во двор" : "Захватить"}</Link>
               : <span className="rd-closed">Сначала захвати двор «{RAID_YARDS[i - 1]?.name}»</span>}
             <span className="rd-h">Награды за захват двора</span>
@@ -389,7 +389,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
         <b>Двор №{y.n} · {BUILDING_NAMES[b.kind]}</b>
       </div>
       <div className="rd-attack-foot">
-        {!v ? null : !v.clanId ? <span className="rd-attack-note">Ходки — только для клана</span>
+        {!v ? null : !v.clanId ? <span className="rd-attack-note">Захват — только для клана</span>
           : elsewhere ? <span className="rd-attack-note">Ты уже в бою за другое здание</span>
           : prog?.taken ? <span className="rd-attack-note">Здание уже захвачено кланом</span>
           : <button type="button" className="btn gold block rd-attack-go" disabled={busy === "raid_start"} onClick={start}>Атаковать</button>}
