@@ -1855,6 +1855,9 @@ describe("boss slayer badges", () => {
     for (let i = 0; i < 10; i++) {
       await db.query("INSERT INTO fights (player_id, boss_id, hp_max, start_total, start_seq, started_at, ends_at, day, status, my_damage) VALUES ($1,'datsik',10,0,0,now(),now(),'2020-01-01','won',10)", [p]);
     }
+    // won but not taken yet: not counted (the boss page and the medal count the taken wins too)
+    await expect(act(db, p, "achievement_claim", { id: "bosskill-datsik-1" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
+    await db.query("INSERT INTO boss_damage (boss_id, player_id, wins) VALUES ('datsik',$1,10)", [p]);
     const r = await act(db, p, "achievement_claim", { id: "bosskill-datsik-1" }, T0);
     expect(r.result.reward).toBeTruthy();
     await expect(act(db, p, "achievement_claim", { id: "bosskill-datsik-2" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });

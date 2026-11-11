@@ -40,9 +40,10 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
     "SELECT boss_id, COUNT(*)::int AS n FROM fights WHERE player_id=$1 AND status='won' AND solo GROUP BY boss_id",
     [pid],
   );
-  // wins over each boss where I dealt damage ("win:<boss id>")
+  // wins over each boss ("win:<boss id>"): the same counter as the boss page and the medal (boss_damage.wins, counted
+  // when the win's reward is taken)
   const wins = await q.query<{ boss_id: string; n: number }>(
-    "SELECT boss_id, COUNT(*)::int AS n FROM fights WHERE player_id=$1 AND status='won' GROUP BY boss_id",
+    "SELECT boss_id, wins AS n FROM boss_damage WHERE player_id=$1 AND wins > 0",
     [pid],
   );
   // sets of stashes collected ("stashsets:<n>")

@@ -1378,4 +1378,12 @@ ALTER TABLE clans ADD COLUMN IF NOT EXISTS raid_xp BIGINT NOT NULL DEFAULT 0;`,
     id: "v2-091-fortune-open",
     sql: `INSERT INTO config (key, value) VALUES ('fortune', '{"on": true}') ON CONFLICT (key) DO UPDATE SET value = '{"on": true}', updated_at = now();`,
   },
+  {
+    // the wins over each boss: one counter for everything (boss_damage.wins — the boss page, the medal, the case, the
+    // achievements); it had fallen behind the won and claimed fights for some players — raised to that count
+    id: "v2-092-boss-wins-sync",
+    sql: `INSERT INTO boss_damage (boss_id, player_id, wins)
+SELECT boss_id, player_id, COUNT(*)::int FROM fights WHERE status = 'won' AND reward IS NOT NULL GROUP BY boss_id, player_id
+ON CONFLICT (boss_id, player_id) DO UPDATE SET wins = GREATEST(boss_damage.wins, EXCLUDED.wins);`,
+  },
 ];
