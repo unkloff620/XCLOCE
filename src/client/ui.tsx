@@ -10,10 +10,13 @@ import type { Granted } from "./api.ts";
 import { tattooSetsOfBoss } from "../content/tattoos.ts";
 import { full, money, pct } from "./format.ts";
 
-export function Bar({ value, max, tone = "green", label, height }: { value: number; max: number; tone?: "green" | "red" | "gold" | "violet"; label?: ReactNode; height?: number }) {
+/** tone "health": the fill goes from green (full) through yellow (half) to red (empty) — a boss's HP, the fight's time left */
+export function Bar({ value, max, tone = "green", label, height }: { value: number; max: number; tone?: "green" | "red" | "gold" | "violet" | "health"; label?: ReactNode; height?: number }) {
+  const w = pct(value, max);
+  const hue = Math.round(1.2 * Math.max(0, Math.min(100, w)));
   return (
     <div className={`bar ${tone}`} style={height ? { height } : undefined}>
-      <i style={{ width: `${pct(value, max)}%` }} />
+      <i style={{ width: `${w}%`, ...(tone === "health" ? { background: `linear-gradient(180deg, hsl(${hue} 100% 68%), hsl(${hue} 85% 36%))` } : null) }} />
       {label !== undefined && <span style={height ? { lineHeight: `${height - 5}px` } : undefined}>{label}</span>}
     </div>
   );

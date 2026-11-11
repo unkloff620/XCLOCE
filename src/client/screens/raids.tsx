@@ -304,7 +304,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
         </div>
         <div className="arena full">
           <div className="arena-top">
-            <Bar value={fight.hp} max={fight.hpMax} tone="red" height={24} label={`${fight.hp.toLocaleString("ru-RU")} / ${fight.hpMax.toLocaleString("ru-RU")}`} />
+            <Bar value={fight.hp} max={fight.hpMax} tone="health" height={24} label={`${fight.hp.toLocaleString("ru-RU")} / ${fight.hpMax.toLocaleString("ru-RU")}`} />
           </div>
           {/* the defender of every building: Гопник (tools/boss/assemble-gopnik.py), down to the hips, boxing */}
           <div className={`arena-photo rd-defender-fight ${hitFx ? "hit ouch" : ""}`}>

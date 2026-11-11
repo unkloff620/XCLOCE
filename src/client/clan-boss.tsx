@@ -70,7 +70,7 @@ export function ClanBossPanel() {
         {cb.killed && <span className="cb-stamp display">ПОВЕРЖЕН</span>}
         <span className="cb-name display">{boss.name}</span>
       </div>
-      <Bar value={cb.hp} max={cb.hpMax} tone="red" height={22} label={`${full(cb.hp)} / ${full(cb.hpMax)}`} />
+      <Bar value={cb.hp} max={cb.hpMax} tone="health" height={22} label={`${full(cb.hp)} / ${full(cb.hpMax)}`} />
       <div className="tiny muted">HP на весь клан ({cb.size} чел.). Бьют только участники. Когда упадёт — каждый, кто бил, получит приз по своей доле урона.</div>
 
       {!cb.killed && (
