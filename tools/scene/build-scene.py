@@ -50,7 +50,7 @@ for f in sorted(os.listdir(os.path.join(HERE, "source"))):
 # chairs: drawn on the 2000×2800 character canvas in place (like the clothes) → trimmed, half size, and their place
 # in the 1000×1400 rig coordinates
 CHAIRS = {}
-CHAIR_LIFT = {"chair-knyaz": 70, "chair-vadim": -30}  # rig units (negative — lower)
+CHAIR_LIFT = {"chair-knyaz": 70, "chair-vadim": -30, "chair-botsman": -40}  # rig units (negative — lower)
 CHAIR_DX = {"chair-vadim": 18}  # rig units, a nudge to the right where a picture sits off-centre
 CHAIR_BOX = (122, -60, 1877, 2733)  # where a chair stands on the 2000×2800 character canvas: the wheels on the floor line, the back up past the top of the head
 for f in sorted(os.listdir(os.path.join(HERE, "source"))):
