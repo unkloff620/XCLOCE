@@ -15,15 +15,16 @@ import { useEffect, type RefObject } from "react";
 import { frameGate } from "../eco.ts";
 
 type J = "up" | "head" | "armL" | "lowL" | "handL" | "armR" | "lowR" | "handR";
-/** a pose: the angle of each joint (deg, clockwise), and x — the upper body's shift (px of the rig) */
-type Pose = Partial<Record<J | "x", number>>;
+/** a pose: the angle of each joint (deg, clockwise), x — the upper body's shift (px of the rig), and the rig's own
+ *  channels: a shape's weight (Spec.shapes, 0…1) or a fist's growth towards the screen (Spec.scale, %) */
+type Pose = Partial<Record<string, number>>;
 interface Key { at: number; pose: Pose; /** how hard the springs pull until the next key (a blow ×3–4) */ stiff?: number }
 interface Action { keys: Key[]; dur: number }
 interface Spec {
   /** the rig's joint groups (all the matches turn alike — Вадим's key arm is drawn twice), default: SEL */
   sel?: Partial<Record<J, string>>;
   /** stiffness and damping of each joint's spring (ζ = c / 2√k: < 1 overshoots) */
-  springs: Record<J | "x", { k: number; c: number }>;
+  springs: Partial<Record<string, { k: number; c: number }>>;
   /** the follow-through: the child is pulled back by its parent's speed × this (s) */
   drag: Partial<Record<J, [J, number]>>;
   /** never still: a slow pose drifting with the time (s) */
@@ -47,7 +48,15 @@ interface Spec {
   /** a thing hanging free off the end of a chain (Восток's bag off his fist): it wants to keep hanging straight down
    *  (minus the chain's turn), so it lags and swings on a soft spring of its own */
   hang?: { sel: string; chain: J[]; k: number; c: number };
+  /** the artist's poses as offsets of the joints ([translate x, y px, turn deg] each), mixed in by their channel's weight
+   *  (Мугонатор's wind-up and jab: the pieces also slide, not only turn) */
+  shapes?: Record<string, Partial<Record<J, [number, number, number]>>>;
+  /** a joint that also grows from its pivot by its channel (%) — a one-piece forearm can only come at the screen so */
+  scale?: Partial<Record<J, string>>;
+  /** the blow at the player stays the screens.css one (strike-l/r: the fist on that side flies at the screen) */
+  cssStrike?: boolean;
 }
+const SPRING0 = { k: 160, c: 16 };
 
 const SEL: Record<J, string> = {
   up: ".br-up", head: ".br-head", armL: ".br-arm-l", lowL: ".br-low-l", handL: ".br-hand-l", armR: ".br-arm-r", lowR: ".br-low-r", handR: ".br-hand-r",
@@ -60,7 +69,7 @@ const blowL: Action = {
   dur: 0.78,
   keys: [
     { at: 0, pose: { armL: 8, lowL: -16, handL: 8, up: 2.5, x: 3, head: 2 } }, // the wind-up: the arm and the body back
-    { at: 0.17, pose: { armL: -11, lowL: 76, handL: -26, up: -5.5, x: -8, head: -3, lowR: 10, armR: 3 }, stiff: 4 }, // the blow
+    { at: 0.17, pose: { armL: -11, lowL: 76, handL: -26, up: -5.5, x: -8, head: -3, lowR: 10, armR: 3 }, stiff: 5.5 }, // the blow
     { at: 0.3, pose: { armL: -8, lowL: 64, handL: -14, up: -4, x: -5, head: -2 }, stiff: 1.4 },
     { at: 0.44, pose: {} }, // back to the stance (the springs settle him)
   ],
@@ -69,7 +78,7 @@ const jabR: Action = {
   dur: 0.56,
   keys: [
     { at: 0, pose: { lowR: -10, handR: 8, armR: 2, up: 1 } },
-    { at: 0.1, pose: { armR: -5, lowR: 34, handR: -22, up: 2.5, x: 4, head: 1.5 }, stiff: 4 },
+    { at: 0.1, pose: { armR: -5, lowR: 34, handR: -22, up: 2.5, x: 4, head: 1.5 }, stiff: 5.5 },
     { at: 0.24, pose: { lowR: 14, handR: -6 }, stiff: 1.4 },
     { at: 0.34, pose: {} },
   ],
@@ -95,7 +104,7 @@ const vdKeys: Action = {
   dur: 0.62,
   keys: [
     { at: 0, pose: { armL: 10, lowL: 38, handL: 20, up: 1.5, head: 1.5 } }, // the elbow cocked, the keys up
-    { at: 0.15, pose: { armL: -9, lowL: -28, handL: -26, up: -2.5, x: -4, head: -1.5 }, stiff: 4 }, // down on the head
+    { at: 0.15, pose: { armL: -9, lowL: -28, handL: -26, up: -2.5, x: -4, head: -1.5 }, stiff: 5.5 }, // down on the head
     { at: 0.27, pose: { armL: -4, lowL: -10, handL: -8 }, stiff: 1.4 },
     { at: 0.36, pose: {} },
   ],
@@ -104,7 +113,7 @@ const vdStab: Action = {
   dur: 0.5,
   keys: [
     { at: 0, pose: { armR: -8, lowR: -24, handR: -18, up: -1, head: -1 } }, // the blade drawn back
-    { at: 0.11, pose: { armR: 10, lowR: 22, handR: 28, up: 2, x: 4, head: 1.2 }, stiff: 4.5 }, // the stab
+    { at: 0.11, pose: { armR: 10, lowR: 22, handR: 28, up: 2, x: 4, head: 1.2 }, stiff: 6 }, // the stab
     { at: 0.22, pose: { armR: 5, lowR: 12, handR: 16 }, stiff: 1.4 },
     { at: 0.3, pose: {} },
   ],
@@ -124,7 +133,7 @@ const kzCut: Action = {
   dur: 0.6,
   keys: [
     { at: 0, pose: { armL: 11, lowL: 0, handL: 18, up: -1.5, x: -3, head: 1.2 } }, // the wind-up: the wallet up and out
-    { at: 0.12, pose: { armL: -22, lowL: 24, handL: -28, up: 2.5, x: 5, head: -1.5, armR: 2 }, stiff: 4 }, // down across
+    { at: 0.12, pose: { armL: -22, lowL: 24, handL: -28, up: 2.5, x: 5, head: -1.5, armR: 2 }, stiff: 5.5 }, // down across
     { at: 0.25, pose: { armL: -17, lowL: 16, handL: -20, up: 1.5, x: 3 }, stiff: 1.4 },
     { at: 0.36, pose: {} },
   ],
@@ -133,7 +142,7 @@ const kzStab: Action = {
   dur: 0.6,
   keys: [
     { at: 0, pose: { armL: 5, handL: -16, up: -1, head: 1 } }, // the wrist cocked
-    { at: 0.13, pose: { armL: -10, lowL: 14, handL: 34, up: 2, x: 4, head: -1 }, stiff: 4.5 }, // the stab
+    { at: 0.13, pose: { armL: -10, lowL: 14, handL: 34, up: 2, x: 4, head: -1 }, stiff: 6 }, // the stab
     { at: 0.27, pose: { armL: -7, lowL: 8, handL: 26 }, stiff: 1.4 },
     { at: 0.38, pose: {} },
   ],
@@ -142,7 +151,7 @@ const kzJab: Action = {
   dur: 0.48,
   keys: [
     { at: 0, pose: { armR: 2.5, lowR: 0, up: -0.6 } },
-    { at: 0.09, pose: { armR: -11, lowR: 16, up: 1.6, x: 3, head: 1 }, stiff: 4.5 }, // the fist out, the elbow snaps
+    { at: 0.09, pose: { armR: -11, lowR: 16, up: 1.6, x: 3, head: 1 }, stiff: 6 }, // the fist out, the elbow snaps
     { at: 0.21, pose: { armR: -4, lowR: 6 }, stiff: 1.4 },
     { at: 0.3, pose: {} },
   ],
@@ -162,7 +171,7 @@ const bfSmash: Action = {
   dur: 0.76,
   keys: [
     { at: 0, pose: { armL: 7, lowL: -24, handL: -20, up: -2.5, x: -4, head: 2, lowR: 6 } }, // the balalaika back over the shoulder
-    { at: 0.2, pose: { armL: -7, lowL: 24, handL: 16, up: 3.5, x: 6, head: -2.5, armR: 4, lowR: -10 }, stiff: 4 }, // down on the head
+    { at: 0.2, pose: { armL: -7, lowL: 24, handL: 16, up: 3.5, x: 6, head: -2.5, armR: 4, lowR: -10 }, stiff: 5.5 }, // down on the head
     { at: 0.32, pose: { armL: -4, lowL: 14, handL: 8, up: 2, x: 3, head: -1.5 }, stiff: 1.4 },
     { at: 0.44, pose: {} },
   ],
@@ -194,7 +203,7 @@ const bfShove: Action = {
   dur: 0.6,
   keys: [
     { at: 0, pose: { armR: -4, lowR: -24, handR: -6, up: -1 } }, // the palm drawn in
-    { at: 0.12, pose: { armR: 11, lowR: 20, handR: 14, up: 2.5, x: 5, head: 1.5 }, stiff: 4.5 }, // shoves out
+    { at: 0.12, pose: { armR: 11, lowR: 20, handR: 14, up: 2.5, x: 5, head: 1.5 }, stiff: 6 }, // shoves out
     { at: 0.26, pose: { armR: 7, lowR: 12, handR: 8 }, stiff: 1.4 },
     { at: 0.38, pose: {} },
   ],
@@ -206,7 +215,7 @@ const vkJab: Action = {
   dur: 0.55,
   keys: [
     { at: 0, pose: { armR: 3, lowR: 8, handR: 4, up: -1.5, x: 4 } }, // the fist drawn back
-    { at: 0.09, pose: { armR: -15, lowR: -26, handR: -10, up: 2.5, x: -8, head: -2 }, stiff: 4.5 }, // the jab
+    { at: 0.09, pose: { armR: -15, lowR: -26, handR: -10, up: 2.5, x: -8, head: -2 }, stiff: 6 }, // the jab
     { at: 0.22, pose: { armR: -8, lowR: -12, handR: -4, up: 1 }, stiff: 1.4 },
     { at: 0.32, pose: {} },
   ],
@@ -237,13 +246,216 @@ const vkSlam: Action = {
   dur: 0.95,
   keys: [
     { at: 0, pose: { armL: 35, lowL: -25, up: 4, x: 16, head: 5 } }, // the bag up over his head
-    { at: 0.3, pose: { armL: -12, lowL: -8, up: -6, x: -28, head: -8 }, stiff: 4 }, // down at the screen
+    { at: 0.3, pose: { armL: -12, lowL: -8, up: -6, x: -28, head: -8 }, stiff: 5.5 }, // down at the screen
     { at: 0.46, pose: { armL: -9, lowL: -6, up: -4, x: -20, head: -6 }, stiff: 1.4 },
     { at: 0.66, pose: {} },
   ],
 };
 
+/* the bosses with one-piece forearms (Дацик, Командате, Кедр): the fist turns at the elbow and grows at the screen as it
+   comes (sL/sR, %); L is the fist on the left of the picture */
+const fistSprings = {
+  up: { k: 70, c: 12 }, x: { k: 60, c: 11 }, head: { k: 110, c: 11 },
+  armL: { k: 260, c: 21 }, armR: { k: 260, c: 21 }, sL: { k: 300, c: 21 }, sR: { k: 300, c: 21 },
+};
+const fistSel = { armL: ".br-fist-l", armR: ".br-fist-r", lowL: ".br-none", lowR: ".br-none", handL: ".br-none", handR: ".br-none" };
+/** a blow with one fist: [joint, its scale channel, the turn towards the middle (deg, signed), the lean (deg)] */
+const fistBlow = (arm: "armL" | "armR", s: "sL" | "sR", toMid: number, lean: number, grow = 15): Action => ({
+  dur: 0.5,
+  keys: [
+    { at: 0, pose: { [arm]: -0.42 * toMid, [s]: -4, up: -0.5 * lean, x: -1.6 * lean, head: 0.4 * lean } }, // the wind-up
+    { at: 0.08, pose: { [arm]: toMid, [s]: grow, up: lean, x: 3 * lean, head: -0.7 * lean }, stiff: 6 }, // the blow
+    { at: 0.19, pose: { [arm]: 0.55 * toMid, [s]: 0.45 * grow, up: 0.5 * lean, x: 1.5 * lean }, stiff: 1.4 },
+    { at: 0.29, pose: {} },
+  ],
+});
+const fistIdle = (t: number): Pose => ({
+  up: 0.8 * Math.sin(t * 0.9) + 0.3 * Math.sin(t * 2.2 + 1),
+  x: 3 * Math.sin(t * 0.55),
+  head: 1.6 * Math.sin(t * 1.05 + 1) + 0.7 * Math.sin(t * 0.5),
+  armL: 2 * Math.sin(t * 2.4), armR: 2 * Math.sin(t * 2.4 + 1.7), sL: 1.2 * Math.sin(t * 2.4 + 0.4), sR: 1.2 * Math.sin(t * 2.4 + 2.1),
+});
+// Дацик: a boxer, the left fist up, the right across the belly (it rises at the screen — an uppercut)
+const dsL = fistBlow("armL", "sL", 20, 3), dsR = fistBlow("armR", "sR", 22, -3, 17);
+// Командате: the torch in the left hand (a smash), the right fist (a jab)
+const bbTorch: Action = {
+  dur: 0.62,
+  keys: [
+    { at: 0, pose: { armL: -14, sL: -3, up: -2, x: -5, head: 1.5 } }, // the torch back
+    { at: 0.12, pose: { armL: 26, sL: 10, up: 3, x: 8, head: -2 }, stiff: 5.5 }, // down at the screen
+    { at: 0.26, pose: { armL: 16, sL: 5, up: 2, x: 5 }, stiff: 1.4 },
+    { at: 0.38, pose: {} },
+  ],
+};
+const bbJab = fistBlow("armR", "sR", -18, -2.5);
+const bbWave: Action = {
+  dur: 1.1,
+  keys: [
+    { at: 0, pose: { armL: -7, sL: 4, head: -3, up: -1 } }, // the torch up, waved
+    { at: 0.14, pose: { armL: 6, sL: 4, head: -3, up: -1 }, stiff: 2.5 },
+    { at: 0.28, pose: { armL: -7, sL: 4, head: -3 }, stiff: 2.5 },
+    { at: 0.42, pose: { armL: 5, sL: 3, head: -2 }, stiff: 2.5 },
+    { at: 0.6, pose: {} },
+  ],
+};
+// Кедр: claws up — swipes at the screen, both claws reaching to grab
+const kdL = fistBlow("armL", "sL", 13, 2.5, 16), kdR = fistBlow("armR", "sR", -13, -2.5, 16);
+const kdGrab: Action = {
+  dur: 0.95,
+  keys: [
+    { at: 0, pose: { sL: -4, sR: -4, armL: -4, armR: 4, up: -1.5, head: 1 } },
+    { at: 0.14, pose: { sL: 20, sR: 20, armL: 4, armR: -4, up: 2, head: -2 }, stiff: 4 }, // both claws at the player
+    { at: 0.42, pose: { sL: 16, sR: 16, armL: 3, armR: -3, up: 1.5 }, stiff: 2 },
+    { at: 0.64, pose: {} },
+  ],
+};
+/* Гаркуша: a bundle of cash in each hand — slaps with it (the shoulder swings in, the wrist whips the money), counts it */
+const gkSlapR: Action = {
+  dur: 0.6,
+  keys: [
+    { at: 0, pose: { armR: -12, handR: 20, up: 1.5, x: 4, head: -1 } }, // the cash raised back
+    { at: 0.11, pose: { armR: 16, handR: -32, up: -2.5, x: -8, head: 1.5 }, stiff: 5.5 }, // the slap
+    { at: 0.24, pose: { armR: 9, handR: -16, up: -1.2, x: -4 }, stiff: 1.4 },
+    { at: 0.36, pose: {} },
+  ],
+};
+const gkSlapL: Action = {
+  dur: 0.6,
+  keys: [
+    { at: 0, pose: { armL: 12, handL: 16, up: -1.5, x: -4, head: 1 } },
+    { at: 0.11, pose: { armL: -16, handL: -26, up: 2.5, x: 8, head: -1.5 }, stiff: 5.5 },
+    { at: 0.24, pose: { armL: -9, handL: -13, up: 1.2, x: 4 }, stiff: 1.4 },
+    { at: 0.36, pose: {} },
+  ],
+};
+const gkCount: Action = {
+  dur: 1.2,
+  keys: [
+    { at: 0, pose: { handL: 12, handR: -12, head: 3 } }, // he fans the cash at you
+    { at: 0.12, pose: { handL: -8, handR: 10, head: 3 }, stiff: 2.5 },
+    { at: 0.24, pose: { handL: 12, handR: -12, head: 3 }, stiff: 2.5 },
+    { at: 0.36, pose: { handL: -8, handR: 10, head: 2 }, stiff: 2.5 },
+    { at: 0.5, pose: { handL: 8, handR: -8, head: 1 }, stiff: 2.5 },
+    { at: 0.66, pose: {} },
+  ],
+};
+/* Мугонатор (the shark boxer): the artist's two poses of the near arm (tools/boss/source/mugo/raw/poses.json — it was
+   screens.css mg-sh/el/fi-l): the wind-up and the jab across the body; the far fist stays up in the guard */
+const mgJab: Action = {
+  dur: 0.6,
+  keys: [
+    { at: 0, pose: { wind: 1, head: -1.2, up: -1, x: 3 } }, // the arm pulled back
+    { at: 0.17, pose: { punch: 1, head: 1.6, up: 1.8, x: -6, armR: -1.5 }, stiff: 5.5 }, // the jab
+    { at: 0.29, pose: { punch: 0.8, head: 1, up: 1 }, stiff: 1.5 },
+    { at: 0.42, pose: {} },
+  ],
+};
+const mgTaunt: Action = {
+  dur: 1.3,
+  keys: [
+    { at: 0, pose: { head: -4, up: -1.5, armR: 3 } }, // the chin up, the chest out
+    { at: 0.6, pose: { head: 2, up: 0.5 } },
+    { at: 0.9, pose: {} },
+  ],
+};
+
 const POSES: Record<string, Spec> = {
+  datsik: {
+    sel: fistSel, springs: fistSprings, scale: { armL: "sL", armR: "sR" }, cssStrike: true,
+    drag: { head: ["up", -0.08] },
+    idle: fistIdle,
+    actions: [
+      { a: dsL, w: 16 }, { a: dsR, w: 14 },
+      { a: join(dsL, shift(dsR, 0.04)), w: 22 }, // the one-two
+      { a: join(dsL, shift(dsL, 0.04), shift(dsR, 0.04)), w: 16 },
+      { a: join(dsR, shift(dsL, 0.04)), w: 14 },
+    ],
+    rest: [0.8, 2.0],
+    hit: { head: 240, up: -70, x: -60, armL: -200, armR: -200, sL: -150, sR: -150 },
+    dazed: { pose: { armL: -14, armR: -14, sL: -6, sR: -6, head: 4, up: -1 }, act: false },
+  },
+  bebyakyan: {
+    sel: fistSel, springs: fistSprings, scale: { armL: "sL", armR: "sR" }, cssStrike: true,
+    drag: { head: ["up", -0.08] },
+    idle: fistIdle,
+    actions: [
+      { a: bbTorch, w: 22 }, { a: bbJab, w: 18 },
+      { a: join(bbJab, shift(bbTorch, 0.04)), w: 18 },
+      { a: join(bbTorch, shift(bbTorch, 0.05)), w: 12 },
+      { a: join(bbJab, shift(bbJab, 0.04)), w: 14 },
+      { a: bbWave, w: 8 },
+    ],
+    rest: [0.8, 2.0],
+    hit: { head: 220, up: 60, x: 50, armL: -180, armR: 180, sL: -120, sR: -120 },
+    dazed: { pose: { armL: -12, armR: 12, sL: -5, sR: -5, head: 4, up: -1 }, act: false },
+  },
+  kedr: {
+    sel: fistSel, springs: fistSprings, scale: { armL: "sL", armR: "sR" }, cssStrike: true,
+    drag: { head: ["up", -0.08] },
+    idle: (t) => ({ ...fistIdle(t), sL: 3 + 3 * Math.sin(t * 1.2), sR: 3 + 3 * Math.sin(t * 1.2 + Math.PI) }), // the claws creep at you in turns
+    actions: [
+      { a: kdL, w: 16 }, { a: kdR, w: 16 },
+      { a: join(kdL, shift(kdR, 0.04)), w: 22 },
+      { a: join(kdR, shift(kdL, 0.04), shift(kdR, 0.04)), w: 12 },
+      { a: kdGrab, w: 16 },
+    ],
+    rest: [0.8, 2.0],
+    hit: { head: 220, up: 60, x: 50, armL: -180, armR: 180, sL: -150, sR: -150 },
+    dazed: { pose: { armL: -10, armR: 10, sL: -6, sR: -6, head: 4, up: -1 }, act: false },
+  },
+  garkusha: {
+    cssStrike: true,
+    springs: {
+      up: { k: 70, c: 12 }, x: { k: 60, c: 11 }, head: { k: 110, c: 11 },
+      armL: { k: 110, c: 16 }, handL: { k: 300, c: 15 }, armR: { k: 110, c: 16 }, handR: { k: 300, c: 15 },
+    },
+    drag: { handL: ["armL", -0.06], handR: ["armR", -0.06], head: ["up", -0.08] },
+    idle: (t) => ({
+      up: 0.8 * Math.sin(t * 0.9) + 0.3 * Math.sin(t * 2.1 + 1),
+      x: 3 * Math.sin(t * 0.5),
+      head: 1.6 * Math.sin(t * 1.0 + 1) + 0.7 * Math.sin(t * 0.45),
+      armL: 2 * Math.sin(t * 1.2), handL: 4 * Math.sin(t * 2.2 + 0.4), armR: 2 * Math.sin(t * 1.2 + 2), handR: 4 * Math.sin(t * 2.2 + 2),
+    }),
+    actions: [
+      { a: gkSlapR, w: 20 }, { a: gkSlapL, w: 18 },
+      { a: join(gkSlapL, shift(gkSlapR, 0.04)), w: 20 },
+      { a: join(gkSlapR, shift(gkSlapR, 0.05)), w: 12 },
+      { a: gkCount, w: 12 },
+    ],
+    rest: [0.8, 2.0],
+    hit: { head: 220, up: 60, x: 50, armL: 140, armR: -140, handL: 220, handR: -220 },
+    dazed: { pose: { armL: 8, armR: -8, handL: 10, handR: 12, head: 4, up: -1 }, act: false },
+  },
+  mugo: {
+    shapes: {
+      wind: { armL: [-75.8, -6.9, -11], lowL: [-93.6, -28.3, -0.24], handL: [2.4, 4.4, 11.27] },
+      punch: { armL: [-10.8, -4.9, -11], lowL: [28.2, 8, 11.88], handL: [15, 5.2, -0.86] },
+    },
+    springs: {
+      up: { k: 65, c: 12 }, x: { k: 55, c: 11 }, head: { k: 100, c: 11 },
+      armL: { k: 120, c: 16 }, lowL: { k: 200, c: 18 }, handL: { k: 300, c: 16 }, armR: { k: 110, c: 16 }, lowR: { k: 200, c: 18 }, handR: { k: 300, c: 16 },
+      wind: { k: 230, c: 25 }, punch: { k: 260, c: 24 },
+    },
+    drag: { lowL: ["armL", -0.04], handL: ["lowL", -0.04], head: ["up", -0.08] },
+    idle: (t) => ({
+      up: 0.7 * Math.sin(t * 0.8) + 0.3 * Math.sin(t * 2 + 1),
+      x: 3 * Math.sin(t * 0.5),
+      head: 1.4 * Math.sin(t * 0.95 + 1) + 0.6 * Math.sin(t * 0.45),
+      armL: 1.5 * Math.sin(t * 1.6), lowL: 2 * Math.sin(t * 2 + 0.5), handL: 2 * Math.sin(t * 2.4),
+      armR: 1.5 * Math.sin(t * 1.6 + 1.5), handR: 2 * Math.sin(t * 2.2 + 1),
+    }),
+    actions: [
+      { a: mgJab, w: 12 },
+      { a: join(mgJab, mgJab), w: 22 },
+      { a: join(mgJab, mgJab, mgJab), w: 24 },
+      { a: join(mgJab, mgJab, mgJab, mgJab, mgJab), w: 10 }, // the artist's round of five
+      { a: mgTaunt, w: 8 },
+    ],
+    rest: [0.8, 2.0],
+    hit: { head: 240, up: 70, x: 60, armL: -100, lowL: 140, handL: 200, armR: 100, handR: -160 },
+    strike: join(mgJab, mgJab),
+    dazed: { pose: { armL: 5, lowL: 6, armR: 4, head: 4, up: -1 }, act: false },
+  },
   vodovoz: {
     sel: { up: ".vk-up", head: ".vk-head", armL: ".vk-arm-l", lowL: ".vk-low-l", handL: ".vk-hand-l", armR: ".vk-arm-r", lowR: ".vk-low-r", handR: ".vk-hand-r" },
     springs: {
@@ -268,7 +480,7 @@ const POSES: Record<string, Spec> = {
       { a: join(vkJab, shift(vkSlam, 0.05)), w: 12 },
       { a: vkSlam, w: 10 },
     ],
-    rest: [0.3, 1.4],
+    rest: [0.7, 1.9],
     hit: { up: 120, x: 90, head: 200, armL: -120, lowL: 140, armR: 120, lowR: -150, handL: 160, handR: -200 },
     strike: vkSlam,
     // beaten: bent over and gasping, both fists up in a tired guard by his shoulders (the bag is dropped)
@@ -303,7 +515,7 @@ const POSES: Record<string, Spec> = {
       { a: join(bfShove, shift(bfSmash, 0.05)), w: 14 },
       { a: bfBeckon, w: 14 },
     ],
-    rest: [0.35, 1.6],
+    rest: [0.8, 2.0],
     hit: { head: 280, up: -80, x: -60, armL: 110, lowL: -160, handL: -240, armR: -110, lowR: 160, handR: 220 },
     strike: join(bfSmash, shift(bfSmash, 0.08)),
     // scared: the balalaika sinks, the palm up in front of him — and he keeps fending them off, slower
@@ -334,7 +546,7 @@ const POSES: Record<string, Spec> = {
       { a: join(kzJab, shift(kzCut, 0.04)), w: 12 },
       { a: kzSmug, w: 8 },
     ],
-    rest: [0.3, 1.5],
+    rest: [0.7, 1.9],
     hit: { head: 300, up: 80, x: 60, armL: 120, lowL: -100, handL: 220, armR: -110, lowR: -100 },
     strike: join(kzCut, kzCut, kzCut),
     dazed: { pose: { armL: -8, handL: -2, lowL: -2, lowR: -2, head: 3 }, act: false },
@@ -364,7 +576,7 @@ const POSES: Record<string, Spec> = {
       { a: join(vdStab, shift(vdKeys, 0.04)), w: 14 },
       { a: vdSmug, w: 10 },
     ],
-    rest: [0.3, 1.4],
+    rest: [0.7, 1.9],
     hit: { head: -300, up: -80, x: -60, armL: 120, lowL: -140, armR: -110, lowR: 150, handL: -220, handR: 220 },
     strike: join(vdKeys, vdKeys),
     dazed: { pose: { armL: -9, armR: 9, lowL: -4, lowR: 4, head: 3 }, act: false },
@@ -394,7 +606,7 @@ const POSES: Record<string, Spec> = {
       { a: join(jabR, jabR), w: 8 },
       { a: taunt, w: 8 },
     ],
-    rest: [0.35, 1.6],
+    rest: [0.8, 2.0],
     hit: { head: 260, up: 90, x: 70, armL: -120, lowL: 160, armR: 100, lowR: -160, handL: 200, handR: -200 },
   },
 };
@@ -423,7 +635,7 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
     let hangA = 0, hangV = 0;
     const follow = spec.breathFollow ? [...svg.querySelectorAll<SVGGElement>(spec.breathFollow.sel)] : [];
     svg.classList.add("posed");
-    const keys = [...JOINTS, "x"] as (J | "x")[];
+    const keys: string[] = [...JOINTS, "x", ...Object.keys(spec.shapes ?? {}), ...Object.values(spec.scale ?? {}) as string[]];
     const ang: Record<string, number> = {};
     const vel: Record<string, number> = {};
     for (const k of keys) { ang[k] = 0; vel[k] = 0; }
@@ -456,6 +668,7 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
       // he strikes the player: that blow now, whatever he was doing
       const strike = !!arena?.classList.contains("strike");
       if (strike && !wasStrike && spec.strike) { act = spec.strike; actT = 0; }
+      if (spec.cssStrike && strike !== wasStrike) svg.classList.toggle("posed", !strike);
       wasStrike = strike;
       // the action: its key now (a dazed boss — half as often, slower)
       const dazed = svg.classList.contains("dazed");
@@ -472,11 +685,11 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
         else { act = pick(); actT = 0; }
       }
       const idle = spec.idle(t);
-      if (dazed && spec.dazed) for (const [k, v] of Object.entries(spec.dazed.pose)) idle[k as J] = (idle[k as J] ?? 0) + v;
+      if (dazed && spec.dazed) for (const [k, v] of Object.entries(spec.dazed.pose)) idle[k as J] = (idle[k as J] ?? 0) + (v ?? 0);
       for (const k of keys) {
-        const s = spec.springs[k];
+        const s = spec.springs[k] ?? SPRING0;
         let target = (idle[k] ?? 0) + (pose[k] ?? 0);
-        const d = k !== "x" ? spec.drag[k] : undefined;
+        const d = spec.drag[k as J];
         if (d) target += vel[d[0]] * d[1];
         const kk = s.k * stiff, cc = s.c * Math.sqrt(stiff);
         // semi-implicit Euler in small steps (stiff springs stay stable at 15–30 fps)
@@ -495,10 +708,19 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
         const tr = `rotate(${hangA.toFixed(2)}deg)`;
         for (const el of hangs) el.style.transform = tr;
       }
+      const joint = (j: J) => {
+        let tx = 0, ty = 0, r = ang[j];
+        for (const [n, sh] of Object.entries(spec.shapes ?? {})) {
+          const o = sh[j];
+          if (o) { tx += o[0] * ang[n]; ty += o[1] * ang[n]; r += o[2] * ang[n]; }
+        }
+        const sc = spec.scale?.[j];
+        return `${tx || ty ? `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px) ` : ""}rotate(${r.toFixed(2)}deg)${sc ? ` scale(${(1 + ang[sc] / 100).toFixed(4)})` : ""}`;
+      };
       for (const j of JOINTS) {
         const tr = j === "up"
           ? `translateX(${ang.x.toFixed(2)}px) rotate(${ang.up.toFixed(2)}deg)${br ? ` translateY(${br[2].toFixed(2)}px) scale(${br[0].toFixed(4)}, ${br[1].toFixed(4)})` : ""}`
-          : `rotate(${ang[j].toFixed(2)}deg)`;
+          : joint(j);
         for (const el of els[j]) el.style.transform = tr;
       }
       if (spec.breathFollow) { const tr = spec.breathFollow.f(t); for (const el of follow) el.style.transform = tr; }

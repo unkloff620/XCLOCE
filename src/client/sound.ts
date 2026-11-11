@@ -25,6 +25,8 @@ export type Sfx = "ink" | "wear" | "spin" | "tap" | "hit" | "crit" | "coin" | "b
   | "casedrop"
   /* a thing out of the case (a cigarette, a toothpick): one of four recordings at random (thing-drop-1/2.mp3 and two of the «надел» ones, wear-2/3.mp3) */
   | "thingdrop"
+  /* a stash set collected («Нычки»): the player's two recordings in turn (the same takes as wear-2/3.mp3) */
+  | "setcollect"
   /* the coin at half the volume: the tiles coming out of the case one by one */
   | "coinsoft"
   /* a win: one of the player's victory recordings at random (victory-1…5.mp3 and big-win.mp3) — the upgrader, the games, a boss, a brawl */
@@ -632,6 +634,10 @@ export function sfx(name: Sfx, power = 0.5) {
       if (sample(a, "brawllose", t, 1)) break;
       [311, 294, 277].forEach((f, i) => tone(a, f, t + i * 0.2, 0.2, { type: "sawtooth", vol: 0.05 }));
       break;
+    case "setcollect":
+      if (sample(a, nextOf("setcollect", ["wear2", "wear3"]), t, 1)) break;
+      tone(a, 659, t, 0.3, { type: "triangle", vol: 0.12 });
+      break;
     case "thingdrop":
       if (sample(a, nextOf("thingdrop", ["thingdrop1", "thingdrop2", "wear2", "wear3"]), t, 1)) break;
       tone(a, 659, t, 0.3, { type: "triangle", vol: 0.12 });
@@ -691,7 +697,7 @@ export function yardSfx(dropId: string) {
 /** What a successful action sounds like (attacks and slots play their own). */
 export const ACTION_SFX: Partial<Record<string, Sfx>> = {
   buy: "buy", exchange: "buy", room_buy: "upgrade", equipment_upgrade: "upgrade", piece_buy: "upgrade", talent_up: "upgrade", talent_reset: "chest",
-  daily_claim: "reward", quest_claim: "reward", location_claim: "reward", fight_claim: "win", quest_chest: "chest",
+  daily_claim: "reward", quest_claim: "reward", location_claim: "reward", fight_claim: "win", quest_chest: "chest", stash_collect: "setcollect",
   yard_pick: "coin", task: "step", sell: "coin", use: "coin",
   fight_start: "tap", equip: "wear", unequip: "tap", room_set: "tap", decor_set: "tap", decor_save: "tap", look_set: "tap", notify_set: "tap",
 };

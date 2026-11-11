@@ -29,7 +29,12 @@ const SPLIT_BEHIND = new Set(["babafey"]);
 const NO_PUPPET = new Set<string>(["knyaz"]);
 /** the bosses drawn whole (no legs of their own) that still bend at the waist on the pose engine: the waist (rig units)
  *  and where the torso picture bends (data-pp-follow-at: the top follows fully down to a, not at all from b) */
-const WAIST: Record<string, { at: [number, number]; bend: string }> = { babafey: { at: [547, 940], bend: "0.24,0.46" } };
+const WAIST: Record<string, { at: [number, number]; bend?: string }> = {
+  babafey: { at: [547, 940], bend: "0.24,0.46" }, bebyakyan: { at: [400, 650], bend: "0.35,0.62" }, kedr: { at: [350, 590], bend: "0.4,0.6" },
+  garkusha: { at: [420, 700], bend: "0.4,0.66" }, mugo: { at: [600, 660], bend: "0.35,0.5" },
+  // cut off at the waist: he leans whole from the bottom edge
+  datsik: { at: [590, 1400] },
+};
 
 /** frame schedules of the puppet strips: [frame, ms] — idle loops, ouch/strike play once */
 type SeqMode = "idle" | "ouch" | "strike" | "fear";
@@ -355,7 +360,7 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
         {behind && arm(behind, split ? "upper" : undefined, "back")}
         {/* with legs of its own the torso bends at the waist (the puppet): its frame is the standing one, the top
             follows the leaning upper body; without the puppet it leans whole with br-up */}
-        {(P.legs || WAIST[baseId]) && puppet ? (
+        {(P.legs || WAIST[baseId]?.bend) && puppet ? (
           <image className="pp" data-pp="back" data-pp-body="1" data-pp-own="br-breath" data-pp-follow="br-up" data-pp-follow-at={WAIST[baseId]?.bend ?? "0.3,0.93"}
             href={`/bosses/${id}/rig/body.webp${P.body.v ? `?v=${P.body.v}` : ""}`} x={P.body.x} y={P.body.y} width={P.body.w} height={P.body.h} preserveAspectRatio="none" />
         ) : img("body", undefined, "back")}
