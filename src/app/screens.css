@@ -6187,3 +6187,23 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 /* the paper's edge leans 4.3° (measured on zonk-room.webp: x 617 at y 440 → 659 at y 1000): the writing leans with it */
 .zb-sheet2 { transform: rotate(-4.3deg); }
 .zb-c2.wide .zb-c2-dice i { width: 2.6cqw; height: 2.6cqw; }
+/* Боцман's face (boss-rig.tsx br-mouth-open: the open mouth over his whole head): the eyes look about and blink, the
+ * lower teeth grind and the jaw clacks now and then, the brows tighten; hit or beaten — the open mouth is gone (the
+ * head's own sad mouth shows) and the brows go up in pain */
+.rig-botsman .br-pupils { animation-name: bt-look; animation-duration: 6.2s; }
+@keyframes bt-look { 0%, 14%, 46%, 100% { transform: translate(0, 0); } 20%, 32% { transform: translate(-2.6px, 0.2px); } 52%, 64% { transform: translate(2.6px, 0.3px); } 74%, 84% { transform: translate(0.4px, 0.9px); } }
+.rig-botsman .br-eyes-closed, .rig-botsman .br-eyes-open { animation-duration: 3.9s; }
+.rig-botsman .br-teeth-low { animation: bt-teeth-low 5.2s linear infinite; }
+@keyframes bt-teeth-low { 0%, 18% { transform: translate(0, 0); } 20% { transform: translate(-0.9px, 0); } 22% { transform: translate(0.9px, 0); } 24% { transform: translate(-0.9px, 0); }
+  26% { transform: translate(0.9px, 0); } 28% { transform: translate(-0.9px, 0); } 30%, 52% { transform: translate(0, 0); } 55% { transform: translate(0, 2.4px); } 58% { transform: translate(0, 0); }
+  61% { transform: translate(0, 2.2px); } 64%, 100% { transform: translate(0, 0); } }
+.rig-botsman .br-teeth-up { animation: bt-teeth-up 5.2s ease-in-out infinite; }
+@keyframes bt-teeth-up { 0%, 52%, 64%, 100% { transform: translateY(0); } 55%, 61% { transform: translateY(-0.7px); } }
+.rig-botsman .br-brow-l { animation: bt-brow-l 5.2s ease-in-out infinite; }
+.rig-botsman .br-brow-r { animation: bt-brow-r 5.2s ease-in-out infinite; }
+@keyframes bt-brow-l { 0%, 12%, 40%, 100% { transform: translateY(0) rotate(0); } 18%, 32% { transform: translateY(1px) rotate(4deg); } 70%, 78% { transform: translateY(-1.2px) rotate(-2deg); } }
+@keyframes bt-brow-r { 0%, 12%, 40%, 100% { transform: translateY(0) rotate(0); } 18%, 32% { transform: translateY(1px) rotate(-4deg); } 70%, 78% { transform: translateY(-1.2px) rotate(2deg); } }
+.arena-photo.ouch .rig-botsman .br-mouth-open, .rig-botsman.dazed .br-mouth-open, .bphoto-ko .rig-botsman .br-mouth-open { opacity: 0; }
+.arena-photo.ouch .rig-botsman .br-brow-l, .rig-botsman.dazed .br-brow-l { animation: none; transform: translateY(-1.5px) rotate(-9deg); }
+.arena-photo.ouch .rig-botsman .br-brow-r, .rig-botsman.dazed .br-brow-r { animation: none; transform: translateY(-1.5px) rotate(9deg); }
+@media (prefers-reduced-motion: reduce) { .rig-botsman :is(.br-teeth-low, .br-teeth-up, .br-brow-l, .br-brow-r) { animation: none; } }

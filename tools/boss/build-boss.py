@@ -19,6 +19,7 @@ SCALE_BY_BOSS = {}
 HIRES_BY_BOSS = {"vodovoz": (2, {"head", "eyes", "pupils", "eyes-closed", "browL", "browR", "mouth-closed", "throat",
                                  "teeth-up", "teeth-low", "head-open", "jaw"}),
                   "vadim": (2, {"head", "eyes", "pupils", "eyes-closed", "browL", "browR", "throat", "teeth-up", "teeth-low", "lips", "mouth-sad", "duck"}),
+                  "botsman": (2, {"head", "eyes", "pupils", "eyes-closed", "browL", "browR", "throat", "teeth-up", "teeth-low", "lips"}),
                   "knyaz": (2, {"head", "head-open", "eyes", "pupils", "eyes-closed", "throat", "teeth-up", "teeth-low", "lips", "mouth-closed", "mouth-sad", "gag"})}
 PARTS = ["tail", "legs", "body", "headset", "foreL", "foreR", "armL", "lowL", "handL", "bag", "cover", "keyRing", "keyFob", "keyKey", "duck", "armR", "lowR", "handR", "head", "head-open", "throat", "teeth-up", "teeth-low", "jaw", "lips", "mouth-sad", "eyes", "eyes-closed", "pupils", "brows", "brows-sad", "browL", "browR", "mouth", "mouth-closed", "collar", "gag"]
 # puppet-warped sequences (<part>@0.png, <part>@1.png …): one strip <part>.webp, frames side by side, frame 0 first
@@ -31,7 +32,8 @@ JOINT_BY_BOSS = {"kedr": {"foreR": ("y", "max")}, "kedr-beaten": {"foreR": ("y",
 PIVOT_BY_BOSS = {
     # Боцман (2000×3000 sheet cropped at (40, 100), tools/boss/assemble-botsman.py): the neck, shoulders, elbows, wrists
     "botsman": {"head": [440.0, 230.0], "armL": [260.0, 330.0], "lowL": [229.5, 532.5], "handL": [359.0, 644.5],
-                "armR": [600.0, 350.0], "lowR": [719.0, 417.0], "handR": [826.5, 291.0]},
+                "armR": [600.0, 350.0], "lowR": [719.0, 417.0], "handR": [826.5, 291.0],
+                "browL": [436.5, 149.5], "browR": [450.0, 149.8]},  # the brows: printed by assemble-botsman.py
     "bebyakyan": {"foreL": [228.0, 405.0], "foreR": [617.0, 437.0]},
     # whole arms swing at the shoulder, the hands with money turn at the wrist (inside the arm's swing)
     "garkusha": {"armL": [290.0, 335.0], "handL": [125.0, 560.0], "armR": [540.0, 350.0], "handR": [730.0, 430.0]},

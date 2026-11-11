@@ -388,6 +388,16 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
               {img("head-open")}
             </g>
           )}
+          {/* an open mouth over the whole head (Боцман): the throat, the upper teeth, the lower teeth on a jaw that drops
+              and grinds, the lips with their hole round them; hidden when he is hit — the head's own sad mouth shows */}
+          {P.lips && !P["head-open"] && (
+            <g className="br-mouth-open">
+              {img("throat")}
+              <g className="br-teeth-up">{img("teeth-up")}</g>
+              <g className="br-teeth-low">{img("teeth-low")}</g>
+              {img("lips")}
+            </g>
+          )}
           {clipEyes && (
             <mask id={maskId} style={{ maskType: "alpha" }} maskUnits="userSpaceOnUse" x="0" y="0" width={rig.w} height={rig.h}>{img("eyes")}</mask>
           )}
