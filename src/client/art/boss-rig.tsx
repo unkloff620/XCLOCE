@@ -27,6 +27,9 @@ const BEHIND: Record<string, "L" | "R"> = { mugo: "R", babafey: "L", gopnik: "L"
 const SPLIT_BEHIND = new Set(["babafey"]);
 /** rigs drawn as plain SVG only */
 const NO_PUPPET = new Set<string>(["knyaz"]);
+/** the bosses drawn whole (no legs of their own) that still bend at the waist on the pose engine: the waist (rig units)
+ *  and where the torso picture bends (data-pp-follow-at: the top follows fully down to a, not at all from b) */
+const WAIST: Record<string, { at: [number, number]; bend: string }> = { babafey: { at: [547, 940], bend: "0.24,0.46" } };
 
 /** frame schedules of the puppet strips: [frame, ms] — idle loops, ouch/strike play once */
 type SeqMode = "idle" | "ouch" | "strike" | "fear";
@@ -346,13 +349,14 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
       <g className="br-breath" style={{ transformOrigin: `${rig.w / 2}px ${rig.h}px`, transformBox: "view-box" }}>
         {/* legs of their own (Гопник): they stay put, everything above the waist leans in br-up (screens.css «Гопник») */}
         {img("legs", undefined, "back")}
-        <g className="br-up" style={P.legs ? { transformOrigin: `${P.legs.x + P.legs.w / 2}px ${P.legs.y + P.legs.h * 0.2}px`, transformBox: "view-box" } : undefined}>
+        <g className="br-up" style={P.legs ? { transformOrigin: `${P.legs.x + P.legs.w / 2}px ${P.legs.y + P.legs.h * 0.2}px`, transformBox: "view-box" }
+          : WAIST[baseId] ? { transformOrigin: `${WAIST[baseId].at[0]}px ${WAIST[baseId].at[1]}px`, transformBox: "view-box" } : undefined}>
         {P.tail && <g className="br-tail" {...joint("tail")} style={origin("tail")}>{img("tail", undefined, "back")}</g>}
         {behind && arm(behind, split ? "upper" : undefined, "back")}
         {/* with legs of its own the torso bends at the waist (the puppet): its frame is the standing one, the top
             follows the leaning upper body; without the puppet it leans whole with br-up */}
-        {P.legs && puppet ? (
-          <image className="pp" data-pp="back" data-pp-body="1" data-pp-own="br-breath" data-pp-follow="br-up" data-pp-follow-at="0.3,0.93"
+        {(P.legs || WAIST[baseId]) && puppet ? (
+          <image className="pp" data-pp="back" data-pp-body="1" data-pp-own="br-breath" data-pp-follow="br-up" data-pp-follow-at={WAIST[baseId]?.bend ?? "0.3,0.93"}
             href={`/bosses/${id}/rig/body.webp${P.body.v ? `?v=${P.body.v}` : ""}`} x={P.body.x} y={P.body.y} width={P.body.w} height={P.body.h} preserveAspectRatio="none" />
         ) : img("body", undefined, "back")}
         <g className="br-head" {...joint("head")} style={origin("head")}>

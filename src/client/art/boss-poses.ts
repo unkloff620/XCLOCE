@@ -153,7 +153,79 @@ const kzSmug: Action = {
   ],
 };
 
+/* Бабафей: L — the balalaika in the raised hand (a smash down with it, a fast strum-shake), R — the open palm (beckons
+   «иди сюда», shoves off); the right elbow rests bent (−30°) */
+const bfSmash: Action = {
+  dur: 0.76,
+  keys: [
+    { at: 0, pose: { armL: 7, lowL: -24, handL: -20, up: -2.5, x: -4, head: 2, lowR: 6 } }, // the balalaika back over the shoulder
+    { at: 0.2, pose: { armL: -7, lowL: 24, handL: 16, up: 3.5, x: 6, head: -2.5, armR: 4, lowR: -10 }, stiff: 4 }, // down on the head
+    { at: 0.32, pose: { armL: -4, lowL: 14, handL: 8, up: 2, x: 3, head: -1.5 }, stiff: 1.4 },
+    { at: 0.44, pose: {} },
+  ],
+};
+const bfStrum: Action = {
+  dur: 0.95,
+  keys: [
+    { at: 0, pose: { lowL: 6, handL: 9, head: 2.5, up: 0.8 } },
+    { at: 0.08, pose: { lowL: -4, handL: -10, head: 2.5, up: 0.8 }, stiff: 3 },
+    { at: 0.16, pose: { lowL: 6, handL: 10, head: 2.5, up: 0.8 }, stiff: 3 },
+    { at: 0.24, pose: { lowL: -4, handL: -10, head: 2.5, up: 0.8 }, stiff: 3 },
+    { at: 0.32, pose: { lowL: 6, handL: 10, head: 2.5, up: 0.8 }, stiff: 3 },
+    { at: 0.4, pose: { lowL: -3, handL: -8, head: 2, up: 0.5 }, stiff: 3 },
+    { at: 0.48, pose: { lowL: 4, handL: 6, head: 1 }, stiff: 2 },
+    { at: 0.6, pose: {} },
+  ],
+};
+const bfBeckon: Action = {
+  dur: 1.2,
+  keys: [
+    { at: 0, pose: { armR: 3, lowR: -12, handR: 4, head: -2, up: -1 } }, // the palm up to him
+    { at: 0.22, pose: { armR: 3, lowR: -16, handR: -18, head: -2.5, up: -1 }, stiff: 2 }, // «иди сюда»
+    { at: 0.4, pose: { armR: 3, lowR: -10, handR: 2, head: -2 }, stiff: 2 },
+    { at: 0.58, pose: { armR: 3, lowR: -16, handR: -16, head: -2.5 }, stiff: 2 },
+    { at: 0.78, pose: {} },
+  ],
+};
+const bfShove: Action = {
+  dur: 0.6,
+  keys: [
+    { at: 0, pose: { armR: -4, lowR: -24, handR: -6, up: -1 } }, // the palm drawn in
+    { at: 0.12, pose: { armR: 11, lowR: 20, handR: 14, up: 2.5, x: 5, head: 1.5 }, stiff: 4.5 }, // shoves out
+    { at: 0.26, pose: { armR: 7, lowR: 12, handR: 8 }, stiff: 1.4 },
+    { at: 0.38, pose: {} },
+  ],
+};
+
 const POSES: Record<string, Spec> = {
+  babafey: {
+    springs: {
+      up: { k: 65, c: 11.5 }, x: { k: 60, c: 11 }, head: { k: 110, c: 11 },
+      armL: { k: 85, c: 15 }, lowL: { k: 150, c: 16 }, handL: { k: 260, c: 14 },
+      armR: { k: 95, c: 15 }, lowR: { k: 180, c: 17 }, handR: { k: 320, c: 15 },
+    },
+    drag: { lowL: ["armL", -0.05], handL: ["lowL", -0.06], lowR: ["armR", -0.05], handR: ["lowR", -0.05], head: ["up", -0.08] },
+    idle: (t) => ({
+      up: 0.9 * Math.sin(t * 0.85) + 0.35 * Math.sin(t * 2 + 1),
+      x: 2.5 * Math.sin(t * 0.5),
+      head: 1.8 * Math.sin(t * 1.05 + 1) + 0.8 * Math.sin(t * 0.45),
+      armL: 2 * Math.sin(t * 1.1), lowL: 3 * Math.sin(t * 1.4 + 0.5), handL: 3.5 * Math.sin(t * 2.1 + 1),
+      armR: 1.6 * Math.sin(t * 1.2 + 2), lowR: -30 + 3.5 * Math.sin(t * 1.5 + 1), handR: 4 * Math.sin(t * 1.8),
+    }),
+    actions: [
+      { a: bfSmash, w: 26 },
+      { a: join(bfSmash, shift(bfSmash, 0.05)), w: 12 },
+      { a: bfStrum, w: 18 },
+      { a: bfShove, w: 16 },
+      { a: join(bfShove, shift(bfSmash, 0.05)), w: 14 },
+      { a: bfBeckon, w: 14 },
+    ],
+    rest: [0.35, 1.6],
+    hit: { head: 280, up: -80, x: -60, armL: 110, lowL: -160, handL: -240, armR: -110, lowR: 160, handR: 220 },
+    strike: join(bfSmash, shift(bfSmash, 0.08)),
+    // scared: the balalaika sinks, the palm up in front of him — and he keeps fending them off, slower
+    dazed: { pose: { armL: 6, lowL: -14, handL: -8, lowR: -14, handR: -10, head: 3, up: -1.5 }, act: true },
+  },
   knyaz: {
     sel: { up: ".kz-up", head: ".kz-head", armL: ".kz-arm-l", lowL: ".kz-none", handL: ".kz-hand-l", armR: ".kz-arm-r", lowR: ".kz-none", handR: ".kz-none" },
     bend: { lowL: { strip: ".kz-elbow-l", perFrame: 2, turn: ".kz-turn-l" }, lowR: { strip: ".kz-elbow-r", perFrame: 2 } },
