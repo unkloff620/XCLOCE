@@ -105,6 +105,7 @@ export const TATTOO_SETS: TattooSet[] = [
   solid("jackpot", "Джекпот", "vodovoz", "pacan", "gpu", 200), solid("sunrise", "Восход", "vodovoz", "avtor", "rug-pull-gun", 400),
   solid("safe", "Сейф", "knyaz", "pacan", "gpu", 250), solid("realm", "Княжество", "knyaz", "avtor", "rug-pull-gun", 500),
   solid("ducky", "Уточка", "vadim", "pacan", "gpu", 300), solid("racer", "Тачка", "vadim", "avtor", "rug-pull-gun", 600),
+  solid("dragon", "Дракон додзё", "botsman", "pacan", "gpu", 350), solid("cyber", "Кибер", "botsman", "avtor", "rug-pull-gun", 700),
   // Пепе (the event boss, content/bosses.ts EVENT_FIGHTS): one piece per win, «Пацанский» only
   solid("swamp", "Болото", "pepe", "pacan", "rug-pull-gun", 300),
   // Тося's sets (boss "tosya"): every pie he sells holds one piece (content/tosya.ts)
