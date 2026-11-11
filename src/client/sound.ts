@@ -384,10 +384,30 @@ function noise(a: AudioContext, at: number, dur: number, opts: { freq?: number; 
   src.start(at);
 }
 
+/*
+ * The recordings that come in several takes are played in turns, not by a coin: each one once, in a shuffled order,
+ * then a new shuffle — never the same take twice in a row (with two takes they simply alternate).
+ */
+const bags = new Map<string, string[]>();
+const lastOf = new Map<string, string>();
+function nextOf(group: string, takes: string[]): string {
+  let bag = bags.get(group);
+  if (!bag || !bag.length) {
+    bag = takes.slice();
+    for (let i = bag.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [bag[i], bag[j]] = [bag[j], bag[i]]; }
+    // the first of the new round is not the one just played
+    if (bag.length > 1 && bag[bag.length - 1] === lastOf.get(group)) [bag[0], bag[bag.length - 1]] = [bag[bag.length - 1], bag[0]];
+    bags.set(group, bag);
+  }
+  const id = bag.pop()!;
+  lastOf.set(group, id);
+  return id;
+}
+
 /** the fist fight's voice («Наехать»): one of the two recordings at random, with punches under it all the way through;
  *  returns how long it lasts (s) — the dust fight on the screen runs that long */
 export function raidVoice(): number {
-  const id = Math.random() < 0.5 ? "raid1" : "raid2";
+  const id = nextOf("raid", ["raid1", "raid2"]);
   const dur = buffers[id]?.duration ?? 2.5;
   if (muted) return dur;
   const a = audio();
@@ -411,7 +431,7 @@ export function sfx(name: Sfx, power = 0.5) {
   const t = a.currentTime + 0.005;
   switch (name) {
     case "wow":
-      if (sample(a, Math.random() < 0.5 ? "wow1" : "wow2", t, 1)) break;
+      if (sample(a, nextOf("wow", ["wow1", "wow2"]), t, 1)) break;
       tone(a, 140, t, 0.2, { type: "sawtooth", vol: 0.18, slide: 1.2 });
       tone(a, 170, t + 0.22, 0.4, { type: "sawtooth", vol: 0.18, slide: 0.7 });
       break;
@@ -420,10 +440,10 @@ export function sfx(name: Sfx, power = 0.5) {
       [392, 523, 659, 784].forEach((f, i) => tone(a, f, t + i * 0.09, 0.25, { type: "square", vol: 0.08 }));
       break;
     case "lvlvoice":
-      sample(a, Math.random() < 0.5 ? "lvlvoice1" : "lvlvoice2", t, 1);
+      sample(a, nextOf("lvlvoice", ["lvlvoice1", "lvlvoice2"]), t, 1);
       break;
     case "nychka":
-      if (sample(a, `nychka${1 + Math.floor(Math.random() * 4)}`, t, 1)) break;
+      if (sample(a, nextOf("nychka", ["nychka1", "nychka2", "nychka3", "nychka4"]), t, 1)) break;
       tone(a, 120, t, 0.3, { type: "sawtooth", vol: 0.18, slide: 1.3 });
       break;
     case "nishtyak":
@@ -454,7 +474,7 @@ export function sfx(name: Sfx, power = 0.5) {
       const now = performance.now();
       if (now - lastInk < 600) break;
       lastInk = now;
-      if (sample(a, `ink${1 + Math.floor(Math.random() * 3)}`, t, 0.65)) break;
+      if (sample(a, nextOf("ink", ["ink1", "ink2", "ink3"]), t, 0.65)) break;
       noise(a, t, 0.4, { freq: 300, type: "bandpass", q: 4, vol: 0.2 });
       break;
     }
@@ -463,7 +483,7 @@ export function sfx(name: Sfx, power = 0.5) {
       const now = performance.now();
       if (now - lastWear < 600) break;
       lastWear = now;
-      if (sample(a, `wear${1 + Math.floor(Math.random() * 3)}`, t, 0.65)) break;
+      if (sample(a, nextOf("wear", ["wear1", "wear2", "wear3"]), t, 0.65)) break;
       noise(a, t, 0.25, { freq: 1600, type: "bandpass", q: 0.7, vol: 0.25 });
       break;
     }
@@ -603,26 +623,26 @@ export function sfx(name: Sfx, power = 0.5) {
       noise(a, t + 0.06, 0.12, { freq: 2200, type: "bandpass", q: 2, vol: 0.18 });
       break;
     case "pump":
-      sample(a, Math.random() < 0.5 ? "pump1" : "pump2", t, 1);
+      sample(a, nextOf("pump", ["pump1", "pump2"]), t, 1);
       break;
     case "raid":
-      sample(a, Math.random() < 0.5 ? "raid1" : "raid2", t, 1);
+      sample(a, nextOf("raid", ["raid1", "raid2"]), t, 1);
       break;
     case "brawllose":
       if (sample(a, "brawllose", t, 1)) break;
       [311, 294, 277].forEach((f, i) => tone(a, f, t + i * 0.2, 0.2, { type: "sawtooth", vol: 0.05 }));
       break;
     case "thingdrop":
-      if (sample(a, ["thingdrop1", "thingdrop2", "wear2", "wear3"][Math.floor(Math.random() * 4)], t, 1)) break;
+      if (sample(a, nextOf("thingdrop", ["thingdrop1", "thingdrop2", "wear2", "wear3"]), t, 1)) break;
       tone(a, 659, t, 0.3, { type: "triangle", vol: 0.12 });
       break;
     case "casedrop":
-      if (sample(a, Math.random() < 0.5 ? "casedrop1" : "casedrop2", t, 1)) break;
+      if (sample(a, nextOf("casedrop", ["casedrop1", "casedrop2"]), t, 1)) break;
       tone(a, 784, t, 0.3, { type: "triangle", vol: 0.12 });
       break;
     case "victory": {
       const pool = ["victory1", "victory2", "victory3", "victory4", "victory5", "bigwin"];
-      if (sample(a, pool[Math.floor(Math.random() * pool.length)], t, 1)) break;
+      if (sample(a, nextOf(`victory${pool.length}`, pool), t, 1)) break;
       [523, 659, 784, 1047].forEach((f, i) => tone(a, f, t + i * 0.09, 0.25, { type: "square", vol: 0.08 }));
       break;
     }
@@ -631,7 +651,7 @@ export function sfx(name: Sfx, power = 0.5) {
       [523, 659, 784, 1047].forEach((f, i) => tone(a, f, t + i * 0.09, 0.25, { type: "square", vol: 0.08 }));
       break;
     case "failgame":
-      if (sample(a, Math.random() < 0.5 ? "fail" : "fail2", t, 1)) break;
+      if (sample(a, nextOf("fail", ["fail", "fail2"]), t, 1)) break;
       [311, 294, 277].forEach((f, i) => tone(a, f, t + i * 0.2, 0.2, { type: "sawtooth", vol: 0.05 }));
       break;
     case "fail":
@@ -639,7 +659,7 @@ export function sfx(name: Sfx, power = 0.5) {
       [311, 294, 277].forEach((f, i) => tone(a, f, t + i * 0.2, 0.2, { type: "sawtooth", vol: 0.05 }));
       break;
     case "zonk":
-      if (sample(a, Math.random() < 0.5 ? "fail" : "fail2", t, 1)) break;
+      if (sample(a, nextOf("fail", ["fail", "fail2"]), t, 1)) break;
       // the sad trombone of a zonk
       [311, 294, 277].forEach((f, i) => tone(a, f, t + i * 0.2, 0.2, { type: "sawtooth", vol: 0.05 }));
       tone(a, 262, t + 0.6, 0.55, { type: "sawtooth", vol: 0.05, slide: 0.92 });
