@@ -5,6 +5,7 @@ import { getDb } from "../../../../server/db.ts";
 import { json } from "../../../../server/http.ts";
 import { dispatchNotifications } from "../../../../server/notify-send.ts";
 import { runAllAutos } from "../../../../server/systems/autos.ts";
+import { settleAllWins } from "../../../../server/game.ts";
 
 /**
  * Sends due Telegram reminders. Called by Vercel Cron (every 15 min, 09:00–23:59 MSK) and maybe an external pinger.
@@ -24,7 +25,9 @@ export async function GET(req: Request) {
     const db = await getDb();
     // the automation (toggles of today: a zone's energy, the bosses' free hits), then the reminders
     const autos = await runAllAutos(db).catch(() => ({ players: 0 }));
-    return json({ ...(await dispatchNotifications(db)), autos });
+    // the bosses' rewards of the players who are away: won is won (combat.ts settleMyWins)
+    const wins = await settleAllWins(db).catch(() => ({ players: 0 }));
+    return json({ ...(await dispatchNotifications(db)), autos, wins });
   } catch {
     return json({ error: "failed" }, 500);
   }

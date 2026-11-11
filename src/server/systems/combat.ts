@@ -25,7 +25,7 @@ import { notifyBossLow } from "./notify.ts";
  * so a hit by anyone on any boss lowers HP in every running fight of every player (except «Соло» fights).
  * Each boss row still counts its own damage and wins (statistics). Hits carry the global sequence number.
  * Lock order everywhere: player row (FOR NO KEY UPDATE) → the GLOBAL row (FOR UPDATE). Other players'
- * rows are never touched inside an attack: winners collect their reward themselves (claimFight).
+ * rows are never touched inside an attack: each winner's reward is granted in his own transaction (settleMyWins).
  * Fights started before the switch (fights.global = false) keep their boss's own counter in the history views.
  */
 export const GLOBAL = "_all";
@@ -345,7 +345,18 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1
 }
 
 /** Collects the reward of a won fight (or acknowledges a lost one). Rewards and the key go to the inventory. */
-export async function claimFight(ctx: Ctx, fightId: number) {
+/**
+ * The rewards of my won fights are mine the moment the boss falls: granted with my very next request (gameState runs
+ * after every action and on every load — the killer gets his in the same request) and by the cron for those who are
+ * away. The victory card («Забрать», result.tsx) only shows them (fight_claim then marks the fight seen).
+ */
+export async function settleMyWins(ctx: Ctx): Promise<void> {
+  const won = await ctx.q.query<{ id: number }>("SELECT id FROM fights WHERE player_id=$1 AND status='won' AND reward IS NULL ORDER BY id", [ctx.pid]);
+  for (const f of won) await claimFight(ctx, f.id, false);
+}
+
+/** the victory card: the reward (granted already, settleMyWins — or now, if not yet), the fight marked seen */
+export async function claimFight(ctx: Ctx, fightId: number, see = true) {
   const [f] = await ctx.q.query<FightRow>("SELECT * FROM fights WHERE id=$1 AND player_id=$2 FOR UPDATE", [fightId, ctx.pid]);
   if (!f) throw new GameError("no_fight", "Бой не найден", 404);
   if (f.status === "active") throw new GameError("fight_running", "Бой ещё идёт");
@@ -354,8 +365,11 @@ export async function claimFight(ctx: Ctx, fightId: number) {
     return { status: "lost" as const, reward: null };
   }
   if (f.reward) {
-    await ctx.q.query("UPDATE fights SET seen=true WHERE id=$1", [f.id]);
-    return { status: "won" as const, reward: f.reward };
+    if (see) await ctx.q.query("UPDATE fights SET seen=true WHERE id=$1", [f.id]);
+    // granted already (settleMyWins): the same answer the card got when it was granted here
+    const r = f.reward as Granted;
+    const k = r.items?.find((x) => x.id === keyId(f.boss_id))?.qty ?? 0;
+    return { status: "won" as const, reward: f.reward, share: rewardShare(Number(f.my_damage)), key: true, bonusKey: k >= 2 };
   }
   const def = bossById(f.boss_id)!;
   // being in a won fight earns the whole reward, hits or not: money, xp, the pass, the drop, the medal (content/bosses.ts)
@@ -466,7 +480,7 @@ export async function claimFight(ctx: Ctx, fightId: number) {
   if (unlocked.length) granted.unlocks = unlocked;
   // «Взлом»: while the event is on, a box for the win (any mode, the same fair share as the pass)
   if (earnedKey) await heistDrop(ctx, def, granted);
-  await ctx.q.query("UPDATE fights SET reward=$2, seen=true WHERE id=$1", [f.id, JSON.stringify(granted)]);
+  await ctx.q.query("UPDATE fights SET reward=$2, seen=seen OR $3 WHERE id=$1", [f.id, JSON.stringify(granted), see]);
   {
     await ctx.q.query(
       "INSERT INTO boss_damage (boss_id, player_id, wins) VALUES ($1,$2,1) ON CONFLICT (boss_id, player_id) DO UPDATE SET wins = boss_damage.wins + 1",

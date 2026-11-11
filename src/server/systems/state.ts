@@ -5,7 +5,7 @@ import { autosView } from "./autos.ts";
 import { fortuneOn, isAdminPlayer } from "./fortune.ts";
 import { GameError, type Queryable } from "../db.ts";
 import { balances, energyCfgOf, energyNow, moscowDay, type Ctx, type PlayerRow } from "../core.ts";
-import { fightHp, settleMyFight, unlockedItems } from "./combat.ts";
+import { fightHp, settleMyFight, settleMyWins, unlockedItems } from "./combat.ts";
 import { dealerBonus, inventoryView } from "./shop.ts";
 import { yardSync } from "./yard.ts";
 import { levelFromXp } from "../../content/levels.ts";
@@ -38,6 +38,7 @@ import { giftsLeft, giftsReceived, stashWish } from "./swap.ts";
 /** Everything the HUD and the always-visible parts of the game need. Runs inside the player's transaction. */
 export async function gameState(ctx: Ctx) {
   await settleMyFight(ctx);
+  await settleMyWins(ctx);
   const [p] = await ctx.q.query<PlayerRow>("SELECT * FROM players WHERE id=$1", [ctx.pid]);
   if (!p) throw new GameError("no_player", "Игрок не найден", 404);
   await touchActivity(ctx.q, ctx.pid, moscowDay(ctx.now), ctx.now);

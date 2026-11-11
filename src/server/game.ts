@@ -71,6 +71,23 @@ export async function inPlayerTx<T>(db: Db, pid: number, fn: (ctx: Ctx) => Promi
   return { result, state };
 }
 
+/** the cron: the rewards of the won fights of the players who are away (settleMyWins — the others get theirs on any request) */
+export async function settleAllWins(db: Db, now = Date.now()) {
+  const ids = (await db.query<{ player_id: number }>("SELECT DISTINCT player_id FROM fights WHERE status='won' AND reward IS NULL LIMIT 200")).map((r) => Number(r.player_id));
+  let n = 0;
+  for (const pid of ids) {
+    try {
+      await db.tx(async (q) => {
+        const ctx = await makeCtx(q, pid, { now });
+        await lockPlayer(ctx);
+        await combat.settleMyWins(ctx);
+      });
+      n++;
+    } catch { /* one player's trouble must not stop the others */ }
+  }
+  return { players: n };
+}
+
 export const ACTIONS = [
   "fight_start", "attack", "fight_claim", "fight_flee",
   "task", "location_claim", "business_up", "business_claim",
