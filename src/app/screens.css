@@ -6172,3 +6172,15 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 /* four dice and more: the points over the dice, both in the middle */
 .zb-c2.wide { flex-direction: column-reverse; align-items: center; gap: 0.2cqw; }
 .zb-c2.wide b { line-height: 1; }
+/* the paper's sheet as in the artist's example: hand-lettered ink, the dice drawn in ink (outline and pips, no plastic) */
+.zb-sheet2 { color: #3a2410; gap: 0; }
+.zb-sheet2-h { font-family: var(--font-hand), var(--font-display), sans-serif; font-weight: 700; font-size: 3.6cqw; line-height: 0.95; letter-spacing: 0.03em; color: #3a2410; margin-bottom: 0.8cqw; }
+.zb-c2 { gap: 1.2cqw; padding: 0.15cqw 0.6cqw; }
+.zb-c2 b { font-family: var(--font-hand), var(--font-body), sans-serif; font-weight: 700; font-size: 3.4cqw; line-height: 1; color: #3a2410; }
+.zb-c2-dice { gap: 0.35cqw; }
+.zb-c2-dice i { width: 2.9cqw; height: 2.9cqw; border-radius: 0.45cqw; background: rgba(255, 246, 222, 0.35); border: 0.2cqw solid rgba(58, 36, 16, 0.85); box-shadow: none; }
+.zb-c2-dice circle { fill: #3a2410; }
+.zb-c2.wide { gap: 0.1cqw; margin-top: 0.3cqw; }
+.zb-c2.can { background: rgba(255, 190, 40, 0.32); }
+.zb-c2.on { background: rgba(40, 130, 60, 0.25); box-shadow: inset 0 0 0 0.2cqw rgba(40, 110, 50, 0.5); }
+.zb-sheet2-h { font-size: 3.1cqw; }
