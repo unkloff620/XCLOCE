@@ -519,9 +519,11 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
   const [extra, setExtra] = useState(0);
   const extraKey = playing ? `${g?.id}:${g?.round}:${pastSets}` : "";
   const prevExtra = useRef(extraKey);
+  const autoAt = useRef(0);
   useEffect(() => {
     const was = prevExtra.current;
     prevExtra.current = extraKey;
+    if (Date.now() - autoAt.current < 4000) return; // shown already, when the last die was picked
     if (extraKey && was && was !== extraKey && was.split(":").slice(0, 2).join(":") === extraKey.split(":").slice(0, 2).join(":") && pastSets > 0) {
       setExtra(Date.now() % 100000);
       haptic.ok();
@@ -538,6 +540,20 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
   const target = g?.target ?? 0;
   const left = (() => { const l = (g?.left ?? 6) - pick.length; return l <= 0 ? 6 : l; })();
   const canBank = playing && !show && pts !== null && turn >= bankMin;
+  // every die of the throw is in the ladder and every one scores: no button to press — «Дополнительный бросок» at once,
+  // and the six are thrown again
+  const allIn = playing && !show && !g?.ask && roll.length > 0 && pick.length === roll.length && pts !== null;
+  useEffect(() => {
+    if (!allIn) return;
+    const t = setTimeout(() => {
+      autoAt.current = Date.now();
+      setExtra(Date.now() % 100000);
+      haptic.ok();
+      sfx("reward");
+      void run("zonk_move", { pick, then: "roll" });
+    }, 450);
+    return () => clearTimeout(t);
+  }, [allIn, rollKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const lvl = info ? Math.max(0, Math.min(100, ((info.xp - info.from) / Math.max(1, info.to - info.from)) * 100)) : 0;
   const hint = !hintsOn || show || g?.ask ? null
     : pick.length === 0 ? "Нажми на очковые кости"
