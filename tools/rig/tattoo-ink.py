@@ -1,6 +1,7 @@
 """
 Ink layers of a tattoo set from the image edits — the ONE way to make them (then run build-tattoos.py):
-  python3 tools/rig/tattoo-ink.py <set> [<set> …]
+  python3 tools/rig/tattoo-ink.py [--sparse] <set> [<set> …]
+  --sparse: a set of separate motifs on bare skin (not a full suit): no ink pushed out to the outline, no coverage check
 Inputs (tools/rig/source/tattoo/):
   _base/in.png, full.png      the bare hero the edits were made on (1024×1536, the rig at 0,51 ×1.434) and his body alpha
   _base/head-in.png, handR-in.png, geo.json   the head and the right hand alone (1024², placed by geo.json)
@@ -99,7 +100,7 @@ def unmix(a, b, inside):
     return out, lines
 
 
-def fill_gaps(out, skin, lines):
+def fill_gaps(out, skin, lines, sparse=False):
     """rule 2: inpaint the holes the hero's own lines cut in the inked area (only those: a light stroke of the tattoo has a
     low alpha on purpose), then push the ink out to the outline"""
     A = out[..., 3]
@@ -111,6 +112,9 @@ def fill_gaps(out, skin, lines):
     h = m > 0
     out[h, :3] = rgb[h]
     out[h, 3] = np.maximum(al[h], A[h])
+    if sparse:
+        out[~skin] = 0
+        return out
     # the strip along the outline (outside the inked area only — never over the light strokes inside it): the nearest
     # solid ink, copied outwards
     solid = out[..., 3] > 150
@@ -126,7 +130,7 @@ def fill_gaps(out, skin, lines):
     return out
 
 
-def main(sid):
+def main(sid, sparse=False):
     base = os.path.join(T, "_base")
     a = prep(os.path.join(base, "in.png"))
     body = np.array(Image.open(os.path.join(base, "full.png")))[..., 3] > 128
@@ -147,7 +151,7 @@ def main(sid):
     own = (np.abs(sdf(bm)) < 8) & (b.mean(2) < 110) & (ndimage.distance_transform_edt(body) > 5)
     own = ndimage.binary_dilation(own, iterations=2) & body
     out[own, 3] = 0
-    out = fill_gaps(out, skin, lines | own)
+    out = fill_gaps(out, skin, lines | own, sparse)
     covered = ndimage.binary_fill_holes(ndimage.binary_closing(out[..., 3] > 30, iterations=3))
     bare = (skin & ~covered).sum() / skin.sum()
     os.makedirs(os.path.join(T, sid), exist_ok=True)
@@ -173,10 +177,11 @@ def main(sid):
         I = Image.fromarray(ink).crop((g["ox"], g["oy"], g["ox"] + r.shape[1], g["oy"] + r.shape[0])).resize((g["w"], g["h"]), Image.LANCZOS)
         I.save(os.path.join(T, sid, f"{p}-ink.png"))
     print(sid, "bare skin", round(bare * 100, 1), "%")
-    if bare > MAX_BARE:
+    if bare > MAX_BARE and not sparse:
         raise SystemExit(f"{sid}: {bare:.1%} of the skin left bare (> {MAX_BARE:.0%}) — the edit is not a full suit, redo it")
 
 
 if __name__ == "__main__":
-    for s in sys.argv[1:]:
-        main(s)
+    sparse = "--sparse" in sys.argv
+    for s in [a for a in sys.argv[1:] if a != "--sparse"]:
+        main(s, sparse)
