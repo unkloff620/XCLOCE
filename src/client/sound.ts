@@ -8,7 +8,7 @@
  * The mute switch is remembered on this device.
  */
 
-export type Sfx = "spin" | "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" | "upgrade" | "levelup" | "error" | "win" | "step" | "door" | "locked"
+export type Sfx = "wear" | "spin" | "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" | "upgrade" | "levelup" | "error" | "win" | "step" | "door" | "locked"
   /* mini-games: dice in the cup and on the table, a card flip, a deal, poker chips, a squashed roach, a zonk */
   | "shake" | "dice" | "card" | "deal" | "chips" | "splat" | "zonk"
   /* a profile: «Ништяк!» for a pumped biceps (public/assets/sound/nishtyak-4.mp3, a hoarse prison voice), a spit, a fist fight */
@@ -23,7 +23,7 @@ export type Sfx = "spin" | "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | 
   | "bigwin"
   /* a tattoo or a thing out of the case: one of two recordings at random (public/assets/sound/case-drop-1/2.mp3) */
   | "casedrop"
-  /* a thing out of the case (a cigarette, a toothpick): one of two recordings at random (thing-drop-1/2.mp3) */
+  /* a thing out of the case (a cigarette, a toothpick): one of four recordings at random (thing-drop-1/2.mp3 and two of the «надел» ones, wear-2/3.mp3) */
   | "thingdrop"
   /* the coin at half the volume: the tiles coming out of the case one by one */
   | "coinsoft"
@@ -241,6 +241,10 @@ const SAMPLE_URLS = {
   page: "/assets/sound/page.mp3",
   // the wheel of «Колесо удачи» turning (the player's recording, tools/sound/source/fortune-spin.mp3, cut to the 1.5 s turn)
   fortunespin: "/assets/sound/fortune-spin.mp3",
+  // a thing put on: one of three recordings of the player's at random (tools/sound/source/wear-1..3.mp3)
+  wear1: "/assets/sound/wear-1.mp3",
+  wear2: "/assets/sound/wear-2.mp3",
+  wear3: "/assets/sound/wear-3.mp3",
   door: "/assets/sound/door.mp3",
   keys: "/assets/sound/keys.mp3",
   punch: "/assets/sound/punch.mp3",
@@ -393,6 +397,7 @@ export function raidVoice(): number {
   return dur;
 }
 
+let lastWear = 0;
 /** Plays a sound. `power` 0..1 makes hits heavier. */
 export function sfx(name: Sfx, power = 0.5) {
   if (muted) return;
@@ -439,6 +444,15 @@ export function sfx(name: Sfx, power = 0.5) {
         if (!sample(a, "punch", at, 0.7, 0.9 + k * 0.08)) noise(a, at, 0.12, { freq: 900, vol: 0.5 });
       }
       break;
+    case "wear": {
+      // several things saved at once play it once
+      const now = performance.now();
+      if (now - lastWear < 600) break;
+      lastWear = now;
+      if (sample(a, `wear${1 + Math.floor(Math.random() * 3)}`, t, 0.65)) break;
+      noise(a, t, 0.25, { freq: 1600, type: "bandpass", q: 0.7, vol: 0.25 });
+      break;
+    }
     case "spin":
       if (sample(a, "fortunespin", t, 0.7)) break;
       for (let i = 0; i < 14; i++) noise(a, t + 1.4 * (1 - Math.pow(1 - i / 14, 1.6)), 0.02, { freq: 2200, type: "bandpass", q: 3, vol: 0.25 });
@@ -585,7 +599,7 @@ export function sfx(name: Sfx, power = 0.5) {
       [311, 294, 277].forEach((f, i) => tone(a, f, t + i * 0.2, 0.2, { type: "sawtooth", vol: 0.05 }));
       break;
     case "thingdrop":
-      if (sample(a, Math.random() < 0.5 ? "thingdrop1" : "thingdrop2", t, 1)) break;
+      if (sample(a, ["thingdrop1", "thingdrop2", "wear2", "wear3"][Math.floor(Math.random() * 4)], t, 1)) break;
       tone(a, 659, t, 0.3, { type: "triangle", vol: 0.12 });
       break;
     case "casedrop":
@@ -645,7 +659,7 @@ export const ACTION_SFX: Partial<Record<string, Sfx>> = {
   buy: "buy", exchange: "buy", room_buy: "upgrade", equipment_upgrade: "upgrade", piece_buy: "upgrade", talent_up: "upgrade", talent_reset: "chest",
   daily_claim: "reward", quest_claim: "reward", location_claim: "reward", fight_claim: "win", quest_chest: "chest",
   yard_pick: "coin", task: "step", sell: "coin", use: "coin",
-  fight_start: "tap", equip: "tap", unequip: "tap", room_set: "tap", decor_set: "tap", decor_save: "tap", look_set: "tap", notify_set: "tap",
+  fight_start: "tap", equip: "wear", unequip: "tap", room_set: "tap", decor_set: "tap", decor_save: "tap", look_set: "tap", notify_set: "tap",
 };
 
 /* ---------------- background music ----------------

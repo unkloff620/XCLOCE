@@ -103,6 +103,8 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
     if (id) worn[slot] = id;
     else delete worn[slot];
     setDraft({ ...draft, worn });
+    // a thing put on: the rustle of clothes (the button's «тык» is left out — data-nosfx on the items)
+    if (id && id !== draft.worn[slot]) sfx("wear");
   };
   const patch = (p: Partial<Look>) => {
     haptic.tap();
@@ -261,7 +263,7 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
           <span className="sty-item-name">{slot === "HAND" ? "Обычная" : "Ничего"}</span>
         </button>
         {items.map((i) => (
-          <button key={i.id} className={`sty-item rar-${i.rarity} ${draft.worn[slot] === i.id ? "on" : ""}`} onClick={() => wear(i.id)}>
+          <button key={i.id} data-nosfx className={`sty-item rar-${i.rarity} ${draft.worn[slot] === i.id ? "on" : ""}`} onClick={() => wear(i.id)}>
             <ItemArt id={i.id} size={46} />
             <span className="sty-item-name">{i.name}</span>
           </button>
