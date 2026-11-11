@@ -667,7 +667,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
           {/* the sheet on the right: the combinations; a row lights up when the roll has it, brighter when it is picked */}
           {/* the combinations written on the picture's paper: the dice of each and what it scores (four dice and more: the
               points over the dice); a row lights up when the roll has it (hints), green when it is picked */}
-          <div className="zb-sheet2" style={{ left: zx(634), top: zy(416), width: zx(198), height: zy(632) }}>
+          <div className="zb-sheet2" style={{ left: zx(648), top: zy(418), width: zx(186), height: zy(630) }}>
             <b className="zb-sheet2-h">Фартовые<br />комбинации</b>
             {COMBOS.map((c) => {
               const can = hintsOn && c.test(nRoll, roll.length);
