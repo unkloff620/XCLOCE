@@ -4118,9 +4118,9 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
  },
  "tat-luck-face": {
   "part": "head",
-  "x": 551.0,
-  "y": 110.0,
-  "w": 49.0,
+  "x": 527.0,
+  "y": 99.0,
+  "w": 62.0,
   "h": 65.0
  },
  "tat-luck-hand-r": {
@@ -4251,9 +4251,9 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
  },
  "tat-luck-foot-l": {
   "part": "torso",
-  "x": 109.0,
+  "x": 107.0,
   "y": 1134.0,
-  "w": 270.0,
+  "w": 272.0,
   "h": 191.0
  },
  "tat-luck-foot-r": {
@@ -4265,10 +4265,10 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
  },
  "tat-hustler-face": {
   "part": "head",
-  "x": 547.0,
-  "y": 105.0,
-  "w": 54.0,
-  "h": 44.0
+  "x": 512.0,
+  "y": 83.0,
+  "w": 78.0,
+  "h": 98.0
  },
  "tat-hustler-hand-r": {
   "part": "handR",
@@ -4398,9 +4398,9 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
  },
  "tat-hustler-foot-l": {
   "part": "torso",
-  "x": 112.0,
+  "x": 107.0,
   "y": 1134.0,
-  "w": 267.0,
+  "w": 272.0,
   "h": 191.0
  },
  "tat-hustler-foot-r": {
@@ -4412,10 +4412,10 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
  },
  "tat-katran-face": {
   "part": "head",
-  "x": 555.0,
-  "y": 99.0,
-  "w": 47.0,
-  "h": 56.0
+  "x": 514.0,
+  "y": 97.0,
+  "w": 82.0,
+  "h": 85.0
  },
  "tat-katran-hand-r": {
   "part": "handR",
@@ -4429,7 +4429,7 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
   "x": 394.0,
   "y": 242.0,
   "w": 211.0,
-  "h": 143.0
+  "h": 147.0
  },
  "tat-katran-chest-l": {
   "part": "upper",
@@ -4559,10 +4559,10 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
  },
  "tat-smotr-face": {
   "part": "head",
-  "x": 562.0,
-  "y": 112.0,
-  "w": 38.0,
-  "h": 42.0
+  "x": 534.0,
+  "y": 82.0,
+  "w": 63.0,
+  "h": 86.0
  },
  "tat-smotr-hand-r": {
   "part": "handR",
