@@ -375,13 +375,13 @@ const btBar: Action = {
   ],
 };
 const btHammer: Action = {
-  dur: 0.62,
+  dur: 0.66,
   keys: [
-    { at: 0, pose: { armR: -12, lowR: -22, handR: -10, up: 1.5, x: 6, head: 1.5 } }, // the guard fist pulled up and back
-    { at: 0.05, pose: { armR: -6, lowR: 118, handR: 12, up: -1.5, x: -4 }, stiff: 6 }, // the forearm folds down first (no swing out)
-    { at: 0.12, pose: { armR: 28, lowR: 125, handR: 22, up: -3.5, x: -12, head: 2.5, armL: -3, lowL: -8 }, stiff: 6 }, // the fist down into the player
-    { at: 0.25, pose: { armR: 18, lowR: 95, handR: 14, up: -2, x: -6 }, stiff: 1.4 },
-    { at: 0.36, pose: {} },
+    { at: 0, pose: { armR: -8, lowR: 14, handR: -10, up: 1.5, x: 6, head: 1.5 } }, // the guard fist cocked up and back
+    { at: 0.06, pose: { armR: 4, lowR: -110, handR: -6, up: -1, x: -4 }, stiff: 6 }, // the forearm turns counter-clockwise, over the chest
+    { at: 0.13, pose: { armR: 10, lowR: -182, handR: -12, up: -3.5, x: -12, head: 2.5, armL: -3, lowL: -8 }, stiff: 6 }, // the fist down into the player
+    { at: 0.26, pose: { armR: 8, lowR: -150, handR: -8, up: -2, x: -6 }, stiff: 1.4 },
+    { at: 0.38, pose: {} },
   ],
 };
 const btTaunt: Action = {
@@ -400,7 +400,7 @@ const POSES: Record<string, Spec> = {
     springs: {
       up: { k: 70, c: 11.5 }, x: { k: 60, c: 11 }, head: { k: 110, c: 11 },
       armL: { k: 110, c: 16 }, lowL: { k: 200, c: 18 }, handL: { k: 320, c: 16 },
-      armR: { k: 110, c: 16 }, lowR: { k: 620, c: 36 }, handR: { k: 320, c: 16 },
+      armR: { k: 110, c: 16 }, lowR: { k: 260, c: 20 }, handR: { k: 320, c: 16 },
     },
     drag: { lowL: ["armL", -0.05], handL: ["lowL", -0.05], handR: ["lowR", -0.05], head: ["up", -0.08] },
     // on his toes: the guard bobs, the body sways
