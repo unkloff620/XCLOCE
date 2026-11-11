@@ -6239,4 +6239,7 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 @keyframes btr-swing { 0% { transform: rotate(0deg); } 6% { transform: rotate(-4.5deg); } 15% { transform: rotate(3.4deg); } 24% { transform: rotate(-2.4deg); }
   33% { transform: rotate(1.6deg); } 42% { transform: rotate(-1deg); } 51% { transform: rotate(0.6deg); } 60% { transform: rotate(-0.4deg); } 70% { transform: rotate(0.9deg); }
   80% { transform: rotate(-0.9deg); } 90% { transform: rotate(0.6deg); } 100% { transform: rotate(0deg); } }
-@media (prefers-reduced-motion: reduce) { .btr-code-a, .btr-code-b, .btr-bag { animation: none; } }
+/* the bag in «Додзё Боцмана» at home: a slow, even sway from side to side */
+.home-bag { animation: home-bag-sway 5.2s ease-in-out infinite alternate; transform: rotate(-3deg); }
+@keyframes home-bag-sway { from { transform: rotate(-3deg); } to { transform: rotate(3deg); } }
+@media (prefers-reduced-motion: reduce) { .btr-code-a, .btr-code-b, .btr-bag, .home-bag { animation: none; transform: none; } }

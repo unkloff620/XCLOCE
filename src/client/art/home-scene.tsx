@@ -5,9 +5,29 @@ import { RigViewport, type RigEdit, type Worn } from "./rig.tsx";
 import { ART_ASPECT } from "./desk-data.ts";
 import { usedUrl } from "../preload.ts";
 import { KnyazRoom } from "./arena-bg.tsx";
+import { BOTSMAN_ROOM } from "./arena-botsman-data.ts";
 import { placedArt, placedOf, type Look } from "../../content/home.ts";
 
 type ObjId = keyof typeof SCENE_OBJECTS;
+
+/**
+ * «Додзё Боцмана»: the punching bag sways slowly on its chain. The room picture has the bag drawn in, so the bag's corner is
+ * covered by the same room without the bag (his fight room's layer), and the bag's own layer swings over it.
+ * Coordinates are his 1024×1536 room, scaled to the scene width (tools/boss/build-botsman-room.py: no offset at the top).
+ */
+function DojoBag() {
+  const B = BOTSMAN_ROOM;
+  const cx = B.bag.x - 46, cw = B.bag.w + 92, cy = B.pin[1] - 14, ch = B.bag.y + B.bag.h - cy + 14;
+  return (
+    <g transform={`scale(${SCENE.w / 1024})`} aria-hidden="true">
+      <defs><clipPath id="dojo-bag-clip"><rect x={cx} y={cy} width={cw} height={ch} /></clipPath></defs>
+      <image href="/assets/arena/botsman/room.webp" x={0} y={0} width={1024} height={1536} preserveAspectRatio="none" clipPath="url(#dojo-bag-clip)" />
+      <g className="home-bag" style={{ transformOrigin: `${B.pin[0]}px ${B.pin[1]}px`, transformBox: "view-box" }}>
+        <image href="/assets/arena/botsman/bag.webp" x={B.bag.x} y={B.bag.y} width={B.bag.w} height={B.bag.h} preserveAspectRatio="none" />
+      </g>
+    </g>
+  );
+}
 
 /** a picture standing at its place; a picture of another height keeps the place's bottom line (legs, stand on the desk) */
 function Obj({ id, art }: { id: ObjId; art: string }) {
@@ -73,6 +93,7 @@ export function HomeScene({ room = "basic", onPick, onHero, still, look, worn, p
         // «Хранилище Князя» is alive like his fight room: his 1024×1536 picture scaled onto the scene (tools/scene: ×1060/1024, 53 px off the top)
         <g transform={`translate(0 -53) scale(${SCENE.w / 1024})`}><KnyazRoom uid="home" /></g>
       ) : <image href={`/assets/home/${bg}.webp`} x="0" y="0" width={SCENE.w} height={SCENE.h} preserveAspectRatio="none" />}
+      {room === "dojo" && !still && <DojoBag />}
       {lights.length > 0 && (
         <g className={still ? undefined : "room-lights"} style={{ mixBlendMode: "screen" }} aria-hidden="true">
           <defs>
