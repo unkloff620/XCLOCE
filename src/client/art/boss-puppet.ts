@@ -113,12 +113,17 @@ function buildMesh(gl: WebGLRenderingContext, img: SVGImageElement): Mesh {
   };
   // data-pp-follow="<class>": the picture's top goes with that group and its bottom stays (Восток's legs: the hips
   // bob with the upper body, the feet stay planted) — the weight fades from the top fifth to the middle
-  const follow = img.getAttribute("data-pp-follow");
-  const followEl = follow ? img.ownerSVGElement?.querySelector(`.${follow}`) ?? null : null;
-  const followSlot = followEl ? bones.push(followEl) - 1 : -1;
+  // several groups may be followed, each over its own band: data-pp-follow="br-up bs-hem", data-pp-follow-at="0.3,0.5;0.78,0.52"
+  // (a > b: the bottom follows — Боцман's coat tails swing with bs-hem below the belt, the top leans with br-up)
+  const followCls = (img.getAttribute("data-pp-follow") ?? "").split(/\s+/).filter(Boolean);
+  const followAts = (img.getAttribute("data-pp-follow-at") ?? "").split(";").map((t) => (t ? t.split(",").map(Number) : null));
+  const followers = followCls.map((c, k) => {
+    const el = img.ownerSVGElement?.querySelector(`.${c}`) ?? null;
+    return el ? { slot: bones.push(el) - 1, at: followAts[k] ?? null } : null;
+  }).filter((f): f is { slot: number; at: number[] | null } => !!f);
   // data-pp-follow-at="a,b": the top follows fully down to a (share of the height) and not at all from b — a bend at the
   // waist; the joints then take their share from all the weights (so the shoulders and the neck go with the lean too)
-  const followAt = img.getAttribute("data-pp-follow-at")?.split(",").map(Number) ?? null;
+  const followAt = followAts[0] ?? null;
   const take = (ws: { slot: number; k: number }[], f: number, slot: number) => {
     if (followAt) { for (const x of ws) x.k *= 1 - f; } else ws[0].k -= f;
     ws.push({ slot, k: f });
@@ -127,9 +132,9 @@ function buildMesh(gl: WebGLRenderingContext, img: SVGImageElement): Mesh {
   for (let n = 0; n < pts.length / 2; n++) {
     const px = pts[n * 2], py = pts[n * 2 + 1];
     const ws: { slot: number; k: number }[] = [{ slot: 0, k: 1 }];
-    if (followSlot >= 0) {
-      const f = 1 - smooth(y + h * (followAt?.[0] ?? 0.18), y + h * (followAt?.[1] ?? 0.6), py);
-      if (f > 0.002) { ws[0].k -= f; ws.push({ slot: followSlot, k: f }); }
+    for (const fl of followers) {
+      const f = 1 - smooth(y + h * (fl.at?.[0] ?? 0.18), y + h * (fl.at?.[1] ?? 0.6), py);
+      if (f > 0.002) { ws[0].k -= f; ws.push({ slot: fl.slot, k: f }); }
     }
     // blend towards the parent near our own joint
     if (parent && ownPivot) {

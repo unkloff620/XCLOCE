@@ -34,7 +34,12 @@ const WAIST: Record<string, { at: [number, number]; bend?: string }> = {
   garkusha: { at: [420, 700], bend: "0.4,0.66" }, mugo: { at: [600, 660], bend: "0.35,0.5" },
   // cut off at the waist: he leans whole from the bottom edge
   datsik: { at: [590, 1400] },
+  // Боцман: he bends at the belt (the legs stand; the coat's top leans, its tails swing — COAT below)
+  botsman: { at: [450, 625] },
 };
+/** a long coat (Боцман): its top leans with br-up, its tails below the belt swing with an empty group bs-hem (the pose
+ *  engine's hem, boss-poses.ts); the legs are drawn over it */
+const COAT: Record<string, { follow: string; hem: [number, number] }> = { botsman: { follow: "0.24,0.43;0.72,0.48", hem: [450, 640] } };
 
 /** frame schedules of the puppet strips: [frame, ms] — idle loops, ouch/strike play once */
 type SeqMode = "idle" | "ouch" | "strike" | "fear";
@@ -353,17 +358,24 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
       {frameCss && <style>{frameCss}</style>}
       <g className="br-breath" style={{ transformOrigin: `${rig.w / 2}px ${rig.h}px`, transformBox: "view-box" }}>
         {/* legs of their own (Гопник): they stay put, everything above the waist leans in br-up (screens.css «Гопник») */}
-        {img("legs", undefined, "back")}
-        <g className="br-up" style={P.legs ? { transformOrigin: `${P.legs.x + P.legs.w / 2}px ${P.legs.y + P.legs.h * 0.2}px`, transformBox: "view-box" }
-          : WAIST[baseId] ? { transformOrigin: `${WAIST[baseId].at[0]}px ${WAIST[baseId].at[1]}px`, transformBox: "view-box" } : undefined}>
+        {!COAT[baseId] && img("legs", undefined, "back")}
+        {COAT[baseId] && <g className="bs-hem" style={{ transformOrigin: `${COAT[baseId].hem[0]}px ${COAT[baseId].hem[1]}px`, transformBox: "view-box" }} />}
+        <g className="br-up" style={WAIST[baseId] ? { transformOrigin: `${WAIST[baseId].at[0]}px ${WAIST[baseId].at[1]}px`, transformBox: "view-box" }
+          : P.legs ? { transformOrigin: `${P.legs.x + P.legs.w / 2}px ${P.legs.y + P.legs.h * 0.2}px`, transformBox: "view-box" } : undefined}>
         {P.tail && <g className="br-tail" {...joint("tail")} style={origin("tail")}>{img("tail", undefined, "back")}</g>}
         {behind && arm(behind, split ? "upper" : undefined, "back")}
         {/* with legs of its own the torso bends at the waist (the puppet): its frame is the standing one, the top
             follows the leaning upper body; without the puppet it leans whole with br-up */}
         {(P.legs || WAIST[baseId]?.bend) && puppet ? (
-          <image className="pp" data-pp="back" data-pp-body="1" data-pp-own="br-breath" data-pp-follow="br-up" data-pp-follow-at={WAIST[baseId]?.bend ?? "0.3,0.93"}
+          <image className="pp" data-pp="back" data-pp-body="1" data-pp-own="br-breath" data-pp-follow={COAT[baseId] ? "br-up bs-hem" : "br-up"}
+            data-pp-follow-at={COAT[baseId]?.follow ?? WAIST[baseId]?.bend ?? "0.3,0.93"}
             href={`/bosses/${id}/rig/body.webp${P.body.v ? `?v=${P.body.v}` : ""}`} x={P.body.x} y={P.body.y} width={P.body.w} height={P.body.h} preserveAspectRatio="none" />
         ) : img("body", undefined, "back")}
+        {/* the legs over the coat (Боцман): standing with the body's frame, not leaning with br-up */}
+        {COAT[baseId] && P.legs && (puppet ? (
+          <image className="pp" data-pp="back" data-pp-own="br-breath" href={`/bosses/${id}/rig/legs.webp${P.legs.v ? `?v=${P.legs.v}` : ""}`}
+            x={P.legs.x} y={P.legs.y} width={P.legs.w} height={P.legs.h} preserveAspectRatio="none" />
+        ) : img("legs"))}
         <g className="br-head" {...joint("head")} style={origin("head")}>
           {img("head", P["head-open"] ? "br-face-closed" : undefined)}
           {/* a jaw of its own (Бабафей): the head with a hole for the mouth over the throat and both rows of teeth —

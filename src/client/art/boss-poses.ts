@@ -48,6 +48,9 @@ interface Spec {
   /** a thing hanging free off the end of a chain (Восток's bag off his fist): it wants to keep hanging straight down
    *  (minus the chain's turn), so it lags and swings on a soft spring of its own */
   hang?: { sel: string; chain: J[]; k: number; c: number };
+  /** a coat's tails (Боцман, the empty group bs-hem the puppet follows below the belt): they lag behind the body's
+   *  lean and shift on a soft spring of their own and flutter a little — skewed from the belt */
+  hem?: { sel: string; k: number; c: number; up: number; x: number; flutter: (t: number) => number };
   /** the artist's poses as offsets of the joints ([translate x, y px, turn deg] each), mixed in by their channel's weight
    *  (Мугонатор's wind-up and jab: the pieces also slide, not only turn) */
   shapes?: Record<string, Partial<Record<J, [number, number, number]>>>;
@@ -359,7 +362,67 @@ const mgTaunt: Action = {
   ],
 };
 
+/* Боцман: a fighter in a long coat — the left fist low before the belly (jabs up at the screen), the right one up in the
+   guard (hooks across); the body leans into each blow at the belt and the coat's tails swing after it */
+const btJab: Action = {
+  dur: 0.5,
+  keys: [
+    { at: 0, pose: { armL: 6, lowL: 12, handL: 4, up: -1.5, x: -5 } }, // the fist drawn back
+    { at: 0.08, pose: { armL: -16, lowL: -46, handL: -10, up: 3, x: 10, head: -2, armR: 3, lowR: 6 }, stiff: 6 }, // the jab
+    { at: 0.2, pose: { armL: -8, lowL: -24, handL: -4, up: 1.5, x: 5 }, stiff: 1.4 },
+    { at: 0.3, pose: {} },
+  ],
+};
+const btHook: Action = {
+  dur: 0.6,
+  keys: [
+    { at: 0, pose: { armR: 9, lowR: 18, handR: 6, up: 2, x: 6, head: 1.5 } }, // the guard drawn back
+    { at: 0.1, pose: { armR: -14, lowR: -48, handR: -12, up: -4, x: -12, head: 2.5, armL: -3, lowL: -6 }, stiff: 6 }, // the hook across
+    { at: 0.23, pose: { armR: -7, lowR: -26, handR: -5, up: -2, x: -6 }, stiff: 1.4 },
+    { at: 0.34, pose: {} },
+  ],
+};
+const btTaunt: Action = {
+  dur: 1.2,
+  keys: [
+    { at: 0, pose: { head: -4, up: -1.5, lowR: 10, handR: 12 } }, // the chin up, the guard fist rolls — «давай»
+    { at: 0.25, pose: { head: -3, lowR: -6, handR: -10 }, stiff: 2.5 },
+    { at: 0.45, pose: { head: -3, lowR: 8, handR: 10 }, stiff: 2.5 },
+    { at: 0.7, pose: {} },
+  ],
+};
+
 const POSES: Record<string, Spec> = {
+  botsman: {
+    springs: {
+      up: { k: 70, c: 11.5 }, x: { k: 60, c: 11 }, head: { k: 110, c: 11 },
+      armL: { k: 110, c: 16 }, lowL: { k: 200, c: 18 }, handL: { k: 320, c: 16 },
+      armR: { k: 110, c: 16 }, lowR: { k: 200, c: 18 }, handR: { k: 320, c: 16 },
+    },
+    drag: { lowL: ["armL", -0.05], handL: ["lowL", -0.05], lowR: ["armR", -0.05], handR: ["lowR", -0.05], head: ["up", -0.08] },
+    // on his toes: the guard bobs, the body sways
+    idle: (t) => ({
+      up: 1.1 * Math.sin(t * 1.3) + 0.4 * Math.sin(t * 2.6 + 1),
+      x: 5 * Math.sin(t * 0.65),
+      head: 1.8 * Math.sin(t * 1.1 + 1) + 0.8 * Math.sin(t * 0.5),
+      armL: 2 * Math.sin(t * 2.2), lowL: 3 * Math.sin(t * 2.2 + 0.6), handL: 2.5 * Math.sin(t * 2.5),
+      armR: 2 * Math.sin(t * 2.2 + 1.6), lowR: 3.5 * Math.sin(t * 2.2 + 2.2), handR: 3 * Math.sin(t * 2.4 + 1),
+    }),
+    actions: [
+      { a: btJab, w: 16 },
+      { a: join(btJab, shift(btJab, 0.03)), w: 18 },
+      { a: join(btJab, shift(btHook, 0.03)), w: 22 }, // the one-two
+      { a: btHook, w: 14 },
+      { a: join(btJab, shift(btJab, 0.03), shift(btHook, 0.03)), w: 14 },
+      { a: btTaunt, w: 8 },
+    ],
+    rest: [0.8, 2.0],
+    hit: { head: 240, up: -80, x: -70, armL: 120, lowL: 180, handL: 160, armR: 120, lowR: 200, handR: 180 },
+    strike: join(btJab, shift(btHook, 0.03)),
+    // beaten: the guard dropped, the fists hang
+    dazed: { pose: { armL: 10, lowL: 22, handL: 6, armR: 18, lowR: 42, handR: 10, head: 6, up: -1.5 }, act: false },
+    hem: { sel: ".bs-hem", k: 30, c: 3.2, up: 1.6, x: 0.35, flutter: (t) => 1.6 * Math.sin(t * 1.7) + 0.8 * Math.sin(t * 3.1 + 1) },
+  },
   datsik: {
     sel: fistSel, springs: fistSprings, scale: { armL: "sL", armR: "sR" }, cssStrike: true,
     drag: { head: ["up", -0.08] },
@@ -632,6 +695,8 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
       turns: b!.turn ? [...svg.querySelectorAll<SVGGElement>(b!.turn)] : [],
     }));
     const hangs = spec.hang ? [...svg.querySelectorAll<SVGGElement>(spec.hang.sel)] : [];
+    const hems = spec.hem ? [...svg.querySelectorAll<SVGGElement>(spec.hem.sel)] : [];
+    let hemA = 0, hemV = 0;
     let hangA = 0, hangV = 0;
     const follow = spec.breathFollow ? [...svg.querySelectorAll<SVGGElement>(spec.breathFollow.sel)] : [];
     svg.classList.add("posed");
@@ -701,6 +766,14 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
         }
       }
       const br = spec.breath?.(t, dazed);
+      if (spec.hem) {
+        const hm = spec.hem;
+        const target = -(hm.up * ang.up + hm.x * ang.x) + hm.flutter(t);
+        const n = Math.ceil(dt / 0.008), h = dt / n;
+        for (let i = 0; i < n; i++) { hemV += (hm.k * (target - hemA) - hm.c * hemV) * h; hemA += hemV * h; }
+        const tr = `skewX(${hemA.toFixed(2)}deg) scaleX(${(1 + Math.abs(hemV) * 0.0006).toFixed(4)})`;
+        for (const el of hems) el.style.transform = tr;
+      }
       if (spec.hang) {
         const target = -spec.hang.chain.reduce((a, j) => a + ang[j], 0);
         const n = Math.ceil(dt / 0.008), h = dt / n;
@@ -741,6 +814,7 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
       for (const j of JOINTS) for (const el of els[j]) el.style.transform = "";
       for (const el of follow) el.style.transform = "";
       for (const el of hangs) el.style.transform = "";
+      for (const el of hems) el.style.transform = "";
       for (const b of bends) { for (const s of b.strips) s.el.style.transform = ""; for (const el of b.turns) el.style.transform = ""; }
     };
   }, [svgRef, baseId, rigKey]);

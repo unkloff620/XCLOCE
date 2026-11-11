@@ -29,6 +29,9 @@ JOINT = {"head": ("y", "max"), "foreL": ("y", "max"), "foreR": ("x", "max")}
 JOINT_BY_BOSS = {"kedr": {"foreR": ("y", "max")}, "kedr-beaten": {"foreR": ("y", "max")}}
 # hand-placed joints (output px): where the arm piece lies over the end of the torso's sleeve, so it turns without a gap
 PIVOT_BY_BOSS = {
+    # Боцман (2000×3000 sheet cropped at (40, 100), tools/boss/assemble-botsman.py): the neck, shoulders, elbows, wrists
+    "botsman": {"head": [440.0, 230.0], "armL": [260.0, 330.0], "lowL": [229.5, 532.5], "handL": [359.0, 644.5],
+                "armR": [600.0, 350.0], "lowR": [719.0, 417.0], "handR": [826.5, 291.0]},
     "bebyakyan": {"foreL": [228.0, 405.0], "foreR": [617.0, 437.0]},
     # whole arms swing at the shoulder, the hands with money turn at the wrist (inside the arm's swing)
     "garkusha": {"armL": [290.0, 335.0], "handL": [125.0, 560.0], "armR": [540.0, 350.0], "handR": [730.0, 430.0]},
