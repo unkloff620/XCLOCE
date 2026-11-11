@@ -102,6 +102,7 @@ export const EQUIPMENT: EquipmentDef[] = [
       { name: "Кресло Пепе", art: "chair-pepe", price: { currency: "RUB", amount: 7000 }, bonus: { critChance: 0.025 }, drop: { boss: "pepe" } },
       // new pieces go at the end: a piece is a bit of the owned mask by its place in this list
       { name: "Кресло Вадима", art: "chair-vadim", price: { currency: "RUB", amount: 7500 }, bonus: { critChance: 0.03 }, drop: { boss: "vadim" } },
+      { name: "Кресло Боцмана", art: "chair-botsman", price: { currency: "RUB", amount: 8000 }, bonus: { critChance: 0.03 }, drop: { boss: "botsman" } },
     ],
   },
   {
@@ -157,6 +158,7 @@ export const ROOM_DEFS: RoomDef[] = [
   { id: "pepe", name: "Гардеробная Пепе", description: "Синие свитера на вешалке, гантели, флаг с быком и светящаяся таблетка на полке. Выпадает с ивента «Пепе». +4% к урону и +1% шанса крита.", price: { currency: "RUB", amount: 7000 }, bonus: { damage: 0.04, critChance: 0.01 }, drop: { boss: "pepe", chance: ROOM_DROP_CHANCE } },
   { id: "vault", name: "Хранилище Князя", description: "Светлые обои, круглая дверь сейфа, полка с леджерами, портреты классиков и листва за окном. Выпадает с Князя. +4% к урону.", price: { currency: "RUB", amount: 6500 }, bonus: { damage: 0.04 }, drop: { boss: "knyaz", chance: ROOM_DROP_CHANCE } },
   { id: "cabinet", name: "Кабинет Вадима", description: "Тёмное дерево, ночной город за окном, полка с брелоками от тачек и спорткар в золотой раме. Выпадает с Вадима. +5% к урону.", price: { currency: "RUB", amount: 7500 }, bonus: { damage: 0.05 }, drop: { boss: "vadim", chance: ROOM_DROP_CHANCE } },
+  { id: "dojo", name: "Додзё Боцмана", description: "Тёмный зал с зелёными ширмами, по стене бежит код, у стены — боксёрская груша. Выпадает с Боцмана. +5% к урону.", price: { currency: "RUB", amount: 8000 }, bonus: { damage: 0.05 }, drop: { boss: "botsman", chance: ROOM_DROP_CHANCE } },
   { id: "office", name: "Офис трейдера", description: "Стеклянные стены, три графика и кофемашина. Даёт шанс крита.", price: { currency: "RUB", amount: 3_400 }, bonus: { critChance: 0.03 } },
   { id: "penthouse", name: "Пентхаус To The Moon", description: "Вид на Луну, золото и бассейн из стейблкоинов. Выпадает с Утилизатора. +7% к урону.", price: { currency: "RUB", amount: 7_600 }, bonus: { damage: 0.07 }, drop: { boss: "utilizator", chance: ROOM_DROP_CHANCE } },
 ];

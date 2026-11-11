@@ -6,6 +6,7 @@
  */
 import { arenaOf } from "../../content/bosses.ts";
 import { KNYAZ_ROOM } from "./arena-knyaz-data.ts";
+import { BOTSMAN_ROOM } from "./arena-botsman-data.ts";
 
 const K = KNYAZ_ROOM;
 /** the vault door's hinge (its right edge) and the middle of the vault */
@@ -58,14 +59,49 @@ export function KnyazRoom({ uid = "a" }: { uid?: string }) {
   );
 }
 
+/**
+ * Боцман's dojo in 1024×1536 (tools/boss/build-botsman-room.py): a green code rain runs down the black back wall (two
+ * strips at different speeds, fading at the wall's edges), the punching bag swings on its chain.
+ */
+export function BotsmanRoom({ uid = "a" }: { uid?: string }) {
+  const B = BOTSMAN_ROOM;
+  const w = B.wall;
+  return (
+    <g className="btr-live">
+      <defs>
+        <clipPath id={`btr-wall-${uid}`}><rect x={w.x} y={w.y} width={w.w} height={w.h} /></clipPath>
+        <linearGradient id={`btr-fade-${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#fff" stopOpacity="0" />
+          <stop offset="0.14" stopColor="#fff" stopOpacity="1" />
+          <stop offset="0.86" stopColor="#fff" stopOpacity="1" />
+          <stop offset="1" stopColor="#fff" stopOpacity="0" />
+        </linearGradient>
+        <mask id={`btr-mask-${uid}`} maskUnits="userSpaceOnUse" x={w.x} y={w.y} width={w.w} height={w.h}>
+          <rect x={w.x} y={w.y} width={w.w} height={w.h} fill={`url(#btr-fade-${uid})`} />
+        </mask>
+      </defs>
+      <image href="/assets/arena/botsman/room.webp" x={0} y={0} width={1024} height={1536} preserveAspectRatio="none" />
+      <g clipPath={`url(#btr-wall-${uid})`}>
+        <g mask={`url(#btr-mask-${uid})`} style={{ mixBlendMode: "screen" }}>
+          <g className="btr-code btr-code-a"><image href="/assets/arena/botsman/code.webp" x={w.x} y={w.y - w.h} width={w.w} height={w.h * 2} preserveAspectRatio="none" /></g>
+          <g className="btr-code btr-code-b"><image href="/assets/arena/botsman/code.webp" x={w.x - 9} y={w.y - w.h} width={w.w} height={w.h * 2} preserveAspectRatio="none" /></g>
+        </g>
+      </g>
+      <g className="btr-bag" style={{ transformOrigin: `${B.pin[0]}px ${B.pin[1]}px`, transformBox: "view-box" }}>
+        <image href="/assets/arena/botsman/bag.webp" x={B.bag.x} y={B.bag.y} width={B.bag.w} height={B.bag.h} preserveAspectRatio="none" />
+      </g>
+    </g>
+  );
+}
+
 export function ArenaBg({ bossId, className, focus = "bottom" }: { bossId: string; className?: string; focus?: "bottom" | "middle" }) {
-  if (bossId !== "knyaz") {
+  if (bossId !== "knyaz" && bossId !== "botsman") {
     // eslint-disable-next-line @next/next/no-img-element
     return <img className={className} src={arenaOf(bossId)} alt="" draggable={false} />;
   }
   return (
     <svg className={`arena-live ${className ?? ""}`} viewBox="0 0 1024 1536" preserveAspectRatio={focus === "bottom" ? "xMidYMax slice" : "xMidYMid slice"} aria-hidden="true">
-      <KnyazRoom uid={focus} />
+      {bossId === "botsman" ? <BotsmanRoom uid={focus} /> : <KnyazRoom uid={focus} />}
     </svg>
   );
 }
