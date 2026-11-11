@@ -38,12 +38,15 @@ interface Spec {
   /** below half HP: this pose under the idle; act: false — no blows at all (he only sways) */
   dazed?: { pose: Pose; act: boolean };
   /** his breath, drawn with the upper body (it owns that group): at time t → [scale x, scale y, shift y px] */
-  breath?: (t: number) => [number, number, number];
+  breath?: (t: number, dazed: boolean) => [number, number, number];
   /** what else follows the breath (the jaw): el → transform */
   breathFollow?: { sel: string; f: (t: number) => string };
   /** a joint drawn as a strip of bent frames (Князь's elbows: a window one frame wide over the strip, perFrame° apart):
    *  its angle picks the frame; turn — a group that turns by the frame's bend (the hand riding on that forearm) */
   bend?: Partial<Record<J, { strip: string; perFrame: number; turn?: string }>>;
+  /** a thing hanging free off the end of a chain (Восток's bag off his fist): it wants to keep hanging straight down
+   *  (minus the chain's turn), so it lags and swings on a soft spring of its own */
+  hang?: { sel: string; chain: J[]; k: number; c: number };
 }
 
 const SEL: Record<J, string> = {
@@ -197,7 +200,87 @@ const bfShove: Action = {
   ],
 };
 
+/* Восток: R — the fist (a jab from the guard, a pump: the upper arm out level, the forearm straight up), L — the courier
+   bag (swung out and up and shaken, slammed down at the screen); the bag hangs off the fist and swings by itself */
+const vkJab: Action = {
+  dur: 0.55,
+  keys: [
+    { at: 0, pose: { armR: 3, lowR: 8, handR: 4, up: -1.5, x: 4 } }, // the fist drawn back
+    { at: 0.09, pose: { armR: -15, lowR: -26, handR: -10, up: 2.5, x: -8, head: -2 }, stiff: 4.5 }, // the jab
+    { at: 0.22, pose: { armR: -8, lowR: -12, handR: -4, up: 1 }, stiff: 1.4 },
+    { at: 0.32, pose: {} },
+  ],
+};
+const vkPump: Action = {
+  dur: 1.45,
+  keys: [
+    { at: 0, pose: { armR: 4, lowR: 10, up: -1 } },
+    { at: 0.12, pose: { armR: -40, lowR: 68, handR: -12, up: -2, head: 4 }, stiff: 2.4 }, // the fist up
+    { at: 0.36, pose: { armR: -33, lowR: 60, handR: -4, up: -1, head: 2 }, stiff: 2.4 },
+    { at: 0.56, pose: { armR: -42, lowR: 70, handR: -12, up: -2, head: 5 }, stiff: 2.4 },
+    { at: 0.8, pose: { armR: -34, lowR: 62, handR: -4, head: 2 }, stiff: 2.4 },
+    { at: 1.0, pose: {} },
+  ],
+};
+const vkShake: Action = {
+  dur: 1.5,
+  keys: [
+    { at: 0, pose: { armL: -5, lowL: -4, up: 1 } },
+    { at: 0.12, pose: { armL: 32, lowL: -18, up: 2, x: 6, head: -2 }, stiff: 2.2 }, // the bag out and up
+    { at: 0.36, pose: { armL: 25, lowL: -11, up: 1.5, x: 4 }, stiff: 2.4 },
+    { at: 0.54, pose: { armL: 34, lowL: -20, up: 2, x: 6, head: -3 }, stiff: 2.4 },
+    { at: 0.74, pose: { armL: 26, lowL: -12, up: 1.5 }, stiff: 2.4 },
+    { at: 0.92, pose: {} },
+  ],
+};
+const vkSlam: Action = {
+  dur: 0.95,
+  keys: [
+    { at: 0, pose: { armL: 35, lowL: -25, up: 4, x: 16, head: 5 } }, // the bag up over his head
+    { at: 0.3, pose: { armL: -12, lowL: -8, up: -6, x: -28, head: -8 }, stiff: 4 }, // down at the screen
+    { at: 0.46, pose: { armL: -9, lowL: -6, up: -4, x: -20, head: -6 }, stiff: 1.4 },
+    { at: 0.66, pose: {} },
+  ],
+};
+
 const POSES: Record<string, Spec> = {
+  vodovoz: {
+    sel: { up: ".vk-up", head: ".vk-head", armL: ".vk-arm-l", lowL: ".vk-low-l", handL: ".vk-hand-l", armR: ".vk-arm-r", lowR: ".vk-low-r", handR: ".vk-hand-r" },
+    springs: {
+      up: { k: 70, c: 11 }, x: { k: 55, c: 10 }, head: { k: 100, c: 10 },
+      armL: { k: 85, c: 15 }, lowL: { k: 170, c: 17 }, handL: { k: 300, c: 15 },
+      armR: { k: 100, c: 15 }, lowR: { k: 190, c: 17 }, handR: { k: 330, c: 15 },
+    },
+    drag: { lowL: ["armL", -0.05], handL: ["lowL", -0.05], lowR: ["armR", -0.05], handR: ["lowR", -0.05], head: ["up", -0.08] },
+    // a boxer on his toes: the hips sway with the bounce (the bounce itself is the breath), the guard bobs
+    idle: (t) => ({
+      up: 1.3 * Math.sin((t / 0.8) * Math.PI * 2) + 0.6 * Math.sin(t * 0.7),
+      x: 4 * Math.sin(t * 0.6),
+      head: 2.6 * Math.sin(t * 1.9 + 1) + 1.4 * Math.sin(t * 0.8),
+      armL: 2 * Math.sin(t * 1.3), lowL: 3 * Math.sin(t * 1.6 + 0.5), handL: 2 * Math.sin(t * 2.1),
+      armR: -3 + 2.5 * Math.sin((t / 0.8) * Math.PI * 2 + 0.6), lowR: -3 + 3 * Math.sin((t / 0.8) * Math.PI * 2 + 1), handR: 2.5 * Math.sin(t * 2.2),
+    }),
+    actions: [
+      { a: vkJab, w: 22 },
+      { a: join(vkJab, vkJab), w: 18 },
+      { a: vkPump, w: 14 },
+      { a: vkShake, w: 16 },
+      { a: join(vkJab, shift(vkSlam, 0.05)), w: 12 },
+      { a: vkSlam, w: 10 },
+    ],
+    rest: [0.3, 1.4],
+    hit: { up: 120, x: 90, head: 200, armL: -120, lowL: 140, armR: 120, lowR: -150, handL: 160, handR: -200 },
+    strike: vkSlam,
+    // beaten: bent over and gasping, both fists up in a tired guard by his shoulders (the bag is dropped)
+    dazed: { pose: { up: -2, head: 9, armR: -37, lowR: 64, handR: -6, armL: -2, lowL: 4 }, act: false },
+    // the bounce on his toes (it was screens.css vk-bob, twice in 0.8 s); beaten — slow heavy gasps, bent low
+    breath: (t, dazed) => {
+      if (dazed) { const b = 0.5 - 0.5 * Math.cos((t / 1.2) * Math.PI * 2); return [1 + 0.018 * b, 0.985 + 0.035 * b, 18 - 10 * b]; }
+      const b = 0.5 - 0.5 * Math.cos((t / 0.4) * Math.PI * 2);
+      return [1 + 0.008 * b, 1 - 0.01 * b, 10 * b];
+    },
+    hang: { sel: ".vk-bag", chain: ["up", "armL", "lowL", "handL"], k: 38, c: 2.6 },
+  },
   babafey: {
     springs: {
       up: { k: 65, c: 11.5 }, x: { k: 60, c: 11 }, head: { k: 110, c: 11 },
@@ -336,6 +419,8 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
       }),
       turns: b!.turn ? [...svg.querySelectorAll<SVGGElement>(b!.turn)] : [],
     }));
+    const hangs = spec.hang ? [...svg.querySelectorAll<SVGGElement>(spec.hang.sel)] : [];
+    let hangA = 0, hangV = 0;
     const follow = spec.breathFollow ? [...svg.querySelectorAll<SVGGElement>(spec.breathFollow.sel)] : [];
     svg.classList.add("posed");
     const keys = [...JOINTS, "x"] as (J | "x")[];
@@ -402,7 +487,14 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
           ang[k] += vel[k] * h;
         }
       }
-      const br = spec.breath?.(t);
+      const br = spec.breath?.(t, dazed);
+      if (spec.hang) {
+        const target = -spec.hang.chain.reduce((a, j) => a + ang[j], 0);
+        const n = Math.ceil(dt / 0.008), h = dt / n;
+        for (let i = 0; i < n; i++) { hangV += (spec.hang.k * (target - hangA) - spec.hang.c * hangV) * h; hangA += hangV * h; }
+        const tr = `rotate(${hangA.toFixed(2)}deg)`;
+        for (const el of hangs) el.style.transform = tr;
+      }
       for (const j of JOINTS) {
         const tr = j === "up"
           ? `translateX(${ang.x.toFixed(2)}px) rotate(${ang.up.toFixed(2)}deg)${br ? ` translateY(${br[2].toFixed(2)}px) scale(${br[0].toFixed(4)}, ${br[1].toFixed(4)})` : ""}`
@@ -426,6 +518,7 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
       svg.classList.remove("posed");
       for (const j of JOINTS) for (const el of els[j]) el.style.transform = "";
       for (const el of follow) el.style.transform = "";
+      for (const el of hangs) el.style.transform = "";
       for (const b of bends) { for (const s of b.strips) s.el.style.transform = ""; for (const el of b.turns) el.style.transform = ""; }
     };
   }, [svgRef, baseId, rigKey]);
