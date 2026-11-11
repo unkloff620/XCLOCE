@@ -41,6 +41,9 @@ interface Spec {
   breath?: (t: number) => [number, number, number];
   /** what else follows the breath (the jaw): el → transform */
   breathFollow?: { sel: string; f: (t: number) => string };
+  /** a joint drawn as a strip of bent frames (Князь's elbows: a window one frame wide over the strip, perFrame° apart):
+   *  its angle picks the frame; turn — a group that turns by the frame's bend (the hand riding on that forearm) */
+  bend?: Partial<Record<J, { strip: string; perFrame: number; turn?: string }>>;
 }
 
 const SEL: Record<J, string> = {
@@ -112,7 +115,77 @@ const vdSmug: Action = {
   ],
 };
 
+/* Князь: L — the hardware wallet held like a knife (cuts down across, a stab with the wrist; the elbow is a strip of
+   bent frames), R — the fist in the guard (short jabs, the elbow snaps in) */
+const kzCut: Action = {
+  dur: 0.6,
+  keys: [
+    { at: 0, pose: { armL: 11, lowL: 0, handL: 18, up: -1.5, x: -3, head: 1.2 } }, // the wind-up: the wallet up and out
+    { at: 0.12, pose: { armL: -22, lowL: 24, handL: -28, up: 2.5, x: 5, head: -1.5, armR: 2 }, stiff: 4 }, // down across
+    { at: 0.25, pose: { armL: -17, lowL: 16, handL: -20, up: 1.5, x: 3 }, stiff: 1.4 },
+    { at: 0.36, pose: {} },
+  ],
+};
+const kzStab: Action = {
+  dur: 0.6,
+  keys: [
+    { at: 0, pose: { armL: 5, handL: -16, up: -1, head: 1 } }, // the wrist cocked
+    { at: 0.13, pose: { armL: -10, lowL: 14, handL: 34, up: 2, x: 4, head: -1 }, stiff: 4.5 }, // the stab
+    { at: 0.27, pose: { armL: -7, lowL: 8, handL: 26 }, stiff: 1.4 },
+    { at: 0.38, pose: {} },
+  ],
+};
+const kzJab: Action = {
+  dur: 0.48,
+  keys: [
+    { at: 0, pose: { armR: 2.5, lowR: 0, up: -0.6 } },
+    { at: 0.09, pose: { armR: -11, lowR: 16, up: 1.6, x: 3, head: 1 }, stiff: 4.5 }, // the fist out, the elbow snaps
+    { at: 0.21, pose: { armR: -4, lowR: 6 }, stiff: 1.4 },
+    { at: 0.3, pose: {} },
+  ],
+};
+const kzSmug: Action = {
+  dur: 1.5,
+  keys: [
+    { at: 0, pose: { head: 4.5, up: -1.2, armL: 4, handL: 14, armR: 1.5 } }, // the chin up, the wallet turned in the hand
+    { at: 0.65, pose: { head: -1.5, handL: -10 } },
+    { at: 1.05, pose: {} },
+  ],
+};
+
 const POSES: Record<string, Spec> = {
+  knyaz: {
+    sel: { up: ".kz-up", head: ".kz-head", armL: ".kz-arm-l", lowL: ".kz-none", handL: ".kz-hand-l", armR: ".kz-arm-r", lowR: ".kz-none", handR: ".kz-none" },
+    bend: { lowL: { strip: ".kz-elbow-l", perFrame: 2, turn: ".kz-turn-l" }, lowR: { strip: ".kz-elbow-r", perFrame: 2 } },
+    springs: {
+      up: { k: 70, c: 12 }, x: { k: 60, c: 11 }, head: { k: 110, c: 11 },
+      armL: { k: 95, c: 15 }, lowL: { k: 200, c: 18 }, handL: { k: 330, c: 15 },
+      armR: { k: 100, c: 15 }, lowR: { k: 200, c: 18 }, handR: { k: 330, c: 15 },
+    },
+    drag: { lowL: ["armL", -0.05], handL: ["armL", -0.05], lowR: ["armR", -0.05], head: ["up", -0.08] },
+    idle: (t) => ({
+      up: 0.9 * Math.sin(t * 0.9) + 0.3 * Math.sin(t * 2.1 + 1),
+      x: 3 * Math.sin(t * 0.5),
+      head: 1.8 * Math.sin(t * 1.1 + 1) + 0.8 * Math.sin(t * 0.5),
+      armL: 2 * Math.sin(t * 1.2), lowL: 2 + 2.5 * Math.sin(t * 1.5 + 0.5), handL: 4 * Math.sin(t * 1.9 + 1),
+      armR: 1.6 * Math.sin(t * 1.6 + 2), lowR: 2 + 2.5 * Math.sin(t * 1.6 + 2.3),
+    }),
+    actions: [
+      { a: kzCut, w: 20 },
+      { a: join(kzCut, shift(kzCut, 0.03)), w: 20 },
+      { a: join(kzCut, kzCut, kzStab), w: 14 },
+      { a: kzJab, w: 16 },
+      { a: join(kzJab, kzJab), w: 14 },
+      { a: join(kzJab, shift(kzCut, 0.04)), w: 12 },
+      { a: kzSmug, w: 8 },
+    ],
+    rest: [0.3, 1.5],
+    hit: { head: 300, up: 80, x: 60, armL: 120, lowL: -100, handL: 220, armR: -110, lowR: -100 },
+    strike: join(kzCut, kzCut, kzCut),
+    dazed: { pose: { armL: -8, handL: -2, lowL: -2, lowR: -2, head: 3 }, act: false },
+    // his breath (it was screens.css kz-breath, 2.4 s): the chest up and a little wider
+    breath: (t) => { const b = 0.5 - 0.5 * Math.cos((t / 2.4) * Math.PI * 2); return [1 + 0.017 * b, 1 + 0.032 * b, -6.5 * b]; },
+  },
   vadim: {
     sel: { up: ".vd-up", head: ".vd-head", armL: ".vd-arm-l", lowL: ".vd-low-l", handL: ".vd-hand-l", armR: ".vd-arm-r", lowR: ".vd-low-r", handR: ".vd-hand-r" },
     springs: {
@@ -182,6 +255,15 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
     if (typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const els = {} as Record<J, SVGGElement[]>;
     for (const j of JOINTS) els[j] = [...svg.querySelectorAll<SVGGElement>(spec.sel?.[j] ?? SEL[j])];
+    // the strip joints: the frame width is the window's (the strip's parent <svg>), the count — strip ÷ window
+    const bends = Object.entries(spec.bend ?? {}).map(([j, b]) => ({
+      j: j as J, perFrame: b!.perFrame,
+      strips: [...svg.querySelectorAll<SVGImageElement>(b!.strip)].map((el) => {
+        const w = Number(el.parentElement?.getAttribute("width")) || 1;
+        return { el, w, n: Math.max(1, Math.round(Number(el.getAttribute("width")) / w)) };
+      }),
+      turns: b!.turn ? [...svg.querySelectorAll<SVGGElement>(b!.turn)] : [],
+    }));
     const follow = spec.breathFollow ? [...svg.querySelectorAll<SVGGElement>(spec.breathFollow.sel)] : [];
     svg.classList.add("posed");
     const keys = [...JOINTS, "x"] as (J | "x")[];
@@ -256,6 +338,15 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
         for (const el of els[j]) el.style.transform = tr;
       }
       if (spec.breathFollow) { const tr = spec.breathFollow.f(t); for (const el of follow) el.style.transform = tr; }
+      for (const b of bends) {
+        let deg = 0;
+        for (const s of b.strips) {
+          const f = Math.max(0, Math.min(s.n - 1, Math.round(ang[b.j] / b.perFrame)));
+          s.el.style.transform = `translateX(${-f * s.w}px)`;
+          deg = f * b.perFrame;
+        }
+        for (const el of b.turns) el.style.transform = `rotate(${deg}deg)`;
+      }
     };
     raf = requestAnimationFrame(frame);
     return () => {
@@ -263,6 +354,7 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
       svg.classList.remove("posed");
       for (const j of JOINTS) for (const el of els[j]) el.style.transform = "";
       for (const el of follow) el.style.transform = "";
+      for (const b of bends) { for (const s of b.strips) s.el.style.transform = ""; for (const el of b.turns) el.style.transform = ""; }
     };
   }, [svgRef, baseId, rigKey]);
 }

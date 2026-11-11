@@ -6118,7 +6118,7 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
   12%, 27% { transform: rotate(0deg) translateX(0px); }
   100% { transform: rotate(0deg) translateX(0px); } }
 /* the pose engine drives his joints (boss-poses.ts): the keyframes above are only the fallback without it */
-.boss-rig.posed :is(.br-up, .br-head, .br-arm, .br-low, .br-hand, .vd-root, .vd-up, .vd-head, .vd-arm-l, .vd-low-l, .vd-hand-l, .vd-arm-r, .vd-low-r, .vd-hand-r, .vd-jaw) { animation: none !important; }
+.boss-rig.posed :is(.br-up, .br-head, .br-arm, .br-low, .br-hand, .vd-root, .vd-up, .vd-head, .vd-arm-l, .vd-low-l, .vd-hand-l, .vd-arm-r, .vd-low-r, .vd-hand-r, .vd-jaw, .kz-up, .kz-head, .kz-arm-l, .kz-arm-r, .kz-hand-l, .kz-turn-l, .kz-elbow-l, .kz-elbow-r) { animation: none !important; }
 /* a hit does not stop his boxing: the head jerks back */
 .arena-photo.hit .rig-gopnik .br-arm-r { animation-duration: 4.8s; }
 .arena-photo.hit .rig-gopnik :is(.br-low-r, .br-hand-r) { animation-duration: 2.4s; }
