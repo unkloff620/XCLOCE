@@ -70,8 +70,10 @@ const COMBOS: { key: string; dice: number[]; label: string; test: (n: number[], 
   { key: "5", dice: [5], label: "50", test: (n) => n[5] >= 1 },
   { key: "111", dice: [1, 1, 1], label: "1000", test: (n) => n[1] >= 3 },
   ...[2, 3, 4, 5, 6].map((f) => ({ key: `${f}${f}${f}`, dice: [f, f, f], label: String(f * 100), test: (n: number[]) => n[f] >= 3 })),
-  // four of a kind and more in one line (×2, five ×4, six ×8 — told in the help): the sheet stays readable on a phone
-  { key: "4k", dice: [3, 3, 3, 3], label: "×2+", test: (n) => n.some((x) => x >= 4) },
+  // four, five, six of a kind: the three's points ×2, ×4, ×8
+  { key: "4k", dice: [3, 3, 3, 3], label: "×2", test: (n) => n.some((x) => x === 4) },
+  { key: "5k", dice: [3, 3, 3, 3, 3], label: "×4", test: (n) => n.some((x) => x === 5) },
+  { key: "6k", dice: [3, 3, 3, 3, 3, 3], label: "×8", test: (n) => n.some((x) => x === 6) },
   { key: "str", dice: [1, 2, 3, 4, 5, 6], label: "1500", test: (n, len) => len === 6 && n.slice(1).every((x) => x === 1) },
   { key: "pairs", dice: [2, 2, 4, 4, 6, 6], label: "750", test: (n, len) => len === 6 && n.filter((x) => x === 2).length === 3 },
 ];
@@ -105,7 +107,7 @@ const rewardText = (r: { currencies?: Partial<Record<string, number>> }) =>
   Object.entries(r.currencies ?? {}).map(([c, v]) => `${v} ${c}`).join(" + ");
 
 /*
- * The room picture (public/assets/yard/zonk-room.webp, 841×1870 — every place below is in those pixels): a lamp and the
+ * The room picture (public/assets/yard/zonk-room-2.webp — zonk-room.webp with its paper painted out; 841×1870 — every place below is in those pixels): a lamp and the
  * «ЗОНК» sign on top, the framed chalkboard in the middle, a table at the bottom. It covers the whole window; only the
  * top and the bottom (the lamp and the table) may be cut on a short screen.
  */
@@ -119,36 +121,28 @@ const LADDER_ROWS = [758, 842, 927, 1014, 1103, 1194];
 const LADDER_COLS = [246, 328, 409, 490, 571, 652];
 /** one chalk cell */
 const CELL = { w: 73, h: 78 };
-/** cells per ladder row, from the bottom row up */
-/* the dice take every other row from the bottom (6, 4 and 2 cells): the row between is left for the points under them */
-const LADDER_CAPS = [6, 4, 2];
-const ladderCell = (row: number, col: number) => ({ x: LADDER_COLS[col], y: LADDER_ROWS[LADDER_ROWS.length - 1 - row * 2] });
+/** the ladder: one throw a step — the first throw's dice on the bottom row (6 cells), the next on the row above (5)… */
+const ladderCell = (row: number, col: number) => ({ x: LADDER_COLS[col], y: LADDER_ROWS[LADDER_ROWS.length - 1 - row] });
 type LadderGroup = { dice: { v: number; i: number }[]; points: number | null; old: boolean };
 /**
- * The kept dice laid into the ladder, combination by combination, from the bottom row up: a combination that does not
- * fit what is left of a row starts the next one (a group bigger than a row wraps). Every piece of a combination in a
- * row gets a chalk bracket under it; the points are written under the biggest piece.
+ * The kept dice of each throw on its own row (row 0 — the bottom one), combination by combination: a chalk bracket
+ * under each combination, the throw's points at the row's end (right of its cells; under the bottom row's).
  */
-function layoutLadder(groups: LadderGroup[]) {
+function layoutLadder(throws: LadderGroup[][]) {
   const dice: { v: number; i: number; old: boolean; row: number; col: number }[] = [];
-  const marks: { row: number; from: number; to: number; label: string | null; bad: boolean; old: boolean }[] = [];
-  let row = 0, col = 0;
-  for (const gr of groups) {
-    if (row >= LADDER_CAPS.length) break;
-    if (col > 0 && gr.dice.length <= LADDER_CAPS[row] && col + gr.dice.length > LADDER_CAPS[row]) { row++; col = 0; }
-    const pieces: { row: number; from: number; to: number }[] = [];
-    for (const d of gr.dice) {
-      if (row < LADDER_CAPS.length && col >= LADDER_CAPS[row]) { row++; col = 0; }
-      if (row >= LADDER_CAPS.length) break;
-      dice.push({ ...d, old: gr.old, row, col });
-      const last = pieces[pieces.length - 1];
-      if (last && last.row === row) last.to = col; else pieces.push({ row, from: col, to: col });
-      col++;
+  const marks: { row: number; from: number; to: number; bad: boolean; old: boolean }[] = [];
+  const sums: { row: number; label: string; bad: boolean; old: boolean }[] = [];
+  throws.slice(0, LADDER_ROWS.length).forEach((groups, row) => {
+    let col = 0, sum = 0, bad = false;
+    for (const gr of groups) {
+      const from = col;
+      for (const d of gr.dice) if (col < LADDER_ROWS.length - row) dice.push({ ...d, old: gr.old, row, col: col++ });
+      if (col > from) marks.push({ row, from, to: col - 1, bad: gr.points === null, old: gr.old });
+      if (gr.points === null) bad = true; else sum += gr.points;
     }
-    const main = pieces.reduce((b, p, k) => (p.to - p.from > pieces[b].to - pieces[b].from ? k : b), 0);
-    pieces.forEach((p, k) => marks.push({ ...p, label: k === main ? (gr.points === null ? "✕" : full(gr.points)) : null, bad: gr.points === null, old: gr.old }));
-  }
-  return { dice, marks };
+    if (groups.length) sums.push({ row, label: bad ? "✕" : `+${full(sum)}`, bad, old: groups.every((g) => g.old) });
+  });
+  return { dice, marks, sums };
 }
 /** where the dice land: the open chalk field above the ladder */
 const FIELD_SLOTS = [[250, 470], [356, 470], [250, 566], [356, 566], [250, 662], [356, 662], [462, 662]] as const;
@@ -512,15 +506,28 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
     if (used >= ZONK_DICE) { past += hist.slice(setStart, k + 1).reduce((t, x) => t + (x.points ?? 0), 0); pastSets++; used = 0; setStart = k + 1; }
   });
   const ladder = layoutLadder([
-    ...hist.slice(setStart).flatMap((h) => zonkGroups(h.kept).map((gr) => ({ dice: gr.dice.map((v) => ({ v, i: -1 })), points: gr.points, old: true }))),
+    ...hist.slice(setStart).map((h) => zonkGroups(h.kept).map((gr) => ({ dice: gr.dice.map((v) => ({ v, i: -1 })), points: gr.points, old: true }))),
     ...(show || !playing ? [] : (() => {
       const free = [...pick];
-      return zonkGroups(picked).map((gr) => ({
+      return [zonkGroups(picked).map((gr) => ({
         dice: gr.dice.map((v) => { const k = free.findIndex((i) => roll[i] === v); const i = free[k]; free.splice(k, 1); return { v, i }; }),
         points: gr.points, old: false,
-      }));
+      }))];
     })()),
   ]);
+  // all six dice played: «Дополнительный бросок» jumps out, the ladder is wiped and the six are thrown again
+  const [extra, setExtra] = useState(0);
+  const extraKey = playing ? `${g?.id}:${g?.round}:${pastSets}` : "";
+  const prevExtra = useRef(extraKey);
+  useEffect(() => {
+    const was = prevExtra.current;
+    prevExtra.current = extraKey;
+    if (extraKey && was && was !== extraKey && was.split(":").slice(0, 2).join(":") === extraKey.split(":").slice(0, 2).join(":") && pastSets > 0) {
+      setExtra(Date.now() % 100000);
+      haptic.ok();
+      sfx("reward");
+    }
+  }, [extraKey, pastSets]);
   const onBoard = playing || !!show;
   const fieldRoll = show ? show.roll : playing ? roll : [];
   const fieldSeed = show ? show.key : seed;
@@ -545,7 +552,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
         <div className="zb-help"><ZonkHelp /></div>
         <div className="zb" style={{ ["--throw" as string]: throwing }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="zb-bg" src="/assets/yard/zonk-room.webp" alt="" draggable={false} />
+          <img className="zb-bg" src="/assets/yard/zonk-room-2.webp" alt="" draggable={false} />
           {/* the lamp over the sign is alive: its light breathes, dims and flickers, the room darkens with it */}
           <span className="zb-dark" aria-hidden="true" />
           <span className="zb-lamp" aria-hidden="true" />
@@ -628,18 +635,28 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
               ? <span key={`k${k}`} className="zb-kept old" style={style}><DieFace v={d.v} /></span>
               : <button key={`p${d.i}`} className="zb-kept" style={style} onClick={() => toggle(d.i)} aria-label={`вернуть ${d.v}`}><DieFace v={d.v} /></button>;
           })}
-          {pastSets > 0 && (
-            <span className="zb-hot num" style={{ left: zx(246), top: zy(LADDER_ROWS[0] - 4), width: zx(479), height: zy(CELL.h) }}>
-              {pastSets > 1 ? `${pastSets}×` : ""}все 6 костей сыграны · +{full(past)} <small>бросаешь все 6 заново</small>
+          {pastSets > 0 && playing && !show && (
+            <span className="zb-hot num" style={{ left: zx(336), top: zy(LADDER_ROWS[0] + 6), width: zx(255), height: zy(64) }}>
+              доп. бросок{pastSets > 1 ? ` ×${pastSets}` : ""} · сыграно +{full(past)}
             </span>
           )}
-          {/* chalk brackets under each combination and what it scores (picture: 1-1-1 → 1000, 5 → 50) */}
+          {extra > 0 && playing && !show && (
+            <div key={`x${extra}`} className="zb-flash extra" style={{ left: zx(236), top: zy(560), width: zx(400) }}>Дополнительный бросок</div>
+          )}
+          {/* a thin chalk bracket under each combination of a throw */}
           {ladder.marks.map((m, k) => {
             const a = ladderCell(m.row, m.from), b = ladderCell(m.row, m.to);
             return (
-              <span key={`m${k}-${m.row}-${m.from}`} className={`zb-br ${m.bad ? "bad" : ""} ${m.old ? "old" : ""}`} style={{ left: zx(a.x + 8), width: zx(b.x + CELL.w - 8 - (a.x + 8)), top: zy(a.y + CELL.h + 4), height: zy(34) }}>
-                <i />{m.label && <b className="num">{m.label}</b>}
+              <span key={`m${k}-${m.row}-${m.from}`} className={`zb-br thin ${m.bad ? "bad" : ""} ${m.old ? "old" : ""}`} style={{ left: zx(a.x + 8), width: zx(b.x + CELL.w - 8 - (a.x + 8)), top: zy(a.y + CELL.h + 1), height: zy(10) }}>
+                <i />
               </span>
+            );
+          })}
+          {/* each throw's points at its row's end */}
+          {ladder.sums.map((m) => {
+            const end = ladderCell(m.row, LADDER_ROWS.length - 1 - m.row);
+            return (
+              <span key={`s${m.row}`} className={`zb-sum num ${m.bad ? "bad" : ""} ${m.old ? "old" : ""}`} style={{ left: zx(end.x + CELL.w + 6), top: zy(end.y), width: zx(92), height: zy(CELL.h) }}>{m.label}</span>
             );
           })}
           {/* this attempt's points so far: what «Сохранить» would write down */}
@@ -648,14 +665,16 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
           )}
 
           {/* the sheet on the right: the combinations; a row lights up when the roll has it, brighter when it is picked */}
-          <div className="zb-sheet" style={{ left: zx(670), top: zy(438), width: zx(150), height: zy(596) }}>
-            <b className="zb-sheet-h">Комбинации</b>
+          {/* the paper of the combinations, drawn here (over the picture's own paper): the dice of each and what it scores;
+              a row lights up when the roll has it (hints), green when it is picked */}
+          <div className="zb-sheet2" style={{ left: zx(598), top: zy(392), width: zx(228), height: zy(604) }}>
+            <b className="zb-sheet2-h">Фартовые<br />комбинации</b>
             {COMBOS.map((c) => {
               const can = hintsOn && c.test(nRoll, roll.length);
               const on = picked.length > 0 && c.test(nPick, picked.length);
               return (
-                <div key={c.key} className={`zb-combo ${can ? "can" : ""} ${on ? "on" : ""}`}>
-                  <span className="zb-mini">{c.dice.map((d, k) => <i key={k}><DieFace v={d} /></i>)}</span>
+                <div key={c.key} className={`zb-c2 ${can ? "can" : ""} ${on ? "on" : ""}`}>
+                  <span className="zb-c2-dice">{c.dice.map((d, k) => <i key={k}><DieFace v={d} /></i>)}</span>
                   <b className="num">{c.label}</b>
                 </div>
               );

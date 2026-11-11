@@ -2758,6 +2758,7 @@ export const ASSET_FILES: string[] = [
  "/assets/yard/yard2-bg.webp",
  "/assets/yard/zonk-arrow.webp",
  "/assets/yard/zonk-cup.webp",
+ "/assets/yard/zonk-room-2.webp",
  "/assets/yard/zonk-room.webp",
  "/bosses/babafey/card.webp",
  "/bosses/babafey/full.webp",

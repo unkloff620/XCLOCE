@@ -6131,3 +6131,41 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 /* the attack page: he waits behind the window */
 .rd-defender { position: absolute; left: 17%; top: 10.5%; width: 65.5%; height: 29%; overflow: hidden; pointer-events: none; }
 .rd-defender-in { position: absolute; left: 50%; top: 8%; width: 62%; aspect-ratio: 850 / 875; transform: translateX(-50%); }
+
+/* zonk, round 4: one throw a step of the ladder (the throw's points at the row's end, a thin bracket under each
+ * combination), «Дополнительный бросок» when all six are played, the combinations paper drawn in code */
+.zb-br.thin i { height: 0.55cqw; border-width: 0.22cqw; }
+.zb-br.thin i::after { display: none; }
+.zb-sum { z-index: 2; display: flex; align-items: center; font-size: 2.6cqw; font-weight: 900; color: #f2fbf8; white-space: nowrap; pointer-events: none;
+  text-shadow: 0 0 0.5cqw rgba(255, 255, 255, 0.35); }
+.zb-sum.old { color: rgba(242, 251, 248, 0.72); }
+.zb-sum.bad { color: #ff8f8f; }
+.zb-hot { font-size: 2cqw; line-height: 1.15; font-weight: 700; color: rgba(242, 251, 248, 0.8); }
+.zb-flash.extra { color: #ffd76a; font-size: 4.6cqw; line-height: 1.1; }
+.zb-sheet2 { z-index: 1; display: flex; flex-direction: column; gap: 0.15cqw; padding: 2.4cqw 1.6cqw 2cqw; color: #3b220e; transform: rotate(2deg);
+  background:
+    radial-gradient(ellipse at 20% 12%, rgba(255, 246, 220, 0.75), transparent 55%),
+    radial-gradient(ellipse at 80% 85%, rgba(160, 96, 40, 0.28), transparent 60%),
+    radial-gradient(ellipse at 10% 70%, rgba(150, 90, 40, 0.2), transparent 45%),
+    linear-gradient(170deg, #f3dcae, #e8c48a 55%, #dcae6e);
+  box-shadow: inset 0 0 2.4cqw rgba(120, 66, 20, 0.55), 0.8cqw 1.4cqw 1.6cqw rgba(0, 0, 0, 0.5);
+  clip-path: polygon(0 1.5%, 6% 0, 18% 1.2%, 33% 0.2%, 50% 1.4%, 66% 0, 81% 1%, 94% 0.1%, 100% 1.6%, 99.2% 14%, 100% 30%, 98.8% 46%, 100% 61%, 99% 77%, 100% 92%, 98.5% 100%,
+    84% 98.8%, 70% 100%, 54% 98.6%, 38% 99.8%, 22% 98.5%, 7% 100%, 0 98.4%, 1% 84%, 0 68%, 1.2% 52%, 0 37%, 0.8% 21%); }
+.zb-sheet2-h { font-family: var(--font-display, inherit); font-size: 2.5cqw; line-height: 1.05; font-weight: 900; text-transform: uppercase; letter-spacing: 0.04em;
+  text-align: center; margin-bottom: 0.8cqw; color: #4a2a10; }
+.zb-c2 { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: space-between; gap: 0.6cqw; padding: 0 0.6cqw; border-radius: 0.8cqw;
+  border-bottom: 0.15cqw dashed rgba(90, 50, 20, 0.25); transition: background 0.2s; }
+.zb-c2:last-child { border-bottom: 0; }
+.zb-c2 b { font-size: 2.4cqw; font-weight: 900; color: #3b220e; }
+.zb-c2-dice { display: inline-flex; gap: 0.25cqw; }
+.zb-c2-dice i { display: block; width: 2.5cqw; height: 2.5cqw; border-radius: 0.45cqw; background: #fffaf0; border: 0.18cqw solid #3b220e; box-shadow: 0 0.15cqw 0 rgba(60, 30, 10, 0.35); }
+.zb-c2-dice svg { display: block; }
+.zb-c2.can { background: rgba(255, 196, 40, 0.38); }
+.zb-c2.on { background: rgba(30, 140, 70, 0.32); box-shadow: inset 0 0 0 0.25cqw rgba(20, 110, 55, 0.55); }
+/* the paper's dice as big as the paper's width allows (six of them and «1500» in one line) */
+.zb-sheet2 { padding: 2.2cqw 1cqw 1.6cqw; }
+.zb-c2 { padding: 0 0.4cqw; gap: 0.4cqw; }
+.zb-c2-dice { gap: 0.2cqw; }
+.zb-c2-dice i { width: 2.9cqw; height: 2.9cqw; border-radius: 0.5cqw; }
+.zb-c2 b { font-size: 2.6cqw; }
+.zb-sheet2-h { font-size: 2.7cqw; }
