@@ -20,6 +20,8 @@ type Pose = Partial<Record<J | "x", number>>;
 interface Key { at: number; pose: Pose; /** how hard the springs pull until the next key (a blow ×3–4) */ stiff?: number }
 interface Action { keys: Key[]; dur: number }
 interface Spec {
+  /** the rig's joint groups (all the matches turn alike — Вадим's key arm is drawn twice), default: SEL */
+  sel?: Partial<Record<J, string>>;
   /** stiffness and damping of each joint's spring (ζ = c / 2√k: < 1 overshoots) */
   springs: Record<J | "x", { k: number; c: number }>;
   /** the follow-through: the child is pulled back by its parent's speed × this (s) */
@@ -31,6 +33,14 @@ interface Spec {
   rest: [number, number];
   /** a hit on him: the kick of speed to each joint (deg/s) */
   hit: Pose;
+  /** he strikes the player («strike» on the arena): this action at once */
+  strike?: Action;
+  /** below half HP: this pose under the idle; act: false — no blows at all (he only sways) */
+  dazed?: { pose: Pose; act: boolean };
+  /** his breath, drawn with the upper body (it owns that group): at time t → [scale x, scale y, shift y px] */
+  breath?: (t: number) => [number, number, number];
+  /** what else follows the breath (the jaw): el → transform */
+  breathFollow?: { sel: string; f: (t: number) => string };
 }
 
 const SEL: Record<J, string> = {
@@ -74,7 +84,66 @@ const taunt: Action = {
   ],
 };
 
+/* Вадим: L — the car keys (blows down from a cocked elbow), R — the knife (stabs with the blade turned in) */
+const vdKeys: Action = {
+  dur: 0.62,
+  keys: [
+    { at: 0, pose: { armL: 10, lowL: 38, handL: 20, up: 1.5, head: 1.5 } }, // the elbow cocked, the keys up
+    { at: 0.15, pose: { armL: -9, lowL: -28, handL: -26, up: -2.5, x: -4, head: -1.5 }, stiff: 4 }, // down on the head
+    { at: 0.27, pose: { armL: -4, lowL: -10, handL: -8 }, stiff: 1.4 },
+    { at: 0.36, pose: {} },
+  ],
+};
+const vdStab: Action = {
+  dur: 0.5,
+  keys: [
+    { at: 0, pose: { armR: -8, lowR: -24, handR: -18, up: -1, head: -1 } }, // the blade drawn back
+    { at: 0.11, pose: { armR: 10, lowR: 22, handR: 28, up: 2, x: 4, head: 1.2 }, stiff: 4.5 }, // the stab
+    { at: 0.22, pose: { armR: 5, lowR: 12, handR: 16 }, stiff: 1.4 },
+    { at: 0.3, pose: {} },
+  ],
+};
+const vdSmug: Action = {
+  dur: 1.4,
+  keys: [
+    { at: 0, pose: { head: 4, up: -1.5, armR: 3, lowR: -8, handR: 10 } }, // leans back, the knife turned in the fingers
+    { at: 0.6, pose: { head: -2, handR: -12 } },
+    { at: 1.0, pose: {} },
+  ],
+};
+
 const POSES: Record<string, Spec> = {
+  vadim: {
+    sel: { up: ".vd-up", head: ".vd-head", armL: ".vd-arm-l", lowL: ".vd-low-l", handL: ".vd-hand-l", armR: ".vd-arm-r", lowR: ".vd-low-r", handR: ".vd-hand-r" },
+    springs: {
+      up: { k: 75, c: 12 }, x: { k: 60, c: 11 }, head: { k: 110, c: 11 },
+      armL: { k: 95, c: 15 }, lowL: { k: 190, c: 17 }, handL: { k: 340, c: 15 },
+      armR: { k: 95, c: 15 }, lowR: { k: 190, c: 17 }, handR: { k: 340, c: 15 },
+    },
+    drag: { lowL: ["armL", -0.05], handL: ["lowL", -0.05], lowR: ["armR", -0.05], handR: ["lowR", -0.05], head: ["up", -0.08] },
+    idle: (t) => ({
+      up: 0.9 * Math.sin(t * 0.95) + 0.35 * Math.sin(t * 2.2 + 1),
+      x: -3 + 3 * Math.sin(t * 0.98),
+      head: 1.6 * Math.sin(t * 1.2 + 1) + 0.8 * Math.sin(t * 0.55),
+      armL: 1.8 * Math.sin(t * 1.3), lowL: 3 * Math.sin(t * 1.7 + 0.5), handL: 3 * Math.sin(t * 2.3 + 1),
+      armR: 1.5 * Math.sin(t * 1.1 + 2), lowR: 3 * Math.sin(t * 1.5 + 1), handR: 4 * Math.sin(t * 1.9),
+    }),
+    actions: [
+      { a: vdKeys, w: 24 },
+      { a: join(vdKeys, vdKeys), w: 18 },
+      { a: vdStab, w: 20 },
+      { a: join(vdStab, vdStab, vdStab), w: 14 },
+      { a: join(vdStab, shift(vdKeys, 0.04)), w: 14 },
+      { a: vdSmug, w: 10 },
+    ],
+    rest: [0.3, 1.4],
+    hit: { head: -300, up: -80, x: -60, armL: 120, lowL: -140, armR: -110, lowR: 150, handL: -220, handR: 220 },
+    strike: join(vdKeys, vdKeys),
+    dazed: { pose: { armL: -9, armR: 9, lowL: -4, lowR: 4, head: 3 }, act: false },
+    // his fast heavy breath (it was screens.css vd-breath): the chest up and wider, the jaw drops with it
+    breath: (t) => { const b = 0.5 - 0.5 * Math.cos((t / 1.05) * Math.PI * 2); return [1 + 0.016 * b, 1 + 0.03 * b, -4 * b]; },
+    breathFollow: { sel: ".vd-jaw", f: (t) => `translateY(${(4 * (0.5 - 0.5 * Math.cos((t / 1.05) * Math.PI * 2))).toFixed(2)}px)` },
+  },
   gopnik: {
     springs: {
       up: { k: 70, c: 12 }, x: { k: 70, c: 12 }, head: { k: 120, c: 12 },
@@ -111,8 +180,9 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
     const svg = svgRef.current;
     if (!spec || !svg) return;
     if (typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const els = {} as Record<J, SVGGElement | null>;
-    for (const j of JOINTS) els[j] = svg.querySelector<SVGGElement>(SEL[j]);
+    const els = {} as Record<J, SVGGElement[]>;
+    for (const j of JOINTS) els[j] = [...svg.querySelectorAll<SVGGElement>(spec.sel?.[j] ?? SEL[j])];
+    const follow = spec.breathFollow ? [...svg.querySelectorAll<SVGGElement>(spec.breathFollow.sel)] : [];
     svg.classList.add("posed");
     const keys = [...JOINTS, "x"] as (J | "x")[];
     const ang: Record<string, number> = {};
@@ -124,6 +194,7 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
     let t = Math.random() * 10;
     let last = performance.now();
     let wasHit = false;
+    let wasStrike = false;
     const gate = frameGate();
     const pick = (): Action => {
       const all = spec.actions.reduce((s, x) => s + x.w, 0);
@@ -143,6 +214,10 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
       const hit = !!arena?.classList.contains("hit");
       if (hit && !wasHit) for (const k of keys) vel[k] += (spec.hit[k] ?? 0) * (0.8 + Math.random() * 0.4);
       wasHit = hit;
+      // he strikes the player: that blow now, whatever he was doing
+      const strike = !!arena?.classList.contains("strike");
+      if (strike && !wasStrike && spec.strike) { act = spec.strike; actT = 0; }
+      wasStrike = strike;
       // the action: its key now (a dazed boss — half as often, slower)
       const dazed = svg.classList.contains("dazed");
       let pose: Pose = {};
@@ -153,8 +228,12 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
         for (const k of act.keys) if (k.at <= actT) cur = k;
         if (cur) { pose = cur.pose; stiff = cur.stiff ?? 1; }
         if (actT >= act.dur) { act = null; wait = spec.rest[0] + Math.random() * (spec.rest[1] - spec.rest[0]) * (dazed ? 2 : 1); }
-      } else if ((wait -= dt) <= 0) { act = pick(); actT = 0; }
+      } else if ((wait -= dt) <= 0) {
+        if (dazed && spec.dazed && !spec.dazed.act) wait = 1;
+        else { act = pick(); actT = 0; }
+      }
       const idle = spec.idle(t);
+      if (dazed && spec.dazed) for (const [k, v] of Object.entries(spec.dazed.pose)) idle[k as J] = (idle[k as J] ?? 0) + v;
       for (const k of keys) {
         const s = spec.springs[k];
         let target = (idle[k] ?? 0) + (pose[k] ?? 0);
@@ -169,17 +248,21 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
           ang[k] += vel[k] * h;
         }
       }
+      const br = spec.breath?.(t);
       for (const j of JOINTS) {
-        const el = els[j];
-        if (!el) continue;
-        el.style.transform = j === "up" ? `translateX(${ang.x.toFixed(2)}px) rotate(${ang.up.toFixed(2)}deg)` : `rotate(${ang[j].toFixed(2)}deg)`;
+        const tr = j === "up"
+          ? `translateX(${ang.x.toFixed(2)}px) rotate(${ang.up.toFixed(2)}deg)${br ? ` translateY(${br[2].toFixed(2)}px) scale(${br[0].toFixed(4)}, ${br[1].toFixed(4)})` : ""}`
+          : `rotate(${ang[j].toFixed(2)}deg)`;
+        for (const el of els[j]) el.style.transform = tr;
       }
+      if (spec.breathFollow) { const tr = spec.breathFollow.f(t); for (const el of follow) el.style.transform = tr; }
     };
     raf = requestAnimationFrame(frame);
     return () => {
       cancelAnimationFrame(raf);
       svg.classList.remove("posed");
-      for (const j of JOINTS) if (els[j]) els[j]!.style.transform = "";
+      for (const j of JOINTS) for (const el of els[j]) el.style.transform = "";
+      for (const el of follow) el.style.transform = "";
     };
   }, [svgRef, baseId, rigKey]);
 }
