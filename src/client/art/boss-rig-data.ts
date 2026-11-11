@@ -2749,14 +2749,14 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
       },
       "handL": {
         "x": 329.5,
-        "y": 609.0,
-        "w": 144,
-        "h": 100,
+        "y": 547.5,
+        "w": 264,
+        "h": 177,
         "pivot": [
           359.0,
           644.5
         ],
-        "v": "e9c81627"
+        "v": "580f4d4d"
       },
       "armR": {
         "x": 561.5,

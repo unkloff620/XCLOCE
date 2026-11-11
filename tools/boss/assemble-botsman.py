@@ -1,7 +1,7 @@
 """
 Боцман (id botsman): the artist's layers, all in place on one 2000×3000 sheet — tools/boss/source/botsman/raw/
 {coat,legs,head,upperL,foreL,fistL,upperR,foreR,fistR}.png (L — the arm on the left of the picture: down, the fist before
-the belly; R — the guard arm up on the right).
+the belly holding a crowbar (raw/crowbar.png, under the fist); R — the guard arm up on the right).
 → rig sources for build-boss.py (cropped to the figure): body = the coat (its tails swing — bs-hem, boss-rig.tsx),
 legs = the trousers and boots (drawn OVER the coat, as the artist asked), head, armL/lowL/handL, armR/lowR/handR
 (shoulder → forearm at the elbow → fist at the wrist; joints: build-boss.py PIVOT_BY_BOSS),
@@ -58,12 +58,12 @@ for n, box in {"browL": (0, 0, cut, 3000), "browR": (cut, 0, 2000, 3000)}.items(
     print(n, "pivot", [round((x - CROP[0]) * 0.5, 1), round((ys.mean() - CROP[1]) * 0.5, 1)])
 
 for out, src in {"legs": ("legs",), "body": ("coat",),
-                 "armL": ("upperL",), "lowL": ("foreL",), "handL": ("fistL",),
+                 "armL": ("upperL",), "lowL": ("foreL",), "handL": ("crowbar", "fistL"),
                  "armR": ("upperR",), "lowR": ("foreR",), "handR": ("fistR",)}.items():
     lay(*src).save(f"{D}/{out}.png")
 
 os.makedirs("public/bosses/botsman", exist_ok=True)
-full = lay("coat", "legs", "upperR", "foreR", "fistR", "upperL", "foreL", "fistL")
+full = lay("coat", "legs", "upperR", "foreR", "fistR", "upperL", "foreL", "crowbar", "fistL")
 full.alpha_composite(face("head").crop(CROP))
 f = full.resize((full.width // 2, full.height // 2), Image.LANCZOS)
 f.save("public/bosses/botsman/full.webp", quality=88, method=6)

@@ -362,33 +362,36 @@ const mgTaunt: Action = {
   ],
 };
 
-/* Боцман: a fighter in a long coat — the left fist low before the belly (jabs up at the screen), the right one up in the
-   guard (hooks across); the body leans into each blow at the belt and the coat's tails swing after it */
-const btJab: Action = {
-  dur: 0.5,
+/* Боцман: a fighter in a long coat with a crowbar in the fist before his belly (L) and the other fist up in the guard (R);
+   the player stands below him in the middle of the screen — the crowbar comes down from over his shoulder at him, the
+   guard fist hammers down there; the body leans into each blow at the belt and the coat's tails swing after it */
+const btBar: Action = {
+  dur: 0.72,
   keys: [
-    { at: 0, pose: { armL: 6, lowL: 12, handL: 4, up: -1.5, x: -5 } }, // the fist drawn back
-    { at: 0.08, pose: { armL: -16, lowL: -46, handL: -10, up: 3, x: 10, head: -2, armR: 3, lowR: 6 }, stiff: 6 }, // the jab
-    { at: 0.2, pose: { armL: -8, lowL: -24, handL: -4, up: 1.5, x: 5 }, stiff: 1.4 },
-    { at: 0.3, pose: {} },
+    { at: 0, pose: { armL: -14, lowL: -92, handL: -34, up: -2.5, x: -8, head: 2, lowR: 6 } }, // the crowbar up over the shoulder
+    { at: 0.18, pose: { armL: -2, lowL: -6, handL: 52, up: 4, x: 12, head: -3, armR: 3 }, stiff: 6 }, // the hook down into the player
+    { at: 0.32, pose: { armL: -1, lowL: -4, handL: 34, up: 2.5, x: 7, head: -2 }, stiff: 1.4 },
+    { at: 0.46, pose: {} },
   ],
 };
-const btHook: Action = {
-  dur: 0.6,
+const btHammer: Action = {
+  dur: 0.62,
   keys: [
-    { at: 0, pose: { armR: 9, lowR: 18, handR: 6, up: 2, x: 6, head: 1.5 } }, // the guard drawn back
-    { at: 0.1, pose: { armR: -14, lowR: -48, handR: -12, up: -4, x: -12, head: 2.5, armL: -3, lowL: -6 }, stiff: 6 }, // the hook across
-    { at: 0.23, pose: { armR: -7, lowR: -26, handR: -5, up: -2, x: -6 }, stiff: 1.4 },
-    { at: 0.34, pose: {} },
+    { at: 0, pose: { armR: -12, lowR: -22, handR: -10, up: 1.5, x: 6, head: 1.5 } }, // the guard fist pulled up and back
+    { at: 0.05, pose: { armR: -6, lowR: 118, handR: 12, up: -1.5, x: -4 }, stiff: 6 }, // the forearm folds down first (no swing out)
+    { at: 0.12, pose: { armR: 28, lowR: 125, handR: 22, up: -3.5, x: -12, head: 2.5, armL: -3, lowL: -8 }, stiff: 6 }, // the fist down into the player
+    { at: 0.25, pose: { armR: 18, lowR: 95, handR: 14, up: -2, x: -6 }, stiff: 1.4 },
+    { at: 0.36, pose: {} },
   ],
 };
 const btTaunt: Action = {
-  dur: 1.2,
+  dur: 1.3,
   keys: [
-    { at: 0, pose: { head: -4, up: -1.5, lowR: 10, handR: 12 } }, // the chin up, the guard fist rolls — «давай»
-    { at: 0.25, pose: { head: -3, lowR: -6, handR: -10 }, stiff: 2.5 },
-    { at: 0.45, pose: { head: -3, lowR: 8, handR: 10 }, stiff: 2.5 },
-    { at: 0.7, pose: {} },
+    { at: 0, pose: { head: -4, up: -1.5, lowL: -30, handL: -18 } }, // the chin up, the crowbar lifted and tapped in the palm — «ну давай»
+    { at: 0.22, pose: { head: -3, lowL: -18, handL: 6 }, stiff: 2.5 },
+    { at: 0.42, pose: { head: -3, lowL: -30, handL: -16 }, stiff: 2.5 },
+    { at: 0.62, pose: { head: -2, lowL: -18, handL: 6 }, stiff: 2.5 },
+    { at: 0.85, pose: {} },
   ],
 };
 
@@ -397,9 +400,9 @@ const POSES: Record<string, Spec> = {
     springs: {
       up: { k: 70, c: 11.5 }, x: { k: 60, c: 11 }, head: { k: 110, c: 11 },
       armL: { k: 110, c: 16 }, lowL: { k: 200, c: 18 }, handL: { k: 320, c: 16 },
-      armR: { k: 110, c: 16 }, lowR: { k: 200, c: 18 }, handR: { k: 320, c: 16 },
+      armR: { k: 110, c: 16 }, lowR: { k: 620, c: 36 }, handR: { k: 320, c: 16 },
     },
-    drag: { lowL: ["armL", -0.05], handL: ["lowL", -0.05], lowR: ["armR", -0.05], handR: ["lowR", -0.05], head: ["up", -0.08] },
+    drag: { lowL: ["armL", -0.05], handL: ["lowL", -0.05], handR: ["lowR", -0.05], head: ["up", -0.08] },
     // on his toes: the guard bobs, the body sways
     idle: (t) => ({
       up: 1.1 * Math.sin(t * 1.3) + 0.4 * Math.sin(t * 2.6 + 1),
@@ -409,16 +412,17 @@ const POSES: Record<string, Spec> = {
       armR: 2 * Math.sin(t * 2.2 + 1.6), lowR: 3.5 * Math.sin(t * 2.2 + 2.2), handR: 3 * Math.sin(t * 2.4 + 1),
     }),
     actions: [
-      { a: btJab, w: 16 },
-      { a: join(btJab, shift(btJab, 0.03)), w: 18 },
-      { a: join(btJab, shift(btHook, 0.03)), w: 22 }, // the one-two
-      { a: btHook, w: 14 },
-      { a: join(btJab, shift(btJab, 0.03), shift(btHook, 0.03)), w: 14 },
+      { a: btBar, w: 18 },
+      { a: join(btBar, shift(btHammer, 0.03)), w: 22 }, // crowbar, then the fist
+      { a: btHammer, w: 14 },
+      { a: join(btHammer, shift(btHammer, 0.04)), w: 12 },
+      { a: join(btBar, shift(btBar, 0.05)), w: 12 },
+      { a: join(btHammer, shift(btBar, 0.03), shift(btHammer, 0.03)), w: 12 },
       { a: btTaunt, w: 8 },
     ],
     rest: [0.8, 2.0],
     hit: { head: 240, up: -80, x: -70, armL: 120, lowL: 180, handL: 160, armR: 120, lowR: 200, handR: 180 },
-    strike: join(btJab, shift(btHook, 0.03)),
+    strike: join(btBar, shift(btHammer, 0.03)),
     // beaten: the guard dropped, the fists hang
     dazed: { pose: { armL: 10, lowL: 22, handL: 6, armR: 18, lowR: 42, handR: 10, head: 6, up: -1.5 }, act: false },
     hem: { sel: ".bs-hem", k: 30, c: 3.2, up: 1.6, x: 0.35, flutter: (t) => 1.6 * Math.sin(t * 1.7) + 0.8 * Math.sin(t * 3.1 + 1) },

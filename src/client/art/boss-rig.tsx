@@ -24,7 +24,7 @@ type Part = { x: number; y: number; w: number; h: number; pivot?: readonly numbe
 /** bosses whose far arm (R or L) goes behind the body */
 const BEHIND: Record<string, "L" | "R"> = { mugo: "R", babafey: "L", gopnik: "L", botsman: "R" };
 /** of these the arm in BEHIND goes behind only with its shoulder: the forearm and the hand stay in front of everything */
-const SPLIT_BEHIND = new Set(["babafey"]);
+const SPLIT_BEHIND = new Set(["babafey", "botsman"]);
 /** rigs drawn as plain SVG only */
 const NO_PUPPET = new Set<string>(["knyaz"]);
 /** the bosses drawn whole (no legs of their own) that still bend at the waist on the pose engine: the waist (rig units)
