@@ -15,6 +15,7 @@
  * brows drawn one by one (browL/browR) turn at their inner ends for the emotions.
  */
 import { useEffect, useRef, type CSSProperties, type ReactNode, type RefObject } from "react";
+import { usePoses } from "./boss-poses.ts";
 import { usePuppet } from "./boss-puppet.ts";
 import { BOSS_RIGS } from "./boss-rig-data.ts";
 
@@ -179,6 +180,8 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
   const puppet = !bust && !!BOSS_RIGS[id] && !NO_PUPPET.has(baseId);
   const wrapRef = useRef<HTMLDivElement>(null);
   usePuppet(wrapRef, id, { w: BOSS_RIGS[id]?.w ?? 1, h: BOSS_RIGS[id]?.h ?? 1 }, puppet);
+  // the bosses with a pose engine (boss-poses.ts): springs instead of the CSS keyframes
+  usePoses(svgRef, baseId, id);
   const rig = BOSS_RIGS[id];
   if (!rig) return null;
   const P = rig.parts;
