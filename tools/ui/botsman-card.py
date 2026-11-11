@@ -8,19 +8,10 @@ import random
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
-src = Image.open("tools/ui/source/boss-card-frame-botsman.png").convert("RGB")
+src = Image.open("tools/ui/source/boss-card-frame-botsman.png").convert("RGBA")   # cut out by the artist
 W = 1200
-im = src.resize((W, round(src.height * W / src.width)), Image.LANCZOS).convert("RGBA")
+im = src.resize((W, round(src.height * W / src.width)), Image.LANCZOS)
 a = np.array(im)
-# the outside: near-black pixels reachable from the edges
-dark = a[..., :3].astype(int).sum(2) < 18
-from scipy import ndimage
-lab, _ = ndimage.label(dark)
-edge = set(np.unique(np.concatenate([lab[0], lab[-1], lab[:, 0], lab[:, -1]]))) - {0}
-out = np.isin(lab, list(edge))
-alpha = np.where(out, 0, 255).astype(np.uint8)
-alpha = np.array(Image.fromarray(alpha).filter(ImageFilter.GaussianBlur(1)))
-a[..., 3] = alpha
 Image.fromarray(a).save("public/assets/ui/boss-card-frame-botsman.webp", quality=90, method=6)
 print("frame", im.size)
 

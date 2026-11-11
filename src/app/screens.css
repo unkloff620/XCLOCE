@@ -6210,7 +6210,7 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 /* Боцман's card: black leather with buckles (boss-card-frame-botsman.webp, 1200×514, the artist's; tools/ui/botsman-card.py);
  * inside it a dim green code rain falls in two layers at different speeds (botsman-rain.webp), and the two lamps on the
  * sides (at 27.6%–52.4% of the frame's stretched middle, 6 px in) flicker in green */
-.bcard.bcard-boss-botsman { --ink-c: #e6f2e8; --mute-c: #8fae96; border-image: url("/assets/ui/boss-card-frame-botsman.webp?v=1") 130 fill / 40px stretch; }
+.bcard.bcard-boss-botsman { --ink-c: #e6f2e8; --mute-c: #8fae96; border-image: url("/assets/ui/boss-card-frame-botsman.webp?v=2") 130 fill / 40px stretch; }
 .bcard.bcard-boss-botsman .bcard-name { text-shadow: 0 2px 0 rgba(0, 0, 0, 0.6), 0 0 12px rgba(80, 255, 140, 0.25); }
 .bcard.bcard-boss-botsman .bcard-reward { background: rgba(0, 0, 0, 0.35); box-shadow: inset 0 0 0 1.5px rgba(90, 200, 120, 0.25); }
 .bcard.bcard-boss-botsman::before { display: block; content: ""; position: absolute; inset: 24px 30px; z-index: 0; height: auto; border-radius: 6px; pointer-events: none;
