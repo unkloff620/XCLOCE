@@ -148,12 +148,15 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
   const toggleInk = (id: string) => {
     if (!owned.has(id)) return;
     if (inked.has(id)) setInk([...inked].filter((t) => t !== id));
-    else setInk([...[...inked].filter((t) => tattooZone(t) !== tattooZone(id)), id]);
+    else {
+      setInk([...[...inked].filter((t) => tattooZone(t) !== tattooZone(id)), id]);
+      sfx("ink");
+    }
   };
   const piece = (s: (typeof TATTOO_SETS)[number], p: (typeof TATTOO_SETS)[number]["pieces"][number]) => {
     const have = owned.has(p.id);
     return (
-      <button key={p.id} className={`sty-item rar-epic ink-item ${inked.has(p.id) ? "on" : ""} ${have ? "" : "locked"}`} onClick={() => toggleInk(p.id)} disabled={!have}
+      <button key={p.id} data-nosfx className={`sty-item rar-epic ink-item ${inked.has(p.id) ? "on" : ""} ${have ? "" : "locked"}`} onClick={() => toggleInk(p.id)} disabled={!have}
         title={have ? (inked.has(p.id) ? "Свести" : "Набить") : `Выпадает ${tattooSource(s, (b) => bossById(b)?.name)}`}>
         <ItemArt id={p.id} size={46} />
         <span className="sty-item-name">{have ? p.name : "???"}</span>
@@ -199,7 +202,7 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
           {all ? (
             <button type="button" className="btn dark sm" onClick={() => setInk([...inked].filter((t) => !openSet.pieces.some((p) => p.id === t)))}>Свести все</button>
           ) : (
-            <button type="button" className="btn gold sm" disabled={!mine.length} onClick={() => setInk([...inked, ...mine.map((p) => p.id)])}>Набить все</button>
+            <button type="button" className="btn gold sm" disabled={!mine.length} data-nosfx onClick={() => { setInk([...inked, ...mine.map((p) => p.id)]); sfx("ink"); }}>Набить все</button>
           )}
         </div>
         <div className="ink-grid">{openSet.pieces.map((p) => piece(openSet, p))}</div>

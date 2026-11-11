@@ -8,7 +8,7 @@
  * The mute switch is remembered on this device.
  */
 
-export type Sfx = "wear" | "spin" | "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" | "upgrade" | "levelup" | "error" | "win" | "step" | "door" | "locked"
+export type Sfx = "ink" | "wear" | "spin" | "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" | "upgrade" | "levelup" | "error" | "win" | "step" | "door" | "locked"
   /* mini-games: dice in the cup and on the table, a card flip, a deal, poker chips, a squashed roach, a zonk */
   | "shake" | "dice" | "card" | "deal" | "chips" | "splat" | "zonk"
   /* a profile: «Ништяк!» for a pumped biceps (public/assets/sound/nishtyak-4.mp3, a hoarse prison voice), a spit, a fist fight */
@@ -245,6 +245,10 @@ const SAMPLE_URLS = {
   wear1: "/assets/sound/wear-1.mp3",
   wear2: "/assets/sound/wear-2.mp3",
   wear3: "/assets/sound/wear-3.mp3",
+  // a tattoo inked: one of three recordings of the player's at random (tools/sound/source/ink-1..3.mp3)
+  ink1: "/assets/sound/ink-1.mp3",
+  ink2: "/assets/sound/ink-2.mp3",
+  ink3: "/assets/sound/ink-3.mp3",
   door: "/assets/sound/door.mp3",
   keys: "/assets/sound/keys.mp3",
   punch: "/assets/sound/punch.mp3",
@@ -398,6 +402,7 @@ export function raidVoice(): number {
 }
 
 let lastWear = 0;
+let lastInk = 0;
 /** Plays a sound. `power` 0..1 makes hits heavier. */
 export function sfx(name: Sfx, power = 0.5) {
   if (muted) return;
@@ -444,6 +449,15 @@ export function sfx(name: Sfx, power = 0.5) {
         if (!sample(a, "punch", at, 0.7, 0.9 + k * 0.08)) noise(a, at, 0.12, { freq: 900, vol: 0.5 });
       }
       break;
+    case "ink": {
+      // «Набить все» plays it once
+      const now = performance.now();
+      if (now - lastInk < 600) break;
+      lastInk = now;
+      if (sample(a, `ink${1 + Math.floor(Math.random() * 3)}`, t, 0.65)) break;
+      noise(a, t, 0.4, { freq: 300, type: "bandpass", q: 4, vol: 0.2 });
+      break;
+    }
     case "wear": {
       // several things saved at once play it once
       const now = performance.now();
