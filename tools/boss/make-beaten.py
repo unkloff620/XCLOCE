@@ -34,8 +34,12 @@ ORDER = {
     # the wallet sleeve (viewer's left) behind the body, the fist arm (viewer's right) in front (boss-rig.tsx KnyazRig)
     "knyaz": ["legs", "armLb@0", "body", "head", "eyes", "pupils", "brows@0", "armRb@0", "handL", "cover"],
     # Вадим (boss-rig.tsx VadimRig): the eye whites and the irises behind the head, the key arm's sleeve behind the body
+    # Боцман (boss-rig.tsx): the far shoulder behind the coat, the legs over the coat's tails, the forearms and fists in front
+    "botsman": ["armR", "body", "legs", "head", "eyes", "pupils", "browL", "browR", "throat", "teeth-up", "teeth-low", "lips", "lowR", "handR", "armL", "lowL", "handL"],
     "vadim": ["legs", "armL", "body", "eyes", "pupils", "head", "browL", "browR", "lowL", "handL", "keyRing", "keyFob", "keyKey", "armR", "lowR", "handR"],
 }
+# bosses whose face takes the edit's blood close to the mouth, and whose lips layer gets it too
+OPEN_FACE = {"botsman"}
 SKIN_AND_CLOTHES = {"body", "head", "head-open", "legs", "foreL", "foreR", "armL", "armR", "lowL", "lowR", "handL", "handR", "armLb@0", "armRb@0"}
 LOOK = {
     "datsik": "a curly-haired guy in a white t-shirt and dark trousers",
@@ -44,6 +48,7 @@ LOOK = {
     "babafey": "a guy in an embroidered folk shirt and black trousers with a balalaika",
     "vodovoz": "a guy in a beige strapped jumpsuit with a yellow delivery bag and headphones",
     "knyaz": "a curly-haired guy in a fluffy cream jacket, a black t-shirt and grey sweatpants with a hardware wallet",
+    "botsman": "a blond guy in a long black leather trench coat with buckles, a black turtleneck, black trousers and boots, a crowbar in one fist",
     "vadim": "a chubby guy in a navy blue suit, a white shirt and a red tie, brown loafers, with a kitchen knife and a bunch of car keys",
 }
 PROMPT = ("Edit this game boss character ({look}): keep exactly the same character, pose, outline, face, proportions, colours and cartoon style "
@@ -64,6 +69,8 @@ def edit(boss, comp):
         pad.paste(Image.fromarray(comp.astype(np.uint8)), (ox, oy))
         tmp = f"/tmp/{boss}-beaten-in.png"
         pad.resize((1024, 1536), Image.LANCZOS).save(tmp)
+        if not os.path.exists("/tmp/t/openai.env"):
+            sys.exit(f"no key here: edit {tmp} elsewhere and put the result at {raw}")
         key = open("/tmp/t/openai.env").read().split("=", 1)[1].strip()
         r = requests.post("https://api.openai.com/v1/images/edits", headers={"Authorization": "Bearer " + key},
                           files={"image": open(tmp, "rb")}, data={"model": "gpt-image-2", "prompt": PROMPT.format(look=LOOK[boss]), "size": "1024x1536", "quality": "high"}, timeout=900)
@@ -153,18 +160,29 @@ def main(boss):
     # the face keeps its own eyes, brows and mouth (they are layers of their own and move): the edit's around them is not
     # taken — swollen or shut eyes from the edit would show under the rig's open ones
     face = np.zeros((H, W), bool)
-    for f in ["eyes", "eyes-closed", "pupils", "brows", "brows-sad", "browL", "browR", "mouth", "mouth-closed", "mouth-sad", "lips", "brows@0", "jaw@0"]:
+    for f in ["eyes", "eyes-closed", "pupils", "brows", "brows-sad", "browL", "browR", "mouth", "mouth-closed", "mouth-sad", "lips", "throat", "teeth-up", "teeth-low", "brows@0", "jaw@0"]:
         fp = os.path.join(S, f + ".png")
         if os.path.exists(fp):
-            face |= np.array(Image.open(fp).convert("RGBA"))[..., 3] > 40
-    face = ndimage.binary_dilation(face, iterations=14)
+            m = np.array(Image.open(fp).convert("RGBA"))[..., 3] > 40
+            # Боцман's mouth is its own tight layers: the blood from the nose may run right up to his lips
+            near = 3 if boss in OPEN_FACE and f in ("lips", "throat", "teeth-up", "teeth-low") else 14
+            face |= ndimage.binary_dilation(m, iterations=near)
     for i, p in enumerate(order):
-        if p not in SKIN_AND_CLOTHES:
+        if p not in SKIN_AND_CLOTHES and not (boss in OPEN_FACE and p == "lips"):
             continue
         im = L[p].copy()
-        m = (top == i) & ndimage.binary_erosion(L[p][..., 3] > 128, iterations=7) & ~white & ~face
+        m = (top == i) & ndimage.binary_erosion(L[p][..., 3] > 128, iterations=2 if p == "lips" else 7) & ~white & ~(face & (p != "lips"))
         w = ndimage.gaussian_filter(m.astype(np.float32), 2)[..., None]
         im[..., :3] = np.clip(im[..., :3] * (1 - w) + warped * w, 0, 255).astype(np.uint8)
+        if boss in OPEN_FACE and p == "head":
+            # the head's own sad mouth (shown when the open mouth hides, hit or beaten) lies under the lips: only the edit's
+            # blood is taken there, so the blood from the nose runs over the sad mouth too
+            lp = os.path.join(S, "lips.png")
+            zone = ndimage.binary_dilation(np.array(Image.open(lp).convert("RGBA"))[..., 3] > 40, iterations=4) & (L[p][..., 3] > 128)
+            r, g, b = warped[..., 0], warped[..., 1], warped[..., 2]
+            blood = (r > 90) & (r > g * 2.0) & (r > b * 1.8) & (r - g > 60)
+            bw = ndimage.gaussian_filter((zone & blood).astype(np.float32), 1.2)[..., None]
+            im[..., :3] = np.clip(im[..., :3] * (1 - bw) + warped * bw, 0, 255).astype(np.uint8)
         hurt[p] = im
     # the head with the mouth open looks like the head: the same damage where the head is on top
     if os.path.exists(os.path.join(S, "head-open.png")) and "head" in order:
