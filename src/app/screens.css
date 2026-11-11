@@ -6162,10 +6162,13 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .zb-c2-dice svg { display: block; }
 .zb-c2.can { background: rgba(255, 196, 40, 0.38); }
 .zb-c2.on { background: rgba(30, 140, 70, 0.32); box-shadow: inset 0 0 0 0.25cqw rgba(20, 110, 55, 0.55); }
-/* the paper's dice as big as the paper's width allows (six of them and «1500» in one line) */
-.zb-sheet2 { padding: 2.2cqw 1cqw 1.6cqw; }
-.zb-c2 { padding: 0 0.4cqw; gap: 0.4cqw; }
-.zb-c2-dice { gap: 0.2cqw; }
-.zb-c2-dice i { width: 2.9cqw; height: 2.9cqw; border-radius: 0.5cqw; }
-.zb-c2 b { font-size: 2.6cqw; }
-.zb-sheet2-h { font-size: 2.7cqw; }
+/* the combinations are written on the picture's own paper (turned with it): ink, no paper of their own */
+.zb-sheet2 { background: none; box-shadow: none; clip-path: none; transform: rotate(-2.4deg); padding: 0; gap: 0.25cqw; justify-content: space-between; }
+.zb-sheet2-h { font-size: 2.8cqw; margin-bottom: 0.4cqw; }
+.zb-c2 { flex: none; justify-content: flex-start; gap: 1cqw; padding: 0.2cqw 0.5cqw; border-bottom: 0; }
+.zb-c2-dice { gap: 0.25cqw; }
+.zb-c2-dice i { width: 3.1cqw; height: 3.1cqw; border-radius: 0.5cqw; }
+.zb-c2 b { font-size: 2.7cqw; }
+/* four dice and more: the points over the dice, both in the middle */
+.zb-c2.wide { flex-direction: column-reverse; align-items: center; gap: 0.2cqw; }
+.zb-c2.wide b { line-height: 1; }

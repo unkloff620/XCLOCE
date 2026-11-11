@@ -107,7 +107,7 @@ const rewardText = (r: { currencies?: Partial<Record<string, number>> }) =>
   Object.entries(r.currencies ?? {}).map(([c, v]) => `${v} ${c}`).join(" + ");
 
 /*
- * The room picture (public/assets/yard/zonk-room-2.webp — zonk-room.webp with its paper painted out; 841×1870 — every place below is in those pixels): a lamp and the
+ * The room picture (public/assets/yard/zonk-room.webp, 841×1870 — every place below is in those pixels): a lamp and the
  * «ЗОНК» sign on top, the framed chalkboard in the middle, a table at the bottom. It covers the whole window; only the
  * top and the bottom (the lamp and the table) may be cut on a short screen.
  */
@@ -552,7 +552,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
         <div className="zb-help"><ZonkHelp /></div>
         <div className="zb" style={{ ["--throw" as string]: throwing }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="zb-bg" src="/assets/yard/zonk-room-2.webp" alt="" draggable={false} />
+          <img className="zb-bg" src="/assets/yard/zonk-room.webp" alt="" draggable={false} />
           {/* the lamp over the sign is alive: its light breathes, dims and flickers, the room darkens with it */}
           <span className="zb-dark" aria-hidden="true" />
           <span className="zb-lamp" aria-hidden="true" />
@@ -665,15 +665,15 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
           )}
 
           {/* the sheet on the right: the combinations; a row lights up when the roll has it, brighter when it is picked */}
-          {/* the paper of the combinations, drawn here (over the picture's own paper): the dice of each and what it scores;
-              a row lights up when the roll has it (hints), green when it is picked */}
-          <div className="zb-sheet2" style={{ left: zx(598), top: zy(392), width: zx(228), height: zy(604) }}>
+          {/* the combinations written on the picture's paper: the dice of each and what it scores (four dice and more: the
+              points over the dice); a row lights up when the roll has it (hints), green when it is picked */}
+          <div className="zb-sheet2" style={{ left: zx(634), top: zy(416), width: zx(198), height: zy(632) }}>
             <b className="zb-sheet2-h">Фартовые<br />комбинации</b>
             {COMBOS.map((c) => {
               const can = hintsOn && c.test(nRoll, roll.length);
               const on = picked.length > 0 && c.test(nPick, picked.length);
               return (
-                <div key={c.key} className={`zb-c2 ${can ? "can" : ""} ${on ? "on" : ""}`}>
+                <div key={c.key} className={`zb-c2 ${c.dice.length > 3 ? "wide" : ""} ${can ? "can" : ""} ${on ? "on" : ""}`}>
                   <span className="zb-c2-dice">{c.dice.map((d, k) => <i key={k}><DieFace v={d} /></i>)}</span>
                   <b className="num">{c.label}</b>
                 </div>
