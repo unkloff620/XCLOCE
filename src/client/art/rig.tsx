@@ -274,13 +274,36 @@ function WearBack() {
   const back = id ? WEAR_BACK[id] : undefined;
   if (!back || !(back in WEARS)) return null;
   const f = WEARS[back];
-  return <image href={`/assets/hero/wear/${back}.webp?v=${ART_VER.wear}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
+  const pic = <image href={`/assets/hero/wear/${back}.webp?v=${ART_VER.wear}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
+  // a swaying coat: its back sways from its top edge, a beat behind the front tails
+  return id && WEAR_SWAY[id] ? <g className="rig-sway rig-sway-back" style={{ transformOrigin: `500px ${f.y}px`, transformBox: "view-box" }}>{pic}</g> : pic;
+}
+
+/** long coats whose tails sway a little: below this line (rig y) the picture leans side to side (a skew about the line,
+ *  so the seam stays put); above it — the shoulders and sleeves on the arms — it stays still */
+const WEAR_SWAY: Record<string, number> = { "coat-botsman": 820 };
+function SwayingWear({ id }: { id: string }) {
+  const f = WEARS[id];
+  const cut = WEAR_SWAY[id];
+  const uid = useId().replace(/:/g, "");
+  const pic = <image href={`/assets/hero/wear/${id}.webp?v=${ART_VER.wear}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
+  return (
+    <>
+      <defs>
+        <clipPath id={`${uid}-u`}><rect x={-200} y={-200} width={1400} height={cut + 200} /></clipPath>
+        <clipPath id={`${uid}-d`}><rect x={-200} y={cut} width={1400} height={1600} /></clipPath>
+      </defs>
+      <g clipPath={`url(#${uid}-u)`}>{pic}</g>
+      <g className="rig-sway" style={{ transformOrigin: `500px ${cut}px`, transformBox: "view-box" }}><g clipPath={`url(#${uid}-d)`}>{pic}</g></g>
+    </>
+  );
 }
 
 function Wear({ slot, hat }: { slot: string; hat?: "under" | "over" }) {
   const id = wornIn(useContext(WornCtx), slot);
   if (!id) return null;
   if (hat && (hat === "over") !== (HAIR_CUT_HATS.includes(id) || HATS_ON_HAIR.includes(id))) return null;
+  if (WEAR_SWAY[id]) return <SwayingWear id={id} />;
   const f = WEARS[id];
   return <image href={`/assets/hero/wear/${id}.webp?v=${ART_VER.wear}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
 }

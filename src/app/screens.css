@@ -6272,3 +6272,10 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .fit-page .room-confirm { top: auto; bottom: var(--bottom); max-width: calc(100% - 24px); }
 @keyframes room-confirm-up { from { opacity: 0; transform: translate(-50%, 8px); } }
 .fit-page .room-confirm { animation-name: room-confirm-up; }
+
+/* a long coat on the hero (rig.tsx WEAR_SWAY): the tails below the hips sway a little from side to side, the back a beat later */
+.rig-sway { animation: rig-sway 4.6s ease-in-out infinite; }
+.rig-sway-back { animation-delay: -0.5s; animation-duration: 4.6s; }
+@keyframes rig-sway { 0%, 100% { transform: skewX(0.9deg); } 50% { transform: skewX(-0.9deg); } }
+.rig.still .rig-sway { animation: none; }
+@media (prefers-reduced-motion: reduce) { .rig-sway { animation: none; } }
