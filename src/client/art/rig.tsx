@@ -549,7 +549,7 @@ function GloveHand() {
     <g className="rig-hand rig-gloves">
       <g className="rig-crowbar">
         {pic("crowbar", g.crowbar)}
-        <MetalGlint mask={`/assets/hero/held/${GLOVES_ID}-crowbar-shine.webp?v=1`} box={g.crowbar} star={[g.crowbar.x + 205, g.crowbar.y + 34]} size={16} delay={-2.2} />
+        <MetalGlint mask={`/assets/hero/held/${GLOVES_ID}-crowbar-shine.webp?v=1`} box={g.crowbar} star={[g.crowbar.x + 62, g.crowbar.y + 42]} size={18} delay={-2.2} />
       </g>
       {pic("fist", g.hand, "rig-gf rig-gf-fist")}
       {pic("open", g.hand, "rig-gf rig-gf-open")}
