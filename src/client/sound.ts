@@ -44,7 +44,9 @@ export type Sfx = "ink" | "wear" | "spin" | "tap" | "hit" | "crit" | "coin" | "b
   /* a new achievement: one of two recordings of the player's at random (public/assets/sound/ach-voice-1/2.mp3) */
   | "wow"
   /* «Личное дело»: a sheet of paper turned over */
-  | "page";
+  | "page"
+  /* the daily login gift taken (public/assets/sound/daily-claim.mp3, the player's recording) */
+  | "dailyclaim";
 
 const MUTE_KEY = "xc2_mute";
 const MUSIC_KEY = "xc2_music";
@@ -260,6 +262,7 @@ const SAMPLE_URLS = {
   bars: "/assets/sound/bars.mp3",
   // one voice for both: «Ништяк!» in a hoarse prison voice (a new achievement and a pumped biceps)
   nishtyak: "/assets/sound/nishtyak-4.mp3",
+  dailyclaim: "/assets/sound/daily-claim.mp3",
   wow1: "/assets/sound/ach-voice-1.mp3",
   wow2: "/assets/sound/ach-voice-2.mp3",
   // «Ооо, нычка!»: two recordings of the player's, one of them at random each time
@@ -447,6 +450,11 @@ export function sfx(name: Sfx, power = 0.5) {
     case "nychka":
       if (sample(a, nextOf("nychka", ["nychka1", "nychka2", "nychka3", "nychka4"]), t, 1)) break;
       tone(a, 120, t, 0.3, { type: "sawtooth", vol: 0.18, slide: 1.3 });
+      break;
+    case "dailyclaim":
+      if (sampleSoon(a, "dailyclaim", 1)) break;
+      tone(a, 660, t, 0.12, { type: "triangle", vol: 0.2 });
+      tone(a, 990, t + 0.1, 0.2, { type: "triangle", vol: 0.2 });
       break;
     case "nishtyak":
       // the first tap of the session may be this very one: the voice is still loading — wait for it, no stand-in

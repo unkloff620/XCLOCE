@@ -40,7 +40,7 @@ export function DailyWindow({ onClose }: { onClose: () => void }) {
     const r = await act<{ day: number; reward: Granted; bonus: Granted | null }>("daily_claim");
     if (r) {
       haptic.ok();
-      sfx("nishtyak"); // «Ништяк!» for the daily login gift
+      sfx("dailyclaim"); // the daily login gift: the player's own recording
       setGot(r.reward);
       setBonus(r.bonus);
     }
