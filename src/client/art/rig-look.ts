@@ -327,6 +327,20 @@ export const WEAR_FIT = {
     "y": 288.5,
     "w": 138,
     "h": 423
+  },
+  "pants-botsman": {
+    "slot": "PANTS",
+    "x": 69.5,
+    "y": 684.0,
+    "w": 864,
+    "h": 429
+  },
+  "boots-botsman": {
+    "slot": "SHOES",
+    "x": 99.5,
+    "y": 1069.0,
+    "w": 791,
+    "h": 272
   }
 } as const;
 /** head things that cut the hair under them (the rest are worn over the hair) */

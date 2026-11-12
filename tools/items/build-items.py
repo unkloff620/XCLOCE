@@ -15,7 +15,7 @@ OUT = os.path.abspath(os.path.join(HERE, "..", "..", "public", "assets", "items"
 SIZE = 256
 os.makedirs(OUT, exist_ok=True)
 WEAR = os.path.abspath(os.path.join(HERE, "..", "rig", "source", "wear"))
-ICON_CROP = {"sneakers": (0, 0, 1000, 2800), "slippers": (0, 0, 1000, 2800), "shoes-vadim": (0, 0, 1000, 2800)}  # a pair far apart: the icon shows one shoe
+ICON_CROP = {"sneakers": (0, 0, 1000, 2800), "slippers": (0, 0, 1000, 2800), "shoes-vadim": (0, 0, 1000, 2800), "boots-botsman": (0, 0, 1000, 2800)}  # a pair far apart: the icon shows one shoe
 UI_OUT = os.path.abspath(os.path.join(HERE, "..", "..", "public", "assets", "ui"))
 os.makedirs(UI_OUT, exist_ok=True)
 # a dedicated icon drawn by the artist (source/<id>.png) wins over the one cut from the clothes on the rig canvas

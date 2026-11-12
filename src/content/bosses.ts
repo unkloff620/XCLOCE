@@ -160,7 +160,7 @@ export const BOSSES: BossDef[] = [
     story: "Весь год его никто не видел, а в декабре он уже стоит у ёлки. Что-то из себя да представляет.",
     hp: hp(9), reward: { xp: xp(9), currencies: { USD: 39, RUB: 32_880 } },
     drop: [{ id: "rug-pull-gun", qty: 1, chance: 0.15 }],
-    wear: { items: ["gloves-botsman"], chance: 0.1, pity: 10 },
+    wear: { items: ["gloves-botsman", "pants-botsman", "boots-botsman"], chance: 0.1, pity: 10 },
     theme: { a: "#0f2a44", b: "#050e18", accent: "#5fb8ff" }, photo: photo("botsman", true),
     keysToUnlock: 1,
   },
