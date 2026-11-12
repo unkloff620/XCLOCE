@@ -71,19 +71,51 @@ export const YARD_WALKERS: { n: number; from: [number, number]; to: [number, num
   { n: 5, from: [60, 44], to: [74, 49.5], s: 28 },
 ];
 
-/** a win over a building gives (the yard's number makes it bigger): authority and roubles */
-export const buildingReward = (yardN: number, main: boolean) => ({ xp: (main ? 600 : 250) * yardN, rub: (main ? 5_000 : 2_000) * yardN });
-/** wins over a building to take it: the yard's count (the main one — twice as many) */
-export const buildingWins = (y: RaidYard, main: boolean) => y.wins * (main ? 2 : 1);
+/*
+ * The rules of a capture (the yard's number n, the building's row from the bottom):
+ *  - the rows grow harder: the bottom building ×1, the two above it ×1.5, the three above those ×2, the main one ×3 —
+ *    its HP and its rewards; the later yards give more (YARD_K) and need more wins (RaidYard.wins);
+ *  - a taken building: the clan gets its experience, every member who won a fight over it in this capture — authority
+ *    and the yard's flags; the whole yard: a bonus on top (clan experience, authority, flags);
+ *  - a taken yard rests for RAID_YARD_COOLDOWN_MS, then it can be taken again (from the bottom building);
+ *  - the clan's level comes only from this experience (CLAN_RAID_XP): yard №1 once — level 2, all five once — level 10,
+ *    all five ~10 times — level 100.
+ */
+/** the yards' weight: the rewards of yard n are YARD_K[n-1] times those of the first one */
+export const YARD_K = [1, 1.4, 1.8, 2.2, 2.6];
+const yk = (n: number) => YARD_K[n - 1] ?? 1;
+/** the building's row multiplier: its HP and its rewards (from the bottom up: 1, 1.5, 1.5, 2, 2, 2; the main one 3) */
+export const rowK = (b: RaidBuilding) => {
+  if (b.kind === "main") return 3;
+  const i = Number(b.id.split("-").pop()) - 1;
+  return i === 0 ? 1 : i <= 2 ? 1.5 : 2;
+};
+const r10 = (x: number) => Math.round(x / 10) * 10;
+/** a win over a building gives (one fight): authority and roubles */
+export const buildingReward = (yardN: number, b: RaidBuilding) => ({ xp: r10(250 * yardN * rowK(b)), rub: r10(2_000 * yardN * rowK(b)) });
+/** wins over a building to take it (the yard's count — the same for all its buildings; the main one is harder by its HP) */
+export const buildingWins = (y: RaidYard) => y.wins;
 
-/** the building's HP in one fight */
+/** the building's HP in one fight: 100 000 × its row */
 export const BUILDING_HP = 100_000;
-export const MAIN_HP = 150_000;
-export const buildingHp = (main: boolean) => (main ? MAIN_HP : BUILDING_HP);
-/** a taken building gives the clan authority (it counts in the clan's level with the members' own): the main one twice */
-export const buildingClanXp = (yardN: number, main: boolean) => (main ? 50_000 : 25_000) * yardN;
-/** a taken yard gives each clan member who won a fight there: authority and the yard's flag; the clan — more authority on top */
-export const yardReward = (n: number) => ({ clanXp: 100_000 * n, xp: 2_000 * n, flag: flagId(n) });
+export const buildingHp = (b: RaidBuilding) => BUILDING_HP * rowK(b);
+/** a taken building: the clan's experience; every member who won a fight over it — authority and the yard's flags */
+export const buildingTake = (yardN: number, b: RaidBuilding) => ({
+  clanXp: r10(1_100 * yk(yardN) * rowK(b)), xp: r10(1_000 * yk(yardN) * rowK(b)), flags: Math.round(10 * rowK(b)), flag: flagId(yardN),
+});
+/** the whole yard taken: a bonus on top — the clan's experience; everyone who won a fight in it — authority and flags */
+export const yardReward = (n: number) => ({ clanXp: r10(5_000 * yk(n)), xp: r10(4_400 * yk(n)), flags: 20, flag: flagId(n) });
+/** a full capture of yard n: the clan's experience, the authority and the flags of one who won over every building */
+export const yardTotal = (y: RaidYard) => {
+  const bonus = yardReward(y.n);
+  return y.buildings.reduce((t, b) => {
+    const r = buildingTake(y.n, b);
+    return { clanXp: t.clanXp + r.clanXp, xp: t.xp + r.xp, flags: t.flags + r.flags };
+  }, { clanXp: bonus.clanXp, xp: bonus.xp, flags: bonus.flags });
+};
+/** a taken yard rests this long before it can be taken again */
+export const RAID_YARD_COOLDOWN_MS = 2 * 3_600_000;
+
 /** the yards' flags (items): «Флаг двора» with 1…5 stars, the bags of tattoo sets are opened for them */
 export const flagId = (n: number) => `raid-flag-${n}`;
 export const FLAG_IDS = [1, 2, 3, 4, 5].map(flagId);

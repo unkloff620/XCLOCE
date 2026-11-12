@@ -1,15 +1,13 @@
 /*
- * Clan level from the total authority (xp) of its members: threshold of level n = CLAN_XP_K · n^CLAN_XP_P.
- * 1 — 50 000, 5 — 3,3 млн, 10 — 20 млн, 25 — 220 млн, 50 — 1,3 млрд, 100 — 8 млрд (a clan of 30 strong players
- * reaches the 50s–70s; the level cannot run into the thousands any more).
+ * Clan level from the clan's own experience — only from «Захват» (content/raids.ts: taken buildings and yards).
+ * CLAN_LEVEL_XP — the experience of one full capture of yard №1 (level 2); up to level 10 every level costs that much
+ * (all five yards once ≈ level 10), after it — 0,9 of it (all five yards ~10 times ≈ level 100).
  */
-export const CLAN_XP_K = 50_000;
-export const CLAN_XP_P = 2.6;
-export const clanLevelAt = (n: number) => (n <= 0 ? 0 : Math.round(CLAN_XP_K * n ** CLAN_XP_P));
-
+export const CLAN_LEVEL_XP = 19_300;
+export const clanLevelAt = (n: number) => (n <= 1 ? 0 : n <= 10 ? CLAN_LEVEL_XP * (n - 1) : Math.round(CLAN_LEVEL_XP * (9 + 0.9 * (n - 10))));
 export function clanLevelInfo(xp: number): { level: number; from: number; to: number } {
   const x = Math.max(0, xp);
-  let n = Math.max(0, Math.floor((x / CLAN_XP_K) ** (1 / CLAN_XP_P)) - 1);
+  let n = 1;
   while (clanLevelAt(n + 1) <= x) n++;
   return { level: n, from: clanLevelAt(n), to: clanLevelAt(n + 1) };
 }

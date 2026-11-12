@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { act, freshDb, give, newPlayer, qty, wallet } from "./helpers.ts";
 import { resetConfigCache } from "../src/server/config.ts";
 import type { Db } from "../src/server/db.ts";
-import { RAID_YARDS, buildingClanXp, buildingReward, yardReward } from "../src/content/raids.ts";
+import { RAID_YARDS, RAID_YARD_COOLDOWN_MS, buildingReward, buildingTake, yardReward } from "../src/content/raids.ts";
 
 const T = Date.UTC(2026, 10, 10, 12);
 async function setup(db: Db) {
@@ -26,7 +26,7 @@ describe("«Ходки»", () => {
     const rub = await wallet(db, p, "RUB");
     const h = await act(db, p, "raid_attack", { weapon: "rug-pull-gun", count: 1000 }, T);
     expect(h.result.status).toBe("won");
-    expect(await wallet(db, p, "RUB")).toBe(rub + buildingReward(1, false).rub);
+    expect(await wallet(db, p, "RUB")).toBe(rub + buildingReward(1, yard.buildings[0]).rub);
     // the raid damage counts for the talents like any boss damage
     expect(h.result.talentDamage).toBeGreaterThanOrEqual(h.result.damage);
     expect(h.result.talentsGained).toBeGreaterThan(0);
@@ -37,22 +37,29 @@ describe("«Ходки»", () => {
     await expect(act(db, p, "fight_start", { boss: "datsik" }, T)).rejects.toMatchObject({ code: "raid_running" });
   });
 
-  it("enough wins take the building; all of the yard — the yard: authority and the flag to who fought there", async () => {
+  it("enough wins take the building (clan experience, authority and flags to who won over it); the whole yard — its bonus; it rests 2 h and can be taken again", async () => {
     const db = await freshDb();
     const { p, clan } = await setup(db);
     // everything but the main building is already taken, the main one is one win short
-    for (const b of yard.buildings) await db.query("INSERT INTO raid_progress (clan_id, building_id, wins, taken_at) VALUES ($1,$2,$3,$4)", [clan, b.id, b.kind === "main" ? 19 : 10, b.kind === "main" ? null : new Date(T)]);
+    for (const b of yard.buildings) await db.query("INSERT INTO raid_progress (clan_id, building_id, wins, taken_at) VALUES ($1,$2,$3,$4)", [clan, b.id, b.kind === "main" ? 9 : 10, b.kind === "main" ? null : new Date(T)]);
     const main = yard.buildings.find((b) => b.kind === "main")!;
     await act(db, p, "raid_start", { building: main.id }, T);
     let h = await act(db, p, "raid_attack", { weapon: "rug-pull-gun", count: 1000 }, T);
     while (h.result.status !== "won") h = await act(db, p, "raid_attack", { weapon: "rug-pull-gun", count: 1000 }, T);
     expect(h.result).toMatchObject({ buildingTaken: true, yardTaken: true });
-    // the clan's authority: the main building (×2) and the yard, counted in its level
-    expect(h.result.clanXp).toBe(buildingClanXp(1, true) + yardReward(1).clanXp);
+    // the clan's experience: the main building (×3) and the yard's bonus — its level counts only this
+    const take = buildingTake(1, main), bonus = yardReward(1);
+    expect(h.result.clanXp).toBe(take.clanXp + bonus.clanXp);
     const [c] = await db.query<{ raid_xp: number }>("SELECT raid_xp FROM clans WHERE id=$1", [clan]);
     expect(Number(c.raid_xp)).toBe(h.result.clanXp);
-    expect(await qty(db, p, "raid-flag-1")).toBe(1);
+    expect(await qty(db, p, "raid-flag-1")).toBe(take.flags + bonus.flags);
     const v = await act(db, p, "raid_flee", {}, T);
     expect(v.result.yards[1].open).toBe(true);
+    // the yard rests: no capture now; after 2 h — again from the bottom building, the count of captures 1
+    expect(v.result.yards[0]).toMatchObject({ taken: true, times: 1, target: null });
+    await expect(act(db, p, "raid_start", { building: yard.buildings[0].id }, T + 60_000)).rejects.toMatchObject({ code: "yard_taken" });
+    const later = T + RAID_YARD_COOLDOWN_MS + 1;
+    const s = await act(db, p, "raid_start", { building: yard.buildings[0].id }, later);
+    expect(s.result.yards[0]).toMatchObject({ taken: false, times: 1, target: yard.buildings[0].id });
   });
 });

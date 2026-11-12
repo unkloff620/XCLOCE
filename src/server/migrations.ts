@@ -1397,4 +1397,17 @@ ON CONFLICT (boss_id, player_id) DO UPDATE SET wins = GREATEST(boss_damage.wins,
   SELECT SUM(100000 * y.n) FROM raid_yards r JOIN (VALUES ('garages',1),('promzona',2),('rynok',3),('panelki',4),('center',5)) AS y(id, n) ON r.yard_id = y.id
   WHERE r.clan_id = c.id), 0);`,
   },
+  {
+    // «Захват» v2: the clan's level only from its experience (taken buildings, yards); a yard can be taken again 2 hours
+    // after the last capture (its count of captures); the experience recounted by the new rules for what is taken now,
+    // and the yards already taken start their next capture from the bottom
+    id: "v2-094-raid-repeat",
+    sql: `ALTER TABLE raid_yards ADD COLUMN IF NOT EXISTS times INT NOT NULL DEFAULT 1;
+UPDATE clans c SET raid_xp = COALESCE((
+  SELECT SUM(b.xp) FROM raid_progress p JOIN (VALUES ('garages-1',1100),('garages-2',1650),('garages-3',1650),('garages-4',2200),('garages-5',2200),('garages-6',2200),('garages-main',3300),('promzona-1',1540),('promzona-2',2310),('promzona-3',2310),('promzona-4',3080),('promzona-5',3080),('promzona-6',3080),('promzona-main',4620),('rynok-1',1980),('rynok-2',2970),('rynok-3',2970),('rynok-4',3960),('rynok-5',3960),('rynok-6',3960),('rynok-main',5940),('panelki-1',2420),('panelki-2',3630),('panelki-3',3630),('panelki-4',4840),('panelki-5',4840),('panelki-6',4840),('panelki-main',7260),('center-1',2860),('center-2',4290),('center-3',4290),('center-4',5720),('center-5',5720),('center-6',5720),('center-main',8580)) AS b(id, xp) ON b.id = p.building_id
+  WHERE p.clan_id = c.id AND p.taken_at IS NOT NULL
+    AND NOT EXISTS (SELECT 1 FROM raid_yards r WHERE r.clan_id = c.id AND p.building_id LIKE r.yard_id || '-%')), 0) + COALESCE((
+  SELECT SUM(y.xp) FROM raid_yards r JOIN (VALUES ('garages',19300),('promzona',27020),('rynok',34740),('panelki',42460),('center',50180)) AS y(id, xp) ON y.id = r.yard_id WHERE r.clan_id = c.id), 0);
+DELETE FROM raid_progress p USING raid_yards r WHERE r.clan_id = p.clan_id AND p.building_id LIKE r.yard_id || '-%';`,
+  },
 ];

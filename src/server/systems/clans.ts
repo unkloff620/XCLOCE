@@ -169,14 +169,14 @@ export async function editClan(ctx: Ctx, nameRaw: string, emblem: string, color:
 }
 
 export async function clanList(q: Queryable) {
-  // the level and the order: the members' total authority plus the clan's own from «Захват» (taken buildings and yards);
+  // the level and the order: the clan's own experience — only from «Захват» (taken buildings and yards);
   // the damage stays as a stat
   const rows = await q.query<{ id: number; name: string; tag: string; emblem: string; color: string; description: string; members: number; damage: number; xp: number; leader: string }>(
     `SELECT c.id, c.name, c.tag, c.emblem, c.color, c.description, COUNT(m.player_id)::int AS members, COALESCE(SUM(s.total_damage), 0)::bigint AS damage,
-            (COALESCE(SUM(mp.xp), 0) + c.raid_xp)::bigint AS xp, lp.display_name AS leader
+            c.raid_xp::bigint AS xp, lp.display_name AS leader
      FROM clans c LEFT JOIN clan_members m ON m.clan_id=c.id LEFT JOIN player_stats s ON s.player_id=m.player_id LEFT JOIN players mp ON mp.id=m.player_id
      JOIN players lp ON lp.id=c.leader_id
-     GROUP BY c.id, lp.display_name ORDER BY xp DESC, c.id`,
+     GROUP BY c.id, lp.display_name ORDER BY xp DESC, members DESC, c.id`,
   );
   return rows.map((r, i) => {
     const lv = clanLevelInfo(Number(r.xp));

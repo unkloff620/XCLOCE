@@ -6308,3 +6308,6 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .rd-clan-xp { margin: 6px auto 0; padding: 6px 14px; border-radius: 999px; background: rgba(255, 200, 60, 0.12); border: 1px solid rgba(255, 200, 60, 0.35);
   color: var(--gold); font-weight: 800; font-size: 14px; width: fit-content; }
 .rd-clan-xp b { color: #fff; margin-left: 4px; }
+.rd-times { position: absolute; right: 8px; top: 8px; padding: 2px 8px; border-radius: 999px; background: rgba(0, 0, 0, 0.65); color: var(--gold); font-size: 12px; font-weight: 800; }
+.rd-rewards b { display: block; color: #1a0f05; font-size: 14px; font-weight: 900; }
+.rd-rew-note { display: block; margin-top: 2px; font-size: 10.5px; line-height: 1.25; color: #5a4128; text-align: center; padding: 0 10px; }

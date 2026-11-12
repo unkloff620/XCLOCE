@@ -31,7 +31,7 @@ import { useGame } from "../store.tsx";
 import { Icon } from "../art/icons.tsx";
 import { haptic } from "../telegram.ts";
 import { useRouter } from "next/navigation";
-import { BUILDING_NAMES, RAID_YARDS, YARD_TREES, YARD_WALKERS, buildingClanXp, buildingReward, flagId, raidYardById, type RaidBuilding } from "../../content/raids.ts";
+import { BUILDING_NAMES, RAID_YARDS, YARD_TREES, YARD_WALKERS, buildingReward, buildingTake, flagId, raidYardById, yardReward, yardTotal, type RaidBuilding } from "../../content/raids.ts";
 import { itemById } from "../../content/items.ts";
 
 const A = "/assets/raids";
@@ -39,7 +39,7 @@ const A = "/assets/raids";
 interface RaidsView {
   clanId: number | null;
   clan: { emblem: string; color: string } | null;
-  yards: { id: string; open: boolean; taken: boolean; target: string | null; buildings: { id: string; wins: number; need: number; taken: boolean }[] }[];
+  yards: { id: string; open: boolean; taken: boolean; rest: number; times: number; target: string | null; buildings: { id: string; wins: number; need: number; taken: boolean }[] }[];
   fight: { id: number; building: string; hp: number; hpMax: number; hits: number } | null;
   weapons: Tray[];
 }
@@ -81,6 +81,7 @@ export function RaidsScreen() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={`${A}/yard-bg.webp`} alt="" draggable={false} />
             <span className="rd-wins num">{yv?.taken ? "Двор наш" : `Захвачено ${taken}/${y.buildings.length}`}</span>
+            {!!yv?.times && <span className="rd-times num">захвачен ×{yv.times}</span>}
             {!open && <span className="rd-lock"><Icon name="lock" size={34} /></span>}
           </div>
           <div className="rd-body">
@@ -88,20 +89,43 @@ export function RaidsScreen() {
             <b className="rd-name">{y.name}</b>
             <span className="rd-sub">{y.subtitle}</span>
             {v && !v.clanId ? <span className="rd-closed">Захват — для клана. Вступи в клан или создай свой</span>
-              : open ? <Link href={`/clans/raids/${y.id}`} className="btn gold rd-go">{yv?.taken ? "Во двор" : "Захватить"}</Link>
+              : open && yv?.rest ? <span className="rd-closed">Двор ваш. Снова захватить — через <RestLeft until={yv.rest} /></span>
+              : open ? <Link href={`/clans/raids/${y.id}`} className="btn gold rd-go">Захватить</Link>
               : <span className="rd-closed">Сначала захвати двор «{RAID_YARDS[i - 1]?.name}»</span>}
             <span className="rd-h">Награды за захват двора</span>
-            <div className="rd-rewards">
-              <span><Icon name="ach-clan" size={26} />опыт клана</span>
-              <span><Icon name="xp" size={26} />авторитет</span>
-              <span><ItemArt id={flagId(y.n)} size={26} />флаг {"★".repeat(y.n)}</span>
-            </div>
+            <YardRewards y={y} />
           </div>
         </div>
         <button type="button" className="rd-arrow" data-nosfx onClick={() => go(1)} aria-label="Следующий двор">›</button>
       </div>
     </div>
   );
+}
+
+/** the rewards of a full capture of the yard (each building and the yard's bonus together), and of one building */
+function YardRewards({ y }: { y: (typeof RAID_YARDS)[number] }) {
+  const t = yardTotal(y);
+  const first = buildingTake(y.n, y.buildings[0]);
+  const fmt = (n: number) => n.toLocaleString("ru-RU");
+  return (
+    <>
+      <div className="rd-rewards">
+        <span><Icon name="ach-clan" size={26} /><b className="num">+{fmt(t.clanXp)}</b>опыт клана</span>
+        <span><Icon name="xp" size={26} /><b className="num">+{fmt(t.xp)}</b>авторитет</span>
+        <span><ItemArt id={flagId(y.n)} size={26} /><b className="num">+{fmt(t.flags)}</b>флагов {"★".repeat(y.n)}</span>
+      </div>
+      <span className="rd-rew-note">здание — от +{fmt(first.clanXp)} опыта клану · двор целиком — ещё +{fmt(yardReward(y.n).clanXp)}</span>
+    </>
+  );
+}
+
+/** «1:24» to a time (ms), ticking */
+function RestLeft({ until }: { until: number }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => { const t = window.setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
+  const s = Math.max(0, Math.ceil((until - now) / 1000));
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+  return <b className="num">{h ? `${h}:${String(m).padStart(2, "0")}` : m}:{String(sec).padStart(2, "0")}</b>;
 }
 
 /** a building on the yard's ground; the one to attack now glows, a taken one carries the clan's flag */
@@ -178,7 +202,7 @@ const RAID_BOSS_DEF = { id: RAID_BOSS, name: "Гопник", photo: {}, theme: {
 
 interface RaidHit { weapon: string; damage: number; crit: boolean; count: number; left: number | null; readyAt: number | null; status: "active" | "won"; hp: number; hpMax: number;
   talentDamage: number; talentsGained: number;
-  reward?: Granted; buildingTaken?: boolean; yardTaken?: boolean; yardGot?: Granted | null; clanXp?: number }
+  reward?: Granted; buildingTaken?: boolean; yardTaken?: boolean; takeGot?: Granted | null; yardGot?: Granted | null; clanXp?: number }
 type Granted = Parameters<typeof GainLine>[0]["r"];
 
 /**
@@ -223,7 +247,8 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
   const b = y?.buildings.find((x) => x.id === building);
   if (!y || !b) return null;
   const main = b.kind === "main";
-  const r = buildingReward(y.n, main);
+  const r = buildingReward(y.n, b);
+  const take = buildingTake(y.n, b);
   const prog = v?.yards.find((x) => x.id === y.id)?.buildings.find((x) => x.id === b.id);
   const fight = v?.fight && v.fight.building === b.id ? v.fight : null;
   const elsewhere = v?.fight && v.fight.building !== b.id ? v.fight : null;
@@ -357,9 +382,10 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
               </div>
               <div className="result-gains">
                 <GainLine r={won.reward} size={30} />
+                {won.takeGot && <GainLine r={won.takeGot} size={30} />}
                 {won.yardGot && <GainLine r={won.yardGot} size={30} />}
               </div>
-              {!!won.clanXp && <div className="rd-clan-xp">Авторитет клана <b className="num">+{won.clanXp.toLocaleString("ru-RU")}</b></div>}
+              {!!won.clanXp && <div className="rd-clan-xp">Опыт клана <b className="num">+{won.clanXp.toLocaleString("ru-RU")}</b></div>}
               <button className="btn gold big result-take" onClick={() => void toYard()}>Забрать</button>
             </div>
           </Modal>
@@ -379,15 +405,16 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
         <img className="rd-map-bg rd-wall" src={`${A}/attack-wall.webp`} alt="" draggable={false} />
         <div className="rd-board">
           <b className="rd-board-t">{BUILDING_NAMES[b.kind]}</b>
-          <span className="rd-board-w">Побед клана: <b className="num">{prog?.wins ?? 0}/{prog?.need ?? y.wins * (main ? 2 : 1)}</b>{prog?.taken ? " — захвачено" : ""}</span>
+          <span className="rd-board-w">Побед клана: <b className="num">{prog?.wins ?? 0}/{prog?.need ?? y.wins}</b>{prog?.taken ? " — захвачено" : ""}</span>
           <span className="rd-board-h">За каждую победу</span>
           <span className="rd-board-r">
             <span><Icon name="xp" size={26} /><b className="num">+{r.xp.toLocaleString("ru-RU")}</b></span>
             <span><Icon name="RUB" size={26} /><b className="num">+{r.rub.toLocaleString("ru-RU")}</b></span>
           </span>
         </div>
-        {/* under the board: what the clan gets when the building is taken */}
-        <div className="rd-board-clan">Клану за захват: <Icon name="xp" size={20} /><b className="num">+{buildingClanXp(y.n, main).toLocaleString("ru-RU")}</b> авторитета</div>
+        {/* under the board: what a capture of the building gives */}
+        <div className="rd-board-clan">За захват: <Icon name="ach-clan" size={20} /><b className="num">+{take.clanXp.toLocaleString("ru-RU")}</b> клану ·
+          <Icon name="xp" size={20} /><b className="num">+{take.xp.toLocaleString("ru-RU")}</b> · <ItemArt id={flagId(y.n)} size={20} /><b className="num">×{take.flags}</b></div>
       </div>
       <div className="title-row rd-title">
         <Link href={`/clans/raids/${y.id}`} className="back-btn" aria-label="Во двор">‹</Link>
@@ -396,7 +423,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
       <div className="rd-attack-foot">
         {!v ? null : !v.clanId ? <span className="rd-attack-note">Захват — только для клана</span>
           : elsewhere ? <span className="rd-attack-note">Ты уже в бою за другое здание</span>
-          : prog?.taken ? <span className="rd-attack-note">Здание уже захвачено кланом</span>
+          : prog?.taken ? <span className="rd-attack-note">{v.yards.find((x) => x.id === y.id)?.rest ? "Двор ваш — снова захватить можно позже" : "Здание уже захвачено кланом"}</span>
           : <button type="button" className="btn gold block rd-attack-go" disabled={busy === "raid_start"} onClick={start}>Атаковать</button>}
       </div>
     </div>

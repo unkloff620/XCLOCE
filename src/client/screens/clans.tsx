@@ -163,7 +163,7 @@ export function ClansScreen() {
         <div className="title-row">
           <h1 className="display">Кланы</h1>
           <Help topic="clans" title="Кланы">
-            <p>Клан — до 30 человек. Рейтинг кланов и уровень клана считаются по общему авторитету участников и авторитету самого клана — его дают захваченные в «Захвате» здания и дворы.</p>
+            <p>Клан — до 30 человек. Рейтинг кланов и уровень клана считаются по опыту клана — его дают только захваченные в «Захвате» здания и дворы.</p>
             <p>Уровни: 1 — 50 тыс. авторитета, 5 — 3,3 млн, 10 — 20 млн, 25 — 220 млн, 50 — 1,3 млрд, 100 — 8 млрд.</p>
             <p>Каждую неделю топ-10 кланов по урону за неделю получают награды — их получает каждый участник: авторитет, рубли и оружие.</p>
             <p>Создать клан можно бесплатно. Чтобы вступить, подай заявку — лидер примет её или отклонит. Заявка одна: отмени её, чтобы подать в другой клан. Создал свой — заявка снимается сама.</p>
@@ -331,7 +331,7 @@ export function ClanScreen({ id }: { id: number }) {
           <span className="clan-lv display">{c.level}</span>
           <div className="grow col" style={{ gap: 2, minWidth: 0 }}>
             <Bar value={c.xp - c.levelFrom} max={c.levelTo - c.levelFrom} tone="gold" height={16} label={`${short(c.xp)} / ${short(c.levelTo)}`} />
-            <span className="tiny muted">до {c.level + 1} уровня: {short(c.levelTo - c.xp)} авторитета</span>
+            <span className="tiny muted">до {c.level + 1} уровня: {short(c.levelTo - c.xp)} опыта клана — за захват зданий и дворов</span>
           </div>
         </div>
         <b className="display" style={{ fontSize: 22 }}>{c.name}</b>
