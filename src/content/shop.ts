@@ -60,6 +60,7 @@ export const OFFERS: Offer[] = [
   { id: "sneakers-chunky", section: "clothing", give: { item: "sneakers-chunky", qty: 1 }, price: { currency: "RUB", amount: 2_200 }, title: "Кроссовки Гаркуши" },
   { id: "tee-sailor", section: "clothing", give: { item: "tee-sailor", qty: 1 }, price: { currency: "RUB", amount: 1_700 }, title: "Тельняшка Мугонатора" },
   { id: "anchor-mugo", section: "clothing", give: { item: "anchor-mugo", qty: 1 }, price: { currency: "RUB", amount: 2_600 }, title: "Якорь" },
+  { id: "gloves-botsman", section: "clothing", give: { item: "gloves-botsman", qty: 1 }, price: { currency: "RUB", amount: 3_200 }, title: "Перчатки Боцмана" },
   { id: "cap-captain", section: "clothing", give: { item: "cap-captain", qty: 1 }, price: { currency: "RUB", amount: 2_400 }, title: "Капитанская фуражка" },
   { id: "mask-diver", section: "clothing", give: { item: "mask-diver", qty: 1 }, price: { currency: "RUB", amount: 1_900 }, title: "Маска для ныряния" },
   { id: "teeth-necklace", section: "clothing", give: { item: "teeth-necklace", qty: 1 }, price: { currency: "RUB", amount: 2_200 }, title: "Ожерелье из акульих зубов" },

@@ -15,6 +15,7 @@ import { RIG } from "./rig-data.ts";
 import { BEARD_FIT } from "./beard-data.ts";
 import { HAIR_CUT_HATS, HAIR_FIT, HATS_ON_HAIR, SKIN_ORIGINAL, WEAR_FIT } from "./rig-look.ts";
 import { HELD_FIT, HELD_SWING } from "./held-data.ts";
+import { GLOVES, GLOVES_ID } from "./gloves-data.ts";
 import { TATTOO_FIT } from "./tattoo-data.ts";
 import { PLACES } from "./places-data.ts";
 import { SEAT } from "../../content/home-scene.ts";
@@ -95,6 +96,7 @@ function wearLayer(worn: Worn, slot: string): Box | null {
   return id ? { href: `/assets/hero/wear/${id}.webp?v=${ART_VER.wear}`, ...WEARS[id] } : null;
 }
 function handLayer(look: Look, worn: Worn): Box {
+  if (worn.HAND === GLOVES_ID) return { href: `/assets/hero/held/${GLOVES_ID}-fist.webp?v=${ART_VER.heroPart}`, ...GLOVES.hand };
   const held = worn.HAND && worn.HAND in HELD_FIT ? worn.HAND : null;
   if (!held) return partLayer(look, "handR");
   const base = look.skin !== SKIN_ORIGINAL ? `/assets/hero/skin-${look.skin}/held-${held}` : `/assets/hero/held/${held}`;
@@ -204,7 +206,7 @@ function partShapes(edit: RigEdit, look: Look, worn: Worn): { boxes: Box[]; clip
     switch (edit.part) {
       case "HEAD": { const w = wearLayer(worn, "HEAD"); return w ? [{ boxes: [w, ...head] }] : []; }
       case "ACCESSORY": case "FACE": case "SHIRT": case "PANTS": case "SHOES": { const w = wearLayer(worn, edit.part); return w ? [{ boxes: [w] }] : []; }
-      case "HAND": return worn.HAND && worn.HAND in HELD_FIT ? [{ boxes: [handLayer(look, worn)] }] : [];
+      case "HAND": return worn.HAND && (worn.HAND in HELD_FIT || worn.HAND === GLOVES_ID) ? [{ boxes: [handLayer(look, worn)] }] : [];
     }
     return [];
   }
@@ -459,6 +461,7 @@ function HandFrames() {
   const r = RIG.handR;
   const { skin } = useContext(LookCtx);
   const heldId = useContext(WornCtx).HAND;
+  if (heldId === GLOVES_ID) return <GloveHand />;
   if (heldId && heldId in HELD_FIT) {
     const f = HELD_FIT[heldId];
     const sw = HELD_SWING[heldId];
@@ -496,6 +499,34 @@ function HandFrames() {
       <Ink part="handR" />
     </g>
   );
+}
+
+/**
+ * «Перчатки Боцмана», the left hand: the glove's fingers over Боцман's crowbar. The wrist rocks it, dips, flicks it up —
+ * a full turn in the air — and catches it; the crowbar hangs on a spring at the grip (its weight); the glove's frames
+ * (fist, open, squeeze — a puppet warp of the fingers) switch as it lets go and clenches. All baked by tools/rig/build-gloves.py.
+ */
+function GloveHand() {
+  const g = GLOVES;
+  const pic = (name: string, b: { x: number; y: number; w: number; h: number }, className?: string) => (
+    <image className={className} href={`/assets/hero/held/${GLOVES_ID}-${name}.webp?v=${ART_VER.heroPart}`} x={b.x} y={b.y} width={b.w} height={b.h} preserveAspectRatio="none" />
+  );
+  return (
+    <g className="rig-hand rig-gloves">
+      <g className="rig-crowbar">{pic("crowbar", g.crowbar)}</g>
+      {pic("fist", g.hand, "rig-gf rig-gf-fist")}
+      {pic("open", g.hand, "rig-gf rig-gf-open")}
+      {pic("squeeze", g.hand, "rig-gf rig-gf-squeeze")}
+    </g>
+  );
+}
+
+/** «Перчатки Боцмана», the right hand: the glove over the hand that rests on the knee (rides on the forearm, foreL) */
+function GloveRight() {
+  const worn = useContext(WornCtx);
+  if (worn.HAND !== GLOVES_ID) return null;
+  const b = GLOVES.right;
+  return <image href={`/assets/hero/held/${GLOVES_ID}-right.webp?v=${ART_VER.heroPart}`} x={b.x} y={b.y} width={b.w} height={b.h} preserveAspectRatio="none" />;
 }
 
 /**
@@ -574,7 +605,7 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
       <g className="rig-breath">
         <Ol>
           <Bone p="armUL">
-            <Bone p="foreL" />
+            <Bone p="foreL"><GloveRight /></Bone>
           </Bone>
         </Ol>
         <Ol>
