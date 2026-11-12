@@ -37,7 +37,8 @@ export interface BossDef {
    * the boss's set: owning every thing of his `wear` list (worn or not) adds `damage` to every hit of `weapon`
    * (a flat bonus like the weapon's talents, before the room and trophy %)
    */
-  set?: { weapon: string; damage: number };
+  /** the clothing set's bonus: flat damage to a weapon (and, for the strongest, to a second one — `also`) */
+  set?: { weapon: string; damage: number; also?: { weapon: string; damage: number } };
   /**
    * an event boss (EVENT_FIGHTS, not in the chain): fought only while the admin has him on («Ивенты», cfg.eventBosses),
    * only in «Пацанский» (no other modes, no «Соло»), no pass needed and none given
@@ -161,6 +162,7 @@ export const BOSSES: BossDef[] = [
     hp: hp(9), reward: { xp: xp(9), currencies: { USD: 39, RUB: 32_880 } },
     drop: [{ id: "rug-pull-gun", qty: 1, chance: 0.15 }],
     wear: { items: ["coat-botsman", "gloves-botsman", "pants-botsman", "boots-botsman"], chance: 0.1, pity: 10 },
+    set: { weapon: "rug-pull-gun", damage: 600, also: { weapon: "gpu", damage: 300 } },
     theme: { a: "#0f2a44", b: "#050e18", accent: "#5fb8ff" }, photo: photo("botsman", true),
     keysToUnlock: 1,
   },

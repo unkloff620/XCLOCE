@@ -21,7 +21,7 @@ import { BOSS_KILL_TARGETS } from "../content/achievements.ts";
 export interface CaseRow {
   id: string; wins: number; damage: number; bestHit: number;
   things: { id: string; owned: boolean; opened: boolean }[];
-  set: { weapon: string; damage: number; have: number; total: number } | null;
+  set: { weapon: string; damage: number; also?: { weapon: string; damage: number } | null; have: number; total: number } | null;
   /** his tattoo sets: pieces dropped of each */
   tattoos?: { set: string; have: number; total: number }[];
   closed: boolean;
@@ -85,7 +85,7 @@ function CaseWindow({ c, self, onClose }: { c: CaseRow; self: boolean; onClose: 
           <div className={`case-set ${setDone ? "done" : ""}`}>
             <ItemArt id={c.set.weapon} size={34} />
             <span className="grow">
-              <b>Комплект: {weaponName(c.set.weapon)} +{c.set.damage} урона</b>
+              <b>Комплект: {weaponName(c.set.weapon)} +{c.set.damage}{c.set.also ? `, ${weaponName(c.set.also.weapon)} +${c.set.also.damage}` : ""} урона</b>
               <small>{setDone ? "Собран — бонус работает, даже если вещи не надеты" : `Собери все вещи: ${c.set.have}/${c.set.total}`}</small>
             </span>
           </div>

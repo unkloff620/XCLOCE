@@ -27,6 +27,7 @@ export async function setBonuses(q: Queryable, pid: number): Promise<Record<stri
     const items = bossSetItems(b);
     if (!b.set || !items.length || !items.every((id) => have.has(id))) continue;
     out[b.set.weapon] = (out[b.set.weapon] ?? 0) + b.set.damage;
+    if (b.set.also) out[b.set.also.weapon] = (out[b.set.also.weapon] ?? 0) + b.set.also.damage;
   }
   // tattoo sets: every piece of a set owned (inked or not) adds the set's bonus
   const ink = new Set((await q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id = ANY($2)", [pid, TATTOO_IDS])).map((r) => r.item_id));
@@ -46,7 +47,7 @@ export async function casesView(q: Queryable, pid: number) {
   const ink = new Set((await q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id LIKE 'tat-%'", [pid])).map((r) => r.item_id));
   return [...BOSSES, ...EVENT_FIGHTS].map((b) => {
     const things = (b.wear?.items ?? []).map((id) => ({ id, owned: have.has(id), opened: have.has(id) || opened.has(id) }));
-    const set = b.set && things.length ? { weapon: b.set.weapon, damage: b.set.damage, have: things.filter((t) => t.owned).length, total: things.length } : null;
+    const set = b.set && things.length ? { weapon: b.set.weapon, damage: b.set.damage, also: b.set.also ?? null, have: things.filter((t) => t.owned).length, total: things.length } : null;
     const w = wins.get(b.id) ?? { wins: 0, damage: 0 };
     return {
       id: b.id, wins: w.wins, damage: w.damage, bestHit: best.get(b.id) ?? 0, things, set,
