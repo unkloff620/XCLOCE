@@ -193,7 +193,7 @@ H = [move(0, d) @ rot(a, *W_) for a, d, _ in hand]
 
 # pass 2: the crowbar. Held: it turns at the grip on a soft spring (the wrist's turns swing it the other way). In the air:
 # its middle flies from where it was let go to where the fist will be at the catch (a parabola), turning a full turn
-# against the clock about its middle; drawn in the hand's frame (the hand's own picture group), so: hand⁻¹ · world.
+# clockwise about its middle; drawn in the hand's frame (the hand's own picture group), so: hand⁻¹ · world.
 i_go, i_catch = round(LET_GO / DT), round(CATCH / DT)
 phi, phiv = 0.0, 0.0
 local = []
@@ -215,7 +215,7 @@ for i in range(n + 1):
         m = m0 + (m1 - m0) * u
         m[1] -= 4 * HEIGHT * u * (1 - u)
         th0, th1 = go_phi, hand[i_catch][0]
-        th = th0 + (th1 - th0 - 360) * u
+        th = th0 + (th1 - th0 + 360) * u  # a full turn clockwise
         world = move(m[0], m[1]) @ rot(th, 0, 0) @ move(-M_[0], -M_[1])
         L = np.linalg.inv(H[i]) @ world
     local.append(L)
