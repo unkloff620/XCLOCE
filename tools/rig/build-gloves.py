@@ -131,8 +131,10 @@ cx, cy = (x0 + x1) // 2, (y0 + y1) // 2
 sq = np.zeros((s, s, 4), np.uint8)
 sx0, sy0 = cx - s // 2, cy - s // 2
 sq[max(0, -sy0):, max(0, -sx0):] = icon[max(0, sy0):sy0 + s, max(0, sx0):sx0 + s][: s - max(0, -sy0), : s - max(0, -sx0)]
-Image.fromarray(unpremul(cv2.resize(premul(sq), (256, 256), interpolation=cv2.INTER_AREA))).save(
-    os.path.join(ROOT, "public", "assets", "items", f"{ID}.webp"), "WEBP", quality=90, method=6)
+# (a drawn icon in tools/items/source wins: tools/items/build-items.py makes it)
+if not os.path.exists(os.path.join(ROOT, "tools", "items", "source", f"{ID}.png")):
+    Image.fromarray(unpremul(cv2.resize(premul(sq), (256, 256), interpolation=cv2.INTER_AREA))).save(
+        os.path.join(ROOT, "public", "assets", "items", f"{ID}.webp"), "WEBP", quality=90, method=6)
 
 # ---------------- the motion: springs, baked into keyframes ----------------
 T, DT = 6.9, 1 / 60
