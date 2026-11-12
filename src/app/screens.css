@@ -6228,6 +6228,12 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
   47% { opacity: 0.1; } 49% { opacity: 0.1; } 50%, 71% { opacity: 0.95; } 72% { opacity: 0.4; } 73%, 100% { opacity: 0.75; } }
 .bcard.bcard-boss-botsman.locked::before, .bcard.bcard-boss-botsman.locked::after { display: none; }
 @media (prefers-reduced-motion: reduce) { .bcard.bcard-boss-botsman::before, .bcard.bcard-boss-botsman::after { animation: none; } }
+/* an emerald glint sweeping along the frame only (the ring: the middle masked out), as the gold one on Вадим's card */
+.bcard-glint { position: absolute; inset: 2px; z-index: 4; border-radius: 18px; pointer-events: none; mix-blend-mode: screen; padding: 24px;
+  background: linear-gradient(115deg, transparent 38%, rgba(40, 200, 120, 0.55) 46%, rgba(170, 255, 205, 0.95) 50%, rgba(30, 190, 110, 0.55) 54%, transparent 62%);
+  background-size: 260% 100%; background-repeat: no-repeat; animation: bcard-gold-shine 4.5s ease-in-out infinite;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
+@media (prefers-reduced-motion: reduce) { .bcard-glint { animation: none; background: none; } }
 
 /* Боцман's dojo (art/arena-bg.tsx BotsmanRoom): the code rain falls down the black wall in two layers (one a tile per
  * 7 s, the other slower and dimmer, shifted), shimmering; the punching bag swings on its chain and gets a shove now and then */

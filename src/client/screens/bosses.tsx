@@ -110,6 +110,8 @@ export function BossesScreen() {
               style={{ ["--i" as string]: b.order, ["--acc" as string]: tierColor(b.order) }}>
               {/* the case number over the boss: «Дело №1», «Дело №2»… (his health is a surprise — not shown in the list) */}
               <span className="bcard-n display">Дело №{b.order}</span>
+              {/* Боцман's card: an emerald glint runs along the frame (its ::before/::after are the rain and the lamps) */}
+              {b.id === "botsman" && !grey && <i className="bcard-glint" aria-hidden="true" />}
               {/* the boss stands on the left and fades into the card */}
               <div className="bcard-art" aria-hidden="true">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
