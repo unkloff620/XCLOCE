@@ -1386,4 +1386,15 @@ ALTER TABLE clans ADD COLUMN IF NOT EXISTS raid_xp BIGINT NOT NULL DEFAULT 0;`,
 SELECT boss_id, player_id, COUNT(*)::int FROM fights WHERE status = 'won' AND reward IS NOT NULL GROUP BY boss_id, player_id
 ON CONFLICT (boss_id, player_id) DO UPDATE SET wins = GREATEST(boss_damage.wins, EXCLUDED.wins);`,
   },
+  {
+    // «Захват»: the clan's authority now counts in its level and comes for every taken building too — the clans' own
+    // authority recounted from what they have already taken (a building 25 000 × yard, the main one twice; a yard 100 000 × yard)
+    id: "v2-093-raid-clan-xp",
+    sql: `UPDATE clans c SET raid_xp = COALESCE((
+  SELECT SUM(CASE WHEN p.building_id LIKE '%-main' THEN 50000 ELSE 25000 END * y.n)
+  FROM raid_progress p JOIN (VALUES ('garages',1),('promzona',2),('rynok',3),('panelki',4),('center',5)) AS y(id, n) ON p.building_id LIKE y.id || '-%'
+  WHERE p.clan_id = c.id AND p.taken_at IS NOT NULL), 0) + COALESCE((
+  SELECT SUM(100000 * y.n) FROM raid_yards r JOIN (VALUES ('garages',1),('promzona',2),('rynok',3),('panelki',4),('center',5)) AS y(id, n) ON r.yard_id = y.id
+  WHERE r.clan_id = c.id), 0);`,
+  },
 ];

@@ -31,7 +31,7 @@ import { useGame } from "../store.tsx";
 import { Icon } from "../art/icons.tsx";
 import { haptic } from "../telegram.ts";
 import { useRouter } from "next/navigation";
-import { BUILDING_NAMES, RAID_YARDS, YARD_TREES, YARD_WALKERS, buildingReward, flagId, raidYardById, type RaidBuilding } from "../../content/raids.ts";
+import { BUILDING_NAMES, RAID_YARDS, YARD_TREES, YARD_WALKERS, buildingClanXp, buildingReward, flagId, raidYardById, type RaidBuilding } from "../../content/raids.ts";
 import { itemById } from "../../content/items.ts";
 
 const A = "/assets/raids";
@@ -178,7 +178,7 @@ const RAID_BOSS_DEF = { id: RAID_BOSS, name: "Гопник", photo: {}, theme: {
 
 interface RaidHit { weapon: string; damage: number; crit: boolean; count: number; left: number | null; readyAt: number | null; status: "active" | "won"; hp: number; hpMax: number;
   talentDamage: number; talentsGained: number;
-  reward?: Granted; buildingTaken?: boolean; yardTaken?: boolean; yardGot?: Granted | null }
+  reward?: Granted; buildingTaken?: boolean; yardTaken?: boolean; yardGot?: Granted | null; clanXp?: number }
 type Granted = Parameters<typeof GainLine>[0]["r"];
 
 /**
@@ -359,6 +359,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
                 <GainLine r={won.reward} size={30} />
                 {won.yardGot && <GainLine r={won.yardGot} size={30} />}
               </div>
+              {!!won.clanXp && <div className="rd-clan-xp">Авторитет клана <b className="num">+{won.clanXp.toLocaleString("ru-RU")}</b></div>}
               <button className="btn gold big result-take" onClick={() => void toYard()}>Забрать</button>
             </div>
           </Modal>
@@ -385,6 +386,8 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
             <span><Icon name="RUB" size={26} /><b className="num">+{r.rub.toLocaleString("ru-RU")}</b></span>
           </span>
         </div>
+        {/* under the board: what the clan gets when the building is taken */}
+        <div className="rd-board-clan">Клану за захват: <Icon name="xp" size={20} /><b className="num">+{buildingClanXp(y.n, main).toLocaleString("ru-RU")}</b> авторитета</div>
       </div>
       <div className="title-row rd-title">
         <Link href={`/clans/raids/${y.id}`} className="back-btn" aria-label="Во двор">‹</Link>

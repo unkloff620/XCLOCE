@@ -12,7 +12,7 @@ import type { Config } from "../config.ts";
 import { strike } from "./combat.ts";
 import { isAdminPlayer } from "./fortune.ts";
 import { weaponById } from "../../content/items.ts";
-import { RAID_YARDS, buildingById, buildingHp, buildingReward, buildingWins, yardReward, type RaidYard } from "../../content/raids.ts";
+import { RAID_YARDS, buildingById, buildingClanXp, buildingHp, buildingReward, buildingWins, yardReward, type RaidYard } from "../../content/raids.ts";
 
 export async function raidsOn(q: Queryable, pid: number, cfg: Config) {
   return cfg.raids.on || (await isAdminPlayer(q, pid, cfg));
@@ -124,17 +124,21 @@ export async function raidAttack(ctx: Ctx, weaponId: string, want = 1, rush = fa
   const [pr] = await ctx.q.query<{ wins: number; taken_at: Date | null }>(
     `INSERT INTO raid_progress (clan_id, building_id, wins) VALUES ($1,$2,1)
      ON CONFLICT (clan_id, building_id) DO UPDATE SET wins = raid_progress.wins + 1 RETURNING wins, taken_at`, [clanId, b.id]);
-  let buildingTaken = false, yardTaken = false;
+  let buildingTaken = false, yardTaken = false, clanXp = 0;
   let yardGot: Granted | null = null;
   if (!pr.taken_at && Number(pr.wins) >= buildingWins(y, main)) {
     await ctx.q.query("UPDATE raid_progress SET taken_at=$3 WHERE clan_id=$1 AND building_id=$2", [clanId, b.id, new Date(ctx.now)]);
     buildingTaken = true;
+    // the clan's authority for the building (its level counts it with the members' own)
+    clanXp += buildingClanXp(y.n, main);
+    await ctx.q.query("UPDATE clans SET raid_xp = raid_xp + $2 WHERE id=$1", [clanId, buildingClanXp(y.n, main)]);
     const p = await progressOf(ctx.q, clanId);
     if (y.buildings.every((x) => p.taken.has(x.id)) && !p.yards.has(y.id)) {
       yardTaken = true;
       await ctx.q.query("INSERT INTO raid_yards (clan_id, yard_id, taken_at) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING", [clanId, y.id, new Date(ctx.now)]);
       const yr = yardReward(y.n);
       await ctx.q.query("UPDATE clans SET raid_xp = raid_xp + $2 WHERE id=$1", [clanId, yr.clanXp]);
+      clanXp += yr.clanXp;
       // every member who won a fight in this yard: authority and the flag (straight into his inventory)
       const who = await ctx.q.query<{ player_id: number }>(
         "SELECT DISTINCT f.player_id FROM raid_fights f JOIN clan_members m ON m.player_id = f.player_id AND m.clan_id = f.clan_id WHERE f.clan_id=$1 AND f.yard_id=$2 AND f.status='won'", [clanId, y.id]);
@@ -144,7 +148,7 @@ export async function raidAttack(ctx: Ctx, weaponId: string, want = 1, rush = fa
       }
     }
   }
-  return { ...base, status: "won" as const, hp: 0, hpMax: Number(f.hp_max), reward, buildingTaken, yardTaken, yardGot, view: await raidsView(ctx.q, ctx.pid) };
+  return { ...base, status: "won" as const, hp: 0, hpMax: Number(f.hp_max), reward, buildingTaken, yardTaken, yardGot, clanXp, view: await raidsView(ctx.q, ctx.pid) };
 }
 
 /** leave the raid fight (the damage done is lost) */

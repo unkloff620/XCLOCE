@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { act, freshDb, give, newPlayer, qty, wallet } from "./helpers.ts";
 import { resetConfigCache } from "../src/server/config.ts";
 import type { Db } from "../src/server/db.ts";
-import { RAID_YARDS, buildingReward } from "../src/content/raids.ts";
+import { RAID_YARDS, buildingClanXp, buildingReward, yardReward } from "../src/content/raids.ts";
 
 const T = Date.UTC(2026, 10, 10, 12);
 async function setup(db: Db) {
@@ -47,6 +47,10 @@ describe("«Ходки»", () => {
     let h = await act(db, p, "raid_attack", { weapon: "rug-pull-gun", count: 1000 }, T);
     while (h.result.status !== "won") h = await act(db, p, "raid_attack", { weapon: "rug-pull-gun", count: 1000 }, T);
     expect(h.result).toMatchObject({ buildingTaken: true, yardTaken: true });
+    // the clan's authority: the main building (×2) and the yard, counted in its level
+    expect(h.result.clanXp).toBe(buildingClanXp(1, true) + yardReward(1).clanXp);
+    const [c] = await db.query<{ raid_xp: number }>("SELECT raid_xp FROM clans WHERE id=$1", [clan]);
+    expect(Number(c.raid_xp)).toBe(h.result.clanXp);
     expect(await qty(db, p, "raid-flag-1")).toBe(1);
     const v = await act(db, p, "raid_flee", {}, T);
     expect(v.result.yards[1].open).toBe(true);

@@ -80,8 +80,10 @@ export const buildingWins = (y: RaidYard, main: boolean) => y.wins * (main ? 2 :
 export const BUILDING_HP = 100_000;
 export const MAIN_HP = 150_000;
 export const buildingHp = (main: boolean) => (main ? MAIN_HP : BUILDING_HP);
-/** a taken yard gives each clan member who won a fight there: authority and the yard's flag; the clan — its experience */
-export const yardReward = (n: number) => ({ clanXp: 1_000 * n, xp: 2_000 * n, flag: flagId(n) });
+/** a taken building gives the clan authority (it counts in the clan's level with the members' own): the main one twice */
+export const buildingClanXp = (yardN: number, main: boolean) => (main ? 50_000 : 25_000) * yardN;
+/** a taken yard gives each clan member who won a fight there: authority and the yard's flag; the clan — more authority on top */
+export const yardReward = (n: number) => ({ clanXp: 100_000 * n, xp: 2_000 * n, flag: flagId(n) });
 /** the yards' flags (items): «Флаг двора» with 1…5 stars, the bags of tattoo sets are opened for them */
 export const flagId = (n: number) => `raid-flag-${n}`;
 export const FLAG_IDS = [1, 2, 3, 4, 5].map(flagId);
