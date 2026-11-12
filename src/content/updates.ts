@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-12-home",
+    date: "12 ноября",
+    title: "Дома",
+    items: [
+      { text: "Смена комнаты переехала наверх: стрелки «‹ комната ›» теперь над персонажем, а выбор ✓ / ✕ — внизу экрана." },
+    ],
+  },
+  {
     id: "2026-11-11-bosses",
     date: "11 ноября",
     title: "Боссы ожили",

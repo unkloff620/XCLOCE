@@ -6258,3 +6258,11 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .rig.still .rig-gloves, .rig.still .rig-crowbar, .rig.still .rig-gf { animation: none; } .rig.still .rig-gf:not(.rig-gf-fist) { opacity: 0; } .rig.still .rig-gf-fist { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .rig-gloves, .rig-crowbar, .rig-gf { animation: none; } .rig-gf:not(.rig-gf-fist) { opacity: 0; } .rig-gf-fist { opacity: 1; } }
 /* gloves-botsman:end */
+
+/* the room switcher at the top, between the corner buttons (the locked room's offer under it); the «choose this room?»
+   bar takes its old place at the bottom */
+.fit-page .room-label { top: calc(var(--top) + 6px); bottom: auto; max-width: calc(100% - 150px); }
+.fit-page .room-label .room-switch { order: -1; }
+.fit-page .room-confirm { top: auto; bottom: var(--bottom); max-width: calc(100% - 24px); }
+@keyframes room-confirm-up { from { opacity: 0; transform: translate(-50%, 8px); } }
+.fit-page .room-confirm { animation-name: room-confirm-up; }
