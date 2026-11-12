@@ -605,7 +605,7 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
       <g className="rig-breath">
         <Ol>
           <Bone p="armUL">
-            <Bone p="foreL"><GloveRight /></Bone>
+            <Bone p="foreL" />
           </Bone>
         </Ol>
         <Ol>
@@ -615,6 +615,8 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
         </Ol>
         {/* the tattoos of the chest, the belly and the arms: over the arms, under the shirt — and under the trousers (they fade out under the waistband) */}
         <UnderPants><Ink part="upper" /></UnderPants>
+        {/* the right glove over the hand on the knee — over the arm's tattoos (the glove covers the hand's ink), under the shirt */}
+        <Joint p="armUL"><Joint p="foreL"><GloveRight /></Joint></Joint>
         {/* a chain lies over a T-shirt, but under an open jacket (on the bare chest between its flaps) */}
         {OPEN_JACKETS.includes(worn?.SHIRT ?? "") ? (
           <>

@@ -111,8 +111,8 @@ data = {"right": save(right, *box(right), "right")}
 lb = box(left, 40)
 data["hand"] = save(left, *lb, "fist")
 # open: the fingers straighten away from the bar (down and out); squeeze: the tips pulled in towards the knuckles
-OPEN = [(-16, 26), (-10, 28), (-4, 26), (2, 22)]
-SQUEEZE = [(8, -20), (6, -22), (4, -20), (2, -16)]
+OPEN = [(-34, 40), (-24, 44), (-14, 42), (-4, 36)]
+SQUEEZE = [(12, -26), (10, -28), (8, -26), (6, -22)]
 save(warp(left, *lb, OPEN), *lb, "open")
 save(warp(left, *lb, SQUEEZE), *lb, "squeeze")
 data["crowbar"] = save(bar, *box(bar), "crowbar")
@@ -136,10 +136,10 @@ Image.fromarray(unpremul(cv2.resize(premul(sq), (256, 256), interpolation=cv2.IN
 
 # ---------------- the motion: springs, baked into keyframes ----------------
 T, DT = 6.4, 1 / 60
-SWAY_END, DIP, FLICK, LET_GO = 3.8, 4.06, 4.16, 4.14
-FLIGHT, HEIGHT = 0.7, 115.0  # s in the air; how high the crowbar goes (rig units)
+SWAY_END, WIND, FLICK = 3.6, 3.95, 4.12  # the rocking ends; the wind-up (the wrist cocked back); the flick (the wrist turned in)
+LET_GO, FLIGHT, HEIGHT = 4.07, 0.78, 120.0  # the fingers let go; s in the air; how high over the line from the throw to the catch
 CATCH = LET_GO + FLIGHT
-V0, G = 4 * HEIGHT / FLIGHT, 8 * HEIGHT / FLIGHT ** 2
+FLICK_TO = 68.0  # ° — the wrist turns in towards the body (the fingertips up to the belt), as the artist marked
 
 
 def smooth(a, b, t0, t1, t):
@@ -148,78 +148,96 @@ def smooth(a, b, t0, t1, t):
 
 
 def hand_target(t):
-    """where the wrist is led (angle °, drop in rig units) — the springs below follow it"""
+    """where the wrist is led (angle °, + = the fingers turn in to the body; drop in rig units) — a spring follows it"""
     if t < SWAY_END:
         env = smooth(0, 1, 0, 0.6, t) * smooth(1, 0, SWAY_END - 0.7, SWAY_END, t)
         return 6.0 * math.sin(2 * math.pi * t / 1.9) * env, 1.5 * math.sin(2 * math.pi * t / 0.95) * env
-    if t < DIP:
-        return smooth(0, -5, SWAY_END, DIP, t), smooth(0, 9, SWAY_END, DIP, t)
+    if t < WIND:
+        return smooth(0, -9, SWAY_END, WIND, t), smooth(0, 7, SWAY_END, WIND, t)
     if t < FLICK:
-        return smooth(-5, 7, DIP, FLICK, t), smooth(9, -10, DIP, FLICK, t)
-    if t < CATCH - 0.12:
-        return smooth(7, 2, FLICK, FLICK + 0.25, t), smooth(-10, -2, FLICK, FLICK + 0.25, t)
-    return smooth(2, 0, CATCH - 0.12, CATCH + 0.6, t), smooth(-2, 0, CATCH - 0.12, CATCH + 0.6, t)
+        return smooth(-9, FLICK_TO, WIND, FLICK, t), smooth(7, -6, WIND, FLICK, t)
+    if t < CATCH - 0.15:
+        return smooth(FLICK_TO, 4, FLICK + 0.05, FLICK + 0.45, t), smooth(-6, -3, FLICK, FLICK + 0.4, t)
+    return smooth(4, 0, CATCH - 0.15, CATCH + 0.6, t), smooth(-3, 0, CATCH - 0.15, CATCH + 0.6, t)
 
 
-keys = []
-ang, angv, drop, dropv = 0.0, 0.0, 0.0, 0.0  # the wrist (spring-led)
-phi, phiv = 0.0, 0.0  # the crowbar's own turn at the grip, against the hand (its weight)
-prev_angv = 0.0
-t = 0.0
+def rot(deg, cx, cy):
+    r = math.radians(deg)
+    c, s_ = math.cos(r), math.sin(r)
+    return np.array([[c, -s_, cx - c * cx + s_ * cy], [s_, c, cy - s_ * cx - c * cy], [0, 0, 1]])
+
+
+def move(dx, dy):
+    return np.array([[1, 0, dx], [0, 1, dy], [0, 0, 1.0]])
+
+
+W_ = (WRIST[0] * SCALE, WRIST[1] * SCALE)
+G_ = (GRIP[0] * SCALE, GRIP[1] * SCALE)
+M_ = (MID[0] * SCALE, MID[1] * SCALE)
+
+# pass 1: the wrist (a stiff spring after its target; the catch knocks it down)
 n = round(T / DT)
+hand = []
+ang, angv, drop, dropv = 0.0, 0.0, 0.0, 0.0
 for i in range(n + 1):
     t = i * DT
     ta, td = hand_target(t)
-    # the wrist: a stiff spring (quick, a little bounce)
-    acc = 520 * (ta - ang) - 34 * angv
-    angv += acc * DT; ang += angv * DT
-    dacc = 520 * (td - drop) - 30 * dropv
     if abs(t - CATCH) < DT / 2:
-        dropv += 150  # the catch knocks the hand down
-        angv += -60
-    dropv += dacc * DT; drop += dropv * DT
-    flying = LET_GO <= t < CATCH
-    if flying:
-        u = (t - LET_GO) / FLIGHT
-        fly_y = -V0 * (t - LET_GO) + G * (t - LET_GO) ** 2 / 2
-        turn = -360 * u  # one full turn, against the clock
-        # turned about its middle, not the grip: t = (m - g) - R(m - g)
-        mx, my = (MID[0] - GRIP[0]) * SCALE, (MID[1] - GRIP[1]) * SCALE
-        r = math.radians(turn)
-        tx = mx - (mx * math.cos(r) - my * math.sin(r))
-        phi_out, ty = turn, fly_y + (my - (mx * math.sin(r) + my * math.cos(r)))
-        phi, phiv = 0.0, 0.0
-    else:
-        # the crowbar hangs in the fist on a soft spring: the wrist's turns swing it the other way, it lags and settles
-        ha = (angv - prev_angv) / DT
-        pacc = -150 * phi - 6 * phiv - 0.8 * ha
-        if abs(t - CATCH) < DT / 2:
-            phiv += -95  # the weight landing in the fist
-        phiv += pacc * DT; phi += phiv * DT
-        phi_out, ty, tx = phi, 0.0, 0.0
-    prev_angv = angv
-    if t < LET_GO:
-        frame = "squeeze" if SWAY_END + 0.05 <= t < LET_GO else "fist"
-    elif t < CATCH - 0.03:
-        frame = "open"
-    elif t < CATCH + 0.32:
-        frame = "squeeze"
-    else:
-        frame = "fist"
-    keys.append((t / T * 100, ang, drop, phi_out, ty, frame, tx))
+        dropv += 150
+        angv += -70
+    angv += (900 * (ta - ang) - 50 * angv) * DT; ang += angv * DT
+    dropv += (600 * (td - drop) - 32 * dropv) * DT; drop += dropv * DT
+    hand.append((ang, drop, angv))
+H = [move(0, d) @ rot(a, *W_) for a, d, _ in hand]
 
-# the loop must close: at the end everything is back at rest
-assert abs(keys[-1][1]) < 0.5 and abs(keys[-1][2]) < 0.5 and abs(keys[-1][3]) < 1.0, keys[-1]
-keys[-1] = (100.0, 0.0, 0.0, 0.0, 0.0, "fist", 0.0)
+# pass 2: the crowbar. Held: it turns at the grip on a soft spring (the wrist's turns swing it the other way). In the air:
+# its middle flies from where it was let go to where the fist will be at the catch (a parabola), turning a full turn
+# against the clock about its middle; drawn in the hand's frame (the hand's own picture group), so: hand⁻¹ · world.
+i_go, i_catch = round(LET_GO / DT), round(CATCH / DT)
+phi, phiv = 0.0, 0.0
+local = []
+for i in range(n + 1):
+    t = i * DT
+    if i < i_go or i >= i_catch:
+        ha = (hand[i][2] - hand[i - 1][2]) / DT if i else 0.0
+        if i == i_catch:
+            phi, phiv = 0.0, -110.0  # the weight landing in the fist
+        phiv += (-150 * phi - 6 * phiv - 0.8 * ha) * DT; phi += phiv * DT
+        L = rot(phi, *G_)
+        if i == i_go - 1:
+            go_world = H[i] @ L
+            go_phi = hand[i][0] + phi
+    else:
+        u = (i - i_go) / (i_catch - i_go)
+        m0 = go_world @ np.array([M_[0], M_[1], 1.0])
+        m1 = H[i_catch] @ np.array([M_[0], M_[1], 1.0])
+        m = m0 + (m1 - m0) * u
+        m[1] -= 4 * HEIGHT * u * (1 - u)
+        th0, th1 = go_phi, hand[i_catch][0]
+        th = th0 + (th1 - th0 - 360) * u
+        world = move(m[0], m[1]) @ rot(th, 0, 0) @ move(-M_[0], -M_[1])
+        L = np.linalg.inv(H[i]) @ world
+    local.append(L)
+
+keys = []
+for i in range(n + 1):
+    t = i * DT
+    frame = "open" if LET_GO - 0.02 <= t < CATCH - 0.02 else "squeeze"
+    keys.append((t / T * 100, hand[i][0], hand[i][1], local[i], frame))
+last = keys[-1]
+assert abs(last[1]) < 0.5 and abs(last[2]) < 0.5 and np.abs(last[3] - np.eye(3)).max() < 1.0, last
+keys[-1] = (100.0, 0.0, 0.0, np.eye(3), "squeeze")
 
 step = 2  # every other simulated frame (30 keys a second), linear between
-hand_kf = " ".join(f"{p:.2f}% {{ transform: translate(0px, {d:.2f}px) rotate({a:.2f}deg); }}" for p, a, d, *_ in keys[::step] + [keys[-1]])
-bar_kf = " ".join(f"{p:.2f}% {{ transform: translate({x:.2f}px, {y:.2f}px) rotate({f:.2f}deg); }}" for p, a, d, f, y, _, x in keys[::step] + [keys[-1]])
+sel = keys[::step] + ([keys[-1]] if (len(keys) - 1) % step else [])
+hand_kf = " ".join(f"{p:.2f}% {{ transform: translate(0px, {d:.2f}px) rotate({a:.2f}deg); }}" for p, a, d, *_ in sel)
+mat = lambda L: f"matrix({L[0,0]:.4f}, {L[1,0]:.4f}, {L[0,1]:.4f}, {L[1,1]:.4f}, {L[0,2]:.2f}, {L[1,2]:.2f})"
+bar_kf = " ".join(f"{p:.2f}% {{ transform: {mat(L)}; }}" for p, a, d, L, _ in sel)
 
 
 def frame_kf(name):
     out, cur = [], None
-    for p, *_, fr, _x in keys:
+    for p, *_, fr in keys:
         on = fr == name
         if on != cur:
             out.append(f"{p:.2f}% {{ opacity: {1 if on else 0}; }}")
@@ -231,16 +249,15 @@ css = f"""/* gloves-botsman:begin — generated by tools/rig/build-gloves.py, do
    «Перчатки Боцмана»: the wrist rocks the crowbar, dips, flicks it up (a full turn in the air) and catches it; the crowbar
    lags on a spring at the grip (its weight); the glove's frames (fist / open / squeeze) switch as the fingers let go and clench */
 .rig-gloves {{ transform-origin: {WRIST[0] * SCALE}px {WRIST[1] * SCALE}px; transform-box: view-box; animation: rig-gloves {T}s linear infinite; }}
-.rig-crowbar {{ transform-origin: {GRIP[0] * SCALE}px {GRIP[1] * SCALE}px; transform-box: view-box; animation: rig-crowbar {T}s linear infinite; }}
+.rig-crowbar {{ transform-origin: 0px 0px; transform-box: view-box; animation: rig-crowbar {T}s linear infinite; }}
 .rig-gf {{ animation-duration: {T}s; animation-timing-function: steps(1, end); animation-iteration-count: infinite; }}
-.rig-gf-fist {{ animation-name: rig-gf-fist; }} .rig-gf-open {{ animation-name: rig-gf-open; opacity: 0; }} .rig-gf-squeeze {{ animation-name: rig-gf-squeeze; opacity: 0; }}
+.rig-gf-fist {{ opacity: 0; }} .rig-gf-squeeze {{ animation-name: rig-gf-squeeze; }} .rig-gf-open {{ animation-name: rig-gf-open; opacity: 0; }}
 @keyframes rig-gloves {{ {hand_kf} }}
 @keyframes rig-crowbar {{ {bar_kf} }}
-@keyframes rig-gf-fist {{ {frame_kf("fist")} }}
 @keyframes rig-gf-open {{ {frame_kf("open")} }}
 @keyframes rig-gf-squeeze {{ {frame_kf("squeeze")} }}
-.rig.still .rig-gloves, .rig.still .rig-crowbar, .rig.still .rig-gf {{ animation: none; }} .rig.still .rig-gf:not(.rig-gf-fist) {{ opacity: 0; }}
-@media (prefers-reduced-motion: reduce) {{ .rig-gloves, .rig-crowbar, .rig-gf {{ animation: none; }} .rig-gf:not(.rig-gf-fist) {{ opacity: 0; }} }}
+.rig.still .rig-gloves, .rig.still .rig-crowbar, .rig.still .rig-gf {{ animation: none; }} .rig.still .rig-gf:not(.rig-gf-fist) {{ opacity: 0; }} .rig.still .rig-gf-fist {{ opacity: 1; }}
+@media (prefers-reduced-motion: reduce) {{ .rig-gloves, .rig-crowbar, .rig-gf {{ animation: none; }} .rig-gf:not(.rig-gf-fist) {{ opacity: 0; }} .rig-gf-fist {{ opacity: 1; }} }}
 /* gloves-botsman:end */"""
 cp = os.path.join(ROOT, "src", "app", "screens.css")
 s = open(cp).read()
