@@ -135,9 +135,9 @@ Image.fromarray(unpremul(cv2.resize(premul(sq), (256, 256), interpolation=cv2.IN
     os.path.join(ROOT, "public", "assets", "items", f"{ID}.webp"), "WEBP", quality=90, method=6)
 
 # ---------------- the motion: springs, baked into keyframes ----------------
-T, DT = 6.4, 1 / 60
+T, DT = 6.9, 1 / 60
 SWAY_END, WIND, FLICK = 3.6, 3.95, 4.12  # the rocking ends; the wind-up (the wrist cocked back); the flick (the wrist turned in)
-LET_GO, FLIGHT, HEIGHT = 4.07, 0.78, 120.0  # the fingers let go; s in the air; how high over the line from the throw to the catch
+LET_GO, FLIGHT, HEIGHT = 4.07, 1.0, 210.0  # the fingers let go; s in the air; how high over the line from the throw to the catch
 CATCH = LET_GO + FLIGHT
 FLICK_TO = 68.0  # ° — the wrist turns in towards the body (the fingertips up to the belt), as the artist marked
 
@@ -156,9 +156,10 @@ def hand_target(t):
         return smooth(0, -9, SWAY_END, WIND, t), smooth(0, 7, SWAY_END, WIND, t)
     if t < FLICK:
         return smooth(-9, FLICK_TO, WIND, FLICK, t), smooth(7, -6, WIND, FLICK, t)
-    if t < CATCH - 0.15:
-        return smooth(FLICK_TO, 4, FLICK + 0.05, FLICK + 0.45, t), smooth(-6, -3, FLICK, FLICK + 0.4, t)
-    return smooth(4, 0, CATCH - 0.15, CATCH + 0.6, t), smooth(-3, 0, CATCH - 0.15, CATCH + 0.6, t)
+    if t < CATCH + 0.12:
+        # the hand waits up, turned in, till the crowbar lands back in it
+        return FLICK_TO, -6.0
+    return smooth(FLICK_TO, 0, CATCH + 0.12, CATCH + 0.75, t), smooth(-6, 0, CATCH + 0.12, CATCH + 0.75, t)
 
 
 def rot(deg, cx, cy):
@@ -202,7 +203,7 @@ for i in range(n + 1):
         ha = (hand[i][2] - hand[i - 1][2]) / DT if i else 0.0
         if i == i_catch:
             phi, phiv = 0.0, -110.0  # the weight landing in the fist
-        phiv += (-150 * phi - 6 * phiv - 0.8 * ha) * DT; phi += phiv * DT
+        phiv += (-150 * phi - 8 * phiv - 0.8 * ha) * DT; phi += phiv * DT
         L = rot(phi, *G_)
         if i == i_go - 1:
             go_world = H[i] @ L
