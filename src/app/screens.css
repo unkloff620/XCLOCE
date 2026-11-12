@@ -6208,6 +6208,16 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .arena-photo.ouch .rig-botsman .br-brow-l, .rig-botsman.dazed .br-brow-l { animation: none; transform: translateY(-1.5px) rotate(-9deg); }
 .arena-photo.ouch .rig-botsman .br-brow-r, .rig-botsman.dazed .br-brow-r { animation: none; transform: translateY(-1.5px) rotate(9deg); }
 @media (prefers-reduced-motion: reduce) { .rig-botsman :is(.br-teeth-low, .br-teeth-up, .br-brow-l, .br-brow-r) { animation: none; } }
+/* the crowbar's swing (boss-poses.ts btBar, face «bt-chomp», 1.7 s): the jaw drops wide as he swings, snaps shut on the
+   blow, then the lower teeth grind side to side (as Бабафей's), and the usual face comes back */
+.rig-botsman.bt-chomp .br-teeth-low { animation: bt-chomp-low 1.7s linear both; }
+@keyframes bt-chomp-low { 0% { transform: translate(0, 0); } 8% { transform: translate(0, 7px); } 13% { transform: translate(0, 7.5px); } 17% { transform: translate(0, 0); } 18.5% { transform: translate(0, 0.8px); } 20.0% { transform: translate(1.8px, 0); } 25.8% { transform: translate(-1.8px, 0); } 31.6% { transform: translate(1.8px, 0); } 37.4% { transform: translate(-1.8px, 0); } 43.2% { transform: translate(1.8px, 0); } 49.0% { transform: translate(-1.8px, 0); } 54.8% { transform: translate(1.8px, 0); } 60.6% { transform: translate(-1.8px, 0); } 66.4% { transform: translate(1.8px, 0); } 72.2% { transform: translate(-1.8px, 0); } 78.0% { transform: translate(1.8px, 0); } 80%, 100% { transform: translate(0, 0); } }
+.rig-botsman.bt-chomp .br-teeth-up { animation: bt-chomp-up 1.7s ease-out both; }
+@keyframes bt-chomp-up { 0% { transform: translateY(0); } 8%, 13% { transform: translateY(-1.4px); } 17%, 100% { transform: translateY(0); } }
+.rig-botsman.bt-chomp .br-brow-l { animation: none; transform: translateY(1.4px) rotate(6deg); transition: transform 0.12s; }
+.rig-botsman.bt-chomp .br-brow-r { animation: none; transform: translateY(1.4px) rotate(-6deg); transition: transform 0.12s; }
+@media (prefers-reduced-motion: reduce) { .rig-botsman.bt-chomp :is(.br-teeth-low, .br-teeth-up) { animation: none; } }
+
 /* Боцман's card: black leather with buckles (boss-card-frame-botsman.webp, 1200×514, the artist's; tools/ui/botsman-card.py);
  * inside it a dim green code rain falls in two layers at different speeds (botsman-rain.webp), and the two lamps on the
  * sides (at 27.6%–52.4% of the frame's stretched middle, 6 px in) flicker in green */

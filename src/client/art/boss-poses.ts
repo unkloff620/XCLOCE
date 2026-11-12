@@ -19,7 +19,10 @@ type J = "up" | "head" | "armL" | "lowL" | "handL" | "armR" | "lowR" | "handR";
  *  channels: a shape's weight (Spec.shapes, 0…1) or a fist's growth towards the screen (Spec.scale, %) */
 type Pose = Partial<Record<string, number>>;
 interface Key { at: number; pose: Pose; /** how hard the springs pull until the next key (a blow ×3–4) */ stiff?: number }
-interface Action { keys: Key[]; dur: number }
+/** face: classes put on the rig for a while once the action reaches `at` (s) — the CSS face plays its own keyframes then
+ *  (Боцман: the jaw drops on the crowbar's swing and grinds after it) */
+interface Face { cls: string; at: number; dur: number }
+interface Action { keys: Key[]; dur: number; face?: Face[] }
 interface Spec {
   /** the rig's joint groups (all the matches turn alike — Вадим's key arm is drawn twice), default: SEL */
   sel?: Partial<Record<J, string>>;
@@ -89,10 +92,12 @@ const jabR: Action = {
 const join = (...as: Action[]): Action => {
   let t = 0;
   const keys: Key[] = [];
-  for (const a of as) { for (const k of a.keys) keys.push({ ...k, at: t + k.at }); t += a.dur; }
-  return { keys, dur: t };
+  const face: Face[] = [];
+  for (const a of as) { for (const k of a.keys) keys.push({ ...k, at: t + k.at }); for (const f of a.face ?? []) face.push({ ...f, at: t + f.at }); t += a.dur; }
+  return { keys, dur: t, face: face.length ? face : undefined };
 };
-const shift = (a: Action, by: number): Action => ({ dur: a.dur - by, keys: a.keys.map((k) => ({ ...k, at: Math.max(0, k.at - by) })) });
+const shift = (a: Action, by: number): Action => ({ dur: a.dur - by, keys: a.keys.map((k) => ({ ...k, at: Math.max(0, k.at - by) })),
+  face: a.face?.map((f) => ({ ...f, at: Math.max(0, f.at - by) })) });
 const taunt: Action = {
   dur: 1.3,
   keys: [
@@ -373,6 +378,8 @@ const btBar: Action = {
     { at: 0.32, pose: { armL: -1, lowL: -4, handL: 34, up: 2.5, x: 7, head: -2 }, stiff: 1.4 },
     { at: 0.46, pose: {} },
   ],
+  // the jaw drops on the swing, snaps shut on the blow, then the teeth grind (screens.css «bt-chomp»)
+  face: [{ cls: "bt-chomp", at: 0, dur: 1.7 }],
 };
 const btHammer: Action = {
   dur: 0.66,
@@ -723,12 +730,14 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
       return spec.actions[0].a;
     };
     let raf = 0;
+    const faceOff = new Map<string, number>();
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
       if (!gate(now)) return;
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       t += dt;
+      for (const [c, end] of faceOff) if (t >= end) { svg.classList.remove(c); faceOff.delete(c); }
       // a hit on him: a push to every joint
       const arena = svg.closest(".arena-photo");
       const hit = !!arena?.classList.contains("hit");
@@ -744,7 +753,14 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
       let pose: Pose = {};
       let stiff = 1;
       if (act) {
+        const before = actT;
         actT += dt * (dazed ? 0.75 : 1);
+        for (const f of act.face ?? []) if (f.at >= before && f.at < actT || (before === 0 && f.at === 0)) {
+          svg.classList.remove(f.cls);
+          void svg.getBoundingClientRect(); // restart its keyframes
+          svg.classList.add(f.cls);
+          faceOff.set(f.cls, t + f.dur);
+        }
         let cur: Key | null = null;
         for (const k of act.keys) if (k.at <= actT) cur = k;
         if (cur) { pose = cur.pose; stiff = cur.stiff ?? 1; }
@@ -815,6 +831,7 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
     return () => {
       cancelAnimationFrame(raf);
       svg.classList.remove("posed");
+      for (const c of faceOff.keys()) svg.classList.remove(c);
       for (const j of JOINTS) for (const el of els[j]) el.style.transform = "";
       for (const el of follow) el.style.transform = "";
       for (const el of hangs) el.style.transform = "";
