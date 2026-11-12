@@ -124,6 +124,7 @@ const WEARABLES: ItemDef[] = ([
   { id: "tee-sailor", name: "Тельняшка Мугонатора", slot: "SHIRT", rarity: "rare", description: "Полоски — чтобы акула видела, кого не трогать. Край уже кто-то откусил.", sources: ["Победа: Мугонатор (Блатной)"] },
   { id: "anchor-mugo", name: "Якорь", slot: "HAND", rarity: "epic", description: "Мугонатор качает его на верёвке и ждёт, когда Вадим скажет «бросай». Герой держит его в руке.", sources: ["Победа: Мугонатор (Блатной)"] },
   // Боцман's set: the gloves; the left hand plays with his crowbar (tools/rig/build-gloves.py)
+  { id: "coat-botsman", name: "Плащ Боцмана", slot: "SHIRT", rarity: "legendary", description: "Длинный, кожаный, нараспашку. Полы ложатся на пол, как у того, кто знает, где выход из матрицы.", sources: ["Победа: Боцман (Блатной)"] },
   { id: "pants-botsman", name: "Штаны Боцмана", slot: "PANTS", rarity: "epic", description: "Чёрные, широкие, с ремнями на бёдрах. Карманов нет — всё нужное у него в руке.", sources: ["Победа: Боцман (Блатной)"] },
   { id: "boots-botsman", name: "Берцы Боцмана", slot: "SHOES", rarity: "epic", description: "Шнуровка до верха, подошва — протектор. Год пылились до Нового года.", sources: ["Победа: Боцман (Блатной)"] },
   { id: "gloves-botsman", name: "Перчатки Боцмана", slot: "HAND", rarity: "epic", description: "Чёрные, кожаные. В левой — монтировка: качает, подкидывает, ловит. Ни разу не уронил.", sources: ["Победа: Боцман (Блатной)"] },

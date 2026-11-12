@@ -79,7 +79,7 @@ WEAR_SLOT = {"tee-white": "SHIRT", "tee-pump": "SHIRT", "jeans": "PANTS", "short
              # Вадим's things (image edits of Гаркуша's layers, their alpha kept; the tie drawn on the hero)
              "jacket-vadim": "SHIRT", "pants-vadim": "PANTS", "shoes-vadim": "SHOES", "tie-vadim": "ACCESSORY",
              # Боцман's things (drawn by the artist on the rig canvas)
-             "pants-botsman": "PANTS", "boots-botsman": "SHOES"}
+             "pants-botsman": "PANTS", "boots-botsman": "SHOES", "coat-botsman": "SHIRT"}
 # head things worn over the hair (no hair variants cut under them)
 OVER_HAIR = {"headphones-vostok", "crown-cash", "bandana-hodl", "cap-captain"}
 # of those: drawn on top of the hair (the crown sits on it, the bandana is tied over it) — the hair is not cut
