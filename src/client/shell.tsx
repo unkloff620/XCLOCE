@@ -242,14 +242,17 @@ function Nav() {
   const now = useNow();
   const taskHint = tasksReady(state, now);
   const myClan = state?.clan?.id ?? null;
+  // a fight going on (a boss or a building in «Ходки»): the Bosses tab leads straight into it
+  const activeFight = state?.fight ? `/bosses/${state.fight.bossId}`
+    : state?.raidFight ? `/clans/raids/${state.raidFight.yard}/${state.raidFight.building}` : null;
   return (
     <nav className="nav">
       {/* the leaders strip sits on top of the menu (not over a boss fight) */}
       {!/^\/bosses\/[^/]+/.test(path) && <LeadersStrip />}
       {TABS.map((t) => (
         // a member's Clans tab leads straight to the own clan (no flash of the clan list);
-        // a running boss fight: the Bosses tab leads straight into it (from the fight a second tap opens the list)
-        <Link key={t.id} href={t.id === "clans" && myClan ? `/clans/${myClan}` : t.id === "bosses" && state?.fight && on !== "bosses" ? `/bosses/${state.fight.bossId}` : t.href} className={on === t.id ? "on" : ""} style={{ ["--glow" as string]: NAV_GLOW[t.id] }} aria-label={t.label} title={t.label}
+        // a running fight (a boss or a «Ходки» building): the Bosses tab leads straight into it (from the fight a second tap opens the list)
+        <Link key={t.id} href={t.id === "clans" && myClan ? `/clans/${myClan}` : t.id === "bosses" && activeFight && path !== activeFight ? activeFight : t.href} className={on === t.id ? "on" : ""} style={{ ["--glow" as string]: NAV_GLOW[t.id] }} aria-label={t.label} title={t.label}
           onClick={(e) => {
             window.scrollTo({ top: 0 });
             if (on !== t.id) return;
@@ -268,7 +271,7 @@ function Nav() {
           {t.id === "yard" && !state?.yard.count && taskHint && <span className="badge" style={{ background: "var(--gold)", color: "#2e1c00" }}>!</span>}
           {/* new messages in the clan chat, requests to my clan */}
           {t.id === "clans" && ((state?.clanRequests?.chat ?? 0) + (state?.clanRequests?.waiting ?? 0)) > 0 && <span className="badge">{Math.min(99, (state?.clanRequests?.chat ?? 0) + (state?.clanRequests?.waiting ?? 0))}</span>}
-          {t.id === "bosses" && state?.fight && <span className="badge" style={{ background: "var(--gold)", color: "#2e1c00" }}>!</span>}
+          {t.id === "bosses" && activeFight && <span className="badge" style={{ background: "var(--gold)", color: "#2e1c00" }}>!</span>}
           {/* the achievement box on the trader's counter can be opened */}
           {t.id === "shop" && (state?.achBox?.ready ?? 0) > 0 && <span className="badge" style={{ background: "var(--gold)", color: "#2e1c00" }}>!</span>}
         </Link>

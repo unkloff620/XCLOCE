@@ -129,6 +129,10 @@ export async function gameState(ctx: Ctx) {
     fortune: { on: await fortuneOn(ctx.q, ctx.pid, ctx.cfg) },
     /** «Ходки» of the clans (the admins see them before the players) */
     raids: { on: ctx.cfg.raids.on || (await isAdminPlayer(ctx.q, ctx.pid, ctx.cfg)) },
+    /** my fight for a building in «Ходки» going on now (the boss button leads there) */
+    raidFight: await ctx.q.query<{ yard_id: string; building_id: string }>(
+      "SELECT yard_id, building_id FROM raid_fights WHERE player_id=$1 AND status='active' LIMIT 1", [ctx.pid])
+      .then(([r]) => (r ? { yard: r.yard_id, building: r.building_id } : null)),
     newbie: await newbieView(ctx.q, ctx.pid, ctx.now),
     /** the talk at the exchange machine: today's talk done? the better rate it gave (until when) */
     dealerTalk: { talked: p.dealer_talk_day === moscowDay(ctx.now), ...(await dealerBonus(ctx.q, ctx.pid, ctx.now)) },
