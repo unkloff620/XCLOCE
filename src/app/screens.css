@@ -3124,6 +3124,7 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .br-pup { position: relative; width: 100%; height: 100%; filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.55)); }
 .br-pup > canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .br-pup > canvas.br-pup-front { z-index: 1; }
+.br-pup > .br-pup-over { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: visible; }
 .br-pup > .boss-rig { position: relative; filter: none; }
 .br-pup[data-on="1"] .boss-rig image.pp { visibility: hidden; }
 
@@ -6279,3 +6280,13 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 @keyframes rig-sway { 0%, 100% { transform: skewX(0.9deg); } 50% { transform: skewX(-0.9deg); } }
 .rig.still .rig-sway { animation: none; }
 @media (prefers-reduced-motion: reduce) { .rig-sway { animation: none; } }
+
+/* polished metal (art/glint.tsx MetalGlint): a soft band of light slides along now and then; once a cycle a bright flash
+   pops up on one spot, as if a lamp got reflected */
+.metal-glint-band { animation: metal-glint-band 5.6s ease-in-out infinite; }
+@keyframes metal-glint-band { 0%, 8% { transform: translateX(0); opacity: 0; } 10% { opacity: 1; } 34% { transform: translateX(var(--w)); opacity: 1; } 36%, 100% { transform: translateX(var(--w)); opacity: 0; } }
+.metal-glint-star { animation: metal-glint-star 5.6s linear infinite; opacity: 0; }
+@keyframes metal-glint-star { 0%, 21% { opacity: 0; transform: scale(0.2) rotate(0deg); } 24% { opacity: 1; transform: scale(1.15) rotate(20deg); }
+  27% { opacity: 0.85; transform: scale(0.8) rotate(35deg); } 31%, 100% { opacity: 0; transform: scale(0.2) rotate(50deg); } }
+.rig.still .metal-glint { display: none; }
+@media (prefers-reduced-motion: reduce) { .metal-glint { display: none; } }

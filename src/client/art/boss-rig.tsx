@@ -14,6 +14,7 @@
  * A head with its own jaw (head-open + throat + teeth-up/teeth-low, Бабафей) grinds its teeth and opens its mouth;
  * brows drawn one by one (browL/browR) turn at their inner ends for the emotions.
  */
+import { MetalGlint } from "./glint.tsx";
 import { useEffect, useRef, type CSSProperties, type ReactNode, type RefObject } from "react";
 import { usePoses } from "./boss-poses.ts";
 import { usePuppet } from "./boss-puppet.ts";
@@ -195,6 +196,25 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
   usePuppet(wrapRef, id, { w: BOSS_RIGS[id]?.w ?? 1, h: BOSS_RIGS[id]?.h ?? 1 }, puppet);
   // the bosses with a pose engine (boss-poses.ts): springs instead of the CSS keyframes
   usePoses(svgRef, baseId, id);
+  // a gleaming tool in a hand (Боцман's crowbar): the puppet draws the forearms and fists on a canvas OVER the SVG, so the
+  // gleam lives on a layer of its own above it and follows the hand's group every frame
+  const glintSide = GLINT[baseId];
+  const glintRef = useRef<SVGGElement>(null);
+  useEffect(() => {
+    if (!glintSide || !puppet) return;
+    let raf = 0;
+    const tick = () => {
+      raf = requestAnimationFrame(tick);
+      const svg = svgRef.current, g = glintRef.current;
+      const hand = svg?.querySelector<SVGGElement>("[data-glint]");
+      const a = svg?.getScreenCTM(), b = hand?.getScreenCTM();
+      if (!g || !a || !b) return;
+      const m = a.inverse().multiply(b);
+      g.setAttribute("transform", `matrix(${m.a} ${m.b} ${m.c} ${m.d} ${m.e} ${m.f})`);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [glintSide, puppet, id]);
   const rig = BOSS_RIGS[id];
   if (!rig) return null;
   const P = rig.parts;
@@ -233,7 +253,11 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
           // three pieces (Мугонатор): the forearm bends at the elbow, the fist turns at the wrist inside it
           <g className={`br-low br-low-${side.toLowerCase()}`} {...joint(`low${side}`)} style={origin(`low${side}`)}>
             {img(`low${side}`, undefined, layer)}
-            <g className={`br-hand br-hand-${side.toLowerCase()}`} {...joint(`hand${side}`)} style={origin(`hand${side}`)}>{img(`hand${side}`, undefined, layer)}</g>
+            <g className={`br-hand br-hand-${side.toLowerCase()}`} {...joint(`hand${side}`)} style={origin(`hand${side}`)} data-glint={glintSide === side ? "1" : undefined}>
+              {img(`hand${side}`, undefined, layer)}
+              {/* without the puppet the gleam sits right here; with it — on its own layer over the puppet's canvas (below) */}
+              {glintSide === side && !puppet && <CrowbarGlint P={P} />}
+            </g>
           </g>
         ) : (
           <g className={`br-hand br-hand-${side.toLowerCase()}`} {...joint(`hand${side}`)} style={origin(`hand${side}`)}>{img(`hand${side}`, undefined, layer)}</g>
@@ -432,8 +456,22 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
       <canvas className="br-pup-back" aria-hidden="true" />
       {svgEl}
       <canvas className="br-pup-front" aria-hidden="true" />
+      {glintSide && (
+        <svg className="br-pup-over" viewBox={`0 0 ${rig.w} ${rig.h}`} width="100%" height="100%" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+          <g ref={glintRef}><CrowbarGlint P={P} /></g>
+        </svg>
+      )}
     </div>
   );
+}
+
+/** the bosses with a gleaming tool, and in which hand */
+const GLINT: Record<string, "L" | "R"> = { botsman: "L" };
+/** Боцман's crowbar in his fist (handL): the gleam over its bare metal, the flash near the bend (tools/boss/make-shine.py) */
+function CrowbarGlint({ P }: { P: Record<string, Part> }) {
+  const h = P.handL;
+  if (!h) return null;
+  return <MetalGlint mask="/bosses/botsman/rig/handL-shine.webp?v=1" box={h} star={[h.x + 168, h.y + 57]} size={22} />;
 }
 
 /*

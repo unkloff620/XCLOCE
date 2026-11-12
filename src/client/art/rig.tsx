@@ -16,6 +16,7 @@ import { BEARD_FIT } from "./beard-data.ts";
 import { HAIR_CUT_HATS, HAIR_FIT, HATS_ON_HAIR, SKIN_ORIGINAL, WEAR_FIT } from "./rig-look.ts";
 import { HELD_FIT, HELD_SWING } from "./held-data.ts";
 import { GLOVES, GLOVES_ID } from "./gloves-data.ts";
+import { MetalGlint } from "./glint.tsx";
 import { TATTOO_FIT } from "./tattoo-data.ts";
 import { PLACES } from "./places-data.ts";
 import { SEAT } from "../../content/home-scene.ts";
@@ -546,7 +547,10 @@ function GloveHand() {
   );
   return (
     <g className="rig-hand rig-gloves">
-      <g className="rig-crowbar">{pic("crowbar", g.crowbar)}</g>
+      <g className="rig-crowbar">
+        {pic("crowbar", g.crowbar)}
+        <MetalGlint mask={`/assets/hero/held/${GLOVES_ID}-crowbar-shine.webp?v=1`} box={g.crowbar} star={[g.crowbar.x + 205, g.crowbar.y + 34]} size={16} delay={-2.2} />
+      </g>
       {pic("fist", g.hand, "rig-gf rig-gf-fist")}
       {pic("open", g.hand, "rig-gf rig-gf-open")}
       {pic("squeeze", g.hand, "rig-gf rig-gf-squeeze")}
