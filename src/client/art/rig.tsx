@@ -267,6 +267,16 @@ function wornIn(worn: Worn, slot: string): WearId | null {
 
 /** a worn piece of clothing, if the item in that slot has art (the FACE slot is drawn on the head, over the eyes) */
 /** `hat`: a head thing — "under" the hair (headphones) or "over" it (hats that cut the hair, HAIR_CUT_HATS) */
+/** clothes with a part behind the legs (a long coat's back, over the seat, under the body): its own picture */
+const WEAR_BACK: Record<string, string> = { "coat-botsman": "coat-botsman-back" };
+function WearBack() {
+  const id = wornIn(useContext(WornCtx), "SHIRT");
+  const back = id ? WEAR_BACK[id] : undefined;
+  if (!back || !(back in WEARS)) return null;
+  const f = WEARS[back];
+  return <image href={`/assets/hero/wear/${back}.webp?v=${ART_VER.wear}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
+}
+
 function Wear({ slot, hat }: { slot: string; hat?: "under" | "over" }) {
   const id = wornIn(useContext(WornCtx), slot);
   if (!id) return null;
@@ -595,6 +605,7 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
       {edit && <OutlineDefs />}
       <ellipse cx="500" cy="1282" rx="400" ry="30" fill="rgba(0,0,0,0.3)" />
       {seat !== undefined && seat !== false && <Seat level={typeof seat === "number" ? seat : 0} />}
+      <WearBack />
       {/* torso breathes; arms and head ride along in a second group with the same animation */}
       {/* the torso layer carries the legs too; only the chest breathes visibly (origin at the hips) */}
       <g className="rig-breath">

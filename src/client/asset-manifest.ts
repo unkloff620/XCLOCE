@@ -1228,6 +1228,7 @@ export const ASSET_FILES: string[] = [
  "/assets/hero/wear/cap-moon.webp",
  "/assets/hero/wear/chain-cuban.webp",
  "/assets/hero/wear/cigarette.webp",
+ "/assets/hero/wear/coat-botsman-back.webp",
  "/assets/hero/wear/coat-botsman.webp",
  "/assets/hero/wear/crown-cash.webp",
  "/assets/hero/wear/gold-chain.webp",
