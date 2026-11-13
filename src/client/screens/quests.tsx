@@ -76,7 +76,6 @@ export function QuestsWindow({ onClose }: { onClose: () => void }) {
                 <div className="quest-bar" style={{ ["--p" as string]: `${pct}%` }}><i /><span className="num">{x.progress}/{x.target}</span></div>
                 <RewardChips r={def.reward} size={14} />
                 {!x.done && def.hint && <span className="tiny muted">{def.hint}</span>}
-                {x.auto && !x.claimed && <span className="tiny muted">Всё уже прокачано и куплено — засчитано</span>}
               </div>
               {x.claimed ? (
                 <span className="quest-ok display">✓</span>

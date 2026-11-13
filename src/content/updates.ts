@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-13-quests",
+    date: "13 ноября",
+    title: "Задания дня",
+    items: [
+      { text: "Задание дня «Вложи талант или улучши комнату» убрано. Скоро задания дня будут переработаны." },
+    ],
+  },
+  {
     id: "2026-11-12-botsman",
     date: "12 ноября",
     title: "Боцман на районе",

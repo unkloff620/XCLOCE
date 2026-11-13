@@ -8,7 +8,7 @@ import type { Reward } from "./rewards.ts";
  */
 
 /** what the server counts: every kind is fed by one kind of action */
-export type QuestKind = "damage" | "hits" | "steps" | "energy" | "yard" | "buy" | "exchange" | "slots" | "upgrade" | "poker" | "zonk" | "roach" | "bj" | "social" | "upgrader";
+export type QuestKind = "damage" | "hits" | "steps" | "energy" | "yard" | "buy" | "exchange" | "slots" | "poker" | "zonk" | "roach" | "bj" | "social" | "upgrader";
 
 export interface QuestDef {
   id: string;
@@ -46,9 +46,8 @@ export const QUEST_GROUPS: QuestDef[][] = [
     { id: "q-roach", kind: "roach", target: 1, title: "Прихлопни таракана в зонке", href: "/yard", hint: "Он бегает по раме доски", reward: R(150, 300, { items: [{ id: "poker-chip", qty: 1 }] }) },
     { id: "q-bj", kind: "bj", target: 3, title: "Сыграй 3 раунда в блэкджек", href: "/yard", hint: "Стол во дворе → Блэкджек", reward: R(150, 300, { items: [{ id: "poker-chip", qty: 1 }] }) },
   ],
-  // getting stronger and the neighbours
+  // the neighbours and the «Апгрейдер» («Вложи талант или улучши комнату» removed: players farmed it)
   [
-    { id: "q-upgrade", kind: "upgrade", target: 1, title: "Вложи талант или улучши комнату", href: "/profile", hint: "Личное дело → Таланты, или Обстановка дома: мебель или новая комната", reward: R(200, 400) },
     { id: "q-social", kind: "social", target: 2, title: "Наедь, харкни или накачай бицуху 2 раза", href: "/rating", hint: "Рейтинг → профиль игрока", reward: R(200, 400) },
     { id: "q-upgrader", kind: "upgrader", target: 1, title: "Крутани апгрейдер", href: "/yard", hint: "Автомат «Апгрейдер» во дворе", reward: R(200, 400) },
   ],

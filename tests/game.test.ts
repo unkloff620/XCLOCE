@@ -1199,19 +1199,6 @@ describe("admin", () => {
     expect(v.admin.length).toBe(6);
     expect(v.ledger.some((l) => l.reason === "admin:777" && l.key === "keyboard" && Number(l.delta) === -50)).toBe(true);
   });
-  it("«Вложи талант или улучши комнату» counts by itself when nothing is left to upgrade", async () => {
-    const { canUpgrade } = await import("../src/server/systems/home.ts");
-    const { EQUIPMENT, ROOM_DEFS } = await import("../src/content/home.ts");
-    const p = await newPlayer(db);
-    expect(await canUpgrade(db, p)).toBe(true);
-    await db.query("UPDATE players SET talents=0 WHERE id=$1", [p]);
-    for (const e of EQUIPMENT) {
-      const n = e.pieces?.length ?? 0;
-      await db.query("INSERT INTO player_equipment (player_id, equipment_id, level, pieces) VALUES ($1,$2,$3,$4) ON CONFLICT (player_id, equipment_id) DO UPDATE SET level=EXCLUDED.level, pieces=EXCLUDED.pieces", [p, e.id, n || e.levels.length, (1 << n) - 1]);
-    }
-    await db.query("UPDATE appearance SET rooms=$2 WHERE player_id=$1", [p, JSON.stringify(ROOM_DEFS.map((r) => r.id))]);
-    expect(await canUpgrade(db, p)).toBe(false);
-  });
   it("admin gives a home room (energy bonus too) and can take it back", async () => {
     const { edit, player } = await import("../src/server/admin.ts");
     const { roomsEnergyBonus } = await import("../src/content/home.ts");

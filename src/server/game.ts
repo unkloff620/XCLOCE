@@ -154,10 +154,6 @@ async function afterAction(ctx: Ctx, type: ActionType, result: unknown) {
     case "social_spit": return quests.questTick(ctx, "social", 1);
     case "clan_create": return counters.setMax(ctx.q, ctx.pid, "clanCreated", 1);
     case "slots_spin": return quests.questTick(ctx, "slots", 1);
-    case "equipment_upgrade":
-    case "room_buy":
-    case "piece_buy":
-    case "talent_up": return quests.questTick(ctx, "upgrade", 1);
     case "daily_claim": return notify.scheduleStreak(ctx, Number(r.streak) || 1);
     // the mini-game quests: a counted poker hand, a finished zonk game, a squashed roach (blackjack rounds: blackjack.ts)
     case "poker_play":
