@@ -6359,7 +6359,7 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .mt-need { font-size: 11px; font-weight: 800; text-transform: uppercase; text-align: center; line-height: 1.15; padding: 4px 10px; border: 2px solid #ffe6b0; border-radius: 6px;
   color: #ffe6b0; background: rgba(0, 0, 0, 0.25); }
 .mt-need b { font-size: 13px; }
-.mt-chest-in { display: flex; flex-wrap: wrap; gap: 4px 10px; color: #f2d9ad; }
-.mt-chest-in span { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+.mt-chest-in { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.mt-chest-in span { display: inline-flex; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5)); }
 .mt-case-chip { display: inline-flex; align-items: center; gap: 2px; }
 .mt-plank .tiny.muted { color: #cdb497; }

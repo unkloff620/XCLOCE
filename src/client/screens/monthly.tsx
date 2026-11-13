@@ -7,7 +7,7 @@ import { Icon } from "../art/icons.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { clock } from "../format.ts";
 import { haptic } from "../telegram.ts";
-import { CASE_POINTS, MONTHLY_CHEST, MONTHLY_TATTOO_SET, MONTHLY_TIERS, monthTaskOf } from "../../content/monthly.ts";
+import { CASE_POINTS, MONTHLY_TIERS, monthTaskOf } from "../../content/monthly.ts";
 import type { Granted } from "../api.ts";
 
 /*
@@ -32,21 +32,20 @@ function TierArt({ id }: { id: string }) {
   }
 }
 
-/** what the chest holds, the ranges in words */
+/** what the chest holds: only the pictures (the amounts are random) */
 function ChestInside() {
-  const c = MONTHLY_CHEST;
-  const r = (x: readonly [number, number]) => `${fmt(x[0])}–${fmt(x[1])}`;
   return (
-    <div className="mt-chest-in tiny">
-      <span><Icon name="USD" size={16} />{r(c.USD)}</span>
-      <span><Icon name="RUB" size={16} />{r(c.RUB)}</span>
-      <span><Icon name="SOL" size={16} />{r(c.SOL)}</span>
-      <span><Icon name="xp" size={16} />{r(c.xp)}</span>
-      <span><Icon name="case" size={16} />{r(c.cases)}</span>
-      <span><ItemArt id="rug-pull-gun" size={16} />{r(c.rugPull)}</span>
-      <span><Icon name="parts" size={16} />{r(c.parts)}</span>
-      <span><ItemArt id="stash-cigs" size={16} />{r(c.stashes)}</span>
-      <span>{MONTHLY_TATTOO_SET ? "+ наколка из сета месяца" : "+ наколка из нового сета (скоро)"}</span>
+    <div className="mt-chest-in">
+      <span title="Доллары"><Icon name="USD" size={28} /></span>
+      <span title="Рубли"><Icon name="RUB" size={28} /></span>
+      <span title="Solana"><Icon name="SOL" size={28} /></span>
+      <span title="Авторитет"><Icon name="xp" size={28} /></span>
+      <span title="Кейсы"><Icon name="case" size={28} /></span>
+      <span title="Rug Pull Gun"><ItemArt id="rug-pull-gun" size={28} /></span>
+      <span title="Детали"><Icon name="parts" size={28} /></span>
+      <span title="Нычки"><ItemArt id="stash-cigs" size={28} /></span>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <span title="Наколка из сета месяца"><img src="/assets/ui/drop-tattoo.webp" width={28} height={28} alt="" /></span>
     </div>
   );
 }
