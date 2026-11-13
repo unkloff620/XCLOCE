@@ -4,7 +4,7 @@ import { adminRoute, num, oneOf } from "../../../server/http.ts";
 import * as admin from "../../../server/admin.ts";
 import { costs, costsSave } from "../../../server/costs.ts";
 
-const OPS = ["me", "dashboard", "players", "player", "actions", "admin_log", "edit", "events", "event_save", "event_delete", "exchange_schedule", "exchange_schedule_save", "event_bosses", "event_boss_set", "boss_limit_reset_all", "maintenance", "maintenance_set", "fortune", "fortune_set", "tosya", "tosya_set", "broadcast", "funnel", "costs", "costs_save"] as const;
+const OPS = ["me", "dashboard", "players", "player", "actions", "admin_log", "edit", "events", "event_save", "event_delete", "exchange_schedule", "exchange_schedule_save", "event_bosses", "event_boss_set", "boss_limit_reset_all", "maintenance", "maintenance_set", "fortune", "fortune_set", "monthly", "monthly_set", "tosya", "tosya_set", "broadcast", "funnel", "costs", "costs_save"] as const;
 const optNum = (v: unknown) => (v === undefined || v === null || v === "" ? undefined : num(v, "number"));
 const optStr = (v: unknown) => (typeof v === "string" && v ? v.slice(0, 100) : undefined);
 
@@ -34,6 +34,8 @@ export const POST = adminRoute("admin", async ({ db, body, adminTg }) => {
     case "maintenance_set": return admin.maintenanceSet(db, adminTg, body.on === true, body.text);
     case "fortune": return admin.fortuneAdmin(db);
     case "fortune_set": return admin.fortuneSet(db, adminTg, body);
+    case "monthly": return admin.monthlyAdmin(db);
+    case "monthly_set": return admin.monthlySet(db, adminTg, body);
     case "boss_limit_reset_all": return admin.bossLimitResetAll(db, adminTg);
     case "edit": {
       const e = body.edit as Record<string, unknown> | undefined;

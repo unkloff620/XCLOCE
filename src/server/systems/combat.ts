@@ -1,4 +1,5 @@
 import { autoSpendTalents } from "./home.ts";
+import { monthTick } from "./monthly.ts";
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, idempotent, itemQty, ledger, moscowDay, nextMoscowMidnight, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { BLAT_THING_CHANCE, BOTH_DROP_CHANCE, BOSSES, EVENT_FIGHTS, EXTRA_KEY_CHANCE, OPEN_BOSSES, bossById, bossOpen, keyId, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
@@ -480,6 +481,8 @@ export async function claimFight(ctx: Ctx, fightId: number, see = true) {
   if (unlocked.length) granted.unlocks = unlocked;
   // «Взлом»: while the event is on, a box for the win (any mode, the same fair share as the pass)
   if (earnedKey) await heistDrop(ctx, def, granted);
+  // «От звонка до звонка»: the win counts on the day the boss fell
+  await monthTick(ctx, "kill", 1, { boss: def.id, mode: mode.id, at: f.ended_at ? new Date(f.ended_at).getTime() : ctx.now });
   await ctx.q.query("UPDATE fights SET reward=$2, seen=seen OR $3 WHERE id=$1", [f.id, JSON.stringify(granted), see]);
   {
     await ctx.q.query(

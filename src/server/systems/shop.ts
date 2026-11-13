@@ -1,5 +1,5 @@
 import { GameError, type Queryable } from "../db.ts";
-import { addEnergy, addItem, addMoney, idempotent, itemQty, moscowDay, takeItem, takeMoney, type Ctx } from "../core.ts";
+import { addEnergy, addItem, addMoney, energyCfgOf, idempotent, itemQty, lockPlayer, moscowDay, takeItem, takeMoney, type Ctx } from "../core.ts";
 import { TALK_BONUS, TALK_BONUS_MS, talkChance, talkOfDay, talkScore } from "../../content/dealer-talk.ts";
 import { OFFERS, bulkOf, bulkPrice, offerById } from "../../content/shop.ts";
 import { CURRENCY_DEFS, exchangeScheduleText, exchangeWindow, floorTo, type Currency } from "../../content/currencies.ts";
@@ -88,8 +88,17 @@ export async function exchange(ctx: Ctx, from: Currency, to: Currency, amount: n
 export async function useItem(ctx: Ctx, itemId: string) {
   const def = itemById(itemId);
   if (!def?.use) throw new GameError("not_usable", "Этот предмет нельзя использовать");
-  await takeItem(ctx, def.id, 1, "use");
   let energy: number | null = null;
+  if (def.use.energyFull) {
+    // up to the limit: nothing to add when it is full already (the can stays)
+    const p = await lockPlayer(ctx);
+    const gap = energyCfgOf(ctx.cfg, p).max - p.energyNow;
+    if (!(gap > 0)) throw new GameError("energy_full", "Энергия и так полная");
+    await takeItem(ctx, def.id, 1, "use");
+    energy = await addEnergy(ctx, gap, `use:${def.id}`);
+    return { itemId: def.id, energy };
+  }
+  await takeItem(ctx, def.id, 1, "use");
   if (def.use.energy) energy = await addEnergy(ctx, def.use.energy, `use:${def.id}`);
   return { itemId: def.id, energy };
 }

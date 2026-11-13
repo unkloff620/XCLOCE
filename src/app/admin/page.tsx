@@ -24,12 +24,12 @@ const TOKEN_KEY = "xcloce.admin";
 const ACTION_TYPES = [
   "fight_start", "fight_claim", "fight_flee", "task", "location_claim", "yard_pick", "buy", "exchange", "use", "equip", "unequip",
   "clan_create", "clan_join", "clan_leave", "clan_kick", "clan_transfer", "stash_wish", "stash_gift", "stash_accept", "clan_edit", "daily_claim", "sell", "rename", "slots_spin",
-  "equipment_upgrade", "talent_up", "talent_reset", "room_buy", "room_set", "look_set", "decor_set", "decor_save", "piece_buy", "quest_claim", "quest_chest",
+  "equipment_upgrade", "talent_up", "talent_reset", "room_buy", "room_set", "look_set", "decor_set", "decor_save", "piece_buy", "quest_claim", "quest_chest", "month_buy", "month_claim",
   "attack", "auto_set", "heist_pick", "heist_rush", "heist_auto", "heist_open", "fortune_buy", "fortune_spin", "fortune_cups", "fortune_cup_pick", "fortune_bag", "raid_start", "raid_attack", "raid_flee",
   "notify_set", "achievement_claim", "achievement_claim_all", "ach_box_open", "prize_claim", "game_start", "zonk_move", "poker_play", "bj_open", "bj_invite", "bj_join", "bj_leave", "bj_bet", "bj_move", "upgrade", "up_sell", "up_take", "clan_cancel", "clan_accept", "clan_reject", "stash_collect",
 ];
 const ACTION_NAMES: Record<string, string> = {
-  attack: "удар", auto_set: "автоматика", heist_pick: "взлом замка", heist_rush: "замок сразу", heist_auto: "автовзлом", heist_open: "открыл ящик", fortune_buy: "колесо: билеты", fortune_spin: "колесо: прокрутка", fortune_cups: "колесо: чашки", fortune_cup_pick: "колесо: поднял чашку", fortune_bag: "колесо: открыл сумку", raid_start: "захват: бой", raid_attack: "захват: удар", raid_flee: "захват: ушёл",
+  month_buy: "делюги: выкупил день", month_claim: "делюги: награда", attack: "удар", auto_set: "автоматика", heist_pick: "взлом замка", heist_rush: "замок сразу", heist_auto: "автовзлом", heist_open: "открыл ящик", fortune_buy: "колесо: билеты", fortune_spin: "колесо: прокрутка", fortune_cups: "колесо: чашки", fortune_cup_pick: "колесо: поднял чашку", fortune_bag: "колесо: открыл сумку", raid_start: "захват: бой", raid_attack: "захват: удар", raid_flee: "захват: ушёл",
   fight_start: "начал бой", fight_claim: "забрал награду боя", fight_flee: "сбежал из боя", task: "задание", location_claim: "награда локации",
   yard_pick: "находка во дворе", buy: "покупка", exchange: "обмен", use: "использовал", equip: "надел", unequip: "снял",
   clan_create: "создал клан", clan_join: "заявка в клан", clan_leave: "вышел из клана", clan_kick: "исключил из клана", clan_transfer: "передал лидерство", stash_wish: "попросил нычки", stash_gift: "отправил нычку", stash_accept: "принял нычки", clan_edit: "изменил клан",
@@ -140,10 +140,10 @@ type View =
   | { tab: "stats"; sub: StatsSub }
   | { tab: "log"; sub: "actions" | "admins"; q: ActionsQuery; key: string }
   | { tab: "costs" };
-type LiveSub = "works" | "news" | "tosya" | "bosses" | "events" | "exchange" | "fortune";
+type LiveSub = "works" | "news" | "tosya" | "bosses" | "events" | "exchange" | "fortune" | "monthly";
 type StatsSub = "funnel" | "items" | "actions";
 const LIVE: [LiveSub, string, string][] = [
-  ["works", "🛠", "Тех. работы"], ["news", "📣", "Рассылка"], ["tosya", "🥟", "Тося"], ["bosses", "👹", "Боссы"], ["events", "🎉", "События"], ["exchange", "💱", "Обменник"], ["fortune", "🎡", "Колесо удачи"],
+  ["works", "🛠", "Тех. работы"], ["news", "📣", "Рассылка"], ["tosya", "🥟", "Тося"], ["bosses", "👹", "Боссы"], ["events", "🎉", "События"], ["exchange", "💱", "Обменник"], ["fortune", "🎡", "Колесо удачи"], ["monthly", "📅", "Делюги"],
 ];
 const STATS: [StatsSub, string, string][] = [["funnel", "🧭", "Воронка новичков"], ["items", "📦", "Предметы у игроков"], ["actions", "⚡", "Действия за 24 ч"]];
 const NAV: [View["tab"], string, string][] = [["dash", "📊", "Обзор"], ["live", "🎮", "Игра"], ["players", "👥", "Игроки"], ["stats", "📈", "Аналитика"], ["log", "📜", "Журнал"], ["costs", "💸", "Расходы"]];
@@ -606,6 +606,7 @@ function Live({ sub }: { sub: LiveSub }) {
       {sub === "events" && <Events />}
       {sub === "exchange" && <ExchangeEvent />}
       {sub === "fortune" && <FortuneAdmin />}
+      {sub === "monthly" && <MonthlyAdmin />}
     </>
   );
 }
@@ -1115,6 +1116,29 @@ function Costs() {
         </div>
       </Box>
     </>
+  );
+}
+
+/** «От звонка до звонка»: the month's tasks for the players instead of «Задания дня», or only for the admins */
+function MonthlyAdmin() {
+  const m = useLoad(() => admin<{ on: boolean }>("monthly"), []);
+  const [busy, setBusy] = useState(false);
+  const set = async (on: boolean, ask: string) => {
+    if (!confirm(ask)) return;
+    setBusy(true);
+    try { await admin("monthly_set", { on }); m.reload(); } catch (e) { alert((e as Error).message); }
+    setBusy(false);
+  };
+  const d = m.data;
+  return (
+    <Box title={`📅 Делюги «От звонка до звонка» — ${!d ? "…" : d.on ? "у всех игроков" : "только у админов"}`}>
+      <p className="muted tiny">Делюга в день, одна для всех, на весь месяц. Пока выключено — делюги видят только админы (по Telegram id), а у игроков старые «Задания дня». Включайте 1-го числа: дни до включения в этом месяце считаются пропущенными и выкупаются за 1 SOL.</p>
+      <div className="row" style={{ gap: 8, marginTop: 8 }}>
+        {d?.on
+          ? <button className="adm-btn ghost" disabled={busy} onClick={() => set(false, "Вернуть игрокам «Задания дня»?")}>Вернуть «Задания дня»</button>
+          : <button className="adm-btn" disabled={busy || !d} onClick={() => set(true, "Включить делюги всем игрокам вместо «Заданий дня»?")}>Включить всем игрокам</button>}
+      </div>
+    </Box>
   );
 }
 

@@ -176,7 +176,7 @@ export function InventoryFull() {
                 </button>
               )}
               {open.use && (
-                <button className="btn green block" disabled={busy === "use" || qtyOf(open.id) < 1} onClick={() => act("use", { itemId: open.id }, `+${open.use?.energy} энергии`)}>
+                <button className="btn green block" disabled={busy === "use" || qtyOf(open.id) < 1} onClick={() => act("use", { itemId: open.id }, open.use?.energyFull ? "Энергия до полной" : `+${open.use?.energy} энергии`)}>
                   Использовать
                 </button>
               )}

@@ -515,6 +515,19 @@ export async function fortuneSet(db: Db, adminTg: number, body: Record<string, u
   return fortuneAdmin(db);
 }
 
+/** «От звонка до звонка»: the month's tasks for the players instead of the daily quests (the admins see them always) */
+export async function monthlyAdmin(db: Db) {
+  return { on: (await loadConfig(db)).monthly.on };
+}
+export async function monthlySet(db: Db, adminTg: number, body: Record<string, unknown>) {
+  if (typeof body.on === "boolean") {
+    await db.query("INSERT INTO config (key, value) VALUES ('monthly', $1) ON CONFLICT (key) DO UPDATE SET value = excluded.value", [JSON.stringify({ on: body.on })]);
+    resetConfigCache();
+  }
+  console.info(JSON.stringify({ msg: "admin.monthly", adminTg, on: body.on }));
+  return monthlyAdmin(db);
+}
+
 /** «Технические работы»: closes the game for everyone but the admins (http.ts maintenanceGate) */
 export async function maintenance(db: Db) {
   return (await loadConfig(db)).maintenance;

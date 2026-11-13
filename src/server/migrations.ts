@@ -1410,4 +1410,17 @@ UPDATE clans c SET raid_xp = COALESCE((
   SELECT SUM(y.xp) FROM raid_yards r JOIN (VALUES ('garages',19300),('promzona',27020),('rynok',34740),('panelki',42460),('center',50180)) AS y(id, xp) ON y.id = r.yard_id WHERE r.clan_id = c.id), 0);
 DELETE FROM raid_progress p USING raid_yards r WHERE r.clan_id = p.clan_id AND p.building_id LIKE r.yard_id || '-%';`,
   },
+  {
+    // «От звонка до звонка»: a task a day for the month — progress of the days, the closed days (done or bought out),
+    // the rewards taken and the chest
+    id: "v2-095-monthly",
+    sql: `CREATE TABLE IF NOT EXISTS monthly_tasks (
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  month TEXT NOT NULL,
+  progress JSONB NOT NULL DEFAULT '{}'::jsonb,
+  closed JSONB NOT NULL DEFAULT '{}'::jsonb,
+  claimed JSONB NOT NULL DEFAULT '{}'::jsonb,
+  PRIMARY KEY (player_id, month)
+);`,
+  },
 ];

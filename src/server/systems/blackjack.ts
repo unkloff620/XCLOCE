@@ -12,6 +12,7 @@ import { schedule } from "./notify.ts";
 import { shuffled } from "./games.ts";
 import { addBjDaily, addGameWeekly } from "./minigame-extras.ts";
 import { questTick } from "./quests.ts";
+import { monthTick } from "./monthly.ts";
 import {
   BJ_BET, BJ_BET_MS, BJ_FREE, BJ_SHOW_MS, BJ_INS_MS, BJ_INS_PAY, bjInsurance, BJ_MAX_HANDS, BJ_RETURN, BJ_SEATS, BJ_SIDE_MAX, BJ_TITLES, BJ_TURN_MS, PP_PAY, T3_PAY,
   bjOutcome, canSplitCards, handValue, isBlackjack, perfectPairs, twentyOnePlus3,
@@ -180,6 +181,7 @@ async function finishRound(ctx: Ctx, t: TableRow) {
       // the achievements «Блэкджек!» and «Игрок за столом»
       if (h.outcome === "blackjack") await bump(ctx.q, seat.pid, "bjBlackjacks", 1);
       if (h.outcome === "blackjack" || h.outcome === "win") await bump(ctx.q, seat.pid, "bjWins", 1);
+      if (h.outcome === "blackjack" || h.outcome === "win") await monthTick(asCtx(ctx, seat.pid), "bj_win", 1);
       // «Блэкджек»: the biggest stake won (a free seat's hand is not a stake)
       if ((h.outcome === "blackjack" || h.outcome === "win") && !seat.free) await setMax(ctx.q, seat.pid, "bjBestBet", h.bet);
     }

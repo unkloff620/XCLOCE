@@ -16,6 +16,7 @@ import { haptic } from "./telegram.ts";
 import { clock } from "./format.ts";
 import { leftText } from "./event-banner.tsx";
 import { isPhoneMode, onPhoneModeChange } from "./phone-mode.ts";
+import { monthTaskOf } from "../content/monthly.ts";
 import { questById } from "../content/quests.ts";
 import { bossById } from "../content/bosses.ts";
 import { locationById } from "../content/locations.ts";
@@ -65,11 +66,35 @@ function Box({ title, icon, right, children }: { title: string; icon?: string; r
   );
 }
 
+/** «От звонка до звонка»: today's делюга and the days closed (the window — from the home menu) */
+function Monthly() {
+  const { state } = useGame();
+  const now = useNow();
+  const m = state?.monthly;
+  if (!m) return null;
+  const task = monthTaskOf(m.today);
+  const done = !!m.closed[m.today];
+  return (
+    <Box title="Делюга дня" icon="clock" right={<span className="wp-muted num">{clock(m.resetAt - now)}</span>}>
+      {task && (
+        <div className={`wp-quest ${done ? "done" : ""}`}>
+          <span className="wp-quest-t">{task.title}</span>
+          {done ? <span className="wp-ok">✓</span> : <span className="wp-muted num">{m.progress}/{task.target}</span>}
+          {!done && <i className="wp-bar" style={{ ["--p" as string]: `${Math.round((m.progress / task.target) * 100)}%` }} />}
+        </div>
+      )}
+      <div className="wp-quest"><span className="wp-quest-t">Закрыто дней</span><span className="wp-muted num">{m.closedN}/{m.days}</span></div>
+      {m.claimable && <span className="wp-muted">Есть награда — открой «Делюги» дома</span>}
+    </Box>
+  );
+}
+
 function Quests() {
   const { state, act, busy } = useGame();
   const now = useNow();
   const q = state?.quests;
   if (!q) return null;
+  if (state?.monthly) return <Monthly />;
   const left = q.list.filter((x) => !x.claimed).length;
   return (
     <Box title="Задания дня" icon="clock" right={<span className="wp-muted num">{clock(q.resetAt - now)}</span>}>

@@ -14,6 +14,7 @@ import { clock, full } from "../format.ts";
 import { BossPhoto } from "./boss-parts.tsx";
 import { DailyWindow } from "./daily.tsx";
 import { QuestsWindow } from "./quests.tsx";
+import { MonthlyWindow } from "./monthly.tsx";
 import { tutorialPending } from "../tutorial.tsx";
 import { BonusLine } from "./house.tsx";
 import { RoomEditor, previewPieces, roomDraftOf, type RoomDraft, type RoomTab } from "./decorator.tsx";
@@ -150,7 +151,9 @@ export function HomeScreen() {
   };
   const f = state.fight;
   const fb = f ? bossById(f.bossId)! : null;
-  const menuAlert = state.daily.available || state.quests.claimable || state.prizes.length > 0;
+  const mon = state.monthly;
+  const questsAlert = mon ? mon.claimable : state.quests.claimable;
+  const menuAlert = state.daily.available || questsAlert || state.prizes.length > 0;
   const openWardrobe = () => {
     setDecorating(null);
     setStyling({ look: { ...state.look.body }, worn: { ...state.look.equipped } });
@@ -279,10 +282,10 @@ export function HomeScreen() {
                 {state.daily.available && <i className="side-dot" />}
                 {state.daily.streak > 1 && <span className="side-streak num" title={`Серия входов: ${state.daily.streak} дн.`}><Icon name="fire" size={13} />{state.daily.streak}</span>}
               </button>
-              <button className={`icon-btn-art ${state.quests.claimable ? "glow" : ""}`} style={{ ["--c" as string]: "#3ddc84" }} onClick={() => setQuests(true)} aria-label="Задания дня" title="Задания дня">
+              <button className={`icon-btn-art ${questsAlert ? "glow" : ""}`} style={{ ["--c" as string]: "#3ddc84" }} onClick={() => setQuests(true)} aria-label={mon ? "Делюги" : "Задания дня"} title={mon ? "Делюги «От звонка до звонка»" : "Задания дня"}>
                 <Icon name="map" size={58} />
-                {state.quests.claimable && <i className="side-dot" />}
-                <span className="side-count num">{state.quests.list.filter((x) => x.claimed).length}/{state.quests.list.length}</span>
+                {(questsAlert || (mon?.todayOpen ?? false)) && <i className="side-dot" />}
+                <span className="side-count num">{mon ? `${mon.closedN}/${mon.days}` : `${state.quests.list.filter((x) => x.claimed).length}/${state.quests.list.length}`}</span>
               </button>
               <button className="icon-btn-art" style={{ ["--c" as string]: "#3fd2ff" }} onClick={() => openRoomEditor("desk")} aria-label="Обстановка" title="Обстановка">
                 <Icon name="bolt" size={58} />
@@ -340,7 +343,7 @@ export function HomeScreen() {
       {newsOpen && <UpdatesWindow list={todayNews} onClose={() => setNewsOpen(false)} />}
       {wish && <StashWishWindow onClose={() => setWish(false)} />}
       {messages && <MessagesWindow onClose={() => setMessages(false)} />}
-      {quests && <QuestsWindow onClose={() => setQuests(false)} />}
+      {quests && (mon ? <MonthlyWindow onClose={() => setQuests(false)} /> : <QuestsWindow onClose={() => setQuests(false)} />)}
       {decorating && <RoomEditor draft={decorating} setDraft={setDecorating} tab={roomTab} setTab={setRoomTab}
         onClose={() => { setDecorating(null); setStyledBefore(null); }}
         onBack={() => { setDecorating(null); if (styledBefore) setStyling(styledBefore); setStyledBefore(null); }} />}

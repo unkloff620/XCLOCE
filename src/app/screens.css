@@ -6311,3 +6311,55 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .rd-times { position: absolute; right: 8px; top: 8px; padding: 2px 8px; border-radius: 999px; background: rgba(0, 0, 0, 0.65); color: var(--gold); font-size: 12px; font-weight: 800; }
 .rd-rewards b { display: block; color: #1a0f05; font-size: 14px; font-weight: 900; }
 .rd-rew-note { display: block; margin-top: 2px; font-size: 10.5px; line-height: 1.25; color: #5a4128; text-align: center; padding: 0 10px; }
+
+/* ── «От звонка до звонка»: the month on a sheet of paper, today's делюга under it, the rewards on wooden planks ── */
+.mt-wrap { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.mt-cal { background: url(/assets/ui/paper-tile.webp) center / cover, #e3d0ac; border: 2.5px solid #3a2718; border-radius: 10px; padding: 0 0 8px; color: #3a2718;
+  box-shadow: 0 4px 0 #150d07, 0 8px 16px rgba(0, 0, 0, 0.35); overflow: hidden; }
+.mt-cal-h { background: linear-gradient(180deg, #7cc04a, #4f8f2a); color: #fff; text-align: center; font-size: 20px; padding: 6px 8px 5px; letter-spacing: 0.04em;
+  text-shadow: 0 2px 0 #26450f; border-bottom: 2.5px solid #2b4d14; text-transform: uppercase; }
+.mt-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0; padding: 4px 6px 0; }
+.mt-dow { text-align: center; font-size: 10.5px; font-weight: 800; color: #6d5a43; padding: 4px 0; border-bottom: 1.5px solid rgba(58, 39, 24, 0.25); }
+.mt-day { position: relative; aspect-ratio: 1 / 0.82; display: grid; place-items: center; font-size: 19px; font-weight: 900; color: #5a4632; background: none; border: 0;
+  border-right: 1.5px solid rgba(58, 39, 24, 0.18); border-bottom: 1.5px solid rgba(58, 39, 24, 0.18); padding: 0; cursor: pointer; font-family: inherit; }
+.mt-day:nth-child(7n + 7) { border-right: 0; }
+.mt-day.other { color: rgba(90, 70, 50, 0.35); cursor: default; }
+.mt-day.today { color: #d8261c; }
+.mt-day.missed { color: rgba(90, 70, 50, 0.5); }
+.mt-day.missed::after { content: ""; position: absolute; left: 22%; right: 22%; top: 50%; height: 2px; background: rgba(216, 38, 28, 0.55); transform: rotate(-18deg); }
+.mt-day.sel { background: rgba(255, 204, 51, 0.35); box-shadow: inset 0 0 0 2px #c98a1a; border-radius: 6px; }
+.mt-day.closed { color: rgba(90, 70, 50, 0.55); }
+.mt-check { position: absolute; inset: 8% 8% 8% 14%; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 32'%3E%3Cpath d='M4 17 L14 27 L36 4' fill='none' stroke='%23123d12' stroke-width='9' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M4 17 L14 27 L36 4' fill='none' stroke='%2341c23a' stroke-width='5.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35)); }
+.mt-day.bought .mt-check { filter: hue-rotate(-75deg) saturate(1.4) drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35)); }
+.mt-check.big { position: static; display: block; width: 44px; height: 36px; flex: none; }
+.mt-task { position: relative; background: url(/assets/ui/paper-tile.webp) center / cover, #e3d0ac; border: 2.5px solid #3a2718; border-radius: 10px; padding: 26px 12px 12px; color: #3a2718;
+  box-shadow: 0 4px 0 #150d07; margin-top: 10px; }
+.mt-ribbon { position: absolute; left: 50%; top: -12px; transform: translateX(-50%) rotate(-1deg); white-space: nowrap; background: linear-gradient(180deg, #e8433a, #b9221b);
+  color: #fff; font-size: 15px; padding: 4px 22px; text-transform: uppercase; text-shadow: 0 2px 0 #6e0f0b; box-shadow: 0 3px 0 #6e0f0b;
+  clip-path: polygon(0 0, 100% 0, 96% 50%, 100% 100%, 0 100%, 4% 50%); }
+.mt-task-body { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.mt-task-body > b { font-size: 15px; line-height: 1.25; }
+.mt-task-body .quest-bar { align-self: stretch; }
+.mt-task-body .tiny.muted { color: #6d5a43; }
+.mt-task-body .btn { display: inline-flex; align-items: center; gap: 4px; }
+.mt-ok { font-weight: 800; color: #2f7d1d; }
+.mt-strike { text-decoration: line-through; text-decoration-color: rgba(216, 38, 28, 0.6); opacity: 0.75; }
+.mt-rewards { display: flex; flex-direction: column; gap: 8px; }
+.mt-sign { align-self: center; background: url(/assets/ui/paper-tile.webp) center / cover, #e3d0ac; color: #2f7d1d; font-size: 22px; text-transform: uppercase; letter-spacing: 0.05em;
+  padding: 3px 26px; border: 2.5px solid #3a2718; border-radius: 6px; box-shadow: 0 4px 0 #150d07; text-shadow: 0 1px 0 #fff8; }
+.mt-plank { display: flex; flex-direction: column; gap: 6px; padding: 8px 12px; border-radius: 6px; color: #ffe6b0;
+  background: linear-gradient(180deg, rgba(255, 236, 200, 0.1), rgba(0, 0, 0, 0.25)), var(--tx-dark), #6b4426; border: 2.5px solid #150d07;
+  box-shadow: inset 0 1px 0 rgba(255, 230, 190, 0.2), 0 4px 0 #150d07, 0 6px 12px rgba(0, 0, 0, 0.35); }
+.mt-plank.ready { border-color: #ffcc33; box-shadow: inset 0 1px 0 rgba(255, 230, 190, 0.2), 0 4px 0 #150d07, 0 0 18px rgba(255, 204, 51, 0.5); }
+.mt-plank-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 48px; }
+.mt-art { display: inline-flex; align-items: center; gap: 8px; }
+.mt-art b { font-size: 17px; color: #fff; text-shadow: 0 2px 0 #000; }
+.mt-need { font-size: 11px; font-weight: 800; text-transform: uppercase; text-align: center; line-height: 1.15; padding: 4px 10px; border: 2px solid #ffe6b0; border-radius: 6px;
+  color: #ffe6b0; background: rgba(0, 0, 0, 0.25); }
+.mt-need b { font-size: 13px; }
+.mt-chest-in { display: flex; flex-wrap: wrap; gap: 4px 10px; color: #f2d9ad; }
+.mt-chest-in span { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+.mt-case-chip { display: inline-flex; align-items: center; gap: 2px; }
+.mt-plank .tiny.muted { color: #cdb497; }

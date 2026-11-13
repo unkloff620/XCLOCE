@@ -52,6 +52,8 @@ export interface Config {
   fortune: { on: boolean };
   /** «Ходки» (content/raids.ts): shown to the players (the admins see it always, to check it before) */
   raids: { on: boolean };
+  /** «От звонка до звонка» (content/monthly.ts): instead of the daily quests for the players (the admins see it always) */
+  monthly: { on: boolean };
 }
 
 export function defaultConfig(): Config {
@@ -76,6 +78,7 @@ export function defaultConfig(): Config {
     tosya: { mode: "auto", at: 0 },
     fortune: { on: true },
     raids: { on: false },
+    monthly: { on: false },
   };
 }
 
@@ -85,6 +88,7 @@ const KEYS: Record<string, (c: Config, v: unknown) => void> = {
   tosya: (c, v) => { c.tosya = cleanTosyaMode(v); },
   fortune: (c, v) => { c.fortune = { on: (v as { on?: unknown } | null)?.on === true }; },
   raids: (c, v) => { c.raids = { on: (v as { on?: unknown } | null)?.on === true }; },
+  monthly: (c, v) => { c.monthly = { on: (v as { on?: unknown } | null)?.on === true }; },
   maintenance: (c, v) => {
     const m = (v ?? {}) as { on?: unknown; text?: unknown };
     c.maintenance = { on: m.on === true, text: typeof m.text === "string" && m.text.trim() ? m.text.trim().slice(0, 300) : MAINTENANCE_TEXT };

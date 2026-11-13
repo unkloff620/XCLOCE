@@ -55,6 +55,13 @@ export interface GameState {
     claimable: boolean;
     resetAt: number;
   };
+  /** «От звонка до звонка» (content/monthly.ts): null — the daily quests are on instead */
+  monthly: {
+    month: string; firstDow: number; days: number; today: number; progress: number;
+    closed: Record<string, "done" | "bought">; closedN: number;
+    tiers: { id: string; need: number; ready: boolean; got: Granted | null }[];
+    skipPrice: number; resetAt: number; claimable: boolean; todayOpen: boolean;
+  } | null;
   /** Telegram reminders: on — the player's switch; blocked — the bot may not write to them yet */
   notify: { on: boolean; blocked: boolean; available: boolean };
   /** weekly rating prizes waiting to be collected */

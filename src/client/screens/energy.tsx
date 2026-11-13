@@ -21,7 +21,7 @@ export function EnergyWindow({ onClose }: { onClose: () => void }) {
   }, []);
   if (!state) return null;
   const e = liveEnergy(state, now);
-  const drinks = ITEMS.filter((i) => i.use?.energy && invQty(state, i.id) > 0);
+  const drinks = ITEMS.filter((i) => (i.use?.energy || i.use?.energyFull) && invQty(state, i.id) > 0);
   const buy = async (o: Offer) => {
     haptic.tap();
     await act("buy", { offerId: o.id, idem: crypto.randomUUID() }, `+${o.give.energy} энергии`);
@@ -50,9 +50,9 @@ export function EnergyWindow({ onClose }: { onClose: () => void }) {
                 <ItemArt id={d.id} size={38} />
                 <div className="grow">
                   <b className="small">{d.name}</b>
-                  <div className="tiny muted">+{d.use!.energy} · есть {invQty(state, d.id)}</div>
+                  <div className="tiny muted">{d.use!.energyFull ? "до полной" : `+${d.use!.energy}`} · есть {invQty(state, d.id)}</div>
                 </div>
-                <button className="btn sm green" disabled={busy === "use"} onClick={() => act("use", { itemId: d.id }, `+${d.use!.energy} энергии`)}>Выпить</button>
+                <button className="btn sm green" disabled={busy === "use"} onClick={() => act("use", { itemId: d.id }, d.use!.energyFull ? "Энергия до полной" : `+${d.use!.energy} энергии`)}>Выпить</button>
               </div>
             ))}
           </div>

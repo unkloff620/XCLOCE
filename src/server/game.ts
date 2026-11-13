@@ -24,6 +24,7 @@ import * as craft from "./systems/craft.ts";
 import * as bj from "./systems/blackjack.ts";
 import * as home from "./systems/home.ts";
 import * as quests from "./systems/quests.ts";
+import * as monthly from "./systems/monthly.ts";
 import * as notify from "./systems/notify.ts";
 import * as rating from "./systems/rating.ts";
 import * as extras2 from "./systems/minigame-extras.ts";
@@ -98,7 +99,7 @@ export const ACTIONS = [
   "equipment_upgrade", "talent_up", "talent_reset", "talent_auto", "room_buy", "room_set", "look_set", "decor_set", "decor_save", "piece_buy", "help_seen", "starter_gift",
   "quest_claim", "quest_chest", "notify_set", "achievement_claim", "achievement_claim_all", "ach_box_open", "prize_claim", "clan_edit",
   "game_start", "zonk_move", "zonk_give_up", "zonk_hints", "zonk_choice", "roach_squash", "pigeon_scare", "poker_play", "poker_swap", "poker_stand", "bj_open", "bj_invite", "bj_join", "bj_decline", "bj_leave", "bj_bet", "bj_unbet", "bj_insure", "bj_move", "upgrade", "up_sell", "up_take", "craft_put", "craft_take", "craft_make", "craft_box_buy", "dealer_buy", "craft_split", "dealer_talk", "part_buy", "shave", "tosya_buy", "newbie_claim", "heist_pick", "heist_rush", "heist_open", "heist_auto", "auto_set", "craft_preset_save", "craft_preset_apply", "craft_preset_delete", "fortune_buy", "fortune_spin", "fortune_cups", "fortune_cup_pick", "fortune_bag", "raid_start", "raid_attack", "raid_flee",
-  "clan_cancel", "clan_accept", "clan_reject", "clan_boss_hit", "duel_create", "duel_answer", "duel_play", "stash_collect", "stash_wish", "stash_gift", "stash_accept", "social_pump", "social_fight", "social_spit", "notes_read",
+  "clan_cancel", "clan_accept", "clan_reject", "clan_boss_hit", "duel_create", "duel_answer", "duel_play", "stash_collect", "stash_wish", "stash_gift", "stash_accept", "social_pump", "social_fight", "social_spit", "notes_read", "month_buy", "month_claim",
 ] as const;
 export type ActionType = (typeof ACTIONS)[number];
 
@@ -124,6 +125,7 @@ async function afterAction(ctx: Ctx, type: ActionType, result: unknown) {
     }
     case "task": {
       await quests.questTick(ctx, "steps", 1);
+      if (r.stash) await monthly.monthTick(ctx, "stash", 1);
       await quests.questTick(ctx, "energy", taskById(String(r.taskId))?.task.energy ?? 0);
       return;
     }
@@ -151,7 +153,11 @@ async function afterAction(ctx: Ctx, type: ActionType, result: unknown) {
     }
     case "social_pump":
     case "social_fight":
-    case "social_spit": return quests.questTick(ctx, "social", 1);
+    case "social_spit": {
+      await monthly.monthTick(ctx, type === "social_pump" ? "pump" : type === "social_fight" ? "fight" : "spit", 1);
+      return quests.questTick(ctx, "social", 1);
+    }
+    case "craft_make": return monthly.monthTick(ctx, "craft", 1);
     case "clan_create": return counters.setMax(ctx.q, ctx.pid, "clanCreated", 1);
     case "slots_spin": return quests.questTick(ctx, "slots", 1);
     case "daily_claim": return notify.scheduleStreak(ctx, Number(r.streak) || 1);
@@ -215,6 +221,8 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "clan_transfer": return clans.transferLeader(ctx, num(body.playerId, "playerId"));
     case "quest_claim": return quests.claimQuest(ctx, str(body.id, "id", 40));
     case "quest_chest": return quests.openQuestChest(ctx);
+    case "month_buy": return monthly.buyMonthDay(ctx, num(body.day, "day"));
+    case "month_claim": return monthly.claimMonthTier(ctx, str(body.id, "id", 10));
     case "notify_set": return notify.setNotify(ctx, body.on === true, body.granted === true);
     case "achievement_claim": return achievements.claimAchievement(ctx, str(body.id, "id", 40));
     case "achievement_claim_all": return achievements.claimAllAchievements(ctx);
