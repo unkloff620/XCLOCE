@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState, type TouchEvent } from "react
 import { usePageReady } from "../route-loader.tsx";
 import { tasksReady, useGame, useNow } from "../store.tsx";
 import { api } from "../api.ts";
-import { YARD_SPOTS } from "../art/scenes.tsx";
+import { yardSpot } from "../art/scenes.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { YARD_DROPS, yardTime } from "../../content/yard.ts";
 import { craftById } from "../../content/craft.ts";
@@ -34,7 +34,7 @@ export function YardScreen() {
   usePageReady(!!data);
   // picked finds vanish at once (several can be picked in a row); what each gave floats up where it lay, like a pigeon's roubles
   const [gone, setGone] = useState<Set<number>>(() => new Set());
-  const [gains, setGains] = useState<{ key: number; x: number; y: number; r: Granted }[]>([]);
+  const [gains, setGains] = useState<{ key: number; page: -1 | 0 | 1; x: number; y: number; r: Granted }[]>([]);
   const tod = yardTime(now);
   // the exchanger works one Moscow day out of three: the kiosk is open (the dealer smokes inside) or shut
   const exOpen = exchangeWindow(now, state?.exchangeSchedule).open;
@@ -82,16 +82,48 @@ export function YardScreen() {
     if (data?.nextAt && now >= data.nextAt + 500) void load();
   }, [now, data?.nextAt, load]);
 
-  const pick = async (id: number, at: { x: number; y: number }) => {
+  const pick = async (id: number, at: { page: -1 | 0 | 1; x: number; y: number }) => {
     if (gone.has(id)) return;
     haptic.tap();
     setGone((g) => new Set(g).add(id));
     const r = await act<{ name: string; reward: Granted; yard: YardData }>("yard_pick", { itemId: id });
     if (r) {
-      setGains((l) => [...l.slice(-5), { key: Date.now() + id, x: at.x, y: at.y, r: r.reward }]);
+      setGains((l) => [...l.slice(-5), { key: Date.now() + id, page: at.page, x: at.x, y: at.y, r: r.reward }]);
       setData(r.yard);
     } else setGone((g) => { const n = new Set(g); n.delete(id); return n; });
   };
+
+  // the finds lie on all three screens of the yard (art/scenes.tsx yardSpot); the gains pop up where they were picked
+  const left = data?.items.filter((it) => !gone.has(it.id)) ?? [];
+  const finds = (pg: -1 | 0 | 1) => (
+    <>
+      {gains.filter((g) => g.page === pg).map((g) => (
+        <span key={g.key} className="pg-gain yard-gain num" style={{ left: `${g.x}%`, top: `${g.y}%` }} onAnimationEnd={() => setGains((l) => l.filter((x) => x.key !== g.key))}>
+          <GainLine r={g.r} size={20} times={false} />
+        </span>
+      ))}
+      {left.map((it) => ({ it, spot: yardSpot(it.slot) })).filter(({ spot }) => spot.page === pg).map(({ it, spot }) => {
+        // a craft part lies there by its own id
+        const part = it.drop.startsWith("part-") ? craftById(it.drop) : null;
+        const drop = part ? { name: part.name, icon: part.id, weight: part.rarity === "common" ? 22 : 3 } : YARD_DROPS.find((d) => d.id === it.drop);
+        return (
+          <button
+            key={it.id}
+            className={`yard-item ${drop && drop.weight <= 3 ? "rare" : ""}`}
+            style={{ left: `${spot.x}%`, top: `${spot.y}%`, ["--r" as string]: `${spot.r}deg`, ["--d" as string]: `${(it.slot % 5) * -0.45}s` }}
+            onClick={() => pick(it.id, spot)}
+            tabIndex={page === pg ? 0 : -1}
+            aria-label={drop?.name ?? "предмет"}
+          >
+            <ItemArt id={drop?.icon ?? "coins"} size={52} />
+          </button>
+        );
+      })}
+    </>
+  );
+  // finds on the screens to the left / to the right of this one: a count on the arrow
+  const onLeft = left.filter((it) => yardSpot(it.slot).page < page).length;
+  const onRight = left.filter((it) => yardSpot(it.slot).page > page).length;
 
   return (
     <div className="fit-page">
@@ -149,28 +181,7 @@ export function YardScreen() {
           <YardUpgrader />
           {/* pigeons on the ground in front of the machines (low, clear of the finds) */}
           <Pigeons area={{ x0: 8, x1: 92, y0: 3, y1: 9 }} n={2} />
-          {gains.map((g) => (
-            <span key={g.key} className="pg-gain yard-gain num" style={{ left: `${g.x}%`, top: `${g.y}%` }} onAnimationEnd={() => setGains((l) => l.filter((x) => x.key !== g.key))}>
-              <GainLine r={g.r} size={20} times={false} />
-            </span>
-          ))}
-          {data?.items.filter((it) => !gone.has(it.id)).map((it) => {
-            const spot = YARD_SPOTS[it.slot % YARD_SPOTS.length];
-            // a craft part lies there by its own id
-            const part = it.drop.startsWith("part-") ? craftById(it.drop) : null;
-            const drop = part ? { name: part.name, icon: part.id, weight: part.rarity === "common" ? 22 : 3 } : YARD_DROPS.find((d) => d.id === it.drop);
-            return (
-              <button
-                key={it.id}
-                className={`yard-item ${drop && drop.weight <= 3 ? "rare" : ""}`}
-                style={{ left: `${spot.x}%`, top: `${spot.y}%`, ["--r" as string]: `${spot.r}deg`, ["--d" as string]: `${(it.slot % 5) * -0.45}s` }}
-                onClick={() => pick(it.id, spot)}
-                aria-label={drop?.name ?? "предмет"}
-              >
-                <ItemArt id={drop?.icon ?? "coins"} size={52} />
-              </button>
-            );
-          })}
+          {finds(0)}
         </div>
         {/* the back yard on the left (tools/scene/build-yard0.py): the manhole of «Колесо удачи» */}
         <div className="yard-stage yard-pan yard-stage0" style={pan(-1)} aria-hidden={page !== -1}>
@@ -179,6 +190,7 @@ export function YardScreen() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="yard-bg" src={tod === "night" ? "/assets/yard/yard0-bg-dark.webp" : "/assets/yard/yard0-bg.webp"} alt="" draggable={false} />
           <span className="yard-tint" aria-hidden="true" />
+          {finds(-1)}
           {/* «Колесо удачи»: a manhole on the ground (the admins see it before the players) */}
           {state?.fortune?.on && (
             <Link href="/yard/fortune" className="yard-obj yard-fortune" aria-label="Колесо удачи" title="Колесо удачи" tabIndex={page === -1 ? 0 : -1}>
@@ -198,12 +210,13 @@ export function YardScreen() {
           <span className="yard-tint" aria-hidden="true" />
           <Pigeons area={{ x0: 55, x1: 94, y0: 6, y1: 22 }} n={3} first={2} />
           {/* the exchange kiosk: its own picture over the yard (a button) */}
+          {finds(1)}
           <Link href="/exchange" className={`yard-obj yard-kiosk kiosk-live ${exOpen ? "" : "closed"}`} aria-label={exOpen ? "Обменник" : "Обменник (закрыт)"} title={exOpen ? "Обменник" : "Обменник закрыт"} tabIndex={page === 1 ? 0 : -1}>
             <KioskArt open={exOpen} night={tod === "night"} />
           </Link>
         </div>
-        {page > -1 && <button type="button" className="yard-pager prev" onClick={() => turn(page - 1)} aria-label={page === 0 ? "Задний двор" : "Назад во двор"}>‹</button>}
-        {page < 1 && <button type="button" className="yard-pager next" onClick={() => turn(page + 1)} aria-label={page === 0 ? "Дальше по двору" : "Назад во двор"}>›</button>}
+        {page > -1 && <button type="button" className="yard-pager prev" onClick={() => turn(page - 1)} aria-label={page === 0 ? "Задний двор" : "Назад во двор"}>‹{onLeft > 0 && <span className="yard-pager-n num">{onLeft}</span>}</button>}
+        {page < 1 && <button type="button" className="yard-pager next" onClick={() => turn(page + 1)} aria-label={page === 0 ? "Дальше по двору" : "Назад во двор"}>›{onRight > 0 && <span className="yard-pager-n num">{onRight}</span>}</button>}
         <div className="yard-timer">
           {!data ? "…" : data.nextAt ? <>Следующая находка через <b className="num">{clock(data.nextAt - now)}</b></> : <>Двор полон — собери, чтобы появилось новое</>}
         </div>

@@ -22,6 +22,28 @@ export const YARD_SPOTS = [
   { x: 78, y: 77, r: -8 }, // clear of the «Игроки» tab on the right
   { x: 56, y: 73, r: 12 },
 ];
+/** the back yard on the left (public/assets/yard/yard0-bg.webp): on the tiles, clear of the manhole (x 27–73%, y 78–90%) and the puddles */
+export const YARD0_SPOTS = [
+  { x: 14, y: 75, r: 10 },
+  { x: 84, y: 77, r: -12 },
+  { x: 50, y: 72, r: 6 },
+  { x: 86, y: 87, r: 14 },
+  { x: 20, y: 82, r: -6 },
+];
+/** the kiosk's side on the right (public/assets/yard/yard2-bg.webp): right of the kiosk (x 1–53%), clear of the puddles */
+export const YARD2_SPOTS = [
+  { x: 72, y: 76, r: -10 },
+  { x: 62, y: 86, r: 12 },
+  { x: 88, y: 79, r: 8 },
+  { x: 13, y: 85, r: -14 },
+  { x: 80, y: 71, r: 4 },
+];
+/** a find's place: the finds take the three screens of the yard in turn (the court, the back yard, the kiosk's side) */
+export function yardSpot(slot: number): { page: -1 | 0 | 1; x: number; y: number; r: number } {
+  const page = ([0, -1, 1] as const)[slot % 3];
+  const list = page === 0 ? YARD_SPOTS : page === -1 ? YARD0_SPOTS : YARD2_SPOTS;
+  return { page, ...list[Math.floor(slot / 3) % list.length] };
+}
 
 /** Silhouette used until a boss photo is provided. */
 export function BossSilhouette({ accent }: { accent: string }) {
