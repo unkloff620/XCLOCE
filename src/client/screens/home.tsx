@@ -247,8 +247,8 @@ export function HomeScreen() {
           </button>
           {/* «Новичок»: Баба Зина's tasks for the first 3 days */}
           <NewbieButton />
-          {/* «Тося» is here: his pies (screens/tosya.tsx) */}
-          {state.tosya && (
+          {/* «Тося» is here: his pies (screens/tosya.tsx); every pie bought (next: null) — the button goes away */}
+          {state.tosya && state.tosya.next !== null && (
             <Link href="/event/tosya" className="menu-toggle event-toggle" aria-label="Ивент: Тося" title={tosyaLookById(state.tosya.look).w.brought}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={`/assets/tosya/portrait${tosyaLookById(state.tosya.look).art}.webp?v=2`} alt="" draggable={false} />

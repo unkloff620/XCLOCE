@@ -142,7 +142,7 @@ function Events() {
   const now = useNow();
   const rows: { key: string; href: string; text: React.ReactNode }[] = [];
   if (state?.heist) rows.push({ key: "heist", href: "/event/heist", text: <>Взлом{state.heist.on && state.heist.endsAt ? <> · ещё {leftText(state.heist.endsAt - now)}</> : " · довскрыть ящики"} · ящиков {state.heist.boxes.length}/{state.heist.slots}</> });
-  if (state?.tosya) rows.push({ key: "tosya", href: "/event/tosya", text: <>Тося приехал · ещё {leftText(state.tosya.endsAt - now)}</> });
+  if (state?.tosya && state.tosya.next !== null) rows.push({ key: "tosya", href: "/event/tosya", text: <>Тося приехал · ещё {leftText(state.tosya.endsAt - now)}</> });
   for (const b of EVENT_BOSSES.filter((x) => state?.eventBosses?.includes(x.id))) rows.push({ key: b.id, href: b.href, text: <>Ивент-босс: {b.name}</> });
   if (!rows.length) return null;
   return (
