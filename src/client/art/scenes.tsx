@@ -13,15 +13,14 @@ export function LocationScene({ scene }: { scene: string }) {
 
 /* ---------------- yard: where finds lie on the drawn yard (percent of the picture) ---------------- */
 export const YARD_SPOTS = [
-  // on the asphalt of the drawn yard (public/assets/yard/court-night.webp): in front of the table and the machines
-  // (table x 2–61%, y 58–83%; 777 and the upgrader x 60–100%, y 59–82%); r = how the thing lies
-  // high enough that the open leaders strip over the bottom bar never covers a find (the picture itself does not move)
-  { x: 14, y: 81, r: -14 },
-  { x: 36, y: 82, r: 9 },
-  { x: 57, y: 80, r: 18 },
-  { x: 78, y: 77, r: -8 }, // clear of the «Игроки» tab on the right
-  { x: 56, y: 73, r: 12 },
-];
+  // on the asphalt of the drawn yard (public/assets/yard/court-night.webp): below the table and the machines (they end at
+  // y ≈ 83%), on the ground in front of them, clear of the puddle (x 52–78%, y 88–93%); r = how the thing lies
+  { x: 12, y: 88, r: -14 },
+  { x: 34, y: 90, r: 9 },
+  { x: 86, y: 87, r: -8 },
+  { x: 46, y: 86, r: 12 },
+  { x: 22, y: 94, r: 18 },
+]
 /** the back yard on the left (public/assets/yard/yard0-bg.webp): on the tiles, clear of the manhole (x 27–73%, y 78–90%) and the puddles */
 export const YARD0_SPOTS = [
   { x: 14, y: 75, r: 10 },

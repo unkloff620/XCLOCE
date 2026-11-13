@@ -115,7 +115,7 @@ export function YardScreen() {
             tabIndex={page === pg ? 0 : -1}
             aria-label={drop?.name ?? "предмет"}
           >
-            <ItemArt id={drop?.icon ?? "coins"} size={52} />
+            <ItemArt id={drop?.icon ?? "coins"} size={38} />
           </button>
         );
       })}
