@@ -9,7 +9,7 @@ import { CRAFT_ALL } from "../../content/craft.ts";
 /** Items drawn by the artist (public/assets/items/<id>.webp, built by tools/items/build-items.py). */
 const RASTER_ITEMS = new Set([
   "fist", "mouse", "red-candle", "keyboard", "gpu", "rug-pull-gun",
-  "tee-white", "tee-pump", "hoodie-hodl", "jeans", "shorts-remote", "sneakers", "cap-moon", "slippers", "gold-chain", "bottle-komandate", "anchor-mugo", "hand-drum", "gloves-botsman", "pants-botsman", "boots-botsman", "coat-botsman",
+  "tee-white", "tee-pump", "hoodie-hodl", "jeans", "shorts-remote", "sneakers", "cap-moon", "slippers", "gold-chain", "bottle-komandate", "anchor-mugo", "hand-drum", "mug-coin", "gloves-botsman", "pants-botsman", "boots-botsman", "coat-botsman",
   "jacket-puffer", "pants-black", "sneakers-chunky", "tee-sailor", "cap-captain", "mask-diver", "teeth-necklace", "tee-actclose", "shorts-actclose", "badge-actclose", "jacket-komandate", "pants-komandate", "sneakers-komandate", "jacket-vadim", "pants-vadim", "shoes-vadim", "tie-vadim", "sweater-vostok", "pants-vostok", "headphones-vostok", "sneakers-black", "cigarette", "toothpick", "shades-gold", "chain-cuban", "mask-anon", "monocle-whale", "bruise-liq", "crown-cash", "ushanka-star", "helmet-miner", "bandana-hodl", "cigar", "teeth-grin", "grillz-diamond",
   "poker-chip", "energy-drink", "energy-pack", "energy-full", "energy-50", "energy-100", "energy-500", "lost-wallet", "bottle-cap", "flyer-passive", "spinner", "sticker-hodl", "statue-close", "trophy-sun", "santa-hat", "laser-eyes", "fortune-ticket", "keycap", "raid-flag-1", "raid-flag-2", "raid-flag-3", "raid-flag-4", "raid-flag-5",
   ...STASH_IDS,

@@ -6366,3 +6366,22 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 /* the yard's arrows: how many finds lie on the screens that way */
 .yard-pager .yard-pager-n { -webkit-text-stroke: 0; paint-order: normal; text-shadow: none; font-family: inherit; position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px; background: #e8b24a;
   color: #1a1206; font-size: 12px; font-weight: 900; line-height: 20px; text-align: center; box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.55), 0 0 10px rgba(255, 200, 90, 0.7); }
+
+/* «Кружка с монетой»: the hand sloshes the mug about the wrist; the steam's group turns back about the rim (rig.tsx Steam) */
+.rig-hand.held.slosh { animation: rig-slosh 3.8s ease-in-out infinite; }
+@keyframes rig-slosh { 0% { transform: rotate(-6.0deg); } 11% { transform: rotate(-13.0deg); } 24% { transform: rotate(-1.5deg); } 36% { transform: rotate(-12.0deg); } 49% { transform: rotate(-2.5deg); } 61% { transform: rotate(-10.5deg); } 73% { transform: rotate(-4.0deg); } 86% { transform: rotate(-7.5deg); } 100% { transform: rotate(-6.0deg); } }
+.rig-hand.held.slosh .rig-steam-keep { animation: rig-slosh-keep 3.8s ease-in-out infinite; }
+@keyframes rig-slosh-keep { 0% { transform: rotate(6.0deg); } 11% { transform: rotate(13.0deg); } 24% { transform: rotate(1.5deg); } 36% { transform: rotate(12.0deg); } 49% { transform: rotate(2.5deg); } 61% { transform: rotate(10.5deg); } 73% { transform: rotate(4.0deg); } 86% { transform: rotate(7.5deg); } 100% { transform: rotate(6.0deg); } }
+.rig-steam { opacity: 0; animation: rig-steam 3.2s ease-out infinite; }
+.rig-steam-1 { animation-delay: -0.64s; animation-duration: 3.5s; }
+.rig-steam-2 { animation-delay: -1.28s; }
+.rig-steam-3 { animation-delay: -1.92s; animation-duration: 3.6s; }
+.rig-steam-4 { animation-delay: -2.56s; animation-duration: 3s; }
+@keyframes rig-steam {
+  0% { opacity: 0; transform: translate(0, 10px) scale(0.55, 0.35) skewX(0deg); }
+  22% { opacity: 0.8; }
+  55% { opacity: 0.55; transform: translate(4px, -18px) scale(0.9, 0.85) skewX(-10deg); }
+  100% { opacity: 0; transform: translate(-6px, -52px) scale(1.35, 1.15) skewX(8deg); }
+}
+.rig.still .rig-hand.held.slosh { animation: none; transform: rotate(-6deg); } .rig.still .rig-steam-keep { animation: none; transform: rotate(6deg); }
+@media (prefers-reduced-motion: reduce) { .rig-hand.held.slosh { animation: none; transform: rotate(-6deg); } .rig-steam-keep { animation: none; transform: rotate(6deg); } .rig-steam { animation-duration: 6s; } }

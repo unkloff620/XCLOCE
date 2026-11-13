@@ -501,7 +501,7 @@ function HandFrames() {
     const sw = HELD_SWING[heldId];
     const base = skin !== SKIN_ORIGINAL ? `/assets/hero/skin-${skin}/held-${heldId}` : `/assets/hero/held/${heldId}`;
     return (
-      <g className={`rig-hand held ${sw ? "swing" : ""}`}>
+      <g className={`rig-hand held ${sw ? "swing" : ""} ${heldId in HELD_STEAM ? "slosh" : ""}`}>
         {/* what hangs from the fist (the anchor on its rope) swings behind the hand as a pendulum, a beat behind it */}
         {sw && (
           <g className="rig-pendulum" style={{ transformOrigin: `${sw.pivot[0]}px ${sw.pivot[1]}px`, transformBox: "view-box" }}>
@@ -511,6 +511,7 @@ function HandFrames() {
           </g>
         )}
         <image href={`${base}.webp?v=${ART_VER.heroPart}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />
+        {heldId in HELD_STEAM && <Steam at={HELD_STEAM[heldId]} />}
       </g>
     );
   }
@@ -531,6 +532,33 @@ function HandFrames() {
         <image key={k} className={`rig-hf rig-hf-${k}`} href={`${dir}/handR-f${k}.webp?v=${ART_VER.heroPart}`} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" />
       ))}
       <Ink part="handR" />
+    </g>
+  );
+}
+
+/** a hot drink in the hand: where its steam rises from (the middle of the rim, rig coordinates; tools/rig/make-mug.py) */
+const HELD_STEAM: Record<string, [number, number]> = { "mug-coin": [619, 708] };
+
+/**
+ * Steam over a hot mug: soft wisps rise, sway, widen and melt away, one after another (screens.css «rig-steam»).
+ * The hand sloshes the mug about the wrist; the steam's own group turns back the same angle about the rim, so the
+ * steam rides along with the mug but keeps rising straight up.
+ */
+function Steam({ at }: { at: [number, number] }) {
+  const uid = useId().replace(/:/g, "");
+  const [x, y] = at;
+  const wisp = (dx: number) => `M${x + dx} ${y} c -9 -12 9 -22 0 -34 s -9 -22 0 -34 s 7 -18 0 -28`;
+  return (
+    <g className="rig-steam-keep" style={{ transformOrigin: `${x}px ${y}px`, transformBox: "view-box" }} pointerEvents="none" aria-hidden="true">
+      <defs>
+        <filter id={`${uid}-b`} x="-1" y="-1" width="3" height="3"><feGaussianBlur stdDeviation="3.2" /></filter>
+      </defs>
+      <g filter={`url(#${uid}-b)`} fill="none" stroke="#fff" strokeLinecap="round">
+        {[-22, 2, 24, -8, 14].map((dx, i) => (
+          <path key={i} className={`rig-steam rig-steam-${i}`} d={wisp(dx)} strokeWidth={i % 2 ? 9 : 12}
+            style={{ transformOrigin: `${x + dx}px ${y}px`, transformBox: "view-box" }} />
+        ))}
+      </g>
     </g>
   );
 }

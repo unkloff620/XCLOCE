@@ -116,6 +116,7 @@ const WEARABLES: ItemDef[] = ([
   { id: "chain-cuban", name: "Золотая цепь", slot: "ACCESSORY", rarity: "legendary", description: "Толстая, как профит после халвинга. Звенит на весь двор.", sources: ["Ящик ништяков"] },
   // held in the left hand (slot «Кисть»): the boss's own weapon, worn for the look
   { id: "bottle-komandate", name: "Бутылка Командате", slot: "HAND", rarity: "epic", description: "Оружие Командате: горит, но не гаснет. Герой держит её в руке.", sources: ["Победа: Командате"] },
+  { id: "mug-coin", name: "Кружка с монетой", slot: "HAND", rarity: "epic", description: "Горячий кофе с утра — и к графику. Герой болтает кружкой, а из неё идёт пар.", sources: ["Магазин"] },
   { id: "hand-drum", name: "Нервные пальцы", slot: "HAND", rarity: "rare", description: "Пальцы сами отбивают ритм по колену, пока график грузится.", sources: ["Победа: Кедр"] },
   // Гаркуша's set: all in black (cut from the hero on tools/rig/source/wear); the jacket is worn open over the bare chest
   { id: "jacket-puffer", name: "Пуховик Гаркуши", slot: "SHIRT", rarity: "epic", description: "Чёрный, дутый, нараспашку — чтобы наколки было видно. Карманы под пачки.", sources: ["Победа: Гаркуша (Блатной)"] },

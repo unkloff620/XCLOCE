@@ -12,6 +12,12 @@ export const HELD_FIT: Record<string, { x: number; y: number; w: number; h: numb
     "y": 733.5,
     "w": 161,
     "h": 154
+  },
+  "mug-coin": {
+    "x": 542.5,
+    "y": 691.0,
+    "w": 240,
+    "h": 156
   }
 };
 /** what hangs from the fist and swings (drawn behind the hand, in order): the pivot and the parts */

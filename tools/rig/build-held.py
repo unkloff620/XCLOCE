@@ -27,7 +27,9 @@ SKIN_ORIGINAL = 1
 # hand's side of the grip — past it there is just the thing, its pale label stays as drawn)
 HELD = {"bottle-komandate": {"grip": (1300, 1810), "far": (1110, 2000)},
         # the anchor: the hand alone (skin everywhere above the fist); the rope and the anchor swing below it
-        "anchor-mugo": {"grip": (1360, 1790), "far": (1360, 2100)}}
+        "anchor-mugo": {"grip": (1360, 1790), "far": (1360, 2100)},
+        # the mug (tools/rig/make-mug.py): skin only right of its handle; the black mug and the gold coin stay as drawn
+        "mug-coin": {"grip": (1352, 1520), "far": (1200, 1520)}}
 # things that hang from the fist and swing as a pendulum (rig.tsx HeldSwing): their own pictures, not tinted, and the
 # point they hang from (source-canvas pixels) — <item>-rope.png, <item>-anchor.png
 SWING = {"anchor-mugo": {"pivot": (1328, 1748), "parts": ["rope", "anchor"]}}

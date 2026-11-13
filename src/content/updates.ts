@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-14-mug",
+    date: "14 ноября",
+    title: "Кружка с монетой",
+    items: [
+      { img: "/assets/updates/2026-11-14-mug.webp", text: "В магазине одежды — «Кружка с монетой» (слот «Кисть»). Герой держит чёрную кружку с золотой монетой, болтает ею, а из кружки поднимается пар." },
+    ],
+  },
+  {
     id: "2026-11-13-quests",
     date: "13 ноября",
     title: "Задания дня",
