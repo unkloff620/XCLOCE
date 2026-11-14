@@ -2828,6 +2828,7 @@ export const ASSET_FILES: string[] = [
  "/assets/updates/2026-11-12-botsman-home.webp",
  "/assets/updates/2026-11-12-botsman-tattoos.webp",
  "/assets/updates/2026-11-12-botsman.webp",
+ "/assets/updates/2026-11-14-mug.webp",
  "/assets/upgrader/btn-go.webp",
  "/assets/upgrader/btn-off.webp",
  "/assets/upgrader/btn-on.webp",

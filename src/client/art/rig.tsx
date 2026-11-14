@@ -536,8 +536,8 @@ function HandFrames() {
   );
 }
 
-/** a hot drink in the hand: where its steam rises from (the middle of the rim, rig coordinates; tools/rig/make-mug.py) */
-const HELD_STEAM: Record<string, [number, number]> = { "mug-coin": [619, 708] };
+/** a hot drink in the hand: where its steam rises from (the middle of the rim, rig coordinates; source/held/mug-coin.png) */
+const HELD_STEAM: Record<string, [number, number]> = { "mug-coin": [621.5, 716] };
 
 /**
  * Steam over a hot mug: soft wisps rise, sway, widen and melt away, one after another (screens.css «rig-steam»).
