@@ -207,7 +207,7 @@ export function ClansScreen() {
                 <b className="ellipsis" style={{ display: "block" }}>{c.name} <span className="muted">[{c.tag}]</span></b>
                 <span className="tiny muted">ур. {c.level} · {c.members} чел. · лидер {c.leader}</span>
               </div>
-              <b className="num row" style={{ gap: 3 }}><Icon name="xp" size={14} />{short(c.xp)}</b>
+              <b className="num row" style={{ gap: 3 }} title="Опыт клана"><Icon name="clan-xp" size={16} />{short(c.xp)}</b>
             </Link>
           ))}
         </div>
@@ -340,7 +340,7 @@ export function ClanScreen({ id }: { id: number }) {
         <div className="stat-grid" style={{ width: "100%" }}>
           <div><b className="num">{c.week.place ? `#${c.week.place}` : "—"}</b><span>место недели</span></div>
           <div><b className="num">{c.members.length}/{c.max}</b><span>участников</span></div>
-          <div><b className="num">{short(c.xp)}</b><span>общий авторитет</span></div>
+          <div><b className="num row" style={{ gap: 3, justifyContent: "center" }}><Icon name="clan-xp" size={18} />{short(c.xp)}</b><span>опыт клана</span></div>
           <div><b className="num">{c.wins}</b><span>побед</span></div>
         </div>
         {!state?.clan && (req?.clanId === c.id ? (

@@ -110,7 +110,7 @@ function YardRewards({ y }: { y: (typeof RAID_YARDS)[number] }) {
   return (
     <>
       <div className="rd-rewards">
-        <span><Icon name="ach-clan" size={26} /><b className="num">+{fmt(t.clanXp)}</b>опыт клана</span>
+        <span><Icon name="clan-xp" size={26} /><b className="num">+{fmt(t.clanXp)}</b>опыт клана</span>
         <span><Icon name="xp" size={26} /><b className="num">+{fmt(t.xp)}</b>авторитет</span>
         <span><ItemArt id={flagId(y.n)} size={26} /><b className="num">+{fmt(t.flags)}</b>флагов {"★".repeat(y.n)}</span>
       </div>
@@ -385,7 +385,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
                 {won.takeGot && <GainLine r={won.takeGot} size={30} />}
                 {won.yardGot && <GainLine r={won.yardGot} size={30} />}
               </div>
-              {!!won.clanXp && <div className="rd-clan-xp">Опыт клана <b className="num">+{won.clanXp.toLocaleString("ru-RU")}</b></div>}
+              {!!won.clanXp && <div className="rd-clan-xp"><Icon name="clan-xp" size={22} />Опыт клана <b className="num">+{won.clanXp.toLocaleString("ru-RU")}</b></div>}
               <button className="btn gold big result-take" onClick={() => void toYard()}>Забрать</button>
             </div>
           </Modal>
@@ -413,7 +413,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
           </span>
         </div>
         {/* under the board: what a capture of the building gives */}
-        <div className="rd-board-clan">За захват: <Icon name="ach-clan" size={20} /><b className="num">+{take.clanXp.toLocaleString("ru-RU")}</b> клану ·
+        <div className="rd-board-clan">За захват: <Icon name="clan-xp" size={20} /><b className="num">+{take.clanXp.toLocaleString("ru-RU")}</b> клану ·
           <Icon name="xp" size={20} /><b className="num">+{take.xp.toLocaleString("ru-RU")}</b> · <ItemArt id={flagId(y.n)} size={20} /><b className="num">×{take.flags}</b></div>
       </div>
       <div className="title-row rd-title">
