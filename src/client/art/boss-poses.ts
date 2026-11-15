@@ -89,14 +89,25 @@ const jabR: Action = {
     { at: 0.34, pose: {} },
   ],
 };
-/* Ларёчник: L — the brass knuckles low (the same hook as Гопник's blowL), R — the raised fist comes down across, on the head */
-const lrHammer: Action = {
-  dur: 0.7,
+/* Ларёчник: L — the brass knuckles held out in front (the rest pose in his idle): the elbow goes up, then comes down
+   hard and the fist drives forward; R — the raised fist turns down at the elbow, counter-clockwise, across onto the head */
+const LR_HOLD = { armL: -8, lowL: -48, handL: 14 };
+const lrElbow: Action = {
+  dur: 0.74,
   keys: [
-    { at: 0, pose: { armR: 6, lowR: 14, handR: 10, up: 2, x: -2, head: 1.5 } }, // the fist goes back and up
-    { at: 0.16, pose: { armR: -7, lowR: -46, handR: -18, up: -5, x: -7, head: -2.5, armL: 3 }, stiff: 5.5 }, // down across
-    { at: 0.3, pose: { armR: -5, lowR: -36, handR: -10, up: -3.5, x: -4 }, stiff: 1.4 },
-    { at: 0.44, pose: {} },
+    { at: 0, pose: { armL: 30, lowL: 14, handL: 10, up: 2, x: 2, head: 1.5 } }, // the elbow up, the fist drawn back
+    { at: 0.18, pose: { armL: -14, lowL: -22, handL: -12, up: -5, x: -6, head: -2.5, lowR: 6 }, stiff: 5.5 }, // the elbow down — the blow
+    { at: 0.32, pose: { armL: -10, lowL: -16, handL: -6, up: -3.5, x: -4 }, stiff: 1.4 },
+    { at: 0.46, pose: {} },
+  ],
+};
+const lrHammer: Action = {
+  dur: 0.72,
+  keys: [
+    { at: 0, pose: { armR: 6, lowR: 22, handR: 12, up: 2, x: -2, head: 1.5 } }, // the fist goes back
+    { at: 0.18, pose: { armR: -7, lowR: -52, handR: -18, up: -5, x: -7, head: -2.5, armL: 3 }, stiff: 5.5 }, // counter-clockwise, down
+    { at: 0.32, pose: { armR: -5, lowR: -40, handR: -10, up: -3.5, x: -4 }, stiff: 1.4 },
+    { at: 0.46, pose: {} },
   ],
 };
 const join = (...as: Action[]): Action => {
@@ -680,14 +691,15 @@ const POSES: Record<string, Spec> = {
       up: 1.3 * Math.sin(t * 0.9) + 0.4 * Math.sin(t * 2.1 + 1),
       x: 2.2 * Math.sin(t * 0.5),
       head: 1.6 * Math.sin(t * 0.8 + 1) + 0.6 * Math.sin(t * 1.9),
-      armL: 2 * Math.sin(t * 1.15), lowL: 3 * Math.sin(t * 1.5 + 0.5), handL: 2.5 * Math.sin(t * 2.1 + 1),
+      // the brass knuckles held out in front: the forearm turned up from the elbow (the artist drew it hanging)
+      armL: LR_HOLD.armL + 2 * Math.sin(t * 1.15), lowL: LR_HOLD.lowL + 3 * Math.sin(t * 1.5 + 0.5), handL: LR_HOLD.handL + 2.5 * Math.sin(t * 2.1 + 1),
       armR: 1.8 * Math.sin(t * 1.05 + 2), lowR: 4 * Math.sin(t * 1.4 + 1), handR: 3 * Math.sin(t * 2.3),
     }),
     actions: [
-      { a: blowL, w: 28 },
+      { a: lrElbow, w: 28 },
       { a: lrHammer, w: 24 },
-      { a: join(lrHammer, shift(blowL, 0.05)), w: 20 },
-      { a: join(blowL, blowL), w: 10 },
+      { a: join(lrHammer, shift(lrElbow, 0.05)), w: 20 },
+      { a: join(lrElbow, lrElbow), w: 10 },
       { a: join(lrHammer, lrHammer), w: 8 },
       { a: taunt, w: 8 },
     ],

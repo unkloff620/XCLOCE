@@ -6150,6 +6150,13 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 /* the attack page: he waits behind the window */
 .rd-defender { position: absolute; left: 17%; top: 10.5%; width: 65.5%; height: 29%; overflow: hidden; pointer-events: none; }
 .rd-defender-in { position: absolute; left: 50%; top: 8%; width: 62%; aspect-ratio: 850 / 875; transform: translateX(-50%); }
+/* the main building: both defenders side by side, shoulder to shoulder — a strip as wide as the place for one, each
+   rig in a box of its own proportions (850 × 875) */
+.rd-duo { position: absolute; left: 0; right: 0; bottom: 0; aspect-ratio: 1.47; }
+.rd-duo > div { position: absolute; bottom: 0; width: 66%; height: 100%; }
+.rd-duo-0 { left: -11%; width: 74%; } /* Гопник is drawn smaller on his sheet */
+.rd-duo-1 { right: -5%; }
+.rd-defender-in:has(.rd-duo) { width: 96%; aspect-ratio: 1.47; }
 
 /* zonk, round 4: one throw a step of the ladder (the throw's points at the row's end, a thin bracket under each
  * combination), «Дополнительный бросок» when all six are played, the combinations paper drawn in code */

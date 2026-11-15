@@ -220,13 +220,27 @@ export function RaidYardScreen({ id }: { id: string }) {
   );
 }
 
-/** the defenders of the raid buildings (boss rigs of their own, src/client/art/boss-rig-data.ts): Ларёчник in the kiosks,
- *  Гопник everywhere else */
-const RAID_DEFENDERS: Partial<Record<BuildingKind, { id: string; name: string }>> = { kiosk: { id: "larek", name: "Ларёчник" } };
-const defenderOf = (kind: BuildingKind) => RAID_DEFENDERS[kind] ?? { id: "gopnik", name: "Гопник" };
+/** the defenders of the raid buildings (boss rigs of their own, src/client/art/boss-rig-data.ts): Гопник in the garages
+ *  and the houses, Ларёчник in the kiosks and the boiler houses (the garage with the chimney); in the main building both
+ *  of them together */
+const GOPNIK = { id: "gopnik", name: "Гопник" }, LAREK = { id: "larek", name: "Ларёчник" };
+const RAID_DEFENDERS: Record<BuildingKind, { id: string; name: string }[]> = {
+  garage: [GOPNIK], barrack: [GOPNIK], khrush: [GOPNIK], shop: [GOPNIK], kiosk: [LAREK], boiler: [LAREK], main: [GOPNIK, LAREK],
+};
+const defendersOf = (kind: BuildingKind) => RAID_DEFENDERS[kind] ?? [GOPNIK];
+/** the defenders' rigs: one in the middle, or two side by side (the main building) */
+function Defenders({ kind, hpShare }: { kind: BuildingKind; hpShare?: number }) {
+  const ds = defendersOf(kind);
+  if (ds.length === 1) return <BossRig id={ds[0].id} hpShare={hpShare} />;
+  return (
+    <div className="rd-duo">
+      {ds.map((d, i) => <div key={d.id} className={`rd-duo-${i}`}><BossRig id={d.id} hpShare={hpShare} /></div>)}
+    </div>
+  );
+}
 /** the defender as a boss for the win card (BossPhoto: his live rig knocked out, stars over the head) */
 const defenderDef = (kind: BuildingKind) => {
-  const d = defenderOf(kind);
+  const d = defendersOf(kind)[0];
   return { id: d.id, name: d.name, photo: {}, theme: { accent: "#e6b65a", a: "#3a2614" } } as unknown as BossDef;
 };
 
@@ -361,9 +375,9 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
           <div className="arena-top">
             <Bar value={fight.hp} max={fight.hpMax} tone="health" height={24} label={`${fight.hp.toLocaleString("ru-RU")} / ${fight.hpMax.toLocaleString("ru-RU")}`} />
           </div>
-          {/* the building's defender (Гопник, in the kiosks Ларёчник — tools/boss/assemble-*.py), down to the hips, boxing */}
+          {/* the building's defenders (RAID_DEFENDERS, tools/boss/assemble-*.py), down to the hips, boxing */}
           <div className={`arena-photo rd-defender-fight ${hitFx ? "hit ouch" : ""}`}>
-            <BossRig id={defenderOf(b.kind).id} hpShare={fight.hp / Math.max(1, fight.hpMax)} />
+            <Defenders kind={b.kind} hpShare={fight.hp / Math.max(1, fight.hpMax)} />
           </div>
           {layer}
           <div className="rd-pops">{pops.map((p) => <b key={p.id} className={`rd-pop ${p.crit ? "crit" : ""}`}>{p.text}{p.crit ? " КРИТ" : ""}</b>)}</div>
@@ -406,7 +420,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
               <div className="result-photo">
                 <BossPhoto boss={defenderDef(b.kind)} round defeated />
               </div>
-              <div className="display result-name">{won.yardTaken ? "Двор захвачен!" : won.buildingTaken ? `${BUILDING_NAMES[b.kind]} захвачен!` : defenderOf(b.kind).name}</div>
+              <div className="display result-name">{won.yardTaken ? "Двор захвачен!" : won.buildingTaken ? `${BUILDING_NAMES[b.kind]} захвачен!` : defendersOf(b.kind).map((d) => d.name).join(" и ")}</div>
               <div className="muted small">
                 {won.yardTaken ? `Клан взял весь двор «${y.name}»` : won.buildingTaken ? "Здание теперь ваше" : <>Побед клана: <b style={{ color: "var(--ink)" }}>{(prog?.wins ?? 0) + 1}/{prog?.need ?? "?"}</b></>}
               </div>
@@ -430,7 +444,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img key={shake} className={`rd-room ${shake ? "hit" : ""}`} src={`${A}/attack-room.webp`} alt="" draggable={false} />
         {/* he waits behind the window */}
-        <div className="rd-defender"><div className="rd-defender-in"><BossRig id={defenderOf(b.kind).id} /></div></div>
+        <div className="rd-defender"><div className="rd-defender-in"><Defenders kind={b.kind} /></div></div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="rd-map-bg rd-wall" src={`${A}/attack-wall.webp`} alt="" draggable={false} />
         <div className="rd-board">
