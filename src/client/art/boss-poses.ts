@@ -89,6 +89,16 @@ const jabR: Action = {
     { at: 0.34, pose: {} },
   ],
 };
+/* Ларёчник: L — the brass knuckles low (the same hook as Гопник's blowL), R — the raised fist comes down across, on the head */
+const lrHammer: Action = {
+  dur: 0.7,
+  keys: [
+    { at: 0, pose: { armR: 6, lowR: 14, handR: 10, up: 2, x: -2, head: 1.5 } }, // the fist goes back and up
+    { at: 0.16, pose: { armR: -7, lowR: -46, handR: -18, up: -5, x: -7, head: -2.5, armL: 3 }, stiff: 5.5 }, // down across
+    { at: 0.3, pose: { armR: -5, lowR: -36, handR: -10, up: -3.5, x: -4 }, stiff: 1.4 },
+    { at: 0.44, pose: {} },
+  ],
+};
 const join = (...as: Action[]): Action => {
   let t = 0;
   const keys: Key[] = [];
@@ -657,6 +667,32 @@ const POSES: Record<string, Spec> = {
     // his fast heavy breath (it was screens.css vd-breath): the chest up and wider, the jaw drops with it
     breath: (t) => { const b = 0.5 - 0.5 * Math.cos((t / 1.05) * Math.PI * 2); return [1 + 0.016 * b, 1 + 0.03 * b, -4 * b]; },
     breathFollow: { sel: ".vd-jaw", f: (t) => `translateY(${(4 * (0.5 - 0.5 * Math.cos((t / 1.05) * Math.PI * 2))).toFixed(2)}px)` },
+  },
+  larek: {
+    springs: {
+      up: { k: 60, c: 12 }, x: { k: 60, c: 12 }, head: { k: 110, c: 12 },
+      armL: { k: 85, c: 15 }, lowL: { k: 170, c: 17 }, handL: { k: 320, c: 16 },
+      armR: { k: 85, c: 15 }, lowR: { k: 170, c: 17 }, handR: { k: 320, c: 16 },
+    },
+    drag: { lowL: ["armL", -0.05], handL: ["lowL", -0.045], lowR: ["armR", -0.05], handR: ["lowR", -0.045], head: ["up", -0.08] },
+    // heavy: the belly goes up and down slowly, the raised fist keeps bobbing in the guard
+    idle: (t) => ({
+      up: 1.3 * Math.sin(t * 0.9) + 0.4 * Math.sin(t * 2.1 + 1),
+      x: 2.2 * Math.sin(t * 0.5),
+      head: 1.6 * Math.sin(t * 0.8 + 1) + 0.6 * Math.sin(t * 1.9),
+      armL: 2 * Math.sin(t * 1.15), lowL: 3 * Math.sin(t * 1.5 + 0.5), handL: 2.5 * Math.sin(t * 2.1 + 1),
+      armR: 1.8 * Math.sin(t * 1.05 + 2), lowR: 4 * Math.sin(t * 1.4 + 1), handR: 3 * Math.sin(t * 2.3),
+    }),
+    actions: [
+      { a: blowL, w: 28 },
+      { a: lrHammer, w: 24 },
+      { a: join(lrHammer, shift(blowL, 0.05)), w: 20 },
+      { a: join(blowL, blowL), w: 10 },
+      { a: join(lrHammer, lrHammer), w: 8 },
+      { a: taunt, w: 8 },
+    ],
+    rest: [0.9, 2.1],
+    hit: { head: 260, up: 90, x: 70, armL: -120, lowL: 160, armR: 100, lowR: 160, handL: 200, handR: -200 },
   },
   gopnik: {
     springs: {

@@ -3110,10 +3110,10 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 @media (prefers-reduced-motion: reduce) { .br-face-open, .br-face-closed, .br-teeth-low, .br-teeth-up, .br-brow-l, .br-brow-r, .rig-babafey .br-arm, .rig-babafey .br-low, .rig-babafey .br-hand { animation: none; } }
 
 /* every boss with arms fends off a hit: a sharp wave of both arms (Мугонатор keeps his own boxing) */
-.arena-photo.hit:not(.strike) .boss-rig:not(.rig-mugo):not(.rig-gopnik) :is(.br-arm-l, .br-fist-l) { animation: br-hit-fend-l 0.42s cubic-bezier(0.2, 0.9, 0.3, 1); }
-.arena-photo.hit:not(.strike) .boss-rig:not(.rig-mugo):not(.rig-gopnik) :is(.br-arm-r, .br-fist-r) { animation: br-hit-fend-r 0.42s cubic-bezier(0.2, 0.9, 0.3, 1); }
-.arena-photo.hit:not(.strike) .boss-rig:not(.rig-mugo):not(.rig-gopnik) .br-low-l { animation: br-hit-fend-r 0.42s cubic-bezier(0.2, 0.9, 0.3, 1); }
-.arena-photo.hit:not(.strike) .boss-rig:not(.rig-mugo):not(.rig-gopnik) .br-low-r { animation: br-hit-fend-l 0.42s cubic-bezier(0.2, 0.9, 0.3, 1); }
+.arena-photo.hit:not(.strike) .boss-rig:not(.rig-mugo):not(.rig-gopnik):not(.rig-larek) :is(.br-arm-l, .br-fist-l) { animation: br-hit-fend-l 0.42s cubic-bezier(0.2, 0.9, 0.3, 1); }
+.arena-photo.hit:not(.strike) .boss-rig:not(.rig-mugo):not(.rig-gopnik):not(.rig-larek) :is(.br-arm-r, .br-fist-r) { animation: br-hit-fend-r 0.42s cubic-bezier(0.2, 0.9, 0.3, 1); }
+.arena-photo.hit:not(.strike) .boss-rig:not(.rig-mugo):not(.rig-gopnik):not(.rig-larek) .br-low-l { animation: br-hit-fend-r 0.42s cubic-bezier(0.2, 0.9, 0.3, 1); }
+.arena-photo.hit:not(.strike) .boss-rig:not(.rig-mugo):not(.rig-gopnik):not(.rig-larek) .br-low-r { animation: br-hit-fend-l 0.42s cubic-bezier(0.2, 0.9, 0.3, 1); }
 @keyframes br-hit-fend-l { 25% { transform: rotate(-13deg); } 55% { transform: rotate(8deg); } 80% { transform: rotate(-4deg); } }
 @keyframes br-hit-fend-r { 25% { transform: rotate(13deg); } 55% { transform: rotate(-8deg); } 80% { transform: rotate(4deg); } }
 @media (prefers-reduced-motion: reduce) { .arena-photo.hit .boss-rig :is(.br-arm, .br-low, .br-fist-l, .br-fist-r) { animation: none; } }
@@ -6140,6 +6140,9 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .arena-photo.hit .rig-gopnik :is(.br-low-r, .br-hand-r) { animation-duration: 2.4s; }
 .arena-photo.hit .rig-gopnik :is(.br-arm-l, .br-low-l, .br-hand-l) { animation-duration: 3.6s; }
 .arena-photo.ouch .rig-gopnik .br-head { animation: mg-head-hit 0.42s ease-out; }
+/* Ларёчник — the defender of the kiosks (tools/boss/assemble-larek.py): the pose engine moves him (boss-poses.ts «larek») */
+.rig-larek .br-breath { animation-duration: 3.8s; }
+.arena-photo.ouch .rig-larek .br-head { animation: mg-head-hit 0.42s ease-out; }
 @media (prefers-reduced-motion: reduce) { .rig-gopnik :is(.br-arm, .br-low, .br-hand, .br-up) { animation: none; } }
 /* the raid fight: he stands in the room, down to the hips */
 .rd-fight .arena.full .arena-photo.rd-defender-fight { left: -4%; right: -4%; top: 64px; bottom: 120px;

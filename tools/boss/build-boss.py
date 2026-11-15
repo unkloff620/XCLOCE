@@ -56,6 +56,10 @@ PIVOT_BY_BOSS = {
     # Гопник (Ходки, tools/boss/assemble-gopnik.py): neck, shoulders, elbows, wrists — the middles of the pieces' overlaps
     "gopnik": {"head": [475.0, 260.0], "armL": [365.0, 345.0], "lowL": [307.0, 509.0], "handL": [145.5, 648.0],
                "armR": [598.0, 345.0], "lowR": [627.5, 501.0], "handR": [449.5, 583.5]},
+    # Ларёчник (ларьки в «Захвате», tools/boss/assemble-larek.py): the neck, the shoulders (the inner ends of the upper
+    # arms, under the sleeves), the elbows and the wrists — the middles of the pieces' overlaps (printed by that script)
+    "larek": {"head": [414.4, 314.6], "armL": [277.3, 431.6], "lowL": [127.5, 500.7], "handL": [163.3, 639.0],
+              "armR": [531.6, 450.2], "lowR": [710.3, 498.8], "handR": [736.6, 352.9]},
     "vadim": {"head": [510.0, 370.0], "armL": [400.0, 460.0], "lowL": [272.0, 555.0], "handL": [148.0, 508.0],
               "armR": [665.0, 450.0], "lowR": [750.0, 570.0], "handR": [858.0, 492.0],
               "keyRing": [98.8, 552.2], "keyFob": [97.5, 636.3], "keyKey": [118.3, 626.6],
