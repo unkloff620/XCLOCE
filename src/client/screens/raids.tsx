@@ -57,14 +57,32 @@ export function RaidsScreen() {
   const [i, setI] = useState(0);
   const touch = useRef<number | null>(null);
   const y = RAID_YARDS[i];
-  const go = (d: number) => { setI((v) => (v + d + RAID_YARDS.length) % RAID_YARDS.length); haptic.tap(); sfx("page"); };
+  // the yards' cards turn like the pages of «Личное дело»: forward — the card flies off to the left and the next one
+  // was lying under it; back — the card sinks and the previous one comes back from the left. A finger drags the card.
+  const [anim, setAnim] = useState<"" | "out-l" | "out-r" | "in-l" | "in-r">("");
+  const [drag, setDrag] = useState(0);
+  const busy = useRef(false);
+  const go = (d: number) => {
+    if (busy.current) return;
+    busy.current = true;
+    haptic.tap(); sfx("page");
+    setAnim(d > 0 ? "out-l" : "out-r");
+    window.setTimeout(() => {
+      setI((v) => (v + d + RAID_YARDS.length) % RAID_YARDS.length);
+      setDrag(0);
+      setAnim(d > 0 ? "in-r" : "in-l");
+      window.setTimeout(() => { setAnim(""); busy.current = false; }, 280);
+    }, 220);
+  };
+  const moving = drag ? { transform: `translateX(${drag}px) rotate(${drag * 0.015}deg)`, transition: "none" } : undefined;
   const yv = v?.yards.find((x) => x.id === y.id);
   const open = !!yv?.open;
   const taken = yv?.buildings.filter((b) => b.taken).length ?? 0;
   return (
     <div className="fit-page rd-page"
       onTouchStart={(e) => { touch.current = e.touches[0].clientX; }}
-      onTouchEnd={(e) => { const x0 = touch.current; touch.current = null; if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1); }}>
+      onTouchMove={(e) => { const x0 = touch.current; if (x0 == null || busy.current) return; setDrag(e.touches[0].clientX - x0); }}
+      onTouchEnd={(e) => { const x0 = touch.current; touch.current = null; if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1); else setDrag(0); }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="rd-bg" src={`${A}/yard-bg.webp`} alt="" draggable={false} />
       <div className="title-row rd-title">
@@ -74,7 +92,13 @@ export function RaidsScreen() {
       </div>
       <div className="rd-cardrow">
         <button type="button" className="rd-arrow" data-nosfx onClick={() => go(-1)} aria-label="Предыдущий двор">‹</button>
-        <div className="rd-card" key={y.id}>
+        <div className="rd-cardstack">
+        {/* the next yards' cards lie under the open one */}
+        {[2, 1].map((k) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img key={k} className={`rd-under u${k}`} src={`${A}/card.webp`} alt="" draggable={false} aria-hidden="true" />
+        ))}
+        <div className={`rd-card ${anim}`} key={y.id} style={moving}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="rd-card-paper" src={`${A}/card.webp`} alt="" draggable={false} />
           <div className="rd-photo">
@@ -95,6 +119,7 @@ export function RaidsScreen() {
             <span className="rd-h">Награды за захват двора</span>
             <YardRewards y={y} />
           </div>
+        </div>
         </div>
         <button type="button" className="rd-arrow" data-nosfx onClick={() => go(1)} aria-label="Следующий двор">›</button>
       </div>
