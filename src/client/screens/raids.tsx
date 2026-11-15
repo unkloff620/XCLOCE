@@ -68,7 +68,7 @@ export function RaidsScreen() {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="rd-bg" src={`${A}/yard-bg.webp`} alt="" draggable={false} />
       <div className="title-row rd-title">
-        <Link href="/clans" className="back-btn" aria-label="К кланам">‹</Link>
+        <Link href={v?.clanId ? `/clans/${v.clanId}` : "/clans"} className="back-btn" aria-label="В клан">‹</Link>
         <b>Захват</b>
         <span className="rd-dots">{RAID_YARDS.map((x, k) => <i key={x.id} className={k === i ? "on" : ""} />)}</span>
       </div>
