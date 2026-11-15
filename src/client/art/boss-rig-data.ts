@@ -3062,15 +3062,15 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "v": "712e986d"
       },
       "armL": {
-        "x": 46.0,
+        "x": 39.5,
         "y": 333.0,
-        "w": 256,
-        "h": 216,
+        "w": 262,
+        "h": 238,
         "pivot": [
-          277.3,
-          431.6
+          276.8,
+          431.5
         ],
-        "v": "22ea049f"
+        "v": "8158522b"
       },
       "lowL": {
         "x": 23.0,
@@ -3078,8 +3078,8 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "w": 202,
         "h": 230,
         "pivot": [
-          127.5,
-          500.7
+          116.2,
+          510.4
         ],
         "v": "dbafec1f"
       },
@@ -3128,15 +3128,36 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "v": "e8123926"
       },
       "head": {
-        "x": 277.5,
-        "y": 1.0,
+        "x": 278.0,
+        "y": 1.5,
         "w": 336,
-        "h": 363,
+        "h": 356,
         "pivot": [
-          414.4,
-          314.6
+          418.4,
+          311.1
         ],
-        "v": "5ccce97b"
+        "v": "3a44e404"
+      },
+      "eyes": {
+        "x": 402.5,
+        "y": 207.5,
+        "w": 108,
+        "h": 28,
+        "v": "db8edecd"
+      },
+      "eyes-closed": {
+        "x": 392.0,
+        "y": 196.0,
+        "w": 128,
+        "h": 51,
+        "v": "b393355b"
+      },
+      "pupils": {
+        "x": 408.5,
+        "y": 205.5,
+        "w": 95,
+        "h": 30,
+        "v": "e60ded0d"
       }
     }
   }

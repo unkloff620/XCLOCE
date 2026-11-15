@@ -6142,6 +6142,9 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .arena-photo.ouch .rig-gopnik .br-head { animation: mg-head-hit 0.42s ease-out; }
 /* Ларёчник — the defender of the kiosks (tools/boss/assemble-larek.py): the pose engine moves him (boss-poses.ts «larek») */
 .rig-larek .br-breath { animation-duration: 3.8s; }
+/* his eyes (the head with holes, the whites, the pupils, the lids — the artist's): the pupils glance a little, he blinks */
+.rig-larek .br-pupils { animation-name: br-look-small; animation-duration: 6.2s; }
+.rig-larek .br-eyes-closed, .rig-larek .br-eyes-open { animation-duration: 3.9s; }
 .arena-photo.ouch .rig-larek .br-head { animation: mg-head-hit 0.42s ease-out; }
 @media (prefers-reduced-motion: reduce) { .rig-gopnik :is(.br-arm, .br-low, .br-hand, .br-up) { animation: none; } }
 /* the raid fight: he stands in the room, down to the hips */
