@@ -140,10 +140,10 @@ type View =
   | { tab: "stats"; sub: StatsSub }
   | { tab: "log"; sub: "actions" | "admins"; q: ActionsQuery; key: string }
   | { tab: "costs" };
-type LiveSub = "works" | "news" | "tosya" | "bosses" | "events" | "exchange" | "fortune" | "monthly";
+type LiveSub = "works" | "news" | "tosya" | "bosses" | "events" | "exchange" | "fortune" | "monthly" | "raids";
 type StatsSub = "funnel" | "items" | "actions";
 const LIVE: [LiveSub, string, string][] = [
-  ["works", "🛠", "Тех. работы"], ["news", "📣", "Рассылка"], ["tosya", "🥟", "Тося"], ["bosses", "👹", "Боссы"], ["events", "🎉", "События"], ["exchange", "💱", "Обменник"], ["fortune", "🎡", "Колесо удачи"], ["monthly", "📅", "Делюги"],
+  ["works", "🛠", "Тех. работы"], ["news", "📣", "Рассылка"], ["tosya", "🥟", "Тося"], ["bosses", "👹", "Боссы"], ["events", "🎉", "События"], ["exchange", "💱", "Обменник"], ["fortune", "🎡", "Колесо удачи"], ["monthly", "📅", "Делюги"], ["raids", "🚩", "Захват"],
 ];
 const STATS: [StatsSub, string, string][] = [["funnel", "🧭", "Воронка новичков"], ["items", "📦", "Предметы у игроков"], ["actions", "⚡", "Действия за 24 ч"]];
 const NAV: [View["tab"], string, string][] = [["dash", "📊", "Обзор"], ["live", "🎮", "Игра"], ["players", "👥", "Игроки"], ["stats", "📈", "Аналитика"], ["log", "📜", "Журнал"], ["costs", "💸", "Расходы"]];
@@ -607,6 +607,7 @@ function Live({ sub }: { sub: LiveSub }) {
       {sub === "exchange" && <ExchangeEvent />}
       {sub === "fortune" && <FortuneAdmin />}
       {sub === "monthly" && <MonthlyAdmin />}
+      {sub === "raids" && <RaidsAdmin />}
     </>
   );
 }
@@ -1116,6 +1117,29 @@ function Costs() {
         </div>
       </Box>
     </>
+  );
+}
+
+/** «Захват»: the clans' raids on the yards for all the players, or only for the admins */
+function RaidsAdmin() {
+  const r = useLoad(() => admin<{ on: boolean }>("raids"), []);
+  const [busy, setBusy] = useState(false);
+  const set = async (on: boolean, ask: string) => {
+    if (!confirm(ask)) return;
+    setBusy(true);
+    try { await admin("raids_set", { on }); r.reload(); } catch (e) { alert((e as Error).message); }
+    setBusy(false);
+  };
+  const d = r.data;
+  return (
+    <Box title={`🚩 Захват дворов — ${!d ? "…" : d.on ? "у всех игроков" : "только у админов"}`}>
+      <p className="muted tiny">Кланы захватывают здания и дворы: опыт клана, авторитет и флаги. Пока выключено — захват видят только админы (по Telegram id).</p>
+      <div className="row" style={{ gap: 8, marginTop: 8 }}>
+        {d?.on
+          ? <button className="adm-btn ghost" disabled={busy} onClick={() => set(false, "Закрыть захват для игроков?")}>Закрыть для игроков</button>
+          : <button className="adm-btn" disabled={busy || !d} onClick={() => set(true, "Открыть захват всем игрокам?")}>Открыть всем игрокам</button>}
+      </div>
+    </Box>
   );
 }
 

@@ -1423,4 +1423,9 @@ DELETE FROM raid_progress p USING raid_yards r WHERE r.clan_id = p.clan_id AND p
   PRIMARY KEY (player_id, month)
 );`,
   },
+  {
+    // «Захват» opens for all the players (the admin can close it again: Админка → Живое → Захват)
+    id: "v2-096-raids-open",
+    sql: `INSERT INTO config (key, value) VALUES ('raids', '{"on": true}') ON CONFLICT (key) DO UPDATE SET value = excluded.value;`,
+  },
 ];

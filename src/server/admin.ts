@@ -515,6 +515,19 @@ export async function fortuneSet(db: Db, adminTg: number, body: Record<string, u
   return fortuneAdmin(db);
 }
 
+/** «Захват»: the clans' raids on the yards for all the players, or only for the admins */
+export async function raidsAdmin(db: Db) {
+  return { on: (await loadConfig(db)).raids.on };
+}
+export async function raidsSet(db: Db, adminTg: number, body: Record<string, unknown>) {
+  if (typeof body.on === "boolean") {
+    await db.query("INSERT INTO config (key, value) VALUES ('raids', $1) ON CONFLICT (key) DO UPDATE SET value = excluded.value", [JSON.stringify({ on: body.on })]);
+    resetConfigCache();
+  }
+  console.info(JSON.stringify({ msg: "admin.raids", adminTg, on: body.on }));
+  return raidsAdmin(db);
+}
+
 /** «От звонка до звонка»: the month's tasks for the players instead of the daily quests (the admins see them always) */
 export async function monthlyAdmin(db: Db) {
   return { on: (await loadConfig(db)).monthly.on };
