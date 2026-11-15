@@ -420,7 +420,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
               <div className="result-photo">
                 <BossPhoto boss={defenderDef(b.kind)} round defeated />
               </div>
-              <div className="display result-name">{won.yardTaken ? "Двор захвачен!" : won.buildingTaken ? `${BUILDING_NAMES[b.kind]} захвачен!` : defendersOf(b.kind).map((d) => d.name).join(" и ")}</div>
+              <div className="display result-name">{won.yardTaken ? "Двор захвачен!" : won.buildingTaken ? `${BUILDING_NAMES[b.kind]} ${["boiler", "khrush"].includes(b.kind) ? "захвачена" : "захвачен"}!` : defendersOf(b.kind).map((d) => d.name).join(" и ")}</div>
               <div className="muted small">
                 {won.yardTaken ? `Клан взял весь двор «${y.name}»` : won.buildingTaken ? "Здание теперь ваше" : <>Побед клана: <b style={{ color: "var(--ink)" }}>{(prog?.wins ?? 0) + 1}/{prog?.need ?? "?"}</b></>}
               </div>
