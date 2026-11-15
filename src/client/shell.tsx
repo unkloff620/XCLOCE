@@ -228,7 +228,10 @@ export function parentOf(path: string, search: string, myClan: number | null): s
   if (parts[0] === "bosses" && parts.length > 1) return "/bosses";
   if (parts[0] === "profile" || parts[0] === "rating" || parts[0] === "event") return "/"; // an event (Пепе) is opened from the room
   if (parts[0] === "clans") {
-    if (parts.length > 1) return Number(parts[1]) === myClan ? null : myClan ? "/clans?all=1" : "/clans";
+    // «Захват»: building → yard → yards → the own clan
+    if (parts[1] === "raids") return parts.length > 2 ? `/${parts.slice(0, -1).join("/")}` : myClan ? `/clans/${myClan}` : "/clans";
+    // the list of all clans is reached only by «Все кланы» on the own clan's page: another clan steps back to the own one
+    if (parts.length > 1) return Number(parts[1]) === myClan ? null : myClan ? `/clans/${myClan}` : "/clans";
     return myClan && search.includes("all") ? `/clans/${myClan}` : null;
   }
   return null;
