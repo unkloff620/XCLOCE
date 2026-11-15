@@ -23,11 +23,9 @@ import { BOSS_RIGS } from "./boss-rig-data.ts";
 type Part = { x: number; y: number; w: number; h: number; pivot?: readonly number[]; frames?: number; v?: string };
 
 /** bosses whose far arm (R or L) goes behind the body */
-const BEHIND: Record<string, "L" | "R"> = { mugo: "R", babafey: "L", gopnik: "L", botsman: "R" };
+const BEHIND: Record<string, "L" | "R"> = { mugo: "R", babafey: "L", gopnik: "L", botsman: "R", larek: "R" };
 /** of these the arm in BEHIND goes behind only with its shoulder: the forearm and the hand stay in front of everything */
-const SPLIT_BEHIND = new Set(["babafey", "botsman"]);
-/** both shoulders under the T-shirt's sleeves, both forearms and fists over it (Ларёчник) */
-const SPLIT_BOTH = new Set(["larek"]);
+const SPLIT_BEHIND = new Set(["babafey", "botsman", "larek"]);
 /** rigs drawn as plain SVG only */
 const NO_PUPPET = new Set<string>(["knyaz"]);
 /** the bosses drawn whole (no legs of their own) that still bend at the waist on the pose engine: the waist (rig units)
@@ -390,7 +388,6 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
           : P.legs ? { transformOrigin: `${P.legs.x + P.legs.w / 2}px ${P.legs.y + P.legs.h * 0.2}px`, transformBox: "view-box" } : undefined}>
         {P.tail && <g className="br-tail" {...joint("tail")} style={origin("tail")}>{img("tail", undefined, "back")}</g>}
         {behind && arm(behind, split ? "upper" : undefined, "back")}
-        {SPLIT_BOTH.has(baseId) && <>{arm("L", "upper", "back")}{arm("R", "upper", "back")}</>}
         {/* with legs of its own the torso bends at the waist (the puppet): its frame is the standing one, the top
             follows the leaning upper body; without the puppet it leans whole with br-up */}
         {(P.legs || WAIST[baseId]?.bend) && puppet ? (
@@ -446,11 +443,9 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
         {img("collar")}
         {P.foreL && <g className="br-fist-l" {...joint("foreL")} style={{ ...origin("foreL"), ...tilt("foreL", "foreL", 9) }}>{img("foreL", undefined, "front")}</g>}
         {P.foreR && <g className="br-fist-r" {...joint("foreR")} style={{ ...origin("foreR"), ...tilt("foreR", "foreR", 9) }}>{img("foreR", undefined, "front")}</g>}
-        {SPLIT_BOTH.has(baseId) ? <>{arm("R", "lower")}{arm("L", "lower")}</> : <>
-          {behind !== "R" && arm("R")}
-          {behind !== "L" && arm("L")}
-          {split && behind && arm(behind, "lower")}
-        </>}
+        {behind !== "R" && arm("R")}
+        {behind !== "L" && arm("L")}
+        {split && behind && arm(behind, "lower")}
         </g>
       </g>
     </svg>

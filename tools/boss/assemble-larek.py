@@ -2,7 +2,7 @@
 Ларёчник — the defender of the kiosks in «Захват» (src/client/screens/raids.tsx), drawn by the artist in layers on one
 2000×3000 sheet, in place: tools/boss/source/larek/raw/{pants,torso,head,upperL,foreL,fistL,upperR,foreR,fistR}.png.
 L is the arm on the left of the picture (his right arm, the brass knuckles low), R — on the right (his left, the fist raised).
-Both shoulders go under the T-shirt's sleeves; the forearms and the fists lie over it (boss-rig.tsx SPLIT_BOTH).
+The right shoulder (R) goes under the T-shirt's sleeve, its forearm and fist over it; the arm with the brass knuckles (L) lies all over the body (boss-rig.tsx BEHIND + SPLIT_BEHIND).
 → rig sources for build-boss.py, cropped to the hips (the fight shows him down to the hips):
   legs = pants (they stay put), body = torso (leans into the punches at the waist), head, armL/lowL/handL, armR/lowR/handR (shoulder → forearm at the elbow → fist at the wrist).
 The joints (build-boss.py PIVOT_BY_BOSS) are the middles of where the pieces overlap.

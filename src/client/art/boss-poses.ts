@@ -91,7 +91,7 @@ const jabR: Action = {
 };
 /* Ларёчник: L — the brass knuckles held out in front (the rest pose in his idle): the elbow goes up, then comes down
    hard and the fist drives forward; R — the raised fist turns down at the elbow, counter-clockwise, across onto the head */
-const LR_HOLD = { armL: -8, lowL: -48, handL: 14 };
+const LR_HOLD = { armL: 9, lowL: -50, handL: 16 };
 const lrElbow: Action = {
   dur: 0.74,
   keys: [
