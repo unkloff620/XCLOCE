@@ -26,6 +26,8 @@ type Part = { x: number; y: number; w: number; h: number; pivot?: readonly numbe
 const BEHIND: Record<string, "L" | "R"> = { mugo: "R", babafey: "L", gopnik: "L", botsman: "R", larek: "R" };
 /** of these the arm in BEHIND goes behind only with its shoulder: the forearm and the hand stay in front of everything */
 const SPLIT_BEHIND = new Set(["babafey", "botsman", "larek"]);
+/** the head has holes for the eyes: the whites and the pupils are drawn under it and show through (Ларёчник) */
+const EYES_UNDER = new Set(["larek"]);
 /** rigs drawn as plain SVG only */
 const NO_PUPPET = new Set<string>(["knyaz"]);
 /** the bosses drawn whole (no legs of their own) that still bend at the waist on the pose engine: the waist (rig units)
@@ -401,6 +403,7 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
             x={P.legs.x} y={P.legs.y} width={P.legs.w} height={P.legs.h} preserveAspectRatio="none" />
         ) : img("legs"))}
         <g className="br-head" {...joint("head")} style={origin("head")}>
+          {EYES_UNDER.has(baseId) && <g className="br-eyes-under">{img("eyes")}<g className="br-pupils">{img("pupils")}</g></g>}
           {img("head", P["head-open"] ? "br-face-closed" : undefined)}
           {/* a jaw of its own (Бабафей): the head with a hole for the mouth over the throat and both rows of teeth —
               the lower row grinds side to side and drops when he opens his mouth (screens.css «Бабафей») */}
@@ -425,10 +428,12 @@ export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string;
           {clipEyes && (
             <mask id={maskId} style={{ maskType: "alpha" }} maskUnits="userSpaceOnUse" x="0" y="0" width={rig.w} height={rig.h}>{img("eyes")}</mask>
           )}
+          {!EYES_UNDER.has(baseId) && (
           <g className="br-eyes-open">
             {img("eyes")}
             {P.pupils && <g mask={clipEyes ? `url(#${maskId})` : undefined}><g className="br-pupils">{img("pupils")}</g></g>}
           </g>
+          )}
           {img("eyes-closed", "br-eyes-closed")}
           {P.brows && !P.brows.frames && <g className="br-brows">{img("brows", "br-brows-angry")}{img("brows-sad", "br-brows-sad")}</g>}
           {P.brows?.frames && strip("brows")}
