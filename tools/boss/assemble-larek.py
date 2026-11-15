@@ -16,10 +16,9 @@ R = f"{D}/raw"
 CROP = (150, 50, 1850, 1800)
 
 
-# the head redrawn with holes for the eyes (raw/face/, 1000×1000): the head, the pupils, the closed lids — put on the
-# sheet over the old head (the face matched by template: scale 0.735, at (666, 47)). The eye whites are the head's
-# holes filled white; the closed lids get the holes filled with the skin round them, so a blink hides the whites.
-import numpy as np, cv2
+# the head redrawn with holes for the eyes (raw/face/, 1000×1000): the head, the pupils, the eye whites (white with the
+# lid line over and the red rim under) — put on the sheet over the old head (the face matched by template: scale 0.735,
+# at (666, 47)). No blink: the artist drew none.
 FACE_K, FACE_AT = 0.735, (666, 47)
 def face(n):
     im = Image.open(f"{R}/face/{n}.png").convert("RGBA")
@@ -27,31 +26,9 @@ def face(n):
     sheet = Image.new("RGBA", (2000, 3000), (0, 0, 0, 0))
     sheet.alpha_composite(im.resize((w, w), Image.LANCZOS), FACE_AT)
     return sheet
-head = face("head")
-ha = np.array(head)[:, :, 3] > 128
-# the holes: what is not head but can't be reached from the outside
-outside = np.zeros((3002, 2002), np.uint8)
-inv = (~ha).astype(np.uint8)
-cv2.floodFill(inv, outside, (0, 0), 2)
-holes = (inv == 1)
-# only the two eyes (the biggest holes); gaps between the hair locks stay see-through
-_, lab, st, _ = cv2.connectedComponentsWithStats(holes.astype(np.uint8))
-keep = 1 + np.argsort(-st[1:, cv2.CC_STAT_AREA])[:2]
-holes = np.isin(lab, keep)
-holes = cv2.dilate(holes.astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool)
-eyes = np.zeros((3000, 2000, 4), np.uint8); eyes[holes] = (250, 248, 244, 255)
-head.save(f"{R}/head.png")
-Image.fromarray(eyes).save(f"{R}/eyes.png")
+face("head").save(f"{R}/head.png")
+face("whites").save(f"{R}/eyes.png")
 face("pupils").save(f"{R}/pupils.png")
-# the skin round each hole (a ring a few px out), its median colour fills the hole under the lids
-ring = cv2.dilate(holes.astype(np.uint8), np.ones((15, 15), np.uint8)).astype(bool) & ~holes & ha
-rp = np.array(head)[ring][:, :3].astype(int)
-rp = rp[rp.sum(1) >= np.percentile(rp.sum(1), 60)]  # the lit skin, not the outline of the lids
-skin = np.median(rp, axis=0).astype(np.uint8)
-closed = np.zeros((3000, 2000, 4), np.uint8); closed[holes] = (*skin, 255)
-# the lids' sheet is white inside the lids: that white is cut away, the skin shows there
-lids = np.array(face("closed")); lids[lids[:, :, :3].min(2) > 215, 3] = 0
-cl = Image.fromarray(closed); cl.alpha_composite(Image.fromarray(lids)); cl.save(f"{R}/closed.png")
 
 
 def lay(*names):
@@ -61,7 +38,7 @@ def lay(*names):
     return im.crop(CROP)
 
 
-for out, src in {"legs": ("pants",), "body": ("torso",), "head": ("head",), "eyes": ("eyes",), "pupils": ("pupils",), "eyes-closed": ("closed",),
+for out, src in {"legs": ("pants",), "body": ("torso",), "head": ("head",), "eyes": ("eyes",), "pupils": ("pupils",),
                  "armL": ("upperL",), "lowL": ("foreL",), "handL": ("fistL",),
                  "armR": ("upperR",), "lowR": ("foreR",), "handR": ("fistR",)}.items():
     lay(*src).save(f"{D}/{out}.png")
