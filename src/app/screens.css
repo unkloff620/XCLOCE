@@ -1169,8 +1169,9 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .slot-btn.on { background: var(--gold); color: var(--line); transform: translateY(1px); box-shadow: 0 2px 0 var(--line); }
 
 /* clan page: level bar under the emblem, weekly prizes */
-.clan-level { display: flex; align-items: center; gap: 8px; width: 100%; max-width: 280px; }
-.clan-lv { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; border: 2.5px solid var(--line); background: var(--gold); color: var(--line); font-size: 16px; box-shadow: 0 2px 0 var(--line); }
+.clan-level { display: flex; align-items: flex-start; gap: 8px; width: 100%; max-width: 280px; }
+/* the level's coin: level with the bar (its middle on the bar's middle), a thin rim */
+.clan-lv { flex: none; display: grid; place-items: center; width: 30px; height: 30px; margin-top: -7px; border-radius: 50%; border: 1px solid var(--line); background: var(--gold); color: var(--line); font-size: 15px; line-height: 1; }
 .clan-prize { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 10px; border: 2px solid transparent; background: rgba(0, 0, 0, 0.22); }
 .clan-prize.on { border-color: var(--gold); background: color-mix(in srgb, var(--gold) 14%, transparent); }
 .clan-prize-place { flex: none; min-width: 38px; text-align: center; font-size: 24px; line-height: 1; }
