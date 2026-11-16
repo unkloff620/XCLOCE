@@ -118,11 +118,15 @@ export const TATTOO_SETS: TattooSet[] = [
   // «Колесо удачи» (content/fortune.ts FORTUNE_BAGS, boss "fortune"): one set per bag, a piece with BAG_TATTOO_CHANCE
   solid("luck", "Фарт", "fortune", "pacan", "keyboard", 150), solid("hustler", "Барыга", "fortune", "pacan", "gpu", 200),
   solid("katran", "Катран", "fortune", "pacan", "rug-pull-gun", 300), solid("smotr", "Смотрящий", "fortune", "pacan", "rug-pull-gun", 400),
+  // «Захват» (content/raids.ts RAID_BAGS, boss "raids"): the bag of each yard, opened for its flags, holds its set
+  solid("garages", "Гаражи", "raids", "pacan", "gpu", 250), solid("industry", "Промзона", "raids", "pacan", "rug-pull-gun", 350),
+  solid("market", "Рынок", "raids", "pacan", "gpu", 350), solid("blocks", "Панельки", "raids", "pacan", "rug-pull-gun", 450),
+  solid("oldtown", "Старый центр", "raids", "pacan", "rug-pull-gun", 600),
 ];
 export const BOX_TATTOO_SETS = TATTOO_SETS.filter((s) => s.boss === "box");
 /** where a set's pieces drop, in words: «с Дацкоу в «Пацанском»» / «из Ящика ништяков» */
 export const tattooSource = (s: TattooSet, bossName: (id: string) => string | undefined) =>
-  s.boss === "box" ? "из Ящика ништяков (шанс 20%)" : s.boss === "tosya" ? "из пирожков Тоси" : s.boss === "heist" ? "из ящиков ивента «Взлом»" : s.boss === "fortune" ? "из сумок «Колеса удачи»" : `с ${bossName(s.boss) ?? s.boss} в «${TATTOO_MODE_NAME[s.mode]}»`;
+  s.boss === "box" ? "из Ящика ништяков (шанс 20%)" : s.boss === "tosya" ? "из пирожков Тоси" : s.boss === "heist" ? "из ящиков ивента «Взлом»" : s.boss === "fortune" ? "из сумок «Колеса удачи»" : s.boss === "raids" ? "из сумок за флаги «Захвата»" : `с ${bossName(s.boss) ?? s.boss} в «${TATTOO_MODE_NAME[s.mode]}»`;
 
 export const TATTOO_IDS = TATTOO_SETS.flatMap((s) => s.pieces.map((p) => p.id));
 export const tattooSetOf = (id: string) => TATTOO_SETS.find((s) => s.pieces.some((p) => p.id === id));

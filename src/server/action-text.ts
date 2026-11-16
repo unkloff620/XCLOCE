@@ -76,6 +76,7 @@ export function actionText(type: string, body: Row, result: unknown): string | n
     case "raid_start": return `захват: бой за ${String(body.building ?? "")}`;
     case "raid_attack": return join(`захват: удар ${String(body.weapon ?? "")}`, r.damage !== undefined ? `−${fmt(r.damage)}` : null, r.status === "won" ? `здание пало, ${grantedText(r.reward) ?? ""}` : null, r.buildingTaken ? "здание захвачено" : null, r.yardTaken ? "ДВОР ЗАХВАЧЕН" : null);
     case "raid_flee": return "захват: ушёл из боя";
+    case "raid_bag": return join(`захват: сумка ${"★".repeat(Number(body.n ?? 0))}`, r.tattoo ? `наколка ${String(r.tattoo)}` : grantedText(r.reward));
     case "fortune_bag": return join(`колесо: сумка ${String(body.bag ?? "")}`, grantedText(r.reward), r.tattoo ? `наколка ${String(r.tattoo)}` : null);
     case "fortune_cup_pick": return join(`колесо: чашка ${Number(body.index) + 1} — ${String(r.kind ?? "")}`, r.jackpot ? `ДЖЕКПОТ ${fmt(r.jackpot)} $` : grantedText(r.reward));
     case "heist_pick": return `ящик ${Number(body.slot) + 1}: взлом замка`;

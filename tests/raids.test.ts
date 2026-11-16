@@ -69,4 +69,16 @@ describe("«Ходки»", () => {
     const s = await act(db, p, "raid_start", { building: yard.buildings[0].id }, later);
     expect(s.result.yards[0]).toMatchObject({ taken: false, times: 1, target: yard.buildings[0].id });
   });
+  it("a bag for 50 flags of its yard gives a piece of its set not owned yet", async () => {
+    const db = await freshDb();
+    const { p } = await setup(db);
+    await expect(act(db, p, "raid_bag", { n: 1 }, T)).rejects.toMatchObject({ code: "raid_no_flags" });
+    await db.query("INSERT INTO inventory (player_id, item_id, qty) VALUES ($1,'raid-flag-1',100)", [p]);
+    const a = await act(db, p, "raid_bag", { n: 1 }, T);
+    const b = await act(db, p, "raid_bag", { n: 1 }, T);
+    expect(a.result.tattoo).toMatch(/^tat-garages-/);
+    expect(b.result.tattoo).not.toBe(a.result.tattoo);
+    expect(await qty(db, p, "raid-flag-1")).toBe(0);
+    expect(b.result.bags[0]).toEqual({ have: 2, of: 21 });
+  });
 });

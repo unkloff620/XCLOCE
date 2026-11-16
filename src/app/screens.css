@@ -6456,6 +6456,7 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 @keyframes rd-bags-in-r { from { opacity: 0; transform: translateX(40px) rotate(6deg); } }
 @keyframes rd-bags-in-l { from { opacity: 0; transform: translateX(-40px) rotate(-6deg); } }
 .rb-name { font-size: 22px; color: #ffd36a; text-shadow: 0 2px 0 #4a2a00, 0 0 8px rgba(0, 0, 0, 0.9); }
+.rb-open { margin-top: 4px; display: inline-flex; align-items: center; gap: 4px; }
 .rb-arrow { width: 44px; height: 60px; border: 0; background: none; color: #e8b24a; font-size: 32px; line-height: 1; cursor: pointer; filter: drop-shadow(0 2px 2px #000); }
 .rb-arrow:active { transform: scale(0.9); }
 

@@ -32,6 +32,8 @@ import { ART_VER } from "../preload.ts";
 import { Icon } from "../art/icons.tsx";
 import { haptic } from "../telegram.ts";
 import { useRouter } from "next/navigation";
+import { RAID_BAG_PRICE } from "../../content/raids.ts";
+import { tattooPiece } from "../../content/tattoos.ts";
 import { BUILDING_NAMES, RAID_YARDS, YARD_TREES, YARD_WALKERS, buildingReward, buildingTake, flagId, raidYardById, yardTotal, type BuildingKind, type RaidBuilding } from "../../content/raids.ts";
 import { itemById } from "../../content/items.ts";
 
@@ -46,6 +48,8 @@ interface RaidsView {
   fight: { id: number; building: string; hp: number; hpMax: number; hits: number; endsAt: number | null } | null;
   /** my flags of the yards 1…5 */
   flags?: number[];
+  /** the pieces of each bag's set I have */
+  bags?: { have: number; of: number }[];
   weapons: Tray[];
 }
 /** the clan's progress (refreshed while the screen is open) */
@@ -230,7 +234,9 @@ function AlleyScene() {
 }
 
 export function RaidBagsScreen() {
+  const { act, busy } = useGame();
   const [v, setV] = useState<RaidsView | null>(null);
+  const [got, setGot] = useState<{ n: number; tattoo: string | null; reward: Granted } | null>(null);
   useEffect(() => { api.get<RaidsView>("/api/raids").then(setV).catch(() => {}); }, []);
   usePageReady(!!v);
   const flags = v?.flags ?? [0, 0, 0, 0, 0];
@@ -266,9 +272,32 @@ export function RaidBagsScreen() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img key={n} className={anim} src={`/assets/items/raid-bag-${n + 1}.webp?v=${ART_VER.items}`} alt="" draggable={false} />
           <b className="rb-name display">{RAID_YARDS[n].name}</b>
+          <button type="button" className="btn gold rb-open" disabled={!!busy || flags[n] < RAID_BAG_PRICE}
+            onClick={async () => {
+              haptic.tap();
+              const r = await act<RaidsView & { tattoo: string | null; reward: Granted }>("raid_bag", { n: n + 1 });
+              if (r) { setV(r); setGot({ n, tattoo: r.tattoo, reward: r.reward }); }
+            }}>
+            Открыть · <ItemArt id={flagId(n + 1)} size={22} /> {RAID_BAG_PRICE}
+          </button>
         </div>
         <button type="button" className="rb-arrow" data-nosfx onClick={() => go(1)} aria-label="Следующая сумка">▶</button>
       </div>
+      {got && (
+        <Modal title={`Сумка «${RAID_YARDS[got.n].name}»`} onClose={() => setGot(null)}>
+          <div className="col center" style={{ gap: 8, alignItems: "center" }}>
+            {got.tattoo ? <>
+              <ItemArt id={got.tattoo} size={120} />
+              <b className="display">{tattooPiece(got.tattoo)?.name ?? "Наколка"}</b>
+              <span className="muted small">Наколка в инвентаре — набить можно в редакторе героя</span>
+            </> : <>
+              <span className="muted small">Весь сет уже собран — вместо наколки:</span>
+              <GainLine r={got.reward} size={30} />
+            </>}
+            <button type="button" className="btn gold" onClick={() => setGot(null)}>Забрать</button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

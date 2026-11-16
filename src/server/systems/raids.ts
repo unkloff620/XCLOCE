@@ -6,7 +6,8 @@
  * No raid while a boss fight runs (and no boss fight while a raid fight runs).
  */
 import { GameError, type Queryable } from "../db.ts";
-import { grantReward, ledger, type Ctx, type Granted } from "../core.ts";
+import { grantReward, itemQty, ledger, takeItem, type Ctx, type Granted } from "../core.ts";
+import { TATTOO_SETS } from "../../content/tattoos.ts";
 import { autoSpendTalents } from "./home.ts";
 import { talentsForDamage } from "../../content/talents.ts";
 import type { Config } from "../config.ts";
@@ -16,7 +17,7 @@ import { weaponById } from "../../content/items.ts";
 import { talentExtras } from "../../content/talents.ts";
 import { weaponTalents } from "./home.ts";
 import { craftBonus } from "./craft.ts";
-import { FLAG_IDS, RAID_YARDS, RAID_YARD_COOLDOWN_MS, buildingById, buildingHp, buildingReward, buildingTake, buildingWins, yardReward, type RaidYard } from "../../content/raids.ts";
+import { FLAG_IDS, RAID_BAG_PRICE, RAID_BAG_RUB, RAID_BAG_SETS, RAID_YARDS, RAID_YARD_COOLDOWN_MS, buildingById, buildingHp, buildingReward, buildingTake, buildingWins, yardReward, type RaidYard } from "../../content/raids.ts";
 
 export async function raidsOn(q: Queryable, pid: number, cfg: Config) {
   return cfg.raids.on || (await isAdminPlayer(q, pid, cfg));
@@ -66,6 +67,10 @@ export async function raidsView(q: Queryable, pid: number, now = Date.now()) {
   // my flags of the five yards (the bags of tattoo sets are opened for them)
   const fl = await q.query<{ item_id: string; qty: number }>("SELECT item_id, qty FROM inventory WHERE player_id=$1 AND item_id = ANY($2)", [pid, FLAG_IDS]);
   const flags = FLAG_IDS.map((id) => Number(fl.find((r) => r.item_id === id)?.qty ?? 0));
+  // how many pieces of each bag's set I have
+  const setIds = RAID_BAG_SETS.map((sid) => TATTOO_SETS.find((x) => x.id === sid)!.pieces.map((p) => p.id));
+  const ownT = new Set((await q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id = ANY($2)", [pid, setIds.flat()])).map((r) => r.item_id));
+  const bags = setIds.map((ids) => ({ have: ids.filter((x) => ownT.has(x)).length, of: ids.length }));
   // the influence: mine in every yard, and the clan with the most of it there (its logo on the yard's card)
   const mineInf = clanId ? await q.query<{ yard_id: string; influence: number }>("SELECT yard_id, influence FROM raid_influence WHERE clan_id=$1", [clanId]) : [];
   const leaders = await q.query<{ yard_id: string; clan_id: number; influence: number; name: string; emblem: string; color: string }>(
@@ -76,6 +81,7 @@ export async function raidsView(q: Queryable, pid: number, now = Date.now()) {
   return {
     clanId,
     flags,
+    bags,
     clan: c ? { emblem: c.emblem, color: c.color } : null,
     yards: RAID_YARDS.map((y) => ({
       id: y.id,
@@ -241,6 +247,21 @@ export async function clanEvents(q: Queryable, clanId: number) {
     influence: RAID_YARDS.map((y) => ({ yard: y.id, name: y.name, influence: Number(inf.find((r) => r.yard_id === y.id)?.influence ?? 0) })),
     events: ev.map((e) => ({ id: Number(e.id), at: new Date(e.at).getTime(), kind: e.kind, player: e.player, other: e.other, yard: e.yard_id, building: e.building_id, amount: Number(e.amount) })),
   };
+}
+
+/** «Сумки за флаги»: the bag of yard n for RAID_BAG_PRICE of its flags — a piece of its set not owned yet (or roubles) */
+export async function raidBagOpen(ctx: Ctx, n: number) {
+  if (!Number.isInteger(n) || n < 1 || n > 5) throw new GameError("bad_request", "Нет такой сумки", 400);
+  const flag = FLAG_IDS[n - 1];
+  if ((await itemQty(ctx.q, ctx.pid, flag)) < RAID_BAG_PRICE) throw new GameError("raid_no_flags", `Нужно ${RAID_BAG_PRICE} флагов ${"★".repeat(n)}`);
+  await takeItem(ctx, flag, RAID_BAG_PRICE, `raid_bag:${n}`);
+  const set = TATTOO_SETS.find((s) => s.id === RAID_BAG_SETS[n - 1])!;
+  const all = set.pieces.map((p) => p.id);
+  const own = new Set((await ctx.q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id = ANY($2)", [ctx.pid, all])).map((x) => x.item_id));
+  const left = all.filter((x) => !own.has(x));
+  const tattoo = left.length ? left[Math.floor(ctx.rng() * left.length) % left.length] : null;
+  const reward = await grantReward(ctx, tattoo ? { items: [{ id: tattoo, qty: 1 }] } : { currencies: { RUB: RAID_BAG_RUB * n } }, `raid_bag:${n}`);
+  return { bag: n, tattoo, reward, ...(await raidsView(ctx.q, ctx.pid, ctx.now)) };
 }
 
 /** leave the raid fight (the damage done is lost) */

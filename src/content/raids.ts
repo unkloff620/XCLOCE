@@ -135,6 +135,13 @@ export const RAID_YARD_COOLDOWN_MS = 2 * 3_600_000;
 /** the yards' flags (items): «Флаг двора» with 1…5 stars, the bags of tattoo sets are opened for them */
 export const flagId = (n: number) => `raid-flag-${n}`;
 export const FLAG_IDS = [1, 2, 3, 4, 5].map(flagId);
+/**
+ * «Сумки за флаги»: the bag of yard n is opened for RAID_BAG_PRICE of its flags and gives one piece of its tattoo set
+ * the player does not have yet; when the set is whole, roubles instead (RAID_BAG_RUB × n).
+ */
+export const RAID_BAG_SETS = ["garages", "industry", "market", "blocks", "oldtown"];
+export const RAID_BAG_PRICE = 50;
+export const RAID_BAG_RUB = 5_000;
 export const buildingById = (id: string) => {
   for (const y of RAID_YARDS) { const b = y.buildings.find((x) => x.id === id); if (b) return { yard: y, b }; }
   return null;
