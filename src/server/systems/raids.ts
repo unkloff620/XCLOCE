@@ -17,7 +17,7 @@ import { weaponById } from "../../content/items.ts";
 import { talentExtras } from "../../content/talents.ts";
 import { weaponTalents } from "./home.ts";
 import { craftBonus } from "./craft.ts";
-import { FLAG_IDS, RAID_BAG_PRICE, RAID_BAG_RUB, RAID_BAG_SETS, RAID_YARDS, RAID_YARD_COOLDOWN_MS, buildingById, buildingHp, buildingReward, buildingTake, buildingWins, yardReward, type RaidYard } from "../../content/raids.ts";
+import { FLAG_IDS, RAID_BAG_PRICES, RAID_BAG_RUB, RAID_BAG_SETS, RAID_YARDS, RAID_YARD_COOLDOWN_MS, buildingById, buildingHp, buildingReward, buildingTake, buildingWins, yardReward, type RaidYard } from "../../content/raids.ts";
 
 export async function raidsOn(q: Queryable, pid: number, cfg: Config) {
   return cfg.raids.on || (await isAdminPlayer(q, pid, cfg));
@@ -249,12 +249,13 @@ export async function clanEvents(q: Queryable, clanId: number) {
   };
 }
 
-/** «Сумки за флаги»: the bag of yard n for RAID_BAG_PRICE of its flags — a piece of its set not owned yet (or roubles) */
+/** «Сумки за флаги»: the bag of yard n for RAID_BAG_PRICES[n-1] of its flags — a piece of its set not owned yet (or roubles) */
 export async function raidBagOpen(ctx: Ctx, n: number) {
   if (!Number.isInteger(n) || n < 1 || n > 5) throw new GameError("bad_request", "Нет такой сумки", 400);
   const flag = FLAG_IDS[n - 1];
-  if ((await itemQty(ctx.q, ctx.pid, flag)) < RAID_BAG_PRICE) throw new GameError("raid_no_flags", `Нужно ${RAID_BAG_PRICE} флагов ${"★".repeat(n)}`);
-  await takeItem(ctx, flag, RAID_BAG_PRICE, `raid_bag:${n}`);
+  const price = RAID_BAG_PRICES[n - 1];
+  if ((await itemQty(ctx.q, ctx.pid, flag)) < price) throw new GameError("raid_no_flags", `Нужно ${price} флагов ${"★".repeat(n)}`);
+  await takeItem(ctx, flag, price, `raid_bag:${n}`);
   const set = TATTOO_SETS.find((s) => s.id === RAID_BAG_SETS[n - 1])!;
   const all = set.pieces.map((p) => p.id);
   const own = new Set((await ctx.q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id = ANY($2)", [ctx.pid, all])).map((x) => x.item_id));

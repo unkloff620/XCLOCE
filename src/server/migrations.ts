@@ -1459,4 +1459,10 @@ CREATE TABLE IF NOT EXISTS clan_events (
 );
 CREATE INDEX IF NOT EXISTS clan_events_clan ON clan_events (clan_id, at DESC);`,
   },
+  {
+    // the yards' flags have a cap (content/items.ts maxStack): what was held above it before the cap — burnt
+    id: "v2-099-flag-cap",
+    sql: `UPDATE inventory SET qty = LEAST(qty, CASE item_id WHEN 'raid-flag-1' THEN 80 WHEN 'raid-flag-2' THEN 180 WHEN 'raid-flag-3' THEN 300 WHEN 'raid-flag-4' THEN 400 ELSE 560 END)
+WHERE item_id IN ('raid-flag-1','raid-flag-2','raid-flag-3','raid-flag-4','raid-flag-5');`,
+  },
 ];

@@ -339,6 +339,11 @@ function Bags({ keycaps, onClose }: { keycaps: number; onClose: () => void }) {
   const [drag, setDrag] = useState(0);
   const b = FORTUNE_BAGS[i];
   const set = TATTOO_SETS.find((x) => x.id === b.set);
+  const { state } = useGame();
+  const ownOf = (s: (typeof TATTOO_SETS)[number]) => {
+    const own = new Set((state?.inventory ?? []).filter((x) => x.qty > 0).map((x) => x.id));
+    return s.pieces.filter((p) => own.has(p.id)).length;
+  };
   const go = (d: 1 | -1) => {
     setTurn((t) => ({ n: (t?.n ?? 0) + 1, dir: d, from: i }));
     setI((v) => (v + d + FORTUNE_BAGS.length) % FORTUNE_BAGS.length);
@@ -395,6 +400,8 @@ function Bags({ keycaps, onClose }: { keycaps: number; onClose: () => void }) {
                 <span className="tat" title={`Наколка сета «${set.name}» — ${Math.round(BAG_TATTOO_CHANCE * 100)}%`}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={`${A}/tattoo-icon.webp`} alt="" />
+                  {/* how many of its set are mine already */}
+                  <b className="tat-of num">{ownOf(set)}/{set.pieces.length}</b>
                 </span>
               )}
             </div>

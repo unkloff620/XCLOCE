@@ -5962,6 +5962,9 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .fo-bags-can { position: absolute; left: 50%; bottom: 4%; transform: translateX(-50%); display: flex; gap: 6px; padding: 5px 8px; border-radius: 16px; background: rgba(12, 13, 16, 0.72); border: 1px solid rgba(255, 255, 255, 0.25); }
 .fo-bags-can > span { display: inline-flex; width: 30px; height: 30px; align-items: center; justify-content: center; }
 .fo-bags-can .tat img { width: 30px; height: 30px; object-fit: contain; }
+/* the tattoo icon on a bag: how many of its set I own, in its lower right corner */
+.fo-bags-can .tat { position: relative; }
+.tat-of { position: absolute; right: -9px; bottom: -6px; padding: 0 4px; border-radius: 6px; background: #1a120b; border: 1px solid #c9962e; color: #ffe08a; font-size: 9px; font-weight: 800; line-height: 13px; white-space: nowrap; }
 .fo-bags-arrow { width: 44px; height: 64px; border-radius: 12px; border: 2px solid rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.08); color: #fff; font-size: 34px; line-height: 1; cursor: pointer; flex: none; }
 .fo-bags-pic { width: 100%; max-width: 70cqw; height: auto; filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.6)); user-select: none; }
 .fo-bags-pic.shake { animation: fo-bag-shake 0.45s ease-in-out; }
@@ -6505,7 +6508,17 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 @keyframes rd-bags-in-r { from { opacity: 0; transform: translateX(40px) rotate(6deg); } }
 @keyframes rd-bags-in-l { from { opacity: 0; transform: translateX(-40px) rotate(-6deg); } }
 .rb-name { font-size: 22px; color: #ffd36a; text-shadow: 0 2px 0 #4a2a00, 0 0 8px rgba(0, 0, 0, 0.9); }
-.rb-open { margin-top: 4px; display: inline-flex; align-items: center; gap: 4px; }
+.rb-open { margin-top: 6px; width: min(300px, 78vw); min-height: 58px; }
+.rb-bag-pic { position: relative; display: block; }
+.rb-bag-pic > img { display: block; width: min(240px, 58vw); aspect-ratio: 1; object-fit: contain; filter: drop-shadow(0 12px 10px rgba(0, 0, 0, 0.7)); }
+.rb-bag-pic > img.from-r { animation: rd-bags-in-r 0.28s ease-out; }
+.rb-bag-pic > img.from-l { animation: rd-bags-in-l 0.28s ease-out; }
+/* the set's count on a bag: the tattoo icon and «6/21», in the bag's lower right corner */
+.tat-count { position: absolute; right: 4%; bottom: 8%; display: inline-flex; align-items: center; gap: 3px; padding: 3px 7px 3px 4px; border-radius: 12px;
+  background: rgba(12, 13, 16, 0.78); border: 1px solid rgba(255, 255, 255, 0.25); }
+.tat-count img { width: 24px; height: 24px; object-fit: contain; }
+.tat-count b { color: #ffe08a; font-size: 13px; font-weight: 800; }
+.tat-count.full b { color: #7dff9a; }
 .rb-arrow { width: 44px; height: 60px; border: 0; background: none; color: #e8b24a; font-size: 32px; line-height: 1; cursor: pointer; filter: drop-shadow(0 2px 2px #000); }
 .rb-arrow:active { transform: scale(0.9); }
 

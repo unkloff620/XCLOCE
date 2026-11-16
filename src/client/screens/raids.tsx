@@ -32,8 +32,8 @@ import { ART_VER } from "../preload.ts";
 import { Icon } from "../art/icons.tsx";
 import { haptic } from "../telegram.ts";
 import { useRouter } from "next/navigation";
-import { RAID_BAG_PRICE } from "../../content/raids.ts";
-import { tattooPiece } from "../../content/tattoos.ts";
+import { RAID_BAG_PRICES, RAID_BAG_SETS } from "../../content/raids.ts";
+import { TATTOO_SETS, tattooPiece } from "../../content/tattoos.ts";
 import { GROUND_H, GROUND_W, YARD_LIGHTS, groundH, groundY } from "../../content/raids.ts";
 import { takenWord } from "../../content/raids.ts";
 import { BUILDING_NAMES, RAID_YARDS, YARD_TREES, YARD_WALKERS, buildingReward, buildingTake, flagId, raidYardById, yardTotal, type BuildingKind, type RaidBuilding } from "../../content/raids.ts";
@@ -236,6 +236,22 @@ function AlleyScene() {
   );
 }
 
+/** «6/21»: how many pieces of a tattoo set I own — on a bag, so one sees whether it is still worth opening */
+export function TatCount({ set }: { set: string }) {
+  const { state } = useGame();
+  const s = TATTOO_SETS.find((x) => x.id === set);
+  if (!s || !state) return null;
+  const own = new Set(state.inventory.filter((x) => x.qty > 0).map((x) => x.id));
+  const have = s.pieces.filter((p) => own.has(p.id)).length;
+  return (
+    <span className={`tat-count ${have >= s.pieces.length ? "full" : ""}`} title={`Наколок сета «${s.name}»: ${have} из ${s.pieces.length}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/assets/fortune/tattoo-icon.webp" alt="" />
+      <b className="num">{have}/{s.pieces.length}</b>
+    </span>
+  );
+}
+
 export function RaidBagsScreen() {
   const { act, busy } = useGame();
   const [v, setV] = useState<RaidsView | null>(null);
@@ -273,15 +289,21 @@ export function RaidBagsScreen() {
         <button type="button" className="rb-arrow" data-nosfx onClick={() => go(-1)} aria-label="Предыдущая сумка">◀</button>
         <div className="rb-bag">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img key={n} className={anim} src={`/assets/items/raid-bag-${n + 1}.webp?v=${ART_VER.items}`} alt="" draggable={false} />
+          <span className="rb-bag-pic">
+            <img key={n} className={anim} src={`/assets/items/raid-bag-${n + 1}.webp?v=${ART_VER.items}`} alt="" draggable={false} />
+            {/* how many tattoos of its set are mine already */}
+            <TatCount set={RAID_BAG_SETS[n]} />
+          </span>
           <b className="rb-name display">{RAID_YARDS[n].name}</b>
-          <button type="button" className="btn gold rb-open" disabled={!!busy || flags[n] < RAID_BAG_PRICE}
+          {/* the same button as the bags of «Колесо удачи» */}
+          <button type="button" className="fo-spin rb-open" disabled={!!busy || flags[n] < RAID_BAG_PRICES[n]}
             onClick={async () => {
               haptic.tap();
               const r = await act<RaidsView & { tattoo: string | null; reward: Granted }>("raid_bag", { n: n + 1 });
               if (r) { setV(r); setGot({ n, tattoo: r.tattoo, reward: r.reward }); }
             }}>
-            Открыть · <ItemArt id={flagId(n + 1)} size={22} /> {RAID_BAG_PRICE}
+            <b>Открыть</b>
+            <span className="num"><ItemArt id={flagId(n + 1)} size={16} />{RAID_BAG_PRICES[n]}</span>
           </button>
         </div>
         <button type="button" className="rb-arrow" data-nosfx onClick={() => go(1)} aria-label="Следующая сумка">▶</button>
