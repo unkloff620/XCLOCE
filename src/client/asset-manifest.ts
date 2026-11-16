@@ -2475,6 +2475,8 @@ export const ASSET_FILES: string[] = [
  "/assets/pc/gpu.webp",
  "/assets/pc/psu.webp",
  "/assets/raids/arena-garage2.webp",
+ "/assets/raids/arena-kiosk.webp",
+ "/assets/raids/arena-main.webp",
  "/assets/raids/attack-room.webp",
  "/assets/raids/attack-wall.webp",
  "/assets/raids/b-barrack.webp",

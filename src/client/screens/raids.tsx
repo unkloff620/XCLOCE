@@ -228,6 +228,8 @@ const RAID_DEFENDERS: Record<BuildingKind, { id: string; name: string }[]> = {
   garage: [GOPNIK], barrack: [GOPNIK], khrush: [GOPNIK], shop: [GOPNIK], kiosk: [LAREK], boiler: [LAREK], main: [GOPNIK, LAREK],
 };
 const defendersOf = (kind: BuildingKind) => RAID_DEFENDERS[kind] ?? [GOPNIK];
+/** the fight's room: Ларёчник fights inside his kiosk, the main building is the gang's hall, Гопник — in the basement */
+const arenaOf = (kind: BuildingKind) => (kind === "main" ? "arena-main" : kind === "kiosk" || kind === "boiler" ? "arena-kiosk" : "arena-garage2");
 /** the defenders' rigs: one in the middle, or two side by side (the main building) */
 function Defenders({ kind, hpShare }: { kind: BuildingKind; hpShare?: number }) {
   const ds = defendersOf(kind);
@@ -362,7 +364,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
       <div className="fit-page fight-page rd-fight">
         <div className="fight-bg" aria-hidden="true">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img key={shake} className={shake ? "rd-hitbg" : ""} src={`${A}/arena-garage2.webp`} alt="" draggable={false} />
+          <img key={shake} className={shake ? "rd-hitbg" : ""} src={`${A}/${arenaOf(b.kind)}.webp`} alt="" draggable={false} />
         </div>
         <div className="fight-head">
           <Link href={`/clans/raids/${y.id}`} className="back-btn" aria-label="Во двор">‹</Link>
