@@ -6581,3 +6581,9 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 @keyframes rd-smoke { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } 12% { opacity: 0.85; }
   100% { opacity: 0; transform: translate(calc(-50% + 70px), calc(-50% - 60px)) scale(2.6); } }
 @media (prefers-reduced-motion: reduce) { .rd-smoke > i { animation: none; } }
+
+/* a yard not drawn yet: a red rubber stamp «Закрыто» over its card's photo */
+.rd-shut { position: absolute; z-index: 3; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-12deg); padding: 4px 16px; border: 3px solid #c3162a; border-radius: 8px;
+  color: #d0172d; background: rgba(255, 240, 230, 0.55); font-family: var(--font-display, inherit); font-size: 26px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase;
+  box-shadow: inset 0 0 0 2px rgba(195, 22, 42, 0.35); text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5); pointer-events: none; }
+.rd-closed.shut { color: #c3162a; font-weight: 800; }

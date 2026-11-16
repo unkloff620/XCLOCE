@@ -34,7 +34,8 @@ export interface RaidYard {
   subtitle: string;
   /** wins over each of its buildings to take it */
   wins: number;
-  /** drawn by the artist as layers: its ground and its own buildings in public/assets/raids/<art>/ (build-yard-art.py) */
+  /** drawn by the artist as layers: its ground and its own buildings in public/assets/raids/<art>/ (build-yard-art.py).
+   *  A yard without its art is closed for now («Закрыто» on its card) */
   art?: string;
   buildings: RaidBuilding[];
 }
@@ -79,7 +80,7 @@ const plan = (yard: string, n: number, kinds: BuildingKind[]): RaidBuilding[] =>
 };
 
 const G: BuildingKind = "garage", K: BuildingKind = "kiosk", B: BuildingKind = "barrack", O: BuildingKind = "boiler", S: BuildingKind = "shop", H: BuildingKind = "khrush";
-/** every building is taken with WINS wins; the later yards are harder by having more buildings */
+/** every building is taken with WINS wins; each next yard has one building more (7, 8, 9, 10, 11 with the main one) */
 export const WINS = 10;
 export const RAID_YARDS: RaidYard[] = [
   // the artist's yard (tools/raids/source/garages, build-yard-art.py prints these places): from the gate up
@@ -98,9 +99,9 @@ export const RAID_YARDS: RaidYard[] = [
     { id: "promzona-6", kind: "office", pic: "office2", x: 52.64, y: 37.63, w: 28.52 }, { id: "promzona-7", kind: "pipes", pic: "pipes2", x: 29.88, y: 31.45, w: 24.22 },
     { id: "promzona-main", kind: "main", pic: "factory", x: 58.84, y: 29.62, w: 54.0 },
   ] },
-  { id: "rynok", n: 3, name: "Рынок", subtitle: "Ларьки, палатки и свои люди", wins: WINS, buildings: plan("rynok", 3, [K, S, K, S, K, G, K, S, K, G, S, K]) },
-  { id: "panelki", n: 4, name: "Панельки", subtitle: "Пятиэтажки, лавочки и бабки на страже", wins: WINS, buildings: plan("panelki", 4, [H, B, H, S, H, K, H, B, H, S, K, H, B, H, S]) },
-  { id: "center", n: 5, name: "Центр района", subtitle: "Главный двор. Кто держит его — держит район", wins: WINS, buildings: plan("center", 5, [S, H, S, H, O, H, S, H, K, H, S, O, H, S, H, K, H, S]) },
+  { id: "rynok", n: 3, name: "Рынок", subtitle: "Ларьки, палатки и свои люди", wins: WINS, buildings: plan("rynok", 3, [K, S, K, S, K, G, K, S]) },
+  { id: "panelki", n: 4, name: "Панельки", subtitle: "Пятиэтажки, лавочки и бабки на страже", wins: WINS, buildings: plan("panelki", 4, [H, B, H, S, H, K, H, B, H]) },
+  { id: "center", n: 5, name: "Центр района", subtitle: "Главный двор. Кто держит его — держит район", wins: WINS, buildings: plan("center", 5, [S, H, S, H, O, H, S, H, K, H]) },
 ];
 /**
  * The lights of an artist's yard (x, y — the lamp's head, % of its ground picture): street lamps glow and breathe, a
@@ -125,6 +126,9 @@ export const YARD_LIGHTS: Record<string, YardLight[]> = {
     { x: 84, y: 58.5, k: "spark" }, { x: 69.8, y: 9.4, k: "smoke" },
   ],
 };
+
+/** the yard can be raided (its art is in; the others are «Закрыто» for now) */
+export const yardReady = (y: RaidYard) => !!y.art;
 
 export const raidYardById = (id: string) => RAID_YARDS.find((y) => y.id === id);
 
@@ -170,7 +174,7 @@ export const buildingReward = (yardN: number, b: RaidBuilding) => ({ xp: r10(250
 export const buildingWins = (y: RaidYard) => y.wins;
 
 /** the building's HP in one fight: 100 000 × its row */
-export const BUILDING_HP = 100_000;
+export const BUILDING_HP = 33_000;
 export const buildingHp = (b: RaidBuilding) => BUILDING_HP * rowK(b);
 /*
  * Influence (влияние): the clan's weight in a yard, it only grows. Every capture adds it: a full capture of yard n gives

@@ -17,6 +17,7 @@ import { weaponById } from "../../content/items.ts";
 import { talentExtras } from "../../content/talents.ts";
 import { weaponTalents } from "./home.ts";
 import { craftBonus } from "./craft.ts";
+import { yardReady } from "../../content/raids.ts";
 import { FLAG_IDS, RAID_BAG_PRICES, RAID_BAG_RUB, RAID_BAG_SETS, RAID_YARDS, RAID_YARD_COOLDOWN_MS, buildingById, buildingHp, buildingReward, buildingTake, buildingWins, yardReward, type RaidYard } from "../../content/raids.ts";
 
 export async function raidsOn(q: Queryable, pid: number, cfg: Config) {
@@ -44,7 +45,7 @@ type Progress = Awaited<ReturnType<typeof progressOf>>;
 /** the building to attack in a yard now: the first one (from the bottom up) the clan has not taken; null — all taken */
 const targetOf = (y: RaidYard, taken: Set<string>) => y.buildings.find((b) => !taken.has(b.id)) ?? null;
 /** a yard is open when it is the first one or the one before it has been taken (once is enough) */
-const yardOpen = (y: RaidYard, yards: Set<string>) => y.n === 1 || yards.has(RAID_YARDS[y.n - 2].id);
+const yardOpen = (y: RaidYard, yards: Set<string>) => yardReady(y) && (y.n === 1 || yards.has(RAID_YARDS[y.n - 2].id));
 /** a just-taken yard rests: until when (ms), or 0 — it can be taken now */
 const restUntil = (y: RaidYard, p: Progress, now: number) => {
   const l = p.last.get(y.id);
@@ -126,6 +127,7 @@ export async function raidStart(ctx: Ctx, buildingId: string) {
     throw new GameError("raid_running", "Сначала закончи бой за другое здание");
   }
   const p = await progressOf(ctx.q, clanId);
+  if (!yardReady(y)) throw new GameError("yard_closed", `Двор «${y.name}» пока закрыт`);
   if (!yardOpen(y, p.yards)) throw new GameError("yard_closed", `Сначала клан должен захватить двор «${RAID_YARDS[y.n - 2].name}»`);
   const rest = restUntil(y, p, ctx.now);
   if (rest) throw new GameError("yard_taken", `Двор ваш. Снова захватить можно через ${Math.ceil((rest - ctx.now) / 60_000)} мин`);

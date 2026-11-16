@@ -35,7 +35,7 @@ import { useRouter } from "next/navigation";
 import { RAID_BAG_PRICES, RAID_BAG_SETS } from "../../content/raids.ts";
 import { TATTOO_SETS, tattooPiece } from "../../content/tattoos.ts";
 import { GROUND_H, GROUND_W, YARD_LIGHTS, groundH, groundY } from "../../content/raids.ts";
-import { takenWord } from "../../content/raids.ts";
+import { takenWord, yardReady } from "../../content/raids.ts";
 import { BUILDING_NAMES, RAID_YARDS, YARD_TREES, YARD_WALKERS, buildingReward, buildingTake, flagId, raidYardById, yardTotal, type BuildingKind, type RaidBuilding } from "../../content/raids.ts";
 import { itemById } from "../../content/items.ts";
 
@@ -124,7 +124,9 @@ export function RaidsScreen() {
             <img className={y.art ? "own" : ""} src={y.art ? `${A}/${y.art}/photo.webp` : `${A}/yard-bg.webp`} alt="" draggable={false} />
             <span className="rd-wins num">{yv?.taken ? "Двор наш" : `Захвачено ${taken}/${y.buildings.length}`}</span>
             {!!yv?.times && <span className="rd-times num">захвачен ×{yv.times}</span>}
-            {!open && <span className="rd-lock"><Icon name="lock" size={34} /></span>}
+            {!open && yardReady(y) && <span className="rd-lock"><Icon name="lock" size={34} /></span>}
+            {/* a yard not drawn yet: closed for now — a red stamp over its photo */}
+            {!yardReady(y) && <span className="rd-shut">Закрыто</span>}
           </div>
           {/* the coffee stain in the corner: the clan with the most influence in this yard */}
           {yv?.leader && (
@@ -137,7 +139,8 @@ export function RaidsScreen() {
             <span className="rd-kicker">двор №{y.n}</span>
             <b className="rd-name">{y.name}</b>
             <span className="rd-sub">{y.subtitle}</span>
-            {v && !v.clanId ? <span className="rd-closed">Захват — для клана. Вступи в клан или создай свой</span>
+            {!yardReady(y) ? <span className="rd-closed shut">Двор пока закрыт</span>
+              : v && !v.clanId ? <span className="rd-closed">Захват — для клана. Вступи в клан или создай свой</span>
               : open && yv?.rest ? <span className="rd-closed">Двор ваш. Снова захватить — через <RestLeft until={yv.rest} /></span>
               : open ? <Link href={`/clans/raids/${y.id}`} className="btn gold rd-go">Захватить</Link>
               : <span className="rd-closed">Сначала захвати двор «{RAID_YARDS[i - 1]?.name}»</span>}
