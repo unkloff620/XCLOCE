@@ -2924,6 +2924,7 @@ export const ASSET_FILES: string[] = [
  "/assets/ui/btn-cancel.webp",
  "/assets/ui/btn-claim-all.webp",
  "/assets/ui/btn-ok.webp",
+ "/assets/ui/calendar.webp",
  "/assets/ui/case.webp",
  "/assets/ui/chain-lock.webp",
  "/assets/ui/chest.webp",

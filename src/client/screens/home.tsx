@@ -282,11 +282,6 @@ export function HomeScreen() {
                 {state.daily.available && <i className="side-dot" />}
                 {state.daily.streak > 1 && <span className="side-streak num" title={`Серия входов: ${state.daily.streak} дн.`}><Icon name="fire" size={13} />{state.daily.streak}</span>}
               </button>
-              <button className={`icon-btn-art ${questsAlert ? "glow" : ""}`} style={{ ["--c" as string]: "#3ddc84" }} onClick={() => setQuests(true)} aria-label={mon ? "Делюги" : "Задания дня"} title={mon ? "Делюги «От звонка до звонка»" : "Задания дня"}>
-                <Icon name="map" size={58} />
-                {(questsAlert || (mon?.todayOpen ?? false)) && <i className="side-dot" />}
-                <span className="side-count num">{mon ? `${mon.closedN}/${mon.days}` : `${state.quests.list.filter((x) => x.claimed).length}/${state.quests.list.length}`}</span>
-              </button>
               <button className="icon-btn-art" style={{ ["--c" as string]: "#3fd2ff" }} onClick={() => openRoomEditor("desk")} aria-label="Обстановка" title="Обстановка">
                 <Icon name="bolt" size={58} />
               </button>
@@ -307,6 +302,12 @@ export function HomeScreen() {
           <button className={`menu-toggle news-toggle ${newsUnread ? "glow" : ""}`} onClick={openNews} aria-label="Что нового" title="Что нового">
             <Icon name="news" size={40} />
             {newsUnread > 0 && <span className="msg-count num">{newsUnread}</span>}
+          </button>
+          {/* the month's tasks («Делюги») / the day's tasks: a tear-off calendar under the news */}
+          <button className={`menu-toggle news-toggle cal-toggle ${questsAlert ? "glow" : ""}`} onClick={() => setQuests(true)} aria-label={mon ? "Делюги" : "Задания дня"} title={mon ? "Делюги «От звонка до звонка»" : "Задания дня"}>
+            <Icon name="calendar" size={40} />
+            {(questsAlert || (mon?.todayOpen ?? false)) && <i className="side-dot" />}
+            <span className="side-count num">{mon ? `${mon.closedN}/${mon.days}` : `${state.quests.list.filter((x) => x.claimed).length}/${state.quests.list.length}`}</span>
           </button>
           {f && fb && !fightOpen && (
             <button className="fight-mini" style={{ ["--acc" as string]: fb.theme.accent, ["--hp" as string]: hpPct }} onClick={() => setFightOpen(true)} aria-label={`Идёт бой: ${fb.name}`} title="Идёт бой">
