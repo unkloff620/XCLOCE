@@ -366,10 +366,10 @@ function YardLife({ n }: { n: number }) {
 
 export function RaidYardScreen({ id }: { id: string }) {
   const { v } = useRaids();
-  // start at the bottom of a tall yard (where the attack starts), once its layout has settled
+  // start at the bottom of a tall yard (where the attack starts) and in the middle of a wide one, once its layout has settled
   const scroller = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
-    const down = () => { const el = scroller.current; if (el) el.scrollTop = el.scrollHeight; };
+    const down = () => { const el = scroller.current; if (el) { el.scrollTop = el.scrollHeight; el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2; } };
     const ts = [0, 120, 400].map((ms) => window.setTimeout(down, ms));
     return () => ts.forEach((t) => window.clearTimeout(t));
   }, [id, !!v]);

@@ -6017,9 +6017,11 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 /* the yard from above: the ground picture covering the screen, the buildings on it (in % of the picture) */
 .rd-scene { position: absolute; top: 0; bottom: 0; left: 50%; transform: translateX(-50%); aspect-ratio: 1024 / 1536; min-width: 100%; }
 /* the yard: as wide as the first yard on this screen; a bigger (taller) yard scrolls up from the bottom */
-.rd-yscroll { position: absolute; inset: 0; overflow-x: hidden; overflow-y: auto; container-type: size; scrollbar-width: none; overscroll-behavior: contain; }
+/* the yard keeps its size (as high as the screen): on a narrow phone it is wider than the screen — a finger drags it
+   left and right (it opens in the middle); a bigger yard is also taller and scrolls up */
+.rd-yscroll { position: absolute; inset: 0; isolation: isolate; overflow: auto; container-type: size; scrollbar-width: none; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
 .rd-yscroll::-webkit-scrollbar { display: none; }
-.rd-yscroll > .rd-scene { position: relative; top: auto; bottom: auto; left: 50%; width: max(100cqw, 100cqh * 1024 / 1536); min-width: 0; }
+.rd-yscroll > .rd-scene { position: relative; top: auto; bottom: auto; left: auto; transform: none; margin: 0 auto; width: max(100cqw, 100cqh * 1024 / 1536); min-width: 0; }
 .rd-map-bg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; user-select: none; }
 .rd-bld { position: absolute; transform: translate(-50%, -100%); padding: 0; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .rd-bld > img { width: 100%; height: auto; display: block; filter: drop-shadow(-5px 6px 5px rgba(15, 20, 10, 0.55)); transition: transform 0.15s; }
