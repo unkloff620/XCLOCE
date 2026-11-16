@@ -1428,4 +1428,11 @@ DELETE FROM raid_progress p USING raid_yards r WHERE r.clan_id = p.clan_id AND p
     id: "v2-096-raids-open",
     sql: `INSERT INTO config (key, value) VALUES ('raids', '{"on": true}') ON CONFLICT (key) DO UPDATE SET value = excluded.value;`,
   },
+  {
+    // «Захват»: a raid fight has the time of a boss fight (8 h + the clock bonuses); it is lost when the time is over.
+    // The fights already on get their 8 hours from now
+    id: "v2-097-raid-fight-time",
+    sql: `ALTER TABLE raid_fights ADD COLUMN IF NOT EXISTS ends_at TIMESTAMPTZ;
+UPDATE raid_fights SET ends_at = now() + interval '8 hours' WHERE ends_at IS NULL AND status = 'active';`,
+  },
 ];

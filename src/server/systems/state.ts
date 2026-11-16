@@ -134,7 +134,7 @@ export async function gameState(ctx: Ctx) {
     raids: { on: ctx.cfg.raids.on || (await isAdminPlayer(ctx.q, ctx.pid, ctx.cfg)) },
     /** my fight for a building in «Ходки» going on now (the boss button leads there) */
     raidFight: await ctx.q.query<{ yard_id: string; building_id: string }>(
-      "SELECT yard_id, building_id FROM raid_fights WHERE player_id=$1 AND status='active' LIMIT 1", [ctx.pid])
+      "SELECT yard_id, building_id FROM raid_fights WHERE player_id=$1 AND status='active' AND (ends_at IS NULL OR ends_at > $2) LIMIT 1", [ctx.pid, new Date(ctx.now)])
       .then(([r]) => (r ? { yard: r.yard_id, building: r.building_id } : null)),
     newbie: await newbieView(ctx.q, ctx.pid, ctx.now),
     /** the talk at the exchange machine: today's talk done? the better rate it gave (until when) */

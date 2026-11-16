@@ -13,6 +13,9 @@ import type { Config } from "../config.ts";
 import { strike } from "./combat.ts";
 import { isAdminPlayer } from "./fortune.ts";
 import { weaponById } from "../../content/items.ts";
+import { talentExtras } from "../../content/talents.ts";
+import { weaponTalents } from "./home.ts";
+import { craftBonus } from "./craft.ts";
 import { RAID_YARDS, RAID_YARD_COOLDOWN_MS, buildingById, buildingHp, buildingReward, buildingTake, buildingWins, yardReward, type RaidYard } from "../../content/raids.ts";
 
 export async function raidsOn(q: Queryable, pid: number, cfg: Config) {
@@ -49,11 +52,17 @@ const restUntil = (y: RaidYard, p: Progress, now: number) => {
 /** the current capture of a yard started when it was last taken (fights before that were for the last capture) */
 const captureFrom = (y: RaidYard, p: Progress) => new Date(p.last.get(y.id)?.at ?? 0);
 
+/** a raid fight whose time is over is lost (like a boss fight: the damage done is gone) */
+async function expireRaid(q: Queryable, pid: number, now: number) {
+  await q.query("UPDATE raid_fights SET status='lost', ended_at=ends_at WHERE player_id=$1 AND status='active' AND ends_at <= $2", [pid, new Date(now)]);
+}
+
 export async function raidsView(q: Queryable, pid: number, now = Date.now()) {
+  await expireRaid(q, pid, now);
   const clanId = await myClan(q, pid);
   const p: Progress = clanId ? await progressOf(q, clanId) : { wins: new Map(), taken: new Set(), yards: new Set(), last: new Map() };
-  const [f] = await q.query<{ id: number; building_id: string; hp_max: number; damage: number; hits: number }>(
-    "SELECT id, building_id, hp_max, damage, hits FROM raid_fights WHERE player_id=$1 AND status='active'", [pid]);
+  const [f] = await q.query<{ id: number; building_id: string; hp_max: number; damage: number; hits: number; ends_at: Date | null }>(
+    "SELECT id, building_id, hp_max, damage, hits, ends_at FROM raid_fights WHERE player_id=$1 AND status='active'", [pid]);
   // the clan's logo: it stands over every building the clan has taken
   const [c] = clanId ? await q.query<{ emblem: string; color: string }>("SELECT emblem, color FROM clans WHERE id=$1", [clanId]) : [];
   return {
@@ -70,7 +79,9 @@ export async function raidsView(q: Queryable, pid: number, now = Date.now()) {
       target: restUntil(y, p, now) ? null : targetOf(y, p.taken)?.id ?? null,
       buildings: y.buildings.map((b) => ({ id: b.id, wins: p.wins.get(b.id) ?? 0, need: buildingWins(y), taken: !!restUntil(y, p, now) || p.taken.has(b.id) })),
     })),
-    fight: f ? { id: Number(f.id), building: f.building_id, hp: Math.max(0, Number(f.hp_max) - Number(f.damage)), hpMax: Number(f.hp_max), hits: Number(f.hits) } : null,
+    fight: f ? { id: Number(f.id), building: f.building_id, hp: Math.max(0, Number(f.hp_max) - Number(f.damage)), hpMax: Number(f.hp_max), hits: Number(f.hits),
+      /** when the fight's time is over (ms): it is lost then */
+      endsAt: f.ends_at ? new Date(f.ends_at).getTime() : null } : null,
   };
 }
 
@@ -89,6 +100,7 @@ export async function raidStart(ctx: Ctx, buildingId: string) {
   const found = buildingById(buildingId);
   if (!found) throw new GameError("bad_request", "Нет такого здания", 400);
   const { yard: y, b } = found;
+  await expireRaid(ctx.q, ctx.pid, ctx.now);
   const [active] = await ctx.q.query<{ building_id: string }>("SELECT building_id FROM raid_fights WHERE player_id=$1 AND status='active'", [ctx.pid]);
   if (active) {
     if (active.building_id === b.id) return { building: b.id, already: true, ...(await raidsView(ctx.q, ctx.pid, ctx.now)) };
@@ -99,21 +111,24 @@ export async function raidStart(ctx: Ctx, buildingId: string) {
   const rest = restUntil(y, p, ctx.now);
   if (rest) throw new GameError("yard_taken", `Двор ваш. Снова захватить можно через ${Math.ceil((rest - ctx.now) / 60_000)} мин`);
   if (targetOf(y, p.taken)?.id !== b.id) throw new GameError("not_target", "Сначала захватите здания пониже");
+  // the time of a boss fight: 8 hours + the talents' and the craft stash's minutes
+  const clockMin = talentExtras(await weaponTalents(ctx.q, ctx.pid)).clockMin + (await craftBonus(ctx.q, ctx.pid)).clock;
   await ctx.q.query(
-    "INSERT INTO raid_fights (player_id, clan_id, yard_id, building_id, hp_max, started_at) VALUES ($1,$2,$3,$4,$5,$6)",
-    [ctx.pid, clanId, y.id, b.id, buildingHp(b), new Date(ctx.now)]);
+    "INSERT INTO raid_fights (player_id, clan_id, yard_id, building_id, hp_max, started_at, ends_at) VALUES ($1,$2,$3,$4,$5,$6,$7)",
+    [ctx.pid, clanId, y.id, b.id, buildingHp(b), new Date(ctx.now), new Date(ctx.now + ctx.cfg.fight.hours * 3600_000 + clockMin * 60_000)]);
   return { building: b.id, ...(await raidsView(ctx.q, ctx.pid, ctx.now)) };
 }
 
 /** a hit with a weapon in the raid fight; the building falls — the win, the clan's count, maybe the building and the yard */
 export async function raidAttack(ctx: Ctx, weaponId: string, want = 1, rush = false) {
   const clanId = await guard(ctx);
+  await expireRaid(ctx.q, ctx.pid, ctx.now);
   const w = weaponById(weaponId);
   if (!w) throw new GameError("bad_weapon", "Этим не повоюешь");
   if (!Number.isInteger(want) || want < 1 || want > 1000) throw new GameError("bad_count", "Можно бить по 1, 10, 100 или 1000");
   const [f] = await ctx.q.query<{ id: number; yard_id: string; building_id: string; hp_max: number; damage: number }>(
     "SELECT id, yard_id, building_id, hp_max, damage FROM raid_fights WHERE player_id=$1 AND status='active' FOR UPDATE", [ctx.pid]);
-  if (!f) throw new GameError("no_fight", "Сначала нажми «Атаковать»");
+  if (!f) throw new GameError("no_fight", "Время боя вышло или бой не начат — нажми «Атаковать»");
   const hit = await strike(ctx, w, w.weapon.kind === "consumable" ? want : 1, `raid:${f.building_id}`, rush);
   const damage = Number(f.damage) + hit.damage;
   await ctx.q.query("UPDATE raid_fights SET damage=$2, hits = hits + $3 WHERE id=$1", [f.id, damage, hit.count]);

@@ -23,11 +23,11 @@ import { TalentWindow } from "./talents.tsx";
 import { CritBurn, preloadCritBanner } from "../art/crit-burn.tsx";
 import { GainLine, Modal } from "../ui.tsx";
 import { BossPhoto } from "./boss-parts.tsx";
-import type { BossDef } from "../../content/bosses.ts";
+import { FIGHT_HOURS, type BossDef } from "../../content/bosses.ts";
 import { RUSH_PRICE } from "../../content/items.ts";
 import { clock } from "../format.ts";
 import { usePageReady } from "../route-loader.tsx";
-import { useGame } from "../store.tsx";
+import { useGame, useNow } from "../store.tsx";
 import { Icon } from "../art/icons.tsx";
 import { haptic } from "../telegram.ts";
 import { useRouter } from "next/navigation";
@@ -40,7 +40,7 @@ interface RaidsView {
   clanId: number | null;
   clan: { emblem: string; color: string } | null;
   yards: { id: string; open: boolean; taken: boolean; rest: number; times: number; target: string | null; buildings: { id: string; wins: number; need: number; taken: boolean }[] }[];
-  fight: { id: number; building: string; hp: number; hpMax: number; hits: number } | null;
+  fight: { id: number; building: string; hp: number; hpMax: number; hits: number; endsAt: number | null } | null;
   weapons: Tray[];
 }
 /** the clan's progress (refreshed while the screen is open) */
@@ -145,6 +145,16 @@ function YardRewards({ y }: { y: (typeof RAID_YARDS)[number] }) {
 }
 
 /** «1:24» to a time (ms), ticking */
+function FightTime({ endsAt }: { endsAt: number }) {
+  const now = useNow();
+  const left = Math.max(0, endsAt - now);
+  return (
+    <div className="arena-time">
+      <Bar value={left} max={FIGHT_HOURS * 3600_000} tone="health" height={18} label={<><Icon name="clock" size={12} /> {clock(left)}</>} />
+    </div>
+  );
+}
+
 function RestLeft({ until }: { until: number }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => { const t = window.setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
@@ -289,6 +299,13 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
     setMusicTrack("battle");
     return () => setMusicTrack("calm");
   }, [fighting]);
+  // the fight's time is over: the server counts it lost — the screen goes back to the building
+  const endsAt = v?.fight?.endsAt ?? null;
+  useEffect(() => {
+    if (!endsAt) return;
+    const t = window.setTimeout(() => { void load(); }, Math.max(0, endsAt - Date.now()) + 1500);
+    return () => window.clearTimeout(t);
+  }, [endsAt, load]);
   const y = raidYardById(yard);
   const b = y?.buildings.find((x) => x.id === building);
   if (!y || !b) return null;
@@ -376,6 +393,8 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
         <div className="arena full">
           <div className="arena-top">
             <Bar value={fight.hp} max={fight.hpMax} tone="health" height={24} label={`${fight.hp.toLocaleString("ru-RU")} / ${fight.hpMax.toLocaleString("ru-RU")}`} />
+            {/* the fight's time, like a boss fight: the bar shortens as the 8 hours pass; over — the fight is lost */}
+            {fight.endsAt && <FightTime endsAt={fight.endsAt} />}
           </div>
           {/* the building's defenders (RAID_DEFENDERS, tools/boss/assemble-*.py), down to the hips, boxing */}
           <div className={`arena-photo rd-defender-fight ${hitFx ? "hit ouch" : ""}`}>
