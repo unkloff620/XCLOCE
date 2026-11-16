@@ -368,9 +368,10 @@ function YardLife({ n }: { n: number }) {
 const CLOUDS: { x: number; y: number; s: number }[] = (() => {
   const out: { x: number; y: number; s: number }[] = [];
   let k = 0;
-  const size = () => 30 + ((k++ * 37) % 17);
-  for (let x = -6; x <= 106; x += 11) { out.push({ x, y: -3, s: size() }); out.push({ x: x + 5, y: 103, s: size() }); }
-  for (let y = 4; y <= 96; y += 7) { out.push({ x: -7, y, s: size() }); out.push({ x: 107, y: y + 3, s: size() }); }
+  // big lumps, close together, a double ring: the yard's rim is under thick cloud
+  const size = () => 44 + ((k++ * 37) % 20);
+  for (let x = -8; x <= 108; x += 9) { out.push({ x, y: -4, s: size() }); out.push({ x: x + 4, y: 104, s: size() }); out.push({ x: x + 2, y: -11, s: size() }); out.push({ x: x + 6, y: 111, s: size() }); }
+  for (let y = 0; y <= 100; y += 5) { out.push({ x: -8, y, s: size() }); out.push({ x: 108, y: y + 2, s: size() }); out.push({ x: -16, y: y + 1, s: size() }); out.push({ x: 116, y: y + 3, s: size() }); }
   return out;
 })();
 function YardClouds() {

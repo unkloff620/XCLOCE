@@ -6020,27 +6020,30 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 /* the yard keeps its size (as high as the screen) and lies in a dark country under clouds: the map is dragged every
    way (a margin of fog all round it, so its top comes out from under the head and the edges are seen) */
 .rd-yscroll { position: absolute; inset: 0; isolation: isolate; overflow: auto; container-type: size; scrollbar-width: none; overscroll-behavior: none; -webkit-overflow-scrolling: touch;
-  background: #0d1015; }
+  background: #5f6878; }
 .rd-yscroll::-webkit-scrollbar { display: none; }
 .rd-world { position: relative; width: max-content; min-width: 100%; padding: calc(var(--top) + 70px + 18cqh) 34cqw calc(var(--bottom) + 18cqh); box-sizing: border-box; }
-.rd-fog { position: absolute; inset: 0; pointer-events: none;
-  background: radial-gradient(ellipse 60% 40% at 20% 15%, rgba(120, 132, 150, 0.22), transparent 70%), radial-gradient(ellipse 50% 35% at 85% 40%, rgba(110, 122, 140, 0.2), transparent 70%),
-    radial-gradient(ellipse 70% 45% at 40% 85%, rgba(120, 130, 148, 0.2), transparent 70%), radial-gradient(ellipse 40% 30% at 70% 10%, rgba(140, 150, 165, 0.16), transparent 70%), #0d1015;
-  animation: rd-fog 40s ease-in-out infinite alternate; }
-@keyframes rd-fog { to { background-position: 30px 20px, -40px 10px, 20px -30px, -10px 25px, 0 0; } }
+/* the country round the yard: a thick sea of clouds (public/assets/raids/clouds.webp, tiles seamlessly), two layers
+   drifting apart slowly */
+.rd-fog { position: absolute; inset: 0; pointer-events: none; overflow: hidden; background: #5f6878 url(/assets/raids/clouds.webp) 0 0 / 520px 520px repeat;
+  animation: rd-fog 90s linear infinite; }
+.rd-fog::after { content: ""; position: absolute; inset: -20%; background: url(/assets/raids/clouds.webp) 0 0 / 820px 820px repeat; opacity: 0.55; mix-blend-mode: screen;
+  animation: rd-fog2 140s linear infinite; }
+@keyframes rd-fog { to { background-position: 520px 260px; } }
+@keyframes rd-fog2 { to { background-position: -820px 410px; } }
 .rd-yscroll .rd-scene { position: relative; top: auto; bottom: auto; left: auto; transform: none; margin: 0; width: max(100cqw, 100cqh * 1024 / 1536); min-width: 0; }
 /* the yard's own picture melts into the dark at its edges */
 .rd-yscroll .rd-map-bg { -webkit-mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent), linear-gradient(180deg, transparent, #000 7%, #000 93%, transparent);
   -webkit-mask-composite: source-in; mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent), linear-gradient(180deg, transparent, #000 7%, #000 93%, transparent);
   mask-composite: intersect; }
 .rd-clouds { position: absolute; inset: 0; z-index: 9999; pointer-events: none; }
-.rd-clouds > i { position: absolute; aspect-ratio: 1.6; transform: translate(-50%, -50%); border-radius: 50%; opacity: 0.8;
-  /* a puffy cloud: three round lumps with a lit top, a darker belly */
-  background: radial-gradient(circle at 35% 45%, rgba(214, 220, 230, 0.8), rgba(214, 220, 230, 0) 32%), radial-gradient(circle at 62% 38%, rgba(226, 231, 240, 0.85), rgba(226, 231, 240, 0) 30%),
-    radial-gradient(ellipse at 50% 62%, rgba(120, 130, 150, 0.7), rgba(110, 120, 140, 0.35) 45%, rgba(100, 110, 130, 0) 70%); filter: blur(5px);
+.rd-clouds > i { position: absolute; aspect-ratio: 1.4; transform: translate(-50%, -50%); border-radius: 50%;
+  /* a lump of the same cloud sea, its edge soft: it lies over the yard's rim */
+  background: url(/assets/raids/clouds.webp) 0 0 / 520px 520px repeat;
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, rgba(0, 0, 0, 0.6) 50%, transparent 70%); mask-image: radial-gradient(ellipse at center, #000 30%, rgba(0, 0, 0, 0.6) 50%, transparent 70%);
   animation: rd-cloud 16s ease-in-out infinite alternate; }
 @keyframes rd-cloud { from { transform: translate(-54%, -50%) scale(1); } to { transform: translate(-46%, -53%) scale(1.08); } }
-@media (prefers-reduced-motion: reduce) { .rd-clouds > i, .rd-fog { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .rd-clouds > i, .rd-fog, .rd-fog::after { animation: none; } }
 .rd-map-bg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; user-select: none; }
 .rd-bld { position: absolute; transform: translate(-50%, -100%); padding: 0; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .rd-bld > img { width: 100%; height: auto; display: block; filter: drop-shadow(-5px 6px 5px rgba(15, 20, 10, 0.55)); transition: transform 0.15s; }

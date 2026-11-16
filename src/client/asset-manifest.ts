@@ -2710,6 +2710,7 @@ export const ASSET_FILES: string[] = [
  "/assets/raids/bags-bg.webp",
  "/assets/raids/bags-door.webp",
  "/assets/raids/card.webp",
+ "/assets/raids/clouds.webp",
  "/assets/raids/garages/b-barrack.webp",
  "/assets/raids/garages/b-boiler.webp",
  "/assets/raids/garages/b-garage.webp",
