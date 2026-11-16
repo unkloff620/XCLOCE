@@ -46,7 +46,7 @@ interface RaidsView {
   clan: { emblem: string; color: string } | null;
   yards: { id: string; open: boolean; taken: boolean; rest: number; times: number; target: string | null; buildings: { id: string; wins: number; need: number; taken: boolean }[];
     /** my clan's influence here; the clan with the most of it */
-    influence: number; leader: { id: number; name: string; emblem: string; color: string; influence: number } | null }[];
+    influence: number; leader: { id: number; name: string; tag: string; emblem: string; color: string; influence: number } | null }[];
   fight: { id: number; building: string; hp: number; hpMax: number; hits: number; endsAt: number | null } | null;
   /** my flags of the yards 1…5 */
   flags?: number[];
@@ -130,7 +130,7 @@ export function RaidsScreen() {
           {yv?.leader && (
             <span className="rd-leader" title={`Самые влиятельные: ${yv.leader.name} — ${yv.leader.influence.toLocaleString("ru-RU")}`}>
               <Emblem emblem={yv.leader.emblem} color={yv.leader.color} size={44} />
-              <span className="rd-leader-n"><Icon name="influence" size={13} />{yv.leader.influence.toLocaleString("ru-RU")}</span>
+              <span className="rd-leader-n">{yv.leader.tag.slice(0, 4).toUpperCase()}</span>
             </span>
           )}
           <div className="rd-body">

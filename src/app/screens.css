@@ -6012,7 +6012,7 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 /* the coffee stain in the lower left corner of the card: the logo of the clan with the most influence in the yard */
 .rd-leader { position: absolute; z-index: 1; left: 8%; top: 74%; width: 20%; aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
   pointer-events: auto; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35)); }
-.rd-leader-n { display: inline-flex; align-items: center; gap: 2px; font-size: 10px; font-weight: 900; color: #3a2410; }
+.rd-leader-n { font-size: 11px; font-weight: 400; letter-spacing: 1px; color: #3a2410; }
 .rd-rewards { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; font-size: 11px; font-weight: 700; color: #3a2a14; }
 .rd-rewards > span { display: flex; flex-direction: column; align-items: center; gap: 1px; }
 /* the yard from above: the ground picture covering the screen, the buildings on it (in % of the picture) */
@@ -6371,7 +6371,7 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
   color: var(--gold); font-weight: 800; font-size: 14px; width: fit-content; display: flex; align-items: center; gap: 4px; }
 .rd-clan-xp b { color: #fff; margin-left: 4px; font-size: 16px; }
 .rd-times { position: absolute; right: 8px; top: 8px; padding: 2px 8px; border-radius: 999px; background: rgba(0, 0, 0, 0.65); color: var(--gold); font-size: 12px; font-weight: 800; }
-.rd-rewards b { display: block; color: #1a0f05; font-size: 14px; font-weight: 900; }
+.rd-rewards b { display: block; color: #1a0f05; font-size: 14px; font-weight: 500; }
 .rd-rew-note { display: block; margin-top: 2px; font-size: 10.5px; line-height: 1.25; color: #5a4128; text-align: center; padding: 0 10px; }
 
 /* ── «От звонка до звонка»: the month on a sheet of paper, today's делюга under it, the rewards on wooden planks ── */

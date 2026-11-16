@@ -73,8 +73,8 @@ export async function raidsView(q: Queryable, pid: number, now = Date.now()) {
   const bags = setIds.map((ids) => ({ have: ids.filter((x) => ownT.has(x)).length, of: ids.length }));
   // the influence: mine in every yard, and the clan with the most of it there (its logo on the yard's card)
   const mineInf = clanId ? await q.query<{ yard_id: string; influence: number }>("SELECT yard_id, influence FROM raid_influence WHERE clan_id=$1", [clanId]) : [];
-  const leaders = await q.query<{ yard_id: string; clan_id: number; influence: number; name: string; emblem: string; color: string }>(
-    `SELECT DISTINCT ON (i.yard_id) i.yard_id, i.clan_id, i.influence, c.name, c.emblem, c.color
+  const leaders = await q.query<{ yard_id: string; clan_id: number; influence: number; name: string; tag: string; emblem: string; color: string }>(
+    `SELECT DISTINCT ON (i.yard_id) i.yard_id, i.clan_id, i.influence, c.name, c.tag, c.emblem, c.color
      FROM raid_influence i JOIN clans c ON c.id = i.clan_id WHERE i.influence > 0 ORDER BY i.yard_id, i.influence DESC, i.clan_id`);
   // the clan's logo: it stands over every building the clan has taken
   const [c] = clanId ? await q.query<{ emblem: string; color: string }>("SELECT emblem, color FROM clans WHERE id=$1", [clanId]) : [];
@@ -95,7 +95,7 @@ export async function raidsView(q: Queryable, pid: number, now = Date.now()) {
       /** my clan's influence here */
       influence: Number(mineInf.find((r) => r.yard_id === y.id)?.influence ?? 0),
       /** the clan with the most influence here */
-      leader: (() => { const l = leaders.find((r) => r.yard_id === y.id); return l ? { id: Number(l.clan_id), name: l.name, emblem: l.emblem, color: l.color, influence: Number(l.influence) } : null; })(),
+      leader: (() => { const l = leaders.find((r) => r.yard_id === y.id); return l ? { id: Number(l.clan_id), name: l.name, tag: l.tag, emblem: l.emblem, color: l.color, influence: Number(l.influence) } : null; })(),
       buildings: y.buildings.map((b) => ({ id: b.id, wins: p.wins.get(b.id) ?? 0, need: buildingWins(y), taken: !!restUntil(y, p, now) || p.taken.has(b.id) })),
     })),
     fight: f ? { id: Number(f.id), building: f.building_id, hp: Math.max(0, Number(f.hp_max) - Number(f.damage)), hpMax: Number(f.hp_max), hits: Number(f.hits),
