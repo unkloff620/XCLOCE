@@ -217,9 +217,9 @@ function AlleyScene() {
         {/* behind the doorway: the dark of the basement */}
         <i className="rb-dark" style={{ left: pc(696, 1024), top: pc(324, 1536), width: pc(192, 1024), height: pc(526, 1536) }} />
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="rb-bg" src={`${A}/bags-bg.webp`} alt="" draggable={false} />
+        <img className="rb-bg" src={`${A}/bags-bg.webp?v=2`} alt="" draggable={false} />
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img ref={door} className="rb-door" src={`${A}/bags-door.webp`} alt="" draggable={false}
+        <img ref={door} className="rb-door" src={`${A}/bags-door.webp?v=2`} alt="" draggable={false}
           style={{ left: pc(DOOR.x, 1024), top: pc(DOOR.y, 1536), width: pc(DOOR.w, 1024), height: pc(DOOR.h, 1536) }} />
         {/* the lamp over the door: its glow flickers */}
         <i className="rb-lamp" style={{ left: pc(765, 1024), top: pc(215, 1536) }} />

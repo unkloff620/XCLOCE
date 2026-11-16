@@ -243,6 +243,8 @@ const SAMPLE_URLS = {
   // the key «тык» on every button and a page turned (the player's recordings, tools/sound/source/tap.mp3, page.mp3)
   tap: "/assets/sound/tap.mp3",
   page: "/assets/sound/page.mp3",
+  // the alley's door creaking open (the player's recording, tools/sound/source/door-creak.mp3)
+  creak: "/assets/sound/door-creak.mp3",
   // the wheel of «Колесо удачи» turning (the player's recording, tools/sound/source/fortune-spin.mp3, cut to the 1.5 s turn)
   fortunespin: "/assets/sound/fortune-spin.mp3",
   // a thing put on: one of three recordings of the player's at random (tools/sound/source/wear-1..3.mp3)
@@ -858,10 +860,10 @@ function alleyStep(a: AudioContext, at: number) {
     const gust = a.createOscillator();
     gust.frequency.value = 0.13;
     const gustG = a.createGain();
-    gustG.gain.value = 0.35;
+    gustG.gain.value = 0.12;
     gust.connect(gustG).connect(g.gain);
     g.gain.setValueAtTime(0, at);
-    g.gain.linearRampToValueAtTime(0.75, at + 3);
+    g.gain.linearRampToValueAtTime(0.28, at + 3);
     src.connect(bp).connect(g).connect(musicBus);
     src.start(at);
     lfo.start(at);
@@ -898,6 +900,19 @@ export function alleyCreak(power = 0.6, dur = 0.9) {
   const a = ctx;
   if (!a || !musicBus || track !== "alley" || !seqTimer || a.state !== "running") return;
   const at = a.currentTime + 0.02;
+  // the player's recording, a little slower/faster and louder/softer with the swing
+  const rec = buffers.creak;
+  if (rec) {
+    const src = a.createBufferSource();
+    src.buffer = rec;
+    src.playbackRate.value = 0.85 + Math.random() * 0.3;
+    const g = a.createGain();
+    g.gain.value = 0.9 + power * 1.2;
+    src.connect(g).connect(alleyEcho(a));
+    src.start(at);
+    return;
+  }
+  void dur;
   const o = a.createOscillator();
   o.type = "sawtooth";
   const f0 = 170 + Math.random() * 60;
