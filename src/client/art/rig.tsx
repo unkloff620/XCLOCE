@@ -697,12 +697,13 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
         )}
         {/* the hand (and what it holds, its animations) over everything worn: a sleeve never covers it — the same
             shoulder and elbow joints as the arm above, without their pictures */}
+        {/* the forearm's tattoos round the wrist of a holding hand: under the hand (it and its mug lie over the ink) */}
+        <WristInk />
         <Joint p="armUR">
           <Joint p="foreR">
             <Ol><HandFrames /></Ol>
           </Joint>
         </Joint>
-        <WristInk />
         <Ol>
           <Bone p="head" className="rig-head">
             <Face />
