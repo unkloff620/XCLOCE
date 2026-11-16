@@ -364,12 +364,38 @@ function YardLife({ n }: { n: number }) {
   );
 }
 
+/** the clouds over the yard's edges: soft blobs all round it, drifting a little */
+const CLOUDS: { x: number; y: number; s: number }[] = (() => {
+  const out: { x: number; y: number; s: number }[] = [];
+  let k = 0;
+  const size = () => 30 + ((k++ * 37) % 17);
+  for (let x = -6; x <= 106; x += 11) { out.push({ x, y: -3, s: size() }); out.push({ x: x + 5, y: 103, s: size() }); }
+  for (let y = 4; y <= 96; y += 7) { out.push({ x: -7, y, s: size() }); out.push({ x: 107, y: y + 3, s: size() }); }
+  return out;
+})();
+function YardClouds() {
+  return (
+    <span className="rd-clouds" aria-hidden="true">
+      {CLOUDS.map((c, i) => (
+        <i key={i} style={{ left: `${c.x}%`, top: `${c.y}%`, width: `${c.s}%`, animationDelay: `${-i * 1.7}s`, animationDuration: `${14 + (i % 5) * 3}s` }} />
+      ))}
+    </span>
+  );
+}
+
 export function RaidYardScreen({ id }: { id: string }) {
   const { v } = useRaids();
   // start at the bottom of a tall yard (where the attack starts) and in the middle of a wide one, once its layout has settled
   const scroller = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
-    const down = () => { const el = scroller.current; if (el) { el.scrollTop = el.scrollHeight; el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2; } };
+    // the yard's bottom (its gate, where the attack starts) just above the menu, the yard in the middle
+    const down = () => {
+      const el = scroller.current;
+      const sc = el?.querySelector<HTMLElement>(".rd-scene");
+      if (!el || !sc) return;
+      el.scrollTop = sc.offsetTop + sc.offsetHeight - el.clientHeight + 84;
+      el.scrollLeft = sc.offsetLeft + sc.offsetWidth / 2 - el.clientWidth / 2;
+    };
     const ts = [0, 120, 400].map((ms) => window.setTimeout(down, ms));
     return () => ts.forEach((t) => window.clearTimeout(t));
   }, [id, !!v]);
@@ -382,13 +408,19 @@ export function RaidYardScreen({ id }: { id: string }) {
     <div className="fit-page rd-page rd-yard">
       {/* the bigger yards are taller than the screen: they scroll, starting at the bottom (where the attack starts) */}
       <div className="rd-yscroll" ref={scroller}>
+        {/* the open yard in the middle of a dark country under clouds (like the fog of a strategy game): a finger drags
+            the map every way; the yard's edges melt into the dark, clouds lie over them */}
+        <div className="rd-world">
+        <i className="rd-fog" aria-hidden="true" />
         <div className="rd-scene" style={{ aspectRatio: `${GROUND_W} / ${groundH(y.n)}`, ["--gh" as string]: groundH(y.n) / GROUND_H } as React.CSSProperties}>
+          <YardClouds />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="rd-map-bg" src={`${A}/${y.art ? `${y.art}/ground` : y.n > 1 ? `yard-ground-${y.n}` : "yard-ground2"}.webp`} alt="" draggable={false} />
           {/* the main one first in the markup: it stands behind (higher on the picture); the artist's yards have their
               own trees drawn in */}
           {!y.art && <YardLife n={y.n} />}
           {[...y.buildings].reverse().map((b) => <Building key={b.id} b={b} art={y.art} yard={y.id} clan={v?.clan ?? null} target={!!yv?.open && yv.target === b.id} taken={!!yv?.buildings.find((x) => x.id === b.id)?.taken} prog={yv?.buildings.find((x) => x.id === b.id)} />)}
+        </div>
         </div>
       </div>
       <div className="title-row rd-title">
