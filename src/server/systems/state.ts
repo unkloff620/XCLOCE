@@ -13,7 +13,7 @@ import { levelFromXp } from "../../content/levels.ts";
 import { OPEN_BOSSES } from "../../content/bosses.ts";
 import { WEAPONS } from "../../content/items.ts";
 import { LOCATIONS } from "../../content/locations.ts";
-import { normalizeLook } from "../../content/home.ts";
+import { normalizeLook, beardLevel } from "../../content/home.ts";
 import { touchActivity } from "../players.ts";
 import { dailyView } from "./daily.ts";
 import { renameView, slotsView } from "./extras.ts";
@@ -215,7 +215,11 @@ export async function profileView(q: Queryable, viewer: number, pid: number, cfg
       return { left: await giftsLeft(q, viewer, now, pid), have: Object.fromEntries(mine.map((r) => [r.item_id, Number(r.qty)])) as Record<string, number> };
     })(),
     equipped: app?.equipped ?? {},
-    body: normalizeLook(app?.body),
+    // the beard grows on whoever does not come and shave: a visitor sees it too
+    body: await (async () => {
+      const [sh] = await q.query<{ shaved_at: Date | null }>("SELECT shaved_at FROM players WHERE id=$1", [pid]);
+      return { ...normalizeLook(app?.body), beard: sh?.shaved_at ? beardLevel(new Date(sh.shaved_at).getTime(), now) : 0 };
+    })(),
     frame: (await framesFor(q, [pid], now)).get(pid) ?? null,
     achievements: await achievementsView(q, pid, cfg),
     room: await (async () => {
