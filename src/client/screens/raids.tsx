@@ -113,11 +113,11 @@ export function RaidsScreen() {
         {/* the next yards' cards lie under the open one */}
         {[2, 1].map((k) => (
           // eslint-disable-next-line @next/next/no-img-element
-          <img key={k} className={`rd-under u${k}`} src={`${A}/card.webp`} alt="" draggable={false} aria-hidden="true" />
+          <img key={k} className={`rd-under u${k}`} src={`${A}/card.webp?v=2`} alt="" draggable={false} aria-hidden="true" />
         ))}
         <div className={`rd-card ${anim}`} key={y.id} style={moving}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="rd-card-paper" src={`${A}/card.webp`} alt="" draggable={false} />
+          <img className="rd-card-paper" src={`${A}/card.webp?v=2`} alt="" draggable={false} />
           <div className="rd-photo">
             {/* the yard's own photo: its ground with its buildings (build-yard-art.py), or the old common one */}
             {/* eslint-disable-next-line @next/next/no-img-element */}

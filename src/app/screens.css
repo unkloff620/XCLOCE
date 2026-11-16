@@ -5996,8 +5996,13 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .rd-card.in-r { animation: dos-in-r 0.28s ease-out; }
 .rd-card.in-l { animation: dos-in-l 0.28s ease-out; }
 @media (prefers-reduced-motion: reduce) { .rd-card.out-l, .rd-card.out-r, .rd-card.in-l, .rd-card.in-r { animation-duration: 0.01s; } }
-.rd-card-paper { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.55)); pointer-events: none; user-select: none; }
-.rd-photo { position: absolute; left: 20%; right: 17%; top: 10.6%; height: 23.4%; overflow: hidden; }
+/* the paper has a window cut for the photo: the photo lies UNDER the paper, so its frame, the tape and the paper clip hold it */
+.rd-card-paper { position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.55)); pointer-events: none; user-select: none; }
+.rd-photo { position: absolute; z-index: 0; left: 18.4%; right: 15.4%; top: 9%; height: 26.6%; overflow: hidden; }
+/* the tape (top left) and the clip (top right) lie over the photo's top: its labels sit at its bottom */
+.rd-photo > .rd-wins { top: auto; left: 9%; bottom: 10%; }
+.rd-photo > .rd-times { top: auto; right: 9%; bottom: 10%; }
+.rd-body, .rd-leader { z-index: 2; }
 .rd-photo > img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; filter: sepia(0.25) contrast(1.05); }
 .rd-photo > img.own { object-position: 50% 50%; filter: sepia(0.15) contrast(1.05) brightness(1.08); }
 .rd-wins { position: absolute; left: 6px; top: 6px; padding: 2px 8px; border-radius: 8px; background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 12px; font-weight: 800; }
@@ -6010,7 +6015,7 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .rd-closed { margin-top: 6px; font-size: 12px; font-weight: 700; color: #8a2a1a; }
 .rd-h { margin-top: 14px; font-family: var(--font-hand), cursive; font-size: 18px; color: #1f3a8a; }
 /* the coffee stain in the lower left corner of the card: the logo of the clan with the most influence in the yard */
-.rd-leader { position: absolute; z-index: 1; left: 8%; top: 74%; width: 20%; aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+.rd-leader { position: absolute; z-index: 2; left: 5.3%; top: 74%; width: 20%; aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
   pointer-events: auto; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35)); }
 .rd-leader-n { font-size: 11px; font-weight: 400; letter-spacing: 1px; color: #3a2410; }
 .rd-rewards { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; font-size: 11px; font-weight: 700; color: #3a2a14; }
