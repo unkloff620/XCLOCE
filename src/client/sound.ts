@@ -860,10 +860,10 @@ function alleyStep(a: AudioContext, at: number) {
     const gust = a.createOscillator();
     gust.frequency.value = 0.13;
     const gustG = a.createGain();
-    gustG.gain.value = 0.12;
+    gustG.gain.value = 0.06;
     gust.connect(gustG).connect(g.gain);
     g.gain.setValueAtTime(0, at);
-    g.gain.linearRampToValueAtTime(0.28, at + 3);
+    g.gain.linearRampToValueAtTime(0.13, at + 3);
     src.connect(bp).connect(g).connect(musicBus);
     src.start(at);
     lfo.start(at);
@@ -907,7 +907,7 @@ export function alleyCreak(power = 0.6, dur = 0.9) {
     src.buffer = rec;
     src.playbackRate.value = 0.85 + Math.random() * 0.3;
     const g = a.createGain();
-    g.gain.value = 0.35 + power * 0.45;
+    g.gain.value = 0.15 + power * 0.2;
     src.connect(g).connect(alleyEcho(a));
     src.start(at);
     return;
