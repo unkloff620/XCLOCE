@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-16-garages",
+    date: "16 ноября",
+    title: "Новые Гаражи",
+    items: [
+      { img: "/assets/updates/2026-11-16-garages.webp", text: "Двор «Гаражи» перерисован: стоянка за воротами «ГАРАЖ», фонари и свои здания — гараж, котельная, ларёк, магазин, дом, пятиэтажка и главное здание." },
+    ],
+  },
+  {
     id: "2026-11-16-bags",
     date: "16 ноября",
     title: "Сумки за флаги",

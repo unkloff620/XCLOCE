@@ -25,8 +25,10 @@ export interface RaidYard {
   n: number;
   name: string;
   subtitle: string;
-  /** wins over each of its buildings to take it (the main one — twice as many) */
+  /** wins over each of its buildings to take it */
   wins: number;
+  /** drawn by the artist as layers: its ground and its own buildings in public/assets/raids/<art>/ (build-yard-art.py) */
+  art?: string;
   buildings: RaidBuilding[];
 }
 
@@ -73,7 +75,14 @@ const G: BuildingKind = "garage", K: BuildingKind = "kiosk", B: BuildingKind = "
 /** every building is taken with WINS wins; the later yards are harder by having more buildings */
 export const WINS = 10;
 export const RAID_YARDS: RaidYard[] = [
-  { id: "garages", n: 1, name: "Гаражи", subtitle: "Ряды ракушек, где решают все вопросы", wins: WINS, buildings: plan("garages", 1, [G, K, G, B, G, O]) },
+  // the artist's yard (tools/raids/source/garages, build-yard-art.py prints these places): from the gate up
+  { id: "garages", n: 1, name: "Гаражи", subtitle: "Ряды ракушек, где решают все вопросы", wins: WINS, art: "garages", buildings: [
+    { id: "garages-1", kind: G, x: 58.3, y: 86.78, w: 18.75 },
+    { id: "garages-2", kind: O, x: 38.18, y: 74.15, w: 17.38 }, { id: "garages-3", kind: K, x: 73.58, y: 64.78, w: 20.61 },
+    { id: "garages-4", kind: S, x: 22.36, y: 58.85, w: 22.46 }, { id: "garages-5", kind: B, x: 74.9, y: 52.67, w: 27.54 },
+    { id: "garages-6", kind: H, x: 20.7, y: 45.57, w: 27.54 },
+    { id: "garages-main", kind: "main", x: 51.95, y: 34.38, w: 37.3 },
+  ] },
   { id: "promzona", n: 2, name: "Промзона", subtitle: "Котельные, склады и ничейные трубы", wins: WINS, buildings: plan("promzona", 2, [O, G, S, O, B, K, G, O, S]) },
   { id: "rynok", n: 3, name: "Рынок", subtitle: "Ларьки, палатки и свои люди", wins: WINS, buildings: plan("rynok", 3, [K, S, K, S, K, G, K, S, K, G, S, K]) },
   { id: "panelki", n: 4, name: "Панельки", subtitle: "Пятиэтажки, лавочки и бабки на страже", wins: WINS, buildings: plan("panelki", 4, [H, B, H, S, H, K, H, B, H, S, K, H, B, H, S]) },

@@ -322,13 +322,14 @@ function RestLeft({ until }: { until: number }) {
 }
 
 /** a building on the yard's ground; the one to attack now glows, a taken one carries the clan's flag */
-function Building({ b, target, taken, yard, clan, prog }: { b: RaidBuilding; target: boolean; taken: boolean; yard: string; clan: RaidsView["clan"]; prog?: { wins: number; need: number } }) {
+function Building({ b, art, target, taken, yard, clan, prog }: { b: RaidBuilding; art?: string; target: boolean; taken: boolean; yard: string; clan: RaidsView["clan"]; prog?: { wins: number; need: number } }) {
   const router = useRouter();
+  const pic = `${A}/${art ? `${art}/` : ""}b-${b.kind}.webp`;
   return (
-    <button type="button" className={`rd-bld k-${b.kind} ${target ? "target" : ""} ${taken ? "taken" : ""}`} style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%`, zIndex: Math.round(b.y * 10), ["--pic" as string]: `url(${A}/b-${b.kind}.webp)` }}
+    <button type="button" className={`rd-bld k-${b.kind} ${target ? "target" : ""} ${taken ? "taken" : ""}`} style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%`, zIndex: Math.round(b.y * 10), ["--pic" as string]: `url(${pic})` }}
       onClick={() => { haptic.tap(); if (target) router.push(`/clans/raids/${yard}/${b.id}`); }} aria-label={BUILDING_NAMES[b.kind]}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={`${A}/b-${b.kind}.webp`} alt="" draggable={false} />
+      <img src={pic} alt="" draggable={false} />
       {/* the one being taken: the clan's wins over it so far, small on its left */}
       {target && prog && <span className="rd-bld-count">{prog.wins}/{prog.need}</span>}
       {/* taken: the clan's logo over its top-left corner */}
@@ -383,10 +384,11 @@ export function RaidYardScreen({ id }: { id: string }) {
       <div className="rd-yscroll" ref={scroller}>
         <div className="rd-scene" style={{ aspectRatio: `${GROUND_W} / ${groundH(y.n)}`, ["--gh" as string]: groundH(y.n) / GROUND_H } as React.CSSProperties}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="rd-map-bg" src={`${A}/${y.n > 1 ? `yard-ground-${y.n}` : "yard-ground2"}.webp`} alt="" draggable={false} />
-          {/* the main one first in the markup: it stands behind (higher on the picture) */}
-          <YardLife n={y.n} />
-          {[...y.buildings].reverse().map((b) => <Building key={b.id} b={b} yard={y.id} clan={v?.clan ?? null} target={!!yv?.open && yv.target === b.id} taken={!!yv?.buildings.find((x) => x.id === b.id)?.taken} prog={yv?.buildings.find((x) => x.id === b.id)} />)}
+          <img className="rd-map-bg" src={`${A}/${y.art ? `${y.art}/ground` : y.n > 1 ? `yard-ground-${y.n}` : "yard-ground2"}.webp`} alt="" draggable={false} />
+          {/* the main one first in the markup: it stands behind (higher on the picture); the artist's yards have their
+              own trees drawn in */}
+          {!y.art && <YardLife n={y.n} />}
+          {[...y.buildings].reverse().map((b) => <Building key={b.id} b={b} art={y.art} yard={y.id} clan={v?.clan ?? null} target={!!yv?.open && yv.target === b.id} taken={!!yv?.buildings.find((x) => x.id === b.id)?.taken} prog={yv?.buildings.find((x) => x.id === b.id)} />)}
         </div>
       </div>
       <div className="title-row rd-title">
