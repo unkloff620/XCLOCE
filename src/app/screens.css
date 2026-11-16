@@ -6507,3 +6507,34 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .cev-row b { color: #1a0f05; }
 .cev-row .icon, .cev-row img { vertical-align: -3px; }
 .cev-ic { font-size: 18px; flex: none; }
+
+/* the yard's lamps (raids.tsx YardLights): a warm glow breathing on each head, a pool of light on the ground under it;
+   «buzz» — a faulty one stutters and dies out now and then; «beacon» — the gate's amber lamps blink in turns; «sign» —
+   the sign's lamps flicker; «moths» — a few moths circle it. Under the buildings, over the ground. */
+.rd-lights { position: absolute; inset: 0; z-index: 1; pointer-events: none; container-type: size; }
+.rd-lamp { position: absolute; width: 0; height: 0; }
+.rd-lamp-glow { position: absolute; left: 0; top: 0; width: 6.5cqw; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; mix-blend-mode: screen;
+  background: radial-gradient(circle, rgba(255, 236, 170, 0.95), rgba(255, 190, 90, 0.55) 22%, rgba(255, 150, 50, 0.18) 48%, transparent 70%);
+  animation: rd-lamp var(--t, 4s) ease-in-out var(--d, 0s) infinite alternate; }
+.rd-lamp-pool { position: absolute; left: 0; top: 0; width: 13cqw; aspect-ratio: 2.2; transform: translate(-50%, 115%); border-radius: 50%; mix-blend-mode: screen;
+  background: radial-gradient(ellipse, rgba(255, 190, 100, 0.32), rgba(255, 160, 70, 0.12) 45%, transparent 70%);
+  animation: rd-lamp var(--t, 4s) ease-in-out var(--d, 0s) infinite alternate; }
+@keyframes rd-lamp { from { opacity: 0.75; transform: translate(-50%, -50%) scale(0.92); } to { opacity: 1; transform: translate(-50%, -50%) scale(1.06); } }
+.rd-lamp-pool { animation-name: rd-pool; }
+@keyframes rd-pool { from { opacity: 0.7; } to { opacity: 1; } }
+.rd-lamp.buzz .rd-lamp-glow, .rd-lamp.buzz .rd-lamp-pool { animation: rd-buzz 6.5s steps(1, end) var(--d, 0s) infinite; }
+@keyframes rd-buzz { 0%, 100% { opacity: 1; } 61% { opacity: 0.25; } 62% { opacity: 0.9; } 63% { opacity: 0.1; } 64% { opacity: 0.95; } 66% { opacity: 0.05; } 80% { opacity: 0.05; }
+  81% { opacity: 0.7; } 82% { opacity: 0.15; } 84% { opacity: 1; } }
+.rd-lamp.beacon .rd-lamp-glow { width: 8cqw; background: radial-gradient(circle, rgba(255, 220, 120, 1), rgba(255, 150, 30, 0.6) 25%, rgba(255, 110, 0, 0.2) 50%, transparent 70%);
+  animation: rd-beacon 1.6s ease-in-out infinite; }
+.rd-lamp.beacon.alt .rd-lamp-glow { animation-delay: -0.8s; }
+@keyframes rd-beacon { 0%, 100% { opacity: 0.2; transform: translate(-50%, -50%) scale(0.7); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); } }
+.rd-lamp.sign .rd-lamp-glow { width: 9cqw; animation: rd-sign 4.2s steps(1, end) var(--d, 0s) infinite; }
+@keyframes rd-sign { 0%, 100% { opacity: 1; } 30% { opacity: 0.55; } 31% { opacity: 1; } 72% { opacity: 0.4; } 73% { opacity: 0.9; } 74% { opacity: 0.5; } 76% { opacity: 1; } }
+.rd-moth { position: absolute; left: 0; top: 0; width: 2px; height: 2px; border-radius: 50%; background: #fff3d0; box-shadow: 0 0 2px #ffd890;
+  animation: rd-moth 1.9s linear infinite; }
+.rd-moth.m2 { animation-duration: 2.6s; animation-direction: reverse; }
+.rd-moth.m3 { animation-duration: 1.4s; animation-delay: -0.7s; }
+@keyframes rd-moth { 0% { transform: rotate(0deg) translate(9px) rotate(0deg) translateY(1px); } 25% { transform: rotate(90deg) translate(6px) translateY(-2px); }
+  50% { transform: rotate(180deg) translate(10px) translateY(2px); } 75% { transform: rotate(270deg) translate(7px) translateY(-1px); } 100% { transform: rotate(360deg) translate(9px) translateY(1px); } }
+@media (prefers-reduced-motion: reduce) { .rd-lamp-glow, .rd-lamp-pool, .rd-moth { animation: none !important; } }

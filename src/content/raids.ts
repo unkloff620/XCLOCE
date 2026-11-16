@@ -88,6 +88,25 @@ export const RAID_YARDS: RaidYard[] = [
   { id: "panelki", n: 4, name: "Панельки", subtitle: "Пятиэтажки, лавочки и бабки на страже", wins: WINS, buildings: plan("panelki", 4, [H, B, H, S, H, K, H, B, H, S, K, H, B, H, S]) },
   { id: "center", n: 5, name: "Центр района", subtitle: "Главный двор. Кто держит его — держит район", wins: WINS, buildings: plan("center", 5, [S, H, S, H, O, H, S, H, K, H, S, O, H, S, H, K, H, S]) },
 ];
+/**
+ * The lights of an artist's yard (x, y — the lamp's head, % of its ground picture): street lamps glow and breathe, a
+ * few of them buzz and die out for a moment; the gate's beacons blink in turns; the sign's lamps flicker
+ * (raids.tsx YardLights, screens.css «rd-lamp»).
+ */
+export type YardLight = { x: number; y: number; k?: "buzz" | "beacon" | "sign" | "moths" };
+export const YARD_LIGHTS: Record<string, YardLight[]> = {
+  garages: [
+    { x: 25.5, y: 6.8 }, { x: 9.7, y: 12.1 }, { x: 9.2, y: 22.3, k: "moths" }, { x: 6.4, y: 33.0 }, { x: 9.2, y: 51.5 },
+    { x: 31.8, y: 22.1 }, { x: 39.4, y: 36.4, k: "buzz" }, { x: 36.7, y: 48.8 }, { x: 31.5, y: 66.6, k: "moths" }, { x: 58.1, y: 17.6 },
+    { x: 59.6, y: 39.5 }, { x: 58.1, y: 55.8, k: "moths" }, { x: 69.4, y: 3.1 }, { x: 36.6, y: 2.4 }, { x: 94.7, y: 11.0 },
+    { x: 95.0, y: 18.8, k: "buzz" }, { x: 94.1, y: 24.9 }, { x: 78.3, y: 69.9 }, { x: 69.4, y: 78.4, k: "buzz" }, { x: 30.5, y: 83.6 },
+    { x: 13.6, y: 74.4 }, { x: 90.3, y: 74.5, k: "sign" }, { x: 84.5, y: 76.7, k: "sign" },
+    { x: 33.4, y: 86.1, k: "beacon" }, { x: 62.7, y: 87.2, k: "beacon" },
+    // the «ГАРАЖ» neon over the gate
+    { x: 48.2, y: 85.6, k: "sign" },
+  ],
+};
+
 export const raidYardById = (id: string) => RAID_YARDS.find((y) => y.id === id);
 
 /**

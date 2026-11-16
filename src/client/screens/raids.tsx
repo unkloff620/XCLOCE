@@ -34,7 +34,7 @@ import { haptic } from "../telegram.ts";
 import { useRouter } from "next/navigation";
 import { RAID_BAG_PRICE } from "../../content/raids.ts";
 import { tattooPiece } from "../../content/tattoos.ts";
-import { GROUND_H, GROUND_W, groundH, groundY } from "../../content/raids.ts";
+import { GROUND_H, GROUND_W, YARD_LIGHTS, groundH, groundY } from "../../content/raids.ts";
 import { BUILDING_NAMES, RAID_YARDS, YARD_TREES, YARD_WALKERS, buildingReward, buildingTake, flagId, raidYardById, yardTotal, type BuildingKind, type RaidBuilding } from "../../content/raids.ts";
 import { itemById } from "../../content/items.ts";
 
@@ -374,6 +374,25 @@ const CLOUDS: { x: number; y: number; s: number }[] = (() => {
   for (let y = 0; y <= 100; y += 5) { out.push({ x: -8, y, s: size() }); out.push({ x: 108, y: y + 2, s: size() }); out.push({ x: -16, y: y + 1, s: size() }); out.push({ x: 116, y: y + 3, s: size() }); }
   return out;
 })();
+/** the lamps of an artist's yard come alive (content/raids.ts YARD_LIGHTS) */
+function YardLights({ art }: { art: string }) {
+  const ls = YARD_LIGHTS[art];
+  if (!ls) return null;
+  return (
+    <span className="rd-lights" aria-hidden="true">
+      {ls.map((l, i) => (
+        <span key={i} className={`rd-lamp ${l.k ?? ""} ${l.k === "beacon" && i % 2 ? "alt" : ""}`}
+          style={{ left: `${l.x}%`, top: `${l.y}%`, ["--d" as string]: `${-((i * 1.37) % 5).toFixed(2)}s`, ["--t" as string]: `${(3.2 + (i % 4) * 0.7).toFixed(1)}s` } as React.CSSProperties}>
+          {/* the light on the ground under it */}
+          {l.k !== "beacon" && l.k !== "sign" && <i className="rd-lamp-pool" />}
+          <i className="rd-lamp-glow" />
+          {l.k === "moths" && <><b className="rd-moth" /><b className="rd-moth m2" /><b className="rd-moth m3" /></>}
+        </span>
+      ))}
+    </span>
+  );
+}
+
 function YardClouds() {
   return (
     <span className="rd-clouds" aria-hidden="true">
@@ -420,6 +439,7 @@ export function RaidYardScreen({ id }: { id: string }) {
           {/* the main one first in the markup: it stands behind (higher on the picture); the artist's yards have their
               own trees drawn in */}
           {!y.art && <YardLife n={y.n} />}
+          {y.art && <YardLights art={y.art} />}
           {[...y.buildings].reverse().map((b) => <Building key={b.id} b={b} art={y.art} yard={y.id} clan={v?.clan ?? null} target={!!yv?.open && yv.target === b.id} taken={!!yv?.buildings.find((x) => x.id === b.id)?.taken} prog={yv?.buildings.find((x) => x.id === b.id)} />)}
         </div>
         </div>
