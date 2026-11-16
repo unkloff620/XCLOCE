@@ -295,15 +295,14 @@ export function RaidBagsScreen() {
             <TatCount set={RAID_BAG_SETS[n]} />
           </span>
           <b className="rb-name display">{RAID_YARDS[n].name}</b>
-          {/* the same button as the bags of «Колесо удачи» */}
-          <button type="button" className="fo-spin rb-open" disabled={!!busy || flags[n] < RAID_BAG_PRICES[n]}
+          {/* the game's gold button — the same on the bags of «Колесо удачи» */}
+          <button type="button" className="btn gold rb-open" disabled={!!busy || flags[n] < RAID_BAG_PRICES[n]}
             onClick={async () => {
               haptic.tap();
               const r = await act<RaidsView & { tattoo: string | null; reward: Granted }>("raid_bag", { n: n + 1 });
               if (r) { setV(r); setGot({ n, tattoo: r.tattoo, reward: r.reward }); }
             }}>
-            <b>Открыть</b>
-            <span className="num"><ItemArt id={flagId(n + 1)} size={16} />{RAID_BAG_PRICES[n]}</span>
+            Открыть · <ItemArt id={flagId(n + 1)} size={22} /> {RAID_BAG_PRICES[n]}
           </button>
         </div>
         <button type="button" className="rb-arrow" data-nosfx onClick={() => go(1)} aria-label="Следующая сумка">▶</button>

@@ -426,9 +426,8 @@ function Bags({ keycaps, onClose }: { keycaps: number; onClose: () => void }) {
       </button>
 
       <div className="fo-bags-foot">
-        <button type="button" className="fo-spin" disabled={busy === "fortune_bag" || have < b.price} onClick={open}>
-          <b>{got ? "Ещё раз" : "Открыть"}</b>
-          <span className="num"><ItemArt id={KEYCAP_ID} size={16} />{fmtN(b.price)}</span>
+        <button type="button" className="btn gold rb-open" disabled={busy === "fortune_bag" || have < b.price} onClick={open}>
+          {got ? "Ещё раз" : "Открыть"} · <ItemArt id={KEYCAP_ID} size={22} /> {fmtN(b.price)}
         </button>
         {have < b.price && <span className="fo-muted">Не хватает {fmtN(b.price - have)} кнопок — крути колесо</span>}
       </div>
