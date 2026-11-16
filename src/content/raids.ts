@@ -7,10 +7,15 @@
  * clan takes a building with enough wins — then the next one (from the bottom up, the main one last).
  */
 
-export type BuildingKind = "garage" | "barrack" | "khrush" | "kiosk" | "boiler" | "shop" | "main";
+export type BuildingKind = "garage" | "barrack" | "khrush" | "kiosk" | "boiler" | "shop" | "main"
+  // Промзона (the artist's yard)
+  | "checkpoint" | "tanks" | "pipes" | "office" | "warehouse";
 export const BUILDING_NAMES: Record<BuildingKind, string> = {
   garage: "Гараж", barrack: "Барак", khrush: "Пятиэтажка", kiosk: "Ларёк", boiler: "Котельная", shop: "Магазин", main: "Главное здание",
+  checkpoint: "КПП", tanks: "Цистерны", pipes: "Теплотрасса", office: "Контора", warehouse: "Склад",
 };
+/** «… захвачен / захвачена / захвачены!» */
+export const takenWord = (k: BuildingKind) => (["boiler", "khrush", "pipes", "office"].includes(k) ? "захвачена" : k === "tanks" ? "захвачены" : "захвачен");
 
 export interface RaidBuilding {
   id: string;
@@ -19,6 +24,8 @@ export interface RaidBuilding {
   x: number; y: number;
   /** its width, % of the yard picture's width (the main building is bigger) */
   w: number;
+  /** its own picture in an artist's yard (<art>/b-<pic>.webp), when two buildings of a kind look different */
+  pic?: string;
 }
 export interface RaidYard {
   id: string;
@@ -83,7 +90,14 @@ export const RAID_YARDS: RaidYard[] = [
     { id: "garages-6", kind: H, x: 20.7, y: 45.57, w: 27.54 },
     { id: "garages-main", kind: "main", x: 51.95, y: 34.38, w: 37.3 },
   ] },
-  { id: "promzona", n: 2, name: "Промзона", subtitle: "Котельные, склады и ничейные трубы", wins: WINS, buildings: plan("promzona", 2, [O, G, S, O, B, K, G, O, S]) },
+  // the artist's yard (tools/raids/source/promzona): from the checkpoint up to the factory
+  { id: "promzona", n: 2, name: "Промзона", subtitle: "Котельные, склады и ничейные трубы", wins: WINS, art: "promzona", buildings: [
+    { id: "promzona-1", kind: "checkpoint", x: 27.83, y: 90.56, w: 23.24 }, { id: "promzona-2", kind: "tanks", x: 62.35, y: 89.52, w: 38.57 },
+    { id: "promzona-3", kind: "pipes", pic: "pipes1", x: 39.84, y: 74.74, w: 26.37 },
+    { id: "promzona-4", kind: "office", pic: "office1", x: 18.36, y: 51.82, w: 29.49 }, { id: "promzona-5", kind: "warehouse", x: 79.35, y: 50.46, w: 39.94 },
+    { id: "promzona-6", kind: "office", pic: "office2", x: 52.64, y: 37.63, w: 28.52 }, { id: "promzona-7", kind: "pipes", pic: "pipes2", x: 29.88, y: 31.45, w: 24.22 },
+    { id: "promzona-main", kind: "main", pic: "factory", x: 58.84, y: 29.62, w: 54.0 },
+  ] },
   { id: "rynok", n: 3, name: "Рынок", subtitle: "Ларьки, палатки и свои люди", wins: WINS, buildings: plan("rynok", 3, [K, S, K, S, K, G, K, S, K, G, S, K]) },
   { id: "panelki", n: 4, name: "Панельки", subtitle: "Пятиэтажки, лавочки и бабки на страже", wins: WINS, buildings: plan("panelki", 4, [H, B, H, S, H, K, H, B, H, S, K, H, B, H, S]) },
   { id: "center", n: 5, name: "Центр района", subtitle: "Главный двор. Кто держит его — держит район", wins: WINS, buildings: plan("center", 5, [S, H, S, H, O, H, S, H, K, H, S, O, H, S, H, K, H, S]) },
@@ -93,7 +107,7 @@ export const RAID_YARDS: RaidYard[] = [
  * few of them buzz and die out for a moment; the gate's beacons blink in turns; the sign's lamps flicker
  * (raids.tsx YardLights, screens.css «rd-lamp»).
  */
-export type YardLight = { x: number; y: number; k?: "buzz" | "beacon" | "sign" | "moths" };
+export type YardLight = { x: number; y: number; k?: "buzz" | "beacon" | "sign" | "moths" | "spark" | "smoke" };
 export const YARD_LIGHTS: Record<string, YardLight[]> = {
   garages: [
     { x: 25.5, y: 6.8 }, { x: 9.7, y: 12.1 }, { x: 9.2, y: 22.3, k: "moths" }, { x: 6.4, y: 33.0 }, { x: 9.2, y: 51.5 },
@@ -104,6 +118,11 @@ export const YARD_LIGHTS: Record<string, YardLight[]> = {
     { x: 33.4, y: 86.1, k: "beacon" }, { x: 62.7, y: 87.2, k: "beacon" },
     // the «ГАРАЖ» neon over the gate
     { x: 48.2, y: 85.6, k: "sign" },
+  ],
+  promzona: [
+    { x: 37.9, y: 8.8, k: "moths" }, { x: 86.2, y: 16.4 }, { x: 89.6, y: 53.1, k: "buzz" }, { x: 8.8, y: 67.8 },
+    // the transformer yard crackles; the factory's chimney smokes
+    { x: 84, y: 58.5, k: "spark" }, { x: 69.8, y: 9.4, k: "smoke" },
   ],
 };
 

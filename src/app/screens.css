@@ -6538,3 +6538,14 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 @keyframes rd-moth { 0% { transform: rotate(0deg) translate(9px) rotate(0deg) translateY(1px); } 25% { transform: rotate(90deg) translate(6px) translateY(-2px); }
   50% { transform: rotate(180deg) translate(10px) translateY(2px); } 75% { transform: rotate(270deg) translate(7px) translateY(-1px); } 100% { transform: rotate(360deg) translate(9px) translateY(1px); } }
 @media (prefers-reduced-motion: reduce) { .rd-lamp-glow, .rd-lamp-pool, .rd-moth { animation: none !important; } }
+.rd-lamp.spark .rd-lamp-glow { width: 7cqw; background: radial-gradient(circle, rgba(220, 240, 255, 1), rgba(120, 190, 255, 0.6) 20%, rgba(80, 140, 255, 0.18) 45%, transparent 70%);
+  animation: rd-spark 3.7s steps(1, end) infinite; }
+@keyframes rd-spark { 0%, 100% { opacity: 0; } 40% { opacity: 0.9; } 41% { opacity: 0; } 42% { opacity: 1; } 44% { opacity: 0; } 77% { opacity: 0.7; } 78% { opacity: 0; } }
+/* chimney smoke: grey puffs rise, grow and drift off with the wind */
+.rd-smoke { position: absolute; z-index: 950; width: 0; height: 0; pointer-events: none; container-type: normal; }
+.rd-smoke > i { position: absolute; left: 0; top: 0; width: 22px; aspect-ratio: 1; border-radius: 50%; transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(150, 145, 140, 0.75), rgba(120, 115, 110, 0.35) 50%, transparent 72%); filter: blur(1.5px);
+  animation: rd-smoke 6.5s linear infinite; opacity: 0; }
+@keyframes rd-smoke { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } 12% { opacity: 0.85; }
+  100% { opacity: 0; transform: translate(calc(-50% + 70px), calc(-50% - 60px)) scale(2.6); } }
+@media (prefers-reduced-motion: reduce) { .rd-smoke > i { animation: none; } }

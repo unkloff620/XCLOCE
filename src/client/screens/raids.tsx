@@ -35,6 +35,7 @@ import { useRouter } from "next/navigation";
 import { RAID_BAG_PRICE } from "../../content/raids.ts";
 import { tattooPiece } from "../../content/tattoos.ts";
 import { GROUND_H, GROUND_W, YARD_LIGHTS, groundH, groundY } from "../../content/raids.ts";
+import { takenWord } from "../../content/raids.ts";
 import { BUILDING_NAMES, RAID_YARDS, YARD_TREES, YARD_WALKERS, buildingReward, buildingTake, flagId, raidYardById, yardTotal, type BuildingKind, type RaidBuilding } from "../../content/raids.ts";
 import { itemById } from "../../content/items.ts";
 
@@ -324,7 +325,7 @@ function RestLeft({ until }: { until: number }) {
 /** a building on the yard's ground; the one to attack now glows, a taken one carries the clan's flag */
 function Building({ b, art, target, taken, yard, clan, prog }: { b: RaidBuilding; art?: string; target: boolean; taken: boolean; yard: string; clan: RaidsView["clan"]; prog?: { wins: number; need: number } }) {
   const router = useRouter();
-  const pic = `${A}/${art ? `${art}/` : ""}b-${b.kind}.webp`;
+  const pic = `${A}/${art ? `${art}/` : ""}b-${b.pic ?? b.kind}.webp`;
   return (
     <button type="button" className={`rd-bld k-${b.kind} ${target ? "target" : ""} ${taken ? "taken" : ""}`} style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%`, zIndex: Math.round(b.y * 10), ["--pic" as string]: `url(${pic})` }}
       onClick={() => { haptic.tap(); if (target) router.push(`/clans/raids/${yard}/${b.id}`); }} aria-label={BUILDING_NAMES[b.kind]}>
@@ -379,17 +380,25 @@ function YardLights({ art }: { art: string }) {
   const ls = YARD_LIGHTS[art];
   if (!ls) return null;
   return (
+    <>
+    {/* smoke rises over the buildings */}
+    {ls.filter((l) => l.k === "smoke").map((l, i) => (
+      <span key={`s${i}`} className="rd-smoke" aria-hidden="true" style={{ left: `${l.x}%`, top: `${l.y}%` }}>
+        {[0, 1, 2, 3, 4].map((k) => <i key={k} style={{ animationDelay: `${-k * 1.3}s` }} />)}
+      </span>
+    ))}
     <span className="rd-lights" aria-hidden="true">
-      {ls.map((l, i) => (
+      {ls.filter((l) => l.k !== "smoke").map((l, i) => (
         <span key={i} className={`rd-lamp ${l.k ?? ""} ${l.k === "beacon" && i % 2 ? "alt" : ""}`}
           style={{ left: `${l.x}%`, top: `${l.y}%`, ["--d" as string]: `${-((i * 1.37) % 5).toFixed(2)}s`, ["--t" as string]: `${(3.2 + (i % 4) * 0.7).toFixed(1)}s` } as React.CSSProperties}>
           {/* the light on the ground under it */}
-          {l.k !== "beacon" && l.k !== "sign" && <i className="rd-lamp-pool" />}
+          {l.k !== "beacon" && l.k !== "sign" && l.k !== "spark" && <i className="rd-lamp-pool" />}
           <i className="rd-lamp-glow" />
           {l.k === "moths" && <><b className="rd-moth" /><b className="rd-moth m2" /><b className="rd-moth m3" /></>}
         </span>
       ))}
     </span>
+    </>
   );
 }
 
@@ -432,7 +441,7 @@ export function RaidYardScreen({ id }: { id: string }) {
             the map every way; the yard's edges melt into the dark, clouds lie over them */}
         <div className="rd-world">
         <i className="rd-fog" aria-hidden="true" />
-        <div className="rd-scene" style={{ aspectRatio: `${GROUND_W} / ${groundH(y.n)}`, ["--gh" as string]: groundH(y.n) / GROUND_H } as React.CSSProperties}>
+        <div className="rd-scene" style={{ aspectRatio: `${GROUND_W} / ${y.art ? GROUND_H : groundH(y.n)}`, ["--gh" as string]: y.art ? 1 : groundH(y.n) / GROUND_H } as React.CSSProperties}>
           <YardClouds />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="rd-map-bg" src={`${A}/${y.art ? `${y.art}/ground` : y.n > 1 ? `yard-ground-${y.n}` : "yard-ground2"}.webp`} alt="" draggable={false} />
@@ -459,10 +468,11 @@ export function RaidYardScreen({ id }: { id: string }) {
 const GOPNIK = { id: "gopnik", name: "Гопник" }, LAREK = { id: "larek", name: "Ларёчник" };
 const RAID_DEFENDERS: Record<BuildingKind, { id: string; name: string }[]> = {
   garage: [GOPNIK], barrack: [GOPNIK], khrush: [GOPNIK], shop: [GOPNIK], kiosk: [LAREK], boiler: [LAREK], main: [GOPNIK, LAREK],
+  checkpoint: [LAREK], tanks: [LAREK], pipes: [LAREK], office: [GOPNIK], warehouse: [GOPNIK],
 };
 const defendersOf = (kind: BuildingKind) => RAID_DEFENDERS[kind] ?? [GOPNIK];
 /** the fight's room: Ларёчник fights inside his kiosk, the main building is the gang's hall, Гопник — in the basement */
-const arenaOf = (kind: BuildingKind) => (kind === "main" ? "arena-main" : kind === "kiosk" || kind === "boiler" ? "arena-kiosk" : "arena-garage2");
+const arenaOf = (kind: BuildingKind) => (kind === "main" ? "arena-main" : kind === "kiosk" || kind === "boiler" || kind === "checkpoint" || kind === "tanks" || kind === "pipes" ? "arena-kiosk" : "arena-garage2");
 /** the defenders' rigs: one in the middle, or two side by side (the main building) */
 function Defenders({ kind, hpShare }: { kind: BuildingKind; hpShare?: number }) {
   const ds = defendersOf(kind);
@@ -664,7 +674,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
               <div className="result-photo">
                 <BossPhoto boss={defenderDef(b.kind)} round defeated />
               </div>
-              <div className="display result-name">{won.yardTaken ? "Двор захвачен!" : won.buildingTaken ? `${BUILDING_NAMES[b.kind]} ${["boiler", "khrush"].includes(b.kind) ? "захвачена" : "захвачен"}!` : defendersOf(b.kind).map((d) => d.name).join(" и ")}</div>
+              <div className="display result-name">{won.yardTaken ? "Двор захвачен!" : won.buildingTaken ? `${BUILDING_NAMES[b.kind]} ${takenWord(b.kind)}!` : defendersOf(b.kind).map((d) => d.name).join(" и ")}</div>
               <div className="muted small">
                 {won.yardTaken ? `Клан взял весь двор «${y.name}»` : won.buildingTaken ? "Здание теперь ваше" : <>Побед клана: <b style={{ color: "var(--ink)" }}>{(prog?.wins ?? 0) + 1}/{prog?.need ?? "?"}</b></>}
               </div>
