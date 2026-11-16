@@ -145,16 +145,17 @@ describe("achievements and someone's profile", () => {
 });
 
 describe("clan level", () => {
-  it("clan level from the clan's own experience (only «Захват»): yard №1 once — 2, all five once — 10, all five ×10 — 100", async () => {
+  it("clan level from the clan's own experience (only «Захват»): 1 500 000 × n / 38 from n to n+1, up to level 50", async () => {
     const { clanLevelInfo, clanLevelAt } = await import("../src/content/clans.ts");
-    const { RAID_YARDS, yardTotal } = await import("../src/content/raids.ts");
     expect(clanLevelInfo(0).level).toBe(1);
-    const all = RAID_YARDS.reduce((t, y) => t + yardTotal(y).clanXp, 0);
-    expect(clanLevelInfo(yardTotal(RAID_YARDS[0]).clanXp).level).toBe(2);
-    expect(clanLevelInfo(all).level).toBe(10);
-    expect(clanLevelInfo(all * 10).level).toBe(100);
+    // the step from n to n+1 is 1 500 000 × n / 38
+    expect(clanLevelAt(2)).toBe(39_474);
+    expect(clanLevelAt(3) - clanLevelAt(2)).toBe(78_947);
+    expect(clanLevelAt(39) - clanLevelAt(38)).toBe(1_500_000);
     expect(clanLevelInfo(clanLevelAt(10) - 1).level).toBe(9);
-    for (let x = 1; x < 3e7; x *= 1.7) { const l = clanLevelInfo(x); expect(x).toBeGreaterThanOrEqual(l.from); expect(x).toBeLessThan(l.to); }
+    // the top is level 50
+    expect(clanLevelInfo(1e12)).toMatchObject({ level: 50, max: true });
+    for (let x = 1; x < clanLevelAt(50); x *= 1.7) { const l = clanLevelInfo(x); expect(x).toBeGreaterThanOrEqual(l.from); expect(x).toBeLessThan(l.to); }
   });
 
 });

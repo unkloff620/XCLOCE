@@ -390,8 +390,13 @@ export function ClanScreen({ id }: { id: number }) {
         <div className="clan-level">
           <span className="clan-lv display">{c.level}</span>
           <div className="grow col" style={{ gap: 2, minWidth: 0 }}>
-            <Bar value={c.xp - c.levelFrom} max={c.levelTo - c.levelFrom} tone="gold" height={16} label={`${short(c.xp)} / ${short(c.levelTo)}`} />
-            <span className="tiny muted">до {c.level + 1} уровня: {short(c.levelTo - c.xp)} опыта клана — за захват зданий и дворов</span>
+            {c.levelTo > c.levelFrom ? <>
+              <Bar value={c.xp - c.levelFrom} max={c.levelTo - c.levelFrom} tone="gold" height={16} label={`${short(c.xp)} / ${short(c.levelTo)}`} />
+              <span className="tiny muted">до {c.level + 1} уровня: {short(c.levelTo - c.xp)} опыта клана — за захват зданий и дворов</span>
+            </> : <>
+              <Bar value={1} max={1} tone="gold" height={16} label={`${short(c.xp)} · максимум`} />
+              <span className="tiny muted">Максимальный уровень клана</span>
+            </>}
           </div>
         </div>
         <b className="display" style={{ fontSize: 22 }}>{c.name}</b>

@@ -1,17 +1,24 @@
 /*
  * Clan level from the clan's own experience — only from «Захват» (content/raids.ts: taken buildings and yards).
- * CLAN_LEVEL_XP — one full capture of yard №1 (level 2); CLAN_PASS_XP — all five yards once (level 10), the levels
- * between evenly; after it every level costs a tenth of a pass (all five yards ~10 times ≈ level 100).
+ * From level n to n+1 takes CLAN_LEVEL_STEP × n / 38 (1→2: 39 474 … 38→39: 1 500 000); the top level is CLAN_LEVEL_MAX.
  */
-export const CLAN_LEVEL_XP = 7_820;
-export const CLAN_PASS_XP = 7_820 + 17_420 + 30_280 + 40_520 + 57_140;
-export const clanLevelAt = (n: number) => (n <= 1 ? 0 : n <= 10 ? Math.round(CLAN_LEVEL_XP + (CLAN_PASS_XP - CLAN_LEVEL_XP) * (n - 2) / 8)
-  : Math.round(CLAN_PASS_XP + (CLAN_PASS_XP / 10) * (n - 10)));
-export function clanLevelInfo(xp: number): { level: number; from: number; to: number } {
+export const CLAN_LEVEL_STEP = 1_500_000;
+export const CLAN_LEVEL_MAX = 50;
+/** the experience from level n to n+1 */
+export const clanLevelStep = (n: number) => Math.round((CLAN_LEVEL_STEP * n) / 38);
+/** the experience a clan needs to be at level n */
+export const clanLevelAt = (n: number) => {
+  let t = 0;
+  for (let k = 1; k < Math.min(n, CLAN_LEVEL_MAX); k++) t += clanLevelStep(k);
+  return t;
+};
+/** the clan's level, where it began and where the next one begins (at the top level: to = from) */
+export function clanLevelInfo(xp: number): { level: number; from: number; to: number; max: boolean } {
   const x = Math.max(0, xp);
   let n = 1;
-  while (clanLevelAt(n + 1) <= x) n++;
-  return { level: n, from: clanLevelAt(n), to: clanLevelAt(n + 1) };
+  while (n < CLAN_LEVEL_MAX && clanLevelAt(n + 1) <= x) n++;
+  const max = n >= CLAN_LEVEL_MAX;
+  return { level: n, from: clanLevelAt(n), to: max ? clanLevelAt(n) : clanLevelAt(n + 1), max };
 }
 
 /*
