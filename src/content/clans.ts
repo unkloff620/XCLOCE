@@ -1,10 +1,12 @@
 /*
  * Clan level from the clan's own experience — only from «Захват» (content/raids.ts: taken buildings and yards).
- * CLAN_LEVEL_XP — the experience of one full capture of yard №1 (level 2); up to level 10 every level costs that much
- * (all five yards once ≈ level 10), after it — 0,9 of it (all five yards ~10 times ≈ level 100).
+ * CLAN_LEVEL_XP — one full capture of yard №1 (level 2); CLAN_PASS_XP — all five yards once (level 10), the levels
+ * between evenly; after it every level costs a tenth of a pass (all five yards ~10 times ≈ level 100).
  */
-export const CLAN_LEVEL_XP = 19_300;
-export const clanLevelAt = (n: number) => (n <= 1 ? 0 : n <= 10 ? CLAN_LEVEL_XP * (n - 1) : Math.round(CLAN_LEVEL_XP * (9 + 0.9 * (n - 10))));
+export const CLAN_LEVEL_XP = 7_820;
+export const CLAN_PASS_XP = 7_820 + 17_420 + 30_280 + 40_520 + 57_140;
+export const clanLevelAt = (n: number) => (n <= 1 ? 0 : n <= 10 ? Math.round(CLAN_LEVEL_XP + (CLAN_PASS_XP - CLAN_LEVEL_XP) * (n - 2) / 8)
+  : Math.round(CLAN_PASS_XP + (CLAN_PASS_XP / 10) * (n - 10)));
 export function clanLevelInfo(xp: number): { level: number; from: number; to: number } {
   const x = Math.max(0, xp);
   let n = 1;

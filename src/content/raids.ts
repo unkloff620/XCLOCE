@@ -31,27 +31,53 @@ export interface RaidYard {
 }
 
 /**
- * The plan of a yard, in the order of the attack: one building at the bottom, two above it, three above those, the main
- * one at the top (twice as big). `kinds` — the six ordinary ones, from the bottom up, left to right.
+ * The plan of a yard, in the order of the attack: one building at the bottom, two above it, three above those, then
+ * rows of three more (yard n has n−1 of them: 7, 10, 13, 16, 19 buildings with the main one), the main one at the top
+ * (twice as big). `kinds` — the ordinary ones, from the bottom up, left to right.
+ *
+ * The ground: yard-ground2.webp (1024×1536, drawn with places for one, two, three buildings and the main one). A bigger
+ * yard is the same picture with its band of three places (GROUND_BAND) repeated: its upper half, the band k more
+ * times, its lower half (tools/raids/build-grounds.py → yard-ground-<n>.webp). The positions below are in % of the
+ * width and of THAT yard's own ground height.
  */
-// in % of the yard's ground picture (public/assets/raids/yard-ground2.webp, 1024×1536, drawn with places for them)
-// a phone shows only the middle ~70% of the picture's width (it covers the screen), so the outer ones are pulled in a bit
+// in px of the 1024×1536 ground: the band with the row of three (repeated in the bigger yards)
+export const GROUND_W = 1024, GROUND_H = 1536, GROUND_BAND = { y: 768, h: 246 };
 const SPOTS = [
   { x: 55, y: 88, w: 16 },
   { x: 40.5, y: 74, w: 15 }, { x: 59.5, y: 74, w: 16 },
   { x: 31, y: 58, w: 15.5 }, { x: 51, y: 58, w: 18.5 }, { x: 71, y: 58, w: 17.5 },
 ];
-const plan = (yard: string, kinds: BuildingKind[]): RaidBuilding[] => [
-  ...kinds.map((kind, i) => ({ id: `${yard}-${i + 1}`, kind, ...SPOTS[i] })),
-  { id: `${yard}-main`, kind: "main" as const, x: 50, y: 38, w: 29 },
-];
+/** the extra rows of three of yard n */
+export const extraRows = (n: number) => Math.max(0, n - 1);
+/** yard n's ground height, px */
+export const groundH = (n: number) => GROUND_H + extraRows(n) * GROUND_BAND.h;
+/** a point of the 1536-high ground (y in %) → y in % of yard n's ground: below the band's top it moves down by the bands */
+export const groundY = (n: number, yPct: number) => {
+  const px = (yPct / 100) * GROUND_H;
+  return ((px >= GROUND_BAND.y ? px + extraRows(n) * GROUND_BAND.h : px) / groundH(n)) * 100;
+};
+const plan = (yard: string, n: number, kinds: BuildingKind[]): RaidBuilding[] => {
+  const k = extraRows(n);
+  const spots = [
+    ...SPOTS.map((p) => ({ ...p, y: groundY(n, p.y) })),
+    // the extra rows: the row of three again, each one band higher (on the band's copies above the first one)
+    ...Array.from({ length: k }, (_, j) => SPOTS.slice(3).map((p) => ({ ...p, y: (((p.y / 100) * GROUND_H + (k - 1 - j) * GROUND_BAND.h) / groundH(n)) * 100 }))).flat(),
+  ];
+  return [
+    ...kinds.map((kind, i) => ({ id: `${yard}-${i + 1}`, kind, ...spots[i] })),
+    { id: `${yard}-main`, kind: "main" as const, x: 50, y: groundY(n, 38), w: 29 },
+  ];
+};
 
+const G: BuildingKind = "garage", K: BuildingKind = "kiosk", B: BuildingKind = "barrack", O: BuildingKind = "boiler", S: BuildingKind = "shop", H: BuildingKind = "khrush";
+/** every building is taken with WINS wins; the later yards are harder by having more buildings */
+export const WINS = 10;
 export const RAID_YARDS: RaidYard[] = [
-  { id: "garages", n: 1, name: "Гаражи", subtitle: "Ряды ракушек, где решают все вопросы", wins: 10, buildings: plan("garages", ["garage", "kiosk", "garage", "barrack", "garage", "boiler"]) },
-  { id: "promzona", n: 2, name: "Промзона", subtitle: "Котельные, склады и ничейные трубы", wins: 20, buildings: plan("promzona", ["boiler", "garage", "shop", "boiler", "barrack", "kiosk"]) },
-  { id: "rynok", n: 3, name: "Рынок", subtitle: "Ларьки, палатки и свои люди", wins: 30, buildings: plan("rynok", ["kiosk", "shop", "kiosk", "shop", "kiosk", "garage"]) },
-  { id: "panelki", n: 4, name: "Панельки", subtitle: "Пятиэтажки, лавочки и бабки на страже", wins: 40, buildings: plan("panelki", ["khrush", "barrack", "khrush", "shop", "khrush", "kiosk"]) },
-  { id: "center", n: 5, name: "Центр района", subtitle: "Главный двор. Кто держит его — держит район", wins: 50, buildings: plan("center", ["shop", "khrush", "shop", "khrush", "boiler", "khrush"]) },
+  { id: "garages", n: 1, name: "Гаражи", subtitle: "Ряды ракушек, где решают все вопросы", wins: WINS, buildings: plan("garages", 1, [G, K, G, B, G, O]) },
+  { id: "promzona", n: 2, name: "Промзона", subtitle: "Котельные, склады и ничейные трубы", wins: WINS, buildings: plan("promzona", 2, [O, G, S, O, B, K, G, O, S]) },
+  { id: "rynok", n: 3, name: "Рынок", subtitle: "Ларьки, палатки и свои люди", wins: WINS, buildings: plan("rynok", 3, [K, S, K, S, K, G, K, S, K, G, S, K]) },
+  { id: "panelki", n: 4, name: "Панельки", subtitle: "Пятиэтажки, лавочки и бабки на страже", wins: WINS, buildings: plan("panelki", 4, [H, B, H, S, H, K, H, B, H, S, K, H, B, H, S]) },
+  { id: "center", n: 5, name: "Центр района", subtitle: "Главный двор. Кто держит его — держит район", wins: WINS, buildings: plan("center", 5, [S, H, S, H, O, H, S, H, K, H, S, O, H, S, H, K, H, S]) },
 ];
 export const raidYardById = (id: string) => RAID_YARDS.find((y) => y.id === id);
 
@@ -107,19 +133,26 @@ export const buildingHp = (b: RaidBuilding) => BUILDING_HP * rowK(b);
 export const YARD_INFLUENCE = [390, 870, 1_510, 2_025, 2_860];
 const r5 = (x: number) => Math.round(x / 5) * 5;
 const rowSum = (y: RaidYard) => y.buildings.reduce((t, b) => t + rowK(b), 0);
+/** a full capture of yard n: the clan's experience and the flags (of one who won over every building) */
+export const YARD_CLAN_XP = [7_820, 17_420, 30_280, 40_520, 57_140];
+export const YARD_FLAGS = [20, 45, 75, 100, 140];
+/** the most flags of yard n one can hold (no more are given above it) */
+export const FLAG_MAX = [80, 180, 300, 400, 560];
+/** 70% of a yard's total spread over its buildings by their rows, the rest for the whole yard */
+const share = (total: number, n: number, b: RaidBuilding, round: (x: number) => number) => round(total * 0.7 * rowK(b) / rowSum(RAID_YARDS[n - 1]));
 /** a taken building: the clan's experience and influence; every member who won a fight over it — the yard's flags */
-export const buildingTake = (yardN: number, b: RaidBuilding) => {
-  const y = RAID_YARDS[yardN - 1];
-  return {
-    clanXp: r10(1_100 * yk(yardN) * rowK(b)), influence: r5((YARD_INFLUENCE[yardN - 1] ?? 0) * 0.7 * rowK(b) / rowSum(y)),
-    flags: Math.round(10 * rowK(b)), flag: flagId(yardN),
-  };
-};
-/** the whole yard taken: a bonus on top — the clan's experience and influence; everyone who won a fight in it — flags */
+export const buildingTake = (yardN: number, b: RaidBuilding) => ({
+  clanXp: share(YARD_CLAN_XP[yardN - 1] ?? 0, yardN, b, r10), influence: share(YARD_INFLUENCE[yardN - 1] ?? 0, yardN, b, r5),
+  flags: Math.max(1, share(YARD_FLAGS[yardN - 1] ?? 0, yardN, b, Math.round)), flag: flagId(yardN),
+});
+/** the whole yard taken: a bonus on top — the rest of the yard's totals */
 export const yardReward = (n: number) => {
   const y = RAID_YARDS[n - 1];
-  const inB = y.buildings.reduce((t, b) => t + buildingTake(n, b).influence, 0);
-  return { clanXp: r10(5_000 * yk(n)), influence: (YARD_INFLUENCE[n - 1] ?? 0) - inB, flags: 20, flag: flagId(n) };
+  const sum = (f: (t: ReturnType<typeof buildingTake>) => number) => y.buildings.reduce((t, b) => t + f(buildingTake(n, b)), 0);
+  return {
+    clanXp: (YARD_CLAN_XP[n - 1] ?? 0) - sum((t) => t.clanXp), influence: (YARD_INFLUENCE[n - 1] ?? 0) - sum((t) => t.influence),
+    flags: (YARD_FLAGS[n - 1] ?? 0) - sum((t) => t.flags), flag: flagId(n),
+  };
 };
 /** a full capture of yard n: the clan's experience and influence, the flags of one who won over every building */
 export const yardTotal = (y: RaidYard) => {

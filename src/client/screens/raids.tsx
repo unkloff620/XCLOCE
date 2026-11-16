@@ -34,6 +34,7 @@ import { haptic } from "../telegram.ts";
 import { useRouter } from "next/navigation";
 import { RAID_BAG_PRICE } from "../../content/raids.ts";
 import { tattooPiece } from "../../content/tattoos.ts";
+import { GROUND_H, GROUND_W, groundH, groundY } from "../../content/raids.ts";
 import { BUILDING_NAMES, RAID_YARDS, YARD_TREES, YARD_WALKERS, buildingReward, buildingTake, flagId, raidYardById, yardTotal, type BuildingKind, type RaidBuilding } from "../../content/raids.ts";
 import { itemById } from "../../content/items.ts";
 
@@ -337,18 +338,18 @@ function Building({ b, target, taken, yard, clan, prog }: { b: RaidBuilding; tar
 }
 
 /** the yard's life: trees swaying (each at its own pace) and little people walking slowly back and forth */
-function YardLife() {
+function YardLife({ n }: { n: number }) {
   return (
     <>
       {YARD_TREES.map((t, i) => (
         // eslint-disable-next-line @next/next/no-img-element
         <img key={`t${i}`} className="rd-tree" src={`${A}/tree${t.n}.webp`} alt="" draggable={false}
-          style={{ left: `${t.x}%`, top: `${t.y}%`, width: `${t.w}%`, zIndex: Math.round(t.y * 10), animationDuration: `${3.6 + i * 0.7}s`, animationDelay: `${-i * 1.3}s` }} />
+          style={{ left: `${t.x}%`, top: `${groundY(n, t.y)}%`, width: `${t.w}%`, zIndex: Math.round(groundY(n, t.y) * 10), animationDuration: `${3.6 + i * 0.7}s`, animationDelay: `${-i * 1.3}s` }} />
       ))}
       {YARD_WALKERS.map((w, i) => (
         <span key={`w${i}`} className="rd-walker" aria-hidden="true"
-          style={{ ["--x1" as string]: `${w.from[0]}%`, ["--y1" as string]: `${w.from[1]}%`, ["--x2" as string]: `${w.to[0]}%`, ["--y2" as string]: `${w.to[1]}%`,
-            zIndex: Math.round(Math.max(w.from[1], w.to[1]) * 10), animationDuration: `${w.s * 2}s`, animationDelay: `${-i * 7}s` }}>
+          style={{ ["--x1" as string]: `${w.from[0]}%`, ["--y1" as string]: `${groundY(n, w.from[1])}%`, ["--x2" as string]: `${w.to[0]}%`, ["--y2" as string]: `${groundY(n, w.to[1])}%`,
+            zIndex: Math.round(groundY(n, Math.max(w.from[1], w.to[1])) * 10), animationDuration: `${w.s * 2}s`, animationDelay: `${-i * 7}s` }}>
           <i style={{ animationDuration: `${w.s * 2}s`, animationDelay: `${-i * 7}s` }}>
             {/* the same picture three times: the body (above the hips), and each leg (its half below the hips) swinging
                 the opposite way — steps without separate frames */}
@@ -364,6 +365,13 @@ function YardLife() {
 
 export function RaidYardScreen({ id }: { id: string }) {
   const { v } = useRaids();
+  // start at the bottom of a tall yard (where the attack starts), once its layout has settled
+  const scroller = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const down = () => { const el = scroller.current; if (el) el.scrollTop = el.scrollHeight; };
+    const ts = [0, 120, 400].map((ms) => window.setTimeout(down, ms));
+    return () => ts.forEach((t) => window.clearTimeout(t));
+  }, [id, !!v]);
   usePageReady(!!v);
   const { state } = useGame();
   const y = raidYardById(id);
@@ -371,12 +379,15 @@ export function RaidYardScreen({ id }: { id: string }) {
   const yv = v?.yards.find((x) => x.id === y.id);
   return (
     <div className="fit-page rd-page rd-yard">
-      <div className="rd-scene">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="rd-map-bg" src={`${A}/yard-ground2.webp`} alt="" draggable={false} />
-        {/* the main one first in the markup: it stands behind (higher on the picture) */}
-        <YardLife />
-        {[...y.buildings].reverse().map((b) => <Building key={b.id} b={b} yard={y.id} clan={v?.clan ?? null} target={!!yv?.open && yv.target === b.id} taken={!!yv?.buildings.find((x) => x.id === b.id)?.taken} prog={yv?.buildings.find((x) => x.id === b.id)} />)}
+      {/* the bigger yards are taller than the screen: they scroll, starting at the bottom (where the attack starts) */}
+      <div className="rd-yscroll" ref={scroller}>
+        <div className="rd-scene" style={{ aspectRatio: `${GROUND_W} / ${groundH(y.n)}`, ["--gh" as string]: groundH(y.n) / GROUND_H } as React.CSSProperties}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="rd-map-bg" src={`${A}/${y.n > 1 ? `yard-ground-${y.n}` : "yard-ground2"}.webp`} alt="" draggable={false} />
+          {/* the main one first in the markup: it stands behind (higher on the picture) */}
+          <YardLife n={y.n} />
+          {[...y.buildings].reverse().map((b) => <Building key={b.id} b={b} yard={y.id} clan={v?.clan ?? null} target={!!yv?.open && yv.target === b.id} taken={!!yv?.buildings.find((x) => x.id === b.id)?.taken} prog={yv?.buildings.find((x) => x.id === b.id)} />)}
+        </div>
       </div>
       <div className="title-row rd-title">
         <Link href="/clans/raids" className="back-btn" aria-label="К дворам">‹</Link>
@@ -629,15 +640,19 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
         <div className="rd-board">
           <b className="rd-board-t">{BUILDING_NAMES[b.kind]}</b>
           <span className="rd-board-w">Побед клана: <b className="num">{prog?.wins ?? 0}/{prog?.need ?? y.wins}</b>{prog?.taken ? " — захвачено" : ""}</span>
-          <span className="rd-board-h">За каждую победу</span>
+          {/* all the rewards on the board: a win's (each fight) and the capture's (the clan's, when the building is taken) */}
           <span className="rd-board-r">
-            <span><Icon name="xp" size={26} /><b className="num">+{r.xp.toLocaleString("ru-RU")}</b></span>
-            <span><Icon name="RUB" size={26} /><b className="num">+{r.rub.toLocaleString("ru-RU")}</b></span>
+            <i className="rd-board-l">За победу</i>
+            <span><Icon name="xp" size={22} /><b className="num">+{r.xp.toLocaleString("ru-RU")}</b></span>
+            <span><Icon name="RUB" size={22} /><b className="num">+{r.rub.toLocaleString("ru-RU")}</b></span>
+          </span>
+          <span className="rd-board-r">
+            <i className="rd-board-l">За захват</i>
+            <span><Icon name="clan-xp" size={20} /><b className="num">+{take.clanXp.toLocaleString("ru-RU")}</b></span>
+            <span><Icon name="influence" size={20} /><b className="num">+{take.influence.toLocaleString("ru-RU")}</b></span>
+            <span><ItemArt id={flagId(y.n)} size={20} /><b className="num">+{take.flags}</b></span>
           </span>
         </div>
-        {/* under the board: what a capture of the building gives */}
-        <div className="rd-board-clan">За захват: <Icon name="clan-xp" size={20} /><b className="num">+{take.clanXp.toLocaleString("ru-RU")}</b> клану ·
-          <Icon name="influence" size={20} /><b className="num">+{take.influence.toLocaleString("ru-RU")}</b> · <ItemArt id={flagId(y.n)} size={20} /><b className="num">×{take.flags}</b></div>
       </div>
       <div className="title-row rd-title">
         <Link href={`/clans/raids/${y.id}`} className="back-btn" aria-label="Во двор">‹</Link>
