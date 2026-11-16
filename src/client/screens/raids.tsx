@@ -119,8 +119,9 @@ export function RaidsScreen() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="rd-card-paper" src={`${A}/card.webp`} alt="" draggable={false} />
           <div className="rd-photo">
+            {/* the yard's own photo: its ground with its buildings (build-yard-art.py), or the old common one */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`${A}/yard-bg.webp`} alt="" draggable={false} />
+            <img className={y.art ? "own" : ""} src={y.art ? `${A}/${y.art}/photo.webp` : `${A}/yard-bg.webp`} alt="" draggable={false} />
             <span className="rd-wins num">{yv?.taken ? "Двор наш" : `Захвачено ${taken}/${y.buildings.length}`}</span>
             {!!yv?.times && <span className="rd-times num">захвачен ×{yv.times}</span>}
             {!open && <span className="rd-lock"><Icon name="lock" size={34} /></span>}

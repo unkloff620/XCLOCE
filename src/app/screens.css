@@ -5999,6 +5999,7 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .rd-card-paper { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.55)); pointer-events: none; user-select: none; }
 .rd-photo { position: absolute; left: 20%; right: 17%; top: 10.6%; height: 23.4%; overflow: hidden; }
 .rd-photo > img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; filter: sepia(0.25) contrast(1.05); }
+.rd-photo > img.own { object-position: 50% 50%; filter: sepia(0.15) contrast(1.05) brightness(1.08); }
 .rd-wins { position: absolute; left: 6px; top: 6px; padding: 2px 8px; border-radius: 8px; background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 12px; font-weight: 800; }
 .rd-lock { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.55); }
 .rd-body { position: absolute; left: 12%; right: 12%; top: 38%; bottom: 8%; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }

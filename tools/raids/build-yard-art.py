@@ -33,3 +33,23 @@ for f in sorted(os.listdir(src)):
     W, H = a.shape[1], a.shape[0]
     places[kind] = {"x": round((box[0] + box[2]) / 2 / W * 100, 2), "y": round(box[3] / H * 100, 2), "w": round((box[2] - box[0]) / W * 100, 2), "foot": round(solid[3] / H * 100, 2)}
 print(json.dumps(places))
+
+# the yard's photo on its card (raids.tsx RaidsScreen): the ground with its buildings, a 16:9 cut of the busy middle
+import re
+ts = open(os.path.join(ROOT, "src", "content", "raids.ts"), encoding="utf-8").read()
+blk = ts[ts.index(f'art: "{yard}"'):]
+blk = blk[:blk.index("] },")]
+ground = Image.open(os.path.join(out, "ground.webp")).convert("RGBA")
+W, H = ground.size
+bs = []
+for m in re.finditer(r'kind: "?(\w+)"?(?:, pic: "(\w+)")?, x: ([\d.]+), y: ([\d.]+), w: ([\d.]+)', blk):
+    kind = {"G": "garage", "K": "kiosk", "B": "barrack", "O": "boiler", "S": "shop", "H": "khrush"}.get(m.group(1), m.group(1))
+    bs.append((m.group(2) or kind, float(m.group(3)), float(m.group(4)), float(m.group(5))))
+for pic, x, y, w in sorted(bs, key=lambda b: b[2]):
+    im = Image.open(os.path.join(out, f"b-{pic}.webp")).convert("RGBA")
+    bw = round(W * w / 100); bh = round(im.height * bw / im.width)
+    ground.alpha_composite(im.resize((bw, bh), Image.LANCZOS), (round(W * x / 100 - bw / 2), round(H * y / 100 - bh)))
+ch = round(W * 9 / 16)
+top = int(H * 0.30) - ch // 2
+ground.crop((0, top, W, top + ch)).convert("RGB").resize((640, 360), Image.LANCZOS).save(os.path.join(out, "photo.webp"), "WEBP", quality=84)
+print("photo", len(bs), "buildings")
