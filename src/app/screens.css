@@ -5533,14 +5533,15 @@ html.paused *, html.paused *::before, html.paused *::after { animation-play-stat
 .clan-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
 /* the clan's menu under its head: five square buttons, each a page of its own (clans.tsx ClanScreen) */
 .clan-menu { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 10px 0; }
-.clan-menu-b { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; aspect-ratio: 1; min-width: 0; padding: 4px 2px;
+.clan-menu-b { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; aspect-ratio: 1; min-width: 0; padding: 4px 2px;
   border-radius: 12px; border: 2px solid #6b4a26; background: linear-gradient(180deg, #4a3220, #2a1b10); box-shadow: inset 0 1px 0 rgba(255, 220, 160, 0.18), 0 3px 6px rgba(0, 0, 0, 0.4);
   color: #f3dcae; font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.2px; text-align: center; line-height: 1.05; text-decoration: none; }
-.clan-menu-b > span { font-size: 24px; line-height: 1; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5)); }
+.clan-menu-b > img { width: 74%; aspect-ratio: 1; object-fit: contain; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.55)); pointer-events: none; user-select: none; }
+.clan-menu-b > em { font-style: normal; font-size: 8.5px; font-weight: 700; letter-spacing: 0.2px; }
 .clan-menu-b:active { transform: scale(0.95); }
 .clan-menu-b.off { opacity: 0.55; filter: grayscale(0.7); cursor: default; }
 .clan-menu-b.off:active { transform: none; }
-.clan-menu-b > i { font-style: normal; font-size: 9px; font-weight: 600; text-transform: none; color: #c9b08a; }
+.clan-menu-b > i { position: absolute; top: 3px; right: 4px; font-style: normal; font-size: 8px; font-weight: 600; text-transform: none; color: #c9b08a; }
 .clan-menu-b .badge { position: absolute; top: -6px; right: -4px; }
 .clan-tabs .btn { position: relative; }
 .clan-tabs .badge { position: absolute; top: -7px; right: -4px; }

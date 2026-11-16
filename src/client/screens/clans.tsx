@@ -354,13 +354,15 @@ export function ClanScreen({ id }: { id: number }) {
   };
   const unread = state?.clanRequests?.chat ?? 0;
   // the clan's own menu under its head: each button opens a page of its own
+  // eslint-disable-next-line @next/next/no-img-element
+  const ic = (k: string) => <img src={`/assets/ui/clan-${k}.webp`} alt="" draggable={false} />;
   const menu = mine && (
     <nav className="clan-menu" aria-label="Клан">
-      {state?.raids?.on && <Link href="/clans/raids" className="clan-menu-b"><span>🚔</span>Захват</Link>}
-      <span className="clan-menu-b off" aria-disabled="true" title="Скоро"><span>🤝</span>Сходняк<i>скоро</i></span>
-      {state?.raids?.on && <Link href={`/clans/${c.id}/events`} className="clan-menu-b"><span>📜</span>События</Link>}
-      <Link href="/clans?all=1" className="clan-menu-b"><span>🔍</span>Все кланы</Link>
-      <Link href={`/clans/${c.id}/chat`} className="clan-menu-b"><span>💬</span>Чат{unread > 0 && <b className="badge">{unread}</b>}</Link>
+      {state?.raids?.on && <Link href="/clans/raids" className="clan-menu-b">{ic("raid")}<em>Захват</em></Link>}
+      <span className="clan-menu-b off" aria-disabled="true" title="Скоро">{ic("meet")}<em>Сходняк</em><i>скоро</i></span>
+      {state?.raids?.on && <Link href={`/clans/${c.id}/events`} className="clan-menu-b">{ic("events")}<em>События</em></Link>}
+      <Link href="/clans?all=1" className="clan-menu-b">{ic("all")}<em>Все кланы</em></Link>
+      <Link href={`/clans/${c.id}/chat`} className="clan-menu-b">{ic("chat")}<em>Чат</em>{unread > 0 && <b className="badge">{unread}</b>}</Link>
     </nav>
   );
   return (
