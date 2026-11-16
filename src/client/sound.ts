@@ -907,7 +907,7 @@ export function alleyCreak(power = 0.6, dur = 0.9) {
     src.buffer = rec;
     src.playbackRate.value = 0.85 + Math.random() * 0.3;
     const g = a.createGain();
-    g.gain.value = 0.9 + power * 1.2;
+    g.gain.value = 0.35 + power * 0.45;
     src.connect(g).connect(alleyEcho(a));
     src.start(at);
     return;
