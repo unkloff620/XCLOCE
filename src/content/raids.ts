@@ -75,8 +75,8 @@ export const YARD_WALKERS: { n: number; from: [number, number]; to: [number, num
  * The rules of a capture (the yard's number n, the building's row from the bottom):
  *  - the rows grow harder: the bottom building ×1, the two above it ×1.5, the three above those ×2, the main one ×3 —
  *    its HP and its rewards; the later yards give more (YARD_K) and need more wins (RaidYard.wins);
- *  - a taken building: the clan gets its experience, every member who won a fight over it in this capture — authority
- *    and the yard's flags; the whole yard: a bonus on top (clan experience, authority, flags);
+ *  - a taken building: the clan gets its experience and influence, every member who won a fight over it in this
+ *    capture — the yard's flags; the whole yard: a bonus on top (clan experience, influence, flags);
  *  - a taken yard rests for RAID_YARD_COOLDOWN_MS, then it can be taken again (from the bottom building);
  *  - the clan's level comes only from this experience (CLAN_RAID_XP): yard №1 once — level 2, all five once — level 10,
  *    all five ~10 times — level 100.
@@ -99,19 +99,35 @@ export const buildingWins = (y: RaidYard) => y.wins;
 /** the building's HP in one fight: 100 000 × its row */
 export const BUILDING_HP = 100_000;
 export const buildingHp = (b: RaidBuilding) => BUILDING_HP * rowK(b);
-/** a taken building: the clan's experience; every member who won a fight over it — authority and the yard's flags */
-export const buildingTake = (yardN: number, b: RaidBuilding) => ({
-  clanXp: r10(1_100 * yk(yardN) * rowK(b)), xp: r10(1_000 * yk(yardN) * rowK(b)), flags: Math.round(10 * rowK(b)), flag: flagId(yardN),
-});
-/** the whole yard taken: a bonus on top — the clan's experience; everyone who won a fight in it — authority and flags */
-export const yardReward = (n: number) => ({ clanXp: r10(5_000 * yk(n)), xp: r10(4_400 * yk(n)), flags: 20, flag: flagId(n) });
-/** a full capture of yard n: the clan's experience, the authority and the flags of one who won over every building */
+/*
+ * Influence (влияние): the clan's weight in a yard, it only grows. Every capture adds it: a full capture of yard n gives
+ * YARD_INFLUENCE[n-1] — 70% spread over its buildings by their rows, the rest for the whole yard. The clan with the
+ * most influence in a yard stands on its card (the stamp in the corner).
+ */
+export const YARD_INFLUENCE = [390, 870, 1_510, 2_025, 2_860];
+const r5 = (x: number) => Math.round(x / 5) * 5;
+const rowSum = (y: RaidYard) => y.buildings.reduce((t, b) => t + rowK(b), 0);
+/** a taken building: the clan's experience and influence; every member who won a fight over it — the yard's flags */
+export const buildingTake = (yardN: number, b: RaidBuilding) => {
+  const y = RAID_YARDS[yardN - 1];
+  return {
+    clanXp: r10(1_100 * yk(yardN) * rowK(b)), influence: r5((YARD_INFLUENCE[yardN - 1] ?? 0) * 0.7 * rowK(b) / rowSum(y)),
+    flags: Math.round(10 * rowK(b)), flag: flagId(yardN),
+  };
+};
+/** the whole yard taken: a bonus on top — the clan's experience and influence; everyone who won a fight in it — flags */
+export const yardReward = (n: number) => {
+  const y = RAID_YARDS[n - 1];
+  const inB = y.buildings.reduce((t, b) => t + buildingTake(n, b).influence, 0);
+  return { clanXp: r10(5_000 * yk(n)), influence: (YARD_INFLUENCE[n - 1] ?? 0) - inB, flags: 20, flag: flagId(n) };
+};
+/** a full capture of yard n: the clan's experience and influence, the flags of one who won over every building */
 export const yardTotal = (y: RaidYard) => {
   const bonus = yardReward(y.n);
   return y.buildings.reduce((t, b) => {
     const r = buildingTake(y.n, b);
-    return { clanXp: t.clanXp + r.clanXp, xp: t.xp + r.xp, flags: t.flags + r.flags };
-  }, { clanXp: bonus.clanXp, xp: bonus.xp, flags: bonus.flags });
+    return { clanXp: t.clanXp + r.clanXp, influence: t.influence + r.influence, flags: t.flags + r.flags };
+  }, { clanXp: bonus.clanXp, influence: bonus.influence, flags: bonus.flags });
 };
 /** a taken yard rests this long before it can be taken again */
 export const RAID_YARD_COOLDOWN_MS = 2 * 3_600_000;

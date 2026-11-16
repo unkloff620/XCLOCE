@@ -12,6 +12,7 @@ import type { Reward } from "../../content/rewards.ts";
 import { full, short } from "../format.ts";
 import { Icon } from "../art/icons.tsx";
 import { ClanChat } from "./clan-chat.tsx";
+import { BUILDING_NAMES, RAID_YARDS, buildingById } from "../../content/raids.ts";
 
 interface ClanRow { id: number; name: string; tag: string; emblem: string; color: string; description: string; members: number; damage: number; xp: number; leader: string; level: number; levelFrom: number; levelTo: number; rank: number }
 interface ClanPage extends Omit<ClanRow, "members"> {
@@ -244,13 +245,63 @@ function ClanWeek({ c }: { c: ClanPage }) {
   );
 }
 
+interface ClanEventsView {
+  influence: { yard: string; name: string; influence: number }[];
+  events: { id: number; at: number; kind: string; player: string | null; other: string | null; yard: string | null; building: string | null; amount: number }[];
+}
+/**
+ * «События»: our influence in the yards (it only grows with the captures; the most influential clan stands on the
+ * yard's card), and the crew's events by day — who took what (+influence), and who of the enemies threatens our yards.
+ */
+function ClanEvents({ id }: { id: number }) {
+  const [v, setV] = useState<ClanEventsView | null>(null);
+  useEffect(() => { api.get<ClanEventsView>(`/api/clans/${id}/events`).then(setV).catch(() => {}); }, [id]);
+  if (!v) return null;
+  const day = (t: number) => new Date(t).toLocaleDateString("ru-RU", { timeZone: "Europe/Moscow" });
+  const days: { d: string; list: ClanEventsView["events"] }[] = [];
+  for (const e of v.events) {
+    const d = day(e.at);
+    if (days[days.length - 1]?.d !== d) days.push({ d, list: [] });
+    days[days.length - 1].list.push(e);
+  }
+  const bName = (b: string | null) => { const f = b ? buildingById(b) : null; return f ? BUILDING_NAMES[f.b.kind] : "здание"; };
+  const yName = (y: string | null) => RAID_YARDS.find((x) => x.id === y)?.name ?? "двор";
+  return (
+    <div className="cev">
+      <div className="cev-board">
+        <b className="cev-h display">Наше влияние во дворах</b>
+        <ul className="cev-inf">
+          {v.influence.map((r) => (
+            <li key={r.yard}><span>{r.name}</span><Icon name="influence" size={22} /><b className="num">{r.influence.toLocaleString("ru-RU")}</b></li>
+          ))}
+        </ul>
+      </div>
+      <b className="cev-h2 display">События клана</b>
+      {!days.length && <Empty>Пока тихо. Захватывайте здания — здесь появится, кто что взял.</Empty>}
+      {days.map((g) => (
+        <div key={g.d} className="cev-day">
+          <b className="cev-date">{g.d}</b>
+          {g.list.map((e) => (
+            <div key={e.id} className={`cev-row ${e.kind === "threat" ? "bad" : "good"}`}>
+              <span className="cev-ic">{e.kind === "threat" ? "👎" : "👍"}</span>
+              {e.kind === "threat" ? <span>Вражеский клан <b>{e.other ?? "?"}</b> угрожает захватом нашего двора «{yName(e.yard)}»</span>
+                : e.kind === "yard" ? <span>Клан взял весь двор «{yName(e.yard)}»: <b className="num">+{e.amount.toLocaleString("ru-RU")}</b> <Icon name="influence" size={16} /> влияния</span>
+                : <span><b>{e.player ?? "Боец"}</b> захватил {bName(e.building).toLowerCase()} в «{yName(e.yard)}»: <b className="num">+{e.amount.toLocaleString("ru-RU")}</b> <Icon name="influence" size={16} /> влияния</span>}
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function ClanScreen({ id }: { id: number }) {
   const { state, act, busy } = useGame();
   const [editing, setEditing] = useState(false);
   const [settings, setSettings] = useState(false);
   const [kickAsk, setKickAsk] = useState<number | null>(null);
   const [leadAsk, setLeadAsk] = useState<number | null>(null);
-  const [tab, setTab] = useState<"clan" | "chat">(() => (typeof location !== "undefined" && location.hash === "#chat" ? "chat" : "clan"));
+  const [tab, setTab] = useState<"clan" | "chat" | "events">(() => (typeof location !== "undefined" && location.hash === "#chat" ? "chat" : typeof location !== "undefined" && location.hash === "#events" ? "events" : "clan"));
   const [c, setC] = useState<ClanPage | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const load = useCallback(() => api.get<ClanPage>(`/api/clans/${id}`).then(setC).catch((e) => setErr(e.message)), [id]);
@@ -288,8 +339,21 @@ export function ClanScreen({ id }: { id: number }) {
       <button type="button" role="tab" aria-selected={tab === "chat"} className={`btn sm ${tab === "chat" ? "gold" : "dark"}`} onClick={() => { setTab("chat"); history.replaceState(null, "", "#chat"); }}>
         💬 Чат{tab !== "chat" && unread > 0 && <span className="badge">{unread}</span>}
       </button>
+      {state?.raids?.on && <button type="button" role="tab" aria-selected={tab === "events"} className={`btn sm ${tab === "events" ? "gold" : "dark"}`} onClick={() => { setTab("events"); history.replaceState(null, "", "#events"); }}>📜 События</button>}
     </div>
   );
+  if (mine && tab === "events") {
+    return (
+      <div>
+        <div className="title">
+          <b className="display ellipsis" style={{ minWidth: 0 }}>{c.name} <span className="muted">[{c.tag}]</span></b>
+          <span className="chip">{c.members.length} чел.</span>
+        </div>
+        {tabs}
+        <ClanEvents id={c.id} />
+      </div>
+    );
+  }
   if (mine && tab === "chat") {
     return (
       <div>

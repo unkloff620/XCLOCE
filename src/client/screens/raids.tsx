@@ -32,7 +32,7 @@ import { ART_VER } from "../preload.ts";
 import { Icon } from "../art/icons.tsx";
 import { haptic } from "../telegram.ts";
 import { useRouter } from "next/navigation";
-import { BUILDING_NAMES, RAID_YARDS, YARD_TREES, YARD_WALKERS, buildingReward, buildingTake, flagId, raidYardById, yardReward, yardTotal, type BuildingKind, type RaidBuilding } from "../../content/raids.ts";
+import { BUILDING_NAMES, RAID_YARDS, YARD_TREES, YARD_WALKERS, buildingReward, buildingTake, flagId, raidYardById, yardTotal, type BuildingKind, type RaidBuilding } from "../../content/raids.ts";
 import { itemById } from "../../content/items.ts";
 
 const A = "/assets/raids";
@@ -40,7 +40,9 @@ const A = "/assets/raids";
 interface RaidsView {
   clanId: number | null;
   clan: { emblem: string; color: string } | null;
-  yards: { id: string; open: boolean; taken: boolean; rest: number; times: number; target: string | null; buildings: { id: string; wins: number; need: number; taken: boolean }[] }[];
+  yards: { id: string; open: boolean; taken: boolean; rest: number; times: number; target: string | null; buildings: { id: string; wins: number; need: number; taken: boolean }[];
+    /** my clan's influence here; the clan with the most of it */
+    influence: number; leader: { id: number; name: string; emblem: string; color: string; influence: number } | null }[];
   fight: { id: number; building: string; hp: number; hpMax: number; hits: number; endsAt: number | null } | null;
   /** my flags of the yards 1…5 */
   flags?: number[];
@@ -58,7 +60,6 @@ export function RaidsScreen() {
   const { v } = useRaids();
   usePageReady(!!v);
   const [i, setI] = useState(0);
-  const [bags, setBags] = useState(false);
   const touch = useRef<number | null>(null);
   const y = RAID_YARDS[i];
   // the yards' cards turn like the pages of «Личное дело»: forward — the card flies off to the left and the next one
@@ -89,13 +90,12 @@ export function RaidsScreen() {
       onTouchEnd={(e) => { const x0 = touch.current; touch.current = null; if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1); else setDrag(0); }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="rd-bg" src={`${A}/yard-bg.webp`} alt="" draggable={false} />
-      {/* the bag of the yards: the bags of tattoo sets, opened for the flags */}
-      <button type="button" className="rd-bagbtn" onClick={() => { haptic.tap(); setBags(true); }} aria-label="Сумки за флаги">
+      {/* the bag of the yards: the bags of tattoo sets, opened for the flags (a page of its own) */}
+      <Link href="/clans/raids/bags" className="rd-bagbtn" aria-label="Сумки за флаги" onClick={() => haptic.tap()}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={`${A}/bag-all.webp`} alt="" draggable={false} />
         {(v?.flags ?? []).some((n) => n > 0) && <i className="rd-bagbtn-n">{(v?.flags ?? []).reduce((a, n) => a + n, 0)}</i>}
-      </button>
-      {bags && <FlagBags flags={v?.flags ?? [0, 0, 0, 0, 0]} start={i} onClose={() => setBags(false)} />}
+      </Link>
       <div className="title-row rd-title">
         <Link href={v?.clanId ? `/clans/${v.clanId}` : "/clans"} className="back-btn" aria-label="В клан">‹</Link>
         <b>Захват</b>
@@ -119,6 +119,13 @@ export function RaidsScreen() {
             {!!yv?.times && <span className="rd-times num">захвачен ×{yv.times}</span>}
             {!open && <span className="rd-lock"><Icon name="lock" size={34} /></span>}
           </div>
+          {/* the coffee stain in the corner: the clan with the most influence in this yard */}
+          {yv?.leader && (
+            <span className="rd-leader" title={`Самые влиятельные: ${yv.leader.name} — ${yv.leader.influence.toLocaleString("ru-RU")}`}>
+              <Emblem emblem={yv.leader.emblem} color={yv.leader.color} size={44} />
+              <span className="rd-leader-n"><Icon name="influence" size={13} />{yv.leader.influence.toLocaleString("ru-RU")}</span>
+            </span>
+          )}
           <div className="rd-body">
             <span className="rd-kicker">двор №{y.n}</span>
             <b className="rd-name">{y.name}</b>
@@ -138,31 +145,33 @@ export function RaidsScreen() {
   );
 }
 
-/** the rewards of a full capture of the yard (each building and the yard's bonus together), and of one building */
+/** the rewards of a full capture of the yard (each building and the yard's bonus together): the yard's influence, the
+ *  clan's experience, the flags — the icons and the numbers only */
 function YardRewards({ y }: { y: (typeof RAID_YARDS)[number] }) {
   const t = yardTotal(y);
-  const first = buildingTake(y.n, y.buildings[0]);
   const fmt = (n: number) => n.toLocaleString("ru-RU");
   return (
-    <>
-      <div className="rd-rewards">
-        <span><Icon name="clan-xp" size={26} /><b className="num">+{fmt(t.clanXp)}</b>опыт клана</span>
-        <span><Icon name="xp" size={26} /><b className="num">+{fmt(t.xp)}</b>авторитет</span>
-        <span><ItemArt id={flagId(y.n)} size={26} /><b className="num">+{fmt(t.flags)}</b>флагов {"★".repeat(y.n)}</span>
-      </div>
-      <span className="rd-rew-note">здание — от +{fmt(first.clanXp)} опыта клану · двор целиком — ещё +{fmt(yardReward(y.n).clanXp)}</span>
-    </>
+    <div className="rd-rewards">
+      <span title="Влияние двора"><Icon name="influence" size={30} /><b className="num">+{fmt(t.influence)}</b></span>
+      <span title="Опыт клана"><Icon name="clan-xp" size={30} /><b className="num">+{fmt(t.clanXp)}</b></span>
+      <span title={`Флаги ${"★".repeat(y.n)}`}><ItemArt id={flagId(y.n)} size={30} /><b className="num">+{fmt(t.flags)}</b></span>
+    </div>
   );
 }
 
 /** «1:24» to a time (ms), ticking */
 /**
- * «Сумки за флаги»: on the left, top down, how many flags of each yard I have; in the middle the bag of one yard
- * (its fabric and stars — the yard's flag's), turned left and right like the yards' cards. Each bag holds a set of
- * tattoos and opens for its yard's flags (the sets are being drawn: «Скоро»).
+ * «Сумки за флаги» — a page of its own (the back alley behind the block): on the left, top down, how many flags of
+ * each yard I have; in the middle, on the ground, the bag of one yard (its fabric and stars — the yard's flag's),
+ * turned left and right with the arrows or a swipe; under it only the yard's name. Each bag holds a set of tattoos
+ * and opens for its yard's flags (the sets are being drawn: no button yet).
  */
-function FlagBags({ flags, start, onClose }: { flags: number[]; start: number; onClose: () => void }) {
-  const [n, setN] = useState(Math.min(4, Math.max(0, start)));
+export function RaidBagsScreen() {
+  const [v, setV] = useState<RaidsView | null>(null);
+  useEffect(() => { api.get<RaidsView>("/api/raids").then(setV).catch(() => {}); }, []);
+  usePageReady(!!v);
+  const flags = v?.flags ?? [0, 0, 0, 0, 0];
+  const [n, setN] = useState(0);
   const [anim, setAnim] = useState("");
   const touch = useRef<number | null>(null);
   const go = (d: number) => {
@@ -170,33 +179,35 @@ function FlagBags({ flags, start, onClose }: { flags: number[]; start: number; o
     setAnim(d > 0 ? "from-r" : "from-l");
     setN((x) => (x + d + 5) % 5);
   };
-  const stars = "★".repeat(n + 1);
   return (
-    <Modal title="Сумки за флаги" onClose={onClose} className="rd-bags">
-      <div className="rd-bags-body"
-        onTouchStart={(e) => { touch.current = e.touches[0].clientX; }}
-        onTouchEnd={(e) => { const x0 = touch.current; touch.current = null; if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1); }}>
-        {/* my flags, top down: ★ … ★★★★★ */}
-        <ul className="rd-bags-flags">
-          {flags.map((q, k) => (
-            <li key={k} className={k === n ? "on" : ""}>
-              <ItemArt id={flagId(k + 1)} size={30} />
-              <b className="num">{q.toLocaleString("ru-RU")}</b>
-            </li>
-          ))}
-        </ul>
-        <button type="button" className="rd-arrow rd-bags-prev" data-nosfx onClick={() => go(-1)} aria-label="Предыдущая сумка">‹</button>
-        <div className="rd-bags-bag">
+    <div className="fit-page rb-page"
+      onTouchStart={(e) => { touch.current = e.touches[0].clientX; }}
+      onTouchEnd={(e) => { const x0 = touch.current; touch.current = null; if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1); }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className="rb-bg" src={`${A}/bags-bg.webp`} alt="" draggable={false} />
+      <div className="title-row rd-title">
+        <Link href="/clans/raids" className="back-btn" aria-label="К дворам">‹</Link>
+        <b>Сумки за флаги</b>
+      </div>
+      {/* my flags, top down: ★ … ★★★★★ */}
+      <ul className="rb-flags">
+        {flags.map((q, k) => (
+          <li key={k} className={k === n ? "on" : ""}>
+            <ItemArt id={flagId(k + 1)} size={34} />
+            <b className="num">{q.toLocaleString("ru-RU")}</b>
+          </li>
+        ))}
+      </ul>
+      <div className="rb-shelf">
+        <button type="button" className="rb-arrow" data-nosfx onClick={() => go(-1)} aria-label="Предыдущая сумка">◀</button>
+        <div className="rb-bag">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img key={n} className={anim} src={`/assets/items/raid-bag-${n + 1}.webp?v=${ART_VER.items}`} alt="" draggable={false} />
-          <b className="rd-bags-name">Сумка двора {stars}</b>
-          <span className="rd-bags-sub">«{RAID_YARDS[n].name}» · открывается за флаги {stars}</span>
-          <span className="rd-bags-dots">{[0, 1, 2, 3, 4].map((k) => <i key={k} className={k === n ? "on" : ""} />)}</span>
-          <button type="button" className="btn-big" disabled>Скоро — наколки уже набивают</button>
+          <b className="rb-name display">{RAID_YARDS[n].name}</b>
         </div>
-        <button type="button" className="rd-arrow rd-bags-next" data-nosfx onClick={() => go(1)} aria-label="Следующая сумка">›</button>
+        <button type="button" className="rb-arrow" data-nosfx onClick={() => go(1)} aria-label="Следующая сумка">▶</button>
       </div>
-    </Modal>
+    </div>
   );
 }
 
@@ -313,7 +324,7 @@ const defenderDef = (kind: BuildingKind) => {
 
 interface RaidHit { weapon: string; damage: number; crit: boolean; count: number; left: number | null; readyAt: number | null; status: "active" | "won"; hp: number; hpMax: number;
   talentDamage: number; talentsGained: number;
-  reward?: Granted; buildingTaken?: boolean; yardTaken?: boolean; takeGot?: Granted | null; yardGot?: Granted | null; clanXp?: number }
+  reward?: Granted; buildingTaken?: boolean; yardTaken?: boolean; takeGot?: Granted | null; yardGot?: Granted | null; clanXp?: number; influence?: number }
 type Granted = Parameters<typeof GainLine>[0]["r"];
 
 /**
@@ -506,6 +517,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
                 {won.yardGot && <GainLine r={won.yardGot} size={30} />}
               </div>
               {!!won.clanXp && <div className="rd-clan-xp"><Icon name="clan-xp" size={22} />Опыт клана <b className="num">+{won.clanXp.toLocaleString("ru-RU")}</b></div>}
+              {!!won.influence && <div className="rd-clan-xp"><Icon name="influence" size={22} />Влияние <b className="num">+{won.influence.toLocaleString("ru-RU")}</b></div>}
               <button className="btn gold big result-take" onClick={() => void toYard()}>Забрать</button>
             </div>
           </Modal>
@@ -534,7 +546,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
         </div>
         {/* under the board: what a capture of the building gives */}
         <div className="rd-board-clan">За захват: <Icon name="clan-xp" size={20} /><b className="num">+{take.clanXp.toLocaleString("ru-RU")}</b> клану ·
-          <Icon name="xp" size={20} /><b className="num">+{take.xp.toLocaleString("ru-RU")}</b> · <ItemArt id={flagId(y.n)} size={20} /><b className="num">×{take.flags}</b></div>
+          <Icon name="influence" size={20} /><b className="num">+{take.influence.toLocaleString("ru-RU")}</b> · <ItemArt id={flagId(y.n)} size={20} /><b className="num">×{take.flags}</b></div>
       </div>
       <div className="title-row rd-title">
         <Link href={`/clans/raids/${y.id}`} className="back-btn" aria-label="Во двор">‹</Link>

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { clanEvents } from "../src/server/systems/raids.ts";
 import { act, freshDb, give, newPlayer, qty, wallet } from "./helpers.ts";
 import { resetConfigCache } from "../src/server/config.ts";
 import type { Db } from "../src/server/db.ts";
@@ -37,7 +38,7 @@ describe("«Ходки»", () => {
     await expect(act(db, p, "fight_start", { boss: "datsik" }, T)).rejects.toMatchObject({ code: "raid_running" });
   });
 
-  it("enough wins take the building (clan experience, authority and flags to who won over it); the whole yard — its bonus; it rests 2 h and can be taken again", async () => {
+  it("enough wins take the building (clan experience and influence, flags to who won over it); the whole yard — its bonus; it rests 2 h and can be taken again", async () => {
     const db = await freshDb();
     const { p, clan } = await setup(db);
     // everything but the main building is already taken, the main one is one win short
@@ -53,6 +54,12 @@ describe("«Ходки»", () => {
     const [c] = await db.query<{ raid_xp: number }>("SELECT raid_xp FROM clans WHERE id=$1", [clan]);
     expect(Number(c.raid_xp)).toBe(h.result.clanXp);
     expect(await qty(db, p, "raid-flag-1")).toBe(take.flags + bonus.flags);
+    // the yard's influence: the main building's and the yard's bonus; the clan leads the yard; the events tell it
+    expect(h.result.influence).toBe(take.influence + bonus.influence);
+    expect(h.result.view.yards[0].leader).toMatchObject({ id: clan, influence: take.influence + bonus.influence });
+    const ev = await clanEvents(db, clan);
+    expect(ev.influence[0].influence).toBe(take.influence + bonus.influence);
+    expect(ev.events.map((e) => e.kind).sort()).toEqual(["take", "yard"]);
     const v = await act(db, p, "raid_flee", {}, T);
     expect(v.result.yards[1].open).toBe(true);
     // the yard rests: no capture now; after 2 h — again from the bottom building, the count of captures 1

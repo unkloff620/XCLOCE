@@ -1435,4 +1435,28 @@ DELETE FROM raid_progress p USING raid_yards r WHERE r.clan_id = p.clan_id AND p
     sql: `ALTER TABLE raid_fights ADD COLUMN IF NOT EXISTS ends_at TIMESTAMPTZ;
 UPDATE raid_fights SET ends_at = now() + interval '8 hours' WHERE ends_at IS NULL AND status = 'active';`,
   },
+  {
+    // «Захват»: the clans' influence in the yards (it only grows; the most influential clan stands on the yard's card)
+    // and the clan's events (who took what, who threatens our yards) for the «События» tab
+    id: "v2-098-raid-influence",
+    sql: `CREATE TABLE IF NOT EXISTS raid_influence (
+  clan_id INT NOT NULL,
+  yard_id TEXT NOT NULL,
+  influence BIGINT NOT NULL DEFAULT 0,
+  PRIMARY KEY (clan_id, yard_id)
+);
+CREATE INDEX IF NOT EXISTS raid_influence_yard ON raid_influence (yard_id, influence DESC);
+CREATE TABLE IF NOT EXISTS clan_events (
+  id SERIAL PRIMARY KEY,
+  clan_id INT NOT NULL,
+  at TIMESTAMPTZ NOT NULL,
+  kind TEXT NOT NULL,
+  player_id INT,
+  other_clan INT,
+  yard_id TEXT,
+  building_id TEXT,
+  amount BIGINT NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS clan_events_clan ON clan_events (clan_id, at DESC);`,
+  },
 ];

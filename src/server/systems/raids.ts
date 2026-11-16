@@ -66,6 +66,11 @@ export async function raidsView(q: Queryable, pid: number, now = Date.now()) {
   // my flags of the five yards (the bags of tattoo sets are opened for them)
   const fl = await q.query<{ item_id: string; qty: number }>("SELECT item_id, qty FROM inventory WHERE player_id=$1 AND item_id = ANY($2)", [pid, FLAG_IDS]);
   const flags = FLAG_IDS.map((id) => Number(fl.find((r) => r.item_id === id)?.qty ?? 0));
+  // the influence: mine in every yard, and the clan with the most of it there (its logo on the yard's card)
+  const mineInf = clanId ? await q.query<{ yard_id: string; influence: number }>("SELECT yard_id, influence FROM raid_influence WHERE clan_id=$1", [clanId]) : [];
+  const leaders = await q.query<{ yard_id: string; clan_id: number; influence: number; name: string; emblem: string; color: string }>(
+    `SELECT DISTINCT ON (i.yard_id) i.yard_id, i.clan_id, i.influence, c.name, c.emblem, c.color
+     FROM raid_influence i JOIN clans c ON c.id = i.clan_id WHERE i.influence > 0 ORDER BY i.yard_id, i.influence DESC, i.clan_id`);
   // the clan's logo: it stands over every building the clan has taken
   const [c] = clanId ? await q.query<{ emblem: string; color: string }>("SELECT emblem, color FROM clans WHERE id=$1", [clanId]) : [];
   return {
@@ -81,6 +86,10 @@ export async function raidsView(q: Queryable, pid: number, now = Date.now()) {
       times: p.last.get(y.id)?.times ?? 0,
       taken: !!restUntil(y, p, now),
       target: restUntil(y, p, now) ? null : targetOf(y, p.taken)?.id ?? null,
+      /** my clan's influence here */
+      influence: Number(mineInf.find((r) => r.yard_id === y.id)?.influence ?? 0),
+      /** the clan with the most influence here */
+      leader: (() => { const l = leaders.find((r) => r.yard_id === y.id); return l ? { id: Number(l.clan_id), name: l.name, emblem: l.emblem, color: l.color, influence: Number(l.influence) } : null; })(),
       buildings: y.buildings.map((b) => ({ id: b.id, wins: p.wins.get(b.id) ?? 0, need: buildingWins(y), taken: !!restUntil(y, p, now) || p.taken.has(b.id) })),
     })),
     fight: f ? { id: Number(f.id), building: f.building_id, hp: Math.max(0, Number(f.hp_max) - Number(f.damage)), hpMax: Number(f.hp_max), hits: Number(f.hits),
@@ -155,7 +164,7 @@ export async function raidAttack(ctx: Ctx, weaponId: string, want = 1, rush = fa
   await ctx.q.query("UPDATE raid_fights SET status='won', ended_at=$2 WHERE id=$1", [f.id, new Date(ctx.now)]);
   const per = buildingReward(y.n, b);
   const reward = await grantReward(ctx, { xp: per.xp, currencies: { RUB: per.rub } }, `raid_win:${b.id}`);
-  let buildingTaken = false, yardTaken = false, clanXp = 0;
+  let buildingTaken = false, yardTaken = false, clanXp = 0, influence = 0;
   let takeGot: Granted | null = null, yardGot: Granted | null = null;
   const p0 = await progressOf(ctx.q, clanId);
   // the yard was taken (by the others) while this fight ran: the win's own reward only
@@ -171,12 +180,14 @@ export async function raidAttack(ctx: Ctx, weaponId: string, want = 1, rush = fa
   if (!pr.taken_at && Number(pr.wins) >= buildingWins(y)) {
     await ctx.q.query("UPDATE raid_progress SET taken_at=$3 WHERE clan_id=$1 AND building_id=$2", [clanId, b.id, new Date(ctx.now)]);
     buildingTaken = true;
-    // the building: the clan's experience; everyone who won over it — authority and the yard's flags
+    // the building: the clan's experience and influence; everyone who won over it — the yard's flags
     const t = buildingTake(y.n, b);
     clanXp += t.clanXp;
+    influence += t.influence;
     await ctx.q.query("UPDATE clans SET raid_xp = raid_xp + $2 WHERE id=$1", [clanId, t.clanXp]);
+    await addInfluence(ctx, clanId, y.id, b.id, t.influence, "take");
     for (const r of await winners(b.id)) {
-      const g = await grantReward({ ...ctx, pid: Number(r.player_id) }, { xp: t.xp, items: [{ id: t.flag, qty: t.flags }] }, `raid_take:${b.id}`);
+      const g = await grantReward({ ...ctx, pid: Number(r.player_id) }, { items: [{ id: t.flag, qty: t.flags }] }, `raid_take:${b.id}`);
       if (Number(r.player_id) === ctx.pid) takeGot = g;
     }
     const p = await progressOf(ctx.q, clanId);
@@ -185,9 +196,11 @@ export async function raidAttack(ctx: Ctx, weaponId: string, want = 1, rush = fa
       yardTaken = true;
       const yr = yardReward(y.n);
       clanXp += yr.clanXp;
+      influence += yr.influence;
       await ctx.q.query("UPDATE clans SET raid_xp = raid_xp + $2 WHERE id=$1", [clanId, yr.clanXp]);
+      await addInfluence(ctx, clanId, y.id, null, yr.influence, "yard");
       for (const r of await winners(null)) {
-        const g = await grantReward({ ...ctx, pid: Number(r.player_id) }, { xp: yr.xp, items: [{ id: yr.flag, qty: yr.flags }] }, `raid_yard:${y.id}`);
+        const g = await grantReward({ ...ctx, pid: Number(r.player_id) }, { items: [{ id: yr.flag, qty: yr.flags }] }, `raid_yard:${y.id}`);
         if (Number(r.player_id) === ctx.pid) yardGot = g;
       }
       await ctx.q.query(
@@ -196,7 +209,38 @@ export async function raidAttack(ctx: Ctx, weaponId: string, want = 1, rush = fa
       await ctx.q.query("DELETE FROM raid_progress WHERE clan_id=$1 AND building_id = ANY($2::text[])", [clanId, y.buildings.map((x) => x.id)]);
     }
   }
-  return { ...base, status: "won" as const, hp: 0, hpMax: Number(f.hp_max), reward, buildingTaken, yardTaken, takeGot, yardGot, clanXp, view: await raidsView(ctx.q, ctx.pid, ctx.now) };
+  return { ...base, status: "won" as const, hp: 0, hpMax: Number(f.hp_max), reward, buildingTaken, yardTaken, takeGot, yardGot, clanXp, influence, view: await raidsView(ctx.q, ctx.pid, ctx.now) };
+}
+
+/**
+ * The clan's influence in a yard grows; the event goes to its «События». If another clan leads that yard, it hears
+ * that an enemy crew threatens it (once a building: «Вражеская бригада угрожает захватом нашего двора»).
+ */
+async function addInfluence(ctx: Ctx, clanId: number, yardId: string, buildingId: string | null, amount: number, kind: "take" | "yard") {
+  const [lead] = await ctx.q.query<{ clan_id: number }>(
+    "SELECT clan_id FROM raid_influence WHERE yard_id=$1 AND influence > 0 ORDER BY influence DESC, clan_id LIMIT 1", [yardId]);
+  await ctx.q.query(
+    `INSERT INTO raid_influence (clan_id, yard_id, influence) VALUES ($1,$2,$3)
+     ON CONFLICT (clan_id, yard_id) DO UPDATE SET influence = raid_influence.influence + EXCLUDED.influence`, [clanId, yardId, amount]);
+  await ctx.q.query("INSERT INTO clan_events (clan_id, at, kind, player_id, yard_id, building_id, amount) VALUES ($1,$2,$3,$4,$5,$6,$7)",
+    [clanId, new Date(ctx.now), kind, ctx.pid, yardId, buildingId, amount]);
+  if (lead && Number(lead.clan_id) !== clanId) {
+    await ctx.q.query("INSERT INTO clan_events (clan_id, at, kind, other_clan, yard_id, building_id) VALUES ($1,$2,'threat',$3,$4,$5)",
+      [Number(lead.clan_id), new Date(ctx.now), clanId, yardId, buildingId]);
+  }
+}
+
+/** «События» of a clan: its influence in every yard and the latest events (members only) */
+export async function clanEvents(q: Queryable, clanId: number) {
+  const inf = await q.query<{ yard_id: string; influence: number }>("SELECT yard_id, influence FROM raid_influence WHERE clan_id=$1", [clanId]);
+  const ev = await q.query<{ id: number; at: Date; kind: string; player: string | null; other: string | null; yard_id: string | null; building_id: string | null; amount: number }>(
+    `SELECT e.id, e.at, e.kind, p.display_name AS player, oc.name AS other, e.yard_id, e.building_id, e.amount
+     FROM clan_events e LEFT JOIN players p ON p.id = e.player_id LEFT JOIN clans oc ON oc.id = e.other_clan
+     WHERE e.clan_id=$1 ORDER BY e.at DESC, e.id DESC LIMIT 60`, [clanId]);
+  return {
+    influence: RAID_YARDS.map((y) => ({ yard: y.id, name: y.name, influence: Number(inf.find((r) => r.yard_id === y.id)?.influence ?? 0) })),
+    events: ev.map((e) => ({ id: Number(e.id), at: new Date(e.at).getTime(), kind: e.kind, player: e.player, other: e.other, yard: e.yard_id, building: e.building_id, amount: Number(e.amount) })),
+  };
 }
 
 /** leave the raid fight (the damage done is lost) */

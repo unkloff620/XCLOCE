@@ -6007,8 +6007,12 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .rd-sub { font-size: 12px; color: #5a4630; }
 .rd-go { margin-top: 6px; min-width: 60%; text-align: center; }
 .rd-closed { margin-top: 6px; font-size: 12px; font-weight: 700; color: #8a2a1a; }
-.rd-h { margin-top: auto; font-family: var(--font-hand), cursive; font-size: 18px; color: #1f3a8a; }
-.rd-rewards { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; font-size: 11px; font-weight: 700; color: #3a2a14; }
+.rd-h { margin-top: 14px; font-family: var(--font-hand), cursive; font-size: 18px; color: #1f3a8a; }
+/* the coffee stain in the lower left corner of the card: the logo of the clan with the most influence in the yard */
+.rd-leader { position: absolute; z-index: 1; left: 8%; top: 74%; width: 20%; aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  pointer-events: auto; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35)); }
+.rd-leader-n { display: inline-flex; align-items: center; gap: 2px; font-size: 10px; font-weight: 900; color: #3a2410; }
+.rd-rewards { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; font-size: 11px; font-weight: 700; color: #3a2a14; }
 .rd-rewards > span { display: flex; flex-direction: column; align-items: center; gap: 1px; }
 /* the yard from above: the ground picture covering the screen, the buildings on it (in % of the picture) */
 .rd-scene { position: absolute; top: 0; bottom: 0; left: 50%; transform: translateX(-50%); aspect-ratio: 1024 / 1536; min-width: 100%; }
@@ -6422,23 +6426,39 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
   font: 900 12px/22px inherit; font-style: normal; text-align: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6); }
 @keyframes rd-bag-bob { 0%, 100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-3px) rotate(1.5deg); } }
 @media (prefers-reduced-motion: reduce) { .rd-bagbtn { animation: none; } }
-.rd-bags-body { position: relative; min-height: 360px; display: flex; align-items: center; justify-content: center; padding-left: 64px; }
-.rd-bags-flags { position: absolute; left: 0; top: 0; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
-.rd-bags-flags li { display: flex; align-items: center; gap: 4px; padding: 2px 8px 2px 2px; border-radius: 10px; background: rgba(0, 0, 0, 0.25); border: 1px solid transparent; }
-.rd-bags-flags li.on { border-color: var(--gold); background: rgba(232, 178, 74, 0.15); }
-.rd-bags-flags b { font-size: 14px; color: #fff; }
-.rd-bags-bag { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
-.rd-bags-bag > img { width: min(220px, 60vw); aspect-ratio: 1; object-fit: contain; filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.55)); }
-.rd-bags-bag > img.from-r { animation: rd-bags-in-r 0.28s ease-out; }
-.rd-bags-bag > img.from-l { animation: rd-bags-in-l 0.28s ease-out; }
+/* the bags' page: the back alley, my flags on the left, the bag on the ground in the middle (raids.tsx RaidBagsScreen) */
+.rb-page { background: #0c0a08; color: #fff; }
+.rb-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 70%; user-select: none; }
+.rb-flags { position: absolute; z-index: 2; left: 12px; top: calc(var(--top) + 56px); margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.rb-flags li { display: flex; align-items: center; gap: 6px; opacity: 0.85; }
+.rb-flags li.on { opacity: 1; }
+.rb-flags b { font-family: var(--font-display, inherit); font-size: 22px; color: #ffd36a; text-shadow: 0 2px 0 #4a2a00, 0 0 6px rgba(0, 0, 0, 0.8); }
+.rb-flags li.on b { color: #fff3c0; }
+.rb-shelf { position: absolute; z-index: 2; left: 8px; right: 8px; bottom: calc(var(--bottom) + 26px); display: flex; align-items: center; justify-content: center; gap: 6px; }
+.rb-bag { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.rb-bag > img { width: min(240px, 58vw); aspect-ratio: 1; object-fit: contain; filter: drop-shadow(0 12px 10px rgba(0, 0, 0, 0.7)); }
+.rb-bag > img.from-r { animation: rd-bags-in-r 0.28s ease-out; }
+.rb-bag > img.from-l { animation: rd-bags-in-l 0.28s ease-out; }
 @keyframes rd-bags-in-r { from { opacity: 0; transform: translateX(40px) rotate(6deg); } }
 @keyframes rd-bags-in-l { from { opacity: 0; transform: translateX(-40px) rotate(-6deg); } }
-.rd-bags-name { font-size: 18px; color: #7a3d0e; }
-.rd-bags-sub { font-size: 12px; opacity: 0.8; }
-.rd-bags-dots { display: flex; gap: 5px; margin: 2px 0 4px; }
-.rd-bags-dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255, 255, 255, 0.3); }
-.rd-bags-dots i.on { background: var(--gold); }
-.rd-bags-bag .btn-big { width: 100%; max-width: 280px; }
-.rd-bags-prev, .rd-bags-next { position: absolute; top: 40%; z-index: 2; }
-.rd-bags-prev { left: 56px; }
-.rd-bags-next { right: -4px; }
+.rb-name { font-size: 22px; color: #ffd36a; text-shadow: 0 2px 0 #4a2a00, 0 0 8px rgba(0, 0, 0, 0.9); }
+.rb-arrow { width: 44px; height: 60px; border: 0; background: none; color: #e8b24a; font-size: 32px; line-height: 1; cursor: pointer; filter: drop-shadow(0 2px 2px #000); }
+.rb-arrow:active { transform: scale(0.9); }
+
+/* «События» of the clan (clans.tsx ClanEvents): the paper board with our influence in the yards, the events by day */
+.cev { display: flex; flex-direction: column; gap: 10px; }
+.cev-board { position: relative; padding: 14px 18px 12px; border-radius: 6px; color: #2b1d10;
+  background: radial-gradient(ellipse at 50% 40%, #f1dfb8, #d9bf8c 70%, #b8955e); box-shadow: inset 0 0 18px rgba(90, 55, 20, 0.45), 0 4px 10px rgba(0, 0, 0, 0.4); }
+.cev-h { display: block; text-align: center; font-size: 19px; color: #3a2410; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.cev-inf { list-style: none; margin: 0 auto; padding: 0; display: grid; gap: 4px; max-width: 300px; }
+.cev-inf li { display: grid; grid-template-columns: 1fr auto 72px; align-items: center; gap: 8px; font-size: 16px; font-weight: 700; }
+.cev-inf li b { font-size: 16px; color: #1a0f05; }
+.cev-h2 { text-align: center; font-size: 20px; margin-top: 4px; }
+.cev-day { display: flex; flex-direction: column; gap: 6px; }
+.cev-date { text-align: center; font-size: 15px; margin: 4px 0 2px; }
+.cev-row { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 10px; font-size: 13.5px; line-height: 1.3; color: #2b1d10; }
+.cev-row.good { background: linear-gradient(90deg, rgba(150, 205, 110, 0.85), rgba(190, 225, 150, 0.7)); }
+.cev-row.bad { background: linear-gradient(90deg, rgba(225, 140, 120, 0.85), rgba(235, 180, 160, 0.7)); }
+.cev-row b { color: #1a0f05; }
+.cev-row .icon, .cev-row img { vertical-align: -3px; }
+.cev-ic { font-size: 18px; flex: none; }
