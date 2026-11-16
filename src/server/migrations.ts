@@ -1465,4 +1465,33 @@ CREATE INDEX IF NOT EXISTS clan_events_clan ON clan_events (clan_id, at DESC);`,
     sql: `UPDATE inventory SET qty = LEAST(qty, CASE item_id WHEN 'raid-flag-1' THEN 80 WHEN 'raid-flag-2' THEN 180 WHEN 'raid-flag-3' THEN 300 WHEN 'raid-flag-4' THEN 400 ELSE 560 END)
 WHERE item_id IN ('raid-flag-1','raid-flag-2','raid-flag-3','raid-flag-4','raid-flag-5');`,
   },
+  {
+    // «Сходняк»: the tasks a player took this week (their points go to the clan), the bought slots, the 1st place's boost
+    id: "v2-100-shodnyak",
+    sql: `CREATE TABLE IF NOT EXISTS shod_tasks (
+  week TEXT NOT NULL,
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  task_id TEXT NOT NULL,
+  clan_id INT NOT NULL,
+  points INT NOT NULL,
+  goal BIGINT NOT NULL,
+  progress BIGINT NOT NULL DEFAULT 0,
+  taken_at TIMESTAMPTZ NOT NULL,
+  done_at TIMESTAMPTZ,
+  PRIMARY KEY (week, player_id, task_id)
+);
+CREATE INDEX IF NOT EXISTS shod_tasks_clan ON shod_tasks (week, clan_id) WHERE done_at IS NOT NULL;
+CREATE TABLE IF NOT EXISTS shod_slots (
+  week TEXT NOT NULL,
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  bought INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (week, player_id)
+);
+CREATE TABLE IF NOT EXISTS shod_boost (
+  player_id INT PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
+  weapon TEXT,
+  until TIMESTAMPTZ,
+  week TEXT NOT NULL
+);`,
+  },
 ];

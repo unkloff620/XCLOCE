@@ -296,7 +296,7 @@ function ClanEvents({ id }: { id: number }) {
 }
 
 /** a page of the own clan («События», «Чат»): its name on top, then the page; another clan's — back to it */
-function ClanSubPage({ id, children }: { id: number; children: React.ReactNode }) {
+export function ClanSubPage({ id, children }: { id: number; children: React.ReactNode }) {
   const { state } = useGame();
   if (!state) return null;
   if (state.clan?.id !== id) return <Empty>Это видно только своему клану</Empty>;
@@ -359,7 +359,7 @@ export function ClanScreen({ id }: { id: number }) {
   const menu = mine && (
     <nav className="clan-menu" aria-label="Клан">
       {state?.raids?.on && <Link href="/clans/raids" className="clan-menu-b">{ic("raid")}<em>Захват</em></Link>}
-      <span className="clan-menu-b off" aria-disabled="true" title="Скоро">{ic("meet")}<em>Сходняк</em><i>скоро</i></span>
+      <Link href={`/clans/${c.id}/shodnyak`} className="clan-menu-b">{ic("meet")}<em>Сходняк</em></Link>
       {state?.raids?.on && <Link href={`/clans/${c.id}/events`} className="clan-menu-b">{ic("events")}<em>События</em></Link>}
       <Link href="/clans?all=1" className="clan-menu-b">{ic("all")}<em>Все кланы</em></Link>
       <Link href={`/clans/${c.id}/chat`} className="clan-menu-b">{ic("chat")}<em>Чат</em>{unread > 0 && <b className="badge">{unread}</b>}</Link>

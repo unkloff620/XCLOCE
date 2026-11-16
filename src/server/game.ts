@@ -2,6 +2,7 @@ import { newbieClaim } from "./systems/newbie.ts";
 import { tosyaBuy } from "./systems/tosya.ts";
 import { heistAuto, heistOpen, heistPick, heistRush } from "./systems/heist.ts";
 import { raidAttack, raidBagOpen, raidFlee, raidStart } from "./systems/raids.ts";
+import { shodBoost, shodSlot, shodTake, shodTick } from "./systems/shodnyak.ts";
 import { fortuneBagOpen, fortuneBuy, fortuneCupsPick, fortuneCupsStart, fortuneSpin } from "./systems/fortune.ts";
 import { autoSet, runAutos } from "./systems/autos.ts";
 import { randomInt } from "node:crypto";
@@ -98,7 +99,7 @@ export const ACTIONS = [
   "daily_claim", "sell", "sell_many", "rename", "slots_spin",
   "equipment_upgrade", "talent_up", "talent_reset", "talent_auto", "room_buy", "room_set", "look_set", "decor_set", "decor_save", "piece_buy", "help_seen", "starter_gift",
   "quest_claim", "quest_chest", "notify_set", "achievement_claim", "achievement_claim_all", "ach_box_open", "prize_claim", "clan_edit",
-  "game_start", "zonk_move", "zonk_give_up", "zonk_hints", "zonk_choice", "roach_squash", "pigeon_scare", "poker_play", "poker_swap", "poker_stand", "bj_open", "bj_invite", "bj_join", "bj_decline", "bj_leave", "bj_bet", "bj_unbet", "bj_insure", "bj_move", "upgrade", "up_sell", "up_take", "craft_put", "craft_take", "craft_make", "craft_box_buy", "dealer_buy", "craft_split", "dealer_talk", "part_buy", "shave", "tosya_buy", "newbie_claim", "heist_pick", "heist_rush", "heist_open", "heist_auto", "auto_set", "craft_preset_save", "craft_preset_apply", "craft_preset_delete", "fortune_buy", "fortune_spin", "fortune_cups", "fortune_cup_pick", "fortune_bag", "raid_start", "raid_attack", "raid_flee", "raid_bag",
+  "game_start", "zonk_move", "zonk_give_up", "zonk_hints", "zonk_choice", "roach_squash", "pigeon_scare", "poker_play", "poker_swap", "poker_stand", "bj_open", "bj_invite", "bj_join", "bj_decline", "bj_leave", "bj_bet", "bj_unbet", "bj_insure", "bj_move", "upgrade", "up_sell", "up_take", "craft_put", "craft_take", "craft_make", "craft_box_buy", "dealer_buy", "craft_split", "dealer_talk", "part_buy", "shave", "tosya_buy", "newbie_claim", "heist_pick", "heist_rush", "heist_open", "heist_auto", "auto_set", "craft_preset_save", "craft_preset_apply", "craft_preset_delete", "fortune_buy", "fortune_spin", "fortune_cups", "fortune_cup_pick", "fortune_bag", "raid_start", "raid_attack", "raid_flee", "raid_bag", "shod_take", "shod_slot", "shod_boost",
   "clan_cancel", "clan_accept", "clan_reject", "clan_boss_hit", "duel_create", "duel_answer", "duel_play", "stash_collect", "stash_wish", "stash_gift", "stash_accept", "social_pump", "social_fight", "social_spit", "notes_read", "month_buy", "month_claim",
 ] as const;
 export type ActionType = (typeof ACTIONS)[number];
@@ -116,6 +117,7 @@ async function afterAction(ctx: Ctx, type: ActionType, result: unknown) {
     case "attack": {
       await quests.questTick(ctx, "damage", Number(r.damage) || 0);
       await rating.addWeeklyDamage(ctx, Number(r.damage) || 0);
+      await shodTick(ctx, "damage", Number(r.damage) || 0);
       await quests.questTick(ctx, "hits", Number(r.count) || 1);
       // a free weapon (fist, mouse, candle) rests 5 hours: remind when it is ready again
       if (typeof r.readyAt === "number" && weaponById(String(r.weapon))?.weapon.kind === "permanent") {
@@ -279,6 +281,9 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "raid_attack": return raidAttack(ctx, str(body.weapon, "weapon"), body.count === undefined ? 1 : num(body.count, "count"), body.rush === true);
     case "raid_flee": return raidFlee(ctx);
     case "raid_bag": return raidBagOpen(ctx, Number(body.n));
+    case "shod_take": return shodTake(ctx, str(body.id, "id", 40));
+    case "shod_slot": return shodSlot(ctx);
+    case "shod_boost": return shodBoost(ctx, str(body.weapon, "weapon", 40));
     case "fortune_bag": return fortuneBagOpen(ctx, str(body.bag, "bag"));
     case "fortune_cup_pick": return fortuneCupsPick(ctx, num(body.index, "index"));
     case "auto_set": return autoSet(ctx, str(body.kind, "kind", 10), str(body.target, "target", 40), body.on === true, body.mode === undefined ? "" : str(body.mode, "mode", 10));

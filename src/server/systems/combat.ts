@@ -1,5 +1,6 @@
 import { autoSpendTalents } from "./home.ts";
 import { monthTick } from "./monthly.ts";
+import { shodBoostMult, shodTick } from "./shodnyak.ts";
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, idempotent, itemQty, ledger, moscowDay, nextMoscowMidnight, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { BLAT_THING_CHANCE, BOTH_DROP_CHANCE, BOSSES, EVENT_FIGHTS, EXTRA_KEY_CHANCE, OPEN_BOSSES, bossById, bossOpen, keyId, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
@@ -257,7 +258,9 @@ export async function strike(ctx: Ctx, w: NonNullable<ReturnType<typeof weaponBy
   const roomFlat = w.id === "fist" ? bonus.fistDamage ?? 0 : 0;
   // complete boss sets add flat damage to their weapon (Командате's set: the keyboard +30)
   const setFlat = (await setBonuses(ctx.q, ctx.pid))[w.id] ?? 0;
-  const one = Math.round((w.weapon.damage + wt.flat + roomFlat + setFlat) * (1 + bonus.damage));
+  // «Сходняк»: the 1st clan of the week picks a weapon that hits harder for a week
+  const shod = await shodBoostMult(ctx.q, ctx.pid, w.id, ctx.now);
+  const one = Math.round((w.weapon.damage + wt.flat + roomFlat + setFlat) * (1 + bonus.damage) * shod);
   const critOne = Math.round(one * Math.min(CRIT_MULT_MAX, BASE_CRIT_MULT + wt.critDamage));
   // the crit chance: the home's plus this weapon's «Крит» talents, never above 51%. One roll for the whole action:
   // ×1000 at once is one blow — a crit makes all of it ×2, else none of it
@@ -483,6 +486,8 @@ export async function claimFight(ctx: Ctx, fightId: number, see = true) {
   if (earnedKey) await heistDrop(ctx, def, granted);
   // «От звонка до звонка»: the win counts on the day the boss fell
   await monthTick(ctx, "kill", 1, { boss: def.id, mode: mode.id, at: f.ended_at ? new Date(f.ended_at).getTime() : ctx.now });
+  // «Сходняк»: a task «beat this boss»
+  await shodTick(ctx, "kill", 1, def.id);
   await ctx.q.query("UPDATE fights SET reward=$2, seen=seen OR $3 WHERE id=$1", [f.id, JSON.stringify(granted), see]);
   {
     await ctx.q.query(

@@ -1,0 +1,47 @@
+import { describe, expect, it } from "vitest";
+import { settleWeeks } from "../src/server/systems/rating.ts";
+import { act, freshDb, newPlayer, setMoney, wallet } from "./helpers.ts";
+import type { Db } from "../src/server/db.ts";
+import { SHOD_PRIZES } from "../src/content/shodnyak.ts";
+
+const T = Date.UTC(2026, 10, 18, 12); // Wednesday
+const NEXT = Date.UTC(2026, 10, 23, 12); // next Monday
+async function clanPlayer(db: Db, name: string) {
+  const p = await newPlayer(db);
+  const [c] = await db.query<{ id: number }>("INSERT INTO clans (name, tag, emblem, color, leader_id) VALUES ($1, $1, 'skull', '#f00', $2) RETURNING id", [name, p]);
+  await db.query("INSERT INTO clan_members (player_id, clan_id, role) VALUES ($1,$2,'leader')", [p, c.id]);
+  await db.query("UPDATE players SET clan_id=$2 WHERE id=$1", [p, c.id]);
+  return { p, clan: Number(c.id) };
+}
+
+describe("«Сходняк»", () => {
+  it("3 free slots, more for SOL; damage fills the task; Monday the top clan gets the prize and the boost", async () => {
+    const db = await freshDb();
+    const a = await clanPlayer(db, "Альфа");
+    const b = await clanPlayer(db, "Бета");
+    for (const id of ["dmg-10000", "dmg-50000", "kill-datsik"]) await act(db, a.p, "shod_take", { id }, T);
+    await expect(act(db, a.p, "shod_take", { id: "dmg-100000" }, T)).rejects.toMatchObject({ code: "shod_full" });
+    await expect(act(db, a.p, "shod_slot", {}, T)).rejects.toMatchObject({ code: "no_money" });
+    await setMoney(db, a.p, "SOL", 4);
+    const v = await act(db, a.p, "shod_slot", {}, T);
+    expect(v.result.slots).toBe(4);
+    expect(await wallet(db, a.p, "SOL")).toBe(0);
+    await act(db, a.p, "shod_take", { id: "dmg-100000" }, T);
+    await act(db, b.p, "shod_take", { id: "dmg-10000" }, T);
+    // hits: Альфа deals 60k (two damage tasks done), Бета 10k
+    const { shodTick } = await import("../src/server/systems/shodnyak.ts");
+    await shodTick({ q: db, pid: a.p, now: T } as never, "damage", 60_000);
+    await shodTick({ q: db, pid: b.p, now: T } as never, "damage", 10_000);
+    const [pa] = await db.query<{ n: number }>("SELECT COUNT(*)::int AS n FROM shod_tasks WHERE player_id=$1 AND done_at IS NOT NULL", [a.p]);
+    expect(Number(pa.n)).toBe(2);
+    await settleWeeks(db, NEXT);
+    const prizes = await db.query<{ player_id: number; title: string; reward: { xp: number } }>("SELECT player_id, title, reward FROM prizes WHERE title LIKE 'Сходняк%' ORDER BY player_id");
+    expect(prizes.find((x) => Number(x.player_id) === a.p)!.title).toContain("1 место");
+    expect(prizes.find((x) => Number(x.player_id) === a.p)!.reward.xp).toBe(SHOD_PRIZES[0].xp);
+    expect(prizes.find((x) => Number(x.player_id) === b.p)!.title).toContain("2 место");
+    // the 1st place picks the boost
+    const r = await act(db, a.p, "shod_boost", { weapon: "gpu" }, NEXT);
+    expect(r.result.boost.weapon).toBe("gpu");
+    await expect(act(db, b.p, "shod_boost", { weapon: "gpu" }, NEXT)).rejects.toMatchObject({ code: "shod_no_boost" });
+  });
+});

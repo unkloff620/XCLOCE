@@ -6587,3 +6587,35 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
   color: #d0172d; background: rgba(255, 240, 230, 0.55); font-family: var(--font-display, inherit); font-size: 26px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase;
   box-shadow: inset 0 0 0 2px rgba(195, 22, 42, 0.35); text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5); pointer-events: none; }
 .rd-closed.shut { color: #c3162a; font-weight: 800; }
+
+/* «Сходняк» (shodnyak.tsx): my tasks in slots, the list to take from, the clans of the week, the prizes by place */
+.shod-sum li { grid-template-columns: 1fr auto; }
+.shod-slots, .shod-list { display: flex; flex-direction: column; gap: 6px; }
+.shod-task { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; color: #2b1d10;
+  background: linear-gradient(90deg, rgba(241, 223, 184, 0.95), rgba(217, 191, 140, 0.9)); box-shadow: inset 0 0 10px rgba(90, 55, 20, 0.35); }
+.shod-task.mine { background: linear-gradient(90deg, rgba(245, 214, 140, 0.95), rgba(224, 180, 95, 0.9)); }
+.shod-task.done { background: linear-gradient(90deg, rgba(150, 205, 110, 0.9), rgba(190, 225, 150, 0.8)); }
+.shod-task.taken { opacity: 0.6; }
+.shod-task.empty { justify-content: center; min-height: 52px; font-size: 13px; color: #d9c49a; background: transparent; border: 2px dashed rgba(217, 191, 140, 0.45); box-shadow: none; }
+.shod-pic { width: 40px; height: 40px; flex: none; display: grid; place-items: center; }
+.shod-pic .bphoto { width: 40px; height: 40px; }
+.shod-name { font-size: 14px; line-height: 1.2; display: block; margin-bottom: 3px; }
+.shod-list .shod-name { margin: 0; }
+.shod-pts { flex: none; font-size: 16px; color: #6a3a00; min-width: 34px; text-align: right; }
+.shod-ok { font-size: 13px; font-weight: 800; color: #1f5a10; }
+.shod-buy { align-self: center; display: inline-flex; align-items: center; gap: 6px; }
+.shod-table { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.shod-table li { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 8px; background: rgba(255, 255, 255, 0.06); }
+.shod-table li.me { background: rgba(245, 200, 90, 0.22); outline: 1px solid rgba(245, 200, 90, 0.6); }
+.shod-table li > b:first-child { width: 22px; text-align: center; }
+.shod-prizes { display: flex; flex-direction: column; gap: 6px; }
+.shod-prize { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 10px; border-radius: 10px; background: rgba(255, 255, 255, 0.06); }
+.shod-place { width: 84px; flex: none; font-size: 15px; }
+.shod-bw { display: inline-flex; }
+.shod-boost { display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center; }
+.shod-boost-pick { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.shod-boost-pick .btn { display: inline-flex; align-items: center; gap: 6px; }
+.shod-bar { position: relative; display: block; height: 16px; border-radius: 8px; overflow: hidden; background: rgba(60, 35, 10, 0.55); }
+.shod-bar i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(180deg, #ffe08a, #e0a630); }
+.shod-bar em { position: relative; display: block; text-align: center; font-style: normal; font-size: 11px; font-weight: 800; line-height: 16px; color: #fff; text-shadow: 0 1px 2px #000; }
+.shod-prize .shod-place { width: 100%; }

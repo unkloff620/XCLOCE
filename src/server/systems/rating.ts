@@ -4,6 +4,7 @@ import { CLAN_PRIZES, WEEKLY_PRIZES, frameOf, type Frame } from "../../content/a
 import { levelFromXp } from "../../content/levels.ts";
 import type { Config } from "../config.ts";
 import { gameRatingView } from "./minigame-extras.ts";
+import { settleShod } from "./shodnyak.ts";
 
 /*
  * Ratings: damage this week (Moscow week from Monday 00:00), authority (all time) and clans (members' damage this week).
@@ -52,6 +53,8 @@ export async function settleWeeks(q: Queryable, now: number) {
       [c.clan_id, `Клан «${c.name}» — ${i + 1} место недели`, JSON.stringify(CLAN_PRIZES[i]), new Date(now)],
     );
   }
+  // «Сходняк»: the clans by the points of their tasks
+  await settleShod(q, now);
 }
 
 /** Frames for last week's places of these players. */
