@@ -28,6 +28,7 @@ import { RUSH_PRICE } from "../../content/items.ts";
 import { clock } from "../format.ts";
 import { usePageReady } from "../route-loader.tsx";
 import { useGame, useNow } from "../store.tsx";
+import { ART_VER } from "../preload.ts";
 import { Icon } from "../art/icons.tsx";
 import { haptic } from "../telegram.ts";
 import { useRouter } from "next/navigation";
@@ -41,6 +42,8 @@ interface RaidsView {
   clan: { emblem: string; color: string } | null;
   yards: { id: string; open: boolean; taken: boolean; rest: number; times: number; target: string | null; buildings: { id: string; wins: number; need: number; taken: boolean }[] }[];
   fight: { id: number; building: string; hp: number; hpMax: number; hits: number; endsAt: number | null } | null;
+  /** my flags of the yards 1…5 */
+  flags?: number[];
   weapons: Tray[];
 }
 /** the clan's progress (refreshed while the screen is open) */
@@ -55,6 +58,7 @@ export function RaidsScreen() {
   const { v } = useRaids();
   usePageReady(!!v);
   const [i, setI] = useState(0);
+  const [bags, setBags] = useState(false);
   const touch = useRef<number | null>(null);
   const y = RAID_YARDS[i];
   // the yards' cards turn like the pages of «Личное дело»: forward — the card flies off to the left and the next one
@@ -85,6 +89,13 @@ export function RaidsScreen() {
       onTouchEnd={(e) => { const x0 = touch.current; touch.current = null; if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1); else setDrag(0); }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="rd-bg" src={`${A}/yard-bg.webp`} alt="" draggable={false} />
+      {/* the bag of the yards: the bags of tattoo sets, opened for the flags */}
+      <button type="button" className="rd-bagbtn" onClick={() => { haptic.tap(); setBags(true); }} aria-label="Сумки за флаги">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={`${A}/bag-all.webp`} alt="" draggable={false} />
+        {(v?.flags ?? []).some((n) => n > 0) && <i className="rd-bagbtn-n">{(v?.flags ?? []).reduce((a, n) => a + n, 0)}</i>}
+      </button>
+      {bags && <FlagBags flags={v?.flags ?? [0, 0, 0, 0, 0]} start={i} onClose={() => setBags(false)} />}
       <div className="title-row rd-title">
         <Link href={v?.clanId ? `/clans/${v.clanId}` : "/clans"} className="back-btn" aria-label="В клан">‹</Link>
         <b>Захват</b>
@@ -145,6 +156,50 @@ function YardRewards({ y }: { y: (typeof RAID_YARDS)[number] }) {
 }
 
 /** «1:24» to a time (ms), ticking */
+/**
+ * «Сумки за флаги»: on the left, top down, how many flags of each yard I have; in the middle the bag of one yard
+ * (its fabric and stars — the yard's flag's), turned left and right like the yards' cards. Each bag holds a set of
+ * tattoos and opens for its yard's flags (the sets are being drawn: «Скоро»).
+ */
+function FlagBags({ flags, start, onClose }: { flags: number[]; start: number; onClose: () => void }) {
+  const [n, setN] = useState(Math.min(4, Math.max(0, start)));
+  const [anim, setAnim] = useState("");
+  const touch = useRef<number | null>(null);
+  const go = (d: number) => {
+    haptic.tap(); sfx("page");
+    setAnim(d > 0 ? "from-r" : "from-l");
+    setN((x) => (x + d + 5) % 5);
+  };
+  const stars = "★".repeat(n + 1);
+  return (
+    <Modal title="Сумки за флаги" onClose={onClose} className="rd-bags">
+      <div className="rd-bags-body"
+        onTouchStart={(e) => { touch.current = e.touches[0].clientX; }}
+        onTouchEnd={(e) => { const x0 = touch.current; touch.current = null; if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1); }}>
+        {/* my flags, top down: ★ … ★★★★★ */}
+        <ul className="rd-bags-flags">
+          {flags.map((q, k) => (
+            <li key={k} className={k === n ? "on" : ""}>
+              <ItemArt id={flagId(k + 1)} size={30} />
+              <b className="num">{q.toLocaleString("ru-RU")}</b>
+            </li>
+          ))}
+        </ul>
+        <button type="button" className="rd-arrow rd-bags-prev" data-nosfx onClick={() => go(-1)} aria-label="Предыдущая сумка">‹</button>
+        <div className="rd-bags-bag">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img key={n} className={anim} src={`/assets/items/raid-bag-${n + 1}.webp?v=${ART_VER.items}`} alt="" draggable={false} />
+          <b className="rd-bags-name">Сумка двора {stars}</b>
+          <span className="rd-bags-sub">«{RAID_YARDS[n].name}» · открывается за флаги {stars}</span>
+          <span className="rd-bags-dots">{[0, 1, 2, 3, 4].map((k) => <i key={k} className={k === n ? "on" : ""} />)}</span>
+          <button type="button" className="btn-big" disabled>Скоро — наколки уже набивают</button>
+        </div>
+        <button type="button" className="rd-arrow rd-bags-next" data-nosfx onClick={() => go(1)} aria-label="Следующая сумка">›</button>
+      </div>
+    </Modal>
+  );
+}
+
 function FightTime({ endsAt }: { endsAt: number }) {
   const now = useNow();
   const left = Math.max(0, endsAt - now);

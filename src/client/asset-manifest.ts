@@ -2491,6 +2491,7 @@ export const ASSET_FILES: string[] = [
  "/assets/raids/b-kiosk.webp",
  "/assets/raids/b-main.webp",
  "/assets/raids/b-shop.webp",
+ "/assets/raids/bag-all.webp",
  "/assets/raids/card.webp",
  "/assets/raids/man1.webp",
  "/assets/raids/man2.webp",

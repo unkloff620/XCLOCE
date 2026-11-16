@@ -6412,3 +6412,33 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 }
 .rig.still .rig-hand.held.slosh { animation: none; transform: none; } .rig.still .rig-steam-keep { animation: none; transform: none; }
 @media (prefers-reduced-motion: reduce) { .rig-hand.held.slosh, .rig-steam-keep { animation: none; transform: none; } .rig-steam { animation-duration: 6s; } }
+
+/* «Сумки за флаги»: the bag button in the yards' lower left corner, and its window (raids.tsx FlagBags) */
+.rd-bagbtn { position: absolute; z-index: 4; left: 2px; bottom: calc(var(--bottom) - 4px); width: 82px; height: 82px; padding: 0; border: 0; background: none; cursor: pointer;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6)); -webkit-tap-highlight-color: transparent; animation: rd-bag-bob 3.2s ease-in-out infinite; }
+.rd-bagbtn > img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.rd-bagbtn:active > img { transform: scale(0.94); }
+.rd-bagbtn-n { position: absolute; top: 2px; right: 0; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: #e8b24a; color: #2b1a08;
+  font: 900 12px/22px inherit; font-style: normal; text-align: center; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6); }
+@keyframes rd-bag-bob { 0%, 100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-3px) rotate(1.5deg); } }
+@media (prefers-reduced-motion: reduce) { .rd-bagbtn { animation: none; } }
+.rd-bags-body { position: relative; min-height: 360px; display: flex; align-items: center; justify-content: center; padding-left: 64px; }
+.rd-bags-flags { position: absolute; left: 0; top: 0; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.rd-bags-flags li { display: flex; align-items: center; gap: 4px; padding: 2px 8px 2px 2px; border-radius: 10px; background: rgba(0, 0, 0, 0.25); border: 1px solid transparent; }
+.rd-bags-flags li.on { border-color: var(--gold); background: rgba(232, 178, 74, 0.15); }
+.rd-bags-flags b { font-size: 14px; color: #fff; }
+.rd-bags-bag { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.rd-bags-bag > img { width: min(220px, 60vw); aspect-ratio: 1; object-fit: contain; filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.55)); }
+.rd-bags-bag > img.from-r { animation: rd-bags-in-r 0.28s ease-out; }
+.rd-bags-bag > img.from-l { animation: rd-bags-in-l 0.28s ease-out; }
+@keyframes rd-bags-in-r { from { opacity: 0; transform: translateX(40px) rotate(6deg); } }
+@keyframes rd-bags-in-l { from { opacity: 0; transform: translateX(-40px) rotate(-6deg); } }
+.rd-bags-name { font-size: 18px; color: #7a3d0e; }
+.rd-bags-sub { font-size: 12px; opacity: 0.8; }
+.rd-bags-dots { display: flex; gap: 5px; margin: 2px 0 4px; }
+.rd-bags-dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255, 255, 255, 0.3); }
+.rd-bags-dots i.on { background: var(--gold); }
+.rd-bags-bag .btn-big { width: 100%; max-width: 280px; }
+.rd-bags-prev, .rd-bags-next { position: absolute; top: 40%; z-index: 2; }
+.rd-bags-prev { left: 56px; }
+.rd-bags-next { right: -4px; }

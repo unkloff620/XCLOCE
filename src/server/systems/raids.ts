@@ -16,7 +16,7 @@ import { weaponById } from "../../content/items.ts";
 import { talentExtras } from "../../content/talents.ts";
 import { weaponTalents } from "./home.ts";
 import { craftBonus } from "./craft.ts";
-import { RAID_YARDS, RAID_YARD_COOLDOWN_MS, buildingById, buildingHp, buildingReward, buildingTake, buildingWins, yardReward, type RaidYard } from "../../content/raids.ts";
+import { FLAG_IDS, RAID_YARDS, RAID_YARD_COOLDOWN_MS, buildingById, buildingHp, buildingReward, buildingTake, buildingWins, yardReward, type RaidYard } from "../../content/raids.ts";
 
 export async function raidsOn(q: Queryable, pid: number, cfg: Config) {
   return cfg.raids.on || (await isAdminPlayer(q, pid, cfg));
@@ -63,10 +63,14 @@ export async function raidsView(q: Queryable, pid: number, now = Date.now()) {
   const p: Progress = clanId ? await progressOf(q, clanId) : { wins: new Map(), taken: new Set(), yards: new Set(), last: new Map() };
   const [f] = await q.query<{ id: number; building_id: string; hp_max: number; damage: number; hits: number; ends_at: Date | null }>(
     "SELECT id, building_id, hp_max, damage, hits, ends_at FROM raid_fights WHERE player_id=$1 AND status='active'", [pid]);
+  // my flags of the five yards (the bags of tattoo sets are opened for them)
+  const fl = await q.query<{ item_id: string; qty: number }>("SELECT item_id, qty FROM inventory WHERE player_id=$1 AND item_id = ANY($2)", [pid, FLAG_IDS]);
+  const flags = FLAG_IDS.map((id) => Number(fl.find((r) => r.item_id === id)?.qty ?? 0));
   // the clan's logo: it stands over every building the clan has taken
   const [c] = clanId ? await q.query<{ emblem: string; color: string }>("SELECT emblem, color FROM clans WHERE id=$1", [clanId]) : [];
   return {
     clanId,
+    flags,
     clan: c ? { emblem: c.emblem, color: c.color } : null,
     yards: RAID_YARDS.map((y) => ({
       id: y.id,
