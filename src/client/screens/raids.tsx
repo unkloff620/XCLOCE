@@ -16,7 +16,7 @@ import { ItemArt } from "../art/items.tsx";
 import { BossRig } from "../art/boss-rig.tsx";
 import { Emblem } from "../art/emblems.tsx";
 import { useFx } from "../fx/attack.tsx";
-import { setMusicTrack, sfx, weaponSfx } from "../sound.ts";
+import { alleyCreak, setMusicTrack, sfx, weaponSfx } from "../sound.ts";
 import { MultPicker, TalentProgress, WeaponTray, type Mult } from "./boss.tsx";
 import { WeaponShopWindow } from "./shop.tsx";
 import { TalentWindow } from "./talents.tsx";
@@ -166,6 +166,69 @@ function YardRewards({ y }: { y: (typeof RAID_YARDS)[number] }) {
  * turned left and right with the arrows or a swipe; under it only the yard's name. Each bag holds a set of tattoos
  * and opens for its yard's flags (the sets are being drawn: no button yet).
  */
+/*
+ * The back alley (the artist's picture, 1024×1536, drawn like `cover`): darkness behind the doorway, the wall with its
+ * hole for the door, the door on its hinges (right edge) — the wind pushes it open now and then, it swings back and
+ * rattles, and creaks as it goes (sound.ts alleyCreak); the lamp over it flickers. The sound of the page is the alley
+ * itself (setMusicTrack("alley")): the wind, the drops — no music.
+ */
+const DOOR = { x: 689, y: 315, w: 204, h: 544 };
+function AlleyScene() {
+  const door = useRef<HTMLImageElement | null>(null);
+  useEffect(() => {
+    setMusicTrack("alley");
+    return () => setMusicTrack("calm");
+  }, []);
+  useEffect(() => {
+    const reduce = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let ang = 0, vel = 0, target = 1.5, raf = 0, last = performance.now();
+    let next = last + 1500 + Math.random() * 2500, back = 0;
+    const tick = (now: number) => {
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      if (now > next) {
+        // a gust: the door swings open a little or a lot, then the wind lets go
+        const open = 5 + Math.random() * (Math.random() < 0.3 ? 26 : 12);
+        target = open;
+        back = now + 600 + Math.random() * 900;
+        next = now + 2600 + Math.random() * 4500;
+        alleyCreak(Math.min(1, open / 30), 0.6 + open / 40);
+      }
+      if (back && now > back) {
+        // it falls back towards the frame: a shorter creak
+        back = 0;
+        target = 0.5 + Math.random() * 2;
+        alleyCreak(Math.min(0.7, ang / 40), 0.5 + ang / 60);
+      }
+      // a heavy door on rusty hinges: a soft spring, much friction; a little rattle near the frame
+      const jitter = ang < 4 ? Math.sin(now / 37) * 0.25 : 0;
+      vel += ((target - ang) * 9 - vel * 3.2) * dt;
+      ang = Math.max(0, ang + vel * dt);
+      if (door.current) door.current.style.transform = `rotateY(${(ang + jitter).toFixed(2)}deg)`;
+      raf = requestAnimationFrame(tick);
+    };
+    if (!reduce) raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  const pc = (v: number, of: number) => `${(v / of) * 100}%`;
+  return (
+    <div className="rb-scene" aria-hidden="true">
+      <div className="rb-art">
+        {/* behind the doorway: the dark of the basement */}
+        <i className="rb-dark" style={{ left: pc(696, 1024), top: pc(324, 1536), width: pc(192, 1024), height: pc(526, 1536) }} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="rb-bg" src={`${A}/bags-bg.webp`} alt="" draggable={false} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img ref={door} className="rb-door" src={`${A}/bags-door.webp`} alt="" draggable={false}
+          style={{ left: pc(DOOR.x, 1024), top: pc(DOOR.y, 1536), width: pc(DOOR.w, 1024), height: pc(DOOR.h, 1536) }} />
+        {/* the lamp over the door: its glow flickers */}
+        <i className="rb-lamp" style={{ left: pc(765, 1024), top: pc(215, 1536) }} />
+        <i className="rb-lamp-wash" />
+      </div>
+    </div>
+  );
+}
+
 export function RaidBagsScreen() {
   const [v, setV] = useState<RaidsView | null>(null);
   useEffect(() => { api.get<RaidsView>("/api/raids").then(setV).catch(() => {}); }, []);
@@ -183,8 +246,7 @@ export function RaidBagsScreen() {
     <div className="fit-page rb-page"
       onTouchStart={(e) => { touch.current = e.touches[0].clientX; }}
       onTouchEnd={(e) => { const x0 = touch.current; touch.current = null; if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1); }}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="rb-bg" src={`${A}/bags-bg.webp`} alt="" draggable={false} />
+      <AlleyScene />
       <div className="title-row rd-title">
         <Link href="/clans/raids" className="back-btn" aria-label="К дворам">‹</Link>
         <b>Сумки за флаги</b>

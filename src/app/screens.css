@@ -6428,7 +6428,21 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 @media (prefers-reduced-motion: reduce) { .rd-bagbtn { animation: none; } }
 /* the bags' page: the back alley, my flags on the left, the bag on the ground in the middle (raids.tsx RaidBagsScreen) */
 .rb-page { background: #0c0a08; color: #fff; }
-.rb-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 70%; user-select: none; }
+/* the alley's picture in its own box (1024×1536), laid like object-fit: cover with its point at 50% 70% */
+.rb-scene { position: absolute; inset: 0; overflow: hidden; container-type: size; }
+.rb-art { position: absolute; width: max(100cqw, 100cqh * 1024 / 1536); height: max(100cqh, 100cqw * 1536 / 1024);
+  left: calc((100cqw - max(100cqw, 100cqh * 1024 / 1536)) / 2); top: calc((100cqh - max(100cqh, 100cqw * 1536 / 1024)) * 0.7); perspective: 1400px; }
+.rb-art > * { position: absolute; }
+.rb-bg { inset: 0; width: 100%; height: 100%; user-select: none; }
+.rb-dark { background: radial-gradient(ellipse at 40% 35%, #1a120c, #070504 70%); }
+.rb-door { transform-origin: 98% 50%; will-change: transform; filter: drop-shadow(-6px 4px 6px rgba(0, 0, 0, 0.55)); user-select: none; }
+.rb-lamp { width: 30%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none; mix-blend-mode: screen;
+  background: radial-gradient(circle, rgba(255, 214, 140, 0.55), rgba(255, 170, 80, 0.18) 40%, transparent 70%); animation: rb-flicker 4.3s steps(1, end) infinite; }
+.rb-lamp-wash { inset: 0; pointer-events: none; background: rgba(0, 0, 0, 0.3); animation: rb-wash 4.3s steps(1, end) infinite; }
+@keyframes rb-flicker { 0%, 100% { opacity: 1; } 8% { opacity: 0.35; } 10% { opacity: 0.95; } 12% { opacity: 0.2; } 15% { opacity: 1; } 47% { opacity: 0.85; } 49% { opacity: 1; }
+  71% { opacity: 0.25; } 72% { opacity: 0.9; } 74% { opacity: 0.1; } 78% { opacity: 1; } }
+@keyframes rb-wash { 0%, 100% { opacity: 0; } 8% { opacity: 0.6; } 10% { opacity: 0.05; } 12% { opacity: 0.8; } 15% { opacity: 0; } 71% { opacity: 0.7; } 72% { opacity: 0.1; } 74% { opacity: 0.9; } 78% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .rb-lamp, .rb-lamp-wash { animation: none; } .rb-lamp-wash { opacity: 0; } }
 .rb-flags { position: absolute; z-index: 2; left: 12px; top: calc(var(--top) + 56px); margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
 .rb-flags li { display: flex; align-items: center; gap: 6px; opacity: 0.85; }
 .rb-flags li.on { opacity: 1; }

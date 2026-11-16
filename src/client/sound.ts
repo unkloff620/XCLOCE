@@ -104,7 +104,7 @@ let musicVol = readVol(VOL_KEY + "_music");
 let sfxVol = readVol(VOL_KEY + "_sfx");
 const MASTER = 0.55;
 /** the music bus level of a track at full volume */
-const trackLevel = (t: MusicTrack) => (t === "battle" ? 0.45 : 0.5) * musicVol;
+const trackLevel = (t: MusicTrack) => (t === "battle" ? 0.45 : t === "alley" ? 0.8 : 0.5) * musicVol;
 export const getMusicVolume = () => musicVol;
 export const getSfxVolume = () => sfxVol;
 export function setMusicVolume(v: number) {
@@ -796,13 +796,135 @@ function battleStep(a: AudioContext, s: number, at: number) {
   if (s === 0) noise(a, at, 1.2, { freq: 5000, type: "highpass", vol: 0.12, out });
 }
 
-export type MusicTrack = "calm" | "battle" | "yard";
+export type MusicTrack = "calm" | "battle" | "yard" | "alley";
 const TRACKS: Record<MusicTrack, { step: number; bars: number; play: (a: AudioContext, s: number, at: number) => void }> = {
   calm: { step: STEP, bars: 8, play: calmStep },
   battle: { step: B_STEP, bars: 8, play: battleStep },
   // nature has no synthesized stand-in: quiet until its file is in
   yard: { step: STEP, bars: 8, play: () => undefined },
+  // the back alley of «Сумки за флаги»: no music — the wind, water dripping somewhere (the door creaks: alleyCreak)
+  alley: { step: STEP, bars: 8, play: (a, _s, at) => alleyStep(a, at) },
 };
+
+/*
+ * The back alley (synthesized, on the music bus — the music switch and volume rule it): the wind is a looped noise
+ * through a band-pass that wanders slowly, with gusts; drops fall now and then, each a short falling «plip» with a
+ * little echo; the door's creak comes from the door's swing (alleyCreak, raids.tsx).
+ */
+let wind: { src: AudioBufferSourceNode; g: GainNode } | null = null;
+let echo: AudioNode | null = null;
+function alleyEcho(a: AudioContext): AudioNode {
+  if (echo) return echo;
+  const d = a.createDelay(1);
+  d.delayTime.value = 0.23;
+  const fb = a.createGain();
+  fb.gain.value = 0.32;
+  const lp = a.createBiquadFilter();
+  lp.type = "lowpass";
+  lp.frequency.value = 2500;
+  d.connect(lp).connect(fb).connect(d);
+  const inp = a.createGain();
+  inp.connect(musicBus!);
+  inp.connect(d);
+  lp.connect(musicBus!);
+  echo = inp;
+  return inp;
+}
+function alleyStep(a: AudioContext, at: number) {
+  if (!wind && musicBus) {
+    const len = a.sampleRate * 4;
+    const buf = a.createBuffer(1, len, a.sampleRate);
+    const d = buf.getChannelData(0);
+    // brown-ish noise: the low roar of the wind (the ends meet, so the loop does not click)
+    let last = 0;
+    for (let i = 0; i < len; i++) { last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02; d[i] = last * 3.5; }
+    for (let i = 0; i < 2000; i++) { const k = i / 2000; d[len - 1 - i] = d[len - 1 - i] * k + d[i] * (1 - k); }
+    const src = a.createBufferSource();
+    src.buffer = buf;
+    src.loop = true;
+    const bp = a.createBiquadFilter();
+    bp.type = "bandpass";
+    bp.frequency.value = 420;
+    bp.Q.value = 0.7;
+    // the howl wanders: the band slides up and down
+    const lfo = a.createOscillator();
+    lfo.frequency.value = 0.09;
+    const lfoG = a.createGain();
+    lfoG.gain.value = 260;
+    lfo.connect(lfoG).connect(bp.frequency);
+    // gusts: the loudness swells and falls
+    const g = a.createGain();
+    g.gain.value = 0;
+    const gust = a.createOscillator();
+    gust.frequency.value = 0.13;
+    const gustG = a.createGain();
+    gustG.gain.value = 0.35;
+    gust.connect(gustG).connect(g.gain);
+    g.gain.setValueAtTime(0, at);
+    g.gain.linearRampToValueAtTime(0.75, at + 3);
+    src.connect(bp).connect(g).connect(musicBus);
+    src.start(at);
+    lfo.start(at);
+    gust.start(at);
+    src.onended = () => { lfo.stop(); gust.stop(); };
+    wind = { src, g };
+    musicLp?.frequency.setValueAtTime(9000, at);
+  }
+  // a drop: rarely, sometimes two close together
+  if (Math.random() < 0.035) {
+    const out = alleyEcho(a);
+    const f = 900 + Math.random() * 900;
+    tone(a, f, at, 0.07, { type: "sine", vol: 0.09 + Math.random() * 0.06, slide: 0.45, out });
+    tone(a, f * 1.9, at + 0.004, 0.03, { type: "sine", vol: 0.03, slide: 0.6, out });
+    if (Math.random() < 0.3) tone(a, f * 0.85, at + 0.18 + Math.random() * 0.2, 0.06, { type: "sine", vol: 0.06, slide: 0.45, out });
+  }
+}
+function stopWind(at = 0) {
+  if (!wind) return;
+  const w = wind;
+  wind = null;
+  if (ctx) {
+    w.g.gain.cancelScheduledValues(ctx.currentTime);
+    w.g.gain.setTargetAtTime(0, ctx.currentTime, 0.15);
+  }
+  try { w.src.stop(Math.max(at, (ctx?.currentTime ?? 0) + 0.6)); } catch { /* stopped */ }
+  if (ctx) musicLp?.frequency.setValueAtTime(2600, ctx.currentTime + 0.6);
+}
+/**
+ * The door's creak: a rusty hinge — a rough sawtooth whose pitch slides with the swing, shaken by a fast tremble,
+ * through two narrow resonances; `power` 0…1 — how far it swings. Only in the alley, with the music on.
+ */
+export function alleyCreak(power = 0.6, dur = 0.9) {
+  const a = ctx;
+  if (!a || !musicBus || track !== "alley" || !seqTimer || a.state !== "running") return;
+  const at = a.currentTime + 0.02;
+  const o = a.createOscillator();
+  o.type = "sawtooth";
+  const f0 = 170 + Math.random() * 60;
+  o.frequency.setValueAtTime(f0, at);
+  o.frequency.linearRampToValueAtTime(f0 * (1.35 + power * 0.5), at + dur * 0.55);
+  o.frequency.linearRampToValueAtTime(f0 * 1.1, at + dur);
+  // the hinge sticks and slips: a fast tremble of the loudness
+  const trem = a.createOscillator();
+  trem.frequency.setValueAtTime(18 + Math.random() * 10, at);
+  trem.frequency.linearRampToValueAtTime(34, at + dur);
+  const tremG = a.createGain();
+  tremG.gain.value = 0.5;
+  const g = a.createGain();
+  g.gain.setValueAtTime(0.0001, at);
+  g.gain.linearRampToValueAtTime(0.05 + power * 0.06, at + 0.08);
+  g.gain.setValueAtTime(0.05 + power * 0.06, at + dur * 0.7);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+  trem.connect(tremG).connect(g.gain);
+  const r1 = a.createBiquadFilter(); r1.type = "bandpass"; r1.frequency.value = 1100; r1.Q.value = 9;
+  const r2 = a.createBiquadFilter(); r2.type = "bandpass"; r2.frequency.value = 2300; r2.Q.value = 12;
+  const mix = a.createGain(); mix.gain.value = 1;
+  o.connect(r1).connect(mix);
+  o.connect(r2).connect(mix);
+  mix.connect(g).connect(alleyEcho(a));
+  o.start(at); trem.start(at);
+  o.stop(at + dur + 0.05); trem.stop(at + dur + 0.05);
+}
 let track: MusicTrack = "calm";
 
 let seqTimer: ReturnType<typeof setInterval> | null = null;
@@ -833,7 +955,8 @@ let fileTrack: MusicTrack | null = null;
 /** the music file of this track, looped; the low-pass of the music bus is opened for it. false: not loaded (yet) */
 function startFile(a: AudioContext, t: MusicTrack): boolean {
   if (fileSrc && fileTrack === t) return true;
-  const f = MUSIC_FILES[t];
+  const f = (MUSIC_FILES as Partial<Record<MusicTrack, { id: SampleId; start: number; end: number; gain: number }>>)[t];
+  if (!f) return false;
   const b = buffers[f.id];
   if (!b || !musicBus) return false;
   stopFile();
@@ -910,6 +1033,7 @@ export function setMusicTrack(t: MusicTrack) {
   switchTimer = setTimeout(() => {
     switchTimer = null;
     stopFile();
+    if (t !== "alley") stopWind();
     track = t;
     step = 0;
     if (!musicBus || !ctx) return;
@@ -923,6 +1047,7 @@ export function setMusicTrack(t: MusicTrack) {
 export function stopMusic() {
   if (seqTimer) clearInterval(seqTimer);
   seqTimer = null;
+  stopWind();
   if (ctx) stopFile(ctx.currentTime + 0.45);
   if (ctx && musicBus) {
     musicBus.gain.cancelScheduledValues(ctx.currentTime);
