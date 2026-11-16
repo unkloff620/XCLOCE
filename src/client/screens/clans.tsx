@@ -295,13 +295,34 @@ function ClanEvents({ id }: { id: number }) {
   );
 }
 
+/** a page of the own clan («События», «Чат»): its name on top, then the page; another clan's — back to it */
+function ClanSubPage({ id, children }: { id: number; children: React.ReactNode }) {
+  const { state } = useGame();
+  if (!state) return null;
+  if (state.clan?.id !== id) return <Empty>Это видно только своему клану</Empty>;
+  return (
+    <div>
+      <div className="title">
+        <Link href={`/clans/${id}`} className="back-btn" aria-label="В клан">‹</Link>
+        <b className="display ellipsis grow" style={{ minWidth: 0 }}>{state.clan.name}</b>
+      </div>
+      {children}
+    </div>
+  );
+}
+export function ClanEventsScreen({ id }: { id: number }) {
+  return <ClanSubPage id={id}><ClanEvents id={id} /></ClanSubPage>;
+}
+export function ClanChatScreen({ id }: { id: number }) {
+  return <ClanSubPage id={id}><ClanChat /></ClanSubPage>;
+}
+
 export function ClanScreen({ id }: { id: number }) {
   const { state, act, busy } = useGame();
   const [editing, setEditing] = useState(false);
   const [settings, setSettings] = useState(false);
   const [kickAsk, setKickAsk] = useState<number | null>(null);
   const [leadAsk, setLeadAsk] = useState<number | null>(null);
-  const [tab, setTab] = useState<"clan" | "chat" | "events">(() => (typeof location !== "undefined" && location.hash === "#chat" ? "chat" : typeof location !== "undefined" && location.hash === "#events" ? "events" : "clan"));
   const [c, setC] = useState<ClanPage | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const load = useCallback(() => api.get<ClanPage>(`/api/clans/${id}`).then(setC).catch((e) => setErr(e.message)), [id]);
@@ -332,47 +353,22 @@ export function ClanScreen({ id }: { id: number }) {
     if (r) void load();
   };
   const unread = state?.clanRequests?.chat ?? 0;
-  const tabs = mine && (
-    <div className="clan-tabs" role="tablist">
-      {state?.raids?.on && <Link href="/clans/raids" className="btn sm dark">🚔 Захват</Link>}
-      <button type="button" role="tab" aria-selected={tab === "clan"} className={`btn sm ${tab === "clan" ? "gold" : "dark"}`} onClick={() => { setTab("clan"); history.replaceState(null, "", "#"); }}>🛡 Клан</button>
-      <button type="button" role="tab" aria-selected={tab === "chat"} className={`btn sm ${tab === "chat" ? "gold" : "dark"}`} onClick={() => { setTab("chat"); history.replaceState(null, "", "#chat"); }}>
-        💬 Чат{tab !== "chat" && unread > 0 && <span className="badge">{unread}</span>}
-      </button>
-      {state?.raids?.on && <button type="button" role="tab" aria-selected={tab === "events"} className={`btn sm ${tab === "events" ? "gold" : "dark"}`} onClick={() => { setTab("events"); history.replaceState(null, "", "#events"); }}>📜 События</button>}
-    </div>
+  // the clan's own menu under its head: each button opens a page of its own
+  const menu = mine && (
+    <nav className="clan-menu" aria-label="Клан">
+      {state?.raids?.on && <Link href="/clans/raids" className="clan-menu-b"><span>🚔</span>Захват</Link>}
+      <span className="clan-menu-b off" aria-disabled="true" title="Скоро"><span>🤝</span>Сходняк<i>скоро</i></span>
+      {state?.raids?.on && <Link href={`/clans/${c.id}/events`} className="clan-menu-b"><span>📜</span>События</Link>}
+      <Link href="/clans?all=1" className="clan-menu-b"><span>🔍</span>Все кланы</Link>
+      <Link href={`/clans/${c.id}/chat`} className="clan-menu-b"><span>💬</span>Чат{unread > 0 && <b className="badge">{unread}</b>}</Link>
+    </nav>
   );
-  if (mine && tab === "events") {
-    return (
-      <div>
-        <div className="title">
-          <b className="display ellipsis" style={{ minWidth: 0 }}>{c.name} <span className="muted">[{c.tag}]</span></b>
-          <span className="chip">{c.members.length} чел.</span>
-        </div>
-        {tabs}
-        <ClanEvents id={c.id} />
-      </div>
-    );
-  }
-  if (mine && tab === "chat") {
-    return (
-      <div>
-        <div className="title">
-          <b className="display ellipsis" style={{ minWidth: 0 }}>{c.name} <span className="muted">[{c.tag}]</span></b>
-          <span className="chip">{c.members.length} чел.</span>
-        </div>
-        {tabs}
-        <ClanChat />
-      </div>
-    );
-  }
   return (
     <div>
       <div className="title">
         <span className="chip">#{c.rank} в рейтинге</span>
-        <Link href="/clans?all=1" className="btn dark sm">🔍 Все кланы</Link>
+        {!mine && <Link href="/clans?all=1" className="btn dark sm">🔍 Все кланы</Link>}
       </div>
-      {tabs}
       <div className="panel center col clan-head" style={{ alignItems: "center" }}>
         {/* the leader's tools: edit the member list, the clan settings */}
         {leader && (
@@ -419,6 +415,7 @@ export function ClanScreen({ id }: { id: number }) {
         ))}
         {mine && <button className="btn dark block" disabled={busy === "clan_leave"} onClick={() => act("clan_leave", {}, "Ты вышел из клана")}>Выйти из клана</button>}
       </div>
+      {menu}
       {/* the clan boss moves to the brigade bosses (Боссы → «Бригадные»), soon */}
       {leader && c.requests && c.requests.length > 0 && (
         <div className="panel col clan-reqs" style={{ gap: 6 }}>
