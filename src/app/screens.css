@@ -6813,7 +6813,7 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 
 /* Rug Pull Gun (fx/attack.tsx): the arm (public/assets/fx/rugpull-arm.webp, the muzzle at 98% / 20% of it) slides in from the
    bottom left, fires with a recoil — a flash at the muzzle, bills flying at the boss — and slides back out */
-.fx-arm { position: absolute; left: -16%; bottom: -12%; width: 84%; aspect-ratio: 1; transform-origin: 8% 92%; animation: fx-arm 1.4s cubic-bezier(0.3, 0.8, 0.3, 1) forwards; }
+.fx-arm { position: absolute; left: -6%; top: 50%; margin-top: -21%; width: 42%; aspect-ratio: 1; transform-origin: 8% 92%; animation: fx-arm 1.4s cubic-bezier(0.3, 0.8, 0.3, 1) forwards; }
 .fx-arm img { width: 100%; height: 100%; display: block; filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.55)); }
 @keyframes fx-arm {
   0% { transform: translate(-75%, 35%) rotate(14deg); }
