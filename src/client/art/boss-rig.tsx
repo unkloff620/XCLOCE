@@ -441,6 +441,7 @@ export function BossRig({ id: asked, hpShare = 1, bust = false, outfit: wanted }
                 <g className="br-jaw-lips">{img("lips")}</g>
               </g>
               {img("lips-up")}
+              {baseId === "utilizator" && <Drool x={339} y={185} />}
             </g>
           )}
           {clipEyes && (
@@ -486,6 +487,26 @@ export function BossRig({ id: asked, hpShare = 1, bust = false, outfit: wanted }
         </svg>
       )}
     </div>
+  );
+}
+
+/** a string of spit from the corner of the lower lip (Утилизатор): it stretches down slowly, a drop breaks off and falls,
+ *  the string springs back; it rides on the lower lip (screens.css «his drool», --close moves it with the jaw) */
+function Drool({ x, y }: { x: number; y: number }) {
+  return (
+    <g className="ut-drool" transform={`translate(${x} ${y}) scale(1.7)`}>
+      <g className="ut-drool-lip">
+        <g className="ut-drool-str">
+          <path d="M-1.6 0 C-1.4 6 -0.9 12 -0.6 20 C-0.5 24 0.5 24 0.6 20 C0.9 12 1.4 6 1.6 0 Z" fill="rgba(215,238,255,0.72)" stroke="rgba(40,60,80,0.55)" strokeWidth="0.35" />
+          <path d="M-0.5 1 C-0.4 7 -0.3 12 -0.2 18" stroke="rgba(255,255,255,0.9)" strokeWidth="0.35" fill="none" strokeLinecap="round" />
+          <ellipse cx="0" cy="22.4" rx="1.6" ry="2" fill="rgba(215,238,255,0.8)" stroke="rgba(40,60,80,0.55)" strokeWidth="0.35" />
+        </g>
+        <g className="ut-drool-drop">
+          <path d="M0 -2.6 C1.2 -0.8 1.7 0.4 1.7 1.2 A1.7 1.7 0 0 1 -1.7 1.2 C-1.7 0.4 -1.2 -0.8 0 -2.6 Z" fill="rgba(215,238,255,0.85)" stroke="rgba(40,60,80,0.55)" strokeWidth="0.35" />
+          <circle cx="-0.5" cy="0.6" r="0.45" fill="#fff" />
+        </g>
+      </g>
+    </g>
   );
 }
 
