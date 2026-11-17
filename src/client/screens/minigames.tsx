@@ -5,7 +5,7 @@
  */
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useGame, useNow } from "../store.tsx";
-import { Avatar, Coin, Modal, RewardChips } from "../ui.tsx";
+import { Avatar, Coin, DropKind, Modal, RewardChips } from "../ui.tsx";
 import { Icon } from "../art/icons.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { Help } from "../help.tsx";
@@ -897,11 +897,11 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="pkt-bg" src="/assets/yard/poker-room.webp?v=2" alt="" draggable={false} />
 
-          {/* the poker's cases (for stickers): a case on the felt's corner */}
+          {/* the poker's cases (for stickers): the case in the felt's bottom-left corner, the stickers over it */}
           <button type="button" className="pkt-cases" onClick={() => { haptic.tap(); setCases(true); }} aria-label="Чемоданы покера" title="Чемоданы за стикеры">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`/assets/items/poker-case.webp?v=${ART_VER.items}`} alt="" draggable={false} />
             <b className="num"><ItemArt id={POKER_STICKER} size={14} />{(p?.stickers ?? 0).toLocaleString("ru-RU")}</b>
+            <img src={`/assets/items/poker-case.webp?v=${ART_VER.items}`} alt="" draggable={false} />
           </button>
 
           {/* above the title: the poker level, its experience, the swaps it gives, the hands left today */}
@@ -1002,46 +1002,102 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
   );
 }
 
-/** the poker's three cases: each for its stickers — authority, roubles, dollars, 30% a piece of its own tattoo set, now and then a нычка */
+/**
+ * The poker's cases, a page of their own over the table (like the wheel's bags): bronze, silver, gold — ‹ › or a swipe.
+ * Each for its stickers: authority, roubles, dollars, 30% a piece of its own tattoo set, now and then a нычка. Opened —
+ * the black case with its lid up, the rewards lying on its velvet; a tap puts the case back.
+ */
 function PokerCases({ onClose, stickers, onOpened }: { onClose: () => void; stickers: number; onOpened: (p: PokerInfo) => void }) {
-  const { act, busy } = useGame();
+  const { state, act, busy } = useGame();
+  const [i, setI] = useState(0);
+  const [have, setHave] = useState(stickers);
   const [got, setGot] = useState<{ case: number; tattoo: string | null; reward: Granted } | null>(null);
-  const open = async (n: number) => {
+  const [turn, setTurn] = useState<{ n: number; dir: 1 | -1; from: number } | null>(null);
+  const [drag, setDrag] = useState(0);
+  const touch = useRef<number | null>(null);
+  const c = POKER_CASES[i];
+  const set = TATTOO_SETS.find((x) => x.id === c.set);
+  const own = new Set((state?.inventory ?? []).filter((x) => x.qty > 0).map((x) => x.id));
+  const go = (d: 1 | -1) => {
+    setTurn((t) => ({ n: (t?.n ?? 0) + 1, dir: d, from: i }));
+    setI((v) => (v + d + POKER_CASES.length) % POKER_CASES.length);
+    setGot(null);
     haptic.tap();
-    const r = await act<{ case: number; tattoo: string | null; reward: Granted; poker: PokerInfo }>("poker_case", { n });
-    if (r) { setGot(r); onOpened(r.poker); haptic.ok(); sfx(r.tattoo ? "victory" : "coin"); }
+  };
+  useEffect(() => {
+    if (!turn) return;
+    const t = window.setTimeout(() => setTurn((x) => (x && x.n === turn.n ? { ...x, from: -1 } : x)), 380);
+    return () => clearTimeout(t);
+  }, [turn]);
+  const pic = (k: number) => (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img className="fo-bags-pic pkc-pic" src={`/assets/items/poker-case-${POKER_CASES[k].n}.webp?v=${ART_VER.items}`} alt="" draggable={false} />
+  );
+  const open = async () => {
+    if (have < c.price) return;
+    haptic.tap();
+    const r = await act<{ case: number; tattoo: string | null; reward: Granted; poker: PokerInfo }>("poker_case", { n: c.n });
+    if (!r) return;
+    setHave(r.poker.stickers ?? have - c.price);
+    setGot(r);
+    onOpened(r.poker);
+    if (r.tattoo) { haptic.big(); sfx("win"); } else { haptic.ok(); sfx("reward"); }
   };
   return (
-    <Modal onClose={onClose} title="Чемоданы покера" maxWidth={380} className="pkc">
-      <p className="pkc-have">У тебя <ItemArt id={POKER_STICKER} size={20} /><b className="num">{stickers.toLocaleString("ru-RU")}</b> стикеров</p>
-      <div className="pkc-list">
-        {POKER_CASES.map((c) => {
-          const set = TATTOO_SETS.find((s) => s.id === c.set);
-          return (
-            <div key={c.n} className="pkc-case">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`/assets/items/poker-case-${c.n}.webp?v=${ART_VER.items}`} alt="" draggable={false} />
-              <span className="pkc-t"><b>{c.name}</b><small>Наколка «{set?.name}» — {Math.round(POKER_CASE_TATTOO * 100)}%, авторитет, ₽, $, нычки</small></span>
-              <button type="button" className="btn gold sm" disabled={!!busy || stickers < c.price} onClick={() => open(c.n)}>
-                <ItemArt id={POKER_STICKER} size={16} /><b className="num">{c.price}</b>
-              </button>
-            </div>
-          );
-        })}
+    <div className="fo-bags pkc-page" role="dialog" aria-label="Кейсы покера" style={{ ["--top" as string]: "14px", ["--bottom" as string]: "18px" }}
+      onTouchStart={(e) => { touch.current = e.touches[0].clientX; setDrag(0); }}
+      onTouchMove={(e) => { if (touch.current != null) setDrag(e.touches[0].clientX - touch.current); }}
+      onTouchEnd={(e) => { const x0 = touch.current; touch.current = null; setDrag(0); if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1); }}>
+      <div className="fo-bags-head">
+        <button type="button" className="back-btn" onClick={onClose} aria-label="Назад">‹</button>
+        <b>{c.name}</b>
+        <span className="fo-chip"><ItemArt id={POKER_STICKER} size={20} /><b className="num">{have.toLocaleString("ru-RU")}</b></span>
       </div>
-      {/* the opened case: the black case with its lid up, the rewards lying on its velvet */}
-      {got && (
-        <div className="pkc-got" role="button" tabIndex={0} onClick={() => setGot(null)} onKeyDown={(e) => e.key === "Enter" && setGot(null)}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="pkc-open" src={`/assets/items/poker-case-open.webp?v=${ART_VER.items}`} alt="" draggable={false} />
-          <div className="pkc-in">
-            {got.tattoo && <span className="pkc-tat"><ItemArt id={got.tattoo} size={44} /><small>{itemById(got.tattoo)?.name}</small></span>}
-            <RewardChips r={{ ...got.reward, items: got.reward.items.filter((i) => i.id !== got.tattoo) }} size={22} />
-          </div>
-          <small className="muted">Нажми, чтобы закрыть</small>
+      <div className="fo-bags-dots">{POKER_CASES.map((x, k) => <i key={x.n} className={k === i ? "on" : ""} />)}</div>
+      <div className="fo-bags-stage">
+        <button type="button" className="fo-bags-arrow" onClick={() => go(-1)} aria-label="Предыдущий">‹</button>
+        {turn && turn.from >= 0 && (
+          <div key={`out-${turn.n}`} className={`fo-bags-bag fo-bags-out-bag ${turn.dir > 0 ? "out-l" : "out-r"}`} aria-hidden="true">{pic(turn.from)}</div>
+        )}
+        <div key={`in-${turn?.n ?? 0}`} className={`fo-bags-bag ${turn ? (turn.dir > 0 ? "in-r" : "in-l") : ""} ${drag ? "drag" : ""}`}
+          style={drag ? { transform: `translateX(${drag}px) rotate(${drag / 40}deg)` } : undefined}>
+          {got ? (
+            // the opened case: its lid up, what fell out lying on the velvet; a tap puts it back
+            <button type="button" className="pkc-got" onClick={() => setGot(null)} aria-label="Закрыть кейс">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="pkc-open" src={`/assets/items/poker-case-open.webp?v=${ART_VER.items}`} alt="" draggable={false} />
+              <span className="pkc-in">
+                {got.tattoo && <span className="pkc-tat"><ItemArt id={got.tattoo} size={48} /><small>Наколка!</small></span>}
+                <RewardChips r={{ ...got.reward, items: got.reward.items.filter((x) => x.id !== got.tattoo) }} size={24} />
+              </span>
+            </button>
+          ) : (
+            <>
+              {pic(i)}
+              <div className="fo-bags-can" aria-label="Что может выпасть">
+                <span title="Авторитет"><Icon name="xp" size={26} /></span>
+                <span title="Рубли"><Icon name="RUB" size={26} /></span>
+                <span title="Доллары"><Icon name="USD" size={26} /></span>
+                <span title="Нычки"><Icon name="chest" size={26} /></span>
+                {set && (
+                  <span className="tat" title={`Наколка сета «${set.name}» — ${Math.round(POKER_CASE_TATTOO * 100)}%`}>
+                    <DropKind kind="tattoo" size={28} />
+                    <b className="tat-of num">{set.pieces.filter((x) => own.has(x.id)).length}/{set.pieces.length}</b>
+                  </span>
+                )}
+              </div>
+            </>
+          )}
         </div>
-      )}
-    </Modal>
+        <button type="button" className="fo-bags-arrow" onClick={() => go(1)} aria-label="Следующий">›</button>
+      </div>
+      <div className="fo-bags-foot">
+        <button type="button" className="btn gold rb-open" disabled={busy === "poker_case" || have < c.price} onClick={open}>
+          {got ? "Ещё раз" : "Открыть"} · <ItemArt id={POKER_STICKER} size={22} /> {c.price.toLocaleString("ru-RU")}
+        </button>
+        {have < c.price && <span className="fo-muted">Не хватает {(c.price - have).toLocaleString("ru-RU")} стикеров — играй в покер</span>}
+      </div>
+    </div>
   );
 }
 

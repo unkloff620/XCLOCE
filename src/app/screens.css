@@ -2361,7 +2361,8 @@ button.bjt-stack { cursor: pointer; }
 .pkt-top { font-size: 2.6cqw; gap: 1.8cqw; }
 .pkt-lvl { width: 8cqw; height: 8cqw; }
 .pkt-res { display: flex; align-items: center; justify-content: center; }
-.pkt-out { padding: 0.8cqw 2.4cqw; border-radius: 3cqw; background: rgba(0, 0, 0, 0.45); border: 0.25cqw solid rgba(230, 190, 90, 0.45); gap: 0.6cqw 1.6cqw; }
+.pkt-out { padding: 0.8cqw 2.4cqw; gap: 0.6cqw 1.6cqw; }
+.pkt-out .chip { background: none; border: 0; box-shadow: none; }
 .pkt-out b { font-size: 4cqw; }
 .pkt-out .chip { font-size: 13px; }
 .pkt-hint { padding: 0.8cqw 2.4cqw; border-radius: 3cqw; background: rgba(0, 0, 0, 0.35); font-size: 2.8cqw; }
@@ -2378,6 +2379,9 @@ button.bjt-stack { cursor: pointer; }
 .pkt-row { display: grid; grid-template-columns: 1.5fr 1fr 1fr 0.45fr; align-items: center; justify-items: start; gap: 2cqw; padding: 0 2.4cqw;
   flex-direction: row; border-radius: 1.4cqw; background: rgba(0, 0, 0, 0.18); border: 0; box-shadow: none; transform: none; }
 .pkt-row.on, .pkt-row.now { background: rgba(0, 0, 0, 0.18); border: 0; box-shadow: none; transform: none; }
+/* the combination on the table lights its whole line (its cards and its prize) */
+.pkt-row.on { background: rgba(255, 213, 74, 0.22); box-shadow: inset 0 0 0 0.35cqw #ffd54a, 0 0 1.6cqw rgba(255, 213, 74, 0.5); }
+.pkt-row.now:not(.on) { box-shadow: inset 0 0 0 0.3cqw rgba(255, 224, 138, 0.8); }
 .pkt-row-cards { gap: 0.45cqw; }
 .pkt .pkt-row .pk-mini { width: 3.4cqw; height: 4.6cqw; border-radius: 0.55cqw; transition: transform 0.2s, box-shadow 0.2s; }
 .pkt .pkt-row .pk-mini b, .pkt .pkt-row .pk-mini i { font-size: 1.8cqw; }
@@ -6690,9 +6694,14 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .shod-cprize .chips, .shod-cprize > * { flex-wrap: wrap; }
 
 /* poker's cases (minigames.tsx PokerCases): the case on the felt's top-left corner with the stickers count; the window */
-.pkt-cases { position: absolute; left: 3%; top: 13.2%; width: 15%; display: flex; flex-direction: column; align-items: center; gap: 0.4cqw; padding: 0; border: 0; background: none; cursor: pointer; z-index: 2; }
+.pkt-cases { position: absolute; left: 3.5%; top: 83.5%; width: 15%; display: flex; flex-direction: column; align-items: center; gap: 0.4cqw; padding: 0; border: 0; background: none; cursor: pointer; z-index: 2; }
 .pkt-cases img { width: 100%; filter: drop-shadow(0 0.6cqw 0.8cqw rgba(0, 0, 0, 0.6)); }
 .pkt-cases b { display: inline-flex; align-items: center; gap: 0.6cqw; padding: 0.2cqw 1.2cqw; border-radius: 2cqw; font-size: 2.6cqw; color: #ffe08a; background: rgba(0, 0, 0, 0.6); }
+/* the cases' page over the felt (minigames.tsx PokerCases; the wheel's bags layout) */
+.modal.full > .pkc-page { position: absolute; inset: 0; z-index: 30; max-width: none; margin: 0; }
+.pkc-pic { max-width: 62cqw; }
+.pkc-got { display: block; position: relative; width: 100%; max-width: 70cqw; padding: 0; border: 0; background: none; cursor: pointer; color: #fff; }
+.pkc-got .pkc-open { max-width: none; }
 .pkt-cell img { width: 7.5cqw; height: 7.5cqw; margin: -1.5cqw 0; object-fit: contain; }
 .pkc-have { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 0 0 10px; font-weight: 800; }
 .pkc-list { display: flex; flex-direction: column; gap: 8px; }
@@ -6701,11 +6710,9 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .pkc-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .pkc-t small { font-size: 11.5px; color: var(--muted); line-height: 1.25; }
 .pkc-case .btn { display: inline-flex; align-items: center; gap: 4px; flex: none; }
-.pkc-got { margin-top: 12px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
-.pkc-got { position: relative; cursor: pointer; }
-.pkc-open { width: 100%; max-width: 300px; display: block; margin: 0 auto; }
+.pkc-open { width: 100%; display: block; margin: 0 auto; filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.6)); }
 /* the velvet tray of poker-case-open.webp (its lower half): the rewards lie there */
-.pkc-in { position: absolute; left: 50%; top: 47%; width: 62%; transform: translateX(-50%); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px;
+.pkc-in { position: absolute; left: 50%; top: 55%; width: 62%; transform: translateX(-50%); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px;
   padding: 6px; color: #fff; text-shadow: 0 1px 2px #000; }
 .pkc-tat { display: flex; flex-direction: column; align-items: center; gap: 2px; width: 100%; font-weight: 800; }
 .pkc-tat small { font-size: 11px; }
