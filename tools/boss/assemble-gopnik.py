@@ -9,7 +9,8 @@ The joints (build-boss.py PIVOT_BY_BOSS) are the middles of where the pieces ove
 import os
 from PIL import Image
 
-D = "tools/boss/source/gopnik"
+import sys
+D = sys.argv[1] if len(sys.argv) > 1 else "tools/boss/source/gopnik"  # or a variant's folder (an outfit: tools/boss/outfit/parts.py)
 R = f"{D}/raw"
 # the sheet down to the hips, with room for the fists to swing out
 CROP = (150, 50, 1850, 1800)
