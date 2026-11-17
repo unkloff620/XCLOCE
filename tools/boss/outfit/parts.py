@@ -91,19 +91,21 @@ def apply(boss, outfit, q):
         sheet[sy:ey, sx:ex] = big[sy - oy:ey - oy, sx - ox:ex - ox]
         a = orig[:, :, 3]
         # inside the outline, where the edit left white background (its piece a hair narrower): the nearest drawn colour
-        hole = (sheet.min(2) > 235) & (a > 0)
-        hole = cv2.dilate(hole.astype(np.uint8), np.ones((3, 3), np.uint8)) > 0
+        # near the outline the edit's light background fringe counts too (not the white stripes further in)
+        rim = cv2.distanceTransform((a > 0).astype(np.uint8), cv2.DIST_L2, 5) < 28
+        hole = ((sheet.min(2) > 235) | (rim & (sheet.min(2) > 185))) & (a > 0)
+        hole = (cv2.dilate(hole.astype(np.uint8), np.ones((3, 3), np.uint8)) > 0) | ((a > 0) & (a < 160))
+        # (the faint soft edge outside the drawn outline too: it takes the nearest solid colour — the new outline)
         if hole.any():
-            _, lab = cv2.distanceTransformWithLabels(hole.astype(np.uint8), cv2.DIST_L2, 5, labelType=cv2.DIST_LABEL_PIXEL)
-            ys, xs = np.nonzero(~hole)
+            # the colours come only from the drawn piece itself (inside the outline), never from the white around it
+            src_ok = ~hole & (a >= 160)
+            _, lab = cv2.distanceTransformWithLabels((~src_ok).astype(np.uint8), cv2.DIST_L2, 5, labelType=cv2.DIST_LABEL_PIXEL)
+            ys, xs = np.nonzero(src_ok)
             lut = np.zeros((lab.max() + 1, 3), np.uint8); lut[lab[ys, xs]] = sheet[ys, xs]
             sheet = np.where(hole[..., None], lut[lab], sheet)
         if n in SLEEVE_ONLY:
             k = sleeve_mask(orig)[..., None]
             sheet = (sheet * k + orig[:, :, :3] * (1 - k)).round().astype(np.uint8)
-        # the faint soft edge outside the drawn outline keeps the artist's own colours (no grey haze round the piece)
-        faint = (a < 160)[..., None]
-        sheet = np.where(faint, orig[:, :, :3], sheet)
         out = np.dstack([sheet, a])
         Image.fromarray(out.astype(np.uint8)).save(os.path.join(dst, f"{n}.png"))
         print(n, "→", dst, f"(filled {int(hole.sum())} px)")
