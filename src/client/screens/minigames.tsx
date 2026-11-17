@@ -1065,10 +1065,10 @@ function PokerCases({ onClose, stickers, onOpened }: { onClose: () => void; stic
             // the opened case: its lid up, what fell out lying on the velvet; a tap puts it back
             <button type="button" className="pkc-got" onClick={() => setGot(null)} aria-label="Закрыть кейс">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="pkc-open" src={`/assets/items/poker-case-open.webp?v=${ART_VER.items}`} alt="" draggable={false} />
+              <img className="pkc-open" src={`/assets/items/poker-case-${got.case}-open.webp?v=${ART_VER.items}`} alt="" draggable={false} />
               <span className="pkc-in">
-                {got.tattoo && <span className="pkc-tat"><ItemArt id={got.tattoo} size={48} /><small>Наколка!</small></span>}
-                <RewardChips r={{ ...got.reward, items: got.reward.items.filter((x) => x.id !== got.tattoo) }} size={24} />
+                {got.tattoo && <span className="pkc-tat"><ItemArt id={got.tattoo} size={56} /><small>Наколка!</small></span>}
+                <span className="pkc-row"><RewardChips r={{ ...got.reward, items: got.reward.items.filter((x) => x.id !== got.tattoo) }} size={26} /></span>
               </span>
             </button>
           ) : (

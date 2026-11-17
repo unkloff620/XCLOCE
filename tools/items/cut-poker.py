@@ -11,8 +11,10 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 SRC = os.path.join(ROOT, "tools", "items", "source", "poker")
 OUT = os.path.join(ROOT, "public", "assets", "items")
 MAP = {"sticker2": "poker-sticker", "case2": "poker-case", "case-bronze": "poker-case-1", "case-silver": "poker-case-2",
-       "case-gold": "poker-case-3", "case-open": "poker-case-open", "raven": "raven"}
-SIZE = {"poker-case-open": 512}
+       "case-gold": "poker-case-3", "case-open": "poker-case-open", "raven": "raven",
+       # the opened cases seen from above (the rewards lie on the velvet)
+       "open-bronze": "poker-case-1-open", "open-silver": "poker-case-2-open", "open-gold": "poker-case-3-open"}
+SIZE = {"poker-case-open": 512, "poker-case-1-open": 512, "poker-case-2-open": 512, "poker-case-3-open": 512}
 
 for src, out in MAP.items():
     im = np.array(Image.open(os.path.join(SRC, src + ".png")).convert("RGB")).astype(np.float32)

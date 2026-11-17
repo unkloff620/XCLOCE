@@ -6700,7 +6700,7 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 /* the cases' page over the felt (minigames.tsx PokerCases; the wheel's bags layout) */
 .modal.full > .pkc-page { position: absolute; inset: 0; z-index: 30; max-width: none; margin: 0; }
 .pkc-pic { max-width: 62cqw; }
-.pkc-got { display: block; position: relative; width: 100%; max-width: 70cqw; padding: 0; border: 0; background: none; cursor: pointer; color: #fff; }
+.pkc-got { display: block; position: relative; width: 100%; max-width: 82cqw; padding: 0; border: 0; background: none; cursor: pointer; color: #fff; }
 .pkc-got .pkc-open { max-width: none; }
 .pkt-cell img { width: 7.5cqw; height: 7.5cqw; margin: -1.5cqw 0; object-fit: contain; }
 .pkc-have { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 0 0 10px; font-weight: 800; }
@@ -6712,7 +6712,10 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .pkc-case .btn { display: inline-flex; align-items: center; gap: 4px; flex: none; }
 .pkc-open { width: 100%; display: block; margin: 0 auto; filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.6)); }
 /* the velvet tray of poker-case-open.webp (its lower half): the rewards lie there */
-.pkc-in { position: absolute; left: 50%; top: 55%; width: 62%; transform: translateX(-50%); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px;
-  padding: 6px; color: #fff; text-shadow: 0 1px 2px #000; }
+/* the opened case from above (poker-case-<n>-open.webp, 512²): the velvet is its middle — the rewards are laid out inside it,
+   centred both ways, the tattoo on top and the rest in a row, so nothing slides off the velvet */
+.pkc-in { position: absolute; left: 10%; right: 10%; top: 19%; bottom: 19%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  color: #fff; text-shadow: 0 1px 2px #000; }
+.pkc-row { display: flex; flex-wrap: wrap; justify-content: center; }
 .pkc-tat { display: flex; flex-direction: column; align-items: center; gap: 2px; width: 100%; font-weight: 800; }
 .pkc-tat small { font-size: 11px; }
