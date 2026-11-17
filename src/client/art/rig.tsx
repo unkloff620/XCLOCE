@@ -546,12 +546,59 @@ const KEYS_ID = "keys-bundle";
 const VIALS_ID = "vials-utilizator";
 
 /**
- * «Колбы Утилизатора» (tools/rig/build-vials.py): the hand twirls the ring round its finger clockwise (a little circle
- * of the wrist drives it); the vials swing out on the ring, each dangling on its own eye a beat behind
- * (screens.css «rv-»). The hand is over all of it.
+ * «Колбы Утилизатора» (tools/rig/build-vials.py), a little physics instead of a picture going round:
+ *  - the ring with the vials is a heavy pendulum on the finger; the hand keeps driving it clockwise (a pull towards the
+ *    drive speed), gravity slows it over the top and speeds it through the bottom;
+ *  - the hand answers the weight: it lifts and turns with the vials' pull (most when they swing low and fast), and leads
+ *    the ring a little, as a hand that is twirling it;
+ *  - each vial hangs on its eye: it wants to point along gravity + the spin's pull outward (in the ring's frame) and gets
+ *    there on a soft spring, so it lags and swings on its own.
  */
 function VialsHand() {
   const { skin } = useContext(LookCtx);
+  const handRef = useRef<SVGGElement>(null), spinRef = useRef<SVGGElement>(null);
+  const vialRefs = [useRef<SVGGElement>(null), useRef<SVGGElement>(null), useRef<SVGGElement>(null)];
+  useEffect(() => {
+    if (typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const DRIVE = (Math.PI * 2) / 1.25; // rad/s: the hand's twirl
+    const PULL = 5.5, GL = 13;          // the drive's grip on the ring, gravity ÷ length
+    let phi = 0, w = DRIVE * 0.6, last = performance.now(), raf = 0;
+    const vials = [0, 0, 0].map((_, i) => ({ a: 0, v: 0, k: 70 + i * 12, c: 6 + i }));
+    const tick = (now: number) => {
+      raf = requestAnimationFrame(tick);
+      const dt = Math.min(0.04, (now - last) / 1000);
+      last = now;
+      const n = Math.ceil(dt / 0.004), h = dt / n;
+      let acc = 0;
+      for (let k = 0; k < n; k++) {
+        acc = PULL * (DRIVE - w) - GL * Math.sin(phi);
+        w += acc * h;
+        phi += w * h;
+        // the vials: gravity (world down, seen from the turning ring) + the spin's outward pull
+        const gx = -Math.sin(phi) * GL, gy = Math.cos(phi) * GL, cf = w * w * 0.55;
+        const target = Math.atan2(gx, gy + cf);
+        for (const v of vials) {
+          v.v += (v.k * (target - v.a) - v.c * v.v - acc * 0.35) * h;
+          v.a += v.v * h;
+        }
+      }
+      phi %= Math.PI * 2;
+      const deg = (r: number) => (r * 180) / Math.PI;
+      // the hand: lifts as the weight goes up and away, turns with its pull, a beat ahead of the ring
+      const lead = phi + 0.7;
+      const lift = -6 * (1 - Math.cos(lead)) / 2 - 1.5 * Math.sin(lead * 2);
+      const turn = -7 * Math.sin(lead) - 0.08 * (w - DRIVE) * 10;
+      handRef.current?.setAttribute("transform", `translate(${(2.2 * Math.cos(lead)).toFixed(2)} ${lift.toFixed(2)}) rotate(${turn.toFixed(2)} ${VIALS_PIVOTS.wrist[0]} ${VIALS_PIVOTS.wrist[1]})`);
+      spinRef.current?.setAttribute("transform", `rotate(${deg(phi).toFixed(2)} ${VIALS_PIVOTS.spin[0]} ${VIALS_PIVOTS.spin[1]})`);
+      vialRefs.forEach((r, i) => {
+        const p = VIALS_PARTS[`vial-${i + 1}`].pivot!;
+        r.current?.setAttribute("transform", `rotate(${deg(vials[i].a).toFixed(2)} ${p[0]} ${p[1]})`);
+      });
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const src = (part: string, tinted = false) =>
     `${tinted && skin !== SKIN_ORIGINAL ? `/assets/hero/skin-${skin}/held-${VIALS_ID}` : `/assets/hero/held/${VIALS_ID}`}-${part}.webp?v=${ART_VER.heroPart}`;
   const img = (part: string, tinted = false) => {
@@ -559,18 +606,17 @@ function VialsHand() {
     return <image href={src(part, tinted)} x={b.x} y={b.y} width={b.w} height={b.h} preserveAspectRatio="none" />;
   };
   return (
-    <g className="rig-hand rig-vials" style={at(VIALS_PIVOTS.wrist)}>
-      <g className="rv-spin" style={at(VIALS_PIVOTS.spin)}>
+    <g className="rig-hand rig-vials" ref={handRef}>
+      <g ref={spinRef}>
         {img("ring")}
-        {["vial-1", "vial-2", "vial-3"].map((v, i) => (
-          <g key={v} className={`rv-vial rv-vial-${i + 1}`} style={at(VIALS_PARTS[v].pivot!)}>{img(v)}</g>
-        ))}
+        {["vial-1", "vial-2", "vial-3"].map((v, i) => <g key={v} ref={vialRefs[i]}>{img(v)}</g>)}
         {img("clip-1")}{img("clip-2")}{img("clip-3")}
       </g>
       {img("hand", true)}
     </g>
   );
 }
+
 const KEY_NAMES = KEYS_ORDER.filter((n) => n.startsWith("key-"));
 const at = (p: [number, number]) => ({ transformOrigin: `${p[0]}px ${p[1]}px`, transformBox: "view-box" as const });
 
