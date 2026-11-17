@@ -943,9 +943,12 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
               <button className="btn big green block" disabled={busy === "poker_stand" || busy === "poker_swap"} onClick={() => run("poker_stand")}>Вскрыть</button>
             ) : (
               <div className="pkt-btns">
-                <button className="btn big gold block" disabled={busy === "poker_play" || left <= 0 || usd < POKER_RULES.price.amount} onClick={() => run("poker_play")} aria-label="Раздать">
-                  {left <= 0 ? "Завтра" : <><Icon name={POKER_RULES.price.currency} size={18} /><b className="num">{POKER_RULES.price.amount}</b></>}
-                </button>
+                {/* the hands are over: the reset (an arrow only) takes the deal button's place while resets are left */}
+                {!canReset && (
+                  <button className="btn big gold block" disabled={busy === "poker_play" || left <= 0 || usd < POKER_RULES.price.amount} onClick={() => run("poker_play")} aria-label="Раздать">
+                    {left <= 0 ? "Завтра" : <><Icon name={POKER_RULES.price.currency} size={18} /><b className="num">{POKER_RULES.price.amount}</b></>}
+                  </button>
+                )}
                 {canReset && (
                   <button type="button" className="btn big gold pkt-reset" disabled={busy === "poker_reset"} onClick={() => setAskReset(true)} aria-label="Сбросить лимит" title="Сбросить лимит">
                     <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
@@ -965,8 +968,8 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
         </div>
       </div>
       {askReset && resetPrice && (
-        <Modal onClose={() => setAskReset(false)} maxWidth={300} className="pkt-ask">
-          <p className="pkt-ask-q">Сбросить лимит за <Icon name={resetPrice.currency} size={22} /><b className="num">{resetPrice.amount}</b>?</p>
+        <Modal onClose={() => setAskReset(false)} maxWidth={320} className="pkt-ask">
+          <p className="pkt-ask-q">Сбросить лимит<br /><span>за <Icon name={resetPrice.currency} size={24} /><b className="num">{resetPrice.amount.toLocaleString("ru-RU")}</b>?</span></p>
           <div className="pkt-ask-btns">
             <button type="button" className="btn gold" disabled={busy === "poker_reset" || usd < resetPrice.amount} onClick={doReset}>Да</button>
             <button type="button" className="btn dark" onClick={() => setAskReset(false)}>Нет</button>

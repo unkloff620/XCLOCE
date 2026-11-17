@@ -6647,9 +6647,13 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 @media (prefers-reduced-motion: reduce) { .rig-keys, .rig-keys * { animation: none; } }
 
 /* poker «Сбросить лимит» (minigames.tsx PokerWindow): a round gold button with the arrow only, next to «Завтра»; the question */
-.pkt-btns .btn.gold.pkt-reset { flex: 0 0 auto; aspect-ratio: 1; padding: 0; display: grid; place-items: center; }
-.pkt-reset svg { width: 6cqw; height: 6cqw; }
-.pkt-ask-q { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; margin: 6px 0 14px; font-size: 17px; font-weight: 800; text-align: center; }
-.pkt-ask-q b { font-size: 18px; }
+.pkt-btns .btn.gold.pkt-reset { flex: 1; min-width: 0; padding: 0; display: grid; place-items: center; }
+.pkt-reset svg { width: 6.5cqw; height: 6.5cqw; }
+.modal.pkt-ask { width: 100%; padding-top: 22px; }
+.pkt-ask-q { margin: 4px 30px 16px; font-size: 18px; font-weight: 800; line-height: 1.35; text-align: center; }
+.pkt-ask-q span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.pkt-ask-q b { font-size: 19px; }
+/* over a full-screen game the HUD is hidden: a small window's dim covers the whole screen from the top */
+body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .pkt-ask-btns { display: flex; gap: 10px; }
 .pkt-ask-btns .btn { flex: 1; }
