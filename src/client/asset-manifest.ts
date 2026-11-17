@@ -113,6 +113,7 @@ export const ASSET_FILES: string[] = [
  "/assets/fortune/tattoo-icon.webp",
  "/assets/fortune/xp.webp",
  "/assets/fortune/yard-lid.webp",
+ "/assets/fx/rugpull-arm.webp",
  "/assets/generated/brawl-bottle.webp",
  "/assets/generated/brawl-brick.webp",
  "/assets/generated/brawl-dust.webp",

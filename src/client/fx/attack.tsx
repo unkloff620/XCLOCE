@@ -81,8 +81,13 @@ function FxItem({ fx }: { fx: Fx }) {
       )}
       {anim === "rugpull" && (
         <>
-          <div className="fx-gun"><ItemArt id="rug-pull-gun" size={90} /></div>
-          <div className="fx-flash" />
+          {/* the arm with the gun slides in from the left, fires (a flash at the muzzle, the recoil, bills flying out), and goes */}
+          <div className="fx-arm">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/assets/fx/rugpull-arm.webp" alt="" draggable={false} />
+            <i className="fx-muzzle" />
+            {[0, 1, 2, 3].map((k) => <i key={k} className={`fx-bill b${k}`} />)}
+          </div>
           <div className="fx-rug" />
         </>
       )}
