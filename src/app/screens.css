@@ -6265,6 +6265,14 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 @media (prefers-reduced-motion: reduce) { .ut-drool-str, .ut-drool-drop { animation: none; } }
 /* the beaten one's nose bleeds (boss-rig.tsx Drool with BLOOD): slower, the two trickles out of step; no lip ride */
 .ut-blood .ut-drool-lip { transform: none; }
+/* the poison off his gloves: glowing, each drip in its own time */
+.ut-acid .ut-drool-lip { transform: none; }
+.ut-acid { filter: drop-shadow(0 0 2px rgba(160, 255, 40, 0.9)); }
+.ut-acid-L0 :is(.ut-drool-str, .ut-drool-drop) { animation-duration: 3.1s; }
+.ut-acid-L1 :is(.ut-drool-str, .ut-drool-drop) { animation-duration: 4.4s; animation-delay: -1.6s; }
+.ut-acid-L2 :is(.ut-drool-str, .ut-drool-drop) { animation-duration: 3.7s; animation-delay: -2.9s; }
+.ut-acid-R0 :is(.ut-drool-str, .ut-drool-drop) { animation-duration: 3.4s; animation-delay: -0.7s; }
+.ut-acid-R1 :is(.ut-drool-str, .ut-drool-drop) { animation-duration: 4.9s; animation-delay: -3.3s; }
 .ut-blood-l .ut-drool-str, .ut-blood-l .ut-drool-drop { animation-duration: 4.3s; }
 .ut-blood-r .ut-drool-str, .ut-blood-r .ut-drool-drop { animation-duration: 5.1s; animation-delay: -2.2s; }
 .br-hang-vials { animation: ut-swing 3.1s ease-in-out infinite; }

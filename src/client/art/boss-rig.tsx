@@ -48,6 +48,9 @@ const WAIST: Record<string, { at: [number, number]; bend?: string }> = {
 /** a long coat (Боцман): its top leans with br-up, its tails below the belt swing with an empty group bs-hem (the pose
  *  engine's hem, boss-poses.ts); the legs are drawn over it */
 const COAT: Record<string, { follow: string; hem: [number, number] }> = { botsman: { follow: "0.24,0.43;0.72,0.48", hem: [450, 640] } };
+/** an apron's hem that swings on its own below the belt (Утилизатор): the top leans with br-up, the bottom with bs-hem;
+ *  the legs stay under it (not like the coat, they are not drawn over) */
+const HEM: Record<string, { follow: string; hem: [number, number] }> = { utilizator: { follow: "0.5,0.66;0.97,0.6", hem: [322, 600] } };
 
 /** frame schedules of the puppet strips: [frame, ms] — idle loops, ouch/strike play once */
 type SeqMode = "idle" | "ouch" | "strike" | "fear";
@@ -267,6 +270,9 @@ export function BossRig({ id: asked, hpShare = 1, bust = false, outfit: wanted }
           // three pieces (Мугонатор): the forearm bends at the elbow, the fist turns at the wrist inside it
           <g className={`br-low br-low-${side.toLowerCase()}`} {...joint(`low${side}`)} style={origin(`low${side}`)}>
             {img(`low${side}`, undefined, layer)}
+            {baseId === "utilizator" && (side === "L" ? !id.endsWith("-dying") : id === baseId) && ACID_DRIPS[side].map(([x, y, k], i) => (
+              <Drool key={i} x={x} y={y} k={k} c={ACID} cls={`ut-acid ut-acid-${side}${i}`} />
+            ))}
             <g className={`br-hand br-hand-${side.toLowerCase()}`} {...joint(`hand${side}`)} style={origin(`hand${side}`)} data-glint={glintSide === side ? "1" : undefined}>
               {img(`hand${side}`, undefined, layer)}
               {/* without the puppet the gleam sits right here; with it — on its own layer over the puppet's canvas (below) */}
@@ -397,7 +403,7 @@ export function BossRig({ id: asked, hpShare = 1, bust = false, outfit: wanted }
       <g className="br-breath" style={{ transformOrigin: `${rig.w / 2}px ${rig.h}px`, transformBox: "view-box" }}>
         {/* legs of their own (Гопник): they stay put, everything above the waist leans in br-up (screens.css «Гопник») */}
         {!COAT[baseId] && img("legs", undefined, "back")}
-        {COAT[baseId] && <g className="bs-hem" style={{ transformOrigin: `${COAT[baseId].hem[0]}px ${COAT[baseId].hem[1]}px`, transformBox: "view-box" }} />}
+        {(COAT[baseId] ?? HEM[baseId]) && <g className="bs-hem" style={{ transformOrigin: `${(COAT[baseId] ?? HEM[baseId]).hem[0]}px ${(COAT[baseId] ?? HEM[baseId]).hem[1]}px`, transformBox: "view-box" }} />}
         <g className="br-up" style={WAIST[baseId] ? { transformOrigin: `${WAIST[baseId].at[0]}px ${WAIST[baseId].at[1]}px`, transformBox: "view-box" }
           : P.legs ? { transformOrigin: `${P.legs.x + P.legs.w / 2}px ${P.legs.y + P.legs.h * 0.2}px`, transformBox: "view-box" } : undefined}>
         {P.tail && <g className="br-tail" {...joint("tail")} style={origin("tail")}>{img("tail", undefined, "back")}</g>}
@@ -405,8 +411,8 @@ export function BossRig({ id: asked, hpShare = 1, bust = false, outfit: wanted }
         {/* with legs of its own the torso bends at the waist (the puppet): its frame is the standing one, the top
             follows the leaning upper body; without the puppet it leans whole with br-up */}
         {(P.legs || WAIST[baseId]?.bend) && puppet ? (
-          <image className="pp" data-pp="back" data-pp-body="1" data-pp-own="br-breath" data-pp-follow={COAT[baseId] ? "br-up bs-hem" : "br-up"}
-            data-pp-follow-at={COAT[baseId]?.follow ?? WAIST[baseId]?.bend ?? "0.3,0.93"}
+          <image className="pp" data-pp="back" data-pp-body="1" data-pp-own="br-breath" data-pp-follow={COAT[baseId] || HEM[baseId] ? "br-up bs-hem" : "br-up"}
+            data-pp-follow-at={COAT[baseId]?.follow ?? HEM[baseId]?.follow ?? WAIST[baseId]?.bend ?? "0.3,0.93"}
             href={`/bosses/${id}/rig/body.webp${P.body.v ? `?v=${P.body.v}` : ""}`} x={P.body.x} y={P.body.y} width={P.body.w} height={P.body.h} preserveAspectRatio="none" />
         ) : img("body", undefined, "back")}
         {/* the legs over the coat (Боцман): standing with the body's frame, not leaning with br-up */}
@@ -498,6 +504,12 @@ export function BossRig({ id: asked, hpShare = 1, bust = false, outfit: wanted }
 /** a string of spit from the corner of the lower lip (Утилизатор): it stretches down slowly, a drop breaks off and falls,
  *  the string springs back; it rides on the lower lip (screens.css «his drool», --close moves it with the jaw) */
 const SPIT = { fill: "rgba(215,238,255,0.72)", drop: "rgba(215,238,255,0.85)", shine: "rgba(255,255,255,0.9)", line: "rgba(40,60,80,0.55)" };
+const ACID = { fill: "rgba(175,255,45,0.88)", drop: "rgba(190,255,60,0.95)", shine: "rgba(245,255,200,0.95)", line: "rgba(30,80,0,0.75)" };
+/** Утилизатор's gloves drip green poison: where the drawn drips end (rig units) — they hang on and drop, out of step */
+const ACID_DRIPS: Record<"L" | "R", [number, number, number][]> = {
+  L: [[212.5, 636.5, 1.1], [138, 619, 0.85], [276, 662, 0.8]],
+  R: [[756, 553, 1.1], [674.5, 550, 0.8]],
+};
 const BLOOD = { fill: "rgba(205,18,20,0.95)", drop: "rgba(220,24,24,0.97)", shine: "rgba(255,190,180,0.9)", line: "rgba(70,0,0,0.8)" };
 function Drool({ x, y, k = 1.7, c = SPIT, cls = "" }: { x: number; y: number; k?: number; c?: typeof SPIT; cls?: string }) {
   return (
