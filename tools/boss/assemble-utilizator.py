@@ -10,7 +10,7 @@ is the fist, no wrist joint), vials and gasmask (hanging off the belt: they swin
 the pictures for the lists: public/bosses/utilizator/{full,portrait}.webp.
 The face (raw/face/, the artist's 1000×1000 sheets, all in place on one face; head.png — the head with holes for the eyes
 and its own closed mouth): fitted onto the sheet's head (FACE_K, FACE_AT — the best match with full.png) → head,
-eyes + pupils (drawn UNDER the head, they show through its holes), browL / browR (split at their gap), throat,
+eyes + pupils (drawn UNDER the head, they show through its holes), eyes-closed (the lids over the holes: he blinks), browL / browR (split at their gap), throat,
 teeth-up, teeth-low, lips (the lower face with the open, yelling mouth: over the throat and the teeth).
 Prints the joints (rig px: cropped, halved) for build-boss.py PIVOT_BY_BOSS.
 """
@@ -93,7 +93,7 @@ out = {
 }
 for k, im in out.items():
     im.crop(CROP).save(f"{D}/{k}.png")
-for n in ["head", "eyes", "pupils", "throat", "teeth-up", "teeth-low", "lips"]:
+for n in ["head", "eyes", "pupils", "eyes-closed", "throat", "teeth-up", "teeth-low", "lips"]:
     face(n).crop(CROP).save(f"{D}/{n}.png")
 
 

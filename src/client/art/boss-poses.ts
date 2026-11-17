@@ -423,55 +423,66 @@ const btTaunt: Action = {
   ],
 };
 
-/* Утилизатор: R — the raised gloved fist on the right comes down hard from the elbow (a hammer blow); L — the fist held
-   before the belly drives up from the elbow (an uppercut). The springs are quick: a pumped young guy, not a heavy one */
+/* Утилизатор (the artist's reference video): he breathes hard — the whole chest heaves up and sinks, the head nods
+   with it — and strikes rising: the upper body goes up and grows at the screen (y, z) as he winds up, then drops into
+   the blow and comes forward. R — the raised gloved fist comes down from the elbow (a hammer blow); L — the fist before
+   the belly drives up (an uppercut) */
 const utHammer: Action = {
-  dur: 0.7,
+  dur: 1.0,
   keys: [
-    { at: 0, pose: { armR: -10, lowR: -28, up: 2, x: 3, head: 1.5 } }, // the fist up and back
-    { at: 0.16, pose: { armR: 8, lowR: 40, up: -5, x: -7, head: -2.5, lowL: 6 }, stiff: 5.5 }, // down on the target
-    { at: 0.3, pose: { armR: 5, lowR: 28, up: -3.5, x: -4 }, stiff: 1.4 },
-    { at: 0.44, pose: {} },
+    { at: 0, pose: { y: -46, z: 6, up: 3, x: 8, armR: -16, lowR: -34, head: -1.5, lowL: -6 } }, // he rises, the fist up and back
+    { at: 0.3, pose: { y: 14, z: 9, up: -6, x: -14, armR: 10, lowR: 44, head: 1.5, lowL: 8 }, stiff: 4.5 }, // drops into the blow
+    { at: 0.46, pose: { y: 8, z: 6, up: -4, x: -8, armR: 6, lowR: 30 }, stiff: 1.4 },
+    { at: 0.64, pose: {} },
   ],
 };
 const utUpper: Action = {
-  dur: 0.72,
+  dur: 1.0,
   keys: [
-    { at: 0, pose: { armL: 6, lowL: 14, up: 2.5, x: 3, head: 2 } }, // dips down
-    { at: 0.17, pose: { armL: -12, lowL: -48, up: -5, x: 6, head: -2.5, lowR: -6 }, stiff: 5.5 }, // up from the belly
-    { at: 0.31, pose: { armL: -9, lowL: -36, up: -3.5, x: 4 }, stiff: 1.4 },
-    { at: 0.45, pose: {} },
+    { at: 0, pose: { y: 12, z: -1, up: 2, x: 4, armL: 8, lowL: 16, head: 1 } }, // sinks, the fist down
+    { at: 0.2, pose: { y: -50, z: 8, up: -5, x: 12, armL: -14, lowL: -52, head: -2, lowR: -8 }, stiff: 4.5 }, // rises with the uppercut
+    { at: 0.42, pose: { y: -32, z: 5, up: -3, x: 7, armL: -10, lowL: -38 }, stiff: 1.4 },
+    { at: 0.62, pose: {} },
   ],
 };
+/** his heavy breath (s → 0…1): a deep slow heave with a short catch at the top */
+const utBreath = (t: number) => { const ph = (t / 2.3) % 1; return ph < 0.42 ? Math.sin((ph / 0.42) * Math.PI / 2) ** 2 : Math.cos(((ph - 0.42) / 0.58) * Math.PI / 2) ** 1.6; };
 
 const POSES: Record<string, Spec> = {
   utilizator: {
     springs: {
-      up: { k: 75, c: 12 }, x: { k: 70, c: 12 }, head: { k: 120, c: 12 },
-      armL: { k: 100, c: 15 }, lowL: { k: 210, c: 17 },
-      armR: { k: 100, c: 15 }, lowR: { k: 210, c: 17 },
+      up: { k: 70, c: 12 }, x: { k: 60, c: 11.5 }, y: { k: 55, c: 10.5 }, z: { k: 55, c: 10.5 }, head: { k: 170, c: 18 },
+      armL: { k: 100, c: 15 }, lowL: { k: 200, c: 17 },
+      armR: { k: 100, c: 15 }, lowR: { k: 200, c: 17 },
     },
-    drag: { lowL: ["armL", -0.05], lowR: ["armR", -0.05], head: ["up", -0.08] },
-    // the guard: the raised fist bobs, the low one creeps, the shoulders roll, he breathes hard (yelling)
-    idle: (t) => ({
-      up: 1.2 * Math.sin(t * 1.15) + 0.4 * Math.sin(t * 2.4 + 1),
-      x: 2.4 * Math.sin(t * 0.6),
-      head: 1.6 * Math.sin(t * 0.95 + 1) + 0.6 * Math.sin(t * 2.2),
-      armL: 2 * Math.sin(t * 1.3), lowL: 3.5 * Math.sin(t * 1.7 + 0.5),
-      armR: 2 * Math.sin(t * 1.2 + 2), lowR: 4.5 * Math.sin(t * 1.6 + 1),
-    }),
+    // the head stays on the neck: a stiff spring, a small drag (the T-shirt's neck is cut flat under the chin)
+    drag: { lowL: ["armL", -0.05], lowR: ["armR", -0.05], head: ["up", -0.03] },
+    // the guard bobs and the shoulders heave with the breath; the head nods with it
+    idle: (t) => {
+      const b = utBreath(t);
+      return {
+        y: -16 * b, z: 2 * b,
+        up: 0.8 * Math.sin(t * 0.7) + 0.3 * Math.sin(t * 1.9 + 1),
+        x: 3 * Math.sin(t * 0.45),
+        head: -1.2 * b + 0.6 * Math.sin(t * 0.8 + 1),
+        armL: -2 * b + 1.2 * Math.sin(t * 1.3), lowL: 2.5 * Math.sin(t * 1.7 + 0.5),
+        armR: 2.5 * b + 1.2 * Math.sin(t * 1.2 + 2), lowR: -3 * b + 3 * Math.sin(t * 1.6 + 1),
+      };
+    },
+    // the chest: up and a little wider with each breath
+    breath: (t, dazed) => { const b = utBreath(dazed ? t * 0.7 : t); return [1 + 0.014 * b, 1 + 0.03 * b, -3 * b]; },
     actions: [
       { a: utHammer, w: 28 },
       { a: utUpper, w: 24 },
-      { a: join(utUpper, shift(utHammer, 0.05)), w: 20 },
-      { a: join(utHammer, utHammer), w: 10 },
-      { a: join(utUpper, utUpper), w: 8 },
-      { a: taunt, w: 8 },
+      { a: join(utUpper, shift(utHammer, 0.12)), w: 20 },
+      { a: join(utHammer, shift(utHammer, 0.1)), w: 10 },
+      { a: join(utUpper, shift(utUpper, 0.1)), w: 8 },
+      { a: taunt, w: 6 },
     ],
-    rest: [0.8, 2.0],
-    hit: { head: 260, up: 90, x: 70, armL: -120, lowL: 160, armR: 100, lowR: -180 },
-    strike: join(utUpper, shift(utHammer, 0.05)),
-    dazed: { pose: { armL: 8, lowL: 20, armR: 16, lowR: 46, head: 6, up: -1.5 }, act: false },
+    rest: [1.0, 2.4],
+    hit: { head: 90, up: 90, x: 70, y: 220, z: -60, armL: -120, lowL: 160, armR: 100, lowR: -180 },
+    strike: join(utUpper, shift(utHammer, 0.12)),
+    dazed: { pose: { armL: 8, lowL: 20, armR: 16, lowR: 46, head: 6, up: -1.5, y: 8 }, act: false },
   },
   botsman: {
     springs: {
@@ -808,7 +819,8 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
     let hangA = 0, hangV = 0;
     const follow = spec.breathFollow ? [...svg.querySelectorAll<SVGGElement>(spec.breathFollow.sel)] : [];
     svg.classList.add("posed");
-    const keys: string[] = [...JOINTS, "x", ...Object.keys(spec.shapes ?? {}), ...Object.values(spec.scale ?? {}) as string[]];
+    // x — the upper body's shift sideways, y — up and down (px of the rig), z — its growth towards the screen (%)
+    const keys: string[] = [...JOINTS, "x", "y", "z", ...Object.keys(spec.shapes ?? {}), ...Object.values(spec.scale ?? {}) as string[]];
     const ang: Record<string, number> = {};
     const vel: Record<string, number> = {};
     for (const k of keys) { ang[k] = 0; vel[k] = 0; }
@@ -909,7 +921,7 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
       };
       for (const j of JOINTS) {
         const tr = j === "up"
-          ? `translateX(${ang.x.toFixed(2)}px) rotate(${ang.up.toFixed(2)}deg)${br ? ` translateY(${br[2].toFixed(2)}px) scale(${br[0].toFixed(4)}, ${br[1].toFixed(4)})` : ""}`
+          ? `translateX(${ang.x.toFixed(2)}px)${ang.y || ang.z ? ` translateY(${ang.y.toFixed(2)}px) scale(${(1 + ang.z / 100).toFixed(4)})` : ""} rotate(${ang.up.toFixed(2)}deg)${br ? ` translateY(${br[2].toFixed(2)}px) scale(${br[0].toFixed(4)}, ${br[1].toFixed(4)})` : ""}`
           : joint(j);
         for (const el of els[j]) el.style.transform = tr;
       }

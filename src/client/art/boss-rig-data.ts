@@ -3492,6 +3492,13 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "h": 24,
         "v": "0913e70c"
       },
+      "eyes-closed": {
+        "x": 265.5,
+        "y": 112.5,
+        "w": 106,
+        "h": 26,
+        "v": "830e7249"
+      },
       "pupils": {
         "x": 284.0,
         "y": 113.5,
