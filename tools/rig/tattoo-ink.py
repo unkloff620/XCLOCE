@@ -159,6 +159,9 @@ def main(sid, sparse=False):
     # the head and the hand: small, drawn alone — a rigid fit is enough
     geo = json.load(open(os.path.join(base, "geo.json")))
     for p, src in (("head", f"{sid}-head.png"), ("handR", f"{sid}-hand.png")):
+        # an old set redone from its body edit only: its head and hand ink stay as they were
+        if not os.path.exists(os.path.join(T, "_edits", src)) and os.path.exists(os.path.join(T, sid, f"{p}-ink.png")):
+            continue
         g = geo[p]
         a2 = np.array(Image.open(os.path.join(base, f"{p}-in.png")).convert("RGB")).astype(np.float32)
         b2 = np.array(Image.open(os.path.join(T, "_edits", src)).convert("RGB")).astype(np.float32)
