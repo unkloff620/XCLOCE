@@ -446,8 +446,10 @@ const utUpper: Action = {
     { at: 0.5, pose: {} },
   ],
 };
-/** his breath (s → 0…1): breath in 1.9 s (eases in, full at the top), hold 0.35 s, breath out 2.1 s, pause 0.45 s */
-const UT_IN = 1.9, UT_HOLD = 0.35, UT_OUT = 2.1, UT_PAUSE = 0.45, UT_CYCLE = UT_IN + UT_HOLD + UT_OUT + UT_PAUSE;
+/** his breath (s → 0…1), as in the artist's reference: a heavy heaving chest — breath in 1.25 s (the whole upper body
+ *  rises and straightens, the chest fills), a moment at the top, breath out 1.35 s (he slumps, the shoulders sag), a
+ *  moment at the bottom; eased at both ends so it flows */
+const UT_IN = 1.25, UT_HOLD = 0.15, UT_OUT = 1.35, UT_PAUSE = 0.2, UT_CYCLE = UT_IN + UT_HOLD + UT_OUT + UT_PAUSE;
 const utBreath = (t: number) => {
   const p = t % UT_CYCLE;
   if (p < UT_IN) return 0.5 - 0.5 * Math.cos((p / UT_IN) * Math.PI);
@@ -460,28 +462,29 @@ const POSES: Record<string, Spec> = {
   utilizator: {
     // the body is heavy (soft, overdamped), the arms quick
     springs: {
-      up: { k: 70, c: 14 }, x: { k: 60, c: 13 }, y: { k: 60, c: 13 }, z: { k: 60, c: 13 }, head: { k: 110, c: 20 },
+      up: { k: 70, c: 14 }, x: { k: 60, c: 13 }, y: { k: 110, c: 19 }, z: { k: 60, c: 13 }, head: { k: 110, c: 20 },
       armL: { k: 170, c: 18 }, lowL: { k: 320, c: 22 },
       armR: { k: 170, c: 18 }, lowR: { k: 320, c: 22 },
       jaw: { k: 120, c: 18 },
     },
     // the head stays on the neck: a small drag (the T-shirt's neck is cut flat under the chin)
     drag: { lowL: ["armL", -0.03], lowR: ["armR", -0.03], head: ["up", -0.02] },
-    // the breath: the shoulders up and out, the arms open, the head lifts; nothing else moves much
+    // the breath: in — the whole upper body (the legs stand) rises and stands taller, the chest fills, the shoulders go
+    // up and the arms open, the chin lifts; out — he slumps below his rest, the shoulders and the arms sag
     idle: (t) => {
       const b = utBreath(t);
       return {
-        y: -9 * b,
+        y: 7 - 30 * b,
         up: 0.4 * Math.sin(t * 0.45),
         x: 1.2 * Math.sin(t * 0.3),
-        head: -1.2 * b + 0.4 * Math.sin(t * 0.6 + 1),
-        armL: 3 * b, lowL: 1.5 * b + 0.8 * Math.sin(t * 0.9 + 0.5),
-        armR: -3 * b, lowR: -1.5 * b + 1 * Math.sin(t * 0.8 + 1),
-        jaw: 0.35 * b,
+        head: -2.2 * b + 1 + 0.4 * Math.sin(t * 0.6 + 1),
+        armL: 5 * b - 1.5, lowL: 3 * b + 0.8 * Math.sin(t * 0.9 + 0.5),
+        armR: -5 * b + 1.5, lowR: -3 * b + 1 * Math.sin(t * 0.8 + 1),
+        jaw: 0.45 * b,
       };
     },
-    // the chest fills: much wider in the shoulders and taller; out — back down
-    breath: (t, dazed) => { const b = utBreath(dazed ? t * 0.8 : t); return [1 + 0.05 * b, 1 + 0.022 * b, 0]; },
+    // the chest: in — fuller and taller (from the belt up), out — it sinks back
+    breath: (t, dazed) => { const b = utBreath(dazed ? t * 0.8 : t); return [1 + 0.035 * b, 0.985 + 0.045 * b, 0]; },
     // the jaw (the lips with the chin and the lower teeth) drops: a little with each breath in, wide on the blow
     breathFollow: { sel: ".rig-utilizator .br-jaw", f: (_t, a) => `translateY(${(Math.max(0, a.jaw ?? 0) * 9).toFixed(2)}px)` },
     actions: [
