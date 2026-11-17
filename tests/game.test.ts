@@ -1570,8 +1570,9 @@ describe("yard mini games", () => {
     expect(pokerLevel(20).level).toBe(1);
     expect(pokerLevel(21).level).toBe(2);
     expect(pokerXpFor(20)).toBe(390);
-    expect(pokerLevel(1e9)).toMatchObject({ level: 100, to: null });
-    expect([0, 19, 20, 49, 50, 99, 100].map(pokerCheats)).toEqual([0, 0, 1, 1, 2, 2, 3]);
+    expect(pokerLevel(1e9)).toMatchObject({ level: 1000, to: null });
+    expect(pokerLevel(pokerXpFor(500)).level).toBe(500);
+    expect([0, 9, 10, 14, 15, 29, 30, 49, 50, 74, 75, 99, 100, 1000].map(pokerCheats)).toEqual([0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6]);
     expect(pokerPay("pair", 0).currencies?.USD).toBe(2);
     // whole dollars only (2 × 1.15 = 2.3 → 2)
     expect(pokerPay("pair", 10).currencies?.USD).toBe(2);
@@ -1662,11 +1663,11 @@ describe("yard mini games", () => {
     await expect(act(db, p, "starter_gift", {}, T0)).rejects.toMatchObject({ code: "gift_taken" });
   });
 
-  it("poker: from level 20 a card on the table can be swapped (шулерство), the last swap counts the hand", async () => {
+  it("poker: from level 10 a card on the table can be swapped (шулерство), the last swap counts the hand", async () => {
     const { pokerXpFor } = await import("../src/content/games.ts");
     const p = await newPlayer(db);
     await setMoney(db, p, "USD", 100);
-    await db.query("UPDATE players SET poker_xp=$2 WHERE id=$1", [p, pokerXpFor(50)]);
+    await db.query("UPDATE players SET poker_xp=$2 WHERE id=$1", [p, pokerXpFor(15)]);
     const d = await act(db, p, "poker_play", {}, T0, always(0.37));
     expect(d.result).toMatchObject({ phase: "draw", swapsLeft: 2 });
     expect(d.state.poker.active).toMatchObject({ swapsLeft: 2 });

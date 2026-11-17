@@ -255,8 +255,8 @@ export const upgradeValue = (stake: number, mult: number) => Math.max(1, Math.ro
  * Платная игра: POKER_RULES.price за раздачу, до POKER_RULES.perDay раздач в сутки (МСК); «Фишка» (POKER_CHIP: кейс, чашки колеса, задания, зонк…) — одна раздача без оплаты. Сразу сдаётся 5 карт
  * из полной колоды, комбинация даёт награду из POKER_HANDS. Каждая раздача даёт опыт покера (xp комбинации); уровень
  * покера добавляет к денежной награде POKER_LEVEL_BONUS за уровень (до POKER_BONUS_LEVELS).
- * Шулерство: с 20 уровня покера после раздачи можно заменить карту на столе (нажать на неё — придёт новая из колоды),
- * с 50 — две замены, со 100 — три (POKER_CHEATS). Комбинация считается после замен.
+ * Шулерство: с 10 уровня покера после раздачи можно заменить карту на столе (нажать на неё — придёт новая из колоды),
+ * с 15 — две замены, с 30 — три, с 50 — четыре, с 75 — пять, со 100 — шесть (POKER_CHEATS). Уровней покера — до 1000. Комбинация считается после замен.
  */
 export const POKER_RULES = { perDay: 25, price: { currency: "USD" as const, amount: 10 } };
 /** the yard item that pays for one poker hand */
@@ -302,15 +302,15 @@ export function pokerHand(cards: Card[]): { hand: PokerHand; used: number[] } {
   return { hand: "high", used: [top] };
 }
 
-/* poker experience: level L needs POKER_XP_STEP × L + L × (L − 1) / 2 xp in total (level 20 ≈ 390, 50 ≈ 1725, 100 ≈ 5950) */
+/* poker experience: level L needs POKER_XP_STEP × L + L × (L − 1) / 2 xp in total (level 20 ≈ 390, 50 ≈ 1725, 100 ≈ 5950, 1000 ≈ 509 500) */
 export const POKER_XP_STEP = 10;
-export const POKER_MAX_LEVEL = 100;
+export const POKER_MAX_LEVEL = 1000;
 /** the money bonus grows with the level up to this one */
 export const POKER_BONUS_LEVELS = 20;
 export const POKER_LEVEL_BONUS = 0.015;
 export const pokerXpFor = (level: number) => POKER_XP_STEP * level + (level * (level - 1)) / 2;
 /** card swaps after the deal, by poker level (the best that fits) */
-export const POKER_CHEATS = [{ level: 100, swaps: 3 }, { level: 50, swaps: 2 }, { level: 20, swaps: 1 }] as const;
+export const POKER_CHEATS = [{ level: 100, swaps: 6 }, { level: 75, swaps: 5 }, { level: 50, swaps: 4 }, { level: 30, swaps: 3 }, { level: 15, swaps: 2 }, { level: 10, swaps: 1 }] as const;
 export const pokerCheats = (level: number) => POKER_CHEATS.find((c) => level >= c.level)?.swaps ?? 0;
 export function pokerLevel(xp: number): { level: number; from: number; to: number | null } {
   let level = 0;
