@@ -31,7 +31,7 @@ import { BOXERS, useBossStrike } from "../fx/boss-strike.tsx";
 import { FIGHT_MODES, fightMode, type FightMode } from "../../content/medals.ts";
 import { usePageReady } from "../route-loader.tsx";
 import { tattooSetsOfBoss } from "../../content/tattoos.ts";
-import { FightTray, HitLog, SidePanel, TopList, WeaponPanel, slotsOf } from "./fight-kit.tsx";
+import { BoostIcons, FightTray, HitLog, SidePanel, TopList, WeaponPanel, slotsOf } from "./fight-kit.tsx";
 
 /**
  * Each fight mode is its own page of the room before the fight (swipe left/right): «Пацанский» — the old basement as it
@@ -419,6 +419,7 @@ export function BossScreen({ id }: { id: string }) {
         </div>
         <Arena full boss={boss} hp={hpShown} hpMax={hpMax} endsAt={state!.fight!.endsAt} fx={layer} hit={hitAnim} ouch={ouch} rug={rug} feed={[]} strike={strikeFx.side} />
         {/* the side tabs: «Топ» on the left edge, «Инфо» (the hits) on the right — each slides its panel in */}
+        <BoostIcons />
         <button type="button" className="fside l" onClick={() => { haptic.tap(); setTab("top"); }}><span>Топ</span></button>
         <button type="button" className="fside r" onClick={() => { haptic.tap(); setTab("info"); }}><span>Инфо</span></button>
         <div className="fight-bottom">

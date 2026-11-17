@@ -6729,9 +6729,11 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .fcell:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
 .fcell.empty { background: rgba(0, 0, 0, 0.35); border-style: dashed; border-color: rgba(255, 255, 255, 0.25); box-shadow: none; }
 .fcell.none > img, .fcell.none > svg { filter: grayscale(1) brightness(0.6); }
-.fcell-dmg { position: absolute; left: 0; right: 0; bottom: 1px; text-align: center; font-size: 11px; font-weight: 900; color: #fff; text-shadow: 0 1px 0 #000, 0 0 3px #000; }
-.fcell-qty { position: absolute; right: 3px; top: 2px; font-size: 9.5px; font-weight: 800; color: #fff; text-shadow: 0 1px 0 #000, 0 0 2px #000; }
-.fcell-pack { position: absolute; left: 3px; top: 2px; padding: 0 4px; border-radius: 6px; font-size: 9.5px; color: #2a1606; background: #ffd54a; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5); }
+.fcell-dmg { position: absolute; left: 0; right: 0; bottom: 1px; text-align: center; font-size: 10.5px; font-weight: 600; color: #fff; text-shadow: 0 1px 0 #000, 0 0 3px #000; }
+.fcell-qty { position: absolute; right: 3px; top: 2px; font-size: 9px; font-weight: 600; color: #fff; text-shadow: 0 1px 0 #000, 0 0 2px #000; }
+/* how many a tap uses: over the middle of the weapon, thin and see-through (the weapon stays visible) */
+.fcell-pack { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; font-size: 11.5px; font-weight: 500; letter-spacing: -0.3px; white-space: nowrap; color: rgba(255, 255, 255, 0.72);
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.9); pointer-events: none; }
 .fcell .w-cd { border-radius: 8px; }
 .fbtn-arms { padding: 0 !important; width: 38px; height: 34px; display: grid; place-items: center; }
 .fbtn-flee { padding: 0 !important; width: 38px; height: 34px; display: grid; place-items: center; }
@@ -6740,7 +6742,7 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 
 .wpanel-back { position: fixed; inset: 0; z-index: 60; background: rgba(0, 0, 0, 0.35); animation: wp-fade 0.22s ease-out both; touch-action: none; }
 .wpanel-back.out { animation: wp-fade 0.22s ease-in reverse both; }
-.wpanel { position: absolute; left: 0; right: 0; bottom: 0; max-width: 520px; margin: 0 auto; max-height: 78%; display: flex; flex-direction: column; gap: 8px;
+.wpanel { position: absolute; left: 0; right: 0; bottom: 0; max-width: 520px; margin: 0 auto; height: min(78%, 520px); display: flex; flex-direction: column; gap: 8px;
   padding: 8px 12px calc(14px + env(safe-area-inset-bottom)); border-radius: 18px 18px 0 0; border: 3px solid var(--line); border-bottom: 0;
   background: var(--tex), linear-gradient(180deg, var(--panel3), var(--panel)); box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.6); animation: wp-up 0.26s cubic-bezier(0.2, 0.9, 0.3, 1) both; }
 .wpanel-back.out .wpanel { animation: wp-up 0.22s ease-in reverse both; }
@@ -6756,14 +6758,14 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .wpanel-tabs button { padding: 8px; border-radius: 10px; border: 2px solid var(--line); background: rgba(0, 0, 0, 0.3); color: var(--muted); font: inherit; font-weight: 900; text-transform: uppercase; font-size: 13px; }
 .wpanel-tabs button.on { background: linear-gradient(#ffe08a, #e0a630); color: #2a1606; }
 .wpanel-hint { margin: 0; font-size: 11.5px; color: var(--muted); text-align: center; }
-.wpanel-list { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; overflow-y: auto; padding: 2px 2px 6px; touch-action: pan-y; }
+.wpanel-list { flex: 1; min-height: 0; align-content: start; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; overflow-y: auto; padding: 2px 2px 6px; touch-action: pan-y; }
 .wpanel-list .fcell { touch-action: none; cursor: grab; }
 .wpanel-list .fcell.short { opacity: 0.45; }
 .wpanel-list .fcell.used { outline: 2px solid #ffd54a; }
 .wpanel-list .fcell-qty { top: auto; bottom: 1px; right: 3px; }
 .wdrag { position: fixed; z-index: 70; width: 58px; height: 58px; margin: -29px 0 0 -29px; display: grid; place-items: center; pointer-events: none; border-radius: 10px;
   background: rgba(0, 0, 0, 0.45); box-shadow: 0 8px 18px rgba(0, 0, 0, 0.6); }
-.wdrag .fcell-pack { position: absolute; left: 2px; top: 2px; }
+
 .wboost { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 12px; background: rgba(0, 0, 0, 0.3); border: 2px solid var(--line); }
 .wboost.on { border-color: #ffd54a; box-shadow: 0 0 12px rgba(255, 213, 74, 0.35); }
 .wboost-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
@@ -6775,9 +6777,7 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5); }
 .fside span { writing-mode: vertical-rl; }
 .fside.l { left: 0; border-left: 0; border-radius: 0 10px 10px 0; }
-.fside.l span { transform: rotate(180deg); }
 .fside.r { right: 0; border-right: 0; border-radius: 10px 0 0 10px; }
-.fside.r span { transform: rotate(180deg); }
 .spanel-back { position: fixed; inset: 0; z-index: 60; animation: wp-fade 0.2s ease-out both; }
 .spanel-back.out { animation: wp-fade 0.2s ease-in reverse both; }
 .spanel { position: absolute; top: calc(var(--hud-h) + var(--safe-t) + 4px); bottom: calc(var(--nav-h) + var(--safe-b) + 4px); width: min(78%, 340px); display: flex; flex-direction: column; gap: 8px; padding: 12px;
@@ -6804,3 +6804,9 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .spanel-row .dmg { flex: none; color: #ff8a9e; }
 .spanel-row .dmg i { font-style: normal; color: #ffd54a; font-size: 10px; }
 .spanel-empty { margin: 8px 0; color: rgba(255, 255, 255, 0.7); text-align: center; font-size: 13px; }
+
+/* the boosts in use, top left of the fight (below the boss's bars) */
+.fboosts { position: fixed; left: 10px; top: 200px; z-index: 6; display: flex; flex-direction: column; gap: 6px; }
+.fboost { position: relative; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 9px; border: 2px solid #ffd54a;
+  background: radial-gradient(circle at 50% 35%, #5a3a10, #1d1209); box-shadow: 0 0 10px rgba(255, 213, 74, 0.45); }
+.fboost b { position: absolute; left: -2px; right: -2px; bottom: -8px; text-align: center; font-size: 9.5px; color: #ffe08a; text-shadow: 0 1px 0 #000, 0 0 3px #000; }

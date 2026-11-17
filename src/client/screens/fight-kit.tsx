@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useGame, useNow } from "../store.tsx";
@@ -58,9 +58,9 @@ export function FightTray({ slots, tray, onHit, onCooldown, onBuy, disabled }: {
           <button key={i} type="button" className={`fcell rar-${w.rarity} ${none ? "none" : ""} ${cd ? "cd" : ""}`} disabled={disabled} aria-disabled={!!cd}
             onClick={() => (cd ? onCooldown(w.name, cd, w.id) : none ? onBuy() : onHit(w.id, n))} title={`${w.name}${s.n > 1 ? ` ×${s.n}` : ""}: ${w.weapon.action}`}>
             <PackArt id={w.id} n={s.n} size={44} />
-            {s.n > 1 && <b className="fcell-pack num">×{s.n}</b>}
+            {s.n > 1 && <b className="fcell-pack num">{s.n}шт</b>}
             <span className="fcell-dmg num">−{short(weaponStats(state, w.id).damage * n)}</span>
-            {!perm && <span className="fcell-qty num">{short(qty)}</span>}
+            {!perm && <span className="fcell-qty num">x{qty.toLocaleString("ru-RU")}</span>}
             {cd > 0 && <span className="w-cd" style={{ ["--p" as string]: `${done * 360}deg` }} />}
           </button>
         );
@@ -146,7 +146,7 @@ export function WeaponPanel({ tray, onClose }: { tray: Tray[]; onClose: () => vo
                 {s && w ? (
                   <>
                     <PackArt id={w.id} n={s.n} size={40} />
-                    {s.n > 1 && <b className="fcell-pack num">×{s.n}</b>}
+                    {s.n > 1 && <b className="fcell-pack num">{s.n}шт</b>}
                     <i className="fcell-x" aria-hidden="true">×</i>
                   </>
                 ) : <span className="fcell-n">{i + 1}</span>}
@@ -171,8 +171,8 @@ export function WeaponPanel({ tray, onClose }: { tray: Tray[]; onClose: () => vo
                     onPointerDown={(e) => { e.preventDefault(); start.current = { x: e.clientX, y: e.clientY }; setDrag({ w: w.id, n, x: e.clientX, y: e.clientY, moved: false }); }}
                     title={`${w.name}${n > 1 ? ` — пачка ${n}` : ""}${!perm ? ` (есть ${full(have)})` : ""}`}>
                     <PackArt id={w.id} n={n} size={40} />
-                    {n > 1 && <b className="fcell-pack num">×{n}</b>}
-                    {!perm && <span className="fcell-qty num">{short(have)}</span>}
+                    {n > 1 && <b className="fcell-pack num">{n}шт</b>}
+                    {!perm && <span className="fcell-qty num">x{have.toLocaleString("ru-RU")}</span>}
                   </button>
                 );
               })}
@@ -202,7 +202,7 @@ export function WeaponPanel({ tray, onClose }: { tray: Tray[]; onClose: () => vo
       {drag?.moved && (
         <span className="wdrag" style={{ left: drag.x, top: drag.y }} aria-hidden="true">
           <PackArt id={drag.w} n={drag.n} size={48} />
-          {drag.n > 1 && <b className="fcell-pack num">×{drag.n}</b>}
+          {drag.n > 1 && <b className="fcell-pack num">{drag.n}шт</b>}
         </span>
       )}
     </div>,
@@ -210,13 +210,44 @@ export function WeaponPanel({ tray, onClose }: { tray: Tray[]; onClose: () => vo
   );
 }
 
+/** the boosts in use, top left of the fight: a square with the weapon and +N% (the clan's «Сходняк» boost now; timed and
+ * permanent ones later) */
+export function BoostIcons() {
+  const { state } = useGame();
+  const b = state?.player.boost;
+  // just under the boss's time bar
+  const [top, setTop] = useState<number | null>(null);
+  const on = !!(b && b.weapon && b.on);
+  useLayoutEffect(() => {
+    if (!on) return;
+    const t = document.querySelector(".arena-time")?.getBoundingClientRect().bottom;
+    if (t) setTop(t + 8);
+  }, [on]);
+  if (!b || !b.weapon || !b.on) return null;
+  return (
+    <div className="fboosts" style={top !== null ? { top } : undefined}>
+      <span className="fboost" title={`${itemById(b.weapon)?.name}: +${b.pct}% урона (Сходняк), ещё ${clock(Math.max(0, (b.until ?? 0) - Date.now()))}`}>
+        <ItemArt id={b.weapon} size={28} />
+        <b className="num">+{b.pct}%</b>
+      </span>
+    </div>
+  );
+}
+
 /** a side panel (half transparent) sliding in from the left («Топ») or the right («Инфо»); a tap outside closes it */
 export function SidePanel({ side, title, onClose, children }: { side: "l" | "r"; title: string; onClose: () => void; children: React.ReactNode }) {
   const [closing, setClosing] = useState(false);
   const close = () => { if (!closing) { setClosing(true); setTimeout(onClose, 220); } };
+  // between the boss's bars (HP, time) and the weapons: the panel never covers them
+  const [box, setBox] = useState<{ top: number; bottom: number } | null>(null);
+  useLayoutEffect(() => {
+    const top = document.querySelector(".arena-time")?.getBoundingClientRect().bottom;
+    const bot = document.querySelector(".fight-bottom")?.getBoundingClientRect().top;
+    if (top && bot && bot - top > 120) setBox({ top: top + 6, bottom: window.innerHeight - bot + 6 });
+  }, []);
   return createPortal(
     <div className={`spanel-back ${closing ? "out" : ""}`} onPointerDown={(e) => { if (e.target === e.currentTarget) close(); }}>
-      <div className={`spanel ${side}`} role="dialog" aria-label={title}>
+      <div className={`spanel ${side}`} role="dialog" aria-label={title} style={box ? { top: box.top, bottom: box.bottom } : undefined}>
         <b className="spanel-h display">{title}</b>
         <div className="spanel-body">{children}</div>
       </div>
