@@ -332,8 +332,8 @@ export function pokerPay(hand: PokerHand, level: number): Reward {
 /* the poker's cases: bought for stickers (the poker's own prize), each with its tattoo set */
 export const POKER_STICKER = "poker-sticker";
 export const POKER_CASES = [
-  { n: 1, name: "Потёртый чемодан", price: 500, set: "pk-mast" },
-  { n: 2, name: "Кейс шулера", price: 1000, set: "pk-bluff" },
+  { n: 1, name: "Бронзовый кейс", price: 500, set: "pk-mast" },
+  { n: 2, name: "Серебряный кейс", price: 1000, set: "pk-bluff" },
   { n: 3, name: "Золотой кейс", price: 1500, set: "pk-royal" },
 ] as const;
 /** in every case: authority, roubles, dollars; a piece of its set with this chance (a missing one), a нычка now and then */

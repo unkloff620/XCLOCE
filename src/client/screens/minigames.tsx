@@ -13,6 +13,7 @@ import { haptic } from "../telegram.ts";
 import { sfx } from "../sound.ts";
 import { full } from "../format.ts";
 import { api, type DuelView, type GameView, type Granted, type PokerInfo, type PokerPlay } from "../api.ts";
+import { ART_VER } from "../preload.ts";
 import { TATTOO_SETS } from "../../content/tattoos.ts";
 import type { Currency } from "../../content/currencies.ts";
 import { BlackjackWindow } from "./blackjack.tsx";
@@ -899,7 +900,7 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
           {/* the poker's cases (for stickers): a case on the felt's corner */}
           <button type="button" className="pkt-cases" onClick={() => { haptic.tap(); setCases(true); }} aria-label="Чемоданы покера" title="Чемоданы за стикеры">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/assets/items/poker-case-1.webp" alt="" draggable={false} />
+            <img src={`/assets/items/poker-case.webp?v=${ART_VER.items}`} alt="" draggable={false} />
             <b className="num"><ItemArt id={POKER_STICKER} size={14} />{(p?.stickers ?? 0).toLocaleString("ru-RU")}</b>
           </button>
 
@@ -1019,7 +1020,7 @@ function PokerCases({ onClose, stickers, onOpened }: { onClose: () => void; stic
           return (
             <div key={c.n} className="pkc-case">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`/assets/items/poker-case-${c.n}.webp`} alt="" draggable={false} />
+              <img src={`/assets/items/poker-case-${c.n}.webp?v=${ART_VER.items}`} alt="" draggable={false} />
               <span className="pkc-t"><b>{c.name}</b><small>Наколка «{set?.name}» — {Math.round(POKER_CASE_TATTOO * 100)}%, авторитет, ₽, $, нычки</small></span>
               <button type="button" className="btn gold sm" disabled={!!busy || stickers < c.price} onClick={() => open(c.n)}>
                 <ItemArt id={POKER_STICKER} size={16} /><b className="num">{c.price}</b>
@@ -1028,10 +1029,16 @@ function PokerCases({ onClose, stickers, onOpened }: { onClose: () => void; stic
           );
         })}
       </div>
+      {/* the opened case: the black case with its lid up, the rewards lying on its velvet */}
       {got && (
-        <div className="pkc-got">
-          <b>{got.tattoo ? `Наколка: ${itemById(got.tattoo)?.name ?? ""}` : "Из чемодана:"}</b>
-          <RewardChips r={got.reward} size={20} />
+        <div className="pkc-got" role="button" tabIndex={0} onClick={() => setGot(null)} onKeyDown={(e) => e.key === "Enter" && setGot(null)}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="pkc-open" src={`/assets/items/poker-case-open.webp?v=${ART_VER.items}`} alt="" draggable={false} />
+          <div className="pkc-in">
+            {got.tattoo && <span className="pkc-tat"><ItemArt id={got.tattoo} size={44} /><small>{itemById(got.tattoo)?.name}</small></span>}
+            <RewardChips r={{ ...got.reward, items: got.reward.items.filter((i) => i.id !== got.tattoo) }} size={22} />
+          </div>
+          <small className="muted">Нажми, чтобы закрыть</small>
         </div>
       )}
     </Modal>
