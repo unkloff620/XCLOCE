@@ -454,6 +454,11 @@ export function BossRig({ id: asked, hpShare = 1, bust = false, outfit: wanted }
           </g>
           )}
           {img("eyes-closed", "br-eyes-closed")}
+          {/* the beaten Утилизатор's nose bleeds: a trickle from each nostril, the drops fall off */}
+          {baseId === "utilizator" && id !== baseId && <g className="ut-nose">
+            <Drool x={313.3} y={149} k={1.15} c={BLOOD} cls="ut-blood ut-blood-l" />
+            <Drool x={331.7} y={148.5} k={1.05} c={BLOOD} cls="ut-blood ut-blood-r" />
+          </g>}
           {P.brows && !P.brows.frames && <g className="br-brows">{img("brows", "br-brows-angry")}{img("brows-sad", "br-brows-sad")}</g>}
           {P.brows?.frames && strip("brows")}
           {/* each brow alone, turning at its inner end: the emotions are in the brows */}
@@ -492,18 +497,20 @@ export function BossRig({ id: asked, hpShare = 1, bust = false, outfit: wanted }
 
 /** a string of spit from the corner of the lower lip (Утилизатор): it stretches down slowly, a drop breaks off and falls,
  *  the string springs back; it rides on the lower lip (screens.css «his drool», --close moves it with the jaw) */
-function Drool({ x, y }: { x: number; y: number }) {
+const SPIT = { fill: "rgba(215,238,255,0.72)", drop: "rgba(215,238,255,0.85)", shine: "rgba(255,255,255,0.9)", line: "rgba(40,60,80,0.55)" };
+const BLOOD = { fill: "rgba(205,18,20,0.95)", drop: "rgba(220,24,24,0.97)", shine: "rgba(255,190,180,0.9)", line: "rgba(70,0,0,0.8)" };
+function Drool({ x, y, k = 1.7, c = SPIT, cls = "" }: { x: number; y: number; k?: number; c?: typeof SPIT; cls?: string }) {
   return (
-    <g className="ut-drool" transform={`translate(${x} ${y}) scale(1.7)`}>
+    <g className={`ut-drool ${cls}`} transform={`translate(${x} ${y}) scale(${k})`}>
       <g className="ut-drool-lip">
         <g className="ut-drool-str">
-          <path d="M-1.6 0 C-1.4 6 -0.9 12 -0.6 20 C-0.5 24 0.5 24 0.6 20 C0.9 12 1.4 6 1.6 0 Z" fill="rgba(215,238,255,0.72)" stroke="rgba(40,60,80,0.55)" strokeWidth="0.35" />
-          <path d="M-0.5 1 C-0.4 7 -0.3 12 -0.2 18" stroke="rgba(255,255,255,0.9)" strokeWidth="0.35" fill="none" strokeLinecap="round" />
-          <ellipse cx="0" cy="22.4" rx="1.6" ry="2" fill="rgba(215,238,255,0.8)" stroke="rgba(40,60,80,0.55)" strokeWidth="0.35" />
+          <path d="M-1.6 0 C-1.4 6 -0.9 12 -0.6 20 C-0.5 24 0.5 24 0.6 20 C0.9 12 1.4 6 1.6 0 Z" fill={c.fill} stroke={c.line} strokeWidth="0.35" />
+          <path d="M-0.5 1 C-0.4 7 -0.3 12 -0.2 18" stroke={c.shine} strokeWidth="0.35" fill="none" strokeLinecap="round" />
+          <ellipse cx="0" cy="22.4" rx="1.6" ry="2" fill={c.drop} stroke={c.line} strokeWidth="0.35" />
         </g>
         <g className="ut-drool-drop">
-          <path d="M0 -2.6 C1.2 -0.8 1.7 0.4 1.7 1.2 A1.7 1.7 0 0 1 -1.7 1.2 C-1.7 0.4 -1.2 -0.8 0 -2.6 Z" fill="rgba(215,238,255,0.85)" stroke="rgba(40,60,80,0.55)" strokeWidth="0.35" />
-          <circle cx="-0.5" cy="0.6" r="0.45" fill="#fff" />
+          <path d="M0 -2.6 C1.2 -0.8 1.7 0.4 1.7 1.2 A1.7 1.7 0 0 1 -1.7 1.2 C-1.7 0.4 -1.2 -0.8 0 -2.6 Z" fill={c.drop} stroke={c.line} strokeWidth="0.35" />
+          <circle cx="-0.5" cy="0.6" r="0.45" fill={c.shine} />
         </g>
       </g>
     </g>

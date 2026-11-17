@@ -6239,7 +6239,7 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .rig-utilizator .br-teeth-up { animation: bt-teeth-up 4.6s ease-in-out infinite; }
 .rig-utilizator .br-brow-l { animation: bt-brow-l 4.6s ease-in-out infinite; }
 .rig-utilizator .br-brow-r { animation: bt-brow-r 4.6s ease-in-out infinite; }
-.arena-photo.ouch .rig-utilizator .br-mouth-open, .rig-utilizator.dazed .br-mouth-open, .bphoto-ko .rig-utilizator .br-mouth-open { opacity: 0; }
+/* (his head has a hole for the mouth: the open mouth always stays — he yells when hit, the jaw opens wide) */
 .arena-photo.ouch .rig-utilizator .br-brow-l, .rig-utilizator.dazed .br-brow-l { animation: none; transform: translateY(-1.5px) rotate(-9deg); }
 .arena-photo.ouch .rig-utilizator .br-brow-r, .rig-utilizator.dazed .br-brow-r { animation: none; transform: translateY(-1.5px) rotate(9deg); }
 .arena-photo.ouch .rig-utilizator .br-head { animation: mg-head-hit 0.42s ease-out; }
@@ -6257,6 +6257,10 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 @keyframes ut-drool-drop { 0%, 72% { opacity: 0; transform: translateY(25px); } 73% { opacity: 1; transform: translateY(25px); } 100% { opacity: 0; transform: translateY(95px); } }
 .arena-photo.ouch .ut-drool-str { animation-duration: 0.6s; }
 @media (prefers-reduced-motion: reduce) { .ut-drool-str, .ut-drool-drop { animation: none; } }
+/* the beaten one's nose bleeds (boss-rig.tsx Drool with BLOOD): slower, the two trickles out of step; no lip ride */
+.ut-blood .ut-drool-lip { transform: none; }
+.ut-blood-l .ut-drool-str, .ut-blood-l .ut-drool-drop { animation-duration: 4.3s; }
+.ut-blood-r .ut-drool-str, .ut-blood-r .ut-drool-drop { animation-duration: 5.1s; animation-delay: -2.2s; }
 .br-hang-vials { animation: ut-swing 3.1s ease-in-out infinite; }
 .br-hang-gasmask { animation: ut-swing 3.7s ease-in-out -0.8s infinite; }
 @keyframes ut-swing { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
