@@ -94,14 +94,82 @@ export function BotsmanRoom({ uid = "a" }: { uid?: string }) {
   );
 }
 
+/**
+ * Утилизатор's night yard in 1024×1536 (tools/boss/build-utilizator-room.py): the storm sky drifts slowly behind the
+ * yard, the lightning flashes now and then (the sky lights up with it), the street lamp flickers, the acid by the barrels
+ * glows green, fog creeps along the gate behind him — and a downpour falls. The front fog by his feet and the near rain
+ * go over the boss (UtilizatorFront).
+ */
+const UT = "/assets/arena/utilizator";
+function Rain({ cls, src, op }: { cls: string; src: string; op: number }) {
+  // two copies of the tile, one over the other: the group slides down one tile and starts again
+  return (
+    <g className={`utr-rain ${cls}`} opacity={op}>
+      {[-768, 0, 768].flatMap((y) => [0, 1024].map((x) => <image key={`${x},${y}`} href={src} x={x} y={y} width={1024} height={768} preserveAspectRatio="none" />))}
+    </g>
+  );
+}
+function Fog({ cls, y, h, op }: { cls: string; y: number; h: number; op: number }) {
+  return (
+    <g className={`utr-fog ${cls}`} opacity={op}>
+      <image href={`${UT}/fog.webp`} x={0} y={y} width={2048} height={h} preserveAspectRatio="none" />
+      <image href={`${UT}/fog.webp`} x={2048} y={y} width={2048} height={h} preserveAspectRatio="none" />
+    </g>
+  );
+}
+export function UtilizatorRoom({ uid = "a" }: { uid?: string }) {
+  return (
+    <g className="utr-live">
+      <defs>
+        <radialGradient id={`utr-lamp-${uid}`}><stop offset="0" stopColor="#ffd38a" stopOpacity="0.9" /><stop offset="0.3" stopColor="#ffb44a" stopOpacity="0.35" /><stop offset="1" stopColor="#ff9a2a" stopOpacity="0" /></radialGradient>
+        <radialGradient id={`utr-pool-${uid}`}><stop offset="0" stopColor="#ffb050" stopOpacity="0.35" /><stop offset="1" stopColor="#ff9a2a" stopOpacity="0" /></radialGradient>
+        <radialGradient id={`utr-acid-${uid}`}><stop offset="0" stopColor="#9dff3a" stopOpacity="0.55" /><stop offset="0.45" stopColor="#6fe01e" stopOpacity="0.2" /><stop offset="1" stopColor="#4ac010" stopOpacity="0" /></radialGradient>
+      </defs>
+      {/* the sky: two seamless tiles side by side drift left */}
+      <g className="utr-sky">
+        <image href={`${UT}/sky.webp`} x={0} y={-300} width={1024} height={1024} preserveAspectRatio="none" />
+        <image href={`${UT}/sky.webp`} x={1024} y={-300} width={1024} height={1024} preserveAspectRatio="none" />
+      </g>
+      <rect className="utr-skyflash" x={0} y={0} width={1024} height={720} fill="#9fc2ff" />
+      <image className="utr-bolt" href={`${UT}/bolt.webp`} x={160} y={-50} width={900} height={600} preserveAspectRatio="none" />
+      <Rain cls="utr-rain-far" src={`${UT}/rain-b.webp`} op={0.55} />
+      <image href={`${UT}/room.webp`} x={0} y={0} width={1024} height={1536} preserveAspectRatio="none" />
+      {/* the lamp: its head and the orange pool on the wet ground flicker together */}
+      <g className="utr-lamp" style={{ mixBlendMode: "screen" }}>
+        <ellipse cx={200} cy={152} rx={150} ry={130} fill={`url(#utr-lamp-${uid})`} />
+        <ellipse cx={250} cy={1010} rx={260} ry={150} fill={`url(#utr-pool-${uid})`} />
+      </g>
+      {/* the acid by the barrels and in the puddles */}
+      <g className="utr-acid" style={{ mixBlendMode: "screen" }}>
+        <ellipse cx={120} cy={830} rx={200} ry={120} fill={`url(#utr-acid-${uid})`} />
+        <ellipse cx={890} cy={850} rx={200} ry={120} fill={`url(#utr-acid-${uid})`} />
+        <ellipse className="utr-acid-b" cx={240} cy={1240} rx={170} ry={70} fill={`url(#utr-acid-${uid})`} />
+        <ellipse className="utr-acid-b" cx={770} cy={1270} rx={180} ry={70} fill={`url(#utr-acid-${uid})`} />
+      </g>
+      {/* fog behind him, along the gate and the barrels */}
+      <Fog cls="utr-fog-back" y={560} h={360} op={0.85} />
+      <rect className="utr-groundflash" x={0} y={480} width={1024} height={1056} fill="#9fc2ff" />
+    </g>
+  );
+}
+/** what goes over Утилизатор in his fight: the near rain and the fog by his feet */
+export function UtilizatorFront() {
+  return (
+    <svg className="arena-front" viewBox="0 0 1024 1536" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+      <Fog cls="utr-fog-front" y={800} h={420} op={0.6} />
+      <Rain cls="utr-rain-near" src={`${UT}/rain-a.webp`} op={0.6} />
+    </svg>
+  );
+}
+
 export function ArenaBg({ bossId, className, focus = "bottom" }: { bossId: string; className?: string; focus?: "bottom" | "middle" }) {
-  if (bossId !== "knyaz" && bossId !== "botsman") {
+  if (bossId !== "knyaz" && bossId !== "botsman" && bossId !== "utilizator") {
     // eslint-disable-next-line @next/next/no-img-element
     return <img className={className} src={arenaOf(bossId)} alt="" draggable={false} />;
   }
   return (
     <svg className={`arena-live ${className ?? ""}`} viewBox="0 0 1024 1536" preserveAspectRatio={focus === "bottom" ? "xMidYMax slice" : "xMidYMid slice"} aria-hidden="true">
-      {bossId === "botsman" ? <BotsmanRoom uid={focus} /> : <KnyazRoom uid={focus} />}
+      {bossId === "botsman" ? <BotsmanRoom uid={focus} /> : bossId === "utilizator" ? <UtilizatorRoom uid={focus} /> : <KnyazRoom uid={focus} />}
     </svg>
   );
 }

@@ -20,7 +20,7 @@ import { setMusicTrack, sfx, weaponSfx } from "../sound.ts";
 import { haptic } from "../telegram.ts";
 import { DriftingSky } from "../art/sky.tsx";
 import { BEATEN_BELOW, BossRig, hasBossRig } from "../art/boss-rig.tsx";
-import { ArenaBg } from "../art/arena-bg.tsx";
+import { ArenaBg, UtilizatorFront } from "../art/arena-bg.tsx";
 import { PepeRig } from "../art/pepe-rig.tsx";
 import { CritBurn, preloadCritBanner } from "../art/crit-burn.tsx";
 import { Modal, Toggle } from "../ui.tsx";
@@ -417,6 +417,7 @@ export function BossScreen({ id }: { id: string }) {
           {(view?.solo ?? state?.fight?.solo) ? <span className="chip violet">соло</span> : view && <span className="chip red">бьют: {view.fightingNow}</span>}
           <BossRulesHelp topic="boss" />
         </div>
+        {boss.id === "utilizator" && <UtilizatorFront />}
         <Arena full boss={boss} hp={hpShown} hpMax={hpMax} endsAt={state!.fight!.endsAt} fx={layer} hit={hitAnim} ouch={ouch} rug={rug} feed={[]} strike={strikeFx.side} />
         {/* the side tabs: «Топ» on the left edge, «Инфо» (the hits) on the right — each slides its panel in */}
         <BoostIcons />
