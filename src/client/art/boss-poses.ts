@@ -423,66 +423,65 @@ const btTaunt: Action = {
   ],
 };
 
-/* Утилизатор (the artist's reference video): he breathes hard — the whole chest heaves up and sinks, the head nods
-   with it — and strikes rising: the upper body goes up and grows at the screen (y, z) as he winds up, then drops into
-   the blow and comes forward. R — the raised gloved fist comes down from the elbow (a hammer blow); L — the fist before
-   the belly drives up (an uppercut) */
+/* Утилизатор (the artist's reference video): he breathes with his whole body — on the breath in the chest fills and the
+   shoulders stretch out a little, on the breath out he sinks a touch; slow and smooth, no bouncing. His blows: the upper
+   body rises a little and leans into the blow. R — the raised gloved fist comes down from the elbow (a hammer blow);
+   L — the fist before the belly drives up (an uppercut) */
 const utHammer: Action = {
-  dur: 1.0,
+  dur: 1.5,
   keys: [
-    { at: 0, pose: { y: -46, z: 6, up: 3, x: 8, armR: -16, lowR: -34, head: -1.5, lowL: -6 } }, // he rises, the fist up and back
-    { at: 0.3, pose: { y: 14, z: 9, up: -6, x: -14, armR: 10, lowR: 44, head: 1.5, lowL: 8 }, stiff: 4.5 }, // drops into the blow
-    { at: 0.46, pose: { y: 8, z: 6, up: -4, x: -8, armR: 6, lowR: 30 }, stiff: 1.4 },
-    { at: 0.64, pose: {} },
+    { at: 0, pose: { y: -10, z: 1.5, up: 2, x: 4, armR: -14, lowR: -30, lowL: -4 } }, // straightens up, the fist goes back
+    { at: 0.45, pose: { y: 2, z: 3, up: -4, x: -8, armR: 8, lowR: 40, head: 1, lowL: 6 }, stiff: 2.2 }, // into the blow
+    { at: 0.7, pose: { y: 1, z: 2, up: -2.5, x: -5, armR: 5, lowR: 26 } },
+    { at: 0.95, pose: {} },
   ],
 };
 const utUpper: Action = {
-  dur: 1.0,
+  dur: 1.5,
   keys: [
-    { at: 0, pose: { y: 12, z: -1, up: 2, x: 4, armL: 8, lowL: 16, head: 1 } }, // sinks, the fist down
-    { at: 0.2, pose: { y: -50, z: 8, up: -5, x: 12, armL: -14, lowL: -52, head: -2, lowR: -8 }, stiff: 4.5 }, // rises with the uppercut
-    { at: 0.42, pose: { y: -32, z: 5, up: -3, x: 7, armL: -10, lowL: -38 }, stiff: 1.4 },
-    { at: 0.62, pose: {} },
+    { at: 0, pose: { y: 4, up: 1.5, x: 3, armL: 6, lowL: 14 } }, // sinks a little, the fist down
+    { at: 0.4, pose: { y: -12, z: 3, up: -4, x: 7, armL: -12, lowL: -46, head: -1, lowR: -6 }, stiff: 2.2 }, // rises with the uppercut
+    { at: 0.68, pose: { y: -8, z: 2, up: -2.5, x: 5, armL: -9, lowL: -34 } },
+    { at: 0.95, pose: {} },
   ],
 };
-/** his heavy breath (s → 0…1): a deep slow heave with a short catch at the top */
-const utBreath = (t: number) => { const ph = (t / 2.3) % 1; return ph < 0.42 ? Math.sin((ph / 0.42) * Math.PI / 2) ** 2 : Math.cos(((ph - 0.42) / 0.58) * Math.PI / 2) ** 1.6; };
+/** his breath (s → 0…1): a slow smooth wave, 3.6 s */
+const utBreath = (t: number) => 0.5 - 0.5 * Math.cos((t / 3.6) * Math.PI * 2);
 
 const POSES: Record<string, Spec> = {
   utilizator: {
+    // soft, overdamped springs: he moves like a heavy body, nothing bounces
     springs: {
-      up: { k: 70, c: 12 }, x: { k: 60, c: 11.5 }, y: { k: 55, c: 10.5 }, z: { k: 55, c: 10.5 }, head: { k: 170, c: 18 },
-      armL: { k: 100, c: 15 }, lowL: { k: 200, c: 17 },
-      armR: { k: 100, c: 15 }, lowR: { k: 200, c: 17 },
+      up: { k: 40, c: 13 }, x: { k: 35, c: 12 }, y: { k: 30, c: 11.5 }, z: { k: 30, c: 11.5 }, head: { k: 90, c: 19 },
+      armL: { k: 70, c: 16 }, lowL: { k: 120, c: 19 },
+      armR: { k: 70, c: 16 }, lowR: { k: 120, c: 19 },
     },
-    // the head stays on the neck: a stiff spring, a small drag (the T-shirt's neck is cut flat under the chin)
-    drag: { lowL: ["armL", -0.05], lowR: ["armR", -0.05], head: ["up", -0.03] },
-    // the guard bobs and the shoulders heave with the breath; the head nods with it
+    // the head stays on the neck: a small drag (the T-shirt's neck is cut flat under the chin)
+    drag: { lowL: ["armL", -0.03], lowR: ["armR", -0.03], head: ["up", -0.02] },
+    // breath in: the shoulders go a little up and out (the arms open with them), the head lifts a touch
     idle: (t) => {
       const b = utBreath(t);
       return {
-        y: -16 * b, z: 2 * b,
-        up: 0.8 * Math.sin(t * 0.7) + 0.3 * Math.sin(t * 1.9 + 1),
-        x: 3 * Math.sin(t * 0.45),
-        head: -1.2 * b + 0.6 * Math.sin(t * 0.8 + 1),
-        armL: -2 * b + 1.2 * Math.sin(t * 1.3), lowL: 2.5 * Math.sin(t * 1.7 + 0.5),
-        armR: 2.5 * b + 1.2 * Math.sin(t * 1.2 + 2), lowR: -3 * b + 3 * Math.sin(t * 1.6 + 1),
+        y: -3 * b,
+        up: 0.5 * Math.sin(t * 0.5),
+        x: 1.5 * Math.sin(t * 0.35),
+        head: -0.6 * b + 0.4 * Math.sin(t * 0.6 + 1),
+        armL: 1.6 * b, lowL: 1.2 * Math.sin(t * 0.9 + 0.5),
+        armR: -1.6 * b, lowR: 1.4 * Math.sin(t * 0.8 + 1),
       };
     },
-    // the chest: up and a little wider with each breath
-    breath: (t, dazed) => { const b = utBreath(dazed ? t * 0.7 : t); return [1 + 0.014 * b, 1 + 0.03 * b, -3 * b]; },
+    // the chest fills: wider in the shoulders, a little taller; out — back down
+    breath: (t, dazed) => { const b = utBreath(dazed ? t * 0.8 : t); return [1 + 0.03 * b, 1 + 0.012 * b, 0]; },
     actions: [
-      { a: utHammer, w: 28 },
-      { a: utUpper, w: 24 },
-      { a: join(utUpper, shift(utHammer, 0.12)), w: 20 },
-      { a: join(utHammer, shift(utHammer, 0.1)), w: 10 },
-      { a: join(utUpper, shift(utUpper, 0.1)), w: 8 },
+      { a: utHammer, w: 30 },
+      { a: utUpper, w: 26 },
+      { a: join(utUpper, shift(utHammer, 0.2)), w: 16 },
       { a: taunt, w: 6 },
     ],
-    rest: [1.0, 2.4],
-    hit: { head: 90, up: 90, x: 70, y: 220, z: -60, armL: -120, lowL: 160, armR: 100, lowR: -180 },
-    strike: join(utUpper, shift(utHammer, 0.12)),
-    dazed: { pose: { armL: 8, lowL: 20, armR: 16, lowR: 46, head: 6, up: -1.5, y: 8 }, act: false },
+    rest: [2.2, 4.5],
+    hit: { head: 50, up: 40, x: 35, y: 40, armL: -60, lowL: 80, armR: 50, lowR: -90 },
+    strike: join(utUpper, shift(utHammer, 0.2)),
+    dazed: { pose: { armL: 8, lowL: 20, armR: 16, lowR: 46, head: 5, up: -1.5, y: 4 }, act: false },
   },
   botsman: {
     springs: {

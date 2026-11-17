@@ -16,6 +16,7 @@ CARDS = {
     "vodovoz": ("tools/boss/source/vodovoz/raw/reference.png", (170, -110, 1650, 1717)),
     "vadim": ("public/bosses/vadim/full.webp", (150, -40, 740, 690)),
     "botsman": ("public/bosses/botsman/full.webp", (110, -30, 790, 810)),
+    "utilizator": ("public/bosses/utilizator/full.webp", (20, -30, 820, 950)),
 }
 W = 640
 # `build-cards.py vodovoz` builds only the named cards

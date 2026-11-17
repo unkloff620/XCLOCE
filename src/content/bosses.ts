@@ -171,7 +171,7 @@ export const BOSSES: BossDef[] = [
     story: "Отвечает за прокси и за всё, что связано с алкоголем. Тусовка не начнётся без его разрешения.",
     hp: hp(10), reward: { xp: xp(10), currencies: { USD: 21, RUB: 53_950 }, items: [{ id: "statue-close", qty: 1 }] },
     drop: [{ id: "rug-pull-gun", qty: 1, chance: 0.25 }],
-    theme: { a: "#2f3416", b: "#0f1106", accent: "#c8f03c" }, photo: photo("utilizator"),
+    theme: { a: "#2f3416", b: "#0f1106", accent: "#c8f03c" }, photo: photo("utilizator", true),
     keysToUnlock: 1,
   },
   {

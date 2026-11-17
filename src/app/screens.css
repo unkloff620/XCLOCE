@@ -6213,7 +6213,10 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 /* Утилизатор (tools/boss/assemble-utilizator.py): the pose engine moves him (boss-poses.ts «utilizator»); his eyes are
    under the head (EYES_UNDER), the open yelling mouth grinds, the brows tighten; hit or beaten — the mouth shuts (the
    head's own) and the brows go up; the vials and the gas mask swing on their rings off the belt (boss-rig.tsx HANG) */
-.rig-utilizator .br-breath { animation-duration: 3.4s; }
+/* the breath itself is the pose engine's (the shoulders out, the chest up — boss-poses.ts utBreath); the whole figure only
+   a hair, in its tempo */
+.rig-utilizator .br-breath { animation: ut-breath 3.6s ease-in-out infinite; }
+@keyframes ut-breath { 50% { transform: scale(1.003, 1.005); } }
 .rig-utilizator .br-pupils { animation-name: bt-look; animation-duration: 5.6s; }
 .rig-utilizator .br-teeth-low { animation: bt-teeth-low 4.6s linear infinite; }
 .rig-utilizator .br-teeth-up { animation: bt-teeth-up 4.6s ease-in-out infinite; }
@@ -6223,9 +6226,9 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .arena-photo.ouch .rig-utilizator .br-brow-l, .rig-utilizator.dazed .br-brow-l { animation: none; transform: translateY(-1.5px) rotate(-9deg); }
 .arena-photo.ouch .rig-utilizator .br-brow-r, .rig-utilizator.dazed .br-brow-r { animation: none; transform: translateY(-1.5px) rotate(9deg); }
 .arena-photo.ouch .rig-utilizator .br-head { animation: mg-head-hit 0.42s ease-out; }
-.br-hang-vials { animation: ut-swing 2.3s ease-in-out infinite; }
-.br-hang-gasmask { animation: ut-swing 2.9s ease-in-out -0.8s infinite; }
-@keyframes ut-swing { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+.br-hang-vials { animation: ut-swing 3.1s ease-in-out infinite; }
+.br-hang-gasmask { animation: ut-swing 3.7s ease-in-out -0.8s infinite; }
+@keyframes ut-swing { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
 .arena-photo.hit .br-hang { animation: ut-jolt 0.9s cubic-bezier(0.2, 0.8, 0.3, 1); }
 @keyframes ut-jolt { 0% { transform: rotate(0); } 15% { transform: rotate(14deg); } 40% { transform: rotate(-8deg); } 65% { transform: rotate(4deg); } 100% { transform: rotate(0); } }
 @media (prefers-reduced-motion: reduce) { .rig-utilizator :is(.br-teeth-low, .br-teeth-up, .br-brow-l, .br-brow-r), .br-hang { animation: none; } }

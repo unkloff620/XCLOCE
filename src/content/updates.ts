@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-17-utilizator",
+    date: "17 ноября",
+    title: "Новый босс: Утилизатор",
+    items: [
+      { img: "/assets/updates/2026-11-17-utilizator.webp", text: "Пришёл Утилизатор — одиннадцатый босс. Тяжело дышит в своём кислотном фартуке и бьёт резиновыми перчатками." },
+    ],
+  },
+  {
     id: "2026-11-17-promzona-wear",
     date: "17 ноября",
     title: "Промзона: рабочая форма",
