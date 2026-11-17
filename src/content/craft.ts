@@ -24,7 +24,7 @@ export interface CraftDef {
   /** what it is made of (собранные вещи) */
   recipe?: { id: string; qty: number }[];
   /** вещь 3 ур.: оружие (permanent, its own reload) */
-  weapon?: { damage: number; cooldownMin: number; animation: "fist" | "mouse" | "candle" | "keyboard" | "gpu" | "rugpull"; action: string };
+  weapon?: { damage: number; cooldownMin: number; animation: "fist" | "mouse" | "candle" | "keyboard" | "gpu" | "rugpull" | "flame"; action: string };
 }
 
 /** cells in the stash */
@@ -182,7 +182,7 @@ export const CRAFT_ITEMS_3: CraftDef[] = [
   item3("railgun", "Рельсотрон из майнинг-фермы", [["craft2-mining-rig", 3], ["craft2-tesla-glove", 1], ["craft-laser-gun", 3], ["part-neodym", 20], ["part-quartz", 20]], { dmg: { gpu: 150 } },
     "Разгоняет видеокарты до скорости света и швыряет в босса.", { damage: 1200, cooldownMin: 360, animation: "gpu", action: "Выстрелить из рельсотрона" }),
   item3("bear-market", "Огнемёт «Медвежий рынок»", [["craft2-fuel-crossbow", 3], ["craft2-fire-show", 1], ["craft-samopal", 3], ["part-carbon", 20], ["part-pump", 20]], { dmg: { "rug-pull-gun": 150 } },
-    "Выжигает всё зелёное. Остаются только красные свечи.", { damage: 2000, cooldownMin: 480, animation: "rugpull", action: "Залить босса огнём" }),
+    "Выжигает всё зелёное. Остаются только красные свечи.", { damage: 2000, cooldownMin: 480, animation: "flame", action: "Залить босса огнём" }),
   item3("mech-fist", "Кулак экзоскелета", [["craft2-exoskeleton", 3], ["craft2-chainsaw", 1], ["craft-knuckles", 3], ["part-titanium", 20], ["part-gyro", 20]], { dmg: { fist: 15 }, biceps: 1000 },
     "Гидравлика, титан и злость. Один удар — и босс в нокауте.", { damage: 3000, cooldownMin: 720, animation: "fist", action: "Врезать кулаком экзоскелета" }),
 ];

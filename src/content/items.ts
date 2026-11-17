@@ -19,7 +19,7 @@ export interface WeaponStats {
   /** permanent weapons only: minutes until it can be used again */
   cooldownMin?: number;
   /** client animation id (see client/fx) */
-  animation: "fist" | "mouse" | "candle" | "keyboard" | "gpu" | "rugpull";
+  animation: "fist" | "mouse" | "candle" | "keyboard" | "gpu" | "rugpull" | "flame";
   /** button text on the boss screen */
   action: string;
 }
@@ -47,6 +47,9 @@ export interface ItemDef {
 
 /** a free weapon still reloading can hit at once for this (the player agrees in a window first); then it reloads again */
 export const RUSH_PRICE = { currency: "USD" as const, amount: 2 };
+/** «ударить сейчас» for the craft weapons (вещи 3 ур.: рельсотрон, огнемёт, кулак экзоскелета) */
+export const RUSH_PRICE_CRAFT = { currency: "USD" as const, amount: 5 };
+export const rushPrice = (id: string) => (id.startsWith("craft3-") ? RUSH_PRICE_CRAFT : RUSH_PRICE);
 
 export const WEAPONS: ItemDef[] = [
   {

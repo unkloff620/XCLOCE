@@ -24,7 +24,7 @@ import { CritBurn, preloadCritBanner } from "../art/crit-burn.tsx";
 import { GainLine, Modal } from "../ui.tsx";
 import { BossPhoto } from "./boss-parts.tsx";
 import { FIGHT_HOURS, type BossDef } from "../../content/bosses.ts";
-import { RUSH_PRICE } from "../../content/items.ts";
+import { rushPrice } from "../../content/items.ts";
 import { clock } from "../format.ts";
 import { usePageReady } from "../route-loader.tsx";
 import { useGame, useNow } from "../store.tsx";
@@ -677,17 +677,17 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
         {shopOpen && <WeaponShopWindow onClose={closeShop} />}
         {rushAsk && (
           <Modal title={`${rushAsk.name} перезаряжается`} onClose={() => setRushAsk(null)}>
-            <div className="col center" style={{ gap: 12 }}>
+            <div className="col center" style={{ gap: 12, alignItems: "center" }}>
               <ItemArt id={rushAsk.id} size={72} />
-              <span className="small center">Ещё {clock(rushAsk.left)}. Ударить сейчас за <b>{RUSH_PRICE.amount} $</b>? После удара — снова перезарядка.</span>
+              <span className="small center">Ещё {clock(rushAsk.left)}. Ударить сейчас за <b>{rushPrice(rushAsk.id).amount} $</b>? После удара — снова перезарядка.</span>
               <div className="row" style={{ gap: 8, width: "100%" }}>
                 <button className="btn dark grow" onClick={() => setRushAsk(null)}>Отмена</button>
-                <button className="btn gold grow" disabled={(state?.wallet.USD ?? 0) < RUSH_PRICE.amount}
+                <button className="btn gold grow" disabled={(state?.wallet.USD ?? 0) < rushPrice(rushAsk.id).amount}
                   onClick={() => { const id = rushAsk.id; setRushAsk(null); void hit(id, true); }}>
-                  Ударить за {RUSH_PRICE.amount} $
+                  Ударить за {rushPrice(rushAsk.id).amount} $
                 </button>
               </div>
-              {(state?.wallet.USD ?? 0) < RUSH_PRICE.amount && <span className="tiny" style={{ color: "#ff8a9e" }}>Не хватает долларов</span>}
+              {(state?.wallet.USD ?? 0) < rushPrice(rushAsk.id).amount && <span className="tiny" style={{ color: "#ff8a9e" }}>Не хватает долларов</span>}
             </div>
           </Modal>
         )}

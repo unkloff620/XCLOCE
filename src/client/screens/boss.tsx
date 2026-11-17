@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { api, type FightView, type Hit, type Tray } from "../api.ts";
 import { BOSSES, arenaOf, bossById, type BossDef, FIGHT_HOURS, rewardShare } from "../../content/bosses.ts";
-import { RUSH_PRICE, WEAPONS, itemById, weaponById } from "../../content/items.ts";
+import { WEAPONS, itemById, rushPrice, weaponById } from "../../content/items.ts";
 import { CRAFT_WEAPONS } from "../../content/craft.ts";
 import { HIT_PHRASES, bossLines } from "../../content/phrases.ts";
 import { BossSilhouette } from "../art/scenes.tsx";
@@ -440,17 +440,17 @@ export function BossScreen({ id }: { id: string }) {
         {shopOpen && <WeaponShopWindow onClose={closeShop} />}
         {rushAsk && (
           <Modal title={`${rushAsk.name} перезаряжается`} onClose={() => setRushAsk(null)}>
-            <div className="col center" style={{ gap: 12 }}>
+            <div className="col center" style={{ gap: 12, alignItems: "center" }}>
               <ItemArt id={rushAsk.id} size={72} />
-              <span className="small center">Ещё {clock(rushAsk.left)}. Ударить сейчас за <b>{RUSH_PRICE.amount} $</b>? После удара — снова перезарядка.</span>
+              <span className="small center">Ещё {clock(rushAsk.left)}. Ударить сейчас за <b>{rushPrice(rushAsk.id).amount} $</b>? После удара — снова перезарядка.</span>
               <div className="row" style={{ gap: 8, width: "100%" }}>
                 <button className="btn dark grow" onClick={() => setRushAsk(null)}>Отмена</button>
-                <button className="btn gold grow" disabled={(state?.wallet.USD ?? 0) < RUSH_PRICE.amount}
+                <button className="btn gold grow" disabled={(state?.wallet.USD ?? 0) < rushPrice(rushAsk.id).amount}
                   onClick={() => { const id = rushAsk.id; setRushAsk(null); void attack(id, true); }}>
-                  Ударить за {RUSH_PRICE.amount} $
+                  Ударить за {rushPrice(rushAsk.id).amount} $
                 </button>
               </div>
-              {(state?.wallet.USD ?? 0) < RUSH_PRICE.amount && <span className="tiny" style={{ color: "#ff8a9e" }}>Не хватает долларов</span>}
+              {(state?.wallet.USD ?? 0) < rushPrice(rushAsk.id).amount && <span className="tiny" style={{ color: "#ff8a9e" }}>Не хватает долларов</span>}
             </div>
           </Modal>
         )}

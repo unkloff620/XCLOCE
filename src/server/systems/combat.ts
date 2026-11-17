@@ -4,7 +4,7 @@ import { shodBoostMult, shodTick } from "./shodnyak.ts";
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, idempotent, itemQty, ledger, moscowDay, nextMoscowMidnight, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { BLAT_THING_CHANCE, BOTH_DROP_CHANCE, BOSSES, EVENT_FIGHTS, EXTRA_KEY_CHANCE, OPEN_BOSSES, bossById, bossOpen, KEY_RING, keyId, keyRingFits, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
-import { RUSH_PRICE, WEAPONS, itemById, weaponById } from "../../content/items.ts";
+import { WEAPONS, itemById, rushPrice, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
 import { boostReward, mergeRewards, scaleReward } from "../../content/rewards.ts";
 import { BASE_CRIT_MULT, EQUIPMENT, PIECE_DROP_CHANCE, PIECE_PITY, ROOM_DEFS, ROOM_PITY, pieceUnlockId, roomUnlockId } from "../../content/home.ts";
@@ -88,8 +88,9 @@ async function expireFights(ctx: Ctx, g: BossRow) {
   for (const f of lost) await resetFreeWeapons(ctx.q, f.player_id);
 }
 
-/** the free weapons (fist, mouse, candle): permanent, with a rest after each hit */
-export const FREE_WEAPONS = WEAPONS.filter((w) => w.weapon?.kind === "permanent").map((w) => w.id);
+/** the free weapons (fist, mouse, candle) and the craft weapons (вещи 3 ур.): permanent, with a rest after each hit —
+ * ready again in every new fight */
+export const FREE_WEAPONS = [...WEAPONS.filter((w) => w.weapon?.kind === "permanent").map((w) => w.id), ...CRAFT_WEAPONS.map((c) => c.id)];
 async function resetFreeWeapons(q: Queryable, pid: number) {
   await q.query("DELETE FROM cooldowns WHERE player_id=$1 AND item_id = ANY($2::text[])", [pid, FREE_WEAPONS]);
 }
@@ -244,7 +245,8 @@ export async function strike(ctx: Ctx, w: NonNullable<ReturnType<typeof weaponBy
     if (cd && new Date(cd.ready_at).getTime() > ctx.now) {
       // «Ударить сейчас»: the reload is skipped for RUSH_PRICE, the weapon goes on a new cooldown after this hit
       if (!rush) throw new GameError("cooldown", `${w.name} ещё перезаряжается`);
-      await takeMoney(ctx, RUSH_PRICE.currency, RUSH_PRICE.amount, `rush:${w.id}`);
+      const price = rushPrice(w.id);
+      await takeMoney(ctx, price.currency, price.amount, `rush:${w.id}`);
     }
     readyAt = ctx.now + (w.weapon.cooldownMin ?? 0) * 60_000;
     await ctx.q.query(

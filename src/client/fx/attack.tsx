@@ -91,6 +91,15 @@ function FxItem({ fx }: { fx: Fx }) {
           <div className="fx-rug" />
         </>
       )}
+      {anim === "flame" && (
+        <>
+          {/* the flamethrower comes in from the left and pours a jet of fire at the boss, sparks fly, the air goes red */}
+          <div className="fx-thrower"><ItemArt id={fx.weapon} size={96} /></div>
+          <div className="fx-jet"><i /><i /><i /></div>
+          {[0, 1, 2, 3, 4, 5].map((k) => <i key={k} className={`fx-ember e${k}`} />)}
+          <div className="fx-heat" />
+        </>
+      )}
       <div className="fx-dmg display">−{fx.damage}</div>
       {fx.mine && fx.phrase && <div className="fx-phrase">{fx.phrase}</div>}
     </div>

@@ -6833,3 +6833,27 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .fx-bill.b2 { animation-delay: 0.53s; --dy: 40%; --r: -260deg; }
 .fx-bill.b3 { animation-delay: 0.59s; --dy: -140%; --r: 300deg; }
 @keyframes fx-bill { 0% { opacity: 1; transform: translate(0, 0) rotate(0); } 100% { opacity: 0; transform: translate(260%, var(--dy, -20%)) rotate(var(--r, 180deg)); } }
+
+/* the flamethrower «Медвежий рынок» (fx/attack.tsx anim "flame"): it slides in on the left, a flickering jet of fire to the
+   boss, embers, a red heat over the arena */
+.fx-thrower { position: absolute; left: 2%; top: 50%; margin-top: -48px; animation: fx-thrower 1.3s ease forwards; }
+@keyframes fx-thrower { 0% { transform: translateX(-130%) rotate(-8deg); } 18%, 70% { transform: none; } 30%, 50% { transform: translateX(-3px) rotate(1deg); } 100% { transform: translateX(-130%) rotate(-6deg); } }
+.fx-jet { position: absolute; left: 24%; top: 50%; width: 46%; height: 70px; margin-top: -40px; transform-origin: 0 50%; transform: scaleX(0); opacity: 0;
+  animation: fx-jet 0.85s ease-out 0.22s forwards; filter: blur(1px); }
+.fx-jet i { position: absolute; inset: 0; border-radius: 0 50% 50% 0 / 0 50% 50% 0;
+  background: radial-gradient(ellipse at 0% 50%, #fffbe0 0 10%, #ffd84a 22%, #ff8a1f 45%, rgba(220, 40, 10, 0.75) 68%, transparent 80%); mix-blend-mode: screen; }
+.fx-jet i:nth-child(2) { inset: 12% -8% 12% 4%; animation: fx-flick 0.12s steps(2) infinite; opacity: 0.8; }
+.fx-jet i:nth-child(3) { inset: 25% -14% 25% 10%; animation: fx-flick 0.09s steps(2) infinite reverse; opacity: 0.7; }
+@keyframes fx-jet { 0% { opacity: 1; transform: scaleX(0.1) scaleY(0.6); } 20% { opacity: 1; transform: scaleX(1) scaleY(1); } 75% { opacity: 1; transform: scaleX(1.05) scaleY(1.1); } 100% { opacity: 0; transform: scaleX(1.1) scaleY(1.4); } }
+@keyframes fx-flick { 50% { transform: translateY(-4px) scaleY(1.12); } }
+.fx-ember { position: absolute; left: 60%; top: 50%; width: 6px; height: 6px; border-radius: 50%; background: #ffcc33; box-shadow: 0 0 6px #ff7a1a; opacity: 0;
+  animation: fx-ember 0.9s ease-out forwards; }
+.fx-ember.e0 { animation-delay: 0.35s; --ex: 40px; --ey: -60px; }
+.fx-ember.e1 { animation-delay: 0.42s; --ex: 70px; --ey: -20px; }
+.fx-ember.e2 { animation-delay: 0.5s; --ex: 30px; --ey: 50px; }
+.fx-ember.e3 { animation-delay: 0.55s; --ex: 80px; --ey: -80px; }
+.fx-ember.e4 { animation-delay: 0.62s; --ex: 55px; --ey: 30px; }
+.fx-ember.e5 { animation-delay: 0.7s; --ex: 20px; --ey: -40px; }
+@keyframes fx-ember { 0% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translate(var(--ex), var(--ey)) scale(0.4); } }
+.fx-heat { position: absolute; inset: 0; background: radial-gradient(circle at 60% 50%, rgba(255, 90, 20, 0.28), transparent 60%); opacity: 0; animation: fx-heat 1s ease 0.25s forwards; }
+@keyframes fx-heat { 30% { opacity: 1; } 100% { opacity: 0; } }
