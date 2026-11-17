@@ -26,8 +26,8 @@ export const HELD_FIT: Record<string, { x: number; y: number; w: number; h: numb
     "h": 295
   },
   "vials-utilizator": {
-    "x": 576.5,
-    "y": 733.0,
+    "x": 591.0,
+    "y": 747.5,
     "w": 191,
     "h": 200
   }

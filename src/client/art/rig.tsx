@@ -558,41 +558,54 @@ function VialsHand() {
   const { skin } = useContext(LookCtx);
   const handRef = useRef<SVGGElement>(null), spinRef = useRef<SVGGElement>(null);
   const vialRefs = [useRef<SVGGElement>(null), useRef<SVGGElement>(null), useRef<SVGGElement>(null)];
+  const fingerRefs = [useRef<SVGGElement>(null), useRef<SVGGElement>(null), useRef<SVGGElement>(null)];
   useEffect(() => {
     if (typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const DRIVE = (Math.PI * 2) / 1.25; // rad/s: the hand's twirl
-    const PULL = 5.5, GL = 13;          // the drive's grip on the ring, gravity ÷ length
-    let phi = 0, w = DRIVE * 0.6, last = performance.now(), raf = 0;
-    const vials = [0, 0, 0].map((_, i) => ({ a: 0, v: 0, k: 70 + i * 12, c: 6 + i }));
+    // the twirl never stops: the hand keeps the ring going round at about DRIVE; the weight only slows it a little over
+    // the top and speeds it through the bottom (GL small against PULL: it never swings back)
+    const DRIVE = (Math.PI * 2) / 0.95, PULL = 9, GL = 7;
+    let phi = 0, w = DRIVE, last = performance.now(), raf = 0, t = 0;
+    const vials = [0, 0, 0].map((_, i) => ({ a: 0, v: 0, k: 90 + i * 14, c: 7 + i }));
+    // the middle, ring and little fingers close together now and then
+    let close = 0, closeV = 0, closeAt = 1.5 + Math.random() * 2, closeEnd = 0;
     const tick = (now: number) => {
       raf = requestAnimationFrame(tick);
       const dt = Math.min(0.04, (now - last) / 1000);
       last = now;
+      t += dt;
       const n = Math.ceil(dt / 0.004), h = dt / n;
-      let acc = 0;
+      if (t >= closeAt && closeEnd === 0) closeEnd = t + 0.45 + Math.random() * 0.4;
+      if (closeEnd && t >= closeEnd) { closeEnd = 0; closeAt = t + 1.6 + Math.random() * 2.8; }
+      const closeTarget = closeEnd ? 1 : 0;
       for (let k = 0; k < n; k++) {
-        acc = PULL * (DRIVE - w) - GL * Math.sin(phi);
-        w += acc * h;
+        const acc = PULL * (DRIVE - w) - GL * Math.sin(phi);
+        w = Math.max(DRIVE * 0.55, w + acc * h);
         phi += w * h;
-        // the vials: gravity (world down, seen from the turning ring) + the spin's outward pull
-        const gx = -Math.sin(phi) * GL, gy = Math.cos(phi) * GL, cf = w * w * 0.55;
-        const target = Math.atan2(gx, gy + cf);
+        // each vial: the spin flings it outward, a little of the weight pulls it toward the ground; it lags on a spring
+        const target = Math.atan2(-Math.sin(phi) * 0.35, Math.cos(phi) * 0.35 + 1);
         for (const v of vials) {
-          v.v += (v.k * (target - v.a) - v.c * v.v - acc * 0.35) * h;
+          let d = target - v.a;
+          d = Math.atan2(Math.sin(d), Math.cos(d));
+          v.v += (v.k * d - v.c * v.v - acc * 0.25) * h;
           v.a += v.v * h;
         }
+        closeV += (60 * (closeTarget - close) - 11 * closeV) * h;
+        close += closeV * h;
       }
       phi %= Math.PI * 2;
       const deg = (r: number) => (r * 180) / Math.PI;
-      // the hand: lifts as the weight goes up and away, turns with its pull, a beat ahead of the ring
-      const lead = phi + 0.7;
-      const lift = -6 * (1 - Math.cos(lead)) / 2 - 1.5 * Math.sin(lead * 2);
-      const turn = -7 * Math.sin(lead) - 0.08 * (w - DRIVE) * 10;
-      handRef.current?.setAttribute("transform", `translate(${(2.2 * Math.cos(lead)).toFixed(2)} ${lift.toFixed(2)}) rotate(${turn.toFixed(2)} ${VIALS_PIVOTS.wrist[0]} ${VIALS_PIVOTS.wrist[1]})`);
+      // the hand turns at the wrist only (it stays on the forearm): it rises as the weight swings up and away, sinks as it falls
+      const turn = -6 * (1 - Math.cos(phi + 0.6)) / 2 + 1.5 * Math.sin(phi + 0.6) - 0.6 * (w - DRIVE);
+      handRef.current?.setAttribute("transform", `rotate(${turn.toFixed(2)} ${VIALS_PIVOTS.wrist[0]} ${VIALS_PIVOTS.wrist[1]})`);
       spinRef.current?.setAttribute("transform", `rotate(${deg(phi).toFixed(2)} ${VIALS_PIVOTS.spin[0]} ${VIALS_PIVOTS.spin[1]})`);
       vialRefs.forEach((r, i) => {
         const p = VIALS_PARTS[`vial-${i + 1}`].pivot!;
         r.current?.setAttribute("transform", `rotate(${deg(vials[i].a).toFixed(2)} ${p[0]} ${p[1]})`);
+      });
+      // closing: the middle finger turns toward the ring finger, the little one too; the ring one a touch
+      [-7, 2, 9].forEach((a, i) => {
+        const p = VIALS_PIVOTS[["finger-m", "finger-r", "finger-p"][i]];
+        fingerRefs[i].current?.setAttribute("transform", `rotate(${(a * close).toFixed(2)} ${p[0]} ${p[1]})`);
       });
     };
     raf = requestAnimationFrame(tick);
@@ -613,6 +626,7 @@ function VialsHand() {
         {img("clip-1")}{img("clip-2")}{img("clip-3")}
       </g>
       {img("hand", true)}
+      {["finger-m", "finger-r", "finger-p"].map((f, i) => <g key={f} ref={fingerRefs[i]}>{img(f, true)}</g>)}
     </g>
   );
 }

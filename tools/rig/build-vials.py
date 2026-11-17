@@ -24,7 +24,7 @@ ID = "vials-utilizator"
 # the artist's picture → the rig: its wrist (the cut edge on the right) lands where the other held hands' wrist is,
 # the hand as big as the hand with the keys
 S = 0.46
-U0 = np.array([463.0, 160.0])
+U0 = np.array([432.0, 128.0])   # the middle of the wrist's cut edge (as the keys' hand)
 R0 = np.array([762.0, 764.0])
 rig = lambda u: (np.asarray(u, np.float32) - U0) * S + R0
 SKIN_TONES = ["#f8d5b4", "#fcb477", "#dda57a", "#b97a4e", "#8a5534", "#5e3a24"]
@@ -61,11 +61,29 @@ def tint(base, i):
 VIALS = ["vial-1", "vial-2", "vial-3"]
 CLIPS = ["clip-1", "clip-2", "clip-3"]
 L = {n: load(n) for n in ["ring", *VIALS, *CLIPS, "hand"]}
-ORDER = ["ring", *VIALS, *CLIPS, "hand"]
+# the middle, ring and little fingers are cut out of the hand (they close together now and then — rig.tsx VialsHand):
+# each a polygon from the gaps between them, turning at its knuckle; a soft band across the cut stays on both sides
+FINGERS = {
+    "finger-m": ([(212, 258), (237, 280), (165, 375), (150, 445), (40, 445), (40, 330), (150, 268)], (222, 266)),
+    "finger-r": ([(237, 280), (277, 307), (228, 400), (228, 445), (150, 445), (165, 375)], (256, 292)),
+    "finger-p": ([(277, 307), (330, 290), (335, 445), (228, 445), (228, 400)], (296, 303)),
+}
+hand = L["hand"]
+base = hand.copy()
+for n, (poly, _) in FINGERS.items():
+    m = np.zeros(hand.shape[:2], np.uint8)
+    cv2.fillPoly(m, [np.array(poly, np.int32)], 255)
+    # a little into the palm past the knuckle line (covers the seam when it turns)
+    soft = cv2.GaussianBlur(cv2.dilate(m, np.ones((9, 9), np.uint8)), (0, 0), 2.5).astype(np.float32) / 255
+    f = hand.copy(); f[..., 3] = (hand[..., 3] * soft).astype(np.uint8)
+    L[n] = f
+    base[..., 3] = np.where(m > 0, 0, base[..., 3])
+L["hand"] = base
+ORDER = ["ring", *VIALS, *CLIPS, "hand", *FINGERS]
 H, W = L["hand"].shape[:2]
 
 # the spin's pivot: where the finger goes through the ring (the overlap of the ring and the hand)
-ov = (L["ring"][..., 3] > 128) & (L["hand"][..., 3] > 128)
+ov = (L["ring"][..., 3] > 128) & (hand[..., 3] > 128)
 ys, xs = np.nonzero(ov)
 SPIN = (float(xs.mean()), float(ys.mean())) if len(xs) else (180.0, 240.0)
 data = {}
@@ -79,14 +97,15 @@ for n in ORDER:
     (rx, ry), (rx1, ry1) = rig((x0, y0)), rig((x1, y1))
     data[n] = {"x": round(float(rx), 1), "y": round(float(ry), 1), "w": round(float(rx1 - rx), 1), "h": round(float(ry1 - ry), 1)}
     for i in range(len(SKIN_TONES)):
-        if i != SKIN_ORIGINAL and n != "hand": continue
+        if i != SKIN_ORIGINAL and n != "hand" and n not in FINGERS: continue
         p = os.path.join(OUT, "held", f"{ID}-{n}") if i == SKIN_ORIGINAL else os.path.join(OUT, f"skin-{i}", f"held-{ID}-{n}")
         Image.fromarray(tint(crop, i)).save(p + ".webp", "WEBP", quality=90, method=6)
     if n in VIALS:
         # the vial hangs from its eye: the top middle of its picture
         top = ys.min(); row = xs[ys < top + 10]
         data[n]["pivot"] = [round(float(v), 1) for v in rig(((row.min() + row.max()) / 2, top + 6))]
-pivots = {"spin": [round(float(v), 1) for v in rig(SPIN)], "wrist": [round(float(v), 1) for v in rig(U0)]}
+pivots = {"spin": [round(float(v), 1) for v in rig(SPIN)], "wrist": [round(float(v), 1) for v in rig(U0)],
+          **{n: [round(float(v), 1) for v in rig(pv)] for n, (_, pv) in FINGERS.items()}}
 
 canvas = Image.new("RGBA", (W, H), (0, 0, 0, 0))
 for n in ORDER: canvas.alpha_composite(Image.fromarray(L[n]))

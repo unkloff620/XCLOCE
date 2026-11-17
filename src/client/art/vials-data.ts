@@ -2,74 +2,104 @@
 /** «Колбы Утилизатора» in the hand: its layers (the vials hang from their own pivot) and the pivots */
 export const VIALS_PARTS: Record<string, { x: number; y: number; w: number; h: number; pivot?: [number, number] }> = {
   "ring": {
-    "x": 594.1,
-    "y": 791.1,
+    "x": 608.4,
+    "y": 805.9,
     "w": 52.9,
     "h": 49.2
   },
   "vial-1": {
-    "x": 577.1,
-    "y": 831.6,
+    "x": 591.3,
+    "y": 846.3,
     "w": 39.1,
     "h": 95.2,
     "pivot": [
-      605.4,
-      835.8
+      619.6,
+      850.5
     ]
   },
   "vial-2": {
-    "x": 595.5,
-    "y": 837.1,
+    "x": 609.7,
+    "y": 851.9,
     "w": 35.0,
     "h": 95.7,
     "pivot": [
-      619.6,
-      841.3
+      633.9,
+      856.0
     ]
   },
   "vial-3": {
-    "x": 619.4,
-    "y": 833.9,
+    "x": 633.7,
+    "y": 848.6,
     "w": 32.2,
     "h": 97.1,
     "pivot": [
-      632.3,
-      838.1
+      646.5,
+      852.8
     ]
   },
   "clip-1": {
-    "x": 601.9,
-    "y": 822.4,
+    "x": 616.2,
+    "y": 837.1,
     "w": 14.3,
     "h": 21.2
   },
   "clip-2": {
-    "x": 615.7,
-    "y": 825.6,
+    "x": 630.0,
+    "y": 840.4,
     "w": 9.7,
     "h": 21.6
   },
   "clip-3": {
-    "x": 624.5,
-    "y": 823.8,
+    "x": 638.7,
+    "y": 838.5,
     "w": 12.0,
     "h": 22.1
   },
   "hand": {
-    "x": 598.2,
-    "y": 733.6,
-    "w": 169.3,
-    "h": 149.0
+    "x": 621.2,
+    "y": 748.4,
+    "w": 160.5,
+    "h": 99.4
+  },
+  "finger-m": {
+    "x": 612.5,
+    "y": 817.8,
+    "w": 66.7,
+    "h": 73.1
+  },
+  "finger-r": {
+    "x": 639.2,
+    "y": 827.9,
+    "w": 58.4,
+    "h": 67.6
+  },
+  "finger-p": {
+    "x": 668.6,
+    "y": 832.1,
+    "w": 53.4,
+    "h": 65.3
   }
 };
-export const VIALS_ORDER = ["ring", "vial-1", "vial-2", "vial-3", "clip-1", "clip-2", "clip-3", "hand"] as const;
+export const VIALS_ORDER = ["ring", "vial-1", "vial-2", "vial-3", "clip-1", "clip-2", "clip-3", "hand", "finger-m", "finger-r", "finger-p"] as const;
 export const VIALS_PIVOTS: Record<string, [number, number]> = {
   "spin": [
-    628.0,
-    815.6
+    642.3,
+    830.3
   ],
   "wrist": [
     762.0,
     764.0
+  ],
+  "finger-m": [
+    665.4,
+    827.5
+  ],
+  "finger-r": [
+    681.0,
+    839.4
+  ],
+  "finger-p": [
+    699.4,
+    844.5
   ]
 };
