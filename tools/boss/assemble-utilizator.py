@@ -19,8 +19,14 @@ import numpy as np
 import cv2
 from PIL import Image
 
-D = "tools/boss/source/utilizator"
+import sys
+# a variant (the beaten looks, tools/boss/beaten-parts.py): its own folder with its raw/; flags: nogloveR / nogloveL —
+# the glove is gone, the bare forearm with its fist shows; nomask — the gas mask is gone from the belt
+D = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("no") else "tools/boss/source/utilizator"
+FLAGS = set(a for a in sys.argv[1:] if a.startswith("no"))
+VARIANT = D.rstrip("/") != "tools/boss/source/utilizator"
 R = f"{D}/raw"
+BASE_R = "tools/boss/source/utilizator/raw"
 CROP = (300, 140, 1940, 2860)
 FACE_K, FACE_AT = 0.544, (658, 129)
 BROW_GAP = 505                  # between the brows on the face sheet (x)
@@ -73,6 +79,26 @@ if os.path.exists(f"{R}/upperL.png"):
     L["upperL"] = Image.fromarray(u)
 
 
+def visible_mask(part, *over):
+    """which pixels of a skin layer under its glove show in the boss: its own in full.png (the BASE layers decide, so a
+    redrawn variant keeps the same cut) or covered by the glove anyway"""
+    p = arr(part).astype(int)
+    covered = np.zeros(p.shape[:2], bool)
+    for o in over:
+        covered |= arr(o)[..., 3] > 128
+    own = np.abs(p[..., :3] - full[..., :3].astype(int)).mean(2) < 40
+    return (p[..., 3] > 0) & (covered | own | (full[..., 3] < 30))
+
+
+def masked(part, keep):
+    p = arr(part).copy()
+    p[..., 3] = np.where(keep, p[..., 3], 0)
+    return Image.fromarray(p)
+
+
+BASE = {n: Image.open(f"{BASE_R}/{n}.png").convert("RGBA") for n in ["foreR", "gloveR", "foreL", "gloveL"]}
+
+
 def visible_only(part, *over):
     """a skin layer under its glove: keep only the pixels that are its own in full.png or that the glove covers anyway
     (not the bits the torso hides in the picture — they would show over the shirt)"""
@@ -90,12 +116,15 @@ out = {
     "legs": lay(L["pants"]),
     "body": lay(L["torso"], L["apron"]),
     "armL": L["upperL"],
-    "lowL": lay(visible_only(L["foreL"], L["gloveL"]), L["gloveL"]),
+    "lowL": lay(masked(L["foreL"], visible_mask(BASE["foreL"], BASE["gloveL"])), *([] if "nogloveL" in FLAGS else [L["gloveL"]])),
     "armR": L["upperR"],
-    "lowR": lay(visible_only(L["foreR"], L["gloveR"]), L["gloveR"]),
+    "lowR": lay(masked(L["foreR"], visible_mask(BASE["foreR"], BASE["gloveR"])), *([] if "nogloveR" in FLAGS else [L["gloveR"]])),
     "vials": L["vials"],
     "gasmask": L["gasmask"],
 }
+if "nomask" in FLAGS:
+    del out["gasmask"]
+    if os.path.exists(f"{D}/gasmask.png"): os.remove(f"{D}/gasmask.png")
 for k, im in out.items():
     im.crop(CROP).save(f"{D}/{k}.png")
 for n in ["head", "eyes", "pupils", "eyes-closed", "throat", "teeth-up", "teeth-low"]:
@@ -151,6 +180,9 @@ print("armL pivot", mid(L["upperL"], L["torso"]), "lowL", mid(L["upperL"], out["
 print("armR pivot", mid(L["upperR"], L["torso"]), "lowR", mid(L["upperR"], out["lowR"]))
 print("vials", ring(L["vials"]), "gasmask", ring(L["gasmask"]))
 
+if VARIANT:
+    print("variant ok", D, sorted(FLAGS))
+    sys.exit(0)
 os.makedirs("public/bosses/utilizator", exist_ok=True)
 whole = lay(out["legs"], out["armR"], out["body"], heads, out["armL"], out["lowL"].copy(), out["lowR"], out["vials"], out["gasmask"]).crop(CROP)
 whole = Image.fromarray(np.where(arr(whole)[..., 3:] > 0, arr(whole), 0).astype(np.uint8))
