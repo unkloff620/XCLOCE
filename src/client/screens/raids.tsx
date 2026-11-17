@@ -38,6 +38,7 @@ import { RAID_BAG_PRICES, RAID_BAG_SETS } from "../../content/raids.ts";
 import { TATTOO_SETS, tattooPiece } from "../../content/tattoos.ts";
 import { GROUND_H, GROUND_W, YARD_LIGHTS, groundH, groundY } from "../../content/raids.ts";
 import { takenWord, yardReady } from "../../content/raids.ts";
+import { RAID_LOGO_AT } from "../../content/raid-logos.ts";
 import { BUILDING_NAMES, RAID_YARDS, YARD_TREES, YARD_WALKERS, buildingReward, buildingTake, flagId, raidYardById, yardTotal, type BuildingKind, type RaidBuilding } from "../../content/raids.ts";
 import { itemById } from "../../content/items.ts";
 
@@ -349,6 +350,12 @@ function RestLeft({ until }: { until: number }) {
   return <b className="num">{h ? `${h}:${String(m).padStart(2, "0")}` : m}:{String(sec).padStart(2, "0")}</b>;
 }
 
+/** a taken building's emblem: on its left roof corner, found on each picture by tools/raids/logo-spots.py */
+const logoAt = (art: string | undefined, b: RaidBuilding) => {
+  const [x, y] = RAID_LOGO_AT[`${art ? `${art}/` : ""}b-${b.pic ?? b.kind}`] ?? [8, 20];
+  return { left: `${x}%`, top: `${y}%` };
+};
+
 /** a building on the yard's ground; the one to attack now glows, a taken one carries the clan's flag */
 function Building({ b, art, target, taken, yard, clan, prog }: { b: RaidBuilding; art?: string; target: boolean; taken: boolean; yard: string; clan: RaidsView["clan"]; prog?: { wins: number; need: number } }) {
   const router = useRouter();
@@ -361,7 +368,7 @@ function Building({ b, art, target, taken, yard, clan, prog }: { b: RaidBuilding
       {/* the one being taken: the clan's wins over it so far, small on its left */}
       {target && prog && <span className="rd-bld-count">{prog.wins}/{prog.need}</span>}
       {/* taken: the clan's logo over its top-left corner */}
-      {taken && <span className="rd-bld-logo">{clan ? <Emblem emblem={clan.emblem} color={clan.color} size={34} /> : <ItemArt id={flagId(1)} size={24} />}</span>}
+      {taken && <span className="rd-bld-logo" style={logoAt(art, b)}>{clan ? <Emblem emblem={clan.emblem} color={clan.color} size={34} /> : <ItemArt id={flagId(1)} size={24} />}</span>}
     </button>
   );
 }
