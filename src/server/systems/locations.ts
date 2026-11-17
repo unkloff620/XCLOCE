@@ -1,4 +1,5 @@
 import { GameError, type Queryable } from "../db.ts";
+import { shodTick } from "./shodnyak.ts";
 import { addItem, addMoney, grantReward, ledger, spendEnergy, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { STASH_MISSING_WEIGHT, STASH_PITY, STASH_SETS, stashChance, stashSetsByLocation } from "../../content/stashes.ts";
 import { BUSINESS_MAX_HOURS, LOCATIONS, businessCells, businessCost, businessPerHour, businessPerLevel, locRep, locationById, taskById, taskOpen, tasksOf, type BusinessLine, type LocMode, type LocationDef } from "../../content/locations.ts";
@@ -270,6 +271,7 @@ export async function claimLocation(ctx: Ctx, locationId: string, mode: LocMode 
   const parts = [...rollParts(ctx.rng, cp.n, { rare: cp.rare, pool: LOCATION_PARTS[loc.id] }), ...rollParts(ctx.rng, cp.epic, { epic: 1 })];
   const got = await grantReward(ctx, mergeRewards(first && mode === "day" ? loc.reward : repeatReward(loc.reward), { items: parts }), `location:${key}`);
   await ctx.q.query("INSERT INTO location_claims (player_id, location_id, claimed_at) VALUES ($1,$2,$3)", [ctx.pid, key, new Date(ctx.now)]);
+  await shodTick(ctx, "location", 1); // «Сходняк»: a location passed
   if (first && mode === "day") await ctx.q.query("UPDATE player_stats SET locations_done = locations_done + 1 WHERE player_id=$1", [ctx.pid]);
   // reset the tasks for the next round
   await ctx.q.query("UPDATE task_progress SET steps=0, done_at=NULL WHERE player_id=$1 AND task_id = ANY($2::text[])", [ctx.pid, list.map((t) => t.id)]);

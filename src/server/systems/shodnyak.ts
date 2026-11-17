@@ -1,9 +1,9 @@
 import { GameError, type Queryable } from "../db.ts";
-import { takeMoney, weekKey, weekStart, nextWeekAt, type Ctx } from "../core.ts";
+import { moneyHooks, rewardHooks, takeMoney, weekKey, weekStart, nextWeekAt, type Ctx } from "../core.ts";
 import { OPEN_BOSSES } from "../../content/bosses.ts";
 import {
   SHOD_BOOST, SHOD_BOOST_DAYS, SHOD_BOOST_WEAPONS, SHOD_FREE_SLOTS, SHOD_MAX_SLOTS, SHOD_PRIZES, SHOD_SETS, SHOD_SLOT_PRICES,
-  SHOD_TASKS, SHOD_TATTOOS, SHOD_TATTOO_RUB, shodTaskById, type ShodTask,
+  SHOD_TASKS, SHOD_TATTOOS, SHOD_TATTOO_RUB, shodTaskById, type ShodTask, type ShodTaskKind,
 } from "../../content/shodnyak.ts";
 import { TATTOO_SETS } from "../../content/tattoos.ts";
 import type { Reward } from "../../content/rewards.ts";
@@ -44,6 +44,13 @@ export async function shodView(q: Queryable, pid: number, now: number, bossOpen?
   const [my] = clan
     ? await q.query<{ points: number }>("SELECT COALESCE(SUM(points),0)::int AS points FROM shod_tasks WHERE week=$1 AND clan_id=$2 AND done_at IS NOT NULL", [week, clan])
     : [];
+  // my clan's place among all the clans with points (it can be below the top 10)
+  const [above] = clan && Number(my?.points ?? 0) > 0
+    ? await q.query<{ n: number }>(
+      `SELECT COUNT(*)::int AS n FROM (SELECT clan_id, SUM(points) AS p FROM shod_tasks WHERE week=$1 AND done_at IS NOT NULL GROUP BY clan_id) x
+       WHERE x.p > $2 OR (x.p = $2 AND x.clan_id < $3)`, [week, Number(my!.points), clan])
+    : [];
+  const [me] = clan ? await q.query<{ name: string; tag: string; emblem: string; color: string }>("SELECT name, tag, emblem, color FROM clans WHERE id=$1", [clan]) : [];
   const [b] = await q.query<{ weapon: string | null; until: Date | null }>("SELECT weapon, until FROM shod_boost WHERE player_id=$1", [pid]);
   const boost = b && (b.weapon === null || (b.until && new Date(b.until).getTime() > now))
     ? { weapon: b.weapon, until: b.until ? new Date(b.until).getTime() : null }
@@ -56,7 +63,7 @@ export async function shodView(q: Queryable, pid: number, now: number, bossOpen?
     slots: SHOD_FREE_SLOTS + Number(s?.bought ?? 0),
     maxSlots: SHOD_MAX_SLOTS,
     slotPrices: SHOD_SLOT_PRICES,
-    clan: clan ? { id: clan, points: Number(my?.points ?? 0), place: (table.findIndex((t) => Number(t.clan_id) === clan) + 1) || null } : null,
+    clan: clan ? { id: clan, points: Number(my?.points ?? 0), place: above ? Number(above.n) + 1 : null, name: me?.name ?? "", tag: me?.tag ?? "", emblem: me?.emblem ?? "", color: me?.color ?? "" } : null,
     table: table.map((t) => ({ ...t, clan_id: Number(t.clan_id), points: Number(t.points) })),
     prizes: SHOD_PRIZES,
     tattoos: SHOD_TATTOOS,
@@ -115,11 +122,11 @@ export async function shodBoostMult(q: Queryable, pid: number, weapon: string, n
   return b?.weapon === weapon && b.until && new Date(b.until).getTime() > now ? 1 + SHOD_BOOST : 1;
 }
 
-/** progress of my taken tasks: damage dealt to bosses, a boss beaten */
-export async function shodTick(ctx: Ctx, kind: "damage" | "kill", amount: number, boss?: string) {
+/** progress of my taken tasks: damage dealt to bosses, a boss beaten (in a mode), authority got, roubles earned, a location passed */
+export async function shodTick(ctx: Ctx, kind: ShodTaskKind, amount: number, meta: { boss?: string; mode?: string } = {}) {
   if (!(amount > 0)) return;
   const week = weekKey(ctx.now);
-  const ids = SHOD_TASKS.filter((t) => t.kind === kind && (kind === "damage" || t.boss === boss)).map((t) => t.id);
+  const ids = SHOD_TASKS.filter((t) => t.kind === kind && (kind !== "kill" || (t.boss === meta.boss && (!t.mode || t.mode === meta.mode)))).map((t) => t.id);
   if (!ids.length) return;
   await ctx.q.query(
     `UPDATE shod_tasks SET progress = LEAST(goal, progress + $4::bigint), done_at = CASE WHEN progress + $4::bigint >= goal THEN $5::timestamptz ELSE NULL END
@@ -176,3 +183,14 @@ function hash(s: string) {
 }
 
 export { shodTaskById };
+
+// authority and roubles: every reward counts — but not a currency exchange (not «earning») and not the weekly prizes
+// (the clans' own prizes would fill the next week's tasks)
+const notEarned = (reason: string) => reason.startsWith("exchange") || reason.startsWith("prize:");
+rewardHooks.push(async (ctx, got, reason) => {
+  if (got.xp > 0 && !notEarned(reason)) await shodTick(ctx, "authority", got.xp);
+});
+// roubles: rewards, the business, things sold — every rouble coming in
+moneyHooks.push(async (ctx, c, amount, reason) => {
+  if (c === "RUB" && !notEarned(reason)) await shodTick(ctx, "rub", amount);
+});

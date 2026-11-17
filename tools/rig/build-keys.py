@@ -168,7 +168,9 @@ t = c1 - R @ c0
 ink_fit = [round(float(v), 4) for v in (R[0, 0], R[1, 0], R[0, 1], R[1, 1], t[0], t[1])]
 mask = np.zeros_like(hand)
 mask[:, :, :3] = 255
-mask[:, :, 3] = hand[:, :, 3]
+# the ink stays on the back of the hand by the wrist and fades out toward the knuckles: the fingers move, the ink would not
+INK_FADE = (470.0, 580.0)
+mask[:, :, 3] = (hand[:, :, 3] * np.clip((np.arange(W, dtype=np.float32) - INK_FADE[0]) / (INK_FADE[1] - INK_FADE[0]), 0, 1)[None, :]).astype(np.uint8)
 ys, xs = np.nonzero(mask[:, :, 3])
 x0, y0, x1, y1 = xs.min(), ys.min(), xs.max() + 1, ys.max() + 1
 Image.fromarray(mask[y0:y1, x0:x1]).save(os.path.join(OUT, "held", f"{ID}-ink-mask.webp"), "WEBP", quality=80, method=6)

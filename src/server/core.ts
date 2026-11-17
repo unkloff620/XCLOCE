@@ -123,8 +123,11 @@ export async function addMoney(ctx: Ctx, c: Currency, amount: number, reason: st
     [ctx.pid, c, v],
   );
   await ledger(ctx, "currency", c, v, reason);
+  for (const h of moneyHooks) await h(ctx, c, v, reason);
   return v;
 }
+/** what else listens to the money coming in (systems/shodnyak.ts: roubles earned for its tasks); registered at import */
+export const moneyHooks: ((ctx: Ctx, c: Currency, amount: number, reason: string) => Promise<void>)[] = [];
 
 export async function takeMoney(ctx: Ctx, c: Currency, amount: number, reason: string) {
   // whole units only: a fractional charge is rounded up (never takes less than asked)
@@ -186,6 +189,9 @@ export interface Granted {
   heistBox?: string;
 }
 
+/** what else listens to the rewards (systems/shodnyak.ts: authority for its tasks); registered at import */
+export const rewardHooks: ((ctx: Ctx, got: Granted, reason: string) => Promise<void>)[] = [];
+
 export async function grantReward(ctx: Ctx, r: Reward, reason: string): Promise<Granted> {
   const out: Granted = { xp: 0, currencies: {}, items: [], energy: 0 };
   for (const [c, v] of Object.entries(r.currencies ?? {})) {
@@ -211,6 +217,7 @@ export async function grantReward(ctx: Ctx, r: Reward, reason: string): Promise<
     if (after > before) out.levelUp = { from: before, to: after };
   }
   await ctx.q.query("UPDATE player_stats SET rewards_got = rewards_got + 1 WHERE player_id=$1", [ctx.pid]);
+  for (const h of rewardHooks) await h(ctx, out, reason);
   return out;
 }
 

@@ -47,4 +47,31 @@ describe("«Сходняк»", () => {
     expect(r.result.boost.weapon).toBe("gpu");
     await expect(act(db, b.p, "shod_boost", { weapon: "gpu" }, NEXT)).rejects.toMatchObject({ code: "shod_no_boost" });
   });
+
+  it("authority, roubles (not an exchange), a location passed and a win in its mode fill their tasks", async () => {
+    const db = await freshDb();
+    const a = await clanPlayer(db, "Гамма");
+    await setMoney(db, a.p, "SOL", 20);
+    await act(db, a.p, "shod_slot", {}, T);
+    for (const id of ["xp-5000", "rub-5000", "loc-5", "kill-kedr-blat"]) await act(db, a.p, "shod_take", { id }, T);
+    const { grantReward, addMoney } = await import("../src/server/core.ts");
+    const { shodTick } = await import("../src/server/systems/shodnyak.ts");
+    const { loadConfig } = await import("../src/server/config.ts");
+    const ctx = { q: db, pid: a.p, now: T, cfg: await loadConfig(db), rng: Math.random } as never;
+    await grantReward(ctx, { xp: 6_000 }, "test");
+    await addMoney(ctx, "RUB", 9_000, "exchange:USD");
+    await addMoney(ctx, "RUB", 4_000, "sell:keyboard");
+    for (let i = 0; i < 5; i++) await shodTick(ctx, "location", 1);
+    await shodTick(ctx, "kill", 1, { boss: "kedr", mode: "pacan" });
+    const rows = await db.query<{ task_id: string; progress: number; done_at: Date | null }>("SELECT task_id, progress, done_at FROM shod_tasks WHERE player_id=$1", [a.p]);
+    const by = Object.fromEntries(rows.map((r) => [r.task_id, r]));
+    expect(by["xp-5000"].done_at).not.toBeNull();
+    expect(Number(by["rub-5000"].progress)).toBe(4_000);
+    expect(by["rub-5000"].done_at).toBeNull();
+    expect(by["loc-5"].done_at).not.toBeNull();
+    expect(by["kill-kedr-blat"].done_at).toBeNull();
+    await shodTick(ctx, "kill", 1, { boss: "kedr", mode: "blat" });
+    const [k] = await db.query<{ done_at: Date | null }>("SELECT done_at FROM shod_tasks WHERE player_id=$1 AND task_id='kill-kedr-blat'", [a.p]);
+    expect(k.done_at).not.toBeNull();
+  });
 });

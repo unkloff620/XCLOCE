@@ -130,9 +130,9 @@ export const KEYS_PARTS: Record<string, { x: number; y: number; w: number; h: nu
     "h": 98.3
   },
   "ink-mask": {
-    "x": 597.7,
+    "x": 640.3,
     "y": 739.6,
-    "w": 165.9,
+    "w": 123.2,
     "h": 124.3
   }
 };

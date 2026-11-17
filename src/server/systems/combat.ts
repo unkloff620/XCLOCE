@@ -493,7 +493,7 @@ export async function claimFight(ctx: Ctx, fightId: number, see = true) {
   // «От звонка до звонка»: the win counts on the day the boss fell
   await monthTick(ctx, "kill", 1, { boss: def.id, mode: mode.id, at: f.ended_at ? new Date(f.ended_at).getTime() : ctx.now });
   // «Сходняк»: a task «beat this boss»
-  await shodTick(ctx, "kill", 1, def.id);
+  await shodTick(ctx, "kill", 1, { boss: def.id, mode: mode.id });
   await ctx.q.query("UPDATE fights SET reward=$2, seen=seen OR $3 WHERE id=$1", [f.id, JSON.stringify(granted), see]);
   {
     await ctx.q.query(

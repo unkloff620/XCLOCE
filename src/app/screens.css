@@ -6657,3 +6657,32 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .pkt-ask-btns { display: flex; gap: 10px; }
 .pkt-ask-btns .btn { flex: 1; }
+
+/* «Сходняк», round 2: tabs (Сходняк · Мои · Все · Награды), the filters of «Все», the clans' top with the prizes by place */
+.shod-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; width: 100%; box-sizing: border-box; }
+.shod-tabs button { padding: 8px 4px; font-size: 11.5px; text-align: center; white-space: nowrap; }
+.shod-task.empty { width: 100%; cursor: pointer; font: inherit; font-size: 13px; }
+.shod-pic.m-blat .bphoto { box-shadow: 0 0 0 2.5px #c3cdde; border-radius: 50%; }
+.shod-pic.m-avtor .bphoto { box-shadow: 0 0 0 2.5px #ffcc33; border-radius: 50%; }
+.shod-filters { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+.shod-filters label { display: flex; flex-direction: column; align-items: stretch; gap: 2px; }
+.shod-filters label > span { align-self: center; padding: 1px 10px; border-radius: 6px 6px 0 0; font-size: 10.5px; font-weight: 800; color: #ffe6a8; background: #6a3a14; }
+.shod-filters select { appearance: none; -webkit-appearance: none; width: 100%; padding: 7px 26px 7px 10px; border-radius: 10px; border: 2px solid #2e5a2a;
+  background: linear-gradient(#3f8a3a, #2a6526) no-repeat, #2a6526; color: #fff; font: inherit; font-size: 13px; font-weight: 800; text-align: center;
+  background-image: linear-gradient(45deg, transparent 50%, #fff 50%), linear-gradient(135deg, #fff 50%, transparent 50%), linear-gradient(#3f8a3a, #2a6526);
+  background-position: calc(100% - 14px) 52%, calc(100% - 9px) 52%, 0 0; background-size: 5px 5px, 5px 5px, 100% 100%; background-repeat: no-repeat; }
+.shod-top { border-radius: 12px; overflow: hidden; background: linear-gradient(#21384a, #172836); border: 2px solid #3c5f78; }
+.shod-top-h { display: grid; grid-template-columns: 44px 1fr 1.1fr; gap: 6px; padding: 6px 10px; font-size: 12px; font-weight: 800; color: #9fc0d8; text-transform: uppercase; background: rgba(0, 0, 0, 0.25); }
+.shod-top .shod-table { padding: 6px; gap: 5px; }
+.shod-top .shod-table li { display: grid; grid-template-columns: 30px 34px minmax(0, 1fr) 1.1fr; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 10px; background: rgba(255, 255, 255, 0.06); }
+.shod-top .shod-table li.me { background: rgba(80, 160, 255, 0.28); outline: 1.5px solid #6fb4ff; }
+.shod-top .shod-table li.gap { display: block; text-align: center; padding: 0; background: none; color: #9fc0d8; }
+.shod-medal { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 14px; color: #fff; }
+.p1 .shod-medal { background: radial-gradient(#ffe27a, #d79c1c); color: #3b2500; }
+.p2 .shod-medal { background: radial-gradient(#f2f4f8, #9aa5b8); color: #252b36; }
+.p3 .shod-medal { background: radial-gradient(#f0b07a, #a8602a); color: #2c1405; }
+.shod-cl { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.shod-cl b { font-size: 13.5px; color: #fff; }
+.shod-cpts { align-self: flex-start; padding: 0 8px; border-radius: 8px; font-size: 12px; font-weight: 800; color: #3b2500; background: linear-gradient(#ffd66b, #d7a33a); }
+.shod-cprize { min-width: 0; font-size: 12px; }
+.shod-cprize .chips, .shod-cprize > * { flex-wrap: wrap; }
