@@ -4232,6 +4232,8 @@ body { background-attachment: fixed; }
 .ink-go { font-size: 22px; color: var(--muted); }
 .ink-open { display: flex; flex-direction: column; gap: 8px; }
 .ink-open-head { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+/* the open set's / place's head stays on top while its pieces scroll under it */
+.ink-open-head { position: sticky; top: -3px; z-index: 3; padding: 6px 4px; margin: -6px -4px 0; background: rgb(34, 22, 14); box-shadow: 0 6px 8px -6px rgba(0, 0, 0, 0.7); }
 .ink-open-head .num { color: var(--gold); }
 .ink-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 6px; }
 .ink-grid .sty-item { width: auto; height: 84px; position: relative; }
