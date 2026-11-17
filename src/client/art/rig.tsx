@@ -17,7 +17,7 @@ import { HAIR_CUT_HATS, HAIR_FIT, HATS_ON_HAIR, SKIN_ORIGINAL, WEAR_FIT } from "
 import { HELD_FIT, HELD_SWING } from "./held-data.ts";
 import { GLOVES, GLOVES_ID } from "./gloves-data.ts";
 import { MetalGlint } from "./glint.tsx";
-import { KEYS_INK_FIT, KEYS_ORDER, KEYS_PARTS, KEYS_PIVOTS } from "./keys-data.ts";
+import { KEYS_ORDER, KEYS_PARTS, KEYS_PIVOTS } from "./keys-data.ts";
 import { TATTOO_FIT } from "./tattoo-data.ts";
 import { PLACES } from "./places-data.ts";
 import { SEAT } from "../../content/home-scene.ts";
@@ -559,8 +559,6 @@ function KeysHand() {
     return <image href={src(part, tinted)} x={b.x} y={b.y} width={b.w} height={b.h} preserveAspectRatio="none" />;
   };
   const [shine, setShine] = useState<{ key: string; n: number }[]>([]);
-  const uid = useId().replace(/:/g, "");
-  const m = KEYS_PARTS["ink-mask"];
   const edit = useContext(EditCtx);
   useEffect(() => {
     let last = "";
@@ -598,15 +596,7 @@ function KeysHand() {
       <g className="rk-thumb" style={at(KEYS_PIVOTS.thumb)}>{img("thumb", true)}</g>
       {img("hand", true)}
       <g className="rk-finger" style={at(KEYS_PIVOTS.finger)}>{img("finger", true)}</g>
-      {/* the hand's tattoos: the bare hand's ink turned onto this hand, cut to its shape (fading at the wrist with it) */}
-      <defs>
-        <mask id={`${uid}-ink`} maskUnits="userSpaceOnUse" x={m.x} y={m.y} width={m.w} height={m.h}>
-          <image href={src("ink-mask")} x={m.x} y={m.y} width={m.w} height={m.h} preserveAspectRatio="none" />
-        </mask>
-      </defs>
-      <g mask={`url(#${uid}-ink)`}>
-        <g transform={`matrix(${KEYS_INK_FIT.join(" ")})`}><Ink part="handR" /></g>
-      </g>
+      {/* no hand tattoos on this hand: it moves, the ink would not (the forearm keeps its own) */}
       {/* the looks editor's tattoo grid: this hand's own outline, filled when its place is chosen */}
       {edit?.mode === "ink" && (
         <image className={edit.part === "hand-r" ? "rig-place" : "rig-grid"} href={src(edit.part === "hand-r" ? "place" : "zone")} pointerEvents="none"
