@@ -510,7 +510,7 @@ const POSES: Record<string, Spec> = {
     hit: { head: 60, up: 50, x: 40, y: 50, jaw: 3, armL: -80, lowL: 110, armR: 70, lowR: -120 },
     strike: join(utUpper, shift(utHammer, 0.12)),
     // the apron's hem: heavy rubber, it lags behind his lean and sway and swings back on its own
-    hem: { sel: ".bs-hem", k: 22, c: 2.6, up: 1.9, x: 0.42, flutter: (t) => 1.1 * Math.sin(t * 1.3) + 0.5 * Math.sin(t * 2.7 + 1) },
+    hem: { sel: ".bs-hem", k: 40, c: 5.5, up: 0.55, x: 0.12, flutter: (t) => 0.35 * Math.sin(t * 1.3) + 0.15 * Math.sin(t * 2.7 + 1) },
     // beaten: he stands on his boots (the legs never move) and sways from the hips like a drunk — slow, never still, the
     // upper body leaning over and back in a loose figure, the head lagging and lolling the other way, the arms hanging
     dazed: {

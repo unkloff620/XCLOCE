@@ -50,7 +50,7 @@ const WAIST: Record<string, { at: [number, number]; bend?: string }> = {
 const COAT: Record<string, { follow: string; hem: [number, number] }> = { botsman: { follow: "0.24,0.43;0.72,0.48", hem: [450, 640] } };
 /** an apron's hem that swings on its own below the belt (Утилизатор): the top leans with br-up, the bottom with bs-hem;
  *  the legs stay under it (not like the coat, they are not drawn over) */
-const HEM: Record<string, { follow: string; hem: [number, number] }> = { utilizator: { follow: "0.5,0.66;0.97,0.6", hem: [322, 600] } };
+const HEM: Record<string, { follow: string; hem: [number, number] }> = { utilizator: { follow: "0.5,0.66;0.98,0.72", hem: [322, 640] } };
 
 /** frame schedules of the puppet strips: [frame, ms] — idle loops, ouch/strike play once */
 type SeqMode = "idle" | "ouch" | "strike" | "fear";
