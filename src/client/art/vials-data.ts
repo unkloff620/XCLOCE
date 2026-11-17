@@ -2,80 +2,80 @@
 /** «Колбы Утилизатора» in the hand: its layers (the vials hang from their own pivot) and the pivots */
 export const VIALS_PARTS: Record<string, { x: number; y: number; w: number; h: number; pivot?: [number, number] }> = {
   "ring": {
-    "x": 608.4,
-    "y": 805.9,
+    "x": 604.7,
+    "y": 796.7,
     "w": 52.9,
     "h": 49.2
   },
   "vial-1": {
-    "x": 591.3,
-    "y": 846.3,
+    "x": 587.7,
+    "y": 837.1,
     "w": 39.1,
     "h": 95.2,
     "pivot": [
-      619.6,
-      850.5
+      616.0,
+      841.3
     ]
   },
   "vial-2": {
-    "x": 609.7,
-    "y": 851.9,
+    "x": 606.1,
+    "y": 842.7,
     "w": 35.0,
     "h": 95.7,
     "pivot": [
-      633.9,
-      856.0
+      630.2,
+      846.8
     ]
   },
   "vial-3": {
-    "x": 633.7,
-    "y": 848.6,
+    "x": 630.0,
+    "y": 839.4,
     "w": 32.2,
     "h": 97.1,
     "pivot": [
-      646.5,
-      852.8
+      642.9,
+      843.6
     ]
   },
   "clip-1": {
-    "x": 616.2,
-    "y": 837.1,
+    "x": 612.5,
+    "y": 827.9,
     "w": 14.3,
     "h": 21.2
   },
   "clip-2": {
-    "x": 630.0,
-    "y": 840.4,
+    "x": 626.3,
+    "y": 831.2,
     "w": 9.7,
     "h": 21.6
   },
   "clip-3": {
-    "x": 638.7,
-    "y": 838.5,
+    "x": 635.0,
+    "y": 829.3,
     "w": 12.0,
     "h": 22.1
   },
   "hand": {
-    "x": 621.2,
-    "y": 748.4,
+    "x": 617.6,
+    "y": 739.2,
     "w": 160.5,
     "h": 99.4
   },
   "finger-m": {
-    "x": 612.5,
-    "y": 817.8,
+    "x": 608.8,
+    "y": 808.6,
     "w": 66.7,
     "h": 73.1
   },
   "finger-r": {
-    "x": 639.2,
-    "y": 827.9,
+    "x": 635.5,
+    "y": 818.7,
     "w": 58.4,
     "h": 67.6
   },
   "finger-p": {
-    "x": 668.6,
-    "y": 832.1,
+    "x": 664.9,
+    "y": 822.9,
     "w": 53.4,
     "h": 65.3
   }
@@ -83,23 +83,23 @@ export const VIALS_PARTS: Record<string, { x: number; y: number; w: number; h: n
 export const VIALS_ORDER = ["ring", "vial-1", "vial-2", "vial-3", "clip-1", "clip-2", "clip-3", "hand", "finger-m", "finger-r", "finger-p"] as const;
 export const VIALS_PIVOTS: Record<string, [number, number]> = {
   "spin": [
-    642.3,
-    830.3
+    638.6,
+    821.1
   ],
   "wrist": [
     762.0,
     764.0
   ],
   "finger-m": [
-    665.4,
-    827.5
+    661.7,
+    818.3
   ],
   "finger-r": [
-    681.0,
-    839.4
+    677.4,
+    830.2
   ],
   "finger-p": [
-    699.4,
-    844.5
+    695.8,
+    835.3
   ]
 };

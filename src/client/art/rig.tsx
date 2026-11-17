@@ -561,11 +561,11 @@ function VialsHand() {
   const fingerRefs = [useRef<SVGGElement>(null), useRef<SVGGElement>(null), useRef<SVGGElement>(null)];
   useEffect(() => {
     if (typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    // the twirl never stops: the hand keeps the ring going round at about DRIVE; the weight only slows it a little over
-    // the top and speeds it through the bottom (GL small against PULL: it never swings back)
-    const DRIVE = (Math.PI * 2) / 0.95, PULL = 9, GL = 7;
+    // the twirl never stops: the hand keeps the ring going round at about DRIVE; the weight slows it hard on the way up
+    // and drops it fast over the top and through the bottom (the speed never goes below a third: it never swings back)
+    const DRIVE = (Math.PI * 2) / 1.0, PULL = 7, GL = 17;
     let phi = 0, w = DRIVE, last = performance.now(), raf = 0, t = 0;
-    const vials = [0, 0, 0].map((_, i) => ({ a: 0, v: 0, k: 90 + i * 14, c: 7 + i }));
+    const vials = [0, 0, 0].map((_, i) => ({ a: 0, v: 0, k: 55 + i * 10, c: 4.5 + i * 0.6 }));
     // the middle, ring and little fingers close together now and then
     let close = 0, closeV = 0, closeAt = 1.5 + Math.random() * 2, closeEnd = 0;
     const tick = (now: number) => {
@@ -579,14 +579,14 @@ function VialsHand() {
       const closeTarget = closeEnd ? 1 : 0;
       for (let k = 0; k < n; k++) {
         const acc = PULL * (DRIVE - w) - GL * Math.sin(phi);
-        w = Math.max(DRIVE * 0.55, w + acc * h);
+        w = Math.max(DRIVE * 0.3, w + acc * h);
         phi += w * h;
         // each vial: the spin flings it outward, a little of the weight pulls it toward the ground; it lags on a spring
-        const target = Math.atan2(-Math.sin(phi) * 0.35, Math.cos(phi) * 0.35 + 1);
+        const target = Math.atan2(-Math.sin(phi) * 0.7, Math.cos(phi) * 0.7 + 0.9);
         for (const v of vials) {
           let d = target - v.a;
           d = Math.atan2(Math.sin(d), Math.cos(d));
-          v.v += (v.k * d - v.c * v.v - acc * 0.25) * h;
+          v.v += (v.k * d - v.c * v.v - acc * 0.45) * h;
           v.a += v.v * h;
         }
         closeV += (60 * (closeTarget - close) - 11 * closeV) * h;
