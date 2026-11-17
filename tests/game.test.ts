@@ -1581,7 +1581,25 @@ describe("yard mini games", () => {
     expect(pokerPay("high", 5)).toEqual({});
   });
 
-  it("poker: 10 USD a hand, 25 a day, poker xp grows; a «Фишка» pays for a hand instead", async () => {
+  it("poker: «Сбросить лимит» — 1500 USD for another 25 hands, only when the hands are over, at most 3 a day", async () => {
+    const p = await newPlayer(db);
+    await setMoney(db, p, "USD", 10_000);
+    const { moscowDay } = await import("../src/server/core.ts");
+    await expect(act(db, p, "poker_reset", {}, T0)).rejects.toMatchObject({ code: "poker_has_left" });
+    // 25 hands played today (as rows), the limit is reached
+    for (let i = 0; i < 25; i++) await db.query("INSERT INTO games (player_id, kind, day, paid, status, state, created_at, updated_at) VALUES ($1,'poker',$2,true,'done','{}',$3,$3)", [p, moscowDay(T0), new Date(T0)]);
+    await expect(act(db, p, "poker_play", {}, T0)).rejects.toMatchObject({ code: "poker_limit" });
+    const r = await act(db, p, "poker_reset", {}, T0);
+    expect(r.result.poker).toMatchObject({ left: 25, resets: 1, resetsMax: 3 });
+    expect(await wallet(db, p, "USD")).toBe(10_000 - 1500);
+    await act(db, p, "poker_play", {}, T0, always(0.1));
+    await db.query("UPDATE players SET poker_resets=3 WHERE id=$1", [p]);
+    await expect(act(db, p, "poker_reset", {}, T0)).rejects.toMatchObject({ code: "poker_resets_max" });
+    // a new day starts over
+    expect((await act(db, p, "poker_play", {}, T0 + 86_400_000, always(0.1))).result.poker.resets).toBe(0);
+  });
+
+  it("poker: 3 USD a hand, 25 a day, poker xp grows; a «Фишка» pays for a hand instead", async () => {
     const p = await newPlayer(db);
     await setMoney(db, p, "USD", 500);
     let xp = 0;
@@ -1594,7 +1612,7 @@ describe("yard mini games", () => {
     }
     const charges = await db.query<{ delta: number }>("SELECT delta FROM ledger WHERE player_id=$1 AND reason='game:poker'", [p]);
     expect(charges).toHaveLength(24);
-    expect(Number(charges[0].delta)).toBe(-10);
+    expect(Number(charges[0].delta)).toBe(-3);
     // no chip: an error; with a chip the 25th hand costs no money
     await expect(act(db, p, "poker_play", { chip: true }, T0 + 30_000)).rejects.toMatchObject({ code: "no_chip" });
     await give(db, p, "poker-chip", 2);

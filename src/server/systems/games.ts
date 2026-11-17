@@ -9,7 +9,7 @@ import { addGameWeekly, setGameBest } from "./minigame-extras.ts";
 import { duelScore } from "./duels.ts";
 import { addItem, addMoney, grantReward, itemQty, ledger, moscowDay, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { useItem } from "./shop.ts";
-import { ZONK_CONT_PENALTY, UPGRADE_RULES, POKER_RULES, POKER_CHIP, pokerCheats, pokerHand, pokerHandDef, pokerLevel, pokerPay,
+import { ZONK_CONT_PENALTY, UPGRADE_RULES, POKER_RULES, POKER_RESET, POKER_CHIP, pokerCheats, pokerHand, pokerHandDef, pokerLevel, pokerPay,
   GAME_RULES, ITEM_VALUES, ZONK_BANK_MIN, ZONK_DICE, ZONK_FAIL_XP, ZONK_LEVELS, ZONK_ROUNDS, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue,
   zonkCombos, zonkHasScore, zonkLevelDef, zonkScore, zonkXpLevel,
   type Card, type GameKind,
@@ -398,15 +398,33 @@ function pokerDrawView(id: number, st: PokerState) {
 
 /** hands left today, the price, the poker experience and level, the swaps the level gives, a hand not finished yet */
 export async function pokerView(q: Queryable, pid: number, now: number) {
-  const [p] = await q.query<{ poker_xp: number }>("SELECT poker_xp FROM players WHERE id=$1", [pid]);
+  const [p] = await q.query<{ poker_xp: number; poker_reset_day: string | null; poker_resets: number }>("SELECT poker_xp, poker_reset_day, poker_resets FROM players WHERE id=$1", [pid]);
   const xp = Number(p?.poker_xp ?? 0);
   const played = await pokerPlaysToday(q, pid, now);
   const lv = pokerLevel(xp);
   const open = await activePoker(q, pid);
-  // perDay 0 would mean no daily limit
-  const left = POKER_RULES.perDay > 0 ? Math.max(0, POKER_RULES.perDay - played) : 9999;
+  const resets = pokerResetsToday(p, now);
+  // perDay 0 would mean no daily limit; every bought reset adds another perDay hands
+  const left = POKER_RULES.perDay > 0 ? Math.max(0, POKER_RULES.perDay * (1 + resets) - played) : 9999;
   const chips = await itemQty(q, pid, POKER_CHIP);
-  return { left, played, perDay: POKER_RULES.perDay, price: POKER_RULES.price, chips, xp, ...lv, cheats: pokerCheats(lv.level), active: open ? pokerDrawView(open.id, open.state) : null };
+  return {
+    left, played, perDay: POKER_RULES.perDay, price: POKER_RULES.price, chips, xp, ...lv, cheats: pokerCheats(lv.level), active: open ? pokerDrawView(open.id, open.state) : null,
+    resets, resetsMax: POKER_RESET.perDay, resetPrice: POKER_RESET.price,
+  };
+}
+
+const pokerResetsToday = (p: { poker_reset_day: string | null; poker_resets: number } | undefined, now: number) =>
+  p?.poker_reset_day === moscowDay(now) ? Number(p.poker_resets) : 0;
+
+/** «Сбросить лимит»: when today's hands are all played — another perDay hands for the price, up to POKER_RESET.perDay times a day */
+export async function resetPokerLimit(ctx: Ctx) {
+  const [p] = await ctx.q.query<{ poker_reset_day: string | null; poker_resets: number }>("SELECT poker_reset_day, poker_resets FROM players WHERE id=$1 FOR UPDATE", [ctx.pid]);
+  const resets = pokerResetsToday(p, ctx.now);
+  if (resets >= POKER_RESET.perDay) throw new GameError("poker_resets_max", `Сегодня лимит уже сброшен ${POKER_RESET.perDay} раза — новые раздачи после полуночи`);
+  if ((await pokerPlaysToday(ctx.q, ctx.pid, ctx.now)) < POKER_RULES.perDay * (1 + resets)) throw new GameError("poker_has_left", "Раздачи на сегодня ещё есть");
+  await takeMoney(ctx, POKER_RESET.price.currency, POKER_RESET.price.amount, "poker_reset");
+  await ctx.q.query("UPDATE players SET poker_reset_day=$2, poker_resets=$3 WHERE id=$1", [ctx.pid, moscowDay(ctx.now), resets + 1]);
+  return { poker: await pokerView(ctx.q, ctx.pid, ctx.now) };
 }
 
 /** The hand is counted: the combination pays (more with the poker level) and gives poker xp. */
@@ -444,7 +462,11 @@ export async function playPoker(ctx: Ctx, chip = false) {
   const [p] = await ctx.q.query<{ poker_xp: number }>("SELECT poker_xp FROM players WHERE id=$1 FOR UPDATE", [ctx.pid]);
   if (await activePoker(ctx.q, ctx.pid)) throw new GameError("poker_open", "Сначала доиграй раздачу");
   // the daily limit is for the hands paid with money; a chip hand can be played over it
-  if (!chip && POKER_RULES.perDay > 0 && (await pokerPlaysToday(ctx.q, ctx.pid, ctx.now)) >= POKER_RULES.perDay) throw new GameError("poker_limit", `На сегодня все ${POKER_RULES.perDay} раздач сыграны`);
+  if (!chip && POKER_RULES.perDay > 0) {
+    const [r] = await ctx.q.query<{ poker_reset_day: string | null; poker_resets: number }>("SELECT poker_reset_day, poker_resets FROM players WHERE id=$1", [ctx.pid]);
+    const limit = POKER_RULES.perDay * (1 + pokerResetsToday(r, ctx.now));
+    if ((await pokerPlaysToday(ctx.q, ctx.pid, ctx.now)) >= limit) throw new GameError("poker_limit", `На сегодня все ${limit} раздач сыграны`);
+  }
   // a «Фишка» from the yard pays for the hand instead of the money
   if (chip) {
     if ((await itemQty(ctx.q, ctx.pid, POKER_CHIP)) <= 0) throw new GameError("no_chip", "Фишек нет — они выпадают из кейса у барыги, в чашках колеса удачи и за задания");

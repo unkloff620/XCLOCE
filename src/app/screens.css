@@ -6645,3 +6645,11 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 @keyframes rk-finger { 0%, 100% { transform: rotate(0deg); } 30% { transform: rotate(4deg); } 55% { transform: rotate(-1.5deg); } 75% { transform: rotate(2.5deg); } }
 .rig.still .rig-keys, .rig.still .rig-keys * { animation: none; }
 @media (prefers-reduced-motion: reduce) { .rig-keys, .rig-keys * { animation: none; } }
+
+/* poker «Сбросить лимит» (minigames.tsx PokerWindow): a round gold button with the arrow only, next to «Завтра»; the question */
+.pkt-btns .btn.gold.pkt-reset { flex: 0 0 auto; aspect-ratio: 1; padding: 0; display: grid; place-items: center; }
+.pkt-reset svg { width: 6cqw; height: 6cqw; }
+.pkt-ask-q { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; margin: 6px 0 14px; font-size: 17px; font-weight: 800; text-align: center; }
+.pkt-ask-q b { font-size: 18px; }
+.pkt-ask-btns { display: flex; gap: 10px; }
+.pkt-ask-btns .btn { flex: 1; }

@@ -258,7 +258,9 @@ export const upgradeValue = (stake: number, mult: number) => Math.max(1, Math.ro
  * Шулерство: с 10 уровня покера после раздачи можно заменить карту на столе (нажать на неё — придёт новая из колоды),
  * с 15 — две замены, с 30 — три, с 50 — четыре, с 75 — пять, со 100 — шесть (POKER_CHEATS). Уровней покера — до 1000. Комбинация считается после замен.
  */
-export const POKER_RULES = { perDay: 25, price: { currency: "USD" as const, amount: 10 } };
+export const POKER_RULES = { perDay: 25, price: { currency: "USD" as const, amount: 3 } };
+/** the day's limit can be bought again (another perDay hands): this price, at most `perDay` times a Moscow day */
+export const POKER_RESET = { price: { currency: "USD" as const, amount: 1500 }, perDay: 3 };
 /** the yard item that pays for one poker hand */
 export const POKER_CHIP = "poker-chip";
 export type PokerHand = "royal" | "sflush" | "quads" | "full" | "flush" | "straight" | "trips" | "twopair" | "pair" | "high";

@@ -1494,4 +1494,10 @@ CREATE TABLE IF NOT EXISTS shod_boost (
   week TEXT NOT NULL
 );`,
   },
+  {
+    // покер: «Сбросить лимит» — сколько раз за московский день куплены новые раздачи
+    id: "v2-101-poker-reset",
+    sql: `ALTER TABLE players ADD COLUMN IF NOT EXISTS poker_reset_day TEXT;
+ALTER TABLE players ADD COLUMN IF NOT EXISTS poker_resets INT NOT NULL DEFAULT 0;`,
+  },
 ];

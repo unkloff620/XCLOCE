@@ -847,6 +847,16 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
   const cheats = p?.cheats ?? pokerCheats(level);
   const drawing = open?.phase === "draw";
   const nextCheat = POKER_CHEATS.slice().reverse().find((c) => level < c.level);
+  // «Сбросить лимит»: when today's hands are over — a round icon button, a question with the price, «Да» / «Нет»
+  const [askReset, setAskReset] = useState(false);
+  const resetPrice = p?.resetPrice;
+  const canReset = !drawing && left <= 0 && !!resetPrice && (p?.resets ?? 0) < (p?.resetsMax ?? 0);
+  const doReset = async () => {
+    setAskReset(false);
+    haptic.tap();
+    const r = await act<{ poker: NonNullable<typeof info> }>("poker_reset", {}, "Лимит сброшен — раздачи снова доступны");
+    if (r) setPlay((x) => (x ? { ...x, poker: r.poker } : x));
+  };
   const run = async (type: string, body: Record<string, unknown> = {}) => {
     haptic.tap();
     sfx("tap");
@@ -936,6 +946,13 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
                 <button className="btn big gold block" disabled={busy === "poker_play" || left <= 0 || usd < POKER_RULES.price.amount} onClick={() => run("poker_play")} aria-label="Раздать">
                   {left <= 0 ? "Завтра" : <><Icon name={POKER_RULES.price.currency} size={18} /><b className="num">{POKER_RULES.price.amount}</b></>}
                 </button>
+                {canReset && (
+                  <button type="button" className="btn big gold pkt-reset" disabled={busy === "poker_reset"} onClick={() => setAskReset(true)} aria-label="Сбросить лимит" title="Сбросить лимит">
+                    <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 12a8 8 0 1 1-2.34-5.66" /><path d="M20 4v5h-5" />
+                    </svg>
+                  </button>
+                )}
                 {/* a «Фишка» from the yard: one hand without the money */}
                 {chips > 0 && (
                   <button className="btn big pkt-chip" disabled={busy === "poker_play"} onClick={() => run("poker_play", { chip: true })} aria-label={`Раздать за фишку, фишек: ${chips}`}>
@@ -947,6 +964,16 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
           </div>
         </div>
       </div>
+      {askReset && resetPrice && (
+        <Modal onClose={() => setAskReset(false)} maxWidth={300} className="pkt-ask">
+          <p className="pkt-ask-q">Сбросить лимит за <Icon name={resetPrice.currency} size={22} /><b className="num">{resetPrice.amount}</b>?</p>
+          <div className="pkt-ask-btns">
+            <button type="button" className="btn gold" disabled={busy === "poker_reset" || usd < resetPrice.amount} onClick={doReset}>Да</button>
+            <button type="button" className="btn dark" onClick={() => setAskReset(false)}>Нет</button>
+          </div>
+          {usd < resetPrice.amount && <p className="tiny center" style={{ color: "#ff8a9e", margin: "8px 0 0" }}>Не хватает долларов</p>}
+        </Modal>
+      )}
     </Modal>
   );
 }
