@@ -322,6 +322,8 @@ function decode(a: AudioContext, data: ArrayBuffer): Promise<AudioBuffer> {
     if (p && typeof p.then === "function") p.then(ok, fail);
   });
 }
+/** the samples that could not be loaded (their synthesized stand-in plays) */
+const failed = new Set<SampleId>();
 function loadSamples(a: AudioContext) {
   if (samplesLoading) return;
   samplesLoading = true;
@@ -331,7 +333,7 @@ function loadSamples(a: AudioContext) {
       .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(String(r.status)))))
       .then((d) => decode(a, d))
       .then((b) => { buffers[id] = b; return b; })
-      .catch(() => undefined); // the synthesized sound stays
+      .catch(() => { failed.add(id); return undefined; }); // the synthesized sound stays
   }
 }
 /** a recorded voice that must be ours (no synthesized stand-in): plays now, or as soon as it has loaded (within `wait` ms) */
@@ -985,6 +987,12 @@ function startFile(a: AudioContext, t: MusicTrack): boolean {
   src.connect(g).connect(musicBus);
   musicLp?.frequency.setValueAtTime(14000, a.currentTime);
   src.start(a.currentTime + 0.05, f.start);
+  // the first start after the silence of loading: a fade-in of its own
+  if (musicBus.gain.value < 0.02) {
+    musicBus.gain.cancelScheduledValues(a.currentTime);
+    musicBus.gain.setValueAtTime(0, a.currentTime);
+    musicBus.gain.linearRampToValueAtTime(trackLevel(t), a.currentTime + 1.5);
+  }
   fileSrc = src;
   fileTrack = t;
   return true;
@@ -1002,7 +1010,10 @@ export function startMusic() {
   if (!a || !musicBus || seqTimer) return;
   musicBus.gain.cancelScheduledValues(a.currentTime);
   musicBus.gain.setValueAtTime(musicBus.gain.value, a.currentTime);
-  musicBus.gain.linearRampToValueAtTime(trackLevel(track), a.currentTime + 2.5); // fade in
+  // fade in — unless the track's file is still loading: then it fades in when the file starts (startFile)
+  const f0 = (MUSIC_FILES as Partial<Record<MusicTrack, { id: SampleId }>>)[track];
+  if (!f0 || buffers[f0.id] || failed.has(f0.id)) musicBus.gain.linearRampToValueAtTime(trackLevel(track), a.currentTime + 2.5);
+  else musicBus.gain.setValueAtTime(0, a.currentTime);
   nextAt = a.currentTime + 0.1;
   seqTimer = setInterval(() => {
     if (a.state !== "running" || switchTimer) return;
@@ -1012,6 +1023,13 @@ export function startMusic() {
       return;
     }
     if (fileTrack !== track) stopFile();
+    // the track's own file is still loading: silence until it is in (the old synthesized tune is only a stand-in for a
+    // file that failed — it must not flash for a moment before our music)
+    const file = (MUSIC_FILES as Partial<Record<MusicTrack, { id: SampleId }>>)[track];
+    if (file && !failed.has(file.id)) {
+      nextAt = a.currentTime + 0.05;
+      return;
+    }
     // schedule everything due in the next 0.3 s
     while (nextAt < a.currentTime + 0.3) {
       const t = TRACKS[track];
