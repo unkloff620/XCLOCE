@@ -90,8 +90,16 @@ for k in keys:
     layers[k] = load(k)
 hand = load("hand")
 # the wrist: the cut edge melts into the sleeve / the forearm under it instead of a hard line
-WRIST_FADE = (668.0, 708.0)
-hand[:, :, 3] = (hand[:, :, 3] * np.clip((WRIST_FADE[1] - np.arange(hand.shape[1], dtype=np.float32)) / (WRIST_FADE[1] - WRIST_FADE[0]), 0, 1)[None, :]).astype(np.uint8)
+# (the artist's line: solid up to it, gone at the cut edge)
+def past(line, h, w):
+    """signed distance of every pixel from a line, positive on the wrist's side (to the right)"""
+    (ax, ay), (bx, by) = line
+    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+    nx, ny = (by - ay), -(bx - ax)
+    if nx < 0: nx, ny = -nx, -ny
+    return ((xx - ax) * nx + (yy - ay) * ny) / np.hypot(nx, ny)
+WRIST_LINE, WRIST_FADE = ((650.0, 310.0), (690.0, 420.0)), 42.0
+hand[:, :, 3] = (hand[:, :, 3] * np.clip(1 - past(WRIST_LINE, *hand.shape[:2]) / WRIST_FADE, 0, 1)).astype(np.uint8)
 # the finger: a soft band across the cut, the hand keeps its side of the band (the finger covers the seam when it moves)
 H, W = hand.shape[:2]
 yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
@@ -169,8 +177,9 @@ ink_fit = [round(float(v), 4) for v in (R[0, 0], R[1, 0], R[0, 1], R[1, 1], t[0]
 mask = np.zeros_like(hand)
 mask[:, :, :3] = 255
 # the ink stays on the back of the hand by the wrist and fades out toward the knuckles: the fingers move, the ink would not
-INK_FADE = (470.0, 580.0)
-mask[:, :, 3] = (hand[:, :, 3] * np.clip((np.arange(W, dtype=np.float32) - INK_FADE[0]) / (INK_FADE[1] - INK_FADE[0]), 0, 1)[None, :]).astype(np.uint8)
+# (the artist's line: no ink left of it, full ink INK_FADE px toward the wrist)
+INK_LINE, INK_FADE = ((522.0, 330.0), (593.0, 470.0)), 60.0
+mask[:, :, 3] = (hand[:, :, 3] * np.clip(past(INK_LINE, H, W) / INK_FADE, 0, 1)).astype(np.uint8)
 ys, xs = np.nonzero(mask[:, :, 3])
 x0, y0, x1, y1 = xs.min(), ys.min(), xs.max() + 1, ys.max() + 1
 Image.fromarray(mask[y0:y1, x0:x1]).save(os.path.join(OUT, "held", f"{ID}-ink-mask.webp"), "WEBP", quality=80, method=6)

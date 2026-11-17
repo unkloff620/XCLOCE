@@ -120,7 +120,7 @@ export const KEYS_PARTS: Record<string, { x: number; y: number; w: number; h: nu
   "hand": {
     "x": 621.6,
     "y": 738.0,
-    "w": 143.5,
+    "w": 144.6,
     "h": 127.4
   },
   "finger": {
@@ -130,15 +130,15 @@ export const KEYS_PARTS: Record<string, { x: number; y: number; w: number; h: nu
     "h": 98.3
   },
   "ink-mask": {
-    "x": 640.3,
+    "x": 674.6,
     "y": 739.6,
-    "w": 123.2,
-    "h": 124.3
+    "w": 90.0,
+    "h": 90.0
   }
 };
 export const KEYS_ORDER = ["ring-back", "key-1", "key-2", "key-3", "key-4", "key-5", "key-6", "key-7", "ring-front", "thumb", "hand", "finger"] as const;
 /** the bare hand's tattoos onto this hand: an SVG matrix(a b c d e f) */
-export const KEYS_INK_FIT = [0.9298, 0.539, -0.539, 0.9298, 470.9087, -346.4627] as const;
+export const KEYS_INK_FIT = [0.9288, 0.5571, -0.5571, 0.9288, 487.2101, -358.4647] as const;
 export const KEYS_PIVOTS: Record<string, [number, number]> = {
   "finger": [
     646.0,

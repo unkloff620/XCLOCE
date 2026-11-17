@@ -21,8 +21,8 @@ export const HELD_FIT: Record<string, { x: number; y: number; w: number; h: numb
   },
   "keys-bundle": {
     "x": 590.0,
-    "y": 737.5,
-    "w": 172,
+    "y": 738.0,
+    "w": 176,
     "h": 296
   }
 };
