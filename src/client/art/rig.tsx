@@ -723,12 +723,9 @@ function Seat({ level = 0 }: { level?: number }) {
 function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number; look?: Look; worn?: Worn; seatOnly?: boolean; edit?: RigEdit }) {
   // the room editor hides the hero: only the seat stays, so the room behind is seen
   if (seatOnly) return <>{seat !== undefined && seat !== false && <Seat level={typeof seat === "number" ? seat : 0} />}</>;
-  // the tattoo editor shows the bare hand (a thing in it — the keys, a mug, the gloves — would hide the hand's places
-  // and turn its ink): the grid and the ink lie on the hand they were made for
-  const shown = edit?.mode === "ink" && worn?.HAND ? { ...worn, HAND: undefined } : worn;
   return (
     <LookCtx.Provider value={look ?? DEFAULT_LOOK}>
-    <WornCtx.Provider value={shown ?? {}}>
+    <WornCtx.Provider value={worn ?? {}}>
     <EditCtx.Provider value={edit ?? null}>
       {edit && <OutlineDefs />}
       <ellipse cx="500" cy="1282" rx="400" ry="30" fill="rgba(0,0,0,0.3)" />
