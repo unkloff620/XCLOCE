@@ -101,6 +101,9 @@ def apply(boss, outfit, q):
         if n in SLEEVE_ONLY:
             k = sleeve_mask(orig)[..., None]
             sheet = (sheet * k + orig[:, :, :3] * (1 - k)).round().astype(np.uint8)
+        # the faint soft edge outside the drawn outline keeps the artist's own colours (no grey haze round the piece)
+        faint = (a < 160)[..., None]
+        sheet = np.where(faint, orig[:, :, :3], sheet)
         out = np.dstack([sheet, a])
         Image.fromarray(out.astype(np.uint8)).save(os.path.join(dst, f"{n}.png"))
         print(n, "→", dst, f"(filled {int(hole.sum())} px)")
@@ -108,9 +111,11 @@ def apply(boss, outfit, q):
 
 def check(boss, outfit):
     """the pieces laid apart on white (as on the artist's sheet) + the whole boss, the original next to it"""
-    order = ["upperL", "foreL", "fistL", "pants", "torso", "head", "upperR", "foreR", "fistR"]
+    # the game's own order (boss-rig.tsx: the legs, the arm in BEHIND — only its shoulder for SPLIT_BEHIND — the body, the head, the arms)
+    order = {"larek": ["pants", "upperR", "torso", "eyes", "pupils", "head", "upperL", "foreL", "fistL", "foreR", "fistR"],
+             "gopnik": ["pants", "upperL", "foreL", "fistL", "torso", "head", "upperR", "foreR", "fistR"]}[boss]
     spread = {"head": (0, -420), "torso": (0, -120), "pants": (0, 260), "upperL": (-380, -140), "foreL": (-520, 120),
-              "fistL": (-420, 420), "upperR": (330, -60), "foreR": (560, -20), "fistR": (420, -380)}
+              "fistL": (-420, 420), "upperR": (330, -60), "foreR": (560, -20), "fistR": (420, -380), "eyes": (0, -420), "pupils": (0, -420)}
     cols = []
     for b in (boss, f"{boss}-{outfit}"):
         d = os.path.join(SRC, b, "raw")

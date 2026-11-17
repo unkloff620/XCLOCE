@@ -3260,14 +3260,14 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "y": 742.0,
         "w": 489,
         "h": 133,
-        "v": "ed5a055a"
+        "v": "faab439d"
       },
       "body": {
         "x": 149.5,
         "y": 268.5,
         "w": 520,
         "h": 593,
-        "v": "be2746a9"
+        "v": "9f432674"
       },
       "armL": {
         "x": 39.5,
@@ -3278,7 +3278,7 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
           276.8,
           431.5
         ],
-        "v": "a59486f5"
+        "v": "c1b80839"
       },
       "lowL": {
         "x": 23.0,
@@ -3311,7 +3311,7 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
           531.6,
           450.2
         ],
-        "v": "f5a886cf"
+        "v": "301d60ad"
       },
       "lowR": {
         "x": 655.5,
