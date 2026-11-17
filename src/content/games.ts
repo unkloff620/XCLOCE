@@ -252,13 +252,13 @@ export const upgradeValue = (stake: number, mult: number) => Math.max(1, Math.ro
 
 /* ---------------- poker (пять карт сразу) ---------------- */
 /*
- * Платная игра: POKER_RULES.price за раздачу, до POKER_RULES.perDay раздач в сутки (МСК); «Фишка» из двора (POKER_CHIP) — одна раздача без оплаты. Сразу сдаётся 5 карт
+ * Платная игра: POKER_RULES.price за раздачу, до POKER_RULES.perDay раздач в сутки (МСК); «Фишка» (POKER_CHIP: кейс, чашки колеса, задания, зонк…) — одна раздача без оплаты. Сразу сдаётся 5 карт
  * из полной колоды, комбинация даёт награду из POKER_HANDS. Каждая раздача даёт опыт покера (xp комбинации); уровень
  * покера добавляет к денежной награде POKER_LEVEL_BONUS за уровень (до POKER_BONUS_LEVELS).
  * Шулерство: с 20 уровня покера после раздачи можно заменить карту на столе (нажать на неё — придёт новая из колоды),
  * с 50 — две замены, со 100 — три (POKER_CHEATS). Комбинация считается после замен.
  */
-export const POKER_RULES = { perDay: 25, price: { currency: "USD" as const, amount: 3 } };
+export const POKER_RULES = { perDay: 25, price: { currency: "USD" as const, amount: 10 } };
 /** the yard item that pays for one poker hand */
 export const POKER_CHIP = "poker-chip";
 export type PokerHand = "royal" | "sflush" | "quads" | "full" | "flush" | "straight" | "trips" | "twopair" | "pair" | "high";
@@ -267,7 +267,7 @@ const cs = (s: string): Card[] => s.split(" ").map((t) => ({ r: RANKS.indexOf(t.
 /** from the best down; the sample is what the row in the table shows */
 export const POKER_HANDS: PokerHandDef[] = [
   { id: "royal", name: "Роял-флеш", xp: 100, pay: { currencies: { USD: 3000 }, items: [{ id: "rug-pull-gun", qty: 3 }] }, sample: cs("10s Js Qs Ks As") },
-  { id: "sflush", name: "Стрит-флеш", xp: 60, pay: { currencies: { USD: 1000 }, items: [{ id: "rug-pull-gun", qty: 1 }] }, sample: cs("5h 6h 7h 8h 9h") },
+  { id: "sflush", name: "Стрит-флеш", xp: 60, pay: { currencies: { USD: 1000 }, items: [{ id: "rug-pull-gun", qty: 1 }, { id: "keys-bundle", qty: 1 }] }, sample: cs("5h 6h 7h 8h 9h") },
   { id: "quads", name: "Каре", xp: 30, pay: { currencies: { USD: 300 }, items: [{ id: "gpu", qty: 2 }] }, sample: cs("9s 9h 9d 9c Ks") },
   { id: "full", name: "Фулл-хаус", xp: 16, pay: { currencies: { USD: 90 }, items: [{ id: "energy-pack", qty: 2 }] }, sample: cs("Qh Qs Qd 7c 7h") },
   { id: "flush", name: "Флеш", xp: 12, pay: { currencies: { USD: 55 }, items: [{ id: "energy-pack", qty: 1 }] }, sample: cs("2d 6d 9d Jd Kd") },

@@ -117,6 +117,8 @@ const WEARABLES: ItemDef[] = ([
   // held in the left hand (slot «Кисть»): the boss's own weapon, worn for the look
   { id: "bottle-komandate", name: "Бутылка Командате", slot: "HAND", rarity: "epic", description: "Оружие Командате: горит, но не гаснет. Герой держит её в руке.", sources: ["Победа: Командате"] },
   { id: "mug-coin", name: "Кружка с монетой", slot: "HAND", rarity: "epic", description: "Горячий кофе с утра — и к графику. Герой болтает кружкой, а из неё идёт пар.", sources: ["Магазин"] },
+  // the poker's straight flush prize: owned — fights with most bosses need no passes (content/bosses.ts KEY_RING); worn — the keys jingle in the hand
+  { id: "keys-bundle", name: "Связка ключей", slot: "HAND", rarity: "legendary", description: "Подходит почти ко всем дверям: на боссов можно нападать без пропусков, они не тратятся. Кроме Вадима и Боцмана — к ним нужны пропуска. Герой держит связку и позвякивает ключами.", sources: ["Покер: стрит-флеш"] },
   { id: "hand-drum", name: "Нервные пальцы", slot: "HAND", rarity: "rare", description: "Пальцы сами отбивают ритм по колену, пока график грузится.", sources: ["Победа: Кедр"] },
   // Гаркуша's set: all in black (cut from the hero on tools/rig/source/wear); the jacket is worn open over the bare chest
   { id: "jacket-puffer", name: "Пуховик Гаркуши", slot: "SHIRT", rarity: "epic", description: "Чёрный, дутый, нараспашку — чтобы наколки было видно. Карманы под пачки.", sources: ["Победа: Гаркуша (Блатной)"] },
@@ -166,7 +168,7 @@ const MISC: ItemDef[] = [
   { id: "bottle-cap", name: "Крышка от энергетика", category: "item", rarity: "common", maxStack: 999, description: "Собери 1000 и… ничего не будет.", sources: ["Двор"] },
   { id: "spinner", name: "Спиннер из 2017", category: "item", rarity: "common", maxStack: 999, description: "Крутится. Это всё.", sources: ["Двор"] },
   { id: "flyer-passive", name: "Листовка «Пассивный доход»", category: "item", rarity: "common", maxStack: 999, description: "Звоните прямо сейчас!", sources: ["Двор"] },
-  { id: "poker-chip", name: "Фишка", category: "item", rarity: "rare", maxStack: 999, description: "Одна бесплатная раздача в покере.", sources: ["Двор"] },
+  { id: "poker-chip", name: "Фишка", category: "item", rarity: "rare", maxStack: 999, description: "Одна бесплатная раздача в покере.", sources: ["Кейс у барыги", "Колесо удачи (чашки)", "Задания дня", "Серия входов", "Зонк", "Босс клана"] },
   { id: "lost-wallet", name: "Забытый кошелёк", category: "item", rarity: "rare", maxStack: 999, description: "Внутри немного долларов и чек из шаурмы.", sources: ["Двор"] },
   // «Колесо удачи» (content/fortune.ts): the ticket is one spin; the keycaps open the boxes of the bag
   { id: "fortune-ticket", name: "Билет колеса", category: "item", rarity: "rare", maxStack: 99_999, description: "Одна прокрутка «Колеса удачи» на заднем дворе. Каждая прокрутка растит общий джекпот.", sources: ["Ящик ништяков в магазине", "Колесо удачи: купить за 10 $", "Колесо удачи"] },

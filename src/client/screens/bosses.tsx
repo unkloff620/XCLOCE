@@ -23,7 +23,7 @@ import { MEDAL_TIERS } from "../../content/medals.ts";
 import { BOSS_KILL_TARGETS } from "../../content/achievements.ts";
 
 export interface BossRow {
-  id: string; unlocked: boolean; keysHave: number; keysNeed: number; myKeys: number; hpMax: number;
+  id: string; unlocked: boolean; /** «Связка ключей» opens him: no passes spent */ ring?: boolean; keysHave: number; keysNeed: number; myKeys: number; hpMax: number;
   fightsToday: number; fightsPerDay: number; myDamage: number; myWins: number; mySoloWins?: number; fightingNow: number; totalWins: number;
   /** my medals of this boss by kind (content/medals.ts) */
   medals?: { bronze: number; silver: number; gold: number };

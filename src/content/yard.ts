@@ -25,7 +25,6 @@ export const YARD_DROPS: YardDrop[] = [
   { id: "flyer-passive", name: "Листовка «Пассивный доход»", icon: "flyer-passive", weight: 7, reward: { items: [{ id: "flyer-passive", qty: 1 }] } },
   { id: "energy-drink", name: "Энергетик", icon: "energy-drink", weight: 18, reward: { items: [{ id: "energy-drink", qty: 1 }] } },
   { id: "lost-wallet", name: "Забытый кошелёк", icon: "lost-wallet", weight: 8, reward: { currencies: { USD: 1 }, items: [{ id: "lost-wallet", qty: 1 }] } },
-  { id: "poker-chip", name: "Фишка", icon: "poker-chip", weight: 5, reward: { items: [{ id: "poker-chip", qty: 1 }] } },
   { id: "keyboard", name: "Клавиатура", icon: "keyboard", weight: 1, reward: { items: [{ id: "keyboard", qty: 1 }] } },
 ];
 
@@ -39,4 +38,4 @@ export function yardTime(now: number): YardTime {
   return h >= 22 || h < 5 ? "night" : h < 8 ? "morning" : h < 17 ? "day" : "evening";
 }
 /** at night these finds are this many times likelier (the dark hides a lot under the benches) */
-export const NIGHT_BOOST: Record<string, number> = { "poker-chip": 2, "lost-wallet": 2, keyboard: 2 };
+export const NIGHT_BOOST: Record<string, number> = { "lost-wallet": 2, keyboard: 2 };

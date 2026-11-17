@@ -542,7 +542,12 @@ export function BossScreen({ id }: { id: string }) {
         <img className="door-room" src={`/assets/door/room${MODE_ART[mode]}.webp`} alt="" draggable={false} />
         {/* the pass that opens this boss, on the left wall */}
         <div className={`door-pass ${locked ? "short" : ""}`}>
-          {prev ? (
+          {prev && row?.ring ? (
+            <>
+              <ItemArt id="keys-bundle" size={34} />
+              <span className="tiny">связка</span>
+            </>
+          ) : prev ? (
             <>
               <ItemArt id={`key-${prev.id}`} size={34} />
               <b className="num">{row?.keysHave ?? 0}/{row?.keysNeed ?? 3}</b>

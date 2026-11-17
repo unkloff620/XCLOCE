@@ -150,6 +150,13 @@ export const ACH_CATEGORIES: AchCategory[] = [
       tier: ({ pair: 1, twopair: 1, trips: 2, straight: 2, flush: 3, full: 3, quads: 4, sflush: 5, royal: 5 } as Record<string, AchTier>)[h.id] ?? 1,
     })),
   },
+  {
+    id: "keys-bundle", section: "games", name: "Связка ключей", icon: "keys-bundle", kind: "list",
+    lines: [line("keys-bundle", 0, 1, {
+      id: "got-keys-bundle", name: "Ключник", hint: "Получи «Связку ключей» — она даётся за стрит-флеш в покере", stat: "got:keys-bundle", target: 1,
+      icon: "keys-bundle", label: "1", points: 40, tier: 5,
+    })],
+  },
   series("bj-bet", "games", "Блэкджек", "ach-bj", "bjBestBet", [5, 10, 25, 50, 75, 100, 150, 250, 350, 500], (n) => `Выиграй ставку ${n} $ в блэкджек`),
   {
     id: "zonk-combos", section: "games", name: "Зонк: комбинации", icon: "ach-zonk", kind: "list",

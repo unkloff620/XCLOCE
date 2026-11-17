@@ -233,6 +233,10 @@ export const unlockBossOf = (itemId: string) => BOSSES.find((b) => b.wear?.items
 /** the thing opens for sure with the first win over its boss (BossDef.firstWin), not by a chance */
 export const isFirstWinItem = (itemId: string) => BOSSES.some((b) => b.firstWin?.includes(itemId));
 export const keyId = (bossId: string) => `key-${bossId}`;
+/** «Связка ключей» (the poker's straight flush): its owner fights the bosses without passes (none are spent) — except these */
+export const KEY_RING = "keys-bundle";
+export const KEY_RING_EXCEPT = ["vadim", "botsman"];
+export const keyRingFits = (b: BossDef) => !b.event && b.order > 1 && !KEY_RING_EXCEPT.includes(b.id);
 /**
  * What a boss's pass (item key-<id>) looks like. A pass dropped by boss N opens boss N+1, so it is drawn as the key of
  * the boss it opens (public/assets/items/pass-key-<next id>.webp, tools/items/source/pass-key-<next id>.png): Дацкоу

@@ -297,6 +297,21 @@ describe("boss fights: personal fights, shared damage", () => {
     expect(totalBonus({}, ["basic"], []).damage).toBe(0);
   });
 
+  it("«Связка ключей»: bosses open without passes and none are spent — but not Вадим and Боцман", async () => {
+    const p = await newPlayer(db);
+    await give(db, p, "keys-bundle", 1);
+    await give(db, p, "key-datsik", 2);
+    const r = await act(db, p, "fight_start", { boss: "kedr" }, T0);
+    expect(r.state.fight?.bossId).toBe("kedr");
+    expect(await qty(db, p, "key-datsik")).toBe(2);
+    await act(db, p, "fight_flee", {}, T0).catch(() => {});
+    const q = await newPlayer(db);
+    await give(db, q, "keys-bundle", 1);
+    await expect(act(db, q, "fight_start", { boss: "vadim" }, T0)).rejects.toMatchObject({ code: "boss_locked" });
+    await expect(act(db, q, "fight_start", { boss: "botsman" }, T0)).rejects.toMatchObject({ code: "boss_locked" });
+    expect((await act(db, q, "fight_start", { boss: "knyaz" }, T0)).state.fight?.bossId).toBe("knyaz");
+  });
+
   it("Фокус and Солнце open with a single key", async () => {
     const p = await newPlayer(db);
     await expect(act(db, p, "fight_start", { boss: "fokus" }, T0)).rejects.toMatchObject({ code: "boss_locked" });
@@ -859,7 +874,7 @@ describe("«Ящик ништяков»", () => {
     // every box: keyboards, a GPU and (mostly) a Rug Pull Gun; the wheel's tickets (the wheel is open) are checked apart
     expect(a.result.reward.items.some((i: { id: string }) => i.id === "fortune-ticket")).toBe(true);
     const noParts = (l: { id: string }[]) => l.filter((i) => !i.id.startsWith("part-") && i.id !== "fortune-ticket"); // the box has craft parts too
-    expect(noParts(a.result.reward.items)).toEqual([{ id: "keyboard", qty: 2 }, { id: "gpu", qty: 1 }, { id: "rug-pull-gun", qty: 1 }]);
+    expect(noParts(a.result.reward.items)).toEqual([{ id: "keyboard", qty: 2 }, { id: "gpu", qty: 1 }, { id: "rug-pull-gun", qty: 1 }, { id: "poker-chip", qty: 2 }]);
     expect(a.result.reward.items.some((i: { id: string }) => i.id.startsWith("part-"))).toBe(true);
     await act(db, p, "ach_box_open", {}, T0, always(0.5));
     await expect(act(db, p, "ach_box_open", {}, T0)).rejects.toMatchObject({ code: "ach_box_empty" });
@@ -867,7 +882,7 @@ describe("«Ящик ништяков»", () => {
     await db.query("UPDATE players SET ach_points = 27 WHERE id=$1", [p]);
     const all = await act(db, p, "ach_box_open", { all: true }, T0, always(0.5));
     expect(all.result).toMatchObject({ opened: 3, box: { opened: 5, ready: 0 } });
-    expect(noParts(all.result.reward.items)).toEqual([{ id: "keyboard", qty: 6 }, { id: "gpu", qty: 3 }, { id: "rug-pull-gun", qty: 3 }]);
+    expect(noParts(all.result.reward.items)).toEqual([{ id: "keyboard", qty: 6 }, { id: "gpu", qty: 3 }, { id: "rug-pull-gun", qty: 3 }, { id: "poker-chip", qty: 6 }]);
   });
 
   it("case things: at most one a box; 20 boxes in a row without one — the 21st gives one for sure", async () => {
@@ -1565,9 +1580,9 @@ describe("yard mini games", () => {
     expect(pokerPay("high", 5)).toEqual({});
   });
 
-  it("poker: 3 USD a hand, 25 a day, poker xp grows; a «Фишка» pays for a hand instead", async () => {
+  it("poker: 10 USD a hand, 25 a day, poker xp grows; a «Фишка» pays for a hand instead", async () => {
     const p = await newPlayer(db);
-    await setMoney(db, p, "USD", 200);
+    await setMoney(db, p, "USD", 500);
     let xp = 0;
     for (let i = 0; i < 24; i++) {
       const r = await act(db, p, "poker_play", {}, T0 + i * 1000, always(0.37));
@@ -1578,7 +1593,7 @@ describe("yard mini games", () => {
     }
     const charges = await db.query<{ delta: number }>("SELECT delta FROM ledger WHERE player_id=$1 AND reason='game:poker'", [p]);
     expect(charges).toHaveLength(24);
-    expect(Number(charges[0].delta)).toBe(-3);
+    expect(Number(charges[0].delta)).toBe(-10);
     // no chip: an error; with a chip the 25th hand costs no money
     await expect(act(db, p, "poker_play", { chip: true }, T0 + 30_000)).rejects.toMatchObject({ code: "no_chip" });
     await give(db, p, "poker-chip", 2);

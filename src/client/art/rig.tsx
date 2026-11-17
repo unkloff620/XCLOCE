@@ -10,13 +10,14 @@
  */
 import { ART_VER, usedUrl } from "../preload.ts";
 import type { PointerEvent as ReactPointerEvent, ReactNode } from "react";
-import { createContext, useContext, useEffect, useId, useMemo, useRef } from "react";
+import { createContext, useContext, useEffect, useId, useMemo, useRef, useState } from "react";
 import { RIG } from "./rig-data.ts";
 import { BEARD_FIT } from "./beard-data.ts";
 import { HAIR_CUT_HATS, HAIR_FIT, HATS_ON_HAIR, SKIN_ORIGINAL, WEAR_FIT } from "./rig-look.ts";
 import { HELD_FIT, HELD_SWING } from "./held-data.ts";
 import { GLOVES, GLOVES_ID } from "./gloves-data.ts";
 import { MetalGlint } from "./glint.tsx";
+import { KEYS_ORDER, KEYS_PARTS, KEYS_PIVOTS } from "./keys-data.ts";
 import { TATTOO_FIT } from "./tattoo-data.ts";
 import { PLACES } from "./places-data.ts";
 import { SEAT } from "../../content/home-scene.ts";
@@ -496,6 +497,7 @@ function HandFrames() {
   const { skin } = useContext(LookCtx);
   const heldId = useContext(WornCtx).HAND;
   if (heldId === GLOVES_ID) return <GloveHand />;
+  if (heldId === KEYS_ID) return <KeysHand />;
   if (heldId && heldId in HELD_FIT) {
     const f = HELD_FIT[heldId];
     const sw = HELD_SWING[heldId];
@@ -532,6 +534,65 @@ function HandFrames() {
         <image key={k} className={`rig-hf rig-hf-${k}`} href={`${dir}/handR-f${k}.webp?v=${ART_VER.heroPart}`} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" />
       ))}
       <Ink part="handR" />
+    </g>
+  );
+}
+
+const KEYS_ID = "keys-bundle";
+const KEY_NAMES = KEYS_ORDER.filter((n) => n.startsWith("key-"));
+const at = (p: [number, number]) => ({ transformOrigin: `${p[0]}px ${p[1]}px`, transformBox: "view-box" as const });
+
+/**
+ * «Связка ключей» (tools/rig/build-keys.py): the hand lifts the key ring at the wrist and lowers it; the ring and the keys
+ * on it hang behind, swing and settle (a pendulum driven by the hand, screens.css «rk-»), each key dangles a little on its
+ * own; the thumb behind the hand and the index finger move. The ring's back half is behind the keys, its front half over
+ * them and the hand. Now and then one key gleams — one at a time, in a random order.
+ */
+function KeysHand() {
+  const { skin } = useContext(LookCtx);
+  const src = (part: string, tinted = false) =>
+    `${tinted && skin !== SKIN_ORIGINAL ? `/assets/hero/skin-${skin}/held-${KEYS_ID}` : `/assets/hero/held/${KEYS_ID}`}-${part}.webp?v=${ART_VER.heroPart}`;
+  const img = (part: string, tinted = false) => {
+    const b = KEYS_PARTS[part];
+    return <image href={src(part, tinted)} x={b.x} y={b.y} width={b.w} height={b.h} preserveAspectRatio="none" />;
+  };
+  const [shine, setShine] = useState<{ key: string; n: number }[]>([]);
+  useEffect(() => {
+    let last = "";
+    let n = 0;
+    let t: ReturnType<typeof setTimeout>;
+    const next = () => {
+      const pool = KEY_NAMES.filter((k) => k !== last);
+      last = pool[Math.floor(Math.random() * pool.length)];
+      const item = { key: last, n: ++n };
+      setShine((s) => [...s.slice(-1), item]);
+      t = setTimeout(next, 1100 + Math.random() * 1300);
+    };
+    t = setTimeout(next, 600);
+    return () => clearTimeout(t);
+  }, []);
+  return (
+    <g className="rig-hand rig-keys" style={at(KEYS_PIVOTS.wrist)}>
+      <g className="rk-ring" style={at(KEYS_PIVOTS.grip)}>
+        {img("ring-back")}
+        <g className="rk-keys" style={at(KEYS_PIVOTS.hang)}>
+          {KEY_NAMES.map((k, i) => {
+            const b = KEYS_PARTS[k];
+            return (
+              <g key={k} className={`rk-key rk-key-${i + 1}`} style={at(b.pivot!)}>
+                {img(k)}
+                {shine.filter((x) => x.key === k).map((x) => (
+                  <MetalGlint key={x.n} mask={src(`${k}-shine`)} box={b} star={b.star!} size={11} />
+                ))}
+              </g>
+            );
+          })}
+        </g>
+      </g>
+      <g className="rk-thumb" style={at(KEYS_PIVOTS.thumb)}>{img("thumb", true)}</g>
+      {img("hand", true)}
+      <g className="rk-finger" style={at(KEYS_PIVOTS.finger)}>{img("finger", true)}</g>
+      <g className="rk-ring" style={at(KEYS_PIVOTS.grip)}>{img("ring-front")}</g>
     </g>
   );
 }

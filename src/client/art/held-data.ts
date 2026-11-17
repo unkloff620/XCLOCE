@@ -18,6 +18,12 @@ export const HELD_FIT: Record<string, { x: number; y: number; w: number; h: numb
     "y": 706.5,
     "w": 195,
     "h": 140
+  },
+  "keys-bundle": {
+    "x": 570.0,
+    "y": 735.0,
+    "w": 196,
+    "h": 330
   }
 };
 /** what hangs from the fist and swings (drawn behind the hand, in order): the pivot and the parts */

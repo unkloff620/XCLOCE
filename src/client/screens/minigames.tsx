@@ -790,7 +790,7 @@ function PokerHelp() {
   return (
     <Help topic="poker" title="Покер">
       <p>Сразу сдаётся 5 карт. Собралась комбинация из таблицы под картами — получаешь награду, чем старше комбинация, тем больше.</p>
-      <p>Раздача — {POKER_RULES.price.amount} USD, до {POKER_RULES.perDay} раздач в сутки. «Фишка» из двора оплачивает одну раздачу вместо денег.</p>
+      <p>Раздача — {POKER_RULES.price.amount} USD, до {POKER_RULES.perDay} раздач в сутки. «Фишка» (из кейса у барыги, чашек колеса удачи, заданий) оплачивает одну раздачу вместо денег. Стрит-флеш даёт «Связку ключей»: с ней на боссов нападают без пропусков (кроме Вадима и Боцмана).</p>
       <p>Каждая раздача даёт опыт покера (за старшие комбинации — больше). Каждый уровень покера до {POKER_BONUS_LEVELS}-го добавляет +{Math.round(POKER_LEVEL_BONUS * 1000) / 10}% к денежной награде; всего уровней {POKER_MAX_LEVEL}.</p>
       <p>Шулерство: {POKER_CHEATS.slice().reverse().map((c) => `с ${c.level} уровня — ${c.swaps} ${c.swaps === 1 ? "замена" : "замены"}`).join(", ")}. После раздачи нажми на любую карту на столе — она уйдёт, а на её место придёт новая из колоды. Комбинация считается, когда замены кончатся или ты нажмёшь «Вскрыть».</p>
     </Help>
@@ -810,13 +810,15 @@ function PrizeIcons({ hand, level }: { hand: PokerHand; level: number }) {
     ...Object.entries(pay.currencies ?? {}).map(([c, v]) => ({ key: c, icon: <Icon name={c as Currency} size={22} />, n: v ?? 0, title: `${v} ${c}` })),
     ...(pay.items ?? []).map((it) => ({ key: it.id, icon: <ItemArt id={it.id} size={24} />, n: it.qty, title: `${itemById(it.id)?.name ?? it.id} ×${it.qty}` })),
   ];
-  // two cells, always (an empty one when the combination pays only money): the column of the list stays even
+  // three cells, always (empty ones when the combination pays less): the columns of the list stay even; a one-of-a-kind
+  // thing (the straight flush's «Связка ключей») — just its picture
   return (
     <>
-      {[0, 1].map((k) => {
+      {[0, 1, 2].map((k) => {
         const p = parts[k];
+        const one = itemById(p?.key ?? "")?.maxStack === 1;
         return p
-          ? <span key={p.key} className="pkt-cell" title={p.title}>{p.icon}<b className="num">{p.key in (pay.currencies ?? {}) ? qtyText(p.n) : `×${p.n}`}</b></span>
+          ? <span key={p.key} className={`pkt-cell ${one ? "one" : ""}`} title={p.title}>{p.icon}{!one && <b className="num">{p.key in (pay.currencies ?? {}) ? qtyText(p.n) : `×${p.n}`}</b>}</span>
           : <span key={`e${k}`} className="pkt-cell empty" />;
       })}
     </>

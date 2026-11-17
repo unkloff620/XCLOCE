@@ -447,7 +447,7 @@ export async function playPoker(ctx: Ctx, chip = false) {
   if (!chip && POKER_RULES.perDay > 0 && (await pokerPlaysToday(ctx.q, ctx.pid, ctx.now)) >= POKER_RULES.perDay) throw new GameError("poker_limit", `На сегодня все ${POKER_RULES.perDay} раздач сыграны`);
   // a «Фишка» from the yard pays for the hand instead of the money
   if (chip) {
-    if ((await itemQty(ctx.q, ctx.pid, POKER_CHIP)) <= 0) throw new GameError("no_chip", "Фишек нет — их находят во дворе");
+    if ((await itemQty(ctx.q, ctx.pid, POKER_CHIP)) <= 0) throw new GameError("no_chip", "Фишек нет — они выпадают из кейса у барыги, в чашках колеса удачи и за задания");
     await takeItem(ctx, POKER_CHIP, 1, "game:poker");
   } else await takeMoney(ctx, POKER_RULES.price.currency, POKER_RULES.price.amount, "game:poker");
   const deck = shuffled(ctx.rng);

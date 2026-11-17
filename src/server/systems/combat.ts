@@ -3,7 +3,7 @@ import { monthTick } from "./monthly.ts";
 import { shodBoostMult, shodTick } from "./shodnyak.ts";
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, idempotent, itemQty, ledger, moscowDay, nextMoscowMidnight, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
-import { BLAT_THING_CHANCE, BOTH_DROP_CHANCE, BOSSES, EVENT_FIGHTS, EXTRA_KEY_CHANCE, OPEN_BOSSES, bossById, bossOpen, keyId, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
+import { BLAT_THING_CHANCE, BOTH_DROP_CHANCE, BOSSES, EVENT_FIGHTS, EXTRA_KEY_CHANCE, OPEN_BOSSES, bossById, bossOpen, KEY_RING, keyId, keyRingFits, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
 import { RUSH_PRICE, WEAPONS, itemById, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
 import { boostReward, mergeRewards, scaleReward } from "../../content/rewards.ts";
@@ -125,9 +125,15 @@ export function fightHp(f: Pick<FightRow, "hp_max" | "start_total" | "end_total"
 /** Boss N+1 opens after KEYS keys of boss N. */
 export async function isUnlocked(q: Queryable, pid: number, boss: BossDef, defaultKeys: number): Promise<boolean> {
   if (boss.order === 1 || boss.event) return true;
+  if (await ringOpens(q, pid, boss)) return true;
   const prev = prevBoss(boss);
   if (!prev) return false;
   return (await itemQty(q, pid, keyId(prev.id))) >= keysNeeded(boss, defaultKeys);
+}
+
+/** «Связка ключей»: the boss opens without passes (and none are spent) */
+async function ringOpens(q: Queryable, pid: number, boss: BossDef) {
+  return keyRingFits(boss) && (await itemQty(q, pid, KEY_RING)) > 0;
 }
 
 /** Fights that count toward the daily limit: won ones and the running one. Lost / abandoned fights do not count. */
@@ -173,7 +179,7 @@ export async function startFight(ctx: Ctx, bossId: string, solo = false, modeId:
   await expireFights(ctx, g);
   // the entry: the passes of the previous boss are spent (a lost or fled fight gives them back)
   const prev = prevBoss(def);
-  const keys = prev ? keysNeeded(def, ctx.cfg.fight.keysToUnlock) : 0;
+  const keys = prev && !(await ringOpens(ctx.q, ctx.pid, def)) ? keysNeeded(def, ctx.cfg.fight.keysToUnlock) : 0;
   if (prev && keys > 0) await takeItem(ctx, keyId(prev.id), keys, `fight:${def.id}`);
   const hpMax = Math.round((ctx.cfg.bossHp[def.id] ?? def.hp) * mode.hp);
   const clockMin = extras.clockMin + (await craftBonus(ctx.q, ctx.pid)).clock; // + the craft stash's minutes
@@ -615,6 +621,7 @@ export async function bossList(q: Queryable, pid: number, cfg: Ctx["cfg"], now =
   const perDay = cfg.fight.perDay + talentExtras(await weaponTalents(q, pid)).bossFights;
   const keys = await q.query<{ item_id: string; qty: number }>("SELECT item_id, qty FROM inventory WHERE player_id=$1 AND item_id LIKE 'key-%'", [pid]);
   const keyMap = new Map(keys.map((k) => [k.item_id, k.qty]));
+  const ring = (await itemQty(q, pid, KEY_RING)) > 0;
   const today = await q.query<{ boss_id: string; n: number }>("SELECT boss_id, COUNT(*)::int AS n FROM fights WHERE player_id=$1 AND day=$2 AND status <> 'lost' GROUP BY boss_id", [pid, day]);
   const todayMap = new Map(today.map((t) => [t.boss_id, t.n]));
   const mine = await q.query<{ boss_id: string; damage: number; wins: number }>("SELECT boss_id, damage, wins FROM boss_damage WHERE player_id=$1", [pid]);
@@ -644,7 +651,9 @@ export async function bossList(q: Queryable, pid: number, cfg: Ctx["cfg"], now =
       const keysHave = prev ? keyMap.get(keyId(prev.id)) ?? 0 : 0;
       return {
         id: b.id,
-        unlocked: b.order === 1 || !!b.event || keysHave >= keysNeeded(b, cfg.fight.keysToUnlock) || myFight?.boss_id === b.id,
+        unlocked: b.order === 1 || !!b.event || keysHave >= keysNeeded(b, cfg.fight.keysToUnlock) || myFight?.boss_id === b.id || (ring && keyRingFits(b)),
+        /** «Связка ключей» opens him: no passes needed, none spent */
+        ring: ring && keyRingFits(b),
         keysHave,
         keysNeed: keysNeeded(b, cfg.fight.keysToUnlock),
         myKeys: keyMap.get(keyId(b.id)) ?? 0,
