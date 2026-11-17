@@ -1512,4 +1512,10 @@ ALTER TABLE players ADD COLUMN IF NOT EXISTS poker_resets INT NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS promises_what ON promises (what) WHERE given_at IS NULL;`,
   },
+  {
+    // the fight's six weapon cells (each a weapon and how many of it a tap uses), the clan boost switched on/off
+    id: "v2-103-fight-slots",
+    sql: `ALTER TABLE players ADD COLUMN IF NOT EXISTS fight_slots JSONB;
+ALTER TABLE shod_boost ADD COLUMN IF NOT EXISTS on_ BOOLEAN NOT NULL DEFAULT true;`,
+  },
 ];

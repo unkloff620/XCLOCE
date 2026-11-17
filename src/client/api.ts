@@ -30,6 +30,10 @@ export interface GameState {
     talentDamage: number;
     /** «Автопрокачка»: free talents go into the next stop by themselves */
     talentAuto?: boolean;
+    /** the fight's six weapon cells: a weapon and how many of it a tap uses */
+    fightSlots?: ({ w: string; n: number } | null)[];
+    /** the clan's boost (the 1st place of «Сходняк»): weapon null — still to pick */
+    boost?: { weapon: string | null; until: number | null; on: boolean; pct: number } | null;
   };
   weaponTalents: WeaponTalents;
   wallet: Record<Currency, number>;

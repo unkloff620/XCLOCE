@@ -1,3 +1,5 @@
+import { fightSlots } from "../../content/fight-slots.ts";
+import { myBoost } from "./shodnyak.ts";
 import { newbieView } from "./newbie.ts";
 import { tosyaView } from "./tosya.ts";
 import { heistView } from "./heist.ts";
@@ -68,6 +70,9 @@ export async function gameState(ctx: Ctx) {
       energy: e.energy, energyMax: ec.max, energyNextIn: e.nextIn, energyPeriodMs: ctx.cfg.energy.regenMin * 60_000,
       talents: Number((p as PlayerRow & { talents?: number }).talents ?? 0),
       talentAuto: !!(p as PlayerRow & { talent_auto?: boolean }).talent_auto,
+      // the fight's six weapon cells (content/fight-slots.ts) and the clan boost (the panel's «Усиление»)
+      fightSlots: fightSlots((p as PlayerRow & { fight_slots?: unknown }).fight_slots ?? null),
+      boost: await myBoost(ctx.q, ctx.pid, ctx.now),
       // the talent counter: boss damage of all time
       talentDamage: Number((await ctx.q.query<{ total_damage: number }>("SELECT total_damage FROM player_stats WHERE player_id=$1", [ctx.pid]))[0]?.total_damage ?? 0),
     },

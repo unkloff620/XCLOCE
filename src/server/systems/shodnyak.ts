@@ -116,10 +116,23 @@ export async function shodBoost(ctx: Ctx, weapon: string) {
   return shodView(ctx.q, ctx.pid, ctx.now, ctx.cfg.bossOpen);
 }
 
-/** the damage multiplier of the boost for this weapon (1 when there is none) */
+/** the damage multiplier of the boost for this weapon (1 when there is none, or it is switched off in the fight's panel) */
 export async function shodBoostMult(q: Queryable, pid: number, weapon: string, now: number) {
-  const [b] = await q.query<{ weapon: string | null; until: Date | null }>("SELECT weapon, until FROM shod_boost WHERE player_id=$1", [pid]);
-  return b?.weapon === weapon && b.until && new Date(b.until).getTime() > now ? 1 + SHOD_BOOST : 1;
+  const [b] = await q.query<{ weapon: string | null; until: Date | null; on_: boolean }>("SELECT weapon, until, on_ FROM shod_boost WHERE player_id=$1", [pid]);
+  return b?.on_ !== false && b?.weapon === weapon && b.until && new Date(b.until).getTime() > now ? 1 + SHOD_BOOST : 1;
+}
+
+/** the fight panel's «Усиление»: the clan's boost switched on or off */
+export async function shodBoostOn(ctx: Ctx, on: boolean) {
+  await ctx.q.query("UPDATE shod_boost SET on_=$2 WHERE player_id=$1", [ctx.pid, on]);
+  return { boost: await myBoost(ctx.q, ctx.pid, ctx.now) };
+}
+
+/** my clan boost for the state (null: none running and none to pick) */
+export async function myBoost(q: Queryable, pid: number, now: number) {
+  const [b] = await q.query<{ weapon: string | null; until: Date | null; on_: boolean }>("SELECT weapon, until, on_ FROM shod_boost WHERE player_id=$1", [pid]);
+  if (!b || (b.weapon && (!b.until || new Date(b.until).getTime() <= now))) return null;
+  return { weapon: b.weapon, until: b.until ? new Date(b.until).getTime() : null, on: b.on_ !== false, pct: Math.round(SHOD_BOOST * 100) };
 }
 
 /** progress of my taken tasks: damage dealt to bosses, a boss beaten (in a mode), authority got, roubles earned, a location passed */

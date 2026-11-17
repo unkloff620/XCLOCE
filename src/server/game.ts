@@ -2,7 +2,8 @@ import { newbieClaim } from "./systems/newbie.ts";
 import { tosyaBuy } from "./systems/tosya.ts";
 import { heistAuto, heistOpen, heistPick, heistRush } from "./systems/heist.ts";
 import { raidAttack, raidBagOpen, raidFlee, raidStart } from "./systems/raids.ts";
-import { shodBoost, shodSlot, shodTake, shodTick } from "./systems/shodnyak.ts";
+import { shodBoost, shodBoostOn, shodSlot, shodTake, shodTick } from "./systems/shodnyak.ts";
+import { fightSlots } from "../content/fight-slots.ts";
 import { fortuneBagOpen, fortuneBuy, fortuneCupsPick, fortuneCupsStart, fortuneSpin } from "./systems/fortune.ts";
 import { autoSet, runAutos } from "./systems/autos.ts";
 import { randomInt } from "node:crypto";
@@ -99,7 +100,7 @@ export const ACTIONS = [
   "daily_claim", "sell", "sell_many", "rename", "slots_spin",
   "equipment_upgrade", "talent_up", "talent_reset", "talent_auto", "room_buy", "room_set", "look_set", "decor_set", "decor_save", "piece_buy", "help_seen", "starter_gift",
   "quest_claim", "quest_chest", "notify_set", "achievement_claim", "achievement_claim_all", "ach_box_open", "prize_claim", "clan_edit",
-  "game_start", "zonk_move", "zonk_give_up", "zonk_hints", "zonk_choice", "roach_squash", "pigeon_scare", "poker_play", "poker_swap", "poker_stand", "bj_open", "bj_invite", "bj_join", "bj_decline", "bj_leave", "bj_bet", "bj_unbet", "bj_insure", "bj_move", "upgrade", "up_sell", "up_take", "craft_put", "craft_take", "craft_make", "craft_box_buy", "dealer_buy", "craft_split", "dealer_talk", "part_buy", "shave", "tosya_buy", "newbie_claim", "heist_pick", "heist_rush", "heist_open", "heist_auto", "auto_set", "craft_preset_save", "craft_preset_apply", "craft_preset_delete", "fortune_buy", "fortune_spin", "fortune_cups", "fortune_cup_pick", "fortune_bag", "raid_start", "raid_attack", "raid_flee", "raid_bag", "shod_take", "shod_slot", "shod_boost", "poker_reset", "poker_case",
+  "game_start", "zonk_move", "zonk_give_up", "zonk_hints", "zonk_choice", "roach_squash", "pigeon_scare", "poker_play", "poker_swap", "poker_stand", "bj_open", "bj_invite", "bj_join", "bj_decline", "bj_leave", "bj_bet", "bj_unbet", "bj_insure", "bj_move", "upgrade", "up_sell", "up_take", "craft_put", "craft_take", "craft_make", "craft_box_buy", "dealer_buy", "craft_split", "dealer_talk", "part_buy", "shave", "tosya_buy", "newbie_claim", "heist_pick", "heist_rush", "heist_open", "heist_auto", "auto_set", "craft_preset_save", "craft_preset_apply", "craft_preset_delete", "fortune_buy", "fortune_spin", "fortune_cups", "fortune_cup_pick", "fortune_bag", "raid_start", "raid_attack", "raid_flee", "raid_bag", "shod_take", "shod_slot", "shod_boost", "poker_reset", "poker_case", "fight_slots", "shod_boost_on",
   "clan_cancel", "clan_accept", "clan_reject", "clan_boss_hit", "duel_create", "duel_answer", "duel_play", "stash_collect", "stash_wish", "stash_gift", "stash_accept", "social_pump", "social_fight", "social_spit", "notes_read", "month_buy", "month_claim",
 ] as const;
 export type ActionType = (typeof ACTIONS)[number];
@@ -247,6 +248,8 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "poker_play": return games.playPoker(ctx, body.chip === true);
     case "poker_reset": return games.resetPokerLimit(ctx);
     case "poker_case": return games.openPokerCase(ctx, Number(body.n));
+    case "fight_slots": return saveFightSlots(ctx, body.slots);
+    case "shod_boost_on": return shodBoostOn(ctx, !!body.on);
     case "roach_squash": return extras2.squashRoach(ctx);
     case "pigeon_scare": return extras2.scarePigeon(ctx, Number(body.slot));
     case "duel_create": return duels.createDuel(ctx, num(body.to, "to"), num(body.stake, "stake"));
@@ -354,4 +357,11 @@ async function sellMany(ctx: Ctx, body: Record<string, unknown>) {
   for (const [id, qty] of want) { const r = await extras.sellItem(ctx, id, qty); got += Number(r.got) || 0; count += qty; }
   for (const uid of uids) { const r = await games.sellUpgraded(ctx, uid); got += Number(r.got) || 0; count += 1; }
   return { got, count };
+}
+
+/** the fight panel's six weapon cells, cleaned up and kept */
+async function saveFightSlots(ctx: Ctx, raw: unknown) {
+  const slots = fightSlots(raw);
+  await ctx.q.query("UPDATE players SET fight_slots=$2 WHERE id=$1", [ctx.pid, JSON.stringify(slots)]);
+  return { slots };
 }

@@ -31,6 +31,7 @@ import { BOXERS, useBossStrike } from "../fx/boss-strike.tsx";
 import { FIGHT_MODES, fightMode, type FightMode } from "../../content/medals.ts";
 import { usePageReady } from "../route-loader.tsx";
 import { tattooSetsOfBoss } from "../../content/tattoos.ts";
+import { FightTray, HitLog, SidePanel, TopList, WeaponPanel, slotsOf } from "./fight-kit.tsx";
 
 /**
  * Each fight mode is its own page of the room before the fight (swipe left/right): «Пацанский» — the old basement as it
@@ -207,7 +208,8 @@ export function BossScreen({ id }: { id: string }) {
   // the talent counter after my last hit (the state catches up on the next refresh)
   const [talentDmg, setTalentDmg] = useState<number | null>(null);
   const [talentsOpen, setTalentsOpen] = useState(false);
-  const [tab, setTab] = useState<"top" | "mine" | null>(null);
+  const [tab, setTab] = useState<"top" | "info" | null>(null);
+  const [panel, setPanel] = useState(false);
   const [details, setDetails] = useState<{ top: { playerId: number; name: string; damage: number; wins: number }[]; myHits: { weapon: string; damage: number; phrase: number; at: number; count?: number }[] } | null>(null);
   const lastSeq = useRef(0);
   const seen = useRef<Set<number>>(new Set());
@@ -247,7 +249,7 @@ export function BossScreen({ id }: { id: string }) {
         // other players' hits: a small animation each (own hits are animated on the tap)
         fresh.filter((h) => h.playerId !== me).slice(0, 4).forEach((h, i) => setTimeout(() => play(h.weapon, h.damage, "", false), i * 180));
       }
-      if (fresh.length) setHits((old) => [...fresh, ...old].sort((a, b) => b.seq - a.seq).slice(0, 30));
+      if (fresh.length) setHits((old) => [...fresh, ...old].sort((a, b) => b.seq - a.seq).slice(0, 150));
       lastSeq.current = Math.max(lastSeq.current, r.fight.lastSeq);
       if (r.fight.status !== "active") void refresh();
     } catch {
@@ -269,25 +271,18 @@ export function BossScreen({ id }: { id: string }) {
     return () => clearInterval(t);
   }, [fightId, poll]);
 
-  // my hits are shown only during a fight (only hits of this fight)
-  useEffect(() => {
-    if (!fightId || tab !== "mine") return;
-    api.get<typeof details>(`/api/bosses/${id}`).then(setDetails).catch(() => undefined);
-  }, [tab, id, fightId, view?.myHits]); // eslint-disable-line react-hooks/exhaustive-deps
-
   const row = list?.bosses.find((b) => b.id === id) ?? list?.events?.find((b) => b.id === id);
   const hpShown = view ? Math.max(0, view.hp - pendingDmg) : state?.fight?.bossId === id ? state.fight.hp : null;
   // the boss punches at the screen now and then while the fight is on (show only, no damage)
   // a dazed boss (below half HP) is scared: no more punches at the screen, he only waves his arms limply (screens.css)
   const strikeFx = useBossStrike(boss?.id ?? "", fighting && (hpShown ?? 1) > 0 && !BOXERS.has(boss?.id ?? "") && (hpShown === null || hpShown / Math.max(1, view?.hpMax ?? row?.hpMax ?? boss?.hp ?? 1) >= BEATEN_BELOW));
 
-  const [mult, setMult] = useState<Mult>(1);
   // a free weapon still reloading: «ударить сейчас» for RUSH_PRICE (a window asks first), then it reloads again
   const [rushAsk, setRushAsk] = useState<{ id: string; name: string; left: number } | null>(null);
-  const attack = async (weapon: string, rush = false) => {
+  const attack = async (weapon: string, rush = false, pack = 1) => {
     const w = weaponById(weapon)!;
     const have = tray.find((x) => x.id === weapon)?.qty ?? 0;
-    const n = batchOf(w.weapon.kind, have, mult);
+    const n = w.weapon.kind === "consumable" ? Math.max(1, Math.min(pack, have)) : 1;
     const est = weaponStats(state, w.id).damage * n;
     haptic.hit();
     // heavier weapons sound heavier: 10 dmg → 0, 500+ → 1
@@ -388,7 +383,6 @@ export function BossScreen({ id }: { id: string }) {
 
   const myShare = view ? pct(view.myDamage, view.hpMax) : 0;
   const topRows = useMemo(() => view?.top ?? [], [view]);
-  const myHits = useMemo(() => (details?.myHits ?? []).filter((h) => view && h.at >= view.startedAt), [details, view]);
 
   if (!boss) return <Empty>Такого босса нет</Empty>;
   // an event boss is there only while the admin has the event on (a fight already started may still be finished)
@@ -423,19 +417,25 @@ export function BossScreen({ id }: { id: string }) {
           {(view?.solo ?? state?.fight?.solo) ? <span className="chip violet">соло</span> : view && <span className="chip red">бьют: {view.fightingNow}</span>}
           <BossRulesHelp topic="boss" />
         </div>
-        <Arena full boss={boss} hp={hpShown} hpMax={hpMax} endsAt={state!.fight!.endsAt} fx={layer} hit={hitAnim} ouch={ouch} rug={rug} feed={hits} strike={strikeFx.side} />
+        <Arena full boss={boss} hp={hpShown} hpMax={hpMax} endsAt={state!.fight!.endsAt} fx={layer} hit={hitAnim} ouch={ouch} rug={rug} feed={[]} strike={strikeFx.side} />
+        {/* the side tabs: «Топ» on the left edge, «Инфо» (the hits) on the right — each slides its panel in */}
+        <button type="button" className="fside l" onClick={() => { haptic.tap(); setTab("top"); }}><span>Топ</span></button>
+        <button type="button" className="fside r" onClick={() => { haptic.tap(); setTab("info"); }}><span>Инфо</span></button>
         <div className="fight-bottom">
           {critPop > 0 && <CritBurn key={critPop} className="crit-burn" onDone={() => setCritPop(0)} />}
-          <MultPicker mult={mult} setMult={setMult} />
           <div className="row fight-bar">
             <TalentProgress dmg={talentDmg ?? state?.player.talentDamage ?? 0} pop={talentPop} share={myShare} onOpen={() => setTalentsOpen(true)} />
+            <button type="button" className="btn sm gold fbtn-arms" onClick={() => { haptic.tap(); setPanel(true); }} aria-label="Оружие" title="Оружие в бою">
+              <ItemArt id="rug-pull-gun" size={22} />
+            </button>
             <span className="grow" />
-            <button className="btn sm dark" onClick={() => setTab("top")}>Топ</button>
-            <button className="btn sm dark" onClick={() => setTab("mine")}>Мои</button>
-            <button className={`btn sm ${fleeAsk ? "red" : "dark"}`} onClick={flee} disabled={busy === "fight_flee"}>{fleeAsk ? "Точно?" : "Сдаться"}</button>
+            <button type="button" className={`btn sm red fbtn-flee ${fleeAsk ? "ask" : ""}`} onClick={flee} disabled={busy === "fight_flee"} aria-label={fleeAsk ? "Точно сдаться?" : "Сдаться"} title="Сдаться">
+              {fleeAsk ? <b>?</b> : <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h13" /><path d="M13 6l6 6-6 6" /></svg>}
+            </button>
           </div>
-          <WeaponTray tray={tray} onHit={attack} onBuy={() => setShopOpen(true)} onCooldown={(name, left, id) => { haptic.tap(); setRushAsk({ id, name, left }); }} disabled={view?.status !== undefined && view.status !== "active"} mult={mult} />
+          <FightTray slots={slotsOf(state)} tray={tray} onHit={(id, n) => attack(id, false, n)} onBuy={() => setShopOpen(true)} onCooldown={(name, left, id) => { haptic.tap(); setRushAsk({ id, name, left }); }} disabled={view?.status !== undefined && view.status !== "active"} />
         </div>
+        {panel && <WeaponPanel tray={tray} onClose={() => setPanel(false)} />}
         {shopOpen && <WeaponShopWindow onClose={closeShop} />}
         {rushAsk && (
           <Modal title={`${rushAsk.name} перезаряжается`} onClose={() => setRushAsk(null)}>
@@ -454,34 +454,8 @@ export function BossScreen({ id }: { id: string }) {
           </Modal>
         )}
       {talentsOpen && <TalentWindow onClose={() => setTalentsOpen(false)} />}
-        {tab !== null && (
-          <Modal title={tab === "top" ? "Топ боя" : "Мои удары"} onClose={() => setTab(null)}>
-            {tab === "top" ? (
-              topRows.length ? (
-                <div className="col" style={{ gap: 4 }}>
-                  {topRows.map((t, i) => (
-                    <Link key={t.playerId} href={`/profile?id=${t.playerId}`} className={`top-row ${t.playerId === me ? "me" : ""}`}>
-                      <span className="top-n display">{i + 1}</span>
-                      <span className="grow ellipsis">{t.name}</span>
-                      <b className="num">{short(t.damage)}</b>
-                    </Link>
-                  ))}
-                </div>
-              ) : <div className="muted small center">В этом бою ещё никто не бил. Будь первым.</div>
-            ) : myHits.length ? (
-              <div className="col" style={{ gap: 4 }}>
-                {myHits.map((h, i) => (
-                  <div key={i} className="row small">
-                    <ItemArt id={h.weapon} size={22} />
-                    <span className="grow ellipsis muted">{HIT_PHRASES[h.weapon]?.[h.phrase] ?? ""}</span>
-                    {(h.count ?? 1) > 1 && <span className="tiny muted">×{h.count}</span>}
-                    <b className="num" style={{ color: "var(--red)" }}>−{full(h.damage)}</b>
-                  </div>
-                ))}
-              </div>
-            ) : <div className="muted small center">В этом бою ты ещё не бил.</div>}
-          </Modal>
-        )}
+        {tab === "top" && <SidePanel side="l" title="Топ по урону" onClose={() => setTab(null)}><TopList rows={topRows} me={me} /></SidePanel>}
+        {tab === "info" && <SidePanel side="r" title="Удары" onClose={() => setTab(null)}><HitLog hits={hits} /></SidePanel>}
       </div>
     );
   }
