@@ -6211,9 +6211,8 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .rig-larek .br-pupils { animation-duration: 6.2s; }
 .arena-photo.ouch .rig-larek .br-head { animation: mg-head-hit 0.42s ease-out; }
 @media (prefers-reduced-motion: reduce) { .rig-gopnik :is(.br-arm, .br-low, .br-hand, .br-up) { animation: none; } }
-/* the raid fight: he stands in the room, down to the hips */
-.rd-fight .arena.full .arena-photo.rd-defender-fight { left: -4%; right: -4%; top: 64px; bottom: 120px;
-  -webkit-mask-image: linear-gradient(to bottom, #000 84%, transparent); mask-image: linear-gradient(to bottom, #000 84%, transparent); }
+/* the raid fight: he stands in the room like a boss in his fight — down to the weapons, behind the bars (the boss's own fade) */
+.rd-fight .arena.full .arena-photo.rd-defender-fight { left: -4%; right: -4%; top: 64px; bottom: 0; }
 /* the attack page: he waits behind the window */
 .rd-defender { position: absolute; left: 17%; top: 10.5%; width: 65.5%; height: 29%; overflow: hidden; pointer-events: none; }
 .rd-defender-in { position: absolute; left: 50%; top: 8%; width: 62%; aspect-ratio: 850 / 875; transform: translateX(-50%); }
