@@ -19,8 +19,8 @@ export const SCENE_OBJECTS = {
   monitorRight: { x: 682, y: 398, w: 282, aspect: 1.0, flip: false },
   /** the system unit on the floor, right in the corner of the room (its back in the corner of the walls at x≈945, y≈885, the base on the floor in front of it) */
   pc: { x: 850, y: 756, w: 140, aspect: 1.4401, flip: false },
-  /** trophies on the desk: the CLOSE statue (for Утилизатор) on the right end, next to the monitor */
-  statueClose: { x: 872, y: 538, w: 108, aspect: 1.6112, flip: false },
+  /** trophies: the CLOSE statue (for Утилизатор) stands on the floor in the left front corner, by the chair */
+  statueClose: { x: 52, y: 1150, w: 140, aspect: 1.6112, flip: false },
 } as const;
 
 /** tap zones (scene units) that open the windows: bigger than the pictures so a finger hits them */
