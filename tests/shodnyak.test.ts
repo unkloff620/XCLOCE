@@ -35,10 +35,13 @@ describe("«Сходняк»", () => {
     const [pa] = await db.query<{ n: number }>("SELECT COUNT(*)::int AS n FROM shod_tasks WHERE player_id=$1 AND done_at IS NOT NULL", [a.p]);
     expect(Number(pa.n)).toBe(2);
     await settleWeeks(db, NEXT);
-    const prizes = await db.query<{ player_id: number; title: string; reward: { xp: number } }>("SELECT player_id, title, reward FROM prizes WHERE title LIKE 'Сходняк%' ORDER BY player_id");
+    const prizes = await db.query<{ player_id: number; title: string; reward: { xp: number; items?: { id: string }[] } }>("SELECT player_id, title, reward FROM prizes WHERE title LIKE 'Сходняк%' ORDER BY player_id");
     expect(prizes.find((x) => Number(x.player_id) === a.p)!.title).toContain("1 место");
     expect(prizes.find((x) => Number(x.player_id) === a.p)!.reward.xp).toBe(SHOD_PRIZES[0].xp);
     expect(prizes.find((x) => Number(x.player_id) === b.p)!.title).toContain("2 место");
+    // tattoos of the «Сходняк» sets: 3 for the 1st place, 2 for the 2nd
+    expect(prizes.find((x) => Number(x.player_id) === a.p)!.reward.items!.filter((i) => i.id.startsWith("tat-shod-"))).toHaveLength(3);
+    expect(prizes.find((x) => Number(x.player_id) === b.p)!.reward.items).toHaveLength(2);
     // the 1st place picks the boost
     const r = await act(db, a.p, "shod_boost", { weapon: "gpu" }, NEXT);
     expect(r.result.boost.weapon).toBe("gpu");

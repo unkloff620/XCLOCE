@@ -25,8 +25,7 @@ const KILL_POINTS = [0, 2, 3, 4, 6, 8, 10, 13, 16, 20, 24, 30, 36, 45];
 
 export const SHOD_TASKS: ShodTask[] = [
   ...DAMAGE_TIERS.map(([goal, points]) => ({ id: `dmg-${goal}`, kind: "damage" as const, goal, points })),
-  // Боцман comes once a year — not in the list
-  ...BOSSES.filter((b) => !b.event && b.id !== "botsman" && b.order <= 13).map((b) => ({
+  ...BOSSES.filter((b) => !b.event && b.order <= 13).map((b) => ({
     id: `kill-${b.id}`, kind: "kill" as const, goal: 1, boss: b.id, points: KILL_POINTS[b.order] ?? 2,
   })),
 ];
@@ -37,8 +36,8 @@ export const SHOD_FREE_SLOTS = 3;
 export const SHOD_SLOT_PRICES = [4, 5, 6];
 export const SHOD_MAX_SLOTS = SHOD_FREE_SLOTS + SHOD_SLOT_PRICES.length;
 
-/** the set of the «Сходняк» tattoos (prizes of the top 3 clans) */
-export const SHOD_SET = "shodnyak";
+/** the «Сходняк» tattoo sets (prizes of the top 3 clans): the pieces go to the set one has most of first */
+export const SHOD_SETS = ["shod-domes", "shod-bear", "shod-raven"];
 /** tattoos for places 1–3 (when one has the whole set — rubles instead of each) */
 export const SHOD_TATTOOS = [3, 2, 1];
 export const SHOD_TATTOO_RUB = 15_000;

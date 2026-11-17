@@ -2,7 +2,7 @@ import { GameError, type Queryable } from "../db.ts";
 import { takeMoney, weekKey, weekStart, nextWeekAt, type Ctx } from "../core.ts";
 import { OPEN_BOSSES } from "../../content/bosses.ts";
 import {
-  SHOD_BOOST, SHOD_BOOST_DAYS, SHOD_BOOST_WEAPONS, SHOD_FREE_SLOTS, SHOD_MAX_SLOTS, SHOD_PRIZES, SHOD_SET, SHOD_SLOT_PRICES,
+  SHOD_BOOST, SHOD_BOOST_DAYS, SHOD_BOOST_WEAPONS, SHOD_FREE_SLOTS, SHOD_MAX_SLOTS, SHOD_PRIZES, SHOD_SETS, SHOD_SLOT_PRICES,
   SHOD_TASKS, SHOD_TATTOOS, SHOD_TATTOO_RUB, shodTaskById, type ShodTask,
 } from "../../content/shodnyak.ts";
 import { TATTOO_SETS } from "../../content/tattoos.ts";
@@ -137,18 +137,19 @@ export async function settleShod(q: Queryable, now: number) {
      ORDER BY SUM(t.points) DESC, t.clan_id LIMIT ${SHOD_PRIZES.length}`,
     [prev],
   );
-  const set = TATTOO_SETS.find((s) => s.id === SHOD_SET);
+  const sets = SHOD_SETS.map((id) => TATTOO_SETS.find((s) => s.id === id)!.pieces.map((p) => p.id));
   for (const [i, c] of clans.entries()) {
     const members = await q.query<{ id: number }>("SELECT id FROM players WHERE clan_id=$1", [c.clan_id]);
     for (const m of members) {
       const reward: Reward = { ...SHOD_PRIZES[i], currencies: { ...SHOD_PRIZES[i].currencies }, items: [] };
       const want = SHOD_TATTOOS[i] ?? 0;
       if (want) {
-        const all = set?.pieces.map((p) => p.id) ?? [];
+        const all = sets.flat();
         const own = new Set((await q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id = ANY($2)", [m.id, all])).map((x) => x.item_id));
-        const left = all.filter((x) => !own.has(x));
-        // a fair shuffle by the player and the week (the same pick if this is ever run twice)
-        left.sort((a, b) => hash(`${prev}:${m.id}:${a}`) - hash(`${prev}:${m.id}:${b}`));
+        // the set one has most pieces of comes first (to finish it), then the next; inside a set — a fair shuffle by
+        // the player and the week (the same pick if this is ever run twice)
+        const order = sets.map((s, k) => ({ k, n: s.filter((x) => own.has(x)).length })).sort((a, b) => b.n - a.n || a.k - b.k);
+        const left = order.flatMap(({ k }) => sets[k].filter((x) => !own.has(x)).sort((a, b) => hash(`${prev}:${m.id}:${a}`) - hash(`${prev}:${m.id}:${b}`)));
         const got = left.slice(0, want);
         reward.items = got.map((id) => ({ id, qty: 1 }));
         const rub = (want - got.length) * SHOD_TATTOO_RUB;
