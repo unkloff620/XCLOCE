@@ -1500,4 +1500,16 @@ CREATE TABLE IF NOT EXISTS shod_boost (
     sql: `ALTER TABLE players ADD COLUMN IF NOT EXISTS poker_reset_day TEXT;
 ALTER TABLE players ADD COLUMN IF NOT EXISTS poker_resets INT NOT NULL DEFAULT 0;`,
   },
+  {
+    // prizes not in the game yet (the poker's royal flush — «Ворон»): who earned them, given when they come
+    id: "v2-102-promises",
+    sql: `CREATE TABLE IF NOT EXISTS promises (
+  id SERIAL PRIMARY KEY,
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  what TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL,
+  given_at TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS promises_what ON promises (what) WHERE given_at IS NULL;`,
+  },
 ];

@@ -9,7 +9,7 @@ import { addGameWeekly, setGameBest } from "./minigame-extras.ts";
 import { duelScore } from "./duels.ts";
 import { addItem, addMoney, grantReward, itemQty, ledger, moscowDay, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { useItem } from "./shop.ts";
-import { ZONK_CONT_PENALTY, UPGRADE_RULES, POKER_RULES, POKER_RESET, POKER_CHIP, pokerCheats, pokerHand, pokerHandDef, pokerLevel, pokerPay,
+import { ZONK_CONT_PENALTY, UPGRADE_RULES, POKER_RULES, POKER_RESET, POKER_CHIP, POKER_CASES, POKER_CASE_RUB, POKER_CASE_STASH, POKER_CASE_TATTOO, POKER_CASE_USD, POKER_CASE_XP, POKER_STICKER, pokerCheats, pokerHand, pokerHandDef, pokerLevel, pokerPay,
   GAME_RULES, ITEM_VALUES, ZONK_BANK_MIN, ZONK_DICE, ZONK_FAIL_XP, ZONK_LEVELS, ZONK_ROUNDS, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue,
   zonkCombos, zonkHasScore, zonkLevelDef, zonkScore, zonkXpLevel,
   type Card, type GameKind,
@@ -19,6 +19,8 @@ import { itemById } from "../../content/items.ts";
 import type { Reward } from "../../content/rewards.ts";
 import { between, rollParts } from "../../content/craft-drops.ts";
 import { mergeRewards } from "../../content/rewards.ts";
+import { TATTOO_SETS } from "../../content/tattoos.ts";
+import { STASH_IDS } from "../../content/stashes.ts";
 
 /** round: the attempt now (1…ZONK_ROUNDS); total: points written down; last: how the previous attempt ended */
 /** level: the difficulty (ZONK_LEVELS), target: the points to reach; old games (before the levels) have neither */
@@ -410,11 +412,34 @@ export async function pokerView(q: Queryable, pid: number, now: number) {
   return {
     left, played, perDay: POKER_RULES.perDay, price: POKER_RULES.price, chips, xp, ...lv, cheats: pokerCheats(lv.level), active: open ? pokerDrawView(open.id, open.state) : null,
     resets, resetsMax: POKER_RESET.perDay, resetPrice: POKER_RESET.price,
+    stickers: await itemQty(q, pid, POKER_STICKER), cases: POKER_CASES,
   };
 }
 
 const pokerResetsToday = (p: { poker_reset_day: string | null; poker_resets: number } | undefined, now: number) =>
   p?.poker_reset_day === moscowDay(now) ? Number(p.poker_resets) : 0;
+
+/** a poker case for stickers: authority, roubles, dollars, with POKER_CASE_TATTOO a missing piece of its set, now and then a нычка */
+export async function openPokerCase(ctx: Ctx, n: number) {
+  const c = POKER_CASES.find((x) => x.n === n);
+  if (!c) throw new GameError("bad_request", "Нет такого чемодана", 400);
+  if ((await itemQty(ctx.q, ctx.pid, POKER_STICKER)) < c.price) throw new GameError("no_stickers", `Нужно ${c.price} стикеров`);
+  await takeItem(ctx, POKER_STICKER, c.price, `poker_case:${n}`);
+  const r = (lo: number, hi: number) => lo + Math.floor(ctx.rng() * (hi - lo + 1));
+  const items: { id: string; qty: number }[] = [];
+  let tattoo: string | null = null;
+  if (ctx.rng() < POKER_CASE_TATTOO) {
+    const all = TATTOO_SETS.find((s) => s.id === c.set)?.pieces.map((p) => p.id) ?? [];
+    const own = new Set((await ctx.q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id = ANY($2)", [ctx.pid, all])).map((x) => x.item_id));
+    const left = all.filter((x) => !own.has(x));
+    if (left.length) { tattoo = left[Math.floor(ctx.rng() * left.length) % left.length]; items.push({ id: tattoo, qty: 1 }); }
+  }
+  if (ctx.rng() < POKER_CASE_STASH) items.push({ id: STASH_IDS[Math.floor(ctx.rng() * STASH_IDS.length) % STASH_IDS.length], qty: 1 });
+  const reward = await grantReward(ctx, {
+    xp: r(...POKER_CASE_XP), currencies: { RUB: r(...POKER_CASE_RUB), USD: r(...POKER_CASE_USD) }, ...(items.length ? { items } : {}),
+  }, `poker_case:${n}`);
+  return { case: n, tattoo, reward, poker: await pokerView(ctx.q, ctx.pid, ctx.now) };
+}
 
 /** «Сбросить лимит»: when today's hands are all played — another perDay hands for the price, up to POKER_RESET.perDay times a day */
 export async function resetPokerLimit(ctx: Ctx) {
@@ -437,6 +462,8 @@ async function settlePoker(ctx: Ctx, gameId: number | null, cards: Card[], swapp
   // a paying hand: a craft part or two on top
   const pay = isEmpty(base) ? base : mergeRewards(base, { items: rollParts(ctx.rng, between(1, 2, ctx.rng), { rare: 0.25 }) });
   const reward = isEmpty(pay) ? null : await grantReward(ctx, pay, `game:poker:${hand}`);
+  // a prize not in the game yet (the royal flush's «Ворон»): promised, given when it comes
+  if (def.promise) await ctx.q.query("INSERT INTO promises (player_id, what, created_at) VALUES ($1,$2,$3)", [ctx.pid, def.promise, new Date(ctx.now)]);
   const [u] = await ctx.q.query<{ poker_xp: number }>("UPDATE players SET poker_xp = poker_xp + $2 WHERE id=$1 RETURNING poker_xp", [ctx.pid, def.xp]);
   await addGameWeekly(ctx, "poker", def.xp);
   await setGameBest(ctx, "poker_best", pokerRank(hand));

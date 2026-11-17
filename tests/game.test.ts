@@ -1578,7 +1578,21 @@ describe("yard mini games", () => {
     expect(pokerPay("pair", 10).currencies?.USD).toBe(2);
     // the money bonus stops at level 20: 2 × 1.3 = 2.6 → 3
     expect(pokerPay("pair", 80).currencies?.USD).toBe(3);
-    expect(pokerPay("high", 5)).toEqual({});
+    expect(pokerPay("high", 5)).toEqual({ items: [{ id: "poker-sticker", qty: 100 }] });
+  });
+
+  it("poker: a case for stickers — authority, roubles, dollars; a piece of its set at 30%", async () => {
+    const p = await newPlayer(db);
+    await give(db, p, "poker-sticker", 1200);
+    await expect(act(db, p, "poker_case", { n: 3 }, T0)).rejects.toMatchObject({ code: "no_stickers" });
+    const r = await act(db, p, "poker_case", { n: 2 }, T0, always(0.1));
+    expect(r.result.tattoo).toMatch(/^tat-pk-bluff-/);
+    expect(r.result.reward.xp).toBeGreaterThanOrEqual(2000);
+    expect(r.result.reward.currencies.RUB).toBeGreaterThanOrEqual(700);
+    expect(await qty(db, p, "poker-sticker")).toBe(200);
+    const { pokerPay } = await import("../src/content/games.ts");
+    expect(pokerPay("quads", 20).currencies?.SOL).toBe(15);
+    expect(pokerPay("high", 0).items?.[0]).toEqual({ id: "poker-sticker", qty: 100 });
   });
 
   it("poker: «Сбросить лимит» — 1500 USD for another 25 hands, only when the hands are over, at most 3 a day", async () => {
