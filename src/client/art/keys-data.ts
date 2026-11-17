@@ -134,6 +134,18 @@ export const KEYS_PARTS: Record<string, { x: number; y: number; w: number; h: nu
     "y": 739.6,
     "w": 90.0,
     "h": 90.0
+  },
+  "gridcut": {
+    "x": 639.5,
+    "y": 736.5,
+    "w": 126,
+    "h": 182
+  },
+  "zone": {
+    "x": 597.2,
+    "y": 739.6,
+    "w": 166.4,
+    "h": 124.8
   }
 };
 export const KEYS_ORDER = ["ring-back", "key-1", "key-2", "key-3", "key-4", "key-5", "key-6", "key-7", "ring-front", "thumb", "hand", "finger"] as const;

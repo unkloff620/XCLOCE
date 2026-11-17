@@ -186,6 +186,27 @@ Image.fromarray(mask[y0:y1, x0:x1]).save(os.path.join(OUT, "held", f"{ID}-ink-ma
 (rx, ry), (rx1, ry1) = rig((x0, y0)), rig((x1, y1))
 data["ink-mask"] = {"x": round(float(rx), 1), "y": round(float(ry), 1), "w": round(float(rx1 - rx), 1), "h": round(float(ry1 - ry), 1)}
 
+# the looks editor's tattoo grid (rig.tsx): the bare hand's lines are cut out of tattoo/zones.webp under this hand
+# (gridcut: the bare hand, a little wider, black), and this hand gets its own outline (zone) and highlight (place)
+ZONE_RGB = (244, 214, 85)
+cut = (cv2.dilate((bare > 40).astype(np.uint8), np.ones((9, 9), np.uint8)) > 0)
+gc = np.zeros(bare.shape + (4,), np.uint8)
+gc[:, :, 3] = cut * 255
+Image.fromarray(gc).save(os.path.join(OUT, "held", f"{ID}-gridcut.webp"), "WEBP", quality=80, method=6)
+data["gridcut"] = {"x": hr["x"], "y": hr["y"], "w": hr["w"], "h": hr["h"]}
+whole = np.maximum(layers["hand"][:, :, 3], layers["finger"][:, :, 3]) > 110
+whole = cv2.morphologyEx(whole.astype(np.uint8), cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8))
+ring_ = (cv2.dilate(whole, np.ones((5, 5), np.uint8)) - cv2.erode(whole, np.ones((3, 3), np.uint8))) > 0
+ys, xs = np.nonzero(cv2.dilate(whole, np.ones((5, 5), np.uint8)))
+x0, y0, x1, y1 = xs.min(), ys.min(), xs.max() + 1, ys.max() + 1
+for name, fill in (("zone", 0), ("place", 70)):
+    im = np.zeros((H, W, 4), np.uint8)
+    im[:, :, :3] = ZONE_RGB
+    im[:, :, 3] = np.where(ring_, 235, np.where(whole > 0, fill, 0))
+    Image.fromarray(im[y0:y1, x0:x1]).save(os.path.join(OUT, "held", f"{ID}-{name}.webp"), "WEBP", quality=85, method=6)
+(rx, ry), (rx1, ry1) = rig((x0, y0)), rig((x1, y1))
+data["zone"] = {"x": round(float(rx), 1), "y": round(float(ry), 1), "w": round(float(rx1 - rx), 1), "h": round(float(ry1 - ry), 1)}
+
 pv = lambda p: [round(float(v), 1) for v in rig(p)]
 pivots = {"finger": pv(FINGER_PIVOT), "thumb": pv(THUMB_PIVOT), "grip": pv(GRIP), "hang": pv(HANG), "wrist": pv(U0)}
 

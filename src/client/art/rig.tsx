@@ -236,6 +236,8 @@ function PlacePic({ grid, id }: { grid: Grid; id: string }) {
 }
 function Highlight({ edit }: { edit: RigEdit }) {
   const look = useContext(LookCtx), worn = useContext(WornCtx);
+  // the hand with the keys shows its own place (KeysHand)
+  if (edit.mode === "ink" && edit.part === "hand-r" && worn.HAND === KEYS_ID) return null;
   const shapes = partShapes(edit, look, worn);
   return (
     <g pointerEvents="none" className="rig-hl-part">
@@ -559,6 +561,7 @@ function KeysHand() {
   const [shine, setShine] = useState<{ key: string; n: number }[]>([]);
   const uid = useId().replace(/:/g, "");
   const m = KEYS_PARTS["ink-mask"];
+  const edit = useContext(EditCtx);
   useEffect(() => {
     let last = "";
     let n = 0;
@@ -604,6 +607,11 @@ function KeysHand() {
       <g mask={`url(#${uid}-ink)`}>
         <g transform={`matrix(${KEYS_INK_FIT.join(" ")})`}><Ink part="handR" /></g>
       </g>
+      {/* the looks editor's tattoo grid: this hand's own outline, filled when its place is chosen */}
+      {edit?.mode === "ink" && (
+        <image className={edit.part === "hand-r" ? "rig-place" : "rig-grid"} href={src(edit.part === "hand-r" ? "place" : "zone")} pointerEvents="none"
+          x={KEYS_PARTS.zone.x} y={KEYS_PARTS.zone.y} width={KEYS_PARTS.zone.w} height={KEYS_PARTS.zone.h} preserveAspectRatio="none" />
+      )}
     </g>
   );
 }
@@ -791,7 +799,23 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
         </Ol>
       </g>
       {/* the grid of the places: the tattoo places or the clothes places */}
-      {edit && edit.mode !== "body" && <image className="rig-grid" href={`/assets/hero/tattoo/${edit.mode === "ink" ? "zones" : "slots"}.webp?v=${PLACE_ART_V}`} x={0} y={0} width={1000} height={1400} preserveAspectRatio="none" pointerEvents="none" />}
+      {edit && edit.mode !== "body" && (() => {
+        const grid = <image className="rig-grid" href={`/assets/hero/tattoo/${edit.mode === "ink" ? "zones" : "slots"}.webp?v=${PLACE_ART_V}`} x={0} y={0} width={1000} height={1400} preserveAspectRatio="none" pointerEvents="none" />;
+        // «Связка ключей»: the bare hand's lines are cut out of the tattoo grid (the hand with the keys draws its own)
+        if (edit.mode !== "ink" || worn?.HAND !== KEYS_ID) return grid;
+        const c = KEYS_PARTS.gridcut;
+        return (
+          <>
+            <defs>
+              <mask id="rig-keys-gridcut" maskUnits="userSpaceOnUse" x={0} y={0} width={1000} height={1400}>
+                <rect x={0} y={0} width={1000} height={1400} fill="#fff" />
+                <image href={`/assets/hero/held/${KEYS_ID}-gridcut.webp?v=${ART_VER.heroPart}`} x={c.x} y={c.y} width={c.w} height={c.h} preserveAspectRatio="none" />
+              </mask>
+            </defs>
+            <g mask="url(#rig-keys-gridcut)">{grid}</g>
+          </>
+        );
+      })()}
       {edit?.part && <Highlight edit={edit} />}
     </EditCtx.Provider>
     </WornCtx.Provider>
