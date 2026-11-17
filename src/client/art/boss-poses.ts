@@ -44,7 +44,7 @@ interface Spec {
   /** his breath, drawn with the upper body (it owns that group): at time t → [scale x, scale y, shift y px] */
   breath?: (t: number, dazed: boolean) => [number, number, number];
   /** what else follows the breath (the jaw): el → transform */
-  breathFollow?: { sel: string; f: (t: number) => string };
+  breathFollow?: { sel: string; f: (t: number, ang: Record<string, number>) => string };
   /** a joint drawn as a strip of bent frames (Князь's elbows: a window one frame wide over the strip, perFrame° apart):
    *  its angle picks the frame; turn — a group that turns by the frame's bend (the hand riding on that forearm) */
   bend?: Partial<Record<J, { strip: string; perFrame: number; turn?: string }>>;
@@ -423,65 +423,78 @@ const btTaunt: Action = {
   ],
 };
 
-/* Утилизатор (the artist's reference video): he breathes with his whole body — on the breath in the chest fills and the
-   shoulders stretch out a little, on the breath out he sinks a touch; slow and smooth, no bouncing. His blows: the upper
-   body rises a little and leans into the blow. R — the raised gloved fist comes down from the elbow (a hammer blow);
-   L — the fist before the belly drives up (an uppercut) */
+/* Утилизатор (the artist's reference video): a real breath — a long full breath in (the chest fills, the shoulders go up
+   and out, the arms open with them), a short hold, a long breath out (he sinks back a little), a pause. His blows are
+   quick: the upper body (the T-shirt and the apron, the legs stand) rises and stretches up and leans INTO the blow — to
+   the side of the striking arm. R — the raised gloved fist (right of the picture) comes down from the elbow (a hammer
+   blow); L — the fist before the belly (left) drives up (an uppercut). The jaw drops with the breath and on the blow */
 const utHammer: Action = {
-  dur: 1.5,
+  dur: 0.82,
   keys: [
-    { at: 0, pose: { y: -10, z: 1.5, up: 2, x: 4, armR: -14, lowR: -30, lowL: -4 } }, // straightens up, the fist goes back
-    { at: 0.45, pose: { y: 2, z: 3, up: -4, x: -8, armR: 8, lowR: 40, head: 1, lowL: 6 }, stiff: 2.2 }, // into the blow
-    { at: 0.7, pose: { y: 1, z: 2, up: -2.5, x: -5, armR: 5, lowR: 26 } },
-    { at: 0.95, pose: {} },
+    { at: 0, pose: { y: -16, z: 2, up: -2, x: -3, armR: -18, lowR: -36, jaw: 0.6 } }, // rises, the fist up and back
+    { at: 0.17, pose: { y: -10, z: 4, up: 6, x: 14, armR: 10, lowR: 46, head: 2, jaw: 1, lowL: 6 }, stiff: 4.5 }, // leans right into the blow
+    { at: 0.32, pose: { y: -6, z: 3, up: 4, x: 9, armR: 6, lowR: 30, jaw: 0.6 }, stiff: 1.5 },
+    { at: 0.5, pose: {} },
   ],
 };
 const utUpper: Action = {
-  dur: 1.5,
+  dur: 0.82,
   keys: [
-    { at: 0, pose: { y: 4, up: 1.5, x: 3, armL: 6, lowL: 14 } }, // sinks a little, the fist down
-    { at: 0.4, pose: { y: -12, z: 3, up: -4, x: 7, armL: -12, lowL: -46, head: -1, lowR: -6 }, stiff: 2.2 }, // rises with the uppercut
-    { at: 0.68, pose: { y: -8, z: 2, up: -2.5, x: 5, armL: -9, lowL: -34 } },
-    { at: 0.95, pose: {} },
+    { at: 0, pose: { y: 4, up: 1.5, x: 2, armL: 6, lowL: 14, jaw: 0.3 } }, // dips, the fist down
+    { at: 0.14, pose: { y: -18, z: 4, up: -6, x: -14, armL: -14, lowL: -50, head: -2, lowR: -6, jaw: 1 }, stiff: 4.5 }, // rises, leans left with the uppercut
+    { at: 0.3, pose: { y: -12, z: 3, up: -4, x: -9, armL: -10, lowL: -36, jaw: 0.6 }, stiff: 1.5 },
+    { at: 0.5, pose: {} },
   ],
 };
-/** his breath (s → 0…1): a slow smooth wave, 3.6 s */
-const utBreath = (t: number) => 0.5 - 0.5 * Math.cos((t / 3.6) * Math.PI * 2);
+/** his breath (s → 0…1): breath in 1.9 s (eases in, full at the top), hold 0.35 s, breath out 2.1 s, pause 0.45 s */
+const UT_IN = 1.9, UT_HOLD = 0.35, UT_OUT = 2.1, UT_PAUSE = 0.45, UT_CYCLE = UT_IN + UT_HOLD + UT_OUT + UT_PAUSE;
+const utBreath = (t: number) => {
+  const p = t % UT_CYCLE;
+  if (p < UT_IN) return 0.5 - 0.5 * Math.cos((p / UT_IN) * Math.PI);
+  if (p < UT_IN + UT_HOLD) return 1;
+  if (p < UT_IN + UT_HOLD + UT_OUT) return 0.5 + 0.5 * Math.cos(((p - UT_IN - UT_HOLD) / UT_OUT) * Math.PI);
+  return 0;
+};
 
 const POSES: Record<string, Spec> = {
   utilizator: {
-    // soft, overdamped springs: he moves like a heavy body, nothing bounces
+    // the body is heavy (soft, overdamped), the arms quick
     springs: {
-      up: { k: 40, c: 13 }, x: { k: 35, c: 12 }, y: { k: 30, c: 11.5 }, z: { k: 30, c: 11.5 }, head: { k: 90, c: 19 },
-      armL: { k: 70, c: 16 }, lowL: { k: 120, c: 19 },
-      armR: { k: 70, c: 16 }, lowR: { k: 120, c: 19 },
+      up: { k: 70, c: 14 }, x: { k: 60, c: 13 }, y: { k: 60, c: 13 }, z: { k: 60, c: 13 }, head: { k: 110, c: 20 },
+      armL: { k: 170, c: 18 }, lowL: { k: 320, c: 22 },
+      armR: { k: 170, c: 18 }, lowR: { k: 320, c: 22 },
+      jaw: { k: 120, c: 18 },
     },
     // the head stays on the neck: a small drag (the T-shirt's neck is cut flat under the chin)
     drag: { lowL: ["armL", -0.03], lowR: ["armR", -0.03], head: ["up", -0.02] },
-    // breath in: the shoulders go a little up and out (the arms open with them), the head lifts a touch
+    // the breath: the shoulders up and out, the arms open, the head lifts; nothing else moves much
     idle: (t) => {
       const b = utBreath(t);
       return {
-        y: -3 * b,
-        up: 0.5 * Math.sin(t * 0.5),
-        x: 1.5 * Math.sin(t * 0.35),
-        head: -0.6 * b + 0.4 * Math.sin(t * 0.6 + 1),
-        armL: 1.6 * b, lowL: 1.2 * Math.sin(t * 0.9 + 0.5),
-        armR: -1.6 * b, lowR: 1.4 * Math.sin(t * 0.8 + 1),
+        y: -9 * b,
+        up: 0.4 * Math.sin(t * 0.45),
+        x: 1.2 * Math.sin(t * 0.3),
+        head: -1.2 * b + 0.4 * Math.sin(t * 0.6 + 1),
+        armL: 3 * b, lowL: 1.5 * b + 0.8 * Math.sin(t * 0.9 + 0.5),
+        armR: -3 * b, lowR: -1.5 * b + 1 * Math.sin(t * 0.8 + 1),
+        jaw: 0.35 * b,
       };
     },
-    // the chest fills: wider in the shoulders, a little taller; out — back down
-    breath: (t, dazed) => { const b = utBreath(dazed ? t * 0.8 : t); return [1 + 0.03 * b, 1 + 0.012 * b, 0]; },
+    // the chest fills: much wider in the shoulders and taller; out — back down
+    breath: (t, dazed) => { const b = utBreath(dazed ? t * 0.8 : t); return [1 + 0.05 * b, 1 + 0.022 * b, 0]; },
+    // the jaw (the lips with the chin and the lower teeth) drops: a little with each breath in, wide on the blow
+    breathFollow: { sel: ".rig-utilizator .br-jaw", f: (_t, a) => `translateY(${(Math.max(0, a.jaw ?? 0) * 9).toFixed(2)}px)` },
     actions: [
       { a: utHammer, w: 30 },
       { a: utUpper, w: 26 },
-      { a: join(utUpper, shift(utHammer, 0.2)), w: 16 },
-      { a: taunt, w: 6 },
+      { a: join(utUpper, shift(utHammer, 0.12)), w: 18 },
+      { a: join(utHammer, shift(utHammer, 0.12)), w: 8 },
+      { a: taunt, w: 5 },
     ],
-    rest: [2.2, 4.5],
-    hit: { head: 50, up: 40, x: 35, y: 40, armL: -60, lowL: 80, armR: 50, lowR: -90 },
-    strike: join(utUpper, shift(utHammer, 0.2)),
-    dazed: { pose: { armL: 8, lowL: 20, armR: 16, lowR: 46, head: 5, up: -1.5, y: 4 }, act: false },
+    rest: [1.6, 3.6],
+    hit: { head: 60, up: 50, x: 40, y: 50, jaw: 3, armL: -80, lowL: 110, armR: 70, lowR: -120 },
+    strike: join(utUpper, shift(utHammer, 0.12)),
+    dazed: { pose: { armL: 8, lowL: 20, armR: 16, lowR: 46, head: 5, up: -1.5, y: 4, jaw: 0.5 }, act: false },
   },
   botsman: {
     springs: {
@@ -819,7 +832,7 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
     const follow = spec.breathFollow ? [...svg.querySelectorAll<SVGGElement>(spec.breathFollow.sel)] : [];
     svg.classList.add("posed");
     // x — the upper body's shift sideways, y — up and down (px of the rig), z — its growth towards the screen (%)
-    const keys: string[] = [...JOINTS, "x", "y", "z", ...Object.keys(spec.shapes ?? {}), ...Object.values(spec.scale ?? {}) as string[]];
+    const keys: string[] = [...JOINTS, "x", "y", "z", "jaw", ...Object.keys(spec.shapes ?? {}), ...Object.values(spec.scale ?? {}) as string[]];
     const ang: Record<string, number> = {};
     const vel: Record<string, number> = {};
     for (const k of keys) { ang[k] = 0; vel[k] = 0; }
@@ -924,7 +937,7 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
           : joint(j);
         for (const el of els[j]) el.style.transform = tr;
       }
-      if (spec.breathFollow) { const tr = spec.breathFollow.f(t); for (const el of follow) el.style.transform = tr; }
+      if (spec.breathFollow) { const tr = spec.breathFollow.f(t, ang); for (const el of follow) el.style.transform = tr; }
       for (const b of bends) {
         let deg = 0;
         for (const s of b.strips) {

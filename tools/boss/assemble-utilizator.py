@@ -2,8 +2,8 @@
 Утилизатор (id utilizator): the artist's layers, all in place on one 2000×3000 sheet — tools/boss/source/utilizator/raw/
 {pants,torso,apron,upperR,foreR,gloveR,foreL,gloveL,vials,gasmask}.png and the whole boss full.png.
 L — the arm on the left of the picture (the gloved fist before the belly), R — the raised gloved fist on the right.
-The artist's upper LEFT arm (the short sleeve and the biceps) has no layer of its own: it is cut out of full.png (the part
-of the picture no layer covers, a little grown into its neighbours so the shoulder turns without a gap).
+The upper LEFT arm (the short sleeve and the biceps): raw/upperL.png, the artist's (over the body); without it — cut out of
+full.png (the part of the picture no layer covers, a little grown into its neighbours).
 → rig sources for build-boss.py (cropped to the figure): legs = the trousers and boots (under the apron), body = the
 T-shirt with the apron over it, armL/lowL, armR/lowR (shoulder → the forearm with its rubber glove at the elbow; the glove
 is the fist, no wrist joint), vials and gasmask (hanging off the belt: they swing on their rings — boss-rig.tsx HANG), and
@@ -66,6 +66,11 @@ upperL = full.copy()
 upperL[..., 3] = np.where(grow, full[..., 3], 0)
 upperL[upperL[..., 3] == 0] = 0
 L["upperL"] = Image.fromarray(upperL)
+# the artist's own upper left arm (sent later): it replaces the cut-out — drawn over the body
+if os.path.exists(f"{R}/upperL.png"):
+    u = arr(raw("upperL"))
+    u[u[..., 3] < 40] = 0
+    L["upperL"] = Image.fromarray(u)
 
 
 def visible_only(part, *over):
@@ -93,8 +98,18 @@ out = {
 }
 for k, im in out.items():
     im.crop(CROP).save(f"{D}/{k}.png")
-for n in ["head", "eyes", "pupils", "eyes-closed", "throat", "teeth-up", "teeth-low", "lips"]:
+for n in ["head", "eyes", "pupils", "eyes-closed", "throat", "teeth-up", "teeth-low"]:
     face(n).crop(CROP).save(f"{D}/{n}.png")
+# the lips with the chin split across the middle of the mouth's hole (y 679 on the face sheet): lips-up — the upper lip
+# stays with the head; lips — the lower lip and the chin, the jaw that drops (boss-rig.tsx br-jaw)
+MOUTH_CUT = 679
+lp = face("lips")
+cut_y = round(FACE_AT[1] + MOUTH_CUT * FACE_K)
+up_, low_ = arr(lp).copy(), arr(lp).copy()
+up_[cut_y:] = 0
+low_[:cut_y] = 0
+Image.fromarray(up_).crop(CROP).save(f"{D}/lips-up.png")
+Image.fromarray(low_).crop(CROP).save(f"{D}/lips.png")
 
 
 def rig(x, y):

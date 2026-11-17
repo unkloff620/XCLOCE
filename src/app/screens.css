@@ -6213,10 +6213,10 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 /* Утилизатор (tools/boss/assemble-utilizator.py): the pose engine moves him (boss-poses.ts «utilizator»); his eyes are
    under the head (EYES_UNDER), the open yelling mouth grinds, the brows tighten; hit or beaten — the mouth shuts (the
    head's own) and the brows go up; the vials and the gas mask swing on their rings off the belt (boss-rig.tsx HANG) */
-/* the breath itself is the pose engine's (the shoulders out, the chest up — boss-poses.ts utBreath); the whole figure only
-   a hair, in its tempo */
-.rig-utilizator .br-breath { animation: ut-breath 3.6s ease-in-out infinite; }
-@keyframes ut-breath { 50% { transform: scale(1.003, 1.005); } }
+/* the breath is the pose engine's (the shoulders out, the chest up — boss-poses.ts utBreath); the legs stand still (this
+   only keeps the puppet awake) */
+.rig-utilizator .br-breath { animation: ut-breath 4.8s ease-in-out infinite; }
+@keyframes ut-breath { 50% { transform: translateY(-0.4px); } }
 .rig-utilizator .br-pupils { animation-name: bt-look; animation-duration: 5.6s; }
 .rig-utilizator .br-teeth-low { animation: bt-teeth-low 4.6s linear infinite; }
 .rig-utilizator .br-teeth-up { animation: bt-teeth-up 4.6s ease-in-out infinite; }

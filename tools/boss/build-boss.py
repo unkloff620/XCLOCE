@@ -20,9 +20,9 @@ HIRES_BY_BOSS = {"vodovoz": (2, {"head", "eyes", "pupils", "eyes-closed", "browL
                                  "teeth-up", "teeth-low", "head-open", "jaw"}),
                   "vadim": (2, {"head", "eyes", "pupils", "eyes-closed", "browL", "browR", "throat", "teeth-up", "teeth-low", "lips", "mouth-sad", "duck"}),
                   "botsman": (2, {"head", "eyes", "pupils", "eyes-closed", "browL", "browR", "throat", "teeth-up", "teeth-low", "lips"}),
-                  "utilizator": (2, {"head", "eyes", "pupils", "eyes-closed", "browL", "browR", "throat", "teeth-up", "teeth-low", "lips"}),
+                  "utilizator": (2, {"head", "eyes", "pupils", "eyes-closed", "browL", "browR", "throat", "teeth-up", "teeth-low", "lips", "lips-up"}),
                   "knyaz": (2, {"head", "head-open", "eyes", "pupils", "eyes-closed", "throat", "teeth-up", "teeth-low", "lips", "mouth-closed", "mouth-sad", "gag"})}
-PARTS = ["tail", "legs", "body", "headset", "foreL", "foreR", "armL", "lowL", "handL", "bag", "vials", "gasmask", "cover", "keyRing", "keyFob", "keyKey", "duck", "armR", "lowR", "handR", "head", "head-open", "throat", "teeth-up", "teeth-low", "jaw", "lips", "mouth-sad", "eyes", "eyes-closed", "pupils", "brows", "brows-sad", "browL", "browR", "mouth", "mouth-closed", "collar", "gag"]
+PARTS = ["tail", "legs", "body", "headset", "foreL", "foreR", "armL", "lowL", "handL", "bag", "vials", "gasmask", "cover", "keyRing", "keyFob", "keyKey", "duck", "armR", "lowR", "handR", "head", "head-open", "throat", "teeth-up", "teeth-low", "jaw", "lips", "lips-up", "mouth-sad", "eyes", "eyes-closed", "pupils", "brows", "brows-sad", "browL", "browR", "mouth", "mouth-closed", "collar", "gag"]
 # puppet-warped sequences (<part>@0.png, <part>@1.png …): one strip <part>.webp, frames side by side, frame 0 first
 FRAMES = ["brows", "jaw", "armRb", "armLb"]
 # which edge of the part joins the parent: (axis, side) — y/bottom for head and left forearm, x/right for the right one
@@ -38,7 +38,7 @@ PIVOT_BY_BOSS = {
     # Утилизатор (2000×3000 sheet cropped at (300, 140), tools/boss/assemble-utilizator.py): the neck, the shoulders (the
     # upper arms' overlaps with the T-shirt), the elbows (where the gloved forearms lie on the upper arms), the brows'
     # inner ends, the rings of the vials and the gas mask on the belt — printed by that script
-    "utilizator": {"head": [316.0, 228.0], "armL": [128.0, 372.0], "lowL": [85.1, 485.3],
+    "utilizator": {"head": [316.0, 228.0], "armL": [132.0, 340.0], "lowL": [80.3, 502.8],
                    "armR": [454.8, 366.5], "lowR": [559.0, 507.9], "vials": [255.3, 649.0], "gasmask": [440.7, 636.0],
                    "browL": [311.5, 110.2], "browR": [325.0, 109.5]},
     "bebyakyan": {"foreL": [228.0, 405.0], "foreR": [617.0, 437.0]},

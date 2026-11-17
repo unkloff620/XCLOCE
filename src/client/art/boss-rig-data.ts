@@ -3381,15 +3381,15 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "v": "ddd0dfb8"
       },
       "armL": {
-        "x": 24.5,
-        "y": 277.0,
-        "w": 132,
-        "h": 223,
+        "x": 27.5,
+        "y": 279.0,
+        "w": 147,
+        "h": 256,
         "pivot": [
-          128.0,
-          372.0
+          132.0,
+          340.0
         ],
-        "v": "a89e41d9"
+        "v": "dc885eb4"
       },
       "lowL": {
         "x": 21.0,
@@ -3397,8 +3397,8 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "w": 286,
         "h": 197,
         "pivot": [
-          85.1,
-          485.3
+          80.3,
+          502.8
         ],
         "v": "31891a2a"
       },
@@ -3480,10 +3480,17 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
       },
       "lips": {
         "x": 260.5,
-        "y": 146.5,
+        "y": 177.5,
         "w": 124,
-        "h": 80,
-        "v": "9e91003b"
+        "h": 48,
+        "v": "39a467f6"
+      },
+      "lips-up": {
+        "x": 273.5,
+        "y": 146.5,
+        "w": 112,
+        "h": 34,
+        "v": "8fd6fe35"
       },
       "eyes": {
         "x": 273.0,

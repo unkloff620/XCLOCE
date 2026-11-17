@@ -40,6 +40,8 @@ const WAIST: Record<string, { at: [number, number]; bend?: string }> = {
   garkusha: { at: [420, 700], bend: "0.4,0.66" }, mugo: { at: [600, 660], bend: "0.35,0.5" },
   // cut off at the waist: he leans whole from the bottom edge
   datsik: { at: [590, 1400] },
+  // Утилизатор: the legs stand; the T-shirt and the apron go up and lean together (the apron's hem follows too)
+  utilizator: { at: [380, 600], bend: "0.8,1.05" },
   // Боцман: he bends at the belt (the legs stand; the coat's top leans, its tails swing — COAT below)
   botsman: { at: [450, 625] },
 };
@@ -430,9 +432,16 @@ export function BossRig({ id: asked, hpShare = 1, bust = false, outfit: wanted }
           {P.lips && !P["head-open"] && (
             <g className="br-mouth-open">
               {img("throat")}
+              {/* a jaw that drops (lips-up: the upper lip stays): the throat goes down with it, so the open mouth stays dark */}
+              {P["lips-up"] && <g className="br-jaw">{img("throat")}</g>}
               <g className="br-teeth-up">{img("teeth-up")}</g>
-              <g className="br-teeth-low">{img("teeth-low")}</g>
-              {img("lips")}
+              {/* the jaw: the lower teeth and the lips with the chin move together (Утилизатор's jaw goes up and down
+                  with his breath and his yell — boss-poses.ts breathFollow) */}
+              <g className="br-jaw">
+                <g className="br-teeth-low">{img("teeth-low")}</g>
+                {img("lips")}
+              </g>
+              {img("lips-up")}
             </g>
           )}
           {clipEyes && (
