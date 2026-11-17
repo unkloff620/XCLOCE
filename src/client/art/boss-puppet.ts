@@ -299,7 +299,10 @@ export function usePuppet(wrap: RefObject<HTMLDivElement | null>, key: string, s
       const cs = getComputedStyle(svg!);
       for (const c of [back!, front!]) {
         if (c.style.transform !== cs.transform) c.style.transform = cs.transform;
-        if (c.style.transformOrigin !== cs.transformOrigin) c.style.transformOrigin = cs.transformOrigin;
+        // the canvas is bigger than the SVG (the bleed): the same origin point, measured from the canvas's own corner
+        const [tx, ty] = cs.transformOrigin.split(" ").map((v) => parseFloat(v) || 0);
+        const to = `${tx - c.offsetLeft}px ${ty - c.offsetTop}px`;
+        if (c.style.transformOrigin !== to) c.style.transformOrigin = to;
         if (c.style.opacity !== cs.opacity) c.style.opacity = cs.opacity;
       }
       const cw = root!.clientWidth, ch = root!.clientHeight;
@@ -310,7 +313,10 @@ export function usePuppet(wrap: RefObject<HTMLDivElement | null>, key: string, s
       const ox = (cw - size.w * s) / 2, oy = ch - size.h * s;
       for (const L of layers) {
         const { gl, aP, aT, uR, uA, uC } = L.ctx;
-        const pw = Math.round(cw * dpr), ph = Math.round(ch * dpr);
+        // the canvas reaches past the rig's box (screens.css .br-pup > canvas: the bleed), so a raised arm or the head
+        // going up is not cut at the box's edge: the rig is drawn shifted by the bleed
+        const bl = -L.canvas.offsetLeft, bt = -L.canvas.offsetTop;
+        const pw = Math.round(L.canvas.clientWidth * dpr), ph = Math.round(L.canvas.clientHeight * dpr);
         if (L.canvas.width !== pw || L.canvas.height !== ph) { L.canvas.width = pw; L.canvas.height = ph; }
         gl.viewport(0, 0, pw, ph);
         gl.clearColor(0, 0, 0, 0);
@@ -362,8 +368,8 @@ export function usePuppet(wrap: RefObject<HTMLDivElement | null>, key: string, s
               X += k * (t.a * x + t.c * y + t.e);
               Y += k * (t.b * x + t.d * y + t.f);
             }
-            m.pos[v * 2] = (ox + X * s) * dpr;
-            m.pos[v * 2 + 1] = (oy + Y * s) * dpr;
+            m.pos[v * 2] = (bl + ox + X * s) * dpr;
+            m.pos[v * 2 + 1] = (bt + oy + Y * s) * dpr;
           }
           gl.bindBuffer(gl.ARRAY_BUFFER, m.posBuf);
           gl.bufferData(gl.ARRAY_BUFFER, m.pos, gl.DYNAMIC_DRAW);

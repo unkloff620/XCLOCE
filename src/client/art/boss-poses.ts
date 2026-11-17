@@ -40,7 +40,7 @@ interface Spec {
   /** he strikes the player («strike» on the arena): this action at once */
   strike?: Action;
   /** below half HP: this pose under the idle; act: false — no blows at all (he only sways) */
-  dazed?: { pose: Pose; act: boolean };
+  dazed?: { pose: Pose; act: boolean; /** a motion of its own on top (Утилизатор sways like a drunk) */ sway?: (t: number) => Pose };
   /** his breath, drawn with the upper body (it owns that group): at time t → [scale x, scale y, shift y px] */
   breath?: (t: number, dazed: boolean) => [number, number, number];
   /** what else follows the breath (the jaw): el → transform */
@@ -509,7 +509,22 @@ const POSES: Record<string, Spec> = {
     rest: [1.6, 3.6],
     hit: { head: 60, up: 50, x: 40, y: 50, jaw: 3, armL: -80, lowL: 110, armR: 70, lowR: -120 },
     strike: join(utUpper, shift(utHammer, 0.12)),
-    dazed: { pose: { armL: 8, lowL: 20, armR: 16, lowR: 46, head: 5, up: -1.5, y: 4, jaw: 0.5 }, act: false },
+    // beaten: he stands on his boots (the legs never move) and sways from the hips like a drunk — slow, never still, the
+    // upper body leaning over and back in a loose figure, the head lagging and lolling the other way, the arms hanging
+    dazed: {
+      pose: { armL: 8, lowL: 20, armR: 16, lowR: 46, head: 5, up: -1.5, y: 4, jaw: 0.5 }, act: false,
+      sway: (t) => {
+        const a = t * 0.85;
+        return {
+          up: 4.2 * Math.sin(a) + 1.3 * Math.sin(a * 1.9 + 1.1),
+          x: 11 * Math.sin(a - 0.5) + 3 * Math.sin(a * 0.43 + 2),
+          y: 3 * Math.sin(a * 2 + 0.3),
+          head: -3.2 * Math.sin(a - 1.1) + 1.4 * Math.sin(a * 1.3 + 0.4),
+          armL: -3 * Math.sin(a - 0.9), lowL: 4 * Math.sin(a - 1.3),
+          armR: -3 * Math.sin(a - 0.9), lowR: 5 * Math.sin(a - 1.2),
+        };
+      },
+    },
   },
   botsman: {
     springs: {
@@ -907,6 +922,7 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
       }
       const idle = spec.idle(t);
       if (dazed && spec.dazed) for (const [k, v] of Object.entries(spec.dazed.pose)) idle[k as J] = (idle[k as J] ?? 0) + (v ?? 0);
+      if (dazed && spec.dazed?.sway) for (const [k, v] of Object.entries(spec.dazed.sway(t))) idle[k as J] = (idle[k as J] ?? 0) + (v ?? 0);
       for (const k of keys) {
         const s = spec.springs[k] ?? SPRING0;
         let target = (idle[k] ?? 0) + (pose[k] ?? 0);

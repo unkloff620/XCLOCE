@@ -548,7 +548,9 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 
 /* the boss stands behind the bottom panel: his cut-off lower edge hides under the weapons / the «В бой» button */
 .arena.full { bottom: calc(var(--bottom) + 26px); }
-.arena.full .arena-photo { -webkit-mask-image: linear-gradient(180deg, #000 88%, transparent); mask-image: linear-gradient(180deg, #000 88%, transparent); }
+/* the fight: the boss may go behind the HP bar and past the screen's sides (no clipping of the arena, no mask on him —
+   a mask would cut him to his box); his cut-off lower edge hides under the bottom panel's dark fade */
+.arena.full { overflow: visible; }
 .fight-bottom::before { content: ""; position: absolute; left: -12px; right: -12px; top: 30px; bottom: calc(-1 * var(--bottom)); z-index: -1;
   background: linear-gradient(180deg, transparent, rgba(24, 15, 9, 0.85) 40%, rgba(24, 15, 9, 0.95)); pointer-events: none; }
 
@@ -3145,7 +3147,9 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 
 /* the puppet warp (boss-puppet.ts): two canvases around the SVG rig; the warped pictures hide in the SVG */
 .br-pup { position: relative; width: 100%; height: 100%; filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.55)); }
-.br-pup > canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+/* the canvases bleed past the rig's box (a third up, a quarter to each side): nothing that moves out of the box is cut
+   (boss-puppet.ts draws the rig shifted by this) */
+.br-pup > canvas { position: absolute; left: -25%; top: -35%; width: 150%; height: 135%; pointer-events: none; }
 .br-pup > canvas.br-pup-front { z-index: 1; }
 .br-pup > .br-pup-over { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: visible; }
 .br-pup > .boss-rig { position: relative; filter: none; }
@@ -6233,6 +6237,8 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 /* the breath is the pose engine's (the shoulders out, the chest up — boss-poses.ts utBreath); the legs stand still (this
    only keeps the puppet awake) */
 .rig-utilizator .br-breath { animation: ut-breath 4.8s ease-in-out infinite; }
+/* beaten, he sways from the hips on the pose engine (his boots stay on the ground): not the whole figure's sway */
+.boss-rig.rig-utilizator.dazed { animation: none; }
 @keyframes ut-breath { 50% { transform: translateY(-0.4px); } }
 .rig-utilizator .br-pupils { animation-name: bt-look; animation-duration: 5.6s; }
 .rig-utilizator .br-teeth-low { animation: bt-teeth-low 4.6s linear infinite; }
