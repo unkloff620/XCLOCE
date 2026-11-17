@@ -543,10 +543,10 @@ const KEY_NAMES = KEYS_ORDER.filter((n) => n.startsWith("key-"));
 const at = (p: [number, number]) => ({ transformOrigin: `${p[0]}px ${p[1]}px`, transformBox: "view-box" as const });
 
 /**
- * «Связка ключей» (tools/rig/build-keys.py): the hand lifts the key ring at the wrist and lowers it; the ring and the keys
- * on it hang behind, swing and settle (a pendulum driven by the hand, screens.css «rk-»), each key dangles a little on its
- * own; the thumb behind the hand and the index finger move. The ring's back half is behind the keys, its front half over
- * them and the hand. Now and then one key gleams — one at a time, in a random order.
+ * «Связка ключей» (tools/rig/build-keys.py): the hand bobs a little at the wrist; the ring swings from the fingers and
+ * the keys on it a beat behind (screens.css «rk-»), each key dangles a little on its
+ * own; the thumb behind the hand and the index finger move. The ring's left half is behind the keys, its right half over
+ * them; the hand is over all of it. Now and then one key gleams — one at a time, in a random order.
  */
 function KeysHand() {
   const { skin } = useContext(LookCtx);
@@ -565,8 +565,8 @@ function KeysHand() {
       const pool = KEY_NAMES.filter((k) => k !== last);
       last = pool[Math.floor(Math.random() * pool.length)];
       const item = { key: last, n: ++n };
-      setShine((s) => [...s.slice(-1), item]);
-      t = setTimeout(next, 1100 + Math.random() * 1300);
+      setShine((s) => [...s.slice(-3), item]);
+      t = setTimeout(next, 500 + Math.random() * 700);
     };
     t = setTimeout(next, 600);
     return () => clearTimeout(t);
@@ -588,11 +588,11 @@ function KeysHand() {
             );
           })}
         </g>
+        {img("ring-front")}
       </g>
       <g className="rk-thumb" style={at(KEYS_PIVOTS.thumb)}>{img("thumb", true)}</g>
       {img("hand", true)}
       <g className="rk-finger" style={at(KEYS_PIVOTS.finger)}>{img("finger", true)}</g>
-      <g className="rk-ring" style={at(KEYS_PIVOTS.grip)}>{img("ring-front")}</g>
     </g>
   );
 }

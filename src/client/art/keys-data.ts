@@ -2,10 +2,10 @@
 /** «Связка ключей» in the hand: its layers, bottom to top (keys hang from their own pivot), and the pivots */
 export const KEYS_PARTS: Record<string, { x: number; y: number; w: number; h: number; pivot?: [number, number]; star?: [number, number] }> = {
   "ring-back": {
-    "x": 628.0,
+    "x": 570.6,
     "y": 822.0,
-    "w": 68.4,
-    "h": 116.6
+    "w": 87.6,
+    "h": 127.0
   },
   "key-1": {
     "x": 589.2,
@@ -105,6 +105,12 @@ export const KEYS_PARTS: Record<string, { x: number; y: number; w: number; h: nu
       933.7
     ]
   },
+  "ring-front": {
+    "x": 628.0,
+    "y": 822.0,
+    "w": 68.4,
+    "h": 116.6
+  },
   "thumb": {
     "x": 587.4,
     "y": 768.1,
@@ -122,15 +128,9 @@ export const KEYS_PARTS: Record<string, { x: number; y: number; w: number; h: nu
     "y": 764.6,
     "w": 69.0,
     "h": 109.6
-  },
-  "ring-front": {
-    "x": 570.6,
-    "y": 822.0,
-    "w": 87.6,
-    "h": 127.0
   }
 };
-export const KEYS_ORDER = ["ring-back", "key-1", "key-2", "key-3", "key-4", "key-5", "key-6", "key-7", "thumb", "hand", "finger", "ring-front"] as const;
+export const KEYS_ORDER = ["ring-back", "key-1", "key-2", "key-3", "key-4", "key-5", "key-6", "key-7", "ring-front", "thumb", "hand", "finger"] as const;
 export const KEYS_PIVOTS: Record<string, [number, number]> = {
   "finger": [
     632.7,

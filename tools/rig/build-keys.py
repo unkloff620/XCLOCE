@@ -1,7 +1,7 @@
 """
 «Связка ключей» (item keys-bundle, HAND slot): the hand holding a key ring, drawn by the artist as separate layers
-(tools/rig/source/held/keys-bundle/, a 1000×1183 picture): hand.png, thumb.png (behind the hand), ring-back.png
-(behind the keys), key-1…7.png, ring-front.png (over the keys and the hand). The index finger is cut out of hand.png
+(tools/rig/source/held/keys-bundle/, a 1000×1183 picture): ring-back.png (the ring's left half, behind the keys),
+key-1…7.png, ring-front.png (its right half, over the keys), thumb.png (behind the hand), hand.png — the hand over all. The index finger is cut out of hand.png
 here (it moves on its own).
 Output:
   public/assets/hero/held/keys-bundle-<part>.webp  — each layer trimmed (the hand, the thumb and the finger also in every
@@ -106,7 +106,7 @@ rest[:, :, 3] = (hand[:, :, 3] * (d < 6)).astype(np.uint8)
 layers["hand"] = rest
 layers["finger"] = finger
 layers["ring-front"] = load("ring-front")
-ORDER = ["ring-back", *keys, "thumb", "hand", "finger", "ring-front"]
+ORDER = ["ring-back", *keys, "ring-front", "thumb", "hand", "finger"]
 SKIN_PARTS = {"hand", "finger", "thumb"}
 
 data = {}
