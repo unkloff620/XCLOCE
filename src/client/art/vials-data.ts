@@ -2,79 +2,79 @@
 /** «Колбы Утилизатора» in the hand: its layers (the vials hang from their own pivot) and the pivots */
 export const VIALS_PARTS: Record<string, { x: number; y: number; w: number; h: number; pivot?: [number, number] }> = {
   "ring": {
-    "x": 604.7,
+    "x": 598.2,
     "y": 796.7,
     "w": 52.9,
     "h": 49.2
   },
   "vial-1": {
-    "x": 587.7,
+    "x": 581.2,
     "y": 837.1,
     "w": 39.1,
     "h": 95.2,
     "pivot": [
-      616.0,
+      609.5,
       841.3
     ]
   },
   "vial-2": {
-    "x": 606.1,
+    "x": 599.6,
     "y": 842.7,
     "w": 35.0,
     "h": 95.7,
     "pivot": [
-      630.2,
+      623.8,
       846.8
     ]
   },
   "vial-3": {
-    "x": 630.0,
+    "x": 623.5,
     "y": 839.4,
     "w": 32.2,
     "h": 97.1,
     "pivot": [
-      642.9,
+      636.4,
       843.6
     ]
   },
   "clip-1": {
-    "x": 612.5,
+    "x": 606.1,
     "y": 827.9,
     "w": 14.3,
     "h": 21.2
   },
   "clip-2": {
-    "x": 626.3,
+    "x": 619.9,
     "y": 831.2,
     "w": 9.7,
     "h": 21.6
   },
   "clip-3": {
-    "x": 635.0,
+    "x": 628.6,
     "y": 829.3,
     "w": 12.0,
     "h": 22.1
   },
   "hand": {
-    "x": 617.6,
+    "x": 611.1,
     "y": 739.2,
     "w": 160.5,
     "h": 99.4
   },
   "finger-m": {
-    "x": 608.8,
+    "x": 602.4,
     "y": 808.6,
     "w": 66.7,
     "h": 73.1
   },
   "finger-r": {
-    "x": 635.5,
+    "x": 629.1,
     "y": 818.7,
     "w": 58.4,
     "h": 67.6
   },
   "finger-p": {
-    "x": 664.9,
+    "x": 658.5,
     "y": 822.9,
     "w": 53.4,
     "h": 65.3
@@ -83,7 +83,7 @@ export const VIALS_PARTS: Record<string, { x: number; y: number; w: number; h: n
 export const VIALS_ORDER = ["ring", "vial-1", "vial-2", "vial-3", "clip-1", "clip-2", "clip-3", "hand", "finger-m", "finger-r", "finger-p"] as const;
 export const VIALS_PIVOTS: Record<string, [number, number]> = {
   "spin": [
-    638.6,
+    632.2,
     821.1
   ],
   "wrist": [
@@ -91,15 +91,15 @@ export const VIALS_PIVOTS: Record<string, [number, number]> = {
     764.0
   ],
   "finger-m": [
-    661.7,
+    655.3,
     818.3
   ],
   "finger-r": [
-    677.4,
+    670.9,
     830.2
   ],
   "finger-p": [
-    695.8,
+    689.3,
     835.3
   ]
 };

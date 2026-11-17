@@ -24,7 +24,7 @@ ID = "vials-utilizator"
 # the artist's picture → the rig: its wrist (the cut edge on the right) lands where the other held hands' wrist is,
 # the hand as big as the hand with the keys
 S = 0.46
-U0 = np.array([440.0, 148.0])   # a little in from the wrist's cut edge: the hand sits up under the sleeve (as the keys' hand)
+U0 = np.array([454.0, 148.0])   # a little in from the wrist's cut edge: the hand sits up under the sleeve (as the keys' hand)
 R0 = np.array([762.0, 764.0])
 rig = lambda u: (np.asarray(u, np.float32) - U0) * S + R0
 SKIN_TONES = ["#f8d5b4", "#fcb477", "#dda57a", "#b97a4e", "#8a5534", "#5e3a24"]
