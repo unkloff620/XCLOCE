@@ -423,7 +423,56 @@ const btTaunt: Action = {
   ],
 };
 
+/* Утилизатор: R — the raised gloved fist on the right comes down hard from the elbow (a hammer blow); L — the fist held
+   before the belly drives up from the elbow (an uppercut). The springs are quick: a pumped young guy, not a heavy one */
+const utHammer: Action = {
+  dur: 0.7,
+  keys: [
+    { at: 0, pose: { armR: -10, lowR: -28, up: 2, x: 3, head: 1.5 } }, // the fist up and back
+    { at: 0.16, pose: { armR: 8, lowR: 40, up: -5, x: -7, head: -2.5, lowL: 6 }, stiff: 5.5 }, // down on the target
+    { at: 0.3, pose: { armR: 5, lowR: 28, up: -3.5, x: -4 }, stiff: 1.4 },
+    { at: 0.44, pose: {} },
+  ],
+};
+const utUpper: Action = {
+  dur: 0.72,
+  keys: [
+    { at: 0, pose: { armL: 6, lowL: 14, up: 2.5, x: 3, head: 2 } }, // dips down
+    { at: 0.17, pose: { armL: -12, lowL: -48, up: -5, x: 6, head: -2.5, lowR: -6 }, stiff: 5.5 }, // up from the belly
+    { at: 0.31, pose: { armL: -9, lowL: -36, up: -3.5, x: 4 }, stiff: 1.4 },
+    { at: 0.45, pose: {} },
+  ],
+};
+
 const POSES: Record<string, Spec> = {
+  utilizator: {
+    springs: {
+      up: { k: 75, c: 12 }, x: { k: 70, c: 12 }, head: { k: 120, c: 12 },
+      armL: { k: 100, c: 15 }, lowL: { k: 210, c: 17 },
+      armR: { k: 100, c: 15 }, lowR: { k: 210, c: 17 },
+    },
+    drag: { lowL: ["armL", -0.05], lowR: ["armR", -0.05], head: ["up", -0.08] },
+    // the guard: the raised fist bobs, the low one creeps, the shoulders roll, he breathes hard (yelling)
+    idle: (t) => ({
+      up: 1.2 * Math.sin(t * 1.15) + 0.4 * Math.sin(t * 2.4 + 1),
+      x: 2.4 * Math.sin(t * 0.6),
+      head: 1.6 * Math.sin(t * 0.95 + 1) + 0.6 * Math.sin(t * 2.2),
+      armL: 2 * Math.sin(t * 1.3), lowL: 3.5 * Math.sin(t * 1.7 + 0.5),
+      armR: 2 * Math.sin(t * 1.2 + 2), lowR: 4.5 * Math.sin(t * 1.6 + 1),
+    }),
+    actions: [
+      { a: utHammer, w: 28 },
+      { a: utUpper, w: 24 },
+      { a: join(utUpper, shift(utHammer, 0.05)), w: 20 },
+      { a: join(utHammer, utHammer), w: 10 },
+      { a: join(utUpper, utUpper), w: 8 },
+      { a: taunt, w: 8 },
+    ],
+    rest: [0.8, 2.0],
+    hit: { head: 260, up: 90, x: 70, armL: -120, lowL: 160, armR: 100, lowR: -180 },
+    strike: join(utUpper, shift(utHammer, 0.05)),
+    dazed: { pose: { armL: 8, lowL: 20, armR: 16, lowR: 46, head: 6, up: -1.5 }, act: false },
+  },
   botsman: {
     springs: {
       up: { k: 70, c: 11.5 }, x: { k: 60, c: 11 }, head: { k: 110, c: 11 },

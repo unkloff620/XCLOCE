@@ -23,11 +23,14 @@ import { BOSS_RIGS } from "./boss-rig-data.ts";
 type Part = { x: number; y: number; w: number; h: number; pivot?: readonly number[]; frames?: number; v?: string };
 
 /** bosses whose far arm (R or L) goes behind the body */
-const BEHIND: Record<string, "L" | "R"> = { mugo: "R", babafey: "L", gopnik: "L", botsman: "R", larek: "R" };
+const BEHIND: Record<string, "L" | "R"> = { mugo: "R", babafey: "L", gopnik: "L", botsman: "R", larek: "R", utilizator: "R" };
 /** of these the arm in BEHIND goes behind only with its shoulder: the forearm and the hand stay in front of everything */
-const SPLIT_BEHIND = new Set(["babafey", "botsman", "larek"]);
+const SPLIT_BEHIND = new Set(["babafey", "botsman", "larek", "utilizator"]);
 /** the head has holes for the eyes: the whites and the pupils are drawn under it and show through (Ларёчник) */
-const EYES_UNDER = new Set(["larek"]);
+const EYES_UNDER = new Set(["larek", "utilizator"]);
+/** things hanging off the belt on a ring (Утилизатор's vials and gas mask): they lean with the body and swing on their
+ *  pins (screens.css «Утилизатор»), drawn over the apron and under the gloved fists */
+const HANG = ["vials", "gasmask"];
 /** rigs drawn as plain SVG only */
 const NO_PUPPET = new Set<string>(["knyaz"]);
 /** the bosses drawn whole (no legs of their own) that still bend at the waist on the pose engine: the waist (rig units)
@@ -453,6 +456,7 @@ export function BossRig({ id: asked, hpShare = 1, bust = false, outfit: wanted }
           {dazed && P.eyes && <Sweat eyes={P.eyes} id={id} />}
         </g>
         {img("collar")}
+        {HANG.map((h) => P[h] && <g key={h} className={`br-hang br-hang-${h}`} style={origin(h)}>{img(h)}</g>)}
         {P.foreL && <g className="br-fist-l" {...joint("foreL")} style={{ ...origin("foreL"), ...tilt("foreL", "foreL", 9) }}>{img("foreL", undefined, "front")}</g>}
         {P.foreR && <g className="br-fist-r" {...joint("foreR")} style={{ ...origin("foreR"), ...tilt("foreR", "foreR", 9) }}>{img("foreR", undefined, "front")}</g>}
         {behind !== "R" && arm("R")}
