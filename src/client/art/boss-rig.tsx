@@ -433,13 +433,12 @@ export function BossRig({ id: asked, hpShare = 1, bust = false, outfit: wanted }
             <g className="br-mouth-open">
               {img("throat")}
               {/* a jaw that drops (lips-up: the upper lip stays): the throat goes down with it, so the open mouth stays dark */}
-              {P["lips-up"] && <g className="br-jaw">{img("throat")}</g>}
               <g className="br-teeth-up">{img("teeth-up")}</g>
               {/* the jaw: the lower teeth and the lips with the chin move together (Утилизатор's jaw goes up and down
                   with his breath and his yell — boss-poses.ts breathFollow) */}
               <g className="br-jaw">
-                <g className="br-teeth-low">{img("teeth-low")}</g>
-                {img("lips")}
+                <g className="br-jaw-teeth"><g className="br-teeth-low">{img("teeth-low")}</g></g>
+                <g className="br-jaw-lips">{img("lips")}</g>
               </g>
               {img("lips-up")}
             </g>

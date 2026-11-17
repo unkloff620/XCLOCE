@@ -3479,18 +3479,18 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "v": "60571ffe"
       },
       "lips": {
-        "x": 260.5,
-        "y": 177.5,
-        "w": 124,
-        "h": 48,
-        "v": "39a467f6"
+        "x": 287.5,
+        "y": 183.5,
+        "w": 76,
+        "h": 42,
+        "v": "bff6217a"
       },
       "lips-up": {
-        "x": 273.5,
+        "x": 285.5,
         "y": 146.5,
-        "w": 112,
-        "h": 34,
-        "v": "8fd6fe35"
+        "w": 79,
+        "h": 40,
+        "v": "92b159c2"
       },
       "eyes": {
         "x": 273.0,

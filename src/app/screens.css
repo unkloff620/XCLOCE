@@ -6226,6 +6226,11 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .arena-photo.ouch .rig-utilizator .br-brow-l, .rig-utilizator.dazed .br-brow-l { animation: none; transform: translateY(-1.5px) rotate(-9deg); }
 .arena-photo.ouch .rig-utilizator .br-brow-r, .rig-utilizator.dazed .br-brow-r { animation: none; transform: translateY(-1.5px) rotate(9deg); }
 .arena-photo.ouch .rig-utilizator .br-head { animation: mg-head-hit 0.42s ease-out; }
+/* his mouth (the artist's lips drawn wide open): shut at rest — the lower lip and the chin stretch up from the chin's bottom
+   (the corners and the jaw line stay where they are, nothing tears), the lower teeth bite up a little; --close comes from
+   the pose engine (1 shut … 0 the yell) */
+.rig-utilizator .br-jaw-lips { transform-box: view-box; transform-origin: 325.9px 223.8px; transform: scaleY(calc(1 + 0.33 * var(--close, 1))); }
+.rig-utilizator .br-jaw-teeth { transform: translateY(calc(-2.2px * var(--close, 1))); }
 .br-hang-vials { animation: ut-swing 3.1s ease-in-out infinite; }
 .br-hang-gasmask { animation: ut-swing 3.7s ease-in-out -0.8s infinite; }
 @keyframes ut-swing { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }

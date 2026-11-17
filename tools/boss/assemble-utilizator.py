@@ -100,9 +100,9 @@ for k, im in out.items():
     im.crop(CROP).save(f"{D}/{k}.png")
 for n in ["head", "eyes", "pupils", "eyes-closed", "throat", "teeth-up", "teeth-low"]:
     face(n).crop(CROP).save(f"{D}/{n}.png")
-# the lips with the chin split across the middle of the mouth's hole (y 679 on the face sheet): lips-up — the upper lip
+# the lips with the chin split under the mouth's hole (y 700 on the face sheet, the artist's lips drawn open wide): lips-up — the upper lip
 # stays with the head; lips — the lower lip and the chin, the jaw that drops (boss-rig.tsx br-jaw)
-MOUTH_CUT = 679
+MOUTH_CUT = 700   # under the mouth's corners: they stay with the upper piece (pinned), the lower lip and the chin go
 lp = face("lips")
 cut_y = round(FACE_AT[1] + MOUTH_CUT * FACE_K)
 up_, low_ = arr(lp).copy(), arr(lp).copy()

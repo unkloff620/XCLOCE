@@ -45,6 +45,8 @@ interface Spec {
   breath?: (t: number, dazed: boolean) => [number, number, number];
   /** what else follows the breath (the jaw): el → transform */
   breathFollow?: { sel: string; f: (t: number, ang: Record<string, number>) => string };
+  /** CSS variables put on the rig every frame from the channels (Утилизатор's jaw: --close, the CSS shapes the mouth) */
+  vars?: (ang: Record<string, number>) => Record<string, string>;
   /** a joint drawn as a strip of bent frames (Князь's elbows: a window one frame wide over the strip, perFrame° apart):
    *  its angle picks the frame; turn — a group that turns by the frame's bend (the hand riding on that forearm) */
   bend?: Partial<Record<J, { strip: string; perFrame: number; turn?: string }>>;
@@ -480,13 +482,15 @@ const POSES: Record<string, Spec> = {
         head: -2.2 * b + 1 + 0.4 * Math.sin(t * 0.6 + 1),
         armL: 5 * b - 1.5, lowL: 3 * b + 0.8 * Math.sin(t * 0.9 + 0.5),
         armR: -5 * b + 1.5, lowR: -3 * b + 1 * Math.sin(t * 0.8 + 1),
-        jaw: 0.45 * b,
+        jaw: 0.15 * b,
       };
     },
     // the chest: in — fuller and taller (from the belt up), out — it sinks back
     breath: (t, dazed) => { const b = utBreath(dazed ? t * 0.8 : t); return [1 + 0.035 * b, 0.985 + 0.045 * b, 0]; },
-    // the jaw (the lips with the chin and the lower teeth) drops: a little with each breath in, wide on the blow
-    breathFollow: { sel: ".rig-utilizator .br-jaw", f: (_t, a) => `translateY(${(Math.max(0, a.jaw ?? 0) * 9).toFixed(2)}px)` },
+    // the mouth: drawn open wide (jaw 1); at rest he shuts it — the lower lip goes up, the chin stretches from its bottom
+    // and the corners stay put (screens.css «Утилизатор», --close); he opens it a little with each breath in and yells
+    // on the blow
+    vars: (a) => ({ "--close": (1 - Math.max(0, Math.min(1, a.jaw ?? 0))).toFixed(3) }),
     actions: [
       { a: utHammer, w: 30 },
       { a: utUpper, w: 26 },
@@ -940,6 +944,7 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
           : joint(j);
         for (const el of els[j]) el.style.transform = tr;
       }
+      if (spec.vars) for (const [k, v] of Object.entries(spec.vars(ang))) svg.style.setProperty(k, v);
       if (spec.breathFollow) { const tr = spec.breathFollow.f(t, ang); for (const el of follow) el.style.transform = tr; }
       for (const b of bends) {
         let deg = 0;
