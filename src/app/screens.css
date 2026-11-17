@@ -1867,6 +1867,23 @@ button.bjt-stack { cursor: pointer; }
   background-size: 260% 100%; background-repeat: no-repeat; animation: bcard-gold-shine 4.5s ease-in-out infinite;
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
 .bcard.bcard-boss-vadim.locked::after { display: none; }
+/* Утилизатор's card: a rusty hazard plate in a frame of acid slime (boss-card-frame-utilizator.webp, the artist's layers,
+   tools/ui/utilizator-card.py). The slime glows — its own lit copy with a green halo breathes in and out (::before,
+   screen) — and a glint slides along it (::after, masked to the slime's shape) */
+.bcard.bcard-boss-utilizator { --ink-c: #f1f7e4; --mute-c: #b9cf8f; border-image: url("/assets/ui/boss-card-frame-utilizator.webp?v=1") 130 fill / 40px stretch; }
+.bcard.bcard-boss-utilizator .bcard-name { text-shadow: 0 2px 0 rgba(0, 0, 0, 0.65), 0 0 12px rgba(170, 255, 40, 0.3); }
+.bcard.bcard-boss-utilizator .bcard-reward { background: rgba(0, 0, 0, 0.4); box-shadow: inset 0 0 0 1.5px rgba(170, 255, 40, 0.3); }
+.bcard.bcard-boss-utilizator::before { display: block; content: ""; position: absolute; inset: 0; z-index: 3; height: auto; pointer-events: none;
+  border-style: solid; border-width: 40px; border-color: transparent; border-image: url("/assets/ui/utilizator-slime-glow.webp?v=1") 130 fill / 40px stretch;
+  mix-blend-mode: screen; animation: ut-card-glow 2.6s ease-in-out infinite; }
+@keyframes ut-card-glow { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.75; } }
+.bcard.bcard-boss-utilizator::after { content: ""; position: absolute; inset: 0; z-index: 4; pointer-events: none; mix-blend-mode: screen; opacity: 0.75;
+  border-style: solid; border-width: 40px; border-color: transparent; border-image: url("/assets/ui/utilizator-slime-mask.webp?v=1") 130 fill / 40px stretch;
+  -webkit-mask-image: linear-gradient(115deg, transparent 40%, #000 48%, #000 52%, transparent 60%); mask-image: linear-gradient(115deg, transparent 40%, #000 48%, #000 52%, transparent 60%);
+  -webkit-mask-size: 260% 100%; mask-size: 260% 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; animation: ut-card-glint 3.8s ease-in-out infinite; }
+@keyframes ut-card-glint { 0%, 55% { -webkit-mask-position: 130% 0; mask-position: 130% 0; } 100% { -webkit-mask-position: -40% 0; mask-position: -40% 0; } }
+.bcard.bcard-boss-utilizator.locked::before, .bcard.bcard-boss-utilizator.locked::after { display: none; }
+@media (prefers-reduced-motion: reduce) { .bcard.bcard-boss-utilizator::before, .bcard.bcard-boss-utilizator::after { animation: none; } .bcard.bcard-boss-utilizator::after { display: none; } }
 @media (prefers-reduced-motion: reduce) { .bcard.bcard-boss-vadim::after { animation: none; background: none; } }
 @media (prefers-reduced-motion: reduce) { .bcard.bcard-boss-knyaz::after { animation: none; background: none; } }
 .bcard-art { left: 5%; top: 16px; bottom: 50px; width: 35%; border-radius: 10px; }
