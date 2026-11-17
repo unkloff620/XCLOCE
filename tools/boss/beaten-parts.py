@@ -18,6 +18,8 @@ SRC = os.path.join(HERE, "source")
 OUT = os.path.join(HERE, "beaten")
 PAD = 0.05
 key = lambda n: n.replace("/", "-")
+# the layers whose rips are cut right through (see-through holes)
+HOLES = {"apron"}
 
 
 def inputs(boss, layers):
@@ -68,7 +70,23 @@ def apply(boss, q, layers):
         ox, oy = m["ox"], m["oy"]
         sx, sy, ex, ey = max(0, ox), max(0, oy), min(W, ox + side), min(H, oy + side)
         sheet[sy:ey, sx:ex] = big[sy - oy:ey - oy, sx - ox:ex - ox]
-        a = orig[..., 3]
+        a = orig[..., 3].copy()
+        if n in HOLES:
+            # cuts right through (the edit draws them pure white): those patches become see-through — what is behind shows;
+            # only real patches (not the thin white gloss lines) and not the white background round the piece
+            w = (sheet.min(2) > 236).astype(np.uint8) & (a > 0)
+            w = cv2.morphologyEx(w, cv2.MORPH_OPEN, np.ones((5, 5), np.uint8))
+            cnt, lb, st, _ = cv2.connectedComponentsWithStats(w)
+            inner = cv2.erode((a > 0).astype(np.uint8), np.ones((15, 15), np.uint8)) > 0
+            holes = np.zeros_like(w, bool)
+            for i in range(1, cnt):
+                x, y, ww, hh, ar = st[i]
+                fill = ar / max(1, ww * hh)
+                if ar >= 250 and fill > 0.18 and (lb[inner] == i).any():
+                    holes |= lb == i
+            holes = cv2.dilate(holes.astype(np.uint8), np.ones((3, 3), np.uint8)) > 0
+            a[holes] = 0
+            print("  holes", int(holes.sum()), "px")
         # the edit's white background inside the outline and the faint soft edge take the nearest colour of the piece itself
         rim = cv2.distanceTransform((a > 0).astype(np.uint8), cv2.DIST_L2, 5) < 28
         hole = ((sheet.min(2) > 235) | (rim & (sheet.min(2) > 185))) & (a > 0)

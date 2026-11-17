@@ -21,7 +21,7 @@ from PIL import Image
 
 import sys
 # a variant (the beaten looks, tools/boss/beaten-parts.py): its own folder with its raw/; flags: nogloveR / nogloveL —
-# the glove is gone, the bare forearm with its fist shows; nomask — the gas mask is gone from the belt
+# the glove is gone, the bare forearm with its fist shows; nomask — the gas mask is gone from the belt; novials — the vials too
 D = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("no") else "tools/boss/source/utilizator"
 FLAGS = set(a for a in sys.argv[1:] if a.startswith("no"))
 VARIANT = D.rstrip("/") != "tools/boss/source/utilizator"
@@ -122,6 +122,9 @@ out = {
     "vials": L["vials"],
     "gasmask": L["gasmask"],
 }
+if "novials" in FLAGS:
+    del out["vials"]
+    if os.path.exists(f"{D}/vials.png"): os.remove(f"{D}/vials.png")
 if "nomask" in FLAGS:
     del out["gasmask"]
     if os.path.exists(f"{D}/gasmask.png"): os.remove(f"{D}/gasmask.png")

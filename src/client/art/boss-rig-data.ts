@@ -3546,14 +3546,14 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "y": 599.0,
         "w": 594,
         "h": 738,
-        "v": "5cba4d81"
+        "v": "4610bc37"
       },
       "body": {
         "x": 94.5,
         "y": 160.5,
         "w": 455,
         "h": 948,
-        "v": "4a4dcd21"
+        "v": "fcf228fd"
       },
       "armL": {
         "x": 27.5,
@@ -3564,7 +3564,7 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
           132.0,
           340.0
         ],
-        "v": "b77c5bc1"
+        "v": "097dcbef"
       },
       "lowL": {
         "x": 21.0,
@@ -3575,7 +3575,7 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
           80.3,
           502.8
         ],
-        "v": "a859ca5b"
+        "v": "776d8ef1"
       },
       "vials": {
         "x": 209.5,
@@ -3597,7 +3597,7 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
           454.8,
           366.5
         ],
-        "v": "6db0c337"
+        "v": "a8a3f1c4"
       },
       "lowR": {
         "x": 534.5,
@@ -3608,7 +3608,7 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
           559.0,
           507.9
         ],
-        "v": "0dd4fc65"
+        "v": "95f42677"
       },
       "head": {
         "x": 227.0,
@@ -3619,7 +3619,7 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
           316.0,
           228.0
         ],
-        "v": "a5d117cc"
+        "v": "150fe778"
       },
       "throat": {
         "x": 299.0,
@@ -3710,14 +3710,14 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "y": 599.0,
         "w": 594,
         "h": 738,
-        "v": "5cba4d81"
+        "v": "4610bc37"
       },
       "body": {
         "x": 94.5,
         "y": 160.5,
         "w": 455,
         "h": 948,
-        "v": "4a4dcd21"
+        "v": "fcf228fd"
       },
       "armL": {
         "x": 27.5,
@@ -3728,7 +3728,7 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
           132.0,
           340.0
         ],
-        "v": "b77c5bc1"
+        "v": "097dcbef"
       },
       "lowL": {
         "x": 21.0,
@@ -3739,18 +3739,7 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
           80.3,
           502.8
         ],
-        "v": "c27a2d37"
-      },
-      "vials": {
-        "x": 209.5,
-        "y": 642.5,
-        "w": 100,
-        "h": 179,
-        "pivot": [
-          255.3,
-          649.0
-        ],
-        "v": "90fcb714"
+        "v": "55ddfaaf"
       },
       "armR": {
         "x": 413.0,
@@ -3761,7 +3750,7 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
           454.8,
           366.5
         ],
-        "v": "6db0c337"
+        "v": "a8a3f1c4"
       },
       "lowR": {
         "x": 534.5,
@@ -3772,7 +3761,7 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
           559.0,
           507.9
         ],
-        "v": "0dd4fc65"
+        "v": "95f42677"
       },
       "head": {
         "x": 227.0,
@@ -3783,7 +3772,7 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
           316.0,
           228.0
         ],
-        "v": "a5d117cc"
+        "v": "150fe778"
       },
       "throat": {
         "x": 299.0,
