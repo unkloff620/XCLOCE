@@ -20,10 +20,10 @@ export const HELD_FIT: Record<string, { x: number; y: number; w: number; h: numb
     "h": 140
   },
   "keys-bundle": {
-    "x": 570.0,
-    "y": 735.0,
-    "w": 196,
-    "h": 330
+    "x": 590.0,
+    "y": 737.5,
+    "w": 176,
+    "h": 296
   }
 };
 /** what hangs from the fist and swings (drawn behind the hand, in order): the pivot and the parts */

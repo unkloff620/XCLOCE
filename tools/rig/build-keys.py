@@ -23,7 +23,7 @@ OUT = os.path.join(ROOT, "public", "assets", "hero")
 ID = "keys-bundle"
 
 # the artist's picture → the rig: its wrist (the cut edge on the right) lands where the mug's wrist is
-S = 0.58
+S = 0.52
 U0 = np.array([705.0, 366.0])
 R0 = np.array([762.0, 764.0])
 rig = lambda u: (np.asarray(u, np.float32) - U0) * S + R0
