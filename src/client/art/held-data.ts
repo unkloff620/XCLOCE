@@ -21,9 +21,9 @@ export const HELD_FIT: Record<string, { x: number; y: number; w: number; h: numb
   },
   "keys-bundle": {
     "x": 590.0,
-    "y": 738.0,
+    "y": 739.0,
     "w": 176,
-    "h": 296
+    "h": 295
   }
 };
 /** what hangs from the fist and swings (drawn behind the hand, in order): the pivot and the parts */

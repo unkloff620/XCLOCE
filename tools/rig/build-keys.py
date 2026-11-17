@@ -99,7 +99,8 @@ def past(line, h, w):
     if nx < 0: nx, ny = -nx, -ny
     return ((xx - ax) * nx + (yy - ay) * ny) / np.hypot(nx, ny)
 WRIST_LINE, WRIST_FADE = ((650.0, 310.0), (690.0, 420.0)), 42.0
-hand[:, :, 3] = (hand[:, :, 3] * np.clip(1 - past(WRIST_LINE, *hand.shape[:2]) / WRIST_FADE, 0, 1)).astype(np.uint8)
+# the artist cut the wrist himself (hand.png has its own soft edge) — no fade of ours
+# hand[:, :, 3] = (hand[:, :, 3] * np.clip(1 - past(WRIST_LINE, *hand.shape[:2]) / WRIST_FADE, 0, 1)).astype(np.uint8)
 # the finger: a soft band across the cut, the hand keeps its side of the band (the finger covers the seam when it moves)
 H, W = hand.shape[:2]
 yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
