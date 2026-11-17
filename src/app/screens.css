@@ -6723,6 +6723,18 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 /* «Связка ключей» (rig.tsx KeysHand): the hand bobs a little at the wrist; the ring swings from the fingers like a
    pendulum, the bunch of keys a beat behind it, every key dangles on its own;
    the thumb and the index finger move */
+/* «Колбы Утилизатора» (rig.tsx VialsHand): the wrist circles a little, the ring spins round the finger clockwise, the
+   vials swing out and dangle each on its eye */
+.rig-vials { animation: rv-wrist 1.2s linear infinite; }
+@keyframes rv-wrist { 0% { transform: translate(1.2px, 0) rotate(0.6deg); } 25% { transform: translate(0, 1.2px) rotate(0deg); } 50% { transform: translate(-1.2px, 0) rotate(-0.6deg); } 75% { transform: translate(0, -1.2px) rotate(0deg); } 100% { transform: translate(1.2px, 0) rotate(0.6deg); } }
+.rv-spin { animation: rv-spin 1.2s linear infinite; }
+@keyframes rv-spin { to { transform: rotate(360deg); } }
+.rv-vial { animation: rv-dangle 0.6s ease-in-out infinite alternate; }
+.rv-vial-1 { animation-delay: -0.15s; }
+.rv-vial-2 { animation-duration: 0.7s; animation-delay: -0.4s; }
+.rv-vial-3 { animation-duration: 0.55s; animation-delay: -0.05s; }
+@keyframes rv-dangle { from { transform: rotate(-10deg); } to { transform: rotate(10deg); } }
+@media (prefers-reduced-motion: reduce) { .rig-vials, .rv-spin, .rv-vial { animation: none; } }
 .rig-keys { animation: rk-lift 3s ease-in-out infinite; }
 @keyframes rk-lift { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(3deg); } }
 .rk-ring { animation: rk-ring 1.5s ease-in-out infinite alternate; animation-delay: -0.5s; }

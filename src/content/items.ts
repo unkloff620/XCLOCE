@@ -129,6 +129,7 @@ const WEARABLES: ItemDef[] = ([
   { id: "sneakers-chunky", name: "Кроссовки Гаркуши", slot: "SHOES", rarity: "rare", description: "Чёрные, на толстой подошве. Шаг тяжёлый, как пачка пятитысячных.", sources: ["Победа: Гаркуша (Блатной)"] },
   // Мугонатор's set: the sea captain (cut from the hero on tools/rig/source/wear)
   { id: "tee-sailor", name: "Тельняшка Мугонатора", slot: "SHIRT", rarity: "rare", description: "Полоски — чтобы акула видела, кого не трогать. Край уже кто-то откусил.", sources: ["Победа: Мугонатор (Блатной)"] },
+  { id: "vials-utilizator", name: "Колбы Утилизатора", slot: "HAND", rarity: "legendary", description: "Три колбы с кислотой на кольце. Утилизатор крутит их на пальце, пока решает, кого растворить. Герой крутит кольцо, колбы болтаются.", sources: ["Победа: Утилизатор (Авторитетный)"] },
   { id: "anchor-mugo", name: "Якорь", slot: "HAND", rarity: "epic", description: "Мугонатор качает его на верёвке и ждёт, когда Вадим скажет «бросай». Герой держит его в руке.", sources: ["Победа: Мугонатор (Блатной)"] },
   // Боцман's set: the gloves; the left hand plays with his crowbar (tools/rig/build-gloves.py)
   { id: "coat-botsman", name: "Плащ Боцмана", slot: "SHIRT", rarity: "legendary", description: "Длинный, кожаный, нараспашку. Полы ложатся на пол, как у того, кто знает, где выход из матрицы.", sources: ["Победа: Боцман (Блатной)"] },

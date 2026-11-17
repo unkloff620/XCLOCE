@@ -24,6 +24,12 @@ export const HELD_FIT: Record<string, { x: number; y: number; w: number; h: numb
     "y": 739.0,
     "w": 176,
     "h": 295
+  },
+  "vials-utilizator": {
+    "x": 576.5,
+    "y": 733.0,
+    "w": 191,
+    "h": 200
   }
 };
 /** what hangs from the fist and swings (drawn behind the hand, in order): the pivot and the parts */

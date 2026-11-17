@@ -31,7 +31,9 @@ HELD = {"bottle-komandate": {"grip": (1300, 1810), "far": (1110, 2000)},
         # the mug (source/held/mug-coin.png, the artist's picture): skin only right of its handle; the black mug and the gold coin stay as drawn
         "mug-coin": {"grip": (1352, 1520), "far": (1200, 1520)},
         # «Связка ключей» (made by build-keys.py from its layers): skin above the ring's grip, the keys below stay as drawn
-        "keys-bundle": {"grip": (1280, 1660), "far": (1280, 1900)}}
+        "keys-bundle": {"grip": (1280, 1660), "far": (1280, 1900)},
+        # «Колбы Утилизатора» (build-vials.py): skin above the ring, the green vials below stay as drawn
+        "vials-utilizator": {"grip": (1256, 1631), "far": (1199, 1859)}}
 # things that hang from the fist and swing as a pendulum (rig.tsx HeldSwing): their own pictures, not tinted, and the
 # point they hang from (source-canvas pixels) — <item>-rope.png, <item>-anchor.png
 SWING = {"anchor-mugo": {"pivot": (1328, 1748), "parts": ["rope", "anchor"]}}

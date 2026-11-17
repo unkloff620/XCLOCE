@@ -31,6 +31,8 @@ export interface BossDef {
    * in the shop and has to be bought there. Which ones, is a secret for the player (shown as «?» x/N)
    */
   wear?: { items: string[]; chance: number; pity: number };
+  /** the fight mode his things (and his room) drop in, when not the usual «Блатной» (Утилизатор: «Авторитетный») */
+  thingsMode?: "pacan" | "blat" | "avtor";
   /** things the first win (any own hit) opens in the shop for sure; they are bought there too */
   firstWin?: string[];
   /**
@@ -171,6 +173,8 @@ export const BOSSES: BossDef[] = [
     story: "Отвечает за прокси и за всё, что связано с алкоголем. Тусовка не начнётся без его разрешения.",
     hp: hp(10), reward: { xp: xp(10), currencies: { USD: 21, RUB: 53_950 }, items: [{ id: "statue-close", qty: 1 }] },
     drop: [{ id: "rug-pull-gun", qty: 1, chance: 0.25 }],
+    // his things drop in «Авторитетный» (his tattoos — in «Пацанский» and «Блатной»)
+    wear: { items: ["vials-utilizator"], chance: 0.1, pity: 10 }, thingsMode: "avtor",
     theme: { a: "#2f3416", b: "#0f1106", accent: "#c8f03c" }, photo: photo("utilizator", true),
     keysToUnlock: 1,
   },

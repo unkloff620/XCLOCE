@@ -394,7 +394,7 @@ export async function claimFight(ctx: Ctx, fightId: number, see = true) {
   const key = def.final || def.event || !earnedKey ? [] : [{ id: keyId(def.id), qty: bonusKey ? 2 : 1 }];
   // the boss's own things (clothes, rooms, first-win things) drop only in «Блатной»
   const mode = fightMode(f.mode);
-  const things = earnedKey && mode.things;
+  const things = earnedKey && (def.thingsMode ? mode.id === def.thingsMode : mode.things);
   // the thing and the room are rolled first, then written: one win gives one of them — both only with BOTH_DROP_CHANCE
   const thingPlan = things ? await planUnlock(ctx, def) : null;
   const unlocked: string[] = [];

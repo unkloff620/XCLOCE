@@ -18,6 +18,7 @@ import { HELD_FIT, HELD_SWING } from "./held-data.ts";
 import { GLOVES, GLOVES_ID } from "./gloves-data.ts";
 import { MetalGlint } from "./glint.tsx";
 import { KEYS_ORDER, KEYS_PARTS, KEYS_PIVOTS } from "./keys-data.ts";
+import { VIALS_PARTS, VIALS_PIVOTS } from "./vials-data.ts";
 import { TATTOO_FIT } from "./tattoo-data.ts";
 import { PLACES } from "./places-data.ts";
 import { SEAT } from "../../content/home-scene.ts";
@@ -237,7 +238,7 @@ function PlacePic({ grid, id }: { grid: Grid; id: string }) {
 function Highlight({ edit }: { edit: RigEdit }) {
   const look = useContext(LookCtx), worn = useContext(WornCtx);
   // the hand with the keys shows its own place (KeysHand)
-  if (edit.mode === "ink" && edit.part === "hand-r" && worn.HAND === KEYS_ID) return null;
+  if (edit.mode === "ink" && edit.part === "hand-r" && (worn.HAND === KEYS_ID || worn.HAND === VIALS_ID)) return null;
   const shapes = partShapes(edit, look, worn);
   return (
     <g pointerEvents="none" className="rig-hl-part">
@@ -500,6 +501,7 @@ function HandFrames() {
   const heldId = useContext(WornCtx).HAND;
   if (heldId === GLOVES_ID) return <GloveHand />;
   if (heldId === KEYS_ID) return <KeysHand />;
+  if (heldId === VIALS_ID) return <VialsHand />;
   if (heldId && heldId in HELD_FIT) {
     const f = HELD_FIT[heldId];
     const sw = HELD_SWING[heldId];
@@ -541,6 +543,34 @@ function HandFrames() {
 }
 
 const KEYS_ID = "keys-bundle";
+const VIALS_ID = "vials-utilizator";
+
+/**
+ * «Колбы Утилизатора» (tools/rig/build-vials.py): the hand twirls the ring round its finger clockwise (a little circle
+ * of the wrist drives it); the vials swing out on the ring, each dangling on its own eye a beat behind
+ * (screens.css «rv-»). The hand is over all of it.
+ */
+function VialsHand() {
+  const { skin } = useContext(LookCtx);
+  const src = (part: string, tinted = false) =>
+    `${tinted && skin !== SKIN_ORIGINAL ? `/assets/hero/skin-${skin}/held-${VIALS_ID}` : `/assets/hero/held/${VIALS_ID}`}-${part}.webp?v=${ART_VER.heroPart}`;
+  const img = (part: string, tinted = false) => {
+    const b = VIALS_PARTS[part];
+    return <image href={src(part, tinted)} x={b.x} y={b.y} width={b.w} height={b.h} preserveAspectRatio="none" />;
+  };
+  return (
+    <g className="rig-hand rig-vials" style={at(VIALS_PIVOTS.wrist)}>
+      <g className="rv-spin" style={at(VIALS_PIVOTS.spin)}>
+        {img("ring")}
+        {["vial-1", "vial-2", "vial-3"].map((v, i) => (
+          <g key={v} className={`rv-vial rv-vial-${i + 1}`} style={at(VIALS_PARTS[v].pivot!)}>{img(v)}</g>
+        ))}
+        {img("clip-1")}{img("clip-2")}{img("clip-3")}
+      </g>
+      {img("hand", true)}
+    </g>
+  );
+}
 const KEY_NAMES = KEYS_ORDER.filter((n) => n.startsWith("key-"));
 const at = (p: [number, number]) => ({ transformOrigin: `${p[0]}px ${p[1]}px`, transformBox: "view-box" as const });
 

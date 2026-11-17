@@ -570,7 +570,7 @@ export function BossScreen({ id }: { id: string }) {
           <span className="door-plate">
             <b className="door-plate-title">{boss.final ? "ФИНАЛ" : "НАГРАДА"}</b>
             <GainLine r={doorReward} size={14} />
-            {!!boss.wear && fightMode(mode).things && <DropKind kind="wear" size={14} count={bossItemsCount(boss, state) ?? undefined} />}
+            {!!boss.wear && (boss.thingsMode ? mode === boss.thingsMode : fightMode(mode).things) && <DropKind kind="wear" size={14} count={bossItemsCount(boss, state) ?? undefined} />}
             {!!bossTattooCount(boss.id, state, mode) && <DropKind kind="tattoo" size={14} count={bossTattooCount(boss.id, state, mode)!} />}
           </span>
           {blocked && locked && <span className="door-lock"><Icon name="lock" size={30} /></span>}
@@ -582,7 +582,7 @@ export function BossScreen({ id }: { id: string }) {
       {!locked && !ev && door === "closed" && mode !== "avtor" && <button type="button" className="mode-arrow r" onClick={() => goMode(1)} aria-label="Следующий режим">›</button>}
       <div className="fight-bottom prefight-panel">
         <div className="tiny muted center mode-hint">
-          {soloPick ? "Соло (бьёшь один): здоровье" : `${fightMode(mode).name}: здоровье`} {full(Math.round((row?.hpMax ?? boss.hp) * fightMode(mode).hp))}{fightMode(mode).things ? " · падают вещи босса" : ""}{tattooSetsOfBoss(boss.id).some((t) => t.mode === mode) ? " · падают наколки" : ""}.
+          {soloPick ? "Соло (бьёшь один): здоровье" : `${fightMode(mode).name}: здоровье`} {full(Math.round((row?.hpMax ?? boss.hp) * fightMode(mode).hp))}{(boss.thingsMode ? mode === boss.thingsMode : fightMode(mode).things) ? " · падают вещи босса" : ""}{tattooSetsOfBoss(boss.id).some((t) => t.mode === mode) ? " · падают наколки" : ""}.
         </div>
         {/* auto-fight: this mode fights by itself today — up to the day's limit, free weapons only (one mode per boss) */}
         {!locked && !ev && !soloPick && (
