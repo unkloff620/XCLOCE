@@ -13,11 +13,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api, type Tray } from "../api.ts";
 import { Bar } from "../ui.tsx";
 import { ItemArt } from "../art/items.tsx";
-import { BossRig } from "../art/boss-rig.tsx";
+import { BossRig, hasBossRig } from "../art/boss-rig.tsx";
 import { Emblem } from "../art/emblems.tsx";
 import { useFx } from "../fx/attack.tsx";
 import { alleyCreak, setMusicTrack, sfx, weaponSfx } from "../sound.ts";
-import { MultPicker, TalentProgress, WeaponTray, type Mult } from "./boss.tsx";
+import { TalentProgress } from "./boss.tsx";
+import { BoostIcons, FightTray, HitLog, SidePanel, TopList, WeaponPanel, slotsOf } from "./fight-kit.tsx";
+import type { Hit } from "../api.ts";
 import { WeaponShopWindow } from "./shop.tsx";
 import { TalentWindow } from "./talents.tsx";
 import { CritBurn, preloadCritBanner } from "../art/crit-burn.tsx";
@@ -47,7 +49,7 @@ interface RaidsView {
   yards: { id: string; open: boolean; taken: boolean; rest: number; times: number; target: string | null; buildings: { id: string; wins: number; need: number; taken: boolean }[];
     /** my clan's influence here; the clan with the most of it */
     influence: number; leader: { id: number; name: string; tag: string; emblem: string; color: string; influence: number } | null }[];
-  fight: { id: number; building: string; hp: number; hpMax: number; hits: number; endsAt: number | null } | null;
+  fight: { id: number; building: string; hp: number; hpMax: number; hits: number; endsAt: number | null; top?: { playerId: number; name: string; damage: number }[] } | null;
   /** my flags of the yards 1…5 */
   flags?: number[];
   /** the pieces of each bag's set I have */
@@ -499,19 +501,20 @@ const defendersOf = (kind: BuildingKind) => RAID_DEFENDERS[kind] ?? [GOPNIK];
 /** the fight's room: Ларёчник fights inside his kiosk, the main building is the gang's hall, Гопник — in the basement */
 const arenaOf = (kind: BuildingKind) => (kind === "main" ? "arena-main" : kind === "kiosk" || kind === "boiler" || kind === "checkpoint" || kind === "tanks" || kind === "pipes" ? "arena-kiosk" : "arena-garage2");
 /** the defenders' rigs: one in the middle, or two side by side (the main building) */
-function Defenders({ kind, hpShare }: { kind: BuildingKind; hpShare?: number }) {
+function Defenders({ kind, hpShare, outfit }: { kind: BuildingKind; hpShare?: number; outfit?: string }) {
   const ds = defendersOf(kind);
-  if (ds.length === 1) return <BossRig id={ds[0].id} hpShare={hpShare} />;
+  if (ds.length === 1) return <BossRig id={ds[0].id} hpShare={hpShare} outfit={outfit} />;
   return (
     <div className="rd-duo">
-      {ds.map((d, i) => <div key={d.id} className={`rd-duo-${i}`}><BossRig id={d.id} hpShare={hpShare} /></div>)}
+      {ds.map((d, i) => <div key={d.id} className={`rd-duo-${i}`}><BossRig id={d.id} hpShare={hpShare} outfit={outfit} /></div>)}
     </div>
   );
 }
 /** the defender as a boss for the win card (BossPhoto: his live rig knocked out, stars over the head) */
-const defenderDef = (kind: BuildingKind) => {
+const defenderDef = (kind: BuildingKind, outfit?: string) => {
   const d = defendersOf(kind)[0];
-  return { id: d.id, name: d.name, photo: {}, theme: { accent: "#e6b65a", a: "#3a2614" } } as unknown as BossDef;
+  // in the yard's own clothes when it has them (the promzona's work clothes)
+  return { id: outfit && hasBossRig(`${d.id}-${outfit}`) ? `${d.id}-${outfit}` : d.id, name: d.name, photo: {}, theme: { accent: "#e6b65a", a: "#3a2614" } } as unknown as BossDef;
 };
 
 interface RaidHit { weapon: string; damage: number; crit: boolean; count: number; left: number | null; readyAt: number | null; status: "active" | "won"; hp: number; hpMax: number;
@@ -529,7 +532,12 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
   usePageReady(!!v);
   const { state, act, busy, toast } = useGame();
   const router = useRouter();
-  const [mult, setMult] = useState<Mult>(1);
+  // the boss fight's kit: the weapons panel, «Топ» (my clan on this building) and «Инфо» (my hits)
+  const [panel, setPanel] = useState(false);
+  const [tab, setTab] = useState<"top" | "info" | null>(null);
+  const [log, setLog] = useState<Hit[]>([]);
+  const fightKey = v?.fight?.id;
+  useEffect(() => { setLog([]); }, [fightKey]);
   // everything of a boss fight: the talents' counter, the crit banner, the weapons shelf, «ударить сейчас» for dollars
   const [talentDmg, setTalentDmg] = useState<number | null>(null);
   const [talentPop, setTalentPop] = useState(0);
@@ -578,7 +586,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
     haptic.tap();
     if (await act("raid_start", { building: b.id })) await load();
   };
-  const hit = async (weapon: string, rush = false) => {
+  const hit = async (weapon: string, rush = false, pack = 1) => {
     if (!v || !fight) return;
     const w = itemById(weapon);
     // the sound and the flying weapon on the tap, like in a boss fight: heavier weapons sound heavier (10 dmg → 0, 500+ → 1)
@@ -587,8 +595,10 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
       weaponSfx(w.id, Math.min(1, Math.log10(Math.max(10, w.weapon.damage) / 10) / Math.log10(50)));
       play(weapon, w.weapon.damage, w.weapon.action, true);
     }
-    const r2 = await act<RaidHit>("raid_attack", { weapon, count: w?.weapon?.kind === "consumable" ? mult : 1, ...(rush ? { rush: true } : {}) });
+    const r2 = await act<RaidHit>("raid_attack", { weapon, count: w?.weapon?.kind === "consumable" ? pack : 1, ...(rush ? { rush: true } : {}) });
     if (!r2) { haptic.err(); sfx("error"); return; }
+    // «Инфо»: my hits in this fight, the newest on top
+    setLog((l) => [{ seq: Date.now() + Math.random(), playerId: state?.player.id ?? 0, name: state?.player.name ?? "", weapon, damage: r2.damage, phrase: 0, at: Date.now(), crit: r2.crit, count: r2.count }, ...l].slice(0, 150));
     if (r2.crit) { setCritPop(Date.now()); haptic.heavy(); sfx("crit"); }
     setShake((x) => x + 1);
     const id = Date.now() + Math.random();
@@ -656,24 +666,34 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
           </div>
           {/* the building's defenders (RAID_DEFENDERS, tools/boss/assemble-*.py), down to the hips, boxing */}
           <div className={`arena-photo rd-defender-fight ${hitFx ? "hit ouch" : ""}`}>
-            <Defenders kind={b.kind} hpShare={fight.hp / Math.max(1, fight.hpMax)} />
+            <Defenders kind={b.kind} hpShare={fight.hp / Math.max(1, fight.hpMax)} outfit={y.art} />
           </div>
           {layer}
           <div className="rd-pops">{pops.map((p) => <b key={p.id} className={`rd-pop ${p.crit ? "crit" : ""}`}>{p.text}{p.crit ? " КРИТ" : ""}</b>)}</div>
         </div>
         <div className="fight-bottom">
           {critPop > 0 && <CritBurn key={critPop} className="crit-burn" onDone={() => setCritPop(0)} />}
-          <MultPicker mult={mult} setMult={setMult} />
           <div className="row fight-bar">
             <TalentProgress dmg={talentDmg ?? state?.player.talentDamage ?? 0} pop={talentPop} share={(1 - fight.hp / Math.max(1, fight.hpMax)) * 100} onOpen={() => setTalentsOpen(true)} />
+            <button type="button" className="btn sm gold fbtn-arms" onClick={() => { haptic.tap(); setPanel(true); }} aria-label="Оружие" title="Оружие в бою">
+              <ItemArt id="rug-pull-gun" size={22} />
+            </button>
             <span className="small rd-fight-r"><Icon name="xp" size={16} />+{r.xp.toLocaleString("ru-RU")} <Icon name="RUB" size={16} />+{r.rub.toLocaleString("ru-RU")}</span>
             <span className="grow" />
-            <button className={`btn sm ${fleeAsk ? "red" : "dark"}`} onClick={flee} disabled={busy === "raid_flee" || !!won}>{fleeAsk ? "Точно?" : "Уйти"}</button>
+            <button type="button" className={`btn sm red fbtn-flee ${fleeAsk ? "ask" : ""}`} onClick={flee} disabled={busy === "raid_flee" || !!won} aria-label={fleeAsk ? "Точно уйти?" : "Уйти"} title="Уйти">
+              {fleeAsk ? <b>?</b> : <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h13" /><path d="M13 6l6 6-6 6" /></svg>}
+            </button>
           </div>
-          <WeaponTray tray={v.weapons} mult={mult} disabled={busy === "raid_attack" || !!won} onHit={(id) => void hit(id)}
+          <FightTray slots={slotsOf(state)} tray={v.weapons} disabled={busy === "raid_attack" || !!won} onHit={(id, n) => void hit(id, false, n)}
             onCooldown={(name, left, id) => { haptic.tap(); setRushAsk({ id, name, left }); }}
             onBuy={() => setShopOpen(true)} />
         </div>
+        <BoostIcons />
+        <button type="button" className="fside l" onClick={() => { haptic.tap(); setTab("top"); }}><span>Топ</span></button>
+        <button type="button" className="fside r" onClick={() => { haptic.tap(); setTab("info"); }}><span>Инфо</span></button>
+        {panel && <WeaponPanel tray={v.weapons} onClose={() => setPanel(false)} />}
+        {tab === "top" && <SidePanel side="l" title="Топ клана по урону" onClose={() => setTab(null)}><TopList rows={fight.top ?? []} me={state?.player.id} /></SidePanel>}
+        {tab === "info" && <SidePanel side="r" title="Мои удары" onClose={() => setTab(null)}><HitLog hits={log} /></SidePanel>}
         {shopOpen && <WeaponShopWindow onClose={closeShop} />}
         {rushAsk && (
           <Modal title={`${rushAsk.name} перезаряжается`} onClose={() => setRushAsk(null)}>
@@ -697,7 +717,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
           <Modal onClose={() => void toYard()}>
             <div className="result-win">
               <div className="result-photo">
-                <BossPhoto boss={defenderDef(b.kind)} round defeated />
+                <BossPhoto boss={defenderDef(b.kind, y.art)} round defeated />
               </div>
               <div className="display result-name">{won.yardTaken ? "Двор захвачен!" : won.buildingTaken ? `${BUILDING_NAMES[b.kind]} ${takenWord(b.kind)}!` : defendersOf(b.kind).map((d) => d.name).join(" и ")}</div>
               <div className="muted small">
@@ -724,7 +744,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img key={shake} className={`rd-room ${shake ? "hit" : ""}`} src={`${A}/attack-room.webp`} alt="" draggable={false} />
         {/* he waits behind the window */}
-        <div className="rd-defender"><div className="rd-defender-in"><Defenders kind={b.kind} /></div></div>
+        <div className="rd-defender"><div className="rd-defender-in"><Defenders kind={b.kind} outfit={y.art} /></div></div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="rd-map-bg rd-wall" src={`${A}/attack-wall.webp`} alt="" draggable={false} />
         <div className="rd-board">

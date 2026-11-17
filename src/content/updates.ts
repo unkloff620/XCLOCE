@@ -17,6 +17,15 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-17-promzona-wear",
+    date: "17 ноября",
+    title: "Промзона: рабочая форма",
+    items: [
+      { img: "/assets/updates/2026-11-17-promzona-wear.webp", text: "В Промзоне Гопник и Ларёчник теперь в рабочей форме. В Гаражах они такие же, как были." },
+      { img: "/assets/updates/2026-11-17-fight-slots.webp", text: "В бою за здание теперь всё как в бою с боссом: 6 ячеек оружия с пачками, панель оружия и усиление, «Топ» — урон твоего клана по зданию, «Инфо» — твои удары, красная кнопка «Уйти»." },
+    ],
+  },
+  {
     id: "2026-11-17-fight-slots",
     date: "17 ноября",
     title: "Оружие в бою",

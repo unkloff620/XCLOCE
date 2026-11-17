@@ -100,6 +100,12 @@ export async function raidsView(q: Queryable, pid: number, now = Date.now()) {
       buildings: y.buildings.map((b) => ({ id: b.id, wins: p.wins.get(b.id) ?? 0, need: buildingWins(y), taken: !!restUntil(y, p, now) || p.taken.has(b.id) })),
     })),
     fight: f ? { id: Number(f.id), building: f.building_id, hp: Math.max(0, Number(f.hp_max) - Number(f.damage)), hpMax: Number(f.hp_max), hits: Number(f.hits),
+      /** «Топ»: my clan's fighters on this building since the yard was last taken — their damage */
+      top: clanId ? (await q.query<{ player_id: number; name: string; damage: number }>(
+        `SELECT r.player_id, p.display_name AS name, SUM(r.damage)::bigint AS damage FROM raid_fights r JOIN players p ON p.id = r.player_id
+         WHERE r.clan_id=$1 AND r.building_id=$2 AND r.started_at > $3 GROUP BY r.player_id, p.display_name ORDER BY SUM(r.damage) DESC LIMIT 30`,
+        [clanId, f.building_id, new Date(p.last.get(RAID_YARDS.find((y) => y.buildings.some((b) => b.id === f.building_id))?.id ?? "")?.at ?? 0)],
+      )).map((r) => ({ playerId: Number(r.player_id), name: r.name, damage: Number(r.damage) })) : [],
       /** when the fight's time is over (ms): it is lost then */
       endsAt: f.ends_at ? new Date(f.ends_at).getTime() : null } : null,
   };

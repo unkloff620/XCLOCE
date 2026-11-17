@@ -185,10 +185,17 @@ function Sweat({ eyes, id }: { eyes: Part; id: string }) {
  * `bust`: only the head, the neck and the top of the shoulders (the boss list card) — the same live rig, the picture
  * cut to a box around the head (wider than the head, about 1.6 heads tall from just above the crown).
  */
-export function BossRig({ id: baseId, hpShare = 1, bust = false }: { id: string; hpShare?: number; bust?: boolean }) {
+export function BossRig({ id: asked, hpShare = 1, bust = false, outfit: wanted }: { id: string; hpShare?: number; bust?: boolean; outfit?: string }) {
+  // «gopnik-promzona» asked by id (a boss card): the boss «gopnik» in the outfit «promzona»
+  const dressedAs = asked.match(/^(.+)-(promzona|market|blocks|center)$/);
+  const baseId = dressedAs ? dressedAs[1] : asked;
+  const outfit = wanted ?? dressedAs?.[2];
+  // another outfit (the zones of «Захват»: «<id>-promzona» — work clothes, tools/boss/outfit/apply-outfit.py): the same
+  // layers' outlines and pivots, so the poses and the puppet of the boss work on it unchanged
+  const dressed = outfit && `${baseId}-${outfit}` in BOSS_RIGS ? `${baseId}-${outfit}` : null;
   // below a quarter: the last look (Князь — rags and a gag, «<id>-dying»), below half: beaten
-  const id = hpShare < DYING_BELOW && `${baseId}-dying` in BOSS_RIGS ? `${baseId}-dying`
-    : hpShare < BEATEN_BELOW && `${baseId}-beaten` in BOSS_RIGS ? `${baseId}-beaten` : baseId;
+  const id = dressed ?? (hpShare < DYING_BELOW && `${baseId}-dying` in BOSS_RIGS ? `${baseId}-dying`
+    : hpShare < BEATEN_BELOW && `${baseId}-beaten` in BOSS_RIGS ? `${baseId}-beaten` : baseId);
   const dazed = hpShare < BEATEN_BELOW;
   const svgRef = useRef<SVGSVGElement>(null);
   useDazed(svgRef, dazed);
