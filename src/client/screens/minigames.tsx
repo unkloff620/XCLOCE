@@ -12,7 +12,9 @@ import { Help } from "../help.tsx";
 import { haptic } from "../telegram.ts";
 import { sfx } from "../sound.ts";
 import { full } from "../format.ts";
-import { api, type DuelView, type GameView, type PokerPlay } from "../api.ts";
+import { api, type DuelView, type GameView, type Granted, type PokerInfo, type PokerPlay } from "../api.ts";
+import { ART_VER } from "../preload.ts";
+import { TATTOO_SETS } from "../../content/tattoos.ts";
 import type { Currency } from "../../content/currencies.ts";
 import { BlackjackWindow } from "./blackjack.tsx";
 import { DayTopNote } from "../day-top.tsx";
@@ -23,7 +25,7 @@ import { yardTime } from "../../content/yard.ts";
 import {
   ITEM_VALUES, RANKS, SUITS, UPGRADE_MODES, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue, zonkGroups, zonkScore, ZONK_ROUNDS,
   ZONK_BANK_MIN, ZONK_CONT_PENALTY, ZONK_DAY_PRIZE, ZONK_FAIL_XP, ZONK_LEVELS,
-  POKER_BONUS_LEVELS, POKER_CHEATS, POKER_HANDS, POKER_LEVEL_BONUS, POKER_MAX_LEVEL, POKER_RULES, POKER_CHIP, pokerCheats, pokerPay,
+  POKER_BONUS_LEVELS, POKER_CHEATS, POKER_HANDS, POKER_LEVEL_BONUS, POKER_MAX_LEVEL, POKER_RULES, POKER_CHIP, POKER_STICKER, POKER_CASES, POKER_CASE_TATTOO, pokerCheats, pokerHandDef, pokerPay,
   type PokerHand, type UpgradeMode, DUEL_FEE, DUEL_ROUNDS, DUEL_STAKES,
   ZONK_DICE,
 } from "../../content/games.ts";
@@ -806,6 +808,16 @@ const qtyText = (v: number) => (v >= 1000 ? `${Math.round(v / 100) / 10}K` : Str
 /** a combination's prize as icons only, the amount at the icon's top right */
 function PrizeIcons({ hand, level }: { hand: PokerHand; level: number }) {
   const pay = pokerPay(hand, level);
+  // the royal flush's «Ворон» is not in the game yet: his picture with «скоро»
+  if (pokerHandDef(hand).promise) {
+    return (
+      <>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <span className="pkt-cell one" title="Ворон — придёт в игру позже, выбивший получит его сразу"><img src="/assets/items/raven.webp" alt="Ворон" draggable={false} /><b className="num">скоро</b></span>
+        <span className="pkt-cell empty" /><span className="pkt-cell empty" />
+      </>
+    );
+  }
   const parts = [
     ...Object.entries(pay.currencies ?? {}).map(([c, v]) => ({ key: c, icon: <Icon name={c as Currency} size={22} />, n: v ?? 0, title: `${v} ${c}` })),
     ...(pay.items ?? []).map((it) => ({ key: it.id, icon: <ItemArt id={it.id} size={24} />, n: it.qty, title: `${itemById(it.id)?.name ?? it.id} ×${it.qty}` })),
@@ -849,6 +861,7 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
   const nextCheat = POKER_CHEATS.slice().reverse().find((c) => level < c.level);
   // «Сбросить лимит»: when today's hands are over — a round icon button, a question with the price, «Да» / «Нет»
   const [askReset, setAskReset] = useState(false);
+  const [cases, setCases] = useState(false);
   const resetPrice = p?.resetPrice;
   const canReset = !drawing && left <= 0 && !!resetPrice && (p?.resets ?? 0) < (p?.resetsMax ?? 0);
   const doReset = async () => {
@@ -883,6 +896,13 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
         <div className="pkt">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="pkt-bg" src="/assets/yard/poker-room.webp?v=2" alt="" draggable={false} />
+
+          {/* the poker's cases (for stickers): a case on the felt's corner */}
+          <button type="button" className="pkt-cases" onClick={() => { haptic.tap(); setCases(true); }} aria-label="Чемоданы покера" title="Чемоданы за стикеры">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`/assets/items/poker-case.webp?v=${ART_VER.items}`} alt="" draggable={false} />
+            <b className="num"><ItemArt id={POKER_STICKER} size={14} />{(p?.stickers ?? 0).toLocaleString("ru-RU")}</b>
+          </button>
 
           {/* above the title: the poker level, its experience, the swaps it gives, the hands left today */}
           <div className="pkt-top" style={{ left: px(370), top: py(330), width: px(600) }}>
@@ -929,7 +949,7 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
 
           {/* the combinations in the free felt: the sample cards and the prize as icons, no words */}
           <div className="pkt-table" style={{ left: px(130), top: py(1200), width: px(820), height: py(645) }}>
-            {POKER_HANDS.filter((h) => h.id !== "high").map((h) => (
+            {POKER_HANDS.map((h) => (
               // the combination on the table lights its five sample cards (not the whole line): gold when counted, dashed while swapping
               <div key={h.id} className={`pkt-row ${hand === h.id ? "on" : ""} ${drawing && open?.hand === h.id ? "now" : ""}`} title={h.name}>
                 <span className="pkt-row-cards">{h.sample.map((c, k) => <MiniCard key={k} r={c.r} s={c.s} />)}</span>
@@ -967,6 +987,7 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
           </div>
         </div>
       </div>
+      {cases && <PokerCases onClose={() => setCases(false)} stickers={p?.stickers ?? 0} onOpened={(np) => setPlay((x) => (x ? { ...x, poker: np } : x))} />}
       {askReset && resetPrice && (
         <Modal onClose={() => setAskReset(false)} maxWidth={320} className="pkt-ask">
           <p className="pkt-ask-q">Сбросить лимит<br /><span>за <Icon name={resetPrice.currency} size={24} /><b className="num">{resetPrice.amount.toLocaleString("ru-RU")}</b>?</span></p>
@@ -976,6 +997,49 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
           </div>
           {usd < resetPrice.amount && <p className="tiny center" style={{ color: "#ff8a9e", margin: "8px 0 0" }}>Не хватает долларов</p>}
         </Modal>
+      )}
+    </Modal>
+  );
+}
+
+/** the poker's three cases: each for its stickers — authority, roubles, dollars, 30% a piece of its own tattoo set, now and then a нычка */
+function PokerCases({ onClose, stickers, onOpened }: { onClose: () => void; stickers: number; onOpened: (p: PokerInfo) => void }) {
+  const { act, busy } = useGame();
+  const [got, setGot] = useState<{ case: number; tattoo: string | null; reward: Granted } | null>(null);
+  const open = async (n: number) => {
+    haptic.tap();
+    const r = await act<{ case: number; tattoo: string | null; reward: Granted; poker: PokerInfo }>("poker_case", { n });
+    if (r) { setGot(r); onOpened(r.poker); haptic.ok(); sfx(r.tattoo ? "victory" : "coin"); }
+  };
+  return (
+    <Modal onClose={onClose} title="Чемоданы покера" maxWidth={380} className="pkc">
+      <p className="pkc-have">У тебя <ItemArt id={POKER_STICKER} size={20} /><b className="num">{stickers.toLocaleString("ru-RU")}</b> стикеров</p>
+      <div className="pkc-list">
+        {POKER_CASES.map((c) => {
+          const set = TATTOO_SETS.find((s) => s.id === c.set);
+          return (
+            <div key={c.n} className="pkc-case">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={`/assets/items/poker-case-${c.n}.webp?v=${ART_VER.items}`} alt="" draggable={false} />
+              <span className="pkc-t"><b>{c.name}</b><small>Наколка «{set?.name}» — {Math.round(POKER_CASE_TATTOO * 100)}%, авторитет, ₽, $, нычки</small></span>
+              <button type="button" className="btn gold sm" disabled={!!busy || stickers < c.price} onClick={() => open(c.n)}>
+                <ItemArt id={POKER_STICKER} size={16} /><b className="num">{c.price}</b>
+              </button>
+            </div>
+          );
+        })}
+      </div>
+      {/* the opened case: the black case with its lid up, the rewards lying on its velvet */}
+      {got && (
+        <div className="pkc-got" role="button" tabIndex={0} onClick={() => setGot(null)} onKeyDown={(e) => e.key === "Enter" && setGot(null)}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="pkc-open" src={`/assets/items/poker-case-open.webp?v=${ART_VER.items}`} alt="" draggable={false} />
+          <div className="pkc-in">
+            {got.tattoo && <span className="pkc-tat"><ItemArt id={got.tattoo} size={44} /><small>{itemById(got.tattoo)?.name}</small></span>}
+            <RewardChips r={{ ...got.reward, items: got.reward.items.filter((i) => i.id !== got.tattoo) }} size={22} />
+          </div>
+          <small className="muted">Нажми, чтобы закрыть</small>
+        </div>
       )}
     </Modal>
   );

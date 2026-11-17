@@ -164,6 +164,8 @@ const MISC: ItemDef[] = [
   { id: "energy-drink", name: "Энергетик", category: "item", rarity: "common", maxStack: 999, description: "+10 энергии. Сверх лимита тоже работает.", sources: ["Двор", "Боссы"], use: { energy: 10 } },
   { id: "energy-pack", name: "Пачка энергетиков", category: "item", rarity: "rare", maxStack: 999, description: "+50 энергии разом.", sources: ["Награды локаций"], use: { energy: 50 } },
   { id: "energy-full", name: "Энергетик «До краёв»", category: "item", rarity: "epic", maxStack: 999, description: "Энергия сразу до полной. Если и так полная — не пей, жалко.", sources: ["Делюги «От звонка до звонка»"], use: { energyFull: true } },
+  // the poker's prize (a pair of nothing — 100, three of a kind — 500): buys the poker's cases
+  { id: "poker-sticker", name: "Стикер", category: "item", rarity: "common", maxStack: 99_999_999, description: "Липкий трофей покерного стола. За стикеры открываются чемоданы в покере.", sources: ["Покер"] },
   { id: "sticker-hodl", name: "Стикер HODL", category: "item", rarity: "common", maxStack: 999, description: "Клеится на ноутбук и на мораль.", sources: ["Двор"] },
   { id: "bottle-cap", name: "Крышка от энергетика", category: "item", rarity: "common", maxStack: 999, description: "Собери 1000 и… ничего не будет.", sources: ["Двор"] },
   { id: "spinner", name: "Спиннер из 2017", category: "item", rarity: "common", maxStack: 999, description: "Крутится. Это всё.", sources: ["Двор"] },
