@@ -24,7 +24,7 @@ ID = "vials-utilizator"
 # the artist's picture → the rig: its wrist (the cut edge on the right) lands where the other held hands' wrist is,
 # the hand as big as the hand with the keys
 S = 0.46
-U0 = np.array([480.0, 148.0])   # a little in from the wrist's cut edge: the hand sits up under the sleeve (as the keys' hand)
+U0 = np.array([480.0, 161.0])   # a little in from the wrist's cut edge: the hand sits up under the sleeve (as the keys' hand)
 R0 = np.array([762.0, 764.0])
 rig = lambda u: (np.asarray(u, np.float32) - U0) * S + R0
 SKIN_TONES = ["#f8d5b4", "#fcb477", "#dda57a", "#b97a4e", "#8a5534", "#5e3a24"]
@@ -69,6 +69,15 @@ FINGERS = {
     "finger-p": ([(277, 307), (330, 290), (335, 445), (228, 445), (228, 400)], (296, 303)),
 }
 hand = L["hand"]
+# the wrist melts into the sleeve: fully seen WRIST_FADE px in from the cut edge, gone at the edge (the artist's lines)
+WRIST_EDGE, WRIST_FADE = ((400.0, 102.0), (465.0, 155.0)), 45.0
+(ax, ay), (bx, by) = WRIST_EDGE
+yy, xx = np.mgrid[0:hand.shape[0], 0:hand.shape[1]].astype(np.float32)
+nx, ny = -(by - ay), (bx - ax)                      # the normal pointing into the hand (down-left)
+d = ((xx - ax) * nx + (yy - ay) * ny) / np.hypot(nx, ny)
+if d[300, 250] < 0: d = -d
+hand = hand.copy()
+hand[..., 3] = (hand[..., 3] * np.clip(d / WRIST_FADE, 0, 1)).astype(np.uint8)
 base = hand.copy()
 for n, (poly, _) in FINGERS.items():
     m = np.zeros(hand.shape[:2], np.uint8)
