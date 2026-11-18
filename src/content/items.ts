@@ -1,6 +1,6 @@
 import { STASH_LOCATION_NAMES, STASH_SETS, stashLevel } from "./stashes.ts";
-import { BOSSES, CARD_TIERS, bossById, isFirstWinItem, keyId, passLook, unlockBossOf } from "./bosses.ts";
-import { TATTOO_MODE_NAME, TATTOO_SETS } from "./tattoos.ts";
+import { BOSSES, CARD_TIERS, MODE_SHORT, bossById, isFirstWinItem, keyId, passLook, thingsFrom, thingsModeName, unlockBossOf } from "./bosses.ts";
+import { TATTOO_SETS } from "./tattoos.ts";
 import { CRAFT_ALL, CRAFT_PARTS } from "./craft.ts";
 import { PART_SELL } from "./craft-drops.ts";
 
@@ -161,7 +161,7 @@ const WEARABLES: ItemDef[] = ([
 ] as Omit<ItemDef, "category" | "maxStack">[]).map((w) => {
   // clothes a boss unlocks: the drop opens them in the shop, then they are bought there
   const boss = unlockBossOf(w.id);
-  return { ...w, category: "clothing" as const, maxStack: 1, sources: boss ? [isFirstWinItem(w.id) ? `Первая победа над боссом ${boss.name}, потом — магазин` : `Выпадает с босса ${boss.name}, потом — магазин`, ...w.sources.filter((x) => !x.startsWith("Магазин") && !x.startsWith("Победа"))] : w.sources };
+  return { ...w, category: "clothing" as const, maxStack: 1, sources: boss ? [isFirstWinItem(w.id) ? `Первая победа над ${boss.name} (${thingsModeName(boss)}), потом — магазин` : `${thingsFrom(boss)}, потом — магазин`, ...w.sources.filter((x) => !x.startsWith("Магазин") && !x.startsWith("Победа"))] : w.sources };
 });
 
 const MISC: ItemDef[] = [
@@ -221,7 +221,7 @@ const TATTOOS: ItemDef[] = TATTOO_SETS.flatMap((s) =>
   s.pieces.map((p) => ({
     id: p.id, name: `Наколка: ${p.name}`, category: "tattoo" as const, rarity: "epic" as const, maxStack: 1,
     description: `Из сета «${s.name}». Набивается бесплатно в редакторе персонажа → «Наколки». Весь сет: +${s.bonus.damage} к урону «${WEAPONS.find((w) => w.id === s.bonus.weapon)?.name ?? s.bonus.weapon}».`,
-    sources: [s.boss === "box" ? "Ящик ништяков: шанс 20% за открытие" : s.boss === "tosya" ? "Тося: одна наколка в каждом пирожке" : `${bossById(s.boss)?.name ?? s.boss}: по одной наколке за победу в «${TATTOO_MODE_NAME[s.mode]}»`],
+    sources: [s.boss === "box" ? "Ящик ништяков: шанс 20% за открытие" : s.boss === "tosya" ? "Тося: одна наколка в каждом пирожке" : `Выпадает с ${bossById(s.boss)?.name ?? s.boss} (${MODE_SHORT[s.mode]}): по наколке за победу`],
   })),
 );
 /** «Крафт» (content/craft.ts): детали и собранные вещи — лежат на складе, бонус дают из заныка */

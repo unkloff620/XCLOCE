@@ -64,6 +64,7 @@ const DATSIK_SETS: TattooSet[] = [
 
 /** the fight mode's name in the dropping text («в «Пацанском»») */
 export const TATTOO_MODE_NAME = { pacan: "Пацанском", blat: "Блатном", avtor: "Авторитетном" } as const;
+const TATTOO_MODE_SHORT = { pacan: "Пацанский", blat: "Блатной", avtor: "Авторитетный" } as const;
 
 /** the place on the body a piece takes («chest-l»): one tattoo per place — a new one there replaces the old */
 export const tattooZone = (id: string) => id.split("-").slice(2).join("-");
@@ -134,7 +135,7 @@ export const TATTOO_SETS: TattooSet[] = [
 export const BOX_TATTOO_SETS = TATTOO_SETS.filter((s) => s.boss === "box");
 /** where a set's pieces drop, in words: «с Дацкоу в «Пацанском»» / «из Ящика ништяков» */
 export const tattooSource = (s: TattooSet, bossName: (id: string) => string | undefined) =>
-  s.boss === "box" ? "из Ящика ништяков (шанс 20%)" : s.boss === "tosya" ? "из пирожков Тоси" : s.boss === "heist" ? "из ящиков ивента «Взлом»" : s.boss === "fortune" ? "из сумок «Колеса удачи»" : s.boss === "raids" ? "из сумок за флаги «Захвата»" : s.boss === "shodnyak" ? "за топ-3 клана на «Сходняке»" : s.boss === "poker" ? "из чемоданов покера" : `с ${bossName(s.boss) ?? s.boss} в «${TATTOO_MODE_NAME[s.mode]}»`;
+  s.boss === "box" ? "из Ящика ништяков (шанс 20%)" : s.boss === "tosya" ? "из пирожков Тоси" : s.boss === "heist" ? "из ящиков ивента «Взлом»" : s.boss === "fortune" ? "из сумок «Колеса удачи»" : s.boss === "raids" ? "из сумок за флаги «Захвата»" : s.boss === "shodnyak" ? "за топ-3 клана на «Сходняке»" : s.boss === "poker" ? "из чемоданов покера" : `с ${bossName(s.boss) ?? s.boss} (${TATTOO_MODE_SHORT[s.mode]})`;
 
 export const TATTOO_IDS = TATTOO_SETS.flatMap((s) => s.pieces.map((p) => p.id));
 export const tattooSetOf = (id: string) => TATTOO_SETS.find((s) => s.pieces.some((p) => p.id === id));

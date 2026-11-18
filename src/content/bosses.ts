@@ -74,6 +74,13 @@ const photo = (id: string, has = false, v = "") => {
  * Strict order, weakest first: Дацкоу → … → Солнце (final) — the Close hierarchy from the bottom up.
  * Ids stay as they were when a boss got renamed (keys, art folders and fight history are keyed by id).
  */
+/** the fight modes in a word, for «Выпадает с Дацкоу (Блатной)» */
+export const MODE_SHORT = { pacan: "Пацанский", blat: "Блатной", avtor: "Авторитетный" } as const;
+/** the mode a boss's things (his clothes, his room, the first-win things) drop in, in a word */
+export const thingsModeName = (b: { event?: unknown; thingsMode?: keyof typeof MODE_SHORT }) => (b.event ? "ивент" : MODE_SHORT[b.thingsMode ?? "blat"]);
+/** «Выпадает с Дацкоу (Блатной)» */
+export const thingsFrom = (b: { name: string; event?: unknown; thingsMode?: keyof typeof MODE_SHORT }) => `Выпадает с ${b.name} (${thingsModeName(b)})`;
+
 export const BOSSES: BossDef[] = [
   {
     id: "datsik", perDay: 12, order: 1, card: "bronze", name: "Дацкоу", title: "Замороженный подчинённый Бабафея",

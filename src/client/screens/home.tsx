@@ -9,7 +9,7 @@ import { HomeScene } from "../art/home-scene.tsx";
 import { ROOM_BACKDROP } from "../../content/home-scene.ts";
 import { Icon, NavIcon } from "../art/icons.tsx";
 import { NAV_TABS } from "../../content/nav.ts";
-import { bossById, type BossDef } from "../../content/bosses.ts";
+import { bossById, thingsFrom, type BossDef } from "../../content/bosses.ts";
 import { clock, full } from "../format.ts";
 import { BossPhoto } from "./boss-parts.tsx";
 import { DailyWindow } from "./daily.tsx";
@@ -201,7 +201,7 @@ export function HomeScreen() {
                   {!canPay && <span className="tiny" style={{ color: "#ff8a9e" }}>Не хватает {viewRoom.price!.currency}</span>}
                 </>
               ) : (
-                <span className="chip"><Icon name="lock" size={16} /> {bossById(viewRoom.drop!.boss) ? `Выпадает с босса ${bossById(viewRoom.drop!.boss)!.name} · ${Math.round(viewRoom.drop!.chance * 100)}%` : "Выпадет с ивента «Пепе»"}</span>
+                <span className="chip"><Icon name="lock" size={16} /> {bossById(viewRoom.drop!.boss) ? `${thingsFrom(bossById(viewRoom.drop!.boss)!)} · ${Math.round(viewRoom.drop!.chance * 100)}%` : "Выпадет с ивента «Пепе»"}</span>
               )}
             </div>
           )}

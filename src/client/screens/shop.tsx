@@ -12,7 +12,7 @@ import { ACH_BOX_COST, CASE_THINGS } from "../../content/ach-box.ts";
 import { Help, HelpList } from "../help.tsx";
 import type { Currency } from "../../content/currencies.ts";
 import { ITEMS, itemById, type ItemDef, type Slot } from "../../content/items.ts";
-import { isFirstWinItem, unlockBossOf } from "../../content/bosses.ts";
+import { isFirstWinItem, thingsModeName, unlockBossOf } from "../../content/bosses.ts";
 import { EnergyArt, ItemArt } from "../art/items.tsx";
 import { Icon } from "../art/icons.tsx";
 import { money } from "../format.ts";
@@ -62,12 +62,12 @@ function LockedInfo({ itemId, onClose }: { itemId: string; onClose: () => void }
           <b>Где получить</b>
           {first ? (
             <>
-              <span className="small">Награда за первую победу над боссом <b>{boss.name}</b> (№{boss.order}). Победи его — вещь откроется здесь, в магазине, и её можно будет выкупить.</span>
+              <span className="small">Награда за первую победу над <b>{boss.name}</b> ({thingsModeName(boss)}). Победи его — вещь откроется здесь, в магазине, и её можно будет выкупить.</span>
               <span className="tiny muted">Нужно победить босса в «Блатном» бою.</span>
             </>
           ) : (
             <>
-              <span className="small">Выпадает с босса <b>{boss.name}</b> (№{boss.order}). Победи его — вещь откроется здесь, в магазине, и её можно будет выкупить.</span>
+              <span className="small">Выпадает с <b>{boss.name}</b> ({thingsModeName(boss)}). Победи его — вещь откроется здесь, в магазине, и её можно будет выкупить.</span>
               <span className="tiny muted">Шанс — 70% за каждую победу в «Блатном» режиме, если ударил босса хоть раз. Не везёт {boss.wear?.pity ?? 10} побед подряд — вещь откроется точно.</span>
             </>
           )}
