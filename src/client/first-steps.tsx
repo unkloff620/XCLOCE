@@ -177,6 +177,15 @@ export function FirstSteps() {
 
   const step = i >= 0 && i < STEPS.length ? STEPS[i] : null;
   const rect = useAim(pending && step && !cheer ? step.aims : null, path);
+  // in a fight the bottom is all buttons (the weapons, «Уйти», the boosts): Зина talks from the top there
+  const [onFight, setOnFight] = useState(false);
+  useEffect(() => {
+    if (!pending) return;
+    const check = () => setOnFight(!!document.querySelector(".fight-bottom"));
+    check();
+    const t = setInterval(check, 400);
+    return () => clearInterval(t);
+  }, [pending, path]);
   if (!pending) return null;
 
   const skip = () => {
@@ -240,7 +249,7 @@ export function FirstSteps() {
         </div>
       )}
       {step && (
-        <div className={`zn-card ${cheer ? "cheer" : ""} ${rect && rect.bottom > (window.innerHeight / uiZoom()) * 0.55 ? "top" : ""}`} key={step.id}>
+        <div className={`zn-card ${cheer ? "cheer" : ""} ${(rect && rect.bottom > (window.innerHeight / uiZoom()) * 0.55) || onFight ? "top" : ""}`} key={step.id}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="zn-face" src="/assets/guide/zina.webp?v=1" alt="" draggable={false} />
           <div className="zn-bubble">
