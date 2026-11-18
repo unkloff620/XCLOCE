@@ -240,3 +240,6 @@ a.adm-stat.link:hover { border-color: #4b6bff; background: var(--a-panel2); }
 .adm-cost-row .adm-in.adm-cost-times { width: 70px; }
 .adm-cost-total .adm-quick { justify-content: center; }
 .adm-cost-row .grow { flex: 1; min-width: 120px; }
+
+/* «Нет приложения? Войти по номеру» on a phone: a plain text link */
+.adm-link { background: none; border: 0; padding: 6px; text-decoration: underline; cursor: pointer; color: inherit; }

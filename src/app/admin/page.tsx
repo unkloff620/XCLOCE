@@ -329,6 +329,11 @@ function BrowserLogin({ onIn }: { onIn: (tg: number) => void }) {
   const [wait, setWait] = useState<{ code: string; secret: string; until: number } | null>(null);
   const [noApp, setNoApp] = useState(false);
   const [opening, setOpening] = useState(false);
+  // on a phone the panel opens right in the Telegram app (the bot's Mini App signs in by itself, no phone number);
+  // the browser sign-in by number is hidden behind a link
+  const [phone, setPhone] = useState(false);
+  const [byNumber, setByNumber] = useState(false);
+  useEffect(() => setPhone(/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)), []);
   const signedIn = useCallback((r: { token: string; tg: number }) => {
     saveToken(r.token);
     try { sessionStorage.removeItem(LOGIN_KEY); } catch { /* ignore */ }
@@ -353,7 +358,7 @@ function BrowserLogin({ onIn }: { onIn: (tg: number) => void }) {
   }, []);
   const bot = cfg?.bot ?? null;
   useEffect(() => {
-    if (!bot || !box.current) return;
+    if (!bot || !box.current || (phone && !byNumber)) return;
     (window as unknown as { onAdminAuth: (u: Row) => void }).onAdminAuth = (u) => done({ widget: u });
     const s = document.createElement("script");
     s.src = "https://telegram.org/js/telegram-widget.js?22";
@@ -363,7 +368,7 @@ function BrowserLogin({ onIn }: { onIn: (tg: number) => void }) {
     s.setAttribute("data-radius", "10");
     s.setAttribute("data-onauth", "onAdminAuth(user)");
     box.current.replaceChildren(s);
-  }, [bot, done]);
+  }, [bot, done, phone, byNumber]);
   // waiting for the confirmation in Telegram
   useEffect(() => {
     if (!wait) return;
@@ -419,6 +424,12 @@ function BrowserLogin({ onIn }: { onIn: (tg: number) => void }) {
             <button className="adm-btn ghost" onClick={cancel}>Отмена</button>
           </div>
         </div>
+      ) : bot && phone ? (
+        <div className="adm-choice">
+          <a className="adm-btn tg" href={`https://t.me/${bot}?startapp=admin`}>Войти через Telegram</a>
+          <span className="muted tiny">Админка откроется прямо в приложении Telegram — вход сам, без номера телефона.</span>
+          <button className="adm-btn ghost" onClick={viaApp} disabled={opening}>Подтвердить в Telegram, а работать здесь</button>
+        </div>
       ) : bot ? (
         <div className="adm-choice">
           <button className="adm-btn tg" onClick={viaApp} disabled={opening}>Войти через приложение Telegram</button>
@@ -428,8 +439,9 @@ function BrowserLogin({ onIn }: { onIn: (tg: number) => void }) {
       ) : null}
       {noApp && <p className="adm-warn small">Приложение Telegram не открылось — похоже, его нет на этом компьютере. Войдите через браузер ниже.</p>}
       {cfg?.mainApp === false && bot && <p className="muted tiny">У бота не включено мини-приложение (BotFather → Bot Settings → Configure Mini App), поэтому Telegram откроет только чат бота.</p>}
-      {bot && <div className="adm-or"><span>без приложения — в браузере</span></div>}
-      <div ref={box} className="adm-widget" />
+      {bot && phone && !byNumber && !wait && <button className="adm-link muted tiny" onClick={() => setByNumber(true)}>Нет приложения? Войти по номеру телефона</button>}
+      {bot && (!phone || byNumber) && <div className="adm-or"><span>без приложения — в браузере</span></div>}
+      {(!phone || byNumber) && <div ref={box} className="adm-widget" />}
       {cfg && !bot && <p className="muted small">Вход через Telegram не настроен (нет бота или домена).</p>}
       {dev && (
         <form className="row" onSubmit={(e) => { e.preventDefault(); done({ dev: Number(devId) }); }}>
