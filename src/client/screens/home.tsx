@@ -135,8 +135,8 @@ export function HomeScreen() {
   // a room that drops from a boss is bought only after it dropped
   const dropped = !viewRoom.drop || (state.unlocks ?? []).includes(`room:${viewRoom.id}`);
   const flip = (dir: number) => {
-    const ni = idx + dir;
-    if (ni < 0 || ni >= rooms.length) return;
+    // round and round: after the last room comes the first again (and before the first — the last)
+    const ni = (idx + dir + rooms.length) % rooms.length;
     // back on the current room: nothing to confirm
     setViewIdx(ni === curIdx ? null : ni);
   };
@@ -206,9 +206,9 @@ export function HomeScreen() {
             </div>
           )}
           <div className={`room-switch ${previewing ? "" : "idle"}`}>
-            <button className="room-step" onClick={() => flip(-1)} disabled={idx === 0 || busy === "room_set"} aria-label="Предыдущая комната">‹</button>
+            <button className="room-step" onClick={() => flip(-1)} disabled={busy === "room_set"} aria-label="Предыдущая комната">‹</button>
             <span className="room-name display">{viewRoom.name}</span>
-            <button className="room-step" onClick={() => flip(1)} disabled={idx >= rooms.length - 1 || busy === "room_set"} aria-label="Следующая комната">›</button>
+            <button className="room-step" onClick={() => flip(1)} disabled={busy === "room_set"} aria-label="Следующая комната">›</button>
           </div>
         </div>
         <div className="room-help">

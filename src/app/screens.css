@@ -6965,3 +6965,6 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .bz-1 .bz-drop { animation-duration: 1.9s; }
 @keyframes bz-drop { 0% { opacity: 0; transform: translateY(0); } 10% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; transform: translateY(180px); } }
 @media (prefers-reduced-motion: reduce) { .bz-flow, .bz-pool, .bz-drop { animation: none; } }
+
+/* the room switcher keeps one width whatever the room's name: the arrows stay put while flipping */
+.room-switch .room-name { width: 190px; flex: none; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
