@@ -3,7 +3,7 @@
  * «Барыга на газели» (content/van.ts): the weekend van in the yard. A tap on it — its open back (public/assets/van/
  * trunk.webp, tools/van/build-van.py): on the left door «Меняла» — the paper «Обмен» (the week's currency, папиросы or
  * зубы, for roubles / метро tokens at the visit's rate), on the right door «Акции» — the paper «Посмотреть» (the packs
- * on the slate, ‹ › between them, each once a visit; the slate bronze / silver / gold by the pack, its outline shining).
+ * on the slate in the cargo opening, ‹ › between them under the van, each once a visit; the slate bronze / silver / gold by the pack, its outline shining).
  */
 import { useState } from "react";
 import { useGame, useNow } from "../store.tsx";
@@ -60,7 +60,7 @@ export function VanWindow({ onClose }: { onClose: () => void }) {
   return (
     <div className="van-layer" role="dialog" aria-label="Барыга на газели" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <button type="button" className="van-x" onClick={onClose} aria-label="Закрыть">✕</button>
-      <div className="van-trunk">
+      <div className={`van-trunk ${door ? "with" : ""}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={`${V}/trunk.webp`} alt="" draggable={false} />
         <button type="button" className={`van-paper l ${door === "ex" ? "on" : ""}`} onClick={() => pick("ex")}>
@@ -69,10 +69,11 @@ export function VanWindow({ onClose }: { onClose: () => void }) {
         <button type="button" className={`van-paper r ${door === "packs" ? "on" : ""}`} onClick={() => pick("packs")}>
           <span className="van-paper-ic"><IcEye /></span><b className="display">Посмотреть</b>
         </button>
+        {door && <i className="van-hold" aria-hidden="true" />}
+        {door === "ex" && <VanExchange />}
+        {door === "packs" && <VanPacks />}
       </div>
       <span className="van-when tiny">Барыга стоит до конца воскресенья · уедет через <b className="num">{left(v.until - now)}</b></span>
-      {door === "ex" && <VanExchange />}
-      {door === "packs" && <VanPacks />}
     </div>
   );
 }
@@ -95,7 +96,6 @@ function VanExchange() {
   };
   return (
     <div className="van-panel">
-      <button type="button" className="van-arrow l" onClick={turn} aria-label="Другая валюта"><IcArrow /></button>
       <div className="van-ex-paper">
         <b className="display">Сколько нужно {give === "RUB" ? "рублей" : "жетонов"}</b>
         <span className="van-ex-coin"><Icon name={give} size={56} /></span>
@@ -104,8 +104,11 @@ function VanExchange() {
         <span className="van-ex-price num">{full(cost)} <Icon name={v.takes} size={20} /></span>
         <span className="van-ex-rate">1 {give === "RUB" ? "₽" : "жетон"} = {full(v.rates[give])} {NAME_GEN[v.takes]} · есть {full(have)}</span>
       </div>
-      <button type="button" className="van-arrow r" onClick={turn} aria-label="Другая валюта"><IcArrow flip /></button>
-      <button type="button" className="btn gold van-go" disabled={!n || cost > have || busy === "van_exchange"} onClick={go}>{cost > have ? "Не хватает" : "Обменять"}</button>
+      <div className="van-ctl">
+        <button type="button" className="van-arrow" onClick={turn} aria-label="Другая валюта"><IcArrow /></button>
+        <button type="button" className="btn gold van-go" disabled={!n || cost > have || busy === "van_exchange"} onClick={go}>{cost > have ? "Не хватает" : "Обменять"}</button>
+        <button type="button" className="van-arrow" onClick={turn} aria-label="Другая валюта"><IcArrow flip /></button>
+      </div>
     </div>
   );
 }
@@ -128,25 +131,27 @@ function VanPacks() {
   const can = !p.price || (state?.wallet[p.price.currency] ?? 0) >= p.price.amount;
   return (
     <div className="van-panel">
-      <button type="button" className="van-arrow l" onClick={() => turn(-1)} aria-label="Предыдущая акция"><IcArrow /></button>
       <div className={`van-plaque k-${kind}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={`${V}/plaque-${kind}.webp`} alt="" draggable={false} />
         {(kind === "gold" || kind === "silver") && <i className="van-plaque-rim" aria-hidden="true" />}
         <b className="van-plaque-name display">{p.price ? p.name : "Подгон от барыги"}</b>
-        <div className="van-plaque-in">
+        <div className={`van-plaque-in ${Object.keys(inside.currencies ?? {}).length + (inside.items ?? []).length + (inside.achPoints ? 1 : 0) > 9 ? "many" : ""}`}>
           {got ? <RewardChips r={got} size={18} /> : <>
-            {Object.entries(inside.currencies ?? {}).map(([c, n]) => <span key={c}><Icon name={c} size={22} /><b className="num">+{full(n ?? 0)}</b></span>)}
-            {!!inside.achPoints && <span><Icon name="case" size={22} /><b className="num">+{inside.achPoints / ACH_BOX_COST}</b></span>}
-            {(inside.items ?? []).map((it) => <span key={it.id}><ItemArt id={it.id} size={24} /><b className="num">+{full(it.qty)}</b></span>)}
+            {Object.entries(inside.currencies ?? {}).map(([c, n]) => <span key={c}><Icon name={c} size={22} /><b className="num">{full(n ?? 0)}</b></span>)}
+            {!!inside.achPoints && <span><Icon name="case" size={22} /><b className="num">{inside.achPoints / ACH_BOX_COST}</b></span>}
+            {(inside.items ?? []).map((it) => <span key={it.id}><ItemArt id={it.id} size={24} /><b className="num">{full(it.qty)}</b></span>)}
           </>}
         </div>
         <b className="van-plaque-price display">{p.price ? <>{full(p.price.amount)} <Icon name={p.price.currency} size={20} /></> : "Бесплатно"}</b>
       </div>
-      <button type="button" className="van-arrow r" onClick={() => turn(1)} aria-label="Следующая акция"><IcArrow flip /></button>
-      <button type="button" className="btn gold van-go" disabled={taken || !can || busy === "van_pack"} onClick={take}>
-        {taken ? "Взято до пятницы" : !can ? "Не хватает" : p.price ? "Купить" : "Забрать"}
-      </button>
+      <div className="van-ctl">
+        <button type="button" className="van-arrow" onClick={() => turn(-1)} aria-label="Предыдущая акция"><IcArrow /></button>
+        <button type="button" className="btn gold van-go" disabled={taken || !can || busy === "van_pack"} onClick={take}>
+          {taken ? "Взято до пятницы" : !can ? "Не хватает" : p.price ? "Купить" : "Забрать"}
+        </button>
+        <button type="button" className="van-arrow" onClick={() => turn(1)} aria-label="Следующая акция"><IcArrow flip /></button>
+      </div>
     </div>
   );
 }
