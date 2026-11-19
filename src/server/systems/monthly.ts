@@ -2,11 +2,11 @@ import type { Config } from "../config.ts";
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, moscowDay, nextMoscowMidnight, takeMoney, type Ctx, type Granted } from "../core.ts";
 import {
-  CASE_POINTS, MONTHLY_CHEST, MONTHLY_SKIP_PRICE, MONTHLY_TATTOO_SET, MONTHLY_TIERS, daysInMonth, monthKey, monthTaskOf, tierNeed,
+  CASE_POINTS, MONTHLY_CHEST, MONTHLY_SKIP_PRICE, MONTHLY_TATTOO_SET, MONTHLY_TIERS, daysInMonth, monthKey, monthTaskOf, monthTierReward, tierNeed,
   type MonthKind,
 } from "../../content/monthly.ts";
-import { between, rollParts } from "../../content/craft-drops.ts";
-import { STASH_IDS } from "../../content/stashes.ts";
+import { between } from "../../content/craft-drops.ts";
+import { CASE_THINGS } from "../../content/ach-box.ts";
 import { TATTOO_SETS } from "../../content/tattoos.ts";
 import type { Reward } from "../../content/rewards.ts";
 import { isAdminPlayer } from "./fortune.ts";
@@ -110,32 +110,21 @@ export async function buyMonthDay(ctx: Ctx, d: number) {
   return { day: d, paid: MONTHLY_SKIP_PRICE };
 }
 
-/** the chest for every day: each line a random amount from its range */
+/** the chest for every day: roubles and cases in their ranges, and ONE tattoo of the month's set or a case thing
+ * (one the player does not have yet; when both are possible — either, half and half) */
 async function rollChest(ctx: Ctx): Promise<Reward> {
   const c = MONTHLY_CHEST;
   const rnd = (x: readonly [number, number]) => between(x[0], x[1], ctx.rng);
-  const items: { id: string; qty: number }[] = [{ id: "rug-pull-gun", qty: rnd(c.rugPull) }];
-  items.push(...rollParts(ctx.rng, rnd(c.parts), { rare: 0.3, epic: 0.05 }));
-  const stashes = new Map<string, number>();
-  for (let i = rnd(c.stashes); i > 0; i--) {
-    const id = STASH_IDS[Math.floor(ctx.rng() * STASH_IDS.length)];
-    stashes.set(id, (stashes.get(id) ?? 0) + 1);
-  }
-  items.push(...[...stashes].map(([id, qty]) => ({ id, qty })));
-  // one tattoo of the month's set the player does not have yet
-  const set = MONTHLY_TATTOO_SET ? TATTOO_SETS.find((s) => s.id === MONTHLY_TATTOO_SET) : undefined;
-  if (set) {
-    const ids = set.pieces.map((x) => x.id);
-    const have = new Set((await ctx.q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id = ANY($2)", [ctx.pid, ids])).map((x) => x.item_id));
-    const left = ids.filter((id) => !have.has(id));
-    if (left.length) items.push({ id: left[Math.floor(ctx.rng() * left.length)], qty: 1 });
-  }
-  return {
-    currencies: { RUB: rnd(c.RUB), GOLD: rnd(c.GOLD) },
-    xp: rnd(c.xp),
-    achPoints: rnd(c.cases) * CASE_POINTS,
-    items,
+  const missing = async (ids: readonly string[]) => {
+    const have = new Set((await ctx.q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id = ANY($2)", [ctx.pid, [...ids]])).map((x) => x.item_id));
+    return ids.filter((id) => !have.has(id));
   };
+  const set = MONTHLY_TATTOO_SET ? TATTOO_SETS.find((s) => s.id === MONTHLY_TATTOO_SET) : undefined;
+  const ink = set ? await missing(set.pieces.map((x) => x.id)) : [];
+  const things = await missing(CASE_THINGS);
+  const from = ink.length && things.length ? (ctx.rng() < 0.5 ? ink : things) : ink.length ? ink : things;
+  const items = from.length ? [{ id: from[Math.floor(ctx.rng() * from.length) % from.length], qty: 1 }] : [];
+  return { currencies: { RUB: rnd(c.RUB) }, achPoints: rnd(c.cases) * CASE_POINTS, items };
 }
 
 /** A reward of the month once enough days are closed; the last one is the chest. */
@@ -149,7 +138,7 @@ export async function claimMonthTier(ctx: Ctx, id: string) {
   if (r.claimed[t.id]) throw new GameError("tier_taken", "Награда уже получена");
   const need = tierNeed(t, daysInMonth(month));
   if (Object.keys(r.closed).length < need) throw new GameError("tier_locked", `Закрой ${need} делюг`);
-  const reward = await grantReward(ctx, t.chest ? await rollChest(ctx) : t.reward, `monthly:${month}:${t.id}`);
+  const reward = await grantReward(ctx, t.chest ? await rollChest(ctx) : monthTierReward(t, month), `monthly:${month}:${t.id}`);
   r.claimed[t.id] = reward;
   await save(ctx.q, ctx.pid, month, r);
   return { id: t.id, reward, chest: !!t.chest };

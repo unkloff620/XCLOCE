@@ -7051,3 +7051,6 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .fo-choice-pic img { width: 46px; height: auto; margin: 0 -6px; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.4)); }
 .fo-choice-pic img:nth-child(2) { width: 56px; z-index: 1; }
 .fo-choice-card .btn { width: 100%; }
+/* «От звонка до звонка»: the chest on its plank opens a popup with what it holds */
+.mt-chest-btn { border: 0; background: none; padding: 0; cursor: pointer; color: inherit; }
+.mt-chest-row { display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: 10px; }

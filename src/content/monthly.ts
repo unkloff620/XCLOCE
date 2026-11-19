@@ -73,10 +73,13 @@ export const MONTHLY_SKIP_PRICE = 1;
 /** the tattoo set of the chest (content/tattoos.ts, 21 pieces, one at random): null until the set is drawn */
 export const MONTHLY_TATTOO_SET: string | null = null;
 
-/** the chest for every day of the month: each line a random amount from..to */
+/** the chest for every day of the month (the user's table): roubles, cases, and one tattoo of the month's set or a thing */
 export const MONTHLY_CHEST = {
-  cases: [4, 7], RUB: [30_000, 100_000], xp: [50_000, 123_560], rugPull: [59, 83], GOLD: [3, 5], parts: [30, 60], stashes: [24, 41],
+  RUB: [130, 150], cases: [3, 5],
 } as const satisfies Record<string, readonly [number, number]>;
+/** the 10-days reward: a weapon pack, a different one every month in turn */
+export const MONTH_WEAPONS = [{ id: "gpu", qty: 70 }, { id: "keyboard", qty: 80 }, { id: "rug-pull-gun", qty: 50 }] as const;
+export const monthWeapon = (month: string) => MONTH_WEAPONS[(Number(month.slice(0, 4)) * 12 + Number(month.slice(5, 7)) - 1) % MONTH_WEAPONS.length];
 
 /** a case = one opening of «Ящик ништяков» (the achievement points it costs, content/ach-box.ts ACH_BOX_COST) */
 export const CASE_POINTS = ACH_BOX_COST;
@@ -85,10 +88,13 @@ export interface MonthTier { id: string; need: number | "all"; reward: Reward; c
 export const MONTHLY_TIERS: MonthTier[] = [
   { id: "t2", need: 2, reward: { currencies: { RUB: 30 } } },
   { id: "t5", need: 5, reward: { items: [{ id: "energy-full", qty: 2 }] } },
-  { id: "t10", need: 10, reward: { items: [{ id: "gpu", qty: 40 }] } },
+  // the weapon of the month (monthWeapon): monthTierReward puts it in
+  { id: "t10", need: 10, reward: {} },
   { id: "t20", need: 20, reward: { achPoints: 4 * CASE_POINTS } },
   { id: "all", need: "all", reward: {}, chest: true },
 ];
+/** a tier's reward in this month ("2026-11") */
+export const monthTierReward = (t: MonthTier, month: string): Reward => (t.id === "t10" ? { items: [{ ...monthWeapon(month) }] } : t.reward);
 /** days to close for a tier in a month of `days` days */
 export const tierNeed = (t: MonthTier, days: number) => (t.need === "all" ? days : Math.min(t.need, days));
 

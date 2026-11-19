@@ -7,7 +7,7 @@ import { Icon } from "../art/icons.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { clock } from "../format.ts";
 import { haptic } from "../telegram.ts";
-import { CASE_POINTS, MONTHLY_TIERS, monthTaskOf } from "../../content/monthly.ts";
+import { CASE_POINTS, MONTHLY_CHEST, MONTHLY_TIERS, monthTaskOf, monthWeapon } from "../../content/monthly.ts";
 import type { Granted } from "../api.ts";
 
 /*
@@ -21,31 +21,31 @@ const MONTHS_NOM = ["Январь", "Февраль", "Март", "Апрель"
 const fmt = (v: number) => v.toLocaleString("ru-RU");
 
 /** a reward's picture on its plank: one big icon and «×N» */
-function TierArt({ id }: { id: string }) {
+function TierArt({ id, month }: { id: string; month: string }) {
   const one = (art: React.ReactNode, n: string) => <span className="mt-art">{art}<b className="num">×{n}</b></span>;
   switch (id) {
-    case "t2": return one(<Icon name="GOLD" size={40} />, "30");
+    case "t2": return one(<Icon name="RUB" size={40} />, "30");
     case "t5": return one(<ItemArt id="energy-full" size={44} />, "2");
-    case "t10": return one(<ItemArt id="gpu" size={44} />, "40");
+    // the weapon of this month (a different one every month)
+    case "t10": { const w = monthWeapon(month); return one(<ItemArt id={w.id} size={44} />, String(w.qty)); }
     case "t20": return one(<Icon name="case" size={44} />, "4");
     default: return one(<Icon name="chest" size={46} />, "1");
   }
 }
 
-/** what the chest holds: only the pictures (the amounts are random) */
-function ChestInside() {
+/** a tap on the chest: what it holds (the amounts are random) */
+function ChestInfo({ onClose }: { onClose: () => void }) {
+  const c = MONTHLY_CHEST;
   return (
-    <div className="mt-chest-in">
-      <span title="Рубли"><Icon name="RUB" size={28} /></span>
-      <span title="Золотые слитки"><Icon name="GOLD" size={28} /></span>
-      <span title="Авторитет"><Icon name="xp" size={28} /></span>
-      <span title="Кейсы"><Icon name="case" size={28} /></span>
-      <span title="Rug Pull Gun"><ItemArt id="rug-pull-gun" size={28} /></span>
-      <span title="Детали"><Icon name="parts" size={28} /></span>
-      <span title="Нычки"><ItemArt id="stash-cigs" size={28} /></span>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <span title="Наколка из сета месяца"><img src="/assets/ui/drop-tattoo.webp" width={28} height={28} alt="" /></span>
-    </div>
+    <Modal title="Сундук месяца" onClose={onClose} maxWidth={320}>
+      <div className="col" style={{ gap: 10 }}>
+        <span className="tiny muted">Открывается, когда закрыты все делюги месяца.</span>
+        <div className="mt-chest-row"><Icon name="RUB" size={32} /><b>Рубли</b><span className="num">{c.RUB[0]}–{c.RUB[1]}</span></div>
+        <div className="mt-chest-row"><Icon name="case" size={32} /><b>Кейсы</b><span className="num">{c.cases[0]}–{c.cases[1]}</span></div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <div className="mt-chest-row"><img src="/assets/ui/drop-tattoo.webp" width={32} height={32} alt="" /><b>Наколка или вещь</b><span className="num">1</span></div>
+      </div>
+    </Modal>
   );
 }
 
@@ -67,6 +67,7 @@ export function MonthlyWindow({ onClose }: { onClose: () => void }) {
   const m = state?.monthly;
   const [pick, setPick] = useState<number | null>(null);
   const [opened, setOpened] = useState<Granted | null>(null);
+  const [info, setInfo] = useState(false);
   if (!m) return null;
   const sel = pick ?? m.today;
   const task = monthTaskOf(sel);
@@ -154,12 +155,11 @@ export function MonthlyWindow({ onClose }: { onClose: () => void }) {
             return (
               <div key={t.id} className={`mt-plank ${t.got ? "got" : t.ready ? "ready" : ""} ${chest ? "chest" : ""}`}>
                 <div className="mt-plank-row">
-                  <TierArt id={t.id} />
+                  {chest ? <button type="button" className="mt-chest-btn" onClick={() => setInfo(true)} aria-label="Что в сундуке"><TierArt id={t.id} month={m.month} /></button> : <TierArt id={t.id} month={m.month} />}
                   {t.got ? <i className="mt-check big" aria-label="получено" />
                     : t.ready ? <button className="btn gold sm" disabled={busy === "month_claim"} onClick={() => claim(t.id)}>{chest ? "Открыть" : "Забрать"}</button>
                     : <span className="mt-need">Выполни<br /><b className="num">{t.need}</b> делюг{t.need === 2 ? "и" : ""}</span>}
                 </div>
-                {chest && !t.got && <ChestInside />}
                 {chest && (opened ?? t.got) && <Got g={(opened ?? t.got)!} />}
               </div>
             );
@@ -167,6 +167,7 @@ export function MonthlyWindow({ onClose }: { onClose: () => void }) {
           <p className="tiny muted" style={{ margin: 0 }}>Награды месяца забирай до конца месяца — 1-го числа всё начинается заново.</p>
         </div>
       </div>
+      {info && <ChestInfo onClose={() => setInfo(false)} />}
     </Modal>
   );
 }

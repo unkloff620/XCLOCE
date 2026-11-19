@@ -88,17 +88,20 @@ describe("«От звонка до звонка»", () => {
     for (let d = 3; d <= 30; d++) await act(db, p, "month_buy", { day: d }, at(31));
     await act(db, p, "month_claim", { id: "t5" }, at(31));
     expect(await qty(db, p, "energy-full")).toBe(2);
+    // December 2026: the month's weapon is Rug Pull Gun ×50 (gpu 70 → keyboard 80 → rug-pull-gun 50, a month each)
+    const rpg0 = await qty(db, p, "rug-pull-gun");
     await act(db, p, "month_claim", { id: "t10" }, at(31));
+    expect(await qty(db, p, "rug-pull-gun")).toBe(rpg0 + 50);
     await act(db, p, "month_claim", { id: "t20" }, at(31));
     // 30 of 31: the chest still waits for the last day
     await expect(act(db, p, "month_claim", { id: "all" }, at(31))).rejects.toMatchObject({ code: "tier_locked" });
     await tick(p, at(31), "spit", 15);
-    const rpg = await qty(db, p, "rug-pull-gun");
     const c = await act(db, p, "month_claim", { id: "all" }, at(31), always(0));
     expect(c.result).toMatchObject({ chest: true });
-    expect(await qty(db, p, "rug-pull-gun")).toBe(rpg + 59);
-    expect(c.result.reward.currencies).toMatchObject({ RUB: 30_000, GOLD: 3 });
-    expect(c.result.reward.achPoints).toBe(200); // 4 cases × 50 points
+    // the chest: 130–150 ₽, 3–5 cases, one tattoo of the month's set or a case thing (no set yet — a thing)
+    expect(c.result.reward.currencies).toEqual({ RUB: 130 });
+    expect(c.result.reward.achPoints).toBe(150); // 3 cases × 50 points
+    expect(c.result.reward.items).toHaveLength(1);
   });
 
   it("a new month starts empty", async () => {
