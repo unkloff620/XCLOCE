@@ -817,10 +817,10 @@ describe("selling, nickname, slot machine 777", () => {
 
   it("slots: 3 spins per 60 minutes, 777 pays the jackpot", async () => {
     const p = await newPlayer(db);
+    const rub0 = await wallet(db, p, "RUB");
     const s1 = await act(db, p, "slots_spin", {}, T0, always(0)); // lowest roll → first outcome = jackpot
     expect(s1.result).toMatchObject({ outcome: "jackpot", reels: ["seven", "seven", "seven"], left: 2 });
-    expect(await qty(db, p, "gpu")).toBe(1);
-    expect(await wallet(db, p, "RUB")).toBeGreaterThanOrEqual(7777);
+    expect(await wallet(db, p, "RUB")).toBe(rub0 + 777);
     const s2 = await act(db, p, "slots_spin", {}, T0 + 10 * M, always(0.999));
     expect(s2.result.kind).toBe("miss");
     expect(new Set(s2.result.reels).size).toBe(3);

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { RewardChips } from "../ui.tsx";
 import { Icon } from "../art/icons.tsx";
+import type { Currency } from "../../content/currencies.ts";
 import { ItemArt } from "../art/items.tsx";
 import { itemById } from "../../content/items.ts";
 import { clock, full } from "../format.ts";
@@ -221,11 +222,12 @@ export function SlotMachine() {
             {SLOT_OUTCOMES.filter((o) => o.kind !== "miss").map((o) => (
               <div key={o.id} className="sl-pay-row">
                 <span className="sl-pay-sym">{o.triple ? [0, 1, 2].map((k) => <Sym key={k} s={o.triple!} />) : <span className="tiny">любые 2</span>}</span>
-                <RewardChips r={o.reward} size={13} />
+                {/* the win straight after the symbols, every row from the same line: the coin and the sum side by side */}
+                <span className="sl-pay-win">{Object.entries(o.reward.currencies ?? {}).map(([c, v]) => <span key={c}><Icon name={c as Currency} size={18} /><b className="num">{(v ?? 0).toLocaleString("ru-RU")}</b></span>)}{!o.reward.currencies && <span className="tiny">только опыт</span>}</span>
                 <i className="sl-xp num">+{slotXpOf(o.id)}</i>
               </div>
             ))}
-            <span className="tiny sl-pay-note">Каждый прокрут — опыт автомата (мимо — +{slotXpOf("miss")}). Уровень 2 — {slotLevelNeed(1)} опыта, дальше каждый на {slotLevelNeed(2) - slotLevelNeed(1)} больше. За каждый уровень — награда: ₽, каждый 5-й — ещё $, каждый 10-й — видеокарта.</span>
+            <span className="tiny sl-pay-note">Каждый прокрут — опыт автомата (мимо — +{slotXpOf("miss")}). Уровень 2 — {slotLevelNeed(1)} опыта, дальше каждый на {slotLevelNeed(2) - slotLevelNeed(1)} больше. За каждый уровень — награда: ₽, каждый 10-й — ещё видеокарта.</span>
             <button className="btn gold block" onClick={() => setPay(false)}>Понятно</button>
           </div>
         </div>

@@ -3742,7 +3742,10 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .sl-paytable { position: absolute; inset: 0; z-index: 7; display: grid; place-items: center; background: rgba(10, 5, 2, 0.7); padding: 16px; }
 .sl-paytable-in { width: min(100%, 340px); display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: 16px; border: 3px solid #2a1606; background: #f1e3c6; color: #24160a; }
 .sl-paytable-in > b { text-align: center; font-size: 18px; }
-.sl-pay-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sl-pay-row { display: grid; grid-template-columns: 96px 1fr auto; align-items: center; gap: 10px; }
+.sl-pay-win { display: flex; align-items: center; gap: 8px; justify-self: start; }
+.sl-pay-win > span { display: inline-flex; align-items: center; gap: 4px; }
+.sl-pay-win b { font-size: 15px; color: #2b1a0b; }
 .sl-pay-sym { display: flex; gap: 2px; align-items: center; }
 .sl-pay-sym .sl-sym { width: 26px; margin: 0; }
 @media (prefers-reduced-motion: reduce) { .sl-strip, .sl-sign, .sl-btn, .sl-still, .sl-reel.hit .mid .sl-sym, .sl-coins i, .sl-rain i { animation: none !important; } }
