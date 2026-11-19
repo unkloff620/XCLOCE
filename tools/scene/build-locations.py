@@ -1,15 +1,17 @@
 """Location backgrounds: tools/scene/source/locations/<id>.png (tall, ~941×1672)
 → public/assets/locations/<id>.webp (full-screen backdrop of the location page)
 → public/assets/locations/<id>-card.webp (wide banner for the list card, cropped around BANNER_Y)."""
-import os, glob
+import os, sys, glob
 from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.abspath(os.path.join(HERE, "..", "..", "public", "assets", "locations"))
 os.makedirs(OUT, exist_ok=True)
 BANNER = (720, 280)  # 360×140 card at 2×
-BANNER_Y = {"openspace": 0.3, "market": 0.42, "board": 0.45, "basement": 0.45, "serverroom": 0.45, "accounting": 0.45, "hr": 0.47, "party": 0.42, "offshore": 0.45, "yacht": 0.45, "moonbase": 0.45}  # centre of the banner crop, share of the height
+BANNER_Y = {"openspace": 0.3, "market": 0.42, "board": 0.45, "basement": 0.45, "serverroom": 0.45, "accounting": 0.45, "hr": 0.47, "party": 0.42, "offshore": 0.45, "yacht": 0.45, "moonbase": 0.45, "mars": 0.4, "orbit": 0.4, "sunfarm": 0.45, "genesis": 0.45}  # centre of the banner crop, share of the height
+# python3 build-locations.py [id …] — only these (all without arguments)
 for f in sorted(glob.glob(os.path.join(HERE, "source", "locations", "*.png"))):
+    if len(sys.argv) > 1 and os.path.splitext(os.path.basename(f))[0] not in sys.argv[1:]: continue
     name = os.path.splitext(os.path.basename(f))[0]
     im = Image.open(f).convert("RGB")
     # tall pictures: 800 wide; wide ones: 1500 tall at most (the page shows a phone-shaped middle part)

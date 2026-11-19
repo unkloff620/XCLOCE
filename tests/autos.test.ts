@@ -4,6 +4,7 @@ import { inPlayerTx } from "../src/server/game.ts";
 import { resetConfigCache } from "../src/server/config.ts";
 import { eventSave } from "../src/server/admin.ts";
 import { runAllAutos, runAutos } from "../src/server/systems/autos.ts";
+import { moscowDay } from "../src/server/core.ts";
 import { LOCK_RUSH } from "../src/content/heist.ts";
 import { LOCATIONS } from "../src/content/locations.ts";
 
@@ -11,19 +12,14 @@ const T = Date.UTC(2026, 10, 10, 9); // 12:00 Moscow
 const iso = (t: number) => new Date(t).toISOString();
 
 describe("automation toggles", () => {
-  it("the zone spends the energy on its tasks, for today only", async () => {
+  it("the zone toggle is gone: it cannot be switched on, an old one does nothing", async () => {
     const db = await freshDb();
     const p = await newPlayer(db);
     await db.query("UPDATE players SET energy=200, energy_at=$2 WHERE id=$1", [p, new Date(T)]);
-    const r = await act(db, p, "auto_set", { kind: "zone", target: "openspace", on: true }, T);
-    expect(r.state.autos.zone).toBe("openspace");
-    const steps = await db.query<{ n: number }>("SELECT COALESCE(SUM(steps),0)::int AS n FROM task_progress WHERE player_id=$1", [p]);
-    expect(steps[0].n).toBeGreaterThan(0);
-    const [{ energy }] = await db.query<{ energy: number }>("SELECT energy FROM players WHERE id=$1", [p]);
-    expect(energy).toBeLessThan(Math.max(...LOCATIONS[0].tasks.map((t) => t.energy))); // spent down to less than a step
-    // the next day the toggle is off by itself
-    const next = await act(db, p, "auto_set", { kind: "zone", target: "openspace", on: false }, T + 24 * H);
-    expect(next.state.autos.zone).toBeNull();
+    await expect(act(db, p, "auto_set", { kind: "zone", target: "openspace", on: true }, T)).rejects.toThrow();
+    await db.query("INSERT INTO autos (player_id, kind, target, mode, day, at) VALUES ($1,'zone','openspace','',$2,$3)", [p, moscowDay(T), new Date(T)]);
+    expect(await runAutos(db, p, T)).toMatchObject({ tasks: 0, claims: 0 });
+    expect(LOCATIONS.length).toBe(15);
   });
 
   it("a boss toggle starts the fight and hits with the free weapons; one mode per boss", async () => {

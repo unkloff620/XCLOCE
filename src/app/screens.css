@@ -7151,3 +7151,30 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .van-plaque.k-silver .van-plaque-rim { opacity: 0.45; animation-duration: 3.4s; }
 @keyframes van-rim { from { background-position: 100% 100%; } to { background-position: 0% 0%; } }
 @media (prefers-reduced-motion: reduce) { .van-plaque-rim { animation: none; opacity: 0.3; } }
+
+/* ---------------- the location card of the list: the artist's plank (tools/locations/build-card.py; places of his template) ---------------- */
+.lc { position: relative; display: block; color: #5a3a14; -webkit-tap-highlight-color: transparent; }
+.lc > a { display: block; color: inherit; }
+.lc-plank { position: relative; display: block; width: 100%; aspect-ratio: 1200 / 261; container-type: inline-size;
+  background: url(/assets/locations/card-plank.webp) center / 100% 100% no-repeat; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5)); }
+.lc-name { position: absolute; left: 6.6%; top: 2.8%; width: 20.8%; height: 13.5%; display: flex; align-items: center; justify-content: center;
+  white-space: nowrap; line-height: 1; letter-spacing: 0.01em; color: #6b4410; }
+.lc-pic { position: absolute; left: 5.2%; top: 19.6%; width: 23.2%; height: 70.6%; border-radius: 1.2cqi; overflow: hidden; display: grid; place-items: center;
+  box-shadow: 0 0 0 0.35cqi #8a5a2a, inset 0 0 1.5cqi rgba(0, 0, 0, 0.45); background: #2a1c10; }
+.lc-pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.lc-pic svg { position: relative; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.8)); }
+.lc-plank.locked .lc-pic img { filter: grayscale(1) brightness(0.45); }
+.lc-lead { position: absolute; top: 30.2%; height: 48.9%; left: 33.1%; width: 27%; }
+.lc-lead.night { left: 64%; }
+.lc-ava { position: absolute; left: 0; top: 0; height: 100%; aspect-ratio: 1; border-radius: 1cqi; overflow: hidden;
+  box-shadow: 0 0 0 0.35cqi #c99a2e; background: rgba(90, 58, 20, 0.18); }
+.lc-lead.night .lc-ava { box-shadow: 0 0 0 0.35cqi #6f63c9; }
+.lc-lead.none .lc-ava { box-shadow: 0 0 0 0.3cqi rgba(107, 68, 16, 0.45); }
+.lc-ava .avatar { width: 100% !important; height: 100% !important; border-radius: 0 !important; font-size: 4cqi !important; }
+.lc-nick { position: absolute; left: 41.5%; right: 0; top: 0; height: 27.5%; display: block; font-size: 2.6cqi; line-height: 1.35; font-weight: 800; color: #5a3a14; }
+.lc-rep { position: absolute; left: 41.5%; right: 0; top: 30%; height: 26%; display: flex; align-items: center; gap: 0.5cqi; font-size: 2.3cqi; font-weight: 700; color: #6b4a1e; }
+.lc-rep svg { width: 2.6cqi !important; height: 2.6cqi !important; }
+.lc-lead.night .lc-rep { color: #3f357e; }
+.lc.current .lc-plank { filter: drop-shadow(0 0 6px rgba(255, 204, 51, 0.85)) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5)); }
+.lc.ready .lc-plank { filter: drop-shadow(0 0 7px rgba(255, 204, 51, 0.95)) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5)); }
+.lc.ready .loc-claim { padding: 6px 4px 2px; }

@@ -13,7 +13,7 @@ import { dispatch, logAction, makeCtx, type ActionType } from "../game.ts";
 import { actionText } from "../action-text.ts";
 import { lockPlayer } from "../core.ts";
 import { BOSSES, bossById } from "../../content/bosses.ts";
-import { LOCATIONS, locationById, taskOpen, tasksOf } from "../../content/locations.ts";
+import { LOCATIONS } from "../../content/locations.ts";
 import { FREE_WEAPONS } from "./combat.ts";
 
 export type AutoKind = "zone" | "boss";
@@ -34,9 +34,9 @@ export async function autosView(q: Queryable, pid: number, now: number) {
 export async function autoSet(ctx: Ctx, kind: string, target: string, on: boolean, mode = "") {
   const day = moscowDay(ctx.now);
   if (kind === "zone") {
-    if (!locationById(target)) throw new GameError("bad_location", "Такой локации нет");
+    // the zone toggle is gone (2026-11-20): only switching an old one off
+    if (on) throw new GameError("auto_zone_gone", "Автоматики в локациях больше нет");
     await ctx.q.query("DELETE FROM autos WHERE player_id=$1 AND kind='zone'", [ctx.pid]);
-    if (on) await ctx.q.query("INSERT INTO autos (player_id, kind, target, mode, day, at) VALUES ($1,'zone',$2,'',$3,$4)", [ctx.pid, target, day, new Date(ctx.now)]);
   } else if (kind === "boss") {
     const b = bossById(target);
     if (!b || b.event) throw new GameError("bad_boss", "Автобой — только с обычными боссами");
@@ -65,36 +65,11 @@ async function step(db: Db, pid: number, now: number, type: ActionType, body: Re
   }
 }
 
-/** the next task of the zone (day road): the first open one not yet done; null — all done (claim it) */
-async function nextTask(q: Queryable, pid: number, locId: string) {
-  const loc = locationById(locId)!;
-  const list = tasksOf(loc, "day");
-  const rows = await q.query<{ task_id: string; steps: number }>("SELECT task_id, steps FROM task_progress WHERE player_id=$1 AND task_id = ANY($2::text[])", [pid, list.map((t) => t.id)]);
-  const steps = new Map(rows.map((r) => [r.task_id, Number(r.steps)]));
-  const i = list.findIndex((t, k) => (steps.get(t.id) ?? 0) < t.steps && taskOpen(loc, k, (id) => steps.get(id) ?? 0, "day"));
-  return i < 0 ? null : list[i];
-}
-
 /** does everything today's toggles of the player allow right now; returns what it did */
 export async function runAutos(db: Db, pid: number, now = Date.now()) {
   const done = { tasks: 0, claims: 0, fights: 0, hits: 0, wins: 0 };
   const rows = await db.query<AutoRow>("SELECT kind, target, mode FROM autos WHERE player_id=$1 AND day=$2", [pid, moscowDay(now)]);
   if (!rows.length) return done;
-
-  // the zone: spend the energy there, step by step, claim the location when its tasks are done and go round again
-  const zone = rows.find((r) => r.kind === "zone");
-  if (zone && locationById(zone.target)) {
-    for (let guard = 0; guard < 60; guard++) {
-      const t = await nextTask(db, pid, zone.target);
-      if (!t) {
-        if ((await step(db, pid, now, "location_claim", { locationId: zone.target, mode: "day" })) === false) break;
-        done.claims++;
-        continue;
-      }
-      if ((await step(db, pid, now, "task", { taskId: t.id })) === false) break; // out of energy (or the zone is closed)
-      done.tasks++;
-    }
-  }
 
   // the bosses: one fight at a time — finish the running one (free hits; claim it once over), then start the next
   const bosses = new Map(rows.filter((r) => r.kind === "boss").map((r) => [r.target, r.mode]));

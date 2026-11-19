@@ -6,9 +6,9 @@ import { liveEnergy, useGame, useNow } from "../store.tsx";
 import { api, type Granted } from "../api.ts";
 import { LOCATIONS, locRep, locationById, taskOpen, tasksOf, type LocMode } from "../../content/locations.ts";
 import type { Reward } from "../../content/rewards.ts";
-import { LOCATION_ART, LocationScene } from "../art/scenes.tsx";
+import { LOCATION_ART } from "../art/scenes.tsx";
 import { Icon } from "../art/icons.tsx";
-import { Avatar, Bar, Empty, Modal, RewardChips, Toggle } from "../ui.tsx";
+import { Avatar, Bar, Empty, Modal, RewardChips } from "../ui.tsx";
 import { clock, full } from "../format.ts";
 import { haptic } from "../telegram.ts";
 import { Help } from "../help.tsx";
@@ -113,25 +113,13 @@ function LocRepChip({ v, size = 14 }: { v: number; size?: number }) {
   return <span className="chip loc-rep" title="Авторитет локации"><Icon name="rep" size={size} />+{full(v)}</span>;
 }
 
-/** the leaders of a location over its picture: by day and by night, a small box each */
-function LocLeaderBadge({ l, mode, me }: { l: LocLeader; mode: LocMode; me: boolean }) {
+/** a leader on the list's plank: the avatar, the nickname, the zone's (day) or the night authority */
+function LcLeader({ l, mode, me }: { l: LocLeader | null; mode: LocMode; me?: number }) {
   return (
-    <span className={`loc-lead ${mode} ${me ? "me" : ""}`} title={`Больше всех ${mode === "night" ? "ночного " : ""}авторитета в локации: ${l.name}`}>
-      <span className="loc-lead-ava"><Avatar name={l.name} photo={l.photo} size={40} /></span>
-      <span className="loc-lead-txt">
-        <small className="loc-lead-k">👑 {mode === "night" ? "Ночные" : "Дневные"}</small>
-        <b className="ellipsis">{me ? "Ты" : l.name}</b>
-        <small className="num"><Icon name="rep" size={11} />{full(l.rep)}</small>
-      </span>
-    </span>
-  );
-}
-function LocLeaders({ r, me }: { r: LocRow; me?: number }) {
-  if (!r.leader && !r.night.leader) return null;
-  return (
-    <span className="loc-leads">
-      {r.leader && <LocLeaderBadge l={r.leader} mode="day" me={r.leader.id === me} />}
-      {r.night.leader && <LocLeaderBadge l={r.night.leader} mode="night" me={r.night.leader.id === me} />}
+    <span className={`lc-lead ${mode} ${l ? "" : "none"}`}>
+      <span className="lc-ava">{l ? <Avatar name={l.name} photo={l.photo} size={64} /> : null}</span>
+      <b className="lc-nick ellipsis">{l ? (l.id === me ? "Ты" : l.name) : "—"}</b>
+      <span className="lc-rep num">{l ? <><Icon name="rep" size={14} />{full(l.rep)}</> : null}</span>
     </span>
   );
 }
@@ -275,56 +263,35 @@ export function LocationsScreen() {
           const current = !!rows && rows.find((x) => x.unlocked && !x.clears)?.id === l.id;
           const cleared = !!r?.clears;
           const locked = r ? !r.unlocked : l.order > 1;
-          const inner = (
-            <>
-              <LocationScene scene={l.scene} />
-              {!locked && r && <LocLeaders r={r} me={state?.player.id} />}
-              <div className="loc-body">
-                <div className="row" style={{ justifyContent: "space-between" }}>
-                  <span className="tiny muted display">ЛОКАЦИЯ {l.order}</span>
-                  {cleared && <span className="chip green">✓ пройдена{r!.clears > 1 ? ` ×${r!.clears}` : ""}</span>}
-                  {current && <span className="chip gold loc-now">сейчас здесь</span>}
-                </div>
-                <b className="display" style={{ fontSize: 18 }}>{locked ? "???" : l.name}</b>
-                <div className="small muted">{locked ? `Закрой «${LOCATIONS[l.order - 2]?.name}»` : l.subtitle}</div>
-                {!locked && (
-                  <div className="row" style={{ justifyContent: "space-between", gap: 8 }}>
-                    <Blocks done={r?.done ?? 0} total={l.tasks.length} />
-                    <span className="loc-myrep" title="Твой авторитет в этой локации"><Icon name="rep" size={14} /><b className="num">{full(r?.rep ?? 0)}</b></span>
-                  </div>
-                )}
-              </div>
-              {locked && <div className="loc-lock"><Icon name="lock" size={44} /></div>}
-              {/* the zone toggle: today the energy goes into this location's tasks by itself (one zone, for today only) */}
-              {!locked && (
-                <div className="loc-auto">
-                  <Toggle on={state?.autos?.zone === l.id} disabled={busy === "auto_set"} title="Энергия сама тратится на задания этой локации — сегодня. Можно выбрать одну"
-                    onChange={(v) => void act("auto_set", { kind: "zone", target: l.id, on: v })}>
-                    <Icon name="energy" size={13} />Авто
-                  </Toggle>
-                </div>
-              )}
-            </>
-          );
           const ready = !locked && !!r && r.done === r.total;
-          if (locked) return <div key={l.id} className="loc-card locked">{inner}</div>;
+          // the artist's plank: the name on its tab, the picture on the left, the day and the night leader
+          const plank = (
+            <span className={`lc-plank ${locked ? "locked" : ""}`}>
+              <b className="lc-name display" style={{ fontSize: `${Math.min(3.3, 33 / (locked ? 3 : l.name.length))}cqi` }}>{locked ? "???" : l.name}</b>
+              <span className="lc-pic">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={`/assets/locations/${LOCATION_ART.has(l.scene) ? l.scene : "openspace"}-card.webp`} alt="" draggable={false} />
+                {locked && <Icon name="lock" size={34} />}
+              </span>
+              <LcLeader l={locked ? null : r?.leader ?? null} mode="day" me={state?.player.id} />
+              <LcLeader l={locked ? null : r?.night.leader ?? null} mode="night" me={state?.player.id} />
+            </span>
+          );
+          if (locked) return <div key={l.id} className="lc locked">{plank}</div>;
           if (ready) {
             return (
-              <div key={l.id} className={`loc-card ready ${cleared ? "cleared" : ""}`}>
-                {inner}
+              <div key={l.id} className="lc ready">
+                <Link href={`/locations/${l.id}`}>{plank}</Link>
                 <div className="loc-claim">
                   <RewardChips r={r!.nextReward} size={14} />
-                  <div className="row">
-                    <button className="btn gold grow" disabled={busy === "location_claim"} onClick={() => claim(l.id)}>
-                      <Icon name="chest" size={20} /> Забрать награду
-                    </button>
-                    <Link href={`/locations/${l.id}`} className="btn dark sm">Открыть</Link>
-                  </div>
+                  <button className="btn gold" disabled={busy === "location_claim"} onClick={() => claim(l.id)}>
+                    <Icon name="chest" size={20} /> Забрать награду
+                  </button>
                 </div>
               </div>
             );
           }
-          return <Link key={l.id} href={`/locations/${l.id}`} className={`loc-card ${cleared ? "cleared" : ""} ${current ? "current" : ""}`}>{inner}</Link>;
+          return <Link key={l.id} href={`/locations/${l.id}`} className={`lc ${cleared ? "cleared" : ""} ${current ? "current" : ""}`}>{plank}</Link>;
         })}
       </div>
       {got && <ClaimedModal got={got} onClose={() => setGot(null)} />}

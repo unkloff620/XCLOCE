@@ -58,7 +58,7 @@ describe("energy", () => {
     await expect(act(db, p, "use", { itemId: "energy-drink" }, T0)).rejects.toMatchObject({ code: "energy_full" });
     // spend some, drink: back to 50, not more
     r = await act(db, p, "task", { taskId: "os-standup" }, T0);
-    expect(r.state.player.energy).toBe(47);
+    expect(r.state.player.energy).toBe(50 - LOCATIONS[0].tasks[0].energy);
     r = await act(db, p, "use", { itemId: "energy-drink" }, T0);
     expect(r.state.player.energy).toBe(50);
   });
@@ -593,6 +593,11 @@ describe("shop and exchange", () => {
 });
 
 describe("locations", () => {
+  it("one pass of every location costs the energy of the user's table", () => {
+    const pass = [166, 278, 364, 519, 675, 779, 969, 1082, 1307, 1537, 1676, 1935, 2077, 2377, 2651];
+    expect(LOCATIONS.map((l) => l.tasks.reduce((a, t) => a + t.energy * t.steps, 0))).toEqual(pass);
+    expect(LOCATIONS.map((l) => l.night.reduce((a, t) => a + t.energy * t.steps, 0))).toEqual(pass);
+  });
   it("first location tasks take at least 5 steps, later ones more; a task finished before the change is not paid twice", async () => {
     expect(Math.min(...LOCATIONS[0].tasks.map((t) => t.steps))).toBeGreaterThanOrEqual(5);
     for (let i = 1; i < LOCATIONS.length; i++) {
@@ -1090,7 +1095,7 @@ describe("home: equipment, rooms, look, help", () => {
   it("tasks hint: the cheapest step left in an open location", async () => {
     const p = await newPlayer(db);
     const st = await act(db, p, "help_seen", { topic: "home" }, T0);
-    expect(st.state.tasks).toEqual({ minEnergy: 3, claimable: false });
+    expect(st.state.tasks).toEqual({ minEnergy: LOCATIONS[0].tasks[0].energy, claimable: false });
     // a cleared location stops calling: only the next, not yet cleared one counts
     await db.query("INSERT INTO location_claims (player_id, location_id, claimed_at) VALUES ($1, 'openspace', $2)", [p, new Date(T0)]);
     const st2 = await act(db, p, "help_seen", { topic: "yard" }, T0);
@@ -1944,8 +1949,9 @@ describe("нычки v2", () => {
     const { stashSetsByLocation, STASH_SETS } = await import("../src/content/stashes.ts");
     expect(STASH_SETS).toHaveLength(44);
     const { LOCATIONS } = await import("../src/content/locations.ts");
-    expect(LOCATIONS).toHaveLength(11);
-    for (const l of LOCATIONS) expect(stashSetsByLocation(l.id)).toHaveLength(4);
+    expect(LOCATIONS).toHaveLength(15);
+    // the first eleven have their own four sets; the four new ones (2026-11-20) borrow from all of them for now
+    for (const l of LOCATIONS.slice(0, 11)) expect(stashSetsByLocation(l.id)).toHaveLength(4);
     // every stash has its picture, every set its set picture
     const { existsSync } = await import("node:fs");
     for (const s of STASH_SETS) {
@@ -1964,12 +1970,12 @@ describe("нычки v2", () => {
     let found: string | null = null, spent = 0;
     while (!found && spent <= STASH_PITY + 10) {
       const s = await act(db, p, "task", { taskId: "os-standup" }, T0, always(0.99));
-      spent += 3;
+      spent += loc.tasks[0].energy;
       found = s.result.stash;
       if (s.result.steps >= s.result.need) await db.query("UPDATE task_progress SET steps=0, done_at=now() WHERE player_id=$1", [p]);
     }
     expect(found).toMatch(/^stash-/);
-    expect(spent).toBe(Math.ceil(STASH_PITY / 3) * 3);
+    expect(spent).toBe(Math.ceil(STASH_PITY / loc.tasks[0].energy) * loc.tasks[0].energy);
     expect(stashSetsByLocation("openspace").some((s) => s.items.some((i) => i.id === found))).toBe(true);
     const [m] = await db.query<{ stash_energy: number }>("SELECT stash_energy FROM players WHERE id=$1", [p]);
     expect(Number(m.stash_energy)).toBe(0);
