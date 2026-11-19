@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useGame } from "../store.tsx";
 import { api } from "../api.ts";
-import { CURRENCIES, CURRENCY_DEFS, exchangeScheduleText, exchangeWindow, floorTo, type Currency } from "../../content/currencies.ts";
+import { CURRENCY_DEFS, EXCHANGEABLE, exchangeScheduleText, exchangeWindow, floorTo, type Currency } from "../../content/currencies.ts";
 import { Icon } from "../art/icons.tsx";
 import { clock, money } from "../format.ts";
 import { haptic } from "../telegram.ts";
@@ -131,7 +131,7 @@ function ChatExchange({ ex, bonus, disabled, onDone, onBack }: { ex: ShopData["e
   };
   const row = (v: Currency, set: (c: Currency) => void, other: Currency) => (
     <div className="dl-curs">
-      {CURRENCIES.map((c) => (
+      {EXCHANGEABLE.map((c) => (
         <button key={c} type="button" className={`dl-cur ${v === c ? "on" : ""}`} disabled={c === other} onClick={() => { haptic.tap(); set(c); }} aria-label={CURRENCY_DEFS[c].name}>
           <Icon name={c} size={22} /><b>{c}</b>
         </button>
@@ -317,7 +317,7 @@ export function ExchangeScreen() {
         <div className="title-row">
           <Link href="/yard" className="back-btn" aria-label="Во двор">‹</Link>
           <Help topic="exchange" title="Обменник">
-            <HelpList title="Валюты" rows={CURRENCIES.map((c) => ({ key: c, icon: <Icon name={c} size={40} />, name: CURRENCY_DEFS[c].name, hint: `1 ${c} ≈ ${money("RUB", CURRENCY_DEFS[c].rub)} ₽ по базовому курсу` }))} />
+            <HelpList title="Валюты" rows={EXCHANGEABLE.map((c) => ({ key: c, icon: <Icon name={c} size={40} />, name: CURRENCY_DEFS[c].name, hint: `1 ${c} ≈ ${money("RUB", CURRENCY_DEFS[c].rub)} ₽ по базовому курсу` }))} />
             <ul>
               <li>Нажми на автомат — барыга спросит, чё надо: поговорить или обменять.</li>
               <li>Обмен идёт прямо в разговоре по курсу с экрана автомата: выбери, что отдаёшь и что получаешь, впиши сумму или нажми «всё».</li>

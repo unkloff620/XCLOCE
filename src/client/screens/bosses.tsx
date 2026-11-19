@@ -6,7 +6,8 @@ import { usePageReady } from "../route-loader.tsx";
 import { useCallback, useEffect, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { api, type Tray } from "../api.ts";
-import { BOSSES, bossesIn, bossById } from "../../content/bosses.ts";
+import { BOSSES, EVENT_FIGHTS, bossesIn, bossById } from "../../content/bosses.ts";
+import { eventBossById } from "../../content/event-bosses.ts";
 import { Avatar, DropKind, GainLine, MysteryDrop, RewardChips, bossItemsCount } from "../ui.tsx";
 import { WEAPONS } from "../../content/items.ts";
 import type { BossDef } from "../../content/bosses.ts";
@@ -87,10 +88,37 @@ export function BossesScreen() {
           <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} className={tab === t.id ? "on" : ""} onClick={() => setTab(t.id)}>{t.label}</button>
         ))}
       </div>
-      {tab !== "admins" && (
+      {tab === "mentors" && (
+        // the mentors: always open, «Пацанский» only; the card opens his fight page
+        <div className="col" style={{ gap: 12 }}>
+          {EVENT_FIGHTS.filter((b) => b.mentor).map((b) => (
+            <Link key={b.id} href={eventBossById(b.id)?.href ?? `/bosses/${b.id}`} className={`bcard bcard-boss-${b.id}`} style={{ ["--i" as string]: 1, ["--acc" as string]: b.theme.accent }}>
+              <span className="bcard-n display">Ментор</span>
+              <div className="bcard-art" aria-hidden="true">
+                {hasBossRig(b.id) ? <BossRig id={b.id} bust hpShare={1} />
+                  // eslint-disable-next-line @next/next/no-img-element
+                  : <img src={b.photo.portrait ?? undefined} alt="" draggable={false} />}
+              </div>
+              <div className="bcard-main">
+                <div className="bcard-head">
+                  <div className="col" style={{ gap: 1, minWidth: 0 }}>
+                    <b className="bcard-name display ellipsis">{b.name}</b>
+                    <span className="bcard-title ellipsis">Только «Пацанский»</span>
+                  </div>
+                </div>
+                <div className="bcard-reward">
+                  <span className="bcard-label">Награда:</span>
+                  <GainLine r={b.reward} size={16} side />
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+      {tab === "brigade" && (
         <div className="panel center boss-soon">
           <b className="display">Скоро</b>
-          <span className="small muted">{tab === "mentors" ? "Боссы-менторы скоро появятся." : "Бригадные боссы скоро появятся: бьёт вся бригада (клан), урон идёт только от своих."}</span>
+          <span className="small muted">{"Бригадные боссы скоро появятся: бьёт вся бригада (клан), урон идёт только от своих."}</span>
         </div>
       )}
       {tab === "admins" && <div className="col" style={{ gap: 12 }}>

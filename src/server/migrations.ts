@@ -1518,4 +1518,9 @@ CREATE INDEX IF NOT EXISTS promises_what ON promises (what) WHERE given_at IS NU
     sql: `ALTER TABLE players ADD COLUMN IF NOT EXISTS fight_slots JSONB;
 ALTER TABLE shod_boost ADD COLUMN IF NOT EXISTS on_ BOOLEAN NOT NULL DEFAULT true;`,
   },
+  {
+    // the bosses' new HP (content/bosses.ts, the user's table): an old admin override of the HP would hide it
+    id: "v2-104-boss-hp-reset",
+    sql: `DELETE FROM config WHERE key = 'boss.hp';`,
+  },
 ];

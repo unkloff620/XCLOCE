@@ -116,7 +116,7 @@ const MONEY_KEY = "xc-hud-money";
 function HudMoney({ wallet }: { wallet: Partial<Record<Currency, number>> }) {
   const [shown, setShown] = useState<[Currency, Currency]>(() => {
     try { const v = JSON.parse(localStorage.getItem(MONEY_KEY) ?? "null"); if (Array.isArray(v) && v.length === 2 && v.every((c) => (CURRENCIES as readonly string[]).includes(c)) && v[0] !== v[1]) return v as [Currency, Currency]; } catch { /* none */ }
-    return ["RUB", "USD"];
+    return ["PAP", "TOOTH"];
   });
   const [box, setBox] = useState<0 | 1 | null>(null);
   // where the open box is on screen: the list goes into <body> under it (the HUD lives in the page's own layer, every

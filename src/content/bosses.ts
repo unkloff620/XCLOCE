@@ -46,6 +46,8 @@ export interface BossDef {
    * only in «Пацанский» (no other modes, no «Соло»), no pass needed and none given
    */
   event?: boolean;
+  /** a mentor (the «Менторы» tab): an event fight that is always on — no admin switch, «Пацанский» only */
+  mentor?: boolean;
 }
 
 /** Boss passes «Пропуск» (they used to be keys): the tier only sets the look and the name, every boss has its own card. */
@@ -58,11 +60,11 @@ export const CARD_TIERS: Record<CardTier, { name: string; rarity: "common" | "ra
   diamond: { name: "Бриллиантовый пропуск", rarity: "mythic" },
 };
 
-/** 1 000 → 10 000 → 50 000 → … → 10 000 000 (Солнце). Подчинённые (Гаркуша, Мугонатор, Вадим, Боцман) fill the gaps. */
-const HP = [1_000, 10_000, 50_000, 80_000, 115_000, 150_000, 400_000, 1_000_000, 1_500_000, 2_000_000, 2_500_000, 5_000_000, 10_000_000];
+/** «Пацанский» HP (×3 «Блатной», ×6 «Авторитетный»): 1 000 (Дацкоу) … 1 000 000 000 (Солнце) — the user's table. */
+const HP = [1_000, 10_000, 50_000, 100_000, 500_000, 2_000_000, 3_000_000, 5_000_000, 8_000_000, 30_000_000, 600_000_000, 700_000_000, 1_000_000_000];
 const hp = (i: number) => HP[i];
-/** Authority for a win: 100 for Дацкоу … 1 500 000 for Солнце (×≈3.3 per boss, smaller steps across the inserted bosses). */
-const XP = [100, 350, 1_100, 1_700, 2_600, 3_700, 12_000, 40_000, 60_000, 90_000, 135_000, 450_000, 1_500_000];
+/** Authority for a win: 25 for Дацкоу … 1 000 000 for Солнце (the user's table). */
+const XP = [25, 30, 50, 100, 200, 500, 750, 850, 1_000, 1_500, 15_000, 12_000, 1_000_000];
 const xp = (i: number) => XP[i];
 /** `v`: bump when the pictures are redrawn under the same names, so phones don't keep the old ones from the cache */
 const photo = (id: string, has = false, v = "") => {
@@ -77,7 +79,7 @@ const photo = (id: string, has = false, v = "") => {
 /** the fight modes in a word, for «Выпадает с Дацкоу (Блатной)» */
 export const MODE_SHORT = { pacan: "Пацанский", blat: "Блатной", avtor: "Авторитетный" } as const;
 /** the mode a boss's things (his clothes, his room, the first-win things) drop in, in a word */
-export const thingsModeName = (b: { event?: unknown; thingsMode?: keyof typeof MODE_SHORT }) => (b.event ? "ивент" : MODE_SHORT[b.thingsMode ?? "blat"]);
+export const thingsModeName = (b: { event?: unknown; thingsMode?: keyof typeof MODE_SHORT }) => ((b as { mentor?: unknown }).mentor ? "ментор" : b.event ? "ивент" : MODE_SHORT[b.thingsMode ?? "blat"]);
 /** «Выпадает с Дацкоу (Блатной)» */
 export const thingsFrom = (b: { name: string; event?: unknown; thingsMode?: keyof typeof MODE_SHORT }) => `Выпадает с ${b.name} (${thingsModeName(b)})`;
 
@@ -85,7 +87,7 @@ export const BOSSES: BossDef[] = [
   {
     id: "datsik", perDay: 12, order: 1, card: "bronze", name: "Дацкоу", title: "Замороженный подчинённый Бабафея",
     story: "Числится в штате, но давно заморожен. Оттаивает, только когда кто-то пытается пройти мимо.",
-    hp: hp(0), reward: { xp: xp(0), currencies: { USD: 4, RUB: 150 } },
+    hp: hp(0), reward: { xp: xp(0), currencies: { RUB: 5 } },
     drop: [{ id: "keyboard", qty: 1, chance: 0.35 }],
     wear: { items: ["tee-white", "jeans", "sneakers"], chance: 0.1, pity: 10 },
     set: { weapon: "fist", damage: 20 },
@@ -94,7 +96,7 @@ export const BOSSES: BossDef[] = [
   {
     id: "kedr", order: 2, card: "bronze", name: "Кедр", title: "Ответственный за сайт ActClose",
     story: "Сайт лежит — Кедр стоит. Сайт стоит — Кедр всё равно стоит, корни глубоко.",
-    hp: hp(1), reward: { xp: xp(1), currencies: { USD: 5, RUB: 720 } },
+    hp: hp(1), reward: { xp: xp(1), currencies: { PAP: 200 } },
     drop: [{ id: "keyboard", qty: 2, chance: 0.3 }],
     wear: { items: ["tee-actclose", "shorts-actclose", "badge-actclose"], chance: 0.1, pity: 10 },
     set: { weapon: "mouse", damage: 35 },
@@ -104,7 +106,7 @@ export const BOSSES: BossDef[] = [
   {
     id: "mugo", order: 3, card: "bronze", name: "Мугонатор", title: "Подчинённый Вадима",
     story: "Делает всё, что сказал Вадим. Иногда даже то, что Вадим только подумал.",
-    hp: hp(2), reward: { xp: xp(2), currencies: { USD: 7, RUB: 1_150 } },
+    hp: hp(2), reward: { xp: xp(2), currencies: { RUB: 20 } },
     drop: [{ id: "energy-drink", qty: 2, chance: 0.35 }],
     wear: { items: ["tee-sailor", "cap-captain", "mask-diver", "teeth-necklace", "anchor-mugo"], chance: 0.1, pity: 10 },
     set: { weapon: "red-candle", damage: 60 },
@@ -113,7 +115,7 @@ export const BOSSES: BossDef[] = [
   {
     id: "garkusha", order: 4, card: "silver", name: "Гаркуша", title: "Подчинённый Князя",
     story: "Правая рука Князя. Левой подписывает всё, что Князь не успел прочитать.",
-    hp: hp(3), reward: { xp: xp(3), currencies: { USD: 9, RUB: 1_740 } },
+    hp: hp(3), reward: { xp: xp(3), currencies: { PAP: 500 } },
     drop: [{ id: "keyboard", qty: 3, chance: 0.35 }],
     wear: { items: ["jacket-puffer", "pants-black", "sneakers-chunky"], chance: 0.1, pity: 10 },
     set: { weapon: "keyboard", damage: 100 },
@@ -122,7 +124,7 @@ export const BOSSES: BossDef[] = [
   {
     id: "bebyakyan", order: 5, card: "silver", name: "Командате", title: "Подчинённый Востока",
     story: "Командует всеми, кто ниже. Таких пока немного, но он не сдаётся.",
-    hp: hp(4), reward: { xp: xp(4), currencies: { USD: 11, RUB: 2_780 } },
+    hp: hp(4), reward: { xp: xp(4), currencies: { PAP: 5_000 } },
     drop: [{ id: "keyboard", qty: 3, chance: 0.3 }],
     wear: { items: ["bottle-komandate", "jacket-komandate", "pants-komandate", "sneakers-komandate"], chance: 0.1, pity: 10 },
     set: { weapon: "gpu", damage: 160 },
@@ -132,7 +134,7 @@ export const BOSSES: BossDef[] = [
   {
     id: "babafey", order: 6, card: "silver", name: "Бабафей", title: "Главный администратор Close Neo",
     story: "Держит Close Neo в ежовых рукавицах. Каждое «ок» стоит три письма и одно совещание.",
-    hp: hp(5), reward: { xp: xp(5), currencies: { USD: 12, RUB: 4_420 } },
+    hp: hp(5), reward: { xp: xp(5), currencies: { PAP: 10_000 } },
     drop: [{ id: "gpu", qty: 1, chance: 0.25 }],
     theme: { a: "#3a2a10", b: "#140d04", accent: "#ffb020" }, photo: photo("babafey", true),
     keysToUnlock: 1,
@@ -140,7 +142,7 @@ export const BOSSES: BossDef[] = [
   {
     id: "vodovoz", order: 7, card: "gold", name: "Восток", title: "Главный администратор Close Vostok",
     story: "Солнце встаёт на востоке, а Восток встаёт раньше Солнца. Проверяет всех ещё до начала смены.",
-    hp: hp(6), reward: { xp: xp(6), currencies: { USD: 16, RUB: 7_260 } },
+    hp: hp(6), reward: { xp: xp(6), currencies: { TOOTH: 750 } },
     drop: [{ id: "energy-drink", qty: 3, chance: 0.4 }],
     wear: { items: ["sweater-vostok", "pants-vostok", "headphones-vostok", "sneakers-black"], chance: 0.1, pity: 10 },
     set: { weapon: "gpu", damage: 250 },
@@ -150,7 +152,7 @@ export const BOSSES: BossDef[] = [
   {
     id: "knyaz", order: 8, card: "gold", name: "Князь", title: "Главный администратор Close Knuaz",
     story: "Правит своим Close как княжеством. Отчёты принимает только в правильном шрифте — шрифт каждый раз новый.",
-    hp: hp(7), reward: { xp: xp(7), currencies: { USD: 23, RUB: 11_750 } },
+    hp: hp(7), reward: { xp: xp(7), currencies: { TOOTH: 850 } },
     drop: [{ id: "gpu", qty: 1, chance: 0.35 }],
     theme: { a: "#2e1846", b: "#0e0718", accent: "#b06bff" }, photo: photo("knyaz", true),
     keysToUnlock: 1,
@@ -158,7 +160,7 @@ export const BOSSES: BossDef[] = [
   {
     id: "vadim", order: 9, card: "platinum", name: "Вадим", title: "Главный администратор Close Vadim",
     story: "Сводит весь Close Vadim в один Excel. Нет тебя в таблице — нет тебя в компании.",
-    hp: hp(8), reward: { xp: xp(8), currencies: { USD: 30, RUB: 19_820 } },
+    hp: hp(8), reward: { xp: xp(8), currencies: { PAP: 1_000, TOOTH: 1_000 } },
     drop: [{ id: "gpu", qty: 1, chance: 0.4 }],
     wear: { items: ["jacket-vadim", "pants-vadim", "shoes-vadim", "tie-vadim"], chance: 0.1, pity: 10 },
     set: { weapon: "rug-pull-gun", damage: 400 },
@@ -168,7 +170,7 @@ export const BOSSES: BossDef[] = [
   {
     id: "botsman", order: 10, card: "platinum", name: "Боцман", title: "Появляется раз в год — на Новый год",
     story: "Весь год его никто не видел, а в декабре он уже стоит у ёлки. Что-то из себя да представляет.",
-    hp: hp(9), reward: { xp: xp(9), currencies: { USD: 39, RUB: 32_880 } },
+    hp: hp(9), reward: { xp: xp(9), currencies: { TOOTH: 1_500 } },
     drop: [{ id: "rug-pull-gun", qty: 1, chance: 0.15 }],
     wear: { items: ["coat-botsman", "gloves-botsman", "pants-botsman", "boots-botsman"], chance: 0.1, pity: 10 },
     set: { weapon: "rug-pull-gun", damage: 600, also: { weapon: "gpu", damage: 300 } },
@@ -178,7 +180,7 @@ export const BOSSES: BossDef[] = [
   {
     id: "utilizator", order: 11, card: "diamond", name: "Утилизатор", title: "Прокси и вся движуха",
     story: "Отвечает за прокси и за всё, что связано с алкоголем. Тусовка не начнётся без его разрешения.",
-    hp: hp(10), reward: { xp: xp(10), currencies: { USD: 21, RUB: 53_950 }, items: [{ id: "statue-close", qty: 1 }] },
+    hp: hp(10), reward: { xp: xp(10), currencies: { TOOTH: 15_000, PAP: 15_000 }, items: [{ id: "statue-close", qty: 1 }] },
     drop: [{ id: "rug-pull-gun", qty: 1, chance: 0.25 }],
     // his things drop in «Авторитетный» (his tattoos — in «Пацанский» and «Блатной»)
     wear: { items: ["vials-utilizator"], chance: 0.1, pity: 10 }, thingsMode: "avtor",
@@ -188,7 +190,7 @@ export const BOSSES: BossDef[] = [
   {
     id: "fokus", order: 12, card: "diamond", name: "Фокус", title: "Главный и единственный программист",
     story: "Весь код Close написал он один. И только он знает, почему это работает.",
-    hp: hp(11), reward: { xp: xp(11), currencies: { USD: 35, RUB: 91_200 } },
+    hp: hp(11), reward: { xp: xp(11), currencies: { TOOTH: 12_000, PAP: 12_000 } },
     drop: [{ id: "rug-pull-gun", qty: 1, chance: 0.35 }],
     theme: { a: "#401624", b: "#16060c", accent: "#ff6b9a" }, photo: photo("fokus"),
     keysToUnlock: 1,
@@ -196,7 +198,7 @@ export const BOSSES: BossDef[] = [
   {
     id: "solntse", order: 13, name: "Солнце", title: "Главный начальник всего Close",
     story: "Светит всем, всегда и без выходных. Чтобы дойти сюда, нужно пройти весь Close.",
-    hp: hp(12), reward: { xp: xp(12), currencies: { USD: 71, RUB: 152_000 }, items: [{ id: "trophy-sun", qty: 1 }] },
+    hp: hp(12), reward: { xp: xp(12), currencies: { TOOTH: 2_500, PAP: 1_000 }, items: [{ id: "trophy-sun", qty: 1 }] },
     drop: [{ id: "rug-pull-gun", qty: 2, chance: 0.5 }],
     theme: { a: "#4a2a06", b: "#1a0c02", accent: "#ffd23f" }, photo: photo("solntse"),
     phases: [{ from: 100, name: "Рассвет" }, { from: 66, name: "Зенит" }, { from: 33, name: "Солнечная буря" }],
@@ -223,9 +225,9 @@ export const bossesIn = (ids?: string[] | null): BossDef[] => (ids ? BOSSES.filt
  */
 export const EVENT_FIGHTS: BossDef[] = [
   {
-    id: "pepe", order: 100, name: "Пепе", title: "Ивент-босс", event: true,
+    id: "pepe", order: 100, name: "Пепе", title: "Ментор", event: true, mentor: true,
     story: "Пришёл из болота и сел на чужую таблетку. Уходить не собирается, пока его не прогонят.",
-    hp: 250_000, reward: { xp: 100_000, currencies: { RUB: 15_000 } },
+    hp: 100_000, reward: { xp: 25, currencies: { TOOTH: 25 } },
     theme: { a: "#173d1f", b: "#06140a", accent: "#3ddc84" }, photo: { portrait: "/bosses/pepe/portrait.webp", full: null },
     keysToUnlock: 0,
   },

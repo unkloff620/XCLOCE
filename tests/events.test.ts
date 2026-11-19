@@ -64,7 +64,7 @@ describe("game events", () => {
     const f = await act(db, p, "fight_start", { boss: "datsik" }, T);
     await act(db, p, "attack", { weapon: "keyboard" }, T, always(0));
     const c = await act(db, p, "fight_claim", { fightId: f.result.fightId }, T, always(0.99));
-    expect(c.result.reward.currencies.RUB).toBe(150 * 3);
-    expect(await wallet(db, p, "RUB")).toBeGreaterThanOrEqual(rub0 + 450);
+    expect(c.result.reward.currencies.RUB).toBe(5 * 3);
+    expect(await wallet(db, p, "RUB")).toBeGreaterThanOrEqual(rub0 + 15);
   });
 });

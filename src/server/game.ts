@@ -38,7 +38,7 @@ import { taskById } from "../content/locations.ts";
 import { weaponById } from "../content/items.ts";
 import { gameState } from "./systems/state.ts";
 import { actionText, refusedText } from "./action-text.ts";
-import { CURRENCIES } from "../content/currencies.ts";
+import { EXCHANGEABLE } from "../content/currencies.ts";
 import { WEARABLE_SLOTS } from "../content/items.ts";
 
 /** Server-side randomness: crypto-grade, never from the client. */
@@ -195,7 +195,7 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "business_claim": return locations.businessClaim(ctx);
     case "yard_pick": return yard.yardPick(ctx, num(body.itemId, "itemId"));
     case "buy": return shop.buy(ctx, str(body.offerId, "offerId", 40), idem, body.qty === undefined ? 1 : num(body.qty, "qty"));
-    case "exchange": return shop.exchange(ctx, oneOf(body.from, CURRENCIES, "from"), oneOf(body.to, CURRENCIES, "to"), num(body.amount, "amount"), idem);
+    case "exchange": return shop.exchange(ctx, oneOf(body.from, EXCHANGEABLE, "from"), oneOf(body.to, EXCHANGEABLE, "to"), num(body.amount, "amount"), idem);
     case "use": return shop.useItem(ctx, str(body.itemId, "itemId", 40));
     case "equip": return shop.equip(ctx, str(body.itemId, "itemId", 40));
     case "unequip": return shop.unequip(ctx, oneOf(body.slot, WEARABLE_SLOTS, "slot"));

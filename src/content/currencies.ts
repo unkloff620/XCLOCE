@@ -1,6 +1,9 @@
 /** In-game currencies. They have no real-world value and are not tied to any wallet. */
-export const CURRENCIES = ["RUB", "USD", "SOL", "BTC"] as const;
+export const CURRENCIES = ["PAP", "TOOTH", "RUB", "USD", "SOL", "BTC"] as const;
 export type Currency = (typeof CURRENCIES)[number];
+/** what the exchanger trades (папиросы and зубы are earned only — not bought or sold there) */
+export const EXCHANGEABLE = ["RUB", "USD", "SOL", "BTC"] as const satisfies readonly Currency[];
+export const isExchangeable = (c: Currency) => (EXCHANGEABLE as readonly string[]).includes(c);
 
 export interface CurrencyDef {
   id: Currency;
@@ -12,6 +15,9 @@ export interface CurrencyDef {
 }
 
 export const CURRENCY_DEFS: Record<Currency, CurrencyDef> = {
+  // the bosses pay in папиросы and зубы (content/bosses.ts); not in the exchanger (rub: 0 — no rate)
+  PAP: { id: "PAP", name: "Папиросы", decimals: 0, rub: 0 },
+  TOOTH: { id: "TOOTH", name: "Зубы", decimals: 0, rub: 0 },
   RUB: { id: "RUB", name: "Рубли", decimals: 0, rub: 1 },
   // whole numbers only; close to the real rates: 1 USD = 85 ₽, 1 SOL = 120 $, 1 BTC = 85 000 $.
   // SOL and BTC are for big rewards and purchases (v2-056 moved the old SOL/BTC rewards, prices and balances to USD)

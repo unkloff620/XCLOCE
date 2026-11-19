@@ -137,14 +137,15 @@ describe("boss fights: personal fights, shared damage", () => {
     const r = await hit(a, "rug-pull-gun");
     expect(r.result).toMatchObject({ status: "won", hp: 0, finished: 4 });
 
+    const rubB = await wallet(db, b, "RUB"), rubC = await wallet(db, c, "RUB");
     const sb = await act(db, b, "fight_claim", { fightId: fb.result.fightId }, T0, always(0.99));
     expect(sb.result).toMatchObject({ status: "won", share: 1, key: true });
     expect(await qty(db, b, "key-datsik")).toBe(1);
-    expect(await wallet(db, b, "USD")).toBe(4);
+    expect(await wallet(db, b, "RUB")).toBe(rubB + 5); // Дацкоу: +5 ₽
 
     const sc = await act(db, c, "fight_claim", { fightId: fc.result.fightId }, T0, always(0.99));
     expect(sc.result).toMatchObject({ share: 1, key: true });
-    expect(await wallet(db, c, "USD")).toBe(4);
+    expect(await wallet(db, c, "RUB")).toBe(rubC + 5);
     expect(await qty(db, c, "key-datsik")).toBe(1);
 
     const sd = await act(db, d, "fight_claim", { fightId: fd.result.fightId }, T0, always(0.99));
@@ -904,7 +905,7 @@ describe("«Ящик ништяков»", () => {
 });
 
 describe("home: equipment, rooms, look, help", () => {
-  it("equipment levels cost money and add crits and damage to hits", async () => {
+  it("a room chair costs money and adds crits to hits; the old desk, monitors, RGB and computer are gone", async () => {
     await setBossHp({ datsik: 100000 });
     const p = await newPlayer(db);
     await setMoney(db, p, "RUB", 30000);
@@ -913,21 +914,13 @@ describe("home: equipment, rooms, look, help", () => {
     const plain = await hit(p, "keyboard");
     expect(plain.result).toMatchObject({ damage: 30, crit: false });
     await act(db, p, "equipment_upgrade", { id: "chair" }, T0);
-    await act(db, p, "equipment_upgrade", { id: "monitor2" }, T0);
-    // the old money-bought system unit is gone from the shop (the computer is upgraded for talents now)
-    await expect(act(db, p, "equipment_upgrade", { id: "pc" }, T0)).rejects.toMatchObject({ code: "bad_equipment" });
-    expect(await wallet(db, p, "RUB")).toBe(30000 - 2500 - 3000);
+    for (const id of ["desk", "monitor2", "rgb", "pc"]) await expect(act(db, p, "equipment_upgrade", { id }, T0)).rejects.toMatchObject({ code: "bad_equipment" });
+    expect(await wallet(db, p, "RUB")).toBe(30000 - 2500);
     const r = await hit(p, "keyboard"); // rng 0 → always a crit once the chance is above zero
-    expect(r.result).toMatchObject({ crit: true, damage: Math.round(Math.round(30 * 1.01) * 1.5) }); // the home adds no crit power: ×1.5
-    // level 2 of the monitor costs more than is left (the RGB still fits)
-    await setMoney(db, p, "RUB", 1500);
-    await expect(act(db, p, "equipment_upgrade", { id: "monitor2" }, T0)).rejects.toMatchObject({ code: "no_money" });
-    const st = await act(db, p, "equipment_upgrade", { id: "rgb" }, T0);
-    expect(st.state.home.levels).toMatchObject({ chair: 1, monitor2: 1, rgb: 1 });
-    // players who bought it earlier keep its bonus
-    await db.query("INSERT INTO player_equipment (player_id, equipment_id, level) VALUES ($1, 'pc', 1)", [p]);
-    const legacy = await hit(p, "keyboard");
-    expect(legacy.result.damage).toBe(Math.round(Math.round(30 * 1.04) * 1.5)); // +1% monitor, +3% old computer; crit ×1.5
+    expect(r.result).toMatchObject({ crit: true, damage: Math.round(30 * 1.5) }); // the home adds no crit power: ×1.5
+    // what was bought of the removed things gives nothing
+    await db.query("INSERT INTO player_equipment (player_id, equipment_id, level) VALUES ($1, 'pc', 1), ($1, 'rgb', 3)", [p]);
+    expect((await hit(p, "keyboard")).result.damage).toBe(Math.round(30 * 1.5));
   });
 
   it("talents: the 1st for 100 damage, the 100th for 1 000 000, uneven steps in between", () => {
@@ -1093,15 +1086,6 @@ describe("home: equipment, rooms, look, help", () => {
     expect(st2.state.tasks.minEnergy).toBe(Math.min(...market.tasks.map((t) => t.energy)));
   });
 
-  it("desk: four stages, upgraded in «Обстановка» for money, each with its bonus", async () => {
-    const p = await newPlayer(db);
-    await setMoney(db, p, "RUB", 5000);
-    const r = await act(db, p, "equipment_upgrade", { id: "desk" }, T0);
-    expect(r.result).toMatchObject({ level: 1, max: 3 });
-    expect(r.state.home.bonus.critChance).toBeCloseTo(0.02);
-    await expect(act(db, p, "equipment_upgrade", { id: "desk" }, T0)).rejects.toMatchObject({ code: "no_money" });
-  });
-
   it("decor: any owned stage of a room thing can stand in the room; an upgrade shows the new one", async () => {
     const p = await newPlayer(db);
     await setMoney(db, p, "RUB", 3000);
@@ -1113,33 +1097,26 @@ describe("home: equipment, rooms, look, help", () => {
     await expect(act(db, p, "decor_set", { id: "rgb", stage: 0 }, T0)).rejects.toMatchObject({ code: "bad_equipment" });
   });
 
-  it("room pieces: desk, monitors and chair are bought one by one, in any order", async () => {
+  it("room pieces: chairs are bought one by one, in any order", async () => {
     const p = await newPlayer(db);
     await setMoney(db, p, "RUB", 30000);
-    // the middle monitor first, without the right and the left ones
-    const m3 = await act(db, p, "piece_buy", { id: "monitor2", piece: 3 }, T0);
-    expect(m3.state.home.pieces).toMatchObject({ monitor2: 4 });
-    expect(m3.state.home.bonus.damage).toBeCloseTo(0.02);
-    await expect(act(db, p, "piece_buy", { id: "monitor2", piece: 3 }, T0)).rejects.toMatchObject({ code: "owned" });
-    const m1 = await act(db, p, "piece_buy", { id: "monitor2", piece: 1 }, T0);
-    expect(m1.state.home.pieces).toMatchObject({ monitor2: 5 });
-    expect(m1.state.home.bonus.damage).toBeCloseTo(0.03);
     // the throne straight away
     const ch = await act(db, p, "piece_buy", { id: "chair", piece: 3 }, T0);
     expect(ch.state.home.decor).toMatchObject({ chair: 3 });
     expect(ch.state.home.bonus.critChance).toBeCloseTo(0.03);
+    await expect(act(db, p, "piece_buy", { id: "chair", piece: 3 }, T0)).rejects.toMatchObject({ code: "owned" });
+    await expect(act(db, p, "piece_buy", { id: "monitor2", piece: 1 }, T0)).rejects.toMatchObject({ code: "bad_equipment" });
     // the editor saves what stands: only owned things
-    await expect(act(db, p, "decor_save", { decor: { monitor2: 2 } }, T0)).rejects.toMatchObject({ code: "locked" });
     await expect(act(db, p, "decor_save", { decor: { chair: 1 } }, T0)).rejects.toMatchObject({ code: "locked" });
-    const saved = await act(db, p, "decor_save", { decor: { desk: 0, chair: 0, monitor2: 4 } }, T0);
-    expect(saved.state.home.decor).toMatchObject({ desk: 0, chair: 0, monitor2: 4 });
-    expect(saved.state.home.bonus.damage).toBeCloseTo(0.03); // hidden things keep their bonus
+    const saved = await act(db, p, "decor_save", { decor: { chair: 0 } }, T0);
+    expect(saved.state.home.decor).toMatchObject({ chair: 0 });
+    expect(saved.state.home.bonus.critChance).toBeCloseTo(0.03); // a hidden chair keeps its bonus
   });
 
   it("rooms: buy, switch, the bonus of every owned room counts", async () => {
     const p = await newPlayer(db);
     await expect(act(db, p, "room_set", { id: "office" }, T0)).rejects.toMatchObject({ code: "room_locked" });
-    await setMoney(db, p, "RUB", 5000);
+    await setMoney(db, p, "USD", 1500);
     const b = await act(db, p, "room_buy", { id: "office" }, T0);
     expect(b.state.look.room).toBe("office");
     expect(b.state.home.bonus.critChance).toBeCloseTo(0.03);
@@ -1895,9 +1872,9 @@ describe("a won fight pays at once", () => {
     // the killer has his already
     const [ra] = await db.query<{ wins: number }>("SELECT wins FROM boss_damage WHERE player_id=$1 AND boss_id='datsik'", [a]);
     expect(Number(ra.wins)).toBe(1);
-    const usd = await wallet(db, b, "USD");
+    const rub = await wallet(db, b, "RUB");
     await act(db, b, "equip", { itemId: "jeans" }, T0); // any request
-    expect(await wallet(db, b, "USD")).toBeGreaterThan(usd);
+    expect(await wallet(db, b, "RUB")).toBeGreaterThan(rub);
     expect(await qty(db, b, "key-datsik")).toBeGreaterThanOrEqual(1);
     const [fr] = await db.query<{ seen: boolean; reward: unknown }>("SELECT seen, reward FROM fights WHERE id=$1", [fb.result.fightId]);
     expect(fr.reward).toBeTruthy();

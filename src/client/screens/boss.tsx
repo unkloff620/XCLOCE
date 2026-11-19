@@ -386,7 +386,7 @@ export function BossScreen({ id }: { id: string }) {
 
   if (!boss) return <Empty>Такого босса нет</Empty>;
   // an event boss is there only while the admin has the event on (a fight already started may still be finished)
-  if (ev && state && !fightId && !state.eventBosses?.includes(boss.id)) {
+  if (ev && state && !fightId && !boss.mentor && !state.eventBosses?.includes(boss.id)) {
     return (
       <div className="fit-page" style={{ display: "grid", placeItems: "center", padding: 24 }}>
         <div className="panel col center" style={{ gap: 10, maxWidth: 320 }}>

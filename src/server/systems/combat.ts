@@ -156,7 +156,7 @@ export async function startFight(ctx: Ctx, bossId: string, solo = false, modeId:
   if (!def) throw new GameError("bad_boss", "Такого босса нет");
   if (def.event) {
     // an event boss: only while the admin has him on, only «Пацанский», no «Соло»
-    if (!ctx.cfg.eventBosses[def.id]) throw new GameError("event_off", "Ивент сейчас не идёт");
+    if (!def.mentor && !ctx.cfg.eventBosses[def.id]) throw new GameError("event_off", "Ивент сейчас не идёт");
     if (modeId !== "pacan" || solo) throw new GameError("bad_mode", `С боссом ${def.name} — только «Пацанский»`);
   } else if (!bossOpen(def, ctx.cfg.bossOpen)) throw new GameError("boss_hidden", "Этот босс пока не пришёл");
   await settleMyFight(ctx);
@@ -646,7 +646,8 @@ export async function bossList(q: Queryable, pid: number, cfg: Ctx["cfg"], now =
     resetAt: nextMoscowMidnight(now),
     bosses: OPEN_BOSSES(cfg.bossOpen).map((b) => rowOf(b)),
     /** the event bosses that are on (Пепе): the same rows, shown on their own page, not in the list */
-    events: EVENT_FIGHTS.filter((b) => cfg.eventBosses[b.id]).map((b) => rowOf(b)),
+    events: EVENT_FIGHTS.filter((b) => !b.mentor && cfg.eventBosses[b.id]).map((b) => rowOf(b)),
+    mentors: EVENT_FIGHTS.filter((b) => b.mentor).map((b) => rowOf(b)),
   };
   function rowOf(b: BossDef) {
       const prev = b.event ? undefined : BOSSES.find((x) => x.order === b.order - 1);

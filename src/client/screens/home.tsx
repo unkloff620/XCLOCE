@@ -130,7 +130,7 @@ export function HomeScreen() {
   if (!state) return null;
   // an event boss's room shows only while his event is on (or once it is mine)
   // the rooms that are not for a boss come first, then the bosses' rooms by how hard the boss is
-  const rooms = ROOM_DEFS.filter((r) => !r.drop || !eventBossById(r.drop.boss) || state.eventBosses?.includes(r.drop.boss) || state.home.rooms.includes(r.id))
+  const rooms = ROOM_DEFS.filter((r) => !r.drop || !eventBossById(r.drop.boss) || eventBossById(r.drop.boss)?.mentor || state.eventBosses?.includes(r.drop.boss) || state.home.rooms.includes(r.id))
     .map((r, i) => ({ r, i, k: r.drop ? (bossById(r.drop.boss)?.order ?? (eventBossById(r.drop.boss) ? 99 : 50)) : -1 }))
     .sort((a, b) => a.k - b.k || a.i - b.i).map((x) => x.r);
   const curIdx = Math.max(0, rooms.findIndex((r) => r.id === state.look.room));

@@ -108,7 +108,7 @@ export function ResultWindow() {
     }
     done();
     // an event boss is fought from the home screen («Ивент» there): back to the room; the chain bosses — to their list
-    router.push(boss.event ? "/" : "/bosses");
+    router.push(boss.event && !boss.mentor ? "/" : "/bosses");
   };
 
   return (
