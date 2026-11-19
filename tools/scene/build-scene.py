@@ -53,7 +53,9 @@ CHAIRS = {}
 CHAIR_LIFT = {"chair-knyaz": 70, "chair-vadim": -30, "chair-botsman": -40}  # rig units (negative — lower)
 CHAIR_DX = {"chair-vadim": 18}
 # a low seat (no tall back: Утилизатор's barrel) is drawn smaller, its bottom on the same floor line: the lid under the hips
-CHAIR_SCALE = {"chair-utilizator": 0.66}  # rig units, a nudge to the right where a picture sits off-centre
+CHAIR_SCALE = {}
+# chairs the artist drew in place on the 2000×2800 character canvas (Утилизатор's lying barrel): kept where they are
+CHAIR_INPLACE = {"chair-utilizator"}  # rig units, a nudge to the right where a picture sits off-centre
 CHAIR_BOX = (122, -60, 1877, 2733)  # where a chair stands on the 2000×2800 character canvas: the wheels on the floor line, the back up past the top of the head
 for f in sorted(os.listdir(os.path.join(HERE, "source"))):
     m = re.match(r"(chair-[a-z0-9]+)\.png$", f)
@@ -62,6 +64,15 @@ for f in sorted(os.listdir(os.path.join(HERE, "source"))):
     im = Image.open(os.path.join(HERE, "source", f)).convert("RGBA")
     a = im.getchannel("A").point(lambda v: 0 if v < 30 else v); im.putalpha(a)
     # drawn on its own canvas: the same height for every chair, the wheels on the same line, centred
+    if m.group(1) in CHAIR_INPLACE and im.size == (2000, 2800):
+        # drawn by the artist right on the 2000×2800 character canvas: it stays exactly where it is
+        bx0, by0, bx1, by1 = im.getbbox()
+        w, h = round((bx1 - bx0) / 2), round((by1 - by0) / 2)
+        k = min(1, 720 / w)
+        im.crop((bx0, by0, bx1, by1)).resize((round(w * k), round(h * k)), Image.LANCZOS).save(os.path.join(OUT, m.group(1) + ".webp"), "WEBP", quality=86, method=6)
+        CHAIRS[m.group(1)] = {"x": bx0 / 2, "y": by0 / 2, "w": w, "h": h}
+        print(m.group(1), CHAIRS[m.group(1)], "in place")
+        continue
     im = im.crop(im.getbbox())
     sc = CHAIR_SCALE.get(m.group(1), 1)
     H = round((CHAIR_BOX[3] - CHAIR_BOX[1]) * sc)
