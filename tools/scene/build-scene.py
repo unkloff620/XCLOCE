@@ -51,7 +51,9 @@ for f in sorted(os.listdir(os.path.join(HERE, "source"))):
 # in the 1000×1400 rig coordinates
 CHAIRS = {}
 CHAIR_LIFT = {"chair-knyaz": 70, "chair-vadim": -30, "chair-botsman": -40}  # rig units (negative — lower)
-CHAIR_DX = {"chair-vadim": 18}  # rig units, a nudge to the right where a picture sits off-centre
+CHAIR_DX = {"chair-vadim": 18}
+# a low seat (no tall back: Утилизатор's barrel) is drawn smaller, its bottom on the same floor line: the lid under the hips
+CHAIR_SCALE = {"chair-utilizator": 0.66}  # rig units, a nudge to the right where a picture sits off-centre
 CHAIR_BOX = (122, -60, 1877, 2733)  # where a chair stands on the 2000×2800 character canvas: the wheels on the floor line, the back up past the top of the head
 for f in sorted(os.listdir(os.path.join(HERE, "source"))):
     m = re.match(r"(chair-[a-z0-9]+)\.png$", f)
@@ -61,9 +63,10 @@ for f in sorted(os.listdir(os.path.join(HERE, "source"))):
     a = im.getchannel("A").point(lambda v: 0 if v < 30 else v); im.putalpha(a)
     # drawn on its own canvas: the same height for every chair, the wheels on the same line, centred
     im = im.crop(im.getbbox())
-    H = CHAIR_BOX[3] - CHAIR_BOX[1]
+    sc = CHAIR_SCALE.get(m.group(1), 1)
+    H = round((CHAIR_BOX[3] - CHAIR_BOX[1]) * sc)
     W = round(im.width * H / im.height)
-    x0, y0 = 1000 - W // 2, CHAIR_BOX[1]
+    x0, y0 = 1000 - W // 2, CHAIR_BOX[3] - H
     w, h = round(W / 2), round(H / 2)
     # the picture itself at most 720 px wide (shown ≈ 330 px on a phone): big ones ran phones out of memory
     k = min(1, 720 / w)
