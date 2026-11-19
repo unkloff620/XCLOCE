@@ -139,9 +139,10 @@ export function HomeScene({ room = "basic", onPick, onHero, still, look, worn, p
       {!noDesk && (monitors & 2) !== 0 && <Obj id="monitorLeft" art="monitor-left" />}
       {!noDesk && (monitors & 1) !== 0 && <Obj id="monitorRight" art="monitor-right" />}
       {!noDesk && (monitors & 8) !== 0 && <Obj id="monitorOld" art="monitor-1" />}
-      {trophies.includes("statue-close") && (decor["statue-close"] ?? 0) !== -1 && <Obj id="statueClose" art="statue-close" />}
       </g>
       <RigViewport x={CHARACTER.x} y={CHARACTER.y} scale={CHARACTER.scale} seat={placedOf("chair", pieces, decor)} still={still} look={look} worn={worn} seatOnly={hideHero} edit={edit} />
+      {/* the trophy stands on the floor in front: over the hero and his chair */}
+      {trophies.includes("statue-close") && (decor["statue-close"] ?? 0) !== -1 && <g filter={focusHero ? "url(#scene-dim)" : undefined}><Obj id="statueClose" art="statue-close" /></g>}
       {onPick && <Hot id="monitors" onPick={onPick} />}
       {onPick && <Hot id="pc" onPick={onPick} />}
       {onHero && !hideHero && HERO_HOT.map((z, i) => (
