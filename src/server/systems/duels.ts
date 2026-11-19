@@ -22,10 +22,10 @@ async function settle(ctx: Ctx, d: DuelRow) {
   if (a !== null && b !== null) winner = a > b ? d.from_id : b > a ? d.to_id : null;
   else if (a !== null) winner = d.from_id;
   else if (b !== null) winner = d.to_id;
-  if (winner) await addMoney(as(ctx, winner), "USD", round2(stake * 2 * (1 - DUEL_FEE)), `duel:${d.id}:win`);
+  if (winner) await addMoney(as(ctx, winner), "RUB", round2(stake * 2 * (1 - DUEL_FEE)), `duel:${d.id}:win`);
   else {
-    await addMoney(as(ctx, d.from_id), "USD", stake, `duel:${d.id}:back`);
-    await addMoney(as(ctx, d.to_id), "USD", stake, `duel:${d.id}:back`);
+    await addMoney(as(ctx, d.from_id), "RUB", stake, `duel:${d.id}:back`);
+    await addMoney(as(ctx, d.to_id), "RUB", stake, `duel:${d.id}:back`);
   }
   await ctx.q.query("UPDATE duels SET status='done', winner_id=$2, finished_at=$3 WHERE id=$1", [d.id, winner, new Date(ctx.now)]);
   // the result goes to Telegram to whoever is not looking at it right now
@@ -40,7 +40,7 @@ export async function expireDuels(ctx: Ctx) {
   );
   for (const d of stale) {
     if (d.status === "open") {
-      await addMoney(as(ctx, d.from_id), "USD", Number(d.stake), `duel:${d.id}:expired`);
+      await addMoney(as(ctx, d.from_id), "RUB", Number(d.stake), `duel:${d.id}:expired`);
       await ctx.q.query("UPDATE duels SET status='expired', finished_at=$2 WHERE id=$1", [d.id, new Date(ctx.now)]);
     } else {
       // a game still running in it is closed as it stands
@@ -61,7 +61,7 @@ export async function createDuel(ctx: Ctx, to: number, stake: number) {
   if (Number(n.n) >= DUEL_MAX_OPEN) throw new GameError("duel_limit", `Не больше ${DUEL_MAX_OPEN} вызовов сразу — подожди ответа`);
   const [dup] = await ctx.q.query("SELECT 1 FROM duels WHERE status IN ('open','playing') AND ((from_id=$1 AND to_id=$2) OR (from_id=$2 AND to_id=$1))", [ctx.pid, to]);
   if (dup) throw new GameError("duel_exists", "С этим игроком дуэль уже идёт");
-  await takeMoney(ctx, "USD", stake, `duel:call:${to}`);
+  await takeMoney(ctx, "RUB", stake, `duel:call:${to}`);
   const [row] = await ctx.q.query<{ id: number }>("INSERT INTO duels (from_id, to_id, stake, created_at) VALUES ($1,$2,$3,$4) RETURNING id", [ctx.pid, to, stake, new Date(ctx.now)]);
   // he gets a Telegram message (the sender skips players who are in the game right now)
   const [me] = await ctx.q.query<{ display_name: string }>("SELECT display_name FROM players WHERE id=$1", [ctx.pid]);
@@ -81,17 +81,17 @@ export async function answerDuel(ctx: Ctx, id: number, answer: "accept" | "decli
   if (d.status !== "open") throw new GameError("duel_closed", "Этот вызов уже закрыт");
   if (answer === "cancel") {
     if (d.from_id !== ctx.pid) throw new GameError("not_yours", "Отменить может только тот, кто вызвал");
-    await addMoney(ctx, "USD", Number(d.stake), `duel:${d.id}:cancel`);
+    await addMoney(ctx, "RUB", Number(d.stake), `duel:${d.id}:cancel`);
     await ctx.q.query("UPDATE duels SET status='cancelled', finished_at=$2 WHERE id=$1", [d.id, new Date(ctx.now)]);
     return { duelId: d.id, status: "cancelled" };
   }
   if (d.to_id !== ctx.pid) throw new GameError("not_yours", "Ответить может только тот, кого вызвали");
   if (answer === "decline") {
-    await addMoney(as(ctx, d.from_id), "USD", Number(d.stake), `duel:${d.id}:declined`);
+    await addMoney(as(ctx, d.from_id), "RUB", Number(d.stake), `duel:${d.id}:declined`);
     await ctx.q.query("UPDATE duels SET status='declined', finished_at=$2 WHERE id=$1", [d.id, new Date(ctx.now)]);
     return { duelId: d.id, status: "declined" };
   }
-  await takeMoney(ctx, "USD", Number(d.stake), `duel:${d.id}:accept`);
+  await takeMoney(ctx, "RUB", Number(d.stake), `duel:${d.id}:accept`);
   await ctx.q.query("UPDATE duels SET status='playing', accepted_at=$2 WHERE id=$1", [d.id, new Date(ctx.now)]);
   return { duelId: d.id, status: "playing" };
 }

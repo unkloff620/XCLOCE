@@ -60,7 +60,7 @@ const NIGHT_LIGHTS = Array.from({ length: 18 }, (_, i) => ({ x: (i * 37 + 11) % 
 function BizPanel({ b, locId, onDone }: { b: LocBiz; locId: string; onDone: () => void }) {
   const { act, busy, state } = useGame();
   const now = useNow();
-  const rub = state?.wallet?.RUB ?? 0;
+  const rub = state?.wallet?.PAP ?? 0;
   const up = async (line: "rep" | "rub") => {
     haptic.tap();
     const res = await act("business_up", { locationId: locId, line }, () => "Бизнес прокачан!");
@@ -71,7 +71,7 @@ function BizPanel({ b, locId, onDone }: { b: LocBiz; locId: string; onDone: () =
   };
   const lines = [
     { line: "rep" as const, name: "авторитет", icon: <Icon name="rep" size={16} />, lv: b.lvRep, cost: b.costRep, per: b.perRep, step: b.stepRep },
-    { line: "rub" as const, name: "рубли", icon: <b className="biz-rub">₽</b>, lv: b.lvRub, cost: b.costRub, per: b.perRub, step: b.stepRub },
+    { line: "rub" as const, name: "папиросы", icon: <Icon name="PAP" size={18} />, lv: b.lvRub, cost: b.costRub, per: b.perRub, step: b.stepRub },
   ];
   if (!b.open) {
     return (
@@ -97,7 +97,7 @@ function BizPanel({ b, locId, onDone }: { b: LocBiz; locId: string; onDone: () =
           </span>
           {x.cost !== null ? (
             <button className="btn gold biz-up" disabled={busy === "business_up" || rub < x.cost} onClick={() => up(x.line)}>
-              Прокачать <span className="num">{full(x.cost)} ₽</span><small>+{full(x.step / 24)} в час</small>
+              Прокачать <span className="num">{full(x.cost)} <Icon name="PAP" size={14} /></span><small>+{full(x.step / 24)} в час</small>
             </button>
           ) : (
             <span className="biz-max display">МАКСИМУМ</span>
@@ -152,7 +152,7 @@ function BizTotal({ rows, onDone }: { rows: LocRow[]; onDone: () => void }) {
   const nextAt = next.length ? Math.min(...next) : null;
   const ready = rep > 0 || rub > 0;
   const take = async () => {
-    const res = await act<{ hours: number; rub: number; rep: number }>("business_claim", {}, (y) => `Прибыль: +${full(y.rub)} ₽ · +${full(y.rep)} авторитета`);
+    const res = await act<{ hours: number; rub: number; rep: number }>("business_claim", {}, (y) => `Прибыль: +${full(y.rub)} папирос · +${full(y.rep)} авторитета`);
     if (res) {
       haptic.big();
       sfx("win");
@@ -164,13 +164,13 @@ function BizTotal({ rows, onDone }: { rows: LocRow[]; onDone: () => void }) {
       <span className="biz-h">💼 Бизнес · {live.length} {live.length === 1 ? "локация" : live.length < 5 ? "локации" : "локаций"}
         <span className="biz-hour">
           <small>Каждый час:</small>
-          <b className="num">+{full(perRub / 24)} <Icon name="RUB" size={14} /></b>
+          <b className="num">+{full(perRub / 24)} <Icon name="PAP" size={14} /></b>
           <b className="num">+{full(perRep / 24)} <Icon name="rep" size={14} /></b>
         </span>
       </span>
       <span className="biz-take-sum num">
         {rep > 0 && <span><Icon name="rep" size={15} />+{full(rep)}</span>}
-        {rub > 0 && <span>+{full(rub)} <Icon name="RUB" size={18} /></span>}
+        {rub > 0 && <span>+{full(rub)} <Icon name="PAP" size={18} /></span>}
         {!ready && <span className="muted">пока пусто</span>}
       </span>
       <button className="btn gold block" disabled={!ready || busy === "business_claim"} onClick={take}>Забрать прибыль{ready ? ` за ${hours < 24 ? `${hours} ч` : `${Math.floor(hours / 24)} дн. ${hours % 24} ч`}` : ""}</button>
@@ -256,12 +256,12 @@ export function LocationsScreen() {
           <div className="title-row">
             <h1 className="display">Локации</h1>
             <Help topic="locations" title="Локации">
-              <p>Энергия тратится только здесь: каждый шаг задания стоит энергии и даёт рубли и авторитет.</p>
+              <p>Энергия тратится только здесь: каждый шаг задания стоит энергии и даёт папиросы и авторитет.</p>
               <p>Задания идут по очереди, как по карте: следующее открывается, когда выполнено предыдущее. Закрой все 5 заданий — на карточке появится кнопка «Забрать награду» (доллары и вещи), откроется следующая локация.</p>
               <p>Пройденную локацию можно повторить: награда за повтор — половина валюты и авторитета.</p>
               <p><b>Авторитет локации</b>: каждый шаг задания даёт ещё и авторитет этой локации — треть от авторитета шага (50 → 17). Он копится только в своей локации и ни на что не тратится. У кого его больше всех, тот красуется на картинке локации с короной.</p>
               <p><b>Нычки</b> находятся за потраченную энергию: каждый шаг задания — шанс {Math.round(STASH_CHANCE * 100)}%. Не везёт — энергия копится в «нычкомере», и после {STASH_PITY} ⚡ без находки нычка выпадает наверняка. Чаще выпадают те, которых у тебя ещё нет. У каждой локации свои наборы по 4 нычки. Собери набор целиком и забери награду в достижениях «Нычки». Найденные лежат в инвентаре во вкладке «Нычки».</p>
-              <p><b>Ночные</b> задания — своя дорожка с ночным авторитетом. <b>Бизнес</b> качается за рубли в каждой локации и приносит рубли и авторитет локации: каждый час капает 1/24 суточной прибыли. Прибыль со всех локаций забирается здесь, вверху списка, в любой момент; копится до 7 дней.</p>
+              <p><b>Ночные</b> задания — своя дорожка с ночным авторитетом. <b>Бизнес</b> качается за папиросы в каждой локации и приносит папиросы и авторитет локации: каждый час капает 1/24 суточной прибыли. Прибыль со всех локаций забирается здесь, вверху списка, в любой момент; копится до 7 дней.</p>
               <p>Энергия: +1 каждые 5 минут до 50. Купить больше — нажми на энергию вверху.</p>
             </Help>
           </div>
@@ -373,7 +373,7 @@ export function LocationScreen({ id }: { id: string }) {
   const [stashes, setStashes] = useState<{ key: number; i: number; id: string }[]>([]);
   const [pick, setPick] = useState<string | null>(null);
   const [tab, setTab] = useState<LocTab>("day");
-  // "+36 ₽" flying up from the tapped stop
+  // "+36" (папиросы) flying up from the tapped stop
   const [pops, setPops] = useState<{ key: number; i: number; text: string; rep: number }[]>([]);
   if (!loc) return <Empty>Такой локации нет</Empty>;
   const row = rows?.find((x) => x.id === id);
@@ -407,7 +407,7 @@ export function LocationScreen({ id }: { id: string }) {
     );
     if (!res) return;
     const key = Date.now();
-    setPops((p) => [...p.slice(-4), { key, i: x.i, text: `+${res.step.currencies.RUB ?? 0} ₽`, rep: res.locRep ?? 0 }]);
+    setPops((p) => [...p.slice(-4), { key, i: x.i, text: `+${res.step.currencies.PAP ?? 0}`, rep: res.locRep ?? 0 }]);
     setTimeout(() => setPops((p) => p.filter((q) => q.key !== key)), 1100);
     if (res.stash) {
       // a stash found: a moment of its own

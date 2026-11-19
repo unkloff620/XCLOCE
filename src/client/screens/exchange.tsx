@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useGame } from "../store.tsx";
 import { api } from "../api.ts";
-import { CURRENCY_DEFS, EXCHANGEABLE, exchangeScheduleText, exchangeWindow, floorTo, type Currency } from "../../content/currencies.ts";
+import { CURRENCY_DEFS, EXCHANGEABLE, EXCHANGE_FROM, EXCHANGE_TO, exchangeScheduleText, exchangeWindow, floorTo, type Currency } from "../../content/currencies.ts";
 import { Icon } from "../art/icons.tsx";
 import { clock, money } from "../format.ts";
 import { haptic } from "../telegram.ts";
@@ -117,22 +117,24 @@ function BonusStrip({ until, bonus }: { until: number; bonus: number }) {
 /** the exchange inside the chat: what I give, what I get, how much; at the rate on the machine (and his better rate) */
 function ChatExchange({ ex, bonus, disabled, onDone, onBack }: { ex: ShopData["exchange"]; bonus: number; disabled: boolean; onDone: (line: string) => void; onBack: () => void }) {
   const { state, act } = useGame();
-  const [from, setFrom] = useState<Currency>("RUB");
-  const [to, setTo] = useState<Currency>("USD");
+  const [from, setFrom] = useState<Currency>("PAP");
+  const [to, setTo] = useState<Currency>("TOKEN");
   const [amount, setAmount] = useState("");
   const have = state?.wallet[from] ?? 0;
   const a = Math.floor(Number(amount) || 0);
   const k = (1 - ex.fee) * (1 + bonus);
   const quote = a > 0 && from !== to ? floorTo(to, ((a * ex.rub[from]) / ex.rub[to]) * k) : 0;
-  const rate = (ex.rub[from] / ex.rub[to]) * k;
+  // 0 — the rate of this pair is not set yet (the exchanger refuses it)
+  const rate = ex.rub[from] > 0 && ex.rub[to] > 0 ? (ex.rub[from] / ex.rub[to]) * k : 0;
   const go = async () => {
     const r = await act<{ paid: number; got: number }>("exchange", { from, to, amount: floorTo(from, a), idem: crypto.randomUUID() }, (x) => `Обмен: ${money(from, x.paid)} ${from} → ${money(to, x.got)} ${to}`);
     if (r) { haptic.ok(); sfx("coin"); setAmount(""); onDone(pick(DEALER_EXCHANGED)); }
   };
-  const row = (v: Currency, set: (c: Currency) => void, other: Currency) => (
+  // папиросы and зубы are given, жетоны and рубли are got (never the other way)
+  const row = (v: Currency, set: (c: Currency) => void, list: readonly Currency[]) => (
     <div className="dl-curs">
-      {EXCHANGEABLE.map((c) => (
-        <button key={c} type="button" className={`dl-cur ${v === c ? "on" : ""}`} disabled={c === other} onClick={() => { haptic.tap(); set(c); }} aria-label={CURRENCY_DEFS[c].name}>
+      {list.map((c) => (
+        <button key={c} type="button" className={`dl-cur ${v === c ? "on" : ""}`} onClick={() => { haptic.tap(); set(c); }} aria-label={CURRENCY_DEFS[c].name}>
           <Icon name={c} size={22} /><b>{c}</b>
         </button>
       ))}
@@ -141,18 +143,17 @@ function ChatExchange({ ex, bonus, disabled, onDone, onBack }: { ex: ShopData["e
   return (
     <div className="dl-ex">
       <div className="dl-ex-h"><span>Отдаю</span><span className="tiny">есть <b className="num">{money(from, have)}</b></span></div>
-      {row(from, setFrom, to)}
+      {row(from, setFrom, EXCHANGE_FROM)}
       <div className="dl-ex-in">
         <Icon name={from} size={22} />
         <input inputMode="numeric" placeholder="0" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^0-9]/g, "").replace(/^0+(?=\d)/, ""))} aria-label="Сколько отдать" />
         <button type="button" className="dl-all" onClick={() => setAmount(String(floorTo(from, have)))}>всё</button>
-        <button type="button" className="dl-swap" onClick={() => { setFrom(to); setTo(from); setAmount(""); }} aria-label="Поменять местами">⇅</button>
       </div>
       <div className="dl-ex-h"><span>Получаю</span></div>
-      {row(to, setTo, from)}
+      {row(to, setTo, EXCHANGE_TO)}
       <div className="dl-ex-got">
         <Icon name={to} size={22} /><b className="num grow">{money(to, quote)}</b>
-        <span className="tiny">{rate >= 1 ? `1 ${from} = ${money(to, floorTo(to, rate))} ${to}` : `${Math.ceil(1 / rate)} ${from} = 1 ${to}`}{bonus > 0 && <b className="dl-up"> +{Math.round(bonus * 100)}%</b>}</span>
+        <span className="tiny">{!rate ? "курс скоро" : rate >= 1 ? `1 ${from} = ${money(to, floorTo(to, rate))} ${to}` : `${Math.ceil(1 / rate)} ${from} = 1 ${to}`}{bonus > 0 && <b className="dl-up"> +{Math.round(bonus * 100)}%</b>}</span>
       </div>
       <div className="dl-ex-go">
         <button type="button" className="btn dark sm" onClick={onBack}>Назад</button>
@@ -357,7 +358,8 @@ function ExchangeGarage({ data, win }: { data: ShopData | null; win: { open: boo
   const bonus = state?.dealerTalk && state.dealerTalk.until && state.dealerTalk.until > Date.now() ? state.dealerTalk.bonus : 0;
   // the fee works both ways: buying $1 costs more roubles than selling $1 gives
   const k = ex ? (1 - ex.fee) * (1 + bonus) : 1;
-  const rate = ex ? { buy: Math.ceil(ex.rub.USD / ex.rub.RUB / k), sell: Math.floor((ex.rub.USD / ex.rub.RUB) * k) } : null;
+  // the machine shows what 100 папирос give in roubles (none while the rate is not set)
+  const rate = ex && ex.rub.PAP > 0 ? { sell: Math.floor(((100 * ex.rub.PAP) / ex.rub.RUB) * k) } : null;
   const [ml, mt, mw, mh] = XG_BOX.machine;
   const [pl, pt, pw, ph] = XG_BOX.paper;
   return (
@@ -375,7 +377,7 @@ function ExchangeGarage({ data, win }: { data: ShopData | null; win: { open: boo
           <XgLayer id="machine" />
           {/* the machine's green display: the rate, or «закрыто» */}
           <span className={`xg-screen ${win?.open ? "" : "off"} ${bonus > 0 ? "up" : ""}`} aria-hidden="true">
-            {win?.open ? (rate ? <><small>$1</small><b>куп {rate.buy}₽</b><b>прод {rate.sell}₽</b></> : <b>…</b>) : <b>ЗАКРЫТО</b>}
+            {win?.open ? (rate ? <><small>100 пап.</small><b>{rate.sell}₽</b></> : <b>СКОРО</b>) : <b>ЗАКРЫТО</b>}
           </span>
           {/* the lamp swings on its wire, its light flickers */}
           <span className="xg-lamp">

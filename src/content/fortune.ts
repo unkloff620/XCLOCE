@@ -50,7 +50,7 @@ export const SECTORS: Sector[] = [
   { id: "energy", kind: "reward", icon: "energy-drink", label: "1", name: "Энергетик", weight: 10, reward: { items: [{ id: "energy-drink", qty: 1 }] } },
   { id: "keys45", kind: "reward", icon: KEYCAP_ID, label: "45", name: "45 кнопок", weight: 6, reward: { items: [{ id: KEYCAP_ID, qty: 45 }] } },
   { id: "ticket", kind: "reward", icon: TICKET_ID, label: "1", name: "Билет", weight: 9, reward: { items: [{ id: TICKET_ID, qty: 1 }] } },
-  { id: "usd", kind: "reward", icon: "USD", label: "10", name: "10 $", weight: 2, reward: { currencies: { USD: 10 } } },
+  { id: "usd", kind: "reward", icon: "RUB", label: "10", name: "10 $", weight: 2, reward: { currencies: { RUB: 10 } } },
   { id: "keys75", kind: "reward", icon: KEYCAP_ID, label: "75", name: "75 кнопок", weight: 3, reward: { items: [{ id: KEYCAP_ID, qty: 75 }] } },
   { id: "rpg", kind: "reward", icon: "rug-pull-gun", label: "2", name: "2 Rug Pull Gun", weight: 2, reward: { items: [{ id: "rug-pull-gun", qty: 2 }] } },
 ];
@@ -89,7 +89,7 @@ function pick(rng: () => number, from: number, to: number, step = 1) {
 export function cupReward(kind: CupKind, rng: () => number): Reward | undefined {
   switch (kind) {
     case "rub": return { currencies: { RUB: pick(rng, 1000, 3000, 250) } };
-    case "usd": return { currencies: { USD: pick(rng, 10, 30, 5) } };
+    case "usd": return { currencies: { RUB: pick(rng, 10, 30, 5) } };
     case "weapon": return rng() < 0.5 ? { items: [{ id: "rug-pull-gun", qty: pick(rng, 2, 4) }] } : { items: [{ id: "gpu", qty: pick(rng, 4, 6) }] };
     case "chips": return { items: [{ id: "poker-chip", qty: pick(rng, 3, 5) }] };
     case "case": return { achPoints: CUP_CASE_POINTS };

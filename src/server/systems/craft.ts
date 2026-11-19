@@ -100,7 +100,7 @@ export async function partBuy(ctx: Ctx, itemId: string, want: number) {
   if (!def || def.level !== 0) throw new GameError("bad_item", "Купить можно только детали");
   if (!Number.isInteger(want) || want < 1 || want > 100) throw new GameError("bad_qty", "Некорректное количество");
   const price = PART_USD[def.rarity] ?? PART_USD.common;
-  await takeMoney(ctx, "USD", price * want, `part-buy:${def.id}`);
+  await takeMoney(ctx, "TOKEN", price * want, `part-buy:${def.id}`);
   const got = await addItem(ctx, def.id, want, "part-buy");
   return { itemId: def.id, qty: got, paid: price * want };
 }

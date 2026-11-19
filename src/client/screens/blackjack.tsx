@@ -32,11 +32,11 @@ function BlackjackHelp() {
       <p>За столом 6 мест: твоё — большое поле внизу, остальные пять боксов по дуге — другие игроки. Зови соклановцев на пустые боксы «+» — играете вместе против дилера, каждый за себя.</p>
       <p>Ставка — фишками: выбери номинал внизу и нажми на своё поле (основная ставка) или на кружки сайдов над ним: «Пары» и «21+3». Нажми на фишки на столе — верхняя вернётся.</p>
       <ul className="small">
-        <li>Ставка — от {BJ_BET.min} до {BJ_BET.max} USD. Победа — 1:1, блэкджек — 3:2, ничья — ставка назад. На руке пишется чистый выигрыш: ставка 25 после удвоения — это 50 на столе, победа даёт +50.</li>
+        <li>Ставка — от {BJ_BET.min} до {BJ_BET.max} ₽. Победа — 1:1, блэкджек — 3:2, ничья — ставка назад. На руке пишется чистый выигрыш: ставка 25 после удвоения — это 50 на столе, победа даёт +50.</li>
         <li><b>Ещё</b> — взять карту, <b>Хватит</b> — остановиться, <b>Удвоить</b> — удвоить ставку и взять ровно одну карту, <b>Разбить</b> — пару одного достоинства на две руки (до 4 рук; тузы получают по одной карте).</li>
         <li>Сайд «Идеальные пары» (две первые карты): разноцветная пара {PP_PAY.mixed}:1, цветная {PP_PAY.colored}:1, одной масти {PP_PAY.perfect}:1.</li>
         <li>Сайд «21+3» (твои две карты и открытая карта дилера как покерная тройка): флеш {T3_PAY.flush}:1, стрит {T3_PAY.straight}:1, тройка {T3_PAY.trips}:1, стрит-флеш {T3_PAY.sflush}:1, тройка одной масти {T3_PAY.suited}:1.</li>
-        <li>Сайд — до {BJ_SIDE_MAX} USD. Бесплатная ставка — {BJ_FREE.perDay} в день по {BJ_FREE.bet} USD: выигрыш твой, проигрыш ничего не стоит.</li>
+        <li>Сайд — до {BJ_SIDE_MAX} ₽. Бесплатная ставка — {BJ_FREE.perDay} в день по {BJ_FREE.bet} RUB: выигрыш твой, проигрыш ничего не стоит.</li>
       </ul>
       <p><b>Страховка:</b> если у дилера открыт туз, перед ходами каждому со ставкой предлагают застраховаться на половину ставки ({BJ_INS_MS / 1000} секунд на ответ). Есть у дилера блэкджек — страховка платит 2:1, нет — она сгорает и игра идёт дальше. Бесплатную ставку не страхуют.</p>
       <p>Закрыл окно блэкджека — ты встал из-за стола (ставка, если её ещё не раздали, вернётся). Тебя снова можно позвать.</p>
@@ -367,7 +367,7 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
   const me = table && mySeat !== null ? table.seats[mySeat] : null;
   const myTurn = !!table && table.phase === "playing" && table.turn?.seat === mySeat;
   const left = table?.deadline ? Math.max(0, Math.ceil((table.deadline - (now + skew.current)) / 1000)) : null;
-  const usd = state?.wallet.USD ?? 0;
+  const usd = state?.wallet.RUB ?? 0;
 
   // the stake being put down: chips go onto the box and the circles one by one, a tap on a pile takes its top chip off
   const [chip, setChip] = useState<number>(5);
@@ -391,14 +391,14 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
   const betting = !!me && table?.phase === "betting" && !me.ready && !clearing;
   const cost = (free ? 0 : sum(pending.main)) + sum(pending.pp) + sum(pending.t3);
   const put = (k: keyof Pending) => {
-    if (k === "main" && free) { setNote("Бесплатная ставка — 1 USD, сайды можно добавить"); return; }
+    if (k === "main" && free) { setNote("Бесплатная ставка — 1 ₽, сайды можно добавить"); return; }
     const cap = k === "main" ? BJ_BET.max : BJ_SIDE_MAX;
     const have = sum(pending[k]);
     // the chosen chip, or the largest one that still fits under the limit
     const room = cap - have;
     const c = chip <= room ? chip : [...TRAY].reverse().find((d) => d <= room);
-    if (!c) { haptic.err(); setNote(k === "main" ? `Ставка — до ${BJ_BET.max} USD` : `Сайд — до ${BJ_SIDE_MAX} USD`); return; }
-    if (cost + c > usd) { haptic.err(); setNote("Не хватает USD"); return; }
+    if (!c) { haptic.err(); setNote(k === "main" ? `Ставка — до ${BJ_BET.max} ₽` : `Сайд — до ${BJ_SIDE_MAX} ₽`); return; }
+    if (cost + c > usd) { haptic.err(); setNote("Не хватает рублей"); return; }
     haptic.tap();
     sfx("chips");
     setTouched(true);
@@ -443,14 +443,14 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
           </div>
         ))}
         <button className="btn big block gold" disabled={busy === "bj_open"} onClick={() => run("bj_open")}>Сесть за стол</button>
-        <span className="tiny center bjt-hint">Ставки {BJ_BET.min}–{BJ_BET.max} USD, сайды «Пары» и «21+3» до {BJ_SIDE_MAX} USD. Сядешь — позовёшь соклановцев на свободные боксы. Бесплатных ставок сегодня: {view.free.left}/{view.free.perDay}</span>
+        <span className="tiny center bjt-hint">Ставки {BJ_BET.min}–{BJ_BET.max} ₽, сайды «Пары» и «21+3» до {BJ_SIDE_MAX} ₽. Сядешь — позовёшь соклановцев на свободные боксы. Бесплатных ставок сегодня: {view.free.left}/{view.free.perDay}</span>
       </div>
     );
   } else if (table && view) {
     const line = note ? <span className="bjt-note">{note}</span>
       : summary ? (
         <span className={`bjt-sum ${summary.total > 0 ? "win" : summary.total < 0 ? "lose" : ""}`}>
-          <b>{summary.total > 0 ? `Выигрыш ${signed(summary.total)}` : summary.total < 0 ? `Минус ${money(-summary.total)}` : "В ноль"}</b> <Icon name="USD" size={14} />
+          <b>{summary.total > 0 ? `Выигрыш ${signed(summary.total)}` : summary.total < 0 ? `Минус ${money(-summary.total)}` : "В ноль"}</b> <Icon name="RUB" size={14} />
           <small> рука {signed(summary.hands)}{summary.pp !== null ? ` · пары ${signed(summary.pp)}` : ""}{summary.ins !== null ? ` · страховка ${signed(summary.ins)}` : ""}</small>
         </span>
       )
@@ -470,7 +470,7 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
           <div className="bjt-acts">
             <button className="btn dark grow" disabled={!!busy} onClick={() => run("bj_insure", { take: false })}>Без страховки</button>
             <button className="btn gold grow" disabled={!!busy || usd < bjInsurance(me.hands[0]?.bet ?? 0)} onClick={() => run("bj_insure", { take: true })}>
-              Страховка · {money(bjInsurance(me.hands[0]?.bet ?? 0))} <Icon name="USD" size={16} />
+              Страховка · {money(bjInsurance(me.hands[0]?.bet ?? 0))} <Icon name="RUB" size={16} />
             </button>
           </div>
         ) : table.phase === "playing" && myTurn && reveal ? (
@@ -488,7 +488,7 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
               ))}
               {view.free.left > 0 && (
                 <button type="button" className={`chp big vfree ${free ? "on" : ""}`} onClick={() => { haptic.tap(); setTouched(true); setFree((f) => !f); setPending((p) => ({ ...p, main: [] })); }}
-                  title={`Бесплатная ставка ${BJ_FREE.bet} USD: выигрыш твой, проигрыш ничего не стоит`}>
+                  title={`Бесплатная ставка ${BJ_FREE.bet} RUB: выигрыш твой, проигрыш ничего не стоит`}>
                   FREE<small>{view.free.left}/{view.free.perDay}</small>
                 </button>
               )}
@@ -496,7 +496,7 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
             <div className="bjt-acts">
               <button className="btn dark" disabled={!(cost > 0 || free)} onClick={() => { haptic.tap(); setPending(NO_BET); setFree(false); }}>Убрать</button>
               <button className="btn gold grow" disabled={busy === "bj_bet" || (!free && pending.main.length === 0) || cost > usd} onClick={place}>
-                {free ? "Бесплатно" : <>Ставка {money(cost)} <Icon name="USD" size={16} /></>}{free && cost > 0 ? <> + {money(cost)} <Icon name="USD" size={16} /></> : null}
+                {free ? "Бесплатно" : <>Ставка {money(cost)} <Icon name="RUB" size={16} /></>}{free && cost > 0 ? <> + {money(cost)} <Icon name="RUB" size={16} /></> : null}
               </button>
             </div>
           </>
@@ -549,7 +549,7 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
             </>
           )}
           {/* my money: at the bottom, on the rail under the controls */}
-          <span className="bjt-wallet bj2-wallet" style={at(0, 1600)}><Icon name="USD" size={18} /><b className="num">{money(usd)}</b></span>
+          <span className="bjt-wallet bj2-wallet" style={at(0, 1600)}><Icon name="RUB" size={18} /><b className="num">{money(usd)}</b></span>
           <div className="bjt-panel bj2-panel" style={{ ...at(44, 1272), width: `${((841 - 88) / TW) * 100}%`, height: `${((1575 - 1272) / TH) * 100}%` }}>{panel}</div>
         </div>
       </div>

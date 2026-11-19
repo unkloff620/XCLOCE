@@ -78,7 +78,7 @@ function Shodnyak({ id }: { id: number }) {
   const taken = new Set(v.mine.map((m) => m.id));
   const free = v.slots - v.mine.length;
   const nextPrice = v.slotPrices[v.slots - 3];
-  const sol = state?.wallet.SOL ?? 0;
+  const sol = state?.wallet.GOLD ?? 0;
   const myPoints = v.mine.filter((m) => m.done).reduce((s, m) => s + (byId.get(m.id)?.points ?? 0), 0);
   const list = v.tasks
     .filter((t) => !kind || t.kind === kind)
@@ -182,7 +182,7 @@ function Shodnyak({ id }: { id: number }) {
             ))}
             {v.slots < v.maxSlots && nextPrice !== undefined && (
               <button type="button" className="btn gold shod-buy" disabled={!!busy || sol < nextPrice} onClick={() => run("shod_slot", {}, "Ячейка открыта до конца недели")}>
-                <Icon name="lock" size={18} /> {sol < nextPrice ? "Не хватает" : `Ещё ячейка · ${nextPrice}`} <Coin c="SOL" v={nextPrice} size={16} />
+                <Icon name="lock" size={18} /> {sol < nextPrice ? "Не хватает" : `Ещё ячейка · ${nextPrice}`} <Coin c="GOLD" v={nextPrice} size={16} />
               </button>
             )}
           </div>

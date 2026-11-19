@@ -115,7 +115,7 @@ export async function businessUp(ctx: Ctx, locationId: string, line: BusinessLin
   const lv = Number(line === "rep" ? b?.lv_rep ?? 0 : b?.lv_rub ?? 0);
   if (lv >= businessCells(loc)) throw new GameError("max_level", "Уже прокачано до конца");
   const price = businessCost(loc, line, lv);
-  await takeMoney(ctx, "RUB", price, `business:${loc.id}:${line}`);
+  await takeMoney(ctx, "PAP", price, `business:${loc.id}:${line}`);
   const col = line === "rep" ? "lv_rep" : "lv_rub";
   await ctx.q.query(
     `INSERT INTO location_business (player_id, location_id, ${col}, since) VALUES ($1,$2,1,$3)
@@ -150,7 +150,7 @@ export async function businessClaim(ctx: Ctx) {
     parts.push({ locationId: loc.id, hours: p.hours, rub: p.rub, rep: p.rep });
   }
   if (!parts.length) throw new GameError("not_yet", "Прибыль ещё не набежала: она капает каждый час");
-  if (rub > 0) await addMoney(ctx, "RUB", rub, "business");
+  if (rub > 0) await addMoney(ctx, "PAP", rub, "business");
   return { hours, rub, rep, parts };
 }
 

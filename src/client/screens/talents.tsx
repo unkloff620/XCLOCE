@@ -3,7 +3,7 @@
  * The talent window: talents are earned by boss damage of all time and spent along one path (content/talents.ts
  * TALENT_PATH), drawn like a location's tasks — stops one after another down a winding road, the next opens when the
  * one before is full; a tap on the glowing stop puts one talent in. The card under the road tells what the stop gives.
- * On top: the talent counter and the reset (all spent talents come back) for 5 USD.
+ * On top: the talent counter and the reset (all spent talents come back) for 5 ₽.
  */
 import { useEffect, useRef, useState } from "react";
 import { useGame } from "../store.tsx";
@@ -158,7 +158,7 @@ export function TalentPanel() {
           <span className="tp-cnt free" title="Не вложено"><small>свободно</small><b className="num">{talents}</b></span>
           <button className="btn red sm tp-reset" disabled={spent === 0} onClick={() => setConfirm(true)} aria-label={`Сбросить таланты за ${TALENT_RESET_PRICE.amount} ${TALENT_RESET_PRICE.currency}`}>
             <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            <Icon name="USD" size={13} /><b className="num">{TALENT_RESET_PRICE.amount}</b>
+            <Icon name={TALENT_RESET_PRICE.currency} size={13} /><b className="num">{TALENT_RESET_PRICE.amount}</b>
           </button>
           <TalentHelp />
         </div>
@@ -186,8 +186,8 @@ export function TalentPanel() {
       {confirm && (
         <Modal title="Сброс талантов" onClose={() => setConfirm(false)}>
           <div className="col" style={{ gap: 10, textAlign: "center" }}>
-            <span className="small">Сбросить все таланты за <b>{TALENT_RESET_PRICE.amount} USD</b>? Вернётся <b className="num">{spent}</b>, их можно вложить заново.</span>
-            {usd < TALENT_RESET_PRICE.amount && <span className="small" style={{ color: "var(--red)" }}>Не хватает USD.</span>}
+            <span className="small">Сбросить все таланты за <b>{TALENT_RESET_PRICE.amount} ₽</b>? Вернётся <b className="num">{spent}</b>, их можно вложить заново.</span>
+            {usd < TALENT_RESET_PRICE.amount && <span className="small" style={{ color: "var(--red)" }}>Не хватает рублей.</span>}
             <div className="row" style={{ gap: 8 }}>
               <button className="btn dark grow" onClick={() => setConfirm(false)}>Нет</button>
               <button className="btn red grow" disabled={busy === "talent_reset" || usd < TALENT_RESET_PRICE.amount} onClick={reset}>Сбросить</button>

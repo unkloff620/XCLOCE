@@ -27,10 +27,10 @@ describe("«Колесо удачи»", () => {
     const db = await freshDb();
     await wheelOn(db);
     const p = await newPlayer(db);
-    await setMoney(db, p, "USD", TICKET_PRICE * 3);
+    await setMoney(db, p, "RUB", TICKET_PRICE * 3);
     const b = await act(db, p, "fortune_buy", { qty: 3 }, T);
     expect(b.result.bought).toBe(3);
-    expect(await wallet(db, p, "USD")).toBe(0);
+    expect(await wallet(db, p, "RUB")).toBe(0);
     const before = await jackpot(db);
     const rub0 = await wallet(db, p, "RUB");
     // the sector «150 ₽» (index 1): a roll just past the empty sector's weight
@@ -78,12 +78,12 @@ describe("«Колесо удачи»", () => {
     expect(again.result.fortune.cups).toBe(1);
     // the roll picks the cup whose prize goes under the lifted one: aim it at the jackpot's cup
     const jk = s.result.layout.findIndex((c: { kind: string }) => c.kind === "jackpot");
-    const usd = await wallet(db, p, "USD");
+    const usd = await wallet(db, p, "RUB");
     const r = await act(db, p, "fortune_cup_pick", { index: 4 }, T, always((jk + 0.5) / 9));
     expect(r.result.kind).toBe("jackpot");
     expect(r.result.final[4].kind).toBe("jackpot");
     expect(r.result.jackpot).toBe(12345);
-    expect(await wallet(db, p, "USD")).toBe(usd + 12345);
+    expect(await wallet(db, p, "RUB")).toBe(usd + 12345);
     expect(r.result.fortune.jackpot).toBe(JACKPOT_SEED);
     expect(r.result.fortune.winner).toMatchObject({ id: p, amount: 12345 });
     await expect(act(db, p, "fortune_cup_pick", { index: 0 }, T)).rejects.toMatchObject({ code: "fortune_no_cups" });
@@ -102,7 +102,7 @@ describe("«Колесо удачи»", () => {
     // everything at once: authority, roubles, dollars, a stash piece
     expect(r.result.reward.xp).toBeGreaterThanOrEqual(200);
     expect(r.result.reward.currencies.RUB).toBeGreaterThanOrEqual(800);
-    expect(r.result.reward.currencies.USD).toBeGreaterThanOrEqual(3);
+    expect(r.result.reward.currencies.RUB).toBeGreaterThanOrEqual(3);
     expect(r.result.reward.items.length).toBeGreaterThanOrEqual(1);
     expect(await qty(db, p, "keycap")).toBe(10);
     // a low roll: a piece of the bag's own set (Фарт for the first bag)

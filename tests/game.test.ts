@@ -541,35 +541,29 @@ describe("shop and exchange", () => {
     expect(exchangeWindow(day0, { ...s, mode: "always" }).open).toBe(true);
     expect(exchangeWindow(day0 + 13 * H, { ...s, mode: "closed" }).open).toBe(false);
   });
-  it("exchanges at the server rate minus the fee", async () => {
-    // the default schedule (the live one from the migration — 11:00–3:00 — is not what these times expect)
+  it("the exchanger: папиросы and зубы go for жетоны and рубли only; no rate yet — refused", async () => {
     await db.query("DELETE FROM config WHERE key='exchange.schedule'");
     resetConfigCache();
     const p = await newPlayer(db);
-    await setMoney(db, p, "RUB", 900);
-    // the exchanger is an event: one Moscow day out of three
+    await setMoney(db, p, "PAP", 900);
     let open = T0;
     while (!exchangeWindow(open).open) open += 24 * H;
-    await expect(act(db, p, "exchange", { from: "RUB", to: "USD", amount: 900 }, open + 24 * H)).rejects.toMatchObject({ code: "exchange_closed" });
-    const r = await act(db, p, "exchange", { from: "RUB", to: "USD", amount: 900 }, open);
-    expect(r.result.got).toBe(10); // 900 / 85 × 0.95 = 10.06 → whole dollars only
-    expect(await wallet(db, p, "RUB")).toBe(0);
-    await expect(act(db, p, "exchange", { from: "RUB", to: "USD", amount: 1000 }, open)).rejects.toMatchObject({ code: "no_money" });
-    await expect(act(db, p, "exchange", { from: "RUB", to: "USD", amount: 10 }, open)).rejects.toMatchObject({ code: "too_small" });
-    await expect(act(db, p, "exchange", { from: "USD", to: "RUB", amount: -5 }, open)).rejects.toMatchObject({ code: "bad_amount" });
-    await setMoney(db, p, "USD", 5);
-    await expect(act(db, p, "exchange", { from: "USD", to: "RUB", amount: 1.5 }, open)).rejects.toMatchObject({ code: "bad_amount" });
+    await expect(act(db, p, "exchange", { from: "PAP", to: "TOKEN", amount: 900 }, open + 24 * H)).rejects.toMatchObject({ code: "exchange_closed" });
+    await expect(act(db, p, "exchange", { from: "PAP", to: "TOKEN", amount: 900 }, open)).rejects.toMatchObject({ code: "no_rate" });
+    // the other way and the other currencies are not traded at all
+    await expect(act(db, p, "exchange", { from: "RUB", to: "PAP", amount: 100 }, open)).rejects.toMatchObject({ code: "bad_request" });
+    await expect(act(db, p, "exchange", { from: "PAP", to: "GOLD", amount: 100 }, open)).rejects.toMatchObject({ code: "bad_request" });
   });
   it("craft: a missing part is bought for dollars, 5 $ a common one, twice as much a rarity up", async () => {
     const p = await newPlayer(db);
-    await setMoney(db, p, "USD", 100);
+    await setMoney(db, p, "TOKEN", 100);
     await expect(act(db, p, "part_buy", { itemId: "craft-flamethrower", qty: 1 }, T0)).rejects.toMatchObject({ code: "bad_item" });
     const { CRAFT_PARTS } = await import("../src/content/craft.ts");
     const common = CRAFT_PARTS.find((x) => x.rarity === "common")!, epic = CRAFT_PARTS.find((x) => x.rarity === "epic")!;
     const r = await act(db, p, "part_buy", { itemId: common.id, qty: 3 }, T0);
     expect(r.result).toMatchObject({ qty: 3, paid: 15 });
     await act(db, p, "part_buy", { itemId: epic.id, qty: 1 }, T0);
-    expect(await wallet(db, p, "USD")).toBe(65);
+    expect(await wallet(db, p, "TOKEN")).toBe(65);
     expect(await qty(db, p, common.id)).toBe(3);
   });
   it("a good talk with the dealer may give a better rate for 2 hours; once a day, only while the exchange works", async () => {
@@ -590,9 +584,6 @@ describe("shop and exchange", () => {
     expect(r.result).toMatchObject({ score: talk.steps.length * 2, bonus: 0.1 });
     expect(r.state.dealerTalk).toMatchObject({ talked: true, bonus: 0.1 });
     await expect(act(db, p, "dealer_talk", { answers: best }, open + 60_000)).rejects.toMatchObject({ code: "talked" });
-    await setMoney(db, p, "RUB", 900);
-    const ex = await act(db, p, "exchange", { from: "RUB", to: "USD", amount: 900 }, open + 60_000);
-    expect(ex.result.got).toBe(11); // 900 / 85 × 0.95 × 1.1 = 11.06
   });
 });
 
@@ -624,17 +615,17 @@ describe("locations", () => {
     for (const t of loc.tasks) for (let i = 0; i < t.steps; i++) last = await act(db, p, "task", { taskId: t.id }, T0);
     expect(last!.result.locationComplete).toBe(true);
     await expect(act(db, p, "task", { taskId: loc.tasks[0].id }, T0)).rejects.toMatchObject({ code: "task_done" });
-    const usd0 = await wallet(db, p, "USD");
+    const usd0 = await wallet(db, p, "PAP");
     const c = await act(db, p, "location_claim", { locationId: loc.id }, T0);
     expect(c.result).toMatchObject({ first: true, opened: "market" });
-    expect((await wallet(db, p, "USD")) - usd0).toBe(5);
+    expect((await wallet(db, p, "PAP")) - usd0).toBe(300);
     expect(await qty(db, p, "tee-pump")).toBe(1);
     await act(db, p, "task", { taskId: LOCATIONS[1].tasks[0].id }, T0);
     for (const t of loc.tasks) for (let i = 0; i < t.steps; i++) await act(db, p, "task", { taskId: t.id }, T0);
-    const usd1 = await wallet(db, p, "USD");
+    const usd1 = await wallet(db, p, "PAP");
     const c2 = await act(db, p, "location_claim", { locationId: loc.id }, T0);
     expect(c2.result.first).toBe(false);
-    expect((await wallet(db, p, "USD")) - usd1).toBe(2); // half of 5, whole dollars
+    expect((await wallet(db, p, "PAP")) - usd1).toBe(150); // half of 300
   });
   it("night road: own tasks, ночной авторитет, always the repeat reward, the day road untouched", async () => {
     const p = await newPlayer(db);
@@ -649,10 +640,10 @@ describe("locations", () => {
     const [nr] = await db.query<{ rep: number }>("SELECT rep FROM location_night_rep WHERE player_id=$1 AND location_id=$2", [p, loc.id]);
     expect(Number(nr.rep)).toBeGreaterThan(0);
     expect(await db.query("SELECT 1 FROM location_rep WHERE player_id=$1", [p])).toHaveLength(0);
-    const usd0 = await wallet(db, p, "USD");
+    const usd0 = await wallet(db, p, "PAP");
     const c = await act(db, p, "location_claim", { locationId: loc.id, mode: "night" }, T0);
     expect(c.result).toMatchObject({ first: false, opened: null, mode: "night" });
-    expect((await wallet(db, p, "USD")) - usd0).toBe(2);
+    expect((await wallet(db, p, "PAP")) - usd0).toBe(150);
     // the day road is still closed for the first time, the next location still shut
     await expect(act(db, p, "task", { taskId: LOCATIONS[1].tasks[0].id }, T0)).rejects.toMatchObject({ code: "location_locked" });
     const view = await locationsView(db, p, T0);
@@ -664,7 +655,7 @@ describe("locations", () => {
     const cells = businessCells(loc);
     const hRub = businessPerHour(loc, "rub"), hRep = businessPerHour(loc, "rep");
     expect(businessPerLevel(loc, "rub")).toBe(24 * hRub);
-    await setMoney(db, p, "RUB", 1_000_000);
+    await setMoney(db, p, "PAP", 1_000_000);
     await expect(act(db, p, "business_up", { locationId: loc.id, line: "rub" }, T0)).rejects.toMatchObject({ code: "business_locked" });
     await db.query("INSERT INTO location_claims (player_id, location_id, claimed_at) VALUES ($1,$2,now())", [p, loc.id]);
     await expect(act(db, p, "business_up", { locationId: loc.id, line: "rub" }, T0)).rejects.toMatchObject({ code: "business_locked" });
@@ -672,46 +663,46 @@ describe("locations", () => {
     await expect(act(db, p, "business_claim", {}, T0)).rejects.toMatchObject({ code: "not_yet" });
     await act(db, p, "business_up", { locationId: loc.id, line: "rub" }, T0);
     await act(db, p, "business_up", { locationId: loc.id, line: "rep" }, T0 + 10 * M);
-    expect(await wallet(db, p, "RUB")).toBe(1_000_000 - businessCost(loc, "rub", 0) - businessCost(loc, "rep", 0));
+    expect(await wallet(db, p, "PAP")).toBe(1_000_000 - businessCost(loc, "rub", 0) - businessCost(loc, "rep", 0));
     await expect(act(db, p, "business_claim", {}, T0 + 59 * M)).rejects.toMatchObject({ code: "not_yet" });
-    let rub = await wallet(db, p, "RUB");
+    let rub = await wallet(db, p, "PAP");
     const c = await act(db, p, "business_claim", {}, T0 + 3 * H + 20 * M);
     expect(c.result).toMatchObject({ hours: 3, rub: 3 * hRub, rep: 3 * hRep });
-    expect((await wallet(db, p, "RUB")) - rub).toBe(3 * hRub);
+    expect((await wallet(db, p, "PAP")) - rub).toBe(3 * hRub);
     const [lr] = await db.query<{ rep: number }>("SELECT rep FROM location_rep WHERE player_id=$1 AND location_id=$2", [p, loc.id]);
     expect(Number(lr.rep)).toBe(3 * hRep);
     // the part of the hour already gone is kept: the next hour is due at T0 + 4h
     await expect(act(db, p, "business_claim", {}, T0 + 4 * H - M)).rejects.toMatchObject({ code: "not_yet" });
     expect((await act(db, p, "business_claim", {}, T0 + 4 * H)).result.hours).toBe(1);
     // a month away: only a week is paid
-    rub = await wallet(db, p, "RUB");
+    rub = await wallet(db, p, "PAP");
     const c2 = await act(db, p, "business_claim", {}, T0 + 40 * 24 * H);
     expect(c2.result.hours).toBe(BUSINESS_MAX_HOURS);
-    expect((await wallet(db, p, "RUB")) - rub).toBe(BUSINESS_MAX_HOURS * hRub);
+    expect((await wallet(db, p, "PAP")) - rub).toBe(BUSINESS_MAX_HOURS * hRub);
     // the clock started again from the claim
     await expect(act(db, p, "business_claim", {}, T0 + 40 * 24 * H + 59 * M)).rejects.toMatchObject({ code: "not_yet" });
     for (let i = 1; i < cells; i++) await act(db, p, "business_up", { locationId: loc.id, line: "rub" }, T0 + 41 * 24 * H);
     await expect(act(db, p, "business_up", { locationId: loc.id, line: "rub" }, T0 + 41 * 24 * H)).rejects.toMatchObject({ code: "max_level" });
     const v = (await locationsView(db, p, T0 + 41 * 24 * H))[0].business;
     expect(v).toMatchObject({ cells, lvRub: cells, lvRep: 1, costRub: null, perRub: cells * businessPerLevel(loc, "rub") });
-    await setMoney(db, p, "RUB", 0);
+    await setMoney(db, p, "PAP", 0);
     await expect(act(db, p, "business_up", { locationId: loc.id, line: "rep" }, T0)).rejects.toMatchObject({ code: "no_money" });
     await expect(act(db, p, "business_up", { locationId: LOCATIONS[1].id, line: "rep" }, T0)).rejects.toMatchObject({ code: "business_locked" });
   });
   it("business: the profit of all locations is taken in one go", async () => {
     const p = await newPlayer(db);
-    await setMoney(db, p, "RUB", 1_000_000);
+    await setMoney(db, p, "PAP", 1_000_000);
     // the second location opened by hand
     for (const k of [LOCATIONS[0].id, `night:${LOCATIONS[0].id}`, LOCATIONS[1].id, `night:${LOCATIONS[1].id}`]) {
       await db.query("INSERT INTO location_claims (player_id, location_id, claimed_at) VALUES ($1,$2,now())", [p, k]);
     }
     await act(db, p, "business_up", { locationId: LOCATIONS[0].id, line: "rub" }, T0);
     await act(db, p, "business_up", { locationId: LOCATIONS[1].id, line: "rub" }, T0 + 12 * H);
-    const rub = await wallet(db, p, "RUB");
+    const rub = await wallet(db, p, "PAP");
     // half a day later only the first has whole hours
     let c = await act(db, p, "business_claim", {}, T0 + 12 * H + 30 * M);
     expect(c.result.parts).toHaveLength(1);
-    expect((await wallet(db, p, "RUB")) - rub).toBe(12 * businessPerHour(LOCATIONS[0], "rub"));
+    expect((await wallet(db, p, "PAP")) - rub).toBe(12 * businessPerHour(LOCATIONS[0], "rub"));
     c = await act(db, p, "business_claim", {}, T0 + 14 * H);
     expect(c.result.parts).toHaveLength(2);
     expect(c.result.rub).toBe(2 * businessPerHour(LOCATIONS[0], "rub") + 2 * businessPerHour(LOCATIONS[1], "rub"));
@@ -827,7 +818,7 @@ describe("selling, nickname, slot machine 777", () => {
     const s1 = await act(db, p, "slots_spin", {}, T0, always(0)); // lowest roll → first outcome = jackpot
     expect(s1.result).toMatchObject({ outcome: "jackpot", reels: ["seven", "seven", "seven"], left: 2 });
     expect(await qty(db, p, "gpu")).toBe(1);
-    expect(await wallet(db, p, "USD")).toBe(12);
+    expect(await wallet(db, p, "RUB")).toBeGreaterThanOrEqual(7777);
     const s2 = await act(db, p, "slots_spin", {}, T0 + 10 * M, always(0.999));
     expect(s2.result.kind).toBe("miss");
     expect(new Set(s2.result.reels).size).toBe(3);
@@ -1026,20 +1017,20 @@ describe("home: equipment, rooms, look, help", () => {
     expect(await db.query("SELECT 1 FROM player_talents")).toHaveLength(0);
   });
 
-  it("the talent reset costs 5 USD and gives every spent talent back", async () => {
+  it("the talent reset costs 5 ₽ and gives every spent talent back", async () => {
     const p = await newPlayer(db);
     await expect(act(db, p, "talent_reset", {}, T0)).rejects.toMatchObject({ code: "nothing_to_reset" });
     await db.query("INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,'_biceps','s1',30),($1,'fist','n1',10),($1,'gpu','n1',3),($1,'fist','n3',4)", [p]);
     await db.query("UPDATE players SET talents = 7, talent_biceps = 30 WHERE id=$1", [p]);
-    await setMoney(db, p, "USD", 4);
+    await setMoney(db, p, "RUB", 4);
     await expect(act(db, p, "talent_reset", {}, T0)).rejects.toMatchObject({ code: "no_money" });
-    await setMoney(db, p, "USD", 12);
+    await setMoney(db, p, "RUB", 12);
     const r = await act(db, p, "talent_reset", {}, T0);
     expect(r.result).toMatchObject({ returned: 30 + 10 + 3 + 4, talents: 7 + 47 });
     const [after] = await db.query<{ talent_biceps: number }>("SELECT talent_biceps FROM players WHERE id=$1", [p]);
     expect(after.talent_biceps).toBe(0);
     expect(r.state.weaponTalents).toEqual({});
-    expect(await wallet(db, p, "USD")).toBe(7);
+    expect(await wallet(db, p, "RUB")).toBe(7);
   });
 
   it("tree migration: old branches are refunded, mice and candles become one free each", async () => {
@@ -1116,7 +1107,7 @@ describe("home: equipment, rooms, look, help", () => {
   it("rooms: buy, switch, the bonus of every owned room counts", async () => {
     const p = await newPlayer(db);
     await expect(act(db, p, "room_set", { id: "office" }, T0)).rejects.toMatchObject({ code: "room_locked" });
-    await setMoney(db, p, "USD", 1500);
+    await setMoney(db, p, "PAP", 1500);
     const b = await act(db, p, "room_buy", { id: "office" }, T0);
     expect(b.state.look.room).toBe("office");
     expect(b.state.home.bonus.critChance).toBeCloseTo(0.03);
@@ -1394,7 +1385,7 @@ describe("yard mini games", () => {
 
   it("blackjack: a solo table — bet, side bet, split, the dealer stands on 17; money adds up", async () => {
     const p = await newPlayer(db);
-    await setMoney(db, p, "USD", 100);
+    await setMoney(db, p, "RUB", 100);
     const open = await act(db, p, "bj_open", {}, T0);
     expect(open.result.seat).toBe(0);
     expect(open.result.table.seats.filter(Boolean)).toHaveLength(1);
@@ -1407,10 +1398,10 @@ describe("yard mini games", () => {
     expect(v.table.dealerHidden).not.toBeNull();
     expect(v.table.seats[0].side.pp).toBe("perfect");
     expect(v.moves).toMatchObject({ hit: true, stand: true, double: true, split: true });
-    expect(await wallet(db, p, "USD")).toBe(100 - 5 - 2 + 2 * 26);
+    expect(await wallet(db, p, "RUB")).toBe(100 - 5 - 2 + 2 * 26);
     v = (await act(db, p, "bj_move", { move: "split" }, T0 + 2000)).result;
     expect(v.table.seats[0].hands.map((h: { cards: unknown[] }) => h.cards.length)).toEqual([2, 2]);
-    expect(await wallet(db, p, "USD")).toBe(140);
+    expect(await wallet(db, p, "RUB")).toBe(140);
     v = (await act(db, p, "bj_move", { move: "stand" }, T0 + 3000)).result;
     expect(v.table.turn).toEqual({ seat: 0, hand: 1 });
     v = (await act(db, p, "bj_move", { move: "stand" }, T0 + 4000)).result;
@@ -1419,7 +1410,7 @@ describe("yard mini games", () => {
     expect(v.table.dealerValue).toBe(17);
     expect(v.table.seats[0].hands.map((h: { outcome: string }) => h.outcome)).toEqual(["lose", "lose"]);
     expect(v.table.seats[0].won).toBe(52);
-    expect(await wallet(db, p, "USD")).toBe(140);
+    expect(await wallet(db, p, "RUB")).toBe(140);
     // the results stay 5 s, then the table is cleared and there are 20 s to bet
     expect(v.table.clearAt).toBe(T0 + 4000 + 5000);
     expect(v.table.deadline).toBe(T0 + 4000 + 5000 + 20_000);
@@ -1429,14 +1420,14 @@ describe("yard mini games", () => {
     v = (await act(db, p, "bj_bet", { bet: 10 }, T0 + 10_000)).result;
     expect(v.table.settled).toBe(true);
     expect(v.table.seats[0].hands[0].outcome).toBe("blackjack");
-    expect(await wallet(db, p, "USD")).toBe(140 - 10 + 25);
+    expect(await wallet(db, p, "RUB")).toBe(140 - 10 + 25);
     // a free bet: a win pays, the stake is the house's
     await stackShoe(p, [[10, 0], [10, 1], [9, 2], [7, 3]]);
     v = (await act(db, p, "bj_bet", { free: true }, T0 + 16_000)).result;
     expect(v.moves.double).toBe(false);
     v = (await act(db, p, "bj_move", { move: "stand" }, T0 + 17_000)).result;
     expect(v.table.seats[0].hands[0].outcome).toBe("win");
-    expect(await wallet(db, p, "USD")).toBe(155 + 1);
+    expect(await wallet(db, p, "RUB")).toBe(155 + 1);
     expect(v.free.left).toBe(2);
     // getting up closes an empty table
     v = (await act(db, p, "bj_leave", {}, T0 + 18_000)).result;
@@ -1446,7 +1437,7 @@ describe("yard mini games", () => {
 
   it("blackjack: an ace up offers insurance — 2:1 on a dealer blackjack, lost otherwise; no deal-now, no betting while the table is cleared", async () => {
     const p = await newPlayer(db);
-    await setMoney(db, p, "USD", 100);
+    await setMoney(db, p, "RUB", 100);
     await act(db, p, "bj_open", {}, T0);
     await expect(act(db, p, "bj_deal" as never, {}, T0)).rejects.toBeTruthy();
     // me 10♠, the dealer A♥, me 9♦, under the dealer K♣ — a dealer blackjack
@@ -1460,7 +1451,7 @@ describe("yard mini games", () => {
     // insured 5, paid 15; the hand loses 10 — even
     expect(v.table.settled).toBe(true);
     expect(v.table.seats[0].insPay).toBe(15);
-    expect(await wallet(db, p, "USD")).toBe(100);
+    expect(await wallet(db, p, "RUB")).toBe(100);
     // the next round: an ace up, no dealer blackjack (A♥ + 7♣), no answer in 10 s → no insurance, the moves start
     await stackShoe(p, [[10, 0], [1, 1], [9, 2], [7, 3]]);
     v = (await act(db, p, "bj_bet", { bet: 10 }, T0 + 2000 + 5000 + 1000)).result;
@@ -1468,12 +1459,12 @@ describe("yard mini games", () => {
     v = (await act(db, p, "bj_move", { move: "stand" }, T0 + 8000 + 11_000)).result;
     expect(v.table.seats[0].ins).toBe(0);
     expect(v.table.seats[0].hands[0].outcome).toBe("win"); // 19 against 18
-    expect(await wallet(db, p, "USD")).toBe(110);
+    expect(await wallet(db, p, "RUB")).toBe(110);
   });
 
   it("blackjack: clan mates at one table; turns in seat order; a missed move stands by itself", async () => {
     const a = await newPlayer(db), b = await newPlayer(db), x = await newPlayer(db);
-    for (const p of [a, b, x]) await setMoney(db, p, "USD", 50);
+    for (const p of [a, b, x]) await setMoney(db, p, "RUB", 50);
     const c = await act(db, a, "clan_create", { name: "Картёжники", tag: "BJK", emblem: "bull", color: "#3ddc84" }, T0);
     await act(db, b, "clan_join", { clanId: c.result.clanId }, T0);
     await act(db, a, "clan_accept", { playerId: b }, T0);
@@ -1504,8 +1495,8 @@ describe("yard mini games", () => {
     expect(v.table.seats[1].hands[0].outcome).toBe("lose");
     expect(v.table.seats[0].hands[0].outcome).toBe("lose");
     expect(v.table.dealerValue).toBe(17);
-    expect(await wallet(db, a, "USD")).toBe(45);
-    expect(await wallet(db, b, "USD")).toBe(45);
+    expect(await wallet(db, a, "RUB")).toBe(45);
+    expect(await wallet(db, b, "RUB")).toBe(45);
     // the table stays when one gets up
     await act(db, a, "bj_leave", {}, T0 + 60_000);
     const left = (await act(db, b, "bj_unbet", {}, T0 + 61_000).catch((e) => e)) as { code?: string };
@@ -1516,7 +1507,7 @@ describe("yard mini games", () => {
 
   it("blackjack: a player who closed the game (no polls for 40 s) gets up by himself — the stake back, the seat free", async () => {
     const a = await newPlayer(db), b = await newPlayer(db);
-    for (const p of [a, b]) await setMoney(db, p, "USD", 50);
+    for (const p of [a, b]) await setMoney(db, p, "RUB", 50);
     const c = await act(db, a, "clan_create", { name: "Ушедшие", tag: "GON", emblem: "bull", color: "#3ddc84" }, T0);
     await act(db, b, "clan_join", { clanId: c.result.clanId }, T0);
     await act(db, a, "clan_accept", { playerId: b }, T0);
@@ -1525,11 +1516,11 @@ describe("yard mini games", () => {
     const [{ id: inviteId }] = await db.query<{ id: number }>("SELECT id FROM bj_invites WHERE player_id=$1", [b]);
     await act(db, b, "bj_join", { inviteId }, T0 + 1000);
     await act(db, a, "bj_bet", { bet: 5 }, T0 + 2000);
-    expect(await wallet(db, a, "USD")).toBe(45);
+    expect(await wallet(db, a, "RUB")).toBe(45);
     // a is gone; b comes back a minute later — a's stake returns and his seat is free
     const v = (await act(db, b, "bj_bet", { bet: 5 }, T0 + 62_000)).result;
     expect(v.table.seats.filter(Boolean)).toHaveLength(1);
-    expect(await wallet(db, a, "USD")).toBe(50);
+    expect(await wallet(db, a, "RUB")).toBe(50);
     expect(await db.query("SELECT 1 FROM bj_seats WHERE player_id=$1", [a])).toHaveLength(0);
   });
 
@@ -1550,11 +1541,11 @@ describe("yard mini games", () => {
     expect(pokerLevel(1e9)).toMatchObject({ level: 1000, to: null });
     expect(pokerLevel(pokerXpFor(500)).level).toBe(500);
     expect([0, 9, 10, 14, 15, 29, 30, 49, 50, 74, 75, 99, 100, 1000].map(pokerCheats)).toEqual([0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6]);
-    expect(pokerPay("pair", 0).currencies?.USD).toBe(2);
+    expect(pokerPay("pair", 0).currencies?.GOLD).toBe(2);
     // whole dollars only (2 × 1.15 = 2.3 → 2)
-    expect(pokerPay("pair", 10).currencies?.USD).toBe(2);
+    expect(pokerPay("pair", 10).currencies?.GOLD).toBe(2);
     // the money bonus stops at level 20: 2 × 1.3 = 2.6 → 3
-    expect(pokerPay("pair", 80).currencies?.USD).toBe(3);
+    expect(pokerPay("pair", 80).currencies?.GOLD).toBe(3);
     expect(pokerPay("high", 5)).toEqual({ items: [{ id: "poker-sticker", qty: 100 }] });
   });
 
@@ -1568,13 +1559,13 @@ describe("yard mini games", () => {
     expect(r.result.reward.currencies.RUB).toBeGreaterThanOrEqual(700);
     expect(await qty(db, p, "poker-sticker")).toBe(200);
     const { pokerPay } = await import("../src/content/games.ts");
-    expect(pokerPay("quads", 20).currencies?.SOL).toBe(15);
+    expect(pokerPay("quads", 20).currencies?.GOLD).toBe(20);
     expect(pokerPay("high", 0).items?.[0]).toEqual({ id: "poker-sticker", qty: 100 });
   });
 
-  it("poker: «Сбросить лимит» — 1500 USD for another 25 hands, only when the hands are over, at most 3 a day", async () => {
+  it("poker: «Сбросить лимит» — 1500 слитков for another 25 hands, only when the hands are over, at most 3 a day", async () => {
     const p = await newPlayer(db);
-    await setMoney(db, p, "USD", 10_000);
+    await setMoney(db, p, "GOLD", 10_000);
     const { moscowDay } = await import("../src/server/core.ts");
     await expect(act(db, p, "poker_reset", {}, T0)).rejects.toMatchObject({ code: "poker_has_left" });
     // 25 hands played today (as rows), the limit is reached
@@ -1582,7 +1573,7 @@ describe("yard mini games", () => {
     await expect(act(db, p, "poker_play", {}, T0)).rejects.toMatchObject({ code: "poker_limit" });
     const r = await act(db, p, "poker_reset", {}, T0);
     expect(r.result.poker).toMatchObject({ left: 25, resets: 1, resetsMax: 3 });
-    expect(await wallet(db, p, "USD")).toBe(10_000 - 1500);
+    expect(await wallet(db, p, "GOLD")).toBe(10_000 - 1500);
     await act(db, p, "poker_play", {}, T0, always(0.1));
     await db.query("UPDATE players SET poker_resets=3 WHERE id=$1", [p]);
     await expect(act(db, p, "poker_reset", {}, T0)).rejects.toMatchObject({ code: "poker_resets_max" });
@@ -1590,9 +1581,9 @@ describe("yard mini games", () => {
     expect((await act(db, p, "poker_play", {}, T0 + 86_400_000, always(0.1))).result.poker.resets).toBe(0);
   });
 
-  it("poker: 3 USD a hand, 25 a day, poker xp grows; a «Фишка» pays for a hand instead", async () => {
+  it("poker: 3 слитка a hand, 25 a day, poker xp grows; a «Фишка» pays for a hand instead", async () => {
     const p = await newPlayer(db);
-    await setMoney(db, p, "USD", 500);
+    await setMoney(db, p, "GOLD", 500);
     let xp = 0;
     for (let i = 0; i < 24; i++) {
       const r = await act(db, p, "poker_play", {}, T0 + i * 1000, always(0.37));
@@ -1607,11 +1598,11 @@ describe("yard mini games", () => {
     // no chip: an error; with a chip the 25th hand costs no money
     await expect(act(db, p, "poker_play", { chip: true }, T0 + 30_000)).rejects.toMatchObject({ code: "no_chip" });
     await give(db, p, "poker-chip", 2);
-    const usd = await wallet(db, p, "USD");
+    const usd = await wallet(db, p, "GOLD");
     const c = await act(db, p, "poker_play", { chip: true }, T0 + 31_000, always(0.37));
     expect(await qty(db, p, "poker-chip")).toBe(1);
     expect(c.result.poker.chips).toBe(1);
-    expect(await wallet(db, p, "USD")).toBe(Math.round((usd + (c.result.reward?.currencies?.USD ?? 0)) * 100) / 100);
+    expect(await wallet(db, p, "GOLD")).toBe(Math.round((usd + (c.result.reward?.currencies?.GOLD ?? 0)) * 100) / 100);
     // a chip hand does not use up the day's money hands, and chips play on past the limit
     expect(c.result.poker.left).toBe(1);
     const last = await act(db, p, "poker_play", {}, T0 + 32_000, always(0.37));
@@ -1650,18 +1641,18 @@ describe("yard mini games", () => {
     expect(again.state.prizes.filter((x: { title: string }) => x.title.startsWith("Рекорд дня"))).toHaveLength(0);
   });
 
-  it("zonk hints: off at the start, 2 $ once a game to switch on, then free on and off", async () => {
+  it("zonk hints: off at the start, 2 ₽ once a game to switch on, then free on and off", async () => {
     const p = await newPlayer(db);
-    await setMoney(db, p, "USD", 10);
+    await setMoney(db, p, "RUB", 10);
     const g = await act(db, p, "game_start", { game: "zonk", level: 1 }, T0, always(0.5));
     expect(g.result.game?.hints ?? g.result.hints ?? false).toBe(false);
     const on = await act(db, p, "zonk_hints", { on: true }, T0 + M);
     expect(on.result).toMatchObject({ hints: true, hintsPaid: true });
-    expect(await wallet(db, p, "USD")).toBe(8);
+    expect(await wallet(db, p, "RUB")).toBe(8);
     await act(db, p, "zonk_hints", { on: false }, T0 + 2 * M);
     const again = await act(db, p, "zonk_hints", { on: true }, T0 + 3 * M);
     expect(again.result.hints).toBe(true);
-    expect(await wallet(db, p, "USD")).toBe(8);
+    expect(await wallet(db, p, "RUB")).toBe(8);
   });
 
   it("the newcomer's gift comes once", async () => {
@@ -1675,19 +1666,19 @@ describe("yard mini games", () => {
   it("poker: from level 10 a card on the table can be swapped (шулерство), the last swap counts the hand", async () => {
     const { pokerXpFor } = await import("../src/content/games.ts");
     const p = await newPlayer(db);
-    await setMoney(db, p, "USD", 100);
+    await setMoney(db, p, "GOLD", 100);
     await db.query("UPDATE players SET poker_xp=$2 WHERE id=$1", [p, pokerXpFor(15)]);
     const d = await act(db, p, "poker_play", {}, T0, always(0.37));
     expect(d.result).toMatchObject({ phase: "draw", swapsLeft: 2 });
     expect(d.state.poker.active).toMatchObject({ swapsLeft: 2 });
     // no second hand while this one waits
     await expect(act(db, p, "poker_play", {}, T0)).rejects.toMatchObject({ code: "poker_open" });
-    const usd = await wallet(db, p, "USD");
+    const usd = await wallet(db, p, "GOLD");
     const s1 = await act(db, p, "poker_swap", { index: 4 }, T0, always(0.37));
     expect(s1.result).toMatchObject({ phase: "draw", swapsLeft: 1, swapped: [4] });
     expect(s1.result.cards[4]).not.toEqual(d.result.cards[4]);
     expect(s1.result.cards.slice(0, 4)).toEqual(d.result.cards.slice(0, 4));
-    expect(await wallet(db, p, "USD")).toBe(usd);
+    expect(await wallet(db, p, "GOLD")).toBe(usd);
     // the last swap does not count the hand: the new card is shown first
     const s2 = await act(db, p, "poker_swap", { index: 0 }, T0, always(0.37));
     expect(s2.result).toMatchObject({ phase: "draw", swapsLeft: 0, swapped: [4, 0] });
@@ -1703,9 +1694,9 @@ describe("yard mini games", () => {
     expect(st.result.poker.played).toBe(2);
   });
 
-  it("poker: not enough USD", async () => {
+  it("poker: not enough gold", async () => {
     const p = await newPlayer(db);
-    await setMoney(db, p, "USD", 2);
+    await setMoney(db, p, "GOLD", 2);
     await expect(act(db, p, "poker_play", {}, T0)).rejects.toBeTruthy();
     const n = await db.query("SELECT 1 FROM games WHERE player_id=$1 AND kind='poker'", [p]);
     expect(n).toHaveLength(0);
@@ -1760,14 +1751,14 @@ describe("yard mini games", () => {
     // the second level-1 game today costs rubles
     await setMoney(db, p, "RUB", 100);
     await expect(act(db, p, "game_start", { game: "zonk", level: 1 }, T0 + M)).rejects.toMatchObject({ code: "no_money" });
-    // level 2 costs dollars; giving up ends it as not passed: rubles of consolation and 1 xp
-    await setMoney(db, p, "USD", 3);
+    // level 2 costs roubles too; giving up ends it as not passed: rubles of consolation and 1 xp
+    await setMoney(db, p, "RUB", 3);
     const g2 = await act(db, p, "game_start", { game: "zonk", level: 2 }, T0 + M, always(0));
     expect(g2.result).toMatchObject({ level: 2, target: 5500, paid: true });
-    expect(await wallet(db, p, "USD")).toBe(0);
+    expect(await wallet(db, p, "RUB")).toBe(0);
     const up = await act(db, p, "zonk_give_up", {}, T0 + M, always(0));
     expect(up.result).toMatchObject({ status: "done", result: { outcome: "gave_up", won: false, xp: 1 } });
-    expect(await wallet(db, p, "RUB")).toBe(100 + (ZONK_LEVELS[1].fail.currencies?.RUB ?? 0));
+    expect(await wallet(db, p, "RUB")).toBe(ZONK_LEVELS[1].fail.currencies?.RUB ?? 0); // the stake took all 3 ₽
     expect(up.state.games.zonk.xp).toBe(11);
     await expect(act(db, p, "game_start", { game: "zonk", level: 5 }, T0 + M)).rejects.toMatchObject({ code: "bad_level" });
   });
@@ -2189,10 +2180,10 @@ describe("режимы боя и медали боссов", () => {
 describe("zonk duels", () => {
   it("call, accept, both play: a draw gives the stakes back; a duel left unplayed goes to the one who played", async () => {
     const a = await newPlayer(db), b = await newPlayer(db);
-    await setMoney(db, a, "USD", 50);
-    await setMoney(db, b, "USD", 50);
+    await setMoney(db, a, "RUB", 50);
+    await setMoney(db, b, "RUB", 50);
     const c = await act(db, a, "duel_create", { to: b, stake: 5 }, T0);
-    expect(await wallet(db, a, "USD")).toBe(45);
+    expect(await wallet(db, a, "RUB")).toBe(45);
     // b is told in Telegram (the sender skips him while he is in the game)
     const [n] = await db.query<{ kind: string; meta: { duelId: number; stake: number } }>("SELECT kind, meta FROM notifications WHERE player_id=$1 AND kind='duel_call'", [b]);
     expect(n.meta).toMatchObject({ duelId: c.result.duelId, stake: 5 });
@@ -2202,7 +2193,7 @@ describe("zonk duels", () => {
     expect((await duelRivals(db, a, bn.display_name, T0)).players.some((x) => x.id === b)).toBe(true);
     await expect(act(db, a, "duel_play", { id: c.result.duelId }, T0)).rejects.toMatchObject({ code: "duel_not_playing" });
     await act(db, b, "duel_answer", { id: c.result.duelId, answer: "accept" }, T0);
-    expect(await wallet(db, b, "USD")).toBe(45);
+    expect(await wallet(db, b, "RUB")).toBe(45);
     const g = await act(db, a, "duel_play", { id: c.result.duelId }, T0, always(0.01));
     expect(g.result).toMatchObject({ duel: c.result.duelId, rounds: 5 });
     await act(db, a, "zonk_give_up", {}, T0);
@@ -2214,8 +2205,8 @@ describe("zonk duels", () => {
     // the result goes to the one who is not looking
     const [done] = await db.query("SELECT 1 FROM notifications WHERE player_id=$1 AND kind='duel_done'", [a]);
     expect(done).toBeTruthy();
-    expect(await wallet(db, a, "USD")).toBe(50);
-    expect(await wallet(db, b, "USD")).toBe(50);
+    expect(await wallet(db, a, "RUB")).toBe(50);
+    expect(await wallet(db, b, "RUB")).toBe(50);
     // the second one: b never plays — after a day a gets the pot (minus 5%)
     const d = await act(db, a, "duel_create", { to: b, stake: 10 }, T0 + 1000);
     await act(db, b, "duel_answer", { id: d.result.duelId, answer: "accept" }, T0 + 2000);
@@ -2223,13 +2214,13 @@ describe("zonk duels", () => {
     await act(db, a, "zonk_give_up", {}, T0 + 4000);
     const later = await act(db, a, "equip", { itemId: "jeans" }, T0 + 25 * H);
     expect(later.state.duels.find((x: { id: number }) => x.id === d.result.duelId)).toMatchObject({ status: "done", won: true, pot: 19 });
-    expect(await wallet(db, a, "USD")).toBe(59);
+    expect(await wallet(db, a, "RUB")).toBe(59);
     // a call nobody answers: the stake comes back after a day
     const e = await act(db, a, "duel_create", { to: b, stake: 1 }, T0 + 26 * H);
     await act(db, a, "equip", { itemId: "jeans" }, T0 + 51 * H);
     const [row] = await db.query<{ status: string }>("SELECT status FROM duels WHERE id=$1", [e.result.duelId]);
     expect(row.status).toBe("expired");
-    expect(await wallet(db, a, "USD")).toBe(59);
+    expect(await wallet(db, a, "RUB")).toBe(59);
   });
 });
 
@@ -2413,18 +2404,18 @@ describe("Тося", () => {
     expect(p).toBeGreaterThanOrEqual(3);
     expect(p).toBeLessThanOrEqual(5);
   });
-  it("buys pies off the tray for dollars, each one once", async () => {
+  it("buys pies off the tray for gold bars, each one once", async () => {
     await db.query("INSERT INTO config (key, value) VALUES ('tosya', $1) ON CONFLICT (key) DO UPDATE SET value = excluded.value", [JSON.stringify({ mode: "run", at: T0 - 60_000 })]);
     resetConfigCache();
     const p = await newPlayer(db);
-    await setMoney(db, p, "USD", 1000);
+    await setMoney(db, p, "GOLD", 1000);
     const r1 = await act(db, p, "tosya_buy", { slot: 0 }, T0);
     const pies = r1.state.tosya!.pies;
     expect(r1.result.price).toBe(pies === 5 ? 0 : 20);
     await expect(act(db, p, "tosya_buy", { slot: 0 }, T0)).rejects.toMatchObject({ code: "tosya_taken" });
     const r2 = await act(db, p, "tosya_buy", { slot: 1 }, T0);
     expect(r2.result.price).toBe(pies === 5 ? 20 : 40);
-    expect(await wallet(db, p, "USD")).toBeGreaterThanOrEqual(1000 - r1.result.price - r2.result.price);
+    expect(await wallet(db, p, "GOLD")).toBeGreaterThanOrEqual(1000 - r1.result.price - r2.result.price);
     expect(r2.state.tosya!.taken).toBe(3);
     // every pie holds one of Тося's tattoos, a new one each time
     const tats = [...r1.result.reward.items, ...r2.result.reward.items].filter((i: { id: string }) => /^tat-(oven|maid|yakuza)-/.test(i.id));

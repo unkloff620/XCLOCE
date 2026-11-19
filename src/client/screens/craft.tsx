@@ -285,10 +285,10 @@ function Scheme({ d, qty, busy, onMake, onOpen, onClose, onSplit, back, onBack }
   // «Всё сразу»: «купить» buys every missing part of that kind at once (remembered on this device)
   const [bulk, setBulk] = useState(() => { try { return localStorage.getItem("xc-craft-bulk") === "1"; } catch { return false; } });
   const toggleBulk = () => { haptic.tap(); setBulk((b) => { try { localStorage.setItem("xc-craft-bulk", b ? "0" : "1"); } catch { /* private mode */ } return !b; }); };
-  const usd = state?.wallet.USD ?? 0;
-  // a missing part: «Купить» the missing ones for dollars
+  const usd = state?.wallet.TOKEN ?? 0;
+  // a missing part: «Купить» the missing ones for жетоны
   const buy = async (id: string, n: number) => {
-    const r = await act<{ qty: number; paid: number }>("part_buy", { itemId: id, qty: n }, (x) => `Куплено ×${x.qty} · −${x.paid} $`);
+    const r = await act<{ qty: number; paid: number }>("part_buy", { itemId: id, qty: n }, (x) => `Куплено ×${x.qty} · −${x.paid} жетонов`);
     if (r) { haptic.ok(); sfx("coinsoft"); }
   };
   const own = qty.get(d.id) ?? 0;
@@ -327,8 +327,8 @@ function Scheme({ d, qty, busy, onMake, onOpen, onClose, onSplit, back, onBack }
                       const cost = n * (PART_USD[sub.rarity] ?? PART_USD.common);
                       return (
                         <span className={`cf-buy-row ${need ? "" : "idle"}`}>
-                          <button type="button" className="bb-buy cf-buy" disabled={!need || busy || usd < cost} onClick={() => void buy(r.id, n)} title={`Купить ${n} шт. за ${cost} $`}>купить{n > 1 ? ` ×${n}` : ""}</button>
-                          <i className="cf-buy-cost num">{cost}$</i>
+                          <button type="button" className="bb-buy cf-buy" disabled={!need || busy || usd < cost} onClick={() => void buy(r.id, n)} title={`Купить ${n} шт. за ${cost} жетонов`}>купить{n > 1 ? ` ×${n}` : ""}</button>
+                          <i className="cf-buy-cost num">{cost}<Icon name="TOKEN" size={11} /></i>
                         </span>
                       );
                     })()}

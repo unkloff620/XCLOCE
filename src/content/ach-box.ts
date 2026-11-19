@@ -34,13 +34,12 @@ export const CASE_THING_CHANCE: Record<(typeof CASE_THINGS)[number], number> = {
 /** this many boxes in a row without a thing — the next one gives a thing (a random missing one) for sure */
 export const CASE_THING_PITY = 20;
 export const ACH_BOX_RUB = { min: 300, max: 2_000, step: 50 };
-export const ACH_BOX_USD = { min: 3, max: 25 };
 /** poker chips in every box (the yard no longer drops them) */
 export const ACH_BOX_CHIPS = { min: 1, max: 3 };
 
 export function rollAchBox(rng: () => number): Reward {
   const rub = ACH_BOX_RUB.min + Math.floor(rng() * ((ACH_BOX_RUB.max - ACH_BOX_RUB.min) / ACH_BOX_RUB.step + 1)) * ACH_BOX_RUB.step;
-  const usd = ACH_BOX_USD.min + Math.floor(rng() * (ACH_BOX_USD.max - ACH_BOX_USD.min + 1));
+  rng(); // the old dollars' roll: kept so the rest of the box rolls as before
   const items: { id: string; qty: number }[] = [];
   for (const w of ACH_BOX_WEAPONS) {
     if (rng() >= w.chance) continue;
@@ -48,5 +47,5 @@ export function rollAchBox(rng: () => number): Reward {
     items.push({ id: w.id, qty });
   }
   items.push({ id: "poker-chip", qty: ACH_BOX_CHIPS.min + Math.floor(rng() * (ACH_BOX_CHIPS.max - ACH_BOX_CHIPS.min + 1)) });
-  return { currencies: { RUB: Math.min(ACH_BOX_RUB.max, rub), USD: Math.min(ACH_BOX_USD.max, usd) }, items };
+  return { currencies: { RUB: Math.min(ACH_BOX_RUB.max, rub) }, items };
 }

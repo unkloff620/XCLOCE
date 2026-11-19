@@ -197,9 +197,9 @@ export type ZonkLevel = 1 | 2 | 3 | 4;
 export interface ZonkLevelDef { level: ZonkLevel; target: number; entry: { currency: Currency; amount: number }; win: Reward; winXp: number; fail: Reward }
 export const ZONK_LEVELS: ZonkLevelDef[] = [
   { level: 1, target: 4000, entry: { currency: "RUB", amount: 150 }, win: { currencies: { RUB: 170 } }, winXp: 10, fail: { currencies: { RUB: 20 } } },
-  { level: 2, target: 5500, entry: { currency: "USD", amount: 3 }, win: { currencies: { USD: 7 } }, winXp: 15, fail: { currencies: { RUB: 30 } } },
-  { level: 3, target: 7000, entry: { currency: "USD", amount: 5 }, win: { currencies: { USD: 30 } }, winXp: 25, fail: { currencies: { RUB: 50 } } },
-  { level: 4, target: 10000, entry: { currency: "USD", amount: 10 }, win: { currencies: { USD: 400 } }, winXp: 50, fail: { currencies: { RUB: 80 } } },
+  { level: 2, target: 5500, entry: { currency: "RUB", amount: 3 }, win: { currencies: { RUB: 7 } }, winXp: 15, fail: { currencies: { RUB: 30 } } },
+  { level: 3, target: 7000, entry: { currency: "RUB", amount: 5 }, win: { currencies: { RUB: 30 } }, winXp: 25, fail: { currencies: { RUB: 50 } } },
+  { level: 4, target: 10000, entry: { currency: "RUB", amount: 10 }, win: { currencies: { RUB: 400 } }, winXp: 50, fail: { currencies: { RUB: 80 } } },
 ];
 export const zonkLevelDef = (level: number) => ZONK_LEVELS.find((l) => l.level === level);
 export const ZONK_FAIL_XP = 1;
@@ -258,9 +258,9 @@ export const upgradeValue = (stake: number, mult: number) => Math.max(1, Math.ro
  * Шулерство: с 10 уровня покера после раздачи можно заменить карту на столе (нажать на неё — придёт новая из колоды),
  * с 15 — две замены, с 30 — три, с 50 — четыре, с 75 — пять, со 100 — шесть (POKER_CHEATS). Уровней покера — до 1000. Комбинация считается после замен.
  */
-export const POKER_RULES = { perDay: 25, price: { currency: "USD" as const, amount: 3 } };
+export const POKER_RULES = { perDay: 25, price: { currency: "GOLD" as const, amount: 3 } };
 /** the day's limit can be bought again (another perDay hands): this price, at most `perDay` times a Moscow day */
-export const POKER_RESET = { price: { currency: "USD" as const, amount: 1500 }, perDay: 3 };
+export const POKER_RESET = { price: { currency: "GOLD" as const, amount: 1500 }, perDay: 3 };
 /** the yard item that pays for one poker hand */
 export const POKER_CHIP = "poker-chip";
 export type PokerHand = "royal" | "sflush" | "quads" | "full" | "flush" | "straight" | "trips" | "twopair" | "pair" | "high";
@@ -271,13 +271,13 @@ export const POKER_HANDS: PokerHandDef[] = [
   // «Ворон» comes into the game later: who gets a royal flush is promised him (the promises table), he is given then
   { id: "royal", name: "Роял-флеш", xp: 100, pay: {}, promise: "raven", sample: cs("10s Js Qs Ks As") },
   { id: "sflush", name: "Стрит-флеш", xp: 60, pay: { items: [{ id: "keys-bundle", qty: 1 }] }, sample: cs("5h 6h 7h 8h 9h") },
-  { id: "quads", name: "Каре", xp: 30, pay: { currencies: { SOL: 15 } }, sample: cs("9s 9h 9d 9c Ks") },
+  { id: "quads", name: "Каре", xp: 30, pay: { currencies: { GOLD: 15 } }, sample: cs("9s 9h 9d 9c Ks") },
   { id: "full", name: "Фулл-хаус", xp: 16, pay: { items: [{ id: "rug-pull-gun", qty: 100 }] }, sample: cs("Qh Qs Qd 7c 7h") },
-  { id: "flush", name: "Флеш", xp: 12, pay: { currencies: { SOL: 2 } }, sample: cs("2d 6d 9d Jd Kd") },
+  { id: "flush", name: "Флеш", xp: 12, pay: { currencies: { GOLD: 2 } }, sample: cs("2d 6d 9d Jd Kd") },
   { id: "straight", name: "Стрит", xp: 10, pay: { items: [{ id: "gpu", qty: 20 }] }, sample: cs("4c 5h 6s 7d 8c") },
   { id: "trips", name: "Тройка", xp: 6, pay: { items: [{ id: "poker-sticker", qty: 500 }] }, sample: cs("8s 8h 8d 3c Js") },
   { id: "twopair", name: "Две пары", xp: 4, pay: { items: [{ id: "gpu", qty: 7 }] }, sample: cs("Js Jh 4d 4c Ah") },
-  { id: "pair", name: "Пара", xp: 2, pay: { currencies: { USD: 2 } }, sample: cs("10h 10c 3s 7d Kc") },
+  { id: "pair", name: "Пара", xp: 2, pay: { currencies: { GOLD: 2 } }, sample: cs("10h 10c 3s 7d Kc") },
   { id: "high", name: "Ничего", xp: 1, pay: { items: [{ id: "poker-sticker", qty: 100 }] }, sample: cs("2s 6h 9d Jc Kh") },
 ];
 export const pokerHandDef = (id: PokerHand) => POKER_HANDS.find((h) => h.id === id)!;
@@ -320,12 +320,12 @@ export function pokerLevel(xp: number): { level: number; from: number; to: numbe
   while (level < POKER_MAX_LEVEL && xp >= pokerXpFor(level + 1)) level++;
   return { level, from: pokerXpFor(level), to: level >= POKER_MAX_LEVEL ? null : pokerXpFor(level + 1) };
 }
-/** a combination's prize at a poker level: the dollars grow by POKER_LEVEL_BONUS per level (SOL and the items stay) */
+/** a combination's prize at a poker level: the gold bars grow by POKER_LEVEL_BONUS per level (the items stay) */
 export function pokerPay(hand: PokerHand, level: number): Reward {
   const base = pokerHandDef(hand).pay;
   if (!base.currencies) return base;
   const k = 1 + POKER_LEVEL_BONUS * Math.min(level, POKER_BONUS_LEVELS);
-  const currencies = Object.fromEntries(Object.entries(base.currencies).map(([c, v]) => [c, c === "USD" ? Math.max(1, Math.round((v ?? 0) * k)) : v]));
+  const currencies = Object.fromEntries(Object.entries(base.currencies).map(([c, v]) => [c, c === "GOLD" ? Math.max(1, Math.round((v ?? 0) * k)) : v]));
   return { ...base, currencies };
 }
 
@@ -341,16 +341,16 @@ export const POKER_CASE_TATTOO = 0.3;
 export const POKER_CASE_STASH = 0.25;
 export const POKER_CASE_XP = [2000, 4000] as const;
 export const POKER_CASE_RUB = [700, 1400] as const;
-export const POKER_CASE_USD = [3, 7] as const;
+export const POKER_CASE_GOLD = [3, 7] as const;
 
 /* ---------------- around the mini-games ---------------- */
 /** the best zonk game of a Moscow day: its player gets this the next day (a prize window, prizes table) */
-export const ZONK_DAY_PRIZE: Reward = { currencies: { USD: 5 }, items: [{ id: "poker-chip", qty: 3 }] };
+export const ZONK_DAY_PRIZE: Reward = { currencies: { RUB: 5 }, items: [{ id: "poker-chip", qty: 3 }] };
 /** the weekly mini-game ratings: places 1–3 of each game get these */
 export const GAME_WEEK_PRIZES: Reward[] = [
-  { currencies: { USD: 15 }, items: [{ id: "poker-chip", qty: 5 }] },
-  { currencies: { USD: 10 }, items: [{ id: "poker-chip", qty: 3 }] },
-  { currencies: { USD: 5 }, items: [{ id: "poker-chip", qty: 2 }] },
+  { currencies: { RUB: 15 }, items: [{ id: "poker-chip", qty: 5 }] },
+  { currencies: { RUB: 10 }, items: [{ id: "poker-chip", qty: 3 }] },
+  { currencies: { RUB: 5 }, items: [{ id: "poker-chip", qty: 2 }] },
 ];
 export type GameBoard = "poker" | "zonk" | "bj";
 /**
@@ -360,7 +360,7 @@ export type GameBoard = "poker" | "zonk" | "bj";
 export const GAME_BOARDS: { id: GameBoard; name: string; unit: string; col: string }[] = [
   { id: "poker", name: "Покер", unit: "комбинация", col: "poker_best" },
   { id: "zonk", name: "Зонк", unit: "очков", col: "zonk_best" },
-  { id: "bj", name: "Блэкджек", unit: "USD", col: "bj" },
+  { id: "bj", name: "Блэкджек", unit: "RUB", col: "bj" },
 ];
 /** a poker hand as a number for the weekly rating: royal flush 10 … high card 1 */
 export const pokerRank = (hand: PokerHand) => POKER_HANDS.length - POKER_HANDS.findIndex((h) => h.id === hand);

@@ -46,9 +46,9 @@ export interface ItemDef {
 }
 
 /** a free weapon still reloading can hit at once for this (the player agrees in a window first); then it reloads again */
-export const RUSH_PRICE = { currency: "USD" as const, amount: 2 };
+export const RUSH_PRICE = { currency: "TOKEN" as const, amount: 2 };
 /** «ударить сейчас» for the craft weapons (вещи 3 ур.: рельсотрон, огнемёт, кулак экзоскелета) */
-export const RUSH_PRICE_CRAFT = { currency: "USD" as const, amount: 5 };
+export const RUSH_PRICE_CRAFT = { currency: "TOKEN" as const, amount: 5 };
 export const rushPrice = (id: string) => (id.startsWith("craft3-") ? RUSH_PRICE_CRAFT : RUSH_PRICE);
 
 export const WEAPONS: ItemDef[] = [

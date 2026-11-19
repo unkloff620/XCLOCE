@@ -713,7 +713,7 @@ function Player({ id }: { id: number }) {
   if (!data) return <div className="muted">Загрузка…</div>;
   const p = data.player;
   const quick: [ReactNode, string, unknown][] = [
-    [<Icon key="x" name="xp" size={20} />, "Авторитет", p.xp], [<Icon key="r" name="RUB" size={20} />, "Рубли", data.money.RUB], [<Icon key="u" name="USD" size={20} />, "Доллары", data.money.USD],
+    [<Icon key="x" name="xp" size={20} />, "Авторитет", p.xp], [<Icon key="r" name="RUB" size={20} />, "Рубли", data.money.RUB], [<Icon key="p" name="PAP" size={20} />, "Папиросы", data.money.PAP], [<Icon key="t" name="TOOTH" size={20} />, "Зубы", data.money.TOOTH],
     [<Icon key="e" name="energy" size={20} />, "Энергия", p.energyNow], [<Icon key="t" name="talent" size={20} />, "Своб. таланты", p.talents],
   ];
   return (
@@ -1692,7 +1692,7 @@ function HeistAdmin({ rows, onSaved }: { rows: Row[]; onSaved: (r: Row[]) => voi
     if (!confirm(`Запустить ивент «Взлом» на ${days} дн. для всех игроков?`)) return;
     void run(() => admin<Row[]>("event_save", { event: {
       title: "Взлом", startsAt: new Date().toISOString(), endsAt: new Date(Date.now() + days * 86_400_000).toISOString(), enabled: true, effects: { heistBoxes: 1 },
-      description: "С каждого босса падает ящик с замками. Взламывай замки отмычками — внутри рубли, доллары, оружие, детали, нычки и наколки сетов «Динамит», «Маски» и «Ночная смена». Кнопка ивента — на главном экране.",
+      description: "С каждого босса падает ящик с замками. Взламывай замки отмычками — внутри рубли, зубы, оружие, детали, нычки и наколки сетов «Динамит», «Маски» и «Ночная смена». Кнопка ивента — на главном экране.",
     } }));
   };
   const stop = () => {

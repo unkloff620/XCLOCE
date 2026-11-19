@@ -1,8 +1,10 @@
 /** In-game currencies. They have no real-world value and are not tied to any wallet. */
-export const CURRENCIES = ["PAP", "TOOTH", "RUB", "USD", "SOL", "BTC"] as const;
+export const CURRENCIES = ["PAP", "TOOTH", "RUB", "TOKEN", "GOLD"] as const;
 export type Currency = (typeof CURRENCIES)[number];
-/** what the exchanger trades (папиросы and зубы are earned only — not bought or sold there) */
-export const EXCHANGEABLE = ["RUB", "USD", "SOL", "BTC"] as const satisfies readonly Currency[];
+/** the exchanger: папиросы and зубы are given away for жетоны and рубли (never the other way); the rates come later */
+export const EXCHANGE_FROM = ["PAP", "TOOTH"] as const satisfies readonly Currency[];
+export const EXCHANGE_TO = ["TOKEN", "RUB"] as const satisfies readonly Currency[];
+export const EXCHANGEABLE = [...EXCHANGE_FROM, ...EXCHANGE_TO] as const;
 export const isExchangeable = (c: Currency) => (EXCHANGEABLE as readonly string[]).includes(c);
 
 export interface CurrencyDef {
@@ -15,15 +17,13 @@ export interface CurrencyDef {
 }
 
 export const CURRENCY_DEFS: Record<Currency, CurrencyDef> = {
-  // the bosses pay in папиросы and зубы (content/bosses.ts); not in the exchanger (rub: 0 — no rate)
+  // `rub` is the exchanger's rate (in roubles); 0 — not set yet: the exchanger refuses that pair
   PAP: { id: "PAP", name: "Папиросы", decimals: 0, rub: 0 },
   TOOTH: { id: "TOOTH", name: "Зубы", decimals: 0, rub: 0 },
   RUB: { id: "RUB", name: "Рубли", decimals: 0, rub: 1 },
-  // whole numbers only; close to the real rates: 1 USD = 85 ₽, 1 SOL = 120 $, 1 BTC = 85 000 $.
-  // SOL and BTC are for big rewards and purchases (v2-056 moved the old SOL/BTC rewards, prices and balances to USD)
-  USD: { id: "USD", name: "Доллары", decimals: 0, rub: 85 },
-  SOL: { id: "SOL", name: "Solana", decimals: 0, rub: 10_200 },
-  BTC: { id: "BTC", name: "Bitcoin", decimals: 0, rub: 7_225_000 },
+  TOKEN: { id: "TOKEN", name: "Жетоны метро", decimals: 0, rub: 0 },
+  // bought for Telegram Stars (later); never exchanged
+  GOLD: { id: "GOLD", name: "Золотые слитки", decimals: 0, rub: 0 },
 };
 
 /**

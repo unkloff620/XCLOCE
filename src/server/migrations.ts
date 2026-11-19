@@ -1523,4 +1523,10 @@ ALTER TABLE shod_boost ADD COLUMN IF NOT EXISTS on_ BOOLEAN NOT NULL DEFAULT tru
     id: "v2-104-boss-hp-reset",
     sql: `DELETE FROM config WHERE key = 'boss.hp';`,
   },
+  {
+    // the dollars, Solana and Bitcoin are gone from the game (it is not out yet): their balances go with them
+    id: "v2-105-drop-usd-sol-btc",
+    sql: `DELETE FROM wallets WHERE currency IN ('USD', 'SOL', 'BTC');
+DELETE FROM config WHERE key = 'exchange.rub';`,
+  },
 ];

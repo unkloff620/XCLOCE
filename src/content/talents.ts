@@ -51,7 +51,7 @@ export function talentsForDamage(damage: number): number {
  * Часы IV +3 минуты (15 уровней, ещё 45), Лимит боссов +1 бой в день с каждым боссом (всего +3), Урон III — остаток до 800 талантов,
  * Крит +1% шанса крита этому оружию (всего 15% на оружие); общий шанс крита — не больше 51%.
  * Урон: +N за уровень (N — шаг этого оружия), Сила крита: +2% (I) и +1,5% (II) за уровень — с ×1,5 до ×2 на максимуме.
- * Сброс всех талантов — за 5 USD: потраченные таланты возвращаются.
+ * Сброс всех талантов — за 5 ₽: потраченные таланты возвращаются.
  */
 export type TalentKind = "dmg" | "crit" | "chance" | "biceps" | "energy" | "clock" | "bosses";
 export interface TalentStop {
@@ -155,7 +155,7 @@ export function talentArt(x: TalentStop): string {
 }
 export const talentStop = (target: string, branch: string) => TALENT_PATH.find((s) => s.target === target && s.branch === branch);
 /** resetting all talents (they all come back) */
-export const TALENT_RESET_PRICE = { currency: "USD" as const, amount: 5 };
+export const TALENT_RESET_PRICE = { currency: "RUB" as const, amount: 5 };
 
 /** levels the player has: target → branch → level */
 export type WeaponTalents = Record<string, Partial<Record<string, number>>>;

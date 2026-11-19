@@ -31,7 +31,7 @@ function DayTopWindow({ game, onClose }: { game: "bj" | "poker"; onClose: () => 
     return () => { alive = false; };
   }, [game, day]);
   const value = (r: { value: number; hand?: string }) => game === "bj"
-    ? <><b className="num">+{money(r.value)}</b> <Icon name="USD" size={14} /></>
+    ? <><b className="num">+{money(r.value)}</b> <Icon name="RUB" size={14} /></>
     : <b>{handName(r.hand)}</b>;
   const meIn = !!data?.top.some((r) => r.id === state?.player.id);
   return (
@@ -59,7 +59,7 @@ function DayTopWindow({ game, onClose }: { game: "bj" | "poker"; onClose: () => 
           <div className="dt-row me mine">
             <span className="dt-place"><b className="num">{data.me.place ?? "—"}</b></span>
             <span className="grow">Ты</span>
-            <span className="dt-val">{game === "bj" ? <><b className="num">{data.me.value > 0 ? "+" : ""}{money(data.me.value)}</b> <Icon name="USD" size={14} /></> : <b>{handName(data.me.hand)}</b>}</span>
+            <span className="dt-val">{game === "bj" ? <><b className="num">{data.me.value > 0 ? "+" : ""}{money(data.me.value)}</b> <Icon name="RUB" size={14} /></> : <b>{handName(data.me.hand)}</b>}</span>
           </div>
         )}
       </div>

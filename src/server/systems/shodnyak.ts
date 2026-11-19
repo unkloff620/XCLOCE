@@ -97,7 +97,7 @@ export async function shodSlot(ctx: Ctx) {
   const [s] = await ctx.q.query<{ bought: number }>("SELECT bought FROM shod_slots WHERE week=$1 AND player_id=$2", [week, ctx.pid]);
   const bought = Number(s?.bought ?? 0);
   if (bought >= SHOD_SLOT_PRICES.length) throw new GameError("shod_slots_max", "Больше ячеек не бывает");
-  await takeMoney(ctx, "SOL", SHOD_SLOT_PRICES[bought], `shod_slot:${bought + 1}`);
+  await takeMoney(ctx, "GOLD", SHOD_SLOT_PRICES[bought], `shod_slot:${bought + 1}`);
   await ctx.q.query(
     "INSERT INTO shod_slots (week, player_id, bought) VALUES ($1,$2,1) ON CONFLICT (week, player_id) DO UPDATE SET bought = shod_slots.bought + 1",
     [week, ctx.pid],

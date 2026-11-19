@@ -109,7 +109,8 @@ export function tosyaPrice(bought: number, pies: number): number {
 /** what a pie holds, in dollars */
 export const tosyaValue = (price: number) => (price || TOSYA_PRICE) * TOSYA_MULT;
 
-const RUB_PER_USD = CURRENCY_DEFS.USD.rub;
+/** the pies' inner value unit (the old dollar): 85 roubles; a pie bought for gold bars holds this many units per bar */
+const RUB_PER_USD = 85;
 /** the weapons from the shop and their dollar price */
 const WEAPONS = OFFERS.filter((o) => o.section === "weapons" && o.give.item && o.price.currency === "RUB").map((o) => ({ id: o.give.item!, usd: o.price.amount / RUB_PER_USD }));
 
@@ -148,7 +149,7 @@ export function rollPieBase(rng: () => number, usd: number): Reward {
   if (TOSYA_TATTOOS.length) add(pick(TOSYA_TATTOOS), 1);
   return {
     ...(xp > 0 ? { xp } : {}),
-    currencies: { ...(dollars > 0 ? { USD: dollars } : {}), ...(rub > 0 ? { RUB: rub } : {}) },
+    currencies: { ...(dollars > 0 ? { GOLD: dollars } : {}), ...(rub > 0 ? { RUB: rub } : {}) },
     items: [...items].map(([id, qty]) => ({ id, qty })),
   };
 }
@@ -160,17 +161,17 @@ const WEAPON_SET = new Set(WEAPONS.map((w) => w.id));
 export function rollPie(rng: () => number, usd: number): Reward {
   const r = rollPieBase(rng, usd);
   const rub = Math.round((r.currencies?.RUB ?? 0) * TOSYA_BOOST.rub);
-  const dollars = Math.round((r.currencies?.USD ?? 0) * TOSYA_BOOST.usd);
+  const dollars = Math.round((r.currencies?.GOLD ?? 0) * TOSYA_BOOST.usd);
   return {
     ...(r.xp ? { xp: r.xp * TOSYA_BOOST.xp } : {}),
-    currencies: { ...(dollars > 0 ? { USD: dollars } : {}), ...(rub > 0 ? { RUB: rub } : {}) },
+    currencies: { ...(dollars > 0 ? { GOLD: dollars } : {}), ...(rub > 0 ? { RUB: rub } : {}) },
     items: (r.items ?? []).map((it) => ({ id: it.id, qty: it.qty * (PART_SET.has(it.id) ? TOSYA_BOOST.parts : WEAPON_SET.has(it.id) ? TOSYA_BOOST.weapons : 1) })),
   };
 }
 
 /** the dollar worth of a reward by the same prices (tests: a pie holds TOSYA_MULT × its price) */
 export function tosyaWorth(r: Reward): number {
-  let v = (r.xp ?? 0) / TOSYA_XP_PER_USD + (r.currencies?.USD ?? 0) + (r.currencies?.RUB ?? 0) / RUB_PER_USD;
+  let v = (r.xp ?? 0) / TOSYA_XP_PER_USD + (r.currencies?.GOLD ?? 0) + (r.currencies?.RUB ?? 0) / RUB_PER_USD;
   for (const it of r.items ?? []) {
     const wpn = WEAPONS.find((x) => x.id === it.id);
     if (wpn) v += wpn.usd * it.qty;

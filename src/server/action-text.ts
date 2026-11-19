@@ -55,7 +55,7 @@ export function actionText(type: string, body: Row, result: unknown): string | n
     case "sell": return join(`${item(r.itemId)} ×${fmt(r.qty)}`, grantedText(r.got) || (typeof r.got === "number" ? `+${fmt(r.got)} RUB` : null));
     case "dealer_talk": return `поболтал с барыгой (${fmt(r.score)} очков)${r.bonus ? " · курс получше на 2 ч" : ""}`;
     case "shave": return `побрился (небрит ${fmt(r.days)} дн.)`;
-    case "part_buy": return `купил ${item(r.itemId)} ×${fmt(r.qty)} · −${fmt(r.paid)} USD`;
+    case "part_buy": return `купил ${item(r.itemId)} ×${fmt(r.qty)} · −${fmt(r.paid)} жетонов`;
     case "sell_many": return `продал ${fmt(r.count)} шт. · +${fmt(r.got)} RUB`;
     case "use": return join(item(r.itemId), n(r.energy) ? `энергия ${fmt(r.energy)}` : null);
     case "equip": return item(r.itemId ?? body.itemId);
@@ -81,7 +81,7 @@ export function actionText(type: string, body: Row, result: unknown): string | n
     case "fortune_cup_pick": return join(`колесо: чашка ${Number(body.index) + 1} — ${String(r.kind ?? "")}`, r.jackpot ? `ДЖЕКПОТ ${fmt(r.jackpot)} $` : grantedText(r.reward));
     case "heist_pick": return `ящик ${Number(body.slot) + 1}: взлом замка`;
     case "heist_rush": return join(`ящик ${Number(body.slot) + 1}: замок сразу`, r.done !== undefined ? `снято ${fmt(r.done)}` : null);
-    case "heist_auto": return join(`ящик ${Number(body.slot) + 1}: автовзлом`, r.paid !== undefined ? `за ${fmt(r.paid)} USD` : null);
+    case "heist_auto": return join(`ящик ${Number(body.slot) + 1}: автовзлом`, r.paid !== undefined ? `за ${fmt(r.paid)} зубов` : null);
     case "heist_open": return join(`${String(r.kind ?? "")} ящик открыт`, r.rushed ? "со срезом за платные замки" : null, grantedText(r.reward), r.tattoo ? "наколка" : null);
     case "fight_claim": return join(`бой #${body.fightId}`, r.status === "won" ? "победа" : r.status === "lost" ? "босс ушёл" : String(r.status ?? ""), grantedText(r.reward), r.key ? "пропуск получен" : null);
     case "fight_flee": return r.fightId ? `бой #${r.fightId}` : null;
@@ -93,7 +93,7 @@ export function actionText(type: string, body: Row, result: unknown): string | n
     }
     case "pigeon_scare": return r.reward ? join("голубь", grantedText(r.reward as never)) : "голубь (без награды)";
     case "talent_auto": return `автопрокачка ${r.on ? "включена" : "выключена"}${r.spent ? ` · вложено ${fmt(r.spent)}` : ""}`;
-    case "talent_reset": return `сброс талантов за ${r.price ? `${(r.price as { amount: number }).amount} USD` : "5 USD"} · вернулось ${fmt(r.returned)}`;
+    case "talent_reset": return `сброс талантов за ${r.price ? `${(r.price as { amount: number }).amount} ₽` : "5 ₽"} · вернулось ${fmt(r.returned)}`;
     case "equipment_upgrade": return `${equipmentById(String(r.id ?? body.id))?.name ?? body.id} → уровень ${r.level}`;
     case "room_buy":
     case "room_set": return roomById(String(r.room ?? body.id))?.name ?? String(body.id);
@@ -102,7 +102,7 @@ export function actionText(type: string, body: Row, result: unknown): string | n
     case "decor_set": return `${equipmentById(String(body.id))?.name ?? body.id}, стадия ${body.stage}`;
     case "quest_claim": return join(questById(String(body.id))?.title ?? String(body.id), grantedText(r.reward));
     case "quest_chest": return join("сундук дня", grantedText(r.reward));
-    case "month_buy": return `выкупил день ${r.day} за ${r.paid} SOL`;
+    case "month_buy": return `выкупил день ${r.day} за ${r.paid} слитков`;
     case "month_claim": return join(r.chest ? "сундук месяца" : `награда за делюги (${r.id})`, grantedText(r.reward));
     case "achievement_claim_all": return join(`достижений: ${(r.ids as unknown[] | undefined)?.length ?? 0}`, grantedText(r.reward));
     case "ach_box_open": return join(Number(r.opened ?? 1) > 1 ? `Ящик ништяков ×${r.opened}` : "Ящик ништяков", grantedText(r.reward));
@@ -124,7 +124,7 @@ export function actionText(type: string, body: Row, result: unknown): string | n
     }
     case "starter_gift": return join("подарок новичку", grantedText((r as { reward?: unknown }).reward));
     case "clan_boss_hit": { const c = r as { damage?: number; killed?: boolean }; return join("Клановый босс", `−${c.damage ?? 0}`, c.killed ? "повержен!" : ""); }
-    case "duel_create": return `вызвал игрока #${body.to} на дуэль в зонк (${body.stake} USD)`;
+    case "duel_create": return `вызвал игрока #${body.to} на дуэль в зонк (${body.stake} ₽)`;
     case "duel_answer": return `дуэль #${body.id}: ${body.answer === "accept" ? "принял" : body.answer === "decline" ? "отказался" : "отменил"}`;
     case "duel_play": return `дуэль #${body.id}: начал партию`;
     case "roach_squash": return join("Прихлопнул таракана", grantedText((r as { reward?: unknown }).reward) || "без награды");
@@ -133,7 +133,7 @@ export function actionText(type: string, body: Row, result: unknown): string | n
     case "bj_join": return "сел за стол блэкджека";
     case "bj_decline": return "отказался от приглашения";
     case "bj_leave": return "встал из-за стола";
-    case "bj_bet": return body.free === true ? "бесплатная ставка 1 USD" : join(`ставка ${fmt(body.bet)} USD`, n(body.pp) ? `пары ${fmt(body.pp)}` : "", n(body.t3) ? `21+3 ${fmt(body.t3)}` : "");
+    case "bj_bet": return body.free === true ? "бесплатная ставка 1 ₽" : join(`ставка ${fmt(body.bet)} ₽`, n(body.pp) ? `пары ${fmt(body.pp)}` : "", n(body.t3) ? `21+3 ${fmt(body.t3)}` : "");
     case "bj_unbet": return "снял ставку";
     case "social_pump": return "бицуха";
     case "social_fight": return "наезд";

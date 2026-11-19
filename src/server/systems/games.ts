@@ -9,7 +9,7 @@ import { addGameWeekly, setGameBest } from "./minigame-extras.ts";
 import { duelScore } from "./duels.ts";
 import { addItem, addMoney, grantReward, itemQty, ledger, moscowDay, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { useItem } from "./shop.ts";
-import { ZONK_CONT_PENALTY, UPGRADE_RULES, POKER_RULES, POKER_RESET, POKER_CHIP, POKER_CASES, POKER_CASE_RUB, POKER_CASE_STASH, POKER_CASE_TATTOO, POKER_CASE_USD, POKER_CASE_XP, POKER_STICKER, pokerCheats, pokerHand, pokerHandDef, pokerLevel, pokerPay,
+import { ZONK_CONT_PENALTY, UPGRADE_RULES, POKER_RULES, POKER_RESET, POKER_CHIP, POKER_CASES, POKER_CASE_RUB, POKER_CASE_STASH, POKER_CASE_TATTOO, POKER_CASE_GOLD, POKER_CASE_XP, POKER_STICKER, pokerCheats, pokerHand, pokerHandDef, pokerLevel, pokerPay,
   GAME_RULES, ITEM_VALUES, ZONK_BANK_MIN, ZONK_DICE, ZONK_FAIL_XP, ZONK_LEVELS, ZONK_ROUNDS, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue,
   zonkCombos, zonkHasScore, zonkLevelDef, zonkScore, zonkXpLevel,
   type Card, type GameKind,
@@ -270,7 +270,7 @@ export async function zonkChoice(ctx: Ctx, go: "end" | "continue") {
 }
 
 /** Hints in zonk: every game starts without them; switching them on costs ZONK_HINT_PRICE once a game, then free on/off. */
-export const ZONK_HINT_PRICE = { currency: "USD" as const, amount: 2 };
+export const ZONK_HINT_PRICE = { currency: "RUB" as const, amount: 2 };
 export async function zonkHints(ctx: Ctx, on: boolean) {
   const g = await activeGame(ctx.q, ctx.pid, "zonk");
   if (!g) throw new GameError("no_game", "Партия не начата");
@@ -436,7 +436,7 @@ export async function openPokerCase(ctx: Ctx, n: number) {
   }
   if (ctx.rng() < POKER_CASE_STASH) items.push({ id: STASH_IDS[Math.floor(ctx.rng() * STASH_IDS.length) % STASH_IDS.length], qty: 1 });
   const reward = await grantReward(ctx, {
-    xp: r(...POKER_CASE_XP), currencies: { RUB: r(...POKER_CASE_RUB), USD: r(...POKER_CASE_USD) }, ...(items.length ? { items } : {}),
+    xp: r(...POKER_CASE_XP), currencies: { RUB: r(...POKER_CASE_RUB), GOLD: r(...POKER_CASE_GOLD) }, ...(items.length ? { items } : {}),
   }, `poker_case:${n}`);
   return { case: n, tattoo, reward, poker: await pokerView(ctx.q, ctx.pid, ctx.now) };
 }

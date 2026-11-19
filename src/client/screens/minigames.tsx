@@ -97,7 +97,7 @@ function ZonkHelp() {
       <p>В попытке бросаешь 6 костей и забираешь очковые (нажми на кость — она встанет в лесенку), потом решаешь: «Бросить» оставшиеся — рискнуть ради большего, или «Сохранить» очки попытки — это можно от {ZONK_BANK_MIN} очков. Бросок без единой очковой кости — «Зонк»: очки этой попытки сгорают. Забрал все шесть — бросаешь все шесть заново.</p>
       <p>Четыре одинаковых кости — очки тройки ×2, пять — ×4, шесть — ×8. Шесть разных (1–6) — 1500, три пары — 750.</p>
       <p>Не набрал цель или нажал «Сдаться» — немного рублей в утешение и +{ZONK_FAIL_XP} опыта. Каждые 100 опыта — новый уровень зонка.</p>
-      <p>Очки попыток пишутся мелом слева, стрелка показывает текущую. На листке сверху — лучший счёт дня среди всех игроков: в полночь по Москве он получает приз: {ZONK_DAY_PRIZE.currencies?.USD} USD и {ZONK_DAY_PRIZE.items?.[0]?.qty} фишки. На листе справа — комбинации.</p>
+      <p>Очки попыток пишутся мелом слева, стрелка показывает текущую. На листке сверху — лучший счёт дня среди всех игроков: в полночь по Москве он получает приз: {ZONK_DAY_PRIZE.currencies?.RUB} ₽ и {ZONK_DAY_PRIZE.items?.[0]?.qty} фишки. На листе справа — комбинации.</p>
       <p>Набрал цель уровня — можно выбрать: «Закончить» и забрать награду или «Продолжить» ради рекорда дня на свой страх и риск. Продолжение награду не увеличит, два зонка подряд отнимают {full(ZONK_CONT_PENALTY)} очков, и если к концу очков станет меньше цели — уровень не пройден.</p>
       <p>По стене бегает таракан — прихлопни его, это пара рублей (иногда фишка для покера).</p>
       <p><b>Дуэли:</b> в меню уровней нажми [+] в «Дуэлях», выбери игрока и ставку. Если он не в игре — ему придёт сообщение в Telegram. У каждого {DUEL_ROUNDS} попыток, очки соперника видны прямо во время партии. Больше очков — забираешь банк (минус {Math.round(DUEL_FEE * 100)}%), ничья — ставки назад.</p>
@@ -235,11 +235,11 @@ function DuelPicker({ onClose }: { onClose: () => void }) {
     }, q ? 350 : 0);
     return () => { alive = false; clearTimeout(t); };
   }, [q]);
-  const usd = state?.wallet.USD ?? 0;
+  const usd = state?.wallet.RUB ?? 0; // duels are played for roubles
   const busyWith = new Set((state?.duels ?? []).filter((d) => d.status === "open" || d.status === "playing").map((d) => d.rival.id));
   const call = async (stake: number) => {
     if (!who) return;
-    const r = await act("duel_create", { to: who.id, stake }, `Вызов отправлен: ${who.name}, ставка ${stake} $`);
+    const r = await act("duel_create", { to: who.id, stake }, `Вызов отправлен: ${who.name}, ставка ${stake} ₽`);
     if (r) { haptic.ok(); onClose(); }
   };
   return (
@@ -279,7 +279,7 @@ function DuelPicker({ onClose }: { onClose: () => void }) {
             <div className="dp-stakes">
               {DUEL_STAKES.map((st) => (
                 <button key={st} className="btn green" disabled={busy === "duel_create" || usd < st} onClick={() => call(st)}>
-                  {st} <Icon name="USD" size={15} />
+                  {st} <Icon name="RUB" size={15} />
                 </button>
               ))}
             </div>
@@ -326,8 +326,8 @@ function DuelResult({ d, onClose }: { d: DuelView; onClose: () => void }) {
         </div>
         <div className="dr-money">
           {!done ? (d.rivalPlaying ? `${d.rival.name} ещё играет: попытка ${Math.min(d.rivalRounds.length + 1, DUEL_ROUNDS)}/${DUEL_ROUNDS}` : d.rivalRounds.length ? "Соперник доигрывает" : `${d.rival.name} ещё не начинал — пришлём итог, когда сыграет`)
-            : d.won === true ? <>Банк твой: +{d.pot} <Icon name="USD" size={15} /></>
-            : d.won === false ? <>Ставка ушла: −{d.stake} <Icon name="USD" size={15} /></>
+            : d.won === true ? <>Банк твой: +{d.pot} <Icon name="RUB" size={15} /></>
+            : d.won === false ? <>Ставка ушла: −{d.stake} <Icon name="RUB" size={15} /></>
             : "Ставки вернулись обоим"}
         </div>
         <button className="btn gold block" onClick={onClose}>Ок</button>
@@ -384,7 +384,7 @@ function DuelsList({ onPlay, onShow }: { onPlay: (id: number) => void; onShow: (
       {!list.length && <small className="zb-duels-none">Вызови игрока: {DUEL_ROUNDS} попыток у каждого, банк — тому, у кого больше</small>}
       {list.slice(0, 4).map((d) => {
         const vs = <span className="zb-duel-vs"><Avatar name={d.rival.name} photo={d.rival.photo} size={20} /><i className="ellipsis">{d.rival.name}</i></span>;
-        const stake = <span className="zb-duel-stake num">{d.stake} <Icon name="USD" size={12} /></span>;
+        const stake = <span className="zb-duel-stake num">{d.stake} <Icon name="RUB" size={12} /></span>;
         let tail: ReactNode = null;
         if (d.status === "open" && !d.mine) {
           tail = <span className="zb-duel-acts">
@@ -792,7 +792,7 @@ function PokerHelp() {
   return (
     <Help topic="poker" title="Покер">
       <p>Сразу сдаётся 5 карт. Собралась комбинация из таблицы под картами — получаешь награду, чем старше комбинация, тем больше.</p>
-      <p>Раздача — {POKER_RULES.price.amount} USD, до {POKER_RULES.perDay} раздач в сутки. «Фишка» (из кейса у барыги, чашек колеса удачи, заданий) оплачивает одну раздачу вместо денег. Стрит-флеш даёт «Связку ключей»: с ней на боссов нападают без пропусков (кроме Вадима и Боцмана).</p>
+      <p>Раздача — {POKER_RULES.price.amount} слитка, до {POKER_RULES.perDay} раздач в сутки. «Фишка» (из кейса у барыги, чашек колеса удачи, заданий) оплачивает одну раздачу вместо денег. Стрит-флеш даёт «Связку ключей»: с ней на боссов нападают без пропусков (кроме Вадима и Боцмана).</p>
       <p>Каждая раздача даёт опыт покера (за старшие комбинации — больше). Каждый уровень покера до {POKER_BONUS_LEVELS}-го добавляет +{Math.round(POKER_LEVEL_BONUS * 1000) / 10}% к денежной награде; всего уровней {POKER_MAX_LEVEL}.</p>
       <p>Шулерство: {POKER_CHEATS.slice().reverse().map((c) => `с ${c.level} уровня — ${c.swaps} ${c.swaps === 1 ? "замена" : c.swaps <= 4 ? "замены" : "замен"}`).join(", ")}. После раздачи нажми на любую карту на столе — она уйдёт, а на её место придёт новая из колоды. Комбинация считается, когда замены кончатся или ты нажмёшь «Вскрыть».</p>
     </Help>
@@ -995,7 +995,7 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
             <button type="button" className="btn gold" disabled={busy === "poker_reset" || usd < resetPrice.amount} onClick={doReset}>Да</button>
             <button type="button" className="btn dark" onClick={() => setAskReset(false)}>Нет</button>
           </div>
-          {usd < resetPrice.amount && <p className="tiny center" style={{ color: "#ff8a9e", margin: "8px 0 0" }}>Не хватает долларов</p>}
+          {usd < resetPrice.amount && <p className="tiny center" style={{ color: "#ff8a9e", margin: "8px 0 0" }}>Не хватает слитков</p>}
         </Modal>
       )}
     </Modal>
@@ -1077,7 +1077,7 @@ function PokerCases({ onClose, stickers, onOpened }: { onClose: () => void; stic
               <div className="fo-bags-can" aria-label="Что может выпасть">
                 <span title="Авторитет"><Icon name="xp" size={26} /></span>
                 <span title="Рубли"><Icon name="RUB" size={26} /></span>
-                <span title="Доллары"><Icon name="USD" size={26} /></span>
+                <span title="Золотые слитки"><Icon name="GOLD" size={26} /></span>
                 <span title="Нычки"><Icon name="chest" size={26} /></span>
                 {set && (
                   <span className="tat" title={`Наколка сета «${set.name}» — ${Math.round(POKER_CASE_TATTOO * 100)}%`}>
@@ -1380,9 +1380,9 @@ export function YardGames() {
           <div className="game-pick">
             {([
               { id: "poker", name: "Покер", img: "/assets/yard/game-poker.webp",
-                note: state?.poker?.active ? "ждёт замен" : state?.poker?.perDay ? `${state.poker.left}/${state.poker.perDay} раздач` : `раздача ${POKER_RULES.price.amount} USD`, live: !!state?.poker?.active },
+                note: state?.poker?.active ? "ждёт замен" : state?.poker?.perDay ? `${state.poker.left}/${state.poker.perDay} раздач` : `раздача ${POKER_RULES.price.amount} слитка`, live: !!state?.poker?.active },
               { id: "blackjack", name: "Блэкджек", img: "/assets/yard/game-blackjack.webp",
-                note: invites > 0 ? `зовут (${invites})` : "1–25 USD", live: invites > 0 },
+                note: invites > 0 ? `зовут (${invites})` : "1–25 ₽", live: invites > 0 },
               { id: "zonk", name: "Зонк", img: "/assets/yard/game-zonk.webp", note: calls > 0 ? `вызов (${calls})` : note(zk, "4 уровня"), live: !!zk?.active || calls > 0 },
             ] as const).map((gm) => (
               <button key={gm.id} type="button" data-game={gm.id} className={`game-tile ${gm.live ? "live" : ""}`} onClick={() => setOpen(gm.id)}>

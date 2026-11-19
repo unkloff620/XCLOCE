@@ -24,7 +24,7 @@ const fmt = (v: number) => v.toLocaleString("ru-RU");
 function TierArt({ id }: { id: string }) {
   const one = (art: React.ReactNode, n: string) => <span className="mt-art">{art}<b className="num">×{n}</b></span>;
   switch (id) {
-    case "t2": return one(<Icon name="USD" size={40} />, "30");
+    case "t2": return one(<Icon name="GOLD" size={40} />, "30");
     case "t5": return one(<ItemArt id="energy-full" size={44} />, "2");
     case "t10": return one(<ItemArt id="gpu" size={44} />, "40");
     case "t20": return one(<Icon name="case" size={44} />, "4");
@@ -36,9 +36,8 @@ function TierArt({ id }: { id: string }) {
 function ChestInside() {
   return (
     <div className="mt-chest-in">
-      <span title="Доллары"><Icon name="USD" size={28} /></span>
       <span title="Рубли"><Icon name="RUB" size={28} /></span>
-      <span title="Solana"><Icon name="SOL" size={28} /></span>
+      <span title="Золотые слитки"><Icon name="GOLD" size={28} /></span>
       <span title="Авторитет"><Icon name="xp" size={28} /></span>
       <span title="Кейсы"><Icon name="case" size={28} /></span>
       <span title="Rug Pull Gun"><ItemArt id="rug-pull-gun" size={28} /></span>
@@ -83,7 +82,7 @@ export function MonthlyWindow({ onClose }: { onClose: () => void }) {
   for (let d = 1; cells.length % 7; d++) cells.push({ d, mine: false });
 
   const buy = async (d: number) => {
-    if (!confirm(`Выкупить ${d} ${monthName} за ${m.skipPrice} SOL?`)) return;
+    if (!confirm(`Выкупить ${d} ${monthName} за ${m.skipPrice} слитков?`)) return;
     if (await act("month_buy", { day: d }, `День ${d} закрыт`)) haptic.ok();
   };
   const claim = async (id: string) => {
@@ -136,7 +135,7 @@ export function MonthlyWindow({ onClose }: { onClose: () => void }) {
               <b className="mt-strike">{task.title}</b>
               <span className="tiny muted">День пропущен. Его можно выкупить — он засчитается в награды.</span>
               <button className="btn gold sm" disabled={busy === "month_buy"} onClick={() => buy(sel)}>
-                Выкупить за <Icon name="SOL" size={16} /><b className="num">{m.skipPrice}</b>
+                Выкупить за <Icon name="GOLD" size={16} /><b className="num">{m.skipPrice}</b>
               </button>
             </div>
           ) : (

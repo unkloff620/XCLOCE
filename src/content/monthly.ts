@@ -74,7 +74,7 @@ export const MONTHLY_TATTOO_SET: string | null = null;
 
 /** the chest for every day of the month: each line a random amount from..to */
 export const MONTHLY_CHEST = {
-  USD: [200, 410], cases: [4, 7], RUB: [30_000, 100_000], xp: [50_000, 123_560], rugPull: [59, 83], SOL: [3, 5], parts: [30, 60], stashes: [24, 41],
+  cases: [4, 7], RUB: [30_000, 100_000], xp: [50_000, 123_560], rugPull: [59, 83], GOLD: [3, 5], parts: [30, 60], stashes: [24, 41],
 } as const satisfies Record<string, readonly [number, number]>;
 
 /** a case = one opening of «Ящик ништяков» (the achievement points it costs, content/ach-box.ts ACH_BOX_COST) */
@@ -82,7 +82,7 @@ export const CASE_POINTS = 5;
 
 export interface MonthTier { id: string; need: number | "all"; reward: Reward; chest?: true }
 export const MONTHLY_TIERS: MonthTier[] = [
-  { id: "t2", need: 2, reward: { currencies: { USD: 30 } } },
+  { id: "t2", need: 2, reward: { currencies: { RUB: 30 } } },
   { id: "t5", need: 5, reward: { items: [{ id: "energy-full", qty: 2 }] } },
   { id: "t10", need: 10, reward: { items: [{ id: "gpu", qty: 40 }] } },
   { id: "t20", need: 20, reward: { achPoints: 4 * CASE_POINTS } },

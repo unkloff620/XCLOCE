@@ -28,7 +28,7 @@ export async function tosyaBuy(ctx: Ctx, slot: number) {
   const taken = Number(r?.taken ?? 0);
   if (taken & (1 << slot)) throw new GameError("tosya_taken", "Это уже твоё");
   const price = tosyaPrice(bits(taken), pies);
-  if (price > 0) await takeMoney(ctx, "USD", price, `tosya:${v.id}:${slot}`);
+  if (price > 0) await takeMoney(ctx, "GOLD", price, `tosya:${v.id}:${slot}`);
   // one of Тося's tattoos the player does not have yet (all three sets — content/tattoos.ts boss "tosya")
   const pie = rollPie(ctx.rng, tosyaValue(price));
   const all = TATTOO_SETS.filter((s) => s.boss === "tosya").flatMap((s) => s.pieces.map((x) => x.id));

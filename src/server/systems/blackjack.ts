@@ -131,7 +131,7 @@ async function paySides(ctx: Ctx, t: TableRow) {
     if (pp) pay += seat.pp * (PP_PAY[pp] + 1);
     if (t3) pay += seat.t3 * (T3_PAY[t3] + 1);
     seat.side = { pp, t3, pay };
-    if (pay > 0) await addMoney(asCtx(ctx, seat.pid), "USD", pay, "bj:side");
+    if (pay > 0) await addMoney(asCtx(ctx, seat.pid), "RUB", pay, "bj:side");
   }
 }
 
@@ -177,7 +177,7 @@ async function finishRound(ctx: Ctx, t: TableRow) {
       h.pay = seat.free ? Math.max(0, BJ_RETURN[h.outcome] - 1) * h.bet : BJ_RETURN[h.outcome] * h.bet;
       h.pay = Math.floor(h.pay + 1e-9); // whole dollars only
       won += h.pay;
-      if (h.pay > 0) await addMoney(asCtx(ctx, seat.pid), "USD", h.pay, `bj:${h.outcome}`);
+      if (h.pay > 0) await addMoney(asCtx(ctx, seat.pid), "RUB", h.pay, `bj:${h.outcome}`);
       // the achievements «Блэкджек!» and «Игрок за столом»
       if (h.outcome === "blackjack") await bump(ctx.q, seat.pid, "bjBlackjacks", 1);
       if (h.outcome === "blackjack" || h.outcome === "win") await bump(ctx.q, seat.pid, "bjWins", 1);
@@ -251,7 +251,7 @@ async function settleInsurance(ctx: Ctx, t: TableRow, base: number) {
     if (seat.ins === null) seat.ins = 0;
     if (!seat.ins) continue;
     seat.insPay = bj ? Math.floor(seat.ins * (BJ_INS_PAY + 1)) : 0;
-    if (seat.insPay > 0) await addMoney(asCtx(ctx, seat.pid), "USD", seat.insPay, "bj:insurance");
+    if (seat.insPay > 0) await addMoney(asCtx(ctx, seat.pid), "RUB", seat.insPay, "bj:insurance");
   }
   await peek(ctx, t, base);
 }
@@ -476,14 +476,14 @@ export async function bjLeave(ctx: Ctx) {
 
 async function refund(ctx: Ctx, seat: BjSeat) {
   const back = (seat.free ? 0 : seat.bet) + seat.pp + seat.t3;
-  if (back > 0) await addMoney(ctx, "USD", back, "bj:refund");
+  if (back > 0) await addMoney(ctx, "RUB", back, "bj:refund");
   if (seat.free) await ctx.q.query("DELETE FROM games WHERE id = (SELECT id FROM games WHERE player_id=$1 AND kind='bj_free' AND day=$2 ORDER BY id DESC LIMIT 1)", [ctx.pid, moscowDay(ctx.now)]);
   seat.ready = false;
   seat.free = false;
 }
 
 const whole = (v: number, lo: number, hi: number, what: string) => {
-  if (!Number.isInteger(v) || v < lo || v > hi) throw new GameError("bj_bad_bet", `${what}: от ${lo} до ${hi} USD`);
+  if (!Number.isInteger(v) || v < lo || v > hi) throw new GameError("bj_bad_bet", `${what}: от ${lo} до ${hi} ₽`);
   return v;
 };
 
@@ -504,7 +504,7 @@ export async function bjBet(ctx: Ctx, bet: number, pp: number, t3: number, free:
     );
   } else whole(bet, BJ_BET.min, BJ_BET.max, "Ставка");
   const cost = (free ? 0 : bet) + pp + t3;
-  if (cost > 0) await takeMoney(ctx, "USD", cost, "bj:bet");
+  if (cost > 0) await takeMoney(ctx, "RUB", cost, "bj:bet");
   Object.assign(seat, { bet: free ? seat.bet : bet, pp, t3, free, ready: true });
   if (sitting(s).every((x) => x.ready)) {
     deal(ctx, t);
@@ -531,7 +531,7 @@ export async function bjInsure(ctx: Ctx, take: boolean) {
   if (s.phase !== "insurance" || seat.ins !== null) throw new GameError("bj_no_insurance", "Страховку сейчас не предлагают");
   const amount = take ? bjInsurance(seat.hands[0]?.bet ?? 0) : 0;
   if (amount > 0) {
-    await takeMoney(ctx, "USD", amount, "bj:insurance");
+    await takeMoney(ctx, "RUB", amount, "bj:insurance");
     seat.staked = (seat.staked ?? 0) + amount;
   }
   seat.ins = amount;
@@ -555,7 +555,7 @@ export async function bjMove(ctx: Ctx, move: BjMove) {
     h.done = true;
   } else if (move === "double") {
     if (!two || seat.free) throw new GameError("bj_bad_move", "Удвоить можно только на двух картах");
-    await takeMoney(ctx, "USD", h.bet, "bj:double");
+    await takeMoney(ctx, "RUB", h.bet, "bj:double");
     seat.staked = (seat.staked ?? 0) + h.bet;
     h.bet *= 2;
     h.doubled = true;
@@ -563,7 +563,7 @@ export async function bjMove(ctx: Ctx, move: BjMove) {
     h.done = true;
   } else {
     if (!two || seat.free || !canSplitCards(h.cards) || seat.hands.length >= BJ_MAX_HANDS) throw new GameError("bj_bad_move", "Разбить можно только пару");
-    await takeMoney(ctx, "USD", h.bet, "bj:split");
+    await takeMoney(ctx, "RUB", h.bet, "bj:split");
     seat.staked = (seat.staked ?? 0) + h.bet;
     const aces = h.cards[0].r === 1;
     const second: BjHand = { cards: [h.cards.pop()!], bet: h.bet, split: true, done: false };

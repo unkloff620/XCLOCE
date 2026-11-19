@@ -12,7 +12,6 @@ import { NAV_TABS } from "../../content/nav.ts";
 import { bossById, thingsFrom, type BossDef } from "../../content/bosses.ts";
 import { clock, full } from "../format.ts";
 import { BossPhoto } from "./boss-parts.tsx";
-import { DailyWindow } from "./daily.tsx";
 import { QuestsWindow } from "./quests.tsx";
 import { MonthlyWindow } from "./monthly.tsx";
 import { tutorialPending } from "../tutorial.tsx";
@@ -37,7 +36,6 @@ import { heistReady } from "./heist.tsx";
 const MENU_KEY = "xc2_home_menu";
 
 /** The login reward pops up by itself once per app start; later only from the button. */
-let dailyAutoShown = false;
 
 
 /** The boss's face in a plain circle; the ring around it is the boss's HP left (uses --hp and --acc from the parent). */
@@ -73,7 +71,6 @@ export function HomeScreen() {
     haptic.tap();
     setEditFocus((f) => ({ ...f, part }));
   }, []);
-  const [daily, setDaily] = useState(false);
   // «Рейтинг»: a sheet of paper over the hero (old /rating links come here as /?top=1)
   const [top, setTop] = useState(false);
   useEffect(() => {
@@ -112,15 +109,8 @@ export function HomeScreen() {
   const [fightOpen, setFightOpen] = useState(false);
   // room browser: arrows flip through rooms as a preview; a bar on top confirms the choice (✓) or goes back (✕)
   const [viewIdx, setViewIdx] = useState<number | null>(null);
-  const dailyReady = !!state?.daily.available;
-  // the first-visit tour goes first; the daily reward window waits for it
+  // (the daily login bonus is gone from the game — the month calendar stays)
   const busyWindow = (state?.pending.length ?? 0) > 0 || top || tutorialPending(state) || !!styling || !!decorating;
-  useEffect(() => {
-    if (dailyReady && !busyWindow && !dailyAutoShown) {
-      dailyAutoShown = true;
-      setDaily(true);
-    }
-  }, [dailyReady, busyWindow]);
   const isStyling = !!styling || !!decorating;
   // the editor greys out the HUD and the bottom menu too — they live outside this screen
   useEffect(() => {
@@ -159,7 +149,7 @@ export function HomeScreen() {
   const fb = f ? bossById(f.bossId)! : null;
   const mon = state.monthly;
   const questsAlert = mon ? mon.claimable : state.quests.claimable;
-  const menuAlert = state.daily.available || questsAlert || state.prizes.length > 0;
+  const menuAlert = questsAlert || state.prizes.length > 0;
   const openWardrobe = () => {
     setDecorating(null);
     setStyling({ look: { ...state.look.body }, worn: { ...state.look.equipped } });
@@ -221,16 +211,16 @@ export function HomeScreen() {
           <Help topic="home-menu" title="Твой дом">
             <p>Здесь живёт твой персонаж. Нажми на него — откроется гардероб: одежда, причёска, наколки. Оттуда же, кнопками слева, — кресло и трофеи комнаты. Стрелки внизу листают твои комнаты.</p>
             <HelpList title="Меню [≡] слева (остаётся открытым или закрытым, как ты его оставил)" rows={[
-              { key: "b", icon: <Icon name="gift" size={44} />, name: "Бонус", hint: "Награда за ежедневный вход. Заходи каждый день подряд — награда растёт, на 7-й день редкое оружие. Пропустишь день — серия сгорит." },
               { key: "r", icon: <Icon name="trophy" size={44} />, name: "Рейтинг", hint: "Топ по урону за неделю, по авторитету и кланам. Топ-10 недели получает призы, лидеры — рамку на карточке." },
               { key: "q", icon: <Icon name="map" size={44} />, name: "Задания дня", hint: "Три задания на сутки: бой, энергия, покупки. Выполнишь все — открой сундук. Там же включаются напоминания в Telegram." },
             ]} />
             <HelpList title="Меню внизу" rows={NAV_TABS.map((t) => ({ key: t.id, icon: <NavIcon id={t.id} size={44} />, name: t.label, hint: t.hint }))} />
             <HelpList title="Валюта (вверху)" rows={[
-              { key: "RUB", icon: <Icon name="RUB" size={40} />, name: CURRENCY_DEFS.RUB.name, hint: "Основная валюта: задания, двор, боссы. Оружие и мелочи в магазине." },
-              { key: "USD", icon: <Icon name="USD" size={40} />, name: CURRENCY_DEFS.USD.name, hint: "Награды за боссов и локации. Видеокарты, одежда, энергия." },
-              { key: "SOL", icon: <Icon name="SOL" size={40} />, name: CURRENCY_DEFS.SOL.name, hint: "Редкая валюта для крупных наград и покупок. 1 SOL ≈ 120 $, достать можно в обменнике." },
-              { key: "BTC", icon: <Icon name="BTC" size={40} />, name: CURRENCY_DEFS.BTC.name, hint: "Самая ценная валюта — для крупных наград и покупок. 1 BTC ≈ 85 000 $." },
+              { key: "PAP", icon: <Icon name="PAP" size={40} />, name: CURRENCY_DEFS.PAP.name, hint: "Главная валюта: падают с боссов и с заданий в локациях. Комнаты, бизнес и многое другое." },
+              { key: "TOOTH", icon: <Icon name="TOOTH" size={40} />, name: CURRENCY_DEFS.TOOTH.name, hint: "Падают с боссов. Для событий («Взлом») и обмена." },
+              { key: "RUB", icon: <Icon name="RUB" size={40} />, name: CURRENCY_DEFS.RUB.name, hint: "Оружие в магазине, блэкджек, зонк, дуэли, автомат 777, колесо удачи." },
+              { key: "TOKEN", icon: <Icon name="TOKEN" size={40} />, name: CURRENCY_DEFS.TOKEN.name, hint: "Детали для крафта и «Ударить сейчас» без перезарядки." },
+              { key: "GOLD", icon: <Icon name="GOLD" size={40} />, name: CURRENCY_DEFS.GOLD.name, hint: "Редкая валюта: покер, Тося, выкуп дня в календаре, ячейки сходняка." },
               { key: "xp", icon: <Icon name="xp" size={40} />, name: "Авторитет", hint: "Опыт за задания, боссов и бонусы. Полоса вверху — прогресс до следующего уровня." },
               { key: "en", icon: <Icon name="energy" size={40} />, name: "Энергия", hint: "Тратится на задания в локациях и сама восстанавливается. Нажми на неё, чтобы докупить." },
             ]} />
@@ -278,11 +268,6 @@ export function HomeScreen() {
           ))}
           {menuOpen && (
             <div className="menu-drop">
-              <button className={`icon-btn-art ${state.daily.available ? "glow" : ""}`} style={{ ["--c" as string]: "#ffcc33" }} onClick={() => setDaily(true)} aria-label="Бонус" title="Бонус">
-                <Icon name="gift" size={58} />
-                {state.daily.available && <i className="side-dot" />}
-                {state.daily.streak > 1 && <span className="side-streak num" title={`Серия входов: ${state.daily.streak} дн.`}><Icon name="fire" size={13} />{state.daily.streak}</span>}
-              </button>
               <button className="icon-btn-art" style={{ ["--c" as string]: "#b98bff" }} onClick={() => setWish(true)} aria-label="Попросить нычки и детали" title="Попросить нычки и детали">
                 <ItemArt id="stash-cigs" size={54} />
                 {(state.stashWish?.length ?? 0) > 0 && <span className="side-count num">{state.stashWish!.length}/6</span>}
@@ -336,10 +321,9 @@ export function HomeScreen() {
         </div>
       )}
       {styling && <Stylist draft={styling} setDraft={setStyling} onClose={() => setStyling(null)} focus={editFocus} setFocus={setEditFocus} onRoom={openRoomEditor} />}
-      {daily && <DailyWindow onClose={() => setDaily(false)} />}
       {top && <RatingBoard onClose={() => setTop(false)} />}
-      <UpdatesNotice wait={busyWindow || daily || (dailyReady && !dailyAutoShown)} onOpen={setUpdOpen} />
-      <ExchangeNotice wait={busyWindow || daily || updOpen || (dailyReady && !dailyAutoShown)} />
+      <UpdatesNotice wait={busyWindow} onOpen={setUpdOpen} />
+      <ExchangeNotice wait={busyWindow || updOpen} />
       {newsOpen && <UpdatesWindow list={todayNews} onClose={() => setNewsOpen(false)} />}
       {wish && <StashWishWindow onClose={() => setWish(false)} />}
       {messages && <MessagesWindow onClose={() => setMessages(false)} />}

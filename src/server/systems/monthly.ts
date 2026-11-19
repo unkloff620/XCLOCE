@@ -104,7 +104,7 @@ export async function buyMonthDay(ctx: Ctx, d: number) {
   const month = monthKey(day);
   const r = await row(ctx.q, ctx.pid, month, true);
   if (r.closed[d]) throw new GameError("day_closed", "Этот день уже закрыт");
-  await takeMoney(ctx, "SOL", MONTHLY_SKIP_PRICE, `monthly-skip:${month}-${d}`);
+  await takeMoney(ctx, "GOLD", MONTHLY_SKIP_PRICE, `monthly-skip:${month}-${d}`);
   r.closed[d] = "bought";
   await save(ctx.q, ctx.pid, month, r);
   return { day: d, paid: MONTHLY_SKIP_PRICE };
@@ -131,7 +131,7 @@ async function rollChest(ctx: Ctx): Promise<Reward> {
     if (left.length) items.push({ id: left[Math.floor(ctx.rng() * left.length)], qty: 1 });
   }
   return {
-    currencies: { USD: rnd(c.USD), RUB: rnd(c.RUB), SOL: rnd(c.SOL) },
+    currencies: { RUB: rnd(c.RUB), GOLD: rnd(c.GOLD) },
     xp: rnd(c.xp),
     achPoints: rnd(c.cases) * CASE_POINTS,
     items,

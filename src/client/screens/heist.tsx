@@ -74,7 +74,7 @@ function Possible({ kind, owned }: { kind: HeistKind; owned: Set<string> }) {
         <b className="hs-panel-t">Возможная награда</b>
         <div className="hs-panel-grid">
           <span title="Рубли"><Icon name="RUB" size={24} /></span>
-          <span title="Доллары"><Icon name="USD" size={24} /></span>
+          <span title="Зубы"><Icon name="TOOTH" size={24} /></span>
           {L.weapons.map(([id]) => <span key={id}><ItemArt id={id} size={28} /></span>)}
           <span title="Детали"><Icon name="parts" size={24} /></span>
           {L.stashes[1] > 0 && <span title="Нычки"><ItemArt id={STASH_IDS[0]} size={28} /></span>}
@@ -150,7 +150,7 @@ export function HeistScreen() {
                 <div className="hs-auto">
                   <Toggle on={!!box.auto} disabled={!!box.auto || busy === "heist_auto"} title="Замки ломаются сами, один за другим, по часу — заходить не нужно. Награда полная"
                     onChange={(v) => { if (v) setAutoAsk(box.slot); }}>
-                    {box.auto ? "Автовзлом" : <><Icon name="USD" size={14} /><b className="num">{(h?.rush ?? 100) * (d.locks - done)}</b></>}
+                    {box.auto ? "Автовзлом" : <><Icon name="TOOTH" size={14} /><b className="num">{(h?.rush ?? 100) * (d.locks - done)}</b></>}
                   </Toggle>
                 </div>
               )}
@@ -200,7 +200,7 @@ export function HeistScreen() {
         return (
           <Modal title="Автовзлом" onClose={() => setAutoAsk(null)}>
             <p className="center" style={{ margin: "4px 0 8px", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, flexWrap: "wrap" }}>
-              Оплатить {left} {left === 1 ? "замок" : left < 5 ? "замка" : "замков"} за <span style={{ display: "inline-flex", alignItems: "center", gap: 3, whiteSpace: "nowrap" }}><Icon name="USD" size={16} /><b>{(h?.rush ?? 100) * left}</b>?</span>
+              Оплатить {left} {left === 1 ? "замок" : left < 5 ? "замка" : "замков"} за <span style={{ display: "inline-flex", alignItems: "center", gap: 3, whiteSpace: "nowrap" }}><Icon name="TOOTH" size={16} /><b>{(h?.rush ?? 100) * left}</b>?</span>
             </p>
             <p className="small center muted" style={{ margin: "0 0 12px" }}>Замки будут ломаться сами, один за другим, по часу — заходить каждый час не нужно. Награда полная.</p>
             <div className="row" style={{ gap: 8 }}>
@@ -214,7 +214,7 @@ export function HeistScreen() {
       {ask !== null && (
         <Modal title="Открыть сразу?" onClose={() => setAsk(null)}>
           <p style={{ margin: "4px 0 12px", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, flexWrap: "wrap" }}>
-            Открыть замок сразу за <span style={{ display: "inline-flex", alignItems: "center", gap: 3, whiteSpace: "nowrap" }}><Icon name="USD" size={16} /><b>{h?.rush ?? 100}</b>?</span>
+            Открыть замок сразу за <span style={{ display: "inline-flex", alignItems: "center", gap: 3, whiteSpace: "nowrap" }}><Icon name="TOOTH" size={16} /><b>{h?.rush ?? 100}</b>?</span>
           </p>
           {(() => {
             const bx = boxes.find((b) => b.slot === ask);
@@ -235,7 +235,7 @@ export function HeistScreen() {
             <li>Пока идёт ивент, с каждой победы над любым боссом в любом режиме падает ящик. Он ложится в свободную ячейку; когда все 5 заняты, ящики не падают.</li>
             <li>Чем сильнее босс, тем чаще дорогие ящики: {HEIST_BOXES.map((b) => b.name.split(" ")[0].toLowerCase()).join(", ")}. С Солнца бриллиантовый — примерно 1 из {Math.round(1 / heistOdds(1).diamond)}.</li>
             <li>На ящике от 1 до 4 замков. Нажми на замок — его начнут взламывать, это час; следующий начинаешь сам, так что заходи каждый час. Нажми на взламываемый замок ещё раз — откроешь его сразу за ${h?.rush ?? 100}, но каждый такой замок срезает награду ящика: бриллиантовый −10%, золотой −13%, серебряный −20%, бронзовый −40% за замок.</li>
-            <li>Внутри рубли, доллары, оружие, детали и нычки — чем дороже ящик, тем больше. И шанс на наколку из сетов ивента: бронза 25%, серебро 50%, золото 75%, бриллиант 100%.</li>
+            <li>Внутри рубли, зубы, оружие, детали и нычки — чем дороже ящик, тем больше. И шанс на наколку из сетов ивента: бронза 25%, серебро 50%, золото 75%, бриллиант 100%.</li>
             <li>Сеты: «Динамит» +300 к Rug Pull Gun, «Маски» +200 к видеокарте, «Ночная смена» +100 к клавиатуре.</li>
           </ul>
         </Modal>

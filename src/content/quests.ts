@@ -57,7 +57,7 @@ export const QUESTS: QuestDef[] = QUEST_GROUPS.flat();
 export const questById = (id: string) => QUESTS.find((q) => q.id === id);
 
 /** The chest for all five: a fixed part plus one weapon by chance. */
-export const QUEST_CHEST_BASE: Reward = { currencies: { RUB: 500, USD: 3 }, energy: 20, xp: 2_000 };
+export const QUEST_CHEST_BASE: Reward = { currencies: { RUB: 500 }, energy: 20, xp: 2_000 };
 export const QUEST_CHEST_LOOT: { v: { id: string; qty: number }; w: number }[] = [
   { v: { id: "keyboard", qty: 2 }, w: 45 },
   { v: { id: "keyboard", qty: 1 }, w: 35 },

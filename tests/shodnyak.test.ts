@@ -15,17 +15,17 @@ async function clanPlayer(db: Db, name: string) {
 }
 
 describe("«Сходняк»", () => {
-  it("3 free slots, more for SOL; damage fills the task; Monday the top clan gets the prize and the boost", async () => {
+  it("3 free slots, more for gold bars; damage fills the task; Monday the top clan gets the prize and the boost", async () => {
     const db = await freshDb();
     const a = await clanPlayer(db, "Альфа");
     const b = await clanPlayer(db, "Бета");
     for (const id of ["dmg-10000", "dmg-50000", "kill-datsik"]) await act(db, a.p, "shod_take", { id }, T);
     await expect(act(db, a.p, "shod_take", { id: "dmg-100000" }, T)).rejects.toMatchObject({ code: "shod_full" });
     await expect(act(db, a.p, "shod_slot", {}, T)).rejects.toMatchObject({ code: "no_money" });
-    await setMoney(db, a.p, "SOL", 4);
+    await setMoney(db, a.p, "GOLD", 4);
     const v = await act(db, a.p, "shod_slot", {}, T);
     expect(v.result.slots).toBe(4);
-    expect(await wallet(db, a.p, "SOL")).toBe(0);
+    expect(await wallet(db, a.p, "GOLD")).toBe(0);
     await act(db, a.p, "shod_take", { id: "dmg-100000" }, T);
     await act(db, b.p, "shod_take", { id: "dmg-10000" }, T);
     // hits: Альфа deals 60k (two damage tasks done), Бета 10k
@@ -51,7 +51,7 @@ describe("«Сходняк»", () => {
   it("authority, roubles (not an exchange), a location passed and a win in its mode fill their tasks", async () => {
     const db = await freshDb();
     const a = await clanPlayer(db, "Гамма");
-    await setMoney(db, a.p, "SOL", 20);
+    await setMoney(db, a.p, "GOLD", 20);
     await act(db, a.p, "shod_slot", {}, T);
     for (const id of ["xp-5000", "rub-5000", "loc-5", "kill-kedr-blat"]) await act(db, a.p, "shod_take", { id }, T);
     const { grantReward, addMoney } = await import("../src/server/core.ts");
@@ -59,7 +59,7 @@ describe("«Сходняк»", () => {
     const { loadConfig } = await import("../src/server/config.ts");
     const ctx = { q: db, pid: a.p, now: T, cfg: await loadConfig(db), rng: Math.random } as never;
     await grantReward(ctx, { xp: 6_000 }, "test");
-    await addMoney(ctx, "RUB", 9_000, "exchange:USD");
+    await addMoney(ctx, "RUB", 9_000, "exchange:TOKEN");
     await addMoney(ctx, "RUB", 4_000, "sell:keyboard");
     for (let i = 0; i < 5; i++) await shodTick(ctx, "location", 1);
     await shodTick(ctx, "kill", 1, { boss: "kedr", mode: "pacan" });

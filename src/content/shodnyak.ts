@@ -60,10 +60,10 @@ export const SHOD_TATTOO_RUB = 15_000;
 
 /** every member of the top-10 clans, by the clan's place (index 0 = 1st) */
 export const SHOD_PRIZES: Reward[] = [
-  { xp: 300_000, currencies: { RUB: 50_000, USD: 25 } },
-  { xp: 200_000, currencies: { RUB: 30_000, USD: 15 } },
-  { xp: 120_000, currencies: { RUB: 20_000, USD: 10 } },
-  ...Array.from({ length: 7 }, () => ({ xp: 50_000, currencies: { RUB: 8_000, USD: 4 } }) as Reward),
+  { xp: 300_000, currencies: { RUB: 50_000 } },
+  { xp: 200_000, currencies: { RUB: 30_000 } },
+  { xp: 120_000, currencies: { RUB: 20_000 } },
+  ...Array.from({ length: 7 }, () => ({ xp: 50_000, currencies: { RUB: 8_000 } }) as Reward),
 ];
 
 /** the 1st place also picks a week-long boost of one weapon */

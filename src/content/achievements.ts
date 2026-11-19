@@ -133,9 +133,6 @@ export const ACH_CATEGORIES: AchCategory[] = [
     [10_000, 50_000, 100_000, 250_000, 500_000, 1_000_000, 2_500_000, 5_000_000, 7_500_000, 10_000_000], (n) => `Набери ${n} авторитета`),
   series("save-rub", "eco", "Рубли", "RUB", "haveRUB",
     [50_000, 100_000, 250_000, 500_000, 1_000_000, 2_000_000, 3_000_000, 5_000_000, 7_500_000, 10_000_000], (n) => `Накопи ${n} ₽`),
-  series("save-usd", "eco", "Доллары", "USD", "haveUSD", [100, 250, 500, 1_000, 2_500, 5_000, 10_000, 25_000, 50_000, 100_000], (n) => `Накопи ${n} $`),
-  series("save-sol", "eco", "Солана", "SOL", "haveSOL", [1, 3, 5, 10, 25, 50, 100, 250, 500, 1_000], (n) => `Накопи ${n} SOL`),
-  series("save-btc", "eco", "Биткоин", "BTC", "haveBTC", [1, 2, 3, 4, 5, 7, 10, 15, 20, 25], (n) => `Накопи ${n} BTC`),
   series("got-chips", "eco", "Фишки для покера", "poker-chip", "got:poker-chip", [1, 5, 10, 25, 50, 100, 250, 500, 750, 1_000], (n) => `Собери ${n} фишек для покера`),
   series("got-hodl", "eco", "Стикер HODL", "sticker-hodl", "got:sticker-hodl", [10, 25, 50, 100, 250, 500, 1_000, 2_500, 5_000, 10_000], (n) => `Собери ${n} стикеров HODL`),
   // ---------------- Азартные ----------------
@@ -265,10 +262,10 @@ export const achievementById = (id: string) => ACHIEVEMENTS.find((a) => a.id ===
 
 /** Prizes for the weekly damage top-10, by place (index 0 = 1st place). */
 export const WEEKLY_PRIZES: Reward[] = [
-  { currencies: { USD: 48 }, xp: 300_000, items: [{ id: "rug-pull-gun", qty: 2 }] },
-  { currencies: { USD: 31 }, xp: 200_000, items: [{ id: "rug-pull-gun", qty: 1 }] },
-  { currencies: { USD: 22 }, xp: 150_000, items: [{ id: "gpu", qty: 2 }] },
-  ...Array.from({ length: 7 }, () => ({ currencies: { USD: 10 }, xp: 50_000, items: [{ id: "gpu", qty: 1 }] }) as Reward),
+  { xp: 300_000, items: [{ id: "rug-pull-gun", qty: 2 }] },
+  { xp: 200_000, items: [{ id: "rug-pull-gun", qty: 1 }] },
+  { xp: 150_000, items: [{ id: "gpu", qty: 2 }] },
+  ...Array.from({ length: 7 }, () => ({ xp: 50_000, items: [{ id: "gpu", qty: 1 }] }) as Reward),
 ];
 /** Every member of the top-10 clans of the week (by the members' damage that week); places 4–10 get the same. */
 export const CLAN_PRIZES: Reward[] = [

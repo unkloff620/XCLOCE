@@ -60,9 +60,9 @@ describe("rating", () => {
     const eleventh = await act(db, ids[10], "equip", { itemId: "jeans" }, T0);
     expect(eleventh.state.prizes).toHaveLength(0);
 
-    const usd = await wallet(db, ids[0], "USD");
+    const xp0 = Number((await db.query<{ xp: number }>("SELECT xp FROM players WHERE id=$1", [ids[0]]))[0].xp);
     const c = await act(db, ids[0], "prize_claim", { id: s.state.prizes[0].id }, T0);
-    expect(await wallet(db, ids[0], "USD")).toBe(usd + (WEEKLY_PRIZES[0].currencies?.USD ?? 0));
+    expect(Number((await db.query<{ xp: number }>("SELECT xp FROM players WHERE id=$1", [ids[0]]))[0].xp)).toBe(xp0 + (WEEKLY_PRIZES[0].xp ?? 0));
     expect(c.state.prizes).toHaveLength(0);
     await expect(act(db, ids[0], "prize_claim", { id: s.state.prizes[0].id }, T0)).rejects.toMatchObject({ code: "prize_taken" });
     // someone else's prize cannot be taken
@@ -93,7 +93,7 @@ describe("rating", () => {
 });
 
 async function setMoneyAll(pid: number) {
-  for (const c of ["RUB", "USD", "SOL", "BTC"]) await db.query("UPDATE wallets SET amount=100000 WHERE player_id=$1 AND currency=$2", [pid, c]);
+  for (const c of ["RUB", "PAP", "TOOTH", "TOKEN", "GOLD"]) await db.query("UPDATE wallets SET amount=100000 WHERE player_id=$1 AND currency=$2", [pid, c]);
 }
 
 describe("achievements and someone's profile", () => {

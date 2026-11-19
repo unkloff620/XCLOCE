@@ -59,7 +59,7 @@ async function mustBeOn(ctx: Ctx) {
 export async function fortuneBuy(ctx: Ctx, qty: number) {
   await mustBeOn(ctx);
   if (!Number.isInteger(qty) || qty < 1 || qty > 1000) throw new GameError("bad_request", "Столько билетов не продаём", 400);
-  await takeMoney(ctx, "USD", TICKET_PRICE * qty, `fortune_buy:${qty}`);
+  await takeMoney(ctx, "RUB", TICKET_PRICE * qty, `fortune_buy:${qty}`);
   await addItem(ctx, TICKET_ID, qty, "fortune_buy");
   return { bought: qty, paid: TICKET_PRICE * qty, fortune: await fortuneView(ctx.q, ctx.pid) };
 }
@@ -123,7 +123,7 @@ export async function fortuneCupsPick(ctx: Ctx, index: number) {
     const [g] = await ctx.q.query<{ jackpot: number }>("SELECT jackpot FROM fortune_global WHERE id='_all' FOR UPDATE");
     jackpot = Number(g?.jackpot ?? JACKPOT_SEED);
     await ctx.q.query("UPDATE fortune_global SET jackpot=$1, winner_id=$2, winner_amount=$3, won_at=$4 WHERE id='_all'", [JACKPOT_SEED, ctx.pid, jackpot, new Date(ctx.now)]);
-    reward = await grantReward(ctx, { currencies: { USD: jackpot } }, "fortune_jackpot");
+    reward = await grantReward(ctx, { currencies: { RUB: jackpot } }, "fortune_jackpot");
   } else if (cup.reward) reward = await grantReward(ctx, cup.reward, `fortune_cup:${cup.kind}`);
   return { index, kind: cup.kind, final, reward, jackpot, fortune: await fortuneView(ctx.q, ctx.pid) };
 }
@@ -137,7 +137,7 @@ export async function fortuneBagOpen(ctx: Ctx, id: string) {
   if (have < bag.price) throw new GameError("fortune_no_keycaps", `Нужно ${bag.price} кнопок клавиатуры`);
   await takeItem(ctx, KEYCAP_ID, bag.price, `fortune_bag:${bag.id}`);
   const l = rollBagLoot(bag, ctx.rng);
-  const loot: Reward = mergeRewards({ xp: l.xp, currencies: { RUB: l.rub, USD: l.usd } },
+  const loot: Reward = mergeRewards({ xp: l.xp, currencies: { RUB: l.rub + l.usd } },
     ...Array.from({ length: l.stash }, () => ({ items: [{ id: STASH_IDS[Math.floor(ctx.rng() * STASH_IDS.length) % STASH_IDS.length], qty: 1 }] })));
   let tattoo: string | null = null;
   const set = TATTOO_SETS.find((s) => s.id === bag.set);

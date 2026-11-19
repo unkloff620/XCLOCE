@@ -22,7 +22,7 @@ export function TosyaScreen() {
   const t = state?.tosya ?? null;
   const [picked, setPicked] = useState<number | null>(null);
   const [got, setGot] = useState<{ reward: Granted; price: number } | null>(null);
-  const usd = state?.wallet.USD ?? 0;
+  const usd = state?.wallet.GOLD ?? 0;
   const buy = async () => {
     if (picked === null) return;
     const r = await act<{ slot: number; price: number; reward: Granted }>("tosya_buy", { slot: picked });
@@ -61,7 +61,7 @@ export function TosyaScreen() {
             {["keyboard", "gpu", "rug-pull-gun", "part-gear", "tat-yakuza-chest-l"].map((id) => <ItemArt key={id} id={id} size={30} />)}
             <Icon name="xp" size={28} />
             <Icon name="RUB" size={28} />
-            <Icon name="USD" size={28} />
+            <Icon name="GOLD" size={28} />
           </div>
         )}
       </div>
@@ -76,9 +76,9 @@ export function TosyaScreen() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={`/assets/tosya/${look.art ? `item${look.art}-c` : "pie-c"}.webp?v=${TOSYA_ART_V}`} alt="" width={140} draggable={false} />
             <button className="btn gold block" disabled={busy === "tosya_buy" || usd < t.next} onClick={buy}>
-              {t.next === 0 ? "Взять бесплатно" : <>Купить за <Icon name="USD" size={18} /> {money("USD", t.next)}</>}
+              {t.next === 0 ? "Взять бесплатно" : <>Купить за <Icon name="GOLD" size={18} /> {money("GOLD", t.next)}</>}
             </button>
-            {usd < t.next && <span className="tiny muted">Не хватает долларов</span>}
+            {usd < t.next && <span className="tiny muted">Не хватает слитков</span>}
           </div>
         </Modal>
       )}

@@ -77,7 +77,7 @@ export async function heistRush(ctx: Ctx, slot: number) {
   const r = await boxRow(ctx, slot);
   const d = heistBox(r.kind);
   if (Number(r.locks_done) >= d.locks) throw new GameError("heist_done", "Все замки сняты — открывай");
-  await takeMoney(ctx, "USD", LOCK_RUSH, `heist_rush:${slot}`);
+  await takeMoney(ctx, "TOOTH", LOCK_RUSH, `heist_rush:${slot}`);
   await ctx.q.query("UPDATE heist_boxes SET locks_done = locks_done + 1, pick_ends = NULL, rushed = rushed + 1 WHERE player_id=$1 AND slot=$2", [ctx.pid, slot]);
   return { slot, done: Number(r.locks_done) + 1 };
 }
@@ -90,7 +90,7 @@ export async function heistAuto(ctx: Ctx, slot: number) {
   if (r.auto) throw new GameError("heist_auto", "Автовзлом уже включён");
   const left = d.locks - Number(r.locks_done);
   if (left <= 0) throw new GameError("heist_done", "Все замки сняты — открывай");
-  await takeMoney(ctx, "USD", LOCK_RUSH * left, `heist_auto:${slot}`);
+  await takeMoney(ctx, "TOOTH", LOCK_RUSH * left, `heist_auto:${slot}`);
   await ctx.q.query("UPDATE heist_boxes SET auto=true, pick_ends=COALESCE(pick_ends, $3) WHERE player_id=$1 AND slot=$2", [ctx.pid, slot, new Date(ctx.now + LOCK_MS)]);
   return { slot, paid: LOCK_RUSH * left };
 }

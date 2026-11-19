@@ -97,5 +97,5 @@ export function rollHeistLoot(k: HeistKind, rng: () => number): Reward {
   for (let i = between(L.stashes[0], L.stashes[1], rng); i > 0; i--) add(pick(STASH_IDS, rng), 1);
   // rounded to hundreds, like the other rewards
   const rub = Math.round(between(L.rub[0], L.rub[1], rng) / 100) * 100;
-  return { currencies: { RUB: rub, USD: between(L.usd[0], L.usd[1], rng) }, items: [...items].map(([id, qty]) => ({ id, qty })) };
+  return { currencies: { RUB: rub, TOOTH: between(L.usd[0], L.usd[1], rng) }, items: [...items].map(([id, qty]) => ({ id, qty })) };
 }

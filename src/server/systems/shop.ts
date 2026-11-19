@@ -73,6 +73,7 @@ export async function exchange(ctx: Ctx, from: Currency, to: Currency, amount: n
     if (from === to) throw new GameError("bad_exchange", "Выбери разные валюты");
     // an event: open one Moscow day out of three
     if (!exchangeWindow(ctx.now, ctx.cfg.exchange.schedule).open) throw new GameError("exchange_closed", `Обменник закрыт — он ${exchangeScheduleText(ctx.cfg.exchange.schedule)}`);
+    if (!(ctx.cfg.exchange.rub[from] > 0 && ctx.cfg.exchange.rub[to] > 0)) throw new GameError("no_rate", "Курс на этот обмен ещё не назначен");
     const a = floorTo(from, amount);
     if (!(a > 0) || a !== Math.round(amount * 10 ** CURRENCY_DEFS[from].decimals) / 10 ** CURRENCY_DEFS[from].decimals) {
       throw new GameError("bad_amount", "Некорректная сумма");

@@ -49,9 +49,9 @@ describe("automation toggles", () => {
     resetConfigCache();
     const p = await newPlayer(db);
     await db.query("INSERT INTO heist_boxes (player_id, slot, kind) VALUES ($1, 0, 'gold')", [p]);
-    await setMoney(db, p, "USD", LOCK_RUSH * 3 + 7);
+    await setMoney(db, p, "TOOTH", LOCK_RUSH * 3 + 7);
     await act(db, p, "heist_auto", { slot: 0 }, T);
-    expect(await wallet(db, p, "USD")).toBe(7);
+    expect(await wallet(db, p, "TOOTH")).toBe(7);
     const mid = await inPlayerTx(db, p, async () => null, { now: T + 2 * H + M });
     expect(mid.state.heist!.boxes[0]).toMatchObject({ done: 2, auto: true });
     const o = await act(db, p, "heist_open", { slot: 0 }, T + 3 * H + M);

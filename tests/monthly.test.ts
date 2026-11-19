@@ -62,14 +62,14 @@ describe("«От звонка до звонка»", () => {
     expect((await view(p, at(31))).closed["31"]).toBe("done");
   });
 
-  it("a past day is bought out for 1 SOL; today and the future are not", async () => {
+  it("a past day is bought out for 1 gold bar; today and the future are not", async () => {
     const p = await newPlayer(db);
-    await setMoney(db, p, "SOL", 2);
+    await setMoney(db, p, "GOLD", 2);
     await expect(act(db, p, "month_buy", { day: 10 }, at(10))).rejects.toMatchObject({ code: "day_not_past" });
     await expect(act(db, p, "month_buy", { day: 12 }, at(10))).rejects.toMatchObject({ code: "day_not_past" });
     const r = await act(db, p, "month_buy", { day: 3 }, at(10));
     expect(r.state.monthly!.closed["3"]).toBe("bought");
-    expect(await wallet(db, p, "SOL")).toBe(1);
+    expect(await wallet(db, p, "GOLD")).toBe(1);
     await expect(act(db, p, "month_buy", { day: 3 }, at(10))).rejects.toMatchObject({ code: "day_closed" });
     await act(db, p, "month_buy", { day: 4 }, at(10));
     await expect(act(db, p, "month_buy", { day: 5 }, at(10))).rejects.toMatchObject({ code: "no_money" });
@@ -77,12 +77,12 @@ describe("«От звонка до звонка»", () => {
 
   it("rewards open by closed days, once each; the chest for the whole month", async () => {
     const p = await newPlayer(db);
-    await setMoney(db, p, "SOL", 40);
+    await setMoney(db, p, "GOLD", 40);
     await expect(act(db, p, "month_claim", { id: "t2" }, at(31))).rejects.toMatchObject({ code: "tier_locked" });
     for (let d = 1; d <= 2; d++) await act(db, p, "month_buy", { day: d }, at(31));
-    const usd = await wallet(db, p, "USD");
+    const rub = await wallet(db, p, "RUB");
     const r = await act(db, p, "month_claim", { id: "t2" }, at(31));
-    expect(await wallet(db, p, "USD")).toBe(usd + 30);
+    expect(await wallet(db, p, "RUB")).toBe(rub + 30);
     await expect(act(db, p, "month_claim", { id: "t2" }, at(31))).rejects.toMatchObject({ code: "tier_taken" });
     expect(r.state.monthly!.tiers.find((t) => t.id === "t2")!.got).toBeTruthy();
     for (let d = 3; d <= 30; d++) await act(db, p, "month_buy", { day: d }, at(31));
@@ -97,7 +97,7 @@ describe("«От звонка до звонка»", () => {
     const c = await act(db, p, "month_claim", { id: "all" }, at(31), always(0));
     expect(c.result).toMatchObject({ chest: true });
     expect(await qty(db, p, "rug-pull-gun")).toBe(rpg + 59);
-    expect(c.result.reward.currencies).toMatchObject({ USD: 200, RUB: 30_000, SOL: 3 });
+    expect(c.result.reward.currencies).toMatchObject({ RUB: 30_000, GOLD: 3 });
     expect(c.result.reward.achPoints).toBe(20);
   });
 

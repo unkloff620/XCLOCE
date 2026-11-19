@@ -65,6 +65,8 @@ async function textFor(q: Queryable, n: Due, now: number): Promise<string | null
       return `🔥 ${bossById(f.boss_id)?.name ?? "Босс"} почти повержен — осталось ${pct}% здоровья.\nДобей его и забери награду!`;
     }
     case "streak": {
+      // the daily login bonus is gone from the game: the old reminders about its streak are dropped
+      if (n.kind === "streak") return null;
       const [d] = await q.query<{ last_day: string; streak: number }>("SELECT last_day, streak FROM daily_login WHERE player_id=$1", [n.player_id]);
       const today = moscowDay(now);
       const yesterday = moscowDay(now - 24 * 3600_000);

@@ -54,10 +54,10 @@ describe("«Взлом»: boxes with padlocks", () => {
 
     // a gold box: three padlocks; one paid, the rest picked
     await db.query("INSERT INTO heist_boxes (player_id, slot, kind) VALUES ($1, 2, 'gold')", [p]);
-    await setMoney(db, p, "USD", LOCK_RUSH + 5);
+    await setMoney(db, p, "TOOTH", LOCK_RUSH + 5);
     const rush = await act(db, p, "heist_rush", { slot: 2 }, T + 2 * H);
     expect(rush.result.done).toBe(1);
-    expect(await wallet(db, p, "USD")).toBe(5);
+    expect(await wallet(db, p, "TOOTH")).toBe(5);
     await expect(act(db, p, "heist_rush", { slot: 2 }, T + 2 * H)).rejects.toMatchObject({ code: "no_money" });
     await act(db, p, "heist_pick", { slot: 2 }, T + 2 * H);
     // the player must come back to start the next one: the second lock is off, the third waits
@@ -88,7 +88,7 @@ describe("«Взлом»: boxes with padlocks", () => {
     await heistOn(db);
     const p = await newPlayer(db);
     await db.query("INSERT INTO heist_boxes (player_id, slot, kind) VALUES ($1, 0, 'silver'), ($1, 1, 'silver')", [p]);
-    await setMoney(db, p, "USD", LOCK_RUSH * 2);
+    await setMoney(db, p, "TOOTH", LOCK_RUSH * 2);
     // box 0: both padlocks waited out
     await act(db, p, "heist_pick", { slot: 0 }, T);
     await act(db, p, "heist_pick", { slot: 0 }, T + H + M);

@@ -31,7 +31,7 @@ export const CLAN_BOSS_ROTATION = ["datsik", "kedr", "mugo", "garkusha", "bebyak
 export const CLAN_BOSS_HP_PER_MEMBER = 25_000;
 export const CLAN_BOSS_MIN_MEMBERS = 3;
 /** the prize pool per member of the clan (split by the share of the damage) */
-export const CLAN_BOSS_POOL_PER_MEMBER = { RUB: 3000, USD: 10, chips: 3, gpu: 1 };
+export const CLAN_BOSS_POOL_PER_MEMBER = { RUB: 3000, chips: 3, gpu: 1 };
 /** everyone who hit it gets at least this */
 export const CLAN_BOSS_FLOOR = { RUB: 500, chips: 1 };
 

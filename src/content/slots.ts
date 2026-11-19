@@ -21,11 +21,11 @@ export interface SlotOutcome {
 }
 
 export const SLOT_OUTCOMES: SlotOutcome[] = [
-  { id: "jackpot", title: "КУШ! 777", triple: "seven", kind: "jackpot", weight: 1, reward: { currencies: { RUB: 7777, USD: 12 }, items: [{ id: "gpu", qty: 1 }, { id: "keyboard", qty: 3 }] } },
-  { id: "bar", title: "Три BAR", triple: "bar", kind: "triple", weight: 1, reward: { currencies: { USD: 14 } } },
-  { id: "bell", title: "Три колокола", triple: "bell", kind: "triple", weight: 2, reward: { currencies: { USD: 4 } } },
+  { id: "jackpot", title: "КУШ! 777", triple: "seven", kind: "jackpot", weight: 1, reward: { currencies: { RUB: 7777 }, items: [{ id: "gpu", qty: 1 }, { id: "keyboard", qty: 3 }] } },
+  { id: "bar", title: "Три BAR", triple: "bar", kind: "triple", weight: 1, reward: { currencies: { RUB: 14 } } },
+  { id: "bell", title: "Три колокола", triple: "bell", kind: "triple", weight: 2, reward: { currencies: { RUB: 4 } } },
   { id: "melon", title: "Три арбуза", triple: "melon", kind: "triple", weight: 3, reward: { items: [{ id: "keyboard", qty: 2 }] } },
-  { id: "grape", title: "Три грозди", triple: "grape", kind: "triple", weight: 5, reward: { currencies: { USD: 7 } } },
+  { id: "grape", title: "Три грозди", triple: "grape", kind: "triple", weight: 5, reward: { currencies: { RUB: 7 } } },
   { id: "lemon", title: "Три лимона", triple: "lemon", kind: "triple", weight: 6, reward: { items: [{ id: "keyboard", qty: 3 }] } },
   { id: "cherry", title: "Три вишни", triple: "cherry", kind: "triple", weight: 9, reward: { currencies: { RUB: 777 } } },
   { id: "pair", title: "Пара!", triple: null, kind: "pair", weight: 28, reward: { currencies: { RUB: 150 } } },
@@ -51,6 +51,6 @@ export function slotLevel(xp: number): { level: number; into: number; need: numb
 /** what reaching this level pays: roubles growing with the level, every 5th level dollars too, every 10th a GPU */
 export function slotLevelReward(level: number): Reward {
   const currencies: NonNullable<Reward["currencies"]> = { RUB: 150 + 50 * level };
-  if (level % 5 === 0) currencies.USD = level;
+  if (level % 5 === 0) currencies.RUB = level;
   return { currencies, ...(level % 10 === 0 ? { items: [{ id: "gpu", qty: 1 }] } : {}) };
 }
