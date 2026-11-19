@@ -458,12 +458,17 @@ async function settlePoker(ctx: Ctx, gameId: number | null, cards: Card[], swapp
   const { hand, used } = pokerHand(cards);
   const def = pokerHandDef(hand);
   const before = pokerLevel(Number(p?.poker_xp ?? 0));
-  const base = pokerPay(hand, before.level);
+  // the keys and «Ворон» are one of a kind: had (or promised) already — gold bars instead
+  const unique = def.promise
+    ? (await ctx.q.query("SELECT 1 FROM promises WHERE player_id=$1 AND what=$2", [ctx.pid, def.promise])).length > 0
+    : (def.pay.items ?? []).some((x) => x.id === "keys-bundle") && (await itemQty(ctx.q, ctx.pid, "keys-bundle")) > 0;
+  const repeat = !!def.repeat && unique;
+  const base = repeat ? def.repeat! : pokerPay(hand, before.level);
   // a paying hand: a craft part or two on top
   const pay = isEmpty(base) ? base : mergeRewards(base, { items: rollParts(ctx.rng, between(1, 2, ctx.rng), { rare: 0.25 }) });
   const reward = isEmpty(pay) ? null : await grantReward(ctx, pay, `game:poker:${hand}`);
   // a prize not in the game yet (the royal flush's «Ворон»): promised, given when it comes
-  if (def.promise) await ctx.q.query("INSERT INTO promises (player_id, what, created_at) VALUES ($1,$2,$3)", [ctx.pid, def.promise, new Date(ctx.now)]);
+  if (def.promise && !repeat) await ctx.q.query("INSERT INTO promises (player_id, what, created_at) VALUES ($1,$2,$3)", [ctx.pid, def.promise, new Date(ctx.now)]);
   const [u] = await ctx.q.query<{ poker_xp: number }>("UPDATE players SET poker_xp = poker_xp + $2 WHERE id=$1 RETURNING poker_xp", [ctx.pid, def.xp]);
   await addGameWeekly(ctx, "poker", def.xp);
   await setGameBest(ctx, "poker_best", pokerRank(hand));

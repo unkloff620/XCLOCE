@@ -1541,11 +1541,11 @@ describe("yard mini games", () => {
     expect(pokerLevel(1e9)).toMatchObject({ level: 1000, to: null });
     expect(pokerLevel(pokerXpFor(500)).level).toBe(500);
     expect([0, 9, 10, 14, 15, 29, 30, 49, 50, 74, 75, 99, 100, 1000].map(pokerCheats)).toEqual([0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6]);
-    expect(pokerPay("pair", 0).currencies?.GOLD).toBe(2);
-    // whole dollars only (2 × 1.15 = 2.3 → 2)
-    expect(pokerPay("pair", 10).currencies?.GOLD).toBe(2);
-    // the money bonus stops at level 20: 2 × 1.3 = 2.6 → 3
-    expect(pokerPay("pair", 80).currencies?.GOLD).toBe(3);
+    expect(pokerPay("pair", 0).currencies?.RUB).toBe(20);
+    // whole roubles only (20 × 1.15 = 23)
+    expect(pokerPay("pair", 10).currencies?.RUB).toBe(23);
+    // the money bonus stops at level 20: 20 × 1.3 = 26
+    expect(pokerPay("pair", 80).currencies?.RUB).toBe(26);
     expect(pokerPay("high", 5)).toEqual({ items: [{ id: "poker-sticker", qty: 100 }] });
   });
 
@@ -1559,7 +1559,7 @@ describe("yard mini games", () => {
     expect(r.result.reward.currencies.RUB).toBeGreaterThanOrEqual(700);
     expect(await qty(db, p, "poker-sticker")).toBe(200);
     const { pokerPay } = await import("../src/content/games.ts");
-    expect(pokerPay("quads", 20).currencies?.GOLD).toBe(20);
+    expect(pokerPay("quads", 20).currencies?.GOLD).toBe(780); // 600 × 1.3
     expect(pokerPay("high", 0).items?.[0]).toEqual({ id: "poker-sticker", qty: 100 });
   });
 

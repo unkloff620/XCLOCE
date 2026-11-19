@@ -814,13 +814,17 @@ function PrizeIcons({ hand, level }: { hand: PokerHand; level: number }) {
       <>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <span className="pkt-cell one" title="Ворон — придёт в игру позже, выбивший получит его сразу"><img src="/assets/items/raven.webp" alt="Ворон" draggable={false} /><b className="num">скоро</b></span>
-        <span className="pkt-cell empty" /><span className="pkt-cell empty" />
+        {/* a second royal flush (Ворон already promised): gold bars instead */}
+        <span className="pkt-cell" title={`Повтор — ${pokerHandDef(hand).repeat?.currencies?.GOLD ?? 0} слитков`}><Icon name="GOLD" size={22} /><b className="num">{qtyText(pokerHandDef(hand).repeat?.currencies?.GOLD ?? 0)}</b></span>
+        <span className="pkt-cell empty" />
       </>
     );
   }
   const parts = [
     ...Object.entries(pay.currencies ?? {}).map(([c, v]) => ({ key: c, icon: <Icon name={c as Currency} size={22} />, n: v ?? 0, title: `${v} ${c}` })),
     ...(pay.items ?? []).map((it) => ({ key: it.id, icon: <ItemArt id={it.id} size={24} />, n: it.qty, title: `${itemById(it.id)?.name ?? it.id} ×${it.qty}` })),
+    // a one-of-a-kind prize already owned (the keys): gold bars instead
+    ...Object.entries(pokerHandDef(hand).repeat?.currencies ?? {}).map(([c, v]) => ({ key: `re-${c}`, icon: <Icon name={c as Currency} size={22} />, n: v ?? 0, title: `Повтор (уже есть) — ${v} слитков` })),
   ];
   // three cells, always (empty ones when the combination pays less): the columns of the list stay even; a one-of-a-kind
   // thing (the straight flush's «Связка ключей») — just its picture
@@ -830,7 +834,7 @@ function PrizeIcons({ hand, level }: { hand: PokerHand; level: number }) {
         const p = parts[k];
         const one = itemById(p?.key ?? "")?.maxStack === 1;
         return p
-          ? <span key={p.key} className={`pkt-cell ${one ? "one" : ""}`} title={p.title}>{p.icon}{!one && <b className="num">{p.key in (pay.currencies ?? {}) ? qtyText(p.n) : `×${p.n}`}</b>}</span>
+          ? <span key={p.key} className={`pkt-cell ${one ? "one" : ""}`} title={p.title}>{p.icon}{!one && <b className="num">{p.key in (pay.currencies ?? {}) || p.key.startsWith("re-") ? qtyText(p.n) : `×${p.n}`}</b>}</span>
           : <span key={`e${k}`} className="pkt-cell empty" />;
       })}
     </>
