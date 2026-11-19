@@ -68,7 +68,7 @@ export async function fortuneBuy(ctx: Ctx, qty: number) {
 export async function fortuneSpin(ctx: Ctx, all = false) {
   await mustBeOn(ctx);
   const have = await itemQty(ctx.q, ctx.pid, TICKET_ID);
-  if (have < 1) throw new GameError("fortune_no_ticket", "Нет билетов — купи или достань из ящика в магазине");
+  if (have < 1) throw new GameError("fortune_no_ticket", "Нет билетов — купи их здесь");
   const n = all ? Math.min(have, SPIN_ALL_MAX) : 1;
   await takeItem(ctx, TICKET_ID, n, "fortune_spin");
   const hits: number[] = [];

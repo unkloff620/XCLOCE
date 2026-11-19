@@ -3,9 +3,9 @@ import type { Reward } from "./rewards.ts";
 /*
  * «Ящик ништяков» on the shop shelf by the energy drinks. Achievement points (the sun) are never spent: every
  * ACH_BOX_COST points earned give one opening; the boxes already opened are counted (players.ach_boxes_opened).
- * So 73 points = 14 boxes, and the 15th comes at 75 (the box shows 3/5 meanwhile).
+ * So 730 points = 14 boxes, and the 15th comes at 750 (the box shows 30/50 meanwhile).
  */
-export const ACH_BOX_COST = 5;
+export const ACH_BOX_COST = 50;
 
 /** how many boxes are waiting, and the way to the next one */
 export function achBoxState(points: number, opened: number) {
@@ -13,13 +13,6 @@ export function achBoxState(points: number, opened: number) {
   return { points, opened, ready: Math.max(0, earned - opened), progress: Math.max(0, points) % ACH_BOX_COST, cost: ACH_BOX_COST };
 }
 
-/** what is inside: roubles and dollars at random, and every weapon on its own — 1–3 keyboards, a GPU (now and then two)
- * and often a Rug Pull Gun: on average 2 keyboards, 1,25 GPU and 0,77 Rug Pull Gun a box (169 boxes ≈ 340 / 210 / 130) */
-export const ACH_BOX_WEAPONS = [
-  { id: "keyboard", min: 1, max: 3, chance: 1, extra: 0 },
-  { id: "gpu", min: 1, max: 1, chance: 1, extra: 0.25 },
-  { id: "rug-pull-gun", min: 1, max: 1, chance: 0.77, extra: 0 },
-] as const;
 /** things for the mouth (slot «Рот»): each opened box with this chance gives one the player does not have yet */
 export const MOUTH_ITEMS = ["cigarette", "toothpick"] as const;
 export const MOUTH_ITEM_CHANCE = 0.1;
@@ -33,19 +26,12 @@ export const CASE_THING_CHANCE: Record<(typeof CASE_THINGS)[number], number> = {
 };
 /** this many boxes in a row without a thing — the next one gives a thing (a random missing one) for sure */
 export const CASE_THING_PITY = 20;
-export const ACH_BOX_RUB = { min: 300, max: 2_000, step: 50 };
-/** poker chips in every box (the yard no longer drops them) */
-export const ACH_BOX_CHIPS = { min: 1, max: 3 };
+/** what is inside (the user's table): папиросы, жетоны, рубли, зубы and нычки (that many random stash pieces, picked by
+ * the server); the tattoo and the thing are rolled by the server (BOX_TATTOO_CHANCE, CASE_THING_CHANCE / CASE_THING_PITY) */
+export const ACH_BOX_LOOT = { PAP: [700, 3500], TOKEN: [6, 12], RUB: [7, 13], TOOTH: [500, 3000], stash: [5, 14] } as const;
 
-export function rollAchBox(rng: () => number): Reward {
-  const rub = ACH_BOX_RUB.min + Math.floor(rng() * ((ACH_BOX_RUB.max - ACH_BOX_RUB.min) / ACH_BOX_RUB.step + 1)) * ACH_BOX_RUB.step;
-  rng(); // the old dollars' roll: kept so the rest of the box rolls as before
-  const items: { id: string; qty: number }[] = [];
-  for (const w of ACH_BOX_WEAPONS) {
-    if (rng() >= w.chance) continue;
-    const qty = w.min + Math.floor(rng() * (w.max - w.min + 1)) + (rng() < w.extra ? 1 : 0);
-    items.push({ id: w.id, qty });
-  }
-  items.push({ id: "poker-chip", qty: ACH_BOX_CHIPS.min + Math.floor(rng() * (ACH_BOX_CHIPS.max - ACH_BOX_CHIPS.min + 1)) });
-  return { currencies: { RUB: Math.min(ACH_BOX_RUB.max, rub) }, items };
+export function rollAchBox(rng: () => number): Reward & { stash: number } {
+  const r = ([a, b]: readonly [number, number], step = 1) => a + Math.floor(rng() * ((b - a) / step + 1)) * step;
+  const L = ACH_BOX_LOOT;
+  return { currencies: { PAP: r(L.PAP, 50), TOKEN: r(L.TOKEN), RUB: r(L.RUB), TOOTH: r(L.TOOTH, 50) }, stash: r(L.stash) };
 }

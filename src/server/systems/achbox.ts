@@ -3,9 +3,7 @@ import { grantReward, type Ctx } from "../core.ts";
 import { CASE_THINGS, CASE_THING_CHANCE, CASE_THING_PITY, achBoxState, rollAchBox } from "../../content/ach-box.ts";
 import { mergeRewards } from "../../content/rewards.ts";
 import { BOX_TATTOO_CHANCE, BOX_TATTOO_SETS } from "../../content/tattoos.ts";
-import { between, rollParts } from "../../content/craft-drops.ts";
-import { CASE_TICKETS, TICKET_ID } from "../../content/fortune.ts";
-import { fortuneOn } from "./fortune.ts";
+import { STASH_IDS } from "../../content/stashes.ts";
 
 /** «Ящик ништяков» (content/ach-box.ts): how many are waiting for the achievement points, the way to the next one */
 export async function achBoxView(q: Queryable, pid: number) {
@@ -52,11 +50,9 @@ export async function openAchBox(ctx: Ctx, all = false) {
     if (got) { mouthHave.add(got); ink.push({ id: got, qty: 1 }); miss = 0; } else miss += 1;
   }
   await ctx.q.query("UPDATE players SET case_thing_miss=$2 WHERE id=$1", [ctx.pid, miss]);
-  // «Крафт»: every box opened — 2–4 parts, 15% on a very rare one
-  const parts = Array.from({ length: n }, () => rollParts(ctx.rng, between(2, 4, ctx.rng), { rare: 0.3, epic: 0.15 / 3 })).flat();
-  // «Колесо удачи»: tickets in every box (once the wheel is in the yard for this player)
-  let tickets = 0;
-  if (await fortuneOn(ctx.q, ctx.pid, ctx.cfg)) for (let i = 0; i < n; i++) tickets += CASE_TICKETS.min + (ctx.rng() < CASE_TICKETS.extra ? 1 : 0);
-  const reward = await grantReward(ctx, mergeRewards(...Array.from({ length: n }, () => rollAchBox(ctx.rng)), { items: [...ink, ...parts, ...(tickets ? [{ id: TICKET_ID, qty: tickets }] : [])] }), "ach_box");
+  // the money and the нычки of every box (content/ach-box.ts ACH_BOX_LOOT): the stash pieces picked at random
+  const boxes = Array.from({ length: n }, () => rollAchBox(ctx.rng));
+  const stash = boxes.flatMap((b) => Array.from({ length: b.stash }, () => ({ id: STASH_IDS[Math.floor(ctx.rng() * STASH_IDS.length) % STASH_IDS.length], qty: 1 })));
+  const reward = await grantReward(ctx, mergeRewards(...boxes.map(({ currencies }) => ({ currencies })), { items: [...ink, ...stash] }), "ach_box");
   return { reward, opened: n, box: await achBoxView(ctx.q, ctx.pid) };
 }

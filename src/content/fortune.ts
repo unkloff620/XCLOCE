@@ -1,4 +1,5 @@
 import type { Reward } from "./rewards.ts";
+import { ACH_BOX_COST } from "./ach-box.ts";
 
 /*
  * «Колесо удачи» — a manhole wheel in the back yard. A spin costs one ticket (from the case in the shop, or bought for
@@ -92,7 +93,7 @@ export interface Cup { kind: CupKind; reward?: Reward }
 /** the nine cups: what lies under them (amounts rolled within the user's ranges) */
 export const CUP_SET: CupKind[] = ["energy", "gpu", "tickets", "chips", "jackpot", "pap", "case", "rpg", "keyboard"];
 /** «Ящик ништяков» = this many achievement points (one more opening of the case in the shop) */
-export const CUP_CASE_POINTS = 5;
+export const CUP_CASE_POINTS = ACH_BOX_COST;
 
 function pick(rng: () => number, from: number, to: number, step = 1) {
   return from + Math.floor(rng() * ((to - from) / step + 1)) * step;

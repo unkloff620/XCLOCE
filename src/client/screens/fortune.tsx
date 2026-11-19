@@ -314,7 +314,7 @@ export function FortuneScreen() {
         <Modal onClose={() => setOut(false)} title="Билеты кончились">
           <div className="fo-res">
             <ItemArt id={TICKET_ID} size={72} />
-            <p><b>Браток, билеты кончились.</b> Купи ещё или достань из «Ящика ништяков» в магазине.</p>
+            <p><b>Браток, билеты кончились.</b> Купи ещё — или выиграй на колесе и в чашках.</p>
             <button className="btn gold block" onClick={() => { setOut(false); setBuy(true); }}>Купить билеты</button>
           </div>
         </Modal>
@@ -606,7 +606,7 @@ function BuyTickets({ price, onClose, onDone }: { price: number; onClose: () => 
     <Modal onClose={onClose} title="Билеты колеса">
       <div className="fo-res">
         <ItemArt id={TICKET_ID} size={72} />
-        <p className="small">Один билет — одна прокрутка. Ещё билеты падают из «Ящика ништяков» в магазине.</p>
+        <p className="small">Один билет — одна прокрутка. Ещё билеты выпадают на колесе и в чашках.</p>
         <div className="fo-qty">
           {[1, 5, 10, 25].map((q) => <button key={q} type="button" className={`btn sm ${n === q ? "gold" : "dark"}`} onClick={() => setN(q)}>{q}</button>)}
           <button type="button" className={`btn sm ${n === max ? "gold" : "dark"}`} onClick={() => setN(max)}>макс</button>
@@ -625,7 +625,7 @@ function BuyTickets({ price, onClose, onDone }: { price: number; onClose: () => 
 function FortuneHelp() {
   return (
     <Help topic="fortune" title="Колесо удачи">
-      <p>Одна прокрутка — один билет. Билеты падают из «Ящика ништяков» в магазине или покупаются здесь по {TICKET_PRICE} ₽ (кнопка «+»).</p>
+      <p>Одна прокрутка — один билет. Билеты выпадают на колесе и в чашках или покупаются здесь по {TICKET_PRICE} ₽ (кнопка «+»).</p>
       <p>Каждая прокрутка любого игрока добавляет {JACKPOT_ADD} ₽ к общему джекпоту.</p>
       <p>На колесе 16 секторов: кнопки клавиатуры, Rug Pull Gun, билет, энергетик, наколка (скоро — свой сет колеса), рубли, жетоны, папиросы, видеокарта, опыт колеса, пустой сектор и <b>ПРИЗ</b>.</p>
       <p><b>ПРИЗ</b> — выбор: забрать {PRIZE_TAKE_RUB} ₽ сразу или рискнуть в чашки. Девять чашек: энергетики, видеокарты, билеты, фишки, папиросы, ящики ништяков, Rug Pull Gun, клавиатуры — и под одной джекпот. Чашки показывают призы, накрываются и перемешиваются — выбери одну. Кто сорвал джекпот, того видно наверху, а джекпот начинается заново с {JACKPOT_SEED} ₽.</p>

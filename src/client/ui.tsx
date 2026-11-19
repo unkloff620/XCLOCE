@@ -1,4 +1,5 @@
 "use client";
+import { STASH_IDS } from "../content/stashes.ts";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "./art/icons.tsx";
@@ -9,6 +10,8 @@ import type { Reward } from "../content/rewards.ts";
 import type { Granted } from "./api.ts";
 import { tattooSetsOfBoss } from "../content/tattoos.ts";
 import { full, money, pct } from "./format.ts";
+/** the нычки (stash pieces): grouped into one chip in the rewards */
+const STASH_SET = new Set<string>(STASH_IDS);
 
 /** tone "health": the fill goes from green (full) through yellow (half) to red (empty) — a boss's HP, the fight's time left */
 export function Bar({ value, max, tone = "green", label, height }: { value: number; max: number; tone?: "green" | "red" | "gold" | "violet" | "health"; label?: ReactNode; height?: number }) {
@@ -111,7 +114,10 @@ export function RewardChips({ r, size = 18, times = true, side = false, extra }:
   // nothing for 0 (a one-of-a-kind thing already owned); the craft parts — one chip «×N» with the parts pile, the names in the tooltip
   const all = (r.items ?? []).filter((it) => it.qty > 0);
   const parts = all.filter((it) => it.id.startsWith("part-"));
-  const items = all.filter((it) => !it.id.startsWith("part-"));
+  // the нычки (stash pieces) too: one chip «×N» with the chest, the names in the tooltip
+  const stash = all.filter((it) => STASH_SET.has(it.id));
+  const items = all.filter((it) => !it.id.startsWith("part-") && !STASH_SET.has(it.id));
+  const stashN = stash.reduce((t, it) => t + it.qty, 0);
   const partsN = parts.reduce((t, it) => t + it.qty, 0);
   const partsTip = parts.map((it) => `${itemById(it.id)?.name ?? it.id} ×${it.qty}`).join(", ");
   if (side) times = true;
@@ -133,6 +139,12 @@ export function RewardChips({ r, size = 18, times = true, side = false, extra }:
           {times ? n(full(it.qty)) : <span className="num">+{it.qty}</span>}
         </span>
       ))}
+      {stashN > 0 && (
+        <span className="chip rc-item rc-parts" title={`Нычки: ${stash.map((it) => `${itemById(it.id)?.name ?? it.id} ×${it.qty}`).join(", ")}`} aria-label={`Нычки ×${stashN}`}>
+          <Icon name="chest" size={sz + 2} />
+          {times ? n(full(stashN)) : <span className="num">×{stashN}</span>}
+        </span>
+      )}
       {partsN > 0 && (
         <span className="chip rc-item rc-parts" title={`Детали: ${partsTip}`} aria-label={`Детали ×${partsN}`}>
           <Icon name="parts" size={sz + 2} />

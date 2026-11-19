@@ -1,4 +1,5 @@
 import type { Reward } from "./rewards.ts";
+import { ACH_BOX_COST } from "./ach-box.ts";
 
 /*
  * «От звонка до звонка»: a «делюга» a day, the same for every player. Day N of the month (Moscow) has the N-th task of
@@ -78,7 +79,7 @@ export const MONTHLY_CHEST = {
 } as const satisfies Record<string, readonly [number, number]>;
 
 /** a case = one opening of «Ящик ништяков» (the achievement points it costs, content/ach-box.ts ACH_BOX_COST) */
-export const CASE_POINTS = 5;
+export const CASE_POINTS = ACH_BOX_COST;
 
 export interface MonthTier { id: string; need: number | "all"; reward: Reward; chest?: true }
 export const MONTHLY_TIERS: MonthTier[] = [

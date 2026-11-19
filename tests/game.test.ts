@@ -502,9 +502,11 @@ describe("yard", () => {
 describe("shop and exchange", () => {
   it("buys with server prices; not enough money changes nothing", async () => {
     const p = await newPlayer(db);
+    const rub0 = await wallet(db, p, "RUB");
     await act(db, p, "buy", { offerId: "keyboard-1", price: 1 }, T0);
-    expect(await wallet(db, p, "RUB")).toBe(310);
+    expect(await wallet(db, p, "RUB")).toBe(rub0 - 4);
     expect(await qty(db, p, "keyboard")).toBe(1);
+    await setMoney(db, p, "RUB", 4);
     await expect(act(db, p, "buy", { offerId: "gpu-1" }, T0)).rejects.toMatchObject({ code: "no_money" });
     expect(await qty(db, p, "gpu")).toBe(0);
   });
@@ -518,19 +520,20 @@ describe("shop and exchange", () => {
   it("sells weapons in batches with a discount", async () => {
     const p = await newPlayer(db);
     await setMoney(db, p, "RUB", 300000);
-    await act(db, p, "buy", { offerId: "keyboard-1", qty: 10 }, T0); // 1900 − 2%
-    expect(await wallet(db, p, "RUB")).toBe(300000 - 1862);
-    await act(db, p, "buy", { offerId: "keyboard-1", qty: 1000 }, T0); // 190 000 − 10%
-    expect(await wallet(db, p, "RUB")).toBe(300000 - 1862 - 171000);
+    await act(db, p, "buy", { offerId: "keyboard-1", qty: 10 }, T0); // 40 − 2%
+    expect(await wallet(db, p, "RUB")).toBe(300000 - 39);
+    await act(db, p, "buy", { offerId: "keyboard-1", qty: 1000 }, T0); // 4 000 − 10%
+    expect(await wallet(db, p, "RUB")).toBe(300000 - 39 - 3600);
     expect(await qty(db, p, "keyboard")).toBe(1010);
     await expect(act(db, p, "buy", { offerId: "keyboard-1", qty: 7 }, T0)).rejects.toMatchObject({ code: "bad_qty" });
     await expect(act(db, p, "buy", { offerId: "tee-white", qty: 10 }, T0)).rejects.toMatchObject({ code: "bad_qty" });
   });
   it("idempotent purchase is charged once", async () => {
     const p = await newPlayer(db);
+    const rub0 = await wallet(db, p, "RUB");
     await act(db, p, "buy", { offerId: "keyboard-1", idem: "b1" }, T0);
     await act(db, p, "buy", { offerId: "keyboard-1", idem: "b1" }, T0);
-    expect(await wallet(db, p, "RUB")).toBe(310);
+    expect(await wallet(db, p, "RUB")).toBe(rub0 - 4);
   });
   it("the exchanger's schedule: a cycle of days with Moscow hours, or always / never", () => {
     const day0 = Date.UTC(2026, 0, 3) - 3 * H; // a Moscow midnight
@@ -875,29 +878,30 @@ describe("the beard", () => {
 });
 
 describe("«Ящик ништяков»", () => {
-  it("one box for every 5 achievement points; the points stay", async () => {
+  it("one box for every 50 achievement points; the points stay; inside — папиросы, жетоны, рубли, зубы, нычки", async () => {
+    const { STASH_IDS } = await import("../src/content/stashes.ts");
     const p = await newPlayer(db);
-    await db.query("UPDATE players SET ach_points = 12 WHERE id=$1", [p]);
+    await db.query("UPDATE players SET ach_points = 120 WHERE id=$1", [p]);
     const a = await act(db, p, "ach_box_open", {}, T0, always(0.5));
-    expect(a.result.box).toMatchObject({ points: 12, opened: 1, ready: 1, progress: 2 });
-    // every box: keyboards, a GPU and (mostly) a Rug Pull Gun; the wheel's tickets (the wheel is open) are checked apart
-    expect(a.result.reward.items.some((i: { id: string }) => i.id === "fortune-ticket")).toBe(true);
-    const noParts = (l: { id: string }[]) => l.filter((i) => !i.id.startsWith("part-") && i.id !== "fortune-ticket"); // the box has craft parts too
-    expect(noParts(a.result.reward.items)).toEqual([{ id: "keyboard", qty: 2 }, { id: "gpu", qty: 1 }, { id: "rug-pull-gun", qty: 1 }, { id: "poker-chip", qty: 2 }]);
-    expect(a.result.reward.items.some((i: { id: string }) => i.id.startsWith("part-"))).toBe(true);
+    expect(a.result.box).toMatchObject({ points: 120, opened: 1, ready: 1, progress: 20 });
+    expect(a.result.reward.currencies).toEqual({ PAP: 2100, TOKEN: 9, RUB: 10, TOOTH: 1750 });
+    const stash = (l: { id: string; qty: number }[]) => l.filter((i) => STASH_IDS.includes(i.id)).reduce((n, i) => n + i.qty, 0);
+    expect(stash(a.result.reward.items)).toBe(10);
+    // no weapons, chips, tickets or craft parts any more
+    expect(a.result.reward.items.some((i: { id: string }) => ["keyboard", "gpu", "rug-pull-gun", "poker-chip", "fortune-ticket"].includes(i.id) || i.id.startsWith("part-"))).toBe(false);
     await act(db, p, "ach_box_open", {}, T0, always(0.5));
     await expect(act(db, p, "ach_box_open", {}, T0)).rejects.toMatchObject({ code: "ach_box_empty" });
     // «Открыть все»: every waiting box at once, one reward — the sum
-    await db.query("UPDATE players SET ach_points = 27 WHERE id=$1", [p]);
+    await db.query("UPDATE players SET ach_points = 270 WHERE id=$1", [p]);
     const all = await act(db, p, "ach_box_open", { all: true }, T0, always(0.5));
     expect(all.result).toMatchObject({ opened: 3, box: { opened: 5, ready: 0 } });
-    expect(noParts(all.result.reward.items)).toEqual([{ id: "keyboard", qty: 6 }, { id: "gpu", qty: 3 }, { id: "rug-pull-gun", qty: 3 }, { id: "poker-chip", qty: 6 }]);
+    expect(all.result.reward.currencies).toEqual({ PAP: 6300, TOKEN: 27, RUB: 30, TOOTH: 5250 });
   });
 
   it("case things: at most one a box; 20 boxes in a row without one — the 21st gives one for sure", async () => {
     const { CASE_THINGS } = await import("../src/content/ach-box.ts");
     const p = await newPlayer(db);
-    await db.query("UPDATE players SET ach_points = 1000 WHERE id=$1", [p]);
+    await db.query("UPDATE players SET ach_points = 10000 WHERE id=$1", [p]);
     const things = (r: { reward: { items: { id: string }[] } }) => r.reward.items.filter((i) => (CASE_THINGS as readonly string[]).includes(i.id));
     // a very lucky roll still gives one thing only
     const lucky = await act(db, p, "ach_box_open", {}, T0, always(0.001));
@@ -1800,8 +1804,8 @@ describe("yard mini games", () => {
     expect(upgradeChanceOf(upgradeMode("x2")!.mult)).toBeCloseTo(0.45, 4);
     expect(upgradeChanceOf(upgradeMode("x8")!.mult)).toBeCloseTo(0.1125, 4);
     expect(upgradeChanceOf(upgradeMode("c70")!.mult)).toBeCloseTo(0.7, 4);
-    expect(upgradeTarget(240)).toBe("keyboard");
-    expect(upgradeTarget(2500)).toBe("rug-pull-gun");
+    expect(upgradeTarget(240)).toBe("energy-drink");
+    expect(upgradeTarget(2500)).toBe("energy-pack");
     const p = await newPlayer(db);
     await give(db, p, "spinner", 4);
     // lose: the stake burns, nothing comes
@@ -2363,14 +2367,12 @@ describe("«Крафт»", () => {
     expect(row2.talent_biceps).toBe(0);
   });
 
-  it("a level-3 thing is a weapon: it hits the boss once and goes on its reload", async () => {
+  it("a level-3 thing is not a weapon (for now): it only adds damage in the stash", async () => {
     await setBossHp({ datsik: 100000 });
     const p = await newPlayer(db);
     await give(db, p, "craft3-railgun", 1);
     await startDatsik(p);
-    const r = await hit(p, "craft3-railgun");
-    expect(r.result.damage).toBeGreaterThanOrEqual(1200);
-    await expect(hit(p, "craft3-railgun", T0 + M)).rejects.toMatchObject({ code: "cooldown" });
+    await expect(hit(p, "craft3-railgun")).rejects.toMatchObject({ code: "bad_weapon" });
   });
 
   it("the dealer sells today's parts (a few of each), takes them back; a thing is taken apart; parts are asked for and sent ×5", async () => {

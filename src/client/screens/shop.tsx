@@ -9,6 +9,7 @@ import { BULK, bulkPrice, type Offer } from "../../content/shop.ts";
 import { Modal, RewardChips } from "../ui.tsx";
 import { sfx } from "../sound.ts";
 import { ACH_BOX_COST, CASE_THINGS } from "../../content/ach-box.ts";
+import { STASH_IDS } from "../../content/stashes.ts";
 import { Help, HelpList } from "../help.tsx";
 import type { Currency } from "../../content/currencies.ts";
 import { ITEMS, itemById, type ItemDef, type Slot } from "../../content/items.ts";
@@ -273,7 +274,10 @@ function lootParts(r: Granted): Granted[] {
   for (const [c, v] of Object.entries(r.currencies ?? {})) if (v) out.push(one({ currencies: { [c]: v } }));
   if (r.xp) out.push(one({ xp: r.xp }));
   if (r.energy) out.push(one({ energy: r.energy }));
-  for (const it of r.items ?? []) if (!it.id.startsWith("part-")) out.push(one({ items: [it] }));
+  for (const it of r.items ?? []) if (!it.id.startsWith("part-") && !STASH_IDS.includes(it.id)) out.push(one({ items: [it] }));
+  // the нычки: one tile «×N» too
+  const stash = (r.items ?? []).filter((it) => STASH_IDS.includes(it.id));
+  if (stash.length) out.push(one({ items: stash }));
   // the craft parts: one tile «×N» (RewardChips sums them)
   const parts = (r.items ?? []).filter((it) => it.id.startsWith("part-"));
   if (parts.length) out.push(one({ items: parts }));

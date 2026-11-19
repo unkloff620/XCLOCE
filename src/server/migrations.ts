@@ -1529,4 +1529,11 @@ ALTER TABLE shod_boost ADD COLUMN IF NOT EXISTS on_ BOOLEAN NOT NULL DEFAULT tru
     sql: `DELETE FROM wallets WHERE currency IN ('USD', 'SOL', 'BTC');
 DELETE FROM config WHERE key = 'exchange.rub';`,
   },
+  {
+    // «Ящик ништяков» now costs 50 achievement points a box (was 5): the boxes already opened count ten times less,
+    // the shop's weapon prices from the admin panel are dropped (the new ones are in content/shop.ts)
+    id: "v2-106-achbox-50",
+    sql: `UPDATE players SET ach_boxes_opened = FLOOR(ach_boxes_opened / 10);
+UPDATE config SET value = value - 'keyboard-1' - 'gpu-1' - 'rpg-1' WHERE key = 'prices' AND jsonb_typeof(value) = 'object';`,
+  },
 ];

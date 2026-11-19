@@ -175,9 +175,10 @@ export const CRAFT_ITEMS_2: CraftDef[] = [
   item2("fire-show", "Огненное шоу", [["craft-molotov", 3], ["craft-torch", 1], ["craft-water-gun", 1], ["part-sulfur", 10], ["part-pump", 10]], { dmg: { "red-candle": 50 } }, "Свечи горят красиво. Красные."),
 ];
 
-/** вещи 3 уровня (3): оружие — новые удары по боссам (permanent, со своей перезарядкой); в заныке тоже дают бонус */
-const item3 = (id: string, name: string, recipe: [string, number][], bonus: CraftBonus, description: string, weapon: CraftDef["weapon"]): CraftDef =>
-  ({ id: `craft3-${id}`, name, level: 3, rarity: "legendary", bonus, power: 1000, description, weapon, recipe: recipe.map(([rid, qty]) => ({ id: rid, qty })) });
+/** вещи 3 уровня (3): пока только бонус к урону в заныке — новым оружием они больше не становятся (переработаем позже;
+ * их оружейные данные — в последнем аргументе — не используются) */
+const item3 = (id: string, name: string, recipe: [string, number][], bonus: CraftBonus, description: string, _weapon: CraftDef["weapon"]): CraftDef =>
+  ({ id: `craft3-${id}`, name, level: 3, rarity: "legendary", bonus, power: 1000, description, recipe: recipe.map(([rid, qty]) => ({ id: rid, qty })) });
 export const CRAFT_ITEMS_3: CraftDef[] = [
   item3("railgun", "Рельсотрон из майнинг-фермы", [["craft2-mining-rig", 3], ["craft2-tesla-glove", 1], ["craft-laser-gun", 3], ["part-neodym", 20], ["part-quartz", 20]], { dmg: { gpu: 150 } },
     "Разгоняет видеокарты до скорости света и швыряет в босса.", { damage: 1200, cooldownMin: 360, animation: "gpu", action: "Выстрелить из рельсотрона" }),
@@ -188,8 +189,8 @@ export const CRAFT_ITEMS_3: CraftDef[] = [
 ];
 
 export const CRAFT_ALL: CraftDef[] = [...CRAFT_PARTS, ...CRAFT_ITEMS, ...CRAFT_ITEMS_2, ...CRAFT_ITEMS_3];
-/** the level-3 things are weapons: new hits in the boss fight (shown in the tray when you have one) */
-export const CRAFT_WEAPONS = CRAFT_ITEMS_3;
+/** level-3 things that are weapons (none for now: they only add damage in the stash) */
+export const CRAFT_WEAPONS = CRAFT_ITEMS_3.filter((c) => c.weapon);
 export const craftById = (id: string) => CRAFT_ALL.find((c) => c.id === id);
 export const CRAFT_LEVEL_NAME = ["Деталь", "Вещь 1 ур.", "Вещь 2 ур.", "Вещь 3 ур."];
 

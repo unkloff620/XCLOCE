@@ -98,7 +98,7 @@ describe("«От звонка до звонка»", () => {
     expect(c.result).toMatchObject({ chest: true });
     expect(await qty(db, p, "rug-pull-gun")).toBe(rpg + 59);
     expect(c.result.reward.currencies).toMatchObject({ RUB: 30_000, GOLD: 3 });
-    expect(c.result.reward.achPoints).toBe(20);
+    expect(c.result.reward.achPoints).toBe(200); // 4 cases × 50 points
   });
 
   it("a new month starts empty", async () => {
