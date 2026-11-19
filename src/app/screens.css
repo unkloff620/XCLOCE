@@ -7102,14 +7102,14 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .van-panel { position: absolute; inset: 0; pointer-events: none; }
 .van-panel > * { pointer-events: auto; }
 /* on the bumper: ‹ the button › (the bumper x 26–74%, y 80–88% of the trunk) */
-.van-ctl { position: absolute; left: 25%; right: 25%; top: 81.2%; height: 6%; display: grid; grid-template-columns: 7cqi 1fr 7cqi; align-items: center; gap: 1.5cqi; }
+.van-ctl { position: absolute; left: 28%; right: 28%; top: 81.6%; height: 5.2%; display: grid; grid-template-columns: 7cqi 1fr 7cqi; align-items: center; gap: 1.5cqi; }
 .van-arrow { width: 7cqi; height: 7cqi; padding: 0; border: 0; background: none; display: grid; place-items: center; cursor: pointer; }
 .van-arrow svg { width: 100%; height: auto; filter: drop-shadow(0 0 0.5px #fff) drop-shadow(0 0 0.5px #fff) drop-shadow(0 1px 1px rgba(0, 0, 0, 0.8)); }
 .van-arrow:active { transform: scale(0.92); }
-.van-go.btn { width: 100%; height: 100%; min-height: 0; padding: 0 1cqi; font-size: 2.1cqi; gap: 1cqi; border-width: 1px; border-radius: 0.8cqi; outline-offset: -0.7cqi;
+.van-go.btn { width: 100%; height: 100%; min-height: 0; padding: 0 1cqi; font-size: 1.9cqi; gap: 1cqi; border-width: 1px; border-radius: 0.8cqi; outline-offset: -0.7cqi;
   box-shadow: 0 0.4cqi 0 var(--b4), 0 0.8cqi 1.4cqi rgba(0, 0, 0, 0.45); }
 /* «Обмен» on the artist's slate (exchange.webp): the title, the coin, the number on the dark bar (57.98–69.6%), the price under it */
-.van-ex-paper { position: absolute; top: 4%; height: 80%; left: 31.55%; width: 36.9%; container-type: inline-size; color: #f3ead8; text-align: center;
+.van-ex-paper { position: absolute; top: 5.5%; height: 73%; left: 33.15%; width: 33.7%; container-type: inline-size; color: #f3ead8; text-align: center;
   background: url(/assets/van/exchange.webp) center / 100% 100% no-repeat; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.55)); }
 .van-ex-paper > * { position: absolute; left: 10%; right: 10%; display: flex; align-items: center; justify-content: center; }
 .van-ex-paper > b { top: 9%; height: 15%; font-size: 7.6cqi; text-transform: uppercase; line-height: 1.08; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.55); }
@@ -7121,18 +7121,19 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .van-ex-price-h { top: 72%; height: 7%; font-size: 6cqi; text-transform: uppercase; opacity: 0.85; }
 .van-ex-price { top: 79%; height: 9%; gap: 2cqi; font-weight: 900; font-size: 9cqi; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.55); }
 .van-ex-rate { top: 88.5%; height: 5%; font-size: 5.4cqi; white-space: nowrap; opacity: 0.75; }
-/* the slate: 80% of the trunk's height, its places as on the artist's marks — the name (y 10–17%), the contents (19–72%), the price on the ribbon (76.5–87%) */
-.van-plaque { position: absolute; top: 4%; height: 80%; left: 28.1%; width: 43.8%; container-type: inline-size; color: #f3ead8; }
+/* the slate: 73% of the trunk's height, its places as on the artist's marks — the name (y 10–17%), the contents (19–72%), the price on the ribbon (76.5–87%) */
+.van-plaque { position: absolute; top: 5.5%; height: 73%; left: 30.05%; width: 39.9%; container-type: inline-size; color: #f3ead8; }
 .van-plaque > img { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.55)); }
 .van-plaque-name { position: absolute; left: 19%; right: 19%; top: 10.3%; height: 6.8%; display: flex; align-items: center; justify-content: center; text-align: center; white-space: nowrap;
   font-size: 4.9cqi; line-height: 1; text-transform: uppercase; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.5); }
-.van-plaque-in { position: absolute; left: 19%; right: 17%; top: 19%; bottom: 28.5%; overflow: hidden; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: center; gap: 2.4cqi 1cqi; }
+.van-plaque-in { position: absolute; left: 25%; right: 21%; top: 19%; bottom: 28.5%; overflow: hidden; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: center; gap: 2.6cqi 3cqi; }
 .van-plaque-in:has(.rchips) { display: flex; }
 .van-plaque-in .rchips { justify-content: center; flex-wrap: wrap; }
-.van-plaque-in > span { display: flex; align-items: center; gap: 1.2cqi; min-width: 0; font-size: 5.4cqi; line-height: 1; white-space: nowrap; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); }
-.van-plaque-in > span > svg { width: 7.6cqi !important; height: 7.6cqi !important; }
+.van-plaque-in > span { display: flex; align-items: center; gap: 1.2cqi; min-width: 0; font-size: 4.6cqi; line-height: 1; white-space: nowrap; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); }
+.van-plaque-in > span > b { font-weight: 400; font-family: var(--font-body), system-ui; }
+.van-plaque-in > span > svg { width: 7cqi !important; height: 7cqi !important; }
 .van-plaque-in.many { gap: 1.6cqi 1cqi; }
-.van-plaque-in.many > span > svg { width: 6.8cqi !important; height: 6.8cqi !important; }
+.van-plaque-in.many > span > svg { width: 6.4cqi !important; height: 6.4cqi !important; }
 .van-plaque-price { position: absolute; left: 20%; right: 20%; top: 76.5%; height: 10.5%; display: flex; align-items: center; justify-content: center; gap: 1.5cqi;
   font-size: 7.5cqi; color: #3b2a1a; text-transform: uppercase; }
 .van-plaque-price svg { width: 9cqi !important; height: 9cqi !important; }

@@ -154,7 +154,7 @@ function VanPacks() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={`${V}/plaque-${kind}.webp`} alt="" draggable={false} />
         {(kind === "gold" || kind === "silver") && <i className="van-plaque-rim" aria-hidden="true" />}
-        <b className="van-plaque-name display">{p.price ? p.name : "Подгон от барыги"}</b>
+        <b className="van-plaque-name display">{p.price ? p.name.replace(/\s+подгон$/i, "") : "Подгон от барыги"}</b>
         <div className={`van-plaque-in ${Object.keys(inside.currencies ?? {}).length + (inside.items ?? []).length + (inside.achPoints ? 1 : 0) > 9 ? "many" : ""}`}>
           {got ? <RewardChips r={got} size={18} /> : <>
             {Object.entries(inside.currencies ?? {}).map(([c, n]) => <span key={c}><Icon name={c} size={22} /><b className="num">+{full(n ?? 0)}</b></span>)}
