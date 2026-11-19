@@ -7093,12 +7093,19 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .van-arrow { width: 44px; height: 44px; border: 0; background: none; display: grid; place-items: center; cursor: pointer; }
 .van-arrow:active { transform: scale(0.92); }
 .van-go { grid-column: 1 / -1; width: min(100%, 250px); }
-.van-ex-paper { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 26px 18px 22px; color: #2b1a0b; text-align: center;
-  background: url(/assets/ui/rating-sheet.webp) center / 100% 100% no-repeat; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.55)); }
-.van-ex-paper > b { font-size: 18px; text-transform: uppercase; line-height: 1.1; }
-.van-ex-paper input { width: 80%; padding: 6px 10px; border: 2px solid #8a6a3a; border-radius: 4px; background: #fff6e0; color: #2b1a0b; font: 800 20px/1 var(--font-body), system-ui; text-align: center; }
-.van-ex-price-h { font-size: 14px; text-transform: uppercase; }
-.van-ex-price { display: inline-flex; align-items: center; gap: 5px; font-weight: 900; font-size: 20px; }
+/* «Обмен» on the artist's slate (exchange.webp): the title, the coin, the number on the dark bar (57.98–69.6%), the price under it */
+.van-ex-paper { position: relative; width: min(100%, 212px); aspect-ratio: 852 / 1240; container-type: inline-size; color: #f3ead8; text-align: center;
+  background: url(/assets/van/exchange.webp) center / 100% 100% no-repeat; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.55)); }
+.van-ex-paper > * { position: absolute; left: 10%; right: 10%; display: flex; align-items: center; justify-content: center; }
+.van-ex-paper > b { top: 9%; height: 15%; font-size: 7.6cqi; text-transform: uppercase; line-height: 1.08; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.55); }
+.van-ex-coin { top: 27%; height: 27%; }
+.van-ex-coin svg, .van-ex-coin img { width: 34cqi !important; height: 34cqi !important; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6)); }
+.van-ex-paper input { position: absolute; left: 9%; width: 81%; top: 58%; height: 11.6%; padding: 0 3%; border: 0; border-radius: 0; background: transparent;
+  color: #ffe08a; font: 900 11cqi/1 var(--font-body), system-ui; text-align: center; outline: none; }
+.van-ex-paper input:focus { box-shadow: inset 0 0 0 2px rgba(255, 210, 110, 0.55); }
+.van-ex-price-h { top: 72%; height: 7%; font-size: 6cqi; text-transform: uppercase; opacity: 0.85; }
+.van-ex-price { top: 79%; height: 9%; gap: 2cqi; font-weight: 900; font-size: 9cqi; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.55); }
+.van-ex-rate { top: 88.5%; height: 5%; font-size: 4.2cqi; opacity: 0.75; }
 .van-plaque { position: relative; width: 100%; aspect-ratio: 1117 / 1371; container-type: inline-size; color: #f3ead8; }
 .van-plaque > img { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.55)); }
 .van-plaque-name { position: absolute; left: 10%; right: 10%; top: 7%; text-align: center; font-size: 5.6cqi; line-height: 1.05; text-transform: uppercase; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.5); }

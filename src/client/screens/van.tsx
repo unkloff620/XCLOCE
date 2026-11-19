@@ -79,7 +79,7 @@ export function VanWindow({ onClose }: { onClose: () => void }) {
 
 const NAME_GEN: Partial<Record<Currency, string>> = { PAP: "папирос", TOOTH: "зубов" };
 
-/** «Обмен»: the paper — how many roubles (or tokens, ‹ ›), the price in the week's currency */
+/** «Обмен»: the slate (exchange.webp) — how many roubles (or tokens, ‹ ›), the price in the week's currency */
 function VanExchange() {
   const { state, act, busy } = useGame();
   const v = state!.van!;
@@ -98,11 +98,11 @@ function VanExchange() {
       <button type="button" className="van-arrow l" onClick={turn} aria-label="Другая валюта"><IcArrow /></button>
       <div className="van-ex-paper">
         <b className="display">Сколько нужно {give === "RUB" ? "рублей" : "жетонов"}</b>
-        <Icon name={give} size={56} />
+        <span className="van-ex-coin"><Icon name={give} size={56} /></span>
         <input inputMode="numeric" value={qty} onChange={(e) => setQty(e.target.value.replace(/[^0-9]/g, "").replace(/^0+(?=\d)/, ""))} aria-label="Сколько" />
         <span className="display van-ex-price-h">Цена вопроса:</span>
         <span className="van-ex-price num">{full(cost)} <Icon name={v.takes} size={20} /></span>
-        <span className="tiny">1 {give === "RUB" ? "₽" : "жетон"} = {full(v.rates[give])} {NAME_GEN[v.takes]} · есть {full(have)}</span>
+        <span className="van-ex-rate">1 {give === "RUB" ? "₽" : "жетон"} = {full(v.rates[give])} {NAME_GEN[v.takes]} · есть {full(have)}</span>
       </div>
       <button type="button" className="van-arrow r" onClick={turn} aria-label="Другая валюта"><IcArrow flip /></button>
       <button type="button" className="btn gold van-go" disabled={!n || cost > have || busy === "van_exchange"} onClick={go}>{cost > have ? "Не хватает" : "Обменять"}</button>

@@ -55,3 +55,20 @@ rim[..., :3] = 255
 rim[..., 3] = (band * 255).astype(np.uint8)
 Image.fromarray(rim).save(os.path.join(OUT, "plaque-rim.webp"), quality=90, method=6)
 print("plaque", p.size)
+
+# «Обмен»: the slate with the dark bar (the input sits on the bar) — only the slate itself (stray marks above it off)
+e = np.array(Image.open(os.path.join(SRC, "exchange.png")).convert("RGBA"))
+lab, n = ndimage.label(e[..., 3] > 40)
+big = 1 + int(np.argmax(ndimage.sum(np.ones_like(lab), lab, range(1, n + 1))))
+keep = ndimage.binary_dilation(lab == big, iterations=3)
+e[~keep] = 0
+ei = Image.fromarray(e)
+x0, y0, x1, y1 = ei.getbbox()
+ei = ei.crop((x0, y0, x1, y1))
+ei.save(os.path.join(OUT, "exchange.webp"), quality=90, method=6)
+g = np.asarray(ei.convert("L")).astype(int)
+mid = g[:, ei.width // 2] < 50
+rows = [y for y in range(int(ei.height * 0.3), int(ei.height * 0.9)) if mid[y]]
+cy = (rows[0] + rows[-1]) // 2
+cols = [x for x in range(int(ei.width * 0.1), int(ei.width * 0.9)) if g[cy, x] < 50]
+print("exchange", ei.size, f"bar top {rows[0] / ei.height * 100:.2f}% bottom {rows[-1] / ei.height * 100:.2f}% left {cols[0] / ei.width * 100:.2f}% right {cols[-1] / ei.width * 100:.2f}%")

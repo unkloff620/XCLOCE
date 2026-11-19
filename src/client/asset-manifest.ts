@@ -3564,6 +3564,7 @@ export const ASSET_FILES: string[] = [
  "/assets/upgrader/needle.webp",
  "/assets/upgrader/room.webp",
  "/assets/van/body.webp",
+ "/assets/van/exchange.webp",
  "/assets/van/plaque-bronze.webp",
  "/assets/van/plaque-free.webp",
  "/assets/van/plaque-gold.webp",
