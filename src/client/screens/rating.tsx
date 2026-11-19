@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api.ts";
 import { useGame, useNow } from "../store.tsx";
@@ -81,7 +82,8 @@ function MyPrizes() {
   );
 }
 
-export function RatingScreen() {
+/** The weekly tops on a sheet of old paper: opened over the hero on the home screen (onClose — back to the room). */
+export function RatingBoard({ onClose }: { onClose: () => void }) {
   const { state } = useGame();
   const now = useNow();
   const [data, setData] = useState<Rating | null>(null);
@@ -110,7 +112,7 @@ export function RatingScreen() {
   };
 
   return (
-    <div className="fit-page rt-page">
+    <div className="rt-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="rt-board">
         {/* the paper tabs stuck to the left edge of the sheet */}
         <div className="rt-side" role="tablist">
@@ -122,18 +124,12 @@ export function RatingScreen() {
           ))}
         </div>
         <div className="rt-sheet">
-          <Link href="/" className="rt-x" aria-label="Закрыть">✕</Link>
+          <button className="rt-x" onClick={onClose} aria-label="Закрыть">✕</button>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <h1 className="rt-head display">{head}<img src="/assets/ui/trophy.webp" alt="" draggable={false} /></h1>
           <div className="rt-scroll" ref={scroll}>
       <MyPrizes />
 
-      {(tab === "damage" || tab === "clans") && data && (
-        <div className="rt-week">
-          <span>{tab === "damage" ? "Топ-10 недели получает призы" : "Лучшие кланы недели получают призы"}</span>
-          <button className="btn dark sm" onClick={() => setPrizesOpen((v) => !v)}>{prizesOpen ? "Скрыть" : "Призы"}</button>
-        </div>
-      )}
       {prizesOpen && data && tab !== "authority" && tab !== "games" && (
         <div className="panel col" style={{ gap: 6 }}>
           {tab === "damage" ? (
@@ -225,6 +221,7 @@ export function RatingScreen() {
       )}
           </div>
           <div className="rt-foot">
+            {(tab === "damage" || tab === "clans") && data && <button className="btn dark sm rt-prize-btn" onClick={() => { haptic.tap(); setPrizesOpen((v) => !v); scroll.current?.scrollTo({ top: 0, behavior: "smooth" }); }}>{prizesOpen ? "Скрыть" : "Призы"}</button>}
             {data && tab !== "authority" && <span>Сброс через <b className="num">{untilText(data.week.end - now)}</b></span>}
           </div>
           {/* on the strip of tape at the bottom left, turned with it */}
@@ -233,4 +230,11 @@ export function RatingScreen() {
       </div>
     </div>
   );
+}
+
+/** /rating (old links): the tops open over the hero on the home screen */
+export function RatingScreen() {
+  const router = useRouter();
+  useEffect(() => { router.replace("/?top=1"); }, [router]);
+  return null;
 }

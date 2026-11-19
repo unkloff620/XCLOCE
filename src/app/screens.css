@@ -6975,20 +6975,23 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 @media (prefers-reduced-motion: reduce) { .statue-glint { display: none; } }
 
 /* ---------- «Рейтинг» on a sheet of old parchment (tools/ui/build-rating.py: rating-sheet.webp, rating-tab.webp) ---------- */
-.rt-page { background: radial-gradient(120% 80% at 50% 40%, rgba(70, 40, 15, 0.35), transparent 70%), var(--tex), #120c08; }
-.rt-board { position: absolute; top: var(--top); bottom: var(--bottom); left: 4px; right: 6px; display: flex; }
-.rt-side { flex: none; width: 60px; display: flex; flex-direction: column; gap: 6px; padding-top: 70px; position: relative; z-index: 0; margin-right: -10px; }
-.rt-side-tab { position: relative; width: 70px; height: 60px; padding: 0 14px 0 9px; border: 0; cursor: pointer; display: grid; place-items: center start;
+/* over the hero on the home screen: the sheet in the middle of the free space between the HUD and the nav */
+.rt-overlay { position: fixed; z-index: 40; left: 0; right: 0; margin: 0 auto; max-width: var(--col); top: calc(var(--hud-h) + var(--safe-t) + 6px);
+  bottom: calc(var(--nav-h) + var(--safe-b) + 6px); display: grid; place-items: center; animation: rt-in 0.22s ease-out; }
+@keyframes rt-in { from { opacity: 0; transform: translateY(14px) rotate(-1deg); } }
+.rt-board { position: relative; width: min(calc(100% - 88px), 330px); height: min(100%, calc(min(calc(100vw - 88px), 330px) * 1.72)); display: flex; container-type: size; }
+.rt-side { position: absolute; right: calc(100% - 12px); top: 15%; z-index: 0; display: flex; flex-direction: column; gap: 6px; }
+.rt-side-tab { position: relative; width: 56px; height: 50px; padding: 0 12px 0 6px; border: 0; cursor: pointer; display: grid; place-items: center start;
   background: url(/assets/ui/rating-tab.webp) left center / 100% 100% no-repeat; filter: brightness(0.62) saturate(0.85) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
-  transform: translateX(-5px); transition: transform 0.18s, filter 0.18s; -webkit-tap-highlight-color: transparent; }
-.rt-side-tab img { width: 40px; height: 40px; object-fit: contain; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.45)); pointer-events: none; }
+  transform: translateX(-3px); transition: transform 0.18s, filter 0.18s; -webkit-tap-highlight-color: transparent; }
+.rt-side-tab img { width: 32px; height: 32px; object-fit: contain; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.45)); pointer-events: none; }
 .rt-side-tab.on { filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45)); transform: none; }
 .rt-side-tab:not(.on):active { transform: translateX(-3px); }
 .rt-sheet { position: relative; z-index: 1; flex: 1; min-width: 0; display: flex; flex-direction: column;
   background: url(/assets/ui/rating-sheet.webp) center / 100% 100% no-repeat; filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.6));
-  padding: 64px 20px 40px 24px; container-type: inline-size; color: #2b1a0b; --ink: #2b1a0b; --muted: #6e5232; --gold: #7a4a00; --line: #3b2410; text-shadow: none; }
-.rt-head { margin: 0 24px 10px 6px; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 8px; text-align: center;
-  font-size: clamp(12px, 5.6cqi, 20px); line-height: 1.1; color: #1e1208; text-transform: uppercase; letter-spacing: 0.06em; }
+  padding: 13cqh 7cqi 0 8cqi; color: #2b1a0b; --ink: #2b1a0b; --muted: #6e5232; --gold: #7a4a00; --line: #3b2410; text-shadow: none; }
+.rt-head { margin: 0 6% 2.2cqh; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 6px; text-align: center;
+  font-size: clamp(11px, 4.6cqi, 16px); line-height: 1.1; color: #1e1208; text-transform: uppercase; letter-spacing: 0.05em; }
 .rt-x { position: absolute; top: 6px; right: 2px; z-index: 3; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
   background: radial-gradient(circle at 35% 30%, #ffe27a, #f5a623 60%, #b86d0a); border: 2px solid #3b2410; color: #3b2410; font: 900 16px/1 system-ui;
   text-decoration: none; box-shadow: 0 2px 0 #3b2410, 0 3px 6px rgba(0, 0, 0, 0.45); }
@@ -6997,7 +7000,7 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
   -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 26px), transparent); mask-image: linear-gradient(180deg, #000 calc(100% - 26px), transparent); padding-bottom: 22px; }
 .rt-scroll::-webkit-scrollbar { width: 4px; }
 .rt-scroll::-webkit-scrollbar-thumb { background: rgba(59, 36, 16, 0.55); border-radius: 4px; }
-.rt-foot { flex: none; display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 8px 4px 0 40px; border-top: 1px dashed rgba(59, 36, 16, 0.35);
+.rt-foot { flex: none; height: 15cqh; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-start; gap: 6px; padding: 1.4cqh 2px 0 40%;
   font: 800 11px/1.2 var(--font-body), system-ui; text-transform: uppercase; letter-spacing: 0.03em; color: #4a3018; white-space: nowrap; }
 .rt-find { position: absolute; z-index: 3; left: 14.5%; top: 91.8%; transform: translate(-50%, -50%) rotate(33deg); width: 30%; padding: 6px 0; border: 0; background: none;
   color: #2b1a0b; font-size: clamp(11px, 4cqi, 15px); line-height: 1; white-space: nowrap; letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; text-shadow: 0 1px 0 rgba(255, 240, 200, 0.35); }
@@ -7025,4 +7028,8 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .rt-sheet .empty { color: #4a3018; }
 .rt-flash { animation: rt-flash 1.2s ease-out; }
 @keyframes rt-flash { 0%, 40% { box-shadow: 0 0 0 4px rgba(197, 106, 27, 0.75); } 100% { box-shadow: 0 0 0 0 rgba(197, 106, 27, 0); } }
-.rt-head img { width: 1.5em; height: 1.5em; flex: none; }
+.rt-head img { width: 1.6em; height: 1.6em; flex: none; }
+.rt-prize-btn { padding: 4px 14px !important; min-height: 0; font-size: 12px; }
+/* the tops open over the hero: the room's buttons step aside, the room dims a little */
+.fit-page.topping :is(.room-left, .room-right, .room-label, .room-help, .room-arrow, .room-switch, .room-top), .fit-page.topping > .fight-card { display: none; }
+.fit-page.topping .room-view { filter: brightness(0.7); transition: filter 0.2s; }

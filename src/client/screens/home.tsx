@@ -23,6 +23,7 @@ import { money } from "../format.ts";
 import { Help, HelpList } from "../help.tsx";
 import { CURRENCY_DEFS } from "../../content/currencies.ts";
 import { BARE_HIDES, Stylist, type StyleDraft } from "./stylist.tsx";
+import { RatingBoard } from "./rating.tsx";
 import { MessagesWindow, messagesWaiting, StashWishWindow } from "./stash-swap.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { ExchangeNotice } from "../exchange-notice.tsx";
@@ -73,6 +74,13 @@ export function HomeScreen() {
     setEditFocus((f) => ({ ...f, part }));
   }, []);
   const [daily, setDaily] = useState(false);
+  // «Рейтинг»: a sheet of paper over the hero (old /rating links come here as /?top=1)
+  const [top, setTop] = useState(false);
+  useEffect(() => {
+    if (!new URLSearchParams(location.search).has("top")) return;
+    setTop(true);
+    history.replaceState(history.state, "", location.pathname);
+  }, []);
   const [updOpen, setUpdOpen] = useState(false);
   const [wish, setWish] = useState(false);
   const [messages, setMessages] = useState(false);
@@ -106,7 +114,7 @@ export function HomeScreen() {
   const [viewIdx, setViewIdx] = useState<number | null>(null);
   const dailyReady = !!state?.daily.available;
   // the first-visit tour goes first; the daily reward window waits for it
-  const busyWindow = (state?.pending.length ?? 0) > 0 || tutorialPending(state) || !!styling || !!decorating;
+  const busyWindow = (state?.pending.length ?? 0) > 0 || top || tutorialPending(state) || !!styling || !!decorating;
   useEffect(() => {
     if (dailyReady && !busyWindow && !dailyAutoShown) {
       dailyAutoShown = true;
@@ -166,7 +174,7 @@ export function HomeScreen() {
   const editing = !!styling || !!decorating;
   const hpPct = f ? `${Math.max(0, Math.min(100, (f.hp / Math.max(1, f.hpMax)) * 100))}%` : "0%";
   return (
-    <div className={`fit-page ${f && fb && fightOpen ? "has-fight" : ""} ${editing ? "styling" : ""} ${decorating ? "decorating" : ""}`}>
+    <div className={`fit-page ${f && fb && fightOpen ? "has-fight" : ""} ${editing ? "styling" : ""} ${decorating ? "decorating" : ""} ${top ? "topping" : ""}`}>
       <div className="room">
         <div className={`scene-backdrop ${owned ? "" : "locked"}`} style={{ backgroundImage: `url(/assets/home/${ROOM_BACKDROP[viewRoom.id] ?? ROOM_BACKDROP.basic}.webp)` }} />
         <div className={`room-view ${owned ? "" : "locked"}`}>
@@ -279,10 +287,10 @@ export function HomeScreen() {
                 <ItemArt id="stash-cigs" size={54} />
                 {(state.stashWish?.length ?? 0) > 0 && <span className="side-count num">{state.stashWish!.length}/6</span>}
               </button>
-              <Link href="/rating" className={`icon-btn-art ${state.prizes.length ? "glow" : ""}`} style={{ ["--c" as string]: "#ffcc33" }} aria-label="Рейтинг" title="Рейтинг">
+              <button onClick={() => setTop(true)} className={`icon-btn-art ${state.prizes.length ? "glow" : ""}`} style={{ ["--c" as string]: "#ffcc33" }} aria-label="Рейтинг" title="Рейтинг">
                 <Icon name="trophy" size={54} />
                 {state.prizes.length > 0 && <i className="side-dot" />}
-              </Link>
+              </button>
             </div>
           )}
         </div>
@@ -329,6 +337,7 @@ export function HomeScreen() {
       )}
       {styling && <Stylist draft={styling} setDraft={setStyling} onClose={() => setStyling(null)} focus={editFocus} setFocus={setEditFocus} onRoom={openRoomEditor} />}
       {daily && <DailyWindow onClose={() => setDaily(false)} />}
+      {top && <RatingBoard onClose={() => setTop(false)} />}
       <UpdatesNotice wait={busyWindow || daily || (dailyReady && !dailyAutoShown)} onOpen={setUpdOpen} />
       <ExchangeNotice wait={busyWindow || daily || updOpen || (dailyReady && !dailyAutoShown)} />
       {newsOpen && <UpdatesWindow list={todayNews} onClose={() => setNewsOpen(false)} />}
