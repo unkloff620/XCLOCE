@@ -165,9 +165,9 @@ const WEARABLES: ItemDef[] = ([
 });
 
 const MISC: ItemDef[] = [
-  { id: "energy-drink", name: "Энергетик", category: "item", rarity: "common", maxStack: 999, description: "+10 энергии. Сверх лимита тоже работает.", sources: ["Двор", "Боссы"], use: { energy: 10 } },
-  { id: "energy-pack", name: "Пачка энергетиков", category: "item", rarity: "rare", maxStack: 999, description: "+50 энергии разом.", sources: ["Награды локаций"], use: { energy: 50 } },
-  { id: "energy-full", name: "Энергетик «До краёв»", category: "item", rarity: "epic", maxStack: 999, description: "Энергия сразу до полной. Если и так полная — не пей, жалко.", sources: ["Делюги «От звонка до звонка»"], use: { energyFull: true } },
+  { id: "energy-drink", name: "Энергетик", category: "item", rarity: "common", maxStack: 999, description: "Энергия сразу до полной (сверх лимита — нельзя).", sources: ["Двор"], use: { energyFull: true } },
+  { id: "energy-pack", name: "Пачка энергетиков", category: "item", rarity: "rare", maxStack: 999, description: "Энергия сразу до полной (сверх лимита — нельзя).", sources: ["Награды локаций"], use: { energyFull: true } },
+  { id: "energy-full", name: "Энергетик «До краёв»", category: "item", rarity: "epic", maxStack: 999, description: "Энергия сразу до полной. Если и так полная — не пей, жалко.", sources: ["Магазин: 5 слитков", "Делюги «От звонка до звонка»"], use: { energyFull: true } },
   // the poker's prize (a pair of nothing — 100, three of a kind — 500): buys the poker's cases
   { id: "matches", name: "Спички", category: "item", rarity: "common", maxStack: 99_999_999, description: "Спички с чёрной головкой — награда за зонк. Скоро из них можно будет открывать ящик с наколками.", sources: ["Зонк"] },
   { id: "poker-sticker", name: "Стикер", category: "item", rarity: "common", maxStack: 99_999_999, description: "Липкий трофей покерного стола. За стикеры открываются чемоданы в покере.", sources: ["Покер"] },

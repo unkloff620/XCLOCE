@@ -99,7 +99,10 @@ export async function spendEnergy(ctx: Ctx, amount: number): Promise<number> {
 
 export async function addEnergy(ctx: Ctx, amount: number, reason: string): Promise<number> {
   const p = await lockPlayer(ctx);
-  const total = p.energyNow + amount;
+  // never above the limit (energy already above it from before stays, but does not grow)
+  const max = energyCfgOf(ctx.cfg, p).max;
+  const total = Math.max(p.energyNow, Math.min(p.energyNow + amount, max));
+  amount = total - p.energyNow;
   // Below the maximum the regen clock keeps running; at or above it, regen simply pauses.
   await ctx.q.query("UPDATE players SET energy=$2, energy_at=$3 WHERE id=$1", [ctx.pid, total, p.energyNow >= energyCfgOf(ctx.cfg, p).max ? new Date(ctx.now) : p.energy_at]);
   await ledger(ctx, "energy", "energy", amount, reason);

@@ -45,20 +45,22 @@ describe("energy", () => {
   it("never cuts energy above the maximum and does not regenerate there", () => {
     expect(energyNow(1500, 0, 10 * H, cfg)).toMatchObject({ energy: 1500, nextIn: 0 });
   });
-  it("bought energy goes over 50; regen starts only after dropping below 50", async () => {
+  it("an energy drink fills energy up to the limit, never above; bought for 5 gold bars", async () => {
     const p = await newPlayer(db);
     await setEnergy(p, 45, T0);
-    await setMoney(db, p, "RUB", 5000);
-    let r = await act(db, p, "buy", { offerId: "energy-50" }, T0);
-    expect(r.state.player.energy).toBe(95);
-    r = await act(db, p, "task", { taskId: "os-standup" }, T0 + 10 * H);
-    expect(r.state.player.energy).toBe(92);
-    // spend down to 47, regen starts at that moment
-    await setEnergy(p, 52, T0 + 11 * H);
-    r = await act(db, p, "task", { taskId: "os-standup" }, T0 + 11 * H);
-    expect(r.state.player.energy).toBe(49);
-    const s = await act(db, p, "equip", { itemId: "jeans" }, T0 + 11 * H + 5 * M);
-    expect(s.state.player.energy).toBe(50);
+    await setMoney(db, p, "GOLD", 5);
+    await act(db, p, "buy", { offerId: "energy-full-1" }, T0);
+    expect(await wallet(db, p, "GOLD")).toBe(0);
+    let r = await act(db, p, "use", { itemId: "energy-full" }, T0);
+    expect(r.state.player.energy).toBe(50);
+    // full: nothing to drink for
+    await give(db, p, "energy-drink", 1);
+    await expect(act(db, p, "use", { itemId: "energy-drink" }, T0)).rejects.toMatchObject({ code: "energy_full" });
+    // spend some, drink: back to 50, not more
+    r = await act(db, p, "task", { taskId: "os-standup" }, T0);
+    expect(r.state.player.energy).toBe(47);
+    r = await act(db, p, "use", { itemId: "energy-drink" }, T0);
+    expect(r.state.player.energy).toBe(50);
   });
   it("tasks need enough energy", async () => {
     const p = await newPlayer(db);
@@ -717,11 +719,11 @@ describe("inventory and clans", () => {
     const r = await act(db, p, "equip", { itemId: "laser-eyes" }, T0);
     expect(r.state.look.equipped.FACE).toBe("laser-eyes"); // laser eyes moved to the face slot
   });
-  it("energy drink adds energy above the maximum", async () => {
+  it("an energy drink at full energy is not drunk (never above the maximum)", async () => {
     const p = await newPlayer(db);
     await give(db, p, "energy-drink", 1);
-    const r = await act(db, p, "use", { itemId: "energy-drink" }, T0);
-    expect(r.state.player.energy).toBe(60);
+    await expect(act(db, p, "use", { itemId: "energy-drink" }, T0)).rejects.toMatchObject({ code: "energy_full" });
+    expect(await qty(db, p, "energy-drink")).toBe(1);
   });
   it("create, join, leave; the leader role passes on", async () => {
     const a = await newPlayer(db), b = await newPlayer(db);

@@ -37,14 +37,13 @@ export const SHOP_SECTIONS = [
   { id: "misc", name: "Разное" },
 ] as const;
 
-// Everything is sold for RUB. Energy: +50 — 40 ₽ a point, +100 — 36, +500 — 30 (the best deal); all far above the best task pay (16), so it cannot be farmed.
+// Weapons and clothes for RUB; the energy drink (to the limit) for gold bars.
 export const OFFERS: Offer[] = [
   { id: "keyboard-1", section: "weapons", give: { item: "keyboard", qty: 1 }, price: { currency: "RUB", amount: 190 }, title: "Клавиатура", bulk: true },
   { id: "gpu-1", section: "weapons", give: { item: "gpu", qty: 1 }, price: { currency: "RUB", amount: 350 }, title: "Видеокарта", bulk: true },
   { id: "rpg-1", section: "weapons", give: { item: "rug-pull-gun", qty: 1 }, price: { currency: "RUB", amount: 500 }, title: "Rug Pull Gun", bulk: true },
-  { id: "energy-50", section: "energy", give: { energy: 50, qty: 1 }, price: { currency: "RUB", amount: 4_500 }, title: "+50 энергии" },
-  { id: "energy-100", section: "energy", give: { energy: 100, qty: 1 }, price: { currency: "RUB", amount: 8_200 }, title: "+100 энергии" },
-  { id: "energy-500", section: "energy", give: { energy: 500, qty: 1 }, price: { currency: "RUB", amount: 35_000 }, title: "+500 энергии", note: "самое выгодное" },
+  // energy is not sold by the point any more: one energy drink fills it up to the limit (never above), 5 gold bars
+  { id: "energy-full-1", section: "energy", give: { item: "energy-full", qty: 1 }, price: { currency: "GOLD", amount: 5 }, title: "Энергетик «До краёв»", note: "энергия до полной" },
   { id: "tee-white", section: "clothing", give: { item: "tee-white", qty: 1 }, price: { currency: "RUB", amount: 400 }, title: "Белая футболка" },
   { id: "slippers", section: "clothing", give: { item: "slippers", qty: 1 }, price: { currency: "RUB", amount: 900 }, title: "Тапки" },
   { id: "sneakers", section: "clothing", give: { item: "sneakers", qty: 1 }, price: { currency: "RUB", amount: 500 }, title: "Кеды" },

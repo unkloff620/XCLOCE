@@ -24,7 +24,7 @@ export function EnergyWindow({ onClose }: { onClose: () => void }) {
   const drinks = ITEMS.filter((i) => (i.use?.energy || i.use?.energyFull) && invQty(state, i.id) > 0);
   const buy = async (o: Offer) => {
     haptic.tap();
-    await act("buy", { offerId: o.id, idem: crypto.randomUUID() }, `+${o.give.energy} энергии`);
+    await act("buy", { offerId: o.id, idem: crypto.randomUUID() }, o.give.item ? `Куплено: ${o.title}` : `+${o.give.energy} энергии`);
   };
   return (
     <Modal title="Энергия" onClose={onClose}>
@@ -40,7 +40,7 @@ export function EnergyWindow({ onClose }: { onClose: () => void }) {
             </div>
           </div>
         </div>
-        <div className="tiny muted">Энергия тратится только в локациях. Купленная энергия добавляется сверх лимита.</div>
+        <div className="tiny muted">Энергия тратится только в локациях. Энергетик заполняет её до лимита — сверх лимита нельзя.</div>
 
         {drinks.length > 0 && (
           <div className="col" style={{ gap: 6 }}>
@@ -65,7 +65,7 @@ export function EnergyWindow({ onClose }: { onClose: () => void }) {
             const can = (state.wallet[o.price.currency] ?? 0) >= o.price.amount;
             return (
               <div key={o.id} className="energy-row">
-                <EnergyArt amount={o.give.energy ?? 0} size={38} />
+                {o.give.item ? <ItemArt id={o.give.item} size={38} /> : <EnergyArt amount={o.give.energy ?? 0} size={38} />}
                 <div className="grow">
                   <b className="small">{o.title}</b>
                   {o.note && <div className="tiny muted">{o.note}</div>}
