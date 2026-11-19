@@ -4,7 +4,7 @@ import { CHARACTER, HERO_HOT, ROOM_BG, ROOM_LIGHTS, ROOM_RGB, ROOM_SKY, SCENE, S
 import { RigViewport, type RigEdit, type Worn } from "./rig.tsx";
 import { ART_ASPECT } from "./desk-data.ts";
 import { usedUrl } from "../preload.ts";
-import { KnyazRoom } from "./arena-bg.tsx";
+import { KnyazRoom, UtilizatorRoom } from "./arena-bg.tsx";
 import { BOTSMAN_ROOM } from "./arena-botsman-data.ts";
 import { placedArt, placedOf, type Look } from "../../content/home.ts";
 
@@ -92,6 +92,9 @@ export function HomeScene({ room = "basic", onPick, onHero, still, look, worn, p
       {room === "vault" && !still ? (
         // «Хранилище Князя» is alive like his fight room: his 1024×1536 picture scaled onto the scene (tools/scene: ×1060/1024, 53 px off the top)
         <g transform={`translate(0 -53) scale(${SCENE.w / 1024})`}><KnyazRoom uid="home" /></g>
+      ) : room === "acidyard" && !still ? (
+        // «Кислотный двор» is Утилизатор's live fight room (the sky drifts, lightning, the lamp, fog, the rain), scaled the same way
+        <g transform={`translate(0 -53) scale(${SCENE.w / 1024})`}><UtilizatorRoom uid="home" /></g>
       ) : <image href={`/assets/home/${bg}.webp`} x="0" y="0" width={SCENE.w} height={SCENE.h} preserveAspectRatio="none" />}
       {room === "dojo" && !still && <DojoBag />}
       {lights.length > 0 && (

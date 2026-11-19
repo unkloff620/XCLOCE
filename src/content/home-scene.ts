@@ -42,9 +42,9 @@ export const CHARACTER = { x: 130, y: 375, scale: 0.78 };
 /** Seat inside the rig canvas (under the hips). */
 export const SEAT = { x: 280, y: 670, w: 440, aspect: 1.5 }; // stretched taller: the seat hides under the shorts, the legs stand on the floor
 
-export const ROOM_BG: Record<string, string> = { basic: "room-basic", freezer: "room-freezer", neon: "room-neon", shark: "room-shark", backroom: "room-backroom", boxing: "room-boxing", izba: "room-izba", ludoman: "room-ludoman", pepe: "room-pepe", vault: "room-vault", office: "room-office", penthouse: "room-penthouse", kitchen: "room-kitchen", cabinet: "room-cabinet", dojo: "room-dojo" };
+export const ROOM_BG: Record<string, string> = { basic: "room-basic", freezer: "room-freezer", neon: "room-neon", shark: "room-shark", backroom: "room-backroom", boxing: "room-boxing", izba: "room-izba", ludoman: "room-ludoman", pepe: "room-pepe", vault: "room-vault", office: "room-office", penthouse: "room-penthouse", kitchen: "room-kitchen", cabinet: "room-cabinet", dojo: "room-dojo", acidyard: "room-acidyard" };
 /** opaque picture for the blurred backdrop around the scene (a room with a see-through window has a flat copy) */
-export const ROOM_BACKDROP: Record<string, string> = { basic: "room-basic", freezer: "room-freezer", neon: "room-neon", shark: "room-shark", backroom: "room-backroom", boxing: "room-boxing", izba: "room-izba", ludoman: "room-ludoman", pepe: "room-pepe", vault: "room-vault", office: "room-office", penthouse: "room-penthouse-flat", kitchen: "room-kitchen", cabinet: "room-cabinet", dojo: "room-dojo" };
+export const ROOM_BACKDROP: Record<string, string> = { basic: "room-basic", freezer: "room-freezer", neon: "room-neon", shark: "room-shark", backroom: "room-backroom", boxing: "room-boxing", izba: "room-izba", ludoman: "room-ludoman", pepe: "room-pepe", vault: "room-vault", office: "room-office", penthouse: "room-penthouse-flat", kitchen: "room-kitchen", cabinet: "room-cabinet", dojo: "room-dojo", acidyard: "room-acidyard" };
 /** RGB LED strip (violet → blue) along the ceiling and the sides: polylines in scene units */
 export const ROOM_RGB: Record<string, number[][][]> = {
   neon: [
@@ -66,6 +66,8 @@ export const ROOM_LIGHTS: Record<string, { x: number; y: number; r: number; colo
     { x: 843, y: 380, r: 120, color: "#ffc46b", kind: "lamp" },
   ],
   penthouse: [{ x: 530, y: 112, r: 520, color: "#ffb35c", kind: "strip" }],
+  // «Кислотный двор»: the acid by the barrels (the lamp flickers in the live room itself)
+  acidyard: [{ x: 124, y: 806, r: 150, color: "#8dff3a", kind: "lamp" }, { x: 921, y: 827, r: 150, color: "#8dff3a", kind: "lamp" }],
   boxing: [{ x: 528, y: 95, r: 150, color: "#ffc46b", kind: "lamp" }],
   shark: [{ x: 532, y: 72, r: 140, color: "#ffc46b", kind: "lamp" }],
   freezer: [{ x: 532, y: 72, r: 130, color: "#ffe2b0", kind: "lamp" }],

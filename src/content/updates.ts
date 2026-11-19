@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-19-acidyard",
+    date: "19 ноября",
+    title: "Кислотный двор",
+    items: [
+      { img: "/assets/updates/2026-11-19-acidyard.webp", text: "Новая комната с Утилизатора (в «Авторитетном») — «Кислотный двор»: ливень, гроза, мигающий фонарь и светящаяся кислота. +6% к урону." },
+    ],
+  },
+  {
     id: "2026-11-17-utilizator",
     date: "17 ноября",
     title: "Новый босс: Утилизатор",
