@@ -413,6 +413,11 @@ export async function pokerView(q: Queryable, pid: number, now: number) {
     left, played, perDay: POKER_RULES.perDay, price: POKER_RULES.price, chips, xp, ...lv, cheats: pokerCheats(lv.level), active: open ? pokerDrawView(open.id, open.state) : null,
     resets, resetsMax: POKER_RESET.perDay, resetPrice: POKER_RESET.price,
     stickers: await itemQty(q, pid, POKER_STICKER), cases: POKER_CASES,
+    // the one-of-a-kind prizes the player has already: a repeat of their hand pays gold bars instead (the table shows it)
+    owned: {
+      keys: (await itemQty(q, pid, "keys-bundle")) > 0,
+      raven: (await q.query("SELECT 1 FROM promises WHERE player_id=$1 AND what='raven'", [pid])).length > 0,
+    },
   };
 }
 

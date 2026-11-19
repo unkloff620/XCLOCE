@@ -1541,11 +1541,8 @@ describe("yard mini games", () => {
     expect(pokerLevel(1e9)).toMatchObject({ level: 1000, to: null });
     expect(pokerLevel(pokerXpFor(500)).level).toBe(500);
     expect([0, 9, 10, 14, 15, 29, 30, 49, 50, 74, 75, 99, 100, 1000].map(pokerCheats)).toEqual([0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6]);
-    expect(pokerPay("pair", 0).currencies?.RUB).toBe(20);
-    // whole roubles only (20 × 1.15 = 23)
-    expect(pokerPay("pair", 10).currencies?.RUB).toBe(23);
-    // the money bonus stops at level 20: 20 × 1.3 = 26
-    expect(pokerPay("pair", 80).currencies?.RUB).toBe(26);
+    // the prizes are the same at every poker level
+    expect([0, 10, 80].map((lv) => pokerPay("pair", lv).currencies?.RUB)).toEqual([20, 20, 20]);
     expect(pokerPay("high", 5)).toEqual({ items: [{ id: "poker-sticker", qty: 100 }] });
   });
 
@@ -1559,7 +1556,7 @@ describe("yard mini games", () => {
     expect(r.result.reward.currencies.RUB).toBeGreaterThanOrEqual(700);
     expect(await qty(db, p, "poker-sticker")).toBe(200);
     const { pokerPay } = await import("../src/content/games.ts");
-    expect(pokerPay("quads", 20).currencies?.GOLD).toBe(780); // 600 × 1.3
+    expect(pokerPay("quads", 20).currencies?.GOLD).toBe(600);
     expect(pokerPay("high", 0).items?.[0]).toEqual({ id: "poker-sticker", qty: 100 });
   });
 
@@ -1581,7 +1578,7 @@ describe("yard mini games", () => {
     expect((await act(db, p, "poker_play", {}, T0 + 86_400_000, always(0.1))).result.poker.resets).toBe(0);
   });
 
-  it("poker: 3 слитка a hand, 25 a day, poker xp grows; a «Фишка» pays for a hand instead", async () => {
+  it("poker: 5 слитков a hand, 25 a day, poker xp grows; a «Фишка» pays for a hand instead", async () => {
     const p = await newPlayer(db);
     await setMoney(db, p, "GOLD", 500);
     let xp = 0;
@@ -1594,7 +1591,7 @@ describe("yard mini games", () => {
     }
     const charges = await db.query<{ delta: number }>("SELECT delta FROM ledger WHERE player_id=$1 AND reason='game:poker'", [p]);
     expect(charges).toHaveLength(24);
-    expect(Number(charges[0].delta)).toBe(-3);
+    expect(Number(charges[0].delta)).toBe(-5);
     // no chip: an error; with a chip the 25th hand costs no money
     await expect(act(db, p, "poker_play", { chip: true }, T0 + 30_000)).rejects.toMatchObject({ code: "no_chip" });
     await give(db, p, "poker-chip", 2);

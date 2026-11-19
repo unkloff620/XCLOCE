@@ -25,7 +25,7 @@ import { yardTime } from "../../content/yard.ts";
 import {
   ITEM_VALUES, RANKS, SUITS, UPGRADE_MODES, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue, zonkGroups, zonkScore, ZONK_ROUNDS,
   ZONK_BANK_MIN, ZONK_CONT_PENALTY, ZONK_DAY_PRIZE, ZONK_FAIL_XP, ZONK_LEVELS,
-  POKER_BONUS_LEVELS, POKER_CHEATS, POKER_HANDS, POKER_LEVEL_BONUS, POKER_MAX_LEVEL, POKER_RULES, POKER_CHIP, POKER_STICKER, POKER_CASES, POKER_CASE_TATTOO, pokerCheats, pokerHandDef, pokerPay,
+  POKER_CHEATS, POKER_HANDS, POKER_MAX_LEVEL, POKER_RULES, POKER_CHIP, POKER_STICKER, POKER_CASES, POKER_CASE_TATTOO, pokerCheats, pokerHandDef, pokerPay,
   type PokerHand, type UpgradeMode, DUEL_FEE, DUEL_ROUNDS, DUEL_STAKES,
   ZONK_DICE,
 } from "../../content/games.ts";
@@ -793,7 +793,7 @@ function PokerHelp() {
     <Help topic="poker" title="Покер">
       <p>Сразу сдаётся 5 карт. Собралась комбинация из таблицы под картами — получаешь награду, чем старше комбинация, тем больше.</p>
       <p>Раздача — {POKER_RULES.price.amount} слитка, до {POKER_RULES.perDay} раздач в сутки. «Фишка» (из кейса у барыги, чашек колеса удачи, заданий) оплачивает одну раздачу вместо денег. Стрит-флеш даёт «Связку ключей»: с ней на боссов нападают без пропусков (кроме Вадима и Боцмана).</p>
-      <p>Каждая раздача даёт опыт покера (за старшие комбинации — больше). Каждый уровень покера до {POKER_BONUS_LEVELS}-го добавляет +{Math.round(POKER_LEVEL_BONUS * 1000) / 10}% к денежной награде; всего уровней {POKER_MAX_LEVEL}.</p>
+      <p>Каждая раздача даёт опыт покера (за старшие комбинации — больше). Уровень покера открывает шулерство (замены карт); всего уровней {POKER_MAX_LEVEL}. Стрит-флеш и роял-флеш, если ключи или Ворон уже есть, дают слитки.</p>
       <p>Шулерство: {POKER_CHEATS.slice().reverse().map((c) => `с ${c.level} уровня — ${c.swaps} ${c.swaps === 1 ? "замена" : c.swaps <= 4 ? "замены" : "замен"}`).join(", ")}. После раздачи нажми на любую карту на столе — она уйдёт, а на её место придёт новая из колоды. Комбинация считается, когда замены кончатся или ты нажмёшь «Вскрыть».</p>
     </Help>
   );
@@ -806,25 +806,32 @@ function MiniCard({ r, s }: { r: number; s: number }) {
 /** an amount over a reward icon: 3000 → 3K, 2.3 → 2.3 */
 const qtyText = (v: number) => (v >= 1000 ? `${Math.round(v / 100) / 10}K` : String(Math.round(v * 100) / 100));
 /** a combination's prize as icons only, the amount at the icon's top right */
-function PrizeIcons({ hand, level }: { hand: PokerHand; level: number }) {
+function PrizeIcons({ hand, level, owned }: { hand: PokerHand; level: number; owned?: { keys: boolean; raven: boolean } }) {
   const pay = pokerPay(hand, level);
   // the royal flush's «Ворон» is not in the game yet: his picture with «скоро»
-  if (pokerHandDef(hand).promise) {
+  // a one-of-a-kind prize the player has already (the keys, «Ворон»): only the gold bars of the repeat
+  const def = pokerHandDef(hand);
+  if (def.repeat && (def.promise ? owned?.raven : owned?.keys)) {
+    const gold = def.repeat.currencies?.GOLD ?? 0;
+    return (
+      <>
+        <span className="pkt-cell" title={`Уже есть — ${gold} слитков`}><Icon name="GOLD" size={22} /><b className="num">{qtyText(gold)}</b></span>
+        <span className="pkt-cell empty" /><span className="pkt-cell empty" />
+      </>
+    );
+  }
+  if (def.promise) {
     return (
       <>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <span className="pkt-cell one" title="Ворон — придёт в игру позже, выбивший получит его сразу"><img src="/assets/items/raven.webp" alt="Ворон" draggable={false} /><b className="num">скоро</b></span>
-        {/* a second royal flush (Ворон already promised): gold bars instead */}
-        <span className="pkt-cell" title={`Повтор — ${pokerHandDef(hand).repeat?.currencies?.GOLD ?? 0} слитков`}><Icon name="GOLD" size={22} /><b className="num">{qtyText(pokerHandDef(hand).repeat?.currencies?.GOLD ?? 0)}</b></span>
-        <span className="pkt-cell empty" />
+        <span className="pkt-cell empty" /><span className="pkt-cell empty" />
       </>
     );
   }
   const parts = [
     ...Object.entries(pay.currencies ?? {}).map(([c, v]) => ({ key: c, icon: <Icon name={c as Currency} size={22} />, n: v ?? 0, title: `${v} ${c}` })),
     ...(pay.items ?? []).map((it) => ({ key: it.id, icon: <ItemArt id={it.id} size={24} />, n: it.qty, title: `${itemById(it.id)?.name ?? it.id} ×${it.qty}` })),
-    // a one-of-a-kind prize already owned (the keys): gold bars instead
-    ...Object.entries(pokerHandDef(hand).repeat?.currencies ?? {}).map(([c, v]) => ({ key: `re-${c}`, icon: <Icon name={c as Currency} size={22} />, n: v ?? 0, title: `Повтор (уже есть) — ${v} слитков` })),
   ];
   // three cells, always (empty ones when the combination pays less): the columns of the list stay even; a one-of-a-kind
   // thing (the straight flush's «Связка ключей») — just its picture
@@ -834,7 +841,7 @@ function PrizeIcons({ hand, level }: { hand: PokerHand; level: number }) {
         const p = parts[k];
         const one = itemById(p?.key ?? "")?.maxStack === 1;
         return p
-          ? <span key={p.key} className={`pkt-cell ${one ? "one" : ""}`} title={p.title}>{p.icon}{!one && <b className="num">{p.key in (pay.currencies ?? {}) || p.key.startsWith("re-") ? qtyText(p.n) : `×${p.n}`}</b>}</span>
+          ? <span key={p.key} className={`pkt-cell ${one ? "one" : ""}`} title={p.title}>{p.icon}{!one && <b className="num">{p.key in (pay.currencies ?? {}) ? qtyText(p.n) : `×${p.n}`}</b>}</span>
           : <span key={`e${k}`} className="pkt-cell empty" />;
       })}
     </>
@@ -957,7 +964,7 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
               // the combination on the table lights its five sample cards (not the whole line): gold when counted, dashed while swapping
               <div key={h.id} className={`pkt-row ${hand === h.id ? "on" : ""} ${drawing && open?.hand === h.id ? "now" : ""}`} title={h.name}>
                 <span className="pkt-row-cards">{h.sample.map((c, k) => <MiniCard key={k} r={c.r} s={c.s} />)}</span>
-                <PrizeIcons hand={h.id} level={level} />
+                <PrizeIcons hand={h.id} level={level} owned={p?.owned} />
               </div>
             ))}
           </div>

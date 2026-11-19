@@ -254,11 +254,11 @@ export const upgradeValue = (stake: number, mult: number) => Math.max(1, Math.ro
 /*
  * Платная игра: POKER_RULES.price за раздачу, до POKER_RULES.perDay раздач в сутки (МСК); «Фишка» (POKER_CHIP: кейс, чашки колеса, задания, зонк…) — одна раздача без оплаты. Сразу сдаётся 5 карт
  * из полной колоды, комбинация даёт награду из POKER_HANDS. Каждая раздача даёт опыт покера (xp комбинации); уровень
- * покера добавляет к денежной награде POKER_LEVEL_BONUS за уровень (до POKER_BONUS_LEVELS).
+ * покера на награду не влияет (с v2: награды ровно как в таблице).
  * Шулерство: с 10 уровня покера после раздачи можно заменить карту на столе (нажать на неё — придёт новая из колоды),
  * с 15 — две замены, с 30 — три, с 50 — четыре, с 75 — пять, со 100 — шесть (POKER_CHEATS). Уровней покера — до 1000. Комбинация считается после замен.
  */
-export const POKER_RULES = { perDay: 25, price: { currency: "GOLD" as const, amount: 3 } };
+export const POKER_RULES = { perDay: 25, price: { currency: "GOLD" as const, amount: 5 } };
 /** the day's limit can be bought again (another perDay hands): this price, at most `perDay` times a Moscow day */
 export const POKER_RESET = { price: { currency: "GOLD" as const, amount: 1500 }, perDay: 3 };
 /** the yard item that pays for one poker hand */
@@ -321,13 +321,10 @@ export function pokerLevel(xp: number): { level: number; from: number; to: numbe
   while (level < POKER_MAX_LEVEL && xp >= pokerXpFor(level + 1)) level++;
   return { level, from: pokerXpFor(level), to: level >= POKER_MAX_LEVEL ? null : pokerXpFor(level + 1) };
 }
-/** a combination's prize at a poker level: the money (roubles, gold bars) grows by POKER_LEVEL_BONUS per level (the items stay) */
-export function pokerPay(hand: PokerHand, level: number): Reward {
-  const base = pokerHandDef(hand).pay;
-  if (!base.currencies) return base;
-  const k = 1 + POKER_LEVEL_BONUS * Math.min(level, POKER_BONUS_LEVELS);
-  const currencies = Object.fromEntries(Object.entries(base.currencies).map(([c, v]) => [c, c === "GOLD" || c === "RUB" ? Math.max(1, Math.round((v ?? 0) * k)) : v]));
-  return { ...base, currencies };
+/** a combination's prize (the same at every poker level) */
+export function pokerPay(hand: PokerHand, _level: number): Reward {
+  // the prizes are exactly as set (the user's table): the poker level no longer adds to the money
+  return pokerHandDef(hand).pay;
 }
 
 /* the poker's cases: bought for stickers (the poker's own prize), each with its tattoo set */

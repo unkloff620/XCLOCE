@@ -165,7 +165,7 @@ export interface ZonkInfo {
   active: GameView | null;
 }
 export interface PokerDraw { id: number; cards: { r: number; s: number }[]; swapsLeft: number; swapped: number[]; hand: import("../content/games.ts").PokerHand; used: number[] }
-export interface PokerInfo { left: number; played?: number; perDay: number; price: { currency: Currency; amount: number }; chips?: number; xp: number; level: number; from: number; to: number | null; cheats?: number; active?: PokerDraw | null; resets?: number; resetsMax?: number; resetPrice?: { currency: Currency; amount: number }; stickers?: number }
+export interface PokerInfo { left: number; played?: number; perDay: number; price: { currency: Currency; amount: number }; chips?: number; xp: number; level: number; from: number; to: number | null; cheats?: number; active?: PokerDraw | null; resets?: number; resetsMax?: number; resetPrice?: { currency: Currency; amount: number }; stickers?: number; owned?: { keys: boolean; raven: boolean } }
 export interface PokerPlay {
   kind: "poker"; phase: "draw" | "done"; cards: { r: number; s: number }[]; hand: import("../content/games.ts").PokerHand; used: number[];
   swapsLeft: number; swapped: number[];
