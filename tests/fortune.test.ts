@@ -23,7 +23,7 @@ describe("«Колесо удачи»", () => {
     await expect(act(db, p, "fortune_spin", {}, T)).rejects.toMatchObject({ code: "fortune_off" });
   });
 
-  it("tickets for dollars; a spin takes one, grows the jackpot and gives its sector", async () => {
+  it("tickets for roubles; a spin takes one, grows the jackpot and gives its sector", async () => {
     const db = await freshDb();
     await wheelOn(db);
     const p = await newPlayer(db);
@@ -33,11 +33,12 @@ describe("«Колесо удачи»", () => {
     expect(await wallet(db, p, "RUB")).toBe(0);
     const before = await jackpot(db);
     const rub0 = await wallet(db, p, "RUB");
-    // the sector «150 ₽» (index 1): a roll just past the empty sector's weight
+    // the sector «10 ₽»: a roll inside its weight
     const total = SECTORS.reduce((s, x) => s + x.weight, 0);
-    const r = await act(db, p, "fortune_spin", {}, T, always((SECTORS[0].weight + 1) / total));
+    const k = SECTORS.findIndex((s) => s.id === "rub");
+    const r = await act(db, p, "fortune_spin", {}, T, always((SECTORS.slice(0, k).reduce((s, x) => s + x.weight, 0) + 0.5) / total));
     expect(r.result.sector).toBe("rub");
-    expect(await wallet(db, p, "RUB")).toBe(rub0 + 150);
+    expect(await wallet(db, p, "RUB")).toBe(rub0 + 10);
     expect(await qty(db, p, TICKET_ID)).toBe(2);
     expect(await jackpot(db)).toBe(before + JACKPOT_ADD);
     // all at once: both tickets left
@@ -112,8 +113,27 @@ describe("«Колесо удачи»", () => {
     expect(await qty(db, p, t.result.tattoo)).toBe(1);
   });
 
+  it("«ПРИЗ»: take 500 ₽ instead of the cups; the tattoo sector gives a piece of the wheel's sets", async () => {
+    const db = await freshDb();
+    await wheelOn(db);
+    const p = await newPlayer(db);
+    await expect(act(db, p, "fortune_prize_take", {}, T)).rejects.toMatchObject({ code: "fortune_no_cups" });
+    await db.query("INSERT INTO fortune_players (player_id, cups) VALUES ($1, 1)", [p]);
+    const rub0 = await wallet(db, p, "RUB");
+    const t = await act(db, p, "fortune_prize_take", {}, T);
+    expect(await wallet(db, p, "RUB")).toBe(rub0 + 500);
+    expect(t.result.fortune.cups).toBe(0);
+    await give(db, p, TICKET_ID, 1);
+    const total = SECTORS.reduce((s, x) => s + x.weight, 0);
+    const k = SECTORS.findIndex((s) => s.kind === "tattoo");
+    const r = await act(db, p, "fortune_spin", {}, T, always((SECTORS.slice(0, k).reduce((s, x) => s + x.weight, 0) + 0.5) / total));
+    expect(r.result.sector).toBe("tattoo");
+    expect(r.result.tattoos).toHaveLength(1);
+    expect(await qty(db, p, r.result.tattoos[0])).toBe(1);
+  });
+
   it("the weights add up to the sectors' order", () => {
-    expect(SECTORS).toHaveLength(13);
+    expect(SECTORS).toHaveLength(16);
     expect(rollSector(() => 0)).toBe(0);
     expect(rollSector(() => 0.999999)).toBe(SECTORS.length - 1);
   });

@@ -7033,3 +7033,18 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 /* the tops open over the hero: the room's buttons step aside, the room dims a little */
 .fit-page.topping :is(.room-left, .room-right, .room-label, .room-help, .room-arrow, .room-switch, .room-top), .fit-page.topping > .fight-card { display: none; }
 .fit-page.topping .room-view { filter: brightness(0.7); transition: filter 0.2s; }
+/* «Колесо удачи» → «ПРИЗ»: two paper cards over the wheel — take the money or risk it on the cups */
+.fo-choice { position: absolute; inset: 0; z-index: 19; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 16px;
+  background: rgba(10, 8, 6, 0.72); backdrop-filter: blur(2px); animation: rt-in 0.22s ease-out; }
+.fo-choice-h { font-size: 34px; line-height: 1; color: #ffd23f; text-transform: uppercase; letter-spacing: 0.04em; transform: rotate(-4deg);
+  text-shadow: 0 3px 0 #b3220f, 0 5px 0 #4a0d05, 0 0 18px rgba(255, 90, 40, 0.6); -webkit-text-stroke: 1.5px #4a0d05; }
+.fo-choice-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: min(100%, 380px); }
+.fo-choice-card { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 22px 10px 14px; text-align: center; color: #2b1a0b;
+  background: url(/assets/ui/rating-sheet.webp) center / 100% 100% no-repeat; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.55)); }
+.fo-choice-card > b { font-size: 17px; line-height: 1.05; text-transform: uppercase; }
+.fo-choice-sum { display: inline-flex; align-items: center; gap: 4px; font-weight: 800; font-size: 20px; min-height: 28px; }
+.fo-choice-sum:not(.num) { font-size: 12px; color: #6e5232; }
+.fo-choice-pic { display: flex; align-items: flex-end; justify-content: center; height: 64px; }
+.fo-choice-pic img { width: 46px; height: auto; margin: 0 -6px; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.4)); }
+.fo-choice-pic img:nth-child(2) { width: 56px; z-index: 1; }
+.fo-choice-card .btn { width: 100%; }

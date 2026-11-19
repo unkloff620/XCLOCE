@@ -3,7 +3,7 @@
 
   - the frame: its toothed rim (outside R_CUT), it stays → public/assets/fortune/rim.webp;
   - the lid: everything inside — the dotted rusty plate (source/wheel-plate.png, an edit of the same picture without its
-    15 uneven spokes), SECTORS even curved spokes drawn here, the hub → public/assets/fortune/lid-v1.webp; it turns.
+    15 uneven spokes), SECTORS (16) even curved spokes drawn here, the hub → public/assets/fortune/lid-v2.webp; it turns.
 Both on the same sheet, so the client lays them one on the other. The prizes follow the same curve and radii
 (src/content/fortune.ts WHEEL_CURVE, WHEEL_R).
 
@@ -16,7 +16,7 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter
 ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "tools/fortune/source"
 OUT = ROOT / "public/assets/fortune"
-SECTORS, CURVE, SS = 13, 34, 2
+SECTORS, CURVE, SS = 16, 34, 2
 R_HUB, R_RIM = 134, 404     # px on the 1024 sheet: the hub's white ring, the rim's white ring
 R_CUT = 424                 # the lid ends here (on the dark groove between the white ring and the toothed rim)
 C = 512
@@ -60,13 +60,13 @@ def main():
     lid = Image.alpha_composite(lid, line)
     lid.paste(orig, (0, 0), disc(R_HUB - 3, 1.5))
     lid.putalpha(ImageChops.multiply(lid.getchannel("A"), disc(R_CUT, 1)))
-    lid.resize((900, 900), Image.LANCZOS).save(OUT / "lid-v1.webp", "WEBP", quality=88, method=6)
+    lid.resize((900, 900), Image.LANCZOS).save(OUT / "lid-v2.webp", "WEBP", quality=88, method=6)
 
     # the frame: the toothed rim of the original, the middle cut out
     rim = orig.copy()
     rim.putalpha(ImageChops.multiply(rim.getchannel("A"), ImageChops.invert(disc(R_CUT - 1, 1))))
     rim.resize((900, 900), Image.LANCZOS).save(OUT / "rim.webp", "WEBP", quality=88, method=6)
-    print("wrote", OUT / "lid-v1.webp", OUT / "rim.webp")
+    print("wrote", OUT / "lid-v2.webp", OUT / "rim.webp")
 
 
 if __name__ == "__main__":

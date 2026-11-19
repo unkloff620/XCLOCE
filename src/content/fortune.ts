@@ -2,7 +2,7 @@ import type { Reward } from "./rewards.ts";
 
 /*
  * «Колесо удачи» — a manhole wheel in the back yard. A spin costs one ticket (from the case in the shop, or bought for
- * TICKET_PRICE dollars); every spin of anybody adds JACKPOT_ADD to the shared jackpot. The wheel stops on one of its
+ * TICKET_PRICE roubles); every spin of anybody adds JACKPOT_ADD to the shared jackpot. The wheel stops on one of its
  * sectors: a prize, nothing («Пусто»), or «ПРИЗ» — the cups game (nine cups, one of them holds the jackpot).
  * The sectors are equal on the picture; how often each comes is its weight (the wheel is turned to it by the server).
  */
@@ -24,7 +24,7 @@ export const SPIN_ALL_MAX = 100;
 export const FORTUNE_LEVEL_XP = 300;
 export const fortuneLevel = (xp: number) => ({ level: 1 + Math.floor(Math.max(0, xp) / FORTUNE_LEVEL_XP), into: Math.max(0, xp) % FORTUNE_LEVEL_XP, need: FORTUNE_LEVEL_XP });
 
-export type SectorKind = "empty" | "prize" | "xp" | "reward";
+export type SectorKind = "empty" | "prize" | "xp" | "reward" | "tattoo";
 export interface Sector {
   id: string;
   kind: SectorKind;
@@ -38,27 +38,35 @@ export interface Sector {
   xp?: number;
 }
 
-/** clockwise from the top, as on the picture (tools/fortune/build-wheel.py draws 13 sectors) */
+/** clockwise from the top, as on the picture (tools/fortune/build-wheel.py draws 16 sectors) — the user's list */
 export const SECTORS: Sector[] = [
-  { id: "empty", kind: "empty", icon: "empty", label: "", name: "Пусто", weight: 14 },
-  { id: "rub", kind: "reward", icon: "RUB", label: "150", name: "150 ₽", weight: 14, reward: { currencies: { RUB: 150 } } },
   { id: "keys15", kind: "reward", icon: KEYCAP_ID, label: "15", name: "15 кнопок", weight: 12, reward: { items: [{ id: KEYCAP_ID, qty: 15 }] } },
-  { id: "gpu", kind: "reward", icon: "gpu", label: "2", name: "2 видеокарты", weight: 4, reward: { items: [{ id: "gpu", qty: 2 }] } },
-  { id: "xp", kind: "xp", icon: "fortune-xp", label: "30", name: "30 опыта колеса", weight: 12, xp: 30 },
-  { id: "keys30", kind: "reward", icon: KEYCAP_ID, label: "30", name: "30 кнопок", weight: 9, reward: { items: [{ id: KEYCAP_ID, qty: 30 }] } },
-  { id: "prize", kind: "prize", icon: "prize", label: "", name: "ПРИЗ", weight: 3 },
-  { id: "energy", kind: "reward", icon: "energy-drink", label: "1", name: "Энергетик", weight: 10, reward: { items: [{ id: "energy-drink", qty: 1 }] } },
-  { id: "keys45", kind: "reward", icon: KEYCAP_ID, label: "45", name: "45 кнопок", weight: 6, reward: { items: [{ id: KEYCAP_ID, qty: 45 }] } },
+  { id: "rpg", kind: "reward", icon: "rug-pull-gun", label: "1", name: "Rug Pull Gun", weight: 4, reward: { items: [{ id: "rug-pull-gun", qty: 1 }] } },
+  { id: "keys60", kind: "reward", icon: KEYCAP_ID, label: "60", name: "60 кнопок", weight: 4, reward: { items: [{ id: KEYCAP_ID, qty: 60 }] } },
   { id: "ticket", kind: "reward", icon: TICKET_ID, label: "1", name: "Билет", weight: 9, reward: { items: [{ id: TICKET_ID, qty: 1 }] } },
-  { id: "usd", kind: "reward", icon: "RUB", label: "10", name: "10 $", weight: 2, reward: { currencies: { RUB: 10 } } },
+  { id: "energy", kind: "reward", icon: "energy-drink", label: "1", name: "Энергетик", weight: 8, reward: { items: [{ id: "energy-drink", qty: 1 }] } },
+  // a piece of the wheel's tattoo sets not owned yet (the server picks it; all owned — 30 keycaps instead)
+  { id: "tattoo", kind: "tattoo", icon: "tattoo", label: "", name: "Наколка", weight: 2 },
+  { id: "keys45", kind: "reward", icon: KEYCAP_ID, label: "45", name: "45 кнопок", weight: 6, reward: { items: [{ id: KEYCAP_ID, qty: 45 }] } },
+  { id: "prize", kind: "prize", icon: "prize", label: "", name: "ПРИЗ", weight: 3 },
+  { id: "rub", kind: "reward", icon: "RUB", label: "10", name: "10 ₽", weight: 10, reward: { currencies: { RUB: 10 } } },
+  { id: "token", kind: "reward", icon: "TOKEN", label: "12", name: "12 жетонов", weight: 4, reward: { currencies: { TOKEN: 12 } } },
+  { id: "pap", kind: "reward", icon: "PAP", label: "3000", name: "3 000 папирос", weight: 6, reward: { currencies: { PAP: 3000 } } },
   { id: "keys75", kind: "reward", icon: KEYCAP_ID, label: "75", name: "75 кнопок", weight: 3, reward: { items: [{ id: KEYCAP_ID, qty: 75 }] } },
-  { id: "rpg", kind: "reward", icon: "rug-pull-gun", label: "2", name: "2 Rug Pull Gun", weight: 2, reward: { items: [{ id: "rug-pull-gun", qty: 2 }] } },
+  { id: "xp", kind: "xp", icon: "fortune-xp", label: "30", name: "30 опыта колеса", weight: 12, xp: 30 },
+  { id: "gpu", kind: "reward", icon: "gpu", label: "1", name: "Видеокарта", weight: 6, reward: { items: [{ id: "gpu", qty: 1 }] } },
+  { id: "keys30", kind: "reward", icon: KEYCAP_ID, label: "30", name: "30 кнопок", weight: 9, reward: { items: [{ id: KEYCAP_ID, qty: 30 }] } },
+  { id: "empty", kind: "empty", icon: "empty", label: "", name: "Пусто", weight: 14 },
 ];
+/** the tattoo sector with every piece of the wheel's sets owned: this instead */
+export const TATTOO_SECTOR_FALLBACK: Reward = { items: [{ id: KEYCAP_ID, qty: 30 }] };
+/** «ПРИЗ»: take this many roubles at once, or risk it on the cups */
+export const PRIZE_TAKE_RUB = 500;
 
 /** the spokes bend this many degrees from the hub to the rim (tools/fortune/build-wheel.py CURVE); t = 0 hub … 1 rim */
 export const WHEEL_CURVE = 34;
 export const spokeBend = (t: number) => WHEEL_CURVE * Math.pow(Math.max(0, Math.min(1, t)), 1.35);
-/** the wheel picture: the hub's and the rim's radius as a share of the half-width (134 and 404 px of 512 of fortune/lid-v1.webp) */
+/** the wheel picture: the hub's and the rim's radius as a share of the half-width (134 and 404 px of 512 of fortune/lid-v2.webp) */
 export const WHEEL_R = { hub: 134 / 512, rim: 404 / 512 };
 
 export function rollSector(rng: () => number): number {
@@ -76,10 +84,10 @@ export function rollSector(rng: () => number): number {
  * shuffled; the player lifts one. What lies under it is drawn by the server — any of the nine with the same chance,
  * the jackpot too (the shuffle on the screen is only a show — following the jackpot cup with the eye does not win it).
  */
-export type CupKind = "rub" | "weapon" | "usd" | "chips" | "jackpot" | "case" | "keys";
+export type CupKind = "energy" | "gpu" | "tickets" | "chips" | "jackpot" | "pap" | "case" | "rpg" | "keyboard";
 export interface Cup { kind: CupKind; reward?: Reward }
-/** the nine cups: what lies under them (amounts rolled a little) */
-export const CUP_SET: CupKind[] = ["jackpot", "rub", "rub", "weapon", "usd", "chips", "case", "keys", "keys"];
+/** the nine cups: what lies under them (amounts rolled within the user's ranges) */
+export const CUP_SET: CupKind[] = ["energy", "gpu", "tickets", "chips", "jackpot", "pap", "case", "rpg", "keyboard"];
 /** «Ящик ништяков» = this many achievement points (one more opening of the case in the shop) */
 export const CUP_CASE_POINTS = 5;
 
@@ -88,12 +96,15 @@ function pick(rng: () => number, from: number, to: number, step = 1) {
 }
 export function cupReward(kind: CupKind, rng: () => number): Reward | undefined {
   switch (kind) {
-    case "rub": return { currencies: { RUB: pick(rng, 1000, 3000, 250) } };
-    case "usd": return { currencies: { RUB: pick(rng, 10, 30, 5) } };
-    case "weapon": return rng() < 0.5 ? { items: [{ id: "rug-pull-gun", qty: pick(rng, 2, 4) }] } : { items: [{ id: "gpu", qty: pick(rng, 4, 6) }] };
-    case "chips": return { items: [{ id: "poker-chip", qty: pick(rng, 3, 5) }] };
-    case "case": return { achPoints: CUP_CASE_POINTS };
-    case "keys": return { items: [{ id: KEYCAP_ID, qty: pick(rng, 50, 150, 10) }] };
+    case "energy": return { items: [{ id: "energy-drink", qty: pick(rng, 4, 7) }] };
+    case "gpu": return { items: [{ id: "gpu", qty: pick(rng, 45, 65) }] };
+    case "tickets": return { items: [{ id: TICKET_ID, qty: pick(rng, 3, 6) }] };
+    case "chips": return { items: [{ id: "poker-chip", qty: pick(rng, 3, 6) }] };
+    case "pap": return { currencies: { PAP: pick(rng, 15_000, 29_000, 500) } };
+    // «кейсы»: openings of «Ящик ништяков» (its achievement points)
+    case "case": return { achPoints: CUP_CASE_POINTS * pick(rng, 2, 5) };
+    case "rpg": return { items: [{ id: "rug-pull-gun", qty: pick(rng, 45, 65) }] };
+    case "keyboard": return { items: [{ id: "keyboard", qty: pick(rng, 45, 65) }] };
     case "jackpot": return undefined;
   }
 }

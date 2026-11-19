@@ -17,10 +17,10 @@ import { Icon } from "../art/icons.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { haptic } from "../telegram.ts";
 import { sfx } from "../sound.ts";
-import { BAG_TATTOO_CHANCE, FORTUNE_BAGS, JACKPOT_ADD, JACKPOT_SEED, KEYCAP_ID, TICKET_PRICE, SECTORS, TICKET_ID, WHEEL_R, spokeBend, type CupKind, type Sector } from "../../content/fortune.ts";
+import { BAG_TATTOO_CHANCE, CUP_CASE_POINTS, FORTUNE_BAGS, PRIZE_TAKE_RUB, JACKPOT_ADD, JACKPOT_SEED, KEYCAP_ID, TICKET_PRICE, SECTORS, TICKET_ID, WHEEL_R, spokeBend, type CupKind, type Sector } from "../../content/fortune.ts";
 
 const A = "/assets/fortune";
-const WHEEL_IMG = `${A}/lid-v1.webp`;
+const WHEEL_IMG = `${A}/lid-v2.webp`;
 const PRIZE_IMG = `${A}/prize.webp?v=2`;
 const N = SECTORS.length;
 const STEP = 360 / N;
@@ -110,7 +110,9 @@ function Sparks({ on }: { on: boolean }) {
 const SPARK_PAD = 1.5;
 
 function SectorIcon({ s, size }: { s: Sector; size: number }) {
-  if (s.icon === "RUB" || s.icon === "RUB") return <Icon name={s.icon} size={size} />;
+  if (s.icon === "RUB" || s.icon === "PAP" || s.icon === "TOKEN") return <Icon name={s.icon} size={size} />;
+  // eslint-disable-next-line @next/next/no-img-element
+  if (s.icon === "tattoo") return <img src={`${A}/tattoo-icon.webp`} alt="" width={size} height={size} draggable={false} />;
   // eslint-disable-next-line @next/next/no-img-element
   if (s.icon === "fortune-xp") return <img src={`${A}/xp.webp`} alt="" width={size} height={size} draggable={false} />;
   return <ItemArt id={s.icon} size={size} />;
@@ -133,7 +135,7 @@ function WheelFace() {
         const ic = at(k, 0.72), lb = at(k, 0.3);
         return (
           <span key={s.id}>
-            <span className="fo-ic" style={{ left: ic.left, top: ic.top, transform: `translate(-50%, -50%) rotate(${ic.a + 90}deg)` }}><SectorIcon s={s} size={40} /></span>
+            <span className="fo-ic" style={{ left: ic.left, top: ic.top, transform: `translate(-50%, -50%) rotate(${ic.a + 90}deg)` }}><SectorIcon s={s} size={34} /></span>
             {s.label && <span className="fo-lb num" style={{ left: lb.left, top: lb.top, transform: `translate(-50%, -50%) rotate(${lb.a}deg)` }}>{s.label}</span>}
           </span>
         );
@@ -159,6 +161,8 @@ export function FortuneScreen() {
   const runRef = useRef(false);
   const [buy, setBuy] = useState(false);
   const [cups, setCups] = useState(false);
+  // «ПРИЗ» fell: «Взять деньги» (PRIZE_TAKE_RUB) or «Попытать удачу» (the cups)
+  const [choice, setChoice] = useState(false);
   const [bag, setBag] = useState(false);
   const timer = useRef<number | null>(null);
   // the tickets and keycaps change at once; the jackpot and the level — when the wheel stops
@@ -195,7 +199,7 @@ export function FortuneScreen() {
     setF(r.fortune);
     setStock(null);
     const s = SECTORS[r.last];
-    if (s.kind === "prize") { haptic.big(); sfx("win"); stop(); setCups(true); return; }
+    if (s.kind === "prize") { haptic.big(); sfx("win"); stop(); setChoice(true); return; }
     if (s.kind === "empty") haptic.tap(); else { haptic.ok(); sfx("coin"); }
     if (runRef.current) {
       if (r.fortune.tickets < 1) { stop(); setOut(true); return; }
@@ -281,7 +285,7 @@ export function FortuneScreen() {
 
       <div className="fo-bottom">
         {cupsWaiting > 0 && !cups && (
-          <button type="button" className="fo-cups" onClick={() => { stop(); setCups(true); }}>
+          <button type="button" className="fo-cups" onClick={() => { stop(); if (f?.cupsLayout) setCups(true); else setChoice(true); }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={PRIZE_IMG} alt="" /> Чашки ждут{cupsWaiting > 1 ? <>: <b className="num">{cupsWaiting}</b></> : null} — открыть
           </button>
@@ -318,6 +322,7 @@ export function FortuneScreen() {
       {buy && f && <BuyTickets price={f.price} onClose={() => setBuy(false)} onDone={() => { void load(); }} />}
       {bag && <Bags keycaps={keycaps} onClose={() => { setBag(false); void load(); }} />}
       {cups && <CupsGame onClose={() => { setCups(false); void load(); }} />}
+      {choice && <PrizeChoice onTake={() => { setChoice(false); void load(); }} onRisk={() => { setChoice(false); setCups(true); }} />}
     </div>
   );
 }
@@ -435,8 +440,37 @@ function Bags({ keycaps, onClose }: { keycaps: number; onClose: () => void }) {
   );
 }
 
+/* ---------------- «ПРИЗ»: take the money or risk it on the cups ---------------- */
+function PrizeChoice({ onTake, onRisk }: { onTake: () => void; onRisk: () => void }) {
+  const { act, busy } = useGame();
+  const take = async () => {
+    const r = await act("fortune_prize_take", {}, `+${PRIZE_TAKE_RUB} ₽`);
+    if (r) { haptic.ok(); sfx("coin"); onTake(); }
+  };
+  return (
+    <div className="fo-choice" role="dialog" aria-label="Сектор ПРИЗ">
+      <b className="fo-choice-h display">Сектор приз</b>
+      <div className="fo-choice-row">
+        <div className="fo-choice-card">
+          <b className="display">Взять деньги</b>
+          <span className="fo-choice-sum num">{PRIZE_TAKE_RUB} <Icon name="RUB" size={26} /></span>
+          <span className="fo-choice-pic"><Icon name="RUB" size={44} /><Icon name="RUB" size={56} /><Icon name="RUB" size={44} /></span>
+          <button type="button" className="btn green" disabled={busy === "fortune_prize_take"} onClick={take}>Забрать</button>
+        </div>
+        <div className="fo-choice-card">
+          <b className="display">Попытать удачу</b>
+          <span className="fo-choice-sum">чашки и джекпот</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <span className="fo-choice-pic"><img src={`${A}/cup.webp`} alt="" /><img src={`${A}/cup.webp`} alt="" /><img src={`${A}/cup.webp`} alt="" /></span>
+          <button type="button" className="btn green" onClick={() => { haptic.tap(); onRisk(); }}>Рискнуть</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ---------------- «ПРИЗ»: the cups ---------------- */
-type CupView = { kind: CupKind; reward?: { currencies?: Partial<Record<"RUB" | "RUB", number>>; items?: { id: string; qty: number }[]; achPoints?: number } };
+type CupView = { kind: CupKind; reward?: { currencies?: Partial<Record<"RUB" | "PAP", number>>; items?: { id: string; qty: number }[]; achPoints?: number } };
 interface CupsStart { layout: CupView[] }
 interface CupsPick { index: number; kind: CupKind; final: CupView[]; reward: Granted | null; jackpot: number }
 
@@ -450,9 +484,9 @@ function CupPrize({ c, jackpot }: { c: CupView; jackpot?: number }) {
         <><img src={`${A}/jackpot.webp`} alt="" /><b>{jackpot ? jackpot.toLocaleString("ru-RU") : "Джекпот"}</b></>
       ) : c.kind === "case" ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <><img src={`${A}/case.webp`} alt="" /><b>Ящик</b></>
-      ) : r?.currencies?.RUB ? <><Icon name="RUB" size={30} /><b className="num">{r.currencies.RUB.toLocaleString("ru-RU")}</b></>
-        : r?.currencies?.RUB ? <><Icon name="RUB" size={30} /><b className="num">{r.currencies.RUB}</b></>
+        <><img src={`${A}/case.webp`} alt="" /><b className="num">×{Math.round((r?.achPoints ?? 0) / CUP_CASE_POINTS)}</b></>
+      ) : r?.currencies?.PAP ? <><Icon name="PAP" size={30} /><b className="num">{r.currencies.PAP.toLocaleString("ru-RU")}</b></>
+        : r?.currencies?.RUB ? <><Icon name="RUB" size={30} /><b className="num">{r.currencies.RUB.toLocaleString("ru-RU")}</b></>
         : it ? <><ItemArt id={it.id} size={34} /><b className="num">×{it.qty}</b></> : null}
     </span>
   );
@@ -593,8 +627,8 @@ function FortuneHelp() {
     <Help topic="fortune" title="Колесо удачи">
       <p>Одна прокрутка — один билет. Билеты падают из «Ящика ништяков» в магазине или покупаются здесь по {TICKET_PRICE} ₽ (кнопка «+»).</p>
       <p>Каждая прокрутка любого игрока добавляет {JACKPOT_ADD} ₽ к общему джекпоту.</p>
-      <p>На колесе: оружие, энергетик, рубли, билет, кнопки клавиатуры, опыт колеса, пустой сектор и <b>ПРИЗ</b>.</p>
-      <p><b>ПРИЗ</b> — игра в чашки: девять чашек, под каждой приз (рубли, оружие, фишки, ящик ништяков, кнопки), под одной — джекпот. Чашки показывают призы, накрываются и перемешиваются — выбери одну. Кто сорвал джекпот, того видно наверху, а джекпот начинается заново с {JACKPOT_SEED} ₽.</p>
+      <p>На колесе 16 секторов: кнопки клавиатуры, Rug Pull Gun, билет, энергетик, наколка, рубли, жетоны, папиросы, видеокарта, опыт колеса, пустой сектор и <b>ПРИЗ</b>.</p>
+      <p><b>ПРИЗ</b> — выбор: забрать {PRIZE_TAKE_RUB} ₽ сразу или рискнуть в чашки. Девять чашек: энергетики, видеокарты, билеты, фишки, папиросы, ящики ништяков, Rug Pull Gun, клавиатуры — и под одной джекпот. Чашки показывают призы, накрываются и перемешиваются — выбери одну. Кто сорвал джекпот, того видно наверху, а джекпот начинается заново с {JACKPOT_SEED} ₽.</p>
       <p>Кнопки клавиатуры копятся — за них будут открываться коробки с наколками.</p>
       <p>«Автопрокрутка» — включи, и колесо крутится само, билет за билетом, пока они не кончатся (остановится на «ПРИЗ» или когда выключишь).</p>
     </Help>

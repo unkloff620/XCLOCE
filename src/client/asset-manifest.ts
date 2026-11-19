@@ -115,6 +115,7 @@ export const ASSET_FILES: string[] = [
  "/assets/fortune/jackpot-title.webp",
  "/assets/fortune/jackpot.webp",
  "/assets/fortune/lid-v1.webp",
+ "/assets/fortune/lid-v2.webp",
  "/assets/fortune/prize.webp",
  "/assets/fortune/rim.webp",
  "/assets/fortune/tattoo-icon.webp",
