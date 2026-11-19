@@ -4,7 +4,7 @@ import { grantReward, takeMoney, type Ctx } from "../core.ts";
 import type { Config } from "../config.ts";
 import { countersOf, setTo } from "./counters.ts";
 import { isAdminPlayer } from "./fortune.ts";
-import { VAN_GIVES, VAN_PACKS, rollVanPack, vanDeal, vanPackById, vanVisit, vanWindow, type VanGive } from "../../content/van.ts";
+import { VAN_GIVES, VAN_PACKS, vanDeal, vanPackOf, vanPackById, vanVisit, vanWindow, type VanGive } from "../../content/van.ts";
 
 /** the van is in the yard for this player: Friday–Sunday (Moscow); the admins see it any day (to try it) */
 async function vanOpen(q: Queryable, pid: number, cfg: Config, now: number) {
@@ -50,6 +50,6 @@ export async function vanPack(ctx: Ctx, id: string) {
   if (((await countersOf(ctx.q, ctx.pid))[key] ?? 0) > 0) throw new GameError("van_taken", "Эту акцию ты уже взял — барыга вернётся в следующую пятницу");
   if (p.price) await takeMoney(ctx, p.price.currency, p.price.amount, `van_pack:${p.id}`);
   await setTo(ctx.q, ctx.pid, key, 1);
-  const reward = await grantReward(ctx, rollVanPack(p, ctx.rng), `van_pack:${p.id}`);
+  const reward = await grantReward(ctx, vanPackOf(p, vanVisit(ctx.now)), `van_pack:${p.id}`);
   return { id: p.id, reward, van: await vanView(ctx.q, ctx.pid, ctx.cfg, ctx.now) };
 }

@@ -13,7 +13,8 @@ import { clock, full } from "../format.ts";
 import { haptic } from "../telegram.ts";
 import { sfx } from "../sound.ts";
 import { CURRENCY_DEFS, type Currency } from "../../content/currencies.ts";
-import { VAN_CASE, VAN_PACKS, type VanGive } from "../../content/van.ts";
+import { VAN_PACKS, vanPackOf, type VanGive } from "../../content/van.ts";
+import { ACH_BOX_COST } from "../../content/ach-box.ts";
 import type { Granted } from "../api.ts";
 
 const left = (ms: number) => (ms > 86_400_000 ? `${Math.floor(ms / 86_400_000)} д ${Math.floor((ms % 86_400_000) / 3_600_000)} ч` : clock(ms));
@@ -92,6 +93,7 @@ function VanPacks({ onBack }: { onBack: () => void }) {
   const [got, setGot] = useState<Granted | null>(null);
   const p = VAN_PACKS[i];
   const taken = v.taken.includes(p.id);
+  const inside = vanPackOf(p, v.visit);
   const turn = (d: number) => { haptic.tap(); setGot(null); setI((x) => (x + d + VAN_PACKS.length) % VAN_PACKS.length); };
   const take = async () => {
     const r = await act<{ reward: Granted }>("van_pack", { id: p.id }, p.price ? `Куплено: ${p.name}` : "Забрал бесплатную акцию");
@@ -105,10 +107,12 @@ function VanPacks({ onBack }: { onBack: () => void }) {
         <b className="display">{p.name}</b>
         <button type="button" className="btn dark sm" onClick={() => turn(1)} aria-label="Следующая акция">›</button>
       </div>
+      {/* this visit's contents: rolled once for the weekend, the same for everyone */}
       {got ? <RewardChips r={got} size={18} /> : (
         <div className="van-pack">
-          {Object.entries(p.currencies).map(([c, r]) => <span key={c}><Icon name={c} size={24} /><b className="num">{r![0] === r![1] ? full(r![0]) : `${full(r![0])}–${full(r![1])}`}</b></span>)}
-          {Object.entries(p.items).map(([id, r]) => <span key={id}>{id === VAN_CASE ? <Icon name="case" size={24} /> : <ItemArt id={id} size={26} />}<b className="num">{r![0]}–{r![1]}</b></span>)}
+          {Object.entries(inside.currencies ?? {}).map(([c, n]) => <span key={c}><Icon name={c} size={24} /><b className="num">+{full(n ?? 0)}</b></span>)}
+          {(inside.items ?? []).map((it) => <span key={it.id}><ItemArt id={it.id} size={26} /><b className="num">+{full(it.qty)}</b></span>)}
+          {!!inside.achPoints && <span><Icon name="case" size={24} /><b className="num">+{inside.achPoints / ACH_BOX_COST}</b></span>}
         </div>
       )}
       <div className="row" style={{ gap: 8 }}>

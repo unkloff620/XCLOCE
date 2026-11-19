@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { act, always, freshDb, newPlayer, qty, setMoney, wallet } from "./helpers.ts";
-import { VAN_RATES, vanDeal, vanWindow } from "../src/content/van.ts";
+import { VAN_RATES, vanDeal, vanPackById, vanPackOf, vanVisit, vanWindow } from "../src/content/van.ts";
 
 // Friday 2026-11-20 12:00 Moscow; Thursday the 19th
 const FRI = Date.parse("2026-11-20T09:00:00Z");
@@ -34,14 +34,19 @@ describe("«Барыга на газели»", () => {
     expect(await wallet(db, p, "TOKEN")).toBe(3);
     await expect(act(db, p, "van_exchange", { give: "RUB", qty: 1 }, FRI)).rejects.toMatchObject({ code: "no_money" });
     // the free pack: once a visit
+    // the contents are rolled once a visit: the same for everyone (here and on the screen)
+    const inside = vanPackOf(vanPackById("free")!, vanVisit(FRI));
     const f = await act(db, p, "van_pack", { id: "free" }, FRI, always(0));
-    expect(f.result.reward.currencies).toMatchObject({ RUB: 5, TOOTH: 1123, PAP: 1825, GOLD: 2, TOKEN: 8 });
-    expect(await qty(db, p, "rug-pull-gun")).toBe(2);
+    expect(f.result.reward.currencies).toEqual(inside.currencies);
+    expect(await qty(db, p, "rug-pull-gun")).toBe(inside.items!.find((i) => i.id === "rug-pull-gun")!.qty);
+    const q = await newPlayer(db);
+    const g = await act(db, q, "van_pack", { id: "free" }, FRI, always(0.99));
+    expect(g.result.reward.currencies).toEqual(inside.currencies);
     await expect(act(db, p, "van_pack", { id: "free" }, FRI)).rejects.toMatchObject({ code: "van_taken" });
     // a paid pack for roubles, with cases (achievement points)
     await setMoney(db, p, "RUB", 350);
     const a = await act(db, p, "van_pack", { id: "avtor" }, FRI, always(0));
-    expect(a.result.reward.achPoints).toBe(50);
+    expect(a.result.reward.achPoints).toBe(vanPackOf(vanPackById("avtor")!, vanVisit(FRI)).achPoints);
     expect(await qty(db, p, "poker-chip")).toBeGreaterThanOrEqual(1);
     expect(a.state.van.taken).toEqual(["free", "avtor"]);
     // next Friday: a new visit, the packs again

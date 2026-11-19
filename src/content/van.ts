@@ -89,6 +89,14 @@ export const VAN_PACKS: VanPack[] = [
 ];
 export const vanPackById = (id: string) => VAN_PACKS.find((p) => p.id === id);
 
+/** a seeded 0…1 sequence (mulberry32) */
+function seeded(seed: string): () => number {
+  let a = Math.floor(hash01(seed) * 0xffffffff) >>> 0;
+  return () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+/** what a pack holds on this visit: rolled in its ranges ONCE a visit — the same for every player all weekend */
+export const vanPackOf = (p: VanPack, visit: string): Reward => rollVanPack(p, seeded(`${visit}:${p.id}`));
+
 /** what a pack gives: every line an amount in its range (the cases as achievement points) */
 export function rollVanPack(p: VanPack, rng: () => number): Reward {
   const r = ([a, b]: Range) => a + Math.floor(rng() * (b - a + 1));
