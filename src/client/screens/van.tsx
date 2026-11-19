@@ -5,7 +5,7 @@
  * зубы, for roubles / метро tokens at the visit's rate), on the right door «Акции» — the paper «Посмотреть» (the packs
  * on the slate in the cargo opening, ‹ › between them under the van, each once a visit; the slate bronze / silver / gold by the pack, its outline shining).
  */
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { RewardChips } from "../ui.tsx";
 import { Icon } from "../art/icons.tsx";
@@ -55,12 +55,29 @@ export function VanWindow({ onClose }: { onClose: () => void }) {
   const now = useNow();
   const [door, setDoor] = useState<"ex" | "packs" | null>(null);
   const v = state?.van;
+  const layer = useRef<HTMLDivElement>(null);
+  const trunk = useRef<HTMLDivElement>(null);
+  const [zoom, setZoom] = useState(1);
+  // how close the trunk comes: its opening, the bumper and the arrows by it (x 20–80%, y 3–90%) fill the window
+  useLayoutEffect(() => {
+    const fit = () => {
+      const l = layer.current, t = trunk.current;
+      if (!l || !t) return;
+      const k = Math.min((l.clientWidth * 0.98) / (t.offsetWidth * 0.6), (l.clientHeight * 0.9) / (t.offsetHeight * 0.87));
+      setZoom(Math.max(1, Math.min(2.6, k)));
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    if (layer.current) ro.observe(layer.current);
+    return () => ro.disconnect();
+  }, [v]);
   if (!v) return null;
   const pick = (d: "ex" | "packs") => { haptic.tap(); setDoor((x) => (x === d ? null : d)); };
   return (
-    <div className="van-layer" role="dialog" aria-label="Барыга на газели" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+    <div ref={layer} className={`van-layer ${door ? "near" : ""}`} role="dialog" aria-label="Барыга на газели" onClick={(e) => { if (e.target === e.currentTarget) (door ? setDoor(null) : onClose()); }}>
       <button type="button" className="van-x" onClick={onClose} aria-label="Закрыть">✕</button>
-      <div className={`van-trunk ${door ? "with" : ""}`}>
+      {door && <button type="button" className="van-back" onClick={() => { haptic.tap(); setDoor(null); }} aria-label="К машине"><IcArrow /></button>}
+      <div ref={trunk} className="van-trunk" style={{ transform: door ? `scale(${zoom})` : undefined }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={`${V}/trunk.webp`} alt="" draggable={false} />
         <button type="button" className={`van-paper l ${door === "ex" ? "on" : ""}`} onClick={() => pick("ex")}>
@@ -86,9 +103,11 @@ function VanExchange() {
   const v = state!.van!;
   const [give, setGive] = useState<VanGive>("RUB");
   const [qty, setQty] = useState("1");
-  const n = Math.max(0, Math.floor(Number(qty) || 0));
-  const cost = v.rates[give] * n;
   const have = state?.wallet[v.takes] ?? 0;
+  // the most the player can take: what he has, at the visit's rate
+  const most = Math.floor(have / v.rates[give]);
+  const n = Math.min(most, Math.max(0, Math.floor(Number(qty) || 0)));
+  const cost = v.rates[give] * n;
   const turn = () => { haptic.tap(); setGive((g) => (g === "RUB" ? "TOKEN" : "RUB")); };
   const go = async () => {
     const r = await act("van_exchange", { give, qty: n }, `+${n} ${give === "RUB" ? "₽" : "жетонов"}`);
@@ -99,14 +118,14 @@ function VanExchange() {
       <div className="van-ex-paper">
         <b className="display">Сколько нужно {give === "RUB" ? "рублей" : "жетонов"}</b>
         <span className="van-ex-coin"><Icon name={give} size={56} /></span>
-        <input inputMode="numeric" value={qty} onChange={(e) => setQty(e.target.value.replace(/[^0-9]/g, "").replace(/^0+(?=\d)/, ""))} aria-label="Сколько" />
+        <input inputMode="numeric" value={qty === "" ? "" : String(n)} onChange={(e) => { const t = e.target.value.replace(/[^0-9]/g, ""); setQty(t === "" ? "" : String(Math.min(most, Number(t)))); }} aria-label="Сколько" />
         <span className="display van-ex-price-h">Цена вопроса:</span>
         <span className="van-ex-price num">{full(cost)} <Icon name={v.takes} size={20} /></span>
         <span className="van-ex-rate">1 {give === "RUB" ? "₽" : "жетон"} = {full(v.rates[give])} {NAME_GEN[v.takes]} · есть {full(have)}</span>
       </div>
       <div className="van-ctl">
         <button type="button" className="van-arrow" onClick={turn} aria-label="Другая валюта"><IcArrow /></button>
-        <button type="button" className="btn gold van-go" disabled={!n || cost > have || busy === "van_exchange"} onClick={go}>{cost > have ? "Не хватает" : "Обменять"}</button>
+        <button type="button" className="btn gold van-go" disabled={!n || busy === "van_exchange"} onClick={go}>{most < 1 ? "Не хватает" : "Обменять"}</button>
         <button type="button" className="van-arrow" onClick={turn} aria-label="Другая валюта"><IcArrow flip /></button>
       </div>
     </div>
@@ -138,9 +157,9 @@ function VanPacks() {
         <b className="van-plaque-name display">{p.price ? p.name : "Подгон от барыги"}</b>
         <div className={`van-plaque-in ${Object.keys(inside.currencies ?? {}).length + (inside.items ?? []).length + (inside.achPoints ? 1 : 0) > 9 ? "many" : ""}`}>
           {got ? <RewardChips r={got} size={18} /> : <>
-            {Object.entries(inside.currencies ?? {}).map(([c, n]) => <span key={c}><Icon name={c} size={22} /><b className="num">{full(n ?? 0)}</b></span>)}
-            {!!inside.achPoints && <span><Icon name="case" size={22} /><b className="num">{inside.achPoints / ACH_BOX_COST}</b></span>}
-            {(inside.items ?? []).map((it) => <span key={it.id}><ItemArt id={it.id} size={24} /><b className="num">{full(it.qty)}</b></span>)}
+            {Object.entries(inside.currencies ?? {}).map(([c, n]) => <span key={c}><Icon name={c} size={22} /><b className="num">+{full(n ?? 0)}</b></span>)}
+            {!!inside.achPoints && <span><Icon name="case" size={22} /><b className="num">+{inside.achPoints / ACH_BOX_COST}</b></span>}
+            {(inside.items ?? []).map((it) => <span key={it.id}><ItemArt id={it.id} size={24} /><b className="num">+{full(it.qty)}</b></span>)}
           </>}
         </div>
         <b className="van-plaque-price display">{p.price ? <>{full(p.price.amount)} <Icon name={p.price.currency} size={20} /></> : "Бесплатно"}</b>
