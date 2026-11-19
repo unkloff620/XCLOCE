@@ -7109,7 +7109,7 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .van-go.btn { width: 100%; height: 100%; min-height: 0; padding: 0 1cqi; font-size: 1.9cqi; gap: 1cqi; border-width: 1px; border-radius: 0.8cqi; outline-offset: -0.7cqi;
   box-shadow: 0 0.4cqi 0 var(--b4), 0 0.8cqi 1.4cqi rgba(0, 0, 0, 0.45); }
 /* «Обмен» on the artist's slate (exchange.webp): the title, the coin, the number on the dark bar (57.98–69.6%), the price under it */
-.van-ex-paper { position: absolute; top: 5.5%; height: 73%; left: 33.15%; width: 33.7%; container-type: inline-size; color: #f3ead8; text-align: center;
+.van-ex-paper { position: absolute; top: 10.6%; height: 62.8%; left: 35.5%; width: 29%; container-type: inline-size; color: #f3ead8; text-align: center;
   background: url(/assets/van/exchange.webp) center / 100% 100% no-repeat; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.55)); }
 .van-ex-paper > * { position: absolute; left: 10%; right: 10%; display: flex; align-items: center; justify-content: center; }
 .van-ex-paper > b { top: 9%; height: 15%; font-size: 7.6cqi; text-transform: uppercase; line-height: 1.08; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.55); }
@@ -7118,9 +7118,8 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .van-ex-paper input { position: absolute; left: 9%; width: 81%; top: 58%; height: 11.6%; padding: 0 3%; border: 0; border-radius: 0; background: transparent;
   color: #ffe08a; font: 900 11cqi/1 var(--font-body), system-ui; text-align: center; outline: none; }
 .van-ex-paper input:focus { box-shadow: inset 0 0 0 2px rgba(255, 210, 110, 0.55); }
-.van-ex-price-h { top: 72%; height: 7%; font-size: 6cqi; text-transform: uppercase; opacity: 0.85; }
-.van-ex-price { top: 79%; height: 9%; gap: 2cqi; font-weight: 900; font-size: 9cqi; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.55); }
-.van-ex-rate { top: 88.5%; height: 5%; font-size: 5.4cqi; white-space: nowrap; opacity: 0.75; }
+.van-ex-price-h { top: 73.5%; height: 7%; font-size: 6cqi; text-transform: uppercase; opacity: 0.85; }
+.van-ex-price { top: 81%; height: 9%; gap: 2cqi; font-weight: 900; font-size: 9cqi; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.55); }
 /* the slate: 73% of the trunk's height, its places as on the artist's marks — the name (y 10–17%), the contents (19–72%), the price on the ribbon (76.5–87%) */
 .van-plaque { position: absolute; top: 5.5%; height: 73%; left: 30.05%; width: 39.9%; container-type: inline-size; color: #f3ead8; }
 .van-plaque > img { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.55)); }
@@ -7138,6 +7137,12 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
   font-size: 7.5cqi; color: #3b2a1a; text-transform: uppercase; }
 .van-plaque-price svg { width: 9cqi !important; height: 9cqi !important; }
 .van-plaque.k-gold .van-plaque-name, .van-plaque.k-bronze .van-plaque-name { color: #fff3d0; }
+/* paging ‹ ›: the frame turns over like a card */
+.van-plaque.flip-r, .van-ex-paper.flip-r { animation: van-flip-r 0.38s cubic-bezier(0.2, 0.7, 0.3, 1); }
+.van-plaque.flip-l, .van-ex-paper.flip-l { animation: van-flip-l 0.38s cubic-bezier(0.2, 0.7, 0.3, 1); }
+@keyframes van-flip-r { from { transform: perspective(600px) translateX(18%) rotateY(-75deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes van-flip-l { from { transform: perspective(600px) translateX(-18%) rotateY(75deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .van-plaque.flip-r, .van-plaque.flip-l, .van-ex-paper.flip-r, .van-ex-paper.flip-l { animation: none; } }
 /* the outline shines: a light runs along the slate's edge — clear on gold, faint on silver */
 .van-plaque-rim { position: absolute; inset: 0; pointer-events: none; -webkit-mask: url(/assets/van/plaque-rim.webp) center / 100% 100% no-repeat; mask: url(/assets/van/plaque-rim.webp) center / 100% 100% no-repeat;
   background: linear-gradient(115deg, transparent 38%, rgba(255, 248, 210, 0.95) 47%, #fff 50%, rgba(255, 248, 210, 0.95) 53%, transparent 62%) 0 0 / 300% 300%;

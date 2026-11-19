@@ -13,7 +13,6 @@ import { ItemArt } from "../art/items.tsx";
 import { clock, full } from "../format.ts";
 import { haptic } from "../telegram.ts";
 import { sfx } from "../sound.ts";
-import type { Currency } from "../../content/currencies.ts";
 import { VAN_PACKS, vanPackOf, type VanGive } from "../../content/van.ts";
 import { ACH_BOX_COST } from "../../content/ach-box.ts";
 import type { Granted } from "../api.ts";
@@ -95,8 +94,6 @@ export function VanWindow({ onClose }: { onClose: () => void }) {
   );
 }
 
-const NAME_GEN: Partial<Record<Currency, string>> = { PAP: "папирос", TOOTH: "зубов" };
-
 /** «Обмен»: the slate (exchange.webp) — how many roubles (or tokens, ‹ ›), the price in the week's currency */
 function VanExchange() {
   const { state, act, busy } = useGame();
@@ -108,25 +105,25 @@ function VanExchange() {
   const most = Math.floor(have / v.rates[give]);
   const n = Math.min(most, Math.max(0, Math.floor(Number(qty) || 0)));
   const cost = v.rates[give] * n;
-  const turn = () => { haptic.tap(); setGive((g) => (g === "RUB" ? "TOKEN" : "RUB")); };
+  const [dir, setDir] = useState(0);
+  const turn = (d: number) => { haptic.tap(); setDir(d); setGive((g) => (g === "RUB" ? "TOKEN" : "RUB")); };
   const go = async () => {
     const r = await act("van_exchange", { give, qty: n }, `+${n} ${give === "RUB" ? "₽" : "жетонов"}`);
     if (r) { haptic.ok(); sfx("coin"); }
   };
   return (
     <div className="van-panel">
-      <div className="van-ex-paper">
+      <div key={give} className={`van-ex-paper ${dir ? (dir > 0 ? "flip-r" : "flip-l") : ""}`}>
         <b className="display">Сколько нужно {give === "RUB" ? "рублей" : "жетонов"}</b>
         <span className="van-ex-coin"><Icon name={give} size={56} /></span>
         <input inputMode="numeric" value={qty === "" ? "" : String(n)} onChange={(e) => { const t = e.target.value.replace(/[^0-9]/g, ""); setQty(t === "" ? "" : String(Math.min(most, Number(t)))); }} aria-label="Сколько" />
         <span className="display van-ex-price-h">Цена вопроса:</span>
         <span className="van-ex-price num">{full(cost)} <Icon name={v.takes} size={20} /></span>
-        <span className="van-ex-rate">1 {give === "RUB" ? "₽" : "жетон"} = {full(v.rates[give])} {NAME_GEN[v.takes]} · есть {full(have)}</span>
       </div>
       <div className="van-ctl">
-        <button type="button" className="van-arrow" onClick={turn} aria-label="Другая валюта"><IcArrow /></button>
+        <button type="button" className="van-arrow" onClick={() => turn(-1)} aria-label="Другая валюта"><IcArrow /></button>
         <button type="button" className="btn gold van-go" disabled={!n || busy === "van_exchange"} onClick={go}>{most < 1 ? "Не хватает" : "Обменять"}</button>
-        <button type="button" className="van-arrow" onClick={turn} aria-label="Другая валюта"><IcArrow flip /></button>
+        <button type="button" className="van-arrow" onClick={() => turn(1)} aria-label="Другая валюта"><IcArrow flip /></button>
       </div>
     </div>
   );
@@ -142,7 +139,8 @@ function VanPacks() {
   const taken = v.taken.includes(p.id);
   const inside = vanPackOf(p, v.visit);
   const kind = PLAQUE[p.id] ?? "free";
-  const turn = (d: number) => { haptic.tap(); setGot(null); setI((x) => (x + d + VAN_PACKS.length) % VAN_PACKS.length); };
+  const [dir, setDir] = useState(0);
+  const turn = (d: number) => { haptic.tap(); setGot(null); setDir(d); setI((x) => (x + d + VAN_PACKS.length) % VAN_PACKS.length); };
   const take = async () => {
     const r = await act<{ reward: Granted }>("van_pack", { id: p.id }, p.price ? `Куплено: ${p.name}` : "Забрал бесплатную акцию");
     if (r) { haptic.big(); sfx("reward"); setGot(r.reward); }
@@ -150,7 +148,7 @@ function VanPacks() {
   const can = !p.price || (state?.wallet[p.price.currency] ?? 0) >= p.price.amount;
   return (
     <div className="van-panel">
-      <div className={`van-plaque k-${kind}`}>
+      <div key={p.id} className={`van-plaque k-${kind} ${dir ? (dir > 0 ? "flip-r" : "flip-l") : ""}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={`${V}/plaque-${kind}.webp`} alt="" draggable={false} />
         {(kind === "gold" || kind === "silver") && <i className="van-plaque-rim" aria-hidden="true" />}
