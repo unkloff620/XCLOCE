@@ -159,9 +159,10 @@ export const ROOM_DEFS: RoomDef[] = [
   { id: "vault", name: "Хранилище Князя", description: "Светлые обои, круглая дверь сейфа, полка с леджерами, портреты классиков и листва за окном. Выпадает с Князя. +4% к урону.", price: { currency: "RUB", amount: 6500 }, bonus: { damage: 0.04 }, drop: { boss: "knyaz", chance: ROOM_DROP_CHANCE } },
   { id: "cabinet", name: "Кабинет Вадима", description: "Тёмное дерево, ночной город за окном, полка с брелоками от тачек и спорткар в золотой раме. Выпадает с Вадима. +5% к урону.", price: { currency: "RUB", amount: 7500 }, bonus: { damage: 0.05 }, drop: { boss: "vadim", chance: ROOM_DROP_CHANCE } },
   { id: "dojo", name: "Додзё Боцмана", description: "Тёмный зал с зелёными ширмами, по стене бежит код, у стены — боксёрская груша. Выпадает с Боцмана. +5% к урону.", price: { currency: "RUB", amount: 8000 }, bonus: { damage: 0.05 }, drop: { boss: "botsman", chance: ROOM_DROP_CHANCE } },
-  { id: "office", name: "Офис трейдера", description: "Стеклянные стены, три графика и кофемашина. Даёт шанс крита.", price: { currency: "RUB", amount: 3_400 }, bonus: { critChance: 0.03 } },
+  // the rooms that drop from no boss: bought for dollars for now (where they drop from — later)
+  { id: "office", name: "Офис трейдера", description: "Стеклянные стены, три графика и кофемашина. +3% шанса крита.", price: { currency: "USD", amount: 1_500 }, bonus: { critChance: 0.03 } },
   { id: "acidyard", name: "Кислотный двор", description: "Ночной двор Утилизатора: ливень, гроза над воротами, мигающий фонарь и бочки с кислотой, что светится в лужах. Выпадает с Утилизатора. +6% к урону.", price: { currency: "RUB", amount: 8_800 }, bonus: { damage: 0.06 }, drop: { boss: "utilizator", chance: ROOM_DROP_CHANCE } },
-  { id: "penthouse", name: "Пентхаус To The Moon", description: "Вид на Луну, золото и бассейн из стейблкоинов. Выпадает с Утилизатора. +7% к урону.", price: { currency: "RUB", amount: 7_600 }, bonus: { damage: 0.07 }, drop: { boss: "utilizator", chance: ROOM_DROP_CHANCE } },
+  { id: "penthouse", name: "Пентхаус To The Moon", description: "Вид на Луну, золото и бассейн из стейблкоинов. +7% к урону.", price: { currency: "USD", amount: 1_500 }, bonus: { damage: 0.07 } },
 ];
 
 export const equipmentById = (id: string) => EQUIPMENT.find((e) => e.id === id);
