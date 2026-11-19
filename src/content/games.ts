@@ -187,19 +187,23 @@ export const ZONK_BANK_MIN = 300;
 
 /*
  * Уровни сложности зонка: за ZONK_ROUNDS попыток набери target очков. Набрал — партия сразу кончается победой: награда
- * win и winXp опыта зонка. Не набрал за все попытки или сдался — утешение fail (немного рублей) и 1 опыт.
- * 1-й уровень — вход за рубли и платит рублями (первая игра дня бесплатно); 2–4-й — вход за доллары и платят долларами.
+ * win и winXp опыта зонка. Не набрал за все попытки или сдался — только 1 опыт (fail пустой).
+ * Вход за рубли (первая игра дня 1-го уровня бесплатно), победа — спички, со 2-го уровня и рубли.
  * Цены посчитаны так, чтобы фармить было невыгодно: при хорошей игре 4000 набирают ~3 партии из 4, 5500 — ~1 из 3,
  * 7000 — ~1 из 8, 10000 — ~1 из 70 (проверено симуляцией, tools/zonk-sim.mjs) — на круг выигрыш чуть меньше входа,
  * в плюс выходит тот, кому везёт и кто вовремя рискует.
  */
-export type ZonkLevel = 1 | 2 | 3 | 4;
+export type ZonkLevel = 1 | 2 | 3 | 4 | 5;
+/** «Спички»: the zonk's own prize (a box to open them for tattoo sets comes later) */
+export const ZONK_MATCHES = "matches";
 export interface ZonkLevelDef { level: ZonkLevel; target: number; entry: { currency: Currency; amount: number }; win: Reward; winXp: number; fail: Reward }
 export const ZONK_LEVELS: ZonkLevelDef[] = [
-  { level: 1, target: 4000, entry: { currency: "RUB", amount: 150 }, win: { currencies: { RUB: 170 } }, winXp: 10, fail: { currencies: { RUB: 20 } } },
-  { level: 2, target: 5500, entry: { currency: "RUB", amount: 3 }, win: { currencies: { RUB: 7 } }, winXp: 15, fail: { currencies: { RUB: 30 } } },
-  { level: 3, target: 7000, entry: { currency: "RUB", amount: 5 }, win: { currencies: { RUB: 30 } }, winXp: 25, fail: { currencies: { RUB: 50 } } },
-  { level: 4, target: 10000, entry: { currency: "RUB", amount: 10 }, win: { currencies: { RUB: 400 } }, winXp: 50, fail: { currencies: { RUB: 80 } } },
+  // the user's table: the entry in roubles, the win in спички (+ roubles from level 2), no consolation money
+  { level: 1, target: 4000, entry: { currency: "RUB", amount: 10 }, win: { items: [{ id: ZONK_MATCHES, qty: 150 }] }, winXp: 10, fail: {} },
+  { level: 2, target: 5500, entry: { currency: "RUB", amount: 30 }, win: { currencies: { RUB: 45 }, items: [{ id: ZONK_MATCHES, qty: 300 }] }, winXp: 15, fail: {} },
+  { level: 3, target: 7000, entry: { currency: "RUB", amount: 50 }, win: { currencies: { RUB: 100 }, items: [{ id: ZONK_MATCHES, qty: 500 }] }, winXp: 25, fail: {} },
+  { level: 4, target: 8500, entry: { currency: "RUB", amount: 100 }, win: { currencies: { RUB: 300 }, items: [{ id: ZONK_MATCHES, qty: 1000 }] }, winXp: 50, fail: {} },
+  { level: 5, target: 10000, entry: { currency: "RUB", amount: 500 }, win: { currencies: { RUB: 8000 }, items: [{ id: ZONK_MATCHES, qty: 5000 }] }, winXp: 100, fail: {} },
 ];
 export const zonkLevelDef = (level: number) => ZONK_LEVELS.find((l) => l.level === level);
 export const ZONK_FAIL_XP = 1;

@@ -1743,21 +1743,22 @@ describe("yard mini games", () => {
     expect(b.result.total).toBe(5000);
     b = await act(db, p, "zonk_give_up", {}, T0, always(0));
     expect(b.result).toMatchObject({ status: "done", total: 5000, result: { outcome: "win", won: true, points: 5000, xp: 10 } });
-    expect(await wallet(db, p, "RUB")).toBe(rub + (ZONK_LEVELS[0].win.currencies?.RUB ?? 0));
+    expect(await wallet(db, p, "RUB")).toBe(rub);
+    expect(await qty(db, p, "matches")).toBe(150); // level 1 pays спички
     expect(b.state.games.zonk).toMatchObject({ xp: 10, level: 0, record: { points: 5000, playerId: p, day: "today" } });
-    // the second level-1 game today costs rubles
-    await setMoney(db, p, "RUB", 100);
+    // the second level-1 game today costs roubles
+    await setMoney(db, p, "RUB", 5);
     await expect(act(db, p, "game_start", { game: "zonk", level: 1 }, T0 + M)).rejects.toMatchObject({ code: "no_money" });
-    // level 2 costs roubles too; giving up ends it as not passed: rubles of consolation and 1 xp
-    await setMoney(db, p, "RUB", 3);
+    // level 2: 30 ₽; giving up ends it as not passed: only 1 xp, no consolation money
+    await setMoney(db, p, "RUB", 30);
     const g2 = await act(db, p, "game_start", { game: "zonk", level: 2 }, T0 + M, always(0));
     expect(g2.result).toMatchObject({ level: 2, target: 5500, paid: true });
     expect(await wallet(db, p, "RUB")).toBe(0);
     const up = await act(db, p, "zonk_give_up", {}, T0 + M, always(0));
     expect(up.result).toMatchObject({ status: "done", result: { outcome: "gave_up", won: false, xp: 1 } });
-    expect(await wallet(db, p, "RUB")).toBe(ZONK_LEVELS[1].fail.currencies?.RUB ?? 0); // the stake took all 3 ₽
+    expect(await wallet(db, p, "RUB")).toBe(0);
     expect(up.state.games.zonk.xp).toBe(11);
-    await expect(act(db, p, "game_start", { game: "zonk", level: 5 }, T0 + M)).rejects.toMatchObject({ code: "bad_level" });
+    await expect(act(db, p, "game_start", { game: "zonk", level: 6 }, T0 + M)).rejects.toMatchObject({ code: "bad_level" });
   });
 
   it("zonk: after «Продолжить» two zonks in a row cost 1000; below the target at the end — not passed, no prize", async () => {

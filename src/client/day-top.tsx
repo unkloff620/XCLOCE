@@ -101,7 +101,7 @@ export function DayTopNote({ game, refresh = 0 }: { game: "bj" | "poker"; refres
                 <Avatar name={lead.row.name} photo={lead.row.photo} size={22} />
                 <i className="ellipsis">{lead.row.name}</i>
               </span>
-              <b className="dt-note-val">{game === "bj" ? <>+{money(lead.row.value)} $</> : handName(lead.row.hand)}</b>
+              <b className="dt-note-val">{game === "bj" ? <>+{money(lead.row.value)} ₽</> : handName(lead.row.hand)}</b>
             </>
           ) : <span className="dt-note-none">{lead === undefined ? "…" : "пока никого"}</span>}
         </span>

@@ -1798,6 +1798,7 @@ export const ASSET_FILES: string[] = [
  "/assets/items/lost-wallet.webp",
  "/assets/items/mask-anon.webp",
  "/assets/items/mask-diver.webp",
+ "/assets/items/matches.webp",
  "/assets/items/monocle-whale.webp",
  "/assets/items/mouse.webp",
  "/assets/items/mug-coin.webp",

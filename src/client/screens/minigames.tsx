@@ -91,12 +91,12 @@ function ZonkHelp() {
       <p>Выбери уровень и набери его цель за {ZONK_ROUNDS} попыток. Набрал — партия сразу кончается победой.</p>
       <ul>
         {ZONK_LEVELS.map((l) => (
-          <li key={l.level}>Уровень {l.level}: {full(l.target)} очков. Вход {l.entry.amount} {l.entry.currency}{l.level === 1 ? " (первая игра дня — бесплатно)" : ""}, победа — {rewardText(l.win)} и +{l.winXp} опыта.</li>
+          <li key={l.level}>Уровень {l.level}: {full(l.target)} очков. Вход {l.entry.amount} ₽{l.level === 1 ? " (первая игра дня — бесплатно)" : ""}, победа — {rewardText(l.win)} и +{l.winXp} опыта.</li>
         ))}
       </ul>
       <p>В попытке бросаешь 6 костей и забираешь очковые (нажми на кость — она встанет в лесенку), потом решаешь: «Бросить» оставшиеся — рискнуть ради большего, или «Сохранить» очки попытки — это можно от {ZONK_BANK_MIN} очков. Бросок без единой очковой кости — «Зонк»: очки этой попытки сгорают. Забрал все шесть — бросаешь все шесть заново.</p>
       <p>Четыре одинаковых кости — очки тройки ×2, пять — ×4, шесть — ×8. Шесть разных (1–6) — 1500, три пары — 750.</p>
-      <p>Не набрал цель или нажал «Сдаться» — немного рублей в утешение и +{ZONK_FAIL_XP} опыта. Каждые 100 опыта — новый уровень зонка.</p>
+      <p>Не набрал цель или нажал «Сдаться» — +{ZONK_FAIL_XP} опыта. Каждые 100 опыта — новый уровень зонка.</p>
       <p>Очки попыток пишутся мелом слева, стрелка показывает текущую. На листке сверху — лучший счёт дня среди всех игроков: в полночь по Москве он получает приз: {ZONK_DAY_PRIZE.currencies?.RUB} ₽ и {ZONK_DAY_PRIZE.items?.[0]?.qty} фишки. На листе справа — комбинации.</p>
       <p>Набрал цель уровня — можно выбрать: «Закончить» и забрать награду или «Продолжить» ради рекорда дня на свой страх и риск. Продолжение награду не увеличит, два зонка подряд отнимают {full(ZONK_CONT_PENALTY)} очков, и если к концу очков станет меньше цели — уровень не пройден.</p>
       <p>По стене бегает таракан — прихлопни его, это пара рублей (иногда фишка для покера).</p>
@@ -105,8 +105,8 @@ function ZonkHelp() {
   );
 }
 
-const rewardText = (r: { currencies?: Partial<Record<string, number>> }) =>
-  Object.entries(r.currencies ?? {}).map(([c, v]) => `${v} ${c}`).join(" + ");
+const rewardText = (r: { currencies?: Partial<Record<string, number>>; items?: { id: string; qty: number }[] }) =>
+  [...(r.items ?? []).map((it) => `${full(it.qty)} ${(itemById(it.id)?.name ?? it.id).toLowerCase()}`), ...Object.entries(r.currencies ?? {}).map(([c, v]) => `${full(v ?? 0)} ${c === "RUB" ? "₽" : c}`)].join(" + ");
 
 /*
  * The room picture (public/assets/yard/zonk-room.webp, 841×1870 — every place below is in those pixels): a lamp and the
@@ -495,7 +495,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
   const turn = (g?.turn ?? 0) + (pts ?? 0);
   const nRoll = counts(playing ? roll : []);
   const nPick = counts(picked);
-  // hints (the scoring dice and combinations light up) only when switched on for this game — they cost 2 $ once a game
+  // hints (the scoring dice and combinations light up) only when switched on for this game — they cost 2 ₽ once a game
   const hintsOn = playing && !!g?.hints;
   const hints = hintsOn ? new Set(bestPick(roll)) : new Set<number>();
   // the ladder: earlier throws of this attempt (fixed) and the dice picked now (a tap puts one back), with their points
@@ -708,12 +708,12 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
               +{full(g.last.points)} записано
             </div>
           ) : null}
-          {/* the hints switch: off at the start of every game; the first switch-on of a game costs 2 $ */}
+          {/* the hints switch: off at the start of every game; the first switch-on of a game costs 2 ₽ */}
           {playing && !show && (
             <button className={`zb-hints ${hintsOn ? "on" : ""}`} style={{ left: zx(246), top: zy(1372), width: zx(372), height: zy(66) }} disabled={busy === "zonk_hints"}
               onClick={() => run("zonk_hints", { on: !g?.hints })} aria-pressed={hintsOn}>
               <i className="zb-hints-sw" aria-hidden="true"><em /></i>
-              <span className="zb-hints-t">{hint ?? "Подсказки"}{!g?.hintsPaid && <small className="num">2 $</small>}</span>
+              <span className="zb-hints-t">{hint ?? "Подсказки"}{!g?.hintsPaid && <small className="num">2 ₽</small>}</span>
             </button>
           )}
 
@@ -772,7 +772,7 @@ export function ZonkWindow({ onClose }: { onClose: () => void }) {
                     <b className="zb-lvl-n display">{l.level}</b>
                     <span className="zb-lvl-main">
                       <b className="num">{full(l.target)} очков</b>
-                      <span className="zb-lvl-win">приз {Object.entries(l.win.currencies ?? {}).map(([c, v]) => <Coin key={c} c={c as Currency} v={v ?? 0} size={13} />)} · +{l.winXp} опыта</span>
+                      <span className="zb-lvl-win">приз {(l.win.items ?? []).map((it) => <span key={it.id} className="row" style={{ gap: 3, display: "inline-flex" }} title={itemById(it.id)?.name}><ItemArt id={it.id} size={13} /><b className="num">{full(it.qty)}</b></span>)}{Object.entries(l.win.currencies ?? {}).map(([c, v]) => <Coin key={c} c={c as Currency} v={v ?? 0} size={13} />)} · +{l.winXp} опыта</span>
                     </span>
                     <span className="zb-lvl-pay">{free ? "бесплатно" : <>{l.entry.amount} <Icon name={l.entry.currency} size={15} /></>}</span>
                   </button>
@@ -1394,7 +1394,7 @@ export function YardGames() {
                 note: state?.poker?.active ? "ждёт замен" : state?.poker?.perDay ? `${state.poker.left}/${state.poker.perDay} раздач` : `раздача ${POKER_RULES.price.amount} слитка`, live: !!state?.poker?.active },
               { id: "blackjack", name: "Блэкджек", img: "/assets/yard/game-blackjack.webp",
                 note: invites > 0 ? `зовут (${invites})` : "1–25 ₽", live: invites > 0 },
-              { id: "zonk", name: "Зонк", img: "/assets/yard/game-zonk.webp", note: calls > 0 ? `вызов (${calls})` : note(zk, "4 уровня"), live: !!zk?.active || calls > 0 },
+              { id: "zonk", name: "Зонк", img: "/assets/yard/game-zonk.webp", note: calls > 0 ? `вызов (${calls})` : note(zk, `${ZONK_LEVELS.length} уровней`), live: !!zk?.active || calls > 0 },
             ] as const).map((gm) => (
               <button key={gm.id} type="button" data-game={gm.id} className={`game-tile ${gm.live ? "live" : ""}`} onClick={() => setOpen(gm.id)}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
