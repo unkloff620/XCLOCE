@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "../api.ts";
 import { useGame, useNow } from "../store.tsx";
 import { Avatar, Empty, RewardChips } from "../ui.tsx";
@@ -29,11 +29,12 @@ interface Rating {
 }
 
 type Tab = "damage" | "authority" | "clans" | "games";
-const TABS: { id: Tab; label: string }[] = [
-  { id: "damage", label: "Урон недели" },
-  { id: "authority", label: "Авторитет" },
-  { id: "clans", label: "Кланы" },
-  { id: "games", label: "Игры" },
+/** the paper tabs on the left of the sheet: their picture and the sheet's heading */
+const TABS: { id: Tab; label: string; icon: string; head: string }[] = [
+  { id: "damage", label: "Урон недели", icon: "/assets/ui/influence.webp", head: "Недельный топ по урону" },
+  { id: "authority", label: "Авторитет", icon: "/assets/ui/authority.webp", head: "Топ по авторитету" },
+  { id: "clans", label: "Кланы", icon: "/assets/ui/clan-all.webp", head: "Топ кланов недели" },
+  { id: "games", label: "Игры", icon: "/assets/ui/ach-poker.webp", head: "Топ игр недели" },
 ];
 /* the weekly mini-game boards: their picture (the game tiles of the yard) and what the number means */
 const BOARD_ART: Record<GameBoard, string> = { poker: "/assets/yard/game-poker.webp", zonk: "/assets/yard/game-zonk.webp", bj: "/assets/yard/game-blackjack.webp" };
@@ -88,6 +89,7 @@ export function RatingScreen() {
   const [tab, setTab] = useState<Tab>("damage");
   const [prizesOpen, setPrizesOpen] = useState(false);
   const [board, setBoard] = useState<GameBoard>("poker");
+  const scroll = useRef<HTMLDivElement>(null);
   useEffect(() => {
     api.get<Rating>("/api/rating").then(setData).catch((e) => setErr(e.message));
   }, []);
@@ -96,26 +98,40 @@ export function RatingScreen() {
   const rows = data ? (tab === "damage" ? data.damage : data.authority) : [];
   const mine = data ? (tab === "damage" ? data.me.damage : tab === "authority" ? data.me.authority : null) : null;
   const myClan = state?.clan?.id;
+  const head = TABS.find((t) => t.id === tab)!.head;
+  const pick = (t: Tab) => { if (t === tab) return; haptic.tap(); setTab(t); scroll.current?.scrollTo({ top: 0 }); };
+  // «Найти себя»: scroll the list to my row (or my clan's)
+  const findMe = () => {
+    const el = scroll.current?.querySelector<HTMLElement>(".rt-row.me");
+    if (!el) return;
+    haptic.tap();
+    el.scrollIntoView({ block: "center", behavior: "smooth" });
+    el.classList.remove("rt-flash"); void el.offsetWidth; el.classList.add("rt-flash");
+  };
 
   return (
-    <div className="col" style={{ gap: 12 }}>
-      <div className="title" style={{ margin: 0 }}>
-        <div>
-          <Link href="/" className="back">← Дом</Link>
-          <h1 className="display">Рейтинг</h1>
+    <div className="fit-page rt-page">
+      <div className="rt-board">
+        {/* the paper tabs stuck to the left edge of the sheet */}
+        <div className="rt-side" role="tablist">
+          {TABS.map((t) => (
+            <button key={t.id} role="tab" aria-selected={tab === t.id} className={`rt-side-tab ${tab === t.id ? "on" : ""}`} onClick={() => pick(t.id)} aria-label={t.label} title={t.label}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={t.icon} alt="" draggable={false} />
+            </button>
+          ))}
         </div>
-      </div>
-
+        <div className="rt-sheet">
+          <Link href="/" className="rt-x" aria-label="Закрыть">✕</Link>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <h1 className="rt-head display">{head}<img src="/assets/ui/trophy.webp" alt="" draggable={false} /></h1>
+          <div className="rt-scroll" ref={scroll}>
       <MyPrizes />
 
-      <div className="rt-tabs">
-        {TABS.map((t) => <button key={t.id} className={tab === t.id ? "on" : ""} onClick={() => setTab(t.id)}>{t.label}</button>)}
-      </div>
-
-      {tab !== "authority" && data && (
+      {(tab === "damage" || tab === "clans") && data && (
         <div className="rt-week">
-          <span className="row" style={{ gap: 6 }}><Icon name="clock" size={16} />Итоги недели через <b className="num">{untilText(data.week.end - now)}</b></span>
-          {tab !== "games" && <button className="btn dark sm" onClick={() => setPrizesOpen((v) => !v)}>{prizesOpen ? "Скрыть" : "Призы"}</button>}
+          <span>{tab === "damage" ? "Топ-10 недели получает призы" : "Лучшие кланы недели получают призы"}</span>
+          <button className="btn dark sm" onClick={() => setPrizesOpen((v) => !v)}>{prizesOpen ? "Скрыть" : "Призы"}</button>
         </div>
       )}
       {prizesOpen && data && tab !== "authority" && tab !== "games" && (
@@ -222,6 +238,13 @@ export function RatingScreen() {
           <b className="rt-val num">{tab === "damage" ? short(mine.value) : full(mine.value)}</b>
         </div>
       )}
+          </div>
+          <div className="rt-foot">
+            {data && tab !== "authority" ? <span>Сброс через <b className="num">{untilText(data.week.end - now)}</b></span> : <span />}
+            <button className="rt-find display" onClick={findMe}>Найти себя</button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
