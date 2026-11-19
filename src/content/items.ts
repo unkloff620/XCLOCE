@@ -1,5 +1,5 @@
 import { STASH_LOCATION_NAMES, STASH_SETS, stashLevel } from "./stashes.ts";
-import { BOSSES, CARD_TIERS, MODE_SHORT, bossById, isFirstWinItem, keyId, passLook, thingsFrom, thingsModeName, unlockBossOf } from "./bosses.ts";
+import { BOSSES, EVENT_FIGHTS, CARD_TIERS, MODE_SHORT, bossById, isFirstWinItem, keyId, passLook, thingsFrom, thingsModeName, unlockBossOf } from "./bosses.ts";
 import { TATTOO_SETS } from "./tattoos.ts";
 import { CRAFT_ALL, CRAFT_PARTS } from "./craft.ts";
 import { PART_SELL } from "./craft-drops.ts";
@@ -184,7 +184,7 @@ const MISC: ItemDef[] = [
 ];
 
 /** Boss passes (ids key-<boss>): the key to the next boss, or for the last five bosses a pass card (passLook). */
-const KEYS: ItemDef[] = BOSSES.filter((b) => !b.final).map((b) => {
+const KEYS: ItemDef[] = [...BOSSES, ...EVENT_FIGHTS.filter((b) => b.mentor)].map((b) => {
   const t = CARD_TIERS[b.card ?? "bronze"];
   const look = passLook(b.id);
   const key = look.kind === "key";
@@ -192,6 +192,12 @@ const KEYS: ItemDef[] = BOSSES.filter((b) => !b.final).map((b) => {
   const need = next?.keysToUnlock ?? 3;
   const one = key ? "Один ключ — вход" : "Один пропуск — вход";
   const many = key ? `${need} ключа — вход` : `${need} пропуска — вход`;
+  // the last boss and the mentors: their passes open nothing yet — they pile up for the bosses still to come
+  if (b.final || b.mentor) return {
+    id: keyId(b.id), name: `Пропуск: ${b.name}`, category: "reward" as const, rarity: b.final ? "legendary" as const : "common" as const, maxStack: 999,
+    description: `Выдаётся за победу над ${b.final ? "боссом" : "ментором"} ${b.name}. Копится: откроет новых боссов, когда они придут.`,
+    sources: [`Победа: ${b.name}`],
+  };
   return {
     id: keyId(b.id), name: key ? `Ключ: ${next?.name ?? b.name}` : `${CARD_TIERS[look.tier].name}: ${next?.name ?? b.name}`, category: "reward" as const, rarity: t.rarity, maxStack: 999,
     description: `Выдаётся за победу над боссом ${b.name}. ${need === 1 ? one : many} в бой с боссом ${next?.name ?? ""}: тратятся на старте боя, а если босс ушёл или ты сбежал — возвращаются.`.trim(),

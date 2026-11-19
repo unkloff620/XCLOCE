@@ -14,7 +14,6 @@ import { setBonuses } from "./collection.ts";
 import { heistDrop } from "./heist.ts";
 import { craftBonus } from "./craft.ts";
 import { CRAFT_WEAPONS } from "../../content/craft.ts";
-import { BOSS_PARTS, between, craftBossParts, rollParts } from "../../content/craft-drops.ts";
 import { fightMode, type FightMode } from "../../content/medals.ts";
 import { tattooSetsOfBoss } from "../../content/tattoos.ts";
 import { notifyBossLow } from "./notify.ts";
@@ -388,10 +387,12 @@ export async function claimFight(ctx: Ctx, fightId: number, see = true) {
   const myDamage = Number(f.my_damage);
   const share = rewardShare(myDamage);
   const earnedKey = true;
-  const drops = earnedKey ? (def.drop ?? []).filter((d) => ctx.rng() < d.chance).map((d) => ({ id: d.id, qty: d.qty })) : [];
+  // no random drops any more (weapons, energy drinks): the boss pays his currencies and the pass
+  const drops: { id: string; qty: number }[] = [];
   // the pass of this boss, and with EXTRA_KEY_CHANCE a second one
   const bonusKey = !def.final && earnedKey && ctx.rng() < EXTRA_KEY_CHANCE;
-  const key = def.final || def.event || !earnedKey ? [] : [{ id: keyId(def.id), qty: bonusKey ? 2 : 1 }];
+  // every boss gives his pass, the last one and the mentors too: they pile up for the bosses still to come
+  const key = !earnedKey ? [] : [{ id: keyId(def.id), qty: bonusKey ? 2 : 1 }];
   // the boss's own things (clothes, rooms, first-win things) drop only in «Блатной»
   const mode = fightMode(f.mode);
   const things = earnedKey && (def.thingsMode ? mode.id === def.thingsMode : mode.things);
@@ -479,15 +480,8 @@ export async function claimFight(ctx: Ctx, fightId: number, see = true) {
   // the mode's money and authority (× FightModeDef.reward), then the admin's boost
   const base = boostReward(boostReward(scaleReward(def.reward, share), mode.reward), ctx.cfg.bossReward[def.id] ?? 1);
   if (base.items?.length) base.items = await notOwnedUnique(ctx, base.items);
-  // «Крафт»: parts for the win (only for a fair share of the damage) — the harder the boss and the mode, the more
-  // (craftBossParts): the count, the rare and very rare chances, and his own very rare part
+  // no craft parts for a win any more (the yard and the events give them)
   const parts: { id: string; qty: number }[] = [];
-  if (earnedKey) {
-    const d = craftBossParts(def.event ? 7 : def.order, def.event ? "blat" : mode.id);
-    parts.push(...rollParts(ctx.rng, between(d.min, d.max, ctx.rng), { rare: d.rare, epic: d.epic }));
-    const sig = BOSS_PARTS[def.id];
-    if (sig && ctx.rng() < d.sigChance) parts.push({ id: sig, qty: between(d.sigMin, d.sigMax, ctx.rng) });
-  }
   const granted = await grantReward(ctx, mergeRewards(base, { items: [...key, ...drops, ...tattoos, ...parts] }), `win:${def.id}`);
   if (unlocked.length) granted.unlocks = unlocked;
   // «Взлом»: while the event is on, a box for the win (any mode, the same fair share as the pass)

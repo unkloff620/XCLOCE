@@ -108,7 +108,7 @@ export function BossesScreen() {
                 </div>
                 <div className="bcard-reward">
                   <span className="bcard-label">Награда:</span>
-                  <GainLine r={b.reward} size={16} side />
+                  <GainLine r={{ ...b.reward, items: [{ id: `key-${b.id}`, qty: 1 }] }} size={16} side />
                 </div>
               </div>
             </Link>
@@ -161,7 +161,7 @@ export function BossesScreen() {
                 </div>
                 <div className="bcard-reward">
                   <span className="bcard-label">{b.final ? "Финал:" : "Награда:"}</span>
-                  <GainLine r={{ ...b.reward, items: [...(b.final ? [] : [{ id: `key-${b.id}`, qty: 1 }]), ...(b.reward.items ?? [])] }} size={16} side extra={state?.heist?.on ? <HeistBoxChip size={16} /> : null} />
+                  <GainLine r={{ ...b.reward, items: [{ id: `key-${b.id}`, qty: 1 }, ...(b.reward.items ?? [])] }} size={16} side extra={state?.heist?.on ? <HeistBoxChip size={16} /> : null} />
                 </div>
                 <div className="bcard-foot">
                   {locked ? (
