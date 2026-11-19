@@ -45,8 +45,9 @@ export const SECTORS: Sector[] = [
   { id: "keys60", kind: "reward", icon: KEYCAP_ID, label: "60", name: "60 кнопок", weight: 4, reward: { items: [{ id: KEYCAP_ID, qty: 60 }] } },
   { id: "ticket", kind: "reward", icon: TICKET_ID, label: "1", name: "Билет", weight: 9, reward: { items: [{ id: TICKET_ID, qty: 1 }] } },
   { id: "energy", kind: "reward", icon: "energy-drink", label: "1", name: "Энергетик", weight: 8, reward: { items: [{ id: "energy-drink", qty: 1 }] } },
-  // a piece of the wheel's tattoo sets not owned yet (the server picks it; all owned — 30 keycaps instead)
-  { id: "tattoo", kind: "tattoo", icon: "tattoo", label: "", name: "Наколка", weight: 2 },
+  // the wheel's own tattoo set (for the spins, not the bags' sets): the set is not drawn yet — weight 0, it never
+  // falls until it comes (then: its id in WHEEL_TATTOO_SET and a weight here)
+  { id: "tattoo", kind: "tattoo", icon: "tattoo", label: "", name: "Наколка", weight: 0 },
   { id: "keys45", kind: "reward", icon: KEYCAP_ID, label: "45", name: "45 кнопок", weight: 6, reward: { items: [{ id: KEYCAP_ID, qty: 45 }] } },
   { id: "prize", kind: "prize", icon: "prize", label: "", name: "ПРИЗ", weight: 3 },
   { id: "rub", kind: "reward", icon: "RUB", label: "10", name: "10 ₽", weight: 10, reward: { currencies: { RUB: 10 } } },
@@ -58,7 +59,9 @@ export const SECTORS: Sector[] = [
   { id: "keys30", kind: "reward", icon: KEYCAP_ID, label: "30", name: "30 кнопок", weight: 9, reward: { items: [{ id: KEYCAP_ID, qty: 30 }] } },
   { id: "empty", kind: "empty", icon: "empty", label: "", name: "Пусто", weight: 14 },
 ];
-/** the tattoo sector with every piece of the wheel's sets owned: this instead */
+/** the wheel's own tattoo set (content/tattoos.ts) — none yet */
+export const WHEEL_TATTOO_SET: string | null = null;
+/** the tattoo sector with every piece of the wheel's set owned: this instead */
 export const TATTOO_SECTOR_FALLBACK: Reward = { items: [{ id: KEYCAP_ID, qty: 30 }] };
 /** «ПРИЗ»: take this many roubles at once, or risk it on the cups */
 export const PRIZE_TAKE_RUB = 500;

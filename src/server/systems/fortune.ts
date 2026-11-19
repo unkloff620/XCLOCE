@@ -5,7 +5,7 @@ import type { Config } from "../config.ts";
 import { STASH_IDS } from "../../content/stashes.ts";
 import { TATTOO_SETS } from "../../content/tattoos.ts";
 import { mergeRewards, type Reward } from "../../content/rewards.ts";
-import { BAG_TATTOO_CHANCE, FORTUNE_BAGS, PRIZE_TAKE_RUB, TATTOO_SECTOR_FALLBACK, bagById, rollBagLoot, JACKPOT_ADD, JACKPOT_SEED, KEYCAP_ID, SECTORS, SPIN_ALL_MAX, TICKET_ID, TICKET_PRICE, fortuneLevel, rollCups, rollSector, type Cup } from "../../content/fortune.ts";
+import { BAG_TATTOO_CHANCE, PRIZE_TAKE_RUB, TATTOO_SECTOR_FALLBACK, WHEEL_TATTOO_SET, bagById, rollBagLoot, JACKPOT_ADD, JACKPOT_SEED, KEYCAP_ID, SECTORS, SPIN_ALL_MAX, TICKET_ID, TICKET_PRICE, fortuneLevel, rollCups, rollSector, type Cup } from "../../content/fortune.ts";
 
 /** the wheel is in the back yard for everybody once the admin shows it; the admins see it always */
 export async function fortuneOn(q: Queryable, pid: number, cfg: Config): Promise<boolean> {
@@ -74,8 +74,8 @@ export async function fortuneSpin(ctx: Ctx, all = false) {
   const hits: number[] = [];
   const rewards: Reward[] = [];
   let xp = 0, cups = 0, empty = 0;
-  // the tattoo sector: a piece of the wheel's sets (its bags' sets) not owned yet, none twice in one go
-  const setPieces = FORTUNE_BAGS.flatMap((b) => TATTOO_SETS.find((s) => s.id === b.set)?.pieces.map((p) => p.id) ?? []);
+  // the tattoo sector: a piece of the wheel's own set (WHEEL_TATTOO_SET, for the spins) not owned yet, none twice in one go
+  const setPieces = TATTOO_SETS.find((s) => s.id === WHEEL_TATTOO_SET)?.pieces.map((p) => p.id) ?? [];
   const owned = new Set((await ctx.q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id = ANY($2)", [ctx.pid, setPieces])).map((x) => x.item_id));
   const tattoos: string[] = [];
   for (let i = 0; i < n; i++) {
