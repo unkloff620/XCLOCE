@@ -29,6 +29,31 @@ function DojoBag() {
   );
 }
 
+/** a glint sliding over the CLOSE statue now and then (only over its own shape: the picture is its mask) */
+function StatueGlint() {
+  const o = SCENE_OBJECTS.statueClose;
+  const h = o.w * o.aspect;
+  const src = usedUrl("/assets/home/statue-close.webp");
+  return (
+    <g aria-hidden="true" style={{ mixBlendMode: "screen", pointerEvents: "none" }}>
+      <defs>
+        <mask id="statue-mask" style={{ maskType: "alpha" }}><image href={src} x={o.x} y={o.y} width={o.w} height={h} preserveAspectRatio="none" /></mask>
+        <linearGradient id="statue-shine" x1="0" y1="0" x2="1" y2="0.35">
+          <stop offset="0" stopColor="#fff" stopOpacity="0" />
+          <stop offset="0.45" stopColor="#fff6d8" stopOpacity="0.25" />
+          <stop offset="0.5" stopColor="#ffffff" stopOpacity="0.95" />
+          <stop offset="0.55" stopColor="#fff6d8" stopOpacity="0.25" />
+          <stop offset="1" stopColor="#fff" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <g mask="url(#statue-mask)">
+        <rect className="statue-glint" x={o.x - o.w} y={o.y} width={o.w} height={h} fill="url(#statue-shine)"
+          style={{ ["--glint-w" as string]: `${o.w * 3}px` }} />
+      </g>
+    </g>
+  );
+}
+
 /** a picture standing at its place; a picture of another height keeps the place's bottom line (legs, stand on the desk) */
 function Obj({ id, art }: { id: ObjId; art: string }) {
   const o = SCENE_OBJECTS[id];
@@ -142,7 +167,7 @@ export function HomeScene({ room = "basic", onPick, onHero, still, look, worn, p
       </g>
       <RigViewport x={CHARACTER.x} y={CHARACTER.y} scale={CHARACTER.scale} seat={placedOf("chair", pieces, decor)} still={still} look={look} worn={worn} seatOnly={hideHero} edit={edit} />
       {/* the trophy stands on the floor in front: over the hero and his chair */}
-      {trophies.includes("statue-close") && (decor["statue-close"] ?? 0) !== -1 && <g filter={focusHero ? "url(#scene-dim)" : undefined}><Obj id="statueClose" art="statue-close" /></g>}
+      {trophies.includes("statue-close") && (decor["statue-close"] ?? 0) !== -1 && <g filter={focusHero ? "url(#scene-dim)" : undefined}><Obj id="statueClose" art="statue-close" />{!still && <StatueGlint />}</g>}
       {onPick && <Hot id="monitors" onPick={onPick} />}
       {onPick && <Hot id="pc" onPick={onPick} />}
       {onHero && !hideHero && HERO_HOT.map((z, i) => (

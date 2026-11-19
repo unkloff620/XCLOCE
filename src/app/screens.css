@@ -6968,3 +6968,8 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 
 /* the room switcher keeps one width whatever the room's name: the arrows stay put while flipping */
 .room-switch .room-name { width: 190px; flex: none; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* the CLOSE statue's glint (home-scene.tsx StatueGlint): a quick sweep left to right every 4 s */
+.statue-glint { animation: statue-glint 4s ease-in-out infinite; }
+@keyframes statue-glint { 0%, 60% { transform: translateX(0); } 85%, 100% { transform: translateX(var(--glint-w)); } }
+@media (prefers-reduced-motion: reduce) { .statue-glint { display: none; } }
