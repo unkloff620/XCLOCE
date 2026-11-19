@@ -107,6 +107,8 @@ function Pigeon({ area, delay, slot }: { area: PigeonArea; delay: number; slot: 
         else { st.x += (dx / dist) * v; st.y += ((dy / dist) * v) / 2; }
         st.phase += dt * (Math.PI * 2) / 0.5;
       }
+      // the server says no pigeon here now (the day's roubles are all taken): one sitting here flies off
+      if (st.act !== "fly" && st.act !== "gone" && st.act !== "land" && Date.now() < nextAt.current && nextAt.current !== Infinity) { st.act = "fly"; st.t = 0; st.fly = 0; }
       if (st.act === "gone" && Date.now() >= nextAt.current) {
         // another one flies in from the sky and lands
         const from: 1 | -1 = Math.random() < 0.5 ? 1 : -1;

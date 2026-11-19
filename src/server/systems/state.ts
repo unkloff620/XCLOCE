@@ -118,7 +118,7 @@ export async function gameState(ctx: Ctx) {
     // the event bosses in the game now (the admin panel, «Ивенты»)
     eventBosses: Object.entries(ctx.cfg.eventBosses).filter(([, on]) => on).map(([id]) => id),
     // the yard pigeons: when each place has a pigeon (ms); the server keeps them, so they do not come back on a reload
-    pigeons: await pigeonsView(ctx.q, ctx.pid),
+    pigeons: await pigeonsView(ctx.q, ctx.pid, ctx.now),
     // bosses in the game now (art + the admin's boss controls)
     openBosses: OPEN_BOSSES(ctx.cfg.bossOpen).map((b) => b.id),
     games: await gamesView(ctx.q, ctx.pid, ctx.now),

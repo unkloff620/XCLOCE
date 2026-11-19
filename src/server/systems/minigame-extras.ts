@@ -1,5 +1,5 @@
 import type { Queryable } from "../db.ts";
-import { grantReward, moscowDay, weekKey, weekStart, type Ctx } from "../core.ts";
+import { grantReward, moscowDay, nextMoscowMidnight, weekKey, weekStart, type Ctx } from "../core.ts";
 import { bump, countersOf, setTo } from "./counters.ts";
 import { GAME_BOARDS, GAME_WEEK_PRIZES, POKER_HANDS, ROACH_RULES, ZONK_DAY_PRIZE, type GameBoard } from "../../content/games.ts";
 import { between, rollParts } from "../../content/craft-drops.ts";
@@ -179,31 +179,35 @@ export async function dayTop(q: Queryable, pid: number, game: "bj" | "poker", wh
 
 /**
  * Pigeons in the yard, kept by the server so they cannot be farmed: PIGEON_SLOTS places, each has a pigeon when its
- * time has come (counter "pigeonNext:<slot>", ms); scaring it pays 1–5 roubles (no more than rubPerDay a Moscow day)
- * and the next one comes to that place 5–10 minutes later. Counted for «Прогнать голубя».
+ * time has come (counter "pigeonNext:<slot>", ms); scaring it pays 1 rouble, at most rubPerDay a Moscow day — then no
+ * more pigeons in the yard till midnight (Moscow). The next one comes to that place 5–10 minutes later. Counted for
+ * «Прогнать голубя».
  */
 export const PIGEON_SLOTS = 5;
-export const PIGEON_RULES = { min: 1, max: 5, rubPerDay: 1_000, backMin: 5 * 60_000, backMax: 10 * 60_000 };
-export async function pigeonsView(q: Queryable, pid: number): Promise<number[]> {
+export const PIGEON_RULES = { rub: 1, rubPerDay: 100, backMin: 5 * 60_000, backMax: 10 * 60_000 };
+/** the roubles the pigeons paid today (Moscow day) */
+const pigeonPaidToday = (c: Record<string, number>, now: number) =>
+  c.pigeonDay === Number(moscowDay(now).replace(/-/g, "")) ? c.pigeonDayRub ?? 0 : 0;
+export async function pigeonsView(q: Queryable, pid: number, now = Date.now()): Promise<number[]> {
   const c = await countersOf(q, pid);
-  return Array.from({ length: PIGEON_SLOTS }, (_, i) => c[`pigeonNext:${i}`] ?? 0);
+  // the day's roubles all taken: no pigeon anywhere till Moscow midnight
+  const shut = pigeonPaidToday(c, now) >= PIGEON_RULES.rubPerDay ? nextMoscowMidnight(now) : 0;
+  return Array.from({ length: PIGEON_SLOTS }, (_, i) => Math.max(c[`pigeonNext:${i}`] ?? 0, shut));
 }
 export async function scarePigeon(ctx: Ctx, slot: number) {
   if (!Number.isInteger(slot) || slot < 0 || slot >= PIGEON_SLOTS) return { reward: null, nextAt: 0 };
   const c = await countersOf(ctx.q, ctx.pid);
   const next = c[`pigeonNext:${slot}`] ?? 0;
-  // no pigeon there yet (scared before, a second tap, or a reload): nothing
-  if (ctx.now < next) return { reward: null, nextAt: next, slot };
-  const nextAt = ctx.now + PIGEON_RULES.backMin + Math.floor(ctx.rng() * (PIGEON_RULES.backMax - PIGEON_RULES.backMin));
-  await setTo(ctx.q, ctx.pid, `pigeonNext:${slot}`, nextAt);
-  await bump(ctx.q, ctx.pid, "pigeons", 1);
+  const paid = pigeonPaidToday(c, ctx.now);
+  // no pigeon there yet (scared before, a second tap, or a reload), or the day's limit is reached: nothing
+  if (ctx.now < next || paid >= PIGEON_RULES.rubPerDay) return { reward: null, nextAt: Math.max(next, paid >= PIGEON_RULES.rubPerDay ? nextMoscowMidnight(ctx.now) : 0), slot };
   const day = Number(moscowDay(ctx.now).replace(/-/g, ""));
-  const paid = c.pigeonDay === day ? c.pigeonDayRub ?? 0 : 0;
-  // past the daily limit it still counts for the achievement, it just pays nothing more
-  if (paid >= PIGEON_RULES.rubPerDay) return { reward: null, nextAt, slot };
-  const rub = Math.min(PIGEON_RULES.rubPerDay - paid, PIGEON_RULES.min + Math.floor(ctx.rng() * (PIGEON_RULES.max - PIGEON_RULES.min + 1)));
+  const rub = Math.min(PIGEON_RULES.rubPerDay - paid, PIGEON_RULES.rub);
   await setTo(ctx.q, ctx.pid, "pigeonDay", day);
   await setTo(ctx.q, ctx.pid, "pigeonDayRub", paid + rub);
-  // «Крафт»: 10% on a common part the pigeons left behind
-  return { reward: await grantReward(ctx, { currencies: { RUB: rub }, items: ctx.rng() < 0.1 ? rollParts(ctx.rng, 1, { rare: 0 }) : [] }, "pigeon"), nextAt, slot };
+  await bump(ctx.q, ctx.pid, "pigeons", 1);
+  // the last rouble of the day: the pigeons are gone till midnight
+  const nextAt = paid + rub >= PIGEON_RULES.rubPerDay ? nextMoscowMidnight(ctx.now) : ctx.now + PIGEON_RULES.backMin + Math.floor(ctx.rng() * (PIGEON_RULES.backMax - PIGEON_RULES.backMin));
+  await setTo(ctx.q, ctx.pid, `pigeonNext:${slot}`, nextAt);
+  return { reward: await grantReward(ctx, { currencies: { RUB: rub } }, "pigeon"), nextAt, slot };
 }

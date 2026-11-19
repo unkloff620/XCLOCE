@@ -815,6 +815,21 @@ describe("selling, nickname, slot machine 777", () => {
     expect(ok.state.player.name).toBe("Другой");
   });
 
+  it("pigeons: 1 ₽ each, 100 ₽ a day at most — then no pigeons till midnight", async () => {
+    const p = await newPlayer(db);
+    const rub0 = await wallet(db, p, "RUB");
+    let t = T0;
+    for (let i = 0; i < 100; i++) {
+      const r = await act(db, p, "pigeon_scare", { slot: i % 5 }, t);
+      expect(r.result.reward.currencies.RUB).toBe(1);
+      t += Math.ceil((11 * M) / 5); // each place is back 5–10 minutes later
+    }
+    expect(await wallet(db, p, "RUB")).toBe(rub0 + 100);
+    const after = await act(db, p, "pigeon_scare", { slot: 0 }, t);
+    expect(after.result.reward).toBeNull();
+    expect(after.state.pigeons.every((x: number) => x > t)).toBe(true);
+  });
+
   it("slots: 3 spins per 60 minutes, 777 pays the jackpot", async () => {
     const p = await newPlayer(db);
     const rub0 = await wallet(db, p, "RUB");
