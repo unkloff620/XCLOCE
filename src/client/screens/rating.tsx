@@ -152,15 +152,6 @@ export function RatingScreen() {
         </div>
       )}
 
-      {tab === "damage" && !!data?.lastWinners.length && (
-        <div className="rt-last">
-          <span className="tiny muted">Прошлая неделя:</span>
-          {data.lastWinners.map((w) => (
-            <Link key={w.id} href={`/profile?id=${w.id}`} className="rt-last-one"><Place n={w.place} /><span className="ellipsis">{w.name}</span></Link>
-          ))}
-        </div>
-      )}
-
       {tab === "games" && data?.games && (() => {
         const b = data.games.boards[board];
         const def = GAME_BOARDS.find((x) => x.id === board)!;
@@ -176,12 +167,6 @@ export function RatingScreen() {
               ))}
             </div>
             <div className="tiny muted center">{board === "bj" ? "Чистый выигрыш в блэкджеке за неделю" : board === "poker" ? "Лучшая комбинация за неделю" : "Лучший счёт за одну игру за неделю"} · тройка лидеров получает приз</div>
-            {!!b.last.length && (
-              <div className="rt-last">
-                <span className="tiny muted">Прошлая неделя:</span>
-                {b.last.map((w) => <Link key={w.id} href={`/profile?id=${w.id}`} className="rt-last-one"><Place n={w.place} /><span className="ellipsis">{w.name}</span></Link>)}
-              </div>
-            )}
             {b.rows.length ? b.rows.map((r, i) => (
               <Link key={r.id} href={`/profile?id=${r.id}`} className={`rt-row ${r.id === me ? "me" : ""} ${i < 3 ? `top${i + 1}` : ""}`}>
                 <Place n={i + 1} />
@@ -240,9 +225,10 @@ export function RatingScreen() {
       )}
           </div>
           <div className="rt-foot">
-            {data && tab !== "authority" ? <span>Сброс через <b className="num">{untilText(data.week.end - now)}</b></span> : <span />}
-            <button className="rt-find display" onClick={findMe}>Найти себя</button>
+            {data && tab !== "authority" && <span>Сброс через <b className="num">{untilText(data.week.end - now)}</b></span>}
           </div>
+          {/* on the strip of tape at the bottom left, turned with it */}
+          <button className="rt-find display" onClick={findMe}>Найти себя</button>
         </div>
       </div>
     </div>
