@@ -1,23 +1,54 @@
 "use client";
 /*
- * «Барыга на газели» (content/van.ts): the weekend van in the yard. Two doors: «Меняла» — the week's currency (папиросы
- * or зубы) for roubles / метро tokens at the visit's rate; «Акции» — the packs, one at a time with ‹ ›, each once a visit.
- * The van's own pictures come later (the user draws them): for now a plain window on the game's panels.
+ * «Барыга на газели» (content/van.ts): the weekend van in the yard. A tap on it — its open back (public/assets/van/
+ * trunk.webp, tools/van/build-van.py): on the left door «Меняла» — the paper «Обмен» (the week's currency, папиросы or
+ * зубы, for roubles / метро tokens at the visit's rate), on the right door «Акции» — the paper «Посмотреть» (the packs
+ * on the slate, ‹ › between them, each once a visit; the slate bronze / silver / gold by the pack, its outline shining).
  */
 import { useState } from "react";
 import { useGame, useNow } from "../store.tsx";
-import { Modal, RewardChips } from "../ui.tsx";
+import { RewardChips } from "../ui.tsx";
 import { Icon } from "../art/icons.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { clock, full } from "../format.ts";
 import { haptic } from "../telegram.ts";
 import { sfx } from "../sound.ts";
-import { CURRENCY_DEFS, type Currency } from "../../content/currencies.ts";
+import type { Currency } from "../../content/currencies.ts";
 import { VAN_PACKS, vanPackOf, type VanGive } from "../../content/van.ts";
 import { ACH_BOX_COST } from "../../content/ach-box.ts";
 import type { Granted } from "../api.ts";
 
+const V = "/assets/van";
+/* the marker-drawn signs on the papers and the red arrows on the carpet (as on the artist's screens) */
+const IcSwap = () => (
+  <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><g fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M19 8a7.5 7.5 0 0 0-13.2-2.4M5 16a7.5 7.5 0 0 0 13.2 2.4" /><path d="M5.5 2.8v3.4h3.4M18.5 21.2v-3.4h-3.4" /></g></svg>
+);
+const IcEye = () => (
+  <svg viewBox="0 0 24 24" width="30" height="26" aria-hidden="true"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12Z" fill="currentColor" /><circle cx="12" cy="12" r="3.6" fill="#f4e2b8" /><circle cx="12" cy="12" r="1.7" fill="currentColor" /></svg>
+);
+const IcArrow = ({ flip }: { flip?: boolean }) => (
+  <svg viewBox="0 0 32 24" width="34" height="26" aria-hidden="true" style={flip ? { transform: "scaleX(-1)" } : undefined}>
+    <path d="M28 6c-2 9-11 12-20 9" fill="none" stroke="#d8261c" strokeWidth="4.2" strokeLinecap="round" /><path d="M11 8.5 5 15l7.5 4.5" fill="none" stroke="#d8261c" strokeWidth="4.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+);
 const left = (ms: number) => (ms > 86_400_000 ? `${Math.floor(ms / 86_400_000)} д ${Math.floor((ms % 86_400_000) / 3_600_000)} ч` : clock(ms));
+/** the slate of each pack */
+const PLAQUE: Record<string, "free" | "bronze" | "silver" | "gold"> = { free: "free", pacan: "bronze", blat: "silver", avtor: "gold" };
+
+/** the van standing in the back yard: the body idles on its wheels, smoke from under it (placed on the yard's sheet) */
+export function YardVan({ onOpen, focusable }: { onOpen: () => void; focusable: boolean }) {
+  return (
+    <>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className="yard-van-wheels" src={`${V}/wheels.webp`} alt="" draggable={false} />
+      <button type="button" className="yard-van" onClick={() => { haptic.tap(); onOpen(); }} aria-label="Барыга на газели" title="Барыга на газели" tabIndex={focusable ? 0 : -1}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={`${V}/body.webp`} alt="" draggable={false} />
+      </button>
+      <span className="yard-van-smoke" aria-hidden="true">{[0, 1, 2, 3, 4, 5].map((i) => <i key={i} style={{ ["--d" as string]: `${i * 0.55}s` }} />)}</span>
+    </>
+  );
+}
 
 export function VanWindow({ onClose }: { onClose: () => void }) {
   const { state } = useGame();
@@ -25,68 +56,62 @@ export function VanWindow({ onClose }: { onClose: () => void }) {
   const [door, setDoor] = useState<"ex" | "packs" | null>(null);
   const v = state?.van;
   if (!v) return null;
+  const pick = (d: "ex" | "packs") => { haptic.tap(); setDoor((x) => (x === d ? null : d)); };
   return (
-    <Modal title="Барыга на газели" onClose={onClose}>
-      <div className="col" style={{ gap: 12 }}>
-        <span className="tiny muted">Приезжает по пятницам и стоит до конца воскресенья. Уедет через <b className="num">{left(v.until - now)}</b>.</span>
-        {door === null && (
-          <div className="van-doors">
-            <button type="button" className="van-door" onClick={() => { haptic.tap(); setDoor("ex"); }}>
-              <b className="display">Меняла</b><span className="small">⇄ Обмен</span>
-            </button>
-            <button type="button" className="van-door" onClick={() => { haptic.tap(); setDoor("packs"); }}>
-              <b className="display">Акции</b><span className="small">% Посмотреть</span>
-            </button>
-          </div>
-        )}
-        {door === "ex" && <VanExchange onBack={() => setDoor(null)} />}
-        {door === "packs" && <VanPacks onBack={() => setDoor(null)} />}
+    <div className="van-layer" role="dialog" aria-label="Барыга на газели" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <button type="button" className="van-x" onClick={onClose} aria-label="Закрыть">✕</button>
+      <div className="van-trunk">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={`${V}/trunk.webp`} alt="" draggable={false} />
+        <button type="button" className={`van-paper l ${door === "ex" ? "on" : ""}`} onClick={() => pick("ex")}>
+          <span className="van-paper-ic"><IcSwap /></span><b className="display">Обмен</b>
+        </button>
+        <button type="button" className={`van-paper r ${door === "packs" ? "on" : ""}`} onClick={() => pick("packs")}>
+          <span className="van-paper-ic"><IcEye /></span><b className="display">Посмотреть</b>
+        </button>
       </div>
-    </Modal>
+      <span className="van-when tiny">Барыга стоит до конца воскресенья · уедет через <b className="num">{left(v.until - now)}</b></span>
+      {door === "ex" && <VanExchange />}
+      {door === "packs" && <VanPacks />}
+    </div>
   );
 }
 
 const NAME_GEN: Partial<Record<Currency, string>> = { PAP: "папирос", TOOTH: "зубов" };
 
-function VanExchange({ onBack }: { onBack: () => void }) {
+/** «Обмен»: the paper — how many roubles (or tokens, ‹ ›), the price in the week's currency */
+function VanExchange() {
   const { state, act, busy } = useGame();
   const v = state!.van!;
   const [give, setGive] = useState<VanGive>("RUB");
   const [qty, setQty] = useState("1");
   const n = Math.max(0, Math.floor(Number(qty) || 0));
-  const rate = v.rates[give];
-  const cost = rate * n;
+  const cost = v.rates[give] * n;
   const have = state?.wallet[v.takes] ?? 0;
+  const turn = () => { haptic.tap(); setGive((g) => (g === "RUB" ? "TOKEN" : "RUB")); };
   const go = async () => {
     const r = await act("van_exchange", { give, qty: n }, `+${n} ${give === "RUB" ? "₽" : "жетонов"}`);
     if (r) { haptic.ok(); sfx("coin"); }
   };
   return (
-    <div className="col van-card" style={{ gap: 10 }}>
-      <span className="small">На этой неделе барыга берёт <b>{CURRENCY_DEFS[v.takes].name.toLowerCase()}</b> <Icon name={v.takes} size={18} /> · есть <b className="num">{full(have)}</b></span>
-      <div className="van-gives">
-        {(["RUB", "TOKEN"] as const).map((g) => (
-          <button key={g} type="button" className={`van-give ${give === g ? "on" : ""}`} onClick={() => { haptic.tap(); setGive(g); }}>
-            <Icon name={g} size={34} />
-            <b>{CURRENCY_DEFS[g].name}</b>
-            <span className="tiny num">1 = {full(v.rates[g])} {NAME_GEN[v.takes]}</span>
-          </button>
-        ))}
-      </div>
-      <label className="van-qty">
-        <span className="small">Сколько нужно {give === "RUB" ? "рублей" : "жетонов"}</span>
+    <div className="van-panel">
+      <button type="button" className="van-arrow l" onClick={turn} aria-label="Другая валюта"><IcArrow /></button>
+      <div className="van-ex-paper">
+        <b className="display">Сколько нужно {give === "RUB" ? "рублей" : "жетонов"}</b>
+        <Icon name={give} size={56} />
         <input inputMode="numeric" value={qty} onChange={(e) => setQty(e.target.value.replace(/[^0-9]/g, "").replace(/^0+(?=\d)/, ""))} aria-label="Сколько" />
-      </label>
-      <span className="small">Цена вопроса: <b className="num">{full(cost)}</b> <Icon name={v.takes} size={16} /></span>
-      <div className="row" style={{ gap: 8 }}>
-        <button type="button" className="btn dark" onClick={onBack}>Назад</button>
-        <button type="button" className="btn gold grow" disabled={!n || cost > have || busy === "van_exchange"} onClick={go}>{cost > have ? "Не хватает" : "Обменять"}</button>
+        <span className="display van-ex-price-h">Цена вопроса:</span>
+        <span className="van-ex-price num">{full(cost)} <Icon name={v.takes} size={20} /></span>
+        <span className="tiny">1 {give === "RUB" ? "₽" : "жетон"} = {full(v.rates[give])} {NAME_GEN[v.takes]} · есть {full(have)}</span>
       </div>
+      <button type="button" className="van-arrow r" onClick={turn} aria-label="Другая валюта"><IcArrow flip /></button>
+      <button type="button" className="btn gold van-go" disabled={!n || cost > have || busy === "van_exchange"} onClick={go}>{cost > have ? "Не хватает" : "Обменять"}</button>
     </div>
   );
 }
 
-function VanPacks({ onBack }: { onBack: () => void }) {
+/** «Посмотреть»: a pack on its slate (this visit's contents, exact), ‹ › between the packs */
+function VanPacks() {
   const { state, act, busy } = useGame();
   const v = state!.van!;
   const [i, setI] = useState(0);
@@ -94,6 +119,7 @@ function VanPacks({ onBack }: { onBack: () => void }) {
   const p = VAN_PACKS[i];
   const taken = v.taken.includes(p.id);
   const inside = vanPackOf(p, v.visit);
+  const kind = PLAQUE[p.id] ?? "free";
   const turn = (d: number) => { haptic.tap(); setGot(null); setI((x) => (x + d + VAN_PACKS.length) % VAN_PACKS.length); };
   const take = async () => {
     const r = await act<{ reward: Granted }>("van_pack", { id: p.id }, p.price ? `Куплено: ${p.name}` : "Забрал бесплатную акцию");
@@ -101,26 +127,26 @@ function VanPacks({ onBack }: { onBack: () => void }) {
   };
   const can = !p.price || (state?.wallet[p.price.currency] ?? 0) >= p.price.amount;
   return (
-    <div className="col van-card" style={{ gap: 10 }}>
-      <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
-        <button type="button" className="btn dark sm" onClick={() => turn(-1)} aria-label="Предыдущая акция">‹</button>
-        <b className="display">{p.name}</b>
-        <button type="button" className="btn dark sm" onClick={() => turn(1)} aria-label="Следующая акция">›</button>
-      </div>
-      {/* this visit's contents: rolled once for the weekend, the same for everyone */}
-      {got ? <RewardChips r={got} size={18} /> : (
-        <div className="van-pack">
-          {Object.entries(inside.currencies ?? {}).map(([c, n]) => <span key={c}><Icon name={c} size={24} /><b className="num">+{full(n ?? 0)}</b></span>)}
-          {(inside.items ?? []).map((it) => <span key={it.id}><ItemArt id={it.id} size={26} /><b className="num">+{full(it.qty)}</b></span>)}
-          {!!inside.achPoints && <span><Icon name="case" size={24} /><b className="num">+{inside.achPoints / ACH_BOX_COST}</b></span>}
+    <div className="van-panel">
+      <button type="button" className="van-arrow l" onClick={() => turn(-1)} aria-label="Предыдущая акция"><IcArrow /></button>
+      <div className={`van-plaque k-${kind}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={`${V}/plaque-${kind}.webp`} alt="" draggable={false} />
+        {(kind === "gold" || kind === "silver") && <i className="van-plaque-rim" aria-hidden="true" />}
+        <b className="van-plaque-name display">{p.price ? p.name : "Подгон от барыги"}</b>
+        <div className="van-plaque-in">
+          {got ? <RewardChips r={got} size={18} /> : <>
+            {Object.entries(inside.currencies ?? {}).map(([c, n]) => <span key={c}><Icon name={c} size={22} /><b className="num">+{full(n ?? 0)}</b></span>)}
+            {!!inside.achPoints && <span><Icon name="case" size={22} /><b className="num">+{inside.achPoints / ACH_BOX_COST}</b></span>}
+            {(inside.items ?? []).map((it) => <span key={it.id}><ItemArt id={it.id} size={24} /><b className="num">+{full(it.qty)}</b></span>)}
+          </>}
         </div>
-      )}
-      <div className="row" style={{ gap: 8 }}>
-        <button type="button" className="btn dark" onClick={onBack}>Назад</button>
-        <button type="button" className="btn gold grow" disabled={taken || !can || busy === "van_pack"} onClick={take}>
-          {taken ? "Уже взято — до следующей пятницы" : p.price ? <>Купить · {full(p.price.amount)} <Icon name={p.price.currency} size={16} /></> : "Бесплатно — забрать"}
-        </button>
+        <b className="van-plaque-price display">{p.price ? <>{full(p.price.amount)} <Icon name={p.price.currency} size={20} /></> : "Бесплатно"}</b>
       </div>
+      <button type="button" className="van-arrow r" onClick={() => turn(1)} aria-label="Следующая акция"><IcArrow flip /></button>
+      <button type="button" className="btn gold van-go" disabled={taken || !can || busy === "van_pack"} onClick={take}>
+        {taken ? "Взято до пятницы" : !can ? "Не хватает" : p.price ? "Купить" : "Забрать"}
+      </button>
     </div>
   );
 }
