@@ -16,6 +16,7 @@ import { KioskArt } from "../art/kiosk.tsx";
 import { Pigeons } from "../art/pigeons.tsx";
 import { exchangeWindow } from "../../content/currencies.ts";
 import { SlotMachine } from "./slots.tsx";
+import { VanWindow } from "./van.tsx";
 import { YardGames, YardUpgrader } from "./minigames.tsx";
 import { Help } from "../help.tsx";
 import { GainLine, Modal } from "../ui.tsx";
@@ -41,6 +42,7 @@ export function YardScreen() {
   // enough energy for a task step (or a location reward waits) → the Locations button calls for attention
   const taskHint = tasksReady(state, now);
   const [slots, setSlots] = useState(false);
+  const [van, setVan] = useState(false);
   // the yard is three pictures side by side: -1 the back yard on the left (the mural wall, the arch), 0 the court, 1 the kiosk and
   // the pigeon loft on the right; a swipe or the arrows move between them
   const [page, setPage] = useState(0);
@@ -191,6 +193,12 @@ export function YardScreen() {
           <img className="yard-bg" src={tod === "night" ? "/assets/yard/yard0-bg-dark.webp" : "/assets/yard/yard0-bg.webp"} alt="" draggable={false} />
           <span className="yard-tint" aria-hidden="true" />
           {finds(-1)}
+          {/* «Барыга на газели»: Friday to Sunday (the van's own picture comes from the artist; a sign for now) */}
+          {state?.van?.open && (
+            <button type="button" className="yard-van-sign" onClick={() => { haptic.tap(); setVan(true); }} tabIndex={page === -1 ? 0 : -1}>
+              <b className="display">Барыга приехал</b><span className="tiny">обмен · акции</span>
+            </button>
+          )}
           {/* «Колесо удачи»: a manhole on the ground (the admins see it before the players) */}
           {state?.fortune?.on && (
             <Link href="/yard/fortune" className="yard-obj yard-fortune" aria-label="Колесо удачи" title="Колесо удачи" tabIndex={page === -1 ? 0 : -1}>
@@ -221,6 +229,7 @@ export function YardScreen() {
           {!data ? "…" : data.nextAt ? <>Следующая находка через <b className="num">{clock(data.nextAt - now)}</b></> : <>Двор полон — собери, чтобы появилось новое</>}
         </div>
       </div>
+      {van && <VanWindow onClose={() => setVan(false)} />}
       {slots && (
         <Modal onClose={() => setSlots(false)} page>
           <div className="sl-help"><SlotsHelp /></div>

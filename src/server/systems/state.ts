@@ -28,6 +28,7 @@ import { tasksHint } from "./locations.ts";
 import { questsView } from "./quests.ts";
 import { notifyView, scheduleEnergy } from "./notify.ts";
 import { framesFor, prizesView, settleWeeks } from "./rating.ts";
+import { vanView } from "./van.ts";
 import { pigeonsView, settleGameWeeks, settleZonkDay } from "./minigame-extras.ts";
 import { casesView, setBonuses } from "./collection.ts";
 import { craftBoxes, craftBoxesBought, craftPresets, dealerView } from "./craft.ts";
@@ -135,6 +136,8 @@ export async function gameState(ctx: Ctx) {
     autos: await autosView(ctx.q, ctx.pid, ctx.now),
     /** «Колесо удачи»: the manhole in the back yard (the admins see it before the players) */
     fortune: { on: await fortuneOn(ctx.q, ctx.pid, ctx.cfg) },
+    // «Барыга на газели»: the weekend van (content/van.ts)
+    van: await vanView(ctx.q, ctx.pid, ctx.cfg, ctx.now),
     /** «Ходки» of the clans (the admins see them before the players) */
     raids: { on: ctx.cfg.raids.on || (await isAdminPlayer(ctx.q, ctx.pid, ctx.cfg)) },
     /** my fight for a building in «Ходки» going on now (the boss button leads there) */

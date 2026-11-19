@@ -25,7 +25,7 @@ const ACTION_TYPES = [
   "fight_start", "fight_claim", "fight_flee", "task", "location_claim", "yard_pick", "buy", "exchange", "use", "equip", "unequip",
   "clan_create", "clan_join", "clan_leave", "clan_kick", "clan_transfer", "stash_wish", "stash_gift", "stash_accept", "clan_edit", "daily_claim", "sell", "rename", "slots_spin",
   "equipment_upgrade", "talent_up", "talent_reset", "room_buy", "room_set", "look_set", "decor_set", "decor_save", "piece_buy", "quest_claim", "quest_chest", "month_buy", "month_claim",
-  "attack", "auto_set", "heist_pick", "heist_rush", "heist_auto", "heist_open", "fortune_buy", "fortune_spin", "fortune_cups", "fortune_prize_take", "fortune_cup_pick", "fortune_bag", "raid_start", "raid_attack", "raid_flee",
+  "attack", "auto_set", "heist_pick", "heist_rush", "heist_auto", "heist_open", "van_exchange", "van_pack", "fortune_buy", "fortune_spin", "fortune_cups", "fortune_prize_take", "fortune_cup_pick", "fortune_bag", "raid_start", "raid_attack", "raid_flee",
   "notify_set", "achievement_claim", "achievement_claim_all", "ach_box_open", "prize_claim", "game_start", "zonk_move", "poker_play", "bj_open", "bj_invite", "bj_join", "bj_leave", "bj_bet", "bj_move", "upgrade", "up_sell", "up_take", "clan_cancel", "clan_accept", "clan_reject", "stash_collect",
 ];
 const ACTION_NAMES: Record<string, string> = {

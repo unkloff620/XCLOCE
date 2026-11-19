@@ -4,6 +4,8 @@ import { heistAuto, heistOpen, heistPick, heistRush } from "./systems/heist.ts";
 import { raidAttack, raidBagOpen, raidFlee, raidStart } from "./systems/raids.ts";
 import { shodBoost, shodBoostOn, shodSlot, shodTake, shodTick } from "./systems/shodnyak.ts";
 import { fightSlots } from "../content/fight-slots.ts";
+import { vanExchange, vanPack } from "./systems/van.ts";
+import { VAN_GIVES } from "../content/van.ts";
 import { fortuneBagOpen, fortuneBuy, fortuneCupsPick, fortuneCupsStart, fortunePrizeTake, fortuneSpin } from "./systems/fortune.ts";
 import { autoSet, runAutos } from "./systems/autos.ts";
 import { randomInt } from "node:crypto";
@@ -100,7 +102,7 @@ export const ACTIONS = [
   "daily_claim", "sell", "sell_many", "rename", "slots_spin",
   "equipment_upgrade", "talent_up", "talent_reset", "talent_auto", "room_buy", "room_set", "look_set", "decor_set", "decor_save", "piece_buy", "help_seen", "starter_gift",
   "quest_claim", "quest_chest", "notify_set", "achievement_claim", "achievement_claim_all", "ach_box_open", "prize_claim", "clan_edit",
-  "game_start", "zonk_move", "zonk_give_up", "zonk_hints", "zonk_choice", "roach_squash", "pigeon_scare", "poker_play", "poker_swap", "poker_stand", "bj_open", "bj_invite", "bj_join", "bj_decline", "bj_leave", "bj_bet", "bj_unbet", "bj_insure", "bj_move", "upgrade", "up_sell", "up_take", "craft_put", "craft_take", "craft_make", "craft_box_buy", "dealer_buy", "craft_split", "dealer_talk", "part_buy", "shave", "tosya_buy", "newbie_claim", "heist_pick", "heist_rush", "heist_open", "heist_auto", "auto_set", "craft_preset_save", "craft_preset_apply", "craft_preset_delete", "fortune_buy", "fortune_spin", "fortune_cups", "fortune_prize_take", "fortune_cup_pick", "fortune_bag", "raid_start", "raid_attack", "raid_flee", "raid_bag", "shod_take", "shod_slot", "shod_boost", "poker_reset", "poker_case", "fight_slots", "shod_boost_on",
+  "game_start", "zonk_move", "zonk_give_up", "zonk_hints", "zonk_choice", "roach_squash", "pigeon_scare", "poker_play", "poker_swap", "poker_stand", "bj_open", "bj_invite", "bj_join", "bj_decline", "bj_leave", "bj_bet", "bj_unbet", "bj_insure", "bj_move", "upgrade", "up_sell", "up_take", "craft_put", "craft_take", "craft_make", "craft_box_buy", "dealer_buy", "craft_split", "dealer_talk", "part_buy", "shave", "tosya_buy", "newbie_claim", "heist_pick", "heist_rush", "heist_open", "heist_auto", "auto_set", "craft_preset_save", "craft_preset_apply", "craft_preset_delete", "van_exchange", "van_pack", "fortune_buy", "fortune_spin", "fortune_cups", "fortune_prize_take", "fortune_cup_pick", "fortune_bag", "raid_start", "raid_attack", "raid_flee", "raid_bag", "shod_take", "shod_slot", "shod_boost", "poker_reset", "poker_case", "fight_slots", "shod_boost_on",
   "clan_cancel", "clan_accept", "clan_reject", "clan_boss_hit", "duel_create", "duel_answer", "duel_play", "stash_collect", "stash_wish", "stash_gift", "stash_accept", "social_pump", "social_fight", "social_spit", "notes_read", "month_buy", "month_claim",
 ] as const;
 export type ActionType = (typeof ACTIONS)[number];
@@ -279,6 +281,8 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "heist_rush": return heistRush(ctx, Number(body.slot));
     case "heist_open": return heistOpen(ctx, Number(body.slot));
     case "heist_auto": return heistAuto(ctx, Number(body.slot));
+    case "van_exchange": return vanExchange(ctx, oneOf(body.give, VAN_GIVES, "give"), num(body.qty, "qty"));
+    case "van_pack": return vanPack(ctx, str(body.id, "id", 20));
     case "fortune_buy": return fortuneBuy(ctx, num(body.qty, "qty"));
     case "fortune_spin": return fortuneSpin(ctx, body.all === true);
     case "fortune_cups": return fortuneCupsStart(ctx);

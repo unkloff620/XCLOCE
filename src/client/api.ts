@@ -100,6 +100,8 @@ export interface GameState {
   /** «Взлом» (content/heist.ts): null while the event is off and the cells are empty */
   /** «Колесо удачи» in the back yard */
   fortune?: { on: boolean };
+  /** «Барыга на газели»: the weekend van (content/van.ts) */
+  van?: { open: boolean; until: number; visit: string; takes: Currency; rates: Record<"RUB" | "TOKEN", number>; taken: string[] };
   /** «Ходки» of the clans */
   raids?: { on: boolean };
   /** my fight for a building in «Ходки» going on now */

@@ -7054,3 +7054,20 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 /* «От звонка до звонка»: the chest on its plank opens a popup with what it holds */
 .mt-chest-btn { border: 0; background: none; padding: 0; cursor: pointer; color: inherit; }
 .mt-chest-row { display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: 10px; }
+/* «Барыга на газели»: the sign in the back yard (the van's picture comes later) and its window */
+.yard-van-sign { position: absolute; left: 6%; top: 52%; z-index: 6; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 12px;
+  border: 2.5px solid #3b2410; border-radius: 10px; background: linear-gradient(180deg, #ffe08a, #f2b13a); color: #2b1a0b; cursor: pointer;
+  box-shadow: 0 3px 0 #3b2410, 0 6px 14px rgba(0, 0, 0, 0.5); transform: rotate(-3deg); animation: van-bob 2.4s ease-in-out infinite; }
+.yard-van-sign b { font-size: 15px; text-transform: uppercase; }
+@keyframes van-bob { 0%, 100% { transform: rotate(-3deg) translateY(0); } 50% { transform: rotate(-3deg) translateY(-4px); } }
+.van-doors { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.van-door { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 22px 8px; border-radius: 12px; border: 2px solid var(--line);
+  background: var(--tex), linear-gradient(180deg, #e9e4dc, #b9b2a6); color: #2b1a0b; cursor: pointer; }
+.van-door b { font-size: 22px; color: #b3220f; text-transform: uppercase; }
+.van-gives { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.van-give { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 6px; border-radius: 12px; border: 2px solid var(--line); background: rgba(0, 0, 0, 0.25); color: inherit; cursor: pointer; }
+.van-give.on { border-color: #ffcc33; background: rgba(255, 204, 51, 0.16); }
+.van-qty { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.van-qty input { width: 110px; padding: 8px 10px; border-radius: 10px; border: 2px solid var(--line); background: #fff6e0; color: #2b1a0b; font: 800 16px/1 var(--font-body), system-ui; text-align: right; }
+.van-pack { display: flex; flex-wrap: wrap; gap: 8px 14px; justify-content: center; padding: 8px 0; }
+.van-pack > span { display: inline-flex; align-items: center; gap: 4px; }
