@@ -1,12 +1,12 @@
 "use client";
-/* The player's room: artist's background, the PC in the corner, the desk with 1–3 monitors and the seated character on the stool. */
-import { CHARACTER, HERO_HOT, ROOM_BG, ROOM_LIGHTS, ROOM_RGB, ROOM_SKY, SCENE, SCENE_HOT, SCENE_OBJECTS } from "../../content/home-scene.ts";
+/* The player's room: artist's background, the seated character on his chair, the trophies. */
+import { CHARACTER, HERO_HOT, ROOM_BG, ROOM_LIGHTS, ROOM_RGB, ROOM_SKY, SCENE, SCENE_OBJECTS } from "../../content/home-scene.ts";
 import { RigViewport, type RigEdit, type Worn } from "./rig.tsx";
 import { ART_ASPECT } from "./desk-data.ts";
 import { usedUrl } from "../preload.ts";
 import { KnyazRoom, UtilizatorRoom } from "./arena-bg.tsx";
 import { BOTSMAN_ROOM } from "./arena-botsman-data.ts";
-import { placedArt, placedOf, type Look } from "../../content/home.ts";
+import { placedOf, type Look } from "../../content/home.ts";
 
 type ObjId = keyof typeof SCENE_OBJECTS;
 
@@ -69,30 +69,14 @@ function Obj({ id, art }: { id: ObjId; art: string }) {
   );
 }
 
-/** invisible tap zone above everything (the character's pictures would catch the taps otherwise) */
-function Hot({ id, onPick }: { id: keyof typeof SCENE_HOT; onPick: (equipment: string) => void }) {
-  const z = SCENE_HOT[id];
-  return (
-    <rect role="button" tabIndex={0} aria-label={id === "pc" ? "Системник" : "Мониторы"} x={z.x} y={z.y} width={z.w} height={z.h}
-      fill="transparent" pointerEvents="all" style={{ cursor: "pointer", outline: "none" }}
-      onClick={() => onPick(z.equipment)} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onPick(z.equipment)} />
-  );
-}
-
 /**
  * focusHero: the character editor is open — the whole room goes grey and dark, only the hero keeps his colours.
  * hideHero: the room editor is open — the hero steps away (his chair stays) so the room behind is seen.
  * pieces / decor: the owned room things and which of them stand (content/home.ts placedOf).
  */
-export function HomeScene({ room = "basic", onPick, onHero, still, look, worn, pieces = {}, decor = {}, trophies = [], focusHero, hideHero, edit }: { edit?: RigEdit; room?: string; onPick?: (equipment: string) => void; onHero?: () => void; still?: boolean; look?: Look; worn?: Worn; pieces?: Record<string, number>; decor?: Record<string, number>; trophies?: string[]; focusHero?: boolean; hideHero?: boolean }) {
+export function HomeScene({ room = "basic", onHero, still, look, worn, pieces = {}, decor = {}, trophies = [], focusHero, hideHero, edit }: { edit?: RigEdit; room?: string; onHero?: () => void; still?: boolean; look?: Look; worn?: Worn; pieces?: Record<string, number>; decor?: Record<string, number>; trophies?: string[]; focusHero?: boolean; hideHero?: boolean }) {
   const bg = ROOM_BG[room] ?? ROOM_BG.basic;
   const sky = ROOM_SKY[room];
-  // the desk taken away (room editor «Убрать»): the monitors on it go with it; the computer stands on its own
-  const noDesk = placedOf("desk", pieces, decor) < 0;
-  const noPc = placedOf("pc", pieces, decor) < 0;
-  const desk = placedArt("desk", pieces, decor) ?? "desk-001";
-  // shown monitors: bit 1 — right, 2 — left, 4 — middle, 8 — the old CRT (in the right one's place)
-  const monitors = placedOf("monitor2", pieces, decor);
   const lights = ROOM_LIGHTS[room] ?? [];
   const rgb = ROOM_RGB[room];
   return (
@@ -158,18 +142,10 @@ export function HomeScene({ room = "basic", onPick, onHero, still, look, worn, p
           ))}
         </g>
       )}
-      {!noPc && <Obj id="pc" art="pc-1" />}
-      {!noDesk && <Obj id="desk" art={desk} />}
-      {!noDesk && (monitors & 4) !== 0 && <Obj id="monitorCenter" art="monitor-center" />}
-      {!noDesk && (monitors & 2) !== 0 && <Obj id="monitorLeft" art="monitor-left" />}
-      {!noDesk && (monitors & 1) !== 0 && <Obj id="monitorRight" art="monitor-right" />}
-      {!noDesk && (monitors & 8) !== 0 && <Obj id="monitorOld" art="monitor-1" />}
       </g>
       <RigViewport x={CHARACTER.x} y={CHARACTER.y} scale={CHARACTER.scale} seat={placedOf("chair", pieces, decor)} still={still} look={look} worn={worn} seatOnly={hideHero} edit={edit} />
       {/* the trophy stands on the floor in front: over the hero and his chair */}
       {trophies.includes("statue-close") && (decor["statue-close"] ?? 0) !== -1 && <g filter={focusHero ? "url(#scene-dim)" : undefined}><Obj id="statueClose" art="statue-close" />{!still && <StatueGlint />}</g>}
-      {onPick && <Hot id="monitors" onPick={onPick} />}
-      {onPick && <Hot id="pc" onPick={onPick} />}
       {onHero && !hideHero && HERO_HOT.map((z, i) => (
         // the hero's body over the monitors' zone: a tap opens the wardrobe
         <rect key={i} role="button" tabIndex={i === 0 ? 0 : -1} aria-label="Персонаж: гардероб" x={z.x} y={z.y} width={z.w} height={z.h} rx="40"

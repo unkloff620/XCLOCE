@@ -6,30 +6,26 @@ import { useGame } from "../store.tsx";
 import { Icon } from "../art/icons.tsx";
 import { money } from "../format.ts";
 import { haptic } from "../telegram.ts";
-import { EQUIPMENT, REMOVABLE, baseBit, equipmentById, hasPiece, pieceUnlockId, placedOf, type Price } from "../../content/home.ts";
+import { REMOVABLE, baseBit, equipmentById, hasPiece, pieceUnlockId, placedOf, type Price } from "../../content/home.ts";
 import { bossById } from "../../content/bosses.ts";
 import { BonusLine } from "./house.tsx";
 
 /*
  * The room editor right on the home screen, built like the hero editor: the hero steps away (his chair stays) so the room
  * behind is seen; things to change stand at the left, the panel below shows the choices for the picked one.
- * Desk, monitors and chair are bought one by one, in any order: the 3rd monitor before the 2nd, the throne before the office chair.
- * Every bought piece gives its bonus forever; which desk / chair / monitors stand in the room is a preview until «Сохранить».
+ * Chairs are bought one by one, in any order; the trophies only stand or are taken away.
+ * Every bought piece gives its bonus forever; which chair / trophy stands in the room is a preview until «Сохранить».
  */
 
-/** what stands: desk / chair — piece index (0 = the free one); monitor2 — a mask of the shown monitors */
+/** what stands: chair — piece index (0 = the free one); a trophy — 0 stands, -1 away */
 export type RoomDraft = Record<string, number>;
-export type RoomTab = "desk" | "monitor2" | "chair" | "pc" | "rgb" | "trophy";
+export type RoomTab = "chair" | "trophy";
 
-const PLACED = ["desk", "monitor2", "chair", "pc", "statue-close"] as const;
+const PLACED = ["chair", "statue-close"] as const;
 /** things that only stand or are taken away (no pieces to buy): 0 — stands, -1 — away */
-const SOLO = new Set<string>(["pc", "statue-close"]);
+const SOLO = new Set<string>(["statue-close"]);
 export const ROOM_SIDE: { id: RoomTab; name: string }[] = [
-  { id: "desk", name: "Стол" },
-  { id: "monitor2", name: "Мониторы" },
   { id: "chair", name: "Кресло" },
-  { id: "pc", name: "ПК" },
-  { id: "rgb", name: "Подсветка" },
   { id: "trophy", name: "Трофеи" },
 ];
 const SIDE = ROOM_SIDE;
@@ -97,10 +93,6 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose, onBack }: { 
       if (e.multi) setDraft({ ...draft, [id]: ((draft[id] ?? 0) | (1 << (k - 1))) & ~(e.baseSpot === k ? baseBit(e) : 0) });
     }
   };
-  const rgbUp = async () => {
-    const r = await act<{ level: number }>("equipment_upgrade", { id: "rgb" }, (x) => `Подсветка: уровень ${x.level}`);
-    if (r) haptic.ok();
-  };
   const save = async () => {
     setSaving(true);
     // a trophy the player has not got is not sent (the server would refuse nothing, but there is nothing to keep)
@@ -114,11 +106,8 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose, onBack }: { 
   };
 
   const sideArt = (id: RoomTab) => {
-    if (id === "rgb") return <Icon name="bolt" size={36} />;
     // eslint-disable-next-line @next/next/no-img-element
     if (id === "trophy") return <img src={usedUrl("/assets/home/statue-close.webp")} alt="" draggable={false} style={{ opacity: hasStatue && (draft["statue-close"] ?? 0) === 0 ? 1 : 0.4 }} />;
-    // eslint-disable-next-line @next/next/no-img-element
-    if (id === "pc") return <img src={usedUrl("/assets/home/thumb/pc-1.webp")} alt="" draggable={false} style={{ opacity: (draft.pc ?? 0) < 0 ? 0.4 : 1 }} />;
     const e = equipmentById(id)!;
     const v = draft[id] ?? 0;
     // monitors: the newest shown one, else the old CRT
@@ -128,13 +117,10 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose, onBack }: { 
     return <img src={usedUrl(`/assets/home/thumb/${art}.webp`)} alt="" draggable={false} />;
   };
 
-  const e = tab === "rgb" || tab === "pc" || tab === "trophy" ? null : equipmentById(tab)!;
+  const e = tab === "trophy" ? null : equipmentById(tab)!;
   const f = e ? focus[tab] ?? (e.multi ? -1 : draft[tab] ?? 0) : 0;
   const fPiece = e && f > 0 ? e.pieces![f - 1] : null;
   const fOwned = e && f > 0 ? hasPiece(owned[tab] ?? 0, f) : true;
-  const rgb = EQUIPMENT.find((x) => x.id === "rgb")!;
-  const rgbLv = state.home.levels.rgb ?? 0;
-  const rgbNext = rgb.levels[rgbLv];
 
   return (
     <>
@@ -150,7 +136,7 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose, onBack }: { 
       {createPortal(<div className="sty-panel">
         <div className="sty-head">
           <div className="room-ed-title">
-            <b className="display">{e ? e.name : tab === "trophy" ? "Трофеи" : tab === "pc" ? "Мощный системник" : rgb.name}</b>
+            <b className="display">{e ? e.name : "Трофеи"}</b>
             <span className="tiny muted">крит {Math.round(b.critChance * 1000) / 10}% · урон +{Math.round(b.damage * 1000) / 10}%</span>
           </div>
           <button className="sty-x" onClick={onClose} aria-label="Закрыть без сохранения">✕</button>
@@ -176,21 +162,6 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose, onBack }: { 
                   <span className="sty-item-name">Убрать</span>
                 </button>
               )}
-            </div>
-          </div>
-        ) : tab === "pc" ? (
-          <div className="sty-body">
-            <div className="tiny muted">Системник стоит сам по себе: поставь его в комнату или убери.</div>
-            <div className="sty-strip room-ed-strip">
-              <button className={`sty-item room-ed-item ${(draft.pc ?? 0) === 0 ? "on" : ""}`} onClick={() => pick("pc", 0)} aria-pressed={(draft.pc ?? 0) === 0}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="room-ed-thumb" src={usedUrl("/assets/home/thumb/pc-1.webp")} alt="" draggable={false} />
-                <span className="sty-item-name">Поставить</span>
-              </button>
-              <button className={`sty-item room-ed-item room-ed-none ${(draft.pc ?? 0) === -1 ? "on" : ""}`} onClick={() => pick("pc", -1)} aria-pressed={(draft.pc ?? 0) === -1}>
-                <span className="room-ed-thumb room-ed-x" aria-hidden="true">✕</span>
-                <span className="sty-item-name">Убрать</span>
-              </button>
             </div>
           </div>
         ) : e ? (
@@ -248,26 +219,7 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose, onBack }: { 
               <div className="room-ed-info tiny muted">{e.multi ? (f === 0 ? `${e.base!.name} — бесплатно, без бонуса. Стоит на месте правого монитора.` : "Можно поставить любые купленные мониторы — или ни одного.") : `${e.base!.name} — бесплатно, без бонуса.`}</div>
             )}
           </div>
-        ) : (
-          <div className="sty-body">
-            <div className="row" style={{ justifyContent: "space-between" }}>
-              <span className="small">Уровень {rgbLv} из {rgb.levels.length}</span>
-              <span className="equip-lv">{rgb.levels.map((_, i) => <i key={i} className={i < rgbLv ? "on" : ""} />)}</span>
-            </div>
-            <div className="tiny muted">{rgb.description}</div>
-            <div className="tiny">
-              {rgbLv > 0 && <>Сейчас: <BonusLine b={rgb.levels[rgbLv - 1].bonus} /><br /></>}
-              {rgbNext && <>Уровень {rgbLv + 1}: <b><BonusLine b={rgbNext.bonus} /></b></>}
-            </div>
-            {rgbNext ? (
-              <button className="btn sm gold block" disabled={!canPay(rgbNext.price) || busy === "equipment_upgrade"} onClick={rgbUp}>
-                {rgbLv === 0 ? "Купить" : "Улучшить"} · <Icon name={rgbNext.price.currency} size={15} /> {money(rgbNext.price.currency, rgbNext.price.amount)}
-              </button>
-            ) : (
-              <div className="chip green" style={{ alignSelf: "flex-start" }}>Максимальный уровень</div>
-            )}
-          </div>
-        )}
+        ) : null}
 
         <div className="sty-actions">
           <button className="btn dark room-ed-back" onClick={onBack ?? onClose} aria-label="Назад без сохранения" title="Назад">

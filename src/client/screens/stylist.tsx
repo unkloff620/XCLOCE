@@ -46,11 +46,11 @@ const SHORT_PART: Record<string, string> = { HEAD: "Голова", FACE: "Лиц
 // «левое / правое» — as seen on the screen
 
 /** the picture on each room button in the hero editor */
-const ROOM_THUMB: Record<string, string> = { desk: "desk-001", monitor2: "monitor-center", chair: "chair-1", pc: "pc-1" };
+const ROOM_THUMB: Record<string, string> = { chair: "chair-1", trophy: "statue-close" };
 
 export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
   draft: StyleDraft; setDraft: (d: StyleDraft) => void; onClose: () => void; focus: RigEdit; setFocus: (f: RigEdit) => void;
-  /** the room things (desk, monitors, chair, PC, light): a tap opens the room editor on that one */
+  /** the room things (chair, trophies): a tap opens the room editor on that one */
   onRoom?: (tab: RoomTab) => void;
 }) {
   const { state, act, busy } = useGame();
@@ -308,7 +308,7 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
         <div className="sty-room-tabs">
           {ROOM_SIDE.map((s) => (
             <button key={s.id} type="button" onClick={() => { haptic.tap(); onRoom(s.id); }} aria-label={s.name} title={s.name}>
-              {s.id === "rgb" ? <Icon name="bolt" size={30} /> : <img src={`/assets/home/thumb/${ROOM_THUMB[s.id]}.webp`} alt="" draggable={false} />}
+              <img src={s.id === "trophy" ? "/assets/home/statue-close.webp" : `/assets/home/thumb/${ROOM_THUMB[s.id]}.webp`} alt="" draggable={false} />
             </button>
           ))}
         </div>

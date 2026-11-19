@@ -197,8 +197,8 @@ export async function setRoom(ctx: Ctx, id: string) {
 
 /** Check one decor value: desk / chair — 0 (the free one) or an owned piece; monitors — a mask of owned ones. */
 function decorValue(id: string, v: unknown, pieces: Record<string, number>): number {
-  // the computer and the trophies: only stand or are taken away
-  if (id === "pc" || TROPHIES.some((t) => t.id === id)) {
+  // the trophies: only stand or are taken away
+  if (TROPHIES.some((t) => t.id === id)) {
     if (v !== 0 && v !== -1) throw new GameError("bad_value", "Неверное значение");
     return v;
   }

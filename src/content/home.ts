@@ -60,29 +60,6 @@ export interface EquipmentDef {
 
 export const EQUIPMENT: EquipmentDef[] = [
   {
-    id: "desk", name: "Стол", description: "Всё начинается со стола. Каждый купленный стол даёт свой бонус навсегда, а в комнату ставишь любой.",
-    levels: [],
-    base: { name: "Стол с Авито", art: "desk-001" },
-    pieces: [
-      { name: "Ореховый стандарт", art: "desk-002", price: { currency: "RUB", amount: 4_000 }, bonus: { critChance: 0.02 } },
-      { name: "Мраморный холд", art: "desk-003", price: { currency: "RUB", amount: 6_000 }, bonus: { critChance: 0.01, damage: 0.03 } },
-      { name: "Золотой памп", art: "desk-004", price: { currency: "RUB", amount: 9_000 }, bonus: { critChance: 0.02, damage: 0.04 } },
-    ],
-  },
-  {
-    // id stays "monitor2": players who bought monitors keep them (levels became pieces in migration v2-031)
-    id: "monitor2", name: "Мониторы", description: "Один экран — для графика, второй — для чата, третий — чтобы видеть, куда бить. Каждый покупается отдельно и усиливает криты.",
-    levels: [],
-    base: { name: "Старый ламповый", art: "monitor-1" },
-    multi: true,
-    baseSpot: 1,
-    pieces: [
-      { name: "Монитор справа", art: "monitor-right", price: { currency: "RUB", amount: 3000 }, bonus: { damage: 0.01 } },
-      { name: "Монитор слева", art: "monitor-left", price: { currency: "RUB", amount: 4_000 }, bonus: { damage: 0.01 } },
-      { name: "Монитор по центру", art: "monitor-center", price: { currency: "RUB", amount: 5_500 }, bonus: { damage: 0.02 } },
-    ],
-  },
-  {
     id: "chair", name: "Кресло", description: "Спина прямая — рука твёрдая. Каждое купленное кресло повышает шанс крита навсегда, а сидишь на любом.",
     levels: [],
     base: { name: "Табуретка", art: "seat-1" },
@@ -106,30 +83,8 @@ export const EQUIPMENT: EquipmentDef[] = [
       { name: "Бочка Утилизатора", art: "chair-utilizator", price: { currency: "RUB", amount: 8800 }, bonus: { critChance: 0.035 }, drop: { boss: "utilizator" } },
     ],
   },
-  {
-    id: "rgb", name: "RGB-подсветка", description: "Всем известно: RGB даёт +15% к скиллу. У нас чуть скромнее.",
-    levels: [
-      { price: { currency: "RUB", amount: 1200 }, bonus: { critChance: 0.01 } },
-      { price: { currency: "RUB", amount: 2400 }, bonus: { critChance: 0.02 } },
-      { price: { currency: "RUB", amount: 4_000 }, bonus: { critChance: 0.03, damage: 0.01 } },
-    ],
-  },
 ];
 
-/**
- * Снято с продажи: системник за валюту заменён талантами оружия (content/talents.ts).
- * Уже купленные уровни продолжают давать бонус, но в «Технике» не показываются и не улучшаются.
- */
-export const LEGACY_EQUIPMENT: EquipmentDef[] = [
-  {
-    id: "pc", name: "Мощный системник", description: "Рендерит удары быстрее, чем босс успевает моргнуть. Добавляет урон любому оружию.",
-    levels: [
-      { price: { currency: "RUB", amount: 5000 }, bonus: { damage: 0.03 } },
-      { price: { currency: "RUB", amount: 4_200 }, bonus: { damage: 0.06 } },
-      { price: { currency: "RUB", amount: 3_800 }, bonus: { damage: 0.1 } },
-    ],
-  },
-];
 
 export interface RoomDef {
   id: string;
@@ -198,7 +153,7 @@ export function placedOf(id: string, pieces: Record<string, number>, decor: Reco
 }
 /** the room things that can be taken away altogether (the desk goes with the monitors on it; the computer stands on its
  *  own — "pc": 0 standing, -1 taken away); the seat always stays — the hero sits on it */
-export const REMOVABLE = new Set(["desk", "pc"]);
+export const REMOVABLE = new Set<string>();
 /** the picture of what stands in the room (desk / chair); undefined — taken away */
 export const placedArt = (id: string, pieces: Record<string, number>, decor: Record<string, number> = {}) => {
   const e = equipmentById(id);
@@ -226,7 +181,7 @@ export const TROPHIES: { id: string; bonus: Bonus }[] = [
 /** Total bonus from equipment levels, owned rooms and trophies (weapon talents are added per weapon in combat). */
 export function totalBonus(levels: Record<string, number>, rooms: string[], trophies: string[] = [], pieces: Record<string, number> = {}): Required<Bonus> {
   let b: Bonus = {};
-  for (const e of [...EQUIPMENT, ...LEGACY_EQUIPMENT]) {
+  for (const e of EQUIPMENT) {
     if (e.pieces?.length) {
       e.pieces.forEach((pc, i) => { if (hasPiece(pieces[e.id] ?? 0, i + 1)) b = addBonus(b, pc.bonus); });
       continue;
