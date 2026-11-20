@@ -6956,18 +6956,18 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 @keyframes fx-heat { 30% { opacity: 1; } 100% { opacity: 0; } }
 
 /* «Бочка Утилизатора»: the ooze from its bungs (rig.tsx BarrelOoze) — the stream glows and runs, drops fall, the puddle breathes */
-.bz-all { filter: drop-shadow(0 0 4px rgba(150, 255, 40, 0.75)); }
-.bz-flow { animation: bz-flow 0.9s linear infinite; }
-@keyframes bz-flow { to { stroke-dashoffset: -36; } }
-.bz-pool { transform-box: fill-box; transform-origin: center; animation: bz-pool 2.6s ease-in-out infinite; }
-.bz-1 .bz-pool { animation-delay: -1.1s; }
-@keyframes bz-pool { 0%, 100% { transform: scale(0.92, 0.9); opacity: 0.85; } 50% { transform: scale(1.06, 1.1); opacity: 1; } }
-.bz-drop { opacity: 0; animation: bz-drop 1.6s ease-in infinite; }
-.bz-drop-1 { animation-delay: -0.55s; }
-.bz-drop-2 { animation-delay: -1.1s; }
-.bz-1 .bz-drop { animation-duration: 1.9s; }
-@keyframes bz-drop { 0% { opacity: 0; transform: translateY(0); } 10% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; transform: translateY(180px); } }
-@media (prefers-reduced-motion: reduce) { .bz-flow, .bz-pool, .bz-drop { animation: none; } }
+.boz-all { filter: drop-shadow(0 0 4px rgba(150, 255, 40, 0.75)); }
+.boz-flow { animation: boz-flow 0.9s linear infinite; }
+@keyframes boz-flow { to { stroke-dashoffset: -36; } }
+.boz-pool { transform-box: fill-box; transform-origin: center; animation: boz-pool 2.6s ease-in-out infinite; }
+.boz-1 .boz-pool { animation-delay: -1.1s; }
+@keyframes boz-pool { 0%, 100% { transform: scale(0.92, 0.9); opacity: 0.85; } 50% { transform: scale(1.06, 1.1); opacity: 1; } }
+.boz-drop { opacity: 0; animation: boz-drop 1.6s ease-in infinite; }
+.boz-drop-1 { animation-delay: -0.55s; }
+.boz-drop-2 { animation-delay: -1.1s; }
+.boz-1 .boz-drop { animation-duration: 1.9s; }
+@keyframes boz-drop { 0% { opacity: 0; transform: translateY(0); } 10% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; transform: translateY(180px); } }
+@media (prefers-reduced-motion: reduce) { .boz-flow, .boz-pool, .boz-drop { animation: none; } }
 
 /* the room switcher keeps one width whatever the room's name: the arrows stay put while flipping */
 .room-switch .room-name { width: 190px; flex: none; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

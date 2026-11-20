@@ -803,26 +803,26 @@ function Bone({ p, className, children }: { p: PartId; className?: string; child
 /**
  * «Бочка Утилизатора»: green toxic ooze pours out of the bungs at both ends of the lying barrel (rig units: the artist's
  * barrel drawn in place, its bungs at (36, 1025) and (964, 1025), its bottom at 1244): a stream that bends down to the
- * ground, drops falling along it, a glowing puddle that breathes (screens.css «bz-»)
+ * ground, drops falling along it, a glowing puddle that breathes (screens.css «boz-»; not «bz», the business drawer’s class)
  */
 function BarrelOoze() {
   const side = (x: number, dir: 1 | -1, k: number) => {
     const out = x + dir * 18, low = 1246;
     const d = `M${x} 1022 C${x + dir * 10} 1020 ${out} 1030 ${out + dir * 2} 1050 C${out + dir * 4} 1100 ${out} 1170 ${out + dir * 2} ${low - 4}`;
     return (
-      <g key={k} className={`bz bz-${k}`}>
-        <ellipse className="bz-pool" cx={out + dir * 10} cy={low} rx={78} ry={15} fill="url(#bz-pool)" />
-        <path className="bz-stream" d={d} fill="none" stroke="#b6ff2e" strokeWidth={11} strokeLinecap="round" />
-        <path className="bz-flow" d={d} fill="none" stroke="#f2ffb0" strokeWidth={3.5} strokeLinecap="round" strokeDasharray="12 24" />
+      <g key={k} className={`boz boz-${k}`}>
+        <ellipse className="boz-pool" cx={out + dir * 10} cy={low} rx={78} ry={15} fill="url(#boz-pool)" />
+        <path className="boz-stream" d={d} fill="none" stroke="#b6ff2e" strokeWidth={11} strokeLinecap="round" />
+        <path className="boz-flow" d={d} fill="none" stroke="#f2ffb0" strokeWidth={3.5} strokeLinecap="round" strokeDasharray="12 24" />
         <path d={`M${x - dir * 2} 1012 Q${x + dir * 14} 1008 ${x + dir * 20} 1034 L${x + dir * 2} 1036 Z`} fill="#9ff21c" stroke="#2c5a00" strokeWidth={1.2} />
-        {[0, 1, 2].map((i) => <circle key={i} className={`bz-drop bz-drop-${i}`} cx={out + dir * 2} cy={1060} r={5.5} fill="#c8ff4a" />)}
+        {[0, 1, 2].map((i) => <circle key={i} className={`boz-drop boz-drop-${i}`} cx={out + dir * 2} cy={1060} r={5.5} fill="#c8ff4a" />)}
       </g>
     );
   };
   return (
-    <g className="bz-all" aria-hidden="true">
+    <g className="boz-all" aria-hidden="true">
       <defs>
-        <radialGradient id="bz-pool"><stop offset="0" stopColor="#d6ff5c" stopOpacity="0.95" /><stop offset="0.55" stopColor="#8fe81a" stopOpacity="0.8" /><stop offset="1" stopColor="#5cbf00" stopOpacity="0" /></radialGradient>
+        <radialGradient id="boz-pool"><stop offset="0" stopColor="#d6ff5c" stopOpacity="0.95" /><stop offset="0.55" stopColor="#8fe81a" stopOpacity="0.8" /><stop offset="1" stopColor="#5cbf00" stopOpacity="0" /></radialGradient>
       </defs>
       {side(36, -1, 0)}
       {side(964, 1, 1)}
