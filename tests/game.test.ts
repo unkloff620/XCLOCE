@@ -596,7 +596,7 @@ describe("locations", () => {
   it("one pass of every location costs the energy of the user's table", () => {
     const pass = [166, 278, 364, 519, 675, 779, 969, 1082, 1307, 1537, 1676, 1935, 2077, 2377, 2651];
     expect(LOCATIONS.map((l) => l.tasks.reduce((a, t) => a + t.energy * t.steps, 0))).toEqual(pass);
-    expect(LOCATIONS.map((l) => l.night.reduce((a, t) => a + t.energy * t.steps, 0))).toEqual(pass);
+    expect(LOCATIONS.map((l) => l.night.reduce((a, t) => a + t.energy * t.steps, 0))).toEqual([223, 356, 470, 635, 848, 986, 1211, 1362, 1660, 1944, 2133, 2434, 2639, 3006, 3346]);
   });
   it("first location tasks take at least 5 steps, later ones more; a task finished before the change is not paid twice", async () => {
     expect(Math.min(...LOCATIONS[0].tasks.map((t) => t.steps))).toBeGreaterThanOrEqual(5);

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePageReady } from "../route-loader.tsx";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { liveEnergy, useGame, useNow } from "../store.tsx";
 import { api, type Granted } from "../api.ts";
 import { LOCATIONS, locRep, locationById, taskOpen, tasksOf, type LocMode } from "../../content/locations.ts";
@@ -124,47 +124,40 @@ function LcLeader({ l, mode, me }: { l: LocLeader | null; mode: LocMode; me?: nu
   );
 }
 
-/** «Бизнес» of all locations together: the profit piled up everywhere, taken in one go */
-function BizTotal({ rows, onDone }: { rows: LocRow[]; onDone: () => void }) {
+/** «Бизнес» of all locations together: the artist's plank in a drawer at the screen's right edge — its tab «Бизнес» sticks
+ *  out, a tap pulls it out: the profit piled up everywhere (папиросы, авторитет) and «Собрать» / «Нечего» with the time
+ *  to the next part of it on the button */
+function BizDrawer({ rows, onDone }: { rows: LocRow[]; onDone: () => void }) {
   const { act, busy } = useGame();
   const now = useNow();
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  // a tap anywhere else slides it back
+  useEffect(() => {
+    if (!open) return;
+    const off = (e: PointerEvent) => { if (box.current && !box.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("pointerdown", off);
+    return () => document.removeEventListener("pointerdown", off);
+  }, [open]);
   const live = rows.filter((x) => x.business.lvRep + x.business.lvRub > 0);
-  if (!live.length) return null;
   const rep = live.reduce((a, x) => a + x.business.pendingRep, 0);
   const rub = live.reduce((a, x) => a + x.business.pendingRub, 0);
-  const perRep = live.reduce((a, x) => a + x.business.perRep, 0);
-  const perRub = live.reduce((a, x) => a + x.business.perRub, 0);
-  const hours = Math.max(...live.map((x) => x.business.hours));
-  const anyFull = live.some((x) => x.business.full);
   const next = live.map((x) => x.business.nextAt).filter((t): t is number => t !== null);
   const nextAt = next.length ? Math.min(...next) : null;
   const ready = rep > 0 || rub > 0;
   const take = async () => {
     const res = await act<{ hours: number; rub: number; rep: number }>("business_claim", {}, (y) => `Прибыль: +${full(y.rub)} папирос · +${full(y.rep)} авторитета`);
-    if (res) {
-      haptic.big();
-      sfx("win");
-      onDone();
-    }
+    if (res) { haptic.big(); sfx("win"); onDone(); }
   };
   return (
-    <div className={`biz-take biz-total ${ready ? "ready" : ""}`}>
-      <span className="biz-h">💼 Бизнес · {live.length} {live.length === 1 ? "локация" : live.length < 5 ? "локации" : "локаций"}
-        <span className="biz-hour">
-          <small>Каждый час:</small>
-          <b className="num">+{full(perRub / 24)} <Icon name="PAP" size={14} /></b>
-          <b className="num">+{full(perRep / 24)} <Icon name="rep" size={14} /></b>
-        </span>
-      </span>
-      <span className="biz-take-sum num">
-        {rep > 0 && <span><Icon name="rep" size={15} />+{full(rep)}</span>}
-        {rub > 0 && <span>+{full(rub)} <Icon name="PAP" size={18} /></span>}
-        {!ready && <span className="muted">пока пусто</span>}
-      </span>
-      <button className="btn gold block" disabled={!ready || busy === "business_claim"} onClick={take}>Забрать прибыль{ready ? ` за ${hours < 24 ? `${hours} ч` : `${Math.floor(hours / 24)} дн. ${hours % 24} ч`}` : ""}</button>
-      <span className="tiny biz-note">
-        {anyFull ? "Копилка полна: больше 7 дней не копится — забери!" : nextAt ? `Ещё часть прибыли через ${clock(Math.max(0, nextAt - now))}` : ""}
-      </span>
+    <div ref={box} className={`bz ${open ? "open" : ""}`}>
+      <button type="button" className="bz-tab display" onClick={() => { haptic.tap(); setOpen((o) => !o); }} aria-expanded={open}>Бизнес</button>
+      <b className="bz-title display">Награды:</b>
+      <span className="bz-rew num"><Icon name="PAP" size={28} />+{full(rub)}</span>
+      <span className="bz-rew num"><Icon name="rep" size={24} />+{full(rep)}</span>
+      <button type="button" className="btn gold bz-go" disabled={!ready || busy === "business_claim"} onClick={take}>
+        {ready ? "Собрать" : <>Нечего{nextAt ? <small className="num">{clock(Math.max(0, nextAt - now))}</small> : null}</>}
+      </button>
     </div>
   );
 }
@@ -256,7 +249,7 @@ export function LocationsScreen() {
         </div>
       </div>
       <div className="col" style={{ gap: 12 }}>
-        {rows && <BizTotal rows={rows} onDone={() => void load()} />}
+        {rows && <BizDrawer rows={rows} onDone={() => void load()} />}
         {LOCATIONS.map((l) => {
           const r = rows?.find((x) => x.id === l.id);
           // the one to play now: the first open location not cleared yet

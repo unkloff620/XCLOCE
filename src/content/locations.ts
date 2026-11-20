@@ -23,7 +23,7 @@ export interface LocationDef {
   /** vector scene id (client/art/scenes) */
   scene: "openspace" | "market" | "serverroom" | "basement" | "board" | "accounting" | "hr" | "party" | "offshore" | "yacht" | "moonbase" | "mars" | "orbit" | "sunfarm" | "genesis";
   tasks: TaskDef[];
-  /** «Ночные движухи»: the same road at night — the same energy, steps and pay, but «ночной авторитет» (NIGHT_TASKS) */
+  /** «Ночные движухи»: the same road at night — the same steps, its own energy (NIGHT_ENERGY) and pay, «ночной авторитет» (NIGHT_TASKS) */
   night: TaskDef[];
   /** special reward for closing all five tasks, much bigger than a task reward */
   reward: Reward;
@@ -207,7 +207,7 @@ const DAY: Omit<LocationDef, "night">[] = [
   },
 ];
 
-/* «Ночные движухи»: every location's night tasks, one for each day task (same energy, steps and pay) */
+/* «Ночные движухи»: every location's night tasks, one for each day task (same steps; energy — NIGHT_ENERGY) */
 const NIGHT_TASKS: Record<string, [string, string][]> = {
   openspace: [
     ["Остаться после работы", "Охранник уже косо смотрит."], ["Доесть торт из холодильника", "Чей он — уже не важно."],
@@ -285,9 +285,40 @@ const NIGHT_TASKS: Record<string, [string, string][]> = {
     ["Загадать желание у первого блока", "Желание одно: «to the moon». Ты уже был там."],
   ],
 };
+/**
+ * Night energy per step of every task (the steps are the day's): one night pass costs the user's night table (2026-11-20):
+ * 223, 356, 470, 635, 848, 986, 1211, 1362, 1660, 1944, 2133, 2434, 2639, 3006, 3346. The pay follows the energy.
+ */
+const NIGHT_ENERGY: Record<string, number[]> = {
+  openspace: [7, 7, 7, 8, 9],
+  market: [7, 7, 11, 13, 13],
+  serverroom: [8, 10, 12, 13, 16],
+  basement: [10, 12, 15, 16, 18],
+  board: [14, 16, 17, 18, 19],
+  accounting: [17, 17, 19, 19, 19],
+  hr: [18, 19, 20, 21, 24],
+  party: [19, 21, 21, 21, 24],
+  offshore: [22, 22, 22, 22, 24],
+  yacht: [19, 20, 26, 26, 31],
+  moonbase: [19, 22, 25, 28, 32],
+  mars: [21, 26, 27, 29, 33],
+  orbit: [24, 28, 28, 29, 31],
+  sunfarm: [21, 26, 29, 33, 40],
+  genesis: [24, 30, 32, 34, 40],
+};
 export const LOCATIONS: LocationDef[] = DAY.map((l) => ({
   ...l,
-  night: l.tasks.map((t, i) => ({ ...t, id: `n-${t.id}`, title: NIGHT_TASKS[l.id]?.[i]?.[0] ?? `${t.title} ночью`, flavor: NIGHT_TASKS[l.id]?.[i]?.[1] ?? t.flavor })),
+  night: l.tasks.map((t, i) => {
+    const e = NIGHT_ENERGY[l.id]?.[i] ?? t.energy;
+    const k = e / t.energy;
+    return {
+      ...t, id: `n-${t.id}`, energy: e,
+      title: NIGHT_TASKS[l.id]?.[i]?.[0] ?? `${t.title} ночью`, flavor: NIGHT_TASKS[l.id]?.[i]?.[1] ?? t.flavor,
+      // the pay grows with the energy: папиросы and XP of a step and of the finish
+      stepReward: { ...t.stepReward, currencies: { PAP: Math.round((t.stepReward.currencies?.PAP ?? 0) * k) }, xp: e * 10 },
+      doneReward: { ...t.doneReward, xp: e * t.steps * 10 },
+    };
+  }),
 }));
 
 export const locationById = (id: string) => LOCATIONS.find((l) => l.id === id);

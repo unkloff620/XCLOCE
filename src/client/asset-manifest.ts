@@ -3115,6 +3115,7 @@ export const ASSET_FILES: string[] = [
  "/assets/locations/accounting.webp",
  "/assets/locations/basement-card.webp",
  "/assets/locations/basement.webp",
+ "/assets/locations/biz-plank.webp",
  "/assets/locations/board-card.webp",
  "/assets/locations/board.webp",
  "/assets/locations/card-plank.webp",

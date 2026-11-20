@@ -7178,3 +7178,24 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .lc.current .lc-plank { filter: drop-shadow(0 0 6px rgba(255, 204, 51, 0.85)) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5)); }
 .lc.ready .lc-plank { filter: drop-shadow(0 0 7px rgba(255, 204, 51, 0.95)) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5)); }
 .lc.ready .loc-claim { padding: 6px 4px 2px; }
+
+/* «Бизнес»: the artist's plank as a drawer at the screen's right edge (tools/locations/build-card.py; places of his template) —
+   shut, only its tab sticks out; open, it slides in */
+.bz { position: fixed; z-index: 40; right: 0; top: 34%; width: min(calc(100vw - 8px), 440px); aspect-ratio: 1000 / 402; container-type: inline-size;
+  background: url(/assets/locations/biz-plank.webp) center / 100% 100% no-repeat; filter: drop-shadow(-3px 4px 6px rgba(0, 0, 0, 0.55));
+  transform: translateX(calc(100% - 7.6cqi)); transition: transform 0.42s cubic-bezier(0.3, 0.75, 0.2, 1); color: #6b4626; }
+.bz.open { transform: translateX(0); }
+.bz-tab { position: absolute; left: 2.3%; top: 32%; width: 4.8%; height: 37.5%; padding: 0; border: 0; background: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent;
+  writing-mode: vertical-rl; transform: rotate(180deg); font-size: 2.4cqi; line-height: 1; letter-spacing: 0.05em; color: #6b4626; }
+.bz-title { position: absolute; left: 31.9%; width: 37.2%; top: 15%; height: 15%; display: flex; align-items: center; justify-content: center;
+  font-size: 7cqi; letter-spacing: 0.06em; text-transform: uppercase; color: #6b4626; }
+.bz-rew { position: absolute; top: 34.6%; height: 17.2%; width: 26%; display: flex; align-items: center; justify-content: center; gap: 1.5cqi;
+  font-size: 5cqi; font-weight: 900; color: #5a3a14; }
+.bz-rew:nth-of-type(1) { left: 23.6%; }
+.bz-rew:nth-of-type(2) { left: 52.1%; }
+.bz-rew svg { width: 6.5cqi !important; height: 6.5cqi !important; }
+.bz-go.btn { position: absolute; left: 74.2%; top: 74.5%; width: 21.1%; height: 14.2%; min-height: 0; padding: 0 0.8cqi; font-size: 2.3cqi; gap: 0.9cqi; letter-spacing: 0.04em;
+  line-height: 1; border-radius: 1cqi; outline-offset: -0.7cqi; box-shadow: 0 0.5cqi 0 var(--b4), 0 1cqi 1.6cqi rgba(0, 0, 0, 0.4); }
+.bz-go small { font-size: 2.3cqi; letter-spacing: 0.02em; }
+.bz-go:disabled { filter: none; opacity: 1; --b1: #e8d6b4; --b2: #cdb58c; --b4: #6b4626; }
