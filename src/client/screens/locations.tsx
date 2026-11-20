@@ -117,8 +117,8 @@ function LocRepChip({ v, size = 14 }: { v: number; size?: number }) {
 function LcLeader({ l, mode, me }: { l: LocLeader | null; mode: LocMode; me?: number }) {
   return (
     <span className={`lc-lead ${mode} ${l ? "" : "none"}`}>
-      <span className="lc-ava">{l ? <Avatar name={l.name} photo={l.photo} size={64} /> : null}</span>
-      <b className="lc-nick ellipsis">{l ? (l.id === me ? "Ты" : l.name) : "—"}</b>
+      <span className="lc-ava">{l ? <Avatar name={l.name} photo={l.photo} size={64} /> : <i className="lc-first">Стань<br />первым</i>}</span>
+      <b className="lc-nick ellipsis">{l ? (l.id === me ? "Ты" : l.name) : null}</b>
       <span className="lc-rep num">{l ? <><Icon name="rep" size={14} />{full(l.rep)}</> : null}</span>
     </span>
   );
@@ -151,7 +151,7 @@ function BizDrawer({ rows, onDone }: { rows: LocRow[]; onDone: () => void }) {
   };
   return (
     <div ref={box} className={`bz ${open ? "open" : ""}`}>
-      <button type="button" className="bz-tab display" onClick={() => { haptic.tap(); setOpen((o) => !o); }} aria-expanded={open}>Бизнес</button>
+      <button type="button" className="bz-tab" onClick={() => { haptic.tap(); setOpen((o) => !o); }} aria-expanded={open}>Бизнес</button>
       <b className="bz-title display">Награды:</b>
       <span className="bz-rew num"><Icon name="PAP" size={28} />+{full(rub)}</span>
       <span className="bz-rew num"><Icon name="rep" size={24} />+{full(rep)}</span>
