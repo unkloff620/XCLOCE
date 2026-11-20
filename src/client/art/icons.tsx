@@ -30,7 +30,7 @@ export function Icon({ name, size = 28, className }: { name: IconName; size?: nu
   if (art) {
     return (
       <svg className={className} width={size} height={size} viewBox="0 0 64 64" aria-hidden="true" style={{ flex: "none", display: "block" }}>
-        <image href={`/assets/ui/${art}.webp`} x="0" y="0" width="64" height="64" />
+        <image href={`/assets/ui/${art}.webp${art.startsWith("cur-") ? "?v=2" : ""}`} x="0" y="0" width="64" height="64" />
       </svg>
     );
   }
