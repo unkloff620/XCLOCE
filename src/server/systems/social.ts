@@ -1,6 +1,6 @@
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, moscowDay, type Ctx } from "../core.ts";
-import { FIGHT_WIN, NOTE_KEEP_MS, SOCIAL_COOLDOWN_MS, fightChance } from "../../content/social.ts";
+import { FIGHT_COOLDOWN_MS, FIGHT_DAY_MAX, FIGHT_WIN, NOTE_KEEP_MS, SOCIAL_COOLDOWN_MS, fightChance } from "../../content/social.ts";
 import { rollParts } from "../../content/craft-drops.ts";
 import { mergeRewards } from "../../content/rewards.ts";
 
@@ -56,7 +56,8 @@ export async function pump(ctx: Ctx, to: number) {
 export async function fight(ctx: Ctx, to: number) {
   const p = await target(ctx, to);
   const c = await counts(ctx.q, ctx.pid, "fight", to, ctx.now);
-  if (c.last && ctx.now - c.last < SOCIAL_COOLDOWN_MS) throw new GameError("fight_wait", "С ним ты недавно махался — отдышись");
+  if (c.same >= FIGHT_DAY_MAX) throw new GameError("fight_day", "На него на сегодня хватит");
+  if (c.last && ctx.now - c.last < FIGHT_COOLDOWN_MS) throw new GameError("fight_wait", "С ним ты недавно махался — отдышись");
   const mine = await bicepsOf(ctx.q, ctx.pid), theirs = p.biceps;
   // luck: the stronger one usually wins, but not always (content/social.ts fightChance)
   const chance = fightChance(mine, theirs);
@@ -78,8 +79,8 @@ export async function spit(ctx: Ctx, to: number) {
   return { ok: true };
 }
 
-// no daily limits: only the hour's reload on the same player
-const readyAt = (c: { last: number }) => (c.last ? c.last + SOCIAL_COOLDOWN_MS : 0);
+// the hour's reload on the same player; a fight — a minute, and -1 once the day's FIGHT_DAY_MAX is used up
+const readyAt = (c: { last: number }, cd = SOCIAL_COOLDOWN_MS) => (c.last ? c.last + cd : 0);
 /** what the viewer may do to this player: for each — when it is ready again (0 — now, -1 — the day's limit is used up; null — the own profile) */
 export async function socialView(q: Queryable, viewer: number, pid: number, now: number) {
   const biceps = await bicepsOf(q, pid);
@@ -88,7 +89,7 @@ export async function socialView(q: Queryable, viewer: number, pid: number, now:
   return {
     biceps, mine: await bicepsOf(q, viewer),
     pump: readyAt(pc),
-    fight: readyAt(fc),
+    fight: fc.same >= FIGHT_DAY_MAX ? -1 : readyAt(fc, FIGHT_COOLDOWN_MS),
     spit: readyAt(sc),
   };
 }

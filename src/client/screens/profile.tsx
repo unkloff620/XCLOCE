@@ -19,6 +19,7 @@ import { Avatar, Bar, Empty, Modal } from "../ui.tsx";
 import { Emblem } from "../art/emblems.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { Icon } from "../art/icons.tsx";
+import { FIGHT_COOLDOWN_MS, FIGHT_WIN } from "../../content/social.ts";
 import { EyesArt, HeroRig, type Worn } from "../art/rig.tsx";
 import { HomeScene } from "../art/home-scene.tsx";
 import { ROOM_BACKDROP } from "../../content/home-scene.ts";
@@ -149,9 +150,9 @@ function RenameWindow({ current, onClose, onDone }: { current: string; onClose: 
 /* ---------------- the buttons on the wall of the room ---------------- */
 
 /** a social button reloading: the grey part shrinks clockwise like a weapon's (the icon stays), the time left under it */
-function Reload({ ms }: { ms: number }) {
+function Reload({ ms, cd = SOCIAL_CD }: { ms: number; cd?: number }) {
   if (!ms) return null;
-  const done = ms < 0 ? 0 : Math.max(0, Math.min(1, 1 - ms / SOCIAL_CD));
+  const done = ms < 0 ? 0 : Math.max(0, Math.min(1, 1 - ms / cd));
   return (
     <>
       <span className="pr-cd" style={{ ["--p" as string]: `${done * 360}deg` }} />
@@ -316,7 +317,7 @@ function Brawl({ res, name, me, them, onClose }: { res: { won: boolean; mine: nu
           <span><BicepsArt size={36} /><b className="num">{res.theirs}</b><small>у {name}</small></span>
         </div>
         <p className="small">{res.won
-          ? <>Наехал на {name} и вышел победителем: <b>+50 ₽</b>{res.chance !== undefined && res.chance < 0.5 && <> — повезло, шанс был {Math.round(res.chance * 100)}%</>}</>
+          ? <>Наехал на {name} и вышел победителем: <b className="gain"><Icon name="PAP" size={18} />+{FIGHT_WIN.currencies?.PAP}</b>{res.chance !== undefined && res.chance < 0.5 && <> — повезло, шанс был {Math.round(res.chance * 100)}%</>}</>
           : <>{name} в этот раз оказался сильнее{res.chance !== undefined && <> — твой шанс был {Math.max(1, Math.round(res.chance * 100))}%</>}. Качай бицуху и пробуй ещё.</>}</p>
         <button className="btn gold block" onClick={onClose}>Ок</button>
       </div>
@@ -673,7 +674,7 @@ export function ProfileScreen() {
           {!p.self && (
             <>
               <button type="button" className="pr-btn bare" disabled={!!brawl || busy === "social_fight"} onClick={fight} aria-label="Наехать">
-                <PrIcon name="fight" /><Reload ms={fightIn} />
+                <PrIcon name="fight" /><Reload ms={fightIn} cd={FIGHT_COOLDOWN_MS} />
               </button>
               <button type="button" className="pr-btn bare" disabled={busy === "social_spit"} onClick={spit} aria-label="Харкнуть">
                 <PrIcon name="spit" /><Reload ms={spitIn} />

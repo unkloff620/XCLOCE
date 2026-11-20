@@ -3,12 +3,15 @@
  *  - «Бицуха»: a tap pumps the other player's biceps by one (each visitor once in SOCIAL_COOLDOWN_MS per player). The more
  *    biceps, the harder it is to beat him in a fist fight;
  *  - «Наехать»: a fist fight in the background — a chance by the biceps (fightChance: equal — 50%, half — 10%), the attacker who
- *    wins gets FIGHT_WIN; each player once in SOCIAL_COOLDOWN_MS (no daily limits — only the reload);
+ *    wins gets FIGHT_WIN; the same player once in FIGHT_COOLDOWN_MS, at most FIGHT_DAY_MAX a day;
  *  - «Харкнуть»: the other player gets «В тебя харкнул …» in his messages; the same player once in SPIT_EVERY_MS.
  */
 import type { Reward } from "./rewards.ts";
 
-export const FIGHT_WIN: Reward = { currencies: { RUB: 50 } };
+export const FIGHT_WIN: Reward = { currencies: { PAP: 5 } };
+/** «Наехать» on the same player: again after a minute, at most FIGHT_DAY_MAX times a Moscow day (the user 2026-11-20) */
+export const FIGHT_COOLDOWN_MS = 60_000;
+export const FIGHT_DAY_MAX = 1000;
 /** the same player again — after an hour (all three: biceps, a fight, a spit); the button refills clockwise meanwhile */
 export const SOCIAL_COOLDOWN_MS = 60 * 60_000;
 export const SPIT_EVERY_MS = SOCIAL_COOLDOWN_MS;

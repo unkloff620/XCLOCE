@@ -2188,7 +2188,7 @@ describe("daily tops of blackjack and poker", () => {
 });
 
 describe("бицуха, наезд, харкнуть", () => {
-  it("biceps pumped once an hour per visitor; more biceps wins a fight (+50 ₽); a spit leaves a message", async () => {
+  it("biceps pumped once an hour per visitor; more biceps wins a fight (+5 папирос), a minute between fights, 1000 a day; a spit leaves a message", async () => {
     const a = await newPlayer(db), b = await newPlayer(db), c = await newPlayer(db);
     await expect(act(db, a, "social_pump", { to: a }, T0)).rejects.toMatchObject({ code: "social_self" });
     expect((await act(db, a, "social_pump", { to: b }, T0)).result.biceps).toBe(1);
@@ -2198,12 +2198,17 @@ describe("бицуха, наезд, харкнуть", () => {
     const f1 = await act(db, a, "social_fight", { to: b }, T0, always(0.5)); // 0 against 2: 1% luck
     expect(f1.result).toMatchObject({ won: false, mine: 0, theirs: 2 });
     await expect(act(db, a, "social_fight", { to: b }, T0 + 1000)).rejects.toMatchObject({ code: "fight_wait" });
-    const rub = await wallet(db, b, "RUB");
+    const pap = await wallet(db, b, "PAP");
     expect((await act(db, b, "social_fight", { to: a }, T0, always(0.5))).result.won).toBe(true);
     // luck: the weaker one wins now and then (0 against 2 — 1%)
     const lucky = await act(db, c, "social_fight", { to: b }, T0, always(0.001));
     expect(lucky.result).toMatchObject({ won: true, chance: 0.01 });
-    expect(await wallet(db, b, "RUB")).toBe(rub + 50);
+    expect(await wallet(db, b, "PAP")).toBe(pap + 5);
+    // a minute later — again; after 1000 fights on him today — no more
+    expect((await act(db, a, "social_fight", { to: b }, T0 + 61_000, always(0.5))).result.won).toBe(false);
+    await db.query("INSERT INTO social_log (from_id, to_id, kind, day, at, won) SELECT $1, $2, 'fight', day, at, false FROM social_log WHERE from_id=$1 AND to_id=$2 AND kind='fight' LIMIT 1", [a, b]);
+    await db.query("INSERT INTO social_log (from_id, to_id, kind, day, at, won) SELECT from_id, to_id, kind, day, at, won FROM social_log, generate_series(1, 998) WHERE from_id=$1 AND to_id=$2 AND kind='fight' LIMIT 998", [a, b]);
+    await expect(act(db, a, "social_fight", { to: b }, T0 + 200_000)).rejects.toMatchObject({ code: "fight_day" });
     // an hour later the same player can be pumped again
     expect((await act(db, a, "social_pump", { to: b }, T0 + H)).result.biceps).toBe(3);
     await act(db, c, "social_spit", { to: a }, T0);
