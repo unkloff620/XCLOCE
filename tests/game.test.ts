@@ -793,12 +793,15 @@ describe("daily login reward", () => {
 });
 
 describe("selling, nickname, slot machine 777", () => {
-  it("yard finds sell for RUB, other things do not", async () => {
+  it("yard finds sell (caps, spinners, flyers for папиросы, the rest for RUB), other things do not", async () => {
     const p = await newPlayer(db);
     await give(db, p, "spinner", 3);
+    const pap = await wallet(db, p, "PAP");
     const r = await act(db, p, "sell", { itemId: "spinner", qty: 2 }, T0);
-    expect(r.result).toMatchObject({ got: 120, left: 1 });
-    expect(await wallet(db, p, "RUB")).toBe(620);
+    expect(r.result).toMatchObject({ got: 120, left: 1, currency: "PAP" });
+    expect(await wallet(db, p, "PAP")).toBe(pap + 120);
+    await give(db, p, "lost-wallet", 1);
+    expect((await act(db, p, "sell", { itemId: "lost-wallet", qty: 1 }, T0)).result).toMatchObject({ got: 150, currency: "RUB" });
     await expect(act(db, p, "sell", { itemId: "spinner", qty: 5 }, T0)).rejects.toMatchObject({ code: "no_item" });
     await expect(act(db, p, "sell", { itemId: "fist" }, T0)).rejects.toMatchObject({ code: "not_sellable" });
   });
@@ -810,7 +813,7 @@ describe("selling, nickname, slot machine 777", () => {
     await expect(act(db, p, "sell_many", { items: [{ itemId: "spinner", qty: 1 }, { itemId: "spinner", qty: 3 }] }, T0)).rejects.toMatchObject({ code: "no_item" });
     expect(await qty(db, p, "spinner")).toBe(3);
     const r = await act(db, p, "sell_many", { items: [{ itemId: "spinner", qty: 2 }] }, T0);
-    expect(r.result).toMatchObject({ got: 120, count: 2 });
+    expect(r.result).toMatchObject({ got: 0, gotPap: 120, count: 2 });
     expect(await qty(db, p, "spinner")).toBe(1);
   });
 

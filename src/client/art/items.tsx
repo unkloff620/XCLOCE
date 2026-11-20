@@ -41,5 +41,6 @@ export function ItemArt({ id, size = 40 }: { id: string; size?: number }) {
     );
   }
   if (id === "coins") return <Icon name="coins" size={size} />;
+  if (id === "PAP") return <Icon name="PAP" size={size} />;
   return <Icon name="chest" size={size} />;
 }
