@@ -9,6 +9,8 @@ from PIL import Image
 from scipy import ndimage
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+# turned before the square: degrees counter-clockwise (the knife — blade up at 45°, the user 2026-11-20)
+ROTATE = {"keyboard": 45}
 OUT = os.path.abspath(os.path.join(HERE, "..", "..", "public", "assets", "items"))
 for name in sys.argv[1:]:
     a = np.asarray(Image.open(os.path.join(HERE, "source", f"{name}.png")).convert("RGB"), dtype=np.float32)
@@ -18,6 +20,9 @@ for name in sys.argv[1:]:
     alpha = np.clip((ndimage.gaussian_filter((~bg).astype(np.float32), 0.8) - 0.15) / 0.7, 0, 1)
     im = Image.fromarray(np.dstack([a, alpha * 255]).astype(np.uint8))
     im = im.crop(im.getbbox())
+    if name in ROTATE:
+        im = im.rotate(ROTATE[name], resample=Image.BICUBIC, expand=True)
+        im = im.crop(im.getbbox())
     side = max(im.size) + 12
     sq = Image.new("RGBA", (side, side), (0, 0, 0, 0))
     sq.alpha_composite(im, ((side - im.width) // 2, (side - im.height) // 2))
