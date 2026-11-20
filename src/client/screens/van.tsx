@@ -7,7 +7,6 @@
  */
 import { useLayoutEffect, useRef, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
-import { RewardChips } from "../ui.tsx";
 import { Icon } from "../art/icons.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { clock, full } from "../format.ts";
@@ -154,18 +153,16 @@ function VanPacks() {
         {(kind === "gold" || kind === "silver") && <i className="van-plaque-rim" aria-hidden="true" />}
         <b className="van-plaque-name display">{p.price ? p.name.replace(/\s+подгон$/i, "") : "Подгон от барыги"}</b>
         <div className={`van-plaque-in ${Object.keys(inside.currencies ?? {}).length + (inside.items ?? []).length + (inside.achPoints ? 1 : 0) > 9 ? "many" : ""}`}>
-          {got ? <RewardChips r={got} size={18} /> : <>
-            {Object.entries(inside.currencies ?? {}).map(([c, n]) => <span key={c}><Icon name={c} size={22} /><b className="num">+{full(n ?? 0)}</b></span>)}
+          {Object.entries(inside.currencies ?? {}).map(([c, n]) => <span key={c}><Icon name={c} size={22} /><b className="num">+{full(n ?? 0)}</b></span>)}
             {!!inside.achPoints && <span><Icon name="case" size={22} /><b className="num">+{inside.achPoints / ACH_BOX_COST}</b></span>}
             {(inside.items ?? []).map((it) => <span key={it.id}><ItemArt id={it.id} size={24} /><b className="num">+{full(it.qty)}</b></span>)}
-          </>}
         </div>
         <b className="van-plaque-price display">{p.price ? <>{full(p.price.amount)} <Icon name={p.price.currency} size={20} /></> : "Бесплатно"}</b>
       </div>
       <div className="van-ctl">
         <button type="button" className="van-arrow" onClick={() => turn(-1)} aria-label="Предыдущая акция"><IcArrow /></button>
-        <button type="button" className="btn gold van-go" disabled={taken || !can || busy === "van_pack"} onClick={take}>
-          {taken ? "Взято до пятницы" : !can ? "Не хватает" : p.price ? "Купить" : "Забрать"}
+        <button type="button" className="btn gold van-go" disabled={taken || !!got || !can || busy === "van_pack"} onClick={take}>
+          {taken || got ? "Получено" : !can ? "Не хватает" : p.price ? "Купить" : "Забрать"}
         </button>
         <button type="button" className="van-arrow" onClick={() => turn(1)} aria-label="Следующая акция"><IcArrow flip /></button>
       </div>
