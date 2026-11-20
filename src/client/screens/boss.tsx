@@ -145,7 +145,7 @@ export function MultPicker({ mult, setMult }: { mult: Mult; setMult: (m: Mult) =
       {open && MULTS.map((m) => (
         <button key={m} className={`btn sm ${m === mult ? "gold" : "dark"}`} onClick={() => { setMult(m); setOpen(false); }}>×{m}</button>
       ))}
-      {open && <span className="tiny muted mult-note">кулак, мышь и свеча — всегда ×1</span>}
+      {open && <span className="tiny muted mult-note">кулак, тычок и пинок — всегда ×1</span>}
     </div>
   );
 }

@@ -2,13 +2,15 @@
 Item sounds: a hit sound per weapon (w-*) and a pick-up sound per yard find (y-*), all synthesized.
   fist — NOT from here since 2026-11-20 — the user's recording tools/sound/source/w-fist-punch.mp3
     (ffmpeg: silenceremove at the start, limiter, a 0.08 s fade → public/assets/sound/w-fist.mp3)
-  mouse — a plastic mouse: whoosh, a hollow plastic knock and a click
+  mouse — the eye poke: NOT from here since 2026-11-20 — the user's recording tools/sound/source/w-mouse-poke.mp3
+    (ffmpeg: from 0.26 s, 0.38 s, a 0.12 s fade → public/assets/sound/w-mouse.mp3)
   keyboard — the knife: NOT from here since 2026-11-20 — the user's recording tools/sound/source/w-keyboard-knife.mp3
     (ffmpeg: silenceremove at the start, highpass 500 Hz ×3 (no bass), +5 dB, limiter, a 0.12 s fade → public/assets/sound/w-keyboard.mp3)
-  red-candle — fire: a «fwoom» of flame with crackles
+  red-candle — the kick: NOT from here since 2026-11-20 — the 2nd hit of the user's recording tools/sound/source/w-red-candle-kick.mp3
+    (ffmpeg: from 1.04 s, 0.5 s, +3 dB, limiter, a 0.12 s fade → public/assets/sound/w-red-candle.mp3)
   gpu — the pistol: NOT from here since 2026-11-20 — the user's recording tools/sound/source/w-gpu-revolver.mp3
     (ffmpeg: silenceremove at the start, the first 0.75 s, +3.5 dB, limiter, a 0.2 s fade → public/assets/sound/w-gpu.mp3)
-  bat — a wooden baseball bat: a heavy whoosh, a hollow wooden crack and a thud
+  bat — NOT from here since 2026-11-20 — the user's recording tools/sound/source/w-bat.mp3 (the first 0.45 s, a 0.12 s fade)
   rug-pull-gun — the gun: NOT from here since 2026-11-20 — the user's recording tools/sound/source/w-rug-pull-gun-m4.mp3, its 2nd shot
     (ffmpeg: -ss 6.47 -t 1.1, silenceremove at the start, +3 dB, limiter, a 0.28 s fade → public/assets/sound/w-rug-pull-gun.mp3)
 Run from an empty folder: python3 tools/sound/build-item-sounds.py → out/*.wav; encode with
@@ -59,10 +61,10 @@ S["w-fist"] = room(mix(0.55,
     (tone(95, 0.35, 0.09, 1.3, 0.4), 0.12),                          # the body thud
     (lp(noise(0.12, 0.03, 0.8), 700), 0.12)), 0.18)
 S["w-mouse"] = room(mix(0.4,
-    (whoosh(0.12, 400, 2500, 0.3), 0.0),
-    (bp(noise(0.06, 0.015, 0.9), 1200, 4500), 0.11),                  # plastic knock
-    (tone(820, 0.12, 0.03, 0.5), 0.11), (tone(1340, 0.08, 0.02, 0.3), 0.11),
-    (hp(noise(0.012, 0.002, 0.7), 4000), 0.16)), 0.15)                # the button clicks
+    (whoosh(0.08, 700, 3600, 0.35), 0.0),                                  # a quick light swish
+    (hp(noise(0.02, 0.004, 0.9), 2500), 0.08),                             # the sharp slap of two fingers
+    (bp(noise(0.06, 0.015, 0.5), 600, 2500), 0.085),                       # a soft squelch
+    (tone(240, 0.08, 0.02, 0.4, 0.7), 0.08)), 0.12)
 # the knife: a fast swish, the blade's thin steel ring, a short stab — a dull wet thump
 blade = metal(0.5, [2350, 3610, 5020, 6880], 0.09, 0.35)
 S["w-keyboard"] = hp(room(mix(0.6,
@@ -76,7 +78,12 @@ fire += tone(70, 0.9, 0.3, 0.5, 0.7)
 crack = np.zeros_like(t)
 for k in range(22):                                                   # crackles
     i = int(rng.uniform(0.05, 0.75)*SR); crack[i:i+60] += (rng.random(60)*2-1)*rng.uniform(0.3, 0.9)*np.exp(-np.arange(60)/12)
-S["w-red-candle"] = room(mix(1.0, (whoosh(0.15, 300, 1800, 0.3), 0.0), (fire + hp(crack, 2000), 0.1)), 0.12)
+CANDLE_FIRE = room(mix(1.0, (whoosh(0.15, 300, 1800, 0.3), 0.0), (fire + hp(crack, 2000), 0.1)), 0.12)  # the old candle — only for the yard pick-up now
+S["w-red-candle"] = room(mix(0.6,
+    (whoosh(0.18, 200, 1300, 0.5), 0.0),                                    # the boot swings
+    (bp(noise(0.03, 0.006, 1.1), 900, 3500), 0.16),                         # the leathery smack
+    (tone(85, 0.35, 0.09, 1.3, 0.45), 0.16),                                # the deep thud
+    (lp(noise(0.12, 0.03, 0.7), 700), 0.16)), 0.18)
 # the pistol (a revolver): the hammer cocked, a sharp crack and blast lighter than the gun's, the barrel's ring, the cylinder clicks round
 rev = mix(1.1,
     (hp(noise(0.012, 0.002, 0.6), 3500), 0.0), (tone(3100, 0.02, 0.004, 0.3), 0.0),       # the hammer cocked
@@ -119,7 +126,7 @@ t = T(0.7); fizz = hp(rng.random(len(t))*2-1, 3500)*np.exp(-t/0.18)*0.55        
 S["y-energy-drink"] = room(mix(0.8, (ping(1900, 0.12, 0.02, 0.35), 0.0), (hp(noise(0.02, 0.004, 0.8), 2500), 0.12), (fizz, 0.13)), 0.1)
 t = T(0.15); flap = lp(rng.random(len(t))*2-1, 1200)*np.exp(-t/0.03)*0.8
 S["y-lost-wallet"] = room(mix(0.6, (flap, 0.0), *[(ping(rng.uniform(2800, 3800), 0.25, 0.05, 0.3), 0.09+k*0.06) for k in range(3)]), 0.12)
-S["y-red-candle"] = S["w-red-candle"][int(0.1*SR):int(0.75*SR)]*0.7
+S["y-red-candle"] = CANDLE_FIRE[int(0.1*SR):int(0.75*SR)]*0.7
 S["y-keyboard"] = mix(0.35, *[(bp(noise(0.02, 0.004, 0.6), 2500, 6000), k*0.05) for k in range(4)], (tone(500, 0.12, 0.03, 0.4), 0.0))
 os.makedirs("out", exist_ok=True)
 for k, x in S.items():

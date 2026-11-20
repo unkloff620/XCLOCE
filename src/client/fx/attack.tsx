@@ -43,30 +43,17 @@ export function useFx(onImpact: (fx: Fx) => void) {
 }
 
 function FxItem({ fx }: { fx: Fx }) {
-  // the bat flies like the fist (its own picture)
+  // the bat, the eye poke (mouse) and the kick (red-candle) fly like the fist, each with its own picture
   const anim0 = weaponById(fx.weapon)?.weapon.animation ?? "fist";
-  const anim = anim0 === "bat" ? "fist" : anim0;
+  const anim = anim0 === "bat" || anim0 === "mouse" || anim0 === "candle" ? "fist" : anim0;
+  const pic = anim0 === "bat" ? "bat" : anim0 === "mouse" ? "mouse" : anim0 === "candle" ? "red-candle" : "fist";
   const style = { ["--lane" as string]: fx.lane } as React.CSSProperties;
   return (
     <div className={`fx fx-${anim} ${fx.mine ? "mine" : "other"}`} style={style}>
       {anim === "fist" && (
         <>
-          <div className="fx-proj"><ItemArt id={anim0 === "bat" ? "bat" : "fist"} size={110} /></div>
+          <div className="fx-proj"><ItemArt id={pic} size={110} /></div>
           <div className="fx-pow" />
-        </>
-      )}
-      {anim === "mouse" && (
-        <>
-          <svg className="fx-cable" viewBox="0 0 200 300" preserveAspectRatio="none">
-            <path d="M100 300 C40 220 160 140 100 40" fill="none" stroke="#e8ebff" strokeWidth="4" strokeDasharray="8 6" />
-          </svg>
-          <div className="fx-proj"><ItemArt id="mouse" size={64} /></div>
-        </>
-      )}
-      {anim === "candle" && (
-        <>
-          <div className="fx-proj"><ItemArt id="red-candle" size={120} /></div>
-          <div className="fx-tag display">−{fx.damage} MC</div>
         </>
       )}
       {anim === "keyboard" && (

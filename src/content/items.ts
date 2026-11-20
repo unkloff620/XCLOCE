@@ -60,16 +60,16 @@ export const WEAPONS: ItemDef[] = [
     weapon: { damage: 12, kind: "permanent", cooldownMin: 300, animation: "fist", action: "Втащить кулаком" },
   },
   {
-    id: "mouse", name: "Мышь", category: "weapon", rarity: "common", maxStack: 1,
-    description: "Перемотана скотчем, провод держится на честном слове. Бесплатная: после броска её надо 5 часов искать под столом, а в новом бою она снова под рукой.",
+    id: "mouse", name: "Тычок в глаза", category: "weapon", rarity: "common", maxStack: 1,
+    description: "Два пальца — и босс ничего не видит. Бесплатный: после тычка пальцы 5 часов отходят, а в новом бою снова наготове.",
     sources: ["Есть у каждого с начала игры"],
-    weapon: { damage: 20, kind: "permanent", cooldownMin: 300, animation: "mouse", action: "Кинуть мышку" },
+    weapon: { damage: 20, kind: "permanent", cooldownMin: 300, animation: "mouse", action: "Ткнуть в глаза" },
   },
   {
-    id: "red-candle", name: "Красная свеча", category: "weapon", rarity: "common", maxStack: 1,
-    description: "Свеча графика, которая падает быстрее, чем ты успеваешь продать. Бесплатная: после удара 5 часов ждёт нового дна, но новый бой начинается с ней наготове.",
+    id: "red-candle", name: "Пинок", category: "weapon", rarity: "common", maxStack: 1,
+    description: "Берцем с разворота. Бесплатный: после пинка нога 5 часов отдыхает, а в новом бою снова готова.",
     sources: ["Есть у каждого с начала игры"],
-    weapon: { damage: 30, kind: "permanent", cooldownMin: 300, animation: "candle", action: "Уронить капу" },
+    weapon: { damage: 30, kind: "permanent", cooldownMin: 300, animation: "candle", action: "Дать пинка" },
   },
   {
     id: "keyboard", name: "Нож", category: "weapon", rarity: "rare", maxStack: 99_999_999,

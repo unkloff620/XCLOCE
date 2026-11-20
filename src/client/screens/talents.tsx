@@ -27,9 +27,9 @@ const effect = (n: TalentStop, lv: number) =>
     : n.kind === "biceps" ? `+${full(lv * n.per)} к бицухе` : n.kind === "energy" ? `+${full(lv * n.per)} к лимиту энергии`
     : n.kind === "bosses" ? `+${full(lv * n.per)} ${lv * n.per === 1 ? "бой" : "боя"} в день с каждым боссом` : `+${full(lv * n.per)} мин к бою с боссом`;
 
-/** what one more level gives, in plain words: «+3 урона к ножу», «+2% к шансу крита мыши», «+1 к бицухе» */
+/** what one more level gives, in plain words: «+3 урона к ножу», «+2% к шансу крита пинка», «+1 к бицухе» */
 const TO_WEAPON: Record<string, [string, string]> = { // [к чему (дательный), чего (родительный)]
-  fist: ["кулаку", "кулака"], mouse: ["мыши", "мыши"], "red-candle": ["красной свече", "красной свечи"], keyboard: ["ножу", "ножа"],
+  fist: ["кулаку", "кулака"], mouse: ["тычку в глаза", "тычка в глаза"], "red-candle": ["пинку", "пинка"], keyboard: ["ножу", "ножа"],
   gpu: ["пистолету", "пистолета"], "rug-pull-gun": ["Rug Pull Gun", "Rug Pull Gun"], bat: ["бите", "биты"],
 };
 function stepText(n: TalentStop) {
@@ -76,7 +76,7 @@ function TalentHelp() {
       <ol className="small">
         {TALENT_BLOCKS.map((b) => <li key={b.id}><b>{b.title}</b></li>)}
       </ol>
-      <p className="small">Сначала — три главных оружия: нож, пистолет и Rug Pull Gun. Потом бицуха и крит кулака, мыши и свечи, их урон и перезарядка, новый удар битой, время боя, энергия и усиление оружия.</p>
+      <p className="small">Сначала — три главных оружия: нож, пистолет и Rug Pull Gun. Потом бицуха и крит кулака, тычка и пинка, их урон и перезарядка, новый удар битой, время боя, энергия и усиление оружия.</p>
       <p className="small">Бицуха — до +{full(TALENT_PATH.filter((x) => x.kind === "biceps").reduce((n, x) => n + x.max * x.per, 0))} (в «Основе» хватит 10, дальше — по желанию), лимит энергии — до +{full(TALENT_PATH.filter((x) => x.kind === "energy").reduce((n, x) => n + x.max * x.per, 0))}, время боя с боссом — до +{full(TALENT_PATH.filter((x) => x.kind === "clock").reduce((n, x) => n + x.max * x.per, 0))} минут. Общий шанс крита — не больше {Math.round(CRIT_CHANCE_CAP * 100)}%.</p>
       <p className="small">Вся дорожка — {full(total)} талантов.</p>
       <p className="small muted">Сброс талантов стоит {TALENT_RESET_PRICE.amount} {TALENT_RESET_PRICE.currency}: все потраченные таланты возвращаются.</p>
@@ -87,7 +87,7 @@ function TalentHelp() {
 /** the picture of a stop (public/assets/talents): a meme scene with the weapon, or the biceps / energy / clock */
 function StopArt({ n, size }: { n: TalentStop; size: number }) {
   // eslint-disable-next-line @next/next/no-img-element
-  return <img className="tb-art" src={`/assets/talents/${talentArt(n)}.webp?v=2`} alt="" width={size} height={size} draggable={false} />;
+  return <img className="tb-art" src={`/assets/talents/${talentArt(n)}.webp?v=3`} alt="" width={size} height={size} draggable={false} />;
 }
 const stopTitle = (n: TalentStop) => (EXTRA_NAMES[n.target] ? n.name : `${itemById(n.target)?.name ?? n.target} · ${n.name}`);
 
