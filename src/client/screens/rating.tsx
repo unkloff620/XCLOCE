@@ -6,7 +6,6 @@ import { api } from "../api.ts";
 import { useGame, useNow } from "../store.tsx";
 import { Avatar, Empty, RewardChips } from "../ui.tsx";
 import { Icon } from "../art/icons.tsx";
-import { Emblem } from "../art/emblems.tsx";
 import { clock, full, short } from "../format.ts";
 import type { Reward } from "../../content/rewards.ts";
 import { haptic } from "../telegram.ts";
@@ -20,8 +19,10 @@ interface Rating {
   prizes: { players: Reward[]; clans: Reward[] };
   damage: PlayerRow[];
   authority: PlayerRow[];
+  /** «Топ 100 по достижениям»: how many achievements taken */
+  achievements?: PlayerRow[];
   clans: ClanRow[];
-  me: { damage: { value: number; place: number } | null; authority: { value: number; place: number } | null };
+  me: { damage: { value: number; place: number } | null; authority: { value: number; place: number } | null; achievements?: { value: number; place: number } | null };
   lastWinners: { id: number; place: number; damage: number; name: string }[];
   games?: {
     boards: Record<GameBoard, { rows: { id: number; name: string; photo: string | null; value: number }[]; me: { value: number; place: number } | null; last: { id: number; name: string; place: number }[] }>;
@@ -29,12 +30,12 @@ interface Rating {
   };
 }
 
-type Tab = "damage" | "authority" | "clans" | "games";
+type Tab = "damage" | "authority" | "ach" | "games";
 /** the paper tabs on the left of the sheet: their picture and the sheet's heading */
 const TABS: { id: Tab; label: string; icon: string; head: string }[] = [
   { id: "damage", label: "Урон недели", icon: "/assets/ui/influence.webp", head: "Недельный топ по урону" },
   { id: "authority", label: "Авторитет", icon: "/assets/ui/authority.webp", head: "Топ по авторитету" },
-  { id: "clans", label: "Кланы", icon: "/assets/ui/clan-all.webp", head: "Топ кланов недели" },
+  { id: "ach", label: "Достижения", icon: "/assets/ui/ach-leader.webp", head: "Топ 100 по достижениям" },
   { id: "games", label: "Игры", icon: "/assets/ui/ach-poker.webp", head: "Топ игр недели" },
 ];
 /* the weekly mini-game boards: their picture (the game tiles of the yard) and what the number means */
@@ -97,12 +98,11 @@ export function RatingBoard({ onClose }: { onClose: () => void }) {
   }, []);
   if (err) return <Empty>{err}</Empty>;
   const me = state?.player.id;
-  const rows = data ? (tab === "damage" ? data.damage : data.authority) : [];
-  const mine = data ? (tab === "damage" ? data.me.damage : tab === "authority" ? data.me.authority : null) : null;
-  const myClan = state?.clan?.id;
+  const rows = data ? (tab === "damage" ? data.damage : tab === "ach" ? data.achievements ?? [] : data.authority) : [];
+  const mine = data ? (tab === "damage" ? data.me.damage : tab === "authority" ? data.me.authority : tab === "ach" ? data.me.achievements ?? null : null) : null;
   const head = TABS.find((t) => t.id === tab)!.head;
   const pick = (t: Tab) => { if (t === tab) return; haptic.tap(); setTab(t); scroll.current?.scrollTo({ top: 0 }); };
-  // «Найти себя»: scroll the list to my row (or my clan's)
+  // «Найти себя»: scroll the list to my row
   const findMe = () => {
     const el = scroll.current?.querySelector<HTMLElement>(".rt-row.me");
     if (!el) return;
@@ -130,7 +130,7 @@ export function RatingBoard({ onClose }: { onClose: () => void }) {
           <div className="rt-scroll" ref={scroll}>
       <MyPrizes />
 
-      {prizesOpen && data && tab !== "authority" && tab !== "games" && (
+      {prizesOpen && data && tab === "damage" && (
         <div className="panel col" style={{ gap: 6 }}>
           {tab === "damage" ? (
             <>
@@ -184,19 +184,6 @@ export function RatingBoard({ onClose }: { onClose: () => void }) {
 
       {tab === "games" ? null : !data ? (
         <div className="muted small center">Загружаем…</div>
-      ) : tab === "clans" ? (
-        data.clans.length ? (
-          <div className="col" style={{ gap: 6 }}>
-            {data.clans.map((c, i) => (
-              <Link key={c.id} href={`/clans/${c.id}`} className={`rt-row ${c.id === myClan ? "me" : ""} ${i < 3 ? `top${i + 1}` : ""}`}>
-                <Place n={i + 1} />
-                <Emblem emblem={c.emblem} color={c.color} size={34} />
-                <span className="rt-name"><b className="ellipsis">{c.name}</b><span className="tiny muted">[{c.tag}] · {c.members} чел.</span></span>
-                <b className="rt-val num">{short(c.value)}</b>
-              </Link>
-            ))}
-          </div>
-        ) : <Empty>Кланов пока нет — создай первый.</Empty>
       ) : rows.length ? (
         <div className="col" style={{ gap: 6 }}>
           {rows.map((r, i) => (
@@ -209,7 +196,7 @@ export function RatingBoard({ onClose }: { onClose: () => void }) {
           ))}
         </div>
       ) : (
-        <Empty>{tab === "damage" ? "На этой неделе ещё никто не бил боссов. Займи первое место!" : "Пока пусто."}</Empty>
+        <Empty>{tab === "damage" ? "На этой неделе ещё никто не бил боссов. Займи первое место!" : tab === "ach" ? "Достижений пока никто не забрал. Будь первым!" : "Пока пусто."}</Empty>
       )}
 
       {mine && !rows.some((r) => r.id === me) && (
@@ -221,8 +208,8 @@ export function RatingBoard({ onClose }: { onClose: () => void }) {
       )}
           </div>
           <div className="rt-foot">
-            {(tab === "damage" || tab === "clans") && data && <button className="btn dark sm rt-prize-btn" onClick={() => { haptic.tap(); setPrizesOpen((v) => !v); scroll.current?.scrollTo({ top: 0, behavior: "smooth" }); }}>{prizesOpen ? "Скрыть" : "Призы"}</button>}
-            {data && tab !== "authority" && <span>Сброс через <b className="num">{untilText(data.week.end - now)}</b></span>}
+            {tab === "damage" && data && <button className="btn dark sm rt-prize-btn" onClick={() => { haptic.tap(); setPrizesOpen((v) => !v); scroll.current?.scrollTo({ top: 0, behavior: "smooth" }); }}>{prizesOpen ? "Скрыть" : "Призы"}</button>}
+            {data && tab !== "authority" && tab !== "ach" && <span>Сброс через <b className="num">{untilText(data.week.end - now)}</b></span>}
           </div>
           {/* on the strip of tape at the bottom left, turned with it */}
           <button className="rt-find display" onClick={findMe}>Найти себя</button>

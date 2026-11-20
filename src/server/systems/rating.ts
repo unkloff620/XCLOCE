@@ -89,6 +89,16 @@ export async function ratingView(q: Queryable, pid: number, cfg: Config, now: nu
      GROUP BY c.id ORDER BY value DESC, c.id LIMIT 30`,
     [week],
   );
+  // «Топ 100 по достижениям»: how many achievements each has taken (all time)
+  const ach = await q.query<Row>(
+    `SELECT p.id, p.display_name, p.photo_url, p.xp, a.n AS value FROM (SELECT player_id, COUNT(*)::int AS n FROM achievements GROUP BY player_id) a
+     JOIN players p ON p.id = a.player_id WHERE p.banned_at IS NULL ORDER BY a.n DESC, p.id LIMIT 100`,
+  );
+  const [myAch] = await q.query<{ value: number; place: number }>(
+    `WITH c AS (SELECT player_id, COUNT(*)::int AS n FROM achievements GROUP BY player_id)
+     SELECT m.n AS value, (SELECT COUNT(*)::int FROM c WHERE c.n > m.n) + 1 AS place FROM c m WHERE m.player_id=$1`,
+    [pid],
+  );
   // my own place even outside the top 50
   const [myDmg] = await q.query<{ value: number; place: number }>(
     `SELECT w.damage AS value, (SELECT COUNT(*)::int FROM weekly_stats o WHERE o.week=$1 AND o.damage > w.damage) + 1 AS place
@@ -99,7 +109,7 @@ export async function ratingView(q: Queryable, pid: number, cfg: Config, now: nu
     "SELECT p.xp AS value, (SELECT COUNT(*)::int FROM players o WHERE o.xp > p.xp) + 1 AS place FROM players p WHERE p.id=$1",
     [pid],
   );
-  const frames = await framesFor(q, [...new Set([...dmg, ...auth].map((r) => r.id))], now);
+  const frames = await framesFor(q, [...new Set([...dmg, ...auth, ...ach].map((r) => r.id))], now);
   const row = (r: Row) => ({ id: r.id, name: r.display_name, photo: r.photo_url, level: levelFromXp(Number(r.xp), cfg.levels).level, value: Number(r.value), frame: frames.get(r.id) ?? null });
   const lastWinners = await q.query<{ player_id: number; place: number; damage: number; display_name: string }>(
     `SELECT r.player_id, r.place, r.damage, p.display_name FROM week_results r JOIN players p ON p.id = r.player_id
@@ -111,10 +121,12 @@ export async function ratingView(q: Queryable, pid: number, cfg: Config, now: nu
     prizes: { players: WEEKLY_PRIZES, clans: CLAN_PRIZES },
     damage: dmg.map(row),
     authority: auth.map(row),
+    achievements: ach.map(row),
     clans: clans.map((c) => ({ ...c, value: Number(c.value) })),
     me: {
       damage: myDmg ? { value: Number(myDmg.value), place: myDmg.place } : null,
       authority: myAuth ? { value: Number(myAuth.value), place: myAuth.place } : null,
+      achievements: myAch ? { value: Number(myAch.value), place: myAch.place } : null,
     },
     lastWinners: lastWinners.map((w) => ({ id: w.player_id, place: w.place, damage: Number(w.damage), name: w.display_name })),
     games: await gameRatingView(q, pid, now),
