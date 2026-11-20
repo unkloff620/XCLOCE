@@ -2445,17 +2445,28 @@ describe("«Крафт»", () => {
 });
 
 describe("Тося", () => {
-  it("a pie holds 5× its price; prices double; with five pies the first is free; he comes and goes", async () => {
-    const { rollPie, rollPieBase, tosyaWorth, tosyaPrice, tosyaVisit, tosyaPies } = await import("../src/content/tosya.ts");
+  it("a pie costs 8 bars and holds only roubles, weapons, tokens and tickets in their ranges; he comes and goes", async () => {
+    const { rollPie, tosyaPrice, tosyaVisit, tosyaPies } = await import("../src/content/tosya.ts");
     let s = 1;
     const rng = () => ((s = (s * 16807) % 2147483647) / 2147483647);
-    for (const usd of [100, 200, 800]) for (let i = 0; i < 20; i++) expect(Math.abs(tosyaWorth(rollPieBase(rng, usd)) - usd)).toBeLessThan(0.6);
-    // every weapon in each pie; roubles ×2, authority ×5, parts ×10 on top
-    const pie = rollPie(rng, 100);
-    for (const w of ["keyboard", "gpu", "rug-pull-gun"]) expect(pie.items!.find((i) => i.id === w)?.qty ?? 0).toBeGreaterThan(0);
-    expect(tosyaWorth(pie)).toBeGreaterThan(100);
-    expect([0, 1, 2, 3].map((b) => tosyaPrice(b, 4))).toEqual([20, 40, 80, 160]);
-    expect([0, 1, 2, 3, 4].map((b) => tosyaPrice(b, 5))).toEqual([0, 20, 40, 80, 160]);
+    for (let i = 0; i < 50; i++) {
+      const pie = rollPie(rng);
+      expect(Object.keys(pie.currencies!).sort()).toEqual(["RUB", "TOKEN"]);
+      expect(pie.currencies!.RUB).toBeGreaterThanOrEqual(90);
+      expect(pie.currencies!.RUB).toBeLessThanOrEqual(150);
+      expect(pie.currencies!.TOKEN).toBeGreaterThanOrEqual(40);
+      expect(pie.currencies!.TOKEN).toBeLessThanOrEqual(50);
+      const t = pie.items!.find((x) => x.id === "fortune-ticket")!.qty;
+      expect(t).toBeGreaterThanOrEqual(5);
+      expect(t).toBeLessThanOrEqual(9);
+      const w = pie.items!.filter((x) => x.id !== "fortune-ticket");
+      for (const x of w) expect(x.qty).toBeGreaterThan(0);
+      const wt = w.reduce((a, x) => a + x.qty, 0);
+      expect(wt).toBeGreaterThanOrEqual(60);
+      expect(wt).toBeLessThanOrEqual(95);
+      expect(pie.xp ?? 0).toBe(0);
+    }
+    expect([0, 1, 2, 3, 4].map((b) => tosyaPrice(b, 5))).toEqual([8, 8, 8, 8, 8]);
     expect(tosyaVisit(T0, { mode: "off", at: 0 })).toBeNull();
     // started by hand: here for 3 hours, a new start is a new visit
     expect(tosyaVisit(T0 + 3600_000, { mode: "run", at: T0 })).toMatchObject({ id: `run-${T0}`, endsAt: T0 + 3 * 3600_000 });
@@ -2471,16 +2482,12 @@ describe("Тося", () => {
     await setMoney(db, p, "GOLD", 1000);
     const r1 = await act(db, p, "tosya_buy", { slot: 0 }, T0);
     const pies = r1.state.tosya!.pies;
-    expect(r1.result.price).toBe(pies === 5 ? 0 : 20);
+    expect(r1.result.price).toBe(8);
     await expect(act(db, p, "tosya_buy", { slot: 0 }, T0)).rejects.toMatchObject({ code: "tosya_taken" });
     const r2 = await act(db, p, "tosya_buy", { slot: 1 }, T0);
-    expect(r2.result.price).toBe(pies === 5 ? 20 : 40);
+    expect(r2.result.price).toBe(8);
     expect(await wallet(db, p, "GOLD")).toBeGreaterThanOrEqual(1000 - r1.result.price - r2.result.price);
     expect(r2.state.tosya!.taken).toBe(3);
-    // every pie holds one of Тося's tattoos, a new one each time
-    const tats = [...r1.result.reward.items, ...r2.result.reward.items].filter((i: { id: string }) => /^tat-(oven|maid|yakuza)-/.test(i.id));
-    expect(tats).toHaveLength(2);
-    expect(tats[0].id).not.toBe(tats[1].id);
     await db.query("DELETE FROM config WHERE key='tosya'");
     resetConfigCache();
   });
