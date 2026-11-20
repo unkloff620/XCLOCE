@@ -120,6 +120,8 @@ export function RewardChips({ r, size = 18, times = true, side = false, extra }:
   const stashN = stash.reduce((t, it) => t + it.qty, 0);
   const partsN = parts.reduce((t, it) => t + it.qty, 0);
   const partsTip = parts.map((it) => `${itemById(it.id)?.name ?? it.id} ×${it.qty}`).join(", ");
+  // the user (2026-11-20): everywhere a reward is shown, its count stands right of the picture
+  if (times) side = true;
   if (side) times = true;
   const sz = times && !side ? Math.max(size, CORNER_MIN) : size;
   const n = (v: string) => <span className="num rc-n">×{v}</span>;
@@ -200,6 +202,8 @@ export function bossItemsCount(boss: { wear?: { items: string[] } }, state: { un
 /** What was gained or will be: pictures with «×N» at their corner (`times`, the default) or «+N» after them. */
 export function GainLine({ r, size = 26, times = true, side = false, extra }: { r: Reward | Granted | null | undefined; size?: number; times?: boolean; side?: boolean; extra?: ReactNode }) {
   if (!r) return null;
+  // the user (2026-11-20): everywhere a reward is shown, its count stands right of the picture
+  if (times) side = true;
   if (side) times = true;
   const sz = times && !side ? Math.max(size, CORNER_MIN) : size;
   const n = (v: string) => (times ? <span className="num rc-n">×{v}</span> : <>+{v}</>);

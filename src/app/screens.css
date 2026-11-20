@@ -7217,3 +7217,8 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
   transform: rotate(-4deg); font: 400 17px/1 var(--font-body), system-ui; color: #2f2a26; box-shadow: 1px 1px 0 rgba(93, 90, 99, 0.35); }
 .bzc-go.btn { width: 100%; max-width: 160px; min-height: 30px; font-size: 13px; gap: 4px; padding: 0 8px; }
 .bzc.max .bzc-go { filter: none; }
+
+/* the case tray (2026-11-20): small pictures, how many — right of them */
+.acx-item .chip { display: inline-flex !important; flex-direction: row !important; align-items: center; gap: 4px; margin: 0 !important; padding: 0 !important; min-width: 0; }
+.acx-item .chip .num, .acx-item .chip .rc-n { position: static !important; margin: 0 !important; font-size: 13px; }
+.acx-loot { gap: 6px 12px; }
