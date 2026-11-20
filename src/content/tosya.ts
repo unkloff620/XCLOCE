@@ -10,6 +10,8 @@ import { OFFERS } from "./shop.ts";
 import { TICKET_ID } from "./fortune.ts";
 
 export const TOSYA_PRICE = 8;
+/** the chance of one of his tattoos in a pie */
+export const TOSYA_TATTOO_CHANCE = 0.5;
 export const TOSYA_HOURS = 3;
 /** the share of Moscow days he comes on, and the hours (МСК) a visit may start at */
 export const TOSYA_DAY_CHANCE = 0.6;
