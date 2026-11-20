@@ -3162,6 +3162,7 @@ export const ASSET_FILES: string[] = [
  "/assets/locations/genesis.webp",
  "/assets/locations/hr-card.webp",
  "/assets/locations/hr.webp",
+ "/assets/locations/map/openspace.webp",
  "/assets/locations/market-card.webp",
  "/assets/locations/market.webp",
  "/assets/locations/mars-card.webp",

@@ -7285,3 +7285,9 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
   100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))); }
 }
 @media (prefers-reduced-motion: reduce) { .lp-drop { animation-duration: 1.2s; } }
+/* a drawn task map (top-down office etc.): the picture under the path; night — the same picture darkened */
+.lp-map.drawn { max-width: 440px; border-radius: 10px; overflow: visible; background: center / 100% 100% no-repeat; box-shadow: 0 3px 0 #3a2718, 0 6px 14px rgba(0, 0, 0, 0.35); }
+.lp-map.drawn::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: transparent; transition: background 0.3s; }
+.loc-page.night .lp-map.drawn::before { background: rgba(10, 8, 40, 0.55); }
+.lp-map.drawn .lp-name { color: rgba(255, 246, 230, 0.85); border-color: rgba(255, 246, 230, 0.4); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9); }
+.loc-page.night .lp-map.drawn .lp-name { color: rgba(220, 214, 255, 0.85); border-color: rgba(220, 214, 255, 0.4); }

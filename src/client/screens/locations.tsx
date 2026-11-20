@@ -307,6 +307,14 @@ const STOPS = [
 ];
 const MAP_W = 360;
 const MAP_H = 440;
+/** the drawn task maps (public/assets/locations/map/<id>.webp, 2:3, tools/locations/build-maps.py): where the stops stand on each */
+const LOC_MAPS: Record<string, { stops: { x: number; y: number }[] }> = {
+  openspace: { stops: [{ x: 40, y: 88 }, { x: 57, y: 70 }, { x: 38, y: 52 }, { x: 57, y: 33 }, { x: 42, y: 13 }] },
+};
+const mapOf = (id: string) => {
+  const m = LOC_MAPS[id];
+  return m ? { w: 360, h: 540, stops: m.stops, img: `/assets/locations/map/${id}.webp` } : { w: MAP_W, h: MAP_H, stops: STOPS, img: null };
+};
 
 /** a stash picture for every task: the location's own stashes (locations without sets borrow from the whole pool);
  *  the night road takes other stashes, never the ones of the day road */
@@ -323,8 +331,8 @@ function stopIcons(locationId: string, order: number, n: number, mode: LocMode =
 }
 
 /** the path between two stops: across, then up (like the drawn map) */
-function legPath(a: { x: number; y: number }, b: { x: number; y: number }) {
-  const ax = (a.x / 100) * MAP_W, ay = (a.y / 100) * MAP_H, bx = (b.x / 100) * MAP_W, by = (b.y / 100) * MAP_H;
+function legPath(a: { x: number; y: number }, b: { x: number; y: number }, W = MAP_W, H = MAP_H) {
+  const ax = (a.x / 100) * W, ay = (a.y / 100) * H, bx = (b.x / 100) * W, by = (b.y / 100) * H;
   return `M${ax} ${ay} H${bx} V${by}`;
 }
 
@@ -357,7 +365,8 @@ export function LocationScreen({ id }: { id: string }) {
   const current = tasks.find((x) => x.open && !x.done) ?? null;
   const sel = tasks.find((x) => x.t.id === pick) ?? current ?? tasks[tasks.length - 1];
   const icons = stopIcons(loc.id, loc.order, list.length, mode);
-  const stops = STOPS.slice(0, list.length);
+  const map = mapOf(loc.id);
+  const stops = map.stops.slice(0, list.length);
 
   const step = async (x: (typeof tasks)[number]) => {
     if (busy === "task") return;
@@ -455,14 +464,14 @@ export function LocationScreen({ id }: { id: string }) {
         row ? <BizPanel b={row.business} onDone={() => void load()} /> : null
       ) : (
         <>
-          <div className="lp-map" style={{ aspectRatio: `${MAP_W} / ${MAP_H}` }}>
-            <svg className="lp-path" viewBox={`0 0 ${MAP_W} ${MAP_H}`} aria-hidden="true">
+          <div className={`lp-map ${map.img ? "drawn" : ""}`} style={{ aspectRatio: `${map.w} / ${map.h}`, ...(map.img ? { backgroundImage: `url(${map.img})` } : {}) }}>
+            <svg className="lp-path" viewBox={`0 0 ${map.w} ${map.h}`} aria-hidden="true">
               {stops.slice(1).map((b, k) => {
                 const a = stops[k];
                 const from = tasks[k];
                 // the leg after a stop fills with that stop's steps; legs after done stops are full
                 const fill = from.done ? 1 : from.open ? from.steps / from.t.steps : 0;
-                const d = legPath(a, b);
+                const d = legPath(a, b, map.w, map.h);
                 return (
                   <g key={k}>
                     <path d={d} className="lp-edge" />
