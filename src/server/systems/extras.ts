@@ -1,6 +1,6 @@
 import { GameError, type Queryable } from "../db.ts";
 import { addMoney, grantReward, takeItem, takeMoney, weighted, type Ctx } from "../core.ts";
-import { itemById } from "../../content/items.ts";
+import { itemById, sellCurrency } from "../../content/items.ts";
 import { NICK_RE, RENAME } from "../../content/profile.ts";
 import { SLOT_OUTCOMES, SLOT_SYMBOLS, slotLevel, slotLevelReward, slotXpOf, type SlotOutcome, type SlotSymbol } from "../../content/slots.ts";
 import type { Config } from "../config.ts";
@@ -14,8 +14,9 @@ export async function sellItem(ctx: Ctx, itemId: string, qty: number) {
   if (!def || !price || def.weapon) throw new GameError("not_sellable", "Это нельзя продать");
   if (!Number.isInteger(qty) || qty < 1 || qty > 9999) throw new GameError("bad_qty", "Некорректное количество");
   const left = await takeItem(ctx, def.id, qty, "sell");
-  const got = await addMoney(ctx, "RUB", price * qty, `sell:${def.id}`);
-  return { itemId: def.id, qty, got, left };
+  const currency = sellCurrency(def.id);
+  const got = await addMoney(ctx, currency, price * qty, `sell:${def.id}`);
+  return { itemId: def.id, qty, got, currency, left };
 }
 
 // ---------------- nickname ----------------

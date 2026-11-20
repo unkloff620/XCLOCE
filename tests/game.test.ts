@@ -560,16 +560,16 @@ describe("shop and exchange", () => {
     await expect(act(db, p, "exchange", { from: "RUB", to: "PAP", amount: 100 }, open)).rejects.toMatchObject({ code: "bad_request" });
     await expect(act(db, p, "exchange", { from: "PAP", to: "GOLD", amount: 100 }, open)).rejects.toMatchObject({ code: "bad_request" });
   });
-  it("craft: a missing part is bought for dollars, 5 $ a common one, twice as much a rarity up", async () => {
+  it("craft: a missing part is bought for метро tokens, 8 a part", async () => {
     const p = await newPlayer(db);
     await setMoney(db, p, "TOKEN", 100);
     await expect(act(db, p, "part_buy", { itemId: "craft-flamethrower", qty: 1 }, T0)).rejects.toMatchObject({ code: "bad_item" });
     const { CRAFT_PARTS } = await import("../src/content/craft.ts");
     const common = CRAFT_PARTS.find((x) => x.rarity === "common")!, epic = CRAFT_PARTS.find((x) => x.rarity === "epic")!;
     const r = await act(db, p, "part_buy", { itemId: common.id, qty: 3 }, T0);
-    expect(r.result).toMatchObject({ qty: 3, paid: 15 });
+    expect(r.result).toMatchObject({ qty: 3, paid: 24 });
     await act(db, p, "part_buy", { itemId: epic.id, qty: 1 }, T0);
-    expect(await wallet(db, p, "TOKEN")).toBe(65);
+    expect(await wallet(db, p, "TOKEN")).toBe(100 - 32);
     expect(await qty(db, p, common.id)).toBe(3);
   });
   it("a good talk with the dealer may give a better rate for 2 hours; once a day, only while the exchange works", async () => {
@@ -1963,11 +1963,11 @@ describe("нычки", () => {
     await expect(act(db, p, "stash_collect", { set: "stash-set-1" }, T0)).rejects.toMatchObject({ code: "set_incomplete" });
     expect(await qty(db, p, "stash-sneaker")).toBe(2); // nothing taken on a refusal
     for (const id of ["stash-cigs", "stash-noodles", "stash-can"]) await give(db, p, id, 1);
-    const rub = await wallet(db, p, "RUB");
+    const rub = await wallet(db, p, "PAP");
     const c = await act(db, p, "stash_collect", { set: "stash-set-1" }, T0);
     expect(c.result.count).toBe(1);
     expect(c.state.stashSets).toEqual({ 1: 1 });
-    expect(await wallet(db, p, "RUB")).toBe(rub + 100);
+    expect(await wallet(db, p, "PAP")).toBe(rub + 100); // a set pays папиросы
     expect([await qty(db, p, "stash-sneaker"), await qty(db, p, "stash-cigs")]).toEqual([1, 0]);
     // medals: bronze at 10 sets
     await expect(act(db, p, "achievement_claim", { id: "stashset-1-1" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
@@ -2417,15 +2417,18 @@ describe("«Крафт»", () => {
 
   it("the dealer sells today's parts (a few of each), takes them back; a thing is taken apart; parts are asked for and sent ×5", async () => {
     const p = await newPlayer(db);
-    await setMoney(db, p, "RUB", 10000);
+    await setMoney(db, p, "TOKEN", 10000);
     const { dealerParts } = await import("../src/content/craft-drops.ts");
     const { moscowDay } = await import("../src/server/core.ts");
     const id = dealerParts(moscowDay(T0))[0];
     const b = await act(db, p, "dealer_buy", { itemId: id, qty: 9 }, T0);
-    expect(b.result).toMatchObject({ itemId: id, qty: 5, paid: 750 });
+    expect(b.result).toMatchObject({ itemId: id, qty: 5, paid: 40 }); // 8 tokens a part
+    expect(await wallet(db, p, "TOKEN")).toBe(10000 - 40);
+    const pap = await wallet(db, p, "PAP");
     await expect(act(db, p, "dealer_buy", { itemId: id }, T0)).rejects.toMatchObject({ code: "sold_out" });
     const sold = await act(db, p, "sell", { itemId: id, qty: 5 }, T0);
-    expect(sold.result.got).toBe(250);
+    expect(sold.result).toMatchObject({ got: 250, currency: "PAP" }); // parts go for папиросы
+    expect(await wallet(db, p, "PAP")).toBe(pap + 250);
     for (const pid of ["part-board", "part-nails", "part-scotch", "part-rope", "part-sandpaper"]) await give(db, p, pid, 5);
     await act(db, p, "craft_make", { itemId: "craft-nail-bat" }, T0);
     const sp = await act(db, p, "craft_split", { itemId: "craft-nail-bat" }, T0, always(0.5));

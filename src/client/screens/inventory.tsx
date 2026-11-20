@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useGame } from "../store.tsx";
-import { CATEGORY_NAME, itemById, RARITY_NAME, type Category, type ItemDef } from "../../content/items.ts";
+import { CATEGORY_NAME, itemById, RARITY_NAME, type Category, type ItemDef, sellCurrency } from "../../content/items.ts";
 import { ItemArt } from "../art/items.tsx";
 import { Coin, Empty, Modal } from "../ui.tsx";
 import { haptic } from "../telegram.ts";
@@ -13,14 +13,16 @@ import { TalentNext, TalentWindow } from "./talents.tsx";
 const CATS: (Category | "all")[] = ["all", "weapon", "clothing", "item", "reward", "stash", "event"];
 const CAT_LABEL = { all: "Всё", ...CATEGORY_NAME };
 
-/** Selling yard finds back for RUB. */
+/** Selling yard finds back for RUB (craft parts — for папиросы). */
 function SellBox({ id, have, price }: { id: string; have: number; price: number }) {
   const { act, busy } = useGame();
   const [n, setN] = useState(1);
   const qty = Math.max(1, Math.min(n, have));
+  // the parts go for папиросы, the rest for roubles
+  const cur = sellCurrency(id);
   if (have < 1) return null;
   const sell = async () => {
-    const r = await act<{ got: number }>("sell", { itemId: id, qty }, (x) => `Продано за ${x.got} ₽`);
+    const r = await act<{ got: number; currency: string }>("sell", { itemId: id, qty }, (x) => `Продано за ${x.got} ${x.currency === "PAP" ? "папирос" : "₽"}`);
     if (r) {
       haptic.ok();
       setN(1);
@@ -29,8 +31,8 @@ function SellBox({ id, have, price }: { id: string; have: number; price: number 
   return (
     <div className="sell-box">
       <div className="row" style={{ justifyContent: "space-between" }}>
-        <span className="small muted">Продать · {price} ₽ за шт.</span>
-        <b><Coin c="RUB" v={price * qty} /></b>
+        <span className="small muted">Продать · {price} {cur === "PAP" ? "папирос" : "₽"} за шт.</span>
+        <b><Coin c={cur} v={price * qty} /></b>
       </div>
       <div className="row">
         <button className="btn sm dark" onClick={() => setN(Math.max(1, qty - 1))} disabled={qty <= 1}>−</button>

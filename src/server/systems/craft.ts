@@ -6,7 +6,7 @@
  */
 import { GameError, type Queryable } from "../db.ts";
 import { addItem, ledger, moscowDay, takeItem, takeMoney, type Ctx } from "../core.ts";
-import { DEALER_STOCK, PART_BUY, dealerParts, PART_USD } from "../../content/craft-drops.ts";
+import { DEALER_STOCK, PART_TOKEN, dealerParts } from "../../content/craft-drops.ts";
 import { CRAFT_BOXES, CRAFT_BOX_PRICES, CRAFT_BOX_TALENTS, craftBonusOf, craftById, craftBoxesOpen } from "../../content/craft.ts";
 import { talentsForDamage } from "../../content/talents.ts";
 import { syncTalentExtras } from "./home.ts";
@@ -86,20 +86,20 @@ export async function craftBoxBuy(ctx: Ctx) {
   return { slot: bought, price, open: Number(r.craft_boxes) };
 }
 
-/** the dealer in the garage today: DEALER_OFFERS parts, DEALER_STOCK of each for every player, at PART_BUY prices */
+/** the dealer in the garage today: DEALER_OFFERS parts, DEALER_STOCK of each for every player, PART_TOKEN tokens a part */
 export async function dealerView(q: Queryable, pid: number, now: number) {
   const day = moscowDay(now);
   const ids = dealerParts(day);
   const rows = await q.query<{ key: string; n: number }>("SELECT key, SUM(delta)::int AS n FROM ledger WHERE player_id=$1 AND kind='item' AND reason=$2 GROUP BY key", [pid, `dealer:${day}`]);
   const bought = new Map(rows.map((r) => [r.key, Number(r.n)]));
-  return ids.map((id) => ({ id, price: PART_BUY[craftById(id)?.rarity ?? "common"] ?? 150, left: Math.max(0, DEALER_STOCK - (bought.get(id) ?? 0)) }));
+  return ids.map((id) => ({ id, price: PART_TOKEN, currency: "TOKEN" as const, left: Math.max(0, DEALER_STOCK - (bought.get(id) ?? 0)) }));
 }
-/** «Купить» in the scheme: the missing parts of a recipe for dollars (PART_USD by rarity) */
+/** «Купить» in the scheme: the missing parts of a recipe for метро tokens (PART_TOKEN a part) */
 export async function partBuy(ctx: Ctx, itemId: string, want: number) {
   const def = craftById(itemId);
   if (!def || def.level !== 0) throw new GameError("bad_item", "Купить можно только детали");
   if (!Number.isInteger(want) || want < 1 || want > 100) throw new GameError("bad_qty", "Некорректное количество");
-  const price = PART_USD[def.rarity] ?? PART_USD.common;
+  const price = PART_TOKEN;
   await takeMoney(ctx, "TOKEN", price * want, `part-buy:${def.id}`);
   const got = await addItem(ctx, def.id, want, "part-buy");
   return { itemId: def.id, qty: got, paid: price * want };
@@ -110,7 +110,7 @@ export async function dealerBuy(ctx: Ctx, itemId: string, want: number) {
   if (!offer) throw new GameError("not_sold", "Сегодня барыга этим не торгует");
   const qty = Math.max(1, Math.min(offer.left, Math.floor(want)));
   if (offer.left < 1) throw new GameError("sold_out", "На сегодня кончилось — завтра будет другое");
-  await takeMoney(ctx, "RUB", offer.price * qty, `dealer:${itemId}`);
+  await takeMoney(ctx, "TOKEN", offer.price * qty, `dealer:${itemId}`);
   const got = await addItem(ctx, itemId, qty, `dealer:${moscowDay(ctx.now)}`);
   return { itemId, qty: got, paid: offer.price * qty };
 }

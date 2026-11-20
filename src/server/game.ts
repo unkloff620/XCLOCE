@@ -357,11 +357,12 @@ async function sellMany(ctx: Ctx, body: Record<string, unknown>) {
   }
   const uids = [...new Set((Array.isArray(body.uids) ? body.uids : []).slice(0, 50).map((u) => num(u, "uid")))];
   if (!want.size && !uids.length) throw new GameError("nothing", "Ничего не выбрано");
-  let got = 0;
+  let got = 0, gotPap = 0;
   let count = 0;
-  for (const [id, qty] of want) { const r = await extras.sellItem(ctx, id, qty); got += Number(r.got) || 0; count += qty; }
+  // the parts go for папиросы, the rest for roubles
+  for (const [id, qty] of want) { const r = await extras.sellItem(ctx, id, qty); if (r.currency === "PAP") gotPap += Number(r.got) || 0; else got += Number(r.got) || 0; count += qty; }
   for (const uid of uids) { const r = await games.sellUpgraded(ctx, uid); got += Number(r.got) || 0; count += 1; }
-  return { got, count };
+  return { got, gotPap, count };
 }
 
 /** the fight panel's six weapon cells, cleaned up and kept */

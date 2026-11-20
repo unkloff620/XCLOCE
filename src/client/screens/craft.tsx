@@ -22,7 +22,7 @@ import { BicepsArt } from "./profile.tsx";
 import { StashWishWindow } from "./stash-swap.tsx";
 import { CRAFT_ALL, CRAFT_BLOCK_BONUS, CRAFT_BOXES, CRAFT_BOX_PRICES, CRAFT_BOX_TALENTS, CRAFT_LEVEL_NAME, craftBonusOf, craftById, craftBoxesOpen, type CraftBonus, type CraftDef } from "../../content/craft.ts";
 import { talentsForDamage } from "../../content/talents.ts";
-import { PART_USD } from "../../content/craft-drops.ts";
+import { PART_TOKEN } from "../../content/craft-drops.ts";
 
 type Filter = "all" | "mine" | 0 | 1 | 2 | 3;
 
@@ -324,7 +324,7 @@ function Scheme({ d, qty, busy, onMake, onOpen, onClose, onSplit, back, onBack }
                     {sub && sub.level === 0 && (() => {
                       const need = h < r.qty;
                       const n = need ? (bulk ? r.qty - h : 1) : 1;
-                      const cost = n * (PART_USD[sub.rarity] ?? PART_USD.common);
+                      const cost = n * PART_TOKEN;
                       return (
                         <span className={`cf-buy-row ${need ? "" : "idle"}`}>
                           <button type="button" className="bb-buy cf-buy" disabled={!need || busy || usd < cost} onClick={() => void buy(r.id, n)} title={`Купить ${n} шт. за ${cost} жетонов`}>купить{n > 1 ? ` ×${n}` : ""}</button>

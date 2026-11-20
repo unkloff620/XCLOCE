@@ -89,10 +89,11 @@ export function rollParts(rng: Rng, n: number, opts: { rare?: number; epic?: num
 /** one part of a given rarity */
 export const onePart = (rng: Rng, rarity: Rarity) => pick(PARTS_BY_RARITY[rarity === "epic" ? "epic" : rarity === "rare" ? "rare" : "common"], rng);
 
-/** the dealer: sell prices (₽ a part he pays) and his own prices; every day he has DEALER_OFFERS parts, DEALER_STOCK of each */
+/** the dealer: sell prices (what a part fetches — папиросы, items.ts sellCurrency) and his own prices; every day he has DEALER_OFFERS parts, DEALER_STOCK of each */
 export const PART_SELL: Record<string, number> = { common: 50, rare: 130, epic: 400 };
-export const PART_BUY: Record<string, number> = { common: 150, rare: 400 };
-/** a missing part bought right in the scheme, for dollars: common 5 $, then twice as much a rarity up */
+/** buying a part — from the dealer or right in the scheme — only for метро tokens: 8 a part (the user 2026-11-20) */
+export const PART_TOKEN = 8;
+/** a part's worth in Тося's gift budget (content/tosya.ts): common 5, then twice as much a rarity up */
 export const PART_USD: Record<string, number> = { common: 5, rare: 10, epic: 20 };
 export const DEALER_OFFERS = 4;
 export const DEALER_STOCK = 5;

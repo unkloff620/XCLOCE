@@ -21,18 +21,19 @@ export const STASH_MISSING_WEIGHT = 3;
 /** the chance of a step (the same for every step; the energy argument is kept for the callers) */
 export const stashChance = (_energy?: number) => STASH_CHANCE;
 
+/** a whole set's reward: only папиросы, and the authority cut ten times (the user 2026-11-20) */
 const LOC_REWARD: Record<string, Reward> = {
-  openspace: { currencies: { RUB: 100 }, xp: 1_000 },
-  market: { currencies: { RUB: 300 }, xp: 2_000 },
-  serverroom: { currencies: { RUB: 500 }, xp: 3_000 },
-  basement: { currencies: { RUB: 750 }, xp: 4_000 },
-  board: { currencies: { RUB: 1000 }, xp: 5_000 },
-  accounting: { currencies: { RUB: 1250 }, xp: 6_000 },
-  hr: { currencies: { RUB: 1500 }, xp: 7_000 },
-  party: { currencies: { RUB: 1750 }, xp: 8_000 },
-  offshore: { currencies: { RUB: 2000 }, xp: 9_000 },
-  yacht: { currencies: { RUB: 2500 }, xp: 10_000 },
-  moonbase: { currencies: { RUB: 3000 }, xp: 12_000 },
+  openspace: { currencies: { PAP: 100 }, xp: 100 },
+  market: { currencies: { PAP: 300 }, xp: 200 },
+  serverroom: { currencies: { PAP: 500 }, xp: 300 },
+  basement: { currencies: { PAP: 750 }, xp: 400 },
+  board: { currencies: { PAP: 1000 }, xp: 500 },
+  accounting: { currencies: { PAP: 1250 }, xp: 600 },
+  hr: { currencies: { PAP: 1500 }, xp: 700 },
+  party: { currencies: { PAP: 1750 }, xp: 800 },
+  offshore: { currencies: { PAP: 2000 }, xp: 900 },
+  yacht: { currencies: { PAP: 2500 }, xp: 1_000 },
+  moonbase: { currencies: { PAP: 3000 }, xp: 1_200 },
 };
 /** the order of the locations (rarity and medal of their sets grow with it) */
 export const STASH_LOCATIONS = ["openspace", "market", "serverroom", "basement", "board", "accounting", "hr", "party", "offshore", "yacht", "moonbase"] as const;

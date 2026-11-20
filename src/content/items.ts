@@ -262,6 +262,8 @@ export const CATEGORY_NAME: Record<Category, string> = { weapon: "Оружие",
 
 /** The yard finds the dealer buys for RUB (about half of the shop price). Overridable via config "sell".
  * Weapons (a keyboard from the yard) are not bought here — only an upgraded ★ one, in «Скупка» or the upgrader. */
+/** what a thing sells for at «Скупка»: craft parts — only for папиросы (the user 2026-11-20), the rest for roubles */
+export const sellCurrency = (id: string): "PAP" | "RUB" => (id.startsWith("part-") ? "PAP" : "RUB");
 export const SELL_PRICES: Record<string, number> = {
   "bottle-cap": 15,
   "flyer-passive": 25,

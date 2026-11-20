@@ -5,12 +5,12 @@ import { useGame } from "../store.tsx";
 import { api } from "../api.ts";
 import { CURRENCY_DEFS, EXCHANGEABLE, EXCHANGE_FROM, EXCHANGE_TO, exchangeScheduleText, exchangeWindow, floorTo, type Currency } from "../../content/currencies.ts";
 import { Icon } from "../art/icons.tsx";
-import { clock, money } from "../format.ts";
+import { clock, full, money } from "../format.ts";
 import { haptic } from "../telegram.ts";
 import type { ShopData } from "./shop.tsx";
 import { Help, HelpList } from "../help.tsx";
 import { ItemArt } from "../art/items.tsx";
-import { itemById } from "../../content/items.ts";
+import { itemById, sellCurrency } from "../../content/items.ts";
 import { sfx } from "../sound.ts";
 import { Modal } from "../ui.tsx";
 import { KioskDealer } from "../art/kiosk.tsx";
@@ -184,7 +184,7 @@ export function BuyBack() {
   const ups = state.upgraded ?? [];
   const dealer = state.dealer ?? [];
   const buyPart = async (id: string) => {
-    const r = await act<{ qty: number; paid: number }>("dealer_buy", { itemId: id, qty: 1 }, (x) => `Куплено: ${itemById(id)?.name} · −${money("RUB", x.paid)} ₽`);
+    const r = await act<{ qty: number; paid: number }>("dealer_buy", { itemId: id, qty: 1 }, (x) => `Куплено: ${itemById(id)?.name} · −${x.paid} жетонов`);
     if (r) { haptic.ok(); sfx("coinsoft"); }
   };
   const finds = rows.filter((r) => !r.id.startsWith("part-"));
@@ -193,10 +193,12 @@ export function BuyBack() {
   // what is picked, clamped to what the player still has
   const items = rows.map((r) => ({ itemId: r.id, qty: Math.min(r.qty, pick[r.id] ?? 0), price: r.price })).filter((x) => x.qty > 0);
   const uids = ups.filter((u) => (pick[`u${u.uid}`] ?? 0) > 0);
-  const total = items.reduce((t, x) => t + x.qty * x.price, 0) + uids.reduce((t, u) => t + u.value, 0);
+  // the parts go for папиросы, the finds and ★ things for roubles
+  const total = items.filter((x) => sellCurrency(x.itemId) === "RUB").reduce((t, x) => t + x.qty * x.price, 0) + uids.reduce((t, u) => t + u.value, 0);
+  const totalPap = items.filter((x) => sellCurrency(x.itemId) === "PAP").reduce((t, x) => t + x.qty * x.price, 0);
   const picked = (ids: string[]) => ids.reduce((t, id) => t + (pick[id] ?? 0), 0);
   const sellAll = async () => {
-    const r = await act<{ got: number; count: number }>("sell_many", { items: items.map(({ itemId, qty }) => ({ itemId, qty })), uids: uids.map((u) => u.uid) }, (x) => `Продано ${x.count} шт. за ${money("RUB", x.got)} ₽`);
+    const r = await act<{ got: number; gotPap: number; count: number }>("sell_many", { items: items.map(({ itemId, qty }) => ({ itemId, qty })), uids: uids.map((u) => u.uid) }, (x) => `Продано ${x.count} шт.${x.got ? ` · +${money("RUB", x.got)} ₽` : ""}${x.gotPap ? ` · +${full(x.gotPap)} папирос` : ""}`);
     if (r) { haptic.ok(); sfx("coin"); setPick({}); }
   };
   const stepper = (key: string, max: number) => {
@@ -235,8 +237,8 @@ export function BuyBack() {
                       {out && <i className="bb-offer-stamp">куплено</i>}
                     </span>
                     <span className="tiny ellipsis">{itemById(o.id)?.name}</span>
-                    <b className="num small">{money("RUB", o.price)} ₽</b>
-                    <button type="button" className="bb-buy" disabled={!!busy || out || (state.wallet.RUB ?? 0) < o.price} onClick={() => buyPart(o.id)}>купить</button>
+                    <b className="num small bb-price">{o.price} <Icon name="TOKEN" size={14} /></b>
+                    <button type="button" className="bb-buy" disabled={!!busy || out || (state.wallet.TOKEN ?? 0) < o.price} onClick={() => buyPart(o.id)}>купить</button>
                   </div>
                 );
               })}
@@ -248,8 +250,8 @@ export function BuyBack() {
             {tabBtn("finds", "Находки", picked([...finds.map((r) => r.id), ...ups.map((u) => `u${u.uid}`)]))}
             {tabBtn("parts", "Детали", picked(parts.map((r) => r.id)))}
           </div>
-          <b className={`bb-total num ${total > 0 ? "on" : ""}`}>+{money("RUB", total)} ₽</b>
-          <button type="button" className="btn sm gold bb-sell" disabled={!!busy || total <= 0} onClick={sellAll}>Продать</button>
+          <b className={`bb-total num ${total + totalPap > 0 ? "on" : ""}`}>{tab === "parts" ? <>+{full(totalPap)} <Icon name="PAP" size={16} /></> : <>+{money("RUB", total)} ₽</>}</b>
+          <button type="button" className="btn sm gold bb-sell" disabled={!!busy || total + totalPap <= 0} onClick={sellAll}>Продать</button>
         </div>
       </div>
       <div className="bb-list">
@@ -258,7 +260,7 @@ export function BuyBack() {
             <ItemArt id={r.id} size={36} />
             <span className="grow col" style={{ minWidth: 0 }}>
               <b className="small ellipsis">{r.def!.name}</b>
-              <span className="tiny bb-sub num">есть <b className={(pick[r.id] ?? 0) > 0 ? "bb-left" : undefined}>{r.qty - Math.min(r.qty, pick[r.id] ?? 0)}</b> · {money("RUB", r.price)} ₽ за шт.</span>
+              <span className="tiny bb-sub num">есть <b className={(pick[r.id] ?? 0) > 0 ? "bb-left" : undefined}>{r.qty - Math.min(r.qty, pick[r.id] ?? 0)}</b> · {sellCurrency(r.id) === "PAP" ? <>{full(r.price)} <Icon name="PAP" size={12} /></> : <>{money("RUB", r.price)} ₽</>} за шт.</span>
             </span>
             {stepper(r.id, r.qty)}
           </div>
