@@ -17,6 +17,8 @@ export interface LocationDef {
   id: string;
   order: number;
   name: string;
+  /** the short name on the list's plank (its tab fits ~11 letters) — the user's list (2026-11-20) */
+  short: string;
   subtitle: string;
   /** vector scene id (client/art/scenes) */
   scene: "openspace" | "market" | "serverroom" | "basement" | "board" | "accounting" | "hr" | "party" | "offshore" | "yacht" | "moonbase" | "mars" | "orbit" | "sunfarm" | "genesis";
@@ -39,7 +41,7 @@ const t = (id: string, title: string, flavor: string, energy: number, steps: num
 
 const DAY: Omit<LocationDef, "night">[] = [
   {
-    id: "openspace", order: 1, name: "Опенспейс", subtitle: "Здесь начинается карьера и заканчивается кофе", scene: "openspace",
+    id: "openspace", order: 1, name: "Опенспейс", short: "Опенспейс", subtitle: "Здесь начинается карьера и заканчивается кофе", scene: "openspace",
     tasks: [
       t("os-standup", "Пережить планёрку", "Кивать в нужных местах — тоже навык.", 4, 5, 12),
       t("os-coffee", "Добыть кофе из автомата", "Автомат принимает только монеты 2009 года.", 5, 5, 12),
@@ -50,7 +52,7 @@ const DAY: Omit<LocationDef, "night">[] = [
     reward: { currencies: { PAP: 300 }, xp: 1_000, items: [{ id: "keyboard", qty: 5 }, { id: "tee-pump", qty: 1 }] },
   },
   {
-    id: "market", order: 2, name: "Крипто-рынок", subtitle: "Купи на хаях, продай на лоях", scene: "market",
+    id: "market", order: 2, name: "Крипто-рынок", short: "Рынок", subtitle: "Купи на хаях, продай на лоях", scene: "market",
     tasks: [
       t("mk-enter", "Зайти на рынок", "Главное — не смотреть на график.", 6, 6, 13),
       t("mk-shill", "Послушать шиллера", "Этот токен точно сделает иксы. Наверное.", 6, 6, 13),
@@ -61,7 +63,7 @@ const DAY: Omit<LocationDef, "night">[] = [
     reward: { currencies: { PAP: 500 }, xp: 3_000, items: [{ id: "keyboard", qty: 5 }, { id: "shorts-remote", qty: 1 }, { id: "cap-moon", qty: 1 }] },
   },
   {
-    id: "serverroom", order: 3, name: "Серверная", subtitle: "Тепло, шумно и всё мигает", scene: "serverroom",
+    id: "serverroom", order: 3, name: "Серверная", short: "Серверная", subtitle: "Тепло, шумно и всё мигает", scene: "serverroom",
     tasks: [
       t("sr-cable", "Найти нужный кабель", "Их 400, и все одинаковые.", 7, 7, 14),
       t("sr-reboot", "Перезагрузить прод в пятницу", "Что может пойти не так?", 8, 7, 14),
@@ -72,7 +74,7 @@ const DAY: Omit<LocationDef, "night">[] = [
     reward: { currencies: { PAP: 800 }, xp: 8_000, items: [{ id: "gpu", qty: 2 }, { id: "slippers", qty: 1 }, { id: "gold-chain", qty: 1 }] },
   },
   {
-    id: "basement", order: 4, name: "Майнинг-подвал", subtitle: "Здесь греются видеокарты и надежды", scene: "basement",
+    id: "basement", order: 4, name: "Майнинг-подвал", short: "Подвал", subtitle: "Здесь греются видеокарты и надежды", scene: "basement",
     tasks: [
       t("bs-fan", "Остудить ферму вентилятором", "Восемь карт, один вентилятор, никакой надежды.", 8, 8, 15),
       t("bs-pool", "Подключиться к пулу", "Пул тебя тоже не ждал.", 10, 8, 15),
@@ -83,7 +85,7 @@ const DAY: Omit<LocationDef, "night">[] = [
     reward: { currencies: { PAP: 1200 }, xp: 20_000, items: [{ id: "gpu", qty: 3 }, { id: "hoodie-hodl", qty: 1 }] },
   },
   {
-    id: "board", order: 5, name: "Совет директоров", subtitle: "Здесь решают, кому сегодня повезёт", scene: "board",
+    id: "board", order: 5, name: "Совет директоров", short: "Кабинет", subtitle: "Здесь решают, кому сегодня повезёт", scene: "board",
     tasks: [
       t("bd-slides", "Защитить презентацию", "47 слайдов, ни одного вывода.", 12, 9, 16),
       t("bd-chart", "Показать график вверх ногами", "Если перевернуть — это рост.", 13, 9, 16),
@@ -94,7 +96,7 @@ const DAY: Omit<LocationDef, "night">[] = [
     reward: { currencies: { PAP: 2000 }, xp: 50_000, items: [{ id: "rug-pull-gun", qty: 3 }, { id: "laser-eyes", qty: 1 }] },
   },
   {
-    id: "accounting", order: 6, name: "Бухгалтерия", subtitle: "Деньги любят счёт. Бухгалтерия — тишину", scene: "accounting",
+    id: "accounting", order: 6, name: "Бухгалтерия", short: "Бухгалтерия", subtitle: "Деньги любят счёт. Бухгалтерия — тишину", scene: "accounting",
     tasks: [
       t("ac-receipt", "Сдать чеки за такси", "Чек из шаурмы — тоже командировочные.", 14, 10, 17),
       t("ac-advance", "Выпросить аванс", "Аванс будет. Когда-нибудь. Наверное.", 14, 10, 17),
@@ -105,7 +107,7 @@ const DAY: Omit<LocationDef, "night">[] = [
     reward: { currencies: { PAP: 3000 }, xp: 100_000, items: [{ id: "gpu", qty: 4 }, { id: "lost-wallet", qty: 3 }] },
   },
   {
-    id: "hr", order: 7, name: "Отдел кадров", subtitle: "Мы не команда, мы семья. Но уволить можем", scene: "hr",
+    id: "hr", order: 7, name: "Отдел кадров", short: "Кадры", subtitle: "Мы не команда, мы семья. Но уволить можем", scene: "hr",
     tasks: [
       t("hr-form", "Заполнить анкету на 12 страниц", "Хобби: работа. Мечта: выходной.", 16, 11, 18),
       t("hr-vacation", "Согласовать отпуск", "Есть свободная неделя. В феврале 2031-го.", 16, 11, 18),
@@ -116,7 +118,7 @@ const DAY: Omit<LocationDef, "night">[] = [
     reward: { currencies: { PAP: 4500 }, xp: 200_000, items: [{ id: "rug-pull-gun", qty: 4 }, { id: "energy-pack", qty: 3 }] },
   },
   {
-    id: "party", order: 8, name: "Новогодний корпоратив", subtitle: "Оливье, тосты и фото, которые не удалить", scene: "party",
+    id: "party", order: 8, name: "Новогодний корпоратив", short: "Корпоратив", subtitle: "Оливье, тосты и фото, которые не удалить", scene: "party",
     tasks: [
       t("pt-oliv", "Добраться до оливье", "Тазик один, а желающих — весь отдел.", 14, 12, 19),
       t("pt-toast", "Сказать тост за руководство", "Главное — не перепутать имена.", 16, 12, 19),
@@ -127,7 +129,7 @@ const DAY: Omit<LocationDef, "night">[] = [
     reward: { currencies: { PAP: 6500 }, xp: 400_000, items: [{ id: "rug-pull-gun", qty: 5 }, { id: "santa-hat", qty: 1 }] },
   },
   {
-    id: "offshore", order: 9, name: "Офшор", subtitle: "Деньги любят тишину, пальмы и ноль налогов", scene: "offshore",
+    id: "offshore", order: 9, name: "Офшор", short: "Офшор", subtitle: "Деньги любят тишину, пальмы и ноль налогов", scene: "offshore",
     tasks: [
       t("of-account", "Открыть счёт на Кайманах", "Банкир спросил только размер обуви.", 16, 14, 20),
       t("of-shell", "Зарегистрировать фирму-пустышку", "ООО «Рога и Токены», директор — кот.", 17, 14, 20),
@@ -138,7 +140,7 @@ const DAY: Omit<LocationDef, "night">[] = [
     reward: { currencies: { PAP: 8500 }, xp: 700_000, items: [{ id: "rug-pull-gun", qty: 6 }, { id: "energy-pack", qty: 4 }] },
   },
   {
-    id: "yacht", order: 10, name: "Яхта кита", subtitle: "Киты не тонут — они плавают", scene: "yacht",
+    id: "yacht", order: 10, name: "Яхта кита", short: "Яхта кита", subtitle: "Киты не тонут — они плавают", scene: "yacht",
     tasks: [
       t("yt-board", "Попасть на борт", "Дресс-код: холодный кошелёк.", 18, 15, 21),
       t("yt-deck", "Надраить палубу", "Тик — не дерево, тик — это график.", 18, 15, 21),
@@ -149,7 +151,7 @@ const DAY: Omit<LocationDef, "night">[] = [
     reward: { currencies: { PAP: 11000 }, xp: 1_200_000, items: [{ id: "rug-pull-gun", qty: 7 }, { id: "energy-pack", qty: 5 }] },
   },
   {
-    id: "moonbase", order: 11, name: "Лунная база", subtitle: "To the moon. Буквально", scene: "moonbase",
+    id: "moonbase", order: 11, name: "Лунная база", short: "Лунобаза", subtitle: "To the moon. Буквально", scene: "moonbase",
     tasks: [
       t("mn-launch", "Пережить запуск", "Обратный отсчёт: 3… 2… памп!", 15, 16, 22),
       t("mn-dock", "Пристыковаться к базе", "Стыковочный узел заело. Как и ордер.", 17, 16, 22),
@@ -160,7 +162,7 @@ const DAY: Omit<LocationDef, "night">[] = [
     reward: { currencies: { PAP: 15000 }, xp: 2_000_000, items: [{ id: "rug-pull-gun", qty: 8 }, { id: "energy-pack", qty: 6 }] },
   },
   {
-    id: "mars", order: 12, name: "Марсианская биржа", subtitle: "Красная планета, зелёные свечи", scene: "mars",
+    id: "mars", order: 12, name: "Марсианская биржа", short: "Марсобиржа", subtitle: "Красная планета, зелёные свечи", scene: "mars",
     tasks: [
       t("ms-land", "Сесть в кратер", "Посадка мягкая. Депозит — нет.", 16, 17, 23),
       t("ms-dust", "Пережить пылевую бурю", "Графики не видно. И слава богу.", 20, 17, 23),
@@ -171,7 +173,7 @@ const DAY: Omit<LocationDef, "night">[] = [
     reward: { currencies: { PAP: 19000 }, xp: 3_000_000, items: [{ id: "rug-pull-gun", qty: 9 }, { id: "energy-pack", qty: 7 }] },
   },
   {
-    id: "orbit", order: 13, name: "Казино на орбите", subtitle: "Ставки сделаны. Гравитации нет", scene: "orbit",
+    id: "orbit", order: 13, name: "Казино на орбите", short: "Казино", subtitle: "Ставки сделаны. Гравитации нет", scene: "orbit",
     tasks: [
       t("or-dock", "Пройти фейс-контроль в скафандре", "Дресс-код: шлем от Gucci.", 18, 18, 24),
       t("or-roulette", "Сыграть в невесомую рулетку", "Шарик улетел. Ставка — тоже.", 21, 18, 24),
@@ -182,7 +184,7 @@ const DAY: Omit<LocationDef, "night">[] = [
     reward: { currencies: { PAP: 24000 }, xp: 4_500_000, items: [{ id: "rug-pull-gun", qty: 10 }, { id: "energy-pack", qty: 8 }] },
   },
   {
-    id: "sunfarm", order: 14, name: "Солнечная ферма", subtitle: "Майнинг на энергии звезды. Жарковато", scene: "sunfarm",
+    id: "sunfarm", order: 14, name: "Солнечная ферма", short: "Пекло", subtitle: "Майнинг на энергии звезды. Жарковато", scene: "sunfarm",
     tasks: [
       t("sf-shield", "Опустить теплозащиту", "Плюс 5000 за бортом. Кондиционер сдался.", 18, 19, 25),
       t("sf-panels", "Протереть солнечные панели", "Тряпка сгорела на втором метре.", 21, 19, 25),
@@ -193,7 +195,7 @@ const DAY: Omit<LocationDef, "night">[] = [
     reward: { currencies: { PAP: 30000 }, xp: 6_500_000, items: [{ id: "rug-pull-gun", qty: 11 }, { id: "energy-pack", qty: 9 }] },
   },
   {
-    id: "genesis", order: 15, name: "Генезис-блок", subtitle: "Здесь всё началось. Здесь всё и закончится", scene: "genesis",
+    id: "genesis", order: 15, name: "Генезис-блок", short: "Генезис", subtitle: "Здесь всё началось. Здесь всё и закончится", scene: "genesis",
     tasks: [
       t("gn-gate", "Найти вход в первый блок", "Пароль — хэш нулевого дня.", 21, 20, 26),
       t("gn-chain", "Пройти по цепочке блоков", "Каждый шаг подтверждают шесть раз.", 24, 20, 26),

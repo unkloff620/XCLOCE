@@ -267,7 +267,7 @@ export function LocationsScreen() {
           // the artist's plank: the name on its tab, the picture on the left, the day and the night leader
           const plank = (
             <span className={`lc-plank ${locked ? "locked" : ""}`}>
-              <b className="lc-name display" style={{ fontSize: `${Math.min(3.3, 33 / (locked ? 3 : l.name.length))}cqi` }}>{locked ? "???" : l.name}</b>
+              <b className="lc-name display">{locked ? "???" : l.short}</b>
               <span className="lc-pic">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={`/assets/locations/${LOCATION_ART.has(l.scene) ? l.scene : "openspace"}-card.webp`} alt="" draggable={false} />
