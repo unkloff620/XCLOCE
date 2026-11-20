@@ -2,7 +2,8 @@
 Item sounds: a hit sound per weapon (w-*) and a pick-up sound per yard find (y-*), all synthesized.
   fist — a movie punch: whoosh, slap and a deep body thud
   mouse — a plastic mouse: whoosh, a hollow plastic knock and a click
-  keyboard — the knife (2026-11-20): a quick swish, the steel's ring, a sharp stab — no bass
+  keyboard — the knife: NOT from here since 2026-11-20 — the user's recording tools/sound/source/w-keyboard-knife.mp3
+    (ffmpeg: silenceremove at the start, +3.6 dB, a 0.12 s fade at the end → public/assets/sound/w-keyboard.mp3)
   red-candle — fire: a «fwoom» of flame with crackles
   gpu — the pistol (a revolver, 2026-11-20): the hammer cocked, a sharp shot, a short ring of the barrel, the casing… no, the cylinder clicks round
   bat — a wooden baseball bat: a heavy whoosh, a hollow wooden crack and a thud
