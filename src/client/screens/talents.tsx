@@ -68,7 +68,7 @@ function TalentHelp() {
   return (
     <Help topic="talents" title="Таланты">
       <p>Таланты дают за урон по боссам за всё время: счётчик не сгорает — каждый бой продолжает его с того места, где остановился прошлый.</p>
-      <p className="small">1-й талант — за {full(talentThreshold(1))} урона, 10-й — за {full(talentThreshold(10))}, 50-й — за {full(talentThreshold(50))}, 100-й — за {full(talentThreshold(100))}.</p>
+      <p className="small">1-й талант — за {full(talentThreshold(1))} урона, 10-й — за {full(talentThreshold(10))}, 100-й — за {full(talentThreshold(100))}, 500-й — за {full(talentThreshold(500))}, 1000-й — за {full(talentThreshold(1000))}.</p>
       <p>Таланты вкладываются блоками сверху вниз: следующий блок открывается, когда закрыт весь предыдущий. Внутри блока ячейка открывается, когда закрыта та, от которой к ней идёт стрелка; верхние ячейки — в любом порядке.</p>
       <p className="small">Когда закрыты «Специализация в оружии» и «Основа», открывается тумблер «Автопрокачка»: новые таланты сами идут в следующую ячейку (бицуха — только до 10).</p>
       <ol className="small">
@@ -85,7 +85,7 @@ function TalentHelp() {
 /** the picture of a stop (public/assets/talents): a meme scene with the weapon, or the biceps / energy / clock */
 function StopArt({ n, size }: { n: TalentStop; size: number }) {
   // eslint-disable-next-line @next/next/no-img-element
-  return <img className="tb-art" src={`/assets/talents/${talentArt(n)}.webp`} alt="" width={size} height={size} draggable={false} />;
+  return <img className="tb-art" src={`/assets/talents/${talentArt(n)}.webp?v=2`} alt="" width={size} height={size} draggable={false} />;
 }
 const stopTitle = (n: TalentStop) => (EXTRA_NAMES[n.target] ? n.name : `${itemById(n.target)?.name ?? n.target} · ${n.name}`);
 
@@ -241,7 +241,7 @@ export function TalentBlockView({ b, wt, cur, selI, poor, onTap }: { b: TalentBl
         })}
       </div>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      {b.hero && <img className="tb-hero" src={`/assets/talents/${b.hero}.webp`} alt="" draggable={false} />}
+      {b.hero && <img className="tb-hero" src={`/assets/talents/${b.hero}.webp?v=2`} alt="" draggable={false} />}
     </section>
   );
 }

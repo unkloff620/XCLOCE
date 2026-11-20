@@ -947,13 +947,14 @@ describe("home: equipment, rooms, look, help", () => {
     expect((await hit(p, "keyboard")).result.damage).toBe(Math.round(30 * 1.5));
   });
 
-  it("talents: the 1st for 100 damage, the 100th for 1 000 000, uneven steps in between", () => {
-    expect(TALENT_THRESHOLDS.length).toBe(100);
-    expect([talentThreshold(1), talentThreshold(100)]).toEqual([100, 1_000_000]);
-    for (let k = 2; k <= 100; k++) expect(talentThreshold(k)).toBeGreaterThan(talentThreshold(k - 1));
-    expect([0, 99, 100, talentThreshold(2) - 1, talentThreshold(2), 999_999, 1_000_000, 1_210_000].map(talentsForDamage)).toEqual([0, 0, 1, 1, 2, 99, 100, 110]);
-    // not a plain 100·k² curve
-    expect(TALENT_THRESHOLDS.filter((v, i) => v !== 100 * (i + 1) ** 2).length).toBeGreaterThan(80);
+  it("talents: the user's curve — 30, 579, 130 212, … 17 345 292 428 for the 1000th; every next talent dearer", () => {
+    expect(TALENT_THRESHOLDS.length).toBe(1000);
+    expect([1, 10, 100, 250, 500, 750, 1000].map(talentThreshold)).toEqual([30, 579, 130_212, 2_142_543, 18_482_787, 496_562_318, 17_345_292_428]);
+    // the user's stretches: from 250 to 500 — 16 340 244 damage
+    expect(talentThreshold(500) - talentThreshold(250)).toBe(16_340_244);
+    for (let k = 2; k <= 1005; k++) expect(talentThreshold(k) - talentThreshold(k - 1)).toBeGreaterThanOrEqual(talentThreshold(k - 1) - talentThreshold(Math.max(0, k - 2)));
+    expect([0, 29, 30, 578, 579, 130_212, 17_345_292_428].map(talentsForDamage)).toEqual([0, 0, 1, 9, 10, 100, 1000]);
+    expect(talentsForDamage(talentThreshold(1003))).toBe(1003);
   });
 
   it("talents: the counter carries over between fights; the weapon tree costs talents and boosts only that weapon", async () => {
@@ -961,15 +962,14 @@ describe("home: equipment, rooms, look, help", () => {
     const p = await newPlayer(db);
     await give(db, p, "keyboard", 200);
     await startDatsik(p);
-    for (let i = 0; i < 3; i++) expect((await hit(p, "keyboard")).result.talentsGained).toBe(0); // 30, 60, 90
-    const t1 = await hit(p, "keyboard"); // 120
-    expect(t1.result).toMatchObject({ fightDamage: 120, talentDamage: 120, talentsGained: 1 });
-    expect(t1.state.player).toMatchObject({ talents: 1, talentDamage: 120 });
+    const t1 = await hit(p, "keyboard"); // 30: the 1st talent
+    expect(t1.result).toMatchObject({ fightDamage: 30, talentDamage: 30, talentsGained: 1 });
+    expect(t1.state.player).toMatchObject({ talents: 1, talentDamage: 30 });
     // a new fight goes on from the same counter
     await act(db, p, "fight_flee", {}, T0);
     await startDatsik(p, T0 + M);
     let last = t1;
-    const need = talentThreshold(3) - 120;
+    const need = talentThreshold(3) - 30;
     for (let i = 0; i < Math.ceil(need / 30); i++) last = await hit(p, "keyboard", T0 + M);
     expect(last.state.fight?.myDamage).toBe(Math.ceil(need / 30) * 30);
     expect(last.state.player.talents).toBe(3);
@@ -985,7 +985,7 @@ describe("home: equipment, rooms, look, help", () => {
     await db.query("UPDATE player_talents SET level=10 WHERE player_id=$1 AND weapon_id='keyboard'", [p]);
     await db.query("INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,'keyboard','c1',5),($1,'gpu','n1',10),($1,'gpu','c1',5),($1,'rug-pull-gun','n1',10),($1,'rug-pull-gun','c1',5)", [p]);
     const b1 = await act(db, p, "talent_up", { weapon: "_biceps", branch: "s1" }, T0 + M);
-    expect(b1.result).toMatchObject({ level: 1, max: 100, talents: 1 }); // up to 100, but 10 opens the next cell
+    expect(b1.result).toMatchObject({ level: 1, max: 100 }); // up to 100, but 10 opens the next cell
     const [bi] = await db.query<{ talent_biceps: number }>("SELECT talent_biceps FROM players WHERE id=$1", [p]);
     expect(bi.talent_biceps).toBe(10);
     // the energy limit grows with «Лимит энергии»
@@ -996,6 +996,7 @@ describe("home: equipment, rooms, look, help", () => {
     const e1 = await act(db, p, "talent_up", { weapon: "_energy", branch: "s1" }, T0 + M);
     expect(e1.state.player.energyMax).toBe(max0 + 15);
     expect((await hit(p, "mouse", T0 + M)).result.damage).toBe(40); // the mouse has its +20 «Урон»
+    await db.query("UPDATE players SET talents=0 WHERE id=$1", [p]);
     await expect(act(db, p, "talent_up", { weapon: "_clock", branch: "s1" }, T0 + M)).rejects.toMatchObject({ code: "no_talents" });
     await expect(act(db, p, "talent_up", { weapon: "keyboard", branch: "n1" }, T0 + M)).rejects.toMatchObject({ code: "max_level" });
   });
@@ -1095,7 +1096,7 @@ describe("home: equipment, rooms, look, help", () => {
     await db.exec(MIGRATIONS.find((m) => m.id === "v2-021-weapon-talents")!.sql);
     const [row] = await db.query<{ talents: number }>("SELECT talents FROM players WHERE id=$1", [p]);
     // 2 left + 3 refunded + (talents for 20 000 on the new curve − 5 already earned)
-    expect(row.talents).toBe(2 + 3 + talentsForDamage(20000) - 5);
+    expect(row.talents).toBe(2 + 3 + 14 - 5); // 14 talents for 20 000 on the curve of that time
     expect(await db.query("SELECT 1 FROM player_equipment WHERE player_id=$1 AND equipment_id LIKE 'pc-%'", [p])).toHaveLength(0);
   });
 

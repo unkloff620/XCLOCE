@@ -1,45 +1,69 @@
 /*
  * Таланты.
  * Даются за урон по боссам за всё время игры: счётчик не сгорает после боя — следующий бой продолжает набивать
- * его с того места, где остановился прошлый. 1-й талант — за 100 урона, 100-й — за 1 000 000; пороги между ними
- * идут примерно как 100·k², но не ровно (где-то чуть раньше, где-то позже). После 100-го — ровно 100·k².
+ * его с того места, где остановился прошлый.
+ * Кривая — таблица пользователя (2026-11-20), урон между отметками: до 1-го таланта 30, до 10-го всего 579, с 10-го
+ * до 100-го 129 633, со 100-го до 250-го 2 012 331, с 250-го до 500-го 16 340 244, с 500-го до 750-го 478 079 531,
+ * с 750-го до 1000-го 16 848 730 110 (с 0 до 1000 — 17 345 292 428). Внутри отрезка каждый следующий талант дороже
+ * предыдущего в одно и то же число раз (оно подобрано так, чтобы отрезок сходился ровно); после 1000-го — с тем же шагом.
  * Тратятся в окне талантов (счётчик в бою, профиль, инвентарь): у каждого оружия, даже у кулака, две ветки — урон и сила крита.
  */
 import { WEAPONS } from "./items.ts";
 
-/** total damage needed for the k-th talent, k = 1…100 (generated once: 100·k² with a smooth ±7% wobble) */
-export const TALENT_THRESHOLDS: readonly number[] = [
-  100, 401, 905, 1_613, 2_519, 3_626, 4_909, 6_403, 8_074, 9_878,
-  11_893, 14_047, 16_267, 18_923, 21_512, 24_338, 27_833, 31_194, 35_158, 38_929,
-  43_668, 48_163, 53_591, 58_901, 65_158, 70_027, 76_085, 82_394, 88_859, 96_784,
-  101_946, 108_629, 113_829, 120_336, 125_743, 131_291, 137_774, 143_456, 150_605, 155_661,
-  163_137, 169_501, 177_399, 183_326, 188_521, 201_611, 211_856, 221_677, 230_105, 242_527,
-  250_538, 267_851, 278_602, 289_322, 300_806, 321_807, 337_203, 342_633, 363_893, 379_168,
-  384_124, 402_344, 415_882, 425_893, 444_256, 458_485, 465_897, 479_603, 489_867, 504_457,
-  509_142, 524_451, 525_346, 531_825, 547_737, 551_129, 564_198, 578_874, 594_733, 604_543,
-  630_407, 641_516, 661_536, 680_438, 710_031, 728_365, 756_467, 775_739, 802_998, 824_003,
-  845_103, 867_526, 883_933, 902_517, 920_587, 934_589, 949_849, 965_897, 982_441, 1_000_000,
+/** the user's marks: [talent, total damage for it] */
+export const TALENT_MARKS: readonly [number, number][] = [
+  [0, 0], [1, 30], [10, 579], [100, 130_212], [250, 2_142_543], [500, 18_482_787], [750, 496_562_318], [1000, 17_345_292_428],
 ];
+/** after the 1000th talent: every next one dearer by the last stretch's rate (filled below) */
+const TALENT_AFTER: { rate: number; last: number } = { rate: 1, last: 0 };
+/** total damage for the k-th talent, k = 1…1000: the step costs grow geometrically inside each stretch, each stretch
+ *  goes on from the last step of the one before and lands on its mark exactly */
+export const TALENT_THRESHOLDS: readonly number[] = (() => {
+  const cum = [0, TALENT_MARKS[1][1]];
+  let last = TALENT_MARKS[1][1];
+  let rate = 1;
+  for (let i = 1; i + 1 < TALENT_MARKS.length; i++) {
+    const [a, da] = TALENT_MARKS[i], [b, db] = TALENT_MARKS[i + 1];
+    const n = b - a, S = db - da;
+    const sum = (r: number) => { let t = 0, p = 1; for (let k = 1; k <= n; k++) { p *= r; t += p; } return last * t; };
+    let lo = 0.5, hi = 3;
+    for (let it = 0; it < 200; it++) { const m = (lo + hi) / 2; if (sum(m) > S) hi = m; else lo = m; }
+    rate = (lo + hi) / 2;
+    let c = last;
+    for (let k = 0; k < n; k++) { c *= rate; cum.push(cum[cum.length - 1] + c); }
+    cum[cum.length - 1] = db;
+    last = c;
+  }
+  TALENT_AFTER.rate = rate;
+  TALENT_AFTER.last = last;
+  return cum.slice(1).map((v) => Math.round(v));
+})();
 
 /** total damage needed for the k-th talent (k ≥ 1) */
 export function talentThreshold(k: number): number {
   if (k <= 0) return 0;
-  return k <= TALENT_THRESHOLDS.length ? TALENT_THRESHOLDS[k - 1] : 100 * k * k;
+  const n = TALENT_THRESHOLDS.length;
+  if (k <= n) return TALENT_THRESHOLDS[k - 1];
+  const { rate, last } = TALENT_AFTER;
+  const m = k - n;
+  return Math.round(TALENT_THRESHOLDS[n - 1] + (last * rate * (Math.pow(rate, m) - 1)) / (rate - 1));
 }
 
 /** talents earned by `damage` dealt to bosses in total */
 export function talentsForDamage(damage: number): number {
-  let lo = 0, hi = TALENT_THRESHOLDS.length;
+  const n = TALENT_THRESHOLDS.length;
+  if (damage >= TALENT_THRESHOLDS[n - 1]) {
+    let k = n;
+    while (talentThreshold(k + 1) <= damage) k++;
+    return k;
+  }
+  let lo = 0, hi = n;
   while (lo < hi) {
     const mid = (lo + hi + 1) >> 1;
     if (TALENT_THRESHOLDS[mid - 1] <= damage) lo = mid;
     else hi = mid - 1;
   }
-  if (lo < TALENT_THRESHOLDS.length) return lo;
-  let k = Math.max(lo, Math.floor(Math.sqrt(damage / 100)));
-  while (talentThreshold(k + 1) <= damage) k++;
-  while (k > lo && talentThreshold(k) > damage) k--;
-  return k;
+  return lo;
 }
 
 /* ---------------- дорожка талантов ---------------- */

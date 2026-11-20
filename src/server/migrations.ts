@@ -4,6 +4,7 @@
  */
 import { ACHIEVEMENTS, SOLO_BOSS_ACHIEVEMENTS } from "../content/achievements.ts";
 import { LOCATIONS, locRep } from "../content/locations.ts";
+import { TALENT_PATH, TALENT_THRESHOLDS } from "../content/talents.ts";
 
 const OLD_TABLES = [
   "actions", "balances", "battles", "boss_damage", "boss_defeats", "boss_instances", "boss_progress", "clan_members", "clan_requests",
@@ -1548,5 +1549,23 @@ UPDATE config SET value = value - 'keyboard-1' - 'gpu-1' - 'rpg-1' WHERE key = '
   PRIMARY KEY (player_id, biz_id)
 );
 DELETE FROM location_business;`,
+  },
+  {
+    // the talents' new curve (content/talents.ts, the user's table 2026-11-20): every talent spent comes back, the
+    // talents' part of the energy limit and the biceps goes, and everyone has the talents the new curve gives for
+    // the damage of all time
+    id: "v2-108-talent-curve",
+    sql: `WITH ex AS (
+  SELECT player_id,
+    COALESCE(SUM(CASE ${TALENT_PATH.filter((t) => t.kind === "energy").map((t) => `WHEN weapon_id = '${t.target}' AND branch = '${t.branch}' THEN LEAST(level, ${t.max}) * ${t.per}`).join(" ") || "WHEN false THEN 0"} ELSE 0 END), 0)::int AS energy,
+    COALESCE(SUM(CASE ${TALENT_PATH.filter((t) => t.kind === "biceps").map((t) => `WHEN weapon_id = '${t.target}' AND branch = '${t.branch}' THEN LEAST(level, ${t.max}) * ${t.per}`).join(" ") || "WHEN false THEN 0"} ELSE 0 END), 0)::int AS biceps
+  FROM player_talents GROUP BY player_id
+)
+UPDATE players p SET talent_energy = GREATEST(0, p.talent_energy - ex.energy), talent_biceps = GREATEST(0, p.talent_biceps - ex.biceps) FROM ex WHERE ex.player_id = p.id;
+DELETE FROM player_talents;
+WITH thr(v) AS (VALUES ${TALENT_THRESHOLDS.map((v) => `(${v}::bigint)`).join(",")}),
+due AS (SELECT s.player_id, (SELECT COUNT(*) FROM thr WHERE v <= s.total_damage)::int AS n FROM player_stats s)
+UPDATE players p SET talents = COALESCE(d.n, 0) FROM due d WHERE d.player_id = p.id;
+INSERT INTO ledger (player_id, kind, key, delta, reason) SELECT id, 'talent', 'talent', talents, 'talent-curve-v3' FROM players WHERE talents > 0;`,
   },
 ];
