@@ -58,8 +58,6 @@ interface LocBiz {
 const BIZ_ICON: Record<BizKind, string> = { xp: "xp", loc: "rep", pap: "PAP" };
 type LocTab = "day" | "night" | "biz";
 
-/** night: lights blinking over the darkened picture (fixed spots, so nothing jumps between renders) */
-const NIGHT_LIGHTS = Array.from({ length: 18 }, (_, i) => ({ x: (i * 37 + 11) % 97, y: (i * 53 + 7) % 88, d: 1.6 + ((i * 7) % 10) / 4, w: ((i * 13) % 20) / 10, s: 4 + (i % 4) * 3, c: i % 3 }));
 
 /** «Бизнес» of one location: its businesses as cards on squared paper (the user's sample) — the picture, the profit an
  *  hour, the cells, the cells bought in a pencil circle, the button with the next cell's price; opens after the day and night roads */
@@ -235,7 +233,8 @@ export function LocationsScreen() {
     }
   };
   return (
-    <div>
+    <div className="locs-page">
+      <div className="locs-bg" aria-hidden="true" />
       <div className="title">
         <div>
           <Link href="/yard" className="back">← Двор</Link>
@@ -406,22 +405,22 @@ export function LocationScreen({ id }: { id: string }) {
   };
 
   return (
-    <div className={`loc-page ${LOCATION_ART.has(loc.scene) ? "has-bg" : ""} ${night ? "night" : ""} ${tab === "biz" ? "biz-mode" : ""}`}>
-      {LOCATION_ART.has(loc.scene) && <div className="loc-page-bg" style={{ backgroundImage: `url(/assets/locations/${loc.scene}.webp)` }} aria-hidden="true" />}
-      {night && (
-        <div className="loc-night-sky" aria-hidden="true">
-          {NIGHT_LIGHTS.map((l, i) => <i key={i} className={`c${l.c}`} style={{ left: `${l.x}%`, top: `${l.y}%`, width: l.s, height: l.s, animationDuration: `${l.d}s`, animationDelay: `${l.w}s` }} />)}
-        </div>
-      )}
+    <div className={`loc-page paper ${night ? "night" : ""} ${tab === "biz" ? "biz-mode" : ""}`}>
       <div className="title">
         <Link href="/locations" className="back">← Локации</Link>
         <span className="chip gold"><Icon name="energy" size={16} />{energy}</span>
       </div>
-      <div className="lp-tabs" role="tablist">
-        {([["day", "☀️ Дневные"], ["night", "🌙 Ночные"], ["biz", "💼 Бизнес"]] as const).map(([k, t]) => (
-          <button key={k} type="button" role="tab" aria-selected={tab === k} className={`lp-tab t-${k} ${tab === k ? "on" : ""}`} onClick={() => { haptic.tap(); setTab(k); setPick(null); }}>{t}</button>
+      {/* the user's tabs on the sheet's top edge: the chosen one in front of the sheet, the others grey behind it */}
+      <div className="lp-tabs2" role="tablist">
+        {([["day", "Дневные", "l"], ["night", "Ночные", "m"], ["biz", "Бизнес", "r"]] as const).map(([k, t, at]) => (
+          <button key={k} type="button" role="tab" aria-selected={tab === k} className={`lp-tab2 at-${at} ${tab === k ? "on" : ""}`} onClick={() => { haptic.tap(); setTab(k); setPick(null); }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`/assets/locations/page/tab-${at}.webp`} alt="" draggable={false} />
+            <b className="display">{t}</b>
+          </button>
         ))}
       </div>
+      <div className="lp-sheet">
       <div className="lp-head">
         <span className="tiny display">ЛОКАЦИЯ {loc.order}</span>
         <b className="display">{loc.name}</b>
@@ -512,8 +511,8 @@ export function LocationScreen({ id }: { id: string }) {
           )}
         </>
       )}
+      </div>
       {got && <ClaimedModal got={got} onClose={() => setGot(null)} />}
-
     </div>
   );
 }
