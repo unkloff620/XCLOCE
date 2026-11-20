@@ -193,7 +193,7 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "fight_flee": return combat.fleeFight(ctx);
     case "task": return locations.doTask(ctx, str(body.taskId, "taskId", 40));
     case "location_claim": return locations.claimLocation(ctx, str(body.locationId, "locationId", 40), body.mode === "night" ? "night" : "day");
-    case "business_up": return locations.businessUp(ctx, str(body.locationId, "locationId", 40), body.line === "rep" ? "rep" : "rub");
+    case "business_up": return locations.businessUp(ctx, str(body.bizId, "bizId", 40));
     case "business_claim": return locations.businessClaim(ctx);
     case "yard_pick": return yard.yardPick(ctx, num(body.itemId, "itemId"));
     case "buy": return shop.buy(ctx, str(body.offerId, "offerId", 40), idem, body.qty === undefined ? 1 : num(body.qty, "qty"));

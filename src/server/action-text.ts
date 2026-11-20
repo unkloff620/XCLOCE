@@ -2,6 +2,7 @@
  * Human-readable lines for the admin's action log: what the player did and what they got,
  * e.g. «нашёл «Ржавый ключ» · +120 RUB» or «Тройка BTC [BTC BTC BTC] · +1 BTC».
  */
+import { bizById } from "../content/business.ts";
 import { weaponById } from "../content/items.ts";
 import type { Granted } from "./core.ts";
 import { itemById } from "../content/items.ts";
@@ -64,8 +65,8 @@ export function actionText(type: string, body: Row, result: unknown): string | n
       const t = taskById(String(body.taskId));
       return join(t ? `${t.loc.name}: «${t.task.title}»` : String(body.taskId), r.steps !== undefined ? `шаг ${r.steps}/${r.need}` : null, grantedText(r.step), r.done ? `задание выполнено: ${grantedText(r.done)}` : null, r.locationComplete ? "локация пройдена" : null);
     }
-    case "business_up": return `${locationById(String(body.locationId))?.name ?? body.locationId}: бизнес «${body.line === "rep" ? "авторитет" : "рубли"}» → ${r.level} за ${fmt(r.price)} ₽`;
-    case "business_claim": return `Бизнес: прибыль с ${Array.isArray(r.parts) ? r.parts.length : 0} локаций за ${r.hours} ч · +${fmt(r.rub)} ₽ · +${fmt(r.rep)} авторитета локации`;
+    case "business_up": return `бизнес «${bizById(String(body.bizId))?.biz.name ?? body.bizId}» (${bizById(String(body.bizId))?.loc.name ?? ""}): ячейка ${r.cells}, ступень ${r.step} за ${fmt(r.price)} папирос`;
+    case "business_claim": return `Бизнес: прибыль с ${Array.isArray(r.parts) ? r.parts.length : 0} локаций за ${r.hours} ч · +${fmt(r.pap)} папирос · +${fmt(r.xp)} авторитета · +${fmt(r.loc)} авторитета локаций`;
     case "location_claim": return join(locationById(String(body.locationId))?.name ?? String(body.locationId), r.first ? "первое прохождение" : "повтор", grantedText(r.reward));
     case "fight_start": return join(bossById(String(body.boss))?.name ?? String(body.boss), body.solo === true ? "соло" : null, r.fightId ? `бой #${r.fightId}` : null);
     case "attack": return join(weaponById(String(body.weapon))?.name ?? String(body.weapon), r.damage !== undefined ? `−${fmt(r.damage)}${r.crit ? " крит" : ""}` : null, r.fightId ? `бой #${r.fightId}` : null, r.status === "won" ? "босс побеждён" : null);

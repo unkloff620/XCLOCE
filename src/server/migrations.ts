@@ -1536,4 +1536,17 @@ DELETE FROM config WHERE key = 'exchange.rub';`,
     sql: `UPDATE players SET ach_boxes_opened = FLOOR(ach_boxes_opened / 10);
 UPDATE config SET value = value - 'keyboard-1' - 'gpu-1' - 'rpg-1' WHERE key = 'prices' AND jsonb_typeof(value) = 'object';`,
   },
+  {
+    // «Бизнес» rebuilt (content/business.ts): two or three businesses a location, six steps of cells each. The old two
+    // lines (lv_rep / lv_rub) are gone with their levels (the game is not out yet); location_business keeps the clock.
+    id: "v2-107-business-lines",
+    sql: `CREATE TABLE IF NOT EXISTS business_lines (
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  biz_id TEXT NOT NULL,
+  location_id TEXT NOT NULL,
+  cells INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (player_id, biz_id)
+);
+DELETE FROM location_business;`,
+  },
 ];
