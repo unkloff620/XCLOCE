@@ -19,7 +19,7 @@ interface Rating {
   prizes: { players: Reward[]; clans: Reward[] };
   damage: PlayerRow[];
   authority: PlayerRow[];
-  /** «Топ 100 по достижениям»: how many achievements taken */
+  /** «Топ 100 по достижениям»: the achievement points */
   achievements?: PlayerRow[];
   clans: ClanRow[];
   me: { damage: { value: number; place: number } | null; authority: { value: number; place: number } | null; achievements?: { value: number; place: number } | null };

@@ -89,14 +89,12 @@ export async function ratingView(q: Queryable, pid: number, cfg: Config, now: nu
      GROUP BY c.id ORDER BY value DESC, c.id LIMIT 30`,
     [week],
   );
-  // «Топ 100 по достижениям»: how many achievements each has taken (all time)
+  // «Топ 100 по достижениям»: the achievement points (the sun in the profile) of all time
   const ach = await q.query<Row>(
-    `SELECT p.id, p.display_name, p.photo_url, p.xp, a.n AS value FROM (SELECT player_id, COUNT(*)::int AS n FROM achievements GROUP BY player_id) a
-     JOIN players p ON p.id = a.player_id WHERE p.banned_at IS NULL ORDER BY a.n DESC, p.id LIMIT 100`,
+    "SELECT id, display_name, photo_url, xp, ach_points AS value FROM players WHERE banned_at IS NULL AND ach_points > 0 ORDER BY ach_points DESC, id LIMIT 100",
   );
   const [myAch] = await q.query<{ value: number; place: number }>(
-    `WITH c AS (SELECT player_id, COUNT(*)::int AS n FROM achievements GROUP BY player_id)
-     SELECT m.n AS value, (SELECT COUNT(*)::int FROM c WHERE c.n > m.n) + 1 AS place FROM c m WHERE m.player_id=$1`,
+    "SELECT p.ach_points AS value, (SELECT COUNT(*)::int FROM players o WHERE o.banned_at IS NULL AND o.ach_points > p.ach_points) + 1 AS place FROM players p WHERE p.id=$1 AND p.ach_points > 0",
     [pid],
   );
   // my own place even outside the top 50
