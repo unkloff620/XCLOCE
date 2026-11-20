@@ -197,24 +197,28 @@ function Blocks({ done, total }: { done: number; total: number }) {
 
 type ClaimResult = { reward: Granted; first: boolean; opened: string | null; stash?: string | null };
 
+/** a location left finished (e.g. by an older version): taken as soon as its page opens (once per finish) */
+function AutoClaim({ when, busy, onClaim }: { when: boolean; busy: boolean; onClaim: () => void }) {
+  const done = useRef(false);
+  useEffect(() => {
+    if (!when) { done.current = false; return; }
+    if (!done.current && !busy) { done.current = true; onClaim(); }
+  }, [when, busy, onClaim]);
+  return null;
+}
+
 function ClaimedModal({ got, onClose }: { got: ClaimResult; onClose: () => void }) {
   return (
     <Modal title="Локация пройдена!" onClose={onClose}>
-      <div className="col" style={{ alignItems: "center", textAlign: "center" }}>
-        <RewardChips r={got.reward} size={30} />
-        {got.stash && (
-          <div className="col" style={{ alignItems: "center", gap: 4 }}>
-            <span className="stash-cell big stash-pop" style={{ width: 120 }}>{/* eslint-disable-next-line @next/next/no-img-element */}<img src={`/assets/items/${got.stash}.webp`} alt="" /></span>
-            <b>Нычка: {itemById(got.stash)?.name}</b>
-          </div>
-        )}
-        {got.opened && <div className="chip green">Открыта локация «{locationById(got.opened)?.name}»</div>}
-        {got.reward.levelUp && <div className="chip violet">Новый уровень: {got.reward.levelUp.to}!</div>}
-        <div className="small muted">Задания этой локации можно пройти заново.</div>
-        <div className="row" style={{ width: "100%" }}>
-          {got.opened && <Link className="btn green grow" href={`/locations/${got.opened}`} onClick={onClose}>Дальше</Link>}
-          <button className="btn dark grow" onClick={onClose}>Ок</button>
+      <div className="lc-done">
+        <span className="lc-done-h display">Награда</span>
+        <div className="lc-done-box">
+          <RewardChips r={got.reward} size={30} />
+          {got.stash && (
+            <span className="stash-cell big stash-pop" style={{ width: 72 }} title={itemById(got.stash)?.name}>{/* eslint-disable-next-line @next/next/no-img-element */}<img src={`/assets/items/${got.stash}.webp`} alt="" /></span>
+          )}
         </div>
+        <button className="btn gold lc-done-ok" onClick={onClose}>Ок</button>
       </div>
     </Modal>
   );
@@ -386,9 +390,10 @@ export function LocationScreen({ id }: { id: string }) {
       sfx("win");
       setPick(null);
     }
+    // the last task done: once the list reloads, AutoClaim takes the location at once — «Локация пройдена!»
     void load();
   };
-  const claim = async () => {
+  async function claim() {
     const res = await act<{ reward: Granted; first: boolean; opened: string | null }>("location_claim", night ? { locationId: id, mode: "night" } : { locationId: id });
     if (res) {
       haptic.ok();
@@ -396,7 +401,7 @@ export function LocationScreen({ id }: { id: string }) {
       setPick(null);
       void load();
     }
-  };
+  }
   const tapStop = (x: (typeof tasks)[number]) => {
     setPick(x.t.id);
     if (x.open && !x.done) return void step(x);
@@ -422,7 +427,6 @@ export function LocationScreen({ id }: { id: string }) {
       </div>
       <div className="lp-sheet">
       <div className="lp-head">
-        <span className="tiny display">ЛОКАЦИЯ {loc.order}</span>
         <b className="display">{loc.name}</b>
         {tab !== "biz" && <Blocks done={r?.done ?? 0} total={list.length} />}
         <span className="lp-rep">
@@ -444,7 +448,6 @@ export function LocationScreen({ id }: { id: string }) {
           <div className={`lp-prize ${allDone ? "ready" : ""}`}>
             <span className="lp-prize-h"><Icon name="chest" size={22} />{night ? "За ночь" : r?.clears ? "За повтор" : "За локацию"}</span>
             <RewardChips r={r?.nextReward ?? loc.reward} size={13} />
-            {allDone && <button className="btn gold block lp-prize-go" disabled={busy === "location_claim"} onClick={claim}>Забрать награду</button>}
           </div>
 
           <div className="lp-map" style={{ aspectRatio: `${MAP_W} / ${MAP_H}` }}>
@@ -512,6 +515,8 @@ export function LocationScreen({ id }: { id: string }) {
         </>
       )}
       </div>
+      {row?.unlocked && tab !== "biz" && <AutoClaim key={tab} when={allDone} busy={busy === "location_claim" || busy === "task"} onClaim={() => void claim()} />}
+      {row?.unlocked && tab !== "biz" && <AutoClaim key={tab} when={allDone} busy={busy === "location_claim" || busy === "task"} onClaim={() => void claim()} />}
       {got && <ClaimedModal got={got} onClose={() => setGot(null)} />}
     </div>
   );

@@ -7253,3 +7253,14 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .loc-page.paper > .lp-tabs2 { z-index: auto; }
 .loc-page.paper > .lp-sheet { z-index: 2; }
 .loc-page.paper > .lp-tabs2 > .lp-tab2.on { z-index: 3; }
+
+/* «Локация пройдена!»: «Награда», the reward in a box, a small «Ок» */
+.lc-done { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+.lc-done-h { font-size: 15px; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.85; }
+.lc-done-box { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; padding: 12px 16px; border-radius: 10px;
+  border: 2px solid rgba(90, 58, 20, 0.55); background: rgba(40, 26, 14, 0.78); min-width: 60%; }
+.lc-done-ok.btn { min-width: 120px; width: auto; padding: 0 28px; }
+/* the location's head on the paper: one size, no bold */
+.loc-page.paper .lp-rep { font-size: 13px; font-weight: 400; gap: 4px 14px; }
+.loc-page.paper .lp-rep b, .loc-page.paper .lp-rep i, .loc-page.paper .lp-rep-lead i { font-size: inherit; font-weight: 400; color: #5a3a14; }
+.loc-page.paper .lp-head .blocks b { font-size: 13px; font-weight: 400; color: #5a3a14; }
