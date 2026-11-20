@@ -23,7 +23,7 @@ interface Step { target?: string; title: string; text: string; pics?: Pic[]; wid
 
 const item = (id: string, cap?: string): Pic => ({ src: `/assets/items/${id}.webp`, cap });
 const ui = (id: string, cap?: string): Pic => ({ src: `/assets/ui/${id}.webp`, cap });
-const nav = (id: string, cap: string): Pic => ({ src: `/assets/nav/${id}.webp`, cap });
+const nav = (id: string, cap: string): Pic => ({ src: `/assets/nav/${id}.webp?v=2`, cap });
 
 const STEPS: Step[] = [
   {
