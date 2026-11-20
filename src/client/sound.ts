@@ -294,9 +294,11 @@ const SAMPLE_URLS = {
   lvlvoice2: "/assets/sound/levelup-voice-2.mp3",
 } as Record<string, string>;
 /** a hit sound per weapon (w-<weapon id>) and a pick-up sound per yard find (y-<drop id>): tools/sound/build-item-sounds.py */
-const WEAPON_SOUNDS = ["fist", "mouse", "keyboard", "red-candle", "gpu", "rug-pull-gun"];
+const WEAPON_SOUNDS = ["fist", "mouse", "keyboard", "red-candle", "gpu", "rug-pull-gun", "bat"];
+/** the sounds redone: the knife (keyboard), the pistol (gpu), the bat (2026-11-20) — a version so the old file is not served from cache */
+const WEAPON_SOUND_VER: Record<string, string> = { keyboard: "?v=2", gpu: "?v=2", bat: "?v=1" };
 const YARD_SOUNDS = ["coins", "sticker-hodl", "bottle-cap", "spinner", "flyer-passive", "energy-drink", "lost-wallet", "red-candle", "keyboard"];
-for (const id of WEAPON_SOUNDS) SAMPLE_URLS[`w-${id}`] = `/assets/sound/w-${id}.mp3`;
+for (const id of WEAPON_SOUNDS) SAMPLE_URLS[`w-${id}`] = `/assets/sound/w-${id}.mp3${WEAPON_SOUND_VER[id] ?? ""}`;
 for (const id of YARD_SOUNDS) SAMPLE_URLS[`y-${id}`] = `/assets/sound/y-${id}.mp3`;
 type SampleId = string;
 /**
@@ -690,7 +692,7 @@ export function sfx(name: Sfx, power = 0.5) {
   }
 }
 
-/** The hit of this weapon (its own sound: a movie punch, plastic, fire, metal, a gunshot); `power` 0..1 for the fallback. */
+/** The hit of this weapon (its own sound: a movie punch, plastic, fire, a knife, a revolver, a bat, a gunshot); `power` 0..1 for the fallback. */
 export function weaponSfx(weaponId: string, power = 0.5) {
   if (muted) return;
   const a = audio();

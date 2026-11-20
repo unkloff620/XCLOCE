@@ -2,9 +2,10 @@
 Item sounds: a hit sound per weapon (w-*) and a pick-up sound per yard find (y-*), all synthesized.
   fist — a movie punch: whoosh, slap and a deep body thud
   mouse — a plastic mouse: whoosh, a hollow plastic knock and a click
-  keyboard — plastic: whoosh, a clatter of keys and the case knocking
+  keyboard — the knife (2026-11-20): a quick swish, the steel's ring as it's drawn, a stab — a wet thump
   red-candle — fire: a «fwoom» of flame with crackles
-  gpu — metal: a heavy clang of the cooler shroud, a ring, the fans whining down
+  gpu — the pistol (a revolver, 2026-11-20): the hammer cocked, a sharp shot, a short ring of the barrel, the casing… no, the cylinder clicks round
+  bat — a wooden baseball bat: a heavy whoosh, a hollow wooden crack and a thud
   rug-pull-gun — a gunshot: the hammer click, the crack, the boom and its echo
 Run from an empty folder: python3 tools/sound/build-item-sounds.py → out/*.wav; encode with
   for f in out/*.wav; do ffmpeg -i $f -ac 1 -b:a 64k public/assets/sound/$(basename ${f%.wav}).mp3; done
@@ -58,11 +59,14 @@ S["w-mouse"] = room(mix(0.4,
     (bp(noise(0.06, 0.015, 0.9), 1200, 4500), 0.11),                  # plastic knock
     (tone(820, 0.12, 0.03, 0.5), 0.11), (tone(1340, 0.08, 0.02, 0.3), 0.11),
     (hp(noise(0.012, 0.002, 0.7), 4000), 0.16)), 0.15)                # the button clicks
-kb = [(whoosh(0.13, 350, 2400, 0.35), 0.0), (tone(420, 0.2, 0.05, 0.6), 0.12), (bp(noise(0.08, 0.02, 0.8), 800, 3500), 0.12)]
-for k in range(14):                                                   # keys clattering off
-    at = 0.13 + rng.uniform(0, 0.22); f = rng.uniform(2500, 5500)
-    kb += [(bp(noise(0.02, 0.004, rng.uniform(0.3, 0.7)), f*0.7, f*1.3), at), (tone(rng.uniform(1100, 2200), 0.03, 0.008, 0.2), at)]
-S["w-keyboard"] = room(mix(0.55, *kb), 0.15)
+# the knife: a fast swish, the blade's thin steel ring, a short stab — a dull wet thump
+blade = metal(0.5, [2350, 3610, 5020, 6880], 0.09, 0.35)
+S["w-keyboard"] = room(mix(0.6,
+    (whoosh(0.09, 900, 5200, 0.45), 0.0),                                  # swish
+    (hp(blade, 1800), 0.02),                                                # the steel's ring
+    (hp(noise(0.015, 0.003, 0.6), 3500), 0.1),                              # the edge biting
+    (tone(130, 0.18, 0.045, 1.0, 0.6), 0.1),                                # the stab's thump
+    (lp(noise(0.08, 0.02, 0.7), 900), 0.1)), 0.12)
 t = T(0.9); fl = rng.random(len(t))*2-1
 fire = lp(fl, 1800)*np.minimum(1, t/0.06)*np.exp(-t/0.35)*1.1                # the flame «fwoom»
 fire += tone(70, 0.9, 0.3, 0.5, 0.7)
@@ -70,13 +74,25 @@ crack = np.zeros_like(t)
 for k in range(22):                                                   # crackles
     i = int(rng.uniform(0.05, 0.75)*SR); crack[i:i+60] += (rng.random(60)*2-1)*rng.uniform(0.3, 0.9)*np.exp(-np.arange(60)/12)
 S["w-red-candle"] = room(mix(1.0, (whoosh(0.15, 300, 1800, 0.3), 0.0), (fire + hp(crack, 2000), 0.1)), 0.12)
-fan_t = T(0.9); fan = np.sin(np.cumsum(2*np.pi*(260*np.exp(-fan_t*2.2)+40)/SR))*(1+0.6*np.sin(2*np.pi*(60*np.exp(-fan_t*2))*fan_t))*np.exp(-fan_t/0.5)*0.12
-S["w-gpu"] = room(mix(1.2,
-    (whoosh(0.15, 250, 1500, 0.4), 0.0),
-    (tone(80, 0.4, 0.1, 1.2, 0.5), 0.14),                             # heavy thud
-    (metal(1.0, [347, 811, 1290, 1893, 2711, 3460], 0.22, 0.55), 0.14),   # the shroud rings
-    (hp(noise(0.04, 0.008, 0.8), 2500), 0.14),
-    (lp(fan, 3000), 0.2)), 0.22)
+# the pistol (a revolver): the hammer cocked, a sharp crack and blast lighter than the gun's, the barrel's ring, the cylinder clicks round
+rev = mix(1.1,
+    (hp(noise(0.012, 0.002, 0.6), 3500), 0.0), (tone(3100, 0.02, 0.004, 0.3), 0.0),       # the hammer cocked
+    (hp(noise(0.012, 0.002, 0.5), 3500), 0.06), (tone(2400, 0.02, 0.004, 0.25), 0.06),
+    (hp(noise(0.015, 0.0025, 1.8), 2000), 0.12),                                          # the crack
+    (lp(noise(0.16, 0.035, 1.2), 3500), 0.12),                                            # the blast
+    (tone(95, 0.35, 0.08, 1.1, 0.6), 0.12),                                               # the punch
+    (metal(0.5, [1780, 2930, 4150], 0.07, 0.18), 0.13),                                   # the barrel rings
+    (lp(noise(0.7, 0.2, 0.25), 1200), 0.2),                                               # the echo
+    (hp(noise(0.01, 0.002, 0.45), 3000), 0.62), (tone(2800, 0.015, 0.004, 0.2), 0.62))    # the cylinder clicks round
+S["w-gpu"] = room(np.tanh(rev*1.3), 0.25, (29, 53, 89, 131))
+# the bat: a heavy low whoosh, a hollow wooden «tok» and the body's thud
+wood = mix(0.5, (tone(310, 0.25, 0.04, 0.9), 0.0), (tone(540, 0.18, 0.03, 0.6), 0.0), (tone(890, 0.1, 0.02, 0.35), 0.0))
+S["w-bat"] = room(mix(0.65,
+    (whoosh(0.2, 160, 1100, 0.55), 0.0),                                    # the swing
+    (bp(noise(0.03, 0.006, 1.2), 600, 3000), 0.18),                         # the wooden crack
+    (wood, 0.18),                                                           # the hollow «tok»
+    (tone(75, 0.4, 0.1, 1.4, 0.5), 0.18),                                   # the body's thud
+    (lp(noise(0.15, 0.04, 0.8), 600), 0.18)), 0.2)
 shot = mix(1.6,
     (hp(noise(0.015, 0.003, 0.5), 3000), 0.0), (tone(2600, 0.02, 0.004, 0.3), 0.0),   # the hammer click
     (hp(noise(0.02, 0.003, 1.6), 1500), 0.12),                                          # the crack
