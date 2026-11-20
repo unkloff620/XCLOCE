@@ -7291,3 +7291,11 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .loc-page.night .lp-map.drawn::before { background: rgba(10, 8, 40, 0.55); }
 .lp-map.drawn .lp-name { color: rgba(255, 246, 230, 0.85); border-color: rgba(255, 246, 230, 0.4); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9); }
 .loc-page.night .lp-map.drawn .lp-name { color: rgba(220, 214, 255, 0.85); border-color: rgba(220, 214, 255, 0.4); }
+/* the locations list on the same paper: «← Двор» and «?» in one row, the list on the sheet */
+.locs-list > .title { display: flex; align-items: center; justify-content: space-between; }
+.locs-list .lp-sheet { display: flex; flex-direction: column; gap: 12px; padding-top: 5cqi; }
+.locs-list .lp-tab2[aria-disabled="true"] { cursor: default; }
+/* «Ночной авторитет»: its crown darkened, so it differs from the day one */
+.lc-lead.night .lc-rep svg, .loc-page.night .lp-rep svg, .lead-night-ico { filter: brightness(0.42) saturate(0.55) hue-rotate(200deg) drop-shadow(0 0 1px rgba(120, 100, 255, 0.6)); }
+/* the «Бизнес» drawer inside the paper page (it is the drawer's frame): just under the tabs, over the sheet */
+.locs-list > .bz { position: absolute; top: calc(8.9cqi + 52px); z-index: 6; }

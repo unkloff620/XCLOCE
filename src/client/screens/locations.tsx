@@ -223,7 +223,7 @@ function ClaimedModal({ got, onClose }: { got: ClaimResult; onClose: () => void 
 
 export function LocationsScreen() {
   const { rows, load } = useLocations();
-  const { state, act, busy } = useGame();
+  const { state, act, busy, toast } = useGame();
   const [got, setGot] = useState<ClaimResult | null>(null);
   const claim = async (locationId: string) => {
     const res = await act<ClaimResult>("location_claim", { locationId });
@@ -234,13 +234,9 @@ export function LocationsScreen() {
     }
   };
   return (
-    <div className="locs-page">
-      <div className="locs-bg" aria-hidden="true" />
+    <div className="loc-page paper locs-list">
       <div className="title">
-        <div>
-          <Link href="/yard" className="back">← Двор</Link>
-          <div className="title-row">
-            <h1 className="display">Локации</h1>
+        <Link href="/yard" className="back">← Двор</Link>
             <Help topic="locations" title="Локации">
               <p>Энергия тратится только здесь: каждый шаг задания стоит энергии и даёт папиросы и авторитет.</p>
               <p>Задания идут по очереди, как по карте: следующее открывается, когда выполнено предыдущее. Закрой все 5 заданий — на карточке появится кнопка «Забрать награду» (доллары и вещи), откроется следующая локация.</p>
@@ -250,11 +246,20 @@ export function LocationsScreen() {
               <p><b>Ночные</b> задания — своя дорожка с ночным авторитетом. <b>Бизнес</b> качается за папиросы в каждой локации и приносит папиросы и авторитет локации: каждый час капает 1/24 суточной прибыли. Прибыль со всех локаций забирается здесь, вверху списка, в любой момент; копится до 7 дней.</p>
               <p>Энергия: +1 каждые 5 минут до 50. Купить больше — нажми на энергию вверху.</p>
             </Help>
-          </div>
-        </div>
       </div>
-      <div className="col" style={{ gap: 12 }}>
-        {rows && <BizDrawer rows={rows} onDone={() => void load()} />}
+      {/* the user's tabs: «Локации» and two more, coming later (grey, behind the sheet) */}
+      <div className="lp-tabs2" role="tablist">
+        {([["Локации", "l", true], ["Скоро", "m", false], ["Скоро", "r", false]] as const).map(([t, at, on]) => (
+          <button key={at} type="button" role="tab" aria-selected={on} aria-disabled={!on} className={`lp-tab2 at-${at} ${on ? "on" : ""}`}
+            onClick={() => { if (!on) { haptic.tap(); toast("Скоро"); } }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`/assets/locations/page/tab-${at}.webp`} alt="" draggable={false} />
+            <b className="display">{t}</b>
+          </button>
+        ))}
+      </div>
+      {rows && <BizDrawer rows={rows} onDone={() => void load()} />}
+      <div className="lp-sheet col" style={{ gap: 12 }}>
         {LOCATIONS.map((l) => {
           const r = rows?.find((x) => x.id === l.id);
           // the one to play now: the first open location not cleared yet
