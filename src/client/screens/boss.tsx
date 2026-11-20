@@ -313,6 +313,7 @@ export function BossScreen({ id }: { id: string }) {
       }
       if (r.result.status !== "active" || r.result.talentsGained > 0) void refresh();
     } catch (e) {
+      if ((e as { code?: string }).code === "too_fast") return;
       haptic.err();
       sfx("error");
       toast(e instanceof Error ? e.message : "Не получилось", "err");

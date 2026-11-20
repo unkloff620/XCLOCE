@@ -92,6 +92,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
         if (msg) toast(msg, "ok");
         return r.result;
       } catch (e) {
+        // the server turned down a too-quick hit: nothing to tell, the next tap goes through
+        if ((e as { code?: string }).code === "too_fast") return null;
         haptic.err();
         sfx("error");
         toast(e instanceof Error ? e.message : "Ошибка", "err");

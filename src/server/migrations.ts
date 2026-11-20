@@ -1581,4 +1581,9 @@ DELETE FROM location_business;`,
     id: "v2-109-talent-path-v3",
     sql: TALENT_RESET_SQL("talent-path-v3"),
   },
+  {
+    // the weapon hits: one a player per 250 ms, checked on the player's row (app/api/action/route.ts)
+    id: "v2-110-last-hit-at",
+    sql: `ALTER TABLE players ADD COLUMN IF NOT EXISTS last_hit_at TIMESTAMPTZ;`,
+  },
 ];

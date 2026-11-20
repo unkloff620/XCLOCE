@@ -605,7 +605,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
       play(weapon, w.weapon.damage, w.weapon.action, true);
     }
     const r2 = await act<RaidHit>("raid_attack", { weapon, count: w?.weapon?.kind === "consumable" ? pack : 1, ...(rush ? { rush: true } : {}) });
-    if (!r2) { haptic.err(); sfx("error"); return; }
+    if (!r2) return; // act() already told about a real error; a too-quick tap stays quiet
     // «Инфо»: my hits in this fight, the newest on top
     setLog((l) => [{ seq: Date.now() + Math.random(), playerId: state?.player.id ?? 0, name: state?.player.name ?? "", weapon, damage: r2.damage, phrase: 0, at: Date.now(), crit: r2.crit, count: r2.count }, ...l].slice(0, 150));
     if (r2.crit) { setCritPop(Date.now()); haptic.heavy(); /* no crit sound: only the weapon's own */ }
