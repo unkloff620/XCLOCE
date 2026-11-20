@@ -296,7 +296,7 @@ const SAMPLE_URLS = {
 /** a hit sound per weapon (w-<weapon id>) and a pick-up sound per yard find (y-<drop id>): tools/sound/build-item-sounds.py */
 const WEAPON_SOUNDS = ["fist", "mouse", "keyboard", "red-candle", "gpu", "rug-pull-gun", "bat"];
 /** the sounds redone: the knife (keyboard), the pistol (gpu), the bat (2026-11-20) — a version so the old file is not served from cache */
-const WEAPON_SOUND_VER: Record<string, string> = { keyboard: "?v=5", gpu: "?v=3", bat: "?v=1", "rug-pull-gun": "?v=2" };
+const WEAPON_SOUND_VER: Record<string, string> = { keyboard: "?v=5", gpu: "?v=3", bat: "?v=1", "rug-pull-gun": "?v=2", fist: "?v=2" };
 const YARD_SOUNDS = ["coins", "sticker-hodl", "bottle-cap", "spinner", "flyer-passive", "energy-drink", "lost-wallet", "red-candle", "keyboard"];
 for (const id of WEAPON_SOUNDS) SAMPLE_URLS[`w-${id}`] = `/assets/sound/w-${id}.mp3${WEAPON_SOUND_VER[id] ?? ""}`;
 for (const id of YARD_SOUNDS) SAMPLE_URLS[`y-${id}`] = `/assets/sound/y-${id}.mp3`;

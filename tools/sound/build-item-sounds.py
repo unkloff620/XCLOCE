@@ -1,6 +1,7 @@
 """
 Item sounds: a hit sound per weapon (w-*) and a pick-up sound per yard find (y-*), all synthesized.
-  fist — a movie punch: whoosh, slap and a deep body thud
+  fist — NOT from here since 2026-11-20 — the user's recording tools/sound/source/w-fist-punch.mp3
+    (ffmpeg: silenceremove at the start, limiter, a 0.08 s fade → public/assets/sound/w-fist.mp3)
   mouse — a plastic mouse: whoosh, a hollow plastic knock and a click
   keyboard — the knife: NOT from here since 2026-11-20 — the user's recording tools/sound/source/w-keyboard-knife.mp3
     (ffmpeg: silenceremove at the start, highpass 500 Hz ×3 (no bass), +5 dB, limiter, a 0.12 s fade → public/assets/sound/w-keyboard.mp3)
