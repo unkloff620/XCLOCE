@@ -130,6 +130,7 @@ const WEARABLES: ItemDef[] = ([
   { id: "sneakers-chunky", name: "Кроссовки Гаркуши", slot: "SHOES", rarity: "rare", description: "Чёрные, на толстой подошве. Шаг тяжёлый, как пачка пятитысячных.", sources: ["Победа: Гаркуша (Блатной)"] },
   // Мугонатор's set: the sea captain (cut from the hero on tools/rig/source/wear)
   { id: "tee-sailor", name: "Тельняшка Мугонатора", slot: "SHIRT", rarity: "rare", description: "Полоски — чтобы акула видела, кого не трогать. Край уже кто-то откусил.", sources: ["Победа: Мугонатор (Блатной)"] },
+  { id: "mask-gas-utilizator", name: "Противогаз Утилизатора", slot: "FACE", rarity: "legendary", description: "Тот самый, что висит у него на фартуке. Фильтры жёлтые, взгляд сквозь стекло — тяжёлый. Кислотные пары не страшны.", sources: ["Победа: Утилизатор (Авторитетный)"] },
   { id: "vials-utilizator", name: "Колбы Утилизатора", slot: "HAND", rarity: "legendary", description: "Три колбы с кислотой на кольце. Утилизатор крутит их на пальце, пока решает, кого растворить. Герой крутит кольцо, колбы болтаются.", sources: ["Победа: Утилизатор (Авторитетный)"] },
   { id: "anchor-mugo", name: "Якорь", slot: "HAND", rarity: "epic", description: "Мугонатор качает его на верёвке и ждёт, когда Вадим скажет «бросай». Герой держит его в руке.", sources: ["Победа: Мугонатор (Блатной)"] },
   // Боцман's set: the gloves; the left hand plays with his crowbar (tools/rig/build-gloves.py)

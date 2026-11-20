@@ -272,6 +272,13 @@ export const WEAR_FIT = {
     "w": 79,
     "h": 106
   },
+  "mask-gas-utilizator": {
+    "slot": "FACE",
+    "x": 398.0,
+    "y": 118.0,
+    "w": 208,
+    "h": 216
+  },
   "crown-cash": {
     "slot": "HEAD",
     "x": 364.0,
