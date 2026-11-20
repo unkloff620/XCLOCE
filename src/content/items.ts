@@ -19,7 +19,7 @@ export interface WeaponStats {
   /** permanent weapons only: minutes until it can be used again */
   cooldownMin?: number;
   /** client animation id (see client/fx) */
-  animation: "fist" | "mouse" | "candle" | "keyboard" | "gpu" | "rugpull" | "flame";
+  animation: "fist" | "mouse" | "candle" | "keyboard" | "gpu" | "rugpull" | "flame" | "bat";
   /** button text on the boss screen */
   action: string;
 }
@@ -239,7 +239,15 @@ const CRAFT: ItemDef[] = CRAFT_ALL.map((c) => ({
   // вещь 3 ур. — оружие: бьёт боссов, как кулак, со своей перезарядкой
   ...(c.weapon ? { weapon: { ...c.weapon, kind: "permanent" as const } } : {}),
 }));
-export const ITEMS: ItemDef[] = [...WEAPONS, ...WEARABLES, ...MISC, ...KEYS, TROPHY, STATUE, ...STASHES, ...TATTOOS, ...CRAFT];
+/** «Бита»: a free weapon opened by the talent «Удар битой» (content/talents.ts «Новый удар»): the talent puts it in the
+ *  inventory, a reset of the talents takes it away. Not one of the six main weapons (it is not in WEAPONS). */
+export const BAT: ItemDef = {
+  id: "bat", name: "Бита", category: "weapon", rarity: "rare", maxStack: 1,
+  description: "Бейсбольная, но в бейсбол ей ни разу не играли. Бесплатная: после удара 6 часов отдыхает, в новом бою снова в руке.",
+  sources: ["Таланты: «Удар битой»"],
+  weapon: { damage: 40, kind: "permanent", cooldownMin: 360, animation: "bat", action: "Втащить битой" },
+};
+export const ITEMS: ItemDef[] = [...WEAPONS, BAT, ...WEARABLES, ...MISC, ...KEYS, TROPHY, STATUE, ...STASHES, ...TATTOOS, ...CRAFT];
 const BY_ID = new Map(ITEMS.map((i) => [i.id, i]));
 export const itemById = (id: string) => BY_ID.get(id);
 export const weaponById = (id: string) => {

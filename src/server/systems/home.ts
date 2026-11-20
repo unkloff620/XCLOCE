@@ -1,9 +1,9 @@
 import { GameError, type Queryable } from "../db.ts";
-import { grantReward, ledger, takeMoney, type Ctx } from "../core.ts";
+import { addItem, grantReward, itemQty, ledger, takeMoney, type Ctx } from "../core.ts";
 import { EQUIPMENT, ROOM_DEFS, FIRST_STEPS_GIFT, pieceUnlockId, HELP_TOPICS, TROPHIES, baseBit, equipmentById, hasPiece, piecesCount, normalizeLook, roomById, roomUnlockId, roomsEnergyBonus, totalBonus, type HelpTopic, type Look, beardLevel, unshavenDays, REMOVABLE } from "../../content/home.ts";
 import { bossById } from "../../content/bosses.ts";
 import { craftBonus } from "./craft.ts";
-import { TALENT_PATH, TALENT_RESET_PRICE, autoStop, autoTalentsOpen, stopLevel, stopOpen, talentExtras, talentStop, talentsSpent, type WeaponTalents } from "../../content/talents.ts";
+import { BAT_ID, TALENT_PATH, TALENT_RESET_PRICE, autoStop, autoTalentsOpen, stopLevel, stopOpen, talentExtras, talentStop, talentsSpent, type WeaponTalents } from "../../content/talents.ts";
 
 /*
  * Дом: оборудование (уровни), комнаты (купить / выбрать), внешность персонажа, просмотренные подсказки.
@@ -132,6 +132,8 @@ export async function upgradeTalent(ctx: Ctx, target: string, branch: string) {
   if (!row) throw new GameError("conflict", "Талант уже улучшен, обнови экран");
   await ledger(ctx, "talent", "talent", -node.cost, `talent:${target}:${branch}`);
   if (node.kind === "energy" || node.kind === "biceps") await syncTalentExtras(ctx.q, ctx.pid);
+  // «Удар битой»: the bat comes into the inventory
+  if (node.kind === "unlock" && (await itemQty(ctx.q, ctx.pid, BAT_ID)) < 1) await addItem(ctx, BAT_ID, 1, "talent:bat");
   return { weapon: target, branch, level: lv + 1, max: node.max, talents: p.talents, name: node.name };
 }
 
@@ -166,6 +168,8 @@ export async function resetTalents(ctx: Ctx) {
   if (back <= 0) throw new GameError("nothing_to_reset", "Таланты ещё не вложены — сбрасывать нечего");
   await takeMoney(ctx, TALENT_RESET_PRICE.currency, TALENT_RESET_PRICE.amount, "talent-reset");
   await ctx.q.query("DELETE FROM player_talents WHERE player_id=$1", [ctx.pid]);
+  // the bat goes with its talent
+  await ctx.q.query("DELETE FROM inventory WHERE player_id=$1 AND item_id=$2", [ctx.pid, BAT_ID]);
   const [p] = await ctx.q.query<{ talents: number }>("UPDATE players SET talents = talents + $2 WHERE id=$1 RETURNING talents", [ctx.pid, back]);
   await syncTalentExtras(ctx.q, ctx.pid); // the talents' part is gone, the craft stash's stays
   await ledger(ctx, "talent", "talent", back, "talent-reset");

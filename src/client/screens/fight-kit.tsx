@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useGame, useNow } from "../store.tsx";
 import { type Hit, type Tray } from "../api.ts";
-import { WEAPONS, itemById } from "../../content/items.ts";
+import { BAT, WEAPONS, itemById } from "../../content/items.ts";
 import { CRAFT_WEAPONS } from "../../content/craft.ts";
 import { DEFAULT_FIGHT_SLOTS, FIGHT_PACKS, FIGHT_SLOTS, type FightSlot } from "../../content/fight-slots.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
@@ -129,7 +129,7 @@ export function WeaponPanel({ tray, onClose }: { tray: Tray[]; onClose: () => vo
   }, [drag, pick, slots]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const qtyOf = (id: string) => tray.find((x) => x.id === id)?.qty ?? 0;
-  const weapons = [...WEAPONS, ...CRAFT_WEAPONS.filter((c) => qtyOf(c.id) > 0).map((c) => itemById(c.id)!)];
+  const weapons = [...WEAPONS, ...(qtyOf(BAT.id) > 0 ? [BAT] : []), ...CRAFT_WEAPONS.filter((c) => qtyOf(c.id) > 0).map((c) => itemById(c.id)!)];
   const tiles = weapons.flatMap((w) => (w.weapon!.kind === "consumable" ? FIGHT_PACKS.map((n) => ({ w, n })) : [{ w, n: 1 }]));
 
   return createPortal(

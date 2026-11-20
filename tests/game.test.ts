@@ -980,44 +980,70 @@ describe("home: equipment, rooms, look, help", () => {
     await expect(act(db, p, "talent_up", { weapon: "nope", branch: "n1" }, T0 + M)).rejects.toMatchObject({ code: "bad_talent" });
     const up = await act(db, p, "talent_up", { weapon: "keyboard", branch: "n1" }, T0 + M);
     expect(up.result).toMatchObject({ level: 1, max: 10, talents: 2 });
-    expect((await hit(p, "keyboard", T0 + M)).result.damage).toBe(33); // +3 to the keyboard only
-    // the main weapons' block done → «Бицуха I»
+    expect((await hit(p, "keyboard", T0 + M)).result.damage).toBe(31); // +1 to the knife only
+    // the main weapons' block done → «Основа»: the biceps +50 a level
     await db.query("UPDATE player_talents SET level=10 WHERE player_id=$1 AND weapon_id='keyboard'", [p]);
-    await db.query("INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,'keyboard','c1',5),($1,'gpu','n1',10),($1,'gpu','c1',5),($1,'rug-pull-gun','n1',10),($1,'rug-pull-gun','c1',5)", [p]);
+    await db.query("INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,'keyboard','c1',10),($1,'gpu','n1',20),($1,'gpu','c1',10),($1,'rug-pull-gun','n1',10),($1,'rug-pull-gun','c1',10)", [p]);
     const b1 = await act(db, p, "talent_up", { weapon: "_biceps", branch: "s1" }, T0 + M);
-    expect(b1.result).toMatchObject({ level: 1, max: 100 }); // up to 100, but 10 opens the next cell
+    expect(b1.result).toMatchObject({ level: 1, max: 200 }); // up to 200, but 10 close it
     const [bi] = await db.query<{ talent_biceps: number }>("SELECT talent_biceps FROM players WHERE id=$1", [p]);
-    expect(bi.talent_biceps).toBe(10);
-    // the energy limit grows with «Лимит энергии»
+    expect(bi.talent_biceps).toBe(50);
+    // the energy limit grows with «Лимит энергии» (in «Супер таланты», after «Основа», «Сила удара» and «Новый удар»)
     await expect(act(db, p, "talent_up", { weapon: "_energy", branch: "s1" }, T0 + M)).rejects.toMatchObject({ code: "talent_locked" });
     await db.query("UPDATE player_talents SET level=10 WHERE player_id=$1 AND weapon_id='_biceps'", [p]);
-    await db.query("INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,'_energy','s1',14),($1,'mouse','n1',10)", [p]);
+    await db.query(`INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,'fist','c1',10),($1,'mouse','c1',10),($1,'red-candle','c1',10),
+      ($1,'fist','n1',10),($1,'fist','r1',10),($1,'mouse','n1',10),($1,'mouse','r1',10),($1,'red-candle','n1',10),($1,'red-candle','r1',10),
+      ($1,'bat','u1',1),($1,'bat','n1',10),($1,'bat','c1',20),($1,'bat','r1',30),($1,'_energy','s1',14)`, [p]);
     const max0 = b1.state.player.energyMax;
+    await db.query("UPDATE players SET talents = talents + 1 WHERE id=$1", [p]);
     const e1 = await act(db, p, "talent_up", { weapon: "_energy", branch: "s1" }, T0 + M);
     expect(e1.state.player.energyMax).toBe(max0 + 15);
-    expect((await hit(p, "mouse", T0 + M)).result.damage).toBe(40); // the mouse has its +20 «Урон»
+    expect([30, 45]).toContain((await hit(p, "mouse", T0 + M)).result.damage); // the mouse has its +10 «Урон» (×1.5 on a crit)
     await db.query("UPDATE players SET talents=0 WHERE id=$1", [p]);
     await expect(act(db, p, "talent_up", { weapon: "_clock", branch: "s1" }, T0 + M)).rejects.toMatchObject({ code: "no_talents" });
     await expect(act(db, p, "talent_up", { weapon: "keyboard", branch: "n1" }, T0 + M)).rejects.toMatchObject({ code: "max_level" });
   });
 
-  it("the path: 800 talents; every weapon gets +30 steps of damage and «Урон III», +50% crit power (×1.5 → ×2) and +15% crit chance; biceps 1000, energy 50, clock 90 min, +3 boss fights", async () => {
-    const { TALENT_PATH, weaponTalentBonus, talentsSpent, talentExtras, critChanceOf } = await import("../src/content/talents.ts");
+  it("the path: the user's blocks — 1054 talents; damage, crit, reloads, the bat, biceps, energy, clock, boss fights", async () => {
+    const { TALENT_PATH, TALENT_BLOCKS, weaponTalentBonus, talentsSpent, talentExtras, critChanceOf } = await import("../src/content/talents.ts");
+    expect(TALENT_BLOCKS.map((b) => b.title)).toEqual(["Специализация в оружии", "Основа", "Сила удара", "Новый удар", "Супер таланты", "Увеличение урона", "Сила автомата", "Энергия", "Оружейник", "Тактика", "Военный", "Ярость"]);
     const full: Record<string, Record<string, number>> = {};
     for (const x of TALENT_PATH) (full[x.target] ??= {})[x.branch] = x.max;
-    for (const w of ["fist", "mouse", "red-candle", "keyboard", "gpu", "rug-pull-gun"]) {
-      const b = weaponTalentBonus(full, w);
-      expect(b.critDamage).toBeCloseTo(0.5);
-      expect(b.critChance).toBeCloseTo(0.15);
-      const n5 = TALENT_PATH.find((x) => x.target === w && x.branch === "n5")!;
-      expect(b.flat).toBe((30 + n5.max) * n5.per);
-    }
-    expect(talentExtras(full)).toEqual({ biceps: 1000, energy: 50, clockMin: 90, bossFights: 3 });
-    expect(TALENT_PATH.reduce((n, x) => n + x.max * x.cost, 0)).toBe(800);
-    expect(talentsSpent(full)).toBe(TALENT_PATH.reduce((n, x) => n + x.max * x.cost, 0));
-    // the last stop: «Урон III» of the fist
-    expect(TALENT_PATH[TALENT_PATH.length - 1]).toMatchObject({ target: "fist", branch: "n5" });
+    const b = (w: string) => weaponTalentBonus(full, w);
+    // the knife: +10 +100 +500 damage, 10% + 10% crit; the pistol: +20 +150 +100 +100; the gun: +10 +100 +100 +100 +500
+    expect([b("keyboard").flat, b("gpu").flat, b("rug-pull-gun").flat, b("fist").flat, b("bat").flat]).toEqual([610, 370, 810, 10, 10]);
+    expect(b("keyboard").critChance).toBeCloseTo(0.2 + 0.045);
+    expect(b("gpu").critChance).toBeCloseTo(0.3 + 0.045);
+    expect(b("rug-pull-gun").critChance).toBeCloseTo(0.26 + 0.045);
+    expect(b("bat").critChance).toBeCloseTo(0.2 + 0.045);
+    expect([b("fist").cooldownMin, b("bat").cooldownMin, b("gpu").cooldownMin]).toEqual([100, 300, 0]);
+    expect(b("fist").critDamage).toBe(0);
+    expect(talentExtras(full)).toEqual({ biceps: 10_000, energy: 124, clockMin: 45 + 48 + 38 + 28, bossFights: 2 });
+    expect(TALENT_PATH.reduce((n, x) => n + x.max * x.cost, 0)).toBe(1054);
+    expect(talentsSpent(full)).toBe(1054);
     expect(critChanceOf(0.45, 0.15)).toBeCloseTo(0.51);
+  });
+
+  it("«Удар битой» puts the bat in the inventory; it hits like the free weapons, its reload cut by the talents", async () => {
+    await setBossHp({ datsik: 1_000_000 });
+    const p = await newPlayer(db);
+    const { TALENT_PATH } = await import("../src/content/talents.ts");
+    // every block before «Новый удар» closed
+    const before = TALENT_PATH.slice(0, TALENT_PATH.findIndex((x) => x.key === "bat:u1"));
+    for (const x of before) await db.query("INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,$2,$3,$4)", [p, x.target, x.branch, x.max]);
+    await db.query("UPDATE players SET talents = 5 WHERE id=$1", [p]);
+    await act(db, p, "talent_up", { weapon: "bat", branch: "u1" }, T0);
+    expect((await db.query("SELECT 1 FROM inventory WHERE player_id=$1 AND item_id='bat' AND qty > 0", [p])).length).toBe(1);
+    await db.query("INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,'bat','r1',30)", [p]);
+    await startDatsik(p);
+    const h = await hit(p, "bat");
+    expect(h.result.damage).toBeGreaterThan(0);
+    // 360 minutes − 300 = an hour
+    const [cd] = await db.query<{ ready_at: Date }>("SELECT ready_at FROM cooldowns WHERE player_id=$1 AND item_id='bat'", [p]);
+    expect(new Date(cd.ready_at).getTime() - T0).toBe(60 * M);
+    await setMoney(db, p, "RUB", 10);
+    await act(db, p, "talent_reset", {}, T0 + M);
+    expect((await db.query("SELECT 1 FROM inventory WHERE player_id=$1 AND item_id='bat' AND qty > 0", [p])).length).toBe(0);
   });
 
   it("the 800-talent migration gives «Бицуха II/III» back and counts the biceps ×10", async () => {
@@ -1054,7 +1080,7 @@ describe("home: equipment, rooms, look, help", () => {
   it("the talent reset costs 5 ₽ and gives every spent talent back", async () => {
     const p = await newPlayer(db);
     await expect(act(db, p, "talent_reset", {}, T0)).rejects.toMatchObject({ code: "nothing_to_reset" });
-    await db.query("INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,'_biceps','s1',30),($1,'fist','n1',10),($1,'gpu','n1',3),($1,'fist','n3',4)", [p]);
+    await db.query("INSERT INTO player_talents (player_id, weapon_id, branch, level) VALUES ($1,'_biceps','s1',30),($1,'fist','n1',10),($1,'gpu','n1',3),($1,'fist','r1',4)", [p]);
     await db.query("UPDATE players SET talents = 7, talent_biceps = 30 WHERE id=$1", [p]);
     await setMoney(db, p, "RUB", 4);
     await expect(act(db, p, "talent_reset", {}, T0)).rejects.toMatchObject({ code: "no_money" });

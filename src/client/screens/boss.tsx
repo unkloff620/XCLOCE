@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { api, type FightView, type Hit, type Tray } from "../api.ts";
 import { BOSSES, arenaOf, bossById, type BossDef, FIGHT_HOURS, rewardShare } from "../../content/bosses.ts";
-import { WEAPONS, itemById, rushPrice, weaponById } from "../../content/items.ts";
+import { BAT, WEAPONS, itemById, rushPrice, weaponById } from "../../content/items.ts";
 import { CRAFT_WEAPONS } from "../../content/craft.ts";
 import { HIT_PHRASES, bossLines } from "../../content/phrases.ts";
 import { BossSilhouette } from "../art/scenes.tsx";
@@ -24,7 +24,7 @@ import { ArenaBg, UtilizatorFront } from "../art/arena-bg.tsx";
 import { PepeRig } from "../art/pepe-rig.tsx";
 import { CritBurn, preloadCritBanner } from "../art/crit-burn.tsx";
 import { Modal, Toggle } from "../ui.tsx";
-import { talentThreshold, talentsForDamage } from "../../content/talents.ts";
+import { reloadMin, talentThreshold, talentsForDamage, weaponTalentBonus } from "../../content/talents.ts";
 import { TalentWindow } from "./talents.tsx";
 import { weaponStats } from "../weapon-stats.ts";
 import { BOXERS, useBossStrike } from "../fx/boss-strike.tsx";
@@ -156,11 +156,11 @@ export function WeaponTray({ tray, onHit, onCooldown, onBuy, disabled, mult }: {
   return (
     <div className="tray" style={{ gridTemplateColumns: `repeat(${WEAPONS.length}, minmax(0, 1fr))` }}>
       {/* the six weapons, then the craft weapons (вещи 3 ур.) you have — on a second row */}
-      {[...WEAPONS, ...CRAFT_WEAPONS.filter((c) => (tray.find((x) => x.id === c.id)?.qty ?? 0) > 0).map((c) => itemById(c.id)!)].map((w) => {
+      {[...WEAPONS, ...((tray.find((x) => x.id === BAT.id)?.qty ?? 0) > 0 ? [BAT] : []), ...CRAFT_WEAPONS.filter((c) => (tray.find((x) => x.id === c.id)?.qty ?? 0) > 0).map((c) => itemById(c.id)!)].map((w) => {
         const t = tray.find((x) => x.id === w.id);
         const qty = t?.qty ?? 0;
         const cd = t?.readyAt && t.readyAt > now ? t.readyAt - now : 0;
-        const total = (w.weapon!.cooldownMin ?? 0) * 60_000;
+        const total = reloadMin(w.weapon!.cooldownMin ?? 0, weaponTalentBonus(state?.weaponTalents ?? {}, w.id).cooldownMin) * 60_000;
         const perm = w.weapon!.kind === "permanent";
         const empty = !perm && qty <= 0;
         // the cooldown "clock": the grey part shrinks clockwise until the weapon is in colour again

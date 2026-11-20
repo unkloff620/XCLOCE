@@ -4,7 +4,7 @@
  */
 import { ACHIEVEMENTS, SOLO_BOSS_ACHIEVEMENTS } from "../content/achievements.ts";
 import { LOCATIONS, locRep } from "../content/locations.ts";
-import { TALENT_PATH, TALENT_THRESHOLDS } from "../content/talents.ts";
+import { TALENT_THRESHOLDS } from "../content/talents.ts";
 
 const OLD_TABLES = [
   "actions", "balances", "battles", "boss_damage", "boss_defeats", "boss_instances", "boss_progress", "clan_members", "clan_requests",
@@ -12,6 +12,25 @@ const OLD_TABLES = [
   "market_clock", "player_bosses", "player_fights", "player_stats", "players", "positions", "quest_claims", "quest_metrics",
   "token_prices", "tokens", "yard_pickups",
 ];
+
+/**
+ * All talents back and counted anew on the curve (content/talents.ts TALENT_THRESHOLDS) from the damage of all time:
+ * the talents' part of the energy limit and the biceps goes (the path before 2026-11-20: «Лимит энергии» +1 a level,
+ * «Бицуха» +10 a level up to 100), every level is dropped, the bat (a talent's weapon) too.
+ */
+const TALENT_RESET_SQL = (reason: string) => `WITH ex AS (
+  SELECT player_id,
+    COALESCE(SUM(CASE WHEN weapon_id = '_energy' THEN LEAST(level, CASE branch WHEN 's3' THEN 20 ELSE 15 END) ELSE 0 END), 0)::int AS energy,
+    COALESCE(SUM(CASE WHEN weapon_id = '_biceps' THEN LEAST(level, 100) * 10 ELSE 0 END), 0)::int AS biceps
+  FROM player_talents GROUP BY player_id
+)
+UPDATE players p SET talent_energy = GREATEST(0, p.talent_energy - ex.energy), talent_biceps = GREATEST(0, p.talent_biceps - ex.biceps) FROM ex WHERE ex.player_id = p.id;
+DELETE FROM player_talents;
+DELETE FROM inventory WHERE item_id = 'bat';
+WITH thr(v) AS (VALUES ${TALENT_THRESHOLDS.map((v) => `(${v}::bigint)`).join(",")}),
+due AS (SELECT s.player_id, (SELECT COUNT(*) FROM thr WHERE v <= s.total_damage)::int AS n FROM player_stats s)
+UPDATE players p SET talents = COALESCE(d.n, 0) FROM due d WHERE d.player_id = p.id;
+INSERT INTO ledger (player_id, kind, key, delta, reason) SELECT id, 'talent', 'talent', talents, '${reason}' FROM players WHERE talents > 0;`;
 
 export const MIGRATIONS: { id: string; sql: string }[] = [
   {
@@ -1555,17 +1574,11 @@ DELETE FROM location_business;`,
     // talents' part of the energy limit and the biceps goes, and everyone has the talents the new curve gives for
     // the damage of all time
     id: "v2-108-talent-curve",
-    sql: `WITH ex AS (
-  SELECT player_id,
-    COALESCE(SUM(CASE ${TALENT_PATH.filter((t) => t.kind === "energy").map((t) => `WHEN weapon_id = '${t.target}' AND branch = '${t.branch}' THEN LEAST(level, ${t.max}) * ${t.per}`).join(" ") || "WHEN false THEN 0"} ELSE 0 END), 0)::int AS energy,
-    COALESCE(SUM(CASE ${TALENT_PATH.filter((t) => t.kind === "biceps").map((t) => `WHEN weapon_id = '${t.target}' AND branch = '${t.branch}' THEN LEAST(level, ${t.max}) * ${t.per}`).join(" ") || "WHEN false THEN 0"} ELSE 0 END), 0)::int AS biceps
-  FROM player_talents GROUP BY player_id
-)
-UPDATE players p SET talent_energy = GREATEST(0, p.talent_energy - ex.energy), talent_biceps = GREATEST(0, p.talent_biceps - ex.biceps) FROM ex WHERE ex.player_id = p.id;
-DELETE FROM player_talents;
-WITH thr(v) AS (VALUES ${TALENT_THRESHOLDS.map((v) => `(${v}::bigint)`).join(",")}),
-due AS (SELECT s.player_id, (SELECT COUNT(*) FROM thr WHERE v <= s.total_damage)::int AS n FROM player_stats s)
-UPDATE players p SET talents = COALESCE(d.n, 0) FROM due d WHERE d.player_id = p.id;
-INSERT INTO ledger (player_id, kind, key, delta, reason) SELECT id, 'talent', 'talent', talents, 'talent-curve-v3' FROM players WHERE talents > 0;`,
+    sql: TALENT_RESET_SQL("talent-curve-v3"),
+  },
+  {
+    // the talent path rebuilt (content/talents.ts, the user's blocks 2026-11-20): every talent spent comes back again
+    id: "v2-109-talent-path-v3",
+    sql: TALENT_RESET_SQL("talent-path-v3"),
   },
 ];

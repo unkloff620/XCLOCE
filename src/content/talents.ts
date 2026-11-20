@@ -68,20 +68,27 @@ export function talentsForDamage(damage: number): number {
 
 /* ---------------- дорожка талантов ---------------- */
 /*
- * Одна общая дорожка: остановки идут одна за другой, следующая открывается, когда предыдущая прокачана до конца.
- * Нарисована блоками (TALENT_BLOCKS): сначала три главных оружия (нож, пистолет, Rug Pull Gun) — урон и крит,
- * потом понемногу всё остальное — бицуха, лимит энергии, часы, кулак, свеча, мышь; в конце — Сила крита II у всех.
- * Бицуха +10 за уровень (только в «Основе», всего 1000), лимит энергии +1 (всего 50), Часы +1 минута к бою с боссом (I–III, всего 45),
- * Часы IV +3 минуты (15 уровней, ещё 45), Лимит боссов +1 бой в день с каждым боссом (всего +3), Урон III — остаток до 800 талантов,
- * Крит +1% шанса крита этому оружию (всего 15% на оружие); общий шанс крита — не больше 51%.
- * Урон: +N за уровень (N — шаг этого оружия), Сила крита: +2% (I) и +1,5% (II) за уровень — с ×1,5 до ×2 на максимуме.
- * Сброс всех талантов — за 5 ₽: потраченные таланты возвращаются.
+ * Одна общая дорожка, нарисованная блоками (TALENT_BLOCKS) сверху вниз: следующий блок открывается, когда закрыт весь
+ * предыдущий; внутри блока ячейка открывается, когда закрыта та, от которой к ней идёт стрелка.
+ * Блоки и числа — таблица пользователя (2026-11-20):
+ *  «Специализация в оружии»: нож +1 урона ×10 и +1% крита ×10; пистолет +1 ×20 и +1% ×10; автомат +1 ×10 и +1% ×10.
+ *  «Основа»: бицуха +50 ×200; +1% крита кулаку, мыши, свече — по 10.
+ *  «Сила удара»: кулак, мышь, свеча — по +1 урона ×10 и −10 минут перезарядки ×10.
+ *  «Новый удар»: удар битой (открывает биту) ×1, бите +1 урона ×10, +1% крита ×20, −10 минут перезарядки ×30.
+ *  «Супер таланты»: +1 минута боя с боссом ×45, +1 к лимиту энергии ×40, автомату +10 урона ×10.
+ *  «Увеличение урона»: ножу +1% крита ×10 и +1 урона ×100; пистолету +1% крита ×20 и +1 урона ×150.
+ *  «Сила автомата»: +1% крита ×10, +10 урона ×10.   «Энергия»: +1 к лимиту энергии ×70.
+ *  «Оружейник»: автомату +10 урона ×10 и +1% крита ×6, пистолету +10 урона ×10.
+ *  «Тактика»: +1 минута боя ×48, +1 бой в день с каждым боссом ×2.
+ *  «Военный»: пистолету +10 ×10, автомату +50 ×10, ножу +50 ×10, +2 минуты боя ×19.
+ *  «Ярость»: +1 к лимиту энергии ×14, +2 минуты боя ×14, +0,3% крита всему оружию ×15.
+ * Общий шанс крита — не больше 51%. Сброс всех талантов — за 5 ₽: потраченные таланты возвращаются.
  */
-export type TalentKind = "dmg" | "crit" | "chance" | "biceps" | "energy" | "clock" | "bosses";
+export type TalentKind = "dmg" | "crit" | "chance" | "chanceAll" | "cooldown" | "unlock" | "biceps" | "energy" | "clock" | "bosses";
 export interface TalentStop {
   /** unique key: `${target}:${branch}` */
   key: string;
-  /** a weapon id, or "_biceps" / "_energy" / "_clock" / "_bosses" */
+  /** a weapon id, or "_biceps" / "_energy" / "_clock" / "_bosses" / "_all" (every weapon) */
   target: string;
   branch: string;
   kind: TalentKind;
@@ -92,90 +99,89 @@ export interface TalentStop {
   need: number;
   cost: number;
 }
-/** damage added by one level of the damage upgrades of each weapon */
-export const TALENT_DMG_STEP: Record<string, number> = { fist: 1, mouse: 2, "red-candle": 3, keyboard: 3, gpu: 5, "rug-pull-gun": 20 };
-/** every weapon is on the path, the fist too (in this order) */
-export const TALENT_WEAPONS = WEAPONS.map((w) => w.id);
-/** the crit hits ×1.5 at first; «Сила крита» I (+0.2) and II (+0.3) take it to ×2 at most — nothing else adds to it */
+/** the crit hits ×1.5 (nothing in the talents adds to it now) — ×2 at most */
 export const CRIT_MULT_MAX = 2;
 /** the crit chance never goes above this, whatever gives it */
 export const CRIT_CHANCE_CAP = 0.51;
-export const EXTRA_NAMES: Record<string, string> = { _biceps: "Бицуха", _energy: "Лимит энергии", _clock: "Часы", _bosses: "Лимит боссов" };
+export const EXTRA_NAMES: Record<string, string> = { _biceps: "Бицуха", _energy: "Лимит энергии", _clock: "Часы", _bosses: "Лимит боссов", _all: "Всё оружие" };
+/** the weapon the «Удар битой» talent opens (content/items.ts BAT) */
+export const BAT_ID = "bat";
 
-const stop = (target: string, branch: string, kind: TalentKind, name: string, per: number, max: number, cost: number, need = max): TalentStop =>
-  ({ key: `${target}:${branch}`, target, branch, kind, name, per, max, need: Math.min(need, max), cost });
-/** biceps per talent: only in «Основа» (one stop, +10 a level) */
-export const BICEPS_PER_TALENT = 10;
-const extras = (n: 1 | 2 | 3, energy: number, clock: number) => {
-  const r = ["", "I", "II", "III"][n];
-  return [
-    stop("_energy", `s${n}`, "energy", `Лимит энергии ${r}`, 1, energy, 1),
-    stop("_clock", `s${n}`, "clock", `Часы ${r}`, 1, clock, 1),
-  ];
-};
-/** «Урон III»: the rest of the 800 talents — the three main weapons 25 levels, the candle and the mouse 21, the fist 20 */
-const DMG3_MAX: Record<string, number> = { keyboard: 25, gpu: 25, "rug-pull-gun": 25, "red-candle": 21, mouse: 21, fist: 20 };
-const each = (f: (w: string) => TalentStop) => TALENT_WEAPONS.map(f);
-const dmg = (b: "n1" | "n3", name: string, max: number, cost: number) => each((w) => stop(w, b, "dmg", name, TALENT_DMG_STEP[w] ?? 1, max, cost));
-const power = (b: "n2" | "n4", name: string, per: number, max: number, cost: number) => each((w) => stop(w, b, "crit", name, per, max, cost));
-const chance = (n: 1 | 2 | 3) => each((w) => stop(w, `c${n}`, "chance", `Крит ${["", "I", "II", "III"][n]}`, 0.01, 5, 1));
+const stop = (target: string, branch: string, kind: TalentKind, name: string, per: number, max: number, need = max): TalentStop =>
+  ({ key: `${target}:${branch}`, target, branch, kind, name, per, max, need: Math.min(need, max), cost: 1 });
+/** biceps per talent (only in «Основа») */
+export const BICEPS_PER_TALENT = 50;
+const dmg = (w: string, b: string, per: number, max: number, name = "Урон") => stop(w, b, "dmg", name, per, max);
+const crit = (w: string, b: string, max: number, name = "Крит") => stop(w, b, "chance", name, 0.01, max);
+const cd = (w: string, b: string, max: number) => stop(w, b, "cooldown", "Перезарядка", 10, max);
 
 /** every stop of the path (the order is the blocks' below) */
 const ALL_STOPS: TalentStop[] = [
-  // «Бицуха»: +10 a level, up to 100 levels, but 10 are enough to go on — the rest is up to the player
-  stop("_biceps", "s1", "biceps", "Бицуха", BICEPS_PER_TALENT, 100, 1, 10),
-  ...extras(1, 15, 15),
-  ...dmg("n1", "Урон", 10, 1),
-  ...chance(1),
-  ...power("n2", "Сила крита", 0.02, 10, 1),
-  ...extras(2, 15, 15),
-  // one more fight a day with every boss, up to +3
-  stop("_bosses", "s1", "bosses", "Лимит боссов", 1, 3, 1),
-  ...chance(2),
-  ...dmg("n3", "Урон II", 20, 1),
-  ...extras(3, 20, 15),
-  // «Часы IV»: +3 minutes to a boss fight a level, 15 levels
-  stop("_clock", "s4", "clock", "Часы IV", 3, 15, 1),
-  ...chance(3),
-  ...power("n4", "Сила крита II", 0.015, 20, 1),
-  ...each((w) => stop(w, "n5", "dmg", "Урон III", TALENT_DMG_STEP[w] ?? 1, DMG3_MAX[w] ?? 20, 1)),
+  // «Специализация в оружии»
+  dmg("keyboard", "n1", 1, 10), crit("keyboard", "c1", 10), dmg("gpu", "n1", 1, 20), crit("gpu", "c1", 10), dmg("rug-pull-gun", "n1", 1, 10), crit("rug-pull-gun", "c1", 10),
+  // «Основа»: the biceps up to 200 levels, 10 are enough to go on — the rest is up to the player
+  stop("_biceps", "s1", "biceps", "Бицуха", BICEPS_PER_TALENT, 200, 10), crit("fist", "c1", 10), crit("mouse", "c1", 10), crit("red-candle", "c1", 10),
+  // «Сила удара»
+  dmg("fist", "n1", 1, 10), cd("fist", "r1", 10), dmg("mouse", "n1", 1, 10), cd("mouse", "r1", 10), dmg("red-candle", "n1", 1, 10), cd("red-candle", "r1", 10),
+  // «Новый удар»: the bat
+  stop(BAT_ID, "u1", "unlock", "Удар битой", 1, 1), dmg(BAT_ID, "n1", 1, 10), crit(BAT_ID, "c1", 20), cd(BAT_ID, "r1", 30),
+  // «Супер таланты»
+  stop("_clock", "s1", "clock", "Часы", 1, 45), stop("_energy", "s1", "energy", "Лимит энергии", 1, 40), dmg("rug-pull-gun", "n2", 10, 10, "Урон II"),
+  // «Увеличение урона»
+  crit("keyboard", "c2", 10, "Крит II"), dmg("keyboard", "n2", 1, 100, "Урон II"), crit("gpu", "c2", 20, "Крит II"), dmg("gpu", "n2", 1, 150, "Урон II"),
+  // «Сила автомата»
+  crit("rug-pull-gun", "c2", 10, "Крит II"), dmg("rug-pull-gun", "n3", 10, 10, "Урон III"),
+  // «Энергия»
+  stop("_energy", "s2", "energy", "Лимит энергии II", 1, 70),
+  // «Оружейник»
+  dmg("rug-pull-gun", "n4", 10, 10, "Урон IV"), crit("rug-pull-gun", "c3", 6, "Крит III"), dmg("gpu", "n3", 10, 10, "Урон III"),
+  // «Тактика»
+  stop("_clock", "s2", "clock", "Часы II", 1, 48), stop("_bosses", "s1", "bosses", "Лимит боссов", 1, 2),
+  // «Военный»
+  dmg("gpu", "n4", 10, 10, "Урон IV"), dmg("rug-pull-gun", "n5", 50, 10, "Урон V"), dmg("keyboard", "n3", 50, 10, "Урон III"), stop("_clock", "s3", "clock", "Часы III", 2, 19),
+  // «Ярость»
+  stop("_energy", "s3", "energy", "Лимит энергии III", 1, 14), stop("_clock", "s4", "clock", "Часы IV", 2, 14), stop("_all", "c1", "chanceAll", "Крит всему оружию", 0.003, 15),
 ];
 
 /*
  * The path drawn as blocks, top to bottom (screens/talents.tsx): panels with a meme hero on the right and the stops in
- * a grid on the left (arrows from one to the next), rows of single stops between them. The three main weapons go first
- * (keyboard, GPU, Rug Pull Gun), then a little of everything: biceps, energy, the clock, the fist, the candle, the mouse.
+ * a grid on the left (arrows from one to the next), rows of single stops between them.
  */
-export interface TalentCell { key: string; col: number; row: number }
+/** `solo`: no arrow comes to it — it opens with its block */
+export interface TalentCell { key: string; col: number; row: number; solo?: boolean }
 export interface TalentBlock { id: string; title: string; hero?: string; skin: "paper" | "metal" | "none" | "fire"; cells: TalentCell[] }
 const MAIN = ["keyboard", "gpu", "rug-pull-gun"];
-const MINOR = ["fist", "red-candle", "mouse"];
+const MINOR = ["fist", "mouse", "red-candle"];
 const columns = (ws: string[], top: string, bottom: string): TalentCell[] =>
   ws.flatMap((w, i) => [{ key: `${w}:${top}`, col: i, row: 0 }, { key: `${w}:${bottom}`, col: i, row: 1 }]);
-const rows = (...lines: string[][]): TalentCell[] => lines.flatMap((l, r) => l.map((key, c) => ({ key, col: c, row: r })));
-/** six stops in a loop: along the top row, then back along the bottom one */
-const loop = (keys: string[]): TalentCell[] => keys.map((key, i) => ({ key, col: i < 3 ? i : 5 - i, row: i < 3 ? 0 : 1 }));
-const of = (ws: string[], b: string) => ws.map((w) => `${w}:${b}`);
+/** cells in a row, each its own (no arrows between them: every one opens with its block) */
+const line = (keys: string[], row = 0): TalentCell[] => keys.map((key, col) => ({ key, col, row, solo: true }));
+/** cells one after another along a row (an arrow from each to the next) */
+const chain = (keys: string[]): TalentCell[] => keys.map((key, c) => ({ key, col: c, row: 0 }));
 export const TALENT_BLOCKS: TalentBlock[] = [
   { id: "spec", title: "Специализация в оружии", hero: "hero-pepe-hacker", skin: "paper", cells: columns(MAIN, "n1", "c1") },
-  { id: "base", title: "Основа", skin: "none", cells: rows(of(["_biceps", "_energy", "_clock"], "s1"), of(MINOR, "n1")) },
-  { id: "power", title: "Сила удара", hero: "hero-chad", skin: "metal", cells: columns(MAIN, "n2", "n3") },
-  { id: "minor", title: "Кулак, свеча и мышь", skin: "none", cells: rows(of(MINOR, "c1"), of(MINOR, "n2")) },
-  { id: "stamina", title: "Выносливость", hero: "hero-wojak", skin: "paper", cells: [{ key: "_energy:s2", col: 0, row: 0 }, { key: "_clock:s2", col: 0, row: 1 }] },
-  { id: "bosses", title: "Лимит боссов", skin: "none", cells: [{ key: "_bosses:s1", col: 0, row: 0 }] },
-  { id: "aim", title: "Меткость", hero: "hero-pepe-sniper", skin: "metal", cells: columns(MAIN, "c2", "c3") },
-  { id: "finish", title: "Добивание", skin: "none", cells: rows(of(MINOR, "n3"), of(MINOR, "c2")) },
-  { id: "last", title: "Последний рубеж", hero: "hero-doge", skin: "paper", cells: loop(["_clock:s4", ...of(["_energy", "_clock"], "s3"), ...of(MINOR, "c3")]) },
-  { id: "master", title: "Мастер крита", hero: "hero-chad-gold", skin: "metal", cells: loop(of(["fist", "mouse", "red-candle", "keyboard", "gpu", "rug-pull-gun"], "n4")) },
-  { id: "rage", title: "Ярость", hero: "hero-berserk", skin: "fire", cells: loop(of(["keyboard", "gpu", "rug-pull-gun", "mouse", "red-candle", "fist"], "n5")) },
+  { id: "base", title: "Основа", skin: "none", cells: [{ key: "_biceps:s1", col: 1, row: 0 }, ...line(MINOR.map((w) => `${w}:c1`), 1)] },
+  { id: "power", title: "Сила удара", hero: "hero-chad", skin: "metal", cells: columns(MINOR, "n1", "r1") },
+  { id: "bat", title: "Новый удар", hero: "hero-wojak", skin: "paper", cells: [{ key: "bat:u1", col: 0, row: 0 }, { key: "bat:n1", col: 1, row: 0 }, { key: "bat:c1", col: 1, row: 1 }, { key: "bat:r1", col: 0, row: 1 }] },
+  { id: "super", title: "Супер таланты", hero: "hero-doge", skin: "metal", cells: line(["_clock:s1", "_energy:s1", "rug-pull-gun:n2"]) },
+  { id: "dmg", title: "Увеличение урона", hero: "hero-pepe-sniper", skin: "paper", cells: columns(["keyboard", "gpu"], "c2", "n2") },
+  { id: "rpg", title: "Сила автомата", skin: "none", cells: chain(["rug-pull-gun:c2", "rug-pull-gun:n3"]) },
+  { id: "energy", title: "Энергия", skin: "none", cells: [{ key: "_energy:s2", col: 0, row: 0 }] },
+  { id: "gunsmith", title: "Оружейник", hero: "hero-chad-gold", skin: "metal", cells: [{ key: "rug-pull-gun:n4", col: 0, row: 0 }, { key: "rug-pull-gun:c3", col: 0, row: 1 }, { key: "gpu:n3", col: 1, row: 0, solo: true }] },
+  { id: "tactics", title: "Тактика", skin: "none", cells: line(["_clock:s2", "_bosses:s1"]) },
+  { id: "military", title: "Военный", hero: "hero-chad", skin: "paper", cells: [...line(["gpu:n4", "rug-pull-gun:n5", "keyboard:n3"]), { key: "_clock:s3", col: 1, row: 1, solo: true }] },
+  { id: "rage", title: "Ярость", hero: "hero-berserk", skin: "fire", cells: line(["_energy:s3", "_clock:s4", "_all:c1"]) },
 ];
 const BY_KEY = new Map(ALL_STOPS.map((x) => [x.key, x]));
 export const TALENT_PATH: TalentStop[] = TALENT_BLOCKS.flatMap((b) => b.cells.map((c) => BY_KEY.get(c.key)!));
 /** the picture of a stop (public/assets/talents/<name>.webp): the weapon's damage / crit chance / crit power, or biceps, energy, clock */
 export function talentArt(x: TalentStop): string {
-  if (x.key === "_clock:s4") return "clock-big";
+  if (x.kind === "clock" && x.per > 1) return "clock-big";
+  if (x.kind === "unlock") return "bat-unlock";
+  if (x.kind === "cooldown") return x.target === BAT_ID ? "bat-cd" : "clock";
+  if (x.kind === "chanceAll") return "crit-all";
   if (x.target.startsWith("_")) return x.target.slice(1);
-  return `${x.target}-${x.kind === "dmg" ? "dmg" : x.kind === "chance" ? "chance" : "crit"}`;
+  return `${x.target}-${x.kind === "dmg" ? "dmg" : "chance"}`;
 }
 export const talentStop = (target: string, branch: string) => TALENT_PATH.find((s) => s.target === target && s.branch === branch);
 /** resetting all talents (they all come back) */
@@ -192,6 +198,7 @@ export function stopBefore(s: TalentStop): TalentStop | null {
   const at = BLOCK_OF.get(s.key);
   if (!at || at.k === 0) return null;
   const cells = TALENT_BLOCKS[at.bi].cells, a = cells[at.k - 1], c = cells[at.k];
+  if (c.solo) return null;
   const near = (a.col === c.col && a.row === c.row - 1) || (a.row === c.row && Math.abs(a.col - c.col) === 1);
   return near ? BY_KEY.get(a.key) ?? null : null;
 }
@@ -225,18 +232,21 @@ export function autoStop(t: WeaponTalents): TalentStop | null {
 export function talentsSpent(t: WeaponTalents): number {
   return TALENT_PATH.reduce((sum, s) => sum + stopLevel(t, s) * s.cost, 0);
 }
-/** what the talents give one weapon: flat damage added to the base, crit power and crit chance */
-export function weaponTalentBonus(t: WeaponTalents, weapon: string): { flat: number; critDamage: number; critChance: number } {
-  let flat = 0, critDamage = 0, critChance = 0;
+/** what the talents give one weapon: flat damage added to the base, crit chance (its own and «всему оружию»), minutes
+ *  off its reload (the free weapons); crit power stays 0 (no talent adds to it now) */
+export function weaponTalentBonus(t: WeaponTalents, weapon: string): { flat: number; critDamage: number; critChance: number; cooldownMin: number } {
+  let flat = 0, critChance = 0, cooldownMin = 0;
   for (const s of TALENT_PATH) {
-    if (s.target !== weapon) continue;
+    if (s.target !== weapon && s.target !== "_all") continue;
     const l = stopLevel(t, s);
     if (s.kind === "dmg") flat += l * s.per;
-    else if (s.kind === "crit") critDamage += l * s.per;
-    else if (s.kind === "chance") critChance += l * s.per;
+    else if (s.kind === "chance" || s.kind === "chanceAll") critChance += l * s.per;
+    else if (s.kind === "cooldown") cooldownMin += l * s.per;
   }
-  return { flat, critDamage: Math.round(critDamage * 1000) / 1000, critChance: Math.round(critChance * 1000) / 1000 };
+  return { flat, critDamage: 0, critChance: Math.round(critChance * 10000) / 10000, cooldownMin };
 }
+/** a free weapon's reload after its talents: never shorter than 10 minutes */
+export const reloadMin = (base: number, talentsOff: number) => Math.max(10, base - talentsOff);
 /** the player's own talents: biceps, energy limit, minutes added to a boss fight */
 export function talentExtras(t: WeaponTalents): { biceps: number; energy: number; clockMin: number; bossFights: number } {
   const sum = (k: TalentKind) => TALENT_PATH.filter((s) => s.kind === k).reduce((n, s) => n + stopLevel(t, s) * s.per, 0);

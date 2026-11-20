@@ -43,13 +43,15 @@ export function useFx(onImpact: (fx: Fx) => void) {
 }
 
 function FxItem({ fx }: { fx: Fx }) {
-  const anim = weaponById(fx.weapon)?.weapon.animation ?? "fist";
+  // the bat flies like the fist (its own picture)
+  const anim0 = weaponById(fx.weapon)?.weapon.animation ?? "fist";
+  const anim = anim0 === "bat" ? "fist" : anim0;
   const style = { ["--lane" as string]: fx.lane } as React.CSSProperties;
   return (
     <div className={`fx fx-${anim} ${fx.mine ? "mine" : "other"}`} style={style}>
       {anim === "fist" && (
         <>
-          <div className="fx-proj"><ItemArt id="fist" size={110} /></div>
+          <div className="fx-proj"><ItemArt id={anim0 === "bat" ? "bat" : "fist"} size={110} /></div>
           <div className="fx-pow" />
         </>
       )}

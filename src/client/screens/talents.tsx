@@ -22,17 +22,19 @@ import {
 const pct = (v: number) => `${Math.round(v * 1000) / 10}%`;
 const effect = (n: TalentStop, lv: number) =>
   n.kind === "dmg" ? `+${full(lv * n.per)} урона` : n.kind === "crit" ? `+${pct(lv * n.per)} к силе крита` : n.kind === "chance" ? `+${pct(lv * n.per)} к шансу крита`
+    : n.kind === "chanceAll" ? `+${pct(lv * n.per)} к шансу крита всему оружию` : n.kind === "cooldown" ? `−${full(lv * n.per)} мин перезарядки`
+    : n.kind === "unlock" ? "открывает удар битой"
     : n.kind === "biceps" ? `+${full(lv * n.per)} к бицухе` : n.kind === "energy" ? `+${full(lv * n.per)} к лимиту энергии`
     : n.kind === "bosses" ? `+${full(lv * n.per)} ${lv * n.per === 1 ? "бой" : "боя"} в день с каждым боссом` : `+${full(lv * n.per)} мин к бою с боссом`;
 
 /** what one more level gives, in plain words: «+3 урона к ножу», «+2% к шансу крита мыши», «+1 к бицухе» */
 const TO_WEAPON: Record<string, [string, string]> = { // [к чему (дательный), чего (родительный)]
   fist: ["кулаку", "кулака"], mouse: ["мыши", "мыши"], "red-candle": ["красной свече", "красной свечи"], keyboard: ["ножу", "ножа"],
-  gpu: ["пистолету", "пистолета"], "rug-pull-gun": ["Rug Pull Gun", "Rug Pull Gun"],
+  gpu: ["пистолету", "пистолета"], "rug-pull-gun": ["Rug Pull Gun", "Rug Pull Gun"], bat: ["бите", "биты"],
 };
 function stepText(n: TalentStop) {
   const w = TO_WEAPON[n.target];
-  if (!w) return effect(n, 1);
+  if (!w || n.kind === "unlock") return effect(n, 1);
   return n.kind === "dmg" ? `+${full(n.per)} урона к ${w[0]}` : `${effect(n, 1)} ${w[1]}`;
 }
 
@@ -74,8 +76,8 @@ function TalentHelp() {
       <ol className="small">
         {TALENT_BLOCKS.map((b) => <li key={b.id}><b>{b.title}</b></li>)}
       </ol>
-      <p className="small">Сначала — три главных оружия: нож, пистолет и Rug Pull Gun. Потом понемногу всё остальное: бицуха, энергия, время боя, кулак, свеча и мышь.</p>
-      <p className="small">Бицуха — до +170 (в «Основе» хватит 10, дальше — по желанию), лимит энергии — до +50, Часы — до +45 минут к бою с боссом, Крит — до +15% шанса крита каждому оружию. Общий шанс крита — не больше {Math.round(CRIT_CHANCE_CAP * 100)}%.</p>
+      <p className="small">Сначала — три главных оружия: нож, пистолет и Rug Pull Gun. Потом бицуха и крит кулака, мыши и свечи, их урон и перезарядка, новый удар битой, время боя, энергия и усиление оружия.</p>
+      <p className="small">Бицуха — до +{full(TALENT_PATH.filter((x) => x.kind === "biceps").reduce((n, x) => n + x.max * x.per, 0))} (в «Основе» хватит 10, дальше — по желанию), лимит энергии — до +{full(TALENT_PATH.filter((x) => x.kind === "energy").reduce((n, x) => n + x.max * x.per, 0))}, время боя с боссом — до +{full(TALENT_PATH.filter((x) => x.kind === "clock").reduce((n, x) => n + x.max * x.per, 0))} минут. Общий шанс крита — не больше {Math.round(CRIT_CHANCE_CAP * 100)}%.</p>
       <p className="small">Вся дорожка — {full(total)} талантов.</p>
       <p className="small muted">Сброс талантов стоит {TALENT_RESET_PRICE.amount} {TALENT_RESET_PRICE.currency}: все потраченные таланты возвращаются.</p>
     </Help>
@@ -220,7 +222,7 @@ export function TalentBlockView({ b, wt, cur, selI, poor, onTap }: { b: TalentBl
         {b.cells.map((c, k) => {
           const next = b.cells[k + 1];
           // an arrow to the next stop when it is the neighbour (down, right or left)
-          const dir = !next ? null : next.col === c.col && next.row === c.row + 1 ? "down" : next.row === c.row && next.col === c.col + 1 ? "right" : next.row === c.row && next.col === c.col - 1 ? "left" : null;
+          const dir = !next || next.solo ? null : next.col === c.col && next.row === c.row + 1 ? "down" : next.row === c.row && next.col === c.col + 1 ? "right" : next.row === c.row && next.col === c.col - 1 ? "left" : null;
           return dir && <i key={`a${k}`} className={`tb-arrow ${dir}`} style={{ ["--c" as string]: c.col, ["--r" as string]: c.row }} aria-hidden="true" />;
         })}
         {b.cells.map((c) => {

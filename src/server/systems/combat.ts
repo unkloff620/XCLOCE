@@ -4,11 +4,11 @@ import { shodBoostMult, shodTick } from "./shodnyak.ts";
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, idempotent, itemQty, ledger, moscowDay, nextMoscowMidnight, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { BLAT_THING_CHANCE, BOTH_DROP_CHANCE, BOSSES, EVENT_FIGHTS, EXTRA_KEY_CHANCE, OPEN_BOSSES, bossById, bossOpen, KEY_RING, keyId, keyRingFits, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
-import { WEAPONS, itemById, rushPrice, weaponById } from "../../content/items.ts";
+import { BAT, WEAPONS, itemById, rushPrice, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
 import { boostReward, mergeRewards, scaleReward } from "../../content/rewards.ts";
 import { BASE_CRIT_MULT, EQUIPMENT, PIECE_DROP_CHANCE, PIECE_PITY, ROOM_DEFS, ROOM_PITY, pieceUnlockId, roomUnlockId } from "../../content/home.ts";
-import { CRIT_MULT_MAX, critChanceOf, talentExtras, talentsForDamage, weaponTalentBonus } from "../../content/talents.ts";
+import { CRIT_MULT_MAX, critChanceOf, reloadMin, talentExtras, talentsForDamage, weaponTalentBonus } from "../../content/talents.ts";
 import { playerBonus, weaponTalents } from "./home.ts";
 import { setBonuses } from "./collection.ts";
 import { heistDrop } from "./heist.ts";
@@ -89,7 +89,7 @@ async function expireFights(ctx: Ctx, g: BossRow) {
 
 /** the free weapons (fist, mouse, candle) and the craft weapons (вещи 3 ур.): permanent, with a rest after each hit —
  * ready again in every new fight */
-export const FREE_WEAPONS = [...WEAPONS.filter((w) => w.weapon?.kind === "permanent").map((w) => w.id), ...CRAFT_WEAPONS.map((c) => c.id)];
+export const FREE_WEAPONS = [...WEAPONS.filter((w) => w.weapon?.kind === "permanent").map((w) => w.id), BAT.id, ...CRAFT_WEAPONS.map((c) => c.id)];
 async function resetFreeWeapons(q: Queryable, pid: number) {
   await q.query("DELETE FROM cooldowns WHERE player_id=$1 AND item_id = ANY($2::text[])", [pid, FREE_WEAPONS]);
 }
@@ -247,7 +247,9 @@ export async function strike(ctx: Ctx, w: NonNullable<ReturnType<typeof weaponBy
       const price = rushPrice(w.id);
       await takeMoney(ctx, price.currency, price.amount, `rush:${w.id}`);
     }
-    readyAt = ctx.now + (w.weapon.cooldownMin ?? 0) * 60_000;
+    // the reload, minus the weapon's «Перезарядка» talents (never under 10 minutes)
+    const off = weaponTalentBonus(await weaponTalents(ctx.q, ctx.pid), w.id).cooldownMin;
+    readyAt = ctx.now + reloadMin(w.weapon.cooldownMin ?? 0, off) * 60_000;
     await ctx.q.query(
       "INSERT INTO cooldowns (player_id, item_id, ready_at) VALUES ($1,$2,$3) ON CONFLICT (player_id, item_id) DO UPDATE SET ready_at = EXCLUDED.ready_at",
       [ctx.pid, w.id, new Date(readyAt)],
@@ -692,6 +694,8 @@ export async function weaponTray(q: Queryable, pid: number, now = Date.now()) {
   const cdMap = new Map(cds.map((c) => [c.item_id, new Date(c.ready_at).getTime()]));
   // the craft weapons (вещи 3 ур.) only when you have one
   const craft = CRAFT_WEAPONS.filter((c) => (invMap.get(c.id) ?? 0) > 0).map((c) => ({ id: c.id }));
-  return [...WEAPONS, ...craft].map((w) => ({ id: w.id, qty: invMap.get(w.id) ?? 0, readyAt: (cdMap.get(w.id) ?? 0) > now ? cdMap.get(w.id)! : null }));
+  // the bat (opened by a talent) only when you have it
+  const bat = (invMap.get(BAT.id) ?? 0) > 0 ? [{ id: BAT.id }] : [];
+  return [...WEAPONS, ...bat, ...craft].map((w) => ({ id: w.id, qty: invMap.get(w.id) ?? 0, readyAt: (cdMap.get(w.id) ?? 0) > now ? cdMap.get(w.id)! : null }));
 }
 
