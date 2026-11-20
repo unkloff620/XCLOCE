@@ -3,13 +3,13 @@ import { LOCATIONS, type LocationDef } from "./locations.ts";
 /*
  * «Бизнес» of the locations — the user's table (2026-11-20). Every location has two or three businesses; each gives one
  * kind of profit an hour: «xp» (авторитет игроку), «loc» (авторитет локации — counts for the zone's leader) or «pap»
- * (папиросы). A business has BIZ_STEPS steps; a step is BIZ_CELLS(location) cells bought one by one for папиросы
- * (BIZ_CELL_COST of the location each); every full step adds a sixth of the business's top profit. Profit piles up
- * hour by hour (whole hours), up to BUSINESS_MAX_DAYS, and is taken all at once.
+ * (папиросы). A business is a row of cells (4 in the first locations, 8 in the last), bought one by one for папиросы:
+ * the first cell costs 1 100 in the first location (+150 every next location, 3 200 in the 15th), every next cell +150.
+ * Every cell adds an equal share of the business's top profit. Profit piles up hour by hour (whole hours), up to
+ * BUSINESS_MAX_DAYS, and is taken all at once.
  */
 export const BUSINESS_MAX_DAYS = 7;
 export const BUSINESS_MAX_HOURS = BUSINESS_MAX_DAYS * 24;
-export const BIZ_STEPS = 6;
 export type BizKind = "xp" | "loc" | "pap";
 export interface BizDef {
   id: string;
@@ -44,13 +44,9 @@ export const bizById = (id: string) => {
   }
   return undefined;
 };
-/** cells in a step: 4 in the first locations, 8 in the last */
+/** cells of a business: 4 in the first locations, 8 in the last */
 export const bizCells = (l: LocationDef) => Math.min(8, 4 + Math.floor((l.order - 1) / 3));
-/** all cells of a business */
-export const bizCellsAll = (l: LocationDef) => BIZ_STEPS * bizCells(l);
-/** the price of a cell: 1 100 папирос in the first location, +150 in every next one (3 200 in the 15th) */
-export const bizCellCost = (l: LocationDef) => 1100 + 150 * (l.order - 1);
-/** full steps of a business with `cells` cells bought */
-export const bizStep = (l: LocationDef, cells: number) => Math.min(BIZ_STEPS, Math.floor(cells / bizCells(l)));
-/** profit an hour at a step: its share of the top profit (whole numbers; the last step — the top exactly) */
-export const bizPerHour = (d: BizDef, step: number) => Math.round((d.max * Math.min(BIZ_STEPS, step)) / BIZ_STEPS);
+/** the price of the next cell (`bought` already bought): 1 100 + 150 a location before + 150 a cell before */
+export const bizCellCost = (l: LocationDef, bought: number) => 1100 + 150 * (l.order - 1) + 150 * bought;
+/** profit an hour with `cells` cells: their share of the top profit (whole numbers; all cells — the top exactly) */
+export const bizPerHour = (l: LocationDef, d: BizDef, cells: number) => Math.round((d.max * Math.min(bizCells(l), cells)) / bizCells(l));

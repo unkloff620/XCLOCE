@@ -3,7 +3,7 @@ import { shodTick } from "./shodnyak.ts";
 import { addItem, addMoney, grantReward, ledger, spendEnergy, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { STASH_MISSING_WEIGHT, STASH_PITY, STASH_SETS, stashChance, stashSetsByLocation } from "../../content/stashes.ts";
 import { LOCATIONS, locRep, locationById, taskById, taskOpen, tasksOf, type LocMode, type LocationDef } from "../../content/locations.ts";
-import { BIZ_STEPS, BUSINESS_MAX_HOURS, bizById, bizCellCost, bizCells, bizCellsAll, bizOf, bizPerHour, bizStep, type BizKind } from "../../content/business.ts";
+import { BUSINESS_MAX_HOURS, bizById, bizCellCost, bizCells, bizOf, bizPerHour, type BizKind } from "../../content/business.ts";
 import type { Reward } from "../../content/rewards.ts";
 import { LOCATION_PARTS, between, locClaimParts, locStepParts, rollParts } from "../../content/craft-drops.ts";
 import { mergeRewards } from "../../content/rewards.ts";
@@ -68,7 +68,7 @@ function bizPending(l: LocationDef, clock: BizRow | undefined, lines: Lines, now
   const elapsed = since === null ? 0 : Math.max(0, now - since);
   const hours = Math.min(BUSINESS_MAX_HOURS, Math.floor(elapsed / HOUR_MS));
   const hour: Gain = { xp: 0, loc: 0, pap: 0 };
-  for (const d of bizOf(l)) hour[d.kind] += bizPerHour(d, bizStep(l, lines.get(d.id) ?? 0));
+  for (const d of bizOf(l)) hour[d.kind] += bizPerHour(l, d, lines.get(d.id) ?? 0);
   const got: Gain = { xp: hours * hour.xp, loc: hours * hour.loc, pap: hours * hour.pap };
   return { since, hours, hour, got, full: elapsed >= BUSINESS_MAX_HOURS * HOUR_MS };
 }
@@ -92,10 +92,10 @@ export async function locationsView(q: Queryable, pid: number, now = Date.now())
       id: l.id, unlocked: unlocked(l, clears), ...d, rep: day.mine.get(l.id) ?? 0, leader: day.leaders.get(l.id) ?? null,
       night: { ...nt, rep: night.mine.get(l.id) ?? 0, leader: night.leaders.get(l.id) ?? null },
       business: {
-        cells: bizCells(l), steps: BIZ_STEPS, cost: bizCellCost(l),
+        cells: bizCells(l),
         lines: bizOf(l).map((x) => {
-          const n = lines.get(x.id) ?? 0, st = bizStep(l, n);
-          return { id: x.id, name: x.name, kind: x.kind, cells: n, step: st, perHour: bizPerHour(x, st), nextPerHour: st < BIZ_STEPS ? bizPerHour(x, st + 1) : null, max: x.max };
+          const n = lines.get(x.id) ?? 0, top = n >= bizCells(l);
+          return { id: x.id, name: x.name, kind: x.kind, cells: n, perHour: bizPerHour(l, x, n), nextPerHour: top ? null : bizPerHour(l, x, n + 1), cost: top ? null : bizCellCost(l, n), max: x.max };
         }),
         hours: b.hours, hour: b.hour, pending: b.got, full: b.full,
         nextAt: b.since === null || b.full ? null : b.since + (b.hours + 1) * HOUR_MS,
@@ -112,8 +112,7 @@ function bizOpen(l: LocationDef, clears: Map<string, number>) {
   return { open: dayDone && nightDone, dayDone, nightDone };
 }
 
-/** «Бизнес»: one more cell of a business, paid in папиросы; the first cell of a location starts its profit clock.
- *  The profit piled up so far is kept at the old rate: the clock is not reset, the new step counts from the next whole hour on. */
+/** «Бизнес»: one more cell of a business, paid in папиросы; the first cell of a location starts its profit clock. */
 export async function businessUp(ctx: Ctx, bizId: string) {
   const f = bizById(bizId);
   if (!f) throw new GameError("bad_business", "Такого бизнеса нет");
@@ -123,8 +122,8 @@ export async function businessUp(ctx: Ctx, bizId: string) {
   if (!bizOpen(loc, clears).open) throw new GameError("business_locked", "Бизнес откроется, когда пройдёшь дневные и ночные задания локации");
   const [row] = await ctx.q.query<{ cells: number }>("SELECT cells FROM business_lines WHERE player_id=$1 AND biz_id=$2 FOR UPDATE", [ctx.pid, biz.id]);
   const n = Number(row?.cells ?? 0);
-  if (n >= bizCellsAll(loc)) throw new GameError("max_level", "Уже прокачано до конца");
-  const price = bizCellCost(loc);
+  if (n >= bizCells(loc)) throw new GameError("max_level", "Уже прокачано до конца");
+  const price = bizCellCost(loc, n);
   await takeMoney(ctx, "PAP", price, `business:${biz.id}`);
   await ctx.q.query(
     `INSERT INTO business_lines (player_id, biz_id, location_id, cells) VALUES ($1,$2,$3,1)
@@ -135,7 +134,7 @@ export async function businessUp(ctx: Ctx, bizId: string) {
     `INSERT INTO location_business (player_id, location_id, since) VALUES ($1,$2,$3) ON CONFLICT (player_id, location_id) DO UPDATE SET since = COALESCE(location_business.since, EXCLUDED.since)`,
     [ctx.pid, loc.id, new Date(ctx.now)],
   );
-  return { locationId: loc.id, bizId: biz.id, cells: n + 1, step: bizStep(loc, n + 1), price };
+  return { locationId: loc.id, bizId: biz.id, cells: n + 1, price };
 }
 
 /** «Бизнес»: take the profit of every location at once (whole hours piled up in each, at most a week):

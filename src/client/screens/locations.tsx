@@ -45,10 +45,10 @@ interface LocRow {
   business: LocBiz;
 }
 type BizKind = "xp" | "loc" | "pap";
-interface LocBizLine { id: string; name: string; kind: BizKind; cells: number; step: number; perHour: number; nextPerHour: number | null; max: number }
+interface LocBizLine { id: string; name: string; kind: BizKind; cells: number; perHour: number; nextPerHour: number | null; cost: number | null; max: number }
 interface LocBiz {
-  /** cells in a step, steps, the price of a cell (папиросы) */
-  cells: number; steps: number; cost: number;
+  /** cells of a business */
+  cells: number;
   lines: LocBizLine[];
   hours: number; hour: Record<BizKind, number>; pending: Record<BizKind, number>; full: boolean; nextAt: number | null;
   /** business opens once the day and the night roads are both cleared */
@@ -62,15 +62,14 @@ type LocTab = "day" | "night" | "biz";
 const NIGHT_LIGHTS = Array.from({ length: 18 }, (_, i) => ({ x: (i * 37 + 11) % 97, y: (i * 53 + 7) % 88, d: 1.6 + ((i * 7) % 10) / 4, w: ((i * 13) % 20) / 10, s: 4 + (i % 4) * 3, c: i % 3 }));
 
 /** «Бизнес» of one location: its businesses as cards on squared paper (the user's sample) — the picture, the profit an
- *  hour, the cells of the step, the step in a pencil circle, the button; opens after the day and night roads */
+ *  hour, the cells, the cells bought in a pencil circle, the button with the next cell's price; opens after the day and night roads */
 function BizPanel({ b, onDone }: { b: LocBiz; onDone: () => void }) {
   const { act, busy, state } = useGame();
   const pap = state?.wallet?.PAP ?? 0;
   const up = async (x: LocBizLine) => {
     haptic.tap();
-    const done = x.cells + 1 === (x.step + 1) * b.cells;
-    const res = await act("business_up", { bizId: x.id }, () => (done ? `«${x.name}»: ступень ${x.step + 1}!` : `«${x.name}»: +1 ячейка`));
-    if (res) { (done ? haptic.big : haptic.ok)(); onDone(); }
+    const res = await act("business_up", { bizId: x.id }, () => `«${x.name}»: ${x.cells + 1}/${b.cells}`);
+    if (res) { (x.cells + 1 >= b.cells ? haptic.big : haptic.ok)(); onDone(); }
   };
   if (!b.open) {
     return (
@@ -89,8 +88,8 @@ function BizPanel({ b, onDone }: { b: LocBiz; onDone: () => void }) {
   return (
     <div className="bzc-grid">
       {b.lines.map((x) => {
-        const max = x.step >= b.steps;
-        const filled = max ? b.cells : x.cells - x.step * b.cells;
+        const max = x.cost === null;
+        const filled = x.cells;
         return (
           <div className={`bzc ${max ? "max" : ""}`} key={x.id}>
             <b className="bzc-name">{x.name}</b>
@@ -98,10 +97,10 @@ function BizPanel({ b, onDone }: { b: LocBiz; onDone: () => void }) {
             <img className="bzc-pic" src={`/assets/biz/${x.id}.webp`} alt="" draggable={false} />
             <span className="bzc-profit">Прибыль: +{full(x.perHour)} <Icon name={BIZ_ICON[x.kind]} size={18} /></span>
             <span className="bzc-cells" aria-label={`${filled}/${b.cells}`}>{Array.from({ length: b.cells }, (_, i) => <i key={i} className={i < filled ? "on" : ""} />)}</span>
-            <span className="bzc-step">{max ? "Макс." : `${x.step}/${b.steps}`}</span>
+            <span className="bzc-step">{max ? "Макс." : `${x.cells}/${b.cells}`}</span>
             {max ? <span className="btn gold sm bzc-go" aria-disabled="true">Макс. уровень</span> : (
-              <button type="button" className="btn gold sm bzc-go" disabled={busy === "business_up" || pap < b.cost} onClick={() => up(x)}>
-                <span className="num">{full(b.cost)}</span><Icon name="PAP" size={16} />
+              <button type="button" className="btn gold sm bzc-go" disabled={busy === "business_up" || pap < (x.cost ?? 0)} onClick={() => up(x)}>
+                <span className="num">{full(x.cost ?? 0)}</span><Icon name="PAP" size={16} />
               </button>
             )}
           </div>

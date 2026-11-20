@@ -65,7 +65,7 @@ export function actionText(type: string, body: Row, result: unknown): string | n
       const t = taskById(String(body.taskId));
       return join(t ? `${t.loc.name}: «${t.task.title}»` : String(body.taskId), r.steps !== undefined ? `шаг ${r.steps}/${r.need}` : null, grantedText(r.step), r.done ? `задание выполнено: ${grantedText(r.done)}` : null, r.locationComplete ? "локация пройдена" : null);
     }
-    case "business_up": return `бизнес «${bizById(String(body.bizId))?.biz.name ?? body.bizId}» (${bizById(String(body.bizId))?.loc.name ?? ""}): ячейка ${r.cells}, ступень ${r.step} за ${fmt(r.price)} папирос`;
+    case "business_up": return `бизнес «${bizById(String(body.bizId))?.biz.name ?? body.bizId}» (${bizById(String(body.bizId))?.loc.name ?? ""}): ячейка ${r.cells} за ${fmt(r.price)} папирос`;
     case "business_claim": return `Бизнес: прибыль с ${Array.isArray(r.parts) ? r.parts.length : 0} локаций за ${r.hours} ч · +${fmt(r.pap)} папирос · +${fmt(r.xp)} авторитета · +${fmt(r.loc)} авторитета локаций`;
     case "location_claim": return join(locationById(String(body.locationId))?.name ?? String(body.locationId), r.first ? "первое прохождение" : "повтор", grantedText(r.reward));
     case "fight_start": return join(bossById(String(body.boss))?.name ?? String(body.boss), body.solo === true ? "соло" : null, r.fightId ? `бой #${r.fightId}` : null);
