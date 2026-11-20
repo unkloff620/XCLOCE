@@ -697,7 +697,9 @@ export function weaponSfx(weaponId: string, power = 0.5) {
   if (muted) return;
   const a = audio();
   if (!a || a.state !== "running") return;
-  if (!sample(a, `w-${weaponId}`, a.currentTime + 0.005, weaponId === "rug-pull-gun" ? 0.6 : 0.55)) sfx("hit", power);
+  // only the weapon's own sound (the user 2026-11-20): no punch under it, and none instead of it while it loads
+  void power;
+  sampleSoon(a, `w-${weaponId}` as SampleId, weaponId === "rug-pull-gun" ? 0.6 : 0.55, 600);
 }
 
 /** Picking a thing up in the yard: coins jingle, a sticker peels, a spinner whirs, a can hisses… */

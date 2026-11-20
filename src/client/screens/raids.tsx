@@ -606,7 +606,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
     if (!r2) { haptic.err(); sfx("error"); return; }
     // «Инфо»: my hits in this fight, the newest on top
     setLog((l) => [{ seq: Date.now() + Math.random(), playerId: state?.player.id ?? 0, name: state?.player.name ?? "", weapon, damage: r2.damage, phrase: 0, at: Date.now(), crit: r2.crit, count: r2.count }, ...l].slice(0, 150));
-    if (r2.crit) { setCritPop(Date.now()); haptic.heavy(); sfx("crit"); }
+    if (r2.crit) { setCritPop(Date.now()); haptic.heavy(); /* no crit sound: only the weapon's own */ }
     setShake((x) => x + 1);
     const id = Date.now() + Math.random();
     // the flying weapon shows the damage; a crit also flashes its real number

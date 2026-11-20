@@ -294,8 +294,7 @@ export function BossScreen({ id }: { id: string }) {
       const r = await api.action<{ damage: number; crit: boolean; crits: number; count: number; phrase: string; hp: number; status: string; left: number | null; readyAt: number | null; fightDamage: number; talentDamage: number; talentsGained: number }>("attack", { weapon, count: n, idem: crypto.randomUUID(), ...(rush ? { rush: true } : {}) });
       if (r.result.crit) {
         setCritPop(Date.now());
-        haptic.heavy();
-        sfx("crit");
+        haptic.heavy(); // no crit sound: only the weapon's own
       }
       setView((v) => (v ? { ...v, hp: Math.min(v.hp, r.result.hp), myDamage: v.myDamage + r.result.damage, myHits: v.myHits + (r.result.count ?? 1) } : v));
       setTray((t) => t.map((x) => (x.id === weapon ? { ...x, qty: r.result.left ?? x.qty, readyAt: r.result.readyAt ?? x.readyAt } : x)));
