@@ -25,10 +25,10 @@ const effect = (n: TalentStop, lv: number) =>
     : n.kind === "biceps" ? `+${full(lv * n.per)} к бицухе` : n.kind === "energy" ? `+${full(lv * n.per)} к лимиту энергии`
     : n.kind === "bosses" ? `+${full(lv * n.per)} ${lv * n.per === 1 ? "бой" : "боя"} в день с каждым боссом` : `+${full(lv * n.per)} мин к бою с боссом`;
 
-/** what one more level gives, in plain words: «+3 урона к клавиатуре», «+2% к шансу крита мыши», «+1 к бицухе» */
+/** what one more level gives, in plain words: «+3 урона к ножу», «+2% к шансу крита мыши», «+1 к бицухе» */
 const TO_WEAPON: Record<string, [string, string]> = { // [к чему (дательный), чего (родительный)]
-  fist: ["кулаку", "кулака"], mouse: ["мыши", "мыши"], "red-candle": ["красной свече", "красной свечи"], keyboard: ["клавиатуре", "клавиатуры"],
-  gpu: ["видеокарте", "видеокарты"], "rug-pull-gun": ["Rug Pull Gun", "Rug Pull Gun"],
+  fist: ["кулаку", "кулака"], mouse: ["мыши", "мыши"], "red-candle": ["красной свече", "красной свечи"], keyboard: ["ножу", "ножа"],
+  gpu: ["пистолету", "пистолета"], "rug-pull-gun": ["Rug Pull Gun", "Rug Pull Gun"],
 };
 function stepText(n: TalentStop) {
   const w = TO_WEAPON[n.target];
@@ -74,7 +74,7 @@ function TalentHelp() {
       <ol className="small">
         {TALENT_BLOCKS.map((b) => <li key={b.id}><b>{b.title}</b></li>)}
       </ol>
-      <p className="small">Сначала — три главных оружия: клавиатура, видеокарта и Rug Pull Gun. Потом понемногу всё остальное: бицуха, энергия, время боя, кулак, свеча и мышь.</p>
+      <p className="small">Сначала — три главных оружия: нож, пистолет и Rug Pull Gun. Потом понемногу всё остальное: бицуха, энергия, время боя, кулак, свеча и мышь.</p>
       <p className="small">Бицуха — до +170 (в «Основе» хватит 10, дальше — по желанию), лимит энергии — до +50, Часы — до +45 минут к бою с боссом, Крит — до +15% шанса крита каждому оружию. Общий шанс крита — не больше {Math.round(CRIT_CHANCE_CAP * 100)}%.</p>
       <p className="small">Вся дорожка — {full(total)} талантов.</p>
       <p className="small muted">Сброс талантов стоит {TALENT_RESET_PRICE.amount} {TALENT_RESET_PRICE.currency}: все потраченные таланты возвращаются.</p>

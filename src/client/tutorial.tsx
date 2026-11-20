@@ -37,7 +37,7 @@ const STEPS: Step[] = [
   },
   {
     title: "Оружие",
-    pics: [item("fist", "кулак"), item("mouse", "мышь"), item("red-candle", "свеча"), item("keyboard", "клава"), item("gpu", "GPU"), item("rug-pull-gun", "пушка")],
+    pics: [item("fist", "кулак"), item("mouse", "мышь"), item("red-candle", "свеча"), item("keyboard", "нож"), item("gpu", "пистолет"), item("rug-pull-gun", "пушка")],
     text: "Кулак, мышь и свеча — бесплатные, бьют раз в 5 часов. Остальное оружие тратится за удар, зато бьёт сильнее.",
   },
   {

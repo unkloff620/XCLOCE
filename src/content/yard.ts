@@ -25,7 +25,7 @@ export const YARD_DROPS: YardDrop[] = [
   { id: "flyer-passive", name: "Листовка «Пассивный доход»", icon: "flyer-passive", weight: 7, reward: { items: [{ id: "flyer-passive", qty: 1 }] } },
   { id: "energy-drink", name: "Энергетик", icon: "energy-drink", weight: 18, reward: { items: [{ id: "energy-drink", qty: 1 }] } },
   { id: "lost-wallet", name: "Забытый кошелёк", icon: "lost-wallet", weight: 8, reward: { items: [{ id: "lost-wallet", qty: 1 }] } },
-  { id: "keyboard", name: "Клавиатура", icon: "keyboard", weight: 1, reward: { items: [{ id: "keyboard", qty: 1 }] } },
+  { id: "keyboard", name: "Нож", icon: "keyboard", weight: 1, reward: { items: [{ id: "keyboard", qty: 1 }] } },
 ];
 
 /*

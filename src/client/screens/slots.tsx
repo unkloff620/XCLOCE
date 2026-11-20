@@ -227,7 +227,7 @@ export function SlotMachine() {
                 <i className="sl-xp num">+{slotXpOf(o.id)}</i>
               </div>
             ))}
-            <span className="tiny sl-pay-note">Каждый прокрут — опыт автомата (мимо — +{slotXpOf("miss")}). Уровень 2 — {slotLevelNeed(1)} опыта, дальше каждый на {slotLevelNeed(2) - slotLevelNeed(1)} больше. За каждый уровень — награда: ₽, каждый 10-й — ещё видеокарта.</span>
+            <span className="tiny sl-pay-note">Каждый прокрут — опыт автомата (мимо — +{slotXpOf("miss")}). Уровень 2 — {slotLevelNeed(1)} опыта, дальше каждый на {slotLevelNeed(2) - slotLevelNeed(1)} больше. За каждый уровень — награда: ₽, каждый 10-й — ещё пистолет.</span>
             <button className="btn gold block" onClick={() => setPay(false)}>Понятно</button>
           </div>
         </div>

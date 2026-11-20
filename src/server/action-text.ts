@@ -24,7 +24,7 @@ const fmt = (v: unknown) => n(v).toLocaleString("ru-RU", { maximumFractionDigits
 const item = (id: unknown) => String(id).startsWith("room:") ? `комната «${roomById(String(id).slice(5))?.name ?? id}»` : itemById(String(id))?.name ?? String(id);
 const join = (...parts: (string | null | undefined | false)[]) => parts.filter(Boolean).join(" · ");
 
-/** «+300 RUB, +200 авторитета, Клавиатура ×3» */
+/** «+300 RUB, +200 авторитета, Нож ×3» */
 export function grantedText(g: unknown): string {
   if (!g || typeof g !== "object") return "";
   const r = g as Partial<Granted>;

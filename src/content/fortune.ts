@@ -56,7 +56,7 @@ export const SECTORS: Sector[] = [
   { id: "pap", kind: "reward", icon: "PAP", label: "3000", name: "3 000 папирос", weight: 6, reward: { currencies: { PAP: 3000 } } },
   { id: "keys75", kind: "reward", icon: KEYCAP_ID, label: "75", name: "75 кнопок", weight: 3, reward: { items: [{ id: KEYCAP_ID, qty: 75 }] } },
   { id: "xp", kind: "xp", icon: "fortune-xp", label: "30", name: "30 опыта колеса", weight: 12, xp: 30 },
-  { id: "gpu", kind: "reward", icon: "gpu", label: "1", name: "Видеокарта", weight: 6, reward: { items: [{ id: "gpu", qty: 1 }] } },
+  { id: "gpu", kind: "reward", icon: "gpu", label: "1", name: "Пистолет", weight: 6, reward: { items: [{ id: "gpu", qty: 1 }] } },
   { id: "keys30", kind: "reward", icon: KEYCAP_ID, label: "30", name: "30 кнопок", weight: 9, reward: { items: [{ id: KEYCAP_ID, qty: 30 }] } },
   { id: "empty", kind: "empty", icon: "empty", label: "", name: "Пусто", weight: 14 },
 ];
