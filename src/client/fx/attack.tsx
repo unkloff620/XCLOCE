@@ -90,7 +90,7 @@ function FxItem({ fx }: { fx: Fx }) {
             <i className="fx-muzzle" />
             {[0, 1, 2, 3].map((k) => <i key={k} className={`fx-bill b${k}`} />)}
           </div>
-          <div className="fx-rug" />
+          {/* the striped rug pulled from under the boss — removed (the user 2026-11-20) */}
         </>
       )}
       {anim === "flame" && (
