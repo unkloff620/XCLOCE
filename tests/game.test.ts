@@ -2488,6 +2488,10 @@ describe("Тося", () => {
     expect(r2.result.price).toBe(8);
     expect(await wallet(db, p, "GOLD")).toBeGreaterThanOrEqual(1000 - r1.result.price - r2.result.price);
     expect(r2.state.tosya!.taken).toBe(3);
+    // every pie holds one of Тося's tattoos, a new one each time
+    const tats = [...r1.result.reward.items, ...r2.result.reward.items].filter((i: { id: string }) => /^tat-(oven|maid|yakuza)-/.test(i.id));
+    expect(tats).toHaveLength(2);
+    expect(tats[0].id).not.toBe(tats[1].id);
     await db.query("DELETE FROM config WHERE key='tosya'");
     resetConfigCache();
   });
