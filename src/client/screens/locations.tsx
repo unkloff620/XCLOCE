@@ -308,8 +308,12 @@ const STOPS = [
 const MAP_W = 360;
 const MAP_H = 440;
 /** the drawn task maps (public/assets/locations/map/<id>.webp, 2:3, tools/locations/build-maps.py): where the stops stand on each */
+const zig = (l: number, r: number, top = 42): { x: number; y: number }[] => [{ x: l, y: 88 }, { x: r, y: 70 }, { x: l - 2, y: 52 }, { x: r, y: 33 }, { x: top, y: 13 }];
 const LOC_MAPS: Record<string, { stops: { x: number; y: number }[] }> = {
-  openspace: { stops: [{ x: 40, y: 88 }, { x: 57, y: 70 }, { x: 38, y: 52 }, { x: 57, y: 33 }, { x: 42, y: 13 }] },
+  openspace: { stops: zig(40, 57) }, market: { stops: zig(42, 54) }, serverroom: { stops: zig(40, 57) }, basement: { stops: zig(40, 57) },
+  board: { stops: zig(48, 63, 50) }, accounting: { stops: zig(42, 56) }, hr: { stops: zig(40, 57) }, party: { stops: zig(40, 56) },
+  offshore: { stops: zig(32, 46, 36) }, yacht: { stops: zig(40, 57) }, moonbase: { stops: zig(40, 57) }, mars: { stops: zig(40, 57) },
+  orbit: { stops: zig(38, 50, 44) }, sunfarm: { stops: zig(42, 56) }, genesis: { stops: zig(40, 57, 47) },
 };
 const mapOf = (id: string) => {
   const m = LOC_MAPS[id];
