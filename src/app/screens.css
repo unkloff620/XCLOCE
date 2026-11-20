@@ -7249,3 +7249,7 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .loc-page.paper.night .lp-rep b { color: #4b3bc4; }
 .loc-page.paper .bzc-grid { box-shadow: 0 2px 0 #3a2718, 0 4px 10px rgba(0, 0, 0, 0.25); }
 .loc-page.paper .small.muted { color: #6b4626; }
+/* the layers: the tabs row makes no layer of its own (the chosen tab comes in front of the sheet, the others stay behind) */
+.loc-page.paper > .lp-tabs2 { z-index: auto; }
+.loc-page.paper > .lp-sheet { z-index: 2; }
+.loc-page.paper > .lp-tabs2 > .lp-tab2.on { z-index: 3; }
