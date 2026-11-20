@@ -54,16 +54,16 @@ export const SHOD_MAX_SLOTS = SHOD_FREE_SLOTS + SHOD_SLOT_PRICES.length;
 
 /** the «Сходняк» tattoo sets (prizes of the top 3 clans): the pieces go to the set one has most of first */
 export const SHOD_SETS = ["shod-domes", "shod-bear", "shod-raven"];
-/** tattoos for places 1–3 (when one has the whole set — rubles instead of each) */
-export const SHOD_TATTOOS = [3, 2, 1];
+/** tattoos by place (index 0 = 1st; the user 2026-11-20: 4, 3, 2, then 1 for 4th–10th); when one has the whole set — rubles instead of each */
+export const SHOD_TATTOOS = [4, 3, 2, ...Array.from({ length: 7 }, () => 1)];
 export const SHOD_TATTOO_RUB = 15_000;
 
-/** every member of the top-10 clans, by the clan's place (index 0 = 1st) */
+/** every member of the top-10 clans, by the clan's place (index 0 = 1st) — the user's table (2026-11-20) */
 export const SHOD_PRIZES: Reward[] = [
-  { xp: 300_000, currencies: { RUB: 50_000 } },
-  { xp: 200_000, currencies: { RUB: 30_000 } },
-  { xp: 120_000, currencies: { RUB: 20_000 } },
-  ...Array.from({ length: 7 }, () => ({ xp: 50_000, currencies: { RUB: 8_000 } }) as Reward),
+  { xp: 5_000_000, currencies: { RUB: 6_000 } },
+  { xp: 3_000_000, currencies: { RUB: 4_000 } },
+  { xp: 2_000_000, currencies: { RUB: 2_000 } },
+  ...Array.from({ length: 7 }, () => ({ xp: 1_000_000, currencies: { RUB: 1_200 } }) as Reward),
 ];
 
 /** the 1st place also picks a week-long boost of one weapon */

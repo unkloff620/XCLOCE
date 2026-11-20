@@ -250,7 +250,7 @@ function Shodnyak({ id }: { id: number }) {
               <PrizeLine i={i} />
             </div>
           ))}
-          <span className="tiny muted center">1 место выбирает усиление на неделю: Rug Pull Gun или Видеокарта, +{v.boostPct}% урона. Наколки — из сетов «Купола», «Медведь» и «Ворон».</span>
+          <span className="tiny muted center">1 место выбирает усиление на неделю: Rug Pull Gun или Пистолет, +{v.boostPct}% урона. Наколки — из сетов «Купола», «Медведь» и «Ворон».</span>
         </div>
       )}
     </div>

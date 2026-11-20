@@ -39,9 +39,9 @@ describe("«Сходняк»", () => {
     expect(prizes.find((x) => Number(x.player_id) === a.p)!.title).toContain("1 место");
     expect(prizes.find((x) => Number(x.player_id) === a.p)!.reward.xp).toBe(SHOD_PRIZES[0].xp);
     expect(prizes.find((x) => Number(x.player_id) === b.p)!.title).toContain("2 место");
-    // tattoos of the «Сходняк» sets: 3 for the 1st place, 2 for the 2nd
-    expect(prizes.find((x) => Number(x.player_id) === a.p)!.reward.items!.filter((i) => i.id.startsWith("tat-shod-"))).toHaveLength(3);
-    expect(prizes.find((x) => Number(x.player_id) === b.p)!.reward.items).toHaveLength(2);
+    // tattoos of the «Сходняк» sets: 4 for the 1st place, 3 for the 2nd
+    expect(prizes.find((x) => Number(x.player_id) === a.p)!.reward.items!.filter((i) => i.id.startsWith("tat-shod-"))).toHaveLength(4);
+    expect(prizes.find((x) => Number(x.player_id) === b.p)!.reward.items).toHaveLength(3);
     // the 1st place picks the boost
     const r = await act(db, a.p, "shod_boost", { weapon: "gpu" }, NEXT);
     expect(r.result.boost.weapon).toBe("gpu");
