@@ -5,8 +5,8 @@ Item sounds: a hit sound per weapon (w-*) and a pick-up sound per yard find (y-*
   keyboard — the knife: NOT from here since 2026-11-20 — the user's recording tools/sound/source/w-keyboard-knife.mp3
     (ffmpeg: silenceremove at the start, highpass 500 Hz ×3 (no bass), +5 dB, limiter, a 0.12 s fade → public/assets/sound/w-keyboard.mp3)
   red-candle — fire: a «fwoom» of flame with crackles
-  gpu — the pistol (a revolver, 2026-11-20): the hammer cocked, a sharp shot, a short ring of the barrel, the casing… no, the cylinder clicks round
-  bat — a wooden baseball bat: a heavy whoosh, a hollow wooden crack and a thud
+  gpu — the pistol: NOT from here since 2026-11-20 — the user's recording tools/sound/source/w-gpu-revolver.mp3
+    (ffmpeg: silenceremove at the start, the first 0.75 s, +3.5 dB, limiter, a 0.2 s fade → public/assets/sound/w-gpu.mp3)
   rug-pull-gun — a gunshot: the hammer click, the crack, the boom and its echo
 Run from an empty folder: python3 tools/sound/build-item-sounds.py → out/*.wav; encode with
   for f in out/*.wav; do ffmpeg -i $f -ac 1 -b:a 64k public/assets/sound/$(basename ${f%.wav}).mp3; done
