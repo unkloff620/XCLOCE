@@ -4,6 +4,7 @@
  * whole clan, hit with the usual weapons; the members' damage list with shares; when he falls everyone who hit gets a
  * prize by his share (the prize window).
  */
+import { hitGapOk } from "./hit-gap.ts";
 import { useState } from "react";
 import Link from "next/link";
 import { useGame, useNow } from "./store.tsx";
@@ -41,6 +42,7 @@ export function ClanBossPanel() {
   if (!boss) return null;
   const qtyOf = (id: string) => state.inventory.find((i) => i.id === id)?.qty ?? 0;
   const hit = async (id: string) => {
+    if (!hitGapOk()) return;
     const w = WEAPONS.find((x) => x.id === id)!;
     const ready = state.cooldowns[id] ?? 0;
     if (w.weapon!.kind !== "consumable" && ready > now) { haptic.err(); toast(`${w.name} перезаряжается: ещё ${clock(ready - now)}`, "err"); return; }

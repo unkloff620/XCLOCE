@@ -1,4 +1,5 @@
 "use client";
+import { hitGapOk } from "../hit-gap.ts";
 import { boostReward } from "../../content/rewards.ts";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -280,6 +281,7 @@ export function BossScreen({ id }: { id: string }) {
   // a free weapon still reloading: «ударить сейчас» for RUSH_PRICE (a window asks first), then it reloads again
   const [rushAsk, setRushAsk] = useState<{ id: string; name: string; left: number } | null>(null);
   const attack = async (weapon: string, rush = false, pack = 1) => {
+    if (!hitGapOk()) return;
     const w = weaponById(weapon)!;
     const have = tray.find((x) => x.id === weapon)?.qty ?? 0;
     const n = w.weapon.kind === "consumable" ? Math.max(1, Math.min(pack, have)) : 1;

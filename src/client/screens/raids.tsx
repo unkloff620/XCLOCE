@@ -8,6 +8,7 @@
  *    the HP and the weapons like in a boss fight.
  * The progress is the clan's (GET /api/raids); the fights are each player's own.
  */
+import { hitGapOk } from "../hit-gap.ts";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, type Tray } from "../api.ts";
@@ -594,6 +595,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
     if (await act("raid_start", { building: b.id })) await load();
   };
   const hit = async (weapon: string, rush = false, pack = 1) => {
+    if (!hitGapOk()) return;
     if (!v || !fight) return;
     const w = itemById(weapon);
     // the sound and the flying weapon on the tap, like in a boss fight: heavier weapons sound heavier (10 dmg → 0, 500+ → 1)
