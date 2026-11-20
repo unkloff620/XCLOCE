@@ -119,10 +119,10 @@ function VanExchange() {
         <span className="display van-ex-price-h">Цена вопроса:</span>
         <span className="van-ex-price num">{full(cost)} <Icon name={v.takes} size={20} /></span>
       </div>
+      <button type="button" className="van-arrow l" onClick={() => turn(-1)} aria-label="Другая валюта"><IcArrow /></button>
+      <button type="button" className="van-arrow r" onClick={() => turn(1)} aria-label="Другая валюта"><IcArrow flip /></button>
       <div className="van-ctl">
-        <button type="button" className="van-arrow" onClick={() => turn(-1)} aria-label="Другая валюта"><IcArrow /></button>
         <button type="button" className="btn gold van-go" disabled={!n || busy === "van_exchange"} onClick={go}>{most < 1 ? "Не хватает" : "Обменять"}</button>
-        <button type="button" className="van-arrow" onClick={() => turn(1)} aria-label="Другая валюта"><IcArrow flip /></button>
       </div>
     </div>
   );
@@ -159,12 +159,12 @@ function VanPacks() {
         </div>
         <b className="van-plaque-price display">{p.price ? <>{full(p.price.amount)} <Icon name={p.price.currency} size={20} /></> : "Бесплатно"}</b>
       </div>
+      <button type="button" className="van-arrow l" onClick={() => turn(-1)} aria-label="Предыдущая акция"><IcArrow /></button>
+      <button type="button" className="van-arrow r" onClick={() => turn(1)} aria-label="Следующая акция"><IcArrow flip /></button>
       <div className="van-ctl">
-        <button type="button" className="van-arrow" onClick={() => turn(-1)} aria-label="Предыдущая акция"><IcArrow /></button>
         <button type="button" className="btn gold van-go" disabled={taken || !!got || !can || busy === "van_pack"} onClick={take}>
           {taken || got ? "Получено" : !can ? "Не хватает" : p.price ? "Купить" : "Забрать"}
         </button>
-        <button type="button" className="van-arrow" onClick={() => turn(1)} aria-label="Следующая акция"><IcArrow flip /></button>
       </div>
     </div>
   );
