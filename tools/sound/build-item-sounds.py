@@ -2,7 +2,7 @@
 Item sounds: a hit sound per weapon (w-*) and a pick-up sound per yard find (y-*), all synthesized.
   fist — a movie punch: whoosh, slap and a deep body thud
   mouse — a plastic mouse: whoosh, a hollow plastic knock and a click
-  keyboard — the knife (2026-11-20): a quick swish, the steel's ring as it's drawn, a stab — a wet thump
+  keyboard — the knife (2026-11-20): a quick swish, the steel's ring, a sharp stab — no bass
   red-candle — fire: a «fwoom» of flame with crackles
   gpu — the pistol (a revolver, 2026-11-20): the hammer cocked, a sharp shot, a short ring of the barrel, the casing… no, the cylinder clicks round
   bat — a wooden baseball bat: a heavy whoosh, a hollow wooden crack and a thud
@@ -61,12 +61,11 @@ S["w-mouse"] = room(mix(0.4,
     (hp(noise(0.012, 0.002, 0.7), 4000), 0.16)), 0.15)                # the button clicks
 # the knife: a fast swish, the blade's thin steel ring, a short stab — a dull wet thump
 blade = metal(0.5, [2350, 3610, 5020, 6880], 0.09, 0.35)
-S["w-keyboard"] = room(mix(0.6,
+S["w-keyboard"] = hp(room(mix(0.6,
     (whoosh(0.09, 900, 5200, 0.45), 0.0),                                  # swish
     (hp(blade, 1800), 0.02),                                                # the steel's ring
     (hp(noise(0.015, 0.003, 0.6), 3500), 0.1),                              # the edge biting
-    (tone(130, 0.18, 0.045, 1.0, 0.6), 0.1),                                # the stab's thump
-    (lp(noise(0.08, 0.02, 0.7), 900), 0.1)), 0.12)
+    (bp(noise(0.05, 0.012, 0.5), 1200, 4000), 0.1)), 0.12), 600)           # the stab, no bass (the user 2026-11-20)
 t = T(0.9); fl = rng.random(len(t))*2-1
 fire = lp(fl, 1800)*np.minimum(1, t/0.06)*np.exp(-t/0.35)*1.1                # the flame «fwoom»
 fire += tone(70, 0.9, 0.3, 0.5, 0.7)
