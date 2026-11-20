@@ -292,6 +292,8 @@ const SAMPLE_URLS = {
   levelupbg: "/assets/sound/levelup-bg.mp3",
   lvlvoice1: "/assets/sound/levelup-voice-1.mp3",
   lvlvoice2: "/assets/sound/levelup-voice-2.mp3",
+  // a spit at another player (the player's recording, tools/sound/source/spit.mp3)
+  spit: "/assets/sound/spit.mp3",
 } as Record<string, string>;
 /** a hit sound per weapon (w-<weapon id>) and a pick-up sound per yard find (y-<drop id>): tools/sound/build-item-sounds.py */
 const WEAPON_SOUNDS = ["fist", "mouse", "keyboard", "red-candle", "gpu", "rug-pull-gun", "bat"];
@@ -469,7 +471,8 @@ export function sfx(name: Sfx, power = 0.5) {
       tone(a, 90, t + 0.25, 0.35, { type: "sawtooth", vol: 0.2, slide: 0.7 });
       break;
     case "spit":
-      // a «тьфу»: a short wet hiss, then a splat
+      if (sample(a, "spit", t, 1)) break;
+      // a «тьфу» until the recording has loaded: a short wet hiss, then a splat
       noise(a, t, 0.12, { freq: 2600, vol: 0.35 });
       noise(a, t + 0.18, 0.08, { freq: 700, vol: 0.5 });
       tone(a, 180, t + 0.18, 0.08, { type: "sine", vol: 0.3, slide: 0.5 });
