@@ -7264,3 +7264,24 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .loc-page.paper .lp-rep { font-size: 13px; font-weight: 400; gap: 4px 14px; }
 .loc-page.paper .lp-rep b, .loc-page.paper .lp-rep i, .loc-page.paper .lp-rep-lead i { font-size: inherit; font-weight: 400; color: #5a3a14; }
 .loc-page.paper .lp-head .blocks b { font-size: 13px; font-weight: 400; color: #5a3a14; }
+
+/* the task's name beside its stop: grey and thin, like a pencil note on a drawing */
+.lp-name { position: absolute; top: 50%; transform: translateY(-50%); font: italic 300 12px/1.2 var(--font-body), system-ui; letter-spacing: 0.02em;
+  color: rgba(70, 62, 56, 0.62); pointer-events: none; text-align: left; border-bottom: 1px dashed rgba(70, 62, 56, 0.35); padding-bottom: 2px; }
+/* above its disc (clear of the path, which leaves a stop sideways and comes in from below); the top one — at its left */
+.lp-name.up { left: 50%; top: auto; bottom: calc(100% + 3px); transform: translateX(-50%); width: 175%; max-width: none; text-align: center; }
+.lp-name.side { right: calc(100% + 8px); width: 120%; text-align: right; }
+.loc-page.night .lp-name { color: rgba(60, 52, 110, 0.65); border-color: rgba(60, 52, 110, 0.35); }
+/* a step's rewards: up out of the stop, then down to a random spot near it, fading away */
+.lp-drop { position: absolute; left: 50%; top: 50%; z-index: 5; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; pointer-events: none;
+  font: 700 14px/1 var(--font-body), system-ui; color: #fff8e8; text-shadow: 0 0 2px #000, 0 1px 2px #000; opacity: 0;
+  animation: lp-drop 2.3s cubic-bezier(0.3, 0.6, 0.4, 1) forwards; }
+@keyframes lp-drop {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+  12% { opacity: 1; transform: translate(calc(-50% + var(--dx) * 0.4), calc(-50% - 56px)) scale(1.08); }
+  42% { opacity: 1; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1); }
+  49% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy) - 7px)); }
+  56% { opacity: 1; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))); }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))); }
+}
+@media (prefers-reduced-motion: reduce) { .lp-drop { animation-duration: 1.2s; } }

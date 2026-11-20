@@ -4,11 +4,12 @@ import { usePageReady } from "../route-loader.tsx";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { liveEnergy, useGame, useNow } from "../store.tsx";
 import { api, type Granted } from "../api.ts";
-import { LOCATIONS, locRep, locationById, taskOpen, tasksOf, type LocMode } from "../../content/locations.ts";
+import { LOCATIONS, locationById, taskOpen, tasksOf, type LocMode } from "../../content/locations.ts";
 import type { Reward } from "../../content/rewards.ts";
 import { LOCATION_ART } from "../art/scenes.tsx";
+import { ItemArt } from "../art/items.tsx";
 import { Icon } from "../art/icons.tsx";
-import { Avatar, Bar, Empty, Modal, RewardChips } from "../ui.tsx";
+import { Avatar, Empty, Modal, RewardChips } from "../ui.tsx";
 import { clock, full } from "../format.ts";
 import { haptic } from "../telegram.ts";
 import { Help } from "../help.tsx";
@@ -108,10 +109,6 @@ function BizPanel({ b, onDone }: { b: LocBiz; onDone: () => void }) {
   );
 }
 
-/** авторитет локации: a chip of its own (it piles up in the location only) */
-function LocRepChip({ v, size = 14 }: { v: number; size?: number }) {
-  return <span className="chip loc-rep" title="Авторитет локации"><Icon name="rep" size={size} />+{full(v)}</span>;
-}
 
 /** a leader on the list's plank: the avatar, the nickname, the zone's (day) or the night authority */
 function LcLeader({ l, mode, me }: { l: LocLeader | null; mode: LocMode; me?: number }) {
@@ -342,7 +339,7 @@ export function LocationScreen({ id }: { id: string }) {
   const [pick, setPick] = useState<string | null>(null);
   const [tab, setTab] = useState<LocTab>("day");
   // "+36" (папиросы) flying up from the tapped stop
-  const [pops, setPops] = useState<{ key: number; i: number; text: string; rep: number }[]>([]);
+  const [pops, setPops] = useState<{ key: number; i: number; drops: { icon: string; n: number; dx: number; dy: number }[] }[]>([]);
   if (!loc) return <Empty>Такой локации нет</Empty>;
   const row = rows?.find((x) => x.id === id);
   const mode: LocMode = tab === "night" ? "night" : "day";
@@ -375,8 +372,22 @@ export function LocationScreen({ id }: { id: string }) {
     );
     if (!res) return;
     const key = Date.now();
-    setPops((p) => [...p.slice(-4), { key, i: x.i, text: `+${res.step.currencies.PAP ?? 0}`, rep: res.locRep ?? 0 }]);
-    setTimeout(() => setPops((p) => p.filter((q) => q.key !== key)), 1100);
+    // the step's rewards: each flies up from the stop and falls somewhere near it, then fades (nothing to pick up)
+    const got: { icon: string; n: number }[] = [
+      ...Object.entries(res.step.currencies ?? {}).filter(([, v]) => (v ?? 0) > 0).map(([c, v]) => ({ icon: c, n: v as number })),
+      ...(res.step.xp ? [{ icon: "xp", n: res.step.xp }] : []),
+      ...(res.locRep ? [{ icon: "rep", n: res.locRep }] : []),
+    ];
+    const items = (res.step.items ?? []).filter((it) => it.qty > 0).map((it) => ({ icon: `item:${it.id}`, n: it.qty }));
+    // they land around the stop, clear of its disc: on a ring 60…95 px out, spread evenly from a random start
+    const all = [...got, ...items];
+    const a0 = Math.random() * Math.PI * 2;
+    const drops = all.map((g, k) => {
+      const a = a0 + (k / all.length) * Math.PI * 2 + (Math.random() - 0.5) * 0.6, r = 60 + Math.random() * 35;
+      return { ...g, dx: Math.round(Math.cos(a) * r), dy: Math.round(Math.sin(a) * r * 0.8) };
+    });
+    setPops((p) => [...p.slice(-5), { key, i: x.i, drops }]);
+    setTimeout(() => setPops((p) => p.filter((q) => q.key !== key)), 2600);
     if (res.stash) {
       // a stash found: a moment of its own
       haptic.big();
@@ -444,12 +455,6 @@ export function LocationScreen({ id }: { id: string }) {
         row ? <BizPanel b={row.business} onDone={() => void load()} /> : null
       ) : (
         <>
-          {/* what closing the location gives — on top */}
-          <div className={`lp-prize ${allDone ? "ready" : ""}`}>
-            <span className="lp-prize-h"><Icon name="chest" size={22} />{night ? "За ночь" : r?.clears ? "За повтор" : "За локацию"}</span>
-            <RewardChips r={r?.nextReward ?? loc.reward} size={13} />
-          </div>
-
           <div className="lp-map" style={{ aspectRatio: `${MAP_W} / ${MAP_H}` }}>
             <svg className="lp-path" viewBox={`0 0 ${MAP_W} ${MAP_H}`} aria-hidden="true">
               {stops.slice(1).map((b, k) => {
@@ -480,6 +485,7 @@ export function LocationScreen({ id }: { id: string }) {
                   onClick={() => tapStop(x)}
                   aria-label={x.t.title}
                 >
+                  <i className={`lp-name ${x.i === tasks.length - 1 ? "side" : "up"}`}>{x.t.title}</i>
                   <span className="lp-disc">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={`/assets/items/${icons[x.i]}.webp`} alt="" draggable={false} />
@@ -487,28 +493,17 @@ export function LocationScreen({ id }: { id: string }) {
                   {x.done ? <i className="lp-tag ok">✓</i>
                     : x.open ? <i className="lp-tag num">{x.steps}/{x.t.steps}<em><Icon name="energy" size={11} />{x.t.energy}</em></i>
                     : <i className="lp-tag lock"><Icon name="lock" size={14} /></i>}
-                  {pops.filter((q) => q.i === x.i).map((q) => <b key={q.key} className="lp-pop num">{q.text}{q.rep > 0 && <em><Icon name="rep" size={14} />+{q.rep}</em>}</b>)}
+                  {pops.filter((q) => q.i === x.i).flatMap((q) => q.drops.map((d, k) => (
+                    <b key={`${q.key}-${k}`} className="lp-drop num" style={{ ["--dx" as string]: `${d.dx}px`, ["--dy" as string]: `${d.dy}px`, animationDelay: `${k * 70}ms` }}>
+                      {d.icon.startsWith("item:") ? <ItemArt id={d.icon.slice(5)} size={20} /> : <Icon name={d.icon} size={20} />}+{full(d.n)}
+                    </b>
+                  )))}
                   {stashes.filter((q) => q.i === x.i).map((q) => <StashPop key={q.key} id={q.id} />)}
                 </button>
               );
             })}
           </div>
 
-          <div className={`lp-card ${sel.done ? "done" : sel.open ? "" : "shut"}`} key={sel.t.id}>
-            <span className="lp-card-pic">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`/assets/items/${icons[sel.i]}.webp`} alt="" draggable={false} />
-            </span>
-            <div className="grow col" style={{ gap: 4, minWidth: 0 }}>
-              <span className="tiny muted display lp-card-k">{night ? "НОЧНОЕ " : ""}ЗАДАНИЕ {sel.i + 1}/{list.length}{sel.open && !sel.done ? <> · шаг <Icon name="energy" size={12} />{sel.t.energy}</> : null}</span>
-              <b>{sel.t.title}</b>
-              <span className="tiny muted">
-                {sel.done ? "Выполнено" : !sel.open ? `Откроется после «${tasks[sel.i - 1]?.t.title}»` : current?.t.id === sel.t.id ? "Жми на светящийся кружок — каждый шаг тратит энергию" : sel.t.flavor}
-              </span>
-              <Bar value={sel.steps} max={sel.t.steps} tone={sel.done ? "green" : night ? "violet" : "gold"} label={`${sel.steps}/${sel.t.steps}`} />
-              <span className="row" style={{ gap: 6, flexWrap: "wrap" }}><small className="tiny muted">за шаг</small><RewardChips r={sel.t.stepReward} size={13} /><LocRepChip v={locRep(sel.t.stepReward.xp ?? 0)} size={13} /></span>
-            </div>
-          </div>
           {energy < Math.min(...list.map((t) => t.energy)) && (
             <p className="small muted center">Энергия кончилась: +1 каждые 5 минут, или <Link href="/shop?tab=energy" style={{ color: "var(--gold)", textShadow: "1px 0 0 #2e1c00, -1px 0 0 #2e1c00, 0 1px 0 #2e1c00, 0 -1px 0 #2e1c00" }}>купи энергию</Link>.</p>
           )}
