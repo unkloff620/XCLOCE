@@ -68,6 +68,7 @@ export const ASSET_FILES: string[] = [
  "/assets/biz/yt-heli.webp",
  "/assets/biz/yt-jacuzzi.webp",
  "/assets/bossbox/bar.webp",
+ "/assets/bossbox/barbg.webp",
  "/assets/bossbox/board.webp",
  "/assets/bossbox/box.webp",
  "/assets/bossbox/clamps.webp",

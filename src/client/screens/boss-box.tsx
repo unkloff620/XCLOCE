@@ -108,9 +108,11 @@ export function BossBoxWindow({ bossId, fightId, damage, onClose }: { bossId: st
         <b className="bbox-title display">Дополнительная награда</b>
         {/* the pins' planks stand behind the bar */}
         {stages.map((_, k) => pin(k, false))}
-        {layer("bar")}
+        {layer("barbg")}
         <span className="bbox-progress" style={{ left: `${bl}%`, top: `${bt}%`, width: `${(PIN_AT - bl) * frac + (frac >= 1 ? br - PIN_AT : 0)}%`, height: `${bb - bt}%` }} />
-        <span className="bbox-dmg num" style={{ left: `${bl + 1.5}%`, top: `${bt}%`, height: `${bb - bt}%` }}>{full(Math.min(damage, max))} / {full(max)}</span>
+        <span className="bbox-dmg num" style={{ left: `${bl + 3}%`, top: `${bt}%`, height: `${bb - bt}%` }}>{full(Math.min(damage, max))} / {full(max)}</span>
+        {/* the bar's frame over its progress */}
+        {layer("bar")}
         {stages.map((_, k) => pin(k, true))}
         <span className="bbox-text">
           {next ? <>Нанеси боссу {full(next.damage)} урона в этом бою и победи</> : <>Награды — при победе</>}

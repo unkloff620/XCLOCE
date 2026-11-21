@@ -5,6 +5,7 @@ export const BOX_WINDOW = [12.28, 39.44, 87.59, 76.89] as const;
 /** each layer: left, top, width, height in % of the stage */
 export const BOX_LAYERS = {
   board: [1.55, 2.91, 96.95, 91.64],
+  barbg: [10.60, 42.78, 78.60, 11.53],
   bar: [6.15, 40.24, 87.65, 17.35],
   plank: [41.70, 25.25, 12.35, 54.50],
   pin: [45.80, 22.07, 3.95, 46.32],
@@ -13,7 +14,7 @@ export const BOX_LAYERS = {
   plate: [42.45, 66.58, 10.70, 10.26],
 } as const;
 /** the bar's inside: left, top, right, bottom in % of the stage */
-export const BAR_INSIDE = [12.00, 43.32, 88.00, 52.86] as const;
+export const BAR_INSIDE = [10.60, 42.78, 89.15, 54.22] as const;
 /** the pin assembly's centre line (x, % of the stage) as drawn */
 export const PIN_X = 47.75;
 export const STAGE_ASPECT = 1.8165;

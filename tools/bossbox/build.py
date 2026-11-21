@@ -3,7 +3,8 @@
 and src/client/art/boss-box-layout.ts (where each layer sits).
 
   box.png     — the small box by the boss; the knife in its window is cut out: the progress shows through it
-  board.png   — the window's wooden board; bar.png — the progress bar; plank.png, pin.png, clamps.png, nut.png,
+  board.png   — the window's wooden board; barbg.png — the dark strip behind the bar; bar.png — the bar's frame (open inside,
+                the progress runs under it); plank.png, pin.png, clamps.png, nut.png,
                 plate.png — the pin that holds the stage (all of these share one 2000×1101 stage: kept in place)
 
     python3 tools/bossbox/build.py
@@ -36,7 +37,7 @@ lines.append(f"/** the box's window: left, top, right, bottom in % */\nexport co
 
 SW, SH = 2000, 1101
 layers = {}
-for name in ["board", "bar", "plank", "pin", "clamps", "nut", "plate"]:
+for name in ["board", "barbg", "bar", "plank", "pin", "clamps", "nut", "plate"]:
     im = Image.open(os.path.join(HERE, "source", f"{name}.png")).convert("RGBA")
     a, b, c, d = bbox(im)
     part = im.crop((a, b, c, d))
@@ -49,7 +50,7 @@ for k, (l, t, ww, hh) in layers.items():
     lines.append(f"  {k}: [{l:.2f}, {t:.2f}, {ww:.2f}, {hh:.2f}],")
 lines.append("} as const;")
 # the bar's dark inside (where the progress fills) and the pin's centre (it moves along the bar to the stage's damage)
-BAR_IN = (240, 477, 1760, 582)
+BAR_IN = (212, 471, 1783, 597)  # the dark strip behind the bar's frame (barbg.png): the progress fills it, under the frame
 lines.append(f"/** the bar's inside: left, top, right, bottom in % of the stage */\nexport const BAR_INSIDE = [{BAR_IN[0] / SW * 100:.2f}, {BAR_IN[1] / SH * 100:.2f}, {BAR_IN[2] / SW * 100:.2f}, {BAR_IN[3] / SH * 100:.2f}] as const;")
 lines.append(f"/** the pin assembly's centre line (x, % of the stage) as drawn */\nexport const PIN_X = {955 / SW * 100:.2f};")
 lines.append(f"export const STAGE_ASPECT = {SW / SH:.4f};")

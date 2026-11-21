@@ -7410,7 +7410,7 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .bbox-title { position: absolute; left: 8%; right: 8%; top: 6.5%; text-align: center; white-space: nowrap; font-size: 4.4cqi; color: #fff6e4; text-transform: uppercase; -webkit-text-stroke: 0.5cqi #3a1d0c; paint-order: stroke fill; }
 .bbox-text { position: absolute; left: 8%; right: 8%; top: 16.5%; z-index: 2; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 2.5cqi; font-weight: 700; line-height: 1.2; color: #fff0d8; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); }
 .bbox-progress { position: absolute; border-radius: 0.6cqi; background: linear-gradient(180deg, #ffd65a, #e48a12); box-shadow: inset 0 -0.6cqi 0 rgba(0, 0, 0, 0.18); transition: width 0.5s ease-out; }
-.bbox-dmg { position: absolute; display: flex; align-items: center; font-size: 3cqi; font-weight: 800; color: #fff; text-shadow: 0 1px 2px #000; }
+.bbox-dmg { position: absolute; z-index: 1; display: flex; align-items: center; font-size: 3cqi; font-weight: 800; color: #fff; text-shadow: 0 1px 2px #000; }
 /* the pin assembly: the whole stage, moved along the bar */
 .bbox-pin { position: absolute; inset: 0; pointer-events: none; }
 .bbox-plate-n { position: absolute; display: grid; place-items: center; font-size: 3cqi; font-weight: 900; color: #3a1d0c; }
