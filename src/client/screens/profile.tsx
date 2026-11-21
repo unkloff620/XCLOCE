@@ -53,7 +53,7 @@ interface Profile {
   level: number; xp: number; levelXp: number; levelNeed: number;
   firstSeen: number; lastSeen: number; activeDays: number;
   wallet: Record<Currency, number> | null; energy: number | null;
-  arsenal?: { id: string; qty: number }[];
+  arsenal?: { id: string; qty: number; dmg?: number; dmgDay?: number }[];
   /** what was gained in the last 24 hours: currencies, weapons by id, xp, damage, talents, biceps, energy */
   day?: Record<string, number>;
   beardDays?: number;
@@ -555,34 +555,45 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
               </div>
               {/* «Сводка»: the values one under another, what came in (or went out) in the last 24 hours after each */}
               <div className="sv-rows">
-                <SvRow icon={<Icon name="xp" size={22} />} label="Авторитет" value={full(p.xp)} d={p.day?.xp} />
-                <SvRow icon={<BicepsArt size={22} />} label="Бицуха" value={full(p.social?.biceps ?? 0)} d={p.day?.biceps} />
-                {p.energy !== null && <SvRow icon={<Icon name="energy" size={22} />} label="Энергия" value={`${full(p.energy)}/${full(p.energyMax ?? 0)}`} />}
-                <SvRow icon={<Icon name="talent" size={22} />} label="Таланты" value={full(p.talentsIn ?? 0)} d={p.day?.talents} />
-                <SvRow icon={<Icon name="swords" size={22} />} label="Урон" value={full(s.totalDamage)} d={p.day?.damage} />
-                <SvRow icon={<Icon name="sun" size={22} />} label="Достижения" value={full(p.achPoints ?? 0)} />
-                <SvRow icon={<Icon name="razor" size={22} />} label="Борода" value={`${full(p.beardDays ?? 0)} ${plural(p.beardDays ?? 0, "день", "дня", "дней")}`} />
-                <SvRow icon={<Icon name="calendar" size={22} />} label="В игре с" value={shortDate(p.firstSeen)} />
-                <SvRow icon={<Icon name="clock" size={22} />} label="Дней в игре" value={full(p.activeDays)} />
-                <SvRow icon={<Icon name="clock" size={22} />} label="Был в игре" value={shortDate(p.lastSeen)} />
-                <SvRow icon={<Icon name="ach-clan" size={22} />} label="Клан" value={p.clan ? `[${p.clan.tag}] ${p.clan.name}` : "нет"} />
+                <SvRow icon={<Icon name="xp" size={18} />} label="Авторитет" value={full(p.xp)} d={p.day?.xp} />
+                <SvRow icon={<BicepsArt size={18} />} label="Бицуха" value={full(p.social?.biceps ?? 0)} d={p.day?.biceps} />
+                {p.energy !== null && <SvRow icon={<Icon name="energy" size={18} />} label="Энергия" value={`${full(p.energy)}/${full(p.energyMax ?? 0)}`} />}
+                <SvRow icon={<Icon name="talent" size={18} />} label="Таланты" value={full(p.talentsIn ?? 0)} d={p.day?.talents} />
+                <SvRow icon={<Icon name="swords" size={18} />} label="Урон" value={full(s.totalDamage)} d={p.day?.damage} />
+                <SvRow icon={<Icon name="sun" size={18} />} label="Достижения" value={full(p.achPoints ?? 0)} />
+                <SvRow icon={<Icon name="razor" size={18} />} label="Борода" value={`${full(p.beardDays ?? 0)} ${plural(p.beardDays ?? 0, "день", "дня", "дней")}`} />
+                <SvRow icon={<Icon name="calendar" size={18} />} label="В игре с" value={shortDate(p.firstSeen)} />
+                <SvRow icon={<Icon name="clock" size={18} />} label="Дней в игре" value={full(p.activeDays)} />
+                <SvRow icon={<Icon name="clock" size={18} />} label="Был в игре" value={shortDate(p.lastSeen)} />
+                <SvRow icon={<Icon name="ach-clan" size={18} />} label="Клан" value={p.clan ? `[${p.clan.tag}] ${p.clan.name}` : "нет"} />
               </div>
               {/* his weapons and money: only he sees them (others — only the most he ever had, in the achievements) */}
               {p.self && !!p.arsenal?.length && (
                 <>
-                  <b className="sv-head"><Icon name="swords" size={18} />Боевые характеристики</b>
+                  <b className="sv-head"><span className="sv-ico"><Icon name="swords" size={16} /></span>Боевые характеристики</b>
                   <div className="sv-rows">
-                    {p.arsenal.map((w) => <SvRow key={w.id} icon={<ItemArt id={w.id} size={26} />} label={itemById(w.id)?.name ?? w.id} value={`${full(w.qty)} шт`} d={p.day?.[w.id]} good />)}
+                    {/* a weapon: its hit now and how it grew in a day · how many there are and how many came in a day */}
+                    {p.arsenal.map((w) => (
+                      <span key={w.id} className="sv-row">
+                        <span className="sv-ico"><ItemArt id={w.id} size={18} /></span>
+                        <span className="sv-label ellipsis">{itemById(w.id)?.name ?? w.id}:</span>
+                        <b className="sv-val num">
+                          <span className="sv-dmg" title="Урон за удар"><Icon name="swords" size={12} />{full(w.dmg ?? 0)}<Delta n={w.dmgDay} /></span>
+                          <span className="sv-dot">•</span>
+                          <span title="Сколько есть">{full(w.qty)} шт<Delta n={p.day?.[w.id]} /></span>
+                        </b>
+                      </span>
+                    ))}
                   </div>
                 </>
               )}
               {p.wallet && (
                 <>
-                  <b className="sv-head"><Icon name="coins" size={18} />Валюты</b>
+                  <b className="sv-head"><span className="sv-ico"><Icon name="coins" size={16} /></span>Валюты</b>
                   <div className="sv-cur">
                     {CURRENCIES.map((c) => (
                       <span key={c} className="sv-tile" title={BALANCE_NAMES[c] ?? CURRENCY_DEFS[c].name}>
-                        <Icon name={c} size={24} />
+                        <span className="sv-ico"><Icon name={c} size={18} /></span>
                         <b className="num">{money(c, p.wallet![c])}</b>
                         <Delta n={p.day?.[c]} />
                       </span>

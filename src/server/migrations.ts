@@ -1603,4 +1603,15 @@ UPDATE players SET ach_points = 0, ach_boxes_opened = 0;`,
   PRIMARY KEY (player_id, hour, key)
 );`,
   },
+  {
+    // «Боевые характеристики»: a weapon's hit, noted once an hour, for its growth over the last day (systems/state.ts)
+    id: "v2-113-weapon-dmg",
+    sql: `CREATE TABLE IF NOT EXISTS player_weapon_dmg (
+  player_id INT NOT NULL,
+  hour TIMESTAMPTZ NOT NULL,
+  weapon_id TEXT NOT NULL,
+  dmg BIGINT NOT NULL,
+  PRIMARY KEY (player_id, hour, weapon_id)
+);`,
+  },
 ];

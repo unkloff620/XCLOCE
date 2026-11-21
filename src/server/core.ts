@@ -192,9 +192,10 @@ export async function takeItem(ctx: Ctx, id: string, qty: number, reason: string
 
 export async function ledger(ctx: Ctx, kind: string, key: string, delta: number, reason: string) {
   await ctx.q.query("INSERT INTO ledger (player_id, kind, key, delta, reason, created_at) VALUES ($1,$2,$3,$4,$5,$6)", [ctx.pid, kind, key, delta, reason.slice(0, 60), new Date(ctx.now)]);
-  // «за сутки» in the profile: money and weapons — what came in and went out (the net, + or −); talents — only gained
+  // «за сутки» in the profile: money — what came in and went out (the net, + or −); weapons and talents — only gained
   // (a talent reset gives back, it does not gain)
-  if (kind === "currency" || (kind === "item" && itemById(key)?.weapon)) await gain(ctx, key, delta);
+  if (kind === "currency") await gain(ctx, key, delta);
+  else if (kind === "item" && delta > 0 && itemById(key)?.weapon) await gain(ctx, key, delta);
   else if (kind === "talent" && delta > 0 && reason !== "talent-reset") await gain(ctx, "talents", delta);
 }
 

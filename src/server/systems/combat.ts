@@ -263,13 +263,7 @@ export async function strike(ctx: Ctx, w: NonNullable<ReturnType<typeof weaponBy
   const bonus = await playerBonus(ctx.q, ctx.pid);
   const wt = weaponTalentBonus(await weaponTalents(ctx.q, ctx.pid), w.id);
   // talents add flat damage to the weapon's base; the room and trophies multiply the sum; a batch rolls its crit once
-  // a room may add flat damage to the fist (Боксёрская)
-  const roomFlat = w.id === "fist" ? bonus.fistDamage ?? 0 : 0;
-  // complete boss sets add flat damage to their weapon (Командате's set: the keyboard +30)
-  const setFlat = (await setBonuses(ctx.q, ctx.pid))[w.id] ?? 0;
-  // «Сходняк»: the 1st clan of the week picks a weapon that hits harder for a week
-  const shod = await shodBoostMult(ctx.q, ctx.pid, w.id, ctx.now);
-  const one = Math.round((w.weapon.damage + wt.flat + roomFlat + setFlat) * (1 + bonus.damage) * shod);
+  const one = await weaponHitDamage(ctx.q, ctx.pid, w.id, ctx.now);
   const critOne = Math.round(one * Math.min(CRIT_MULT_MAX, BASE_CRIT_MULT + wt.critDamage));
   // the crit chance: the home's plus this weapon's «Крит» talents, never above 51%. One roll for the whole action:
   // ×1000 at once is one blow — a crit makes all of it ×2, else none of it
@@ -279,6 +273,21 @@ export async function strike(ctx: Ctx, w: NonNullable<ReturnType<typeof weaponBy
   const crits = crit ? count : 0;
   if (w.weapon.kind === "consumable") left = await takeItem(ctx, w.id, count, reason);
   return { damage, crit, crits, count, left, readyAt, phraseIdx, phrases };
+}
+
+/** one hit of a weapon without a crit: its base, the talents, the room and the sets, the home's +damage, «Сходняк» */
+export async function weaponHitDamage(q: Queryable, pid: number, weaponId: string, now: number): Promise<number> {
+  const w = weaponById(weaponId);
+  if (!w?.weapon) return 0;
+  const bonus = await playerBonus(q, pid);
+  const wt = weaponTalentBonus(await weaponTalents(q, pid), w.id);
+  // a room may add flat damage to the fist (Боксёрская)
+  const roomFlat = w.id === "fist" ? bonus.fistDamage ?? 0 : 0;
+  // complete boss sets add flat damage to their weapon (Командате's set: the keyboard +30)
+  const setFlat = (await setBonuses(q, pid))[w.id] ?? 0;
+  // «Сходняк»: the 1st clan of the week picks a weapon that hits harder for a week
+  const shod = await shodBoostMult(q, pid, w.id, now);
+  return Math.round((w.weapon.damage + wt.flat + roomFlat + setFlat) * (1 + bonus.damage) * shod);
 }
 
 export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1, rush = false): Promise<HitResult> {

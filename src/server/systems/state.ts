@@ -10,7 +10,7 @@ import { GameError, type Queryable } from "../db.ts";
 import { balances, energyCfgOf, energyNow, gainsDay, moscowDay, type Ctx, type PlayerRow } from "../core.ts";
 import { CURRENCIES, type Currency } from "../../content/currencies.ts";
 import { itemById } from "../../content/items.ts";
-import { fightHp, settleMyFight, settleMyWins, unlockedItems } from "./combat.ts";
+import { fightHp, settleMyFight, settleMyWins, unlockedItems, weaponHitDamage } from "./combat.ts";
 import { dealerBonus, inventoryView } from "./shop.ts";
 import { yardSync } from "./yard.ts";
 import { levelFromXp } from "../../content/levels.ts";
@@ -167,6 +167,27 @@ export async function gameState(ctx: Ctx) {
   };
 }
 
+/**
+ * «Боевые характеристики»: a weapon's hit now and how much it grew in the last 24 hours. The hit is written down once an
+ * hour (player_weapon_dmg) when the player looks; the growth is against the last note a day old (or the oldest there is).
+ */
+async function weaponDay(q: Queryable, pid: number, list: { id: string; qty: number }[], now: number) {
+  const hour = new Date(Math.floor(now / 3_600_000) * 3_600_000);
+  const dayAgo = new Date(hour.getTime() - 24 * 3_600_000);
+  const out: { id: string; qty: number; dmg: number; dmgDay: number }[] = [];
+  for (const w of list) {
+    const dmg = await weaponHitDamage(q, pid, w.id, now);
+    await q.query("INSERT INTO player_weapon_dmg (player_id, hour, weapon_id, dmg) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING", [pid, hour, w.id, dmg]);
+    const [old] = await q.query<{ dmg: number }>(
+      `SELECT dmg FROM player_weapon_dmg WHERE player_id=$1 AND weapon_id=$2
+       ORDER BY (hour <= $3) DESC, CASE WHEN hour <= $3 THEN -EXTRACT(EPOCH FROM hour) ELSE EXTRACT(EPOCH FROM hour) END LIMIT 1`,
+      [pid, w.id, dayAgo]);
+    out.push({ ...w, dmg, dmgDay: dmg - Number(old?.dmg ?? dmg) });
+  }
+  if (Math.random() < 0.05) await q.query("DELETE FROM player_weapon_dmg WHERE player_id=$1 AND hour < $2", [pid, new Date(dayAgo.getTime() - 24 * 3_600_000)]);
+  return out;
+}
+
 export async function profileView(q: Queryable, viewer: number, pid: number, cfg: Ctx["cfg"], now = Date.now()) {
   const [p] = await q.query<PlayerRow & { last_day: string | null }>("SELECT * FROM players WHERE id=$1", [pid]);
   if (!p) throw new GameError("no_player", "Игрок не найден", 404);
@@ -197,7 +218,7 @@ export async function profileView(q: Queryable, viewer: number, pid: number, cfg
     id: p.id, self, name: p.display_name, username: p.username, photo: p.photo_url, place: Number(pl?.place ?? 0),
     achPoints: Number((p as PlayerRow & { ach_points?: number }).ach_points ?? 0),
     cases: await casesView(q, pid),
-    arsenal: self ? stockIds.map((id) => ({ id, qty: Number(stock.find((r) => r.item_id === id)?.qty ?? 0) })).filter((w) => w.qty > 0) : [],
+    arsenal: self ? await weaponDay(q, pid, stockIds.map((id) => ({ id, qty: Number(stock.find((r) => r.item_id === id)?.qty ?? 0) })).filter((w) => w.qty > 0), now) : [],
     // what he gained in the last 24 hours (the money and energy only for himself, as the balances)
     // other players do not see his money and weapons (only the most he ever had, in the achievements)
     day: await (async () => {

@@ -154,8 +154,11 @@ describe("achievements and someone's profile", () => {
     const other = await profileView(db, viewer, p, await loadConfig(db), T0);
     expect(Object.keys(other.day).some((k) => ["RUB", "PAP", "keyboard"].includes(k))).toBe(false);
     expect(other.arsenal).toEqual([]);
-    // the weapon spent on the hit: the day's net goes down
-    expect(mine.day.keyboard).toBe(-1);
+    // weapons: only what came in counts (spent on the hit — not), and each has its hit and its day's growth
+    expect(mine.day.keyboard).toBeUndefined();
+    const kb = mine.arsenal.find((w: { id: string }) => w.id === "keyboard")!;
+    expect(kb.dmg).toBeGreaterThan(0);
+    expect(kb.dmgDay).toBe(0);
   });
 
   it("clan settings: only the leader edits name, emblem, colour and description", async () => {
