@@ -1653,4 +1653,10 @@ DELETE FROM inventory WHERE item_id IN ('energy-pack', 'energy-full');`,
     sql: `INSERT INTO inventory (player_id, item_id, qty, source, updated_at) SELECT player_id, item_id, 1, 'unlock', now() FROM player_unlocks WHERE item_id IN ('tee-white', 'jeans', 'sneakers', 'tee-actclose', 'shorts-actclose', 'badge-actclose', 'hand-drum', 'tee-sailor', 'cap-captain', 'mask-diver', 'teeth-necklace', 'anchor-mugo', 'jacket-puffer', 'pants-black', 'sneakers-chunky', 'bottle-komandate', 'jacket-komandate', 'pants-komandate', 'sneakers-komandate', 'sweater-vostok', 'pants-vostok', 'headphones-vostok', 'sneakers-black', 'jacket-vadim', 'pants-vadim', 'shoes-vadim', 'tie-vadim', 'coat-botsman', 'gloves-botsman', 'pants-botsman', 'boots-botsman', 'vials-utilizator', 'mask-gas-utilizator', 'apron-utilizator') ON CONFLICT (player_id, item_id) DO NOTHING;
 DELETE FROM player_unlocks WHERE item_id IN ('tee-white', 'jeans', 'sneakers', 'tee-actclose', 'shorts-actclose', 'badge-actclose', 'hand-drum', 'tee-sailor', 'cap-captain', 'mask-diver', 'teeth-necklace', 'anchor-mugo', 'jacket-puffer', 'pants-black', 'sneakers-chunky', 'bottle-komandate', 'jacket-komandate', 'pants-komandate', 'sneakers-komandate', 'sweater-vostok', 'pants-vostok', 'headphones-vostok', 'sneakers-black', 'jacket-vadim', 'pants-vadim', 'shoes-vadim', 'tie-vadim', 'coat-botsman', 'gloves-botsman', 'pants-botsman', 'boots-botsman', 'vials-utilizator', 'mask-gas-utilizator', 'apron-utilizator');`,
   },
+  {
+    // the yard: no more stickers, caps, spinners, flyers, wallets on the ground; the admin's old weights dropped (the user 2026-11-22)
+    id: "v2-119-yard-papirosy",
+    sql: `DELETE FROM yard_items WHERE drop_id IN ('sticker-hodl', 'bottle-cap', 'spinner', 'flyer-passive', 'lost-wallet');
+DELETE FROM config WHERE key='yard.weights';`,
+  },
 ];

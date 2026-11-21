@@ -13,24 +13,19 @@ export interface YardDrop {
 export const YARD_SPAWN_MIN = 5;
 export const YARD_MAX_ITEMS = 5;
 
-// Weapons never drop in the yard except a rare keyboard (the fist, the mouse and the candle are everyone's anyway).
+// Mostly папиросы; every other find 1%, the roubles 0.5% (the user 2026-11-22). Weights are per mille.
 export const YARD_DROPS: YardDrop[] = [
-  { id: "papirosy", name: "Папиросы", icon: "PAP", weight: 40, reward: { currencies: { PAP: 10 } } },
-  { id: "coins", name: "Мелочь из-под лавки", icon: "coins", weight: 1, reward: { currencies: { RUB: 25 } } },
+  { id: "papirosy", name: "Папиросы", icon: "PAP", weight: 955, reward: { currencies: { PAP: 10 } } },
+  { id: "coins", name: "Мелочь из-под лавки", icon: "coins", weight: 5, reward: { currencies: { RUB: 25 } } },
   // «Крафт»: a part lies on the ground (which one is rolled when it appears — the drop id becomes the part's id)
-  { id: "parts-common", name: "Деталь", icon: "part-nails", weight: 22, reward: {} },
-  { id: "parts-rare", name: "Редкая деталь", icon: "part-battery", weight: 3, reward: {} },
-  { id: "sticker-hodl", name: "Стикер HODL", icon: "sticker-hodl", weight: 8, reward: { items: [{ id: "sticker-hodl", qty: 1 }] } },
-  { id: "bottle-cap", name: "Крышка от энергетика", icon: "bottle-cap", weight: 8, reward: { items: [{ id: "bottle-cap", qty: 1 }] } },
-  { id: "spinner", name: "Спиннер из 2017", icon: "spinner", weight: 7, reward: { items: [{ id: "spinner", qty: 1 }] } },
-  { id: "flyer-passive", name: "Листовка «Пассивный доход»", icon: "flyer-passive", weight: 7, reward: { items: [{ id: "flyer-passive", qty: 1 }] } },
-  { id: "energy-drink", name: "Энергетик", icon: "energy-drink", weight: 18, reward: { items: [{ id: "energy-drink", qty: 1 }] } },
-  { id: "lost-wallet", name: "Забытый кошелёк", icon: "lost-wallet", weight: 8, reward: { items: [{ id: "lost-wallet", qty: 1 }] } },
-  { id: "keyboard", name: "Нож", icon: "keyboard", weight: 1, reward: { items: [{ id: "keyboard", qty: 1 }] } },
+  { id: "parts-common", name: "Деталь", icon: "part-nails", weight: 10, reward: {} },
+  { id: "parts-rare", name: "Редкая деталь", icon: "part-battery", weight: 10, reward: {} },
+  { id: "energy-drink", name: "Энергетик", icon: "energy-drink", weight: 10, reward: { items: [{ id: "energy-drink", qty: 1 }] } },
+  { id: "keyboard", name: "Нож", icon: "keyboard", weight: 10, reward: { items: [{ id: "keyboard", qty: 1 }] } },
 ];
 
 /*
- * Time of day in the yard (Moscow time): the picture is tinted to match, and at night rare finds come more often.
+ * Time of day in the yard (Moscow time): the picture is tinted to match.
  * day 8–17, evening 17–22, night 22–5, morning 5–8.
  */
 export type YardTime = "morning" | "day" | "evening" | "night";
@@ -38,5 +33,5 @@ export function yardTime(now: number): YardTime {
   const h = new Date(now + 3 * 3600_000).getUTCHours();
   return h >= 22 || h < 5 ? "night" : h < 8 ? "morning" : h < 17 ? "day" : "evening";
 }
-/** at night these finds are this many times likelier (the dark hides a lot under the benches) */
-export const NIGHT_BOOST: Record<string, number> = { "lost-wallet": 2, keyboard: 2 };
+/** at night some finds could be likelier — none now: the chances are fixed (the user 2026-11-22) */
+export const NIGHT_BOOST: Record<string, number> = {};

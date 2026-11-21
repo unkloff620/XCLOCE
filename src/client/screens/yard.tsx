@@ -107,11 +107,11 @@ export function YardScreen() {
       {left.map((it) => ({ it, spot: yardSpot(it.slot) })).filter(({ spot }) => spot.page === pg).map(({ it, spot }) => {
         // a craft part lies there by its own id
         const part = it.drop.startsWith("part-") ? craftById(it.drop) : null;
-        const drop = part ? { name: part.name, icon: part.id, weight: part.rarity === "common" ? 22 : 3 } : YARD_DROPS.find((d) => d.id === it.drop);
+        const drop = part ? { name: part.name, icon: part.id, weight: 10 } : YARD_DROPS.find((d) => d.id === it.drop);
         return (
           <button
             key={it.id}
-            className={`yard-item ${drop && drop.weight <= 3 ? "rare" : ""}`}
+            className={`yard-item ${drop && drop.weight <= 10 ? "rare" : ""}`}
             style={{ left: `${spot.x}%`, top: `${spot.y}%`, ["--r" as string]: `${spot.r}deg`, ["--d" as string]: `${(it.slot % 5) * -0.45}s` }}
             onClick={() => pick(it.id, spot)}
             tabIndex={page === pg ? 0 : -1}
@@ -144,7 +144,7 @@ export function YardScreen() {
           </Help>
         </div>
         <span className="row" style={{ gap: 6 }}>
-          {tod === "night" && <span className="chip yard-night" title="Ночью редкие находки попадаются чаще">ночь · редкие находки</span>}
+          {tod === "night" && <span className="chip yard-night">ночь</span>}
           <span className="chip">{data?.items.length ?? state?.yard.count ?? 0}/{data?.max ?? 5}</span>
         </span>
       </div>
