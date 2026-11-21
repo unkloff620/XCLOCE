@@ -35,7 +35,7 @@ describe("daily quests", () => {
     await act(db, p, "fight_start", { boss: "datsik" }, T0);
     const r = await act(db, p, "attack", { weapon: "red-candle" }, T0, always(0.99));
     const q0 = r.state.quests.list[0];
-    expect(q0.progress).toBe(q0.id === "q-damage" ? 30 : 1);
+    expect(q0.progress).toBe(q0.id === "q-damage" ? 12 : 1);
   });
 
   it("a location step counts toward steps / energy quests", async () => {
@@ -108,7 +108,7 @@ describe("Telegram reminders", () => {
   });
 
   it("the fist: armed for when it is ready; boss almost dead: the others in that fight are told once", async () => {
-    await db.query("INSERT INTO config (key, value) VALUES ('boss.hp', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value", [JSON.stringify({ datsik: 200 })]);
+    await db.query("INSERT INTO config (key, value) VALUES ('boss.hp', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value", [JSON.stringify({ datsik: 210 })]);
     const { resetConfigCache } = await import("../src/server/config.ts");
     resetConfigCache();
     const a = await newPlayer(db);
@@ -116,10 +116,10 @@ describe("Telegram reminders", () => {
     await act(db, a, "fight_start", { boss: "datsik" }, T0);
     await act(db, b, "fight_start", { boss: "datsik" }, T0);
     await act(db, a, "attack", { weapon: "fist" }, T0, always(0.99));
-    expect((await notes(a)).find((x) => x.kind === "fist_ready")?.due_at).toEqual(new Date(T0 + 300 * M));
+    expect((await notes(a)).find((x) => x.kind === "fist_ready")?.due_at).toEqual(new Date(T0 + 480 * M));
     await give(db, a, "gpu", 10);
     for (let i = 0; i < 2; i++) await act(db, a, "attack", { weapon: "gpu" }, T0 + M, always(0.99));
-    // 12 + 120 = 132 of 200 → 34% left; one more GPU → 192, 4% left
+    // 20 + 120 = 140 of 210 → 33% left; one more GPU → 200, 5% left
     expect((await notes(b)).some((x) => x.kind === "boss_low")).toBe(false);
     await act(db, a, "attack", { weapon: "gpu" }, T0 + M, always(0.99));
     const low = (await notes(b)).filter((x) => x.kind === "boss_low");

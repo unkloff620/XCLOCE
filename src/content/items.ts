@@ -55,21 +55,21 @@ export const rushPrice = (id: string) => (id.startsWith("craft3-") ? RUSH_PRICE_
 export const WEAPONS: ItemDef[] = [
   {
     id: "fist", name: "Кулак", category: "weapon", rarity: "common", maxStack: 1,
-    description: "Базовое оружие. Всегда с тобой: после удара руке нужно 5 часов отдыха, но в каждом новом бою кулак снова готов.",
+    description: "Базовое оружие. Всегда с тобой: после удара руке нужно 8 часов отдыха, но в каждом новом бою кулак снова готов.",
     sources: ["Есть у каждого с начала игры"],
-    weapon: { damage: 12, kind: "permanent", cooldownMin: 300, animation: "fist", action: "Втащить кулаком" },
+    weapon: { damage: 20, kind: "permanent", cooldownMin: 480, animation: "fist", action: "Втащить кулаком" },
   },
   {
     id: "mouse", name: "Тычок в глаза", category: "weapon", rarity: "common", maxStack: 1,
-    description: "Два пальца — и босс ничего не видит. Бесплатный: после тычка пальцы 5 часов отходят, а в новом бою снова наготове.",
+    description: "Два пальца — и босс ничего не видит. Бесплатный: после тычка пальцы 8 часов отходят, а в новом бою снова наготове.",
     sources: ["Есть у каждого с начала игры"],
-    weapon: { damage: 20, kind: "permanent", cooldownMin: 300, animation: "mouse", action: "Ткнуть в глаза" },
+    weapon: { damage: 5, kind: "permanent", cooldownMin: 480, animation: "mouse", action: "Ткнуть в глаза" },
   },
   {
     id: "red-candle", name: "Пинок", category: "weapon", rarity: "common", maxStack: 1,
-    description: "Берцем с разворота. Бесплатный: после пинка нога 5 часов отдыхает, а в новом бою снова готова.",
+    description: "Берцем с разворота. Бесплатный: после пинка нога 8 часов отдыхает, а в новом бою снова готова.",
     sources: ["Есть у каждого с начала игры"],
-    weapon: { damage: 30, kind: "permanent", cooldownMin: 300, animation: "candle", action: "Дать пинка" },
+    weapon: { damage: 12, kind: "permanent", cooldownMin: 480, animation: "candle", action: "Дать пинка" },
   },
   {
     id: "keyboard", name: "Нож", category: "weapon", rarity: "rare", maxStack: 99_999_999,
@@ -244,9 +244,9 @@ const CRAFT: ItemDef[] = CRAFT_ALL.map((c) => ({
  *  inventory, a reset of the talents takes it away. Not one of the six main weapons (it is not in WEAPONS). */
 export const BAT: ItemDef = {
   id: "bat", name: "Бита", category: "weapon", rarity: "rare", maxStack: 1,
-  description: "Бейсбольная, но в бейсбол ей ни разу не играли. Бесплатная: после удара 6 часов отдыхает, в новом бою снова в руке.",
+  description: "Бейсбольная, но в бейсбол ей ни разу не играли. Бесплатная: после удара 8 часов отдыхает, в новом бою снова в руке.",
   sources: ["Таланты: «Удар битой»"],
-  weapon: { damage: 40, kind: "permanent", cooldownMin: 360, animation: "bat", action: "Втащить битой" },
+  weapon: { damage: 30, kind: "permanent", cooldownMin: 480, animation: "bat", action: "Втащить битой" },
 };
 export const ITEMS: ItemDef[] = [...WEAPONS, BAT, ...WEARABLES, ...MISC, ...KEYS, TROPHY, STATUE, ...STASHES, ...TATTOOS, ...CRAFT];
 const BY_ID = new Map(ITEMS.map((i) => [i.id, i]));

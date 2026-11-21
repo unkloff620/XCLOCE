@@ -87,7 +87,7 @@ describe("boss fights: personal fights, shared damage", () => {
     const p = await newPlayer(db);
     await startDatsik(p);
     const r = await hit(p, "red-candle", T0, { damage: 999999 });
-    expect(r.result.damage).toBe(30);
+    expect(r.result.damage).toBe(12);
   });
 
   it("another player's hit lowers HP in my fight; fights started later do not get earlier hits", async () => {
@@ -95,14 +95,14 @@ describe("boss fights: personal fights, shared damage", () => {
     const fa = await startDatsik(a);
     await startDatsik(b);
     await hit(b, "red-candle");
-    expect((await fightView(db, a, fa.result.fightId, 0, T0)).hp).toBe(970);
+    expect((await fightView(db, a, fa.result.fightId, 0, T0)).hp).toBe(988);
     const fc = await startDatsik(c, T0 + M);
     expect((await fightView(db, c, fc.result.fightId, 0, T0 + M)).hp).toBe(1000);
     await hit(a, "red-candle", T0 + 2 * M);
-    expect((await fightView(db, a, fa.result.fightId, 0, T0 + 2 * M)).hp).toBe(940);
-    expect((await fightView(db, c, fc.result.fightId, 0, T0 + 2 * M)).hp).toBe(970);
+    expect((await fightView(db, a, fa.result.fightId, 0, T0 + 2 * M)).hp).toBe(976);
+    expect((await fightView(db, c, fc.result.fightId, 0, T0 + 2 * M)).hp).toBe(988);
     const v = await fightView(db, a, fa.result.fightId, 0, T0 + 2 * M);
-    expect(v.top.map((t) => t.damage).sort()).toEqual([30, 30]);
+    expect(v.top.map((t) => t.damage).sort()).toEqual([12, 12]);
     expect(v.hits).toHaveLength(2);
   });
 
@@ -114,15 +114,15 @@ describe("boss fights: personal fights, shared damage", () => {
     const fb = await act(db, b, "fight_start", { boss: "kedr" }, T0);
     const fc = await act(db, c, "fight_start", { boss: "kedr", solo: true }, T0);
     await hit(a, "red-candle");
-    expect((await fightView(db, b, fb.result.fightId, 0, T0)).hp).toBe(10_000 - 30);
+    expect((await fightView(db, b, fb.result.fightId, 0, T0)).hp).toBe(10_000 - 12);
     expect((await fightView(db, c, fc.result.fightId, 0, T0)).hp).toBe(10_000);
     await hit(b, "red-candle");
     const va = await fightView(db, a, fa.result.fightId, 0, T0);
-    expect(va.hp).toBe(1000 - 60);
+    expect(va.hp).toBe(1000 - 24);
     expect(va.hits.map((h) => h.playerId).sort()).toEqual([a, b].sort());
     // the bosses still count their own damage
     const rows = await db.query<{ id: string; damage_total: number }>("SELECT id, damage_total FROM bosses WHERE id IN ('datsik','kedr','_all') ORDER BY id");
-    expect(Object.fromEntries(rows.map((r) => [r.id, Number(r.damage_total)]))).toEqual({ _all: 60, datsik: 30, kedr: 30 });
+    expect(Object.fromEntries(rows.map((r) => [r.id, Number(r.damage_total)]))).toEqual({ _all: 24, datsik: 12, kedr: 12 });
   });
 
   it("one hit can finish several fights; everyone in the fight gets the full reward", async () => {
@@ -394,19 +394,20 @@ describe("boss fights: personal fights, shared damage", () => {
     expect(await qty(db, p, "key-datsik")).toBe(3);
   });
 
-  it("the fist, the mouse and the candle are free for everyone, with a 5 hour cooldown each", async () => {
+  it("the fist, the mouse and the candle are free for everyone, with an 8 hour cooldown each", async () => {
     await setBossHp({ datsik: 100000 });
     const p = await newPlayer(db);
     expect([await qty(db, p, "fist"), await qty(db, p, "mouse"), await qty(db, p, "red-candle")]).toEqual([1, 1, 1]);
     await startDatsik(p);
     const r = await hit(p, "fist");
-    expect(r.result).toMatchObject({ damage: 12, left: null });
-    expect((await hit(p, "mouse")).result).toMatchObject({ damage: 20, left: null });
-    expect((await hit(p, "red-candle")).result).toMatchObject({ damage: 30, left: null });
-    await expect(hit(p, "fist", T0 + 299 * M)).rejects.toMatchObject({ code: "cooldown" });
-    await expect(hit(p, "mouse", T0 + 299 * M)).rejects.toMatchObject({ code: "cooldown" });
-    await hit(p, "fist", T0 + 300 * M);
-    await hit(p, "mouse", T0 + 300 * M);
+    expect(r.result).toMatchObject({ damage: 20, left: null });
+    expect((await hit(p, "mouse")).result).toMatchObject({ damage: 5, left: null });
+    expect((await hit(p, "red-candle")).result).toMatchObject({ damage: 12, left: null });
+    await expect(hit(p, "fist", T0 + 479 * M)).rejects.toMatchObject({ code: "cooldown" });
+    await expect(hit(p, "mouse", T0 + 479 * M)).rejects.toMatchObject({ code: "cooldown" });
+    // ready again after 8 hours (the fight itself lasts 8, so it is the next fight's)
+    const cds = await db.query<{ item_id: string; ready_at: Date }>("SELECT item_id, ready_at FROM cooldowns WHERE player_id=$1 AND item_id IN ('fist','mouse')", [p]);
+    expect(cds.map((c) => new Date(c.ready_at).getTime() - T0)).toEqual([480 * M, 480 * M]);
     expect([await qty(db, p, "fist"), await qty(db, p, "mouse"), await qty(db, p, "red-candle")]).toEqual([1, 1, 1]);
     // the mouse and the candle are no longer sold
     const { OFFERS } = await import("../src/content/shop.ts");
@@ -424,14 +425,14 @@ describe("boss fights: personal fights, shared damage", () => {
     await expect(hit(p, "fist", T0 + 4 * M)).rejects.toMatchObject({ code: "cooldown" });
 
     // the boss is beaten (by someone else): the fist is rested at once, and the next fight starts with it ready
-    await setBossHp({ datsik: 40 });
+    await setBossHp({ datsik: 30 });
     const q = await newPlayer(db);
     const k = await newPlayer(db);
     await startDatsik(q, T0 + 10 * M);
     await startDatsik(k, T0 + 10 * M);
     await hit(q, "fist", T0 + 11 * M);
     expect(await db.query("SELECT 1 FROM cooldowns WHERE player_id=$1 AND item_id='fist'", [q])).toHaveLength(1);
-    await hit(k, "red-candle", T0 + 12 * M); // 12 + 30 ≥ 40: the boss falls
+    await hit(k, "red-candle", T0 + 12 * M); // 20 + 12 ≥ 30: the boss falls
     expect(await db.query("SELECT 1 FROM cooldowns WHERE player_id=$1 AND item_id='fist'", [q])).toHaveLength(0);
 
     // the time ran out (the boss left): the rest is gone as well
@@ -1000,7 +1001,7 @@ describe("home: equipment, rooms, look, help", () => {
     await db.query("UPDATE players SET talents = talents + 1 WHERE id=$1", [p]);
     const e1 = await act(db, p, "talent_up", { weapon: "_energy", branch: "s1" }, T0 + M);
     expect(e1.state.player.energyMax).toBe(max0 + 15);
-    expect([30, 45]).toContain((await hit(p, "mouse", T0 + M)).result.damage); // the mouse has its +10 «Урон» (×1.5 on a crit)
+    expect([15, 23]).toContain((await hit(p, "mouse", T0 + M)).result.damage); // the mouse has its +10 «Урон» (×1.5 on a crit)
     await db.query("UPDATE players SET talents=0 WHERE id=$1", [p]);
     await expect(act(db, p, "talent_up", { weapon: "_clock", branch: "s1" }, T0 + M)).rejects.toMatchObject({ code: "no_talents" });
     await expect(act(db, p, "talent_up", { weapon: "keyboard", branch: "n1" }, T0 + M)).rejects.toMatchObject({ code: "max_level" });
@@ -1040,9 +1041,9 @@ describe("home: equipment, rooms, look, help", () => {
     await startDatsik(p);
     const h = await hit(p, "bat");
     expect(h.result.damage).toBeGreaterThan(0);
-    // 360 minutes − 300 = an hour
+    // 480 minutes − 300 = three hours
     const [cd] = await db.query<{ ready_at: Date }>("SELECT ready_at FROM cooldowns WHERE player_id=$1 AND item_id='bat'", [p]);
-    expect(new Date(cd.ready_at).getTime() - T0).toBe(60 * M);
+    expect(new Date(cd.ready_at).getTime() - T0).toBe(180 * M);
     await setMoney(db, p, "RUB", 10);
     await act(db, p, "talent_reset", {}, T0 + M);
     expect((await db.query("SELECT 1 FROM inventory WHERE player_id=$1 AND item_id='bat' AND qty > 0", [p])).length).toBe(0);
@@ -2126,13 +2127,13 @@ describe("the clan boss of the week", () => {
     await act(db, a, "clan_accept", { playerId: b }, T0);
     await expect(act(db, x, "clan_boss_hit", { weapon: "fist" }, T0)).rejects.toMatchObject({ code: "no_clan" });
     const h1 = await act(db, a, "clan_boss_hit", { weapon: "red-candle" }, T0, always(0.99));
-    expect(h1.result.damage).toBe(30);
-    expect(h1.state.clanBoss).toMatchObject({ hpMax: 75_000, hp: 75_000 - 30, killed: false });
+    expect(h1.result.damage).toBe(12);
+    expect(h1.state.clanBoss).toMatchObject({ hpMax: 75_000, hp: 75_000 - 12, killed: false });
     // the fist rests 5 hours after a hit, here too
     await act(db, b, "clan_boss_hit", { weapon: "fist" }, T0, always(0.99));
     await expect(act(db, b, "clan_boss_hit", { weapon: "fist" }, T0 + 1000)).rejects.toMatchObject({ code: "cooldown" });
     // almost dead: a's next hit kills it
-    await db.query("UPDATE clan_boss SET damage = hp_max - 10 WHERE clan_id=$1", [c.result.clanId]);
+    await db.query("UPDATE clan_boss SET damage = hp_max - 5 WHERE clan_id=$1", [c.result.clanId]);
     const k = await act(db, a, "clan_boss_hit", { weapon: "mouse" }, T0 + 2000, always(0.99));
     expect(k.result.killed).toBe(true);
     await expect(act(db, a, "clan_boss_hit", { weapon: "fist" }, T0 + 3000)).rejects.toMatchObject({ code: "clan_boss_down" });
@@ -2323,7 +2324,7 @@ describe("Боксёрская", () => {
     expect(await wallet(db, p, "RUB")).toBe(5000 + (c.result.reward.currencies?.RUB ?? 0) - 4000);
     await setBossHp({ datsik: 1000 });
     await startDatsik(p, T0 + M);
-    expect((await hit(p, "fist", T0 + M)).result.damage).toBe(42);
+    expect((await hit(p, "fist", T0 + M)).result.damage).toBe(50);
   });
 });
 
