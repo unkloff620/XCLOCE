@@ -12,6 +12,7 @@ import { BAR_INSIDE, BOX_LAYERS, BOX_WINDOW, PIN_X } from "../art/boss-box-layou
 import { GainLine } from "../ui.tsx";
 import { full, short } from "../format.ts";
 import { haptic } from "../telegram.ts";
+import { bboxSfx } from "../sound.ts";
 
 const seenKey = (fightId: number) => `xc-bbox-${fightId}`;
 const readSeen = (fightId: number) => { try { return Number(localStorage.getItem(seenKey(fightId)) ?? 0) || 0; } catch { return 0; } };
@@ -57,15 +58,17 @@ export function BossBoxWindow({ bossId, fightId, damage, onClose }: { bossId: st
   // the next passed stage opens a moment after the window
   useEffect(() => {
     if (opening !== null || seen >= reached) return;
-    const t = window.setTimeout(() => { setOpening(seen); haptic.heavy(); }, 450);
+    const t = window.setTimeout(() => { setOpening(seen); haptic.heavy(); bboxSfx("nut"); }, 450);
     return () => window.clearTimeout(t);
   }, [opening, seen, reached]);
   // its pin is out: the reward is on the plank, then the next one
   useEffect(() => {
     if (opening === null) return;
     const i = opening;
+    // the pin starts to fall 1.7 s in (screens.css .bbox-pin.go .pinrod)
+    const p = window.setTimeout(() => bboxSfx("pin"), 1700);
     const t = window.setTimeout(() => { haptic.big(); setSeen(i + 1); writeSeen(fightId, i + 1); setOpening(null); }, 2700);
-    return () => window.clearTimeout(t);
+    return () => { window.clearTimeout(p); window.clearTimeout(t); };
   }, [opening, fightId]);
   if (!stages.length) return null;
   const max = stages[stages.length - 1].damage;

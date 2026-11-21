@@ -294,6 +294,9 @@ const SAMPLE_URLS = {
   lvlvoice2: "/assets/sound/levelup-voice-2.mp3",
   // a spit at another player (the player's recording, tools/sound/source/spit.mp3)
   spit: "/assets/sound/spit.mp3",
+  // the boss's box: the nut unscrews, the pin slips out (the player's recordings, tools/sound/source/bbox-*.mp3)
+  bboxNut: "/assets/sound/bbox-nut.mp3",
+  bboxPin: "/assets/sound/bbox-pin.mp3",
 } as Record<string, string>;
 /** a hit sound per weapon (w-<weapon id>) and a pick-up sound per yard find (y-<drop id>): tools/sound/build-item-sounds.py */
 const WEAPON_SOUNDS = ["fist", "mouse", "keyboard", "red-candle", "gpu", "rug-pull-gun", "bat"];
@@ -706,6 +709,14 @@ export function weaponSfx(weaponId: string, power = 0.5) {
 }
 
 /** Picking a thing up in the yard: coins jingle, a sticker peels, a spinner whirs, a can hisses… */
+/** the boss's box opening: the nut unscrewing, then the pin slipping out */
+export function bboxSfx(kind: "nut" | "pin") {
+  if (muted) return;
+  const a = audio();
+  if (!a || a.state !== "running") return;
+  sample(a, kind === "nut" ? "bboxNut" : "bboxPin", a.currentTime + 0.005, 0.8);
+}
+
 export function yardSfx(dropId: string) {
   if (muted) return;
   const a = audio();
