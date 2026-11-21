@@ -7352,14 +7352,21 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 @keyframes combo-yes { 0% { transform: scale(1); } 40% { transform: scale(1.18); box-shadow: 0 0 16px rgba(124, 240, 124, 0.8); } 100% { transform: scale(1); } }
 @keyframes combo-no { 0%, 100% { transform: none; } 20% { transform: translateX(-4px); border-color: #ff5a4a; } 40% { transform: translateX(4px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(2px); } }
 /* the panel: the sequence */
-.combo-panel { height: auto; max-height: min(90%, 620px); padding-bottom: calc(var(--nav-h) + var(--safe-b, 0px) + 14px); }
-.combo-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 2px 2px 0; }
-.combo-head b { font-size: 15px; color: #fff3d0; }
-.combo-head .num { font-size: 15px; font-weight: 800; color: #ffd54a; }
-.combo-cells { position: relative; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+/* the panel sits over the weapons, see-through, so the hits stay in reach */
+.combo-strip { display: flex; flex-direction: column; gap: 6px; padding: 7px 9px 9px; border-radius: 14px; border: 2px solid rgba(255, 213, 74, 0.35);
+  background: rgba(20, 12, 7, 0.62); backdrop-filter: blur(3px); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35); animation: combo-in 0.22s ease-out both; }
+@keyframes combo-in { from { transform: translateY(12px); opacity: 0; } to { transform: none; opacity: 1; } }
+.combo-x { flex: none; width: 24px; height: 24px; margin-left: 4px; border: 0; border-radius: 7px; background: rgba(0, 0, 0, 0.35); color: #fff3d0; font-size: 17px; line-height: 1; }
+.combo-cell.next { border-color: rgba(255, 213, 74, 0.7); box-shadow: 0 0 8px rgba(255, 213, 74, 0.35) inset; }
+.combo-head { display: flex; align-items: center; gap: 8px; padding: 0 2px; }
+.combo-head b { flex: 1 1 auto; min-width: 0; }
+.combo-head b { font-size: 13px; color: #fff3d0; }
+.combo-head .num { font-size: 13px; font-weight: 800; color: #ffd54a; }
+.combo-cells { position: relative; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 5px; }
+.combo-cells.n6 .combo-cell { aspect-ratio: 1.15; }
 .combo-cells.n10 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .combo-cells.n16 { grid-template-columns: repeat(8, minmax(0, 1fr)); }
-.combo-cell { aspect-ratio: 1; display: grid; place-items: center; border-radius: 9px; border: 2px solid rgba(255, 255, 255, 0.14); background: rgba(0, 0, 0, 0.35); }
+.combo-cell { aspect-ratio: 1; display: grid; place-items: center; border-radius: 9px; border: 2px solid rgba(255, 255, 255, 0.16); background: rgba(0, 0, 0, 0.3); }
 .combo-cell i { font-style: normal; font-size: 20px; font-weight: 900; color: rgba(255, 255, 255, 0.28); }
 .combo-cell.on { border-color: #c0281e; background: radial-gradient(circle at 50% 40%, #d8392c, #7a140e); }
 .combo-cell.on svg { width: 86% !important; height: 86% !important; }

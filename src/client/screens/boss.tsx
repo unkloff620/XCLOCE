@@ -448,16 +448,16 @@ export function BossScreen({ id }: { id: string }) {
             <button type="button" className="btn sm gold fbtn-arms" onClick={() => { haptic.tap(); setPanel(true); }} aria-label="Оружие" title="Оружие в бою">
               <ItemArt id="rug-pull-gun" size={22} />
             </button>
-            {view?.combo && <ComboButton c={view.combo} onOpen={() => setComboOpen(true)} />}
+            {view?.combo && <ComboButton c={view.combo} onOpen={() => setComboOpen((o) => !o)} />}
             <span className="grow" />
             <button type="button" className={`btn sm red fbtn-flee ${fleeAsk ? "ask" : ""}`} onClick={flee} disabled={busy === "fight_flee"} aria-label={fleeAsk ? "Точно сдаться?" : "Сдаться"} title="Сдаться">
               {fleeAsk ? <b>?</b> : <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h13" /><path d="M13 6l6 6-6 6" /></svg>}
             </button>
           </div>
+          {comboOpen && view?.combo && <ComboPanel c={view.combo} bossId={boss.id} onClose={() => setComboOpen(false)} onClaimed={() => setView((v) => (v?.combo ? { ...v, combo: { ...v.combo, claimed: true } } : v))} />}
           <FightTray slots={slotsOf(state)} tray={tray} onHit={(id, n) => attack(id, false, n)} onBuy={() => setShopOpen(true)} onCooldown={(name, left, id) => { haptic.tap(); setRushAsk({ id, name, left }); }} disabled={view?.status !== undefined && view.status !== "active"} />
         </div>
         {panel && <WeaponPanel tray={tray} onClose={() => setPanel(false)} />}
-        {comboOpen && view?.combo && <ComboPanel c={view.combo} bossId={boss.id} onClose={() => setComboOpen(false)} onClaimed={() => setView((v) => (v?.combo ? { ...v, combo: { ...v.combo, claimed: true } } : v))} />}
         {comboWin && view?.combo?.done && <ComboDone c={view.combo} bossId={boss.id} onClose={() => { setComboWin(false); void poll(true); }} />}
         {shopOpen && <WeaponShopWindow onClose={closeShop} />}
         {rushAsk && (

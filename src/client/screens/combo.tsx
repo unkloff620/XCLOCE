@@ -4,7 +4,6 @@
  * the weapons with the progress, its panel sliding up like the weapons one (the cells of the sequence: the guessed hits
  * show, the rest are «?»; done — the «ВЫПОЛНЕНО» stamp), and the «КОМБО РАЗГАДАНО!» window with the payout and «Забрать».
  */
-import { useState } from "react";
 import { COMBO_MODES, comboMode, type ComboMode } from "../../content/combo.ts";
 import type { Reward } from "../../content/rewards.ts";
 import { ItemArt } from "../art/items.tsx";
@@ -50,31 +49,23 @@ export function ComboButton({ c, onOpen }: { c: ComboState; onOpen: () => void }
   );
 }
 
-/** the panel: the sequence's cells, what is guessed, «Забрать» once done */
+/** the panel over the weapons (see-through, the hits stay in reach): the sequence's cells, what is guessed, «Забрать» once done */
 export function ComboPanel({ c, bossId, onClose, onClaimed }: { c: ComboState; bossId: string; onClose: () => void; onClaimed: () => void }) {
-  const [closing, setClosing] = useState(false);
-  const close = () => {
-    if (closing) return;
-    setClosing(true);
-    setTimeout(onClose, 220);
-  };
   return (
-    <div className={`wpanel-back ${closing ? "out" : ""}`} onPointerDown={(e) => { if (e.target === e.currentTarget) close(); }}>
-      <div className="wpanel combo-panel" role="dialog" aria-label="Комбо">
-        <div className="wpanel-grip" aria-hidden="true" />
-        <div className="combo-head">
-          <b>Режим комбо: {comboMode(c.mode)?.name}</b>
-          <span className="num">{c.progress}/{c.length}</span>
-        </div>
-        <div className={`combo-cells n${c.length}`}>
-          {Array.from({ length: c.length }, (_, i) => {
-            const h = c.guessed[i];
-            return <span key={i} className={`combo-cell ${h ? "on" : ""}`}>{h ? <ItemArt id={h} size={40} /> : <i>?</i>}</span>;
-          })}
-          {c.done && <span className="combo-stamp">выполнено</span>}
-        </div>
-        {c.done && !c.claimed && <ClaimButton bossId={bossId} mode={c.mode} onClaimed={() => { onClaimed(); close(); }} />}
+    <div className="combo-strip" role="region" aria-label="Комбо">
+      <div className="combo-head">
+        <b>Режим комбо: {comboMode(c.mode)?.name}</b>
+        <span className="num">{c.progress}/{c.length}</span>
+        <button type="button" className="combo-x" onClick={() => { haptic.tap(); onClose(); }} aria-label="Свернуть комбо">×</button>
       </div>
+      <div className={`combo-cells n${c.length}`}>
+        {Array.from({ length: c.length }, (_, i) => {
+          const h = c.guessed[i];
+          return <span key={i} className={`combo-cell ${h ? "on" : ""} ${i === c.progress && !c.done ? "next" : ""}`}>{h ? <ItemArt id={h} size={34} /> : <i>?</i>}</span>;
+        })}
+        {c.done && <span className="combo-stamp">выполнено</span>}
+      </div>
+      {c.done && !c.claimed && <ClaimButton bossId={bossId} mode={c.mode} onClaimed={onClaimed} />}
     </div>
   );
 }
