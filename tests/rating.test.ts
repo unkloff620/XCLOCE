@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import type { Db } from "../src/server/db.ts";
-import { act, always, freshDb, give, H, newPlayer, wallet } from "./helpers.ts";
+import { achGot, act, always, freshDb, give, H, newPlayer, wallet } from "./helpers.ts";
 import { nextMoscowMidnight, weekKey, weekStart } from "../src/server/core.ts";
 import { ratingView } from "../src/server/systems/rating.ts";
 import { profileView } from "../src/server/systems/state.ts";
@@ -112,9 +112,12 @@ describe("achievements and someone's profile", () => {
     // 1 000 damage dealt in all: the first position, not the second
     await db.query("UPDATE player_stats SET total_damage = 1000 WHERE player_id=$1", [p]);
     await expect(act(db, p, "achievement_claim", { id: "damage-2" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
+    // counted by itself with the next game state, its point with it
     const before = await pts();
-    await act(db, p, "achievement_claim", { id: "damage-1" }, T0);
-    expect(await pts()).toBe(before + 1);
+    await act(db, p, "equip", { itemId: "jeans" }, T0);
+    expect(await achGot(db, p, "damage-1")).toBe(true);
+    expect(await achGot(db, p, "damage-2")).toBe(false);
+    expect(await pts()).toBeGreaterThanOrEqual(before + 1);
     await expect(act(db, p, "achievement_claim", { id: "damage-1" }, T0)).rejects.toMatchObject({ code: "achievement_taken" });
 
     prof = await profileView(db, viewer, p, await loadConfig(db), T0);
@@ -134,7 +137,7 @@ describe("achievements and someone's profile", () => {
     expect(await ach("clan-create")).toMatchObject({ done: true });
     expect(await ach("clan-leave")).toMatchObject({ done: false });
     await act(db, p, "clan_leave", {}, T0);
-    expect((await act(db, p, "achievement_claim", { id: "clan-leave" }, T0)).result.reward.achPoints).toBe(20);
+    expect(await achGot(db, p, "clan-leave")).toBe(true);
   });
 
   it("«за сутки» in the profile: money, weapons, authority and damage gained in the last 24 hours", async () => {

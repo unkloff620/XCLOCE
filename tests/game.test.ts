@@ -1,7 +1,7 @@
 import { DEALER_TALKS, talkOfDay } from "../src/content/dealer-talk.ts";
 import { describe, it, expect, beforeEach } from "vitest";
 import type { Db } from "../src/server/db.ts";
-import { act, always, freshDb, give, H, M, newPlayer, qty, setMoney, wallet } from "./helpers.ts";
+import { achGot, act, always, freshDb, give, H, M, newPlayer, qty, setMoney, wallet } from "./helpers.ts";
 import { energyNow, nextMoscowMidnight } from "../src/server/core.ts";
 import { resetConfigCache } from "../src/server/config.ts";
 import { fightView } from "../src/server/systems/combat.ts";
@@ -286,8 +286,7 @@ describe("boss fights: personal fights, shared damage", () => {
     const c = await act(db, b, "fight_claim", { fightId: fb.result.fightId }, T0, always(0.99));
     expect(c.result).toMatchObject({ status: "won", share: 1, key: true });
     // the per-boss badge: Датцкоу beaten solo — collected once, for 2 achievement points; Кедр is still to do
-    const sr = await act(db, b, "achievement_claim", { id: "soloboss-datsik" }, T0);
-    expect(sr.result.reward.achPoints).toBe(2);
+    expect(await achGot(db, b, "soloboss-datsik")).toBe(true); // counted by itself
     await expect(act(db, b, "achievement_claim", { id: "soloboss-datsik" }, T0)).rejects.toMatchObject({ code: "achievement_taken" });
     await expect(act(db, b, "achievement_claim", { id: "soloboss-kedr" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
     sb = await act(db, b, "equip", { itemId: "jeans" }, T0);
@@ -1970,7 +1969,7 @@ describe("нычки", () => {
     expect(await wallet(db, p, "PAP")).toBe(rub + 100); // a set pays папиросы
     expect([await qty(db, p, "stash-sneaker"), await qty(db, p, "stash-cigs")]).toEqual([1, 0]);
     // the collection gathered once: 5 points; ten times: 20
-    expect((await act(db, p, "achievement_claim", { id: "stashset-1-1" }, T0)).result.reward.achPoints).toBe(5);
+    expect(await achGot(db, p, "stashset-1-1")).toBe(true);
     await expect(act(db, p, "achievement_claim", { id: "stashset-1-2" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
     await db.query("UPDATE stash_sets SET count = 10 WHERE player_id=$1 AND set_n=1", [p]);
     expect((await act(db, p, "achievement_claim", { id: "stashset-1-2" }, T0)).result.reward.achPoints).toBe(20);
@@ -2642,7 +2641,7 @@ describe("«Комбо»", () => {
     expect((await hit(wrong)).done).toBe(true);
     await expect(act(db, p, "combo_claim", { boss: "garkusha", mode: "pacan" }, T0)).rejects.toMatchObject({ code: "combo_none" });
     // the achievement: Гаркуша's «Пацанское» done once
-    expect((await act(db, p, "achievement_claim", { id: "combo-garkusha-pacan-1" }, T0)).result.reward.achPoints).toBe(5);
+    expect(await achGot(db, p, "combo-garkusha-pacan-1")).toBe(true);
     // a new fight with him in the same combo mode: from zero again, the hits known (grey), and it pays again
     await act(db, p, "fight_flee", {}, T0);
     await act(db, p, "fight_flee", {}, T0).catch(() => undefined);

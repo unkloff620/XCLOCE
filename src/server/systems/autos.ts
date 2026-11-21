@@ -38,6 +38,8 @@ export async function autoSet(ctx: Ctx, kind: string, target: string, on: boolea
     if (on) throw new GameError("auto_zone_gone", "Автоматики в локациях больше нет");
     await ctx.q.query("DELETE FROM autos WHERE player_id=$1 AND kind='zone'", [ctx.pid]);
   } else if (kind === "boss") {
+    // «Автобой» is gone (the user 2026-11-21): only switching an old one off
+    if (on) throw new GameError("auto_boss_gone", "Автобоя больше нет");
     const b = bossById(target);
     if (!b || b.event) throw new GameError("bad_boss", "Автобой — только с обычными боссами");
     if (on && !(MODES as readonly string[]).includes(mode)) throw new GameError("bad_mode", "Нет такого режима");

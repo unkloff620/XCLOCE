@@ -3,7 +3,7 @@ import { act, freshDb, H, M, newPlayer, setMoney, wallet } from "./helpers.ts";
 import { inPlayerTx } from "../src/server/game.ts";
 import { resetConfigCache } from "../src/server/config.ts";
 import { eventSave } from "../src/server/admin.ts";
-import { runAllAutos, runAutos } from "../src/server/systems/autos.ts";
+import { runAutos } from "../src/server/systems/autos.ts";
 import { moscowDay } from "../src/server/core.ts";
 import { LOCK_RUSH } from "../src/content/heist.ts";
 import { LOCATIONS } from "../src/content/locations.ts";
@@ -22,21 +22,13 @@ describe("automation toggles", () => {
     expect(LOCATIONS.length).toBe(15);
   });
 
-  it("a boss toggle starts the fight and hits with the free weapons; one mode per boss", async () => {
+  it("«Автобой» with the bosses is gone: it cannot be switched on, an old one only off", async () => {
     const db = await freshDb();
     const p = await newPlayer(db);
-    await act(db, p, "auto_set", { kind: "boss", target: "datsik", on: true, mode: "pacan" }, T);
-    const [f] = await db.query<{ id: number; my_hits: number; mode: string }>("SELECT id, my_hits, mode FROM fights WHERE player_id=$1", [p]);
-    expect(f.mode).toBe("pacan");
-    expect(Number(f.my_hits)).toBeGreaterThan(0);
-    // the admin's journal shows what the automation did
-    const log = await db.query<{ type: string; info: string }>("SELECT type, info FROM action_log WHERE player_id=$1 AND info LIKE '🤖 авто%'", [p]);
-    expect(log.map((l) => l.type)).toEqual(expect.arrayContaining(["fight_start", "attack"]));
-    const r = await act(db, p, "auto_set", { kind: "boss", target: "datsik", on: true, mode: "blat" }, T + M);
-    expect(r.state.autos.bosses).toEqual({ datsik: "blat" });
-    // the cron runs everybody with a toggle today
-    expect((await runAllAutos(db, T + 6 * H)).players).toBe(1);
-    expect(await runAutos(db, p, T + 30 * H)).toMatchObject({ hits: 0, fights: 0 }); // tomorrow: nothing until switched on again
+    await expect(act(db, p, "auto_set", { kind: "boss", target: "datsik", on: true, mode: "pacan" }, T)).rejects.toMatchObject({ code: "auto_boss_gone" });
+    const r = await act(db, p, "auto_set", { kind: "boss", target: "datsik", on: false }, T);
+    expect(r.state.autos.bosses).toEqual({});
+    expect(await runAutos(db, p, T + H)).toMatchObject({ hits: 0, fights: 0 });
   });
 
   it("«Автовзлом»: the padlocks left are paid at once and come off one by one, an hour each, loot whole", async () => {

@@ -37,7 +37,7 @@ import { craftBoxes, craftBoxesBought, craftPresets, dealerView } from "./craft.
 import { clanBossView } from "./clan-boss.ts";
 import { duelsView, expireDuels } from "./duels.ts";
 import { newsView, notesView, socialView } from "./social.ts";
-import { achievementsReady, achievementsReadyIds, achievementsView } from "./achievements.ts";
+import { achievementsReady, achievementsView, autoClaimAchievements } from "./achievements.ts";
 import { achBoxView } from "./achbox.ts";
 import { giftsLeft, giftsReceived, stashWish } from "./swap.ts";
 
@@ -111,7 +111,8 @@ export async function gameState(ctx: Ctx) {
       await settleZonkDay(ctx.q, ctx.now);
       return prizesView(ctx.q, ctx.pid);
     })(),
-    ...(await (async () => { const ids = await achievementsReadyIds(ctx.q, ctx.pid, ctx.cfg); return { achievementsReady: ids.length, achievementsReadyIds: ids.slice(0, 60) }; })()),
+    // achievements count by themselves: the ones just reached are taken now and announced (achievementsReadyIds)
+    ...(await (async () => { const ids = await autoClaimAchievements(ctx); return { achievementsReady: 0, achievementsReadyIds: ids.slice(0, 60) }; })()),
     achBox: await achBoxView(ctx.q, ctx.pid),
     slots: await slotsView(ctx.q, ctx.pid, ctx.now, ctx.cfg),
     // game events going on now (banner + their effects); the admin's working boss tweaks are not announced

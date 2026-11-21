@@ -36,3 +36,8 @@ export const act = (db: Db, pid: number, type: ActionType, body: Record<string, 
 export const always = (v: number) => () => v;
 export const H = 3600_000;
 export const M = 60_000;
+
+/** an achievement already counted (they are taken by themselves with every game state) */
+export async function achGot(db: Db, pid: number, id: string): Promise<boolean> {
+  return (await db.query("SELECT 1 FROM achievements WHERE player_id=$1 AND id=$2", [pid, id])).length > 0;
+}

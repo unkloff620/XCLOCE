@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
-const AUTO_KEY = "xc-ach-auto";
 import { MEDAL_TIERS } from "../content/medals.ts";
 import { ACH_CATEGORIES, ACH_SECTIONS, STASH_MEDAL_TARGETS, TIER_COLORS, TIER_NAMES, achievementById, categoryOf, type AchCategory, type AchievementDef, type AchSection, type AchTier } from "../content/achievements.ts";
 import { Icon, type IconName } from "./art/icons.tsx";
@@ -88,18 +87,6 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
   const [medal, setMedal] = useState<string | null>(null);
   const byId = new Map(rows.map((r) => [r.id, r]));
   const total = rows.filter((r) => r.claimed || (!self && r.done)).length;
-  const waiting = self ? rows.filter((r) => r.done && !r.claimed).length : 0;
-  // «Автосбор» is kept on this device; while it is on, a reached position is collected as soon as it shows up
-  const [auto, setAuto] = useState(() => { try { return localStorage.getItem(AUTO_KEY) === "1"; } catch { return false; } });
-  const toggleAuto = () => {
-    haptic.tap();
-    setAuto((v) => { try { localStorage.setItem(AUTO_KEY, v ? "0" : "1"); } catch { /* no storage */ } return !v; });
-  };
-  useEffect(() => {
-    if (!self || !auto || waiting < 1 || busy) return;
-    const t = window.setTimeout(() => { void act("achievement_claim_all", {}).then((r) => { if (r) onClaimed?.(); }); }, 400);
-    return () => window.clearTimeout(t);
-  }, [self, auto, waiting, busy, act, onClaimed]);
   const claim = async (id: string) => {
     const r = await act("achievement_claim", { id }, "Награда за достижение получена");
     if (r) {
@@ -219,23 +206,13 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
   const sectionDue = (sec: AchSection) => self && rows.some((r) => r.done && !r.claimed && categoryOf(r.id)?.section === sec);
   return (
     <div className="panel ach-panel">
-      <button type="button" className={`ach-head ${waiting ? "ready" : ""}`} onClick={() => setShown((v) => !v)} aria-expanded={shown}>
+      <button type="button" className="ach-head" onClick={() => setShown((v) => !v)} aria-expanded={shown}>
         <span className="small muted">ДОСТИЖЕНИЯ</span>
         <span className="grow" />
         <span className="chip ach-pts" title="Очки достижений"><Icon name="sun" size={16} /><b className="num">{full(points)}</b></span>
         <span className="tiny muted num">{total}/{rows.length}</span>
         <span className={`ach-caret ${shown ? "open" : ""}`} aria-hidden="true">▾</span>
       </button>
-      {/* everything reached, in one tap */}
-      {/* «Автосбор»: on — everything reached is collected by itself; off — by a tap on the glowing picture */}
-      {self && (
-        <div className="ach-uncollected">
-          {waiting > 0 && !auto && <span>Не собранные: <b className="num">{waiting}</b></span>}
-          <span className="grow" />
-          <span>Автосбор</span>
-          <button type="button" role="switch" aria-checked={auto} aria-label="Автосбор достижений" className={`upd-toggle ach-auto ${auto ? "on" : ""}`} onClick={toggleAuto}><i /></button>
-        </div>
-      )}
       {shown && <div className="ach-groups" role="tablist">
         {ACH_SECTIONS.map((g) => (
           <button key={g.id} type="button" role="tab" aria-selected={section === g.id} className={`ach-group ${section === g.id ? "on" : ""} ${sectionDue(g.id) ? "due" : ""}`} onClick={() => { haptic.tap(); setSection(g.id); }}>{g.name}</button>
@@ -283,7 +260,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
       </div>}
       {/* a list window: every position — its picture with the number, what to do, the progress, the points */}
       {cat && (
-        <Modal title={cat.name} onClose={() => setOpen(null)} head={self ? <div className="tiny muted center">Нажми на светящуюся картинку — заберёшь очки достижений</div> : undefined}>
+        <Modal title={cat.name} onClose={() => setOpen(null)}>
           <div className="col" style={{ gap: 6 }}>
             {[...lines(cat)].sort((x, y) => Number(isDue(y.id)) - Number(isDue(x.id)) || Number(isOn(x.id)) - Number(isOn(y.id))).map((a) => {
               const r = byId.get(a.id);

@@ -1636,4 +1636,9 @@ CREATE TABLE IF NOT EXISTS combo_progress (
     sql: `ALTER TABLE combo_progress ADD COLUMN IF NOT EXISTS runs INT NOT NULL DEFAULT 0;
 UPDATE combo_progress SET runs = 1 WHERE done_at IS NOT NULL AND runs = 0;`,
   },
+  {
+    // «Автобой» with the bosses is gone (the user 2026-11-21)
+    id: "v2-116-no-boss-auto",
+    sql: `DELETE FROM autos WHERE kind='boss';`,
+  },
 ];

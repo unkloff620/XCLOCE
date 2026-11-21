@@ -234,3 +234,25 @@ export async function claimAllAchievements(ctx: Ctx) {
   const reward = await grantReward(ctx, { achPoints: points }, "ach:all");
   return { ids: taken, reward };
 }
+
+/**
+ * Achievements count by themselves (the user 2026-11-21): everything reached goes to the «Личное дело» at once, its
+ * points with it — run with every game state. Returns the ones just taken (the client announces them).
+ */
+export async function autoClaimAchievements(ctx: Ctx): Promise<string[]> {
+  const view = await achievementsView(ctx.q, ctx.pid, ctx.cfg);
+  const ids = view.filter((a) => a.done && !a.claimed).map((a) => a.id);
+  if (!ids.length) return [];
+  let points = 0;
+  const taken: string[] = [];
+  for (const id of ids) {
+    const def = achievementById(id);
+    if (!def) continue;
+    const ins = await ctx.q.query("INSERT INTO achievements (player_id, id, claimed_at) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING RETURNING id", [ctx.pid, id, new Date(ctx.now)]);
+    if (!ins.length) continue;
+    taken.push(id);
+    points += def.reward.achPoints ?? 0;
+  }
+  if (points > 0) await ctx.q.query("UPDATE players SET ach_points = ach_points + $2 WHERE id=$1", [ctx.pid, points]);
+  return taken;
+}
