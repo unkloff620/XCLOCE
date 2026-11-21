@@ -36,7 +36,7 @@ function StashPop({ id }: { id: string }) {
   );
 }
 
-interface LocLeader { id: number; name: string; photo: string | null; rep: number }
+interface LocLeader { id: number; name: string; photo: string | null; rep: number; clan?: string | null }
 interface LocRow {
   id: string; unlocked: boolean; done: number; total: number; clears: number; tasks: { id: string; steps: number; need: number }[]; nextReward: Reward;
   /** my authority in this location, and who has the most here */
@@ -117,6 +117,7 @@ function LcLeader({ l, mode, me }: { l: LocLeader | null; mode: LocMode; me?: nu
       <span className="lc-ava">{l ? <Avatar name={l.name} photo={l.photo} size={64} /> : <i className="lc-first">Стань<br />первым</i>}</span>
       <b className="lc-nick ellipsis">{l ? (l.id === me ? "Ты" : l.name) : null}</b>
       <span className="lc-rep num">{l ? <><Icon name="rep" size={14} />{full(l.rep)}</> : null}</span>
+      {l?.clan ? <span className="lc-clan ellipsis">{l.clan}</span> : null}
     </span>
   );
 }

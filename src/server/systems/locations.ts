@@ -46,11 +46,14 @@ async function repAndLeaders(q: Queryable, pid: number, mode: LocMode) {
   const t = repTable(mode);
   const mine = new Map((await q.query<{ location_id: string; rep: number }>(`SELECT location_id, rep FROM ${t} WHERE player_id=$1`, [pid])).map((r) => [r.location_id, Number(r.rep)]));
   // the leader of every location: the most authority there
-  const leaders = new Map((await q.query<{ location_id: string; id: number; rep: number; name: string; photo: string | null }>(
-    `SELECT DISTINCT ON (r.location_id) r.location_id, p.id, r.rep, p.display_name AS name, p.photo_url AS photo
-     FROM ${t} r JOIN players p ON p.id = r.player_id WHERE p.banned_at IS NULL AND r.rep > 0
+  // the leader of every location: the most authority there (and his clan, shown under the authority)
+  const leaders = new Map((await q.query<{ location_id: string; id: number; rep: number; name: string; photo: string | null; clan: string | null }>(
+    `SELECT DISTINCT ON (r.location_id) r.location_id, p.id, r.rep, p.display_name AS name, p.photo_url AS photo, c.name AS clan
+     FROM ${t} r JOIN players p ON p.id = r.player_id
+     LEFT JOIN clan_members m ON m.player_id = p.id LEFT JOIN clans c ON c.id = m.clan_id
+     WHERE p.banned_at IS NULL AND r.rep > 0
      ORDER BY r.location_id, r.rep DESC, r.player_id`,
-  )).map((r) => [r.location_id, { id: r.id, name: r.name, photo: r.photo, rep: Number(r.rep) }]));
+  )).map((r) => [r.location_id, { id: r.id, name: r.name, photo: r.photo, rep: Number(r.rep), clan: r.clan }]));
   return { mine, leaders };
 }
 

@@ -7185,6 +7185,9 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .lc-rep { position: absolute; left: 41.5%; right: 0; top: 30%; height: 26%; display: flex; align-items: center; gap: 0.5cqi; font-size: 2.3cqi; font-weight: 700; color: #6b4a1e; }
 .lc-rep svg { width: 2.6cqi !important; height: 2.6cqi !important; }
 .lc-lead.night .lc-rep { color: #3f357e; }
+/* the leader's clan, under his authority */
+.lc-clan { position: absolute; left: 41.5%; right: 0; top: 57%; height: 24%; display: block; font-size: 2.1cqi; line-height: 1.15; font-weight: 600; color: #7a5a2c; }
+.lc-lead.night .lc-clan { color: #4c4390; }
 .lc.current .lc-plank { filter: drop-shadow(0 0 6px rgba(255, 204, 51, 0.85)) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5)); }
 .lc.ready .lc-plank { filter: drop-shadow(0 0 7px rgba(255, 204, 51, 0.95)) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5)); }
 .lc.ready .loc-claim { padding: 6px 4px 2px; }
