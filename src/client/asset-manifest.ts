@@ -1823,6 +1823,8 @@ export const ASSET_FILES: string[] = [
  "/assets/items/fortune-ticket.webp",
  "/assets/items/gloves-botsman.webp",
  "/assets/items/gold-chain.webp",
+ "/assets/items/gold-nugget.webp",
+ "/assets/items/gold-ring.webp",
  "/assets/items/gpu.webp",
  "/assets/items/grillz-diamond.webp",
  "/assets/items/hand-drum.webp",

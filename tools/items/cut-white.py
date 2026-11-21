@@ -11,11 +11,16 @@ from scipy import ndimage
 HERE = os.path.dirname(os.path.abspath(__file__))
 # turned before the square: degrees counter-clockwise (the knife — blade up at 45°, the user 2026-11-20)
 ROTATE = {"keyboard": 45}
+# things with a see-through hole (a ring): any white patch bigger than this share of the picture is cut away too
+HOLES = {"gold-ring": 0.01}
 OUT = os.path.abspath(os.path.join(HERE, "..", "..", "public", "assets", "items"))
 for name in sys.argv[1:]:
     a = np.asarray(Image.open(os.path.join(HERE, "source", f"{name}.png")).convert("RGB"), dtype=np.float32)
     lab, _ = ndimage.label(a.min(2) > 225)
     edge = set(np.unique(np.concatenate([lab[0], lab[-1], lab[:, 0], lab[:, -1]]))) - {0}
+    if name in HOLES:
+        sizes = np.bincount(lab.ravel())
+        edge |= {i for i in range(1, len(sizes)) if sizes[i] > HOLES[name] * lab.size}
     bg = ndimage.binary_dilation(np.isin(lab, list(edge)), iterations=1)
     alpha = np.clip((ndimage.gaussian_filter((~bg).astype(np.float32), 0.8) - 0.15) / 0.7, 0, 1)
     im = Image.fromarray(np.dstack([a, alpha * 255]).astype(np.uint8))
