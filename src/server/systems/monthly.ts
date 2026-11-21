@@ -12,7 +12,7 @@ import type { Reward } from "../../content/rewards.ts";
 import { isAdminPlayer } from "./fortune.ts";
 
 /*
- * «От звонка до звонка» (content/monthly.ts): today's task is the same for all; the actions feed it (game.ts → monthTick).
+ * «Календарь» (content/monthly.ts): today's task is the same for all; the actions feed it (game.ts → monthTick).
  * A day reaching its target is closed; a past day can be bought out for SOL; closed days open the month's rewards.
  * Everything belongs to its month: on the 1st (00:00 MSK) a new month starts empty.
  */

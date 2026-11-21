@@ -1431,7 +1431,7 @@ UPDATE clans c SET raid_xp = COALESCE((
 DELETE FROM raid_progress p USING raid_yards r WHERE r.clan_id = p.clan_id AND p.building_id LIKE r.yard_id || '-%';`,
   },
   {
-    // «От звонка до звонка»: a task a day for the month — progress of the days, the closed days (done or bought out),
+    // «Календарь»: a task a day for the month — progress of the days, the closed days (done or bought out),
     // the rewards taken and the chest
     id: "v2-095-monthly",
     sql: `CREATE TABLE IF NOT EXISTS monthly_tasks (
@@ -1646,5 +1646,11 @@ UPDATE combo_progress SET runs = 1 WHERE done_at IS NOT NULL AND runs = 0;`,
     id: "v2-117-one-energy-drink",
     sql: `UPDATE inventory SET qty = LEAST(qty, 20) WHERE item_id='energy-drink';
 DELETE FROM inventory WHERE item_id IN ('energy-pack', 'energy-full');`,
+  },
+  {
+    // a boss's things drop straight into the inventory now (the user 2026-11-22): the ones opened before are given
+    id: "v2-118-boss-things-given",
+    sql: `INSERT INTO inventory (player_id, item_id, qty, source, updated_at) SELECT player_id, item_id, 1, 'unlock', now() FROM player_unlocks WHERE item_id IN ('tee-white', 'jeans', 'sneakers', 'tee-actclose', 'shorts-actclose', 'badge-actclose', 'hand-drum', 'tee-sailor', 'cap-captain', 'mask-diver', 'teeth-necklace', 'anchor-mugo', 'jacket-puffer', 'pants-black', 'sneakers-chunky', 'bottle-komandate', 'jacket-komandate', 'pants-komandate', 'sneakers-komandate', 'sweater-vostok', 'pants-vostok', 'headphones-vostok', 'sneakers-black', 'jacket-vadim', 'pants-vadim', 'shoes-vadim', 'tie-vadim', 'coat-botsman', 'gloves-botsman', 'pants-botsman', 'boots-botsman', 'vials-utilizator', 'mask-gas-utilizator', 'apron-utilizator') ON CONFLICT (player_id, item_id) DO NOTHING;
+DELETE FROM player_unlocks WHERE item_id IN ('tee-white', 'jeans', 'sneakers', 'tee-actclose', 'shorts-actclose', 'badge-actclose', 'hand-drum', 'tee-sailor', 'cap-captain', 'mask-diver', 'teeth-necklace', 'anchor-mugo', 'jacket-puffer', 'pants-black', 'sneakers-chunky', 'bottle-komandate', 'jacket-komandate', 'pants-komandate', 'sneakers-komandate', 'sweater-vostok', 'pants-vostok', 'headphones-vostok', 'sneakers-black', 'jacket-vadim', 'pants-vadim', 'shoes-vadim', 'tie-vadim', 'coat-botsman', 'gloves-botsman', 'pants-botsman', 'boots-botsman', 'vials-utilizator', 'mask-gas-utilizator', 'apron-utilizator');`,
   },
 ];

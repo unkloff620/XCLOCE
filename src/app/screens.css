@@ -6524,7 +6524,7 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .rd-rewards b { display: block; color: #1a0f05; font-size: 14px; font-weight: 500; }
 .rd-rew-note { display: block; margin-top: 2px; font-size: 10.5px; line-height: 1.25; color: #5a4128; text-align: center; padding: 0 10px; }
 
-/* ── «От звонка до звонка»: the month on a sheet of paper, today's делюга under it, the rewards on wooden planks ── */
+/* ── «Календарь»: the month on a sheet of paper, today's делюга under it, the rewards on wooden planks ── */
 .mt-wrap { display: grid; grid-template-columns: 1fr; gap: 12px; }
 .mt-cal { background: url(/assets/ui/paper-tile.webp) center / cover, #e3d0ac; border: 2.5px solid #3a2718; border-radius: 10px; padding: 0 0 8px; color: #3a2718;
   box-shadow: 0 4px 0 #150d07, 0 8px 16px rgba(0, 0, 0, 0.35); overflow: hidden; }
@@ -7077,7 +7077,7 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .fo-choice-pic img { width: 46px; height: auto; margin: 0 -6px; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.4)); }
 .fo-choice-pic img:nth-child(2) { width: 56px; z-index: 1; }
 .fo-choice-card .btn { width: 100%; }
-/* «От звонка до звонка»: the chest on its plank opens a popup with what it holds */
+/* «Календарь»: the chest on its plank opens a popup with what it holds */
 .mt-chest-btn { border: 0; background: none; padding: 0; cursor: pointer; color: inherit; }
 .mt-chest-row { display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: 10px; }
 /* «Барыга на газели» (client/screens/van.tsx, tools/van/build-van.py): the van in the back yard — its place on the yard's sheet

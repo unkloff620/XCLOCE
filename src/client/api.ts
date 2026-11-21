@@ -59,7 +59,7 @@ export interface GameState {
     claimable: boolean;
     resetAt: number;
   };
-  /** «От звонка до звонка» (content/monthly.ts): null — the daily quests are on instead */
+  /** «Календарь» (content/monthly.ts): null — the daily quests are on instead */
   monthly: {
     month: string; firstDow: number; days: number; today: number; progress: number;
     closed: Record<string, "done" | "bought">; closedN: number;

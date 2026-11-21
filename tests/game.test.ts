@@ -231,7 +231,7 @@ describe("boss fights: personal fights, shared damage", () => {
     await expect(startDatsik(p, T0 + 40 * M)).rejects.toMatchObject({ code: "fight_limit" });
   });
 
-  it("Дацкоу opens his things in the shop (10% each, the 10th unlucky win for sure); they are bought there, not given", async () => {
+  it("Дацкоу's things drop straight into the inventory (the 10th unlucky win for sure); not sold in the shop", async () => {
     // things drop only in «Блатной» (HP ×3): 20 × 3 = 60, one video card
     await setBossHp({ datsik: 20 });
     const p = await newPlayer(db);
@@ -239,13 +239,11 @@ describe("boss fights: personal fights, shared damage", () => {
     expect(await qty(db, p, "sneakers")).toBe(0);
     const [{ equipped }] = await db.query<{ equipped: Record<string, string> }>("SELECT equipped FROM appearance WHERE player_id=$1", [p]);
     expect(equipped).toEqual({});
-    // locked in the shop before it drops
     await setMoney(db, p, "RUB", 10_000);
-    await expect(act(db, p, "buy", { offerId: "tee-white" }, T0)).rejects.toMatchObject({ code: "item_locked" });
+    await expect(act(db, p, "buy", { offerId: "tee-white" }, T0)).rejects.toMatchObject({ code: "bad_offer" });
     await give(db, p, "gpu", 30);
     const D = 24 * H;
-    // the things only (Дацкоу's room drops in «Блатной» too)
-    const unlocks = async () => (await db.query<{ item_id: string }>("SELECT item_id FROM player_unlocks WHERE player_id=$1 AND item_id NOT LIKE 'room:%' AND item_id NOT LIKE 'piece:%' ORDER BY item_id", [p])).map((r) => r.item_id);
+    const things = async () => (await db.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id IN ('sneakers','tee-white') ORDER BY item_id", [p])).map((r) => r.item_id);
     const win = async (i: number, rng: number) => {
       const t = T0 + Math.floor(i / 7) * D + (i % 7) * M;
       const f = await act(db, p, "fight_start", { boss: "datsik", mode: "blat" }, t);
@@ -253,21 +251,19 @@ describe("boss fights: personal fights, shared damage", () => {
       return act(db, p, "fight_claim", { fightId: f.result.fightId }, t, always(rng));
     };
     for (let i = 0; i < 9; i++) await win(i, 0.99);
-    expect(await unlocks()).toEqual([]);
+    expect(await things()).toEqual([]);
     const c = await win(9, 0.99);
-    expect(await unlocks()).toHaveLength(1);
+    expect(await things()).toHaveLength(1);
     expect(c.result.reward.unlocks.filter((id: string) => !id.startsWith("room:") && !id.startsWith("piece:"))).toHaveLength(1);
-    // a lucky roll opens one more — never all at once (test players own jeans already — owned things do not drop)
+    // a lucky roll gives one more — never all at once (test players own jeans already — owned things do not drop)
     await win(10, 0.01);
-    expect(await unlocks()).toHaveLength(2);
-    expect(await unlocks()).toEqual(["sneakers", "tee-white"]);
-    expect(await qty(db, p, "tee-white")).toBe(0);
-    const s = await act(db, p, "buy", { offerId: "tee-white" }, T0 + 2 * D);
-    expect(s.state.unlocks).toContain("tee-white");
-    expect(await qty(db, p, "tee-white")).toBe(1);
-    // nothing left to open: no more rolls
+    expect(await things()).toEqual(["sneakers", "tee-white"]);
+    // nothing opened to buy: the things are his already
+    const [u] = await db.query("SELECT 1 FROM player_unlocks WHERE player_id=$1 AND item_id IN ('sneakers','tee-white')", [p]);
+    expect(u).toBeUndefined();
+    // nothing left to drop: no more rolls
     const after = await win(11, 0.01);
-    expect(after.result.reward.unlocks).toBeUndefined();
+    expect((after.result.reward.unlocks ?? []).filter((id: string) => !id.startsWith("room:") && !id.startsWith("piece:"))).toEqual([]);
   });
 
   it("«Соло»: others' damage does not touch my solo fight; my own win counts for the solo badge", async () => {
@@ -533,7 +529,7 @@ describe("shop and exchange", () => {
     expect(await wallet(db, p, "RUB")).toBe(300000 - 39 - 3600);
     expect(await qty(db, p, "keyboard")).toBe(1010);
     await expect(act(db, p, "buy", { offerId: "keyboard-1", qty: 7 }, T0)).rejects.toMatchObject({ code: "bad_qty" });
-    await expect(act(db, p, "buy", { offerId: "tee-white", qty: 10 }, T0)).rejects.toMatchObject({ code: "bad_qty" });
+    await expect(act(db, p, "buy", { offerId: "tee-pump", qty: 10 }, T0)).rejects.toMatchObject({ code: "bad_qty" });
   });
   it("idempotent purchase is charged once", async () => {
     const p = await newPlayer(db);
@@ -2295,20 +2291,17 @@ describe("zonk duels", () => {
 });
 
 describe("Нервные пальцы", () => {
-  it("the first win over Кедр opens the drumming hand in the shop; it is bought there and worn in the hand slot", async () => {
+  it("the first win over Кедр gives the drumming hand at once; it is worn in the hand slot", async () => {
     await setBossHp({ kedr: 10 });
     const p = await newPlayer(db);
     await give(db, p, "key-datsik", 100);
     await give(db, p, "keyboard", 30);
-    await expect(act(db, p, "buy", { offerId: "hand-drum" }, T0)).rejects.toMatchObject({ code: "item_locked" });
+    await expect(act(db, p, "buy", { offerId: "hand-drum" }, T0)).rejects.toMatchObject({ code: "bad_offer" });
     const f = await act(db, p, "fight_start", { boss: "kedr", mode: "blat" }, T0);
     await hit(p, "keyboard");
     const c = await act(db, p, "fight_claim", { fightId: f.result.fightId }, T0, always(0.99));
     expect(c.result.reward.unlocks).toContain("hand-drum");
-    expect(await qty(db, p, "hand-drum")).toBe(0); // opened, not given
-    await setMoney(db, p, "RUB", 5000);
-    await act(db, p, "buy", { offerId: "hand-drum" }, T0 + M);
-    expect(await qty(db, p, "hand-drum")).toBe(1);
+    expect(await qty(db, p, "hand-drum")).toBe(1); // given, nothing to buy
     const e = await act(db, p, "equip", { itemId: "hand-drum" }, T0 + M);
     expect(e.state.look.equipped.HAND).toBe("hand-drum");
   });

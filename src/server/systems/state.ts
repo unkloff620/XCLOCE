@@ -102,7 +102,7 @@ export async function gameState(ctx: Ctx) {
     clanRequests: await requestsView(ctx.q, ctx.pid, p.clan_id ?? null),
     daily: await dailyView(ctx.q, ctx.pid, ctx.now, ctx.cfg),
     quests: await questsView(ctx.q, ctx.pid, ctx.now),
-    /** «От звонка до звонка»: the month's tasks (null while the admin has not turned it on — the daily quests then) */
+    /** «Календарь»: the month's tasks (null while the admin has not turned it on — the daily quests then) */
     monthly: await monthlyView(ctx.q, ctx.pid, ctx.now, ctx.cfg),
     notify: await notifyView(ctx.q, ctx.pid),
     prizes: await (async () => {

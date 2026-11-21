@@ -30,7 +30,7 @@ const SHOP_SPOTS = [
   { id: "clothing", img: "rack", name: "Одежда", sections: ["clothing"], hint: "Вешалка с вещами: футболки, кепки и прочее для персонажа." },
 ] as const;
 
-/** A locked thing: which boss drops it, and that it is bought here after it drops. */
+/** A locked thing: which boss drops it (it is his at once — not sold here). */
 function LockedInfo({ itemId, onClose }: { itemId: string; onClose: () => void }) {
   const def = itemById(itemId)!;
   const boss = unlockBossOf(itemId);
@@ -61,15 +61,9 @@ function LockedInfo({ itemId, onClose }: { itemId: string; onClose: () => void }
         <div className="panel col" style={{ gap: 6, width: "100%" }}>
           <b>Где получить</b>
           {first ? (
-            <>
-              <span className="small">Награда за первую победу над <b>{boss.name}</b> ({thingsModeName(boss)}). Победи его — вещь откроется здесь, в магазине, и её можно будет выкупить.</span>
-              <span className="tiny muted">Нужно победить босса в «Блатном» бою.</span>
-            </>
+            <span className="small">Награда за первую победу над <b>{boss.name}</b> ({thingsModeName(boss)}). Победи его — вещь сразу твоя.</span>
           ) : (
-            <>
-              <span className="small">Выпадает с <b>{boss.name}</b> ({thingsModeName(boss)}). Победи его — вещь откроется здесь, в магазине, и её можно будет выкупить.</span>
-              <span className="tiny muted">Шанс — 70% за каждую победу в «Блатном» режиме, если ударил босса хоть раз. Не везёт {boss.wear?.pity ?? 10} побед подряд — вещь откроется точно.</span>
-            </>
+            <span className="small">Выпадает с <b>{boss.name}</b> ({thingsModeName(boss)}). Выпала — сразу твоя, покупать не надо. Не везёт {boss.wear?.pity ?? 10} побед подряд — выпадет точно.</span>
           )}
         </div>
         <Link href={`/bosses/${boss.id}`} className="btn red block" onClick={onClose}>К боссу {boss.name}</Link>

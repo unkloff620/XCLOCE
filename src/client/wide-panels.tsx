@@ -66,7 +66,7 @@ function Box({ title, icon, right, children }: { title: string; icon?: string; r
   );
 }
 
-/** «От звонка до звонка»: today's делюга and the days closed (the window — from the home menu) */
+/** «Календарь»: today's делюга and the days closed (the window — from the home menu) */
 function Monthly() {
   const { state } = useGame();
   const now = useNow();

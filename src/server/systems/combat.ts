@@ -2,7 +2,7 @@ import { autoSpendTalents } from "./home.ts";
 import { monthTick } from "./monthly.ts";
 import { shodBoostMult, shodTick } from "./shodnyak.ts";
 import { GameError, type Queryable } from "../db.ts";
-import { gain, grantReward, idempotent, itemQty, ledger, moscowDay, nextMoscowMidnight, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
+import { addItem, gain, grantReward, idempotent, itemQty, ledger, moscowDay, nextMoscowMidnight, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { BLAT_THING_CHANCE, BOTH_DROP_CHANCE, BOSSES, EVENT_FIGHTS, EXTRA_KEY_CHANCE, OPEN_BOSSES, bossById, bossOpen, KEY_RING, keyId, keyRingFits, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
 import { BAT, WEAPONS, itemById, rushPrice, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
@@ -423,12 +423,11 @@ export async function claimFight(ctx: Ctx, fightId: number, see = true) {
   // the thing and the room are rolled first, then written: one win gives one of them — both only with BOTH_DROP_CHANCE
   const thingPlan = things ? await planUnlock(ctx, def) : null;
   const unlocked: string[] = [];
-  // things the first win opens for sure (BossDef.firstWin) — bought in the shop afterwards
+  // things the first win gives for sure (BossDef.firstWin) — straight into the inventory (the user 2026-11-22)
   if (things && def.firstWin?.length) {
-    const open = new Set(await unlockedItems(ctx.q, ctx.pid));
     for (const id of def.firstWin) {
-      if (open.has(id) || (await itemQty(ctx.q, ctx.pid, id)) > 0) continue;
-      await ctx.q.query("INSERT INTO player_unlocks (player_id, item_id, boss_id, at) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING", [ctx.pid, id, def.id, new Date(ctx.now)]);
+      if ((await itemQty(ctx.q, ctx.pid, id)) > 0) continue;
+      await addItem(ctx, id, 1, `win:${def.id}`);
       unlocked.push(id);
     }
   }
@@ -457,7 +456,7 @@ export async function claimFight(ctx: Ctx, fightId: number, see = true) {
     else thingPlan.held = true;
   }
   if (thingPlan) {
-    await commitUnlock(ctx, def, thingPlan, thingPlan.held);
+    await commitUnlock(ctx, def, thingPlan, thingPlan.held, true);
     if (thingPlan.got && !thingPlan.held) unlocked.unshift(thingPlan.got);
   }
   for (const r of roomPlans) {
@@ -512,7 +511,7 @@ export async function claimFight(ctx: Ctx, fightId: number, see = true) {
   if (unlocked.length) granted.unlocks = unlocked;
   // «Взлом»: while the event is on, a box for the win (any mode, the same fair share as the pass)
   if (earnedKey) await heistDrop(ctx, def, granted);
-  // «От звонка до звонка»: the win counts on the day the boss fell
+  // «Календарь»: the win counts on the day the boss fell
   await monthTick(ctx, "kill", 1, { boss: def.id, mode: mode.id, at: f.ended_at ? new Date(f.ended_at).getTime() : ctx.now });
   // «Сходняк»: a task «beat this boss»
   await shodTick(ctx, "kill", 1, { boss: def.id, mode: mode.id });
@@ -542,16 +541,15 @@ export async function unlockedItems(q: Queryable, pid: number): Promise<string[]
 }
 
 /**
- * Things a boss opens in the shop (BossDef.wear): every one not opened (or owned) yet rolls its chance; after `pity`
- * wins in a row without luck one of them opens for sure. The thing itself is bought in the shop afterwards.
+ * A boss's things (BossDef.wear): one not owned yet may drop; after `pity` wins in a row without luck one of them drops
+ * for sure. It goes straight into the inventory — nothing to buy (the user 2026-11-22).
  * The miss counter lives in boss_pity.
  */
 type Plan = { key: string; got: string | null; misses: number; forced: boolean; held?: boolean };
 async function planUnlock(ctx: Ctx, def: BossDef): Promise<Plan | null> {
   if (!def.wear) return null;
-  const open = new Set(await unlockedItems(ctx.q, ctx.pid));
   const missing: string[] = [];
-  for (const id of def.wear.items) if (!open.has(id) && (await itemQty(ctx.q, ctx.pid, id)) === 0) missing.push(id);
+  for (const id of def.wear.items) if ((await itemQty(ctx.q, ctx.pid, id)) === 0) missing.push(id);
   if (!missing.length) return null;
   const [row] = await ctx.q.query<{ misses: number }>("SELECT misses FROM boss_pity WHERE player_id=$1 AND boss_id=$2 FOR UPDATE", [ctx.pid, def.id]);
   const misses = row?.misses ?? 0;
@@ -562,12 +560,15 @@ async function planUnlock(ctx: Ctx, def: BossDef): Promise<Plan | null> {
   return { key: def.id, got, misses, forced };
 }
 /** writes a planned drop: the miss counter (reset on a drop, +1 on a miss, as it was when the drop was held back) and the unlock */
-async function commitUnlock(ctx: Ctx, def: BossDef, p: Plan, held = false) {
+async function commitUnlock(ctx: Ctx, def: BossDef, p: Plan, held = false, give = false) {
   await ctx.q.query(
     "INSERT INTO boss_pity (player_id, boss_id, misses) VALUES ($1,$2,$3) ON CONFLICT (player_id, boss_id) DO UPDATE SET misses = EXCLUDED.misses",
     [ctx.pid, p.key, held ? p.misses : p.got ? 0 : p.misses + 1],
   );
-  if (p.got && !held) await ctx.q.query("INSERT INTO player_unlocks (player_id, item_id, boss_id, at) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING", [ctx.pid, p.got, def.id, new Date(ctx.now)]);
+  if (!p.got || held) return;
+  // a thing: into the inventory; a room: opened to be bought at home
+  if (give) await addItem(ctx, p.got, 1, `win:${def.id}`);
+  else await ctx.q.query("INSERT INTO player_unlocks (player_id, item_id, boss_id, at) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING", [ctx.pid, p.got, def.id, new Date(ctx.now)]);
 }
 
 /** Gives up the running fight (counts as a loss). */

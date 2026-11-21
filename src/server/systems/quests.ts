@@ -22,7 +22,7 @@ async function row(q: Queryable, pid: number, day: string, lock = false): Promis
 /** Adds progress to today's quests of that kind (a no-op when none of today's quests counts it). */
 export async function questTick(ctx: Ctx, kind: QuestKind, amount = 1) {
   if (!(amount > 0)) return;
-  // «От звонка до звонка» counts the same actions (the social ones by their kind: game.ts)
+  // «Календарь» counts the same actions (the social ones by their kind: game.ts)
   if (kind !== "social") await monthTick(ctx, kind as MonthKind, amount);
   const day = moscowDay(ctx.now);
   const quests = questsForDay(ctx.pid, day, ctx.cfg.exchange.schedule).filter((x) => x.kind === kind);

@@ -47,10 +47,10 @@ describe("«От звонка до звонка»", () => {
     expect((await view(p, at(4))).closed["4"]).toBeUndefined();
     await tick(p, at(4), "kill", 1, { boss: "datsik", mode: "blat" });
     expect((await view(p, at(4))).closed["4"]).toBe("done");
-    // day 16: Гаркуша only in «Блатной»
-    await tick(p, at(16), "kill", 1, { boss: "garkusha", mode: "pacan" });
-    expect((await view(p, at(16))).closed["16"]).toBeUndefined();
+    // day 16: only the easy bosses now — Дацкоу, in any mode
     await tick(p, at(16), "kill", 1, { boss: "garkusha", mode: "blat" });
+    expect((await view(p, at(16))).closed["16"]).toBeUndefined();
+    await tick(p, at(16), "kill", 1, { boss: "datsik", mode: "pacan" });
     expect((await view(p, at(16))).closed["16"]).toBe("done");
   });
 

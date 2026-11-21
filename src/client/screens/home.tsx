@@ -287,7 +287,7 @@ export function HomeScreen() {
             {newsUnread > 0 && <span className="msg-count num">{newsUnread}</span>}
           </button>
           {/* the month's tasks («Делюги») / the day's tasks: a tear-off calendar under the news */}
-          <button className={`menu-toggle news-toggle cal-toggle ${questsAlert ? "glow" : ""}`} onClick={() => setQuests(true)} aria-label={mon ? "Делюги" : "Задания дня"} title={mon ? "Делюги «От звонка до звонка»" : "Задания дня"}>
+          <button className={`menu-toggle news-toggle cal-toggle ${questsAlert ? "glow" : ""}`} onClick={() => setQuests(true)} aria-label={mon ? "Делюги" : "Задания дня"} title={mon ? "Делюги «Календарь»" : "Задания дня"}>
             <Icon name="calendar" size={40} />
             {(questsAlert || (mon?.todayOpen ?? false)) && <i className="side-dot" />}
             <span className="side-count num">{mon ? `${mon.closedN}/${mon.days}` : `${state.quests.list.filter((x) => x.claimed).length}/${state.quests.list.length}`}</span>

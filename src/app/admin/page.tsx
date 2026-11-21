@@ -1191,7 +1191,7 @@ function RaidsAdmin() {
   );
 }
 
-/** «От звонка до звонка»: the month's tasks for the players instead of «Задания дня», or only for the admins */
+/** «Календарь»: the month's tasks for the players instead of «Задания дня», or only for the admins */
 function MonthlyAdmin() {
   const m = useLoad(() => admin<{ on: boolean }>("monthly"), []);
   const [busy, setBusy] = useState(false);
@@ -1203,7 +1203,7 @@ function MonthlyAdmin() {
   };
   const d = m.data;
   return (
-    <Box title={`📅 Делюги «От звонка до звонка» — ${!d ? "…" : d.on ? "у всех игроков" : "только у админов"}`}>
+    <Box title={`📅 Делюги «Календарь» — ${!d ? "…" : d.on ? "у всех игроков" : "только у админов"}`}>
       <p className="muted tiny">Делюга в день, одна для всех, на весь месяц. Пока выключено — делюги видят только админы (по Telegram id), а у игроков старые «Задания дня». Включайте 1-го числа: дни до включения в этом месяце считаются пропущенными и выкупаются за 1 SOL.</p>
       <div className="row" style={{ gap: 8, marginTop: 8 }}>
         {d?.on

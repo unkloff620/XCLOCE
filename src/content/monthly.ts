@@ -2,7 +2,7 @@ import type { Reward } from "./rewards.ts";
 import { ACH_BOX_COST } from "./ach-box.ts";
 
 /*
- * «От звонка до звонка»: a «делюга» a day, the same for every player. Day N of the month (Moscow) has the N-th task of
+ * «Календарь»: a «делюга» a day, the same for every player. Day N of the month (Moscow) has the N-th task of
  * MONTHLY_TASKS (a month of 28–31 days uses the first 28–31). Done that day → the day is closed. A day that passed
  * unclosed can be bought out for MONTHLY_SKIP_PRICE SOL. Closed days open the rewards: 2, 5, 10, 20 and the chest
  * for every day of the month.
@@ -29,7 +29,7 @@ export interface MonthTask {
 const kill = (boss: string | undefined, title: string, mode?: MonthTask["mode"]): MonthTask =>
   ({ kind: "kill", target: 1, title, href: "/bosses", boss, mode, hint: "Засчитывается любая победа, где ты в бою" });
 
-/** day 1 … day 31 */
+/** day 1 … day 31; the kills — only the easy bosses (Дацкоу, Кедр, Мугонатор): a newcomer closes them alone (the user 2026-11-22) */
 export const MONTHLY_TASKS: MonthTask[] = [
   { kind: "hits", target: 20, title: "Ударь босса 20 раз", href: "/bosses" },
   { kind: "yard", target: 5, title: "Подбери 5 вещей во дворе", href: "/yard" },
@@ -46,21 +46,21 @@ export const MONTHLY_TASKS: MonthTask[] = [
   { kind: "craft", target: 1, title: "Скрафти любой предмет", href: "/craft", hint: "Крафт: собери вещь из деталей" },
   { kind: "bj_win", target: 1, title: "Выиграй раунд в блэкджек", href: "/yard", hint: "Стол во дворе → Блэкджек" },
   { kind: "stash", target: 1, title: "Найди нычку", href: "/locations", hint: "Нычки находятся в заданиях локаций" },
-  kill("garkusha", "Убей Гаркушу в «Блатном»", "blat"),
+  kill("datsik", "Убей Дацкоу"),
   { kind: "slots", target: 10, title: "Крутани однорукого бандита 10 раз", href: "/yard" },
   { kind: "damage", target: 5_000, title: "Нанеси 5 000 урона боссам", href: "/bosses" },
-  kill("bebyakyan", "Убей Командате"),
+  kill("kedr", "Убей Кедра"),
   { kind: "spit", target: 10, title: "Харкни в 10 игроков", href: "/rating", hint: "Рейтинг → профиль игрока" },
   { kind: "buy", target: 1, title: "Купи что-нибудь в магазине", href: "/shop" },
-  kill("babafey", "Убей Бабафея в «Пацанском»", "pacan"),
+  kill("mugo", "Убей Мугонатора"),
   { kind: "yard", target: 15, title: "Подбери 15 вещей во дворе", href: "/yard" },
   { kind: "upgrader", target: 3, title: "Крутани апгрейдер 3 раза", href: "/yard", hint: "Автомат «Апгрейдер» во дворе" },
-  kill("vodovoz", "Убей Востока"),
+  kill("datsik", "Убей Дацкоу"),
   { kind: "zonk", target: 3, title: "Доиграй 3 партии в зонк", href: "/yard", hint: "Стол во дворе → Зонк" },
-  kill("knyaz", "Убей Князя"),
+  kill("kedr", "Убей Кедра"),
   { kind: "damage", target: 20_000, title: "Нанеси 20 000 урона боссам", href: "/bosses" },
-  kill("vadim", "Убей Вадима"),
-  kill(undefined, "Убей любого босса в «Авторитетном»", "avtor"),
+  kill("mugo", "Убей Мугонатора"),
+  kill("mugo", "Убей Мугонатора"),
   { kind: "social", target: 15, title: "Наедь, харкни или накачай бицуху 15 раз", href: "/rating", hint: "Рейтинг → профиль игрока" },
 ];
 

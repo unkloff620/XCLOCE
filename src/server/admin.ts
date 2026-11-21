@@ -528,7 +528,7 @@ export async function raidsSet(db: Db, adminTg: number, body: Record<string, unk
   return raidsAdmin(db);
 }
 
-/** «От звонка до звонка»: the month's tasks for the players instead of the daily quests (the admins see them always) */
+/** «Календарь»: the month's tasks for the players instead of the daily quests (the admins see them always) */
 export async function monthlyAdmin(db: Db) {
   return { on: (await loadConfig(db)).monthly.on };
 }

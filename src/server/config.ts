@@ -52,7 +52,7 @@ export interface Config {
   fortune: { on: boolean };
   /** «Ходки» (content/raids.ts): shown to the players (the admins see it always, to check it before) */
   raids: { on: boolean };
-  /** «От звонка до звонка» (content/monthly.ts): instead of the daily quests for the players (the admins see it always) */
+  /** «Календарь» (content/monthly.ts): instead of the daily quests for the players (the admins see it always) */
   monthly: { on: boolean };
 }
 

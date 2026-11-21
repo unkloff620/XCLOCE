@@ -11,7 +11,7 @@ import { CASE_POINTS, MONTHLY_CHEST, MONTHLY_TIERS, monthTaskOf, monthWeapon } f
 import type { Granted } from "../api.ts";
 
 /*
- * «От звонка до звонка»: the month's calendar (a «делюга» a day, the same for all), today's task under it,
+ * «Календарь»: the month's calendar (a «делюга» a day, the same for all), today's task under it,
  * and the rewards for the closed days on the planks.
  */
 
@@ -93,7 +93,7 @@ export function MonthlyWindow({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <Modal title="От звонка до звонка" onClose={onClose} className="mt-modal" head={
+    <Modal title="Календарь" onClose={onClose} className="mt-modal" head={
       <div className="small muted row" style={{ justifyContent: "space-between" }}>
         <span>Делюги выполнено <b className="num">{m.closedN}/{m.days}</b></span>
         <span className="row num" style={{ gap: 4, whiteSpace: "nowrap" }}><Icon name="clock" size={14} />{clock(m.resetAt - now)}</span>
