@@ -1,6 +1,7 @@
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, moscowDay, type Ctx } from "../core.ts";
-import { COMBO_KEEP, comboMode, comboSequence, rollComboReward, type ComboMode } from "../../content/combo.ts";
+import { COMBO_KEEP, COMBO_MODES, comboMode, comboSequence as seqOf, hasCombo, rollComboReward, type ComboMode } from "../../content/combo.ts";
+import { BOSSES, EVENT_FIGHTS } from "../../content/bosses.ts";
 import type { Reward } from "../../content/rewards.ts";
 
 /*
@@ -8,6 +9,38 @@ import type { Reward } from "../../content/rewards.ts";
  * row a Moscow day). The fight remembers the combo mode chosen at its start (fights.combo); every hit of that fight is
  * checked here.
  */
+
+/** the server's secret for the sequences (config «combo.secret»): made once, never sent to the app */
+let saltCache: string | null = null;
+async function comboSalt(q: Queryable): Promise<string> {
+  if (saltCache) return saltCache;
+  const read = async () => (await q.query<{ value: string }>("SELECT value FROM config WHERE key='combo.secret'"))[0]?.value ?? null;
+  let v = await read();
+  if (!v) {
+    await q.query("INSERT INTO config (key, value) VALUES ('combo.secret', $1::jsonb) ON CONFLICT (key) DO NOTHING", [JSON.stringify(crypto.randomUUID())]);
+    v = await read();
+  }
+  saltCache = String(v);
+  return saltCache;
+}
+export async function comboSequence(q: Queryable, day: string, bossId: string, mode: ComboMode): Promise<string[]> {
+  return seqOf(day, bossId, mode, await comboSalt(q));
+}
+
+/** the admin's «Комбо»: today's and tomorrow's sequences of every boss with a combo */
+export async function combosAdmin(q: Queryable, now = Date.now()) {
+  const days = [moscowDay(now), moscowDay(now + 24 * 3_600_000)];
+  const bosses = [...BOSSES, ...EVENT_FIGHTS].filter((b) => hasCombo(b.id));
+  return {
+    days: await Promise.all(days.map(async (day) => ({
+      day,
+      bosses: await Promise.all(bosses.map(async (b) => ({
+        id: b.id, name: b.name,
+        modes: await Promise.all(COMBO_MODES.map(async (m) => ({ mode: m.id, name: m.name, seq: await comboSequence(q, day, b.id, m.id) }))),
+      }))),
+    }))),
+  };
+}
 
 interface ComboRow { progress: number; done_at: Date | null; reward: Reward | null; claimed_at: Date | null }
 
@@ -30,8 +63,7 @@ async function rowOf(q: Queryable, pid: number, day: string, bossId: string, mod
   return r ?? null;
 }
 
-function viewOf(day: string, bossId: string, mode: ComboMode, r: ComboRow | null): ComboView {
-  const seq = comboSequence(day, bossId, mode);
+function viewOf(seq: string[], mode: ComboMode, r: ComboRow | null): ComboView {
   const progress = Math.min(seq.length, Number(r?.progress ?? 0));
   return { mode, length: seq.length, progress, guessed: seq.slice(0, progress), done: !!r?.done_at, claimed: !!r?.claimed_at, reward: r?.done_at ? r.reward : null };
 }
@@ -40,7 +72,7 @@ export async function comboView(q: Queryable, pid: number, bossId: string, mode:
   const m = comboMode(mode);
   if (!m) return null;
   const day = moscowDay(now);
-  return viewOf(day, bossId, m.id, await rowOf(q, pid, day, bossId, m.id));
+  return viewOf(await comboSequence(q, day, bossId, m.id), m.id, await rowOf(q, pid, day, bossId, m.id));
 }
 
 /** today's combos of every boss and mode: done or not (the pre-fight picker marks the done ones) */
@@ -55,9 +87,9 @@ export async function comboHit(ctx: Ctx, bossId: string, mode: string | null, we
   const m = comboMode(mode);
   if (!m) return null;
   const day = moscowDay(ctx.now);
-  const seq = comboSequence(day, bossId, m.id);
+  const seq = await comboSequence(ctx.q, day, bossId, m.id);
   const r = await rowOf(ctx.q, ctx.pid, day, bossId, m.id);
-  if (r?.done_at) return viewOf(day, bossId, m.id, r);
+  if (r?.done_at) return viewOf(seq, m.id, r);
   const before = Number(r?.progress ?? 0);
   let progress: number;
   let last: ComboView["last"];
@@ -79,7 +111,7 @@ export async function comboHit(ctx: Ctx, bossId: string, mode: string | null, we
      ON CONFLICT (player_id, day, boss_id, mode) DO UPDATE SET progress = EXCLUDED.progress, done_at = EXCLUDED.done_at, reward = EXCLUDED.reward`,
     [ctx.pid, day, bossId, m.id, progress, done ? new Date(ctx.now) : null, reward ? JSON.stringify(reward) : null],
   );
-  return { ...viewOf(day, bossId, m.id, { progress, done_at: done ? new Date(ctx.now) : null, reward, claimed_at: null }), last };
+  return { ...viewOf(seq, m.id, { progress, done_at: done ? new Date(ctx.now) : null, reward, claimed_at: null }), last };
 }
 
 /** «Забрать»: the payout of a done combo (the latest one of this boss and mode not taken yet) */

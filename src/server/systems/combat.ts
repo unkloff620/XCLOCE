@@ -9,7 +9,7 @@ import { HIT_PHRASES } from "../../content/phrases.ts";
 import { boostReward, mergeRewards, scaleReward } from "../../content/rewards.ts";
 import { BASE_CRIT_MULT, EQUIPMENT, PIECE_DROP_CHANCE, PIECE_PITY, ROOM_DEFS, ROOM_PITY, pieceUnlockId, roomUnlockId } from "../../content/home.ts";
 import { comboHit, comboView, type ComboView } from "./combo.ts";
-import type { ComboMode } from "../../content/combo.ts";
+import { hasCombo, type ComboMode } from "../../content/combo.ts";
 import { CRIT_MULT_MAX, critChanceOf, reloadMin, talentExtras, talentsForDamage, weaponTalentBonus } from "../../content/talents.ts";
 import { playerBonus, weaponTalents } from "./home.ts";
 import { setBonuses } from "./collection.ts";
@@ -157,6 +157,8 @@ export async function startFight(ctx: Ctx, bossId: string, solo = false, modeId:
   const mode = fightMode(modeId);
   const def = bossById(bossId);
   if (!def) throw new GameError("bad_boss", "Такого босса нет");
+  // the weak bosses (before Гаркуша) have no combo
+  const fightCombo = combo && hasCombo(def.id) ? combo : null;
   if (def.event) {
     // an event boss: only while the admin has him on, only «Пацанский», no «Соло»
     if (!def.mentor && !ctx.cfg.eventBosses[def.id]) throw new GameError("event_off", "Ивент сейчас не идёт");
@@ -189,7 +191,7 @@ export async function startFight(ctx: Ctx, bossId: string, solo = false, modeId:
   const clockMin = extras.clockMin + (await craftBonus(ctx.q, ctx.pid)).clock; // + the craft stash's minutes
   const [f] = await ctx.q.query<{ id: number }>(
     "INSERT INTO fights (player_id, boss_id, hp_max, start_total, start_seq, started_at, ends_at, day, solo, keys_spent, global, mode, combo) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,true,$11,$12) RETURNING id",
-    [ctx.pid, def.id, hpMax, g.damage_total, g.last_seq, new Date(ctx.now), new Date(ctx.now + ctx.cfg.fight.hours * 3600_000 + clockMin * 60_000), day, solo, keys, mode.id, combo],
+    [ctx.pid, def.id, hpMax, g.damage_total, g.last_seq, new Date(ctx.now), new Date(ctx.now + ctx.cfg.fight.hours * 3600_000 + clockMin * 60_000), day, solo, keys, mode.id, fightCombo],
   );
   // every new fight starts with the free weapons (fist, mouse, candle) ready — unless the last fight was fled:
   // otherwise flee + start again would give endless free hits (fled fights do not count toward the daily limit)
@@ -198,7 +200,7 @@ export async function startFight(ctx: Ctx, bossId: string, solo = false, modeId:
     [ctx.pid, f.id],
   );
   if (!last?.fled) await resetFreeWeapons(ctx.q, ctx.pid);
-  return { fightId: f.id, bossId: def.id, solo, mode: mode.id, combo, hpMax };
+  return { fightId: f.id, bossId: def.id, solo, mode: mode.id, combo: fightCombo, hpMax };
 }
 
 export interface HitResult {

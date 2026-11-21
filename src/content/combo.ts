@@ -18,6 +18,8 @@ export const COMBO_MODES: { id: ComboMode; name: string; length: number }[] = [
 ];
 export const comboMode = (id: string | null | undefined) => COMBO_MODES.find((m) => m.id === id) ?? null;
 
+/** the names of the hits (the admin's «Комбо» tab) */
+export const COMBO_HIT_NAMES: Record<string, string> = { fist: "Кулак", mouse: "Глаза", "red-candle": "Пинок", bat: "Бита", keyboard: "Нож", gpu: "Пистолет", "rug-pull-gun": "Автомат" };
 /** the free hits: кулак, тычок в глаза, пинок */
 export const COMBO_FREE = ["fist", "mouse", "red-candle"];
 /** the bat: in «Блатной» and «Авторитетный» only */
@@ -27,9 +29,12 @@ export const COMBO_KEEP = 0.1;
 /** «Пацанский»: a step is a weapon this rarely (when the boss uses weapons) */
 const PACAN_WEAPON = 0.06;
 
-/** the weapons a boss's combo may ask for (нож, пистолет, автомат); the first ones — none */
+/** the weak bosses (before Гаркуша) have no combo (the user 2026-11-21) */
+export const NO_COMBO = new Set(["datsik", "kedr", "mugo"]);
+export const hasCombo = (bossId: string) => !NO_COMBO.has(bossId);
+
+/** the weapons a boss's combo may ask for (нож, пистолет, автомат) */
 export const COMBO_WEAPONS: Record<string, string[]> = {
-  datsik: [], kedr: [], mugo: [],
   garkusha: ["keyboard"], bebyakyan: ["keyboard"], babafey: ["keyboard"],
   vodovoz: ["keyboard", "gpu"], knyaz: ["keyboard", "gpu"], vadim: ["keyboard", "gpu"],
   botsman: ["keyboard", "gpu", "rug-pull-gun"], utilizator: ["keyboard", "gpu", "rug-pull-gun"],
@@ -50,10 +55,13 @@ function seeded(seed: number) {
   };
 }
 
-/** today's sequence of a boss in a combo mode (`day` — the Moscow day, YYYY-MM-DD) */
-export function comboSequence(day: string, bossId: string, mode: ComboMode): string[] {
+/**
+ * the day's sequence of a boss in a combo mode (`day` — the Moscow day, YYYY-MM-DD). `salt` is the server's secret
+ * (config «combo.secret», systems/combo.ts): without it this code in the app's bundle tells nothing.
+ */
+export function comboSequence(day: string, bossId: string, mode: ComboMode, salt = ""): string[] {
   const def = comboMode(mode)!;
-  const rnd = seeded(hash(`combo:${day}:${bossId}:${mode}`));
+  const rnd = seeded(hash(`combo:${salt}:${day}:${bossId}:${mode}`));
   const weapons = COMBO_WEAPONS[bossId] ?? [];
   const pool = mode === "pacan" ? COMBO_FREE : [...COMBO_FREE, COMBO_BAT];
   const out: string[] = [];

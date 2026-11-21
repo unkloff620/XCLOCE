@@ -2593,19 +2593,25 @@ describe("exchanger overnight", () => {
 
 describe("«Комбо»", () => {
   it("a day's hidden sequence per boss and mode: right hits add up, a wrong one starts over; done — the payout by «Забрать»", async () => {
-    const { comboSequence, COMBO_FREE } = await import("../src/content/combo.ts");
+    const { COMBO_FREE } = await import("../src/content/combo.ts");
+    const { comboSequence } = await import("../src/server/systems/combo.ts");
     const { moscowDay } = await import("../src/server/core.ts");
     const day = moscowDay(T0);
-    const seq = comboSequence(day, "datsik", "pacan");
+    const seq = await comboSequence(db, day, "garkusha", "pacan");
     expect(seq).toHaveLength(6);
-    expect(seq.every((h) => COMBO_FREE.includes(h))).toBe(true); // Дацкоу: free hits only
-    expect(comboSequence(day, "datsik", "pacan")).toEqual(seq); // one for everybody
-    expect(comboSequence(moscowDay(T0 + 24 * H), "datsik", "pacan")).not.toEqual(seq); // a new one tomorrow
-    expect(comboSequence(day, "botsman", "avtor")).toHaveLength(16);
+    expect(seq.every((h) => COMBO_FREE.includes(h) || h === "keyboard")).toBe(true); // Гаркуша: free hits, now and then a knife
+    expect(await comboSequence(db, day, "garkusha", "pacan")).toEqual(seq); // one for everybody
+    expect(await comboSequence(db, moscowDay(T0 + 24 * H), "garkusha", "pacan")).not.toEqual(seq); // a new one tomorrow
+    expect(await comboSequence(db, day, "botsman", "avtor")).toHaveLength(16);
+
+    // the weak bosses (before Гаркуша): no combo at all
+    const w = await newPlayer(db);
+    expect((await act(db, w, "fight_start", { boss: "datsik", combo: "pacan" }, T0)).result.combo).toBeNull();
 
     const p = await newPlayer(db);
-    await db.query("UPDATE boss_hp SET hp = 1000000 WHERE boss_id='datsik'").catch(() => undefined);
-    await act(db, p, "fight_start", { boss: "datsik", combo: "pacan" }, T0);
+    await give(db, p, "keys-bundle", 1);
+    await give(db, p, "keyboard", 10);
+    await act(db, p, "fight_start", { boss: "garkusha", combo: "pacan" }, T0);
     const hit = async (w: string) => {
       await db.query("DELETE FROM cooldowns WHERE player_id=$1", [p]);
       return (await act(db, p, "attack", { weapon: w }, T0, always(0.99))).result.combo;
@@ -2621,10 +2627,20 @@ describe("«Комбо»", () => {
     // done for today: more hits change nothing
     expect((await hit(wrong)).done).toBe(true);
     const xp = Number((await db.query<{ xp: number }>("SELECT xp FROM players WHERE id=$1", [p]))[0].xp);
-    const r = await act(db, p, "combo_claim", { boss: "datsik", mode: "pacan" }, T0);
+    const r = await act(db, p, "combo_claim", { boss: "garkusha", mode: "pacan" }, T0);
     expect(r.result.reward.xp).toBeGreaterThanOrEqual(800);
     expect(Number((await db.query<{ xp: number }>("SELECT xp FROM players WHERE id=$1", [p]))[0].xp)).toBe(xp + r.result.reward.xp);
-    await expect(act(db, p, "combo_claim", { boss: "datsik", mode: "pacan" }, T0)).rejects.toMatchObject({ code: "combo_none" });
+    await expect(act(db, p, "combo_claim", { boss: "garkusha", mode: "pacan" }, T0)).rejects.toMatchObject({ code: "combo_none" });
+  });
+
+  it("the admin's «Комбо»: today's and tomorrow's sequences, the weak bosses not there", async () => {
+    const { combosAdmin, comboSequence } = await import("../src/server/systems/combo.ts");
+    const { moscowDay } = await import("../src/server/core.ts");
+    const a = await combosAdmin(db, T0);
+    expect(a.days.map((d) => d.day)).toEqual([moscowDay(T0), moscowDay(T0 + 24 * H)]);
+    expect(a.days[0].bosses.some((b) => b.id === "datsik" || b.id === "mugo")).toBe(false);
+    const g = a.days[0].bosses.find((b) => b.id === "garkusha")!;
+    expect(g.modes.find((m) => m.mode === "blat")!.seq).toEqual(await comboSequence(db, moscowDay(T0), "garkusha", "blat"));
   });
 
   it("the payout by the mode (the user's table)", async () => {

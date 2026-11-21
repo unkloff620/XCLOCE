@@ -3,8 +3,9 @@ export const dynamic = "force-dynamic";
 import { adminRoute, num, oneOf } from "../../../server/http.ts";
 import * as admin from "../../../server/admin.ts";
 import { costs, costsSave } from "../../../server/costs.ts";
+import { combosAdmin } from "../../../server/systems/combo.ts";
 
-const OPS = ["me", "dashboard", "players", "player", "actions", "admin_log", "edit", "events", "event_save", "event_delete", "exchange_schedule", "exchange_schedule_save", "event_bosses", "event_boss_set", "boss_limit_reset_all", "maintenance", "maintenance_set", "fortune", "fortune_set", "monthly", "monthly_set", "raids", "raids_set", "tosya", "tosya_set", "broadcast", "funnel", "costs", "costs_save"] as const;
+const OPS = ["me", "dashboard", "players", "player", "actions", "admin_log", "edit", "events", "event_save", "event_delete", "exchange_schedule", "exchange_schedule_save", "event_bosses", "event_boss_set", "boss_limit_reset_all", "maintenance", "maintenance_set", "fortune", "fortune_set", "monthly", "monthly_set", "raids", "raids_set", "combos", "tosya", "tosya_set", "broadcast", "funnel", "costs", "costs_save"] as const;
 const optNum = (v: unknown) => (v === undefined || v === null || v === "" ? undefined : num(v, "number"));
 const optStr = (v: unknown) => (typeof v === "string" && v ? v.slice(0, 100) : undefined);
 
@@ -37,6 +38,7 @@ export const POST = adminRoute("admin", async ({ db, body, adminTg }) => {
     case "monthly": return admin.monthlyAdmin(db);
     case "monthly_set": return admin.monthlySet(db, adminTg, body);
     case "raids": return admin.raidsAdmin(db);
+    case "combos": return combosAdmin(db);
     case "raids_set": return admin.raidsSet(db, adminTg, body);
     case "boss_limit_reset_all": return admin.bossLimitResetAll(db, adminTg);
     case "edit": {

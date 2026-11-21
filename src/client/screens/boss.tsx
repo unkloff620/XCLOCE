@@ -33,7 +33,7 @@ import { FIGHT_MODES, fightMode, type FightMode } from "../../content/medals.ts"
 import { usePageReady } from "../route-loader.tsx";
 import { tattooSetsOfBoss } from "../../content/tattoos.ts";
 import { ComboButton, ComboDone, ComboPanel, ComboPick } from "./combo.tsx";
-import type { ComboMode } from "../../content/combo.ts";
+import { hasCombo, type ComboMode } from "../../content/combo.ts";
 import { BoostIcons, FightTray, HitLog, SidePanel, TopList, WeaponPanel, slotsOf } from "./fight-kit.tsx";
 
 /**
@@ -371,7 +371,7 @@ export function BossScreen({ id }: { id: string }) {
   };
   const start = async (solo = false) => {
     const md = fightMode(mode);
-    const r = await act<{ fightId: number }>("fight_start", { boss: id, solo, mode, combo }, `${solo ? "Соло-бой" : "Бой"} с боссом ${boss?.name} · ${md.name}${md.hp > 1 ? ` (здоровье ×${md.hp}, награда ×${md.reward})` : ""}. 8 часов`);
+    const r = await act<{ fightId: number }>("fight_start", { boss: id, solo, mode, combo: hasCombo(id) ? combo : null }, `${solo ? "Соло-бой" : "Бой"} с боссом ${boss?.name} · ${md.name}${md.hp > 1 ? ` (здоровье ×${md.hp}, награда ×${md.reward})` : ""}. 8 часов`);
     if (r) void loadList();
     return !!r;
   };
@@ -602,7 +602,7 @@ export function BossScreen({ id }: { id: string }) {
       {!locked && !ev && door === "closed" && mode !== "pacan" && <button type="button" className="mode-arrow l" onClick={() => goMode(-1)} aria-label="Предыдущий режим">‹</button>}
       {!locked && !ev && door === "closed" && mode !== "avtor" && <button type="button" className="mode-arrow r" onClick={() => goMode(1)} aria-label="Следующий режим">›</button>}
       <div className="fight-bottom prefight-panel">
-        {!locked && <ComboPick value={combo} onChange={setCombo} done={(m) => !!list?.combos?.[`${boss.id}:${m}`]?.done} />}
+        {!locked && hasCombo(boss.id) && <ComboPick value={combo} onChange={setCombo} done={(m) => !!list?.combos?.[`${boss.id}:${m}`]?.done} />}
         <div className="tiny muted center mode-hint">
           {soloPick ? "Соло (бьёшь один): здоровье" : `${fightMode(mode).name}: здоровье`} {full(Math.round((row?.hpMax ?? boss.hp) * fightMode(mode).hp))}{(boss.thingsMode ? mode === boss.thingsMode : fightMode(mode).things) ? " · падают вещи босса" : ""}{tattooSetsOfBoss(boss.id).some((t) => t.mode === mode) ? " · падают наколки" : ""}.
         </div>

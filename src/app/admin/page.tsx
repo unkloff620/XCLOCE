@@ -5,6 +5,7 @@
  * the action log and the admins' own log. Sections: Обзор, Игра (live controls), Игроки, Аналитика, Журнал — in the URL hash,
  * so a player's card can be linked: #player/42.
  */
+import { COMBO_HIT_NAMES } from "../../content/combo.ts";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import "./admin.css";
 import { ITEMS, itemById, type ItemDef, type Slot } from "../../content/items.ts";
@@ -139,14 +140,15 @@ type View =
   | { tab: "player"; id: number }
   | { tab: "stats"; sub: StatsSub }
   | { tab: "log"; sub: "actions" | "admins"; q: ActionsQuery; key: string }
-  | { tab: "costs" };
+  | { tab: "costs" }
+  | { tab: "combo" };
 type LiveSub = "works" | "news" | "tosya" | "bosses" | "events" | "exchange" | "fortune" | "monthly" | "raids";
 type StatsSub = "funnel" | "items" | "actions";
 const LIVE: [LiveSub, string, string][] = [
   ["works", "🛠", "Тех. работы"], ["news", "📣", "Рассылка"], ["tosya", "🥟", "Тося"], ["bosses", "👹", "Боссы"], ["events", "🎉", "События"], ["exchange", "💱", "Обменник"], ["fortune", "🎡", "Колесо удачи"], ["monthly", "📅", "Делюги"], ["raids", "🚩", "Захват"],
 ];
 const STATS: [StatsSub, string, string][] = [["funnel", "🧭", "Воронка новичков"], ["items", "📦", "Предметы у игроков"], ["actions", "⚡", "Действия за 24 ч"]];
-const NAV: [View["tab"], string, string][] = [["dash", "📊", "Обзор"], ["live", "🎮", "Игра"], ["players", "👥", "Игроки"], ["stats", "📈", "Аналитика"], ["log", "📜", "Журнал"], ["costs", "💸", "Расходы"]];
+const NAV: [View["tab"], string, string][] = [["dash", "📊", "Обзор"], ["live", "🎮", "Игра"], ["players", "👥", "Игроки"], ["stats", "📈", "Аналитика"], ["log", "📜", "Журнал"], ["costs", "💸", "Расходы"], ["combo", "🥊", "Комбо"]];
 
 function parseHash(): View {
   const h = typeof location === "undefined" ? "" : location.hash.slice(1);
@@ -162,6 +164,7 @@ function parseHash(): View {
   if (a === "stats") return { tab: "stats", sub: STATS.find(([k]) => k === b)?.[0] ?? "funnel" };
   if (a === "players") return { tab: "players" };
   if (a === "costs") return { tab: "costs" };
+  if (a === "combo") return { tab: "combo" };
   return { tab: "dash" };
 }
 /** link to the action log with filters */
@@ -215,6 +218,7 @@ export default function AdminPage() {
         {view.tab === "player" && <Player key={view.id} id={view.id} />}
         {view.tab === "stats" && <Stats sub={view.sub} />}
         {view.tab === "costs" && <Costs />}
+        {view.tab === "combo" && <Combos />}
         {view.tab === "log" && (
           <>
             <SubTabs items={[["actions", "🧾", "Действия игроков"], ["admins", "🛡", "Правки админов"]]} value={view.sub} href={(k) => (k === "actions" ? "#log" : "#log/admins")} />
@@ -1040,6 +1044,38 @@ const usd = (v: number) => `$${v.toLocaleString("ru-RU", { minimumFractionDigits
 const dayOf = (iso: string) => new Date(iso).toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
 
 /** What the game costs a month: the subscriptions (typed in here) + the database by use (Neon API) + the card fee */
+/** «Комбо»: today's and tomorrow's hidden sequences of every boss and mode (they change at 00:00 МСК) */
+type ComboDay = { day: string; bosses: { id: string; name: string; modes: { mode: string; name: string; seq: string[] }[] }[] };
+function Combos() {
+  const [data, setData] = useState<{ days: ComboDay[] } | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  useEffect(() => { admin<{ days: ComboDay[] }>("combos").then(setData, (e) => setErr(String(e?.message ?? e))); }, []);
+  if (err) return <div className="adm-card">Ошибка: {err}</div>;
+  if (!data) return <div className="adm-center muted">Загрузка…</div>;
+  return (
+    <div className="col" style={{ gap: 14 }}>
+      {data.days.map((d, k) => (
+        <section key={d.day} className="adm-card">
+          <h3 style={{ margin: "0 0 10px" }}>{k === 0 ? "Сегодня" : "Завтра"} · {d.day.split("-").reverse().join(".")}</h3>
+          <div className="col" style={{ gap: 10 }}>
+            {d.bosses.map((b) => (
+              <div key={b.id} className="col" style={{ gap: 4 }}>
+                <b>{b.name}</b>
+                {b.modes.map((m) => (
+                  <div key={m.mode} className="row" style={{ gap: 6, flexWrap: "wrap", alignItems: "baseline" }}>
+                    <span className="muted small" style={{ minWidth: 104 }}>{m.name} ({m.seq.length})</span>
+                    <span className="small">{m.seq.map((h, i) => <span key={i}>{i ? " → " : ""}<b>{COMBO_HIT_NAMES[h] ?? h}</b></span>)}</span>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
 function Costs() {
   const c = useLoad(() => admin<CostsView>("costs"), []);
   const [draft, setDraft] = useState<{ subs: CostLine[]; feePct: number } | null>(null);
