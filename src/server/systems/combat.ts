@@ -8,7 +8,7 @@ import { BAT, WEAPONS, itemById, rushPrice, weaponById } from "../../content/ite
 import { HIT_PHRASES } from "../../content/phrases.ts";
 import { boostReward, mergeRewards, scaleReward } from "../../content/rewards.ts";
 import { BASE_CRIT_MULT, EQUIPMENT, PIECE_DROP_CHANCE, PIECE_PITY, ROOM_DEFS, ROOM_PITY, pieceUnlockId, roomUnlockId } from "../../content/home.ts";
-import { comboHit, comboView, type ComboView } from "./combo.ts";
+import { comboHit, comboRestart, comboView, type ComboView } from "./combo.ts";
 import { hasCombo, type ComboMode } from "../../content/combo.ts";
 import { CRIT_MULT_MAX, critChanceOf, reloadMin, talentExtras, talentsForDamage, weaponTalentBonus } from "../../content/talents.ts";
 import { playerBonus, weaponTalents } from "./home.ts";
@@ -157,8 +157,9 @@ export async function startFight(ctx: Ctx, bossId: string, solo = false, modeId:
   const mode = fightMode(modeId);
   const def = bossById(bossId);
   if (!def) throw new GameError("bad_boss", "Такого босса нет");
-  // the weak bosses (before Гаркуша) have no combo
+  // the weak bosses (before Гаркуша) have no combo; done today already — it starts again (systems/combo.ts)
   const fightCombo = combo && hasCombo(def.id) ? combo : null;
+  await comboRestart(ctx, def.id, fightCombo);
   if (def.event) {
     // an event boss: only while the admin has him on, only «Пацанский», no «Соло»
     if (!def.mentor && !ctx.cfg.eventBosses[def.id]) throw new GameError("event_off", "Ивент сейчас не идёт");

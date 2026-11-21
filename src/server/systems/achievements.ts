@@ -145,7 +145,7 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
     ...Object.fromEntries(locs.map((r) => [r.location_id.startsWith("night:") ? `locn:${r.location_id.slice(6)}` : `loc:${r.location_id}`, Number(r.n)])),
     ...Object.fromEntries(biz.map((r) => [`biz:${r.location_id}`, 1])),
     ...Object.fromEntries(hands.map((r) => [`poker:${r.hand}`, Number(r.n)])),
-    ...Object.fromEntries(Object.entries(c).filter(([k]) => k.startsWith("zonk:")).map(([k, v]) => [k, v])),
+    ...Object.fromEntries(Object.entries(c).filter(([k]) => k.startsWith("zonk:") || k.startsWith("combo:")).map(([k, v]) => [k, v])),
     talents: talentsForDamage(Number(r?.damage ?? 0)),
     bjBestBet: c.bjBestBet ?? 0,
     pigeons: c.pigeons ?? 0,

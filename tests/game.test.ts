@@ -2638,9 +2638,22 @@ describe("«Комбо»", () => {
     expect(c).toMatchObject({ progress: 6, done: true, claimed: true });
     expect(Number((await db.query<{ xp: number }>("SELECT xp FROM players WHERE id=$1", [p]))[0].xp)).toBeGreaterThanOrEqual(xp0 + 800);
     expect(await qty(db, p, "keyboard")).toBeGreaterThan(kb0);
-    // done for today: more hits change nothing
+    // done in this fight: more hits change nothing
     expect((await hit(wrong)).done).toBe(true);
     await expect(act(db, p, "combo_claim", { boss: "garkusha", mode: "pacan" }, T0)).rejects.toMatchObject({ code: "combo_none" });
+    // the achievement: Гаркуша's «Пацанское» done once
+    expect((await act(db, p, "achievement_claim", { id: "combo-garkusha-pacan-1" }, T0)).result.reward.achPoints).toBe(5);
+    // a new fight with him in the same combo mode: from zero again, the hits known (grey), and it pays again
+    await act(db, p, "fight_flee", {}, T0);
+    await act(db, p, "fight_flee", {}, T0).catch(() => undefined);
+    const f2 = await act(db, p, "fight_start", { boss: "garkusha", combo: "pacan" }, T0 + M);
+    expect(f2.result.combo).toBe("pacan");
+    c = await hit(seq[0]);
+    expect(c).toMatchObject({ progress: 1, done: false, runs: 1, known: seq });
+    const kb1 = await qty(db, p, "keyboard");
+    for (let i = 1; i < seq.length; i++) c = await hit(seq[i]);
+    expect(c).toMatchObject({ done: true, runs: 2 });
+    expect(await qty(db, p, "keyboard")).toBeGreaterThan(kb1);
   });
 
   it("the admin's «Комбо»: today's and tomorrow's sequences, the weak bosses not there", async () => {

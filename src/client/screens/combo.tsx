@@ -15,6 +15,9 @@ export interface ComboState {
   length: number;
   progress: number;
   guessed: string[];
+  /** done today already: the whole sequence, grey, to hit by again */
+  known?: string[];
+  runs?: number;
   done: boolean;
   claimed: boolean;
   reward: Reward | null;
@@ -48,7 +51,7 @@ export function ComboButton({ c, onOpen }: { c: ComboState; onOpen: () => void }
 }
 
 /** the panel over the weapons (see-through, the hits stay in reach): the sequence's cells, what is guessed, «Забрать» once done */
-export function ComboPanel({ c, bossId, onClose, onClaimed }: { c: ComboState; bossId: string; onClose: () => void; onClaimed: () => void }) {
+export function ComboPanel({ c, onClose }: { c: ComboState; bossId: string; onClose: () => void; onClaimed: () => void }) {
   return (
     <div className="combo-strip" role="region" aria-label="Комбо">
       <div className="combo-head">
@@ -59,7 +62,8 @@ export function ComboPanel({ c, bossId, onClose, onClaimed }: { c: ComboState; b
       <div className={`combo-cells n${c.length}`}>
         {Array.from({ length: c.length }, (_, i) => {
           const h = c.guessed[i];
-          return <span key={i} className={`combo-cell ${h ? "on" : ""} ${i === c.progress && !c.done ? "next" : ""}`}>{h ? <ItemArt id={h} size={34} /> : <i>?</i>}</span>;
+          const k = !h ? c.known?.[i] : undefined;
+          return <span key={i} className={`combo-cell ${h ? "on" : k ? "known" : ""} ${i === c.progress && !c.done ? "next" : ""}`}>{h ? <ItemArt id={h} size={34} /> : k ? <ItemArt id={k} size={34} /> : <i>?</i>}</span>;
         })}
         {c.done && <span className="combo-stamp">выполнено</span>}
       </div>
@@ -88,7 +92,7 @@ function StashPile({ ids }: { ids: string[] }) {
 }
 
 /** «КОМБО РАЗГАДАНО!»: the payout, «Забрать» */
-export function ComboDone({ c, bossId, onClose }: { c: ComboState; bossId: string; onClose: () => void }) {
+export function ComboDone({ c, onClose }: { c: ComboState; bossId: string; onClose: () => void }) {
   // the нычки lie in a heap — no count, just their pictures; the rest in the usual line
   const items = c.reward?.items ?? [];
   const stash = items.filter((i) => i.id.startsWith("stash-")).flatMap((i) => Array.from({ length: i.qty }, () => i.id));
@@ -103,6 +107,8 @@ export function ComboDone({ c, bossId, onClose }: { c: ComboState; bossId: strin
           {stash.length > 0 && <StashPile ids={stash} />}
           <GainLine r={rest} size={30} />
         </div>
+        {/* the payout is already his: «Забрать» only closes the window */}
+        <button type="button" className="btn gold combo-done-take" onClick={() => { haptic.big(); onClose(); }}>Забрать</button>
       </div>
     </div>
   );

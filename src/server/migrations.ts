@@ -1630,4 +1630,10 @@ CREATE TABLE IF NOT EXISTS combo_progress (
   PRIMARY KEY (player_id, day, boss_id, mode)
 );`,
   },
+  {
+    // «Комбо» done again in a new fight: how many times today
+    id: "v2-115-combo-runs",
+    sql: `ALTER TABLE combo_progress ADD COLUMN IF NOT EXISTS runs INT NOT NULL DEFAULT 0;
+UPDATE combo_progress SET runs = 1 WHERE done_at IS NOT NULL AND runs = 0;`,
+  },
 ];

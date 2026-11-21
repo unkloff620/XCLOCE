@@ -7,6 +7,7 @@ import { LOCATIONS } from "./locations.ts";
 import { POKER_HANDS } from "./games.ts";
 import { CRAFT_ITEMS, CRAFT_ITEMS_2, CRAFT_ITEMS_3 } from "./craft.ts";
 import { RAID_YARDS } from "./raids.ts";
+import { COMBO_MODES, hasCombo } from "./combo.ts";
 /** «Нычки»: a collection gathered once and ten times — 5 and 20 points */
 export const STASH_MEDAL_TARGETS = [1, 10] as const;
 const STASH_POINTS = [5, 20];
@@ -31,7 +32,7 @@ export type AchSection = "boss" | "eco" | "games" | "loc" | "stash" | "combo" | 
 /** `soon`: the tab is there, with «Скоро» instead of a list */
 export const ACH_SECTIONS: { id: AchSection; name: string; soon?: boolean }[] = [
   { id: "boss", name: "Боевые" }, { id: "eco", name: "Экономика" }, { id: "games", name: "Азартные" }, { id: "loc", name: "Локации" },
-  { id: "stash", name: "Нычки" }, { id: "combo", name: "Комбо", soon: true }, { id: "craft", name: "Крафт" },
+  { id: "stash", name: "Нычки" }, { id: "combo", name: "Комбо" }, { id: "craft", name: "Крафт" },
   { id: "workshop", name: "Мастерская", soon: true }, { id: "misc", name: "Прочее" }, { id: "clan", name: "Кланы" },
   { id: "events", name: "События", soon: true },
 ];
@@ -132,6 +133,8 @@ const ZONK_COMBOS: [string, string, number][] = [
   ["x3", "Три одинаковых", 10], ["ones3", "Три единицы", 10], ["pairs3", "Три пары", 10], ["x4", "Четыре одинаковых", 10],
   ["straight", "Стрит 1–6", 20], ["x5", "Пять одинаковых", 10], ["x6", "Шесть одинаковых", 10],
 ];
+/** «Комбо»: a boss's combo of a mode done 1, 5, 10, 25, 50 times */
+const COMBO_ACH_POINTS = [5, 10, 20, 30, 40];
 /** «Крафт»: every thing made, by its level */
 const CRAFT_POINTS = { 1: 5, 2: 10, 3: 20 } as const;
 
@@ -202,6 +205,19 @@ export const ACH_CATEGORIES: AchCategory[] = [
       id: `stashset-${st.n}-${k + 1}`, name: `${st.name} · ${t}`, hint: t === 1 ? `Собери коллекцию «${st.name}»` : `Собери коллекцию «${st.name}» ${t} раз`, stat: `stashsets:${st.n}`, target: t,
       icon: "chest", label: String(t), tier: (k ? 3 : 1) as AchTier, points: STASH_POINTS[k],
     })),
+  })),
+  // ---------------- Комбо: every boss with a combo, every mode — done 1 … 50 times, 5 … 40 points ----------------
+  ...FIGHT_BOSSES.filter((b) => hasCombo(b.id)).flatMap((b) => COMBO_MODES.map((m): AchCategory => {
+    const id = `combo-${b.id}-${m.id}`;
+    const runs = [1, 5, 10, 25, 50];
+    const kind = m.id === "pacan" ? "Пацанское" : m.id === "blat" ? "Блатное" : "Авторитетное";
+    return {
+      id, section: "combo", name: `${kind} комбо · ${b.name}`, icon: "ach-wins", kind: "list",
+      lines: runs.map((t, i) => line(id, i, runs.length, {
+        id: `${id}-${t}`, name: `${kind} комбо · ${t}`, hint: t === 1 ? `Разгадай ${kind.toLowerCase()} комбо босса ${b.name}` : `Разгадай ${kind.toLowerCase()} комбо босса ${b.name} ${t} раз`,
+        stat: `combo:${b.id}:${m.id}`, target: t, icon: b.id, label: String(t), boss: b.id, points: COMBO_ACH_POINTS[i],
+      })),
+    };
   })),
   // ---------------- Крафт: every thing made, one by one ----------------
   ...([[1, CRAFT_ITEMS, "ach-craft1"], [2, CRAFT_ITEMS_2, "ach-craft2"], [3, CRAFT_ITEMS_3, "ach-craft3"]] as const).map(([lv, list, icon]): AchCategory => ({
