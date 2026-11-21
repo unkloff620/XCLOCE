@@ -85,7 +85,7 @@ export const thingsFrom = (b: { name: string; event?: unknown; thingsMode?: keyo
 
 export const BOSSES: BossDef[] = [
   {
-    id: "datsik", perDay: 12, order: 1, card: "bronze", name: "Дацкоу", title: "Замороженный подчинённый Бабафея",
+    id: "datsik", order: 1, card: "bronze", name: "Дацкоу", title: "Замороженный подчинённый Бабафея",
     story: "Числится в штате, но давно заморожен. Оттаивает, только когда кто-то пытается пройти мимо.",
     hp: hp(0), reward: { xp: xp(0), currencies: { RUB: 5 } },
     wear: { items: ["tee-white", "jeans", "sneakers"], chance: 0.1, pity: 10 },

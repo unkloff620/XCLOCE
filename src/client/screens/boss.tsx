@@ -32,6 +32,8 @@ import { BOXERS, useBossStrike } from "../fx/boss-strike.tsx";
 import { FIGHT_MODES, fightMode, type FightMode } from "../../content/medals.ts";
 import { usePageReady } from "../route-loader.tsx";
 import { tattooSetsOfBoss } from "../../content/tattoos.ts";
+import { BossBoxButton, BossBoxWindow } from "./boss-box.tsx";
+import { bossBonus } from "../../content/boss-bonus.ts";
 import { ComboButton, ComboDone, ComboPanel, ComboPick } from "./combo.tsx";
 import { hasCombo, type ComboMode } from "../../content/combo.ts";
 import { BoostIcons, FightTray, HitLog, SidePanel, TopList, WeaponPanel, slotsOf } from "./fight-kit.tsx";
@@ -88,7 +90,7 @@ function useBossTalk(bossId: string, on: boolean, scared: boolean) {
 }
 
 
-function Arena({ boss, hp, hpMax, endsAt, fx, hit, ouch, rug, feed, full: fullScreen, strike }: { boss: BossDef; hp: number | null; hpMax: number; endsAt: number | null; fx: React.ReactNode; hit: boolean; ouch?: boolean; rug: boolean; feed: Hit[]; full?: boolean; strike?: "l" | "r" | null }) {
+function Arena({ boss, hp, hpMax, endsAt, fx, hit, ouch, rug, feed, full: fullScreen, strike, corner }: { boss: BossDef; hp: number | null; hpMax: number; endsAt: number | null; fx: React.ReactNode; hit: boolean; ouch?: boolean; rug: boolean; feed: Hit[]; full?: boolean; strike?: "l" | "r" | null; corner?: React.ReactNode }) {
   const now = useNow();
   const phase = boss.phases && hp !== null ? [...boss.phases].reverse().find((p) => pct(hp, hpMax) <= p.from) ?? boss.phases[0] : null;
   const hurt = hp !== null && pct(hp, hpMax) < 25;
@@ -106,6 +108,7 @@ function Arena({ boss, hp, hpMax, endsAt, fx, hit, ouch, rug, feed, full: fullSc
       {/* the boss talks from the upper left corner, off his body (it does not shake with him) */}
       {talk && <div key={talk.id} className={`boss-say ${dazed ? "scared" : ""}`}>{talk.text}</div>}
       <div className="arena-top">
+        {corner && <div className="arena-corner">{corner}</div>}
         {hp !== null ? <Bar value={hp} max={hpMax} tone="health" height={24} label={`${full(hp)} / ${full(hpMax)}`} /> : <Bar value={hpMax} max={hpMax} tone="health" height={24} label={`${full(hpMax)} HP`} />}
         {/* the fight's time runs down like the HP: the bar shortens as the 8 hours pass */}
         {endsAt && (
@@ -285,6 +288,8 @@ export function BossScreen({ id }: { id: string }) {
   // «Комбо»: its panel and the window when it is guessed
   const [comboOpen, setComboOpen] = useState(false);
   const [comboWin, setComboWin] = useState(false);
+  // «Дополнительная награда»: the boss's box window
+  const [boxOpen, setBoxOpen] = useState(false);
   const attack = async (weapon: string, rush = false, pack = 1) => {
     if (!hitGapOk()) return;
     const w = weaponById(weapon)!;
@@ -436,7 +441,9 @@ export function BossScreen({ id }: { id: string }) {
           <BossRulesHelp topic="boss" />
         </div>
         {boss.id === "utilizator" && <UtilizatorFront />}
-        <Arena full boss={boss} hp={hpShown} hpMax={hpMax} endsAt={state!.fight!.endsAt} fx={layer} hit={hitAnim} ouch={ouch} rug={rug} feed={[]} strike={strikeFx.side} />
+        <Arena full boss={boss} hp={hpShown} hpMax={hpMax} endsAt={state!.fight!.endsAt} fx={layer} hit={hitAnim} ouch={ouch} rug={rug} feed={[]} strike={strikeFx.side}
+          corner={view && bossBonus(boss.id).length ? <BossBoxButton bossId={boss.id} fightId={view.fightId} damage={view.myDamage} onOpen={() => setBoxOpen(true)} /> : null} />
+        {boxOpen && view && <BossBoxWindow bossId={boss.id} fightId={view.fightId} damage={view.myDamage} onClose={() => setBoxOpen(false)} />}
         {/* the side tabs: «Топ» on the left edge, «Инфо» (the hits) on the right — each slides its panel in */}
         <BoostIcons />
         <button type="button" className="fside l" onClick={() => { haptic.tap(); setTab("top"); }}><span>Топ</span></button>

@@ -6,8 +6,9 @@ import { gain, grantReward, idempotent, itemQty, ledger, moscowDay, nextMoscowMi
 import { BLAT_THING_CHANCE, BOTH_DROP_CHANCE, BOSSES, EVENT_FIGHTS, EXTRA_KEY_CHANCE, OPEN_BOSSES, bossById, bossOpen, KEY_RING, keyId, keyRingFits, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
 import { BAT, WEAPONS, itemById, rushPrice, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
-import { boostReward, mergeRewards, scaleReward } from "../../content/rewards.ts";
+import { boostReward, mergeRewards, scaleReward, type Reward } from "../../content/rewards.ts";
 import { BASE_CRIT_MULT, EQUIPMENT, PIECE_DROP_CHANCE, PIECE_PITY, ROOM_DEFS, ROOM_PITY, pieceUnlockId, roomUnlockId } from "../../content/home.ts";
+import { bonusReached } from "../../content/boss-bonus.ts";
 import { comboHit, comboRestart, comboView, type ComboView } from "./combo.ts";
 import { hasCombo, type ComboMode } from "../../content/combo.ts";
 import { CRIT_MULT_MAX, critChanceOf, reloadMin, talentExtras, talentsForDamage, weaponTalentBonus } from "../../content/talents.ts";
@@ -505,7 +506,9 @@ export async function claimFight(ctx: Ctx, fightId: number, see = true) {
   if (base.items?.length) base.items = await notOwnedUnique(ctx, base.items);
   // no craft parts for a win any more (the yard and the events give them)
   const parts: { id: string; qty: number }[] = [];
-  const granted = await grantReward(ctx, mergeRewards(base, { items: [...key, ...drops, ...tattoos, ...parts] }), `win:${def.id}`);
+  // «Дополнительная награда»: every stage of the boss's box reached with my damage in this fight (content/boss-bonus.ts)
+  const bonus = bonusReached(def.id, Number(f.my_damage)).reduce((r, st) => mergeRewards(r, st.reward), {} as Reward);
+  const granted = await grantReward(ctx, mergeRewards(mergeRewards(base, { items: [...key, ...drops, ...tattoos, ...parts] }), bonus), `win:${def.id}`);
   if (unlocked.length) granted.unlocks = unlocked;
   // «Взлом»: while the event is on, a box for the win (any mode, the same fair share as the pass)
   if (earnedKey) await heistDrop(ctx, def, granted);

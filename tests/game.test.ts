@@ -205,7 +205,7 @@ describe("boss fights: personal fights, shared damage", () => {
     expect((await fightView(db, a, fa.result.fightId, 0, T0 + 9 * H)).status).toBe("lost");
   });
 
-  it("only one running fight; 12 won fights a day with Дацкоу, lost fights do not count", async () => {
+  it("only one running fight; 7 won fights a day with Дацкоу (like the others), lost fights do not count", async () => {
     await setBossHp({ datsik: 10 });
     const p = await newPlayer(db);
     await give(db, p, "keyboard", 20);
@@ -217,7 +217,7 @@ describe("boss fights: personal fights, shared damage", () => {
       await startDatsik(p, T0 + i * M);
       await act(db, p, "fight_flee", {}, T0 + i * M);
     }
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 7; i++) {
       await startDatsik(p, T0 + (20 + i) * M);
       const r = await hit(p, "keyboard", T0 + (20 + i) * M);
       expect(r.result.status).toBe("won");
@@ -1065,7 +1065,7 @@ describe("home: equipment, rooms, look, help", () => {
     const { loadConfig } = await import("../src/server/config.ts");
     const cfg = await loadConfig(db, T0);
     const list = await bossList(db, p, cfg, T0);
-    expect(list.bosses[0].fightsPerDay).toBe(12 + 2); // Дацкоу: his own 12
+    expect(list.bosses[0].fightsPerDay).toBe(cfg.fight.perDay + 2); // Дацкоу: 7 like the others
     expect(list.bosses[1].fightsPerDay).toBe(cfg.fight.perDay + 2);
   });
 
@@ -2663,6 +2663,14 @@ describe("«Комбо»", () => {
     expect(a.days[0].bosses.some((b) => b.id === "datsik" || b.id === "mugo")).toBe(false);
     const g = a.days[0].bosses.find((b) => b.id === "garkusha")!;
     expect(g.modes.find((m) => m.mode === "blat")!.seq).toEqual(await comboSequence(db, moscowDay(T0), "garkusha", "blat"));
+  });
+
+  it("«Дополнительная награда»: Дацкоу's box — 300 damage in the fight: +1 pass, 700: +2 more, with the win", async () => {
+    const { bonusReached, bossBonus } = await import("../src/content/boss-bonus.ts");
+    expect(bossBonus("datsik").map((s) => s.damage)).toEqual([300, 700]);
+    expect(bonusReached("datsik", 299)).toHaveLength(0);
+    expect(bonusReached("datsik", 750)).toHaveLength(2);
+    expect(bossBonus("kedr")).toEqual([]);
   });
 
   it("the payout by the mode (the user's table)", async () => {
