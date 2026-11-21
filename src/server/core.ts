@@ -111,11 +111,11 @@ export async function addEnergy(ctx: Ctx, amount: number, reason: string): Promi
 
 // ---------------- «за сутки»: what a player gained, by the hour (the profile sums the last 24) ----------------
 export async function gain(ctx: Pick<Ctx, "q" | "pid" | "now">, key: string, amount: number, pid = ctx.pid) {
-  if (!(amount > 0)) return;
+  if (!amount || !Number.isFinite(amount)) return;
   const hour = new Date(Math.floor(ctx.now / 3_600_000) * 3_600_000);
   await ctx.q.query(
     "INSERT INTO player_gains (player_id, hour, key, amount) VALUES ($1,$2,$3,$4) ON CONFLICT (player_id, hour, key) DO UPDATE SET amount = player_gains.amount + EXCLUDED.amount",
-    [pid, hour, key, Math.floor(amount)],
+    [pid, hour, key, Math.trunc(amount)],
   );
   // the old hours go now and then
   if (Math.random() < 0.02) await ctx.q.query("DELETE FROM player_gains WHERE player_id=$1 AND hour < $2", [pid, new Date(hour.getTime() - 48 * 3_600_000)]);
@@ -192,11 +192,10 @@ export async function takeItem(ctx: Ctx, id: string, qty: number, reason: string
 
 export async function ledger(ctx: Ctx, kind: string, key: string, delta: number, reason: string) {
   await ctx.q.query("INSERT INTO ledger (player_id, kind, key, delta, reason, created_at) VALUES ($1,$2,$3,$4,$5,$6)", [ctx.pid, kind, key, delta, reason.slice(0, 60), new Date(ctx.now)]);
-  // «за сутки» in the profile: money, weapons, talents and energy gained (a talent reset gives back, it does not gain)
-  if (delta > 0) {
-    const day = kind === "currency" ? key : kind === "item" && itemById(key)?.weapon ? key : kind === "talent" && reason !== "talent-reset" ? "talents" : kind === "energy" ? "energy" : null;
-    if (day) await gain(ctx, day, delta);
-  }
+  // «за сутки» in the profile: money and weapons — what came in and went out (the net, + or −); talents — only gained
+  // (a talent reset gives back, it does not gain)
+  if (kind === "currency" || (kind === "item" && itemById(key)?.weapon)) await gain(ctx, key, delta);
+  else if (kind === "talent" && delta > 0 && reason !== "talent-reset") await gain(ctx, "talents", delta);
 }
 
 // ---------------- rewards ----------------

@@ -9,6 +9,7 @@ import { monthlyView } from "./monthly.ts";
 import { GameError, type Queryable } from "../db.ts";
 import { balances, energyCfgOf, energyNow, gainsDay, moscowDay, type Ctx, type PlayerRow } from "../core.ts";
 import { CURRENCIES, type Currency } from "../../content/currencies.ts";
+import { itemById } from "../../content/items.ts";
 import { fightHp, settleMyFight, settleMyWins, unlockedItems } from "./combat.ts";
 import { dealerBonus, inventoryView } from "./shop.ts";
 import { yardSync } from "./yard.ts";
@@ -16,7 +17,7 @@ import { levelFromXp } from "../../content/levels.ts";
 import { OPEN_BOSSES } from "../../content/bosses.ts";
 import { WEAPONS } from "../../content/items.ts";
 import { LOCATIONS } from "../../content/locations.ts";
-import { normalizeLook, beardLevel } from "../../content/home.ts";
+import { normalizeLook, beardLevel, unshavenDays } from "../../content/home.ts";
 import { touchActivity } from "../players.ts";
 import { dailyView } from "./daily.ts";
 import { renameView, slotsView } from "./extras.ts";
@@ -196,16 +197,22 @@ export async function profileView(q: Queryable, viewer: number, pid: number, cfg
     id: p.id, self, name: p.display_name, username: p.username, photo: p.photo_url, place: Number(pl?.place ?? 0),
     achPoints: Number((p as PlayerRow & { ach_points?: number }).ach_points ?? 0),
     cases: await casesView(q, pid),
-    arsenal: stockIds.map((id) => ({ id, qty: Number(stock.find((r) => r.item_id === id)?.qty ?? 0) })).filter((w) => w.qty > 0),
+    arsenal: self ? stockIds.map((id) => ({ id, qty: Number(stock.find((r) => r.item_id === id)?.qty ?? 0) })).filter((w) => w.qty > 0) : [],
     // what he gained in the last 24 hours (the money and energy only for himself, as the balances)
+    // other players do not see his money and weapons (only the most he ever had, in the achievements)
     day: await (async () => {
       const d = await gainsDay(q, pid, now);
-      return self ? d : Object.fromEntries(Object.entries(d).filter(([k]) => !CURRENCIES.includes(k as Currency) && k !== "energy"));
+      return self ? d : Object.fromEntries(Object.entries(d).filter(([k]) => !CURRENCIES.includes(k as Currency) && !itemById(k)?.weapon));
+    })(),
+    beardDays: await (async () => {
+      const [sh] = await q.query<{ shaved_at: Date | null }>("SELECT shaved_at FROM players WHERE id=$1", [pid]);
+      return sh?.shaved_at ? unshavenDays(new Date(sh.shaved_at).getTime(), now) : 0;
     })(),
     level: lv.level, xp: Number(p.xp), levelXp: lv.into, levelNeed: lv.need,
     firstSeen: new Date(p.created_at).getTime(), lastSeen: new Date(p.last_seen_at).getTime(), activeDays: p.active_days,
     wallet: self ? await balances(q, pid) : null,
     energy: self ? e.energy : null,
+    energyMax: self ? energyCfgOf(cfg, p).max : null,
     stats: {
       totalDamage: Number(s?.total_damage ?? 0), weapons: s?.weapons ?? {}, taskSteps: s?.task_steps ?? 0, tasksDone: s?.tasks_done ?? 0,
       locationsDone: clears.n, locationsTotal: LOCATIONS.length, yardFound: s?.yard_found ?? 0, rewardsGot: s?.rewards_got ?? 0,

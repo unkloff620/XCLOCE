@@ -152,7 +152,10 @@ describe("achievements and someone's profile", () => {
     expect((await profileView(db, p, p, await loadConfig(db), T0 + 25 * 3_600_000)).day).toEqual({});
     // someone else sees no money or energy of his
     const other = await profileView(db, viewer, p, await loadConfig(db), T0);
-    expect(Object.keys(other.day).some((k) => ["RUB", "PAP", "energy"].includes(k))).toBe(false);
+    expect(Object.keys(other.day).some((k) => ["RUB", "PAP", "keyboard"].includes(k))).toBe(false);
+    expect(other.arsenal).toEqual([]);
+    // the weapon spent on the hit: the day's net goes down
+    expect(mine.day.keyboard).toBe(-1);
   });
 
   it("clan settings: only the leader edits name, emblem, colour and description", async () => {
