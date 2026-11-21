@@ -81,24 +81,31 @@ export function BossBoxWindow({ bossId, fightId, damage, onClose }: { bossId: st
       <div className="bbox-win" role="dialog" aria-label="Дополнительная награда">
         {layer("board")}
         <b className="bbox-title display">Дополнительная награда</b>
-        <span className="bbox-text">
-          {done ? <>За {full(stage.damage)} урона — при победе:</> : <>Нанеси боссу {full(stage.damage)} урона в этом бою и победи</>}
-        </span>
+        {/* the pin's plank stands behind the bar; once the stage is open its reward lies on it */}
+        <div className="bbox-pin" style={{ transform: `translateX(${shift}%)` }}>
+          {layer("plank")}
+        </div>
         {layer("bar")}
         <span className="bbox-progress" style={{ left: `${bl}%`, top: `${bt}%`, width: `${(PIN_AT - bl) * frac + (frac >= 1 ? br - PIN_AT : 0)}%`, height: `${bb - bt}%` }} />
         <span className="bbox-dmg num" style={{ left: `${bl + 1.5}%`, top: `${bt}%`, height: `${bb - bt}%` }}>{full(Math.min(damage, stage.damage))} / {full(stage.damage)}</span>
-        {/* the pin assembly, moved to the stage's place on the bar */}
-        <div className={`bbox-pin ${anim}`} style={{ transform: `translateX(${(shift / 100) * 100}%)`, ["--shift" as string]: `${shift}%` }}>
-          {layer("plank")}
+        {/* the pin, its clamps, the nut and the plate — over the bar, at the stage's place */}
+        <div className={`bbox-pin ${anim}`} style={{ transform: `translateX(${shift}%)` }}>
           {layer("pin", "pinrod")}
           {layer("clamps")}
           {layer("nut", "nut")}
           {layer("plate", "plate")}
+          {/* the stage open: its reward on the plank, where the plate hung */}
+          {done && (
+            <span className="bbox-plank-gain" style={{ left: `${BOX_LAYERS.plank[0]}%`, top: `${BOX_LAYERS.plate[1] - 1}%`, width: `${BOX_LAYERS.plank[2]}%`, height: `${BOX_LAYERS.plate[3] + 2}%` }}>
+              <GainLine r={stage.reward} size={22} />
+            </span>
+          )}
           <span className="bbox-plate-n num plate" style={{ left: `${BOX_LAYERS.plate[0]}%`, top: `${BOX_LAYERS.plate[1]}%`, width: `${BOX_LAYERS.plate[2]}%`, height: `${BOX_LAYERS.plate[3]}%` }}>{short(stage.damage)}</span>
         </div>
-        <div className="bbox-foot">
-          {done ? <GainLine r={stage.reward} size={26} /> : <span className="bbox-step">Этап {i + 1} из {stages.length}</span>}
-        </div>
+        {!done && <div className="bbox-foot"><span className="bbox-step">Этап {i + 1} из {stages.length}</span></div>}
+        <span className="bbox-text">
+          {done ? <>За {full(stage.damage)} урона — при победе:</> : <>Нанеси боссу {full(stage.damage)} урона в этом бою и победи</>}
+        </span>
         <button type="button" className="bbox-x" onClick={onClose} aria-label="Закрыть">×</button>
         {done && phase.kind === "shown" && seen < stages.length && (
           <button type="button" className="btn gold sm bbox-next" onClick={() => { haptic.tap(); setPhase({ kind: "idle" }); }}>Дальше</button>

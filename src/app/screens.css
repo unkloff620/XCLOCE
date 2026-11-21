@@ -7408,7 +7408,7 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .bbox-win { position: relative; width: min(100%, 540px); aspect-ratio: 1.8165; container-type: inline-size; animation: combo-pop 0.35s cubic-bezier(0.2, 1.4, 0.4, 1) both; }
 .bbox-l { position: absolute; display: block; pointer-events: none; }
 .bbox-title { position: absolute; left: 8%; right: 8%; top: 6.5%; text-align: center; white-space: nowrap; font-size: 4.4cqi; color: #fff6e4; text-transform: uppercase; -webkit-text-stroke: 0.5cqi #3a1d0c; paint-order: stroke fill; }
-.bbox-text { position: absolute; left: 6%; right: 22%; top: 19%; text-align: center; font-size: 3cqi; line-height: 1.2; font-weight: 700; color: #fff0d8; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); }
+.bbox-text { position: absolute; left: 8%; right: 8%; top: 16.5%; z-index: 2; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 2.5cqi; font-weight: 700; line-height: 1.2; color: #fff0d8; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); }
 .bbox-progress { position: absolute; border-radius: 0.6cqi; background: linear-gradient(180deg, #ffd65a, #e48a12); box-shadow: inset 0 -0.6cqi 0 rgba(0, 0, 0, 0.18); transition: width 0.5s ease-out; }
 .bbox-dmg { position: absolute; display: flex; align-items: center; font-size: 3cqi; font-weight: 800; color: #fff; text-shadow: 0 1px 2px #000; }
 /* the pin assembly: the whole stage, moved along the bar */
@@ -7433,6 +7433,10 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 @keyframes bbox-pin { 0% { transform: none; opacity: 1; } 20% { transform: translateY(-5%); } 100% { transform: translateY(240%) rotate(-12deg); opacity: 0; } }
 .bbox-foot { position: absolute; left: 8%; right: 8%; top: 81%; height: 12%; display: flex; align-items: center; justify-content: center; }
 .bbox-foot .gain-line { color: #fff; justify-content: center; flex-wrap: wrap; gap: 4px 12px; }
+/* the reward on the pin's plank, under the bar */
+.bbox-plank-gain { position: absolute; display: flex; align-items: center; justify-content: center; animation: combo-pop 0.35s cubic-bezier(0.2, 1.4, 0.4, 1) both; }
+.bbox-plank-gain .gain-line { flex-wrap: nowrap; align-items: center; gap: 2px; color: #fff; font-size: 2.6cqi; text-shadow: 0 1px 2px #000; }
+.bbox-plank-gain svg { width: 6cqi !important; height: 6cqi !important; }
 .bbox-step { font-size: 3cqi; font-weight: 700; color: #ffe2b8; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); }
 .bbox-x { position: absolute; top: 4%; right: 3.5%; width: 7cqi; height: 7cqi; border: 0; border-radius: 1.4cqi; background: rgba(0, 0, 0, 0.4); color: #fff; font-size: 4.6cqi; line-height: 1; }
 .bbox-next { position: absolute; right: 4%; bottom: -12%; }
