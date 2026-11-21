@@ -7,7 +7,8 @@ import { autosView } from "./autos.ts";
 import { fortuneOn, isAdminPlayer } from "./fortune.ts";
 import { monthlyView } from "./monthly.ts";
 import { GameError, type Queryable } from "../db.ts";
-import { balances, energyCfgOf, energyNow, moscowDay, type Ctx, type PlayerRow } from "../core.ts";
+import { balances, energyCfgOf, energyNow, gainsDay, moscowDay, type Ctx, type PlayerRow } from "../core.ts";
+import { CURRENCIES, type Currency } from "../../content/currencies.ts";
 import { fightHp, settleMyFight, settleMyWins, unlockedItems } from "./combat.ts";
 import { dealerBonus, inventoryView } from "./shop.ts";
 import { yardSync } from "./yard.ts";
@@ -196,6 +197,11 @@ export async function profileView(q: Queryable, viewer: number, pid: number, cfg
     achPoints: Number((p as PlayerRow & { ach_points?: number }).ach_points ?? 0),
     cases: await casesView(q, pid),
     arsenal: stockIds.map((id) => ({ id, qty: Number(stock.find((r) => r.item_id === id)?.qty ?? 0) })).filter((w) => w.qty > 0),
+    // what he gained in the last 24 hours (the money and energy only for himself, as the balances)
+    day: await (async () => {
+      const d = await gainsDay(q, pid, now);
+      return self ? d : Object.fromEntries(Object.entries(d).filter(([k]) => !CURRENCIES.includes(k as Currency) && k !== "energy"));
+    })(),
     level: lv.level, xp: Number(p.xp), levelXp: lv.into, levelNeed: lv.need,
     firstSeen: new Date(p.created_at).getTime(), lastSeen: new Date(p.last_seen_at).getTime(), activeDays: p.active_days,
     wallet: self ? await balances(q, pid) : null,

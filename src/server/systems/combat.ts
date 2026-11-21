@@ -2,7 +2,7 @@ import { autoSpendTalents } from "./home.ts";
 import { monthTick } from "./monthly.ts";
 import { shodBoostMult, shodTick } from "./shodnyak.ts";
 import { GameError, type Queryable } from "../db.ts";
-import { grantReward, idempotent, itemQty, ledger, moscowDay, nextMoscowMidnight, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
+import { gain, grantReward, idempotent, itemQty, ledger, moscowDay, nextMoscowMidnight, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { BLAT_THING_CHANCE, BOTH_DROP_CHANCE, BOSSES, EVENT_FIGHTS, EXTRA_KEY_CHANCE, OPEN_BOSSES, bossById, bossOpen, KEY_RING, keyId, keyRingFits, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
 import { BAT, WEAPONS, itemById, rushPrice, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
@@ -330,6 +330,7 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1
       "UPDATE player_stats SET total_damage = total_damage + $2, weapons = jsonb_set(weapons, ARRAY[$3::text], to_jsonb(COALESCE((weapons->>$3)::int, 0) + $4)) WHERE player_id=$1",
       [ctx.pid, damage, w.id, count],
     );
+  await gain(ctx, "damage", damage);
 
     // every running fight (with any boss) whose HP reached zero is won by this hit
     const won = await ctx.q.query<{ id: number; player_id: number; boss_id: string }>(

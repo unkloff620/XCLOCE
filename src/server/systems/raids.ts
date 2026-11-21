@@ -6,7 +6,7 @@
  * No raid while a boss fight runs (and no boss fight while a raid fight runs).
  */
 import { GameError, type Queryable } from "../db.ts";
-import { grantReward, itemQty, ledger, takeItem, type Ctx, type Granted } from "../core.ts";
+import { gain, grantReward, itemQty, ledger, takeItem, type Ctx, type Granted } from "../core.ts";
 import { TATTOO_SETS } from "../../content/tattoos.ts";
 import { autoSpendTalents } from "./home.ts";
 import { talentsForDamage } from "../../content/talents.ts";
@@ -165,6 +165,7 @@ export async function raidAttack(ctx: Ctx, weaponId: string, want = 1, rush = fa
   const talentDamage = before + hit.damage;
   const talentsGained = talentsForDamage(talentDamage) - talentsForDamage(before);
   await ctx.q.query("UPDATE player_stats SET total_damage = total_damage + $2 WHERE player_id=$1", [ctx.pid, hit.damage]);
+  await gain(ctx, "damage", hit.damage);
   if (talentsGained > 0) {
     await ctx.q.query("UPDATE players SET talents = talents + $2 WHERE id=$1", [ctx.pid, talentsGained]);
     await ledger(ctx, "talent", "talent", talentsGained, `raid:${f.building_id}`);

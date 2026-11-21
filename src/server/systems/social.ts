@@ -1,5 +1,5 @@
 import { GameError, type Queryable } from "../db.ts";
-import { grantReward, moscowDay, type Ctx } from "../core.ts";
+import { gain, grantReward, moscowDay, type Ctx } from "../core.ts";
 import { FIGHT_COOLDOWN_MS, FIGHT_DAY_MAX, FIGHT_WIN, NOTE_KEEP_MS, SOCIAL_COOLDOWN_MS, fightChance } from "../../content/social.ts";
 import { rollParts } from "../../content/craft-drops.ts";
 import { mergeRewards } from "../../content/rewards.ts";
@@ -49,6 +49,7 @@ export async function pump(ctx: Ctx, to: number) {
   const [u] = await ctx.q.query<{ n: number }>(
     "INSERT INTO player_biceps (player_id, n) VALUES ($1,1) ON CONFLICT (player_id) DO UPDATE SET n = player_biceps.n + 1 RETURNING n", [p.id]);
   await log(ctx, "pump", to);
+  await gain(ctx, "biceps", 1, p.id);
   return { biceps: Number(u.n) };
 }
 

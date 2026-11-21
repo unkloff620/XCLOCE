@@ -1592,4 +1592,15 @@ DELETE FROM location_business;`,
     sql: `DELETE FROM achievements;
 UPDATE players SET ach_points = 0, ach_boxes_opened = 0;`,
   },
+  {
+    // «за сутки» in the profile: what a player gained, by the hour (core.ts gain)
+    id: "v2-112-player-gains",
+    sql: `CREATE TABLE IF NOT EXISTS player_gains (
+  player_id INT NOT NULL,
+  hour TIMESTAMPTZ NOT NULL,
+  key TEXT NOT NULL,
+  amount BIGINT NOT NULL DEFAULT 0,
+  PRIMARY KEY (player_id, hour, key)
+);`,
+  },
 ];

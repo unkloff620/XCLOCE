@@ -2960,7 +2960,9 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 .dos-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .dos-facts span { display: flex; flex-direction: column; gap: 1px; padding: 6px 8px; border-radius: 10px; background: rgba(0, 0, 0, 0.22); min-width: 0; }
 .dos-facts small { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
-.dos-facts b { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; min-width: 0; }
+.dos-facts b { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; min-width: 0; flex-wrap: wrap; }
+/* «за сутки»: what was gained in the last 24 hours, after a value */
+.day-plus { font-style: normal; font-weight: 400; font-size: 0.82em; opacity: 0.55; margin-left: 5px; white-space: nowrap; }
 
 /* buttons never break their text over two lines */
 .btn { white-space: nowrap; }

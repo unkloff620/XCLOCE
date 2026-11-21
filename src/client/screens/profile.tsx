@@ -28,7 +28,14 @@ import { peekAchFocus } from "../ach-focus.ts";
 import { CasesPanel, type CaseRow } from "../cases.tsx";
 import { TalentPanel } from "./talents.tsx";
 import { EYE_COLORS, SKIN_TONES, type Look } from "../../content/home.ts";
-import { clock, full, money, short } from "../format.ts";
+import { clock, full, money } from "../format.ts";
+
+/** the names in the «Сводка» balances (the user 2026-11-21) */
+const BALANCE_NAMES: Partial<Record<string, string>> = { PAP: "Папиросы", TOOTH: "Зубы", RUB: "Рубли", TOKEN: "Жетон", GOLD: "Слитки" };
+/** «+120 216»: what was gained in the last 24 hours, thin and a little see-through, after the value */
+function DayPlus({ n }: { n?: number }) {
+  return n && n > 0 ? <i className="day-plus num">+{full(n)}</i> : null;
+}
 
 interface Profile {
   id: number; self: boolean; name: string; username: string | null; photo: string | null; place?: number;
@@ -36,6 +43,8 @@ interface Profile {
   firstSeen: number; lastSeen: number; activeDays: number;
   wallet: Record<Currency, number> | null; energy: number | null;
   arsenal?: { id: string; qty: number }[];
+  /** what was gained in the last 24 hours: currencies, weapons by id, xp, damage, talents, biceps, energy */
+  day?: Record<string, number>;
   achPoints?: number;
   cases?: CaseRow[];
   stats: { totalDamage: number; weapons: Record<string, number>; taskSteps: number; tasksDone: number; locationsDone: number; locationsTotal: number; yardFound: number; rewardsGot: number; fightsWon: number; fightsLost: number };
@@ -532,9 +541,10 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
                 <div className="grow"><Bar value={p.levelXp} max={p.levelNeed || 1} tone="violet" label={p.levelNeed ? `${full(p.levelXp)} / ${full(p.levelNeed)}` : "макс."} /></div>
               </div>
               <div className="dos-facts">
-                <span><small>Авторитет</small><b className="num"><Icon name="xp" size={16} />{full(p.xp)}</b></span>
-                <span><small>Бицуха</small><b className="num"><BicepsArt size={18} />{full(p.social?.biceps ?? 0)}</b></span>
-                <span><small>Таланты</small><b className="num"><Icon name="talent" size={16} />{full(p.talentsIn ?? 0)}</b></span>
+                <span><small>Авторитет</small><b className="num"><Icon name="xp" size={16} />{full(p.xp)}<DayPlus n={p.day?.xp} /></b></span>
+                <span><small>Бицуха</small><b className="num"><BicepsArt size={18} />{full(p.social?.biceps ?? 0)}<DayPlus n={p.day?.biceps} /></b></span>
+                <span><small>Таланты</small><b className="num"><Icon name="talent" size={16} />{full(p.talentsIn ?? 0)}<DayPlus n={p.day?.talents} /></b></span>
+                <span><small>Урон</small><b className="num"><Icon name="swords" size={16} />{full(s.totalDamage)}<DayPlus n={p.day?.damage} /></b></span>
                 <span><small>В игре с</small><b>{shortDate(p.firstSeen)}</b></span>
                 <span><small>Дней в игре</small><b className="num">{full(p.activeDays)}</b></span>
                 <span><small>Был в игре</small><b>{shortDate(p.lastSeen)}</b></span>
@@ -545,26 +555,18 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
                   {CURRENCIES.map((c) => (
                     <div key={c} className="balance-row">
                       <Icon name={c} size={24} />
-                      <span className="balance-name">{CURRENCY_DEFS[c].name}</span>
-                      <b className="balance-val num">{money(c, p.wallet![c])}</b>
+                      <span className="balance-name">{BALANCE_NAMES[c] ?? CURRENCY_DEFS[c].name}</span>
+                      <b className="balance-val num">{money(c, p.wallet![c])}<DayPlus n={p.day?.[c]} /></b>
                     </div>
                   ))}
                   {p.energy !== null && (
-                    <div className="balance-row"><Icon name="energy" size={24} /><span className="balance-name">Энергия</span><b className="balance-val num">{full(p.energy)}</b></div>
+                    <div className="balance-row"><Icon name="energy" size={24} /><span className="balance-name">Энергетик</span><b className="balance-val num">{full(p.energy)}<DayPlus n={p.day?.energy} /></b></div>
                   )}
                 </div>
               )}
-              <div className="stat-grid">
-                <div><b className="num">{short(s.totalDamage)}</b><span>урона боссам</span></div>
-                <div><b className="num">{s.fightsWon}</b><span>побед</span></div>
-                <div><b className="num">{s.fightsLost}</b><span>поражений</span></div>
-                <div><b className="num">{s.locationsDone}/{s.locationsTotal}</b><span>локаций</span></div>
-                <div><b className="num">{s.tasksDone}</b><span>заданий</span></div>
-                <div><b className="num">{s.yardFound}</b><span>находок</span></div>
-              </div>
               {!!p.arsenal?.length && (
                 <div className="row" style={{ flexWrap: "wrap", gap: 6 }}>
-                  {p.arsenal.map((w) => <span key={w.id} className="chip" title={itemById(w.id)?.name}><ItemArt id={w.id} size={22} />×{full(w.qty)}</span>)}
+                  {p.arsenal.map((w) => <span key={w.id} className="chip" title={itemById(w.id)?.name}><ItemArt id={w.id} size={22} />×{full(w.qty)}<DayPlus n={p.day?.[w.id]} /></span>)}
                 </div>
               )}
             </div>

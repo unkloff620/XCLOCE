@@ -109,6 +109,23 @@ export async function addEnergy(ctx: Ctx, amount: number, reason: string): Promi
   return total;
 }
 
+// ---------------- «за сутки»: what a player gained, by the hour (the profile sums the last 24) ----------------
+export async function gain(ctx: Pick<Ctx, "q" | "pid" | "now">, key: string, amount: number, pid = ctx.pid) {
+  if (!(amount > 0)) return;
+  const hour = new Date(Math.floor(ctx.now / 3_600_000) * 3_600_000);
+  await ctx.q.query(
+    "INSERT INTO player_gains (player_id, hour, key, amount) VALUES ($1,$2,$3,$4) ON CONFLICT (player_id, hour, key) DO UPDATE SET amount = player_gains.amount + EXCLUDED.amount",
+    [pid, hour, key, Math.floor(amount)],
+  );
+  // the old hours go now and then
+  if (Math.random() < 0.02) await ctx.q.query("DELETE FROM player_gains WHERE player_id=$1 AND hour < $2", [pid, new Date(hour.getTime() - 48 * 3_600_000)]);
+}
+export async function gainsDay(q: Queryable, pid: number, now: number): Promise<Record<string, number>> {
+  const from = new Date(Math.floor(now / 3_600_000) * 3_600_000 - 23 * 3_600_000);
+  const rows = await q.query<{ key: string; n: number }>("SELECT key, SUM(amount)::bigint AS n FROM player_gains WHERE player_id=$1 AND hour >= $2 GROUP BY key", [pid, from]);
+  return Object.fromEntries(rows.map((r) => [r.key, Number(r.n)]));
+}
+
 // ---------------- wallets ----------------
 export async function balances(q: Queryable, pid: number): Promise<Record<Currency, number>> {
   const rows = await q.query<{ currency: Currency; amount: number }>("SELECT currency, amount FROM wallets WHERE player_id=$1", [pid]);
@@ -175,6 +192,11 @@ export async function takeItem(ctx: Ctx, id: string, qty: number, reason: string
 
 export async function ledger(ctx: Ctx, kind: string, key: string, delta: number, reason: string) {
   await ctx.q.query("INSERT INTO ledger (player_id, kind, key, delta, reason, created_at) VALUES ($1,$2,$3,$4,$5,$6)", [ctx.pid, kind, key, delta, reason.slice(0, 60), new Date(ctx.now)]);
+  // «за сутки» in the profile: money, weapons, talents and energy gained (a talent reset gives back, it does not gain)
+  if (delta > 0) {
+    const day = kind === "currency" ? key : kind === "item" && itemById(key)?.weapon ? key : kind === "talent" && reason !== "talent-reset" ? "talents" : kind === "energy" ? "energy" : null;
+    if (day) await gain(ctx, day, delta);
+  }
 }
 
 // ---------------- rewards ----------------
@@ -215,6 +237,7 @@ export async function grantReward(ctx: Ctx, r: Reward, reason: string): Promise<
   if (r.xp) {
     const [p] = await ctx.q.query<{ xp: number }>("UPDATE players SET xp = xp + $2 WHERE id=$1 RETURNING xp", [ctx.pid, r.xp]);
     out.xp = r.xp;
+    await gain(ctx, "xp", r.xp);
     const before = levelFromXp(p.xp - r.xp, ctx.cfg.levels).level;
     const after = levelFromXp(p.xp, ctx.cfg.levels).level;
     if (after > before) out.levelUp = { from: before, to: after };

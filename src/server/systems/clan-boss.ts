@@ -1,6 +1,6 @@
 import { autoSpendTalents } from "./home.ts";
 import { GameError, type Queryable } from "../db.ts";
-import { ledger, nextWeekAt, weekKey, weekStart, type Ctx } from "../core.ts";
+import { gain, ledger, nextWeekAt, weekKey, weekStart, type Ctx } from "../core.ts";
 import { weaponById } from "../../content/items.ts";
 import { bossById } from "../../content/bosses.ts";
 import { talentsForDamage } from "../../content/talents.ts";
@@ -93,6 +93,7 @@ export async function hitClanBoss(ctx: Ctx, weaponId: string, want = 1) {
   const before = Number(st?.total_damage ?? 0);
   const gained = talentsForDamage(before + hit.damage) - talentsForDamage(before);
   await ctx.q.query("UPDATE player_stats SET total_damage = total_damage + $2 WHERE player_id=$1", [ctx.pid, hit.damage]);
+  await gain(ctx, "damage", hit.damage);
   if (gained > 0) {
     await ctx.q.query("UPDATE players SET talents = talents + $2 WHERE id=$1", [ctx.pid, gained]);
     await ledger(ctx, "talent", "talent", gained, `clan-boss:${week}`);

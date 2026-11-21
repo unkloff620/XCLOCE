@@ -137,6 +137,24 @@ describe("achievements and someone's profile", () => {
     expect((await act(db, p, "achievement_claim", { id: "clan-leave" }, T0)).result.reward.achPoints).toBe(20);
   });
 
+  it("«за сутки» in the profile: money, weapons, authority and damage gained in the last 24 hours", async () => {
+    const p = await newPlayer(db);
+    const viewer = await newPlayer(db);
+    await give(db, p, "keyboard", 3);
+    await act(db, p, "fight_start", { boss: "datsik" }, T0);
+    await act(db, p, "attack", { weapon: "keyboard" }, T0, always(0.99));
+    await give(db, p, "lost-wallet", 1);
+    await act(db, p, "sell", { itemId: "lost-wallet", qty: 1 }, T0);
+    const mine = await profileView(db, p, p, await loadConfig(db), T0);
+    expect(mine.day.RUB).toBe(150);
+    expect(mine.day.damage).toBeGreaterThan(0);
+    // a day later it is gone
+    expect((await profileView(db, p, p, await loadConfig(db), T0 + 25 * 3_600_000)).day).toEqual({});
+    // someone else sees no money or energy of his
+    const other = await profileView(db, viewer, p, await loadConfig(db), T0);
+    expect(Object.keys(other.day).some((k) => ["RUB", "PAP", "energy"].includes(k))).toBe(false);
+  });
+
   it("clan settings: only the leader edits name, emblem, colour and description", async () => {
     const a = await newPlayer(db);
     const b = await newPlayer(db);
