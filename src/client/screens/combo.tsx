@@ -8,9 +8,7 @@ import { COMBO_MODES, comboMode, type ComboMode } from "../../content/combo.ts";
 import type { Reward } from "../../content/rewards.ts";
 import { ItemArt } from "../art/items.tsx";
 import { GainLine } from "../ui.tsx";
-import { useGame } from "../store.tsx";
 import { haptic } from "../telegram.ts";
-import { sfx } from "../sound.ts";
 
 export interface ComboState {
   mode: ComboMode;
@@ -65,25 +63,7 @@ export function ComboPanel({ c, bossId, onClose, onClaimed }: { c: ComboState; b
         })}
         {c.done && <span className="combo-stamp">выполнено</span>}
       </div>
-      {c.done && !c.claimed && <ClaimButton bossId={bossId} mode={c.mode} onClaimed={onClaimed} />}
     </div>
-  );
-}
-
-function ClaimButton({ bossId, mode, onClaimed }: { bossId: string; mode: ComboMode; onClaimed: () => void }) {
-  const { act, busy } = useGame();
-  return (
-    <button type="button" className="btn gold block combo-take" disabled={busy === "combo_claim"}
-      onClick={async () => {
-        const r = await act("combo_claim", { boss: bossId, mode });
-        if (r) {
-          haptic.big();
-          sfx("reward");
-          onClaimed();
-        }
-      }}>
-      Забрать
-    </button>
   );
 }
 
@@ -123,7 +103,6 @@ export function ComboDone({ c, bossId, onClose }: { c: ComboState; bossId: strin
           {stash.length > 0 && <StashPile ids={stash} />}
           <GainLine r={rest} size={30} />
         </div>
-        {!c.claimed && <ClaimButton bossId={bossId} mode={c.mode} onClaimed={onClose} />}
       </div>
     </div>
   );

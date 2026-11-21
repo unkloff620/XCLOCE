@@ -26,21 +26,14 @@ export const COMBO_FREE = ["fist", "mouse", "red-candle"];
 export const COMBO_BAT = "bat";
 /** a wrong hit keeps the progress this often */
 export const COMBO_KEEP = 0.1;
-/** «Пацанский»: a step is a weapon this rarely (when the boss uses weapons) */
-const PACAN_WEAPON = 0.06;
+/** «Блатной» and «Авторитетный»: each weapon (нож, пистолет, автомат) is in the sequence this many times — never more
+ *  than the payout gives back (the user 2026-11-21); «Пацанский» — the hand hits only (кулак, глаза, пинок) */
+export const COMBO_WEAPON_HITS: [number, number] = [1, 2];
+export const COMBO_WEAPONS = ["keyboard", "gpu", "rug-pull-gun"];
 
 /** the weak bosses (before Гаркуша) have no combo (the user 2026-11-21) */
 export const NO_COMBO = new Set(["datsik", "kedr", "mugo"]);
 export const hasCombo = (bossId: string) => !NO_COMBO.has(bossId);
-
-/** the weapons a boss's combo may ask for (нож, пистолет, автомат) */
-export const COMBO_WEAPONS: Record<string, string[]> = {
-  garkusha: ["keyboard"], bebyakyan: ["keyboard"], babafey: ["keyboard"],
-  vodovoz: ["keyboard", "gpu"], knyaz: ["keyboard", "gpu"], vadim: ["keyboard", "gpu"],
-  botsman: ["keyboard", "gpu", "rug-pull-gun"], utilizator: ["keyboard", "gpu", "rug-pull-gun"],
-  fokus: ["keyboard", "gpu", "rug-pull-gun"], solntse: ["keyboard", "gpu", "rug-pull-gun"],
-  pepe: [],
-};
 
 const hash = (s: string) => [...s].reduce((h, c) => (Math.imul(h, 31) + c.charCodeAt(0)) >>> 0, 2166136261);
 /** a small seeded random (mulberry32) */
@@ -62,18 +55,27 @@ function seeded(seed: number) {
 export function comboSequence(day: string, bossId: string, mode: ComboMode, salt = ""): string[] {
   const def = comboMode(mode)!;
   const rnd = seeded(hash(`combo:${salt}:${day}:${bossId}:${mode}`));
-  const weapons = COMBO_WEAPONS[bossId] ?? [];
-  const pool = mode === "pacan" ? COMBO_FREE : [...COMBO_FREE, COMBO_BAT];
-  const out: string[] = [];
-  for (let i = 0; i < def.length; i++) {
-    const weapon = weapons.length > 0 && rnd() < (mode === "pacan" ? PACAN_WEAPON : 0.22);
-    const from = weapon ? weapons : pool;
-    let h = from[Math.floor(rnd() * from.length) % from.length];
-    // never three of the same in a row
-    if (out.length >= 2 && out[out.length - 1] === h && out[out.length - 2] === h) h = pool[(pool.indexOf(h) + 1) % pool.length];
-    out.push(h);
+  const pick = <T,>(xs: T[]) => xs[Math.floor(rnd() * xs.length) % xs.length];
+  const out: (string | null)[] = Array(def.length).fill(null);
+  // the weapons first, each 1–2 times, on free places
+  if (mode !== "pacan") {
+    const [lo, hi] = COMBO_WEAPON_HITS;
+    for (const w of COMBO_WEAPONS) {
+      for (let k = lo + Math.floor(rnd() * (hi - lo + 1)); k > 0; k--) {
+        const free = out.map((x, i) => (x ? -1 : i)).filter((i) => i >= 0);
+        if (free.length) out[pick(free)] = w;
+      }
+    }
   }
-  return out;
+  // the rest: the hand hits (and the bat, but not in «Пацанский»), never three of the same in a row
+  const pool = mode === "pacan" ? COMBO_FREE : [...COMBO_FREE, COMBO_BAT];
+  for (let i = 0; i < out.length; i++) {
+    if (out[i]) continue;
+    let h = pick(pool);
+    if (i >= 2 && out[i - 1] === h && out[i - 2] === h) h = pool[(pool.indexOf(h) + 1) % pool.length];
+    out[i] = h;
+  }
+  return out as string[];
 }
 
 /** the payout of a combo mode: [min, max] of each (the user's table) */

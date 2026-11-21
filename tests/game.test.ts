@@ -2599,7 +2599,17 @@ describe("«Комбо»", () => {
     const day = moscowDay(T0);
     const seq = await comboSequence(db, day, "garkusha", "pacan");
     expect(seq).toHaveLength(6);
-    expect(seq.every((h) => COMBO_FREE.includes(h) || h === "keyboard")).toBe(true); // Гаркуша: free hits, now and then a knife
+    expect(seq.every((h) => COMBO_FREE.includes(h))).toBe(true); // «Пацанский»: the hand hits only
+    // «Блатной» / «Авторитетный»: every weapon 1–2 times (never more than the payout gives back), the rest hand hits and the bat
+    for (const m of ["blat", "avtor"] as const) for (const b of ["garkusha", "solntse", "vadim"]) {
+      const sq = await comboSequence(db, day, b, m);
+      for (const w of ["keyboard", "gpu", "rug-pull-gun"]) {
+        const n = sq.filter((h) => h === w).length;
+        expect(n).toBeGreaterThanOrEqual(1);
+        expect(n).toBeLessThanOrEqual(2);
+      }
+      expect(sq.every((h) => [...COMBO_FREE, "bat", "keyboard", "gpu", "rug-pull-gun"].includes(h))).toBe(true);
+    }
     expect(await comboSequence(db, day, "garkusha", "pacan")).toEqual(seq); // one for everybody
     expect(await comboSequence(db, moscowDay(T0 + 24 * H), "garkusha", "pacan")).not.toEqual(seq); // a new one tomorrow
     expect(await comboSequence(db, day, "botsman", "avtor")).toHaveLength(16);
@@ -2621,15 +2631,15 @@ describe("«Комбо»", () => {
     expect((await hit(wrong)).progress).toBe(0);
     let c = await hit(seq[0]);
     expect(c).toMatchObject({ progress: 1, guessed: [seq[0]], last: "right" });
+    const xp0 = Number((await db.query<{ xp: number }>("SELECT xp FROM players WHERE id=$1", [p]))[0].xp);
+    const kb0 = await qty(db, p, "keyboard");
     for (let i = 1; i < seq.length; i++) c = await hit(seq[i]);
-    expect(c).toMatchObject({ progress: 6, done: true, claimed: false });
-    expect(c.reward.items.some((x: { id: string }) => x.id === "keyboard")).toBe(true);
+    // done: the payout is already his, the window only shows it
+    expect(c).toMatchObject({ progress: 6, done: true, claimed: true });
+    expect(Number((await db.query<{ xp: number }>("SELECT xp FROM players WHERE id=$1", [p]))[0].xp)).toBeGreaterThanOrEqual(xp0 + 800);
+    expect(await qty(db, p, "keyboard")).toBeGreaterThan(kb0);
     // done for today: more hits change nothing
     expect((await hit(wrong)).done).toBe(true);
-    const xp = Number((await db.query<{ xp: number }>("SELECT xp FROM players WHERE id=$1", [p]))[0].xp);
-    const r = await act(db, p, "combo_claim", { boss: "garkusha", mode: "pacan" }, T0);
-    expect(r.result.reward.xp).toBeGreaterThanOrEqual(800);
-    expect(Number((await db.query<{ xp: number }>("SELECT xp FROM players WHERE id=$1", [p]))[0].xp)).toBe(xp + r.result.reward.xp);
     await expect(act(db, p, "combo_claim", { boss: "garkusha", mode: "pacan" }, T0)).rejects.toMatchObject({ code: "combo_none" });
   });
 

@@ -105,16 +105,19 @@ export async function comboHit(ctx: Ctx, bossId: string, mode: string | null, we
     last = "wrong";
   }
   const done = progress >= seq.length;
+  // done: the payout is the player's at once (the window only shows what came)
   const reward = done ? rollComboReward(m.id, ctx.rng) : null;
+  const at = done ? new Date(ctx.now) : null;
   await ctx.q.query(
-    `INSERT INTO combo_progress (player_id, day, boss_id, mode, progress, done_at, reward) VALUES ($1,$2,$3,$4,$5,$6,$7)
-     ON CONFLICT (player_id, day, boss_id, mode) DO UPDATE SET progress = EXCLUDED.progress, done_at = EXCLUDED.done_at, reward = EXCLUDED.reward`,
-    [ctx.pid, day, bossId, m.id, progress, done ? new Date(ctx.now) : null, reward ? JSON.stringify(reward) : null],
+    `INSERT INTO combo_progress (player_id, day, boss_id, mode, progress, done_at, reward, claimed_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$6)
+     ON CONFLICT (player_id, day, boss_id, mode) DO UPDATE SET progress = EXCLUDED.progress, done_at = EXCLUDED.done_at, reward = EXCLUDED.reward, claimed_at = EXCLUDED.claimed_at`,
+    [ctx.pid, day, bossId, m.id, progress, at, reward ? JSON.stringify(reward) : null],
   );
-  return { ...viewOf(seq, m.id, { progress, done_at: done ? new Date(ctx.now) : null, reward, claimed_at: null }), last };
+  const granted = reward ? await grantReward(ctx, reward, `combo:${bossId}:${m.id}`) : null;
+  return { ...viewOf(seq, m.id, { progress, done_at: at, reward: (granted as Reward | null) ?? reward, claimed_at: at }), last };
 }
 
-/** «Забрать»: the payout of a done combo (the latest one of this boss and mode not taken yet) */
+/** an old done combo whose payout was not given yet (before it came at once): «Забрать» */
 export async function comboClaim(ctx: Ctx, bossId: string, mode: string) {
   const m = comboMode(mode);
   if (!m) throw new GameError("bad_mode", "Нет такого комбо");
