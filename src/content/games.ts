@@ -227,7 +227,7 @@ export function zonkXpLevel(xp: number): { level: number; from: number; to: numb
  * a thing bought cheap and staked dear was a farm), the yard finds their sell price
  */
 export const ITEM_VALUES: Record<string, number> = {
-  "bottle-cap": 15, "flyer-passive": 25, "sticker-hodl": 40, spinner: 60, "lost-wallet": 150, "energy-pack": 250,
+  "bottle-cap": 15, "flyer-passive": 25, "sticker-hodl": 40, spinner: 60, "lost-wallet": 150,
   ...Object.fromEntries(OFFERS.filter((o) => o.give.item && o.price.currency === "RUB" && ["weapons", "misc"].includes(o.section)).map((o) => [o.give.item!, o.price.amount])),
 };
 export const UPGRADE_EDGE = 0.9;

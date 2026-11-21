@@ -28,7 +28,6 @@ export interface ShopData { offers: Offer[]; exchange: { rub: Record<Currency, n
 const SHOP_SPOTS = [
   { id: "weapons", img: "weapons", name: "Оружие", sections: ["weapons"], hint: "Оружие на прилавке: ножи, пистолеты и Rug Pull Gun. Кулак, тычок в глаза и пинок есть у всех бесплатно." },
   { id: "clothing", img: "rack", name: "Одежда", sections: ["clothing"], hint: "Вешалка с вещами: футболки, кепки и прочее для персонажа." },
-  { id: "energy", img: "drinks", name: "Энергия", sections: ["energy", "misc"], hint: "Энергетики на полке: энергия для заданий и полезные мелочи." },
 ] as const;
 
 /** A locked thing: which boss drops it, and that it is bought here after it drops. */

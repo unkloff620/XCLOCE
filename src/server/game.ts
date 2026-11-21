@@ -98,7 +98,7 @@ export const ACTIONS = [
   "fight_start", "attack", "fight_claim", "fight_flee", "combo_claim",
   "task", "location_claim", "business_up", "business_claim",
   "yard_pick",
-  "buy", "exchange", "use", "equip", "unequip",
+  "buy", "exchange", "use", "energy_refill", "equip", "unequip",
   "clan_create", "clan_join", "clan_leave", "clan_kick", "clan_transfer",
   "daily_claim", "sell", "sell_many", "rename", "slots_spin",
   "equipment_upgrade", "talent_up", "talent_reset", "talent_auto", "room_buy", "room_set", "look_set", "decor_set", "decor_save", "piece_buy", "help_seen", "starter_gift",
@@ -202,6 +202,7 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "buy": return shop.buy(ctx, str(body.offerId, "offerId", 40), idem, body.qty === undefined ? 1 : num(body.qty, "qty"));
     case "exchange": return shop.exchange(ctx, oneOf(body.from, EXCHANGE_FROM, "from"), oneOf(body.to, EXCHANGE_TO, "to"), num(body.amount, "amount"), idem);
     case "use": return shop.useItem(ctx, str(body.itemId, "itemId", 40));
+    case "energy_refill": return shop.energyRefill(ctx);
     case "equip": return shop.equip(ctx, str(body.itemId, "itemId", 40));
     case "unequip": return shop.unequip(ctx, oneOf(body.slot, WEARABLE_SLOTS, "slot"));
     case "ach_box_open": return openAchBox(ctx, body.all === true);

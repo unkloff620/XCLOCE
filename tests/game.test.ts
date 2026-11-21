@@ -46,17 +46,23 @@ describe("energy", () => {
   it("never cuts energy above the maximum and does not regenerate there", () => {
     expect(energyNow(1500, 0, 10 * H, cfg)).toMatchObject({ energy: 1500, nextIn: 0 });
   });
-  it("an energy drink fills energy up to the limit, never above; bought for 5 gold bars", async () => {
+  it("the only energy drink: up to the limit, never above; at most 20 in the bag, «Пополнить» for 5 gold bars", async () => {
     const p = await newPlayer(db);
     await setEnergy(p, 45, T0);
-    await setMoney(db, p, "GOLD", 5);
-    await act(db, p, "buy", { offerId: "energy-full-1" }, T0);
-    expect(await wallet(db, p, "GOLD")).toBe(0);
-    let r = await act(db, p, "use", { itemId: "energy-full" }, T0);
-    expect(r.state.player.energy).toBe(50);
-    // full: nothing to drink for
-    await give(db, p, "energy-drink", 1);
-    await expect(act(db, p, "use", { itemId: "energy-drink" }, T0)).rejects.toMatchObject({ code: "energy_full" });
+    await setMoney(db, p, "GOLD", 10);
+    // not sold in the shop any more
+    const { OFFERS } = await import("../src/content/shop.ts");
+    expect(OFFERS.some((o) => o.give.item?.startsWith("energy"))).toBe(false);
+    await give(db, p, "energy-drink", 3);
+    const f = await act(db, p, "energy_refill", {}, T0);
+    expect(f.result).toMatchObject({ added: 17, have: 20 });
+    expect(await wallet(db, p, "GOLD")).toBe(5);
+    await expect(act(db, p, "energy_refill", {}, T0)).rejects.toMatchObject({ code: "drinks_full" });
+    // more never goes in over 20
+    await act(db, p, "use", { itemId: "energy-drink" }, T0);
+    expect(await qty(db, p, "energy-drink")).toBe(19);
+    let r = await act(db, p, "use", { itemId: "energy-drink" }, T0).catch((e) => e);
+    expect(r).toMatchObject({ code: "energy_full" });
     // spend some, drink: back to 50, not more
     r = await act(db, p, "task", { taskId: "os-standup" }, T0);
     expect(r.state.player.energy).toBe(50 - LOCATIONS[0].tasks[0].energy);
@@ -1846,8 +1852,7 @@ describe("yard mini games", () => {
     expect(upgradeChanceOf(upgradeMode("x2")!.mult)).toBeCloseTo(0.45, 4);
     expect(upgradeChanceOf(upgradeMode("x8")!.mult)).toBeCloseTo(0.1125, 4);
     expect(upgradeChanceOf(upgradeMode("c70")!.mult)).toBeCloseTo(0.7, 4);
-    expect(upgradeTarget(240)).toBe("energy-drink");
-    expect(upgradeTarget(2500)).toBe("energy-pack");
+    expect(upgradeTarget(240)).toBe("lost-wallet");
     const p = await newPlayer(db);
     await give(db, p, "spinner", 4);
     // lose: the stake burns, nothing comes

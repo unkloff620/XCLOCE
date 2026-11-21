@@ -87,7 +87,7 @@ export const CASE_POINTS = ACH_BOX_COST;
 export interface MonthTier { id: string; need: number | "all"; reward: Reward; chest?: true }
 export const MONTHLY_TIERS: MonthTier[] = [
   { id: "t2", need: 2, reward: { currencies: { RUB: 30 } } },
-  { id: "t5", need: 5, reward: { items: [{ id: "energy-full", qty: 2 }] } },
+  { id: "t5", need: 5, reward: { items: [{ id: "energy-drink", qty: 2 }] } },
   // the weapon of the month (monthWeapon): monthTierReward puts it in
   { id: "t10", need: 10, reward: {} },
   { id: "t20", need: 20, reward: { achPoints: 4 * CASE_POINTS } },

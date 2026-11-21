@@ -25,7 +25,7 @@ function TierArt({ id, month }: { id: string; month: string }) {
   const one = (art: React.ReactNode, n: string) => <span className="mt-art">{art}<b className="num">×{n}</b></span>;
   switch (id) {
     case "t2": return one(<Icon name="RUB" size={40} />, "30");
-    case "t5": return one(<ItemArt id="energy-full" size={44} />, "2");
+    case "t5": return one(<ItemArt id="energy-drink" size={44} />, "2");
     // the weapon of this month (a different one every month)
     case "t10": { const w = monthWeapon(month); return one(<ItemArt id={w.id} size={44} />, String(w.qty)); }
     case "t20": return one(<Icon name="case" size={44} />, "4");

@@ -3,7 +3,7 @@ import { addEnergy, addItem, addMoney, energyCfgOf, idempotent, itemQty, lockPla
 import { TALK_BONUS, TALK_BONUS_MS, talkChance, talkOfDay, talkScore } from "../../content/dealer-talk.ts";
 import { OFFERS, bulkOf, bulkPrice, offerById } from "../../content/shop.ts";
 import { CURRENCY_DEFS, exchangeScheduleText, exchangeWindow, floorTo, type Currency } from "../../content/currencies.ts";
-import { itemById, WEARABLE_SLOTS, type Slot } from "../../content/items.ts";
+import { ENERGY_DRINKS_MAX, ENERGY_REFILL, itemById, WEARABLE_SLOTS, type Slot } from "../../content/items.ts";
 import { unlockBossOf } from "../../content/bosses.ts";
 import type { Config } from "../config.ts";
 
@@ -84,6 +84,16 @@ export async function exchange(ctx: Ctx, from: Currency, to: Currency, amount: n
     await addMoney(ctx, to, out, `exchange:${from}`);
     return { from, to, paid: a, got: out };
   });
+}
+
+/** «Пополнить» in the energy window: the energy drinks up to ENERGY_DRINKS_MAX for ENERGY_REFILL (the only way to buy them) */
+export async function energyRefill(ctx: Ctx) {
+  const have = await itemQty(ctx.q, ctx.pid, "energy-drink");
+  const add = ENERGY_DRINKS_MAX - have;
+  if (add <= 0) throw new GameError("drinks_full", `Энергетиков и так ${ENERGY_DRINKS_MAX} из ${ENERGY_DRINKS_MAX}`);
+  await takeMoney(ctx, ENERGY_REFILL.currency, ENERGY_REFILL.amount, "energy-refill");
+  await addItem(ctx, "energy-drink", add, "energy-refill");
+  return { added: add, have: ENERGY_DRINKS_MAX };
 }
 
 export async function useItem(ctx: Ctx, itemId: string) {

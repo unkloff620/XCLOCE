@@ -53,7 +53,7 @@ const STEPS: Step[] = [
     text: "Наноси урон боссам, получай таланты, улучшай оружие.",
   },
   {
-    target: ".energy-chip", title: "Энергия", pics: [ui("energy-can"), item("energy-drink", "энергетик"), item("energy-pack", "пачка")],
+    target: ".energy-chip", title: "Энергия", pics: [ui("energy-can"), item("energy-drink", "энергетик")],
     text: "Тратится на задания и сама восстанавливается: +1 каждые 5 минут. Энергетик сразу заполняет энергию до лимита (сверх лимита — нельзя).",
   },
   {

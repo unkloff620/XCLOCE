@@ -7443,3 +7443,7 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .bbox-step { font-size: 3cqi; font-weight: 700; color: #ffe2b8; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); }
 .bbox-x { position: absolute; top: 4%; right: 3.5%; width: 7cqi; height: 7cqi; border: 0; border-radius: 1.4cqi; background: rgba(0, 0, 0, 0.4); color: #fff; font-size: 4.6cqi; line-height: 1; }
 .bbox-next { position: absolute; right: 4%; bottom: -12%; }
+
+/* the energy window: the drinks in the bag, «N / 20 шт.» */
+.energy-drinks { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 0 2px; }
+.energy-drinks-n { font-size: 20px; text-transform: uppercase; }

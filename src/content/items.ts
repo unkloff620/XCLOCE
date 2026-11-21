@@ -166,10 +166,12 @@ const WEARABLES: ItemDef[] = ([
   return { ...w, category: "clothing" as const, maxStack: 1, sources: boss ? [isFirstWinItem(w.id) ? `Первая победа над ${boss.name} (${thingsModeName(boss)}), потом — магазин` : `${thingsFrom(boss)}, потом — магазин`, ...w.sources.filter((x) => !x.startsWith("Магазин") && !x.startsWith("Победа"))] : w.sources };
 });
 
+/** the only energy drink (the blue one): at most this many in the bag; «Пополнить» in the energy window fills them up for
+ *  ENERGY_REFILL (the user 2026-11-22) — not sold anywhere else */
+export const ENERGY_DRINKS_MAX = 20;
+export const ENERGY_REFILL = { currency: "GOLD" as const, amount: 5 };
 const MISC: ItemDef[] = [
-  { id: "energy-drink", name: "Энергетик", category: "item", rarity: "common", maxStack: 999, description: "Энергия сразу до полной (сверх лимита — нельзя).", sources: ["Двор"], use: { energyFull: true } },
-  { id: "energy-pack", name: "Пачка энергетиков", category: "item", rarity: "rare", maxStack: 999, description: "Энергия сразу до полной (сверх лимита — нельзя).", sources: ["Награды локаций"], use: { energyFull: true } },
-  { id: "energy-full", name: "Энергетик «До краёв»", category: "item", rarity: "epic", maxStack: 999, description: "Энергия сразу до полной. Если и так полная — не пей, жалко.", sources: ["Магазин: 5 слитков", "Делюги «От звонка до звонка»"], use: { energyFull: true } },
+  { id: "energy-drink", name: "Энергетик", category: "item", rarity: "common", maxStack: ENERGY_DRINKS_MAX, description: "Энергия сразу до полной (сверх лимита — нельзя).", sources: ["Двор"], use: { energyFull: true } },
   // the poker's prize (a pair of nothing — 100, three of a kind — 500): buys the poker's cases
   { id: "matches", name: "Спички", category: "item", rarity: "common", maxStack: 99_999_999, description: "Спички с чёрной головкой — награда за зонк. Скоро из них можно будет открывать ящик с наколками.", sources: ["Зонк"] },
   { id: "poker-sticker", name: "Стикер", category: "item", rarity: "common", maxStack: 99_999_999, description: "Липкий трофей покерного стола. За стикеры открываются чемоданы в покере.", sources: ["Покер"] },
@@ -271,7 +273,6 @@ export const SELL_PRICES: Record<string, number> = {
   "flyer-passive": 25,
   "sticker-hodl": 40,
   "spinner": 60,
-  "energy-drink": 90,
   "lost-wallet": 150,
   // «Крафт»: the dealer buys the parts too (content/craft-drops.ts PART_SELL)
   ...Object.fromEntries(CRAFT_PARTS.map((p) => [p.id, PART_SELL[p.rarity] ?? 50])),

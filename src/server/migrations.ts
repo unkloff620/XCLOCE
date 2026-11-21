@@ -1641,4 +1641,10 @@ UPDATE combo_progress SET runs = 1 WHERE done_at IS NOT NULL AND runs = 0;`,
     id: "v2-116-no-boss-auto",
     sql: `DELETE FROM autos WHERE kind='boss';`,
   },
+  {
+    // the energy drinks (the user 2026-11-22): only the blue one, at most 20 in the bag; the pack and «До краёв» are gone
+    id: "v2-117-one-energy-drink",
+    sql: `UPDATE inventory SET qty = LEAST(qty, 20) WHERE item_id='energy-drink';
+DELETE FROM inventory WHERE item_id IN ('energy-pack', 'energy-full');`,
+  },
 ];

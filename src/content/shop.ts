@@ -42,8 +42,7 @@ export const OFFERS: Offer[] = [
   { id: "keyboard-1", section: "weapons", give: { item: "keyboard", qty: 1 }, price: { currency: "RUB", amount: 4 }, title: "Нож", bulk: true },
   { id: "gpu-1", section: "weapons", give: { item: "gpu", qty: 1 }, price: { currency: "RUB", amount: 5 }, title: "Пистолет", bulk: true },
   { id: "rpg-1", section: "weapons", give: { item: "rug-pull-gun", qty: 1 }, price: { currency: "RUB", amount: 18 }, title: "Rug Pull Gun", bulk: true },
-  // energy is not sold by the point any more: one energy drink fills it up to the limit (never above), 5 gold bars
-  { id: "energy-full-1", section: "energy", give: { item: "energy-full", qty: 1 }, price: { currency: "GOLD", amount: 5 }, title: "Энергетик «До краёв»", note: "энергия до полной" },
+  // energy drinks are not sold here any more: only «Пополнить» in the energy window (content/items.ts ENERGY_REFILL)
   { id: "tee-white", section: "clothing", give: { item: "tee-white", qty: 1 }, price: { currency: "RUB", amount: 400 }, title: "Белая футболка" },
   { id: "slippers", section: "clothing", give: { item: "slippers", qty: 1 }, price: { currency: "RUB", amount: 900 }, title: "Тапки" },
   { id: "sneakers", section: "clothing", give: { item: "sneakers", qty: 1 }, price: { currency: "RUB", amount: 500 }, title: "Кеды" },
@@ -83,6 +82,5 @@ export const OFFERS: Offer[] = [
   { id: "cap-moon", section: "clothing", give: { item: "cap-moon", qty: 1 }, price: { currency: "RUB", amount: 1_300 }, title: "Чёрная кепка" },
   { id: "hoodie-hodl", section: "clothing", give: { item: "hoodie-hodl", qty: 1 }, price: { currency: "RUB", amount: 3_000 }, title: "Худи HODL" },
   { id: "gold-chain", section: "clothing", give: { item: "gold-chain", qty: 1 }, price: { currency: "RUB", amount: 1_900 }, title: "Серебряная цепь" },
-  { id: "energy-drink", section: "misc", give: { item: "energy-drink", qty: 1 }, price: { currency: "RUB", amount: 180 }, title: "Энергетик" },
 ];
 export const offerById = (id: string) => OFFERS.find((o) => o.id === id);

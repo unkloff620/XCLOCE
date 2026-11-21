@@ -87,7 +87,7 @@ describe("«От звонка до звонка»", () => {
     expect(r.state.monthly!.tiers.find((t) => t.id === "t2")!.got).toBeTruthy();
     for (let d = 3; d <= 30; d++) await act(db, p, "month_buy", { day: d }, at(31));
     await act(db, p, "month_claim", { id: "t5" }, at(31));
-    expect(await qty(db, p, "energy-full")).toBe(2);
+    expect(await qty(db, p, "energy-drink")).toBe(2);
     // December 2026: the month's weapon is Rug Pull Gun ×50 (gpu 70 → keyboard 80 → rug-pull-gun 50, a month each)
     const rpg0 = await qty(db, p, "rug-pull-gun");
     await act(db, p, "month_claim", { id: "t10" }, at(31));
@@ -123,13 +123,13 @@ describe("«От звонка до звонка»", () => {
     expect((await view(p, at(2))).closedN).toBe(0);
   });
 
-  it("«До краёв» fills the energy up to the limit, not when full", async () => {
+  it("an energy drink fills the energy up to the limit, not when full", async () => {
     const p = await newPlayer(db);
-    await give(db, p, "energy-full", 2);
-    await expect(act(db, p, "use", { itemId: "energy-full" }, at(2))).rejects.toMatchObject({ code: "energy_full" });
+    await give(db, p, "energy-drink", 2);
+    await expect(act(db, p, "use", { itemId: "energy-drink" }, at(2))).rejects.toMatchObject({ code: "energy_full" });
     await db.query("UPDATE players SET energy=5, energy_at=$2 WHERE id=$1", [p, new Date(at(2))]);
-    const r = await act(db, p, "use", { itemId: "energy-full" }, at(2));
+    const r = await act(db, p, "use", { itemId: "energy-drink" }, at(2));
     expect(r.state.player.energy).toBe(r.state.player.energyMax);
-    expect(await qty(db, p, "energy-full")).toBe(1);
+    expect(await qty(db, p, "energy-drink")).toBe(1);
   });
 });
