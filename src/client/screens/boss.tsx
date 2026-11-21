@@ -32,6 +32,8 @@ import { BOXERS, useBossStrike } from "../fx/boss-strike.tsx";
 import { FIGHT_MODES, fightMode, type FightMode } from "../../content/medals.ts";
 import { usePageReady } from "../route-loader.tsx";
 import { tattooSetsOfBoss } from "../../content/tattoos.ts";
+import { ComboButton, ComboDone, ComboPanel, ComboPick } from "./combo.tsx";
+import type { ComboMode } from "../../content/combo.ts";
 import { BoostIcons, FightTray, HitLog, SidePanel, TopList, WeaponPanel, slotsOf } from "./fight-kit.tsx";
 
 /**
@@ -280,6 +282,9 @@ export function BossScreen({ id }: { id: string }) {
 
   // a free weapon still reloading: «ударить сейчас» for RUSH_PRICE (a window asks first), then it reloads again
   const [rushAsk, setRushAsk] = useState<{ id: string; name: string; left: number } | null>(null);
+  // «Комбо»: its panel and the window when it is guessed
+  const [comboOpen, setComboOpen] = useState(false);
+  const [comboWin, setComboWin] = useState(false);
   const attack = async (weapon: string, rush = false, pack = 1) => {
     if (!hitGapOk()) return;
     const w = weaponById(weapon)!;
@@ -293,12 +298,17 @@ export function BossScreen({ id }: { id: string }) {
     setPendingDmg((d) => d + est);
     setTray((t) => t.map((x) => (x.id === weapon && w.weapon.kind === "consumable" ? { ...x, qty: Math.max(0, x.qty - n) } : x)));
     try {
-      const r = await api.action<{ damage: number; crit: boolean; crits: number; count: number; phrase: string; hp: number; status: string; left: number | null; readyAt: number | null; fightDamage: number; talentDamage: number; talentsGained: number }>("attack", { weapon, count: n, idem: crypto.randomUUID(), ...(rush ? { rush: true } : {}) });
+      const r = await api.action<{ damage: number; crit: boolean; crits: number; count: number; phrase: string; hp: number; status: string; left: number | null; readyAt: number | null; fightDamage: number; talentDamage: number; talentsGained: number; combo?: FightView["combo"] }>("attack", { weapon, count: n, idem: crypto.randomUUID(), ...(rush ? { rush: true } : {}) });
       if (r.result.crit) {
         setCritPop(Date.now());
         haptic.heavy(); // no crit sound: only the weapon's own
       }
-      setView((v) => (v ? { ...v, hp: Math.min(v.hp, r.result.hp), myDamage: v.myDamage + r.result.damage, myHits: v.myHits + (r.result.count ?? 1) } : v));
+      setView((v) => (v ? { ...v, hp: Math.min(v.hp, r.result.hp), myDamage: v.myDamage + r.result.damage, myHits: v.myHits + (r.result.count ?? 1), ...(r.result.combo ? { combo: r.result.combo } : {}) } : v));
+      // «Комбо»: right — a little buzz; the last step — «КОМБО РАЗГАДАНО!»
+      const cb = r.result.combo;
+      if (cb && cb.last === "right") {
+        if (cb.done) { haptic.big(); sfx("victory"); setComboWin(true); } else haptic.ok();
+      }
       setTray((t) => t.map((x) => (x.id === weapon ? { ...x, qty: r.result.left ?? x.qty, readyAt: r.result.readyAt ?? x.readyAt } : x)));
       setTalentDmg(r.result.talentDamage);
       if (r.result.status === "won") {
@@ -330,6 +340,12 @@ export function BossScreen({ id }: { id: string }) {
   useEffect(() => {
     try { const m = localStorage.getItem(`xc-mode-${id}`); if (m === "pacan" || m === "blat" || m === "avtor" || m === "solo") setPickRaw(m); } catch { /* storage blocked */ }
   }, [id]);
+  // «Комбо»: picked after the fight mode, remembered per boss
+  const [combo, setComboRaw] = useState<ComboMode>("pacan");
+  useEffect(() => {
+    try { const c = localStorage.getItem(`xc-combo-${id}`); if (c === "pacan" || c === "blat" || c === "avtor") setComboRaw(c); } catch { /* storage blocked */ }
+  }, [id]);
+  const setCombo = (c: ComboMode) => { setComboRaw(c); try { localStorage.setItem(`xc-combo-${id}`, c); } catch { /* storage blocked */ } };
   const setPick = (m: FightMode | "solo") => { setPickRaw(m); try { localStorage.setItem(`xc-mode-${id}`, m); } catch { /* storage blocked */ } };
   // an event boss (Пепе) is fought only in «Пацанский», never «Соло»
   const ev = !!boss?.event;
@@ -355,7 +371,7 @@ export function BossScreen({ id }: { id: string }) {
   };
   const start = async (solo = false) => {
     const md = fightMode(mode);
-    const r = await act<{ fightId: number }>("fight_start", { boss: id, solo, mode }, `${solo ? "Соло-бой" : "Бой"} с боссом ${boss?.name} · ${md.name}${md.hp > 1 ? ` (здоровье ×${md.hp}, награда ×${md.reward})` : ""}. 8 часов`);
+    const r = await act<{ fightId: number }>("fight_start", { boss: id, solo, mode, combo }, `${solo ? "Соло-бой" : "Бой"} с боссом ${boss?.name} · ${md.name}${md.hp > 1 ? ` (здоровье ×${md.hp}, награда ×${md.reward})` : ""}. 8 часов`);
     if (r) void loadList();
     return !!r;
   };
@@ -432,6 +448,7 @@ export function BossScreen({ id }: { id: string }) {
             <button type="button" className="btn sm gold fbtn-arms" onClick={() => { haptic.tap(); setPanel(true); }} aria-label="Оружие" title="Оружие в бою">
               <ItemArt id="rug-pull-gun" size={22} />
             </button>
+            {view?.combo && <ComboButton c={view.combo} onOpen={() => setComboOpen(true)} />}
             <span className="grow" />
             <button type="button" className={`btn sm red fbtn-flee ${fleeAsk ? "ask" : ""}`} onClick={flee} disabled={busy === "fight_flee"} aria-label={fleeAsk ? "Точно сдаться?" : "Сдаться"} title="Сдаться">
               {fleeAsk ? <b>?</b> : <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h13" /><path d="M13 6l6 6-6 6" /></svg>}
@@ -440,6 +457,8 @@ export function BossScreen({ id }: { id: string }) {
           <FightTray slots={slotsOf(state)} tray={tray} onHit={(id, n) => attack(id, false, n)} onBuy={() => setShopOpen(true)} onCooldown={(name, left, id) => { haptic.tap(); setRushAsk({ id, name, left }); }} disabled={view?.status !== undefined && view.status !== "active"} />
         </div>
         {panel && <WeaponPanel tray={tray} onClose={() => setPanel(false)} />}
+        {comboOpen && view?.combo && <ComboPanel c={view.combo} bossId={boss.id} onClose={() => setComboOpen(false)} onClaimed={() => setView((v) => (v?.combo ? { ...v, combo: { ...v.combo, claimed: true } } : v))} />}
+        {comboWin && view?.combo?.done && <ComboDone c={view.combo} bossId={boss.id} onClose={() => { setComboWin(false); void poll(true); }} />}
         {shopOpen && <WeaponShopWindow onClose={closeShop} />}
         {rushAsk && (
           <Modal title={`${rushAsk.name} перезаряжается`} onClose={() => setRushAsk(null)}>
@@ -583,6 +602,7 @@ export function BossScreen({ id }: { id: string }) {
       {!locked && !ev && door === "closed" && mode !== "pacan" && <button type="button" className="mode-arrow l" onClick={() => goMode(-1)} aria-label="Предыдущий режим">‹</button>}
       {!locked && !ev && door === "closed" && mode !== "avtor" && <button type="button" className="mode-arrow r" onClick={() => goMode(1)} aria-label="Следующий режим">›</button>}
       <div className="fight-bottom prefight-panel">
+        {!locked && <ComboPick value={combo} onChange={setCombo} done={(m) => !!list?.combos?.[`${boss.id}:${m}`]?.done} />}
         <div className="tiny muted center mode-hint">
           {soloPick ? "Соло (бьёшь один): здоровье" : `${fightMode(mode).name}: здоровье`} {full(Math.round((row?.hpMax ?? boss.hp) * fightMode(mode).hp))}{(boss.thingsMode ? mode === boss.thingsMode : fightMode(mode).things) ? " · падают вещи босса" : ""}{tattooSetsOfBoss(boss.id).some((t) => t.mode === mode) ? " · падают наколки" : ""}.
         </div>

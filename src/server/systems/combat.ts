@@ -8,6 +8,8 @@ import { BAT, WEAPONS, itemById, rushPrice, weaponById } from "../../content/ite
 import { HIT_PHRASES } from "../../content/phrases.ts";
 import { boostReward, mergeRewards, scaleReward } from "../../content/rewards.ts";
 import { BASE_CRIT_MULT, EQUIPMENT, PIECE_DROP_CHANCE, PIECE_PITY, ROOM_DEFS, ROOM_PITY, pieceUnlockId, roomUnlockId } from "../../content/home.ts";
+import { comboHit, comboView, type ComboView } from "./combo.ts";
+import type { ComboMode } from "../../content/combo.ts";
 import { CRIT_MULT_MAX, critChanceOf, reloadMin, talentExtras, talentsForDamage, weaponTalentBonus } from "../../content/talents.ts";
 import { playerBonus, weaponTalents } from "./home.ts";
 import { setBonuses } from "./collection.ts";
@@ -52,6 +54,8 @@ interface FightRow {
   solo: boolean;
   /** the fight mode (content/medals.ts): the HP multiplier, the medal, whether his things can drop */
   mode: FightMode;
+  /** «Комбо»: the combo mode chosen at the start (content/combo.ts), or none */
+  combo: string | null;
   reward: Granted | null;
   seen: boolean;
 }
@@ -149,7 +153,7 @@ export async function settleMyFight(ctx: Ctx): Promise<void> {
   await expireFights(ctx, await lockBoss(ctx.q, GLOBAL));
 }
 
-export async function startFight(ctx: Ctx, bossId: string, solo = false, modeId: FightMode = "pacan") {
+export async function startFight(ctx: Ctx, bossId: string, solo = false, modeId: FightMode = "pacan", combo: ComboMode | null = null) {
   const mode = fightMode(modeId);
   const def = bossById(bossId);
   if (!def) throw new GameError("bad_boss", "Такого босса нет");
@@ -184,8 +188,8 @@ export async function startFight(ctx: Ctx, bossId: string, solo = false, modeId:
   const hpMax = Math.round((ctx.cfg.bossHp[def.id] ?? def.hp) * mode.hp);
   const clockMin = extras.clockMin + (await craftBonus(ctx.q, ctx.pid)).clock; // + the craft stash's minutes
   const [f] = await ctx.q.query<{ id: number }>(
-    "INSERT INTO fights (player_id, boss_id, hp_max, start_total, start_seq, started_at, ends_at, day, solo, keys_spent, global, mode) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,true,$11) RETURNING id",
-    [ctx.pid, def.id, hpMax, g.damage_total, g.last_seq, new Date(ctx.now), new Date(ctx.now + ctx.cfg.fight.hours * 3600_000 + clockMin * 60_000), day, solo, keys, mode.id],
+    "INSERT INTO fights (player_id, boss_id, hp_max, start_total, start_seq, started_at, ends_at, day, solo, keys_spent, global, mode, combo) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,true,$11,$12) RETURNING id",
+    [ctx.pid, def.id, hpMax, g.damage_total, g.last_seq, new Date(ctx.now), new Date(ctx.now + ctx.cfg.fight.hours * 3600_000 + clockMin * 60_000), day, solo, keys, mode.id, combo],
   );
   // every new fight starts with the free weapons (fist, mouse, candle) ready — unless the last fight was fled:
   // otherwise flee + start again would give endless free hits (fled fights do not count toward the daily limit)
@@ -194,10 +198,12 @@ export async function startFight(ctx: Ctx, bossId: string, solo = false, modeId:
     [ctx.pid, f.id],
   );
   if (!last?.fled) await resetFreeWeapons(ctx.q, ctx.pid);
-  return { fightId: f.id, bossId: def.id, solo, mode: mode.id, hpMax };
+  return { fightId: f.id, bossId: def.id, solo, mode: mode.id, combo, hpMax };
 }
 
 export interface HitResult {
+  /** «Комбо»: where the combo of this fight stands after the hit */
+  combo?: ComboView | null;
   fightId: number;
   weapon: string;
   damage: number;
@@ -307,6 +313,8 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1
     }
 
     const { damage, crit, crits, count, left, readyAt, phraseIdx, phrases } = await strike(ctx, w, want, `hit:${bossId}`, rush);
+    // «Комбо»: this hit against the next step of today's sequence
+    const combo = await comboHit(ctx, bossId, mine.combo, w.id);
     const seq = Number(g.last_seq) + 1;
     const total = Number(g.damage_total) + damage;
     await ctx.q.query("UPDATE bosses SET damage_total=$2, last_seq=$3 WHERE id=$1", [GLOBAL, total, seq]);
@@ -339,7 +347,7 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1
       "UPDATE player_stats SET total_damage = total_damage + $2, weapons = jsonb_set(weapons, ARRAY[$3::text], to_jsonb(COALESCE((weapons->>$3)::int, 0) + $4)) WHERE player_id=$1",
       [ctx.pid, damage, w.id, count],
     );
-  await gain(ctx, "damage", damage);
+    await gain(ctx, "damage", damage);
 
     // every running fight (with any boss) whose HP reached zero is won by this hit
     const won = await ctx.q.query<{ id: number; player_id: number; boss_id: string }>(
@@ -362,7 +370,7 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1
     const hp = mineWon ? 0 : fightHp({ ...mine, end_total: null, my_damage: Number(mine.my_damage) + damage }, total);
     return {
       fightId: mine.id, weapon: w.id, damage, crit, phrase: phrases[phraseIdx], hp, hpMax: mine.hp_max,
-      status: mineWon ? "won" : "active", left, readyAt, finished: won.length, fightDamage, talentDamage, talentsGained, count, crits,
+      status: mineWon ? "won" : "active", left, readyAt, finished: won.length, fightDamage, talentDamage, talentsGained, count, crits, combo,
     };
   });
 }
@@ -612,6 +620,7 @@ export async function fightView(q: Queryable, pid: number, fightId: number, sinc
   const fighting = await q.query<{ n: number }>("SELECT COUNT(*)::int AS n FROM fights WHERE boss_id=$1 AND status='active' AND ends_at > $2", [f.boss_id, new Date(now)]);
   return {
     fightId: f.id, bossId: f.boss_id, hp, hpMax: f.hp_max, solo: !!f.solo, mode: fightMode(f.mode).id,
+    combo: await comboView(q, pid, f.boss_id, f.combo, now),
     status: timeUp ? ("lost" as const) : f.status,
     /** lost by running away (ended before its 8 hours), not by the time running out */
     fled: !timeUp && f.status === "lost" && !!f.ended_at && new Date(f.ended_at).getTime() < new Date(f.ends_at).getTime(),

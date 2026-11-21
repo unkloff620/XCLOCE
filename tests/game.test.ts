@@ -2590,3 +2590,58 @@ describe("exchanger overnight", () => {
     expect(exchangeScheduleText(s)).toBe("каждый день · с 11:00 до 03:00 ночи по Москве");
   });
 });
+
+describe("«Комбо»", () => {
+  it("a day's hidden sequence per boss and mode: right hits add up, a wrong one starts over; done — the payout by «Забрать»", async () => {
+    const { comboSequence, COMBO_FREE } = await import("../src/content/combo.ts");
+    const { moscowDay } = await import("../src/server/core.ts");
+    const day = moscowDay(T0);
+    const seq = comboSequence(day, "datsik", "pacan");
+    expect(seq).toHaveLength(6);
+    expect(seq.every((h) => COMBO_FREE.includes(h))).toBe(true); // Дацкоу: free hits only
+    expect(comboSequence(day, "datsik", "pacan")).toEqual(seq); // one for everybody
+    expect(comboSequence(moscowDay(T0 + 24 * H), "datsik", "pacan")).not.toEqual(seq); // a new one tomorrow
+    expect(comboSequence(day, "botsman", "avtor")).toHaveLength(16);
+
+    const p = await newPlayer(db);
+    await db.query("UPDATE boss_hp SET hp = 1000000 WHERE boss_id='datsik'").catch(() => undefined);
+    await act(db, p, "fight_start", { boss: "datsik", combo: "pacan" }, T0);
+    const hit = async (w: string) => {
+      await db.query("DELETE FROM cooldowns WHERE player_id=$1", [p]);
+      return (await act(db, p, "attack", { weapon: w }, T0, always(0.99))).result.combo;
+    };
+    // a wrong first hit: nothing
+    const wrong = COMBO_FREE.find((h) => h !== seq[0])!;
+    expect((await hit(wrong)).progress).toBe(0);
+    let c = await hit(seq[0]);
+    expect(c).toMatchObject({ progress: 1, guessed: [seq[0]], last: "right" });
+    for (let i = 1; i < seq.length; i++) c = await hit(seq[i]);
+    expect(c).toMatchObject({ progress: 6, done: true, claimed: false });
+    expect(c.reward.items.some((x: { id: string }) => x.id === "keyboard")).toBe(true);
+    // done for today: more hits change nothing
+    expect((await hit(wrong)).done).toBe(true);
+    const xp = Number((await db.query<{ xp: number }>("SELECT xp FROM players WHERE id=$1", [p]))[0].xp);
+    const r = await act(db, p, "combo_claim", { boss: "datsik", mode: "pacan" }, T0);
+    expect(r.result.reward.xp).toBeGreaterThanOrEqual(800);
+    expect(Number((await db.query<{ xp: number }>("SELECT xp FROM players WHERE id=$1", [p]))[0].xp)).toBe(xp + r.result.reward.xp);
+    await expect(act(db, p, "combo_claim", { boss: "datsik", mode: "pacan" }, T0)).rejects.toMatchObject({ code: "combo_none" });
+  });
+
+  it("the payout by the mode (the user's table)", async () => {
+    const { rollComboReward } = await import("../src/content/combo.ts");
+    let s = 7;
+    const rng = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+    for (let i = 0; i < 30; i++) {
+      const a = rollComboReward("avtor", rng);
+      expect(a.xp).toBeGreaterThanOrEqual(2600);
+      expect(a.xp).toBeLessThanOrEqual(3700);
+      expect(a.currencies).toMatchObject({ RUB: 12 });
+      const stash = a.items!.filter((x) => x.id.startsWith("stash-")).reduce((t, x) => t + x.qty, 0);
+      expect(stash).toBeGreaterThanOrEqual(25);
+      expect(stash).toBeLessThanOrEqual(35);
+      const parts = a.items!.filter((x) => x.id.startsWith("part-")).reduce((t, x) => t + x.qty, 0);
+      expect(parts).toBeGreaterThanOrEqual(5);
+      expect(parts).toBeLessThanOrEqual(8);
+    }
+  });
+});

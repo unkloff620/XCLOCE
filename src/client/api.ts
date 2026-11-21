@@ -205,6 +205,8 @@ export interface FightView {
   top: { playerId: number; name: string; damage: number; hits: number }[]; fightingNow: number;
   /** the fight mode (content/medals.ts) */
   mode?: "pacan" | "blat" | "avtor";
+  /** «Комбо» of this fight (content/combo.ts), when one was picked */
+  combo?: import("./screens/combo.tsx").ComboState | null;
   /** «Соло»: only my own hits take this fight's HP */
   solo?: boolean;
 }

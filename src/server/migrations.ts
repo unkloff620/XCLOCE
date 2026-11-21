@@ -1614,4 +1614,20 @@ UPDATE players SET ach_points = 0, ach_boxes_opened = 0;`,
   PRIMARY KEY (player_id, hour, weapon_id)
 );`,
   },
+  {
+    // «Комбо» (content/combo.ts): the combo mode of a fight, and a player's progress in a day's sequence
+    id: "v2-114-combo",
+    sql: `ALTER TABLE fights ADD COLUMN IF NOT EXISTS combo TEXT;
+CREATE TABLE IF NOT EXISTS combo_progress (
+  player_id INT NOT NULL,
+  day TEXT NOT NULL,
+  boss_id TEXT NOT NULL,
+  mode TEXT NOT NULL,
+  progress INT NOT NULL DEFAULT 0,
+  done_at TIMESTAMPTZ,
+  reward JSONB,
+  claimed_at TIMESTAMPTZ,
+  PRIMARY KEY (player_id, day, boss_id, mode)
+);`,
+  },
 ];

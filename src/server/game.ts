@@ -14,6 +14,7 @@ import { loadConfig } from "./config.ts";
 import { lockPlayer, type Ctx } from "./core.ts";
 import { num, oneOf, str } from "./http.ts";
 import * as combat from "./systems/combat.ts";
+import * as combo from "./systems/combo.ts";
 import * as locations from "./systems/locations.ts";
 import * as swap from "./systems/swap.ts";
 import * as yard from "./systems/yard.ts";
@@ -94,7 +95,7 @@ export async function settleAllWins(db: Db, now = Date.now()) {
 }
 
 export const ACTIONS = [
-  "fight_start", "attack", "fight_claim", "fight_flee",
+  "fight_start", "attack", "fight_claim", "fight_flee", "combo_claim",
   "task", "location_claim", "business_up", "business_claim",
   "yard_pick",
   "buy", "exchange", "use", "equip", "unequip",
@@ -188,7 +189,8 @@ async function afterAction(ctx: Ctx, type: ActionType, result: unknown) {
 function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Promise<unknown> {
   const idem = typeof body.idem === "string" ? body.idem.slice(0, 80) : undefined;
   switch (type) {
-    case "fight_start": return combat.startFight(ctx, str(body.boss, "boss", 40), body.solo === true, body.mode === undefined ? "pacan" : oneOf(body.mode, ["pacan", "blat", "avtor"] as const, "mode"));
+    case "fight_start": return combat.startFight(ctx, str(body.boss, "boss", 40), body.solo === true, body.mode === undefined ? "pacan" : oneOf(body.mode, ["pacan", "blat", "avtor"] as const, "mode"), body.combo == null ? null : oneOf(body.combo, ["pacan", "blat", "avtor"] as const, "combo"));
+    case "combo_claim": return combo.comboClaim(ctx, str(body.boss, "boss", 40), str(body.mode, "mode", 10));
     case "attack": return combat.attack(ctx, str(body.weapon, "weapon", 40), idem, body.count === undefined ? 1 : num(body.count, "count"), body.rush === true);
     case "fight_claim": return combat.claimFight(ctx, num(body.fightId, "fightId"));
     case "fight_flee": return combat.fleeFight(ctx);

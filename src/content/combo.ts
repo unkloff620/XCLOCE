@@ -1,0 +1,101 @@
+import type { Reward } from "./rewards.ts";
+import { STASH_SETS_ORDERED } from "./stashes.ts";
+import { onePart } from "./craft-drops.ts";
+
+/*
+ * «Комбо» (the user 2026-11-21): a hidden sequence of hits on a boss, to be guessed in a fight. Before the fight the
+ * player picks the fight mode and then the combo mode; every hit is checked against the next step. Right — +1; wrong —
+ * now and then (COMBO_KEEP) the progress stays, mostly it falls to zero. The sequence is one for everybody (players
+ * may tell each other), its own for every boss and combo mode, and it changes every day at 00:00 Moscow time.
+ * Done — the payout (authority, money, нычки, parts, weapons by the mode) is taken with «Забрать».
+ */
+
+export type ComboMode = "pacan" | "blat" | "avtor";
+export const COMBO_MODES: { id: ComboMode; name: string; length: number }[] = [
+  { id: "pacan", name: "Пацанский", length: 6 },
+  { id: "blat", name: "Блатной", length: 10 },
+  { id: "avtor", name: "Авторитетный", length: 16 },
+];
+export const comboMode = (id: string | null | undefined) => COMBO_MODES.find((m) => m.id === id) ?? null;
+
+/** the free hits: кулак, тычок в глаза, пинок */
+export const COMBO_FREE = ["fist", "mouse", "red-candle"];
+/** the bat: in «Блатной» and «Авторитетный» only */
+export const COMBO_BAT = "bat";
+/** a wrong hit keeps the progress this often */
+export const COMBO_KEEP = 0.1;
+/** «Пацанский»: a step is a weapon this rarely (when the boss uses weapons) */
+const PACAN_WEAPON = 0.06;
+
+/** the weapons a boss's combo may ask for (нож, пистолет, автомат); the first ones — none */
+export const COMBO_WEAPONS: Record<string, string[]> = {
+  datsik: [], kedr: [], mugo: [],
+  garkusha: ["keyboard"], bebyakyan: ["keyboard"], babafey: ["keyboard"],
+  vodovoz: ["keyboard", "gpu"], knyaz: ["keyboard", "gpu"], vadim: ["keyboard", "gpu"],
+  botsman: ["keyboard", "gpu", "rug-pull-gun"], utilizator: ["keyboard", "gpu", "rug-pull-gun"],
+  fokus: ["keyboard", "gpu", "rug-pull-gun"], solntse: ["keyboard", "gpu", "rug-pull-gun"],
+  pepe: [],
+};
+
+const hash = (s: string) => [...s].reduce((h, c) => (Math.imul(h, 31) + c.charCodeAt(0)) >>> 0, 2166136261);
+/** a small seeded random (mulberry32) */
+function seeded(seed: number) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** today's sequence of a boss in a combo mode (`day` — the Moscow day, YYYY-MM-DD) */
+export function comboSequence(day: string, bossId: string, mode: ComboMode): string[] {
+  const def = comboMode(mode)!;
+  const rnd = seeded(hash(`combo:${day}:${bossId}:${mode}`));
+  const weapons = COMBO_WEAPONS[bossId] ?? [];
+  const pool = mode === "pacan" ? COMBO_FREE : [...COMBO_FREE, COMBO_BAT];
+  const out: string[] = [];
+  for (let i = 0; i < def.length; i++) {
+    const weapon = weapons.length > 0 && rnd() < (mode === "pacan" ? PACAN_WEAPON : 0.22);
+    const from = weapon ? weapons : pool;
+    let h = from[Math.floor(rnd() * from.length) % from.length];
+    // never three of the same in a row
+    if (out.length >= 2 && out[out.length - 1] === h && out[out.length - 2] === h) h = pool[(pool.indexOf(h) + 1) % pool.length];
+    out.push(h);
+  }
+  return out;
+}
+
+/** the payout of a combo mode: [min, max] of each (the user's table) */
+export const COMBO_PAYOUT: Record<ComboMode, { xp: [number, number]; PAP: [number, number]; RUB?: number; TOOTH?: [number, number]; stash: [number, number]; parts: [number, number]; keyboard: [number, number]; gpu: [number, number]; rifle: [number, number] }> = {
+  pacan: { xp: [800, 1400], PAP: [400, 700], stash: [1, 2], parts: [1, 2], keyboard: [1, 3], gpu: [1, 2], rifle: [1, 2] },
+  blat: { xp: [1500, 2500], PAP: [800, 1700], RUB: 3, stash: [1, 2], parts: [3, 5], keyboard: [2, 4], gpu: [3, 4], rifle: [2, 3] },
+  avtor: { xp: [2600, 3700], PAP: [1800, 2700], RUB: 12, TOOTH: [800, 1300], stash: [25, 35], parts: [5, 8], keyboard: [5, 9], gpu: [4, 8], rifle: [4, 7] },
+};
+const STASH_ITEMS = STASH_SETS_ORDERED.flatMap((s) => s.items.map((i) => i.id));
+
+/** the payout, rolled once when the combo is done (kept until «Забрать») */
+export function rollComboReward(mode: ComboMode, rng: () => number): Reward {
+  const p = COMBO_PAYOUT[mode];
+  const between = ([a, b]: [number, number]) => a + (Math.floor(rng() * (b - a + 1)) % (b - a + 1));
+  const items = new Map<string, number>();
+  const add = (id: string, n: number) => n > 0 && items.set(id, (items.get(id) ?? 0) + n);
+  // нычки: different ones while there are
+  const stash = between(p.stash);
+  const left = STASH_ITEMS.slice();
+  for (let i = 0; i < stash; i++) {
+    const k = Math.floor(rng() * left.length) % Math.max(1, left.length);
+    add(left.length ? left.splice(k, 1)[0] : STASH_ITEMS[k % STASH_ITEMS.length], 1);
+  }
+  for (let i = 0, n = between(p.parts); i < n; i++) add(onePart(rng, "common"), 1);
+  add("keyboard", between(p.keyboard));
+  add("gpu", between(p.gpu));
+  add("rug-pull-gun", between(p.rifle));
+  return {
+    xp: between(p.xp),
+    currencies: { PAP: between(p.PAP), ...(p.RUB ? { RUB: p.RUB } : {}), ...(p.TOOTH ? { TOOTH: between(p.TOOTH) } : {}) },
+    items: [...items].map(([id, qty]) => ({ id, qty })),
+  };
+}
