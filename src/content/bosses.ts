@@ -172,7 +172,7 @@ export const BOSSES: BossDef[] = [
     story: "Отвечает за прокси и за всё, что связано с алкоголем. Тусовка не начнётся без его разрешения.",
     hp: hp(10), reward: { xp: xp(10), currencies: { TOOTH: 15_000, PAP: 15_000 } },
     // his things drop in «Авторитетный» (his tattoos — in «Пацанский» and «Блатной»)
-    wear: { items: ["vials-utilizator", "mask-gas-utilizator"], chance: 0.1, pity: 10 }, thingsMode: "avtor",
+    wear: { items: ["vials-utilizator", "mask-gas-utilizator", "apron-utilizator"], chance: 0.1, pity: 10 }, thingsMode: "avtor",
     theme: { a: "#2f3416", b: "#0f1106", accent: "#c8f03c" }, photo: photo("utilizator", true),
     keysToUnlock: 1,
   },

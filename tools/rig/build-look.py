@@ -77,6 +77,8 @@ WEAR_SLOT = {"tee-white": "SHIRT", "tee-pump": "SHIRT", "jeans": "PANTS", "short
              "mask-anon": "FACE", "monocle-whale": "FACE", "bruise-liq": "FACE",
              # Утилизатор's gas mask (an image edit of the mask-anon layer, placed in its box; the source picture in wear/_gen)
              "mask-gas-utilizator": "FACE",
+             # Утилизатор's apron (drawn by the artist on the rig canvas, over the chest and the lap)
+             "apron-utilizator": "SHIRT",
              "crown-cash": "HEAD", "ushanka-star": "HEAD", "helmet-miner": "HEAD", "bandana-hodl": "HEAD",
              # Вадим's things (image edits of Гаркуша's layers, their alpha kept; the tie drawn on the hero)
              "jacket-vadim": "SHIRT", "pants-vadim": "PANTS", "shoes-vadim": "SHOES", "tie-vadim": "ACCESSORY",

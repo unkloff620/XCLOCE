@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-22-apron",
+    date: "22 ноября",
+    title: "Фартук Утилизатора",
+    items: [
+      { img: "/assets/items/apron-utilizator.webp", text: "Новая вещь с Утилизатора (в «Авторитетном»): «Фартук Утилизатора» — чёрная кожа, ремень и жёлтый знак «Утилизатор кислоты». Надевается на верх." },
+    ],
+  },
+  {
     id: "2026-11-20-locations",
     date: "20 ноября",
     title: "Ещё четыре локации",

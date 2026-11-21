@@ -279,6 +279,13 @@ export const WEAR_FIT = {
     "w": 208,
     "h": 216
   },
+  "apron-utilizator": {
+    "slot": "SHIRT",
+    "x": 287.5,
+    "y": 309.5,
+    "w": 430,
+    "h": 852
+  },
   "crown-cash": {
     "slot": "HEAD",
     "x": 364.0,
