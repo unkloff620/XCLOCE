@@ -15,7 +15,7 @@ export const YARD_MAX_ITEMS = 5;
 
 // Mostly папиросы; every other find 1%, the roubles 0.5% (the user 2026-11-22). Weights are per mille.
 export const YARD_DROPS: YardDrop[] = [
-  { id: "papirosy", name: "Папиросы", icon: "PAP", weight: 955, reward: { currencies: { PAP: 10 } } },
+  { id: "papirosy", name: "Папироса", icon: "PAP", weight: 955, reward: { currencies: { PAP: 1 } } },
   { id: "coins", name: "Мелочь из-под лавки", icon: "coins", weight: 5, reward: { currencies: { RUB: 25 } } },
   // «Крафт»: a part lies on the ground (which one is rolled when it appears — the drop id becomes the part's id)
   { id: "parts-common", name: "Деталь", icon: "part-nails", weight: 10, reward: {} },
