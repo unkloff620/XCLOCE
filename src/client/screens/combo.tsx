@@ -87,15 +87,42 @@ function ClaimButton({ bossId, mode, onClaimed }: { bossId: string; mode: ComboM
   );
 }
 
+/** a heap of нычки: up to PILE_MAX pictures thrown on each other, each a little turned (the same every time) */
+const PILE_MAX = 14;
+function StashPile({ ids }: { ids: string[] }) {
+  const shown = ids.slice(0, PILE_MAX);
+  const n = shown.length;
+  return (
+    <span className="stash-pile" aria-label="Нычки">
+      {shown.map((id, i) => {
+        // a heap: the first ones at the bottom, wide; the last ones on top, near the middle
+        const k = (i * 2654435761) % 1000 / 1000;
+        const up = n > 1 ? i / (n - 1) : 0.5;
+        const x = 50 + (k - 0.5) * (70 - up * 40);
+        const y = 72 - up * 44 + ((k * 7) % 1) * 8;
+        const r = (k - 0.5) * 70;
+        return <span key={i} className="stash-pile-i" style={{ left: `${x}%`, top: `${y}%`, transform: `translate(-50%, -50%) rotate(${r}deg)`, zIndex: i }}><ItemArt id={id} size={34} /></span>;
+      })}
+    </span>
+  );
+}
+
 /** «КОМБО РАЗГАДАНО!»: the payout, «Забрать» */
 export function ComboDone({ c, bossId, onClose }: { c: ComboState; bossId: string; onClose: () => void }) {
+  // the нычки lie in a heap — no count, just their pictures; the rest in the usual line
+  const items = c.reward?.items ?? [];
+  const stash = items.filter((i) => i.id.startsWith("stash-")).flatMap((i) => Array.from({ length: i.qty }, () => i.id));
+  const rest = c.reward ? { ...c.reward, items: items.filter((i) => !i.id.startsWith("stash-")) } : null;
   return (
     <div className="combo-done-back" onPointerDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="combo-done" role="dialog" aria-label="Комбо разгадано">
         <button type="button" className="combo-done-x" onClick={onClose} aria-label="Закрыть">×</button>
         <b className="combo-done-title display">Комбо разгадано!</b>
         <span className="combo-done-sub">Держи, тебе подгон:</span>
-        <div className="combo-done-gain"><GainLine r={c.reward} size={30} /></div>
+        <div className="combo-done-gain">
+          {stash.length > 0 && <StashPile ids={stash} />}
+          <GainLine r={rest} size={30} />
+        </div>
         {!c.claimed && <ClaimButton bossId={bossId} mode={c.mode} onClaimed={onClose} />}
       </div>
     </div>
