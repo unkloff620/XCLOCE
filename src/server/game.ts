@@ -164,6 +164,7 @@ async function afterAction(ctx: Ctx, type: ActionType, result: unknown) {
     }
     case "craft_make": return monthly.monthTick(ctx, "craft", 1);
     case "clan_create": return counters.setMax(ctx.q, ctx.pid, "clanCreated", 1);
+    case "clan_leave": return counters.setMax(ctx.q, ctx.pid, "clanLeft", 1);
     case "slots_spin": return quests.questTick(ctx, "slots", 1);
     case "daily_claim": return notify.scheduleStreak(ctx, Number(r.streak) || 1);
     // the mini-game quests: a counted poker hand, a finished zonk game, a squashed roach (blackjack rounds: blackjack.ts)

@@ -3654,6 +3654,8 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 /* achievements in lists: Боевые / Экономика / Задания / Нычки / Прочее; a red dot where something waits */
 .ach-groups { display: flex; gap: 5px; overflow-x: auto; scrollbar-width: none; margin: 8px 0 0; padding: 4px 2px 2px; }
 .ach-groups::-webkit-scrollbar { display: none; }
+/* a tab still to come («Комбо», «Мастерская», «События») */
+.ach-soon { margin: 22px 0 14px; text-align: center; font: 900 22px/1 var(--font-display), system-ui; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(90, 63, 36, 0.55); }
 .ach-group { position: relative; flex: none; padding: 6px 11px; border-radius: 10px; border: 2px solid #6e5134; background: rgba(110, 81, 52, 0.14); color: #5a3f24; font-size: 12.5px; font-weight: 800; }
 .ach-group.on { background: #6e5134; color: #f6ead2; border-color: #4a331d; }
 .ach-group.due::after, .dos-book .dos-tab.due::after { content: ""; position: absolute; top: -2px; right: -2px; width: 7px; height: 7px; border-radius: 50%; background: #ff3b4e; border: 1.5px solid #2a1606; }

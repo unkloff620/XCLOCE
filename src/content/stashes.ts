@@ -442,7 +442,7 @@ export const STASH_SETS: StashSet[] = [
   },
 ];
 /** sets collected for the bronze, silver and gold medal of a set */
-export const STASH_MEDAL_TARGETS = [10, 50, 100] as const;
+/** (moved to content/achievements.ts: 1 and 10) */
 export const STASH_IDS = STASH_SETS.flatMap((s) => s.items.map((i) => i.id));
 export const stashSetOf = (itemId: string) => STASH_SETS.find((s) => s.items.some((i) => i.id === itemId));
 export const stashSetsByLocation = (locationId: string) => STASH_SETS.filter((s) => s.location === locationId);

@@ -5,7 +5,8 @@ import type { Config } from "../config.ts";
 import { bossById, bossOpen } from "../../content/bosses.ts";
 import { slotLevel } from "../../content/slots.ts";
 import { fortuneLevel } from "../../content/fortune.ts";
-import { pokerLevel } from "../../content/games.ts";
+import { pokerLevel, zonkXpLevel } from "../../content/games.ts";
+import { clanLevelInfo } from "../../content/clans.ts";
 import { countersOf } from "./counters.ts";
 import { CRAFT_BOXES, craftBonusOf } from "../../content/craft.ts";
 import { unshavenDays } from "../../content/home.ts";
@@ -94,8 +95,24 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
   // poker hands, zonk combinations (counters), the talents the damage gave
   const got = await q.query<{ key: string; n: number }>(
     "SELECT key, SUM(delta)::bigint AS n FROM ledger WHERE player_id=$1 AND kind='item' AND delta > 0 AND key = ANY($2) AND created_at >= COALESCE((SELECT progress_reset_at FROM players WHERE id=$1), '-infinity'::timestamptz) GROUP BY key",
-    [pid, ["rug-pull-gun", "gpu", "keyboard", "poker-chip", "sticker-hodl", "keys-bundle"]],
+    [pid, ["rug-pull-gun", "gpu", "keyboard", "poker-sticker", "keycap"]],
   );
+  // wins over each boss not in a solo fight ("team:<boss>")
+  const team = await q.query<{ boss_id: string; n: number }>(
+    "SELECT boss_id, COUNT(*)::int AS n FROM fights WHERE player_id=$1 AND status='won' AND NOT solo GROUP BY boss_id", [pid]);
+  // the money collected, every gain counted ("earn:<currency>")
+  const earn = await q.query<{ key: string; n: number }>(
+    "SELECT key, SUM(delta)::bigint AS n FROM ledger WHERE player_id=$1 AND kind='currency' AND delta > 0 AND key = ANY($2) GROUP BY key",
+    [pid, ["PAP", "RUB", "TOKEN", "TOOTH", "GOLD"]]);
+  // every thing made in the craft ("craft:<item id>")
+  const made = await q.query<{ key: string; n: number }>("SELECT key, SUM(delta)::int AS n FROM ledger WHERE player_id=$1 AND kind='craft' AND delta > 0 GROUP BY key", [pid]);
+  // the yards captured whole with the clan (a flag for the whole yard: reason raid_yard:<yard>) ("raidyard:<yard>")
+  const yards = await q.query<{ yard: string; n: number }>(
+    "SELECT substr(reason, 11) AS yard, COUNT(*)::int AS n FROM ledger WHERE player_id=$1 AND kind='item' AND delta > 0 AND reason LIKE 'raid_yard:%' GROUP BY 1", [pid]);
+  const [cl] = await q.query<{ xp: number | null; sent: number; zonk_xp: number }>(
+    `SELECT (SELECT c.raid_xp FROM clan_members m JOIN clans c ON c.id = m.clan_id WHERE m.player_id=$1)::bigint AS xp,
+            (SELECT COALESCE(SUM(qty), 0) FROM stash_gifts WHERE from_id=$1)::int AS sent,
+            (SELECT COALESCE(zonk_xp, 0) FROM players WHERE id=$1)::bigint AS zonk_xp`, [pid]);
   const fast = await q.query<{ boss_id: string; n: number }>(
     `SELECT boss_id, COUNT(*)::int AS n FROM fights WHERE player_id=$1 AND status='won' AND ended_at IS NOT NULL
        AND ended_at - started_at <= interval '1 hour' GROUP BY boss_id`,
@@ -116,6 +133,14 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
     ...tat,
     ...Object.fromEntries(slots.map((r) => [`slot:${r.outcome}`, Number(r.n)])),
     ...Object.fromEntries(got.map((r) => [`got:${r.key}`, Number(r.n)])),
+    ...Object.fromEntries(team.map((r) => [`team:${r.boss_id}`, Number(r.n)])),
+    ...Object.fromEntries(earn.map((r) => [`earn:${r.key}`, Number(r.n)])),
+    ...Object.fromEntries(made.map((r) => [`craft:${r.key}`, Number(r.n)])),
+    ...Object.fromEntries(yards.map((r) => [`raidyard:${r.yard}`, Number(r.n)])),
+    clanLevel: cl?.xp == null ? 0 : clanLevelInfo(Number(cl.xp)).level,
+    giftsSent: Number(cl?.sent ?? 0),
+    zonkLevel: zonkXpLevel(Number(cl?.zonk_xp ?? 0)).level,
+    clanLeft: Math.min(1, c.clanLeft ?? 0),
     ...Object.fromEntries(fast.map((r) => [`fast:${r.boss_id}`, Number(r.n)])),
     ...Object.fromEntries(locs.map((r) => [r.location_id.startsWith("night:") ? `locn:${r.location_id.slice(6)}` : `loc:${r.location_id}`, Number(r.n)])),
     ...Object.fromEntries(biz.map((r) => [`biz:${r.location_id}`, 1])),

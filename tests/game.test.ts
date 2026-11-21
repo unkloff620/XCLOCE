@@ -285,9 +285,9 @@ describe("boss fights: personal fights, shared damage", () => {
     expect(h2.result).toMatchObject({ status: "won", hp: 0 });
     const c = await act(db, b, "fight_claim", { fightId: fb.result.fightId }, T0, always(0.99));
     expect(c.result).toMatchObject({ status: "won", share: 1, key: true });
-    // the per-boss badge: Датцкоу beaten solo — collected once, for 1 achievement point; Кедр is still to do
+    // the per-boss badge: Датцкоу beaten solo — collected once, for 2 achievement points; Кедр is still to do
     const sr = await act(db, b, "achievement_claim", { id: "soloboss-datsik" }, T0);
-    expect(sr.result.reward.achPoints).toBe(1);
+    expect(sr.result.reward.achPoints).toBe(2);
     await expect(act(db, b, "achievement_claim", { id: "soloboss-datsik" }, T0)).rejects.toMatchObject({ code: "achievement_taken" });
     await expect(act(db, b, "achievement_claim", { id: "soloboss-kedr" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
     sb = await act(db, b, "equip", { itemId: "jeans" }, T0);
@@ -1939,24 +1939,21 @@ describe("a won fight pays at once", () => {
 });
 
 describe("boss slayer badges", () => {
-  it("10 / 50 / 100 wins over a boss: bronze, silver, gold", async () => {
+  it("«Боссы»: a boss beaten not in a solo fight; a solo win does not count", async () => {
     const p = await newPlayer(db);
-    await expect(act(db, p, "achievement_claim", { id: "bosskill-datsik-1" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
-    for (let i = 0; i < 10; i++) {
-      await db.query("INSERT INTO fights (player_id, boss_id, hp_max, start_total, start_seq, started_at, ends_at, day, status, my_damage) VALUES ($1,'datsik',10,0,0,now(),now(),'2020-01-01','won',10)", [p]);
-    }
-    // won but not taken yet: not counted (the boss page and the medal count the taken wins too)
-    await expect(act(db, p, "achievement_claim", { id: "bosskill-datsik-1" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
-    await db.query("INSERT INTO boss_damage (boss_id, player_id, wins) VALUES ('datsik',$1,10)", [p]);
-    const r = await act(db, p, "achievement_claim", { id: "bosskill-datsik-1" }, T0);
-    expect(r.result.reward).toBeTruthy();
-    await expect(act(db, p, "achievement_claim", { id: "bosskill-datsik-2" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
-    await expect(act(db, p, "achievement_claim", { id: "bosskill-kedr-1" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
+    const fight = (solo: boolean) => db.query("INSERT INTO fights (player_id, boss_id, hp_max, start_total, start_seq, started_at, ends_at, day, status, my_damage, solo) VALUES ($1,'datsik',10,0,0,now(),now(),'2020-01-01','won',10,$2)", [p, solo]);
+    await expect(act(db, p, "achievement_claim", { id: "team-datsik" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
+    await fight(true);
+    await expect(act(db, p, "achievement_claim", { id: "team-datsik" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
+    await fight(false);
+    const r = await act(db, p, "achievement_claim", { id: "team-datsik" }, T0);
+    expect(r.result.reward.achPoints).toBe(2);
+    await expect(act(db, p, "achievement_claim", { id: "team-kedr" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
   });
 });
 
 describe("нычки", () => {
-  it("stashes drop again and pile up; four of a set are collected for the set reward, again and again; medals at 10 / 50 / 100", async () => {
+  it("stashes drop again and pile up; four of a set are collected for the set reward, again and again; medals at 1 / 10", async () => {
     const p = await newPlayer(db);
     // rng 0 → the chance hits and the first stash of the location drops — again and again
     const r = await act(db, p, "task", { taskId: "os-standup" }, T0, always(0));
@@ -1972,10 +1969,11 @@ describe("нычки", () => {
     expect(c.state.stashSets).toEqual({ 1: 1 });
     expect(await wallet(db, p, "PAP")).toBe(rub + 100); // a set pays папиросы
     expect([await qty(db, p, "stash-sneaker"), await qty(db, p, "stash-cigs")]).toEqual([1, 0]);
-    // medals: bronze at 10 sets
-    await expect(act(db, p, "achievement_claim", { id: "stashset-1-1" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
+    // the collection gathered once: 5 points; ten times: 20
+    expect((await act(db, p, "achievement_claim", { id: "stashset-1-1" }, T0)).result.reward.achPoints).toBe(5);
+    await expect(act(db, p, "achievement_claim", { id: "stashset-1-2" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
     await db.query("UPDATE stash_sets SET count = 10 WHERE player_id=$1 AND set_n=1", [p]);
-    await act(db, p, "achievement_claim", { id: "stashset-1-1" }, T0);
+    expect((await act(db, p, "achievement_claim", { id: "stashset-1-2" }, T0)).result.reward.achPoints).toBe(20);
     const { itemById } = await import("../src/content/items.ts");
     expect(itemById("stash-radio")?.category).toBe("stash");
   });

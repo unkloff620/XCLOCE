@@ -1586,4 +1586,10 @@ DELETE FROM location_business;`,
     id: "v2-110-last-hit-at",
     sql: `ALTER TABLE players ADD COLUMN IF NOT EXISTS last_hit_at TIMESTAMPTZ;`,
   },
+  {
+    // achievements, fourth edition (the user 2026-11-21): the old list is gone — what was collected and its points start over
+    id: "v2-111-achievements-v4",
+    sql: `DELETE FROM achievements;
+UPDATE players SET ach_points = 0, ach_boxes_opened = 0;`,
+  },
 ];

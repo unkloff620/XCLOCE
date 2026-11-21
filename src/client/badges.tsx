@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 
 const AUTO_KEY = "xc-ach-auto";
 import { MEDAL_TIERS } from "../content/medals.ts";
-import { ACH_CATEGORIES, ACH_SECTIONS, TIER_COLORS, TIER_NAMES, achievementById, categoryOf, type AchCategory, type AchievementDef, type AchSection, type AchTier } from "../content/achievements.ts";
+import { ACH_CATEGORIES, ACH_SECTIONS, STASH_MEDAL_TARGETS, TIER_COLORS, TIER_NAMES, achievementById, categoryOf, type AchCategory, type AchievementDef, type AchSection, type AchTier } from "../content/achievements.ts";
 import { Icon, type IconName } from "./art/icons.tsx";
 import { Modal, RewardChips } from "./ui.tsx";
 import { useGame } from "./store.tsx";
@@ -115,7 +115,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
           <div className="col" style={{ gap: 8 }}>
             <div className="small muted center">Нычки выпадают за задания в локациях.</div>
             {STASH_SETS_ORDERED.map((st, k, arr) => {
-              const count = self ? state?.stashSets?.[st.n] ?? 0 : byId.get(`stashset-${st.n}-3`)?.progress ?? 0;
+              const count = self ? state?.stashSets?.[st.n] ?? 0 : byId.get(`stashset-${st.n}-${STASH_MEDAL_TARGETS.length}`)?.progress ?? 0;
               const ready = self && st.items.every((it) => (stashQty.get(it.id) ?? 0) > 0);
               return (
                 <div key={st.id} className="col" style={{ gap: 6 }}>
@@ -127,13 +127,14 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
                       <span className="tiny muted">собрано: <b className="num" style={{ color: "var(--ink)" }}>{count}</b></span>
                     </span>
                     <span className="bk-medals">
-                      {([1, 2, 3] as AchTier[]).map((t) => {
-                        const id = `stashset-${st.n}-${t}`;
+                      {STASH_MEDAL_TARGETS.map((_, k) => {
+                        const t = (k ? 3 : 1) as AchTier;
+                        const id = `stashset-${st.n}-${k + 1}`;
                         const r = byId.get(id);
                         const gotM = !!r && (r.claimed || (!self && r.done));
                         const due = self && !!r?.done && !r.claimed;
                         return (
-                          <button key={t} className={`bk-medal ${due ? "due" : ""}`} onClick={() => setMedal(id)} aria-label={achievementById(id)?.name}>
+                          <button key={id} className={`bk-medal ${due ? "due" : ""}`} onClick={() => setMedal(id)} aria-label={achievementById(id)?.name}>
                             <BadgeMedal icon="chest" tier={t} earned={gotM || due} size={28} />
                           </button>
                         );
@@ -240,7 +241,8 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
           <button key={g.id} type="button" role="tab" aria-selected={section === g.id} className={`ach-group ${section === g.id ? "on" : ""} ${sectionDue(g.id) ? "due" : ""}`} onClick={() => { haptic.tap(); setSection(g.id); }}>{g.name}</button>
         ))}
       </div>}
-      {shown && <div className="col ach-scroll" style={{ gap: 8, marginTop: 8 }}>
+      {shown && ACH_SECTIONS.find((g) => g.id === section)?.soon && <div className="ach-soon">Скоро</div>}
+      {shown && !ACH_SECTIONS.find((g) => g.id === section)?.soon && <div className="col ach-scroll" style={{ gap: 8, marginTop: 8 }}>
         {ACH_CATEGORIES.filter((c) => c.section === section && (!c.id.startsWith("fortune-") || !!state?.fortune?.on)).map((c) => {
           const ls = lines(c);
           if (!ls.length) return null;

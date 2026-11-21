@@ -100,26 +100,41 @@ describe("achievements and someone's profile", () => {
   it("a position is collected once, only when reached, for achievement points; the profile shows them and the room", async () => {
     const p = await newPlayer(db);
     const pts = async () => Number((await db.query<{ n: number }>("SELECT ach_points AS n FROM players WHERE id=$1", [p]))[0].n);
-    await expect(act(db, p, "achievement_claim", { id: "fight-damage-1" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
+    await expect(act(db, p, "achievement_claim", { id: "damage-1" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
     await give(db, p, "keyboard", 10);
     await act(db, p, "fight_start", { boss: "datsik" }, T0);
     for (let i = 0; i < 10; i++) await act(db, p, "attack", { weapon: "keyboard" }, T0, always(0.99));
     const viewer = await newPlayer(db);
     let prof = await profileView(db, viewer, p, await loadConfig(db), T0);
-    expect(prof.achievements.find((a) => a.id === "fight-damage-1")).toMatchObject({ progress: 300, done: false });
-    // one fight of 1 000 damage: the first position («Первая кровь»), not the second
-    await db.query("UPDATE fights SET my_damage = 1000 WHERE player_id=$1", [p]);
-    await expect(act(db, p, "achievement_claim", { id: "fight-damage-2" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
+    const dealt = prof.achievements.find((a) => a.id === "damage-1")!;
+    expect(dealt.done).toBe(false);
+    expect(dealt.progress).toBeGreaterThan(0);
+    // 1 000 damage dealt in all: the first position, not the second
+    await db.query("UPDATE player_stats SET total_damage = 1000 WHERE player_id=$1", [p]);
+    await expect(act(db, p, "achievement_claim", { id: "damage-2" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });
     const before = await pts();
-    await act(db, p, "achievement_claim", { id: "fight-damage-1" }, T0);
+    await act(db, p, "achievement_claim", { id: "damage-1" }, T0);
     expect(await pts()).toBe(before + 1);
-    await expect(act(db, p, "achievement_claim", { id: "fight-damage-1" }, T0)).rejects.toMatchObject({ code: "achievement_taken" });
+    await expect(act(db, p, "achievement_claim", { id: "damage-1" }, T0)).rejects.toMatchObject({ code: "achievement_taken" });
 
     prof = await profileView(db, viewer, p, await loadConfig(db), T0);
     expect(prof.self).toBe(false);
     expect(prof.wallet).toBeNull();
-    expect(prof.achievements.find((a) => a.id === "fight-damage-1")).toMatchObject({ done: true, claimed: true });
+    expect(prof.achievements.find((a) => a.id === "damage-1")).toMatchObject({ done: true, claimed: true });
     expect(prof.room).toMatchObject({ id: "basic" });
+  });
+
+  it("new achievements: the money collected, a clan created and left", async () => {
+    const p = await newPlayer(db);
+    const ach = async (id: string) => (await profileView(db, p, p, await loadConfig(db), T0)).achievements.find((a) => a.id === id);
+    await db.query("INSERT INTO ledger (player_id, kind, key, delta, reason) VALUES ($1,'currency','GOLD',3,'test'), ($1,'currency','GOLD',-3,'test')", [p]);
+    expect(await ach("earn-gold-1")).toMatchObject({ progress: 2, done: true });
+    expect(await ach("earn-gold-2")).toMatchObject({ progress: 3, done: false });
+    await act(db, p, "clan_create", { name: "Бета", tag: "BET", emblem: "skull", color: "#ff4d6d" }, T0);
+    expect(await ach("clan-create")).toMatchObject({ done: true });
+    expect(await ach("clan-leave")).toMatchObject({ done: false });
+    await act(db, p, "clan_leave", {}, T0);
+    expect((await act(db, p, "achievement_claim", { id: "clan-leave" }, T0)).result.reward.achPoints).toBe(20);
   });
 
   it("clan settings: only the leader edits name, emblem, colour and description", async () => {
