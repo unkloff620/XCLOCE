@@ -381,6 +381,29 @@ const mgJab: Action = {
     { at: 0.42, pose: {} },
   ],
 };
+/* the reference video (2026-11-22): the far fist (R) throws a straight right across — the one-two with the jab */
+const mgCross: Action = {
+  dur: 0.6,
+  keys: [
+    { at: 0, pose: { armR: 8, lowR: -6, up: -1, x: 3 } }, // the far fist cocked back
+    { at: 0.15, pose: { armR: -55, lowR: 40, handR: 10, up: 2.4, x: -8, head: 2.5, armL: 3 }, stiff: 5.5 }, // the straight right
+    { at: 0.3, pose: { armR: -40, lowR: 28, handR: 6, up: 1.4, head: 1.5 }, stiff: 1.5 },
+    { at: 0.45, pose: {} },
+  ],
+};
+/* …and the near fist goes up over his head and pumps twice — «ну давай!» — the chin up, the chest out */
+const mgRaise: Action = {
+  dur: 1.8,
+  keys: [
+    { at: 0, pose: { armL: -40, lowL: -40, handL: -10, head: -2, up: -1 } },
+    { at: 0.25, pose: { armL: -80, lowL: -56, handL: -24, head: -5, up: -2.5, x: -4, armR: 3 }, stiff: 3 },
+    { at: 0.55, pose: { armL: -88, lowL: -64, handL: -32, head: -6, up: -3, x: -5 }, stiff: 4 },
+    { at: 0.8, pose: { armL: -80, lowL: -56, handL: -24, head: -5, up: -2.5, x: -4 }, stiff: 4 },
+    { at: 1.05, pose: { armL: -88, lowL: -64, handL: -32, head: -6, up: -3, x: -5 }, stiff: 4 },
+    { at: 1.3, pose: { armL: -80, lowL: -56, handL: -24, head: -5, up: -2.5 }, stiff: 4 },
+    { at: 1.65, pose: {} },
+  ],
+};
 const mgTaunt: Action = {
   dur: 1.3,
   keys: [
@@ -648,7 +671,11 @@ const POSES: Record<string, Spec> = {
       { a: join(mgJab, mgJab), w: 22 },
       { a: join(mgJab, mgJab, mgJab), w: 24 },
       { a: join(mgJab, mgJab, mgJab, mgJab, mgJab), w: 10 }, // the artist's round of five
-      { a: mgTaunt, w: 8 },
+      { a: join(mgJab, mgCross), w: 20 }, // the one-two
+      { a: join(mgJab, mgJab, mgCross, mgCross), w: 10 },
+      { a: join(mgCross, mgJab, mgCross), w: 8 },
+      { a: mgRaise, w: 12 }, // the fist up, pumping
+      { a: mgTaunt, w: 6 },
     ],
     rest: [0.8, 2.0],
     hit: { head: 240, up: 70, x: 60, armL: -100, lowL: 140, handL: 200, armR: 100, handR: -160 },

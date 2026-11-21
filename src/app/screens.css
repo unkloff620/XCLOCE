@@ -490,6 +490,9 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .br-tail { animation: br-tail 3.6s ease-in-out infinite; }
 @keyframes br-tail { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-4.5deg); } }
 .rig-mugo .br-breath { animation-duration: 4s; }
+/* on the balls of his feet like a heavyweight in the ring (the user's reference video 2026-11-22): a light bounce */
+.rig-mugo .br-breath { animation: mg-bounce 0.8s ease-in-out infinite; }
+@keyframes mg-bounce { 0%, 100% { transform: translateY(0) scale(1, 1); } 45% { transform: translateY(-7px) scale(1.004, 1.012); } 70% { transform: translateY(1px) scale(1.006, 0.996); } }
 .rig-mugo .br-head { animation-duration: 6.8s; }
 /* he boxes (the artist's two poses, tools/boss/source/mugo/raw/poses.json): a 5 s round — wind up (pose 1: the near
    arm pulled back), then five jabs across the body (pose 2), 0.6 s each, then a ~1.7 s breather in the guard. Shoulder,
