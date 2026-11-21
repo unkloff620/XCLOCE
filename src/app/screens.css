@@ -5468,7 +5468,8 @@ html.paused *, html.paused *::before, html.paused *::after { animation-play-stat
 .sty-item.sty-buy .sty-item-name, .sty-item.sty-locked .sty-item-name { font-size: 9px; line-height: 1.05; }
 .sty-price { display: inline-flex; align-items: center; gap: 2px; padding: 1px 4px; border-radius: 6px; background: rgba(0, 0, 0, 0.35); color: #ffe6a8; font-size: 9.5px; font-weight: 800; white-space: nowrap; }
 .sty-price.go { background: linear-gradient(#f3d27a, #d7a43c); color: #2e1c00; }
-.sty-item.sty-locked { cursor: default; opacity: 0.7; }
+.sty-item.sty-locked { cursor: pointer; opacity: 0.75; }
+.sty-item.sty-locked.on { opacity: 1; }
 .sty-item.sty-locked > svg, .sty-item.sty-locked > img { filter: grayscale(1) brightness(0.6); }
 .sty-why { font-size: 8px; line-height: 1.05; color: rgba(255, 236, 200, 0.75); text-align: center; }
 /* «+комната» on the paper result: dark brown text, no outline */
@@ -7447,3 +7448,11 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 /* the energy window: the drinks in the bag, «N / 20 шт.» */
 .energy-drinks { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 0 2px; }
 .energy-drinks-n { font-size: 20px; text-transform: uppercase; }
+
+/* the hero editor: the thing being tried on — its name and «Купить» */
+.sty-trybar { display: flex; align-items: center; gap: 8px; margin: 0 10px 6px; padding: 6px 8px; border-radius: 12px; border: 2px solid rgba(255, 213, 74, 0.6);
+  background: rgba(24, 15, 9, 0.88); animation: combo-in 0.2s ease-out both; }
+.sty-trybar-name { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
+.sty-trybar-name b { font-size: 13px; color: #fff3d0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sty-trybar-name .tiny { color: #d8c3a0; }
+.sty-trybar .sty-why { font-size: 11px; color: #ffb4a8; white-space: nowrap; }

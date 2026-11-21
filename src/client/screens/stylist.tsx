@@ -259,7 +259,21 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
   } else if (!part) {
     body = <div className="sty-hint">Нажми на персонажа — выбери, что изменить</div>;
   } else if (slot) {
+    // the thing tried on (not owned): its name and «Купить» (or where it comes from)
+    const tried = trying && !owned.has(trying) && draft.worn[slot] === trying ? others.find((x) => x.d.id === trying) ?? null : null;
     body = (
+      <>
+      {tried && (
+        <div className="sty-trybar">
+          <ItemArt id={tried.d.id} size={30} />
+          <span className="grow sty-trybar-name"><b>{tried.d.name}</b><span className="tiny">примерка</span></span>
+          {tried.offer ? (
+            <button type="button" className="btn sm gold" disabled={busy === "buy"} onClick={() => void tryOrBuy(tried.d.id, tried.offer!.id)}>
+              Купить <Icon name={tried.offer.price.currency} size={14} />{money(tried.offer.price.currency, tried.offer.price.amount)}
+            </button>
+          ) : <span className="sty-why">🔒 {tried.why}</span>}
+        </div>
+      )}
       <div className="sty-strip sty-grid">
         <button className={`sty-item none ${!draft.worn[slot] ? "on" : ""}`} onClick={() => wear(null)}>
           <span className="sty-plus" aria-hidden="true">∅</span>
@@ -279,11 +293,13 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
             <span className={`sty-price num ${trying === d.id ? "go" : ""}`}>{trying === d.id ? "Купить" : <><Icon name={offer.price.currency} size={11} />{money(offer.price.currency, offer.price.amount)}</>}</span>
           </button>
         ) : (
-          <span key={d.id} className={`sty-item rar-${d.rarity} sty-locked`} title={`${d.name}: ${why}`}>
+          // not on sale yet: it can still be tried on (it shows where it comes from)
+          <button key={d.id} data-nosfx className={`sty-item rar-${d.rarity} sty-locked ${draft.worn[slot] === d.id ? "on" : ""}`} title={`${d.name}: ${why}`}
+            onClick={() => { wear(d.id); setTrying(d.id); }}>
             <ItemArt id={d.id} size={40} />
             <span className="sty-item-name">{d.name}</span>
             <span className="sty-why">🔒 {why}</span>
-          </span>
+          </button>
         ))}
         {items.length === 0 && others.length === 0 && (slot === "MOUTH" || slot === "TEETH") && (
           <span className="sty-item shop"><span className="sty-plus" aria-hidden="true">⏳</span><span className="sty-item-name">Выпадает из Ящика ништяков</span></span>
@@ -295,6 +311,7 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
           </Link>
         )}
       </div>
+      </>
     );
   }
 
