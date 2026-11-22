@@ -2,7 +2,7 @@
 /*
  * Фокус's monitors (his room, art/arena-fokus.tsx): code types itself on the big one — tiny characters, the whole screen
  * full, it scrolls up when it reaches the bottom — and the small one runs a terminal (builds, tests, failing deadlines).
- * Both are SVG text in a flat box laid onto the screen's corners (the monitors stand turned a little) — not a canvas in a
+ * Both are SVG text in a flat box put onto the screen's four corners in true perspective (thin strips through a homography) — not a canvas in a
  * foreignObject, which the phone's WebKit paints once and never updates. The boss card's code (FokusCardCode) is a canvas.
  */
 import { useEffect, useRef } from "react";
@@ -10,7 +10,7 @@ import { frameGate } from "../eco.ts";
 
 type Pt = readonly [number, number];
 /** the screens' corners in the room's units (1060×1484): top left, top right, bottom right, bottom left */
-const BIG: Pt[] = [[775, 576], [982, 556], [970, 702], [761, 716]];
+const BIG: Pt[] = [[775, 576], [982, 556], [969, 712], [761, 716]];
 const SMALL: Pt[] = [[989, 606], [1046, 598], [1034, 727], [981, 721]];
 /** the screens' exact working area (the artist's mask): the code is clipped to it */
 const BIG_AREA: Pt[] = [[982, 556], [775, 576], [763, 695], [776, 696], [777, 709], [918, 716], [937, 716], [940, 702], [970, 702]];
@@ -154,10 +154,36 @@ export function codeScreen(w: number, h: number) {
   };
 }
 
-/** an affine that lays a flat w×h box onto a screen by its top left, top right and bottom left corners */
-function onto(q: Pt[], w: number, h: number) {
-  const [tl, tr, , bl] = q;
-  return `matrix(${(tr[0] - tl[0]) / w} ${(tr[1] - tl[1]) / w} ${(bl[0] - tl[0]) / h} ${(bl[1] - tl[1]) / h} ${tl[0]} ${tl[1]})`;
+/** the true perspective (as Photoshop's «Perspective»): the homography taking the flat w×h box to the screen's four
+ *  corners (tl, tr, br, bl) — farther parts come out smaller */
+function homography(q: Pt[], w: number, h: number) {
+  const src: Pt[] = [[0, 0], [w, 0], [w, h], [0, h]];
+  const A: number[][] = [];
+  for (let i = 0; i < 4; i++) {
+    const [x, y] = src[i], [X, Y] = q[i];
+    A.push([x, y, 1, 0, 0, 0, -X * x, -X * y, X]);
+    A.push([0, 0, 0, x, y, 1, -Y * x, -Y * y, Y]);
+  }
+  // Gauss–Jordan on the 8×9 system
+  for (let c = 0; c < 8; c++) {
+    let p = c;
+    for (let r = c + 1; r < 8; r++) if (Math.abs(A[r][c]) > Math.abs(A[p][c])) p = r;
+    [A[c], A[p]] = [A[p], A[c]];
+    for (let r = 0; r < 8; r++) if (r !== c) { const f = A[r][c] / A[c][c]; for (let k = c; k < 9; k++) A[r][k] -= f * A[c][k]; }
+  }
+  const m = A.map((r, i) => r[8] / r[i]);
+  return (x: number, y: number): Pt => { const d = m[6] * x + m[7] * y + 1; return [(m[0] * x + m[1] * y + m[2]) / d, (m[3] * x + m[4] * y + m[5]) / d]; };
+}
+/** the flat box cut into n vertical strips, each laid by its own affine through the homography (the strips are thin, so
+ *  together they read as one picture in perspective): [transform, x0, x1] per strip */
+function perspectiveStrips(q: Pt[], w: number, h: number, n: number) {
+  const H = homography(q, w, h);
+  return Array.from({ length: n }, (_, i) => {
+    const x0 = (i / n) * w, x1 = ((i + 1) / n) * w;
+    const o = H(x0, 0), r = H(x1, 0), b = H(x0, h);
+    const a = (r[0] - o[0]) / (x1 - x0), bb = (r[1] - o[1]) / (x1 - x0), c = (b[0] - o[0]) / h, d = (b[1] - o[1]) / h;
+    return { t: `matrix(${a} ${bb} ${c} ${d} ${o[0] - a * x0} ${o[1] - bb * x0})`, x0, x1 };
+  });
 }
 const esc = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -226,6 +252,7 @@ export function FokusScreens() {
     return () => cancelAnimationFrame(raf);
   }, []);
   const poly = (q: Pt[]) => q.map((p) => p.join(",")).join(" ");
+  const SB = perspectiveStrips(BIG, BW, BH, 24), SS = perspectiveStrips(SMALL, SW, SH, 8);
   return (
     <g style={{ pointerEvents: "none" }} fontFamily="ui-monospace, Menlo, Consolas, monospace">
       <defs>
@@ -235,20 +262,27 @@ export function FokusScreens() {
           <stop offset="0" stopColor="#fff" stopOpacity="0.07" /><stop offset="0.45" stopColor="#fff" stopOpacity="0" /><stop offset="1" stopColor="#000" stopOpacity="0.18" />
         </linearGradient>
       </defs>
-      <g clipPath="url(#fks-big)" opacity={0.94}>
-        <polygon points={poly(BIG_AREA)} fill="#0d1117" />
-        <g transform={onto(BIG, BW, BH)}>
-          <g ref={big} fontSize={FS} />
+      {/* the flat screens (drawn once, in defs) shown through the perspective strips */}
+      <defs>
+        <g id="fks-b-flat" fontSize={FS}>
+          <g ref={big} />
           <rect ref={curB} width={6} height={FS} fill="#c9d1d9" />
           <rect width={BW} height={BH} fill="url(#fks-glare)" />
         </g>
+        <g id="fks-s-flat" fontSize={TFS}>
+          <g ref={small} />
+          <rect ref={curS} x={4} width={6} height={TFS} fill="#5fd67a" />
+        </g>
+        {SB.map((st, k) => <clipPath key={k} id={`fks-bc-${k}`}><rect x={st.x0 - 0.6} y={-2} width={st.x1 - st.x0 + 1.2} height={BH + 4} /></clipPath>)}
+        {SS.map((st, k) => <clipPath key={k} id={`fks-sc-${k}`}><rect x={st.x0 - 0.6} y={-2} width={st.x1 - st.x0 + 1.2} height={SH + 4} /></clipPath>)}
+      </defs>
+      <g clipPath="url(#fks-big)" opacity={0.94}>
+        <polygon points={poly(BIG_AREA)} fill="#0d1117" />
+        {SB.map((st, k) => <g key={k} transform={st.t}><use href="#fks-b-flat" clipPath={`url(#fks-bc-${k})`} /></g>)}
       </g>
       <g clipPath="url(#fks-small)" opacity={0.94}>
         <polygon points={poly(SMALL_AREA)} fill="#0a0f0c" />
-        <g transform={onto(SMALL, SW, SH)}>
-          <g ref={small} fontSize={TFS} />
-          <rect ref={curS} x={4} width={6} height={TFS} fill="#5fd67a" />
-        </g>
+        {SS.map((st, k) => <g key={k} transform={st.t}><use href="#fks-s-flat" clipPath={`url(#fks-sc-${k})`} /></g>)}
       </g>
     </g>
   );
