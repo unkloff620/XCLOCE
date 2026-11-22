@@ -43,7 +43,6 @@ const BOARD_ART: Record<GameBoard, string> = { poker: "/assets/yard/game-poker.w
 /** the value on a mini-game board: the best poker hand, the best zonk score, the blackjack winnings */
 const boardValue = (b: GameBoard, v: number) =>
   b === "bj" ? `${short(Math.round(v * 100) / 100)} $` : b === "poker" ? pokerHandOfRank(v)?.name ?? "—" : `${full(v)} очков`;
-const MEDAL = ["gold", "silver", "bronze"];
 
 /** "5 д 3 ч" for long waits, the clock for the last day */
 function untilText(ms: number): string {
@@ -53,9 +52,8 @@ function untilText(ms: number): string {
 }
 
 function Place({ n }: { n: number }) {
-  // places 1–3: a drawn medal with the number (public/assets/ui/place-*.webp)
-  // eslint-disable-next-line @next/next/no-img-element
-  return <span className={`rt-place display ${n <= 3 ? `p${n}` : ""}`}>{n <= 3 ? <img className="rt-medal" src={`/assets/ui/place-${MEDAL[n - 1]}.webp`} alt={`${n} место`} draggable={false} /> : n}</span>;
+  // just the number: the top three already stand on gold / silver / bronze strips (the user 2026-11-23)
+  return <span className={`rt-place display ${n <= 3 ? `p${n}` : ""}`}>{n}</span>;
 }
 
 /** My won prizes waiting to be taken (the weekly tops, the games): here they can always be collected */
