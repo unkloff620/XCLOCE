@@ -1890,7 +1890,7 @@ button.bjt-stack { cursor: pointer; }
 .bcard.bcard-boss-utilizator.locked::before, .bcard.bcard-boss-utilizator.locked::after { display: none; }
 @media (prefers-reduced-motion: reduce) { .bcard.bcard-boss-utilizator::before, .bcard.bcard-boss-utilizator::after { animation: none; } .bcard.bcard-boss-utilizator::after { display: none; } }
 /* Фокус's card: a bloody monitor window (boss-card-frame-fokus.webp, 1200×600, the artist's): the code types itself on
-   the screen behind the text (art/fokus-screens.tsx FokusCardCode), his promise along the top, blood runs down the frame,
+   the screen behind the text (art/fokus-screens.tsx FokusCardCode), his promise along the top,
    and the screen shorts out now and then — bright, then dark for a blink, a flicker, bright again */
 .bcard.bcard-boss-fokus { --ink-c: #f6e6df; --mute-c: #d29a8c; border-image: url("/assets/ui/boss-card-frame-fokus.webp?v=2") 215 fill / 64px stretch;
   animation: fk-card-short 7s steps(1) infinite; }
@@ -1909,18 +1909,8 @@ button.bjt-stack { cursor: pointer; }
 /* his promise runs along the top of the screen like a ticker */
 .fk-card-egg > b { display: inline-block; font-weight: inherit; padding-left: 100%; animation: fk-egg 14s linear infinite; }
 @keyframes fk-egg { from { transform: translateX(0); } to { transform: translateX(-100%); } }
-/* the blood: drops swell at the frame's own drips and run down, one after another */
-.fk-drip { position: absolute; width: 4px; border-radius: 0 0 3px 3px; background: linear-gradient(#7d0a0a, #c4161a); transform-origin: 50% 0;
-  box-shadow: 0 0 3px rgba(200, 20, 20, 0.6); animation: fk-drip 5.2s ease-in infinite; }
-.fk-drip::after { content: ""; position: absolute; left: -2px; bottom: -4px; width: 8px; height: 8px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; background: #b8121a; }
-.fk-drip.d1 { left: 27.5%; top: 17px; animation-delay: -0.4s; }
-.fk-drip.d2 { left: calc(100% - 38px); top: 31px; animation-delay: -2.1s; animation-duration: 6.4s; }
-.fk-drip.d3 { left: 72px; top: calc(100% - 20px); animation-delay: -3.3s; animation-duration: 5.8s; }
-.fk-drip.d4 { left: calc(100% - 60px); top: calc(100% - 16px); animation-delay: -1.2s; animation-duration: 7s; }
-@keyframes fk-drip { 0% { height: 0; opacity: 0; } 8% { height: 2px; opacity: 1; } 70% { height: 26px; opacity: 1; transform: translateY(0); }
-  100% { height: 30px; opacity: 0; transform: translateY(14px); } }
 .bcard.bcard-boss-fokus .bcard-main, .bcard.bcard-boss-fokus .bcard-art { z-index: 1; }
-@media (prefers-reduced-motion: reduce) { .bcard.bcard-boss-fokus, .fk-drip, .fk-card-egg > b { animation: none; } .fk-card-egg > b { padding-left: 0; } }
+@media (prefers-reduced-motion: reduce) { .bcard.bcard-boss-fokus, .fk-card-egg > b { animation: none; } .fk-card-egg > b { padding-left: 0; } }
 @media (prefers-reduced-motion: reduce) { .bcard.bcard-boss-vadim::after { animation: none; background: none; } }
 @media (prefers-reduced-motion: reduce) { .bcard.bcard-boss-knyaz::after { animation: none; background: none; } }
 .bcard-art { left: 5%; top: 16px; bottom: 50px; width: 35%; border-radius: 10px; }

@@ -276,7 +276,6 @@ export function FokusCardCode() {
     <span className="fk-card-fx" aria-hidden="true">
       <canvas ref={ref} className="fk-card-code" width={560} height={300} />
       <span className="fk-card-egg"><b>{"// My name is Fokus — I promise to ship the software by August."}</b></span>
-      <i className="fk-drip d1" /><i className="fk-drip d2" /><i className="fk-drip d3" /><i className="fk-drip d4" />
     </span>
   );
 }
