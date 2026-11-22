@@ -7677,14 +7677,13 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
   57% { transform: translate(760px, 1215px); opacity: 0.6; } 76% { transform: translate(530px, 1235px); opacity: 0.8; }
   96% { transform: translate(300px, 1215px); opacity: 0.6; } 100% { transform: translate(260px, 1215px); opacity: 0.3; } }
 /* the things over the chair at home (layer "front"): the night on them by a filter, on the same clock as the tint */
-.fkr-live.fkr-front { animation: fkr-front-night var(--fkr-cycle) linear infinite; }
-@keyframes fkr-front-night {
-  0% { filter: brightness(0.36) saturate(0.7) sepia(0); } 3% { filter: brightness(0.8) saturate(1.1) sepia(0.2); } 5%, 45% { filter: brightness(1) saturate(1) sepia(0); }
-  49% { filter: brightness(0.8) saturate(1.1) sepia(0.2); } 55%, 100% { filter: brightness(0.36) saturate(0.7) sepia(0); } }
+/* the things over the chair at home (layer "front"): a dark copy over them follows the night tint (opacity only — an
+   animated filter repaints every frame on a phone) */
+.fkr-live .fkr-front-dark { animation: fkr-night-tint var(--fkr-cycle) linear infinite; }
 .fkr-night-tint { animation-name: fkr-night-tint; }
-@keyframes fkr-night-tint { 0% { opacity: 0.72; } 5%, 45% { opacity: 0; } 55%, 100% { opacity: 0.72; } }
+@keyframes fkr-night-tint { 0% { opacity: 0.68; } 5%, 45% { opacity: 0; } 55%, 100% { opacity: 0.68; } }
 .fkr-dusk-tint { animation-name: fkr-dusk-tint; }
-@keyframes fkr-dusk-tint { 0% { opacity: 0.2; } 3% { opacity: 0.55; } 8%, 42% { opacity: 0; } 49% { opacity: 0.6; } 55%, 100% { opacity: 0; } }
+@keyframes fkr-dusk-tint { 0% { opacity: 0.06; } 3% { opacity: 0.16; } 8%, 42% { opacity: 0; } 49% { opacity: 0.18; } 55%, 100% { opacity: 0; } }
 .fkr-lamp { animation-name: fkr-lamp; }
 @keyframes fkr-lamp { 0% { opacity: 1; } 5%, 45% { opacity: 0.25; } 55%, 100% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .fkr-live * { animation: none !important; } }

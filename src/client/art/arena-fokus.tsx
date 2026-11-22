@@ -41,6 +41,10 @@ export function FokusRoom({ uid = "a", layer = "all" }: { uid?: string; layer?: 
     return (
       <g className="fkr-live fkr-front">
         {PROPS.map((n) => thing(n))}
+        <defs>
+          <filter id={`fkr-dk-${uid}`}><feColorMatrix type="matrix" values="0 0 0 0 0.02  0 0 0 0 0.04  0 0 0 0 0.11  0 0 0 1 0" /></filter>
+        </defs>
+        <g className="fkr-front-dark" filter={`url(#fkr-dk-${uid})`}>{PROPS.map((n) => thing(n))}</g>
       </g>
     );
   }
@@ -98,11 +102,11 @@ export function FokusRoom({ uid = "a", layer = "all" }: { uid?: string; layer?: 
       <g className="fkr-spin fkr-fan" style={at(fan.x, fan.y)}>{img("propeller")}</g>
       <image href={`${A}/room.webp?v=2`} x={0} y={0} width={1060} height={1484} preserveAspectRatio="none" />
       {/* the light through the window: a warm glow round it by day */}
-      <circle className="fkr-winglow" cx={wx} cy={wy} r={gr * 1.5} fill={`url(#fkr-pool-${uid})`} style={{ mixBlendMode: "screen" }} />
+      <circle className="fkr-winglow" cx={wx} cy={wy} r={gr * 1.5} fill={`url(#fkr-pool-${uid})`} />
       {/* the window's light on the floor: by day warm (it moves against the sun), at night pale */}
       <g className="fkr-floor">
-        <g className="fkr-pool-sun" style={{ mixBlendMode: "screen" }}><ellipse cx={0} cy={0} rx={260} ry={92} fill={`url(#fkr-pool-${uid})`} /></g>
-        <g className="fkr-pool-moon" style={{ mixBlendMode: "screen" }}><ellipse cx={0} cy={0} rx={240} ry={84} fill={`url(#fkr-mpool-${uid})`} /></g>
+        <g className="fkr-pool-sun"><ellipse cx={0} cy={0} rx={260} ry={92} fill={`url(#fkr-pool-${uid})`} /></g>
+        <g className="fkr-pool-moon"><ellipse cx={0} cy={0} rx={240} ry={84} fill={`url(#fkr-mpool-${uid})`} /></g>
       </g>
       {/* the cat on the bed and the things on the floor (at home the things go over the chair: layer "front") */}
       {thing("cat")}
@@ -110,9 +114,9 @@ export function FokusRoom({ uid = "a", layer = "all" }: { uid?: string; layer?: 
       {/* the ivy sways from where it hangs */}
       <g className="fkr-plant" style={at(box("plant").x + box("plant").w * 0.62, box("plant").y + 6)}>{img("plant")}</g>
       {/* the night: the room goes dark and blue; the lamp lights it */}
-      <rect className="fkr-night-tint" x={0} y={0} width={1060} height={1484} fill="#0b1433" style={{ mixBlendMode: "multiply" }} />
-      <rect className="fkr-dusk-tint" x={0} y={0} width={1060} height={1484} fill="#ff7a3a" style={{ mixBlendMode: "soft-light" }} />
-      <g className="fkr-lamp" style={{ mixBlendMode: "screen" }}>
+      <rect className="fkr-night-tint" x={0} y={0} width={1060} height={1484} fill="#060b1e" />
+      <rect className="fkr-dusk-tint" x={0} y={0} width={1060} height={1484} fill="#ff7a3a" />
+      <g className="fkr-lamp">
         <ellipse cx={LAMP.x} cy={LAMP.y} rx={170} ry={150} fill={`url(#fkr-lamp-${uid})`} />
         <ellipse cx={LAMP.x} cy={1180} rx={420} ry={190} fill={`url(#fkr-lamp-${uid})`} opacity={0.35} />
       </g>

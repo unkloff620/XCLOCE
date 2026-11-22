@@ -238,9 +238,9 @@ export function FokusScreens() {
       if (!gate(now)) return;
       const dt = Math.min(0.1, (now - last) / 1000);
       last = now;
+      // typed in small bursts (~8 a second): every redraw repaints all the strips
       acc += dt * 70;
-      const n = Math.floor(acc);
-      if (n > 0) { step(n); acc -= n; drawBig(); }
+      if (acc >= 8) { const n = Math.floor(acc); step(n); acc -= n; drawBig(); }
       tt += dt;
       if (tt > 0.45) { tstep(); tt = 0; drawSmall(); }
       blink += dt;
@@ -252,7 +252,7 @@ export function FokusScreens() {
     return () => cancelAnimationFrame(raf);
   }, []);
   const poly = (q: Pt[]) => q.map((p) => p.join(",")).join(" ");
-  const SB = perspectiveStrips(BIG, BW, BH, 24), SS = perspectiveStrips(SMALL, SW, SH, 8);
+  const SB = perspectiveStrips(BIG, BW, BH, 12), SS = perspectiveStrips(SMALL, SW, SH, 5);
   return (
     <g style={{ pointerEvents: "none" }} fontFamily="ui-monospace, Menlo, Consolas, monospace">
       <defs>
