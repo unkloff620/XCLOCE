@@ -4683,6 +4683,7 @@ export const ASSET_FILES: string[] = [
  "/assets/ui/dossier-ptab-r.webp",
  "/assets/ui/dossier-ptab.webp",
  "/assets/ui/dossier-tab.webp",
+ "/assets/ui/drop-room.webp",
  "/assets/ui/drop-tattoo.webp",
  "/assets/ui/drop-wear.webp",
  "/assets/ui/emblem-bear.webp",

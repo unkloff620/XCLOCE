@@ -13,6 +13,7 @@ import { BossSilhouette } from "../art/scenes.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { Icon } from "../art/icons.tsx";
 import { Bar, DropKind, Empty, GainLine, bossItemsCount, bossTattooCount } from "../ui.tsx";
+import { ROOM_DEFS, roomUnlockId } from "../../content/home.ts";
 import { useFx, type Fx } from "../fx/attack.tsx";
 import { BossRulesHelp, useBossList } from "./bosses.tsx";
 import { WeaponShopWindow } from "./shop.tsx";
@@ -599,6 +600,8 @@ export function BossScreen({ id }: { id: string }) {
             <b className="door-plate-title">{boss.final ? "ФИНАЛ" : "НАГРАДА"}</b>
             <GainLine r={doorReward} size={14} />
             {!!boss.wear && (boss.thingsMode ? mode === boss.thingsMode : fightMode(mode).things) && <DropKind kind="wear" size={14} count={bossItemsCount(boss, state) ?? undefined} />}
+            {/* his room for the home: in the mode his things drop in (an event boss — his only mode), until it is the player's */}
+            {(boss.thingsMode ? mode === boss.thingsMode : ev || fightMode(mode).things) && ROOM_DEFS.some((r) => r.drop?.boss === boss.id && !state?.home.rooms.includes(r.id) && !state?.unlocks?.includes(roomUnlockId(r.id))) && <DropKind kind="room" size={14} count="шанс" />}
             {!!bossTattooCount(boss.id, state, mode) && <DropKind kind="tattoo" size={14} count={bossTattooCount(boss.id, state, mode)!} />}
           </span>
           {blocked && locked && <span className="door-lock"><Icon name="lock" size={30} /></span>}

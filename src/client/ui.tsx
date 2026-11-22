@@ -173,11 +173,12 @@ export function MysteryDrop({ size = 18, count }: { size?: number; count?: strin
  * What else a boss drops, by its picture: «drop-tattoo» — a piece of his tattoo set (content/tattoos.ts), «drop-wear» —
  * his things (clothes); `count` — how many of them the player has, e.g. "3/12".
  */
-export function DropKind({ kind, size = 18, count }: { kind: "tattoo" | "wear"; size?: number; count?: string }) {
+export function DropKind({ kind, size = 18, count }: { kind: "tattoo" | "wear" | "room"; size?: number; count?: string }) {
+  const what = kind === "tattoo" ? "Наколки" : kind === "wear" ? "Вещи" : "Хата";
   return (
-    <span className={`gain drop-kind ${kind}`} title={kind === "tattoo" ? `Наколки с этого босса${count ? `: ${count}` : ""}` : `Вещи с этого босса${count ? `: ${count}` : ""}`}>
+    <span className={`gain drop-kind ${kind === "room" ? "hata" : kind}`} title={`${what} с этого босса${count ? `: ${count}` : ""}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={`/assets/ui/drop-${kind}.webp`} alt={kind === "tattoo" ? "наколки" : "вещи"} width={size * 1.25} height={size * 1.25} draggable={false} />
+      <img src={`/assets/ui/drop-${kind}.webp`} alt={what.toLowerCase()} width={size * 1.25} height={size * 1.25} draggable={false} />
       {count && <span className="mystery-count">{count}</span>}
     </span>
   );

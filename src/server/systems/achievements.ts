@@ -95,8 +95,12 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
   // poker hands, zonk combinations (counters), the talents the damage gave
   const got = await q.query<{ key: string; n: number }>(
     "SELECT key, SUM(delta)::bigint AS n FROM ledger WHERE player_id=$1 AND kind='item' AND delta > 0 AND key = ANY($2) AND created_at >= COALESCE((SELECT progress_reset_at FROM players WHERE id=$1), '-infinity'::timestamptz) GROUP BY key",
-    [pid, ["rug-pull-gun", "gpu", "keyboard", "poker-sticker", "keycap"]],
+    [pid, ["poker-sticker", "keycap"]],
   );
+  // the weapons' series count what is on hand now, not all ever got (the user 2026-11-22)
+  const held = await q.query<{ key: string; n: number }>(
+    "SELECT item_id AS key, qty::bigint AS n FROM inventory WHERE player_id=$1 AND item_id = ANY($2)", [pid, ["rug-pull-gun", "gpu", "keyboard"]]);
+  got.push(...held);
   // wins over each boss not in a solo fight ("team:<boss>")
   const team = await q.query<{ boss_id: string; n: number }>(
     "SELECT boss_id, COUNT(*)::int AS n FROM fights WHERE player_id=$1 AND status='won' AND NOT solo GROUP BY boss_id", [pid]);
