@@ -31,11 +31,11 @@ export const LOCATION_PARTS: Record<string, string[]> = {
 };
 
 /**
- * The parts from location tasks grow with the location: a step gives 1…(2 + order/4) parts, the closing
- * 10 + 4 per location after the first (Опенспейс 10, Лунная база 50) and 1 + order/4 very rare ones.
+ * The parts from locations (the user 2026-11-22): only in the tasks — a step gives one part with LOC_PART_CHANCE, a random
+ * one (half from the location's own set; rare and very rare a bit likelier farther on). The full pass gives none.
  */
-export const locStepParts = (order: number) => ({ min: 1, max: 2 + Math.floor(order / 4), rare: Math.min(0.4, 0.18 + 0.02 * order), epic: Math.min(0.06, 0.01 + 0.004 * order) });
-export const locClaimParts = (order: number) => ({ n: 10 + 4 * (order - 1), rare: Math.min(0.5, 0.25 + 0.02 * order), epic: 1 + Math.floor(order / 4) });
+export const LOC_PART_CHANCE = 0.1;
+export const locStepParts = (order: number) => ({ rare: Math.min(0.4, 0.18 + 0.02 * order), epic: Math.min(0.06, 0.01 + 0.004 * order) });
 
 /** each boss's own very rare part: it may drop for a win over him */
 export const BOSS_PARTS: Record<string, string> = {
