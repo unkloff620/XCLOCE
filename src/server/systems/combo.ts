@@ -43,7 +43,7 @@ export async function combosAdmin(q: Queryable, now = Date.now()) {
   };
 }
 
-interface ComboRow { progress: number; done_at: Date | null; reward: Reward | null; claimed_at: Date | null; runs?: number }
+interface ComboRow { progress: number; done_at: Date | null; reward: Reward | null; claimed_at: Date | null; runs?: number; best?: number }
 
 export interface ComboView {
   mode: ComboMode;
@@ -51,7 +51,7 @@ export interface ComboView {
   progress: number;
   /** the hits guessed so far (the first `progress` of the sequence) — only these are shown */
   guessed: string[];
-  /** done today already (a fight again — again from zero): the whole sequence, shown grey to hit by */
+  /** shown grey to hit by: the whole sequence once done today, else the longest start of it guessed today (lost by a miss) */
   known: string[];
   /** how many times it was done today */
   runs: number;
@@ -64,14 +64,14 @@ export interface ComboView {
 }
 
 async function rowOf(q: Queryable, pid: number, day: string, bossId: string, mode: ComboMode): Promise<ComboRow | null> {
-  const [r] = await q.query<ComboRow>("SELECT progress, done_at, reward, claimed_at, runs FROM combo_progress WHERE player_id=$1 AND day=$2 AND boss_id=$3 AND mode=$4", [pid, day, bossId, mode]);
+  const [r] = await q.query<ComboRow>("SELECT progress, done_at, reward, claimed_at, runs, best FROM combo_progress WHERE player_id=$1 AND day=$2 AND boss_id=$3 AND mode=$4", [pid, day, bossId, mode]);
   return r ?? null;
 }
 
 function viewOf(seq: string[], mode: ComboMode, r: ComboRow | null): ComboView {
   const progress = Math.min(seq.length, Number(r?.progress ?? 0));
   const runs = Number(r?.runs ?? 0);
-  return { mode, length: seq.length, progress, guessed: seq.slice(0, progress), known: runs > 0 ? seq : [], runs, done: !!r?.done_at, claimed: !!r?.claimed_at, reward: r?.done_at ? r.reward : null };
+  return { mode, length: seq.length, progress, guessed: seq.slice(0, progress), known: runs > 0 ? seq : seq.slice(0, Math.min(seq.length, Number(r?.best ?? 0))), runs, done: !!r?.done_at, claimed: !!r?.claimed_at, reward: r?.done_at ? r.reward : null };
 }
 
 export async function comboView(q: Queryable, pid: number, bossId: string, mode: string | null, now: number): Promise<ComboView | null> {
@@ -126,8 +126,8 @@ export async function comboHit(ctx: Ctx, bossId: string, mode: string | null, we
   const reward = done ? rollComboReward(m.id, ctx.rng) : null;
   const at = done ? new Date(ctx.now) : null;
   await ctx.q.query(
-    `INSERT INTO combo_progress (player_id, day, boss_id, mode, progress, done_at, reward, claimed_at, runs) VALUES ($1,$2,$3,$4,$5,$6,$7,$6,$8)
-     ON CONFLICT (player_id, day, boss_id, mode) DO UPDATE SET progress = EXCLUDED.progress, done_at = EXCLUDED.done_at, reward = EXCLUDED.reward, claimed_at = EXCLUDED.claimed_at,
+    `INSERT INTO combo_progress (player_id, day, boss_id, mode, progress, done_at, reward, claimed_at, runs, best) VALUES ($1,$2,$3,$4,$5,$6,$7,$6,$8,$5)
+     ON CONFLICT (player_id, day, boss_id, mode) DO UPDATE SET progress = EXCLUDED.progress, best = GREATEST(combo_progress.best, EXCLUDED.best), done_at = EXCLUDED.done_at, reward = EXCLUDED.reward, claimed_at = EXCLUDED.claimed_at,
        runs = combo_progress.runs + EXCLUDED.runs`,
     [ctx.pid, day, bossId, m.id, progress, at, reward ? JSON.stringify(reward) : null, done ? 1 : 0],
   );
@@ -135,7 +135,7 @@ export async function comboHit(ctx: Ctx, bossId: string, mode: string | null, we
   if (done) await bump(ctx.q, ctx.pid, `combo:${bossId}:${m.id}`);
   const granted = reward ? await grantReward(ctx, reward, `combo:${bossId}:${m.id}`) : null;
   const runs = Number(r?.runs ?? 0) + (done ? 1 : 0);
-  return { ...viewOf(seq, m.id, { progress, done_at: at, reward: (granted as Reward | null) ?? reward, claimed_at: at, runs }), last };
+  return { ...viewOf(seq, m.id, { progress, done_at: at, reward: (granted as Reward | null) ?? reward, claimed_at: at, runs, best: Math.max(Number(r?.best ?? 0), progress) }), last };
 }
 
 /** an old done combo whose payout was not given yet (before it came at once): «Забрать» */

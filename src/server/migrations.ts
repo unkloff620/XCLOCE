@@ -1695,4 +1695,10 @@ CREATE TABLE IF NOT EXISTS zarub_stats (
     id: "v2-121-no-room-bonus",
     sql: `UPDATE players SET energy_bonus=0 WHERE energy_bonus <> 0;`,
   },
+  {
+    // «Комбо»: the longest part of today's sequence guessed — after a miss it stays shown grey (the user 2026-11-22)
+    id: "v2-122-combo-best",
+    sql: `ALTER TABLE combo_progress ADD COLUMN IF NOT EXISTS best INT NOT NULL DEFAULT 0;
+UPDATE combo_progress SET best = progress WHERE best < progress;`,
+  },
 ];

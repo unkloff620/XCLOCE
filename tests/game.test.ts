@@ -2629,6 +2629,12 @@ describe("«Комбо»", () => {
     expect((await hit(wrong)).progress).toBe(0);
     let c = await hit(seq[0]);
     expect(c).toMatchObject({ progress: 1, guessed: [seq[0]], last: "right" });
+    // a miss after two right: back to zero, the two guessed stay shown (grey)
+    c = await hit(seq[1]);
+    c = await hit(COMBO_FREE.find((h) => h !== seq[2] && h !== seq[0])!);
+    expect(c).toMatchObject({ progress: 0, guessed: [], known: seq.slice(0, 2), last: "wrong" });
+    c = await hit(seq[0]);
+    expect(c).toMatchObject({ progress: 1, known: seq.slice(0, 2) });
     const xp0 = Number((await db.query<{ xp: number }>("SELECT xp FROM players WHERE id=$1", [p]))[0].xp);
     const kb0 = await qty(db, p, "keyboard");
     for (let i = 1; i < seq.length; i++) c = await hit(seq[i]);
