@@ -5034,6 +5034,7 @@ export const ASSET_FILES: string[] = [
  "/bosses/fokus/rig/handR.webp",
  "/bosses/fokus/rig/head-blood.webp",
  "/bosses/fokus/rig/head.webp",
+ "/bosses/fokus/rig/knife-stuck.webp",
  "/bosses/fokus/rig/legs-blood.webp",
  "/bosses/fokus/rig/legs.webp",
  "/bosses/fokus/rig/lips-blood.webp",

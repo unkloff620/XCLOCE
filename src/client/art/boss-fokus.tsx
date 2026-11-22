@@ -27,6 +27,16 @@ const BLOODY = new Set(["legs", "body", "armR", "lowR", "handR", "armL", "lowL",
 const BLOOD_V = 1;
 /** the nostrils (rig units): snot hangs from his right one, blood runs from the left */
 const NOSTRIL_R = [368, 165.5] as const, NOSTRIL_L = [383.5, 163] as const;
+/** a knife stuck in him (the artist's knife-stuck.png, 222×239: the handle's end and where the blade goes in, the blood there) */
+const KNIFE = { w: 222, h: 239, end: [30, 143], entry: [170, 120] } as const;
+/** where the knives stick in him (rig units: where the blade goes in, where the handle ends; mirrored — the picture
+ *  flipped): below half HP in his side and his thigh, below a quarter also in his shoulder and his forearm */
+const STUCK = {
+  side: { entry: [268.6, 504], end: [202.3, 519.3], mirror: false },
+  thigh: { entry: [474.7, 787.7], end: [547.2, 799.9], mirror: true },
+  shoulder: { entry: [176, 346], end: [128, 298], mirror: false },
+  forearm: { entry: [720, 461], end: [744, 397], mirror: true },
+} as const;
 /** the mouth's corners (x, rig units): the lower lip is held there and sags between them */
 const MOUTH = [349, 401] as const;
 
@@ -77,6 +87,21 @@ export function FokusRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
       </g>
     );
   };
+  // a knife stuck in him: the picture turned and scaled so its blade goes in at `entry` and its handle ends at `end`
+  // (pp: drawn by the puppet on that canvas — the arms' knives must lie over the arms), in a group of its own
+  const knife = (k: keyof typeof STUCK, pp?: "front") => {
+    const { entry, end, mirror } = STUCK[k];
+    const sx = mirror ? -1 : 1;
+    const nat = Math.atan2(KNIFE.entry[1] - KNIFE.end[1], (KNIFE.entry[0] - KNIFE.end[0]) * sx);
+    const want = Math.atan2(entry[1] - end[1], entry[0] - end[0]);
+    const sc = Math.hypot(entry[0] - end[0], entry[1] - end[1]) / Math.hypot(KNIFE.entry[0] - KNIFE.end[0], KNIFE.entry[1] - KNIFE.end[1]);
+    const on = puppet && pp;
+    return (
+      <g key={k} className={`fk-stuck fk-stuck-${k}`} transform={`translate(${entry[0]} ${entry[1]}) rotate(${((want - nat) * 180 / Math.PI).toFixed(2)}) scale(${(sc * sx).toFixed(4)} ${sc.toFixed(4)}) translate(${-KNIFE.entry[0]} ${-KNIFE.entry[1]})`}>
+        <image className={on ? "pp" : undefined} data-pp={on ? pp : undefined} href={`/bosses/${id}/rig/knife-stuck.webp`} x={0} y={0} width={KNIFE.w} height={KNIFE.h} preserveAspectRatio="none" />
+      </g>
+    );
+  };
   const lids = (cls: string) => (
     <g className={cls}>
       {HOLES.map((h, i) => (
@@ -101,6 +126,8 @@ export function FokusRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
           {/* the left shoulder behind the body (an empty elbow in it: its end bends with the forearm) */}
           {bone("br-arm br-arm-l", "armL", <>{pic("armL", "back")}{bone("br-low br-low-l", "lowL", null, 130)}</>, 140)}
           {pic("body", "back")}
+          {/* beaten: a knife in his side and one in his thigh (the thigh goes with the upper body then — the legs are fixed at the feet only) */}
+          {dazed && !bust && <>{knife("side")}{knife("thigh")}</>}
           {/* the face, plain SVG: the whites and the pupils under the head's eye holes, the lids over them, the head, the
               nose, the mouth (the chin, the throat, the teeth, the lips — the lower ones on the jaw), the brows, the
               glasses with their arm, the hair on top */}
@@ -140,6 +167,7 @@ export function FokusRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
           {/* the right arm (the fist on the hip): the fist or the hand with the pointing finger on the same wrist */}
           {bone("br-arm br-arm-r", "armR", <>
             {pic("armR", "front")}
+            {dying && !bust && knife("shoulder", "front")}
             {bone("br-low br-low-r", "lowR", <>
               {pic("lowR", "front")}
               {bone("br-hand br-hand-r", "handR", <>
@@ -151,6 +179,7 @@ export function FokusRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
           {/* the left arm with the knife: in front of the body (its shoulder copy is behind, above) */}
           {bone("br-arm br-arm-l", "armL", bone("br-low br-low-l", "lowL", <>
             {pic("lowL", "front")}
+            {dying && !bust && knife("forearm", "front")}
             {bone("br-hand br-hand-l", "handL", pic("handL", "front"), 90, handL)}
           </>, 130), 140)}
         </g>
