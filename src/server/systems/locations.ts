@@ -2,7 +2,7 @@ import { GameError, type Queryable } from "../db.ts";
 import { shodTick } from "./shodnyak.ts";
 import { addItem, addMoney, grantReward, ledger, spendEnergy, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { STASH_MISSING_WEIGHT, STASH_PITY, STASH_SETS, stashChance, stashSetsByLocation } from "../../content/stashes.ts";
-import { LOCATIONS, locRep, locationById, taskById, taskOpen, tasksOf, type LocMode, type LocationDef } from "../../content/locations.ts";
+import { LOCATIONS, locRep, locReward, locationById, taskById, taskOpen, tasksOf, type LocMode, type LocationDef } from "../../content/locations.ts";
 import { BUSINESS_MAX_HOURS, bizById, bizCellCost, bizCells, bizOf, bizPerHour, type BizKind } from "../../content/business.ts";
 import type { Reward } from "../../content/rewards.ts";
 import { LOCATION_PARTS, between, locClaimParts, locStepParts, rollParts } from "../../content/craft-drops.ts";
@@ -11,7 +11,7 @@ import { mergeRewards } from "../../content/rewards.ts";
 /*
  * 5 locations × 5 tasks. Energy is spent only here. A task has N steps; every step costs energy and pays a little,
  * the last step pays the task reward. All five done → the location reward (much bigger) and the next location opens.
- * After the first clear a location can be replayed: tasks reset, the repeat reward is half the currencies and XP, no items.
+ * After a clear a location can be replayed: tasks reset, every pass pays the same (locReward; the night one in зубы).
  */
 
 export async function progress(q: Queryable, pid: number) {
@@ -24,12 +24,6 @@ function unlocked(loc: LocationDef, clears: Map<string, number>): boolean {
   if (loc.order === 1) return true;
   const prev = LOCATIONS.find((l) => l.order === loc.order - 1);
   return !!prev && (clears.get(prev.id) ?? 0) > 0;
-}
-
-export function repeatReward(r: Reward): Reward {
-  const cur: Reward["currencies"] = {};
-  for (const [c, v] of Object.entries(r.currencies ?? {})) cur[c as keyof typeof cur] = (v ?? 0) / 2;
-  return { currencies: cur, xp: Math.round((r.xp ?? 0) / 2) };
 }
 
 /** the stash meter: energy spent in tasks since the last find, and the sure find at STASH_PITY */
@@ -85,7 +79,7 @@ export async function locationsView(q: Queryable, pid: number, now = Date.now())
     const tasks = tasksOf(l, mode).map((t) => ({ id: t.id, steps: Math.min(t.steps, steps.get(t.id) ?? 0), need: t.steps }));
     const n = clears.get(claimKey(l.id, mode)) ?? 0;
     // the night road always pays the repeat reward (the first-clear things come from the day road)
-    return { done: tasks.filter((t) => t.steps >= t.need).length, total: tasks.length, clears: n, tasks, nextReward: n > 0 || mode === "night" ? repeatReward(l.reward) : l.reward };
+    return { done: tasks.filter((t) => t.steps >= t.need).length, total: tasks.length, clears: n, tasks, nextReward: locReward(l, mode) };
   };
   return LOCATIONS.map((l) => {
     const d = side(l, "day");
@@ -281,11 +275,11 @@ export async function claimLocation(ctx: Ctx, locationId: string, mode: LocMode 
   if (!list.every((t) => (steps.get(t.id) ?? 0) >= t.steps)) throw new GameError("not_done", "Выполни все 5 заданий");
   const key = claimKey(loc.id, mode);
   const first = (clears.get(key) ?? 0) === 0;
-  // the night road always pays the repeat reward
+  // every pass pays the same; the night one in зубы (locReward)
   // «Крафт»: parts of the location's set and very rare ones — the farther the location, the more (locClaimParts)
   const cp = locClaimParts(loc.order);
   const parts = [...rollParts(ctx.rng, cp.n, { rare: cp.rare, pool: LOCATION_PARTS[loc.id] }), ...rollParts(ctx.rng, cp.epic, { epic: 1 })];
-  const got = await grantReward(ctx, mergeRewards(first && mode === "day" ? loc.reward : repeatReward(loc.reward), { items: parts }), `location:${key}`);
+  const got = await grantReward(ctx, mergeRewards(locReward(loc, mode), { items: parts }), `location:${key}`);
   await ctx.q.query("INSERT INTO location_claims (player_id, location_id, claimed_at) VALUES ($1,$2,$3)", [ctx.pid, key, new Date(ctx.now)]);
   await shodTick(ctx, "location", 1); // «Сходняк»: a location passed
   if (first && mode === "day") await ctx.q.query("UPDATE player_stats SET locations_done = locations_done + 1 WHERE player_id=$1", [ctx.pid]);

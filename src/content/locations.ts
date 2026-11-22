@@ -39,7 +39,7 @@ const t = (id: string, title: string, flavor: string, energy: number, steps: num
   doneReward: { xp: energy * steps * 10, ...done },
 });
 
-const DAY: Omit<LocationDef, "night">[] = [
+const DAY: Omit<LocationDef, "night" | "reward">[] = [
   {
     id: "openspace", order: 1, name: "Опенспейс", short: "Опенспейс", subtitle: "Здесь начинается карьера и заканчивается кофе", scene: "openspace",
     tasks: [
@@ -49,7 +49,6 @@ const DAY: Omit<LocationDef, "night">[] = [
       t("os-printer", "Починить принтер", "Он не сломан. Он просто тебя не любит.", 6, 6, 12, { items: [{ id: "keyboard", qty: 1 }] }),
       t("os-deadline", "Сдать задачу «на вчера»", "Вчера было вчера.", 7, 7, 12, { items: [{ id: "energy-drink", qty: 1 }] }),
     ],
-    reward: { currencies: { PAP: 300 }, xp: 1_000, items: [{ id: "keyboard", qty: 5 }, { id: "tee-pump", qty: 1 }] },
   },
   {
     id: "market", order: 2, name: "Крипто-рынок", short: "Рынок", subtitle: "Купи на хаях, продай на лоях", scene: "market",
@@ -60,7 +59,6 @@ const DAY: Omit<LocationDef, "night">[] = [
       t("mk-airdrop", "Поймать аирдроп", "Подключи кошелёк… нет, не этот.", 10, 7, 13, { items: [{ id: "keyboard", qty: 1 }] }),
       t("mk-dip", "Откупить дно", "Дно было ниже.", 10, 8, 13, { items: [{ id: "energy-drink", qty: 2 }] }),
     ],
-    reward: { currencies: { PAP: 500 }, xp: 3_000, items: [{ id: "keyboard", qty: 5 }, { id: "shorts-remote", qty: 1 }, { id: "cap-moon", qty: 1 }] },
   },
   {
     id: "serverroom", order: 3, name: "Серверная", short: "Серверная", subtitle: "Тепло, шумно и всё мигает", scene: "serverroom",
@@ -71,7 +69,6 @@ const DAY: Omit<LocationDef, "night">[] = [
       t("sr-cool", "Охладить стойку вентилятором", "Вентилятор от бабушки, надёжный.", 10, 8, 14, { items: [{ id: "keyboard", qty: 2 }] }),
       t("sr-backup", "Проверить бэкап", "Бэкап есть. Восстановления нет.", 11, 9, 14, { items: [{ id: "energy-drink", qty: 1 }] }),
     ],
-    reward: { currencies: { PAP: 800 }, xp: 8_000, items: [{ id: "gpu", qty: 2 }, { id: "slippers", qty: 1 }, { id: "gold-chain", qty: 1 }] },
   },
   {
     id: "basement", order: 4, name: "Майнинг-подвал", short: "Подвал", subtitle: "Здесь греются видеокарты и надежды", scene: "basement",
@@ -82,7 +79,6 @@ const DAY: Omit<LocationDef, "night">[] = [
       t("bs-rig", "Собрать риг из коробки", "Инструкция на китайском, отвёртка твоя.", 13, 9, 15, { items: [{ id: "gpu", qty: 1 }] }),
       t("bs-halving", "Пережить халвинг", "Награда меньше, а гордость та же.", 15, 10, 15, { items: [{ id: "energy-drink", qty: 1 }] }),
     ],
-    reward: { currencies: { PAP: 1200 }, xp: 20_000, items: [{ id: "gpu", qty: 3 }, { id: "hoodie-hodl", qty: 1 }] },
   },
   {
     id: "board", order: 5, name: "Совет директоров", short: "Кабинет", subtitle: "Здесь решают, кому сегодня повезёт", scene: "board",
@@ -93,7 +89,6 @@ const DAY: Omit<LocationDef, "night">[] = [
       t("bd-kpi", "Согласовать KPI", "KPI: согласовать KPI.", 14, 10, 16, { items: [{ id: "rug-pull-gun", qty: 1 }] }),
       t("bd-vote", "Пережить голосование", "Воздержался — тоже голос.", 15, 12, 16, { items: [{ id: "energy-drink", qty: 2 }] }),
     ],
-    reward: { currencies: { PAP: 2000 }, xp: 50_000, items: [{ id: "rug-pull-gun", qty: 3 }, { id: "laser-eyes", qty: 1 }] },
   },
   {
     id: "accounting", order: 6, name: "Бухгалтерия", short: "Бухгалтерия", subtitle: "Деньги любят счёт. Бухгалтерия — тишину", scene: "accounting",
@@ -104,7 +99,6 @@ const DAY: Omit<LocationDef, "night">[] = [
       t("ac-crypto", "Объяснить, что такое крипта", "«А где у биткоина печать?»", 15, 11, 17, { items: [{ id: "gpu", qty: 1 }] }),
       t("ac-salary", "Найти ошибку в зарплате", "Ошибка в твою пользу. Уже исправили.", 15, 12, 17, { items: [{ id: "energy-drink", qty: 2 }] }),
     ],
-    reward: { currencies: { PAP: 3000 }, xp: 100_000, items: [{ id: "gpu", qty: 4 }, { id: "lost-wallet", qty: 3 }] },
   },
   {
     id: "hr", order: 7, name: "Отдел кадров", short: "Кадры", subtitle: "Мы не команда, мы семья. Но уволить можем", scene: "hr",
@@ -115,7 +109,6 @@ const DAY: Omit<LocationDef, "night">[] = [
       t("hr-review", "Пройти performance review", "Сильные стороны: приходишь. Зоны роста: всё остальное.", 17, 12, 18, { items: [{ id: "rug-pull-gun", qty: 1 }] }),
       t("hr-raise", "Попросить повышение", "«Давай вернёмся к этому через полгода».", 17, 13, 18, { items: [{ id: "energy-drink", qty: 2 }] }),
     ],
-    reward: { currencies: { PAP: 4500 }, xp: 200_000, items: [{ id: "rug-pull-gun", qty: 4 }, { id: "energy-drink", qty: 3 }] },
   },
   {
     id: "party", order: 8, name: "Новогодний корпоратив", short: "Корпоратив", subtitle: "Оливье, тосты и фото, которые не удалить", scene: "party",
@@ -126,7 +119,6 @@ const DAY: Omit<LocationDef, "night">[] = [
       t("pt-santa", "Отыграть Деда Мороза", "Борода чешется, мешок тяжёлый, подарки — стикеры.", 17, 13, 19, { items: [{ id: "rug-pull-gun", qty: 1 }] }),
       t("pt-photos", "Удалить фото из общего чата", "Поздно. Уже сохранили 46 человек.", 20, 14, 19, { items: [{ id: "energy-drink", qty: 3 }] }),
     ],
-    reward: { currencies: { PAP: 6500 }, xp: 400_000, items: [{ id: "rug-pull-gun", qty: 5 }, { id: "santa-hat", qty: 1 }] },
   },
   {
     id: "offshore", order: 9, name: "Офшор", short: "Офшор", subtitle: "Деньги любят тишину, пальмы и ноль налогов", scene: "offshore",
@@ -137,7 +129,6 @@ const DAY: Omit<LocationDef, "night">[] = [
       t("of-vault", "Спрятать слитки в ячейку", "Ключ — в кокосе. Кокос — на пальме.", 18, 15, 20, { items: [{ id: "rug-pull-gun", qty: 1 }] }),
       t("of-audit", "Пережить проверку", "«Это всё пожертвования на мемы».", 20, 16, 20, { items: [{ id: "energy-drink", qty: 3 }] }),
     ],
-    reward: { currencies: { PAP: 8500 }, xp: 700_000, items: [{ id: "rug-pull-gun", qty: 6 }, { id: "energy-drink", qty: 4 }] },
   },
   {
     id: "yacht", order: 10, name: "Яхта кита", short: "Яхта кита", subtitle: "Киты не тонут — они плавают", scene: "yacht",
@@ -148,7 +139,6 @@ const DAY: Omit<LocationDef, "night">[] = [
       t("yt-storm", "Пережить шторм на бирже", "Качает так, что сливаются даже чайки.", 20, 16, 21, { items: [{ id: "rug-pull-gun", qty: 1 }] }),
       t("yt-captain", "Встать за штурвал", "Курс — на хаи, полный вперёд.", 21, 17, 21, { items: [{ id: "energy-drink", qty: 3 }] }),
     ],
-    reward: { currencies: { PAP: 11000 }, xp: 1_200_000, items: [{ id: "rug-pull-gun", qty: 7 }, { id: "energy-drink", qty: 5 }] },
   },
   {
     id: "moonbase", order: 11, name: "Лунная база", short: "Лунобаза", subtitle: "To the moon. Буквально", scene: "moonbase",
@@ -159,7 +149,6 @@ const DAY: Omit<LocationDef, "night">[] = [
       t("mn-flag", "Воткнуть флаг HODL", "Ветра нет — флаг стоит, как холдер.", 22, 17, 22, { items: [{ id: "rug-pull-gun", qty: 1 }] }),
       t("mn-earth", "Помахать Земле", "Оттуда все медведи — с горошину.", 25, 18, 22, { items: [{ id: "energy-drink", qty: 4 }] }),
     ],
-    reward: { currencies: { PAP: 15000 }, xp: 2_000_000, items: [{ id: "rug-pull-gun", qty: 8 }, { id: "energy-drink", qty: 6 }] },
   },
   {
     id: "mars", order: 12, name: "Марсианская биржа", short: "Марсобиржа", subtitle: "Красная планета, зелёные свечи", scene: "mars",
@@ -170,7 +159,6 @@ const DAY: Omit<LocationDef, "night">[] = [
       t("ms-colony", "Продать колонистам токены", "Им всё равно больше нечего покупать.", 23, 18, 23, { items: [{ id: "rug-pull-gun", qty: 1 }] }),
       t("ms-elon", "Найти, чей это ракетный завод", "Табличка на двери: «Не шортить».", 27, 19, 23, { items: [{ id: "energy-drink", qty: 4 }] }),
     ],
-    reward: { currencies: { PAP: 19000 }, xp: 3_000_000, items: [{ id: "rug-pull-gun", qty: 9 }, { id: "energy-drink", qty: 7 }] },
   },
   {
     id: "orbit", order: 13, name: "Казино на орбите", short: "Казино", subtitle: "Ставки сделаны. Гравитации нет", scene: "orbit",
@@ -181,7 +169,6 @@ const DAY: Omit<LocationDef, "night">[] = [
       t("or-dealer", "Перехитрить дилера-робота", "Он считает карты. И тебя.", 23, 19, 24, { items: [{ id: "rug-pull-gun", qty: 1 }] }),
       t("or-allin", "Пойти ва-банк над Землёй", "Внизу 8 миллиардов свидетелей.", 26, 20, 24, { items: [{ id: "energy-drink", qty: 4 }] }),
     ],
-    reward: { currencies: { PAP: 24000 }, xp: 4_500_000, items: [{ id: "rug-pull-gun", qty: 10 }, { id: "energy-drink", qty: 8 }] },
   },
   {
     id: "sunfarm", order: 14, name: "Солнечная ферма", short: "Пекло", subtitle: "Майнинг на энергии звезды. Жарковато", scene: "sunfarm",
@@ -192,7 +179,6 @@ const DAY: Omit<LocationDef, "night">[] = [
       t("sf-flare", "Пережить вспышку на Солнце", "Пробой шины. И депо.", 26, 21, 25, { items: [{ id: "rug-pull-gun", qty: 1 }] }),
       t("sf-cool", "Охладить ферму жидким азотом", "Пар до самого Меркурия.", 30, 21, 25, { items: [{ id: "energy-drink", qty: 5 }] }),
     ],
-    reward: { currencies: { PAP: 30000 }, xp: 6_500_000, items: [{ id: "rug-pull-gun", qty: 11 }, { id: "energy-drink", qty: 9 }] },
   },
   {
     id: "genesis", order: 15, name: "Генезис-блок", short: "Генезис", subtitle: "Здесь всё началось. Здесь всё и закончится", scene: "genesis",
@@ -203,7 +189,6 @@ const DAY: Omit<LocationDef, "night">[] = [
       t("gn-satoshi", "Найти записку Сатоши", "«Chancellor on brink…» — дальше не разобрать.", 27, 21, 26, { items: [{ id: "rug-pull-gun", qty: 1 }] }),
       t("gn-block", "Забрать награду за блок", "50 монет. Самых первых.", 29, 22, 26, { items: [{ id: "energy-drink", qty: 5 }] }),
     ],
-    reward: { currencies: { PAP: 38000 }, xp: 9_000_000, items: [{ id: "rug-pull-gun", qty: 12 }, { id: "energy-drink", qty: 10 }] },
   },
 ];
 
@@ -306,8 +291,27 @@ const NIGHT_ENERGY: Record<string, number[]> = {
   sunfarm: [21, 26, 29, 33, 40],
   genesis: [24, 30, 32, 34, 40],
 };
+/**
+ * A location's reward for every full pass (the user 2026-11-22): папиросы 300 → 10 000 and authority 300 → 5 000 from
+ * the first to the last, no things — only weapons (a knife at the first, 3 автомата + 2 ножа + 1 пистолет at the last).
+ * The night pass pays the same with зубы in place of папиросы. Every pass pays the same (no smaller repeat reward).
+ */
+const LOC_PAY: [pap: number, xp: number, knife: number, pistol: number, auto: number][] = [
+  [300, 300, 1, 0, 0], [400, 370, 2, 0, 0], [500, 450, 1, 1, 0], [650, 550, 2, 1, 0], [800, 670, 0, 2, 0],
+  [1050, 820, 1, 2, 0], [1350, 1000, 0, 0, 1], [1750, 1230, 1, 0, 1], [2250, 1500, 1, 1, 1], [2850, 1830, 1, 0, 2],
+  [3700, 2240, 1, 1, 2], [4700, 2740, 2, 1, 2], [6100, 3350, 1, 0, 3], [7800, 4100, 2, 0, 3], [10000, 5000, 2, 1, 3],
+];
+const payOf = (order: number, cur: "PAP" | "TOOTH"): Reward => {
+  const [pap, xp, knife, pistol, auto] = LOC_PAY[order - 1];
+  const items = [["rug-pull-gun", auto], ["keyboard", knife], ["gpu", pistol]].filter(([, n]) => (n as number) > 0).map(([id, qty]) => ({ id: id as string, qty: qty as number }));
+  return { currencies: { [cur]: pap } as Reward["currencies"], xp, items };
+};
+/** the reward of a full pass by day / by night */
+export const locReward = (l: LocationDef, mode: "day" | "night" = "day"): Reward => payOf(l.order, mode === "night" ? "TOOTH" : "PAP");
+
 export const LOCATIONS: LocationDef[] = DAY.map((l) => ({
   ...l,
+  reward: payOf(l.order, "PAP"),
   night: l.tasks.map((t, i) => {
     const e = NIGHT_ENERGY[l.id]?.[i] ?? t.energy;
     const k = e / t.energy;

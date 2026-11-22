@@ -629,7 +629,7 @@ describe("locations", () => {
     expect(last!.result.steps).toBe(t.steps);
     expect(last!.result.done).toBeNull();
   });
-  it("5 tasks, then the location reward opens the next location; replays pay half", async () => {
+  it("5 tasks, then the location reward opens the next location; every pass pays the same", async () => {
     const p = await newPlayer(db);
     await setEnergy(p, 5000, T0);
     const loc = LOCATIONS[0];
@@ -645,15 +645,16 @@ describe("locations", () => {
     const c = await act(db, p, "location_claim", { locationId: loc.id }, T0);
     expect(c.result).toMatchObject({ first: true, opened: "market" });
     expect((await wallet(db, p, "PAP")) - usd0).toBe(300);
-    expect(await qty(db, p, "tee-pump")).toBe(1);
+    expect(await qty(db, p, "tee-pump")).toBe(0);
+    expect(await qty(db, p, "keyboard")).toBeGreaterThanOrEqual(1);
     await act(db, p, "task", { taskId: LOCATIONS[1].tasks[0].id }, T0);
     for (const t of loc.tasks) for (let i = 0; i < t.steps; i++) await act(db, p, "task", { taskId: t.id }, T0);
     const usd1 = await wallet(db, p, "PAP");
     const c2 = await act(db, p, "location_claim", { locationId: loc.id }, T0);
     expect(c2.result.first).toBe(false);
-    expect((await wallet(db, p, "PAP")) - usd1).toBe(150); // half of 300
+    expect((await wallet(db, p, "PAP")) - usd1).toBe(300);
   });
-  it("night road: own tasks, ночной авторитет, always the repeat reward, the day road untouched", async () => {
+  it("night road: own tasks, ночной авторитет, the reward in зубы, the day road untouched", async () => {
     const p = await newPlayer(db);
     await setEnergy(p, 5000, T0);
     const loc = LOCATIONS[0];
@@ -666,10 +667,10 @@ describe("locations", () => {
     const [nr] = await db.query<{ rep: number }>("SELECT rep FROM location_night_rep WHERE player_id=$1 AND location_id=$2", [p, loc.id]);
     expect(Number(nr.rep)).toBeGreaterThan(0);
     expect(await db.query("SELECT 1 FROM location_rep WHERE player_id=$1", [p])).toHaveLength(0);
-    const usd0 = await wallet(db, p, "PAP");
+    const t0 = await wallet(db, p, "TOOTH");
     const c = await act(db, p, "location_claim", { locationId: loc.id, mode: "night" }, T0);
     expect(c.result).toMatchObject({ first: false, opened: null, mode: "night" });
-    expect((await wallet(db, p, "PAP")) - usd0).toBe(150);
+    expect((await wallet(db, p, "TOOTH")) - t0).toBe(300);
     // the day road is still closed for the first time, the next location still shut
     await expect(act(db, p, "task", { taskId: LOCATIONS[1].tasks[0].id }, T0)).rejects.toMatchObject({ code: "location_locked" });
     const view = await locationsView(db, p, T0);
