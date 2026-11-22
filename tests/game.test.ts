@@ -934,7 +934,7 @@ describe("«Ящик ништяков»", () => {
 });
 
 describe("home: equipment, rooms, look, help", () => {
-  it("a room chair costs money and adds crits to hits; the old desk, monitors, RGB and computer are gone", async () => {
+  it("a room chair costs money and gives no bonus; the old desk, monitors, RGB and computer are gone", async () => {
     await setBossHp({ datsik: 100000 });
     const p = await newPlayer(db);
     await setMoney(db, p, "RUB", 30000);
@@ -945,11 +945,11 @@ describe("home: equipment, rooms, look, help", () => {
     await act(db, p, "equipment_upgrade", { id: "chair" }, T0);
     for (const id of ["desk", "monitor2", "rgb", "pc"]) await expect(act(db, p, "equipment_upgrade", { id }, T0)).rejects.toMatchObject({ code: "bad_equipment" });
     expect(await wallet(db, p, "RUB")).toBe(30000 - 2500);
-    const r = await hit(p, "keyboard"); // rng 0 → always a crit once the chance is above zero
-    expect(r.result).toMatchObject({ crit: true, damage: Math.round(30 * 1.5) }); // the home adds no crit power: ×1.5
+    const r = await hit(p, "keyboard"); // the chairs give no crit chance any more (the user 2026-11-22)
+    expect(r.result).toMatchObject({ crit: false, damage: 30 });
     // what was bought of the removed things gives nothing
     await db.query("INSERT INTO player_equipment (player_id, equipment_id, level) VALUES ($1, 'pc', 1), ($1, 'rgb', 3)", [p]);
-    expect((await hit(p, "keyboard")).result.damage).toBe(Math.round(30 * 1.5));
+    expect((await hit(p, "keyboard")).result.damage).toBe(30);
   });
 
   it("talents: the user's curve — 30, 579, 130 212, … 17 345 292 428 for the 1000th; every next talent dearer", () => {
@@ -1149,7 +1149,7 @@ describe("home: equipment, rooms, look, help", () => {
     await expect(act(db, p, "decor_set", { id: "chair", stage: 2 }, T0)).rejects.toMatchObject({ code: "locked" });
     const back = await act(db, p, "decor_set", { id: "chair", stage: 0 }, T0); // the old stool
     expect(back.state.home.decor).toEqual({ chair: 0 });
-    expect(back.state.home.bonus.critChance).toBeCloseTo(0.02); // the bonus stays
+    expect(back.state.home.bonus.critChance).toBe(0); // the chairs give no bonus
     await expect(act(db, p, "decor_set", { id: "rgb", stage: 0 }, T0)).rejects.toMatchObject({ code: "bad_equipment" });
   });
 
@@ -1159,26 +1159,26 @@ describe("home: equipment, rooms, look, help", () => {
     // the throne straight away
     const ch = await act(db, p, "piece_buy", { id: "chair", piece: 3 }, T0);
     expect(ch.state.home.decor).toMatchObject({ chair: 3 });
-    expect(ch.state.home.bonus.critChance).toBeCloseTo(0.03);
+    expect(ch.state.home.bonus.critChance).toBe(0);
     await expect(act(db, p, "piece_buy", { id: "chair", piece: 3 }, T0)).rejects.toMatchObject({ code: "owned" });
     await expect(act(db, p, "piece_buy", { id: "monitor2", piece: 1 }, T0)).rejects.toMatchObject({ code: "bad_equipment" });
     // the editor saves what stands: only owned things
     await expect(act(db, p, "decor_save", { decor: { chair: 1 } }, T0)).rejects.toMatchObject({ code: "locked" });
     const saved = await act(db, p, "decor_save", { decor: { chair: 0 } }, T0);
     expect(saved.state.home.decor).toMatchObject({ chair: 0 });
-    expect(saved.state.home.bonus.critChance).toBeCloseTo(0.03); // a hidden chair keeps its bonus
+    expect(saved.state.home.bonus.critChance).toBe(0);
   });
 
-  it("rooms: buy, switch, the bonus of every owned room counts", async () => {
+  it("rooms: buy, switch — the rooms give no bonus", async () => {
     const p = await newPlayer(db);
     await expect(act(db, p, "room_set", { id: "office" }, T0)).rejects.toMatchObject({ code: "room_locked" });
     await setMoney(db, p, "PAP", 1500);
     const b = await act(db, p, "room_buy", { id: "office" }, T0);
     expect(b.state.look.room).toBe("office");
-    expect(b.state.home.bonus.critChance).toBeCloseTo(0.03);
+    expect(b.state.home.bonus.critChance).toBe(0);
     const back = await act(db, p, "room_set", { id: "basic" }, T0);
     expect(back.state.look.room).toBe("basic");
-    expect(back.state.home.bonus.critChance).toBeCloseTo(0.03);
+    expect(back.state.home.bonus.critChance).toBe(0);
     await expect(act(db, p, "room_buy", { id: "office" }, T0)).rejects.toMatchObject({ code: "room_owned" });
   });
 
@@ -2034,7 +2034,7 @@ describe("thing or room", () => {
 });
 
 describe("Неоновая хата", () => {
-  it("drops from Кедр (15% per win with the pass), then is bought for 2000 RUB and adds +5 to the energy limit", async () => {
+  it("drops from Кедр (15% per win with the pass), then is bought for 2000 RUB (no energy bonus)", async () => {
     await setBossHp({ kedr: 10 });
     const p = await newPlayer(db);
     await setMoney(db, p, "RUB", 5000);
@@ -2046,7 +2046,7 @@ describe("Неоновая хата", () => {
     const c = await act(db, p, "fight_claim", { fightId: f.result.fightId }, T0, always(0.03));
     expect(c.result.reward.unlocks).toContain("room:neon");
     const b = await act(db, p, "room_buy", { id: "neon" }, T0);
-    expect(b.state.player.energyMax).toBe(55);
+    expect(b.state.player.energyMax).toBe(50);
     expect(await wallet(db, p, "RUB")).toBeLessThan(5000);
   });
 });
@@ -2308,7 +2308,7 @@ describe("Нервные пальцы", () => {
 });
 
 describe("Боксёрская", () => {
-  it("drops from Командате, costs 4000 RUB and adds +30 to the fist", async () => {
+  it("drops from Командате, costs 4000 RUB; the fist stays as it is", async () => {
     await setBossHp({ bebyakyan: 10 });
     const p = await newPlayer(db);
     await setMoney(db, p, "RUB", 5000);
@@ -2322,7 +2322,7 @@ describe("Боксёрская", () => {
     expect(await wallet(db, p, "RUB")).toBe(5000 + (c.result.reward.currencies?.RUB ?? 0) - 4000);
     await setBossHp({ datsik: 1000 });
     await startDatsik(p, T0 + M);
-    expect((await hit(p, "fist", T0 + M)).result.damage).toBe(50);
+    expect((await hit(p, "fist", T0 + M)).result.damage).toBe(20);
   });
 });
 

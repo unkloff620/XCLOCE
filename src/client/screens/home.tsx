@@ -16,7 +16,6 @@ import { BossPhoto } from "./boss-parts.tsx";
 import { QuestsWindow } from "./quests.tsx";
 import { MonthlyWindow } from "./monthly.tsx";
 import { tutorialPending } from "../tutorial.tsx";
-import { BonusLine } from "./house.tsx";
 import { RoomEditor, previewPieces, roomDraftOf, type RoomDraft, type RoomTab } from "./decorator.tsx";
 import { ROOM_DEFS } from "../../content/home.ts";
 import { money } from "../format.ts";
@@ -189,7 +188,6 @@ export function HomeScreen() {
           {/* the switcher pill stays on top (screens.css: order), a locked room's offer sits under it */}
           {!owned && (
             <div className="room-unlock">
-              <span className="tiny" style={{ color: "var(--gold)", textShadow: "1px 0 0 #2e1c00, -1px 0 0 #2e1c00, 0 1px 0 #2e1c00, 0 -1px 0 #2e1c00" }}><BonusLine b={viewRoom.bonus} /></span>
               {dropped ? (
                 <>
                   <button className="btn gold sm" disabled={!canPay || busy === "room_buy"} onClick={unlock}>

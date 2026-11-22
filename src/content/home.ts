@@ -2,7 +2,7 @@ import type { Currency } from "./currencies.ts";
 import { TATTOO_IDS, oneTattooPerZone } from "./tattoos.ts";
 
 /*
- * Дом: оборудование на заднем плане и комнаты. Оба дают боевые бонусы.
+ * Дом: оборудование на заднем плане и комнаты — только для вида, бонусов они не дают (кроме трофеев).
  * Бонусы складываются: подсветка (по уровню), каждый купленный стол / монитор / кресло + все купленные комнаты.
  * Черновые цены и бонусы — правятся здесь.
  */
@@ -60,27 +60,27 @@ export interface EquipmentDef {
 
 export const EQUIPMENT: EquipmentDef[] = [
   {
-    id: "chair", name: "Кресло", description: "Спина прямая — рука твёрдая. Каждое купленное кресло повышает шанс крита навсегда, а сидишь на любом.",
+    id: "chair", name: "Кресло", description: "Спина прямая — рука твёрдая. Сидишь на любом купленном.",
     levels: [],
     base: { name: "Табуретка", art: "seat-1" },
     pieces: [
-      { name: "Офисное кресло", art: "chair-1", price: { currency: "RUB", amount: 2500 }, bonus: { critChance: 0.02 } },
-      { name: "Геймерское кресло", art: "chair-2", price: { currency: "RUB", amount: 4_000 }, bonus: { critChance: 0.02 } },
-      { name: "Трон трейдера", art: "chair-3", price: { currency: "RUB", amount: 6_000 }, bonus: { critChance: 0.03 } },
+      { name: "Офисное кресло", art: "chair-1", price: { currency: "RUB", amount: 2500 }, bonus: {} },
+      { name: "Геймерское кресло", art: "chair-2", price: { currency: "RUB", amount: 4_000 }, bonus: {} },
+      { name: "Трон трейдера", art: "chair-3", price: { currency: "RUB", amount: 6_000 }, bonus: {} },
       // the bosses' chairs, each in the style of his room: they drop in any mode (PieceDef.drop)
-      { name: "Ледяное кресло", art: "chair-datsik", price: { currency: "RUB", amount: 2000 }, bonus: { critChance: 0.01 }, drop: { boss: "datsik" } },
-      { name: "Неоновое кресло", art: "chair-kedr", price: { currency: "RUB", amount: 2500 }, bonus: { critChance: 0.01 }, drop: { boss: "kedr" } },
-      { name: "Капитанское кресло", art: "chair-mugo", price: { currency: "RUB", amount: 3000 }, bonus: { critChance: 0.015 }, drop: { boss: "mugo" } },
-      { name: "Кресло кассира", art: "chair-garkusha", price: { currency: "RUB", amount: 3500 }, bonus: { critChance: 0.015 }, drop: { boss: "garkusha" } },
-      { name: "Угол ринга", art: "chair-bebyakyan", price: { currency: "RUB", amount: 4000 }, bonus: { critChance: 0.02 }, drop: { boss: "bebyakyan" } },
-      { name: "Расписной трон", art: "chair-babafey", price: { currency: "RUB", amount: 5000 }, bonus: { critChance: 0.02 }, drop: { boss: "babafey" } },
-      { name: "Кресло лудомана", art: "chair-vodovoz", price: { currency: "RUB", amount: 6000 }, bonus: { critChance: 0.025 }, drop: { boss: "vodovoz" } },
-      { name: "Белый трон", art: "chair-knyaz", price: { currency: "RUB", amount: 6500 }, bonus: { critChance: 0.025 }, drop: { boss: "knyaz" } },
-      { name: "Кресло Пепе", art: "chair-pepe", price: { currency: "RUB", amount: 7000 }, bonus: { critChance: 0.025 }, drop: { boss: "pepe" } },
+      { name: "Ледяное кресло", art: "chair-datsik", price: { currency: "RUB", amount: 2000 }, bonus: {}, drop: { boss: "datsik" } },
+      { name: "Неоновое кресло", art: "chair-kedr", price: { currency: "RUB", amount: 2500 }, bonus: {}, drop: { boss: "kedr" } },
+      { name: "Капитанское кресло", art: "chair-mugo", price: { currency: "RUB", amount: 3000 }, bonus: {}, drop: { boss: "mugo" } },
+      { name: "Кресло кассира", art: "chair-garkusha", price: { currency: "RUB", amount: 3500 }, bonus: {}, drop: { boss: "garkusha" } },
+      { name: "Угол ринга", art: "chair-bebyakyan", price: { currency: "RUB", amount: 4000 }, bonus: {}, drop: { boss: "bebyakyan" } },
+      { name: "Расписной трон", art: "chair-babafey", price: { currency: "RUB", amount: 5000 }, bonus: {}, drop: { boss: "babafey" } },
+      { name: "Кресло лудомана", art: "chair-vodovoz", price: { currency: "RUB", amount: 6000 }, bonus: {}, drop: { boss: "vodovoz" } },
+      { name: "Белый трон", art: "chair-knyaz", price: { currency: "RUB", amount: 6500 }, bonus: {}, drop: { boss: "knyaz" } },
+      { name: "Кресло Пепе", art: "chair-pepe", price: { currency: "RUB", amount: 7000 }, bonus: {}, drop: { boss: "pepe" } },
       // new pieces go at the end: a piece is a bit of the owned mask by its place in this list
-      { name: "Кресло Вадима", art: "chair-vadim", price: { currency: "RUB", amount: 7500 }, bonus: { critChance: 0.03 }, drop: { boss: "vadim" } },
-      { name: "Кресло Боцмана", art: "chair-botsman", price: { currency: "RUB", amount: 8000 }, bonus: { critChance: 0.03 }, drop: { boss: "botsman" } },
-      { name: "Бочка Утилизатора", art: "chair-utilizator", price: { currency: "RUB", amount: 8800 }, bonus: { critChance: 0.035 }, drop: { boss: "utilizator" } },
+      { name: "Кресло Вадима", art: "chair-vadim", price: { currency: "RUB", amount: 7500 }, bonus: {}, drop: { boss: "vadim" } },
+      { name: "Кресло Боцмана", art: "chair-botsman", price: { currency: "RUB", amount: 8000 }, bonus: {}, drop: { boss: "botsman" } },
+      { name: "Бочка Утилизатора", art: "chair-utilizator", price: { currency: "RUB", amount: 8800 }, bonus: {}, drop: { boss: "utilizator" } },
     ],
   },
 ];
@@ -104,21 +104,21 @@ export const ROOM_DROP_CHANCE = 0.5;
 
 export const ROOM_DEFS: RoomDef[] = [
   { id: "basic", name: "Каморка", description: "С чего все начинали: облезлые обои, старый стол, ламповый монитор и табуретка.", price: null, bonus: {} },
-  { id: "freezer", name: "Морозилка", description: "Всё во льду: замёрзший монитор, кресло в инее и сугробы по углам. Выпадает с Дацкоу. +3 к лимиту энергии.", price: { currency: "RUB", amount: 1500 }, bonus: { energyMax: 3 }, drop: { boss: "datsik", chance: ROOM_DROP_CHANCE } },
-  { id: "neon", name: "Неоновая хата", description: "Обои с узором, кот на крыше и RGB-лента под потолком. Выпадает с Кедра. +5 к лимиту энергии.", price: { currency: "RUB", amount: 2000 }, bonus: { energyMax: 5 }, drop: { boss: "kedr", chance: ROOM_DROP_CHANCE } },
-  { id: "shark", name: "Акулья берлога", description: "Аквариум во всю стену, иллюминатор, сети и якорь — логово Мугонатора. Выпадает с Мугонатора. +2% шанса крита.", price: { currency: "RUB", amount: 3000 }, bonus: { critChance: 0.02 }, drop: { boss: "mugo", chance: ROOM_DROP_CHANCE } },
-  { id: "backroom", name: "Денежная подсобка", description: "Пачки купюр на полке, счётная машинка и тяжёлый сейф. Выпадает с Гаркуши. +3% к урону.", price: { currency: "RUB", amount: 3500 }, bonus: { damage: 0.03 }, drop: { boss: "garkusha", chance: ROOM_DROP_CHANCE } },
-  { id: "boxing", name: "Боксёрская", description: "Перчатки на стене, плакаты легенд и полка «для храбрости». Выпадает с Командате. +30 к урону кулака.", price: { currency: "RUB", amount: 4000 }, bonus: { fistDamage: 30 }, drop: { boss: "bebyakyan", chance: ROOM_DROP_CHANCE } },
-  { id: "izba", name: "Изба Бабафея", description: "Бревенчатые стены, балалайки, самовар и расписной сундук. Выпадает с Бабафея. +8 к лимиту энергии.", price: { currency: "RUB", amount: 5000 }, bonus: { energyMax: 8 }, drop: { boss: "babafey", chance: ROOM_DROP_CHANCE } },
-  { id: "ludoman", name: "Берлога лудомана", description: "Однорукий бандит у стены, гора курьерских сумок и рассвет в окне. Выпадает с Востока. +2% шанса крита и +1% к урону.", price: { currency: "RUB", amount: 6000 }, bonus: { critChance: 0.02, damage: 0.01 }, drop: { boss: "vodovoz", chance: ROOM_DROP_CHANCE } },
-  { id: "pepe", name: "Гардеробная Пепе", description: "Синие свитера на вешалке, гантели, флаг с быком и светящаяся таблетка на полке. Выпадает с ивента «Пепе». +4% к урону и +1% шанса крита.", price: { currency: "RUB", amount: 7000 }, bonus: { damage: 0.04, critChance: 0.01 }, drop: { boss: "pepe", chance: ROOM_DROP_CHANCE } },
-  { id: "vault", name: "Хранилище Князя", description: "Светлые обои, круглая дверь сейфа, полка с леджерами, портреты классиков и листва за окном. Выпадает с Князя. +4% к урону.", price: { currency: "RUB", amount: 6500 }, bonus: { damage: 0.04 }, drop: { boss: "knyaz", chance: ROOM_DROP_CHANCE } },
-  { id: "cabinet", name: "Кабинет Вадима", description: "Тёмное дерево, ночной город за окном, полка с брелоками от тачек и спорткар в золотой раме. Выпадает с Вадима. +5% к урону.", price: { currency: "RUB", amount: 7500 }, bonus: { damage: 0.05 }, drop: { boss: "vadim", chance: ROOM_DROP_CHANCE } },
-  { id: "dojo", name: "Додзё Боцмана", description: "Тёмный зал с зелёными ширмами, по стене бежит код, у стены — боксёрская груша. Выпадает с Боцмана. +5% к урону.", price: { currency: "RUB", amount: 8000 }, bonus: { damage: 0.05 }, drop: { boss: "botsman", chance: ROOM_DROP_CHANCE } },
+  { id: "freezer", name: "Морозилка", description: "Всё во льду: замёрзший монитор, кресло в инее и сугробы по углам. Выпадает с Дацкоу.", price: { currency: "RUB", amount: 1500 }, bonus: {}, drop: { boss: "datsik", chance: ROOM_DROP_CHANCE } },
+  { id: "neon", name: "Неоновая хата", description: "Обои с узором, кот на крыше и RGB-лента под потолком. Выпадает с Кедра.", price: { currency: "RUB", amount: 2000 }, bonus: {}, drop: { boss: "kedr", chance: ROOM_DROP_CHANCE } },
+  { id: "shark", name: "Акулья берлога", description: "Аквариум во всю стену, иллюминатор, сети и якорь — логово Мугонатора. Выпадает с Мугонатора.", price: { currency: "RUB", amount: 3000 }, bonus: {}, drop: { boss: "mugo", chance: ROOM_DROP_CHANCE } },
+  { id: "backroom", name: "Денежная подсобка", description: "Пачки купюр на полке, счётная машинка и тяжёлый сейф. Выпадает с Гаркуши.", price: { currency: "RUB", amount: 3500 }, bonus: {}, drop: { boss: "garkusha", chance: ROOM_DROP_CHANCE } },
+  { id: "boxing", name: "Боксёрская", description: "Перчатки на стене, плакаты легенд и полка «для храбрости». Выпадает с Командате.", price: { currency: "RUB", amount: 4000 }, bonus: {}, drop: { boss: "bebyakyan", chance: ROOM_DROP_CHANCE } },
+  { id: "izba", name: "Изба Бабафея", description: "Бревенчатые стены, балалайки, самовар и расписной сундук. Выпадает с Бабафея.", price: { currency: "RUB", amount: 5000 }, bonus: {}, drop: { boss: "babafey", chance: ROOM_DROP_CHANCE } },
+  { id: "ludoman", name: "Берлога лудомана", description: "Однорукий бандит у стены, гора курьерских сумок и рассвет в окне. Выпадает с Востока.", price: { currency: "RUB", amount: 6000 }, bonus: {}, drop: { boss: "vodovoz", chance: ROOM_DROP_CHANCE } },
+  { id: "pepe", name: "Гардеробная Пепе", description: "Синие свитера на вешалке, гантели, флаг с быком и светящаяся таблетка на полке. Выпадает с ивента «Пепе».", price: { currency: "RUB", amount: 7000 }, bonus: {}, drop: { boss: "pepe", chance: ROOM_DROP_CHANCE } },
+  { id: "vault", name: "Хранилище Князя", description: "Светлые обои, круглая дверь сейфа, полка с леджерами, портреты классиков и листва за окном. Выпадает с Князя.", price: { currency: "RUB", amount: 6500 }, bonus: {}, drop: { boss: "knyaz", chance: ROOM_DROP_CHANCE } },
+  { id: "cabinet", name: "Кабинет Вадима", description: "Тёмное дерево, ночной город за окном, полка с брелоками от тачек и спорткар в золотой раме. Выпадает с Вадима.", price: { currency: "RUB", amount: 7500 }, bonus: {}, drop: { boss: "vadim", chance: ROOM_DROP_CHANCE } },
+  { id: "dojo", name: "Додзё Боцмана", description: "Тёмный зал с зелёными ширмами, по стене бежит код, у стены — боксёрская груша. Выпадает с Боцмана.", price: { currency: "RUB", amount: 8000 }, bonus: {}, drop: { boss: "botsman", chance: ROOM_DROP_CHANCE } },
   // the rooms that drop from no boss: bought for dollars for now (where they drop from — later)
-  { id: "office", name: "Офис трейдера", description: "Стеклянные стены, три графика и кофемашина. +3% шанса крита.", price: { currency: "PAP", amount: 1_500 }, bonus: { critChance: 0.03 } },
-  { id: "acidyard", name: "Кислотный двор", description: "Ночной двор Утилизатора: ливень, гроза над воротами, мигающий фонарь и бочки с кислотой, что светится в лужах. Выпадает с Утилизатора. +6% к урону.", price: { currency: "RUB", amount: 8_800 }, bonus: { damage: 0.06 }, drop: { boss: "utilizator", chance: ROOM_DROP_CHANCE } },
-  { id: "penthouse", name: "Пентхаус To The Moon", description: "Вид на Луну, золото и бассейн из стейблкоинов. +7% к урону.", price: { currency: "PAP", amount: 1_500 }, bonus: { damage: 0.07 } },
+  { id: "office", name: "Офис трейдера", description: "Стеклянные стены, три графика и кофемашина.", price: { currency: "PAP", amount: 1_500 }, bonus: {} },
+  { id: "acidyard", name: "Кислотный двор", description: "Ночной двор Утилизатора: ливень, гроза над воротами, мигающий фонарь и бочки с кислотой, что светится в лужах. Выпадает с Утилизатора.", price: { currency: "RUB", amount: 8_800 }, bonus: {}, drop: { boss: "utilizator", chance: ROOM_DROP_CHANCE } },
+  { id: "penthouse", name: "Пентхаус To The Moon", description: "Вид на Луну, золото и бассейн из стейблкоинов.", price: { currency: "PAP", amount: 1_500 }, bonus: {} },
 ];
 
 export const equipmentById = (id: string) => EQUIPMENT.find((e) => e.id === id);

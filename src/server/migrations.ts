@@ -1690,4 +1690,9 @@ CREATE TABLE IF NOT EXISTS zarub_stats (
   xp BIGINT NOT NULL DEFAULT 0
 );`,
   },
+  {
+    // the chairs and the rooms give no bonuses any more (the user 2026-11-22): the rooms' extra energy limit goes
+    id: "v2-121-no-room-bonus",
+    sql: `UPDATE players SET energy_bonus=0 WHERE energy_bonus <> 0;`,
+  },
 ];

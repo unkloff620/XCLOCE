@@ -8,7 +8,6 @@ import { money } from "../format.ts";
 import { haptic } from "../telegram.ts";
 import { REMOVABLE, baseBit, equipmentById, hasPiece, pieceUnlockId, placedOf, type Price } from "../../content/home.ts";
 import { bossById } from "../../content/bosses.ts";
-import { BonusLine } from "./house.tsx";
 
 /*
  * The room editor right on the home screen, built like the hero editor: the hero steps away (his chair stays) so the room
@@ -206,7 +205,7 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose, onBack }: { 
             </div>
             {fPiece ? (
               <div className="room-ed-info">
-                <span className="small"><b>{fPiece.name}</b> · <BonusLine b={fPiece.bonus} /></span>
+                <span className="small"><b>{fPiece.name}</b></span>
                 {!fOwned && fPiece.drop && !(state.unlocks ?? []).includes(pieceUnlockId(fPiece.art)) ? (
                   <span className="tiny muted">Выпадает с {bossById(fPiece.drop.boss)?.name} (любой режим): шанс 30%, после 5 побед без удачи — точно. Потом покупается здесь.</span>
                 ) : !fOwned && (
