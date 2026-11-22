@@ -107,7 +107,7 @@ function colour(line: string): [string, string][] {
 }
 
 /** the flat screen of code: the lines typed so far, the one being typed, the cursor */
-function codeScreen(w: number, h: number) {
+export function codeScreen(w: number, h: number) {
   const cv = document.createElement("canvas");
   cv.width = w; cv.height = h;
   const g = cv.getContext("2d")!;
@@ -243,5 +243,40 @@ export function FokusScreens() {
     <foreignObject x={BOX.x} y={BOX.y} width={BOX.w} height={BOX.h} style={{ pointerEvents: "none" }}>
       <canvas ref={ref} width={BOX.w * PX} height={BOX.h * PX} style={{ width: "100%", height: "100%", display: "block", opacity: 0.94 }} />
     </foreignObject>
+  );
+}
+
+/** Фокус's card in the boss list: the code types itself behind the text (the same code, dim), a frame of its own */
+export function FokusCardCode() {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const cv = ref.current;
+    if (!cv) return;
+    const g = cv.getContext("2d");
+    if (!g) return;
+    const scr = codeScreen(560, 300);
+    scr.step(900);
+    const still = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let raf = 0, last = performance.now(), acc = 0;
+    const gate = frameGate();
+    const paint = (t: number) => { scr.draw(t); g.clearRect(0, 0, cv.width, cv.height); g.drawImage(scr.cv, 0, 0, cv.width, cv.height); };
+    const frame = (now: number) => {
+      raf = requestAnimationFrame(frame);
+      if (!gate(now)) return;
+      acc += Math.min(0.1, (now - last) / 1000) * 45;
+      last = now;
+      const n = Math.floor(acc);
+      if (n > 0) { scr.step(n); acc -= n; }
+      paint(now / 1000);
+    };
+    if (still) paint(0); else raf = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  return (
+    <span className="fk-card-fx" aria-hidden="true">
+      <canvas ref={ref} className="fk-card-code" width={560} height={300} />
+      <span className="fk-card-egg"><b>{"// My name is Fokus — I promise to ship the software by August."}</b></span>
+      <i className="fk-drip d1" /><i className="fk-drip d2" /><i className="fk-drip d3" /><i className="fk-drip d4" />
+    </span>
   );
 }

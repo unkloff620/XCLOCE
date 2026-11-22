@@ -1,4 +1,5 @@
 "use client";
+import { FokusCardCode } from "../art/fokus-screens.tsx";
 import { FIGHT_MODES } from "../../content/medals.ts";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -140,6 +141,8 @@ export function BossesScreen() {
               <span className="bcard-n display">Дело №{b.order}</span>
               {/* Боцман's card: an emerald glint runs along the frame (its ::before/::after are the rain and the lamps) */}
               {b.id === "botsman" && !grey && <i className="bcard-glint" aria-hidden="true" />}
+              {/* Фокус's card: the code typing on the screen, the line from him, blood running down the frame */}
+              {b.id === "fokus" && !grey && <FokusCardCode />}
               {/* the boss stands on the left and fades into the card */}
               <div className="bcard-art" aria-hidden="true">
                 {/* eslint-disable-next-line @next/next/no-img-element */}

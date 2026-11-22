@@ -4627,6 +4627,7 @@ export const ASSET_FILES: string[] = [
  "/assets/ui/authority.webp",
  "/assets/ui/bonus.webp",
  "/assets/ui/boss-card-frame-botsman.webp",
+ "/assets/ui/boss-card-frame-fokus.webp",
  "/assets/ui/boss-card-frame-knyaz.webp",
  "/assets/ui/boss-card-frame-utilizator.webp",
  "/assets/ui/boss-card-frame-vadim.webp",
