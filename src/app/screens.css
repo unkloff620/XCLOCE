@@ -7748,14 +7748,21 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .ms-clan { font-size: 2.4cqi; color: #7a5a2c; }
 .ms-row.locked .ms-face, .ms-row.locked .ms-best-ava { filter: grayscale(1) brightness(0.55); }
 /* his workshop: he stands behind the table, his five parts on it */
-.ms-room { background: #1a120c; }
-.ms-room-bg { position: absolute; left: 0; right: 0; top: 0; bottom: calc(var(--bottom) - 10px); width: 100%; height: calc(100% - var(--bottom) + 10px); object-fit: cover; object-position: center bottom; }
+.ms-room { background: #1a120c; container-type: size; }
+.ms-stage { position: absolute; left: 50%; bottom: calc(var(--bottom) - 10px); width: max(100cqw, (100cqh - var(--bottom) + 10px) * 2 / 3); aspect-ratio: 2 / 3; transform: translateX(-50%); }
+.ms-room-bg, .ms-room-table { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .ms-title { position: relative; z-index: 3; }
-.ms-room-master { position: absolute; z-index: 1; left: 4%; bottom: calc(var(--bottom) + 21%); width: 62%; max-width: 330px; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.5)); }
-.ms-cloud { position: absolute; z-index: 2; right: 6%; top: calc(var(--top) + 90px); max-width: 40%; padding: 14px 16px; border-radius: 50%; background: #fff; color: #2a1a0a;
+/* he stands behind the table (its edge at 69% of the stage), breathing: the chest rises from the waist */
+.ms-room-master { position: absolute; left: 25%; bottom: 26%; width: 46%; transform-origin: 50% 100%; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
+  animation: ms-breath 4.2s ease-in-out infinite; }
+@keyframes ms-breath { 0%, 100% { transform: scale(1, 1); } 45% { transform: scale(1.012, 1.022) translateY(-0.4%); } }
+.ms-face { animation: ms-breath 4.2s ease-in-out infinite; transform-origin: 50% 100%; }
+.ms-row:nth-child(2n) .ms-face { animation-delay: -1.4s; }
+.ms-row:nth-child(3n) .ms-face { animation-delay: -2.7s; }
+.ms-cloud { position: absolute; z-index: 2; right: 4%; top: calc(var(--top) + 70px); max-width: 34%; padding: 14px 16px; border-radius: 50%; background: #fff; color: #2a1a0a;
   font-size: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35); }
 .ms-cloud::after { content: ""; position: absolute; left: -6px; bottom: 6px; width: 16px; height: 16px; border-radius: 50%; background: #fff; }
-.ms-table { position: absolute; z-index: 2; left: 3%; right: 3%; bottom: calc(var(--bottom) + 9%); display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+.ms-table { position: absolute; z-index: 2; left: 3%; right: 3%; bottom: calc(var(--bottom) + 8% + 52px); display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
 .ms-part { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0; border: 0; background: none; cursor: pointer; }
 .ms-part svg, .ms-part img { filter: grayscale(1) brightness(0.55) drop-shadow(0 3px 3px rgba(0, 0, 0, 0.6)); transition: filter 0.3s; }
 .ms-part.have svg, .ms-part.have img { filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.6)); }

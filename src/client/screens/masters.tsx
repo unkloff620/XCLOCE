@@ -76,7 +76,7 @@ export function MastersScreen() {
             const body = (
               <>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="ms-face" src={`${A}/${m.id}.webp`} alt="" draggable={false} />
+                <img className="ms-face" src={`${A}/${m.id}.webp?v=2`} alt="" draggable={false} />
                 <span className="ms-who">
                   <b className="ms-name display">{m.name}</b>
                   <span className="ms-motto">{open ? m.motto : <><Icon name="lock" size={12} /> после «{prev?.name}»</>}</span>
@@ -140,14 +140,19 @@ export function MasterScreen({ id }: { id: string }) {
   if (!allBought || (!learning && r.steps === 0 && r.runs === 0)) {
     return (
       <div className="fit-page ms-room">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="ms-room-bg" src={`${A}/room.webp`} alt="" draggable={false} />
+        {/* the room, the master and the table in front of him: one 2:3 stage, cut like a cover picture */}
+        <div className="ms-stage">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="ms-room-bg" src={`${A}/room.webp?v=2`} alt="" draggable={false} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="ms-room-master" src={`${A}/${m.id}.webp?v=2`} alt="" draggable={false} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="ms-room-table" src={`${A}/table.webp`} alt="" draggable={false} />
+        </div>
         <div className="title-row rd-title ms-title">
           <Link href="/masters" className="back-btn" aria-label="К мастерам">‹</Link>
           <b>{m.name}</b>
         </div>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="ms-room-master" src={`${A}/${m.id}.webp`} alt="" draggable={false} />
         <span className="ms-cloud">{allBought ? "Ну что, учимся?" : "Начать обучение?"}</span>
         <div className="ms-table">
           {m.parts.map((p, i) => {

@@ -4413,6 +4413,7 @@ export const ASSET_FILES: string[] = [
  "/assets/masters/m15.webp",
  "/assets/masters/m16.webp",
  "/assets/masters/room.webp",
+ "/assets/masters/table.webp",
  "/assets/nav/bosses.webp",
  "/assets/nav/clans.webp",
  "/assets/nav/craft.webp",
