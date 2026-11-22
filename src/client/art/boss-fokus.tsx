@@ -26,7 +26,7 @@ const WAIST = [372, 610] as const;
 const BLOODY = new Set(["legs", "body", "armR", "lowR", "handR", "armL", "lowL", "handL", "head", "nose", "chin", "lips-up", "lips"]);
 const BLOOD_V = 1;
 /** the nostrils (rig units): snot hangs from his right one, blood runs from the left */
-const NOSTRIL_R = [368, 163] as const, NOSTRIL_L = [383.5, 163] as const;
+const NOSTRIL_R = [368, 165.5] as const, NOSTRIL_L = [383.5, 163] as const;
 /** the mouth's corners (x, rig units): the lower lip is held there and sags between them */
 const MOUTH = [349, 401] as const;
 

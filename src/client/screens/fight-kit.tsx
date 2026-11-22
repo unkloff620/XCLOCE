@@ -16,7 +16,7 @@ import { haptic } from "../telegram.ts";
 import { weaponStats } from "../weapon-stats.ts";
 
 /*
- * The fight's weapons: six square cells under the boss (FightTray), set up in a panel that slides up from the bottom
+ * The fight's weapons: eight square cells in a row under the boss (FightTray), set up in a panel that slides up from the bottom
  * (WeaponPanel: drag a weapon — a single one or a pack of 10…1000 — from the list onto a cell; «Усиление» switches the
  * clan's boost). The side panels: «Топ» from the left, «Инфо» (who hit with what) from the right.
  */
@@ -34,7 +34,7 @@ export function PackArt({ id, n, size }: { id: string; n: number; size: number }
 
 export const slotsOf = (s: ReturnType<typeof useGame>["state"]): FightSlot[] => s?.player.fightSlots ?? DEFAULT_FIGHT_SLOTS;
 
-/** the six cells: a tap hits with that weapon (the pack's count, or what is left of it) */
+/** the cells: a tap hits with that weapon (the pack's count, or what is left of it) */
 export function FightTray({ slots, tray, onHit, onCooldown, onBuy, disabled }: {
   slots: FightSlot[]; tray: Tray[]; onHit: (id: string, n: number) => void; onCooldown: (name: string, leftMs: number, id: string) => void; onBuy: () => void; disabled: boolean;
 }) {
@@ -69,7 +69,7 @@ export function FightTray({ slots, tray, onHit, onCooldown, onBuy, disabled }: {
   );
 }
 
-/** the panel from the bottom: the six cells on top, the weapons (Атака) or the boosts (Усиление) below */
+/** the panel from the bottom: the cells on top, the weapons (Атака) or the boosts (Усиление) below */
 export function WeaponPanel({ tray, onClose }: { tray: Tray[]; onClose: () => void }) {
   const { state, act } = useGame();
   const [slots, setSlots] = useState<FightSlot[]>(() => slotsOf(state).slice());

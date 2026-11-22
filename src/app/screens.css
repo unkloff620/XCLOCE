@@ -6843,19 +6843,19 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .pkc-tat { display: flex; flex-direction: column; align-items: center; gap: 2px; width: 100%; font-weight: 800; }
 .pkc-tat small { font-size: 11px; }
 
-/* ===== the fight's weapons (fight-kit.tsx): six square cells, the panel from the bottom, the side tabs ===== */
-.ftray { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 5px; }
-.fcell { position: relative; aspect-ratio: 1; display: grid; place-items: center; padding: 0; border-radius: 10px; border: 2.5px solid var(--line); overflow: hidden;
+/* ===== the fight's weapons (fight-kit.tsx): eight square cells in a row, the panel from the bottom, the side tabs ===== */
+.ftray { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; }
+.fcell { position: relative; aspect-ratio: 1; display: grid; place-items: center; padding: 0; border-radius: 9px; border: 2px solid var(--line); overflow: hidden;
   box-shadow: 0 3px 0 var(--line), inset 0 2px 0 rgba(255, 255, 255, 0.12);
   background: var(--tex), radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--rar, #9aa3ad) 70%, #fff 0%), color-mix(in srgb, var(--rar, #9aa3ad) 55%, #1a120b) 85%); }
 .fcell > img, .fcell > svg { width: 78% !important; height: 78% !important; object-fit: contain; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5)); }
 .fcell:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
 .fcell.empty { background: rgba(0, 0, 0, 0.35); border-style: dashed; border-color: rgba(255, 255, 255, 0.25); box-shadow: none; }
 .fcell.none > img, .fcell.none > svg { filter: grayscale(1) brightness(0.6); }
-.fcell-dmg { position: absolute; left: 0; right: 0; bottom: 1px; text-align: center; font-size: 10.5px; font-weight: 600; color: #fff; text-shadow: 0 1px 0 #000, 0 0 3px #000; }
-.fcell-qty { position: absolute; right: 3px; top: 2px; font-size: 9px; font-weight: 600; color: #fff; text-shadow: 0 1px 0 #000, 0 0 2px #000; }
+.fcell-dmg { position: absolute; left: 0; right: 0; bottom: 1px; text-align: center; font-size: 9.5px; letter-spacing: -0.3px; font-weight: 600; color: #fff; text-shadow: 0 1px 0 #000, 0 0 3px #000; }
+.fcell-qty { position: absolute; right: 2px; top: 1px; font-size: 8.5px; font-weight: 600; color: #fff; text-shadow: 0 1px 0 #000, 0 0 2px #000; }
 /* how many a tap uses: over the middle of the weapon, thin and see-through (the weapon stays visible) */
-.fcell-pack { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; font-size: 11.5px; font-weight: 500; letter-spacing: -0.3px; white-space: nowrap; color: rgba(255, 255, 255, 0.72);
+.fcell-pack { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; font-size: 10px; font-weight: 500; letter-spacing: -0.4px; white-space: nowrap; color: rgba(255, 255, 255, 0.72);
   text-shadow: 0 0 3px rgba(0, 0, 0, 0.9); pointer-events: none; }
 .fcell .w-cd { border-radius: 8px; }
 .fbtn-arms { padding: 0 !important; width: 38px; height: 34px; display: grid; place-items: center; }
@@ -6872,7 +6872,7 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 @keyframes wp-up { from { transform: translateY(100%); } to { transform: none; } }
 @keyframes wp-fade { from { opacity: 0; } to { opacity: 1; } }
 .wpanel-grip { width: 44px; height: 5px; margin: 0 auto 2px; border-radius: 3px; background: rgba(255, 255, 255, 0.25); }
-.wpanel-cells { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+.wpanel-cells { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; }
 .wpanel-cells .fcell.pick { outline: 3px solid #ffd54a; outline-offset: 1px; }
 .wpanel-cells .fcell.over { outline: 3px solid #7cf07c; outline-offset: 1px; transform: scale(1.06); }
 .fcell-n { font-size: 15px; font-weight: 900; color: rgba(255, 255, 255, 0.35); }
