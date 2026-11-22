@@ -51,7 +51,7 @@ for n in ["propeller", "plant", "tree", "cat"]:
     put(n, load(n))
 # the props: each connected thing on its own (small specks go with their nearest thing)
 p = load("props")
-a = np.array(p)[..., 3] > 40
+a = np.array(p)[..., 3] > 6
 a = cv2.morphologyEx(a.astype(np.uint8), cv2.MORPH_CLOSE, np.ones((9, 9), np.uint8))
 n, lab, st, _ = cv2.connectedComponentsWithStats(a)
 props = []
@@ -60,7 +60,7 @@ for i in range(1, n):
     if area < 400:
         continue
     keep = (lab == i)
-    keep = cv2.dilate(keep.astype(np.uint8), np.ones((5, 5), np.uint8)) > 0
+    keep = cv2.dilate(keep.astype(np.uint8), np.ones((9, 9), np.uint8)) > 0
     pa = np.array(p).copy()
     pa[..., 3] = np.where(keep, pa[..., 3], 0)
     props.append((y + h, Image.fromarray(pa)))

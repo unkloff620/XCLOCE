@@ -27,7 +27,7 @@ const STARS: [number, number, number][] = [
 export function FokusRoom({ uid = "a", layer = "all" }: { uid?: string; layer?: "all" | "back" | "front" }) {
   const img = (n: string, cls?: string) => {
     const b = (R as unknown as Record<string, Box>)[n];
-    return <image className={cls} href={`${A}/${n}.webp`} x={b.x} y={b.y} width={b.w} height={b.h} preserveAspectRatio="none" />;
+    return <image className={cls} href={`${A}/${n}.webp?v=2`} x={b.x} y={b.y} width={b.w} height={b.h} preserveAspectRatio="none" />;
   };
   const box = (n: string) => (R as unknown as Record<string, Box>)[n];
   const at = (x: number, y: number) => ({ transformOrigin: `${x}px ${y}px`, transformBox: "view-box" as const });
