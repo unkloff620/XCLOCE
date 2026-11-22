@@ -30,7 +30,7 @@ export function FokusRoom({ uid = "a" }: { uid?: string }) {
   const box = (n: string) => (R as unknown as Record<string, Box>)[n];
   const at = (x: number, y: number) => ({ transformOrigin: `${x}px ${y}px`, transformBox: "view-box" as const });
   const [wx, wy] = R.win;
-  const gr = R.glassR + 3;
+  const gr = R.glassR + 5;
   const pr = box("propeller");
   const fan = { x: pr.x + pr.w / 2, y: pr.y + pr.h / 2 };
   // a thing on the floor and its shadow: the same picture as a soft dark silhouette, flipped down from the thing's foot
@@ -86,8 +86,8 @@ export function FokusRoom({ uid = "a" }: { uid?: string }) {
       <g clipPath={`url(#fkr-win-${uid})`}>
         <rect x={wx - gr} y={wy - gr} width={gr * 2} height={gr * 2} fill="#1a2140" />
         <g className="fkr-drift">
-          <image className="fkr-night" href={`${A}/sky-night.webp`} x={wx - gr - 40} y={wy - R["sky-night"].h / 2} width={R["sky-night"].w} height={R["sky-night"].h} preserveAspectRatio="none" />
-          <image className="fkr-day" href={`${A}/sky-day.webp`} x={wx - gr - 40} y={wy - R["sky-day"].h / 2} width={R["sky-day"].w} height={R["sky-day"].h} preserveAspectRatio="none" />
+          <image className="fkr-night" href={`${A}/sky-night.webp`} x={wx - gr - 4} y={wy - R["sky-night"].h / 2} width={R["sky-night"].w} height={R["sky-night"].h} preserveAspectRatio="none" />
+          <image className="fkr-day" href={`${A}/sky-day.webp`} x={wx - gr - 4} y={wy - R["sky-day"].h / 2} width={R["sky-day"].w} height={R["sky-day"].h} preserveAspectRatio="none" />
         </g>
         <g className="fkr-stars">
           {STARS.map(([x, y, r], i) => <circle key={i} cx={x} cy={y} r={r * 1.6} fill="#fff" style={{ animationDelay: `${-i * 0.37}s` }} />)}
@@ -101,7 +101,7 @@ export function FokusRoom({ uid = "a" }: { uid?: string }) {
         </g>
         <g className="fkr-tree" style={at(452, 642)}>{img("tree")}</g>
       </g>
-      <image href={`${A}/room.webp`} x={0} y={0} width={1060} height={1484} preserveAspectRatio="none" />
+      <image href={`${A}/room.webp?v=2`} x={0} y={0} width={1060} height={1484} preserveAspectRatio="none" />
       {/* the light through the window: a warm glow round it by day */}
       <circle className="fkr-winglow" cx={wx} cy={wy} r={gr * 1.5} fill={`url(#fkr-pool-${uid})`} style={{ mixBlendMode: "screen" }} />
       {/* the window's light on the floor, the fan's shadow turning in it: by day warm (it moves against the sun), at night pale */}

@@ -2,8 +2,8 @@
 Фокус's room, 1060×1484 (the scene canvas; the artist's layers in place, tools/boss/source/fokus/room/): room.png (the
 coder's room with the round window), propeller.png (the fan in the window), plant.png (the ivy top right), tree.png
 (the tree on the hill behind the window), cat.png, props.png (cans and chip bags on the floor).
-→ public/assets/arena/fokus/: room.webp — the room, its round window see-through (the artist's: the fan is the window's
-grille; the glass is cut once more here to be sure), the sky, the sun / the moon, the stars and the tree are drawn
+→ public/assets/arena/fokus/: room.webp — the room, its round window see-through (the artist's own hole, used as it is: the fan is the
+window's grille), the sky, the sun / the moon, the stars and the tree are drawn
 behind it (art/arena-fokus.tsx FokusRoom); propeller, plant,
 tree, cat; prop-<n>.webp — every thing of props.png on its own (each casts its own shadow); src/client/art/
 arena-fokus-data.ts — the boxes; public/assets/arena/fokus.webp and tools/scene/source/room-coder.png — the flat picture
@@ -12,17 +12,21 @@ arena-fokus-data.ts — the boxes; public/assets/arena/fokus.webp and tools/scen
 import json, os
 import numpy as np
 import cv2
-from PIL import Image, ImageDraw
+from PIL import Image
 
 S = "tools/boss/source/fokus/room"
 O = "public/assets/arena/fokus"
 os.makedirs(O, exist_ok=True)
 W, H = 1060, 1484
-# the window: its middle, the glass's radius, the hub of the bars and where the bars run to (scene units)
-WIN = (523.5, 433.5)
-GLASS_R = 251
+# the window: the artist's round hole in room.png (the room is used as it is — the hole is his), its middle and radius
+# measured from the hole for the sky behind it (scene units)
+_a = np.array(Image.open(f"{S}/room.png"))[..., 3] < 128
+_n, _lab, _st, _c = cv2.connectedComponentsWithStats(_a.astype(np.uint8))
+_i = 1 + int(np.argmax(_st[1:, 4]))
+_x, _y, _w, _h = _st[_i][:4]
+WIN = (round(_x + _w / 2, 1), round(_y + _h / 2, 1))
+GLASS_R = int(max(_w, _h) / 2)
 HUB = (530, 422)
-BARS: list = []
 
 
 def load(n):
@@ -32,17 +36,7 @@ def load(n):
 
 
 room = load("room")
-# the glass: everything inside the circle but the bars and the hub
-mask = Image.new("L", (W, H), 0)
-d = ImageDraw.Draw(mask)
-d.ellipse([WIN[0] - GLASS_R, WIN[1] - GLASS_R, WIN[0] + GLASS_R, WIN[1] + GLASS_R], fill=255)
-for b in BARS:
-    d.line([HUB, b], fill=0, width=13)
-glass = np.array(mask).astype(np.float32) / 255
-glass = cv2.GaussianBlur(glass, (0, 0), 1.0)
-r = np.array(room)
-r[..., 3] = (r[..., 3] * (1 - glass)).astype(np.uint8)
-Image.fromarray(r).save(f"{O}/room.webp", quality=86, method=6)
+room.save(f"{O}/room.webp", quality=86, method=6)
 
 boxes = {}
 
