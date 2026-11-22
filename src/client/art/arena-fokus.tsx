@@ -4,8 +4,7 @@
  * the ivy top right sways, the tree behind the window stirs; and the day turns into the night and back, fast (one
  * cycle — screens.css «Фокус's room», --fkr-cycle): the sun crosses the window left to right, then the moon, the day and
  * the night skies cross-fade (stars at night), the room goes dark at night and the lamp lights it, the window's light
- * falls on the floor with the fan's turning shadow in it, and the things on the floor (the cat, the cans, the chip
- * bags) cast shadows that swing from the right to the left as the sun (then the moon) goes over. All the motions run on
+ * falls on the floor and moves against the sun. All the motions run on
  * one clock (the same cycle, started together). Also the home room «Берлога кодера» (content/home-scene.ts).
  */
 import { FOKUS_ROOM } from "./arena-fokus-data.ts";
@@ -24,7 +23,7 @@ const STARS: [number, number, number][] = [
 ];
 
 /** layer: "all" (the fight), or the home room in two: "back" — all but the things on the floor, "front" — those things and
- *  their shadows only, drawn over the hero's chair (they get the night by a filter of their own, on the same clock) */
+ *  only, drawn over the hero's chair (they get the night by a filter of their own, on the same clock) */
 export function FokusRoom({ uid = "a", layer = "all" }: { uid?: string; layer?: "all" | "back" | "front" }) {
   const img = (n: string, cls?: string) => {
     const b = (R as unknown as Record<string, Box>)[n];
@@ -36,27 +35,11 @@ export function FokusRoom({ uid = "a", layer = "all" }: { uid?: string; layer?: 
   const gr = R.glassR + 5;
   const pr = box("propeller");
   const fan = { x: pr.x + pr.w / 2, y: pr.y + pr.h / 2 };
-  // a thing on the floor and its shadow: the same picture as a soft dark silhouette, flipped down from the thing's foot
-  // and skewed by the light (screens.css fkr-shadow)
-  const thing = (n: string) => {
-    const b = box(n);
-    return (
-      <g key={n}>
-        <g className="fkr-shadow" style={at(b.x + b.w / 2, b.y + b.h - 2)}>
-          <image href={`${A}/${n}.webp`} x={b.x} y={b.y} width={b.w} height={b.h} preserveAspectRatio="none" filter={`url(#fkr-sil-${uid})`} />
-        </g>
-        {img(n, n === "cat" ? "fkr-cat" : undefined)}
-      </g>
-    );
-  };
+  // a thing on the floor (the cat gets its breath)
+  const thing = (n: string) => <g key={n}>{img(n, n === "cat" ? "fkr-cat" : undefined)}</g>;
   if (layer === "front") {
     return (
       <g className="fkr-live fkr-front">
-        <defs>
-          <filter id={`fkr-sil-${uid}`} x="-5%" y="-5%" width="110%" height="110%">
-            <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" />
-          </filter>
-        </defs>
         {PROPS.map((n) => thing(n))}
       </g>
     );
@@ -65,10 +48,6 @@ export function FokusRoom({ uid = "a", layer = "all" }: { uid?: string; layer?: 
     <g className="fkr-live">
       <defs>
         <clipPath id={`fkr-win-${uid}`}><circle cx={wx} cy={wy} r={gr} /></clipPath>
-        {/* the shadow: the picture's shape only, black, hard-edged (see-through by its group's opacity) */}
-        <filter id={`fkr-sil-${uid}`} x="-5%" y="-5%" width="110%" height="110%">
-          <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" />
-        </filter>
         <radialGradient id={`fkr-sun-${uid}`}>
           <stop offset="0" stopColor="#fffbe6" />
           <stop offset="0.32" stopColor="#ffe9a0" />
@@ -120,19 +99,12 @@ export function FokusRoom({ uid = "a", layer = "all" }: { uid?: string; layer?: 
       <image href={`${A}/room.webp?v=2`} x={0} y={0} width={1060} height={1484} preserveAspectRatio="none" />
       {/* the light through the window: a warm glow round it by day */}
       <circle className="fkr-winglow" cx={wx} cy={wy} r={gr * 1.5} fill={`url(#fkr-pool-${uid})`} style={{ mixBlendMode: "screen" }} />
-      {/* the window's light on the floor, the fan's shadow turning in it: by day warm (it moves against the sun), at night pale */}
+      {/* the window's light on the floor: by day warm (it moves against the sun), at night pale */}
       <g className="fkr-floor">
         <g className="fkr-pool-sun" style={{ mixBlendMode: "screen" }}><ellipse cx={0} cy={0} rx={260} ry={92} fill={`url(#fkr-pool-${uid})`} /></g>
         <g className="fkr-pool-moon" style={{ mixBlendMode: "screen" }}><ellipse cx={0} cy={0} rx={240} ry={84} fill={`url(#fkr-mpool-${uid})`} /></g>
-        <g className="fkr-fanshadow">
-          <g transform="scale(0.62 0.21)">
-            <g className="fkr-spin" style={at(0, 0)}>
-              <image href={`${A}/propeller.webp`} x={-pr.w / 2} y={-pr.h / 2} width={pr.w} height={pr.h} preserveAspectRatio="none" filter={`url(#fkr-sil-${uid})`} />
-            </g>
-          </g>
-        </g>
       </g>
-      {/* the cat on the bed and the things on the floor, each with its shadow (at home the things go over the chair: layer "front") */}
+      {/* the cat on the bed and the things on the floor (at home the things go over the chair: layer "front") */}
       {thing("cat")}
       {layer === "all" && PROPS.map((n) => thing(n))}
       {/* the ivy sways from where it hangs */}

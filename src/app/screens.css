@@ -7589,7 +7589,7 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 /* ── Фокус's room (art/arena-fokus.tsx): one clock for everything — 0% the dawn (night → day by 5%), the day to 45%,
    the dusk to 55%, the night to 100%; the sun crosses the window 1–52%, the moon 52–100% ── */
 .fkr-live { --fkr-cycle: 40s; }
-.fkr-live :is(.fkr-day, .fkr-sun, .fkr-moon, .fkr-stars, .fkr-winglow, .fkr-pool-sun, .fkr-pool-moon, .fkr-fanshadow, .fkr-shadow, .fkr-night-tint, .fkr-dusk-tint, .fkr-lamp) {
+.fkr-live :is(.fkr-day, .fkr-sun, .fkr-moon, .fkr-stars, .fkr-winglow, .fkr-pool-sun, .fkr-pool-moon, .fkr-night-tint, .fkr-dusk-tint, .fkr-lamp) {
   animation-duration: var(--fkr-cycle); animation-iteration-count: infinite; animation-timing-function: linear; }
 .fkr-day { animation-name: fkr-day; }
 @keyframes fkr-day { 0% { opacity: 0; } 5%, 45% { opacity: 1; } 55%, 100% { opacity: 0; } }
@@ -7633,28 +7633,11 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
   0% { transform: translate(260px, 1215px); opacity: 0.3; } 3%, 53% { opacity: 0; transform: translate(800px, 1215px); }
   57% { transform: translate(760px, 1215px); opacity: 0.6; } 76% { transform: translate(530px, 1235px); opacity: 0.8; }
   96% { transform: translate(300px, 1215px); opacity: 0.6; } 100% { transform: translate(260px, 1215px); opacity: 0.3; } }
-.fkr-fanshadow { animation-name: fkr-fanshadow; }
-@keyframes fkr-fanshadow {
-  0% { transform: translate(800px, 1215px); opacity: 0; } 5% { transform: translate(760px, 1215px); opacity: 0.35; }
-  25% { transform: translate(530px, 1235px); opacity: 0.45; } 45% { transform: translate(300px, 1215px); opacity: 0.35; }
-  50%, 55% { opacity: 0; transform: translate(260px, 1215px); } 57% { transform: translate(760px, 1215px); opacity: 0.2; }
-  76% { transform: translate(530px, 1235px); opacity: 0.25; } 96% { transform: translate(300px, 1215px); opacity: 0.2; } 100% { transform: translate(260px, 1215px); opacity: 0; } }
-/* the shadows of the things: the thing's own shape, black and see-through, squashed flat onto the floor from its base
-   (so it starts right under the thing) and slid away from the light — long to the right in the morning, short under it
-   at noon, long to the left in the evening; the moon's are paler */
-.fkr-shadow { animation-name: fkr-shadow; }
-@keyframes fkr-shadow {
-  0% { transform: scaleY(0.38) skewX(-60deg); opacity: 0; }
-  5% { transform: scaleY(0.38) skewX(-60deg); opacity: 0.55; } 15% { transform: scaleY(0.34) skewX(-40deg); opacity: 0.6; }
-  25% { transform: scaleY(0.28) skewX(0deg); opacity: 0.65; } 35% { transform: scaleY(0.34) skewX(40deg); opacity: 0.6; }
-  45% { transform: scaleY(0.38) skewX(60deg); opacity: 0.55; } 51% { transform: scaleY(0.4) skewX(64deg); opacity: 0; }
-  54% { transform: scaleY(0.38) skewX(-60deg); opacity: 0; } 58% { transform: scaleY(0.38) skewX(-56deg); opacity: 0.38; }
-  76% { transform: scaleY(0.3) skewX(0deg); opacity: 0.45; } 94% { transform: scaleY(0.38) skewX(56deg); opacity: 0.38; }
-  100% { transform: scaleY(0.38) skewX(60deg); opacity: 0; } }
 /* the things over the chair at home (layer "front"): the night on them by a filter, on the same clock as the tint */
 .fkr-live.fkr-front { animation: fkr-front-night var(--fkr-cycle) linear infinite; }
-@keyframes fkr-front-night { 0% { filter: brightness(0.42) saturate(0.6); } 5%, 45% { filter: none; } 49% { filter: sepia(0.25) saturate(1.2); }
-  55%, 100% { filter: brightness(0.42) saturate(0.6); } }
+@keyframes fkr-front-night {
+  0% { filter: brightness(0.36) saturate(0.7) sepia(0); } 3% { filter: brightness(0.8) saturate(1.1) sepia(0.2); } 5%, 45% { filter: brightness(1) saturate(1) sepia(0); }
+  49% { filter: brightness(0.8) saturate(1.1) sepia(0.2); } 55%, 100% { filter: brightness(0.36) saturate(0.7) sepia(0); } }
 .fkr-night-tint { animation-name: fkr-night-tint; }
 @keyframes fkr-night-tint { 0% { opacity: 0.72; } 5%, 45% { opacity: 0; } 55%, 100% { opacity: 0.72; } }
 .fkr-dusk-tint { animation-name: fkr-dusk-tint; }
