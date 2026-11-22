@@ -10,8 +10,11 @@ import { frameGate } from "../eco.ts";
 
 type Pt = readonly [number, number];
 /** the screens' corners in the room's units (1060×1484): top left, top right, bottom right, bottom left */
-const BIG: Pt[] = [[776.5, 576.5], [980.5, 559], [966.5, 713.5], [765.5, 693.5]];
-const SMALL: Pt[] = [[989, 608.5], [1046.5, 600], [1034, 724.5], [981.5, 719.5]];
+const BIG: Pt[] = [[775, 576], [982, 556], [970, 702], [761, 716]];
+const SMALL: Pt[] = [[989, 606], [1046, 598], [1034, 727], [981, 721]];
+/** the screens' exact working area (the artist's mask): the code is clipped to it */
+const BIG_AREA: Pt[] = [[982, 556], [775, 576], [763, 695], [776, 696], [777, 709], [918, 716], [937, 716], [940, 702], [970, 702]];
+const SMALL_AREA: Pt[] = [[1046, 598], [989, 606], [981, 721], [1034, 727]];
 
 const CODE = `import { Wallet, Chain, sleep } from "@fokus/core";
 import { pump, dump, hodl } from "./strategy";
@@ -226,23 +229,23 @@ export function FokusScreens() {
   return (
     <g style={{ pointerEvents: "none" }} fontFamily="ui-monospace, Menlo, Consolas, monospace">
       <defs>
-        <clipPath id="fks-big"><polygon points={poly(BIG)} /></clipPath>
-        <clipPath id="fks-small"><polygon points={poly(SMALL)} /></clipPath>
+        <clipPath id="fks-big"><polygon points={poly(BIG_AREA)} /></clipPath>
+        <clipPath id="fks-small"><polygon points={poly(SMALL_AREA)} /></clipPath>
         <linearGradient id="fks-glare" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#fff" stopOpacity="0.07" /><stop offset="0.45" stopColor="#fff" stopOpacity="0" /><stop offset="1" stopColor="#000" stopOpacity="0.18" />
         </linearGradient>
       </defs>
       <g clipPath="url(#fks-big)" opacity={0.94}>
+        <polygon points={poly(BIG_AREA)} fill="#0d1117" />
         <g transform={onto(BIG, BW, BH)}>
-          <rect width={BW} height={BH} fill="#0d1117" />
           <g ref={big} fontSize={FS} />
           <rect ref={curB} width={6} height={FS} fill="#c9d1d9" />
           <rect width={BW} height={BH} fill="url(#fks-glare)" />
         </g>
       </g>
       <g clipPath="url(#fks-small)" opacity={0.94}>
+        <polygon points={poly(SMALL_AREA)} fill="#0a0f0c" />
         <g transform={onto(SMALL, SW, SH)}>
-          <rect width={SW} height={SH} fill="#0a0f0c" />
           <g ref={small} fontSize={TFS} />
           <rect ref={curS} x={4} width={6} height={TFS} fill="#5fd67a" />
         </g>
