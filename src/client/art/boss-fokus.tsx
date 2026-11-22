@@ -22,6 +22,11 @@ const LID_LINE = "#5a2a18";
 const KNIFE_TIP = [764.5, 608.5] as const;
 /** the waist: the upper body leans round it */
 const WAIST = [372, 610] as const;
+/** the parts drawn bloody below half HP, and their pictures' version */
+const BLOODY = new Set(["legs", "body", "armR", "lowR", "handR", "armL", "lowL", "handL", "head", "nose", "chin", "lips-up", "lips"]);
+const BLOOD_V = 1;
+/** the nostrils (rig units): snot hangs from his right one, blood runs from the left */
+const NOSTRIL_R = [368, 163] as const, NOSTRIL_L = [383.5, 163] as const;
 /** the mouth's corners (x, rig units): the lower lip is held there and sags between them */
 const MOUTH = [349, 401] as const;
 
@@ -32,7 +37,8 @@ export function FokusRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
   const handL = useRef<SVGGElement>(null);
   const blood = useRef<SVGGElement>(null);
   useBlood(svgRef, handL, blood, !bust);
-  const src = (p: string) => `/bosses/${id}/rig/${p}.webp${P[p]?.v ? `?v=${P[p].v}` : ""}`;
+  // below half HP: the same pictures with blood on the clothes and the skin, bruises on the face (tools/boss/fokus-blood.py)
+  const src = (p: string) => dazed && !bust && BLOODY.has(p) ? `/bosses/${id}/rig/${p}-blood.webp?v=${BLOOD_V}` : `/bosses/${id}/rig/${p}.webp${P[p]?.v ? `?v=${P[p].v}` : ""}`;
   // a picture: plain SVG, or warped by the puppet on the back / front canvas (fade: drawn with that group's opacity)
   const pic = (p: string, pp?: "back" | "front", fade?: string) => {
     const r = P[p];
@@ -111,6 +117,19 @@ export function FokusRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
             {bent("teeth-low", "fk-teethq")}
             {pic("lips-up")}
             {bent("lips", "fk-lipq")}
+            {/* beaten: snot runs out of one nostril and is sniffed back, blood trickles from the other and drips off the lip */}
+            {dazed && !bust && <>
+              <g className="fk-blood-run" style={at(NOSTRIL_L[0], NOSTRIL_L[1])}>
+                <path d={`M${NOSTRIL_L[0] - 1.6} ${NOSTRIL_L[1]} C${NOSTRIL_L[0] - 1.2} ${NOSTRIL_L[1] + 6} ${NOSTRIL_L[0] + 1.5} ${NOSTRIL_L[1] + 9} ${NOSTRIL_L[0] + 1} ${NOSTRIL_L[1] + 17} L${NOSTRIL_L[0] + 3.2} ${NOSTRIL_L[1] + 17} C${NOSTRIL_L[0] + 3.6} ${NOSTRIL_L[1] + 9} ${NOSTRIL_L[0] + 1.2} ${NOSTRIL_L[1] + 5} ${NOSTRIL_L[0] + 1.6} ${NOSTRIL_L[1]} Z`} fill="#8e0f12" />
+                <path d={`M${NOSTRIL_L[0] + 0.2} ${NOSTRIL_L[1] + 2} C${NOSTRIL_L[0] + 0.4} ${NOSTRIL_L[1] + 7} ${NOSTRIL_L[0] + 2} ${NOSTRIL_L[1] + 10} ${NOSTRIL_L[0] + 1.9} ${NOSTRIL_L[1] + 15}`} stroke="#d8383a" strokeWidth={0.6} fill="none" strokeLinecap="round" opacity={0.7} />
+              </g>
+              <g className="fk-blood-drop"><circle cx={NOSTRIL_L[0] + 2.1} cy={NOSTRIL_L[1] + 17.5} r={1.7} fill="#8e0f12" /><circle cx={NOSTRIL_L[0] + 1.6} cy={NOSTRIL_L[1] + 16.9} r={0.5} fill="#e66" /></g>
+              <g className="fk-snot" style={at(NOSTRIL_R[0], NOSTRIL_R[1] - 1)}><g transform={`translate(${NOSTRIL_R[0]} ${NOSTRIL_R[1]}) scale(1.4) translate(${-NOSTRIL_R[0]} ${-NOSTRIL_R[1]})`}>
+                <path d={`M${NOSTRIL_R[0] - 2.4} ${NOSTRIL_R[1] - 1} C${NOSTRIL_R[0] - 2.2} ${NOSTRIL_R[1] + 4} ${NOSTRIL_R[0] - 3.4} ${NOSTRIL_R[1] + 7} ${NOSTRIL_R[0] - 3} ${NOSTRIL_R[1] + 9.5} C${NOSTRIL_R[0] - 2.6} ${NOSTRIL_R[1] + 12.5} ${NOSTRIL_R[0] + 1.6} ${NOSTRIL_R[1] + 12.5} ${NOSTRIL_R[0] + 1.8} ${NOSTRIL_R[1] + 9.5} C${NOSTRIL_R[0] + 2} ${NOSTRIL_R[1] + 6.5} ${NOSTRIL_R[0] + 0.8} ${NOSTRIL_R[1] + 4} ${NOSTRIL_R[0] + 2} ${NOSTRIL_R[1] - 1} Z`}
+                  fill="rgba(196,214,120,0.82)" stroke="rgba(95,110,40,0.75)" strokeWidth={0.5} />
+                <ellipse cx={NOSTRIL_R[0] - 1.2} cy={NOSTRIL_R[1] + 8.6} rx={0.7} ry={1.3} fill="rgba(255,255,240,0.85)" />
+              </g></g>
+            </>}
             <g className="br-brow-r" style={origin("browR")}>{pic("browR")}</g>
             <g className="br-brow-l" style={origin("browL")}>{pic("browL")}</g>
             <g className="fk-glasses" style={box("glasses", 0.5, 0.4)}>{pic("glasses")}</g>

@@ -7560,6 +7560,17 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .rig-fokus .fk-lipq { transform: translateY(calc(var(--jaw) * var(--q) * 3px)); }
 .rig-fokus .fk-teethq { transform: translateY(calc(var(--jaw) * (0.35 + 0.65 * var(--q)) * 2.4px)); }
 .rig-fokus .fk-throatq { transform: scaleY(calc(1 + var(--jaw) * var(--q) * 0.14)); }
+/* beaten: the blood runs from the nostril down to the lip (grows, then stays), a drop swells at its end and falls; the
+   snot slides out of the other nostril, swings and is sniffed back up */
+.rig-fokus .fk-blood-run { animation: fk-blood-run 9s ease-out infinite; }
+@keyframes fk-blood-run { 0% { transform: scaleY(0.15); } 30%, 100% { transform: scaleY(1); } }
+.rig-fokus .fk-blood-drop { animation: fk-blood-drop 3s ease-in infinite; transform-box: fill-box; transform-origin: 50% 0%; }
+@keyframes fk-blood-drop { 0%, 30% { transform: translateY(0) scale(0.2); opacity: 0; } 45% { opacity: 1; } 80% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(70px) scale(0.8, 1.3); opacity: 0; } }
+.rig-fokus .fk-snot { animation: fk-snot 5.2s cubic-bezier(.45,0,.55,1) infinite; }
+@keyframes fk-snot { 0% { transform: scale(0.6, 0.15); } 55% { transform: scale(1, 1.25) rotate(4deg); } 68% { transform: scale(1, 1.35) rotate(-3deg); }
+  80% { transform: scale(0.95, 1.2) rotate(2deg); } 90% { transform: scale(0.6, 0.15); } 100% { transform: scale(0.6, 0.15); } }
+@media (prefers-reduced-motion: reduce) { .rig-fokus :is(.fk-blood-run, .fk-blood-drop, .fk-snot) { animation: none; } }
 /* the pose engine sways him from foot to foot below half HP: not the whole picture (the feet stay) */
 .rig-fokus.boss-rig.dazed { animation: none; }
 /* the fist or the hand with the pointing finger on the same wrist */
