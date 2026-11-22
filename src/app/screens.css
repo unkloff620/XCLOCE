@@ -7750,6 +7750,9 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 /* his workshop: he stands behind the table, his five parts on it */
 .ms-room { background: #1a120c; container-type: size; }
 .ms-stage { position: absolute; left: 50%; bottom: calc(var(--bottom) - 10px); width: max(100cqw, (100cqh - var(--bottom) + 10px) * 2 / 3); aspect-ratio: 2 / 3; transform: translateX(-50%); }
+/* the window hole: 797–1285 × 444–811 of the 2000×3000 room */
+.ms-sky { position: absolute; left: 39%; top: 14.2%; width: 26%; height: 13.4%; overflow: hidden; background: #3a3150; }
+.ms-sky .yard-sky-strip { animation-duration: 90s; }
 .ms-room-bg, .ms-room-table { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .ms-title { position: relative; z-index: 3; }
 /* he stands behind the table (its edge at 69% of the stage), breathing: the chest rises from the waist */
@@ -7764,38 +7767,49 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .ms-cloud::after { content: ""; position: absolute; left: -6px; bottom: 6px; width: 16px; height: 16px; border-radius: 50%; background: #fff; }
 .ms-table { position: absolute; z-index: 2; left: 3%; right: 3%; bottom: calc(var(--bottom) + 8% + 52px); display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
 .ms-part { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0; border: 0; background: none; cursor: pointer; }
-.ms-part svg, .ms-part img { filter: grayscale(1) brightness(0.55) drop-shadow(0 3px 3px rgba(0, 0, 0, 0.6)); transition: filter 0.3s; }
-.ms-part.have svg, .ms-part.have img { filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.6)); }
+.ms-part > svg, .ms-part > img { filter: grayscale(1) brightness(0.55) drop-shadow(0 3px 3px rgba(0, 0, 0, 0.6)); transition: filter 0.3s; }
+.ms-part.have > svg, .ms-part.have > img { filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.6)); }
 .ms-price { display: inline-flex; align-items: center; gap: 2px; padding: 1px 5px; border-radius: 8px; background: rgba(0, 0, 0, 0.6); color: #ffe7b0; font-size: 11px; }
 .ms-part:not(.have):active { transform: translateY(1px); }
 .ms-room-foot { position: absolute; z-index: 2; left: 0; right: 0; bottom: calc(var(--bottom) + 1%); display: flex; justify-content: center; }
 .ms-hint { padding: 4px 12px; border-radius: 10px; background: rgba(0, 0, 0, 0.55); color: #ffe7b0; font-size: 13px; }
 /* the path on his workbench */
-.ms-learn .ms-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 12px; color: #3a220a; }
-.ms-learn .ms-head b.display { font-size: 18px; text-transform: uppercase; }
-.ms-learn .ms-head .num, .ms-learn .ms-head span { display: inline-flex; align-items: center; gap: 3px; font-size: 13px; }
-.ms-board { position: relative; margin: 6px 8px 0; border-radius: 10px; overflow: hidden; aspect-ratio: 3 / 2; box-shadow: 0 0 0 3px #5a3a14, 0 6px 10px rgba(0, 0, 0, 0.5); }
+.ms-learn-col { flex: 1; min-height: 0; padding-bottom: 32px !important; display: flex; flex-direction: column; padding: 0 8px; }
+.ms-top { position: relative; flex: none; height: 118px; }
+/* he leans in from the top left; the board covers him at the chest */
+.ms-peek { position: absolute; left: -4px; top: 0; width: 150px; height: auto; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4)); animation: ms-breath 4.2s ease-in-out infinite; transform-origin: 50% 100%; }
+.ms-top-info { position: absolute; left: 150px; right: 4px; top: 0; bottom: 8px; display: flex; flex-direction: column; justify-content: center; gap: 3px; color: #3a220a; }
+.ms-top-info .back { font-size: 13px; }
+.ms-top-info b.display { font-size: 20px; line-height: 1.05; text-transform: uppercase; }
+.ms-top-info > span { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; }
+.ms-top-m { font-size: 16px !important; }
+.ms-board { position: relative; z-index: 1; flex: 1; min-height: 0; container-type: size; border-radius: 10px; overflow: hidden; box-shadow: 0 0 0 3px #5a3a14, 0 6px 10px rgba(0, 0, 0, 0.5); }
 .ms-board > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .ms-path { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6)); }
-.ms-node { position: absolute; width: 12%; aspect-ratio: 1; transform: translate(-50%, -50%); display: grid; place-items: center;
-  clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%); background: radial-gradient(circle at 35% 30%, #fff, #b9bcc4 60%, #7a7d86); }
+/* round points, one of his parts in each: grey ahead, gold behind, the current one bigger with its bar */
+.ms-node { position: absolute; width: min(17cqw, 21cqh); aspect-ratio: 1; transform: translate(-50%, -50%); display: grid; place-items: center; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff, #b9bcc4 60%, #7a7d86); box-shadow: 0 3px 6px rgba(0, 0, 0, 0.5), inset 0 0 0 2px rgba(255, 255, 255, 0.5); }
+.ms-node > svg, .ms-node > img { width: 62% !important; height: 62% !important; filter: grayscale(1) brightness(0.6); }
 .ms-node.done { background: radial-gradient(circle at 35% 30%, #fff6c8, #f2c230 60%, #a8780c); }
-.ms-node.now { width: 16%; background: radial-gradient(circle at 35% 30%, #fff, #e8eaee 60%, #9a9da6); }
-.ms-node.now img { width: 86%; height: 86%; object-fit: cover; object-position: top; border-radius: 4px; }
-.ms-node-bar { position: absolute; left: 14%; right: 14%; bottom: 10%; height: 9%; border-radius: 3px; background: rgba(0, 0, 0, 0.55); overflow: hidden; }
+.ms-node.done > svg, .ms-node.done > img, .ms-node.now > svg, .ms-node.now > img { filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.45)); }
+.ms-node.now { width: min(22cqw, 26cqh); background: radial-gradient(circle at 35% 30%, #fff, #e8eaee 60%, #9a9da6); box-shadow: 0 0 0 3px #f2c230, 0 4px 10px rgba(0, 0, 0, 0.55); }
+.ms-node-bar { position: absolute; left: 20%; right: 20%; bottom: 9%; height: 8%; border-radius: 3px; background: rgba(0, 0, 0, 0.55); overflow: hidden; }
 .ms-node-bar b { display: block; height: 100%; background: #f2c230; }
+.ms-done-part { display: inline-flex; align-items: center; gap: 2px; }
+.ms-done-open { margin: 8px 0 0; font-weight: 600; }
 .ms-drop { position: absolute; left: 50%; top: 50%; animation: ms-drop 1.4s ease-out forwards; pointer-events: none; }
 @keyframes ms-drop { 0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; } 20% { transform: translate(-50%, -60%) scale(1.25); opacity: 1; }
   70% { transform: translate(-50%, -90%) scale(1); opacity: 1; } 100% { transform: translate(-50%, -140%) scale(0.8); opacity: 0; } }
-.ms-steps { display: flex; gap: 2px; margin: 10px 10px 0; }
+.ms-steps { flex: none; display: flex; gap: 2px; margin: 8px 2px 0; }
 .ms-steps i { flex: 1; height: 14px; border-radius: 2px; background: #5d7286; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.25); }
 .ms-steps i.on { background: #f2c230; }
-.ms-bottom { display: flex; align-items: stretch; gap: 8px; margin: 10px 8px; }
+.ms-bottom { flex: none; display: flex; align-items: stretch; gap: 8px; margin: 8px 0 0; }
 .ms-reward { flex: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; padding: 6px 8px; border-radius: 10px; background: rgba(90, 50, 20, 0.14);
   box-shadow: inset 0 0 0 1.5px rgba(42, 22, 6, 0.28); }
 .ms-reward-h { flex-basis: 100%; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: #6b4a22; }
 .ms-reward .chip { display: inline-flex; align-items: center; gap: 2px; }
+.ms-m { display: inline-flex; align-items: center; gap: 2px; font-size: 14px; color: #3a220a; }
 .ms-parts { display: inline-flex; gap: 1px; opacity: 0.9; }
-.ms-do { flex: none; flex-direction: column; min-width: 120px; }
-.ms-do .num { display: inline-flex; align-items: center; gap: 2px; }
+.ms-do { flex: none; flex-direction: column; justify-content: center; gap: 2px; min-width: 116px; padding: 6px 12px; font-size: 15px; letter-spacing: 0.04em; }
+.ms-do .num { display: inline-flex; align-items: center; gap: 2px; font-size: 14px; }
 @media (prefers-reduced-motion: reduce) { .ms-drop { animation-duration: 0.01s; } }

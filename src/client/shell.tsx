@@ -41,7 +41,7 @@ const TABS = NAV_TABS;
 function activeTab(path: string): string {
   if (path.startsWith("/bosses")) return "bosses";
   if (path.startsWith("/shop")) return "shop";
-  if (["/yard", "/exchange", "/locations"].some((p) => path.startsWith(p))) return "yard"; // places opened from the yard
+  if (["/yard", "/exchange", "/locations", "/masters"].some((p) => path.startsWith(p))) return "yard"; // places opened from the yard
   if (path.startsWith("/craft") || path.startsWith("/inventory")) return "craft";
   if (path.startsWith("/clans")) return "clans";
   return "home";
@@ -223,6 +223,7 @@ function Hud() {
 export function parentOf(path: string, search: string, myClan: number | null): string | null {
   const parts = path.split("/").filter(Boolean);
   if (parts[0] === "locations") return parts.length > 1 ? "/locations" : "/yard";
+  if (parts[0] === "masters") return parts.length > 1 ? "/masters" : "/yard";
   if (parts[0] === "shop") return search.includes("tab=") ? "/shop" : null; // an open shop window → the shop
   if (parts[0] === "exchange") return "/yard";
   if (parts[0] === "bosses" && parts.length > 1) return "/bosses";
@@ -448,7 +449,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const { auth, authInfo, error, state, retryAuth } = useGame();
   const path = usePathname();
   const router = useRouter();
-  const deep = path.split("/").filter(Boolean).length > 1 || ["/locations", "/profile", "/rating"].includes(path);
+  const deep = path.split("/").filter(Boolean).length > 1 || ["/locations", "/masters", "/profile", "/rating"].includes(path);
   // Telegram's «Назад»: one step up the section (an event → the room), or back in the history
   const myClan = state?.clan?.id ?? null;
   useEffect(() => telegramBack(deep, () => {

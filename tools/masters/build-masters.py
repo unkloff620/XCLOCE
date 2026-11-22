@@ -42,7 +42,8 @@ def cut_white(path, size, keep_right=False):
 for i in range(1, 17):
     cut_white(f"{S}/m{i:02d}.png", 512, keep_right=i == 7).save(f"{O}/m{i:02d}.webp", quality=88, method=6, exact=True)
 # the room and its table (the artist's, 2000×3000 both): the master stands between them, the table in front
-Image.open(f"{S}/room.png").convert("RGB").resize((800, 1200), Image.LANCZOS).save(f"{O}/room.webp", quality=82, method=6)
+# the window is cut out (the yard sky drifts behind it)
+Image.open(f"{S}/room.png").convert("RGBA").resize((800, 1200), Image.LANCZOS).save(f"{O}/room.webp", quality=82, method=6, exact=True)
 Image.open(f"{S}/table.png").convert("RGBA").resize((800, 1200), Image.LANCZOS).save(f"{O}/table.webp", quality=85, method=6)
 Image.open(f"{S}/board.png").convert("RGB").resize((1152, 768), Image.LANCZOS).save(f"{O}/board.webp", quality=82, method=6)
 cut_white(f"{S}/bulb.png", 128).save("public/assets/ui/mastery.webp", quality=90, method=6, exact=True)

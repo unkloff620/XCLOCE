@@ -34,7 +34,7 @@ export function startRouteLoad() {
 function wantsLoader(a: HTMLAnchorElement, path: string): boolean {
   // the open tab of the bottom menu steps back inside its section — Nav starts the loader itself then
   if (a.closest(".nav")) return !a.classList.contains("on");
-  return ["/locations", "/yard", "/shop", "/exchange", "/bosses", "/rating", "/clans", "/inventory"].some((p) => path === p || path.startsWith(p + "/"));
+  return ["/locations", "/masters", "/yard", "/shop", "/exchange", "/bosses", "/rating", "/clans", "/inventory"].some((p) => path === p || path.startsWith(p + "/"));
 }
 
 /** waits until the pictures on the screen are decoded (or the time runs out) */

@@ -1,6 +1,6 @@
 import { GameError, type Queryable } from "../db.ts";
 import { addItem, grantReward, spendEnergy, takeMoney, type Ctx } from "../core.ts";
-import { MASTERS, MASTER_PART_CHANCE, energyOfStep, masterById, partPrice, pointSteps, stepPay, totalSteps, type MasterDef } from "../../content/masters.ts";
+import { MASTERS, MASTER_FINISH_PARTS, MASTER_PART_CHANCE, finishPay, energyOfStep, masterById, partPrice, pointSteps, stepPay, totalSteps, type MasterDef } from "../../content/masters.ts";
 
 /*
  * «Мастера» (content/masters.ts): his five parts are bought once (master_progress.bought — a bit per part), then his
@@ -77,5 +77,16 @@ export async function masterStep(ctx: Ctx, id: string) {
     [ctx.pid, m.id, done ? 0 : step + 1, done ? 1 : 0, e],
   );
   const next = done && (r!.runs === 0) ? MASTERS[m.n] ?? null : null;
-  return { masterId: m.id, energy: e, mastery: e, reward: got, part, done, opened: next?.id ?? null };
+  // the path walked: its own payout (shown in «Обучение пройдено»)
+  let finish = null;
+  if (done) {
+    const f = finishPay(m);
+    const parts = new Map<string, number>();
+    for (let i = 0; i < MASTER_FINISH_PARTS; i++) {
+      const p = m.parts[Math.floor(ctx.rng() * m.parts.length) % m.parts.length];
+      parts.set(p, (parts.get(p) ?? 0) + 1);
+    }
+    finish = await grantReward(ctx, { currencies: { PAP: f.pap, TOOTH: f.tooth }, xp: f.xp, items: [...parts].map(([id, qty]) => ({ id, qty })) }, `master:${m.id}:done`);
+  }
+  return { masterId: m.id, energy: e, mastery: e, reward: got, part, done, finish, opened: next?.id ?? null };
 }

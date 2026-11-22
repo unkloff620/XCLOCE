@@ -75,3 +75,9 @@ export function pointSteps(m: MasterDef): number[] {
 }
 /** a step's pay besides the part: папиросы and authority by its energy */
 export const stepPay = (e: number) => ({ pap: e * 4, xp: e * 5 });
+/**
+ * The whole path walked (the user 2026-11-23): a payout like a location's — папиросы, зубы, authority by the path's
+ * energy, and MASTER_FINISH_PARTS of his parts (each one of the five at random).
+ */
+export const MASTER_FINISH_PARTS = 3;
+export const finishPay = (m: MasterDef) => ({ pap: m.energy * 10, tooth: Math.round(m.energy / 20), xp: m.energy * 8 });

@@ -14,6 +14,8 @@ import { MASTERS, MASTER_POINTS, masterById, partPrice, stepPay, energyOfStep, t
 import { itemById } from "../../content/items.ts";
 import { ItemArt } from "../art/items.tsx";
 import { Icon } from "../art/icons.tsx";
+import { DriftingSky } from "../art/sky.tsx";
+import { yardTime } from "../../content/yard.ts";
 import { Avatar, Modal, RewardChips } from "../ui.tsx";
 import { full } from "../format.ts";
 import { haptic } from "../telegram.ts";
@@ -100,7 +102,7 @@ export function MastersScreen() {
   );
 }
 
-type StepRes = { masterId: string; energy: number; mastery: number; reward: Granted; part: string | null; done: boolean; opened: string | null };
+type StepRes = { masterId: string; energy: number; mastery: number; reward: Granted; part: string | null; done: boolean; finish: Granted | null; opened: string | null };
 
 export function MasterScreen({ id }: { id: string }) {
   const m = masterById(id);
@@ -142,8 +144,10 @@ export function MasterScreen({ id }: { id: string }) {
       <div className="fit-page ms-room">
         {/* the room, the master and the table in front of him: one 2:3 stage, cut like a cover picture */}
         <div className="ms-stage">
+          {/* the yard's sky behind his window (cut out by the artist), day or night like the yard */}
+          <DriftingSky className="ms-sky" src={yardTime(now) === "night" ? "/assets/yard/sky-dark.webp" : undefined} />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="ms-room-bg" src={`${A}/room.webp?v=2`} alt="" draggable={false} />
+          <img className="ms-room-bg" src={`${A}/room.webp?v=3`} alt="" draggable={false} />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="ms-room-master" src={`${A}/${m.id}.webp?v=2`} alt="" draggable={false} />
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -184,55 +188,61 @@ export function MasterScreen({ id }: { id: string }) {
   const energy = liveEnergy(state, now);
   return (
     <div className="loc-page paper ms-learn">
-      <div className="title">
-        <Link href="/masters" className="back">← Мастера</Link>
-      </div>
-      <div className="ms-head">
-        <b className="display">{m.name}</b>
-        <span>Пройдено: <b className="num">{r.runs}</b></span>
-        <span className="num"><Icon name="mastery" size={18} />{full(r.mastery)}</span>
-      </div>
-      <div className="ms-board">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={`${A}/board.webp`} alt="" draggable={false} />
-        <svg className="ms-path" viewBox="0 0 100 66" preserveAspectRatio="none" aria-hidden="true">
-          <polyline points={PATH.map((p) => `${p.x},${p.y}`).join(" ")} fill="none" stroke="#f2c230" strokeWidth={0.9} strokeLinejoin="round" />
-        </svg>
-        {PATH.map((p, i) => (
-          <span key={i} className={`ms-node ${i < point ? "done" : i === point ? "now" : ""}`} style={{ left: `${p.x}%`, top: `${(p.y / 66) * 100}%` }}>
-            {i === point
-              ? <>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={`${A}/${m.id}.webp`} alt="" draggable={false} />
-                <i className="ms-node-bar"><b style={{ width: `${(left / inPoint) * 100}%` }} /></i>
-              </>
-              : i < point ? <Icon name="mastery" size={22} /> : null}
-          </span>
-        ))}
-        {drop && <span key={drop.k} className="ms-drop"><ItemArt id={drop.id} size={56} /></span>}
-      </div>
-      <div className="ms-steps">
-        {Array.from({ length: inPoint }, (_, i) => <i key={i} className={i < left ? "on" : ""} />)}
-      </div>
-      <div className="ms-bottom">
-        <div className="ms-reward">
-          <span className="ms-reward-h">Награда</span>
-          <RewardChips r={{ currencies: { PAP: pay.pap }, xp: pay.xp }} size={16} />
-          <span className="chip"><Icon name="mastery" size={16} />{e}</span>
-          <span className="ms-parts" title="Шанс 20% — одна из деталей мастера">{m.parts.map((p) => <ItemArt key={p} id={p} size={20} />)}</span>
+      <div className="ms-learn-col">
+        {/* the master peeks in from the top left, his numbers beside him */}
+        <div className="ms-top">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="ms-peek" src={`${A}/${m.id}.webp?v=2`} alt="" draggable={false} />
+          <div className="ms-top-info">
+            <Link href="/masters" className="back">← Мастера</Link>
+            <b className="display">{m.name}</b>
+            <span>Пройдено: <b className="num">{r.runs}</b></span>
+            <span className="num ms-top-m"><Icon name="mastery" size={20} />{full(r.mastery)}</span>
+          </div>
         </div>
-        <button type="button" className="btn gold big ms-do" disabled={busy === "master_step"} onClick={() => { if (energy.energy < e) { toast(`Не хватает энергии: нужно ${e} ⚡`, "err"); return; } void step(); }}>
-          Выполнить <span className="num"><Icon name="energy" size={18} />{e}</span>
-        </button>
+        <div className="ms-board">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={`${A}/board.webp`} alt="" draggable={false} />
+          <svg className="ms-path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <polyline points={PATH.map((p) => `${p.x},${p.y}`).join(" ")} fill="none" stroke="#f2c230" strokeWidth={4} vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
+          </svg>
+          {PATH.map((p, i) => (
+            <span key={i} className={`ms-node ${i < point ? "done" : i === point ? "now" : ""}`} style={{ left: `${p.x}%`, top: `${p.y}%` }}>
+              <ItemArt id={m.parts[i % m.parts.length]} size={40} />
+              {i === point && <i className="ms-node-bar"><b style={{ width: `${(left / inPoint) * 100}%` }} /></i>}
+            </span>
+          ))}
+          {drop && <span key={drop.k} className="ms-drop"><ItemArt id={drop.id} size={56} /></span>}
+        </div>
+        <div className="ms-steps">
+          {Array.from({ length: inPoint }, (_, i) => <i key={i} className={i < left ? "on" : ""} />)}
+        </div>
+        <div className="ms-bottom">
+          <div className="ms-reward">
+            <span className="ms-reward-h">Награда</span>
+            <RewardChips r={{ currencies: { PAP: pay.pap }, xp: pay.xp }} size={16} />
+            <span className="ms-m num"><Icon name="mastery" size={18} />{e}</span>
+            <span className="ms-parts" title="Шанс 20% — одна из деталей мастера">{m.parts.map((p) => <ItemArt key={p} id={p} size={20} />)}</span>
+          </div>
+          <button type="button" className="btn gold ms-do" disabled={busy === "master_step"} onClick={() => { if (energy.energy < e) { toast(`Не хватает энергии: нужно ${e} ⚡`, "err"); return; } void step(); }}>
+            Выполнить <span className="num"><Icon name="energy" size={16} />{e}</span>
+          </button>
+        </div>
       </div>
       {done && (
-        <Modal title="Обучение пройдено" onClose={() => setDone(null)}>
-          <div className="col center" style={{ gap: 10 }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`${A}/${m.id}.webp`} alt="" style={{ width: 140 }} draggable={false} />
-            <p className="center">{m.name} научил всему, что знал. Можно пройти обучение ещё раз — детали так и падают.</p>
-            {done.opened && <p className="center"><b>Открыт мастер «{masterById(done.opened)?.name}»</b></p>}
-            {done.opened && <Link href={`/masters/${done.opened}`} className="btn gold" onClick={() => setDone(null)}>К нему</Link>}
+        <Modal title="Обучение пройдено!" onClose={() => setDone(null)}>
+          <div className="lc-done">
+            <span className="lc-done-h display">Награда</span>
+            <div className="lc-done-box">
+              {done.finish && <RewardChips r={{ ...done.finish, items: [] }} size={30} />}
+              {done.finish?.items.filter((it) => it.qty > 0).map((it) => (
+                <span key={it.id} className="chip ms-done-part" title={itemById(it.id)?.name}><ItemArt id={it.id} size={40} /><span className="num rc-n">×{it.qty}</span></span>
+              ))}
+            </div>
+            {done.opened && <p className="center ms-done-open">Открыт мастер «{masterById(done.opened)?.name}»</p>}
+            {done.opened
+              ? <Link href={`/masters/${done.opened}`} className="btn gold lc-done-ok" onClick={() => setDone(null)}>К нему</Link>
+              : <button type="button" className="btn gold lc-done-ok" onClick={() => setDone(null)}>Ок</button>}
           </div>
         </Modal>
       )}
@@ -240,8 +250,8 @@ export function MasterScreen({ id }: { id: string }) {
   );
 }
 
-/** the 7 points on the workbench (percent of its width; y in a 100×66 box) */
+/** the 7 points on the workbench, bottom to top (percent of its width and height) */
 const PATH = [
-  { x: 14, y: 50 }, { x: 26, y: 26 }, { x: 42, y: 30 }, { x: 42, y: 50 }, { x: 62, y: 50 }, { x: 70, y: 22 }, { x: 86, y: 40 },
+  { x: 24, y: 85 }, { x: 66, y: 77 }, { x: 78, y: 56 }, { x: 36, y: 50 }, { x: 22, y: 29 }, { x: 58, y: 22 }, { x: 80, y: 12 },
 ];
 export type { MasterDef };
