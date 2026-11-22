@@ -504,10 +504,11 @@ const FK_R_BACK = { armR: 24, lowR: -20, handR: 6 };
 const FK_R_HIT = { armR: -79, lowR: -16, handR: -14, zR: 48 };
 const FK_L_BACK = { armL: -25, lowL: -44, handL: -30 };
 const FK_L_HIT = { armL: 41, lowL: -98, handL: 12, zL: 42 };
-/** the arm angles of the finger at the outer corner of his right lens: below it (the glasses down), and up (pushed) —
- *  solved for the rig's joints (shoulder, elbow, wrist, the fingertip of fingerR) */
-const FK_PUSH_LOW = { armR: 79.2, lowR: -95.2, handR: -31.3 };
-const FK_PUSH_UP = { armR: 83.7, lowR: -96.9, handR: -39.9 };
+/** the finger at the glasses' bridge, below it (the glasses down) and up (pushed): the arm turns counter-clockwise, the
+ *  elbow comes in to the belly, the forearm goes up in front of the chest — it comes at the screen, so it grows (zLR) and
+ *  the hand too (zR); solved for the rig's joints (shoulder, elbow, wrist, the fingertip of fingerR) */
+const FK_PUSH_LOW = { armR: -98.6, lowR: -67.3, handR: 113.8, zLR: 40, zR: 30 };
+const FK_PUSH_UP = { armR: -98.7, lowR: -64.6, handR: 108.8, zLR: 40, zR: 30 };
 const fkCombo = (n: number): Action => {
   const keys: Key[] = [];
   const face: Face[] = [];
@@ -536,7 +537,7 @@ const fkCombo = (n: number): Action => {
   keys.push({ at: t + 1.25, pose: { ...done, ...FK_PUSH_UP, fing: 1, gl: 0, jaw: 0.7, py: -0.2, brw: -0.5 }, stiff: 1.8 });
   keys.push({ at: t + 1.65, pose: { ...FK_PUSH_UP, fing: 1, jaw: 0.6, brw: -0.3 }, stiff: 1.2 });
   // the hand down, the fist back on the hip; the mouth closes slowly with the breath
-  keys.push({ at: t + 1.95, pose: { armR: 40, lowR: -40, handR: -20, fing: 1, jaw: 0.45 }, stiff: 1.3 });
+  keys.push({ at: t + 1.95, pose: { armR: -35, lowR: -15, handR: 5, zLR: 12, fing: 1, jaw: 0.45 }, stiff: 1.3 });
   keys.push({ at: t + 2.35, pose: { jaw: 0.3 }, stiff: 1 });
   return { keys, dur: t + 2.8, face };
 };
@@ -549,7 +550,7 @@ const POSES: Record<string, Spec> = {
       up: { k: 120, c: 13 }, x: { k: 110, c: 13 }, head: { k: 150, c: 12 },
       armR: { k: 170, c: 17 }, lowR: { k: 260, c: 19 }, handR: { k: 420, c: 18 },
       armL: { k: 170, c: 17 }, lowL: { k: 260, c: 19 }, handL: { k: 420, c: 18 },
-      zR: { k: 300, c: 22 }, zL: { k: 300, c: 22 },
+      zR: { k: 300, c: 22 }, zL: { k: 300, c: 22 }, zLR: { k: 200, c: 20 },
       gl: { k: 70, c: 13 }, fing: { k: 900, c: 60 }, jaw: { k: 90, c: 14 }, brw: { k: 120, c: 16 }, sq: { k: 120, c: 16 },
       px: { k: 160, c: 18 }, py: { k: 160, c: 18 },
     },
@@ -578,7 +579,7 @@ const POSES: Record<string, Spec> = {
     // the heavy breath: the chest up and wider, slow and deep
     breath: (t, dazed) => { const b = 0.5 - 0.5 * Math.cos((t / (dazed ? 1.6 : 1.25)) * Math.PI * 2); return [1 + 0.012 * b, 1 + 0.022 * b, -3.5 * b]; },
     shapes: { gl: {}, fing: {}, brw: {}, sq: {}, px: {}, py: {} },
-    scale: { handR: "zR", handL: "zL" },
+    scale: { handR: "zR", handL: "zL", lowR: "zLR" },
     vars: (a) => ({
       "--gl": a.gl.toFixed(3), "--fing": Math.max(0, Math.min(1, a.fing)).toFixed(3), "--jaw": Math.max(0, a.jaw).toFixed(3),
       "--brw": a.brw.toFixed(3), "--sq": Math.max(0, Math.min(1, a.sq)).toFixed(3), "--px": a.px.toFixed(3), "--py": a.py.toFixed(3),

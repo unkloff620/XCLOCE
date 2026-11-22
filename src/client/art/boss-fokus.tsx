@@ -59,8 +59,14 @@ export function FokusRig({ id, rig, bust, dazed, svgRef, wrapRef, puppet, viewBo
     <svg key={id} ref={svgRef} className={`boss-rig rig-fokus ${dazed ? "dazed" : ""}`} viewBox={viewBox} width="100%" height="100%"
       preserveAspectRatio={bust ? "xMidYMin slice" : "xMidYMax meet"} aria-hidden="true">
       <g className="fk-root" style={at(rig.w / 2, rig.h - 20)}>
-        {pic("legs", "back")}
+        {/* the legs: the feet stay planted, only the shins and the feet are fixed: the hips and the thighs go with the upper body (br-up), the bend fades out at the knees */}
+        {P.legs && (puppet ? (
+          <image className="pp" data-pp="back" data-pp-follow="br-up" data-pp-follow-at="0.36,0.56" href={src("legs")}
+            x={P.legs.x} y={P.legs.y} width={P.legs.w} height={P.legs.h} preserveAspectRatio="none" />
+        ) : pic("legs"))}
         <g className="br-up" style={at(WAIST[0], WAIST[1])}>
+          {/* the left shoulder behind the body (an empty elbow in it: its end bends with the forearm) */}
+          {bone("br-arm br-arm-l", "armL", <>{pic("armL", "back")}{bone("br-low br-low-l", "lowL", null, 130)}</>, 140)}
           {pic("body", "back")}
           {/* the face, plain SVG: the whites and the pupils under the head's eye holes, the lids over them, the head, the
               nose, the mouth (the chin, the throat, the teeth, the lips — the lower ones on the jaw), the brows, the
@@ -94,14 +100,11 @@ export function FokusRig({ id, rig, bust, dazed, svgRef, wrapRef, puppet, viewBo
               </>, 90)}
             </>, 130)}
           </>, 140)}
-          {/* the left arm with the knife */}
-          {bone("br-arm br-arm-l", "armL", <>
-            {pic("armL", "front")}
-            {bone("br-low br-low-l", "lowL", <>
-              {pic("lowL", "front")}
-              {bone("br-hand br-hand-l", "handL", pic("handL", "front"), 90, handL)}
-            </>, 130)}
-          </>, 140)}
+          {/* the left arm with the knife: in front of the body (its shoulder copy is behind, above) */}
+          {bone("br-arm br-arm-l", "armL", bone("br-low br-low-l", "lowL", <>
+            {pic("lowL", "front")}
+            {bone("br-hand br-hand-l", "handL", pic("handL", "front"), 90, handL)}
+          </>, 130), 140)}
         </g>
       </g>
       {!puppet && <g ref={blood} className="fk-blood" />}
