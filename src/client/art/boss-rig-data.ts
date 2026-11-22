@@ -4046,11 +4046,11 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "v": "ef842c6e"
       },
       "temple": {
-        "x": 425.5,
-        "y": 102.0,
-        "w": 23,
-        "h": 22,
-        "v": "ca474e5e"
+        "x": 433.5,
+        "y": 123.0,
+        "w": 14,
+        "h": 28,
+        "v": "f60769ed"
       },
       "glasses": {
         "x": 303.5,

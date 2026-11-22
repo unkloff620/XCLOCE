@@ -7572,3 +7572,5 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 @keyframes fk-blink { 0%, 44%, 50.5%, 89%, 93.5%, 100% { transform: scaleY(0); } 46.5%, 47.5%, 91%, 91.5% { transform: scaleY(1); } }
 .rig-fokus .fk-hair { will-change: transform; }
 @media (prefers-reduced-motion: reduce) { .rig-fokus .fk-lids > g { animation: none; } }
+.rig-fokus { --ta0: 0deg; --ta1: 0deg; --ts: 1; }
+.rig-fokus .fk-temple { transform: rotate(var(--ta1)) scaleX(var(--ts)) rotate(var(--ta0)); }

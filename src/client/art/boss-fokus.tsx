@@ -86,8 +86,10 @@ export function FokusRig({ id, rig, bust, dazed, svgRef, wrapRef, puppet, viewBo
             <g className="fk-jaw">{pic("lips")}</g>
             <g className="br-brow-r" style={origin("browR")}>{pic("browR")}</g>
             <g className="br-brow-l" style={origin("browL")}>{pic("browL")}</g>
-            <g className="fk-glasses" style={box("glasses", 0.5, 0.4)}>{pic("temple")}{pic("glasses")}</g>
+            <g className="fk-glasses" style={box("glasses", 0.5, 0.4)}>{pic("glasses")}</g>
             <g className="fk-hair" style={box("hair", 0.5, 0.18)}>{pic("hair")}</g>
+            {/* the glasses' arm over the hair: hinged on the glasses, resting on the ear — it bends between them (--ta0/--ta1/--ts) */}
+            <g className="fk-temple" style={at(444, 149)}>{pic("temple")}</g>
           </>)}
           {/* the right arm (the fist on the hip): the fist or the hand with the pointing finger on the same wrist */}
           {bone("br-arm br-arm-r", "armR", <>

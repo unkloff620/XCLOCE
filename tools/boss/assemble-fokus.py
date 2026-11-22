@@ -38,8 +38,28 @@ def save(n, im):
 
 
 for n in ["legs", "body", "armR", "lowR", "handR", "fingerR", "armL", "lowL", "handL", "eyes", "pupils", "head", "nose",
-          "chin", "throat", "teeth-up", "teeth-low", "temple", "glasses", "hair"]:
+          "chin", "throat", "teeth-up", "teeth-low", "glasses", "hair"]:
     save(n, placed(n))
+
+# the glasses' arm (raw/temple.png, a bar from its top-right end to its bottom-left one): from the hinge at the glasses'
+# outer corner to the top of the ear — boss-fokus.tsx bends it between the two when the glasses slide down
+HINGE, EAR = (436.0, 124.5), (444.0, 149.0)       # rig units
+import cv2
+tr = arr(Image.open(f"{D}/raw/temple.png").convert("RGBA"))
+A, B = np.array([83.0, 2.0]), np.array([2.0, 81.0])  # the raw bar's ends: the hinge's, the ear's
+sheet = lambda p: np.array([p[0] * 2 + CROP[0], p[1] * 2 + CROP[1]])
+H2, E2 = sheet(HINGE), sheet(EAR)
+v0, v1 = B - A, E2 - H2
+k = np.linalg.norm(v1) / np.linalg.norm(v0)
+ang = np.arctan2(v1[1], v1[0]) - np.arctan2(v0[1], v0[0])
+R = k * np.array([[np.cos(ang), -np.sin(ang)], [np.sin(ang), np.cos(ang)]])
+M = np.hstack([R, (H2 - R @ A)[:, None]]).astype(np.float32)
+# the bar keeps its own thickness: drawn thicker along the normal than the plain scale gives
+warped = cv2.warpAffine(tr, M, (2000, 3000), flags=cv2.INTER_LINEAR, borderValue=(0, 0, 0, 0))
+warped[..., 3] = np.clip(warped[..., 3].astype(int) * 2, 0, 255).astype(np.uint8)
+Image.fromarray(warped).save(f"{D}/placed/temple.png")
+save("temple", Image.fromarray(warped))
+print("temple hinge", HINGE, "ear", EAR)
 
 
 def split(n, axis, at_part):

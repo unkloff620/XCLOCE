@@ -500,15 +500,16 @@ const utBreath = (t: number) => {
    the glasses slide down his nose with every blow (gl), he frowns (brw), squints (sq) and grits his teeth; after the
    last blow the mouth falls open (jaw), he pants, puts the fist away, takes the hand with the pointing finger (fing) and
    pushes the glasses back up the nose, and stands in his stance again. */
-const FK_R_BACK = { armR: 24, lowR: -20, handR: 6 };
-const FK_R_HIT = { armR: -79, lowR: -16, handR: -14, zR: 48 };
-const FK_L_BACK = { armL: -25, lowL: -44, handL: -30 };
-const FK_L_HIT = { armL: 41, lowL: -98, handL: 12, zL: 42 };
-/** the finger at the glasses' bridge, below it (the glasses down) and up (pushed): the arm turns counter-clockwise, the
- *  elbow comes in to the belly, the forearm goes up in front of the chest — it comes at the screen, so it grows (zLR) and
- *  the hand too (zR); solved for the rig's joints (shoulder, elbow, wrist, the fingertip of fingerR) */
-const FK_PUSH_LOW = { armR: -98.6, lowR: -67.3, handR: 113.8, zLR: 40, zR: 30 };
-const FK_PUSH_UP = { armR: -98.7, lowR: -64.6, handR: 108.8, zLR: 40, zR: 30 };
+const FK_R_BACK = { armR: 24, lowR: -20, handR: 4 };
+const FK_R_HIT = { armR: -79, lowR: -16, handR: -8, zR: 8 };
+const FK_L_BACK = { armL: -25, lowL: -44, handL: -10 };
+const FK_L_HIT = { armL: 41, lowL: -98, handL: 8, zL: 8 };
+/** the finger at the glasses' bridge, below it (the glasses down) and up (pushed): the whole arm turns counter-clockwise
+ *  at the shoulder, the elbow comes in to the chest, the forearm stands up in front of it, the hand stays in line with
+ *  it (the user's pose) — solved for the rig's joints (shoulder, elbow, wrist, the fingertip of fingerR); the hands are
+ *  never bent hard at the wrist and grow only a little on a blow */
+const FK_PUSH_LOW = { armR: -124.3, lowR: 0.8, handR: 0.6 };
+const FK_PUSH_UP = { armR: -127.2, lowR: 0, handR: 8 };
 const fkCombo = (n: number): Action => {
   const keys: Key[] = [];
   const face: Face[] = [];
@@ -525,7 +526,7 @@ const fkCombo = (n: number): Action => {
     keys.push({ at: t, pose: { ...back, ...f }, stiff: 1 + 2.5 * k });
     keys.push({ at: t + d * 0.32, pose: { ...hit, ...f, jaw: 0.35 }, stiff: 5 + 3 * k });
     face.push({ cls: right ? "fk-punch" : "fk-stab", at: t + d * 0.32 + 0.06, dur: 0.1 });
-    keys.push({ at: t + d * 0.62, pose: { ...hit, ...f, ...(right ? { armR: -75, lowR: -25, zR: 25 } : { armL: 28, lowL: -80, handL: 26, zL: 18 }) }, stiff: 2 + 2 * k });
+    keys.push({ at: t + d * 0.62, pose: { ...hit, ...f, ...(right ? { armR: -75, lowR: -25, handR: -5, zR: 4 } : { armL: 28, lowL: -80, handL: 5, zL: 4 }) }, stiff: 2 + 2 * k });
     t += d;
   }
   // done: the mouth falls open, he pants, the arms drop back into the stance
@@ -537,24 +538,35 @@ const fkCombo = (n: number): Action => {
   keys.push({ at: t + 1.25, pose: { ...done, ...FK_PUSH_UP, fing: 1, gl: 0, jaw: 0.7, py: -0.2, brw: -0.5 }, stiff: 1.8 });
   keys.push({ at: t + 1.65, pose: { ...FK_PUSH_UP, fing: 1, jaw: 0.6, brw: -0.3 }, stiff: 1.2 });
   // the hand down, the fist back on the hip; the mouth closes slowly with the breath
-  keys.push({ at: t + 1.95, pose: { armR: -35, lowR: -15, handR: 5, zLR: 12, fing: 1, jaw: 0.45 }, stiff: 1.3 });
+  keys.push({ at: t + 1.95, pose: { armR: -35, lowR: -15, handR: 0, fing: 1, jaw: 0.45 }, stiff: 1.3 });
   keys.push({ at: t + 2.35, pose: { jaw: 0.3 }, stiff: 1 });
   return { keys, dur: t + 2.8, face };
 };
 const fkCombo12 = fkCombo(12);
+/** the glasses' arm: from the hinge (it moves with the glasses: screens.css .fk-glasses — rotate(−2.5°·gl) round C, then
+ *  down 11 px·gl) to the top of the ear (stays): turned and stretched / squeezed along its length round the ear */
+const FK_HINGE = [436, 124.5], FK_EAR = [444, 149], FK_GL_C = [374.5, 132.9];
+function fkTemple(gl: number) {
+  const r = (-2.5 * gl * Math.PI) / 180;
+  const dx = FK_HINGE[0] - FK_GL_C[0], dy = FK_HINGE[1] - FK_GL_C[1];
+  const hx = FK_GL_C[0] + dx * Math.cos(r) - dy * Math.sin(r), hy = FK_GL_C[1] + dx * Math.sin(r) + dy * Math.cos(r) + 11 * gl;
+  const a0 = Math.atan2(FK_HINGE[1] - FK_EAR[1], FK_HINGE[0] - FK_EAR[0]), a1 = Math.atan2(hy - FK_EAR[1], hx - FK_EAR[0]);
+  const s = Math.hypot(hx - FK_EAR[0], hy - FK_EAR[1]) / Math.hypot(FK_HINGE[0] - FK_EAR[0], FK_HINGE[1] - FK_EAR[1]);
+  return { "--ta0": `${(-a0 * 180 / Math.PI).toFixed(2)}deg`, "--ta1": `${(a1 * 180 / Math.PI).toFixed(2)}deg`, "--ts": Math.max(0.15, s).toFixed(3) };
+}
 const fkCombo10 = fkCombo(10);
 
 const POSES: Record<string, Spec> = {
   fokus: {
     springs: {
       up: { k: 120, c: 13 }, x: { k: 110, c: 13 }, head: { k: 150, c: 12 },
-      armR: { k: 170, c: 17 }, lowR: { k: 260, c: 19 }, handR: { k: 420, c: 18 },
-      armL: { k: 170, c: 17 }, lowL: { k: 260, c: 19 }, handL: { k: 420, c: 18 },
-      zR: { k: 300, c: 22 }, zL: { k: 300, c: 22 }, zLR: { k: 200, c: 20 },
+      armR: { k: 170, c: 17 }, lowR: { k: 260, c: 19 }, handR: { k: 1100, c: 66 },
+      armL: { k: 170, c: 17 }, lowL: { k: 260, c: 19 }, handL: { k: 1100, c: 66 },
+      zR: { k: 300, c: 30 }, zL: { k: 300, c: 30 },
       gl: { k: 70, c: 13 }, fing: { k: 900, c: 60 }, jaw: { k: 90, c: 14 }, brw: { k: 120, c: 16 }, sq: { k: 120, c: 16 },
       px: { k: 160, c: 18 }, py: { k: 160, c: 18 },
     },
-    drag: { lowL: ["armL", -0.06], handL: ["lowL", -0.05], lowR: ["armR", -0.06], handR: ["lowR", -0.05], head: ["up", -0.09] },
+    drag: { lowL: ["armL", -0.06], handL: ["lowL", -0.008], lowR: ["armR", -0.06], handR: ["lowR", -0.008], head: ["up", -0.09] },
     // never still: a slow weight shift, the head nods; the eyes look about (a new spot every ~1.7 s); heavy breathing
     // keeps the mouth a little open
     idle: (t) => {
@@ -573,14 +585,15 @@ const POSES: Record<string, Spec> = {
     actions: [{ a: fkCombo12, w: 2 }, { a: fkCombo10, w: 1 }],
     // about 5 seconds in the stance between the combos
     rest: [4.8, 5.6],
-    hit: { head: -320, up: -90, x: -70, armL: 120, lowL: -150, armR: -110, lowR: 150, handL: -220, handR: 220, gl: 3, jaw: 4 },
+    hit: { head: -320, up: -90, x: -70, armL: 120, lowL: -150, armR: -110, lowR: 150, handL: -30, handR: 30, gl: 3, jaw: 4 },
     strike: fkCombo(6),
     dazed: { pose: { armL: 8, armR: -6, head: 4, gl: 0.8, jaw: 0.6 }, act: true },
     // the heavy breath: the chest up and wider, slow and deep
     breath: (t, dazed) => { const b = 0.5 - 0.5 * Math.cos((t / (dazed ? 1.6 : 1.25)) * Math.PI * 2); return [1 + 0.012 * b, 1 + 0.022 * b, -3.5 * b]; },
     shapes: { gl: {}, fing: {}, brw: {}, sq: {}, px: {}, py: {} },
-    scale: { handR: "zR", handL: "zL", lowR: "zLR" },
+    scale: { handR: "zR", handL: "zL" },
     vars: (a) => ({
+      ...fkTemple(a.gl),
       "--gl": a.gl.toFixed(3), "--fing": Math.max(0, Math.min(1, a.fing)).toFixed(3), "--jaw": Math.max(0, a.jaw).toFixed(3),
       "--brw": a.brw.toFixed(3), "--sq": Math.max(0, Math.min(1, a.sq)).toFixed(3), "--px": a.px.toFixed(3), "--py": a.py.toFixed(3),
     }),
