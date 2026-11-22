@@ -2464,6 +2464,11 @@ button.bjt-stack { cursor: pointer; }
 .pkt-btns { display: flex; gap: 2cqw; align-items: stretch; }
 .pkt-btns .btn.gold { flex: 1; min-width: 0; }
 .pkt-ctrl .btn.block { width: 100%; min-width: 0; margin-left: 0; align-self: stretch; }
+/* the plate buttons have one width elsewhere; on the table they fit its art */
+.pkt-ctrl .btn { width: auto; --rv: 2.2cqw; }
+.pkt-ctrl .btn::before { inset: 1.1cqw; }
+.pkt-ctrl .btn.pkt-chip { box-shadow: 0 0.6cqw 0 #3b2410, 0 1cqw 1.6cqw rgba(0, 0, 0, 0.35); }
+.pkt-ctrl .btn.pkt-chip::before, .pkt-ctrl .btn.pkt-chip::after { display: none; }
 .pkt-ctrl .btn.pkt-chip { flex: 0 0 auto; padding: 0 2.2cqw 0 1.2cqw; gap: 0.8cqw; background: linear-gradient(#2a1a0c, #140c05); border: 0.4cqw solid #e0b04a; color: #ffe08a; }
 .pkt-ctrl .btn.pkt-chip svg { width: 7.2cqw; height: 7.2cqw; }
 .pkt-chip b { font-size: 3.8cqw; }
@@ -5960,7 +5965,7 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .fo-cups { align-self: flex-end; display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px 4px 6px; border-radius: 12px; background: rgba(28, 30, 34, 0.85); border: 2px solid #ffd23f; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; animation: fo-pulse 1.4s ease-in-out infinite; }
 @keyframes fo-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 .fo-cups img { height: 22px; }
-.fo-spin.stop { background: linear-gradient(180deg, #ff8a6a, #e0442a 55%, #b02a14); border-color: #4a120a; box-shadow: 0 4px 0 #4a120a, inset 0 2px 0 rgba(255, 255, 255, 0.4); }
+.fo-spin.stop { --a: #ff9c7a; --b: #e2452c; --c: #a8231a; --e: #5a0e08; }
 /* «ПРИЗ»: nine mugs on the asphalt, the prizes under them */
 .fo-cups-layer { position: absolute; inset: 0; z-index: 20; container-type: inline-size; background: #3b3e42; }
 .fo-cups-head { position: absolute; z-index: 2; left: 10px; right: 10px; top: var(--top); display: flex; flex-direction: column; align-items: center; gap: 4px; }
@@ -5992,12 +5997,10 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .fo-plus { flex: none; width: 26px; height: 26px; border-radius: 6px; border: 2px solid #2b2b2b; background: #f5ec5c; color: #2b2b2b; font-weight: 900; font-size: 18px; line-height: 1; padding: 0; cursor: pointer; }
 .fo-go { flex: 1; display: flex; flex-direction: column; align-items: stretch; gap: 6px; }
 .fo-go .toggle { align-self: center; background: rgba(28, 30, 34, 0.8); color: #fff; border-color: rgba(255, 255, 255, 0.5); font-size: 12px; font-weight: 700; }
-.fo-spin { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 5px 10px; border-radius: 12px; cursor: pointer;
-  border: 3px solid #1d3a10; background: linear-gradient(180deg, #8ef05a, #3fb31f 55%, #2e8f14); color: #fff; box-shadow: 0 4px 0 #1d3a10, inset 0 2px 0 rgba(255, 255, 255, 0.45); text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45); }
+/* «Крутить»: the green plate button (globals .btn), its two lines inside */
+.fo-spin.btn { flex-direction: column; gap: 1px; align-self: stretch; text-transform: none; color: #fff; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45); }
 .fo-spin b { font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.05; }
 .fo-spin span { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 800; }
-.fo-spin:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 #1d3a10, inset 0 2px 0 rgba(255, 255, 255, 0.45); }
-.fo-spin:disabled { filter: saturate(0.5) brightness(0.85); cursor: default; }
 .fo-all { display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: #fff; font-size: 12px; font-weight: 700; text-shadow: 0 1px 2px #000; }
 .fo-all input { width: 18px; height: 18px; accent-color: #3fb31f; }
 .fo-res { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
@@ -7825,3 +7828,14 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .ms-do { flex-direction: column; justify-content: center; gap: 1px; font-size: 14px; align-self: center; }
 .ms-do .num { display: inline-flex; align-items: center; gap: 2px; font-size: 14px; }
 @media (prefers-reduced-motion: reduce) { .ms-drop { animation-duration: 0.01s; } }
+/* plate buttons fitted into a picture (the van's bumper, the business slate): small rivets, a thin frame */
+:is(.van-go, .bz-go).btn { --rv: 6px; border-radius: 0.8cqi;
+  box-shadow: inset 0 0 0 1.5px var(--e), inset 0 2px 0 1.5px rgba(255, 255, 255, 0.45), inset 0 -2px 0 1.5px rgba(0, 0, 0, 0.18), 0 0.4cqi 0 #3b2410, 0 0.8cqi 1.4cqi rgba(0, 0, 0, 0.4); }
+:is(.van-go, .bz-go).btn::before { inset: 3px; border-radius: 2px; border-width: 1px; }
+:is(.van-go, .bz-go).btn::after { --r: rgba(255, 255, 255, 0.55) 0 0.6px, var(--c) 0.9px 1.7px, var(--e) 2px, transparent 2.5px; }
+/* two-line plate buttons grow with their lines */
+.fo-spin.btn, .ms-do.btn { height: auto; min-height: 42px; padding-top: 5px; padding-bottom: 5px; }
+/* blackjack: the plates share the rows (no minimum width there); «Встать» — a square above the controls on the right */
+:is(.bj-moves, .bjt-acts, .pkt-btns, .pkt-ask-btns) .btn { min-width: 0; }
+.bjt-ctrl { position: relative; }
+.bj-leave.btn { position: absolute; right: 2px; bottom: calc(100% + 8px); z-index: 5; width: 38px; height: 34px; padding: 0; display: grid; place-items: center; }

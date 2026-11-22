@@ -302,7 +302,7 @@ export function FortuneScreen() {
           </div>
           <div className="fo-go">
             <Toggle on={running} onChange={setAutoOn}>Автопрокрутка</Toggle>
-            <button type="button" className="fo-spin" disabled={running || spinning || busy === "fortune_spin"} onClick={go}>
+            <button type="button" className="btn green fo-spin" disabled={running || spinning || busy === "fortune_spin"} onClick={go}>
               <b>Крутить</b>
               <span className="num"><ItemArt id={TICKET_ID} size={14} />1</span>
             </button>

@@ -465,6 +465,10 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
         : "";
     panel = (
       <div className="bjt-ctrl">
+        {/* «Встать»: a small square at the bottom, like «Сдаться» in a fight */}
+        <button type="button" className="btn sm red bj-leave" disabled={!!busy} onClick={() => run("bj_leave")} aria-label="Встать из-за стола" title="Встать">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h13" /><path d="M13 6l6 6-6 6" /></svg>
+        </button>
         <div className="bjt-line tiny">{line}</div>
         {table.phase === "insurance" && me?.ins === null && reveal ? (
           <div className="bjt-acts">
@@ -518,7 +522,6 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
         <DayTopNote game="bj" refresh={table?.round ?? 0} />
         <div className="bj2-top">
           <BlackjackHelp />
-          {table && <button className="btn small dark" disabled={!!busy} onClick={() => run("bj_leave")}>Встать</button>}
         </div>
         <div className={`bjt-stage bj2-stage ${sweep ? "sweep" : ""}`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
