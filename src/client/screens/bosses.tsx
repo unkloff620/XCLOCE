@@ -154,7 +154,8 @@ export function BossesScreen() {
                 <div className="bcard-head">
                   <div className="col" style={{ gap: 1, minWidth: 0 }}>
                     <b className="bcard-name display ellipsis">{b.name}</b>
-                    <span className="bcard-title ellipsis">{grey ? `Откроется пропусками «${prev?.name}»` : locked ? `Нужны пропуски «${prev?.name}»` : b.title}</span>
+                    {/* who he is is not told on the card (the user 2026-11-22): only what is needed to open him */}
+                    {(grey || locked) && <span className="bcard-title ellipsis">{grey ? `Откроется пропусками «${prev?.name}»` : `Нужны пропуски «${prev?.name}»`}</span>}
                   </div>
                   {mine ? (
                     <span className="bcard-pill live"><i className="live-dot" />{clock(mine.endsAt - now)}</span>

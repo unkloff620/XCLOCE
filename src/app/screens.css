@@ -1892,7 +1892,7 @@ button.bjt-stack { cursor: pointer; }
 /* Фокус's card: a bloody monitor window (boss-card-frame-fokus.webp, 1200×600, the artist's): the code types itself on
    the screen behind the text (art/fokus-screens.tsx FokusCardCode), his promise along the top, blood runs down the frame,
    and the screen shorts out now and then — bright, then dark for a blink, a flicker, bright again */
-.bcard.bcard-boss-fokus { --ink-c: #f6e6df; --mute-c: #d29a8c; border-image: url("/assets/ui/boss-card-frame-fokus.webp?v=1") 250 fill / 74px stretch;
+.bcard.bcard-boss-fokus { --ink-c: #f6e6df; --mute-c: #d29a8c; border-image: url("/assets/ui/boss-card-frame-fokus.webp?v=2") 215 fill / 64px stretch;
   animation: fk-card-short 7s steps(1) infinite; }
 .bcard.bcard-boss-fokus .bcard-name { text-shadow: 0 2px 0 rgba(0, 0, 0, 0.7), 0 0 12px rgba(255, 40, 30, 0.45); }
 .bcard.bcard-boss-fokus .bcard-reward { background: rgba(0, 0, 0, 0.45); box-shadow: inset 0 0 0 1.5px rgba(255, 60, 40, 0.3); }
@@ -1903,8 +1903,8 @@ button.bjt-stack { cursor: pointer; }
   64.5% { filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.45)) brightness(0.35); } 66% { filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.45)) brightness(1); }
   88% { filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.45)) brightness(0.55); } 89% { filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.45)) brightness(1); } }
 .fk-card-fx { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
-.fk-card-code { position: absolute; left: 7%; right: 7%; top: 17%; bottom: 13%; width: 86%; height: 70%; opacity: 0.32; mix-blend-mode: screen; filter: hue-rotate(-20deg) saturate(0.8); }
-.fk-card-egg { position: absolute; left: 12%; right: 22%; top: 8.5%; overflow: hidden; white-space: nowrap;
+.fk-card-code { position: absolute; left: 40px; top: 36px; width: calc(100% - 80px); height: calc(100% - 72px); opacity: 0.32; mix-blend-mode: screen; filter: hue-rotate(-20deg) saturate(0.8); }
+.fk-card-egg { position: absolute; left: 66px; right: 66px; top: 22px; overflow: hidden; white-space: nowrap;
   font: 9px/1.1 ui-monospace, Menlo, Consolas, monospace; color: #ff6b5a; text-shadow: 0 0 4px rgba(255, 40, 20, 0.9); letter-spacing: 0.2px; }
 /* his promise runs along the top of the screen like a ticker */
 .fk-card-egg > b { display: inline-block; font-weight: inherit; padding-left: 100%; animation: fk-egg 14s linear infinite; }
@@ -1913,10 +1913,10 @@ button.bjt-stack { cursor: pointer; }
 .fk-drip { position: absolute; width: 4px; border-radius: 0 0 3px 3px; background: linear-gradient(#7d0a0a, #c4161a); transform-origin: 50% 0;
   box-shadow: 0 0 3px rgba(200, 20, 20, 0.6); animation: fk-drip 5.2s ease-in infinite; }
 .fk-drip::after { content: ""; position: absolute; left: -2px; bottom: -4px; width: 8px; height: 8px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; background: #b8121a; }
-.fk-drip.d1 { left: 33.6%; top: 13%; animation-delay: -0.4s; }
-.fk-drip.d2 { left: 87.6%; top: 19%; animation-delay: -2.1s; animation-duration: 6.4s; }
-.fk-drip.d3 { left: 24.2%; top: 94%; animation-delay: -3.3s; animation-duration: 5.8s; }
-.fk-drip.d4 { left: 97.6%; top: 58%; animation-delay: -1.2s; animation-duration: 7s; }
+.fk-drip.d1 { left: 27.5%; top: 17px; animation-delay: -0.4s; }
+.fk-drip.d2 { left: calc(100% - 38px); top: 31px; animation-delay: -2.1s; animation-duration: 6.4s; }
+.fk-drip.d3 { left: 72px; top: calc(100% - 20px); animation-delay: -3.3s; animation-duration: 5.8s; }
+.fk-drip.d4 { left: calc(100% - 60px); top: calc(100% - 16px); animation-delay: -1.2s; animation-duration: 7s; }
 @keyframes fk-drip { 0% { height: 0; opacity: 0; } 8% { height: 2px; opacity: 1; } 70% { height: 26px; opacity: 1; transform: translateY(0); }
   100% { height: 30px; opacity: 0; transform: translateY(14px); } }
 .bcard.bcard-boss-fokus .bcard-main, .bcard.bcard-boss-fokus .bcard-art { z-index: 1; }
