@@ -171,7 +171,7 @@ export function BossesScreen() {
                   <div className="bcard-reward bcard-road">
                     <span className="btn sm gold" role="link" tabIndex={0}
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/locations/${row.road!.loc}`); }}>Идти</span>
-                    <span className="bcard-road-what">{row.road.name} — дневные ({row.road.times - row.road.done})</span>
+                    <span className="bcard-road-what">{row.road.name} — дневные{"\u00a0"}({row.road.times - row.road.done})</span>
                   </div>
                 ) : (
                 <div className="bcard-reward">
