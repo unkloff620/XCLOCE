@@ -102,6 +102,8 @@ export function FokusRoom({ uid = "a" }: { uid?: string }) {
         </g>
         <g className="fkr-tree" style={at(452, 642)}>{img("tree")}</g>
       </g>
+      {/* the fan spins in the window, behind the room (the window's frame and the lamp stay over it) */}
+      <g className="fkr-spin fkr-fan" style={at(fan.x, fan.y)}>{img("propeller")}</g>
       <image href={`${A}/room.webp?v=2`} x={0} y={0} width={1060} height={1484} preserveAspectRatio="none" />
       {/* the light through the window: a warm glow round it by day */}
       <circle className="fkr-winglow" cx={wx} cy={wy} r={gr * 1.5} fill={`url(#fkr-pool-${uid})`} style={{ mixBlendMode: "screen" }} />
@@ -120,8 +122,6 @@ export function FokusRoom({ uid = "a" }: { uid?: string }) {
       {/* the cat on the bed and the things on the floor, each with its shadow */}
       {thing("cat")}
       {PROPS.map((n) => thing(n))}
-      {/* the fan spins in the window */}
-      <g className="fkr-spin fkr-fan" style={at(fan.x, fan.y)}>{img("propeller")}</g>
       {/* the ivy sways from where it hangs */}
       <g className="fkr-plant" style={at(box("plant").x + box("plant").w * 0.62, box("plant").y + 6)}>{img("plant")}</g>
       {/* the night: the room goes dark and blue; the lamp lights it */}
