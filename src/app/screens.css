@@ -758,7 +758,13 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .bcard.locked .bcard-art { filter: brightness(0.7); }
 /* a boss closed by the road: «Идти» to his location and what to clear */
 .bcard-road { flex-direction: column; align-items: center; gap: 4px; }
-.bcard-road .btn { min-width: 110px; }
+.bcard-road .btn { min-width: 110px; position: relative; z-index: 7; }
+/* the grey of a closed card: a film over the whole card (its frame too) that greys what is under it — only «Идти»
+   stands above it, in colour; the card keeps its own shadow */
+.bcard.locked { filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.45)) !important; opacity: 1; animation: none !important; }
+.bcard.locked .bcard-main { z-index: auto; }
+.bcard-grey { position: absolute; inset: 0; z-index: 6; pointer-events: none; border-radius: inherit;
+  -webkit-backdrop-filter: grayscale(1) brightness(0.92); backdrop-filter: grayscale(1) brightness(0.92); }
 .bcard-road-what { font-size: 12px; color: var(--mute-c); text-align: center; }
 .bcard.final:not(.locked) { animation: bcard-boss 3.2s ease-in-out infinite; }
 @keyframes bcard-boss { 50% { box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45), 0 0 30px color-mix(in srgb, var(--acc) 45%, transparent); } }

@@ -140,6 +140,8 @@ export function BossesScreen() {
               style={{ ["--i" as string]: b.order, ["--acc" as string]: tierColor(b.order) }}>
               {/* the case number over the boss: «Дело №1», «Дело №2»… (his health is a surprise — not shown in the list) */}
               <span className="bcard-n display">Дело №{b.order}</span>
+              {/* a closed card goes grey through this film (not a filter on the card: the «Идти» button stays in colour over it) */}
+              {grey && <i className="bcard-grey" aria-hidden="true" />}
               {/* Боцман's card: an emerald glint runs along the frame (its ::before/::after are the rain and the lamps) */}
               {b.id === "botsman" && !grey && <i className="bcard-glint" aria-hidden="true" />}
               {/* Фокус's card: the code typing on the screen, the line from him */}
@@ -167,7 +169,7 @@ export function BossesScreen() {
                 {roadLeft && row?.road ? (
                   // closed by the road: «Идти» to his location, what to clear and how many times more
                   <div className="bcard-reward bcard-road">
-                    <span className="btn sm green" role="link" tabIndex={0}
+                    <span className="btn sm gold" role="link" tabIndex={0}
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/locations/${row.road!.loc}`); }}>Идти</span>
                     <span className="bcard-road-what">{row.road.name} — дневные ({row.road.times - row.road.done})</span>
                   </div>
