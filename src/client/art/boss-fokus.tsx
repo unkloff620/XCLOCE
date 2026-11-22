@@ -35,7 +35,7 @@ const STUCK = {
   side: { entry: [268.6, 504], end: [202.3, 519.3], mirror: false },
   thigh: { entry: [474.7, 787.7], end: [547.2, 799.9], mirror: true },
   shoulder: { entry: [176, 346], end: [128, 298], mirror: false },
-  forearm: { entry: [720, 461], end: [744, 397], mirror: true },
+  forearm: { entry: [712, 489], end: [738, 425], mirror: true },
 } as const;
 /** the mouth's corners (x, rig units): the lower lip is held there and sags between them */
 const MOUTH = [349, 401] as const;
@@ -116,10 +116,9 @@ export function FokusRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
     <svg key={look} ref={svgRef} className={`boss-rig rig-fokus ${dazed ? "dazed" : ""} ${dying ? "dying" : ""}`} viewBox={viewBox} width="100%" height="100%"
       preserveAspectRatio={bust ? "xMidYMin slice" : "xMidYMax meet"} aria-hidden="true">
       <g className="fk-root" style={at(rig.w / 2, rig.h - 20)}>
-        {/* the legs: the feet stay planted, only the shins and the feet are fixed: the hips and the thighs go with the upper body (br-up), the bend fades out at the knees;
-            below half HP only the feet are fixed — the whole leg sways with him from one foot to the other */}
+        {/* the legs: only the feet stay planted (the user 2026-11-22), the whole leg goes with the upper body (br-up) */}
         {P.legs && (puppet ? (
-          <image className="pp" data-pp="back" data-pp-follow="br-up" data-pp-follow-at={dazed ? "0.5,0.8" : "0.36,0.56"} href={src("legs")}
+          <image className="pp" data-pp="back" data-pp-follow="br-up" data-pp-follow-at="0.5,0.8" href={src("legs")}
             x={P.legs.x} y={P.legs.y} width={P.legs.w} height={P.legs.h} preserveAspectRatio="none" />
         ) : pic("legs"))}
         <g className="br-up" style={at(WAIST[0], WAIST[1])}>
