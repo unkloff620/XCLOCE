@@ -71,27 +71,29 @@ export function MastersScreen() {
           const r = rows?.find((x) => x.id === m.id);
           const open = r ? r.open : m.n === 1;
           const prev = MASTERS[m.n - 2];
-          return (
-            <div key={m.id} className={`ms-row ${open ? "" : "locked"}`}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="ms-face" src={`${A}/${m.id}.webp`} alt="" draggable={false} />
-              <span className="ms-who">
-                <b className="ms-name display">{m.name}</b>
-                <span className="ms-motto">{m.motto}</span>
-              </span>
-              <span className="ms-best">
-                <span className="ms-best-ava">{r?.best ? <Avatar name={r.best.name} photo={r.best.photo} size={44} /> : <i>?</i>}</span>
-                <span className="ms-best-t">
-                  <b>Лучший ученик</b>
-                  <span className="ellipsis">{r?.best ? `${r.best.clan ? `${r.best.clan} | ` : ""}${r.best.id === state?.player.id ? "Ты" : r.best.name}` : "Стань первым"}</span>
-                  {r?.best && <span className="num ms-bulb"><Icon name="mastery" size={14} />{full(r.best.mastery)}</span>}
+          // the artist's card: the master on the left, his name and motto; the best student in the clipped frame, his
+            // nick, «Мастерство» and clan on the right; the whole card is the way in
+            const body = (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="ms-face" src={`${A}/${m.id}.webp`} alt="" draggable={false} />
+                <span className="ms-who">
+                  <b className="ms-name display">{m.name}</b>
+                  <span className="ms-motto">{open ? m.motto : <><Icon name="lock" size={12} /> после «{prev?.name}»</>}</span>
                 </span>
-              </span>
-              {open
-                ? <Link href={`/masters/${m.id}`} className="btn gold sm ms-go" onClick={() => haptic.tap()}>Учиться</Link>
-                : <span className="ms-lock"><Icon name="lock" size={18} /><span>после «{prev?.name}»</span></span>}
-            </div>
-          );
+                <span className="ms-best-ava">{r?.best ? <Avatar name={r.best.name} photo={r.best.photo} size={64} /> : <i className="lc-first">Стань<br />первым</i>}</span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="ms-frame" src="/assets/ui/leader-frame.webp" alt="" draggable={false} />
+                <span className="ms-best-t">
+                  <b className="ellipsis">{r?.best ? (r.best.id === state?.player.id ? "Ты" : r.best.name) : "Лучший ученик"}</b>
+                  {r?.best && <span className="num ms-bulb"><Icon name="mastery" size={14} />{full(r.best.mastery)}</span>}
+                  {r?.best?.clan && <span className="ellipsis ms-clan">{r.best.clan}</span>}
+                </span>
+              </>
+            );
+            return open
+              ? <Link key={m.id} href={`/masters/${m.id}`} className="ms-row" onClick={() => haptic.tap()}>{body}</Link>
+              : <div key={m.id} className="ms-row locked">{body}</div>;
         })}
       </div>
     </div>

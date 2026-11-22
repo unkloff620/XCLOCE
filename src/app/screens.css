@@ -7244,6 +7244,9 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .lc-ava { position: absolute; left: 0; top: 0; height: 100%; aspect-ratio: 1; border-radius: 1cqi; overflow: hidden;
   box-shadow: 0 0 0 0.35cqi #c99a2e; background: rgba(90, 58, 20, 0.18); }
 .lc-lead.night .lc-ava { box-shadow: 0 0 0 0.35cqi #6f63c9; }
+/* the artist's clipped frame round the leader's avatar (ui/leader-frame.webp: its hole 6.4% from the left, 26.4% from the top, 68.5% of its height) */
+.lc-lead .lc-ava, .lc-lead.night .lc-ava, .lc-lead.none .lc-ava { box-shadow: none; }
+.lc-frame { position: absolute; left: -1.5%; top: -38.5%; height: 146%; width: auto; pointer-events: none; z-index: 1; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45)); }
 .lc-lead.none .lc-ava { box-shadow: 0 0 0 0.3cqi rgba(107, 68, 16, 0.45); display: grid; place-items: center; }
 /* «Стань первым»: a stamp like the dealer's «Куплено» (.bb-offer-stamp) */
 .lc-first { font: 900 1.8cqi/1.1 var(--font-display), system-ui; font-style: normal; color: #c0281e; text-transform: uppercase; letter-spacing: 0.04em; text-align: center; white-space: nowrap;
@@ -7725,23 +7728,25 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 @media (prefers-reduced-motion: reduce) { .fkr-live * { animation: none !important; } }
 
 /* ===== «Мастера» (screens/masters.tsx) ===== */
-.ms-row { position: relative; display: grid; grid-template-columns: 76px 1fr auto; grid-template-rows: auto auto; align-items: center; gap: 4px 10px;
-  min-height: 92px; padding: 8px 10px 8px 0; border-radius: 10px; background: url(/assets/locations/card-plank.webp) center / 100% 100% no-repeat;
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.45)); color: #4a2e10; }
-.ms-face { grid-row: 1 / 3; align-self: end; width: 86px; margin: -14px 0 -8px -4px; object-fit: contain; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.5)); }
-.ms-who { display: flex; flex-direction: column; min-width: 0; }
-.ms-name { font-size: 16px; letter-spacing: 0.04em; text-transform: uppercase; color: #3a220a; }
-.ms-motto { font-size: 11.5px; line-height: 1.2; color: #6b4a22; }
-.ms-best { grid-column: 2; display: flex; align-items: center; gap: 6px; min-width: 0; }
-.ms-best-ava { flex: none; width: 34px; height: 34px; border-radius: 6px; overflow: hidden; box-shadow: 0 0 0 2px #8a5a2a; background: rgba(90, 58, 20, 0.2); display: grid; place-items: center; }
-.ms-best-ava .avatar { width: 100% !important; height: 100% !important; border-radius: 0 !important; }
-.ms-best-ava i { font-style: normal; color: #8a5a2a; font-weight: 600; }
-.ms-best-t { display: flex; flex-direction: column; min-width: 0; font-size: 11px; line-height: 1.2; }
-.ms-best-t b { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.06em; color: #6b4a22; }
-.ms-bulb { display: inline-flex; align-items: center; gap: 2px; font-weight: 500; }
-.ms-go { grid-column: 3; grid-row: 1 / 3; }
-.ms-lock { grid-column: 3; grid-row: 1 / 3; display: flex; flex-direction: column; align-items: center; gap: 2px; max-width: 86px; font-size: 10px; text-align: center; color: #6b4a22; }
-.ms-row.locked .ms-face { filter: grayscale(1) brightness(0.5); }
+/* the list's card (the artist's masters/card.webp, 1200×284): the master on its dark left, his name and motto beside him;
+   the best student's avatar in the clipped frame (ui/leader-frame.webp, its hole: 6.4% / 26.4%, 86.5% × 68.5% of it),
+   his nick, «Мастерство» and clan right of it */
+.ms-row { position: relative; display: block; width: 100%; aspect-ratio: 1200 / 284; container-type: inline-size; color: #4a2e10;
+  background: url(/assets/masters/card.webp) center / 100% 100% no-repeat; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.45)); -webkit-tap-highlight-color: transparent; }
+.ms-row:active { filter: brightness(0.9) drop-shadow(0 3px 4px rgba(0, 0, 0, 0.45)); }
+.ms-face { position: absolute; left: 1%; bottom: 7%; height: 112%; width: auto; max-width: 20%; object-fit: contain; object-position: bottom; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.5)); }
+.ms-who { position: absolute; left: 19%; right: 54%; top: 18%; display: flex; flex-direction: column; gap: 1cqi; }
+.ms-name { font-size: 3.6cqi; line-height: 1.05; letter-spacing: 0.03em; text-transform: uppercase; color: #fff1d8; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); }
+.ms-motto { font-size: 2.5cqi; line-height: 1.25; color: #f3dcb4; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6); display: inline-flex; align-items: center; gap: 0.6cqi; flex-wrap: wrap; }
+.ms-frame { position: absolute; left: 48.3%; top: -0.2%; width: 13.2%; height: auto; pointer-events: none; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.45)); }
+.ms-best-ava { position: absolute; left: 49.15%; top: 18.3%; width: 11.4%; aspect-ratio: 1; overflow: hidden; display: grid; place-items: center; background: rgba(90, 58, 20, 0.18); }
+.ms-best-ava .avatar { width: 100% !important; height: 100% !important; border-radius: 0 !important; font-size: 4cqi !important; }
+.ms-best-t { position: absolute; left: 63%; right: 4%; top: 24%; display: flex; flex-direction: column; gap: 0.8cqi; min-width: 0; }
+.ms-best-t b { font-size: 3cqi; font-weight: 600; color: #4a2e10; }
+.ms-bulb { display: inline-flex; align-items: center; gap: 0.5cqi; font-size: 2.6cqi; color: #6b4a1e; }
+.ms-bulb svg { width: 2.8cqi !important; height: 2.8cqi !important; }
+.ms-clan { font-size: 2.4cqi; color: #7a5a2c; }
+.ms-row.locked .ms-face, .ms-row.locked .ms-best-ava { filter: grayscale(1) brightness(0.55); }
 /* his workshop: he stands behind the table, his five parts on it */
 .ms-room { background: #1a120c; }
 .ms-room-bg { position: absolute; left: 0; right: 0; top: 0; bottom: calc(var(--bottom) - 10px); width: 100%; height: calc(100% - var(--bottom) + 10px); object-fit: cover; object-position: center bottom; }
