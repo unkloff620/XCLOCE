@@ -8,14 +8,15 @@
  */
 
 export type BuildingKind = "garage" | "barrack" | "khrush" | "kiosk" | "boiler" | "shop" | "main"
-  // Промзона (the artist's yard)
-  | "checkpoint" | "tanks" | "pipes" | "office" | "warehouse";
+  // the artist's yards
+  | "checkpoint" | "tanks" | "pipes" | "office" | "warehouse" | "shed" | "tower" | "booth" | "workshop" | "tent" | "row" | "pavilion";
 export const BUILDING_NAMES: Record<BuildingKind, string> = {
   garage: "Гараж", barrack: "Барак", khrush: "Пятиэтажка", kiosk: "Ларёк", boiler: "Котельная", shop: "Магазин", main: "Главное здание",
   checkpoint: "КПП", tanks: "Цистерны", pipes: "Теплотрасса", office: "Контора", warehouse: "Склад",
+  shed: "Сарай", tower: "Вышка", booth: "Будка", workshop: "Цех", tent: "Палатка", row: "Торговый ряд", pavilion: "Павильон",
 };
 /** «… захвачен / захвачена / захвачены!» */
-export const takenWord = (k: BuildingKind) => (["boiler", "khrush", "pipes", "office"].includes(k) ? "захвачена" : k === "tanks" ? "захвачены" : "захвачен");
+export const takenWord = (k: BuildingKind) => (["boiler", "khrush", "pipes", "office", "tower", "booth", "tent"].includes(k) ? "захвачена" : k === "tanks" ? "захвачены" : "захвачен");
 
 export interface RaidBuilding {
   id: string;
@@ -84,22 +85,46 @@ const G: BuildingKind = "garage", K: BuildingKind = "kiosk", B: BuildingKind = "
 export const WINS = 10;
 export const RAID_YARDS: RaidYard[] = [
   // the artist's yard (tools/raids/source/garages, build-yard-art.py prints these places): from the gate up
+  // the artist's yards (tools/raids/source2/<yard>/, build-yard-v2.py prints these places): from the gate up, the main one last
   { id: "garages", n: 1, name: "Гаражи", subtitle: "Ряды ракушек, где решают все вопросы", wins: WINS, art: "garages", buildings: [
-    { id: "garages-1", kind: G, x: 58.3, y: 86.78, w: 18.75 },
-    { id: "garages-2", kind: O, x: 38.18, y: 74.15, w: 17.38 }, { id: "garages-3", kind: K, x: 73.58, y: 64.78, w: 20.61 },
-    { id: "garages-4", kind: S, x: 22.36, y: 58.85, w: 22.46 }, { id: "garages-5", kind: B, x: 74.9, y: 52.67, w: 27.54 },
-    { id: "garages-6", kind: H, x: 20.7, y: 45.57, w: 27.54 },
-    { id: "garages-main", kind: "main", x: 51.95, y: 34.38, w: 37.3 },
+    { id: "garages-1", kind: "shed", x: 39.55, y: 65.93, w: 12.1 },
+    { id: "garages-2", kind: "tower", pic: "tower1", x: 71.38, y: 64.53, w: 13.15 },
+    { id: "garages-3", kind: "tower", pic: "tower2", x: 23.55, y: 63.73, w: 13.2 },
+    { id: "garages-4", kind: "garage", pic: "garage1", x: 80.4, y: 50.47, w: 18.5 },
+    { id: "garages-5", kind: "garage", pic: "garage2", x: 61.32, y: 49.73, w: 19.35 },
+    { id: "garages-6", kind: "booth", x: 39.15, y: 48.77, w: 19.5 },
+    { id: "garages-7", kind: "boiler", x: 18.95, y: 46.63, w: 16.8 },
+    { id: "garages-8", kind: "warehouse", x: 82.1, y: 41.53, w: 23.3 },
+    { id: "garages-9", kind: "office", x: 21.02, y: 35.0, w: 23.75 },
+    { id: "garages-main", kind: "main", x: 55.33, y: 31.93, w: 40.45 },
   ] },
-  // the artist's yard (tools/raids/source/promzona): from the checkpoint up to the factory
   { id: "promzona", n: 2, name: "Промзона", subtitle: "Котельные, склады и ничейные трубы", wins: WINS, art: "promzona", buildings: [
-    { id: "promzona-1", kind: "checkpoint", x: 27.83, y: 90.56, w: 23.24 }, { id: "promzona-2", kind: "tanks", x: 62.35, y: 89.52, w: 38.57 },
-    { id: "promzona-3", kind: "pipes", pic: "pipes1", x: 39.84, y: 74.74, w: 26.37 },
-    { id: "promzona-4", kind: "office", pic: "office1", x: 18.36, y: 51.82, w: 29.49 }, { id: "promzona-5", kind: "warehouse", x: 79.35, y: 50.46, w: 39.94 },
-    { id: "promzona-6", kind: "office", pic: "office2", x: 52.64, y: 37.63, w: 28.52 }, { id: "promzona-7", kind: "pipes", pic: "pipes2", x: 29.88, y: 31.45, w: 24.22 },
-    { id: "promzona-main", kind: "main", pic: "factory", x: 58.84, y: 29.62, w: 54.0 },
+    { id: "promzona-1", kind: "workshop", pic: "workshop1", x: 44.77, y: 71.3, w: 23.15 },
+    { id: "promzona-2", kind: "tower", x: 74.7, y: 68.7, w: 14.3 },
+    { id: "promzona-3", kind: "warehouse", pic: "warehouse1", x: 24.02, y: 63.23, w: 26.65 },
+    { id: "promzona-4", kind: "warehouse", pic: "warehouse2", x: 81.3, y: 55.23, w: 27.8 },
+    { id: "promzona-5", kind: "workshop", pic: "workshop2", x: 45.9, y: 54.63, w: 36.8 },
+    { id: "promzona-6", kind: "boiler", x: 19.57, y: 44.3, w: 27.85 },
+    { id: "promzona-7", kind: "warehouse", pic: "warehouse3", x: 53.55, y: 40.67, w: 26.3 },
+    { id: "promzona-8", kind: "office", x: 83.53, y: 40.47, w: 23.75 },
+    { id: "promzona-9", kind: "warehouse", pic: "warehouse4", x: 29.58, y: 30.63, w: 22.55 },
+    { id: "promzona-main", kind: "main", x: 65.67, y: 30.63, w: 46.25 },
   ] },
-  { id: "rynok", n: 3, name: "Рынок", subtitle: "Ларьки, палатки и свои люди", wins: WINS, buildings: plan("rynok", 3, [K, S, K, S, K, G, K, S]) },
+  { id: "rynok", n: 3, name: "Рынок", subtitle: "Ларьки, палатки и свои люди", wins: WINS, art: "rynok", buildings: [
+    { id: "rynok-1", kind: "kiosk", pic: "kiosk1", x: 36.95, y: 71.33, w: 18.5 },
+    { id: "rynok-2", kind: "tower", x: 72.82, y: 69.33, w: 20.25 },
+    { id: "rynok-3", kind: "tent", x: 16.8, y: 61.8, w: 17.6 },
+    { id: "rynok-4", kind: "kiosk", pic: "kiosk2", x: 49.35, y: 59.97, w: 15.5 },
+    { id: "rynok-5", kind: "row", pic: "row1", x: 59.85, y: 50.8, w: 23.8 },
+    { id: "rynok-6", kind: "row", pic: "row2", x: 18.62, y: 48.47, w: 25.55 },
+    { id: "rynok-7", kind: "row", pic: "row3", x: 83.8, y: 44.97, w: 23.8 },
+    { id: "rynok-8", kind: "row", pic: "row4", x: 47.75, y: 42.5, w: 21.1 },
+    { id: "rynok-9", kind: "row", pic: "row5", x: 68.1, y: 37.03, w: 21.1 },
+    { id: "rynok-10", kind: "row", pic: "row6", x: 34.9, y: 36.6, w: 21.1 },
+    { id: "rynok-11", kind: "pavilion", pic: "pavilion1", x: 17.4, y: 33.6, w: 26.8 },
+    { id: "rynok-12", kind: "pavilion", pic: "pavilion2", x: 85.12, y: 31.3, w: 25.25 },
+    { id: "rynok-main", kind: "main", x: 50.75, y: 25.1, w: 46.0 },
+  ] },
   { id: "panelki", n: 4, name: "Панельки", subtitle: "Пятиэтажки, лавочки и бабки на страже", wins: WINS, buildings: plan("panelki", 4, [H, B, H, S, H, K, H, B, H]) },
   { id: "center", n: 5, name: "Центр района", subtitle: "Главный двор. Кто держит его — держит район", wins: WINS, buildings: plan("center", 5, [S, H, S, H, O, H, S, H, K, H]) },
 ];
@@ -110,21 +135,7 @@ export const RAID_YARDS: RaidYard[] = [
  */
 export type YardLight = { x: number; y: number; k?: "buzz" | "beacon" | "sign" | "moths" | "spark" | "smoke" };
 export const YARD_LIGHTS: Record<string, YardLight[]> = {
-  garages: [
-    { x: 25.5, y: 6.8 }, { x: 9.7, y: 12.1 }, { x: 9.2, y: 22.3, k: "moths" }, { x: 6.4, y: 33.0 }, { x: 9.2, y: 51.5 },
-    { x: 31.8, y: 22.1 }, { x: 39.4, y: 36.4, k: "buzz" }, { x: 36.7, y: 48.8 }, { x: 31.5, y: 66.6, k: "moths" }, { x: 58.1, y: 17.6 },
-    { x: 59.6, y: 39.5 }, { x: 58.1, y: 55.8, k: "moths" }, { x: 69.4, y: 3.1 }, { x: 36.6, y: 2.4 }, { x: 94.7, y: 11.0 },
-    { x: 95.0, y: 18.8, k: "buzz" }, { x: 94.1, y: 24.9 }, { x: 78.3, y: 69.9 }, { x: 69.4, y: 78.4, k: "buzz" }, { x: 30.5, y: 83.6 },
-    { x: 13.6, y: 74.4 }, { x: 90.3, y: 74.5, k: "sign" }, { x: 84.5, y: 76.7, k: "sign" },
-    { x: 33.4, y: 86.1, k: "beacon" }, { x: 62.7, y: 87.2, k: "beacon" },
-    // the «ГАРАЖ» neon over the gate
-    { x: 48.2, y: 85.6, k: "sign" },
-  ],
-  promzona: [
-    { x: 37.9, y: 8.8, k: "moths" }, { x: 86.2, y: 16.4 }, { x: 89.6, y: 53.1, k: "buzz" }, { x: 8.8, y: 67.8 },
-    // the transformer yard crackles; the factory's chimney smokes
-    { x: 84, y: 58.5, k: "spark" }, { x: 69.8, y: 9.4, k: "smoke" },
-  ],
+  // the yards were redrawn (2026-11-22): their lamps are to be placed anew on the new grounds
 };
 
 /** the yard can be raided (its art is in; the others are «Закрыто» for now) */

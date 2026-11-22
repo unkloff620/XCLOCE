@@ -29,64 +29,136 @@ export const RAID_LOGO_AT: Record<string, [number, number]> = {
     8.0,
     14.3
   ],
-  "garages/b-barrack": [
-    13.7,
-    25.5
-  ],
   "garages/b-boiler": [
-    10.7,
-    47.5
+    7.9,
+    6.5
   ],
-  "garages/b-garage": [
-    10.7,
-    21.4
+  "garages/b-booth": [
+    8.4,
+    15.5
   ],
-  "garages/b-khrush": [
-    10.8,
-    14.1
+  "garages/b-garage1": [
+    7.9,
+    11.4
   ],
-  "garages/b-kiosk": [
-    10.5,
-    18.4
+  "garages/b-garage2": [
+    8.4,
+    9.6
   ],
   "garages/b-main": [
-    12.1,
-    21.5
+    8.2,
+    20.5
   ],
-  "garages/b-shop": [
+  "garages/b-office": [
+    7.9,
+    34.5
+  ],
+  "garages/b-shed": [
+    8.7,
+    35.4
+  ],
+  "garages/b-tower1": [
+    7.9,
+    25.4
+  ],
+  "garages/b-tower2": [
+    8.6,
+    26.9
+  ],
+  "garages/b-warehouse": [
+    8.4,
+    13.0
+  ],
+  "promzona/b-boiler": [
     8.3,
-    17.8
+    9.6
   ],
-  "promzona/b-checkpoint": [
-    10.1,
-    26.2
+  "promzona/b-main": [
+    8.2,
+    35.5
   ],
-  "promzona/b-factory": [
-    8.9,
-    32.2
+  "promzona/b-office": [
+    8.3,
+    14.7
   ],
-  "promzona/b-office1": [
-    8.8,
-    36.2
+  "promzona/b-tower": [
+    8.5,
+    30.3
   ],
-  "promzona/b-office2": [
-    16.7,
-    30.1
+  "promzona/b-warehouse1": [
+    8.3,
+    17.3
   ],
-  "promzona/b-pipes1": [
-    9.5,
-    34.4
+  "promzona/b-warehouse2": [
+    8.3,
+    14.3
   ],
-  "promzona/b-pipes2": [
-    9.4,
-    7.8
+  "promzona/b-warehouse3": [
+    8.3,
+    7.5
   ],
-  "promzona/b-tanks": [
-    9.5,
-    41.3
+  "promzona/b-warehouse4": [
+    8.3,
+    34.6
   ],
-  "promzona/b-warehouse": [
-    9.5,
-    46.3
+  "promzona/b-workshop1": [
+    8.3,
+    50.4
+  ],
+  "promzona/b-workshop2": [
+    8.2,
+    12.7
+  ],
+  "rynok/b-kiosk1": [
+    8.4,
+    13.8
+  ],
+  "rynok/b-kiosk2": [
+    8.5,
+    19.6
+  ],
+  "rynok/b-main": [
+    8.2,
+    35.1
+  ],
+  "rynok/b-pavilion1": [
+    8.3,
+    39.1
+  ],
+  "rynok/b-pavilion2": [
+    7.9,
+    12.1
+  ],
+  "rynok/b-row1": [
+    8.3,
+    13.0
+  ],
+  "rynok/b-row2": [
+    7.9,
+    34.0
+  ],
+  "rynok/b-row3": [
+    8.3,
+    30.6
+  ],
+  "rynok/b-row4": [
+    8.4,
+    32.9
+  ],
+  "rynok/b-row5": [
+    8.4,
+    32.9
+  ],
+  "rynok/b-row6": [
+    8.4,
+    32.9
+  ],
+  "rynok/b-tent": [
+    8.4,
+    23.6
+  ],
+  "rynok/b-tower": [
+    8.4,
+    40.0
   ]
 };

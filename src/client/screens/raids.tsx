@@ -120,12 +120,14 @@ export function RaidsScreen() {
           <img key={k} className={`rd-under u${k}`} src={`${A}/card.webp?v=2`} alt="" draggable={false} aria-hidden="true" />
         ))}
         <div className={`rd-card ${anim}`} key={y.id} style={moving}>
+          {/* the yard's «План» lies under the card, its tab sticking out over the top */}
+          {y.art && <YardPlan art={y.art} />}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="rd-card-paper" src={`${A}/card.webp?v=2`} alt="" draggable={false} />
           <div className="rd-photo">
             {/* the yard's own photo: its ground with its buildings (build-yard-art.py), or the old common one */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className={y.art ? "own" : ""} src={y.art ? `${A}/${y.art}/photo.webp` : `${A}/yard-bg.webp`} alt="" draggable={false} />
+            <img className={y.art ? "own" : ""} src={y.art ? `${A}/${y.art}/photo.webp?v=${ART_V}` : `${A}/yard-bg.webp`} alt="" draggable={false} />
             <span className="rd-wins num">{yv?.taken ? "Двор наш" : `Захвачено ${taken}/${y.buildings.length}`}</span>
             {!!yv?.times && <span className="rd-times num">захвачен ×{yv.times}</span>}
             {!open && yardReady(y) && <span className="rd-lock"><Icon name="lock" size={34} /></span>}
@@ -155,6 +157,34 @@ export function RaidsScreen() {
         </div>
         <button type="button" className="rd-arrow" data-nosfx onClick={() => go(1)} aria-label="Следующий двор">›</button>
       </div>
+    </div>
+  );
+}
+
+/**
+ * The yard's plan sheet (the artist's plan.webp): it lies under the card with its tab «План» sticking out over the top.
+ * A tap on the tab: the sheet slides up from behind the card and comes down in front of it; the tab again, or a swipe
+ * up on the sheet — it slides up and goes back under the card.
+ */
+/** the artist's yards redrawn (2026-11-22): a new version of their pictures past the caches */
+const ART_V = 2;
+function YardPlan({ art }: { art: string }) {
+  const [st, setSt] = useState<"under" | "opening" | "open" | "closing">("under");
+  const y0 = useRef<number | null>(null);
+  const toggle = () => {
+    haptic.tap();
+    setSt((s) => (s === "under" || s === "closing" ? "opening" : "closing"));
+  };
+  const close = () => setSt((s) => (s === "open" || s === "opening" ? "closing" : s));
+  return (
+    <div className={`rd-plan ${st}`}
+      onAnimationEnd={() => setSt((s) => (s === "opening" ? "open" : s === "closing" ? "under" : s))}
+      onTouchStart={(e) => { if (st === "open") { e.stopPropagation(); y0.current = e.touches[0].clientY; } }}
+      onTouchMove={(e) => { if (st === "open") e.stopPropagation(); }}
+      onTouchEnd={(e) => { if (st !== "open") return; e.stopPropagation(); const d = y0.current == null ? 0 : e.changedTouches[0].clientY - y0.current; y0.current = null; if (d < -40) { haptic.tap(); close(); } }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={`${A}/${art}/plan.webp?v=${ART_V}`} alt="План двора" draggable={false} />
+      <button type="button" className="rd-plan-tab" onClick={toggle} aria-label="План" />
     </div>
   );
 }
@@ -360,7 +390,7 @@ const logoAt = (art: string | undefined, b: RaidBuilding) => {
 /** a building on the yard's ground; the one to attack now glows, a taken one carries the clan's flag */
 function Building({ b, art, target, taken, yard, clan, prog }: { b: RaidBuilding; art?: string; target: boolean; taken: boolean; yard: string; clan: RaidsView["clan"]; prog?: { wins: number; need: number } }) {
   const router = useRouter();
-  const pic = `${A}/${art ? `${art}/` : ""}b-${b.pic ?? b.kind}.webp`;
+  const pic = `${A}/${art ? `${art}/` : ""}b-${b.pic ?? b.kind}.webp?v=${ART_V}`;
   return (
     <button type="button" className={`rd-bld k-${b.kind} ${target ? "target" : ""} ${taken ? "taken" : ""}`} style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%`, zIndex: Math.round(b.y * 10), ["--pic" as string]: `url(${pic})` }}
       onClick={() => { haptic.tap(); if (target) router.push(`/clans/raids/${yard}/${b.id}`); }} aria-label={BUILDING_NAMES[b.kind]}>
@@ -479,7 +509,7 @@ export function RaidYardScreen({ id }: { id: string }) {
         <div className="rd-scene" style={{ aspectRatio: `${GROUND_W} / ${y.art ? GROUND_H : groundH(y.n)}`, ["--gh" as string]: y.art ? 1 : groundH(y.n) / GROUND_H } as React.CSSProperties}>
           <YardClouds />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="rd-map-bg" src={`${A}/${y.art ? `${y.art}/ground` : y.n > 1 ? `yard-ground-${y.n}` : "yard-ground2"}.webp`} alt="" draggable={false} />
+          <img className="rd-map-bg" src={`${A}/${y.art ? `${y.art}/ground` : y.n > 1 ? `yard-ground-${y.n}` : "yard-ground2"}.webp?v=${ART_V}`} alt="" draggable={false} />
           {/* the main one first in the markup: it stands behind (higher on the picture); the artist's yards have their
               own trees drawn in */}
           {!y.art && <YardLife n={y.n} />}
@@ -504,10 +534,11 @@ const GOPNIK = { id: "gopnik", name: "Гопник" }, LAREK = { id: "larek", na
 const RAID_DEFENDERS: Record<BuildingKind, { id: string; name: string }[]> = {
   garage: [GOPNIK], barrack: [GOPNIK], khrush: [GOPNIK], shop: [GOPNIK], kiosk: [LAREK], boiler: [LAREK], main: [GOPNIK, LAREK],
   checkpoint: [LAREK], tanks: [LAREK], pipes: [LAREK], office: [GOPNIK], warehouse: [GOPNIK],
+  shed: [GOPNIK], tower: [LAREK], booth: [LAREK], workshop: [GOPNIK], tent: [LAREK], row: [LAREK], pavilion: [GOPNIK],
 };
 const defendersOf = (kind: BuildingKind) => RAID_DEFENDERS[kind] ?? [GOPNIK];
 /** the fight's room: Ларёчник fights inside his kiosk, the main building is the gang's hall, Гопник — in the basement */
-const arenaOf = (kind: BuildingKind) => (kind === "main" ? "arena-main" : kind === "kiosk" || kind === "boiler" || kind === "checkpoint" || kind === "tanks" || kind === "pipes" ? "arena-kiosk" : "arena-garage2");
+const arenaOf = (kind: BuildingKind) => (kind === "main" ? "arena-main" : ["kiosk", "boiler", "checkpoint", "tanks", "pipes", "tower", "booth", "tent", "row"].includes(kind) ? "arena-kiosk" : "arena-garage2");
 /** the defenders' rigs: one in the middle, or two side by side (the main building) */
 function Defenders({ kind, hpShare, outfit }: { kind: BuildingKind; hpShare?: number; outfit?: string }) {
   const ds = defendersOf(kind);
