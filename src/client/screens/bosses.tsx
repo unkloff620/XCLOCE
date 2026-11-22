@@ -25,7 +25,7 @@ import { MEDAL_TIERS } from "../../content/medals.ts";
 import { BOSS_KILL_TARGETS } from "../../content/achievements.ts";
 
 export interface BossRow {
-  id: string; unlocked: boolean; /** «Связка ключей» opens him: no passes spent */ ring?: boolean; keysHave: number; keysNeed: number; myKeys: number; hpMax: number;
+  id: string; unlocked: boolean; /** his location to clear first (null — open) */ road?: { loc: string; name: string; times: number; done: number } | null; /** «Связка ключей» opens him: no passes spent */ ring?: boolean; keysHave: number; keysNeed: number; myKeys: number; hpMax: number;
   fightsToday: number; fightsPerDay: number; myDamage: number; myWins: number; mySoloWins?: number; fightingNow: number; totalWins: number;
   /** my medals of this boss by kind (content/medals.ts) */
   medals?: { bronze: number; silver: number; gold: number };
@@ -130,7 +130,8 @@ export function BossesScreen() {
           // until the list has loaded nothing is locked or grey (a slow or failed request on the phone used to grey every boss)
           const locked = row ? !row.unlocked : false;
           // grey only for a boss never touched: no passes for him yet and never fought; with some passes he stays in colour
-          const grey = !!row && locked && row.keysHave <= 0 && row.myDamage <= 0 && row.myWins <= 0;
+          const roadLeft = !!row?.road && row.road.done < row.road.times;
+          const grey = !!row && locked && (roadLeft || (row.keysHave <= 0 && row.myDamage <= 0 && row.myWins <= 0));
           const hpMax = mine ? mine.hpMax : row?.hpMax ?? b.hp;
           const hp = mine ? mine.hp : hpMax;
           const dazed = !!mine && hp / Math.max(1, hpMax) < 0.5;
@@ -155,7 +156,7 @@ export function BossesScreen() {
                   <div className="col" style={{ gap: 1, minWidth: 0 }}>
                     <b className="bcard-name display ellipsis">{b.name}</b>
                     {/* who he is is not told on the card (the user 2026-11-22): only what is needed to open him */}
-                    {(grey || locked) && <span className="bcard-title ellipsis">{grey ? `Откроется пропусками «${prev?.name}»` : `Нужны пропуски «${prev?.name}»`}</span>}
+                    {(grey || locked) && <span className="bcard-title ellipsis">{roadLeft && row?.road ? `Пройди «${row.road.name}»${row.road.times > 1 ? ` ${row.road.done}/${row.road.times}` : ""}` : grey ? `Откроется пропусками «${prev?.name}»` : `Нужны пропуски «${prev?.name}»`}</span>}
                   </div>
                   {mine ? (
                     <span className="bcard-pill live"><i className="live-dot" />{clock(mine.endsAt - now)}</span>
@@ -168,7 +169,11 @@ export function BossesScreen() {
                   <GainLine r={{ ...b.reward, items: [{ id: `key-${b.id}`, qty: 1 }, ...(b.reward.items ?? [])] }} size={16} side extra={state?.heist?.on ? <HeistBoxChip size={16} /> : null} />
                 </div>
                 <div className="bcard-foot">
-                  {locked ? (
+                  {locked && roadLeft && row?.road ? (
+                    <span className="bcard-meta stack" title="Сначала пройди локацию">
+                      <span className="row" style={{ gap: 4 }}><Icon name="lock" size={16} /> <b className="num">{row.road.done}/{row.road.times}</b></span>
+                    </span>
+                  ) : locked ? (
                     <span className="bcard-meta stack" title="Пропуски для входа к боссу">
                       <span className="row" style={{ gap: 4 }}>{prev && <ItemArt id={`key-${prev.id}`} size={22} />} {row?.keysHave ?? 0}/{row?.keysNeed ?? 3}</span>
                       {(row?.keysHave ?? 0) < (row?.keysNeed ?? 3) && <b className="bcard-nokeys">Нет ключей</b>}

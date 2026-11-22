@@ -4,7 +4,8 @@ import { zarubTick } from "./zarub.ts";
 import { shodBoostMult, shodTick } from "./shodnyak.ts";
 import { GameError, type Queryable } from "../db.ts";
 import { addItem, gain, grantReward, idempotent, itemQty, ledger, moscowDay, nextMoscowMidnight, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
-import { BLAT_THING_CHANCE, BOTH_DROP_CHANCE, BOSSES, EVENT_FIGHTS, EXTRA_KEY_CHANCE, OPEN_BOSSES, bossById, bossOpen, KEY_RING, keyId, keyRingFits, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
+import { LOCATIONS } from "../../content/locations.ts";
+import { BOSS_ROAD, BLAT_THING_CHANCE, BOTH_DROP_CHANCE, BOSSES, EVENT_FIGHTS, EXTRA_KEY_CHANCE, OPEN_BOSSES, bossById, bossOpen, KEY_RING, keyId, keyRingFits, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
 import { BAT, WEAPONS, itemById, rushPrice, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
 import { boostReward, mergeRewards, scaleReward, type Reward } from "../../content/rewards.ts";
@@ -128,9 +129,24 @@ export function fightHp(f: Pick<FightRow, "hp_max" | "start_total" | "end_total"
   return Math.max(0, f.hp_max - ((f.end_total ?? bossTotal) - f.start_total));
 }
 
-/** Boss N+1 opens after KEYS keys of boss N. */
+/** the day clears of every location (location_claims; the night ones are «night:<id>») */
+async function locClears(q: Queryable, pid: number): Promise<Map<string, number>> {
+  const rows = await q.query<{ location_id: string; n: number }>("SELECT location_id, COUNT(*)::int AS n FROM location_claims WHERE player_id=$1 GROUP BY location_id", [pid]);
+  return new Map(rows.map((r) => [r.location_id, Number(r.n)]));
+}
+/** the road to the boss (BOSS_ROAD): his location cleared so many times (none set → open) */
+export function roadOf(boss: BossDef, clears: Map<string, number>) {
+  const r = BOSS_ROAD[boss.id];
+  if (!r || boss.event || boss.order === 1) return null;
+  const loc = LOCATIONS.find((l) => l.id === r.loc);
+  return { loc: r.loc, name: loc?.name ?? r.loc, times: r.times, done: Math.min(r.times, clears.get(r.loc) ?? 0) };
+}
+const roadOpen = (road: ReturnType<typeof roadOf>) => !road || road.done >= road.times;
+
+/** Boss N+1 opens after his road (the location) and KEYS keys of boss N. */
 export async function isUnlocked(q: Queryable, pid: number, boss: BossDef, defaultKeys: number): Promise<boolean> {
   if (boss.order === 1 || boss.event) return true;
+  if (!roadOpen(roadOf(boss, await locClears(q, pid)))) return false;
   if (await ringOpens(q, pid, boss)) return true;
   const prev = prevBoss(boss);
   if (!prev) return false;
@@ -173,6 +189,10 @@ export async function startFight(ctx: Ctx, bossId: string, solo = false, modeId:
   // «Ходки»: not while a fight for a building runs
   const [raid] = await ctx.q.query("SELECT 1 FROM raid_fights WHERE player_id=$1 AND status='active' AND (ends_at IS NULL OR ends_at > $2)", [ctx.pid, new Date(ctx.now)]);
   if (raid) throw new GameError("raid_running", "Сначала закончи бой за здание в захвате");
+  const road = roadOf(def, await locClears(ctx.q, ctx.pid));
+  if (road && road.done < road.times) {
+    throw new GameError("boss_road", road.times === 1 ? `Сначала пройди локацию «${road.name}»` : `Сначала пройди локацию «${road.name}» ${road.times} раза (${road.done}/${road.times})`);
+  }
   if (!(await isUnlocked(ctx.q, ctx.pid, def, ctx.cfg.fight.keysToUnlock))) {
     const n = keysNeeded(def, ctx.cfg.fight.keysToUnlock);
     throw new GameError("boss_locked", n === 1 ? "Нужен пропуск предыдущего босса" : `Нужно ${n} пропуска предыдущего босса`);
@@ -649,6 +669,7 @@ export async function bossList(q: Queryable, pid: number, cfg: Ctx["cfg"], now =
   const keys = await q.query<{ item_id: string; qty: number }>("SELECT item_id, qty FROM inventory WHERE player_id=$1 AND item_id LIKE 'key-%'", [pid]);
   const keyMap = new Map(keys.map((k) => [k.item_id, k.qty]));
   const ring = (await itemQty(q, pid, KEY_RING)) > 0;
+  const clears = await locClears(q, pid);
   const today = await q.query<{ boss_id: string; n: number }>("SELECT boss_id, COUNT(*)::int AS n FROM fights WHERE player_id=$1 AND day=$2 AND status <> 'lost' GROUP BY boss_id", [pid, day]);
   const todayMap = new Map(today.map((t) => [t.boss_id, t.n]));
   const mine = await q.query<{ boss_id: string; damage: number; wins: number }>("SELECT boss_id, damage, wins FROM boss_damage WHERE player_id=$1", [pid]);
@@ -677,9 +698,12 @@ export async function bossList(q: Queryable, pid: number, cfg: Ctx["cfg"], now =
   function rowOf(b: BossDef) {
       const prev = b.event ? undefined : BOSSES.find((x) => x.order === b.order - 1);
       const keysHave = prev ? keyMap.get(keyId(prev.id)) ?? 0 : 0;
+      const road = roadOf(b, clears);
       return {
         id: b.id,
-        unlocked: b.order === 1 || !!b.event || keysHave >= keysNeeded(b, cfg.fight.keysToUnlock) || myFight?.boss_id === b.id || (ring && keyRingFits(b)),
+        unlocked: b.order === 1 || !!b.event || myFight?.boss_id === b.id || (roadOpen(road) && (keysHave >= keysNeeded(b, cfg.fight.keysToUnlock) || (ring && keyRingFits(b)))),
+        /** the road to him: his location cleared so many times (null — none) */
+        road,
         /** «Связка ключей» opens him: no passes needed, none spent */
         ring: ring && keyRingFits(b),
         keysHave,

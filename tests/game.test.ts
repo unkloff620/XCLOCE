@@ -1,7 +1,7 @@
 import { DEALER_TALKS, talkOfDay } from "../src/content/dealer-talk.ts";
 import { describe, it, expect, beforeEach } from "vitest";
 import type { Db } from "../src/server/db.ts";
-import { achGot, act, always, freshDb, give, H, M, newPlayer, qty, setMoney, wallet } from "./helpers.ts";
+import { achGot, act, always, freshDb, give, H, M, newPlayer, openRoads, qty, setMoney, wallet } from "./helpers.ts";
 import { energyNow, nextMoscowMidnight } from "../src/server/core.ts";
 import { resetConfigCache } from "../src/server/config.ts";
 import { fightView } from "../src/server/systems/combat.ts";
@@ -317,6 +317,7 @@ describe("boss fights: personal fights, shared damage", () => {
 
   it("Фокус and Солнце open with a single key", async () => {
     const p = await newPlayer(db);
+    await openRoads(db, p);
     await expect(act(db, p, "fight_start", { boss: "fokus" }, T0)).rejects.toMatchObject({ code: "boss_locked" });
     await give(db, p, "key-utilizator", 1);
     const r = await act(db, p, "fight_start", { boss: "fokus" }, T0);
@@ -355,8 +356,22 @@ describe("boss fights: personal fights, shared damage", () => {
     expect((await act(db, r, "fight_start", { boss: "mugo" }, T0)).state.fight?.bossId).toBe("mugo");
   });
 
+  it("the road: from the second boss on, his location must be cleared (once for the weak, 2–3 times for the strong)", async () => {
+    const p = await newPlayer(db);
+    await db.query("INSERT INTO inventory (player_id, item_id, qty) VALUES ($1,'key-datsik',5), ($1,'key-mugo',5)", [p]);
+    await expect(act(db, p, "fight_start", { boss: "kedr" }, T0)).rejects.toMatchObject({ code: "boss_road" });
+    await db.query("INSERT INTO location_claims (player_id, location_id) VALUES ($1,'openspace'), ($1,'night:serverroom'), ($1,'serverroom')", [p]);
+    expect((await act(db, p, "fight_start", { boss: "kedr" }, T0)).state.fight?.bossId).toBe("kedr");
+    await act(db, p, "fight_flee", {}, T0);
+    // Гаркуша: «Серверная» twice (a night clear does not count)
+    await expect(act(db, p, "fight_start", { boss: "garkusha" }, T0)).rejects.toMatchObject({ code: "boss_road" });
+    await db.query("INSERT INTO location_claims (player_id, location_id) VALUES ($1,'serverroom')", [p]);
+    expect((await act(db, p, "fight_start", { boss: "garkusha" }, T0)).state.fight?.bossId).toBe("garkusha");
+  });
+
   it("3 keys of a boss open the next boss", async () => {
     const p = await newPlayer(db);
+    await openRoads(db, p);
     await expect(act(db, p, "fight_start", { boss: "kedr" }, T0)).rejects.toMatchObject({ code: "boss_locked" });
     await give(db, p, "key-datsik", 2);
     await expect(act(db, p, "fight_start", { boss: "kedr" }, T0)).rejects.toMatchObject({ code: "boss_locked" });

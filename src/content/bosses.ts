@@ -281,6 +281,26 @@ export const BLAT_THING_CHANCE = 0.7;
 /** a «Блатной» win gives the boss's thing or his room, not both — both at once only with this luck */
 export const BOTH_DROP_CHANCE = 0.05;
 
+/**
+ * The road to a boss (the user 2026-11-22): from the second boss on, a boss is open only after his location is cleared
+ * (all five tasks, the day road) so many times — the weak ones once, the stronger two or three times. Then his passes
+ * (the previous boss's) let you in, as before. The first boss is always open; the event bosses need no road.
+ */
+export const BOSS_ROAD: Record<string, { loc: string; times: number }> = {
+  kedr: { loc: "openspace", times: 1 },
+  mugo: { loc: "market", times: 1 },
+  garkusha: { loc: "serverroom", times: 2 },
+  bebyakyan: { loc: "basement", times: 2 },
+  babafey: { loc: "board", times: 2 },
+  vodovoz: { loc: "accounting", times: 2 },
+  knyaz: { loc: "hr", times: 3 },
+  vadim: { loc: "party", times: 3 },
+  botsman: { loc: "offshore", times: 3 },
+  utilizator: { loc: "yacht", times: 3 },
+  fokus: { loc: "moonbase", times: 3 },
+  solntse: { loc: "mars", times: 3 },
+};
+
 /** How many keys of the previous boss open this one. */
 export function keysNeeded(b: BossDef, defaultKeys: number): number {
   return b.keysToUnlock ?? defaultKeys;

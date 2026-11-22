@@ -24,7 +24,16 @@ export async function qty(db: Db, pid: number, item: string): Promise<number> {
 }
 export async function give(db: Db, pid: number, item: string, n: number) {
   await db.query("INSERT INTO inventory (player_id, item_id, qty) VALUES ($1,$2,$3) ON CONFLICT (player_id, item_id) DO UPDATE SET qty = EXCLUDED.qty", [pid, item, n]);
+  // the boss tests: passes (or the key ring) given → the roads to the bosses are walked too (BOSS_ROAD)
+  if (item.startsWith("key-") || item === "keys-bundle") await openRoads(db, pid);
 }
+/** every boss's road walked: each location cleared three times */
+export async function openRoads(db: Db, pid: number) {
+  const [{ n }] = await db.query<{ n: number }>("SELECT COUNT(*)::int AS n FROM location_claims WHERE player_id=$1", [pid]);
+  if (Number(n) > 0) return;
+  await db.query("INSERT INTO location_claims (player_id, location_id) SELECT $1, l FROM unnest($2::text[]) l, generate_series(1,3)", [pid, ROAD_LOCS]);
+}
+const ROAD_LOCS = ["openspace", "market", "serverroom", "basement", "board", "accounting", "hr", "party", "offshore", "yacht", "moonbase", "mars"];
 export async function setMoney(db: Db, pid: number, c: string, v: number) {
   await db.query("UPDATE wallets SET amount=$3 WHERE player_id=$1 AND currency=$2", [pid, c, v]);
 }

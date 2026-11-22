@@ -497,7 +497,8 @@ export function BossScreen({ id }: { id: string }) {
   // already fought → keeps its colour behind the door, grey only for a never opened boss
   const grey = locked && !(row.myDamage > 0 || row.myWins > 0);
   const prev = boss.order > 1 ? BOSSES.find((x) => x.order === boss.order - 1) : null;
-  const blocked = locked ? `Нужно пропусков «${prev?.name}»: ${row!.keysNeed}. У тебя ${row!.keysHave}` : otherFight ? `Сначала закончи бой с боссом ${bossById(otherFight.bossId)?.name}` : limitLeft <= 0 ? "Лимит побед на сегодня — новые после полуночи по Москве" : null;
+  const roadLeft = !!row?.road && row.road.done < row.road.times;
+  const blocked = locked && roadLeft && row?.road ? `Сначала пройди локацию «${row.road.name}»${row.road.times > 1 ? ` ${row.road.times} раза — пройдено ${row.road.done}` : ""}` : locked ? `Нужно пропусков «${prev?.name}»: ${row!.keysNeed}. У тебя ${row!.keysHave}` : otherFight ? `Сначала закончи бой с боссом ${bossById(otherFight.bossId)?.name}` : limitLeft <= 0 ? "Лимит побед на сегодня — новые после полуночи по Москве" : null;
   const openDoor = async (solo: boolean) => {
     if (door !== "closed" || busy === "fight_start") return;
     if (blocked) {
@@ -547,7 +548,12 @@ export function BossScreen({ id }: { id: string }) {
         <img className="door-room" src={`/assets/door/room${MODE_ART[mode]}.webp`} alt="" draggable={false} />
         {/* the pass that opens this boss, on the left wall */}
         <div className={`door-pass ${locked ? "short" : ""}`}>
-          {prev && row?.ring ? (
+          {roadLeft && row?.road ? (
+            <>
+              <Icon name="lock" size={28} />
+              <b className="num">{row.road.done}/{row.road.times}</b>
+            </>
+          ) : prev && row?.ring ? (
             <>
               <ItemArt id="keys-bundle" size={34} />
               <span className="tiny">связка</span>
