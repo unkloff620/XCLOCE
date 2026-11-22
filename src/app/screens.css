@@ -756,6 +756,10 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 /* not open yet: the whole card goes grey (the boss and his name are still visible) */
 .bcard.locked { opacity: 0.85; filter: grayscale(1); }
 .bcard.locked .bcard-art { filter: brightness(0.7); }
+/* a boss closed by the road: «Идти» to his location and what to clear */
+.bcard-road { flex-direction: column; align-items: center; gap: 4px; }
+.bcard-road .btn { min-width: 110px; }
+.bcard-road-what { font-size: 12px; color: var(--mute-c); text-align: center; }
 .bcard.final:not(.locked) { animation: bcard-boss 3.2s ease-in-out infinite; }
 @keyframes bcard-boss { 50% { box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45), 0 0 30px color-mix(in srgb, var(--acc) 45%, transparent); } }
 

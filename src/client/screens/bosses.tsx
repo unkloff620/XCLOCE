@@ -156,7 +156,7 @@ export function BossesScreen() {
                   <div className="col" style={{ gap: 1, minWidth: 0 }}>
                     <b className="bcard-name display ellipsis">{b.name}</b>
                     {/* who he is is not told on the card (the user 2026-11-22): only what is needed to open him */}
-                    {(grey || locked) && <span className="bcard-title ellipsis">{roadLeft && row?.road ? `Пройди «${row.road.name}»${row.road.times > 1 ? ` ${row.road.done}/${row.road.times}` : ""}` : grey ? `Откроется пропусками «${prev?.name}»` : `Нужны пропуски «${prev?.name}»`}</span>}
+                    {(grey || locked) && !roadLeft && <span className="bcard-title ellipsis">{grey ? `Откроется пропусками «${prev?.name}»` : `Нужны пропуски «${prev?.name}»`}</span>}
                   </div>
                   {mine ? (
                     <span className="bcard-pill live"><i className="live-dot" />{clock(mine.endsAt - now)}</span>
@@ -164,10 +164,19 @@ export function BossesScreen() {
                     <span className="bcard-pill" title="Сейчас бьют">⚔ {row.fightingNow}</span>
                   ) : null}
                 </div>
+                {roadLeft && row?.road ? (
+                  // closed by the road: «Идти» to his location, what to clear and how many times more
+                  <div className="bcard-reward bcard-road">
+                    <span className="btn sm green" role="link" tabIndex={0}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/locations/${row.road!.loc}`); }}>Идти</span>
+                    <span className="bcard-road-what">{row.road.name} — дневные ({row.road.times - row.road.done})</span>
+                  </div>
+                ) : (
                 <div className="bcard-reward">
                   <span className="bcard-label">{b.final ? "Финал:" : "Награда:"}</span>
                   <GainLine r={{ ...b.reward, items: [{ id: `key-${b.id}`, qty: 1 }, ...(b.reward.items ?? [])] }} size={16} side extra={state?.heist?.on ? <HeistBoxChip size={16} /> : null} />
                 </div>
+                )}
                 <div className="bcard-foot">
                   {locked && roadLeft && row?.road ? (
                     <span className="bcard-meta stack" title="Сначала пройди локацию">
