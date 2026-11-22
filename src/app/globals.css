@@ -36,6 +36,8 @@
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; padding: 0; }
+/* no fake bold: a weight the font has not got falls to the nearest it has (the text: medium; the titles: semibold) */
+html { font-synthesis: none; }
 body {
   background: var(--tex), var(--bg);
   color: var(--ink);

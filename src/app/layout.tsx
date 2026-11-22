@@ -1,11 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
-import { Caveat, Rubik, Russo_One } from "next/font/google";
+import { Caveat, Rubik } from "next/font/google";
 import "./globals.css";
 import "./screens.css";
 
-const body = Rubik({ subsets: ["latin", "cyrillic"], weight: ["400", "500", "700", "800"], variable: "--font-body", display: "swap" });
-const display = Russo_One({ subsets: ["latin", "cyrillic"], weight: "400", variable: "--font-display", display: "swap" });
+// one font everywhere (the user 2026-11-22: as on the rewards): the text — Rubik regular and medium only (whatever asks
+// for bold gets medium, globals.css font-synthesis: none); the titles and the buttons (--font-display) — Rubik semibold
+const body = Rubik({ subsets: ["latin", "cyrillic"], weight: ["400", "500"], variable: "--font-body", display: "swap" });
+const display = Rubik({ subsets: ["latin", "cyrillic"], weight: "600", variable: "--font-display", display: "swap" });
 // handwriting: what is written by pen on the newspaper of a new level (client/levelup.tsx)
 const hand = Caveat({ subsets: ["latin", "cyrillic"], weight: ["600", "700"], variable: "--font-hand", display: "swap" });
 
