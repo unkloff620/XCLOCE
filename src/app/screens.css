@@ -7639,17 +7639,18 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
   25% { transform: translate(530px, 1235px); opacity: 0.45; } 45% { transform: translate(300px, 1215px); opacity: 0.35; }
   50%, 55% { opacity: 0; transform: translate(260px, 1215px); } 57% { transform: translate(760px, 1215px); opacity: 0.2; }
   76% { transform: translate(530px, 1235px); opacity: 0.25; } 96% { transform: translate(300px, 1215px); opacity: 0.2; } 100% { transform: translate(260px, 1215px); opacity: 0; } }
-/* the shadows of the things: flipped down from the foot, skewed away from the light (the sun on the left → to the right),
-   long and faint low, short and dark high; the moon's are paler */
+/* the shadows of the things: the thing's own shape, black and see-through, squashed flat onto the floor from its base
+   (so it starts right under the thing) and slid away from the light — long to the right in the morning, short under it
+   at noon, long to the left in the evening; the moon's are paler */
 .fkr-shadow { animation-name: fkr-shadow; }
 @keyframes fkr-shadow {
-  0% { transform: scaleY(-0.5) skewX(-50deg); opacity: 0; }
-  5% { transform: scaleY(-0.55) skewX(-52deg); opacity: 0.42; } 15% { transform: scaleY(-0.38) skewX(-30deg); opacity: 0.5; }
-  25% { transform: scaleY(-0.26) skewX(0deg); opacity: 0.55; } 35% { transform: scaleY(-0.38) skewX(30deg); opacity: 0.5; }
-  45% { transform: scaleY(-0.55) skewX(52deg); opacity: 0.42; } 51% { transform: scaleY(-0.6) skewX(56deg); opacity: 0; }
-  54% { transform: scaleY(-0.5) skewX(-50deg); opacity: 0; } 58% { transform: scaleY(-0.5) skewX(-48deg); opacity: 0.28; }
-  76% { transform: scaleY(-0.3) skewX(0deg); opacity: 0.34; } 94% { transform: scaleY(-0.5) skewX(48deg); opacity: 0.28; }
-  100% { transform: scaleY(-0.55) skewX(52deg); opacity: 0; } }
+  0% { transform: scaleY(0.38) skewX(-60deg); opacity: 0; }
+  5% { transform: scaleY(0.38) skewX(-60deg); opacity: 0.55; } 15% { transform: scaleY(0.34) skewX(-40deg); opacity: 0.6; }
+  25% { transform: scaleY(0.28) skewX(0deg); opacity: 0.65; } 35% { transform: scaleY(0.34) skewX(40deg); opacity: 0.6; }
+  45% { transform: scaleY(0.38) skewX(60deg); opacity: 0.55; } 51% { transform: scaleY(0.4) skewX(64deg); opacity: 0; }
+  54% { transform: scaleY(0.38) skewX(-60deg); opacity: 0; } 58% { transform: scaleY(0.38) skewX(-56deg); opacity: 0.38; }
+  76% { transform: scaleY(0.3) skewX(0deg); opacity: 0.45; } 94% { transform: scaleY(0.38) skewX(56deg); opacity: 0.38; }
+  100% { transform: scaleY(0.38) skewX(60deg); opacity: 0; } }
 /* the things over the chair at home (layer "front"): the night on them by a filter, on the same clock as the tint */
 .fkr-live.fkr-front { animation: fkr-front-night var(--fkr-cycle) linear infinite; }
 @keyframes fkr-front-night { 0% { filter: brightness(0.42) saturate(0.6); } 5%, 45% { filter: none; } 49% { filter: sepia(0.25) saturate(1.2); }

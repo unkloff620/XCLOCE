@@ -252,8 +252,8 @@ function Nav() {
     : state?.raidFight ? `/clans/raids/${state.raidFight.yard}/${state.raidFight.building}` : null;
   return (
     <nav className="nav">
-      {/* the leaders strip sits on top of the menu (not over a boss fight) */}
-      {!/^\/bosses\/[^/]+/.test(path) && <LeadersStrip />}
+      {/* the leaders strip sits on top of the menu — not over a fight: a boss, the event «Пепе», the clans' captures */}
+      {!/^\/(bosses\/[^/]+|event\/pepe|clans\/raids\/(?!bags)[^/]+)/.test(path) && <LeadersStrip />}
       {TABS.map((t) => (
         // a member's Clans tab leads straight to the own clan (no flash of the clan list);
         // a running fight (a boss or a «Ходки» building): the Bosses tab leads straight into it (from the fight a second tap opens the list)
