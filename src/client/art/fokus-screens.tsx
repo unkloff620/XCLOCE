@@ -2,9 +2,8 @@
 /*
  * Фокус's monitors (his room, art/arena-fokus.tsx): code types itself on the big one — tiny characters, the whole screen
  * full, it scrolls up when it reaches the bottom — and the small one runs a terminal (builds, tests, failing deadlines).
- * Both are drawn flat on canvases of their own, then laid onto the screens in perspective (the monitors stand turned a
- * little: each screen is a quad of the room picture, filled in thin vertical strips, each strip its own affine) on one
- * canvas in a foreignObject over the two screens.
+ * Both are SVG text in a flat box laid onto the screen's corners (the monitors stand turned a little) — not a canvas in a
+ * foreignObject, which the phone's WebKit paints once and never updates. The boss card's code (FokusCardCode) is a canvas.
  */
 import { useEffect, useRef } from "react";
 import { frameGate } from "../eco.ts";
@@ -13,9 +12,6 @@ type Pt = readonly [number, number];
 /** the screens' corners in the room's units (1060×1484): top left, top right, bottom right, bottom left */
 const BIG: Pt[] = [[776.5, 576.5], [980.5, 559], [966.5, 713.5], [765.5, 693.5]];
 const SMALL: Pt[] = [[989, 608.5], [1046.5, 600], [1034, 724.5], [981.5, 719.5]];
-/** the foreignObject over both screens (room units) and the canvas's pixels per unit */
-const BOX = { x: 760, y: 553, w: 292, h: 177 };
-const PX = 3;
 
 const CODE = `import { Wallet, Chain, sleep } from "@fokus/core";
 import { pump, dump, hodl } from "./strategy";
@@ -155,94 +151,103 @@ export function codeScreen(w: number, h: number) {
   };
 }
 
-/** the flat terminal: a new line every few tenths of a second */
-function termScreen(w: number, h: number) {
-  const cv = document.createElement("canvas");
-  cv.width = w; cv.height = h;
-  const g = cv.getContext("2d")!;
-  const FS = 10, LH = 12.5;
-  const rows = Math.floor((h - 6) / LH);
-  const lines: [string, string][] = [];
-  let k = 0;
-  return {
-    cv,
-    step() { lines.push(TERM[k++ % TERM.length]); if (lines.length > rows) lines.shift(); },
-    draw(t: number) {
-      g.fillStyle = "#0a0f0c";
-      g.fillRect(0, 0, w, h);
-      g.font = `${FS}px ui-monospace, Menlo, Consolas, monospace`;
-      g.textBaseline = "top";
-      lines.forEach(([s, col], i) => { g.fillStyle = col; g.fillText(s, 4, 3 + i * LH); });
-      if (Math.floor(t * 2) % 2 === 0) { g.fillStyle = "#5fd67a"; g.fillRect(4, 3 + lines.length * LH, 6, FS); }
-      const gr = g.createLinearGradient(0, 0, w, 0);
-      gr.addColorStop(0, "rgba(255,255,255,0.05)"); gr.addColorStop(1, "rgba(0,0,0,0.25)");
-      g.fillStyle = gr; g.fillRect(0, 0, w, h);
-    },
-  };
+/** an affine that lays a flat w×h box onto a screen by its top left, top right and bottom left corners */
+function onto(q: Pt[], w: number, h: number) {
+  const [tl, tr, , bl] = q;
+  return `matrix(${(tr[0] - tl[0]) / w} ${(tr[1] - tl[1]) / w} ${(bl[0] - tl[0]) / h} ${(bl[1] - tl[1]) / h} ${tl[0]} ${tl[1]})`;
 }
+const esc = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-/** a flat picture laid onto a quad (canvas pixels) in thin vertical strips */
-function warp(g: CanvasRenderingContext2D, src: HTMLCanvasElement, q: [number, number][], n = 40) {
-  const [tl, tr, br, bl] = q;
-  const lerp = (a: [number, number], b: [number, number], u: number): [number, number] => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u];
-  g.save();
-  g.beginPath(); g.moveTo(...tl); g.lineTo(...tr); g.lineTo(...br); g.lineTo(...bl); g.closePath(); g.clip();
-  const W = src.width, H = src.height;
-  for (let i = 0; i < n; i++) {
-    const u0 = i / n, u1 = (i + 1) / n;
-    const o = lerp(tl, tr, u0), o1 = lerp(tl, tr, u1), ob = lerp(bl, br, u0);
-    const sx0 = u0 * W, sw = (u1 - u0) * W;
-    const a = (o1[0] - o[0]) / sw, b = (o1[1] - o[1]) / sw, c = (ob[0] - o[0]) / H, d = (ob[1] - o[1]) / H;
-    g.setTransform(a, b, c, d, o[0] - a * sx0, o[1] - b * sx0);
-    g.drawImage(src, sx0, 0, sw + 1, H, sx0, 0, sw + 1, H);
-  }
-  g.restore();
-}
-
+/**
+ * The monitors as SVG text (not a canvas in a foreignObject: the phone's WebKit draws that once and never again): each
+ * screen's lines in a flat box, laid onto the screen's corners by one affine, clipped to the screen; updated in place.
+ */
 export function FokusScreens() {
-  const ref = useRef<HTMLCanvasElement>(null);
+  const big = useRef<SVGGElement>(null), small = useRef<SVGGElement>(null), curB = useRef<SVGRectElement>(null), curS = useRef<SVGRectElement>(null);
+  const BW = 600, BH = 420, SW = 200, SH = 430, FS = 11, LH = 13.5, TFS = 10, TLH = 12.5;
   useEffect(() => {
-    const cv = ref.current;
-    if (!cv) return;
-    const g = cv.getContext("2d");
-    if (!g) return;
-    const still = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const big = codeScreen(600, 420), small = termScreen(200, 430);
-    const toPx = (q: Pt[]) => q.map(([x, y]) => [(x - BOX.x) * PX, (y - BOX.y) * PX] as [number, number]);
-    const qb = toPx(BIG), qs = toPx(SMALL);
-    // a screen full of code from the start, the terminal half full
-    big.step(1400);
-    for (let i = 0; i < 14; i++) small.step();
-    let raf = 0, last = performance.now(), acc = 0, term = 0;
-    const gate = frameGate();
-    const paint = (t: number) => {
-      big.draw(t); small.draw(t);
-      g.setTransform(1, 0, 0, 1, 0, 0);
-      g.clearRect(0, 0, cv.width, cv.height);
-      warp(g, big.cv, qb);
-      warp(g, small.cv, qs, 16);
+    const gb = big.current, gs = small.current;
+    if (!gb || !gs) return;
+    const rows = Math.floor((BH - 8) / LH), trows = Math.floor((SH - 6) / TLH);
+    const lines: string[] = [];
+    let src = 0, typed = 0;
+    const step = (n: number) => {
+      while (n > 0) {
+        const line = CODE[src % CODE.length];
+        if (typed >= line.length) { lines.push(line); src++; typed = 0; if (lines.length > rows - 1) lines.shift(); n--; continue; }
+        const k = Math.min(n, line.length - typed); typed += k; n -= k;
+      }
     };
+    const term: [string, string][] = [];
+    let tk = 0;
+    const tstep = () => { term.push(TERM[tk++ % TERM.length]); if (term.length > trows) term.shift(); };
+    step(1400);
+    for (let i = 0; i < 14; i++) tstep();
+    // monospace: the cursor goes after the typed characters (the width of one character ≈ 0.6 em)
+    const CW = FS * 0.6;
+    const drawBig = () => {
+      const all = [...lines, CODE[src % CODE.length].slice(0, typed)];
+      gb.innerHTML = all.map((ln, i) => {
+        const y = 4 + FS + i * LH;
+        const no = String((src - lines.length + i) % CODE.length + 1).padStart(3, " ");
+        return `<text x="3" y="${y}" fill="#3b4252">${no}</text><text x="28" y="${y}" xml:space="preserve">${colour(ln).map(([t, c]) => `<tspan fill="${c}">${esc(t)}</tspan>`).join("")}</text>`;
+      }).join("");
+      const last = all.length - 1;
+      curB.current?.setAttribute("x", String(28 + all[last].length * CW + 1));
+      curB.current?.setAttribute("y", String(4 + last * LH + 1));
+    };
+    const drawSmall = () => {
+      gs.innerHTML = term.map(([t, c], i) => `<text x="4" y="${3 + TFS + i * TLH}" fill="${c}" xml:space="preserve">${esc(t)}</text>`).join("");
+      curS.current?.setAttribute("y", String(3 + term.length * TLH + 1));
+    };
+    drawBig(); drawSmall();
+    if (typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let raf = 0, last = performance.now(), acc = 0, tt = 0, blink = 0;
+    const gate = frameGate();
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
       if (!gate(now)) return;
       const dt = Math.min(0.1, (now - last) / 1000);
       last = now;
-      // about 70 characters a second; a terminal line every 0.45 s
       acc += dt * 70;
       const n = Math.floor(acc);
-      if (n > 0) { big.step(n); acc -= n; }
-      term += dt;
-      if (term > 0.45) { small.step(); term = 0; }
-      paint(now / 1000);
+      if (n > 0) { step(n); acc -= n; drawBig(); }
+      tt += dt;
+      if (tt > 0.45) { tstep(); tt = 0; drawSmall(); }
+      blink += dt;
+      const on = Math.floor(blink * 2.2) % 2 === 0 ? "1" : "0";
+      curB.current?.setAttribute("opacity", on);
+      curS.current?.setAttribute("opacity", on);
     };
-    if (still) paint(0);
-    else raf = requestAnimationFrame(frame);
+    raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
   }, []);
+  const poly = (q: Pt[]) => q.map((p) => p.join(",")).join(" ");
   return (
-    <foreignObject x={BOX.x} y={BOX.y} width={BOX.w} height={BOX.h} style={{ pointerEvents: "none" }}>
-      <canvas ref={ref} width={BOX.w * PX} height={BOX.h * PX} style={{ width: "100%", height: "100%", display: "block", opacity: 0.94 }} />
-    </foreignObject>
+    <g style={{ pointerEvents: "none" }} fontFamily="ui-monospace, Menlo, Consolas, monospace">
+      <defs>
+        <clipPath id="fks-big"><polygon points={poly(BIG)} /></clipPath>
+        <clipPath id="fks-small"><polygon points={poly(SMALL)} /></clipPath>
+        <linearGradient id="fks-glare" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#fff" stopOpacity="0.07" /><stop offset="0.45" stopColor="#fff" stopOpacity="0" /><stop offset="1" stopColor="#000" stopOpacity="0.18" />
+        </linearGradient>
+      </defs>
+      <g clipPath="url(#fks-big)" opacity={0.94}>
+        <g transform={onto(BIG, BW, BH)}>
+          <rect width={BW} height={BH} fill="#0d1117" />
+          <g ref={big} fontSize={FS} />
+          <rect ref={curB} width={6} height={FS} fill="#c9d1d9" />
+          <rect width={BW} height={BH} fill="url(#fks-glare)" />
+        </g>
+      </g>
+      <g clipPath="url(#fks-small)" opacity={0.94}>
+        <g transform={onto(SMALL, SW, SH)}>
+          <rect width={SW} height={SH} fill="#0a0f0c" />
+          <g ref={small} fontSize={TFS} />
+          <rect ref={curS} x={4} width={6} height={TFS} fill="#5fd67a" />
+        </g>
+      </g>
+    </g>
   );
 }
 
