@@ -6,6 +6,7 @@ import { ART_ASPECT } from "./desk-data.ts";
 import { usedUrl } from "../preload.ts";
 import { KnyazRoom, UtilizatorRoom } from "./arena-bg.tsx";
 import { BOTSMAN_ROOM } from "./arena-botsman-data.ts";
+import { FokusRoom } from "./arena-fokus.tsx";
 import { placedOf, type Look } from "../../content/home.ts";
 
 type ObjId = keyof typeof SCENE_OBJECTS;
@@ -104,6 +105,9 @@ export function HomeScene({ room = "basic", onHero, still, look, worn, pieces = 
       ) : room === "acidyard" && !still ? (
         // «Кислотный двор» is Утилизатор's live fight room (the sky drifts, lightning, the lamp, fog, the rain), scaled the same way
         <g transform={`translate(0 -53) scale(${SCENE.w / 1024})`}><UtilizatorRoom uid="home" /></g>
+      ) : room === "coder" && !still ? (
+        // «Берлога кодера» is Фокус's live fight room, drawn on the scene canvas itself (1060×1484)
+        <FokusRoom uid="home" />
       ) : <image href={`/assets/home/${bg}.webp`} x="0" y="0" width={SCENE.w} height={SCENE.h} preserveAspectRatio="none" />}
       {room === "dojo" && !still && <DojoBag />}
       {lights.length > 0 && (

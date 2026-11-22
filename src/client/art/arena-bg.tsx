@@ -7,6 +7,7 @@
 import { arenaOf } from "../../content/bosses.ts";
 import { KNYAZ_ROOM } from "./arena-knyaz-data.ts";
 import { BOTSMAN_ROOM } from "./arena-botsman-data.ts";
+import { FokusRoom } from "./arena-fokus.tsx";
 
 const K = KNYAZ_ROOM;
 /** the vault door's hinge (its right edge) and the middle of the vault */
@@ -163,6 +164,14 @@ export function UtilizatorFront() {
 }
 
 export function ArenaBg({ bossId, className, focus = "bottom" }: { bossId: string; className?: string; focus?: "bottom" | "middle" }) {
+  // Фокус's room is drawn on the scene canvas (1060×1484), alive (art/arena-fokus.tsx)
+  if (bossId === "fokus") {
+    return (
+      <svg className={`arena-live ${className ?? ""}`} viewBox="0 0 1060 1484" preserveAspectRatio={focus === "bottom" ? "xMidYMax slice" : "xMidYMid slice"} aria-hidden="true">
+        <FokusRoom uid={focus} />
+      </svg>
+    );
+  }
   if (bossId !== "knyaz" && bossId !== "botsman" && bossId !== "utilizator") {
     // eslint-disable-next-line @next/next/no-img-element
     return <img className={className} src={arenaOf(bossId)} alt="" draggable={false} />;

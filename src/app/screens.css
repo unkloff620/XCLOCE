@@ -7574,3 +7574,75 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 @media (prefers-reduced-motion: reduce) { .rig-fokus .fk-lids > g { animation: none; } }
 .rig-fokus { --ta0: 0deg; --ta1: 0deg; --ts: 1; }
 .rig-fokus .fk-temple { transform: rotate(var(--ta1)) scaleX(var(--ts)) rotate(var(--ta0)); }
+
+/* ── Фокус's room (art/arena-fokus.tsx): one clock for everything — 0% the dawn (night → day by 5%), the day to 45%,
+   the dusk to 55%, the night to 100%; the sun crosses the window 1–52%, the moon 52–100% ── */
+.fkr-live { --fkr-cycle: 40s; }
+.fkr-live :is(.fkr-day, .fkr-sun, .fkr-moon, .fkr-stars, .fkr-winglow, .fkr-pool-sun, .fkr-pool-moon, .fkr-fanshadow, .fkr-shadow, .fkr-night-tint, .fkr-dusk-tint, .fkr-lamp) {
+  animation-duration: var(--fkr-cycle); animation-iteration-count: infinite; animation-timing-function: linear; }
+.fkr-day { animation-name: fkr-day; }
+@keyframes fkr-day { 0% { opacity: 0; } 5%, 45% { opacity: 1; } 55%, 100% { opacity: 0; } }
+.fkr-stars { animation-name: fkr-stars; }
+@keyframes fkr-stars { 0% { opacity: 0.8; } 4%, 50% { opacity: 0; } 58%, 96% { opacity: 1; } 100% { opacity: 0.8; } }
+.fkr-stars circle { animation: fkr-twinkle 2.6s ease-in-out infinite; }
+@keyframes fkr-twinkle { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+.fkr-drift { animation: fkr-drift 70s ease-in-out infinite alternate; }
+@keyframes fkr-drift { from { transform: translateX(0); } to { transform: translateX(-280px); } }
+/* the sun: up from the bottom left of the window, over the top, down at the bottom right */
+.fkr-sun { animation-name: fkr-sun; }
+@keyframes fkr-sun {
+  0% { transform: translate(300px, 760px); opacity: 0; } 1% { transform: translate(300px, 760px); opacity: 1; }
+  5% { transform: translate(350px, 590px); } 15% { transform: translate(430px, 360px); } 25% { transform: translate(523px, 270px); }
+  35% { transform: translate(615px, 360px); } 45% { transform: translate(695px, 590px); }
+  52% { transform: translate(750px, 760px); opacity: 1; } 53%, 100% { transform: translate(750px, 760px); opacity: 0; } }
+.fkr-moon { animation-name: fkr-moon; }
+@keyframes fkr-moon {
+  0% { transform: translate(750px, 760px); opacity: 1; } 1%, 51% { transform: translate(750px, 760px); opacity: 0; }
+  52% { transform: translate(300px, 760px); opacity: 1; } 56% { transform: translate(350px, 590px); } 66% { transform: translate(430px, 370px); }
+  76% { transform: translate(523px, 285px); } 86% { transform: translate(615px, 370px); } 96% { transform: translate(695px, 590px); }
+  100% { transform: translate(750px, 760px); opacity: 1; } }
+.fkr-tree { animation: fkr-tree 5.5s ease-in-out infinite; }
+@keyframes fkr-tree { 0%, 100% { transform: skewX(0deg); } 30% { transform: skewX(-1.6deg); } 65% { transform: skewX(1.1deg); } }
+.fkr-spin { animation: fkr-spin 2.4s linear infinite; }
+@keyframes fkr-spin { to { transform: rotate(360deg); } }
+.fkr-plant { animation: fkr-plant 4.2s ease-in-out infinite; }
+@keyframes fkr-plant { 0%, 100% { transform: rotate(0deg) skewX(0deg); } 35% { transform: rotate(2.6deg) skewX(-1.5deg); } 70% { transform: rotate(-1.8deg) skewX(1deg); } }
+.fkr-cat { animation: fkr-cat 3.4s ease-in-out infinite; transform-origin: 118px 889px; transform-box: view-box; }
+@keyframes fkr-cat { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.03); } }
+.fkr-winglow { animation-name: fkr-winglow; }
+@keyframes fkr-winglow { 0% { opacity: 0; } 8%, 42% { opacity: 0.75; } 52%, 100% { opacity: 0; } }
+/* the window's light on the floor: it moves against the light — right in the morning, left in the evening */
+.fkr-pool-sun { animation-name: fkr-pool-sun; }
+@keyframes fkr-pool-sun {
+  0% { transform: translate(800px, 1215px); opacity: 0; } 5% { transform: translate(760px, 1215px); opacity: 0.8; }
+  25% { transform: translate(530px, 1235px); opacity: 1; } 45% { transform: translate(300px, 1215px); opacity: 0.8; }
+  52%, 100% { transform: translate(260px, 1215px); opacity: 0; } }
+.fkr-pool-moon { animation-name: fkr-pool-moon; }
+@keyframes fkr-pool-moon {
+  0% { transform: translate(260px, 1215px); opacity: 0.3; } 3%, 53% { opacity: 0; transform: translate(800px, 1215px); }
+  57% { transform: translate(760px, 1215px); opacity: 0.6; } 76% { transform: translate(530px, 1235px); opacity: 0.8; }
+  96% { transform: translate(300px, 1215px); opacity: 0.6; } 100% { transform: translate(260px, 1215px); opacity: 0.3; } }
+.fkr-fanshadow { animation-name: fkr-fanshadow; }
+@keyframes fkr-fanshadow {
+  0% { transform: translate(800px, 1215px); opacity: 0; } 5% { transform: translate(760px, 1215px); opacity: 0.35; }
+  25% { transform: translate(530px, 1235px); opacity: 0.45; } 45% { transform: translate(300px, 1215px); opacity: 0.35; }
+  50%, 55% { opacity: 0; transform: translate(260px, 1215px); } 57% { transform: translate(760px, 1215px); opacity: 0.2; }
+  76% { transform: translate(530px, 1235px); opacity: 0.25; } 96% { transform: translate(300px, 1215px); opacity: 0.2; } 100% { transform: translate(260px, 1215px); opacity: 0; } }
+/* the shadows of the things: flipped down from the foot, skewed away from the light (the sun on the left → to the right),
+   long and faint low, short and dark high; the moon's are paler */
+.fkr-shadow { animation-name: fkr-shadow; }
+@keyframes fkr-shadow {
+  0% { transform: scaleY(-0.5) skewX(-50deg); opacity: 0; }
+  5% { transform: scaleY(-0.55) skewX(-52deg); opacity: 0.32; } 15% { transform: scaleY(-0.38) skewX(-30deg); opacity: 0.45; }
+  25% { transform: scaleY(-0.26) skewX(0deg); opacity: 0.55; } 35% { transform: scaleY(-0.38) skewX(30deg); opacity: 0.45; }
+  45% { transform: scaleY(-0.55) skewX(52deg); opacity: 0.32; } 51% { transform: scaleY(-0.6) skewX(56deg); opacity: 0; }
+  54% { transform: scaleY(-0.5) skewX(-50deg); opacity: 0; } 58% { transform: scaleY(-0.5) skewX(-48deg); opacity: 0.18; }
+  76% { transform: scaleY(-0.3) skewX(0deg); opacity: 0.26; } 94% { transform: scaleY(-0.5) skewX(48deg); opacity: 0.18; }
+  100% { transform: scaleY(-0.55) skewX(52deg); opacity: 0; } }
+.fkr-night-tint { animation-name: fkr-night-tint; }
+@keyframes fkr-night-tint { 0% { opacity: 0.72; } 5%, 45% { opacity: 0; } 55%, 100% { opacity: 0.72; } }
+.fkr-dusk-tint { animation-name: fkr-dusk-tint; }
+@keyframes fkr-dusk-tint { 0% { opacity: 0.2; } 3% { opacity: 0.55; } 8%, 42% { opacity: 0; } 49% { opacity: 0.6; } 55%, 100% { opacity: 0; } }
+.fkr-lamp { animation-name: fkr-lamp; }
+@keyframes fkr-lamp { 0% { opacity: 1; } 5%, 45% { opacity: 0.25; } 55%, 100% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .fkr-live * { animation: none !important; } }
