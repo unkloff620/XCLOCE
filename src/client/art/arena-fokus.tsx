@@ -9,6 +9,7 @@
  * one clock (the same cycle, started together). Also the home room «Берлога кодера» (content/home-scene.ts).
  */
 import { FOKUS_ROOM } from "./arena-fokus-data.ts";
+import { FokusScreens } from "./fokus-screens.tsx";
 
 const R = FOKUS_ROOM;
 const A = "/assets/arena/fokus";
@@ -130,6 +131,8 @@ export function FokusRoom({ uid = "a" }: { uid?: string }) {
         <ellipse cx={LAMP.x} cy={LAMP.y} rx={170} ry={150} fill={`url(#fkr-lamp-${uid})`} />
         <ellipse cx={LAMP.x} cy={1180} rx={420} ry={190} fill={`url(#fkr-lamp-${uid})`} opacity={0.35} />
       </g>
+      {/* the monitors: code types itself on the big one, the terminal runs on the small one (their own light: over the night) */}
+      <FokusScreens />
     </g>
   );
 }
