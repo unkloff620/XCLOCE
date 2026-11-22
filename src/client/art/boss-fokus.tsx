@@ -23,8 +23,8 @@ const KNIFE_TIP = [764.5, 608.5] as const;
 /** the waist: the upper body leans round it */
 const WAIST = [372, 610] as const;
 
-export function FokusRig({ id, rig, bust, dazed, svgRef, wrapRef, puppet, viewBox }: {
-  id: string; rig: Rig; bust: boolean; dazed: boolean; svgRef: RefObject<SVGSVGElement | null>; wrapRef: RefObject<HTMLDivElement | null>; puppet: boolean; viewBox: string;
+export function FokusRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, puppet, viewBox }: {
+  id: string; look: string; rig: Rig; bust: boolean; dazed: boolean; dying: boolean; svgRef: RefObject<SVGSVGElement | null>; wrapRef: RefObject<HTMLDivElement | null>; puppet: boolean; viewBox: string;
 }) {
   const P = rig.parts;
   const handL = useRef<SVGGElement>(null);
@@ -56,12 +56,13 @@ export function FokusRig({ id, rig, bust, dazed, svgRef, wrapRef, puppet, viewBo
     </g>
   );
   const svgEl = (
-    <svg key={id} ref={svgRef} className={`boss-rig rig-fokus ${dazed ? "dazed" : ""}`} viewBox={viewBox} width="100%" height="100%"
+    <svg key={look} ref={svgRef} className={`boss-rig rig-fokus ${dazed ? "dazed" : ""} ${dying ? "dying" : ""}`} viewBox={viewBox} width="100%" height="100%"
       preserveAspectRatio={bust ? "xMidYMin slice" : "xMidYMax meet"} aria-hidden="true">
       <g className="fk-root" style={at(rig.w / 2, rig.h - 20)}>
-        {/* the legs: the feet stay planted, only the shins and the feet are fixed: the hips and the thighs go with the upper body (br-up), the bend fades out at the knees */}
+        {/* the legs: the feet stay planted, only the shins and the feet are fixed: the hips and the thighs go with the upper body (br-up), the bend fades out at the knees;
+            below half HP only the feet are fixed — the whole leg sways with him from one foot to the other */}
         {P.legs && (puppet ? (
-          <image className="pp" data-pp="back" data-pp-follow="br-up" data-pp-follow-at="0.36,0.56" href={src("legs")}
+          <image className="pp" data-pp="back" data-pp-follow="br-up" data-pp-follow-at={dazed ? "0.6,0.9" : "0.36,0.56"} href={src("legs")}
             x={P.legs.x} y={P.legs.y} width={P.legs.w} height={P.legs.h} preserveAspectRatio="none" />
         ) : pic("legs"))}
         <g className="br-up" style={at(WAIST[0], WAIST[1])}>
@@ -114,7 +115,7 @@ export function FokusRig({ id, rig, bust, dazed, svgRef, wrapRef, puppet, viewBo
   );
   if (!puppet) return svgEl;
   return (
-    <div ref={wrapRef} key={id} className="br-pup rig-fokus-pup">
+    <div ref={wrapRef} key={look} className="br-pup rig-fokus-pup">
       <canvas className="br-pup-back" aria-hidden="true" />
       {svgEl}
       <canvas className="br-pup-front" aria-hidden="true" />

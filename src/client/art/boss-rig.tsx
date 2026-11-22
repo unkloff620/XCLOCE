@@ -206,14 +206,18 @@ export function BossRig({ id: asked, hpShare = 1, bust = false, outfit: wanted }
   const id = dressed ?? (hpShare < DYING_BELOW && `${baseId}-dying` in BOSS_RIGS ? `${baseId}-dying`
     : hpShare < BEATEN_BELOW && `${baseId}-beaten` in BOSS_RIGS ? `${baseId}-beaten` : baseId);
   const dazed = hpShare < BEATEN_BELOW;
+  const dying = hpShare < DYING_BELOW;
+  // Фокус below half: his legs are rigged anew (fixed at the feet only — he sways from leg to leg): the puppet and the
+  // poses start over on the new look
+  const look = baseId === "fokus" && dazed ? `${id}:${dying ? "dying" : "dazed"}` : id;
   const svgRef = useRef<SVGSVGElement>(null);
   useDazed(svgRef, dazed);
   // the puppet warp (soft joints) for the full boss; the small busts on the list stay plain SVG
   const puppet = !bust && !!BOSS_RIGS[id] && !NO_PUPPET.has(baseId);
   const wrapRef = useRef<HTMLDivElement>(null);
-  usePuppet(wrapRef, id, { w: BOSS_RIGS[id]?.w ?? 1, h: BOSS_RIGS[id]?.h ?? 1 }, puppet);
+  usePuppet(wrapRef, look, { w: BOSS_RIGS[id]?.w ?? 1, h: BOSS_RIGS[id]?.h ?? 1 }, puppet);
   // the bosses with a pose engine (boss-poses.ts): springs instead of the CSS keyframes
-  usePoses(svgRef, baseId, id);
+  usePoses(svgRef, baseId, look);
   // a gleaming tool in a hand (Боцман's crowbar): the puppet draws the forearms and fists on a canvas OVER the SVG, so the
   // gleam lives on a layer of its own above it and follows the hand's group every frame
   const glintSide = GLINT[baseId];
@@ -391,7 +395,7 @@ export function BossRig({ id: asked, hpShare = 1, bust = false, outfit: wanted }
       </div>
     );
   }
-  if (baseId === "fokus") return <FokusRig id={id} rig={rig} bust={bust} dazed={dazed} svgRef={svgRef} wrapRef={wrapRef} puppet={puppet} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} />;
+  if (baseId === "fokus") return <FokusRig id={id} look={look} rig={rig} bust={bust} dazed={dazed} dying={dying} svgRef={svgRef} wrapRef={wrapRef} puppet={puppet} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} />;
   if (baseId === "knyaz") return <KnyazRig id={id} rig={rig} bust={bust} dazed={dazed} svgRef={svgRef} frameCss={frameCss} strip={strip} />;
   if (baseId === "vadim") return <VadimRig id={id} rig={rig} bust={bust} dazed={dazed} sleepy={hpShare < DYING_BELOW} svgRef={svgRef} wrapRef={wrapRef} puppet={puppet} />;
   const behind = BEHIND[baseId];

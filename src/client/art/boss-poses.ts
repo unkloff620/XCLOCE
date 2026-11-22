@@ -40,7 +40,9 @@ interface Spec {
   /** he strikes the player («strike» on the arena): this action at once */
   strike?: Action;
   /** below half HP: this pose under the idle; act: false — no blows at all (he only sways) */
-  dazed?: { pose: Pose; act: boolean; /** a motion of its own on top (Утилизатор sways like a drunk) */ sway?: (t: number) => Pose };
+  dazed?: Phase;
+  /** below a quarter HP (the rig's class «dying»): the same as dazed, in place of it */
+  dying?: Phase;
   /** his breath, drawn with the upper body (it owns that group): at time t → [scale x, scale y, shift y px] */
   breath?: (t: number, dazed: boolean) => [number, number, number];
   /** what else follows the breath (the jaw): el → transform */
@@ -66,6 +68,13 @@ interface Spec {
   /** hair on the head (Фокус): a soft spring of its own that lags behind the head's turns and the body's jerks and
    *  flops back — turned round its root and skewed (the ends go further than the roots), it also flutters a little */
   hair?: { sel: string; k: number; c: number; turn: number; jerk: number; flutter: (t: number) => number };
+}
+interface Phase {
+  pose: Pose; act: boolean;
+  /** a motion of its own on top (Утилизатор sways like a drunk) */
+  sway?: (t: number) => Pose;
+  /** its own actions, rest, strike and the actions' speed (default: the spec's, the rest twice as long, ×0.75) */
+  actions?: { a: Action; w: number }[]; rest?: [number, number]; strike?: Action; speed?: number;
 }
 const SPRING0 = { k: 160, c: 16 };
 
@@ -510,23 +519,28 @@ const FK_L_HIT = { armL: 41, lowL: -98, handL: 8, zL: 8 };
  *  never bent hard at the wrist and grow only a little on a blow */
 const FK_PUSH_LOW = { armR: -124.3, lowR: 0.8, handR: 0.6 };
 const FK_PUSH_UP = { armR: -127.2, lowR: 0, handR: 8 };
-const fkCombo = (n: number): Action => {
+/** a pose's turns × a (the arms swing less when he is beaten) */
+const fkAmp = (p: Pose, a: number): Pose => Object.fromEntries(Object.entries(p).map(([k, v]) => [k, (v ?? 0) * a]));
+/** the combo of n blows; beaten (below half HP): amp — how far the arms swing, slow — how much longer each blow takes */
+const fkCombo = (n: number, amp = 1, slow = 1): Action => {
   const keys: Key[] = [];
   const face: Face[] = [];
   let t = 0;
   for (let i = 0; i < n; i++) {
     // the berserk: each blow quicker than the one before (0.95 s → 0.2 s)
-    const d = Math.max(0.2, 0.95 * Math.pow(0.8, i));
+    const d = Math.max(0.2, 0.95 * Math.pow(0.8, i)) * slow;
     const right = i % 2 === 0;
     const k = i / (n - 1);
     // the glasses creep down, the frown deepens, the mouth grits a little more with every blow
     const f = { gl: Math.min(1, (i + 1) / (n - 2)), brw: 0.5 + 0.5 * k, sq: 0.25 + 0.45 * k, jaw: 0.15, px: right ? -0.5 : 0.5, py: 0.6 };
-    const back = right ? { ...FK_R_BACK, up: 2.5, x: 4, head: 2.5 } : { ...FK_L_BACK, up: -2.5, x: -4, head: -2.5 };
-    const hit = right ? { ...FK_R_HIT, up: -4, x: -12, head: -3.5, armL: 6, lowL: -8 } : { ...FK_L_HIT, up: 4.5, x: 12, head: 3.5, armR: 4, lowR: 6 };
-    keys.push({ at: t, pose: { ...back, ...f }, stiff: 1 + 2.5 * k });
-    keys.push({ at: t + d * 0.32, pose: { ...hit, ...f, jaw: 0.35 }, stiff: 5 + 3 * k });
+    const back = fkAmp(right ? { ...FK_R_BACK, up: 2.5, x: 4, head: 2.5 } : { ...FK_L_BACK, up: -2.5, x: -4, head: -2.5 }, amp);
+    const hit = fkAmp(right ? { ...FK_R_HIT, up: -4, x: -12, head: -3.5, armL: 6, lowL: -8 } : { ...FK_L_HIT, up: 4.5, x: 12, head: 3.5, armR: 4, lowR: 6 }, amp);
+    const after = fkAmp(right ? { armR: -75, lowR: -25, handR: -5, zR: 4 } : { armL: 28, lowL: -80, handL: 5, zL: 4 }, amp);
+    const st = amp < 1 ? 0.55 : 1;
+    keys.push({ at: t, pose: { ...back, ...f }, stiff: (1 + 2.5 * k) * st });
+    keys.push({ at: t + d * 0.32, pose: { ...hit, ...f, jaw: 0.35 }, stiff: (5 + 3 * k) * st });
     face.push({ cls: right ? "fk-punch" : "fk-stab", at: t + d * 0.32 + 0.06, dur: 0.1 });
-    keys.push({ at: t + d * 0.62, pose: { ...hit, ...f, ...(right ? { armR: -75, lowR: -25, handR: -5, zR: 4 } : { armL: 28, lowL: -80, handL: 5, zL: 4 }) }, stiff: 2 + 2 * k });
+    keys.push({ at: t + d * 0.62, pose: { ...hit, ...f, ...after }, stiff: (2 + 2 * k) * st });
     t += d;
   }
   // done: the mouth falls open, he pants, the arms drop back into the stance
@@ -555,6 +569,25 @@ function fkTemple(gl: number) {
   return { "--ta0": `${(-a0 * 180 / Math.PI).toFixed(2)}deg`, "--ta1": `${(a1 * 180 / Math.PI).toFixed(2)}deg`, "--ts": Math.max(0.15, s).toFixed(3) };
 }
 const fkCombo10 = fkCombo(10);
+/** below a quarter HP: no blows — the glasses slide down his nose slowly, he slowly lifts the hand with the finger and
+ *  pushes them back up, and the hand sinks back to the hip */
+const fkGlasses: Action = {
+  keys: [
+    { at: 0, pose: { gl: 1, jaw: 0.75, brw: 0.15, sq: 0.2, head: 3, py: 0.4 }, stiff: 0.14 },
+    { at: 2.6, pose: { gl: 1, ...FK_PUSH_LOW, fing: 1, jaw: 0.7, py: -0.4, brw: -0.2 }, stiff: 0.35 },
+    { at: 4.8, pose: { gl: 0, ...FK_PUSH_UP, fing: 1, jaw: 0.65, py: -0.2, brw: -0.4 }, stiff: 0.55 },
+    { at: 5.8, pose: { ...FK_PUSH_UP, fing: 1, jaw: 0.6 }, stiff: 0.45 },
+    { at: 6.3, pose: { armR: -35, lowR: -15, handR: 0, fing: 1, jaw: 0.6 }, stiff: 0.32 },
+    { at: 7.6, pose: { jaw: 0.6 }, stiff: 0.35 },
+  ],
+  dur: 8.8,
+};
+/** beaten: the weight goes from one foot to the other (the legs are fixed at the feet only then — boss-fokus.tsx), the
+ *  body leans with it, the head the other way, up a little on each foot */
+const fkShift = (rate: number, a: number) => (t: number): Pose => {
+  const s = Math.sin(t * rate);
+  return { x: 10 * a * s, up: 1.6 * a * s, head: -1.2 * a * s, y: -2.2 * a * Math.abs(s) };
+};
 
 const POSES: Record<string, Spec> = {
   fokus: {
@@ -587,7 +620,12 @@ const POSES: Record<string, Spec> = {
     rest: [4.8, 5.6],
     hit: { head: -320, up: -90, x: -70, armL: 120, lowL: -150, armR: -110, lowR: 150, handL: -30, handR: 30, gl: 3, jaw: 4 },
     strike: fkCombo(6),
-    dazed: { pose: { armL: 8, armR: -6, head: 4, gl: 0.8, jaw: 0.6 }, act: true },
+    // below half: he sways from foot to foot, the combos come shorter, slower and smaller
+    dazed: { pose: { armL: 6, armR: -5, head: 3, gl: 0.5, jaw: 0.5 }, act: true, sway: fkShift(2, 1),
+      actions: [{ a: fkCombo(6, 0.6, 1.7), w: 1 }], rest: [5, 7], strike: fkCombo(4, 0.6, 1.7), speed: 1 },
+    // below a quarter: no blows any more — he sways slower and only pushes his sliding glasses back up, slowly
+    dying: { pose: { armL: 10, armR: -8, head: 5, jaw: 0.6 }, act: true, sway: fkShift(1.5, 0.85),
+      actions: [{ a: fkGlasses, w: 1 }], rest: [0.6, 1.8], strike: fkCombo(2, 0.4, 2.2), speed: 1 },
     // the heavy breath: the chest up and wider, slow and deep
     breath: (t, dazed) => { const b = 0.5 - 0.5 * Math.cos((t / (dazed ? 1.6 : 1.25)) * Math.PI * 2); return [1 + 0.012 * b, 1 + 0.022 * b, -3.5 * b]; },
     shapes: { gl: {}, fing: {}, brw: {}, sq: {}, px: {}, py: {} },
@@ -1013,11 +1051,11 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
     let wasHit = false;
     let wasStrike = false;
     const gate = frameGate();
-    const pick = (): Action => {
-      const all = spec.actions.reduce((s, x) => s + x.w, 0);
+    const pick = (list: { a: Action; w: number }[]): Action => {
+      const all = list.reduce((s, x) => s + x.w, 0);
       let r = Math.random() * all;
-      for (const x of spec.actions) { r -= x.w; if (r < 0) return x.a; }
-      return spec.actions[0].a;
+      for (const x of list) { r -= x.w; if (r < 0) return x.a; }
+      return list[0].a;
     };
     let raf = 0;
     const faceOff = new Map<string, number>();
@@ -1035,16 +1073,18 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
       wasHit = hit;
       // he strikes the player: that blow now, whatever he was doing
       const strike = !!arena?.classList.contains("strike");
-      if (strike && !wasStrike && spec.strike) { act = spec.strike; actT = 0; }
+      const dazed = svg.classList.contains("dazed");
+      const ph = svg.classList.contains("dying") && spec.dying ? spec.dying : dazed ? spec.dazed : undefined;
+      const strikeA = ph?.strike ?? spec.strike;
+      if (strike && !wasStrike && strikeA) { act = strikeA; actT = 0; }
       if (spec.cssStrike && strike !== wasStrike) svg.classList.toggle("posed", !strike);
       wasStrike = strike;
       // the action: its key now (a dazed boss — half as often, slower)
-      const dazed = svg.classList.contains("dazed");
       let pose: Pose = {};
       let stiff = 1;
       if (act) {
         const before = actT;
-        actT += dt * (dazed ? 0.75 : 1);
+        actT += dt * (ph?.speed ?? (dazed ? 0.75 : 1));
         for (const f of act.face ?? []) if (f.at >= before && f.at < actT || (before === 0 && f.at === 0)) {
           svg.classList.remove(f.cls);
           void svg.getBoundingClientRect(); // restart its keyframes
@@ -1054,14 +1094,18 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
         let cur: Key | null = null;
         for (const k of act.keys) if (k.at <= actT) cur = k;
         if (cur) { pose = cur.pose; stiff = cur.stiff ?? 1; }
-        if (actT >= act.dur) { act = null; wait = spec.rest[0] + Math.random() * (spec.rest[1] - spec.rest[0]) * (dazed ? 2 : 1); }
+        if (actT >= act.dur) {
+          act = null;
+          const rest = ph?.rest ?? spec.rest;
+          wait = rest[0] + Math.random() * (rest[1] - rest[0]) * (dazed && !ph?.rest ? 2 : 1);
+        }
       } else if ((wait -= dt) <= 0) {
-        if (dazed && spec.dazed && !spec.dazed.act) wait = 1;
-        else { act = pick(); actT = 0; }
+        if (ph && !ph.act) wait = 1;
+        else { act = pick(ph?.actions ?? spec.actions); actT = 0; }
       }
       const idle = spec.idle(t);
-      if (dazed && spec.dazed) for (const [k, v] of Object.entries(spec.dazed.pose)) idle[k as J] = (idle[k as J] ?? 0) + (v ?? 0);
-      if (dazed && spec.dazed?.sway) for (const [k, v] of Object.entries(spec.dazed.sway(t))) idle[k as J] = (idle[k as J] ?? 0) + (v ?? 0);
+      if (ph) for (const [k, v] of Object.entries(ph.pose)) idle[k as J] = (idle[k as J] ?? 0) + (v ?? 0);
+      if (ph?.sway) for (const [k, v] of Object.entries(ph.sway(t))) idle[k as J] = (idle[k as J] ?? 0) + (v ?? 0);
       for (const k of keys) {
         const s = spec.springs[k] ?? SPRING0;
         let target = (idle[k] ?? 0) + (pose[k] ?? 0);
