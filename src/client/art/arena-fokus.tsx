@@ -23,7 +23,9 @@ const STARS: [number, number, number][] = [
   [650, 250, 1.5], [700, 320, 1.3], [612, 392, 1.0], [395, 405, 1.2], [470, 372, 1.4], [742, 380, 1.1], [520, 352, 1.0],
 ];
 
-export function FokusRoom({ uid = "a" }: { uid?: string }) {
+/** layer: "all" (the fight), or the home room in two: "back" — all but the things on the floor, "front" — those things and
+ *  their shadows only, drawn over the hero's chair (they get the night by a filter of their own, on the same clock) */
+export function FokusRoom({ uid = "a", layer = "all" }: { uid?: string; layer?: "all" | "back" | "front" }) {
   const img = (n: string, cls?: string) => {
     const b = (R as unknown as Record<string, Box>)[n];
     return <image className={cls} href={`${A}/${n}.webp`} x={b.x} y={b.y} width={b.w} height={b.h} preserveAspectRatio="none" />;
@@ -47,14 +49,25 @@ export function FokusRoom({ uid = "a" }: { uid?: string }) {
       </g>
     );
   };
+  if (layer === "front") {
+    return (
+      <g className="fkr-live fkr-front">
+        <defs>
+          <filter id={`fkr-sil-${uid}`} x="-5%" y="-5%" width="110%" height="110%">
+            <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" />
+          </filter>
+        </defs>
+        {PROPS.map((n) => thing(n))}
+      </g>
+    );
+  }
   return (
     <g className="fkr-live">
       <defs>
         <clipPath id={`fkr-win-${uid}`}><circle cx={wx} cy={wy} r={gr} /></clipPath>
-        {/* the shadow: the picture's shape only, dark and soft */}
-        <filter id={`fkr-sil-${uid}`} x="-20%" y="-20%" width="140%" height="140%">
-          <feColorMatrix type="matrix" values="0 0 0 0 0.05  0 0 0 0 0.03  0 0 0 0 0.06  0 0 0 1 0" />
-          <feGaussianBlur stdDeviation="3.5" />
+        {/* the shadow: the picture's shape only, black, hard-edged (see-through by its group's opacity) */}
+        <filter id={`fkr-sil-${uid}`} x="-5%" y="-5%" width="110%" height="110%">
+          <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" />
         </filter>
         <radialGradient id={`fkr-sun-${uid}`}>
           <stop offset="0" stopColor="#fffbe6" />
@@ -119,9 +132,9 @@ export function FokusRoom({ uid = "a" }: { uid?: string }) {
           </g>
         </g>
       </g>
-      {/* the cat on the bed and the things on the floor, each with its shadow */}
+      {/* the cat on the bed and the things on the floor, each with its shadow (at home the things go over the chair: layer "front") */}
       {thing("cat")}
-      {PROPS.map((n) => thing(n))}
+      {layer === "all" && PROPS.map((n) => thing(n))}
       {/* the ivy sways from where it hangs */}
       <g className="fkr-plant" style={at(box("plant").x + box("plant").w * 0.62, box("plant").y + 6)}>{img("plant")}</g>
       {/* the night: the room goes dark and blue; the lamp lights it */}

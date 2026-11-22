@@ -107,7 +107,7 @@ export function HomeScene({ room = "basic", onHero, still, look, worn, pieces = 
         <g transform={`translate(0 -53) scale(${SCENE.w / 1024})`}><UtilizatorRoom uid="home" /></g>
       ) : room === "coder" && !still ? (
         // «Берлога кодера» is Фокус's live fight room, drawn on the scene canvas itself (1060×1484)
-        <FokusRoom uid="home" />
+        <FokusRoom uid="home" layer="back" />
       ) : <image href={`/assets/home/${bg}.webp`} x="0" y="0" width={SCENE.w} height={SCENE.h} preserveAspectRatio="none" />}
       {room === "dojo" && !still && <DojoBag />}
       {lights.length > 0 && (
@@ -148,6 +148,8 @@ export function HomeScene({ room = "basic", onHero, still, look, worn, pieces = 
       )}
       </g>
       <RigViewport x={CHARACTER.x} y={CHARACTER.y} scale={CHARACTER.scale} seat={placedOf("chair", pieces, decor)} still={still} look={look} worn={worn} seatOnly={hideHero} edit={edit} />
+      {/* «Берлога кодера»: the cans and the chip bags on the floor, over the chair */}
+      {room === "coder" && !still && <g filter={focusHero ? "url(#scene-dim)" : undefined}><FokusRoom uid="home-f" layer="front" /></g>}
       {/* the trophy stands on the floor in front: over the hero and his chair */}
       {trophies.includes("statue-close") && (decor["statue-close"] ?? 0) !== -1 && <g filter={focusHero ? "url(#scene-dim)" : undefined}><Obj id="statueClose" art="statue-close" />{!still && <StatueGlint />}</g>}
       {onHero && !hideHero && HERO_HOT.map((z, i) => (

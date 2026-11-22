@@ -7648,12 +7648,16 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .fkr-shadow { animation-name: fkr-shadow; }
 @keyframes fkr-shadow {
   0% { transform: scaleY(-0.5) skewX(-50deg); opacity: 0; }
-  5% { transform: scaleY(-0.55) skewX(-52deg); opacity: 0.32; } 15% { transform: scaleY(-0.38) skewX(-30deg); opacity: 0.45; }
-  25% { transform: scaleY(-0.26) skewX(0deg); opacity: 0.55; } 35% { transform: scaleY(-0.38) skewX(30deg); opacity: 0.45; }
-  45% { transform: scaleY(-0.55) skewX(52deg); opacity: 0.32; } 51% { transform: scaleY(-0.6) skewX(56deg); opacity: 0; }
-  54% { transform: scaleY(-0.5) skewX(-50deg); opacity: 0; } 58% { transform: scaleY(-0.5) skewX(-48deg); opacity: 0.18; }
-  76% { transform: scaleY(-0.3) skewX(0deg); opacity: 0.26; } 94% { transform: scaleY(-0.5) skewX(48deg); opacity: 0.18; }
+  5% { transform: scaleY(-0.55) skewX(-52deg); opacity: 0.42; } 15% { transform: scaleY(-0.38) skewX(-30deg); opacity: 0.5; }
+  25% { transform: scaleY(-0.26) skewX(0deg); opacity: 0.55; } 35% { transform: scaleY(-0.38) skewX(30deg); opacity: 0.5; }
+  45% { transform: scaleY(-0.55) skewX(52deg); opacity: 0.42; } 51% { transform: scaleY(-0.6) skewX(56deg); opacity: 0; }
+  54% { transform: scaleY(-0.5) skewX(-50deg); opacity: 0; } 58% { transform: scaleY(-0.5) skewX(-48deg); opacity: 0.28; }
+  76% { transform: scaleY(-0.3) skewX(0deg); opacity: 0.34; } 94% { transform: scaleY(-0.5) skewX(48deg); opacity: 0.28; }
   100% { transform: scaleY(-0.55) skewX(52deg); opacity: 0; } }
+/* the things over the chair at home (layer "front"): the night on them by a filter, on the same clock as the tint */
+.fkr-live.fkr-front { animation: fkr-front-night var(--fkr-cycle) linear infinite; }
+@keyframes fkr-front-night { 0% { filter: brightness(0.42) saturate(0.6); } 5%, 45% { filter: none; } 49% { filter: sepia(0.25) saturate(1.2); }
+  55%, 100% { filter: brightness(0.42) saturate(0.6); } }
 .fkr-night-tint { animation-name: fkr-night-tint; }
 @keyframes fkr-night-tint { 0% { opacity: 0.72; } 5%, 45% { opacity: 0; } 55%, 100% { opacity: 0.72; } }
 .fkr-dusk-tint { animation-name: fkr-dusk-tint; }
