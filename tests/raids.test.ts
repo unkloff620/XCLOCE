@@ -22,7 +22,9 @@ describe("«Ходки»", () => {
     const db = await freshDb();
     const { p, clan } = await setup(db);
     await expect(act(db, p, "raid_start", { building: yard.buildings[1].id }, T)).rejects.toMatchObject({ code: "not_target" });
-    await expect(act(db, p, "raid_start", { building: RAID_YARDS[1].buildings[0].id }, T)).rejects.toMatchObject({ code: "yard_closed" });
+    // every yard is open at once: the second one too
+    await act(db, p, "raid_start", { building: RAID_YARDS[1].buildings[0].id }, T);
+    await act(db, p, "raid_flee", {}, T);
     await act(db, p, "raid_start", { building: yard.buildings[0].id }, T);
     const rub = await wallet(db, p, "RUB");
     const h = await act(db, p, "raid_attack", { weapon: "rug-pull-gun", count: 1000 }, T);

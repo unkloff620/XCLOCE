@@ -29,6 +29,82 @@ export const RAID_LOGO_AT: Record<string, [number, number]> = {
     8.0,
     14.3
   ],
+  "center/b-garage1": [
+    8.3,
+    8.7
+  ],
+  "center/b-garage2": [
+    8.3,
+    7.7
+  ],
+  "center/b-garage3": [
+    8.3,
+    9.4
+  ],
+  "center/b-house1": [
+    7.9,
+    50.3
+  ],
+  "center/b-house10": [
+    7.9,
+    50.3
+  ],
+  "center/b-house11": [
+    7.9,
+    50.3
+  ],
+  "center/b-house12": [
+    7.9,
+    50.3
+  ],
+  "center/b-house2": [
+    7.9,
+    50.3
+  ],
+  "center/b-house3": [
+    7.9,
+    50.3
+  ],
+  "center/b-house4": [
+    7.9,
+    50.3
+  ],
+  "center/b-house5": [
+    7.9,
+    50.3
+  ],
+  "center/b-house6": [
+    7.9,
+    50.3
+  ],
+  "center/b-house7": [
+    7.9,
+    50.3
+  ],
+  "center/b-house8": [
+    7.9,
+    50.3
+  ],
+  "center/b-house9": [
+    7.9,
+    50.3
+  ],
+  "center/b-khrush1": [
+    8.4,
+    48.9
+  ],
+  "center/b-khrush2": [
+    8.3,
+    27.4
+  ],
+  "center/b-main": [
+    8.1,
+    6.3
+  ],
+  "center/b-office": [
+    8.3,
+    31.0
+  ],
   "garages/b-boiler": [
     7.9,
     6.5
@@ -68,6 +144,66 @@ export const RAID_LOGO_AT: Record<string, [number, number]> = {
   "garages/b-warehouse": [
     8.4,
     13.0
+  ],
+  "panelki/b-barrack1": [
+    8.3,
+    6.7
+  ],
+  "panelki/b-barrack2": [
+    8.0,
+    6.5
+  ],
+  "panelki/b-barrack3": [
+    8.4,
+    9.0
+  ],
+  "panelki/b-barrack4": [
+    8.4,
+    6.8
+  ],
+  "panelki/b-barrack5": [
+    8.2,
+    6.6
+  ],
+  "panelki/b-dorm1": [
+    7.9,
+    12.3
+  ],
+  "panelki/b-dorm2": [
+    7.9,
+    42.1
+  ],
+  "panelki/b-hangar1": [
+    8.6,
+    49.9
+  ],
+  "panelki/b-hangar2": [
+    8.6,
+    51.2
+  ],
+  "panelki/b-hangar3": [
+    7.9,
+    52.3
+  ],
+  "panelki/b-hangar4": [
+    8.6,
+    50.5
+  ],
+  "panelki/b-hangar5": [
+    7.9,
+    51.5
+  ],
+  "panelki/b-hangar6": [
+    8.5,
+    52.5
+  ],
+  "panelki/b-main": [
+    8.2,
+    13.2
+  ],
+  "panelki/b-warehouse": [
+    7.9,
+    14.3
   ],
   "promzona/b-boiler": [
     8.3,

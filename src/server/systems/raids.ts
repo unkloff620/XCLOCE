@@ -44,8 +44,8 @@ type Progress = Awaited<ReturnType<typeof progressOf>>;
 
 /** the building to attack in a yard now: the first one (from the bottom up) the clan has not taken; null — all taken */
 const targetOf = (y: RaidYard, taken: Set<string>) => y.buildings.find((b) => !taken.has(b.id)) ?? null;
-/** a yard is open when it is the first one or the one before it has been taken (once is enough) */
-const yardOpen = (y: RaidYard, yards: Set<string>) => yardReady(y) && (y.n === 1 || yards.has(RAID_YARDS[y.n - 2].id));
+/** every drawn yard is open at once (the user 2026-11-22: no more taking them in order) */
+const yardOpen = (y: RaidYard, _yards: Set<string>) => yardReady(y);
 /** a just-taken yard rests: until when (ms), or 0 — it can be taken now */
 const restUntil = (y: RaidYard, p: Progress, now: number) => {
   const l = p.last.get(y.id);
@@ -134,7 +134,7 @@ export async function raidStart(ctx: Ctx, buildingId: string) {
   }
   const p = await progressOf(ctx.q, clanId);
   if (!yardReady(y)) throw new GameError("yard_closed", `Двор «${y.name}» пока закрыт`);
-  if (!yardOpen(y, p.yards)) throw new GameError("yard_closed", `Сначала клан должен захватить двор «${RAID_YARDS[y.n - 2].name}»`);
+  if (!yardOpen(y, p.yards)) throw new GameError("yard_closed", "Этот двор пока закрыт");
   const rest = restUntil(y, p, ctx.now);
   if (rest) throw new GameError("yard_taken", `Двор ваш. Снова захватить можно через ${Math.ceil((rest - ctx.now) / 60_000)} мин`);
   if (targetOf(y, p.taken)?.id !== b.id) throw new GameError("not_target", "Сначала захватите здания пониже");

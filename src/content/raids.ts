@@ -9,14 +9,14 @@
 
 export type BuildingKind = "garage" | "barrack" | "khrush" | "kiosk" | "boiler" | "shop" | "main"
   // the artist's yards
-  | "checkpoint" | "tanks" | "pipes" | "office" | "warehouse" | "shed" | "tower" | "booth" | "workshop" | "tent" | "row" | "pavilion";
+  | "checkpoint" | "tanks" | "pipes" | "office" | "warehouse" | "shed" | "tower" | "booth" | "workshop" | "tent" | "row" | "pavilion" | "hangar" | "dorm" | "house";
 export const BUILDING_NAMES: Record<BuildingKind, string> = {
   garage: "Гараж", barrack: "Барак", khrush: "Пятиэтажка", kiosk: "Ларёк", boiler: "Котельная", shop: "Магазин", main: "Главное здание",
   checkpoint: "КПП", tanks: "Цистерны", pipes: "Теплотрасса", office: "Контора", warehouse: "Склад",
-  shed: "Сарай", tower: "Вышка", booth: "Будка", workshop: "Цех", tent: "Палатка", row: "Торговый ряд", pavilion: "Павильон",
+  shed: "Сарай", tower: "Вышка", booth: "Будка", workshop: "Цех", tent: "Палатка", row: "Торговый ряд", pavilion: "Павильон", hangar: "Ангар", dorm: "Общага", house: "Дом",
 };
 /** «… захвачен / захвачена / захвачены!» */
-export const takenWord = (k: BuildingKind) => (["boiler", "khrush", "pipes", "office", "tower", "booth", "tent"].includes(k) ? "захвачена" : k === "tanks" ? "захвачены" : "захвачен");
+export const takenWord = (k: BuildingKind) => (["boiler", "khrush", "pipes", "office", "tower", "booth", "tent", "dorm"].includes(k) ? "захвачена" : k === "tanks" ? "захвачены" : "захвачен");
 
 export interface RaidBuilding {
   id: string;
@@ -67,20 +67,7 @@ export const groundY = (n: number, yPct: number) => {
   const px = (yPct / 100) * GROUND_H;
   return ((px >= GROUND_BAND.y ? px + extraRows(n) * GROUND_BAND.h : px) / groundH(n)) * 100;
 };
-const plan = (yard: string, n: number, kinds: BuildingKind[]): RaidBuilding[] => {
-  const k = extraRows(n);
-  const spots = [
-    ...SPOTS.map((p) => ({ ...p, y: groundY(n, p.y) })),
-    // the extra rows: the row of three again, each one band higher (on the band's copies above the first one)
-    ...Array.from({ length: k }, (_, j) => SPOTS.slice(3).map((p) => ({ ...p, y: (((p.y / 100) * GROUND_H + (k - 1 - j) * GROUND_BAND.h) / groundH(n)) * 100 }))).flat(),
-  ];
-  return [
-    ...kinds.map((kind, i) => ({ id: `${yard}-${i + 1}`, kind, ...spots[i] })),
-    { id: `${yard}-main`, kind: "main" as const, x: 50, y: groundY(n, 38), w: 29 },
-  ];
-};
 
-const G: BuildingKind = "garage", K: BuildingKind = "kiosk", B: BuildingKind = "barrack", O: BuildingKind = "boiler", S: BuildingKind = "shop", H: BuildingKind = "khrush";
 /** every building is taken with WINS wins; each next yard has one building more (7, 8, 9, 10, 11 with the main one) */
 export const WINS = 10;
 export const RAID_YARDS: RaidYard[] = [
@@ -125,8 +112,44 @@ export const RAID_YARDS: RaidYard[] = [
     { id: "rynok-12", kind: "pavilion", pic: "pavilion2", x: 85.12, y: 31.3, w: 25.25 },
     { id: "rynok-main", kind: "main", x: 50.75, y: 25.1, w: 46.0 },
   ] },
-  { id: "panelki", n: 4, name: "Панельки", subtitle: "Пятиэтажки, лавочки и бабки на страже", wins: WINS, buildings: plan("panelki", 4, [H, B, H, S, H, K, H, B, H]) },
-  { id: "center", n: 5, name: "Центр района", subtitle: "Главный двор. Кто держит его — держит район", wins: WINS, buildings: plan("center", 5, [S, H, S, H, O, H, S, H, K, H]) },
+  { id: "panelki", n: 4, name: "Панельки", subtitle: "Пятиэтажки, лавочки и бабки на страже", wins: WINS, art: "panelki", buildings: [
+    { id: "panelki-1", kind: "barrack", pic: "barrack1", x: 22.25, y: 59.93, w: 26.2 },
+    { id: "panelki-2", kind: "barrack", pic: "barrack2", x: 57.17, y: 59.33, w: 31.95 },
+    { id: "panelki-3", kind: "hangar", pic: "hangar1", x: 80.85, y: 53.33, w: 13.4 },
+    { id: "panelki-4", kind: "barrack", pic: "barrack3", x: 19.6, y: 52.63, w: 23.6 },
+    { id: "panelki-5", kind: "hangar", pic: "hangar2", x: 65.88, y: 49.9, w: 13.55 },
+    { id: "panelki-6", kind: "hangar", pic: "hangar3", x: 52.73, y: 48.2, w: 13.85 },
+    { id: "panelki-7", kind: "hangar", pic: "hangar4", x: 38.2, y: 46.9, w: 13.9 },
+    { id: "panelki-8", kind: "hangar", pic: "hangar5", x: 24.35, y: 45.13, w: 14.1 },
+    { id: "panelki-9", kind: "hangar", pic: "hangar6", x: 10.35, y: 44.27, w: 15.0 },
+    { id: "panelki-10", kind: "barrack", pic: "barrack4", x: 83.3, y: 42.9, w: 21.6 },
+    { id: "panelki-11", kind: "barrack", pic: "barrack5", x: 49.08, y: 37.7, w: 34.55 },
+    { id: "panelki-12", kind: "dorm", pic: "dorm1", x: 18.15, y: 34.67, w: 25.7 },
+    { id: "panelki-13", kind: "dorm", pic: "dorm2", x: 81.73, y: 32.07, w: 25.55 },
+    { id: "panelki-14", kind: "warehouse", x: 23.52, y: 25.47, w: 15.05 },
+    { id: "panelki-main", kind: "main", x: 54.97, y: 24.1, w: 46.05 },
+  ] },
+  { id: "center", n: 5, name: "Центр района", subtitle: "Главный двор. Кто держит его — держит район", wins: WINS, art: "center", buildings: [
+    { id: "center-1", kind: "office", x: 18.65, y: 87.03, w: 27.3 },
+    { id: "center-2", kind: "garage", pic: "garage1", x: 76.7, y: 70.4, w: 22.4 },
+    { id: "center-3", kind: "garage", pic: "garage2", x: 45.88, y: 70.33, w: 22.35 },
+    { id: "center-4", kind: "garage", pic: "garage3", x: 23.75, y: 62.23, w: 24.4 },
+    { id: "center-5", kind: "house", pic: "house1", x: 83.33, y: 59.93, w: 12.35 },
+    { id: "center-6", kind: "house", pic: "house2", x: 72.28, y: 58.73, w: 12.35 },
+    { id: "center-7", kind: "house", pic: "house3", x: 53.62, y: 55.53, w: 12.35 },
+    { id: "center-8", kind: "house", pic: "house4", x: 40.48, y: 53.87, w: 12.35 },
+    { id: "center-9", kind: "house", pic: "house5", x: 26.42, y: 51.13, w: 12.35 },
+    { id: "center-10", kind: "house", pic: "house6", x: 88.28, y: 50.87, w: 12.35 },
+    { id: "center-11", kind: "house", pic: "house7", x: 13.93, y: 50.07, w: 12.35 },
+    { id: "center-12", kind: "house", pic: "house8", x: 76.38, y: 49.67, w: 12.35 },
+    { id: "center-13", kind: "house", pic: "house9", x: 61.27, y: 47.33, w: 12.35 },
+    { id: "center-14", kind: "house", pic: "house10", x: 49.18, y: 45.87, w: 12.35 },
+    { id: "center-15", kind: "house", pic: "house11", x: 34.73, y: 44.1, w: 12.35 },
+    { id: "center-16", kind: "house", pic: "house12", x: 23.33, y: 42.73, w: 12.35 },
+    { id: "center-17", kind: "khrush", pic: "khrush1", x: 81.8, y: 38.77, w: 20.7 },
+    { id: "center-18", kind: "khrush", pic: "khrush2", x: 19.07, y: 32.77, w: 22.45 },
+    { id: "center-main", kind: "main", x: 54.85, y: 23.43, w: 53.5 },
+  ] },
 ];
 /**
  * The lights of an artist's yard (x, y — the lamp's head, % of its ground picture): street lamps glow and breathe, a

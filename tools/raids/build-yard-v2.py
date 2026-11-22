@@ -13,6 +13,8 @@ from PIL import Image
 KINDS = {
     "garages": ["shed", "tower", "tower", "garage", "garage", "booth", "boiler", "warehouse", "office"],
     "promzona": ["workshop", "tower", "warehouse", "warehouse", "workshop", "boiler", "warehouse", "office", "warehouse"],
+    "panelki": ["barrack", "barrack", "hangar", "barrack", "hangar", "hangar", "hangar", "hangar", "hangar", "barrack", "barrack", "dorm", "dorm", "warehouse"],
+    "center": ["office", "garage", "garage", "garage"] + ["house"] * 12 + ["khrush", "khrush"],
     "rynok": ["kiosk", "tower", "tent", "kiosk", "row", "row", "row", "row", "row", "row", "pavilion", "pavilion"],
 }
 yard = sys.argv[1]

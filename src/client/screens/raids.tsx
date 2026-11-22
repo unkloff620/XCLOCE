@@ -534,7 +534,7 @@ const GOPNIK = { id: "gopnik", name: "Гопник" }, LAREK = { id: "larek", na
 const RAID_DEFENDERS: Record<BuildingKind, { id: string; name: string }[]> = {
   garage: [GOPNIK], barrack: [GOPNIK], khrush: [GOPNIK], shop: [GOPNIK], kiosk: [LAREK], boiler: [LAREK], main: [GOPNIK, LAREK],
   checkpoint: [LAREK], tanks: [LAREK], pipes: [LAREK], office: [GOPNIK], warehouse: [GOPNIK],
-  shed: [GOPNIK], tower: [LAREK], booth: [LAREK], workshop: [GOPNIK], tent: [LAREK], row: [LAREK], pavilion: [GOPNIK],
+  shed: [GOPNIK], tower: [LAREK], booth: [LAREK], workshop: [GOPNIK], tent: [LAREK], row: [LAREK], pavilion: [GOPNIK], hangar: [GOPNIK], dorm: [GOPNIK], house: [GOPNIK],
 };
 const defendersOf = (kind: BuildingKind) => RAID_DEFENDERS[kind] ?? [GOPNIK];
 /** the fight's room: Ларёчник fights inside his kiosk, the main building is the gang's hall, Гопник — in the basement */
