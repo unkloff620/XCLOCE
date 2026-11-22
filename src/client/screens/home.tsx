@@ -1,4 +1,5 @@
 "use client";
+import { ObshakWindow } from "../obshak.tsx";
 import { ART_VER } from "../preload.ts";
 import { NewbieButton } from "./newbie.tsx";
 import Link from "next/link";
@@ -73,6 +74,7 @@ export function HomeScreen() {
   }, []);
   // «Рейтинг»: a sheet of paper over the hero (old /rating links come here as /?top=1)
   const [top, setTop] = useState(false);
+  const [obshak, setObshak] = useState(false);
   useEffect(() => {
     if (!new URLSearchParams(location.search).has("top")) return;
     setTop(true);
@@ -297,6 +299,13 @@ export function HomeScreen() {
             <img src={`/assets/zarub/icon.webp?v=${ART_VER.items}`} alt="" draggable={false} style={{ objectFit: "contain" }} />
             <span className="event-tag">ЗАРУБЫ</span>
           </Link>
+          {/* «Общак» (client/obshak.tsx): the subscription; glows when today's collecting waits */}
+          <button type="button" className={`menu-toggle event-toggle ob-toggle ${state.obshak?.ready ? "glow" : ""}`} onClick={() => setObshak(true)} aria-label="Общак" title="Общак">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/assets/obshak/icon.webp" alt="" draggable={false} style={{ objectFit: "contain" }} />
+            <span className="event-tag">ОБЩАК</span>
+            {state.obshak?.ready && <i className="side-dot" />}
+          </button>
           {f && fb && !fightOpen && (
             <button className="fight-mini" style={{ ["--acc" as string]: fb.theme.accent, ["--hp" as string]: hpPct }} onClick={() => setFightOpen(true)} aria-label={`Идёт бой: ${fb.name}`} title="Идёт бой">
               <BossRing boss={fb} size={58} />
@@ -327,6 +336,7 @@ export function HomeScreen() {
       )}
       {styling && <Stylist draft={styling} setDraft={setStyling} onClose={() => setStyling(null)} focus={editFocus} setFocus={setEditFocus} onRoom={openRoomEditor} />}
       {top && <RatingBoard onClose={() => setTop(false)} />}
+      {obshak && <ObshakWindow onClose={() => setObshak(false)} />}
       <UpdatesNotice wait={busyWindow} onOpen={setUpdOpen} />
       <ExchangeNotice wait={busyWindow || updOpen} />
       {newsOpen && <UpdatesWindow list={todayNews} onClose={() => setNewsOpen(false)} />}

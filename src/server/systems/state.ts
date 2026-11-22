@@ -40,6 +40,7 @@ import { newsView, notesView, socialView } from "./social.ts";
 import { achievementsReady, achievementsView, autoClaimAchievements } from "./achievements.ts";
 import { achBoxView } from "./achbox.ts";
 import { giftsLeft, giftsReceived, stashWish } from "./swap.ts";
+import { obshakView } from "./obshak.ts";
 
 /** Everything the HUD and the always-visible parts of the game need. Runs inside the player's transaction. */
 export async function gameState(ctx: Ctx) {
@@ -159,6 +160,8 @@ export async function gameState(ctx: Ctx) {
     bjInvites: await bjInviteCount(ctx.q, ctx.pid, ctx.now),
     bjInviteList: await invitesFor(ctx.q, ctx.pid, ctx.now),
     stashWish: await stashWish(ctx.q, ctx.pid),
+    /** «Общак» (content/obshak.ts): the level, today's collecting and the needle's damage left */
+    obshak: await obshakView(ctx.q, ctx.pid, ctx.now),
     stashGifts: await giftsReceived(ctx.q, ctx.pid),
     stashInbox: await giftsReceived(ctx.q, ctx.pid, true),
     notes: await notesView(ctx.q, ctx.pid, ctx.now),

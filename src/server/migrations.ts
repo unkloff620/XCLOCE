@@ -1721,4 +1721,15 @@ UPDATE appearance SET decor = decor - 'statue-close' WHERE decor ? 'statue-close
 );
 CREATE INDEX IF NOT EXISTS master_progress_best ON master_progress (master_id, mastery DESC);`,
   },
+  {
+    // «Общак» (content/obshak.ts): the level, till when, the Moscow day last collected and what is left of its damage
+    id: "v2-125-obshak",
+    sql: `CREATE TABLE IF NOT EXISTS obshak (
+  player_id INT PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
+  level TEXT NOT NULL,
+  until TIMESTAMPTZ NOT NULL,
+  day TEXT,
+  pool BIGINT NOT NULL DEFAULT 0
+);`,
+  },
 ];

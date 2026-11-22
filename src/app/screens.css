@@ -7839,3 +7839,30 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 :is(.bj-moves, .bjt-acts, .pkt-btns, .pkt-ask-btns) .btn { min-width: 0; }
 .bjt-ctrl { position: relative; }
 .bj-leave.btn { position: absolute; right: 2px; bottom: calc(100% + 8px); z-index: 5; width: 38px; height: 34px; padding: 0; display: grid; place-items: center; }
+/* «Общак» (client/obshak.tsx): the icon under «Зарубы»; four cards on dark planks, each in its metal */
+.ob-toggle { border-color: rgba(255, 196, 64, 0.7); }
+.ob-toggle img { object-fit: contain; }
+.ob-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (min-width: 720px) { .ob-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.ob-card { --m: #b9bcc4; position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 18px 8px 10px; border-radius: 8px; text-align: center;
+  background: linear-gradient(180deg, #3a2f26, #251c15); color: #f2e6d2; border: 3px solid var(--m); box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.45), 0 4px 10px rgba(0, 0, 0, 0.45); }
+.ob-pacan { --m: #b9bcc4; } .ob-blat { --m: #b4683a; } .ob-avtor { --m: #e8eaee; } .ob-vor { --m: #f2c230; }
+.ob-card.on { box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.45), 0 0 0 2px #f2c230, 0 0 18px rgba(242, 194, 48, 0.55); }
+.ob-crown { position: absolute; top: -12px; left: 50%; width: 34px; height: 18px; transform: translateX(-50%); background: var(--m);
+  clip-path: polygon(0 100%, 0 30%, 22% 62%, 36% 0, 50% 55%, 64% 0, 78% 62%, 100% 30%, 100% 100%); filter: drop-shadow(0 2px 1px rgba(0, 0, 0, 0.5)); }
+.ob-avtor .ob-crown, .ob-vor .ob-crown { background: linear-gradient(180deg, #ff6a5a, #b4201a); }
+.ob-name { font-size: 16px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--m); text-shadow: 0 2px 0 rgba(0, 0, 0, 0.6); }
+.ob-days { font-size: 12.5px; font-weight: 700; color: #ffd76a; }
+.ob-sub { font-size: 11px; color: #b9a68a; }
+.ob-dmg { display: inline-flex; align-items: center; gap: 4px; font-size: 16px; font-weight: 800; color: #fff; }
+.ob-bonus .rchips { justify-content: center; }
+.ob-bonus .chip { color: #f2e6d2; }
+.ob-keys { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: #ffd76a; }
+.ob-next { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: #f2e6d2; }
+.ob-card .ob-buy { margin-top: auto; width: 100%; min-width: 0; padding: 0 6px; font-size: 13px; }
+.ob-card .ob-buy .num { display: inline-flex; align-items: center; gap: 2px; }
+.ob-card .ob-take { width: 100%; }
+.ob-got-dmg { display: inline-flex; align-items: center; gap: 4px; font-size: 18px; font-weight: 800; }
+/* the needle in a fight: today's stock of «Общак» in one blow */
+.fbtn-needle.btn { gap: 3px; padding: 0 8px; }
+.fbtn-needle .num { font-size: 12px; }

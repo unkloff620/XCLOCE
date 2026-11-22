@@ -130,6 +130,8 @@ export interface GameState {
   stashSets: Record<number, number>;
   /** нычки I ask other players for, and who sent me what lately */
   stashWish?: string[];
+  /** «Общак»: the level, today's collecting and the needle's damage left */
+  obshak?: { level: import("../content/obshak.ts").ObshakLevel | null; until: number | null; ready: boolean; pool: number; nextAt: number };
   stashGifts?: { id: number; fromId: number; from: string; itemId: string; qty?: number; at: number }[];
   /** messages from other players (a spit, a fist fight), the newest first */
   notes?: { id: number; kind: string; fromId: number | null; from: string; meta: Record<string, unknown>; at: number; unread: boolean }[];

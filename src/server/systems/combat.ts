@@ -2,6 +2,8 @@ import { autoSpendTalents } from "./home.ts";
 import { monthTick } from "./monthly.ts";
 import { zarubTick } from "./zarub.ts";
 import { shodBoostMult, shodTick } from "./shodnyak.ts";
+import { NEEDLE_ID } from "../../content/obshak.ts";
+import { obshakSpend } from "./obshak.ts";
 import { GameError, type Queryable } from "../db.ts";
 import { addItem, gain, grantReward, idempotent, itemQty, ledger, moscowDay, nextMoscowMidnight, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { LOCATIONS } from "../../content/locations.ts";
@@ -323,11 +325,13 @@ export async function weaponHitDamage(q: Queryable, pid: number, weaponId: strin
 
 export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1, rush = false): Promise<HitResult> {
   return idempotent(ctx, idem ? `hit:${idem}` : undefined, async () => {
-    const w = weaponById(weaponId);
-    if (!w) throw new GameError("bad_weapon", "Этим нельзя бить босса");
+    // «Урон от Иглы» (content/obshak.ts): today's stock of the fund, as much of it as the boss can still take
+    const needle = weaponId === NEEDLE_ID;
+    const w = needle ? null : weaponById(weaponId);
+    if (!needle && !w) throw new GameError("bad_weapon", "Этим нельзя бить босса");
     // ×1 / ×10 / ×100 / ×1000, or what is left when there is less of the weapon (×1000 with 455 in stock — all 455)
-    if (!isBatch(want)) throw new GameError("bad_count", "Можно бить по 1–5000 за раз");
-    if (want > 1 && w.weapon.kind !== "consumable") throw new GameError("bad_count", `${w.name} бьёт только по одному разу`);
+    if (!needle && !isBatch(want)) throw new GameError("bad_count", "Можно бить по 1–5000 за раз");
+    if (w && want > 1 && w.weapon.kind !== "consumable") throw new GameError("bad_count", `${w.name} бьёт только по одному разу`);
     const [mine] = await ctx.q.query<FightRow>("SELECT * FROM fights WHERE player_id=$1 AND status='active'", [ctx.pid]);
     if (!mine) throw new GameError("no_fight", "Сначала начни бой с боссом");
     const g = await lockBoss(ctx.q, GLOBAL);
@@ -337,9 +341,15 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1
       throw new GameError("fight_over", "Время боя вышло — босс ушёл");
     }
 
-    const { damage, crit, crits, count, left, readyAt, phraseIdx, phrases } = await strike(ctx, w, want, `hit:${bossId}`, rush);
-    // «Комбо»: this hit against the next step of today's sequence
-    const combo = await comboHit(ctx, bossId, mine.combo, w.id);
+    const { damage, crit, crits, count, left, readyAt, phraseIdx, phrases } = w
+      ? await strike(ctx, w, want, `hit:${bossId}`, rush)
+      : await (async () => {
+        const n = await obshakSpend(ctx, fightHp(mine, Number(g.damage_total)));
+        return { damage: n.taken, crit: false, crits: 0, count: 1, left: n.left, readyAt: null, phraseIdx: 0, phrases: ["Игла из общака"] };
+      })();
+    const wid = w ? w.id : NEEDLE_ID;
+    // «Комбо»: this hit against the next step of today's sequence (the needle is no step of it)
+    const combo = w ? await comboHit(ctx, bossId, mine.combo, w.id) : null;
     const seq = Number(g.last_seq) + 1;
     const total = Number(g.damage_total) + damage;
     await ctx.q.query("UPDATE bosses SET damage_total=$2, last_seq=$3 WHERE id=$1", [GLOBAL, total, seq]);
@@ -350,7 +360,7 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1
     );
     await ctx.q.query(
       "INSERT INTO boss_hits (boss_id, seq, player_id, fight_id, weapon, damage, phrase, created_at, crit, count) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)",
-      [bossId, seq, ctx.pid, mine.id, w.id, damage, phraseIdx, new Date(ctx.now), crit, count],
+      [bossId, seq, ctx.pid, mine.id, wid, damage, phraseIdx, new Date(ctx.now), crit, count],
     );
     await ctx.q.query("UPDATE fights SET my_damage = my_damage + $2, my_hits = my_hits + $3 WHERE id=$1", [mine.id, damage, count]);
     const fightDamage = mine.my_damage + damage;
@@ -370,7 +380,7 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1
     );
     await ctx.q.query(
       "UPDATE player_stats SET total_damage = total_damage + $2, weapons = jsonb_set(weapons, ARRAY[$3::text], to_jsonb(COALESCE((weapons->>$3)::int, 0) + $4)) WHERE player_id=$1",
-      [ctx.pid, damage, w.id, count],
+      [ctx.pid, damage, wid, count],
     );
     await gain(ctx, "damage", damage);
 
@@ -394,7 +404,7 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1
     const mineWon = won.some((x) => x.id === mine.id);
     const hp = mineWon ? 0 : fightHp({ ...mine, end_total: null, my_damage: Number(mine.my_damage) + damage }, total);
     return {
-      fightId: mine.id, weapon: w.id, damage, crit, phrase: phrases[phraseIdx], hp, hpMax: mine.hp_max,
+      fightId: mine.id, weapon: wid, damage, crit, phrase: phrases[phraseIdx], hp, hpMax: mine.hp_max,
       status: mineWon ? "won" : "active", left, readyAt, finished: won.length, fightDamage, talentDamage, talentsGained, count, crits, combo,
     };
   });

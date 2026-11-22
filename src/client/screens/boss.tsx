@@ -10,6 +10,7 @@ import { BAT, WEAPONS, itemById, rushPrice, weaponById } from "../../content/ite
 import { CRAFT_WEAPONS } from "../../content/craft.ts";
 import { HIT_PHRASES, bossLines } from "../../content/phrases.ts";
 import { BossSilhouette } from "../art/scenes.tsx";
+import { NEEDLE_ID } from "../../content/obshak.ts";
 import { ItemArt } from "../art/items.tsx";
 import { Icon } from "../art/icons.tsx";
 import { Bar, DropKind, Empty, GainLine, bossItemsCount, bossTattooCount } from "../ui.tsx";
@@ -339,6 +340,27 @@ export function BossScreen({ id }: { id: string }) {
     }
   };
 
+  // «Урон от Иглы» (content/obshak.ts): today's stock of «Общак» in one blow, as much as the boss can still take
+  const needle = async () => {
+    if (!hitGapOk()) return;
+    const pool = state?.obshak?.pool ?? 0;
+    if (pool <= 0) return;
+    haptic.heavy();
+    weaponSfx("keyboard", 1);
+    try {
+      const r = await api.action<{ damage: number; hp: number; status: string; left: number | null; talentDamage: number; talentsGained: number }>("attack", { weapon: NEEDLE_ID, idem: crypto.randomUUID() });
+      play("keyboard", r.result.damage, "", true);
+      setView((v) => (v ? { ...v, hp: Math.min(v.hp, r.result.hp), myDamage: v.myDamage + r.result.damage, myHits: v.myHits + 1 } : v));
+      setTalentDmg(r.result.talentDamage);
+      if (r.result.status === "won") { haptic.big(); sfx("victory"); }
+      void refresh();
+    } catch (e) {
+      if ((e as { code?: string }).code === "too_fast") return;
+      haptic.err();
+      toast(e instanceof Error ? e.message : "Не получилось", "err");
+    }
+  };
+
   // «Соло»: the same fight, but only my own hits take the boss's HP — wins count for the «Соло» badge
   // the fight mode: «Пацанский» ×1 HP, «Блатной» ×3, «Авторитетный» ×6 (content/medals.ts); remembered per boss
   // four ways, one at a time: three modes or «Соло» (a fight alone at normal HP); remembered per boss
@@ -456,6 +478,11 @@ export function BossScreen({ id }: { id: string }) {
             <button type="button" className="btn sm gold fbtn-arms" onClick={() => { haptic.tap(); setPanel(true); }} aria-label="Оружие" title="Оружие в бою">
               <ItemArt id="rug-pull-gun" size={22} />
             </button>
+            {(state?.obshak?.pool ?? 0) > 0 && (
+              <button type="button" className="btn sm violet fbtn-needle" onClick={() => void needle()} aria-label="Урон от Иглы" title="Урон от Иглы — запас из общака">
+                <ItemArt id={NEEDLE_ID} size={22} /><span className="num">{short(state!.obshak!.pool)}</span>
+              </button>
+            )}
             {view?.combo && <ComboButton c={view.combo} onOpen={() => setComboOpen((o) => !o)} />}
             <span className="grow" />
             <button type="button" className={`btn sm red fbtn-flee ${fleeAsk ? "ask" : ""}`} onClick={flee} disabled={busy === "fight_flee"} aria-label={fleeAsk ? "Точно сдаться?" : "Сдаться"} title="Сдаться">
