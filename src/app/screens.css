@@ -7548,3 +7548,27 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .zr-done-place { font-size: 28px; color: #ffd04a; }
 .zr-done-xp { font-size: 13px; color: #cfe86a; font-weight: 800; }
 .zr-toggle img { padding: 3px; }
+
+/* ── Фокус (art/boss-fokus.tsx, boss-poses.ts POSES.fokus): the pose engine sets --gl --jaw --fing --brw --sq --px --py ── */
+.rig-fokus { --gl: 0; --jaw: 0.2; --fing: 0; --brw: 0; --sq: 0; --px: 0; --py: 0; }
+/* the glasses slide down the nose and tilt; the nose squashes from its tip and widens under them */
+.rig-fokus .fk-glasses { transform: translateY(calc(var(--gl) * 11px)) rotate(calc(var(--gl) * -2.5deg)); }
+.rig-fokus .fk-nose { transform: translateY(calc(var(--gl) * 1.2px)) scale(calc(1 + var(--gl) * 0.08), calc(1 - var(--gl) * 0.1)); }
+/* the jaw: the chin stretches down from its top, the lower lip and teeth drop, the throat opens behind them */
+.rig-fokus .fk-chin { transform: scaleY(calc(1 + var(--jaw) * 0.12)); }
+.rig-fokus .fk-jaw { transform: translateY(calc(var(--jaw) * 5px)); }
+.rig-fokus .fk-throat { transform: scaleY(calc(1 + var(--jaw) * 0.5)); }
+/* the fist or the hand with the pointing finger on the same wrist */
+.rig-fokus .fk-fist { opacity: calc(1 - var(--fing)); }
+.rig-fokus .fk-finger { opacity: var(--fing); }
+/* the brows: frown (+) — the inner ends down; surprise (−) — up */
+.rig-fokus .br-brow-r { transform: translateY(calc(var(--brw) * 1.2px)) rotate(calc(var(--brw) * 11deg)); }
+.rig-fokus .br-brow-l { transform: translateY(calc(var(--brw) * 1.2px)) rotate(calc(var(--brw) * -11deg)); }
+/* the eyes look about inside their holes */
+.rig-fokus .fk-pupils { transform: translate(calc(var(--px) * 4px), calc(var(--py) * 2px)); }
+/* the lids: a squint (--sq) and a blink now and then (two quick ones in each loop) */
+.rig-fokus .fk-lids-sq > g { transform: scaleY(calc(var(--sq) * 0.6)); }
+.rig-fokus .fk-lids > g { transform: scaleY(0); animation: fk-blink 4.3s linear infinite; }
+@keyframes fk-blink { 0%, 44%, 50.5%, 89%, 93.5%, 100% { transform: scaleY(0); } 46.5%, 47.5%, 91%, 91.5% { transform: scaleY(1); } }
+.rig-fokus .fk-hair { will-change: transform; }
+@media (prefers-reduced-motion: reduce) { .rig-fokus .fk-lids > g { animation: none; } }

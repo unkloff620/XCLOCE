@@ -19,6 +19,7 @@ import { useEffect, useRef, type CSSProperties, type ReactNode, type RefObject }
 import { usePoses } from "./boss-poses.ts";
 import { usePuppet } from "./boss-puppet.ts";
 import { BOSS_RIGS } from "./boss-rig-data.ts";
+import { FokusRig } from "./boss-fokus.tsx";
 
 type Part = { x: number; y: number; w: number; h: number; pivot?: readonly number[]; frames?: number; v?: string };
 
@@ -390,6 +391,7 @@ export function BossRig({ id: asked, hpShare = 1, bust = false, outfit: wanted }
       </div>
     );
   }
+  if (baseId === "fokus") return <FokusRig id={id} rig={rig} bust={bust} dazed={dazed} svgRef={svgRef} wrapRef={wrapRef} puppet={puppet} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} />;
   if (baseId === "knyaz") return <KnyazRig id={id} rig={rig} bust={bust} dazed={dazed} svgRef={svgRef} frameCss={frameCss} strip={strip} />;
   if (baseId === "vadim") return <VadimRig id={id} rig={rig} bust={bust} dazed={dazed} sleepy={hpShare < DYING_BELOW} svgRef={svgRef} wrapRef={wrapRef} puppet={puppet} />;
   const behind = BEHIND[baseId];

@@ -180,7 +180,7 @@ export const BOSSES: BossDef[] = [
     id: "fokus", order: 12, card: "diamond", name: "Фокус", title: "Главный и единственный программист",
     story: "Весь код Close написал он один. И только он знает, почему это работает.",
     hp: hp(11), reward: { xp: xp(11), currencies: { TOOTH: 12_000, PAP: 12_000 } },
-    theme: { a: "#401624", b: "#16060c", accent: "#ff6b9a" }, photo: photo("fokus"),
+    theme: { a: "#401624", b: "#16060c", accent: "#ff6b9a" }, photo: photo("fokus", true),
     keysToUnlock: 1,
   },
   {

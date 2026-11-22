@@ -63,6 +63,9 @@ interface Spec {
   scale?: Partial<Record<J, string>>;
   /** the blow at the player stays the screens.css one (strike-l/r: the fist on that side flies at the screen) */
   cssStrike?: boolean;
+  /** hair on the head (Фокус): a soft spring of its own that lags behind the head's turns and the body's jerks and
+   *  flops back — turned round its root and skewed (the ends go further than the roots), it also flutters a little */
+  hair?: { sel: string; k: number; c: number; turn: number; jerk: number; flutter: (t: number) => number };
 }
 const SPRING0 = { k: 160, c: 16 };
 
@@ -490,7 +493,98 @@ const utBreath = (t: number) => {
   return 0;
 };
 
+
+/* Фокус: R — his right arm (the fist on the hip, the left of the picture): uppercut-jabs from the hip, the fist grows
+   at the screen; L — the knife (on the right): raised high, then stabbed down at the screen — blood splashes at the
+   end of each stab (the class fk-stab, boss-fokus.tsx). The combo goes like a berserk: slow, then faster and faster;
+   the glasses slide down his nose with every blow (gl), he frowns (brw), squints (sq) and grits his teeth; after the
+   last blow the mouth falls open (jaw), he pants, puts the fist away, takes the hand with the pointing finger (fing) and
+   pushes the glasses back up the nose, and stands in his stance again. */
+const FK_R_BACK = { armR: 24, lowR: -20, handR: 6 };
+const FK_R_HIT = { armR: -79, lowR: -16, handR: -14, zR: 48 };
+const FK_L_BACK = { armL: -25, lowL: -44, handL: -30 };
+const FK_L_HIT = { armL: 41, lowL: -98, handL: 12, zL: 42 };
+/** the arm angles of the finger at the outer corner of his right lens: below it (the glasses down), and up (pushed) —
+ *  solved for the rig's joints (shoulder, elbow, wrist, the fingertip of fingerR) */
+const FK_PUSH_LOW = { armR: 79.2, lowR: -95.2, handR: -31.3 };
+const FK_PUSH_UP = { armR: 83.7, lowR: -96.9, handR: -39.9 };
+const fkCombo = (n: number): Action => {
+  const keys: Key[] = [];
+  const face: Face[] = [];
+  let t = 0;
+  for (let i = 0; i < n; i++) {
+    // the berserk: each blow quicker than the one before (0.95 s → 0.2 s)
+    const d = Math.max(0.2, 0.95 * Math.pow(0.8, i));
+    const right = i % 2 === 0;
+    const k = i / (n - 1);
+    // the glasses creep down, the frown deepens, the mouth grits a little more with every blow
+    const f = { gl: Math.min(1, (i + 1) / (n - 2)), brw: 0.5 + 0.5 * k, sq: 0.25 + 0.45 * k, jaw: 0.15, px: right ? -0.5 : 0.5, py: 0.6 };
+    const back = right ? { ...FK_R_BACK, up: 2.5, x: 4, head: 2.5 } : { ...FK_L_BACK, up: -2.5, x: -4, head: -2.5 };
+    const hit = right ? { ...FK_R_HIT, up: -4, x: -12, head: -3.5, armL: 6, lowL: -8 } : { ...FK_L_HIT, up: 4.5, x: 12, head: 3.5, armR: 4, lowR: 6 };
+    keys.push({ at: t, pose: { ...back, ...f }, stiff: 1 + 2.5 * k });
+    keys.push({ at: t + d * 0.32, pose: { ...hit, ...f, jaw: 0.35 }, stiff: 5 + 3 * k });
+    face.push({ cls: right ? "fk-punch" : "fk-stab", at: t + d * 0.32 + 0.06, dur: 0.1 });
+    keys.push({ at: t + d * 0.62, pose: { ...hit, ...f, ...(right ? { armR: -75, lowR: -25, zR: 25 } : { armL: 28, lowL: -80, handL: 26, zL: 18 }) }, stiff: 2 + 2 * k });
+    t += d;
+  }
+  // done: the mouth falls open, he pants, the arms drop back into the stance
+  const done = { gl: 1, brw: 0.2, sq: 0.1, jaw: 1, px: 0, py: 0.3 };
+  keys.push({ at: t, pose: { ...done, up: -1.5, head: 3 }, stiff: 1.2 });
+  // the fist off the hip → the hand with the finger, up under the glasses' bridge (the head still, to meet it)
+  keys.push({ at: t + 0.7, pose: { ...done, ...FK_PUSH_LOW, fing: 1, px: 0, py: -0.4, brw: -0.3 }, stiff: 1.6 });
+  // the push: the glasses go back up the nose
+  keys.push({ at: t + 1.25, pose: { ...done, ...FK_PUSH_UP, fing: 1, gl: 0, jaw: 0.7, py: -0.2, brw: -0.5 }, stiff: 1.8 });
+  keys.push({ at: t + 1.65, pose: { ...FK_PUSH_UP, fing: 1, jaw: 0.6, brw: -0.3 }, stiff: 1.2 });
+  // the hand down, the fist back on the hip; the mouth closes slowly with the breath
+  keys.push({ at: t + 1.95, pose: { armR: 40, lowR: -40, handR: -20, fing: 1, jaw: 0.45 }, stiff: 1.3 });
+  keys.push({ at: t + 2.35, pose: { jaw: 0.3 }, stiff: 1 });
+  return { keys, dur: t + 2.8, face };
+};
+const fkCombo12 = fkCombo(12);
+const fkCombo10 = fkCombo(10);
+
 const POSES: Record<string, Spec> = {
+  fokus: {
+    springs: {
+      up: { k: 120, c: 13 }, x: { k: 110, c: 13 }, head: { k: 150, c: 12 },
+      armR: { k: 170, c: 17 }, lowR: { k: 260, c: 19 }, handR: { k: 420, c: 18 },
+      armL: { k: 170, c: 17 }, lowL: { k: 260, c: 19 }, handL: { k: 420, c: 18 },
+      zR: { k: 300, c: 22 }, zL: { k: 300, c: 22 },
+      gl: { k: 70, c: 13 }, fing: { k: 900, c: 60 }, jaw: { k: 90, c: 14 }, brw: { k: 120, c: 16 }, sq: { k: 120, c: 16 },
+      px: { k: 160, c: 18 }, py: { k: 160, c: 18 },
+    },
+    drag: { lowL: ["armL", -0.06], handL: ["lowL", -0.05], lowR: ["armR", -0.06], handR: ["lowR", -0.05], head: ["up", -0.09] },
+    // never still: a slow weight shift, the head nods; the eyes look about (a new spot every ~1.7 s); heavy breathing
+    // keeps the mouth a little open
+    idle: (t) => {
+      const g = Math.floor(t / 1.7);
+      const r = (n: number) => { const v = Math.sin(n * 12.9898 + g * 78.233) * 43758.5453; return v - Math.floor(v); };
+      return {
+        up: 0.8 * Math.sin(t * 0.9) + 0.3 * Math.sin(t * 2.1 + 1),
+        x: 2.5 * Math.sin(t * 0.7),
+        head: 1.4 * Math.sin(t * 1.1 + 1) + 0.7 * Math.sin(t * 0.47),
+        armR: 1.4 * Math.sin(t * 1.2 + 2), lowR: 2 * Math.sin(t * 1.5 + 1), handR: 2.5 * Math.sin(t * 1.9),
+        armL: 1.6 * Math.sin(t * 1.3), lowL: 2.4 * Math.sin(t * 1.7 + 0.5), handL: 3 * Math.sin(t * 2.3 + 1),
+        jaw: 0.22 + 0.16 * (0.5 - 0.5 * Math.cos((t / 1.25) * Math.PI * 2)),
+        px: (r(1) - 0.5) * 1.6, py: (r(2) - 0.5) * 0.9,
+      };
+    },
+    actions: [{ a: fkCombo12, w: 2 }, { a: fkCombo10, w: 1 }],
+    // about 5 seconds in the stance between the combos
+    rest: [4.8, 5.6],
+    hit: { head: -320, up: -90, x: -70, armL: 120, lowL: -150, armR: -110, lowR: 150, handL: -220, handR: 220, gl: 3, jaw: 4 },
+    strike: fkCombo(6),
+    dazed: { pose: { armL: 8, armR: -6, head: 4, gl: 0.8, jaw: 0.6 }, act: true },
+    // the heavy breath: the chest up and wider, slow and deep
+    breath: (t, dazed) => { const b = 0.5 - 0.5 * Math.cos((t / (dazed ? 1.6 : 1.25)) * Math.PI * 2); return [1 + 0.012 * b, 1 + 0.022 * b, -3.5 * b]; },
+    shapes: { gl: {}, fing: {}, brw: {}, sq: {}, px: {}, py: {} },
+    scale: { handR: "zR", handL: "zL" },
+    vars: (a) => ({
+      "--gl": a.gl.toFixed(3), "--fing": Math.max(0, Math.min(1, a.fing)).toFixed(3), "--jaw": Math.max(0, a.jaw).toFixed(3),
+      "--brw": a.brw.toFixed(3), "--sq": Math.max(0, Math.min(1, a.sq)).toFixed(3), "--px": a.px.toFixed(3), "--py": a.py.toFixed(3),
+    }),
+    hair: { sel: ".fk-hair", k: 95, c: 7, turn: 0.55, jerk: 0.012, flutter: (t) => 0.8 * Math.sin(t * 2.3) + 0.5 * Math.sin(t * 5.1 + 1) },
+  },
   utilizator: {
     // the body is heavy (soft, overdamped), the arms quick
     springs: {
@@ -887,6 +981,8 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
     const hangs = spec.hang ? [...svg.querySelectorAll<SVGGElement>(spec.hang.sel)] : [];
     const hems = spec.hem ? [...svg.querySelectorAll<SVGGElement>(spec.hem.sel)] : [];
     let hemA = 0, hemV = 0;
+    const hairs = spec.hair ? [...svg.querySelectorAll<SVGGElement>(spec.hair.sel)] : [];
+    let hairA = 0, hairV = 0;
     let hangA = 0, hangV = 0;
     const follow = spec.breathFollow ? [...svg.querySelectorAll<SVGGElement>(spec.breathFollow.sel)] : [];
     svg.classList.add("posed");
@@ -975,6 +1071,15 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
         const tr = `skewX(${hemA.toFixed(2)}deg) scaleX(${(1 + Math.abs(hemV) * 0.0006).toFixed(4)})`;
         for (const el of hems) el.style.transform = tr;
       }
+      if (spec.hair) {
+        const hs = spec.hair;
+        // the head's and the body's turns pull it back; a jerk of the upper body (its speed) throws it the other way
+        const target = -hs.turn * (ang.head + ang.up) - hs.jerk * (vel.x + vel.up * 2) + hs.flutter(t);
+        const n = Math.ceil(dt / 0.008), h = dt / n;
+        for (let i = 0; i < n; i++) { hairV += (hs.k * (target - hairA) - hs.c * hairV) * h; hairA += hairV * h; }
+        const tr = `rotate(${hairA.toFixed(2)}deg) skewX(${(hairA * 0.8).toFixed(2)}deg) scaleY(${(1 - Math.min(0.05, Math.abs(hairV) * 0.0004)).toFixed(4)})`;
+        for (const el of hairs) el.style.transform = tr;
+      }
       if (spec.hang) {
         const target = -spec.hang.chain.reduce((a, j) => a + ang[j], 0);
         const n = Math.ceil(dt / 0.008), h = dt / n;
@@ -1018,6 +1123,7 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
       for (const el of follow) el.style.transform = "";
       for (const el of hangs) el.style.transform = "";
       for (const el of hems) el.style.transform = "";
+      for (const el of hairs) el.style.transform = "";
       for (const b of bends) { for (const s of b.strips) s.el.style.transform = ""; for (const el of b.turns) el.style.transform = ""; }
     };
   }, [svgRef, baseId, rigKey]);

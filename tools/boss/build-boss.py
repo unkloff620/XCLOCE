@@ -21,8 +21,9 @@ HIRES_BY_BOSS = {"vodovoz": (2, {"head", "eyes", "pupils", "eyes-closed", "browL
                   "vadim": (2, {"head", "eyes", "pupils", "eyes-closed", "browL", "browR", "throat", "teeth-up", "teeth-low", "lips", "mouth-sad", "duck"}),
                   "botsman": (2, {"head", "eyes", "pupils", "eyes-closed", "browL", "browR", "throat", "teeth-up", "teeth-low", "lips"}),
                   "utilizator": (2, {"head", "eyes", "pupils", "eyes-closed", "browL", "browR", "throat", "teeth-up", "teeth-low", "lips", "lips-up"}),
+                  "fokus": (2, {"head", "eyes", "pupils", "browL", "browR", "throat", "teeth-up", "teeth-low", "lips", "lips-up", "nose", "chin", "temple", "glasses", "hair"}),
                   "knyaz": (2, {"head", "head-open", "eyes", "pupils", "eyes-closed", "throat", "teeth-up", "teeth-low", "lips", "mouth-closed", "mouth-sad", "gag"})}
-PARTS = ["tail", "legs", "body", "headset", "foreL", "foreR", "armL", "lowL", "handL", "bag", "vials", "gasmask", "cover", "keyRing", "keyFob", "keyKey", "duck", "armR", "lowR", "handR", "head", "head-open", "throat", "teeth-up", "teeth-low", "jaw", "lips", "lips-up", "mouth-sad", "eyes", "eyes-closed", "pupils", "brows", "brows-sad", "browL", "browR", "mouth", "mouth-closed", "collar", "gag"]
+PARTS = ["tail", "legs", "body", "headset", "foreL", "foreR", "armL", "lowL", "handL", "bag", "vials", "gasmask", "cover", "keyRing", "keyFob", "keyKey", "duck", "armR", "lowR", "handR", "head", "head-open", "throat", "teeth-up", "teeth-low", "jaw", "lips", "lips-up", "mouth-sad", "eyes", "eyes-closed", "pupils", "brows", "brows-sad", "browL", "browR", "mouth", "mouth-closed", "collar", "gag", "fingerR", "nose", "chin", "temple", "glasses", "hair"]
 # puppet-warped sequences (<part>@0.png, <part>@1.png …): one strip <part>.webp, frames side by side, frame 0 first
 FRAMES = ["brows", "jaw", "armRb", "armLb"]
 # which edge of the part joins the parent: (axis, side) — y/bottom for head and left forearm, x/right for the right one
@@ -41,6 +42,10 @@ PIVOT_BY_BOSS = {
     "utilizator": {"head": [316.0, 228.0], "armL": [132.0, 340.0], "lowL": [80.3, 502.8],
                    "armR": [454.8, 366.5], "lowR": [559.0, 507.9], "vials": [255.3, 649.0], "gasmask": [440.7, 636.0],
                    "browL": [311.5, 110.2], "browR": [325.0, 109.5]},
+    # Фокус (tools/boss/assemble-fokus.py, the 2000×3000 picture cropped at (180, 200)): the neck, the shoulders, the
+    # elbows, the wrists (the finger hand turns on the same wrist as the fist), the brows' inner ends
+    "fokus": {"head": [371.0, 226.0], "armR": [236.0, 336.0], "lowR": [64.3, 455.6], "handR": [190.5, 541.6], "fingerR": [190.5, 541.6],
+              "armL": [470.0, 334.0], "lowL": [630.3, 487.3], "handL": [803.5, 505.3], "browR": [364.0, 117.8], "browL": [380.0, 118.5]},
     "bebyakyan": {"foreL": [228.0, 405.0], "foreR": [617.0, 437.0]},
     # whole arms swing at the shoulder, the hands with money turn at the wrist (inside the arm's swing)
     "garkusha": {"armL": [290.0, 335.0], "handL": [125.0, 560.0], "armR": [540.0, 350.0], "handR": [730.0, 430.0]},
