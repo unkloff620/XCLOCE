@@ -364,25 +364,27 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1
     );
     await ctx.q.query("UPDATE fights SET my_damage = my_damage + $2, my_hits = my_hits + $3 WHERE id=$1", [mine.id, damage, count]);
     const fightDamage = mine.my_damage + damage;
-    // talents for the damage of all time: the counter carries over from fight to fight
+    // the needle's damage is the fund's, not the player's: no talents, no stats, no tops, no tasks
     const [st] = await ctx.q.query<{ total_damage: number }>("SELECT total_damage FROM player_stats WHERE player_id=$1", [ctx.pid]);
     const before = Number(st?.total_damage ?? 0);
-    const talentDamage = before + damage;
-    const talentsGained = talentsForDamage(talentDamage) - talentsForDamage(before);
+    const talentDamage = needle ? before : before + damage;
+    const talentsGained = needle ? 0 : talentsForDamage(talentDamage) - talentsForDamage(before);
     if (talentsGained > 0) {
       await ctx.q.query("UPDATE players SET talents = talents + $2 WHERE id=$1", [ctx.pid, talentsGained]);
       await ledger(ctx, "talent", "talent", talentsGained, `fight:${mine.id}`);
       await autoSpendTalents(ctx);
     }
-    await ctx.q.query(
-      "INSERT INTO boss_damage (boss_id, player_id, damage, hits) VALUES ($1,$2,$3,$4) ON CONFLICT (boss_id, player_id) DO UPDATE SET damage = boss_damage.damage + EXCLUDED.damage, hits = boss_damage.hits + EXCLUDED.hits",
-      [bossId, ctx.pid, damage, count],
-    );
-    await ctx.q.query(
-      "UPDATE player_stats SET total_damage = total_damage + $2, weapons = jsonb_set(weapons, ARRAY[$3::text], to_jsonb(COALESCE((weapons->>$3)::int, 0) + $4)) WHERE player_id=$1",
-      [ctx.pid, damage, wid, count],
-    );
-    await gain(ctx, "damage", damage);
+    if (!needle) {
+      await ctx.q.query(
+        "INSERT INTO boss_damage (boss_id, player_id, damage, hits) VALUES ($1,$2,$3,$4) ON CONFLICT (boss_id, player_id) DO UPDATE SET damage = boss_damage.damage + EXCLUDED.damage, hits = boss_damage.hits + EXCLUDED.hits",
+        [bossId, ctx.pid, damage, count],
+      );
+      await ctx.q.query(
+        "UPDATE player_stats SET total_damage = total_damage + $2, weapons = jsonb_set(weapons, ARRAY[$3::text], to_jsonb(COALESCE((weapons->>$3)::int, 0) + $4)) WHERE player_id=$1",
+        [ctx.pid, damage, wid, count],
+      );
+      await gain(ctx, "damage", damage);
+    }
 
     // every running fight (with any boss) whose HP reached zero is won by this hit
     const won = await ctx.q.query<{ id: number; player_id: number; boss_id: string }>(
@@ -653,7 +655,7 @@ export async function fightView(q: Queryable, pid: number, fightId: number, sinc
   const hits = await hitsInWindow(q, scope, Math.max(f.start_seq, sinceSeq), upTo, 20, f.solo ? pid : null);
   const top = await q.query<{ player_id: number; display_name: string; dmg: number; hits: number }>(
     `SELECT h.player_id, p.display_name, SUM(h.damage)::int AS dmg, COUNT(*)::int AS hits FROM boss_hits h JOIN players p ON p.id=h.player_id
-     WHERE ($1::text IS NULL OR h.boss_id=$1) AND h.seq > $2 AND ($3::bigint IS NULL OR h.seq <= $3) AND ($4::int IS NULL OR h.player_id = $4) GROUP BY h.player_id, p.display_name ORDER BY dmg DESC LIMIT 10`,
+     WHERE ($1::text IS NULL OR h.boss_id=$1) AND h.seq > $2 AND ($3::bigint IS NULL OR h.seq <= $3) AND ($4::int IS NULL OR h.player_id = $4) AND h.weapon <> 'needle' GROUP BY h.player_id, p.display_name ORDER BY dmg DESC LIMIT 10`,
     [scope, f.start_seq, upTo, f.solo ? pid : null],
   );
   const [killer] = f.killer_id ? await q.query<{ display_name: string }>("SELECT display_name FROM players WHERE id=$1", [f.killer_id]) : [];

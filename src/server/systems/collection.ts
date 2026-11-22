@@ -42,7 +42,7 @@ export async function casesView(q: Queryable, pid: number) {
   const opened = new Set((await q.query<{ item_id: string }>("SELECT item_id FROM player_unlocks WHERE player_id=$1", [pid])).map((r) => r.item_id));
   const wins = new Map((await q.query<{ boss_id: string; wins: number; damage: number }>("SELECT boss_id, wins, damage FROM boss_damage WHERE player_id=$1", [pid]))
     .map((r) => [r.boss_id, { wins: Number(r.wins), damage: Number(r.damage) }]));
-  const best = new Map((await q.query<{ boss_id: string; best: number }>("SELECT boss_id, MAX(damage)::int AS best FROM boss_hits WHERE player_id=$1 GROUP BY boss_id", [pid]))
+  const best = new Map((await q.query<{ boss_id: string; best: number }>("SELECT boss_id, MAX(damage)::int AS best FROM boss_hits WHERE player_id=$1 AND weapon <> 'needle' GROUP BY boss_id", [pid]))
     .map((r) => [r.boss_id, Number(r.best)]));
   const ink = new Set((await q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id LIKE 'tat-%'", [pid])).map((r) => r.item_id));
   return [...BOSSES, ...EVENT_FIGHTS].map((b) => {

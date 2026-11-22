@@ -123,6 +123,8 @@ async function afterAction(ctx: Ctx, type: ActionType, result: unknown) {
   const r = (result ?? {}) as Record<string, unknown>;
   switch (type) {
     case "attack": {
+      // «Урон от Иглы» is the fund's damage (content/obshak.ts): no tasks, no rating, no «Сходняк»
+      if (r.weapon === "needle") return;
       await quests.questTick(ctx, "damage", Number(r.damage) || 0);
       await rating.addWeeklyDamage(ctx, Number(r.damage) || 0);
       await shodTick(ctx, "damage", Number(r.damage) || 0);

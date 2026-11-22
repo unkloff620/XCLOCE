@@ -39,6 +39,11 @@ describe("«Общак»", () => {
     expect(hit.damage).toBeGreaterThan(0);
     expect(hit.left).toBe(3_000_000 - hit.damage);
     expect((await obshakView(db, p, T0 + 3000)).pool).toBe(3_000_000 - hit.damage);
+    // the fund's damage is not the player's: no talents, no stats, no damage tops
+    const [st] = await db.query<{ total_damage: number }>("SELECT total_damage FROM player_stats WHERE player_id=$1", [p]);
+    expect(Number(st?.total_damage ?? 0)).toBe(0);
+    const [bd] = await db.query<{ damage: number }>("SELECT damage FROM boss_damage WHERE player_id=$1", [p]);
+    expect(Number(bd?.damage ?? 0)).toBe(0);
     // the next Moscow day: yesterday's stock is gone, the collecting is open again
     v = await obshakView(db, p, T0 + DAY);
     expect(v).toMatchObject({ ready: true, pool: 0 });
