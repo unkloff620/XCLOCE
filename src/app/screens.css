@@ -754,15 +754,15 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .bcard-killer .avatar { border-width: 1.5px; }
 .bcard.live { border-color: var(--gold); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45), 0 0 0 2px rgba(255, 204, 51, 0.5), 0 0 22px rgba(255, 204, 51, 0.3); }
 /* not open yet: the whole card goes grey (the boss and his name are still visible) */
-.bcard.locked { opacity: 0.85; filter: grayscale(1); }
+.bcard.locked { opacity: 0.85; }
 .bcard.locked .bcard-art { filter: brightness(0.7); }
 /* a boss closed by the road: «Идти» to his location and what to clear */
 .bcard-road { flex-direction: column; align-items: center; gap: 4px; }
 .bcard-road .btn { min-width: 110px; position: relative; z-index: 7; }
 /* the grey of a closed card: a film over the whole card (its frame too) that greys what is under it — only «Идти»
    stands above it, in colour; the card keeps its own shadow */
-.bcard.locked { filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.45)) !important; opacity: 1; animation: none !important; }
-.bcard.locked .bcard-main { z-index: auto; }
+.bcard.locked { filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.45)); opacity: 1; }
+.bcard.locked .bcard-main, .bcard.locked.bcard .bcard-main { z-index: auto !important; }
 .bcard-grey { position: absolute; inset: 0; z-index: 6; pointer-events: none; border-radius: inherit;
   -webkit-backdrop-filter: grayscale(1) brightness(0.92); backdrop-filter: grayscale(1) brightness(0.92); }
 .bcard-road-what { font-size: 12px; color: var(--mute-c); text-align: center; }
@@ -1943,7 +1943,7 @@ button.bjt-stack { cursor: pointer; }
 .bcard-cta { border: 2px solid #2a1606; box-shadow: 0 3px 0 #2a1606; }
 .bcard-cta.off { color: var(--mute-c); background: rgba(42, 22, 6, 0.12); border-color: rgba(42, 22, 6, 0.4); box-shadow: none; }
 .bcard.live { border-color: transparent; box-shadow: none; filter: drop-shadow(0 0 10px rgba(255, 204, 51, 0.75)) drop-shadow(0 6px 6px rgba(0, 0, 0, 0.45)); }
-.bcard.locked { filter: grayscale(1) drop-shadow(0 6px 6px rgba(0, 0, 0, 0.45)); }
+/* a closed card: grey by the film (.bcard-grey), the effects play under it */
 @media (max-width: 380px) { .bcard-main { padding-right: 12px; } .bcard-name { font-size: 19px; } }
 .bcard.final:not(.locked) { animation: bcard-boss-frame 3.2s ease-in-out infinite; }
 @keyframes bcard-boss-frame { 50% { filter: drop-shadow(0 0 12px color-mix(in srgb, var(--acc) 70%, transparent)) drop-shadow(0 6px 6px rgba(0, 0, 0, 0.45)); } }

@@ -143,9 +143,9 @@ export function BossesScreen() {
               {/* a closed card goes grey through this film (not a filter on the card: the «Идти» button stays in colour over it) */}
               {grey && <i className="bcard-grey" aria-hidden="true" />}
               {/* Боцман's card: an emerald glint runs along the frame (its ::before/::after are the rain and the lamps) */}
-              {b.id === "botsman" && !grey && <i className="bcard-glint" aria-hidden="true" />}
+              {b.id === "botsman" && <i className="bcard-glint" aria-hidden="true" />}
               {/* Фокус's card: the code typing on the screen, the line from him */}
-              {b.id === "fokus" && !grey && <FokusCardCode />}
+              {b.id === "fokus" && <FokusCardCode />}
               {/* the boss stands on the left and fades into the card */}
               <div className="bcard-art" aria-hidden="true">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
