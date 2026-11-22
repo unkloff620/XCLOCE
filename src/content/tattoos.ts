@@ -11,7 +11,7 @@ export interface TattooSet { id: string; name: string; boss: string; mode: "paca
 
 const DATSIK_SETS: TattooSet[] = [
   {
-    id: "ice", name: "Вечная мерзлота", boss: "datsik", mode: "pacan", bonus: { weapon: "keyboard", damage: 50 },
+    id: "ice", name: "Вечная мерзлота", boss: "datsik", mode: "pacan", bonus: { weapon: "keyboard", damage: 15 },
     pieces: [
       { id: "tat-ice-face", name: "Снежинка на скуле", part: "HEAD" },
       { id: "tat-ice-neck", name: "Ледяное ожерелье", part: "HEAD" },
@@ -37,7 +37,7 @@ const DATSIK_SETS: TattooSet[] = [
     ],
   },
   {
-    id: "king", name: "Ледяной король", boss: "datsik", mode: "avtor", bonus: { weapon: "gpu", damage: 100 },
+    id: "king", name: "Ледяной король", boss: "datsik", mode: "avtor", bonus: { weapon: "gpu", damage: 15 },
     pieces: [
       { id: "tat-king-face", name: "Ледяная корона на виске", part: "HEAD" },
       { id: "tat-king-neck", name: "Корона из сосулек", part: "HEAD" },
@@ -98,21 +98,26 @@ const solid = (id: string, name: string, boss: string, mode: TattooSet["mode"], 
 export const BOX_TATTOO_CHANCE = 0.2;
 const boxSet = (id: string, name: string, weapon: string, damage: number): TattooSet => ({ ...solid(id, name, "box", "pacan", weapon, damage) });
 
+/**
+ * The user's table (2026-11-23) also gives the bonuses of the sets Фокус and Солнце will get (none drawn yet):
+ * Фокус — «Пацанский» +420 Rug Pull Gun, «Авторитетный» +270 Пистолет; Солнце — «Пацанский» +750 Rug Pull Gun,
+ * «Авторитетный» +550 Пистолет.
+ */
 export const TATTOO_SETS: TattooSet[] = [
   ...DATSIK_SETS,
   solid("taiga", "Тайга", "kedr", "pacan", "gpu", 30), solid("roots", "Корни", "kedr", "avtor", "gpu", 25),
-  solid("shark", "Акулья пасть", "mugo", "pacan", "red-candle", 80), solid("kraken", "Кракен", "mugo", "avtor", "gpu", 150),
-  solid("cash", "Нал", "garkusha", "pacan", "keyboard", 100), solid("gold", "Золотой запас", "garkusha", "avtor", "rug-pull-gun", 200),
-  solid("ring", "Ринг", "bebyakyan", "pacan", "fist", 40), solid("fire", "Огненный кулак", "bebyakyan", "avtor", "rug-pull-gun", 250),
-  solid("izba", "Изба", "babafey", "pacan", "keyboard", 150), solid("firebird", "Жар-птица", "babafey", "avtor", "rug-pull-gun", 300),
-  solid("jackpot", "Джекпот", "vodovoz", "pacan", "gpu", 200), solid("sunrise", "Восход", "vodovoz", "avtor", "rug-pull-gun", 400),
-  solid("safe", "Сейф", "knyaz", "pacan", "gpu", 250), solid("realm", "Княжество", "knyaz", "avtor", "rug-pull-gun", 500),
-  solid("ducky", "Уточка", "vadim", "pacan", "gpu", 300), solid("racer", "Тачка", "vadim", "avtor", "rug-pull-gun", 600),
-  solid("dragon", "Дракон додзё", "botsman", "pacan", "gpu", 350), solid("cyber", "Кибер", "botsman", "avtor", "rug-pull-gun", 700),
+  solid("shark", "Акулья пасть", "mugo", "pacan", "keyboard", 40), solid("kraken", "Кракен", "mugo", "avtor", "gpu", 45),
+  solid("cash", "Нал", "garkusha", "pacan", "keyboard", 70), solid("gold", "Золотой запас", "garkusha", "avtor", "rug-pull-gun", 50),
+  solid("ring", "Ринг", "bebyakyan", "pacan", "keyboard", 55), solid("fire", "Огненный кулак", "bebyakyan", "avtor", "rug-pull-gun", 100),
+  solid("izba", "Изба", "babafey", "pacan", "gpu", 110), solid("firebird", "Жар-птица", "babafey", "avtor", "rug-pull-gun", 70),
+  solid("jackpot", "Джекпот", "vodovoz", "pacan", "gpu", 140), solid("sunrise", "Восход", "vodovoz", "avtor", "rug-pull-gun", 180),
+  solid("safe", "Сейф", "knyaz", "pacan", "rug-pull-gun", 170), solid("realm", "Княжество", "knyaz", "avtor", "rug-pull-gun", 170),
+  solid("ducky", "Уточка", "vadim", "pacan", "gpu", 180), solid("racer", "Тачка", "vadim", "avtor", "rug-pull-gun", 200),
+  solid("dragon", "Дракон додзё", "botsman", "pacan", "gpu", 250), solid("cyber", "Кибер", "botsman", "avtor", "rug-pull-gun", 250),
   // Утилизатор: tattoos in «Пацанский» and «Блатной», his thing in «Авторитетный» (bosses.ts thingsMode)
-  solid("ut-acid", "Кислота", "utilizator", "pacan", "gpu", 400), solid("ut-storm", "Гроза", "utilizator", "blat", "rug-pull-gun", 750),
+  solid("ut-acid", "Кислота", "utilizator", "pacan", "gpu", 190), solid("ut-storm", "Гроза", "utilizator", "blat", "rug-pull-gun", 350),
   // Пепе (the event boss, content/bosses.ts EVENT_FIGHTS): one piece per win, «Пацанский» only
-  solid("swamp", "Болото", "pepe", "pacan", "rug-pull-gun", 300),
+  solid("swamp", "Болото", "pepe", "pacan", "rug-pull-gun", 100),
   // Тося's sets (boss "tosya"): every pie he sells holds one piece (content/tosya.ts)
   solid("oven", "Пирожковая", "tosya", "pacan", "gpu", 200), solid("maid", "Горничная", "tosya", "pacan", "keyboard", 150),
   solid("yakuza", "Кухня якудзы", "tosya", "pacan", "rug-pull-gun", 300),
