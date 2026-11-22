@@ -1707,4 +1707,18 @@ UPDATE combo_progress SET best = progress WHERE best < progress;`,
     sql: `DELETE FROM inventory WHERE item_id='statue-close';
 UPDATE appearance SET decor = decor - 'statue-close' WHERE decor ? 'statue-close';`,
   },
+  {
+    // «Мастера» (content/masters.ts): the parts bought (a bit each), the path's steps, the paths walked, «Мастерство»
+    id: "v2-124-masters",
+    sql: `CREATE TABLE IF NOT EXISTS master_progress (
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  master_id TEXT NOT NULL,
+  bought INT NOT NULL DEFAULT 0,
+  steps INT NOT NULL DEFAULT 0,
+  runs INT NOT NULL DEFAULT 0,
+  mastery BIGINT NOT NULL DEFAULT 0,
+  PRIMARY KEY (player_id, master_id)
+);
+CREATE INDEX IF NOT EXISTS master_progress_best ON master_progress (master_id, mastery DESC);`,
+  },
 ];

@@ -13,6 +13,7 @@ import { Avatar, Empty, Modal, RewardChips } from "../ui.tsx";
 import { clock, full } from "../format.ts";
 import { haptic } from "../telegram.ts";
 import { Help } from "../help.tsx";
+import { LocTabs } from "./masters.tsx";
 import { sfx } from "../sound.ts";
 import { itemById } from "../../content/items.ts";
 import { STASH_CHANCE, STASH_PITY, STASH_SETS, stashSetOf, stashSetsByLocation } from "../../content/stashes.ts";
@@ -224,7 +225,7 @@ function ClaimedModal({ got, onClose }: { got: ClaimResult; onClose: () => void 
 
 export function LocationsScreen() {
   const { rows, load } = useLocations();
-  const { state, act, busy, toast } = useGame();
+  const { state, act, busy } = useGame();
   const [got, setGot] = useState<ClaimResult | null>(null);
   const claim = async (locationId: string) => {
     const res = await act<ClaimResult>("location_claim", { locationId });
@@ -248,17 +249,8 @@ export function LocationsScreen() {
               <p>Энергия: +1 каждые 5 минут до 50. Купить больше — нажми на энергию вверху.</p>
             </Help>
       </div>
-      {/* the user's tabs: «Локации» and two more, coming later (grey, behind the sheet) */}
-      <div className="lp-tabs2" role="tablist">
-        {([["Локации", "l", true], ["Скоро", "m", false], ["Скоро", "r", false]] as const).map(([t, at, on]) => (
-          <button key={at} type="button" role="tab" aria-selected={on} aria-disabled={!on} className={`lp-tab2 at-${at} ${on ? "on" : ""}`}
-            onClick={() => { if (!on) { haptic.tap(); toast("Скоро"); } }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`/assets/locations/page/tab-${at}.webp`} alt="" draggable={false} />
-            <b className="display">{t}</b>
-          </button>
-        ))}
-      </div>
+      {/* the user's tabs: «Локации», «Мастера» and one more later */}
+      <LocTabs on="l" />
       {rows && <BizDrawer rows={rows} onDone={() => void load()} />}
       <div className="lp-sheet col" style={{ gap: 12 }}>
         {LOCATIONS.map((l) => {
