@@ -68,6 +68,8 @@ interface Spec {
   /** hair on the head (Фокус): a soft spring of its own that lags behind the head's turns and the body's jerks and
    *  flops back — turned round its root and skewed (the ends go further than the roots), it also flutters a little */
   hair?: { sel: string; k: number; c: number; turn: number; jerk: number; flutter: (t: number) => number };
+  /** a key's stiffness pulls only the channels in its pose — the rest (his sway, his breath) keep their own pace */
+  stiffOwn?: boolean;
 }
 interface Phase {
   pose: Pose; act: boolean;
@@ -532,28 +534,28 @@ const fkCombo = (n: number, amp = 1, slow = 1): Action => {
     const right = i % 2 === 0;
     const k = i / (n - 1);
     // the glasses creep down, the frown deepens, the mouth grits a little more with every blow
-    const f = { gl: Math.min(1, (i + 1) / (n - 2)), brw: 0.5 + 0.5 * k, sq: 0.25 + 0.45 * k, jaw: 0.15, px: right ? -0.5 : 0.5, py: 0.6 };
+    const f = { gl: Math.min(1, (i + 1) / (n - 2)), brw: 0.5 + 0.5 * k, sq: 0.25 + 0.45 * k, jaw: -1.1, px: right ? -0.5 : 0.5, py: 0.6 };
     const back = fkAmp(right ? { ...FK_R_BACK, up: 2.5, x: 4, head: 2.5 } : { ...FK_L_BACK, up: -2.5, x: -4, head: -2.5 }, amp);
     const hit = fkAmp(right ? { ...FK_R_HIT, up: -4, x: -12, head: -3.5, armL: 6, lowL: -8 } : { ...FK_L_HIT, up: 4.5, x: 12, head: 3.5, armR: 4, lowR: 6 }, amp);
     const after = fkAmp(right ? { armR: -75, lowR: -25, handR: -5, zR: 4 } : { armL: 28, lowL: -80, handL: 5, zL: 4 }, amp);
     const st = amp < 1 ? 0.55 : 1;
     keys.push({ at: t, pose: { ...back, ...f }, stiff: (1 + 2.5 * k) * st });
-    keys.push({ at: t + d * 0.32, pose: { ...hit, ...f, jaw: 0.35 }, stiff: (5 + 3 * k) * st });
+    keys.push({ at: t + d * 0.32, pose: { ...hit, ...f }, stiff: (5 + 3 * k) * st });
     face.push({ cls: right ? "fk-punch" : "fk-stab", at: t + d * 0.32 + 0.06, dur: 0.1 });
     keys.push({ at: t + d * 0.62, pose: { ...hit, ...f, ...after }, stiff: (2 + 2 * k) * st });
     t += d;
   }
   // done: the mouth falls open, he pants, the arms drop back into the stance
-  const done = { gl: 1, brw: 0.2, sq: 0.1, jaw: 1, px: 0, py: 0.3 };
+  const done = { gl: 1, brw: 0.2, sq: 0.1, jaw: 0.35, px: 0, py: 0.3 };
   keys.push({ at: t, pose: { ...done, up: -1.5, head: 3 }, stiff: 1.2 });
   // the fist off the hip → the hand with the finger, up under the glasses' bridge (the head still, to meet it)
   keys.push({ at: t + 0.7, pose: { ...done, ...FK_PUSH_LOW, fing: 1, px: 0, py: -0.4, brw: -0.3 }, stiff: 1.6 });
   // the push: the glasses go back up the nose
-  keys.push({ at: t + 1.25, pose: { ...done, ...FK_PUSH_UP, fing: 1, gl: 0, jaw: 0.7, py: -0.2, brw: -0.5 }, stiff: 1.8 });
-  keys.push({ at: t + 1.65, pose: { ...FK_PUSH_UP, fing: 1, jaw: 0.6, brw: -0.3 }, stiff: 1.2 });
+  keys.push({ at: t + 1.25, pose: { ...done, ...FK_PUSH_UP, fing: 1, gl: 0, jaw: 0.15, py: -0.2, brw: -0.5 }, stiff: 1.8 });
+  keys.push({ at: t + 1.65, pose: { ...FK_PUSH_UP, fing: 1, jaw: 0.15, brw: -0.3 }, stiff: 1.2 });
   // the hand down, the fist back on the hip; the mouth closes slowly with the breath
-  keys.push({ at: t + 1.95, pose: { armR: -35, lowR: -15, handR: 0, fing: 1, jaw: 0.45 }, stiff: 1.3 });
-  keys.push({ at: t + 2.35, pose: { jaw: 0.3 }, stiff: 1 });
+  keys.push({ at: t + 1.95, pose: { armR: -35, lowR: -15, handR: 0, fing: 1, jaw: 0.15 }, stiff: 1.3 });
+  keys.push({ at: t + 2.35, pose: { jaw: 0 }, stiff: 1 });
   return { keys, dur: t + 2.8, face };
 };
 const fkCombo12 = fkCombo(12);
@@ -573,12 +575,12 @@ const fkCombo10 = fkCombo(10);
  *  pushes them back up, and the hand sinks back to the hip */
 const fkGlasses: Action = {
   keys: [
-    { at: 0, pose: { gl: 1, jaw: 0.75, brw: 0.15, sq: 0.2, head: 3, py: 0.4 }, stiff: 0.14 },
-    { at: 2.6, pose: { gl: 1, ...FK_PUSH_LOW, fing: 1, jaw: 0.7, py: -0.4, brw: -0.2 }, stiff: 0.35 },
-    { at: 4.8, pose: { gl: 0, ...FK_PUSH_UP, fing: 1, jaw: 0.65, py: -0.2, brw: -0.4 }, stiff: 0.55 },
-    { at: 5.8, pose: { ...FK_PUSH_UP, fing: 1, jaw: 0.6 }, stiff: 0.45 },
-    { at: 6.3, pose: { armR: -35, lowR: -15, handR: 0, fing: 1, jaw: 0.6 }, stiff: 0.32 },
-    { at: 7.6, pose: { jaw: 0.6 }, stiff: 0.35 },
+    { at: 0, pose: { gl: 1, jaw: 0.15, brw: 0.15, sq: 0.2, head: 3, py: 0.4 }, stiff: 0.14 },
+    { at: 2.6, pose: { gl: 1, ...FK_PUSH_LOW, fing: 1, jaw: 0.15, py: -0.4, brw: -0.2 }, stiff: 0.35 },
+    { at: 4.8, pose: { gl: 0, ...FK_PUSH_UP, fing: 1, jaw: 0.15, py: -0.2, brw: -0.4 }, stiff: 0.55 },
+    { at: 5.8, pose: { ...FK_PUSH_UP, fing: 1, jaw: 0.15 }, stiff: 0.45 },
+    { at: 6.3, pose: { armR: -35, lowR: -15, handR: 0, fing: 1, jaw: 0.15 }, stiff: 0.32 },
+    { at: 7.6, pose: { jaw: 0.15 }, stiff: 0.35 },
   ],
   dur: 8.8,
 };
@@ -611,7 +613,7 @@ const POSES: Record<string, Spec> = {
         head: 1.4 * Math.sin(t * 1.1 + 1) + 0.7 * Math.sin(t * 0.47),
         armR: 1.4 * Math.sin(t * 1.2 + 2), lowR: 2 * Math.sin(t * 1.5 + 1), handR: 2.5 * Math.sin(t * 1.9),
         armL: 1.6 * Math.sin(t * 1.3), lowL: 2.4 * Math.sin(t * 1.7 + 0.5), handL: 3 * Math.sin(t * 2.3 + 1),
-        jaw: 0.22 + 0.16 * (0.5 - 0.5 * Math.cos((t / 1.25) * Math.PI * 2)),
+        jaw: 0.7 + 0.3 * (0.5 - 0.5 * Math.cos((t / 1.25) * Math.PI * 2)),
         px: (r(1) - 0.5) * 1.6, py: (r(2) - 0.5) * 0.9,
       };
     },
@@ -621,10 +623,10 @@ const POSES: Record<string, Spec> = {
     hit: { head: -320, up: -90, x: -70, armL: 120, lowL: -150, armR: -110, lowR: 150, handL: -30, handR: 30, gl: 3, jaw: 4 },
     strike: fkCombo(6),
     // below half: he sways from foot to foot, the combos come shorter, slower and smaller
-    dazed: { pose: { armL: 6, armR: -5, head: 3, gl: 0.5, jaw: 0.5 }, act: true, sway: fkShift(2, 1),
+    dazed: { pose: { armL: 6, armR: -5, head: 3, gl: 0.5, jaw: 0.2 }, act: true, sway: fkShift(2, 1),
       actions: [{ a: fkCombo(6, 0.6, 1.7), w: 1 }], rest: [5, 7], strike: fkCombo(4, 0.6, 1.7), speed: 1 },
     // below a quarter: no blows any more — he sways slower and only pushes his sliding glasses back up, slowly
-    dying: { pose: { armL: 10, armR: -8, head: 5, jaw: 0.6 }, act: true, sway: fkShift(1.5, 0.85),
+    dying: { pose: { armL: 10, armR: -8, head: 5, jaw: 0.3 }, act: true, sway: fkShift(1.5, 0.85),
       actions: [{ a: fkGlasses, w: 1 }], rest: [0.6, 1.8], strike: fkCombo(2, 0.4, 2.2), speed: 1 },
     // the heavy breath: the chest up and wider, slow and deep
     breath: (t, dazed) => { const b = 0.5 - 0.5 * Math.cos((t / (dazed ? 1.6 : 1.25)) * Math.PI * 2); return [1 + 0.012 * b, 1 + 0.022 * b, -3.5 * b]; },
@@ -632,9 +634,10 @@ const POSES: Record<string, Spec> = {
     scale: { handR: "zR", handL: "zL" },
     vars: (a) => ({
       ...fkTemple(a.gl),
-      "--gl": a.gl.toFixed(3), "--fing": Math.max(0, Math.min(1, a.fing)).toFixed(3), "--jaw": Math.max(0, a.jaw).toFixed(3),
+      "--gl": a.gl.toFixed(3), "--fing": Math.max(0, Math.min(1, a.fing)).toFixed(3), "--jaw": Math.max(0, Math.min(1.25, a.jaw)).toFixed(3),
       "--brw": a.brw.toFixed(3), "--sq": Math.max(0, Math.min(1, a.sq)).toFixed(3), "--px": a.px.toFixed(3), "--py": a.py.toFixed(3),
     }),
+    stiffOwn: true,
     hair: { sel: ".fk-hair", k: 95, c: 7, turn: 0.55, jerk: 0.012, flutter: (t) => 0.8 * Math.sin(t * 2.3) + 0.5 * Math.sin(t * 5.1 + 1) },
   },
   utilizator: {
@@ -1111,7 +1114,8 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
         let target = (idle[k] ?? 0) + (pose[k] ?? 0);
         const d = spec.drag[k as J];
         if (d) target += vel[d[0]] * d[1];
-        const kk = s.k * stiff, cc = s.c * Math.sqrt(stiff);
+        const st = spec.stiffOwn && !(k in pose) ? 1 : stiff;
+        const kk = s.k * st, cc = s.c * Math.sqrt(st);
         // semi-implicit Euler in small steps (stiff springs stay stable at 15–30 fps)
         const n = Math.ceil(dt / 0.008);
         const h = dt / n;

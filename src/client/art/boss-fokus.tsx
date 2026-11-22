@@ -22,6 +22,8 @@ const LID_LINE = "#5a2a18";
 const KNIFE_TIP = [764.5, 608.5] as const;
 /** the waist: the upper body leans round it */
 const WAIST = [372, 610] as const;
+/** the mouth's corners (x, rig units): the lower lip is held there and sags between them */
+const MOUTH = [349, 401] as const;
 
 export function FokusRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, puppet, viewBox }: {
   id: string; look: string; rig: Rig; bust: boolean; dazed: boolean; dying: boolean; svgRef: RefObject<SVGSVGElement | null>; wrapRef: RefObject<HTMLDivElement | null>; puppet: boolean; viewBox: string;
@@ -45,6 +47,30 @@ export function FokusRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
   const bone = (cls: string, p: string, kids: ReactNode, size?: number, ref?: RefObject<SVGGElement | null>) => (
     <g className={cls} ref={ref} data-pivot={P[p]?.pivot ? `${P[p].pivot![0]},${P[p].pivot![1]}` : undefined} data-pp-size={size} style={origin(p)}>{kids}</g>
   );
+  // the lower lip, the lower teeth and the throat: bent, not cut loose — drawn in thin vertical strips, each moved by its
+  // place between the mouth's corners (--q: 0 at a corner, 1 in the middle; screens.css «the jaw»), so the corners stay
+  // where they are and the lip sags in the middle like a puppet's
+  const bent = (p: string, cls: string, origin?: number) => {
+    const r = P[p];
+    if (!r) return null;
+    const n = 13, sw = r.w / n;
+    return (
+      <g>
+        {Array.from({ length: n }, (_, i) => {
+          const x0 = r.x + i * sw, xc = x0 + sw / 2;
+          const u = Math.max(0, Math.min(1, (xc - MOUTH[0]) / (MOUTH[1] - MOUTH[0])));
+          const q = Math.pow(Math.sin(u * Math.PI), 0.7);
+          const id = `fk-q-${p}-${i}`;
+          return (
+            <g key={i} className={cls} style={{ ["--q" as string]: q.toFixed(3), ...(origin !== undefined ? at(xc, origin) : {}) }}>
+              <clipPath id={id} clipPathUnits="userSpaceOnUse"><rect x={x0 - 0.3} y={r.y - 2} width={sw + 0.6} height={r.h + 4} /></clipPath>
+              <image href={src(p)} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" clipPath={`url(#${id})`} />
+            </g>
+          );
+        })}
+      </g>
+    );
+  };
   const lids = (cls: string) => (
     <g className={cls}>
       {HOLES.map((h, i) => (
@@ -62,7 +88,7 @@ export function FokusRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
         {/* the legs: the feet stay planted, only the shins and the feet are fixed: the hips and the thighs go with the upper body (br-up), the bend fades out at the knees;
             below half HP only the feet are fixed — the whole leg sways with him from one foot to the other */}
         {P.legs && (puppet ? (
-          <image className="pp" data-pp="back" data-pp-follow="br-up" data-pp-follow-at={dazed ? "0.6,0.9" : "0.36,0.56"} href={src("legs")}
+          <image className="pp" data-pp="back" data-pp-follow="br-up" data-pp-follow-at={dazed ? "0.5,0.8" : "0.36,0.56"} href={src("legs")}
             x={P.legs.x} y={P.legs.y} width={P.legs.w} height={P.legs.h} preserveAspectRatio="none" />
         ) : pic("legs"))}
         <g className="br-up" style={at(WAIST[0], WAIST[1])}>
@@ -80,11 +106,11 @@ export function FokusRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
             {pic("head")}
             <g className="fk-nose" style={box("nose", 0.5, 1)}>{pic("nose")}</g>
             <g className="fk-chin" style={box("chin", 0.5, 0)}>{pic("chin")}</g>
-            <g className="fk-throat" style={box("throat", 0.5, 0)}>{pic("throat")}</g>
+            {bent("throat", "fk-throatq", P.throat?.y)}
             {pic("teeth-up")}
-            <g className="fk-jaw">{pic("teeth-low")}</g>
+            {bent("teeth-low", "fk-teethq")}
             {pic("lips-up")}
-            <g className="fk-jaw">{pic("lips")}</g>
+            {bent("lips", "fk-lipq")}
             <g className="br-brow-r" style={origin("browR")}>{pic("browR")}</g>
             <g className="br-brow-l" style={origin("browL")}>{pic("browL")}</g>
             <g className="fk-glasses" style={box("glasses", 0.5, 0.4)}>{pic("glasses")}</g>

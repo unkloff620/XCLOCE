@@ -7554,10 +7554,14 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 /* the glasses slide down the nose and tilt; the nose squashes from its tip and widens under them */
 .rig-fokus .fk-glasses { transform: translateY(calc(var(--gl) * 11px)) rotate(calc(var(--gl) * -2.5deg)); }
 .rig-fokus .fk-nose { transform: translateY(calc(var(--gl) * 1.2px)) scale(calc(1 + var(--gl) * 0.08), calc(1 - var(--gl) * 0.1)); }
-/* the jaw: the chin stretches down from its top, the lower lip and teeth drop, the throat opens behind them */
-.rig-fokus .fk-chin { transform: scaleY(calc(1 + var(--jaw) * 0.12)); }
-.rig-fokus .fk-jaw { transform: translateY(calc(var(--jaw) * 5px)); }
-.rig-fokus .fk-throat { transform: scaleY(calc(1 + var(--jaw) * 0.5)); }
+/* the jaw, a little only: the chin stretches down from its top, the lower lip sags in the middle (its corners held —
+   boss-fokus.tsx bent, --q), the lower teeth go down with it, the throat opens a little behind them */
+.rig-fokus .fk-chin { transform: scaleY(calc(1 + var(--jaw) * 0.045)); }
+.rig-fokus .fk-lipq { transform: translateY(calc(var(--jaw) * var(--q) * 3px)); }
+.rig-fokus .fk-teethq { transform: translateY(calc(var(--jaw) * (0.35 + 0.65 * var(--q)) * 2.4px)); }
+.rig-fokus .fk-throatq { transform: scaleY(calc(1 + var(--jaw) * var(--q) * 0.14)); }
+/* the pose engine sways him from foot to foot below half HP: not the whole picture (the feet stay) */
+.rig-fokus.boss-rig.dazed { animation: none; }
 /* the fist or the hand with the pointing finger on the same wrist */
 .rig-fokus .fk-fist { opacity: calc(1 - var(--fing)); }
 .rig-fokus .fk-finger { opacity: var(--fing); }
