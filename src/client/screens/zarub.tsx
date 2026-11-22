@@ -37,7 +37,8 @@ function TaskIcon({ id, size }: { id: string; size: number }) {
 export function ZarubScreen() {
   const { act, busy } = useGame();
   const [v, setV] = useState<ZarubView | null>(null);
-  const [view, setView] = useState<"hub" | "pick">("hub");
+  // the start (three cards, «Погнали») is the main screen; the hub (the bags, «Переплавить») opens from it
+  const [view, setView] = useState<"hub" | "pick">("pick");
   const load = useCallback(() => api.get<ZarubView>("/api/zarub").then(setV).catch(() => {}), []);
   useEffect(() => { void load(); const t = window.setInterval(load, 20_000); return () => clearInterval(t); }, [load]);
   usePageReady(!!v);
@@ -51,8 +52,20 @@ export function ZarubScreen() {
     <div className="fit-page zr-page">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="zr-bg" src={pic("bg")} alt="" draggable={false} />
+      {/* the lamp on the wall flickers (its spot on the picture, the picture's own units: cover, like the img) */}
+      <svg className="zr-lamp" viewBox="0 0 768 1152" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs>
+          <radialGradient id="zr-lamp-g">
+            <stop offset="0" stopColor="#ffe2a0" stopOpacity="0.85" />
+            <stop offset="0.3" stopColor="#ffb85a" stopOpacity="0.35" />
+            <stop offset="1" stopColor="#ff9a30" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <rect className="zr-lamp-dark" x="0" y="0" width="768" height="1152" fill="#000" />
+        <ellipse className="zr-lamp-glow" cx="218" cy="285" rx="190" ry="210" fill="url(#zr-lamp-g)" />
+      </svg>
       {v.race ? <Race v={v} run={run} busy={!!busy} />
-        : view === "pick" ? <Pick v={v} run={run} busy={!!busy} onBack={() => setView("hub")} />
+        : view === "pick" ? <Pick v={v} run={run} busy={!!busy} onBags={() => { haptic.tap(); setView("hub"); }} />
         : <Hub v={v} run={run} busy={!!busy} onStart={() => { haptic.tap(); setView("pick"); }} />}
     </div>
   );
@@ -86,7 +99,7 @@ function Hub({ v, run, busy, onStart }: { v: ZarubView; run: Run; busy: boolean;
   return (
     <>
       <div className="zr-top">
-        <Link href="/" className="back-btn" aria-label="Домой">‹</Link>
+        <button type="button" className="back-btn" onClick={onStart} aria-label="Назад">‹</button>
         <LevelBadge v={v} />
       </div>
       <div className="zr-wallet">
@@ -112,11 +125,14 @@ function Hub({ v, run, busy, onStart }: { v: ZarubView; run: Run; busy: boolean;
           );
         })}
       </div>
-      {/* «ЗАРУБЫ»: to the start */}
+      {/* «ЗАРУБЫ»: to the start — the letters glow red and flicker; it darkens when pressed */}
       <button type="button" className="zr-sign" onClick={onStart} aria-label="Зарубы: начать">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={pic("sign")} alt="" draggable={false} />
-        <span className="zr-sign-go">›</span>
+        <span className="zr-sign-in">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={pic("sign")} alt="" draggable={false} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="zr-sign-text" src={pic("sign-text")} alt="" draggable={false} />
+        </span>
       </button>
       {/* the bag: its 3 sets, how many tattoos of each are mine */}
       <div className="zr-shelf">
@@ -131,7 +147,7 @@ function Hub({ v, run, busy, onStart }: { v: ZarubView; run: Run; busy: boolean;
         <div className="zr-bag-row">
           <button type="button" className="zr-arrow" data-nosfx onClick={() => go(-1)} aria-label="Предыдущая сумка">◀</button>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img key={`${mode}${bag}`} className="zr-bag" src={pic(`bag-${mode}`)} alt="" draggable={false} />
+          <img key={`${mode}${bag}`} className="zr-bag" src={pic(`bag-${mode}-${bag}`)} alt="" draggable={false} />
           <button type="button" className="zr-arrow" data-nosfx onClick={() => go(1)} aria-label="Следующая сумка">▶</button>
         </div>
         <span className="zr-bag-n num">{bag + 1}/3</span>
@@ -158,18 +174,28 @@ function Hub({ v, run, busy, onStart }: { v: ZarubView; run: Run; busy: boolean;
 }
 
 /** the start: the three difficulties, today's finishes of each, «Погнали» */
-function Pick({ v, run, busy, onBack }: { v: ZarubView; run: Run; busy: boolean; onBack: () => void }) {
+function Pick({ v, run, busy, onBags }: { v: ZarubView; run: Run; busy: boolean; onBags: () => void }) {
   const [mode, setMode] = useState<ZarubMode>("pacan");
   const d = zarubMode(mode)!;
   const m = v.modes.find((x) => x.id === mode)!;
   return (
     <>
       <div className="zr-top">
-        <button type="button" className="back-btn" onClick={onBack} aria-label="Назад">‹</button>
+        <Link href="/" className="back-btn" aria-label="Домой">‹</Link>
         <LevelBadge v={v} />
+        {/* the bags (tattoo sets for кольца) and «Переплавить» */}
+        <button type="button" className="zr-bags-btn" onClick={onBags} aria-label="Сумки">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={pic("bag-pacan-0")} alt="" draggable={false} />
+          <span className="num"><ItemArt id={RING} size={16} />{full(v.rings)}</span>
+        </button>
       </div>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="zr-pick-sign" src={pic("sign")} alt="Зарубы" draggable={false} />
+      <span className="zr-pick-sign">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={pic("sign")} alt="Зарубы" draggable={false} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="zr-sign-text" src={pic("sign-text")} alt="" draggable={false} />
+      </span>
       <div className="zr-cards">
         {ZARUB_MODES.map((x) => {
           const s = v.modes.find((y) => y.id === x.id)!;
