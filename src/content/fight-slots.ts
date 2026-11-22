@@ -2,10 +2,10 @@ import { WEAPONS, itemById } from "./items.ts";
 
 /*
  * The fight's weapon cells: eight of them in a row under the boss, each a weapon and how many of it one tap uses (the packs of the
- * consumables: 1, 10, 50, 100, 500, 1000; the permanent ones always hit once). Set in the fight's weapon panel.
+ * consumables: 1, 10, 50, 100, 500, 1000, 5000; the permanent ones always hit once). Set in the fight's weapon panel.
  */
 export const FIGHT_SLOTS = 8;
-export const FIGHT_PACKS = [1, 10, 50, 100, 500, 1000] as const;
+export const FIGHT_PACKS = [1, 10, 50, 100, 500, 1000, 5000] as const;
 export type FightSlot = { w: string; n: number } | null;
 export const DEFAULT_FIGHT_SLOTS: FightSlot[] = WEAPONS.map((w) => ({ w: w.id, n: 1 }));
 
