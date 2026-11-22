@@ -49,6 +49,26 @@ def put(name, im, q=88):
 
 for n in ["propeller", "plant", "tree", "cat"]:
     put(n, load(n))
+# the cat (the artist's cat/body.png + cat/paw.png, 554×269, in place to each other; dimmed already): the tail and the
+# raised hind leg cut out of the body to move on their own — the body's box in the room is cat.png's
+cb = Image.open(f"{S}/cat/body.png").convert("RGBA")
+cpaw = Image.open(f"{S}/cat/paw.png").convert("RGBA")
+ca = np.array(cb)
+yy, xx = np.mgrid[0:ca.shape[0], 0:ca.shape[1]]
+tail = (xx >= 372) & (yy >= 172)
+leg = (xx >= 385) & (xx <= 448) & (yy <= 150) & ~tail
+parts = {"cat-tail": tail, "cat-leg": leg}
+rest = ca.copy()
+for nm, m in parts.items():
+    im = ca.copy(); im[..., 3] = np.where(m, im[..., 3], 0)
+    Image.fromarray(im).save(f"{O}/{nm}.webp", quality=88, method=6, exact=True)
+    rest[..., 3] = np.where(m, 0, rest[..., 3])
+Image.fromarray(rest).save(f"{O}/cat-body.webp", quality=88, method=6, exact=True)
+cpaw.save(f"{O}/cat-paw.webp", quality=88, method=6, exact=True)
+bb = cb.getbbox()
+cat_box = Image.open(f"{S}/cat.png").getbbox()
+sx, sy = (cat_box[2] - cat_box[0]) / (bb[2] - bb[0]), (cat_box[3] - cat_box[1]) / (bb[3] - bb[1])
+boxes["cat-rig"] = {"x": round(cat_box[0] - bb[0] * sx, 2), "y": round(cat_box[1] - bb[1] * sy, 2), "w": round(cb.width * sx, 2), "h": round(cb.height * sy, 2), "sx": round(sx, 5), "sy": round(sy, 5)}
 # the props: each connected thing on its own (small specks go with their nearest thing)
 p = load("props")
 a = np.array(p)[..., 3] > 6
@@ -86,8 +106,11 @@ open("src/client/art/arena-fokus-data.ts", "w").write(ts)
 flat = Image.new("RGBA", (W, H), (0, 0, 0, 255))
 sky = Image.open(f"{O}/sky-day.webp").convert("RGBA")
 flat.alpha_composite(sky.crop((0, 0, min(sky.width, W), sky.height)), (0, int(WIN[1] - sky.height / 2)))
-for n in ["tree", "room", "propeller", "plant", "props", "cat"]:
+for n in ["tree", "room", "propeller", "plant", "props"]:
     flat.alpha_composite(room if n == "room" else load(n))
+cr = boxes["cat-rig"]
+cat_full = cb.copy(); cat_full.alpha_composite(cpaw)
+flat.alpha_composite(cat_full.resize((round(cr["w"]), round(cr["h"])), Image.LANCZOS), (round(cr["x"]), round(cr["y"])))
 flat.convert("RGB").save("public/assets/arena/fokus.webp", quality=84, method=6)
 flat.convert("RGB").save("tools/scene/source/room-coder.png")
 print("ok", json.dumps(boxes))

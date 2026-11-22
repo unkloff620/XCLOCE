@@ -41,10 +41,6 @@ export function FokusRoom({ uid = "a", layer = "all" }: { uid?: string; layer?: 
     return (
       <g className="fkr-live fkr-front">
         {PROPS.map((n) => thing(n))}
-        <defs>
-          <filter id={`fkr-dk-${uid}`}><feColorMatrix type="matrix" values="0 0 0 0 0.02  0 0 0 0 0.04  0 0 0 0 0.11  0 0 0 1 0" /></filter>
-        </defs>
-        <g className="fkr-front-dark" filter={`url(#fkr-dk-${uid})`}>{PROPS.map((n) => thing(n))}</g>
       </g>
     );
   }
@@ -109,7 +105,20 @@ export function FokusRoom({ uid = "a", layer = "all" }: { uid?: string; layer?: 
         <g className="fkr-pool-moon"><ellipse cx={0} cy={0} rx={240} ry={84} fill={`url(#fkr-mpool-${uid})`} /></g>
       </g>
       {/* the cat on the bed and the things on the floor (at home the things go over the chair: layer "front") */}
-      {thing("cat")}
+      {/* the cat on the bed: breathes; the paw twitches now and then, the hind leg stirs, the tail is shifted and back */}
+      {(() => {
+        const c = R["cat-rig"];
+        const P = (x: number, y: number) => at(c.x + x * c.sx, c.y + y * c.sy);
+        const pic = (n: string) => <image href={`${A}/${n}.webp?v=1`} x={c.x} y={c.y} width={c.w} height={c.h} preserveAspectRatio="none" />;
+        return (
+          <g className="fkr-cat" style={P(280, 250)}>
+            <g className="fkr-cat-tail" style={P(372, 205)}>{pic("cat-tail")}</g>
+            {pic("cat-body")}
+            <g className="fkr-cat-leg" style={P(412, 148)}>{pic("cat-leg")}</g>
+            <g className="fkr-cat-paw" style={P(165, 185)}>{pic("cat-paw")}</g>
+          </g>
+        );
+      })()}
       {layer === "all" && PROPS.map((n) => thing(n))}
       {/* the ivy sways from where it hangs */}
       <g className="fkr-plant" style={at(box("plant").x + box("plant").w * 0.62, box("plant").y + 6)}>{img("plant")}</g>
