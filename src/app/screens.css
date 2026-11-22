@@ -7194,7 +7194,7 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 @keyframes van-point-r { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(1.4cqi); } }
 @media (prefers-reduced-motion: reduce) { .van-panel > .van-arrow { animation: none; } }
 .van-go.btn { width: 100%; height: 100%; min-height: 0; padding: 0 1cqi; font-size: 1.9cqi; gap: 1cqi; border-width: 1px; border-radius: 0.8cqi; outline-offset: -0.7cqi;
-  box-shadow: 0 0.4cqi 0 var(--b4), 0 0.8cqi 1.4cqi rgba(0, 0, 0, 0.45); }
+  box-shadow: 0 0.4cqi 0 #3b2410, 0 0.8cqi 1.4cqi rgba(0, 0, 0, 0.45); }
 /* «Обмен» on the artist's slate (exchange.webp): the title, the coin, the number on the dark bar (57.98–69.6%), the price under it */
 .van-ex-paper { position: absolute; top: 10.6%; height: 62.8%; left: 35.5%; width: 29%; container-type: inline-size; color: #f3ead8; text-align: center;
   background: url(/assets/van/exchange.webp) center / 100% 100% no-repeat; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.55)); }
@@ -7290,9 +7290,9 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .bz-rew { display: flex; align-items: center; gap: 1cqi; font-size: 4.4cqi; font-weight: 900; color: #5a3a14; white-space: nowrap; }
 .bz-rew svg { width: 5.6cqi !important; height: 5.6cqi !important; }
 .bz-go.btn { position: absolute; left: 74.2%; top: 74.5%; width: 21.1%; height: 14.2%; min-height: 0; padding: 0 0.8cqi; font-size: 2.3cqi; gap: 0.9cqi; letter-spacing: 0.04em;
-  line-height: 1; border-radius: 1cqi; outline-offset: -0.7cqi; box-shadow: 0 0.5cqi 0 var(--b4), 0 1cqi 1.6cqi rgba(0, 0, 0, 0.4); }
+  line-height: 1; border-radius: 1cqi; outline-offset: -0.7cqi; box-shadow: 0 0.5cqi 0 #3b2410, 0 1cqi 1.6cqi rgba(0, 0, 0, 0.4); }
 .bz-go small { font-size: 2.3cqi; letter-spacing: 0.02em; }
-.bz-go:disabled { filter: none; opacity: 1; --b1: #e8d6b4; --b2: #cdb58c; --b4: #6b4626; }
+.bz-go:disabled { filter: none; opacity: 1; --a: #e8d6b4; --b: #cdb58c; --c: #a88d62; --e: #6b4626; }
 
 /* «Бизнес» of a location: cards on squared paper, like the user's sample (Кольщик / Лазарет) */
 .bzc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; border-radius: 6px; overflow: hidden;
@@ -7822,6 +7822,6 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .ms-reward .chip { display: inline-flex; align-items: center; gap: 2px; }
 .ms-m { display: inline-flex; align-items: center; gap: 2px; font-size: 14px; color: #3a220a; }
 .ms-parts { display: inline-flex; gap: 1px; opacity: 0.9; }
-.ms-do { flex: none; flex-direction: column; justify-content: center; gap: 2px; min-width: 116px; padding: 6px 12px; font-size: 15px; letter-spacing: 0.04em; }
+.ms-do { flex-direction: column; justify-content: center; gap: 1px; font-size: 14px; align-self: center; }
 .ms-do .num { display: inline-flex; align-items: center; gap: 2px; font-size: 14px; }
 @media (prefers-reduced-motion: reduce) { .ms-drop { animation-duration: 0.01s; } }

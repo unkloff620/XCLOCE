@@ -118,34 +118,44 @@ img { max-width: 100%; }
 .title .back { font-weight: 800; color: var(--muted); font-size: 13px; }
 h2.h { margin: 4px 2px 8px; font-size: 16px; text-shadow: 0 2px 0 var(--line); }
 
-/* buttons look like banknotes: guilloche rings from both ends, a thin inner frame, the ink colour of the note on the edge and the text */
+/*
+ * buttons are metal plates (the user's «вариант А», 2026-11-23): diagonal stripes, an inner frame, four rivets in the
+ * corners. Every ordinary button is one size (--bw × --bh); only the small ones (.sm) are smaller. Long text is cut.
+ */
 .btn {
-  --b1: #f6e3bd; --b2: #dcb47e; --b4: #4a2e14; --bt: var(--b4); --bl: var(--b4);
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 18px;
-  border-radius: 5px; border: 2px solid var(--b4); color: var(--bt);
+  --a: #eceff3; --b: #bfc6cf; --c: #8a929c; --e: #3d434a; --t: #2b2f34; --rv: 10px;
+  --bw: 170px; --bh: 52px;
+  position: relative; overflow: hidden; isolation: isolate; flex: none;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  width: var(--bw); max-width: 100%; height: var(--bh); min-height: var(--bh); padding: 0 16px;
+  border-radius: 8px; border: 0; color: var(--t);
   background:
-    repeating-radial-gradient(circle at 0 50%, transparent 0 5px, rgba(255, 255, 255, 0.2) 5px 6px),
-    repeating-radial-gradient(circle at 100% 50%, transparent 0 5px, rgba(0, 0, 0, 0.08) 5px 6px),
-    linear-gradient(180deg, var(--b1), var(--b2));
-  outline: 1px solid var(--bl); outline-offset: -6px;
-  font-family: var(--font-display), sans-serif; font-size: 15px; letter-spacing: 0.08em; text-transform: uppercase;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
-  box-shadow: 0 3px 0 var(--b4), 0 6px 10px rgba(0, 0, 0, 0.4);
+    repeating-linear-gradient(-58deg, rgba(255, 255, 255, 0) 0 14px, rgba(255, 255, 255, 0.16) 14px 26px),
+    linear-gradient(180deg, var(--a), var(--b) 55%, var(--c));
+  font-family: var(--font-display), sans-serif; font-size: 16px; line-height: 1.05; letter-spacing: 0.05em; text-transform: uppercase;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45); white-space: nowrap; text-overflow: ellipsis;
+  box-shadow: inset 0 0 0 2px var(--e), inset 0 3px 0 2px rgba(255, 255, 255, 0.45), inset 0 -4px 0 2px rgba(0, 0, 0, 0.18), 0 3px 0 #3b2410, 0 5px 8px rgba(0, 0, 0, 0.35);
   transition: transform 0.08s, box-shadow 0.08s, filter 0.15s; user-select: none;
 }
-.btn:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 var(--b4), 0 2px 4px rgba(0, 0, 0, 0.4); }
-.btn:disabled { filter: grayscale(0.85) brightness(0.75); cursor: default; }
-.btn.gold { --b1: #fff2a8; --b2: #ffdb62; --b4: #6b3f00; }
-.btn.green { --b1: #b5ffd2; --b2: #65e89d; --b4: #06401f; }
-.btn.red { --b1: #ffc0cb; --b2: #ff7b93; --b4: #5a0716; }
-.btn.violet { --b1: #ffd9b0; --b2: #eea763; --b4: #5a2a06; }
-.btn.dark { --b1: #8a6a4c; --b2: #6d513b; --b4: #150d07; --bt: #ffe6b0; --bl: #c9a26b; text-shadow: 0 -1px 0 #000; }
-.btn.big { min-height: 54px; font-size: 18px; border-radius: 6px; outline-offset: -7px; }
-/* a «block» button is not stretched any more: normal size, on the right; small ones in cards, menu lists (.wide) and the poker table still fill their place */
-.btn.block { display: flex; width: fit-content; min-width: 140px; max-width: 100%; margin-left: auto; margin-right: auto; align-self: center; }
-.btn.block:is(.sm, .wide) { width: 100%; min-width: 0; margin-left: 0; align-self: stretch; }
-.btn.sm { min-height: 34px; padding: 0 12px; font-size: 12.5px; border-radius: 4px; outline-offset: -5px; box-shadow: 0 2px 0 var(--b4), 0 4px 7px rgba(0, 0, 0, 0.35); }
-.btn.sm:active:not(:disabled) { box-shadow: 0 0 0 var(--b4), 0 1px 3px rgba(0, 0, 0, 0.35); }
+/* the inner frame and the four rivets */
+.btn::before { content: ""; position: absolute; z-index: -1; inset: 5px; border-radius: 5px; border: 1.5px solid rgba(0, 0, 0, 0.18); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35); pointer-events: none; }
+.btn::after { content: ""; position: absolute; z-index: -1; inset: 0; pointer-events: none; --r: rgba(255, 255, 255, 0.55) 0 1.2px, var(--c) 1.6px 3.2px, var(--e) 3.6px, transparent 4.2px;
+  background: radial-gradient(circle at var(--rv) var(--rv), var(--r)), radial-gradient(circle at calc(100% - var(--rv)) var(--rv), var(--r)),
+    radial-gradient(circle at var(--rv) calc(100% - var(--rv)), var(--r)), radial-gradient(circle at calc(100% - var(--rv)) calc(100% - var(--rv)), var(--r)); }
+.btn:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 0 0 2px var(--e), inset 0 3px 0 2px rgba(255, 255, 255, 0.45), inset 0 -4px 0 2px rgba(0, 0, 0, 0.18), 0 1px 0 #3b2410, 0 2px 4px rgba(0, 0, 0, 0.35); }
+.btn:disabled { filter: grayscale(0.9) brightness(0.8); cursor: default; }
+.btn.gold { --a: #ffe066; --b: #f7b51e; --c: #d98c06; --e: #7a4a05; --t: #5a3404; }
+.btn.green { --a: #b6f07a; --b: #5cc23a; --c: #2f8a1e; --e: #1d4a0c; --t: #10300a; }
+.btn.red { --a: #ff9c7a; --b: #e2452c; --c: #a8231a; --e: #5a0e08; --t: #fff; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45); }
+.btn.violet { --a: #9fd4ff; --b: #3f8fe0; --c: #1f5aa8; --e: #0c2a5a; --t: #fff; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45); }
+.btn.dark { --a: #8a6a4c; --b: #6d513b; --c: #4e3826; --e: #150d07; --t: #ffe6b0; text-shadow: 0 -1px 0 #000; }
+.btn.big { font-size: 17px; }
+/* «block»: the same plate, centred; in menu lists (.wide) and with .sm it fills its place */
+.btn.block { display: flex; margin-left: auto; margin-right: auto; align-self: center; }
+.btn.block:is(.sm, .wide), .btn.wide { width: 100%; margin-left: 0; align-self: stretch; }
+.btn.sm { --bh: 34px; --rv: 7px; width: auto; height: auto; padding: 0 12px; font-size: 12.5px; border-radius: 5px; flex: initial; }
+.btn.sm::before { inset: 3px; border-radius: 3px; }
+.btn.sm::after { --r: rgba(255, 255, 255, 0.55) 0 0.8px, var(--c) 1.1px 2.2px, var(--e) 2.5px, transparent 3px; }
 
 .bar { position: relative; height: 18px; border-radius: 10px; background: #0f0905; border: 2.5px solid var(--line); overflow: hidden; }
 .bar > i { position: absolute; inset: 0 auto 0 0; border-radius: 0 8px 8px 0; transition: width 0.35s ease; box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.28); }
