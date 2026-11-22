@@ -499,7 +499,7 @@ export async function claimFight(ctx: Ctx, fightId: number, see = true) {
       if (left.length) tattoos.push({ id: left[Math.floor(ctx.rng() * left.length)].id, qty: 1 });
     }
   }
-  // one-of-a-kind rewards (the statue) are not handed out again
+  // one-of-a-kind rewards are not handed out again
   // the admin's «Увеличить награды» for this boss (rewards in % of the usual)
   // the mode's money and authority (× FightModeDef.reward), then the admin's boost
   const base = boostReward(boostReward(scaleReward(def.reward, share), mode.reward), ctx.cfg.bossReward[def.id] ?? 1);

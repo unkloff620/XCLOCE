@@ -12,20 +12,19 @@ import { bossById } from "../../content/bosses.ts";
 /*
  * The room editor right on the home screen, built like the hero editor: the hero steps away (his chair stays) so the room
  * behind is seen; things to change stand at the left, the panel below shows the choices for the picked one.
- * Chairs are bought one by one, in any order; the trophies only stand or are taken away.
- * Every bought piece gives its bonus forever; which chair / trophy stands in the room is a preview until «Сохранить».
+ * Chairs are bought one by one, in any order.
+ * Which chair stands in the room is a preview until «Сохранить».
  */
 
-/** what stands: chair — piece index (0 = the free one); a trophy — 0 stands, -1 away */
+/** what stands: chair — piece index (0 = the free one) */
 export type RoomDraft = Record<string, number>;
-export type RoomTab = "chair" | "trophy";
+export type RoomTab = "chair";
 
-const PLACED = ["chair", "statue-close"] as const;
+const PLACED = ["chair"] as const;
 /** things that only stand or are taken away (no pieces to buy): 0 — stands, -1 — away */
-const SOLO = new Set<string>(["statue-close"]);
+const SOLO = new Set<string>([]);
 export const ROOM_SIDE: { id: RoomTab; name: string }[] = [
   { id: "chair", name: "Кресло" },
-  { id: "trophy", name: "Трофеи" },
 ];
 const SIDE = ROOM_SIDE;
 
@@ -58,7 +57,6 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose, onBack }: { 
   const decor = state.home.decor;
   const b = state.home.bonus;
   const now = roomDraftOf(owned, decor);
-  const hasStatue = (state.home.trophies ?? []).includes("statue-close");
   // only owned things can be saved into the room
   const notOwned = PLACED.filter((id) => {
     if (SOLO.has(id)) return false;
@@ -94,8 +92,7 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose, onBack }: { 
   };
   const save = async () => {
     setSaving(true);
-    // a trophy the player has not got is not sent (the server would refuse nothing, but there is nothing to keep)
-    const ids = PLACED.filter((id) => id !== "statue-close" || hasStatue);
+    const ids = PLACED;
     const r = await act("decor_save", { decor: Object.fromEntries(ids.map((id) => [id, draft[id] ?? 0])) }, "Обстановка сохранена");
     setSaving(false);
     if (r) {
@@ -105,8 +102,6 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose, onBack }: { 
   };
 
   const sideArt = (id: RoomTab) => {
-    // eslint-disable-next-line @next/next/no-img-element
-    if (id === "trophy") return <img src={usedUrl("/assets/home/statue-close.webp")} alt="" draggable={false} style={{ opacity: hasStatue && (draft["statue-close"] ?? 0) === 0 ? 1 : 0.4 }} />;
     const e = equipmentById(id)!;
     const v = draft[id] ?? 0;
     // monitors: the newest shown one, else the old CRT
@@ -116,7 +111,7 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose, onBack }: { 
     return <img src={usedUrl(`/assets/home/thumb/${art}.webp`)} alt="" draggable={false} />;
   };
 
-  const e = tab === "trophy" ? null : equipmentById(tab)!;
+  const e = equipmentById(tab) ?? null;
   const f = e ? focus[tab] ?? (e.multi ? -1 : draft[tab] ?? 0) : 0;
   const fPiece = e && f > 0 ? e.pieces![f - 1] : null;
   const fOwned = e && f > 0 ? hasPiece(owned[tab] ?? 0, f) : true;
@@ -135,35 +130,13 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose, onBack }: { 
       {createPortal(<div className="sty-panel">
         <div className="sty-head">
           <div className="room-ed-title">
-            <b className="display">{e ? e.name : "Трофеи"}</b>
+            <b className="display">{e?.name}</b>
             <span className="tiny muted">крит {Math.round(b.critChance * 1000) / 10}% · урон +{Math.round(b.damage * 1000) / 10}%</span>
           </div>
           <button className="sty-x" onClick={onClose} aria-label="Закрыть без сохранения">✕</button>
         </div>
 
-        {tab === "trophy" ? (
-          <div className="sty-body">
-            <div className="tiny muted">{hasStatue
-              ? "Статуэтка CLOSE за Утилизатора: +3% к урону, пока она у тебя. Поставь её в комнату или убери — бонус останется."
-              : "Статуэтка CLOSE — награда за победу над Утилизатором. Даёт +3% к урону и встаёт в комнату."}</div>
-            <div className="sty-strip room-ed-strip">
-              <button className={`sty-item room-ed-item ${hasStatue && (draft["statue-close"] ?? 0) === 0 ? "on" : ""} ${hasStatue ? "" : "room-ed-shut"}`}
-                onClick={() => hasStatue && pick("statue-close", 0)} aria-pressed={hasStatue && (draft["statue-close"] ?? 0) === 0} disabled={!hasStatue}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="room-ed-thumb" src={usedUrl("/assets/home/statue-close.webp")} alt="" draggable={false} />
-                <span className="sty-item-name">Статуэтка CLOSE</span>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                {!hasStatue && <img className="ink-chain" src="/assets/ui/chain-lock.webp" alt="" draggable={false} />}
-              </button>
-              {hasStatue && (
-                <button className={`sty-item room-ed-item room-ed-none ${(draft["statue-close"] ?? 0) === -1 ? "on" : ""}`} onClick={() => pick("statue-close", -1)} aria-pressed={(draft["statue-close"] ?? 0) === -1}>
-                  <span className="room-ed-thumb room-ed-x" aria-hidden="true">✕</span>
-                  <span className="sty-item-name">Убрать</span>
-                </button>
-              )}
-            </div>
-          </div>
-        ) : e ? (
+        {e ? (
           <div className="sty-body">
             <div className="tiny muted">{e.multi ? "Каждый монитор покупается отдельно. Нажми, чтобы поставить или убрать." : "Купленные остаются навсегда и дают бонус, а поставить можно любой."}</div>
             <div className="sty-strip room-ed-strip">

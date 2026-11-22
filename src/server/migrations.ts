@@ -1701,4 +1701,10 @@ CREATE TABLE IF NOT EXISTS zarub_stats (
     sql: `ALTER TABLE combo_progress ADD COLUMN IF NOT EXISTS best INT NOT NULL DEFAULT 0;
 UPDATE combo_progress SET best = progress WHERE best < progress;`,
   },
+  {
+    // the CLOSE statue is gone from the game (the user 2026-11-22): out of the inventories and the rooms
+    id: "v2-123-no-statue",
+    sql: `DELETE FROM inventory WHERE item_id='statue-close';
+UPDATE appearance SET decor = decor - 'statue-close' WHERE decor ? 'statue-close';`,
+  },
 ];

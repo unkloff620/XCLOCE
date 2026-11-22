@@ -176,7 +176,6 @@ export function addBonus(a: Bonus, b: Bonus): Bonus {
 
 /** Trophies: reward items that stand in the room by themselves and add a bonus while owned. */
 export const TROPHIES: { id: string; bonus: Bonus }[] = [
-  { id: "statue-close", bonus: { damage: 0.03 } },
 ];
 
 /** Total bonus from equipment levels, owned rooms and trophies (weapon talents are added per weapon in combat). */

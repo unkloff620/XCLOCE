@@ -297,8 +297,6 @@ describe("boss fights: personal fights, shared damage", () => {
 
   it("the CLOSE statue adds damage while owned (crit power comes from talents only)", async () => {
     const { totalBonus } = await import("../src/content/home.ts");
-    expect(totalBonus({}, ["basic"], ["statue-close"]).damage).toBeCloseTo(0.03);
-    expect(totalBonus({}, ["basic"], ["statue-close"]).critDamage).toBe(0);
     expect(totalBonus({}, ["basic"], []).damage).toBe(0);
   });
 

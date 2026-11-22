@@ -19,8 +19,6 @@ export const SCENE_OBJECTS = {
   monitorRight: { x: 682, y: 398, w: 282, aspect: 1.0, flip: false },
   /** the system unit on the floor, right in the corner of the room (its back in the corner of the walls at x≈945, y≈885, the base on the floor in front of it) */
   pc: { x: 850, y: 756, w: 140, aspect: 1.4401, flip: false },
-  /** trophies: the CLOSE statue (for Утилизатор) stands on the floor in the left front corner, by the chair */
-  statueClose: { x: 460, y: 1165, w: 140, aspect: 1.6112, flip: false },
 } as const;
 
 /** the hero's body (head + torso, scene units), laid over the monitors' zone: a tap opens the wardrobe */

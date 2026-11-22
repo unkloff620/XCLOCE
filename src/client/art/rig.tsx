@@ -284,9 +284,9 @@ function WearBack() {
   return id && WEAR_SWAY[id] ? <g className="rig-sway rig-sway-back" style={{ transformOrigin: `500px ${f.y}px`, transformBox: "view-box" }}>{pic}</g> : pic;
 }
 
-/** long coats whose tails sway a little: below this line (rig y) the picture leans side to side (a skew about the line,
+/** long coats whose tails (and the apron below the lap) sway a little: below this line (rig y) the picture leans side to side (a skew about the line,
  *  so the seam stays put); above it — the shoulders and sleeves on the arms — it stays still */
-const WEAR_SWAY: Record<string, number> = { "coat-botsman": 820 };
+const WEAR_SWAY: Record<string, number> = { "coat-botsman": 820, "apron-utilizator": 840 };
 function SwayingWear({ id }: { id: string }) {
   const f = WEARS[id];
   const cut = WEAR_SWAY[id];

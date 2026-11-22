@@ -260,7 +260,6 @@ export function BossRulesHelp({ topic, bossId }: { topic: "bosses" | "boss"; bos
             { key: "pass", icon: <ItemArt id="key-kedr" size={44} />, name: "Пропуск босса", hint: "От 1% урона (у Дацкоу — за любой свой удар в выигранном бою). Вход в бой со следующим боссом. С шансом 10% выпадает сразу два." },
             { key: "cur", icon: <Icon name="RUB" size={40} />, name: "Валюта", hint: "Покупки в магазине, обменник, оборудование и комнаты дома. Чем сильнее босс, тем больше денег." },
             { key: "xp", icon: <Icon name="xp" size={40} />, name: "Авторитет", hint: "Опыт: растёт уровень, место в рейтинге и достижения." },
-            { key: "statue", icon: <ItemArt id="statue-close" size={44} />, name: "Трофеи", hint: "За некоторых боссов — особые награды. Статуэтка CLOSE за Утилизатора встаёт на стол и даёт +3% к урону." },
           ]} />
           <p className="tiny muted" style={{ marginTop: 0 }}>Полная награда — всем, кто был в этом бою, даже без единого удара.</p>
           <HelpList title="Что может выпасть" rows={[
@@ -272,7 +271,6 @@ export function BossRulesHelp({ topic, bossId }: { topic: "bosses" | "boss"; bos
           ]} />
           <HelpList title="Что дают вещи" rows={[
             { key: "wear", icon: <ItemArt id="tee-white" size={44} />, name: "Одежда", hint: "Внешний вид персонажа: видно в комнате, в профиле и другим игрокам. Надевается в гардеробе." },
-            { key: "trophy", icon: <ItemArt id="statue-close" size={44} />, name: "Трофеи", hint: "Сами встают в комнату и дают бонус к бою." },
             { key: "weap", icon: <ItemArt id="gpu" size={44} />, name: "Оружие", hint: "Чем сильнее оружие, тем быстрее падает босс и тем больше твоя доля награды." },
           ]} />
         </>

@@ -213,11 +213,6 @@ const KEYS: ItemDef[] = [...BOSSES, ...EVENT_FIGHTS.filter((b) => b.mentor)].map
     sources: [`Победа: ${b.name}`],
   };
 });
-/** Trophies stand in the room by themselves and give a bonus (TROPHIES in content/home.ts). */
-const STATUE: ItemDef = {
-  id: "statue-close", name: "Статуэтка CLOSE", category: "reward", rarity: "legendary", maxStack: 1,
-  description: "Награда за Утилизатора. Сама встаёт на стол в комнате: +3% к урону всего оружия.", sources: ["Победа: Утилизатор"],
-};
 const TROPHY: ItemDef = {
   id: "trophy-sun", name: "Осколок Солнца", category: "reward", rarity: "mythic", maxStack: 999,
   description: "Доказательство, что ты дошёл до конца.", sources: ["Победа: Солнце"],
@@ -254,7 +249,7 @@ export const BAT: ItemDef = {
   sources: ["Таланты: «Удар битой»"],
   weapon: { damage: 30, kind: "permanent", cooldownMin: 480, animation: "bat", action: "Втащить битой" },
 };
-export const ITEMS: ItemDef[] = [...WEAPONS, BAT, ...WEARABLES, ...MISC, ...KEYS, TROPHY, STATUE, ...STASHES, ...TATTOOS, ...CRAFT];
+export const ITEMS: ItemDef[] = [...WEAPONS, BAT, ...WEARABLES, ...MISC, ...KEYS, TROPHY, ...STASHES, ...TATTOOS, ...CRAFT];
 const BY_ID = new Map(ITEMS.map((i) => [i.id, i]));
 export const itemById = (id: string) => BY_ID.get(id);
 export const weaponById = (id: string) => {
