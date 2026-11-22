@@ -4,6 +4,8 @@
  * whole set adds its bonus to a weapon (server/systems/collection.ts setBonuses). The art: tools/rig/build-tattoos.py.
  * `part` — the place in the hero editor (client/screens/stylist.tsx): HEAD, TORSO, SHOULDER_L/R, ARM_L/R, HAND, LEG_L/R.
  */
+import { ZARUB_SETS, type ZarubMode } from "./zarub.ts";
+
 export interface TattooPiece { id: string; name: string; part: string }
 export interface TattooSet { id: string; name: string; boss: string; mode: "pacan" | "blat" | "avtor"; bonus: { weapon: string; damage: number }; pieces: TattooPiece[] }
 
@@ -131,11 +133,13 @@ export const TATTOO_SETS: TattooSet[] = [
   // «Сходняк» (content/shodnyak.ts SHOD_SETS, boss "shodnyak"): prizes of the top-3 clans of the week
   solid("shod-domes", "Купола", "shodnyak", "pacan", "rug-pull-gun", 500), solid("shod-bear", "Медведь", "shodnyak", "pacan", "gpu", 450),
   solid("shod-raven", "Ворон", "shodnyak", "pacan", "rug-pull-gun", 650),
+  // «Зарубы» (content/zarub.ts, boss "zarub"): 9 sets a difficulty, from the bags opened for кольца
+  ...(Object.keys(ZARUB_SETS) as ZarubMode[]).flatMap((m) => ZARUB_SETS[m].sets.map((z) => solid(z.id, z.name, "zarub", m, ZARUB_SETS[m].weapon, z.damage))),
 ];
 export const BOX_TATTOO_SETS = TATTOO_SETS.filter((s) => s.boss === "box");
 /** where a set's pieces drop, in words: «с Дацкоу в «Пацанском»» / «из Ящика ништяков» */
 export const tattooSource = (s: TattooSet, bossName: (id: string) => string | undefined) =>
-  s.boss === "box" ? "из Ящика ништяков (шанс 20%)" : s.boss === "tosya" ? "из пирожков Тоси" : s.boss === "heist" ? "из ящиков ивента «Взлом»" : s.boss === "fortune" ? "из сумок «Колеса удачи»" : s.boss === "raids" ? "из сумок за флаги «Захвата»" : s.boss === "shodnyak" ? "за топ-3 клана на «Сходняке»" : s.boss === "poker" ? "из чемоданов покера" : `с ${bossName(s.boss) ?? s.boss} (${TATTOO_MODE_SHORT[s.mode]})`;
+  s.boss === "box" ? "из Ящика ништяков (шанс 20%)" : s.boss === "tosya" ? "из пирожков Тоси" : s.boss === "heist" ? "из ящиков ивента «Взлом»" : s.boss === "fortune" ? "из сумок «Колеса удачи»" : s.boss === "raids" ? "из сумок за флаги «Захвата»" : s.boss === "shodnyak" ? "за топ-3 клана на «Сходняке»" : s.boss === "poker" ? "из чемоданов покера" : s.boss === "zarub" ? "из сумок Заруб" : `с ${bossName(s.boss) ?? s.boss} (${TATTOO_MODE_SHORT[s.mode]})`;
 
 export const TATTOO_IDS = TATTOO_SETS.flatMap((s) => s.pieces.map((p) => p.id));
 export const tattooSetOf = (id: string) => TATTOO_SETS.find((s) => s.pieces.some((p) => p.id === id));

@@ -1659,4 +1659,35 @@ DELETE FROM player_unlocks WHERE item_id IN ('tee-white', 'jeans', 'sneakers', '
     sql: `DELETE FROM yard_items WHERE drop_id IN ('sticker-hodl', 'bottle-cap', 'spinner', 'flyer-passive', 'lost-wallet');
 DELETE FROM config WHERE key='yard.weights';`,
   },
+  {
+    // «Зарубы» (content/zarub.ts): the races, their seats (players and bots) and each player's зарубный опыт
+    id: "v2-120-zarub",
+    sql: `CREATE TABLE IF NOT EXISTS zarub_races (
+  id SERIAL PRIMARY KEY,
+  mode TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL,
+  ends_at TIMESTAMPTZ NOT NULL,
+  tasks JSONB NOT NULL DEFAULT '[]'
+);
+CREATE INDEX IF NOT EXISTS zarub_races_open ON zarub_races (mode, created_at);
+CREATE TABLE IF NOT EXISTS zarub_seats (
+  id SERIAL PRIMARY KEY,
+  race_id INT NOT NULL REFERENCES zarub_races(id) ON DELETE CASCADE,
+  player_id INT REFERENCES players(id) ON DELETE CASCADE,
+  bot_name TEXT,
+  bot_finish TIMESTAMPTZ,
+  progress JSONB NOT NULL DEFAULT '[]',
+  joined_at TIMESTAMPTZ NOT NULL,
+  finished_at TIMESTAMPTZ,
+  place INT,
+  reward JSONB,
+  seen BOOLEAN NOT NULL DEFAULT false
+);
+CREATE INDEX IF NOT EXISTS zarub_seats_race ON zarub_seats (race_id);
+CREATE INDEX IF NOT EXISTS zarub_seats_player ON zarub_seats (player_id, joined_at);
+CREATE TABLE IF NOT EXISTS zarub_stats (
+  player_id INT PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
+  xp BIGINT NOT NULL DEFAULT 0
+);`,
+  },
 ];

@@ -78,7 +78,11 @@ ZONE_CENTRES = {
     "hand-l": ((300, 760), "upper"), "knee-l": ((160, 840), "torso"), "knee-r": ((840, 840), "torso"),
     "shin-l": ((230, 1030), "torso"), "shin-r": ((770, 1030), "torso"), "foot-l": ((230, 1240), "torso"), "foot-r": ((765, 1240), "torso"),
 }
-SOLID = ["taiga", "roots", "shark", "kraken", "cash", "gold", "ring", "fire", "izba", "firebird", "jackpot", "sunrise", "safe", "realm", "samurai", "viking", "inferno", "swamp", "oven", "maid", "yakuza", "ducky", "racer", "nightshift", "dynamite", "masks", "luck", "hustler", "katran", "smotr", "dragon", "cyber", "garages", "industry", "market", "blocks", "oldtown", "shod-domes", "shod-bear", "shod-raven", "pk-mast", "pk-royal", "pk-bluff", "ut-acid", "ut-storm"]
+SOLID = ["taiga", "roots", "shark", "kraken", "cash", "gold", "ring", "fire", "izba", "firebird", "jackpot", "sunrise", "safe", "realm", "samurai", "viking", "inferno", "swamp", "oven", "maid", "yakuza", "ducky", "racer", "nightshift", "dynamite", "masks", "luck", "hustler", "katran", "smotr", "dragon", "cyber", "garages", "industry", "market", "blocks", "oldtown", "shod-domes", "shod-bear", "shod-raven", "pk-mast", "pk-royal", "pk-bluff", "ut-acid", "ut-storm",
+         # «Зарубы» (content/zarub.ts): 27 sets from the bags
+         "zr-barak", "zr-bones", "zr-ash", "zr-deep", "zr-gasmask", "zr-gears", "zr-bratva", "zr-totem", "zr-kush",
+         "zr-sakura", "zr-ghost", "zr-wings", "zr-crest", "zr-katana", "zr-clock", "zr-amphora", "zr-abyss", "zr-anchor",
+         "zr-plague", "zr-jaguar", "zr-peak", "zr-chronicle", "zr-fog", "zr-corsair", "zr-heaven", "zr-grin", "zr-ball"]
 _body = np.array(Image.open(os.path.join(ROOT, "tools", "rig", "source", "v2", "torso.png")).convert("RGBA").resize((1000, 1400), Image.LANCZOS))[..., 3] > 20
 UPPER_BODY = np.array(Image.open(os.path.join(ROOT, "tools", "rig", "source", "v2", "body.png")).convert("RGBA").resize((1000, 1400), Image.LANCZOS))[..., 3] > 40
 _yy, _xx = np.mgrid[0:1400, 0:1000]

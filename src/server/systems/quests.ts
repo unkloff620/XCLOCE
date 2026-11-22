@@ -5,6 +5,7 @@ import { QUEST_CHEST_BASE, QUEST_CHEST_LOOT, questsForDay, type QuestKind } from
 import { mergeRewards } from "../../content/rewards.ts";
 import { between, rollParts } from "../../content/craft-drops.ts";
 import { monthTick } from "./monthly.ts";
+import { zarubTick } from "./zarub.ts";
 import type { MonthKind } from "../../content/monthly.ts";
 
 /*
@@ -24,6 +25,8 @@ export async function questTick(ctx: Ctx, kind: QuestKind, amount = 1) {
   if (!(amount > 0)) return;
   // «Календарь» counts the same actions (the social ones by their kind: game.ts)
   if (kind !== "social") await monthTick(ctx, kind as MonthKind, amount);
+  // «Зарубы»: the race's tasks of this kind
+  if (kind !== "exchange" && kind !== "roach") await zarubTick(ctx, kind, amount);
   const day = moscowDay(ctx.now);
   const quests = questsForDay(ctx.pid, day, ctx.cfg.exchange.schedule).filter((x) => x.kind === kind);
   if (!quests.length) return;

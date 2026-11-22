@@ -1,4 +1,5 @@
 "use client";
+import { ART_VER } from "../preload.ts";
 import { NewbieButton } from "./newbie.tsx";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -292,6 +293,12 @@ export function HomeScreen() {
             {(questsAlert || (mon?.todayOpen ?? false)) && <i className="side-dot" />}
             <span className="side-count num">{mon ? `${mon.closedN}/${mon.days}` : `${state.quests.list.filter((x) => x.claimed).length}/${state.quests.list.length}`}</span>
           </button>
+          {/* «Зарубы» (screens/zarub.tsx) */}
+          <Link href="/zarub" className="menu-toggle event-toggle zr-toggle" aria-label="Зарубы" title="Зарубы">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`/assets/zarub/icon.webp?v=${ART_VER.items}`} alt="" draggable={false} style={{ objectFit: "contain" }} />
+            <span className="event-tag">ЗАРУБЫ</span>
+          </Link>
           {f && fb && !fightOpen && (
             <button className="fight-mini" style={{ ["--acc" as string]: fb.theme.accent, ["--hp" as string]: hpPct }} onClick={() => setFightOpen(true)} aria-label={`Идёт бой: ${fb.name}`} title="Идёт бой">
               <BossRing boss={fb} size={58} />

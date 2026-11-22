@@ -181,6 +181,9 @@ const MISC: ItemDef[] = [
   { id: "spinner", name: "Спиннер из 2017", category: "item", rarity: "common", maxStack: 999, description: "Крутится. Это всё.", sources: ["Двор"] },
   { id: "flyer-passive", name: "Листовка «Пассивный доход»", category: "item", rarity: "common", maxStack: 999, description: "Звоните прямо сейчас!", sources: ["Двор"] },
   { id: "poker-chip", name: "Фишка", category: "item", rarity: "rare", maxStack: 999, description: "Одна бесплатная раздача в покере.", sources: ["Кейс у барыги", "Колесо удачи (чашки)", "Задания дня", "Серия входов", "Зонк", "Босс клана"] },
+  // «Зарубы» (content/zarub.ts): the mode's currency and the nuggets that melt into it
+  { id: "gold-ring", name: "Кольцо", category: "item", rarity: "epic", maxStack: 99_999_999, description: "Печатка. Валюта Заруб: за кольца открываются сумки с наколками.", sources: ["Зарубы"] },
+  { id: "gold-nugget", name: "Самородок", category: "item", rarity: "rare", maxStack: 99_999_999, description: "15 самородков переплавляются в одно кольцо.", sources: ["Зарубы"] },
   { id: "lost-wallet", name: "Забытый кошелёк", category: "item", rarity: "rare", maxStack: 999, description: "Внутри немного долларов и чек из шаурмы.", sources: ["Двор"] },
   // «Колесо удачи» (content/fortune.ts): the ticket is one spin; the keycaps open the boxes of the bag
   { id: "fortune-ticket", name: "Билет колеса", category: "item", rarity: "rare", maxStack: 99_999, description: "Одна прокрутка «Колеса удачи» на заднем дворе. Каждая прокрутка растит общий джекпот.", sources: ["Ящик ништяков в магазине", "Колесо удачи: купить за 10 $", "Колесо удачи"] },

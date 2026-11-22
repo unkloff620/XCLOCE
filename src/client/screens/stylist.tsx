@@ -76,7 +76,7 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
   const owned = new Set(state.inventory.map((i) => i.id));
   // the event's sets (boss "heist", «Взлом») stay out of sight until the event starts or a piece is owned
   // the wheel's sets (boss "fortune") — once the wheel is in the yard for the player
-  const SETS = TATTOO_SETS.filter((s) => (s.boss !== "heist" || !!state.heist) && (s.boss !== "fortune" || !!state.fortune?.on) || s.pieces.some((p) => owned.has(p.id)));
+  const SETS = TATTOO_SETS.filter((s) => (s.boss !== "heist" || !!state.heist) && (s.boss !== "fortune" || !!state.fortune?.on) && s.boss !== "zarub" || s.pieces.some((p) => owned.has(p.id)));
   const slot = mode === "items" && part && (CLOTHES as string[]).includes(part) ? (part as Slot) : null;
   const items = slot ? ITEMS.filter((i) => i.slot === slot && owned.has(i.id)) : [];
   // the rest of the slot's things: sold in the shop (a boss's thing — once it dropped) with a price, the others locked
