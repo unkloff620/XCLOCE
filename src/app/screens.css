@@ -7856,7 +7856,7 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .modal.ob-win::before, .modal.ob-win::after { display: none; }
 .modal.ob-win > h3 { margin-left: 22px; color: #ffe9c2; text-shadow: 0 2px 0 #000, 0 0 8px rgba(0, 0, 0, 0.8); }
 .modal.ob-win > .x { margin-right: 18px; }
-.ob-car { position: relative; }
+.ob-car { position: relative; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .ob-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; padding: 6px 13%; scroll-padding: 0 13%; }
 .ob-track::-webkit-scrollbar { display: none; }
 .ob-slide { flex: 0 0 100%; scroll-snap-align: center; scroll-snap-stop: always; display: flex; justify-content: center; padding: 0 2%; transition: transform 0.25s ease, opacity 0.25s ease; transform: scale(0.9); opacity: 0.7; }
@@ -7875,9 +7875,8 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .ob-bonus .chip { color: #fff; font-size: 5.4cqi; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85); }
 .ob-keys { display: inline-flex; align-items: center; gap: 1cqi; font-size: 5cqi; font-weight: 700; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85); }
 /* under the rewards on the left: the time till the next collecting, or «Забрать» */
-.ob-next, .ob-plate .ob-take { position: absolute; left: 10%; top: 68%; }
+.ob-next { position: absolute; left: 10%; top: 68%; }
 .ob-next { display: inline-flex; align-items: center; gap: 1.2cqi; font-size: 5.4cqi; font-weight: 800; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85); }
-.ob-plate .ob-take { top: 66.5%; min-width: 0; padding: 0 3cqi; }
 /* the button stands on the ribbon in place of the price, the price on it */
 .ob-plate .ob-buy { position: absolute; left: 50%; top: 78.5%; transform: translateX(-50%); width: 66%; min-width: 0; padding: 0 2cqi; gap: 2cqi; font-size: 5.4cqi; }
 .ob-plate .ob-buy:active { transform: translateX(-50%) translateY(2px); }

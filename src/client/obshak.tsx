@@ -75,14 +75,14 @@ export function ObshakWindow({ onClose }: { onClose: () => void }) {
                     <span className="ob-bonus"><RewardChips r={d.bonus} size={20} /></span>
                     {d.keysChance ? <span className="ob-keys" title="Шанс получить связку ключей"><ItemArt id="keys-bundle" size={24} />шанс</span> : null}
                   </div>
-                  {mine && o && (
-                    o.ready
-                      ? <button type="button" className="btn sm green ob-take" disabled={busy === "obshak_claim"} onClick={() => void claim()}>Забрать</button>
-                      : <span className="ob-next num"><Icon name="clock" size={14} />{clock(o.nextAt - now)}</span>
+                  {mine && o && !o.ready && <span className="ob-next num"><Icon name="clock" size={14} />{clock(o.nextAt - now)}</span>}
+                  {mine && o?.ready ? (
+                    <button type="button" className="btn green ob-buy" disabled={busy === "obshak_claim"} onClick={() => void claim()}>Забрать</button>
+                  ) : (
+                    <button type="button" className="btn gold ob-buy" disabled={busy === "obshak_buy" || gold < d.price} onClick={() => void buy(d)}>
+                      {mine ? "Продлить" : "Купить"} <span className="num"><Icon name="GOLD" size={18} />{full(d.price)}</span>
+                    </button>
                   )}
-                  <button type="button" className="btn gold ob-buy" disabled={busy === "obshak_buy" || gold < d.price} onClick={() => void buy(d)}>
-                    {mine ? "Продлить" : "Купить"} <span className="num"><Icon name="GOLD" size={18} />{full(d.price)}</span>
-                  </button>
                 </div>
               </div>
             );
