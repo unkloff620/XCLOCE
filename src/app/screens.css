@@ -7888,3 +7888,30 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .rig-solntse .sn-glow-3 { animation-duration: 3.4s; animation-delay: -2s; }
 @keyframes sn-ember { 0%, 100% { opacity: 0.45; } 30% { opacity: 0.95; } 42% { opacity: 0.75; } 60% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .rig-solntse .sn-glow { animation: none; opacity: 0.8; } }
+/* Солнце's room (arena-bg.tsx SunRoom): the fireball turns, its heat breathes, the lava boils, the lamp flickers */
+.snr-live .snr-ball { animation: snr-spin 26s linear infinite; }
+@keyframes snr-spin { to { transform: rotate(360deg); } }
+.snr-live .snr-heat { animation: snr-heat 3.2s ease-in-out infinite; }
+@keyframes snr-heat { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+.snr-live .snr-boil-a { animation: snr-boil-a 2.7s ease-in-out infinite; }
+.snr-live .snr-boil-b { animation: snr-boil-b 3.9s ease-in-out infinite; }
+@keyframes snr-boil-a { 0%, 100% { opacity: 0.2; } 35% { opacity: 0.85; } 55% { opacity: 0.5; } 75% { opacity: 0.95; } }
+@keyframes snr-boil-b { 0%, 100% { opacity: 0.7; } 30% { opacity: 0.15; } 60% { opacity: 0.8; } 80% { opacity: 0.35; } }
+.snr-live .snr-lamp { animation: snr-lamp 4.3s steps(1) infinite; }
+@keyframes snr-lamp { 0%, 100% { opacity: 0.85; } 8% { opacity: 0.35; } 10% { opacity: 0.9; } 37% { opacity: 0.6; } 39% { opacity: 0.95; } 61% { opacity: 0.2; } 62% { opacity: 0.8; } 64% { opacity: 0.3; } 66% { opacity: 0.9; } 88% { opacity: 0.7; } }
+@media (prefers-reduced-motion: reduce) { .snr-live :is(.snr-ball, .snr-heat, .snr-boil-a, .snr-boil-b, .snr-lamp) { animation: none; } }
+/* Солнце's card: a slab of flesh and lava (boss-card-frame-solntse.webp, its cracks dim); its lit copy fades in and out
+   over it (::before), and the cracks' own glow boils out of step (::after, screen) */
+.bcard.bcard-boss-solntse { --ink-c: #fff0e0; --mute-c: #ffb98a; border-image: url("/assets/ui/boss-card-frame-solntse.webp?v=1") 130 fill / 40px stretch; }
+.bcard.bcard-boss-solntse .bcard-name { text-shadow: 0 2px 0 rgba(0, 0, 0, 0.7), 0 0 12px rgba(255, 140, 20, 0.55); }
+.bcard.bcard-boss-solntse .bcard-reward { background: rgba(0, 0, 0, 0.42); box-shadow: inset 0 0 0 1.5px rgba(255, 150, 40, 0.35); }
+.bcard.bcard-boss-solntse::before { display: block; content: ""; position: absolute; inset: 0; z-index: 0; height: auto; pointer-events: none; background: none;
+  border-style: solid; border-width: 40px; border-color: transparent; border-image: url("/assets/ui/solntse-card-hot.webp?v=1") 130 fill / 40px stretch;
+  animation: sn-card-hot 3.1s ease-in-out infinite; }
+@keyframes sn-card-hot { 0%, 100% { opacity: 0.15; } 40% { opacity: 0.9; } 60% { opacity: 0.6; } 80% { opacity: 1; } }
+.bcard.bcard-boss-solntse::after { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; mix-blend-mode: screen;
+  border-style: solid; border-width: 40px; border-color: transparent; border-image: url("/assets/ui/solntse-card-cracks.webp?v=1") 130 fill / 40px stretch;
+  animation: snr-boil-b 4.4s ease-in-out infinite; }
+.bcard.bcard-boss-solntse .bcard-main, .bcard.bcard-boss-solntse .bcard-art { z-index: 1; }
+.bcard.bcard-boss-solntse.locked::before, .bcard.bcard-boss-solntse.locked::after { animation: none; }
+@media (prefers-reduced-motion: reduce) { .bcard.bcard-boss-solntse::before, .bcard.bcard-boss-solntse::after { animation: none; } }

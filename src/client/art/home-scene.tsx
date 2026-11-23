@@ -4,7 +4,7 @@ import { CHARACTER, HERO_HOT, ROOM_BG, ROOM_LIGHTS, ROOM_RGB, ROOM_SKY, SCENE, S
 import { RigViewport, type RigEdit, type Worn } from "./rig.tsx";
 import { ART_ASPECT } from "./desk-data.ts";
 import { usedUrl } from "../preload.ts";
-import { KnyazRoom, UtilizatorRoom } from "./arena-bg.tsx";
+import { KnyazRoom, SunRoom, UtilizatorRoom } from "./arena-bg.tsx";
 import { BOTSMAN_ROOM } from "./arena-botsman-data.ts";
 import { FokusRoom } from "./arena-fokus.tsx";
 import { placedOf, type Look } from "../../content/home.ts";
@@ -80,6 +80,9 @@ export function HomeScene({ room = "basic", onHero, still, look, worn, pieces = 
       ) : room === "acidyard" && !still ? (
         // «Кислотный двор» is Утилизатор's live fight room (the sky drifts, lightning, the lamp, fog, the rain), scaled the same way
         <g transform={`translate(0 -53) scale(${SCENE.w / 1024})`}><UtilizatorRoom uid="home" /></g>
+      ) : room === "forge" && !still ? (
+        // «Лавовая кузня» is Солнце's live fight room (the fireball turns, the lava boils, the lamp flickers), scaled the same way
+        <g transform={`translate(0 -53) scale(${SCENE.w / 1024})`}><SunRoom uid="home" /></g>
       ) : room === "coder" && !still ? (
         // «Берлога кодера» is Фокус's live fight room, drawn on the scene canvas itself (1060×1484)
         <FokusRoom uid="home" layer="back" />

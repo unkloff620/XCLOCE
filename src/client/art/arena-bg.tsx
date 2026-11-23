@@ -8,6 +8,7 @@ import { arenaOf } from "../../content/bosses.ts";
 import { KNYAZ_ROOM } from "./arena-knyaz-data.ts";
 import { BOTSMAN_ROOM } from "./arena-botsman-data.ts";
 import { FokusRoom } from "./arena-fokus.tsx";
+import { SUN_ROOM } from "./arena-sun-data.ts";
 
 const K = KNYAZ_ROOM;
 /** the vault door's hinge (its right edge) and the middle of the vault */
@@ -163,6 +164,51 @@ export function UtilizatorFront() {
   );
 }
 
+/**
+ * Солнце's lava forge in 1024×1536 (tools/boss/build-sun-room.py): the fireball turns behind the round window of the sun
+ * gate (a hot glow pulsing round it), the room's lava cracks boil — two copies of their glow breathing out of step, one
+ * of them a little blurred — and the lamp's beam on the right flickers.
+ */
+export function SunRoom({ uid = "a" }: { uid?: string }) {
+  const R = SUN_ROOM;
+  const b = R.ball, w = R.win, m = R.beam;
+  const A = "/assets/arena/solntse";
+  return (
+    <g className="snr-live">
+      <defs>
+        <radialGradient id={`snr-heat-${uid}`}>
+          <stop offset="0" stopColor="#ffd27a" stopOpacity="0.9" />
+          <stop offset="0.5" stopColor="#ff7a1a" stopOpacity="0.5" />
+          <stop offset="1" stopColor="#ff3a00" stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id={`snr-beam-${uid}`} gradientUnits="userSpaceOnUse" x1={m.lamp[0]} y1={m.lamp[1]} x2={(m.a[0] + m.b[0]) / 2} y2={(m.a[1] + m.b[1]) / 2}>
+          <stop offset="0" stopColor="#ffe2a0" stopOpacity="0.85" />
+          <stop offset="0.5" stopColor="#ffab4a" stopOpacity="0.35" />
+          <stop offset="1" stopColor="#ff8a2a" stopOpacity="0" />
+        </linearGradient>
+        <filter id={`snr-soft-${uid}`} x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation="3" /></filter>
+      </defs>
+      <rect x={0} y={0} width={1024} height={1536} fill="#1a0602" />
+      {/* the fireball behind the window: it turns, its heat breathes */}
+      <circle className="snr-heat" cx={w.cx} cy={w.cy} r={w.r * 1.25} fill={`url(#snr-heat-${uid})`} />
+      <g className="snr-ball" style={{ transformOrigin: `${b.x + b.w / 2}px ${b.y + b.h / 2}px`, transformBox: "view-box" }}>
+        <image href={`${A}/ball.webp`} x={b.x} y={b.y} width={b.w} height={b.h} preserveAspectRatio="none" />
+      </g>
+      <image href={`${A}/room.webp`} x={0} y={0} width={1024} height={1536} preserveAspectRatio="none" />
+      {/* the lava boils: its cracks glow brighter and dimmer, two layers out of step */}
+      <g style={{ mixBlendMode: "screen" }}>
+        <image className="snr-boil snr-boil-a" href={`${A}/cracks.webp`} x={0} y={0} width={1024} height={1536} preserveAspectRatio="none" />
+        <image className="snr-boil snr-boil-b" href={`${A}/cracks.webp`} x={0} y={0} width={1024} height={1536} preserveAspectRatio="none" filter={`url(#snr-soft-${uid})`} />
+        {/* the lamp and its beam flicker */}
+        <g className="snr-lamp">
+          <polygon points={`${m.lamp[0]},${m.lamp[1]} ${m.a[0]},${m.a[1]} ${m.b[0]},${m.b[1]}`} fill={`url(#snr-beam-${uid})`} />
+          <circle cx={m.lamp[0]} cy={m.lamp[1]} r={34} fill={`url(#snr-heat-${uid})`} />
+        </g>
+      </g>
+    </g>
+  );
+}
+
 export function ArenaBg({ bossId, className, focus = "bottom" }: { bossId: string; className?: string; focus?: "bottom" | "middle" }) {
   // Фокус's room is drawn on the scene canvas (1060×1484), alive (art/arena-fokus.tsx)
   if (bossId === "fokus") {
@@ -172,13 +218,13 @@ export function ArenaBg({ bossId, className, focus = "bottom" }: { bossId: strin
       </svg>
     );
   }
-  if (bossId !== "knyaz" && bossId !== "botsman" && bossId !== "utilizator") {
+  if (bossId !== "knyaz" && bossId !== "botsman" && bossId !== "utilizator" && bossId !== "solntse") {
     // eslint-disable-next-line @next/next/no-img-element
     return <img className={className} src={arenaOf(bossId)} alt="" draggable={false} />;
   }
   return (
     <svg className={`arena-live ${className ?? ""}`} viewBox="0 0 1024 1536" preserveAspectRatio={focus === "bottom" ? "xMidYMax slice" : "xMidYMid slice"} aria-hidden="true">
-      {bossId === "botsman" ? <BotsmanRoom uid={focus} /> : bossId === "utilizator" ? <UtilizatorRoom uid={focus} /> : <KnyazRoom uid={focus} />}
+      {bossId === "solntse" ? <SunRoom uid={focus} /> : bossId === "botsman" ? <BotsmanRoom uid={focus} /> : bossId === "utilizator" ? <UtilizatorRoom uid={focus} /> : <KnyazRoom uid={focus} />}
     </svg>
   );
 }
