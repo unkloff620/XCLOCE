@@ -25,7 +25,7 @@ const IcSwap = () => (
 const IcEye = () => (
   <svg viewBox="0 0 24 24" width="30" height="26" aria-hidden="true"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12Z" fill="currentColor" /><circle cx="12" cy="12" r="3.6" fill="#f4e2b8" /><circle cx="12" cy="12" r="1.7" fill="currentColor" /></svg>
 );
-const IcArrow = ({ flip }: { flip?: boolean }) => (
+export const IcArrow = ({ flip }: { flip?: boolean }) => (
   <svg viewBox="0 0 32 24" width="34" height="26" aria-hidden="true" style={flip ? { transform: "scaleX(-1)" } : undefined}>
     <path d="M28 6c-2 9-11 12-20 9" fill="none" stroke="#d8261c" strokeWidth="4.2" strokeLinecap="round" /><path d="M11 8.5 5 15l7.5 4.5" fill="none" stroke="#d8261c" strokeWidth="4.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
 );

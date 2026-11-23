@@ -7846,26 +7846,49 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 /* «Общак» (client/obshak.tsx): the icon under «Зарубы»; four cards on dark planks, each in its metal */
 .ob-toggle { border-color: rgba(255, 196, 64, 0.7); }
 .ob-toggle img { object-fit: contain; }
-.ob-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-@media (min-width: 720px) { .ob-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-.ob-card { --m: #b9bcc4; position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 18px 8px 10px; border-radius: 8px; text-align: center;
-  background: linear-gradient(180deg, #3a2f26, #251c15); color: #f2e6d2; border: 3px solid var(--m); box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.45), 0 4px 10px rgba(0, 0, 0, 0.45); }
-.ob-pacan { --m: #b9bcc4; } .ob-blat { --m: #b4683a; } .ob-avtor { --m: #e8eaee; } .ob-vor { --m: #f2c230; }
-.ob-card.on { box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.45), 0 0 0 2px #f2c230, 0 0 18px rgba(242, 194, 48, 0.55); }
-.ob-crown { position: absolute; top: -12px; left: 50%; width: 34px; height: 18px; transform: translateX(-50%); background: var(--m);
-  clip-path: polygon(0 100%, 0 30%, 22% 62%, 36% 0, 50% 55%, 64% 0, 78% 62%, 100% 30%, 100% 100%); filter: drop-shadow(0 2px 1px rgba(0, 0, 0, 0.5)); }
-.ob-avtor .ob-crown, .ob-vor .ob-crown { background: linear-gradient(180deg, #ff6a5a, #b4201a); }
-.ob-name { font-size: 16px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--m); text-shadow: 0 2px 0 rgba(0, 0, 0, 0.6); }
-.ob-days { font-size: 12.5px; font-weight: 700; color: #ffd76a; }
-.ob-sub { font-size: 11px; color: #b9a68a; }
-.ob-dmg { display: inline-flex; align-items: center; gap: 4px; font-size: 16px; font-weight: 800; color: #fff; }
-.ob-bonus .rchips { justify-content: center; }
-.ob-bonus .chip { color: #f2e6d2; }
-.ob-keys { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: #ffd76a; }
-.ob-next { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: #f2e6d2; }
-.ob-card .ob-buy { margin-top: auto; width: 100%; min-width: 0; padding: 0 6px; font-size: 13px; }
-.ob-card .ob-buy .num { display: inline-flex; align-items: center; gap: 2px; }
-.ob-card .ob-take { width: 100%; }
+/* «Общак»: one level at a time on the van's slates, swiped or turned by the red arrows; the slate's box is its picture's
+   opaque part (x 116–1014, y 75–1295 of 1117×1371): the body above y 77%, the price on the ribbon (79–88%) */
+.ob-win .modal-body, .ob-win { overflow-x: hidden; }
+.ob-car { position: relative; margin: 0 -4px; }
+.ob-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
+.ob-track::-webkit-scrollbar { display: none; }
+.ob-slide { flex: 0 0 100%; scroll-snap-align: center; scroll-snap-stop: always; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 4px 0 2px; }
+.ob-plate { --pw: min(72vw, 270px); position: relative; width: var(--pw); aspect-ratio: 898 / 1220; container-type: inline-size; color: #f3ead8;
+  background: center / 124.4% auto no-repeat; background-position: 53% 49.7%; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.55)); }
+.ob-plate.on { filter: drop-shadow(0 0 6px rgba(255, 215, 90, 0.85)) drop-shadow(0 6px 10px rgba(0, 0, 0, 0.55)); }
+.ob-in { position: absolute; left: 10%; right: 10%; top: 4.5%; height: 71%; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; text-align: center; }
+.ob-name { font-size: 8cqi; line-height: 1; text-transform: uppercase; letter-spacing: 0.03em; color: #fff; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.6); }
+.ob-plate.k-gold .ob-name, .ob-plate.k-bronze .ob-name { color: #fff3d0; }
+.ob-days { font-size: 5.6cqi; font-weight: 800; color: #ffe27a; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.75), 0 0 3px rgba(0, 0, 0, 0.6); }
+.ob-plate.k-gold .ob-days, .ob-plate.k-silver .ob-days { color: #fff; }
+.ob-sub { font-size: 4.8cqi; color: #f3ead8; opacity: 0.9; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); }
+.ob-dmg { display: inline-flex; align-items: center; gap: 1.5cqi; font-size: 9cqi; font-weight: 900; color: #fff; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.6); }
+.ob-bonus .rchips { justify-content: center; gap: 1.5cqi 3cqi; }
+.ob-bonus .chip { color: #fff; font-size: 5.4cqi; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85); }
+.ob-keys { display: inline-flex; align-items: center; gap: 1cqi; font-size: 5cqi; font-weight: 700; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85); }
+.ob-price { position: absolute; left: 20%; right: 20%; top: 79%; height: 9%; display: flex; align-items: center; justify-content: center; gap: 2cqi; font-size: 8.5cqi; color: #3b2a1a; }
+.ob-price svg { width: 9cqi !important; height: 9cqi !important; }
+/* the outline shines (the van's light along the edge): clear on gold, fainter on silver */
+.ob-rim { position: absolute; inset: 0; pointer-events: none;
+  -webkit-mask: url(/assets/van/plaque-rim.webp) 53% 49.7% / 124.4% auto no-repeat; mask: url(/assets/van/plaque-rim.webp) 53% 49.7% / 124.4% auto no-repeat;
+  background: linear-gradient(115deg, transparent 38%, rgba(255, 248, 210, 0.95) 47%, #fff 50%, rgba(255, 248, 210, 0.95) 53%, transparent 62%) 0 0 / 300% 300%;
+  mix-blend-mode: screen; animation: van-rim 2.6s linear infinite; }
+.ob-plate.k-gold .ob-rim { filter: drop-shadow(0 0 4px #ffd75a); }
+.ob-plate.k-silver .ob-rim { opacity: 0.6; animation-duration: 3.4s; }
+@media (prefers-reduced-motion: reduce) { .ob-rim { animation: none; opacity: 0.3; } }
+.ob-ctl { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: var(--bh, 36px); }
+.ob-next { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 700; color: #3b2a1a; }
+.ob-arrow { position: absolute; top: calc(min(72vw, 270px) * 1220 / 898 / 2 - 14px); z-index: 2; width: 38px; height: 30px; padding: 0; border: 0; background: none; display: grid; place-items: center; cursor: pointer; }
+.ob-arrow svg { width: 100%; height: auto; filter: drop-shadow(0 0 0.5px #fff) drop-shadow(0 0 0.5px #fff) drop-shadow(0 1px 1px rgba(0, 0, 0, 0.8)); }
+.ob-arrow:active { transform: scale(0.92); }
+.ob-arrow.l { left: 2px; animation: ob-point-l 1.4s ease-in-out infinite; }
+.ob-arrow.r { right: 2px; animation: ob-point-r 1.4s ease-in-out infinite; }
+@keyframes ob-point-l { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-5px); } }
+@keyframes ob-point-r { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(5px); } }
+@media (prefers-reduced-motion: reduce) { .ob-arrow { animation: none; } }
+.ob-dots { display: flex; justify-content: center; gap: 6px; margin-top: 8px; }
+.ob-dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(59, 42, 26, 0.3); }
+.ob-dots i.on { background: #3b2a1a; }
 .ob-got-dmg { display: inline-flex; align-items: center; gap: 4px; font-size: 18px; font-weight: 800; }
 /* the needle in a fight: today's stock of «Общак» in one blow */
 .fbtn-needle.btn { gap: 3px; padding: 0 8px; }
