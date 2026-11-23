@@ -1732,4 +1732,47 @@ CREATE INDEX IF NOT EXISTS master_progress_best ON master_progress (master_id, m
   pool BIGINT NOT NULL DEFAULT 0
 );`,
   },
+  {
+    // «Лагеря» (content/raids.ts): who holds each building, its barricades, the rewards waiting for the leader, the
+    // clan's camp and rebar; the fights' mode. The old per-clan captures are dropped (the game is not out yet)
+    id: "v2-126-camps",
+    sql: `CREATE TABLE IF NOT EXISTS raid_holds (
+  building_id TEXT PRIMARY KEY,
+  yard_id TEXT NOT NULL,
+  clan_id INT NOT NULL,
+  taken_at TIMESTAMPTZ NOT NULL,
+  defense INT NOT NULL DEFAULT 0,
+  protect_until TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS raid_holds_clan ON raid_holds (clan_id);
+CREATE TABLE IF NOT EXISTS raid_claims (
+  id SERIAL PRIMARY KEY,
+  clan_id INT NOT NULL,
+  yard_id TEXT NOT NULL,
+  building_id TEXT NOT NULL,
+  at TIMESTAMPTZ NOT NULL,
+  whole BOOLEAN NOT NULL DEFAULT false,
+  clan_xp INT NOT NULL,
+  influence INT NOT NULL,
+  flag TEXT NOT NULL,
+  flags INT NOT NULL,
+  players INT[] NOT NULL,
+  claimed_at TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS raid_claims_clan ON raid_claims (clan_id) WHERE claimed_at IS NULL;
+CREATE TABLE IF NOT EXISTS raid_fort (
+  player_id INT NOT NULL,
+  day TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  n INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (player_id, day, kind)
+);
+ALTER TABLE raid_fights ADD COLUMN IF NOT EXISTS mode TEXT NOT NULL DEFAULT 'active';
+ALTER TABLE raid_progress ADD COLUMN IF NOT EXISTS wins_cut INT NOT NULL DEFAULT 0;
+ALTER TABLE raid_progress ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ NOT NULL DEFAULT now();
+ALTER TABLE clans ADD COLUMN IF NOT EXISTS raid_camp TEXT;
+ALTER TABLE clans ADD COLUMN IF NOT EXISTS rebar INT NOT NULL DEFAULT 0;
+DELETE FROM raid_progress;
+DELETE FROM raid_yards;`,
+  },
 ];

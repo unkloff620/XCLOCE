@@ -358,7 +358,7 @@ export function ClanScreen({ id }: { id: number }) {
   const ic = (k: string) => <img src={`/assets/ui/clan-${k}.webp`} alt="" draggable={false} />;
   const menu = mine && (
     <nav className="clan-menu" aria-label="Клан">
-      {state?.raids?.on && <Link href="/clans/raids" className="clan-menu-b">{ic("raid")}<em>Захват</em></Link>}
+      {state?.raids?.on && <Link href="/clans/raids" className="clan-menu-b">{ic("raid")}<em>Лагеря</em></Link>}
       <Link href={`/clans/${c.id}/shodnyak`} className="clan-menu-b">{ic("meet")}<em>Сходняк</em></Link>
       {state?.raids?.on && <Link href={`/clans/${c.id}/events`} className="clan-menu-b">{ic("events")}<em>События</em></Link>}
       <Link href="/clans?all=1" className="clan-menu-b">{ic("all")}<em>Все кланы</em></Link>

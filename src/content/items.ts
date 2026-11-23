@@ -188,7 +188,8 @@ const MISC: ItemDef[] = [
   // «Колесо удачи» (content/fortune.ts): the ticket is one spin; the keycaps open the boxes of the bag
   { id: "fortune-ticket", name: "Билет колеса", category: "item", rarity: "rare", maxStack: 99_999, description: "Одна прокрутка «Колеса удачи» на заднем дворе. Каждая прокрутка растит общий джекпот.", sources: ["Ящик ништяков в магазине", "Колесо удачи: купить за 10 $", "Колесо удачи"] },
   // «Ходки» (content/raids.ts): a taken yard's flag, 1…5 stars — the bags of tattoo sets are opened for them
-  ...[1, 2, 3, 4, 5].map((n) => ({ id: `raid-flag-${n}`, name: `Флаг двора ${"★".repeat(n)}`, category: "item" as const, rarity: (["common", "rare", "rare", "epic", "legendary"] as const)[n - 1], maxStack: [80, 180, 300, 400, 560][n - 1], description: `Флаг захваченного двора №${n}. За флаги открываются сумки с сетами наколок. Больше ${[80, 180, 300, 400, 560][n - 1]} не унести.`, sources: ["Захват: взятие двора"] })),
+  // «Лагеря» (content/raids.ts): the armbands, one kind a camp — Меняла gives the pieces of tattoo sets for them
+  ...[1, 2, 3, 4, 5].map((n) => ({ id: `raid-flag-${n}`, name: `Повязка «${["Тройка", "Копейка", "Красная однёрка", "Атлянка", "Белый медведь"][n - 1]}»`, category: "item" as const, rarity: (["common", "rare", "rare", "epic", "legendary"] as const)[n - 1], maxStack: [80, 165, 275, 390, 540][n - 1], description: "Повязка актива за захват зданий в лагерях. Меняла во дворе меняет повязки на наколки.", sources: ["Лагеря"] })),
   { id: "keycap", name: "Кнопка клавиатуры", category: "item", rarity: "common", maxStack: 99_999_999, description: "Кнопки, выбитые на «Колесе удачи». За них открываются коробки с наколками в сумке колеса.", sources: ["Колесо удачи"] },
 ];
 

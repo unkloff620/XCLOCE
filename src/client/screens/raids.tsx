@@ -35,7 +35,7 @@ import { ART_VER } from "../preload.ts";
 import { Icon } from "../art/icons.tsx";
 import { haptic } from "../telegram.ts";
 import { useRouter } from "next/navigation";
-import { RAID_BAG_PRICES, RAID_BAG_SETS } from "../../content/raids.ts";
+import { CAMP_DEF_MAX, FORTS, RAID_BAG_PRICES, RAID_BAG_SETS, RAID_MODE_NAME, type RaidMode } from "../../content/raids.ts";
 import { TATTOO_SETS, tattooPiece } from "../../content/tattoos.ts";
 import { GROUND_H, GROUND_W, YARD_LIGHTS, groundH, groundY } from "../../content/raids.ts";
 import { takenWord, yardReady } from "../../content/raids.ts";
@@ -45,13 +45,23 @@ import { itemById } from "../../content/items.ts";
 
 const A = "/assets/raids";
 
+type ClanMark = { id: number; name: string; tag: string; emblem: string; color: string };
+type CampBuilding = { id: string; wins: number; need: number; taken: boolean; holder: ClanMark | null; defense: number; protectUntil: number; shielded: boolean; claim: number | null };
+type Claim = { id: number; building: string; yard: string; whole: boolean; clanXp: number; influence: number; flag: string; flags: number };
 interface RaidsView {
   clanId: number | null;
+  /** I am the leader (I pick the camp, I collect the medals) */
+  leader: boolean;
+  level: number;
+  /** the camp my clan is taking now */
+  camp: string | null;
+  rebar: number;
   clan: { emblem: string; color: string } | null;
-  yards: { id: string; open: boolean; taken: boolean; rest: number; times: number; target: string | null; buildings: { id: string; wins: number; need: number; taken: boolean }[];
-    /** my clan's influence here; the clan with the most of it */
-    influence: number; leader: { id: number; name: string; tag: string; emblem: string; color: string; influence: number } | null }[];
-  fight: { id: number; building: string; hp: number; hpMax: number; hits: number; endsAt: number | null; top?: { playerId: number; name: string; damage: number }[] } | null;
+  claims: Claim[];
+  yards: { id: string; open: boolean; needLevel: number; done: boolean; target: string | null; buildings: CampBuilding[];
+    /** my clan's influence here; the clan with the most of it; the rating */
+    influence: number; leader: (ClanMark & { influence: number }) | null; rating: (ClanMark & { influence: number })[] }[];
+  fight: { id: number; building: string; mode: RaidMode; hp: number; hpMax: number; hits: number; endsAt: number | null; top?: { playerId: number; name: string; damage: number }[] } | null;
   /** my flags of the yards 1…5 */
   flags?: number[];
   /** the pieces of each bag's set I have */
@@ -93,6 +103,13 @@ export function RaidsScreen() {
   const yv = v?.yards.find((x) => x.id === y.id);
   const open = !!yv?.open;
   const taken = yv?.buildings.filter((b) => b.taken).length ?? 0;
+  const { act, busy: acting } = useGame();
+  const router = useRouter();
+  const mineCamp = v?.camp === y.id;
+  const pick = async () => {
+    haptic.tap();
+    if (mineCamp || (await act("raid_camp", { yard: y.id }))) router.push(`/clans/raids/${y.id}`);
+  };
   return (
     <div className="fit-page rd-page"
       onTouchStart={(e) => { touch.current = e.touches[0].clientX; }}
@@ -101,14 +118,14 @@ export function RaidsScreen() {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="rd-bg" src={`${A}/yard-bg.webp`} alt="" draggable={false} />
       {/* the bag of the yards: the bags of tattoo sets, opened for the flags (a page of its own) */}
-      <Link href="/clans/raids/bags" className="rd-bagbtn" aria-label="Сумки за флаги" onClick={() => haptic.tap()}>
+      <Link href="/clans/raids/bags" className="rd-bagbtn" aria-label="Меняла" onClick={() => haptic.tap()}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={`${A}/bag-all.webp`} alt="" draggable={false} />
         {(v?.flags ?? []).some((n) => n > 0) && <i className="rd-bagbtn-n">{(v?.flags ?? []).reduce((a, n) => a + n, 0)}</i>}
       </Link>
       <div className="title-row rd-title">
         <Link href={v?.clanId ? `/clans/${v.clanId}` : "/clans"} className="back-btn" aria-label="В клан">‹</Link>
-        <b>Захват</b>
+        <b>Лагеря</b>
         <span className="rd-dots">{RAID_YARDS.map((x, k) => <i key={x.id} className={k === i ? "on" : ""} />)}</span>
       </div>
       <div className="rd-cardrow">
@@ -128,8 +145,8 @@ export function RaidsScreen() {
             {/* the yard's own photo: its ground with its buildings (build-yard-art.py), or the old common one */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className={y.art ? "own" : ""} src={y.art ? `${A}/${y.art}/photo.webp?v=${ART_V}` : `${A}/yard-bg.webp`} alt="" draggable={false} />
-            <span className="rd-wins num">{yv?.taken ? "Двор наш" : `Захвачено ${taken}/${y.buildings.length}`}</span>
-            {!!yv?.times && <span className="rd-times num">захвачен ×{yv.times}</span>}
+            <span className="rd-wins num">{yv?.done ? "Лагерь наш" : `Наших зданий ${taken}/${y.buildings.length}`}</span>
+            {mineCamp && !yv?.done && <span className="rd-times num">захватываем</span>}
             {!open && yardReady(y) && <span className="rd-lock"><Icon name="lock" size={34} /></span>}
             {/* a yard not drawn yet: closed for now — a red stamp over its photo */}
             {!yardReady(y) && <span className="rd-shut">Закрыто</span>}
@@ -142,15 +159,23 @@ export function RaidsScreen() {
             </span>
           )}
           <div className="rd-body">
-            <span className="rd-kicker">двор №{y.n}</span>
+            <span className="rd-kicker">лагерь №{y.n}</span>
             <b className="rd-name">{y.name}</b>
             <span className="rd-sub">{y.subtitle}</span>
-            {!yardReady(y) ? <span className="rd-closed shut">Двор пока закрыт</span>
-              : v && !v.clanId ? <span className="rd-closed">Захват — для клана. Вступи в клан или создай свой</span>
-              : open && yv?.rest ? <span className="rd-closed">Двор ваш. Снова захватить — через <RestLeft until={yv.rest} /></span>
-              : open ? <Link href={`/clans/raids/${y.id}`} className="btn gold rd-go">Захватить</Link>
-              : <span className="rd-closed">Сначала захвати двор «{RAID_YARDS[i - 1]?.name}»</span>}
-            <span className="rd-h">Награды за захват двора</span>
+            {!yardReady(y) ? <span className="rd-closed shut">Лагерь пока закрыт</span>
+              : v && !v.clanId ? <span className="rd-closed">Лагеря — для бригады. Вступи в бригаду или создай свою</span>
+              : !open ? <span className="rd-closed">Откроется с {yv?.needLevel ?? "?"} уровня бригады</span>
+              : mineCamp || yv?.done ? <Link href={`/clans/raids/${y.id}`} className="btn gold rd-go">В лагерь</Link>
+              : v?.leader ? <button type="button" className="btn gold rd-go" disabled={acting === "raid_camp"} onClick={() => void pick()}>Захватить</button>
+              : <span className="rd-closed">{v?.camp ? `Бригада захватывает «${RAID_YARDS.find((x) => x.id === v.camp)?.name}»` : "Лагерь выбирает бригадир"}</span>}
+            {!!yv?.rating.length && (
+              <span className="rd-rating">
+                {yv.rating.slice(0, 3).map((c, k) => (
+                  <span key={c.id} className={`rd-rate ${c.id === v?.clanId ? "me" : ""}`}><b className="num">{k + 1}</b><Emblem emblem={c.emblem} color={c.color} size={18} /><i className="ellipsis">{c.name}</i><b className="num">{c.influence.toLocaleString("ru-RU")}</b></span>
+                ))}
+              </span>
+            )}
+            <span className="rd-h">Награды за захват лагеря</span>
             <YardRewards y={y} />
           </div>
         </div>
@@ -311,7 +336,7 @@ export function RaidBagsScreen() {
       <AlleyScene />
       <div className="title-row rd-title">
         <Link href="/clans/raids" className="back-btn" aria-label="К дворам">‹</Link>
-        <b>Сумки за флаги</b>
+        <b>Меняла</b>
       </div>
       {/* my flags, top down: ★ … ★★★★★ */}
       <ul className="rb-flags">
@@ -373,13 +398,6 @@ function FightTime({ endsAt }: { endsAt: number }) {
   );
 }
 
-function RestLeft({ until }: { until: number }) {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => { const t = window.setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
-  const s = Math.max(0, Math.ceil((until - now) / 1000));
-  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
-  return <b className="num">{h ? `${h}:${String(m).padStart(2, "0")}` : m}:{String(sec).padStart(2, "0")}</b>;
-}
 
 /** a taken building's emblem: on its left roof corner, found on each picture by tools/raids/logo-spots.py */
 const logoAt = (art: string | undefined, b: RaidBuilding) => {
@@ -388,18 +406,23 @@ const logoAt = (art: string | undefined, b: RaidBuilding) => {
 };
 
 /** a building on the yard's ground; the one to attack now glows, a taken one carries the clan's flag */
-function Building({ b, art, target, taken, yard, clan, prog }: { b: RaidBuilding; art?: string; target: boolean; taken: boolean; yard: string; clan: RaidsView["clan"]; prog?: { wins: number; need: number } }) {
+function Building({ b, art, target, taken, yard, clan, prog, onMedal, onFort }: { b: RaidBuilding; art?: string; target: boolean; taken: boolean; yard: string; clan: RaidsView["clan"]; prog?: CampBuilding; onMedal?: () => void; onFort?: () => void }) {
   const router = useRouter();
+  const enemy = !taken && prog?.holder;
   const pic = `${A}/${art ? `${art}/` : ""}b-${b.pic ?? b.kind}.webp?v=${ART_V}`;
   return (
     <button type="button" className={`rd-bld k-${b.kind} ${target ? "target" : ""} ${taken ? "taken" : ""}`} style={{ left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%`, zIndex: Math.round(b.y * 10), ["--pic" as string]: `url(${pic})` }}
-      onClick={() => { haptic.tap(); if (target) router.push(`/clans/raids/${yard}/${b.id}`); }} aria-label={BUILDING_NAMES[b.kind]}>
+      onClick={() => { haptic.tap(); if (target) router.push(`/clans/raids/${yard}/${b.id}`); else if (taken && onFort) onFort(); }} aria-label={BUILDING_NAMES[b.kind]}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={pic} alt="" draggable={false} />
       {/* the one being taken: the clan's wins over it so far, small on its left */}
       {target && prog && <span className="rd-bld-count">{prog.wins}/{prog.need}</span>}
       {/* taken: the clan's logo over its top-left corner */}
       {taken && <span className="rd-bld-logo" style={logoAt(art, b)}>{clan ? <Emblem emblem={clan.emblem} color={clan.color} size={34} /> : <ItemArt id={flagId(1)} size={24} />}</span>}
+      {/* another clan holds it: its logo, a shield while it cannot be attacked */}
+      {enemy && <span className="rd-bld-logo enemy" style={logoAt(art, b)}><Emblem emblem={enemy.emblem} color={enemy.color} size={30} />{prog?.shielded && <i className="rd-bld-shield"><Icon name="lock" size={14} /></i>}</span>}
+      {/* the reward waits for the leader: the medal */}
+      {prog?.claim && <span className="rd-bld-medal" role="button" onClick={(e) => { e.stopPropagation(); haptic.tap(); onMedal?.(); }}><Icon name="ach-damage" size={26} /></span>}
     </button>
   );
 }
@@ -478,7 +501,9 @@ function YardClouds() {
 }
 
 export function RaidYardScreen({ id }: { id: string }) {
-  const { v } = useRaids();
+  const { v, setV, load } = useRaids();
+  const [medal, setMedal] = useState<ClaimDone | null>(null);
+  const [fortB, setFortB] = useState<string | null>(null);
   // start at the bottom of a tall yard (where the attack starts) and in the middle of a wide one, once its layout has settled
   const scroller = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -495,6 +520,13 @@ export function RaidYardScreen({ id }: { id: string }) {
   }, [id, !!v]);
   usePageReady(!!v);
   const { state } = useGame();
+  const { act: doAct, toast } = useGame();
+  const claimOf = async (claimId: number | null) => {
+    if (!claimId) return;
+    if (!v?.leader) { toast("Награду собирает бригадир"); return; }
+    const r = await doAct<ClaimDone & RaidsView>("raid_claim", { claim: claimId });
+    if (r) { haptic.ok(); sfx("coinsoft"); setMedal(r); setV(r); }
+  };
   const y = raidYardById(id);
   if (!y || !state) return null;
   const yv = v?.yards.find((x) => x.id === y.id);
@@ -514,15 +546,18 @@ export function RaidYardScreen({ id }: { id: string }) {
               own trees drawn in */}
           {!y.art && <YardLife n={y.n} />}
           {y.art && <YardLights art={y.art} />}
-          {[...y.buildings].reverse().map((b) => <Building key={b.id} b={b} art={y.art} yard={y.id} clan={v?.clan ?? null} target={!!yv?.open && yv.target === b.id} taken={!!yv?.buildings.find((x) => x.id === b.id)?.taken} prog={yv?.buildings.find((x) => x.id === b.id)} />)}
+          {[...y.buildings].reverse().map((b) => <Building key={b.id} b={b} art={y.art} yard={y.id} clan={v?.clan ?? null} target={!!yv?.open && yv.target === b.id} taken={!!yv?.buildings.find((x) => x.id === b.id)?.taken} prog={yv?.buildings.find((x) => x.id === b.id)}
+            onMedal={() => void claimOf(yv?.buildings.find((x) => x.id === b.id)?.claim ?? null)} onFort={b.id === y.buildings[0].id ? undefined : () => setFortB(b.id)} />)}
         </div>
         </div>
       </div>
       <div className="title-row rd-title">
-        <Link href="/clans/raids" className="back-btn" aria-label="К дворам">‹</Link>
-        <b>Двор №{y.n} · {y.name}</b>
+        <Link href="/clans/raids" className="back-btn" aria-label="К лагерям">‹</Link>
+        <b>Лагерь №{y.n} · {y.name}</b>
         <span className="rd-progress num">{yv?.buildings.filter((b) => b.taken).length ?? 0}/{y.buildings.length}</span>
       </div>
+      {medal && <MedalWindow c={medal} onClose={() => setMedal(null)} />}
+      {fortB && v && <FortWindow v={v} buildingId={fortB} onDone={(nv) => setV(nv)} onClose={() => setFortB(null)} />}
     </div>
   );
 }
@@ -621,9 +656,9 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
   const fight = v?.fight && v.fight.building === b.id ? v.fight : null;
   const elsewhere = v?.fight && v.fight.building !== b.id ? v.fight : null;
 
-  const start = async () => {
+  const start = async (mode: RaidMode) => {
     haptic.tap();
-    if (await act("raid_start", { building: b.id })) await load();
+    if (await act("raid_start", { building: b.id, mode })) await load();
   };
   const hit = async (weapon: string, rush = false, pack = 1) => {
     if (!hitGapOk()) return;
@@ -789,7 +824,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
         <img className="rd-map-bg rd-wall" src={`${A}/attack-wall.webp`} alt="" draggable={false} />
         <div className="rd-board">
           <b className="rd-board-t">{BUILDING_NAMES[b.kind]}</b>
-          <span className="rd-board-w">Побед клана: <b className="num">{prog?.wins ?? 0}/{prog?.need ?? y.wins}</b>{prog?.taken ? " — захвачено" : ""}</span>
+          <span className="rd-board-w">Побед бригады: <b className="num">{prog?.wins ?? 0}/{prog?.need ?? y.wins}</b>{prog?.taken ? " — наше" : prog?.holder ? ` — держит «${prog.holder.name}»` : ""}</span>
           {/* all the rewards on the board: a win's (each fight) and the capture's (the clan's, when the building is taken) */}
           <span className="rd-board-r">
             <i className="rd-board-l">За победу</i>
@@ -806,14 +841,85 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
       </div>
       <div className="title-row rd-title">
         <Link href={`/clans/raids/${y.id}`} className="back-btn" aria-label="Во двор">‹</Link>
-        <b>Двор №{y.n} · {BUILDING_NAMES[b.kind]}</b>
+        <b>Лагерь №{y.n} · {BUILDING_NAMES[b.kind]}</b>
       </div>
       <div className="rd-attack-foot">
-        {!v ? null : !v.clanId ? <span className="rd-attack-note">Захват — только для клана</span>
+        {!v ? null : !v.clanId ? <span className="rd-attack-note">Лагеря — только для бригады</span>
           : elsewhere ? <span className="rd-attack-note">Ты уже в бою за другое здание</span>
-          : prog?.taken ? <span className="rd-attack-note">{v.yards.find((x) => x.id === y.id)?.rest ? "Двор ваш — снова захватить можно позже" : "Здание уже захвачено кланом"}</span>
-          : <button type="button" className="btn gold block rd-attack-go" disabled={busy === "raid_start"} onClick={start}>Атаковать</button>}
+          : prog?.taken ? <span className="rd-attack-note">Здание уже за бригадой</span>
+          : prog?.shielded ? <span className="rd-attack-note">Здание под защитой — атаковать пока нельзя</span>
+          : prog?.holder ? (
+            // held by another clan: the building alone, or the building with its holders (more HP, more reward)
+            <div className="row rd-attack-modes">
+              <button type="button" className="btn gold grow" disabled={busy === "raid_start"} onClick={() => void start("active")}>{RAID_MODE_NAME.active}</button>
+              <button type="button" className="btn red grow" disabled={busy === "raid_start"} onClick={() => void start("cut")}>{RAID_MODE_NAME.cut}</button>
+            </div>
+          )
+          : <button type="button" className="btn gold block rd-attack-go" disabled={busy === "raid_start"} onClick={() => void start("active")}>Атаковать</button>}
       </div>
     </div>
+  );
+}
+
+type ClaimDone = { claim: number; building: string; yard: string; whole: boolean; clanXp: number; influence: number; flag: string; armbands: number; players: number };
+/** «Подмяли здание!»: what the medal gave (the clan's experience, the influence, the armbands to each winner) */
+function MedalWindow({ c, onClose }: { c: ClaimDone; onClose: () => void }) {
+  const found = RAID_YARDS.flatMap((y) => y.buildings.map((b) => ({ y, b }))).find((x) => x.b.id === c.building);
+  if (!found) return null;
+  const { y, b } = found;
+  return (
+    <Modal title={c.whole ? "Лагерь наш!" : "Подмяли здание!"} onClose={onClose}>
+      <div className="col center rd-medal">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="rd-medal-pic" src={`${A}/${y.art ? `${y.art}/` : ""}b-${b.pic ?? b.kind}.webp?v=${ART_V}`} alt="" draggable={false} />
+        <b className="rd-medal-name">{c.whole ? y.name : BUILDING_NAMES[b.kind]}</b>
+        <span className="rd-medal-r">
+          <span><Icon name="clan-xp" size={22} /><b className="num">+{c.clanXp.toLocaleString("ru-RU")}</b></span>
+          <span><Icon name="influence" size={22} /><b className="num">+{c.influence.toLocaleString("ru-RU")}</b></span>
+          <span><ItemArt id={c.flag} size={22} /><b className="num">+{c.armbands}</b></span>
+        </span>
+        <span className="tiny muted">повязки — каждому из {c.players} бойцов</span>
+        <button type="button" className="btn gold" onClick={onClose}>Продолжить</button>
+      </div>
+    </Modal>
+  );
+}
+
+/** the barricade of the clan's building: its defense (to CAMP_DEF_MAX — then nobody can take it), the protection's time
+ *  left, and the five ways to fortify it */
+function FortWindow({ v, buildingId, onDone, onClose }: { v: RaidsView; buildingId: string; onDone: (v: RaidsView) => void; onClose: () => void }) {
+  const { act, busy, state } = useGame();
+  const now = useNow();
+  const found = RAID_YARDS.flatMap((y) => y.buildings.map((b) => ({ y, b }))).find((x) => x.b.id === buildingId);
+  const bv = v.yards.flatMap((y) => y.buildings).find((x) => x.id === buildingId);
+  if (!found || !bv) return null;
+  const { y, b } = found;
+  const full = bv.defense >= CAMP_DEF_MAX;
+  const fort = async (kind: string) => {
+    const r = await act<RaidsView & { defense: number; clanXp: number }>("raid_fort", { building: buildingId, kind });
+    if (r) { haptic.ok(); onDone(r); }
+  };
+  return (
+    <Modal title={BUILDING_NAMES[b.kind]} onClose={onClose}>
+      <div className="col center rd-fort">
+        <div className="rd-fort-bar"><Bar value={bv.defense} max={CAMP_DEF_MAX} /><b className="num">{bv.defense.toLocaleString("ru-RU")}/{CAMP_DEF_MAX.toLocaleString("ru-RU")}</b></div>
+        {bv.protectUntil > now && <span className="small">Временная защита закончится через <b className="num">{clock(bv.protectUntil - now)}</b></span>}
+        {full && <span className="small"><b>Укреплено полностью — отбить нельзя</b></span>}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="rd-medal-pic" src={`${A}/${y.art ? `${y.art}/` : ""}b-${b.pic ?? b.kind}.webp?v=${ART_V}`} alt="" draggable={false} />
+        <div className="rd-fort-row">
+          {FORTS.map((f) => {
+            const n = f.id === "rebar" ? v.rebar : null;
+            return (
+              <button key={f.id} type="button" className={`rd-fort-b f-${f.id}`} disabled={full || busy === "raid_fort" || (n !== null && n < 1) || (!!f.rub && (state?.wallet.RUB ?? 0) < f.rub)} onClick={() => void fort(f.id)}>
+                <b className="rd-fort-n">{f.name}</b>
+                <span className="tiny num">+{f.def}</span>
+                {f.rub ? <span className="tiny num rd-fort-p"><Icon name="RUB" size={12} />{f.rub}</span> : f.perDay ? <span className="tiny">{f.perDay} в день</span> : <span className="tiny num">×{n}</span>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </Modal>
   );
 }

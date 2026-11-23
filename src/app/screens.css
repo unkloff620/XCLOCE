@@ -7929,3 +7929,31 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 /* the raid's clouds lie over the ground's edges but under the buildings */
 .rd-scene > .rd-map-bg { z-index: 0; }
 .rd-scene > .rd-clouds { z-index: 1; }
+/* «Лагеря»: the clans' rating on the camp card, the enemy's logo and shield on a building, the leader's medal, the modes,
+   the medal's window and the barricade */
+.rd-rating { display: flex; flex-direction: column; gap: 2px; width: 100%; margin: 4px 0 2px; }
+.rd-rate { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: #3a220a; }
+.rd-rate i { flex: 1; min-width: 0; font-style: normal; }
+.rd-rate.me { font-weight: 800; }
+.rd-bld-logo.enemy { filter: drop-shadow(0 0 3px rgba(255, 40, 30, 0.9)); }
+.rd-bld-shield { position: absolute; right: -6px; bottom: -4px; display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: #2d6bd1; color: #fff; }
+.rd-bld-medal { position: absolute; left: 50%; top: -6%; transform: translate(-50%, -100%); z-index: 3; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff6c8, #f2c230 60%, #a8780c); box-shadow: 0 0 0 2px #5a3404, 0 0 14px rgba(255, 210, 60, 0.9); animation: rd-medal 1.4s ease-in-out infinite; cursor: pointer; }
+@keyframes rd-medal { 0%, 100% { transform: translate(-50%, -100%) scale(1); } 50% { transform: translate(-50%, -112%) scale(1.08); } }
+.rd-attack-modes { gap: 8px; width: 100%; }
+.rd-medal { gap: 8px; }
+.rd-medal-pic { width: 60%; max-width: 170px; height: auto; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.4)); }
+.rd-medal-name { font-size: 18px; text-transform: uppercase; text-align: center; }
+.rd-medal-r { display: flex; gap: 14px; justify-content: center; }
+.rd-medal-r > span { display: inline-flex; align-items: center; gap: 4px; font-size: 15px; color: #2e6a1a; }
+.rd-fort { gap: 8px; }
+.rd-fort-bar { display: flex; align-items: center; gap: 8px; width: 100%; }
+.rd-fort-bar > :first-child { flex: 1; }
+.rd-fort-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; width: 100%; }
+.rd-fort-b { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 2px; border-radius: 8px; border: 2px solid #3d2a14;
+  background: linear-gradient(180deg, #5c8a3a, #33561d); color: #fff; font: inherit; cursor: pointer; }
+.rd-fort-b.f-mattress, .rd-fort-b.f-wire { background: linear-gradient(180deg, #c24a3a, #7a1f16); }
+.rd-fort-b.f-rebar { background: linear-gradient(180deg, #4a7ad2, #22468a); }
+.rd-fort-b:disabled { filter: grayscale(0.8) brightness(0.75); }
+.rd-fort-n { font-size: 11px; }
+.rd-fort-p { display: inline-flex; align-items: center; gap: 1px; }

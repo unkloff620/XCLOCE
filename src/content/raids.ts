@@ -264,3 +264,42 @@ export const buildingById = (id: string) => {
   for (const y of RAID_YARDS) { const b = y.buildings.find((x) => x.id === id); if (b) return { yard: y, b }; }
   return null;
 };
+
+/*
+ * «Лагеря» (the user 2026-11-23): the clans fight each other for the yards. The leader picks one camp to take
+ * (raid_camp, one at a time; the camps open with the clan's level), its first point (the КПП) is the clan's from the
+ * start. A building held by another clan can be attacked two ways: «Атаковать актив» (the building's HP) or «Вырезать
+ * всех» (the holders too: twice the HP, half as much more experience and influence). A taken building's reward waits for
+ * the leader (the medal on it): the clan's experience, the influence in the camp, the armbands to everyone who won over
+ * it (a member gets them an hour after he joined). A taken building is protected for 4 hours; then, until it is fully
+ * fortified (barricades, CAMP_DEF_MAX points), another clan can take it — and the holders lose 2% of their influence
+ * there (and get rebar, when it was taken by «Атаковать актив»). The main building taken — the camp is done.
+ */
+export type RaidMode = "active" | "cut";
+export const RAID_MODE_NAME: Record<RaidMode, string> = { active: "Атаковать актив", cut: "Вырезать всех" };
+/** «Вырезать всех»: the building's HP × this, its experience and influence × CUT_REWARD_K */
+export const CUT_HP_K = 2;
+export const CUT_REWARD_K = 1.5;
+/** the clan's level that opens camp n */
+export const CAMP_LEVEL = [1, 3, 6, 10, 15];
+export const CAMP_PROTECT_MS = 4 * 3_600_000;
+export const CAMP_DEF_MAX = 10_000;
+/** what the holders lose of their influence in the camp when a building is taken from them */
+export const CAMP_LOSS = 0.02;
+/** the rebar the holders get when a building is taken from them by «Атаковать актив» */
+export const REBAR_FOR_LOSS = 20;
+/** a member gets the camp's rewards this long after he joined */
+export const CAMP_JOIN_WAIT_MS = 3_600_000;
+/** the barricades: what each step gives (defense points; the clan's experience is ×2), its price, a day's limit per player */
+export type FortKind = "bags" | "beams" | "mattress" | "wire" | "rebar";
+export const FORTS: { id: FortKind; name: string; def: number; rub?: number; perDay?: number; clan?: boolean }[] = [
+  { id: "bags", name: "Мешки", def: 100, perDay: 3 },
+  { id: "beams", name: "Балки", def: 150, perDay: 3 },
+  { id: "mattress", name: "Матрас", def: 400, rub: 500 },
+  { id: "wire", name: "Колючка", def: 700, rub: 1_000 },
+  { id: "rebar", name: "Арматура", def: 500, clan: true },
+];
+export const fortById = (id: string) => FORTS.find((f) => f.id === id);
+/** the armbands (the yards' flags renamed): one kind a camp, each with its own most to hold */
+export const ARMBANDS = ["Тройка", "Копейка", "Красная однёрка", "Атлянка", "Белый медведь"];
+export const ARMBAND_MAX = [80, 165, 275, 390, 540];
