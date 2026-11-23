@@ -66,7 +66,15 @@ export function SunRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, pup
             {pic("armL", "back")}
             {bone("br-low br-low-l", "lowL", pic("lowL", "back"), 150)}
           </>, 170)}
-          <g className="sn-trunk" style={at(BELT[0], BELT[1])}>{pic("body")}{glow("body", undefined, 1)}</g>
+          {/* the trunk on the back canvas too: the right shoulder lies over it and under the pecs */}
+          <g className="sn-trunk" style={at(BELT[0], BELT[1])}>{pic("body", "back")}{glow("body", "back", 1)}</g>
+          {/* the right (lava) shoulder: over the trunk, under the pecs (the back canvas); an empty elbow in it, so its end
+              bends with the forearm */}
+          {bone("br-arm br-arm-r", "armR", <>
+            {pic("armR", "back")}
+            {glow("armR", "back", 0)}
+            {bone("br-low br-low-r", "lowR", null, 150)}
+          </>, 170)}
           <g className="sn-pec sn-pec-r" style={at(STERNUM[0], STERNUM[1])}>{pic("chestR")}{glow("chestR", undefined, 2)}</g>
           <g className="sn-pec sn-pec-l" style={at(STERNUM[0], STERNUM[1])}>{pic("chestL")}</g>
           {/* the apron over the pecs */}
@@ -83,12 +91,8 @@ export function SunRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, pup
             <g className="sn-pupils">{pic("pupils")}</g>
             {pic("head")}
           </>, 170, head)}
-          {/* the right arm (lava) with the poker in its fist, in front of everything */}
-          {bone("br-arm br-arm-r", "armR", <>
-            {pic("armR", "front")}
-            {glow("armR", "front", 0)}
-            {bone("br-low br-low-r", "lowR", <>{pic("lowR", "front")}{glow("lowR", "front", 1)}{pic("poker", "front")}</>, 150)}
-          </>, 170)}
+          {/* the right forearm (lava) with the poker in its fist, in front of everything (its shoulder copy is above) */}
+          {bone("br-arm br-arm-r", "armR", bone("br-low br-low-r", "lowR", <>{pic("lowR", "front")}{glow("lowR", "front", 1)}{pic("poker", "front")}</>, 150), 170)}
         </g>
       </g>
       {!puppet && <g ref={spit} className="sn-spit-layer" />}
