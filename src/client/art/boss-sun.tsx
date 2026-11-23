@@ -80,7 +80,7 @@ export function SunRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, pup
           {/* the right arm (lava) with the poker in its fist, in front of everything */}
           {bone("br-arm br-arm-r", "armR", <>
             {pic("armR", "front")}
-            {bone("br-low br-low-r", "lowR", <>{pic("poker", "front")}{pic("lowR", "front")}</>, 150)}
+            {bone("br-low br-low-r", "lowR", <>{pic("lowR", "front")}{pic("poker", "front")}</>, 150)}
           </>, 170)}
         </g>
       </g>
