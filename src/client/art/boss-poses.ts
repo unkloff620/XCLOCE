@@ -617,11 +617,11 @@ const snBlows = (t: number, keys: Key[], face: Face[], amp = 1, slow = 1) => {
   face.push({ cls: "sn-slam", at: t + 0.95 * slow, dur: 0.16 });
   keys.push({ at: t + 1.15 * slow, pose: a({ ...held, armR: -14, lowR: -55, zR: 6, up: -3, x: -8 }), stiff: 1.1 });
   t += 1.85 * slow;
-  // the fist: pulled back, then driven at the screen
-  keys.push({ at: t, pose: a({ ...held, armL: 22, lowL: 30, up: -3, x: -7, head: -1.5, armR: 4, lowR: -10 }), stiff: 0.9 });
-  keys.push({ at: t + 0.75 * slow, pose: a({ ...held, armL: -34, lowL: -46, zL: 24, up: 5, x: 15, head: 3 }), stiff: 5 });
+  // the fist: raised high, then hammered down under him (we are below him) — the shoulder and the elbow turn down
+  keys.push({ at: t, pose: a({ ...held, armL: -38, lowL: -42, up: -3, x: -6, head: -2, armR: 4, lowR: -10 }), stiff: 0.9 });
+  keys.push({ at: t + 0.75 * slow, pose: a({ ...held, armL: 44, lowL: 38, zL: 22, up: 5, x: 12, y: 2, head: 4 }), stiff: 5 });
   face.push({ cls: "sn-slam", at: t + 0.85 * slow, dur: 0.16 });
-  keys.push({ at: t + 1.05 * slow, pose: a({ ...held, armL: -18, lowL: -26, zL: 8, up: 2, x: 6 }), stiff: 1.1 });
+  keys.push({ at: t + 1.05 * slow, pose: a({ ...held, armL: 30, lowL: 26, zL: 8, up: 3, x: 6 }), stiff: 1.1 });
   t += 1.7 * slow;
   keys.push({ at: t, pose: { ...held, armR: 0, lowR: 0, armL: 0, lowL: 0, zR: 0, zL: 0, up: 0, x: 0, head: 0 }, stiff: 0.8 });
   return t + 0.5 * slow;
