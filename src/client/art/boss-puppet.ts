@@ -307,7 +307,8 @@ export function usePuppet(wrap: RefObject<HTMLDivElement | null>, key: string, s
       }
       const cw = root!.clientWidth, ch = root!.clientHeight;
       if (!cw || !ch) return;
-      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      // 1.5× is sharp enough on a phone for a painted picture, and draws ~45% fewer pixels than 2×
+      const dpr = Math.min(1.5, window.devicePixelRatio || 1);
       // the SVG's viewBox → the canvas: preserveAspectRatio xMidYMax meet
       const s = Math.min(cw / size.w, ch / size.h);
       const ox = (cw - size.w * s) / 2, oy = ch - size.h * s;

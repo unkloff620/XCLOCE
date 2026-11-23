@@ -186,7 +186,6 @@ export function SunRoom({ uid = "a" }: { uid?: string }) {
           <stop offset="0.5" stopColor="#ffab4a" stopOpacity="0.35" />
           <stop offset="1" stopColor="#ff8a2a" stopOpacity="0" />
         </linearGradient>
-        <filter id={`snr-soft-${uid}`} x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation="3" /></filter>
       </defs>
       <rect x={0} y={0} width={1024} height={1536} fill="#1a0602" />
       {/* the fireball behind the window: it turns, its heat breathes */}
@@ -198,7 +197,7 @@ export function SunRoom({ uid = "a" }: { uid?: string }) {
       {/* the lava boils: its cracks glow brighter and dimmer, two layers out of step */}
       <g style={{ mixBlendMode: "screen" }}>
         <image className="snr-boil snr-boil-a" href={`${A}/cracks.webp`} x={0} y={0} width={1024} height={1536} preserveAspectRatio="none" />
-        <image className="snr-boil snr-boil-b" href={`${A}/cracks.webp`} x={0} y={0} width={1024} height={1536} preserveAspectRatio="none" filter={`url(#snr-soft-${uid})`} />
+        <image className="snr-boil snr-boil-b" href={`${A}/cracks-soft.webp`} x={0} y={0} width={1024} height={1536} preserveAspectRatio="none" />
         {/* the lamp and its beam flicker */}
         <g className="snr-lamp">
           <polygon points={`${m.lamp[0]},${m.lamp[1]} ${m.a[0]},${m.a[1]} ${m.b[0]},${m.b[1]}`} fill={`url(#snr-beam-${uid})`} />

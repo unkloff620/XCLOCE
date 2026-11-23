@@ -36,6 +36,7 @@ export const ASSET_FILES: string[] = [
  "/assets/arena/mugo.webp",
  "/assets/arena/pepe.webp",
  "/assets/arena/solntse/ball.webp",
+ "/assets/arena/solntse/cracks-soft.webp",
  "/assets/arena/solntse/cracks.webp",
  "/assets/arena/solntse/room.webp",
  "/assets/arena/solntse.webp",

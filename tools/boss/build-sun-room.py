@@ -44,7 +44,11 @@ yy, xx = np.mgrid[0:3000, 0:2000]
 gate = (((xx - 1000) / 800.0) ** 2 + ((yy - 640) / 480.0) ** 2 < 1) & (yy < 880)
 ra2 = ra.copy()
 ra2[gate, 3] = 0
-Image.fromarray(glow_of(ra2)).resize((1024, 1536), Image.LANCZOS).save(f"{O}/cracks.webp", quality=82, method=6)
+cr = Image.fromarray(glow_of(ra2)).resize((1024, 1536), Image.LANCZOS)
+cr.save(f"{O}/cracks.webp", quality=82, method=6)
+# its soft copy, blurred here once (an SVG blur on a layer that pulses costs a phone every frame)
+from PIL import ImageFilter
+cr.filter(ImageFilter.GaussianBlur(3)).save(f"{O}/cracks-soft.webp", quality=80, method=6)
 bb = ball.getbbox()
 ball.crop(bb).resize((round((bb[2] - bb[0]) * K), round((bb[3] - bb[1]) * K)), Image.LANCZOS).save(f"{O}/ball.webp", quality=88, method=6)
 box = {"x": round(bb[0] * K, 1), "y": round(bb[1] * K, 1), "w": round((bb[2] - bb[0]) * K), "h": round((bb[3] - bb[1]) * K)}
