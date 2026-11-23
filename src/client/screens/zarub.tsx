@@ -271,8 +271,12 @@ function Race({ v, run, busy }: { v: ZarubView; run: Run; busy: boolean }) {
         <Modal title={r.finished ? "Заруба пройдена!" : "Время вышло"} onClose={() => { void run("zarub_close"); }}>
           <div className="col center zr-done" style={{ gap: 10, alignItems: "center" }}>
             {r.finished && r.place && <b className="zr-done-place display">{r.place} место</b>}
-            {r.reward ? <GainLine r={r.reward} size={30} /> : r.finished ? <span className="muted small">Лимит на сегодня — без награды</span> : null}
-            {r.reward?.zarubXp ? <span className="zr-done-xp">+{r.reward.zarubXp} опыта заруб</span> : null}
+            {r.reward ? (
+              <div className="lc-done-box zr-done-box">
+                <GainLine r={r.reward} size={30} />
+                {r.reward.zarubXp ? <span className="zr-done-xp">+{r.reward.zarubXp} опыта заруб</span> : null}
+              </div>
+            ) : r.finished ? <span className="muted small">Лимит на сегодня — без награды</span> : null}
             <button type="button" className="btn gold" onClick={() => { haptic.big(); void run("zarub_close"); }}>Забрать</button>
           </div>
         </Modal>

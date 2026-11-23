@@ -7627,8 +7627,11 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .zr-task-n { font-size: 11px; opacity: 0.8; }
 .zr-task-ok { width: 26px; height: 26px; flex: none; display: grid; place-items: center; border-radius: 50%; border: 2px solid #7ccf55; color: #7ccf55; font-weight: 900; }
 .zr-skip { flex: none; display: inline-flex; align-items: center; gap: 3px; }
-.zr-done-place { font-size: 28px; color: #ffd04a; }
-.zr-done-xp { font-size: 13px; color: #cfe86a; font-weight: 800; }
+.zr-done-place { font-size: 30px; color: #c0260f; text-shadow: 0 1px 0 rgba(255, 240, 210, 0.6); }
+/* the reward on a dark plate: the light numbers would vanish on the paper */
+.zr-done-box { flex-direction: column; gap: 6px; }
+.zr-done-box, .zr-done-box .gain-line, .zr-done-box .chip, .zr-done-box .rc-n { color: #fff; }
+.zr-done-xp { font-size: 14px; color: #b6ec5a; font-weight: 800; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6); }
 .zr-toggle img { padding: 3px; }
 
 /* ── Фокус (art/boss-fokus.tsx, boss-poses.ts POSES.fokus): the pose engine sets --gl --jaw --fing --brw --sq --px --py ── */
