@@ -598,33 +598,36 @@ const fkShift = (rate: number, a: number) => (t: number): Pose => {
    in, out, in — the blows (the jaw shut: his rest face) — out, in, out, in — the blows — and so on. The blows: R — the
    poker in his right (lava) fist, raised high behind and slammed down at the screen; L — the left (yellow) fist, pulled
    back and driven at the screen. Slow wind-ups, a short heavy blow, a long settle. */
-const SN_IN = 2.5, SN_OUT = 2.3;
-const SN_FULL = { sw: 1, swa: 16, jaw: 1, armR: 10, lowR: 6, armL: -9, lowL: -5, head: -2.5, y: -7, up: -0.8 };
+const SN_IN = 1.9, SN_OUT = 1.8;
+const SN_FULL = { sw: 1, swa: 8, jaw: 1, armR: 10, lowR: 6, armL: -9, lowL: -5, head: -2.5, y: -7, up: -0.8 };
 const SN_EMPTY = { sw: 0, swa: 0, jaw: 0.35, armR: -3, lowR: -2, armL: 3, lowL: 2, head: 1.5, y: 2, up: 0.5 };
 /** one breath from t: in (or out) — eased by the springs (slow ones: the swell takes the whole breath) */
 const snBreath = (t: number, inhale: boolean, keys: Key[], face: Face[]) => {
-  keys.push({ at: t, pose: inhale ? SN_FULL : SN_EMPTY, stiff: inhale ? 0.55 : 0.6 });
+  // soft keys: the springs never settle — the breath turns from in to out without a stop
+  keys.push({ at: t, pose: inhale ? SN_FULL : SN_EMPTY, stiff: 0.4 });
   if (!inhale) face.push({ cls: "sn-spit", at: t + 0.12, dur: 0.2 });
   return t + (inhale ? SN_IN : SN_OUT);
 };
 /** the blows, full of air (the chest stays swollen) with the jaw shut: the poker, then the fist */
 const snBlows = (t: number, keys: Key[], face: Face[], amp = 1, slow = 1) => {
-  const held = { sw: 0.85, swa: 13, jaw: 0, y: -4 };
+  const held = { sw: 0.85, swa: 6, jaw: 0, y: -4 };
   const a = (p: Pose): Pose => Object.fromEntries(Object.entries(p).map(([k, v]) => [k, (v ?? 0) * (k === "sw" || k === "jaw" || k === "swa" || k === "y" ? 1 : amp)]));
   // the poker: up behind the shoulder (slow), down at the screen (a short heavy blow), a long settle
-  keys.push({ at: t, pose: a({ ...held, armR: 58, lowR: 42, up: 3.5, x: 8, head: 2, armL: -6 }), stiff: 0.9 });
-  keys.push({ at: t + 0.85 * slow, pose: a({ ...held, armR: -24, lowR: -78, zR: 16, up: -6, x: -16, head: -3.5, armL: 4 }), stiff: 5 });
-  face.push({ cls: "sn-slam", at: t + 0.95 * slow, dur: 0.16 });
-  keys.push({ at: t + 1.15 * slow, pose: a({ ...held, armR: -14, lowR: -55, zR: 6, up: -3, x: -8 }), stiff: 1.1 });
-  t += 1.85 * slow;
+  // the poker: the elbow up and the forearm back, so its hook end stands high; then the forearm swings down and the
+  // hook end comes down at us, under him
+  keys.push({ at: t, pose: a({ ...held, armR: 40, lowR: -48, up: 3.5, x: 8, head: 2, armL: -6 }), stiff: 0.9 });
+  keys.push({ at: t + 0.7 * slow, pose: a({ ...held, armR: -12, lowR: 52, zR: 14, up: -6, x: -14, y: 3, head: -3.5, armL: 4 }), stiff: 5 });
+  face.push({ cls: "sn-slam", at: t + 0.8 * slow, dur: 0.16 });
+  keys.push({ at: t + 0.95 * slow, pose: a({ ...held, armR: -6, lowR: 36, zR: 5, up: -3, x: -7 }), stiff: 1.1 });
+  t += 1.5 * slow;
   // the fist: raised high, then hammered down under him (we are below him) — the shoulder and the elbow turn down
   keys.push({ at: t, pose: a({ ...held, armL: -38, lowL: -42, up: -3, x: -6, head: -2, armR: 4, lowR: -10 }), stiff: 0.9 });
-  keys.push({ at: t + 0.75 * slow, pose: a({ ...held, armL: 44, lowL: 38, zL: 22, up: 5, x: 12, y: 2, head: 4 }), stiff: 5 });
-  face.push({ cls: "sn-slam", at: t + 0.85 * slow, dur: 0.16 });
-  keys.push({ at: t + 1.05 * slow, pose: a({ ...held, armL: 30, lowL: 26, zL: 8, up: 3, x: 6 }), stiff: 1.1 });
-  t += 1.7 * slow;
+  keys.push({ at: t + 0.62 * slow, pose: a({ ...held, armL: 44, lowL: 38, zL: 22, up: 5, x: 12, y: 2, head: 4 }), stiff: 5 });
+  face.push({ cls: "sn-slam", at: t + 0.72 * slow, dur: 0.16 });
+  keys.push({ at: t + 0.88 * slow, pose: a({ ...held, armL: 30, lowL: 26, zL: 8, up: 3, x: 6 }), stiff: 1.1 });
+  t += 1.4 * slow;
   keys.push({ at: t, pose: { ...held, armR: 0, lowR: 0, armL: 0, lowL: 0, zR: 0, zL: 0, up: 0, x: 0, head: 0 }, stiff: 0.8 });
-  return t + 0.5 * slow;
+  return t + 0.35 * slow;
 };
 /** the whole loop: in, out, in, the blows, out — played again and again (so: … the blows, out, in, out, in, the blows …) */
 const snCycle = (amp = 1, slow = 1): Action => {
@@ -644,10 +647,10 @@ const POSES: Record<string, Spec> = {
   solntse: {
     // heavy: slow, overdamped springs; the fists a little quicker on the blow
     springs: {
-      up: { k: 45, c: 12 }, x: { k: 40, c: 11 }, y: { k: 30, c: 10 }, head: { k: 60, c: 13 },
-      armR: { k: 70, c: 15 }, lowR: { k: 110, c: 17 }, armL: { k: 70, c: 15 }, lowL: { k: 110, c: 17 },
+      up: { k: 55, c: 13 }, x: { k: 50, c: 12 }, y: { k: 30, c: 10 }, head: { k: 70, c: 14 },
+      armR: { k: 90, c: 16 }, lowR: { k: 140, c: 19 }, armL: { k: 90, c: 16 }, lowL: { k: 140, c: 19 },
       zR: { k: 120, c: 18 }, zL: { k: 120, c: 18 },
-      sw: { k: 9, c: 5.5 }, swa: { k: 9, c: 5.5 }, jaw: { k: 30, c: 10 }, px: { k: 80, c: 15 }, py: { k: 80, c: 15 },
+      sw: { k: 16, c: 6.5 }, swa: { k: 6, c: 4.6 }, jaw: { k: 14, c: 7 }, px: { k: 80, c: 15 }, py: { k: 80, c: 15 },
     },
     drag: { lowL: ["armL", -0.05], lowR: ["armR", -0.05], head: ["up", -0.06] },
     // never still: a slow heavy sway; the eyes look about now and then
