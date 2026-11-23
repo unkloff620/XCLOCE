@@ -202,8 +202,8 @@ export const rowK = (b: RaidBuilding) => {
   return i === 0 ? 1 : i <= 2 ? 1.5 : 2;
 };
 const r10 = (x: number) => Math.round(x / 10) * 10;
-/** a win over a building gives (one fight): authority and roubles */
-export const buildingReward = (yardN: number, b: RaidBuilding) => ({ xp: r10(250 * yardN * rowK(b)), rub: r10(2_000 * yardN * rowK(b)) });
+/** a win over a building gives (one fight): authority and a few папиросы (the user 2026-11-23: no roubles) */
+export const buildingReward = (yardN: number, b: RaidBuilding) => ({ xp: r10(250 * yardN * rowK(b)), pap: r10(100 * yardN * rowK(b)) });
 /** wins over a building to take it (the yard's count — the same for all its buildings; the main one is harder by its HP) */
 export const buildingWins = (y: RaidYard) => y.wins;
 

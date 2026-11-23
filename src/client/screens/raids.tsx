@@ -753,7 +753,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
             <button type="button" className="btn sm gold fbtn-arms" onClick={() => { haptic.tap(); setPanel(true); }} aria-label="Оружие" title="Оружие в бою">
               <ItemArt id="rug-pull-gun" size={22} />
             </button>
-            <span className="small rd-fight-r"><Icon name="xp" size={16} />+{r.xp.toLocaleString("ru-RU")} <Icon name="RUB" size={16} />+{r.rub.toLocaleString("ru-RU")}</span>
+            <span className="small rd-fight-r"><Icon name="xp" size={16} />+{r.xp.toLocaleString("ru-RU")} <Icon name="PAP" size={16} />+{r.pap.toLocaleString("ru-RU")}</span>
             <span className="grow" />
             <button type="button" className={`btn sm red fbtn-flee ${fleeAsk ? "ask" : ""}`} onClick={flee} disabled={busy === "raid_flee" || !!won} aria-label={fleeAsk ? "Точно уйти?" : "Уйти"} title="Уйти">
               {fleeAsk ? <b>?</b> : <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h13" /><path d="M13 6l6 6-6 6" /></svg>}
@@ -829,7 +829,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
           <span className="rd-board-r">
             <i className="rd-board-l">За победу</i>
             <span><Icon name="xp" size={22} /><b className="num">+{r.xp.toLocaleString("ru-RU")}</b></span>
-            <span><Icon name="RUB" size={22} /><b className="num">+{r.rub.toLocaleString("ru-RU")}</b></span>
+            <span><Icon name="PAP" size={22} /><b className="num">+{r.pap.toLocaleString("ru-RU")}</b></span>
           </span>
           <span className="rd-board-r">
             <i className="rd-board-l">За захват</i>

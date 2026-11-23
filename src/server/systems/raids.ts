@@ -220,7 +220,7 @@ export async function raidAttack(ctx: Ctx, weaponId: string, want = 1, rush = fa
   await ctx.q.query("UPDATE raid_fights SET status='won', ended_at=$2 WHERE id=$1", [f.id, new Date(ctx.now)]);
   const per = buildingReward(y.n, b);
   const k = cut ? CUT_REWARD_K : 1;
-  const reward = await grantReward(ctx, { xp: Math.round(per.xp * k), currencies: { RUB: Math.round(per.rub * k) } }, `raid_win:${b.id}`);
+  const reward = await grantReward(ctx, { xp: Math.round(per.xp * k), currencies: { PAP: Math.round(per.pap * k) } }, `raid_win:${b.id}`);
   let buildingTaken = false, yardTaken = false;
   const h0 = await holdsOf(ctx.q);
   const won = () => ({ ...base, status: "won" as const, hp: 0, hpMax: Number(f.hp_max), reward, buildingTaken, yardTaken });

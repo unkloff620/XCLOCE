@@ -45,9 +45,9 @@ describe("«Лагеря»", () => {
     await expect(act(db, p, "raid_start", { building: yard.buildings[2].id }, T)).rejects.toMatchObject({ code: "not_target" });
     // nobody holds it: nobody to cut
     await expect(act(db, p, "raid_start", { building: yard.buildings[1].id, mode: "cut" }, T)).rejects.toMatchObject({ code: "bad_mode" });
-    const rub = await wallet(db, p, "RUB");
+    const pap = await wallet(db, p, "PAP");
     const h = await win(db, p, yard.buildings[1].id, T);
-    expect(await wallet(db, p, "RUB")).toBe(rub + buildingReward(1, yard.buildings[1]).rub);
+    expect(await wallet(db, p, "PAP")).toBe(pap + buildingReward(1, yard.buildings[1]).pap);
     expect(h.result.talentsGained).toBeGreaterThan(0);
     const [pr] = await db.query<{ wins: number }>("SELECT wins FROM raid_progress WHERE clan_id=$1 AND building_id=$2", [clan, yard.buildings[1].id]);
     expect(Number(pr.wins)).toBe(1);
