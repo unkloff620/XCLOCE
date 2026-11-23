@@ -12,7 +12,7 @@ import { haptic } from "../telegram.ts";
 import { sfx } from "../sound.ts";
 import { HeadArt, type RigEdit } from "../art/rig.tsx";
 import { ART_VER } from "../preload.ts";
-import { TATTOO_SETS, TATTOO_ZONE_NAME, tattooSource, oneTattooPerZone, tattooZone } from "../../content/tattoos.ts";
+import { TATTOO_SETS, setBonusText, TATTOO_ZONE_NAME, tattooSource, oneTattooPerZone, tattooZone } from "../../content/tattoos.ts";
 import { bossById, unlockBossOf } from "../../content/bosses.ts";
 import { OFFERS } from "../../content/shop.ts";
 import { money } from "../format.ts";
@@ -197,7 +197,7 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
           <button type="button" className="btn dark sm" onClick={() => { haptic.tap(); setInkSet(null); }}>‹</button>
           <span className="grow ink-open-t">
             <b>«{openSet.name}» <span className="num">{mine.length}/{openSet.pieces.length}</span></b>
-            <small>Падает {tattooSource(openSet, (b) => bossById(b)?.name)} · весь сет: +{openSet.bonus.damage} к урону «{weaponById(openSet.bonus.weapon)?.name}»</small>
+            <small>Падает {tattooSource(openSet, (b) => bossById(b)?.name)} · весь сет: {setBonusText(openSet, (id) => weaponById(id)?.name)}</small>
           </span>
           {all ? (
             <button type="button" className="btn dark sm" onClick={() => setInk([...inked].filter((t) => !openSet.pieces.some((p) => p.id === t)))}>Свести все</button>

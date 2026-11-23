@@ -1,6 +1,6 @@
 import { STASH_LOCATION_NAMES, STASH_SETS, stashLevel } from "./stashes.ts";
 import { BOSSES, EVENT_FIGHTS, CARD_TIERS, MODE_SHORT, bossById, isFirstWinItem, keyId, passLook, thingsFrom, thingsModeName, unlockBossOf } from "./bosses.ts";
-import { TATTOO_SETS } from "./tattoos.ts";
+import { TATTOO_SETS, setBonusText } from "./tattoos.ts";
 import { CRAFT_ALL, CRAFT_PARTS } from "./craft.ts";
 import { PART_SELL } from "./craft-drops.ts";
 
@@ -130,6 +130,9 @@ const WEARABLES: ItemDef[] = ([
   { id: "sneakers-chunky", name: "Кроссовки Гаркуши", slot: "SHOES", rarity: "rare", description: "Чёрные, на толстой подошве. Шаг тяжёлый, как пачка пятитысячных.", sources: ["Победа: Гаркуша (Блатной)"] },
   // Мугонатор's set: the sea captain (cut from the hero on tools/rig/source/wear)
   { id: "tee-sailor", name: "Тельняшка Мугонатора", slot: "SHIRT", rarity: "rare", description: "Полоски — чтобы акула видела, кого не трогать. Край уже кто-то откусил.", sources: ["Победа: Мугонатор (Блатной)"] },
+  { id: "tee-solntse", name: "Футболка Солнца", slot: "SHIRT", rarity: "legendary", description: "Чёрная, в лавовых трещинах, на груди горит солнце. Носится только теми, кто дошёл до конца Close.", sources: ["Победа: Солнце (Авторитетный)"] },
+  { id: "pants-solntse", name: "Штаны Солнца", slot: "PANTS", rarity: "legendary", description: "Закопчённые рабочие штаны, по швам — солнечные лучи, по ткани тлеют трещины.", sources: ["Победа: Солнце (Авторитетный)"] },
+  { id: "sneakers-solntse", name: "Кроссовки Солнца", slot: "SHOES", rarity: "legendary", description: "Подошва из живой лавы. После них на асфальте остаются следы.", sources: ["Победа: Солнце (Авторитетный)"] },
   { id: "apron-utilizator", name: "Фартук Утилизатора", slot: "SHIRT", rarity: "legendary", description: "Чёрная кожа, жёлтый знак и надпись «Утилизатор кислоты». Кислота прожгла пару дырок — но до тела не дошла.", sources: ["Победа: Утилизатор (Авторитетный)"] },
   { id: "mask-gas-utilizator", name: "Противогаз Утилизатора", slot: "FACE", rarity: "legendary", description: "Тот самый, что висит у него на фартуке. Фильтры жёлтые, взгляд сквозь стекло — тяжёлый. Кислотные пары не страшны.", sources: ["Победа: Утилизатор (Авторитетный)"] },
   { id: "vials-utilizator", name: "Колбы Утилизатора", slot: "HAND", rarity: "legendary", description: "Три колбы с кислотой на кольце. Утилизатор крутит их на пальце, пока решает, кого растворить. Герой крутит кольцо, колбы болтаются.", sources: ["Победа: Утилизатор (Авторитетный)"] },
@@ -231,7 +234,7 @@ const STASHES: ItemDef[] = STASH_SETS.flatMap((s) =>
 const TATTOOS: ItemDef[] = TATTOO_SETS.flatMap((s) =>
   s.pieces.map((p) => ({
     id: p.id, name: `Наколка: ${p.name}`, category: "tattoo" as const, rarity: "epic" as const, maxStack: 1,
-    description: `Из сета «${s.name}». Набивается бесплатно в редакторе персонажа → «Наколки». Весь сет: +${s.bonus.damage} к урону «${WEAPONS.find((w) => w.id === s.bonus.weapon)?.name ?? s.bonus.weapon}».`,
+    description: `Из сета «${s.name}». Набивается бесплатно в редакторе персонажа → «Наколки». Весь сет: ${setBonusText(s, (id) => WEAPONS.find((w) => w.id === id)?.name)}.`,
     sources: [s.boss === "box" ? "Ящик ништяков: шанс 20% за открытие" : s.boss === "tosya" ? "Тося: одна наколка в каждом пирожке" : `Выпадает с ${bossById(s.boss)?.name ?? s.boss} (${MODE_SHORT[s.mode]}): по наколке за победу`],
   })),
 );

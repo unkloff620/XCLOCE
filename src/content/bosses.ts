@@ -197,8 +197,9 @@ export const BOSSES: BossDef[] = [
     theme: { a: "#4a2a06", b: "#1a0c02", accent: "#ffd23f" }, photo: photo("solntse", true),
     phases: [{ from: 100, name: "Рассвет" }, { from: 66, name: "Зенит" }, { from: 33, name: "Солнечная буря" }],
     final: true,
-    // his things drop in «Авторитетный» (the user 2026-11-23); none drawn yet: the set waits for them
-    thingsMode: "avtor",
+    // his things drop in «Авторитетный» (the user 2026-11-23). His tattoo sets:
+    // «Кузня» (Пацанский), «Затмение» (Блатной), «Ожог» (Авторитетный) — content/tattoos.ts
+    wear: { items: ["tee-solntse", "pants-solntse", "sneakers-solntse"], chance: 0.1, pity: 10 }, thingsMode: "avtor",
     set: { weapon: "rug-pull-gun", damage: 1000 },
     keysToUnlock: 1,
   },

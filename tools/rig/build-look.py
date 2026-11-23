@@ -79,6 +79,8 @@ WEAR_SLOT = {"tee-white": "SHIRT", "tee-pump": "SHIRT", "jeans": "PANTS", "short
              "mask-gas-utilizator": "FACE",
              # Утилизатор's apron (drawn by the artist on the rig canvas, over the chest and the lap)
              "apron-utilizator": "SHIRT",
+             # Солнце's things (the artist's recolours of tee-white / pants-vadim / sneakers-chunky, their shapes kept)
+             "tee-solntse": "SHIRT", "pants-solntse": "PANTS", "sneakers-solntse": "SHOES",
              "crown-cash": "HEAD", "ushanka-star": "HEAD", "helmet-miner": "HEAD", "bandana-hodl": "HEAD",
              # Вадим's things (image edits of Гаркуша's layers, their alpha kept; the tie drawn on the hero)
              "jacket-vadim": "SHIRT", "pants-vadim": "PANTS", "shoes-vadim": "SHOES", "tie-vadim": "ACCESSORY",

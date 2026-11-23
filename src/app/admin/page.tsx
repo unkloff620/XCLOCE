@@ -14,7 +14,7 @@ import { Icon } from "../../client/art/icons.tsx";
 import { CURRENCIES } from "../../content/currencies.ts";
 import { EXTRA_NAMES, TALENT_PATH, talentStop } from "../../content/talents.ts";
 import { BOSSES, bossById, bossHasArt, keyId, unlockBossOf } from "../../content/bosses.ts";
-import { TATTOO_SETS } from "../../content/tattoos.ts";
+import { TATTOO_SETS, setBonusText } from "../../content/tattoos.ts";
 import { ROOM_DEFS, equipmentById } from "../../content/home.ts";
 import { ROOM_BACKDROP } from "../../content/home-scene.ts";
 import { offerById } from "../../content/shop.ts";
@@ -982,7 +982,7 @@ function Catalog({ rows, edit }: { rows: Row[]; edit: EditFn }) {
           {open && (
             <div className="adm-setbox">
               <div className="row" style={{ justifyContent: "space-between", flexWrap: "wrap" }}>
-                <b>🖋 {open.name} <span className="muted small">· {setFrom(open.boss)} · +{open.bonus.damage} к «{itemById(open.bonus.weapon)?.name ?? open.bonus.weapon}»</span></b>
+                <b>🖋 {open.name} <span className="muted small">· {setFrom(open.boss)} · {setBonusText(open, (id) => itemById(id)?.name)}</span></b>
                 <button className="adm-btn" onClick={() => { if (confirm(`Выдать весь сет «${open.name}»?`)) void edit({ op: "give_tattoo_set", set: open.id }, `Сет наколок «${open.name}»`); }}>Выдать весь сет</button>
               </div>
               <div className="adm-tiles">

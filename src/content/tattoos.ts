@@ -7,7 +7,17 @@
 import { ZARUB_SETS, type ZarubMode } from "./zarub.ts";
 
 export interface TattooPiece { id: string; name: string; part: string }
-export interface TattooSet { id: string; name: string; boss: string; mode: "pacan" | "blat" | "avtor"; bonus: { weapon: string; damage: number }; pieces: TattooPiece[] }
+export interface TattooSet {
+  id: string; name: string; boss: string; mode: "pacan" | "blat" | "avtor"; bonus: { weapon: string; damage: number };
+  /** more weapons the whole set adds to (Солнце's «Затмение»: the pistol and Rug Pull Gun) */
+  extra?: { weapon: string; damage: number }[];
+  pieces: TattooPiece[];
+}
+/** every weapon bonus of a whole set */
+export const setBonusList = (s: Pick<TattooSet, "bonus" | "extra">) => [s.bonus, ...(s.extra ?? [])];
+/** «+300 к урону «Пистолет», +1000 к урону «Rug Pull Gun»» */
+export const setBonusText = (s: Pick<TattooSet, "bonus" | "extra">, weaponName: (id: string) => string | undefined) =>
+  setBonusList(s).map((b) => `+${b.damage} к урону «${weaponName(b.weapon) ?? b.weapon}»`).join(", ");
 
 const DATSIK_SETS: TattooSet[] = [
   {
@@ -99,9 +109,8 @@ export const BOX_TATTOO_CHANCE = 0.2;
 const boxSet = (id: string, name: string, weapon: string, damage: number): TattooSet => ({ ...solid(id, name, "box", "pacan", weapon, damage) });
 
 /**
- * The user's table (2026-11-23) also gives the bonuses of the sets Фокус and Солнце will get (none drawn yet):
- * Фокус — «Пацанский» +420 Rug Pull Gun, «Авторитетный» +270 Пистолет. Солнце (the user 2026-11-23): «Пацанский»
- * +750 Rug Pull Gun, «Блатной» +300 Пистолет and +1000 Rug Pull Gun; his «Авторитетный» gives things (+1000 Rug Pull Gun).
+ * The user's table (2026-11-23) also gives the bonuses of the sets Фокус will get (none drawn yet):
+ * Фокус — «Пацанский» +420 Rug Pull Gun, «Авторитетный» +270 Пистолет.
  */
 export const TATTOO_SETS: TattooSet[] = [
   ...DATSIK_SETS,
@@ -116,6 +125,10 @@ export const TATTOO_SETS: TattooSet[] = [
   solid("dragon", "Дракон додзё", "botsman", "pacan", "gpu", 250), solid("cyber", "Кибер", "botsman", "avtor", "rug-pull-gun", 250),
   // Утилизатор: tattoos in «Пацанский» and «Блатной», his thing in «Авторитетный» (bosses.ts thingsMode)
   solid("ut-acid", "Кислота", "utilizator", "pacan", "gpu", 190), solid("ut-storm", "Гроза", "utilizator", "blat", "rug-pull-gun", 350),
+  // Солнце (the user 2026-11-24): a set in every mode; «Авторитетный» also drops his things (bosses.ts thingsMode)
+  solid("kuznya", "Кузня", "solntse", "pacan", "rug-pull-gun", 750),
+  { ...solid("zatmenie", "Затмение", "solntse", "blat", "gpu", 300), extra: [{ weapon: "rug-pull-gun", damage: 1000 }] },
+  solid("ozhog", "Ожог", "solntse", "avtor", "rug-pull-gun", 1000),
   // Пепе (the event boss, content/bosses.ts EVENT_FIGHTS): one piece per win, «Пацанский» only
   solid("swamp", "Болото", "pepe", "pacan", "rug-pull-gun", 100),
   // Тося's sets (boss "tosya"): every pie he sells holds one piece (content/tosya.ts)

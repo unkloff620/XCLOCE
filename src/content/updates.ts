@@ -17,6 +17,16 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-24-solntse-sets",
+    date: "24 ноября",
+    title: "Сеты Солнца",
+    items: [
+      { img: "/assets/hero/tattoo/set-kuznya.webp", text: "Солнце, «Пацанский»: наколки «Кузня» — весь сет +750 к Rug Pull Gun." },
+      { img: "/assets/hero/tattoo/set-zatmenie.webp", text: "Солнце, «Блатной»: наколки «Затмение» — весь сет +300 к пистолету и +1000 к Rug Pull Gun." },
+      { img: "/assets/hero/tattoo/set-ozhog.webp", text: "Солнце, «Авторитетный»: наколки «Ожог» (+1000 к Rug Pull Gun) и его вещи — футболка, штаны и кроссовки (+1000 к Rug Pull Gun)." },
+    ],
+  },
+  {
     id: "2026-11-22-apron",
     date: "22 ноября",
     title: "Фартук Утилизатора",

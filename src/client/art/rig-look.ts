@@ -286,6 +286,27 @@ export const WEAR_FIT = {
     "w": 430,
     "h": 852
   },
+  "tee-solntse": {
+    "slot": "SHIRT",
+    "x": 179.5,
+    "y": 287.0,
+    "w": 642,
+    "h": 493
+  },
+  "pants-solntse": {
+    "slot": "PANTS",
+    "x": 74.5,
+    "y": 678.0,
+    "w": 855,
+    "h": 472
+  },
+  "sneakers-solntse": {
+    "slot": "SHOES",
+    "x": 96.0,
+    "y": 1131.0,
+    "w": 797,
+    "h": 211
+  },
   "crown-cash": {
     "slot": "HEAD",
     "x": 364.0,

@@ -6909,6 +6909,447 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
   "w": 258.0,
   "h": 204.0
  },
+ "tat-kuznya-face": {
+  "part": "head",
+  "x": 507.0,
+  "y": 57.0,
+  "w": 95.0,
+  "h": 154.0
+ },
+ "tat-kuznya-hand-r": {
+  "part": "handR",
+  "x": 643.5,
+  "y": 737.5,
+  "w": 117.0,
+  "h": 177.0
+ },
+ "tat-kuznya-neck": {
+  "part": "upper",
+  "x": 394.0,
+  "y": 242.0,
+  "w": 211.0,
+  "h": 147.0
+ },
+ "tat-kuznya-chest-l": {
+  "part": "upper",
+  "x": 338.0,
+  "y": 316.0,
+  "w": 165.0,
+  "h": 250.0
+ },
+ "tat-kuznya-chest-r": {
+  "part": "upper",
+  "x": 499.0,
+  "y": 317.0,
+  "w": 163.0,
+  "h": 248.0
+ },
+ "tat-kuznya-belly": {
+  "part": "upper",
+  "x": 367.0,
+  "y": 514.0,
+  "w": 272.0,
+  "h": 227.0
+ },
+ "tat-kuznya-shoulder-l": {
+  "part": "upper",
+  "x": 226.0,
+  "y": 331.0,
+  "w": 143.0,
+  "h": 179.0
+ },
+ "tat-kuznya-shoulder-r": {
+  "part": "upper",
+  "x": 632.0,
+  "y": 333.0,
+  "w": 150.0,
+  "h": 175.0
+ },
+ "tat-kuznya-biceps-l": {
+  "part": "upper",
+  "x": 154.0,
+  "y": 437.0,
+  "w": 146.0,
+  "h": 139.0
+ },
+ "tat-kuznya-biceps-r": {
+  "part": "upper",
+  "x": 706.0,
+  "y": 432.0,
+  "w": 150.0,
+  "h": 145.0
+ },
+ "tat-kuznya-elbow-l": {
+  "part": "upper",
+  "x": 115.0,
+  "y": 534.0,
+  "w": 110.0,
+  "h": 121.0
+ },
+ "tat-kuznya-elbow-r": {
+  "part": "upper",
+  "x": 778.0,
+  "y": 536.0,
+  "w": 116.0,
+  "h": 139.0
+ },
+ "tat-kuznya-forearm-l": {
+  "part": "upper",
+  "x": 142.0,
+  "y": 630.0,
+  "w": 116.0,
+  "h": 123.0
+ },
+ "tat-kuznya-forearm-r": {
+  "part": "upper",
+  "x": 704.0,
+  "y": 634.0,
+  "w": 142.0,
+  "h": 150.0
+ },
+ "tat-kuznya-hand-l": {
+  "part": "upper",
+  "x": 226.0,
+  "y": 662.0,
+  "w": 190.0,
+  "h": 144.0
+ },
+ "tat-kuznya-knee-l": {
+  "part": "torso",
+  "x": 85.0,
+  "y": 754.0,
+  "w": 258.0,
+  "h": 209.0
+ },
+ "tat-kuznya-knee-r": {
+  "part": "torso",
+  "x": 659.0,
+  "y": 756.0,
+  "w": 262.0,
+  "h": 209.0
+ },
+ "tat-kuznya-shin-l": {
+  "part": "torso",
+  "x": 124.0,
+  "y": 880.0,
+  "w": 227.0,
+  "h": 258.0
+ },
+ "tat-kuznya-shin-r": {
+  "part": "torso",
+  "x": 644.0,
+  "y": 880.0,
+  "w": 239.0,
+  "h": 258.0
+ },
+ "tat-kuznya-foot-l": {
+  "part": "torso",
+  "x": 107.0,
+  "y": 1134.0,
+  "w": 272.0,
+  "h": 191.0
+ },
+ "tat-kuznya-foot-r": {
+  "part": "torso",
+  "x": 622.0,
+  "y": 1132.0,
+  "w": 258.0,
+  "h": 204.0
+ },
+ "tat-zatmenie-face": {
+  "part": "head",
+  "x": 503.0,
+  "y": 52.0,
+  "w": 98.0,
+  "h": 172.0
+ },
+ "tat-zatmenie-hand-r": {
+  "part": "handR",
+  "x": 643.5,
+  "y": 737.5,
+  "w": 117.0,
+  "h": 177.0
+ },
+ "tat-zatmenie-neck": {
+  "part": "upper",
+  "x": 394.0,
+  "y": 242.0,
+  "w": 211.0,
+  "h": 147.0
+ },
+ "tat-zatmenie-chest-l": {
+  "part": "upper",
+  "x": 338.0,
+  "y": 316.0,
+  "w": 165.0,
+  "h": 250.0
+ },
+ "tat-zatmenie-chest-r": {
+  "part": "upper",
+  "x": 499.0,
+  "y": 317.0,
+  "w": 163.0,
+  "h": 248.0
+ },
+ "tat-zatmenie-belly": {
+  "part": "upper",
+  "x": 367.0,
+  "y": 514.0,
+  "w": 272.0,
+  "h": 227.0
+ },
+ "tat-zatmenie-shoulder-l": {
+  "part": "upper",
+  "x": 226.0,
+  "y": 331.0,
+  "w": 143.0,
+  "h": 179.0
+ },
+ "tat-zatmenie-shoulder-r": {
+  "part": "upper",
+  "x": 632.0,
+  "y": 333.0,
+  "w": 150.0,
+  "h": 175.0
+ },
+ "tat-zatmenie-biceps-l": {
+  "part": "upper",
+  "x": 154.0,
+  "y": 437.0,
+  "w": 146.0,
+  "h": 139.0
+ },
+ "tat-zatmenie-biceps-r": {
+  "part": "upper",
+  "x": 706.0,
+  "y": 432.0,
+  "w": 150.0,
+  "h": 145.0
+ },
+ "tat-zatmenie-elbow-l": {
+  "part": "upper",
+  "x": 115.0,
+  "y": 534.0,
+  "w": 110.0,
+  "h": 121.0
+ },
+ "tat-zatmenie-elbow-r": {
+  "part": "upper",
+  "x": 778.0,
+  "y": 536.0,
+  "w": 116.0,
+  "h": 139.0
+ },
+ "tat-zatmenie-forearm-l": {
+  "part": "upper",
+  "x": 142.0,
+  "y": 630.0,
+  "w": 116.0,
+  "h": 123.0
+ },
+ "tat-zatmenie-forearm-r": {
+  "part": "upper",
+  "x": 704.0,
+  "y": 634.0,
+  "w": 142.0,
+  "h": 150.0
+ },
+ "tat-zatmenie-hand-l": {
+  "part": "upper",
+  "x": 226.0,
+  "y": 662.0,
+  "w": 190.0,
+  "h": 144.0
+ },
+ "tat-zatmenie-knee-l": {
+  "part": "torso",
+  "x": 85.0,
+  "y": 754.0,
+  "w": 258.0,
+  "h": 209.0
+ },
+ "tat-zatmenie-knee-r": {
+  "part": "torso",
+  "x": 659.0,
+  "y": 756.0,
+  "w": 262.0,
+  "h": 209.0
+ },
+ "tat-zatmenie-shin-l": {
+  "part": "torso",
+  "x": 124.0,
+  "y": 880.0,
+  "w": 227.0,
+  "h": 258.0
+ },
+ "tat-zatmenie-shin-r": {
+  "part": "torso",
+  "x": 647.0,
+  "y": 880.0,
+  "w": 236.0,
+  "h": 258.0
+ },
+ "tat-zatmenie-foot-l": {
+  "part": "torso",
+  "x": 107.0,
+  "y": 1134.0,
+  "w": 272.0,
+  "h": 191.0
+ },
+ "tat-zatmenie-foot-r": {
+  "part": "torso",
+  "x": 622.0,
+  "y": 1132.0,
+  "w": 258.0,
+  "h": 204.0
+ },
+ "tat-ozhog-face": {
+  "part": "head",
+  "x": 469.0,
+  "y": 47.0,
+  "w": 133.0,
+  "h": 265.0
+ },
+ "tat-ozhog-hand-r": {
+  "part": "handR",
+  "x": 643.5,
+  "y": 737.5,
+  "w": 117.0,
+  "h": 177.0
+ },
+ "tat-ozhog-neck": {
+  "part": "upper",
+  "x": 394.0,
+  "y": 242.0,
+  "w": 211.0,
+  "h": 147.0
+ },
+ "tat-ozhog-chest-l": {
+  "part": "upper",
+  "x": 338.0,
+  "y": 316.0,
+  "w": 165.0,
+  "h": 250.0
+ },
+ "tat-ozhog-chest-r": {
+  "part": "upper",
+  "x": 499.0,
+  "y": 317.0,
+  "w": 163.0,
+  "h": 248.0
+ },
+ "tat-ozhog-belly": {
+  "part": "upper",
+  "x": 367.0,
+  "y": 514.0,
+  "w": 272.0,
+  "h": 227.0
+ },
+ "tat-ozhog-shoulder-l": {
+  "part": "upper",
+  "x": 226.0,
+  "y": 331.0,
+  "w": 143.0,
+  "h": 179.0
+ },
+ "tat-ozhog-shoulder-r": {
+  "part": "upper",
+  "x": 632.0,
+  "y": 333.0,
+  "w": 150.0,
+  "h": 175.0
+ },
+ "tat-ozhog-biceps-l": {
+  "part": "upper",
+  "x": 154.0,
+  "y": 437.0,
+  "w": 146.0,
+  "h": 139.0
+ },
+ "tat-ozhog-biceps-r": {
+  "part": "upper",
+  "x": 706.0,
+  "y": 432.0,
+  "w": 150.0,
+  "h": 145.0
+ },
+ "tat-ozhog-elbow-l": {
+  "part": "upper",
+  "x": 115.0,
+  "y": 534.0,
+  "w": 110.0,
+  "h": 121.0
+ },
+ "tat-ozhog-elbow-r": {
+  "part": "upper",
+  "x": 778.0,
+  "y": 536.0,
+  "w": 116.0,
+  "h": 139.0
+ },
+ "tat-ozhog-forearm-l": {
+  "part": "upper",
+  "x": 142.0,
+  "y": 630.0,
+  "w": 116.0,
+  "h": 123.0
+ },
+ "tat-ozhog-forearm-r": {
+  "part": "upper",
+  "x": 704.0,
+  "y": 634.0,
+  "w": 142.0,
+  "h": 150.0
+ },
+ "tat-ozhog-hand-l": {
+  "part": "upper",
+  "x": 226.0,
+  "y": 662.0,
+  "w": 190.0,
+  "h": 144.0
+ },
+ "tat-ozhog-knee-l": {
+  "part": "torso",
+  "x": 85.0,
+  "y": 754.0,
+  "w": 258.0,
+  "h": 209.0
+ },
+ "tat-ozhog-knee-r": {
+  "part": "torso",
+  "x": 659.0,
+  "y": 756.0,
+  "w": 262.0,
+  "h": 209.0
+ },
+ "tat-ozhog-shin-l": {
+  "part": "torso",
+  "x": 124.0,
+  "y": 880.0,
+  "w": 227.0,
+  "h": 258.0
+ },
+ "tat-ozhog-shin-r": {
+  "part": "torso",
+  "x": 644.0,
+  "y": 880.0,
+  "w": 239.0,
+  "h": 258.0
+ },
+ "tat-ozhog-foot-l": {
+  "part": "torso",
+  "x": 107.0,
+  "y": 1134.0,
+  "w": 272.0,
+  "h": 191.0
+ },
+ "tat-ozhog-foot-r": {
+  "part": "torso",
+  "x": 622.0,
+  "y": 1132.0,
+  "w": 258.0,
+  "h": 204.0
+ },
  "tat-zr-barak-face": {
   "part": "head",
   "x": 535.0,
