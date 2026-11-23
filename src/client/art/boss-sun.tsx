@@ -32,12 +32,14 @@ export function SunRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, pup
   const spit = useRef<SVGGElement>(null);
   useSpit(svgRef, head, spit, !bust);
   const src = (p: string) => `/bosses/${id}/rig/${p}.webp${P[p]?.v ? `?v=${P[p].v}` : ""}`;
-  const pic = (p: string, pp?: "back" | "front") => {
+  const pic = (p: string, pp?: "back" | "front", fade?: string) => {
     const r = P[p];
     if (!r) return null;
     const on = puppet && pp;
-    return <image className={on ? "pp" : undefined} data-pp={on ? pp : undefined} href={src(p)} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" />;
+    return <image className={on ? "pp" : undefined} data-pp={on ? pp : undefined} data-pp-fade={on ? fade : undefined} href={src(p)} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" />;
   };
+  // the lava cracks glowing over their part (tools/boss/solntse-glow.py), pulsing like embers (screens.css .sn-glow)
+  const glow = (p: string, pp?: "back" | "front", n = 0) => <g className={`sn-glow sn-glow-${n}`}>{pic(`${p}-glow`, pp, `sn-glow-${n}`)}</g>;
   const at = (x: number, y: number): CSSProperties => ({ transformOrigin: `${x}px ${y}px`, transformBox: "view-box" });
   const origin = (p: string): CSSProperties => { const pv = P[p]?.pivot ?? [rig.w / 2, rig.h]; return at(pv[0], pv[1]); };
   const bone = (cls: string, p: string, kids: ReactNode, size?: number, ref?: RefObject<SVGGElement | null>) => (
@@ -53,6 +55,10 @@ export function SunRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, pup
           <image className="pp" data-pp="front" data-pp-follow="br-up" data-pp-follow-at="0.5,0.86" href={src("legs")}
             x={P.legs.x} y={P.legs.y} width={P.legs.w} height={P.legs.h} preserveAspectRatio="none" />
         ) : pic("legs"))}
+        {P["legs-glow"] && <g className="sn-glow sn-glow-3">{puppet ? (
+          <image className="pp" data-pp="front" data-pp-follow="br-up" data-pp-follow-at="0.5,0.86" data-pp-fade="sn-glow-3" href={src("legs-glow")}
+            x={P["legs-glow"].x} y={P["legs-glow"].y} width={P["legs-glow"].w} height={P["legs-glow"].h} preserveAspectRatio="none" />
+        ) : pic("legs-glow")}</g>}
         <g className="br-up" style={at(WAIST[0], WAIST[1])}>
           {/* the trunk and the apron swell a little from the belt, the pecs a lot from the breastbone */}
           {/* his left (yellow) arm behind the body: on the back canvas, under everything */}
@@ -60,8 +66,8 @@ export function SunRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, pup
             {pic("armL", "back")}
             {bone("br-low br-low-l", "lowL", pic("lowL", "back"), 150)}
           </>, 170)}
-          <g className="sn-trunk" style={at(BELT[0], BELT[1])}>{pic("body")}</g>
-          <g className="sn-pec sn-pec-r" style={at(STERNUM[0], STERNUM[1])}>{pic("chestR")}</g>
+          <g className="sn-trunk" style={at(BELT[0], BELT[1])}>{pic("body")}{glow("body", undefined, 1)}</g>
+          <g className="sn-pec sn-pec-r" style={at(STERNUM[0], STERNUM[1])}>{pic("chestR")}{glow("chestR", undefined, 2)}</g>
           <g className="sn-pec sn-pec-l" style={at(STERNUM[0], STERNUM[1])}>{pic("chestL")}</g>
           {/* the apron over the pecs */}
           <g className="sn-trunk" style={at(BELT[0], BELT[1])}>{pic("apron")}</g>
@@ -80,7 +86,8 @@ export function SunRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, pup
           {/* the right arm (lava) with the poker in its fist, in front of everything */}
           {bone("br-arm br-arm-r", "armR", <>
             {pic("armR", "front")}
-            {bone("br-low br-low-r", "lowR", <>{pic("lowR", "front")}{pic("poker", "front")}</>, 150)}
+            {glow("armR", "front", 0)}
+            {bone("br-low br-low-r", "lowR", <>{pic("lowR", "front")}{glow("lowR", "front", 1)}{pic("poker", "front")}</>, 150)}
           </>, 170)}
         </g>
       </g>

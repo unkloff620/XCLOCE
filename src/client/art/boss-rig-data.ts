@@ -4079,12 +4079,26 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "h": 807,
         "v": "4cd36110"
       },
+      "legs-glow": {
+        "x": 124.5,
+        "y": 559.5,
+        "w": 308,
+        "h": 770,
+        "v": "72a5e397"
+      },
       "body": {
         "x": 221.5,
         "y": 139.0,
         "w": 436,
         "h": 462,
         "v": "803bfd07"
+      },
+      "body-glow": {
+        "x": 221.5,
+        "y": 193.5,
+        "w": 170,
+        "h": 396,
+        "v": "6c5a6ddb"
       },
       "apron": {
         "x": 335.5,
@@ -4099,6 +4113,13 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "w": 216,
         "h": 154,
         "v": "eed379d1"
+      },
+      "chestR-glow": {
+        "x": 303.0,
+        "y": 260.5,
+        "w": 124,
+        "h": 117,
+        "v": "7c37c42f"
       },
       "chestL": {
         "x": 498.5,
@@ -4127,6 +4148,20 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "w": 130,
         "h": 86,
         "v": "297fbd1a"
+      },
+      "armR-glow": {
+        "x": 39.5,
+        "y": 244.0,
+        "w": 339,
+        "h": 184,
+        "v": "d1fcaa8d"
+      },
+      "lowR-glow": {
+        "x": 17.5,
+        "y": 384.0,
+        "w": 178,
+        "h": 276,
+        "v": "8444e2f3"
       },
       "armL": {
         "x": 534.5,

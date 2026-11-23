@@ -7881,3 +7881,10 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .rig-solntse.sn-slam .sn-root { animation: sn-slam 0.16s ease-out; }
 @keyframes sn-slam { 0% { transform: translateY(0); } 35% { transform: translateY(5px); } 100% { transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { .rig-solntse :is(.sn-drool-str, .sn-drool-drop) { animation: none; } }
+/* Солнце's lava side: the cracks glow and pulse like embers, each part a little out of step */
+.rig-solntse .sn-glow { animation: sn-ember 2.6s ease-in-out infinite; }
+.rig-solntse .sn-glow-1 { animation-duration: 3.1s; animation-delay: -0.8s; }
+.rig-solntse .sn-glow-2 { animation-duration: 2.3s; animation-delay: -1.4s; }
+.rig-solntse .sn-glow-3 { animation-duration: 3.4s; animation-delay: -2s; }
+@keyframes sn-ember { 0%, 100% { opacity: 0.45; } 30% { opacity: 0.95; } 42% { opacity: 0.75; } 60% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .rig-solntse .sn-glow { animation: none; opacity: 0.8; } }
