@@ -18,6 +18,8 @@ const DAY = 24 * 3_600_000;
 
 /** the van's slates (public/assets/van/plaque-*.webp) by level; the two top ones shine along the edge */
 const PLATE: Record<string, "free" | "bronze" | "silver" | "gold"> = { pacan: "free", blat: "bronze", avtor: "silver", vor: "gold" };
+/** one slide's width: the neighbours peek out at the sides */
+const step = (el: HTMLElement) => Math.max(1, (el.firstElementChild as HTMLElement | null)?.offsetWidth ?? el.clientWidth);
 const daysWord = (d: number) => (d % 10 === 1 && d % 100 !== 11 ? "день" : d % 10 >= 2 && d % 10 <= 4 && (d % 100 < 12 || d % 100 > 14) ? "дня" : "дней");
 
 export function ObshakWindow({ onClose }: { onClose: () => void }) {
@@ -31,7 +33,7 @@ export function ObshakWindow({ onClose }: { onClose: () => void }) {
   // open on the active level
   useLayoutEffect(() => {
     const el = track.current;
-    if (el && at) el.scrollLeft = at * el.clientWidth;
+    if (el && at) el.scrollLeft = at * step(el);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const go = (i: number) => {
@@ -39,11 +41,11 @@ export function ObshakWindow({ onClose }: { onClose: () => void }) {
     if (!el) return;
     haptic.tap();
     const n = (i + OBSHAK.length) % OBSHAK.length;
-    el.scrollTo({ left: n * el.clientWidth, behavior: "smooth" });
+    el.scrollTo({ left: n * step(el), behavior: "smooth" });
   };
   const onScroll = () => {
     const el = track.current;
-    if (el) setAt(Math.round(el.scrollLeft / Math.max(1, el.clientWidth)));
+    if (el) setAt(Math.min(OBSHAK.length - 1, Math.round(el.scrollLeft / step(el))));
   };
   const buy = async (d: ObshakDef) => {
     const r = await act("obshak_buy", { level: d.id });
@@ -62,7 +64,7 @@ export function ObshakWindow({ onClose }: { onClose: () => void }) {
             const days = mine && o?.until ? Math.max(1, Math.ceil((o.until - now) / DAY)) : null;
             const plate = PLATE[d.id];
             return (
-              <div key={d.id} className="ob-slide">
+              <div key={d.id} className={`ob-slide ${OBSHAK[at]?.id === d.id ? "cur" : ""}`}>
                 <div className={`ob-plate k-${plate} ${mine ? "on" : ""}`} style={{ backgroundImage: `url(/assets/van/plaque-${plate}.webp)` }}>
                   {(plate === "gold" || plate === "silver") && <i className="ob-rim" aria-hidden="true" />}
                   <div className="ob-in">
@@ -73,16 +75,13 @@ export function ObshakWindow({ onClose }: { onClose: () => void }) {
                     <span className="ob-bonus"><RewardChips r={d.bonus} size={20} /></span>
                     {d.keysChance ? <span className="ob-keys" title="Шанс получить связку ключей"><ItemArt id="keys-bundle" size={24} />шанс</span> : null}
                   </div>
-                  <b className="ob-price display num"><Icon name="GOLD" size={20} />{full(d.price)}</b>
-                </div>
-                <div className="ob-ctl">
                   {mine && o && (
                     o.ready
-                      ? <button type="button" className="btn green ob-take" disabled={busy === "obshak_claim"} onClick={() => void claim()}>Забрать</button>
+                      ? <button type="button" className="btn sm green ob-take" disabled={busy === "obshak_claim"} onClick={() => void claim()}>Забрать</button>
                       : <span className="ob-next num"><Icon name="clock" size={14} />{clock(o.nextAt - now)}</span>
                   )}
                   <button type="button" className="btn gold ob-buy" disabled={busy === "obshak_buy" || gold < d.price} onClick={() => void buy(d)}>
-                    {mine ? "Продлить" : "Купить"}
+                    {mine ? "Продлить" : "Купить"} <span className="num"><Icon name="GOLD" size={18} />{full(d.price)}</span>
                   </button>
                 </div>
               </div>

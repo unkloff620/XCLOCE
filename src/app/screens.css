@@ -7848,15 +7848,20 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .ob-toggle img { object-fit: contain; }
 /* «Общак»: one level at a time on the van's slates, swiped or turned by the red arrows; the slate's box is its picture's
    opaque part (x 116–1014, y 75–1295 of 1117×1371): the body above y 77%, the price on the ribbon (79–88%) */
-.ob-win .modal-body, .ob-win { overflow-x: hidden; }
-.ob-car { position: relative; margin: 0 -4px; }
-.ob-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
+/* no paper: the slates stand on the dimmed screen */
+.modal.ob-win { width: calc(100% + 32px); max-width: 492px; margin: 0 -16px; padding: 10px 0 12px; overflow-x: hidden; background: none; border: 0; box-shadow: none; }
+.modal.ob-win::before, .modal.ob-win::after { display: none; }
+.modal.ob-win > h3 { margin-left: 22px; color: #ffe9c2; text-shadow: 0 2px 0 #000, 0 0 8px rgba(0, 0, 0, 0.8); }
+.modal.ob-win > .x { margin-right: 18px; }
+.ob-car { position: relative; }
+.ob-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; padding: 6px 13%; scroll-padding: 0 13%; }
 .ob-track::-webkit-scrollbar { display: none; }
-.ob-slide { flex: 0 0 100%; scroll-snap-align: center; scroll-snap-stop: always; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 4px 0 2px; }
-.ob-plate { --pw: min(72vw, 270px); position: relative; width: var(--pw); aspect-ratio: 898 / 1220; container-type: inline-size; color: #f3ead8;
+.ob-slide { flex: 0 0 100%; scroll-snap-align: center; scroll-snap-stop: always; display: flex; justify-content: center; padding: 0 2%; transition: transform 0.25s ease, opacity 0.25s ease; transform: scale(0.9); opacity: 0.7; }
+.ob-slide.cur { transform: none; opacity: 1; }
+.ob-plate { position: relative; width: 100%; aspect-ratio: 898 / 1220; container-type: inline-size; color: #f3ead8;
   background: center / 124.4% auto no-repeat; background-position: 53% 49.7%; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.55)); }
 .ob-plate.on { filter: drop-shadow(0 0 6px rgba(255, 215, 90, 0.85)) drop-shadow(0 6px 10px rgba(0, 0, 0, 0.55)); }
-.ob-in { position: absolute; left: 10%; right: 10%; top: 4.5%; height: 71%; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; text-align: center; }
+.ob-in { position: absolute; left: 10%; right: 10%; top: 4%; height: 62%; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; text-align: center; }
 .ob-name { font-size: 8cqi; line-height: 1; text-transform: uppercase; letter-spacing: 0.03em; color: #fff; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.6); }
 .ob-plate.k-gold .ob-name, .ob-plate.k-bronze .ob-name { color: #fff3d0; }
 .ob-days { font-size: 5.6cqi; font-weight: 800; color: #ffe27a; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.75), 0 0 3px rgba(0, 0, 0, 0.6); }
@@ -7866,8 +7871,14 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .ob-bonus .rchips { justify-content: center; gap: 1.5cqi 3cqi; }
 .ob-bonus .chip { color: #fff; font-size: 5.4cqi; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85); }
 .ob-keys { display: inline-flex; align-items: center; gap: 1cqi; font-size: 5cqi; font-weight: 700; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85); }
-.ob-price { position: absolute; left: 20%; right: 20%; top: 79%; height: 9%; display: flex; align-items: center; justify-content: center; gap: 2cqi; font-size: 8.5cqi; color: #3b2a1a; }
-.ob-price svg { width: 9cqi !important; height: 9cqi !important; }
+/* under the rewards on the left: the time till the next collecting, or «Забрать» */
+.ob-next, .ob-plate .ob-take { position: absolute; left: 10%; top: 68%; }
+.ob-next { display: inline-flex; align-items: center; gap: 1.2cqi; font-size: 5.4cqi; font-weight: 800; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85); }
+.ob-plate .ob-take { top: 66.5%; min-width: 0; padding: 0 3cqi; }
+/* the button stands on the ribbon in place of the price, the price on it */
+.ob-plate .ob-buy { position: absolute; left: 50%; top: 78.5%; transform: translateX(-50%); width: 66%; min-width: 0; padding: 0 2cqi; gap: 2cqi; font-size: 5.4cqi; }
+.ob-plate .ob-buy:active { transform: translateX(-50%) translateY(2px); }
+.ob-plate .ob-buy .num { display: inline-flex; align-items: center; gap: 1cqi; }
 /* the outline shines (the van's light along the edge): clear on gold, fainter on silver */
 .ob-rim { position: absolute; inset: 0; pointer-events: none;
   -webkit-mask: url(/assets/van/plaque-rim.webp) 53% 49.7% / 124.4% auto no-repeat; mask: url(/assets/van/plaque-rim.webp) 53% 49.7% / 124.4% auto no-repeat;
@@ -7875,10 +7886,8 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
   mix-blend-mode: screen; animation: van-rim 2.6s linear infinite; }
 .ob-plate.k-gold .ob-rim { filter: drop-shadow(0 0 4px #ffd75a); }
 .ob-plate.k-silver .ob-rim { opacity: 0.6; animation-duration: 3.4s; }
-@media (prefers-reduced-motion: reduce) { .ob-rim { animation: none; opacity: 0.3; } }
-.ob-ctl { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: var(--bh, 36px); }
-.ob-next { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 700; color: #3b2a1a; }
-.ob-arrow { position: absolute; top: calc(min(72vw, 270px) * 1220 / 898 / 2 - 14px); z-index: 2; width: 38px; height: 30px; padding: 0; border: 0; background: none; display: grid; place-items: center; cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .ob-rim, .ob-slide { animation: none; transition: none; } }
+.ob-arrow { position: absolute; top: 46%; z-index: 2; width: 34px; height: 28px; padding: 0; border: 0; background: none; display: grid; place-items: center; cursor: pointer; }
 .ob-arrow svg { width: 100%; height: auto; filter: drop-shadow(0 0 0.5px #fff) drop-shadow(0 0 0.5px #fff) drop-shadow(0 1px 1px rgba(0, 0, 0, 0.8)); }
 .ob-arrow:active { transform: scale(0.92); }
 .ob-arrow.l { left: 2px; animation: ob-point-l 1.4s ease-in-out infinite; }
@@ -7887,8 +7896,8 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 @keyframes ob-point-r { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(5px); } }
 @media (prefers-reduced-motion: reduce) { .ob-arrow { animation: none; } }
 .ob-dots { display: flex; justify-content: center; gap: 6px; margin-top: 8px; }
-.ob-dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(59, 42, 26, 0.3); }
-.ob-dots i.on { background: #3b2a1a; }
+.ob-dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255, 240, 210, 0.3); }
+.ob-dots i.on { background: #ffe9c2; }
 .ob-got-dmg { display: inline-flex; align-items: center; gap: 4px; font-size: 18px; font-weight: 800; }
 /* the needle in a fight: today's stock of «Общак» in one blow */
 .fbtn-needle.btn { gap: 3px; padding: 0 8px; }
