@@ -674,6 +674,8 @@ const POSES: Record<string, Spec> = {
     scale: { armR: "swa", armL: "swa", lowR: "zR", lowL: "zL" },
     vars: (a) => ({
       "--sw": Math.max(0, Math.min(1.2, a.sw)).toFixed(3), "--jaw": Math.max(0, Math.min(1.2, a.jaw)).toFixed(3),
+      // the arms' rise (0…1, past the rest): the pec on that side is pulled up and stretched with its arm
+      "--rr": Math.max(-0.4, Math.min(1.2, (a.armR ?? 0) / 45)).toFixed(3), "--rl": Math.max(-0.4, Math.min(1.2, -(a.armL ?? 0) / 40)).toFixed(3),
       "--px": a.px.toFixed(3), "--py": a.py.toFixed(3),
     }),
     stiffOwn: true,

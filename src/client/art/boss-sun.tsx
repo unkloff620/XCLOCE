@@ -18,6 +18,8 @@ const WAIST = [470, 640] as const;
 /** the pecs swell from the breastbone, the trunk from the belt */
 const STERNUM = [506, 296] as const;
 const BELT = [430, 600] as const;
+/** the pecs' root (the bottom of the breastbone): they are pulled from here when an arm goes up */
+const PEC_ROOT = [500, 405] as const;
 /** the jaw's hinge (it drops and turns a little round it) and the mouth's corners, where the drool hangs */
 const JAW_HINGE = [486, 128] as const;
 const CORNERS = [[462, 156], [509, 154]] as const;
@@ -30,7 +32,8 @@ export function SunRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, pup
   const P = rig.parts;
   const head = useRef<SVGGElement>(null);
   const spit = useRef<SVGGElement>(null);
-  useSpit(svgRef, head, spit, !bust);
+  // the card (bust) drools and spits too, like in the fight
+  useSpit(svgRef, head, spit, true);
   const src = (p: string) => `/bosses/${id}/rig/${p}.webp${P[p]?.v ? `?v=${P[p].v}` : ""}`;
   const pic = (p: string, pp?: "back" | "front", fade?: string) => {
     const r = P[p];
@@ -75,8 +78,14 @@ export function SunRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, pup
             {glow("armR", "back", 0)}
             {bone("br-low br-low-r", "lowR", null, 150)}
           </>, 170)}
-          <g className="sn-pec sn-pec-r" style={at(STERNUM[0], STERNUM[1])}>{pic("chestR")}{glow("chestR", undefined, 2)}</g>
-          <g className="sn-pec sn-pec-l" style={at(STERNUM[0], STERNUM[1])}>{pic("chestL")}</g>
+          {/* each pec hangs on its arm: the arm goes up — the pec is pulled up towards the shoulder and stretched (from the
+              breastbone's bottom, it stays on the body) */}
+          <g className="sn-pull sn-pull-r" style={at(PEC_ROOT[0], PEC_ROOT[1])}>
+            <g className="sn-pec sn-pec-r" style={at(STERNUM[0], STERNUM[1])}>{pic("chestR")}{glow("chestR", undefined, 2)}</g>
+          </g>
+          <g className="sn-pull sn-pull-l" style={at(PEC_ROOT[0] + 8, PEC_ROOT[1])}>
+            <g className="sn-pec sn-pec-l" style={at(STERNUM[0], STERNUM[1])}>{pic("chestL")}</g>
+          </g>
           {/* the apron over the pecs */}
           <g className="sn-trunk" style={at(BELT[0], BELT[1])}>{pic("apron")}</g>
           {/* the face: the mouth inside (the throat, the upper teeth) under the jaw, the whites and the pupils under the
@@ -85,7 +94,7 @@ export function SunRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, pup
             {pic("mouthIn")}
             <g className="sn-jaw" style={at(JAW_HINGE[0], JAW_HINGE[1])}>
               {pic("jawLow")}
-              {!bust && CORNERS.map(([x, y], i) => <SunDrool key={i} x={x} y={y} cls={`sn-drool sn-drool-${i}`} />)}
+              {CORNERS.map(([x, y], i) => <SunDrool key={i} x={x} y={y} k={bust ? 1.7 : 1} cls={`sn-drool sn-drool-${i}`} />)}
             </g>
             {pic("eyes")}
             <g className="sn-pupils">{pic("pupils")}</g>
@@ -112,9 +121,9 @@ export function SunRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, pup
 }
 
 /** a string of drool hanging off a corner of the mouth: it stretches and shrinks, a drop gathers at its end and falls */
-function SunDrool({ x, y, cls }: { x: number; y: number; cls: string }) {
+function SunDrool({ x, y, k = 1, cls }: { x: number; y: number; k?: number; cls: string }) {
   return (
-    <g className={cls} transform={`translate(${x} ${y})`}>
+    <g className={cls} transform={`translate(${x} ${y}) scale(${k})`}>
       <g className="sn-drool-str">
         <path d="M-2 0 C-1.8 7 -1.1 14 -0.8 22 C-0.6 27 0.6 27 0.8 22 C1.1 14 1.8 7 2 0 Z" fill="rgba(226,240,255,0.72)" stroke="rgba(120,150,175,0.75)" strokeWidth="0.45" />
         <path d="M-0.6 1.5 C-0.5 8 -0.4 14 -0.3 20" stroke="rgba(255,255,255,0.9)" strokeWidth="0.45" fill="none" strokeLinecap="round" />
