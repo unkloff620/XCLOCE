@@ -47,19 +47,24 @@ export function SunRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, pup
     <svg key={look} ref={svgRef} className={`boss-rig rig-solntse ${dazed ? "dazed" : ""} ${dying ? "dying" : ""}`} viewBox={viewBox} width="100%" height="100%"
       preserveAspectRatio={bust ? "xMidYMin slice" : "xMidYMax meet"} aria-hidden="true">
       <g className="sn-root" style={at(rig.w / 2, rig.h - 20)}>
-        {/* the legs: only the feet stay planted, the rest of the leg goes with the upper body */}
+        {/* the legs: only the feet stay planted, the rest of the leg goes with the upper body; drawn over the apron (the
+            front canvas, under the arms) */}
         {P.legs && (puppet ? (
-          <image className="pp" data-pp="back" data-pp-follow="br-up" data-pp-follow-at="0.5,0.86" href={src("legs")}
+          <image className="pp" data-pp="front" data-pp-follow="br-up" data-pp-follow-at="0.5,0.86" href={src("legs")}
             x={P.legs.x} y={P.legs.y} width={P.legs.w} height={P.legs.h} preserveAspectRatio="none" />
         ) : pic("legs"))}
         <g className="br-up" style={at(WAIST[0], WAIST[1])}>
           {/* the trunk and the apron swell a little from the belt, the pecs a lot from the breastbone */}
-          <g className="sn-trunk" style={at(BELT[0], BELT[1])}>
-            {pic("body")}
-            {pic("apron")}
-          </g>
+          {/* his left (yellow) arm behind the body: on the back canvas, under everything */}
+          {bone("br-arm br-arm-l", "armL", <>
+            {pic("armL", "back")}
+            {bone("br-low br-low-l", "lowL", pic("lowL", "back"), 150)}
+          </>, 170)}
+          <g className="sn-trunk" style={at(BELT[0], BELT[1])}>{pic("body")}</g>
           <g className="sn-pec sn-pec-r" style={at(STERNUM[0], STERNUM[1])}>{pic("chestR")}</g>
           <g className="sn-pec sn-pec-l" style={at(STERNUM[0], STERNUM[1])}>{pic("chestL")}</g>
+          {/* the apron over the pecs */}
+          <g className="sn-trunk" style={at(BELT[0], BELT[1])}>{pic("apron")}</g>
           {/* the face: the mouth inside (the throat, the upper teeth) under the jaw, the whites and the pupils under the
               head's eye holes, the head on top; the jaw drops with the breath in and carries the drool */}
           {bone("br-head", "head", <>
@@ -72,14 +77,10 @@ export function SunRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, pup
             <g className="sn-pupils">{pic("pupils")}</g>
             {pic("head")}
           </>, 170, head)}
-          {/* the arms in front of everything: the right one (lava) with the poker in its fist, the left (yellow) fist */}
+          {/* the right arm (lava) with the poker in its fist, in front of everything */}
           {bone("br-arm br-arm-r", "armR", <>
             {pic("armR", "front")}
             {bone("br-low br-low-r", "lowR", <>{pic("poker", "front")}{pic("lowR", "front")}</>, 150)}
-          </>, 170)}
-          {bone("br-arm br-arm-l", "armL", <>
-            {pic("armL", "front")}
-            {bone("br-low br-low-l", "lowL", pic("lowL", "front"), 150)}
           </>, 170)}
         </g>
       </g>
