@@ -636,9 +636,8 @@ export function BossScreen({ id }: { id: string }) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={`/assets/door/door${MODE_ART[mode]}.webp`} alt="" draggable={false} />
           <span className="door-hit" />
-          {/* the name above the window, the title under it, the rewards down the lower half — all on the door */}
+          {/* the name above the window, the rewards down the lower half — all on the door */}
           <b className="door-name display">{boss.name}</b>
-          <span className="door-title">{boss.final ? `ФИНАЛ · ${boss.title}` : boss.title}</span>
           {ev && <span className="door-event">ИВЕНТ</span>}
           <span className="door-plate">
             <b className="door-plate-title">{boss.final ? "ФИНАЛ" : "НАГРАДА"}</b>
