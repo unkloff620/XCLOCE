@@ -1137,7 +1137,7 @@ describe("home: equipment, rooms, look, help", () => {
     await db.query("UPDATE players SET talents = 2 WHERE id=$1", [p]);
     await db.query("INSERT INTO ledger (player_id, kind, key, delta, reason) VALUES ($1,'talent','talent',5,'fight:1')", [p]);
     await db.query("INSERT INTO player_equipment (player_id, equipment_id, level) VALUES ($1,'pc-gpu',2)", [p]);
-    await db.query("UPDATE player_stats SET total_damage = 20000 WHERE player_id=$1", [p]);
+    await db.query("UPDATE player_stats SET total_damage = 20000, talent_damage = 20000 WHERE player_id=$1", [p]);
     await db.exec(MIGRATIONS.find((m) => m.id === "v2-021-weapon-talents")!.sql);
     const [row] = await db.query<{ talents: number }>("SELECT talents FROM players WHERE id=$1", [p]);
     // 2 left + 3 refunded + (talents for 20 000 on the new curve − 5 already earned)
@@ -2404,7 +2404,7 @@ describe("«Крафт»", () => {
     // the cells are closed until bought
     await expect(act(db, p, "craft_put", { itemId: "craft-nail-bat" }, T0)).rejects.toMatchObject({ code: "boxes_full" });
     await expect(act(db, p, "craft_box_buy", {}, T0)).rejects.toMatchObject({ code: "need_talents" });
-    await db.query("INSERT INTO player_stats (player_id, total_damage) VALUES ($1, 100) ON CONFLICT (player_id) DO UPDATE SET total_damage = 100", [p]);
+    await db.query("INSERT INTO player_stats (player_id, total_damage, talent_damage) VALUES ($1, 100, 100) ON CONFLICT (player_id) DO UPDATE SET total_damage = 100, talent_damage = 100", [p]);
     await setMoney(db, p, "RUB", 1500);
     const b = await act(db, p, "craft_box_buy", {}, T0); // the first cell: 1 000 ₽
     expect(b.result).toMatchObject({ slot: 0, price: 1000, open: 1 });

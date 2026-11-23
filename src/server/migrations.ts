@@ -1775,4 +1775,10 @@ ALTER TABLE clans ADD COLUMN IF NOT EXISTS rebar INT NOT NULL DEFAULT 0;
 DELETE FROM raid_progress;
 DELETE FROM raid_yards;`,
   },
+  {
+    // the talent counter apart from the all-time damage: without «Общак» it drops back to the last talent after a fight
+    id: "v2-127-talent-damage",
+    sql: `ALTER TABLE player_stats ADD COLUMN IF NOT EXISTS talent_damage BIGINT NOT NULL DEFAULT 0;
+UPDATE player_stats SET talent_damage = total_damage;`,
+  },
 ];

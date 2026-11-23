@@ -1,3 +1,4 @@
+import { talentDamageOf } from "./talent-progress.ts";
 /*
  * «Крафт» (content/craft.ts): the stash of CRAFT_BOXES cells (player_craft_box), putting a thing in / taking it out,
  * making a thing from its recipe. What lies in the stash gives its bonus: the energy limit and the biceps go onto the
@@ -75,8 +76,7 @@ export async function craftBoxesBought(q: Queryable, pid: number): Promise<numbe
 export async function craftBoxBuy(ctx: Ctx) {
   const bought = await craftBoxesBought(ctx.q, ctx.pid);
   if (bought >= CRAFT_BOXES) throw new GameError("all_open", "Все ячейки уже открыты");
-  const [st] = await ctx.q.query<{ total_damage: number }>("SELECT total_damage FROM player_stats WHERE player_id=$1", [ctx.pid]);
-  if (craftBoxesOpen(talentsForDamage(Number(st?.total_damage ?? 0))) <= bought) {
+  if (craftBoxesOpen(talentsForDamage(await talentDamageOf(ctx.q, ctx.pid))) <= bought) {
     throw new GameError("need_talents", `Эта ячейка откроется, когда будет ${CRAFT_BOX_TALENTS[bought]} талантов`);
   }
   const price = CRAFT_BOX_PRICES[bought];

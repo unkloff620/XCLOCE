@@ -3,6 +3,7 @@ import type { Db } from "../src/server/db.ts";
 import { act, freshDb, newPlayer, qty, setMoney, wallet } from "./helpers.ts";
 import { OBSHAK, obshakById } from "../src/content/obshak.ts";
 import { obshakView } from "../src/server/systems/obshak.ts";
+import { talentThreshold } from "../src/content/talents.ts";
 
 let db: Db;
 // 12:00 МСК
@@ -57,5 +58,25 @@ describe("«Общак»", () => {
     expect(v).toMatchObject({ level: "vor", ready: true, pool: 0, until: T0 + DAY + 5000 + 30 * DAY });
     await act(db, p, "obshak_claim", {}, T0 + DAY + 6000);
     expect((await obshakView(db, p, T0 + DAY + 6000)).pool).toBe(obshakById("vor")!.damage);
+  });
+
+  it("without «Общак» the damage toward the next talent is lost when a fight ends; with it the progress stays", async () => {
+    const td = async (p: number) => Number((await db.query<{ talent_damage: number }>("SELECT talent_damage FROM player_stats WHERE player_id=$1", [p]))[0].talent_damage);
+    const setTd = (p: number, v: number) => db.query("UPDATE player_stats SET talent_damage=$2, total_damage=$2 WHERE player_id=$1", [p, v]);
+    const total = async (p: number) => Number((await db.query<{ total_damage: number }>("SELECT total_damage FROM player_stats WHERE player_id=$1", [p]))[0].total_damage);
+    // 40 damage: the 1st talent (30) and 10 toward the 2nd
+    const a = await newPlayer(db);
+    await act(db, a, "fight_start", { boss: "datsik" }, T0);
+    await setTd(a, 40);
+    await act(db, a, "fight_flee", {}, T0 + 1000);
+    expect(await td(a)).toBe(talentThreshold(1));
+    expect(await total(a)).toBe(40);
+    const b = await newPlayer(db);
+    await setMoney(db, b, "GOLD", 100);
+    await act(db, b, "obshak_buy", { level: "pacan" }, T0);
+    await act(db, b, "fight_start", { boss: "datsik" }, T0);
+    await setTd(b, 40);
+    await act(db, b, "fight_flee", {}, T0 + 1000);
+    expect(await td(b)).toBe(40);
   });
 });

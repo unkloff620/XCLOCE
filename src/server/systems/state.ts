@@ -1,3 +1,4 @@
+import { talentDamageOf } from "./talent-progress.ts";
 import { fightSlots } from "../../content/fight-slots.ts";
 import { myBoost } from "./shodnyak.ts";
 import { newbieView } from "./newbie.ts";
@@ -78,7 +79,7 @@ export async function gameState(ctx: Ctx) {
       fightSlots: fightSlots((p as PlayerRow & { fight_slots?: unknown }).fight_slots ?? null),
       boost: await myBoost(ctx.q, ctx.pid, ctx.now),
       // the talent counter: boss damage of all time
-      talentDamage: Number((await ctx.q.query<{ total_damage: number }>("SELECT total_damage FROM player_stats WHERE player_id=$1", [ctx.pid]))[0]?.total_damage ?? 0),
+      talentDamage: await talentDamageOf(ctx.q, ctx.pid),
     },
     /** weapon talents: weapon → branch → level */
     weaponTalents: await weaponTalents(ctx.q, ctx.pid),

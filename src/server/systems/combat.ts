@@ -1,4 +1,4 @@
-import { autoSpendTalents } from "./home.ts";
+import { addTalentDamage, fightOverTalents, talentDamageOf } from "./talent-progress.ts";
 import { monthTick } from "./monthly.ts";
 import { zarubTick } from "./zarub.ts";
 import { shodBoostMult, shodTick } from "./shodnyak.ts";
@@ -15,7 +15,7 @@ import { BASE_CRIT_MULT, EQUIPMENT, PIECE_DROP_CHANCE, PIECE_PITY, ROOM_DEFS, RO
 import { bonusReached } from "../../content/boss-bonus.ts";
 import { comboHit, comboRestart, comboView, type ComboView } from "./combo.ts";
 import { hasCombo, type ComboMode } from "../../content/combo.ts";
-import { CRIT_MULT_MAX, critChanceOf, reloadMin, talentExtras, talentsForDamage, weaponTalentBonus } from "../../content/talents.ts";
+import { CRIT_MULT_MAX, critChanceOf, reloadMin, talentExtras, weaponTalentBonus } from "../../content/talents.ts";
 import { playerBonus, weaponTalents } from "./home.ts";
 import { setBonuses } from "./collection.ts";
 import { heistDrop } from "./heist.ts";
@@ -93,7 +93,10 @@ async function expireFights(ctx: Ctx, g: BossRow) {
   );
   await refundKeys(ctx, lost);
   // the boss left: the free weapons of those players are rested again
-  for (const f of lost) await resetFreeWeapons(ctx.q, f.player_id);
+  for (const f of lost) {
+    await resetFreeWeapons(ctx.q, f.player_id);
+    await fightOverTalents(ctx.q, f.player_id, ctx.now);
+  }
 }
 
 /** the free weapons (fist, mouse, candle) and the craft weapons (вещи 3 ур.): permanent, with a rest after each hit —
@@ -365,15 +368,9 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1
     await ctx.q.query("UPDATE fights SET my_damage = my_damage + $2, my_hits = my_hits + $3 WHERE id=$1", [mine.id, damage, count]);
     const fightDamage = mine.my_damage + damage;
     // the needle's damage is the fund's, not the player's: no talents, no stats, no tops, no tasks
-    const [st] = await ctx.q.query<{ total_damage: number }>("SELECT total_damage FROM player_stats WHERE player_id=$1", [ctx.pid]);
-    const before = Number(st?.total_damage ?? 0);
-    const talentDamage = needle ? before : before + damage;
-    const talentsGained = needle ? 0 : talentsForDamage(talentDamage) - talentsForDamage(before);
-    if (talentsGained > 0) {
-      await ctx.q.query("UPDATE players SET talents = talents + $2 WHERE id=$1", [ctx.pid, talentsGained]);
-      await ledger(ctx, "talent", "talent", talentsGained, `fight:${mine.id}`);
-      await autoSpendTalents(ctx);
-    }
+    const { talentDamage, talentsGained } = needle
+      ? { talentDamage: await talentDamageOf(ctx.q, ctx.pid), talentsGained: 0 }
+      : await addTalentDamage(ctx, damage, `fight:${mine.id}`);
     if (!needle) {
       await ctx.q.query(
         "INSERT INTO boss_damage (boss_id, player_id, damage, hits) VALUES ($1,$2,$3,$4) ON CONFLICT (boss_id, player_id) DO UPDATE SET damage = boss_damage.damage + EXCLUDED.damage, hits = boss_damage.hits + EXCLUDED.hits",
@@ -397,7 +394,10 @@ export async function attack(ctx: Ctx, weaponId: string, idem?: string, want = 1
       won.push({ id: mine.id, player_id: ctx.pid, boss_id: bossId });
     }
     // the boss is gone: everyone whose fight ended rests the free weapons no more
-    for (const f of won) await resetFreeWeapons(ctx.q, f.player_id);
+    for (const f of won) {
+      await resetFreeWeapons(ctx.q, f.player_id);
+      await fightOverTalents(ctx.q, f.player_id, ctx.now);
+    }
     const winsBy = new Map<string, number>();
     for (const f of won) winsBy.set(f.boss_id, (winsBy.get(f.boss_id) ?? 0) + 1);
     for (const [id, n] of winsBy) await ctx.q.query("INSERT INTO bosses (id, wins) VALUES ($1,$2) ON CONFLICT (id) DO UPDATE SET wins = bosses.wins + EXCLUDED.wins", [id, n]);
@@ -616,6 +616,7 @@ export async function fleeFight(ctx: Ctx) {
     [f.id, new Date(ctx.now), g.damage_total, g.last_seq],
   );
   await refundKeys(ctx, lost);
+  await fightOverTalents(ctx.q, ctx.pid, ctx.now);
   return { fightId: f.id, keysBack: Number(lost[0]?.keys_spent ?? 0) };
 }
 

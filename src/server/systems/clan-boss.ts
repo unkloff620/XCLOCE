@@ -1,9 +1,8 @@
-import { autoSpendTalents } from "./home.ts";
+import { addTalentDamage } from "./talent-progress.ts";
 import { GameError, type Queryable } from "../db.ts";
-import { gain, ledger, nextWeekAt, weekKey, weekStart, type Ctx } from "../core.ts";
+import { gain, nextWeekAt, weekKey, weekStart, type Ctx } from "../core.ts";
 import { weaponById } from "../../content/items.ts";
 import { bossById } from "../../content/bosses.ts";
-import { talentsForDamage } from "../../content/talents.ts";
 import {
   CLAN_BOSS_FLOOR, CLAN_BOSS_HP_PER_MEMBER, CLAN_BOSS_MIN_MEMBERS, CLAN_BOSS_POOL_PER_MEMBER, CLAN_BOSS_ROTATION,
 } from "../../content/clans.ts";
@@ -89,16 +88,9 @@ export async function hitClanBoss(ctx: Ctx, weaponId: string, want = 1) {
      ON CONFLICT (clan_id, week, player_id) DO UPDATE SET damage = clan_boss_hits.damage + EXCLUDED.damage, hits = clan_boss_hits.hits + EXCLUDED.hits`,
     [clanId, week, ctx.pid, hit.damage, hit.count]);
   // the damage counts for the talents like any boss damage
-  const [st] = await ctx.q.query<{ total_damage: number }>("SELECT total_damage FROM player_stats WHERE player_id=$1", [ctx.pid]);
-  const before = Number(st?.total_damage ?? 0);
-  const gained = talentsForDamage(before + hit.damage) - talentsForDamage(before);
   await ctx.q.query("UPDATE player_stats SET total_damage = total_damage + $2 WHERE player_id=$1", [ctx.pid, hit.damage]);
+  const { talentsGained: gained } = await addTalentDamage(ctx, hit.damage, `clan-boss:${week}`);
   await gain(ctx, "damage", hit.damage);
-  if (gained > 0) {
-    await ctx.q.query("UPDATE players SET talents = talents + $2 WHERE id=$1", [ctx.pid, gained]);
-    await ledger(ctx, "talent", "talent", gained, `clan-boss:${week}`);
-    await autoSpendTalents(ctx);
-  }
   if (killed) {
     // everyone who hit it: a prize by the share of the damage (collected from the prize window, like the weekly ones)
     const hitters = await ctx.q.query<{ player_id: number; damage: number }>("SELECT player_id, damage FROM clan_boss_hits WHERE clan_id=$1 AND week=$2", [clanId, week]);

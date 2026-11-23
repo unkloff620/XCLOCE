@@ -1,3 +1,4 @@
+import { addTalentDamage, fightOverTalents } from "./talent-progress.ts";
 /*
  * «Ходки» (content/raids.ts): each player fights a building on his own (weapons, like a boss; the building's HP), every
  * win counts for his clan; the clan takes a building with enough wins, then the next one; with all of a yard's
@@ -6,11 +7,9 @@
  * No raid while a boss fight runs (and no boss fight while a raid fight runs).
  */
 import { GameError, type Queryable } from "../db.ts";
-import { gain, grantReward, itemQty, ledger, moscowDay, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
+import { gain, grantReward, itemQty, moscowDay, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { clanLevelInfo } from "../../content/clans.ts";
 import { TATTOO_SETS } from "../../content/tattoos.ts";
-import { autoSpendTalents } from "./home.ts";
-import { talentsForDamage } from "../../content/talents.ts";
 import type { Config } from "../config.ts";
 import { strike } from "./combat.ts";
 import { isAdminPlayer } from "./fortune.ts";
@@ -56,7 +55,8 @@ const campDone = (y: RaidYard, h: Holds, clanId: number | null) => !!clanId && y
 
 /** a raid fight whose time is over is lost (like a boss fight: the damage done is gone) */
 async function expireRaid(q: Queryable, pid: number, now: number) {
-  await q.query("UPDATE raid_fights SET status='lost', ended_at=ends_at WHERE player_id=$1 AND status='active' AND ends_at <= $2", [pid, new Date(now)]);
+  const ended = await q.query("UPDATE raid_fights SET status='lost', ended_at=ends_at WHERE player_id=$1 AND status='active' AND ends_at <= $2 RETURNING id", [pid, new Date(now)]);
+  if (ended.length) await fightOverTalents(q, pid, now);
 }
 
 export async function raidsView(q: Queryable, pid: number, now = Date.now()) {
@@ -200,17 +200,9 @@ export async function raidAttack(ctx: Ctx, weaponId: string, want = 1, rush = fa
   const hit = await strike(ctx, w, w.weapon.kind === "consumable" ? want : 1, `raid:${f.building_id}`, rush);
   const damage = Number(f.damage) + hit.damage;
   await ctx.q.query("UPDATE raid_fights SET damage=$2, hits = hits + $3 WHERE id=$1", [f.id, damage, hit.count]);
-  const [st] = await ctx.q.query<{ total_damage: number }>("SELECT total_damage FROM player_stats WHERE player_id=$1", [ctx.pid]);
-  const before = Number(st?.total_damage ?? 0);
-  const talentDamage = before + hit.damage;
-  const talentsGained = talentsForDamage(talentDamage) - talentsForDamage(before);
   await ctx.q.query("UPDATE player_stats SET total_damage = total_damage + $2 WHERE player_id=$1", [ctx.pid, hit.damage]);
+  const { talentDamage, talentsGained } = await addTalentDamage(ctx, hit.damage, `raid:${f.building_id}`);
   await gain(ctx, "damage", hit.damage);
-  if (talentsGained > 0) {
-    await ctx.q.query("UPDATE players SET talents = talents + $2 WHERE id=$1", [ctx.pid, talentsGained]);
-    await ledger(ctx, "talent", "talent", talentsGained, `raid:${f.building_id}`);
-    await autoSpendTalents(ctx);
-  }
   const base = { weapon: w.id, damage: hit.damage, crit: hit.crit, crits: hit.crits, count: hit.count, left: hit.left, readyAt: hit.readyAt, phrase: hit.phrases[hit.phraseIdx] ?? "", talentDamage, talentsGained, fightDamage: damage };
   if (damage < Number(f.hp_max)) return { ...base, status: "active" as const, hp: Number(f.hp_max) - damage, hpMax: Number(f.hp_max) };
 
@@ -218,6 +210,7 @@ export async function raidAttack(ctx: Ctx, weaponId: string, want = 1, rush = fa
   const { yard: y, b } = buildingById(f.building_id)!;
   const cut = f.mode === "cut";
   await ctx.q.query("UPDATE raid_fights SET status='won', ended_at=$2 WHERE id=$1", [f.id, new Date(ctx.now)]);
+  await fightOverTalents(ctx.q, ctx.pid, ctx.now);
   const per = buildingReward(y.n, b);
   const k = cut ? CUT_REWARD_K : 1;
   const reward = await grantReward(ctx, { xp: Math.round(per.xp * k), currencies: { PAP: Math.round(per.pap * k) } }, `raid_win:${b.id}`);
@@ -379,7 +372,8 @@ export async function raidBagOpen(ctx: Ctx, n: number) {
 
 /** leave the raid fight (the damage done is lost) */
 export async function raidFlee(ctx: Ctx) {
-  await ctx.q.query("UPDATE raid_fights SET status='fled', ended_at=$2 WHERE player_id=$1 AND status='active'", [ctx.pid, new Date(ctx.now)]);
+  const ended = await ctx.q.query("UPDATE raid_fights SET status='fled', ended_at=$2 WHERE player_id=$1 AND status='active' RETURNING id", [ctx.pid, new Date(ctx.now)]);
+  if (ended.length) await fightOverTalents(ctx.q, ctx.pid, ctx.now);
   return raidsView(ctx.q, ctx.pid, ctx.now);
 }
 
