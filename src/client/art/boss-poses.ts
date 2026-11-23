@@ -591,7 +591,90 @@ const fkShift = (rate: number, a: number) => (t: number): Pose => {
   return { x: 10 * a * s, up: 1.6 * a * s, head: -1.2 * a * s, y: -2.2 * a * Math.abs(s) };
 };
 
+
+/* Солнце (boss-sun.tsx): huge and slow, every move heavy. He breathes hard — in: the pecs, the arms and the trunk swell
+   (sw → screens.css --sw, swa: the arms grow from the shoulders, %), the arms rise, the chin goes up and the jaw drops
+   open; out: all of it sinks back, the jaw half closes and the spit flies (the class sn-spit). The order (the user's):
+   in, out, in — the blows (the jaw shut: his rest face) — out, in, out, in — the blows — and so on. The blows: R — the
+   poker in his right (lava) fist, raised high behind and slammed down at the screen; L — the left (yellow) fist, pulled
+   back and driven at the screen. Slow wind-ups, a short heavy blow, a long settle. */
+const SN_IN = 2.5, SN_OUT = 2.3;
+const SN_FULL = { sw: 1, swa: 16, jaw: 1, armR: 10, lowR: 6, armL: -9, lowL: -5, head: -2.5, y: -7, up: -0.8 };
+const SN_EMPTY = { sw: 0, swa: 0, jaw: 0.35, armR: -3, lowR: -2, armL: 3, lowL: 2, head: 1.5, y: 2, up: 0.5 };
+/** one breath from t: in (or out) — eased by the springs (slow ones: the swell takes the whole breath) */
+const snBreath = (t: number, inhale: boolean, keys: Key[], face: Face[]) => {
+  keys.push({ at: t, pose: inhale ? SN_FULL : SN_EMPTY, stiff: inhale ? 0.55 : 0.6 });
+  if (!inhale) face.push({ cls: "sn-spit", at: t + 0.12, dur: 0.2 });
+  return t + (inhale ? SN_IN : SN_OUT);
+};
+/** the blows, full of air (the chest stays swollen) with the jaw shut: the poker, then the fist */
+const snBlows = (t: number, keys: Key[], face: Face[], amp = 1, slow = 1) => {
+  const held = { sw: 0.85, swa: 13, jaw: 0, y: -4 };
+  const a = (p: Pose): Pose => Object.fromEntries(Object.entries(p).map(([k, v]) => [k, (v ?? 0) * (k === "sw" || k === "jaw" || k === "swa" || k === "y" ? 1 : amp)]));
+  // the poker: up behind the shoulder (slow), down at the screen (a short heavy blow), a long settle
+  keys.push({ at: t, pose: a({ ...held, armR: 58, lowR: 42, up: 3.5, x: 8, head: 2, armL: -6 }), stiff: 0.9 });
+  keys.push({ at: t + 0.85 * slow, pose: a({ ...held, armR: -24, lowR: -78, zR: 16, up: -6, x: -16, head: -3.5, armL: 4 }), stiff: 5 });
+  face.push({ cls: "sn-slam", at: t + 0.95 * slow, dur: 0.16 });
+  keys.push({ at: t + 1.15 * slow, pose: a({ ...held, armR: -14, lowR: -55, zR: 6, up: -3, x: -8 }), stiff: 1.1 });
+  t += 1.85 * slow;
+  // the fist: pulled back, then driven at the screen
+  keys.push({ at: t, pose: a({ ...held, armL: 22, lowL: 30, up: -3, x: -7, head: -1.5, armR: 4, lowR: -10 }), stiff: 0.9 });
+  keys.push({ at: t + 0.75 * slow, pose: a({ ...held, armL: -34, lowL: -46, zL: 24, up: 5, x: 15, head: 3 }), stiff: 5 });
+  face.push({ cls: "sn-slam", at: t + 0.85 * slow, dur: 0.16 });
+  keys.push({ at: t + 1.05 * slow, pose: a({ ...held, armL: -18, lowL: -26, zL: 8, up: 2, x: 6 }), stiff: 1.1 });
+  t += 1.7 * slow;
+  keys.push({ at: t, pose: { ...held, armR: 0, lowR: 0, armL: 0, lowL: 0, zR: 0, zL: 0, up: 0, x: 0, head: 0 }, stiff: 0.8 });
+  return t + 0.5 * slow;
+};
+/** the whole loop: in, out, in, the blows, out — played again and again (so: … the blows, out, in, out, in, the blows …) */
+const snCycle = (amp = 1, slow = 1): Action => {
+  const keys: Key[] = [], face: Face[] = [];
+  let t = 0;
+  t = snBreath(t, true, keys, face);
+  t = snBreath(t, false, keys, face);
+  t = snBreath(t, true, keys, face);
+  t = snBlows(t, keys, face, amp, slow);
+  t = snBreath(t, false, keys, face);
+  return { keys, dur: t, face };
+};
+/** he strikes the player: the two blows at once */
+const snStrike = (): Action => { const keys: Key[] = [], face: Face[] = []; const t = snBlows(0, keys, face); return { keys, dur: t, face }; };
+
 const POSES: Record<string, Spec> = {
+  solntse: {
+    // heavy: slow, overdamped springs; the fists a little quicker on the blow
+    springs: {
+      up: { k: 45, c: 12 }, x: { k: 40, c: 11 }, y: { k: 30, c: 10 }, head: { k: 60, c: 13 },
+      armR: { k: 70, c: 15 }, lowR: { k: 110, c: 17 }, armL: { k: 70, c: 15 }, lowL: { k: 110, c: 17 },
+      zR: { k: 120, c: 18 }, zL: { k: 120, c: 18 },
+      sw: { k: 9, c: 5.5 }, swa: { k: 9, c: 5.5 }, jaw: { k: 30, c: 10 }, px: { k: 80, c: 15 }, py: { k: 80, c: 15 },
+    },
+    drag: { lowL: ["armL", -0.05], lowR: ["armR", -0.05], head: ["up", -0.06] },
+    // never still: a slow heavy sway; the eyes look about now and then
+    idle: (t) => {
+      const g = Math.floor(t / 2.2);
+      const r = (n: number) => { const v = Math.sin(n * 12.9898 + g * 78.233) * 43758.5453; return v - Math.floor(v); };
+      return {
+        up: 0.6 * Math.sin(t * 0.55), x: 2 * Math.sin(t * 0.4),
+        head: 0.8 * Math.sin(t * 0.7 + 1),
+        lowR: 1.2 * Math.sin(t * 0.9 + 2), lowL: 1.2 * Math.sin(t * 0.8),
+        px: (r(1) - 0.5) * 1.4, py: (r(2) - 0.5) * 0.7,
+      };
+    },
+    actions: [{ a: snCycle(), w: 1 }],
+    rest: [0, 0],
+    hit: { head: -120, up: -40, x: -40, armL: 60, lowL: -70, armR: -60, lowR: 70, jaw: 2 },
+    strike: snStrike(),
+    // beaten: the same, slower and smaller
+    dazed: { pose: { head: 3, armR: -4, armL: 4 }, act: true, actions: [{ a: snCycle(0.75, 1.3), w: 1 }], rest: [0, 0.3], speed: 0.85 },
+    shapes: { sw: {}, swa: {}, px: {}, py: {} },
+    scale: { armR: "swa", armL: "swa", lowR: "zR", lowL: "zL" },
+    vars: (a) => ({
+      "--sw": Math.max(0, Math.min(1.2, a.sw)).toFixed(3), "--jaw": Math.max(0, Math.min(1.2, a.jaw)).toFixed(3),
+      "--px": a.px.toFixed(3), "--py": a.py.toFixed(3),
+    }),
+    stiffOwn: true,
+  },
   fokus: {
     springs: {
       up: { k: 120, c: 13 }, x: { k: 110, c: 13 }, head: { k: 150, c: 12 },

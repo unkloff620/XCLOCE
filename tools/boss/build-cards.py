@@ -18,6 +18,7 @@ CARDS = {
     "botsman": ("public/bosses/botsman/full.webp", (110, -30, 790, 810)),
     "utilizator": ("public/bosses/utilizator/full.webp", (20, -30, 820, 950)),
     "fokus": ("public/bosses/fokus/full.webp", (110, -25, 640, 630)),
+    "solntse": ("public/bosses/solntse/full.webp", (90, -25, 930, 1012)),
 }
 W = 640
 # `build-cards.py vodovoz` builds only the named cards

@@ -194,7 +194,7 @@ export const BOSSES: BossDef[] = [
     id: "solntse", order: 13, name: "Солнце", title: "Главный начальник всего Close",
     story: "Светит всем, всегда и без выходных. Чтобы дойти сюда, нужно пройти весь Close.",
     hp: hp(12), reward: { xp: xp(12), currencies: { TOOTH: 2_500, PAP: 1_000 } },
-    theme: { a: "#4a2a06", b: "#1a0c02", accent: "#ffd23f" }, photo: photo("solntse"),
+    theme: { a: "#4a2a06", b: "#1a0c02", accent: "#ffd23f" }, photo: photo("solntse", true),
     phases: [{ from: 100, name: "Рассвет" }, { from: 66, name: "Зенит" }, { from: 33, name: "Солнечная буря" }],
     final: true,
     // no things yet: the set waits for them (the user's table 2026-11-23)

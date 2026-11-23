@@ -7866,3 +7866,18 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 /* the needle in a fight: today's stock of «Общак» in one blow */
 .fbtn-needle.btn { gap: 3px; padding: 0 8px; }
 .fbtn-needle .num { font-size: 12px; }
+/* Солнце (boss-sun.tsx, boss-poses.ts POSES.solntse): the breath swells the pecs a lot and the trunk a little (--sw),
+   the jaw drops (--jaw), the pupils look about; drool hangs off the mouth's corners; each heavy blow shakes him */
+.rig-solntse { --sw: 0; --jaw: 0; --px: 0; --py: 0; }
+.rig-solntse .sn-pec { transform: scale(calc(1 + var(--sw) * 0.36)); }
+.rig-solntse .sn-trunk { transform: scale(calc(1 + var(--sw) * 0.08), calc(1 + var(--sw) * 0.05)); }
+.rig-solntse .sn-jaw { transform: translateY(calc(var(--jaw) * 15px)) rotate(calc(var(--jaw) * -2.5deg)); }
+.rig-solntse .sn-pupils { transform: translate(calc(var(--px) * 2.6px), calc(var(--py) * 1.6px)); }
+.rig-solntse .sn-drool-str { transform-box: fill-box; transform-origin: 50% 0%; animation: sn-drool 3.4s ease-in-out infinite; }
+.rig-solntse .sn-drool-drop { transform-box: fill-box; transform-origin: 50% 50%; animation: sn-drool-drop 3.4s ease-in infinite; }
+.rig-solntse .sn-drool-1 :is(.sn-drool-str, .sn-drool-drop) { animation-duration: 4.1s; animation-delay: -1.7s; }
+@keyframes sn-drool { 0%, 100% { transform: scaleY(0.55); } 55% { transform: scaleY(1.35); } 70% { transform: scaleY(0.7); } }
+@keyframes sn-drool-drop { 0%, 54% { transform: translateY(26px) scale(0); opacity: 0; } 56% { transform: translateY(34px) scale(1); opacity: 1; } 80% { transform: translateY(120px) scale(1); opacity: 0.9; } 100% { transform: translateY(150px) scale(0.6); opacity: 0; } }
+.rig-solntse.sn-slam .sn-root { animation: sn-slam 0.16s ease-out; }
+@keyframes sn-slam { 0% { transform: translateY(0); } 35% { transform: translateY(5px); } 100% { transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .rig-solntse :is(.sn-drool-str, .sn-drool-drop) { animation: none; } }
