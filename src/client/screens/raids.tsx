@@ -9,6 +9,7 @@
  * The progress is the clan's (GET /api/raids); the fights are each player's own.
  */
 import { hitGapOk } from "../hit-gap.ts";
+import { weaponStats } from "../weapon-stats.ts";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, type Tray } from "../api.ts";
@@ -664,14 +665,26 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
     if (!hitGapOk()) return;
     if (!v || !fight) return;
     const w = itemById(weapon);
-    // the sound and the flying weapon on the tap, like in a boss fight: heavier weapons sound heavier (10 dmg → 0, 500+ → 1)
-    if (w?.weapon) {
-      haptic.hit();
-      weaponSfx(w.id, Math.min(1, Math.log10(Math.max(10, w.weapon.damage) / 10) / Math.log10(50)));
-      play(weapon, w.weapon.damage, w.weapon.action, true);
+    if (!w?.weapon) return;
+    // like a boss fight: the pack is cut to what I have, the flying weapon shows the damage with my talents, the tray
+    // counts down at once, and the taps are not held up by the server (no busy lock)
+    const have = v.weapons.find((x) => x.id === weapon)?.qty ?? 0;
+    const n = w.weapon.kind === "consumable" ? Math.max(1, Math.min(pack, have)) : 1;
+    const est = weaponStats(state, w.id).damage * n;
+    haptic.hit();
+    weaponSfx(w.id, Math.min(1, Math.log10(Math.max(10, w.weapon.damage) / 10) / Math.log10(50)));
+    play(weapon, est, w.weapon.action, true);
+    if (w.weapon.kind === "consumable") setV((cur) => (cur ? { ...cur, weapons: cur.weapons.map((x) => (x.id === weapon ? { ...x, qty: Math.max(0, x.qty - n) } : x)) } : cur));
+    let r2: RaidHit;
+    try {
+      r2 = (await api.action<RaidHit>("raid_attack", { weapon, count: n, idem: crypto.randomUUID(), ...(rush ? { rush: true } : {}) })).result;
+    } catch (e) {
+      if ((e as { code?: string }).code === "too_fast") return;
+      haptic.err();
+      toast(e instanceof Error ? e.message : "Не получилось", "err");
+      void load();
+      return;
     }
-    const r2 = await act<RaidHit>("raid_attack", { weapon, count: w?.weapon?.kind === "consumable" ? pack : 1, ...(rush ? { rush: true } : {}) });
-    if (!r2) return; // act() already told about a real error; a too-quick tap stays quiet
     // «Инфо»: my hits in this fight, the newest on top
     setLog((l) => [{ seq: Date.now() + Math.random(), playerId: state?.player.id ?? 0, name: state?.player.name ?? "", weapon, damage: r2.damage, phrase: 0, at: Date.now(), crit: r2.crit, count: r2.count }, ...l].slice(0, 150));
     if (r2.crit) { setCritPop(Date.now()); haptic.heavy(); /* no crit sound: only the weapon's own */ }
@@ -693,11 +706,11 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
       haptic.big();
       sfx("victory");
       // the fight stays on the screen under the win window; the yard is loaded when the window is closed
-      setV({ ...v, fight: { ...fight, hp: 0 }, weapons: v.weapons.map((x) => (x.id === weapon ? { ...x, qty: r2.left ?? x.qty, readyAt: r2.readyAt ?? x.readyAt } : x)) });
+      setV((cur) => (cur ? { ...cur, fight: cur.fight ? { ...cur.fight, hp: 0 } : cur.fight, weapons: cur.weapons.map((x) => (x.id === weapon ? { ...x, qty: r2.left ?? x.qty, readyAt: r2.readyAt ?? x.readyAt } : x)) } : cur));
       setWon(r2);
       return;
     }
-    setV({ ...v, fight: { ...fight, hp: r2.hp }, weapons: v.weapons.map((x) => (x.id === weapon ? { ...x, qty: r2.left ?? x.qty, readyAt: r2.readyAt ?? x.readyAt } : x)) });
+    setV((cur) => (cur ? { ...cur, fight: cur.fight ? { ...cur.fight, hp: Math.min(cur.fight.hp, r2.hp) } : cur.fight, weapons: cur.weapons.map((x) => (x.id === weapon ? { ...x, qty: r2.left ?? x.qty, readyAt: r2.readyAt ?? x.readyAt } : x)) } : cur));
   };
   const flee = async () => {
     if (!fleeAsk) {
@@ -731,7 +744,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
           <div className="grow" style={{ minWidth: 0 }}>
             <b className="display boss-name ellipsis">{BUILDING_NAMES[b.kind]}</b>
           </div>
-          <span className="chip red">побед клана: {prog?.wins ?? 0}/{prog?.need ?? "?"}</span>
+          <span className="chip red">побед бригады: {prog?.wins ?? 0}/{prog?.need ?? "?"}</span>
         </div>
         <div className="arena full">
           <div className="arena-top">
@@ -753,13 +766,12 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
             <button type="button" className="btn sm gold fbtn-arms" onClick={() => { haptic.tap(); setPanel(true); }} aria-label="Оружие" title="Оружие в бою">
               <ItemArt id="rug-pull-gun" size={22} />
             </button>
-            <span className="small rd-fight-r"><Icon name="xp" size={16} />+{r.xp.toLocaleString("ru-RU")} <Icon name="PAP" size={16} />+{r.pap.toLocaleString("ru-RU")}</span>
             <span className="grow" />
             <button type="button" className={`btn sm red fbtn-flee ${fleeAsk ? "ask" : ""}`} onClick={flee} disabled={busy === "raid_flee" || !!won} aria-label={fleeAsk ? "Точно уйти?" : "Уйти"} title="Уйти">
               {fleeAsk ? <b>?</b> : <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h13" /><path d="M13 6l6 6-6 6" /></svg>}
             </button>
           </div>
-          <FightTray slots={slotsOf(state)} tray={v.weapons} disabled={busy === "raid_attack" || !!won} onHit={(id, n) => void hit(id, false, n)}
+          <FightTray slots={slotsOf(state)} tray={v.weapons} disabled={!!won} onHit={(id, n) => void hit(id, false, n)}
             onCooldown={(name, left, id) => { haptic.tap(); setRushAsk({ id, name, left }); }}
             onBuy={() => setShopOpen(true)} />
         </div>
