@@ -7655,6 +7655,9 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 @media (prefers-reduced-motion: reduce) { .rig-fokus :is(.fk-blood-run, .fk-blood-drop, .fk-snot) { animation: none; } }
 /* the pose engine sways him from foot to foot below half HP: not the whole picture (the feet stay) */
 .rig-fokus.boss-rig.dazed { animation: none; }
+/* Солнце below half HP: his own rock from foot to foot (boss-poses.ts dazed), not the shared sway of the whole picture
+   (it moved his feet) and none of the shared limp of the arms and the head (they fought the pose engine) */
+.rig-solntse.boss-rig.dazed, .rig-solntse.boss-rig.dazed :is(.br-arm-l, .br-arm-r, .br-low-l, .br-low-r, .br-head) { animation: none; }
 /* the fist or the hand with the pointing finger on the same wrist */
 .rig-fokus .fk-fist { opacity: calc(1 - var(--fing)); }
 .rig-fokus .fk-finger { opacity: var(--fing); }

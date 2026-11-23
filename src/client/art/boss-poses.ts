@@ -77,6 +77,8 @@ interface Phase {
   sway?: (t: number) => Pose;
   /** its own actions, rest, strike and the actions' speed (default: the spec's, the rest twice as long, ×0.75) */
   actions?: { a: Action; w: number }[]; rest?: [number, number]; strike?: Action; speed?: number;
+  /** no blow at the player in this phase: he only keeps rocking */
+  noStrike?: boolean;
 }
 const SPRING0 = { k: 160, c: 16 };
 
@@ -640,6 +642,25 @@ const snCycle = (amp = 1, slow = 1): Action => {
   t = snBreath(t, false, keys, face);
   return { keys, dur: t, face };
 };
+/** below half HP: no blows — only the heavy breath, on and on without a stop (slower below a quarter), the arms
+ *  hanging lower; the sway (snSway) rocks him from foot to foot over it */
+const snBreathing = (slow = 1, droop = 0): Action => {
+  const keys: Key[] = [], face: Face[] = [];
+  const hang = (p: Pose): Pose => ({ ...p, armR: (p.armR ?? 0) - 6 * droop, armL: (p.armL ?? 0) + 6 * droop, head: (p.head ?? 0) + 3 * droop });
+  let t = 0;
+  for (let i = 0; i < 4; i++) {
+    const inhale = i % 2 === 0;
+    keys.push({ at: t, pose: hang(inhale ? { ...SN_FULL, swa: SN_FULL.swa * 0.8 } : SN_EMPTY), stiff: 0.4 });
+    if (!inhale) face.push({ cls: "sn-spit", at: t + 0.12, dur: 0.2 });
+    t += (inhale ? SN_IN : SN_OUT) * slow;
+  }
+  return { keys, dur: t, face };
+};
+/** the heavy rock from foot to foot (the feet stay put: only the upper body goes over them) */
+const snSway = (rate: number, a: number) => (t: number): Pose => {
+  const s = Math.sin(t * rate);
+  return { x: 9 * a * s, up: 1.8 * a * s, head: -1.4 * a * s, y: 2 * a * Math.abs(s) };
+};
 /** he strikes the player: the two blows at once */
 const snStrike = (): Action => { const keys: Key[] = [], face: Face[] = []; const t = snBlows(0, keys, face); return { keys, dur: t, face }; };
 
@@ -669,7 +690,9 @@ const POSES: Record<string, Spec> = {
     hit: { head: -120, up: -40, x: -40, armL: 60, lowL: -70, armR: -60, lowR: 70, jaw: 2 },
     strike: snStrike(),
     // beaten: the same, slower and smaller
-    dazed: { pose: { head: 3, armR: -4, armL: 4 }, act: true, actions: [{ a: snCycle(0.75, 1.3), w: 1 }], rest: [0, 0.3], speed: 0.85 },
+    // below half: no blows — he only breathes heavily and rocks from foot to foot; below a quarter slower, heavier, lower
+    dazed: { pose: { head: 3, armR: -4, armL: 4 }, act: true, sway: snSway(1.1, 1), actions: [{ a: snBreathing(1.1, 0.5), w: 1 }], rest: [0, 0], noStrike: true, speed: 1 },
+    dying: { pose: { head: 5, armR: -8, armL: 8, up: -1 }, act: true, sway: snSway(0.8, 1.3), actions: [{ a: snBreathing(1.35, 1), w: 1 }], rest: [0, 0], noStrike: true, speed: 1 },
     shapes: { sw: {}, swa: {}, px: {}, py: {} },
     scale: { armR: "swa", armL: "swa", lowR: "zR", lowL: "zL" },
     vars: (a) => ({
@@ -1166,7 +1189,7 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
       const strike = !!arena?.classList.contains("strike");
       const dazed = svg.classList.contains("dazed");
       const ph = svg.classList.contains("dying") && spec.dying ? spec.dying : dazed ? spec.dazed : undefined;
-      const strikeA = ph?.strike ?? spec.strike;
+      const strikeA = ph?.noStrike ? undefined : ph?.strike ?? spec.strike;
       if (strike && !wasStrike && strikeA) { act = strikeA; actT = 0; }
       if (spec.cssStrike && strike !== wasStrike) svg.classList.toggle("posed", !strike);
       wasStrike = strike;
