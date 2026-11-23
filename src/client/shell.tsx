@@ -39,7 +39,7 @@ import { mskDay } from "../content/updates.ts";
 const TABS = NAV_TABS;
 
 function activeTab(path: string): string {
-  if (path.startsWith("/bosses")) return "bosses";
+  if (path.startsWith("/bosses") || path.startsWith("/event")) return "bosses"; // an event fight (Пепе…) is a boss fight
   if (path.startsWith("/shop")) return "shop";
   if (["/yard", "/exchange", "/locations", "/masters"].some((p) => path.startsWith(p))) return "yard"; // places opened from the yard
   if (path.startsWith("/craft") || path.startsWith("/inventory")) return "craft";
@@ -227,7 +227,8 @@ export function parentOf(path: string, search: string, myClan: number | null): s
   if (parts[0] === "shop") return search.includes("tab=") ? "/shop" : null; // an open shop window → the shop
   if (parts[0] === "exchange") return "/yard";
   if (parts[0] === "bosses" && parts.length > 1) return "/bosses";
-  if (parts[0] === "profile" || parts[0] === "rating" || parts[0] === "event" || parts[0] === "zarub") return "/"; // an event (Пепе), «Зарубы» — opened from the room
+  if (parts[0] === "event") return "/bosses"; // an event fight (Пепе) sits under the bosses tab
+  if (parts[0] === "profile" || parts[0] === "rating" || parts[0] === "zarub") return "/"; // «Зарубы» — opened from the room
   if (parts[0] === "clans") {
     // «Захват»: building → yard → yards → the own clan
     if (parts[1] === "raids") return parts.length > 2 ? `/${parts.slice(0, -1).join("/")}` : myClan ? `/clans/${myClan}` : "/clans";
