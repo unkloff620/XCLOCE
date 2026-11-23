@@ -547,7 +547,7 @@ export function RaidYardScreen({ id }: { id: string }) {
           {!y.art && <YardLife n={y.n} />}
           {y.art && <YardLights art={y.art} />}
           {[...y.buildings].reverse().map((b) => <Building key={b.id} b={b} art={y.art} yard={y.id} clan={v?.clan ?? null} target={!!yv?.open && yv.target === b.id} taken={!!yv?.buildings.find((x) => x.id === b.id)?.taken} prog={yv?.buildings.find((x) => x.id === b.id)}
-            onMedal={() => void claimOf(yv?.buildings.find((x) => x.id === b.id)?.claim ?? null)} onFort={b.id === y.buildings[0].id ? undefined : () => setFortB(b.id)} />)}
+            onMedal={() => void claimOf(yv?.buildings.find((x) => x.id === b.id)?.claim ?? null)} onFort={b.id === y.buildings[0].id ? () => toast("КПП — ваша первая точка, его не отбить. Баррикады ставят на здания, взятые дальше по маршруту") : () => setFortB(b.id)} />)}
         </div>
         </div>
       </div>
