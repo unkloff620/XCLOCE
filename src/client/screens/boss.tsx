@@ -341,6 +341,7 @@ export function BossScreen({ id }: { id: string }) {
   };
 
   // «Урон от Иглы» (content/obshak.ts): today's stock of «Общак» in one blow, as much as the boss can still take
+  const [needleAsk, setNeedleAsk] = useState(false);
   const needle = async () => {
     if (!hitGapOk()) return;
     const pool = state?.obshak?.pool ?? 0;
@@ -479,11 +480,21 @@ export function BossScreen({ id }: { id: string }) {
               <ItemArt id="rug-pull-gun" size={22} />
             </button>
             {(state?.obshak?.pool ?? 0) > 0 && (
-              <button type="button" className="btn sm violet fbtn-needle" onClick={() => void needle()} aria-label="Урон от Иглы" title="Урон от Иглы — запас из общака">
+              <button type="button" className="btn sm violet fbtn-needle" onClick={() => { haptic.tap(); setNeedleAsk(true); }} aria-label="Урон от Иглы" title="Урон от Иглы — запас из общака">
                 <ItemArt id={NEEDLE_ID} size={22} /><span className="num">{short(state!.obshak!.pool)}</span>
               </button>
             )}
             {view?.combo && <ComboButton c={view.combo} onOpen={() => setComboOpen((o) => !o)} />}
+            {needleAsk && (
+              // a guard against a stray tap: today's stock of «Общак» goes in one blow
+              <Modal title="Урон от Иглы" onClose={() => setNeedleAsk(false)}>
+                <div className="col center ob-ask">
+                  <span className="muted">Доступно сегодня:</span>
+                  <b className="num ob-ask-n">{full(state?.obshak?.pool ?? 0)}</b>
+                  <button type="button" className="btn gold" onClick={() => { setNeedleAsk(false); void needle(); }}>Втащить</button>
+                </div>
+              </Modal>
+            )}
             <span className="grow" />
             <button type="button" className={`btn sm red fbtn-flee ${fleeAsk ? "ask" : ""}`} onClick={flee} disabled={busy === "fight_flee"} aria-label={fleeAsk ? "Точно сдаться?" : "Сдаться"} title="Сдаться">
               {fleeAsk ? <b>?</b> : <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h13" /><path d="M13 6l6 6-6 6" /></svg>}
@@ -499,12 +510,12 @@ export function BossScreen({ id }: { id: string }) {
           <Modal title={`${rushAsk.name} перезаряжается`} onClose={() => setRushAsk(null)}>
             <div className="col center" style={{ gap: 12, alignItems: "center" }}>
               <ItemArt id={rushAsk.id} size={72} />
-              <span className="small center">Ещё {clock(rushAsk.left)}. Ударить сейчас за <b>{rushPrice(rushAsk.id).amount}</b> <Icon name={rushPrice(rushAsk.id).currency} size={14} />? После удара — снова перезарядка.</span>
+              <span className="small center rush-q">Ещё {clock(rushAsk.left)}. Ударить сейчас за <span className="nowrap-ic"><Icon name={rushPrice(rushAsk.id).currency} size={14} /><b>{rushPrice(rushAsk.id).amount}</b>?</span> После удара — снова перезарядка.</span>
               <div className="row" style={{ gap: 8, width: "100%" }}>
                 <button className="btn dark grow" onClick={() => setRushAsk(null)}>Отмена</button>
                 <button className="btn gold grow" disabled={(state?.wallet[rushPrice(rushAsk.id).currency] ?? 0) < rushPrice(rushAsk.id).amount}
                   onClick={() => { const id = rushAsk.id; setRushAsk(null); void attack(id, true); }}>
-                  Ударить за {rushPrice(rushAsk.id).amount} <Icon name={rushPrice(rushAsk.id).currency} size={16} />
+                  Ударить за <Icon name={rushPrice(rushAsk.id).currency} size={16} />{rushPrice(rushAsk.id).amount}
                 </button>
               </div>
               {(state?.wallet[rushPrice(rushAsk.id).currency] ?? 0) < rushPrice(rushAsk.id).amount && <span className="tiny" style={{ color: "#ff8a9e" }}>Не хватает жетонов</span>}

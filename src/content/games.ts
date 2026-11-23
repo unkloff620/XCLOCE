@@ -1,3 +1,4 @@
+import { RETIRED_FINDS } from "./items.ts";
 /*
  * Мини-игры во дворе: блэкджек (общий стол до 6 игроков, ставки), зонк (кости), покер и апгрейдер находок.
  * Зонк — 4 уровня сложности (ZONK_LEVELS): 1-й за рубли (первая игра дня бесплатно), 2–4-й за доллары.
@@ -227,6 +228,7 @@ export function zonkXpLevel(xp: number): { level: number; from: number; to: numb
  * a thing bought cheap and staked dear was a farm), the yard finds their sell price
  */
 export const ITEM_VALUES: Record<string, number> = {
+  // the retired yard finds still count as a stake (old stock), but no win gives them (upgradeTarget)
   "bottle-cap": 15, "flyer-passive": 25, "sticker-hodl": 40, spinner: 60, "lost-wallet": 150,
   ...Object.fromEntries(OFFERS.filter((o) => o.give.item && o.price.currency === "RUB" && ["weapons", "misc"].includes(o.section)).map((o) => [o.give.item!, o.price.amount])),
 };
@@ -248,8 +250,9 @@ export const upgradeChanceOf = (mult: number) => Math.round((UPGRADE_EDGE / mult
 
 /** the thing a win gives for this value: the most expensive item whose plain price fits (at least the cheapest) */
 export function upgradeTarget(value: number): string {
-  const fits = Object.entries(ITEM_VALUES).filter(([, v]) => v <= value).sort((a, b) => b[1] - a[1]);
-  return fits[0]?.[0] ?? "bottle-cap";
+  const live = Object.entries(ITEM_VALUES).filter(([id]) => !RETIRED_FINDS.has(id));
+  const fits = live.filter(([, v]) => v <= value).sort((a, b) => b[1] - a[1]);
+  return fits[0]?.[0] ?? live.sort((a, b) => a[1] - b[1])[0][0];
 }
 /** stake value × multiplier, rounded */
 export const upgradeValue = (stake: number, mult: number) => Math.max(1, Math.round(stake * mult));

@@ -7915,3 +7915,17 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .bcard.bcard-boss-solntse .bcard-main, .bcard.bcard-boss-solntse .bcard-art { z-index: 1; }
 .bcard.bcard-boss-solntse.locked::before, .bcard.bcard-boss-solntse.locked::after { animation: none; }
 @media (prefers-reduced-motion: reduce) { .bcard.bcard-boss-solntse::before, .bcard.bcard-boss-solntse::after { animation: none; } }
+/* «Урон от Иглы»: the guard before the blow */
+.ob-ask { gap: 8px; padding: 6px 0 4px; }
+.ob-ask-n { font-size: 30px; font-weight: 800; color: #d21c12; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.2); }
+/* Сходняк: every boss in a round frame; the filters' tabs sit right on their selects, the rows apart */
+.shod-pic .bphoto, .shod-pic .bphoto > * { border-radius: 50% !important; overflow: hidden; }
+.shod-pic .bphoto img { object-fit: cover; }
+.shod-filters { row-gap: 12px; }
+.shod-filters label { gap: 0; }
+/* the rush price: the icon, the number and «?» on one line */
+.rush-q .nowrap-ic { display: inline-flex; align-items: center; gap: 2px; white-space: nowrap; vertical-align: -2px; }
+.bb-pap { display: inline-flex; align-items: center; gap: 2px; vertical-align: -2px; }
+/* the raid's clouds lie over the ground's edges but under the buildings */
+.rd-scene > .rd-map-bg { z-index: 0; }
+.rd-scene > .rd-clouds { z-index: 1; }

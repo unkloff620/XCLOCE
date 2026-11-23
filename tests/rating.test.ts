@@ -146,10 +146,10 @@ describe("achievements and someone's profile", () => {
     await give(db, p, "keyboard", 3);
     await act(db, p, "fight_start", { boss: "datsik" }, T0);
     await act(db, p, "attack", { weapon: "keyboard" }, T0, always(0.99));
-    await give(db, p, "lost-wallet", 1);
-    await act(db, p, "sell", { itemId: "lost-wallet", qty: 1 }, T0);
+    await give(db, p, "part-nails", 1);
+    await act(db, p, "sell", { itemId: "part-nails", qty: 1 }, T0);
     const mine = await profileView(db, p, p, await loadConfig(db), T0);
-    expect(mine.day.RUB).toBe(150);
+    expect(mine.day.PAP).toBe(50);
     expect(mine.day.damage).toBeGreaterThan(0);
     // a day later it is gone
     expect((await profileView(db, p, p, await loadConfig(db), T0 + 25 * 3_600_000)).day).toEqual({});

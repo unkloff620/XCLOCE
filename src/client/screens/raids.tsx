@@ -739,12 +739,12 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
           <Modal title={`${rushAsk.name} перезаряжается`} onClose={() => setRushAsk(null)}>
             <div className="col center" style={{ gap: 12, alignItems: "center" }}>
               <ItemArt id={rushAsk.id} size={72} />
-              <span className="small center">Ещё {clock(rushAsk.left)}. Ударить сейчас за <b>{rushPrice(rushAsk.id).amount}</b> <Icon name={rushPrice(rushAsk.id).currency} size={14} />? После удара — снова перезарядка.</span>
+              <span className="small center rush-q">Ещё {clock(rushAsk.left)}. Ударить сейчас за <span className="nowrap-ic"><Icon name={rushPrice(rushAsk.id).currency} size={14} /><b>{rushPrice(rushAsk.id).amount}</b>?</span> После удара — снова перезарядка.</span>
               <div className="row" style={{ gap: 8, width: "100%" }}>
                 <button className="btn dark grow" onClick={() => setRushAsk(null)}>Отмена</button>
                 <button className="btn gold grow" disabled={(state?.wallet[rushPrice(rushAsk.id).currency] ?? 0) < rushPrice(rushAsk.id).amount}
                   onClick={() => { const id = rushAsk.id; setRushAsk(null); void hit(id, true); }}>
-                  Ударить за {rushPrice(rushAsk.id).amount} <Icon name={rushPrice(rushAsk.id).currency} size={16} />
+                  Ударить за <Icon name={rushPrice(rushAsk.id).currency} size={16} />{rushPrice(rushAsk.id).amount}
                 </button>
               </div>
               {(state?.wallet[rushPrice(rushAsk.id).currency] ?? 0) < rushPrice(rushAsk.id).amount && <span className="tiny" style={{ color: "#ff8a9e" }}>Не хватает жетонов</span>}

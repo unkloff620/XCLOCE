@@ -809,28 +809,28 @@ describe("daily login reward", () => {
 });
 
 describe("selling, nickname, slot machine 777", () => {
-  it("yard finds sell (caps, spinners, flyers for папиросы, the rest for RUB), other things do not", async () => {
+  it("craft parts sell for папиросы; the retired yard finds and other things do not", async () => {
     const p = await newPlayer(db);
-    await give(db, p, "spinner", 3);
+    await give(db, p, "part-nails", 3);
     const pap = await wallet(db, p, "PAP");
-    const r = await act(db, p, "sell", { itemId: "spinner", qty: 2 }, T0);
-    expect(r.result).toMatchObject({ got: 120, left: 1, currency: "PAP" });
-    expect(await wallet(db, p, "PAP")).toBe(pap + 120);
+    const r = await act(db, p, "sell", { itemId: "part-nails", qty: 2 }, T0);
+    expect(r.result).toMatchObject({ got: 100, left: 1, currency: "PAP" });
+    expect(await wallet(db, p, "PAP")).toBe(pap + 100);
     await give(db, p, "lost-wallet", 1);
-    expect((await act(db, p, "sell", { itemId: "lost-wallet", qty: 1 }, T0)).result).toMatchObject({ got: 150, currency: "RUB" });
-    await expect(act(db, p, "sell", { itemId: "spinner", qty: 5 }, T0)).rejects.toMatchObject({ code: "no_item" });
+    await expect(act(db, p, "sell", { itemId: "lost-wallet", qty: 1 }, T0)).rejects.toMatchObject({ code: "not_sellable" });
+    await expect(act(db, p, "sell", { itemId: "part-nails", qty: 5 }, T0)).rejects.toMatchObject({ code: "no_item" });
     await expect(act(db, p, "sell", { itemId: "fist" }, T0)).rejects.toMatchObject({ code: "not_sellable" });
   });
 
   it("«Скупка»: everything picked sells in one go, all or nothing", async () => {
     const p = await newPlayer(db);
-    await give(db, p, "spinner", 3);
+    await give(db, p, "part-nails", 3);
     await expect(act(db, p, "sell_many", { items: [] }, T0)).rejects.toMatchObject({ code: "nothing" });
-    await expect(act(db, p, "sell_many", { items: [{ itemId: "spinner", qty: 1 }, { itemId: "spinner", qty: 3 }] }, T0)).rejects.toMatchObject({ code: "no_item" });
-    expect(await qty(db, p, "spinner")).toBe(3);
-    const r = await act(db, p, "sell_many", { items: [{ itemId: "spinner", qty: 2 }] }, T0);
-    expect(r.result).toMatchObject({ got: 0, gotPap: 120, count: 2 });
-    expect(await qty(db, p, "spinner")).toBe(1);
+    await expect(act(db, p, "sell_many", { items: [{ itemId: "part-nails", qty: 1 }, { itemId: "part-nails", qty: 3 }] }, T0)).rejects.toMatchObject({ code: "no_item" });
+    expect(await qty(db, p, "part-nails")).toBe(3);
+    const r = await act(db, p, "sell_many", { items: [{ itemId: "part-nails", qty: 2 }] }, T0);
+    expect(r.result).toMatchObject({ got: 0, gotPap: 100, count: 2 });
+    expect(await qty(db, p, "part-nails")).toBe(1);
   });
 
   it("nickname: paid, once per 24 h, unique, survives a Telegram re-login", async () => {
@@ -1862,7 +1862,7 @@ describe("yard mini games", () => {
     expect(upgradeChanceOf(upgradeMode("x2")!.mult)).toBeCloseTo(0.45, 4);
     expect(upgradeChanceOf(upgradeMode("x8")!.mult)).toBeCloseTo(0.1125, 4);
     expect(upgradeChanceOf(upgradeMode("c70")!.mult)).toBeCloseTo(0.7, 4);
-    expect(upgradeTarget(240)).toBe("lost-wallet");
+    expect(upgradeTarget(240)).toBe("rug-pull-gun");
     const p = await newPlayer(db);
     await give(db, p, "spinner", 4);
     // lose: the stake burns, nothing comes
@@ -2048,10 +2048,10 @@ describe("thing or room", () => {
 });
 
 describe("Неоновая хата", () => {
-  it("drops from Кедр (15% per win with the pass), then is bought for 2000 RUB (no energy bonus)", async () => {
+  it("drops from Кедр (15% per win with the pass), then is bought for 2000 папирос (no energy bonus)", async () => {
     await setBossHp({ kedr: 10 });
     const p = await newPlayer(db);
-    await setMoney(db, p, "RUB", 5000);
+    await setMoney(db, p, "PAP", 5000);
     await expect(act(db, p, "room_buy", { id: "neon" }, T0)).rejects.toMatchObject({ code: "room_locked" });
     await give(db, p, "key-datsik", 3);
     await give(db, p, "keyboard", 1);
@@ -2061,7 +2061,7 @@ describe("Неоновая хата", () => {
     expect(c.result.reward.unlocks).toContain("room:neon");
     const b = await act(db, p, "room_buy", { id: "neon" }, T0);
     expect(b.state.player.energyMax).toBe(50);
-    expect(await wallet(db, p, "RUB")).toBeLessThan(5000);
+    expect(await wallet(db, p, "PAP")).toBeLessThan(5000);
   });
 });
 
@@ -2322,10 +2322,10 @@ describe("Нервные пальцы", () => {
 });
 
 describe("Боксёрская", () => {
-  it("drops from Командате, costs 4000 RUB; the fist stays as it is", async () => {
+  it("drops from Командате, costs 4000 папирос; the fist stays as it is", async () => {
     await setBossHp({ bebyakyan: 10 });
     const p = await newPlayer(db);
-    await setMoney(db, p, "RUB", 5000);
+    await setMoney(db, p, "PAP", 5000);
     await give(db, p, "key-garkusha", 3);
     await give(db, p, "keyboard", 1);
     const f = await act(db, p, "fight_start", { boss: "bebyakyan", mode: "blat" }, T0);
@@ -2333,7 +2333,7 @@ describe("Боксёрская", () => {
     const c = await act(db, p, "fight_claim", { fightId: f.result.fightId }, T0, always(0.03));
     expect(c.result.reward.unlocks).toContain("room:boxing");
     await act(db, p, "room_buy", { id: "boxing" }, T0);
-    expect(await wallet(db, p, "RUB")).toBe(5000 + (c.result.reward.currencies?.RUB ?? 0) - 4000);
+    expect(await wallet(db, p, "PAP")).toBe(5000 + (c.result.reward.currencies?.PAP ?? 0) - 4000);
     await setBossHp({ datsik: 1000 });
     await startDatsik(p, T0 + M);
     expect((await hit(p, "fist", T0 + M)).result.damage).toBe(20);

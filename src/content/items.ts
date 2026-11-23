@@ -267,12 +267,10 @@ export const CATEGORY_NAME: Record<Category, string> = { weapon: "Оружие",
 /** what a thing sells for at «Скупка»: craft parts and the yard's caps, spinners and flyers — only for папиросы (the user 2026-11-20), the rest for roubles */
 const SELL_FOR_PAP = new Set(["bottle-cap", "spinner", "flyer-passive"]);
 export const sellCurrency = (id: string): "PAP" | "RUB" => (id.startsWith("part-") || SELL_FOR_PAP.has(id) ? "PAP" : "RUB");
+/** the yard finds taken out of the game: hidden at «Скупка» (old stock stays in the bag) */
+export const RETIRED_FINDS = new Set(["bottle-cap", "flyer-passive", "sticker-hodl", "spinner", "lost-wallet"]);
 export const SELL_PRICES: Record<string, number> = {
-  "bottle-cap": 15,
-  "flyer-passive": 25,
-  "sticker-hodl": 40,
-  "spinner": 60,
-  "lost-wallet": 150,
+  // the yard finds (caps, flyers, stickers, spinners, wallets) are out of the game (the user 2026-11-23): not bought any more
   // «Крафт»: the dealer buys the parts too (content/craft-drops.ts PART_SELL)
   ...Object.fromEntries(CRAFT_PARTS.map((p) => [p.id, PART_SELL[p.rarity] ?? 50])),
 };
