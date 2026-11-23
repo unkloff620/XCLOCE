@@ -1226,6 +1226,8 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .tal-confirm { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0; padding: 8px 10px; border-radius: 12px; border: 2px solid rgba(255, 93, 115, 0.5); background: rgba(255, 93, 115, 0.08); }
 @media (max-width: 380px) { .tal-tree { gap: 5px; } .tal-col { padding: 5px; } .tal-art { width: 44px; height: 44px; } }
 .talent-prog { font: inherit; color: inherit; cursor: pointer; }
+.talent-prog.chip { font-size: 11px; white-space: nowrap; }
+.talent-prog .num, .talent-prog .muted { font-size: inherit; }
 /* the weapon batch (×1 ×10 ×100 ×1000): a small badge in the top-right corner of every weapon card */
 .offer-batch { position: absolute; top: 3px; right: 3px; z-index: 2; padding: 0 5px; border-radius: 7px; border: 1.5px solid var(--line); background: var(--green); color: var(--line); font-size: 9px; font-weight: 800; line-height: 14px; }
 
