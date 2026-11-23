@@ -100,8 +100,8 @@ const boxSet = (id: string, name: string, weapon: string, damage: number): Tatto
 
 /**
  * The user's table (2026-11-23) also gives the bonuses of the sets Фокус and Солнце will get (none drawn yet):
- * Фокус — «Пацанский» +420 Rug Pull Gun, «Авторитетный» +270 Пистолет; Солнце — «Пацанский» +750 Rug Pull Gun,
- * «Авторитетный» +550 Пистолет.
+ * Фокус — «Пацанский» +420 Rug Pull Gun, «Авторитетный» +270 Пистолет. Солнце (the user 2026-11-23): «Пацанский»
+ * +750 Rug Pull Gun, «Блатной» +300 Пистолет and +1000 Rug Pull Gun; his «Авторитетный» gives things (+1000 Rug Pull Gun).
  */
 export const TATTOO_SETS: TattooSet[] = [
   ...DATSIK_SETS,

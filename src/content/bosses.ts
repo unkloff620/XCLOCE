@@ -197,7 +197,8 @@ export const BOSSES: BossDef[] = [
     theme: { a: "#4a2a06", b: "#1a0c02", accent: "#ffd23f" }, photo: photo("solntse", true),
     phases: [{ from: 100, name: "Рассвет" }, { from: 66, name: "Зенит" }, { from: 33, name: "Солнечная буря" }],
     final: true,
-    // no things yet: the set waits for them (the user's table 2026-11-23)
+    // his things drop in «Авторитетный» (the user 2026-11-23); none drawn yet: the set waits for them
+    thingsMode: "avtor",
     set: { weapon: "rug-pull-gun", damage: 1000 },
     keysToUnlock: 1,
   },
