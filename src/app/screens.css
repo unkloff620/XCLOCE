@@ -832,7 +832,7 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .tour-pics.wide img { aspect-ratio: 18 / 7; object-fit: cover; border-radius: 12px; filter: none; }
 
 /* ---------------- level up ---------------- */
-.lvlup { position: fixed; inset: 0; z-index: 95; display: grid; place-items: center; overflow: hidden; cursor: pointer;
+.lvlup { position: fixed; inset: 0; z-index: 130; display: grid; place-items: center; overflow: hidden; cursor: pointer;
   background: radial-gradient(circle at 50% 45%, rgba(120, 70, 10, 0.75), rgba(10, 6, 3, 0.94) 65%); animation: lvl-fade 0.35s ease-out both; }
 @keyframes lvl-fade { from { opacity: 0; } }
 .lvlup-rays { position: absolute; left: 50%; top: 45%; width: calc(180 * max(var(--vw), var(--vh))); height: calc(180 * max(var(--vw), var(--vh))); margin: -90vmax 0 0 -90vmax; opacity: 0.35;

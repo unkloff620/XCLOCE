@@ -1,12 +1,13 @@
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, itemQty, takeMoney, type Ctx, type Granted } from "../core.ts";
-import { bump, countersOf } from "./counters.ts";
+import { bump, countersOf, setTo } from "./counters.ts";
 import { BAUL_CUR, BAUL_GOLD_CHANCE, BAUL_GOLD_FROM, BAUL_GOLD_SET, BAUL_PRICE, BAUL_SETS, baulLevel, baulPoints, baulTattooChance, rollBaulPack } from "../../content/baul.ts";
 import type { Reward } from "../../content/rewards.ts";
 import { TATTOO_SETS } from "../../content/tattoos.ts";
 
 /*
- * «Баул» (content/baul.ts): the points of boss wins (counter baul_pts) raise its level; every bag costs BAUL_PRICE слитков.
+ * «Баул» (content/baul.ts): the points of boss wins (counter baul_pts) raise its level; the bag is bought for BAUL_PRICE
+ * слитков and then starts again from level 0.
  * What lies in the bag is rolled ahead for its level and kept (table baul_packs): «Посмотреть» shows it, «Забрать» takes
  * it for слитки and the next one is rolled. A new level rolls the bag anew.
  */
@@ -81,7 +82,7 @@ export async function baulTick(ctx: Ctx, hpMax: number): Promise<{ points: numbe
   return { points: add, level: after, up: after - before };
 }
 
-/** «Забрать»: the bag's pack for BAUL_PRICE слитков; the next one is rolled at once */
+/** «Забрать»: the bag's pack for BAUL_PRICE слитков; the bag is emptied — its points (and level) go back to 0 (the user 2026-11-25) */
 export async function baulOpen(ctx: Ctx): Promise<{ reward: Granted; tattoos: string[]; level: number; view: BaulView }> {
   const c = await countersOf(ctx.q, ctx.pid);
   const { level } = baulLevel(c[PTS] ?? 0);
@@ -94,6 +95,7 @@ export async function baulOpen(ctx: Ctx): Promise<{ reward: Granted; tattoos: st
   for (const it of pack.items ?? []) if (!tatIds.has(it.id) || (await itemQty(ctx.q, ctx.pid, it.id)) === 0) items.push(it);
   const reward = await grantReward(ctx, { ...pack, items }, `baul:${level}`);
   await ctx.q.query("DELETE FROM baul_packs WHERE player_id=$1", [ctx.pid]);
+  await setTo(ctx.q, ctx.pid, PTS, 0);
   const tattoos = items.filter((it) => tatIds.has(it.id)).map((it) => it.id);
   return { reward, tattoos, level, view: await baulView(ctx.q, ctx.pid, ctx.rng) };
 }
