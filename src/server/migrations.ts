@@ -1817,4 +1817,9 @@ CREATE INDEX IF NOT EXISTS donate_payments_player ON donate_payments (player_id,
   pack JSONB NOT NULL
 );`,
   },
+  {
+    // «Баул»: the new contents (the user's level-30 maxima) — the bags rolled before are rolled anew
+    id: "v2-131-baul-repack",
+    sql: `DELETE FROM baul_packs;`,
+  },
 ];
