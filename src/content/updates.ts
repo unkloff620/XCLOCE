@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-24-tattoo-rig",
+    date: "24 ноября",
+    title: "Новая разметка наколок",
+    items: [
+      { img: "/assets/hero/tattoo/set-ozhog.webp", text: "Наколки теперь режутся по новым местам: шея, трапеции, грудь, живот, плечи, бицепсы, предплечья, кисть, бёдра, колени, голени и стопы. Наколки на лице и правой кисти превратились в трапеции, на локтях — в бёдра: всё собранное и все полные сеты на месте." },
+    ],
+  },
+  {
     id: "2026-11-24-sportik",
     date: "24 ноября",
     title: "Сет «Спортик»",

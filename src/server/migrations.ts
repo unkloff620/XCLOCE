@@ -1781,4 +1781,17 @@ DELETE FROM raid_yards;`,
     sql: `ALTER TABLE player_stats ADD COLUMN IF NOT EXISTS talent_damage BIGINT NOT NULL DEFAULT 0;
 UPDATE player_stats SET talent_damage = total_damage;`,
   },
+  {
+    // the artist's tattoo rig (content/tattoos.ts ZONES): no face, no right hand, no elbows — their pieces become the traps
+    // and the thighs, so every owned piece and every finished set stays (face → trap-l, hand-r → trap-r, elbow → thigh)
+    id: "v2-128-tattoo-rig",
+    sql: `UPDATE inventory SET item_id = regexp_replace(regexp_replace(regexp_replace(regexp_replace(item_id,
+  '-face$', '-trap-l'), '-hand-r$', '-trap-r'), '-elbow-l$', '-thigh-l'), '-elbow-r$', '-thigh-r')
+WHERE item_id LIKE 'tat-%' AND (item_id LIKE '%-face' OR item_id LIKE '%-hand-r' OR item_id LIKE '%-elbow-l' OR item_id LIKE '%-elbow-r');
+UPDATE appearance SET body = jsonb_set(body, '{tattoos}', (
+  SELECT COALESCE(jsonb_agg(regexp_replace(regexp_replace(regexp_replace(regexp_replace(t,
+    '-face$', '-trap-l'), '-hand-r$', '-trap-r'), '-elbow-l$', '-thigh-l'), '-elbow-r$', '-thigh-r')), '[]'::jsonb)
+  FROM jsonb_array_elements_text(body->'tattoos') AS t))
+WHERE jsonb_typeof(body->'tattoos') = 'array';`,
+  },
 ];

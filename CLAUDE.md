@@ -72,6 +72,7 @@ A new set's ink is made ONLY by `python3 tools/rig/tattoo-ink.py <set>` from the
 The script fits the edit onto the hero, fills the holes and the outline strip and fails if more than 4% of the skin stays bare.
 The base `_base/in.png` is HEADLESS: edit it with the mask `_base/skin-mask.png` and a prompt that keeps the figure headless (never "keep his head") — a drawn head squeezes the body and the ink smears; the script stops on such an edit.
 Before release, look at the set on the hero next to the edit: the colours must match and no bare stripes may show.
+Every set has 21 pieces, one per place of the artist's tattoo rig `tools/rig/source/tattoo/_zones/<place>.png` (neck, traps, chest, belly, shoulders, biceps, forearms, left hand, thighs, knees, shins, feet — no face, no right hand); `build-tattoos.py` cuts every set's `full-ink.png` by them, so the `-head`/`-hand` edits are no longer needed.
 
 ## Hero clothes from templates
 

@@ -5,7 +5,7 @@ difference against it. Each piece is cut out of its part's layer (a zone box for
 cropped to its ink and saved as public/assets/hero/tattoo/<id>.webp; its place in rig coordinates goes to
 src/client/art/tattoo-data.ts. The item picture (public/assets/items/<id>.webp) is the piece on a patch of skin.
 """
-import json, os
+import glob, json, os
 import numpy as np
 from PIL import Image, ImageDraw
 from scipy import ndimage
@@ -17,85 +17,38 @@ ITEMS = os.path.join(ROOT, "public", "assets", "items")
 os.makedirs(OUT, exist_ok=True)
 rig = json.loads(open(os.path.join(ROOT, "src", "client", "art", "rig-data.ts")).read().split("=", 1)[1].strip().rstrip(";").replace(" as const", ""))
 
-# set → pieces: id, the ink layer ("full" — the whole body on the 1000×1400 rig canvas; or a hero part's own canvas),
-# the zone on that layer (x0, y0, x1, y1) or None for all of it, and where it is drawn: "torso" — on the legs, under
-# the trousers; "upper" — over the arms, under the shirt; or a hero part ("head", "handR") that it moves with
-SETS = {
-    "ice": [
-        ("tat-ice-face", "head", None, "head"),
-        ("tat-ice-neck", "full", (420, 275, 575, 345), "upper"),
-        ("tat-ice-chest-l", "full", (335, 345, 500, 525), "upper"),
-        ("tat-ice-chest-r", "full", (500, 345, 670, 525), "upper"),
-        ("tat-ice-belly", "full", (385, 555, 615, 725), "upper"),
-        ("tat-ice-shoulder-l", "full", (230, 340, 345, 448), "upper"),
-        ("tat-ice-shoulder-r", "full", (650, 340, 770, 448), "upper"),
-        ("tat-ice-biceps-l", "full", (135, 448, 300, 572), "upper"),
-        ("tat-ice-biceps-r", "full", (720, 448, 865, 572), "upper"),
-        ("tat-ice-elbow-l", "full", (120, 572, 200, 648), "upper"),
-        ("tat-ice-elbow-r", "full", (810, 572, 880, 658), "upper"),
-        ("tat-ice-forearm-l", "full", (140, 648, 248, 748), "upper"),
-        ("tat-ice-forearm-r", "full", (700, 658, 840, 770), "upper"),
-        ("tat-ice-hand-l", "full", (248, 700, 335, 800), "upper"),
-        ("tat-ice-hand-r", "handR", None, "handR"),
-        ("tat-ice-knee-l", "full", (85, 760, 220, 910), "torso"),
-        ("tat-ice-knee-r", "full", (780, 760, 910, 910), "torso"),
-        ("tat-ice-shin-l", "full", (160, 910, 325, 1172), "torso"),
-        ("tat-ice-shin-r", "full", (675, 910, 845, 1172), "torso"),
-        ("tat-ice-foot-l", "full", (185, 1172, 325, 1290), "torso"),
-        ("tat-ice-foot-r", "full", (685, 1172, 815, 1290), "torso"),
-    ],
-    "king": [
-        ("tat-king-face", "head", None, "head"),
-        ("tat-king-neck", "full", (425, 255, 575, 350), "upper"),
-        ("tat-king-chest-l", "full", (335, 350, 498, 540), "upper"),
-        ("tat-king-chest-r", "full", (502, 350, 672, 540), "upper"),
-        ("tat-king-belly", "full", (390, 545, 615, 745), "upper"),
-        ("tat-king-shoulder-l", "full", (240, 345, 352, 448), "upper"),
-        ("tat-king-shoulder-r", "full", (650, 345, 765, 452), "upper"),
-        ("tat-king-biceps-l", "full", (160, 448, 280, 578), "upper"),
-        ("tat-king-biceps-r", "full", (735, 452, 845, 582), "upper"),
-        ("tat-king-elbow-l", "full", (112, 555, 166, 630), "upper"),
-        ("tat-king-elbow-r", "full", (822, 565, 888, 640), "upper"),
-        ("tat-king-forearm-l", "full", (150, 598, 260, 730), "upper"),
-        ("tat-king-forearm-r", "full", (732, 640, 858, 795), "upper"),
-        ("tat-king-hand-l", "full", (236, 730, 368, 818), "upper"),
-        ("tat-king-hand-r", "handR", None, "handR"),
-        ("tat-king-knee-l", "full", (88, 775, 200, 915), "torso"),
-        ("tat-king-knee-r", "full", (795, 775, 912, 922), "torso"),
-        ("tat-king-shin-l", "full", (158, 895, 322, 1185), "torso"),
-        ("tat-king-shin-r", "full", (688, 890, 848, 1185), "torso"),
-        ("tat-king-foot-l", "full", (182, 1188, 298, 1275), "torso"),
-        ("tat-king-foot-r", "full", (702, 1188, 812, 1278), "torso"),
-    ],
+# The 21 tattoo places are the artist's own layers (tools/rig/source/tattoo/_zones/<place>.png, 2000×2800, the hero's
+# canvas; the user 2026-11-24): neck, the traps, the chest, the belly, the shoulders, the biceps, the forearms (with the
+# elbows), the resting left hand, the thighs, the knees, the shins and the feet. No face and no right hand (it holds the
+# weapon). Every set is cut by them: each body pixel belongs to its place, or to the nearest place where the layers leave
+# a gap; the upper body (body.png: the chest, the belly, the arms, the resting hand) only to an "upper" place and the
+# legs only to a "torso" place — so a thigh next to a forearm is never given to the arm. "upper" is drawn over the arms,
+# under the shirt; "torso" on the legs, under the trousers.
+ZONE_DEFS = {
+    "neck": "upper", "trap-l": "upper", "trap-r": "upper", "chest-l": "upper", "chest-r": "upper", "belly": "upper",
+    "shoulder-l": "upper", "shoulder-r": "upper", "biceps-l": "upper", "biceps-r": "upper", "forearm-l": "upper", "forearm-r": "upper",
+    "hand-l": "upper", "thigh-l": "torso", "thigh-r": "torso", "knee-l": "torso", "knee-r": "torso",
+    "shin-l": "torso", "shin-r": "torso", "foot-l": "torso", "foot-r": "torso",
 }
-# solid sets (the bosses after Дацкоу, the tattoos join each other): the body is split into 19 places that touch each
-# other (each skin pixel goes to the nearest place's centre), every piece takes all the ink of its place, so the whole set
-# fits together without seams; the face and the left hand are their own parts
-ZONE_CENTRES = {
-    "neck": ((500, 300), "upper"), "chest-l": ((420, 420), "upper"), "chest-r": ((580, 420), "upper"), "belly": ((500, 640), "upper"),
-    "shoulder-l": ((290, 400), "upper"), "shoulder-r": ((710, 400), "upper"), "biceps-l": ((215, 510), "upper"), "biceps-r": ((785, 510), "upper"),
-    "elbow-l": ((160, 600), "upper"), "elbow-r": ((845, 610), "upper"), "forearm-l": ((185, 690), "upper"), "forearm-r": ((790, 705), "upper"),
-    "hand-l": ((300, 760), "upper"), "knee-l": ((160, 840), "torso"), "knee-r": ((840, 840), "torso"),
-    "shin-l": ((230, 1030), "torso"), "shin-r": ((770, 1030), "torso"), "foot-l": ((230, 1240), "torso"), "foot-r": ((765, 1240), "torso"),
-}
-SOLID = ["taiga", "roots", "shark", "kraken", "cash", "gold", "ring", "fire", "izba", "firebird", "jackpot", "sunrise", "safe", "realm", "samurai", "viking", "inferno", "swamp", "oven", "maid", "yakuza", "ducky", "racer", "nightshift", "dynamite", "masks", "luck", "hustler", "katran", "smotr", "dragon", "cyber", "garages", "industry", "market", "blocks", "oldtown", "shod-domes", "shod-bear", "shod-raven", "pk-mast", "pk-royal", "pk-bluff", "ut-acid", "ut-storm", "kuznya", "zatmenie", "ozhog",
+ZONE_IDS = list(ZONE_DEFS)
+SOLID = ["ice", "king", "taiga", "roots", "shark", "kraken", "cash", "gold", "ring", "fire", "izba", "firebird", "jackpot", "sunrise", "safe", "realm", "samurai", "viking", "inferno", "swamp", "oven", "maid", "yakuza", "ducky", "racer", "nightshift", "dynamite", "masks", "luck", "hustler", "katran", "smotr", "dragon", "cyber", "garages", "industry", "market", "blocks", "oldtown", "shod-domes", "shod-bear", "shod-raven", "pk-mast", "pk-royal", "pk-bluff", "ut-acid", "ut-storm", "kuznya", "zatmenie", "ozhog",
          # «Зарубы» (content/zarub.ts): 27 sets from the bags
          "zr-barak", "zr-bones", "zr-ash", "zr-deep", "zr-gasmask", "zr-gears", "zr-bratva", "zr-totem", "zr-kush",
          "zr-sakura", "zr-ghost", "zr-wings", "zr-crest", "zr-katana", "zr-clock", "zr-amphora", "zr-abyss", "zr-anchor",
          "zr-plague", "zr-jaguar", "zr-peak", "zr-chronicle", "zr-fog", "zr-corsair", "zr-heaven", "zr-grin", "zr-ball"]
 _body = np.array(Image.open(os.path.join(ROOT, "tools", "rig", "source", "v2", "torso.png")).convert("RGBA").resize((1000, 1400), Image.LANCZOS))[..., 3] > 20
 UPPER_BODY = np.array(Image.open(os.path.join(ROOT, "tools", "rig", "source", "v2", "body.png")).convert("RGBA").resize((1000, 1400), Image.LANCZOS))[..., 3] > 40
-_yy, _xx = np.mgrid[0:1400, 0:1000]
-_d = np.stack([(_xx - c[0]) ** 2 + (_yy - c[1]) ** 2 for (c, _) in ZONE_CENTRES.values()])
-# the upper body (body.png: the chest, the belly, the arms, the resting hand) takes the nearest "upper" zone, the rest
-# (the legs) the nearest "torso" zone — so a thigh next to a forearm is never given to the arm (and then cut away)
-_upper_z = np.array([w == "upper" for (_, w) in ZONE_CENTRES.values()])
-ZONE_OF = np.where(_body, np.where(UPPER_BODY, np.argmin(np.where(_upper_z[:, None, None], _d, np.inf), axis=0),
-                                   np.argmin(np.where(~_upper_z[:, None, None], _d, np.inf), axis=0)), -1)
-ZONE_IDS = list(ZONE_CENTRES)
-for set_id in SOLID:
-    SETS[set_id] = [(f"tat-{set_id}-face", "head", None, "head"), (f"tat-{set_id}-hand-r", "handR", None, "handR")] + \
-        [(f"tat-{set_id}-{z}", "full", ("zone", i), w) for i, (z, (_, w)) in enumerate(ZONE_CENTRES.items())]
+_layer = {z: np.array(Image.open(os.path.join(SRC, "_zones", f"{z}.png")).convert("L").resize((1000, 1400), Image.LANCZOS)) > 127 for z in ZONE_IDS}
+def _nearest(ids):
+    lab = np.full((1400, 1000), -1, int)
+    for z in ids:
+        lab[_layer[z] & (lab < 0)] = ZONE_IDS.index(z)
+    _, (iy, ix) = ndimage.distance_transform_edt(lab < 0, return_indices=True)
+    return lab[iy, ix]
+_up_of = _nearest([z for z, w in ZONE_DEFS.items() if w == "upper"])
+_lo_of = _nearest([z for z, w in ZONE_DEFS.items() if w == "torso"])
+ZONE_OF = np.where(_body, np.where(UPPER_BODY, _up_of, _lo_of), -1)
+SETS = {set_id: [(f"tat-{set_id}-{z}", "full", ("zone", i), w) for i, (z, w) in enumerate(ZONE_DEFS.items())] for set_id in SOLID}
 
 SKIN = (248, 213, 180)
 
@@ -161,7 +114,7 @@ for set_id in SETS:
 
 # ---------------- the editor's places (client/art/places-data.ts) ----------------
 # Two different grids over the hero in the character editor:
-#   «Наколки» — the 21 tattoo places (the zones above, the face and the right hand);
+#   «Наколки» — the 21 tattoo places (the artist's zones above);
 #   «Вещи»    — where things are worn: head, eyes, mouth, neck, top, bottom, shoes, the right hand.
 # For each: a yellow outline of every place (zones.webp / slots.webp), a map to tell which place a tap hit
 # (zone-map.png / slot-map.png: the red channel = the place's number + 1, half size) and a picture of every place
@@ -180,9 +133,7 @@ CLOTH = ndimage.binary_opening((_trq.max(axis=2) < 80) & _body, iterations=2)  #
 _seen = _body & ~HEAD_M & ~HANDR_M  # the body where nothing is drawn over it
 def _zone(z):
     return (ZONE_OF == ZONE_IDS.index(z)) & _seen
-_fb = [f for k, f in fit.items() if k.endswith("-face")]
-FACE_M = _oval(min(f["x"] for f in _fb) - 4, min(f["y"] for f in _fb) - 4, max(f["x"] + f["w"] for f in _fb) + 4, max(f["y"] + f["h"] for f in _fb) + 4) & HEAD_M
-zones = {"face": FACE_M, "hand-r": HANDR_M}
+zones = {}
 for z in ZONE_IDS:
     zones[z] = _zone(z) & ~CLOTH  # nothing is inked under the shorts
 _e, _h = rig["eyes"], rig["head"]
@@ -193,8 +144,8 @@ slots = {
 }
 slots["HEAD"] = HEAD_M & ~slots["MOUTH"] & ~slots["FACE"]
 slots["ACCESSORY"] = _zone("neck")
-slots["SHIRT"] = np.any([_zone(z) for z in ("chest-l", "chest-r", "belly", "shoulder-l", "shoulder-r", "biceps-l", "biceps-r", "elbow-l", "elbow-r", "forearm-l", "forearm-r")], axis=0)
-slots["PANTS"] = np.any([_zone(z) for z in ("knee-l", "knee-r", "shin-l", "shin-r")], axis=0)
+slots["SHIRT"] = np.any([_zone(z) for z in ("chest-l", "chest-r", "belly", "shoulder-l", "shoulder-r", "biceps-l", "biceps-r", "forearm-l", "forearm-r", "trap-l", "trap-r")], axis=0)
+slots["PANTS"] = np.any([_zone(z) for z in ("thigh-l", "thigh-r", "knee-l", "knee-r", "shin-l", "shin-r")], axis=0)
 slots["SHOES"] = np.any([_zone(z) for z in ("foot-l", "foot-r")], axis=0)
 
 def _outline(m, w=2):
@@ -232,7 +183,7 @@ def _pictures(masks, grid):
         Image.fromarray(g[y0:y1, x0:x1]).save(os.path.join(OUT, f"place-{grid}-{k}.webp"), "WEBP", quality=88, method=6)
         out[k] = {"x": int(x0), "y": int(y0), "w": int(x1 - x0), "h": int(y1 - y0)}
     return out
-ZONE_ORDER = ZONE_IDS + ["face", "hand-r"]
+ZONE_ORDER = ZONE_IDS
 SLOT_ORDER = ["SHOES", "PANTS", "SHIRT", "ACCESSORY", "HEAD", "FACE", "MOUTH", "HAND"]
 _grid(zones, "zones"); _map(zones, "zone", ZONE_ORDER)
 _grid(slots, "slots"); _map(slots, "slot", SLOT_ORDER)

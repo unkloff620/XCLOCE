@@ -19,67 +19,19 @@ export const setBonusList = (s: Pick<TattooSet, "bonus" | "extra">) => [s.bonus,
 export const setBonusText = (s: Pick<TattooSet, "bonus" | "extra">, weaponName: (id: string) => string | undefined) =>
   setBonusList(s).map((b) => `+${b.damage} к урону «${weaponName(b.weapon) ?? b.weapon}»`).join(", ");
 
-const DATSIK_SETS: TattooSet[] = [
-  {
-    id: "ice", name: "Вечная мерзлота", boss: "datsik", mode: "pacan", bonus: { weapon: "keyboard", damage: 15 },
-    pieces: [
-      { id: "tat-ice-face", name: "Снежинка на скуле", part: "HEAD" },
-      { id: "tat-ice-neck", name: "Ледяное ожерелье", part: "HEAD" },
-      { id: "tat-ice-chest-l", name: "Белый медведь", part: "TORSO" },
-      { id: "tat-ice-chest-r", name: "Волк", part: "TORSO" },
-      { id: "tat-ice-belly", name: "«Вечная мерзлота»", part: "TORSO" },
-      { id: "tat-ice-shoulder-l", name: "Снежная мандала (левое плечо)", part: "SHOULDER_L" },
-      { id: "tat-ice-shoulder-r", name: "Снежная мандала (правое плечо)", part: "SHOULDER_R" },
-      { id: "tat-ice-biceps-l", name: "Горы и северное сияние", part: "SHOULDER_L" },
-      { id: "tat-ice-biceps-r", name: "Заснеженный лес", part: "SHOULDER_R" },
-      { id: "tat-ice-elbow-l", name: "Иней на локте (левом)", part: "ARM_L" },
-      { id: "tat-ice-elbow-r", name: "Иней на локте (правом)", part: "ARM_R" },
-      { id: "tat-ice-forearm-l", name: "Сосульки", part: "ARM_L" },
-      { id: "tat-ice-forearm-r", name: "Полярная сова", part: "ARM_R" },
-      { id: "tat-ice-hand-l", name: "Снежинка на кисти", part: "ARM_L" },
-      { id: "tat-ice-hand-r", name: "Медведь на льдине", part: "HAND" },
-      { id: "tat-ice-knee-l", name: "Снежинка на колене (левом)", part: "LEG_L" },
-      { id: "tat-ice-knee-r", name: "Снежинка на колене (правом)", part: "LEG_R" },
-      { id: "tat-ice-shin-l", name: "Мороз и горы (левая нога)", part: "LEG_L" },
-      { id: "tat-ice-shin-r", name: "Мороз и горы (правая нога)", part: "LEG_R" },
-      { id: "tat-ice-foot-l", name: "Снежный след (левая стопа)", part: "LEG_L" },
-      { id: "tat-ice-foot-r", name: "Снежный след (правая стопа)", part: "LEG_R" },
-    ],
-  },
-  {
-    id: "king", name: "Ледяной король", boss: "datsik", mode: "avtor", bonus: { weapon: "gpu", damage: 15 },
-    pieces: [
-      { id: "tat-king-face", name: "Ледяная корона на виске", part: "HEAD" },
-      { id: "tat-king-neck", name: "Корона из сосулек", part: "HEAD" },
-      { id: "tat-king-chest-l", name: "Снежный барс", part: "TORSO" },
-      { id: "tat-king-chest-r", name: "Ледяной дракон", part: "TORSO" },
-      { id: "tat-king-belly", name: "«Ледяной король»", part: "TORSO" },
-      { id: "tat-king-shoulder-l", name: "Ледяные кристаллы (левое плечо)", part: "SHOULDER_L" },
-      { id: "tat-king-shoulder-r", name: "Ледяные кристаллы (правое плечо)", part: "SHOULDER_R" },
-      { id: "tat-king-biceps-l", name: "Ледяной замок", part: "SHOULDER_L" },
-      { id: "tat-king-biceps-r", name: "Корона и меч", part: "SHOULDER_R" },
-      { id: "tat-king-elbow-l", name: "Ледяные соты (левый локоть)", part: "ARM_L" },
-      { id: "tat-king-elbow-r", name: "Ледяные соты (правый локоть)", part: "ARM_R" },
-      { id: "tat-king-forearm-l", name: "Замёрзшая роза", part: "ARM_L" },
-      { id: "tat-king-forearm-r", name: "Хвост дракона", part: "ARM_R" },
-      { id: "tat-king-hand-l", name: "Корона на кисти", part: "ARM_L" },
-      { id: "tat-king-hand-r", name: "Свернувшийся дракон", part: "HAND" },
-      { id: "tat-king-knee-l", name: "Кристальная розетка (левое колено)", part: "LEG_L" },
-      { id: "tat-king-knee-r", name: "Кристальная розетка (правое колено)", part: "LEG_R" },
-      { id: "tat-king-shin-l", name: "Ледопад (левая нога)", part: "LEG_L" },
-      { id: "tat-king-shin-r", name: "Ледопад (правая нога)", part: "LEG_R" },
-      { id: "tat-king-foot-l", name: "Ледяные шипы (левая стопа)", part: "LEG_L" },
-      { id: "tat-king-foot-r", name: "Ледяные шипы (правая стопа)", part: "LEG_R" },
-    ],
-  },
+// Дацкоу's two sets: cut by the same 21 places as every other set (they were drawn as single pictures before)
+const DATSIK_SETS = (): TattooSet[] => [
+  solid("ice", "Вечная мерзлота", "datsik", "pacan", "keyboard", 15),
+  solid("king", "Ледяной король", "datsik", "avtor", "gpu", 15),
 ];
 
 /** the fight mode's name in the dropping text («в «Пацанском»») */
 export const TATTOO_MODE_NAME = { pacan: "Пацанском", blat: "Блатном", avtor: "Авторитетном" } as const;
 const TATTOO_MODE_SHORT = { pacan: "Пацанский", blat: "Блатной", avtor: "Авторитетный" } as const;
 
-/** the place on the body a piece takes («chest-l»): one tattoo per place — a new one there replaces the old */
-export const tattooZone = (id: string) => id.split("-").slice(2).join("-");
+/** the place on the body a piece takes («chest-l»): one tattoo per place — a new one there replaces the old
+ *  (the id ends with its place; a set id may hold a dash itself: «tat-zr-ball-chest-l») */
+export const tattooZone = (id: string) => ZONES.find(([z]) => id.endsWith(`-${z}`))?.[0] ?? id.split("-").slice(2).join("-");
 /** the inked list with one tattoo per place (the last one wins) */
 export function oneTattooPerZone(ids: string[]): string[] {
   const byZone = new Map<string, string>();
@@ -88,14 +40,14 @@ export function oneTattooPerZone(ids: string[]): string[] {
 }
 
 /**
- * The solid sets of the bosses after Дацкоу (tools/rig/build-tattoos.py SOLID): 21 places that join each other — the
- * further the boss, the more of the body the set covers (Восток — a full suit).
+ * Every set (tools/rig/build-tattoos.py SOLID) has 21 pieces, one per place: the artist's tattoo rig (the user 2026-11-24,
+ * tools/rig/source/tattoo/_zones) — no face and no right hand any more (their pieces became the traps and the thighs, v2-127).
  */
 const ZONES: [string, string, string][] = [
-  ["face", "лицо", "HEAD"], ["neck", "шея", "HEAD"], ["chest-l", "левая грудь", "TORSO"], ["chest-r", "правая грудь", "TORSO"], ["belly", "живот", "TORSO"],
-  ["shoulder-l", "левое плечо", "SHOULDER_L"], ["shoulder-r", "правое плечо", "SHOULDER_R"], ["biceps-l", "левый бицепс", "SHOULDER_L"], ["biceps-r", "правый бицепс", "SHOULDER_R"],
-  ["elbow-l", "левый локоть", "ARM_L"], ["elbow-r", "правый локоть", "ARM_R"], ["forearm-l", "левое предплечье", "ARM_L"], ["forearm-r", "правое предплечье", "ARM_R"],
-  ["hand-l", "левая кисть", "ARM_L"], ["hand-r", "правая кисть", "HAND"], ["knee-l", "левое колено", "LEG_L"], ["knee-r", "правое колено", "LEG_R"],
+  ["neck", "шея", "HEAD"], ["trap-l", "левая трапеция", "TORSO"], ["trap-r", "правая трапеция", "TORSO"], ["chest-l", "левая грудь", "TORSO"], ["chest-r", "правая грудь", "TORSO"],
+  ["belly", "живот", "TORSO"], ["shoulder-l", "левое плечо", "SHOULDER_L"], ["shoulder-r", "правое плечо", "SHOULDER_R"], ["biceps-l", "левый бицепс", "SHOULDER_L"], ["biceps-r", "правый бицепс", "SHOULDER_R"],
+  ["forearm-l", "левое предплечье", "ARM_L"], ["forearm-r", "правое предплечье", "ARM_R"], ["hand-l", "левая кисть", "ARM_L"],
+  ["thigh-l", "левое бедро", "LEG_L"], ["thigh-r", "правое бедро", "LEG_R"], ["knee-l", "левое колено", "LEG_L"], ["knee-r", "правое колено", "LEG_R"],
   ["shin-l", "левая голень", "LEG_L"], ["shin-r", "правая голень", "LEG_R"], ["foot-l", "левая стопа", "LEG_L"], ["foot-r", "правая стопа", "LEG_R"],
 ];
 /** a tattoo place's name in words (the editor's grid): «левое плечо» */
@@ -113,7 +65,7 @@ const boxSet = (id: string, name: string, weapon: string, damage: number): Tatto
  * Фокус — «Пацанский» +420 Rug Pull Gun, «Авторитетный» +270 Пистолет.
  */
 export const TATTOO_SETS: TattooSet[] = [
-  ...DATSIK_SETS,
+  ...DATSIK_SETS(),
   solid("taiga", "Тайга", "kedr", "pacan", "gpu", 30), solid("roots", "Корни", "kedr", "avtor", "gpu", 25),
   solid("shark", "Акулья пасть", "mugo", "pacan", "keyboard", 40), solid("kraken", "Кракен", "mugo", "avtor", "gpu", 45),
   solid("cash", "Нал", "garkusha", "pacan", "keyboard", 70), solid("gold", "Золотой запас", "garkusha", "avtor", "rug-pull-gun", 50),
