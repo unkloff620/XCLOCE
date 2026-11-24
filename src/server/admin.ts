@@ -3,6 +3,7 @@
  * log, and edits. Every edit goes through one transaction with the player row locked, is written to the ledger with
  * reason `admin:<telegram id>` and to admin_log (who, whom, what, before → after).
  */
+import { BAUL_MAX, BAUL_TOTAL, baulLevel } from "../content/baul.ts";
 import { send } from "./notify-send.ts";
 import { cleanTosyaMode, tosyaNextAt, tosyaVisit } from "../content/tosya.ts";
 import { GameError, type Db, type Queryable } from "./db.ts";
@@ -138,8 +139,9 @@ export async function player(db: Db, id: number) {
   const chairMask = Number((await db.query<{ pieces: number }>("SELECT pieces FROM player_equipment WHERE player_id=$1 AND equipment_id='chair'", [id]))[0]?.pieces ?? 0);
   const roomsRaw = typeof look?.rooms === "string" ? JSON.parse(look.rooms) : look?.rooms;
   const money = Object.fromEntries(CURRENCIES.map((c) => [c, n(wallet.find((w) => w.currency === c)?.amount)]));
+  const baulPts = n((await db.query<{ n: number }>("SELECT n FROM player_counters WHERE player_id=$1 AND key='baul_pts'", [id]))[0]?.n);
   return {
-    player: { ...p, level: levelFromXp(n(p.xp), cfg.levels).level, energyNow: e.energy },
+    player: { ...p, level: levelFromXp(n(p.xp), cfg.levels).level, energyNow: e.energy, baulLevel: baulLevel(baulPts).level },
     money,
     inventory: inventory.map((r) => ({ ...r, name: itemById(r.item_id)?.name ?? r.item_id, category: itemById(r.item_id)?.category ?? "?" })),
     stats: stats ?? null,
@@ -179,13 +181,14 @@ export type Edit =
   | { op: "set_talent"; weapon: string; branch: string; level: number }
   | { op: "set_name"; value: string }
   | { op: "boss_limit_reset" }
+  | { op: "set_baul_level"; value: number }
   | { op: "give_tattoo_set"; set: string }
   | { op: "give_room"; room: string; own?: boolean }
   | { op: "give_piece"; equipment: string; piece: number; own?: boolean }
   | { op: "ban"; reason: string }
   | { op: "unban" }
   | { op: "reset" };
-export const EDIT_OPS = ["set_money", "set_item", "add_item", "set_xp", "set_poker_xp", "set_zonk_xp", "set_energy", "set_talents", "set_talent", "set_name", "ban", "unban", "reset", "boss_limit_reset", "give_tattoo_set", "give_room", "give_piece"] as const;
+export const EDIT_OPS = ["set_money", "set_item", "add_item", "set_xp", "set_poker_xp", "set_zonk_xp", "set_energy", "set_talents", "set_talent", "set_name", "ban", "unban", "reset", "boss_limit_reset", "give_tattoo_set", "give_room", "give_piece", "set_baul_level"] as const;
 
 /**
  * Everything a player has earned, keyed by player_id. The reset wipes these and gives the starting kit again.
@@ -290,6 +293,16 @@ export async function edit(db: Db, adminTg: number, pid: number, e: Edit) {
         const from = n((p as unknown as Record<string, unknown>)[col]);
         await q.query(`UPDATE players SET ${col}=$2 WHERE id=$1`, [pid, to]);
         await ledgerRow(q, pid, "xp", col, to - from, adminTg);
+        info = { from, to };
+        break;
+      }
+      case "set_baul_level": {
+        // «Баул»: its points set to the level's threshold; the bag is rolled anew for it
+        const to = wholeIn(e.value, 0, BAUL_MAX, "Уровень баула");
+        const [c] = await q.query<{ n: number }>("SELECT n FROM player_counters WHERE player_id=$1 AND key='baul_pts'", [pid]);
+        const from = baulLevel(n(c?.n)).level;
+        await q.query("INSERT INTO player_counters (player_id, key, n) VALUES ($1,'baul_pts',$2) ON CONFLICT (player_id, key) DO UPDATE SET n=EXCLUDED.n", [pid, to ? BAUL_TOTAL[to - 1] : 0]);
+        await q.query("DELETE FROM baul_packs WHERE player_id=$1", [pid]);
         info = { from, to };
         break;
       }

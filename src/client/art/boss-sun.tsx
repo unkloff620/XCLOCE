@@ -35,7 +35,8 @@ export function SunRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, pup
   const head = useRef<SVGGElement>(null);
   const spit = useRef<SVGGElement>(null);
   // the card (bust) drools and spits too, like in the fight
-  useSpit(svgRef, head, spit, true);
+  // below half HP: blood instead of the spit and the drool
+  useSpit(svgRef, head, spit, true, dazed);
   // below half HP: the bloody layers (tools/boss/solntse-blood.py), the same boxes and outlines
   const src = (p: string) => (dazed && BLOOD.has(p) ? `/bosses/${id}/rig/${p}-blood.webp?v=1` : `/bosses/${id}/rig/${p}.webp${P[p]?.v ? `?v=${P[p].v}` : ""}`);
   const pic = (p: string, pp?: "back" | "front", fade?: string) => {
@@ -97,7 +98,7 @@ export function SunRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, pup
             {pic("mouthIn")}
             <g className="sn-jaw" style={at(JAW_HINGE[0], JAW_HINGE[1])}>
               {pic("jawLow")}
-              {CORNERS.map(([x, y], i) => <SunDrool key={i} x={x} y={y} k={bust ? 1.7 : 1} cls={`sn-drool sn-drool-${i}`} />)}
+              {CORNERS.map(([x, y], i) => <SunDrool key={i} x={x} y={y} k={bust ? 1.7 : 1} cls={`sn-drool sn-drool-${i}`} blood={dazed} />)}
             </g>
             {pic("eyes")}
             <g className="sn-pupils">{pic("pupils")}</g>
@@ -124,16 +125,19 @@ export function SunRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, pup
 }
 
 /** a string of drool hanging off a corner of the mouth: it stretches and shrinks, a drop gathers at its end and falls */
-function SunDrool({ x, y, k = 1, cls }: { x: number; y: number; k?: number; cls: string }) {
+function SunDrool({ x, y, k = 1, cls, blood = false }: { x: number; y: number; k?: number; cls: string; blood?: boolean }) {
+  // the spit (pale blue) or, beaten, the blood (dark red)
+  const fill = blood ? "rgba(150,8,12,0.92)" : "rgba(226,240,255,0.72)", fill2 = blood ? "rgba(165,12,16,0.95)" : "rgba(226,240,255,0.85)";
+  const line = blood ? "rgba(70,0,4,0.85)" : "rgba(120,150,175,0.75)", shine = blood ? "rgba(255,120,120,0.7)" : "rgba(255,255,255,0.9)";
   return (
     <g className={cls} transform={`translate(${x} ${y}) scale(${k})`}>
       <g className="sn-drool-str">
-        <path d="M-2 0 C-1.8 7 -1.1 14 -0.8 22 C-0.6 27 0.6 27 0.8 22 C1.1 14 1.8 7 2 0 Z" fill="rgba(226,240,255,0.72)" stroke="rgba(120,150,175,0.75)" strokeWidth="0.45" />
-        <path d="M-0.6 1.5 C-0.5 8 -0.4 14 -0.3 20" stroke="rgba(255,255,255,0.9)" strokeWidth="0.45" fill="none" strokeLinecap="round" />
-        <ellipse cx="0" cy="25" rx="2.1" ry="2.6" fill="rgba(226,240,255,0.85)" stroke="rgba(120,150,175,0.75)" strokeWidth="0.45" />
+        <path d="M-2 0 C-1.8 7 -1.1 14 -0.8 22 C-0.6 27 0.6 27 0.8 22 C1.1 14 1.8 7 2 0 Z" fill={fill} stroke={line} strokeWidth="0.45" />
+        <path d="M-0.6 1.5 C-0.5 8 -0.4 14 -0.3 20" stroke={shine} strokeWidth="0.45" fill="none" strokeLinecap="round" />
+        <ellipse cx="0" cy="25" rx="2.1" ry="2.6" fill={fill2} stroke={line} strokeWidth="0.45" />
       </g>
       <g className="sn-drool-drop">
-        <path d="M0 -3.2 C1.5 -1 2.1 0.5 2.1 1.5 A2.1 2.1 0 0 1 -2.1 1.5 C-2.1 0.5 -1.5 -1 0 -3.2 Z" fill="rgba(226,240,255,0.85)" stroke="rgba(120,150,175,0.75)" strokeWidth="0.45" />
+        <path d="M0 -3.2 C1.5 -1 2.1 0.5 2.1 1.5 A2.1 2.1 0 0 1 -2.1 1.5 C-2.1 0.5 -1.5 -1 0 -3.2 Z" fill={fill2} stroke={line} strokeWidth="0.45" />
       </g>
     </g>
   );
@@ -144,7 +148,7 @@ function SunDrool({ x, y, k = 1, cls }: { x: number; y: number; k?: number; cls:
  * few strings fly out of the mouth — forward and down, they fall with gravity and fade. The mouth is read off the head's
  * group every frame (its pose transform included), in the rig's own units.
  */
-function useSpit(svgRef: RefObject<SVGSVGElement | null>, headRef: RefObject<SVGGElement | null>, layerRef: RefObject<SVGGElement | null>, on: boolean) {
+function useSpit(svgRef: RefObject<SVGSVGElement | null>, headRef: RefObject<SVGGElement | null>, layerRef: RefObject<SVGGElement | null>, on: boolean, blood = false) {
   useEffect(() => {
     if (!on || typeof window === "undefined") return;
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
@@ -169,8 +173,8 @@ function useSpit(svgRef: RefObject<SVGSVGElement | null>, headRef: RefObject<SVG
         const a = Math.PI / 2 + (Math.random() - 0.5) * 2.4;
         const s = 90 + Math.random() * 260;
         const r = streak ? 1.6 + Math.random() * 1.4 : 1 + Math.random() * 2.6;
-        el.setAttribute("fill", "rgba(230,242,255,0.85)");
-        el.setAttribute("stroke", streak ? "rgba(230,242,255,0.8)" : "rgba(120,150,175,0.7)");
+        el.setAttribute("fill", blood ? "rgba(160,10,14,0.92)" : "rgba(230,242,255,0.85)");
+        el.setAttribute("stroke", streak ? (blood ? "rgba(150,8,12,0.9)" : "rgba(230,242,255,0.8)") : (blood ? "rgba(70,0,4,0.8)" : "rgba(120,150,175,0.7)"));
         el.setAttribute("stroke-linecap", "round");
         el.setAttribute("stroke-width", streak ? r.toFixed(2) : "0.5");
         layer.appendChild(el);
@@ -205,5 +209,5 @@ function useSpit(svgRef: RefObject<SVGSVGElement | null>, headRef: RefObject<SVG
     };
     raf = requestAnimationFrame(step);
     return () => { cancelAnimationFrame(raf); for (const d of drops) d.el.remove(); };
-  }, [svgRef, headRef, layerRef, on]);
+  }, [svgRef, headRef, layerRef, on, blood]);
 }

@@ -40,7 +40,7 @@ const ACTION_NAMES: Record<string, string> = {
   game_start: "мини-игра", zonk_move: "зонк", zonk_give_up: "зонк: сдался", poker_play: "покер", poker_swap: "покер: замена", poker_stand: "покер: вскрыл", bj_open: "блэкджек: стол", bj_invite: "блэкджек: позвал", bj_join: "блэкджек: сел", bj_leave: "блэкджек: встал", bj_bet: "блэкджек: ставка", bj_move: "блэкджек: ход", upgrade: "апгрейдер", up_sell: "продал улучшенное", up_take: "забрал улучшенное", clan_cancel: "отменил заявку", clan_accept: "принял в клан", clan_reject: "отклонил заявку", stash_collect: "собрал набор нычек",
 };
 const OP_NAMES: Record<string, string> = {
-  set_money: "валюта", set_item: "предмет", add_item: "выдал", set_xp: "авторитет", set_poker_xp: "опыт покера", set_zonk_xp: "опыт зонка", set_energy: "энергия", set_talents: "свободные таланты",
+  set_money: "валюта", set_item: "предмет", add_item: "выдал", set_xp: "авторитет", set_poker_xp: "опыт покера", set_zonk_xp: "опыт зонка", set_baul_level: "уровень баула", set_energy: "энергия", set_talents: "свободные таланты",
   set_talent: "ветка таланта", set_name: "имя", ban: "бан", unban: "разбан", reset: "сброс прогресса", boss_limit_reset: "сброс лимита боссов", give_tattoo_set: "сет наколок", give_room: "комната", give_piece: "кресло",
 };
 
@@ -754,6 +754,7 @@ function Player({ id }: { id: number }) {
             <EditNum icon={<Icon name="talent" size={22} />} label="Свободные таланты" value={num(p.talents)} onSave={(v) => edit({ op: "set_talents", value: v }, "Таланты")} />
             <EditNum icon="🃏" label="Опыт покера" hint="20 ур. = 390 · 50 = 1725 · 100 = 5950" value={num(p.poker_xp)} onSave={(v) => edit({ op: "set_poker_xp", value: v }, "Опыт покера")} />
             <EditNum icon="🎲" label="Опыт зонка" hint="100 опыта = уровень" value={num(p.zonk_xp)} onSave={(v) => edit({ op: "set_zonk_xp", value: v }, "Опыт зонка")} />
+            <EditNum icon="🎒" label="Уровень баула" hint="0–30, 30 — максимальный" value={num(p.baulLevel)} onSave={(v) => edit({ op: "set_baul_level", value: v }, "Уровень баула")} />
             <EditText icon="✏️" label="Имя" value={String(p.display_name)} onSave={(v) => edit({ op: "set_name", value: v }, "Имя")} />
           </div>
         </section>
