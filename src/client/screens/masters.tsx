@@ -68,7 +68,8 @@ export function MastersScreen() {
         <Link href="/yard" className="back">← Двор</Link>
       </div>
       <LocTabs on="m" />
-      <div className="lp-sheet col" style={{ gap: 10 }}>
+      <div className="lp-sheet">
+        <div className="lp-list col" style={{ gap: 10 }}>
         {MASTERS.map((m) => {
           const r = rows?.find((x) => x.id === m.id);
           const open = r ? r.open : m.n === 1;
@@ -97,6 +98,7 @@ export function MastersScreen() {
               ? <Link key={m.id} href={`/masters/${m.id}`} className="ms-row" onClick={() => haptic.tap()}>{body}</Link>
               : <div key={m.id} className="ms-row locked">{body}</div>;
         })}
+        </div>
       </div>
     </div>
   );

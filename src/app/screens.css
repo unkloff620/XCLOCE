@@ -7414,7 +7414,7 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 /* «Ночной авторитет»: its crown darkened, so it differs from the day one */
 .lc-lead.night .lc-rep svg, .loc-page.night .lp-rep svg, .lead-night-ico { filter: brightness(0.42) saturate(0.55) hue-rotate(200deg) drop-shadow(0 0 1px rgba(120, 100, 255, 0.6)); }
 /* the «Бизнес» drawer inside the paper page (it is the drawer's frame): just under the tabs, over the sheet */
-.locs-list > .bz { position: absolute; top: calc(8.9cqi + 52px); z-index: 6; }
+.locs-list > .bz { position: absolute; top: calc(8.9cqi + 56px); z-index: 6; }
 
 /* ---------------- «Комбо» (screens/combo.tsx) ---------------- */
 /* before the fight: the combo mode under the fight mode */
@@ -8116,3 +8116,8 @@ button:is(.modal > .x, .fs-x, .room-confirm-x, .bbox-x, .acx-x, .zb-res-x, .comb
     radial-gradient(circle at var(--rv) calc(100% - var(--rv)), var(--r)), radial-gradient(circle at calc(100% - var(--rv)) calc(100% - var(--rv)), var(--r)); }
 button:is(.modal > .x, .fs-x, .room-confirm-x, .bbox-x, .acx-x, .zb-res-x, .combo-done-x, .sty-x, .dn-x, .rt-x, .van-x):active { transform: translateY(2px);
   box-shadow: inset 0 0 0 1.5px var(--e), inset 0 2px 0 1.5px rgba(255, 255, 255, 0.45), inset 0 -3px 0 1.5px rgba(0, 0, 0, 0.16), 0 0 0 #3b2410, 0 1px 3px rgba(0, 0, 0, 0.3); }
+
+/* the locations and the masters lists: the tabs 4px lower; the list scrolls in its own box under the sheet's top edge, so the cards vanish there */
+.locs-list > .lp-tabs2 { margin-top: 12px; }
+.locs-list > .lp-sheet { display: flex; flex-direction: column; overflow: hidden; padding: 0; }
+.locs-list .lp-list { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin-top: 4cqi; padding: 12px 10px 18px; }

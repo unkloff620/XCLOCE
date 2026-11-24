@@ -256,7 +256,9 @@ export function LocationsScreen() {
       {/* the user's tabs: «Локации», «Мастера» and one more later */}
       <LocTabs on="l" />
       {rows && <BizDrawer rows={rows} onDone={() => void load()} />}
-      <div className="lp-sheet col" style={{ gap: 12 }}>
+      <div className="lp-sheet">
+        {/* the list scrolls in its own box: it disappears a bit under the sheet's top edge, not up at the tabs */}
+        <div className="lp-list col" style={{ gap: 12 }}>
         {LOCATIONS.map((l) => {
           const r = rows?.find((x) => x.id === l.id);
           // the one to play now: the first open location not cleared yet
@@ -293,6 +295,7 @@ export function LocationsScreen() {
           }
           return <Link key={l.id} href={`/locations/${l.id}`} className={`lc ${cleared ? "cleared" : ""} ${current ? "current" : ""}`}>{plank}</Link>;
         })}
+        </div>
       </div>
       {got && <ClaimedModal got={got} onClose={() => setGot(null)} />}
     </div>
