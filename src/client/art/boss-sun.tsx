@@ -23,6 +23,8 @@ const PEC_ROOT = [500, 405] as const;
 /** the jaw's hinge (it drops and turns a little round it) and the mouth's corners, where the drool hangs */
 const JAW_HINGE = [486, 128] as const;
 const CORNERS = [[462, 156], [509, 154]] as const;
+/** the layers that get bloody below half HP */
+const BLOOD = new Set(["legs", "armL", "lowL", "body", "armR", "chestR", "chestL", "apron", "jawLow", "head", "lowR", "poker"]);
 /** the mouth's middle: the spit flies from here */
 const MOUTH = [486, 152] as const;
 
@@ -34,7 +36,8 @@ export function SunRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, pup
   const spit = useRef<SVGGElement>(null);
   // the card (bust) drools and spits too, like in the fight
   useSpit(svgRef, head, spit, true);
-  const src = (p: string) => `/bosses/${id}/rig/${p}.webp${P[p]?.v ? `?v=${P[p].v}` : ""}`;
+  // below half HP: the bloody layers (tools/boss/solntse-blood.py), the same boxes and outlines
+  const src = (p: string) => (dazed && BLOOD.has(p) ? `/bosses/${id}/rig/${p}-blood.webp?v=1` : `/bosses/${id}/rig/${p}.webp${P[p]?.v ? `?v=${P[p].v}` : ""}`);
   const pic = (p: string, pp?: "back" | "front", fade?: string) => {
     const r = P[p];
     if (!r) return null;

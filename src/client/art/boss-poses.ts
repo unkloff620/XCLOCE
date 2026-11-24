@@ -662,7 +662,7 @@ const snSway = (rate: number, a: number) => (t: number): Pose => {
   return { x: 9 * a * s, up: 1.8 * a * s, head: -1.4 * a * s, y: 2 * a * Math.abs(s) };
 };
 /** he strikes the player: the two blows at once */
-const snStrike = (): Action => { const keys: Key[] = [], face: Face[] = []; const t = snBlows(0, keys, face); return { keys, dur: t, face }; };
+const snStrike = (amp = 1, slow = 1): Action => { const keys: Key[] = [], face: Face[] = []; const t = snBlows(0, keys, face, amp, slow); return { keys, dur: t, face }; };
 
 const POSES: Record<string, Spec> = {
   solntse: {
@@ -689,10 +689,10 @@ const POSES: Record<string, Spec> = {
     rest: [0, 0],
     hit: { head: -120, up: -40, x: -40, armL: 60, lowL: -70, armR: -60, lowR: 70, jaw: 2 },
     strike: snStrike(),
-    // beaten: the same, slower and smaller
-    // below half: no blows — he only breathes heavily and rocks from foot to foot; below a quarter slower, heavier, lower
-    dazed: { pose: { head: 3, armR: -4, armL: 4 }, act: true, sway: snSway(1.1, 1), actions: [{ a: snBreathing(1.1, 0.5), w: 1 }], rest: [0, 0], noStrike: true, speed: 1 },
-    dying: { pose: { head: 5, armR: -8, armL: 8, up: -1 }, act: true, sway: snSway(0.8, 1.3), actions: [{ a: snBreathing(1.35, 1), w: 1 }], rest: [0, 0], noStrike: true, speed: 1 },
+    // below half (bloody, boss-sun.tsx): the same loop, but slow and heavy — the blows smaller and dragged out, the
+    // breath long, a slow rock from foot to foot; below a quarter: no blows any more, only the slow heavy breath
+    dazed: { pose: { head: 3, armR: -4, armL: 4 }, act: true, sway: snSway(0.6, 1), actions: [{ a: snCycle(0.7, 2), w: 1 }], rest: [0, 0], strike: snStrike(0.7, 2), speed: 0.6 },
+    dying: { pose: { head: 5, armR: -8, armL: 8, up: -1 }, act: true, sway: snSway(0.45, 1.3), actions: [{ a: snBreathing(1.6, 1), w: 1 }], rest: [0, 0], noStrike: true, speed: 0.6 },
     shapes: { sw: {}, swa: {}, px: {}, py: {} },
     scale: { armR: "swa", armL: "swa", lowR: "zR", lowL: "zL" },
     vars: (a) => ({

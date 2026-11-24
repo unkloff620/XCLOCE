@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-25-sun-blood",
+    date: "25 ноября",
+    title: "Солнце в крови",
+    items: [
+      { img: "/bosses/solntse/card.webp", text: "Когда у Солнца меньше половины здоровья, он весь в крови и двигается медленно и тяжело: бьёт реже и слабее, тяжело дышит." },
+    ],
+  },
+  {
     id: "2026-11-25-toolbox-discount",
     date: "25 ноября",
     title: "Скидка в строительном ящике",
