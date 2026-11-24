@@ -1837,4 +1837,9 @@ CREATE INDEX IF NOT EXISTS donate_payments_player ON donate_payments (player_id,
     id: "v2-134-baul-repack",
     sql: `DELETE FROM baul_packs;`,
   },
+  {
+    // «Баул»: no free bags for the levels any more (the user 2026-11-25): every bag costs 20 слитков
+    id: "v2-135-baul-no-free",
+    sql: `DELETE FROM player_counters WHERE key = 'baul_free';`,
+  },
 ];

@@ -25,7 +25,7 @@ describe("«Баул»", () => {
     expect(rollBaulPack(3, always(0.1)).items?.some((i) => i.id.startsWith("key-"))).toBeFalsy();
   });
 
-  it("a win gives points and a free opening per level; then an opening costs 20 слитков", async () => {
+  it("a win gives points (the level); every bag costs 20 слитков, no free ones", async () => {
     const db = await freshDb();
     const p = await newPlayer(db);
     await expect(act(db, p, "baul_open")).rejects.toMatchObject({ code: "baul_locked" });
@@ -37,8 +37,10 @@ describe("«Баул»", () => {
     const first = await act(db, p, "baul_open");
     expect(first.result.reward.xp ?? 0).toBeGreaterThanOrEqual(seen.xp ?? 0);
     for (const [c, v] of Object.entries(seen.currencies ?? {})) expect(first.result.reward.currencies[c]).toBe(v);
-    await act(db, p, "baul_open");
-    expect(await wallet(db, p, "GOLD")).toBe(30);
+    expect(await wallet(db, p, "GOLD")).toBe(10);
+    const { countersOf } = await import("../src/server/systems/counters.ts");
+    expect((await countersOf(db, p)).baul_free ?? 0).toBe(0);
+    await setMoney(db, p, "GOLD", 30);
     const r = await act(db, p, "baul_open");
     expect(await wallet(db, p, "GOLD")).toBe(10);
     expect(r.result.level).toBe(2);

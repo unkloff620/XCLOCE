@@ -27,7 +27,7 @@ export const baulImg = (level: number) => `/assets/shop/v2/baul-${tier(level)}.w
 /** width / height of each picture */
 export const baulAspect = (level: number) => ({ 0: 560 / 335, 15: 560 / 398, 30: 560 / 467 })[tier(level)];
 
-interface OpenResult { reward: Granted; tattoos: string[]; free: boolean; level: number }
+interface OpenResult { reward: Granted; tattoos: string[]; level: number }
 
 export function BaulWindow({ onClose }: { onClose: () => void }) {
   const { state, act } = useGame();
@@ -38,7 +38,7 @@ export function BaulWindow({ onClose }: { onClose: () => void }) {
   if (!b) return null;
   const gold = state?.wallet[BAUL_CUR] ?? 0;
   const pct = b.to === null ? 100 : Math.max(0, Math.min(100, ((b.points - b.from) / (b.to - b.from)) * 100));
-  const can = !busy && b.level >= 1 && (b.free > 0 || gold >= BAUL_PRICE);
+  const can = !busy && b.level >= 1 && gold >= BAUL_PRICE;
   const take = async () => {
     if (!can) return;
     haptic.tap();
@@ -47,7 +47,7 @@ export function BaulWindow({ onClose }: { onClose: () => void }) {
     setBusy(false);
     if (r) { haptic.ok(); setLook(false); setGot(r); }
   };
-  const takeLabel = b.free > 0 ? <>Забрать{b.free > 1 ? ` ×${b.free}` : ""}</> : <>Забрать <span className="num row" style={{ gap: 3 }}>{BAUL_PRICE}<Icon name={BAUL_CUR} size={18} /></span></>;
+  const takeLabel = <>Забрать <span className="num row" style={{ gap: 3 }}>{BAUL_PRICE}<Icon name={BAUL_CUR} size={18} /></span></>;
   return (
     <Modal title="Баул" onClose={onClose} wide className="bl-win">
       <div className="bl-lv">
