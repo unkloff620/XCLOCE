@@ -31,7 +31,7 @@ interface Spec {
   /** the follow-through: the child is pulled back by its parent's speed × this (s) */
   drag: Partial<Record<J, [J, number]>>;
   /** never still: a slow pose drifting with the time (s) */
-  idle: (t: number) => Pose;
+  idle: (t: number, lvl?: number) => Pose;
   actions: { a: Action; w: number }[];
   /** the rest between the actions (s) */
   rest: [number, number];
@@ -594,67 +594,41 @@ const fkShift = (rate: number, a: number) => (t: number): Pose => {
 };
 
 
-/* Солнце (boss-sun.tsx): huge and slow, every move heavy. He breathes hard — in: the pecs, the arms and the trunk swell
-   (sw → screens.css --sw, swa: the arms grow from the shoulders, %), the arms rise, the chin goes up and the jaw drops
-   open; out: all of it sinks back, the jaw half closes and the spit flies (the class sn-spit). The order (the user's):
-   in, out, in — the blows (the jaw shut: his rest face) — out, in, out, in — the blows — and so on. The blows: R — the
-   poker in his right (lava) fist, raised high behind and slammed down at the screen; L — the left (yellow) fist, pulled
-   back and driven at the screen. Slow wind-ups, a short heavy blow, a long settle. */
-const SN_IN = 1.9, SN_OUT = 1.8;
+/* Солнце (boss-sun.tsx): huge and slow, every move heavy. He breathes hard all the time, in and out without a stop (the
+   user 2026-11-25) — in: the pecs, the arms and the trunk swell (sw → screens.css --sw, swa: the arms grow from the
+   shoulders, %), the arms rise, the chin goes up and the jaw drops open; out: all of it sinks back, the jaw half closes
+   and the spit flies (boss-sun.tsx useSpit sees the swell turn). The breath runs on its own (snBreathPose in his idle);
+   the blows come whenever, on the breath in or out: R — the poker in his right (lava) fist, raised high behind and
+   slammed down at the screen; L — the left (yellow) fist, raised and hammered down. Slow wind-ups, a short heavy blow. */
 const SN_FULL = { sw: 1, swa: 8, jaw: 1, armR: 10, lowR: 6, armL: -9, lowL: -5, head: -2.5, y: -7, up: -0.8 };
 const SN_EMPTY = { sw: 0, swa: 0, jaw: 0.35, armR: -3, lowR: -2, armL: 3, lowL: 2, head: 1.5, y: 2, up: 0.5 };
-/** one breath from t: in (or out) — eased by the springs (slow ones: the swell takes the whole breath) */
-const snBreath = (t: number, inhale: boolean, keys: Key[], face: Face[]) => {
-  // soft keys: the springs never settle — the breath turns from in to out without a stop
-  keys.push({ at: t, pose: inhale ? SN_FULL : SN_EMPTY, stiff: 0.4 });
-  if (!inhale) face.push({ cls: "sn-spit", at: t + 0.12, dur: 0.2 });
-  return t + (inhale ? SN_IN : SN_OUT);
+/** one breath (in + out), s: healthy / below half / below a quarter */
+const SN_BREATH = [3.7, 5.2, 6.4];
+/** the breath now: in and straight out again, a smooth wave between the empty and the full chest */
+const snBreathPose = (t: number, lvl: number): Pose => {
+  const u = (1 - Math.cos((2 * Math.PI * t) / SN_BREATH[Math.min(2, lvl)])) / 2;
+  const out: Pose = {};
+  for (const k of Object.keys(SN_FULL) as (keyof typeof SN_FULL)[]) out[k] = SN_EMPTY[k] + (SN_FULL[k] - SN_EMPTY[k]) * u;
+  return out;
 };
-/** the blows, full of air (the chest stays swollen) with the jaw shut: the poker, then the fist */
+/** the blows (the breath goes on under them): the poker, then the fist */
 const snBlows = (t: number, keys: Key[], face: Face[], amp = 1, slow = 1) => {
-  const held = { sw: 0.85, swa: 6, jaw: 0, y: -4 };
-  const a = (p: Pose): Pose => Object.fromEntries(Object.entries(p).map(([k, v]) => [k, (v ?? 0) * (k === "sw" || k === "jaw" || k === "swa" || k === "y" ? 1 : amp)]));
-  // the poker: up behind the shoulder (slow), down at the screen (a short heavy blow), a long settle
+  const a = (p: Pose): Pose => Object.fromEntries(Object.entries(p).map(([k, v]) => [k, (v ?? 0) * amp]));
   // the poker: the elbow up and the forearm back, so its hook end stands high; then the forearm swings down and the
   // hook end comes down at us, under him
-  keys.push({ at: t, pose: a({ ...held, armR: 40, lowR: -48, up: 3.5, x: 8, head: 2, armL: -6 }), stiff: 0.9 });
-  keys.push({ at: t + 0.7 * slow, pose: a({ ...held, armR: -12, lowR: 52, zR: 14, up: -6, x: -14, y: 3, head: -3.5, armL: 4 }), stiff: 5 });
+  keys.push({ at: t, pose: a({ armR: 40, lowR: -48, up: 3.5, x: 8, head: 2, armL: -6 }), stiff: 0.9 });
+  keys.push({ at: t + 0.7 * slow, pose: a({ armR: -12, lowR: 52, zR: 14, up: -6, x: -14, head: -3.5, armL: 4 }), stiff: 5 });
   face.push({ cls: "sn-slam", at: t + 0.8 * slow, dur: 0.16 });
-  keys.push({ at: t + 0.95 * slow, pose: a({ ...held, armR: -6, lowR: 36, zR: 5, up: -3, x: -7 }), stiff: 1.1 });
+  keys.push({ at: t + 0.95 * slow, pose: a({ armR: -6, lowR: 36, zR: 5, up: -3, x: -7 }), stiff: 1.1 });
   t += 1.5 * slow;
   // the fist: raised high, then hammered down under him (we are below him) — the shoulder and the elbow turn down
-  keys.push({ at: t, pose: a({ ...held, armL: -38, lowL: -42, up: -3, x: -6, head: -2, armR: 4, lowR: -10 }), stiff: 0.9 });
-  keys.push({ at: t + 0.62 * slow, pose: a({ ...held, armL: 44, lowL: 38, zL: 22, up: 5, x: 12, y: 2, head: 4 }), stiff: 5 });
+  keys.push({ at: t, pose: a({ armL: -38, lowL: -42, up: -3, x: -6, head: -2, armR: 4, lowR: -10 }), stiff: 0.9 });
+  keys.push({ at: t + 0.62 * slow, pose: a({ armL: 44, lowL: 38, zL: 22, up: 5, x: 12, head: 4 }), stiff: 5 });
   face.push({ cls: "sn-slam", at: t + 0.72 * slow, dur: 0.16 });
-  keys.push({ at: t + 0.88 * slow, pose: a({ ...held, armL: 30, lowL: 26, zL: 8, up: 3, x: 6 }), stiff: 1.1 });
+  keys.push({ at: t + 0.88 * slow, pose: a({ armL: 30, lowL: 26, zL: 8, up: 3, x: 6 }), stiff: 1.1 });
   t += 1.4 * slow;
-  keys.push({ at: t, pose: { ...held, armR: 0, lowR: 0, armL: 0, lowL: 0, zR: 0, zL: 0, up: 0, x: 0, head: 0 }, stiff: 0.8 });
+  keys.push({ at: t, pose: {}, stiff: 0.8 });
   return t + 0.35 * slow;
-};
-/** the whole loop: in, out, in, the blows, out — played again and again (so: … the blows, out, in, out, in, the blows …) */
-const snCycle = (amp = 1, slow = 1): Action => {
-  const keys: Key[] = [], face: Face[] = [];
-  let t = 0;
-  t = snBreath(t, true, keys, face);
-  t = snBreath(t, false, keys, face);
-  t = snBreath(t, true, keys, face);
-  t = snBlows(t, keys, face, amp, slow);
-  t = snBreath(t, false, keys, face);
-  return { keys, dur: t, face };
-};
-/** below half HP: no blows — only the heavy breath, on and on without a stop (slower below a quarter), the arms
- *  hanging lower; the sway (snSway) rocks him from foot to foot over it */
-const snBreathing = (slow = 1, droop = 0): Action => {
-  const keys: Key[] = [], face: Face[] = [];
-  const hang = (p: Pose): Pose => ({ ...p, armR: (p.armR ?? 0) - 6 * droop, armL: (p.armL ?? 0) + 6 * droop, head: (p.head ?? 0) + 3 * droop });
-  let t = 0;
-  for (let i = 0; i < 4; i++) {
-    const inhale = i % 2 === 0;
-    keys.push({ at: t, pose: hang(inhale ? { ...SN_FULL, swa: SN_FULL.swa * 0.8 } : SN_EMPTY), stiff: 0.4 });
-    if (!inhale) face.push({ cls: "sn-spit", at: t + 0.12, dur: 0.2 });
-    t += (inhale ? SN_IN : SN_OUT) * slow;
-  }
-  return { keys, dur: t, face };
 };
 /** the heavy rock from foot to foot (the feet stay put: only the upper body goes over them) */
 const snSway = (rate: number, a: number) => (t: number): Pose => {
@@ -675,24 +649,28 @@ const POSES: Record<string, Spec> = {
     },
     drag: { lowL: ["armL", -0.05], lowR: ["armR", -0.05], head: ["up", -0.06] },
     // never still: a slow heavy sway; the eyes look about now and then
-    idle: (t) => {
+    // the breath (in and out, never a stop) and the eyes looking about now and then
+    idle: (t, lvl = 0) => {
       const g = Math.floor(t / 2.2);
       const r = (n: number) => { const v = Math.sin(n * 12.9898 + g * 78.233) * 43758.5453; return v - Math.floor(v); };
+      const b = snBreathPose(t, lvl);
       return {
-        up: 0.6 * Math.sin(t * 0.55), x: 2 * Math.sin(t * 0.4),
-        head: 0.8 * Math.sin(t * 0.7 + 1),
-        lowR: 1.2 * Math.sin(t * 0.9 + 2), lowL: 1.2 * Math.sin(t * 0.8),
+        ...b,
+        up: (b.up ?? 0) + 0.6 * Math.sin(t * 0.55), x: 2 * Math.sin(t * 0.4),
+        head: (b.head ?? 0) + 0.8 * Math.sin(t * 0.7 + 1),
+        lowR: (b.lowR ?? 0) + 1.2 * Math.sin(t * 0.9 + 2), lowL: (b.lowL ?? 0) + 1.2 * Math.sin(t * 0.8),
         px: (r(1) - 0.5) * 1.4, py: (r(2) - 0.5) * 0.7,
       };
     },
-    actions: [{ a: snCycle(), w: 1 }],
-    rest: [0, 0],
+    // the blows whenever (the breath goes on under them)
+    actions: [{ a: snStrike(), w: 1 }],
+    rest: [1.5, 5],
     hit: { head: -120, up: -40, x: -40, armL: 60, lowL: -70, armR: -60, lowR: 70, jaw: 2 },
     strike: snStrike(),
     // below half (bloody, boss-sun.tsx): the same loop, but slow and heavy — the blows smaller and dragged out, the
     // breath long, a slow rock from foot to foot; below a quarter: no blows any more, only the slow heavy breath
-    dazed: { pose: { head: 3, armR: -4, armL: 4 }, act: true, sway: snSway(0.6, 1), actions: [{ a: snCycle(0.7, 2), w: 1 }], rest: [0, 0], strike: snStrike(0.7, 2), speed: 0.6 },
-    dying: { pose: { head: 5, armR: -8, armL: 8, up: -1 }, act: true, sway: snSway(0.45, 1.3), actions: [{ a: snBreathing(1.6, 1), w: 1 }], rest: [0, 0], noStrike: true, speed: 0.6 },
+    dazed: { pose: { head: 3, armR: -7, armL: 7 }, act: true, sway: snSway(0.6, 1), actions: [{ a: snStrike(0.7, 2), w: 1 }], rest: [3, 7], strike: snStrike(0.7, 2), speed: 0.6 },
+    dying: { pose: { head: 5, armR: -14, armL: 14, up: -1 }, act: false, sway: snSway(0.45, 1.3), noStrike: true },
     shapes: { sw: {}, swa: {}, px: {}, py: {} },
     scale: { armR: "swa", armL: "swa", lowR: "zR", lowL: "zL" },
     vars: (a) => ({
@@ -1217,7 +1195,7 @@ export function usePoses(svgRef: RefObject<SVGSVGElement | null>, baseId: string
         if (ph && !ph.act) wait = 1;
         else { act = pick(ph?.actions ?? spec.actions); actT = 0; }
       }
-      const idle = spec.idle(t);
+      const idle = spec.idle(t, ph ? (ph === spec.dying ? 2 : 1) : 0);
       if (ph) for (const [k, v] of Object.entries(ph.pose)) idle[k as J] = (idle[k as J] ?? 0) + (v ?? 0);
       if (ph?.sway) for (const [k, v] of Object.entries(ph.sway(t))) idle[k as J] = (idle[k as J] ?? 0) + (v ?? 0);
       for (const k of keys) {

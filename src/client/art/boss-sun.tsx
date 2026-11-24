@@ -3,9 +3,9 @@
  * Солнце (tools/boss/assemble-solntse.py): the 13th boss — huge, heavy and slow. The artist's layers on soft joints: the
  * puppet (boss-puppet.ts) bends the legs (only the feet are fixed), the arms at the shoulders and the elbows; the trunk,
  * the apron, the pecs and the face are plain SVG over the body. The pose engine (boss-poses.ts POSES.solntse) runs it all:
- * the breath — in: the chest, the arms and the body swell (--sw), the arms rise, the jaw drops (--jaw); out: they sink
- * back, the jaw half closes and the spit flies out of the mouth (the class sn-spit, useSpit) — and between the breaths
- * the slow heavy blows with the poker (the right fist) and the left fist, the jaw shut. Drool hangs from the mouth's
+ * the breath, in and out without a stop — in: the chest, the arms and the body swell (--sw), the arms rise, the jaw drops
+ * (--jaw); out: they sink back, the jaw half closes and the spit flies out of the mouth (useSpit) — and whenever, on the
+ * breath in or out, the slow heavy blows with the poker (the right fist) and the left fist. Drool hangs from the mouth's
  * corners all the time.
  */
 import { useEffect, useRef, type CSSProperties, type ReactNode, type RefObject } from "react";
@@ -155,7 +155,7 @@ function useSpit(svgRef: RefObject<SVGSVGElement | null>, headRef: RefObject<SVG
     const NS = "http://www.w3.org/2000/svg";
     type Drop = { el: SVGElement; x: number; y: number; vx: number; vy: number; r: number; life: number; age: number; streak: boolean };
     const drops: Drop[] = [];
-    let raf = 0, last = 0, was = false;
+    let raf = 0, last = 0, was = false, swPrev = 0, rising = false;
     const mouth = (): [number, number] | null => {
       const svg = svgRef.current, h = headRef.current;
       const a = svg?.getScreenCTM(), b = h?.getScreenCTM();
@@ -189,6 +189,11 @@ function useSpit(svgRef: RefObject<SVGSVGElement | null>, headRef: RefObject<SVG
       const now = !!svgRef.current?.classList.contains("sn-spit");
       if (now && !was) { const p = mouth(); if (p) burst(p); }
       was = now;
+      // the breath turns from in to out (the swell, --sw, passes its top): the spit flies
+      const sw = parseFloat(svgRef.current?.style.getPropertyValue("--sw") || "0");
+      if (sw > swPrev + 0.001) rising = true;
+      else if (rising && sw < swPrev - 0.001) { rising = false; if (swPrev > 0.45) { const p = mouth(); if (p) burst(p); } }
+      swPrev = sw;
       for (let i = drops.length - 1; i >= 0; i--) {
         const d = drops[i];
         d.age += dt;
