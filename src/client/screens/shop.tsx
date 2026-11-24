@@ -267,14 +267,34 @@ function lootParts(r: Granted): Granted[] {
   for (const [c, v] of Object.entries(r.currencies ?? {})) if (v) out.push(one({ currencies: { [c]: v } }));
   if (r.xp) out.push(one({ xp: r.xp }));
   if (r.energy) out.push(one({ energy: r.energy }));
+  // the нычки are not tiles: they lie scattered on the tray's bottom (StashPile)
   for (const it of r.items ?? []) if (!it.id.startsWith("part-") && !STASH_IDS.includes(it.id)) out.push(one({ items: [it] }));
-  // the нычки: one tile «×N» too
-  const stash = (r.items ?? []).filter((it) => STASH_IDS.includes(it.id));
-  if (stash.length) out.push(one({ items: stash }));
   // the craft parts: one tile «×N» (RewardChips sums them)
   const parts = (r.items ?? []).filter((it) => it.id.startsWith("part-"));
   if (parts.length) out.push(one({ items: parts }));
   return out;
+}
+/** where the нычки lie on the bottom of the tray: x, y (% of the pile box), a tilt */
+const PILE_SPOTS: [number, number, number][] = [[8, 38, -14], [30, 62, 9], [52, 30, -5], [72, 60, 16], [90, 34, -10]];
+/** up to five нычки (the most of them first) scattered on the bottom of the open case, each with its «×N» */
+function StashPile({ items, delay }: { items: { id: string; qty: number }[]; delay: number }) {
+  const byId = new Map<string, number>();
+  for (const it of items) byId.set(it.id, (byId.get(it.id) ?? 0) + it.qty);
+  const top = [...byId].sort((a, b) => b[1] - a[1]).slice(0, PILE_SPOTS.length);
+  if (!top.length) return null;
+  return (
+    <div className="acx-pile">
+      {top.map(([id, n], i) => {
+        const [x, y, r] = PILE_SPOTS[i];
+        return (
+          <span key={id} className="acx-pile-it" title={itemById(id)?.name} style={{ left: `${x}%`, top: `${y}%`, ["--r" as string]: `${r}deg`, animationDelay: `${delay + i * 120}ms` }}>
+            <ItemArt id={id} size={30} />
+            {n > 1 && <b className="num">×{n}</b>}
+          </span>
+        );
+      })}
+    </div>
+  );
 }
 const LOOT_STEP = 380; // ms between the things coming out of the case
 
@@ -294,6 +314,7 @@ function AchBoxWindow({ onClose }: { onClose: () => void }) {
   const inkGot = useMemo(() => (got?.items ?? []).filter((it) => TATTOO_ID_SET.has(it.id)), [got]);
   const thingGot = useMemo(() => (got?.items ?? []).filter((it) => isThing(it.id)), [got]); // eslint-disable-line react-hooks/exhaustive-deps
   const parts = useMemo(() => (got ? lootParts({ ...got, items: (got.items ?? []).filter((it) => !TATTOO_ID_SET.has(it.id) && !isThing(it.id)) }) : []), [got]); // eslint-disable-line react-hooks/exhaustive-deps
+  const stashGot = useMemo(() => (got?.items ?? []).filter((it) => STASH_IDS.includes(it.id)), [got]);
   // many boxes at once: the things come out faster (the whole pour stays within ~3 s)
   const step = Math.min(LOOT_STEP, Math.max(60, Math.round(3000 / Math.max(1, parts.length))));
   const inkDelay = 450 + parts.length * step;
@@ -343,11 +364,12 @@ function AchBoxWindow({ onClose }: { onClose: () => void }) {
         {/* two frames, top left of the tray: the tattoo and the thing — «Пусто», or what dropped (after the other things) */}
         <LootFrame kind="ink" items={inkGot} delay={inkDelay} open={phase === "open"} />
         <LootFrame kind="thing" items={thingGot} delay={thingDelay} open={phase === "open"} />
-        <div className={`acx-loot${parts.length > 30 ? " lots" : parts.length > 15 ? " many" : ""}`}>
+        <div className={`acx-loot${parts.length > 30 ? " lots" : parts.length > 15 ? " many" : ""}${stashGot.length ? " pile" : ""}`}>
           {phase === "open" && parts.map((p, i) => (
             <span key={i} className="acx-item" style={{ animationDelay: `${450 + i * step}ms` }}><RewardChips r={p} size={14} /></span>
           ))}
         </div>
+        {phase === "open" && <StashPile items={stashGot} delay={450 + parts.length * step} />}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="acx-closed" src={`/assets/shop/v2/case-front-closed.webp?v=${ART_VER.shop}`} alt="" draggable={false} />
       </div>

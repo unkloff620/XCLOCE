@@ -17,6 +17,12 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-24-case-stash",
+    date: "24 ноября",
+    title: "Нычки в кейсе",
+    items: [{ img: "/assets/shop/v2/case-front-open.webp", text: "Нычки из кейса теперь лежат россыпью на дне — до пяти штук, а не одним сундуком." }],
+  },
+  {
     id: "2026-11-24-solntse-sets",
     date: "24 ноября",
     title: "Сеты Солнца",
