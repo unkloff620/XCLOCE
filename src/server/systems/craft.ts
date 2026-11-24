@@ -7,7 +7,8 @@ import { talentDamageOf } from "./talent-progress.ts";
  */
 import { GameError, type Queryable } from "../db.ts";
 import { addItem, ledger, moscowDay, takeItem, takeMoney, type Ctx } from "../core.ts";
-import { TOOLBOX_PRICE, rollToolbox } from "../../content/toolbox.ts";
+import { TOOLBOX_DISC_GRACE, TOOLBOX_DISC_MS, rollToolbox, rollToolboxDiscount, toolboxPrice } from "../../content/toolbox.ts";
+import { countersOf, setTo } from "./counters.ts";
 import { DEALER_STOCK, PART_TOKEN, dealerParts } from "../../content/craft-drops.ts";
 import { CRAFT_BOXES, CRAFT_BOX_PRICES, CRAFT_BOX_TALENTS, craftBonusOf, craftById, craftBoxesOpen } from "../../content/craft.ts";
 import { talentsForDamage } from "../../content/talents.ts";
@@ -124,10 +125,24 @@ export async function dealerBuy(ctx: Ctx, itemId: string, want: number) {
 
 /** «Строительный ящик» (content/toolbox.ts): one spin — TOOLBOX_PRICE tokens for a random part */
 export async function toolboxSpin(ctx: Ctx) {
-  await takeMoney(ctx, "TOKEN", TOOLBOX_PRICE, "toolbox");
+  // the discount the last spin rolled, while its minute lasts; then a new one for the next spin
+  const d = await toolboxDiscount(ctx.q, ctx.pid, ctx.now);
+  const price = toolboxPrice(d?.pct ?? 0);
+  if (price > 0) await takeMoney(ctx, "TOKEN", price, "toolbox");
   const id = rollToolbox(ctx.rng);
   await addItem(ctx, id, 1, "toolbox");
-  return { itemId: id };
+  const pct = rollToolboxDiscount(ctx.rng);
+  const until = ctx.now + TOOLBOX_DISC_MS + TOOLBOX_DISC_GRACE;
+  await setTo(ctx.q, ctx.pid, "tb_disc", pct);
+  await setTo(ctx.q, ctx.pid, "tb_until", until);
+  return { itemId: id, paid: price, discount: { pct, until } };
+}
+
+/** the discount on the next spin of «Строительный ящик», if its time is not out */
+export async function toolboxDiscount(q: Queryable, pid: number, now: number): Promise<{ pct: number; until: number } | null> {
+  const c = await countersOf(q, pid);
+  const until = c.tb_until ?? 0;
+  return until > now && (c.tb_disc ?? 0) > 0 ? { pct: c.tb_disc, until } : null;
 }
 
 /** takes a level-1/2 thing apart: about 40% of each ingredient comes back (at random), the thing is gone */

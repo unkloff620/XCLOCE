@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-25-toolbox-discount",
+    date: "25 ноября",
+    title: "Скидка в строительном ящике",
+    items: [
+      { img: "/assets/shop/v2/g0.webp", text: "После каждой прокрутки строительного ящика сверху выезжает вторая рулетка — скидка 25, 50, 75 или 100% на следующую прокрутку. Действует минуту, потом сгорает." },
+    ],
+  },
+  {
     id: "2026-11-24-baul",
     date: "24 ноября",
     title: "Баул",

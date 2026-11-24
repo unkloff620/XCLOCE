@@ -70,7 +70,7 @@ const ACH_BOX_H = ACH_BOX_W * (2000 / 3000) / CASE_ASPECT;
 const ACH_BOX_AT = { left: 69.5, top: 80.3 - ACH_BOX_H, width: ACH_BOX_W, height: ACH_BOX_H };
 /** «Баул» on the left of the counter (the scene 2000×3000), standing on the counter like the weapons did; its picture by level */
 const BAUL_W = 36;
-const baulAt = (level: number) => { const h = BAUL_W * (2000 / 3000) / baulAspect(level); return { left: 2, top: 82.5 - h, width: BAUL_W, height: h }; };
+const baulAt = (level: number) => { const h = BAUL_W * (2000 / 3000) / baulAspect(level); return { left: 2, top: 80 - h, width: BAUL_W, height: h }; };
 /** the weapons on the counter: smaller and moved to the left, to make room for the case */
 const WEAPONS_SCALE = 0.8;
 const WEAPONS_LEFT = 3;

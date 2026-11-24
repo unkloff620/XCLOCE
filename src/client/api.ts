@@ -134,6 +134,8 @@ export interface GameState {
   obshak?: { level: import("../content/obshak.ts").ObshakLevel | null; until: number | null; ready: boolean; pool: number; nextAt: number };
   /** «Баул» (content/baul.ts, server/systems/baul.ts) */
   baul?: import("../server/systems/baul.ts").BaulView;
+  /** «Строительный ящик»: the discount on the next spin (server/systems/craft.ts) */
+  toolboxDisc?: { pct: number; until: number } | null;
   stashGifts?: { id: number; fromId: number; from: string; itemId: string; qty?: number; at: number }[];
   /** messages from other players (a spit, a fist fight), the newest first */
   notes?: { id: number; kind: string; fromId: number | null; from: string; meta: Record<string, unknown>; at: number; unread: boolean }[];

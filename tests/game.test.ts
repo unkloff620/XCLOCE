@@ -583,9 +583,14 @@ describe("shop and exchange", () => {
     const got = TOOLBOX_PARTS.find((x) => x.id === r.result.itemId)!;
     expect(got.rarity).toBe("epic");
     expect(await qty(db, p, got.id)).toBe(1);
-    await act(db, p, "toolbox_spin", {}, T0, always(0.9));
-    expect(await wallet(db, p, "TOKEN")).toBe(4);
-    await expect(act(db, p, "toolbox_spin", {}, T0)).rejects.toMatchObject({ code: "no_money" });
+    // the first spin rolled 25% off the next one (6 tokens) for a minute
+    expect(r.result.discount.pct).toBe(25);
+    const r2 = await act(db, p, "toolbox_spin", {}, T0 + 30_000, always(0.9));
+    expect(r2.result.paid).toBe(6);
+    expect(await wallet(db, p, "TOKEN")).toBe(6);
+    expect(r2.result.discount.pct).toBe(75);
+    // the discount burns after its minute: full price again
+    await expect(act(db, p, "toolbox_spin", {}, T0 + 30_000 + 2 * 60_000)).rejects.toMatchObject({ code: "no_money" });
   });
   it("craft: parts are not sold in the scheme any more", async () => {
     const p = await newPlayer(db);

@@ -42,6 +42,7 @@ import { achievementsReady, achievementsView, autoClaimAchievements } from "./ac
 import { achBoxView } from "./achbox.ts";
 import { giftsLeft, giftsReceived, stashWish } from "./swap.ts";
 import { obshakView } from "./obshak.ts";
+import { toolboxDiscount } from "./craft.ts";
 import { baulView } from "./baul.ts";
 
 /** Everything the HUD and the always-visible parts of the game need. Runs inside the player's transaction. */
@@ -166,6 +167,8 @@ export async function gameState(ctx: Ctx) {
     obshak: await obshakView(ctx.q, ctx.pid, ctx.now),
     /** «Баул» (content/baul.ts): the level, the points, the free openings, the sets collected */
     baul: await baulView(ctx.q, ctx.pid, ctx.rng),
+    /** «Строительный ящик»: the discount on the next spin, while it lasts */
+    toolboxDisc: await toolboxDiscount(ctx.q, ctx.pid, ctx.now),
     stashGifts: await giftsReceived(ctx.q, ctx.pid),
     stashInbox: await giftsReceived(ctx.q, ctx.pid, true),
     notes: await notesView(ctx.q, ctx.pid, ctx.now),

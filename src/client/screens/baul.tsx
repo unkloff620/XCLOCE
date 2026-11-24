@@ -85,9 +85,9 @@ export function BaulWindow({ onClose }: { onClose: () => void }) {
 function Inside({ r, title, button, onClose }: { r: Reward | Granted; title?: string; button: ReactNode; onClose: () => void }) {
   const tats = (r.items ?? []).filter((it) => it.qty > 0 && !!tattooSetOf(it.id));
   const cells: { key: string; icon: ReactNode; n: number; name: string }[] = [
-    ...(r.xp ? [{ key: "xp", icon: <Icon name="xp" size={30} />, n: r.xp, name: "Авторитет" }] : []),
-    ...Object.entries(r.currencies ?? {}).filter(([, v]) => !!v).map(([c, v]) => ({ key: c, icon: <Icon name={c} size={30} />, n: v as number, name: c })),
-    ...(r.items ?? []).filter((it) => it.qty > 0 && !tattooSetOf(it.id)).map((it) => ({ key: it.id, icon: <ItemArt id={it.id} size={36} />, n: it.qty, name: itemById(it.id)?.name ?? it.id })),
+    ...(r.xp ? [{ key: "xp", icon: <Icon name="xp" size={22} />, n: r.xp, name: "Авторитет" }] : []),
+    ...Object.entries(r.currencies ?? {}).filter(([, v]) => !!v).map(([c, v]) => ({ key: c, icon: <Icon name={c} size={22} />, n: v as number, name: c })),
+    ...(r.items ?? []).filter((it) => it.qty > 0 && !tattooSetOf(it.id)).map((it) => ({ key: it.id, icon: <ItemArt id={it.id} size={26} />, n: it.qty, name: itemById(it.id)?.name ?? it.id })),
   ];
   // over everything (the window's pop animation would trap a fixed layer inside it)
   return createPortal(
