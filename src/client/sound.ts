@@ -438,7 +438,8 @@ export function raidVoice(): number {
 }
 
 let lastWear = 0;
-let lastInk = 0;
+/** when the ink sound now playing ends (AudioContext time) */
+let inkUntil = 0;
 /** Plays a sound. `power` 0..1 makes hits heavier. */
 export function sfx(name: Sfx, power = 0.5) {
   if (muted) return;
@@ -492,12 +493,12 @@ export function sfx(name: Sfx, power = 0.5) {
       }
       break;
     case "ink": {
-      // «Набить все» plays it once
-      const now = performance.now();
-      if (now - lastInk < 600) break;
-      lastInk = now;
-      if (sample(a, nextOf("ink", ["ink1", "ink2", "ink3"]), t, 0.65)) break;
+      // the machine never buzzes over itself: while one ink sound plays, the next taps stay silent (the user 2026-11-24)
+      if (a.currentTime < inkUntil) break;
+      const id = nextOf("ink", ["ink1", "ink2", "ink3"]);
+      if (sample(a, id, t, 0.65)) { inkUntil = t + (buffers[id]?.duration ?? 0.6); break; }
       noise(a, t, 0.4, { freq: 300, type: "bandpass", q: 4, vol: 0.2 });
+      inkUntil = t + 0.4;
       break;
     }
     case "wear": {
