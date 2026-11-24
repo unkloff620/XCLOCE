@@ -1827,4 +1827,9 @@ CREATE INDEX IF NOT EXISTS donate_payments_player ON donate_payments (player_id,
     id: "v2-132-baul-repack",
     sql: `DELETE FROM baul_packs;`,
   },
+  {
+    // «Баул»: the tickets of the wheel at most 5
+    id: "v2-133-baul-repack",
+    sql: `DELETE FROM baul_packs;`,
+  },
 ];
