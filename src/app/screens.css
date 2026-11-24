@@ -8057,8 +8057,16 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .tb-mark::after { bottom: 0; border-bottom-color: #ffd75a; }
 .tb-got { min-height: 26px; margin: 8px 0 6px; text-align: center; font: 900 16px/1.4 var(--font-display), system-ui; }
 .tb-got .r-common { color: #6d84a3; } .tb-got .r-rare { color: #8a4cf0; } .tb-got .r-epic { color: #e2283c; }
-.tb-spin { gap: 6px; }
-.tb-list { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+.tb-win > h3 { text-align: center; padding: 0 34px; }
+.tb-win .modal-body { display: flex; flex-direction: column; align-items: center; }
+.tb-roll { width: 100%; }
+.tb-spin { gap: 6px; min-width: 170px; }
+.tb-more { width: 100%; margin-top: 14px; }
+.tb-more > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 800; font-size: 13px; color: #5a3b1c; padding: 6px; }
+.tb-more > summary::-webkit-details-marker { display: none; }
+.tb-more > summary::after { content: "▾"; transition: transform 0.2s; }
+.tb-more[open] > summary::after { transform: rotate(180deg); }
+.tb-list { margin-top: 6px; display: flex; flex-direction: column; gap: 10px; }
 .tb-tier-name { display: block; margin-bottom: 4px; font-size: 12px; font-weight: 800; }
 .tb-tier-name.r-common { color: #6d84a3; } .tb-tier-name.r-rare { color: #8a4cf0; } .tb-tier-name.r-epic { color: #e2283c; }
 .tb-tier-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); gap: 4px; }

@@ -35,8 +35,23 @@ export function ToolboxWindow({ onClose }: { onClose: () => void }) {
   const [won, setWon] = useState<string | null>(null);
   const [spinning, setSpinning] = useState(false);
   const box = useRef<HTMLDivElement>(null);
+  /** the spin under way: its end (a second tap ends it at once) */
+  const run = useRef<{ id: string; target: number; timer: number } | null>(null);
+  const finish = () => {
+    const r = run.current;
+    if (!r) return;
+    window.clearTimeout(r.timer);
+    run.current = null;
+    setAnim(false);
+    setX(r.target);
+    setSpinning(false);
+    setWon(r.id);
+    haptic.ok();
+    sfx(rarityOf(r.id) === "common" ? "coin" : "reward");
+  };
   const tokens = state?.wallet.TOKEN ?? 0;
   const spin = async () => {
+    if (run.current) { finish(); return; }
     if (spinning) return;
     haptic.tap();
     setSpinning(true);
@@ -48,18 +63,16 @@ export function ToolboxWindow({ onClose }: { onClose: () => void }) {
     setX(0);
     setItems(strip(r.itemId));
     const w = box.current?.clientWidth ?? 320;
-    const jitter = (Math.random() - 0.5) * (CELL - 20);
+    // the won cell stops right under the marker (a little off its middle, like a real wheel)
+    const jitter = (Math.random() - 0.5) * 24;
+    const target = -(WIN_AT * CELL + 3 + (CELL - 6) / 2 - w / 2 + jitter);
+    run.current = { id: r.itemId, target, timer: window.setTimeout(finish, SPIN_MS + 100) };
     requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (!run.current) return;
       setAnim(true);
-      setX(-(WIN_AT * CELL + CELL / 2 - w / 2 + jitter));
+      setX(target);
       sfx("spin");
     }));
-    setTimeout(() => {
-      setSpinning(false);
-      setWon(r.itemId);
-      haptic.ok();
-      sfx(rarityOf(r.itemId) === "common" ? "coin" : "reward");
-    }, SPIN_MS + 100);
   };
   const byRarity = useMemo(() => (["epic", "rare", "common"] as const).map((t) => ({ t, list: TOOLBOX_PARTS.filter((p) => p.rarity === t) })), []);
   return (
@@ -73,9 +86,11 @@ export function ToolboxWindow({ onClose }: { onClose: () => void }) {
         <i className="tb-mark" aria-hidden="true" />
       </div>
       <div className="tb-got">{won ? <><b className={`r-${rarityOf(won)}`}>{itemById(won)?.name}</b></> : <span>&nbsp;</span>}</div>
-      <button type="button" className="btn gold block tb-spin" disabled={spinning || tokens < TOOLBOX_PRICE} onClick={() => void spin()}>
-        Крутить <span className="num row" style={{ gap: 3 }}>{TOOLBOX_PRICE}<Icon name="TOKEN" size={18} /></span>
+      <button type="button" className="btn gold tb-spin" disabled={(!spinning && tokens < TOOLBOX_PRICE)} onClick={() => void spin()}>
+        {spinning ? "Пропустить" : <>Крутить <span className="num row" style={{ gap: 3 }}>{TOOLBOX_PRICE}<Icon name="TOKEN" size={18} /></span></>}
       </button>
+      <details className="tb-more">
+        <summary>Что в ящике</summary>
       <div className="tb-list">
         {byRarity.map(({ t, list }) => (
           <div key={t} className="tb-tier">
@@ -86,6 +101,7 @@ export function ToolboxWindow({ onClose }: { onClose: () => void }) {
           </div>
         ))}
       </div>
+      </details>
     </Modal>
   );
 }
