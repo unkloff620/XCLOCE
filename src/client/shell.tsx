@@ -274,6 +274,7 @@ function Nav() {
             }
           }}>
           <NavIcon id={t.id} />
+          <span className="nav-l">{t.label}</span>
           {t.id === "yard" && !!state?.yard.count && <span className="badge">{state.yard.count}</span>}
           {t.id === "yard" && !state?.yard.count && taskHint && <span className="badge" style={{ background: "var(--gold)", color: "#2e1c00" }}>!</span>}
           {/* new messages in the clan chat, requests to my clan */}

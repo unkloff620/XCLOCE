@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-24-menu",
+    date: "24 ноября",
+    title: "Новое меню",
+    items: [
+      { img: "/assets/nav/bosses.webp", text: "Меню внизу — на железных плашках с подписями: Двор, Магаз, Забив, Хата, Гараж, Банда. Открытый раздел — на золотой." },
+    ],
+  },
+  {
     id: "2026-11-24-toolbox",
     date: "24 ноября",
     title: "Строительный ящик",

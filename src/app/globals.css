@@ -24,7 +24,7 @@
   --orange: #ff8a3d;
   --r: 16px;
   --hud-h: 114px;
-  --nav-h: 70px;
+  --nav-h: 84px;
   /* the notch / home bar, and in Telegram's fullscreen mode also the row of its own buttons over the top */
   --safe-t: calc(max(env(safe-area-inset-top, 0px), var(--tg-safe-area-inset-top, 0px)) + var(--tg-content-safe-area-inset-top, 0px));
   --safe-b: calc(max(env(safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px)) + var(--tg-content-safe-area-inset-bottom, 0px));
