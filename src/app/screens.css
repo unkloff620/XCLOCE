@@ -8061,11 +8061,30 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .tb-win .modal-body { display: flex; flex-direction: column; align-items: center; }
 .tb-roll { width: 100%; }
 .tb-spin { gap: 6px; min-width: 170px; }
-.tb-more { width: 100%; margin-top: 14px; }
-.tb-more > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 800; font-size: 13px; color: #5a3b1c; padding: 6px; }
-.tb-more > summary::-webkit-details-marker { display: none; }
-.tb-more > summary::after { content: "▾"; transition: transform 0.2s; }
-.tb-more[open] > summary::after { transform: rotate(180deg); }
+/* the window on the slate (the artist's board, stretched by its frame); its top stays put — the list unfolds downward */
+.modal-back:not(.full):not(.page):has(.tb-win) { display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+  --tbt: max(0px, calc((100 * var(--vh) - var(--hud-h) - var(--safe-t) - var(--nav-h) - var(--safe-b) - 16px) / 2 - 175px)); }
+.modal-back:not(.full):not(.page) > .modal.tb-win { flex: none; margin-top: var(--tbt); max-height: calc(100% - var(--tbt));
+  background: none; border-style: solid; border-width: 18px; border-image: url(/assets/shop/donate/slate.webp?v=1) 24 fill / 18px stretch; border-radius: 0;
+  box-shadow: none; filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.6)); padding: 8px 6px 10px; color: #e9e4da; display: flex; flex-direction: column; overflow: hidden; overflow-anchor: none; }
+.tb-win .modal-body { flex: 1 1 auto; min-height: 0; }
+.tb-win .modal-body > * { flex: none; }
+.modal.tb-win > h3 { color: #f1ece2; text-shadow: 0 2px 0 #000; }
+.modal.tb-win > .x { top: 4px; right: 4px; }
+.tb-win .tb-roll { border-color: #111; }
+.tb-more-btn { margin-top: 12px; border: 0; background: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font: 800 13px/1 system-ui; color: #cfc8bb; padding: 6px 10px; }
+.tb-more-btn::after { content: "▾"; transition: transform 0.35s ease; }
+.tb-more-btn.on::after { transform: rotate(180deg); }
+.tb-win .modal-body > .tb-more { width: 100%; flex: 0 1 auto; min-height: 0; display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 0.4s ease, opacity 0.35s ease; }
+.tb-win .modal-body > .tb-more.open { grid-template-rows: 1fr; opacity: 1; }
+.tb-more-in { min-height: 0; overflow: hidden auto; overscroll-behavior: contain; }
+.tb-win .tb-mini { background: rgba(255, 255, 255, 0.07); }
+.tb-win .tb-tier-name.r-common { color: #9fb3cf; }
+.tb-win .tb-tier-name.r-rare { color: #b48cff; }
+.tb-win .tb-tier-name.r-epic { color: #ff6574; }
+.tb-win .tb-got .r-common { color: #a9bcd6; }
+.tb-win .tb-got .r-rare { color: #b48cff; }
+.tb-win .tb-got .r-epic { color: #ff6574; }
 .tb-list { margin-top: 6px; display: flex; flex-direction: column; gap: 10px; }
 .tb-tier-name { display: block; margin-bottom: 4px; font-size: 12px; font-weight: 800; }
 .tb-tier-name.r-common { color: #6d84a3; } .tb-tier-name.r-rare { color: #8a4cf0; } .tb-tier-name.r-epic { color: #e2283c; }

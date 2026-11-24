@@ -34,6 +34,7 @@ export function ToolboxWindow({ onClose }: { onClose: () => void }) {
   const [anim, setAnim] = useState(false);
   const [won, setWon] = useState<string | null>(null);
   const [spinning, setSpinning] = useState(false);
+  const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   /** the spin under way: its end (a second tap ends it at once) */
   const run = useRef<{ id: string; target: number; timer: number } | null>(null);
@@ -89,8 +90,9 @@ export function ToolboxWindow({ onClose }: { onClose: () => void }) {
       <button type="button" className="btn gold tb-spin" disabled={(!spinning && tokens < TOOLBOX_PRICE)} onClick={() => void spin()}>
         {spinning ? "Пропустить" : <>Крутить <span className="num row" style={{ gap: 3 }}>{TOOLBOX_PRICE}<Icon name="TOKEN" size={18} /></span></>}
       </button>
-      <details className="tb-more">
-        <summary>Что в ящике</summary>
+      <button type="button" className={`tb-more-btn ${open ? "on" : ""}`} onClick={() => { haptic.tap(); setOpen((o) => !o); }} aria-expanded={open}>Что в ящике</button>
+      {/* the contents unfold smoothly downward (grid rows 0fr → 1fr); the window's top stays where it is */}
+      <div className={`tb-more ${open ? "open" : ""}`}><div className="tb-more-in">
       <div className="tb-list">
         {byRarity.map(({ t, list }) => (
           <div key={t} className="tb-tier">
@@ -101,7 +103,7 @@ export function ToolboxWindow({ onClose }: { onClose: () => void }) {
           </div>
         ))}
       </div>
-      </details>
+      </div></div>
     </Modal>
   );
 }
