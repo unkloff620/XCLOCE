@@ -14,6 +14,7 @@ import { ART_VER } from "../preload.ts";
 import { FINGER_FRAMES, FINGERS as FINGER_BOX } from "../art/finger-data.ts";
 import type { Currency } from "../../content/currencies.ts";
 import { Star } from "./donate.tsx";
+import { BAUL_IMG } from "./baul.tsx";
 
 const L = SHOP_ART.layers;
 const box = (n: string): CSSProperties => {
@@ -67,15 +68,19 @@ function Spot({ s, onOpen }: { s: (typeof SPOTS)[number]; onOpen: (id: ShopSpotI
 const ACH_BOX_W = 29;
 const ACH_BOX_H = ACH_BOX_W * (2000 / 3000) / CASE_ASPECT;
 const ACH_BOX_AT = { left: 69.5, top: 80.3 - ACH_BOX_H, width: ACH_BOX_W, height: ACH_BOX_H };
+/** «Баул» on the left of the counter (the picture 506×520; the scene 2000×3000), standing on the counter like the weapons did */
+const BAUL_W = 30;
+const BAUL_H = BAUL_W * (2000 / 3000) * (520 / 506);
+const BAUL_AT = { left: 4, top: 82 - BAUL_H, width: BAUL_W, height: BAUL_H };
 /** the weapons on the counter: smaller and moved to the left, to make room for the case */
 const WEAPONS_SCALE = 0.8;
 const WEAPONS_LEFT = 3;
 
-export function ShopScene({ onOpen, onGoods, onToolbox, children, box, onBox }: {
-  onOpen: (id: ShopSpotId) => void; onGoods?: (cur: Currency) => void; onToolbox?: () => void; children?: ReactNode;
+export function ShopScene({ onOpen, onGoods, onToolbox, onBaul, baulLevel, children, box, onBox }: {
+  onOpen: (id: ShopSpotId) => void; onGoods?: (cur: Currency) => void; onToolbox?: () => void; onBaul?: () => void; baulLevel?: number; children?: ReactNode;
   box?: { ready: number; progress: number; cost: number }; onBox?: () => void;
 }) {
-  const spot = (id: ShopSpotId) => <Spot s={SPOTS.find((x) => x.id === id)!} onOpen={onOpen} />;
+  void Spot; void onOpen;
   const neck = SHOP_ART.neck;
   const pv = SHOP_ART.pivots;
   return (
@@ -117,7 +122,12 @@ export function ShopScene({ onOpen, onGoods, onToolbox, children, box, onBox }: 
           <AchCase ready={!!box && box.ready > 0} label={box ? (box.ready > 0 ? `×${box.ready}` : `${box.progress}/${box.cost}`) : undefined} />
         </button>
       )}
-      {spot("weapons")}
+      {/* «Баул» (screens/baul.tsx) lies where the weapons were (the user 2026-11-24: weapons are bought in the fights now) */}
+      <button type="button" className="sk-spot sk-baul" style={{ left: `${BAUL_AT.left}%`, top: `${BAUL_AT.top}%`, width: `${BAUL_AT.width}%`, height: `${BAUL_AT.height}%` }} onClick={() => onBaul?.()} aria-label="Баул" title="Баул">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={BAUL_IMG} alt="" draggable={false} />
+        {baulLevel !== undefined && <i className="sk-baul-lv num">{baulLevel}</i>}
+      </button>
       {/* the arms lie on the counter in front of the goods; they breathe with the body (same animation, same pivot) */}
       <div className="sk-body sk-arms" style={{ transformOrigin: `${neck.x}% 70%` }}>
         <Layer n="sleeveR" />

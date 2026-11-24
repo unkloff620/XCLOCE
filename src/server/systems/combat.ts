@@ -1,4 +1,5 @@
 import { addTalentDamage, fightOverTalents, talentDamageOf } from "./talent-progress.ts";
+import { baulTick } from "./baul.ts";
 import { monthTick } from "./monthly.ts";
 import { zarubTick } from "./zarub.ts";
 import { shodBoostMult, shodTick } from "./shodnyak.ts";
@@ -546,6 +547,9 @@ export async function claimFight(ctx: Ctx, fightId: number, see = true) {
   if (earnedKey) await heistDrop(ctx, def, granted);
   // «Календарь»: the win counts on the day the boss fell
   await monthTick(ctx, "kill", 1, { boss: def.id, mode: mode.id, at: f.ended_at ? new Date(f.ended_at).getTime() : ctx.now });
+  // «Баул»: the points of this win (content/baul.ts), a free opening for every new level
+  const bg = await baulTick(ctx, Number(f.hp_max));
+  if (bg) granted.baul = bg;
   // «Зарубы»: a task «kill a boss»
   await zarubTick(ctx, "kill", 1);
   // «Сходняк»: a task «beat this boss»

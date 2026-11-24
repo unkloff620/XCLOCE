@@ -132,6 +132,8 @@ export interface GameState {
   stashWish?: string[];
   /** «Общак»: the level, today's collecting and the needle's damage left */
   obshak?: { level: import("../content/obshak.ts").ObshakLevel | null; until: number | null; ready: boolean; pool: number; nextAt: number };
+  /** «Баул» (content/baul.ts, server/systems/baul.ts) */
+  baul?: import("../server/systems/baul.ts").BaulView;
   stashGifts?: { id: number; fromId: number; from: string; itemId: string; qty?: number; at: number }[];
   /** messages from other players (a spit, a fist fight), the newest first */
   notes?: { id: number; kind: string; fromId: number | null; from: string; meta: Record<string, unknown>; at: number; unread: boolean }[];

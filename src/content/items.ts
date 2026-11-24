@@ -74,19 +74,19 @@ export const WEAPONS: ItemDef[] = [
   {
     id: "keyboard", name: "Нож", category: "weapon", rarity: "rare", maxStack: 99_999_999,
     description: "Ручка в изоленте, под лентой — заначка. Режет и врагов, и бюджет.",
-    sources: ["Магазин", "Двор (редко)"],
+    sources: ["Баул в магазине", "Покупка в бою", "Двор (редко)"],
     weapon: { damage: 30, kind: "consumable", animation: "keyboard", action: "Пырнуть ножом" },
   },
   {
     id: "gpu", name: "Ствол", category: "weapon", rarity: "epic", maxStack: 99_999_999,
     description: "Старый ствол в изоленте, у барабана — пачка купюр. Без лишних вопросов.",
-    sources: ["Магазин"],
+    sources: ["Баул в магазине", "Покупка в бою"],
     weapon: { damage: 60, kind: "consumable", animation: "gpu", action: "Шмальнуть из ствола" },
   },
   {
     id: "rug-pull-gun", name: "Пушка", category: "weapon", rarity: "legendary", maxStack: 99_999_999,
     description: "Один выстрел — и под ногами босса исчезает ликвидность.",
-    sources: ["Магазин"],
+    sources: ["Баул в магазине", "Покупка в бою"],
     weapon: { damage: 250, kind: "consumable", animation: "rugpull", action: "Выдернуть ковёр" },
   },
 ];

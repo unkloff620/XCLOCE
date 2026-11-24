@@ -1,4 +1,5 @@
 "use client";
+import { BaulWindow } from "./baul.tsx";
 import { ART_VER } from "../preload.ts";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -412,6 +413,7 @@ export function ShopScreen() {
   const [boxOpen, setBoxOpen] = useState(false);
   const [donate, setDonate] = useState<Currency | null>(null);
   const [toolbox, setToolbox] = useState(false);
+  const [baul, setBaul] = useState(false);
   // a tap on «Магазин» in the menu closes the case window
   useEffect(() => {
     const off = () => setBoxOpen(false);
@@ -434,8 +436,7 @@ export function ShopScreen() {
         <div className="title-row">
           <h1 className="display">Магазин</h1>
           <Help topic="shop" title="Магазин">
-            <HelpList title="Что где лежит" rows={SHOP_SPOTS.filter((x) => x.id === "weapons").map((x) => ({ key: x.id, icon: /* eslint-disable-next-line @next/next/no-img-element */ <img src={`/assets/shop/v2/${x.img}.webp?v=${ART_VER.shop}`} alt="" width={44} height={44} style={{ objectFit: "contain" }} />, name: x.name, hint: x.hint }))} />
-            <p className="small muted">Оружие на прилавке — за внутриигровую валюту. Валюта на полках — за звёзды Telegram.</p>
+            <p className="small muted">Баул на прилавке открывается за слитки, его уровень растёт за победы над боссами. Валюта на полках — за звёзды Telegram. Оружие покупается в бою.</p>
           </Help>
         </div>
       </div>
@@ -445,12 +446,13 @@ export function ShopScreen() {
           {/* the ceiling goes on above the picture on tall screens (tools/shop/build-ceiling.py) */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="sk-ceiling" src={`/assets/shop/v2/ceiling.webp?v=${ART_VER.shop}`} alt="" draggable={false} aria-hidden="true" />
-          <ShopScene onOpen={(id) => setOpen(id)} onGoods={(c) => { haptic.tap(); setDonate(c); }} onToolbox={() => { haptic.tap(); setToolbox(true); }} box={state?.achBox} onBox={() => { haptic.tap(); setBoxOpen(true); }} />
+          <ShopScene onOpen={(id) => setOpen(id)} onGoods={(c) => { haptic.tap(); setDonate(c); }} onToolbox={() => { haptic.tap(); setToolbox(true); }} onBaul={() => { haptic.tap(); setBaul(true); }} baulLevel={state?.baul?.level} box={state?.achBox} onBox={() => { haptic.tap(); setBoxOpen(true); }} />
         </div>
       </div>
       {boxOpen && <AchBoxWindow onClose={() => setBoxOpen(false)} />}
       {donate && <DonateWindow cur={donate} onClose={() => setDonate(null)} />}
       {toolbox && <ToolboxWindow onClose={() => setToolbox(false)} />}
+      {baul && <BaulWindow onClose={() => setBaul(false)} />}
       {open && (
         <Modal title={open.name} onClose={() => setOpen(null)} wide className={open.id === "clothing" ? "wear-shop" : undefined}>
           {data ? <OfferGrid offers={offers} rub={data.exchange.rub} /> : <div className="muted small center">Загрузка…</div>}

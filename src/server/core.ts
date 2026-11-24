@@ -212,6 +212,8 @@ export interface Granted {
   unlocks?: string[];
   /** «Взлом»: the box this win dropped into the cells, or "full" — the cells were all taken */
   heistBox?: string;
+  /** «Баул»: the points this win gave, the level after it and the levels gained */
+  baul?: { points: number; level: number; up: number };
 }
 
 /** what else listens to the rewards (systems/shodnyak.ts: authority for its tasks); registered at import */

@@ -230,7 +230,7 @@ function SeatSpot({ s, i, geo, table, reveal, cleared, delayOf, myTurnHand, bett
             const res = done && h.outcome ? h.outcome : null;
             const net = res ? handNet(h, s.free) : 0;
             return (
-              <div key={k} className={`bjt-hand ${active ? "active" : ""} ${res ? `res-${res}` : ""}`}>
+              <div key={k} className={`bjt-hand ${active ? "active" : ""} ${active && myTurnHand === k ? "mine" : ""} ${res ? `res-${res}` : ""}`}>
                 {res && <span className={`bjt-out ${res}`}>{res === "lose" && h.value > 21 ? "Перебор" : h.title} {res !== "push" ? signed(net) : ""}</span>}
                 <div className="bj-cards">{h.cards.map((c) => <Card key={c.n} c={c} delay={delayOf(`c${c.n}`)} />)}</div>
                 <b className={`bjt-hv num ${h.value > 21 && reveal ? "bust" : ""}`}>{reveal ? h.value : "…"}</b>
