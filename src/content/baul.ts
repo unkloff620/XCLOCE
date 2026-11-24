@@ -8,6 +8,7 @@
  */
 import type { Reward } from "./rewards.ts";
 import { BOSSES, keyId } from "./bosses.ts";
+import { STASH_IDS } from "./stashes.ts";
 
 export const BAUL_PRICE = 20;
 export const BAUL_CUR = "GOLD" as const;
@@ -44,43 +45,57 @@ export const baulTattooChance = (level: number) => (level < 1 ? 0 : 0.42 * Math.
 /** the chance of a piece of the 9th set per opening from level 26 (21 pieces ≈ 42 openings ≈ 840 слитков) */
 export const BAUL_GOLD_CHANCE = 0.5;
 
-/** the pool of one opening: base amounts at level 1, × BAUL_GROWTH per level, ±50% at random; `from` — the first level */
-const POOL: { kind: "xp" | "cur" | "item"; id: string; base: number; from?: number }[] = [
-  { kind: "xp", id: "xp", base: 150 },
-  { kind: "cur", id: "PAP", base: 400 },
-  { kind: "cur", id: "RUB", base: 15 },
-  { kind: "cur", id: "TOOTH", base: 60 },
-  { kind: "cur", id: "TOKEN", base: 1, from: 3 },
-  { kind: "item", id: "keyboard", base: 3 },
-  { kind: "item", id: "gpu", base: 2, from: 2 },
-  { kind: "item", id: "rug-pull-gun", base: 1, from: 4 },
-  { kind: "item", id: "fortune-ticket", base: 1, from: 6 },
+/**
+ * One opening (the user 2026-11-25): at level 30 every kind of the pool comes, each up to its MAX — one budget split at
+ * random (fewer roubles — then more of something else: the shares are drawn, then scaled so they average BAUL_SHARE,
+ * none over its max). Lower levels: the same × BAUL_GROWTH^(level − 30), a kind only from its `from` level.
+ */
+const POOL: { kind: "xp" | "cur" | "item" | "stash"; id: string; max: number; from?: number }[] = [
+  { kind: "xp", id: "xp", max: 280_205 },
+  { kind: "cur", id: "RUB", max: 431 },
+  { kind: "cur", id: "TOKEN", max: 162, from: 3 },
+  { kind: "cur", id: "TOOTH", max: 19_125 },
+  { kind: "item", id: "keyboard", max: 191 },
+  { kind: "stash", id: "stash", max: 90, from: 5 },
+  { kind: "item", id: "gold-nugget", max: 699, from: 10 },
+  { kind: "item", id: "gold-ring", max: 210, from: 15 },
 ];
-export const BAUL_GROWTH = 1.17;
-/** keys of the bosses from Князь on (the user): the boss's key joins the pool from this level */
+/** the average share of the max at level 30 */
+export const BAUL_SHARE = 0.7;
+export const BAUL_GROWTH = 1.2;
+/** keys of the bosses from Князь on (the user): the boss's key joins from this level; at 30 — 4 or 5 of them, 6–9 each */
 export const BAUL_KEYS: { boss: string; from: number }[] = [
   { boss: "knyaz", from: 8 }, { boss: "vadim", from: 12 }, { boss: "botsman", from: 16 }, { boss: "utilizator", from: 20 }, { boss: "fokus", from: 25 },
 ];
 
-/** one opening's pack at `level` (without the tattoo): 3 + level/4 kinds of the pool, and with a chance a key */
+const shuffle = <T,>(a: T[], rng: () => number) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+/** one opening's pack at `level` (without the tattoo) */
 export function rollBaulPack(level: number, rng: () => number): Reward {
-  const lv = Math.max(1, level);
-  const grow = Math.pow(BAUL_GROWTH, lv - 1);
+  const lv = Math.max(1, Math.min(BAUL_MAX, level));
+  const grow = Math.pow(BAUL_GROWTH, lv - BAUL_MAX);
   const pool = POOL.filter((p) => lv >= (p.from ?? 1));
-  const n = Math.min(pool.length, 3 + Math.floor(lv / 4));
-  const pick = [...pool];
-  for (let i = pick.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [pick[i], pick[j]] = [pick[j], pick[i]]; }
+  // the budget split: shares drawn, scaled to average BAUL_SHARE, none over 1
+  const r = pool.map(() => 0.3 + rng() * 0.7);
+  const k = (BAUL_SHARE * r.length) / r.reduce((a, b) => a + b, 0);
   const out: Reward = {};
-  for (const p of pick.slice(0, n)) {
-    const qty = Math.max(1, Math.round(p.base * grow * (0.5 + rng())));
+  const items: { id: string; qty: number }[] = [];
+  pool.forEach((p, i) => {
+    const qty = Math.max(1, Math.round(p.max * Math.min(1, r[i] * k) * grow));
     if (p.kind === "xp") out.xp = qty;
     else if (p.kind === "cur") out.currencies = { ...out.currencies, [p.id]: qty };
-    else out.items = [...(out.items ?? []), { id: p.id, qty }];
+    else if (p.kind === "stash") {
+      // нычки: the count over 1–4 random pieces
+      const ids = shuffle([...STASH_IDS], rng).slice(0, Math.min(qty, 1 + Math.floor(rng() * 4)));
+      ids.forEach((id, j) => { const q = Math.floor(qty / ids.length) + (j < qty % ids.length ? 1 : 0); if (q > 0) items.push({ id, qty: q }); });
+    } else items.push({ id: p.id, qty });
+  });
+  // the keys: at 30 — 4 or 5 bosses, 6–9 keys each; lower — fewer bosses and fewer keys
+  const keys = shuffle(BAUL_KEYS.filter((x) => lv >= x.from && BOSSES.some((b) => b.id === x.boss)), rng);
+  if (keys.length) {
+    const nb = lv >= BAUL_MAX ? Math.min(keys.length, 4 + (rng() < 0.5 ? 1 : 0)) : Math.max(1, Math.round(keys.length * (0.5 + rng() * 0.5)));
+    for (const x of keys.slice(0, nb)) items.push({ id: keyId(x.boss), qty: Math.max(1, Math.round((6 + Math.floor(rng() * 4)) * (lv / BAUL_MAX))) });
   }
-  const keys = BAUL_KEYS.filter((k) => lv >= k.from && BOSSES.some((b) => b.id === k.boss));
-  if (keys.length && rng() < 0.35 + lv / 100) {
-    const k = keys[Math.floor(rng() * keys.length) % keys.length];
-    out.items = [...(out.items ?? []), { id: keyId(k.boss), qty: 1 + (rng() < 0.25 ? 1 : 0) }];
-  }
+  if (items.length) out.items = items;
   return out;
 }
