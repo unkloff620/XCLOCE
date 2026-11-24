@@ -165,7 +165,7 @@ export async function gameState(ctx: Ctx) {
     /** «Общак» (content/obshak.ts): the level, today's collecting and the needle's damage left */
     obshak: await obshakView(ctx.q, ctx.pid, ctx.now),
     /** «Баул» (content/baul.ts): the level, the points, the free openings, the sets collected */
-    baul: await baulView(ctx.q, ctx.pid),
+    baul: await baulView(ctx.q, ctx.pid, ctx.rng),
     stashGifts: await giftsReceived(ctx.q, ctx.pid),
     stashInbox: await giftsReceived(ctx.q, ctx.pid, true),
     notes: await notesView(ctx.q, ctx.pid, ctx.now),

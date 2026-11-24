@@ -1808,4 +1808,13 @@ WHERE jsonb_typeof(body->'tattoos') = 'array';`,
 );
 CREATE INDEX IF NOT EXISTS donate_payments_player ON donate_payments (player_id, at);`,
   },
+  {
+    // «Баул»: what lies in the bag now (rolled for its level; the preview shows it, «Забрать» takes it)
+    id: "v2-130-baul",
+    sql: `CREATE TABLE IF NOT EXISTS baul_packs (
+  player_id INT PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
+  level INT NOT NULL,
+  pack JSONB NOT NULL
+);`,
+  },
 ];

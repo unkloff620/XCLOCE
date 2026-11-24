@@ -14,7 +14,7 @@ import { ART_VER } from "../preload.ts";
 import { FINGER_FRAMES, FINGERS as FINGER_BOX } from "../art/finger-data.ts";
 import type { Currency } from "../../content/currencies.ts";
 import { Star } from "./donate.tsx";
-import { BAUL_IMG } from "./baul.tsx";
+import { baulAspect, baulImg } from "./baul.tsx";
 
 const L = SHOP_ART.layers;
 const box = (n: string): CSSProperties => {
@@ -68,10 +68,9 @@ function Spot({ s, onOpen }: { s: (typeof SPOTS)[number]; onOpen: (id: ShopSpotI
 const ACH_BOX_W = 29;
 const ACH_BOX_H = ACH_BOX_W * (2000 / 3000) / CASE_ASPECT;
 const ACH_BOX_AT = { left: 69.5, top: 80.3 - ACH_BOX_H, width: ACH_BOX_W, height: ACH_BOX_H };
-/** «Баул» on the left of the counter (the picture 506×520; the scene 2000×3000), standing on the counter like the weapons did */
-const BAUL_W = 30;
-const BAUL_H = BAUL_W * (2000 / 3000) * (520 / 506);
-const BAUL_AT = { left: 4, top: 82 - BAUL_H, width: BAUL_W, height: BAUL_H };
+/** «Баул» on the left of the counter (the scene 2000×3000), standing on the counter like the weapons did; its picture by level */
+const BAUL_W = 36;
+const baulAt = (level: number) => { const h = BAUL_W * (2000 / 3000) / baulAspect(level); return { left: 2, top: 82.5 - h, width: BAUL_W, height: h }; };
 /** the weapons on the counter: smaller and moved to the left, to make room for the case */
 const WEAPONS_SCALE = 0.8;
 const WEAPONS_LEFT = 3;
@@ -123,9 +122,9 @@ export function ShopScene({ onOpen, onGoods, onToolbox, onBaul, baulLevel, child
         </button>
       )}
       {/* «Баул» (screens/baul.tsx) lies where the weapons were (the user 2026-11-24: weapons are bought in the fights now) */}
-      <button type="button" className="sk-spot sk-baul" style={{ left: `${BAUL_AT.left}%`, top: `${BAUL_AT.top}%`, width: `${BAUL_AT.width}%`, height: `${BAUL_AT.height}%` }} onClick={() => onBaul?.()} aria-label="Баул" title="Баул">
+      <button type="button" className="sk-spot sk-baul" style={(() => { const a = baulAt(baulLevel ?? 0); return { left: `${a.left}%`, top: `${a.top}%`, width: `${a.width}%`, height: `${a.height}%` }; })()} onClick={() => onBaul?.()} aria-label="Баул" title="Баул">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={BAUL_IMG} alt="" draggable={false} />
+        <img src={baulImg(baulLevel ?? 0)} alt="" draggable={false} />
         {baulLevel !== undefined && <i className="sk-baul-lv num">{baulLevel}</i>}
       </button>
       {/* the arms lie on the counter in front of the goods; they breathe with the body (same animation, same pivot) */}

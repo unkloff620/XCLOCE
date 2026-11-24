@@ -31,7 +31,12 @@ describe("«Баул»", () => {
     await expect(act(db, p, "baul_open")).rejects.toMatchObject({ code: "baul_locked" });
     await db.tx(async (q) => { const ctx = await makeCtx(q, p, {}); expect(await baulTick(ctx, 15_000_000)).toMatchObject({ points: 150, level: 2, up: 2 }); });
     await setMoney(db, p, "GOLD", 30);
-    await act(db, p, "baul_open");
+    // what the preview shows is what «Забрать» gives
+    const { baulView } = await import("../src/server/systems/baul.ts");
+    const seen = (await baulView(db, p)).pack!;
+    const first = await act(db, p, "baul_open");
+    expect(first.result.reward.xp ?? 0).toBeGreaterThanOrEqual(seen.xp ?? 0);
+    for (const [c, v] of Object.entries(seen.currencies ?? {})) expect(first.result.reward.currencies[c]).toBe(v);
     await act(db, p, "baul_open");
     expect(await wallet(db, p, "GOLD")).toBe(30);
     const r = await act(db, p, "baul_open");

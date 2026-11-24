@@ -8101,7 +8101,7 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 
 /* every close button is one of our metal plates (.btn's look: stripes, inner frame, four rivets), at its own size and place */
 :where(.fs-x, .room-confirm-x, .sty-x) { position: relative; }
-button:is(.modal > .x, .fs-x, .room-confirm-x, .bbox-x, .acx-x, .zb-res-x, .combo-done-x, .sty-x, .dn-x, .rt-x, .van-x) {
+button:is(.modal > .x, .fs-x, .room-confirm-x, .bbox-x, .acx-x, .zb-res-x, .combo-done-x, .sty-x, .dn-x, .rt-x, .van-x, .bl-in-x) {
   --a: #eceff3; --b: #bfc6cf; --c: #8a929c; --e: #3d434a; --t: #2b2f34; --rv: 5px;
   overflow: hidden; isolation: isolate; display: grid; place-items: center; padding: 0; border: 0; border-radius: 6px; color: var(--t);
   /* the cross is drawn (two strokes exactly in the middle), not the font's «×», which sits off-centre */
@@ -8112,13 +8112,13 @@ button:is(.modal > .x, .fs-x, .room-confirm-x, .bbox-x, .acx-x, .zb-res-x, .comb
   font-size: 0; color: transparent; text-shadow: none; cursor: pointer;
   box-shadow: inset 0 0 0 1.5px var(--e), inset 0 2px 0 1.5px rgba(255, 255, 255, 0.45), inset 0 -3px 0 1.5px rgba(0, 0, 0, 0.16), 0 2px 0 #3b2410, 0 3px 5px rgba(0, 0, 0, 0.35);
   transition: transform 0.08s, box-shadow 0.08s; }
-button:is(.modal > .x, .fs-x, .room-confirm-x, .bbox-x, .acx-x, .zb-res-x, .combo-done-x, .sty-x, .dn-x, .rt-x, .van-x)::before {
+button:is(.modal > .x, .fs-x, .room-confirm-x, .bbox-x, .acx-x, .zb-res-x, .combo-done-x, .sty-x, .dn-x, .rt-x, .van-x, .bl-in-x)::before {
   content: ""; position: absolute; z-index: -1; inset: 3px; border-radius: 3px; border: 1px solid rgba(0, 0, 0, 0.18); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35); pointer-events: none; }
-button:is(.modal > .x, .fs-x, .room-confirm-x, .bbox-x, .acx-x, .zb-res-x, .combo-done-x, .sty-x, .dn-x, .rt-x, .van-x)::after {
+button:is(.modal > .x, .fs-x, .room-confirm-x, .bbox-x, .acx-x, .zb-res-x, .combo-done-x, .sty-x, .dn-x, .rt-x, .van-x, .bl-in-x)::after {
   content: ""; position: absolute; z-index: -1; inset: 0; pointer-events: none; --r: rgba(255, 255, 255, 0.55) 0 0.7px, var(--c) 1px 1.8px, var(--e) 2.1px, transparent 2.5px;
   background: radial-gradient(circle at var(--rv) var(--rv), var(--r)), radial-gradient(circle at calc(100% - var(--rv)) var(--rv), var(--r)),
     radial-gradient(circle at var(--rv) calc(100% - var(--rv)), var(--r)), radial-gradient(circle at calc(100% - var(--rv)) calc(100% - var(--rv)), var(--r)); }
-button:is(.modal > .x, .fs-x, .room-confirm-x, .bbox-x, .acx-x, .zb-res-x, .combo-done-x, .sty-x, .dn-x, .rt-x, .van-x):active { transform: translateY(2px);
+button:is(.modal > .x, .fs-x, .room-confirm-x, .bbox-x, .acx-x, .zb-res-x, .combo-done-x, .sty-x, .dn-x, .rt-x, .van-x, .bl-in-x):active { transform: translateY(2px);
   box-shadow: inset 0 0 0 1.5px var(--e), inset 0 2px 0 1.5px rgba(255, 255, 255, 0.45), inset 0 -3px 0 1.5px rgba(0, 0, 0, 0.16), 0 0 0 #3b2410, 0 1px 3px rgba(0, 0, 0, 0.3); }
 
 /* the locations and the masters lists: the tabs 4px lower; the list scrolls in its own box under the sheet's top edge, so the cards vanish there */
@@ -8146,37 +8146,40 @@ button:is(.modal > .x, .fs-x, .room-confirm-x, .bbox-x, .acx-x, .zb-res-x, .comb
 
 /* «Баул» (screens/baul.tsx): the bag on the counter with its level on a tag, the window, the «Красава!» sheet */
 .sk-baul { z-index: 3; }
+.sk-baul img { object-fit: contain; }
 .sk-baul-lv { position: absolute; right: 8%; top: 4%; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 13px; display: grid; place-items: center;
   font: 600 14px/1 var(--font-display), system-ui; font-style: normal; color: #4a2a03; background: linear-gradient(180deg, #ffe066, #f2a900); border: 2px solid #3b2410; box-shadow: 0 2px 0 rgba(0, 0, 0, 0.45); }
-.bl-win .modal-body { display: flex; flex-direction: column; align-items: stretch; gap: 12px; position: relative; }
-.bl-head { display: flex; align-items: center; gap: 12px; }
-.bl-bag { width: 104px; height: auto; flex: none; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.45)); }
-.bl-lv { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
-.bl-lv b { font-size: 22px; } .bl-lv b span { font-size: 14px; opacity: 0.6; margin-left: 2px; }
+.bl-win .modal-body { display: flex; flex-direction: column; align-items: stretch; gap: 12px; }
+.bl-lv { display: flex; flex-direction: column; gap: 6px; }
+.bl-lv b { font-size: 20px; } .bl-lv b span { font-size: 14px; opacity: 0.6; margin-left: 2px; }
 .bl-bar { height: 14px; border-radius: 7px; background: rgba(0, 0, 0, 0.45); border: 2px solid #1c120a; overflow: hidden; }
 .bl-bar i { display: block; height: 100%; background: linear-gradient(180deg, #ffe066, #e9a521); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5); transition: width 0.5s ease; }
 .bl-pts { font-size: 13px; opacity: 0.85; }
-.bl-open { align-self: center; min-width: 200px; gap: 6px; }
+.bl-bag { align-self: center; width: min(320px, 86%); height: auto; margin: 6px 0; filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.5)); animation: bl-bob 3s ease-in-out infinite; }
+@keyframes bl-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+.bl-btns { display: flex; gap: 10px; justify-content: center; }
+.bl-btns .btn { flex: 1; max-width: 180px; gap: 6px; }
 .bl-sets { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .bl-set { display: flex; justify-content: space-between; gap: 6px; padding: 6px 9px; border-radius: 8px; background: rgba(0, 0, 0, 0.25); border: 1.5px solid rgba(0, 0, 0, 0.4); font-size: 12.5px; }
 .bl-set.gold { border-color: #e9a521; color: #ffd75a; }
 .bl-set.done { background: rgba(61, 220, 132, 0.18); }
-/* «Красава!»: a sheet of paper over the window, the title in fat orange letters, the rewards in rows, the tattoo pinned at the corner */
-.bl-kr-back { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 16px; background: rgba(10, 6, 3, 0.7); animation: fade 0.2s ease; }
-.bl-kr { position: relative; width: min(400px, 100%); padding: 56px 18px 18px; border-radius: 6px; color: #3d2810; text-align: center;
-  background: url(/assets/textures/paper-stained.webp) center / 360px, #efe2c4; box-shadow: inset 0 0 30px rgba(120, 80, 30, 0.35), 0 14px 40px rgba(0, 0, 0, 0.6);
-  clip-path: polygon(0 2%, 4% 0, 12% 1.5%, 22% 0, 35% 1.2%, 48% 0, 60% 1.4%, 73% 0, 86% 1.3%, 96% 0, 100% 2%, 99% 30%, 100% 60%, 99% 98%, 92% 100%, 78% 98.8%, 64% 100%, 50% 98.6%, 36% 100%, 22% 98.8%, 8% 100%, 0 98%, 1% 60%, 0 30%);
-  animation: pop 0.3s cubic-bezier(0.2, 1.4, 0.4, 1); }
-.bl-kr-h { position: absolute; left: 0; right: 0; top: 8px; margin: 0; font-size: 40px; letter-spacing: 0.04em; text-transform: uppercase;
-  color: #ffb21e; -webkit-text-stroke: 2px #6b2a06; paint-order: stroke fill; text-shadow: 0 3px 0 #6b2a06, 0 5px 8px rgba(0, 0, 0, 0.35); }
-.bl-kr-photo { position: absolute; right: -2px; top: -2px; width: 92px; padding: 6px 6px 4px; background: #fbf7ee; transform: rotate(6deg); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-  display: flex; flex-direction: column; align-items: center; gap: 2px; font: 700 11px/1.1 var(--font-hand), cursive; color: #3d2810; }
-.bl-kr-photo > :first-child { background: #d8cbb0; width: 100%; display: grid; place-items: center; padding: 4px 0; }
-.bl-kr-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 16px; margin: 14px 0 18px; padding-right: 0; }
-.bl-kr-photo ~ .bl-kr-grid { padding-right: 60px; }
-.bl-kr-cell { display: inline-flex; align-items: center; gap: 4px; }
-.bl-kr-cell b { font-size: 15px; color: #3d2810; }
-.bl-kr-ok { min-width: 160px; }
+/* the bag from inside (the artist's picture, 2:3): the rewards lie in its middle pocket, the button at the bottom */
+.bl-in-back { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 12px; background: rgba(10, 6, 3, 0.75); animation: fade 0.2s ease; }
+.bl-in { position: relative; height: min(calc(100 * var(--vh) - 24px), 150vw); aspect-ratio: 2 / 3; max-width: 100%; container-type: inline-size; animation: pop 0.3s cubic-bezier(0.2, 1.4, 0.4, 1);
+  filter: drop-shadow(0 14px 30px rgba(0, 0, 0, 0.6)); }
+.bl-in-bg { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 14px; }
+.bl-in-x { position: absolute !important; top: 3cqw; right: 3cqw; margin: 0; z-index: 3; width: 34px; height: 34px; }
+.bl-in-h { position: absolute; left: 0; right: 0; top: 5cqw; margin: 0; text-align: center; font-size: 11cqw; letter-spacing: 0.04em; text-transform: uppercase; z-index: 2;
+  color: #ffb21e; -webkit-text-stroke: 0.5cqw #6b2a06; paint-order: stroke fill; text-shadow: 0 0.8cqw 0 #6b2a06, 0 1.4cqw 2cqw rgba(0, 0, 0, 0.5); }
+.bl-in-pocket { position: absolute; left: 22%; right: 22%; top: 24%; bottom: 22%; display: flex; flex-direction: column; align-items: center; gap: 4cqw; overflow-y: auto; padding: 2cqw 0; }
+.bl-in-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 3.5cqw 4cqw; }
+.bl-in-cell { display: inline-flex; align-items: center; gap: 1cqw; padding: 1cqw 2cqw 1cqw 1.2cqw; border-radius: 3cqw; background: rgba(0, 0, 0, 0.35); }
+.bl-in-cell b { font-size: 3.8cqw; color: #fff3d6; text-shadow: 0 1px 2px #000; }
+.bl-in-photo { width: 26cqw; padding: 1.5cqw 1.5cqw 1cqw; background: #fbf7ee; transform: rotate(-4deg); box-shadow: 0 1cqw 2.5cqw rgba(0, 0, 0, 0.5);
+  display: flex; flex-direction: column; align-items: center; gap: 0.6cqw; font: 700 3.2cqw/1.1 var(--font-hand), cursive; color: #3d2810; }
+.bl-in-photo > :first-child { background: #d8cbb0; width: 100%; display: grid; place-items: center; padding: 1cqw 0; }
+.bl-in-foot { position: absolute; left: 0; right: 0; bottom: 5cqw; display: flex; justify-content: center; }
+.bl-in-ok { min-width: 46cqw; gap: 6px; }
 
 /* blackjack: the hand waiting for MY decision (take or stand, after a split too) — a big bouncing arrow and a pulsing gold frame round its cards */
 .bjt-hand.mine .bj-cards { position: relative; }
