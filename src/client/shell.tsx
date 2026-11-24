@@ -325,6 +325,11 @@ function Loading({ prog, overlay }: { prog?: LoadProgress; overlay?: boolean }) 
   const C = 2 * Math.PI * R;
   return (
     <div className={`loading boot ${overlay ? "overlay" : ""}`}>
+      {/* the yard at dusk (the user's picture), a tumbleweed rolling over it from right to left, bouncing */}
+      <div className="boot-tw" aria-hidden="true">
+        <i className="boot-tw-shadow" />
+        <span className="boot-tw-hop">{/* eslint-disable-next-line @next/next/no-img-element */}<img src="/assets/loading/tumbleweed.webp" alt="" draggable={false} /></span>
+      </div>
       <div className="boot-box">
         <div className="boot-logo display" aria-label="XClose"><span className="x">X</span>Close</div>
         <div className={`boot-ring${frac === null ? " spin" : ""}`} role="progressbar" aria-label="Загрузка" aria-valuemin={0} aria-valuemax={prog?.total ?? 100} aria-valuenow={prog?.n}>

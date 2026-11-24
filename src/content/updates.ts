@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-25-loading",
+    date: "25 ноября",
+    title: "Новая загрузка",
+    items: [
+      { img: "/assets/loading/tumbleweed.webp", text: "Пока игра грузится — вечерний двор с гаражами, а по нему катится перекати-поле." },
+    ],
+  },
+  {
     id: "2026-11-25-sun-blood",
     date: "25 ноября",
     title: "Солнце в крови",

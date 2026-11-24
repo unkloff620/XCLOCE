@@ -8214,3 +8214,20 @@ button:is(.modal > .x, .fs-x, .room-confirm-x, .bbox-x, .acx-x, .zb-res-x, .comb
 .tb-dnote { margin-top: 6px; min-height: 18px; text-align: center; font: 700 13px/1.3 system-ui; color: #e9e4da; }
 .tb-dnote b { color: #ffd23f; }
 .tb-old { opacity: 0.6; font-size: 0.85em; margin-right: 3px; }
+
+/* the loading screen (shell.tsx Loading): the yard at dusk; a tumbleweed rolls over the ground from right to left, hopping */
+.loading.boot, .loading.boot.overlay { position: relative; overflow: hidden; background: url(/assets/loading/bg.webp) center bottom / cover no-repeat, #4a3a33; }
+.loading.boot.overlay { position: fixed; }
+.loading.boot > .boot-box { position: relative; z-index: 2; margin-bottom: 18vh; }
+.loading.boot .boot-what { color: #f3e6d8; text-shadow: 0 1px 2px #000, 0 0 6px rgba(0, 0, 0, 0.8); }
+.loading.boot .boot-tip { background: rgba(20, 12, 8, 0.6); }
+.boot-tw { position: absolute; z-index: 1; bottom: 9%; left: 0; width: min(30vw, 150px); aspect-ratio: 300 / 284; animation: boot-tw-go 6.5s linear infinite; pointer-events: none; }
+.boot-tw-hop { position: absolute; inset: 0; animation: boot-tw-hop 1.3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+.boot-tw-hop img { width: 100%; height: 100%; display: block; animation: boot-tw-spin 1.3s linear infinite; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35)); }
+.boot-tw-shadow { position: absolute; left: 12%; right: 12%; bottom: -6%; height: 14%; border-radius: 50%; background: radial-gradient(closest-side, rgba(0, 0, 0, 0.45), transparent);
+  animation: boot-tw-shade 1.3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+@keyframes boot-tw-go { from { left: 105%; } to { left: -40%; } }
+@keyframes boot-tw-hop { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-38%); } }
+@keyframes boot-tw-spin { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
+@keyframes boot-tw-shade { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.6); opacity: 0.45; } }
+@media (prefers-reduced-motion: reduce) { .boot-tw, .boot-tw-hop, .boot-tw-hop img, .boot-tw-shadow { animation-duration: 0s; } .boot-tw { left: 60%; } }
