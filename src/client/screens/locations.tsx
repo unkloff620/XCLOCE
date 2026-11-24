@@ -115,9 +115,11 @@ function BizPanel({ b, onDone }: { b: LocBiz; onDone: () => void }) {
 function LcLeader({ l, mode, me }: { l: LocLeader | null; mode: LocMode; me?: number }) {
   return (
     <span className={`lc-lead ${mode} ${l ? "" : "none"}`}>
-      <span className="lc-ava">{l ? <Avatar name={l.name} photo={l.photo} size={64} /> : <i className="lc-first">Стань<br />первым</i>}</span>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="lc-frame" src="/assets/ui/leader-frame.webp" alt="" draggable={false} />
+      <span className="lc-box">
+        <span className="lc-ava">{l ? <Avatar name={l.name} photo={l.photo} size={64} /> : <i className="lc-first">Стань<br />первым</i>}</span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="lc-frame" src="/assets/ui/leader-frame.webp" alt="" draggable={false} />
+      </span>
       <b className="lc-nick ellipsis">{l ? (l.id === me ? "Ты" : l.name) : null}</b>
       <span className="lc-rep num">{l ? <><Icon name="rep" size={14} />{full(l.rep)}</> : null}</span>
       {l?.clan ? <span className="lc-clan ellipsis">{l.clan}</span> : null}
