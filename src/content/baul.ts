@@ -56,6 +56,11 @@ const POOL: { kind: "xp" | "cur" | "item" | "stash"; id: string; max: number; fr
   { kind: "cur", id: "TOKEN", max: 162, from: 3 },
   { kind: "cur", id: "TOOTH", max: 19_125 },
   { kind: "item", id: "keyboard", max: 191 },
+  // not in the user's list (my maxima): the papirosy, the guns, the wheel's tickets
+  { kind: "cur", id: "PAP", max: 250_000 },
+  { kind: "item", id: "gpu", max: 120, from: 2 },
+  { kind: "item", id: "rug-pull-gun", max: 60, from: 4 },
+  { kind: "item", id: "fortune-ticket", max: 25, from: 6 },
   { kind: "stash", id: "stash", max: 90, from: 5 },
   { kind: "item", id: "gold-nugget", max: 699, from: 10 },
   { kind: "item", id: "gold-ring", max: 210, from: 15 },
