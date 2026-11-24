@@ -318,7 +318,7 @@ function Tumbleweed() {
     let x = 0, y = 0, vx = 0, vy = 0, ang = 0, spin = 0;
     const reset = () => {
       W = el.clientWidth; H = el.clientHeight;
-      x = W + size() * 0.6; y = H * (0.05 + Math.random() * 0.12); vx = -(W * (0.28 + Math.random() * 0.12)); vy = 0;
+      x = W + size() * 0.6; y = H * (0.05 + Math.random() * 0.12); vx = -(W * (0.7 + Math.random() * 0.25)); vy = 0;
     };
     reset();
     let last = 0, raf = 0;
@@ -329,8 +329,9 @@ function Tumbleweed() {
       if (!dt) return;
       const s = size(), r = s / 2, g = H * 2.6;
       // the wind: a steady push to the left with gusts, the air drag holding it back
-      const wind = -W * (0.32 + 0.18 * Math.sin(t / 900) + 0.1 * Math.sin(t / 370));
-      vx += (wind - vx) * 0.9 * dt;
+      // a strong wind: it crosses the screen in about a second and a half, the gusts push it on harder
+      const wind = -W * (0.8 + 0.25 * Math.sin(t / 700) + 0.15 * Math.sin(t / 260));
+      vx += (wind - vx) * 1.6 * dt;
       vy -= g * dt;
       x += vx * dt;
       y += vy * dt;
