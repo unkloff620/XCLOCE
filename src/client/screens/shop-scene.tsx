@@ -37,9 +37,9 @@ const TAP_AT: Record<string, number> = { f3: 0, f2: 0.1, f4: 0.2, f1: 0.3 };
 /** the elbow on the counter: the raised forearm sways around it (canvas percent) */
 const ELBOW = { x: 25.5, y: 58.2 };
 
-export type ShopSpotId = "weapons" | "clothing" | "energy";
+// the energy drinks are gone from the shelf (the user 2026-11-24): energy is bought only in the energy window
+export type ShopSpotId = "weapons" | "clothing";
 const SPOTS: { id: ShopSpotId; layer: string; label: string; tag: "top" | "bottom" }[] = [
-  { id: "energy", layer: "drinks", label: "Энергия", tag: "bottom" },
   { id: "clothing", layer: "rack", label: "Одежда", tag: "top" },
   { id: "weapons", layer: "weapons", label: "Оружие", tag: "bottom" },
 ];
@@ -80,7 +80,6 @@ export function ShopScene({ onOpen, children, box, onBox }: {
       <Layer n="room" className="sk-room" />
       {/* the lamp hangs a little higher, so the cut end of its cord stays above the picture */}
       <Layer n="lamp" className="sk-lamp" style={{ transformOrigin: "50% 0%", top: `${L.lamp.top - 3.2}%` }} />
-      {spot("energy")}
       {spot("clothing")}
       <div className="sk-body" style={{ transformOrigin: `${neck.x}% 70%` }}>
         <Layer n="torso" />
