@@ -50,7 +50,7 @@ export const BAUL_GOLD_CHANCE = 0.5;
  * random (fewer roubles — then more of something else: the shares are drawn, then scaled so they average BAUL_SHARE,
  * none over its max). Lower levels: the same × BAUL_GROWTH^(level − 30), a kind only from its `from` level.
  */
-const POOL: { kind: "xp" | "cur" | "item" | "stash"; id: string; max: number; from?: number }[] = [
+const POOL: { kind: "xp" | "cur" | "item" | "stash"; id: string; max: number; from?: number; /** at 30: from … to, at random (outside the budget split) */ range?: [number, number] }[] = [
   { kind: "xp", id: "xp", max: 280_205 },
   { kind: "cur", id: "RUB", max: 431 },
   { kind: "cur", id: "TOKEN", max: 162, from: 3 },
@@ -58,8 +58,8 @@ const POOL: { kind: "xp" | "cur" | "item" | "stash"; id: string; max: number; fr
   { kind: "item", id: "keyboard", max: 191 },
   // not in the user's list (my maxima): the papirosy, the guns, the wheel's tickets
   { kind: "cur", id: "PAP", max: 250_000 },
-  { kind: "item", id: "gpu", max: 120, from: 2 },
-  { kind: "item", id: "rug-pull-gun", max: 60, from: 4 },
+  { kind: "item", id: "gpu", max: 140, from: 2, range: [74, 140] },
+  { kind: "item", id: "rug-pull-gun", max: 123, from: 4, range: [67, 123] },
   { kind: "item", id: "fortune-ticket", max: 5, from: 6 },
   { kind: "stash", id: "stash", max: 90, from: 5 },
   { kind: "item", id: "gold-nugget", max: 699, from: 10 },
@@ -80,13 +80,16 @@ export function rollBaulPack(level: number, rng: () => number): Reward {
   const lv = Math.max(1, Math.min(BAUL_MAX, level));
   const grow = Math.pow(BAUL_GROWTH, lv - BAUL_MAX);
   const pool = POOL.filter((p) => lv >= (p.from ?? 1));
-  // the budget split: shares drawn, scaled to average BAUL_SHARE, none over 1
+  // the budget split (the kinds without a range): shares drawn, scaled to average BAUL_SHARE, none over 1
   const r = pool.map(() => 0.3 + rng() * 0.7);
-  const k = (BAUL_SHARE * r.length) / r.reduce((a, b) => a + b, 0);
+  const split = pool.map((p, i) => (p.range ? 0 : r[i]));
+  const k = (BAUL_SHARE * pool.filter((p) => !p.range).length) / split.reduce((a, b) => a + b, 0);
   const out: Reward = {};
   const items: { id: string; qty: number }[] = [];
   pool.forEach((p, i) => {
-    const qty = Math.max(1, Math.round(p.max * Math.min(1, r[i] * k) * grow));
+    const qty = p.range
+      ? Math.max(1, Math.round((p.range[0] + rng() * (p.range[1] - p.range[0])) * grow))
+      : Math.max(1, Math.round(p.max * Math.min(1, r[i] * k) * grow));
     if (p.kind === "xp") out.xp = qty;
     else if (p.kind === "cur") out.currencies = { ...out.currencies, [p.id]: qty };
     else if (p.kind === "stash") {

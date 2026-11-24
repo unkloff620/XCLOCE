@@ -110,8 +110,9 @@ function Inside({ r, title, button, onClose }: { r: Reward | Granted; title?: st
             </div>
           ))}
           <div className="bl-in-grid">
-            {cells.map((c) => (
-              <span key={c.key} className="bl-in-cell" title={c.name}>{c.icon}<b className="num">+{full(c.n)}</b></span>
+            {cells.map((c, i) => (
+              // they fall in from above one after another, big, and settle small where they lie
+              <span key={c.key} className="bl-in-cell" title={c.name} style={{ animationDelay: `${0.15 + i * 0.07}s` }}>{c.icon}<b className="num">+{full(c.n)}</b></span>
             ))}
           </div>
         </div>

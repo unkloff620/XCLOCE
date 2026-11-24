@@ -1842,4 +1842,9 @@ CREATE INDEX IF NOT EXISTS donate_payments_player ON donate_payments (player_id,
     id: "v2-135-baul-no-free",
     sql: `DELETE FROM player_counters WHERE key = 'baul_free';`,
   },
+  {
+    // «Баул»: the guns by the user's ranges at 30
+    id: "v2-136-baul-repack",
+    sql: `DELETE FROM baul_packs;`,
+  },
 ];
