@@ -1234,9 +1234,9 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 /* ---------- the shop: the shopkeeper behind the counter (screens/shop-scene.tsx) ---------- */
 /* the whole scene always fits between the title and the nav: as wide as the screen, or as tall as the space allows */
 .shop-scene .yard-stage { aspect-ratio: auto; top: calc(var(--top) + 8px); container-type: size; }
-.shop-scene .sk-scene { inset: auto; left: 50%; bottom: 0; width: 100%; width: min(100cqw, calc(100cqh * 2000 / 2800)); transform: translateX(-50%); }
+.shop-scene .sk-scene { inset: auto; left: 50%; bottom: 0; width: 100%; width: min(100cqw, calc(100cqh * 2000 / 3000)); transform: translateX(-50%); }
 /* the ceiling above the scene: as wide as it, standing right on its top edge */
-.shop-scene .sk-ceiling { position: absolute; left: 50%; bottom: calc(min(100cqw, calc(100cqh * 2000 / 2800)) * 1.4); width: min(100cqw, calc(100cqh * 2000 / 2800)); aspect-ratio: 1200 / 900; max-width: none; transform: translateX(-50%); pointer-events: none; user-select: none; }
+.shop-scene .sk-ceiling { position: absolute; left: 50%; bottom: calc(min(100cqw, calc(100cqh * 2000 / 3000)) * 1.5); width: min(100cqw, calc(100cqh * 2000 / 3000)); aspect-ratio: 1200 / 900; max-width: none; transform: translateX(-50%); pointer-events: none; user-select: none; }
 .sk-scene { position: absolute; inset: 0; overflow: hidden; user-select: none; -webkit-user-select: none; }
 .sk-layer { position: absolute; display: block; max-width: none; pointer-events: none; }
 .sk-room { inset: 0; width: 100%; height: 100%; }
@@ -1284,8 +1284,16 @@ body.styling .hud, body.styling .nav { filter: grayscale(1) brightness(0.45); po
 .sk-tag.top { top: -4px; }
 .sk-spot-weapons .sk-tag { bottom: 8%; }
 .sk-spot-energy .sk-tag { bottom: auto; top: 100%; margin-top: 3px; }
+/* the currency goods on the shelves: behind the shopkeeper; the big one of each currency glows and wears the buy mark */
+.sk-goods { position: absolute; z-index: 0; padding: 0; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.sk-goods img { display: block; width: 100%; height: 100%; pointer-events: none; }
+.sk-goods-main img { animation: sk-glow 2.2s ease-in-out infinite; animation-delay: inherit; }
+.sk-goods:active img { transform: scale(0.96); }
+.sk-buy { position: absolute; right: -4%; top: -8%; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff3c4, #f2b52c 60%, #b8730e); border: 2px solid #3b2410; box-shadow: 0 2px 0 rgba(0, 0, 0, 0.45); pointer-events: none; animation: sk-buy 1.8s ease-in-out infinite; }
+@keyframes sk-buy { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
 @media (prefers-reduced-motion: reduce) {
-  .sk-body, .sk-head, .sk-pen, .sk-finger, .sk-forearm, .sk-lamp, .sk-spot img { animation: none; }
+  .sk-body, .sk-head, .sk-pen, .sk-finger, .sk-forearm, .sk-lamp, .sk-spot img, .sk-goods img, .sk-buy { animation: none; }
   .sk-spot img { filter: drop-shadow(0 0 2px #fff6c8) drop-shadow(0 0 6px rgba(255, 204, 51, 0.8)); }
 }
 
@@ -8010,3 +8018,23 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .rd-fort-b:disabled { filter: grayscale(0.8) brightness(0.75); }
 .rd-fort-n { font-size: 11px; }
 .rd-fort-p { display: inline-flex; align-items: center; gap: 1px; }
+
+/* «Донат» (screens/donate.tsx): the artist's board, the tabs on top (the open one lifted), 3×3 wooden cells */
+.dn-back { display: grid; place-items: center; padding: 12px; }
+.dn-win { position: relative; width: min(94vw, 420px); padding-top: 52px; }
+.dn-tabs { position: absolute; left: 7%; right: 7%; top: 0; display: flex; justify-content: space-between; z-index: 0; }
+.dn-tab { width: 18%; aspect-ratio: 180 / 264; padding: 0; border: 0; background: center top / 100% 100% no-repeat; cursor: pointer; display: flex; justify-content: center; align-items: flex-start;
+  padding-top: 9%; transform: translateY(12px); transition: transform 0.18s ease, filter 0.18s; filter: brightness(0.8); -webkit-tap-highlight-color: transparent; }
+.dn-tab.on { transform: translateY(-6px); filter: none; }
+.dn-tab { position: relative; }
+.dn-tab svg { position: absolute; left: 50%; top: 21%; width: 58% !important; height: auto !important; aspect-ratio: 1; transform: translate(-50%, -50%); filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5)); }
+.dn-board { position: relative; z-index: 1; aspect-ratio: 900 / 1307; background: center / 100% 100% no-repeat; padding: 9% 6.5% 8%; filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.6)); }
+.dn-x { position: absolute; right: -6px; top: -8px; width: 34px; height: 34px; border-radius: 50%; border: 2px solid #3b2410; background: radial-gradient(circle at 35% 30%, #ffe9a8, #e9a521 65%, #a8650a); color: #3b2410; font: 900 20px/1 system-ui; cursor: pointer; box-shadow: 0 2px 0 rgba(0, 0, 0, 0.45); }
+.dn-grid { height: 100%; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 2.5% 2%; }
+.dn-cell { position: relative; height: 100%; aspect-ratio: 300 / 466; justify-self: center; background: center / 100% 100% no-repeat; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding: 22% 8% 9%; container-type: inline-size; min-height: 0; }
+.dn-pic { flex: 1; min-height: 0; width: 82%; object-fit: contain; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.45)); }
+.dn-amount { display: inline-flex; align-items: center; gap: 3px; margin: 3% 0; font-size: 12cqi; font-weight: 900; color: #3b2410; white-space: nowrap; }
+.dn-buy { display: inline-flex; align-items: center; justify-content: center; gap: 4px; width: 100%; padding: 5% 0; border-radius: 9px; border: 2px solid #3b2410; cursor: pointer;
+  background: linear-gradient(180deg, #ffe27a, #f2b52c 60%, #d48b14); box-shadow: 0 3px 0 #6b3d0a; font: 900 12.5cqi/1 var(--font-display), system-ui; color: #3b2410; }
+.dn-buy:active { transform: translateY(2px); box-shadow: 0 1px 0 #6b3d0a; }
+.dn-buy:disabled { filter: saturate(0.5) brightness(0.85); }

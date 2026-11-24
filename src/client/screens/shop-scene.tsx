@@ -2,9 +2,9 @@
 /*
  * The shop: the shopkeeper behind the counter (tools/shop/build-shop.py cuts the artist's parts into layers).
  * He breathes and sways his head, sways the raised forearm (the hand with the pen lags behind it) and drums the counter with his fingers
- * (each finger taps on its own, one after another). The eyes and the mouth come later. The goods glow and pulse: the weapons on the counter,
- * the clothes rack, the energy drinks on the shelf — a tap opens that window. The arms lie in front of the goods;
- * the rack and the shelf stand right after the background, behind the shopkeeper and the counter.
+ * (each finger taps on its own, one after another). The eyes and the mouth come later. The weapons on the counter glow and
+ * pulse — a tap opens the shelf. Behind him the shelves of currency goods (the user 2026-11-24): a tap opens «Донат» on
+ * that currency; the big one of each currency wears the buy mark. The clothes rack, the drinks and the lamp are gone.
  */
 import { AchCase } from "../art/ach-case.tsx";
 import { CASE_ASPECT } from "../art/case-data.ts";
@@ -12,12 +12,15 @@ import type { CSSProperties, ReactNode } from "react";
 import { SHOP_ART } from "../art/shop-data.ts";
 import { ART_VER } from "../preload.ts";
 import { FINGER_FRAMES, FINGERS as FINGER_BOX } from "../art/finger-data.ts";
+import type { Currency } from "../../content/currencies.ts";
+import { Star } from "./donate.tsx";
 
 const L = SHOP_ART.layers;
 const box = (n: string): CSSProperties => {
   const b = L[n];
   return { left: `${b.left}%`, top: `${b.top}%`, width: `${b.width}%`, height: `${b.height}%` };
 };
+const layerBox = box;
 /** transform-origin of a layer at a canvas point (percent of the canvas) */
 const originAt = (n: string, x: number, y: number) => {
   const b = L[n];
@@ -34,15 +37,15 @@ function Layer({ n, className = "", style }: { n: string; className?: string; st
 /** the fingers on the counter, drawn back to front: index (f1), middle (f4), ring (f2), little (f3); they tap little finger first */
 const FINGER_ORDER = ["f1", "f4", "f2", "f3"] as const;
 const TAP_AT: Record<string, number> = { f3: 0, f2: 0.1, f4: 0.2, f1: 0.3 };
-/** the elbow on the counter: the raised forearm sways around it (canvas percent) */
-const ELBOW = { x: 25.5, y: 58.2 };
+/** the elbow on the counter: the raised forearm sways around it (canvas percent of the 2000×3000 canvas) */
+const ELBOW = { x: 25.5, y: 66.5 };
 
-// the energy drinks are gone from the shelf (the user 2026-11-24): energy is bought only in the energy window
+// the clothes rack and the energy drinks are gone (the user 2026-11-24): clothes open by their links (?tab=clothing)
 export type ShopSpotId = "weapons" | "clothing";
 const SPOTS: { id: ShopSpotId; layer: string; label: string; tag: "top" | "bottom" }[] = [
-  { id: "clothing", layer: "rack", label: "Одежда", tag: "top" },
   { id: "weapons", layer: "weapons", label: "Оружие", tag: "bottom" },
 ];
+const CUR_NAME: Record<string, string> = { RUB: "Рубли", GOLD: "Слитки", TOKEN: "Жетоны", TOOTH: "Зубы", PAP: "Папиросы" };
 
 function spotBox(layer: string): CSSProperties {
   if (layer !== "weapons") return box(layer);
@@ -62,14 +65,14 @@ function Spot({ s, onOpen }: { s: (typeof SPOTS)[number]; onOpen: (id: ShopSpotI
 
 /** «Ящик ништяков» — the case (art/ach-case.tsx) lies whole on the right of the dealer's counter */
 const ACH_BOX_W = 29;
-const ACH_BOX_H = ACH_BOX_W * (2000 / 2800) / CASE_ASPECT;
-const ACH_BOX_AT = { left: 69.5, top: 73 - ACH_BOX_H, width: ACH_BOX_W, height: ACH_BOX_H };
+const ACH_BOX_H = ACH_BOX_W * (2000 / 3000) / CASE_ASPECT;
+const ACH_BOX_AT = { left: 69.5, top: 80.3 - ACH_BOX_H, width: ACH_BOX_W, height: ACH_BOX_H };
 /** the weapons on the counter: smaller and moved to the left, to make room for the case */
 const WEAPONS_SCALE = 0.8;
 const WEAPONS_LEFT = 3;
 
-export function ShopScene({ onOpen, children, box, onBox }: {
-  onOpen: (id: ShopSpotId) => void; children?: ReactNode;
+export function ShopScene({ onOpen, onGoods, children, box, onBox }: {
+  onOpen: (id: ShopSpotId) => void; onGoods?: (cur: Currency) => void; children?: ReactNode;
   box?: { ready: number; progress: number; cost: number }; onBox?: () => void;
 }) {
   const spot = (id: ShopSpotId) => <Spot s={SPOTS.find((x) => x.id === id)!} onOpen={onOpen} />;
@@ -78,9 +81,15 @@ export function ShopScene({ onOpen, children, box, onBox }: {
   return (
     <div className="sk-scene" style={{ aspectRatio: SHOP_ART.aspect }}>
       <Layer n="room" className="sk-room" />
-      {/* the lamp hangs a little higher, so the cut end of its cord stays above the picture */}
-      <Layer n="lamp" className="sk-lamp" style={{ transformOrigin: "50% 0%", top: `${L.lamp.top - 3.2}%` }} />
-      {spot("clothing")}
+      {/* the currency goods on the shelves, behind the shopkeeper */}
+      {SHOP_ART.goods.map((g, i) => (
+        <button key={g.layer} type="button" className={`sk-goods ${g.main ? "sk-goods-main" : ""}`} style={{ ...layerBox(g.layer), animationDelay: `${(i % 5) * 0.45}s` }}
+          onClick={() => onGoods?.(g.cur)} aria-label={CUR_NAME[g.cur]} title={CUR_NAME[g.cur]}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={`/assets/shop/v2/${g.layer}.webp?v=${ART_VER.shop}`} alt="" draggable={false} />
+          {g.main && <i className="sk-buy"><Star size={14} /></i>}
+        </button>
+      ))}
       <div className="sk-body" style={{ transformOrigin: `${neck.x}% 70%` }}>
         <Layer n="torso" />
         <div className="sk-head" style={{ transformOrigin: `${neck.x}% ${neck.y}%` }}>

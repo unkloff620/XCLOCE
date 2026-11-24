@@ -20,6 +20,7 @@ import { money } from "../format.ts";
 import { haptic } from "../telegram.ts";
 import { weaponStats } from "../weapon-stats.ts";
 import { ShopScene } from "./shop-scene.tsx";
+import { DonateWindow } from "./donate.tsx";
 import { TATTOO_IDS } from "../../content/tattoos.ts";
 
 export interface ShopData { offers: Offer[]; exchange: { rub: Record<Currency, number>; fee: number; open?: boolean; until?: number } }
@@ -408,6 +409,7 @@ export function ShopScreen() {
   const router = useRouter();
   const { state } = useGame();
   const [boxOpen, setBoxOpen] = useState(false);
+  const [donate, setDonate] = useState<Currency | null>(null);
   // a tap on «Магазин» in the menu closes the case window
   useEffect(() => {
     const off = () => setBoxOpen(false);
@@ -430,8 +432,8 @@ export function ShopScreen() {
         <div className="title-row">
           <h1 className="display">Магазин</h1>
           <Help topic="shop" title="Магазин">
-            <HelpList title="Что где лежит" rows={SHOP_SPOTS.map((x) => ({ key: x.id, icon: /* eslint-disable-next-line @next/next/no-img-element */ <img src={`/assets/shop/v2/${x.img}.webp?v=${ART_VER.shop}`} alt="" width={44} height={44} style={{ objectFit: "contain" }} />, name: x.name, hint: x.hint }))} />
-            <p className="small muted">Нажми на оружие на прилавке, вешалку или энергетики на полке — они подсвечены — откроется витрина. Все цены во внутриигровой валюте; не хватает — загляни в обменник.</p>
+            <HelpList title="Что где лежит" rows={SHOP_SPOTS.filter((x) => x.id === "weapons").map((x) => ({ key: x.id, icon: /* eslint-disable-next-line @next/next/no-img-element */ <img src={`/assets/shop/v2/${x.img}.webp?v=${ART_VER.shop}`} alt="" width={44} height={44} style={{ objectFit: "contain" }} />, name: x.name, hint: x.hint }))} />
+            <p className="small muted">Оружие на прилавке — за внутриигровую валюту. Валюта на полках — за звёзды Telegram.</p>
           </Help>
         </div>
       </div>
@@ -441,10 +443,11 @@ export function ShopScreen() {
           {/* the ceiling goes on above the picture on tall screens (tools/shop/build-ceiling.py) */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="sk-ceiling" src={`/assets/shop/v2/ceiling.webp?v=${ART_VER.shop}`} alt="" draggable={false} aria-hidden="true" />
-          <ShopScene onOpen={(id) => setOpen(id)} box={state?.achBox} onBox={() => { haptic.tap(); setBoxOpen(true); }} />
+          <ShopScene onOpen={(id) => setOpen(id)} onGoods={(c) => { haptic.tap(); setDonate(c); }} box={state?.achBox} onBox={() => { haptic.tap(); setBoxOpen(true); }} />
         </div>
       </div>
       {boxOpen && <AchBoxWindow onClose={() => setBoxOpen(false)} />}
+      {donate && <DonateWindow cur={donate} onClose={() => setDonate(null)} />}
       {open && (
         <Modal title={open.name} onClose={() => setOpen(null)} wide className={open.id === "clothing" ? "wear-shop" : undefined}>
           {data ? <OfferGrid offers={offers} rub={data.exchange.rub} /> : <div className="muted small center">Загрузка…</div>}

@@ -19,6 +19,8 @@ interface TgWebApp {
   setBackgroundColor?(c: string): void;
   HapticFeedback?: { impactOccurred(s: "light" | "medium" | "heavy" | "rigid" | "soft"): void; notificationOccurred(t: "error" | "success" | "warning"): void };
   requestWriteAccess?(cb?: (granted: boolean) => void): void;
+  /** Bot API 6.1+: a payment (Telegram Stars) over the Mini App; the status: paid / cancelled / failed / pending */
+  openInvoice?(url: string, cb?: (status: "paid" | "cancelled" | "failed" | "pending") => void): void;
   BackButton?: { show(): void; hide(): void; onClick(f: () => void): void; offClick(f: () => void): void };
 }
 

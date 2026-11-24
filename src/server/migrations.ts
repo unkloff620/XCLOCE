@@ -1794,4 +1794,18 @@ UPDATE appearance SET body = jsonb_set(body, '{tattoos}', (
   FROM jsonb_array_elements_text(body->'tattoos') AS t))
 WHERE jsonb_typeof(body->'tattoos') = 'array';`,
   },
+  {
+    // «Донат»: every Telegram Stars payment, once (the charge id); the currency is credited in the same transaction
+    id: "v2-129-donate",
+    sql: `CREATE TABLE IF NOT EXISTS donate_payments (
+  charge_id TEXT PRIMARY KEY,
+  player_id INTEGER NOT NULL REFERENCES players(id),
+  pack TEXT NOT NULL,
+  stars INTEGER NOT NULL,
+  currency TEXT NOT NULL,
+  amount BIGINT NOT NULL,
+  at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS donate_payments_player ON donate_payments (player_id, at);`,
+  },
 ];

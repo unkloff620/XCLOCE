@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-24-donate",
+    date: "24 ноября",
+    title: "Новая лавка",
+    items: [
+      { img: "/assets/shop/v2/g1.webp", text: "У Барыги новые полки: рубли, слитки, жетоны, зубы и папиросы теперь можно купить за звёзды Telegram. Чем больше набор — тем выгоднее, до +10%." },
+    ],
+  },
+  {
     id: "2026-11-24-tattoo-rig",
     date: "24 ноября",
     title: "Новая разметка наколок",

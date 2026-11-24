@@ -3,26 +3,26 @@ export const FINGER_FRAMES = 8;
 export const FINGERS: Record<string, { left: number; top: number; width: number; height: number }> = {
   "f1": {
     "left": 37.55,
-    "top": 53.857,
+    "top": 62.467,
     "width": 9.5,
-    "height": 6.464
+    "height": 6.033
   },
   "f4": {
     "left": 38.4,
-    "top": 54.464,
+    "top": 63.033,
     "width": 9.45,
-    "height": 6.571
+    "height": 6.133
   },
   "f2": {
     "left": 40.05,
-    "top": 55.5,
+    "top": 64.0,
     "width": 8.45,
-    "height": 5.571
+    "height": 5.2
   },
   "f3": {
     "left": 42.05,
-    "top": 56.893,
+    "top": 65.3,
     "width": 6.8,
-    "height": 4.429
+    "height": 4.133
   }
 };
