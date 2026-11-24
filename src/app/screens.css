@@ -8227,3 +8227,8 @@ button:is(.modal > .x, .fs-x, .room-confirm-x, .bbox-x, .acx-x, .zb-res-x, .comb
 .boot-tw img { width: 100%; height: 100%; display: block; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35)); }
 .boot-tw-shadow { position: absolute; left: 0; bottom: -2.5%; width: min(30vw, 150px); height: min(4vw, 20px); border-radius: 50%; background: radial-gradient(closest-side, rgba(0, 0, 0, 0.45), transparent);
   will-change: transform; transform: translateX(120vw); }
+
+/* the loading between sections: the same yard and tumbleweed; the floor above the menu */
+.route-loader { background: url(/assets/loading/bg.webp) center bottom / cover no-repeat, #4a3a33; overflow: hidden; }
+.route-loader .boot-tw-area { bottom: calc(var(--nav-h) + var(--safe-b) + 5%); }
+.route-loader .route-spin { position: relative; z-index: 2; }

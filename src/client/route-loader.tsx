@@ -1,4 +1,5 @@
 "use client";
+import { Tumbleweed } from "./tumbleweed.tsx";
 import { useEffect, useState } from "react";
 
 /** pages still waiting for their data (usePageReady): the loading screen stays until every one is ready */
@@ -14,7 +15,7 @@ export function usePageReady(ready: boolean) {
 }
 
 /*
- * A short loading screen between sections: the screen goes grey and a spinner turns in the middle, no text.
+ * A short loading screen between sections: the yard at dusk with the tumbleweed (as the game's loading), a spinner, no text.
  * Shown for at least MIN_MS (half a second) so the next place has time to draw its pictures; it stays a little longer
  * (up to MAX_MS) while the pictures of the new screen are still decoding.
  * Starts on its own for the bottom menu and for the places of the yard (locations, shop, exchange);
@@ -99,6 +100,8 @@ export function RouteLoader() {
   if (!load) return null;
   return (
     <div className="route-loader" role="progressbar" aria-label="Загрузка">
+      {/* the same yard at dusk as the game's loading, the tumbleweed blown over it */}
+      <Tumbleweed inside />
       <span className="route-spin" />
     </div>
   );
