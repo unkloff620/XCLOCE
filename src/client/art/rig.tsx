@@ -230,10 +230,24 @@ function partShapes(edit: RigEdit, look: Look, worn: Worn): { boxes: Box[]; clip
   return [];
 }
 /** the chosen place of the clothes / tattoo grid: its own picture (lightly filled, brightly outlined) */
+const placeSrc = (grid: Grid, id: string) => `/assets/hero/tattoo/place-${grid}-${id}.webp?v=${PLACE_ART_V}`;
+/** all the place pictures of a grid, loaded once it is opened: a tap then shows its place at once */
+const placesLoaded = new Set<Grid>();
+function preloadPlaces(grid: Grid) {
+  if (placesLoaded.has(grid) || typeof Image === "undefined") return;
+  placesLoaded.add(grid);
+  for (const id of Object.keys(PLACES[grid].fit)) { const im = new Image(); im.src = placeSrc(grid, id); }
+}
 function PlacePic({ grid, id }: { grid: Grid; id: string }) {
   const f = (PLACES[grid].fit as Record<string, { x: number; y: number; w: number; h: number }>)[id];
   if (!f) return null;
-  return <image className="rig-place" href={`/assets/hero/tattoo/place-${grid}-${id}.webp?v=${PLACE_ART_V}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
+  // keyed by the place: a new <image> per place — a reused one moves to the new box at once while it still shows the
+  // previous place's picture until the new one loads (the wrong place flashed on a tap)
+  return <image key={`${grid}-${id}`} className="rig-place" href={placeSrc(grid, id)} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
+}
+function PreloadPlaces({ grid }: { grid: Grid }) {
+  useEffect(() => preloadPlaces(grid), [grid]);
+  return null;
 }
 /** the mask that keeps the tattoo grid off the head and the beard (their pictures, filled black) */
 function InkHeadCut() {
@@ -931,6 +945,7 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
           </Bone>
         </Ol>
       </g>
+      {edit && edit.mode !== "body" && <PreloadPlaces grid={edit.mode === "ink" ? "zone" : "slot"} />}
       {/* the tattoo grid and the chosen place lie under the head and the beard (they hang over the neck and the traps) */}
       {edit?.mode === "ink" && <InkHeadCut />}
       <g mask={edit?.mode === "ink" ? "url(#rig-ink-headcut)" : undefined}>
