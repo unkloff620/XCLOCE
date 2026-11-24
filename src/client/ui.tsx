@@ -143,7 +143,7 @@ export function RewardChips({ r, size = 18, times = true, side = false, extra }:
       ))}
       {stashN > 0 && (
         <span className="chip rc-item rc-parts" title={`Нычки: ${stash.map((it) => `${itemById(it.id)?.name ?? it.id} ×${it.qty}`).join(", ")}`} aria-label={`Нычки ×${stashN}`}>
-          <Icon name="chest" size={sz + 2} />
+          <Icon name="nychki" size={sz + 2} />
           {times ? n(full(stashN)) : <span className="num">×{stashN}</span>}
         </span>
       )}

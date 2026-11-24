@@ -18,7 +18,7 @@ const RASTER_ICONS: Partial<Record<string, string>> = { shirt: "wardrobe", gift:
   energy: "energy-can", key: "key", RUB: "cur-rub", USD: "coin-usd",
   // the new currencies (tools/ui/build-currencies.py): папиросы, золотые слитки, жетоны метро, зубы
   PAP: "cur-papirosa", GOLD: "cur-gold", TOKEN: "cur-token", TOOTH: "cur-tooth", SOL: "coin-sol", BTC: "coin-btc", coins: "coins", xp: "authority", "clan-xp": "clan-xp", influence: "influence",
-  lock: "lock", clock: "clock", sun: "sun", trophy: "trophy", swords: "swords", chest: "chest", case: "case", mail: "mail", news: "news", fire: "fire", talent: "talent",
+  lock: "lock", clock: "clock", sun: "sun", trophy: "trophy", swords: "swords", chest: "chest", nychki: "nychki", case: "case", mail: "mail", news: "news", fire: "fire", talent: "talent",
   // achievement pictures (tools/ui/cut-achievements.py)
   "ach-damage": "ach-damage", "ach-hits": "ach-hits", "ach-wins": "ach-wins", "ach-yard": "ach-yard", "ach-chests": "ach-chests", "ach-weekly": "ach-weekly", "ach-solo": "ach-solo",
   // the second set (tools/ui/cut-achievements-2.py)

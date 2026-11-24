@@ -93,7 +93,7 @@ function Inside({ r, title, button, onClose }: { r: Reward | Granted; title?: st
   ];
   // the нычки: one sign for all of them (the chest, as everywhere in the rewards), the names in the tooltip
   const stash = (r.items ?? []).filter((it) => it.qty > 0 && STASH.has(it.id));
-  if (stash.length) cells.push({ key: "stash", icon: <Icon name="chest" size={26} />, n: stash.reduce((t, it) => t + it.qty, 0), name: `Нычки: ${stash.map((it) => `${itemById(it.id)?.name ?? it.id} ×${it.qty}`).join(", ")}` });
+  if (stash.length) cells.push({ key: "stash", icon: <Icon name="nychki" size={26} />, n: stash.reduce((t, it) => t + it.qty, 0), name: `Нычки: ${stash.map((it) => `${itemById(it.id)?.name ?? it.id} ×${it.qty}`).join(", ")}` });
   // over everything (the window's pop animation would trap a fixed layer inside it)
   return createPortal(
     <div className="bl-in-back" onClick={onClose}>
