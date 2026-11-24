@@ -147,8 +147,9 @@ def main(sid, sparse=False):
     # the base is HEADLESS: an edit that drew a head (or squeezed the body) cannot be fitted — the ink would smear
     ta, tb = figure(a), figure(b0)
     ha, hb = np.ptp(np.nonzero(ta)[0]), np.ptp(np.nonzero(tb)[0])
-    if abs(hb / ha - 1) > 0.06:
-        raise SystemExit(f"{sid}: the edit's figure is {hb / ha:.0%} of the base's height — it drew a head or changed the body; "
+    iou = (ta & tb).sum() / max(1, (ta | tb).sum())  # the edit must keep the hero's figure (the mask): kuznya 0.99, a smeared one 0.90
+    if (abs(hb / ha - 1) > 0.06 or iou < 0.92) and "--force" not in sys.argv:  # --force: the old sets made before the mask
+        raise SystemExit(f"{sid}: the edit's figure is {hb / ha:.0%} of the base's height, overlap {iou:.2f} — it drew a head or moved the body; "
                          "redo the edit of the headless _base/in.png (with the skin mask), never ask to keep a head")
     b, bm = warp_onto(ta, tb, b0, with_mask=True)
     out, lines = unmix(a, b, ndimage.binary_erosion(body, iterations=3) & ~shorts)
@@ -192,5 +193,5 @@ def main(sid, sparse=False):
 
 if __name__ == "__main__":
     sparse = "--sparse" in sys.argv
-    for s in [a for a in sys.argv[1:] if a != "--sparse"]:
+    for s in [a for a in sys.argv[1:] if not a.startswith("--")]:
         main(s, sparse)
