@@ -18,9 +18,17 @@ beforeEach(async () => {
 afterEach(() => { vi.unstubAllGlobals(); delete process.env.TELEGRAM_BOT_TOKEN; });
 
 describe("«Донат»", () => {
-  it("the user's rates: 3 stars give the base, 2500 stars 10% more per star", () => {
+  it("the user's rates: the fixed packs, the rest growing per star", () => {
     expect(donatePack("RUB-0")).toMatchObject({ stars: 3, amount: 12 });
-    expect(donatePack("RUB-8")).toMatchObject({ stars: 2500, amount: 11000 });
+    expect(donatePack("RUB-5")).toMatchObject({ stars: 250, amount: 2000 });
+    expect(donatePack("RUB-8")).toMatchObject({ stars: 2500, amount: 25000 });
+    expect(donatePack("GOLD-5")!.amount).toBe(500);
+    expect(donatePack("GOLD-8")!.amount).toBe(6000);
+    expect(donatePack("TOKEN-8")!.amount).toBe(8500);
+    for (const c of ["RUB", "GOLD", "TOKEN", "TOOTH", "PAP"]) {
+      const per = DONATE_PACKS.filter((p) => p.cur === c).map((p) => p.amount / p.stars);
+      for (let i = 1; i < per.length; i++) expect(per[i]).toBeGreaterThanOrEqual(per[i - 1] - 0.05);
+    }
     for (const [c, base] of [["GOLD", 4], ["TOKEN", 8], ["TOOTH", 720], ["PAP", 2400]] as const) expect(donatePack(`${c}-0`)!.amount).toBe(base);
     expect(DONATE_PACKS).toHaveLength(45);
   });
