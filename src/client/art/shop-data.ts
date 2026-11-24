@@ -2,7 +2,7 @@
 export type ShopLayer = { left: number; top: number; width: number; height: number };
 export const SHOP_ART = {
   aspect: "2000 / 3000",
-  goods: [{"layer": "g0", "cur": "RUB", "main": true}, {"layer": "g1", "cur": "GOLD", "main": true}, {"layer": "g2", "cur": "TOKEN", "main": true}, {"layer": "g3", "cur": "TOOTH", "main": true}, {"layer": "g4", "cur": "PAP", "main": true}, {"layer": "g5", "cur": "RUB", "main": false}, {"layer": "g6", "cur": "TOKEN", "main": false}, {"layer": "g7", "cur": "PAP", "main": false}, {"layer": "g8", "cur": "TOOTH", "main": false}, {"layer": "g9", "cur": "TOOTH", "main": false}, {"layer": "g10", "cur": "GOLD", "main": false}] as { layer: string; cur: "RUB" | "GOLD" | "TOKEN" | "TOOTH" | "PAP"; main: boolean }[],
+  goods: [{"layer": "g0", "cur": "RUB", "main": true}, {"layer": "g1", "cur": "GOLD", "main": true}, {"layer": "g2", "cur": "TOKEN", "main": true}, {"layer": "g3", "cur": "TOOTH", "main": false}, {"layer": "g4", "cur": "TOOTH", "main": true}, {"layer": "g5", "cur": "PAP", "main": true}, {"layer": "g6", "cur": "TOKEN", "main": false}, {"layer": "g7", "cur": "RUB", "main": false}, {"layer": "g8", "cur": "GOLD", "main": false}, {"layer": "g9", "cur": "PAP", "main": false}, {"layer": "g10", "cur": "TOOTH", "main": false}, {"layer": "g11", "cur": "TOOTH", "main": false}, {"layer": "g12", "cur": "PAP", "main": false}] as { layer: string; cur: "RUB" | "GOLD" | "TOKEN" | "TOOTH" | "PAP"; main: boolean }[],
   layers: {
   "room": {
     "left": 0.0,
@@ -11,25 +11,25 @@ export const SHOP_ART = {
     "height": 100.0
   },
   "torso": {
-    "left": 22.2,
+    "left": 42.2,
     "top": 38.767,
     "width": 48.35,
     "height": 35.5
   },
   "head": {
-    "left": 40.3,
+    "left": 60.3,
     "top": 28.267,
     "width": 17.65,
     "height": 16.7
   },
   "pen": {
-    "left": 17.15,
+    "left": 37.15,
     "top": 31.867,
     "width": 9.45,
     "height": 14.7
   },
   "sleeveL": {
-    "left": 16.75,
+    "left": 36.75,
     "top": 44.533,
     "width": 15.9,
     "height": 22.7
@@ -47,13 +47,13 @@ export const SHOP_ART = {
     "height": 18.9
   },
   "sleeveR": {
-    "left": 52.7,
+    "left": 72.7,
     "top": 44.933,
     "width": 25.7,
     "height": 24.367
   },
   "palm": {
-    "left": 44.15,
+    "left": 64.15,
     "top": 63.467,
     "width": 13.05,
     "height": 5.133
@@ -65,66 +65,78 @@ export const SHOP_ART = {
     "height": 6.833
   },
   "g1": {
-    "left": 38.3,
+    "left": 32.3,
     "top": 11.433,
     "width": 23.45,
     "height": 8.367
   },
   "g2": {
-    "left": 70.6,
+    "left": 58.1,
     "top": 13.467,
     "width": 15.8,
     "height": 6.333
   },
   "g3": {
-    "left": 12.85,
+    "left": 73.95,
+    "top": 13.433,
+    "width": 16.1,
+    "height": 6.367
+  },
+  "g4": {
+    "left": 12.35,
     "top": 22.433,
     "width": 17.3,
     "height": 8.033
   },
-  "g4": {
-    "left": 65.8,
-    "top": 21.8,
-    "width": 25.4,
-    "height": 8.667
-  },
   "g5": {
-    "left": 10.1,
-    "top": 35.767,
-    "width": 12.75,
-    "height": 5.2
+    "left": 30.35,
+    "top": 22.167,
+    "width": 24.3,
+    "height": 8.3
   },
   "g6": {
-    "left": 76.5,
-    "top": 35.967,
-    "width": 11.95,
-    "height": 5.0
+    "left": 77.65,
+    "top": 26.0,
+    "width": 10.7,
+    "height": 4.467
   },
   "g7": {
-    "left": 10.4,
+    "left": 13.0,
+    "top": 36.033,
+    "width": 12.05,
+    "height": 4.933
+  },
+  "g8": {
+    "left": 24.6,
+    "top": 36.633,
+    "width": 11.75,
+    "height": 4.333
+  },
+  "g9": {
+    "left": 13.4,
     "top": 44.367,
     "width": 11.2,
     "height": 6.267
   },
-  "g8": {
-    "left": 78.5,
-    "top": 43.767,
-    "width": 9.45,
-    "height": 6.867
+  "g10": {
+    "left": 25.55,
+    "top": 44.167,
+    "width": 8.9,
+    "height": 6.467
   },
-  "g9": {
-    "left": 9.2,
+  "g11": {
+    "left": 11.95,
     "top": 53.767,
     "width": 16.1,
     "height": 6.367
   },
-  "g10": {
-    "left": 76.1,
-    "top": 55.267,
-    "width": 13.25,
-    "height": 4.867
+  "g12": {
+    "left": 25.55,
+    "top": 54.6,
+    "width": 9.9,
+    "height": 5.533
   }
 } as Record<string, ShopLayer>,
-  neck: {"x": 49.25, "y": 44.2},
-  pivots: {"pen": {"x": 22.5, "y": 45.53}, "f1": {"x": 46.13, "y": 64.86}, "f2": {"x": 47.67, "y": 66.18}, "f3": {"x": 48.11, "y": 67.4}, "f4": {"x": 46.93, "y": 65.43}} as Record<string, { x: number; y: number }>,
+  neck: {"x": 69.25, "y": 44.2},
+  pivots: {"pen": {"x": 42.5, "y": 45.53}, "f1": {"x": 66.13, "y": 64.86}, "f2": {"x": 67.67, "y": 66.18}, "f3": {"x": 68.11, "y": 67.4}, "f4": {"x": 66.93, "y": 65.43}} as Record<string, { x: number; y: number }>,
 };

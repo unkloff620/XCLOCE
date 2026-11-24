@@ -38,7 +38,7 @@ function Layer({ n, className = "", style }: { n: string; className?: string; st
 const FINGER_ORDER = ["f1", "f4", "f2", "f3"] as const;
 const TAP_AT: Record<string, number> = { f3: 0, f2: 0.1, f4: 0.2, f1: 0.3 };
 /** the elbow on the counter: the raised forearm sways around it (canvas percent of the 2000×3000 canvas) */
-const ELBOW = { x: 25.5, y: 66.5 };
+const ELBOW = { x: 45.5, y: 66.5 };
 
 // the clothes rack and the energy drinks are gone (the user 2026-11-24): clothes open by their links (?tab=clothing)
 export type ShopSpotId = "weapons" | "clothing";

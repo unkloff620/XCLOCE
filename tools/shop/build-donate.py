@@ -27,3 +27,34 @@ save(tabs.crop((590, 263, 856, 648)), "tab", 180)
 sheet = Image.open(f"{S}/goods.png").convert("RGBA")
 for g in GOODS:
     save(cut(sheet, g), g, 220)
+
+# the packs' pictures (generated sheets 3×3, tools/shop/source/v3/donate/sheet-<CUR>.png): from one coin to a heap of
+# sacks; each cell cut, its white keyed out from the border, kept at the sheet's scale (they grow cell to cell)
+from scipy import ndimage
+for cur in ["RUB", "GOLD", "TOKEN", "TOOTH", "PAP"]:
+    sh = np.array(Image.open(f"{S}/donate/sheet-{cur}.png").convert("RGB")).astype(int)
+    n = sh.shape[0] // 3
+    for i in range(9):
+        r, c = divmod(i, 3)
+        a = sh[r * n:(r + 1) * n, c * n:(c + 1) * n]
+        white = a.min(2) > 232
+        lab, _ = ndimage.label(white)
+        edge = set(np.unique(np.r_[lab[0], lab[-1], lab[:, 0], lab[:, -1]])) - {0}
+        bg = np.isin(lab, list(edge))
+        bg = ndimage.binary_dilation(bg, iterations=1) & (a.min(2) > 200)
+        fg = ~bg
+        lab, k = ndimage.label(ndimage.binary_dilation(fg, iterations=4))
+        if k > 1:  # the neighbours' bits at the cell's edge go
+            sz = ndimage.sum(fg, lab, range(1, k + 1))
+            fg &= np.isin(lab, [j + 1 for j, v in enumerate(sz) if v >= 0.15 * sz.max()])
+        alpha = np.where(fg, 255, 0).astype(np.uint8)
+        im = Image.fromarray(np.dstack([a.astype(np.uint8), alpha]))
+        im = im.crop(im.getchannel("A").getbbox())
+        # each fills the tag, the small ones a bit less: the amount still reads as growing
+        f = min(240 / im.width, 240 / im.height) * (0.62 + 0.38 * i / 8)
+        im = im.resize((max(1, round(im.width * f)), max(1, round(im.height * f))), Image.LANCZOS)
+        out = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
+        out.alpha_composite(im, ((256 - im.width) // 2, 256 - 8 - im.height))
+        im = out
+        im.save(f"{OUT}/{cur.lower()}-{i}.webp", quality=88, method=6)
+    print(cur, "packs ok")

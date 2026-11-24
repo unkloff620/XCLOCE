@@ -16,16 +16,9 @@ import { haptic, tg } from "../telegram.ts";
 
 const ART = "/assets/shop/donate";
 /** bump when the art in public/assets/shop/donate changes */
-const V = "?v=3";
-const CUR_ICON: Record<Currency, string> = { RUB: "cur-rub", GOLD: "cur-gold", TOKEN: "cur-token", TOOTH: "cur-tooth", PAP: "cur-papirosa" };
-/** the picture of each of the 9 packs: the coin first, then ever bigger piles */
-const PICS: Record<Currency, string[]> = {
-  RUB: ["@", "@", "@", "rub-s", "rub-s", "rub-s", "rub-l", "rub-l", "rub-l"],
-  GOLD: ["@", "@", "@", "gold-s", "gold-s", "gold-s", "gold-l", "gold-l", "gold-l"],
-  TOKEN: ["@", "@", "@", "tok-s", "tok-s", "tok-s", "tok-l", "tok-l", "tok-l"],
-  TOOTH: ["@", "@", "tooth-jar", "tooth-jar", "tooth-spill", "tooth-spill", "tooth-crate", "tooth-crate", "tooth-crate"],
-  PAP: ["@", "@", "@", "pap-s", "pap-s", "pap-m", "pap-l", "pap-l", "pap-l"],
-};
+const V = "?v=5";
+/** the picture of each of the 9 packs: generated from one coin to a heap of sacks (tools/shop/build-donate.py) */
+const packPic = (p: DonatePack) => `${ART}/${p.cur.toLowerCase()}-${p.idx}.webp${V}`;
 
 /** the Telegram Stars mark */
 export function Star({ size = 16 }: { size?: number }) {
@@ -77,13 +70,12 @@ export function DonateWindow({ cur, onClose }: { cur: Currency; onClose: () => v
           <button type="button" className="dn-x" onClick={onClose} aria-label="Закрыть">×</button>
           <div className="dn-grid">
             {packs.map((p) => {
-              const pic = PICS[p.cur][p.idx];
               return (
                 <div key={p.id} className="dn-cell" style={{ backgroundImage: `url(${ART}/cell.webp${V})` }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img className="dn-pic" src={pic === "@" ? `/assets/ui/${CUR_ICON[p.cur]}.webp?v=2` : `${ART}/${pic}.webp${V}`} alt="" draggable={false} />
+                  <img className="dn-pic" src={packPic(p)} alt="" draggable={false} />
                   <b className="dn-amount num">{full(p.amount)} <Icon name={p.cur} size={14} /></b>
-                  <button type="button" className="dn-buy" disabled={!!busy} onClick={() => void buy(p)}>
+                  <button type="button" className="btn gold dn-buy" disabled={!!busy} onClick={() => void buy(p)}>
                     <Star size={15} /><span className="num">{full(p.stars)}</span>
                   </button>
                 </div>

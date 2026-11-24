@@ -8027,14 +8027,14 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
   padding-top: 9%; transform: translateY(12px); transition: transform 0.18s ease, filter 0.18s; filter: brightness(0.8); -webkit-tap-highlight-color: transparent; }
 .dn-tab.on { transform: translateY(-6px); filter: none; }
 .dn-tab { position: relative; }
-.dn-tab svg { position: absolute; left: 50%; top: 21%; width: 58% !important; height: auto !important; aspect-ratio: 1; transform: translate(-50%, -50%); filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5)); }
+.dn-tab svg { position: absolute; left: 50%; top: 21%; width: 40% !important; height: auto !important; aspect-ratio: 1; transform: translate(-50%, -50%); filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5)); }
 .dn-board { position: relative; z-index: 1; aspect-ratio: 900 / 1307; background: center / 100% 100% no-repeat; padding: 9% 6.5% 8%; filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.6)); }
 .dn-x { position: absolute; right: -6px; top: -8px; width: 34px; height: 34px; border-radius: 50%; border: 2px solid #3b2410; background: radial-gradient(circle at 35% 30%, #ffe9a8, #e9a521 65%, #a8650a); color: #3b2410; font: 900 20px/1 system-ui; cursor: pointer; box-shadow: 0 2px 0 rgba(0, 0, 0, 0.45); }
 .dn-grid { height: 100%; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 2.5% 2%; }
 .dn-cell { position: relative; height: 100%; aspect-ratio: 300 / 466; justify-self: center; background: center / 100% 100% no-repeat; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding: 22% 8% 9%; container-type: inline-size; min-height: 0; }
 .dn-pic { flex: 1; min-height: 0; width: 82%; object-fit: contain; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.45)); }
 .dn-amount { display: inline-flex; align-items: center; gap: 3px; margin: 3% 0; font-size: 12cqi; font-weight: 900; color: #3b2410; white-space: nowrap; }
-.dn-buy { display: inline-flex; align-items: center; justify-content: center; gap: 4px; width: 100%; padding: 5% 0; border-radius: 9px; border: 2px solid #3b2410; cursor: pointer;
-  background: linear-gradient(180deg, #ffe27a, #f2b52c 60%, #d48b14); box-shadow: 0 3px 0 #6b3d0a; font: 900 12.5cqi/1 var(--font-display), system-ui; color: #3b2410; }
-.dn-buy:active { transform: translateY(2px); box-shadow: 0 1px 0 #6b3d0a; }
+/* the game's own gold plate (globals.css .btn), as wide as the tag */
+.dn-cell .dn-buy { width: 100%; min-width: 0; gap: 4px; padding: 0 4px; }
+.dn-cell .dn-buy .num { font-size: 13px; }
 .dn-buy:disabled { filter: saturate(0.5) brightness(0.85); }
