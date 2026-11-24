@@ -7184,9 +7184,9 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
  },
  "tat-zatmenie-shin-r": {
   "part": "torso",
-  "x": 647.0,
+  "x": 644.0,
   "y": 880.0,
-  "w": 236.0,
+  "w": 239.0,
   "h": 258.0
  },
  "tat-zatmenie-foot-l": {

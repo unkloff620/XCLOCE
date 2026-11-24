@@ -144,7 +144,13 @@ def main(sid, sparse=False):
     skin = body & ~shorts & (ndimage.distance_transform_edt(body) > 3)
     b0 = prep(os.path.join(T, "_edits", f"{sid}-hq.png"))
     # both figures by the same rule (holes between the arms and the body filled), so the outlines compare like for like
-    b, bm = warp_onto(figure(a), figure(b0), b0, with_mask=True)
+    # the base is HEADLESS: an edit that drew a head (or squeezed the body) cannot be fitted — the ink would smear
+    ta, tb = figure(a), figure(b0)
+    ha, hb = np.ptp(np.nonzero(ta)[0]), np.ptp(np.nonzero(tb)[0])
+    if abs(hb / ha - 1) > 0.06:
+        raise SystemExit(f"{sid}: the edit's figure is {hb / ha:.0%} of the base's height — it drew a head or changed the body; "
+                         "redo the edit of the headless _base/in.png (with the skin mask), never ask to keep a head")
+    b, bm = warp_onto(ta, tb, b0, with_mask=True)
     out, lines = unmix(a, b, ndimage.binary_erosion(body, iterations=3) & ~shorts)
     # the edit's own outline: where its limbs are thinner than the hero's (the flow does not always get them all the
     # way), it lands inside the body as a dark line along the edge — taken out and inpainted like the hero's own lines

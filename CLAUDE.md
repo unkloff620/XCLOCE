@@ -70,6 +70,7 @@ that room to the players' homes right away: add a `ROOM_DEFS` entry in `src/cont
 A new set's ink is made ONLY by `python3 tools/rig/tattoo-ink.py <set>` from the image edits in `tools/rig/source/tattoo/_edits/`
 (`<set>-hq.png` on `_base/in.png`, `<set>-head.png`, `<set>-hand.png`), then `python3 tools/rig/build-tattoos.py`.
 The script fits the edit onto the hero, fills the holes and the outline strip and fails if more than 4% of the skin stays bare.
+The base `_base/in.png` is HEADLESS: edit it with the mask `_base/skin-mask.png` and a prompt that keeps the figure headless (never "keep his head") — a drawn head squeezes the body and the ink smears; the script stops on such an edit.
 Before release, look at the set on the hero next to the edit: the colours must match and no bare stripes may show.
 
 ## Hero clothes from templates
