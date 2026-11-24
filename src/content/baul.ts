@@ -90,9 +90,10 @@ export function rollBaulPack(level: number, rng: () => number): Reward {
     if (p.kind === "xp") out.xp = qty;
     else if (p.kind === "cur") out.currencies = { ...out.currencies, [p.id]: qty };
     else if (p.kind === "stash") {
-      // нычки: the count over 1–4 random pieces
-      const ids = shuffle([...STASH_IDS], rng).slice(0, Math.min(qty, 1 + Math.floor(rng() * 4)));
-      ids.forEach((id, j) => { const q = Math.floor(qty / ids.length) + (j < qty % ids.length ? 1 : 0); if (q > 0) items.push({ id, qty: q }); });
+      // нычки: each one drawn at random from the whole list (the same may come twice)
+      const got = new Map<string, number>();
+      for (let j = 0; j < qty; j++) { const id = STASH_IDS[Math.floor(rng() * STASH_IDS.length) % STASH_IDS.length]; got.set(id, (got.get(id) ?? 0) + 1); }
+      for (const [id, q] of got) items.push({ id, qty: q });
     } else items.push({ id: p.id, qty });
   });
   // the keys: at 30 — 4 or 5 bosses, 6–9 keys each; lower — fewer bosses and fewer keys

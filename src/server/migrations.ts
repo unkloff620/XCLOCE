@@ -1832,4 +1832,9 @@ CREATE INDEX IF NOT EXISTS donate_payments_player ON donate_payments (player_id,
     id: "v2-133-baul-repack",
     sql: `DELETE FROM baul_packs;`,
   },
+  {
+    // «Баул»: the нычки each drawn from the whole list
+    id: "v2-134-baul-repack",
+    sql: `DELETE FROM baul_packs;`,
+  },
 ];
