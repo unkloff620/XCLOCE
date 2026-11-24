@@ -15,9 +15,11 @@ import { full } from "../format.ts";
 import { BAUL_CUR, BAUL_MAX, BAUL_PRICE } from "../../content/baul.ts";
 import { itemById } from "../../content/items.ts";
 import { tattooSetOf } from "../../content/tattoos.ts";
+import { STASH_IDS } from "../../content/stashes.ts";
 import type { Reward } from "../../content/rewards.ts";
 import type { Granted } from "../../server/core.ts";
 
+const STASH = new Set<string>(STASH_IDS);
 const V = "?v=2";
 const tier = (level: number) => (level >= BAUL_MAX ? 30 : level >= 15 ? 15 : 0);
 /** the bag's picture by its level: 0–14 empty, 15–29 half full, 30 stuffed */
@@ -87,8 +89,11 @@ function Inside({ r, title, button, onClose }: { r: Reward | Granted; title?: st
   const cells: { key: string; icon: ReactNode; n: number; name: string }[] = [
     ...(r.xp ? [{ key: "xp", icon: <Icon name="xp" size={22} />, n: r.xp, name: "Авторитет" }] : []),
     ...Object.entries(r.currencies ?? {}).filter(([, v]) => !!v).map(([c, v]) => ({ key: c, icon: <Icon name={c} size={22} />, n: v as number, name: c })),
-    ...(r.items ?? []).filter((it) => it.qty > 0 && !tattooSetOf(it.id)).map((it) => ({ key: it.id, icon: <ItemArt id={it.id} size={26} />, n: it.qty, name: itemById(it.id)?.name ?? it.id })),
+    ...(r.items ?? []).filter((it) => it.qty > 0 && !tattooSetOf(it.id) && !STASH.has(it.id)).map((it) => ({ key: it.id, icon: <ItemArt id={it.id} size={26} />, n: it.qty, name: itemById(it.id)?.name ?? it.id })),
   ];
+  // the нычки: one sign for all of them (the chest, as everywhere in the rewards), the names in the tooltip
+  const stash = (r.items ?? []).filter((it) => it.qty > 0 && STASH.has(it.id));
+  if (stash.length) cells.push({ key: "stash", icon: <Icon name="chest" size={26} />, n: stash.reduce((t, it) => t + it.qty, 0), name: `Нычки: ${stash.map((it) => `${itemById(it.id)?.name ?? it.id} ×${it.qty}`).join(", ")}` });
   // over everything (the window's pop animation would trap a fixed layer inside it)
   return createPortal(
     <div className="bl-in-back" onClick={onClose}>
