@@ -130,6 +130,9 @@ const WEARABLES: ItemDef[] = ([
   { id: "sneakers-chunky", name: "Кроссовки Гаркуши", slot: "SHOES", rarity: "rare", description: "Чёрные, на толстой подошве. Шаг тяжёлый, как пачка пятитысячных.", sources: ["Победа: Гаркуша (Блатной)"] },
   // Мугонатор's set: the sea captain (cut from the hero on tools/rig/source/wear)
   { id: "tee-sailor", name: "Тельняшка Мугонатора", slot: "SHIRT", rarity: "rare", description: "Полоски — чтобы акула видела, кого не трогать. Край уже кто-то откусил.", sources: ["Победа: Мугонатор (Блатной)"] },
+  { id: "jacket-sportik", name: "Олимпийка «Спортик»", slot: "SHIRT", rarity: "epic", description: "Чёрная, две полосы, нараспашку — чтобы наколки дышали. Сет «Спортик».", sources: ["Ящик ништяков"] },
+  { id: "pants-sportik", name: "Треники «Спортик»", slot: "PANTS", rarity: "epic", description: "Чёрные треники с лампасами. На корточках сидят как влитые. Сет «Спортик».", sources: ["Ящик ништяков"] },
+  { id: "sneakers-sportik", name: "Кроссы «Спортик»", slot: "SHOES", rarity: "epic", description: "Чёрные, с молнией на боку и белыми носками. Сет «Спортик».", sources: ["Ящик ништяков"] },
   { id: "tee-solntse", name: "Футболка Солнца", slot: "SHIRT", rarity: "legendary", description: "Чёрная, в лавовых трещинах, на груди горит солнце. Носится только теми, кто дошёл до конца Close.", sources: ["Победа: Солнце (Авторитетный)"] },
   { id: "pants-solntse", name: "Штаны Солнца", slot: "PANTS", rarity: "legendary", description: "Закопчённые рабочие штаны, по швам — солнечные лучи, по ткани тлеют трещины.", sources: ["Победа: Солнце (Авторитетный)"] },
   { id: "sneakers-solntse", name: "Кроссовки Солнца", slot: "SHOES", rarity: "legendary", description: "Подошва из живой лавы. После них на асфальте остаются следы.", sources: ["Победа: Солнце (Авторитетный)"] },

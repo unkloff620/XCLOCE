@@ -18,11 +18,13 @@ export const MOUTH_ITEMS = ["cigarette", "toothpick"] as const;
 export const MOUTH_ITEM_CHANCE = 0.1;
 /** things that drop only from the case (the mouth things, the teeth, the face things, the hats, the chain): each with its own
  * chance (CASE_THING_CHANCE), only while the player has none of it; they land in the case's «Вещь» frame */
-export const CASE_THINGS = [...MOUTH_ITEMS, "shades-gold", "chain-cuban", "mask-anon", "monocle-whale", "bruise-liq", "crown-cash", "ushanka-star", "helmet-miner", "bandana-hodl", "cigar", "teeth-grin", "grillz-diamond"] as const;
+export const CASE_THINGS = [...MOUTH_ITEMS, "shades-gold", "chain-cuban", "mask-anon", "monocle-whale", "bruise-liq", "crown-cash", "ushanka-star", "helmet-miner", "bandana-hodl", "cigar", "teeth-grin", "grillz-diamond", "jacket-sportik", "pants-sportik", "sneakers-sportik"] as const;
 /** each case thing's chance per opened box; at most ONE thing a box (the chances of the ones the player lacks add up) */
 export const CASE_THING_CHANCE: Record<(typeof CASE_THINGS)[number], number> = {
   cigarette: 0.005, toothpick: 0.008, cigar: 0.004, "teeth-grin": 0.003, "grillz-diamond": 0.0015, "shades-gold": 0.009, "mask-anon": 0.01, "monocle-whale": 0.01,
   "bruise-liq": 0.013, "crown-cash": 0.015, "ushanka-star": 0.02, "helmet-miner": 0.024, "bandana-hodl": 0.018, "chain-cuban": 0.014,
+  // the set «Спортик» (the user 2026-11-24): 1% a piece, or by the case's guarantee
+  "jacket-sportik": 0.01, "pants-sportik": 0.01, "sneakers-sportik": 0.01,
 };
 /** this many boxes in a row without a thing — the next one gives a thing (a random missing one) for sure */
 export const CASE_THING_PITY = 20;

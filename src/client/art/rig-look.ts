@@ -307,6 +307,27 @@ export const WEAR_FIT = {
     "w": 797,
     "h": 211
   },
+  "jacket-sportik": {
+    "slot": "SHIRT",
+    "x": 105.5,
+    "y": 291.0,
+    "w": 798,
+    "h": 468
+  },
+  "pants-sportik": {
+    "slot": "PANTS",
+    "x": 75.0,
+    "y": 688.5,
+    "w": 856,
+    "h": 458
+  },
+  "sneakers-sportik": {
+    "slot": "SHOES",
+    "x": 83.0,
+    "y": 1111.5,
+    "w": 824,
+    "h": 231
+  },
   "crown-cash": {
     "slot": "HEAD",
     "x": 364.0,

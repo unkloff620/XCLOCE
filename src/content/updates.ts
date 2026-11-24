@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-24-sportik",
+    date: "24 ноября",
+    title: "Сет «Спортик»",
+    items: [
+      { img: "/assets/items/jacket-sportik.webp", text: "Олимпийка, треники и кроссы «Спортик» — падают из «Ящика ништяков» (1% за вещь или по гаранту)." },
+    ],
+  },
+  {
     id: "2026-11-24-case-stash",
     date: "24 ноября",
     title: "Нычки в кейсе",
