@@ -177,13 +177,6 @@ describe("achievements and someone's profile", () => {
     expect(c).toEqual({ name: "Бета", emblem: "moon", description: "Бьём боссов по вечерам" });
   });
 
-  it("the best login streak is remembered after the streak breaks", async () => {
-    const p = await newPlayer(db);
-    for (let i = 0; i < 3; i++) await act(db, p, "daily_claim", {}, T0 + i * D);
-    await act(db, p, "daily_claim", {}, T0 + 6 * D);
-    const [d] = await db.query<{ streak: number; best_streak: number }>("SELECT streak, best_streak FROM daily_login WHERE player_id=$1", [p]);
-    expect(d).toMatchObject({ streak: 1, best_streak: 3 });
-  });
 });
 
 describe("clan level", () => {

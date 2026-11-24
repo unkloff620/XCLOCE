@@ -1,8 +1,6 @@
 import { GameError, type Queryable } from "../db.ts";
 import { gain, grantReward, moscowDay, type Ctx } from "../core.ts";
 import { FIGHT_COOLDOWN_MS, FIGHT_DAY_MAX, FIGHT_WIN, NOTE_KEEP_MS, SOCIAL_COOLDOWN_MS, fightChance } from "../../content/social.ts";
-import { rollParts } from "../../content/craft-drops.ts";
-import { mergeRewards } from "../../content/rewards.ts";
 
 /* Players to players from a profile (content/social.ts): biceps, a fist fight, a spit, and the messages they leave. */
 
@@ -64,7 +62,7 @@ export async function fight(ctx: Ctx, to: number) {
   const chance = fightChance(mine, theirs);
   const won = ctx.rng() < chance;
   // a won fist fight: 30% on a craft part on top
-  const reward = won ? await grantReward(ctx, mergeRewards(FIGHT_WIN, { items: ctx.rng() < 0.3 ? rollParts(ctx.rng, 1, { rare: 0.25 }) : [] }), `fight:${to}`) : null;
+  const reward = won ? await grantReward(ctx, FIGHT_WIN, `fight:${to}`) : null;
   await log(ctx, "fight", to, won);
   await note(ctx, to, "fight", { won, mine, theirs });
   return { won, mine, theirs, chance, reward };

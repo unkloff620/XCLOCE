@@ -86,8 +86,12 @@ export async function craftBoxBuy(ctx: Ctx) {
   return { slot: bought, price, open: Number(r.craft_boxes) };
 }
 
+/** the dealer and the scheme no longer sell parts (the user 2026-11-24; the code kept for a quick turn back) */
+const DEALER_SELLS = true as boolean;
 /** the dealer in the garage today: DEALER_OFFERS parts, DEALER_STOCK of each for every player, PART_TOKEN tokens a part */
 export async function dealerView(q: Queryable, pid: number, now: number) {
+  // parts are not sold any more (the user 2026-11-24): for tokens they come out of the toolbox in the shop
+  if (DEALER_SELLS) return [] as { id: string; price: number; currency: "TOKEN"; left: number }[];
   const day = moscowDay(now);
   const ids = dealerParts(day);
   const rows = await q.query<{ key: string; n: number }>("SELECT key, SUM(delta)::int AS n FROM ledger WHERE player_id=$1 AND kind='item' AND reason=$2 GROUP BY key", [pid, `dealer:${day}`]);
@@ -96,6 +100,7 @@ export async function dealerView(q: Queryable, pid: number, now: number) {
 }
 /** «Купить» in the scheme: the missing parts of a recipe for метро tokens (PART_TOKEN a part) */
 export async function partBuy(ctx: Ctx, itemId: string, want: number) {
+  if (DEALER_SELLS) throw new GameError("not_sold", "Детали больше не продаются — крути строительный ящик в магазине");
   const def = craftById(itemId);
   if (!def || def.level !== 0) throw new GameError("bad_item", "Купить можно только детали");
   if (!Number.isInteger(want) || want < 1 || want > 100) throw new GameError("bad_qty", "Некорректное количество");
@@ -106,6 +111,7 @@ export async function partBuy(ctx: Ctx, itemId: string, want: number) {
 }
 
 export async function dealerBuy(ctx: Ctx, itemId: string, want: number) {
+  if (DEALER_SELLS) throw new GameError("not_sold", "Детали больше не продаются — крути строительный ящик в магазине");
   const offer = (await dealerView(ctx.q, ctx.pid, ctx.now)).find((o) => o.id === itemId);
   if (!offer) throw new GameError("not_sold", "Сегодня барыга этим не торгует");
   const qty = Math.max(1, Math.min(offer.left, Math.floor(want)));

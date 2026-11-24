@@ -9,7 +9,6 @@ import {
 import { isBatch, strike } from "./combat.ts";
 import type { Reward } from "../../content/rewards.ts";
 import { mergeRewards } from "../../content/rewards.ts";
-import { between, rollParts } from "../../content/craft-drops.ts";
 
 /* The clan boss of the week (content/clans.ts): one copy per clan, hit by its members, prizes by share when it falls. */
 
@@ -100,7 +99,7 @@ export async function hitClanBoss(ctx: Ctx, weaponId: string, want = 1) {
       await ctx.q.query("INSERT INTO prizes (player_id, title, reward, created_at) VALUES ($1,$2,$3,$4)", [
         // «Крафт»: a set of parts for everyone who hit it, very rare ones among them
         h.player_id, `Клановый босс ${name} повержен · твой вклад ${Math.round(share * 1000) / 10}%`,
-        JSON.stringify(mergeRewards(clanBossPrize(share, size), { items: rollParts(ctx.rng, between(8, 15, ctx.rng), { rare: 0.35, epic: 0.15 }) })), new Date(ctx.now),
+        JSON.stringify(mergeRewards(clanBossPrize(share, size), {})), new Date(ctx.now),
       ]);
     }
   }

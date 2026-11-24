@@ -58,19 +58,12 @@ describe("daily quests", () => {
     expect(await wallet(db, p, "RUB")).toBe(rub0 + (set[0].reward.currencies?.RUB ?? 0));
     await expect(act(db, p, "quest_claim", { id: set[0].id }, T0)).rejects.toMatchObject({ code: "quest_taken" });
     expect(r.state.quests.claimable).toBe(true);
-    await expect(act(db, p, "quest_chest", {}, T0)).rejects.toMatchObject({ code: "chest_locked" });
     await act(db, p, "quest_claim", { id: set[1].id }, T0);
     await act(db, p, "quest_claim", { id: set[2].id }, T0);
-    const s4 = await act(db, p, "quest_claim", { id: set[3].id }, T0);
-    expect(s4.state.quests.chest.ready).toBe(false); // the fifth is still to collect
-    const s = await act(db, p, "quest_claim", { id: set[4].id }, T0);
-    expect(s.state.quests.chest.ready).toBe(true);
-    const keyboards = await qty(db, p, "keyboard");
-    // rng 0.6 → the second loot entry (keyboard)
-    const c = await act(db, p, "quest_chest", {}, T0, always(0.6));
-    expect(await qty(db, p, "keyboard")).toBe(keyboards + 1);
-    expect(c.state.quests).toMatchObject({ claimable: false, chest: { opened: true } });
-    await expect(act(db, p, "quest_chest", {}, T0)).rejects.toMatchObject({ code: "chest_taken" });
+    await act(db, p, "quest_claim", { id: set[3].id }, T0);
+    await act(db, p, "quest_claim", { id: set[4].id }, T0);
+    // «Сундук дня» is gone (the user 2026-11-24)
+    await expect(act(db, p, "quest_chest", {}, T0)).rejects.toMatchObject({ code: "no_chest" });
   });
 
   it("the mini-game quest counts a squashed roach", async () => {

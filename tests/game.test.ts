@@ -575,17 +575,10 @@ describe("shop and exchange", () => {
     await expect(act(db, p, "exchange", { from: "RUB", to: "PAP", amount: 100 }, open)).rejects.toMatchObject({ code: "bad_request" });
     await expect(act(db, p, "exchange", { from: "PAP", to: "GOLD", amount: 100 }, open)).rejects.toMatchObject({ code: "bad_request" });
   });
-  it("craft: a missing part is bought for метро tokens, 8 a part", async () => {
+  it("craft: parts are not sold in the scheme any more", async () => {
     const p = await newPlayer(db);
     await setMoney(db, p, "TOKEN", 100);
-    await expect(act(db, p, "part_buy", { itemId: "craft-flamethrower", qty: 1 }, T0)).rejects.toMatchObject({ code: "bad_item" });
-    const { CRAFT_PARTS } = await import("../src/content/craft.ts");
-    const common = CRAFT_PARTS.find((x) => x.rarity === "common")!, epic = CRAFT_PARTS.find((x) => x.rarity === "epic")!;
-    const r = await act(db, p, "part_buy", { itemId: common.id, qty: 3 }, T0);
-    expect(r.result).toMatchObject({ qty: 3, paid: 24 });
-    await act(db, p, "part_buy", { itemId: epic.id, qty: 1 }, T0);
-    expect(await wallet(db, p, "TOKEN")).toBe(100 - 32);
-    expect(await qty(db, p, common.id)).toBe(3);
+    await expect(act(db, p, "part_buy", { itemId: "part-nails", qty: 1 }, T0)).rejects.toMatchObject({ code: "not_sold" });
   });
   it("a good talk with the dealer may give a better rate for 2 hours; once a day, only while the exchange works", async () => {
     // the default schedule (the live one from the migration — 11:00–3:00 — is not what these times expect)
@@ -783,28 +776,9 @@ describe("inventory and clans", () => {
 });
 
 describe("daily login reward", () => {
-  const D = 24 * H;
-  it("once per Moscow day, the streak grows, a missed day resets it, the cycle wraps after 7", async () => {
+  it("is gone (the user 2026-11-24)", async () => {
     const p = await newPlayer(db);
-    const r1 = await act(db, p, "daily_claim", {}, T0);
-    expect(r1.result).toMatchObject({ day: 1, streak: 1 });
-    expect(r1.state.daily).toMatchObject({ available: false, day: 1, streak: 1 });
-    expect(await wallet(db, p, "RUB")).toBe(800);
-    await expect(act(db, p, "daily_claim", {}, T0 + 10 * H)).rejects.toMatchObject({ code: "daily_taken" });
-    // 12:00 → next day 01:00 MSK
-    const r2 = await act(db, p, "daily_claim", {}, T0 + 13 * H);
-    expect(r2.result).toMatchObject({ day: 2, streak: 2 });
-    expect(await qty(db, p, "keyboard")).toBe(1);
-    // skip a day → back to day 1
-    const r3 = await act(db, p, "daily_claim", {}, T0 + 3 * D);
-    expect(r3.result).toMatchObject({ day: 1, streak: 1 });
-    for (let i = 1; i < 7; i++) await act(db, p, "daily_claim", {}, T0 + (3 + i) * D);
-    expect(await qty(db, p, "gpu")).toBe(1);
-    // 7 days in a row: the streak bonus on top (5 chips), the next one is at 14
-    expect(await qty(db, p, "poker-chip")).toBe(5);
-    const r8 = await act(db, p, "daily_claim", {}, T0 + 10 * D);
-    expect(r8.result).toMatchObject({ day: 1, streak: 8, bonus: null });
-    expect(r8.state.daily.bonus.at).toBe(14);
+    await expect(act(db, p, "daily_claim", {}, T0)).rejects.toMatchObject({ code: "no_daily" });
   });
 });
 
@@ -2433,17 +2407,14 @@ describe("«Крафт»", () => {
     await expect(hit(p, "craft3-railgun")).rejects.toMatchObject({ code: "bad_weapon" });
   });
 
-  it("the dealer sells today's parts (a few of each), takes them back; a thing is taken apart; parts are asked for and sent ×5", async () => {
+  it("the dealer sells no parts but takes them back; a thing is taken apart; parts are asked for and sent ×5", async () => {
     const p = await newPlayer(db);
     await setMoney(db, p, "TOKEN", 10000);
-    const { dealerParts } = await import("../src/content/craft-drops.ts");
-    const { moscowDay } = await import("../src/server/core.ts");
-    const id = dealerParts(moscowDay(T0))[0];
-    const b = await act(db, p, "dealer_buy", { itemId: id, qty: 9 }, T0);
-    expect(b.result).toMatchObject({ itemId: id, qty: 5, paid: 40 }); // 8 tokens a part
-    expect(await wallet(db, p, "TOKEN")).toBe(10000 - 40);
+    const id = "part-nails";
+    // the dealer sells no parts any more (the toolbox in the shop gives them for tokens)
+    await expect(act(db, p, "dealer_buy", { itemId: id, qty: 1 }, T0)).rejects.toMatchObject({ code: "not_sold" });
+    await give(db, p, id, 5);
     const pap = await wallet(db, p, "PAP");
-    await expect(act(db, p, "dealer_buy", { itemId: id }, T0)).rejects.toMatchObject({ code: "sold_out" });
     const sold = await act(db, p, "sell", { itemId: id, qty: 5 }, T0);
     expect(sold.result).toMatchObject({ got: 250, currency: "PAP" }); // parts go for папиросы
     expect(await wallet(db, p, "PAP")).toBe(pap + 250);

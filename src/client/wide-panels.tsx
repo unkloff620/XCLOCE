@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { api } from "./api.ts";
 import { useGame, useNow } from "./store.tsx";
-import { Avatar, RewardChips } from "./ui.tsx";
+import { Avatar } from "./ui.tsx";
 import { Icon } from "./art/icons.tsx";
 import { haptic } from "./telegram.ts";
 import { clock } from "./format.ts";
@@ -95,7 +95,6 @@ function Quests() {
   const q = state?.quests;
   if (!q) return null;
   if (state?.monthly) return <Monthly />;
-  const left = q.list.filter((x) => !x.claimed).length;
   return (
     <Box title="Задания дня" icon="clock" right={<span className="wp-muted num">{clock(q.resetAt - now)}</span>}>
       {q.list.map((x) => {
@@ -111,13 +110,6 @@ function Quests() {
           </div>
         );
       })}
-      <div className="wp-quest">
-        <span className="wp-quest-t"><b>Сундук дня</b></span>
-        {q.chest.opened ? <span className="wp-ok">✓</span>
-          : q.chest.ready ? <button className="btn gold sm" disabled={busy === "quest_chest"} onClick={async () => { if (await act("quest_chest")) haptic.big(); }}>Открыть</button>
-          : <span className="wp-muted">ещё {left}</span>}
-      </div>
-      {q.chest.reward && <RewardChips r={q.chest.reward} size={14} />}
     </Box>
   );
 }

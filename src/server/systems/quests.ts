@@ -1,9 +1,7 @@
 import { loadConfig } from "../config.ts";
 import { GameError, type Queryable } from "../db.ts";
-import { grantReward, moscowDay, nextMoscowMidnight, weighted, type Ctx, type Granted } from "../core.ts";
-import { QUEST_CHEST_BASE, QUEST_CHEST_LOOT, questsForDay, type QuestKind } from "../../content/quests.ts";
-import { mergeRewards } from "../../content/rewards.ts";
-import { between, rollParts } from "../../content/craft-drops.ts";
+import { grantReward, moscowDay, nextMoscowMidnight, type Ctx, type Granted } from "../core.ts";
+import { questsForDay, type QuestKind } from "../../content/quests.ts";
 import { monthTick } from "./monthly.ts";
 import { zarubTick } from "./zarub.ts";
 import type { MonthKind } from "../../content/monthly.ts";
@@ -70,15 +68,6 @@ export async function claimQuest(ctx: Ctx, id: string) {
 }
 
 export async function openQuestChest(ctx: Ctx) {
-  const day = moscowDay(ctx.now);
-  const r = await row(ctx.q, ctx.pid, day, true);
-  if (r.chest) throw new GameError("chest_taken", "Сундук уже открыт — новый завтра");
-  const ids = questsForDay(ctx.pid, day, ctx.cfg.exchange.schedule).map((x) => x.id);
-  if (!ids.every((id) => r.claimed.includes(id))) throw new GameError("chest_locked", "Сначала забери награды за все задания дня");
-  const loot = weighted(QUEST_CHEST_LOOT, ctx.rng);
-  // «Крафт»: the day's chest holds 5 parts and a rare one too
-  const parts = [...rollParts(ctx.rng, 5, { rare: 0.2 }), ...rollParts(ctx.rng, 1, { rare: 1 })];
-  const got = await grantReward(ctx, mergeRewards(QUEST_CHEST_BASE, { items: [loot, ...parts] }), "quest-chest");
-  await ctx.q.query("UPDATE daily_quests SET chest=$3 WHERE player_id=$1 AND day=$2", [ctx.pid, day, JSON.stringify(got)]);
-  return { reward: got };
+  // «Сундук дня» is gone (the user 2026-11-24)
+  throw new GameError("no_chest", "Сундука дня больше нет");
 }

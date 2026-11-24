@@ -22,7 +22,6 @@ import { BicepsArt } from "./profile.tsx";
 import { StashWishWindow } from "./stash-swap.tsx";
 import { CRAFT_ALL, CRAFT_BLOCK_BONUS, CRAFT_BOXES, CRAFT_BOX_PRICES, CRAFT_BOX_TALENTS, CRAFT_LEVEL_NAME, craftBonusOf, craftById, craftBoxesOpen, type CraftBonus, type CraftDef } from "../../content/craft.ts";
 import { talentsForDamage } from "../../content/talents.ts";
-import { PART_TOKEN } from "../../content/craft-drops.ts";
 
 type Filter = "all" | "mine" | 0 | 1 | 2 | 3;
 
@@ -281,16 +280,6 @@ export function CraftScreen() {
  * opens its own scheme), an arrow, the result and «Создать». */
 function Scheme({ d, qty, busy, onMake, onOpen, onClose, onSplit, back, onBack }: { d: CraftDef; qty: Map<string, number>; busy: boolean; onMake: () => void; onOpen: (d: CraftDef) => void; onClose: () => void; onSplit: () => void; back: CraftDef | null; onBack: () => void }) {
   const [sure, setSure] = useState(false);
-  const { state, act } = useGame();
-  // «Всё сразу»: «купить» buys every missing part of that kind at once (remembered on this device)
-  const [bulk, setBulk] = useState(() => { try { return localStorage.getItem("xc-craft-bulk") === "1"; } catch { return false; } });
-  const toggleBulk = () => { haptic.tap(); setBulk((b) => { try { localStorage.setItem("xc-craft-bulk", b ? "0" : "1"); } catch { /* private mode */ } return !b; }); };
-  const usd = state?.wallet.TOKEN ?? 0;
-  // a missing part: «Купить» the missing ones for жетоны
-  const buy = async (id: string, n: number) => {
-    const r = await act<{ qty: number; paid: number }>("part_buy", { itemId: id, qty: n }, (x) => `Куплено ×${x.qty} · −${x.paid} жетонов`);
-    if (r) { haptic.ok(); sfx("coinsoft"); }
-  };
   const own = qty.get(d.id) ?? 0;
   const parts = d.recipe ?? [];
   const lacks = parts.some((r) => (qty.get(r.id) ?? 0) < r.qty);
@@ -298,9 +287,6 @@ function Scheme({ d, qty, busy, onMake, onOpen, onClose, onSplit, back, onBack }
   return (
     <Modal onClose={onClose} className="cf-scheme-modal">
       <div className="cf-scheme">
-        <button type="button" role="switch" aria-checked={bulk} className={`cf-bulk ${bulk ? "on" : ""}`} onClick={toggleBulk}>
-          <i aria-hidden="true" /><span>Покупать всё сразу</span>
-        </button>
         {/* opened by «Собрать» from another scheme: back to it */}
         {back && (
           <button type="button" className="cf-back" onClick={onBack} title={`Назад: ${back.name}`}>
@@ -320,18 +306,6 @@ function Scheme({ d, qty, busy, onMake, onOpen, onClose, onSplit, back, onBack }
                     {sub?.recipe && <button type="button" className="cf-ing-btn" onClick={() => onOpen(sub)}>Собрать</button>}
 
                     <i className="cf-ing-name">{sub?.name}</i>
-                    {/* «купить» under the name; the row keeps its place when there is nothing to buy (the pictures don't jump) */}
-                    {sub && sub.level === 0 && (() => {
-                      const need = h < r.qty;
-                      const n = need ? (bulk ? r.qty - h : 1) : 1;
-                      const cost = n * PART_TOKEN;
-                      return (
-                        <span className={`cf-buy-row ${need ? "" : "idle"}`}>
-                          <button type="button" className="bb-buy cf-buy" disabled={!need || busy || usd < cost} onClick={() => void buy(r.id, n)} title={`Купить ${n} шт. за ${cost} жетонов`}>купить{n > 1 ? ` ×${n}` : ""}</button>
-                          <i className="cf-buy-cost num">{cost}<Icon name="TOKEN" size={11} /></i>
-                        </span>
-                      );
-                    })()}
                   </span>
                 );
               })}

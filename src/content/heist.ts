@@ -74,10 +74,10 @@ export function rollHeistKind(rng: () => number, t: number): HeistKind {
 
 /** what a box holds: ranges per kind (the richer the box, the more of everything) */
 const LOOT: Record<HeistKind, { rub: [number, number]; usd: [number, number]; weapons: [string, number, number][]; parts: [number, number]; rare: number; epic: number; stashes: [number, number] }> = {
-  bronze: { rub: [3_000, 6_000], usd: [2, 4], weapons: [["keyboard", 10, 20]], parts: [2, 4], rare: 0.15, epic: 0, stashes: [0, 1] },
-  silver: { rub: [8_000, 15_000], usd: [5, 10], weapons: [["keyboard", 15, 30], ["gpu", 8, 15]], parts: [3, 6], rare: 0.25, epic: 0.03, stashes: [1, 1] },
-  gold: { rub: [20_000, 40_000], usd: [12, 25], weapons: [["gpu", 15, 25], ["rug-pull-gun", 5, 10]], parts: [5, 8], rare: 0.35, epic: 0.06, stashes: [1, 2] },
-  diamond: { rub: [50_000, 100_000], usd: [30, 60], weapons: [["gpu", 25, 40], ["rug-pull-gun", 15, 30]], parts: [8, 12], rare: 0.45, epic: 0.12, stashes: [2, 3] },
+  bronze: { rub: [3_000, 6_000], usd: [2, 4], weapons: [["keyboard", 10, 20]], parts: [0, 0], rare: 0.15, epic: 0, stashes: [0, 1] },
+  silver: { rub: [8_000, 15_000], usd: [5, 10], weapons: [["keyboard", 15, 30], ["gpu", 8, 15]], parts: [0, 0], rare: 0.25, epic: 0.03, stashes: [1, 1] },
+  gold: { rub: [20_000, 40_000], usd: [12, 25], weapons: [["gpu", 15, 25], ["rug-pull-gun", 5, 10]], parts: [0, 0], rare: 0.35, epic: 0.06, stashes: [1, 2] },
+  diamond: { rub: [50_000, 100_000], usd: [30, 60], weapons: [["gpu", 25, 40], ["rug-pull-gun", 15, 30]], parts: [0, 0], rare: 0.45, epic: 0.12, stashes: [2, 3] },
 };
 export const heistLoot = (k: HeistKind) => LOOT[k];
 

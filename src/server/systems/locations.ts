@@ -5,7 +5,6 @@ import { STASH_MISSING_WEIGHT, STASH_PITY, STASH_SETS, stashChance, stashSetsByL
 import { LOCATIONS, locRep, locReward, locationById, taskById, taskOpen, tasksOf, type LocMode, type LocationDef } from "../../content/locations.ts";
 import { BUSINESS_MAX_HOURS, bizById, bizCellCost, bizCells, bizOf, bizPerHour, type BizKind } from "../../content/business.ts";
 import type { Reward } from "../../content/rewards.ts";
-import { LOCATION_PARTS, LOC_PART_CHANCE, locStepParts, rollParts } from "../../content/craft-drops.ts";
 import { mergeRewards } from "../../content/rewards.ts";
 
 /*
@@ -196,8 +195,8 @@ export async function doTask(ctx: Ctx, taskId: string) {
   );
   const stepNow = have + 1;
   // «Крафт»: one part a step with LOC_PART_CHANCE (half from the location's own set)
-  const sp = locStepParts(loc.order);
-  const parts = ctx.rng() < LOC_PART_CHANCE ? rollParts(ctx.rng, 1, { rare: sp.rare, epic: sp.epic, pool: LOCATION_PARTS[loc.id] }) : [];
+  // the location tasks give no parts any more (the user 2026-11-24: parts come from the masters, swaps, the slots, the yard and the toolbox)
+  const parts: { id: string; qty: number }[] = []; // no parts from the tasks any more (the user 2026-11-24)
   const stepGot = await grantReward(ctx, mergeRewards(task.stepReward, { items: parts }), `task:${task.id}`);
   // авторитет локации (by day) or ночной авторитет (by night): a third of the step's authority, kept in this location only
   const rep = locRep(stepGot.xp);

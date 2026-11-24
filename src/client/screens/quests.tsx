@@ -1,13 +1,11 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { Modal, RewardChips } from "../ui.tsx";
 import { Icon } from "../art/icons.tsx";
 import { clock } from "../format.ts";
 import { haptic, requestWriteAccess } from "../telegram.ts";
-import { QUEST_CHEST_BASE, QUEST_CHEST_LOOT, questById } from "../../content/quests.ts";
-import { ItemArt } from "../art/items.tsx";
+import { questById } from "../../content/quests.ts";
 import type { Granted } from "../api.ts";
 
 /** Telegram reminders switch: energy full, fist ready, boss almost dead, streak about to burn. */
@@ -43,21 +41,12 @@ export function NotifySwitch() {
 export function QuestsWindow({ onClose }: { onClose: () => void }) {
   const { state, act, busy } = useGame();
   const now = useNow();
-  const [chestGot, setChestGot] = useState<Granted | null>(null);
   if (!state) return null;
   const q = state.quests;
   const claim = async (id: string) => {
     const r = await act<{ reward: Granted }>("quest_claim", { id });
     if (r) haptic.ok();
   };
-  const openChest = async () => {
-    const r = await act<{ reward: Granted }>("quest_chest");
-    if (r) {
-      haptic.big();
-      setChestGot(r.reward);
-    }
-  };
-  const claimedN = q.list.filter((x) => x.claimed).length;
   return (
     <Modal title="Задания дня" onClose={onClose} head={
       <div className="small muted row" style={{ justifyContent: "space-between" }}>
@@ -87,30 +76,6 @@ export function QuestsWindow({ onClose }: { onClose: () => void }) {
             </div>
           );
         })}
-        <div className={`quest-chest ${q.chest.ready ? "ready" : ""} ${q.chest.opened ? "opened" : ""}`}>
-          <div className="quest-chest-art" aria-hidden="true"><Icon name="chest" size={56} /></div>
-          <div className="col" style={{ gap: 4, flex: 1, minWidth: 0 }}>
-            <b className="display">Сундук дня</b>
-            {chestGot || q.chest.reward ? (
-              <RewardChips r={chestGot ?? q.chest.reward} size={14} />
-            ) : (
-              <>
-                <RewardChips r={QUEST_CHEST_BASE} size={14} />
-                <span className="tiny muted row" style={{ gap: 4, flexWrap: "wrap" }}>
-                  + одно оружие:
-                  {QUEST_CHEST_LOOT.map((l) => <span key={l.v.id} title={`${l.w}%`} className="row" style={{ gap: 1 }}><ItemArt id={l.v.id} size={16} /></span>)}
-                </span>
-              </>
-            )}
-          </div>
-          {q.chest.opened ? (
-            <span className="quest-ok display">✓</span>
-          ) : q.chest.ready ? (
-            <button className="btn gold sm" disabled={busy === "quest_chest"} onClick={openChest}>Открыть</button>
-          ) : (
-            <span className="chip num">{claimedN}/{q.list.length}</span>
-          )}
-        </div>
         <NotifySwitch />
       </div>
     </Modal>

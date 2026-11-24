@@ -1,9 +1,7 @@
 import { GameError, type Queryable } from "../db.ts";
-import { grantReward, moscowDay, nextMoscowMidnight, type Ctx } from "../core.ts";
+import { moscowDay, nextMoscowMidnight, type Ctx } from "../core.ts";
 import type { Config } from "../config.ts";
-import { nextStreakBonus, streakBonus } from "../../content/daily.ts";
-import { between, rollParts } from "../../content/craft-drops.ts";
-import { mergeRewards } from "../../content/rewards.ts";
+import { nextStreakBonus } from "../../content/daily.ts";
 
 /*
  * Награда за вход: раз в московские сутки. Серия растёт, если вчера тоже забирал; пропуск — снова день 1.
@@ -34,21 +32,6 @@ export async function dailyView(q: Queryable, pid: number, now: number, cfg: Con
 }
 
 export async function claimDaily(ctx: Ctx) {
-  const [row] = await ctx.q.query<Row>("SELECT last_day, streak, total FROM daily_login WHERE player_id=$1 FOR UPDATE", [ctx.pid]);
-  const s = status(row, ctx.now, ctx.cfg);
-  if (!s.available) throw new GameError("daily_taken", "Сегодняшняя награда уже получена — приходи завтра");
-  const reward = ctx.cfg.daily[s.day - 1];
-  await ctx.q.query(
-    `INSERT INTO daily_login (player_id, last_day, streak, total, best_streak) VALUES ($1,$2,$3,1,$3)
-     ON CONFLICT (player_id) DO UPDATE SET last_day=EXCLUDED.last_day, streak=EXCLUDED.streak, total=daily_login.total+1,
-       best_streak=GREATEST(daily_login.best_streak, EXCLUDED.streak)`,
-    [ctx.pid, moscowDay(ctx.now), s.nextStreak],
-  );
-  // «Крафт»: a handful of parts every day (one rare among them)
-  const parts = [...rollParts(ctx.rng, between(3, 6, ctx.rng)), ...rollParts(ctx.rng, 1, { rare: 1 })];
-  const got = await grantReward(ctx, mergeRewards(reward, { items: parts }), `daily:${s.day}`);
-  // the streak bonus on top: 7, 14, 30 days in a row (then every 30)
-  const extra = streakBonus(s.nextStreak);
-  const bonus = extra ? await grantReward(ctx, extra, `daily-streak:${s.nextStreak}`) : null;
-  return { day: s.day, streak: s.nextStreak, reward: got, bonus };
+  // the daily login reward is gone (the user 2026-11-24)
+  throw new GameError("no_daily", "Награды за вход больше нет");
 }

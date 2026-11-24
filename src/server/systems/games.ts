@@ -17,8 +17,6 @@ import { ZONK_CONT_PENALTY, UPGRADE_RULES, POKER_RULES, POKER_RESET, POKER_CHIP,
 } from "../../content/games.ts";
 import { itemById } from "../../content/items.ts";
 import type { Reward } from "../../content/rewards.ts";
-import { between, rollParts } from "../../content/craft-drops.ts";
-import { mergeRewards } from "../../content/rewards.ts";
 import { TATTOO_SETS } from "../../content/tattoos.ts";
 import { STASH_IDS } from "../../content/stashes.ts";
 
@@ -178,7 +176,7 @@ async function finishZonk(ctx: Ctx, g: GameRow, gaveUp = false) {
   // giving up after the target was reached ends the game as it stands: still at the target — passed
   const won = (!gaveUp || !!s.reached) && points >= target;
   // a won zonk: a few craft parts on top
-  const pay = won ? mergeRewards(def.win, { items: rollParts(ctx.rng, between(1, 3, ctx.rng), { rare: 0.25 }) }) : def.fail;
+  const pay = won ? def.win : def.fail;
   const xp = won ? def.winXp : ZONK_FAIL_XP;
   const reward = isEmpty(pay) ? null : await grantReward(ctx, pay, `game:zonk:${def.level}:${won ? "win" : "fail"}:${points}`);
   await ctx.q.query("UPDATE players SET zonk_xp = zonk_xp + $2 WHERE id=$1", [ctx.pid, xp]);
@@ -470,7 +468,7 @@ async function settlePoker(ctx: Ctx, gameId: number | null, cards: Card[], swapp
   const repeat = !!def.repeat && unique;
   const base = repeat ? def.repeat! : pokerPay(hand, before.level);
   // a paying hand: a craft part or two on top
-  const pay = isEmpty(base) ? base : mergeRewards(base, { items: rollParts(ctx.rng, between(1, 2, ctx.rng), { rare: 0.25 }) });
+  const pay = base;
   const reward = isEmpty(pay) ? null : await grantReward(ctx, pay, `game:poker:${hand}`);
   // a prize not in the game yet (the royal flush's «Ворон»): promised, given when it comes
   if (def.promise && !repeat) await ctx.q.query("INSERT INTO promises (player_id, what, created_at) VALUES ($1,$2,$3)", [ctx.pid, def.promise, new Date(ctx.now)]);

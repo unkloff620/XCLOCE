@@ -2,7 +2,6 @@ import type { Queryable } from "../db.ts";
 import { grantReward, moscowDay, nextMoscowMidnight, weekKey, weekStart, type Ctx } from "../core.ts";
 import { bump, countersOf, setTo } from "./counters.ts";
 import { GAME_BOARDS, GAME_WEEK_PRIZES, POKER_HANDS, ROACH_RULES, ZONK_DAY_PRIZE, type GameBoard } from "../../content/games.ts";
-import { between, rollParts } from "../../content/craft-drops.ts";
 import { mergeRewards } from "../../content/rewards.ts";
 
 /*
@@ -119,7 +118,7 @@ export async function squashRoach(ctx: Ctx) {
   await ctx.q.query("UPDATE players SET roach_day=$2, roach_n=$3, roach_at=$4 WHERE id=$1", [ctx.pid, day, n + 1, new Date(ctx.now)]);
   const chip = ctx.rng() < ROACH_RULES.chipChance;
   // «Крафт»: 10% on a common part under the slipper
-  const part = ctx.rng() < 0.1 ? rollParts(ctx.rng, 1, { rare: 0 }) : [];
+  const part: { id: string; qty: number }[] = [];
   const reward = await grantReward(ctx, mergeRewards(ROACH_RULES.reward, { items: [...(chip ? [{ id: "poker-chip", qty: 1 }] : []), ...part] }), "roach");
   return { reward, left: ROACH_RULES.perDay - n - 1 };
 }
