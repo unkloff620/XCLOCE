@@ -189,7 +189,7 @@ function OutlineDefs() {
       <filter id="rig-ring" x="-20%" y="-20%" width="140%" height="140%">
         <feMorphology in="SourceAlpha" operator="dilate" radius={7} result="d" />
         <feComposite in="d" in2="SourceAlpha" operator="out" result="r" />
-        <feFlood floodColor="#ffe27a" />
+        <feFlood floodColor="#ffffff" />
         <feComposite in2="r" operator="in" result="ring" />
         <feGaussianBlur in="ring" stdDeviation={5} result="glow" />
         <feMerge><feMergeNode in="glow" /><feMergeNode in="ring" /></feMerge>
@@ -235,6 +235,24 @@ function PlacePic({ grid, id }: { grid: Grid; id: string }) {
   if (!f) return null;
   return <image className="rig-place" href={`/assets/hero/tattoo/place-${grid}-${id}.webp?v=${PLACE_ART_V}`} x={f.x} y={f.y} width={f.w} height={f.h} preserveAspectRatio="none" />;
 }
+/** the mask that keeps the tattoo grid off the head and the beard (their pictures, filled black) */
+function InkHeadCut() {
+  const { beard } = useContext(LookCtx);
+  const h = RIG.head, b = beard ? BEARD_FIT[beard] : null;
+  return (
+    <defs>
+      <filter id="rig-ink-black"><feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" /></filter>
+      <mask id="rig-ink-headcut" maskUnits="userSpaceOnUse" x={0} y={0} width={1000} height={1400}>
+        <rect x={0} y={0} width={1000} height={1400} fill="#fff" />
+        <g filter="url(#rig-ink-black)">
+          <image href={`/assets/hero/head.webp?v=${ART_VER.heroPart}`} x={h.x} y={h.y} width={h.w} height={h.h} preserveAspectRatio="none" />
+          {b && <image href={`/assets/hero/beard-${beard}.webp?v=${ART_VER.heroPart}`} x={b.x} y={b.y} width={b.w} height={b.h} preserveAspectRatio="none" />}
+        </g>
+      </mask>
+    </defs>
+  );
+}
+
 function Highlight({ edit }: { edit: RigEdit }) {
   const look = useContext(LookCtx), worn = useContext(WornCtx);
   // the hand with the keys shows its own place (KeysHand)
@@ -913,6 +931,9 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
           </Bone>
         </Ol>
       </g>
+      {/* the tattoo grid and the chosen place lie under the head and the beard (they hang over the neck and the traps) */}
+      {edit?.mode === "ink" && <InkHeadCut />}
+      <g mask={edit?.mode === "ink" ? "url(#rig-ink-headcut)" : undefined}>
       {/* the grid of the places: the tattoo places or the clothes places */}
       {edit && edit.mode !== "body" && (() => {
         const grid = <image className="rig-grid" href={`/assets/hero/tattoo/${edit.mode === "ink" ? "zones" : "slots"}.webp?v=${PLACE_ART_V}`} x={0} y={0} width={1000} height={1400} preserveAspectRatio="none" pointerEvents="none" />;
@@ -932,6 +953,7 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
         );
       })()}
       {edit?.part && <Highlight edit={edit} />}
+      </g>
     </EditCtx.Provider>
     </WornCtx.Provider>
     </LookCtx.Provider>
