@@ -575,6 +575,18 @@ describe("shop and exchange", () => {
     await expect(act(db, p, "exchange", { from: "RUB", to: "PAP", amount: 100 }, open)).rejects.toMatchObject({ code: "bad_request" });
     await expect(act(db, p, "exchange", { from: "PAP", to: "GOLD", amount: 100 }, open)).rejects.toMatchObject({ code: "bad_request" });
   });
+  it("«Строительный ящик»: 8 tokens a spin, one level-0 part by rarity", async () => {
+    const p = await newPlayer(db);
+    await setMoney(db, p, "TOKEN", 20);
+    const { TOOLBOX_PARTS } = await import("../src/content/toolbox.ts");
+    const r = await act(db, p, "toolbox_spin", {}, T0, always(0.01));
+    const got = TOOLBOX_PARTS.find((x) => x.id === r.result.itemId)!;
+    expect(got.rarity).toBe("epic");
+    expect(await qty(db, p, got.id)).toBe(1);
+    await act(db, p, "toolbox_spin", {}, T0, always(0.9));
+    expect(await wallet(db, p, "TOKEN")).toBe(4);
+    await expect(act(db, p, "toolbox_spin", {}, T0)).rejects.toMatchObject({ code: "no_money" });
+  });
   it("craft: parts are not sold in the scheme any more", async () => {
     const p = await newPlayer(db);
     await setMoney(db, p, "TOKEN", 100);

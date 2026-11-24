@@ -21,6 +21,7 @@ import { haptic } from "../telegram.ts";
 import { weaponStats } from "../weapon-stats.ts";
 import { ShopScene } from "./shop-scene.tsx";
 import { DonateWindow } from "./donate.tsx";
+import { ToolboxWindow } from "./toolbox.tsx";
 import { TATTOO_IDS } from "../../content/tattoos.ts";
 
 export interface ShopData { offers: Offer[]; exchange: { rub: Record<Currency, number>; fee: number; open?: boolean; until?: number } }
@@ -410,6 +411,7 @@ export function ShopScreen() {
   const { state } = useGame();
   const [boxOpen, setBoxOpen] = useState(false);
   const [donate, setDonate] = useState<Currency | null>(null);
+  const [toolbox, setToolbox] = useState(false);
   // a tap on «Магазин» in the menu closes the case window
   useEffect(() => {
     const off = () => setBoxOpen(false);
@@ -443,11 +445,12 @@ export function ShopScreen() {
           {/* the ceiling goes on above the picture on tall screens (tools/shop/build-ceiling.py) */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="sk-ceiling" src={`/assets/shop/v2/ceiling.webp?v=${ART_VER.shop}`} alt="" draggable={false} aria-hidden="true" />
-          <ShopScene onOpen={(id) => setOpen(id)} onGoods={(c) => { haptic.tap(); setDonate(c); }} box={state?.achBox} onBox={() => { haptic.tap(); setBoxOpen(true); }} />
+          <ShopScene onOpen={(id) => setOpen(id)} onGoods={(c) => { haptic.tap(); setDonate(c); }} onToolbox={() => { haptic.tap(); setToolbox(true); }} box={state?.achBox} onBox={() => { haptic.tap(); setBoxOpen(true); }} />
         </div>
       </div>
       {boxOpen && <AchBoxWindow onClose={() => setBoxOpen(false)} />}
       {donate && <DonateWindow cur={donate} onClose={() => setDonate(null)} />}
+      {toolbox && <ToolboxWindow onClose={() => setToolbox(false)} />}
       {open && (
         <Modal title={open.name} onClose={() => setOpen(null)} wide className={open.id === "clothing" ? "wear-shop" : undefined}>
           {data ? <OfferGrid offers={offers} rub={data.exchange.rub} /> : <div className="muted small center">Загрузка…</div>}

@@ -7,6 +7,7 @@ import { talentDamageOf } from "./talent-progress.ts";
  */
 import { GameError, type Queryable } from "../db.ts";
 import { addItem, ledger, moscowDay, takeItem, takeMoney, type Ctx } from "../core.ts";
+import { TOOLBOX_PRICE, rollToolbox } from "../../content/toolbox.ts";
 import { DEALER_STOCK, PART_TOKEN, dealerParts } from "../../content/craft-drops.ts";
 import { CRAFT_BOXES, CRAFT_BOX_PRICES, CRAFT_BOX_TALENTS, craftBonusOf, craftById, craftBoxesOpen } from "../../content/craft.ts";
 import { talentsForDamage } from "../../content/talents.ts";
@@ -119,6 +120,14 @@ export async function dealerBuy(ctx: Ctx, itemId: string, want: number) {
   await takeMoney(ctx, "TOKEN", offer.price * qty, `dealer:${itemId}`);
   const got = await addItem(ctx, itemId, qty, `dealer:${moscowDay(ctx.now)}`);
   return { itemId, qty: got, paid: offer.price * qty };
+}
+
+/** «Строительный ящик» (content/toolbox.ts): one spin — TOOLBOX_PRICE tokens for a random part */
+export async function toolboxSpin(ctx: Ctx) {
+  await takeMoney(ctx, "TOKEN", TOOLBOX_PRICE, "toolbox");
+  const id = rollToolbox(ctx.rng);
+  await addItem(ctx, id, 1, "toolbox");
+  return { itemId: id };
 }
 
 /** takes a level-1/2 thing apart: about 40% of each ingredient comes back (at random), the thing is gone */

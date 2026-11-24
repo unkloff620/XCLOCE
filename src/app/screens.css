@@ -8038,3 +8038,29 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .dn-cell .dn-buy { width: 100%; min-width: 0; gap: 4px; padding: 0 4px; }
 .dn-cell .dn-buy .num { font-size: 13px; }
 .dn-buy:disabled { filter: saturate(0.5) brightness(0.85); }
+
+/* «Строительный ящик» (screens/toolbox.tsx): the CS2-style roulette */
+.tb-win { --c-common: #8ea4c0; --c-rare: #9b5cff; --c-epic: #ff3b4e; }
+.tb-roll { position: relative; height: 104px; overflow: hidden; border-radius: 10px; background: linear-gradient(180deg, #1b1712, #2a231b); border: 2px solid #3b2410;
+  -webkit-mask: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
+.tb-strip { position: absolute; left: 0; top: 8px; display: flex; gap: 6px; padding-left: 3px; will-change: transform; }
+.tb-cell { flex: none; width: 86px; height: 86px; display: grid; place-items: center; border-radius: 8px; background: radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.25));
+  border-bottom: 5px solid var(--rc); box-shadow: inset 0 -18px 18px -14px var(--rc); }
+.tb-cell.r-common, .tb-mini.r-common { --rc: var(--c-common); }
+.tb-cell.r-rare, .tb-mini.r-rare { --rc: var(--c-rare); }
+.tb-cell.r-epic, .tb-mini.r-epic { --rc: var(--c-epic); }
+.tb-cell.won { animation: tb-won 0.9s ease-in-out infinite alternate; }
+@keyframes tb-won { to { box-shadow: inset 0 -30px 30px -10px var(--rc), 0 0 14px var(--rc); } }
+.tb-mark { position: absolute; left: 50%; top: 0; bottom: 0; width: 3px; transform: translateX(-50%); background: #ffd75a; box-shadow: 0 0 8px #ffb100; pointer-events: none; }
+.tb-mark::before, .tb-mark::after { content: ""; position: absolute; left: 50%; transform: translateX(-50%); border: 8px solid transparent; }
+.tb-mark::before { top: 0; border-top-color: #ffd75a; }
+.tb-mark::after { bottom: 0; border-bottom-color: #ffd75a; }
+.tb-got { min-height: 26px; margin: 8px 0 6px; text-align: center; font: 900 16px/1.4 var(--font-display), system-ui; }
+.tb-got .r-common { color: #6d84a3; } .tb-got .r-rare { color: #8a4cf0; } .tb-got .r-epic { color: #e2283c; }
+.tb-spin { gap: 6px; }
+.tb-list { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+.tb-tier-name { display: block; margin-bottom: 4px; font-size: 12px; font-weight: 800; }
+.tb-tier-name.r-common { color: #6d84a3; } .tb-tier-name.r-rare { color: #8a4cf0; } .tb-tier-name.r-epic { color: #e2283c; }
+.tb-tier-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); gap: 4px; }
+.tb-mini { display: grid; place-items: center; aspect-ratio: 1; border-radius: 6px; background: rgba(0, 0, 0, 0.18); border-bottom: 3px solid var(--rc); }
+@media (prefers-reduced-motion: reduce) { .tb-cell.won { animation: none; } }

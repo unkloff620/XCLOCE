@@ -71,8 +71,8 @@ const ACH_BOX_AT = { left: 69.5, top: 80.3 - ACH_BOX_H, width: ACH_BOX_W, height
 const WEAPONS_SCALE = 0.8;
 const WEAPONS_LEFT = 3;
 
-export function ShopScene({ onOpen, onGoods, children, box, onBox }: {
-  onOpen: (id: ShopSpotId) => void; onGoods?: (cur: Currency) => void; children?: ReactNode;
+export function ShopScene({ onOpen, onGoods, onToolbox, children, box, onBox }: {
+  onOpen: (id: ShopSpotId) => void; onGoods?: (cur: Currency) => void; onToolbox?: () => void; children?: ReactNode;
   box?: { ready: number; progress: number; cost: number }; onBox?: () => void;
 }) {
   const spot = (id: ShopSpotId) => <Spot s={SPOTS.find((x) => x.id === id)!} onOpen={onOpen} />;
@@ -83,8 +83,11 @@ export function ShopScene({ onOpen, onGoods, children, box, onBox }: {
       <Layer n="room" className="sk-room" />
       {/* the currency goods on the shelves, behind the shopkeeper */}
       {SHOP_ART.goods.map((g, i) => !g.cur ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img key={g.layer} className="sk-layer" src={`/assets/shop/v2/${g.layer}.webp?v=${ART_VER.shop}`} alt="" draggable={false} style={layerBox(g.layer)} />
+        // «Строительный ящик»: the parts roulette for tokens
+        <button key={g.layer} type="button" className="sk-goods sk-goods-main" style={{ ...layerBox(g.layer), animationDelay: "0.2s" }} onClick={() => onToolbox?.()} aria-label="Строительный ящик" title="Строительный ящик">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={`/assets/shop/v2/${g.layer}.webp?v=${ART_VER.shop}`} alt="" draggable={false} />
+        </button>
       ) : (
         <button key={g.layer} type="button" className={`sk-goods ${g.main ? "sk-goods-main" : ""}`} style={{ ...layerBox(g.layer), animationDelay: `${(i % 5) * 0.45}s` }}
           onClick={() => onGoods?.(g.cur!)} aria-label={CUR_NAME[g.cur]} title={CUR_NAME[g.cur]}>
