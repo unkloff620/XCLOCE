@@ -8104,8 +8104,12 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 button:is(.modal > .x, .fs-x, .room-confirm-x, .bbox-x, .acx-x, .zb-res-x, .combo-done-x, .sty-x, .dn-x, .rt-x, .van-x) {
   --a: #eceff3; --b: #bfc6cf; --c: #8a929c; --e: #3d434a; --t: #2b2f34; --rv: 5px;
   overflow: hidden; isolation: isolate; display: grid; place-items: center; padding: 0; border: 0; border-radius: 6px; color: var(--t);
-  background: repeating-linear-gradient(-58deg, rgba(255, 255, 255, 0) 0 8px, rgba(255, 255, 255, 0.16) 8px 15px), linear-gradient(180deg, var(--a), var(--b) 55%, var(--c));
-  font: 900 19px/1 system-ui, sans-serif; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5); cursor: pointer;
+  /* the cross is drawn (two strokes exactly in the middle), not the font's «×», which sits off-centre */
+  --xs: 13px; --xw: 1.4px;
+  background: linear-gradient(45deg, transparent calc(50% - var(--xw)), var(--t) calc(50% - var(--xw)), var(--t) calc(50% + var(--xw)), transparent calc(50% + var(--xw))) center / var(--xs) var(--xs) no-repeat,
+    linear-gradient(-45deg, transparent calc(50% - var(--xw)), var(--t) calc(50% - var(--xw)), var(--t) calc(50% + var(--xw)), transparent calc(50% + var(--xw))) center / var(--xs) var(--xs) no-repeat,
+    repeating-linear-gradient(-58deg, rgba(255, 255, 255, 0) 0 8px, rgba(255, 255, 255, 0.16) 8px 15px), linear-gradient(180deg, var(--a), var(--b) 55%, var(--c));
+  font-size: 0; color: transparent; text-shadow: none; cursor: pointer;
   box-shadow: inset 0 0 0 1.5px var(--e), inset 0 2px 0 1.5px rgba(255, 255, 255, 0.45), inset 0 -3px 0 1.5px rgba(0, 0, 0, 0.16), 0 2px 0 #3b2410, 0 3px 5px rgba(0, 0, 0, 0.35);
   transition: transform 0.08s, box-shadow 0.08s; }
 button:is(.modal > .x, .fs-x, .room-confirm-x, .bbox-x, .acx-x, .zb-res-x, .combo-done-x, .sty-x, .dn-x, .rt-x, .van-x)::before {
@@ -8126,16 +8130,16 @@ button:is(.modal > .x, .fs-x, .room-confirm-x, .bbox-x, .acx-x, .zb-res-x, .comb
 .nav, body:has(.fit-page) .nav { gap: 4px; padding: 7px 6px calc(var(--safe-b) + 8px); border-top: 3px solid #17110c;
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.55)), url(/assets/textures/rust-metal.webp) 0 0 / 260px repeat, #3a3633;
   box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.12), 0 -6px 18px rgba(0, 0, 0, 0.5); }
-.nav a { --a: #d9dde2; --b: #a9b0b8; --c: #7a828c; --e: #30353b; gap: 0; padding: 3px 0 5px; border-radius: 6px; color: #262a2f; transform: none; text-shadow: none;
+.nav > a { --a: #d9dde2; --b: #a9b0b8; --c: #7a828c; --e: #30353b; gap: 0; padding: 3px 0 5px; border-radius: 6px; color: #262a2f; transform: none; text-shadow: none;
   background: repeating-linear-gradient(-58deg, rgba(255, 255, 255, 0) 0 9px, rgba(255, 255, 255, 0.14) 9px 17px), linear-gradient(180deg, var(--a), var(--b) 55%, var(--c));
   box-shadow: inset 0 0 0 1.5px var(--e), inset 0 2px 0 1.5px rgba(255, 255, 255, 0.4), inset 0 -3px 0 1.5px rgba(0, 0, 0, 0.18), 0 2px 0 #120c07; }
-.nav a svg { width: 42px; height: 42px; filter: saturate(0.6) brightness(0.85) drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5)); }
+.nav > a svg { width: 42px; height: 42px; filter: saturate(0.6) brightness(0.85) drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5)); }
 .nav-l { font: 600 11px/1 var(--font-display), system-ui; letter-spacing: 0.05em; text-transform: uppercase; white-space: nowrap; margin-top: 1px; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5); }
-.nav a.on { --a: #ffe066; --b: #f7b51e; --c: #d98c06; --e: #7a4a05; color: #4a2a03; transform: translateY(-5px);
+.nav > a.on { --a: #ffe066; --b: #f7b51e; --c: #d98c06; --e: #7a4a05; color: #4a2a03; transform: translateY(-5px);
   background: repeating-linear-gradient(-58deg, rgba(255, 255, 255, 0) 0 9px, rgba(255, 255, 255, 0.14) 9px 17px), linear-gradient(180deg, var(--a), var(--b) 55%, var(--c));
   box-shadow: inset 0 0 0 1.5px var(--e), inset 0 2px 0 1.5px rgba(255, 255, 255, 0.45), inset 0 -3px 0 1.5px rgba(0, 0, 0, 0.16), 0 5px 0 #120c07, 0 0 14px rgba(255, 190, 40, 0.55); }
-.nav a.on svg { filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.4)); transform: none; }
-.nav a.on::after { display: none; }
-.nav a:active { transform: translateY(2px); }
-.nav a.on:active { transform: translateY(-3px); }
+.nav > a.on svg { filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.4)); transform: none; }
+.nav > a.on::after { display: none; }
+.nav > a:active { transform: translateY(2px); }
+.nav > a.on:active { transform: translateY(-3px); }
 .nav .badge { top: -6px; right: -3px; z-index: 2; }
