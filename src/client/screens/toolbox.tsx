@@ -13,7 +13,7 @@ import { useGame } from "../store.tsx";
 import { haptic } from "../telegram.ts";
 import { sfx } from "../sound.ts";
 
-const CELL = 92;          // px, one cell of the strip with its gap
+const CELL = 78;          // px, one cell of the strip with its gap
 const WIN_AT = 42;        // the won part's place in the strip
 const STRIP = 50;
 const SPIN_MS = 5200;
@@ -77,11 +77,14 @@ export function ToolboxWindow({ onClose }: { onClose: () => void }) {
   };
   const byRarity = useMemo(() => (["epic", "rare", "common"] as const).map((t) => ({ t, list: TOOLBOX_PARTS.filter((p) => p.rarity === t) })), []);
   return (
-    <Modal title="Строительный ящик" onClose={onClose} wide className="tb-win">
+    <Modal onClose={onClose} wide className="tb-win">
+      {/* the main slate; the second slate with the contents slides out from behind it */}
+      <div className="tb-main">
+      <h3 className="display tb-h">Строительный ящик</h3>
       <div className="tb-roll" ref={box}>
         <div className="tb-strip" style={{ transform: `translateX(${x}px)`, transition: anim ? `transform ${SPIN_MS}ms cubic-bezier(0.08, 0.6, 0.12, 1)` : "none" }}>
           {items.map((id, i) => (
-            <div key={i} className={`tb-cell r-${rarityOf(id)} ${won && i === WIN_AT ? "won" : ""}`}><ItemArt id={id} size={56} /></div>
+            <div key={i} className={`tb-cell r-${rarityOf(id)} ${won && i === WIN_AT ? "won" : ""}`}><ItemArt id={id} size={48} /></div>
           ))}
         </div>
         <i className="tb-mark" aria-hidden="true" />
@@ -91,8 +94,8 @@ export function ToolboxWindow({ onClose }: { onClose: () => void }) {
         {spinning ? "Пропустить" : <>Крутить <span className="num row" style={{ gap: 3 }}>{TOOLBOX_PRICE}<Icon name="TOKEN" size={18} /></span></>}
       </button>
       <button type="button" className={`tb-more-btn ${open ? "on" : ""}`} onClick={() => { haptic.tap(); setOpen((o) => !o); }} aria-expanded={open}>Что в ящике</button>
-      {/* the contents unfold smoothly downward (grid rows 0fr → 1fr); the window's top stays where it is */}
-      <div className={`tb-more ${open ? "open" : ""}`}><div className="tb-more-in">
+      </div>
+      <div className={`tb-more ${open ? "open" : ""}`}><div className="tb-drawer"><div className="tb-more-in">
       <div className="tb-list">
         {byRarity.map(({ t, list }) => (
           <div key={t} className="tb-tier">
@@ -103,7 +106,7 @@ export function ToolboxWindow({ onClose }: { onClose: () => void }) {
           </div>
         ))}
       </div>
-      </div></div>
+      </div></div></div>
     </Modal>
   );
 }
