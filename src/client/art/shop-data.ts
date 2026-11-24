@@ -2,7 +2,7 @@
 export type ShopLayer = { left: number; top: number; width: number; height: number };
 export const SHOP_ART = {
   aspect: "2000 / 3000",
-  goods: [{"layer": "g0", "cur": "RUB", "main": true}, {"layer": "g1", "cur": "GOLD", "main": true}, {"layer": "g2", "cur": "TOKEN", "main": true}, {"layer": "g3", "cur": "TOOTH", "main": false}, {"layer": "g4", "cur": "TOOTH", "main": true}, {"layer": "g5", "cur": "PAP", "main": true}, {"layer": "g6", "cur": "TOKEN", "main": false}, {"layer": "g7", "cur": "RUB", "main": false}, {"layer": "g8", "cur": "GOLD", "main": false}, {"layer": "g9", "cur": "PAP", "main": false}, {"layer": "g10", "cur": "TOOTH", "main": false}, {"layer": "g11", "cur": "TOOTH", "main": false}, {"layer": "g12", "cur": "PAP", "main": false}] as { layer: string; cur: "RUB" | "GOLD" | "TOKEN" | "TOOTH" | "PAP"; main: boolean }[],
+  goods: [{"layer": "g0", "cur": null, "main": false}, {"layer": "g1", "cur": "RUB", "main": false}, {"layer": "g2", "cur": "RUB", "main": true}, {"layer": "g3", "cur": "GOLD", "main": true}, {"layer": "g4", "cur": "GOLD", "main": false}, {"layer": "g5", "cur": "TOKEN", "main": false}, {"layer": "g6", "cur": "TOKEN", "main": true}, {"layer": "g7", "cur": "TOOTH", "main": false}, {"layer": "g8", "cur": "TOOTH", "main": false}, {"layer": "g9", "cur": "TOOTH", "main": false}, {"layer": "g10", "cur": "TOOTH", "main": true}, {"layer": "g11", "cur": "TOOTH", "main": false}, {"layer": "g12", "cur": "TOOTH", "main": false}, {"layer": "g13", "cur": "PAP", "main": false}, {"layer": "g14", "cur": "PAP", "main": false}, {"layer": "g15", "cur": "PAP", "main": true}] as { layer: string; cur: "RUB" | "GOLD" | "TOKEN" | "TOOTH" | "PAP" | null; main: boolean }[],
   layers: {
   "room": {
     "left": 0.0,
@@ -59,82 +59,100 @@ export const SHOP_ART = {
     "height": 5.133
   },
   "g0": {
-    "left": 11.2,
-    "top": 12.967,
-    "width": 20.55,
-    "height": 6.833
+    "left": 15.25,
+    "top": 11.533,
+    "width": 24.3,
+    "height": 8.067
   },
   "g1": {
-    "left": 32.3,
-    "top": 11.433,
-    "width": 23.45,
-    "height": 8.367
+    "left": 14.6,
+    "top": 24.633,
+    "width": 13.4,
+    "height": 5.467
   },
   "g2": {
-    "left": 58.1,
-    "top": 13.467,
-    "width": 15.8,
-    "height": 6.333
+    "left": 28.7,
+    "top": 24.9,
+    "width": 16.45,
+    "height": 5.467
   },
   "g3": {
-    "left": 73.95,
-    "top": 13.433,
-    "width": 16.1,
-    "height": 6.367
+    "left": 13.15,
+    "top": 33.567,
+    "width": 19.55,
+    "height": 6.967
   },
   "g4": {
-    "left": 12.35,
-    "top": 22.433,
-    "width": 17.3,
-    "height": 8.033
+    "left": 32.5,
+    "top": 35.033,
+    "width": 14.7,
+    "height": 5.4
   },
   "g5": {
-    "left": 30.35,
-    "top": 22.167,
-    "width": 24.3,
-    "height": 8.3
+    "left": 61.1,
+    "top": 14.367,
+    "width": 12.6,
+    "height": 5.267
   },
   "g6": {
-    "left": 77.65,
-    "top": 26.0,
-    "width": 10.7,
-    "height": 4.467
+    "left": 73.25,
+    "top": 14.333,
+    "width": 12.65,
+    "height": 5.067
   },
   "g7": {
-    "left": 13.0,
-    "top": 36.033,
-    "width": 12.05,
-    "height": 4.933
+    "left": 14.3,
+    "top": 51.633,
+    "width": 11.1,
+    "height": 8.067
   },
   "g8": {
-    "left": 24.6,
-    "top": 36.633,
-    "width": 11.75,
-    "height": 4.333
+    "left": 63.65,
+    "top": 52.033,
+    "width": 10.5,
+    "height": 7.767
   },
   "g9": {
-    "left": 13.4,
-    "top": 44.367,
-    "width": 11.2,
-    "height": 6.267
+    "left": 47.6,
+    "top": 52.567,
+    "width": 15.05,
+    "height": 7.0
   },
   "g10": {
-    "left": 25.55,
-    "top": 44.167,
-    "width": 8.9,
-    "height": 6.467
+    "left": 46.5,
+    "top": 22.9,
+    "width": 15.05,
+    "height": 7.0
   },
   "g11": {
-    "left": 11.95,
-    "top": 53.767,
-    "width": 16.1,
-    "height": 6.367
+    "left": 40.7,
+    "top": 11.533,
+    "width": 20.1,
+    "height": 7.967
   },
   "g12": {
-    "left": 25.55,
-    "top": 54.6,
-    "width": 9.9,
-    "height": 5.533
+    "left": 26.4,
+    "top": 51.833,
+    "width": 20.1,
+    "height": 7.967
+  },
+  "g13": {
+    "left": 14.0,
+    "top": 42.967,
+    "width": 13.2,
+    "height": 7.367
+  },
+  "g14": {
+    "left": 48.2,
+    "top": 33.167,
+    "width": 13.2,
+    "height": 7.367
+  },
+  "g15": {
+    "left": 27.9,
+    "top": 42.967,
+    "width": 22.1,
+    "height": 7.533
   }
 } as Record<string, ShopLayer>,
   neck: {"x": 69.25, "y": 44.2},

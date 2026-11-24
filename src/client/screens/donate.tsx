@@ -16,7 +16,7 @@ import { haptic, tg } from "../telegram.ts";
 
 const ART = "/assets/shop/donate";
 /** bump when the art in public/assets/shop/donate changes */
-const V = "?v=5";
+const V = "?v=6";
 /** the picture of each of the 9 packs: generated from one coin to a heap of sacks (tools/shop/build-donate.py) */
 const packPic = (p: DonatePack) => `${ART}/${p.cur.toLowerCase()}-${p.idx}.webp${V}`;
 

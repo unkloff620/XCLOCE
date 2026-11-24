@@ -82,9 +82,12 @@ export function ShopScene({ onOpen, onGoods, children, box, onBox }: {
     <div className="sk-scene" style={{ aspectRatio: SHOP_ART.aspect }}>
       <Layer n="room" className="sk-room" />
       {/* the currency goods on the shelves, behind the shopkeeper */}
-      {SHOP_ART.goods.map((g, i) => (
+      {SHOP_ART.goods.map((g, i) => !g.cur ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img key={g.layer} className="sk-layer" src={`/assets/shop/v2/${g.layer}.webp?v=${ART_VER.shop}`} alt="" draggable={false} style={layerBox(g.layer)} />
+      ) : (
         <button key={g.layer} type="button" className={`sk-goods ${g.main ? "sk-goods-main" : ""}`} style={{ ...layerBox(g.layer), animationDelay: `${(i % 5) * 0.45}s` }}
-          onClick={() => onGoods?.(g.cur)} aria-label={CUR_NAME[g.cur]} title={CUR_NAME[g.cur]}>
+          onClick={() => onGoods?.(g.cur!)} aria-label={CUR_NAME[g.cur]} title={CUR_NAME[g.cur]}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={`/assets/shop/v2/${g.layer}.webp?v=${ART_VER.shop}`} alt="" draggable={false} />
           {g.main && <i className="sk-buy"><Star size={14} /></i>}

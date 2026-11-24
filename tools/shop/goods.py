@@ -1,5 +1,7 @@
-"""The artist's currency goods (tools/shop/source/v3/goods.png, 2000×3000): their boxes on the sheet, by name."""
+"""The artist's currency goods (tools/shop/source/v3/goods.png): drawn right where they stand on the shelves of the 2000×3000
+shop canvas (the bottoms on the boards 584 / 905 / 1220 / 1510 / 1796); their boxes, by name."""
 GOODS = {
+    "toolbox": (305, 344, 790, 582),   # «Строительный ящик»: later the parts for tokens (the user 2026-11-24)
     "rub-s": (289, 735, 555, 905), "rub-l": (574, 744, 908, 911),
     "gold-l": (264, 1000, 654, 1219), "gold-s": (651, 1000, 947, 1219),
     "tok-s": (1223, 430, 1468, 592), "tok-l": (1471, 424, 1723, 584),
