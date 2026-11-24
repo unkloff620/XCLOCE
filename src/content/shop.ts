@@ -40,8 +40,8 @@ export const SHOP_SECTIONS = [
 // Weapons and clothes for RUB; the energy drink (to the limit) for gold bars.
 export const OFFERS: Offer[] = [
   { id: "keyboard-1", section: "weapons", give: { item: "keyboard", qty: 1 }, price: { currency: "RUB", amount: 4 }, title: "Нож", bulk: true },
-  { id: "gpu-1", section: "weapons", give: { item: "gpu", qty: 1 }, price: { currency: "RUB", amount: 5 }, title: "Пистолет", bulk: true },
-  { id: "rpg-1", section: "weapons", give: { item: "rug-pull-gun", qty: 1 }, price: { currency: "RUB", amount: 18 }, title: "Rug Pull Gun", bulk: true },
+  { id: "gpu-1", section: "weapons", give: { item: "gpu", qty: 1 }, price: { currency: "RUB", amount: 5 }, title: "Ствол", bulk: true },
+  { id: "rpg-1", section: "weapons", give: { item: "rug-pull-gun", qty: 1 }, price: { currency: "RUB", amount: 18 }, title: "Пушка", bulk: true },
   // energy drinks are not sold here any more: only «Пополнить» in the energy window (content/items.ts ENERGY_REFILL)
   { id: "slippers", section: "clothing", give: { item: "slippers", qty: 1 }, price: { currency: "RUB", amount: 900 }, title: "Тапки" },
   { id: "tee-pump", section: "clothing", give: { item: "tee-pump", qty: 1 }, price: { currency: "RUB", amount: 1500 }, title: "Футболка PUMP" },

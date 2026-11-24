@@ -147,7 +147,7 @@ export const ACH_CATEGORIES: AchCategory[] = [
   // ---------------- Боевые ----------------
   series("damage", "boss", "Урон", "ach-damage", "damage", steps(1_000, 70_000_000_000, 36), pointsRange(1, 350, 36), (n) => `Нанеси боссам ${n} урона`),
   series("got-rifle", "boss", "Автоматы", "rug-pull-gun", "got:rug-pull-gun", steps(10, 500_000, 16), pointsRange(1, 50, 16), (n) => `Накопи ${n} автоматов`),
-  series("got-pistol", "boss", "Пистолеты", "gpu", "got:gpu", steps(10, 1_500_000, 16), pointsRange(1, 50, 16), (n) => `Накопи ${n} пистолетов`),
+  series("got-pistol", "boss", "Стволы", "gpu", "got:gpu", steps(10, 1_500_000, 16), pointsRange(1, 50, 16), (n) => `Накопи ${n} стволов`),
   series("got-knife", "boss", "Ножи", "keyboard", "got:keyboard", steps(10, 1_500_000, 16), pointsRange(1, 50, 16), (n) => `Накопи ${n} ножей`),
   perBoss("solo", "boss", "Соло", "ach-solo", (b) => `solo:${b}`, "соло", (n) => `Убей босса ${n} в одиночку (бой «Соло»)`, BOSSES, (b) => `soloboss-${b}`),
   perBoss("team", "boss", "Боссы", "ach-wins", (b) => `team:${b}`, "1", (n) => `Победи босса ${n} не в соло`),

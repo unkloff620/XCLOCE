@@ -30,7 +30,7 @@ const effect = (n: TalentStop, lv: number) =>
 /** what one more level gives, in plain words: «+3 урона к ножу», «+2% к шансу крита пинка», «+1 к бицухе» */
 const TO_WEAPON: Record<string, [string, string]> = { // [к чему (дательный), чего (родительный)]
   fist: ["кулаку", "кулака"], mouse: ["тычку в глаза", "тычка в глаза"], "red-candle": ["пинку", "пинка"], keyboard: ["ножу", "ножа"],
-  gpu: ["пистолету", "пистолета"], "rug-pull-gun": ["Rug Pull Gun", "Rug Pull Gun"], bat: ["бите", "биты"],
+  gpu: ["стволу", "ствола"], "rug-pull-gun": ["пушке", "пушки"], bat: ["бите", "биты"],
 };
 function stepText(n: TalentStop) {
   const w = TO_WEAPON[n.target];
@@ -76,7 +76,7 @@ function TalentHelp() {
       <ol className="small">
         {TALENT_BLOCKS.map((b) => <li key={b.id}><b>{b.title}</b></li>)}
       </ol>
-      <p className="small">Сначала — три главных оружия: нож, пистолет и Rug Pull Gun. Потом бицуха и крит кулака, тычка и пинка, их урон и перезарядка, новый удар битой, время боя, энергия и усиление оружия.</p>
+      <p className="small">Сначала — три главных оружия: нож, ствол и пушка. Потом бицуха и крит кулака, тычка и пинка, их урон и перезарядка, новый удар битой, время боя, энергия и усиление оружия.</p>
       <p className="small">Бицуха — до +{full(TALENT_PATH.filter((x) => x.kind === "biceps").reduce((n, x) => n + x.max * x.per, 0))} (в «Основе» хватит 10, дальше — по желанию), лимит энергии — до +{full(TALENT_PATH.filter((x) => x.kind === "energy").reduce((n, x) => n + x.max * x.per, 0))}, время боя с боссом — до +{full(TALENT_PATH.filter((x) => x.kind === "clock").reduce((n, x) => n + x.max * x.per, 0))} минут. Общий шанс крита — не больше {Math.round(CRIT_CHANCE_CAP * 100)}%.</p>
       <p className="small">Вся дорожка — {full(total)} талантов.</p>
       <p className="small muted">Сброс талантов стоит {TALENT_RESET_PRICE.amount} {TALENT_RESET_PRICE.currency}: все потраченные таланты возвращаются.</p>

@@ -21,9 +21,9 @@ export const CURRENCY_DEFS: Record<Currency, CurrencyDef> = {
   PAP: { id: "PAP", name: "Папиросы", decimals: 0, rub: 0 },
   TOOTH: { id: "TOOTH", name: "Зубы", decimals: 0, rub: 0 },
   RUB: { id: "RUB", name: "Рубли", decimals: 0, rub: 1 },
-  TOKEN: { id: "TOKEN", name: "Жетоны метро", decimals: 0, rub: 0 },
+  TOKEN: { id: "TOKEN", name: "Жетоны", decimals: 0, rub: 0 },
   // bought for Telegram Stars (later); never exchanged
-  GOLD: { id: "GOLD", name: "Золотые слитки", decimals: 0, rub: 0 },
+  GOLD: { id: "GOLD", name: "Слитки", decimals: 0, rub: 0 },
 };
 
 /**

@@ -19,7 +19,7 @@ export const COMBO_MODES: { id: ComboMode; name: string; length: number }[] = [
 export const comboMode = (id: string | null | undefined) => COMBO_MODES.find((m) => m.id === id) ?? null;
 
 /** the names of the hits (the admin's «Комбо» tab) */
-export const COMBO_HIT_NAMES: Record<string, string> = { fist: "Кулак", mouse: "Глаза", "red-candle": "Пинок", bat: "Бита", keyboard: "Нож", gpu: "Пистолет", "rug-pull-gun": "Автомат" };
+export const COMBO_HIT_NAMES: Record<string, string> = { fist: "Кулак", mouse: "Глаза", "red-candle": "Пинок", bat: "Бита", keyboard: "Нож", gpu: "Ствол", "rug-pull-gun": "Автомат" };
 /** the free hits: кулак, тычок в глаза, пинок */
 export const COMBO_FREE = ["fist", "mouse", "red-candle"];
 /** the bat: in «Блатной» and «Авторитетный» only */

@@ -181,7 +181,7 @@ export function WeaponPanel({ tray, onClose }: { tray: Tray[]; onClose: () => vo
         ) : (
           <div className="wpanel-boost">
             {!boost ? (
-              <p className="wpanel-hint">Усилений пока нет. Клан на 1 месте «Сходняка» получает усиление оружия на неделю: Rug Pull Gun или Видеокарта.</p>
+              <p className="wpanel-hint">Усилений пока нет. Клан на 1 месте «Сходняка» получает усиление оружия на неделю: Пушка или Видеокарта.</p>
             ) : boost.weapon === null ? (
               <p className="wpanel-hint">Клан взял 1 место «Сходняка»! Выбери оружие для усиления на странице Сходняка в клане.</p>
             ) : (

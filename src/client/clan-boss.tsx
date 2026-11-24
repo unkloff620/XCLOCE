@@ -92,7 +92,7 @@ export function ClanBossPanel() {
               );
             })}
           </div>
-          <label className="cb-x10"><input type="checkbox" checked={x10} onChange={(e) => setX10(e.target.checked)} /> бить ×10 (нож, пистолет, пушка)</label>
+          <label className="cb-x10"><input type="checkbox" checked={x10} onChange={(e) => setX10(e.target.checked)} /> бить ×10 (нож, ствол, пушка)</label>
         </>
       )}
 

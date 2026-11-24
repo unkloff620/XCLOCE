@@ -42,7 +42,7 @@ export interface Sector {
 /** clockwise from the top, as on the picture (tools/fortune/build-wheel.py draws 16 sectors) — the user's list */
 export const SECTORS: Sector[] = [
   { id: "keys15", kind: "reward", icon: KEYCAP_ID, label: "15", name: "15 кнопок", weight: 12, reward: { items: [{ id: KEYCAP_ID, qty: 15 }] } },
-  { id: "rpg", kind: "reward", icon: "rug-pull-gun", label: "1", name: "Rug Pull Gun", weight: 4, reward: { items: [{ id: "rug-pull-gun", qty: 1 }] } },
+  { id: "rpg", kind: "reward", icon: "rug-pull-gun", label: "1", name: "Пушка", weight: 4, reward: { items: [{ id: "rug-pull-gun", qty: 1 }] } },
   { id: "keys60", kind: "reward", icon: KEYCAP_ID, label: "60", name: "60 кнопок", weight: 4, reward: { items: [{ id: KEYCAP_ID, qty: 60 }] } },
   { id: "ticket", kind: "reward", icon: TICKET_ID, label: "1", name: "Билет", weight: 9, reward: { items: [{ id: TICKET_ID, qty: 1 }] } },
   { id: "energy", kind: "reward", icon: "energy-drink", label: "1", name: "Энергетик", weight: 8, reward: { items: [{ id: "energy-drink", qty: 1 }] } },
@@ -56,7 +56,7 @@ export const SECTORS: Sector[] = [
   { id: "pap", kind: "reward", icon: "PAP", label: "3000", name: "3 000 папирос", weight: 6, reward: { currencies: { PAP: 3000 } } },
   { id: "keys75", kind: "reward", icon: KEYCAP_ID, label: "75", name: "75 кнопок", weight: 3, reward: { items: [{ id: KEYCAP_ID, qty: 75 }] } },
   { id: "xp", kind: "xp", icon: "fortune-xp", label: "30", name: "30 опыта колеса", weight: 12, xp: 30 },
-  { id: "gpu", kind: "reward", icon: "gpu", label: "1", name: "Пистолет", weight: 6, reward: { items: [{ id: "gpu", qty: 1 }] } },
+  { id: "gpu", kind: "reward", icon: "gpu", label: "1", name: "Ствол", weight: 6, reward: { items: [{ id: "gpu", qty: 1 }] } },
   { id: "keys30", kind: "reward", icon: KEYCAP_ID, label: "30", name: "30 кнопок", weight: 9, reward: { items: [{ id: KEYCAP_ID, qty: 30 }] } },
   { id: "empty", kind: "empty", icon: "empty", label: "", name: "Пусто", weight: 14 },
 ];
