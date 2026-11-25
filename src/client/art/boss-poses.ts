@@ -697,17 +697,23 @@ const snStrike = (amp = 1, slow = 1): Action => { const keys: Key[] = [], face: 
    he leans in; the lid of the phone swings towards shut on the blow (ph, a loose spring: it flaps and opens again, never
    past open); the mouth snaps open (jaw), the brows frown (brw), the glasses jump (gb). R — a heavy one: a longer
    wind-up, a deeper crouch. The left arm with the laptop sinks a little with each blow, as if he hugs it. */
-const FX_BACK = { armR: 12, lowR: -24, handR: -12 };
-const FX_HIT = { armR: -20, lowR: 74, handR: 22, zR: 24 };
-const fxAmp = (p: Pose, a: number): Pose => Object.fromEntries(Object.entries(p).map(([k, v]) => [k, (v ?? 0) * (k === "jaw" || k === "brw" || k === "gb" || k === "ph" ? 1 : a)]));
+const FX_BACK = { armR: 18, lowR: -14, handR: -8 };
+/** a hammer blow: the whole arm drops forward and down, the fist stays upright — its bottom comes down first */
+const FX_HIT = { armR: -62, lowR: 34, handR: -4, zR: 36 };
+const fxAmp = (p: Pose, a: number): Pose => Object.fromEntries(Object.entries(p).map(([k, v]) => [k, (v ?? 0) * (k === "jaw" || k === "brw" || k === "gb" || k === "ph" || k === "hl" ? 1 : a)]));
 const fxBlow = (t: number, heavy: boolean, keys: Key[], amp = 1, slow = 1) => {
   const w = heavy ? 1.5 : 1;
-  keys.push({ at: t, pose: fxAmp({ ...FX_BACK, armR: FX_BACK.armR * w, lowR: FX_BACK.lowR * w, up: 2.5, x: -4, y: -4, head: -2, brw: 0.4, jaw: 0.1, gb: -0.4, armL: -2, lowL: -2 }, amp), stiff: 2.2 });
-  t += (heavy ? 0.32 : 0.18) * slow;
-  keys.push({ at: t, pose: fxAmp({ ...FX_HIT, zR: FX_HIT.zR * (heavy ? 1.3 : 1), up: -5, x: 12, y: heavy ? 44 : 30, head: 4, brw: 1, jaw: 1, gb: 1, ph: 1, armL: 6, lowL: 5 }, amp), stiff: 7 });
-  t += 0.2 * slow;
-  keys.push({ at: t, pose: fxAmp({ armR: 3, lowR: 8, y: 3, jaw: 0.2, brw: 0.4, gb: -0.3, ph: 0 }, amp), stiff: 2.5 });
-  return t + 0.2 * slow;
+  // up and back: the lid flaps a little as the fist goes up
+  keys.push({ at: t, pose: fxAmp({ ...FX_BACK, armR: FX_BACK.armR * w, lowR: FX_BACK.lowR * w, up: 2.5, x: -4, y: -4, head: -2, brw: 0.4, jaw: 0.1, gb: -0.4, ph: 0.3, armL: -2, lowL: -2 }, amp), stiff: 1.6 });
+  t += (heavy ? 0.36 : 0.24) * slow;
+  // down: the bottom of the fist at the screen, the knees give, the lid slams towards shut, the hood's rim lifts
+  keys.push({ at: t, pose: fxAmp({ ...FX_HIT, zR: FX_HIT.zR * (heavy ? 1.3 : 1), up: -5, x: 12, y: heavy ? 44 : 30, head: 4, brw: 1, jaw: 1, gb: 1, ph: 1, hl: 1, armL: 6, lowL: 5 }, amp), stiff: 4.5 });
+  t += 0.24 * slow;
+  // back up into the stance: the lid shuts a little once more on the way up, then opens
+  keys.push({ at: t, pose: fxAmp({ armR: 4, lowR: 2, y: 3, jaw: 0.2, brw: 0.4, gb: -0.3, ph: 0.35, hl: 0 }, amp), stiff: 1.8 });
+  t += 0.16 * slow;
+  keys.push({ at: t, pose: fxAmp({ ph: 0 }, amp), stiff: 1.5 });
+  return t + 0.12 * slow;
 };
 /** a run of blows: r — a quick one, R — a heavy one */
 const fxCombo = (plan: ("r" | "R")[], amp = 1, slow = 1): Action => {
@@ -821,7 +827,7 @@ const POSES: Record<string, Spec> = {
       armR: { k: 250, c: 20 }, lowR: { k: 360, c: 24 }, handR: { k: 800, c: 44 },
       armL: { k: 140, c: 16 }, lowL: { k: 160, c: 17 }, handL: { k: 400, c: 30 },
       zR: { k: 360, c: 30 },
-      jaw: { k: 240, c: 20 }, brw: { k: 160, c: 16 }, gb: { k: 320, c: 7 }, ph: { k: 260, c: 9 }, px: { k: 200, c: 20 }, py: { k: 200, c: 20 },
+      jaw: { k: 240, c: 20 }, brw: { k: 160, c: 16 }, gb: { k: 320, c: 7 }, ph: { k: 260, c: 9 }, hl: { k: 160, c: 13 }, px: { k: 200, c: 20 }, py: { k: 200, c: 20 },
     },
     drag: { lowL: ["armL", -0.04], handL: ["lowL", -0.01], lowR: ["armR", -0.05], handR: ["lowR", -0.01], head: ["up", -0.08] },
     // never still: a small nervous bounce, the phone twitches in the fist, the laptop arm breathes; the eyes look about
@@ -844,7 +850,7 @@ const POSES: Record<string, Spec> = {
       { a: fxCombo(["R"]), w: 1 }, { a: fxCombo(["r", "r", "r", "R"]), w: 1 },
     ],
     rest: [1.6, 3.2],
-    hit: { head: -300, up: -90, x: -70, y: -60, armL: 60, lowL: -60, armR: -110, lowR: 140, handR: 40, gb: 12, jaw: 6, ph: 10 },
+    hit: { head: -300, up: -90, x: -70, y: -60, armL: 60, lowL: -60, armR: -110, lowR: 140, handR: 40, gb: 12, jaw: 6, ph: 10, hl: 8 },
     strike: fxCombo(["R", "r"]),
     // below half: slower and smaller, from foot to foot; below a quarter: a slow lone blow now and then
     dazed: { pose: { armL: 4, armR: -6, head: 3, jaw: 0.25 }, act: true, sway: fxShift(1.8, 1), actions: [{ a: fxCombo(["r", "R"], 0.7, 1.8), w: 1 }], rest: [4, 6], strike: fxCombo(["R"], 0.7, 1.8), speed: 0.65 },
@@ -852,12 +858,12 @@ const POSES: Record<string, Spec> = {
     breath: (t, dazed) => { const b = 0.5 - 0.5 * Math.cos((t / (dazed ? 1.4 : 1.1)) * Math.PI * 2); return [1 + 0.012 * b, 1 + 0.026 * b, -4 * b]; },
     // the coat's tails lag behind his moves and flutter a little
     hem: { sel: ".fx-hem", k: 40, c: 4, up: 0.9, x: 0.25, flutter: (t) => 0.8 * Math.sin(t * 1.7) + 0.4 * Math.sin(t * 3.1 + 1) },
-    shapes: { jaw: {}, brw: {}, gb: {}, ph: {}, px: {}, py: {} },
+    shapes: { jaw: {}, brw: {}, gb: {}, ph: {}, hl: {}, px: {}, py: {} },
     scale: { handR: "zR" },
     vars: (a) => ({
       "--jaw": Math.max(0, Math.min(1, a.jaw)).toFixed(3), "--brw": a.brw.toFixed(3), "--gb": a.gb.toFixed(3),
       // the lid only goes towards shut (0 open as drawn … 1 nearly shut)
-      "--ph": Math.max(0, Math.min(1, a.ph)).toFixed(3),
+      "--ph": Math.max(0, Math.min(1, a.ph)).toFixed(3), "--hl": Math.max(-0.3, Math.min(1.2, a.hl)).toFixed(3),
       "--px": a.px.toFixed(3), "--py": a.py.toFixed(3),
     }),
     stiffOwn: true,

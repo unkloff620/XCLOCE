@@ -8303,7 +8303,10 @@ button:is(.modal > .x, .fs-x, .bbox-x, .acx-x, .zb-res-x, .combo-done-x, .sty-x,
 .rig-fx .fx-glasses { transform: translateY(calc(var(--gb) * 3px)) rotate(calc(var(--gb) * 1.2deg)); }
 .rig-fx .fx-lids > g { transform: scaleY(0); animation: fk-blink 4.1s linear infinite; }
 /* the flip phone's lid swings towards shut on its hinge: it shortens along itself (folding over) and leans to the keys */
-.rig-fx .fx-lid { transform: rotate(-44deg) scaleX(calc(1 - var(--ph) * 0.55)) rotate(44deg) rotate(calc(var(--ph) * -8deg)); }
+.rig-fx .fx-lid { transform: rotate(-44deg) scaleX(calc(1 - var(--ph) * 0.68)) rotate(44deg) rotate(calc(var(--ph) * -12deg)); }
 .rig-fx :is(.fx-hood-j, .fx-glasses-j) { will-change: transform; }
 @media (prefers-reduced-motion: reduce) { .rig-fx .fx-lids > g { animation: none; } }
 .rig-fx.boss-rig.dazed, .rig-fx.boss-rig.dazed :is(.br-arm-l, .br-arm-r, .br-low-l, .br-low-r, .br-hand-l, .br-hand-r, .br-head) { animation: none; }
+/* the hood's rim and its shadow lift on a blow (they stretch up a little from the neck) */
+.rig-fx { --hl: 0; }
+.rig-fx .fx-hoodlift { transform: translateY(calc(var(--hl) * -8px)) scaleY(calc(1 + var(--hl) * 0.05)); }

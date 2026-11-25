@@ -6,8 +6,9 @@
  * and the back between the legs) swing behind his moves (fx-hem, the pose engine's hem). The head is plain SVG in its
  * hood: the hood (its back, its rim and the shadow the rim throws on the face) goes with the head and bends a little
  * behind its moves (.fx-hood-j, the pose engine's hair spring), so the head never leaves it. The right fist with the
- * phone is plain SVG too (over the face): the blows are with the phone, down at the screen — the flip phone's lid swings
- * towards shut on every blow and springs back open (--ph, never past open). The left arm only holds the laptop and
+ * forearm, the fist and the phone are on the front canvas (soft at the elbow and the wrist): the blows come down at the
+ * screen with the bottom of the fist (a hammer blow) — the flip phone's lid swings towards shut on every blow and as the
+ * arm comes back up, and springs open again (--ph, never past open); the hood's rim lifts on a blow with its shadow (--hl). The left arm only holds the laptop and
  * sinks a little now and then. The face: the chin and the lower teeth drop (--jaw, the artist's «Shift + 3 × ↓» = 13.1
  * rig px), the brows frown (--brw), the pupils look about (--px, --py), the lids blink, the glasses jump on a quick move
  * (--gb) and wobble (.fx-glasses-j).
@@ -74,8 +75,6 @@ export function FokusRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
           {pic("body", "back")}
           {/* the long coat: its tails below the chest swing with fx-hem */}
           {pic("coat", "back", ["fx-hem", "0.98,0.45"])}
-          {/* the right forearm over the coat, the empty wrist in it */}
-          {bone("br-arm br-arm-r", "armR", bone("br-low br-low-r", "lowR", <>{pic("lowR", "back")}{bone("br-hand br-hand-r", "handR", null, 80)}</>, 110), 130)}
           {/* the laptop under the left arm, held by the forearm */}
           {bone("br-arm br-arm-l", "armL", bone("br-low br-low-l", "lowL", pic("laptop", "back"), 120), 130)}
           {bone("br-arm br-arm-l", "armL", <>{pic("armL", "back")}{bone("br-low br-low-l", "lowL", <>{pic("lowL", "back")}{bone("br-hand br-hand-l", "handL", pic("handL", "back"), 80)}</>, 120)}</>, 130)}
@@ -94,14 +93,21 @@ export function FokusRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
             {pic("head")}
             <g className="fx-brows" style={box("brows", 0.5, 0.5)}>{pic("brows")}</g>
             <g className="fx-glasses" style={box("glasses", 0.5, 0.45)}><g className="fx-glasses-j" style={box("glasses", 0.5, 0.45)}>{pic("glasses")}</g></g>
-            {hood("hoodShadow")}
-            {hood("hoodFront")}
+            {/* the rim and its shadow lift together on a blow (--hl): the shadow comes from the hood */}
+            <g className="fx-hoodlift" style={at(P.head?.pivot?.[0] ?? 396, (P.head?.pivot?.[1] ?? 300) - 10)}>
+              {hood("hoodShadow")}
+              {hood("hoodFront")}
+            </g>
           </>, 150)}
-          {/* the fist with the phone over the face (plain SVG): the lid turns on its hinge */}
-          {bone("br-arm br-arm-r", "armR", bone("br-low br-low-r", "lowR", bone("br-hand br-hand-r", "handR", <>
-            {pic("handR")}
-            <g className="fx-lid" style={at(lid[0], lid[1])}>{pic("phone")}</g>
-          </>, 80), 110), 130)}
+          {/* the right forearm, the fist with the phone and the phone's lid on the front canvas (over the face): soft
+              joints at the elbow and the wrist; the lid turns on its hinge (its own bone, --ph) */}
+          {bone("br-arm br-arm-r", "armR", bone("br-low br-low-r", "lowR", <>
+            {pic("lowR", "front")}
+            {bone("br-hand br-hand-r", "handR", <>
+              {pic("handR", "front")}
+              <g className="fx-lid" data-pivot={`${lid[0]},${lid[1]}`} data-pp-size={40} style={at(lid[0], lid[1])}>{pic("phone", "front")}</g>
+            </>, 80)}
+          </>, 110), 130)}
         </g>
       </g>
     </svg>
