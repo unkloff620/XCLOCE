@@ -11612,5 +11612,152 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
   "y": 1180.0,
   "w": 258.0,
   "h": 156.0
+ },
+ "tat-portnoy-neck": {
+  "part": "upper",
+  "x": 442.0,
+  "y": 251.0,
+  "w": 118.0,
+  "h": 143.0
+ },
+ "tat-portnoy-trap-l": {
+  "part": "upper",
+  "x": 324.0,
+  "y": 301.0,
+  "w": 133.0,
+  "h": 160.0
+ },
+ "tat-portnoy-trap-r": {
+  "part": "upper",
+  "x": 545.0,
+  "y": 296.0,
+  "w": 126.0,
+  "h": 157.0
+ },
+ "tat-portnoy-chest-l": {
+  "part": "upper",
+  "x": 341.0,
+  "y": 362.0,
+  "w": 168.0,
+  "h": 174.0
+ },
+ "tat-portnoy-chest-r": {
+  "part": "upper",
+  "x": 501.0,
+  "y": 362.0,
+  "w": 158.0,
+  "h": 176.0
+ },
+ "tat-portnoy-belly": {
+  "part": "upper",
+  "x": 327.0,
+  "y": 451.0,
+  "w": 339.0,
+  "h": 283.0
+ },
+ "tat-portnoy-shoulder-l": {
+  "part": "upper",
+  "x": 226.0,
+  "y": 347.0,
+  "w": 130.0,
+  "h": 132.0
+ },
+ "tat-portnoy-shoulder-r": {
+  "part": "upper",
+  "x": 647.0,
+  "y": 348.0,
+  "w": 138.0,
+  "h": 125.0
+ },
+ "tat-portnoy-biceps-l": {
+  "part": "upper",
+  "x": 136.0,
+  "y": 446.0,
+  "w": 169.0,
+  "h": 138.0
+ },
+ "tat-portnoy-biceps-r": {
+  "part": "upper",
+  "x": 700.0,
+  "y": 446.0,
+  "w": 167.0,
+  "h": 139.0
+ },
+ "tat-portnoy-forearm-l": {
+  "part": "upper",
+  "x": 121.0,
+  "y": 566.0,
+  "w": 143.0,
+  "h": 174.0
+ },
+ "tat-portnoy-forearm-r": {
+  "part": "upper",
+  "x": 705.0,
+  "y": 563.0,
+  "w": 181.0,
+  "h": 221.0
+ },
+ "tat-portnoy-hand-l": {
+  "part": "upper",
+  "x": 226.0,
+  "y": 715.0,
+  "w": 136.0,
+  "h": 87.0
+ },
+ "tat-portnoy-thigh-l": {
+  "part": "torso",
+  "x": 172.0,
+  "y": 756.0,
+  "w": 174.0,
+  "h": 157.0
+ },
+ "tat-portnoy-thigh-r": {
+  "part": "torso",
+  "x": 652.0,
+  "y": 760.0,
+  "w": 201.0,
+  "h": 155.0
+ },
+ "tat-portnoy-knee-l": {
+  "part": "torso",
+  "x": 90.0,
+  "y": 766.0,
+  "w": 158.0,
+  "h": 156.0
+ },
+ "tat-portnoy-knee-r": {
+  "part": "torso",
+  "x": 758.0,
+  "y": 775.0,
+  "w": 157.0,
+  "h": 131.0
+ },
+ "tat-portnoy-shin-l": {
+  "part": "torso",
+  "x": 113.0,
+  "y": 896.0,
+  "w": 228.0,
+  "h": 295.0
+ },
+ "tat-portnoy-shin-r": {
+  "part": "torso",
+  "x": 663.0,
+  "y": 889.0,
+  "w": 231.0,
+  "h": 306.0
+ },
+ "tat-portnoy-foot-l": {
+  "part": "torso",
+  "x": 115.0,
+  "y": 1174.0,
+  "w": 259.0,
+  "h": 146.0
+ },
+ "tat-portnoy-foot-r": {
+  "part": "torso",
+  "x": 629.0,
+  "y": 1182.0,
+  "w": 247.0,
+  "h": 149.0
  }
 };

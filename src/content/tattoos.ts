@@ -83,6 +83,11 @@ export const TATTOO_SETS: TattooSet[] = [
   solid("ozhog", "Ожог", "solntse", "avtor", "rug-pull-gun", 1000),
   // Пепе (the event boss, content/bosses.ts EVENT_FIGHTS): one piece per win, «Пацанский» only
   solid("swamp", "Болото", "pepe", "pacan", "rug-pull-gun", 100),
+  // Нитка (the mentor, the user 2026-11-25): light sets on bare skin — «Игла» +30 Ствол +50 Нож, «Шов» +55 Ствол +40 Нож,
+  // «Портной» +100 Пушка +40 Нож
+  { ...solid("igla", "Игла", "nitka", "pacan", "gpu", 30), extra: [{ weapon: "keyboard", damage: 50 }] },
+  { ...solid("shov", "Шов", "nitka", "blat", "gpu", 55), extra: [{ weapon: "keyboard", damage: 40 }] },
+  { ...solid("portnoy", "Портной", "nitka", "avtor", "rug-pull-gun", 100), extra: [{ weapon: "keyboard", damage: 40 }] },
   // Тося's sets (boss "tosya"): every pie he sells holds one piece (content/tosya.ts)
   solid("oven", "Пирожковая", "tosya", "pacan", "gpu", 200), solid("maid", "Горничная", "tosya", "pacan", "keyboard", 150),
   solid("yakuza", "Кухня якудзы", "tosya", "pacan", "rug-pull-gun", 300),

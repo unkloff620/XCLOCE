@@ -23,6 +23,7 @@ export const UPDATES: UpdateNote[] = [
     items: [
       { img: "/assets/hero/tattoo/set-igla.webp", text: "«Игла» — с Нитки в «Пацанском»: +30 к урону «Ствол», +50 к урону «Нож»." },
       { img: "/assets/hero/tattoo/set-shov.webp", text: "«Шов» — с Нитки в «Блатном»: +55 к урону «Ствол», +40 к урону «Нож»." },
+      { img: "/assets/hero/tattoo/set-portnoy.webp", text: "«Портной» — с Нитки в «Авторитетном»: +100 к урону «Пушка», +40 к урону «Нож»." },
     ],
   },
   {

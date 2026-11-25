@@ -32,6 +32,8 @@ ZONE_DEFS = {
 }
 ZONE_IDS = list(ZONE_DEFS)
 SOLID = ["ice", "king", "taiga", "roots", "shark", "kraken", "cash", "gold", "ring", "fire", "izba", "firebird", "jackpot", "sunrise", "safe", "realm", "samurai", "viking", "inferno", "swamp", "oven", "maid", "yakuza", "ducky", "racer", "nightshift", "dynamite", "masks", "luck", "hustler", "katran", "smotr", "dragon", "cyber", "garages", "industry", "market", "blocks", "oldtown", "shod-domes", "shod-bear", "shod-raven", "pk-mast", "pk-royal", "pk-bluff", "ut-acid", "ut-storm", "kuznya", "zatmenie", "ozhog",
+         # Нитка (the mentor, the user 2026-11-25): light sets — separate pieces on bare skin
+         "igla", "shov", "portnoy",
          # «Зарубы» (content/zarub.ts): 27 sets from the bags
          "zr-barak", "zr-bones", "zr-ash", "zr-deep", "zr-gasmask", "zr-gears", "zr-bratva", "zr-totem", "zr-kush",
          "zr-sakura", "zr-ghost", "zr-wings", "zr-crest", "zr-katana", "zr-clock", "zr-amphora", "zr-abyss", "zr-anchor",
@@ -54,7 +56,14 @@ SKIN = (248, 213, 180)
 
 # PLACES_ONLY=1: only the editor's places (the grid, the tap map, the highlights), the pieces stay as they are
 PLACES_ONLY = os.environ.get("PLACES_ONLY") == "1"
+# ONLY=<set>,<set>: only these sets are cut again (a new set: minutes, not the whole 40); the others' places are kept
+ONLY = [x for x in os.environ.get("ONLY", "").split(",") if x]
+if ONLY:
+    SETS = {k: v for k, v in SETS.items() if k in ONLY}
 fit = {}
+if ONLY:
+    _old = open(os.path.join(ROOT, "src", "client", "art", "tattoo-data.ts")).read()
+    fit = {k: v for k, v in json.loads(_old[_old.index("= {") + 2:_old.rindex("}") + 1]).items() if not any(k.startswith(f"tat-{x}-") for x in ONLY)}
 for set_id, pieces in ({} if PLACES_ONLY else SETS).items():
     for pid, part, zone, where in pieces:
         ink = Image.open(os.path.join(SRC, set_id, f"{part}-ink.png")).convert("RGBA")
