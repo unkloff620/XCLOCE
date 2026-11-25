@@ -2,8 +2,8 @@
 /*
  * Дацкоу (the new full-height art 2026-11-25, tools/boss/assemble-datsik.py): a long-haired lad in a dirty T-shirt and
  * jeans, both fists up at his chest. The puppet (boss-puppet.ts) bends the legs (only the feet stay: a punch bends the
- * knees), the body and the arms at the shoulders and the elbows; the forearms carry the fists. The head is plain SVG:
- * the long hair swings behind the head's moves (.dz-hair, the pose engine's hair spring), the chin with the lower teeth
+ * knees), the body and the arms at the shoulders, the elbows and the wrists (only the fists grow on a punch). The head
+ * is plain SVG; the long hair (on the front canvas) swings only from the eyes down (dz-hairtip, the hair spring), the chin with the lower teeth
  * and the tongue drops (--jaw, 30 px of the face sheet = 6.45 rig px), the brows frown (--brw), the pupils look about
  * (--px, --py), the lids blink. The punches (boss-poses.ts POSES.datsik) come down at the bottom of the screen and the
  * fist grows at it (zR / zL).
@@ -69,11 +69,15 @@ export function DatsikRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, 
             {pic("head")}
             <g className="dz-jaw">{pic("chin")}</g>
             <g className="dz-brows" style={box("brows", 0.5, 0.5)}>{pic("brows")}</g>
-            <g className="dz-hair" style={box("hair", 0.5, 0.12)}>{pic("hair")}</g>
+            {/* the hair: from the eyes down only its tips swing (they follow dz-hairtip, the pose engine's hair spring;
+                the top stays on the head) — drawn by the puppet on the front canvas, over the face */}
+            <g className="dz-hairtip" style={at(298, 162)} />
+            {pic("hair", "front", ["dz-hairtip", "0.85,0.42"])}
           </>, 150)}
           {/* the arms with the fists in front (over the hair): soft shoulders and elbows */}
-          {bone("br-arm br-arm-r", "armR", <>{pic("armR", "front")}{bone("br-low br-low-r", "lowR", pic("lowR", "front"), 120)}</>, 130)}
-          {bone("br-arm br-arm-l", "armL", bone("br-low br-low-l", "lowL", pic("lowL", "front"), 120), 130)}
+          {/* (only the fists grow on a punch: zR / zL on the wrist, not the forearm) */}
+          {bone("br-arm br-arm-r", "armR", <>{pic("armR", "front")}{bone("br-low br-low-r", "lowR", <>{pic("lowR", "front")}{bone("br-hand br-hand-r", "handR", pic("handR", "front"), 90)}</>, 120)}</>, 130)}
+          {bone("br-arm br-arm-l", "armL", bone("br-low br-low-l", "lowL", <>{pic("lowL", "front")}{bone("br-hand br-hand-l", "handL", pic("handL", "front"), 90)}</>, 120), 130)}
         </g>
       </g>
     </svg>

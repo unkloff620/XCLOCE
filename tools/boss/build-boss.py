@@ -63,7 +63,8 @@ PIVOT_BY_BOSS = {
               "armL": [589.3, 393.3], "lowL": [656.7, 500.8], "handL": [523.9, 564.3]},
     # Дацкоу (the new full-height art 2026-11-25, tools/boss/assemble-datsik.py, the sheet cropped at (448, 73)): the neck
     # (under the chin), the shoulders, the elbows (the forearms carry the fists) — printed by that script
-    "datsik": {"head": [297.5, 262.0], "armR": [145.0, 339.1], "lowR": [86.1, 435.4], "armL": [408.0, 345.0], "lowL": [467.8, 442.4]},
+    "datsik": {"head": [297.5, 262.0], "armR": [145.0, 339.1], "lowR": [86.1, 435.4], "armL": [408.0, 345.0], "lowL": [467.8, 442.4],
+               "handR": [182.2, 371.0], "handL": [377.8, 381.0]},
     "solntse": {"head": [508.0, 196.0], "armR": [362.0, 268.0], "lowR": [92.0, 414.0], "armL": [578.0, 300.0], "lowL": [668.0, 505.0]},
     "bebyakyan": {"foreL": [228.0, 405.0], "foreR": [617.0, 437.0]},
     # whole arms swing at the shoulder, the hands with money turn at the wrist (inside the arm's swing)

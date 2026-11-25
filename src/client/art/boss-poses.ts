@@ -849,11 +849,11 @@ const POSES: Record<string, Spec> = {
     dying: { pose: { armL: 14, armR: -14, head: 6, up: -2, jaw: 0.4 }, act: true, sway: dzShift(1.2, 1.2), actions: [{ a: dzCombo(["r"], 0.45, 2.2), w: 1 }, { a: dzCombo(["l"], 0.45, 2.2), w: 1 }], rest: [5, 8], strike: dzCombo(["b"], 0.45, 2.4), speed: 0.5 },
     breath: (t, dazed) => { const b = 0.5 - 0.5 * Math.cos((t / (dazed ? 1.3 : 1.05)) * Math.PI * 2); return [1 + 0.012 * b, 1 + 0.026 * b, -4 * b]; },
     shapes: { jaw: {}, brw: {}, px: {}, py: {} },
-    scale: { lowR: "zR", lowL: "zL" },
+    scale: { handR: "zR", handL: "zL" },
     vars: (a) => ({ "--jaw": Math.max(0, Math.min(1, a.jaw)).toFixed(3), "--brw": a.brw.toFixed(3), "--px": a.px.toFixed(3), "--py": a.py.toFixed(3) }),
     stiffOwn: true,
     // the long hair lags behind the head and flies on a punch
-    hair: { sel: ".dz-hair", k: 80, c: 6.5, turn: 0.5, jerk: 0.012, flutter: (t) => 0.6 * Math.sin(t * 1.7) + 0.35 * Math.sin(t * 3.9 + 1) },
+    hair: { sel: ".dz-hairtip", k: 80, c: 6.5, turn: 0.5, jerk: 0.012, flutter: (t) => 0.6 * Math.sin(t * 1.7) + 0.35 * Math.sin(t * 3.9 + 1) },
   },
   nitka: {
     // quick: stiff springs, the fists quicker still; the glasses on a loose spring (they jump and settle)
