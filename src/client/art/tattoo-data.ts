@@ -11613,153 +11613,6 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
   "w": 258.0,
   "h": 156.0
  },
- "tat-kuznya-b-crown": {
-  "part": "back",
-  "x": 395.0,
-  "y": 34.0,
-  "w": 212.0,
-  "h": 122.0
- },
- "tat-kuznya-b-nape": {
-  "part": "back",
-  "x": 374.0,
-  "y": 105.0,
-  "w": 257.0,
-  "h": 175.0
- },
- "tat-kuznya-b-upper": {
-  "part": "back",
-  "x": 318.0,
-  "y": 254.0,
-  "w": 367.0,
-  "h": 281.0
- },
- "tat-kuznya-b-middle": {
-  "part": "back",
-  "x": 332.0,
-  "y": 513.0,
-  "w": 339.0,
-  "h": 132.0
- },
- "tat-kuznya-b-lower": {
-  "part": "back",
-  "x": 359.0,
-  "y": 629.0,
-  "w": 286.0,
-  "h": 114.0
- },
- "tat-kuznya-b-delt-l": {
-  "part": "back",
-  "x": 222.0,
-  "y": 339.0,
-  "w": 136.0,
-  "h": 140.0
- },
- "tat-kuznya-b-delt-r": {
-  "part": "back",
-  "x": 654.0,
-  "y": 342.0,
-  "w": 131.0,
-  "h": 140.0
- },
- "tat-kuznya-b-triceps-l": {
-  "part": "back",
-  "x": 134.0,
-  "y": 432.0,
-  "w": 183.0,
-  "h": 165.0
- },
- "tat-kuznya-b-triceps-r": {
-  "part": "back",
-  "x": 685.0,
-  "y": 439.0,
-  "w": 180.0,
-  "h": 160.0
- },
- "tat-kuznya-b-elbow-l": {
-  "part": "back",
-  "x": 106.0,
-  "y": 552.0,
-  "w": 101.0,
-  "h": 103.0
- },
- "tat-kuznya-b-elbow-r": {
-  "part": "back",
-  "x": 795.0,
-  "y": 546.0,
-  "w": 100.0,
-  "h": 90.0
- },
- "tat-kuznya-b-forearm-l": {
-  "part": "back",
-  "x": 134.0,
-  "y": 597.0,
-  "w": 168.0,
-  "h": 172.0
- },
- "tat-kuznya-b-forearm-r": {
-  "part": "back",
-  "x": 702.0,
-  "y": 599.0,
-  "w": 177.0,
-  "h": 171.0
- },
- "tat-kuznya-b-hip-l": {
-  "part": "back",
-  "x": 79.0,
-  "y": 775.0,
-  "w": 151.0,
-  "h": 138.0
- },
- "tat-kuznya-b-thigh-l": {
-  "part": "back",
-  "x": 133.0,
-  "y": 757.0,
-  "w": 164.0,
-  "h": 176.0
- },
- "tat-kuznya-b-thigh-r": {
-  "part": "back",
-  "x": 706.0,
-  "y": 758.0,
-  "w": 178.0,
-  "h": 176.0
- },
- "tat-kuznya-b-hip-r": {
-  "part": "back",
-  "x": 798.0,
-  "y": 787.0,
-  "w": 128.0,
-  "h": 118.0
- },
- "tat-kuznya-b-calf-l": {
-  "part": "back",
-  "x": 97.0,
-  "y": 895.0,
-  "w": 257.0,
-  "h": 303.0
- },
- "tat-kuznya-b-calf-r": {
-  "part": "back",
-  "x": 647.0,
-  "y": 892.0,
-  "w": 263.0,
-  "h": 299.0
- },
- "tat-kuznya-b-foot-l": {
-  "part": "back",
-  "x": 131.0,
-  "y": 1178.0,
-  "w": 245.0,
-  "h": 111.0
- },
- "tat-kuznya-b-foot-r": {
-  "part": "back",
-  "x": 627.0,
-  "y": 1166.0,
-  "w": 252.0,
-  "h": 118.0
- },
  "tat-igla-neck": {
   "part": "upper",
   "x": 442.0,
@@ -11907,6 +11760,7356 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
   "w": 248.0,
   "h": 148.0
  },
+ "tat-ice-b-crown": {
+  "part": "back",
+  "x": 402.0,
+  "y": 39.0,
+  "w": 199.0,
+  "h": 112.0
+ },
+ "tat-ice-b-nape": {
+  "part": "back",
+  "x": 388.0,
+  "y": 105.0,
+  "w": 227.0,
+  "h": 170.0
+ },
+ "tat-ice-b-upper": {
+  "part": "back",
+  "x": 323.0,
+  "y": 254.0,
+  "w": 358.0,
+  "h": 280.0
+ },
+ "tat-ice-b-middle": {
+  "part": "back",
+  "x": 353.0,
+  "y": 514.0,
+  "w": 313.0,
+  "h": 131.0
+ },
+ "tat-ice-b-lower": {
+  "part": "back",
+  "x": 366.0,
+  "y": 630.0,
+  "w": 272.0,
+  "h": 110.0
+ },
+ "tat-ice-b-delt-l": {
+  "part": "back",
+  "x": 228.0,
+  "y": 355.0,
+  "w": 128.0,
+  "h": 123.0
+ },
+ "tat-ice-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 355.0,
+  "w": 127.0,
+  "h": 126.0
+ },
+ "tat-ice-b-triceps-l": {
+  "part": "back",
+  "x": 165.0,
+  "y": 461.0,
+  "w": 147.0,
+  "h": 122.0
+ },
+ "tat-ice-b-triceps-r": {
+  "part": "back",
+  "x": 700.0,
+  "y": 443.0,
+  "w": 150.0,
+  "h": 146.0
+ },
+ "tat-ice-b-elbow-l": {
+  "part": "back",
+  "x": 123.0,
+  "y": 563.0,
+  "w": 69.0,
+  "h": 83.0
+ },
+ "tat-ice-b-elbow-r": {
+  "part": "back",
+  "x": 804.0,
+  "y": 555.0,
+  "w": 86.0,
+  "h": 79.0
+ },
+ "tat-ice-b-forearm-l": {
+  "part": "back",
+  "x": 141.0,
+  "y": 600.0,
+  "w": 146.0,
+  "h": 164.0
+ },
+ "tat-ice-b-forearm-r": {
+  "part": "back",
+  "x": 709.0,
+  "y": 602.0,
+  "w": 163.0,
+  "h": 165.0
+ },
+ "tat-ice-b-hip-l": {
+  "part": "back",
+  "x": 85.0,
+  "y": 789.0,
+  "w": 141.0,
+  "h": 124.0
+ },
+ "tat-ice-b-thigh-l": {
+  "part": "back",
+  "x": 176.0,
+  "y": 770.0,
+  "w": 110.0,
+  "h": 156.0
+ },
+ "tat-ice-b-thigh-r": {
+  "part": "back",
+  "x": 717.0,
+  "y": 770.0,
+  "w": 138.0,
+  "h": 157.0
+ },
+ "tat-ice-b-hip-r": {
+  "part": "back",
+  "x": 800.0,
+  "y": 802.0,
+  "w": 121.0,
+  "h": 102.0
+ },
+ "tat-ice-b-calf-l": {
+  "part": "back",
+  "x": 103.0,
+  "y": 897.0,
+  "w": 232.0,
+  "h": 300.0
+ },
+ "tat-ice-b-calf-r": {
+  "part": "back",
+  "x": 671.0,
+  "y": 893.0,
+  "w": 230.0,
+  "h": 288.0
+ },
+ "tat-ice-b-foot-l": {
+  "part": "back",
+  "x": 185.0,
+  "y": 1181.0,
+  "w": 180.0,
+  "h": 99.0
+ },
+ "tat-ice-b-foot-r": {
+  "part": "back",
+  "x": 636.0,
+  "y": 1166.0,
+  "w": 227.0,
+  "h": 108.0
+ },
+ "tat-king-b-crown": {
+  "part": "back",
+  "x": 401.0,
+  "y": 39.0,
+  "w": 201.0,
+  "h": 111.0
+ },
+ "tat-king-b-nape": {
+  "part": "back",
+  "x": 387.0,
+  "y": 105.0,
+  "w": 230.0,
+  "h": 171.0
+ },
+ "tat-king-b-upper": {
+  "part": "back",
+  "x": 323.0,
+  "y": 260.0,
+  "w": 355.0,
+  "h": 275.0
+ },
+ "tat-king-b-middle": {
+  "part": "back",
+  "x": 349.0,
+  "y": 515.0,
+  "w": 310.0,
+  "h": 130.0
+ },
+ "tat-king-b-lower": {
+  "part": "back",
+  "x": 366.0,
+  "y": 632.0,
+  "w": 271.0,
+  "h": 108.0
+ },
+ "tat-king-b-delt-l": {
+  "part": "back",
+  "x": 226.0,
+  "y": 348.0,
+  "w": 131.0,
+  "h": 130.0
+ },
+ "tat-king-b-delt-r": {
+  "part": "back",
+  "x": 656.0,
+  "y": 350.0,
+  "w": 125.0,
+  "h": 131.0
+ },
+ "tat-king-b-triceps-l": {
+  "part": "back",
+  "x": 147.0,
+  "y": 436.0,
+  "w": 165.0,
+  "h": 153.0
+ },
+ "tat-king-b-triceps-r": {
+  "part": "back",
+  "x": 691.0,
+  "y": 442.0,
+  "w": 165.0,
+  "h": 147.0
+ },
+ "tat-king-b-elbow-l": {
+  "part": "back",
+  "x": 112.0,
+  "y": 557.0,
+  "w": 85.0,
+  "h": 93.0
+ },
+ "tat-king-b-elbow-r": {
+  "part": "back",
+  "x": 799.0,
+  "y": 551.0,
+  "w": 86.0,
+  "h": 84.0
+ },
+ "tat-king-b-forearm-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 598.0,
+  "w": 158.0,
+  "h": 168.0
+ },
+ "tat-king-b-forearm-r": {
+  "part": "back",
+  "x": 709.0,
+  "y": 601.0,
+  "w": 165.0,
+  "h": 166.0
+ },
+ "tat-king-b-hip-l": {
+  "part": "back",
+  "x": 94.0,
+  "y": 785.0,
+  "w": 127.0,
+  "h": 128.0
+ },
+ "tat-king-b-thigh-l": {
+  "part": "back",
+  "x": 157.0,
+  "y": 760.0,
+  "w": 129.0,
+  "h": 165.0
+ },
+ "tat-king-b-thigh-r": {
+  "part": "back",
+  "x": 718.0,
+  "y": 762.0,
+  "w": 146.0,
+  "h": 164.0
+ },
+ "tat-king-b-hip-r": {
+  "part": "back",
+  "x": 802.0,
+  "y": 792.0,
+  "w": 111.0,
+  "h": 112.0
+ },
+ "tat-king-b-calf-l": {
+  "part": "back",
+  "x": 104.0,
+  "y": 897.0,
+  "w": 232.0,
+  "h": 301.0
+ },
+ "tat-king-b-calf-r": {
+  "part": "back",
+  "x": 661.0,
+  "y": 893.0,
+  "w": 238.0,
+  "h": 292.0
+ },
+ "tat-king-b-foot-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 1180.0,
+  "w": 229.0,
+  "h": 93.0
+ },
+ "tat-king-b-foot-r": {
+  "part": "back",
+  "x": 640.0,
+  "y": 1166.0,
+  "w": 231.0,
+  "h": 103.0
+ },
+ "tat-taiga-b-crown": {
+  "part": "back",
+  "x": 402.0,
+  "y": 38.0,
+  "w": 200.0,
+  "h": 114.0
+ },
+ "tat-taiga-b-nape": {
+  "part": "back",
+  "x": 387.0,
+  "y": 108.0,
+  "w": 232.0,
+  "h": 168.0
+ },
+ "tat-taiga-b-upper": {
+  "part": "back",
+  "x": 324.0,
+  "y": 254.0,
+  "w": 359.0,
+  "h": 280.0
+ },
+ "tat-taiga-b-middle": {
+  "part": "back",
+  "x": 337.0,
+  "y": 514.0,
+  "w": 329.0,
+  "h": 131.0
+ },
+ "tat-taiga-b-lower": {
+  "part": "back",
+  "x": 366.0,
+  "y": 630.0,
+  "w": 272.0,
+  "h": 110.0
+ },
+ "tat-taiga-b-delt-l": {
+  "part": "back",
+  "x": 226.0,
+  "y": 345.0,
+  "w": 131.0,
+  "h": 133.0
+ },
+ "tat-taiga-b-delt-r": {
+  "part": "back",
+  "x": 655.0,
+  "y": 347.0,
+  "w": 126.0,
+  "h": 134.0
+ },
+ "tat-taiga-b-triceps-l": {
+  "part": "back",
+  "x": 138.0,
+  "y": 437.0,
+  "w": 175.0,
+  "h": 157.0
+ },
+ "tat-taiga-b-triceps-r": {
+  "part": "back",
+  "x": 690.0,
+  "y": 443.0,
+  "w": 170.0,
+  "h": 152.0
+ },
+ "tat-taiga-b-elbow-l": {
+  "part": "back",
+  "x": 110.0,
+  "y": 554.0,
+  "w": 94.0,
+  "h": 96.0
+ },
+ "tat-taiga-b-elbow-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 548.0,
+  "w": 93.0,
+  "h": 87.0
+ },
+ "tat-taiga-b-forearm-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 597.0,
+  "w": 158.0,
+  "h": 168.0
+ },
+ "tat-taiga-b-forearm-r": {
+  "part": "back",
+  "x": 709.0,
+  "y": 601.0,
+  "w": 165.0,
+  "h": 166.0
+ },
+ "tat-taiga-b-hip-l": {
+  "part": "back",
+  "x": 84.0,
+  "y": 781.0,
+  "w": 143.0,
+  "h": 132.0
+ },
+ "tat-taiga-b-thigh-l": {
+  "part": "back",
+  "x": 149.0,
+  "y": 759.0,
+  "w": 137.0,
+  "h": 167.0
+ },
+ "tat-taiga-b-thigh-r": {
+  "part": "back",
+  "x": 717.0,
+  "y": 761.0,
+  "w": 155.0,
+  "h": 165.0
+ },
+ "tat-taiga-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 789.0,
+  "w": 123.0,
+  "h": 116.0
+ },
+ "tat-taiga-b-calf-l": {
+  "part": "back",
+  "x": 103.0,
+  "y": 897.0,
+  "w": 240.0,
+  "h": 301.0
+ },
+ "tat-taiga-b-calf-r": {
+  "part": "back",
+  "x": 662.0,
+  "y": 892.0,
+  "w": 242.0,
+  "h": 292.0
+ },
+ "tat-taiga-b-foot-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 1181.0,
+  "w": 231.0,
+  "h": 103.0
+ },
+ "tat-taiga-b-foot-r": {
+  "part": "back",
+  "x": 634.0,
+  "y": 1166.0,
+  "w": 238.0,
+  "h": 113.0
+ },
+ "tat-roots-b-crown": {
+  "part": "back",
+  "x": 403.0,
+  "y": 38.0,
+  "w": 199.0,
+  "h": 114.0
+ },
+ "tat-roots-b-nape": {
+  "part": "back",
+  "x": 386.0,
+  "y": 105.0,
+  "w": 239.0,
+  "h": 171.0
+ },
+ "tat-roots-b-upper": {
+  "part": "back",
+  "x": 322.0,
+  "y": 254.0,
+  "w": 359.0,
+  "h": 281.0
+ },
+ "tat-roots-b-middle": {
+  "part": "back",
+  "x": 340.0,
+  "y": 514.0,
+  "w": 325.0,
+  "h": 131.0
+ },
+ "tat-roots-b-lower": {
+  "part": "back",
+  "x": 366.0,
+  "y": 630.0,
+  "w": 272.0,
+  "h": 110.0
+ },
+ "tat-roots-b-delt-l": {
+  "part": "back",
+  "x": 226.0,
+  "y": 344.0,
+  "w": 132.0,
+  "h": 134.0
+ },
+ "tat-roots-b-delt-r": {
+  "part": "back",
+  "x": 656.0,
+  "y": 346.0,
+  "w": 125.0,
+  "h": 135.0
+ },
+ "tat-roots-b-triceps-l": {
+  "part": "back",
+  "x": 138.0,
+  "y": 437.0,
+  "w": 174.0,
+  "h": 157.0
+ },
+ "tat-roots-b-triceps-r": {
+  "part": "back",
+  "x": 691.0,
+  "y": 442.0,
+  "w": 169.0,
+  "h": 153.0
+ },
+ "tat-roots-b-elbow-l": {
+  "part": "back",
+  "x": 110.0,
+  "y": 554.0,
+  "w": 94.0,
+  "h": 96.0
+ },
+ "tat-roots-b-elbow-r": {
+  "part": "back",
+  "x": 799.0,
+  "y": 548.0,
+  "w": 92.0,
+  "h": 86.0
+ },
+ "tat-roots-b-forearm-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 597.0,
+  "w": 158.0,
+  "h": 167.0
+ },
+ "tat-roots-b-forearm-r": {
+  "part": "back",
+  "x": 709.0,
+  "y": 601.0,
+  "w": 164.0,
+  "h": 166.0
+ },
+ "tat-roots-b-hip-l": {
+  "part": "back",
+  "x": 84.0,
+  "y": 777.0,
+  "w": 143.0,
+  "h": 136.0
+ },
+ "tat-roots-b-thigh-l": {
+  "part": "back",
+  "x": 140.0,
+  "y": 763.0,
+  "w": 145.0,
+  "h": 162.0
+ },
+ "tat-roots-b-thigh-r": {
+  "part": "back",
+  "x": 718.0,
+  "y": 760.0,
+  "w": 160.0,
+  "h": 166.0
+ },
+ "tat-roots-b-hip-r": {
+  "part": "back",
+  "x": 800.0,
+  "y": 789.0,
+  "w": 120.0,
+  "h": 116.0
+ },
+ "tat-roots-b-calf-l": {
+  "part": "back",
+  "x": 103.0,
+  "y": 898.0,
+  "w": 238.0,
+  "h": 300.0
+ },
+ "tat-roots-b-calf-r": {
+  "part": "back",
+  "x": 664.0,
+  "y": 893.0,
+  "w": 239.0,
+  "h": 288.0
+ },
+ "tat-roots-b-foot-l": {
+  "part": "back",
+  "x": 145.0,
+  "y": 1180.0,
+  "w": 222.0,
+  "h": 102.0
+ },
+ "tat-roots-b-foot-r": {
+  "part": "back",
+  "x": 635.0,
+  "y": 1166.0,
+  "w": 238.0,
+  "h": 113.0
+ },
+ "tat-shark-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-shark-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-shark-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-shark-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-shark-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-shark-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-shark-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-shark-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-shark-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-shark-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-shark-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-shark-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-shark-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-shark-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-shark-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-shark-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-shark-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-shark-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-shark-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-shark-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-shark-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-kraken-b-crown": {
+  "part": "back",
+  "x": 417.0,
+  "y": 39.0,
+  "w": 172.0,
+  "h": 104.0
+ },
+ "tat-kraken-b-nape": {
+  "part": "back",
+  "x": 399.0,
+  "y": 105.0,
+  "w": 208.0,
+  "h": 171.0
+ },
+ "tat-kraken-b-upper": {
+  "part": "back",
+  "x": 322.0,
+  "y": 254.0,
+  "w": 360.0,
+  "h": 281.0
+ },
+ "tat-kraken-b-middle": {
+  "part": "back",
+  "x": 337.0,
+  "y": 514.0,
+  "w": 329.0,
+  "h": 131.0
+ },
+ "tat-kraken-b-lower": {
+  "part": "back",
+  "x": 367.0,
+  "y": 630.0,
+  "w": 271.0,
+  "h": 109.0
+ },
+ "tat-kraken-b-delt-l": {
+  "part": "back",
+  "x": 231.0,
+  "y": 345.0,
+  "w": 123.0,
+  "h": 133.0
+ },
+ "tat-kraken-b-delt-r": {
+  "part": "back",
+  "x": 655.0,
+  "y": 346.0,
+  "w": 125.0,
+  "h": 135.0
+ },
+ "tat-kraken-b-triceps-l": {
+  "part": "back",
+  "x": 141.0,
+  "y": 437.0,
+  "w": 172.0,
+  "h": 157.0
+ },
+ "tat-kraken-b-triceps-r": {
+  "part": "back",
+  "x": 691.0,
+  "y": 450.0,
+  "w": 169.0,
+  "h": 146.0
+ },
+ "tat-kraken-b-elbow-l": {
+  "part": "back",
+  "x": 111.0,
+  "y": 554.0,
+  "w": 93.0,
+  "h": 95.0
+ },
+ "tat-kraken-b-elbow-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 551.0,
+  "w": 93.0,
+  "h": 83.0
+ },
+ "tat-kraken-b-forearm-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 597.0,
+  "w": 158.0,
+  "h": 167.0
+ },
+ "tat-kraken-b-forearm-r": {
+  "part": "back",
+  "x": 709.0,
+  "y": 602.0,
+  "w": 164.0,
+  "h": 163.0
+ },
+ "tat-kraken-b-hip-l": {
+  "part": "back",
+  "x": 85.0,
+  "y": 778.0,
+  "w": 143.0,
+  "h": 135.0
+ },
+ "tat-kraken-b-thigh-l": {
+  "part": "back",
+  "x": 142.0,
+  "y": 758.0,
+  "w": 144.0,
+  "h": 168.0
+ },
+ "tat-kraken-b-thigh-r": {
+  "part": "back",
+  "x": 717.0,
+  "y": 760.0,
+  "w": 162.0,
+  "h": 167.0
+ },
+ "tat-kraken-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 789.0,
+  "w": 123.0,
+  "h": 116.0
+ },
+ "tat-kraken-b-calf-l": {
+  "part": "back",
+  "x": 104.0,
+  "y": 897.0,
+  "w": 239.0,
+  "h": 301.0
+ },
+ "tat-kraken-b-calf-r": {
+  "part": "back",
+  "x": 672.0,
+  "y": 892.0,
+  "w": 232.0,
+  "h": 289.0
+ },
+ "tat-kraken-b-foot-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 1181.0,
+  "w": 231.0,
+  "h": 103.0
+ },
+ "tat-kraken-b-foot-r": {
+  "part": "back",
+  "x": 639.0,
+  "y": 1166.0,
+  "w": 234.0,
+  "h": 113.0
+ },
+ "tat-cash-b-crown": {
+  "part": "back",
+  "x": 401.0,
+  "y": 39.0,
+  "w": 201.0,
+  "h": 113.0
+ },
+ "tat-cash-b-nape": {
+  "part": "back",
+  "x": 386.0,
+  "y": 105.0,
+  "w": 233.0,
+  "h": 171.0
+ },
+ "tat-cash-b-upper": {
+  "part": "back",
+  "x": 321.0,
+  "y": 254.0,
+  "w": 362.0,
+  "h": 281.0
+ },
+ "tat-cash-b-middle": {
+  "part": "back",
+  "x": 337.0,
+  "y": 514.0,
+  "w": 329.0,
+  "h": 131.0
+ },
+ "tat-cash-b-lower": {
+  "part": "back",
+  "x": 366.0,
+  "y": 630.0,
+  "w": 272.0,
+  "h": 110.0
+ },
+ "tat-cash-b-delt-l": {
+  "part": "back",
+  "x": 226.0,
+  "y": 344.0,
+  "w": 132.0,
+  "h": 134.0
+ },
+ "tat-cash-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 347.0,
+  "w": 127.0,
+  "h": 134.0
+ },
+ "tat-cash-b-triceps-l": {
+  "part": "back",
+  "x": 141.0,
+  "y": 437.0,
+  "w": 171.0,
+  "h": 157.0
+ },
+ "tat-cash-b-triceps-r": {
+  "part": "back",
+  "x": 691.0,
+  "y": 443.0,
+  "w": 168.0,
+  "h": 152.0
+ },
+ "tat-cash-b-elbow-l": {
+  "part": "back",
+  "x": 110.0,
+  "y": 554.0,
+  "w": 94.0,
+  "h": 96.0
+ },
+ "tat-cash-b-elbow-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 552.0,
+  "w": 92.0,
+  "h": 83.0
+ },
+ "tat-cash-b-forearm-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 597.0,
+  "w": 158.0,
+  "h": 169.0
+ },
+ "tat-cash-b-forearm-r": {
+  "part": "back",
+  "x": 709.0,
+  "y": 601.0,
+  "w": 165.0,
+  "h": 166.0
+ },
+ "tat-cash-b-hip-l": {
+  "part": "back",
+  "x": 85.0,
+  "y": 778.0,
+  "w": 143.0,
+  "h": 135.0
+ },
+ "tat-cash-b-thigh-l": {
+  "part": "back",
+  "x": 142.0,
+  "y": 758.0,
+  "w": 143.0,
+  "h": 167.0
+ },
+ "tat-cash-b-thigh-r": {
+  "part": "back",
+  "x": 719.0,
+  "y": 760.0,
+  "w": 160.0,
+  "h": 165.0
+ },
+ "tat-cash-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 789.0,
+  "w": 123.0,
+  "h": 116.0
+ },
+ "tat-cash-b-calf-l": {
+  "part": "back",
+  "x": 103.0,
+  "y": 897.0,
+  "w": 239.0,
+  "h": 300.0
+ },
+ "tat-cash-b-calf-r": {
+  "part": "back",
+  "x": 662.0,
+  "y": 892.0,
+  "w": 242.0,
+  "h": 293.0
+ },
+ "tat-cash-b-foot-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 1180.0,
+  "w": 232.0,
+  "h": 104.0
+ },
+ "tat-cash-b-foot-r": {
+  "part": "back",
+  "x": 636.0,
+  "y": 1166.0,
+  "w": 237.0,
+  "h": 113.0
+ },
+ "tat-gold-b-crown": {
+  "part": "back",
+  "x": 403.0,
+  "y": 40.0,
+  "w": 199.0,
+  "h": 112.0
+ },
+ "tat-gold-b-nape": {
+  "part": "back",
+  "x": 389.0,
+  "y": 105.0,
+  "w": 227.0,
+  "h": 171.0
+ },
+ "tat-gold-b-upper": {
+  "part": "back",
+  "x": 322.0,
+  "y": 254.0,
+  "w": 360.0,
+  "h": 281.0
+ },
+ "tat-gold-b-middle": {
+  "part": "back",
+  "x": 337.0,
+  "y": 514.0,
+  "w": 329.0,
+  "h": 131.0
+ },
+ "tat-gold-b-lower": {
+  "part": "back",
+  "x": 373.0,
+  "y": 630.0,
+  "w": 260.0,
+  "h": 109.0
+ },
+ "tat-gold-b-delt-l": {
+  "part": "back",
+  "x": 228.0,
+  "y": 347.0,
+  "w": 130.0,
+  "h": 131.0
+ },
+ "tat-gold-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 347.0,
+  "w": 125.0,
+  "h": 134.0
+ },
+ "tat-gold-b-triceps-l": {
+  "part": "back",
+  "x": 141.0,
+  "y": 438.0,
+  "w": 171.0,
+  "h": 156.0
+ },
+ "tat-gold-b-triceps-r": {
+  "part": "back",
+  "x": 691.0,
+  "y": 446.0,
+  "w": 166.0,
+  "h": 149.0
+ },
+ "tat-gold-b-elbow-l": {
+  "part": "back",
+  "x": 114.0,
+  "y": 555.0,
+  "w": 90.0,
+  "h": 95.0
+ },
+ "tat-gold-b-elbow-r": {
+  "part": "back",
+  "x": 799.0,
+  "y": 550.0,
+  "w": 90.0,
+  "h": 85.0
+ },
+ "tat-gold-b-forearm-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 597.0,
+  "w": 155.0,
+  "h": 167.0
+ },
+ "tat-gold-b-forearm-r": {
+  "part": "back",
+  "x": 709.0,
+  "y": 601.0,
+  "w": 165.0,
+  "h": 165.0
+ },
+ "tat-gold-b-hip-l": {
+  "part": "back",
+  "x": 90.0,
+  "y": 782.0,
+  "w": 137.0,
+  "h": 131.0
+ },
+ "tat-gold-b-thigh-l": {
+  "part": "back",
+  "x": 151.0,
+  "y": 769.0,
+  "w": 135.0,
+  "h": 157.0
+ },
+ "tat-gold-b-thigh-r": {
+  "part": "back",
+  "x": 717.0,
+  "y": 769.0,
+  "w": 154.0,
+  "h": 158.0
+ },
+ "tat-gold-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 791.0,
+  "w": 123.0,
+  "h": 114.0
+ },
+ "tat-gold-b-calf-l": {
+  "part": "back",
+  "x": 105.0,
+  "y": 898.0,
+  "w": 237.0,
+  "h": 300.0
+ },
+ "tat-gold-b-calf-r": {
+  "part": "back",
+  "x": 663.0,
+  "y": 892.0,
+  "w": 241.0,
+  "h": 293.0
+ },
+ "tat-gold-b-foot-l": {
+  "part": "back",
+  "x": 144.0,
+  "y": 1180.0,
+  "w": 223.0,
+  "h": 104.0
+ },
+ "tat-gold-b-foot-r": {
+  "part": "back",
+  "x": 644.0,
+  "y": 1166.0,
+  "w": 220.0,
+  "h": 109.0
+ },
+ "tat-ring-b-crown": {
+  "part": "back",
+  "x": 407.0,
+  "y": 44.0,
+  "w": 195.0,
+  "h": 106.0
+ },
+ "tat-ring-b-nape": {
+  "part": "back",
+  "x": 388.0,
+  "y": 105.0,
+  "w": 231.0,
+  "h": 171.0
+ },
+ "tat-ring-b-upper": {
+  "part": "back",
+  "x": 322.0,
+  "y": 254.0,
+  "w": 361.0,
+  "h": 281.0
+ },
+ "tat-ring-b-middle": {
+  "part": "back",
+  "x": 337.0,
+  "y": 514.0,
+  "w": 329.0,
+  "h": 131.0
+ },
+ "tat-ring-b-lower": {
+  "part": "back",
+  "x": 369.0,
+  "y": 630.0,
+  "w": 269.0,
+  "h": 110.0
+ },
+ "tat-ring-b-delt-l": {
+  "part": "back",
+  "x": 227.0,
+  "y": 346.0,
+  "w": 130.0,
+  "h": 132.0
+ },
+ "tat-ring-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 347.0,
+  "w": 127.0,
+  "h": 134.0
+ },
+ "tat-ring-b-triceps-l": {
+  "part": "back",
+  "x": 140.0,
+  "y": 438.0,
+  "w": 173.0,
+  "h": 156.0
+ },
+ "tat-ring-b-triceps-r": {
+  "part": "back",
+  "x": 690.0,
+  "y": 443.0,
+  "w": 170.0,
+  "h": 152.0
+ },
+ "tat-ring-b-elbow-l": {
+  "part": "back",
+  "x": 112.0,
+  "y": 554.0,
+  "w": 92.0,
+  "h": 96.0
+ },
+ "tat-ring-b-elbow-r": {
+  "part": "back",
+  "x": 799.0,
+  "y": 548.0,
+  "w": 90.0,
+  "h": 87.0
+ },
+ "tat-ring-b-forearm-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 597.0,
+  "w": 158.0,
+  "h": 169.0
+ },
+ "tat-ring-b-forearm-r": {
+  "part": "back",
+  "x": 709.0,
+  "y": 601.0,
+  "w": 165.0,
+  "h": 166.0
+ },
+ "tat-ring-b-hip-l": {
+  "part": "back",
+  "x": 88.0,
+  "y": 782.0,
+  "w": 140.0,
+  "h": 131.0
+ },
+ "tat-ring-b-thigh-l": {
+  "part": "back",
+  "x": 164.0,
+  "y": 759.0,
+  "w": 122.0,
+  "h": 167.0
+ },
+ "tat-ring-b-thigh-r": {
+  "part": "back",
+  "x": 717.0,
+  "y": 760.0,
+  "w": 155.0,
+  "h": 167.0
+ },
+ "tat-ring-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 791.0,
+  "w": 123.0,
+  "h": 114.0
+ },
+ "tat-ring-b-calf-l": {
+  "part": "back",
+  "x": 104.0,
+  "y": 897.0,
+  "w": 235.0,
+  "h": 301.0
+ },
+ "tat-ring-b-calf-r": {
+  "part": "back",
+  "x": 677.0,
+  "y": 892.0,
+  "w": 227.0,
+  "h": 287.0
+ },
+ "tat-ring-b-foot-l": {
+  "part": "back",
+  "x": 137.0,
+  "y": 1180.0,
+  "w": 227.0,
+  "h": 104.0
+ },
+ "tat-ring-b-foot-r": {
+  "part": "back",
+  "x": 640.0,
+  "y": 1166.0,
+  "w": 232.0,
+  "h": 113.0
+ },
+ "tat-fire-b-crown": {
+  "part": "back",
+  "x": 406.0,
+  "y": 39.0,
+  "w": 196.0,
+  "h": 112.0
+ },
+ "tat-fire-b-nape": {
+  "part": "back",
+  "x": 388.0,
+  "y": 105.0,
+  "w": 230.0,
+  "h": 170.0
+ },
+ "tat-fire-b-upper": {
+  "part": "back",
+  "x": 322.0,
+  "y": 254.0,
+  "w": 360.0,
+  "h": 280.0
+ },
+ "tat-fire-b-middle": {
+  "part": "back",
+  "x": 337.0,
+  "y": 514.0,
+  "w": 329.0,
+  "h": 131.0
+ },
+ "tat-fire-b-lower": {
+  "part": "back",
+  "x": 371.0,
+  "y": 630.0,
+  "w": 265.0,
+  "h": 110.0
+ },
+ "tat-fire-b-delt-l": {
+  "part": "back",
+  "x": 226.0,
+  "y": 346.0,
+  "w": 132.0,
+  "h": 132.0
+ },
+ "tat-fire-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 347.0,
+  "w": 127.0,
+  "h": 134.0
+ },
+ "tat-fire-b-triceps-l": {
+  "part": "back",
+  "x": 141.0,
+  "y": 443.0,
+  "w": 171.0,
+  "h": 151.0
+ },
+ "tat-fire-b-triceps-r": {
+  "part": "back",
+  "x": 691.0,
+  "y": 443.0,
+  "w": 168.0,
+  "h": 152.0
+ },
+ "tat-fire-b-elbow-l": {
+  "part": "back",
+  "x": 112.0,
+  "y": 558.0,
+  "w": 92.0,
+  "h": 91.0
+ },
+ "tat-fire-b-elbow-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 549.0,
+  "w": 93.0,
+  "h": 86.0
+ },
+ "tat-fire-b-forearm-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 597.0,
+  "w": 158.0,
+  "h": 168.0
+ },
+ "tat-fire-b-forearm-r": {
+  "part": "back",
+  "x": 709.0,
+  "y": 601.0,
+  "w": 165.0,
+  "h": 166.0
+ },
+ "tat-fire-b-hip-l": {
+  "part": "back",
+  "x": 86.0,
+  "y": 781.0,
+  "w": 141.0,
+  "h": 132.0
+ },
+ "tat-fire-b-thigh-l": {
+  "part": "back",
+  "x": 149.0,
+  "y": 759.0,
+  "w": 137.0,
+  "h": 167.0
+ },
+ "tat-fire-b-thigh-r": {
+  "part": "back",
+  "x": 717.0,
+  "y": 760.0,
+  "w": 157.0,
+  "h": 167.0
+ },
+ "tat-fire-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 790.0,
+  "w": 123.0,
+  "h": 115.0
+ },
+ "tat-fire-b-calf-l": {
+  "part": "back",
+  "x": 109.0,
+  "y": 900.0,
+  "w": 229.0,
+  "h": 298.0
+ },
+ "tat-fire-b-calf-r": {
+  "part": "back",
+  "x": 666.0,
+  "y": 892.0,
+  "w": 238.0,
+  "h": 291.0
+ },
+ "tat-fire-b-foot-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 1180.0,
+  "w": 227.0,
+  "h": 104.0
+ },
+ "tat-fire-b-foot-r": {
+  "part": "back",
+  "x": 633.0,
+  "y": 1166.0,
+  "w": 239.0,
+  "h": 111.0
+ },
+ "tat-izba-b-crown": {
+  "part": "back",
+  "x": 400.0,
+  "y": 38.0,
+  "w": 202.0,
+  "h": 114.0
+ },
+ "tat-izba-b-nape": {
+  "part": "back",
+  "x": 386.0,
+  "y": 105.0,
+  "w": 232.0,
+  "h": 171.0
+ },
+ "tat-izba-b-upper": {
+  "part": "back",
+  "x": 321.0,
+  "y": 254.0,
+  "w": 362.0,
+  "h": 281.0
+ },
+ "tat-izba-b-middle": {
+  "part": "back",
+  "x": 337.0,
+  "y": 514.0,
+  "w": 329.0,
+  "h": 131.0
+ },
+ "tat-izba-b-lower": {
+  "part": "back",
+  "x": 366.0,
+  "y": 630.0,
+  "w": 272.0,
+  "h": 110.0
+ },
+ "tat-izba-b-delt-l": {
+  "part": "back",
+  "x": 226.0,
+  "y": 345.0,
+  "w": 131.0,
+  "h": 133.0
+ },
+ "tat-izba-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 346.0,
+  "w": 127.0,
+  "h": 135.0
+ },
+ "tat-izba-b-triceps-l": {
+  "part": "back",
+  "x": 140.0,
+  "y": 436.0,
+  "w": 172.0,
+  "h": 158.0
+ },
+ "tat-izba-b-triceps-r": {
+  "part": "back",
+  "x": 690.0,
+  "y": 443.0,
+  "w": 170.0,
+  "h": 152.0
+ },
+ "tat-izba-b-elbow-l": {
+  "part": "back",
+  "x": 110.0,
+  "y": 554.0,
+  "w": 94.0,
+  "h": 96.0
+ },
+ "tat-izba-b-elbow-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 548.0,
+  "w": 90.0,
+  "h": 87.0
+ },
+ "tat-izba-b-forearm-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 597.0,
+  "w": 158.0,
+  "h": 167.0
+ },
+ "tat-izba-b-forearm-r": {
+  "part": "back",
+  "x": 716.0,
+  "y": 601.0,
+  "w": 158.0,
+  "h": 165.0
+ },
+ "tat-izba-b-hip-l": {
+  "part": "back",
+  "x": 84.0,
+  "y": 782.0,
+  "w": 144.0,
+  "h": 131.0
+ },
+ "tat-izba-b-thigh-l": {
+  "part": "back",
+  "x": 149.0,
+  "y": 769.0,
+  "w": 137.0,
+  "h": 157.0
+ },
+ "tat-izba-b-thigh-r": {
+  "part": "back",
+  "x": 717.0,
+  "y": 761.0,
+  "w": 162.0,
+  "h": 166.0
+ },
+ "tat-izba-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 789.0,
+  "w": 123.0,
+  "h": 115.0
+ },
+ "tat-izba-b-calf-l": {
+  "part": "back",
+  "x": 103.0,
+  "y": 897.0,
+  "w": 237.0,
+  "h": 301.0
+ },
+ "tat-izba-b-calf-r": {
+  "part": "back",
+  "x": 657.0,
+  "y": 892.0,
+  "w": 247.0,
+  "h": 295.0
+ },
+ "tat-izba-b-foot-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 1180.0,
+  "w": 235.0,
+  "h": 104.0
+ },
+ "tat-izba-b-foot-r": {
+  "part": "back",
+  "x": 632.0,
+  "y": 1166.0,
+  "w": 241.0,
+  "h": 113.0
+ },
+ "tat-firebird-b-crown": {
+  "part": "back",
+  "x": 402.0,
+  "y": 38.0,
+  "w": 197.0,
+  "h": 112.0
+ },
+ "tat-firebird-b-nape": {
+  "part": "back",
+  "x": 385.0,
+  "y": 105.0,
+  "w": 232.0,
+  "h": 171.0
+ },
+ "tat-firebird-b-upper": {
+  "part": "back",
+  "x": 322.0,
+  "y": 254.0,
+  "w": 361.0,
+  "h": 281.0
+ },
+ "tat-firebird-b-middle": {
+  "part": "back",
+  "x": 338.0,
+  "y": 514.0,
+  "w": 328.0,
+  "h": 131.0
+ },
+ "tat-firebird-b-lower": {
+  "part": "back",
+  "x": 370.0,
+  "y": 630.0,
+  "w": 268.0,
+  "h": 109.0
+ },
+ "tat-firebird-b-delt-l": {
+  "part": "back",
+  "x": 226.0,
+  "y": 345.0,
+  "w": 132.0,
+  "h": 133.0
+ },
+ "tat-firebird-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 346.0,
+  "w": 127.0,
+  "h": 135.0
+ },
+ "tat-firebird-b-triceps-l": {
+  "part": "back",
+  "x": 139.0,
+  "y": 436.0,
+  "w": 173.0,
+  "h": 158.0
+ },
+ "tat-firebird-b-triceps-r": {
+  "part": "back",
+  "x": 690.0,
+  "y": 443.0,
+  "w": 170.0,
+  "h": 152.0
+ },
+ "tat-firebird-b-elbow-l": {
+  "part": "back",
+  "x": 111.0,
+  "y": 554.0,
+  "w": 93.0,
+  "h": 96.0
+ },
+ "tat-firebird-b-elbow-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 548.0,
+  "w": 93.0,
+  "h": 86.0
+ },
+ "tat-firebird-b-forearm-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 597.0,
+  "w": 158.0,
+  "h": 169.0
+ },
+ "tat-firebird-b-forearm-r": {
+  "part": "back",
+  "x": 709.0,
+  "y": 601.0,
+  "w": 165.0,
+  "h": 166.0
+ },
+ "tat-firebird-b-hip-l": {
+  "part": "back",
+  "x": 85.0,
+  "y": 779.0,
+  "w": 143.0,
+  "h": 134.0
+ },
+ "tat-firebird-b-thigh-l": {
+  "part": "back",
+  "x": 142.0,
+  "y": 758.0,
+  "w": 144.0,
+  "h": 168.0
+ },
+ "tat-firebird-b-thigh-r": {
+  "part": "back",
+  "x": 717.0,
+  "y": 760.0,
+  "w": 161.0,
+  "h": 167.0
+ },
+ "tat-firebird-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 789.0,
+  "w": 123.0,
+  "h": 116.0
+ },
+ "tat-firebird-b-calf-l": {
+  "part": "back",
+  "x": 103.0,
+  "y": 897.0,
+  "w": 239.0,
+  "h": 300.0
+ },
+ "tat-firebird-b-calf-r": {
+  "part": "back",
+  "x": 673.0,
+  "y": 892.0,
+  "w": 231.0,
+  "h": 288.0
+ },
+ "tat-firebird-b-foot-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 1182.0,
+  "w": 235.0,
+  "h": 102.0
+ },
+ "tat-firebird-b-foot-r": {
+  "part": "back",
+  "x": 633.0,
+  "y": 1166.0,
+  "w": 239.0,
+  "h": 113.0
+ },
+ "tat-jackpot-b-crown": {
+  "part": "back",
+  "x": 401.0,
+  "y": 39.0,
+  "w": 201.0,
+  "h": 113.0
+ },
+ "tat-jackpot-b-nape": {
+  "part": "back",
+  "x": 386.0,
+  "y": 106.0,
+  "w": 234.0,
+  "h": 170.0
+ },
+ "tat-jackpot-b-upper": {
+  "part": "back",
+  "x": 321.0,
+  "y": 254.0,
+  "w": 362.0,
+  "h": 281.0
+ },
+ "tat-jackpot-b-middle": {
+  "part": "back",
+  "x": 337.0,
+  "y": 514.0,
+  "w": 329.0,
+  "h": 131.0
+ },
+ "tat-jackpot-b-lower": {
+  "part": "back",
+  "x": 366.0,
+  "y": 630.0,
+  "w": 272.0,
+  "h": 110.0
+ },
+ "tat-jackpot-b-delt-l": {
+  "part": "back",
+  "x": 226.0,
+  "y": 346.0,
+  "w": 132.0,
+  "h": 132.0
+ },
+ "tat-jackpot-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 347.0,
+  "w": 127.0,
+  "h": 134.0
+ },
+ "tat-jackpot-b-triceps-l": {
+  "part": "back",
+  "x": 140.0,
+  "y": 436.0,
+  "w": 172.0,
+  "h": 158.0
+ },
+ "tat-jackpot-b-triceps-r": {
+  "part": "back",
+  "x": 690.0,
+  "y": 442.0,
+  "w": 170.0,
+  "h": 153.0
+ },
+ "tat-jackpot-b-elbow-l": {
+  "part": "back",
+  "x": 112.0,
+  "y": 554.0,
+  "w": 92.0,
+  "h": 96.0
+ },
+ "tat-jackpot-b-elbow-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 548.0,
+  "w": 93.0,
+  "h": 86.0
+ },
+ "tat-jackpot-b-forearm-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 597.0,
+  "w": 158.0,
+  "h": 169.0
+ },
+ "tat-jackpot-b-forearm-r": {
+  "part": "back",
+  "x": 709.0,
+  "y": 601.0,
+  "w": 165.0,
+  "h": 166.0
+ },
+ "tat-jackpot-b-hip-l": {
+  "part": "back",
+  "x": 88.0,
+  "y": 779.0,
+  "w": 140.0,
+  "h": 134.0
+ },
+ "tat-jackpot-b-thigh-l": {
+  "part": "back",
+  "x": 145.0,
+  "y": 758.0,
+  "w": 140.0,
+  "h": 167.0
+ },
+ "tat-jackpot-b-thigh-r": {
+  "part": "back",
+  "x": 719.0,
+  "y": 760.0,
+  "w": 159.0,
+  "h": 165.0
+ },
+ "tat-jackpot-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 789.0,
+  "w": 123.0,
+  "h": 116.0
+ },
+ "tat-jackpot-b-calf-l": {
+  "part": "back",
+  "x": 104.0,
+  "y": 897.0,
+  "w": 241.0,
+  "h": 301.0
+ },
+ "tat-jackpot-b-calf-r": {
+  "part": "back",
+  "x": 661.0,
+  "y": 892.0,
+  "w": 243.0,
+  "h": 293.0
+ },
+ "tat-jackpot-b-foot-l": {
+  "part": "back",
+  "x": 144.0,
+  "y": 1180.0,
+  "w": 221.0,
+  "h": 104.0
+ },
+ "tat-jackpot-b-foot-r": {
+  "part": "back",
+  "x": 637.0,
+  "y": 1166.0,
+  "w": 227.0,
+  "h": 113.0
+ },
+ "tat-sunrise-b-crown": {
+  "part": "back",
+  "x": 400.0,
+  "y": 39.0,
+  "w": 202.0,
+  "h": 113.0
+ },
+ "tat-sunrise-b-nape": {
+  "part": "back",
+  "x": 384.0,
+  "y": 105.0,
+  "w": 238.0,
+  "h": 171.0
+ },
+ "tat-sunrise-b-upper": {
+  "part": "back",
+  "x": 320.0,
+  "y": 254.0,
+  "w": 363.0,
+  "h": 281.0
+ },
+ "tat-sunrise-b-middle": {
+  "part": "back",
+  "x": 337.0,
+  "y": 514.0,
+  "w": 329.0,
+  "h": 131.0
+ },
+ "tat-sunrise-b-lower": {
+  "part": "back",
+  "x": 366.0,
+  "y": 630.0,
+  "w": 272.0,
+  "h": 110.0
+ },
+ "tat-sunrise-b-delt-l": {
+  "part": "back",
+  "x": 226.0,
+  "y": 344.0,
+  "w": 132.0,
+  "h": 134.0
+ },
+ "tat-sunrise-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 346.0,
+  "w": 127.0,
+  "h": 135.0
+ },
+ "tat-sunrise-b-triceps-l": {
+  "part": "back",
+  "x": 138.0,
+  "y": 436.0,
+  "w": 175.0,
+  "h": 159.0
+ },
+ "tat-sunrise-b-triceps-r": {
+  "part": "back",
+  "x": 690.0,
+  "y": 443.0,
+  "w": 170.0,
+  "h": 153.0
+ },
+ "tat-sunrise-b-elbow-l": {
+  "part": "back",
+  "x": 115.0,
+  "y": 554.0,
+  "w": 89.0,
+  "h": 96.0
+ },
+ "tat-sunrise-b-elbow-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 548.0,
+  "w": 90.0,
+  "h": 87.0
+ },
+ "tat-sunrise-b-forearm-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 597.0,
+  "w": 158.0,
+  "h": 169.0
+ },
+ "tat-sunrise-b-forearm-r": {
+  "part": "back",
+  "x": 709.0,
+  "y": 601.0,
+  "w": 165.0,
+  "h": 166.0
+ },
+ "tat-sunrise-b-hip-l": {
+  "part": "back",
+  "x": 85.0,
+  "y": 780.0,
+  "w": 143.0,
+  "h": 133.0
+ },
+ "tat-sunrise-b-thigh-l": {
+  "part": "back",
+  "x": 145.0,
+  "y": 758.0,
+  "w": 141.0,
+  "h": 168.0
+ },
+ "tat-sunrise-b-thigh-r": {
+  "part": "back",
+  "x": 718.0,
+  "y": 760.0,
+  "w": 161.0,
+  "h": 166.0
+ },
+ "tat-sunrise-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 789.0,
+  "w": 123.0,
+  "h": 116.0
+ },
+ "tat-sunrise-b-calf-l": {
+  "part": "back",
+  "x": 103.0,
+  "y": 897.0,
+  "w": 237.0,
+  "h": 301.0
+ },
+ "tat-sunrise-b-calf-r": {
+  "part": "back",
+  "x": 668.0,
+  "y": 892.0,
+  "w": 235.0,
+  "h": 291.0
+ },
+ "tat-sunrise-b-foot-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 1180.0,
+  "w": 232.0,
+  "h": 104.0
+ },
+ "tat-sunrise-b-foot-r": {
+  "part": "back",
+  "x": 634.0,
+  "y": 1166.0,
+  "w": 238.0,
+  "h": 113.0
+ },
+ "tat-safe-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-safe-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-safe-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-safe-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-safe-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-safe-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-safe-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-safe-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-safe-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-safe-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-safe-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-safe-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-safe-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-safe-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-safe-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-safe-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-safe-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-safe-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-safe-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-safe-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-safe-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-realm-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-realm-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-realm-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-realm-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-realm-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-realm-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-realm-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-realm-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-realm-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-realm-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-realm-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-realm-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-realm-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-realm-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-realm-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-realm-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-realm-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-realm-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-realm-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-realm-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-realm-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-samurai-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-samurai-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-samurai-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-samurai-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-samurai-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-samurai-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-samurai-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-samurai-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-samurai-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-samurai-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-samurai-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-samurai-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-samurai-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-samurai-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-samurai-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-samurai-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-samurai-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-samurai-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-samurai-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-samurai-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-samurai-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-viking-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-viking-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-viking-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-viking-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-viking-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-viking-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 135.0,
+  "h": 140.0
+ },
+ "tat-viking-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-viking-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-viking-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-viking-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-viking-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-viking-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-viking-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-viking-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-viking-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-viking-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-viking-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-viking-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-viking-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-viking-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-viking-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-inferno-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-inferno-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-inferno-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-inferno-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-inferno-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-inferno-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-inferno-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-inferno-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-inferno-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-inferno-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-inferno-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-inferno-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-inferno-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-inferno-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-inferno-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-inferno-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-inferno-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-inferno-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-inferno-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-inferno-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-inferno-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-swamp-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-swamp-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-swamp-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-swamp-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-swamp-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-swamp-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-swamp-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-swamp-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-swamp-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-swamp-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-swamp-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-swamp-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-swamp-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-swamp-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-swamp-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-swamp-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-swamp-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-swamp-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-swamp-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-swamp-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-swamp-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-oven-b-crown": {
+  "part": "back",
+  "x": 403.0,
+  "y": 42.0,
+  "w": 199.0,
+  "h": 109.0
+ },
+ "tat-oven-b-nape": {
+  "part": "back",
+  "x": 391.0,
+  "y": 106.0,
+  "w": 224.0,
+  "h": 170.0
+ },
+ "tat-oven-b-upper": {
+  "part": "back",
+  "x": 321.0,
+  "y": 254.0,
+  "w": 362.0,
+  "h": 281.0
+ },
+ "tat-oven-b-middle": {
+  "part": "back",
+  "x": 338.0,
+  "y": 514.0,
+  "w": 328.0,
+  "h": 131.0
+ },
+ "tat-oven-b-lower": {
+  "part": "back",
+  "x": 368.0,
+  "y": 630.0,
+  "w": 270.0,
+  "h": 110.0
+ },
+ "tat-oven-b-delt-l": {
+  "part": "back",
+  "x": 227.0,
+  "y": 348.0,
+  "w": 131.0,
+  "h": 130.0
+ },
+ "tat-oven-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 348.0,
+  "w": 127.0,
+  "h": 133.0
+ },
+ "tat-oven-b-triceps-l": {
+  "part": "back",
+  "x": 140.0,
+  "y": 437.0,
+  "w": 172.0,
+  "h": 157.0
+ },
+ "tat-oven-b-triceps-r": {
+  "part": "back",
+  "x": 690.0,
+  "y": 442.0,
+  "w": 170.0,
+  "h": 154.0
+ },
+ "tat-oven-b-elbow-l": {
+  "part": "back",
+  "x": 111.0,
+  "y": 554.0,
+  "w": 93.0,
+  "h": 96.0
+ },
+ "tat-oven-b-elbow-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 548.0,
+  "w": 93.0,
+  "h": 87.0
+ },
+ "tat-oven-b-forearm-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 598.0,
+  "w": 158.0,
+  "h": 168.0
+ },
+ "tat-oven-b-forearm-r": {
+  "part": "back",
+  "x": 709.0,
+  "y": 601.0,
+  "w": 165.0,
+  "h": 166.0
+ },
+ "tat-oven-b-hip-l": {
+  "part": "back",
+  "x": 87.0,
+  "y": 778.0,
+  "w": 141.0,
+  "h": 135.0
+ },
+ "tat-oven-b-thigh-l": {
+  "part": "back",
+  "x": 142.0,
+  "y": 759.0,
+  "w": 144.0,
+  "h": 167.0
+ },
+ "tat-oven-b-thigh-r": {
+  "part": "back",
+  "x": 717.0,
+  "y": 760.0,
+  "w": 162.0,
+  "h": 167.0
+ },
+ "tat-oven-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 789.0,
+  "w": 122.0,
+  "h": 116.0
+ },
+ "tat-oven-b-calf-l": {
+  "part": "back",
+  "x": 103.0,
+  "y": 897.0,
+  "w": 244.0,
+  "h": 301.0
+ },
+ "tat-oven-b-calf-r": {
+  "part": "back",
+  "x": 664.0,
+  "y": 892.0,
+  "w": 241.0,
+  "h": 292.0
+ },
+ "tat-oven-b-foot-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 1181.0,
+  "w": 234.0,
+  "h": 102.0
+ },
+ "tat-oven-b-foot-r": {
+  "part": "back",
+  "x": 635.0,
+  "y": 1166.0,
+  "w": 232.0,
+  "h": 113.0
+ },
+ "tat-maid-b-crown": {
+  "part": "back",
+  "x": 405.0,
+  "y": 41.0,
+  "w": 193.0,
+  "h": 109.0
+ },
+ "tat-maid-b-nape": {
+  "part": "back",
+  "x": 387.0,
+  "y": 105.0,
+  "w": 230.0,
+  "h": 170.0
+ },
+ "tat-maid-b-upper": {
+  "part": "back",
+  "x": 321.0,
+  "y": 254.0,
+  "w": 362.0,
+  "h": 281.0
+ },
+ "tat-maid-b-middle": {
+  "part": "back",
+  "x": 342.0,
+  "y": 515.0,
+  "w": 322.0,
+  "h": 130.0
+ },
+ "tat-maid-b-lower": {
+  "part": "back",
+  "x": 366.0,
+  "y": 631.0,
+  "w": 272.0,
+  "h": 109.0
+ },
+ "tat-maid-b-delt-l": {
+  "part": "back",
+  "x": 226.0,
+  "y": 344.0,
+  "w": 131.0,
+  "h": 134.0
+ },
+ "tat-maid-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 346.0,
+  "w": 127.0,
+  "h": 135.0
+ },
+ "tat-maid-b-triceps-l": {
+  "part": "back",
+  "x": 143.0,
+  "y": 437.0,
+  "w": 169.0,
+  "h": 158.0
+ },
+ "tat-maid-b-triceps-r": {
+  "part": "back",
+  "x": 691.0,
+  "y": 443.0,
+  "w": 160.0,
+  "h": 152.0
+ },
+ "tat-maid-b-elbow-l": {
+  "part": "back",
+  "x": 111.0,
+  "y": 556.0,
+  "w": 93.0,
+  "h": 94.0
+ },
+ "tat-maid-b-elbow-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 555.0,
+  "w": 93.0,
+  "h": 80.0
+ },
+ "tat-maid-b-forearm-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 597.0,
+  "w": 158.0,
+  "h": 169.0
+ },
+ "tat-maid-b-forearm-r": {
+  "part": "back",
+  "x": 709.0,
+  "y": 601.0,
+  "w": 165.0,
+  "h": 166.0
+ },
+ "tat-maid-b-hip-l": {
+  "part": "back",
+  "x": 85.0,
+  "y": 778.0,
+  "w": 143.0,
+  "h": 135.0
+ },
+ "tat-maid-b-thigh-l": {
+  "part": "back",
+  "x": 142.0,
+  "y": 759.0,
+  "w": 143.0,
+  "h": 165.0
+ },
+ "tat-maid-b-thigh-r": {
+  "part": "back",
+  "x": 718.0,
+  "y": 760.0,
+  "w": 161.0,
+  "h": 165.0
+ },
+ "tat-maid-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 788.0,
+  "w": 123.0,
+  "h": 117.0
+ },
+ "tat-maid-b-calf-l": {
+  "part": "back",
+  "x": 102.0,
+  "y": 897.0,
+  "w": 246.0,
+  "h": 301.0
+ },
+ "tat-maid-b-calf-r": {
+  "part": "back",
+  "x": 659.0,
+  "y": 892.0,
+  "w": 244.0,
+  "h": 294.0
+ },
+ "tat-maid-b-foot-l": {
+  "part": "back",
+  "x": 137.0,
+  "y": 1180.0,
+  "w": 234.0,
+  "h": 103.0
+ },
+ "tat-maid-b-foot-r": {
+  "part": "back",
+  "x": 632.0,
+  "y": 1166.0,
+  "w": 241.0,
+  "h": 113.0
+ },
+ "tat-yakuza-b-crown": {
+  "part": "back",
+  "x": 402.0,
+  "y": 39.0,
+  "w": 200.0,
+  "h": 113.0
+ },
+ "tat-yakuza-b-nape": {
+  "part": "back",
+  "x": 381.0,
+  "y": 105.0,
+  "w": 243.0,
+  "h": 171.0
+ },
+ "tat-yakuza-b-upper": {
+  "part": "back",
+  "x": 321.0,
+  "y": 254.0,
+  "w": 362.0,
+  "h": 281.0
+ },
+ "tat-yakuza-b-middle": {
+  "part": "back",
+  "x": 337.0,
+  "y": 514.0,
+  "w": 329.0,
+  "h": 131.0
+ },
+ "tat-yakuza-b-lower": {
+  "part": "back",
+  "x": 366.0,
+  "y": 630.0,
+  "w": 272.0,
+  "h": 110.0
+ },
+ "tat-yakuza-b-delt-l": {
+  "part": "back",
+  "x": 226.0,
+  "y": 344.0,
+  "w": 132.0,
+  "h": 134.0
+ },
+ "tat-yakuza-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 347.0,
+  "w": 127.0,
+  "h": 134.0
+ },
+ "tat-yakuza-b-triceps-l": {
+  "part": "back",
+  "x": 138.0,
+  "y": 436.0,
+  "w": 175.0,
+  "h": 159.0
+ },
+ "tat-yakuza-b-triceps-r": {
+  "part": "back",
+  "x": 690.0,
+  "y": 442.0,
+  "w": 171.0,
+  "h": 154.0
+ },
+ "tat-yakuza-b-elbow-l": {
+  "part": "back",
+  "x": 110.0,
+  "y": 554.0,
+  "w": 94.0,
+  "h": 92.0
+ },
+ "tat-yakuza-b-elbow-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 548.0,
+  "w": 93.0,
+  "h": 87.0
+ },
+ "tat-yakuza-b-forearm-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 597.0,
+  "w": 158.0,
+  "h": 169.0
+ },
+ "tat-yakuza-b-forearm-r": {
+  "part": "back",
+  "x": 709.0,
+  "y": 601.0,
+  "w": 165.0,
+  "h": 166.0
+ },
+ "tat-yakuza-b-hip-l": {
+  "part": "back",
+  "x": 86.0,
+  "y": 784.0,
+  "w": 142.0,
+  "h": 129.0
+ },
+ "tat-yakuza-b-thigh-l": {
+  "part": "back",
+  "x": 155.0,
+  "y": 759.0,
+  "w": 131.0,
+  "h": 167.0
+ },
+ "tat-yakuza-b-thigh-r": {
+  "part": "back",
+  "x": 717.0,
+  "y": 760.0,
+  "w": 153.0,
+  "h": 167.0
+ },
+ "tat-yakuza-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 792.0,
+  "w": 122.0,
+  "h": 113.0
+ },
+ "tat-yakuza-b-calf-l": {
+  "part": "back",
+  "x": 103.0,
+  "y": 897.0,
+  "w": 242.0,
+  "h": 301.0
+ },
+ "tat-yakuza-b-calf-r": {
+  "part": "back",
+  "x": 662.0,
+  "y": 892.0,
+  "w": 239.0,
+  "h": 293.0
+ },
+ "tat-yakuza-b-foot-l": {
+  "part": "back",
+  "x": 137.0,
+  "y": 1180.0,
+  "w": 234.0,
+  "h": 103.0
+ },
+ "tat-yakuza-b-foot-r": {
+  "part": "back",
+  "x": 634.0,
+  "y": 1166.0,
+  "w": 239.0,
+  "h": 113.0
+ },
+ "tat-ducky-b-crown": {
+  "part": "back",
+  "x": 404.0,
+  "y": 42.0,
+  "w": 195.0,
+  "h": 108.0
+ },
+ "tat-ducky-b-nape": {
+  "part": "back",
+  "x": 382.0,
+  "y": 105.0,
+  "w": 240.0,
+  "h": 171.0
+ },
+ "tat-ducky-b-upper": {
+  "part": "back",
+  "x": 321.0,
+  "y": 254.0,
+  "w": 362.0,
+  "h": 281.0
+ },
+ "tat-ducky-b-middle": {
+  "part": "back",
+  "x": 337.0,
+  "y": 514.0,
+  "w": 329.0,
+  "h": 131.0
+ },
+ "tat-ducky-b-lower": {
+  "part": "back",
+  "x": 366.0,
+  "y": 630.0,
+  "w": 272.0,
+  "h": 110.0
+ },
+ "tat-ducky-b-delt-l": {
+  "part": "back",
+  "x": 227.0,
+  "y": 348.0,
+  "w": 131.0,
+  "h": 130.0
+ },
+ "tat-ducky-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 348.0,
+  "w": 126.0,
+  "h": 133.0
+ },
+ "tat-ducky-b-triceps-l": {
+  "part": "back",
+  "x": 140.0,
+  "y": 437.0,
+  "w": 172.0,
+  "h": 157.0
+ },
+ "tat-ducky-b-triceps-r": {
+  "part": "back",
+  "x": 690.0,
+  "y": 445.0,
+  "w": 170.0,
+  "h": 150.0
+ },
+ "tat-ducky-b-elbow-l": {
+  "part": "back",
+  "x": 112.0,
+  "y": 554.0,
+  "w": 92.0,
+  "h": 96.0
+ },
+ "tat-ducky-b-elbow-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 548.0,
+  "w": 93.0,
+  "h": 87.0
+ },
+ "tat-ducky-b-forearm-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 597.0,
+  "w": 158.0,
+  "h": 169.0
+ },
+ "tat-ducky-b-forearm-r": {
+  "part": "back",
+  "x": 709.0,
+  "y": 601.0,
+  "w": 165.0,
+  "h": 166.0
+ },
+ "tat-ducky-b-hip-l": {
+  "part": "back",
+  "x": 85.0,
+  "y": 777.0,
+  "w": 143.0,
+  "h": 136.0
+ },
+ "tat-ducky-b-thigh-l": {
+  "part": "back",
+  "x": 140.0,
+  "y": 758.0,
+  "w": 140.0,
+  "h": 160.0
+ },
+ "tat-ducky-b-thigh-r": {
+  "part": "back",
+  "x": 724.0,
+  "y": 760.0,
+  "w": 155.0,
+  "h": 157.0
+ },
+ "tat-ducky-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 789.0,
+  "w": 123.0,
+  "h": 116.0
+ },
+ "tat-ducky-b-calf-l": {
+  "part": "back",
+  "x": 104.0,
+  "y": 897.0,
+  "w": 243.0,
+  "h": 301.0
+ },
+ "tat-ducky-b-calf-r": {
+  "part": "back",
+  "x": 657.0,
+  "y": 892.0,
+  "w": 247.0,
+  "h": 295.0
+ },
+ "tat-ducky-b-foot-l": {
+  "part": "back",
+  "x": 144.0,
+  "y": 1180.0,
+  "w": 225.0,
+  "h": 104.0
+ },
+ "tat-ducky-b-foot-r": {
+  "part": "back",
+  "x": 635.0,
+  "y": 1166.0,
+  "w": 238.0,
+  "h": 113.0
+ },
+ "tat-racer-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-racer-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-racer-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-racer-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-racer-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-racer-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-racer-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-racer-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-racer-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-racer-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-racer-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-racer-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-racer-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-racer-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-racer-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-racer-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-racer-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-racer-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-racer-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-racer-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-racer-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-nightshift-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-nightshift-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-nightshift-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-nightshift-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-nightshift-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-nightshift-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-nightshift-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-nightshift-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-nightshift-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-nightshift-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-nightshift-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-nightshift-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-nightshift-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-nightshift-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-nightshift-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-nightshift-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-nightshift-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-nightshift-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-nightshift-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-nightshift-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-nightshift-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-dynamite-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-dynamite-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-dynamite-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-dynamite-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-dynamite-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-dynamite-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-dynamite-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-dynamite-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-dynamite-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-dynamite-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-dynamite-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-dynamite-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-dynamite-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-dynamite-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-dynamite-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-dynamite-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-dynamite-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-dynamite-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-dynamite-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-dynamite-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-dynamite-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-masks-b-crown": {
+  "part": "back",
+  "x": 414.0,
+  "y": 39.0,
+  "w": 188.0,
+  "h": 113.0
+ },
+ "tat-masks-b-nape": {
+  "part": "back",
+  "x": 393.0,
+  "y": 105.0,
+  "w": 227.0,
+  "h": 171.0
+ },
+ "tat-masks-b-upper": {
+  "part": "back",
+  "x": 321.0,
+  "y": 254.0,
+  "w": 362.0,
+  "h": 281.0
+ },
+ "tat-masks-b-middle": {
+  "part": "back",
+  "x": 337.0,
+  "y": 514.0,
+  "w": 329.0,
+  "h": 131.0
+ },
+ "tat-masks-b-lower": {
+  "part": "back",
+  "x": 366.0,
+  "y": 630.0,
+  "w": 272.0,
+  "h": 110.0
+ },
+ "tat-masks-b-delt-l": {
+  "part": "back",
+  "x": 226.0,
+  "y": 344.0,
+  "w": 128.0,
+  "h": 134.0
+ },
+ "tat-masks-b-delt-r": {
+  "part": "back",
+  "x": 655.0,
+  "y": 347.0,
+  "w": 123.0,
+  "h": 134.0
+ },
+ "tat-masks-b-triceps-l": {
+  "part": "back",
+  "x": 147.0,
+  "y": 448.0,
+  "w": 165.0,
+  "h": 146.0
+ },
+ "tat-masks-b-triceps-r": {
+  "part": "back",
+  "x": 690.0,
+  "y": 448.0,
+  "w": 171.0,
+  "h": 148.0
+ },
+ "tat-masks-b-elbow-l": {
+  "part": "back",
+  "x": 111.0,
+  "y": 557.0,
+  "w": 93.0,
+  "h": 91.0
+ },
+ "tat-masks-b-elbow-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 548.0,
+  "w": 93.0,
+  "h": 87.0
+ },
+ "tat-masks-b-forearm-l": {
+  "part": "back",
+  "x": 137.0,
+  "y": 597.0,
+  "w": 156.0,
+  "h": 169.0
+ },
+ "tat-masks-b-forearm-r": {
+  "part": "back",
+  "x": 709.0,
+  "y": 601.0,
+  "w": 165.0,
+  "h": 166.0
+ },
+ "tat-masks-b-hip-l": {
+  "part": "back",
+  "x": 91.0,
+  "y": 777.0,
+  "w": 137.0,
+  "h": 136.0
+ },
+ "tat-masks-b-thigh-l": {
+  "part": "back",
+  "x": 140.0,
+  "y": 758.0,
+  "w": 146.0,
+  "h": 167.0
+ },
+ "tat-masks-b-thigh-r": {
+  "part": "back",
+  "x": 717.0,
+  "y": 759.0,
+  "w": 162.0,
+  "h": 167.0
+ },
+ "tat-masks-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 791.0,
+  "w": 123.0,
+  "h": 114.0
+ },
+ "tat-masks-b-calf-l": {
+  "part": "back",
+  "x": 103.0,
+  "y": 897.0,
+  "w": 241.0,
+  "h": 300.0
+ },
+ "tat-masks-b-calf-r": {
+  "part": "back",
+  "x": 678.0,
+  "y": 892.0,
+  "w": 226.0,
+  "h": 286.0
+ },
+ "tat-masks-b-foot-l": {
+  "part": "back",
+  "x": 138.0,
+  "y": 1179.0,
+  "w": 233.0,
+  "h": 105.0
+ },
+ "tat-masks-b-foot-r": {
+  "part": "back",
+  "x": 637.0,
+  "y": 1166.0,
+  "w": 234.0,
+  "h": 111.0
+ },
+ "tat-luck-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-luck-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-luck-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-luck-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-luck-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-luck-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-luck-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-luck-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-luck-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-luck-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-luck-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-luck-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-luck-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-luck-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-luck-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-luck-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-luck-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-luck-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-luck-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-luck-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-luck-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-hustler-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-hustler-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-hustler-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-hustler-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-hustler-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-hustler-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-hustler-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-hustler-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-hustler-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-hustler-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-hustler-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-hustler-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-hustler-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-hustler-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-hustler-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-hustler-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-hustler-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-hustler-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-hustler-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-hustler-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-hustler-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-katran-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-katran-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-katran-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-katran-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-katran-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-katran-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-katran-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-katran-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-katran-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-katran-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-katran-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-katran-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-katran-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-katran-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-katran-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-katran-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-katran-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-katran-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-katran-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-katran-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-katran-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-smotr-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-smotr-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-smotr-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-smotr-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-smotr-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-smotr-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-smotr-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-smotr-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-smotr-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-smotr-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-smotr-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-smotr-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-smotr-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-smotr-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-smotr-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-smotr-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-smotr-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-smotr-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-smotr-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-smotr-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-smotr-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-dragon-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-dragon-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-dragon-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-dragon-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-dragon-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-dragon-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-dragon-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-dragon-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-dragon-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-dragon-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-dragon-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-dragon-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-dragon-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-dragon-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-dragon-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-dragon-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-dragon-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-dragon-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-dragon-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-dragon-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-dragon-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-cyber-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-cyber-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-cyber-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-cyber-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-cyber-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-cyber-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-cyber-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-cyber-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-cyber-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-cyber-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-cyber-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-cyber-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-cyber-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-cyber-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-cyber-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-cyber-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-cyber-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-cyber-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-cyber-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-cyber-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-cyber-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-garages-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-garages-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-garages-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-garages-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-garages-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-garages-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-garages-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-garages-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-garages-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-garages-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-garages-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-garages-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-garages-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-garages-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-garages-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-garages-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-garages-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-garages-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-garages-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-garages-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-garages-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-industry-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-industry-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-industry-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-industry-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-industry-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-industry-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-industry-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-industry-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-industry-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-industry-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-industry-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-industry-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-industry-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-industry-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-industry-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-industry-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-industry-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-industry-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-industry-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-industry-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-industry-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-market-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-market-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-market-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-market-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-market-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-market-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-market-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-market-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-market-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-market-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-market-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-market-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-market-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-market-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-market-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-market-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-market-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-market-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-market-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-market-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-market-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-blocks-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-blocks-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-blocks-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-blocks-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-blocks-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-blocks-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-blocks-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-blocks-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-blocks-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-blocks-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-blocks-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-blocks-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-blocks-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-blocks-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-blocks-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-blocks-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-blocks-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-blocks-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-blocks-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-blocks-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-blocks-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-oldtown-b-crown": {
+  "part": "back",
+  "x": 401.0,
+  "y": 38.0,
+  "w": 201.0,
+  "h": 113.0
+ },
+ "tat-oldtown-b-nape": {
+  "part": "back",
+  "x": 380.0,
+  "y": 105.0,
+  "w": 245.0,
+  "h": 171.0
+ },
+ "tat-oldtown-b-upper": {
+  "part": "back",
+  "x": 320.0,
+  "y": 254.0,
+  "w": 363.0,
+  "h": 281.0
+ },
+ "tat-oldtown-b-middle": {
+  "part": "back",
+  "x": 337.0,
+  "y": 514.0,
+  "w": 329.0,
+  "h": 131.0
+ },
+ "tat-oldtown-b-lower": {
+  "part": "back",
+  "x": 366.0,
+  "y": 630.0,
+  "w": 272.0,
+  "h": 110.0
+ },
+ "tat-oldtown-b-delt-l": {
+  "part": "back",
+  "x": 226.0,
+  "y": 344.0,
+  "w": 132.0,
+  "h": 134.0
+ },
+ "tat-oldtown-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 346.0,
+  "w": 126.0,
+  "h": 135.0
+ },
+ "tat-oldtown-b-triceps-l": {
+  "part": "back",
+  "x": 138.0,
+  "y": 444.0,
+  "w": 175.0,
+  "h": 151.0
+ },
+ "tat-oldtown-b-triceps-r": {
+  "part": "back",
+  "x": 692.0,
+  "y": 444.0,
+  "w": 168.0,
+  "h": 150.0
+ },
+ "tat-oldtown-b-elbow-l": {
+  "part": "back",
+  "x": 110.0,
+  "y": 554.0,
+  "w": 94.0,
+  "h": 93.0
+ },
+ "tat-oldtown-b-elbow-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 549.0,
+  "w": 93.0,
+  "h": 86.0
+ },
+ "tat-oldtown-b-forearm-l": {
+  "part": "back",
+  "x": 137.0,
+  "y": 597.0,
+  "w": 157.0,
+  "h": 170.0
+ },
+ "tat-oldtown-b-forearm-r": {
+  "part": "back",
+  "x": 709.0,
+  "y": 601.0,
+  "w": 165.0,
+  "h": 167.0
+ },
+ "tat-oldtown-b-hip-l": {
+  "part": "back",
+  "x": 84.0,
+  "y": 777.0,
+  "w": 144.0,
+  "h": 136.0
+ },
+ "tat-oldtown-b-thigh-l": {
+  "part": "back",
+  "x": 139.0,
+  "y": 758.0,
+  "w": 138.0,
+  "h": 152.0
+ },
+ "tat-oldtown-b-thigh-r": {
+  "part": "back",
+  "x": 725.0,
+  "y": 759.0,
+  "w": 154.0,
+  "h": 154.0
+ },
+ "tat-oldtown-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 789.0,
+  "w": 123.0,
+  "h": 116.0
+ },
+ "tat-oldtown-b-calf-l": {
+  "part": "back",
+  "x": 103.0,
+  "y": 897.0,
+  "w": 246.0,
+  "h": 301.0
+ },
+ "tat-oldtown-b-calf-r": {
+  "part": "back",
+  "x": 657.0,
+  "y": 892.0,
+  "w": 247.0,
+  "h": 295.0
+ },
+ "tat-oldtown-b-foot-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 1180.0,
+  "w": 232.0,
+  "h": 104.0
+ },
+ "tat-oldtown-b-foot-r": {
+  "part": "back",
+  "x": 634.0,
+  "y": 1166.0,
+  "w": 239.0,
+  "h": 113.0
+ },
+ "tat-shod-domes-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-shod-domes-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-shod-domes-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-shod-domes-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-shod-domes-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-shod-domes-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-shod-domes-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-shod-domes-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-shod-domes-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-shod-domes-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-shod-domes-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-shod-domes-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-shod-domes-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-shod-domes-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-shod-domes-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-shod-domes-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-shod-domes-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-shod-domes-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-shod-domes-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-shod-domes-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-shod-domes-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-shod-bear-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-shod-bear-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-shod-bear-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-shod-bear-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-shod-bear-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-shod-bear-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-shod-bear-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-shod-bear-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-shod-bear-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-shod-bear-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-shod-bear-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-shod-bear-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-shod-bear-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-shod-bear-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-shod-bear-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-shod-bear-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-shod-bear-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-shod-bear-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-shod-bear-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-shod-bear-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-shod-bear-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-shod-raven-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-shod-raven-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-shod-raven-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-shod-raven-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-shod-raven-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-shod-raven-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-shod-raven-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-shod-raven-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-shod-raven-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-shod-raven-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-shod-raven-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-shod-raven-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-shod-raven-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-shod-raven-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-shod-raven-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-shod-raven-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-shod-raven-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-shod-raven-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-shod-raven-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-shod-raven-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-shod-raven-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-pk-mast-b-crown": {
+  "part": "back",
+  "x": 405.0,
+  "y": 40.0,
+  "w": 196.0,
+  "h": 111.0
+ },
+ "tat-pk-mast-b-nape": {
+  "part": "back",
+  "x": 384.0,
+  "y": 105.0,
+  "w": 241.0,
+  "h": 171.0
+ },
+ "tat-pk-mast-b-upper": {
+  "part": "back",
+  "x": 322.0,
+  "y": 254.0,
+  "w": 360.0,
+  "h": 281.0
+ },
+ "tat-pk-mast-b-middle": {
+  "part": "back",
+  "x": 337.0,
+  "y": 514.0,
+  "w": 329.0,
+  "h": 131.0
+ },
+ "tat-pk-mast-b-lower": {
+  "part": "back",
+  "x": 366.0,
+  "y": 630.0,
+  "w": 272.0,
+  "h": 109.0
+ },
+ "tat-pk-mast-b-delt-l": {
+  "part": "back",
+  "x": 226.0,
+  "y": 346.0,
+  "w": 132.0,
+  "h": 132.0
+ },
+ "tat-pk-mast-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 347.0,
+  "w": 126.0,
+  "h": 134.0
+ },
+ "tat-pk-mast-b-triceps-l": {
+  "part": "back",
+  "x": 139.0,
+  "y": 437.0,
+  "w": 174.0,
+  "h": 157.0
+ },
+ "tat-pk-mast-b-triceps-r": {
+  "part": "back",
+  "x": 690.0,
+  "y": 443.0,
+  "w": 170.0,
+  "h": 152.0
+ },
+ "tat-pk-mast-b-elbow-l": {
+  "part": "back",
+  "x": 113.0,
+  "y": 554.0,
+  "w": 91.0,
+  "h": 95.0
+ },
+ "tat-pk-mast-b-elbow-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 548.0,
+  "w": 93.0,
+  "h": 87.0
+ },
+ "tat-pk-mast-b-forearm-l": {
+  "part": "back",
+  "x": 137.0,
+  "y": 597.0,
+  "w": 157.0,
+  "h": 169.0
+ },
+ "tat-pk-mast-b-forearm-r": {
+  "part": "back",
+  "x": 709.0,
+  "y": 601.0,
+  "w": 165.0,
+  "h": 166.0
+ },
+ "tat-pk-mast-b-hip-l": {
+  "part": "back",
+  "x": 86.0,
+  "y": 779.0,
+  "w": 142.0,
+  "h": 134.0
+ },
+ "tat-pk-mast-b-thigh-l": {
+  "part": "back",
+  "x": 140.0,
+  "y": 758.0,
+  "w": 146.0,
+  "h": 167.0
+ },
+ "tat-pk-mast-b-thigh-r": {
+  "part": "back",
+  "x": 717.0,
+  "y": 760.0,
+  "w": 162.0,
+  "h": 166.0
+ },
+ "tat-pk-mast-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 789.0,
+  "w": 123.0,
+  "h": 116.0
+ },
+ "tat-pk-mast-b-calf-l": {
+  "part": "back",
+  "x": 105.0,
+  "y": 898.0,
+  "w": 242.0,
+  "h": 299.0
+ },
+ "tat-pk-mast-b-calf-r": {
+  "part": "back",
+  "x": 660.0,
+  "y": 892.0,
+  "w": 243.0,
+  "h": 294.0
+ },
+ "tat-pk-mast-b-foot-l": {
+  "part": "back",
+  "x": 139.0,
+  "y": 1180.0,
+  "w": 232.0,
+  "h": 104.0
+ },
+ "tat-pk-mast-b-foot-r": {
+  "part": "back",
+  "x": 633.0,
+  "y": 1166.0,
+  "w": 237.0,
+  "h": 113.0
+ },
+ "tat-pk-royal-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-pk-royal-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-pk-royal-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-pk-royal-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-pk-royal-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-pk-royal-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-pk-royal-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-pk-royal-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-pk-royal-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-pk-royal-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-pk-royal-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-pk-royal-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-pk-royal-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-pk-royal-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-pk-royal-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-pk-royal-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-pk-royal-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-pk-royal-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-pk-royal-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-pk-royal-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-pk-royal-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-pk-bluff-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-pk-bluff-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-pk-bluff-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-pk-bluff-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-pk-bluff-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-pk-bluff-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-pk-bluff-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-pk-bluff-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-pk-bluff-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-pk-bluff-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-pk-bluff-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-pk-bluff-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-pk-bluff-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-pk-bluff-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-pk-bluff-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-pk-bluff-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-pk-bluff-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-pk-bluff-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-pk-bluff-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-pk-bluff-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-pk-bluff-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-ut-acid-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-ut-acid-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-ut-acid-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-ut-acid-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-ut-acid-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-ut-acid-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-ut-acid-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-ut-acid-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-ut-acid-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-ut-acid-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-ut-acid-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-ut-acid-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-ut-acid-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-ut-acid-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-ut-acid-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-ut-acid-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-ut-acid-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-ut-acid-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-ut-acid-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-ut-acid-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-ut-acid-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-ut-storm-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-ut-storm-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-ut-storm-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-ut-storm-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-ut-storm-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-ut-storm-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-ut-storm-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-ut-storm-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-ut-storm-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-ut-storm-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-ut-storm-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-ut-storm-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-ut-storm-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-ut-storm-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-ut-storm-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-ut-storm-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-ut-storm-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-ut-storm-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-ut-storm-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-ut-storm-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-ut-storm-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-kuznya-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-kuznya-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-kuznya-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-kuznya-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-kuznya-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-kuznya-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-kuznya-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-kuznya-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-kuznya-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-kuznya-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-kuznya-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-kuznya-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-kuznya-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-kuznya-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-kuznya-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-kuznya-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-kuznya-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-kuznya-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-kuznya-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-kuznya-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-kuznya-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-zatmenie-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-zatmenie-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-zatmenie-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-zatmenie-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-zatmenie-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-zatmenie-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-zatmenie-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-zatmenie-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-zatmenie-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-zatmenie-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-zatmenie-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-zatmenie-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-zatmenie-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-zatmenie-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-zatmenie-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-zatmenie-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-zatmenie-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-zatmenie-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-zatmenie-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-zatmenie-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-zatmenie-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-ozhog-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-ozhog-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-ozhog-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-ozhog-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-ozhog-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-ozhog-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-ozhog-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-ozhog-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-ozhog-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-ozhog-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-ozhog-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-ozhog-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-ozhog-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-ozhog-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-ozhog-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-ozhog-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-ozhog-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-ozhog-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-ozhog-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-ozhog-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-ozhog-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
  "tat-igla-b-crown": {
   "part": "back",
   "x": 403.0,
@@ -12053,5 +19256,4268 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
   "y": 1166.0,
   "w": 240.0,
   "h": 113.0
+ },
+ "tat-shov-b-crown": {
+  "part": "back",
+  "x": 401.0,
+  "y": 38.0,
+  "w": 201.0,
+  "h": 114.0
+ },
+ "tat-shov-b-nape": {
+  "part": "back",
+  "x": 379.0,
+  "y": 105.0,
+  "w": 241.0,
+  "h": 171.0
+ },
+ "tat-shov-b-upper": {
+  "part": "back",
+  "x": 321.0,
+  "y": 254.0,
+  "w": 362.0,
+  "h": 281.0
+ },
+ "tat-shov-b-middle": {
+  "part": "back",
+  "x": 337.0,
+  "y": 514.0,
+  "w": 329.0,
+  "h": 131.0
+ },
+ "tat-shov-b-lower": {
+  "part": "back",
+  "x": 366.0,
+  "y": 630.0,
+  "w": 272.0,
+  "h": 110.0
+ },
+ "tat-shov-b-delt-l": {
+  "part": "back",
+  "x": 226.0,
+  "y": 348.0,
+  "w": 130.0,
+  "h": 130.0
+ },
+ "tat-shov-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 348.0,
+  "w": 127.0,
+  "h": 133.0
+ },
+ "tat-shov-b-triceps-l": {
+  "part": "back",
+  "x": 139.0,
+  "y": 437.0,
+  "w": 173.0,
+  "h": 157.0
+ },
+ "tat-shov-b-triceps-r": {
+  "part": "back",
+  "x": 690.0,
+  "y": 442.0,
+  "w": 171.0,
+  "h": 153.0
+ },
+ "tat-shov-b-elbow-l": {
+  "part": "back",
+  "x": 111.0,
+  "y": 554.0,
+  "w": 93.0,
+  "h": 95.0
+ },
+ "tat-shov-b-elbow-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 548.0,
+  "w": 93.0,
+  "h": 87.0
+ },
+ "tat-shov-b-forearm-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 597.0,
+  "w": 158.0,
+  "h": 169.0
+ },
+ "tat-shov-b-forearm-r": {
+  "part": "back",
+  "x": 709.0,
+  "y": 601.0,
+  "w": 165.0,
+  "h": 166.0
+ },
+ "tat-shov-b-hip-l": {
+  "part": "back",
+  "x": 84.0,
+  "y": 779.0,
+  "w": 144.0,
+  "h": 134.0
+ },
+ "tat-shov-b-thigh-l": {
+  "part": "back",
+  "x": 144.0,
+  "y": 758.0,
+  "w": 141.0,
+  "h": 167.0
+ },
+ "tat-shov-b-thigh-r": {
+  "part": "back",
+  "x": 718.0,
+  "y": 760.0,
+  "w": 161.0,
+  "h": 166.0
+ },
+ "tat-shov-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 789.0,
+  "w": 123.0,
+  "h": 116.0
+ },
+ "tat-shov-b-calf-l": {
+  "part": "back",
+  "x": 103.0,
+  "y": 897.0,
+  "w": 246.0,
+  "h": 301.0
+ },
+ "tat-shov-b-calf-r": {
+  "part": "back",
+  "x": 661.0,
+  "y": 892.0,
+  "w": 243.0,
+  "h": 293.0
+ },
+ "tat-shov-b-foot-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 1180.0,
+  "w": 235.0,
+  "h": 104.0
+ },
+ "tat-shov-b-foot-r": {
+  "part": "back",
+  "x": 633.0,
+  "y": 1166.0,
+  "w": 240.0,
+  "h": 113.0
+ },
+ "tat-portnoy-b-crown": {
+  "part": "back",
+  "x": 405.0,
+  "y": 38.0,
+  "w": 197.0,
+  "h": 114.0
+ },
+ "tat-portnoy-b-nape": {
+  "part": "back",
+  "x": 382.0,
+  "y": 105.0,
+  "w": 243.0,
+  "h": 171.0
+ },
+ "tat-portnoy-b-upper": {
+  "part": "back",
+  "x": 321.0,
+  "y": 254.0,
+  "w": 362.0,
+  "h": 281.0
+ },
+ "tat-portnoy-b-middle": {
+  "part": "back",
+  "x": 337.0,
+  "y": 514.0,
+  "w": 329.0,
+  "h": 131.0
+ },
+ "tat-portnoy-b-lower": {
+  "part": "back",
+  "x": 366.0,
+  "y": 630.0,
+  "w": 272.0,
+  "h": 110.0
+ },
+ "tat-portnoy-b-delt-l": {
+  "part": "back",
+  "x": 227.0,
+  "y": 344.0,
+  "w": 130.0,
+  "h": 134.0
+ },
+ "tat-portnoy-b-delt-r": {
+  "part": "back",
+  "x": 655.0,
+  "y": 346.0,
+  "w": 126.0,
+  "h": 135.0
+ },
+ "tat-portnoy-b-triceps-l": {
+  "part": "back",
+  "x": 138.0,
+  "y": 441.0,
+  "w": 174.0,
+  "h": 153.0
+ },
+ "tat-portnoy-b-triceps-r": {
+  "part": "back",
+  "x": 690.0,
+  "y": 443.0,
+  "w": 170.0,
+  "h": 153.0
+ },
+ "tat-portnoy-b-elbow-l": {
+  "part": "back",
+  "x": 110.0,
+  "y": 554.0,
+  "w": 94.0,
+  "h": 93.0
+ },
+ "tat-portnoy-b-elbow-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 548.0,
+  "w": 93.0,
+  "h": 87.0
+ },
+ "tat-portnoy-b-forearm-l": {
+  "part": "back",
+  "x": 137.0,
+  "y": 597.0,
+  "w": 157.0,
+  "h": 169.0
+ },
+ "tat-portnoy-b-forearm-r": {
+  "part": "back",
+  "x": 709.0,
+  "y": 601.0,
+  "w": 165.0,
+  "h": 166.0
+ },
+ "tat-portnoy-b-hip-l": {
+  "part": "back",
+  "x": 84.0,
+  "y": 780.0,
+  "w": 144.0,
+  "h": 133.0
+ },
+ "tat-portnoy-b-thigh-l": {
+  "part": "back",
+  "x": 147.0,
+  "y": 758.0,
+  "w": 139.0,
+  "h": 168.0
+ },
+ "tat-portnoy-b-thigh-r": {
+  "part": "back",
+  "x": 717.0,
+  "y": 760.0,
+  "w": 159.0,
+  "h": 167.0
+ },
+ "tat-portnoy-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 789.0,
+  "w": 123.0,
+  "h": 116.0
+ },
+ "tat-portnoy-b-calf-l": {
+  "part": "back",
+  "x": 103.0,
+  "y": 897.0,
+  "w": 245.0,
+  "h": 301.0
+ },
+ "tat-portnoy-b-calf-r": {
+  "part": "back",
+  "x": 661.0,
+  "y": 892.0,
+  "w": 243.0,
+  "h": 293.0
+ },
+ "tat-portnoy-b-foot-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 1180.0,
+  "w": 235.0,
+  "h": 103.0
+ },
+ "tat-portnoy-b-foot-r": {
+  "part": "back",
+  "x": 634.0,
+  "y": 1166.0,
+  "w": 238.0,
+  "h": 113.0
+ },
+ "tat-zr-barak-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-zr-barak-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-zr-barak-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-zr-barak-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-zr-barak-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-zr-barak-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-zr-barak-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-zr-barak-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-zr-barak-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-zr-barak-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-zr-barak-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-zr-barak-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-zr-barak-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-zr-barak-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-zr-barak-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-zr-barak-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-zr-barak-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-zr-barak-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-zr-barak-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-zr-barak-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-zr-barak-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-zr-bones-b-crown": {
+  "part": "back",
+  "x": 406.0,
+  "y": 41.0,
+  "w": 192.0,
+  "h": 106.0
+ },
+ "tat-zr-bones-b-nape": {
+  "part": "back",
+  "x": 388.0,
+  "y": 105.0,
+  "w": 229.0,
+  "h": 171.0
+ },
+ "tat-zr-bones-b-upper": {
+  "part": "back",
+  "x": 324.0,
+  "y": 254.0,
+  "w": 356.0,
+  "h": 281.0
+ },
+ "tat-zr-bones-b-middle": {
+  "part": "back",
+  "x": 337.0,
+  "y": 514.0,
+  "w": 329.0,
+  "h": 131.0
+ },
+ "tat-zr-bones-b-lower": {
+  "part": "back",
+  "x": 370.0,
+  "y": 630.0,
+  "w": 266.0,
+  "h": 110.0
+ },
+ "tat-zr-bones-b-delt-l": {
+  "part": "back",
+  "x": 227.0,
+  "y": 344.0,
+  "w": 130.0,
+  "h": 134.0
+ },
+ "tat-zr-bones-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 346.0,
+  "w": 127.0,
+  "h": 135.0
+ },
+ "tat-zr-bones-b-triceps-l": {
+  "part": "back",
+  "x": 143.0,
+  "y": 438.0,
+  "w": 169.0,
+  "h": 156.0
+ },
+ "tat-zr-bones-b-triceps-r": {
+  "part": "back",
+  "x": 691.0,
+  "y": 442.0,
+  "w": 169.0,
+  "h": 151.0
+ },
+ "tat-zr-bones-b-elbow-l": {
+  "part": "back",
+  "x": 113.0,
+  "y": 555.0,
+  "w": 91.0,
+  "h": 94.0
+ },
+ "tat-zr-bones-b-elbow-r": {
+  "part": "back",
+  "x": 799.0,
+  "y": 548.0,
+  "w": 92.0,
+  "h": 87.0
+ },
+ "tat-zr-bones-b-forearm-l": {
+  "part": "back",
+  "x": 137.0,
+  "y": 597.0,
+  "w": 156.0,
+  "h": 169.0
+ },
+ "tat-zr-bones-b-forearm-r": {
+  "part": "back",
+  "x": 713.0,
+  "y": 601.0,
+  "w": 161.0,
+  "h": 166.0
+ },
+ "tat-zr-bones-b-hip-l": {
+  "part": "back",
+  "x": 88.0,
+  "y": 779.0,
+  "w": 139.0,
+  "h": 134.0
+ },
+ "tat-zr-bones-b-thigh-l": {
+  "part": "back",
+  "x": 144.0,
+  "y": 759.0,
+  "w": 141.0,
+  "h": 166.0
+ },
+ "tat-zr-bones-b-thigh-r": {
+  "part": "back",
+  "x": 717.0,
+  "y": 760.0,
+  "w": 162.0,
+  "h": 167.0
+ },
+ "tat-zr-bones-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 789.0,
+  "w": 122.0,
+  "h": 116.0
+ },
+ "tat-zr-bones-b-calf-l": {
+  "part": "back",
+  "x": 105.0,
+  "y": 898.0,
+  "w": 243.0,
+  "h": 300.0
+ },
+ "tat-zr-bones-b-calf-r": {
+  "part": "back",
+  "x": 661.0,
+  "y": 892.0,
+  "w": 242.0,
+  "h": 293.0
+ },
+ "tat-zr-bones-b-foot-l": {
+  "part": "back",
+  "x": 139.0,
+  "y": 1181.0,
+  "w": 232.0,
+  "h": 102.0
+ },
+ "tat-zr-bones-b-foot-r": {
+  "part": "back",
+  "x": 636.0,
+  "y": 1166.0,
+  "w": 236.0,
+  "h": 112.0
+ },
+ "tat-zr-ash-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-zr-ash-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-zr-ash-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-zr-ash-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-zr-ash-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-zr-ash-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-zr-ash-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-zr-ash-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-zr-ash-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-zr-ash-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-zr-ash-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-zr-ash-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-zr-ash-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-zr-ash-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-zr-ash-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-zr-ash-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-zr-ash-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-zr-ash-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-zr-ash-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-zr-ash-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-zr-ash-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-zr-deep-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-zr-deep-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-zr-deep-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-zr-deep-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-zr-deep-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-zr-deep-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-zr-deep-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-zr-deep-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-zr-deep-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-zr-deep-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-zr-deep-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-zr-deep-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-zr-deep-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-zr-deep-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-zr-deep-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-zr-deep-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-zr-deep-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-zr-deep-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-zr-deep-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-zr-deep-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-zr-deep-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-zr-gasmask-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-zr-gasmask-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-zr-gasmask-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-zr-gasmask-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-zr-gasmask-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-zr-gasmask-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-zr-gasmask-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-zr-gasmask-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-zr-gasmask-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-zr-gasmask-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-zr-gasmask-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-zr-gasmask-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-zr-gasmask-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-zr-gasmask-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-zr-gasmask-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-zr-gasmask-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-zr-gasmask-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-zr-gasmask-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-zr-gasmask-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-zr-gasmask-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-zr-gasmask-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-zr-gears-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-zr-gears-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-zr-gears-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-zr-gears-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-zr-gears-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-zr-gears-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-zr-gears-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-zr-gears-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-zr-gears-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-zr-gears-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-zr-gears-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-zr-gears-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-zr-gears-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-zr-gears-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-zr-gears-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-zr-gears-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-zr-gears-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-zr-gears-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-zr-gears-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-zr-gears-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-zr-gears-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-zr-bratva-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-zr-bratva-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-zr-bratva-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-zr-bratva-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-zr-bratva-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-zr-bratva-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-zr-bratva-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-zr-bratva-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-zr-bratva-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-zr-bratva-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-zr-bratva-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-zr-bratva-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-zr-bratva-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-zr-bratva-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-zr-bratva-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-zr-bratva-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-zr-bratva-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-zr-bratva-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-zr-bratva-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-zr-bratva-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-zr-bratva-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-zr-totem-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-zr-totem-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-zr-totem-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-zr-totem-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-zr-totem-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-zr-totem-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-zr-totem-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-zr-totem-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-zr-totem-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-zr-totem-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-zr-totem-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-zr-totem-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-zr-totem-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-zr-totem-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-zr-totem-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-zr-totem-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-zr-totem-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-zr-totem-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-zr-totem-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-zr-totem-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-zr-totem-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-zr-kush-b-crown": {
+  "part": "back",
+  "x": 406.0,
+  "y": 42.0,
+  "w": 196.0,
+  "h": 110.0
+ },
+ "tat-zr-kush-b-nape": {
+  "part": "back",
+  "x": 388.0,
+  "y": 105.0,
+  "w": 232.0,
+  "h": 170.0
+ },
+ "tat-zr-kush-b-upper": {
+  "part": "back",
+  "x": 321.0,
+  "y": 254.0,
+  "w": 362.0,
+  "h": 281.0
+ },
+ "tat-zr-kush-b-middle": {
+  "part": "back",
+  "x": 337.0,
+  "y": 514.0,
+  "w": 329.0,
+  "h": 131.0
+ },
+ "tat-zr-kush-b-lower": {
+  "part": "back",
+  "x": 366.0,
+  "y": 630.0,
+  "w": 272.0,
+  "h": 110.0
+ },
+ "tat-zr-kush-b-delt-l": {
+  "part": "back",
+  "x": 226.0,
+  "y": 345.0,
+  "w": 132.0,
+  "h": 133.0
+ },
+ "tat-zr-kush-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 347.0,
+  "w": 127.0,
+  "h": 134.0
+ },
+ "tat-zr-kush-b-triceps-l": {
+  "part": "back",
+  "x": 138.0,
+  "y": 437.0,
+  "w": 175.0,
+  "h": 157.0
+ },
+ "tat-zr-kush-b-triceps-r": {
+  "part": "back",
+  "x": 690.0,
+  "y": 442.0,
+  "w": 170.0,
+  "h": 153.0
+ },
+ "tat-zr-kush-b-elbow-l": {
+  "part": "back",
+  "x": 111.0,
+  "y": 554.0,
+  "w": 92.0,
+  "h": 96.0
+ },
+ "tat-zr-kush-b-elbow-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 548.0,
+  "w": 91.0,
+  "h": 87.0
+ },
+ "tat-zr-kush-b-forearm-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 597.0,
+  "w": 158.0,
+  "h": 169.0
+ },
+ "tat-zr-kush-b-forearm-r": {
+  "part": "back",
+  "x": 709.0,
+  "y": 601.0,
+  "w": 165.0,
+  "h": 166.0
+ },
+ "tat-zr-kush-b-hip-l": {
+  "part": "back",
+  "x": 85.0,
+  "y": 784.0,
+  "w": 143.0,
+  "h": 129.0
+ },
+ "tat-zr-kush-b-thigh-l": {
+  "part": "back",
+  "x": 157.0,
+  "y": 758.0,
+  "w": 129.0,
+  "h": 168.0
+ },
+ "tat-zr-kush-b-thigh-r": {
+  "part": "back",
+  "x": 717.0,
+  "y": 760.0,
+  "w": 150.0,
+  "h": 167.0
+ },
+ "tat-zr-kush-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 791.0,
+  "w": 123.0,
+  "h": 114.0
+ },
+ "tat-zr-kush-b-calf-l": {
+  "part": "back",
+  "x": 103.0,
+  "y": 897.0,
+  "w": 245.0,
+  "h": 301.0
+ },
+ "tat-zr-kush-b-calf-r": {
+  "part": "back",
+  "x": 664.0,
+  "y": 892.0,
+  "w": 240.0,
+  "h": 292.0
+ },
+ "tat-zr-kush-b-foot-l": {
+  "part": "back",
+  "x": 137.0,
+  "y": 1181.0,
+  "w": 234.0,
+  "h": 103.0
+ },
+ "tat-zr-kush-b-foot-r": {
+  "part": "back",
+  "x": 633.0,
+  "y": 1166.0,
+  "w": 240.0,
+  "h": 113.0
+ },
+ "tat-zr-sakura-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-zr-sakura-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-zr-sakura-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-zr-sakura-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-zr-sakura-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-zr-sakura-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-zr-sakura-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-zr-sakura-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-zr-sakura-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-zr-sakura-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-zr-sakura-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-zr-sakura-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-zr-sakura-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-zr-sakura-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-zr-sakura-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-zr-sakura-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-zr-sakura-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-zr-sakura-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-zr-sakura-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-zr-sakura-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-zr-sakura-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-zr-ghost-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-zr-ghost-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-zr-ghost-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-zr-ghost-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-zr-ghost-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-zr-ghost-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-zr-ghost-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-zr-ghost-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-zr-ghost-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-zr-ghost-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-zr-ghost-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-zr-ghost-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-zr-ghost-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-zr-ghost-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-zr-ghost-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-zr-ghost-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-zr-ghost-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-zr-ghost-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-zr-ghost-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-zr-ghost-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-zr-ghost-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-zr-wings-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-zr-wings-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-zr-wings-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-zr-wings-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-zr-wings-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-zr-wings-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-zr-wings-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-zr-wings-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-zr-wings-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-zr-wings-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-zr-wings-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-zr-wings-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-zr-wings-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-zr-wings-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-zr-wings-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-zr-wings-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-zr-wings-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-zr-wings-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-zr-wings-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-zr-wings-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-zr-wings-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-zr-crest-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-zr-crest-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-zr-crest-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-zr-crest-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-zr-crest-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-zr-crest-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-zr-crest-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-zr-crest-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-zr-crest-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-zr-crest-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-zr-crest-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-zr-crest-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-zr-crest-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-zr-crest-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-zr-crest-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-zr-crest-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-zr-crest-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-zr-crest-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-zr-crest-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-zr-crest-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-zr-crest-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-zr-katana-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-zr-katana-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-zr-katana-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-zr-katana-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-zr-katana-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-zr-katana-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-zr-katana-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-zr-katana-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-zr-katana-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-zr-katana-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-zr-katana-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-zr-katana-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-zr-katana-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-zr-katana-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-zr-katana-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-zr-katana-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-zr-katana-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-zr-katana-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-zr-katana-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-zr-katana-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-zr-katana-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-zr-clock-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-zr-clock-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-zr-clock-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-zr-clock-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-zr-clock-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-zr-clock-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-zr-clock-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-zr-clock-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-zr-clock-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-zr-clock-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-zr-clock-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-zr-clock-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-zr-clock-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-zr-clock-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-zr-clock-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-zr-clock-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-zr-clock-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-zr-clock-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-zr-clock-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-zr-clock-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-zr-clock-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-zr-amphora-b-crown": {
+  "part": "back",
+  "x": 407.0,
+  "y": 40.0,
+  "w": 192.0,
+  "h": 110.0
+ },
+ "tat-zr-amphora-b-nape": {
+  "part": "back",
+  "x": 387.0,
+  "y": 105.0,
+  "w": 232.0,
+  "h": 171.0
+ },
+ "tat-zr-amphora-b-upper": {
+  "part": "back",
+  "x": 321.0,
+  "y": 254.0,
+  "w": 362.0,
+  "h": 281.0
+ },
+ "tat-zr-amphora-b-middle": {
+  "part": "back",
+  "x": 342.0,
+  "y": 514.0,
+  "w": 324.0,
+  "h": 131.0
+ },
+ "tat-zr-amphora-b-lower": {
+  "part": "back",
+  "x": 366.0,
+  "y": 630.0,
+  "w": 272.0,
+  "h": 110.0
+ },
+ "tat-zr-amphora-b-delt-l": {
+  "part": "back",
+  "x": 226.0,
+  "y": 344.0,
+  "w": 132.0,
+  "h": 134.0
+ },
+ "tat-zr-amphora-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 346.0,
+  "w": 127.0,
+  "h": 135.0
+ },
+ "tat-zr-amphora-b-triceps-l": {
+  "part": "back",
+  "x": 141.0,
+  "y": 437.0,
+  "w": 172.0,
+  "h": 157.0
+ },
+ "tat-zr-amphora-b-triceps-r": {
+  "part": "back",
+  "x": 690.0,
+  "y": 442.0,
+  "w": 170.0,
+  "h": 154.0
+ },
+ "tat-zr-amphora-b-elbow-l": {
+  "part": "back",
+  "x": 111.0,
+  "y": 555.0,
+  "w": 93.0,
+  "h": 96.0
+ },
+ "tat-zr-amphora-b-elbow-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 548.0,
+  "w": 93.0,
+  "h": 87.0
+ },
+ "tat-zr-amphora-b-forearm-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 597.0,
+  "w": 158.0,
+  "h": 169.0
+ },
+ "tat-zr-amphora-b-forearm-r": {
+  "part": "back",
+  "x": 709.0,
+  "y": 601.0,
+  "w": 165.0,
+  "h": 166.0
+ },
+ "tat-zr-amphora-b-hip-l": {
+  "part": "back",
+  "x": 86.0,
+  "y": 779.0,
+  "w": 142.0,
+  "h": 134.0
+ },
+ "tat-zr-amphora-b-thigh-l": {
+  "part": "back",
+  "x": 144.0,
+  "y": 758.0,
+  "w": 142.0,
+  "h": 168.0
+ },
+ "tat-zr-amphora-b-thigh-r": {
+  "part": "back",
+  "x": 717.0,
+  "y": 759.0,
+  "w": 162.0,
+  "h": 168.0
+ },
+ "tat-zr-amphora-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 789.0,
+  "w": 123.0,
+  "h": 116.0
+ },
+ "tat-zr-amphora-b-calf-l": {
+  "part": "back",
+  "x": 104.0,
+  "y": 897.0,
+  "w": 244.0,
+  "h": 301.0
+ },
+ "tat-zr-amphora-b-calf-r": {
+  "part": "back",
+  "x": 669.0,
+  "y": 892.0,
+  "w": 235.0,
+  "h": 287.0
+ },
+ "tat-zr-amphora-b-foot-l": {
+  "part": "back",
+  "x": 138.0,
+  "y": 1180.0,
+  "w": 233.0,
+  "h": 104.0
+ },
+ "tat-zr-amphora-b-foot-r": {
+  "part": "back",
+  "x": 633.0,
+  "y": 1166.0,
+  "w": 240.0,
+  "h": 113.0
+ },
+ "tat-zr-abyss-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-zr-abyss-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-zr-abyss-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-zr-abyss-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-zr-abyss-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-zr-abyss-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-zr-abyss-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-zr-abyss-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-zr-abyss-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-zr-abyss-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-zr-abyss-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-zr-abyss-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-zr-abyss-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-zr-abyss-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-zr-abyss-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-zr-abyss-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-zr-abyss-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-zr-abyss-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-zr-abyss-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-zr-abyss-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-zr-abyss-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-zr-anchor-b-crown": {
+  "part": "back",
+  "x": 402.0,
+  "y": 38.0,
+  "w": 200.0,
+  "h": 114.0
+ },
+ "tat-zr-anchor-b-nape": {
+  "part": "back",
+  "x": 380.0,
+  "y": 105.0,
+  "w": 246.0,
+  "h": 171.0
+ },
+ "tat-zr-anchor-b-upper": {
+  "part": "back",
+  "x": 325.0,
+  "y": 254.0,
+  "w": 358.0,
+  "h": 281.0
+ },
+ "tat-zr-anchor-b-middle": {
+  "part": "back",
+  "x": 337.0,
+  "y": 514.0,
+  "w": 329.0,
+  "h": 131.0
+ },
+ "tat-zr-anchor-b-lower": {
+  "part": "back",
+  "x": 366.0,
+  "y": 630.0,
+  "w": 272.0,
+  "h": 110.0
+ },
+ "tat-zr-anchor-b-delt-l": {
+  "part": "back",
+  "x": 226.0,
+  "y": 345.0,
+  "w": 132.0,
+  "h": 133.0
+ },
+ "tat-zr-anchor-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 346.0,
+  "w": 127.0,
+  "h": 135.0
+ },
+ "tat-zr-anchor-b-triceps-l": {
+  "part": "back",
+  "x": 141.0,
+  "y": 438.0,
+  "w": 171.0,
+  "h": 156.0
+ },
+ "tat-zr-anchor-b-triceps-r": {
+  "part": "back",
+  "x": 690.0,
+  "y": 443.0,
+  "w": 170.0,
+  "h": 152.0
+ },
+ "tat-zr-anchor-b-elbow-l": {
+  "part": "back",
+  "x": 112.0,
+  "y": 554.0,
+  "w": 92.0,
+  "h": 95.0
+ },
+ "tat-zr-anchor-b-elbow-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 548.0,
+  "w": 93.0,
+  "h": 87.0
+ },
+ "tat-zr-anchor-b-forearm-l": {
+  "part": "back",
+  "x": 137.0,
+  "y": 597.0,
+  "w": 157.0,
+  "h": 169.0
+ },
+ "tat-zr-anchor-b-forearm-r": {
+  "part": "back",
+  "x": 709.0,
+  "y": 601.0,
+  "w": 165.0,
+  "h": 166.0
+ },
+ "tat-zr-anchor-b-hip-l": {
+  "part": "back",
+  "x": 85.0,
+  "y": 777.0,
+  "w": 143.0,
+  "h": 136.0
+ },
+ "tat-zr-anchor-b-thigh-l": {
+  "part": "back",
+  "x": 140.0,
+  "y": 758.0,
+  "w": 145.0,
+  "h": 167.0
+ },
+ "tat-zr-anchor-b-thigh-r": {
+  "part": "back",
+  "x": 718.0,
+  "y": 760.0,
+  "w": 161.0,
+  "h": 165.0
+ },
+ "tat-zr-anchor-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 789.0,
+  "w": 123.0,
+  "h": 116.0
+ },
+ "tat-zr-anchor-b-calf-l": {
+  "part": "back",
+  "x": 103.0,
+  "y": 897.0,
+  "w": 245.0,
+  "h": 301.0
+ },
+ "tat-zr-anchor-b-calf-r": {
+  "part": "back",
+  "x": 661.0,
+  "y": 892.0,
+  "w": 243.0,
+  "h": 293.0
+ },
+ "tat-zr-anchor-b-foot-l": {
+  "part": "back",
+  "x": 139.0,
+  "y": 1180.0,
+  "w": 230.0,
+  "h": 104.0
+ },
+ "tat-zr-anchor-b-foot-r": {
+  "part": "back",
+  "x": 636.0,
+  "y": 1166.0,
+  "w": 235.0,
+  "h": 109.0
+ },
+ "tat-zr-plague-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-zr-plague-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-zr-plague-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-zr-plague-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-zr-plague-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-zr-plague-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-zr-plague-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-zr-plague-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-zr-plague-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-zr-plague-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-zr-plague-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-zr-plague-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-zr-plague-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-zr-plague-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-zr-plague-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-zr-plague-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-zr-plague-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-zr-plague-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-zr-plague-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-zr-plague-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-zr-plague-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-zr-jaguar-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-zr-jaguar-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-zr-jaguar-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-zr-jaguar-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-zr-jaguar-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-zr-jaguar-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-zr-jaguar-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-zr-jaguar-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-zr-jaguar-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-zr-jaguar-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-zr-jaguar-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-zr-jaguar-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-zr-jaguar-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-zr-jaguar-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-zr-jaguar-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-zr-jaguar-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-zr-jaguar-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-zr-jaguar-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-zr-jaguar-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-zr-jaguar-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-zr-jaguar-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-zr-peak-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-zr-peak-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-zr-peak-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-zr-peak-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-zr-peak-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-zr-peak-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-zr-peak-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-zr-peak-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-zr-peak-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-zr-peak-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-zr-peak-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-zr-peak-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-zr-peak-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-zr-peak-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-zr-peak-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-zr-peak-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-zr-peak-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-zr-peak-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-zr-peak-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-zr-peak-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-zr-peak-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-zr-chronicle-b-crown": {
+  "part": "back",
+  "x": 400.0,
+  "y": 39.0,
+  "w": 202.0,
+  "h": 113.0
+ },
+ "tat-zr-chronicle-b-nape": {
+  "part": "back",
+  "x": 389.0,
+  "y": 105.0,
+  "w": 224.0,
+  "h": 171.0
+ },
+ "tat-zr-chronicle-b-upper": {
+  "part": "back",
+  "x": 321.0,
+  "y": 254.0,
+  "w": 362.0,
+  "h": 281.0
+ },
+ "tat-zr-chronicle-b-middle": {
+  "part": "back",
+  "x": 337.0,
+  "y": 514.0,
+  "w": 329.0,
+  "h": 131.0
+ },
+ "tat-zr-chronicle-b-lower": {
+  "part": "back",
+  "x": 366.0,
+  "y": 630.0,
+  "w": 272.0,
+  "h": 110.0
+ },
+ "tat-zr-chronicle-b-delt-l": {
+  "part": "back",
+  "x": 226.0,
+  "y": 345.0,
+  "w": 131.0,
+  "h": 133.0
+ },
+ "tat-zr-chronicle-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 348.0,
+  "w": 127.0,
+  "h": 133.0
+ },
+ "tat-zr-chronicle-b-triceps-l": {
+  "part": "back",
+  "x": 144.0,
+  "y": 436.0,
+  "w": 169.0,
+  "h": 159.0
+ },
+ "tat-zr-chronicle-b-triceps-r": {
+  "part": "back",
+  "x": 691.0,
+  "y": 443.0,
+  "w": 168.0,
+  "h": 153.0
+ },
+ "tat-zr-chronicle-b-elbow-l": {
+  "part": "back",
+  "x": 111.0,
+  "y": 554.0,
+  "w": 93.0,
+  "h": 92.0
+ },
+ "tat-zr-chronicle-b-elbow-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 550.0,
+  "w": 93.0,
+  "h": 84.0
+ },
+ "tat-zr-chronicle-b-forearm-l": {
+  "part": "back",
+  "x": 138.0,
+  "y": 597.0,
+  "w": 156.0,
+  "h": 169.0
+ },
+ "tat-zr-chronicle-b-forearm-r": {
+  "part": "back",
+  "x": 709.0,
+  "y": 601.0,
+  "w": 163.0,
+  "h": 166.0
+ },
+ "tat-zr-chronicle-b-hip-l": {
+  "part": "back",
+  "x": 84.0,
+  "y": 777.0,
+  "w": 144.0,
+  "h": 136.0
+ },
+ "tat-zr-chronicle-b-thigh-l": {
+  "part": "back",
+  "x": 139.0,
+  "y": 758.0,
+  "w": 138.0,
+  "h": 154.0
+ },
+ "tat-zr-chronicle-b-thigh-r": {
+  "part": "back",
+  "x": 727.0,
+  "y": 760.0,
+  "w": 147.0,
+  "h": 152.0
+ },
+ "tat-zr-chronicle-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 789.0,
+  "w": 123.0,
+  "h": 116.0
+ },
+ "tat-zr-chronicle-b-calf-l": {
+  "part": "back",
+  "x": 103.0,
+  "y": 897.0,
+  "w": 246.0,
+  "h": 301.0
+ },
+ "tat-zr-chronicle-b-calf-r": {
+  "part": "back",
+  "x": 663.0,
+  "y": 892.0,
+  "w": 241.0,
+  "h": 289.0
+ },
+ "tat-zr-chronicle-b-foot-l": {
+  "part": "back",
+  "x": 137.0,
+  "y": 1180.0,
+  "w": 234.0,
+  "h": 104.0
+ },
+ "tat-zr-chronicle-b-foot-r": {
+  "part": "back",
+  "x": 634.0,
+  "y": 1166.0,
+  "w": 239.0,
+  "h": 112.0
+ },
+ "tat-zr-fog-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-zr-fog-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-zr-fog-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-zr-fog-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-zr-fog-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-zr-fog-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-zr-fog-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-zr-fog-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-zr-fog-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-zr-fog-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-zr-fog-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-zr-fog-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-zr-fog-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-zr-fog-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-zr-fog-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-zr-fog-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-zr-fog-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-zr-fog-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-zr-fog-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-zr-fog-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-zr-fog-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-zr-corsair-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-zr-corsair-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-zr-corsair-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-zr-corsair-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-zr-corsair-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-zr-corsair-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-zr-corsair-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-zr-corsair-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-zr-corsair-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-zr-corsair-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-zr-corsair-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-zr-corsair-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-zr-corsair-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-zr-corsair-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-zr-corsair-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-zr-corsair-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-zr-corsair-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-zr-corsair-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-zr-corsair-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-zr-corsair-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-zr-corsair-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-zr-heaven-b-crown": {
+  "part": "back",
+  "x": 406.0,
+  "y": 43.0,
+  "w": 193.0,
+  "h": 106.0
+ },
+ "tat-zr-heaven-b-nape": {
+  "part": "back",
+  "x": 383.0,
+  "y": 113.0,
+  "w": 239.0,
+  "h": 160.0
+ },
+ "tat-zr-heaven-b-upper": {
+  "part": "back",
+  "x": 321.0,
+  "y": 254.0,
+  "w": 361.0,
+  "h": 280.0
+ },
+ "tat-zr-heaven-b-middle": {
+  "part": "back",
+  "x": 337.0,
+  "y": 514.0,
+  "w": 329.0,
+  "h": 131.0
+ },
+ "tat-zr-heaven-b-lower": {
+  "part": "back",
+  "x": 366.0,
+  "y": 630.0,
+  "w": 272.0,
+  "h": 110.0
+ },
+ "tat-zr-heaven-b-delt-l": {
+  "part": "back",
+  "x": 228.0,
+  "y": 345.0,
+  "w": 130.0,
+  "h": 133.0
+ },
+ "tat-zr-heaven-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 347.0,
+  "w": 127.0,
+  "h": 134.0
+ },
+ "tat-zr-heaven-b-triceps-l": {
+  "part": "back",
+  "x": 142.0,
+  "y": 439.0,
+  "w": 170.0,
+  "h": 151.0
+ },
+ "tat-zr-heaven-b-triceps-r": {
+  "part": "back",
+  "x": 690.0,
+  "y": 442.0,
+  "w": 170.0,
+  "h": 153.0
+ },
+ "tat-zr-heaven-b-elbow-l": {
+  "part": "back",
+  "x": 113.0,
+  "y": 555.0,
+  "w": 91.0,
+  "h": 95.0
+ },
+ "tat-zr-heaven-b-elbow-r": {
+  "part": "back",
+  "x": 799.0,
+  "y": 548.0,
+  "w": 92.0,
+  "h": 87.0
+ },
+ "tat-zr-heaven-b-forearm-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 597.0,
+  "w": 158.0,
+  "h": 169.0
+ },
+ "tat-zr-heaven-b-forearm-r": {
+  "part": "back",
+  "x": 709.0,
+  "y": 601.0,
+  "w": 165.0,
+  "h": 166.0
+ },
+ "tat-zr-heaven-b-hip-l": {
+  "part": "back",
+  "x": 86.0,
+  "y": 780.0,
+  "w": 142.0,
+  "h": 133.0
+ },
+ "tat-zr-heaven-b-thigh-l": {
+  "part": "back",
+  "x": 147.0,
+  "y": 758.0,
+  "w": 139.0,
+  "h": 168.0
+ },
+ "tat-zr-heaven-b-thigh-r": {
+  "part": "back",
+  "x": 717.0,
+  "y": 760.0,
+  "w": 162.0,
+  "h": 167.0
+ },
+ "tat-zr-heaven-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 789.0,
+  "w": 123.0,
+  "h": 116.0
+ },
+ "tat-zr-heaven-b-calf-l": {
+  "part": "back",
+  "x": 103.0,
+  "y": 897.0,
+  "w": 239.0,
+  "h": 301.0
+ },
+ "tat-zr-heaven-b-calf-r": {
+  "part": "back",
+  "x": 672.0,
+  "y": 892.0,
+  "w": 232.0,
+  "h": 289.0
+ },
+ "tat-zr-heaven-b-foot-l": {
+  "part": "back",
+  "x": 140.0,
+  "y": 1180.0,
+  "w": 223.0,
+  "h": 100.0
+ },
+ "tat-zr-heaven-b-foot-r": {
+  "part": "back",
+  "x": 643.0,
+  "y": 1166.0,
+  "w": 220.0,
+  "h": 111.0
+ },
+ "tat-zr-grin-b-crown": {
+  "part": "back",
+  "x": 395.0,
+  "y": 34.0,
+  "w": 212.0,
+  "h": 122.0
+ },
+ "tat-zr-grin-b-nape": {
+  "part": "back",
+  "x": 374.0,
+  "y": 105.0,
+  "w": 257.0,
+  "h": 175.0
+ },
+ "tat-zr-grin-b-upper": {
+  "part": "back",
+  "x": 318.0,
+  "y": 254.0,
+  "w": 367.0,
+  "h": 281.0
+ },
+ "tat-zr-grin-b-middle": {
+  "part": "back",
+  "x": 332.0,
+  "y": 513.0,
+  "w": 339.0,
+  "h": 132.0
+ },
+ "tat-zr-grin-b-lower": {
+  "part": "back",
+  "x": 359.0,
+  "y": 629.0,
+  "w": 286.0,
+  "h": 114.0
+ },
+ "tat-zr-grin-b-delt-l": {
+  "part": "back",
+  "x": 222.0,
+  "y": 339.0,
+  "w": 136.0,
+  "h": 140.0
+ },
+ "tat-zr-grin-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 342.0,
+  "w": 131.0,
+  "h": 140.0
+ },
+ "tat-zr-grin-b-triceps-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 432.0,
+  "w": 183.0,
+  "h": 165.0
+ },
+ "tat-zr-grin-b-triceps-r": {
+  "part": "back",
+  "x": 685.0,
+  "y": 439.0,
+  "w": 180.0,
+  "h": 160.0
+ },
+ "tat-zr-grin-b-elbow-l": {
+  "part": "back",
+  "x": 106.0,
+  "y": 552.0,
+  "w": 101.0,
+  "h": 103.0
+ },
+ "tat-zr-grin-b-elbow-r": {
+  "part": "back",
+  "x": 795.0,
+  "y": 546.0,
+  "w": 100.0,
+  "h": 90.0
+ },
+ "tat-zr-grin-b-forearm-l": {
+  "part": "back",
+  "x": 134.0,
+  "y": 597.0,
+  "w": 168.0,
+  "h": 172.0
+ },
+ "tat-zr-grin-b-forearm-r": {
+  "part": "back",
+  "x": 702.0,
+  "y": 599.0,
+  "w": 177.0,
+  "h": 171.0
+ },
+ "tat-zr-grin-b-hip-l": {
+  "part": "back",
+  "x": 79.0,
+  "y": 775.0,
+  "w": 151.0,
+  "h": 138.0
+ },
+ "tat-zr-grin-b-thigh-l": {
+  "part": "back",
+  "x": 133.0,
+  "y": 757.0,
+  "w": 164.0,
+  "h": 176.0
+ },
+ "tat-zr-grin-b-thigh-r": {
+  "part": "back",
+  "x": 706.0,
+  "y": 758.0,
+  "w": 178.0,
+  "h": 176.0
+ },
+ "tat-zr-grin-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 787.0,
+  "w": 128.0,
+  "h": 118.0
+ },
+ "tat-zr-grin-b-calf-l": {
+  "part": "back",
+  "x": 97.0,
+  "y": 895.0,
+  "w": 257.0,
+  "h": 303.0
+ },
+ "tat-zr-grin-b-calf-r": {
+  "part": "back",
+  "x": 647.0,
+  "y": 892.0,
+  "w": 263.0,
+  "h": 299.0
+ },
+ "tat-zr-grin-b-foot-l": {
+  "part": "back",
+  "x": 131.0,
+  "y": 1178.0,
+  "w": 245.0,
+  "h": 111.0
+ },
+ "tat-zr-grin-b-foot-r": {
+  "part": "back",
+  "x": 627.0,
+  "y": 1166.0,
+  "w": 252.0,
+  "h": 118.0
+ },
+ "tat-zr-ball-b-crown": {
+  "part": "back",
+  "x": 405.0,
+  "y": 41.0,
+  "w": 193.0,
+  "h": 108.0
+ },
+ "tat-zr-ball-b-nape": {
+  "part": "back",
+  "x": 389.0,
+  "y": 105.0,
+  "w": 225.0,
+  "h": 171.0
+ },
+ "tat-zr-ball-b-upper": {
+  "part": "back",
+  "x": 326.0,
+  "y": 254.0,
+  "w": 353.0,
+  "h": 281.0
+ },
+ "tat-zr-ball-b-middle": {
+  "part": "back",
+  "x": 341.0,
+  "y": 515.0,
+  "w": 322.0,
+  "h": 130.0
+ },
+ "tat-zr-ball-b-lower": {
+  "part": "back",
+  "x": 369.0,
+  "y": 630.0,
+  "w": 267.0,
+  "h": 109.0
+ },
+ "tat-zr-ball-b-delt-l": {
+  "part": "back",
+  "x": 227.0,
+  "y": 344.0,
+  "w": 130.0,
+  "h": 132.0
+ },
+ "tat-zr-ball-b-delt-r": {
+  "part": "back",
+  "x": 654.0,
+  "y": 346.0,
+  "w": 127.0,
+  "h": 135.0
+ },
+ "tat-zr-ball-b-triceps-l": {
+  "part": "back",
+  "x": 138.0,
+  "y": 439.0,
+  "w": 164.0,
+  "h": 155.0
+ },
+ "tat-zr-ball-b-triceps-r": {
+  "part": "back",
+  "x": 704.0,
+  "y": 442.0,
+  "w": 156.0,
+  "h": 151.0
+ },
+ "tat-zr-ball-b-elbow-l": {
+  "part": "back",
+  "x": 112.0,
+  "y": 554.0,
+  "w": 92.0,
+  "h": 95.0
+ },
+ "tat-zr-ball-b-elbow-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 548.0,
+  "w": 92.0,
+  "h": 87.0
+ },
+ "tat-zr-ball-b-forearm-l": {
+  "part": "back",
+  "x": 136.0,
+  "y": 598.0,
+  "w": 156.0,
+  "h": 166.0
+ },
+ "tat-zr-ball-b-forearm-r": {
+  "part": "back",
+  "x": 712.0,
+  "y": 604.0,
+  "w": 162.0,
+  "h": 161.0
+ },
+ "tat-zr-ball-b-hip-l": {
+  "part": "back",
+  "x": 87.0,
+  "y": 779.0,
+  "w": 140.0,
+  "h": 134.0
+ },
+ "tat-zr-ball-b-thigh-l": {
+  "part": "back",
+  "x": 144.0,
+  "y": 759.0,
+  "w": 138.0,
+  "h": 166.0
+ },
+ "tat-zr-ball-b-thigh-r": {
+  "part": "back",
+  "x": 723.0,
+  "y": 763.0,
+  "w": 154.0,
+  "h": 162.0
+ },
+ "tat-zr-ball-b-hip-r": {
+  "part": "back",
+  "x": 798.0,
+  "y": 789.0,
+  "w": 123.0,
+  "h": 115.0
+ },
+ "tat-zr-ball-b-calf-l": {
+  "part": "back",
+  "x": 103.0,
+  "y": 897.0,
+  "w": 238.0,
+  "h": 301.0
+ },
+ "tat-zr-ball-b-calf-r": {
+  "part": "back",
+  "x": 663.0,
+  "y": 892.0,
+  "w": 239.0,
+  "h": 293.0
+ },
+ "tat-zr-ball-b-foot-l": {
+  "part": "back",
+  "x": 159.0,
+  "y": 1181.0,
+  "w": 204.0,
+  "h": 95.0
+ },
+ "tat-zr-ball-b-foot-r": {
+  "part": "back",
+  "x": 638.0,
+  "y": 1166.0,
+  "w": 233.0,
+  "h": 108.0
  }
 };

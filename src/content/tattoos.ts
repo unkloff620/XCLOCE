@@ -52,7 +52,7 @@ const ZONES: [string, string, string][] = [
 ];
 /**
  * The back (the user 2026-11-26, the artist's back rig tools/rig/source/tattoo/_back/zones): 21 more places, seen when the
- * hero turns round in the wardrobe. A set drawn on the back too (BACK_SETS, its back-ink.png) has 42 pieces; the set's
+ * hero turns round in the wardrobe. Every set is drawn on the back too (tools/rig/source/tattoo/<set>/back-ink.png, the user 2026-11-26): 42 pieces; the set's
  * bonus asks for all 42 (the user 2026-11-26).
  */
 const BACK_ZONES: [string, string, string][] = [
@@ -62,8 +62,6 @@ const BACK_ZONES: [string, string, string][] = [
   ["b-hip-l", "левый бок бедра", "BACK"], ["b-thigh-l", "левое бедро сзади", "BACK"], ["b-thigh-r", "правое бедро сзади", "BACK"], ["b-hip-r", "правый бок бедра", "BACK"],
   ["b-calf-l", "левая икра", "BACK"], ["b-calf-r", "правая икра", "BACK"], ["b-foot-l", "левая пятка", "BACK"], ["b-foot-r", "правая пятка", "BACK"],
 ];
-/** the sets drawn on the back too (tools/rig/source/tattoo/<set>/back-ink.png) */
-const BACK_SETS = new Set(["igla", "kuznya"]);
 /** the back's places, in the editor's order */
 export const TATTOO_BACK_ZONES = BACK_ZONES.map(([z]) => z);
 export const isBackTattoo = (id: string) => BACK_ZONES.some(([z]) => id.endsWith(`-${z}`));
@@ -71,7 +69,7 @@ export const isBackTattoo = (id: string) => BACK_ZONES.some(([z]) => id.endsWith
 export const TATTOO_ZONE_NAME: Record<string, string> = Object.fromEntries([...ZONES, ...BACK_ZONES].map(([z, place]) => [z, place]));
 const solid = (id: string, name: string, boss: string, mode: TattooSet["mode"], weapon: string, damage: number): TattooSet => ({
   id, name, boss, mode, bonus: { weapon, damage },
-  pieces: [...ZONES, ...(BACK_SETS.has(id) ? BACK_ZONES : [])].map(([z, place, part]) => ({ id: `tat-${id}-${z}`, name: `${name}: ${place}`, part })),
+  pieces: [...ZONES, ...BACK_ZONES].map(([z, place, part]) => ({ id: `tat-${id}-${z}`, name: `${name}: ${place}`, part })),
 });
 /** the pieces a set's bonus asks for: every piece, the back's too (42 in a set with a back) */
 export const bonusPieces = (s: TattooSet) => s.pieces;

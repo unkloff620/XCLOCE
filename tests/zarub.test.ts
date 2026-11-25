@@ -24,7 +24,7 @@ describe("«Зарубы»", () => {
     expect(zarubTasks("blat", "7")).toHaveLength(8);
     expect(new Set(zarubTasks("blat", "7").map((t) => t.kind)).size).toBe(8);
     expect(Object.values(ZARUB_SETS).flatMap((m) => m.sets)).toHaveLength(27);
-    expect(TATTOO_SETS.filter((s) => s.boss === "zarub").every((s) => s.pieces.length === 21)).toBe(true);
+    expect(TATTOO_SETS.filter((s) => s.boss === "zarub").every((s) => s.pieces.length === 42)).toBe(true);
   });
 
   it("a race: 4 bots, the tasks count, all 8 closed — first place, its rings, the nuggets, the опыт", async () => {
