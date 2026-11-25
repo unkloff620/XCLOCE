@@ -53,7 +53,7 @@ const ZONES: [string, string, string][] = [
 /**
  * The back (the user 2026-11-26, the artist's back rig tools/rig/source/tattoo/_back/zones): 21 more places, seen when the
  * hero turns round in the wardrobe. A set drawn on the back too (BACK_SETS, its back-ink.png) has 42 pieces; the set's
- * bonus still asks only for the front 21 (nobody loses a bonus he already has).
+ * bonus asks for all 42 (the user 2026-11-26).
  */
 const BACK_ZONES: [string, string, string][] = [
   ["b-crown", "затылок", "BACK"], ["b-nape", "загривок", "BACK"], ["b-upper", "лопатки", "BACK"], ["b-middle", "середина спины", "BACK"], ["b-lower", "поясница", "BACK"],
@@ -73,8 +73,8 @@ const solid = (id: string, name: string, boss: string, mode: TattooSet["mode"], 
   id, name, boss, mode, bonus: { weapon, damage },
   pieces: [...ZONES, ...(BACK_SETS.has(id) ? BACK_ZONES : [])].map(([z, place, part]) => ({ id: `tat-${id}-${z}`, name: `${name}: ${place}`, part })),
 });
-/** the pieces a set's bonus asks for: the front 21 */
-export const bonusPieces = (s: TattooSet) => s.pieces.filter((p) => p.part !== "BACK");
+/** the pieces a set's bonus asks for: every piece, the back's too (42 in a set with a back) */
+export const bonusPieces = (s: TattooSet) => s.pieces;
 /** sets from «Ящик ништяков» (boss "box"): a box opened for achievement points drops a piece with BOX_TATTOO_CHANCE */
 export const BOX_TATTOO_CHANCE = 0.2;
 const boxSet = (id: string, name: string, weapon: string, damage: number): TattooSet => ({ ...solid(id, name, "box", "pacan", weapon, damage) });
