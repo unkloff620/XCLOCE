@@ -1,4 +1,5 @@
 "use client";
+import { NitkaCardSew } from "../art/nitka-card.tsx";
 import { FokusCardCode } from "../art/fokus-screens.tsx";
 import { FIGHT_MODES } from "../../content/medals.ts";
 import Link from "next/link";
@@ -96,6 +97,8 @@ export function BossesScreen() {
           {EVENT_FIGHTS.filter((b) => b.mentor).map((b) => { const mrow = data?.mentors?.find((x) => x.id === b.id); const road = mrow?.road && mrow.road.done < mrow.road.times ? mrow.road : null; return (
             <Link key={b.id} href={eventBossById(b.id)?.href ?? `/bosses/${b.id}`} className={`bcard bcard-boss-${b.id} ${road ? "locked" : ""}`} style={{ ["--i" as string]: 1, ["--acc" as string]: b.theme.accent }}>
               <span className="bcard-n display">Ментор</span>
+              {/* Нитка's card: the needle embroiders his name in the corner */}
+              {b.id === "nitka" && <NitkaCardSew />}
               <div className="bcard-art" aria-hidden="true">
                 {hasBossRig(b.id) ? <BossRig id={b.id} bust hpShare={1} />
                   // eslint-disable-next-line @next/next/no-img-element

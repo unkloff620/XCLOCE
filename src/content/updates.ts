@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-25-nitka-card",
+    date: "25 ноября",
+    title: "Карточка Нитки",
+    items: [
+      { img: "/assets/updates/2026-11-25-nitka-card.webp", text: "У Нитки своя карточка в «Менторах»: джинса в деревянной раме, а иголка сама вышивает на ней «НИТКА»." },
+    ],
+  },
+  {
     id: "2026-11-25-nitka-beaten",
     date: "25 ноября",
     title: "Нитка в крови",
