@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-25-nitka-beaten",
+    date: "25 ноября",
+    title: "Нитка в крови",
+    items: [
+      { img: "/assets/updates/2026-11-25-nitka-beaten.webp", text: "Когда у Нитки меньше половины здоровья, он весь в крови, рубашка порвана, а в голове, груди, руках и ногах торчат иголки. И двигается медленнее." },
+    ],
+  },
+  {
     id: "2026-11-25-nitka",
     date: "25 ноября",
     title: "Новый ментор — Нитка",

@@ -8,7 +8,9 @@
  * the mouth opens on a stab (--jaw: the chin and the lower teeth drop — the artist's «Shift + 3 × ↓», 7.2 rig px), the
  * brows frown (--brw), the cross-eyed pupils look about together (--px, --py), the lids blink; the glasses jump on the
  * nose with a quick move (--gb, a loose spring) and wobble (.nt-glasses-j). Every stab splashes blood off the needle's
- * point (the classes nt-stab-r / nt-stab-l, useNeedleBlood). Below half HP the needles are bloody (the artist's copies).
+ * point (the classes nt-stab-r / nt-stab-l, useNeedleBlood). Below half HP the needles are bloody (the artist's copies),
+ * he is beaten — blood, cuts, the shirt torn (tools/boss/nitka-blood.py) — and six needles stick in him (the user's
+ * bloody needle): in his head, his chest, both forearms and both legs.
  */
 import { useEffect, useRef, type CSSProperties, type ReactNode, type RefObject } from "react";
 
@@ -25,6 +27,22 @@ const TIP = { r: [137, 366.5], l: [580.5, 414] } as const;
 const HEM = [370, 560] as const;
 /** the waist: the upper body leans and bends round it */
 const WAIST = [370, 640] as const;
+/** the parts drawn bloody below half HP (tools/boss/nitka-blood.py), and their pictures' version */
+const BLOODY = new Set(["legs", "armR", "body", "shirtR", "shirtL", "armL", "lowR", "lowL", "chin", "head"]);
+const BLOOD_V = 2;
+/** the stuck needle (the user's bloody needle, raw/needle-blood.png → needle-stuck.webp, 148×172): its eye end and
+ *  where it goes in (the splash of blood there) */
+const NEEDLE = { w: 148, h: 172, end: [141, 4], entry: [33, 151] } as const;
+/** where the needles stick in him below half HP (rig units: where it goes in, where its eye ends; mirrored — the
+ *  picture flipped, for those leaning to the left) */
+const STUCK = {
+  head: { entry: [409, 62], end: [466, 4], mirror: false },
+  chest: { entry: [352, 545], end: [280, 484], mirror: true },
+  foreR: { entry: [116, 412], end: [28, 377], mirror: true },
+  foreL: { entry: [596, 432], end: [679, 386], mirror: false },
+  thigh: { entry: [232, 925], end: [158, 865], mirror: true },
+  shin: { entry: [560, 1092], end: [635, 1033], mirror: false },
+} as const;
 
 export function NitkaRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, puppet, viewBox }: {
   id: string; look: string; rig: Rig; bust: boolean; dazed: boolean; dying: boolean; svgRef: RefObject<SVGSVGElement | null>; wrapRef: RefObject<HTMLDivElement | null>; puppet: boolean; viewBox: string;
@@ -36,7 +54,24 @@ export function NitkaRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
   useNeedleBlood(svgRef, handR, handL, blood, !bust);
   // below half HP: the fists with the bloody needles (the artist's own copies)
   const hand = (p: "handR" | "handL") => (dazed && !bust && P[`${p}-blood`] ? `${p}-blood` : p);
-  const src = (p: string) => `/bosses/${id}/rig/${p}.webp${P[p]?.v ? `?v=${P[p].v}` : ""}`;
+  const beaten = dazed && !bust;
+  const src = (p: string) => beaten && BLOODY.has(p) ? `/bosses/${id}/rig/${p}-blood.webp?v=${BLOOD_V}` : `/bosses/${id}/rig/${p}.webp${P[p]?.v ? `?v=${P[p].v}` : ""}`;
+  // a needle stuck in him: the picture turned and scaled so it goes in at `entry` and its eye ends at `end` (pp: drawn
+  // by the puppet on that canvas — the forearms' needles must lie over the forearms)
+  const needle = (k: keyof typeof STUCK, pp?: "front") => {
+    if (!beaten) return null;
+    const { entry, end, mirror } = STUCK[k];
+    const sx = mirror ? -1 : 1;
+    const nat = Math.atan2(NEEDLE.entry[1] - NEEDLE.end[1], (NEEDLE.entry[0] - NEEDLE.end[0]) * sx);
+    const want = Math.atan2(entry[1] - end[1], entry[0] - end[0]);
+    const sc = Math.hypot(entry[0] - end[0], entry[1] - end[1]) / Math.hypot(NEEDLE.entry[0] - NEEDLE.end[0], NEEDLE.entry[1] - NEEDLE.end[1]);
+    const on = puppet && pp;
+    return (
+      <g key={k} className={`nt-stuck nt-stuck-${k}`} transform={`translate(${entry[0]} ${entry[1]}) rotate(${((want - nat) * 180 / Math.PI).toFixed(2)}) scale(${(sc * sx).toFixed(4)} ${sc.toFixed(4)}) translate(${-NEEDLE.entry[0]} ${-NEEDLE.entry[1]})`}>
+        <image className={on ? "pp" : undefined} data-pp={on ? pp : undefined} href={`/bosses/${id}/rig/needle-stuck.webp`} x={0} y={0} width={NEEDLE.w} height={NEEDLE.h} preserveAspectRatio="none" />
+      </g>
+    );
+  };
   const pic = (p: string, pp?: "back" | "front") => {
     const r = P[p];
     if (!r) return null;
@@ -84,6 +119,8 @@ export function NitkaRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
           <g className="nt-hem" style={at(HEM[0], HEM[1])} />
           {shirt("shirtR")}
           {shirt("shirtL")}
+          {/* beaten: needles in his chest and his legs (the legs go with the upper body: only the feet are fixed) */}
+          {needle("chest")}{needle("thigh")}{needle("shin")}
           {/* his left upper arm over the shirt, an empty elbow in it */}
           {bone("br-arm br-arm-l", "armL", <>{pic("armL", "back")}{bone("br-low br-low-l", "lowL", null, 120)}</>, 130)}
           {/* the face: the mouth inside (the throat, the teeth, the chin that drops), the whites and the pupils under the
@@ -99,14 +136,17 @@ export function NitkaRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
             {pic("head")}
             <g className="nt-brows" style={box("brows", 0.5, 0.5)}>{pic("brows")}</g>
             <g className="nt-glasses" style={box("glasses", 0.5, 0.45)}><g className="nt-glasses-j" style={box("glasses", 0.5, 0.45)}>{pic("glasses")}</g></g>
+            {needle("head")}
           </>, 150)}
           {/* the forearms and the fists with the needles, in front */}
           {bone("br-arm br-arm-r", "armR", bone("br-low br-low-r", "lowR", <>
             {pic("lowR", "front")}
+            {needle("foreR", "front")}
             {bone("br-hand br-hand-r", "handR", pic(hand("handR"), "front"), 80, handR)}
           </>, 120), 130)}
           {bone("br-arm br-arm-l", "armL", bone("br-low br-low-l", "lowL", <>
             {pic("lowL", "front")}
+            {needle("foreL", "front")}
             {bone("br-hand br-hand-l", "handL", pic(hand("handL"), "front"), 80, handL)}
           </>, 120), 130)}
         </g>

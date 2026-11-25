@@ -768,8 +768,8 @@ const POSES: Record<string, Spec> = {
     hit: { head: -300, up: -90, x: -70, y: -60, armL: 110, lowL: -140, armR: -110, lowR: 140, handL: -40, handR: 40, gb: 12, jaw: 6 },
     strike: ntCombo(["R", "b"]),
     // below half: slower and smaller, a shift from foot to foot; below a quarter: a slow lone stab now and then
-    dazed: { pose: { armL: 6, armR: -6, head: 3, jaw: 0.25 }, act: true, sway: ntShift(1.8, 1), actions: [{ a: ntCombo(["r", "L"], 0.7, 1.5), w: 1 }, { a: ntCombo(["l", "R"], 0.7, 1.5), w: 1 }], rest: [3, 5], strike: ntCombo(["B"], 0.7, 1.5), speed: 1 },
-    dying: { pose: { armL: 14, armR: -14, head: 6, up: -2, jaw: 0.4 }, act: true, sway: ntShift(1.2, 1.2), actions: [{ a: ntCombo(["r"], 0.45, 2.2), w: 1 }, { a: ntCombo(["l"], 0.45, 2.2), w: 1 }], rest: [4, 7], strike: ntCombo(["b"], 0.45, 2.2), speed: 1 },
+    dazed: { pose: { armL: 6, armR: -6, head: 3, jaw: 0.25 }, act: true, sway: ntShift(1.8, 1), actions: [{ a: ntCombo(["r", "L"], 0.7, 1.8), w: 1 }, { a: ntCombo(["l", "R"], 0.7, 1.8), w: 1 }], rest: [4, 6], strike: ntCombo(["B"], 0.7, 1.8), speed: 0.65 },
+    dying: { pose: { armL: 14, armR: -14, head: 6, up: -2, jaw: 0.4 }, act: true, sway: ntShift(1.2, 1.2), actions: [{ a: ntCombo(["r"], 0.45, 2.2), w: 1 }, { a: ntCombo(["l"], 0.45, 2.2), w: 1 }], rest: [5, 8], strike: ntCombo(["b"], 0.45, 2.4), speed: 0.5 },
     // he breathes hard: the chest swells and the shoulders go up with every breath (the user 2026-11-25)
     breath: (t, dazed) => { const b = 0.5 - 0.5 * Math.cos((t / (dazed ? 1.3 : 1)) * Math.PI * 2); return [1 + 0.016 * b, 1 + 0.036 * b, -5 * b]; },
     // the open shirt's tails: they lag behind his moves and flutter a little
