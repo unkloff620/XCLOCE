@@ -8,7 +8,7 @@ import { usePageReady } from "../route-loader.tsx";
 import { useCallback, useEffect, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { api, type Tray } from "../api.ts";
-import { BOSSES, EVENT_FIGHTS, bossesIn, bossById } from "../../content/bosses.ts";
+import { MENTORS, bossesIn, bossById, prevInClass } from "../../content/bosses.ts";
 import { eventBossById } from "../../content/event-bosses.ts";
 import { Avatar, DropKind, GainLine, MysteryDrop, RewardChips, bossItemsCount } from "../ui.tsx";
 import { WEAPONS } from "../../content/items.ts";
@@ -75,70 +75,9 @@ export function BossesScreen() {
   useEffect(() => {
     void load();
   }, [state?.fight?.id, state?.pending.length, load]);
-  return (
-    <div>
-      <div className="title">
-        <div className="title-row">
-          <h1 className="display">Боссы</h1>
-          <BossRulesHelp topic="bosses" />
-        </div>
-        {data && <span className="small muted">Лимиты обновятся через {clock(data.resetAt - now)}</span>}
-      </div>
-      {/* the kinds of bosses: the admins (all of them for now), the mentors and the brigade ones (soon) */}
-      <div className="tabs boss-tabs" role="tablist">
-        {BOSS_TABS.map((t) => (
-          <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} className={tab === t.id ? "on" : ""} onClick={() => setTab(t.id)}>{t.label}</button>
-        ))}
-      </div>
-      {tab === "mentors" && (
-        // the mentors: Пепе always open, «Пацанский» only; the next ones open after a night run of their location and
-        // are fought in every mode; the card opens his fight page
-        <div className="col" style={{ gap: 12 }}>
-          {EVENT_FIGHTS.filter((b) => b.mentor).map((b) => { const mrow = data?.mentors?.find((x) => x.id === b.id); const road = mrow?.road && mrow.road.done < mrow.road.times ? mrow.road : null; return (
-            <Link key={b.id} href={eventBossById(b.id)?.href ?? `/bosses/${b.id}`} className={`bcard bcard-boss-${b.id} ${road ? "locked" : ""}`} style={{ ["--i" as string]: 1, ["--acc" as string]: b.theme.accent }}>
-              <span className="bcard-n display">Ментор</span>
-              {/* Нитка's card: the needle embroiders his name in the corner */}
-              {b.id === "nitka" && <NitkaCardSew />}
-              <div className="bcard-art" aria-hidden="true">
-                {hasBossRig(b.id) ? <BossRig id={b.id} bust hpShare={1} />
-                  // eslint-disable-next-line @next/next/no-img-element
-                  : <img src={b.photo.portrait ?? undefined} alt="" draggable={false} />}
-              </div>
-              <div className="bcard-main">
-                <div className="bcard-head">
-                  <div className="col" style={{ gap: 1, minWidth: 0 }}>
-                    <b className="bcard-name display ellipsis">{b.name}</b>
-                    <span className="bcard-title ellipsis">{b.modes ? "Все режимы" : "Только «Пацанский»"}</span>
-                  </div>
-                </div>
-                {road ? (
-                  // closed by the road: «Идти» to the location's night page
-                  <div className="bcard-reward bcard-road">
-                    <span className="btn sm gold" role="link" tabIndex={0}
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/locations/${road.loc}${road.night ? "?tab=night" : ""}`); }}>Идти</span>
-                    <span className="bcard-road-what">{road.name.replace(" (ночь)", "")} — ночные{"\u00a0"}({road.times - road.done})</span>
-                  </div>
-                ) : (
-                <div className="bcard-reward">
-                  <span className="bcard-label">Награда:</span>
-                  <GainLine r={{ ...b.reward, items: [{ id: `key-${b.id}`, qty: 1 }] }} size={16} side />
-                </div>
-                )}
-              </div>
-            </Link>
-          ); })}
-        </div>
-      )}
-      {tab === "brigade" && (
-        <div className="panel center boss-soon">
-          <b className="display">Скоро</b>
-          <span className="small muted">{"Бригадные боссы скоро появятся: бьёт вся бригада (клан), урон идёт только от своих."}</span>
-        </div>
-      )}
-      {tab === "admins" && <div className="col" style={{ gap: 12 }}>
-        {bossesIn(data?.bosses.map((x) => x.id) ?? state?.openBosses).map((b) => {
-          const row = data?.bosses.find((x) => x.id === b.id);
-          const prev = BOSSES.find((x) => x.order === b.order - 1);
+  /** a boss's card (the chain and the mentors alike) */
+  function card(b: BossDef, row: BossRow | undefined) {
+          const prev = prevInClass(b);
           const mine = state?.fight?.bossId === b.id ? state.fight : null;
           // until the list has loaded nothing is locked or grey (a slow or failed request on the phone used to grey every boss)
           const locked = row ? !row.unlocked : false;
@@ -149,22 +88,25 @@ export function BossesScreen() {
           const hp = mine ? mine.hp : hpMax;
           const dazed = !!mine && hp / Math.max(1, hpMax) < 0.5;
           return (
-            <Link key={b.id} href={`/bosses/${b.id}`} className={`bcard bcard-boss-${b.id} ${grey ? "locked" : ""} ${b.final ? "final" : ""} ${mine ? "live" : ""} ${dazed ? "dazed" : ""}`}
-              style={{ ["--i" as string]: b.order, ["--acc" as string]: tierColor(b.order) }}>
-              {/* the case number over the boss: «Дело №1», «Дело №2»… (his health is a surprise — not shown in the list) */}
-              <span className="bcard-n display">Дело №{b.order}</span>
+            <Link key={b.id} href={eventBossById(b.id)?.href ?? `/bosses/${b.id}`} className={`bcard bcard-boss-${b.id} ${grey ? "locked" : ""} ${b.final ? "final" : ""} ${mine ? "live" : ""} ${dazed ? "dazed" : ""}`}
+              style={{ ["--i" as string]: b.mentor ? 1 : b.order, ["--acc" as string]: b.mentor ? b.theme.accent : tierColor(b.order) }}>
+              {/* the case number over the boss: «Дело №1», «Дело №2»… (his health is a surprise — not shown in the list);
+                  nothing on the mentors' cards (the user 2026-11-25) */}
+              {!b.mentor && <span className="bcard-n display">Дело №{b.order}</span>}
               {/* a closed card goes grey through this film (not a filter on the card: the «Идти» button stays in colour over it) */}
               {grey && <i className="bcard-grey" aria-hidden="true" />}
               {/* Боцман's card: an emerald glint runs along the frame (its ::before/::after are the rain and the lamps) */}
               {b.id === "botsman" && <i className="bcard-glint" aria-hidden="true" />}
               {/* Фокус's card: the code typing on the screen, the line from him */}
               {b.id === "fokus" && <FokusCardCode />}
+              {/* Нитка's card: the needle embroiders his name in the corner */}
+              {b.id === "nitka" && <NitkaCardSew />}
               {/* the boss stands on the left and fades into the card */}
               <div className="bcard-art" aria-hidden="true">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 {/* the live rig cut to the head and shoulders: the face blinks, looks around and frowns like in the fight */}
                 {hasBossRig(b.id) ? <BossRig id={b.id} bust hpShare={mine ? hp / Math.max(1, hpMax) : 1} />
-                  : (b.photo.card ?? b.photo.full) ? <img src={(b.photo.card ?? b.photo.full)!} alt="" draggable={false} /> : <div className="bcard-sil"><BossSilhouette accent={tierColor(b.order)} /></div>}
+                  : (b.photo.card ?? b.photo.full ?? b.photo.portrait) ? <img src={(b.photo.card ?? b.photo.full ?? b.photo.portrait)!} alt="" draggable={false} /> : <div className="bcard-sil"><BossSilhouette accent={tierColor(b.order)} /></div>}
               </div>
               <div className="bcard-main">
                 <div className="bcard-head">
@@ -183,8 +125,8 @@ export function BossesScreen() {
                   // closed by the road: «Идти» to his location, what to clear and how many times more
                   <div className="bcard-reward bcard-road">
                     <span className="btn sm gold" role="link" tabIndex={0}
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/locations/${row.road!.loc}`); }}>Идти</span>
-                    <span className="bcard-road-what">{row.road.name} — дневные{"\u00a0"}({row.road.times - row.road.done})</span>
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/locations/${row.road!.loc}${row.road!.night ? "?tab=night" : ""}`); }}>Идти</span>
+                    <span className="bcard-road-what">{row.road.name.replace(" (ночь)", "")} — {row.road.night ? "ночные" : "дневные"}{"\u00a0"}({row.road.times - row.road.done})</span>
                   </div>
                 ) : (
                 <div className="bcard-reward">
@@ -235,7 +177,32 @@ export function BossesScreen() {
               </div>
             </Link>
           );
-        })}
+  }
+  return (
+    <div>
+      <div className="title">
+        <div className="title-row">
+          <h1 className="display">Боссы</h1>
+          <BossRulesHelp topic="bosses" />
+        </div>
+        {data && <span className="small muted">Лимиты обновятся через {clock(data.resetAt - now)}</span>}
+      </div>
+      {/* the kinds of bosses: the admins (all of them for now), the mentors and the brigade ones (soon) */}
+      <div className="tabs boss-tabs" role="tablist">
+        {BOSS_TABS.map((t) => (
+          <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} className={tab === t.id ? "on" : ""} onClick={() => setTab(t.id)}>{t.label}</button>
+        ))}
+      </div>
+      {/* the second class of bosses (the mentors): the same cards, the same passes and limits as the chain */}
+      {tab === "mentors" && <div className="col" style={{ gap: 12 }}>{MENTORS.map((b) => card(b, data?.mentors?.find((x) => x.id === b.id)))}</div>}
+      {tab === "brigade" && (
+        <div className="panel center boss-soon">
+          <b className="display">Скоро</b>
+          <span className="small muted">{"Бригадные боссы скоро появятся: бьёт вся бригада (клан), урон идёт только от своих."}</span>
+        </div>
+      )}
+      {tab === "admins" && <div className="col" style={{ gap: 12 }}>
+        {bossesIn(data?.bosses.map((x) => x.id) ?? state?.openBosses).map((b) => card(b, data?.bosses.find((x) => x.id === b.id)))}
       </div>}
     </div>
   );

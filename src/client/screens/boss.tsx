@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { api, type FightView, type Hit, type Tray } from "../api.ts";
-import { BOSSES, arenaOf, bossById, type BossDef, FIGHT_HOURS, rewardShare } from "../../content/bosses.ts";
+import { prevInClass, arenaOf, bossById, type BossDef, FIGHT_HOURS, rewardShare } from "../../content/bosses.ts";
 import { BAT, WEAPONS, itemById, rushPrice, weaponById } from "../../content/items.ts";
 import { CRAFT_WEAPONS } from "../../content/craft.ts";
 import { HIT_PHRASES, bossLines } from "../../content/phrases.ts";
@@ -544,7 +544,7 @@ export function BossScreen({ id }: { id: string }) {
   const locked = !!row && !row.unlocked;
   // already fought → keeps its colour behind the door, grey only for a never opened boss
   const grey = locked && !(row.myDamage > 0 || row.myWins > 0);
-  const prev = boss.order > 1 && !boss.event ? BOSSES.find((x) => x.order === boss.order - 1) : null;
+  const prev = prevInClass(boss) ?? null;
   const roadLeft = !!row?.road && row.road.done < row.road.times;
   const blocked = locked && roadLeft && row?.road ? `Сначала пройди локацию «${row.road.name}»${row.road.times > 1 ? ` ${row.road.times} раза — пройдено ${row.road.done}` : ""}` : locked ? `Нужно пропусков «${prev?.name}»: ${row!.keysNeed}. У тебя ${row!.keysHave}` : otherFight ? `Сначала закончи бой с боссом ${bossById(otherFight.bossId)?.name}` : limitLeft <= 0 ? "Лимит побед на сегодня — новые после полуночи по Москве" : null;
   const openDoor = async (solo: boolean) => {
@@ -566,7 +566,7 @@ export function BossScreen({ id }: { id: string }) {
     const ok = await start(solo);
     if (!ok) setDoor("closed");
   };
-  const doorReward = { ...boostReward(boss.reward, fightMode(mode).reward), items: [...(boss.final || boss.event ? [] : [{ id: `key-${boss.id}`, qty: 1 }]), ...(boss.reward.items ?? [])] };
+  const doorReward = { ...boostReward(boss.reward, fightMode(mode).reward), items: [...(boss.final || (boss.event && !boss.mentor) ? [] : [{ id: `key-${boss.id}`, qty: 1 }]), ...(boss.reward.items ?? [])] };
   return (
     <div className="fit-page door-page" style={{ ["--acc" as string]: boss.theme.accent }} onTouchStart={door === "closed" ? onTouchStart : undefined} onTouchEnd={door === "closed" ? onTouchEnd : undefined}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -649,7 +649,6 @@ export function BossScreen({ id }: { id: string }) {
           {/* the name above the window, the rewards down the lower half — all on the door */}
           <b className="door-name display">{boss.name}</b>
           {ev && <span className="door-event">ИВЕНТ</span>}
-          {boss.mentor && boss.modes && <span className="door-event">МЕНТОР</span>}
           <span className="door-plate">
             <b className="door-plate-title">{boss.final ? "ФИНАЛ" : "НАГРАДА"}</b>
             <GainLine r={doorReward} size={14} />

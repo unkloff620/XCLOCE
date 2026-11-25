@@ -237,9 +237,17 @@ export const EVENT_FIGHTS: BossDef[] = [
     story: "Мотя Нитка ушьёт так, что шва не найдёшь. А если не понравишься — заштопает иголкой прямо по живому.",
     hp: 1_000_000, reward: { xp: 350, currencies: { TOOTH: 300 } },
     theme: { a: "#2b3347", b: "#0e1118", accent: "#9fb3cf" }, photo: { portrait: "/bosses/nitka/portrait.webp", full: "/bosses/nitka/full.webp" },
-    keysToUnlock: 0,
+    // the mentors are a class of bosses like the chain (the user 2026-11-25): Пепе's passes open him
   },
 ];
+/** the mentors in their order: like the chain — the first is open, every next one opens with the passes of the one before */
+export const MENTORS = EVENT_FIGHTS.filter((b) => b.mentor);
+/** the boss whose passes open this one: the one before him in his class (the chain or the mentors); none for the first and the event bosses */
+export const prevInClass = (b: BossDef): BossDef | undefined =>
+  b.mentor ? MENTORS[MENTORS.findIndex((x) => x.id === b.id) - 1] : b.event ? undefined : BOSSES.find((x) => x.order === b.order - 1);
+/** the boss this one's passes open (the next in his class) */
+export const nextInClass = (b: BossDef): BossDef | undefined =>
+  b.mentor ? MENTORS[MENTORS.findIndex((x) => x.id === b.id) + 1] : b.event ? undefined : BOSSES.find((x) => x.order === b.order + 1);
 export const bossById = (id: string) => BOSSES.find((b) => b.id === id) ?? EVENT_FIGHTS.find((b) => b.id === id);
 /** the things of a boss's set (his wear list) */
 export const bossSetItems = (b: BossDef) => (b.set ? b.wear?.items ?? [] : []);
@@ -274,7 +282,7 @@ export function passLook(bossId: string): PassLook {
   const k = i - (droppers.length - PASS_CARDS.length);
   if (i >= 0 && k < 0) return { opens, kind: "key", art: `pass-key-${opens?.id ?? bossId}` };
   // Солнце's pass (it piles up for the bosses still to come) is the diamond card; a mentor's — the bronze one
-  if (i < 0) return { opens: undefined, kind: "card", tier: BOSSES.some((b) => b.id === bossId) ? "diamond" : "bronze", art: `card-${BOSSES.some((b) => b.id === bossId) ? "diamond" : "bronze"}` };
+  if (i < 0) return { opens: MENTORS.find((m) => m.id === bossId) && nextInClass(MENTORS.find((m) => m.id === bossId)!), kind: "card", tier: BOSSES.some((b) => b.id === bossId) ? "diamond" : "bronze", art: `card-${BOSSES.some((b) => b.id === bossId) ? "diamond" : "bronze"}` };
   const tier = PASS_CARDS[Math.max(0, k)];
   return { opens, kind: "card", tier, art: `card-${tier}` };
 }

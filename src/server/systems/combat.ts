@@ -8,7 +8,7 @@ import { obshakSpend } from "./obshak.ts";
 import { GameError, type Queryable } from "../db.ts";
 import { addItem, gain, grantReward, idempotent, itemQty, ledger, moscowDay, nextMoscowMidnight, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { LOCATIONS } from "../../content/locations.ts";
-import { BOSS_ROAD, BLAT_THING_CHANCE, BOTH_DROP_CHANCE, BOSSES, EVENT_FIGHTS, EXTRA_KEY_CHANCE, OPEN_BOSSES, bossById, bossOpen, KEY_RING, keyId, keyRingFits, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
+import { BOSS_ROAD, BLAT_THING_CHANCE, BOTH_DROP_CHANCE, BOSSES, EVENT_FIGHTS, EXTRA_KEY_CHANCE, OPEN_BOSSES, bossById, bossOpen, prevInClass, KEY_RING, keyId, keyRingFits, keysNeeded, rewardShare, type BossDef } from "../../content/bosses.ts";
 import { BAT, WEAPONS, itemById, rushPrice, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
 import { boostReward, mergeRewards, scaleReward, type Reward } from "../../content/rewards.ts";
@@ -108,7 +108,7 @@ async function resetFreeWeapons(q: Queryable, pid: number) {
 }
 
 /** The boss before this one: its passes are the entry to this one. */
-const prevBoss = (b: BossDef) => (b.event ? undefined : BOSSES.find((x) => x.order === b.order - 1));
+const prevBoss = prevInClass;
 
 interface LostFight { id: number; player_id: number; boss_id: string; keys_spent: number }
 /**
@@ -155,10 +155,11 @@ const roadOpen = (road: ReturnType<typeof roadOf>) => !road || road.done >= road
 export async function isUnlocked(q: Queryable, pid: number, boss: BossDef, defaultKeys: number): Promise<boolean> {
   if (boss.order === 1 && !boss.event) return true;
   if (!roadOpen(roadOf(boss, await locClears(q, pid)))) return false;
-  if (boss.event) return true;
+  if (boss.event && !boss.mentor) return true;
   if (await ringOpens(q, pid, boss)) return true;
   const prev = prevBoss(boss);
-  if (!prev) return false;
+  // the first mentor (Пепе) is open, like the chain's first boss
+  if (!prev) return !!boss.mentor;
   return (await itemQty(q, pid, keyId(prev.id))) >= keysNeeded(boss, defaultKeys);
 }
 
@@ -716,12 +717,12 @@ export async function bossList(q: Queryable, pid: number, cfg: Ctx["cfg"], now =
     mentors: EVENT_FIGHTS.filter((b) => b.mentor).map((b) => rowOf(b)),
   };
   function rowOf(b: BossDef) {
-      const prev = b.event ? undefined : BOSSES.find((x) => x.order === b.order - 1);
+      const prev = prevBoss(b);
       const keysHave = prev ? keyMap.get(keyId(prev.id)) ?? 0 : 0;
       const road = roadOf(b, clears);
       return {
         id: b.id,
-        unlocked: (b.order === 1 && !b.event) || (!!b.event && roadOpen(road)) || myFight?.boss_id === b.id || (roadOpen(road) && (keysHave >= keysNeeded(b, cfg.fight.keysToUnlock) || (ring && keyRingFits(b)))),
+        unlocked: (b.order === 1 && !b.event) || (!!b.event && (!b.mentor || !prev) && roadOpen(road)) || myFight?.boss_id === b.id || (roadOpen(road) && (keysHave >= keysNeeded(b, cfg.fight.keysToUnlock) || (ring && keyRingFits(b)))),
         /** the road to him: his location cleared so many times (null — none) */
         road,
         /** «Связка ключей» opens him: no passes needed, none spent */
