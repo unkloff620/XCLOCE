@@ -8269,3 +8269,5 @@ button:is(.modal > .x, .fs-x, .bbox-x, .acx-x, .zb-res-x, .combo-done-x, .sty-x,
 /* the fight: the HP and the time bars short, in the upper left (the user 2026-11-25) */
 .arena.full .arena-bars { width: min(46%, 210px); }
 .arena.full .arena-bars .bar > span { font-size: 11px; white-space: nowrap; }
+.arena.full .arena-bars .bar { border-radius: 5px; }
+.arena.full .arena-bars .bar > i { border-radius: 0 3px 3px 0; }

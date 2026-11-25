@@ -117,7 +117,7 @@ function Arena({ boss, hp, hpMax, endsAt, fx, hit, ouch, rug, feed, full: fullSc
         {/* the fight's time runs down like the HP: the bar shortens as the 8 hours pass */}
         {endsAt && (
           <div className="arena-time">
-            <Bar value={Math.max(0, endsAt - now)} max={FIGHT_HOURS * 3600_000} tone="health" height={16} label={<><Icon name="clock" size={12} /> {clock(Math.max(0, endsAt - now))}</>} />
+            <Bar value={Math.max(0, endsAt - now)} max={FIGHT_HOURS * 3600_000} tone="health" height={22} label={<><Icon name="clock" size={12} /> {clock(Math.max(0, endsAt - now))}</>} />
           </div>
         )}
         </div>
