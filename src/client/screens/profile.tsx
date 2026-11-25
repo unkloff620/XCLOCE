@@ -190,6 +190,18 @@ function PrIcon({ name }: { name: "dossier" | "biceps" | "fight" | "spit" }) {
   // eslint-disable-next-line @next/next/no-img-element
   return <img className="pr-ico" src={`/assets/ui/pr-${name}.webp`} alt="" width={40} height={40} draggable={false} />;
 }
+/** a text to the clipboard (the old way when the clipboard API is shut, as in some Telegram webviews) */
+async function copyText(t: string): Promise<boolean> {
+  try { await navigator.clipboard.writeText(t); return true; } catch { /* below */ }
+  try {
+    const el = document.createElement("textarea");
+    el.value = t; el.style.position = "fixed"; el.style.opacity = "0";
+    document.body.appendChild(el); el.select();
+    const ok = document.execCommand("copy");
+    el.remove();
+    return ok;
+  } catch { return false; }
+}
 /** the friend button: [+] (none, or his request waiting — it glows), an hourglass (my request sent), ✓ (friends) */
 function FriendArt({ state }: { state: "none" | "sent" | "incoming" | "friends" }) {
   return (
@@ -375,7 +387,11 @@ type DosTab = "sum" | "ach" | "cases" | "tal" | "stash" | "news" | "set";
 
 function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; reload: () => void }) {
   const [renaming, setRenaming] = useState(false);
-  const { state } = useGame();
+  const { state, toast } = useGame();
+  const copyId = (id: number) => {
+    haptic.tap();
+    void copyText(String(id)).then((ok) => toast(ok ? `ID ${id} скопирован` : "Не вышло скопировать", ok ? "info" : "err"));
+  };
   // the folder like a book: the cover first (avatar, the case number = the place in the top, the nick), swipe left —
   // the cover opens and the pages follow, each with its own tab; swipe right — back. A tap on a tab turns to it.
   // opened from the achievement notice: straight to the «Достижения» page
@@ -541,6 +557,13 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
           {cover && (
             <div className={`dos-cover ${anim}`} style={moving}>
               <b className="dos-cover-no display">{p.place || p.id}</b>
+              {/* the player's game id (friends are found by it), copied with a tap */}
+              <span className="dos-cover-id">
+                <span>ID</span><b className="num">{p.id}</b>
+                <button type="button" className="dos-copy" onClick={() => copyId(p.id)} aria-label="Скопировать ID" title="Скопировать ID">
+                  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="8" y="8" width="12" height="13" rx="2" fill="#f3e2c0" stroke="#2a1606" strokeWidth="2" /><path d="M16 5V4a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h1" fill="none" stroke="#2a1606" strokeWidth="2" strokeLinecap="round" /></svg>
+                </button>
+              </span>
               <span className="dos-cover-photo">
                 {p.photo ? (
                   // eslint-disable-next-line @next/next/no-img-element

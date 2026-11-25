@@ -5,10 +5,12 @@
  * игрока (systems/friends.ts). Полоску можно свернуть (остаётся язычок «Друзья»), выбор помнится в браузере. Данные — /api/top.
  */
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
 import { api } from "./api.ts";
 import { useGame } from "./store.tsx";
-import { Avatar } from "./ui.tsx";
+import { Avatar, Modal } from "./ui.tsx";
 import { Icon } from "./art/icons.tsx";
 
 interface TopRow { id: number; name: string; photo: string | null; xp: number; place: number; frame: string | null; online: boolean }
@@ -23,6 +25,7 @@ export function LeadersStrip() {
   const { state } = useGame();
   const [open, setOpen] = useState(true);
   const [data, setData] = useState<TopView | null>(null);
+  const [find, setFind] = useState(false);
   useEffect(() => setOpen(readOpen()), []);
   useEffect(() => {
     let alive = true;
@@ -69,8 +72,55 @@ export function LeadersStrip() {
               <b className="leader-n num">{r.place}</b>
             </Link>
           ))}
+          {/* a player found by his game id (on his dossier's cover) — the way to add a friend */}
+          <button type="button" className="leader more find" onClick={() => setFind(true)} aria-label="Найти по ID" title="Найти по ID">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" strokeWidth="3" /><path d="M15 15l6 6" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" /></svg>
+          </button>
           <Link href="/rating" className="leader more" aria-label="Весь рейтинг">›</Link>
       </div>
+      {find && createPortal(<FindById onClose={() => setFind(false)} />, document.body)}
     </div>
+  );
+}
+
+interface Found { id: number; name: string; photo: string | null; frame: string | null; level: number; self?: boolean }
+
+/** «Найти по ID»: his number → his avatar and nick → into his room (the [+] is there) */
+function FindById({ onClose }: { onClose: () => void }) {
+  const router = useRouter();
+  const [q, setQ] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [found, setFound] = useState<Found | null>(null);
+  const [miss, setMiss] = useState(false);
+  const search = async () => {
+    const id = Number(q.trim());
+    if (!Number.isSafeInteger(id) || id <= 0) { setMiss(true); setFound(null); return; }
+    setBusy(true);
+    try {
+      const p = await api.get<Found>(`/api/profile?id=${id}`);
+      setFound(p); setMiss(false);
+    } catch { setFound(null); setMiss(true); }
+    setBusy(false);
+  };
+  const go = (id: number) => { onClose(); router.push(`/profile?id=${id}`); };
+  return (
+    <Modal title="Найти по ID" onClose={onClose}>
+      <form className="find-id" onSubmit={(e) => { e.preventDefault(); void search(); }}>
+        <input className="input grow" inputMode="numeric" pattern="[0-9]*" placeholder="ID игрока" value={q} autoFocus
+          onChange={(e) => { setQ(e.target.value.replace(/\D/g, "").slice(0, 12)); setMiss(false); }} />
+        <button type="submit" className="btn gold" disabled={busy || !q}>Найти</button>
+      </form>
+      {miss && <p className="small muted" style={{ margin: "10px 0 0", textAlign: "center" }}>Игрока с таким ID нет</p>}
+      {found && (
+        <button type="button" className="find-id-row" onClick={() => go(found.id)}>
+          <Avatar name={found.name} photo={found.photo} size={44} frame={found.frame} />
+          <span className="grow" style={{ minWidth: 0, textAlign: "left" }}>
+            <b className="ellipsis" style={{ display: "block" }}>{found.name}</b>
+            <small className="muted">ID {found.id} · уровень {found.level}</small>
+          </span>
+          <span className="btn green sm">{found.self ? "Это ты" : "В комнату"}</span>
+        </button>
+      )}
+    </Modal>
   );
 }

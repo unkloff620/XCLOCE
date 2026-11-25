@@ -8287,3 +8287,9 @@ button:is(.modal > .x, .fs-x, .bbox-x, .acx-x, .zb-res-x, .combo-done-x, .sty-x,
 .msg-fr-st { display: flex; gap: 10px; margin-top: 2px; }
 .msg-fr-st > span { display: inline-flex; align-items: center; gap: 3px; font-size: 13px; }
 .msg-fr-btns { display: flex; flex-direction: column; gap: 5px; flex: none; }
+/* the player's game id on the dossier's cover, over the title (with a copy button) */
+.dos-cover-id { position: absolute; left: 16%; width: 74%; top: 6.4%; height: 4.6%; display: flex; align-items: center; justify-content: center; gap: 6px; color: #2a1606; font-weight: 900; font-size: min(4.4cqw, 17px); letter-spacing: 0.04em; }
+.dos-cover-id > span { opacity: 0.7; }
+.dos-cover-id b { font-size: min(5.4cqw, 21px); }
+.dos-copy { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border-radius: 8px; border: 2px solid #2a1606; background: rgba(255, 240, 205, 0.55); cursor: pointer; }
+.dos-copy:active { transform: translateY(1px); }
