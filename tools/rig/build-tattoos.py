@@ -74,8 +74,15 @@ PLACES_ONLY = os.environ.get("PLACES_ONLY") == "1"
 ONLY = [x for x in os.environ.get("ONLY", "").split(",") if x]
 if ONLY:
     SETS = {k: v for k, v in SETS.items() if k in ONLY}
+# BACK_ONLY=1: only the back pieces are cut (the fronts and their places in tattoo-data.ts stay as they are)
+BACK_ONLY = os.environ.get("BACK_ONLY") == "1"
+if BACK_ONLY:
+    SETS = {k: [p for p in v if p[1] == "back"] for k, v in SETS.items()}
 fit = {}
-if ONLY:
+if BACK_ONLY:
+    _old = open(os.path.join(ROOT, "src", "client", "art", "tattoo-data.ts")).read()
+    fit = {k: v for k, v in json.loads(_old[_old.index("= {") + 2:_old.rindex("}") + 1]).items() if v["part"] != "back" or not any(k.startswith(f"tat-{x}-") for x in SETS)}
+elif ONLY:
     _old = open(os.path.join(ROOT, "src", "client", "art", "tattoo-data.ts")).read()
     fit = {k: v for k, v in json.loads(_old[_old.index("= {") + 2:_old.rindex("}") + 1]).items() if not any(k.startswith(f"tat-{x}-") for x in ONLY)}
 for set_id, pieces in ({} if PLACES_ONLY else SETS).items():
