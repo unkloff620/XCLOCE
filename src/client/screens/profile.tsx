@@ -76,6 +76,8 @@ interface Profile {
   news?: NewsRow[] | null;
   /** talents put in on the path */
   talentsIn?: number;
+  /** the damage of this week (it starts again every Monday) */
+  weekDamage?: number;
   /** the [+] in his room (systems/friends.ts) */
   friend?: "none" | "sent" | "incoming" | "friends";
 }
@@ -601,15 +603,13 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
               </div>
               {/* «Сводка»: the values one under another, what came in (or went out) in the last 24 hours after each */}
               <div className="sv-rows">
-                <SvRow icon={<Icon name="xp" size={18} />} label="Авторитет" value={full(p.xp)} d={p.day?.xp} />
-                <SvRow icon={<BicepsArt size={18} />} label="Бицуха" value={full(p.social?.biceps ?? 0)} d={p.day?.biceps} />
+                {/* (the user 2026-11-25: no biceps, beard or days in the game, no green «+ today»; the damage is this week's) */}
+                <SvRow icon={<Icon name="xp" size={18} />} label="Авторитет" value={full(p.xp)} />
                 {p.energy !== null && <SvRow icon={<Icon name="energy" size={18} />} label="Энергия" value={`${full(p.energy)}/${full(p.energyMax ?? 0)}`} />}
-                <SvRow icon={<Icon name="talent" size={18} />} label="Таланты" value={full(p.talentsIn ?? 0)} d={p.day?.talents} />
-                <SvRow icon={<Icon name="swords" size={18} />} label="Урон" value={full(s.totalDamage)} d={p.day?.damage} />
+                <SvRow icon={<Icon name="talent" size={18} />} label="Таланты" value={full(p.talentsIn ?? 0)} />
+                <SvRow icon={<Icon name="swords" size={18} />} label="Урон за неделю" value={full(p.weekDamage ?? 0)} />
                 <SvRow icon={<Icon name="sun" size={18} />} label="Достижения" value={full(p.achPoints ?? 0)} />
-                <SvRow icon={<Icon name="razor" size={18} />} label="Борода" value={`${full(p.beardDays ?? 0)} ${plural(p.beardDays ?? 0, "день", "дня", "дней")}`} />
                 <SvRow icon={<Icon name="calendar" size={18} />} label="В игре с" value={shortDate(p.firstSeen)} />
-                <SvRow icon={<Icon name="clock" size={18} />} label="Дней в игре" value={full(p.activeDays)} />
                 <SvRow icon={<Icon name="clock" size={18} />} label="Был в игре" value={shortDate(p.lastSeen)} />
                 <SvRow icon={<Icon name="ach-clan" size={18} />} label="Клан" value={p.clan ? `[${p.clan.tag}] ${p.clan.name}` : "нет"} />
               </div>

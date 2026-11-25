@@ -9,7 +9,7 @@ import { autosView } from "./autos.ts";
 import { fortuneOn, isAdminPlayer } from "./fortune.ts";
 import { monthlyView } from "./monthly.ts";
 import { GameError, type Queryable } from "../db.ts";
-import { balances, energyCfgOf, energyNow, gainsDay, moscowDay, type Ctx, type PlayerRow } from "../core.ts";
+import { balances, energyCfgOf, energyNow, gainsDay, moscowDay, weekKey, type Ctx, type PlayerRow } from "../core.ts";
 import { CURRENCIES, type Currency } from "../../content/currencies.ts";
 import { itemById } from "../../content/items.ts";
 import { fightHp, settleMyFight, settleMyWins, unlockedItems, weaponHitDamage } from "./combat.ts";
@@ -268,6 +268,11 @@ export async function profileView(q: Queryable, viewer: number, pid: number, cfg
     friend: await friendState(q, viewer, pid),
     // «Новости»: only in the own dossier
     news: self ? await newsView(q, pid, now) : null,
+    // the damage of this week (the dossier: it starts again every Monday, the same week as the rating)
+    weekDamage: await (async () => {
+      const [w] = await q.query<{ damage: number }>("SELECT damage FROM weekly_stats WHERE week=$1 AND player_id=$2", [weekKey(now), pid]);
+      return Number(w?.damage ?? 0);
+    })(),
     // talents put in on the path (what counts in the dossier)
     talentsIn: talentsSpent(await weaponTalents(q, pid)),
     // нычки the player asks for; a visitor also sees how many of them he has himself and his gifts left today

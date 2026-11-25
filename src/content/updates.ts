@@ -17,6 +17,12 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-25-dossier",
+    date: "25 ноября",
+    title: "Личное дело",
+    items: [{ text: "В «Личном деле» урон теперь за неделю — с понедельника заново. Бицуху, бороду и дни в игре убрали." }],
+  },
+  {
     id: "2026-11-25-sounds",
     date: "25 ноября",
     title: "Звуки",
