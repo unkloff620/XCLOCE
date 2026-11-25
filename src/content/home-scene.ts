@@ -31,7 +31,7 @@ export const HERO_HOT = [
 export const CHARACTER = { x: 130, y: 375, scale: 0.78 };
 
 /** Seat inside the rig canvas (under the hips). */
-export const SEAT = { x: 280, y: 670, w: 440, aspect: 1.37 }; // the seat hides under the shorts, the legs end on the floor by his feet (lower: the user 2026-11-26)
+export const SEAT = { x: 320, y: 843, w: 360, aspect: 1.2 }; // a low stool: its seat shows under the shorts, the legs end on the floor by his feet (the user 2026-11-26)
 
 export const ROOM_BG: Record<string, string> = { basic: "room-basic", freezer: "room-freezer", neon: "room-neon", shark: "room-shark", backroom: "room-backroom", boxing: "room-boxing", izba: "room-izba", ludoman: "room-ludoman", pepe: "room-pepe", vault: "room-vault", office: "room-office", penthouse: "room-penthouse", kitchen: "room-kitchen", cabinet: "room-cabinet", dojo: "room-dojo", acidyard: "room-acidyard", coder: "room-coder", forge: "room-forge", workshop: "room-workshop" };
 /** opaque picture for the blurred backdrop around the scene (a room with a see-through window has a flat copy) */
