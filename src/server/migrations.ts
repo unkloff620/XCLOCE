@@ -1887,4 +1887,21 @@ UPDATE inventory i SET qty = i.qty + b.n, updated_at = now() FROM fokus_back b W
 UPDATE inventory i SET qty = GREATEST(0, i.qty - b.n), updated_at = now() FROM fokus_back b WHERE i.player_id = b.player_id AND i.item_id = 'key-utilizator';
 DROP TABLE fokus_back;`,
   },
+  {
+    // friends (the user 2026-11-25): requests from one player to another, and the friends both ways (systems/friends.ts)
+    id: "v2-142-friends",
+    sql: `CREATE TABLE IF NOT EXISTS friend_requests (
+  from_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  to_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (from_id, to_id)
+);
+CREATE INDEX IF NOT EXISTS friend_requests_to ON friend_requests (to_id, created_at);
+CREATE TABLE IF NOT EXISTS friends (
+  player_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  friend_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+  since TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (player_id, friend_id)
+);`,
+  },
 ];

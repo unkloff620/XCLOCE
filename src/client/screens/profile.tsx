@@ -76,6 +76,8 @@ interface Profile {
   news?: NewsRow[] | null;
   /** talents put in on the path */
   talentsIn?: number;
+  /** the [+] in his room (systems/friends.ts) */
+  friend?: "none" | "sent" | "incoming" | "friends";
 }
 interface NewsRow { kind: string; fromId: number; from: string; photo: string | null; won: boolean | null; at: number }
 
@@ -187,6 +189,27 @@ function Reload({ ms, cd = SOCIAL_CD }: { ms: number; cd?: number }) {
 function PrIcon({ name }: { name: "dossier" | "biceps" | "fight" | "spit" }) {
   // eslint-disable-next-line @next/next/no-img-element
   return <img className="pr-ico" src={`/assets/ui/pr-${name}.webp`} alt="" width={40} height={40} draggable={false} />;
+}
+/** the friend button: [+] (none, or his request waiting — it glows), an hourglass (my request sent), ✓ (friends) */
+function FriendArt({ state }: { state: "none" | "sent" | "incoming" | "friends" }) {
+  return (
+    <svg viewBox="0 0 48 48" width={40} height={40} aria-hidden="true">
+      {state === "friends" ? (
+        <path d="M11 25l9 9 17-19" fill="none" stroke="#2e1c00" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
+      ) : state === "sent" ? (
+        <path d="M15 8h18M15 40h18M17 8c0 9 14 9 14 16s-14 7-14 16M31 8c0 9-14 9-14 16s14 7 14 16" fill="none" stroke="#2e1c00" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+      ) : (
+        <path d="M24 9v30M9 24h30" stroke="#2e1c00" strokeWidth="10" strokeLinecap="round" />
+      )}
+      {state === "friends" ? (
+        <path d="M11 25l9 9 17-19" fill="none" stroke="#5be38f" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+      ) : state === "sent" ? (
+        <path d="M15 8h18M15 40h18M17 8c0 9 14 9 14 16s-14 7-14 16M31 8c0 9-14 9-14 16s14 7 14 16" fill="none" stroke="#e9d3a8" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+      ) : (
+        <path d="M24 9v30M9 24h30" stroke="#ffd25a" strokeWidth="5" strokeLinecap="round" />
+      )}
+    </svg>
+  );
 }
 /** a flexed arm */
 export function BicepsArt({ size = 40 }: { size?: number }) {
@@ -629,6 +652,7 @@ export function ProfileScreen() {
   const [dossier, setDossier] = useState(false);
   const [give, setGive] = useState(false);
   const [brawl, setBrawl] = useState<{ key: number; res: { won: boolean; mine: number; theirs: number; chance?: number; reward: unknown } | null } | null>(null);
+  const [unfriend, setUnfriend] = useState(false);
   const [fx, setFx] = useState<{ key: number; kind: "pump" | "spit" } | null>(null);
   const id = q.get("id");
   const [tick, setTick] = useState(0);
@@ -671,6 +695,14 @@ export function ProfileScreen() {
     if (!r) { setBrawl(null); return; }
     setBrawl({ key, res: r });
     reload();
+  };
+  // friends: [+] sends him a request (his own request to me — we are friends at once); a friend's ✓ takes him out
+  const friendTap = async () => {
+    haptic.tap();
+    if (p.friend === "friends") { setUnfriend(true); return; }
+    if (p.friend === "sent") { toast("Заявка уже у него в сообщениях", "info"); return; }
+    const r = await act<{ state: string }>("friend_add", { to: p.id }, p.friend === "incoming" ? "Теперь вы друзья" : "Заявка отправлена");
+    if (r) reload();
   };
   const spit = async () => {
     if (spitIn) { wait(spitIn, "Слюна кончилась"); return; }
@@ -715,6 +747,12 @@ export function ProfileScreen() {
               </button>
             </>
           )}
+ {!p.self && p.friend && (
+            <button type="button" className={`pr-btn pr-friend ${p.friend} ${p.friend === "incoming" ? "glow" : ""}`} disabled={busy === "friend_add"} onClick={() => void friendTap()}
+              aria-label={p.friend === "friends" ? "Друг" : p.friend === "sent" ? "Заявка отправлена" : "Добавить в друзья"}>
+              <FriendArt state={p.friend} />
+            </button>
+          )}
           {p.clan && (
             <Link href={`/clans/${p.clan.id}`} className="pr-btn" style={{ ["--c" as string]: p.clan.color }} aria-label={`Клан ${p.clan.name}`}>
               <Emblem emblem={p.clan.emblem} color={p.clan.color} size={38} /><small className="ellipsis">{p.clan.tag}</small>
@@ -736,6 +774,14 @@ export function ProfileScreen() {
       </div>
       {brawl && <Brawl key={brawl.key} res={brawl.res} name={p.name} me={{ name: state?.player.name ?? "Ты", look: state?.look.body, worn: state?.look.equipped }} them={{ name: p.name, look: p.body, worn: p.equipped }} onClose={() => setBrawl(null)} />}
       {dossier && <Dossier p={p} onClose={() => setDossier(false)} reload={reload} />}
+      {unfriend && (
+        <Modal title="Убрать из друзей?" onClose={() => setUnfriend(false)}>
+          <div className="row" style={{ gap: 8 }}>
+            <button className="btn dark grow" onClick={() => setUnfriend(false)}>Нет</button>
+            <button className="btn red grow" disabled={busy === "friend_remove"} onClick={async () => { const r = await act("friend_remove", { id: p.id }); setUnfriend(false); if (r) reload(); }}>Убрать</button>
+          </div>
+        </Modal>
+      )}
       {give && p.stashGive && (
         <Modal title="Нычки и детали" onClose={() => setGive(false)}>
           <StashGivePanel to={p.id} name={p.name} wish={p.stashWish ?? []} give={p.stashGive} onSent={reload} />

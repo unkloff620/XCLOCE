@@ -1,7 +1,8 @@
 "use client";
 /*
- * Все игроки по авторитету — полоска над нижним меню: аватар, под ним место, зелёная точка — сейчас в игре. Свою
- * строчку игрок видит, даже если он дальше списка. Полоску можно свернуть (остаётся маленький язычок «Игроки»), выбор помнится в браузере. Данные — /api/top.
+ * Друзья (the user 2026-11-25; it was the top of all the players) — полоска над нижним меню: я и мои друзья по
+ * авторитету, аватар, под ним место среди нас, зелёная точка — сейчас в игре. Друзей добавляют кнопкой [+] в комнате
+ * игрока (systems/friends.ts). Полоску можно свернуть (остаётся язычок «Друзья»), выбор помнится в браузере. Данные — /api/top.
  */
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -11,7 +12,7 @@ import { Avatar } from "./ui.tsx";
 import { Icon } from "./art/icons.tsx";
 
 interface TopRow { id: number; name: string; photo: string | null; xp: number; place: number; frame: string | null; online: boolean }
-interface TopView { top: TopRow[]; me: { place: number | null; xp: number } | null; online: number }
+interface TopView { friends: TopRow[]; online: number }
 
 const KEY = "xc2_leaders_open";
 const readOpen = () => {
@@ -33,9 +34,9 @@ export function LeadersStrip() {
   }, []);
   // the page below makes room for the open strip
   useEffect(() => {
-    document.documentElement.style.setProperty("--strip-h", open && data?.top.length ? "74px" : "0px");
+    document.documentElement.style.setProperty("--strip-h", open && data?.friends.length ? "74px" : "0px");
     return () => { document.documentElement.style.setProperty("--strip-h", "0px"); };
-  }, [open, data?.top.length]);
+  }, [open, data?.friends.length]);
   const set = (v: boolean) => {
     setOpen(v);
     try { localStorage.setItem(KEY, v ? "1" : "0"); } catch { /* private mode */ }
@@ -50,17 +51,16 @@ export function LeadersStrip() {
     document.addEventListener("pointerdown", away, true);
     return () => document.removeEventListener("pointerdown", away, true);
   }, [open]);
-  if (!data?.top.length) return null;
+  if (!data?.friends.length) return null;
   const meId = state?.player.id;
-  const inTop = data.top.some((r) => r.id === meId);
   return (
     <div className={`leaders ${open ? "open" : "closed"}`}>
-      <button className="leaders-tab" onClick={toggle} aria-expanded={open} aria-label={open ? "Скрыть лидеров" : "Показать лидеров"}>
-        <Icon name="xp" size={14} /> Игроки{data.online > 0 && <span className="leaders-online"><i />{data.online}</span>} <i className="leaders-arrow">▾</i>
+      <button className="leaders-tab" onClick={toggle} aria-expanded={open} aria-label={open ? "Скрыть друзей" : "Показать друзей"}>
+        <Icon name="xp" size={14} /> Друзья{data.online > 0 && <span className="leaders-online"><i />{data.online}</span>} <i className="leaders-arrow">▾</i>
       </button>
       {/* always there: opening and closing slide it (the height), folded it takes no taps */}
       <div className="leaders-row" inert={!open} aria-hidden={!open}>
-          {data.top.map((r) => (
+          {data.friends.map((r) => (
             <Link key={r.id} href={`/profile?id=${r.id}`} className={`leader p${Math.min(r.place, 4)} ${r.id === meId ? "me" : ""}`} title={`${r.place}. ${r.name} · ${r.xp.toLocaleString("ru-RU")} авторитета${r.online ? " · в игре" : ""}`}>
               <span className="leader-av">
                 <Avatar name={r.name} photo={r.photo} size={40} frame={r.frame} />
@@ -69,15 +69,6 @@ export function LeadersStrip() {
               <b className="leader-n num">{r.place}</b>
             </Link>
           ))}
-          {!inTop && state && data.me?.place && (
-            <Link href="/rating" className="leader me" title={`Твоё место: ${data.me.place}`}>
-              <span className="leader-av">
-                <Avatar name={state.player.name} photo={state.player.photo} size={40} />
-                <i className="leader-on" aria-label="в игре" />
-              </span>
-              <b className="leader-n num">{data.me.place}</b>
-            </Link>
-          )}
           <Link href="/rating" className="leader more" aria-label="Весь рейтинг">›</Link>
       </div>
     </div>

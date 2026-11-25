@@ -40,7 +40,7 @@ function useWide(): boolean {
 }
 
 interface TopRow { id: number; name: string; photo: string | null; xp: number; place: number; frame: string | null; online: boolean }
-interface TopView { top: TopRow[]; me: { place: number | null; xp: number } | null; online: number }
+interface TopView { friends: TopRow[]; online: number }
 type Msg = { id: number; pid: number | null; name: string; photo: string | null; text: string; at: number };
 
 /** polls an endpoint while the game is on screen (a minimized app must not keep the database awake) */
@@ -147,11 +147,12 @@ function Events() {
 function Top() {
   const { state } = useGame();
   const data = usePoll<TopView>("/api/top", 60_000);
-  if (!data?.top.length) return null;
+  if (!data?.friends.length) return null;
   const me = state?.player.id;
+  // the friends (the user 2026-11-25: «Игроки» → «Друзья», systems/friends.ts)
   return (
-    <Box title="Игроки" icon="xp" right={<span className="wp-muted"><i className="wp-dot on" />{data.online} в игре</span>}>
-      {data.top.slice(0, 12).map((r) => (
+    <Box title="Друзья" icon="xp" right={<span className="wp-muted"><i className="wp-dot on" />{data.online} в игре</span>}>
+      {data.friends.slice(0, 12).map((r) => (
         <Link key={r.id} href={`/profile?id=${r.id}`} className={`wp-player ${r.id === me ? "me" : ""}`}>
           <b className="num wp-place">{r.place}</b>
           <span className="wp-av"><Avatar name={r.name} photo={r.photo} size={28} frame={r.frame} />{r.online && <i className="wp-dot on" />}</span>
@@ -159,7 +160,6 @@ function Top() {
           <span className="num wp-muted">{r.xp.toLocaleString("ru-RU")}</span>
         </Link>
       ))}
-      {data.me?.place && !data.top.slice(0, 12).some((r) => r.id === me) && <Link href="/rating" className="wp-row">Твоё место: <b className="num">{data.me.place}</b></Link>}
       <Link href="/rating" className="wp-more">Весь рейтинг ›</Link>
     </Box>
   );

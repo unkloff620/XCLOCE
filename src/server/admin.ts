@@ -628,6 +628,7 @@ export const FUNNEL_STEPS: { id: string; name: string; types: string[] }[] = [
   { id: "quest", name: "Забрал задание дня", types: ["quest_claim", "quest_chest"] },
   { id: "talent", name: "Вложил талант", types: ["talent_up", "talent_auto"] },
   { id: "social", name: "Зашёл к другому (бицуха/наезд/харк)", types: ["social_pump", "social_fight", "social_spit"] },
+  { id: "friends", name: "Друзья (заявки)", types: ["friend_add", "friend_answer", "friend_remove"] },
   { id: "slots", name: "Крутил 777", types: ["slots_spin"] },
 ];
 export async function funnel(db: Db, days = 30) {

@@ -142,6 +142,9 @@ export function actionText(type: string, body: Row, result: unknown): string | n
     case "social_pump": return "бицуха";
     case "social_fight": return "наезд";
     case "social_spit": return "харкнул";
+    case "friend_add": return "в друзья";
+    case "friend_answer": return body.yes === true ? "принял в друзья" : "отклонил дружбу";
+    case "friend_remove": return "убрал из друзей";
     case "bj_insure": return body.take === true ? "страховка" : "без страховки";
     case "bj_move": return ({ hit: "ещё", stand: "хватит", double: "удвоил", split: "разбил" } as Record<string, string>)[String(body.move)] ?? "";
     case "poker_swap": if (r.phase === "draw") return `Покер: заменил карту ${n(body.index) + 1}`;

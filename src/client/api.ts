@@ -140,6 +140,8 @@ export interface GameState {
   /** messages from other players (a spit, a fist fight), the newest first */
   notes?: { id: number; kind: string; fromId: number | null; from: string; meta: Record<string, unknown>; at: number; unread: boolean }[];
   /** gifts waiting in «Сообщения» to be accepted */
+  /** friend requests waiting for me (systems/friends.ts): who, how many talents and achievements he has */
+  friendRequests?: { id: number; name: string; photo: string | null; frame: string | null; at: number; talents: number; achievements: number }[];
   stashInbox?: { id: number; fromId: number; from: string; itemId: string; qty?: number; at: number }[];
   games: { zonk: ZonkInfo };
   rename: { price: { currency: Currency; amount: number }; nextAt: number | null; min: number; max: number };

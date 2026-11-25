@@ -8278,3 +8278,12 @@ button:is(.modal > .x, .fs-x, .bbox-x, .acx-x, .zb-res-x, .combo-done-x, .sty-x,
 .arena.full .arena-bars .bar > i { border-radius: 0 3px 3px 0; }
 .arena-barw { position: relative; }
 .arena-bar-ic { position: absolute; right: 6px; top: 50%; width: 14px; height: 14px; transform: translateY(-50%); fill: #000; opacity: 0.85; pointer-events: none; z-index: 1; }
+/* friends: the [+] in another player's room (an hourglass — my request is with him, ✓ — friends), the requests in «Сообщения» */
+.pr-friend { --c: #3d7a4a; }
+.pr-friend.sent { --c: #6b5a3a; }
+.pr-friend svg { display: block; filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.35)); }
+.msg-row.friend { align-items: center; }
+.msg-fr-av { flex: none; text-decoration: none; }
+.msg-fr-st { display: flex; gap: 10px; margin-top: 2px; }
+.msg-fr-st > span { display: inline-flex; align-items: center; gap: 3px; font-size: 13px; }
+.msg-fr-btns { display: flex; flex-direction: column; gap: 5px; flex: none; }

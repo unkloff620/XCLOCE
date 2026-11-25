@@ -2,7 +2,9 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useGame } from "../store.tsx";
-import { Modal } from "../ui.tsx";
+import { Avatar, Modal } from "../ui.tsx";
+import { Icon } from "../art/icons.tsx";
+import { full } from "../format.ts";
 import { ItemArt } from "../art/items.tsx";
 import { itemById } from "../../content/items.ts";
 import { STASH_SETS } from "../../content/stashes.ts";
@@ -170,8 +172,8 @@ function noteText(n: { kind: string; from: string; meta: Record<string, unknown>
 }
 
 /** how many messages wait: gifts to accept and unread notes */
-export function messagesWaiting(state: { stashInbox?: unknown[]; notes?: { unread: boolean }[] } | null) {
-  return (state?.stashInbox?.length ?? 0) + (state?.notes?.filter((n) => n.unread).length ?? 0);
+export function messagesWaiting(state: { stashInbox?: unknown[]; friendRequests?: unknown[]; notes?: { unread: boolean }[] } | null) {
+  return (state?.stashInbox?.length ?? 0) + (state?.friendRequests?.length ?? 0) + (state?.notes?.filter((n) => n.unread).length ?? 0);
 }
 
 export function MessagesWindow({ onClose }: { onClose: () => void }) {
@@ -187,6 +189,8 @@ export function MessagesWindow({ onClose }: { onClose: () => void }) {
   if (!state) return null;
   const notes = state.notes ?? [];
   const inbox = state.stashInbox ?? [];
+  const asks = state.friendRequests ?? [];
+  const answer = (from: number, yes: boolean) => act("friend_answer", { from, yes }, yes ? "Теперь вы друзья" : undefined);
   const accept = (id: number | null) => act("stash_accept", id === null ? {} : { id }, id === null ? "Все подарки на складе" : "Подарок на складе");
   const when = (t: number) => new Date(t).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
   // one feed, the newest on top: the gifts to accept and the notes (spits, fights)
@@ -198,7 +202,25 @@ export function MessagesWindow({ onClose }: { onClose: () => void }) {
     <Modal title="Сообщения" onClose={onClose}>
       <div className="col" style={{ gap: 10 }}>
         {inbox.length > 1 && <button className="btn gold sm" style={{ alignSelf: "flex-end" }} disabled={!!busy} onClick={() => accept(null)}>Принять все подарки ({inbox.length})</button>}
-        {feed.length === 0 && <p className="small muted" style={{ margin: 0, textAlign: "center" }}>Новых сообщений нет. Попроси нычки в меню дома — когда тебе их пришлют, подарки появятся здесь.</p>}
+        {/* friend requests: on top, they wait for an answer */}
+        {asks.map((f) => (
+          <div key={`f${f.id}`} className="msg-row friend new">
+            <Link href={`/profile?id=${f.id}`} onClick={onClose} className="msg-fr-av"><Avatar name={f.name} photo={f.photo} size={44} frame={f.frame} /></Link>
+            <div className="grow" style={{ minWidth: 0 }}>
+              <Link href={`/profile?id=${f.id}`} onClick={onClose} className="msg-who"><b className="small ellipsis" style={{ display: "block" }}>{f.name}</b></Link>
+              <span className="msg-fr-st">
+                <span title="Таланты"><Icon name="talent" size={16} /><b className="num">{full(f.talents)}</b></span>
+                <span title="Достижения"><Icon name="sun" size={16} /><b className="num">{full(f.achievements)}</b></span>
+              </span>
+              <span className="tiny muted" style={{ display: "block" }}>хочет в друзья · {when(f.at)}</span>
+            </div>
+            <div className="msg-fr-btns">
+              <button className="btn green sm" disabled={!!busy} onClick={() => answer(f.id, true)}>Принять</button>
+              <button className="btn dark sm" disabled={!!busy} onClick={() => answer(f.id, false)}>Нет</button>
+            </div>
+          </div>
+        ))}
+        {feed.length === 0 && asks.length === 0 && <p className="small muted" style={{ margin: 0, textAlign: "center" }}>Новых сообщений нет. Попроси нычки в меню дома — когда тебе их пришлют, подарки появятся здесь.</p>}
         <div className="col" style={{ gap: 6 }}>
           {feed.map(({ key, gift: g, note: n }) => g ? (
             <div key={key} className="msg-row gift new">

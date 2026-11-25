@@ -1,7 +1,7 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 import { authedRoute } from "../../../server/http.ts";
-import { topAuthority } from "../../../server/systems/rating.ts";
+import { friendsStrip } from "../../../server/systems/friends.ts";
 
-/** The leaders strip above the bottom menu: the top players by authority and my own place. */
-export const GET = authedRoute("top", async ({ db, playerId }) => topAuthority(db, playerId, Date.now()));
+/** The strip above the bottom menu: me and my friends by authority, who is in the game (systems/friends.ts). */
+export const GET = authedRoute("top", async ({ db, playerId }) => friendsStrip(db, playerId, Date.now()));

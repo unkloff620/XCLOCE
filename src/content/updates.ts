@@ -17,6 +17,12 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-25-friends",
+    date: "25 ноября",
+    title: "Друзья",
+    items: [{ text: "Зайди в комнату игрока и нажми [+] — ему придёт заявка в «Сообщения». Внизу вместо «Игроков» теперь твои «Друзья»." }],
+  },
+  {
     id: "2026-11-25-nitka-tattoos",
     date: "25 ноября",
     title: "Наколки Нитки",

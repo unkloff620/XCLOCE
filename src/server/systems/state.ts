@@ -39,6 +39,7 @@ import { craftBoxes, craftBoxesBought, craftPresets, dealerView } from "./craft.
 import { clanBossView } from "./clan-boss.ts";
 import { duelsView, expireDuels } from "./duels.ts";
 import { newsView, notesView, socialView } from "./social.ts";
+import { friendRequestsIn, friendState } from "./friends.ts";
 import { achievementsReady, achievementsView, autoClaimAchievements } from "./achievements.ts";
 import { achBoxView } from "./achbox.ts";
 import { giftsLeft, giftsReceived, stashWish } from "./swap.ts";
@@ -177,6 +178,8 @@ export async function gameState(ctx: Ctx) {
     stashGifts: await giftsReceived(ctx.q, ctx.pid),
     stashInbox: await giftsReceived(ctx.q, ctx.pid, true),
     notes: await notesView(ctx.q, ctx.pid, ctx.now),
+    // friend requests waiting in «Сообщения» (systems/friends.ts)
+    friendRequests: await friendRequestsIn(ctx.q, ctx.pid, ctx.now),
     stashSets: Object.fromEntries((await ctx.q.query<{ set_n: number; count: number }>("SELECT set_n, count FROM stash_sets WHERE player_id=$1", [ctx.pid])).map((r) => [r.set_n, Number(r.count)])) as Record<number, number>,
     rename: await renameView(ctx.q, ctx.pid, ctx.now, ctx.cfg),
     sell: ctx.cfg.sell,
@@ -261,6 +264,8 @@ export async function profileView(q: Queryable, viewer: number, pid: number, cfg
     }),
     clan: clan ?? null,
     social: await socialView(q, viewer, pid, now),
+    // the [+] in his room: none / sent / incoming / friends
+    friend: await friendState(q, viewer, pid),
     // «Новости»: only in the own dossier
     news: self ? await newsView(q, pid, now) : null,
     // talents put in on the path (what counts in the dossier)
