@@ -13,7 +13,7 @@
  * rig px), the brows frown (--brw), the pupils look about (--px, --py), the lids blink, the glasses jump on a quick move
  * (--gb) and wobble (.fx-glasses-j).
  */
-import type { CSSProperties, ReactNode, RefObject } from "react";
+import { useEffect, useRef, type CSSProperties, type ReactNode, type RefObject } from "react";
 
 type Part = { x: number; y: number; w: number; h: number; pivot?: readonly number[]; frames?: number; v?: string };
 type Rig = { w: number; h: number; parts: Record<string, Part> };
@@ -21,6 +21,8 @@ type Rig = { w: number; h: number; parts: Record<string, Part> };
 /** the eye holes of the head (rig units) and the skin round each (the lids) */
 const HOLES = [{ x: 337, y: 187, w: 22.5, h: 10.5, skin: "#c96236" }, { x: 393.5, y: 175, w: 27.5, h: 10.5, skin: "#f4ad78" }];
 const LID_LINE = "#4a2414";
+/** the bottom of the fist (handR's own frame, rig units): a little blood flies off it when a blow lands */
+const KNUCKLE = [185, 322] as const;
 /** the coat's tails swing from here (rig units) */
 const HEM = [395, 700] as const;
 /** the waist: the upper body leans and bends round it */
@@ -30,6 +32,9 @@ export function FokusRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
   id: string; look: string; rig: Rig; bust: boolean; dazed: boolean; dying: boolean; svgRef: RefObject<SVGSVGElement | null>; wrapRef: RefObject<HTMLDivElement | null>; puppet: boolean; viewBox: string;
 }) {
   const P = rig.parts;
+  const fist = useRef<SVGGElement>(null);
+  const blood = useRef<SVGGElement>(null);
+  useFistBlood(svgRef, fist, blood, !bust);
   const src = (p: string) => `/bosses/${id}/rig/${p}.webp${P[p]?.v ? `?v=${P[p].v}` : ""}`;
   const pic = (p: string, pp?: "back" | "front", follow?: [string, string]) => {
     const r = P[p];
@@ -105,12 +110,14 @@ export function FokusRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
           {bone("br-arm br-arm-r", "armR", bone("br-low br-low-r", "lowR", <>
             {pic("lowR", "front")}
             {bone("br-hand br-hand-r", "handR", <>
+              <g ref={fist} />
               {pic("handR", "front")}
               <g className="fx-lid" data-pivot={`${lid[0]},${lid[1]}`} data-pp-size={40} style={at(lid[0], lid[1])}>{pic("phone", "front")}</g>
             </>, 80)}
           </>, 110), 130)}
         </g>
       </g>
+      {!puppet && <g ref={blood} />}
     </svg>
   );
   if (!puppet) return svgEl;
@@ -119,6 +126,65 @@ export function FokusRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
       <canvas className="br-pup-back" aria-hidden="true" />
       {svgEl}
       <canvas className="br-pup-front" aria-hidden="true" />
+      <svg className="br-pup-over" viewBox={viewBox} width="100%" height="100%" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+        <g ref={blood} />
+      </svg>
     </div>
   );
+}
+
+/** a few drops of blood off the bottom of the fist when a blow lands (the pose engine puts fx-hit on the rig): small,
+ *  they fly along the blow, fall and fade */
+function useFistBlood(svgRef: RefObject<SVGSVGElement | null>, fistRef: RefObject<SVGGElement | null>, layerRef: RefObject<SVGGElement | null>, on: boolean) {
+  useEffect(() => {
+    if (!on || typeof window === "undefined") return;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    const NS = "http://www.w3.org/2000/svg";
+    type Drop = { el: SVGElement; x: number; y: number; vx: number; vy: number; r: number; life: number; age: number };
+    const drops: Drop[] = [];
+    let raf = 0, last = 0, was = false;
+    let prev: [number, number] | null = null, vel: [number, number] = [0, 0];
+    const at = (): [number, number] | null => {
+      const a = svgRef.current?.getScreenCTM(), b = fistRef.current?.getScreenCTM();
+      if (!a || !b) return null;
+      const m = a.inverse().multiply(b), [x, y] = KNUCKLE;
+      return [m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f];
+    };
+    const burst = (p: [number, number], v: [number, number]) => {
+      const layer = layerRef.current;
+      if (!layer) return;
+      const sp = Math.hypot(v[0], v[1]) || 1;
+      const dir = Math.atan2(v[1] / sp, v[0] / sp);
+      for (let i = 0; i < 8; i++) {
+        const el = document.createElementNS(NS, "circle");
+        const a = dir + (Math.random() - 0.5) * 2;
+        const s = 90 + Math.random() * 200;
+        el.setAttribute("fill", i % 3 ? "#b30f12" : "#7a0508");
+        layer.appendChild(el);
+        drops.push({ el, x: p[0], y: p[1], vx: Math.cos(a) * s, vy: Math.sin(a) * s - 80 * Math.random(), r: 1.2 + Math.random() * 2.2, life: 0.3 + Math.random() * 0.3, age: 0 });
+      }
+    };
+    const step = (t: number) => {
+      raf = requestAnimationFrame(step);
+      if (document.hidden) { last = 0; return; }
+      const dt = last ? Math.min(0.05, (t - last) / 1000) : 0;
+      last = t;
+      const p = at();
+      if (p && prev && dt > 0) vel = [(p[0] - prev[0]) / dt * 0.5 + vel[0] * 0.5, (p[1] - prev[1]) / dt * 0.5 + vel[1] * 0.5];
+      prev = p;
+      const now = !!svgRef.current?.classList.contains("fx-hit");
+      if (now && !was && p) burst(p, vel);
+      was = now;
+      for (let i = drops.length - 1; i >= 0; i--) {
+        const d = drops[i];
+        d.age += dt; d.vy += 900 * dt; d.vx *= 1 - 1.5 * dt; d.x += d.vx * dt; d.y += d.vy * dt;
+        const k = 1 - d.age / d.life;
+        if (k <= 0) { d.el.remove(); drops.splice(i, 1); continue; }
+        d.el.setAttribute("opacity", Math.min(1, k * 1.6).toFixed(2));
+        d.el.setAttribute("cx", d.x.toFixed(1)); d.el.setAttribute("cy", d.y.toFixed(1)); d.el.setAttribute("r", d.r.toFixed(2));
+      }
+    };
+    raf = requestAnimationFrame(step);
+    return () => { cancelAnimationFrame(raf); for (const d of drops) d.el.remove(); };
+  }, [svgRef, fistRef, layerRef, on]);
 }

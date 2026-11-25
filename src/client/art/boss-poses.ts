@@ -701,12 +701,14 @@ const FX_BACK = { armR: 18, lowR: -14, handR: -8 };
 /** a hammer blow: the whole arm drops forward and down, the fist stays upright — its bottom comes down first */
 const FX_HIT = { armR: -62, lowR: 34, handR: -4, zR: 36 };
 const fxAmp = (p: Pose, a: number): Pose => Object.fromEntries(Object.entries(p).map(([k, v]) => [k, (v ?? 0) * (k === "jaw" || k === "brw" || k === "gb" || k === "ph" || k === "hl" ? 1 : a)]));
-const fxBlow = (t: number, heavy: boolean, keys: Key[], amp = 1, slow = 1) => {
+const fxBlow = (t: number, heavy: boolean, keys: Key[], face: Face[], amp = 1, slow = 1) => {
   const w = heavy ? 1.5 : 1;
   // up and back: the lid flaps a little as the fist goes up
   keys.push({ at: t, pose: fxAmp({ ...FX_BACK, armR: FX_BACK.armR * w, lowR: FX_BACK.lowR * w, up: 2.5, x: -4, y: -4, head: -2, brw: 0.4, jaw: 0.1, gb: -0.4, ph: 0.3, armL: -2, lowL: -2 }, amp), stiff: 1.6 });
   t += (heavy ? 0.36 : 0.24) * slow;
   // down: the bottom of the fist at the screen, the knees give, the lid slams towards shut, the hood's rim lifts
+  // the blow lands: a little blood off the fist (boss-fokus.tsx, the class fx-hit)
+  face.push({ cls: "fx-hit", at: t + 0.08 * slow, dur: 0.1 });
   keys.push({ at: t, pose: fxAmp({ ...FX_HIT, zR: FX_HIT.zR * (heavy ? 1.3 : 1), up: -5, x: 12, y: heavy ? 44 : 30, head: 4, brw: 1, jaw: 1, gb: 1, ph: 1, hl: 1, armL: 6, lowL: 5 }, amp), stiff: 4.5 });
   t += 0.24 * slow;
   // back up into the stance: the lid shuts a little once more on the way up, then opens
@@ -717,11 +719,11 @@ const fxBlow = (t: number, heavy: boolean, keys: Key[], amp = 1, slow = 1) => {
 };
 /** a run of blows: r — a quick one, R — a heavy one */
 const fxCombo = (plan: ("r" | "R")[], amp = 1, slow = 1): Action => {
-  const keys: Key[] = [];
+  const keys: Key[] = [], face: Face[] = [];
   let t = 0;
-  for (const s of plan) { t = fxBlow(t, s === "R", keys, amp, slow); t += 0.1 * slow; }
+  for (const s of plan) { t = fxBlow(t, s === "R", keys, face, amp, slow); t += 0.1 * slow; }
   keys.push({ at: t, pose: { jaw: 0.12 }, stiff: 1.2 });
-  return { keys, dur: t + 0.5 };
+  return { keys, dur: t + 0.5, face };
 };
 /** the laptop slips out of his fingers (ls: down and tilting) — he looks, then jerks the arm up and tosses it back into
  *  place (it flies a little past and settles) */
