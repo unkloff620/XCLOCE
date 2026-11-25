@@ -184,16 +184,7 @@ export const BOSSES: BossDef[] = [
     keysToUnlock: 1,
   },
   {
-    id: "fokus", order: 12, card: "diamond", name: "Фокус", title: "Главный и единственный программист",
-    story: "Весь код Close написал он один. И только он знает, почему это работает.",
-    hp: hp(11), reward: { xp: xp(11), currencies: { TOOTH: 12_000, PAP: 12_000 } },
-    theme: { a: "#401624", b: "#16060c", accent: "#ff6b9a" }, photo: photo("fokus", true),
-    // no things yet: the set waits for them (the user's table 2026-11-23)
-    set: { weapon: "keyboard", damage: 250 },
-    keysToUnlock: 1,
-  },
-  {
-    id: "solntse", order: 13, name: "Солнце", title: "Главный начальник всего Close",
+    id: "solntse", order: 12, name: "Солнце", title: "Главный начальник всего Close",
     story: "Светит всем, всегда и без выходных. Чтобы дойти сюда, нужно пройти весь Close.",
     hp: hp(12), reward: { xp: xp(12), currencies: { TOOTH: 2_500, PAP: 1_000 } },
     theme: { a: "#4a2a06", b: "#1a0c02", accent: "#ffd23f" }, photo: photo("solntse", true),
@@ -239,6 +230,17 @@ export const EVENT_FIGHTS: BossDef[] = [
     theme: { a: "#2b3347", b: "#0e1118", accent: "#9fb3cf" }, photo: { portrait: "/bosses/nitka/portrait.webp", full: "/bosses/nitka/full.webp" },
     // the mentors are a class of bosses like the chain (the user 2026-11-25): Пепе's passes open him
   },
+  {
+    // «Псих» (the user 2026-11-25): Фокус moved out of the chain to the mentors, renamed, 100 000 000 HP; every mode,
+    // no «Соло»; Нитка's pass opens him, after a night run of «Лунная база» (BOSS_ROAD). His id stays «fokus» (his art,
+    // his room, the players' wins and fights)
+    id: "fokus", order: 15, card: "diamond", name: "Псих", title: "Главный и единственный программист", event: true, mentor: true, modes: true,
+    story: "Весь код Close написал он один. И только он знает, почему это работает.",
+    hp: 100_000_000, reward: { xp: xp(11), currencies: { TOOTH: 12_000, PAP: 12_000 } },
+    theme: { a: "#401624", b: "#16060c", accent: "#ff6b9a" }, photo: photo("fokus", true),
+    set: { weapon: "keyboard", damage: 250 },
+    keysToUnlock: 1,
+  },
 ];
 /** the mentors in their order: like the chain — the first is open, every next one opens with the passes of the one before */
 export const MENTORS = EVENT_FIGHTS.filter((b) => b.mentor);
@@ -273,7 +275,8 @@ export const keyRingFits = (b: BossDef) => !b.event && b.order > 1 && !KEY_RING_
  * the pass cards in order, bronze to diamond. The look sets the picture and the name; the dropper's `card` tier still
  * gives the rarity and the medal tier.
  */
-export const PASS_CARDS: CardTier[] = ["bronze", "silver", "gold", "platinum", "diamond"];
+// (Фокус left the chain for the mentors, 2026-11-25: Утилизатор's pass opens Солнце now — it keeps the diamond card)
+export const PASS_CARDS: CardTier[] = ["bronze", "silver", "gold", "diamond"];
 export type PassLook = { opens: BossDef | undefined } & ({ kind: "key"; art: string } | { kind: "card"; tier: CardTier; art: string });
 export function passLook(bossId: string): PassLook {
   const droppers = BOSSES.filter((b) => !b.final);
@@ -328,7 +331,7 @@ export const BOSS_ROAD: Record<string, { loc: string; times: number; night?: boo
   vadim: { loc: "party", times: 3 },
   botsman: { loc: "offshore", times: 3 },
   utilizator: { loc: "yacht", times: 3 },
-  fokus: { loc: "moonbase", times: 3 },
+  fokus: { loc: "moonbase", times: 1, night: true },
   solntse: { loc: "mars", times: 3 },
 };
 

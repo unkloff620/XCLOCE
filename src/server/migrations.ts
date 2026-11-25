@@ -1864,4 +1864,13 @@ CREATE INDEX IF NOT EXISTS players_seen ON players (last_seen_at) WHERE banned_a
     sql: `CREATE INDEX IF NOT EXISTS boss_hits_player_time ON boss_hits (player_id, created_at);
 CREATE INDEX IF NOT EXISTS fights_unseen ON fights (player_id, id) WHERE seen = false;`,
   },
+  {
+    // Фокус → «Псих» among the mentors (the user 2026-11-25): Солнце opens with Утилизатор's passes now — the passes of
+    // Фокус the players kept for Солнце become Утилизатор's
+    id: "v2-140-fokus-mentor-keys",
+    sql: `INSERT INTO inventory (player_id, item_id, qty, source, updated_at)
+  SELECT player_id, 'key-utilizator', qty, 'migration', now() FROM inventory WHERE item_id = 'key-fokus' AND qty > 0
+  ON CONFLICT (player_id, item_id) DO UPDATE SET qty = inventory.qty + EXCLUDED.qty, updated_at = EXCLUDED.updated_at;
+UPDATE inventory SET qty = 0 WHERE item_id = 'key-fokus';`,
+  },
 ];
