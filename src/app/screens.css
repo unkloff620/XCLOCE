@@ -8293,3 +8293,17 @@ button:is(.modal > .x, .fs-x, .bbox-x, .acx-x, .zb-res-x, .combo-done-x, .sty-x,
 .dos-cover-id b { font-size: min(5.4cqw, 21px); }
 .dos-copy { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border-radius: 8px; border: 2px solid #2a1606; background: rgba(255, 240, 205, 0.55); cursor: pointer; }
 .dos-copy:active { transform: translateY(1px); }
+
+/* ── Фокус (the new art, art/boss-fokus.tsx, boss-poses.ts POSES.fokus): the pose engine sets --jaw --brw --gb --ph --px --py ── */
+.rig-fx { --jaw: 0.1; --brw: 0; --gb: 0; --ph: 0; --px: 0; --py: 0; }
+/* the mouth: the chin and the lower teeth drop — fully open is the artist's «Shift + 3 × ↓» (13.1 rig px) */
+.rig-fx .fx-jaw { transform: translateY(calc(var(--jaw) * 13.1px)); }
+.rig-fx .fx-pupils { transform: translate(calc(var(--px) * 3px), calc(var(--py) * 1.6px)); }
+.rig-fx .fx-brows { transform: translateY(calc(var(--brw) * 2px)) scaleX(calc(1 - var(--brw) * 0.03)); }
+.rig-fx .fx-glasses { transform: translateY(calc(var(--gb) * 3px)) rotate(calc(var(--gb) * 1.2deg)); }
+.rig-fx .fx-lids > g { transform: scaleY(0); animation: fk-blink 4.1s linear infinite; }
+/* the flip phone's lid swings towards shut on its hinge: it shortens along itself (folding over) and leans to the keys */
+.rig-fx .fx-lid { transform: rotate(-44deg) scaleX(calc(1 - var(--ph) * 0.55)) rotate(44deg) rotate(calc(var(--ph) * -8deg)); }
+.rig-fx :is(.fx-hood-j, .fx-glasses-j) { will-change: transform; }
+@media (prefers-reduced-motion: reduce) { .rig-fx .fx-lids > g { animation: none; } }
+.rig-fx.boss-rig.dazed, .rig-fx.boss-rig.dazed :is(.br-arm-l, .br-arm-r, .br-low-l, .br-low-r, .br-hand-l, .br-hand-r, .br-head) { animation: none; }

@@ -17,7 +17,8 @@ CARDS = {
     "vadim": ("public/bosses/vadim/full.webp", (150, -40, 740, 690)),
     "botsman": ("public/bosses/botsman/full.webp", (110, -30, 790, 810)),
     "utilizator": ("public/bosses/utilizator/full.webp", (20, -30, 820, 950)),
-    "fokus": ("public/bosses/fokus/full.webp", (110, -25, 640, 630)),
+    "psih": ("public/bosses/psih/full.webp", (110, -25, 640, 630)),
+    "fokus": ("public/bosses/fokus/full.webp", (60, -20, 700, 770)),
     "solntse": ("public/bosses/solntse/full.webp", (90, -25, 930, 1012)),
 }
 W = 640

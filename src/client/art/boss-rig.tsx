@@ -20,6 +20,7 @@ import { NitkaRig } from "./boss-nitka.tsx";
 import { usePoses } from "./boss-poses.ts";
 import { usePuppet } from "./boss-puppet.ts";
 import { BOSS_RIGS } from "./boss-rig-data.ts";
+import { PsihRig } from "./boss-psih.tsx";
 import { FokusRig } from "./boss-fokus.tsx";
 import { SunRig } from "./boss-sun.tsx";
 
@@ -211,7 +212,7 @@ export function BossRig({ id: asked, hpShare = 1, bust = false, outfit: wanted }
   const dying = hpShare < DYING_BELOW;
   // Фокус below half: his legs are rigged anew (fixed at the feet only — he sways from leg to leg): the puppet and the
   // poses start over on the new look
-  const look = (baseId === "fokus" || baseId === "solntse" || baseId === "nitka") && dazed ? `${id}:${dying ? "dying" : "dazed"}` : id;
+  const look = (baseId === "fokus" || baseId === "psih" || baseId === "solntse" || baseId === "nitka") && dazed ? `${id}:${dying ? "dying" : "dazed"}` : id;
   const svgRef = useRef<SVGSVGElement>(null);
   useDazed(svgRef, dazed);
   // the puppet warp (soft joints) for the full boss; the small busts on the list stay plain SVG
@@ -397,6 +398,7 @@ export function BossRig({ id: asked, hpShare = 1, bust = false, outfit: wanted }
       </div>
     );
   }
+  if (baseId === "psih") return <PsihRig id={id} look={look} rig={rig} bust={bust} dazed={dazed} dying={dying} svgRef={svgRef} wrapRef={wrapRef} puppet={puppet} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} />;
   if (baseId === "fokus") return <FokusRig id={id} look={look} rig={rig} bust={bust} dazed={dazed} dying={dying} svgRef={svgRef} wrapRef={wrapRef} puppet={puppet} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} />;
   if (baseId === "nitka") return <NitkaRig id={id} look={look} rig={rig} bust={bust} dazed={dazed} dying={dying} svgRef={svgRef} wrapRef={wrapRef} puppet={puppet} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} />;
   if (baseId === "solntse") return <SunRig id={id} look={look} rig={rig} bust={bust} dazed={dazed} dying={dying} svgRef={svgRef} wrapRef={wrapRef} puppet={puppet} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} />;

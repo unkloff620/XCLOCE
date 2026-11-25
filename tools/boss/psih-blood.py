@@ -1,15 +1,15 @@
 """
 Фокус beaten (below half HP): blood on his clothes and his skin, bruises and the blood under the nose on his face.
-The artist's look redrawn by two image edits (tools/boss/source/fokus/blood/): edit-body.png — the whole boss (in-body.png,
+The artist's look redrawn by two image edits (tools/boss/source/psih/blood/): edit-body.png — the whole boss (in-body.png,
 the layers put together on white, 1024×1536), edit-face.png — his face up close (in-face.png, 1024×1024). Each edit is
 fitted back onto its input (ECC, affine), and every layer takes from it only what changed (the blood, the bruises),
 only where that layer is the one seen on top — its own outline (alpha) stays exactly the artist's.
-→ public/bosses/fokus/rig/<part>-blood.webp (the same box and size as <part>.webp; boss-fokus.tsx shows them when dazed).
+→ public/bosses/psih/rig/<part>-blood.webp (the same box and size as <part>.webp; boss-psih.tsx shows them when dazed).
 """
 import numpy as np, cv2
 from PIL import Image
 
-D = "tools/boss/source/fokus"
+D = "tools/boss/source/psih"
 B = f"{D}/blood"
 CROP = (180, 200, 1980, 2920)
 SW, SH = 1800, 2720
@@ -88,7 +88,7 @@ idx = {n: i for i, n in enumerate(ORDER)}
 
 import json, re
 _s = open("src/client/art/boss-rig-data.ts").read()
-_i = _s.index('"fokus": {') + len('"fokus": ')
+_i = _s.index('"psih": {') + len('"psih": ')
 _d, _k = 0, _i
 for _k, _c in enumerate(_s[_i:], _i):
     _d += _c == "{"; _d -= _c == "}"
@@ -99,7 +99,7 @@ RIG = json.loads(_s[_i:_k + 1])["parts"]
 def rig_box(n):
     """the part's rig picture box on the sheet (rig units × 2 — the rig is the sheet at half size) and the picture's size"""
     r = RIG[n]
-    im = Image.open(f"public/bosses/fokus/rig/{n}.webp")
+    im = Image.open(f"public/bosses/psih/rig/{n}.webp")
     return (r["x"] * 2, r["y"] * 2, (r["x"] + r["w"]) * 2, (r["y"] + r["h"]) * 2), im.size
 
 
@@ -113,10 +113,10 @@ for parts, edit, m in ((BODY_PARTS, body_sheet, mb), (FACE_PARTS, face_sheet, mf
         (x0, y0, x1, y1), size = rig_box(n)
         ext = lambda im, mode: im.transform(size, Image.EXTENT, (x0, y0, x1, y1), mode)
         # the rig's own picture (its outline exactly), its colours mixed with the edit's where the edit changed it
-        orig = np.array(Image.open(f"public/bosses/fokus/rig/{n}.webp").convert("RGBA")).astype(np.float32)
+        orig = np.array(Image.open(f"public/bosses/psih/rig/{n}.webp").convert("RGBA")).astype(np.float32)
         ew = np.array(ext(Image.fromarray((w * 255).astype(np.uint8)), Image.BILINEAR)).astype(np.float32)[..., None] / 255
         er = np.array(ext(Image.fromarray(edit), Image.BICUBIC)).astype(np.float32)
         orig[..., :3] = orig[..., :3] * (1 - ew) + er * ew
-        Image.fromarray(orig.astype(np.uint8)).save(f"public/bosses/fokus/rig/{n}-blood.webp", quality=88, method=6, exact=True)
+        Image.fromarray(orig.astype(np.uint8)).save(f"public/bosses/psih/rig/{n}-blood.webp", quality=88, method=6, exact=True)
         w = ew
         print(n, size, f"{float(w.mean()) * 100:.2f}%")

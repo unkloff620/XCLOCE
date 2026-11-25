@@ -692,6 +692,37 @@ const snSway = (rate: number, a: number) => (t: number): Pose => {
 /** he strikes the player: the two blows at once */
 const snStrike = (amp = 1, slow = 1): Action => { const keys: Key[] = [], face: Face[] = []; const t = snBlows(0, keys, face, amp, slow); return { keys, dur: t, face }; };
 
+/* Фокус (boss-fokus.tsx, the new art): the flip phone up in his right fist, the laptop under his left arm. A blow: the
+   fist goes up and back (the wind-up), then the phone comes down at the screen hard and grows (zR) — the knees give (y),
+   he leans in; the lid of the phone swings towards shut on the blow (ph, a loose spring: it flaps and opens again, never
+   past open); the mouth snaps open (jaw), the brows frown (brw), the glasses jump (gb). R — a heavy one: a longer
+   wind-up, a deeper crouch. The left arm with the laptop sinks a little with each blow, as if he hugs it. */
+const FX_BACK = { armR: 12, lowR: -24, handR: -12 };
+const FX_HIT = { armR: -20, lowR: 74, handR: 22, zR: 24 };
+const fxAmp = (p: Pose, a: number): Pose => Object.fromEntries(Object.entries(p).map(([k, v]) => [k, (v ?? 0) * (k === "jaw" || k === "brw" || k === "gb" || k === "ph" ? 1 : a)]));
+const fxBlow = (t: number, heavy: boolean, keys: Key[], amp = 1, slow = 1) => {
+  const w = heavy ? 1.5 : 1;
+  keys.push({ at: t, pose: fxAmp({ ...FX_BACK, armR: FX_BACK.armR * w, lowR: FX_BACK.lowR * w, up: 2.5, x: -4, y: -4, head: -2, brw: 0.4, jaw: 0.1, gb: -0.4, armL: -2, lowL: -2 }, amp), stiff: 2.2 });
+  t += (heavy ? 0.32 : 0.18) * slow;
+  keys.push({ at: t, pose: fxAmp({ ...FX_HIT, zR: FX_HIT.zR * (heavy ? 1.3 : 1), up: -5, x: 12, y: heavy ? 44 : 30, head: 4, brw: 1, jaw: 1, gb: 1, ph: 1, armL: 6, lowL: 5 }, amp), stiff: 7 });
+  t += 0.2 * slow;
+  keys.push({ at: t, pose: fxAmp({ armR: 3, lowR: 8, y: 3, jaw: 0.2, brw: 0.4, gb: -0.3, ph: 0 }, amp), stiff: 2.5 });
+  return t + 0.2 * slow;
+};
+/** a run of blows: r — a quick one, R — a heavy one */
+const fxCombo = (plan: ("r" | "R")[], amp = 1, slow = 1): Action => {
+  const keys: Key[] = [];
+  let t = 0;
+  for (const s of plan) { t = fxBlow(t, s === "R", keys, amp, slow); t += 0.1 * slow; }
+  keys.push({ at: t, pose: { jaw: 0.12 }, stiff: 1.2 });
+  return { keys, dur: t + 0.5 };
+};
+/** beaten: the weight from foot to foot, the head the other way */
+const fxShift = (rate: number, a: number) => (t: number): Pose => {
+  const s = Math.sin(t * rate);
+  return { x: 8 * a * s, up: 1.4 * a * s, head: -1.4 * a * s, y: 3 * a * Math.abs(s) };
+};
+
 const POSES: Record<string, Spec> = {
   solntse: {
     // heavy: slow, overdamped springs; the fists a little quicker on the blow
@@ -784,6 +815,57 @@ const POSES: Record<string, Spec> = {
     hair: { sel: ".nt-glasses-j", k: 260, c: 6, turn: 0.35, jerk: 0.006, flutter: () => 0 },
   },
   fokus: {
+    // quick and sharp: stiff springs; the glasses and the hood on a loose spring, the phone's lid looser still
+    springs: {
+      up: { k: 160, c: 15 }, x: { k: 150, c: 15 }, y: { k: 190, c: 17 }, head: { k: 190, c: 14 },
+      armR: { k: 250, c: 20 }, lowR: { k: 360, c: 24 }, handR: { k: 800, c: 44 },
+      armL: { k: 140, c: 16 }, lowL: { k: 160, c: 17 }, handL: { k: 400, c: 30 },
+      zR: { k: 360, c: 30 },
+      jaw: { k: 240, c: 20 }, brw: { k: 160, c: 16 }, gb: { k: 320, c: 7 }, ph: { k: 260, c: 9 }, px: { k: 200, c: 20 }, py: { k: 200, c: 20 },
+    },
+    drag: { lowL: ["armL", -0.04], handL: ["lowL", -0.01], lowR: ["armR", -0.05], handR: ["lowR", -0.01], head: ["up", -0.08] },
+    // never still: a small nervous bounce, the phone twitches in the fist, the laptop arm breathes; the eyes look about
+    // (a new spot every ~1.4 s); the mouth a little open
+    idle: (t) => {
+      const g = Math.floor(t / 1.4);
+      const r = (n: number) => { const v = Math.sin(n * 12.9898 + g * 78.233) * 43758.5453; return v - Math.floor(v); };
+      return {
+        up: 0.8 * Math.sin(t * 1.2) + 0.3 * Math.sin(t * 2.7 + 1), x: 2.2 * Math.sin(t * 0.8),
+        y: 1.2 * (0.5 - 0.5 * Math.cos(t * 2)),
+        head: 1.4 * Math.sin(t * 1.3 + 1) + 0.7 * Math.sin(t * 0.55),
+        armR: 1.4 * Math.sin(t * 1.4 + 2), lowR: 2.2 * Math.sin(t * 1.8 + 1), handR: 3.5 * Math.sin(t * 2.5),
+        armL: 1.2 * Math.sin(t * 0.9), lowL: 1.5 * Math.sin(t * 1.1 + 0.5) + 1.5 * (0.5 - 0.5 * Math.cos(t * 0.45)),
+        jaw: 0.08 + 0.08 * (0.5 - 0.5 * Math.cos(t * 2.2)),
+        px: (r(1) - 0.5) * 1.8, py: (r(2) - 0.5) * 1.1,
+      };
+    },
+    actions: [
+      { a: fxCombo(["r", "r", "R"]), w: 2 }, { a: fxCombo(["r", "R"]), w: 2 },
+      { a: fxCombo(["R"]), w: 1 }, { a: fxCombo(["r", "r", "r", "R"]), w: 1 },
+    ],
+    rest: [1.6, 3.2],
+    hit: { head: -300, up: -90, x: -70, y: -60, armL: 60, lowL: -60, armR: -110, lowR: 140, handR: 40, gb: 12, jaw: 6, ph: 10 },
+    strike: fxCombo(["R", "r"]),
+    // below half: slower and smaller, from foot to foot; below a quarter: a slow lone blow now and then
+    dazed: { pose: { armL: 4, armR: -6, head: 3, jaw: 0.25 }, act: true, sway: fxShift(1.8, 1), actions: [{ a: fxCombo(["r", "R"], 0.7, 1.8), w: 1 }], rest: [4, 6], strike: fxCombo(["R"], 0.7, 1.8), speed: 0.65 },
+    dying: { pose: { armL: 10, armR: -14, head: 6, up: -2, jaw: 0.4 }, act: true, sway: fxShift(1.2, 1.2), actions: [{ a: fxCombo(["r"], 0.45, 2.2), w: 1 }], rest: [5, 8], strike: fxCombo(["R"], 0.45, 2.4), speed: 0.5 },
+    breath: (t, dazed) => { const b = 0.5 - 0.5 * Math.cos((t / (dazed ? 1.4 : 1.1)) * Math.PI * 2); return [1 + 0.012 * b, 1 + 0.026 * b, -4 * b]; },
+    // the coat's tails lag behind his moves and flutter a little
+    hem: { sel: ".fx-hem", k: 40, c: 4, up: 0.9, x: 0.25, flutter: (t) => 0.8 * Math.sin(t * 1.7) + 0.4 * Math.sin(t * 3.1 + 1) },
+    shapes: { jaw: {}, brw: {}, gb: {}, ph: {}, px: {}, py: {} },
+    scale: { handR: "zR" },
+    vars: (a) => ({
+      "--jaw": Math.max(0, Math.min(1, a.jaw)).toFixed(3), "--brw": a.brw.toFixed(3), "--gb": a.gb.toFixed(3),
+      // the lid only goes towards shut (0 open as drawn … 1 nearly shut)
+      "--ph": Math.max(0, Math.min(1, a.ph)).toFixed(3),
+      "--px": a.px.toFixed(3), "--py": a.py.toFixed(3),
+    }),
+    stiffOwn: true,
+    // the glasses and the hood: they lag behind the head's turns and the jerks
+    hair: { sel: ".fx-glasses-j, .fx-hood-j", k: 200, c: 8, turn: 0.3, jerk: 0.005, flutter: () => 0 },
+  },
+  // Псих: the old Фокус's art and moves (boss-psih.tsx)
+  psih: {
     springs: {
       up: { k: 120, c: 13 }, x: { k: 110, c: 13 }, head: { k: 150, c: 12 },
       armR: { k: 170, c: 17 }, lowR: { k: 260, c: 19 }, handR: { k: 1100, c: 66 },

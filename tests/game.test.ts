@@ -315,19 +315,20 @@ describe("boss fights: personal fights, shared damage", () => {
     expect((await act(db, q, "fight_start", { boss: "knyaz" }, T0)).state.fight?.bossId).toBe("knyaz");
   });
 
-  it("Солнце opens with a single key of Утилизатор; «Псих» (Фокус, a mentor now) with one of Нитка", async () => {
+  it("Фокус and Солнце open with a single key; «Псих» (a mentor) with one of Нитка after a night run", async () => {
     const p = await newPlayer(db);
     await openRoads(db, p);
-    await expect(act(db, p, "fight_start", { boss: "solntse" }, T0)).rejects.toMatchObject({ code: "boss_locked" });
+    await expect(act(db, p, "fight_start", { boss: "fokus" }, T0)).rejects.toMatchObject({ code: "boss_locked" });
     await give(db, p, "key-utilizator", 1);
-    const r = await act(db, p, "fight_start", { boss: "solntse" }, T0);
-    expect(r.state.fight?.bossId).toBe("solntse");
+    const r = await act(db, p, "fight_start", { boss: "fokus" }, T0);
+    expect(r.state.fight?.bossId).toBe("fokus");
+    expect(r.state.fight?.hpMax).toBe(700_000_000);
     const q = await newPlayer(db);
     await db.query("INSERT INTO location_claims (player_id, location_id, claimed_at) VALUES ($1,'night:moonbase',now())", [q]);
-    await expect(act(db, q, "fight_start", { boss: "fokus", mode: "blat" }, T0)).rejects.toMatchObject({ code: "boss_locked" });
+    await expect(act(db, q, "fight_start", { boss: "psih", mode: "blat" }, T0)).rejects.toMatchObject({ code: "boss_locked" });
     await give(db, q, "key-nitka", 1);
-    const f = await act(db, q, "fight_start", { boss: "fokus", mode: "blat" }, T0);
-    expect(f.state.fight?.bossId).toBe("fokus");
+    const f = await act(db, q, "fight_start", { boss: "psih", mode: "blat" }, T0);
+    expect(f.state.fight?.bossId).toBe("psih");
     expect(f.state.fight?.hpMax).toBe(300_000_000);
   });
 
