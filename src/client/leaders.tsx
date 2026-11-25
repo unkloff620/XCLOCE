@@ -12,6 +12,7 @@ import { api } from "./api.ts";
 import { useGame } from "./store.tsx";
 import { Avatar, Modal } from "./ui.tsx";
 import { Icon } from "./art/icons.tsx";
+import { fromGameId, gameId } from "../content/social.ts";
 
 interface TopRow { id: number; name: string; photo: string | null; xp: number; place: number; frame: string | null; online: boolean }
 interface TopView { friends: TopRow[]; online: number }
@@ -93,8 +94,8 @@ function FindById({ onClose }: { onClose: () => void }) {
   const [found, setFound] = useState<Found | null>(null);
   const [miss, setMiss] = useState(false);
   const search = async () => {
-    const id = Number(q.trim());
-    if (!Number.isSafeInteger(id) || id <= 0) { setMiss(true); setFound(null); return; }
+    const id = fromGameId(Number(q.trim()));
+    if (!id) { setMiss(true); setFound(null); return; }
     setBusy(true);
     try {
       const p = await api.get<Found>(`/api/profile?id=${id}`);
@@ -116,7 +117,7 @@ function FindById({ onClose }: { onClose: () => void }) {
           <Avatar name={found.name} photo={found.photo} size={44} frame={found.frame} />
           <span className="grow" style={{ minWidth: 0, textAlign: "left" }}>
             <b className="ellipsis" style={{ display: "block" }}>{found.name}</b>
-            <small className="muted">ID {found.id} · уровень {found.level}</small>
+            <small className="muted">ID {gameId(found.id)} · уровень {found.level}</small>
           </span>
           <span className="btn green sm">{found.self ? "Это ты" : "В комнату"}</span>
         </button>

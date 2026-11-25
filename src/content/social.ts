@@ -31,3 +31,12 @@ export function fightChance(mine: number, theirs: number): number {
   const p = a < b ? 0.5 * Math.pow(a / b, FIGHT_LUCK_POWER) : 1 - 0.5 * Math.pow(b / a, FIGHT_LUCK_POWER);
   return Math.min(1 - FIGHT_MIN_CHANCE, Math.max(FIGHT_MIN_CHANCE, p));
 }
+
+/**
+ * The player's game ID (the user 2026-11-25: it starts from 9 000 001): his inner number + GAME_ID_BASE. Shown on his
+ * dossier's cover, typed in «Найти по ID»; the inner number stays everywhere else (links, the database).
+ */
+export const GAME_ID_BASE = 9_000_000;
+export const gameId = (id: number) => GAME_ID_BASE + id;
+/** the inner number of a typed game ID (null when it is not one) */
+export const fromGameId = (g: number) => (Number.isSafeInteger(g) && g > GAME_ID_BASE ? g - GAME_ID_BASE : null);

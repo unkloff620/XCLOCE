@@ -19,7 +19,7 @@ import { Avatar, Bar, Empty, Modal } from "../ui.tsx";
 import { Emblem } from "../art/emblems.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { Icon } from "../art/icons.tsx";
-import { FIGHT_COOLDOWN_MS, FIGHT_WIN } from "../../content/social.ts";
+import { FIGHT_COOLDOWN_MS, FIGHT_WIN, gameId } from "../../content/social.ts";
 import { EyesArt, HeroRig, type Worn } from "../art/rig.tsx";
 import { HomeScene } from "../art/home-scene.tsx";
 import { ROOM_BACKDROP } from "../../content/home-scene.ts";
@@ -559,8 +559,8 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
               <b className="dos-cover-no display">{p.place || p.id}</b>
               {/* the player's game id (friends are found by it), copied with a tap */}
               <span className="dos-cover-id">
-                <span>ID</span><b className="num">{p.id}</b>
-                <button type="button" className="dos-copy" onClick={() => copyId(p.id)} aria-label="Скопировать ID" title="Скопировать ID">
+                <span>ID</span><b className="num">{gameId(p.id)}</b>
+                <button type="button" className="dos-copy" onClick={() => copyId(gameId(p.id))} aria-label="Скопировать ID" title="Скопировать ID">
                   <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="8" y="8" width="12" height="13" rx="2" fill="#f3e2c0" stroke="#2a1606" strokeWidth="2" /><path d="M16 5V4a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h1" fill="none" stroke="#2a1606" strokeWidth="2" strokeLinecap="round" /></svg>
                 </button>
               </span>
