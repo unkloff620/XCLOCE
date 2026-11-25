@@ -747,18 +747,19 @@ const fxShift = (rate: number, a: number) => (t: number): Pose => {
 /* Дацкоу (boss-datsik.tsx, the new art): a boxer, both fists up at the chest. A punch: the fist pulls back up to the face
    (the wind-up), then the forearm swings at the elbow down to the belt (the artist's pose, 2026-11-25) — nothing grows;
    the knees give (y), the body turns into it, the hair flies, the mouth opens (jaw), the brows frown (brw). Both fists
-   by turns, sometimes both at once. Standing, he flicks little guards: one fist up to the face and back, then the other
-   (dzGuard in his idle). */
+   by turns, sometimes both at once. Standing, he snaps guards: one fist up and the other down at once, a micro pause, then
+   the other way (dzGuard in his idle). */
 const DZ_R_BACK = { armR: -6, lowR: -16 };
 const DZ_R_HIT = { armR: 8, lowR: 62 };
 const DZ_L_BACK = { armL: 6, lowL: 16 };
 const DZ_L_HIT = { armL: -8, lowL: -62 };
-/** the little guards while he stands: right, a beat, left, a beat — each a quick lift of the fist to the face */
+/** the guards while he stands (the user 2026-11-25): both fists at once — one snaps up to the face while the other
+ *  snaps down, a micro pause, then the other way round. g: +1 right up / left down … −1 left up / right down */
 const dzGuard = (t: number): Pose => {
-  const p = t % 2.4;
-  const pulse = (s: number) => (p > s && p < s + 0.42 ? Math.sin(((p - s) / 0.42) * Math.PI) : 0);
-  const r = pulse(0.2), l = pulse(1.4);
-  return { armR: -7 * r, lowR: -14 * r, armL: 7 * l, lowL: 14 * l, head: -1.5 * r + 1.5 * l };
+  const T = 0.9, p = (t % (2 * T)) / T; // 0…2: a snap (the first 0.12 of each half), then the hold
+  const snap = (x: number) => Math.min(1, x / 0.12);
+  const g = p < 1 ? -1 + 2 * snap(p) : 1 - 2 * snap(p - 1);
+  return { armR: -6 * g, lowR: -16 * g, armL: -6 * g, lowL: -16 * g, head: -1.2 * g };
 };
 const dzAmp = (p: Pose, a: number): Pose => Object.fromEntries(Object.entries(p).map(([k, v]) => [k, (v ?? 0) * (k === "jaw" || k === "brw" ? 1 : a)]));
 const dzPunch = (t: number, side: "r" | "l" | "b", keys: Key[], amp = 1, slow = 1) => {
