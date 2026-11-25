@@ -125,26 +125,15 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "v": "b01e6988"
       },
       "lowL": {
-        "x": 357.5,
-        "y": 351.5,
-        "w": 178,
-        "h": 166,
+        "x": 317.0,
+        "y": 335.0,
+        "w": 218,
+        "h": 182,
         "pivot": [
           467.8,
           442.4
         ],
-        "v": "76ead4c2"
-      },
-      "handL": {
-        "x": 317.0,
-        "y": 335.0,
-        "w": 74,
-        "h": 89,
-        "pivot": [
-          377.8,
-          381.0
-        ],
-        "v": "c6b692bb"
+        "v": "5f508d2e"
       },
       "armR": {
         "x": 18.5,
@@ -159,25 +148,14 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
       },
       "lowR": {
         "x": 24.5,
-        "y": 341.0,
-        "w": 178,
-        "h": 166,
+        "y": 324.5,
+        "w": 218,
+        "h": 183,
         "pivot": [
           86.1,
           435.4
         ],
-        "v": "cc00d27d"
-      },
-      "handR": {
-        "x": 169.0,
-        "y": 324.5,
-        "w": 74,
-        "h": 89,
-        "pivot": [
-          182.2,
-          371.0
-        ],
-        "v": "e30c7a76"
+        "v": "ce7e6443"
       },
       "head": {
         "x": 224.5,
@@ -255,7 +233,7 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
       }
     }
   },
-    "kedr": {
+  "kedr": {
     "w": 750,
     "h": 900,
     "parts": {

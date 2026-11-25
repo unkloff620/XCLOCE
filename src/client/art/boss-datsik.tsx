@@ -2,7 +2,7 @@
 /*
  * Дацкоу (the new full-height art 2026-11-25, tools/boss/assemble-datsik.py): a long-haired lad in a dirty T-shirt and
  * jeans, both fists up at his chest. The puppet (boss-puppet.ts) bends the legs (only the feet stay: a punch bends the
- * knees), the body and the arms at the shoulders, the elbows and the wrists (only the fists grow on a punch). The head
+ * knees), the body and the arms at the shoulders and the elbows; only the fist end of a forearm grows on a punch. The head
  * is plain SVG; the long hair (on the front canvas) swings only from the eyes down (dz-hairtip, the hair spring), the chin with the lower teeth
  * and the tongue drops (--jaw, 30 px of the face sheet = 6.45 rig px), the brows frown (--brw), the pupils look about
  * (--px, --py), the lids blink. The punches (boss-poses.ts POSES.datsik) come down at the bottom of the screen and the
@@ -16,6 +16,9 @@ type Rig = { w: number; h: number; parts: Record<string, Part> };
 /** the eye holes of the head (rig units) and the skin over each (the lids) */
 const HOLES = [{ x: 256.5, y: 161, w: 22, h: 8.5, skin: "#fc9571" }, { x: 316, y: 160.5, w: 23, h: 8, skin: "#f88a67" }];
 const LID_LINE = "#5a2a18";
+/** the wrists (rig units): the fists grow from here on a punch */
+const WRIST_R = [182.2, 371] as const;
+const WRIST_L = [377.8, 381] as const;
 /** the waist: the upper body leans and bends round it */
 const WAIST = [280, 600] as const;
 
@@ -38,6 +41,7 @@ export function DatsikRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, 
   const bone = (cls: string, p: string, kids: ReactNode, size?: number) => (
     <g className={cls} data-pivot={P[p]?.pivot ? `${P[p].pivot![0]},${P[p].pivot![1]}` : undefined} data-pp-size={size} style={origin(p)}>{kids}</g>
   );
+  const wrist = (cls: string, p: readonly number[]) => <g className={cls} data-pivot={`${p[0]},${p[1]}`} data-pp-size={60} style={at(p[0], p[1])} />;
   const svgEl = (
     <svg key={look} ref={svgRef} className={`boss-rig rig-dz ${dazed ? "dazed" : ""} ${dying ? "dying" : ""}`} viewBox={viewBox} width="100%" height="100%"
       preserveAspectRatio={bust ? "xMidYMin slice" : "xMidYMax meet"} aria-hidden="true">
@@ -75,9 +79,16 @@ export function DatsikRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, 
             {pic("hair", "front", ["dz-hairtip", "0.85,0.42"])}
           </>, 150)}
           {/* the arms with the fists in front (over the hair): soft shoulders and elbows */}
-          {/* (only the fists grow on a punch: zR / zL on the wrist, not the forearm) */}
-          {bone("br-arm br-arm-r", "armR", <>{pic("armR", "front")}{bone("br-low br-low-r", "lowR", <>{pic("lowR", "front")}{bone("br-hand br-hand-r", "handR", pic("handR", "front"), 90)}</>, 120)}</>, 130)}
-          {bone("br-arm br-arm-l", "armL", bone("br-low br-low-l", "lowL", <>{pic("lowL", "front")}{bone("br-hand br-hand-l", "handL", pic("handL", "front"), 90)}</>, 120), 130)}
+          {/* the forearms are whole pictures (nothing cut): only the fist grows on a punch — the puppet bends the forearm's
+              fist end after an empty wrist bone (scaled zR / zL), the elbow stays with the forearm */}
+          {bone("br-arm br-arm-r", "armR", <>{pic("armR", "front")}{bone("br-low br-low-r", "lowR", <>
+            {wrist("dz-fist-r br-hand br-hand-r", WRIST_R)}
+            {pic("lowR", "front", ["dz-fist-r", "0.3,0.5"])}
+          </>, 120)}</>, 130)}
+          {bone("br-arm br-arm-l", "armL", bone("br-low br-low-l", "lowL", <>
+            {wrist("dz-fist-l br-hand br-hand-l", WRIST_L)}
+            {pic("lowL", "front", ["dz-fist-l", "0.3,0.5"])}
+          </>, 120), 130)}
         </g>
       </g>
     </svg>

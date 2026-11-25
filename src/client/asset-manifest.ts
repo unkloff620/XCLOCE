@@ -5484,8 +5484,6 @@ export const ASSET_FILES: string[] = [
  "/bosses/datsik/rig/chin.webp",
  "/bosses/datsik/rig/eyes.webp",
  "/bosses/datsik/rig/hair.webp",
- "/bosses/datsik/rig/handL.webp",
- "/bosses/datsik/rig/handR.webp",
  "/bosses/datsik/rig/head.webp",
  "/bosses/datsik/rig/legs.webp",
  "/bosses/datsik/rig/lowL.webp",
