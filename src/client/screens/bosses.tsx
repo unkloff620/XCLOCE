@@ -241,7 +241,7 @@ export function BossesScreen() {
   );
 }
 
-const BOSS_TABS = [{ id: "admins", label: "Админы" }, { id: "mentors", label: "Менторы" }, { id: "brigade", label: "Бригадные" }] as const;
+const BOSS_TABS = [{ id: "admins", label: "Братки" }, { id: "mentors", label: "Отморозки" }, { id: "brigade", label: "Кидалы" }] as const;
 
 /** a picture for the help rows */
 const helpImg = (src: string) => (

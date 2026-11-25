@@ -17,6 +17,12 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-25-boss-tabs",
+    date: "25 ноября",
+    title: "Новые вкладки боссов",
+    items: [{ text: "Вкладки в «Боссах» теперь называются «Братки», «Отморозки» и «Кидалы»." }],
+  },
+  {
     id: "2026-11-25-nitka-card",
     date: "25 ноября",
     title: "Карточка Нитки",
