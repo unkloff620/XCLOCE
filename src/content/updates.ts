@@ -17,6 +17,12 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-25-ach-damage",
+    date: "25 ноября",
+    title: "Достижения «Урон»",
+    items: [{ text: "«Урон» теперь считается за один бой: шкала показывает урон текущего боя, а если бой кончился раньше отметки — всё сгорает. Отметки, взятые в одном бою, остаются." }],
+  },
+  {
     id: "2026-11-25-deliugi-all",
     date: "25 ноября",
     title: "Делюги у всех",

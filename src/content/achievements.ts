@@ -54,6 +54,9 @@ export interface AchievementDef {
   boss?: string;
   /** achievement points it gives (the only reward) */
   points: number;
+  /** the progress shown (not yet reached): this stat instead of `stat` — «Урон»: the damage of the fight going on now,
+   *  it burns when the fight ends; reached is reached for good (the best single fight, `stat`) */
+  live?: AchStat;
   reward: Reward;
 }
 
@@ -104,6 +107,8 @@ const tierOf = (n: number, i: number) => Math.min(5, 1 + Math.floor((5 * i) / n)
 const line = (cat: string, i: number, n: number, a: Omit<AchievementDef, "category" | "tier" | "reward" | "id"> & { id?: string; tier?: AchTier }): AchievementDef =>
   ({ ...a, id: a.id ?? `${cat}-${i + 1}`, category: cat, tier: a.tier ?? tierOf(n, i), reward: { achPoints: a.points } });
 
+/** its progress is shown from another stat while not reached (AchievementDef.live) */
+const live = (c: AchCategory, stat: AchStat): AchCategory => (c.kind === "list" ? { ...c, lines: c.lines.map((l) => ({ ...l, live: stat })) } : c);
 /** a list of thresholds of one stat, with its points */
 function series(id: string, section: AchSection, name: string, icon: string, stat: AchStat, targets: number[], points: number[], hint: (n: string) => string): AchCategory {
   const n = targets.length;
@@ -145,7 +150,9 @@ const perBoss = (id: string, section: AchSection, name: string, icon: string, st
 
 export const ACH_CATEGORIES: AchCategory[] = [
   // ---------------- Боевые ----------------
-  series("damage", "boss", "Урон", "ach-damage", "damage", steps(1_000, 70_000_000_000, 36), pointsRange(1, 350, 36), (n) => `Нанеси боссам ${n} урона`),
+  // the damage in ONE fight (the user 2026-11-25): it does not add up from fight to fight — what a fight that ended short
+  // of the next mark dealt burns; a mark reached in a fight stays reached
+  live(series("damage", "boss", "Урон", "ach-damage", "bestFight", steps(1_000, 70_000_000_000, 36), pointsRange(1, 350, 36), (n) => `Нанеси боссу ${n} урона за один бой`), "fightNow"),
   series("got-rifle", "boss", "Автоматы", "rug-pull-gun", "got:rug-pull-gun", steps(10, 500_000, 16), pointsRange(1, 50, 16), (n) => `Накопи ${n} автоматов`),
   series("got-pistol", "boss", "Стволы", "gpu", "got:gpu", steps(10, 1_500_000, 16), pointsRange(1, 50, 16), (n) => `Накопи ${n} стволов`),
   series("got-knife", "boss", "Ножи", "keyboard", "got:keyboard", steps(10, 1_500_000, 16), pointsRange(1, 50, 16), (n) => `Накопи ${n} ножей`),

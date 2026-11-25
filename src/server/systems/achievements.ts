@@ -54,6 +54,7 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
   const [x] = await q.query<Record<string, number | null>>(
     `SELECT
        (SELECT COALESCE(MAX(my_damage), 0) FROM fights WHERE player_id=$1)::bigint AS best_fight,
+       (SELECT COALESCE(MAX(my_damage), 0) FROM fights WHERE player_id=$1 AND status='active')::bigint AS fight_now,
        (SELECT COUNT(*) FROM fights WHERE player_id=$1 AND status='won' AND mode='blat')::int AS wins_blat,
        (SELECT COUNT(*) FROM fights WHERE player_id=$1 AND status='won' AND mode='avtor')::int AS wins_avtor,
        (SELECT COUNT(DISTINCT boss_id) FROM fights WHERE player_id=$1 AND status='won')::int AS bosses,
@@ -155,7 +156,7 @@ export async function statsFor(q: Queryable, pid: number, _cfg?: Config): Promis
     pigeons: c.pigeons ?? 0,
   };
   const second = {
-    bestFight: m("best_fight"), winsBlat: m("wins_blat"), winsAvtor: m("wins_avtor"), bossesBeaten: m("bosses"),
+    bestFight: m("best_fight"), fightNow: m("fight_now"), winsBlat: m("wins_blat"), winsAvtor: m("wins_avtor"), bossesBeaten: m("bosses"),
     exchanges: c.exchanges ?? 0, spentRUB: c.spentRUB ?? 0, spentUSD: c.spentUSD ?? 0,
     haveRUB: m("have_rub"), haveUSD: m("have_usd"), haveSOL: m("have_sol"), haveBTC: m("have_btc"),
     slotSpins: m("slot_spins"), slot777: m("slot_777"), slotLevel: slotLevel(m("slot_xp")).level,
@@ -196,8 +197,10 @@ export async function achievementsView(q: Queryable, pid: number, cfg: Config) {
     (await q.query<{ id: string; claimed_at: Date }>("SELECT id, claimed_at FROM achievements WHERE player_id=$1", [pid])).map((x) => [x.id, new Date(x.claimed_at).getTime()]),
   );
   return live(cfg).map((a) => {
-    const progress = Math.min(a.target, stats[a.stat] ?? 0);
-    return { id: a.id, progress, target: a.target, done: progress >= a.target, claimed: got.has(a.id), at: got.get(a.id) ?? null };
+    const done = (stats[a.stat] ?? 0) >= a.target;
+    // «Урон»: not reached yet — the bar shows this fight's damage (it burns when the fight ends)
+    const progress = done ? a.target : Math.min(a.target, stats[a.live ?? a.stat] ?? 0);
+    return { id: a.id, progress, target: a.target, done, claimed: got.has(a.id), at: got.get(a.id) ?? null };
   });
 }
 
