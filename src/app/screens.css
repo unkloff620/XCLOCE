@@ -8248,3 +8248,20 @@ button:is(.modal > .x, .fs-x, .room-confirm-x, .bbox-x, .acx-x, .zb-res-x, .comb
 @media (prefers-reduced-motion: reduce) { .rig-nitka .nt-lids > g { animation: none; } }
 /* below half HP his own shift from foot to foot (the pose engine), not the shared sway and limp */
 .rig-nitka.boss-rig.dazed, .rig-nitka.boss-rig.dazed :is(.br-arm-l, .br-arm-r, .br-low-l, .br-low-r, .br-hand-l, .br-hand-r, .br-head) { animation: none; }
+
+/* ── Нитка's workshop (art/arena-nitka.tsx) ── */
+.ntr-trees { animation: ntr-trees 5.4s ease-in-out infinite; }
+@keyframes ntr-trees { 0%, 100% { transform: skewX(0deg) rotate(0deg); } 30% { transform: skewX(-2.4deg) rotate(-0.6deg); } 55% { transform: skewX(1.2deg) rotate(0.3deg); } 75% { transform: skewX(-1.4deg) rotate(-0.3deg); } }
+.ntr-lamp { animation: ntr-lamp 4.2s ease-in-out infinite; }
+@keyframes ntr-lamp { 0%, 100% { transform: rotate(2.2deg); } 50% { transform: rotate(-2.2deg); } }
+.ntr-light { animation: ntr-flicker 3.3s steps(1) infinite; }
+@keyframes ntr-flicker { 0%, 100% { opacity: 1; } 12% { opacity: 0.55; } 13% { opacity: 1; } 41% { opacity: 0.8; } 42% { opacity: 0.35; } 44% { opacity: 1; } 71% { opacity: 0.88; } 72% { opacity: 1; } }
+.ntr-desk { animation: ntr-flicker 2.7s steps(1) infinite -1.1s; }
+.ntr-machine { animation: ntr-sew 6.5s linear infinite; }
+@keyframes ntr-sew {
+  0%, 68%, 100% { transform: translate(0, 0); }
+  70% { transform: translate(1.8px, -1.5px); } 72% { transform: translate(-1.5px, 0.9px); } 74% { transform: translate(1.5px, -1.2px); } 76% { transform: translate(-1.8px, 1.2px); }
+  78% { transform: translate(1.2px, -1.5px); } 80% { transform: translate(-1.5px, 0.9px); } 82% { transform: translate(1.8px, -1.2px); } 84% { transform: translate(-1.2px, 1.5px); }
+  86% { transform: translate(1.5px, -0.9px); } 88% { transform: translate(-1.8px, 1.2px); } 90% { transform: translate(1.2px, -1.5px); } 92% { transform: translate(0, 0); }
+}
+@media (prefers-reduced-motion: reduce) { .ntr-trees, .ntr-lamp, .ntr-light, .ntr-desk, .ntr-machine { animation: none; } }

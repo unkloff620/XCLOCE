@@ -470,7 +470,7 @@ export async function claimFight(ctx: Ctx, fightId: number, see = true) {
   }
   // a room that drops from this boss (it is bought afterwards, like the clothes); an event boss: in his only mode
   const roomPlans: (Plan & { held?: boolean })[] = [];
-  if (things || (earnedKey && def.event)) {
+  if (things || (earnedKey && def.event && !def.modes)) {
     for (const room of ROOM_DEFS.filter((r) => r.drop?.boss === def.id)) {
       const key = roomUnlockId(room.id);
       const [have] = await ctx.q.query("SELECT 1 FROM player_unlocks WHERE player_id=$1 AND item_id=$2", [ctx.pid, key]);

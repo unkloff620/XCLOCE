@@ -770,7 +770,10 @@ const POSES: Record<string, Spec> = {
     // below half: slower and smaller, a shift from foot to foot; below a quarter: a slow lone stab now and then
     dazed: { pose: { armL: 6, armR: -6, head: 3, jaw: 0.25 }, act: true, sway: ntShift(1.8, 1), actions: [{ a: ntCombo(["r", "L"], 0.7, 1.5), w: 1 }, { a: ntCombo(["l", "R"], 0.7, 1.5), w: 1 }], rest: [3, 5], strike: ntCombo(["B"], 0.7, 1.5), speed: 1 },
     dying: { pose: { armL: 14, armR: -14, head: 6, up: -2, jaw: 0.4 }, act: true, sway: ntShift(1.2, 1.2), actions: [{ a: ntCombo(["r"], 0.45, 2.2), w: 1 }, { a: ntCombo(["l"], 0.45, 2.2), w: 1 }], rest: [4, 7], strike: ntCombo(["b"], 0.45, 2.2), speed: 1 },
-    breath: (t, dazed) => { const b = 0.5 - 0.5 * Math.cos((t / (dazed ? 1.3 : 0.9)) * Math.PI * 2); return [1 + 0.008 * b, 1 + 0.014 * b, -2 * b]; },
+    // he breathes hard: the chest swells and the shoulders go up with every breath (the user 2026-11-25)
+    breath: (t, dazed) => { const b = 0.5 - 0.5 * Math.cos((t / (dazed ? 1.3 : 1)) * Math.PI * 2); return [1 + 0.016 * b, 1 + 0.036 * b, -5 * b]; },
+    // the open shirt's tails: they lag behind his moves and flutter a little
+    hem: { sel: ".nt-hem", k: 45, c: 4.2, up: 0.9, x: 0.22, flutter: (t) => 0.9 * Math.sin(t * 1.9) + 0.45 * Math.sin(t * 3.3 + 1) },
     shapes: { jaw: {}, brw: {}, gb: {}, px: {}, py: {} },
     scale: { handR: "zR", handL: "zL" },
     vars: (a) => ({

@@ -4,6 +4,7 @@
  * room is alive (tools/boss/build-knyaz-room.py): the round vault door swings open a little on its hinge now and then and
  * gold light spills out of the vault, the leaves behind the window stir in the wind.
  */
+import { NitkaRoom } from "./arena-nitka.tsx";
 import { arenaOf } from "../../content/bosses.ts";
 import { KNYAZ_ROOM } from "./arena-knyaz-data.ts";
 import { BOTSMAN_ROOM } from "./arena-botsman-data.ts";
@@ -214,6 +215,13 @@ export function ArenaBg({ bossId, className, focus = "bottom" }: { bossId: strin
     return (
       <svg className={`arena-live ${className ?? ""}`} viewBox="0 0 1060 1484" preserveAspectRatio={focus === "bottom" ? "xMidYMax slice" : "xMidYMid slice"} aria-hidden="true">
         <FokusRoom uid={focus} />
+      </svg>
+    );
+  }
+  if (bossId === "nitka") {
+    return (
+      <svg className={`arena-live ${className ?? ""}`} viewBox="0 0 1024 1536" preserveAspectRatio={focus === "bottom" ? "xMidYMax slice" : "xMidYMid slice"} aria-hidden="true">
+        <NitkaRoom uid={focus} />
       </svg>
     );
   }

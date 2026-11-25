@@ -21,6 +21,8 @@ const SKIN = "#f7a56d";
 const LID_LINE = "#5a2a18";
 /** the needles' points (the end that comes out under the fist and goes in), in each hand's own frame (rig units) */
 const TIP = { r: [137, 366.5], l: [580.5, 414] } as const;
+/** the shirt's tails swing from here (rig units: the middle of the chest) */
+const HEM = [370, 560] as const;
 /** the waist: the upper body leans and bends round it */
 const WAIST = [370, 640] as const;
 
@@ -48,6 +50,13 @@ export function NitkaRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
   const bone = (cls: string, p: string, kids: ReactNode, size?: number, ref?: RefObject<SVGGElement | null>) => (
     <g className={cls} ref={ref} data-pivot={P[p]?.pivot ? `${P[p].pivot![0]},${P[p].pivot![1]}` : undefined} data-pp-size={size} style={origin(p)}>{kids}</g>
   );
+  const shirt = (p: string) => {
+    const r = P[p];
+    if (!r) return null;
+    return puppet
+      ? <image className="pp" data-pp="back" data-pp-follow="nt-hem" data-pp-follow-at="0.98,0.5" href={src(p)} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" />
+      : pic(p);
+  };
   const lids = (cls: string) => (
     <g className={cls}>
       {HOLES.map((h, i) => (
@@ -71,8 +80,10 @@ export function NitkaRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
           {/* his right upper arm behind the body (the artist's order), an empty elbow in it */}
           {bone("br-arm br-arm-r", "armR", <>{pic("armR", "back")}{bone("br-low br-low-r", "lowR", null, 120)}</>, 130)}
           {pic("body", "back")}
-          {pic("shirtR", "back")}
-          {pic("shirtL", "back")}
+          {/* the open shirt's halves: their tails below the chest swing with an empty group (the pose engine's hem) */}
+          <g className="nt-hem" style={at(HEM[0], HEM[1])} />
+          {shirt("shirtR")}
+          {shirt("shirtL")}
           {/* his left upper arm over the shirt, an empty elbow in it */}
           {bone("br-arm br-arm-l", "armL", <>{pic("armL", "back")}{bone("br-low br-low-l", "lowL", null, 120)}</>, 130)}
           {/* the face: the mouth inside (the throat, the teeth, the chin that drops), the whites and the pupils under the
