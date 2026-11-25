@@ -8271,3 +8271,5 @@ button:is(.modal > .x, .fs-x, .bbox-x, .acx-x, .zb-res-x, .combo-done-x, .sty-x,
 .arena.full .arena-bars .bar > span { font-size: 11px; white-space: nowrap; }
 .arena.full .arena-bars .bar { border-radius: 5px; }
 .arena.full .arena-bars .bar > i { border-radius: 0 3px 3px 0; }
+.arena-barw { position: relative; }
+.arena-bar-ic { position: absolute; right: 6px; top: 50%; width: 14px; height: 14px; transform: translateY(-50%); fill: #000; opacity: 0.85; pointer-events: none; z-index: 1; }

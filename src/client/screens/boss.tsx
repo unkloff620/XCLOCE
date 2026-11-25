@@ -113,11 +113,17 @@ function Arena({ boss, hp, hpMax, endsAt, fx, hit, ouch, rug, feed, full: fullSc
         {corner && <div className="arena-corner">{corner}</div>}
         {/* the HP and the time: short bars in the upper left (the user 2026-11-25); a big max is written short — «1 000 000 / 1M» */}
         <div className="arena-bars">
-        {hp !== null ? <Bar value={hp} max={hpMax} tone="health" height={22} label={`${full(hp)} / ${hpMax >= 1e6 ? short(hpMax) : full(hpMax)}`} /> : <Bar value={hpMax} max={hpMax} tone="health" height={22} label={`${hpMax >= 1e6 ? short(hpMax) : full(hpMax)} HP`} />}
+        <div className="arena-barw">
+          {hp !== null ? <Bar value={hp} max={hpMax} tone="health" height={22} label={`${full(hp)} / ${hpMax >= 1e6 ? short(hpMax) : full(hpMax)}`} /> : <Bar value={hpMax} max={hpMax} tone="health" height={22} label={`${hpMax >= 1e6 ? short(hpMax) : full(hpMax)} HP`} />}
+          {/* a black heart on the right end */}
+          <svg className="arena-bar-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.8 8.2 3 4.5 6.6 4.5c2.2 0 3.7 1.2 5.4 3.1 1.7-1.9 3.2-3.1 5.4-3.1 3.6 0 5.8 3.7 4.2 7.3C19.5 16.4 12 21 12 21z" /></svg>
+        </div>
         {/* the fight's time runs down like the HP: the bar shortens as the 8 hours pass */}
         {endsAt && (
-          <div className="arena-time">
-            <Bar value={Math.max(0, endsAt - now)} max={FIGHT_HOURS * 3600_000} tone="health" height={22} label={<><Icon name="clock" size={12} /> {clock(Math.max(0, endsAt - now))}</>} />
+          <div className="arena-time arena-barw">
+            <Bar value={Math.max(0, endsAt - now)} max={FIGHT_HOURS * 3600_000} tone="health" height={22} label={clock(Math.max(0, endsAt - now))} />
+            {/* a black clock on the right end */}
+            <svg className="arena-bar-ic" viewBox="0 0 24 24" aria-hidden="true"><path fillRule="evenodd" d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm-1.3 2h2.4v4.6l3.2 2-1.2 2-4.4-2.7z" /></svg>
           </div>
         )}
         </div>
