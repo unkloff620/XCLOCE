@@ -92,7 +92,7 @@ export const BOSSES: BossDef[] = [
     hp: hp(0), reward: { xp: xp(0), currencies: { RUB: 5 } },
     wear: { items: ["tee-white", "jeans", "sneakers"], chance: 0.1, pity: 10 },
     set: { weapon: "fist", damage: 10 },
-    theme: { a: "#3a1430", b: "#12081a", accent: "#ff4d6d" }, photo: photo("datsik", true),
+    theme: { a: "#3a1430", b: "#12081a", accent: "#ff4d6d" }, photo: photo("datsik", true, "2"), // (v2: the new art — the medals and cards show it, not the cached old one)
   },
   {
     id: "kedr", order: 2, card: "bronze", name: "Кедр", title: "Ответственный за сайт ActClose",
@@ -189,7 +189,7 @@ export const BOSSES: BossDef[] = [
     id: "fokus", order: 12, card: "diamond", name: "Фокус", title: "Главный и единственный программист",
     story: "Весь код Close написал он один. И только он знает, почему это работает.",
     hp: hp(11), reward: { xp: xp(11), currencies: { TOOTH: 12_000, PAP: 12_000 } },
-    theme: { a: "#401624", b: "#16060c", accent: "#ff6b9a" }, photo: photo("fokus", true),
+    theme: { a: "#401624", b: "#16060c", accent: "#ff6b9a" }, photo: photo("fokus", true, "2"), // (v2: the new art)
     set: { weapon: "keyboard", damage: 250 },
     keysToUnlock: 1,
   },

@@ -50,7 +50,7 @@ const STEPS: Step[] = [
   },
   { id: "energy", talk: true, title: "Энергия", say: "Вот твоя энергия — она сверху. Кончилась — подожди, она сама копится. Или энергетик выпей. Только не банку за банкой, как Петрович.", pic: "", done: [], aims: [{ at: () => true, sel: ".energy-chip" }] },
   {
-    id: "boss", title: "Ударь босса", say: "А теперь главное — боссы. Дацкоу опять в холодильнике заперся. Иди открой дверь и врежь ему, для профилактики.", pic: "/bosses/datsik/portrait.webp", done: ["attack"],
+    id: "boss", title: "Ударь босса", say: "А теперь главное — боссы. Дацкоу опять в холодильнике заперся. Иди открой дверь и врежь ему, для профилактики.", pic: "/bosses/datsik/portrait.webp?v=2", done: ["attack"],
     aims: [
       { at: (p) => p.startsWith("/bosses/"), sel: ".weapon:not(.empty):not(.cd)" },
       { at: (p) => p.startsWith("/bosses/"), sel: ".door-leaf:not([disabled])" },
