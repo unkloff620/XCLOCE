@@ -17,6 +17,12 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-25-sounds",
+    date: "25 ноября",
+    title: "Звуки",
+    items: [{ text: "Убрали синтезированные пиликанья: остались только записанные звуки игры, у кнопок — щелчок." }],
+  },
+  {
     id: "2026-11-25-ach-damage",
     date: "25 ноября",
     title: "Достижения «Урон»",

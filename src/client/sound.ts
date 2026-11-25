@@ -367,7 +367,10 @@ function sample(a: AudioContext, id: SampleId, at: number, vol = 0.5, rate = 1):
 }
 
 /** one oscillator note with a quick attack and an exponential tail */
+/** (the synthesized sounds are off — the user 2026-11-25: only the recorded ones play; a sound with no recording is silent) */
+const SYNTH = false;
 function tone(a: AudioContext, freq: number, at: number, dur: number, opts: { type?: OscillatorType; vol?: number; slide?: number; out?: AudioNode; attack?: number } = {}) {
+  if (!SYNTH) return;
   const o = a.createOscillator();
   const g = a.createGain();
   o.type = opts.type ?? "sine";
@@ -384,6 +387,7 @@ function tone(a: AudioContext, freq: number, at: number, dur: number, opts: { ty
 
 /** a burst of filtered noise: impacts and whooshes */
 function noise(a: AudioContext, at: number, dur: number, opts: { freq?: number; q?: number; vol?: number; type?: BiquadFilterType; out?: AudioNode } = {}) {
+  if (!SYNTH) return;
   const len = Math.max(1, Math.floor(a.sampleRate * dur));
   const buf = a.createBuffer(1, len, a.sampleRate);
   const d = buf.getChannelData(0);
@@ -774,6 +778,7 @@ const B_LEAD: [number, number, number, number][] = [
 
 /** a saw note through its own low-pass (the battle bass), the filter opening on the attack */
 function sawBass(a: AudioContext, freq: number, at: number, dur: number, out: AudioNode) {
+  if (!SYNTH) return;
   const o = a.createOscillator();
   const f = a.createBiquadFilter();
   const g = a.createGain();
@@ -854,6 +859,7 @@ function alleyEcho(a: AudioContext): AudioNode {
   return inp;
 }
 function alleyStep(a: AudioContext, at: number) {
+  if (!SYNTH) return;
   if (!wind && musicBus) {
     const len = a.sampleRate * 4;
     const buf = a.createBuffer(1, len, a.sampleRate);
@@ -934,6 +940,7 @@ export function alleyCreak(power = 0.6, dur = 0.9) {
     return;
   }
   void dur;
+  if (!SYNTH) return;
   const o = a.createOscillator();
   o.type = "sawtooth";
   const f0 = 170 + Math.random() * 60;
