@@ -3908,13 +3908,13 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
       "armR": {
         "x": 29.5,
         "y": 323.5,
-        "w": 275,
+        "w": 304,
         "h": 216,
         "pivot": [
           273.8,
           377.0
         ],
-        "v": "23bb5fa8"
+        "v": "a26e727b"
       },
       "lowR": {
         "x": 18.5,
