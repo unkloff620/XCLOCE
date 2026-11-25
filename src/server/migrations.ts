@@ -1867,10 +1867,24 @@ CREATE INDEX IF NOT EXISTS fights_unseen ON fights (player_id, id) WHERE seen = 
   {
     // Фокус → «Псих» among the mentors (the user 2026-11-25): Солнце opens with Утилизатор's passes now — the passes of
     // Фокус the players kept for Солнце become Утилизатор's
+    // (taken back by v2-141 the same day: the user keeps Фокус's passes where they are — he comes back later)
     id: "v2-140-fokus-mentor-keys",
-    sql: `INSERT INTO inventory (player_id, item_id, qty, source, updated_at)
-  SELECT player_id, 'key-utilizator', qty, 'migration', now() FROM inventory WHERE item_id = 'key-fokus' AND qty > 0
-  ON CONFLICT (player_id, item_id) DO UPDATE SET qty = inventory.qty + EXCLUDED.qty, updated_at = EXCLUDED.updated_at;
-UPDATE inventory SET qty = 0 WHERE item_id = 'key-fokus';`,
+    sql: `SELECT 1;`,
+  },
+  {
+    // the user 2026-11-25: «Фокуса мы потом добавим, его пропуски никуда не деваем» — v2-140 (already run on the live
+    // base: every player's Фокус passes were moved to Утилизатор's and zeroed) is undone: each player gets back the
+    // Фокус passes he had then (his ledger of them up to that moment) and as many Утилизатор's are taken off (not below 0)
+    id: "v2-141-fokus-keys-back",
+    sql: `CREATE TEMP TABLE fokus_back AS
+  SELECT l.player_id, GREATEST(0, SUM(l.delta))::int AS n FROM ledger l
+  WHERE l.kind = 'item' AND l.key = 'key-fokus'
+    AND l.created_at < COALESCE((SELECT value::timestamptz FROM schema_meta WHERE key = 'migration:v2-140-fokus-mentor-keys'), '-infinity'::timestamptz)
+    AND EXISTS (SELECT 1 FROM inventory i WHERE i.player_id = l.player_id AND i.item_id = 'key-fokus')
+  GROUP BY l.player_id;
+DELETE FROM fokus_back WHERE n <= 0;
+UPDATE inventory i SET qty = i.qty + b.n, updated_at = now() FROM fokus_back b WHERE i.player_id = b.player_id AND i.item_id = 'key-fokus';
+UPDATE inventory i SET qty = GREATEST(0, i.qty - b.n), updated_at = now() FROM fokus_back b WHERE i.player_id = b.player_id AND i.item_id = 'key-utilizator';
+DROP TABLE fokus_back;`,
   },
 ];
