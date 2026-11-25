@@ -17,6 +17,15 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-25-nitka-tattoos",
+    date: "25 ноября",
+    title: "Наколки Нитки",
+    items: [
+      { img: "/assets/hero/tattoo/set-igla.webp", text: "«Игла» — с Нитки в «Пацанском»: +30 к урону «Ствол», +50 к урону «Нож»." },
+      { img: "/assets/hero/tattoo/set-shov.webp", text: "«Шов» — с Нитки в «Блатном»: +55 к урону «Ствол», +40 к урону «Нож»." },
+    ],
+  },
+  {
     id: "2026-11-25-psih",
     date: "25 ноября",
     title: "Фокус теперь Псих",

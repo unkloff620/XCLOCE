@@ -7350,6 +7350,300 @@ export const TATTOO_FIT: Record<string, { part: string; x: number; y: number; w:
   "w": 258.0,
   "h": 156.0
  },
+ "tat-igla-neck": {
+  "part": "upper",
+  "x": 442.0,
+  "y": 252.0,
+  "w": 118.0,
+  "h": 146.0
+ },
+ "tat-igla-trap-l": {
+  "part": "upper",
+  "x": 323.0,
+  "y": 296.0,
+  "w": 134.0,
+  "h": 165.0
+ },
+ "tat-igla-trap-r": {
+  "part": "upper",
+  "x": 547.0,
+  "y": 296.0,
+  "w": 137.0,
+  "h": 168.0
+ },
+ "tat-igla-chest-l": {
+  "part": "upper",
+  "x": 341.0,
+  "y": 363.0,
+  "w": 168.0,
+  "h": 176.0
+ },
+ "tat-igla-chest-r": {
+  "part": "upper",
+  "x": 500.0,
+  "y": 362.0,
+  "w": 160.0,
+  "h": 176.0
+ },
+ "tat-igla-belly": {
+  "part": "upper",
+  "x": 327.0,
+  "y": 450.0,
+  "w": 347.0,
+  "h": 284.0
+ },
+ "tat-igla-shoulder-l": {
+  "part": "upper",
+  "x": 227.0,
+  "y": 349.0,
+  "w": 129.0,
+  "h": 130.0
+ },
+ "tat-igla-shoulder-r": {
+  "part": "upper",
+  "x": 644.0,
+  "y": 348.0,
+  "w": 141.0,
+  "h": 125.0
+ },
+ "tat-igla-biceps-l": {
+  "part": "upper",
+  "x": 135.0,
+  "y": 446.0,
+  "w": 175.0,
+  "h": 139.0
+ },
+ "tat-igla-biceps-r": {
+  "part": "upper",
+  "x": 697.0,
+  "y": 447.0,
+  "w": 169.0,
+  "h": 141.0
+ },
+ "tat-igla-forearm-l": {
+  "part": "upper",
+  "x": 120.0,
+  "y": 566.0,
+  "w": 144.0,
+  "h": 174.0
+ },
+ "tat-igla-forearm-r": {
+  "part": "upper",
+  "x": 706.0,
+  "y": 563.0,
+  "w": 180.0,
+  "h": 221.0
+ },
+ "tat-igla-hand-l": {
+  "part": "upper",
+  "x": 225.0,
+  "y": 715.0,
+  "w": 137.0,
+  "h": 87.0
+ },
+ "tat-igla-thigh-l": {
+  "part": "torso",
+  "x": 172.0,
+  "y": 757.0,
+  "w": 174.0,
+  "h": 158.0
+ },
+ "tat-igla-thigh-r": {
+  "part": "torso",
+  "x": 652.0,
+  "y": 762.0,
+  "w": 205.0,
+  "h": 154.0
+ },
+ "tat-igla-knee-l": {
+  "part": "torso",
+  "x": 90.0,
+  "y": 767.0,
+  "w": 159.0,
+  "h": 156.0
+ },
+ "tat-igla-knee-r": {
+  "part": "torso",
+  "x": 758.0,
+  "y": 774.0,
+  "w": 157.0,
+  "h": 132.0
+ },
+ "tat-igla-shin-l": {
+  "part": "torso",
+  "x": 113.0,
+  "y": 896.0,
+  "w": 228.0,
+  "h": 295.0
+ },
+ "tat-igla-shin-r": {
+  "part": "torso",
+  "x": 663.0,
+  "y": 889.0,
+  "w": 231.0,
+  "h": 306.0
+ },
+ "tat-igla-foot-l": {
+  "part": "torso",
+  "x": 115.0,
+  "y": 1174.0,
+  "w": 258.0,
+  "h": 146.0
+ },
+ "tat-igla-foot-r": {
+  "part": "torso",
+  "x": 627.0,
+  "y": 1183.0,
+  "w": 248.0,
+  "h": 148.0
+ },
+ "tat-shov-neck": {
+  "part": "upper",
+  "x": 443.0,
+  "y": 250.0,
+  "w": 117.0,
+  "h": 157.0
+ },
+ "tat-shov-trap-l": {
+  "part": "upper",
+  "x": 324.0,
+  "y": 296.0,
+  "w": 141.0,
+  "h": 165.0
+ },
+ "tat-shov-trap-r": {
+  "part": "upper",
+  "x": 541.0,
+  "y": 297.0,
+  "w": 143.0,
+  "h": 160.0
+ },
+ "tat-shov-chest-l": {
+  "part": "upper",
+  "x": 341.0,
+  "y": 366.0,
+  "w": 167.0,
+  "h": 173.0
+ },
+ "tat-shov-chest-r": {
+  "part": "upper",
+  "x": 500.0,
+  "y": 369.0,
+  "w": 144.0,
+  "h": 169.0
+ },
+ "tat-shov-belly": {
+  "part": "upper",
+  "x": 327.0,
+  "y": 450.0,
+  "w": 345.0,
+  "h": 284.0
+ },
+ "tat-shov-shoulder-l": {
+  "part": "upper",
+  "x": 226.0,
+  "y": 348.0,
+  "w": 130.0,
+  "h": 131.0
+ },
+ "tat-shov-shoulder-r": {
+  "part": "upper",
+  "x": 644.0,
+  "y": 348.0,
+  "w": 140.0,
+  "h": 124.0
+ },
+ "tat-shov-biceps-l": {
+  "part": "upper",
+  "x": 135.0,
+  "y": 446.0,
+  "w": 175.0,
+  "h": 139.0
+ },
+ "tat-shov-biceps-r": {
+  "part": "upper",
+  "x": 697.0,
+  "y": 449.0,
+  "w": 171.0,
+  "h": 139.0
+ },
+ "tat-shov-forearm-l": {
+  "part": "upper",
+  "x": 121.0,
+  "y": 566.0,
+  "w": 143.0,
+  "h": 175.0
+ },
+ "tat-shov-forearm-r": {
+  "part": "upper",
+  "x": 705.0,
+  "y": 563.0,
+  "w": 181.0,
+  "h": 221.0
+ },
+ "tat-shov-hand-l": {
+  "part": "upper",
+  "x": 224.0,
+  "y": 716.0,
+  "w": 138.0,
+  "h": 86.0
+ },
+ "tat-shov-thigh-l": {
+  "part": "torso",
+  "x": 172.0,
+  "y": 757.0,
+  "w": 174.0,
+  "h": 157.0
+ },
+ "tat-shov-thigh-r": {
+  "part": "torso",
+  "x": 652.0,
+  "y": 762.0,
+  "w": 204.0,
+  "h": 154.0
+ },
+ "tat-shov-knee-l": {
+  "part": "torso",
+  "x": 90.0,
+  "y": 766.0,
+  "w": 158.0,
+  "h": 157.0
+ },
+ "tat-shov-knee-r": {
+  "part": "torso",
+  "x": 759.0,
+  "y": 774.0,
+  "w": 156.0,
+  "h": 132.0
+ },
+ "tat-shov-shin-l": {
+  "part": "torso",
+  "x": 114.0,
+  "y": 896.0,
+  "w": 227.0,
+  "h": 295.0
+ },
+ "tat-shov-shin-r": {
+  "part": "torso",
+  "x": 664.0,
+  "y": 889.0,
+  "w": 229.0,
+  "h": 306.0
+ },
+ "tat-shov-foot-l": {
+  "part": "torso",
+  "x": 115.0,
+  "y": 1175.0,
+  "w": 259.0,
+  "h": 145.0
+ },
+ "tat-shov-foot-r": {
+  "part": "torso",
+  "x": 627.0,
+  "y": 1183.0,
+  "w": 249.0,
+  "h": 145.0
+ },
  "tat-zr-barak-neck": {
   "part": "upper",
   "x": 439.0,
